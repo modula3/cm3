@@ -82,6 +82,7 @@
 #include <sys/mount.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <semaphore.h>
 #include <ufs/ufs/quota.h>
 #include <sys/signal.h>
 #include <sys/socket.h>
@@ -89,6 +90,7 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <tzfile.h>
 #include <nfs/rpcv2.h>
 #include <nfs/nfsproto.h>
 #include <nfs/nfs.h>
@@ -97,10 +99,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#if __FreeBSD_version >= 400013 
+#if __FreeBSD_version >= 400013
 #define SOCKLEN_T       socklen_t
-#else 
-#define SOCKLEN_T       int 
+#else
+#define SOCKLEN_T       int
 #endif
 
 #ifdef   NULL
@@ -129,10 +131,23 @@ static char RTHeapDepC__c;
 /* Unless otherwise noted, all the following wrappers have the same
    structure. */
 
-int access(path, mode)   /* ok */
-const char *path;
-int mode;
-{ int result;
+int
+accept(int s, struct sockaddr *addr, int *addrlen)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(addr);
+  MAKE_WRITABLE(addrlen);
+  result = syscall(SYS_accept, s, addr, addrlen);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+access(const char *path, int mode)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -141,9 +156,10 @@ int mode;
   return result;
 }
 
-int acct(file)   /* ok */
-const char *file;
-{ int result;
+int
+acct(const char *file)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(file);
@@ -152,10 +168,10 @@ const char *file;
   return result;
 }
 
-int adjtime(delta, olddelta)   /* ok */
-const struct timeval *delta;
-struct timeval *olddelta;
-{ int result;
+int
+adjtime(const struct timeval *delta, struct timeval *olddelta)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(delta);
@@ -165,99 +181,21 @@ struct timeval *olddelta;
   return result;
 }
 
-/* not implemented
-int atomic_op(op, addr)
-int op;
-int *addr;
-{ int result;
+int
+bind(int s, const struct sockaddr *name, int namelen)
+{
+  int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(addr);
-  result = syscall(SYS_atomic_op, op, addr);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-/* not implemented
-int audcntl(request, argp, len, flag, audit_id)
-int request;
-char *argp;
-int len;
-int flag;
-audit_ID_t audit_id;
-{ int result;
-
-  ENTER_CRITICAL;
-  switch (request) {
-  case GET_SYS_AMASK:
-  case GET_TRUSTED_AMASK:
-  case GET_PROC_AMASK:
-    MAKE_WRITABLE(argp);
-    break;
-  case SET_SYS_AMASK:
-  case SET_TRUSTED_AMASK:
-  case SET_PROC_AMASK:
-    MAKE_READABLE(argp);
-    break;
-  default:
-    break;
-  }
-  result = syscall(SYS_audcntl, request, argp, len, flag, audit_id);
+  MAKE_READABLE(name);
+  result = syscall(SYS_bind, s, name, namelen);
   EXIT_CRITICAL;
   return result;
 }
 
-int audgen(event, tokenp, argv)
-int event;
-char *tokenp, *argv[];
-{ int result;
-
-  ENTER_CRITICAL;
-  
-  { char *t, **a;
-
-    for (t = tokenp, a = argv; t; t++, a++) {
-      if (A_TOKEN_PTR(*t)) {
-        MAKE_READABLE(*a);
-      }
-    }
-  }
-  result = syscall(SYS_audgen, tokenp, argv);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-/* not implemented
-int cachectl(addr, nbytes, op)
-char *addr;
-int nbytes, op;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(addr);
-  result = syscall(SYS_cachectl, addr, nbytes, op);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int cacheflush(addr, nbytes, cache)
-char *addr;
-int nbytes, cache;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(addr);
-  result = syscall(SYS_cacheflush, addr, nbytes, cache);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-int chdir(path)   /* ok */
-const char *path;
-{ int result;
+int chdir(const char *path)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -266,10 +204,10 @@ const char *path;
   return result;
 }
 
-int chflags(path, flags)
-const char *path;
-u_long flags;
-{ int result;
+int
+chflags(const char *path, u_long flags)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -278,10 +216,10 @@ u_long flags;
   return result;
 }
 
-int chmod(path, mode)   /* ok */
-const char *path;
-mode_t mode;
-{ int result;
+int
+chmod(const char *path, mode_t mode)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -290,11 +228,10 @@ mode_t mode;
   return result;
 }
 
-int chown(path, owner, group)   /* ok */
-const char *path;
-uid_t owner;
-gid_t group;
-{ int result;
+int
+chown(const char *path, uid_t owner, gid_t group)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -303,9 +240,10 @@ gid_t group;
   return result;
 }
 
-int chroot(dirname)   /* ok */
-const char *dirname;
-{ int result;
+int
+chroot(const char *dirname)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(dirname);
@@ -314,35 +252,32 @@ const char *dirname;
   return result;
 }
 
-/* not implemented (obsolete)
-int creat(name, mode)   
-const char *name;
-mode_t mode;
-{ int result;
+int
+connect(int s, const struct sockaddr *name, int namelen)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(name);
-  result = syscall(SYS_creat, name, mode);
+  result = syscall(SYS_connect, s, name, namelen);
   EXIT_CRITICAL;
   return result;
 }
-*/
 
 /* execve is implemented differently since it does not return, which
    would leave RT0u__inCritical set in the parent if called in the child
    of a vfork. Many calls leave the process in an undefined state in the
    case of EFAULT, but we assume that execve is not one of these. */
 
-int execve(name, argv, envp)   /* ok */
-const char *name;
-char * const argv[];
-char * const envp[];
-{ int result;
+int
+execve(const char *path, char *const argv[], char *const envp[])
+{
+  int result;
 
   for (;;) {
-    result = syscall(SYS_execve, name, argv, envp);
+    result = syscall(SYS_execve, path, argv, envp);
     if (result == -1 && errno == EFAULT) {
-      MAKE_READABLE(name);
+      MAKE_READABLE(path);
       { char * const *a; for (a = argv; *a; a++) MAKE_READABLE(*a); }
       { char * const *e; for (e = envp; *e; e++) MAKE_READABLE(*e); }
     } else {
@@ -351,29 +286,10 @@ char * const envp[];
   }
 }
 
-/* not implemented
-int exportfs(name, rootuid, exflags)
-char *name;
-int rootuid, exflags;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(name);
-  result = syscall(SYS_exportfs, name, rootuid, exflags);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-int ufcntl(int fd, int request, int arg)   /* ok */
-{ int result;
-/*  int arg;
-  va_list ap;
-
-  va_start(ap, request);
-  arg = va_arg(ap, int);
-  va_end(ap);
-*/
+int
+m3_fcntl(int fd, int request, int arg)
+{
+  int result;
 
   ENTER_CRITICAL;
   switch (request) {
@@ -392,10 +308,24 @@ int ufcntl(int fd, int request, int arg)   /* ok */
   return result;
 }
 
-int fstat(fd, buf)   /* ok */
-int fd;
-struct stat *buf;
-{ int result;
+int
+fsctl (const char *path, unsigned long request, void *data,
+       unsigned long option)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  MAKE_WRITABLE(data);
+  result = syscall(SYS_fsctl, path, request, data, option);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+fstat(int fd, struct stat *buf)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(buf);
@@ -404,12 +334,33 @@ struct stat *buf;
   return result;
 }
 
-int getdirentries(fd, buf, nbytes, basep)   /* ok */
-int fd;
-char *buf;
-int nbytes;
-long *basep;
-{ int result;
+int
+fstatfs(int fd, struct statfs *buf)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(buf);
+  result = syscall(SYS_fstatfs, fd, buf);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+futimes(int fd, const struct timeval *times)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(times);
+  result = syscall(SYS_futimes, fd, times);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int getdirentries(int fd, char *buf, int nbytes, long *basep)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(buf);
@@ -419,51 +370,47 @@ long *basep;
   return result;
 }
 
-#if 0
-int getdomainname(name, namelen)   /* ok */
-char *name;
-int namelen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(name);
-  result = _getdomainname(name, namelen);
-  EXIT_CRITICAL;
-  return result;
-}
-#endif
-
-#if 0
-int gethostname(name, namelen)   /* ok */
-char *name;
-int namelen;
+int
+getfh(const char *path, fhandle_t *fhp)
 {
   int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(name);
-  result = _gethostname(name, namelen);
+  MAKE_READABLE(path);
+  MAKE_WRITABLE(fhp);
+  result = syscall(SYS_getfh, path, fhp);
   EXIT_CRITICAL;
   return result;
 }
-#endif
 
-int getgroups(gidsetsize, grouplist)   /* ok */
-int gidsetsize;
-gid_t grouplist[];
-{ int result;
+int
+getfsstat(struct statfs *buf, long bufsize, int flags)
+{
+  int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(grouplist);
-  result = syscall(SYS_getgroups, gidsetsize, grouplist);
+  MAKE_WRITABLE(buf);
+  result = syscall(SYS_getfsstat, buf, bufsize, flags);
   EXIT_CRITICAL;
   return result;
 }
 
-int getitimer(which, value)   /* ok */
-int which;
-struct itimerval *value;
-{ int result;
+int
+getgroups(int gidsetlen, gid_t *gidset)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(gidset);
+  result = syscall(SYS_getgroups, gidsetlen, gidset);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+getitimer(int which, struct itimerval *value)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(value);
@@ -472,28 +419,23 @@ struct itimerval *value;
   return result;
 }
 
-/* not implemented
-int getmnt(start, buffer, nbytes, mode, path)
-int *start;
-struct fs_data *buffer;
-int nbytes, mode;
-char *path;
-{ int result;
+int
+getpeername(int s, struct sockaddr *name, int *namelen)
+{
+  int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(start);
-  MAKE_WRITABLE(buffer);
-  MAKE_READABLE(path);
-  result = syscall(SYS_getmnt, start, buffer, nbytes, mode, path);
+  MAKE_WRITABLE(name);
+  MAKE_WRITABLE(namelen);
+  result = syscall(SYS_getpeername, s, name, namelen);
   EXIT_CRITICAL;
   return result;
 }
-*/
 
-int getrlimit(resource, rlp)   /* ok */
-int resource;
-struct rlimit *rlp;
-{ int result;
+int
+getrlimit(int resource, struct rlimit *rlp)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(rlp);
@@ -502,10 +444,10 @@ struct rlimit *rlp;
   return result;
 }
 
-int getrusage(who, rusage)   /* ok */
-int who;
-struct rusage *rusage;
-{ int result;
+int
+getrusage(int who, struct rusage *rusage)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(rusage);
@@ -514,11 +456,23 @@ struct rusage *rusage;
   return result;
 }
 
-int getsockopt(s, level, optname, optval, optlen)   /* ok */
-int s, level, optname;
-void *optval;
-SOCKLEN_T *optlen;
-{ int result;
+int
+getsockname(int s, struct sockaddr *name, int *namelen)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(name);
+  MAKE_WRITABLE(namelen);
+  result = syscall(SYS_getsockname, s, name, namelen);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+getsockopt(int s, int level, int optname, void *optval, int *optlen)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(optval);
@@ -527,29 +481,55 @@ SOCKLEN_T *optlen;
   EXIT_CRITICAL;
   return result;
 }
-/* not implemented
-int getsysinfo(op, buffer, nbytes, start, arg)
-unsigned op;
-char *buffer;
-unsigned nbytes;
-int *start;
-char *arg;
-{ int result;
 
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(buffer);
-  MAKE_WRITABLE(start);
-  MAKE_WRITABLE(arg);
-  result = syscall(SYS_getsysinfo, op, buffer, nbytes, start, arg);
-  EXIT_CRITICAL;
-  return result;
+static int
+_gettimeofday(struct timeval *tp, struct timezone *tzp)
+{
+  static int validtz = 0;
+  static struct timezone cached_tz = {0};
+  struct timeval localtv;
+
+  if (tp == NULL) {
+    if (tzp == NULL)
+      return	(0);
+    tp = &localtv;
+  }
+
+#ifdef __ppc__
+  {
+    extern int __ppc_gettimeofday(struct timeval *, struct timezone *);
+    extern int __commpage_gettimeofday(struct timeval *);
+
+    if (__commpage_gettimeofday(tp)) {		/* first try commpage */
+      if (__ppc_gettimeofday(tp,tzp)) {	/* if it fails, use syscall */
+	return (-1);
+      }
+    }
+  }
+#else
+  if (syscall (SYS_gettimeofday, tp, tzp) < 0) {
+    return (-1);
+  }
+#endif
+  if (tzp) {
+    if (validtz == 0)  {
+      struct tm *localtm = localtime ((time_t *)&tp->tv_sec);
+      cached_tz.tz_dsttime = localtm->tm_isdst;
+      cached_tz.tz_minuteswest =
+	(-localtm->tm_gmtoff / SECSPERMIN) +
+	(localtm->tm_isdst * MINSPERHOUR);
+      validtz = 1;
+    }
+    tzp->tz_dsttime = cached_tz.tz_dsttime;
+    tzp->tz_minuteswest = cached_tz.tz_minuteswest;
+  }
+  return (0);
 }
-*/
 
-int gettimeofday(tp, tzp)   /* ok */
-struct timeval *tp;
-struct timezone *tzp;
-{ int result;
+int
+gettimeofday(struct timeval *tp, struct timezone *tzp)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(tp);
@@ -561,7 +541,7 @@ struct timezone *tzp;
     if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it readable */
     if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it writable */
   }
-  result = __ppc_gettimeofday(tp, tzp);
+  result = _gettimeofday(tp, tzp);
   EXIT_CRITICAL;
   return result;
 }
@@ -571,39 +551,37 @@ struct timezone *tzp;
    unprotect the page if it's in the traced heap, but do nothing
    otherwise. */
 
-int ioctl(d, request, argp)   /* ok */
-int d;
-unsigned long request;
-char *argp;
-{ int result;
+int
+ioctl(int d, unsigned long request, char *argp)
+{
+  int result;
 
   ENTER_CRITICAL;
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  if (argp) {
+    if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  }
   result = syscall(SYS_ioctl, d, request, argp);
   EXIT_CRITICAL;
   return result;
 }
 
-#ifdef SYS_lchown
-int lchown(path, owner, group)   /* ok */
-const char *path;
-uid_t owner;
-gid_t group;
-{ int result;
+int
+ktrace(const char *tracefile, int ops, int trpoints, int pid)
+{
+  int result;
 
   ENTER_CRITICAL;
-  MAKE_READABLE(path);
-  result = syscall(SYS_lchown, path, owner, group);
+  MAKE_READABLE(tracefile);
+  result = syscall(SYS_ktrace, tracefile, ops, trpoints, pid);
   EXIT_CRITICAL;
   return result;
 }
-#endif /* SYS_lchown */
 
-int link(name1, name2)   /* ok */
-const char *name1;
-const char *name2;
-{ int result;
+int
+link(const char *name1, const char *name2)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(name1);
@@ -613,10 +591,10 @@ const char *name2;
   return result;
 }
 
-int lstat(path, buf)   /* ok */
-const char *path;
-struct stat *buf;
-{ int result;
+int
+lstat(const char *path, struct stat *buf)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -626,10 +604,22 @@ struct stat *buf;
   return result;
 }
 
-int mkdir(path, mode)   /* ok */
-const char *path;
-mode_t mode;
-{ int result;
+int
+mincore(caddr_t addr, size_t len, char *vec)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(vec);
+  result = syscall(SYS_mincore, addr, len, vec);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+mkdir(const char *path, mode_t mode)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -638,10 +628,10 @@ mode_t mode;
   return result;
 }
 
-int mkfifo(path, mode)   /* ok */
-const char *path;
-mode_t mode;
-{ int result;
+int
+mkfifo(const char *path, mode_t mode)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -650,11 +640,10 @@ mode_t mode;
   return result;
 }
 
-int mknod(path, mode, dev)   /* ok */
-const char *path;
-mode_t mode;
-dev_t dev;
-{ int result;
+int
+mknod(const char *path, mode_t mode, dev_t dev)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -664,11 +653,7 @@ dev_t dev;
 }
 
 int
-mount(type, dir, flags, data)
-     const char *type;
-     const char *dir;
-     int flags;
-     void *data;
+mount(const char *type, const char *dir, int flags, void *data)
 {
   int result;
   struct ufs_args *u_data;
@@ -682,23 +667,20 @@ mount(type, dir, flags, data)
     u_data = (struct ufs_args*) data;
     MAKE_READABLE(u_data);
     MAKE_READABLE(u_data->fspec);
-    result = syscall(SYS_mount, type, dir, flags, data);
   } else if (strcmp(type, "mfs") == 0) {
     m_data = (struct mfs_args*) data;
     MAKE_READABLE(m_data);
     MAKE_READABLE(m_data->fspec);
-    result = syscall(SYS_mount, type, dir, flags, data);
   } else if (strcmp(type, "nfs") == 0) {
     n_data = (struct nfs_args*) data;
     MAKE_READABLE(n_data);
-    MAKE_READABLE(n_data->addr); 
+    MAKE_READABLE(n_data->addr);
     MAKE_READABLE(n_data->fh);
     MAKE_READABLE(n_data->hostname);
-    result = syscall(SYS_mount, type, dir, flags, data);
   } else {	/* Not anything we recognize. */
     MAKE_READABLE(data);
-    result = syscall(SYS_mount, type, dir, flags, data);
   }
+  result = syscall(SYS_mount, type, dir, flags, data);
   EXIT_CRITICAL;
   if (result != -1) {
     result = 0;
@@ -706,10 +688,9 @@ mount(type, dir, flags, data)
   return result;
 }
 
-int msgctl(msqid, cmd, buf)   /* ok */
-int msqid, cmd;
-struct msqid_ds *buf;
-{ int result;
+int msgctl(int msqid, int cmd, struct msqid_ds *buf)
+{
+  int result;
 
   ENTER_CRITICAL;
   switch (cmd) {
@@ -722,50 +703,37 @@ struct msqid_ds *buf;
   default:
     break;
   }
-  result = syscall(SYS_msgsys, 0, msqid, cmd, buf);
+  result = syscall(SYS_msgctl, msqid, cmd, buf);
   EXIT_CRITICAL;
   return result;
 }
 
-int msgrcv(msqid, msgp, msgsz, msgtyp, msgflg)   /* ok */
-int msqid;
-void *msgp;
-size_t msgsz;
-long msgtyp;
-int msgflg;
-{ int result;
+int msgrcv(int msqid, void *msgp, size_t msgsz)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(msgp);
-  result = syscall(SYS_msgsys, 3, msqid, msgp, msgsz, msgtyp, msgflg);
+  result = syscall(SYS_msgrcv, msqid, msgp, msgsz);
   EXIT_CRITICAL;
   return result;
 }
 
-int msgsnd(msqid, msgp, msgsz, msgflg)   /* ok */
-int msqid;
-void *msgp;
-size_t msgsz;
-int msgflg;
-{ int result;
+int msgsnd(int msqid, void *msgp, size_t msgsz)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(msgp);
-  result = syscall(SYS_msgsys, 2, msqid, msgp, msgsz, msgflg);
+  result = syscall(SYS_msgsnd, msqid, msgp, msgsz);
   EXIT_CRITICAL;
   return result;
 }
 
-int uopen(const char* path, int flags, mode_t mode)   /* ok */
-{ int result;
-/*  mode_t mode;
-  va_list ap;
-
-  va_start(ap, flags);
-  mode = va_arg(ap, mode_t);
-  va_end(ap);
-  this does not work. Why?
-*/          
+int
+m3_open(const char* path, int flags, mode_t mode)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -774,15 +742,61 @@ int uopen(const char* path, int flags, mode_t mode)   /* ok */
   return result;
 }
 
-int quotactl(path, cmd, uid, addr)   /* ok */
-     char *path;
-     int cmd, uid;
-     caddr_t addr;
+long
+pathconf(const char *path, int name)
 {
   int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
+  result = syscall(SYS_pathconf, path, name);
+  EXIT_CRITICAL;
+  return result;
+}
+
+ssize_t
+pread(int d, void *buf, size_t nbytes, off_t offset)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(buf);
+  result = syscall(SYS_pread, d, buf, nbytes, offset);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+profil(char *samples, int size, int offset, int scale)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(samples);
+  result = syscall(SYS_profil, samples, size, offset, scale);
+  EXIT_CRITICAL;
+  return result;
+}
+
+ssize_t
+pwrite(int d, const void *buf, size_t nbytes, off_t offset)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(buf);
+  result = syscall(SYS_pwrite, d, buf, nbytes, offset);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+quotactl(char *path, int cmd, int id, caddr_t addr)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(path);
   switch (cmd) {
   case Q_QUOTAON:
   case Q_QUOTAOFF:
@@ -791,24 +805,30 @@ int quotactl(path, cmd, uid, addr)   /* ok */
   case Q_GETQUOTA:
     MAKE_READABLE(addr);
     break;
-  /*
-  case Q_GETDLIM:
-    MAKE_WRITABLE(addr);
-    break;
-   */
   default:
     break;
   }
-  result = syscall(SYS_quotactl, path, cmd, uid,  addr);
+  result = syscall(SYS_quotactl, path, cmd, id,  addr);
   EXIT_CRITICAL;
   return result;
 }
 
-int readlink(path, buf, bufsiz)   /* ok */
-const char *path;
-char *buf;
-int bufsiz;
-{ int result;
+ssize_t
+read(int d, void *buf, size_t nbytes)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(buf);
+  result = syscall(SYS_read, d, buf, nbytes);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+readlink(const char *path, char *buf, int bufsiz)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -818,14 +838,14 @@ int bufsiz;
   return result;
 }
 
-ssize_t readv(d, iov, iovcnt)   /* ok */
-int d;
-const struct iovec *iov;
-int iovcnt;
-{ int result;
+ssize_t
+readv(int d, const struct iovec *iov, int iovcnt)
+{
+  int result;
 
   ENTER_CRITICAL;
-  { int i;
+  {
+    int i;
     for (i = 0; i < iovcnt; i++) {
       MAKE_WRITABLE(iov[i].iov_base);
     }
@@ -835,15 +855,36 @@ int iovcnt;
   return result;
 }
 
-ssize_t recvmsg(s, msg, flags)   /* ok */
-int s;
-struct msghdr msg[];
-int flags;
-{ int result;
+ssize_t
+recv(int s, void *buf, size_t len, int flags)
+{
+  return recvfrom(s, buf, len, flags, 0, 0);
+}
+
+ssize_t
+recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr *from,
+	 int *fromlen)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(buf);
+  MAKE_WRITABLE(from);
+  MAKE_WRITABLE(fromlen);
+  result = syscall(SYS_recvfrom, s, buf, len, flags, from, fromlen);
+  EXIT_CRITICAL;
+  return result;
+}
+
+ssize_t
+recvmsg(int s, struct msghdr *msg, int flags)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(msg->msg_name);
-  { int i;
+  {
+    int i;
     for (i = 0; i < msg->msg_iovlen; i++) {
       if (msg->msg_iov[i].iov_len > 0) {
         MAKE_WRITABLE(msg->msg_iov[i].iov_base);
@@ -856,10 +897,10 @@ int flags;
   return result;
 }
 
-int rename(from, to)   /* ok */
-char *from;
-char *to;
-{ int result;
+int
+rename(const char *from, const char *to)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(from);
@@ -869,13 +910,90 @@ char *to;
   return result;
 }
 
-int rmdir(path)   /* ok */
-const char *path;
-{ int result;
+int
+revoke(const char *path)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  result = syscall(SYS_revoke, path);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+rmdir(const char *path)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
   result = syscall(SYS_rmdir, path);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+select(int nfds, fd_set *readfds, fd_set *writefds,
+       fd_set *exceptfds, struct timeval *timeout)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(readfds);
+  MAKE_WRITABLE(writefds);
+  MAKE_WRITABLE(exceptfds);
+  MAKE_READABLE(timeout);
+  result = syscall(SYS_select, nfds, readfds, writefds, exceptfds, timeout);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+sem_close(sem_t *sem)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(sem);
+  result = syscall(SYS_sem_close, sem);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+sem_post(sem_t *sem)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(sem);
+  result = syscall(SYS_sem_post, sem);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+sem_trywait(sem_t *sem)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(sem);
+  result = syscall(SYS_sem_trywait, sem);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+sem_wait(sem_t *sem)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(sem);
+  result = syscall(SYS_sem_wait, sem);
   EXIT_CRITICAL;
   return result;
 }
@@ -910,37 +1028,43 @@ semctl(int semid, int semnum, int cmd, ...)
     MAKE_WRITABLE(arg.array);
     break;
   }
-  result = syscall(SYS_semsys, 0, semid, semnum, cmd, arg);
+  result = syscall(SYS_semctl, semid, semnum, cmd, arg);
   EXIT_CRITICAL;
   return result;
 }
 
-int semop(semid, sops, nsops)   /* ok ? */
-int semid;
-struct sembuf *sops;
-unsigned int nsops;
-{ int result;
+int
+semop(int semid, struct sembuf *sops, unsigned nsops)
+{
+  int result;
 
   ENTER_CRITICAL;
-  { unsigned int i;
+  {
+    unsigned int i;
     for (i = 0; i < nsops; i++) {
       MAKE_READABLE(sops);
     }
   }
-  result = syscall(SYS_semsys, 2, semid, sops, nsops);
+  result = syscall(SYS_semop, semid, sops, nsops);
   EXIT_CRITICAL;
   return result;
 }
 
-ssize_t sendmsg(s, msg, flags)   /* ok */
-int s;
-const struct msghdr msg[];
-int flags;
-{ int result;
+ssize_t
+send(int s, const void *msg, size_t len, int flags)
+{
+  return sendto(s, msg, len, flags, 0, 0);
+}
+
+ssize_t
+sendmsg(int s, const struct msghdr *msg, int flags)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(msg->msg_name);
-  { int i;
+  {
+    int i;
     for (i = 0; i < msg->msg_iovlen; i++) {
       if (msg->msg_iov[i].iov_len > 0) {
         MAKE_READABLE(msg->msg_iov[i].iov_base);
@@ -953,25 +1077,24 @@ int flags;
   return result;
 }
 
-#if 0
-int setdomainname(name, namelen)   /* ok */
-     const char *name;
-     int namelen;
+ssize_t
+sendto(int s, const void *msg, size_t len, int flags,
+       const struct sockaddr *to, int tolen)
 {
   int result;
 
   ENTER_CRITICAL;
-  MAKE_READABLE(name);
-  result = _setdomainname(name, namelen);
+  MAKE_READABLE(msg);
+  MAKE_READABLE(to);
+  result = syscall(SYS_sendto, s, msg, len, flags, to, tolen);
   EXIT_CRITICAL;
   return result;
 }
-#endif
 
-int setgroups(ngroups, gidset)   /* ok */
-int ngroups;
-const gid_t *gidset;
-{ int result;
+int
+setgroups(int ngroups, const gid_t *gidset)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(gidset);
@@ -980,25 +1103,8 @@ const gid_t *gidset;
   return result;
 }
 
-#if 0
-int sethostname(name, namelen)   /* ok */
-     const char *name;
-     int namelen;
-{
-  int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(name);
-  result = _sethostname(name, namelen);
-  EXIT_CRITICAL;
-  return result;
-}
-#endif
-
-int setitimer(which, value, ovalue)   /* ok */
-     int which;
-     const struct itimerval *value;
-     struct itimerval *ovalue;
+int
+setitimer(int which, const struct itimerval *value, struct itimerval *ovalue)
 {
   int result;
 
@@ -1009,25 +1115,11 @@ int setitimer(which, value, ovalue)   /* ok */
   EXIT_CRITICAL;
   return result;
 }
-/* not implemented
-int setquota(special, file)
-char *special;
-char *file;
-{ int result;
 
-  ENTER_CRITICAL;
-  MAKE_READABLE(special);
-  MAKE_READABLE(file);
-  result = syscall(SYS_setquota, special, file);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-int setrlimit(resource, rlp)   /* ok */
-int resource;
-struct rlimit *rlp;
-{ int result;
+int
+setrlimit(int resource, struct rlimit *rlp)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(rlp);
@@ -1036,11 +1128,10 @@ struct rlimit *rlp;
   return result;
 }
 
-int setsockopt(s, level, optname, optval, optlen)   /* ok */
-int s, level, optname;
-const void *optval;
-SOCKLEN_T optlen;
-{ int result;
+int
+setsockopt(int s, int level, int optname, const void *optval, int optlen)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(optval);
@@ -1049,26 +1140,8 @@ SOCKLEN_T optlen;
   return result;
 }
 
-/* not implemented
-int setsysinfo(op, buffer, nbytes, arg, flag)
-unsigned op;
-char *buffer;
-unsigned nbytes;
-unsigned arg;
-unsigned flag;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(buffer);
-  result = syscall(SYS_setsysinfo, op, buffer, nbytes, arg, flag);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-int settimeofday(tp, tzp)   /* ok */
-const struct timeval *tp;
-const struct timezone *tzp;
+int
+settimeofday(const struct timeval *tp, const struct timezone *tzp)
 {
   int result;
 
@@ -1080,25 +1153,23 @@ const struct timezone *tzp;
   return result;
 }
 
-int m3_sigaction(sig, act, oact)
-int sig;
-const struct sigaction *act;
-struct sigaction *oact;
-{ int result;
+int
+m3_sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(act);
   MAKE_WRITABLE(oact);
-  /* result = syscall(SYS_sigaction, sig, act, oact) */
   result = sigaction(sig, act, oact);
   EXIT_CRITICAL;
   return result;
 }
 
-int sigaltstack(ss, oss)   /* ok */
-const struct sigaltstack *ss;
-struct sigaltstack *oss;
-{ int result;
+int
+sigaltstack(const struct sigaltstack *ss, struct sigaltstack *oss)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(ss);
@@ -1108,10 +1179,60 @@ struct sigaltstack *oss;
   return result;
 }
 
-int socketpair(d, type, protocol, sv)   /* ok */
-int d, type, protocol;
-int sv[2];
-{ int result;
+int
+sigpending(sigset_t *set)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(set);
+  result = syscall(SYS_sigpending, set);
+  EXIT_CRITICAL;
+  return result;
+}
+  
+int
+sigprocmask(int how, const sigset_t *set, sigset_t *oset)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(set);
+  MAKE_WRITABLE(oset);
+  result = syscall(SYS_sigprocmask, set, oset);
+  EXIT_CRITICAL;
+  return result;
+}
+  
+int
+sigreturn(struct sigcontext *scp)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_WRITABLE(scp);
+  result = syscall(SYS_sigreturn, scp);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+sigwait(const sigset_t *set, int *sig)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(set);
+  MAKE_WRITABLE(sig);
+  result = syscall(SYS_sigwait, set, sig);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+socketpair(int d, int type, int protocol, int *sv)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(sv);
@@ -1120,10 +1241,10 @@ int sv[2];
   return result;
 }
 
-int stat(path, buf)   /* ok */
-const char *path;
-struct stat *buf;
-{ int result;
+int
+stat(const char *path, struct stat *buf)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -1133,9 +1254,23 @@ struct stat *buf;
   return result;
 }
 
-int swapon(special)   /* ok */
-const char *special;
-{ int result;
+int
+statfs(const char *path, struct statfs *buf)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  MAKE_WRITABLE(buf);
+  result = syscall(SYS_statfs, path, buf);
+  EXIT_CRITICAL;
+  return result;
+}
+
+int
+swapon(const char *special)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(special);
@@ -1144,10 +1279,10 @@ const char *special;
   return result;
 }
 
-int symlink(name1, name2)   /* ok */
-const char *name1;
-const char *name2;
-{ int result;
+int
+symlink(const char *name1, const char *name2)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(name1);
@@ -1157,10 +1292,10 @@ const char *name2;
   return result;
 }
 
-int truncate(path, length)   /* ok */
-const char *path;
-off_t length;
-{ int result;
+int
+truncate(const char *path, off_t length)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -1169,22 +1304,10 @@ off_t length;
   return result;
 }
 
-#if 0
-int uname(name)   /* ok */
-struct utsname *name;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(name);
-  result = _uname(name);
-  EXIT_CRITICAL;
-  return result;
-}
-#endif
-
-int unlink(path)   /* ok */
-const char *path;
-{ int result;
+int
+unlink(const char *path)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -1193,45 +1316,41 @@ const char *path;
   return result;
 }
 
-/* not implemented
-int ustat(dev, buf)
-dev_t dev;
-struct ustat *buf;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(buf);
-  result = syscall(SYS_ustat, dev, buf);
-  EXIT_CRITICAL;
-  return result;
-}
-*/
-
-int utimes(file, tvp)   /* ok */
-const char *file;
-const struct timeval *tvp;
+int
+unmount(const char *dir, int flags)
 {
   int result;
 
   ENTER_CRITICAL;
-  MAKE_READABLE(file);
-  MAKE_READABLE(tvp);
-  result = syscall(SYS_utimes, file, tvp);
+  MAKE_READABLE(dir);
+  result = syscall(SYS_unmount, dir, flags);
   EXIT_CRITICAL;
   return result;
 }
 
-pid_t wait(status)   /* ok */
-int *status;
+int
+utimes(const char *path, const struct timeval *times)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  MAKE_READABLE(times);
+  result = syscall(SYS_utimes, path, times);
+  EXIT_CRITICAL;
+  return result;
+}
+
+pid_t
+wait(int *status)
 {
   return wait3(status, 0, 0);
 }
 
-pid_t wait3(status, options, rusage)   /* ok */
-int *status;
-int options;
-struct rusage *rusage;
-{ int result;
+pid_t
+wait3(int *status, int options, struct rusage *rusage)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(status);
@@ -1241,12 +1360,10 @@ struct rusage *rusage;
   return result;
 }
 
-pid_t wait4(wpid, status, options, rusage)   /* ok */
-pid_t wpid;
-int *status;
-int options;
-struct rusage *rusage;
-{ int result;
+pid_t
+wait4(pid_t wpid, int *status, int options, struct rusage *rusage)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(status);
@@ -1256,11 +1373,9 @@ struct rusage *rusage;
   return result;
 }
 
-pid_t waitpid(pid, status, options)   /* ok */
-pid_t pid;
-int *status;
-int options;
-{ int result;
+pid_t waitpid(pid_t pid, int *status, int options)
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(status);
@@ -1269,14 +1384,26 @@ int options;
   return result;
 }
 
-ssize_t writev(fd, iov, ioveclen)   /* ok */
-int fd;
-const struct iovec *iov;
-int ioveclen;
-{ int result;
+ssize_t
+write(int fd, const void *buf, size_t nbytes)
+{
+  int result;
 
   ENTER_CRITICAL;
-  { int i;
+  MAKE_READABLE(buf);
+  result = syscall(SYS_write, fd, buf, nbytes);
+  EXIT_CRITICAL;
+  return result;
+}
+
+ssize_t
+writev(int fd, const struct iovec *iov, int ioveclen)
+{
+  int result;
+
+  ENTER_CRITICAL;
+  {
+    int i;
     for (i = 0; i < ioveclen; i++) {
       if (iov[i].iov_len > 0) {
         MAKE_READABLE(iov[i].iov_base);
@@ -1306,4 +1433,3 @@ pid_t fork()
   }
   return result;
 }
-

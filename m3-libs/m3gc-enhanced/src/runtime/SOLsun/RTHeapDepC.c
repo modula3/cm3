@@ -87,6 +87,16 @@
 #include <sys/acl.h>
 #include <sys/wait.h>
 
+#if defined(SYS_lwp_mutex_init)
+#define SOL_VERSION	20700
+#elif defined(SYS_ntp_adjtime)
+#define SOL_VERSION	20600
+#elif defined(SYS_install_utrap)
+#define SOL_VERSION	20501
+#else
+#define SOL_VERSION	20500
+#endif
+
 extern int RT0u__inCritical;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
@@ -541,7 +551,15 @@ int gettimeofday(struct timeval *tp, void *tzp)
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(tp);
-  MAKE_WRITABLE(tzp);
+  /* MAKE_WRITABLE(tzp); */
+  /*
+   * Some callers pass an invalid second argument
+   * e.g., InitTimes in libXt
+   */
+  if (tzp) {
+    if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it writable */
+  }
   result = _gettimeofday(tp, tzp);
   EXIT_CRITICAL;
   return result;
@@ -571,10 +589,12 @@ int ioctl(int fildes, int request, ...)
 
   ENTER_CRITICAL;
   va_start(args, request);
-  argp = va_arg(args, int);
+  argp = va_arg(args, void *);
   va_end(args);
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  if (argp) {
+    if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  }
   result = _ioctl(fildes, request, argp);
   EXIT_CRITICAL;
   return result;
@@ -615,7 +635,11 @@ int lstat(const char *path, struct stat *buf)
   return result;
 }
 
+#if SOL_VERSION >= 20700
+int _lwp_create(ucontext_t *contextp, unsigned int flags, lwpid_t *new_lwp)
+#else
 int _lwp_create(ucontext_t *contextp, unsigned long flags, lwpid_t *new_lwp)
+#endif
 {
   int result;
 
@@ -1003,7 +1027,11 @@ ssize_t read(int fildes, void *buf, size_t nbyte)
   return result;
 }
 
+#if SOL_VERSION >= 20600
+int readlink(const char *path, char *buf, size_t bufsiz)
+#else
 int readlink(const char *path, void *buf, int bufsiz)
+#endif
 {
   int result;
 
@@ -1015,7 +1043,11 @@ int readlink(const char *path, void *buf, int bufsiz)
   return result;
 }
 
+#if SOL_VERSION >= 20600
+ssize_t readv(int fildes, const struct iovec *iov, int iovcnt)
+#else
 ssize_t readv(int fildes, struct iovec *iov, int iovcnt)
+#endif
 {
   ssize_t result;
 
@@ -1118,6 +1150,9 @@ int setauid(const au_id_t *auid)
   return result;
 }
 
+/*
+Seems this is already wrapper.
+
 int setcontext(ucontext_t *ucp)
 {
   int result;
@@ -1130,6 +1165,7 @@ int setcontext(ucontext_t *ucp)
       return result;
   }
 }
+*/
 
 int setgroups(int ngroups, const gid_t *grouplist)
 {
@@ -1142,8 +1178,13 @@ int setgroups(int ngroups, const gid_t *grouplist)
   return result;
 }
 
+#if SOL_VERSION >= 20600
+int setitimer(int which, struct itimerval *value,
+	      struct itimerval *ovalue)
+#else
 int setitimer(int which, const struct itimerval *value,
 	      struct itimerval *ovalue)
+#endif
 {
   int result;
 
@@ -1553,7 +1594,11 @@ int utime(const char *path, const struct utimbuf *times)
   return result;
 }
 
+#if SOL_VERSION >= 20700
+int utimes(const char *file, const struct timeval *tvp)
+#else
 int utimes(char *file, struct timeval *tvp)
+#endif
 {
   int result;
 
@@ -1587,16 +1632,6 @@ int utssys(char *cbuf, int mv, int type, char *outbufp)
   return result;
 }
 
-/* ProcessPosix tries to restore signal handlers in the child of a vfork
-   prior to exec'ing to a new Unix process.  Unfortunately, on Solaris
-   restoring the handlers in this way is reflected also in the parent of
-   the vfork, so the parent loses the ability to trap protection
-   violations and crashes after the child performs the exec.  The "solution"
-   is to call fork1 instead, so that the child can do what it likes without
-   affecting signal handling in the parent.  [vfork is deprecated in Solaris
-   anyway, since copy-on-write makes fork/fork1 just as efficient, and
-   there are cleaner ways of doing interprocess communication] */
-
 #ifdef FORK_BUGGY
 /* Similarly to the fork(2) and fork1(2) system calls.  vfork(2) requires
    special treatment, although it takes no arguments.  It reportedly causes
@@ -1609,17 +1644,12 @@ pid_t vfork(void)
 
   ENTER_CRITICAL;
   if (RTCSRC_FinishVM) RTCSRC_FinishVM();
-  result = _fork1();
+  result = _vfork();
   /* don't EXIT_CRITICAL in the child: it's sharing the parent's address
      space */
   if (result)
     EXIT_CRITICAL;
   return result;
-}
-#else
-pid_t vfork(void)
-{
-  return _fork1();
 }
 #endif
 

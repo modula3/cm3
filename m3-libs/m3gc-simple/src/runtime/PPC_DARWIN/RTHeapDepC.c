@@ -16,13 +16,15 @@ void set_RTCSRC_FinishVM(void *p) {
 }
 
 int uopen(const char* path, int flags, mode_t mode)
-{ int result;
+{
+  int result;
   result = open(path, flags, mode);
   return result;
 }
 
 int ufcntl(int fd, int request, int arg)
-{ int result;
+{
+  int result;
   result = fcntl(fd, request, arg);
   return result;
 }

@@ -5,11 +5,5 @@
 ssize_t
 m3_read(int d, void *buf, size_t nbytes)
 {
-  int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(buf);
-  result = read(d, buf, nbytes);
-  EXIT_CRITICAL;
-  return result;
+  return read(d, buf, nbytes);
 }

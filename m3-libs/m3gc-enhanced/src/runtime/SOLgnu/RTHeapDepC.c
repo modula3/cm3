@@ -9,7 +9,7 @@
    the referents of all pointers about to passed to the system call, which
    ensures that the pages are not protected when the call is made.
 
-   Each wrapper is a critical section, with RTou__inCritical non-zero, so that
+   Each wrapper is a critical section, with RT0u__inCritical non-zero, so that
    another thread cannot cause the pages to become reprotected before the
    system call is performed.
 
@@ -551,8 +551,10 @@ int gettimeofday(struct timeval *tp, void *tzp)
    * Some callers pass an invalid second argument
    * e.g., InitTimes in libXt
    */
-  if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it readable */
-  if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it writable */
+  if (tzp) {
+    if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it writable */
+  }
   result = _gettimeofday(tp, tzp);
   EXIT_CRITICAL;
   return result;
@@ -584,8 +586,10 @@ int ioctl(int fildes, int request, ...)
   va_start(args, request);
   argp = va_arg(args, void *);
   va_end(args);
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  if (argp) {
+    if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  }
   result = _ioctl(fildes, request, argp);
   EXIT_CRITICAL;
   return result;
@@ -1141,6 +1145,9 @@ int setauid(const au_id_t *auid)
   return result;
 }
 
+/*
+Seems this is already wrapper.
+
 int setcontext(ucontext_t *ucp)
 {
   int result;
@@ -1153,6 +1160,7 @@ int setcontext(ucontext_t *ucp)
       return result;
   }
 }
+*/
 
 int setgroups(int ngroups, const gid_t *grouplist)
 {

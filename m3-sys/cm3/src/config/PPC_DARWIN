@@ -102,7 +102,7 @@ SYSTEM_LIBS = {
   "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
   "OPENGL"     : [ "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
-  "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm" ],
+% "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm" ],
   "X11"        : [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
@@ -173,17 +173,15 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
   % first, build the non-shared library
-  ret_code = try_exec ("@/usr/bin/ar", "cru", lib_a, objects)
-  if not equal (ret_code, 0) return ret_code end
-  ret_code = try_exec ("@/usr/bin/ranlib", lib_a)
+  ret_code = try_exec ("@libtool", "-static -o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
     % build the shared library
-    ret_code = try_exec ("@libtool -dynamic -flat_namespace",
-                         "-undefined suppress -compatibility_version", vmaj,
+    ret_code = try_exec ("@libtool -dynamic", "-multiply_defined suppress",
+                         "-twolevel_namespace", "-compatibility_version", vmaj,
                          "-current_version", version, "-install_name", lib_pn,
-                         "-lgcc", "-o", lib_soxx, objects)
+                         "-lgcc", "-o", lib_soxx, objects, imported_libs)
     if not equal (ret_code, 0) 
       delete_file (lib_a)
       return ret_code
@@ -249,7 +247,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
-  args += [ "-shared-libgcc", "-multiply_defined suppress" ]
+  args += [ "-multiply_defined suppress", "-bind_at_load", "-shared-libgcc" ]
   return try_exec ("@cc", args)
 end
 
@@ -285,13 +283,8 @@ M3_OPTIONS = [ ]
 M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
-% M3_SPLIT_LIBNAMES = TRUE
+M3_SPLIT_LIBNAMES = TRUE
 % --- split library names and pass -L/-l arguments to the linker
-
-M3_SPLIT_LIBNAMES_IF_SHARED = TRUE
-% --- split library names and pass -L/-l arguments to the linker if linking
-%     dynamically, pass full library names else
-%     (assumes M3_SPLIT_LIBNAMES = FALSE)
 
 % M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
