@@ -1,19 +1,18 @@
 MODULE TestFunctional EXPORTS Test;
 (*Copyright (c) 1996, m3na project*)
 
-IMPORT LongRealBasic AS R;
-IMPORT LongRealTrans AS RT;
-IMPORT LongRealVector      AS V;
-IMPORT LongRealVectorTrans AS VT;
-IMPORT LongRealMatrix      AS M;
-IMPORT LongRealMatrixTrans AS MT;
+IMPORT LongRealBasic       AS R,
+       LongRealTrans       AS RT,
+       LongRealVector      AS V,
+       LongRealVectorTrans AS VT,
+       LongRealMatrix      AS M,
+       LongRealMatrixTrans AS MT,
 
-IMPORT LongRealFmtLex AS RF;
-IMPORT LongRealVectorFmtLex AS VF;
-IMPORT LongRealMatrixFmtLex AS MF;
+       LongRealFmtLex       AS RF,
+       LongRealVectorFmtLex AS VF,
+       LongRealMatrixFmtLex AS MF;
 
-IMPORT LongRealFunctional AS Fn;
-IMPORT LongRealFunctionalDeriv2 AS FnD;
+IMPORT LongRealFunctional AS Fn, LongRealFunctionalDeriv2 AS FnD;
 
 IMPORT IO, Fmt;
 

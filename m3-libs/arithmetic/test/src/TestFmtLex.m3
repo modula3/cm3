@@ -3,11 +3,10 @@ MODULE TestFmtLex EXPORTS Test;
 
 (*Abstract: Tests for FmtLex module.*)
 
-IMPORT LongRealBasic AS R;
-IMPORT LongRealMatrix AS M;
-
-IMPORT LongRealFmtLex AS RF;
-IMPORT LongRealMatrixFmtLex AS MF;
+IMPORT LongRealBasic        AS R,
+       LongRealMatrix       AS M,
+       LongRealFmtLex       AS RF,
+       LongRealMatrixFmtLex AS MF;
 
 IMPORT IO, Lex, TextRd;
 
