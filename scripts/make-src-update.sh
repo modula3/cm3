@@ -28,6 +28,9 @@ for p in $@ ; do
   elif [ -d "${ROOT}/${p}" ] ; then
     echo "adding directory ${p}"
     P="${P} ${p}"
+  elif [ -f "${ROOT}/${p}" ] ; then
+    echo "adding file ${p}"
+    P="${P} ${p}"
   else
     echo "${p} not found, skipping" 1>&2
   fi

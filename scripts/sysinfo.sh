@@ -211,11 +211,11 @@ header() {
 #-----------------------------------------------------------------------------
 # elego customizations
 #
-# uncomment these if they interfere with your environment
+# comment these if they interfere with your environment
 if type domainname > /dev/null 2>/dev/null && \
    [ "${M3OSTYPE}" = "POSIX" -a \
-     "`domainname 2>/dev/null`" = "iceflower" ] ; then
-  STAGE=${STAGE:-/t/wagner/cm3}
+     "`domainname 2>/dev/null`" = "elegoohm" ] ; then
+  STAGE=${STAGE:-/pub/lang/m3/cm3-dist}
   export STAGE
 fi
 if [ "${M3OSTYPE}" = "WIN32" -a "${HOSTNAME}" = "FIR" ] ; then
