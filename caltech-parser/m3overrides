@@ -1,0 +1,41 @@
+/* $Id: m3overrides,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ */
+
+/* .top is made by the Makefile before building anything */
+include(".top")
+
+/* when overriding, ld.so doesn't know where to find libraries */
+/* this is even more true if we want to move the binaries or */
+/* clean.. */
+
+if defined("pm3_version") 
+      	/* Polytechnique de Montreal Modula-3 */
+	option("shared_lib","")
+else 
+	/* SRC Modula-3 */
+	m3_option ("-X2@-static@")
+end
+
+/* these are the packages that are part of this distribution */
+
+override("prsparse",TOP)
+override("magic",TOP)
+override("magicextras",TOP)
+override("cit_common",TOP)
+override("cit_util",TOP)
+override("bdd",TOP)
+override("cptr",TOP)
+override("bool",TOP)
+override("boxes",TOP)
+override("simplegrid",TOP)
+override("router",TOP)
+override("term",TOP)
+override("m3-3",TOP)
+override("paneman",TOP)
+override("parserlib",TOP & "/parserlib")
+override("ktoklib",TOP & "/parserlib")
+override("cit_parse",TOP)
+override("drawcontext",TOP)
+override("dcpane",TOP & "/drawcontext")
+override("tasks",TOP)
+override("matrix",TOP)
+override("layout",TOP)
