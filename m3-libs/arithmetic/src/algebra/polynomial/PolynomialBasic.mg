@@ -280,27 +280,19 @@ PROCEDURE EvalDerivate(
                  x:T;      (*Evaluate the poly with these coefs*)
                  xi:R.T;    (*for this argument*)
              VAR pd:ARRAY OF R.T;  (*returning x(xi), x'(xi)...*)
-                 nd:CARDINAL  (*for up to nd EvalDerivateatives*)
                  ) RAISES {Error}=
 (*Given a poly with coefs x, find the value at xi as pd[0],
-and nd more EvalDerivateatives as pd[1]..pd[nd].
-
-raises:
-   Err.bad_size if nd>NUMBER(pd)+1 
+and nd more EvalDerivateatives as pd[1]..pd[pdl].
 *)
 VAR
   xf:=FIRST(x^); xl:=LAST(x^);
-  pdl:=nd; (*may be using part of pd vector*)
+  pdl:=LAST(pd);
   fact,fac:R.T;
 BEGIN
-  IF nd>NUMBER(pd)+1 OR nd>xl THEN
-    RAISE Error(Err.bad_size);
-  END;
-
   (*---initialize f(xi) and clear f'(xi), f"(xi)...---*)
   pd[0]:=x[xl];
   FOR i:=1 TO pdl DO pd[i]:=R.Zero; END;
-  
+
   (*---collect the raw values---*)
   FOR i:=xl-1 TO xf BY -1 DO
     FOR j:=pdl TO 1 BY -1 DO

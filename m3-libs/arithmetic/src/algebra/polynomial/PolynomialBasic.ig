@@ -57,10 +57,6 @@ PROCEDURE Derive(x:T;           (*differentiate polynomial*)
 PROCEDURE EvalDerivate(x:T;          (*Eval this polynomial*)
                 xi:R.T;               (*for this argument*)
            VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
-               nd:CARDINAL           (*for up to nd EvalDerivateatives*)
                 ) RAISES {Error};
-          (*raises:
-               Err.bad_size if nd>NUMBER(pd)+1
-          *)
 (*==========================*)
 END PolynomialBasic.
