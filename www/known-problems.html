@@ -66,6 +66,8 @@
       &nbsp;&nbsp;
       <a href="#p_5_4">5.4 Installation program fails with unhandled
         OSError exception on SOLgnu platform</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_5_5">5.5 Segmentation fault errors on Fedora 3 and Gentoo Linux</a><br>
     </p>
 
     <a name="p_1">
@@ -781,6 +783,25 @@ Abort</pre>
       installation program in the 5.2.6 archive is broken. There is no
       work-around.
     </p>
+    <a name="p_5_5">
+    <h4>
+      5.5 Segmentation fault errors on Fedora 3 and Gentoo Linux
+    </h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> Linux
+    </p>
+
+    <p>
+      <b>Description:</b> On some Linux Distribution (for example Fedora 3) you get a segmentation fault error message running cm3
+    </p>
+    <p>
+      <b>Solution:</b>
+      Use the cm3-min-POSIX-LINUXLIBC6-d5.2.7-2005-03-31.tgz release. Previous versions of the cm3 compiler for Linux will not work on these distributions. 
+      There is no other work-around.
+    </p>
+    <!--
     <!--
     <h4></h4>
 
