@@ -364,7 +364,7 @@ PROCEDURE FFTwithWrongOrderedInput(VAR a: ARRAY OF C.T; direction: [-1..1]) =
     k, j, L2, L, ip           : CARDINAL;
     dir                       := FLOAT(direction,R.T);
   BEGIN
-    <* ASSERT ABS(direction) = 1 *>
+    <* ASSERT direction # 0 *>
     <* ASSERT n > 0 *>
     <* ASSERT Word.And(n-1, n) = 0 *>
     (** n must be a power of 2 and n>=1. **)
@@ -435,16 +435,15 @@ Slow FT routine, useful for debugging fast one.
 where direction = +1 or -1.
 *****************************************************)
 PROCEDURE SlowFT(READONLY a: ARRAY OF C.T;
-                 VAR b: ARRAY OF C.T;
-                 direction: [-1..1]) =
+                  direction: [-1..1]): REF ARRAY OF C.T =
   VAR
     n   := NUMBER(a);
+    b   := NEW (REF ARRAY OF C.T,n);
     sum :  C.T;
     dir := FLOAT(direction,R.T);
     kn  :  R.T;
   BEGIN
-    <* ASSERT NUMBER(b) = n *>
-    <* ASSERT ABS(direction) = 1 *>
+    <* ASSERT direction # 0 *>
     FOR k:=0 TO n-1 DO
       sum := C.Zero;
       kn  := dir * RT.TwoPi * FLOAT(k, R.T) / FLOAT(n, R.T);
@@ -455,6 +454,7 @@ PROCEDURE SlowFT(READONLY a: ARRAY OF C.T;
       END;
       b[k] := sum;
     END;
+    RETURN b;
   END SlowFT;
 (*=================================================*)
 (**** Test driver. ****)
@@ -462,12 +462,10 @@ PROCEDURE Test() =
 VAR
   a:=NEW(REF ARRAY OF C.T,128);
   b:=NEW(REF ARRAY OF C.T,128);
-  c:=NEW(REF ARRAY OF C.T,128);
   n := NUMBER(a^);
   x : CARDINAL;
   BEGIN
     <* ASSERT NUMBER(b^) = n *>
-    <* ASSERT NUMBER(c^) = n *>
 
     (* initialize a[] to psu-random complex numbers... *)
     x := 432531;
@@ -491,11 +489,14 @@ VAR
     ReOrder(a^);
     FFTwithWrongOrderedInput(a^, 1);
 
-    SlowFT(b^, c^, 1);
+    VAR
+      c := SlowFT(b^, 1);
 
-    (* check slow and fast give same result: *)
-    FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
-      <* ASSERT CT.Norm1( C.Sub(a[j], c[j]) ) < FLOAT (0.0001D0, R.T) *>
+    BEGIN
+      (* check slow and fast give same result: *)
+      FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
+        <* ASSERT CT.Norm1( C.Sub(a[j], c[j]) ) < FLOAT (0.0001D0, R.T) *>
+      END;
     END;
 
     (* backward: *)
