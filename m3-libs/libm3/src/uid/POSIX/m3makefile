@@ -5,6 +5,6 @@
 % Last modified on Mon Sep 20 11:47:42 PDT 1993 by kalsow
 %      modified on Thu Jul 15 16:14:28 PDT 1993 by swart
 
-c_source("MachineIDPosix")
+c_source("MachineIDPosixC")
 module("MachineIDPosix")
 
