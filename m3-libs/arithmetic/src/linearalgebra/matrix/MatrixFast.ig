@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixFast(MB,V,R);
+GENERIC INTERFACE MatrixFast(V,R,MB);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to matrix functions
@@ -19,11 +19,12 @@ TYPE
   TBody = ARRAY OF TRow;
   T     = REF TBody;
 
-PROCEDURE New(m,n:CARDINAL):T; (*make New mxn matrix*)
-PROCEDURE Copy(x:T):T;
-
-PROCEDURE NewZero(m,n:CARDINAL):T;               (*create zero matrix*)
-PROCEDURE NewOne (n  :CARDINAL):T;               (*create identity matrix*)
+CONST
+  New       = MB.New;
+  FromArray = MB.FromArray;
+  Copy      = MB.Copy;
+  NewZero   = MB.NewZero;
+  NewOne    = MB.NewOne;
 
 (*
 PROCEDURE Zero(x:T);                              (*set to zeros*)
@@ -41,6 +42,9 @@ PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
 CONST Adjungate = Transpose;
 
+PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
+(*PROCEDURE Determinant(x:T):R.T;*)
+
 CONST
   GetRow    = MB.GetRow;
   GetColumn = MB.GetColumn;
@@ -56,8 +60,6 @@ CONST
   ReduceRows    = MB.ReduceRows;
   ReduceColumns = MB.ReduceColumns;
 
-
-PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
 
 (*==========================*)
 END MatrixFast.

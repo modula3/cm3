@@ -11,8 +11,10 @@ end
 readonly proc MatrixFast (nm, vfield, rfield) is
   local basic = nm & "MatrixBasic"
   local fast  = nm & "MatrixFast"
-  build_generic_intf (fast, "MatrixFast", [basic, vfield, rfield], VISIBLE)
-  build_generic_impl (fast, "MatrixFast", [       vfield, rfield])
+  build_generic_intf (basic, "MatrixBasic", [vfield, rfield], VISIBLE)
+  build_generic_impl (basic, "MatrixBasic", [vfield, rfield])
+  build_generic_intf (fast,  "MatrixFast",  [vfield, rfield, basic], VISIBLE)
+  build_generic_impl (fast,  "MatrixFast",  [vfield, rfield])
 end
 
 readonly proc MatrixTrans (nm, mfield, eigen, ctrans, rfield, rtrans) is
