@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "$SYSINFO_DONE" = "yes" ] ; then
+  return 0
+fi
+SYSINFO_DONE="yes"
+
 UNAME=`uname`
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
@@ -55,6 +60,9 @@ OSTYPE=${OSTYPE:-${CM3_OSTYPE}}
 TARGET=${TARGET:-${CM3_TARGET}}
 GCC_BACKEND=${GCC_BACKEND:-${CM3_GCC_BACKEND}}
 INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
+PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
+QGREP=${QGREP:-"egrep >/dev/null 2>/dev/null"}
+GREP=${GREP:-egrep}
 
 debug() {
   if [ -n "$CM3_DEBUG" ] ; then
@@ -69,5 +77,11 @@ debug "OSTYPE      = $OSTYPE"
 debug "TARGET      = $TARGET"
 debug "GCC_BACKEND = $GCC_BACKEND"
 debug "INSTALLROOT = $INSTALLROOT"
-export ROOT SCRIPTS M3GDB OSTYPE TARGET GCC_BACKEND INSTALLROOT
+debug "PKGSDB      = $PKGSDB"
+debug "QGREP       = $QGREP"
+debug "GREP        = $GREP"
+
+export ROOT SCRIPTS M3GDB OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB QGREP
+export GREP
+export SYSINFO_DONE
 
