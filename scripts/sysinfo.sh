@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.7 2001-02-14 16:35:36 wagner Exp $
+# $Id: sysinfo.sh,v 1.8 2001-02-14 18:28:19 wagner Exp $
 
 if [ "$SYSINFO_DONE" = "yes" ] ; then
   return 0
@@ -19,6 +19,9 @@ EXE=""
 SL="/"
 SYSLIBDIR="/usr/local/cm3/lib"
 SYSLIBS=""
+DEV_LIB=""
+DEV_BIN=""
+TAR=tar
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
@@ -63,7 +66,7 @@ find_file() {
   f="$1"
   shift
   for d in $@ ; do
-    if [ -f "$d/$f" ] ; then
+    if [ -d "$d" -a -f "$d/$f" ] ; then
       echo "$d/$f"
       return 0
     fi
@@ -72,28 +75,48 @@ find_file() {
   return 1
 }
 
+cygpath() {
+  echo "$2"
+}
+
 # evaluate uname information
 case "${UNAME}" in
 
-  Windows*|WinNT*|Cygwin*)
+  Windows*|WinNT*|Cygwin*|CYGWIN*)
     CM3_OSTYPE=WIN32
     CM3_TARGET=NT386
     CM3_INSTALL="c:/cm3"
     CM3_GCC_BACKEND=no
     HAVE_SERIAL=yes
     EXE=".exe"
-    SL="\\"
+    SL='\\\\'
     SYSLIBS="ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
     SYSLIBS="${SYSLIBS} OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
     SYSLIBS="${SYSLIBS} GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
-    L="c:/cm3/lib d:/cm3/lib e:/cm3/lib c:/reactor/lib d:/reactor/lib"
+    L="c:/cm3/lib d:/cm3/lib e:/cm3/lib c:/reactor5/lib d:/reactor5/lib"
+    L="${L} e:/reactor5/lib c:/reactor/lib d:/reactor/lib"
     L="${L} e:/reactor/lib /usr/local/cm3/lib /usr/local/reactor/lib"
     L="${L} /usr/cm3/lib /usr/reactor/lib"
     if f="`find_file KERNEL32.LIB ${L}`" ; then
-      SYSLIBDIR="`basename $f`"
+      SYSLIBDIR="`dirname $f`"
     else
       SYSLIBDIR="unknown"
     fi
+    D="c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
+    if f="`find_file cl.exe ${D}`" ; then
+      DEV_BIN="`dirname ${f}`"
+      DEV_LIB="`dirname ${DEV_BIN}`/lib"
+    else
+      DEV_LIB=""
+      DEV_BIN=""
+    fi
+    if [ -f /usr/bin/tar.exe ] ; then
+      TAR=/usr/bin/tar.exe
+    fi
+
+    cygpath() {
+      /usr/bin/cygpath $@
+    }
   ;;
 
   FreeBSD*)
@@ -170,8 +193,11 @@ debug "EXE         = $EXE"
 debug "SL          = $SL"
 debug "SYSLIBDIR   = $SYSLIBDIR"
 debug "SYSLIBS     = $SYSLIBS"
+debug "DEV_BIN     = $DEV_BIN"
+debug "DEV_LIB     = $DEV_LIB"
+debug "TAR         = $TAR"
 
 export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB QGREP
-export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB
+export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
 export SYSINFO_DONE
 
