@@ -29,7 +29,7 @@ if defined ("_all")
   local script = path_of ("vostart")
   if stale ("vostart", script)
     % build a version of vostart bound to the current /bin directory
-    > "vostart" in  write ("#! ", BIN_USE, "/vorun -r", CR)  end
+    > "vostart" in  write ("#! ", BIN_USE, SL & "vorun -r", CR)  end
     exec ("cat ", script, " >> vostart")
     exec ("chmod +x vostart")
   end
