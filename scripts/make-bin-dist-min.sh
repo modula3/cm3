@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.7 2001-02-14 23:35:43 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.8 2001-02-16 11:28:32 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -32,13 +32,18 @@ head "stage 1: building cm3 compiler"
 # install the compiler
 head "stage 2: installing cm3 compiler"
 echo "installing ${INSTALLROOT}/bin/cm3${EXE}"
-cp "${ROOT}/m3-sys/cm3/${TARGET}/cm3${EXE}" "${INSTALLROOT}/bin"
-[ "${GCC_BACKEND}" = yes ] && \
-  echo "installing ${INSTALLROOT}/bin/cm3cg${EXE}" && \
-  cp "${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin"
+cp "${ROOT}/m3-sys/cm3/${TARGET}/cm3${EXE}" "${INSTALLROOT}/bin" || exit 1
+strip_exe "${INSTALLROOT}/bin/cm3${EXE}"
+if [ "${GCC_BACKEND}" = yes ] ; then
+  echo "installing ${INSTALLROOT}/bin/cm3cg${EXE}"
+  cp "${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin" || exit 1
+  strip_exe "${INSTALLROOT}/bin/cm3cg${EXE}"
+fi
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
-  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin"
+  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" \
+    || exit 1
+  strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 fi
 if [ -n "${SYSLIBS}" ] ; then
   echo "installing low-level system libraries"
@@ -96,6 +101,7 @@ echo "creating system archive in ${ABSARCH1}"
 ${TAR} -C "${INSTALLROOT}" -czf "${ABSARCH1}" . || exit 1
 echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
 cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${STAGE}" ||  exit 1
+strip_exe "${STAGE}/cminstall${EXE}"
 cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   ITAR="`find_file tar.exe ${CM3BINSEARCHPATH}`"
