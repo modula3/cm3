@@ -14,23 +14,35 @@
 
 UNSAFE INTERFACE RTHooks;
 
-(*------------------------------------------ linker initialized variables ---*)
+(*----------------------------------------------------------------- types ---*)
 
-(* these variables are read and written directly by compiler or linker
-   generated code.  Changing their names, types or values is very dangerous. *)
+PROCEDURE CheckIsType (ref: REFANY;  type: ADDRESS(*RT0.TypeDefn*)): INTEGER;
+(* If "ref" is a subtype of "type" return ORD(TRUE).  Otherwise,
+   return ORD(FALSE). *)
 
-VAR bottom_of_stack : ADDRESS;
-VAR top_of_stack    : ADDRESS;
-(* the limits of the currently running thread's stack.
-   The stack grows from 'bottom' to 'top'. *)    
+PROCEDURE ScanTypecase (ref: REFANY;
+                        x: ADDRESS(*ARRAY [0..] OF TypecaseCell*)): INTEGER;
+(* Return the first "i" such that "ref" is a subtype of the type referenced
+   to by "x[i]".  If "ref" is "NIL", return 0.  If "x[i].uid" is zero,
+   return "i".  If "x[i].defn" is "NIL", resolve it to the type corresponding
+   to "x[i].uid". *)
 
-(*----------------------------------------------------------------- RAISE ---*)
+TYPE
+  TypecaseCell = RECORD
+    defn: ADDRESS; (* RT0.TypeDefn, resolved lazily *)
+    uid : INTEGER; (* a type UID, or zero to terminate the list. *)
+  END;
 
-PROCEDURE Raise (exception: ADDRESS;  arg: ADDRESS) RAISES ANY;
-(* called by the compiler to raise 'exception(arg)'. *)
+(*------------------------------------------------------------ exceptions ---*)
 
-PROCEDURE ResumeRaise (info: ADDRESS) RAISES ANY;
-(* called by the compiler to resume the raising of 'exception(arg)'. *)
+PROCEDURE Raise (ex     : ADDRESS; (*RT0.ExceptionPtr*)
+                 arg    : ADDRESS; (*RT0.ExceptionArg*)
+                 module : ADDRESS; (*RT0.ModulePtr*)
+                 line   : INTEGER) RAISES ANY;
+(* called by the compiler to raise 'ex(arg)'. *)
+
+PROCEDURE ResumeRaise (a: ADDRESS (*VAR RT0.RaiseActivation*)) RAISES ANY;
+(* called by the compiler to resume the raising of 'a.exception(a.arg)'. *)
 
 PROCEDURE PushEFrame (frame: ADDRESS);
 (* called by the compiler to push an exception frame. *)
@@ -38,14 +50,29 @@ PROCEDURE PushEFrame (frame: ADDRESS);
 PROCEDURE PopEFrame (frame: ADDRESS);
 (* called by the compiler to pop an exception frame. *)
 
-(*------------------------------------------------------------ MUTEX/LOCK ---*)
-
-PROCEDURE LockMutex   (m: MUTEX);
-PROCEDURE UnlockMutex (m: MUTEX);
-
 (*----------------------------------------------- builtin TEXT operations ---*)
 
 PROCEDURE Concat (a, b: TEXT): TEXT;
+(* Returns "a & b" .*)
+
+PROCEDURE MultiCat (READONLY x: ARRAY OF TEXT): TEXT;
+(* Returns "x[0] & x[1] & ... & x[LAST[x]]". *)
+
+(* Methods for compiler generated literals *)
+PROCEDURE TextLitInfo         (t: TextLiteral;  VAR i: TextInfo);
+PROCEDURE TextLitGetChar      (t: TextLiteral;  i: CARDINAL): CHAR;
+PROCEDURE TextLitGetWideChar  (t: TextLiteral;  i: CARDINAL): WIDECHAR;
+PROCEDURE TextLitGetChars     (t: TextLiteral;
+                               VAR a: ARRAY OF CHAR;  start: CARDINAL);
+PROCEDURE TextLitGetWideChars (t: TextLiteral;
+                               VAR a: ARRAY OF WIDECHAR; start: CARDINAL);
+TYPE
+  TextLiteral <: TEXT;
+  TextInfo = RECORD
+    start  : ADDRESS;  (* non-NIL => string is at [start .. start+length) *)
+    length : CARDINAL; (* length of string in characters *)
+    wide   : BOOLEAN;  (* => string contains WIDECHARs. *)
+  END;
 
 (*------------------------------------------------------------- allocator ---*)
 (* The parameters are declared as ADDRESSs to avoid sucking in RT0
@@ -72,21 +99,21 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT);
 
 (*-------------------------------------------------------- runtime errors ---*)
 
-PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER);
+PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)
+  RAISES ANY;
 (* report the runtime fault in the specified module.  "info" encodes
-   the source line number and fault code [info = line*16 + code].
-   Where the fault codes are:
-     0 - assertion failure
-     1 - value out of range
-     2 - subscript out of range
-     3 - incompatible array shape
-     4 - attempt to dereference NIL
-     5 - NARROW failure
-     6 - missing RETURN in function
-     7 - missing CASE arm
-     8 - missing TYPECASE arm
-     9 - stack overflow
+   the source line number and fault code [info = line*16 + ORD(RuntimeError.T)].
 *)
+
+PROCEDURE AssertFailed (module: ADDRESS(*RT0.ModulePtr*);  line: INTEGER;
+                        msg: TEXT) RAISES ANY;
+(* Signal an assertion failure with the attached message. *)
+
+(*------------------------------------------------------------- debugging ---*)
+
+PROCEDURE DebugMsg (module: ADDRESS(*RT0.ModulePtr*);  line: INTEGER;
+                     READONLY msg: ARRAY OF TEXT) RAISES ANY;
+(* Print debugging information from the program *)
 
 (*----------------------------------------------------- some useful types ---*)
 (* These types are declared here so that anonymous instances of them
@@ -94,12 +121,18 @@ PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER);
    copies of their typecells are created everywhere. *)
 
 TYPE
-  CharBuffer = REF ARRAY OF CHAR;
-  IntBuffer  = REF ARRAY OF INTEGER;
-  RefInt     = REF INTEGER;
-  RefChar    = REF CHAR;
-  PtrInt     = UNTRACED REF INTEGER;
-  PtrChar    = UNTRACED REF CHAR;
+  Null         = NULL;
+  Address      = ADDRESS;
+  Refany       = REFANY;
+  Root         = ROOT;
+  UntracedRoot = UNTRACED ROOT;
+  Text         = TEXT;
+  CharBuffer   = REF ARRAY OF CHAR;
+  IntBuffer    = REF ARRAY OF INTEGER;
+  RefInt       = REF INTEGER;
+  RefChar      = REF CHAR;
+  PtrInt       = UNTRACED REF INTEGER;
+  PtrChar      = UNTRACED REF CHAR;
 
 END RTHooks.
 

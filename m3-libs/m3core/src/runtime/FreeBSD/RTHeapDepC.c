@@ -765,7 +765,7 @@ int uopen(const char* path, int flags, mode_t mode)   /* ok */
 int quotactl(path, cmd, uid, addr)   /* ok */
 const char *path;
 int cmd, uid;
-void *addr;
+char *addr;
 { int result;
 
   ENTER_CRITICAL;

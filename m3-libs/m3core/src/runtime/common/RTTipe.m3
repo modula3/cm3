@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTTipe;
 
-IMPORT RT0, RT0u, RTType, RTTypeSRC, RTPacking, Word;
+IMPORT RT0, RTType, RTTypeSRC, RTPacking, Word;
 
 TYPE (* This list must be kept in sync with the compiler *)
   Op = {
@@ -62,7 +62,7 @@ TYPE
 PROCEDURE Get (typecode: INTEGER;  READONLY packing: RTPacking.T): T =
   VAR t: T := NIL;  s: State;  p: Packing;
   BEGIN
-    IF (typecode < 0) OR (RT0u.nTypes <= typecode) THEN RETURN NIL; END;
+    IF (typecode < 0) OR (RTType.MaxTypecode() < typecode) THEN RETURN NIL; END;
     s.self := RTType.Get (typecode);
 
     (* read the description *)
@@ -116,7 +116,8 @@ PROCEDURE ReadOp (VAR s: State): T =
 
     | ORD (Op.Object) =>
         VAR obj := NEW (Object, kind := Kind.Object,
-                        super := s.self.parent, fields := NIL);
+                        super := LOOPHOLE (s.self, RT0.ObjectTypeDefn).parent,
+                        fields := NIL);
         BEGIN
           t := obj;  s.types [s.next] := t;  INC (s.next);  stuffed := TRUE;
           obj.fields := GetFields (s);

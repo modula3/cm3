@@ -169,7 +169,8 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   BEGIN
     IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
     THEN
-      IF Uerror.errno = Uerror.EACCES THEN RETURN FALSE END;
+      IF Uerror.errno = Uerror.EACCES
+      OR Uerror.errno = Uerror.EAGAIN THEN RETURN FALSE END;
       OSErrorPosix.Raise()
     END;
     RETURN TRUE
@@ -229,7 +230,7 @@ PROCEDURE IntermittentRead(
       ELSIF status = -1
          AND errno # Uerror.EWOULDBLOCK
          AND errno # Uerror.EAGAIN THEN
-        OSErrorPosix.Raise()
+        OSErrorPosix.Raise0(errno)
       ELSIF NOT mayBlock THEN
         RETURN -1
       END;
@@ -272,7 +273,7 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
       ELSIF status = -1
          AND errno # Uerror.EWOULDBLOCK
          AND errno # Uerror.EAGAIN THEN
-        OSErrorPosix.Raise()
+        OSErrorPosix.Raise0(errno)
       END;
 
       EVAL SchedulerPosix.IOWait(h.fd, FALSE)
@@ -292,7 +293,7 @@ PROCEDURE IsDevNull(READONLY statbuf: Ustat.struct_stat): BOOLEAN RAISES {} =
     IF NOT null_done THEN
       null_done := TRUE;
       null_fd := Unix.open(
-        M3toC.TtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
+        M3toC.FlatTtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
       IF null_fd < 0 THEN RETURN FALSE END;
       result := Ustat.fstat(null_fd, ADR(null_stat));
       EVAL Unix.close(null_fd);

@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTModule;
 
-IMPORT RT0, RT0u, RTMisc;
+IMPORT RT0, RTError;
 
 PROCEDURE Count (): CARDINAL =
   BEGIN
@@ -18,7 +18,7 @@ PROCEDURE Get (m: CARDINAL): RT0.ModulePtr =
   VAR p := RT0u.modules;
   BEGIN
     IF (m >= RT0u.nModules) THEN
-      RTMisc.FatalErrorI ("improper module index: ", m);
+      RTError.MsgI ("improper module index: ", m);
     END;
     p := p + m * ADRSIZE (RT0.ModulePtr);
     RETURN p^;

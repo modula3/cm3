@@ -88,7 +88,7 @@ CONST
   empty_sv_mask  : sigset_t = 0;
 
 CONST
- (* Valid flags defined for sv_flags field of sigvec structure. *)
+  (* Valid flags defined for sv_flags field of sigvec structure. *)
   SV_ONSTACK     = 16_0001;   (* run on special signal stack *)
   SV_RESTART     = 16_0002;   (* restart system calls on sigs *)
   SV_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
@@ -116,7 +116,7 @@ TYPE
   struct_sigaction_star = UNTRACED REF struct_sigaction;
 
 CONST
- (* Valid flags defined for sa_flags field of sigaction structure. *)
+  (* Valid flags defined for sa_flags field of sigaction structure. *)
   SA_ONSTACK     = 16_0001;   (* run on special signal stack *)
   SA_RESTART     = 16_0002;   (* restart system calls on sigs *)
   SA_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)

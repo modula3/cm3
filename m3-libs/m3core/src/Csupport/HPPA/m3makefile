@@ -7,4 +7,5 @@
 
 c_source ("dtoa")
 c_source ("getdtablesize")
+c_source ("getpagesize")
 c_source ("utimes")

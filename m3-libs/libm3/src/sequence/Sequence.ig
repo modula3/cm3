@@ -2,10 +2,11 @@
 (* Distributed only by permission.                           *)
 (* See the file COPYRIGHT for a full description.            *)
 (*                                                           *)
-(* Last modified on Fri Jan 26 13:37:39 PST 1996 by detlefs  *)
-(*      modified on Thu Sep 22 19:43:14 PDT 1994 by heydon   *)
+(* Last modified on Thu Sep 22 19:43:14 PDT 1994 by heydon   *)
+(*      modified on Tue Aug  2 18:26:10 PDT 1994 by detlefs  *)
 (*      modified on Thu Dec  9 11:45:28 PST 1993 by mcjones  *)
 (*      modified on Thu Apr 29 15:51:05 PDT 1993 by gnelson  *)
+<* PRAGMA SPEC*>
 
 (* "Sequence" is a generic interface defining extensible sequences.
    Elements can be added or removed at either end of a sequence; they
@@ -132,5 +133,97 @@ PROCEDURE Sub(s: T; start: CARDINAL;
    multiple threads must ensure that if two operations are active
    concurrently, then neither of them has side effects on the
    sequence.  *)
+
+(* ESC Specifications. *)
+
+<*SPEC VAR Valid: MAP T TO BOOLEAN *>
+<*SPEC VAR Data: MAP T TO SEQ[Elem.T]*>
+
+<*SPEC T.init(t, sizeHint)
+       MODIFIES Valid[t], Data[t]
+       ENSURES RES = t AND Valid'[t] AND NUMBER(Data'[t]) = 0 *>
+
+<*SPEC T.fromArray(t, a)
+       MODIFIES Valid[t], Data[t]
+       ENSURES RES = t AND Valid'[t] AND NUMBER(Data'[t]) = NUMBER(a)
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(a)) IMPLIES
+                                 Data'[t][i] = a[i]) *>
+
+<*SPEC T.addhi(t, x)
+       MODIFIES Data[t]
+       REQUIRES Valid[t]
+       ENSURES NUMBER(Data'[t]) = NUMBER(Data[t])+1
+           AND (ALL [i: INTEGER] 0 <= i AND i < NUMBER(Data[t]) IMPLIES
+                  Data'[t][i] = Data[t][i])
+           AND Data'[t][NUMBER(Data[t])] = x *>
+
+<*SPEC T.addlo(t, x)
+       MODIFIES Data[t]
+       REQUIRES Valid[t]
+       ENSURES NUMBER(Data'[t]) = NUMBER(Data[t])+1
+           AND Data'[t][0] = x
+           AND (ALL [i: CARDINAL] (0 <= i AND i < NUMBER(Data[t])) IMPLIES
+                  Data'[t][i+1] = Data[t][i]) *>
+
+<*SPEC T.remhi(t)
+       MODIFIES Data[t]
+       REQUIRES Valid[t] AND NUMBER(Data[t]) > 0
+       ENSURES NUMBER(Data'[t]) = NUMBER(Data[t])-1
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(Data'[t])) IMPLIES
+                  Data'[t][i] = Data[t][i]) *>
+
+<*SPEC T.remlo(t)
+       MODIFIES Data[t]
+       REQUIRES Valid[t] AND NUMBER(Data[t]) > 0
+       ENSURES NUMBER(Data'[t]) = NUMBER(Data[t])-1
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(Data'[t])) IMPLIES
+                  Data'[t][i] = Data[t][i+1]) *>
+
+<*SPEC T.put(t, i, x)
+       MODIFIES Data[t][i]
+       REQUIRES Valid[t] AND i < NUMBER(Data[t])
+       ENSURES Data'[t][i] = x
+*>
+(*
+       ENSURES Data'[t][i] = x AND NUMBER(Data'[t]) = NUMBER(Data[t]) *>
+*)
+
+<*SPEC T.size(t)
+       REQUIRES Valid[t]
+       ENSURES RES = NUMBER(Data[t]) *>
+
+<*SPEC T.gethi(t)
+       REQUIRES Valid[t] AND NUMBER(Data[t]) > 0
+       ENSURES RES = Data[t][NUMBER(Data[t])-1] *>
+
+<*SPEC T.getlo(t)
+       REQUIRES Valid[t] AND NUMBER(Data[t]) > 0
+       ENSURES RES = Data[t][0] *>
+
+<*SPEC T.get(t, i)
+       REQUIRES Valid[t] AND i < NUMBER(Data[t])
+       ENSURES RES = Data[t][i] *>
+
+<*SPEC Cat(s, t)
+       MODIFIES Data[RES], Valid[RES]
+       REQUIRES Valid[s] AND Valid[t]
+       ENSURES FRESH(RES) AND Valid'[RES]
+           AND (ALL [i: INTEGER]
+                 (0 <= i AND i < NUMBER(Data'[RES])) IMPLIES
+                    Data'[RES][i] = CONCAT(Data[s], Data[t])[i])
+*>
+
+<*SPEC Sub(s, start, length)
+       MODIFIES Data[RES], Valid[RES]
+       REQUIRES Valid[s]
+       ENSURES Valid'[RES] AND FRESH(RES) AND
+               (ALL [i: INTEGER]
+                 (0 <= i AND i < MIN(length, NUMBER(Data[s]) - start)) IMPLIES
+                    Data'[RES][i] = SUBARRAY(Data[s],
+                                             MAX(0, MIN(start,
+                                                        NUMBER(Data[s])-1)),
+                                             MIN(length, NUMBER(Data[s])
+                                                         -start))[i])
+*>
 
 END Sequence.

@@ -2,16 +2,14 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 (*                                                            *)
-(* Last modified on Mon Nov 21 13:15:43 PST 1994 by kalsow    *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking   *)
+(*      modified on Mon Nov 21 13:15:02 PST 1994 by kalsow    *)
 (*      modified on Mon Mar 16 18:10:15 PST 1992 by muller    *)
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RTMisc, RTProcess, Usignal, Uprocess;
+IMPORT RTError, RTProcess, Usignal, Uprocess, Uucontext;
 FROM Ctypes IMPORT int;
-
-TYPE
-  SigInfo = UNTRACED REF Usignal.struct_sigcontext;
 
 VAR
   DefaultHandler   : Usignal.SignalHandler;
@@ -22,6 +20,9 @@ PROCEDURE InstallHandlers () =
   BEGIN
     DefaultHandler := LOOPHOLE (0, Usignal.SignalHandler);
     IgnoreSignal   := LOOPHOLE (1, Usignal.SignalHandler);
+    (* Note: we cannot use Usignal.SIG_DFL and Usignal.SIG_IGN because
+       they may not be initialized when this module is kicked into action
+       by the low-level runtime startup code... *)
 
     SetHandler (0, Usignal.SIGHUP,  Shutdown);
     SetHandler (1, Usignal.SIGINT,  Interrupt);
@@ -38,11 +39,18 @@ PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
   VAR new: Usignal.struct_sigaction;
   BEGIN
     new.sa_handler := LOOPHOLE (handler, Usignal.SignalHandler);
-    new.sa_flags   := 0;
-    EVAL Usignal.sigaction (sig, new, initial_handlers[id]);
+    new.sa_flags   := Usignal.SA_SIGINFO;
+    WITH i = Usignal.sigemptyset(new.sa_mask) DO
+      <*ASSERT i = 0*>
+    END;
+    WITH i = Usignal.sigaction (sig, new, initial_handlers[id]) DO
+      <*ASSERT i = 0*>
+    END;
     IF (initial_handlers[id].sa_handler # DefaultHandler) THEN
       (* don't override inherited, non-default handlers *)
-      EVAL Usignal.sigaction (sig, initial_handlers[id], new);
+      WITH i = Usignal.sigaction (sig, initial_handlers[id], new) DO
+        <*ASSERT i = 0*>
+      END;
     END;
   END SetHandler;
 
@@ -62,39 +70,48 @@ PROCEDURE RestoreHandler (id: INTEGER;  sig: int) =
     EVAL Usignal.sigaction (sig, initial_handlers[id], old);
   END RestoreHandler;
 
-PROCEDURE Shutdown (sig: int; <*UNUSED*> code: int; <*UNUSED*> scp: SigInfo) =
+PROCEDURE Shutdown (sig: int;
+         <*UNUSED*> sip: Usignal.siginfo_t_fault_star;
+         <*UNUSED*> uap: Uucontext.ucontext_t_star) =
   VAR new, old: Usignal.struct_sigaction;
   BEGIN
     new.sa_handler := DefaultHandler;
     new.sa_flags   := 0;
+    EVAL Usignal.sigemptyset(new.sa_mask);
     RTProcess.InvokeExitors ();                   (* flush stdio... *)
     EVAL Usignal.sigaction (sig, new, old);       (* restore default handler *)
     EVAL Usignal.kill (Uprocess.getpid (), sig);  (* and resend the signal *)
   END Shutdown;
 
-PROCEDURE Interrupt (sig: int;  code: int;  scp: SigInfo) =
+PROCEDURE Interrupt (sig: int;
+                     sip: Usignal.siginfo_t_fault_star;
+                     uap: Uucontext.ucontext_t_star) =
   VAR h := RTProcess.OnInterrupt (NIL);
   BEGIN
     IF (h = NIL) THEN
-      Shutdown (sig, code, scp);
+      Shutdown (sig, sip, uap);
     ELSE
       EVAL RTProcess.OnInterrupt (h); (* reinstall the handler *)
       h ();
     END;
   END Interrupt;
 
-PROCEDURE Quit (<*UNUSED*> sig, code: int; <*UNUSED*>scp: SigInfo) =
+PROCEDURE Quit (<*UNUSED*> sig: int;
+                <*UNUSED*> sip: Usignal.siginfo_t_fault_star;
+                           uap: Uucontext.ucontext_t_star) =
   VAR pc := 0;
   BEGIN
-    (*IF (scp # NIL) THEN pc := scp.sc_pc END;*)
-    RTMisc.FatalErrorPC (pc, "aborted");
+    IF (uap # NIL) THEN pc := uap.uc_mcontext.gregs.pc; END;
+    RTError.MsgPC (pc, "aborted");
   END Quit;
 
-PROCEDURE SegV (<*UNUSED*> sig, code: int; <*UNUSED*>scp: SigInfo) =
+PROCEDURE SegV (<*UNUSED*> sig: int;
+                <*UNUSED*> sip: Usignal.siginfo_t_fault_star;
+                           uap: Uucontext.ucontext_t_star) =
   VAR pc := 0;
   BEGIN
-    (*IF (scp # NIL) THEN pc := scp.sc_pc END;*)
-    RTMisc.FatalErrorPC (pc,
+    IF (uap # NIL) THEN pc := uap.uc_mcontext.gregs.pc; END;
+    RTError.MsgPC (pc,
       "Segmentation violation - possible attempt to dereference NIL");
   END SegV;
 

@@ -2129,6 +2129,13 @@ PROCEDURE GetCharWidthA (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
 PROCEDURE GetCharWidthW (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
 CONST GetCharWidth = GetCharWidthA;
 
+<*EXTERNAL GetCharWidth32A:WINAPI*>
+PROCEDURE GetCharWidth32A (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
+
+<*EXTERNAL GetCharWidth32W:WINAPI*>
+PROCEDURE GetCharWidth32W (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
+CONST GetCharWidth32 = GetCharWidth32A;
+
 <*EXTERNAL GetCharWidthFloatA:WINAPI*>
 PROCEDURE GetCharWidthFloatA (a1: HDC; a2: UINT; a3: UINT; a4: PFLOAT): BOOL;
 
@@ -2286,6 +2293,13 @@ PROCEDURE GetTextExtentPointA (a1: HDC; a2: LPCSTR; a3: int; a4: LPSIZE): BOOL;
 <*EXTERNAL GetTextExtentPointW:WINAPI*>
 PROCEDURE GetTextExtentPointW (a1: HDC; a2: LPCWSTR; a3: int; a4: LPSIZE): BOOL;
 CONST GetTextExtentPoint = GetTextExtentPointA;
+
+<*EXTERNAL GetTextExtentPoint32A:WINAPI*>
+PROCEDURE GetTextExtentPoint32A (a1: HDC; a2: LPCSTR; a3: int; a4: LPSIZE): BOOL;
+
+<*EXTERNAL GetTextExtentPoint32W:WINAPI*>
+PROCEDURE GetTextExtentPoint32W (a1: HDC; a2: LPCWSTR; a3: int; a4: LPSIZE): BOOL;
+CONST GetTextExtentPoint32 = GetTextExtentPoint32A;
 
 <*EXTERNAL GetTextExtentExPointA:WINAPI*>
 PROCEDURE GetTextExtentExPointA (a1: HDC;

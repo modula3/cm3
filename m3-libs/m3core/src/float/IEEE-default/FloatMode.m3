@@ -9,46 +9,40 @@
 
 MODULE FloatMode;
 
-IMPORT RTMisc;
-
 PROCEDURE SetRounding(<*UNUSED*> md: RoundingMode) =
   BEGIN
-    Die ("FloatMode.SetRounding not implemented");
+    <*ASSERT FALSE, "FloatMode.SetRounding not implemented" *>
   END SetRounding;
 
 PROCEDURE GetRounding(): RoundingMode =
   BEGIN
     RETURN RoundingMode.NearestElseEven;
-    (***  Die ("FloatMode.GetRounding not implemented"); ***)
-    (*** <*ASSERT FALSE*> ***)
+    (***  <*ASSERT FALSE, "FloatMode.GetRounding not implemented" *> ***)
   END GetRounding;
 
 PROCEDURE GetFlags(): SET OF Flag =
   BEGIN
-    Die ("FloatMode.GetFlags not implemented");
-    <*ASSERT FALSE*>
+    <*ASSERT FALSE, "FloatMode.GetFlags not implemented" *>
   END GetFlags;
 
 PROCEDURE SetFlags(<*UNUSED*> s: SET OF Flag): SET OF Flag =
   BEGIN
-    Die ("FloatMode.SetFlags not implemented");
-    <*ASSERT FALSE*>
+    <*ASSERT FALSE, "FloatMode.SetFlags not implemented" *>
   END SetFlags;
 
 PROCEDURE ClearFlag(<*UNUSED*> f: Flag) =
   BEGIN
-    Die ("FloatMode.ClearFlag not implemented");
+    <*ASSERT FALSE, "FloatMode.ClearFlag not implemented" *>
   END ClearFlag;
 
 PROCEDURE SetBehavior(<*UNUSED*> f: Flag; <*UNUSED*> b: Behavior) =
   BEGIN
-    Die ("FloatMode.SetBehavior not implemented");
+    <*ASSERT FALSE, "FloatMode.SetBehavior not implemented" *>
   END SetBehavior;
 
 PROCEDURE GetBehavior(<*UNUSED*> f: Flag): Behavior =
   BEGIN
-    Die ("FloatMode.GetBehavior not implemented");
-    <*ASSERT FALSE*>
+    <*ASSERT FALSE, "FloatMode.GetBehavior not implemented" *>
   END GetBehavior;
 
 (*------------------------------------------------- thread initialization ---*)
@@ -56,14 +50,6 @@ PROCEDURE GetBehavior(<*UNUSED*> f: Flag): Behavior =
 PROCEDURE InitThread (<*UNUSED*> VAR state: ThreadState) =
   BEGIN
   END InitThread;
-
-(*----------------------------------------- floating-point fault handling ---*)
-
-PROCEDURE Die (msg: TEXT) =
-  BEGIN
-    RTMisc.FatalError (NIL, 0, msg);
-    <*ASSERT FALSE*>
-  END Die;
 
 BEGIN
 END FloatMode.

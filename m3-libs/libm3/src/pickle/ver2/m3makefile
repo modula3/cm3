@@ -9,6 +9,7 @@ interface ("PickleRd")
 sequence ("PklAction", "PklAction")
 module ("PackingTypeCode")
 table ("Packing", "PackingTypeCode", "Refany")
+module ("BuiltinSpecials2")
 
 Module ("Pickle2")
 Module ("PickleStubs")

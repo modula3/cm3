@@ -33,5 +33,9 @@ PROCEDURE OnInterrupt (p: InterruptHandler): InterruptHandler;
 
 TYPE InterruptHandler = PROCEDURE ();
 
+PROCEDURE RegisterInterruptSetup (enable, disable: PROCEDURE ());
+(* Registers "enable" and "disable" as the machine-specific setup procedures
+   to enable and disable respectively control-C handling. *)
+
 END RTProcess.
 

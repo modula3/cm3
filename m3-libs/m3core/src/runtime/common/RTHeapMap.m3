@@ -49,10 +49,15 @@ PROCEDURE WalkRef (h: ObjectPtr;  v: Visitor) =
   END WalkRef;
 
 PROCEDURE DoWalkRef (t: RT0.TypeDefn;  a: ADDRESS;  v: Visitor) =
+  TYPE TK = RT0.TypeKind;
   BEGIN
-    IF (t.parent # NIL) THEN
-      DoWalkRef (t.parent, a, v);
-      INC (a, t.dataOffset);
+    IF (t.kind = ORD (TK.Obj)) THEN
+      VAR tt := LOOPHOLE (t, RT0.ObjectTypeDefn); BEGIN
+        IF (tt.parent # NIL) THEN
+          DoWalkRef (tt.parent, a, v);
+          INC (a, tt.dataOffset);
+        END;
+      END;
     END;
     Walk (a, t.gc_map, v);
   END DoWalkRef;

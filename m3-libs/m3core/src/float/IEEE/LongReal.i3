@@ -12,9 +12,7 @@ INTERFACE LongReal;
 (* Properties of LONGREAL (for ANSI/IEEE Standard 754-1985).
 
    This package defines some basic properties of the 
-   built-in float type LONGREAL. If you want to instantiate
-   a generic type with double-precision real numbers, you
-   should import the "LongRealType" interface instead.
+   built-in float type LONGREAL.
 
    Index: LONGREAL; floating-point; generics
 *)

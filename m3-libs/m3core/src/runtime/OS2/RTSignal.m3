@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RTMisc, RTProcess, Csignal, Usignal, Uprocess;
+IMPORT RTError, RTProcess, Csignal, Usignal, Uprocess;
 FROM Ctypes IMPORT int;
 
 VAR
@@ -73,12 +73,12 @@ PROCEDURE Interrupt (sig: int) =
 
 PROCEDURE Quit (<*UNUSED*> sig: int) =
   BEGIN
-    RTMisc.FatalError (NIL, 0, "aborted");
+    RTError.Msg (NIL, 0, "aborted");
   END Quit;
 
 PROCEDURE SegV (<*UNUSED*> sig: int) =
   BEGIN
-    RTMisc.FatalError (NIL, 0,
+    RTError.Msg (NIL, 0,
       "Segmentation violation - possible attempt to dereference NIL");
   END SegV;
 

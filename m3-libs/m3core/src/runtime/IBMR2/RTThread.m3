@@ -6,7 +6,7 @@
 (*      modified on Wed Dec 23 17:24:54 PST 1992 by jdd       *)
 (*      modified on Thu Nov 12 10:50:07 PST 1992 by muller    *)
 
-UNSAFE MODULE RTThread;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
 IMPORT Usignal;
 
@@ -74,7 +74,7 @@ PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
   BEGIN
     sa.sa_handler := handler;
     sa.sa_mask    := Usignal.empty_sigset_t;
-    sa.sa_flags   := 0;
+    sa.sa_flags   := Usignal.SA_RESTART;
     i := Usignal.sigaction (Usignal.SIGVTALRM, sa, osa);
     <* ASSERT i = 0 *>
   END setup_sigvtalrm;
@@ -90,6 +90,33 @@ PROCEDURE disallow_sigvtalrm () =
   BEGIN
     EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal, i)
   END disallow_sigvtalrm;
+
+(*--------------------------------------------- exception handling support --*)
+
+PROCEDURE GetCurrentHandlers (): ADDRESS=
+  BEGIN
+    RETURN handlerStack;
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+  BEGIN
+    handlerStack := h;
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    f.next := handlerStack;
+    handlerStack := f;
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    handlerStack := frame;
+  END PopEFrame;
 
 BEGIN
   mask_sigvtalrm(ThreadSwitchSignal);

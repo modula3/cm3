@@ -9,16 +9,20 @@
 
 UNSAFE MODULE RTHeapRep;
 
-IMPORT RT0u, RTType, RTMisc;
+IMPORT RT0, RTType;
 
 (*----------------------------------------------------------- open arrays ---*)
 
 PROCEDURE UnsafeGetShape (r: REFANY;  VAR nDims: INTEGER;  VAR s: ArrayShape) =
+  TYPE TK = RT0.TypeKind;
   VAR def := RTType.Get (TYPECODE (r));
   BEGIN
-    nDims := def.nDimensions;
-    IF nDims # 0 THEN
-      s := LOOPHOLE(LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS), ArrayShape);
+    nDims := 0;
+    IF (def.kind = ORD (TK.Array)) THEN
+      nDims := LOOPHOLE (def, RT0.ArrayTypeDefn).nDimensions;
+      IF nDims # 0 THEN
+        s := LOOPHOLE(LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS), ArrayShape);
+      END;
     END;
   END UnsafeGetShape;
 
@@ -89,44 +93,6 @@ PROCEDURE UnregisterMonitor (cl: MonitorClosure) =
 PROCEDURE Noop (<*UNUSED*> cl: MonitorClosure) =
   BEGIN
   END Noop;
-
-(*-------------------------------------------------------- initialization ---*)
-
-PROCEDURE CheckTypes () =
-  (* called by RTType.Init after type registration, but before any
-     allocation *)
-  VAR
-    is_power: ARRAY [0 .. 8] OF BOOLEAN;
-    size    : INTEGER;
-  BEGIN
-    (* check that it's safe to eliminate the #A call to upper ... *)
-    FOR i := 0 TO RT0u.nTypes - 1 DO
-      WITH def = RTType.Get (i)^ DO
-        IF (def.traced # 0) AND (def.nDimensions = 0) THEN
-          size := def.dataSize;
-          <*ASSERT size = RTMisc.Upper (size, BYTESIZE (Header)) *>
-        END;
-      END;
-    END;
-
-    (* compute the small powers of two *)
-    FOR i := FIRST(is_power) TO LAST(is_power) DO is_power[i] := FALSE END;
-    is_power[1] := TRUE;
-    is_power[2] := TRUE;
-    is_power[4] := TRUE;
-    is_power[8] := TRUE;
-
-    (* check that all data alignments are small powers of two so that
-       "RTMisc.Align (addr, alignment)" can be safely replaced by "addr +
-       align [Word.And (addr, 7), alignment]" in Gcalloc.*)
-    FOR i := 0 TO RT0u.nTypes - 1 DO
-      WITH def = RTType.Get (i)^ DO
-        IF (def.traced # 0) THEN
-          <*ASSERT is_power [def.dataAlignment] *>
-        END;
-      END;
-    END;
-  END CheckTypes;
 
 BEGIN
 END RTHeapRep.

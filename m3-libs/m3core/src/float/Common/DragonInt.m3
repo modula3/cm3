@@ -421,7 +421,7 @@ PROCEDURE InitValue (s: Session;  n_words: INTEGER;  VAR(*OUT*) t: T): ADDRESS=
     t.s := n_words;
     t.w := s.next;
     INC (s.next, n_words);
-    IF (s.next > NUMBER (s.w^)) THEN Expand (s); END;
+    IF (s.next >= NUMBER (s.w^)) THEN Expand (s); END;
     RETURN ADR (s.w[t.w]);
   END InitValue;
 

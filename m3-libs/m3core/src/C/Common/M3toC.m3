@@ -9,35 +9,32 @@
 
 UNSAFE MODULE M3toC;
 
-IMPORT Ctypes, Cstdlib, Cstring, TextF, RT0;
+IMPORT Ctypes, Cstdlib, Cstring;
+IMPORT Text, TextClass, Text8, Text8CString;
 
 VAR
   zeroValue := 0;
   zeroPtr   := LOOPHOLE (ADR (zeroValue), Ctypes.char_star);
 
 TYPE
-  M3Text = UNTRACED REF RT0.TextHeader;
-
-  M3TextWithHeader = UNTRACED REF RECORD
-    header : RT0.RefHeader;
-    body   : RT0.TextHeader;
+  CharPtr  = UNTRACED REF CHAR;
+  ArrayPtr = UNTRACED REF ARRAY OF CHAR;
+  OpenArray = RECORD
+    start  : ADDRESS;
+    length : INTEGER;
   END;
 
-PROCEDURE TtoS (t: TEXT): Ctypes.char_star =
-  BEGIN
-    IF (t = NIL) OR (NUMBER (t^) <= 1)
-      THEN RETURN zeroPtr;
-      ELSE RETURN LOOPHOLE (LOOPHOLE (t, M3Text).chars, Ctypes.char_star);
-    END;
-  END TtoS;
 
 PROCEDURE CopyTtoS (t: TEXT): Ctypes.char_star =
-  VAR len: INTEGER;
+  VAR info: TextClass.Info;  arr: OpenArray;
   BEGIN
     IF (t = NIL) THEN RETURN zeroPtr; END;
-    len := NUMBER (t^);
-    IF (len <= 1) THEN RETURN zeroPtr; END;
-    RETURN Cstring.memcpy (Cstdlib.malloc (len), ADR (t[0]), len);
+    t.get_info (info);
+    arr.start  := Cstdlib.malloc (info.length + 1);
+    arr.length := info.length;
+    Text.SetChars (LOOPHOLE (ADR (arr), ArrayPtr)^, t, 0);
+    LOOPHOLE (arr.start + info.length, CharPtr)^ := '\000';
+    RETURN arr.start;
   END CopyTtoS;
 
 PROCEDURE FreeCopiedS (s: Ctypes.char_star) =
@@ -45,19 +42,57 @@ PROCEDURE FreeCopiedS (s: Ctypes.char_star) =
     IF (s # zeroPtr) THEN Cstdlib.free (s); END;
   END FreeCopiedS;
 
-PROCEDURE StoT (s: Ctypes.char_star): TEXT =
-  VAR t := NEW (M3TextWithHeader);
+
+PROCEDURE SharedTtoS (t: TEXT): Ctypes.char_star =
+  VAR info: TextClass.Info;
   BEGIN
-    t.header.typecode := RT0.TextTypecode;
-    t.body.chars      := LOOPHOLE (s, ADDRESS);
-    t.body.length     := 1 + Cstring.strlen (s);
-    RETURN LOOPHOLE (ADR (t.body), TEXT);
+    IF (t = NIL) THEN RETURN zeroPtr; END;
+    t.get_info (info);
+    IF info.start # NIL AND NOT info.wide THEN
+      (* make sure the thing is null terminated! *)
+      IF LOOPHOLE (info.start + info.length, Ctypes.char_star)^ = 0 THEN
+        RETURN info.start;
+      END;
+    END;
+    RETURN CopyTtoS (t);
+  END SharedTtoS;
+
+PROCEDURE FreeSharedS (t: TEXT;  s: Ctypes.char_star) =
+  VAR info: TextClass.Info;
+  BEGIN
+    IF (s # zeroPtr) THEN
+      t.get_info (info);
+      IF (info.start # s) THEN Cstdlib.free (s); END;
+    END;
+  END FreeSharedS;
+
+
+PROCEDURE FlatTtoS (t: TEXT): Ctypes.char_star =
+  VAR info: TextClass.Info;
+  BEGIN
+    IF (t = NIL) THEN RETURN zeroPtr; END;
+    t.get_info (info);
+    IF info.start # NIL AND NOT info.wide THEN
+      (* make sure the thing is null terminated! *)
+      IF LOOPHOLE (info.start + info.length, Ctypes.char_star)^ = 0 THEN
+        RETURN info.start;
+      END;
+    END;
+    (* force a runtime fault *)
+    VAR i: CARDINAL; BEGIN i := -1; <*NOWARN*> END;
+    RETURN NIL;
+  END FlatTtoS;
+
+
+PROCEDURE StoT (s: Ctypes.char_star): TEXT =
+  BEGIN
+    RETURN Text8CString.New (s);
   END StoT;
 
 PROCEDURE CopyStoT (s: Ctypes.char_star): TEXT =
-  VAR len := Cstring.strlen (s) + 1;  t := NEW (TEXT, len);
+  VAR len := Cstring.strlen (s);  t := Text8.Create (len);
   BEGIN
-    EVAL Cstring.memcpy (ADR (t[0]), s, len);
+    EVAL Cstring.memcpy (ADR (t.contents[0]), s, len);
     RETURN t;
   END CopyStoT;
 

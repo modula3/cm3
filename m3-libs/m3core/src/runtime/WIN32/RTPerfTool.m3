@@ -80,10 +80,12 @@ PROCEDURE Create(cmd: TEXT; stdin, stdout, stderr: WinNT.HANDLE): BOOLEAN=
       hStdOutput    := PrepHandle (stdout),
       hStdError     := PrepHandle (stderr)};
     pi: WinBase.PROCESS_INFORMATION;
+    cmd_str: Ctypes.char_star;
   BEGIN
+    cmd_str := M3toC.SharedTtoS(cmd);
     IF WinBase.CreateProcess(
          lpApplicationName := NIL,
-         lpCommandLine := M3toC.TtoS(cmd),
+         lpCommandLine := cmd_str,
          lpProcessAttributes := NIL,
          lpThreadAttributes := NIL,
          bInheritHandles := 1,
@@ -91,13 +93,15 @@ PROCEDURE Create(cmd: TEXT; stdin, stdout, stderr: WinNT.HANDLE): BOOLEAN=
          lpEnvironment := NIL,
          lpCurrentDirectory := NIL,
          lpStartupInfo := ADR(startupInfo),
-         lpProcessInformation := ADR(pi)) = 0 THEN 
+         lpProcessInformation := ADR(pi)) = 0 THEN
+      M3toC.FreeSharedS (cmd, cmd_str);
       Close(startupInfo.hStdInput);
       Close(startupInfo.hStdOutput);
       RETURN FALSE;
     END;
 
     (* Close unnecessary handles. *)
+    M3toC.FreeSharedS (cmd, cmd_str);
     Close(startupInfo.hStdInput);
     Close(startupInfo.hStdOutput);
     Close(startupInfo.hStdError);

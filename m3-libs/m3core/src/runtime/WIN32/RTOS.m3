@@ -6,7 +6,8 @@
 
 UNSAFE MODULE RTOS;
 
-IMPORT RTMachInfo, Thread, ThreadF, WinBase, WinNT, WinCon, WinDef, Word;
+IMPORT RTMachInfo, RTSignal, Thread, ThreadF;
+IMPORT WinBase, WinNT, WinCon, WinDef, Word;
 
 (*--------------------------------------------------- process termination ---*)
 
@@ -21,6 +22,7 @@ PROCEDURE Crash () =
   BEGIN
     ThreadF.SuspendOthers ();
     RTMachInfo.DumpStack (LOOPHOLE (Crash, ADDRESS), fp);
+    RTSignal.RestoreHandlers (); (* so we really do crash... *)
     WinBase.DebugBreak ();
     WinBase.FatalExit (-1);
   END Crash;

@@ -6,39 +6,44 @@
 
 UNSAFE MODULE RTHeapInfo;
 
-IMPORT RT0, RT0u, RTOS, RTParams, RTPerfTool, RTType;
+IMPORT RT0, RTAllocCnts, RTOS, RTParams, RTPerfTool, RTType;
 IMPORT Text, Thread, Cstring, Word;
 
 TYPE Closure = Thread.Closure OBJECT OVERRIDES apply := Producer END;
 
 VAR
-  drain  : RTPerfTool.Handle;
-  self   : Thread.T := NIL;
-  cnt    : INTEGER := 0;
-  buf    : ARRAY [0..255] OF INTEGER;
-  update : LONGREAL := 5.0d0;
+  drain        : RTPerfTool.Handle;
+  self         : Thread.T := NIL;
+  cnt          : INTEGER := 0;
+  buf          : ARRAY [0..255] OF INTEGER;
+  update       : LONGREAL := 5.0d0;
+  n_types_sent : CARDINAL := 0;
 
 PROCEDURE Producer (<*UNUSED*> self: Thread.Closure): REFANY =
-  VAR n: INTEGER;  nTypes: RT0.Typecode := RT0u.nTypes;
+  VAR n: INTEGER;  nTypes: RT0.Typecode;
   BEGIN
     LOOP
       RTOS.LockHeap ();
+        nTypes := MIN (RTAllocCnts.n_types, RTType.MaxTypecode()+1);
+
+        SendTypes (nTypes);
+  
         (* count the non-zero stats *)
         n := 0;
         FOR i := 0 TO nTypes-1 DO
-          IF RT0u.alloc_cnts[i] # 0 THEN INC (n) END;
+          IF RTAllocCnts.n_objects[i] # 0 THEN INC (n) END;
         END;
 
         (* and send'm *)
+        Send (SENDING_COUNTS);
         Send (n);
         FOR i := 0 TO nTypes-1 DO
-          IF RT0u.alloc_cnts[i] # 0 THEN
-            Send (i);
-            Send (RT0u.alloc_cnts[i]);
-            RT0u.alloc_cnts[i] := 0;
-            IF (RT0u.alloc_bytes[i] # 0) THEN
-              Send (RT0u.alloc_bytes[i]);
-              RT0u.alloc_bytes[i] := 0;
+          WITH n_obj = RTAllocCnts.n_objects[i] DO
+            IF (n_obj # 0) THEN
+              Send (i);  Send (n_obj);  n_obj := 0;
+              WITH n_bytes = RTAllocCnts.n_bytes[i] DO
+                IF (n_bytes # 0) THEN Send (n_bytes);  n_bytes := 0; END;
+              END;
             END;
           END;
         END;
@@ -49,15 +54,19 @@ PROCEDURE Producer (<*UNUSED*> self: Thread.Closure): REFANY =
     END;
   END Producer;
 
-PROCEDURE SendTypes () =
+PROCEDURE SendTypes (nTypes: INTEGER) =
+  (* LL = heap lock *)
+  TYPE TK = RT0.TypeKind;
   VAR t: RT0.TypeDefn;  str: ADDRESS;  n: INTEGER;  buf: ARRAY [0..31] OF CHAR;
   BEGIN
-    RTOS.LockHeap ();
-      (* describe the types *)
-      Send (RT0u.nTypes);
-      FOR i := 0 TO RT0u.nTypes-1 DO
+    n := nTypes - n_types_sent;
+    IF (n > 0) THEN
+      (* describe the new types *)
+      Send (SENDING_TYPES);
+      Send (n);
+      FOR i := n_types_sent TO n_types_sent + n - 1 DO
         t := RTType.Get (i);
-        IF (t.nDimensions > 0)
+        IF (t.kind = ORD (TK.Array))
           THEN Send (-1);          (* variable sized object *)
           ELSE Send (t.dataSize);  (* fixed size *)
         END;
@@ -70,7 +79,8 @@ PROCEDURE SendTypes () =
         Flush ();
         EVAL RTPerfTool.Send (drain, str, n);
       END;
-    RTOS.UnlockHeap ();
+      n_types_sent := nTypes;
+    END;
   END SendTypes;
 
 PROCEDURE BuildTypeName (t: RT0.TypeDefn;  VAR buf: ARRAY OF CHAR): INTEGER =
@@ -133,7 +143,6 @@ PROCEDURE SetUpdate (txt: TEXT) =
 PROCEDURE Init () =
   BEGIN
     IF RTPerfTool.Start ("shownew", drain) THEN
-      SendTypes ();
       SetUpdate (RTParams.Value ("update"));
       self := Thread.Fork (NEW (Closure));
     END;

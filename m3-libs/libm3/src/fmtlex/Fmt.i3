@@ -1,7 +1,7 @@
 (* Copyright (C) 1994, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(* Last modified on Wed Mar  6 11:56:02 PST 1996 by detlefs    *)
+(* Last modified on Thu Jan  5 13:51:02 PST 1995 by detlefs    *)
 (*      modified on Tue Mar 15 12:56:39 PST 1994 by heydon     *)
 (*      modified on Fri Feb 18 13:12:30 PST 1994 by kalsow     *)
 (*      modified on Tue Nov  9 08:37:38 PST 1993 by mcjones    *)
@@ -272,6 +272,8 @@ PROCEDURE FN(fmt: TEXT; READONLY texts: ARRAY OF TEXT)
    returns {\tt \char'42Too many arguments for F to handle\char'42}.
 *)
 
+END Fmt.
+
 <*PRAGMA SPEC *>
 
 <*SPEC Bool(b)                           ENSURES RES # NIL *>
@@ -281,6 +283,4 @@ PROCEDURE FN(fmt: TEXT; READONLY texts: ARRAY OF TEXT)
 <*SPEC Real(x, style, prec, literal)     ENSURES RES # NIL *>
 <*SPEC LongReal(x, style, prec, literal) ENSURES RES # NIL *>
 <*SPEC Extended(x, style, prec, literal) ENSURES RES # NIL *>
-
-END Fmt.
 

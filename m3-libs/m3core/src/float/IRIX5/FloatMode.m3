@@ -22,7 +22,7 @@ UNSAFE MODULE FloatMode (* FOR IRIX5 *);
        doesn't cause floating-point exceptions)
 *)
 
-IMPORT FPU, Usignal, ThreadF, Word, RTMisc;
+IMPORT FPU, Usignal, ThreadF, Word, RTError;
 
 TYPE RM  = RoundingMode;
 TYPE MRM = FPU.RoundingMode;
@@ -350,7 +350,7 @@ PROCEDURE FPFaultHandler (sig: INTEGER;  code: INTEGER;
 
 PROCEDURE Die (msg: TEXT) =
   BEGIN
-    RTMisc.FatalError (NIL, 0, msg);
+    RTError.Msg (NIL, 0, msg);
     <*ASSERT FALSE*>
   END Die;
 
