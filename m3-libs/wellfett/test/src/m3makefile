@@ -11,6 +11,7 @@ module("TestMatchWavelet")
 module("TestCDFLifting")
 module("TestTransform")
 module("TestSmoothness")
+module("TestCWT")
 implementation("Main")
 
 program("test")
