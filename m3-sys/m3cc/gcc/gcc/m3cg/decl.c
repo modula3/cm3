@@ -36,6 +36,11 @@ m3_init_decl_processing ()
       t_int_32d = t_int_32;
       t_word_32d = t_word_32;
     }
+  else if (BITS_PER_WORD == 64)
+    {
+      t_int_32d = t_int_64;
+      t_word_32d = t_word_64;
+    }
   else
     {
       t_int_32d = name_type (make_signed_type (BITS_PER_WORD), "int_32d");
