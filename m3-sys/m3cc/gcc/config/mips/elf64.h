@@ -57,7 +57,10 @@ Boston, MA 02111-1307, USA.  */
 %{!mips1:%{!mips2:-U__mips -D__mips=3 -D__mips64}} \
 %{mgp32:-U__mips64} %{mgp64:-D__mips64} \
 %{EB:-UMIPSEL -U_MIPSEL -U__MIPSEL -U__MIPSEL__ -D_MIPSEB -D__MIPSEB -D__MIPSEB__ %{!ansi:-DMIPSEB}} \
-%{EL:-UMIPSEB -U_MIPSEB -U__MIPSEB -U__MIPSEB__ -D_MIPSEL -D__MIPSEL -D__MIPSEL__ %{!ansi:-DMIPSEL}}"
+%{EL:-UMIPSEB -U_MIPSEB -U__MIPSEB -U__MIPSEB__ -D_MIPSEL -D__MIPSEL -D__MIPSEL__ %{!ansi:-DMIPSEL}} \
+%{msingle-float:%{!msoft-float:-D__mips_single_float}} \
+%{m4650:%{!msoft-float:-D__mips_single_float}} \
+"
 
 /* Use memcpy, et. al., rather than bcopy.  */
 #define TARGET_MEM_FUNCTIONS
@@ -65,6 +68,13 @@ Boston, MA 02111-1307, USA.  */
 /* US Software GOFAST library support.  */
 #include "gofast.h"
 #define INIT_TARGET_OPTABS INIT_GOFAST_OPTABS
+
+/* Biggest alignment supported by the object file format of this
+   machine.  Use this macro to limit the alignment which can be
+   specified using the `__attribute__ ((aligned (N)))' construct.  If
+   not defined, the default value is `BIGGEST_ALIGNMENT'.  */
+
+#define MAX_OFILE_ALIGNMENT (32768*8)
 
 /* We need to use .esize and .etype instead of .size and .type to
    avoid conflicting with ELF directives.  */

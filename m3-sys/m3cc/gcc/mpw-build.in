@@ -1,0 +1,77 @@
+# CYGNUS LOCAL mpw (entire file)
+# Script fragment that builds GCC for MPW.
+
+# Build C++ unconditionally for now.
+Set do_gxx 1
+
+Set savedir "`Directory`"
+
+#Set Echo 1
+
+Set ThisScript "{0}"
+
+Set objdir ":"
+
+Set verify 0
+
+Set BuildTarget "none"
+
+# Parse arguments.
+
+Loop
+	Break If {#} == 0
+		If "{BuildTarget}" =~ /none/
+			Set BuildTarget "{1}"
+		Else
+			Echo Only one build target allowed, ignoring "{1}"
+		End If
+	Shift 1
+End Loop
+
+If "{BuildTarget}" =~ /none/
+	Set BuildTarget "all"
+End If
+
+If {verify} == 1
+	Echo "#" Doing "{ThisScript}" "{BuildTarget}" in "`Directory`" ... 
+End If
+
+# Dispatch on various pseudo-targets.
+
+If "{BuildTarget}" =~ /all/
+	Echo Started `Date`
+	# Need separate steps to build all the insn-... etc files.
+	"{ThisScript}" stamps-h
+	"{ThisScript}" stamps-c
+	"{ThisScript}" all.indirect
+	If {do_gxx}
+		"{ThisScript}" do-cc1plus
+	End If
+	Echo Finished `Date`
+Else If "{BuildTarget}" =~ /do-cc1plus/
+	"{ThisScript}" stamp-objlist
+	# Go into the subdirectory to build.
+	SetDirectory :cp:
+	::mpw-build compiler
+Else
+	Set ranmake 0
+	If "`Exists Makefile`" != ""
+		Echo "Set Echo 1" >{BuildTarget}.makeout
+		Make -f Makefile {BuildTarget} >>{BuildTarget}.makeout
+		{BuildTarget}.makeout
+		Delete {BuildTarget}.makeout
+		Set ranmake 1
+	End If
+	If "`Exists Makefile.PPC`" != ""
+		Echo "Set Echo 1" >{BuildTarget}.makeout.ppc
+		Make -f Makefile.PPC {BuildTarget} >>{BuildTarget}.makeout.ppc
+		{BuildTarget}.makeout.ppc
+		Delete {BuildTarget}.makeout.ppc
+		Set ranmake 1
+	End If
+	If {ranmake} == 1
+		Exit
+	End If
+End If
+
+SetDirectory "{savedir}"

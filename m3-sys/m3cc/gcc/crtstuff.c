@@ -1,9 +1,7 @@
 /* Specialized bits of code needed to support construction and
    destruction of file-scope objects in C++ code.
-
-   Written by Ron Guilmette (rfg@netcom.com) with help from Richard Stallman.
-
-Copyright (C) 1991, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1994, 1995, 1996 Free Software Foundation, Inc.
+   Contributed by Ron Guilmette (rfg@monkeys.com).
 
 This file is part of GNU CC.
 
@@ -125,6 +123,7 @@ __do_global_dtors_aux ()
 }
 
 /* Stick a call to __do_global_dtors_aux into the .fini section.  */
+
 static void
 fini_dummy ()
 {
@@ -144,6 +143,7 @@ fini_dummy ()
    function.  It is externally callable so that __main can invoke it when
    INVOKE__main is defined.  This has the additional effect of forcing cc1
    to switch to the .text section.  */
+
 static void __do_global_ctors_aux ();
 void __do_global_ctors ()
 {
@@ -163,7 +163,7 @@ asm (INIT_SECTION_ASM_OP);	/* cc1 doesn't know that we are switching! */
    crti.o may do something, such as bump the stack, which we have to 
    undo before we reach the function prologue code for __do_global_ctors 
    (directly below).  For such systems, define the macro INIT_SECTION_PREAMBLE
-   to expand into the code needed to undo the actions of the crti.o file. */
+   to expand into the code needed to undo the actions of the crti.o file.  */
 
 #ifdef INIT_SECTION_PREAMBLE
   INIT_SECTION_PREAMBLE;
@@ -237,6 +237,7 @@ __do_global_ctors_aux ()
 }
 
 /* Stick a call to __do_global_ctors_aux into the .init section.  */
+
 static void
 init_dummy ()
 {
@@ -247,12 +248,12 @@ init_dummy ()
 #endif
   asm (TEXT_SECTION_ASM_OP);
 
-/* This is a kludge. The Linux dynamic linker needs  ___brk_addr, __environ
-   and atexit (). We have to make sure they are in the .dynsym section. We
-   accomplish it by making a dummy call here. This
-   code is never reached. */
+/* This is a kludge. The i386 Linux dynamic linker needs ___brk_addr,
+   __environ and atexit (). We have to make sure they are in the .dynsym
+   section. We accomplish it by making a dummy call here. This
+   code is never reached.  */
  
-#if defined(__linux__) && defined(__PIC__)
+#if defined(__linux__) && defined(__PIC__) && defined(__i386__)
   {
     extern void *___brk_addr;
     extern char **__environ;
@@ -284,7 +285,7 @@ init_dummy ()
    other libraries, etc.  That's because those other initializations may
    include setup operations for very primitive things (e.g. initializing
    the state of the floating-point coprocessor, etc.) which should be done
-   before we start to execute any of the user's code. */
+   before we start to execute any of the user's code.  */
 
 static void
 __do_global_ctors_aux ()	/* prologue goes in .text section */

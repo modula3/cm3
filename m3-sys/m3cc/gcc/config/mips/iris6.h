@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Iris version 6.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,17 +18,23 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+/* Default to -mabi=n32 and -mips3.  */
+#define MIPS_ISA_DEFAULT 3
+#define MIPS_ABI_DEFAULT ABI_N32
+#define MULTILIB_DEFAULTS { "mabi=n32" }
+
+#include "mips/iris5.h"
+#include "mips/abi64.h"
+
 /* Irix 6 uses DWARF.  */
 #define DWARF_DEBUGGING_INFO
+#define DWARF_VERSION 2
+#define MIPS_DEBUGGING_INFO
+#undef PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DWARF_DEBUG
 
-/* Default to -mips4.  */
-#define TARGET_DEFAULT MASK_ABICALLS|MASK_FLOAT64|MASK_64BIT
-#define MIPS_ISA_DEFAULT 4
-#define MULTILIB_DEFAULTS { "EB", "mips4" }
-
-#include "mips/iris5gas.h"
-#include "mips/abi64.h"
+#undef MACHINE_TYPE
+#define MACHINE_TYPE "SGI running IRIX 6.x"
 
 /* The Irix 6.0.1 assembler doesn't like labels in the text section, so
    just avoid emitting them.  */
@@ -36,11 +42,38 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_IDENTIFY_LANGUAGE
 
 /* Irix 5 stuff that we don't need for Irix 6.  */
+/* ??? We do need this for the -mabi=32 switch though.  */
 #undef ASM_OUTPUT_UNDEF_FUNCTION
 #undef ASM_OUTPUT_EXTERNAL_LIBCALL
 #undef ASM_DECLARE_FUNCTION_SIZE
 
 /* Stuff we need for Irix 6 that isn't in Irix 5.  */
+
+/* The SGI assembler doesn't like labels before the .ent, so we must output
+   the .ent and function name here, which is the normal place for it.  */
+
+#undef ASM_DECLARE_FUNCTION_NAME
+#define ASM_DECLARE_FUNCTION_NAME(STREAM, NAME, DECL)			\
+  do {									\
+    fputs ("\t.ent\t", STREAM);						\
+    assemble_name (STREAM, NAME);					\
+    fputs ("\n", STREAM);						\
+    assemble_name (STREAM, NAME);					\
+    fputs (":\n", STREAM);						\
+  } while (0)
+
+/* Likewise, the SGI assembler doesn't like labels after the .end, so we
+   must output the .end here.  */
+#define ASM_DECLARE_FUNCTION_SIZE(STREAM, NAME, DECL)			\
+  do {									\
+    fputs ("\t.end\t", STREAM);						\
+    assemble_name (STREAM, NAME);					\
+    fputs ("\n", STREAM);						\
+  } while (0)
+
+/* Tell function_prologue in mips.c that we have already output the .ent/.end
+   psuedo-ops.  */
+#define FUNCTION_NAME_ALREADY_DECLARED
 
 #undef SET_ASM_OP	/* Has no equivalent.  See ASM_OUTPUT_DEF below.  */
 
@@ -58,14 +91,18 @@ Boston, MA 02111-1307, USA.  */
 
 #define POPSECTION_ASM_OP	".popsection"
 
-#define DEBUG_SECTION		".debug,1,0,0,1"
-#define LINE_SECTION		".line,1,0,0,1"
-#define SFNAMES_SECTION		".debug_sfnames,1,0,0,1"
-#define SRCINFO_SECTION		".debug_srcinfo,1,0,0,1"
-#define MACINFO_SECTION		".debug_macinfo,1,0,0,1"
-#define PUBNAMES_SECTION	".debug_pubnames,1,0,0,1"
-#define ARANGES_SECTION		".debug_aranges,1,0,0,1"
+#define DEBUG_SECTION		".debug_info,0x7000001e,0,0,1"
+#define LINE_SECTION		".debug_line,0x7000001e,0,0,1"
+#define SFNAMES_SECTION		".debug_sfnames,0x7000001e,0,0,1"
+#define SRCINFO_SECTION		".debug_srcinfo,0x7000001e,0,0,1"
+#define MACINFO_SECTION		".debug_macinfo,0x7000001e,0,0,1"
+#define PUBNAMES_SECTION	".debug_pubnames,0x7000001e,0,0,1"
+#define ARANGES_SECTION		".debug_aranges,0x7000001e,0,0,1"
+#define FRAME_SECTION		".debug_frame,0x7000001e,0x08000000,0,1"
+#define ABBREV_SECTION		".debug_abbrev,0x7000001e,0,0,1"
 
+/* ??? If no mabi=X option give, but a mipsX option is, then should depend
+   on the mipsX option.  */
 #undef ASM_SPEC
 #if ((TARGET_CPU_DEFAULT | TARGET_DEFAULT) & MASK_GAS) != 0
 /* GAS */
@@ -82,7 +119,9 @@ Boston, MA 02111-1307, USA.  */
 %{gstabs:-g} %{gstabs0:-g0} %{gstabs1:-g1} %{gstabs2:-g2} %{gstabs3:-g3} \
 %{gstabs+:-g} %{gstabs+0:-g0} %{gstabs+1:-g1} %{gstabs+2:-g2} %{gstabs+3:-g3} \
 %{gcoff:-g} %{gcoff0:-g0} %{gcoff1:-g1} %{gcoff2:-g2} %{gcoff3:-g3} \
-%{membedded-pic}"
+%{membedded-pic} \
+%{mabi=32:-32}%{mabi=o32:-32}%{mabi=n32:-n32}%{mabi=64:-64}%{mabi=n64:-64} \
+%{!mabi*:-n32}"
 
 #else
 /* not GAS */
@@ -98,9 +137,10 @@ Boston, MA 02111-1307, USA.  */
 	%{K}} \
 %{G*} %{EB} %{EL} %{v:-show} \
 %{mips1} %{mips2} %{mips3} %{mips4} \
-%{!mips1: %{!mips2: %{!mips3: %{!mips4: -mips4}}}} \
 %{noasmopt:-O0} %{!noasmopt:%{O:-O2} %{O1:-O2} %{O2:-O2} %{O3:-O3}} \
--g0 -G 0 %{membedded-pic}"
+-g0 -G 0 %{membedded-pic} \
+%{mabi=32:-32}%{mabi=o32:-32}%{mabi=n32:-n32}%{mabi=64:-64}%{mabi=n64:-64} \
+%{!mabi*:-n32}"
 
 #endif
 
@@ -129,7 +169,7 @@ Boston, MA 02111-1307, USA.  */
    includes this file.  */
 
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_rdata, in_const, in_ctors, in_dtors, in_bss
+#define EXTRA_SECTIONS in_sdata, in_rdata, in_const, in_ctors, in_dtors
 
 /* A default list of extra section function definitions.  For targets
    that use additional sections (e.g. .tdesc) you should override this
@@ -154,7 +194,7 @@ rdata_section ()							\
 {									\
   if (in_section != in_rdata)						\
     {									\
-      if (mips_isa >= 3)						\
+      if (mips_abi != ABI_32)						\
 	fprintf (asm_out_file, "%s\n", CONST_SECTION_ASM_OP_64);	\
       else								\
 	fprintf (asm_out_file, "%s\n", CONST_SECTION_ASM_OP_32);	\
@@ -232,7 +272,7 @@ while (0)
 #define ASM_OUTPUT_ALIGNED_LOCAL(STREAM, NAME, SIZE, ALIGN)	\
 do								\
   {								\
-    if (mips_isa >= 3)						\
+    if (mips_abi != ABI_32)					\
       {								\
 	fputs ("\t.section\t.bss\n", STREAM);			\
 	ASM_DECLARE_OBJECT_NAME (STREAM, NAME, 0);		\
@@ -245,46 +285,45 @@ do								\
   }								\
 while (0)
 
-#undef ASM_OUTPUT_INTERNAL_LABEL
-#define ASM_OUTPUT_INTERNAL_LABEL(STREAM,PREFIX,NUM)			\
-  fprintf (STREAM, ".%s%d:\n", PREFIX, NUM)
+#undef LOCAL_LABEL_PREFIX
+#define LOCAL_LABEL_PREFIX (mips_abi == ABI_32 ? "$" : ".")
 
-/* This is how to store into the string LABEL
-   the symbol_ref name of an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.
-   This is suitable for output with `assemble_name'.  */
-
-#undef ASM_GENERATE_INTERNAL_LABEL
-#define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)			\
-  sprintf (LABEL, "*.%s%d", PREFIX, NUM)
-
-#undef STARTFILE_SPEC
 /* Profiling is supported via libprof1.a not -lc_p as in Irix 3.  */
+/* ??? If no mabi=X option give, but a mipsX option is, then should depend
+   on the mipsX option.  */
+#undef STARTFILE_SPEC
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC \
-  "%{mips1:%{pg:gcrt1.o%s}%{!pg:%{p:mcrt1.o%s libprof1.a%s}%{!p:crt1.o%s}}} \
-   %{mips2:%{pg:gcrt1.o%s}%{!pg:%{p:mcrt1.o%s libprof1.a%s}%{!p:crt1.o%s}}} \
-   %{!mips1:%{!mips2:%{pg:/usr/lib64/gcrt1.o}%{!pg:%{p:/usr/lib64/mcrt1.o /usr/lib64/libprof1.a}%{!p:/usr/lib64/crt1.o}}}}"
+  "%{mabi=32:%{pg:gcrt1.o%s}%{!pg:%{p:mcrt1.o%s libprof1.a%s}%{!p:crt1.o%s}}} \
+   %{mabi=n32:%{pg:/usr/lib32/gcrt1.o%s}%{!pg:%{p:/usr/lib32/mcrt1.o%s /usr/lib32/libprof1.a%s}%{!p:/usr/lib32/crt1.o%s}}} \
+   %{mabi=64:%{pg:/usr/lib64/gcrt1.o}%{!pg:%{p:/usr/lib64/mcrt1.o /usr/lib64/libprof1.a}%{!p:/usr/lib64/crt1.o}}} \
+   %{!mabi=32:%{!mabi=n32:%{!mabi=64:%{pg:/usr/lib32/gcrt1.o%s}%{!pg:%{p:/usr/lib32/mcrt1.o%s /usr/lib32/libprof1.a%s}%{!p:/usr/lib32/crt1.o%s}}}}}"
 
 #undef LIB_SPEC
 #define LIB_SPEC "%{p:libprof1.a%s}%{pg:libprof1.a%s} -lc"
 
+/* ??? If no mabi=X option give, but a mipsX option is, then should depend
+   on the mipsX option.  */
 #undef ENDFILE_SPEC
 #define ENDFILE_SPEC \
-  "%{mips1:crtn.o%s}%{mips2:crtn.o%s}%{!mips1:%{!mips2:/usr/lib64/crtn.o}}"
+  "%{mabi=32:crtn.o%s}%{mabi=n32:/usr/lib32/crtn.o%s}\
+   %{mabi=64:/usr/lib64/crtn.o}\
+   %{!mabi=32:%{!mabi=n32:%{!mabi=64:/usr/lib32/crtn.o%s}}}"
 
+/* ??? If no mabi=X option give, but a mipsX option is, then should depend
+   on the mipsX option.  */
+/* ??? We use the -woff 84 option to disable the warning about linking
+   with libraries that are unnecessary.  This message is currently more of
+   a hassle than a benefit, because we get two warnings for libgcc.a everytime
+   we link.  If we added the proper -dont_warn_unused/-warn_unused options
+   around libgcc.a, then we can take out the -woff 84 option.  */
 #undef LINK_SPEC
 #define LINK_SPEC "\
 %{G*} %{EB} %{EL} %{mips1} %{mips2} %{mips3} %{mips4} \
 %{bestGnum} %{shared} %{non_shared} \
 %{call_shared} %{no_archive} %{exact_version} \
 %{!shared: %{!non_shared: %{!call_shared: -call_shared -no_unresolved}}} \
--_SYSTYPE_SVR4"
-
-/* ??? Debugging does not work.  We get many assembler core dumps,
-   and even some linker core dumps.  */
-#undef DBX_DEBUGGING_INFO
-#undef SDB_DEBUGGING_INFO
-#undef MIPS_DEBUGGING_INFO
-#undef DWARF_DEBUGGING_INFO
-#undef PREFERRED_DEBUGGING_TYPE
+%{rpath} \
+-_SYSTYPE_SVR4 -woff 84 \
+%{mabi=32: -32}%{mabi=n32: -n32}%{mabi=64: -64} \
+%{!mabi=32:%{!mabi=n32:%{!mabi=64: -n32}}}"

@@ -27,6 +27,26 @@ Boston, MA 02111-1307, USA.  */
 /* Use memcpy, et. al., rather than bcopy.  */
 #define TARGET_MEM_FUNCTIONS
 
+/* CYGNUS LOCAL mpw */
+#ifdef MPW_C
+/* The usual definition in mips/mips.h gives MPW C's preprocessor some
+   serious heartburn; use a simpler but equivalent definition instead.  */
+#undef ASM_OUTPUT_ASCII
+#define ASM_OUTPUT_ASCII(FILE,PTR,LEN)			\
+{							\
+  unsigned char *s;					\
+  int i;						\
+  for (i = 0, s = (unsigned char *)(PTR); i < (LEN); s++, i++)	\
+    {							\
+      if ((i % 8) == 0)					\
+	fputs ("\n\t.byte\t", (FILE));			\
+      fprintf ((FILE), "%s0x%x", (i%8?",":""), (unsigned)*s); \
+    }							\
+  fputs ("\n", (FILE));					\
+}
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
+
 /* US Software GOFAST library support.  */
 #include "gofast.h"
 #define INIT_TARGET_OPTABS INIT_GOFAST_OPTABS

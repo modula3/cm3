@@ -1,6 +1,6 @@
 /* Medium-level subroutines: convert bit-field store and extract
    and shifts, multiplies and divides to rtl instructions.
-   Copyright (C) 1987, 88, 89, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 92-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -185,21 +185,12 @@ negate_rtx (mode, x)
      enum machine_mode mode;
      rtx x;
 {
-  if (GET_CODE (x) == CONST_INT)
-    {
-      HOST_WIDE_INT val = - INTVAL (x);
-      if (GET_MODE_BITSIZE (mode) < HOST_BITS_PER_WIDE_INT)
-	{
-	  /* Sign extend the value from the bits that are significant.  */
-	  if (val & ((HOST_WIDE_INT) 1 << (GET_MODE_BITSIZE (mode) - 1)))
-	    val |= (HOST_WIDE_INT) (-1) << GET_MODE_BITSIZE (mode);
-	  else
-	    val &= ((HOST_WIDE_INT) 1 << GET_MODE_BITSIZE (mode)) - 1;
-	}
-      return GEN_INT (val);
-    }
-  else
-    return expand_unop (GET_MODE (x), neg_optab, x, NULL_RTX, 0);
+  rtx result = simplify_unary_operation (NEG, mode, x, mode);
+
+  if (result == 0)
+    result = expand_unop (mode, neg_optab, x, NULL_RTX, 0);
+
+  return result;
 }
 
 /* Generate code to store value from rtx VALUE
@@ -398,6 +389,7 @@ store_bit_field (str_rtx, bitsize, bitnum, fieldmode, value, align, total_size)
 
 #ifdef HAVE_insv
   if (HAVE_insv
+      && GET_MODE (value) != BLKmode
       && !(bitsize == 1 && GET_CODE (value) == CONST_INT)
       /* Ensure insv's size is wide enough for this field.  */
       && (GET_MODE_BITSIZE (insn_operand_mode[(int) CODE_FOR_insv][3])
@@ -740,7 +732,9 @@ store_split_bit_field (op0, bitsize, bitpos, value, align)
   /* If VALUE is a constant other than a CONST_INT, get it into a register in
      WORD_MODE.  If we can do this using gen_lowpart_common, do so.  Note
      that VALUE might be a floating-point constant.  */
-  if (CONSTANT_P (value) && GET_CODE (value) != CONST_INT)
+  /* CYGNUS LOCAL - unaligned-pointers */
+  if ((CONSTANT_P (value) && GET_CODE (value) != CONST_INT)
+      || GET_CODE (value) == LO_SUM)
     {
       rtx word = gen_lowpart_common (word_mode, value);
 
@@ -776,7 +770,7 @@ store_split_bit_field (op0, bitsize, bitpos, value, align)
 	  /* We must do an endian conversion exactly the same way as it is
 	     done in extract_bit_field, so that the two calls to
 	     extract_fixed_bit_field will have comparable arguments.  */
-	  if (GET_CODE (value) != MEM)
+	  if (GET_CODE (value) != MEM || GET_MODE (value) == BLKmode)
 	    total_bits = BITS_PER_WORD;
 	  else
 	    total_bits = GET_MODE_BITSIZE (GET_MODE (value));
@@ -789,10 +783,19 @@ store_split_bit_field (op0, bitsize, bitpos, value, align)
 	  else
 	    /* The args are chosen so that the last part includes the
 	       lsb.  Give extract_bit_field the value it needs (with
-	       endianness compensation) to fetch the piece we want.  */
-	    part = extract_fixed_bit_field (word_mode, value, 0, thissize,
-					    total_bits - bitsize + bitsdone,
-					    NULL_RTX, 1, align);
+	       endianness compensation) to fetch the piece we want.
+
+	       ??? We have no idea what the alignment of VALUE is, so
+	       we have to use a guess.  */
+	    part
+	      = extract_fixed_bit_field
+		(word_mode, value, 0, thissize,
+		 total_bits - bitsize + bitsdone, NULL_RTX, 1,
+		 GET_MODE (value) == VOIDmode
+		 ? UNITS_PER_WORD
+		 : (GET_MODE (value) == BLKmode
+		    ? 1
+		    : GET_MODE_ALIGNMENT (GET_MODE (value)) / BITS_PER_UNIT));
 	}
       else
 	{
@@ -802,8 +805,14 @@ store_split_bit_field (op0, bitsize, bitpos, value, align)
 			     >> bitsdone)
 			    & (((HOST_WIDE_INT) 1 << thissize) - 1));
 	  else
-	    part = extract_fixed_bit_field (word_mode, value, 0, thissize,
-					    bitsdone, NULL_RTX, 1, align);
+	    part
+	      = extract_fixed_bit_field
+		(word_mode, value, 0, thissize, bitsdone, NULL_RTX, 1,
+		 GET_MODE (value) == VOIDmode
+		 ? UNITS_PER_WORD
+		 : (GET_MODE (value) == BLKmode
+		    ? 1
+		    : GET_MODE_ALIGNMENT (GET_MODE (value)) / BITS_PER_UNIT));
 	}
 
       /* If OP0 is a register, then handle OFFSET here.
@@ -875,9 +884,6 @@ extract_bit_field (str_rtx, bitsize, bitnum, unsignedp,
   rtx spec_target = target;
   rtx spec_target_subreg = 0;
 
-  if (GET_CODE (str_rtx) == MEM && ! MEM_IN_STRUCT_P (str_rtx))
-    abort ();
-
   /* Discount the part of the structure before the desired byte.
      We need to know how many bytes are safe to reference after it.  */
   if (total_size >= 0)
@@ -924,7 +930,9 @@ extract_bit_field (str_rtx, bitsize, bitnum, unsignedp,
      So too extracting a subword value in
      the least significant part of the register.  */
 
-  if ((GET_CODE (op0) == REG
+  if (((GET_CODE (op0) == REG
+	&& TRULY_NOOP_TRUNCATION (GET_MODE_BITSIZE (mode),
+				  GET_MODE_BITSIZE (GET_MODE (op0))))
        || (GET_CODE (op0) == MEM
 	   && (! SLOW_UNALIGNED_ACCESS
 	       || (offset * BITS_PER_UNIT % bitsize == 0
@@ -966,6 +974,9 @@ extract_bit_field (str_rtx, bitsize, bitnum, unsignedp,
 
       if (target == 0 || GET_CODE (target) != REG)
 	target = gen_reg_rtx (mode);
+
+      /* Indicate for flow that the entire target reg is being set.  */
+      emit_insn (gen_rtx (CLOBBER, VOIDmode, target));
 
       for (i = 0; i < nwords; i++)
 	{
@@ -1461,7 +1472,7 @@ extract_fixed_bit_field (tmode, op0, offset, bitsize, bitpos,
 #ifdef SLOW_ZERO_EXTEND
 	  /* Always generate an `and' if
 	     we just zero-extended op0 and SLOW_ZERO_EXTEND, since it
-	     will combine fruitfully with the zero-extend. */
+	     will combine fruitfully with the zero-extend.  */
 	  || tmode != mode
 #endif
 #endif
@@ -2465,7 +2476,7 @@ invert_mod2n (x, n)
      unsigned HOST_WIDE_INT x;
      int n;
 {
-  /* Solve x*y == 1 (mod 2^n), where x is odd.  Return y. */
+  /* Solve x*y == 1 (mod 2^n), where x is odd.  Return y.  */
 
   /* The algorithm notes that the choice y = x satisfies
      x*y == 1 mod 2^3, since x is assumed odd.
@@ -2609,13 +2620,19 @@ expand_mult_highpart (mode, op0, cnst1, target, unsignedp, max_cost)
   moptab = unsignedp ? umul_widen_optab : smul_widen_optab;
   if (moptab->handlers[(int) wider_mode].insn_code != CODE_FOR_nothing
       && mul_widen_cost[(int) wider_mode] < max_cost)
-    goto try;
+    {
+      op1 = force_reg (mode, op1);
+      goto try;
+    } 
 
   /* Try widening the mode and perform a non-widening multiplication.  */
   moptab = smul_optab;
   if (smul_optab->handlers[(int) wider_mode].insn_code != CODE_FOR_nothing
       && mul_cost[(int) wider_mode] + shift_cost[size-1] < max_cost)
-    goto try;
+    {
+      op1 = wide_op1;
+      goto try;
+    }
 
   /* Try widening multiplication of opposite signedness, and adjust.  */
   moptab = unsignedp ? smul_widen_optab : umul_widen_optab;
@@ -2623,7 +2640,8 @@ expand_mult_highpart (mode, op0, cnst1, target, unsignedp, max_cost)
       && (mul_widen_cost[(int) wider_mode]
 	  + 2 * shift_cost[size-1] + 4 * add_cost < max_cost))
     {
-      tem = expand_binop (wider_mode, moptab, op0, wide_op1,
+      rtx regop1 = force_reg (mode, op1);
+      tem = expand_binop (wider_mode, moptab, op0, regop1,
 			  NULL_RTX, ! unsignedp, OPTAB_WIDEN);
       if (tem != 0)
 	{
@@ -2641,15 +2659,22 @@ expand_mult_highpart (mode, op0, cnst1, target, unsignedp, max_cost)
 
  try:
   /* Pass NULL_RTX as target since TARGET has wrong mode.  */
-  tem = expand_binop (wider_mode, moptab, op0, wide_op1,
+  tem = expand_binop (wider_mode, moptab, op0, op1,
 		      NULL_RTX, unsignedp, OPTAB_WIDEN);
   if (tem == 0)
     return 0;
 
   /* Extract the high half of the just generated product.  */
-  tem = expand_shift (RSHIFT_EXPR, wider_mode, tem,
-		      build_int_2 (size, 0), NULL_RTX, 1);
-  return convert_modes (mode, wider_mode, tem, unsignedp);
+  if (mode == word_mode)
+    {
+      return gen_highpart (mode, tem);
+    }
+  else
+    {
+      tem = expand_shift (RSHIFT_EXPR, wider_mode, tem,
+			  build_int_2 (size, 0), NULL_RTX, 1);
+      return convert_modes (mode, wider_mode, tem, unsignedp);
+    }
 }
 
 /* Emit the code to divide OP0 by OP1, putting the result in TARGET
@@ -2835,7 +2860,7 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
       {
       case TRUNC_MOD_EXPR:
       case TRUNC_DIV_EXPR:
-	if (op1_is_constant && HOST_BITS_PER_WIDE_INT >= size)
+	if (op1_is_constant)
 	  {
 	    if (unsignedp)
 	      {
@@ -2849,10 +2874,11 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 		    pre_shift = floor_log2 (d);
 		    if (rem_flag)
 		      {
-			remainder = expand_binop (compute_mode, and_optab, op0,
-						  GEN_INT (((HOST_WIDE_INT) 1 << pre_shift) - 1),
-						  remainder, 1,
-						  OPTAB_LIB_WIDEN);
+			remainder =
+			  expand_binop (compute_mode, and_optab, op0,
+					GEN_INT (((HOST_WIDE_INT) 1 << pre_shift) - 1),
+					remainder, 1,
+					OPTAB_LIB_WIDEN);
 			if (remainder)
 			  return gen_lowpart (mode, remainder);
 		      }
@@ -2860,82 +2886,87 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 					     build_int_2 (pre_shift, 0),
 					     tquotient, 1);
 		  }
-		else if (d >= ((unsigned HOST_WIDE_INT) 1 << (size - 1)))
+		else if (size <= HOST_BITS_PER_WIDE_INT)
 		  {
-		    /* Most significant bit of divisor is set, emit a scc insn.
-		       emit_store_flag needs to be passed a place for the
-		       result.  */
-		    quotient = emit_store_flag (tquotient, GEU, op0, op1,
-						compute_mode, 1, 1);
-		    if (quotient == 0)
-		      goto fail1;
-		  }
-		else
-		  {
-		    /* Find a suitable multiplier and right shift count instead
-		       of multiplying with D.  */
-
-		    mh = choose_multiplier (d, size, size,
-					    &ml, &post_shift, &dummy);
-
-		    /* If the suggested multiplier is more than SIZE bits, we
-		       can do better for even divisors, using an initial right
-		       shift.  */
-		    if (mh != 0 && (d & 1) == 0)
+		    if (d >= ((unsigned HOST_WIDE_INT) 1 << (size - 1)))
 		      {
-			pre_shift = floor_log2 (d & -d);
-			mh = choose_multiplier (d >> pre_shift, size,
-						size - pre_shift,
+			/* Most significant bit of divisor is set; emit an scc
+			   insn.  */
+			quotient = emit_store_flag (tquotient, GEU, op0, op1,
+						    compute_mode, 1, 1);
+			if (quotient == 0)
+			  goto fail1;
+		      }
+		    else
+		      {
+			/* Find a suitable multiplier and right shift count
+			   instead of multiplying with D.  */
+
+			mh = choose_multiplier (d, size, size,
 						&ml, &post_shift, &dummy);
-			if (mh)
-			  abort ();
-		      }
-		    else
-		      pre_shift = 0;
 
-		    if (mh != 0)
-		      {
-			rtx t1, t2, t3, t4;
+			/* If the suggested multiplier is more than SIZE bits,
+			   we can do better for even divisors, using an
+			   initial right shift.  */
+			if (mh != 0 && (d & 1) == 0)
+			  {
+			    pre_shift = floor_log2 (d & -d);
+			    mh = choose_multiplier (d >> pre_shift, size,
+						    size - pre_shift,
+						    &ml, &post_shift, &dummy);
+			    if (mh)
+			      abort ();
+			  }
+			else
+			  pre_shift = 0;
 
-			extra_cost = (shift_cost[post_shift - 1]
-				      + shift_cost[1] + 2 * add_cost);
-			t1 = expand_mult_highpart (compute_mode, op0, ml,
-						   NULL_RTX, 1,
-						   max_cost - extra_cost);
-			if (t1 == 0)
-			  goto fail1;
-			t2 = force_operand (gen_rtx (MINUS, compute_mode,
-						     op0, t1),
-					    NULL_RTX);
-			t3 = expand_shift (RSHIFT_EXPR, compute_mode, t2,
-					   build_int_2 (1, 0), NULL_RTX, 1);
-			t4 = force_operand (gen_rtx (PLUS, compute_mode,
-						     t1, t3),
-					    NULL_RTX);
-			quotient = expand_shift (RSHIFT_EXPR, compute_mode, t4,
-						 build_int_2 (post_shift - 1,
-							      0),
-						 tquotient, 1);
-		      }
-		    else
-		      {
-			rtx t1, t2;
+			if (mh != 0)
+			  {
+			    rtx t1, t2, t3, t4;
 
-			t1 = expand_shift (RSHIFT_EXPR, compute_mode, op0,
-					   build_int_2 (pre_shift, 0),
-					   NULL_RTX, 1);
-			extra_cost = (shift_cost[pre_shift]
-				      + shift_cost[post_shift]);
-			t2 = expand_mult_highpart (compute_mode, t1, ml,
-						   NULL_RTX, 1,
-						   max_cost - extra_cost);
-			if (t2 == 0)
-			  goto fail1;
-			quotient = expand_shift (RSHIFT_EXPR, compute_mode, t2,
-						 build_int_2 (post_shift, 0),
-						 tquotient, 1);
+			    extra_cost = (shift_cost[post_shift - 1]
+					  + shift_cost[1] + 2 * add_cost);
+			    t1 = expand_mult_highpart (compute_mode, op0, ml,
+						       NULL_RTX, 1,
+						       max_cost - extra_cost);
+			    if (t1 == 0)
+			      goto fail1;
+			    t2 = force_operand (gen_rtx (MINUS, compute_mode,
+							 op0, t1),
+						NULL_RTX);
+			    t3 = expand_shift (RSHIFT_EXPR, compute_mode, t2,
+					       build_int_2 (1, 0), NULL_RTX,1);
+			    t4 = force_operand (gen_rtx (PLUS, compute_mode,
+							 t1, t3),
+						NULL_RTX);
+			    quotient =
+			      expand_shift (RSHIFT_EXPR, compute_mode, t4,
+					    build_int_2 (post_shift - 1, 0),
+					    tquotient, 1);
+			  }
+			else
+			  {
+			    rtx t1, t2;
+
+			    t1 = expand_shift (RSHIFT_EXPR, compute_mode, op0,
+					       build_int_2 (pre_shift, 0),
+					       NULL_RTX, 1);
+			    extra_cost = (shift_cost[pre_shift]
+					  + shift_cost[post_shift]);
+			    t2 = expand_mult_highpart (compute_mode, t1, ml,
+						       NULL_RTX, 1,
+						       max_cost - extra_cost);
+			    if (t2 == 0)
+			      goto fail1;
+			    quotient =
+			      expand_shift (RSHIFT_EXPR, compute_mode, t2,
+					    build_int_2 (post_shift, 0),
+					    tquotient, 1);
+			  }
 		      }
 		  }
+		else		/* Too wide mode to use tricky code */
+		  break;
 
 		insn = get_last_insn ();
 		if (insn != last
@@ -3029,7 +3060,7 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 						quotient, quotient, 0);
 		      }
 		  }
-		else
+		else if (size <= HOST_BITS_PER_WIDE_INT)
 		  {
 		    choose_multiplier (abs_d, size, size - 1,
 				       &ml, &post_shift, &lgup);
@@ -3081,6 +3112,8 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 						    tquotient);
 		      }
 		  }
+		else		/* Too wide mode to use tricky code */
+		  break;
 
 		insn = get_last_insn ();
 		if (insn != last
@@ -3188,7 +3221,7 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 	   or remainder to get floor rounding, once we have the remainder.
 	   Notice that we compute also the final remainder value here,
 	   and return the result right away.  */
-	if (target == 0)
+	if (target == 0 || GET_MODE (target) != compute_mode)
 	  target = gen_reg_rtx (compute_mode);
 
 	if (rem_flag)
@@ -3315,7 +3348,7 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 	       quotient or remainder to get ceiling rounding, once we have the
 	       remainder.  Notice that we compute also the final remainder
 	       value here, and return the result right away.  */
-	    if (target == 0)
+	    if (target == 0 || GET_MODE (target) != compute_mode)
 	      target = gen_reg_rtx (compute_mode);
 
 	    if (rem_flag)
@@ -3417,7 +3450,7 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 	       quotient or remainder to get ceiling rounding, once we have the
 	       remainder.  Notice that we compute also the final remainder
 	       value here, and return the result right away.  */
-	    if (target == 0)
+	    if (target == 0 || GET_MODE (target) != compute_mode)
 	      target = gen_reg_rtx (compute_mode);
 	    if (rem_flag)
 	      {
@@ -3601,6 +3634,9 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 
   if (quotient == 0)
     {
+      if (target && GET_MODE (target) != compute_mode)
+	target = 0;
+
       if (rem_flag)
 	{
 	  /* Try to produce the remainder directly without a library call.  */
@@ -3652,6 +3688,9 @@ expand_divmod (rem_flag, code, mode, op0, op1, target, unsignedp)
 
   if (rem_flag)
     {
+      if (target && GET_MODE (target) != compute_mode)
+	target = 0;
+
       if (quotient == 0)
 	/* No divide instruction either.  Use library for remainder.  */
 	remainder = sign_expand_binop (compute_mode, umod_optab, smod_optab,
@@ -3834,7 +3873,7 @@ expand_and (op0, op1, target)
    to perform the operation.  It says to use zero-extension.
 
    NORMALIZEP is 1 if we should convert the result to be either zero
-   or one one.  Normalize is -1 if we should convert the result to be
+   or one.  Normalize is -1 if we should convert the result to be
    either zero or -1.  If NORMALIZEP is zero, the result will be left
    "raw" out of the scc insn.  */
 
@@ -3872,7 +3911,7 @@ emit_store_flag (target, code, op0, op1, mode, unsignedp, normalizep)
 
   /* For some comparisons with 1 and -1, we can convert this to 
      comparisons with zero.  This will often produce more opportunities for
-     store-flag insns. */
+     store-flag insns.  */
 
   switch (code)
     {
@@ -3930,9 +3969,11 @@ emit_store_flag (target, code, op0, op1, mode, unsignedp, normalizep)
 	subtarget = 0;
 
       if (code == GE)
-	op0 = expand_unop (mode, one_cmpl_optab, op0, subtarget, 0);
+	op0 = expand_unop (mode, one_cmpl_optab, op0,
+			   ((STORE_FLAG_VALUE == 1 || normalizep)
+			    ? 0 : subtarget), 0);
 
-      if (normalizep || STORE_FLAG_VALUE == 1)
+      if (STORE_FLAG_VALUE == 1 || normalizep)
 	/* If we are supposed to produce a 0/1 value, we want to do
 	   a logical shift from the sign bit to the low-order bit; for
 	   a -1/0 value, we do an arithmetic shift.  */

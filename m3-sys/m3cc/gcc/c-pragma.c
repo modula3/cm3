@@ -21,6 +21,7 @@ Boston, MA 02111-1307, USA.  */
 #include <stdio.h>
 #include "config.h"
 #include "tree.h"
+#include "except.h"
 #include "function.h"
 #include "defaults.h"
 #include "c-pragma.h"
@@ -29,7 +30,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* When structure field packing is in effect, this variable is the
    number of bits to use as the maximum alignment.  When packing is not
-   in effect, this is zero. */
+   in effect, this is zero.  */
 
 extern int maximum_field_alignment;
 

@@ -1,0 +1,15 @@
+# CYGNUS LOCAL mpw (entire file)
+# Driver script for MPW GCC
+
+set echo 0
+set oldexit "{exit}"
+set exit 0
+set temp "__GCC_Temp_Script__"
+
+xgcc {"Parameters"} > "{temp}" && "{temp}"
+set error "{status}"
+
+delete -i -y "{temp}"
+
+set exit "{oldexit}"
+exit "{error}"

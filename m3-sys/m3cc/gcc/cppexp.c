@@ -20,7 +20,7 @@ Boston, MA 02111-1307, USA.
  You are forbidden to forbid anyone else to use, share and improve
  what you give them.   Help stamp out software-hoarding!
 
-Written by Per Bothner 1994. */
+Written by Per Bothner 1994.  */
 
 /* Parse a C expression from text in a string  */
    
@@ -60,7 +60,7 @@ struct arglist {
 #endif
 
 #ifndef NULL_PTR
-#define NULL_PTR ((GENERIC_PTR)0)
+#define NULL_PTR ((GENERIC_PTR) 0)
 #endif
 
 extern char *xmalloc ();
@@ -121,7 +121,10 @@ static long right_shift ();
 #define LEFT_OPERAND_REQUIRED 1
 #define RIGHT_OPERAND_REQUIRED 2
 #define HAVE_VALUE 4
-/*#define UNSIGNEDP 8*/
+/* SKIP_OPERAND is set for '&&' '||' '?' and ':' when the
+   following operand should be short-circuited instead of evaluated.  */
+#define SKIP_OPERAND 8
+/*#define UNSIGNEDP 16*/
 
 #ifndef HOST_BITS_PER_WIDE_INT
 
@@ -137,10 +140,10 @@ static long right_shift ();
 
 struct operation {
     short op;
-    char rprio; /* Priority of op (relative to it right operand). */
+    char rprio; /* Priority of op (relative to it right operand).  */
     char flags;
     char unsignedp;    /* true if value should be treated as unsigned */
-    HOST_WIDE_INT value;        /* The value logically "right" of op. */
+    HOST_WIDE_INT value;        /* The value logically "right" of op.  */
 };
 
 /* Take care of parsing a number (anything that starts with a digit).
@@ -183,7 +186,7 @@ parse_number (pfile, start, olen)
   else if (*p == '0')
     base = 8;
 
-  /* Some buggy compilers (e.g. MPW C) seem to need both casts. */
+  /* Some buggy compilers (e.g. MPW C) seem to need both casts.  */
   ULONG_MAX_over_base = ((unsigned long) -1) / ((unsigned long) base);
 
   for (; len > 0; len--) {
@@ -272,11 +275,11 @@ static struct token tokentab2[] = {
   {NULL, ERROR}
 };
 
-/* Read one token. */
+/* Read one token.  */
 
 struct operation
 cpp_lex (pfile)
-cpp_reader *pfile;
+     cpp_reader *pfile;
 {
   register int c;
   register int namelen;
@@ -307,16 +310,17 @@ cpp_reader *pfile;
   pfile->limit = tok_start;
   switch (token)
   {
-    case CPP_EOF: /* Should not happen ... */
+    case CPP_EOF: /* Should not happen ...  */
+    case CPP_VSPACE:
       op.op = 0;
       return op;
-    case CPP_VSPACE:
     case CPP_POP:
       if (CPP_BUFFER (pfile)->fname != NULL)
 	{
 	  op.op = 0;
 	  return op;
 	}
+      cpp_pop_buffer (pfile);
       goto retry;
     case CPP_HSPACE:   case CPP_COMMENT: 
       goto retry;
@@ -626,7 +630,7 @@ right_shift (pfile, a, unsignedp, b)
     return a >> b;
 }
 
-/* These priorities are all even, so we can handle associatively. */
+/* These priorities are all even, so we can handle associatively.  */
 #define PAREN_INNER_PRIO 0
 #define COMMA_PRIO 4
 #define COND_PRIO (COMMA_PRIO+2)
@@ -670,6 +674,7 @@ cpp_parse_expr (pfile)
   struct operation *limit = stack + INIT_STACK_SIZE;
   register struct operation *top = stack;
   int lprio, rprio;
+  int skip_evaluation = 0;
 
   top->rprio = 0;
   top->flags = 0;
@@ -683,7 +688,7 @@ cpp_parse_expr (pfile)
 
       /* See if the token is an operand, in which case go to set_value.
 	 If the token is an operator, figure out its left and right
-	 priorities, and then goto maybe_reduce. */
+	 priorities, and then goto maybe_reduce.  */
 
       switch (op.op)
 	{
@@ -740,7 +745,7 @@ cpp_parse_expr (pfile)
 	}
 
     set_value:
-      /* Push a value onto the stack. */
+      /* Push a value onto the stack.  */
       if (top->flags & HAVE_VALUE)
 	{
 	  cpp_error (pfile, "syntax error in #if");
@@ -750,7 +755,7 @@ cpp_parse_expr (pfile)
       continue;
 
     maybe_reduce:
-      /* Push an operator, and check if we can reduce now. */
+      /* Push an operator, and check if we can reduce now.  */
       while (top->rprio > lprio)
 	{
 	  long v1 = top[-1].value, v2 = top[0].value;
@@ -782,7 +787,7 @@ cpp_parse_expr (pfile)
 		{
 		  top->value = v1 + v2;
 		  top->unsignedp = unsigned1 || unsigned2;
-		  if (! top->unsignedp
+		  if (! top->unsignedp && ! skip_evaluation
 		      && ! possible_sum_sign (v1, v2, top->value))
 		    integer_overflow (pfile);
 		}
@@ -791,7 +796,7 @@ cpp_parse_expr (pfile)
 	      if (!(top->flags & HAVE_VALUE))
 		{ /* Unary '-' */
 		  top->value = - v2;
-		  if ((top->value & v2) < 0 && ! unsigned2)
+		  if (!skip_evaluation && (top->value & v2) < 0 && !unsigned2)
 		    integer_overflow (pfile);
 		  top->unsignedp = unsigned2;
 		  top->flags |= HAVE_VALUE;
@@ -800,7 +805,7 @@ cpp_parse_expr (pfile)
 		{ /* Binary '-' */
 		  top->value = v1 - v2;
 		  top->unsignedp = unsigned1 || unsigned2;
-		  if (! top->unsignedp
+		  if (! top->unsignedp && ! skip_evaluation
 		      && ! possible_sum_sign (top->value, v2, v1))
 		    integer_overflow (pfile);
 		}
@@ -809,7 +814,7 @@ cpp_parse_expr (pfile)
 	      top->unsignedp = unsigned1 || unsigned2;
 	      if (top->unsignedp)
 		top->value = (unsigned long) v1 * v2;
-	      else
+	      else if (!skip_evaluation)
 		{
 		  top->value = v1 * v2;
 		  if (v1
@@ -819,6 +824,8 @@ cpp_parse_expr (pfile)
 		}
 	      break;
 	    case '/':
+	      if (skip_evaluation)
+		break;
 	      if (v2 == 0)
 		{
 		  cpp_error (pfile, "division by zero in #if");
@@ -835,6 +842,8 @@ cpp_parse_expr (pfile)
 		}
 	      break;
 	    case '%':
+	      if (skip_evaluation)
+		break;
 	      if (v2 == 0)
 		{
 		  cpp_error (pfile, "division by zero in #if");
@@ -879,6 +888,8 @@ cpp_parse_expr (pfile)
 	      top->unsignedp = 0;
 	      break;
 	    case LSH:
+	      if (skip_evaluation)
+		break;
 	      top->unsignedp = unsigned1;
 	      if (v2 < 0 && ! unsigned2)
 		top->value = right_shift (pfile, v1, unsigned1, -v2);
@@ -886,6 +897,8 @@ cpp_parse_expr (pfile)
 		top->value = left_shift (pfile, v1, unsigned1, v2);
 	      break;
 	    case RSH:
+	      if (skip_evaluation)
+		break;
 	      top->unsignedp = unsigned1;
 	      if (v2 < 0 && ! unsigned2)
 		top->value = left_shift (pfile, v1, unsigned1, -v2);
@@ -899,9 +912,13 @@ cpp_parse_expr (pfile)
 	    case '^':  LOGICAL(^);  break;
 	    case '|':  LOGICAL(|);  break;
 	    case ANDAND:
-	      top->value = v1 && v2;  top->unsignedp = 0;  break;
+	      top->value = v1 && v2;  top->unsignedp = 0;
+	      if (!v1) skip_evaluation--;
+	      break;
 	    case OROR:
-	      top->value = v1 || v2;  top->unsignedp = 0;  break;
+	      top->value = v1 || v2;  top->unsignedp = 0;
+	      if (v1) skip_evaluation--;
+	      break;
 	    case ',':
 	      if (CPP_PEDANTIC (pfile))
 		cpp_pedwarn (pfile, "comma operator in operand of `#if'");
@@ -928,6 +945,7 @@ cpp_parse_expr (pfile)
 	      else
 		{
 		  top--;
+		  if (top->value) skip_evaluation--;
 		  top->value = top->value ? v1 : v2;
 		  top->unsignedp = unsigned1 || unsigned2;
 		}
@@ -967,27 +985,40 @@ cpp_parse_expr (pfile)
 	}
       top++;
       
-      /* Check for and handle stack overflow. */
+      /* Check for and handle stack overflow.  */
       if (top == limit)
 	{
 	  struct operation *new_stack;
-	  int old_size = (char*)limit - (char*)stack;
+	  int old_size = (char *) limit - (char *) stack;
 	  int new_size = 2 * old_size;
 	  if (stack != init_stack)
-	    new_stack = (struct operation*) xrealloc (stack, new_size);
+	    new_stack = (struct operation *) xrealloc (stack, new_size);
 	  else
 	    {
-	      new_stack = (struct operation*) xmalloc (new_size);
+	      new_stack = (struct operation *) xmalloc (new_size);
 	      bcopy ((char *) stack, (char *) new_stack, old_size);
 	    }
 	  stack = new_stack;
-	  top = (struct operation*)((char*) new_stack + old_size);
-	  limit = (struct operation*)((char*) new_stack + new_size);
+	  top = (struct operation *) ((char *) new_stack + old_size);
+	  limit = (struct operation *) ((char *) new_stack + new_size);
 	}
       
       top->flags = flags;
       top->rprio = rprio;
       top->op = op.op;
+      if ((op.op == OROR && top[-1].value)
+	  || (op.op == ANDAND && !top[-1].value)
+	  || (op.op == '?' && !top[-1].value))
+	{
+	  skip_evaluation++;
+	}
+      else if (op.op == ':')
+	{
+	  if (top[-2].value) /* Was condition true? */
+	    skip_evaluation++;
+	  else
+	    skip_evaluation--;
+	}
     }
  syntax_error:
   if (stack != init_stack)

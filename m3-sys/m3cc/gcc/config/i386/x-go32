@@ -1,0 +1,21 @@
+# This is ugly but x-go32 is only ever used in a Canadian cross
+# and passing down all these things as environment variables is
+# amazingly tedious and error prone.
+HOST_CC=gcc
+HOST_CFLAGS=
+CFLAGS=-O2 -fno-omit-frame-pointer
+HOST_PREFIX=foo
+HOST_PREFIX_1=foo
+RANLIB=i386-go32-ranlib
+AR=i386-go32-ar
+GCC_FOR_TARGET=${target}-gcc
+AR_FOR_TARGET=${target}-ar
+RANLIB_FOR_TARGET=${target}-ranlib
+CLIB=-lm
+CC=i386-go32-gcc
+# FIXME: This should be done in a better way, but how?  The problem is
+# that we can't build protoize.
+LANGUAGES=c c++ objective-c
+
+# FIXME: Until collect supports DOS, don't use it.
+USE_COLLECT2 =

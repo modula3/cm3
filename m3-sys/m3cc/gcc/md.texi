@@ -1,4 +1,4 @@
-@c Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+@c Copyright (C) 1988,89,92,93,94,96 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
 
@@ -507,8 +507,8 @@ already defined, then you can simply use @code{#} as the output template
 instead of writing an output template that emits the multiple assembler
 instructions.
 
-If @code{ASSEMBLER_DIALECT} is defined, you can use
-@samp{@{option0|option1|option2@}} constructs in the templates.  These
+If the macro @code{ASSEMBLER_DIALECT} is defined, you can use construct
+of the form @samp{@{option0|option1|option2@}} in the templates.  These
 describe multiple variants of assembler language syntax.
 @xref{Instruction Output}.
 
@@ -621,7 +621,7 @@ as follows, having the output control string start with a @samp{@@}:
 @cindex constraints
 
 Each @code{match_operand} in an instruction pattern can specify a
-constraint for the type of operands allowed.  
+constraint for the type of operands allowed.
 @end ifset
 @ifclear INTERNALS
 @node Constraints
@@ -794,7 +794,7 @@ registers that are not general registers.
 @ifset INTERNALS
 Any operand whatsoever is allowed, even if it does not satisfy
 @code{general_operand}.  This is normally used in the constraint of
-a @code{match_scratch} when certain alternatives will not actually 
+a @code{match_scratch} when certain alternatives will not actually
 require a scratch register.
 @end ifset
 @ifclear INTERNALS
@@ -818,7 +818,7 @@ input operands and one output operand in the RTL, but on most CISC
 @end ifset
 @ifclear INTERNALS
 which @code{asm} distinguishes.  For example, an add instruction uses
-two input operands and an output operand, but on most CISC 
+two input operands and an output operand, but on most CISC
 @end ifclear
 machines an add instruction really has only two operands, one of them an
 input-output operand:
@@ -1108,11 +1108,13 @@ identifies an operand that is both input and output; all other operands
 are assumed to be input only.
 
 @cindex @samp{&} in constraint
+@cindex earlyclobber operand
 @item &
-Means (in a particular alternative) that this operand is written
-before the instruction is finished using the input operands.
-Therefore, this operand may not lie in a register that is used as an
-input operand or as part of any memory address.
+Means (in a particular alternative) that this operand is an
+@dfn{earlyclobber} operand, which is modified before the instruction is
+finished using the input operands.  Therefore, this operand may not lie
+in a register that is used as an input operand or as part of any memory
+address.
 
 @samp{&} applies only to the alternative in which it is written.  In
 constraints with multiple alternatives, sometimes one alternative
@@ -1249,7 +1251,7 @@ Integer that satisfies constraint @samp{I} when negated (twos complement)
 Integer in the range 0 to 32
 
 @item Q
-A memory reference where the exact address is in a single register 
+A memory reference where the exact address is in a single register
 (`@samp{m}' is preferable for @code{asm} statements)
 
 @item R
@@ -1370,6 +1372,18 @@ instruction per word
 @item Q
 Memory operand that is an offset from a register (@samp{m} is preferable
 for @code{asm} statements)
+
+@item R
+AIX TOC entry
+
+@item S
+Windows NT SYMBOL_REF
+
+@item T
+Windows NT LABEL_REF
+
+@item U
+System V Release 4 small data area reference
 @end table
 
 @item Intel 386---@file{i386.h}
@@ -1552,6 +1566,9 @@ Signed number whose magnitude is greater than 0x80
 @item L
 Integer in the range -8 to -1
 
+@item M
+Signed number whose magnitude is greater than 0x100
+
 @item G
 Floating point constant that is not a 68881 constant
 
@@ -1563,7 +1580,10 @@ Floating point constant that can be used by Sun FPA
 @item SPARC---@file{sparc.h}
 @table @code
 @item f
-Floating-point register
+Floating-point register that can hold 32 or 64 bit values.
+
+@item e
+Floating-point register that can hold 64 or 128 bit values.
 
 @item I
 Signed 13 bit constant
@@ -1591,7 +1611,7 @@ Constant, or memory address
 @item T
 Memory address aligned to an 8-byte boundary
 
-@item U 
+@item U
 Even register
 @end table
 @end table
@@ -1776,8 +1796,8 @@ means of constraints requiring operands 1 and 0 to be the same location.
 @cindex @code{udiv@var{m}3} instruction pattern
 @cindex @code{mod@var{m}3} instruction pattern
 @cindex @code{umod@var{m}3} instruction pattern
-@cindex @code{min@var{m}3} instruction pattern
-@cindex @code{max@var{m}3} instruction pattern
+@cindex @code{smin@var{m}3} instruction pattern
+@cindex @code{smax@var{m}3} instruction pattern
 @cindex @code{umin@var{m}3} instruction pattern
 @cindex @code{umax@var{m}3} instruction pattern
 @cindex @code{and@var{m}3} instruction pattern
@@ -1921,6 +1941,17 @@ it may provide the value 4 for this operand.
 
 These patterns need not give special consideration to the possibility
 that the source and destination strings might overlap.
+
+@cindex @code{clrstr@var{m}} instruction pattern
+@item @samp{clrstr@var{m}}
+Block clear instruction.  The addresses of the destination string is the
+first operand, in mode @code{Pmode}.  The number of bytes to clear is
+the second operand, in mode @var{m}.
+
+The third operand is the known alignment of the destination, in the form
+of a @code{const_int} rtx.  Thus, if the compiler knows that the
+destination is word-aligned, it may provide the value 4 for this
+operand.
 
 @cindex @code{cmpstr@var{m}} instruction pattern
 @item @samp{cmpstr@var{m}}
@@ -2264,6 +2295,23 @@ table it uses.  Its assembler code normally has no need to use the
 second operand, but you should incorporate it in the RTL pattern so
 that the jump optimizer will not delete the table as unreachable code.
 
+@cindex @code{canonicalize_funcptr_for_compare} instruction pattern
+@item @samp{canonicalize_funcptr_for_compare}
+Canonicalize the function pointer in operand 1 and store the result
+into operand 0.
+
+Operand 0 is always a @code{reg} and has mode @code{Pmode}; operand 1
+may be a @code{reg}, @code{mem}, @code{symbol_ref}, @code{const_int}, etc
+and also has mode @code{Pmode}.
+
+Canonicalization of a function pointer usually involves computing
+the address of the function which would be called if the function
+pointer were used in an indirect call.
+
+Only define this pattern if function pointers on the target machine
+can have different values but still call the same function when
+used in an indirect call.
+
 @cindex @code{save_stack_block} instruction pattern
 @cindex @code{save_stack_function} instruction pattern
 @cindex @code{save_stack_nonlocal} instruction pattern
@@ -2333,6 +2381,18 @@ Do not define this pattern if all that must be done is the subtraction.
 Some machines require other operations such as stack probes or
 maintaining the back chain.  Define this pattern to emit those
 operations in addition to updating the stack pointer.
+
+@cindex @code{probe} instruction pattern
+@item @samp{probe}
+Some machines require instructions to be executed after space is
+allocated from the stack, for example to generate a reference at
+the bottom of the stack.
+
+If you need to emit instructions before the stack has been adjusted,
+put them into the @samp{allocate_stack} pattern.  Otherwise, define
+this pattern to emit the required instructions.
+
+No operands are provided.
 @end table
 
 @node Pattern Ordering
@@ -3209,8 +3269,8 @@ an equality comparison of a register and a large constant:
    (set (match_dup 0) (compare:CC (match_dup 3) (match_dup 5)))]
   "
 @{
-  /* Get the constant we are comparing against, C, and see what it 
-     looks like sign-extended to 16 bits.  Then see what constant 
+  /* Get the constant we are comparing against, C, and see what it
+     looks like sign-extended to 16 bits.  Then see what constant
      could be XOR'ed with C to get the sign-extended value.  */
 
   int c = INTVAL (operands[2]);
@@ -3320,7 +3380,7 @@ defined and the function to obtain the attribute's value will return
 @cindex attribute expressions
 
 RTL expressions used to define attributes use the codes described above
-plus a few specific to attribute definitions, to be discussed below. 
+plus a few specific to attribute definitions, to be discussed below.
 Attribute value expressions must have one of the following forms:
 
 @table @code
@@ -3485,21 +3545,21 @@ scheduled.
 
 @var{name} is a string specifying one of a fixed set of flags to test.
 Test the flags @code{forward} and @code{backward} to determine the
-direction of a conditional branch.  Test the flags @code{very_likely}, 
-@code{likely}, @code{very_unlikely}, and @code{unlikely} to determine 
+direction of a conditional branch.  Test the flags @code{very_likely},
+@code{likely}, @code{very_unlikely}, and @code{unlikely} to determine
 if a conditional branch is expected to be taken.
 
-If the @code{very_likely} flag is true, then the @code{likely} flag is also 
+If the @code{very_likely} flag is true, then the @code{likely} flag is also
 true.  Likewise for the @code{very_unlikely} and @code{unlikely} flags.
 
 This example describes a conditional branch delay slot which
-can be nullified for forward branches that are taken (annul-true) or 
-for backward branches which are not taken (annul-false).  
+can be nullified for forward branches that are taken (annul-true) or
+for backward branches which are not taken (annul-false).
 
 @smallexample
 (define_delay (eq_attr "type" "cbranch")
-  [(eq_attr "in_branch_delay" "true") 
-   (and (eq_attr "in_branch_delay" "true") 
+  [(eq_attr "in_branch_delay" "true")
+   (and (eq_attr "in_branch_delay" "true")
         (attr_flag "forward"))
    (and (eq_attr "in_branch_delay" "true")
         (attr_flag "backward"))])
@@ -3508,12 +3568,12 @@ for backward branches which are not taken (annul-false).
 The @code{forward} and @code{backward} flags are false if the current
 @code{insn} being scheduled is not a conditional branch.
 
-The @code{very_likely} and @code{likely} flags are true if the 
-@code{insn} being scheduled is not a conditional branch.  The 
+The @code{very_likely} and @code{likely} flags are true if the
+@code{insn} being scheduled is not a conditional branch.
 The @code{very_unlikely} and @code{unlikely} flags are false if the
 @code{insn} being scheduled is not a conditional branch.
 
-@code{attr_flag} is only used during delay slot scheduling and has no 
+@code{attr_flag} is only used during delay slot scheduling and has no
 meaning to other passes of the compiler.
 @end table
 
@@ -3702,7 +3762,7 @@ must be a @code{label_ref}.
 @item (pc)
 This refers to the address of the @emph{current} insn.  It might have
 been more consistent with other usage to make this the address of the
-@emph{next} insn but this would be confusing because the length of the 
+@emph{next} insn but this would be confusing because the length of the
 current insn is to be computed.
 @end table
 
@@ -3713,7 +3773,7 @@ For normal insns, the length will be determined by value of the
 @code{addr_diff_vec} insn patterns, the length is computed as
 the number of vectors multiplied by the size of each vector.
 
-Lengths are measured in addressable storage units (bytes). 
+Lengths are measured in addressable storage units (bytes).
 
 The following macros can be used to refine the length computation:
 
@@ -3813,7 +3873,7 @@ On some machines, conditional branch instructions can optionally
 instruction will not be executed for certain branch outcomes.  Both
 instructions that annul if the branch is true and instructions that
 annul if the branch is false are supported.
-  
+
 Delay slot scheduling differs from instruction scheduling in that
 determining whether an instruction needs a delay slot is dependent only
 on the type of instruction being generated, not on data flow between the

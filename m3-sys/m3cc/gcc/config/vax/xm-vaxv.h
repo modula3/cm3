@@ -1,7 +1,5 @@
 /* Config file for Vax running system V.  */
 
-#include "vax/xm-vax.h"
-
 #define USG
 
 #define bcopy(a,b,c) memcpy (b,a,c)

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  AT&T DSP1600.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
    Contributed by Michael Collison (collison@world.std.com).
 
 This file is part of GNU CC.
@@ -142,10 +142,10 @@ extern char *output_block_move();
 #define STANDARD_EXEC_PREFIX  "/d1600/bin"
 
 /* Command line options to the AT&T assembler */
-#define ASM_SPEC  "%{V} %{v:%{!V:-V}} %{g*:-g}"
+#define ASM_SPEC  "%{v:-V} %{g*:-g}"
 
 /* Command line options for the AT&T linker */
-#define LINK_SPEC "%{V} %{v:%{!V:-V}} %{minit:-i}  \
+#define LINK_SPEC "%{v:-V} %{minit:-i}  \
 %{!ifile*:%{mmap1:-ifile m1_deflt.if%s}         \
           %{mmap2:-ifile m2_deflt.if%s}         \
           %{mmap3:-ifile m3_deflt.if%s}         \
@@ -1192,7 +1192,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Initialize a variable CUM of type CUMULATIVE_ARGS
    for a call to a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0. */
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME)  ((CUM) = 0)
+#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)  ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
@@ -1609,9 +1609,9 @@ extern struct dsp16xx_frame_info current_frame_info;
    specify it. */
 #define DEFAULT_CHIP_NAME "1610"
 
-/* A list of names for sections other than the standard two, which are
-   'in_text' and 'in_data'. */
-#define EXTRA_SECTIONS in_bss, in_const
+/* A list of names for sections other than the standard ones, which are
+   'in_text' and 'in_data' (and .bss if BSS_SECTION_ASM_OP is defined). */
+#define EXTRA_SECTIONS in_const
 
 #define EXTRA_SECTION_FUNCTIONS  \
 void                                                               \
@@ -1622,16 +1622,7 @@ const_section ()                                                   \
         fprintf (asm_out_file, "%s\n", READONLY_SECTION_ASM_OP);   \
 	in_section = in_const;                                     \
     }                                                              \
-}                                                                  \
-void								   \
-bss_section ()							   \
-{								   \
-    if (in_section != in_bss) {					   \
-	fprintf (asm_out_file, "%s\n", BSS_SECTION_ASM_OP);	   \
-	in_section = in_bss;					   \
-    }								   \
 }
-
 
 /* THE OVERALL FRAMEWORK OF AN ASSEMBLER FILE */
 

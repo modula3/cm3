@@ -1,5 +1,5 @@
 /* Expand the basic unary and binary arithmetic operations, for GNU compiler.
-   Copyright (C) 1987, 88, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -30,6 +30,13 @@ Boston, MA 02111-1307, USA.  */
 #include "recog.h"
 #include "reload.h"
 #include <ctype.h>
+
+/* CYGNUS LOCAL mpw */
+#ifdef MPW
+/* This is a reserved word in MPW.  */
+#define extended extended_
+#endif /* MPW */
+/* END CYGNUS LOCAL */
 
 /* Each optab contains info on how this target machine
    can perform a particular operation
@@ -85,10 +92,14 @@ optab tst_optab;
 
 optab strlen_optab;
 
+/* CYGNUS LOCAL -- branch prediction */
+optab expect_optab;
+/* END CYGNUS LOCAL -- branch prediction */
+
 /* Tables of patterns for extending one integer mode to another.  */
 enum insn_code extendtab[MAX_MACHINE_MODE][MAX_MACHINE_MODE][2];
 
-/* Tables of patterns for converting between fixed and floating point. */
+/* Tables of patterns for converting between fixed and floating point.  */
 enum insn_code fixtab[NUM_MACHINE_MODES][NUM_MACHINE_MODES][2];
 enum insn_code fixtrunctab[NUM_MACHINE_MODES][NUM_MACHINE_MODES][2];
 enum insn_code floattab[NUM_MACHINE_MODES][NUM_MACHINE_MODES][2];
@@ -117,6 +128,8 @@ rtx memcmp_libfunc;
 rtx bcmp_libfunc;
 rtx memset_libfunc;
 rtx bzero_libfunc;
+
+rtx throw_libfunc;
 
 rtx eqhf2_libfunc;
 rtx nehf2_libfunc;
@@ -438,7 +451,7 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
 	temp = gen_reg_rtx (mode);
 
       /* If it is a commutative operator and the modes would match
-	 if we would swap the operands, we can save the conversions. */
+	 if we would swap the operands, we can save the conversions.  */
       if (commutative_op)
 	{
 	  if (GET_MODE (op0) != mode0 && GET_MODE (op1) != mode1
@@ -2116,6 +2129,13 @@ expand_abs (mode, op0, target, unsignedp, safe)
     }
 
   /* If that does not win, use conditional jump and negate.  */
+
+  /* It is safe to use the target if it is the same
+     as the source if this is also a pseudo register */
+  if (op0 == target && GET_CODE (op0) == REG
+      && REGNO (op0) >= FIRST_PSEUDO_REGISTER)
+    safe = 1;
+
   op1 = gen_label_rtx ();
   if (target == 0 || ! safe
       || GET_MODE (target) != mode
@@ -2374,7 +2394,9 @@ emit_unop_insn (icode, target, op0, code)
 
   op0 = protect_from_queue (op0, 0);
 
-  if (flag_force_mem)
+  /* Sign extension from memory is often done specially on RISC
+     machines, so forcing into a register here can pessimize code.  */
+  if (flag_force_mem && code != SIGN_EXTEND)
     op0 = force_not_mem (op0);
 
   /* Now, if insn does not accept our operands, put them into pseudos.  */
@@ -2741,18 +2763,32 @@ emit_cmp_insn (x, y, comparison, size, mode, unsignedp, align)
       else
 #endif
 	{
+	  rtx result;
+
 #ifdef TARGET_MEM_FUNCTIONS
 	  emit_library_call (memcmp_libfunc, 0,
 			     TYPE_MODE (integer_type_node), 3,
 			     XEXP (x, 0), Pmode, XEXP (y, 0), Pmode,
-			     size, Pmode);
+			     convert_to_mode (TYPE_MODE (sizetype), size,
+					      TREE_UNSIGNED (sizetype)),
+			     TYPE_MODE (sizetype));
 #else
 	  emit_library_call (bcmp_libfunc, 0,
 			     TYPE_MODE (integer_type_node), 3,
 			     XEXP (x, 0), Pmode, XEXP (y, 0), Pmode,
-			     size, Pmode);
+			     convert_to_mode (TYPE_MODE (integer_type_node),
+					      size,
+					      TREE_UNSIGNED (integer_type_node)),
+			     TYPE_MODE (integer_type_node));
 #endif
-	  emit_cmp_insn (hard_libcall_value (TYPE_MODE (integer_type_node)),
+
+	  /* Immediately move the result of the libcall into a pseudo
+	     register so reload doesn't clobber the value if it needs
+	     the return register for a spill reg.  */
+	  result = gen_reg_rtx (TYPE_MODE (integer_type_node));
+	  emit_move_insn (result,
+			  hard_libcall_value (TYPE_MODE (integer_type_node)));
+	  emit_cmp_insn (result,
 			 const0_rtx, comparison, NULL_RTX,
 			 TYPE_MODE (integer_type_node), 0, 0);
 	}
@@ -2829,6 +2865,8 @@ emit_cmp_insn (x, y, comparison, size, mode, unsignedp, align)
       && class != MODE_FLOAT)
     {
       rtx libfunc = cmp_optab->handlers[(int) mode].libfunc;
+      rtx result;
+
       /* If we want unsigned, and this mode has a distinct unsigned
 	 comparison routine, use that.  */
       if (unsignedp && ucmp_optab->handlers[(int) mode].libfunc)
@@ -2837,11 +2875,16 @@ emit_cmp_insn (x, y, comparison, size, mode, unsignedp, align)
       emit_library_call (libfunc, 1,
 			 word_mode, 2, x, mode, y, mode);
 
+      /* Immediately move the result of the libcall into a pseudo
+	 register so reload doesn't clobber the value if it needs
+	 the return register for a spill reg.  */
+      result = gen_reg_rtx (word_mode);
+      emit_move_insn (result, hard_libcall_value (word_mode));
+
       /* Integer comparison returns a result that must be compared against 1,
 	 so that even if we do an unsigned compare afterward,
 	 there is still a value that can represent the result "less than".  */
-
-      emit_cmp_insn (hard_libcall_value (word_mode), const1_rtx,
+      emit_cmp_insn (result, const1_rtx,
 		     comparison, NULL_RTX, word_mode, unsignedp, 0);
       return;
     }
@@ -2880,6 +2923,7 @@ emit_float_lib_cmp (x, y, comparison)
 {
   enum machine_mode mode = GET_MODE (x);
   rtx libfunc = 0;
+  rtx result;
 
   if (mode == HFmode)
     switch (comparison)
@@ -3044,7 +3088,13 @@ emit_float_lib_cmp (x, y, comparison)
   emit_library_call (libfunc, 1,
 		     word_mode, 2, x, mode, y, mode);
 
-  emit_cmp_insn (hard_libcall_value (word_mode), const0_rtx, comparison,
+  /* Immediately move the result of the libcall into a pseudo
+     register so reload doesn't clobber the value if it needs
+     the return register for a spill reg.  */
+  result = gen_reg_rtx (word_mode);
+  emit_move_insn (result, hard_libcall_value (word_mode));
+
+  emit_cmp_insn (result, const0_rtx, comparison,
 		 NULL_RTX, word_mode, 0, 0);
 }
 
@@ -3487,7 +3537,7 @@ expand_float (to, from, unsignedp)
 	  /* There is no such mode.  Pretend the target is wide enough.  */
 	  fmode = GET_MODE (to);
 
-	  /* Avoid double-rounding when TO is narrower than FROM. */
+	  /* Avoid double-rounding when TO is narrower than FROM.  */
 	  if ((significand_size (fmode) + 1)
 	      < GET_MODE_BITSIZE (GET_MODE (from)))
 	    {
@@ -3877,10 +3927,13 @@ expand_fix (to, from, unsignedp)
 				   GET_MODE (to), from));
     }
       
-  if (GET_MODE (to) == GET_MODE (target))
-    emit_move_insn (to, target);
-  else
-    convert_move (to, target, 0);
+  if (target != to)
+    {
+      if (GET_MODE (to) == GET_MODE (target))
+        emit_move_insn (to, target);
+      else
+        convert_move (to, target, 0);
+    }
 }
 
 static optab
@@ -4075,10 +4128,14 @@ init_optabs ()
   sin_optab = init_optab (UNKNOWN);
   cos_optab = init_optab (UNKNOWN);
   strlen_optab = init_optab (UNKNOWN);
+/* CYGNUS LOCAL -- branch prediction */
+  expect_optab = init_optab (EXPECT);
+/* END CYGNUS LOCAL -- branch prediction */
 
   for (i = 0; i < NUM_MACHINE_MODES; i++)
     {
       movstr_optab[i] = CODE_FOR_nothing;
+      clrstr_optab[i] = CODE_FOR_nothing;
 
 #ifdef HAVE_SECONDARY_RELOADS
       reload_in_optab[i] = reload_out_optab[i] = CODE_FOR_nothing;
@@ -4131,6 +4188,9 @@ init_optabs ()
   init_floating_libfuncs (neg_optab, "neg", '2');
   init_integral_libfuncs (one_cmpl_optab, "one_cmpl", '2');
   init_integral_libfuncs (ffs_optab, "ffs", '2');
+/* CYGNUS LOCAL -- branch prediction */
+  init_integral_libfuncs (expect_optab, "expect", '3');
+/* END CYGNUS LOCAL -- branch prediction */
 
   /* Comparison libcalls for integers MUST come in pairs, signed/unsigned.  */
   init_integral_libfuncs (cmp_optab, "cmp", '2');
@@ -4212,6 +4272,8 @@ init_optabs ()
   bcmp_libfunc = gen_rtx (SYMBOL_REF, Pmode, "__gcc_bcmp");
   memset_libfunc = gen_rtx (SYMBOL_REF, Pmode, "memset");
   bzero_libfunc = gen_rtx (SYMBOL_REF, Pmode, "bzero");
+
+  throw_libfunc = gen_rtx (SYMBOL_REF, Pmode, "__throw");
 
   eqhf2_libfunc = gen_rtx (SYMBOL_REF, Pmode, "__eqhf2");
   nehf2_libfunc = gen_rtx (SYMBOL_REF, Pmode, "__nehf2");
@@ -4304,7 +4366,7 @@ init_optabs ()
 
 #ifdef BROKEN_LDEXP
 
-/* SCO 3.2 apparently has a broken ldexp. */
+/* SCO 3.2 apparently has a broken ldexp.  */
 
 double
 ldexp(x,n)

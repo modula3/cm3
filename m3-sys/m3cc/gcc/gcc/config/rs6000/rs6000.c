@@ -4460,8 +4460,6 @@ output_epilog (file, size)
 	i = 13;
       else if (! strcmp (language_string, "GNU CHILL"))
 	i = 44;
-      else if (! strcmp (language_string, "SRC Modula-3"))
-	i = 2; /* use Pascal for Modula-3. */
       else
 	abort ();
       fprintf (file, "%d,", i);

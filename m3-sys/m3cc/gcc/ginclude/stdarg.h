@@ -35,11 +35,14 @@
 #ifdef __alpha__
 #include <va-alpha.h>
 #else
-#if defined (__H8300__) || defined (__H8300H__)
+#if defined (__H8300__) || defined (__H8300H__) || defined (__H8300S__)
 #include <va-h8300.h>
 #else
-#if defined (__PPC__) && defined (_CALL_SYSV)
+#if defined (__PPC__) && (defined (_CALL_SYSV) || defined (_WIN32))
 #include <va-ppc.h>
+#else
+#ifdef __sh__
+#include <va-sh.h>
 #else
 
 /* Define __gnuc_va_list.  */
@@ -93,6 +96,7 @@ void va_end (__gnuc_va_list);		/* Defined in libgcc.a */
 #endif /* big-endian */
 #endif /* _STDARG_H */
 
+#endif /* not sh */
 #endif /* not powerpc with V.4 calling sequence */
 #endif /* not h8300 */
 #endif /* not alpha */
@@ -120,7 +124,7 @@ void va_end (__gnuc_va_list);		/* Defined in libgcc.a */
 #undef _BSD_VA_LIST
 #endif
 
-#ifdef __svr4__
+#if defined(__svr4__) || defined(_SCO_DS)
 /* SVR4.2 uses _VA_LIST for an internal alias for va_list,
    so we must avoid testing it and setting it here.
    SVR4 uses _VA_LIST as a flag in stdarg.h, but we should
@@ -134,7 +138,7 @@ void va_end (__gnuc_va_list);		/* Defined in libgcc.a */
 #endif /* __i860__ */
 typedef __gnuc_va_list va_list;
 #endif /* _VA_LIST_ */
-#else /* not __svr4__ */
+#else /* not __svr4__ || _SCO_DS */
 
 /* The macro _VA_LIST_ is the same thing used by this file in Ultrix.
    But on BSD NET2 we must not test or define or undef it.

@@ -25,3 +25,11 @@ Boston, MA 02111-1307, USA.  */
    
 #define HAVE_STRERROR
 #define HAVE_VPRINTF
+
+/* CYGNUS LOCAL: brendan conflicts with system header */
+/* We have _sys_siglist, but the declaration in <signal.h> conflicts with
+   the declarations in collect2.c and mips-tfile.c, so disable the declarations
+   in those files.  */
+
+#define DONT_DECLARE_SYS_SIGLIST
+/* END CYGNUS LOCAL */

@@ -1,0 +1,26 @@
+CROSS_LIBGCC1 = libgcc1.null
+LIBGCC2_CFLAGS = -DCMPtype=HItype  -g   -O2 
+LIB2FUNCS_EXTRA = fp-bit.c dp-bit.c $(srcdir)/config/z8k/lib2funcs.c
+
+
+fp-bit.c: $(srcdir)/config/fp-bit.c
+	echo '#define FLOAT' > fp-bit.c
+	echo '#define NO_NANS' >> fp-bit.c
+	echo '#define SMALL_MACHINE' >> fp-bit.c
+	cat $(srcdir)/config/fp-bit.c >> fp-bit.c
+
+dp-bit.c: $(srcdir)/config/fp-bit.c
+	echo '#define SMALL_MACHINE' > dp-bit.c
+	echo '#define NO_DI_MODE' >> dp-bit.c
+	echo '#define NO_NANS' >>dp-bit.c
+	cat $(srcdir)/config/fp-bit.c >> dp-bit.c
+
+
+RUNTEST_CFLAGS = -B$$rootme/../newlib/ -L$$rootme/../newlib
+
+MULTILIB_OPTIONS = mz8001 mstd
+MULTILIB_DIRNAMES = z8001 std
+
+LIBGCC = stmp-multilib
+INSTALL_LIBGCC = install-multilib
+

@@ -3,7 +3,7 @@
    Changed by Michael Meissner,		meissner@osf.org
    64 bit r4000 support by Ian Lance Taylor, ian@cygnus.com, and
    Brendan Eich, brendan@microunity.com.
-   Copyright (C) 1989, 90, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1989, 90-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -66,6 +66,8 @@ enum processor_type {
   PROCESSOR_R3000,
   PROCESSOR_R6000,
   PROCESSOR_R4000,
+  PROCESSOR_R4100,
+  PROCESSOR_R4300,
   PROCESSOR_R4600,
   PROCESSOR_R4650,
   PROCESSOR_R8000
@@ -73,6 +75,22 @@ enum processor_type {
 
 /* Recast the cpu class to be the cpu attribute.  */
 #define mips_cpu_attr ((enum attr_cpu)mips_cpu)
+
+/* Which ABI to use.  This is only used by the Irix 6 port currently.  */
+
+enum mips_abi_type {
+  ABI_32,
+  ABI_N32,
+  ABI_64
+};
+
+#ifndef MIPS_ABI_DEFAULT
+/* We define this away so that there is no extra runtime cost if the target
+   doesn't support multiple ABIs.  */
+#define mips_abi ABI_32
+#else
+extern enum mips_abi_type mips_abi;
+#endif
 
 /* Whether to emit abicalls code sequences or not.  */
 
@@ -119,6 +137,8 @@ extern enum mips_abicalls_type mips_abicalls;/* for svr4 abi pic calls */
 extern int mips_isa;			/* architectural level */
 extern char *mips_cpu_string;		/* for -mcpu=<xxx> */
 extern char *mips_isa_string;		/* for -mips{1,2,3,4} */
+extern char *mips_abi_string;		/* for -misa={32,n32,64} */
+extern int mips_split_addresses;	/* perform high/lo_sum support */
 extern int dslots_load_total;		/* total # load related delay slots */
 extern int dslots_load_filled;		/* # filled load delay slots */
 extern int dslots_jump_total;		/* total # jump related delay slots */
@@ -161,6 +181,7 @@ extern void		mips_declare_object ();
 extern int		mips_epilogue_delay_slots ();
 extern void		mips_expand_epilogue ();
 extern void		mips_expand_prologue ();
+extern int		mips_check_split ();
 extern char	       *mips_fill_delay_slot ();
 extern char	       *mips_move_1word ();
 extern char	       *mips_move_2words ();
@@ -195,6 +216,7 @@ extern int		nonimmediate_operand ();
 extern int		nonmemory_operand ();
 extern int		register_operand ();
 extern int		scratch_operand ();
+extern int		move_operand ();
 
 /* Functions to change what output section we are using.  */
 extern void		data_section ();
@@ -258,7 +280,7 @@ extern char	       *mktemp ();
 #define MASK_BIG_ENDIAN	0x00010000	/* Generate big endian code */
 #define MASK_SINGLE_FLOAT 0x00020000	/* Only single precision FPU.  */
 #define MASK_MAD	0x00040000	/* Generate mad/madu as on 4650.  */
-#define MASK_UNUSED1	0x00080000
+#define MASK_4300_MUL_FIX 0x00080000    /* Work-around early Vr4300 CPU bug */
 
 					/* Dummy switches used only in spec's*/
 #define MASK_MIPS_TFILE	0x00000000	/* flag for mips-tfile usage */
@@ -342,6 +364,8 @@ extern char	       *mktemp ();
 
 #define TARGET_MAD		(target_flags & MASK_MAD)
 
+#define TARGET_4300_MUL_FIX     (target_flags & MASK_4300_MUL_FIX)
+
 /* Macro to define tables used to set the flags.
    This is a list in braces of pairs in braces,
    each pair being { "NAME", VALUE }
@@ -388,6 +412,8 @@ extern char	       *mktemp ();
   {"double-float",	 -MASK_SINGLE_FLOAT},				\
   {"mad",		  MASK_MAD},					\
   {"no-mad",		 -MASK_MAD},					\
+  {"fix4300",             MASK_4300_MUL_FIX},				\
+  {"no-fix4300",         -MASK_4300_MUL_FIX},				\
   {"4650",		  MASK_MAD | MASK_SINGLE_FLOAT},		\
   {"debug",		  MASK_DEBUG},					\
   {"debuga",		  MASK_DEBUG_A},				\
@@ -450,9 +476,13 @@ extern char	       *mktemp ();
 
 #define TARGET_OPTIONS							\
 {									\
+  SUBTARGET_TARGET_OPTIONS						\
   { "cpu=",	&mips_cpu_string	},				\
   { "ips",	&mips_isa_string	}				\
 }
+
+/* This is meant to be redefined in the host dependent files.  */
+#define SUBTARGET_TARGET_OPTIONS
 
 /* Macros to decide whether certain features are available or not,
    depending on the instruction set architecture level.  */
@@ -480,10 +510,7 @@ extern char	       *mktemp ();
 #endif
 
 #define SWITCH_TAKES_ARG(CHAR)						\
-  ((CHAR) == 'D' || (CHAR) == 'U' || (CHAR) == 'o'			\
-   || (CHAR) == 'e' || (CHAR) == 'T' || (CHAR) == 'u'			\
-   || (CHAR) == 'I' || (CHAR) == 'm'					\
-   || (CHAR) == 'L' || (CHAR) == 'A' || (CHAR) == 'G')
+  (DEFAULT_SWITCH_TAKES_ARG (CHAR) || (CHAR) == 'G')
 
 /* Sometimes certain combinations of command options do not make sense
    on a particular target machine.  You can define a macro
@@ -533,7 +560,7 @@ do									\
   }									\
 while (0)
 
-/* This is meant to be redefined in the host dependent files */
+/* This is meant to be redefined in the host dependent files.  */
 #define SUBTARGET_CONDITIONAL_REGISTER_USAGE
 
 /* Show we can debug even without a frame pointer.  */
@@ -680,7 +707,7 @@ while (0)
 #ifndef CC1_SPEC
 #define CC1_SPEC "\
 %{gline:%{!g:%{!g0:%{!g1:%{!g2: -g1}}}}} \
-%{mips1:-mfp32 -mgp32}%{mips2:-mfp32 -mgp32}\
+%{mips1:-mfp32 -mgp32} %{mips2:-mfp32 -mgp32}\
 %{mips3:%{!msingle-float:%{!m4650:-mfp64}} -mgp64} \
 %{mips4:%{!msingle-float:%{!m4650:-mfp64}} -mgp64} \
 %{mfp64:%{msingle-float:%emay not use both -mfp64 and -msingle-float}} \
@@ -710,6 +737,8 @@ while (0)
 %{mips3:-U__mips -D__mips=3 -D__mips64} \
 %{mips4:-U__mips -D__mips=4 -D__mips64} \
 %{mgp32:-U__mips64} %{mgp64:-D__mips64} \
+%{msingle-float:%{!msoft-float:-D__mips_single_float}} \
+%{m4650:%{!msoft-float:-D__mips_single_float}} \
 %{EB:-UMIPSEL -U_MIPSEL -U__MIPSEL -U__MIPSEL__ -D_MIPSEB -D__MIPSEB -D__MIPSEB__ %{!ansi:-DMIPSEB}} \
 %{EL:-UMIPSEB -U_MIPSEB -U__MIPSEB -U__MIPSEB__ -D_MIPSEL -D__MIPSEL -D__MIPSEL__ %{!ansi:-DMIPSEL}}"
 #endif
@@ -1171,12 +1200,14 @@ do {                                                  \
    even those that are not normally considered general registers.
 
    On the Mips, we have 32 integer registers, 32 floating point
-   registers and the special registers hi, lo, hilo, and fp status.
+   registers and the special registers hi, lo, hilo, fp status, and rap.
    The hilo register is only used in 64 bit mode.  It represents a 64
    bit value stored as two 32 bit values in the hi and lo registers;
-   this is the result of the mult instruction.  */
+   this is the result of the mult instruction.  rap is a pointer to the
+   stack where the return address reg ($31) was stored.  This is needed
+   for C++ exception handling.  */
 
-#define FIRST_PSEUDO_REGISTER 68
+#define FIRST_PSEUDO_REGISTER 69
 
 /* 1 for registers that have pervasive standard uses
    and are not available for the register allocator.
@@ -1189,7 +1220,7 @@ do {                                                  \
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1,			\
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,			\
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,			\
-  0, 0, 0, 1								\
+  0, 0, 0, 1, 1								\
 }
 
 
@@ -1206,7 +1237,7 @@ do {                                                  \
   0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1,			\
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,			\
   1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,			\
-  1, 1, 1, 1								\
+  1, 1, 1, 1, 1								\
 }
 
 
@@ -1231,6 +1262,8 @@ do {                                                  \
 #define ST_REG_FIRST 67
 #define ST_REG_LAST  67
 #define ST_REG_NUM   (ST_REG_LAST - ST_REG_FIRST + 1)
+
+#define RAP_REG_NUM   68
 
 #define AT_REGNUM	(GP_REG_FIRST + 1)
 #define HI_REGNUM	(MD_REG_FIRST + 0)
@@ -1303,6 +1336,10 @@ extern char mips_hard_regno_mode_ok[][FIRST_PSEUDO_REGISTER];
 
 /* Base register for access to arguments of the function.  */
 #define ARG_POINTER_REGNUM GP_REG_FIRST
+
+/* Fake register that holds the address on the stack of the
+   current function's return address.  */
+#define RETURN_ADDRESS_POINTER_REGNUM RAP_REG_NUM
 
 /* Register in which static-chain is passed to a function.  */
 #define STATIC_CHAIN_REGNUM (GP_REG_FIRST + 2)
@@ -1628,10 +1665,6 @@ extern enum reg_class	mips_secondary_reload_class ();
 
 /* Stack layout; function entry, exit and calling.  */
 
-/* Don't enable support for the 64 bit ABI calling convention.
-   Some embedded code depends on the old 64 bit calling convention.  */
-#define ABI_64BIT 0
-
 /* Define this if pushing a word on the stack
    makes the stack pointer a smaller address.  */
 #define STACK_GROWS_DOWNWARD
@@ -1672,6 +1705,25 @@ extern enum reg_class	mips_secondary_reload_class ();
 	? 4*UNITS_PER_WORD						\
 	: current_function_outgoing_args_size)
 #endif
+
+/* The return address for the current frame is in r31 is this is a leaf
+   function.  Otherwise, it is on the stack.  It is at a variable offset
+   from sp/fp/ap, so we define a fake hard register rap which is a
+   poiner to the return address on the stack.  This always gets eliminated
+   during reload to be either the frame pointer or the stack pointer plus
+   an offset.  */
+
+/* ??? This definition fails for leaf functions.  There is currently no
+   general solution for this problem.  */
+
+/* ??? There appears to be no way to get the return address of any previous
+   frame except by disassembling instructions in the prologue/epilogue.
+   So currently we support only the current frame.  */
+
+#define RETURN_ADDR_RTX(count, frame)			\
+  ((count == 0)						\
+   ? gen_rtx (MEM, Pmode, gen_rtx (REG, Pmode, RETURN_ADDRESS_POINTER_REGNUM))\
+   : (rtx) 0)
 
 /* Structure to be filled in by compute_frame_size with register
    save masks, and offsets for the current function.  */
@@ -1734,8 +1786,9 @@ extern struct mips_frame_info current_frame_info;
 #define ELIMINABLE_REGS							\
 {{ ARG_POINTER_REGNUM,   STACK_POINTER_REGNUM},				\
  { ARG_POINTER_REGNUM,   FRAME_POINTER_REGNUM},				\
+ { RETURN_ADDRESS_POINTER_REGNUM, STACK_POINTER_REGNUM},		\
+ { RETURN_ADDRESS_POINTER_REGNUM, FRAME_POINTER_REGNUM},		\
  { FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM}}
-
 
 /* A C expression that returns non-zero if the compiler is allowed to
    try to replace register number FROM-REG with register number
@@ -1746,7 +1799,9 @@ extern struct mips_frame_info current_frame_info;
 
 #define CAN_ELIMINATE(FROM, TO)						\
   (!frame_pointer_needed						\
-   || ((FROM) == ARG_POINTER_REGNUM && (TO) == FRAME_POINTER_REGNUM))
+   || ((FROM) == ARG_POINTER_REGNUM && (TO) == FRAME_POINTER_REGNUM)	\
+   || ((FROM) == RETURN_ADDRESS_POINTER_REGNUM				\
+       && (TO) == FRAME_POINTER_REGNUM))
 
 /* This macro is similar to `INITIAL_FRAME_POINTER_OFFSET'.  It
    specifies the initial difference between the specified pair of
@@ -1761,9 +1816,13 @@ extern struct mips_frame_info current_frame_info;
 	    && ((TO) == FRAME_POINTER_REGNUM				 \
 		|| (TO) == STACK_POINTER_REGNUM))			 \
     (OFFSET) = (current_frame_info.total_size				 \
-		- (ABI_64BIT && mips_isa >= 3				 \
+		- (mips_abi != ABI_32					 \
 		   ? current_function_pretend_args_size			 \
 		   : 0));						 \
+  else if ((FROM) == RETURN_ADDRESS_POINTER_REGNUM			 \
+	   && ((TO) == FRAME_POINTER_REGNUM				 \
+	       || (TO) == STACK_POINTER_REGNUM))			 \
+    (OFFSET) = current_frame_info.gp_sp_offset;				 \
   else									 \
     abort ();								 \
 }
@@ -1969,7 +2028,7 @@ typedef struct mips_args {
 
 */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME)			\
+#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)		\
   init_cumulative_args (&CUM, FNTYPE, LIBNAME)				\
 
 /* Update the data in CUM to advance over an argument
@@ -2160,12 +2219,11 @@ typedef struct mips_args {
     }									    \
 									    \
   /* Flush the instruction cache.  */					    \
-  /* ??? Are the modes right? Maybe they should depend on -mint64/-mlong64? */\
   /* ??? Should check the return value for errors.  */			    \
   emit_library_call (gen_rtx (SYMBOL_REF, Pmode, "cacheflush"),		    \
 		     0, VOIDmode, 3, addr, Pmode,			    \
-		     GEN_INT (TRAMPOLINE_SIZE), SImode,  		    \
-		     GEN_INT (1), SImode);				    \
+		     GEN_INT (TRAMPOLINE_SIZE), TYPE_MODE (integer_type_node),\
+		     GEN_INT (1), TYPE_MODE (integer_type_node));	    \
 }
 
 /* Addressing modes, and classification of registers for them.  */
@@ -2295,8 +2353,19 @@ typedef struct mips_args {
   if (GET_CODE (xinsn) == REG && REG_OK_FOR_BASE_P (xinsn))		\
     goto ADDR;								\
 									\
-  if (CONSTANT_ADDRESS_P (xinsn))					\
+  if (CONSTANT_ADDRESS_P (xinsn)					\
+      && ! (mips_split_addresses && mips_check_split (xinsn, MODE)))	\
     goto ADDR;								\
+									\
+  if (GET_CODE (xinsn) == LO_SUM && mips_split_addresses)		\
+    {									\
+      register rtx xlow0 = XEXP (xinsn, 0);				\
+      register rtx xlow1 = XEXP (xinsn, 1);				\
+									\
+      if (GET_CODE (xlow0) == REG && REG_OK_FOR_BASE_P (xlow0)		\
+	  && mips_check_split (xlow1, MODE))				\
+	goto ADDR;							\
+    }									\
 									\
   if (GET_CODE (xinsn) == PLUS)						\
     {									\
@@ -2339,8 +2408,9 @@ typedef struct mips_args {
           /* ??? Reject combining an address with a register for the MIPS  \
 	     64 bit ABI, because the SGI assembler can not handle this.  */ \
 	  if (!TARGET_DEBUG_A_MODE					\
-	      && ! ABI_64BIT						\
+	      && mips_abi == ABI_32					\
 	      && CONSTANT_ADDRESS_P (xplus1)				\
+	      && ! mips_split_addresses					\
 	      && (!TARGET_EMBEDDED_PIC					\
 		  || code1 != CONST					\
 		  || GET_CODE (XEXP (xplus1, 0)) != MINUS))		\
@@ -2368,7 +2438,7 @@ typedef struct mips_args {
     || GET_CODE (X) == CONST_INT || GET_CODE (X) == HIGH		\
     || (GET_CODE (X) == CONST						\
 	&& ! (flag_pic && pic_address_needs_scratch (X))		\
-	&& ! ABI_64BIT))						\
+	&& mips_abi == ABI_32))						\
    && (!HALF_PIC_P () || !HALF_PIC_ADDRESS_P (X)))
 
 /* Define this, so that when PIC, reload won't try to reload invalid
@@ -2387,7 +2457,7 @@ typedef struct mips_args {
 #define LEGITIMATE_CONSTANT_P(X)					\
   ((GET_CODE (X) != CONST_DOUBLE					\
     || mips_const_double_ok (X, GET_MODE (X)))				\
-   && ! (GET_CODE (X) == CONST && ABI_64BIT))
+   && ! (GET_CODE (X) == CONST && mips_abi != ABI_32))
 
 /* A C compound statement that attempts to replace X with a valid
    memory address for an operand of mode MODE.  WIN will be a C
@@ -2438,10 +2508,18 @@ typedef struct mips_args {
       GO_DEBUG_RTX (xinsn);						\
     }									\
 									\
+  if (mips_split_addresses && mips_check_split (X, MODE))		\
+    {									\
+      /* ??? Is this ever executed?  */					\
+      X = gen_rtx (LO_SUM, Pmode,					\
+		   copy_to_mode_reg (Pmode, gen_rtx (HIGH, Pmode, X)), X); \
+      goto WIN;								\
+    }									\
+									\
   if (GET_CODE (xinsn) == CONST						\
       && ((flag_pic && pic_address_needs_scratch (xinsn))		\
 	  /* ??? SGI's Irix 6 assembler can't handle CONST.  */		\
-	  || ABI_64BIT))						\
+	  || mips_abi != ABI_32))					\
     {									\
       rtx ptr_reg = gen_reg_rtx (Pmode);				\
       rtx constant = XEXP (XEXP (xinsn, 0), 1);				\
@@ -2979,7 +3057,10 @@ while (0)
   {"cmp_op",			{ EQ, NE, GT, GE, GTU, GEU, LT, LE,	\
 				  LTU, LEU }},				\
   {"pc_or_label_operand",	{ PC, LABEL_REF }},			\
-  {"call_insn_operand",		{ MEM }},				\
+  {"call_insn_operand",		{ CONST_INT, CONST, SYMBOL_REF, REG}},	\
+  {"move_operand", 		{ CONST_INT, CONST_DOUBLE, CONST,	\
+				  SYMBOL_REF, LABEL_REF, SUBREG,	\
+				  REG, MEM}},				\
 
 
 /* If defined, a C statement to be executed just prior to the
@@ -3134,6 +3215,7 @@ while (0)
   &mips_reg_names[65][0],						\
   &mips_reg_names[66][0],						\
   &mips_reg_names[67][0],						\
+  &mips_reg_names[68][0],						\
 }
 
 /* print-rtl.c can't use REGISTER_NAMES, since it depends on mips.c.
@@ -3148,7 +3230,7 @@ while (0)
   "$f8",  "$f9",  "$f10", "$f11", "$f12", "$f13", "$f14", "$f15",	\
   "$f16", "$f17", "$f18", "$f19", "$f20", "$f21", "$f22", "$f23",	\
   "$f24", "$f25", "$f26", "$f27", "$f28", "$f29", "$f30", "$f31",	\
-  "hi",   "lo",   "accum","$fcr31"					\
+  "hi",   "lo",   "accum","$fcr31","$rap"				\
 }
 
 /* If defined, a C initializer for an array of structures
@@ -3505,7 +3587,14 @@ do {									\
   if (TARGET_64BIT)							\
     {									\
       fprintf (STREAM, "\t.dword\t");					\
-      output_addr_const (STREAM, (VALUE));				\
+      if (HOST_BITS_PER_WIDE_INT < 64 || GET_CODE (VALUE) != CONST_INT)	\
+	/* We can't use 'X' for negative numbers, because then we won't	\
+	   get the right value for the upper 32 bits.  */		\
+        output_addr_const (STREAM, VALUE);				\
+      else								\
+	/* We must use 'X', because otherwise LONG_MIN will print as	\
+	   a number that the Irix 6 assembler won't accept.  */		\
+        print_operand (STREAM, VALUE, 'X');				\
       fprintf (STREAM, "\n");						\
     }									\
   else									\
@@ -3554,15 +3643,14 @@ do {									\
     fprintf (STREAM, "\t%s\t%sL%d-%sLS%d\n",				\
 	     TARGET_LONG64 ? ".dword" : ".word",			\
 	     LOCAL_LABEL_PREFIX, VALUE, LOCAL_LABEL_PREFIX, REL);	\
-  else if (! ABI_64BIT)							\
+  else if (mips_abi == ABI_32)						\
     fprintf (STREAM, "\t%s\t%sL%d\n",					\
 	     TARGET_LONG64 ? ".gpdword" : ".gpword",			\
 	     LOCAL_LABEL_PREFIX, VALUE);				\
   else									\
-    /* ??? Why does this one use . and not LOCAL_LABEL_PREFIX?  */	\
-    fprintf (STREAM, "\t%s\t.L%d\n",					\
+    fprintf (STREAM, "\t%s\t%sL%d\n",					\
 	     TARGET_LONG64 ? ".dword" : ".word",			\
-	     VALUE);							\
+	     LOCAL_LABEL_PREFIX, VALUE);				\
 } while (0)
 
 /* When generating embedded PIC code we want to put the jump table in
@@ -3781,11 +3869,11 @@ while (0)
 #define ASM_OPEN_PAREN "("
 #define ASM_CLOSE_PAREN ")"
 
-/* How to start an assembler comment.  */
+/* How to start an assembler comment.
+   The leading space is important (the mips native assembler requires it).  */
 #ifndef ASM_COMMENT_START
-#define ASM_COMMENT_START "\t\t# "
+#define ASM_COMMENT_START " #"
 #endif
-
 
 
 /* Macros for mips-tfile.c to encapsulate stabs in ECOFF, and for

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Vxworks SPARC version.
-   Copyright (C) 1994 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1996 Free Software Foundation, Inc.
    Contributed by David Henkel-Wallace (gumby@cygnus.com)
 
 This file is part of GNU CC.
@@ -19,7 +19,7 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "sparc/sparc-aout.h"
+#include "sparc/aout.h"
 
 /* Specify what to link with.  */
 /* VxWorks does all the library stuff itself.  */
@@ -35,8 +35,9 @@ Boston, MA 02111-1307, USA.  */
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC ""
 
+/* VxWorks requires we define CPU properly.  */
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dsparc -Acpu(sparc) -Amachine(sparc)"
+#define CPP_PREDEFINES "-Dsparc -Acpu(sparc) -Amachine(sparc) -DCPU=SPARC"
 
 #undef PTRDIFF_TYPE
 #undef SIZE_TYPE

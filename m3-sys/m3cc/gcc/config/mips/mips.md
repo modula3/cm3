@@ -93,7 +93,7 @@
 ;;          (const_string "default"))))
 
 ;; ??? Fix everything that tests this attribute.
-(define_attr "cpu" "default,r3000,r6000,r4000,r4600,r4650,r8000"
+(define_attr "cpu" "default,r3000,r6000,r4000,r4100,r4300,r4600,r4650,r8000"
   (const (symbol_ref "mips_cpu_attr")))
 
 ;; Attribute defining whether or not we can use the branch-likely instructions
@@ -151,11 +151,11 @@
 ;; Make the default case (PROCESSOR_DEFAULT) handle the worst case
 
 (define_function_unit "memory" 1 0
-  (and (eq_attr "type" "load") (eq_attr "cpu" "!r3000,r4600,r4650"))
+  (and (eq_attr "type" "load") (eq_attr "cpu" "!r3000,r4600,r4650,r4100,r4300"))
   3 0)
 
 (define_function_unit "memory" 1 0
-  (and (eq_attr "type" "load") (eq_attr "cpu" "r3000,r4600,r4650"))
+  (and (eq_attr "type" "load") (eq_attr "cpu" "r3000,r4600,r4650,r4100,r4300"))
   2 0)
 
 (define_function_unit "memory"   1 0 (eq_attr "type" "store") 1 0)
@@ -167,7 +167,7 @@
   1 3)
 
 (define_function_unit "imuldiv"  1 0
-  (and (eq_attr "type" "imul") (eq_attr "cpu" "!r3000,r4000,r4600,r4650"))
+  (and (eq_attr "type" "imul") (eq_attr "cpu" "!r3000,r4000,r4600,r4650,r4100,r4300"))
   17 17)
 
 (define_function_unit "imuldiv"  1 0
@@ -183,7 +183,23 @@
   4 4)
 
 (define_function_unit "imuldiv"  1 0
-  (and (eq_attr "type" "idiv") (eq_attr "cpu" "!r3000,r4000,r4600,r4650"))
+  (and (eq_attr "type" "imul") (and (eq_attr "mode" "SI") (eq_attr "cpu" "r4100")))
+  1 1)
+
+(define_function_unit "imuldiv"  1 0
+  (and (eq_attr "type" "imul") (and (eq_attr "mode" "DI") (eq_attr "cpu" "r4100")))
+  4 4)
+
+(define_function_unit "imuldiv"  1 0
+  (and (eq_attr "type" "imul") (and (eq_attr "mode" "SI") (eq_attr "cpu" "r4300")))
+  5 5)
+
+(define_function_unit "imuldiv"  1 0
+  (and (eq_attr "type" "imul") (and (eq_attr "mode" "DI") (eq_attr "cpu" "r4300")))
+  8 8)
+
+(define_function_unit "imuldiv"  1 0
+  (and (eq_attr "type" "idiv") (eq_attr "cpu" "!r3000,r4000,r4600,r4650,r4100,r4300"))
   38 38)
 
 (define_function_unit "imuldiv"  1 0
@@ -202,8 +218,31 @@
   (and (eq_attr "type" "idiv") (eq_attr "cpu" "r4000"))
   69 69)
 
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "idiv") (and (eq_attr "mode" "SI") (eq_attr "cpu" "r4100")))
+  35 35)
+
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "idiv") (and (eq_attr "mode" "DI") (eq_attr "cpu" "r4100")))
+  67 67)
+
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "idiv") (and (eq_attr "mode" "SI") (eq_attr "cpu" "r4300")))
+  37 37)
+
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "idiv") (and (eq_attr "mode" "DI") (eq_attr "cpu" "r4300")))
+  69 69)
+
+;; The R4300 does *NOT* have a seperate Floating Point Unit, instead
+;; the FP hardware is part of the normal ALU circuitry.  This means FP
+;; instructions affect the pipe-line, and no functional unit
+;; parallelism can occur on R4300 processors.  To force GCC into coding
+;; for only a single functional unit, we force the R4300 FP
+;; instructions to be processed in the "imuldiv" unit.
+
 (define_function_unit "adder" 1 1
-  (and (eq_attr "type" "fcmp") (eq_attr "cpu" "!r3000,r6000"))
+  (and (eq_attr "type" "fcmp") (eq_attr "cpu" "!r3000,r6000,r4300"))
   3 0)
 
 (define_function_unit "adder" 1 1
@@ -211,7 +250,7 @@
   2 0)
 
 (define_function_unit "adder" 1 1
-  (and (eq_attr "type" "fadd") (eq_attr "cpu" "!r3000,r6000"))
+  (and (eq_attr "type" "fadd") (eq_attr "cpu" "!r3000,r6000,r4300"))
   4 0)
 
 (define_function_unit "adder" 1 1
@@ -223,7 +262,7 @@
   3 0)
 
 (define_function_unit "adder" 1 1
-  (and (eq_attr "type" "fabs,fneg") (eq_attr "cpu" "!r3000,r4600,r4650"))
+  (and (eq_attr "type" "fabs,fneg") (eq_attr "cpu" "!r3000,r4600,r4650,r4300"))
   2 0)
 
 (define_function_unit "adder" 1 1
@@ -231,7 +270,7 @@
   1 0)
 
 (define_function_unit "mult" 1 1
-  (and (eq_attr "type" "fmul") (and (eq_attr "mode" "SF") (eq_attr "cpu" "!r3000,r6000,r4600,r4650")))
+  (and (eq_attr "type" "fmul") (and (eq_attr "mode" "SF") (eq_attr "cpu" "!r3000,r6000,r4600,r4650,r4300")))
   7 0)
 
 (define_function_unit "mult" 1 1
@@ -247,7 +286,7 @@
   8 0)
 
 (define_function_unit "mult" 1 1
-  (and (eq_attr "type" "fmul") (and (eq_attr "mode" "DF") (eq_attr "cpu" "!r3000,r6000")))
+  (and (eq_attr "type" "fmul") (and (eq_attr "mode" "DF") (eq_attr "cpu" "!r3000,r6000,r4300")))
   8 0)
 
 (define_function_unit "mult" 1 1
@@ -259,7 +298,7 @@
   6 0)
 
 (define_function_unit "divide" 1 1
-  (and (eq_attr "type" "fdiv") (and (eq_attr "mode" "SF") (eq_attr "cpu" "!r3000,r6000,r4600,r4650")))
+  (and (eq_attr "type" "fdiv") (and (eq_attr "mode" "SF") (eq_attr "cpu" "!r3000,r6000,r4600,r4650,r4300")))
   23 0)
 
 (define_function_unit "divide" 1 1
@@ -275,7 +314,7 @@
   32 0)
 
 (define_function_unit "divide" 1 1
-  (and (eq_attr "type" "fdiv") (and (eq_attr "mode" "DF") (eq_attr "cpu" "!r3000,r6000,r4600,r4650")))
+  (and (eq_attr "type" "fdiv") (and (eq_attr "mode" "DF") (eq_attr "cpu" "!r3000,r6000,r4600,r4650,r4300")))
   36 0)
 
 (define_function_unit "divide" 1 1
@@ -292,7 +331,7 @@
 
 ;;; ??? Is this number right?
 (define_function_unit "divide" 1 1
-  (and (eq_attr "type" "fsqrt") (and (eq_attr "mode" "SF") (eq_attr "cpu" "!r4600,r4650")))
+  (and (eq_attr "type" "fsqrt") (and (eq_attr "mode" "SF") (eq_attr "cpu" "!r4600,r4650,r4300")))
   54 0)
 (define_function_unit "divide" 1 1
   (and (eq_attr "type" "fsqrt") (and (eq_attr "mode" "SF") (eq_attr "cpu" "r4600,r4650")))
@@ -300,12 +339,38 @@
 
 ;;; ??? Is this number right?
 (define_function_unit "divide" 1 1
-  (and (eq_attr "type" "fsqrt") (and (eq_attr "mode" "DF") (eq_attr "cpu" "!r4600,r4650")))
+  (and (eq_attr "type" "fsqrt") (and (eq_attr "mode" "DF") (eq_attr "cpu" "!r4600,r4650,r4300")))
   112 0)
 (define_function_unit "divide" 1 1
   (and (eq_attr "type" "fsqrt") (and (eq_attr "mode" "DF") (eq_attr "cpu" "r4600,r4650")))
   60 0)
 
+;; R4300 FP instruction classes treated as part of the "imuldiv"
+;; functional unit:
+
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "fadd") (eq_attr "cpu" "r4300"))
+  3 3)
+
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "fcmp,fabs,fneg") (eq_attr "cpu" "r4300"))
+  1 1)
+
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "fmul") (and (eq_attr "mode" "SF") (eq_attr "cpu" "r4300")))
+  5 5)
+(define_function_unit "imuldiv" 1 0
+  (and (eq_attr "type" "fmul") (and (eq_attr "mode" "DF") (eq_attr "cpu" "r4300")))
+  8 8)
+
+(define_function_unit "imuldiv" 1 0
+  (and (and (eq_attr "type" "fdiv") (eq_attr "type" "fsqrt"))
+       (and (eq_attr "mode" "SF") (eq_attr "cpu" "r4300")))
+  29 29)
+(define_function_unit "imuldiv" 1 0
+  (and (and (eq_attr "type" "fdiv") (eq_attr "type" "fsqrt"))
+       (and (eq_attr "mode" "DF") (eq_attr "cpu" "r4300")))
+  58 58)
 
 ;; The following functional units do not use the cpu type, and use
 ;; much less memory in genattrtab.c.
@@ -803,25 +868,89 @@
 ;;  ....................
 ;;
 
-(define_insn "muldf3"
+;; Early Vr4300 silicon has a CPU bug where multiplies with certain
+;; operands may corrupt immediately following multiplies. This is a
+;; simple fix to insert NOPs.
+
+(define_expand "muldf3"
   [(set (match_operand:DF 0 "register_operand" "=f")
 	(mult:DF (match_operand:DF 1 "register_operand" "f")
 		 (match_operand:DF 2 "register_operand" "f")))]
   "TARGET_HARD_FLOAT && TARGET_DOUBLE_FLOAT"
+  "
+{
+  if (mips_cpu != PROCESSOR_R4300)
+    emit_insn (gen_muldf3_internal (operands[0], operands[1], operands[2]));
+  else
+    emit_insn (gen_muldf3_r4300 (operands[0], operands[1], operands[2]));
+  DONE;
+}")
+
+(define_insn "muldf3_internal"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+	(mult:DF (match_operand:DF 1 "register_operand" "f")
+		 (match_operand:DF 2 "register_operand" "f")))]
+  "TARGET_HARD_FLOAT && TARGET_DOUBLE_FLOAT && mips_cpu != PROCESSOR_R4300"
   "mul.d\\t%0,%1,%2"
   [(set_attr "type"	"fmul")
    (set_attr "mode"	"DF")
    (set_attr "length"	"1")])
 
-(define_insn "mulsf3"
+(define_insn "muldf3_r4300"
+  [(set (match_operand:DF 0 "register_operand" "=f")
+	(mult:DF (match_operand:DF 1 "register_operand" "f")
+		 (match_operand:DF 2 "register_operand" "f")))]
+  "TARGET_HARD_FLOAT && TARGET_DOUBLE_FLOAT && mips_cpu == PROCESSOR_R4300"
+  "*
+{
+  output_asm_insn (\"mul.d\\t%0,%1,%2\", operands);
+  if (TARGET_4300_MUL_FIX)
+    output_asm_insn (\"nop\", operands);
+  return \"\";
+}"
+  [(set_attr "type"	"fmul")
+   (set_attr "mode"	"DF")
+   (set_attr "length"	"2")])	;; mul.d + nop
+
+(define_expand "mulsf3"
   [(set (match_operand:SF 0 "register_operand" "=f")
 	(mult:SF (match_operand:SF 1 "register_operand" "f")
 		 (match_operand:SF 2 "register_operand" "f")))]
   "TARGET_HARD_FLOAT"
+  "
+{
+  if (mips_cpu != PROCESSOR_R4300)
+    emit_insn( gen_mulsf3_internal (operands[0], operands[1], operands[2]));
+  else
+    emit_insn( gen_mulsf3_r4300 (operands[0], operands[1], operands[2]));
+  DONE;
+}")
+
+(define_insn "mulsf3_internal"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+	(mult:SF (match_operand:SF 1 "register_operand" "f")
+		 (match_operand:SF 2 "register_operand" "f")))]
+  "TARGET_HARD_FLOAT && mips_cpu != PROCESSOR_R4300"
   "mul.s\\t%0,%1,%2"
   [(set_attr "type"	"fmul")
    (set_attr "mode"	"SF")
    (set_attr "length"	"1")])
+
+(define_insn "mulsf3_r4300"
+  [(set (match_operand:SF 0 "register_operand" "=f")
+	(mult:SF (match_operand:SF 1 "register_operand" "f")
+		 (match_operand:SF 2 "register_operand" "f")))]
+  "TARGET_HARD_FLOAT && mips_cpu == PROCESSOR_R4300"
+  "*
+{
+  output_asm_insn (\"mul.s\\t%0,%1,%2\", operands);
+  if (TARGET_4300_MUL_FIX)
+    output_asm_insn (\"nop\", operands);
+  return \"\";
+}"
+  [(set_attr "type"	"fmul")
+   (set_attr "mode"	"SF")
+   (set_attr "length"	"2")])	;; mul.s + nop
 
 ;; ??? The R4000 (only) has a cpu bug.  If a double-word shift executes while
 ;; a multiply is in progress, it may give an incorrect result.  Avoid
@@ -2979,6 +3108,30 @@ move\\t%0,%z4\\n\\
    (set_attr "mode"	"SI")
    (set_attr "length"	"2,4")])
 
+;; These two patterns support loading addresses with two instructions instead
+;; of using the macro instruction la.
+
+;; ??? mips_move_1word has support for HIGH, so this pattern may be
+;; unnecessary.
+
+(define_insn "high"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(high:SI (match_operand:SI 1 "immediate_operand" "")))]
+  "mips_split_addresses"
+  "lui\\t%0,%%hi(%1) # high"
+  [(set_attr "type"	"move")
+   (set_attr "length"	"1")])
+
+(define_insn "low"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(lo_sum:SI (match_operand:SI 1 "register_operand" "r")
+		   (match_operand:SI 2 "immediate_operand" "")))]
+  "mips_split_addresses"
+  "addiu\\t%0,%1,%%lo(%2) # low"
+  [(set_attr "type"	"arith")
+   (set_attr "mode"	"SI")
+   (set_attr "length"	"1")])
+
 ;; 64-bit integer moves
 
 ;; Unlike most other insns, the move insns can't be split with
@@ -2991,6 +3144,18 @@ move\\t%0,%z4\\n\\
   ""
   "
 {
+  if (mips_split_addresses && mips_check_split (operands[1], DImode))
+    {
+      enum machine_mode mode = GET_MODE (operands[0]);
+      rtx tem = ((reload_in_progress | reload_completed)
+		 ? operands[0] : gen_reg_rtx (mode));
+
+      emit_insn (gen_rtx (SET, VOIDmode, tem,
+			  gen_rtx (HIGH, mode, operands[1])));
+
+      operands[1] = gen_rtx (LO_SUM, mode, tem, operands[1]);
+    }
+
   /* If we are generating embedded PIC code, and we are referring to a
      symbol in the .text section, we must use an offset from the start
      of the function.  */
@@ -3230,6 +3395,18 @@ move\\t%0,%z4\\n\\
   ""
   "
 {
+  if (mips_split_addresses && mips_check_split (operands[1], SImode))
+    {
+      enum machine_mode mode = GET_MODE (operands[0]);
+      rtx tem = ((reload_in_progress | reload_completed)
+		 ? operands[0] : gen_reg_rtx (mode));
+
+      emit_insn (gen_rtx (SET, VOIDmode, tem,
+			  gen_rtx (HIGH, mode, operands[1])));
+
+      operands[1] = gen_rtx (LO_SUM, mode, tem, operands[1]);
+    }
+
   /* If we are generating embedded PIC code, and we are referring to a
      symbol in the .text section, we must use an offset from the start
      of the function.  */
@@ -3277,7 +3454,7 @@ move\\t%0,%z4\\n\\
 
 (define_insn "movsi_internal1"
   [(set (match_operand:SI 0 "nonimmediate_operand" "=d,d,d,d,d,d,R,m,*d,*f*z,*f,*f,*f,*R,*m,*x,*x,*d,*d")
-	(match_operand:SI 1 "general_operand" "d,S,IKL,Mnis,R,m,dJ,dJ,*f*z,*d,*f,*R,*m,*f,*f,I,*d,*x,*a"))]
+	(match_operand:SI 1 "move_operand" "d,S,IKL,Mnis,R,m,dJ,dJ,*f*z,*d,*f,*R,*m,*f,*f,I,*d,*x,*a"))]
   "TARGET_DEBUG_H_MODE
    && (register_operand (operands[0], SImode)
        || register_operand (operands[1], SImode)
@@ -3289,7 +3466,7 @@ move\\t%0,%z4\\n\\
 
 (define_insn "movsi_internal2"
   [(set (match_operand:SI 0 "nonimmediate_operand" "=d,d,d,d,d,d,R,m,*d,*z,*x,*d,*x,*d")
-	(match_operand:SI 1 "general_operand" "d,S,IKL,Mnis,R,m,dJ,dJ,*z,*d,I,*x,*d,*a"))]
+	(match_operand:SI 1 "move_operand" "d,S,IKL,Mnis,R,m,dJ,dJ,*z,*d,I,*x,*d,*a"))]
   "!TARGET_DEBUG_H_MODE
    && (register_operand (operands[0], SImode)
        || register_operand (operands[1], SImode)
@@ -3585,8 +3762,8 @@ move\\t%0,%z4\\n\\
 ;; Insn generated by block moves
 
 (define_insn "movstrsi_internal"
-  [(set (match_operand:BLK 0 "memory_operand" "=Ro")	;; destination
-	(match_operand:BLK 1 "memory_operand" "Ro"))	;; source
+  [(set (match_operand:BLK 0 "memory_operand" "=o")	;; destination
+	(match_operand:BLK 1 "memory_operand" "o"))	;; source
    (clobber (match_scratch:SI 4 "=&d"))			;; temp 1
    (clobber (match_scratch:SI 5 "=&d"))			;; temp 2
    (clobber (match_scratch:SI 6 "=&d"))			;; temp 3
@@ -3644,8 +3821,8 @@ move\\t%0,%z4\\n\\
   "")
 
 (define_insn "movstrsi_internal2"
-  [(set (match_operand:BLK 0 "memory_operand" "=Ro")	;; destination
-	(match_operand:BLK 1 "memory_operand" "Ro"))	;; source
+  [(set (match_operand:BLK 0 "memory_operand" "=o")	;; destination
+	(match_operand:BLK 1 "memory_operand" "o"))	;; source
    (clobber (match_scratch:SI 4 "=&d"))			;; temp 1
    (clobber (match_scratch:SI 5 "=&d"))			;; temp 2
    (clobber (match_scratch:SI 6 "=&d"))			;; temp 3
@@ -5808,7 +5985,7 @@ move\\t%0,%z4\\n\\
   /* ??? I don't know why this is necessary.  This works around an
      assembler problem that appears when a label is defined, then referenced
      in a switch table, then used in a `j' instruction.  */
-  else if (ABI_64BIT && mips_isa >= 3)
+  else if (mips_abi != ABI_32)
     return \"%*b\\t%l0\";
   else	
     return \"%*j\\t%l0\";
@@ -5869,10 +6046,20 @@ move\\t%0,%z4\\n\\
       if (GET_MODE (operands[0]) != Pmode)
 	abort ();
 
-      if (!TARGET_LONG64)
-	emit_jump_insn (gen_tablejump_internal1 (operands[0], operands[1]));
+      if (! flag_pic)
+	{
+	  if (!TARGET_LONG64)
+	    emit_jump_insn (gen_tablejump_internal1 (operands[0], operands[1]));
+	  else
+	    emit_jump_insn (gen_tablejump_internal2 (operands[0], operands[1]));
+	}
       else
-	emit_jump_insn (gen_tablejump_internal2 (operands[0], operands[1]));
+	{
+	  if (!TARGET_LONG64)
+	    emit_jump_insn (gen_tablejump_internal3 (operands[0], operands[1]));
+	  else
+	    emit_jump_insn (gen_tablejump_internal4 (operands[0], operands[1]));
+	}
 
       DONE;
     }
@@ -5883,39 +6070,73 @@ move\\t%0,%z4\\n\\
 	(match_operand:SI 0 "register_operand" "d"))
    (use (label_ref (match_operand 1 "" "")))]
   "!TARGET_LONG64"
-  "*
-{
-  /* .cpadd expands to add REG,REG,$gp when pic, and nothing when not pic.  */
-  if (TARGET_ABICALLS && (! ABI_64BIT || mips_isa < 3))
-    output_asm_insn (\".cpadd\\t%0\", operands);
-  return \"%*j\\t%0\";
-}"
+  "%*j\\t%0"
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
-   (set (attr "length")
-	(if_then_else (eq_attr "abicalls" "yes")
-		      (const_int 2)
-		      (const_int 1)))])
+   (set_attr "length"	"1")])
 
 (define_insn "tablejump_internal2"
   [(set (pc)
 	(match_operand:DI 0 "register_operand" "d"))
    (use (label_ref (match_operand 1 "" "")))]
   "TARGET_LONG64"
+  "%*j\\t%0"
+  [(set_attr "type"	"jump")
+   (set_attr "mode"	"none")
+   (set_attr "length"	"1")])
+
+(define_expand "tablejump_internal3"
+  [(set (pc)
+	(plus:SI (match_operand:SI 0 "register_operand" "d")
+		 (label_ref:SI (match_operand:SI 1 "" ""))))]
+  ""
+  "")
+
+;;; Make sure that this only matches the insn before ADDR_DIFF_VEC.  Otherwise
+;;; it is not valid.
+
+;;; ??? The length depends on the ABI.  It is two for o32, and one for n32.
+;;; We just use the conservative number here.
+
+(define_insn ""
+  [(set (pc)
+	(plus:SI (match_operand:SI 0 "register_operand" "d")
+		 (label_ref:SI (match_operand:SI 1 "" ""))))]
+  "!TARGET_LONG64 && next_active_insn (insn) != 0
+   && GET_CODE (PATTERN (next_active_insn (insn))) == ADDR_DIFF_VEC
+   && PREV_INSN (next_active_insn (insn)) == operands[1]"
   "*
 {
-  /* .cpdadd expands to dadd REG,REG,$gp when pic, and nothing when not pic. */
-  /*  ??? SGI as does not have a .cpdadd.  */
-  if (TARGET_ABICALLS && (! ABI_64BIT || mips_isa < 3))
+  /* .cpadd expands to add REG,REG,$gp when pic, and nothing when not pic.  */
+  if (mips_abi == ABI_32)
     output_asm_insn (\".cpadd\\t%0\", operands);
   return \"%*j\\t%0\";
 }"
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
-   (set (attr "length")
-	(if_then_else (eq_attr "abicalls" "yes")
-		      (const_int 2)
-		      (const_int 1)))])
+   (set_attr "length"	"2")])
+
+(define_expand "tablejump_internal4"
+  [(set (pc)
+	(plus:DI (match_operand:DI 0 "register_operand" "d")
+		 (label_ref:DI (match_operand:SI 1 "" ""))))]
+  ""
+  "")
+
+;;; Make sure that this only matches the insn before ADDR_DIFF_VEC.  Otherwise
+;;; it is not valid.
+
+(define_insn ""
+  [(set (pc)
+	(plus:DI (match_operand:DI 0 "register_operand" "d")
+		 (label_ref:DI (match_operand:SI 1 "" ""))))]
+  "TARGET_LONG64 && next_active_insn (insn) != 0
+   && GET_CODE (PATTERN (next_active_insn (insn))) == ADDR_DIFF_VEC
+   && PREV_INSN (next_active_insn (insn)) == operands[1]"
+  "%*j\\t%0"
+  [(set_attr "type"	"jump")
+   (set_attr "mode"	"none")
+   (set_attr "length"	"1")])
 
 ;; Function return, only allow after optimization, so that we can
 ;; eliminate jumps to jumps if no stack space is used.
@@ -6104,7 +6325,7 @@ move\\t%0,%z4\\n\\
     {
       addr = XEXP (operands[0], 0);
       if ((GET_CODE (addr) != REG && (!CONSTANT_ADDRESS_P (addr) || TARGET_LONG_CALLS))
-	  || ! call_insn_operand (operands[0], VOIDmode))
+	  || ! call_insn_operand (addr, VOIDmode))
 	XEXP (operands[0], 0) = copy_to_mode_reg (Pmode, addr);
 
       /* In order to pass small structures by value in registers
@@ -6124,66 +6345,61 @@ move\\t%0,%z4\\n\\
 	    emit_insn (RTVEC_ELT (adjust, i));
 	}
 
-      emit_call_insn (gen_call_internal1 (operands[0], operands[1],
+      emit_call_insn (gen_call_internal0 (operands[0], operands[1],
 					  gen_rtx (REG, SImode, GP_REG_FIRST + 31)));
       DONE;
     }
 }")
 
+(define_expand "call_internal0"
+  [(parallel [(call (match_operand 0 "" "")
+		    (match_operand 1 "" ""))
+	      (clobber (match_operand:SI 2 "" ""))])]
+  ""
+  "")
+
 (define_insn "call_internal1"
-  [(call (match_operand 0 "call_insn_operand" "m")
+  [(call (mem (match_operand 0 "call_insn_operand" "ri"))
 	 (match_operand 1 "" "i"))
    (clobber (match_operand:SI 2 "register_operand" "=d"))]
   "!TARGET_ABICALLS && !TARGET_LONG_CALLS"
   "*
 {
-  register rtx target = XEXP (operands[0], 0);
+  register rtx target = operands[0];
 
   if (GET_CODE (target) == SYMBOL_REF)
     return \"%*jal\\t%0\";
-
   else if (GET_CODE (target) == CONST_INT)
-    {
-      operands[0] = target;
-      return \"%[li\\t%@,%0\\n\\t%*jal\\t%2,%@%]\";
-    }
-
+    return \"%[li\\t%@,%0\\n\\t%*jal\\t%2,%@%]\";
   else
-    {
-      operands[0] = target;
-      return \"%*jal\\t%2,%0\";
-    }
+    return \"%*jal\\t%2,%0\";
 }"
   [(set_attr "type"	"call")
    (set_attr "mode"	"none")
    (set_attr "length"	"1")])
 
 (define_insn "call_internal2"
-  [(call (match_operand 0 "call_insn_operand" "m")
+  [(call (mem (match_operand 0 "call_insn_operand" "ri"))
 	 (match_operand 1 "" "i"))
    (clobber (match_operand:SI 2 "register_operand" "=d"))]
   "TARGET_ABICALLS && !TARGET_LONG_CALLS"
   "*
 {
-  register rtx target = XEXP (operands[0], 0);
+  register rtx target = operands[0];
 
   if (GET_CODE (target) == SYMBOL_REF)
-    return \"jal\\t%0\";
-
-  else if (GET_CODE (target) == CONST_INT)
     {
-      operands[0] = target;
-      return \"li\\t%^,%0\\n\\tjal\\t%2,%^\";
-    }
-
-  else
-    {
-      operands[0] = target;
-      if (REGNO (target) != PIC_FUNCTION_ADDR_REGNUM)
-	return \"move\\t%^,%0\\n\\tjal\\t%2,%^\";
+      if (GET_MODE (target) == SImode)
+	return \"la\\t%^,%0\\n\\tjal\\t%2,%^\";
       else
-	return \"jal\\t%2,%0\";
+	return \"dla\\t%^,%0\\n\\tjal\\t%2,%^\";
     }
+  else if (GET_CODE (target) == CONST_INT)
+    return \"li\\t%^,%0\\n\\tjal\\t%2,%^\";
+  else if (REGNO (target) != PIC_FUNCTION_ADDR_REGNUM)
+    return \"move\\t%^,%0\\n\\tjal\\t%2,%^\";
+  else
+    return \"jal\\t%2,%0\";
 }"
   [(set_attr "type"	"call")
    (set_attr "mode"	"none")
@@ -6258,7 +6474,7 @@ move\\t%0,%z4\\n\\
     {
       addr = XEXP (operands[1], 0);
       if ((GET_CODE (addr) != REG && (!CONSTANT_ADDRESS_P (addr) || TARGET_LONG_CALLS))
-	  || ! call_insn_operand (operands[1], VOIDmode))
+	  || ! call_insn_operand (addr, VOIDmode))
 	XEXP (operands[1], 0) = copy_to_mode_reg (Pmode, addr);
 
       /* In order to pass small structures by value in registers
@@ -6278,38 +6494,54 @@ move\\t%0,%z4\\n\\
 	    emit_insn (RTVEC_ELT (adjust, i));
 	}
 
-      emit_call_insn (gen_call_value_internal1 (operands[0], operands[1], operands[2],
+      /* Handle Irix6 function calls that have multiple non-contiguous
+	 results.  */
+      if (GET_CODE (operands[0]) == PARALLEL && XVECLEN (operands[0], 0) > 1)
+	{
+	  emit_call_insn (gen_call_value_multiple_internal0
+			  (XEXP (XVECEXP (operands[0], 0, 0), 0),
+			   operands[1], operands[2],
+			   XEXP (XVECEXP (operands[0], 0, 1), 0),
+			   gen_rtx (REG, SImode, GP_REG_FIRST + 31)));
+	  DONE;
+	}
+
+      /* We have a call returning a DImode structure in an FP reg.
+	 Strip off the now unnecessary PARALLEL.  */
+      if (GET_CODE (operands[0]) == PARALLEL)
+	operands[0] = XEXP (XVECEXP (operands[0], 0, 0), 0);
+
+      emit_call_insn (gen_call_value_internal0 (operands[0], operands[1], operands[2],
 					        gen_rtx (REG, SImode, GP_REG_FIRST + 31)));
 
       DONE;
     }
-
 }")
+
+(define_expand "call_value_internal0"
+  [(parallel [(set (match_operand 0 "" "")
+		   (call (match_operand 1 "" "")
+			 (match_operand 2 "" "")))
+	      (clobber (match_operand:SI 3 "" ""))])]
+  ""
+  "")
 
 (define_insn "call_value_internal1"
   [(set (match_operand 0 "register_operand" "=df")
-        (call (match_operand 1 "call_insn_operand" "m")
+        (call (mem (match_operand 1 "call_insn_operand" "ri"))
               (match_operand 2 "" "i")))
    (clobber (match_operand:SI 3 "register_operand" "=d"))]
   "!TARGET_ABICALLS && !TARGET_LONG_CALLS"
   "*
 {
-  register rtx target = XEXP (operands[1], 0);
+  register rtx target = operands[1];
 
   if (GET_CODE (target) == SYMBOL_REF)
     return \"%*jal\\t%1\";
-
   else if (GET_CODE (target) == CONST_INT)
-    {
-      operands[1] = target;
-      return \"%[li\\t%@,%1\\n\\t%*jal\\t%3,%@%]\";
-    }
-
+    return \"%[li\\t%@,%1\\n\\t%*jal\\t%3,%@%]\";
   else
-    {
-      operands[1] = target;
-      return \"%*jal\\t%3,%1\";
-    }
+    return \"%*jal\\t%3,%1\";
 }"
   [(set_attr "type"	"call")
    (set_attr "mode"	"none")
@@ -6317,31 +6549,27 @@ move\\t%0,%z4\\n\\
 
 (define_insn "call_value_internal2"
   [(set (match_operand 0 "register_operand" "=df")
-        (call (match_operand 1 "call_insn_operand" "m")
+        (call (mem (match_operand 1 "call_insn_operand" "ri"))
               (match_operand 2 "" "i")))
    (clobber (match_operand:SI 3 "register_operand" "=d"))]
   "TARGET_ABICALLS && !TARGET_LONG_CALLS"
   "*
 {
-  register rtx target = XEXP (operands[1], 0);
+  register rtx target = operands[1];
 
   if (GET_CODE (target) == SYMBOL_REF)
-    return \"jal\\t%1\";
-
-  else if (GET_CODE (target) == CONST_INT)
     {
-      operands[1] = target;
-      return \"li\\t%^,%1\\n\\tjal\\t%3,%^\";
-    }
-
-  else
-    {
-      operands[1] = target;
-      if (REGNO (target) != PIC_FUNCTION_ADDR_REGNUM)
-	return \"move\\t%^,%1\\n\\tjal\\t%3,%^\";
+      if (GET_MODE (target) == SImode)
+	return \"la\\t%^,%1\\n\\tjal\\t%3,%^\";
       else
-	return \"jal\\t%3,%1\";
+	return \"dla\\t%^,%1\\n\\tjal\\t%3,%^\";
     }
+  else if (GET_CODE (target) == CONST_INT)
+    return \"li\\t%^,%1\\n\\tjal\\t%3,%^\";
+  else if (REGNO (target) != PIC_FUNCTION_ADDR_REGNUM)
+    return \"move\\t%^,%1\\n\\tjal\\t%3,%^\";
+  else
+    return \"jal\\t%3,%1\";
 }"
   [(set_attr "type"	"call")
    (set_attr "mode"	"none")
@@ -6402,6 +6630,52 @@ move\\t%0,%z4\\n\\
   [(set_attr "type"	"call")
    (set_attr "mode"	"none")
    (set_attr "length"	"2")])
+
+(define_insn "call_value_multiple_internal0"
+  [(parallel [(set (match_operand 0 "" "")
+		   (call (match_operand 1 "" "")
+			 (match_operand 2 "" "")))
+	      (set (match_operand 3 "" "")
+		   (call (match_dup 1)
+			 (match_dup 2)))
+	      (clobber (match_operand:SI 4 "" ""))])]
+  ""
+  "")
+
+;; ??? May eventually need all 6 versions of the call patterns with multiple
+;; return values.
+
+(define_insn "call_value_multiple_internal2"
+  [(set (match_operand 0 "register_operand" "=df")
+        (call (mem (match_operand 1 "call_insn_operand" "ri"))
+              (match_operand 2 "" "i")))
+   (set (match_operand 3 "register_operand" "=df")
+        (call (mem (match_dup 1))
+              (match_dup 2)))
+   (clobber (match_operand:SI 4 "register_operand" "=d"))]
+  "TARGET_ABICALLS && !TARGET_LONG_CALLS"
+  "*
+{
+  register rtx target = operands[1];
+
+  if (GET_CODE (target) == SYMBOL_REF)
+    {
+      if (GET_MODE (target) == SImode)
+	return \"la\\t%^,%1\\n\\tjal\\t%4,%^\";
+      else
+	return \"la\\t%^,%1\\n\\tjal\\t%4,%^\";
+    }
+  else if (GET_CODE (target) == CONST_INT)
+    return \"li\\t%^,%1\\n\\tjal\\t%4,%^\";
+  else if (REGNO (target) != PIC_FUNCTION_ADDR_REGNUM)
+    return \"move\\t%^,%1\\n\\tjal\\t%4,%^\";
+  else
+    return \"jal\\t%4,%1\";
+}"
+  [(set_attr "type"	"call")
+   (set_attr "mode"	"none")
+   (set_attr "length"	"2")])
+
 
 ;; Call subroutine returning any type.
 
@@ -6480,6 +6754,21 @@ move\\t%0,%z4\\n\\
 (define_insn ""
   [(set (match_operand:SI 0 "register_operand" "=d,d")
 	(if_then_else:SI
+	 (match_operator 4 "equality_op"
+			 [(match_operand:DI 1 "register_operand" "d,d")
+			  (const_int 0)])
+	 (match_operand:SI 2 "reg_or_0_operand" "dJ,0")
+	 (match_operand:SI 3 "reg_or_0_operand" "0,dJ")))]
+  "mips_isa >= 4"
+  "@
+    mov%B4\\t%0,%z2,%1
+    mov%b4\\t%0,%z3,%1"
+  [(set_attr "type" "move")
+   (set_attr "mode" "SI")])
+
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=d,d")
+	(if_then_else:SI
 	 (match_operator 3 "equality_op" [(reg:CC_FP 67) (const_int 0)])
 	 (match_operand:SI 1 "reg_or_0_operand" "dJ,0")
 	 (match_operand:SI 2 "reg_or_0_operand" "0,dJ")))]
@@ -6489,6 +6778,21 @@ move\\t%0,%z4\\n\\
     mov%t3\\t%0,%z2,$fcc0"
   [(set_attr "type" "move")
    (set_attr "mode" "SI")])
+
+(define_insn ""
+  [(set (match_operand:DI 0 "register_operand" "=d,d")
+	(if_then_else:DI
+	 (match_operator 4 "equality_op"
+			 [(match_operand:SI 1 "register_operand" "d,d")
+			  (const_int 0)])
+	 (match_operand:DI 2 "reg_or_0_operand" "dJ,0")
+	 (match_operand:DI 3 "reg_or_0_operand" "0,dJ")))]
+  "mips_isa >= 4"
+  "@
+    mov%B4\\t%0,%z2,%1
+    mov%b4\\t%0,%z3,%1"
+  [(set_attr "type" "move")
+   (set_attr "mode" "DI")])
 
 (define_insn ""
   [(set (match_operand:DI 0 "register_operand" "=d,d")
@@ -6661,13 +6965,8 @@ move\\t%0,%z4\\n\\
       operands[4] = gen_rtx (REG, CC_FPmode, FPSW_REGNUM);
     }
 
-  if (mode == DImode)
-    operands[5] = gen_rtx (move_code, VOIDmode,
-			   gen_lowpart (SImode, operands[4]),
-			   CONST0_RTX (SImode));
-  else
-    operands[5] = gen_rtx (move_code, VOIDmode, operands[4],
-			   CONST0_RTX (SImode));
+  operands[5] = gen_rtx (move_code, VOIDmode, operands[4],
+			 CONST0_RTX (SImode));
 }")
 
 ;; ??? Need movdicc, movsfcc, and movdfcc patterns.  They should be
