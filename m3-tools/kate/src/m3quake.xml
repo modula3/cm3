@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<!-- Syntax highlighting for Modula-3 Makefiles by Henning Thielemann <modula3@henning-thielemann.de> -->
+<language name="Modula 3 Quake" version="1.00" kateversion="2.1" section="Other" extensions="*.tmpl;m3makefile;m3override" mimetype="text/x-m3quake">
+	<highlighting>
+		<list name="keywords">
+			<item> and </item>
+			<item> contains </item>
+			<item> else </item>
+			<item> end </item>
+			<item> foreach </item>
+			<item> if </item>
+			<item> in </item>
+			<item> is </item>
+			<item> local </item>
+			<item> not </item>
+			<item> or </item>
+			<item> proc </item>
+			<item> readonly </item>
+			<item> return </item>
+		</list>
+		<list name="builtins">
+			<item> write </item>
+			<item> error </item>
+			<item> include </item>
+			<item> exec </item>
+			<item> cp_if </item>
+			<item> arglist </item>
+			<item> defined </item>
+			<item> empty </item>
+			<item> equal </item>
+			<item> escape </item>
+			<item> format </item>
+			<item> normalize </item>
+			<item> path </item>
+			<item> stale </item>
+			<item> unlink_file </item>
+		</list>
+		<list name="makefunctions">
+			<!--
+			<item> array_sort </item>
+			<item> Array_sort </item>
+			<item> list </item>
+			<item> List </item>
+			<item> list_sort </item>
+			<item> List_sort </item>
+			<item> pqueue </item>
+			<item> Pqueue </item>
+			<item> sequence </item>
+			<item> Sequence </item>
+			<item> sorted_table </item>
+			<item> Sorted_table </item>
+			<item> table </item>
+			<item> Table </item>
+			-->
+			<item> library </item>
+			<item> Library </item>
+			<item> program </item>
+			<item> Program </item>
+			<item> build_standalone </item>
+			<item> resource </item>
+			<item> resource_named </item>
+			<item> bundle </item>
+			<item> interface </item>
+			<item> implementation </item>
+			<item> module </item>
+			<item> generic_interface </item>
+			<item> generic_implementation </item>
+			<item> generic_module </item>
+			<item> h_source </item>
+			<item> c_source </item>
+			<item> s_source </item>
+			<item> pgm_source </item>
+			<item> template </item>
+			<item> import </item>
+			<item> include_dir </item>
+			<item> build_generic_intf </item>
+			<item> build_generic_impl </item>
+ 		</list>
+		<list name="constants">
+			<item> HIDDEN </item>
+			<item> VISIBLE </item>
+			<item> SL </item>
+		</list>
+		<contexts>
+			<context attribute="Normal Text" lineEndContext="#stay" name="Normal">
+				<keyword attribute="Keyword" context="#stay" String="keywords"/>
+				<keyword attribute="Function" context="#stay" String="builtins"/>
+				<keyword attribute="Function" context="#stay" String="makefunctions"/>
+				<keyword attribute="Constant" context="#stay" String="constants"/>
+				<Float attribute="Number" context="#stay"/>
+				<Int attribute="Number" context="#stay"/>
+				<DetectChar attribute="String" context="String" char="&quot;" />
+				<RegExp attribute="EnvVar" context="#stay" String="\$[a-zA-Z]\w*"/>
+				<DetectChar attribute="Comment" context="Comment1" char="%"/>
+				<Detect2Chars attribute="Comment" context="Comment2" char="/" char1="*"/>
+			</context>
+			<context attribute="String" lineEndContext="#pop" name="String">
+				<DetectChar attribute="String" context="#pop" char="&quot;"/>
+			</context>
+			<context attribute="Comment" lineEndContext="#pop" name="Comment1" />
+			<context attribute="Comment" lineEndContext="#stay" name="Comment2">
+				<Detect2Chars attribute="Comment" context="#pop" char="*" char1="/"/>
+			</context>
+		</contexts>
+		<itemDatas>
+			<itemData name="Normal Text" defStyleNum="dsNormal" />
+			<itemData name="Keyword"     defStyleNum="dsKeyword" />
+			<itemData name="Function"    defStyleNum="dsFunction"/>
+			<itemData name="Constant"    defStyleNum="dsDecVal"/>
+			<itemData name="Number"      defStyleNum="dsDecVal" />
+			<itemData name="String"      defStyleNum="dsString" />
+			<itemData name="EnvVar"      defStyleNum="dsOther" />
+			<itemData name="Comment"     defStyleNum="dsComment" />
+		</itemDatas>
+  </highlighting>
+  <general>
+    <keywords casesensitive="1" />
+    <comments>
+      <comment name="singleLine" start="%" />
+      <comment name="multiLine" start="/*" end="*/" />
+    </comments>
+  </general>
+</language>
