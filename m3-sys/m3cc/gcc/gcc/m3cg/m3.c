@@ -744,7 +744,7 @@ static void debug_tag VPROTO((char kind, long id, ...))
 
   fmt = va_arg (args, char *);
   vsnprintf (current_dbg_type_tag + UID_SIZE + 3,
-	     100 - (UID_SIZE + 3), fmt, args);
+	     sizeof(current_dbg_type_tag) - (UID_SIZE + 3), fmt, args);
   va_end (args);
 }
 
@@ -792,7 +792,7 @@ static void debug_field_fmt VPROTO((long id, ...))
 
   fmt_uid (id, name);
   fmt = va_arg (args, char *);
-  vsnprintf (name + UID_SIZE, 100 - UID_SIZE, fmt, args);
+  vsnprintf (name + UID_SIZE, sizeof(name) - UID_SIZE, fmt, args);
   va_end (args);
 
   debug_field (name);
@@ -1053,11 +1053,11 @@ static tree fix_name (name, id)
 
   if (name == 0 || name[0] == '*') {
     static int anonymous_counter = 1;
-    sprintf (buf, "L_%d", anonymous_counter++);
+    snprintf (buf, sizeof(buf), "L_%d", anonymous_counter++);
   } else if (id == 0) {
     return get_identifier (name);
   } else if (id == NO_UID) {
-    sprintf (buf, "M%s", name);
+    snprintf (buf, sizeof(buf), "M%s", name);
   } else {
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
     fmt_uid (id, buf + 3);
@@ -1976,7 +1976,7 @@ do_declare_typename ()
 
   char fullname [100];
 
-  sprintf (fullname, "%s.%s", current_unit_name, name);
+  snprintf (fullname, sizeof(fullname), "%s.%s", current_unit_name, name);
   debug_tag ('N', my_id, "");
   debug_field (fullname);
   debug_struct ();
