@@ -11,6 +11,7 @@ IMPORT LongRealBasic                AS R,
        LongRealComplexVectorBasic   AS CVB,
        LongRealComplexVectorSupport AS CVS,
        LongRealComplexVectorTrans   AS CVT,
+       LongRealComplexVectorFmtLex  AS CVF,
        LongRealMatrix               AS M,
        LongRealSignal               AS S,
        LongRealComplexSignal        AS CS,
@@ -26,7 +27,7 @@ IMPORT LongRealBasic                AS R,
 IMPORT IO, Fmt, Wr, Thread;
 (*IMPORT Arithmetic AS Arith;*)
 
-PROCEDURE DFTR2C1D (READONLY x: ARRAY OF R.T;
+PROCEDURE DFTR2C1D (READONLY x: V.TBody;
   (*flags := FFT.FlagSet{FFT.Flag.Estimate};*)): CV.T =
   VAR
     z    := CV.New(NUMBER(x) DIV 2 + 1);
@@ -35,6 +36,16 @@ PROCEDURE DFTR2C1D (READONLY x: ARRAY OF R.T;
     TRY FFT.Execute(plan); FINALLY FFT.DestroyPlan(plan); END;
     RETURN z;
   END DFTR2C1D;
+
+PROCEDURE DFTC2R1D (READONLY x: CV.TBody; parity: [0 .. 1];
+  (*flags := FFT.FlagSet{FFT.Flag.Estimate};*)): V.T =
+  VAR
+    z    := V.New(NUMBER(x) * 2 - 2 + parity);
+    plan := FFT.PlanDFTC2R1D(NUMBER(z^), x[0], z[0], 2_1000000);
+  BEGIN
+    TRY FFT.Execute(plan); FINALLY FFT.DestroyPlan(plan); END;
+    RETURN z;
+  END DFTC2R1D;
 
 PROCEDURE SpecNorm (x: CV.T; rsize: CARDINAL; ): R.T =
   BEGIN
@@ -96,7 +107,7 @@ PROCEDURE PlotComplex (s: CS.T; l: CARDINAL; ) =
 
 (* Test FFT, check equivalence of Euclidean norm in the signal space and in
    the frequency space. *)
-PROCEDURE BSplineSmoothness () =
+PROCEDURE BSplineNorm () =
   VAR x: ARRAY [1 .. 7], [0 .. 6] OF S.T;
   BEGIN
     FOR n := FIRST(x) TO LAST(x) DO
@@ -131,7 +142,7 @@ PROCEDURE BSplineSmoothness () =
         END;
       END;
     END;
-  END BSplineSmoothness;
+  END BSplineNorm;
 
 
 
@@ -149,12 +160,24 @@ PROCEDURE MulVecC (VAR (*OUT*) z   : ARRAY OF C.T;
 (* stretch (the length of) the signal by a factor of 2, remember that there
    must be a spare value at the end of the input, thus a signal of length
    (n+1) is transformed to one of length (2n+1) *)
-PROCEDURE UpSample2 (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
+PROCEDURE UpSample2Linear (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
   BEGIN
     FOR i := FIRST(x) TO LAST(x) - 1 DO
       z[2 * i] := x[i];
       z[2 * i + 1] := C.Scale(C.Add(x[i], x[i + 1]), R.Half);
+    END;
+    z[LAST(z^)] := x[LAST(x)];
+    RETURN z;
+  END UpSample2Linear;
+
+(* geometric interpolation *)
+PROCEDURE UpSample2 (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
+  VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
+  BEGIN
+    FOR i := FIRST(x) TO LAST(x) - 1 DO
+      z[2 * i] := x[i];
+      z[2 * i + 1] := CT.SqRt(C.Mul(x[i], x[i + 1]));
     END;
     z[LAST(z^)] := x[LAST(x)];
     RETURN z;
@@ -265,12 +288,65 @@ PROCEDURE FourierDecay () =
   END FourierDecay;
 
 
+(* Compare two different kinds of upsampling: 1.  interpolate a frequency
+   spectrum, 2.  take the frequency spectrum of the signal padded by
+   zeros *)
+PROCEDURE TestUpsampleA () =
+  CONST vec0 = ARRAY OF R.T{1.4D0, 0.3D0, -0.7D0, 0.2D0, -0.1D0, -0.5D0};
+  VAR
+    vec1 := V.NewZero(NUMBER(vec0) * 2);
+    spec0, spec1, specLinIp, specGeomIp: CV.T;
+  BEGIN
+    SUBARRAY(vec1^, 0, NUMBER(vec0)) := vec0;
+    spec0 := DFTR2C1D(vec0);
+    spec1 := DFTR2C1D(vec1^);
+    specLinIp := UpSample2Linear(spec0^);
+    specGeomIp := UpSample2(spec0^);
+    IO.Put(Fmt.F("Original:\n%s\n" & "Fourier interpolated:\n%s\n"
+                   & "Linearly interpolated:\n%s\n"
+                   & "Geometrically interpolated:\n%s\n", CVF.Fmt(spec0),
+                 CVF.Fmt(spec1), CVF.Fmt(specLinIp), CVF.Fmt(specGeomIp)));
+  END TestUpsampleA;
+
+(* Compare two different kinds of upsampling: 1.  interpolate a complex
+   signal, 2.  Fourier transform the signal to real data, extend with
+   zeros, transform back *)
+PROCEDURE TestUpsampleB () =
+  CONST
+    spec0 = ARRAY OF
+              C.T{C.T{1.4D0, 0.0D0}, C.T{0.3D0, -0.7D0},
+                  C.T{0.2D0, -0.1D0}, C.T{-0.5D0, 0.0D0}};
+  VAR
+    spec1                            := CV.NewZero(NUMBER(spec0) + 1);
+    vec0, vec1, vec0up, vec1up: V.T;
+    spec0up, spec1up          : CV.T;
+    k0,k1                         : R.T;
+  BEGIN
+    SUBARRAY(spec1^, 0, NUMBER(spec0)) := spec0;
+    vec0 := DFTC2R1D(spec0, 0);
+    vec1 := DFTC2R1D(spec1^, 0);
+    vec0up := V.NewZero(NUMBER(vec0^) * 2);
+    vec1up := V.NewZero(NUMBER(vec1^) * 2);
+    k0 := R.Two / FLOAT(NUMBER(vec0up^), R.T);
+    k1 := R.Two / FLOAT(NUMBER(vec1up^), R.T);
+    SUBARRAY(vec0up^, 0, NUMBER(vec0^)) := V.Scale(vec0, k0)^;
+    SUBARRAY(vec1up^, 0, NUMBER(vec1^)) := V.Scale(vec1, k1)^;
+    spec0up := DFTR2C1D(vec0up^);
+    spec1up := DFTR2C1D(vec1up^);
+    IO.Put(Fmt.F("Original:\n%s\n" & "Fourier interpolated short:\n%s\n"
+                   & "Fourier interpolated long:\n%s\n",
+                 CVF.Fmt(CV.FromArray(spec0)), CVF.Fmt(spec0up),
+                 CVF.Fmt(spec1up)));
+  END TestUpsampleB;
+
 PROCEDURE Test () =
   BEGIN
     PL.Init();
-    CASE 1 OF
-    | 0 => BSplineSmoothness();
+    CASE 3 OF
+    | 0 => BSplineNorm();
     | 1 => FourierDecay();
+    | 2 => TestUpsampleA();
+    | 3 => TestUpsampleB();
     ELSE
       <* ASSERT FALSE *>
     END;
