@@ -246,6 +246,34 @@ BEGIN
   RETURN z;
 END SqRt;
 
+
+(*-------------------*)
+
+PROCEDURE FrExp (READONLY x: C.T; VAR exp: INTEGER): C.T =
+  VAR
+    expr, expi : INTEGER;
+  BEGIN
+    EVAL RT.FrExp(x.re,expr);
+    EVAL RT.FrExp(x.im,expi);
+    exp := (expr+expi) DIV 2;
+    RETURN C.T{RT.LdExp(x.re,-exp),RT.LdExp(x.im,-exp)};
+  END FrExp;
+
+PROCEDURE LdExp (READONLY x: C.T; exp: INTEGER): C.T =
+  BEGIN
+    RETURN C.T{RT.LdExp(x.re,exp),RT.LdExp(x.im,exp)};
+  END LdExp;
+
+PROCEDURE ModF (READONLY x: C.T; VAR(*OUT*) i: C.T): C.T =
+  VAR
+    y : C.T;
+  BEGIN
+    y.re := RT.ModF (x.re, i.re);
+    y.im := RT.ModF (x.im, i.im);
+    RETURN y;
+  END ModF;
+
+
 (*==========================*)
 BEGIN
 END ComplexTrans.

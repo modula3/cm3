@@ -90,9 +90,9 @@ TYPE Array = REF ARRAY OF T;
 
 (*---- Floating point representations ----*)
 
-<*INLINE*> PROCEDURE FrExp (x: T;  VAR exp: INTEGER): T;
+<*INLINE*> PROCEDURE FrExp (x: T; VAR exp: INTEGER): T;
 (* returns a value y and sets exp such that x = y * 2^exp,
-    where ABS(X) is in the interval [0.5, 1). *)
+    where ABS(y) is in the interval [0.5, 1). *)
 
 <*INLINE*> PROCEDURE LdExp (x: T; exp: INTEGER): T;
 (* returns x * 2^exp. *)
