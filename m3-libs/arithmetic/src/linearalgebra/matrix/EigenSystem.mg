@@ -12,32 +12,29 @@
 
 *)
 
-MODULE EigenSystem;
-IMPORT Math, LongReal;
+GENERIC MODULE EigenSystem(M,V,R,RT);
 (*IMPORT Wr, Stdio, Fmt;*)
 
 EXCEPTION NormalTermination;
 
 CONST
-  tol = LongReal.MinPos/LongReal.MinPosNormal;
-
-TYPE LongRealVector = REF ARRAY OF LONGREAL;
+  tol = RT.MinPos/RT.MinPosNormal;
 
 (* Solve the real symmetric eigenvalue problem by the algorithm of
 Jacobi. The routine has been tested against the first example given in
 Wilkinson/Reinsch and gives the same results. *)
 
-  PROCEDURE Jacobi(VAR a: REF ARRAY OF ARRAY OF LONGREAL;
+  PROCEDURE Jacobi(VAR a: M.T;
                        n: INTEGER;
-                   VAR d: REF ARRAY OF LONGREAL;
-      	           VAR v: REF ARRAY OF ARRAY OF LONGREAL;
+                   VAR d: V.T;
+      	           VAR v: M.T;
                    VAR nrot: INTEGER;
                        eigenVect:= FALSE)
       RAISES { ArrayTooSmall} =
     VAR
-      tresh,theta,tau,t,sm,s,h,g,c: LONGREAL;
-      b  := NEW( LongRealVector, n);
-      z  := NEW( LongRealVector, n);
+      tresh,theta,tau,t,sm,s,h,g,c: R.T;
+      b  := NEW( V.T, n);
+      z  := NEW( V.T, n);
     BEGIN
       IF NUMBER(a^) < n OR NUMBER(a[0]) < n THEN RAISE ArrayTooSmall END;
       IF NUMBER(d^) < n THEN RAISE ArrayTooSmall END;
@@ -45,57 +42,57 @@ Wilkinson/Reinsch and gives the same results. *)
       IF eigenVect THEN
         FOR p := 0 TO n-1 DO
           FOR q := 0 TO n-1 DO
-            v[p,q] := 0.0D0;
+            v[p,q] := R.Zero;
           END;
-          v[p,p] := 1.0d0;
+          v[p,p] := R.One;
         END;
       END;
       FOR p := 0 TO n-1 DO
         b[p] := a[p,p];
         d[p] := b[p];
-        z[p] := 0.0d0;
+        z[p] := R.Zero;
       END;
       nrot := 0;
       TRY
 
      FOR i := 1 TO 50 DO
-       sm := 0.0d0;
+       sm := R.Zero;
        FOR p := 0 TO n-2 DO
          FOR q := p+1 TO n-1 DO
            sm := sm+ABS(a[p,q]);
          END;
        END;
-       IF sm = 0.0d0 THEN RAISE NormalTermination; END;
+       IF sm = R.Zero THEN RAISE NormalTermination; END;
        IF i < 4 THEN
-         tresh := 0.2d0*sm/FLOAT(n*n, LONGREAL);
+         tresh := FLOAT(0.2D0, R.T)*sm/FLOAT(n*n, R.T);
        ELSE
-         tresh := 0.0d0;
+         tresh := R.Zero;
        END;
        FOR p := 0 TO n-2 DO
          FOR q := p+1 TO n-1 DO
-           g := 100.0d0*ABS(a[p,q]);
+           g := FLOAT(100.0D0,R.T)*ABS(a[p,q]);
            IF (i > 4) AND (ABS(d[p])+g = ABS(d[p]))
                AND (ABS(d[q])+g = ABS(d[q])) THEN
-             a[p,q] := 0.0d0;
+             a[p,q] := R.Zero;
            ELSE
              IF ABS(a[p,q]) > tresh THEN
                h := d[q]-d[p];
                IF ABS(h)+g = ABS(h) THEN
                  t := a[p,q]/h
                ELSE
-                 theta := 0.5d0*h/a[p,q];
-                 t := 1.0d0/(ABS(theta)+Math.sqrt(1.0d0+theta*theta));
-                 IF theta < 0.0d0 THEN t := -t; END;
+                 theta := RT.Half*h/a[p,q];
+                 t := R.One/(ABS(theta)+RT.SqRt(R.One+theta*theta));
+                 IF theta < R.Zero THEN t := -t; END;
                END;
-               c := 1.0d0/Math.sqrt(1.0d0+t*t);
+               c := R.One/RT.SqRt(R.One+t*t);
                s := t*c;
-               tau := s/(1.0d0+c);
+               tau := s/(R.One+c);
                h := t*a[p,q];
                z[p] := z[p]-h;
                z[q] := z[q]+h;
                d[p] := d[p]-h;
                d[q] := d[q]+h;
-               a[p,q] := 0.0d0;
+               a[p,q] := R.Zero;
                FOR j := 0 TO p-1 DO
                  g := a[j,p];
                  h := a[j,q];
@@ -130,7 +127,7 @@ Wilkinson/Reinsch and gives the same results. *)
        FOR p := 0 TO n-1 DO
          b[p] := b[p]+z[p];
          d[p] := b[p];
-         z[p] := 0.0d0;
+         z[p] := R.Zero;
        END;
    END;
    EXCEPT
@@ -142,7 +139,7 @@ END Jacobi;
 (*
 (* Just a support routine to mimick FORTRANs SIGN *)
 
-PROCEDURE sign(a,b: LONGREAL): LONGREAL =
+PROCEDURE sign(a,b: R.T): R.T =
 BEGIN
    IF b < 0 THEN sign := -ABS(a) ELSE sign := ABS(a); END;
 END sign;
@@ -151,17 +148,17 @@ END sign;
 
 (* Calculation of the eigenvalues of a tridiagonal matrix by the QL
 alorithm. Check Wilkinson/Reinsch for the description. *)
-PROCEDURE Tqli(VAR d,e: ARRAY OF LONGREAL;
+PROCEDURE Tqli(VAR d,e: ARRAY OF R.T;
                      n: INTEGER;
-                 VAR z: ARRAY OF ARRAY OF LONGREAL; ) =
+                 VAR z: ARRAY OF ARRAY OF R.T; ) =
 LABEL 10,20;
 VAR
    m,l,iter,i,k: INTEGER;
-   s,r,p,g,f,dd,c,b: LONGREAL;
+   s,r,p,g,f,dd,c,b: R.T;
 
 BEGIN
    FOR i := 1 TO n-1 DO e[i-1] := e[i];
-   e[n] := 0.0d0;
+   e[n] := R.Zero;
    FOR l := 0 TO n-1 DO BEGIN
       iter := 0;
 (*10:   FOR m := l TO n-2 DO
@@ -219,11 +216,11 @@ BEGIN
 END;
 *)
 
-PROCEDURE EigenSort(VAR vects: REF ARRAY OF ARRAY OF LONGREAL;
-                    VAR vals: REF ARRAY OF LONGREAL)
+PROCEDURE EigenSort(VAR vects: M.T;
+                    VAR vals: V.T)
     RAISES {ArraySizesDontMatch}=
   VAR
-    p,q: LONGREAL;
+    p,q: R.T;
   BEGIN
     IF NUMBER(vals^)#NUMBER(vects[0]) THEN
       RAISE ArraySizesDontMatch;
@@ -251,12 +248,12 @@ PROCEDURE EigenSort(VAR vects: REF ARRAY OF ARRAY OF LONGREAL;
  symmetric matrix. Translation of the original ALGOL procedures.
 *)
 PROCEDURE Tred1(n: CARDINAL;
-                VAR a: REF ARRAY OF ARRAY OF LONGREAL;
-                VAR d,e,e2: REF ARRAY OF LONGREAL;)
+                VAR a: M.T;
+                VAR d,e,e2: V.T;)
   RAISES {ArraySizesDontMatch}=
   VAR
     l: INTEGER;
-    f,g,h: LONGREAL;
+    f,g,h: R.T;
   BEGIN
     IF NUMBER(a[0])<n OR NUMBER(a^)<n OR NUMBER(d^)<n OR NUMBER(e^)<n
       OR NUMBER(e2^)<n THEN
@@ -267,7 +264,7 @@ PROCEDURE Tred1(n: CARDINAL;
     END; (* for *)
     FOR i:=LAST(d^) TO FIRST(d^) BY -1 DO
       l := i-1;
-      h := 0.0D0;
+      h := R.Zero;
       FOR k:=FIRST(a[0]) TO l DO
         h := h + a[i,k]*a[i,k];
       END; (* for *)
@@ -275,23 +272,23 @@ PROCEDURE Tred1(n: CARDINAL;
                                             orthogonality to be
                                             guaranteed, skip transformation *)
       IF h<=tol THEN
-        e[i] := 0.0D0;
-        e2[i] := 0.0D0;
+        e[i] := R.Zero;
+        e2[i] := R.Zero;
       ELSE
         e2[i] := h;
         f := a[i,i-1];
-        IF f>=0.0D0 THEN
-          g := -Math.sqrt(h);
+        IF f>=R.Zero THEN
+          g := -RT.SqRt(h);
         ELSE
-          g := Math.sqrt(h);
+          g := RT.SqRt(h);
         END; (* if *)
         e[i] := g;
         h := h - f*g;
         a[i,i-1] := f-g;
-        f := 0.0D0;
+        f := R.Zero;
         FOR j:=FIRST(a[0]) TO l DO
 					 (* form element of A x u *)
-          g := 0.0D0;
+          g := R.Zero;
           FOR k:=FIRST(a[0]) TO j DO
             g := g + a[j,k]*a[i,k];
 	  END; (* for *)
@@ -323,13 +320,13 @@ PROCEDURE Tred1(n: CARDINAL;
   END Tred1;
 
 PROCEDURE Tred2(n: CARDINAL;
-                VAR a: REF ARRAY OF ARRAY OF LONGREAL;
-                VAR d,e: REF ARRAY OF LONGREAL)
+                VAR a: M.T;
+                VAR d,e: V.T)
     RAISES {ArraySizesDontMatch}=
   VAR
     l: INTEGER;
     firstD := FIRST(d^);
-    f,g,h,hh: LONGREAL;
+    f,g,h,hh: R.T;
   BEGIN
 					 (* Test for array sizes. *)
     IF NUMBER(a[0])#n OR NUMBER(a^)#n OR NUMBER(d^)#n OR NUMBER(e^)#n THEN
@@ -339,7 +336,7 @@ PROCEDURE Tred2(n: CARDINAL;
     FOR i:=n-1 TO 1 BY -1 DO
       l := i-2;
       f := a[i,i-1];
-      g := 0.0D0;
+      g := R.Zero;
       FOR k:=0 TO l DO
         g := g + a[i,k]*a[i,k];
         h := g + f*f;
@@ -349,23 +346,23 @@ PROCEDURE Tred2(n: CARDINAL;
                                             guaranteed, skip transformation *)
       IF g<=tol THEN
         e[i] := f;
-        h := 0.0D0;
+        h := R.Zero;
       ELSE
         l := l + 1;
         f := a[i,i-1];
-        IF f>=0.0D0 THEN
-          g := -Math.sqrt(h);
+        IF f>=R.Zero THEN
+          g := -RT.SqRt(h);
         ELSE
-          g := Math.sqrt(h);
+          g := RT.SqRt(h);
         END; (* if *)
         e[i] := g;
         h := h - f*g;
         a[i,i-1] := f-g;
-        f := 0.0D0;
+        f := R.Zero;
         FOR j:=firstD TO l DO
 					 (* form element of A x u *)
           a[j,i] := a[i,j]/h;
-          g := 0.0D0;
+          g := R.Zero;
           FOR k:=firstD TO j DO
             g := g + a[j,k]*a[i,k];
 	  END; (* for *)
@@ -391,15 +388,15 @@ PROCEDURE Tred2(n: CARDINAL;
           					 (* now for all cases of h *)
        d[i] :=  h;
     END; (* for *)
-    d[0] := 0.0D0;
-    e[0] := 0.0D0;
+    d[0] := R.Zero;
+    e[0] := R.Zero;
 					 (* Accumulation of
                                             transformation matrices *)
     FOR i:=0 TO n-1 DO
       l := i-1;
-      IF d[i]#0.0D0 THEN
+      IF d[i]#R.Zero THEN
         FOR j:=0 TO l DO
-          g:=0.0D0;
+          g:=R.Zero;
           FOR k:=0 TO l DO
             g := g + a[i,k]*a[k,j];
 	  END; (* for *)
@@ -409,23 +406,23 @@ PROCEDURE Tred2(n: CARDINAL;
 	END; (* for *)
       END; (* if *)
       d[i] := a[i,i];
-      a[i,i] := 1.0D0;
+      a[i,i] := R.One;
       FOR j:=firstD TO l DO
-         a[i,j] := 0.0D0;
-         a[j,i] := 0.0D0;
+         a[i,j] := R.Zero;
+         a[j,i] := R.Zero;
       END; (* for *)
     END; (* for *)
   END Tred2;
 
 PROCEDURE Trbak1(n: CARDINAL;
-                 a: REF ARRAY OF ARRAY OF LONGREAL;
-                 d,e: REF ARRAY OF LONGREAL;
-                 VAR z: REF ARRAY OF ARRAY OF LONGREAL;
+                 a: M.T;
+                 d,e: V.T;
+                 VAR z: M.T;
                  m1,m2: CARDINAL)
     RAISES {ArraySizesDontMatch}=
   VAR
     l: INTEGER;
-    h,s: LONGREAL;
+    h,s: R.T;
   BEGIN
 					 (* Test for array sizes. *)
     IF NUMBER(a[0])#n OR NUMBER(a^)#n OR NUMBER(d^)#n OR NUMBER(e^)#n OR
@@ -434,11 +431,11 @@ PROCEDURE Trbak1(n: CARDINAL;
     END; (* if *)
 
     FOR i:=FIRST(e^)+1 TO LAST(e^) DO
-      IF e[i]#0.0D0 THEN
+      IF e[i]#R.Zero THEN
         l := i - 1;
         h := e[i]*a[i,i-1];
         FOR j:=m1+1 TO m2+1 DO
-          s := 0.0D0;
+          s := R.Zero;
           FOR k:=FIRST(a^) TO l DO
             s := s + a[i,k]*z[k,j];
 	  END; (* for *)
@@ -452,14 +449,14 @@ PROCEDURE Trbak1(n: CARDINAL;
   END Trbak1;
 
 PROCEDURE Trbak3(n: CARDINAL;
-                 a: REF ARRAY OF LONGREAL;
-                 d,e: REF ARRAY OF LONGREAL;
-                 VAR z: REF ARRAY OF ARRAY OF LONGREAL;
+                 a: V.T;
+                 d,e: V.T;
+                 VAR z: M.T;
                  m1,m2: CARDINAL)
     RAISES {ArraySizesDontMatch}=
   VAR
     l,iz: INTEGER;
-    h,s: LONGREAL;
+    h,s: R.T;
   BEGIN
 					 (* Test for array sizes. *)
     IF NUMBER(a^)#(n*(n+1)DIV 2) OR NUMBER(d^)#n OR NUMBER(e^)#n OR
@@ -471,9 +468,9 @@ PROCEDURE Trbak3(n: CARDINAL;
       l := i - 1;
       iz:= i*l DIV 2;
       h := a[iz+i];
-      IF h#0.0D0 THEN
+      IF h#R.Zero THEN
         FOR j:=m1+1 TO m2+1 DO
-          s := 0.0D0;
+          s := R.Zero;
           FOR k:=FIRST(a^) TO l DO
             s := s + a[iz+k]*z[k,j];
 	  END; (* for *)
@@ -486,11 +483,11 @@ PROCEDURE Trbak3(n: CARDINAL;
     END; (* for *)
   END Trbak3;
 
-PROCEDURE Tql1(VAR d,e: REF ARRAY OF LONGREAL)
+PROCEDURE Tql1(VAR d,e: V.T)
     RAISES {ArraySizesDontMatch,NoConvergence}=
   VAR
     iter,m: INTEGER;
-    b,c,f,g,h,p,r,s: LONGREAL;
+    b,c,f,g,h,p,r,s: R.T;
   BEGIN
     IF NUMBER(d^)#NUMBER(e^) THEN
       RAISE ArraySizesDontMatch;
@@ -498,12 +495,12 @@ PROCEDURE Tql1(VAR d,e: REF ARRAY OF LONGREAL)
     FOR i:=FIRST(e^)+1 TO LAST(e^) DO
       e[i-1] := e[i];
     END; (* for *)
-    f:= 0.0D0;
-    b := 0.0D0;
-    e[LAST(e^)] := 0.0D0;
+    f:= R.Zero;
+    b := R.Zero;
+    e[LAST(e^)] := R.Zero;
 
     FOR l:=FIRST(d^) TO LAST(d^) DO
-      h := LongReal.MinPosNormal*(ABS(d[l])+ABS(e[l]));
+      h := RT.MinPosNormal*(ABS(d[l])+ABS(e[l]));
       IF b<h THEN
         b := h;
       END; (* if *)
@@ -521,8 +518,8 @@ PROCEDURE Tql1(VAR d,e: REF ARRAY OF LONGREAL)
           INC(iter);
 					 (* form shift *)
           g := d[l];
-          p := (d[l+1]-g)/(2.0D0*e[l]);
-          r := Math.sqrt(p*p+1.0D0);
+          p := (d[l+1]-g)/(R.Two*e[l]);
+          r := RT.SqRt(p*p+R.One);
           IF p<r THEN
             d[l] := e[l]/(p-r);
 	  ELSE
@@ -535,17 +532,17 @@ PROCEDURE Tql1(VAR d,e: REF ARRAY OF LONGREAL)
           f := f+h;
 					 (* QL transformation *)
           p := d[m];
-          c := 1.0D0;
-          s := 0.0D0;
+          c := R.One;
+          s := R.Zero;
           FOR i:=m-1 TO l BY -1 DO
             g := c * e[i];
             h := c * p;
             IF ABS(p)>=ABS(e[i]) THEN
-              c := e[i]/p; r:= Math.sqrt(c*c+1.0D0);
-              e[i+1] := s*p*r; s:= c/r; c := 1.0D0/r;
+              c := e[i]/p; r:= RT.SqRt(c*c+R.One);
+              e[i+1] := s*p*r; s:= c/r; c := R.One/r;
             ELSE
-              c := p/e[i]; r:= Math.sqrt(c*c+1.0D0);
-              e[i+1] := s*e[i]*r; s := 1.0D0/r; c := c/r;
+              c := p/e[i]; r:= RT.SqRt(c*c+R.One);
+              e[i+1] := s*e[i]*r; s := R.One/r; c := c/r;
 	    END; (* if *)
             p := c*d[i]-s*g;
             d[i+1] := h + s*(c*g+s*d[i]);
@@ -566,12 +563,12 @@ PROCEDURE Tql1(VAR d,e: REF ARRAY OF LONGREAL)
     END; (* for *)
   END Tql1;
 
-PROCEDURE Tql2(VAR d,e: REF ARRAY OF LONGREAL;
-               VAR z: REF ARRAY OF ARRAY OF LONGREAL)
+PROCEDURE Tql2(VAR d,e: V.T;
+               VAR z: M.T)
     RAISES {ArraySizesDontMatch,NoConvergence}=
   VAR
     k,m,iter: INTEGER;
-    b,c,f,g,h,r,s,p: LONGREAL;
+    b,c,f,g,h,r,s,p: R.T;
   BEGIN
     IF NUMBER(d^)#NUMBER(e^) OR NUMBER(d^)#NUMBER(z^)
       OR NUMBER(d^)#NUMBER(z[0]) THEN
@@ -581,12 +578,12 @@ PROCEDURE Tql2(VAR d,e: REF ARRAY OF LONGREAL;
     FOR i:=FIRST(e^)+1 TO LAST(e^) DO
       e[i-1] := e[i];
     END; (* for *)
-    f:= 0.0D0;
-    b := 0.0D0;
-    e[LAST(e^)] := 0.0D0;
+    f:= R.Zero;
+    b := R.Zero;
+    e[LAST(e^)] := R.Zero;
 
     FOR l:=FIRST(d^) TO LAST(d^) DO
-      h := LongReal.MinPosNormal*(ABS(d[l])+ABS(e[l]));
+      h := RT.MinPosNormal*(ABS(d[l])+ABS(e[l]));
       IF b<h THEN
         b := h;
       END; (* if *)
@@ -604,8 +601,8 @@ PROCEDURE Tql2(VAR d,e: REF ARRAY OF LONGREAL;
           INC(iter);
 					 (* form shift *)
           g := d[l];
-          p := (d[l+1]-g)/(2.0D0*e[l]);
-          r := Math.sqrt(p*p+1.0D0);
+          p := (d[l+1]-g)/(R.Two*e[l]);
+          r := RT.SqRt(p*p+R.One);
           IF p<r THEN
             d[l] := e[l]/(p-r);
 	  ELSE
@@ -618,17 +615,17 @@ PROCEDURE Tql2(VAR d,e: REF ARRAY OF LONGREAL;
           f := f+h;
 					 (* QL transformation *)
           p := d[m];
-          c := 1.0D0;
-          s := 0.0D0;
+          c := R.One;
+          s := R.Zero;
           FOR i:=m-1 TO l BY -1 DO
             g := c * e[i];
             h := c * p;
             IF ABS(p)>=ABS(e[i]) THEN
-              c := e[i]/p; r:= Math.sqrt(c*c+1.0D0);
-              e[i+1] := s*p*r; s:= c/r; c := 1.0D0/r;
+              c := e[i]/p; r:= RT.SqRt(c*c+R.One);
+              e[i+1] := s*p*r; s:= c/r; c := R.One/r;
             ELSE
-              c := p/e[i]; r:= Math.sqrt(c*c+1.0D0);
-              e[i+1] := s*e[i]*r; s := 1.0D0/r; c := c/r;
+              c := p/e[i]; r:= RT.SqRt(c*c+R.One);
+              e[i+1] := s*e[i]*r; s := R.One/r; c := c/r;
 	    END; (* if *)
             p := c*d[i]-s*g;
             d[i+1] := h + s*(c*g+s*d[i]);

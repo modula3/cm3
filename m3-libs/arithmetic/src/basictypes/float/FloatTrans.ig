@@ -42,6 +42,15 @@ CONST
   DegPerRad   = FLOAT(57.29577951308232D0,T);  (*degrees per radian*)
   RadPerDeg   = FLOAT(0.017453292519943D0,T);  (*radians per degree*)
 
+CONST
+  Base            = R.Base;
+  Precision       = R.Precision;
+  MaxFinite       = R.MaxFinite;
+  MinPos          = R.MinPos;
+  MinPosNormal    = R.MinPosNormal;
+  MaxExpDigits    = R.MaxExpDigits;
+  MaxSignifDigits = R.MaxSignifDigits;
+
   (*---boundaries for precision testing---*)
   Tiny = R.MinPos*FLOAT(1000.0,T); (*nearly 0.0*)
   Huge = R.MaxFinite/FLOAT(1000.0,T); (*nearly infinite*)
