@@ -5,8 +5,8 @@
 #define KR_headers
 #endif
 
-#ifndef IEEE_8087
-#define IEEE_8087
+#ifndef IEEE_MC68k
+#define IEEE_MC68k
 #endif
 
 #include "dtoa.h"
