@@ -75,7 +75,7 @@ PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
   END PlotReal;
 
 PROCEDURE PlotComplex (READONLY s: ARRAY OF CS.T; l: CARDINAL; ) =
-  CONST magnify = 100.0D0;
+  CONST magnify = 1.0D0;
 
   VAR
     unit        := IIntPow.MulPower(1, 2, l);
@@ -217,7 +217,7 @@ PROCEDURE FourierDecay () =
   BEGIN
     FOR l := 0 TO 12 DO
       IO.Put(Fmt.FN("number of levels: %s\n", ARRAY OF TEXT{Fmt.Int(l)}));
-      PlotReal(generator, l);
+      (*PlotReal(generator, l);*)
       VAR
         minsize := generator.getNumber() * 2;
         (*round up to the next multiple of twopow*)
@@ -247,7 +247,9 @@ PROCEDURE FourierDecay () =
             bandDoub := band;    (* initialize it with something different
                                     from NIL *)
           BEGIN
-            PlotComplex(ARRAY OF CS.T{NEW(CS.T).fromVector(maskSpec)}, 0);
+            (*PlotComplex(ARRAY OF CS.T{NEW(CS.T).fromVector(maskSpec)},
+               0);*)
+
             (*CVS.Clear(SUBARRAY(decaySpec^, 0, bandWidth));*)
             SUBARRAY(decaySpec^, 0, bandWidth) :=
               SUBARRAY(genSpec^, 0, bandWidth);
@@ -283,6 +285,9 @@ PROCEDURE FourierDecay () =
               bandDoub :=
                 CV.FromArray(SUBARRAY(genDoubSpec^, curBandWidth * 2,
                                       curBandWidth * 2 + 1));
+              PlotComplex(ARRAY OF
+                            CS.T{NEW(CS.T).fromVector(band),
+                                 NEW(CS.T).fromVector(bandDoub)}, l - k);
               (* IO.Put(Fmt.FN( "diff upsampled - Fourier interpolated:
                  %s\n", ARRAY OF TEXT{RF.Fmt(CVT.Norm2(CV.Sub(band,
                  bandDoub)))})); *)
@@ -310,9 +315,11 @@ PROCEDURE FourierDecay () =
               rep := rep * 2;
               curBandWidth := curBandWidth * 2;
             END;
+            (*
             PlotComplex(ARRAY OF
                           CS.T{NEW(CS.T).fromVector(genSpec),
                                NEW(CS.T).fromVector(decaySpec)}, l);
+            *)
           END;
         END;
 
