@@ -63,7 +63,7 @@ typedef int PLINT;
 
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
 %import_lib("plplotd","/usr/lib")
-import_lib("plplotd","/home/thielema/applications/plplot/lib")%}
+import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)%}
 
 %insert(m3rawintf) %{
 TYPE
