@@ -11,6 +11,7 @@ Abstract: Transcendental functions of complex numbers.
                           The ones with beginning caps are wds's
 *)
 FROM xUtils IMPORT Error,Err;
+IMPORT FloatMode;
 
 <*UNUSED*> CONST Module = "ComplexTrans.";
 
@@ -49,11 +50,20 @@ END Pow;
 
 
 (*----------------*)
+(*This function would definitely benefit of an implementation of SinCos*)
 PROCEDURE Exp(
                 READONLY x:T):T=
 BEGIN
   RETURN C.Scale(T{RT.Cos(x.im),RT.Sin(x.im)},RT.Exp(x.re));
 END Exp;
+
+(*----------------*)
+(*This function would definitely benefit of an implementation of SinCos*)
+PROCEDURE ExpI(
+                x:R.T):T=
+BEGIN
+  RETURN T{RT.Cos(x),RT.Sin(x)};
+END ExpI;
 
 (*----------------*)
 PROCEDURE Ln(
@@ -187,6 +197,7 @@ VAR
   exp : INTEGER;
   x : T;
   y : R.T;
+  <*FATAL FloatMode.Trap*>
 BEGIN
   (*a workaround to prevent NaNs and Zeros*)
   x := C.Normalize(x0, exp);

@@ -1,4 +1,4 @@
-GENERIC MODULE PolarBasic(C,Ct,R,Rt);
+GENERIC MODULE PolarBasic(C,CT,R,RT);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Complex numbers in polar coordinates
@@ -16,17 +16,6 @@ FROM xUtils IMPORT Error;
 <*UNUSED*> CONST Module = "PolarBasic.";
 
 (*----------------*)
-PROCEDURE FromComplex(
-                   READONLY c:C.T):T=
-VAR
-  x:T;
-BEGIN
-  x.radius:=Ct.Abs(c);
-  x.angle:=Rt.ArcTan2(c.im,c.re);
-  RETURN x;
-END FromComplex;
-
-(*----------------*)
 PROCEDURE IsZero(READONLY x:T):BOOLEAN =
 BEGIN
   RETURN R.IsZero(x.radius);
@@ -39,10 +28,21 @@ BEGIN
 END Equal;
 
 (*----------------*)
+PROCEDURE FromComplex(
+                   READONLY c:C.T):T=
+VAR
+  x:T;
+BEGIN
+  x.radius:=CT.Abs(c);
+  x.angle:=RT.ArcTan2(c.im,c.re);
+  RETURN x;
+END FromComplex;
+
+(*----------------*)
 PROCEDURE ToComplex(
                      READONLY x:T):C.T=
 BEGIN
-  RETURN C.Scale(C.T{re:=Rt.Cos(x.angle),im:=Rt.Sin(x.angle)},x.radius);
+  RETURN C.Scale(C.T{re:=RT.Cos(x.angle),im:=RT.Sin(x.angle)},x.radius);
 END ToComplex;
 (*----------------*)
 PROCEDURE NormalizeAngle(VAR x:T) =
@@ -50,11 +50,11 @@ PROCEDURE NormalizeAngle(VAR x:T) =
 	(*---normalize to -pi..+pi---*)
 	(*if it was normalized before,
       the loops should run at most one cycle*)
-	WHILE R.Compare(x.angle,Rt.Pi)>0 DO
-      x.angle:=R.Sub(x.angle,Rt.TwoPi);
+	WHILE R.Compare(x.angle,RT.Pi)>0 DO
+      x.angle:=R.Sub(x.angle,RT.TwoPi);
 	END;
-	WHILE R.Compare(x.angle,R.Neg(Rt.Pi))<0 DO
-      x.angle:=R.Add(x.angle,Rt.TwoPi);
+	WHILE R.Compare(x.angle,R.Neg(RT.Pi))<0 DO
+      x.angle:=R.Add(x.angle,RT.TwoPi);
 	END;
   END NormalizeAngle;
 (*----------------*)

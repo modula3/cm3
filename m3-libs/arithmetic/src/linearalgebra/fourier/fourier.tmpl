@@ -1,0 +1,9 @@
+%
+%  Quake functions to instantiate fourier transform on generic float types.
+%
+
+readonly proc FourierTransform (nm, cfield, ctrans, rfield, rtrans) is
+  local basic = nm & "FourierTransform"
+  build_generic_intf (basic, "FourierTransform", [cfield], VISIBLE)
+  build_generic_impl (basic, "FourierTransform", [cfield, ctrans, rfield, rtrans])
+end

@@ -28,8 +28,9 @@ PROCEDURE PowR(READONLY x:T;
 PROCEDURE Pow(x,y:T):T;  (*return x^y*)
 
 (*---transcendentals---*)
-PROCEDURE Exp(READONLY x:T):T;      (*return e^x *)
-PROCEDURE Ln (READONLY x:T):T;      (*return ln(x) *)
+PROCEDURE Exp (READONLY x:T):T;      (*return e^x *)
+PROCEDURE Ln  (READONLY x:T):T;      (*return ln(x) *)
+PROCEDURE ExpI(       x:R.T):T;      (*return e^(i*x) *)
 
 (*---for trig and hyperbolics, must have |x|<=18---*)
 PROCEDURE Cos(READONLY x:T):T RAISES {Error}; (*return cos(x) *)

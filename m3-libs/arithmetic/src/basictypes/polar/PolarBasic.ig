@@ -14,11 +14,11 @@ TYPE
    (*polar angles are in radians*)
    T  = RECORD radius,angle:R.T; END;
 
-PROCEDURE FromComplex(READONLY c:C.T):T;
-PROCEDURE ToComplex(READONLY c:T):C.T;
-
 <*INLINE*> PROCEDURE IsZero(READONLY x:T):BOOLEAN;
 <*INLINE*> PROCEDURE Equal(READONLY x,y:T):BOOLEAN;  (*return x=y*)
+
+PROCEDURE FromComplex(READONLY c:C.T):T;
+PROCEDURE ToComplex(READONLY c:T):C.T;
 
 PROCEDURE Mul(READONLY x,y:T):T;     (*return x*y*)
 PROCEDURE Div(READONLY x,y:T):T RAISES {Error};     (*return x/y*)
