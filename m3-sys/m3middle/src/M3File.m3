@@ -48,7 +48,9 @@ PROCEDURE Copy (src, dest: TEXT) RAISES {OSError.E} =
     FINALLY
       IF (wr # NIL) THEN wr.close (); END;
       IF (rd # NIL) THEN rd.close (); END;
-      FS.SetModificationTime(dest, status.modificationTime);
+      TRY 
+        FS.SetModificationTime(dest, status.modificationTime) 
+      EXCEPT ELSE END;
     END;
   END Copy;
 
@@ -101,7 +103,9 @@ PROCEDURE CopyText (src, dest: TEXT;  eol: TEXT) RAISES {OSError.E} =
     FINALLY
       IF (wr # NIL) THEN wr.close (); END;
       IF (rd # NIL) THEN rd.close (); END;
-      FS.SetModificationTime(dest, status.modificationTime);
+      TRY 
+        FS.SetModificationTime(dest, status.modificationTime);
+      EXCEPT ELSE END;
     END;
   END CopyText;
 
