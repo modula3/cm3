@@ -6,39 +6,28 @@ Abstract:  Tests for Utils module.
 
 *)
 
-IMPORT xBits AS B;
+IMPORT Bits AS B;
 IMPORT Fmt,Text;
 (*=======================*)
 CONST
   Module = "TestBits.";
 (*----------------------*)
-PROCEDURE TestABC():BOOLEAN=
+PROCEDURE TestWhichEndian():BOOLEAN=
 CONST
-  ftn = Module & "TestABC";
-VAR
-  result:=TRUE;
-BEGIN
-  Debug(1,ftn,"begin\n");
-
-  RETURN result;
-END TestABC;
-(*----------------------*)
-PROCEDURE TestWhichend():BOOLEAN=
-CONST
-  ftn = Module & "TestWhichend";
+  ftn = Module & "TestWhichEndian";
 VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
   FOR i:=1 TO 4 DO
-    CASE B.whichend() OF
+    CASE B.WhichEndian() OF
     | -1 => Msg("little endian\n");
     |  0 => Msg("error\n");
-    | +1 => Msg("big  endian\n");
+    | +1 => Msg("big endian\n");
     END;
   END;
   RETURN result;
-END TestWhichend;
+END TestWhichEndian;
 (*----------------------*)
 PROCEDURE TestFmt():BOOLEAN=
 CONST
@@ -48,10 +37,10 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  Msg("2_1010=" & B.fmt(x,nbits:=4) & "\n");
-  Msg("2_00001010=" & B.fmt(x,nbits:=8) & "\n");
-  Msg("2_000000001010=" & B.fmt(x,nbits:=12) & "\n");
-  Msg("2_0000000000001010=" & B.fmt(x,nbits:=16) & "\n");
+  Msg("2_1010=" & B.Fmt(x,nbits:=4) & "\n");
+  Msg("2_00001010=" & B.Fmt(x,nbits:=8) & "\n");
+  Msg("2_000000001010=" & B.Fmt(x,nbits:=12) & "\n");
+  Msg("2_0000000000001010=" & B.Fmt(x,nbits:=16) & "\n");
 
   RETURN result;
 END TestFmt;
@@ -64,9 +53,10 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  Msg(B.fmt(x,nbits+2) & " reverses to "
-    & B.fmt(B.reverse(x,nbits),nbits+2)
+  Msg(B.Fmt(x,nbits+2) & " reverses to "
+    & B.Fmt(B.Reverse(x,nbits),nbits+2)
     & "\n");
+  <*ASSERT B.Reverse(x,nbits)=2_1101 *>
 
   RETURN result;
 END TestReverse;
@@ -77,9 +67,9 @@ VAR
   str:ARRAY [0..20] OF CHAR;	
 
 (*----------------------*)
-PROCEDURE TestHash_pjw():BOOLEAN=
+PROCEDURE TestHashPJW():BOOLEAN=
 CONST
-  ftn = Module & "TestHash_pjw";
+  ftn = Module & "TestHashPJW";
 VAR
   result:=TRUE;
 
@@ -87,25 +77,25 @@ BEGIN
   Debug(1,ftn,"begin\n");
   Text.SetChars(str,textdata);
   FOR i:=FIRST(str) TO LAST(str)-6 BY 5 DO
-    Msg("hash=" & Fmt.Int(B.hash_pjw(str,i,i+5)) & "\n");
+    Msg("hash=" & Fmt.Int(B.HashPJW(str,i,i+5)) & "\n");
   END;
   RETURN result;
-END TestHash_pjw;
+END TestHashPJW;
 (*----------------------*)
-PROCEDURE TestHash_elf():BOOLEAN=
+PROCEDURE TestHashELF():BOOLEAN=
 CONST
-  ftn = Module & "TestHash_elf";
+  ftn = Module & "TestHashELF";
 VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
   Text.SetChars(str,textdata);
   FOR i:=FIRST(str) TO LAST(str)-6 BY 5 DO
-    Msg("hash=" & Fmt.Int(B.hash_elf(str,i,i+5)) & "\n");
+    Msg("hash=" & Fmt.Int(B.HashELF(str,i,i+5)) & "\n");
   END;
 
   RETURN result;
-END TestHash_elf;
+END TestHashELF;
 (*----------------------*)
 PROCEDURE TestBits():BOOLEAN=
 CONST ftn = Module & "TestBits";
@@ -113,11 +103,11 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  NewLine(); EVAL TestWhichend();
+  NewLine(); EVAL TestWhichEndian();
   NewLine(); EVAL TestFmt();
   NewLine(); EVAL TestReverse();
-  NewLine(); EVAL TestHash_pjw();
-  NewLine(); EVAL TestHash_elf();
+  NewLine(); EVAL TestHashPJW();
+  NewLine(); EVAL TestHashELF();
   RETURN result;
 END TestBits;
 (*=======================*)

@@ -5,10 +5,9 @@ Abstract:  Tests for Rand module.
 3/16/96    Harry George   Initial version (basic structure)
 3/17/96    Warren Smith   Normal, Gamma, and Dirichlet
 *)
-IMPORT xReal64 AS R,
-       xInteger AS I;
+IMPORT LongRealBasic  AS R,
+       LongRealFmtLex AS RF;
 IMPORT xRand,xRNG01,xRNG02,Statistic,Fmt;
-FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
 CONST
@@ -29,20 +28,22 @@ END TestABC;
 (*--------------------------*)
 PROCEDURE printstats(name:TEXT;
                      data:R.Array)=
+  CONST
+    fmtStyle=RF.FmtStyle{prec:=6,style:=Fmt.Style.Fix};
   VAR
     r:Statistic.T;
   BEGIN
     Statistic.Describe(data,r);
     Msg("\n" & name);
     Msg("\n"
-     & " min =" & R.fmt(r.min ,prec:=6,style:=Fmt.Style.Fix)
-     & " max =" & R.fmt(r.max ,prec:=6,style:=Fmt.Style.Fix)
-     & " mean=" & R.fmt(r.avg ,prec:=6,style:=Fmt.Style.Fix)
+     & " min =" & RF.Fmt(r.min ,fmtStyle)
+     & " max =" & RF.Fmt(r.max ,fmtStyle)
+     & " mean=" & RF.Fmt(r.avg ,fmtStyle)
      & "\n"
-     & " sdev=" & R.fmt(r.sdev,prec:=6,style:=Fmt.Style.Fix)
-     & " var =" & R.fmt(r.var ,prec:=6,style:=Fmt.Style.Fix)
-     & " skew=" & R.fmt(r.skew,prec:=6,style:=Fmt.Style.Fix)
-     & " kurt=" & R.fmt(r.kurt,prec:=6,style:=Fmt.Style.Fix)
+     & " sdev=" & RF.Fmt(r.sdev,fmtStyle)
+     & " var =" & RF.Fmt(r.var ,fmtStyle)
+     & " skew=" & RF.Fmt(r.skew,fmtStyle)
+     & " kurt=" & RF.Fmt(r.kurt,fmtStyle)
      & "\n");
 END printstats;
 (*----------------------*)
@@ -71,7 +72,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  Msg("N=" & I.fmt(N) & "\n");
+  Msg("N=" & Fmt.Int(N) & "\n");
 
   do_engine("DECSRC",decsrc);
   do_engine("ran0  ",ran0);
