@@ -53,7 +53,7 @@ PROCEDURE Test()=
     FOR n:=1 TO 45 DO
       x := Daub.FilterPureAbsSqr(n);
       trans := Refn.TransitionMatrix(x);
-      specrad := Eigen.SquareMethod(trans,v,tol:=1.0D-6);
+      specrad := Eigen.SquareMethod(trans,v,tol:=1.0D-5);
       IO.Put(Fmt.FN("%s: spectral radius %s\n",
         ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(specrad)}));
     END;
