@@ -74,17 +74,16 @@ PLINT = C.int;
 PLFLT = C.double;
 %}
 
-%insert(m3wrapimpl) %{
-FROM NADefinitions IMPORT Err;
-IMPORT NADefinitions AS NA;
-IMPORT LongRealBasic  AS R;
-IMPORT LongRealVectorFast AS V;
-IMPORT LongRealMatrixFast AS M;
-IMPORT M3toC;
-IMPORT Ctypes AS C;
-%}
-
 %insert(m3wrapintf) %{
+(* * * *
+Precaution:
+ This conversion from the C headers is not well tested
+and may contain bugs, irritating function names or
+improper types.
+ We should use enumerations, sets, subranges
+whereever possible to increase safety for parameter passing.
+We should use exceptions to indicate errors.
+* * * *)
 
 IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic  AS R;
@@ -109,6 +108,16 @@ TYPE
   DrawMode = {linex, liney, magColor, baseCont, topCont, surfCont, sides,
               faceted, mesh};
   DrawModeSet = SET OF DrawMode;
+%}
+
+%insert(m3wrapimpl) %{
+FROM NADefinitions IMPORT Err;
+IMPORT NADefinitions AS NA;
+IMPORT LongRealBasic  AS R;
+IMPORT LongRealVectorFast AS V;
+IMPORT LongRealMatrixFast AS M;
+IMPORT M3toC;
+IMPORT Ctypes AS C;
 %}
 
 
@@ -299,10 +308,10 @@ TYPE
 %typemap("m3indecl")  PLFLTArrayFst %{n:=NUMBER($1_name);%}
 %typemap("m3indecl")  PLFLTArrayX   %{nx:=NUMBER($1_name);%}
 %typemap("m3indecl")  PLFLTArrayY   %{ny:=NUMBER($1_name);%}
-//%typemap("m3in")      PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;%}
-//%typemap("m3in")      PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3in")      PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3in:throws") PLFLTArrayCk %{NA.Error%}
+//%typemap("m3incheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;%}
+//%typemap("m3incheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3incheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3incheck:throws") PLFLTArrayCk %{NA.Error%}
 
 
 %typemap("rawinmode") PLINTArray %{READONLY%}
@@ -312,10 +321,10 @@ TYPE
 %typemap("m3rawarg")  PLINTArray %{$1_name[0]%}
 
 %typemap("m3indecl")  PLINTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3in")      PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3in")      PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3in:throws") PLINTArrayCk        %{NA.Error%}
-%typemap("m3in:throws") PLINTArrayCkInterim %{NA.Error%}
+%typemap("m3incheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3incheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3incheck:throws") PLINTArrayCk        %{NA.Error%}
+%typemap("m3incheck:throws") PLINTArrayCkInterim %{NA.Error%}
 
 
 %typemap("rawinmode") PLFLTMatrix %{READONLY%}
@@ -327,18 +336,21 @@ TYPE
 %typemap("m3intype",numinputs=0) PLArraySize nx %{%}
 %typemap("m3intype",numinputs=0) PLArraySize ny %{%}
 
-%typemap("m3indecl")  PLFLTMatrixFst %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
+%typemap("m3indecl")  PLFLTMatrixFst %{$1:REF ARRAY OF ADDRESS;
 nx:=NUMBER($1_name);
 ny:=NUMBER($1_name[0]);%}
 %typemap("m3in")      PLFLTMatrixFst
-%{FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
-
-%typemap("m3indecl")  PLFLTMatrixCk %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));%}
-%typemap("m3in")      PLFLTMatrixCk
-%{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;
-IF NUMBER($1_name[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+%{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
-%typemap("m3in:throws") PLFLTMatrixCk %{NA.Error%}
+
+%typemap("m3indecl")  PLFLTMatrixCk %{$1:REF ARRAY OF ADDRESS;%}
+%typemap("m3in")      PLFLTMatrixCk
+%{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
+FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
+%typemap("m3incheck") PLFLTMatrixCk
+%{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;
+IF NUMBER($1_name[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3incheck:throws") PLFLTMatrixCk %{NA.Error%}
 
 
 
@@ -381,9 +393,10 @@ PROCEDURE CallbackM3()=BEGIN END CallbackM3;
 %typemap(m3rawarg)  fill_func %{NIL (*not yet supported*)%}
 
 
-%typemap(m3indecl)  (char *) %{$1 := M3toC.SharedTtoS($input);%}
-%typemap(m3freearg) (char *) %{M3toC.FreeSharedS($input,$1);%}
-%typemap(m3rawarg)  (char *) %{$1%}
+%typemap(m3indecl)  char * %{$1 : C.char_star;%}
+%typemap(m3in)      char * %{$1 := M3toC.SharedTtoS($input);%}
+%typemap(m3freearg) char * %{M3toC.FreeSharedS($input,$1);%}
+%typemap(m3rawarg)  char * %{$1%}
 
 %typemap(rawintype) char *legline[4] %{READONLY%}
 %typemap(m3intype)  char *legline[4] %{READONLY%}
@@ -437,6 +450,12 @@ ELSE
 <*ASSERT FALSE*> (*combination not supported by PLPlot :-( *)
 END;
 END;%}
+
+%typemap(m3intype)  PLINT mode    %{BOOLEAN%}
+%typemap(m3rawarg)  PLINT mode    %{ORD($1_name)%}
+
+%typemap(m3argout)     PLINTOutput status %{$1#0%}
+%typemap(m3argouttype) PLINTOutput status %{BOOLEAN%}
 
 %typemap(m3inmode)  PLINT *p_argc %{VAR%}
 %typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
