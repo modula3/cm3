@@ -47,6 +47,7 @@ PROCEDURE Equal(x,y:T):BOOLEAN;  (*return x=y*)
 
 PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible, will fail for floating point numbers often*)
+PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
 PROCEDURE DivMod(x,y:T;                 (*compute x/y *) 
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
 (*
