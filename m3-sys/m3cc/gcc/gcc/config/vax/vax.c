@@ -1,5 +1,5 @@
-/* Subroutines for insn-output.c for Vax.
-   Copyright (C) 1987, 1994, 1995, 1997, 1998, 1999, 2000
+/* Subroutines for insn-output.c for VAX.
+   Copyright (C) 1987, 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
 This file is part of GNU CC.
@@ -30,10 +30,95 @@ Boston, MA 02111-1307, USA.  */
 #include "function.h"
 #include "output.h"
 #include "insn-attr.h"
-#ifdef VMS_TARGET
 #include "tree.h"
-#endif
+#include "recog.h"
+#include "expr.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
+
+static int follows_p PARAMS ((rtx, rtx));
+static void vax_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+#if VMS_TARGET
+static void vms_asm_out_constructor PARAMS ((rtx, int));
+static void vms_asm_out_destructor PARAMS ((rtx, int));
+#endif
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\t.word\t"
+
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE vax_output_function_prologue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
+/* Generate the assembly code for function entry.  FILE is a stdio
+   stream to output the code to.  SIZE is an int: how many units of
+   temporary storage to allocate.
+
+   Refer to the array `regs_ever_live' to determine which registers to
+   save; `regs_ever_live[I]' is nonzero if register number I is ever
+   used in the function.  This function is responsible for knowing
+   which registers should not be saved even if used.  */
+
+static void
+vax_output_function_prologue (file, size)
+     FILE * file;
+     HOST_WIDE_INT size;
+{
+  register int regno;
+  register int mask = 0;
+
+  for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
+    if (regs_ever_live[regno] && !call_used_regs[regno])
+      mask |= 1 << regno;
+
+  fprintf (file, "\t.word 0x%x\n", mask);
+
+  if (VMS_TARGET)
+    {
+      /*
+       * This works for both gcc and g++.  It first checks to see if
+       * the current routine is "main", which will only happen for
+       * GCC, and add the jsb if it is.  If is not the case then try
+       * and see if __MAIN_NAME is part of current_function_name,
+       * which will only happen if we are running g++, and add the jsb
+       * if it is.  In gcc there should never be a paren in the
+       * function name, and in g++ there is always a "(" in the
+       * function name, thus there should never be any confusion.
+       *
+       * Adjusting the stack pointer by 4 before calling C$MAIN_ARGS
+       * is required when linking with the VMS POSIX version of the C
+       * run-time library; using `subl2 $4,r0' is adequate but we use
+       * `clrl -(sp)' instead.  The extra 4 bytes could be removed
+       * after the call because STARTING_FRAME_OFFSET's setting of -4
+       * will end up adding them right back again, but don't bother.
+       */
+
+      const char *p = current_function_name;
+      int is_main = strcmp ("main", p) == 0;
+#     define __MAIN_NAME " main("
+
+      while (!is_main && *p != '\0')
+	{
+	  if (*p == *__MAIN_NAME
+	      && strncmp (p, __MAIN_NAME, sizeof __MAIN_NAME - sizeof "") == 0)
+	    is_main = 1;
+	  else
+	    p++;
+	}
+
+      if (is_main)
+	fprintf (file, "\t%s\n\t%s\n", "clrl -(sp)", "jsb _C$MAIN_ARGS");
+    }
+
+    size -= STARTING_FRAME_OFFSET;
+    if (size >= 64)
+      fprintf (file, "\tmovab %d(sp),sp\n", -size);
+    else if (size)
+      fprintf (file, "\tsubl2 $%d,sp\n", size);
+}
 
 /* This is like nonimmediate_operand with a restriction on the type of MEM.  */
 
@@ -391,7 +476,7 @@ vax_address_cost (addr)
       goto restart;
     }
   /* Indexing and register+offset can both be used (except on a VAX 2)
-     without increasing execution time over either one alone. */
+     without increasing execution time over either one alone.  */
   if (reg && indexed && offset)
     return reg + indir + offset + predec;
   return reg + indexed + indir + offset + predec;
@@ -436,10 +521,12 @@ vax_rtx_cost (x)
 	  c = 10;		/* 3-4 on VAX 9000, 20-28 on VAX 2 */
 	  break;
 	default:
-	  break;
+	  return MAX_COST;	/* Mode is not supported.  */
 	}
       break;
     case UDIV:
+      if (mode != SImode)
+	return MAX_COST;	/* Mode is not supported.  */
       c = 17;
       break;
     case DIV:
@@ -455,6 +542,8 @@ vax_rtx_cost (x)
       c = 23;
       break;
     case UMOD:
+      if (mode != SImode)
+	return MAX_COST;	/* Mode is not supported.  */
       c = 29;
       break;
     case FLOAT:
@@ -491,7 +580,7 @@ vax_rtx_cost (x)
       c = 3;
       break;
     case AND:
-      /* AND is special because the first operand is complemented. */
+      /* AND is special because the first operand is complemented.  */
       c = 3;
       if (GET_CODE (XEXP (x, 0)) == CONST_INT)
 	{
@@ -624,7 +713,7 @@ check_float_value (mode, d, overflow)
 
   if (overflow)
     {
-      bcopy ((char *) &float_values[0], (char *) d, sizeof (REAL_VALUE_TYPE));
+      memcpy (d, &float_values[0], sizeof (REAL_VALUE_TYPE));
       return 1;
     }
 
@@ -634,26 +723,24 @@ check_float_value (mode, d, overflow)
       memcpy (&r, d, sizeof (REAL_VALUE_TYPE));
       if (REAL_VALUES_LESS (float_values[0], r))
 	{
-	  bcopy ((char *) &float_values[0], (char *) d,
-		 sizeof (REAL_VALUE_TYPE));
+	  memcpy (d, &float_values[0], sizeof (REAL_VALUE_TYPE));
 	  return 1;
 	}
       else if (REAL_VALUES_LESS (r, float_values[1]))
 	{
-	  bcopy ((char *) &float_values[1], (char*) d,
-		 sizeof (REAL_VALUE_TYPE));
+	  memcpy (d, &float_values[1], sizeof (REAL_VALUE_TYPE));
 	  return 1;
 	}
       else if (REAL_VALUES_LESS (dconst0, r)
 		&& REAL_VALUES_LESS (r, float_values[2]))
 	{
-	  bcopy ((char *) &dconst0, (char *) d, sizeof (REAL_VALUE_TYPE));
+	  memcpy (d, &dconst0, sizeof (REAL_VALUE_TYPE));
 	  return 1;
 	}
       else if (REAL_VALUES_LESS (r, dconst0)
 		&& REAL_VALUES_LESS (float_values[3], r))
 	{
-	  bcopy ((char *) &dconst0, (char *) d, sizeof (REAL_VALUE_TYPE));
+	  memcpy (d, &dconst0, sizeof (REAL_VALUE_TYPE));
 	  return 1;
 	}
     }
@@ -661,8 +748,8 @@ check_float_value (mode, d, overflow)
   return 0;
 }
 
-#ifdef VMS_TARGET
-/* Additional support code for VMS target. */
+#if VMS_TARGET
+/* Additional support code for VMS target.  */
 
 /* Linked list of all externals that are to be emitted when optimizing
    for the global pointer if they haven't been declared by the end of
@@ -757,11 +844,34 @@ vms_flush_pending_externals (file)
       fprintf (file, ",%d\n", p->size);
     }
 }
+
+static void
+vms_asm_out_constructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  fprintf (asm_out_file,".globl $$PsectAttributes_NOOVR$$__gxx_init_1\n");
+  data_section();
+  fprintf (asm_out_file,"$$PsectAttributes_NOOVR$$__gxx_init_1:\n\t.long\t");
+  assemble_name (asm_out_file, XSTR (symbol, 0));
+  fputc ('\n', asm_out_file);
+}
+
+static void
+vms_asm_out_destructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  fprintf (asm_out_file,".globl $$PsectAttributes_NOOVR$$__gxx_clean_1\n");
+  data_section();
+  fprintf (asm_out_file,"$$PsectAttributes_NOOVR$$__gxx_clean_1:\n\t.long\t");
+  assemble_name (asm_out_file, XSTR (symbol, 0));
+  fputc ('\n', asm_out_file);
+}
 #endif /* VMS_TARGET */
 
-#ifdef VMS
-/* Additional support code for VMS host. */
-
+/* Additional support code for VMS host.  */
+/* ??? This should really be in libiberty; vax.c is a target file.  */
 #ifdef QSORT_WORKAROUND
   /*
 	Do not use VAXCRTL's qsort() due to a severe bug:  once you've
@@ -769,7 +879,7 @@ vms_flush_pending_externals (file)
 	and is longword aligned, you cannot safely sort anything which
 	is either not a multiple of 4 in size or not longword aligned.
 	A static "move-by-longword" optimization flag inside qsort() is
-	never reset.  This is known of affect VMS V4.6 through VMS V5.5-1,
+	never reset.  This is known to affect VMS V4.6 through VMS V5.5-1,
 	and was finally fixed in VMS V5.5-2.
 
 	In this work-around an insertion sort is used for simplicity.
@@ -844,4 +954,37 @@ not_qsort (array, count, size, compare)
 }
 #endif /* QSORT_WORKAROUND */
 
-#endif /* VMS */
+/* Return 1 if insn A follows B.  */
+
+static int
+follows_p (a, b)
+     rtx a, b;
+{
+  register rtx p;
+
+  for (p = a; p != b; p = NEXT_INSN (p))
+    if (! p)
+      return 1;
+
+  return 0;
+}
+
+/* Returns 1 if we know operand OP was 0 before INSN.  */
+
+int
+reg_was_0_p (insn, op)
+     rtx insn, op;
+{
+  rtx link;
+
+  return ((link = find_reg_note (insn, REG_WAS_0, 0))
+	  /* Make sure the insn that stored the 0 is still present
+	     and doesn't follow INSN in the insn sequence.  */
+	  && ! INSN_DELETED_P (XEXP (link, 0))
+	  && GET_CODE (XEXP (link, 0)) != NOTE
+	  && ! follows_p (XEXP (link, 0), insn)
+	  /* Make sure cross jumping didn't happen here.  */
+	  && no_labels_between_p (XEXP (link, 0), insn)
+	  /* Make sure the reg hasn't been clobbered.  */
+	  && ! reg_set_between_p (op, XEXP (link, 0), insn));
+}

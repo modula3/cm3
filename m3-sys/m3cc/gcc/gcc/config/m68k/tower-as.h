@@ -63,6 +63,9 @@ Boston, MA 02111-1307, USA.  */
 #define SGS_CMP_ORDER		/* Takes cmp operands in reverse order */
 #define SGS_NO_LI		/* Suppress jump table label usage */
 
+#undef INT_OP_GROUP
+#define INT_OP_GROUP INT_OP_NO_DOT
+
 /* Turn on SDB debugging info.  */
 
 #define SDB_DEBUGGING_INFO
@@ -82,15 +85,15 @@ Boston, MA 02111-1307, USA.  */
 
 #define ASM_OUTPUT_SOURCE_LINE(FILE, LINENO)	\
   fprintf (FILE, "\tln\t%d\n",			\
-	   (sdb_begin_function_line		\
-	    ? last_linenum - sdb_begin_function_line : 1))
+	   (sdb_begin_function_line > -1	\
+	    ? (LINENO) - sdb_begin_function_line : 1))
 
 #undef ASM_OUTPUT_IDENT
 #define ASM_OUTPUT_IDENT(FILE, NAME) \
   fprintf (FILE, "\tident\t\"%s\" \n", NAME)
 
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN) \
-  do { register int sp = 0, lp = 0; \
+  do { register size_t sp = 0, lp = 0, limit = (LEN); \
     fprintf ((FILE), "\tbyte\t"); \
   loop: \
     if ((PTR)[sp] > ' ' && ! ((PTR)[sp] & 0x80) && (PTR)[sp] != '\\') \
@@ -99,7 +102,7 @@ Boston, MA 02111-1307, USA.  */
     else \
       { lp += 5; \
 	fprintf ((FILE), "0x%x", (PTR)[sp]); } \
-    if (++sp < (LEN)) \
+    if (++sp < limit) \
       {	if (lp > 60) \
 	  { lp = 0; \
 	    fprintf ((FILE), "\n\tbyte\t"); }	\
@@ -153,26 +156,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (68k, Motorola/SGS/Tower32 syntax)");
-
-#undef FUNCTION_BLOCK_PROFILER
-#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO)				\
-  do {									\
-    char label1[20], label2[20];					\
-    ASM_GENERATE_INTERNAL_LABEL (label1, "LPBX", 0);			\
-    ASM_GENERATE_INTERNAL_LABEL (label2, "LPI", LABELNO);		\
-    fprintf (FILE, "\ttst.l %s\n\tbne %s\n\tpea %s\n\tjsr __bb_init_func\n\taddq.l &4,%%sp\n",	\
-	     label1, label2, label1);					\
-    ASM_OUTPUT_INTERNAL_LABEL (FILE, "LPI", LABELNO);			\
-    putc ('\n', FILE);						\
-    } while (0)
-
-#undef BLOCK_PROFILER
-#define BLOCK_PROFILER(FILE, BLOCKNO)				\
-  do {								\
-    char label[20];						\
-    ASM_GENERATE_INTERNAL_LABEL (label, "LPBX", 2);		\
-    fprintf (FILE, "\taddq.l &1,%s+%d\n", label, 4 * BLOCKNO);	\
-    } while (0)
 
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABEL_NO)	\
@@ -244,7 +227,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL, PREFIX, NUM)	\
-  sprintf ((LABEL), "%s%%%d", (PREFIX), (NUM))
+  sprintf ((LABEL), "%s%%%ld", (PREFIX), (long)(NUM))
 
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
@@ -254,55 +237,6 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_CASE_LABEL(FILE,PREFIX,NUM,TABLE)			\
   fprintf (FILE, "\tswbeg &%d\n%s%%%d:\n",				\
            XVECLEN (PATTERN (TABLE), 1), (PREFIX), (NUM));		\
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-do { long l[2];						\
-     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);		\
-     fprintf (FILE, "\tlong 0x%x,0x%x\n", l[0], l[1]); \
-   } while (0)
-
-#undef ASM_OUTPUT_LONG_DOUBLE
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
-do { long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     fprintf (FILE, "\tlong 0x%x,0x%x,0x%x\n", l[0], l[1], l[2]);	\
-   } while (0)
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-do { long l;					\
-     REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);	\
-     fprintf ((FILE), "\tlong 0x%x\n", l);	\
-   } while (0)
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#undef ASM_OUTPUT_INT
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\tlong "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#undef ASM_OUTPUT_SHORT
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\tshort "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#undef ASM_OUTPUT_CHAR
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\tbyte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#undef ASM_OUTPUT_BYTE
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\tbyte 0x%x\n", (VALUE))
 
 #undef ASM_OUTPUT_ADDR_VEC_ELT
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
@@ -314,10 +248,12 @@ do { long l;					\
 
 #undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
+do {					\
   if ((LOG) == 1)			\
     fprintf (FILE, "\teven\n");	        \
   else if ((LOG) != 0)			\
-    abort ();
+    abort ();				\
+} while (0)
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
@@ -364,7 +300,7 @@ do { long l;					\
     { REAL_VALUE_TYPE r; long l;					\
       REAL_VALUE_FROM_CONST_DOUBLE (r, X);				\
       REAL_VALUE_TO_TARGET_SINGLE (r, l);				\
-      fprintf (FILE, "&0x%x", l); }					\
+      fprintf (FILE, "&0x%lx", l); }					\
   else if (GET_CODE (X) == CONST_DOUBLE && GET_MODE (X) == DFmode)	\
     { REAL_VALUE_TYPE r; int i[2];					\
       REAL_VALUE_FROM_CONST_DOUBLE (r, X);				\
@@ -581,12 +517,8 @@ do { fprintf (asm_out_file, "\ttag\t");	\
 
    The __CTORS_LIST__ goes in the .init section.  Define CTOR_LIST_BEGIN
    and CTOR_LIST_END to contribute to the .init section an instruction to
-   push a word containing 0 (or some equivalent of that).
+   push a word containing 0 (or some equivalent of that).  */
 
-   ASM_OUTPUT_CONSTRUCTOR should be defined
-   to push the address of the constructor.  */
-
-#define ASM_LONG	"\tlong"
 #undef INIT_SECTION_ASM_OP
 #define INIT_SECTION_ASM_OP	"\tsection\t~init"
 #undef FINI_SECTION_ASM_OP
@@ -601,10 +533,4 @@ do { fprintf (asm_out_file, "\ttag\t");	\
 
 #define BSS_SECTION_ASM_OP	"\tsection\t~bss"
 
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
-  do {						\
-    init_section ();				\
-    fprintf (FILE, "\tmov.l &");		\
-    assemble_name (FILE, NAME);			\
-    fprintf (FILE, ",-(%%sp)\n");		\
-  } while (0)
+#define TARGET_ASM_CONSTRUCTOR  m68k_svr3_asm_out_constructor

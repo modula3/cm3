@@ -1,6 +1,6 @@
 /* Xtensa Linux configuration.
    Derived from the configuration for GCC for Intel i386 running Linux.
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -21,10 +21,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fputs (" (Xtensa GNU/Linux with ELF)", stderr);
-
-/* Debug format: prefer DWARF2 */
-#undef PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
 #undef ASM_SPEC
 #define ASM_SPEC "%{v} %{mno-density:--no-density} \
@@ -56,10 +52,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
  "-D__XTENSA__ -D__ELF__ -Acpu=xtensa -Amachine=xtensa \
-  -Dunix -Dlinux -Asystem=posix"
+  -Dunix -D__gnu_linux__ -Dlinux -Asystem=posix"
 
 #undef LOCAL_LABEL_PREFIX
 #define LOCAL_LABEL_PREFIX	"."
+
+/* Don't switch sections in the middle of a literal pool! */
+#undef SELECT_RTX_SECTION
+#define SELECT_RTX_SECTION(MODE,RTX,ALIGN)
 
 /* Always enable "-fpic" for Xtensa Linux.  */
 #define XTENSA_ALWAYS_PIC 1

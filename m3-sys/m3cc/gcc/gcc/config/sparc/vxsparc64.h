@@ -19,8 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* Specify this in a cover file to provide bi-architecture (32/64) support.  */
-#define SPARC_BI_ARCH
 
 /* Specify what to link with.  */
 /* VxWorks does all the library stuff itself.  */
@@ -39,7 +37,7 @@ Boston, MA 02111-1307, USA.  */
 /* We need to prohibit dots in constructor labels so that we can build a
    table of { string, address } entries for each non-static name in a
    program.  The address, being of the form &name, it cannot contain a dot or
-   C will try to parse it as a &struct.field phrase. */
+   C will try to parse it as a &struct.field phrase.  */
 #undef NO_DOLLAR_IN_LABEL
 #undef DOLLARS_IN_IDENTIFIERS
 #define DOLLARS_IN_IDENTIFIERS 1
@@ -73,7 +71,7 @@ Boston, MA 02111-1307, USA.  */
 #define CPP_SPEC "%(cpp_cpu) %(cpp_arch) -DCPU=ULTRASPARC -D__CPU__=CPU"
 
 #undef TARGET_DEFAULT
-#define TARGET_DEFAULT (MASK_APP_REGS | MASK_EPILOGUE | MASK_FPU \
+#define TARGET_DEFAULT (MASK_APP_REGS | MASK_FPU \
 			| MASK_LONG_DOUBLE_128 | MASK_64BIT)
 
 #undef SPARC_DEFAULT_CMODEL
@@ -90,6 +88,5 @@ Boston, MA 02111-1307, USA.  */
 #define WCHAR_TYPE_SIZE 8
 
 /* US Software GOFAST library support.  */
-#include "gofast.h"
 #undef INIT_SUBTARGET_OPTABS
 #define INIT_SUBTARGET_OPTABS INIT_GOFAST_OPTABS

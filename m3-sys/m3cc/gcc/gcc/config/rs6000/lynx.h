@@ -19,8 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include <lynx.h>
-
 /* Definitions we want to override with those from rs6000.h: */
 #undef LIB_SPEC
 #undef PTRDIFF_TYPE
@@ -38,10 +36,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_GENERATE_INTERNAL_LABEL
 #undef ASM_OUTPUT_COMMON
 #undef ASM_OUTPUT_LOCAL
-#undef ASM_OUTPUT_CONSTRUCTOR
-#undef ASM_OUTPUT_DESTRUCTOR
-#undef CTORS_SECTION_FUNCTION
-#undef DTORS_SECTION_FUNCTION
 
 #undef SDB_DEBUGGING_INFO
 #undef DBX_DEBUGGING_INFO
@@ -50,6 +44,9 @@ Boston, MA 02111-1307, USA.  */
 #undef FUNCTION_PROFILER
 
 #include <rs6000/rs6000.h>
+
+/* Print subsidiary information on the compiler version in use.  */
+#define TARGET_VERSION fprintf (stderr, " (LynxOS-RS/6000)");
 
 /* LynxOS has signed chars, regardless of what most R/S 6000 systems do */
 #undef DEFAULT_SIGNED_CHAR
@@ -71,7 +68,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef ENDFILE_SPEC
 
-/* This can become more refined as we have more powerpc options. */
+/* This can become more refined as we have more powerpc options.  */
 #undef ASM_SPEC
 #define ASM_SPEC "-u %(asm_cpu)"
 
@@ -98,6 +95,6 @@ do {								\
 #undef REAL_LD_FILE_NAME
 #undef REAL_STRIP_FILE_NAME
 
-/* LynxOS doesn't have mcount. */
+/* LynxOS doesn't have mcount.  */
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(file, profile_label_no)

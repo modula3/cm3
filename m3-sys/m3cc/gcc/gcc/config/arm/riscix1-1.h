@@ -30,7 +30,7 @@ Boston, MA 02111-1307, USA.  */
   "%{pg:/usr/lib/gcrt0.o%s}%{!pg:%{p:mcrt0.o%s}%{!p:crt0.o%s}}"
 
 #ifndef CPP_PREDEFINES
-#define CPP_PREDEFINES  "-Darm -Driscix -Dunix -Asystem=unix -Acpu=arm -Amachine=arm"
+#define CPP_PREDEFINES  "-Darm -Driscix -Dunix -Asystem=unix"
 #endif
 
 /* Riscix 1.1 doesn't have X/OPEN support, so only accept -mbsd (but ignore
@@ -91,10 +91,7 @@ Boston, MA 02111-1307, USA.  */
 
 #include "arm/aout.h"
 
-#undef CPP_SPEC
-#define CPP_SPEC "\
-%(cpp_cpu_arch) %(cpp_apcs_pc) %(cpp_float) %{!ansi: -D_BSD_C} \
-"
+#define SUBTARGET_CPP_SPEC "%{!ansi: -D_BSD_C}"
 
 
 /* The native RISCiX assembler does not support stabs of any kind; because

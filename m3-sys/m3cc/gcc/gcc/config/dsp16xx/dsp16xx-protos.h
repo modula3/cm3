@@ -29,6 +29,8 @@ extern int sp_operand PARAMS ((rtx, enum machine_mode));
 extern int sp_operand2 PARAMS ((rtx, enum machine_mode));
 extern int nonmemory_arith_operand PARAMS ((rtx, enum machine_mode));
 extern int dsp16xx_comparison_operator PARAMS ((rtx, enum machine_mode));
+extern int unx_comparison_operator PARAMS ((rtx, enum machine_mode));
+extern int signed_comparison_operator PARAMS ((rtx, enum machine_mode));
 
 extern void notice_update_cc PARAMS ((rtx));
 extern void double_reg_from_memory PARAMS ((rtx[]));
@@ -47,6 +49,7 @@ extern void output_dsp16xx_float_const PARAMS ((rtx *));
 extern void emit_1600_core_shift PARAMS ((enum rtx_code, rtx *, int));
 extern int dsp16xx_address_cost PARAMS ((rtx));
 extern int symbolic_address_p PARAMS ((rtx));
+extern int uns_comparison_operator PARAMS ((rtx, enum machine_mode));
 #endif /* RTX_CODE */
 
 
@@ -75,11 +78,13 @@ extern int initial_frame_pointer_offset PARAMS ((void));
 extern void asm_output_common PARAMS ((FILE *, const char *, int, int));
 extern void asm_output_local PARAMS ((FILE *, const char *, int, int));
 extern void asm_output_float PARAMS ((FILE *, double));
-extern void asm_output_long PARAMS ((FILE *, long));
 extern void dsp16xx_file_start PARAMS ((void));
+extern void coff_dsp16xx_file_start PARAMS ((FILE *));
+extern void luxworks_dsp16xx_file_start PARAMS ((FILE *));
 extern struct rtx_def *(*dsp16xx_compare_gen) PARAMS (());
 extern int hard_regno_mode_ok PARAMS ((int, enum machine_mode));
 extern enum reg_class dsp16xx_reg_class_from_letter PARAMS ((int));
 extern int regno_reg_class PARAMS ((int));
 extern void function_prologue PARAMS ((FILE *, int));
 extern void function_epilogue PARAMS ((FILE *, int));
+extern int num_1600_core_shifts PARAMS ((int));

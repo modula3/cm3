@@ -1,41 +1,34 @@
 /* Exception Handling interface routines.
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
    Contributed by Mike Stump <mrs@cygnus.com>.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
-#ifndef TREE_CODE
-union tree_node;
-#define tree union tree_node *
-#endif
-
-#ifndef RTX_CODE
-struct rtx_def;
-#define rtx struct rtx_def *
-#endif
-
-#ifndef _VARRAY_H_
+#ifndef GCC_VARRAY_H
 struct varray_head_tag;
 #define varray_type struct varray_head_tag *
 #endif
 
+struct function;
+
+struct inline_remap;
 
 /* Per-function EH data.  Used only in except.c, but GC and others
    manipulate pointers to the opaque type.  */
@@ -61,7 +54,8 @@ extern void expand_eh_region_end_cleanup	PARAMS ((tree));
 extern void expand_start_all_catch		PARAMS ((void));
 
 /* Begin a catch clause.  TYPE is an object to be matched by the
-   runtime, or null if this is a catch-all clause.  */
+   runtime, or a list of such objects, or null if this is a catch-all
+   clause.  */
 extern void expand_start_catch			PARAMS ((tree));
 
 /* End a catch clause.  Control will resume after the try/catch block.  */
@@ -72,7 +66,7 @@ extern void expand_end_all_catch		PARAMS ((void));
 
 /* End an exception region for an exception type filter.  ALLOWED is a
    TREE_LIST of TREE_VALUE objects to be matched by the runtime.
-   FAILURE is a function to invoke if a mismatch ocurrs.  */
+   FAILURE is a function to invoke if a mismatch occurs.  */
 extern void expand_eh_region_end_allowed	PARAMS ((tree, tree));
 
 /* End an exception region for a must-not-throw filter.  FAILURE is a
@@ -102,9 +96,9 @@ extern void add_partial_entry			PARAMS ((tree));
    add_partial_entry.  */
 extern void end_protect_partials		PARAMS ((void));
 
-
-/* A list of labels used for exception handlers.  */
-extern rtx exception_handler_labels;
+/* Invokes CALLBACK for every exception handler label.  Only used by old
+   loop hackery; should not be used by new code.  */
+extern void for_each_eh_label			PARAMS ((void (*) (rtx)));
 
 /* Determine if the given INSN can throw an exception.  */
 extern bool can_throw_internal			PARAMS ((rtx));
@@ -126,6 +120,7 @@ extern void maybe_remove_eh_handler		PARAMS ((rtx));
 extern void convert_from_eh_region_ranges	PARAMS ((void));
 extern void convert_to_eh_region_ranges		PARAMS ((void));
 extern void find_exception_handler_labels	PARAMS ((void));
+extern bool current_function_has_exception_handlers PARAMS ((void));
 extern void output_function_exception_table	PARAMS ((void));
 
 extern void expand_builtin_unwind_init		PARAMS ((void));
@@ -136,19 +131,15 @@ extern rtx expand_builtin_frob_return_addr	PARAMS ((tree));
 extern rtx expand_builtin_dwarf_fp_regnum	PARAMS ((void));
 extern void expand_builtin_eh_return		PARAMS ((tree, tree));
 extern void expand_eh_return			PARAMS ((void));
-
 extern rtx get_exception_pointer		PARAMS ((struct function *));
-
-struct function;
-struct inline_remap;
-extern int duplicate_eh_regions		PARAMS ((struct function *,
+extern int duplicate_eh_regions			PARAMS ((struct function *,
 						 struct inline_remap *));
 
 extern void sjlj_emit_function_exit_after	PARAMS ((rtx));
 
 
 /* If non-NULL, this is a function that returns an expression to be
-   executed if an unhandled exception is propogated out of a cleanup
+   executed if an unhandled exception is propagated out of a cleanup
    region.  For example, in C++, an exception thrown by a destructor
    during stack unwinding is required to result in a call to
    `std::terminate', so the C++ version of this function returns a
@@ -161,15 +152,7 @@ extern int (*lang_eh_type_covers) PARAMS ((tree a, tree b));
 /* Map a type to a runtime object to match type.  */
 extern tree (*lang_eh_runtime_type) PARAMS ((tree));
 
-#ifndef TREE_CODE
-#undef tree
-#endif
-
-#ifndef RTX_CODE
-#undef rtx
-#endif
-
-#ifndef _VARRAY_H_
+#ifndef GCC_VARRAY_H
 #undef varray_type
 #endif
 

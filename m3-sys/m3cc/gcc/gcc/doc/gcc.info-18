@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -36,820 +33,1102 @@ software.  Copies published by the Free Software Foundation raise
 funds for GNU development.
 
 
-File: gcc.info,  Node: Classes,  Prev: Namespaces,  Up: Scopes
+File: gcc.info,  Node: Constant string objects,  Next: compatibility_alias,  Prev: Garbage Collection,  Up: Objective-C
 
-Classes
--------
+Constant string objects
+=======================
 
-   A class type is represented by either a `RECORD_TYPE' or a
-`UNION_TYPE'.  A class declared with the `union' tag is represented by
-a `UNION_TYPE', while classes declared with either the `struct' or the
-`class' tag are represented by `RECORD_TYPE's.  You can use the
-`CLASSTYPE_DECLARED_CLASS' macro to discern whether or not a particular
-type is a `class' as opposed to a `struct'.  This macro will be true
-only for classes declared with the `class' tag.
+   GNU Objective-C provides constant string objects that are generated
+directly by the compiler.  You declare a constant string object by
+prefixing a C constant string with the character `@':
 
-   Almost all non-function members are available on the `TYPE_FIELDS'
-list.  Given one member, the next can be found by following the
-`TREE_CHAIN'.  You should not depend in any way on the order in which
-fields appear on this list.  All nodes on this list will be `DECL'
-nodes.  A `FIELD_DECL' is used to represent a non-static data member, a
-`VAR_DECL' is used to represent a static data member, and a `TYPE_DECL'
-is used to represent a type.  Note that the `CONST_DECL' for an
-enumeration constant will appear on this list, if the enumeration type
-was declared in the class.  (Of course, the `TYPE_DECL' for the
-enumeration type will appear here as well.)  There are no entries for
-base classes on this list.  In particular, there is no `FIELD_DECL' for
-the "base-class portion" of an object.
+       id myString = @"this is a constant string object";
 
-   The `TYPE_VFIELD' is a compiler-generated field used to point to
-virtual function tables.  It may or may not appear on the `TYPE_FIELDS'
-list.  However, back ends should handle the `TYPE_VFIELD' just like all
-the entries on the `TYPE_FIELDS' list.
+   The constant string objects are usually instances of the
+`NXConstantString' class which is provided by the GNU Objective-C
+runtime.  To get the definition of this class you must include the
+`objc/NXConstStr.h' header file.
 
-   The function members are available on the `TYPE_METHODS' list.
-Again, subsequent members are found by following the `TREE_CHAIN'
-field.  If a function is overloaded, each of the overloaded functions
-appears; no `OVERLOAD' nodes appear on the `TYPE_METHODS' list.
-Implicitly declared functions (including default constructors, copy
-constructors, assignment operators, and destructors) will appear on
-this list as well.
+   User defined libraries may want to implement their own constant
+string class.  To be able to support them, the GNU Objective-C compiler
+provides a new command line options
+`-fconstant-string-class=CLASS-NAME'.  The provided class should adhere
+to a strict structure, the same as `NXConstantString''s structure:
 
-   Every class has an associated "binfo", which can be obtained with
-`TYPE_BINFO'.  Binfos are used to represent base-classes.  The binfo
-given by `TYPE_BINFO' is the degenerate case, whereby every class is
-considered to be its own base-class.  The base classes for a particular
-binfo can be obtained with `BINFO_BASETYPES'.  These base-classes are
-themselves binfos.  The class type associated with a binfo is given by
-`BINFO_TYPE'.  It is always the case that `BINFO_TYPE (TYPE_BINFO (x))'
-is the same type as `x', up to qualifiers.  However, it is not always
-the case that `TYPE_BINFO (BINFO_TYPE (y))' is always the same binfo as
-`y'.  The reason is that if `y' is a binfo representing a base-class
-`B' of a derived class `D', then `BINFO_TYPE (y)' will be `B', and
-`TYPE_INFO (BINFO_TYPE (y))' will be `B' as its own base-class, rather
-than as a base-class of `D'.
 
-   The `BINFO_BASETYPES' is a `TREE_VEC' (*note Containers::).  Base
-types appear in left-to-right order in this vector.  You can tell
-whether or `public', `protected', or `private' inheritance was used by
-using the `TREE_VIA_PUBLIC', `TREE_VIA_PROTECTED', and
-`TREE_VIA_PRIVATE' macros.  Each of these macros takes a `BINFO' and is
-true if and only if the indicated kind of inheritance was used.  If
-`TREE_VIA_VIRTUAL' holds of a binfo, then its `BINFO_TYPE' was
-inherited from virtually.
+     @interface NXConstantString : Object
+     {
+       char *c_string;
+       unsigned int len;
+     }
+     @end
 
-   FIXME: Talk about `TYPE_NONCOPIED_PARTS'.
+   User class libraries may choose to inherit the customized constant
+string class from a different class than `Object'.  There is no
+requirement in the methods the constant string class has to implement.
 
-   The following macros can be used on a tree node representing a
-class-type.
-
-`LOCAL_CLASS_P'
-     This predicate holds if the class is local class _i.e._ declared
-     inside a function body.
-
-`TYPE_POLYMORPHIC_P'
-     This predicate holds if the class has at least one virtual function
-     (declared or inherited).
-
-`TYPE_HAS_DEFAULT_CONSTRUCTOR'
-     This predicate holds whenever its argument represents a class-type
-     with default constructor.
-
-`CLASSTYPE_HAS_MUTABLE'
-
-`TYPE_HAS_MUTABLE_P'
-     These predicates hold for a class-type having a mutable data
-     member.
-
-`CLASSTYPE_NON_POD_P'
-     This predicate holds only for class-types that are not PODs.
-
-`TYPE_HAS_NEW_OPERATOR'
-     This predicate holds for a class-type that defines `operator new'.
-
-`TYPE_HAS_ARRAY_NEW_OPERATOR'
-     This predicate holds for a class-type for which `operator new[]'
-     is defined.
-
-`TYPE_OVERLOADS_CALL_EXPR'
-     This predicate holds for class-type for which the function call
-     `operator()' is overloaded.
-
-`TYPE_OVERLOADS_ARRAY_REF'
-     This predicate holds for a class-type that overloads `operator[]'
-
-`TYPE_OVERLOADS_ARROW'
-     This predicate holds for a class-type for which `operator->' is
-     overloaded.
+   When a file is compiled with the `-fconstant-string-class' option,
+all the constant string objects will be instances of the class specified
+as argument to this option.  It is possible to have multiple compilation
+units referring to different constant string classes, neither the
+compiler nor the linker impose any restrictions in doing this.
 
 
-File: gcc.info,  Node: Declarations,  Next: Attributes,  Prev: Functions,  Up: Trees
+File: gcc.info,  Node: compatibility_alias,  Prev: Constant string objects,  Up: Objective-C
 
-Declarations
-============
+compatibility_alias
+===================
 
-   This section covers the various kinds of declarations that appear in
-the internal representation, except for declarations of functions
-(represented by `FUNCTION_DECL' nodes), which are described in *Note
-Functions::.
+   This is a feature of the Objective-C compiler rather than of the
+runtime, anyway since it is documented nowhere and its existence was
+forgotten, we are documenting it here.
 
-   Some macros can be used with any kind of declaration.  These include:
-`DECL_NAME'
-     This macro returns an `IDENTIFIER_NODE' giving the name of the
-     entity.
+   The keyword `@compatibility_alias' allows you to define a class name
+as equivalent to another class name.  For example:
 
-`TREE_TYPE'
-     This macro returns the type of the entity declared.
+     @compatibility_alias WOApplication GSWApplication;
 
-`DECL_SOURCE_FILE'
-     This macro returns the name of the file in which the entity was
-     declared, as a `char*'.  For an entity declared implicitly by the
-     compiler (like `__builtin_memcpy'), this will be the string
-     `"<internal>"'.
+   tells the compiler that each time it encounters `WOApplication' as a
+class name, it should replace it with `GSWApplication' (that is,
+`WOApplication' is just an alias for `GSWApplication').
 
-`DECL_SOURCE_LINE'
-     This macro returns the line number at which the entity was
-     declared, as an `int'.
+   There are some constraints on how this can be used--
 
-`DECL_ARTIFICIAL'
-     This predicate holds if the declaration was implicitly generated
-     by the compiler.  For example, this predicate will hold of an
-     implicitly declared member function, or of the `TYPE_DECL'
-     implicitly generated for a class type.  Recall that in C++ code
-     like:
-          struct S {};
+   * `WOApplication' (the alias) must not be an existing class;
 
-     is roughly equivalent to C code like:
-          struct S {};
-          typedef struct S S;
-     The implicitly generated `typedef' declaration is represented by a
-     `TYPE_DECL' for which `DECL_ARTIFICIAL' holds.
+   * `GSWApplication' (the real class) must be an existing class.
 
-`DECL_NAMESPACE_SCOPE_P'
-     This predicate holds if the entity was declared at a namespace
-     scope.
-
-`DECL_CLASS_SCOPE_P'
-     This predicate holds if the entity was declared at a class scope.
-
-`DECL_FUNCTION_SCOPE_P'
-     This predicate holds if the entity was declared inside a function
-     body.
-
-   The various kinds of declarations include:
-`LABEL_DECL'
-     These nodes are used to represent labels in function bodies.  For
-     more information, see *Note Functions::.  These nodes only appear
-     in block scopes.
-
-`CONST_DECL'
-     These nodes are used to represent enumeration constants.  The
-     value of the constant is given by `DECL_INITIAL' which will be an
-     `INTEGER_CST' with the same type as the `TREE_TYPE' of the
-     `CONST_DECL', i.e., an `ENUMERAL_TYPE'.
-
-`RESULT_DECL'
-     These nodes represent the value returned by a function.  When a
-     value is assigned to a `RESULT_DECL', that indicates that the
-     value should be returned, via bitwise copy, by the function.  You
-     can use `DECL_SIZE' and `DECL_ALIGN' on a `RESULT_DECL', just as
-     with a `VAR_DECL'.
-
-`TYPE_DECL'
-     These nodes represent `typedef' declarations.  The `TREE_TYPE' is
-     the type declared to have the name given by `DECL_NAME'.  In some
-     cases, there is no associated name.
-
-`VAR_DECL'
-     These nodes represent variables with namespace or block scope, as
-     well as static data members.  The `DECL_SIZE' and `DECL_ALIGN' are
-     analogous to `TYPE_SIZE' and `TYPE_ALIGN'.  For a declaration, you
-     should always use the `DECL_SIZE' and `DECL_ALIGN' rather than the
-     `TYPE_SIZE' and `TYPE_ALIGN' given by the `TREE_TYPE', since
-     special attributes may have been applied to the variable to give
-     it a particular size and alignment.  You may use the predicates
-     `DECL_THIS_STATIC' or `DECL_THIS_EXTERN' to test whether the
-     storage class specifiers `static' or `extern' were used to declare
-     a variable.
-
-     If this variable is initialized (but does not require a
-     constructor), the `DECL_INITIAL' will be an expression for the
-     initializer.  The initializer should be evaluated, and a bitwise
-     copy into the variable performed.  If the `DECL_INITIAL' is the
-     `error_mark_node', there is an initializer, but it is given by an
-     explicit statement later in the code; no bitwise copy is required.
-
-     GCC provides an extension that allows either automatic variables,
-     or global variables, to be placed in particular registers.  This
-     extension is being used for a particular `VAR_DECL' if
-     `DECL_REGISTER' holds for the `VAR_DECL', and if
-     `DECL_ASSEMBLER_NAME' is not equal to `DECL_NAME'.  In that case,
-     `DECL_ASSEMBLER_NAME' is the name of the register into which the
-     variable will be placed.
-
-`PARM_DECL'
-     Used to represent a parameter to a function.  Treat these nodes
-     similarly to `VAR_DECL' nodes.  These nodes only appear in the
-     `DECL_ARGUMENTS' for a `FUNCTION_DECL'.
-
-     The `DECL_ARG_TYPE' for a `PARM_DECL' is the type that will
-     actually be used when a value is passed to this function.  It may
-     be a wider type than the `TREE_TYPE' of the parameter; for
-     example, the ordinary type might be `short' while the
-     `DECL_ARG_TYPE' is `int'.
-
-`FIELD_DECL'
-     These nodes represent non-static data members.  The `DECL_SIZE' and
-     `DECL_ALIGN' behave as for `VAR_DECL' nodes.  The
-     `DECL_FIELD_BITPOS' gives the first bit used for this field, as an
-     `INTEGER_CST'.  These values are indexed from zero, where zero
-     indicates the first bit in the object.
-
-     If `DECL_C_BIT_FIELD' holds, this field is a bit-field.
-
-`NAMESPACE_DECL'
-     *Note Namespaces::.
-
-`TEMPLATE_DECL'
-     These nodes are used to represent class, function, and variable
-     (static data member) templates.  The
-     `DECL_TEMPLATE_SPECIALIZATIONS' are a `TREE_LIST'.  The
-     `TREE_VALUE' of each node in the list is a `TEMPLATE_DECL's or
-     `FUNCTION_DECL's representing specializations (including
-     instantiations) of this template.  Back ends can safely ignore
-     `TEMPLATE_DECL's, but should examine `FUNCTION_DECL' nodes on the
-     specializations list just as they would ordinary `FUNCTION_DECL'
-     nodes.
-
-     For a class template, the `DECL_TEMPLATE_INSTANTIATIONS' list
-     contains the instantiations.  The `TREE_VALUE' of each node is an
-     instantiation of the class.  The `DECL_TEMPLATE_SPECIALIZATIONS'
-     contains partial specializations of the class.
-
-`USING_DECL'
-     Back ends can safely ignore these nodes.
 
 
-File: gcc.info,  Node: Functions,  Next: Declarations,  Prev: Scopes,  Up: Trees
+File: gcc.info,  Node: Gcov,  Next: Trouble,  Prev: Objective-C,  Up: Top
 
-Functions
-=========
+`gcov': a Test Coverage Program
+*******************************
 
-   A function is represented by a `FUNCTION_DECL' node.  A set of
-overloaded functions is sometimes represented by a `OVERLOAD' node.
-
-   An `OVERLOAD' node is not a declaration, so none of the `DECL_'
-macros should be used on an `OVERLOAD'.  An `OVERLOAD' node is similar
-to a `TREE_LIST'.  Use `OVL_CURRENT' to get the function associated
-with an `OVERLOAD' node; use `OVL_NEXT' to get the next `OVERLOAD' node
-in the list of overloaded functions.  The macros `OVL_CURRENT' and
-`OVL_NEXT' are actually polymorphic; you can use them to work with
-`FUNCTION_DECL' nodes as well as with overloads.  In the case of a
-`FUNCTION_DECL', `OVL_CURRENT' will always return the function itself,
-and `OVL_NEXT' will always be `NULL_TREE'.
-
-   To determine the scope of a function, you can use the
-`DECL_REAL_CONTEXT' macro.  This macro will return the class (either a
-`RECORD_TYPE' or a `UNION_TYPE') or namespace (a `NAMESPACE_DECL') of
-which the function is a member.  For a virtual function, this macro
-returns the class in which the function was actually defined, not the
-base class in which the virtual declaration occurred.  If a friend
-function is defined in a class scope, the `DECL_CLASS_CONTEXT' macro
-can be used to determine the class in which it was defined.  For
-example, in
-     class C { friend void f() {} };
-   the `DECL_REAL_CONTEXT' for `f' will be the `global_namespace', but
-the `DECL_CLASS_CONTEXT' will be the `RECORD_TYPE' for `C'.
-
-   The `DECL_REAL_CONTEXT' and `DECL_CLASS_CONTEXT' are not available
-in C; instead you should simply use `DECL_CONTEXT'.  In C, the
-`DECL_CONTEXT' for a function maybe another function.  This
-representation indicates that the GNU nested function extension is in
-use.  For details on the semantics of nested functions, see the GCC
-Manual.  The nested function can refer to local variables in its
-containing function.  Such references are not explicitly marked in the
-tree structure; back ends must look at the `DECL_CONTEXT' for the
-referenced `VAR_DECL'.  If the `DECL_CONTEXT' for the referenced
-`VAR_DECL' is not the same as the function currently being processed,
-and neither `DECL_EXTERNAL' nor `DECL_STATIC' hold, then the reference
-is to a local variable in a containing function, and the back end must
-take appropriate action.
+   `gcov' is a tool you can use in conjunction with GCC to test code
+coverage in your programs.
 
 * Menu:
 
-* Function Basics::     Function names, linkage, and so forth.
-* Function Bodies::     The statements that make up a function body.
+* Gcov Intro::         	        Introduction to gcov.
+* Invoking Gcov::       	How to use gcov.
+* Gcov and Optimization::       Using gcov with GCC optimization.
+* Gcov Data Files::             The files used by gcov.
 
 
-File: gcc.info,  Node: Function Basics,  Next: Function Bodies,  Up: Functions
+File: gcc.info,  Node: Gcov Intro,  Next: Invoking Gcov,  Up: Gcov
 
-Function Basics
----------------
+Introduction to `gcov'
+======================
 
-   The following macros and functions can be used on a `FUNCTION_DECL':
-`DECL_MAIN_P'
-     This predicate holds for a function that is the program entry point
-     `::code'.
+   `gcov' is a test coverage program.  Use it in concert with GCC to
+analyze your programs to help create more efficient, faster running
+code.  You can use `gcov' as a profiling tool to help discover where
+your optimization efforts will best affect your code.  You can also use
+`gcov' along with the other profiling tool, `gprof', to assess which
+parts of your code use the greatest amount of computing time.
 
-`DECL_NAME'
-     This macro returns the unqualified name of the function, as an
-     `IDENTIFIER_NODE'.  For an instantiation of a function template,
-     the `DECL_NAME' is the unqualified name of the template, not
-     something like `f<int>'.  The value of `DECL_NAME' is undefined
-     when used on a constructor, destructor, overloaded operator, or
-     type-conversion operator, or any function that is implicitly
-     generated by the compiler.  See below for macros that can be used
-     to distinguish these cases.
+   Profiling tools help you analyze your code's performance.  Using a
+profiler such as `gcov' or `gprof', you can find out some basic
+performance statistics, such as:
 
-`DECL_ASSEMBLER_NAME'
-     This macro returns the mangled name of the function, also an
-     `IDENTIFIER_NODE'.  This name does not contain leading underscores
-     on systems that prefix all identifiers with underscores.  The
-     mangled name is computed in the same way on all platforms; if
-     special processing is required to deal with the object file format
-     used on a particular platform, it is the responsibility of the
-     back end to perform those modifications.  (Of course, the back end
-     should not modify `DECL_ASSEMBLER_NAME' itself.)
+   * how often each line of code executes
 
-`DECL_EXTERNAL'
-     This predicate holds if the function is undefined.
+   * what lines of code are actually executed
 
-`TREE_PUBLIC'
-     This predicate holds if the function has external linkage.
+   * how much computing time each section of code uses
 
-`DECL_LOCAL_FUNCTION_P'
-     This predicate holds if the function was declared at block scope,
-     even though it has a global scope.
+   Once you know these things about how your code works when compiled,
+you can look at each module to see which modules should be optimized.
+`gcov' helps you determine where to work on optimization.
 
-`DECL_ANTICIPATED'
-     This predicate holds if the function is a built-in function but its
-     prototype is not yet explicitly declared.
+   Software developers also use coverage testing in concert with
+testsuites, to make sure software is actually good enough for a release.
+Testsuites can verify that a program works as expected; a coverage
+program tests to see how much of the program is exercised by the
+testsuite.  Developers can then determine what kinds of test cases need
+to be added to the testsuites to create both better testing and a better
+final product.
 
-`DECL_EXTERN_C_FUNCTION_P'
-     This predicate holds if the function is declared as an ``extern
-     "C"'' function.
+   You should compile your code without optimization if you plan to use
+`gcov' because the optimization, by combining some lines of code into
+one function, may not give you as much information as you need to look
+for `hot spots' where the code is using a great deal of computer time.
+Likewise, because `gcov' accumulates statistics by line (at the lowest
+resolution), it works best with a programming style that places only
+one statement on each line.  If you use complicated macros that expand
+to loops or to other control structures, the statistics are less
+helpful--they only report on the line where the macro call appears.  If
+your complex macros behave like functions, you can replace them with
+inline functions to solve this problem.
 
-`DECL_LINKONCE_P'
-     This macro holds if multiple copies of this function may be
-     emitted in various translation units.  It is the responsibility of
-     the linker to merge the various copies.  Template instantiations
-     are the most common example of functions for which
-     `DECL_LINKONCE_P' holds; G++ instantiates needed templates in all
-     translation units which require them, and then relies on the
-     linker to remove duplicate instantiations.
+   `gcov' creates a logfile called `SOURCEFILE.gcov' which indicates
+how many times each line of a source file `SOURCEFILE.c' has executed.
+You can use these logfiles along with `gprof' to aid in fine-tuning the
+performance of your programs.  `gprof' gives timing information you can
+use along with the information you get from `gcov'.
 
-     FIXME: This macro is not yet implemented.
-
-`DECL_FUNCTION_MEMBER_P'
-     This macro holds if the function is a member of a class, rather
-     than a member of a namespace.
-
-`DECL_STATIC_FUNCTION_P'
-     This predicate holds if the function a static member function.
-
-`DECL_NONSTATIC_MEMBER_FUNCTION_P'
-     This macro holds for a non-static member function.
-
-`DECL_CONST_MEMFUNC_P'
-     This predicate holds for a `const'-member function.
-
-`DECL_VOLATILE_MEMFUNC_P'
-     This predicate holds for a `volatile'-member function.
-
-`DECL_CONSTRUCTOR_P'
-     This macro holds if the function is a constructor.
-
-`DECL_NONCONVERTING_P'
-     This predicate holds if the constructor is a non-converting
-     constructor.
-
-`DECL_COMPLETE_CONSTRUCTOR_P'
-     This predicate holds for a function which is a constructor for an
-     object of a complete type.
-
-`DECL_BASE_CONSTRUCTOR_P'
-     This predicate holds for a function which is a constructor for a
-     base class sub-object.
-
-`DECL_COPY_CONSTRUCTOR_P'
-     This predicate holds for a function which is a copy-constructor.
-
-`DECL_DESTRUCTOR_P'
-     This macro holds if the function is a destructor.
-
-`DECL_COMPLETE_DESTRUCTOR_P'
-     This predicate holds if the function is the destructor for an
-     object a complete type.
-
-`DECL_OVERLOADED_OPERATOR_P'
-     This macro holds if the function is an overloaded operator.
-
-`DECL_CONV_FN_P'
-     This macro holds if the function is a type-conversion operator.
-
-`DECL_GLOBAL_CTOR_P'
-     This predicate holds if the function is a file-scope initialization
-     function.
-
-`DECL_GLOBAL_DTOR_P'
-     This predicate holds if the function is a file-scope finalization
-     function.
-
-`DECL_THUNK_P'
-     This predicate holds if the function is a thunk.
-
-     These functions represent stub code that adjusts the `this' pointer
-     and then jumps to another function.  When the jumped-to function
-     returns, control is transferred directly to the caller, without
-     returning to the thunk.  The first parameter to the thunk is
-     always the `this' pointer; the thunk should add `THUNK_DELTA' to
-     this value.  (The `THUNK_DELTA' is an `int', not an `INTEGER_CST'.)
-
-     Then, if `THUNK_VCALL_OFFSET' (an `INTEGER_CST') is nonzero the
-     adjusted `this' pointer must be adjusted again.  The complete
-     calculation is given by the following pseudo-code:
-
-          this += THUNK_DELTA
-          if (THUNK_VCALL_OFFSET)
-            this += (*((ptrdiff_t **) this))[THUNK_VCALL_OFFSET]
-
-     Finally, the thunk should jump to the location given by
-     `DECL_INITIAL'; this will always be an expression for the address
-     of a function.
-
-`DECL_NON_THUNK_FUNCTION_P'
-     This predicate holds if the function is _not_ a thunk function.
-
-`GLOBAL_INIT_PRIORITY'
-     If either `DECL_GLOBAL_CTOR_P' or `DECL_GLOBAL_DTOR_P' holds, then
-     this gives the initialization priority for the function.  The
-     linker will arrange that all functions for which
-     `DECL_GLOBAL_CTOR_P' holds are run in increasing order of priority
-     before `main' is called.  When the program exits, all functions for
-     which `DECL_GLOBAL_DTOR_P' holds are run in the reverse order.
-
-`DECL_ARTIFICIAL'
-     This macro holds if the function was implicitly generated by the
-     compiler, rather than explicitly declared.  In addition to
-     implicitly generated class member functions, this macro holds for
-     the special functions created to implement static initialization
-     and destruction, to compute run-time type information, and so
-     forth.
-
-`DECL_ARGUMENTS'
-     This macro returns the `PARM_DECL' for the first argument to the
-     function.  Subsequent `PARM_DECL' nodes can be obtained by
-     following the `TREE_CHAIN' links.
-
-`DECL_RESULT'
-     This macro returns the `RESULT_DECL' for the function.
-
-`TREE_TYPE'
-     This macro returns the `FUNCTION_TYPE' or `METHOD_TYPE' for the
-     function.
-
-`TYPE_RAISES_EXCEPTIONS'
-     This macro returns the list of exceptions that a (member-)function
-     can raise.  The returned list, if non `NULL', is comprised of nodes
-     whose `TREE_VALUE' represents a type.
-
-`TYPE_NOTHROW_P'
-     This predicate holds when the exception-specification of its
-     arguments if of the form ``()''.
-
-`DECL_ARRAY_DELETE_OPERATOR_P'
-     This predicate holds if the function an overloaded `operator
-     delete[]'.
+   `gcov' works only on code compiled with GCC.  It is not compatible
+with any other profiling or test coverage mechanism.
 
 
-File: gcc.info,  Node: Function Bodies,  Prev: Function Basics,  Up: Functions
+File: gcc.info,  Node: Invoking Gcov,  Next: Gcov and Optimization,  Prev: Gcov Intro,  Up: Gcov
 
-Function Bodies
----------------
+Invoking gcov
+=============
 
-   A function that has a definition in the current translation unit will
-have a non-`NULL' `DECL_INITIAL'.  However, back ends should not make
-use of the particular value given by `DECL_INITIAL'.
+     gcov [OPTIONS] SOURCEFILE
 
-   The `DECL_SAVED_TREE' macro will give the complete body of the
-function.  This node will usually be a `COMPOUND_STMT' representing the
-outermost block of the function, but it may also be a `TRY_BLOCK', a
-`RETURN_INIT', or any other valid statement.
+   `gcov' accepts the following options:
 
-Statements
-..........
+`-h'
+`--help'
+     Display help about using `gcov' (on the standard output), and exit
+     without doing any further processing.
 
-   There are tree nodes corresponding to all of the source-level
-statement constructs.  These are enumerated here, together with a list
-of the various macros that can be used to obtain information about
-them.  There are a few macros that can be used with all statements:
+`-v'
+`--version'
+     Display the `gcov' version number (on the standard output), and
+     exit without doing any further processing.
 
-`STMT_LINENO'
-     This macro returns the line number for the statement.  If the
-     statement spans multiple lines, this value will be the number of
-     the first line on which the statement occurs.  Although we mention
-     `CASE_LABEL' below as if it were a statement, they do not allow
-     the use of `STMT_LINENO'.  There is no way to obtain the line
-     number for a `CASE_LABEL'.
+`-b'
+`--branch-probabilities'
+     Write branch frequencies to the output file, and write branch
+     summary info to the standard output.  This option allows you to
+     see how often each branch in your program was taken.
 
-     Statements do not contain information about the file from which
-     they came; that information is implicit in the `FUNCTION_DECL'
-     from which the statements originate.
+`-c'
+`--branch-counts'
+     Write branch frequencies as the number of branches taken, rather
+     than the percentage of branches taken.
 
-`STMT_IS_FULL_EXPR_P'
-     In C++, statements normally constitute "full expressions";
-     temporaries created during a statement are destroyed when the
-     statement is complete.  However, G++ sometimes represents
-     expressions by statements; these statements will not have
-     `STMT_IS_FULL_EXPR_P' set.  Temporaries created during such
-     statements should be destroyed when the innermost enclosing
-     statement with `STMT_IS_FULL_EXPR_P' set is exited.
+`-n'
+`--no-output'
+     Do not create the `gcov' output file.
 
-   Here is the list of the various statement nodes, and the macros used
-to access them.  This documentation describes the use of these nodes in
-non-template functions (including instantiations of template functions).
-In template functions, the same nodes are used, but sometimes in
-slightly different ways.
+`-l'
+`--long-file-names'
+     Create long file names for included source files.  For example, if
+     the header file `x.h' contains code, and was included in the file
+     `a.c', then running `gcov' on the file `a.c' will produce an
+     output file called `a.c.x.h.gcov' instead of `x.h.gcov'.  This can
+     be useful if `x.h' is included in multiple source files.
 
-   Many of the statements have substatements.  For example, a `while'
-loop will have a body, which is itself a statement.  If the substatement
-is `NULL_TREE', it is considered equivalent to a statement consisting
-of a single `;', i.e., an expression statement in which the expression
-has been omitted.  A substatement may in fact be a list of statements,
-connected via their `TREE_CHAIN's.  So, you should always process the
-statement tree by looping over substatements, like this:
-     void process_stmt (stmt)
-          tree stmt;
-     {
-       while (stmt)
-         {
-           switch (TREE_CODE (stmt))
-             {
-             case IF_STMT:
-               process_stmt (THEN_CLAUSE (stmt));
-               /* More processing here.  */
-               break;
+`-f'
+`--function-summaries'
+     Output summaries for each function in addition to the file level
+     summary.
+
+`-o DIRECTORY'
+`--object-directory DIRECTORY'
+     The directory where the object files live.  Gcov will search for
+     `.bb', `.bbg', and `.da' files in this directory.
+
+   When using `gcov', you must first compile your program with two
+special GCC options: `-fprofile-arcs -ftest-coverage'.  This tells the
+compiler to generate additional information needed by gcov (basically a
+flow graph of the program) and also includes additional code in the
+object files for generating the extra profiling information needed by
+gcov.  These additional files are placed in the directory where the
+source code is located.
+
+   Running the program will cause profile output to be generated.  For
+each source file compiled with `-fprofile-arcs', an accompanying `.da'
+file will be placed in the source directory.
+
+   Running `gcov' with your program's source file names as arguments
+will now produce a listing of the code along with frequency of execution
+for each line.  For example, if your program is called `tmp.c', this is
+what you see when you use the basic `gcov' facility:
+
+     $ gcc -fprofile-arcs -ftest-coverage tmp.c
+     $ a.out
+     $ gcov tmp.c
+      87.50% of 8 source lines executed in file tmp.c
+     Creating tmp.c.gcov.
+
+   The file `tmp.c.gcov' contains output from `gcov'.  Here is a sample:
+
+                     main()
+                     {
+                1      int i, total;
      
+                1      total = 0;
+     
+               11      for (i = 0; i < 10; i++)
+               10        total += i;
+     
+                1      if (total != 45)
+           ######        printf ("Failure\n");
+                       else
+                1        printf ("Success\n");
+                1    }
+
+   When you use the `-b' option, your output looks like this:
+
+     $ gcov -b tmp.c
+      87.50% of 8 source lines executed in file tmp.c
+      80.00% of 5 branches executed in file tmp.c
+      80.00% of 5 branches taken at least once in file tmp.c
+      50.00% of 2 calls executed in file tmp.c
+     Creating tmp.c.gcov.
+
+   Here is a sample of a resulting `tmp.c.gcov' file:
+
+                     main()
+                     {
+                1      int i, total;
+     
+                1      total = 0;
+     
+               11      for (i = 0; i < 10; i++)
+     branch 0 taken = 91%
+     branch 1 taken = 100%
+     branch 2 taken = 100%
+               10        total += i;
+     
+                1      if (total != 45)
+     branch 0 taken = 100%
+           ######        printf ("Failure\n");
+     call 0 never executed
+     branch 1 never executed
+                       else
+                1        printf ("Success\n");
+     call 0 returns = 100%
+                1    }
+
+   For each basic block, a line is printed after the last line of the
+basic block describing the branch or call that ends the basic block.
+There can be multiple branches and calls listed for a single source
+line if there are multiple basic blocks that end on that line.  In this
+case, the branches and calls are each given a number.  There is no
+simple way to map these branches and calls back to source constructs.
+In general, though, the lowest numbered branch or call will correspond
+to the leftmost construct on the source line.
+
+   For a branch, if it was executed at least once, then a percentage
+indicating the number of times the branch was taken divided by the
+number of times the branch was executed will be printed.  Otherwise, the
+message "never executed" is printed.
+
+   For a call, if it was executed at least once, then a percentage
+indicating the number of times the call returned divided by the number
+of times the call was executed will be printed.  This will usually be
+100%, but may be less for functions call `exit' or `longjmp', and thus
+may not return every time they are called.
+
+   The execution counts are cumulative.  If the example program were
+executed again without removing the `.da' file, the count for the
+number of times each line in the source was executed would be added to
+the results of the previous run(s).  This is potentially useful in
+several ways.  For example, it could be used to accumulate data over a
+number of program runs as part of a test verification suite, or to
+provide more accurate long-term information over a large number of
+program runs.
+
+   The data in the `.da' files is saved immediately before the program
+exits.  For each source file compiled with `-fprofile-arcs', the
+profiling code first attempts to read in an existing `.da' file; if the
+file doesn't match the executable (differing number of basic block
+counts) it will ignore the contents of the file.  It then adds in the
+new execution counts and finally writes the data to the file.
+
+
+File: gcc.info,  Node: Gcov and Optimization,  Next: Gcov Data Files,  Prev: Invoking Gcov,  Up: Gcov
+
+Using `gcov' with GCC Optimization
+==================================
+
+   If you plan to use `gcov' to help optimize your code, you must first
+compile your program with two special GCC options: `-fprofile-arcs
+-ftest-coverage'.  Aside from that, you can use any other GCC options;
+but if you want to prove that every single line in your program was
+executed, you should not compile with optimization at the same time.
+On some machines the optimizer can eliminate some simple code lines by
+combining them with other lines.  For example, code like this:
+
+     if (a != b)
+       c = 1;
+     else
+       c = 0;
+
+can be compiled into one instruction on some machines.  In this case,
+there is no way for `gcov' to calculate separate execution counts for
+each line because there isn't separate code for each line.  Hence the
+`gcov' output looks like this if you compiled the program with
+optimization:
+
+           100  if (a != b)
+           100    c = 1;
+           100  else
+           100    c = 0;
+
+   The output shows that this block of code, combined by optimization,
+executed 100 times.  In one sense this result is correct, because there
+was only one instruction representing all four of these lines.  However,
+the output does not indicate how many times the result was 0 and how
+many times the result was 1.
+
+
+File: gcc.info,  Node: Gcov Data Files,  Prev: Gcov and Optimization,  Up: Gcov
+
+Brief description of `gcov' data files
+======================================
+
+   `gcov' uses three files for doing profiling.  The names of these
+files are derived from the original _source_ file by substituting the
+file suffix with either `.bb', `.bbg', or `.da'.  All of these files
+are placed in the same directory as the source file, and contain data
+stored in a platform-independent method.
+
+   The `.bb' and `.bbg' files are generated when the source file is
+compiled with the GCC `-ftest-coverage' option.  The `.bb' file
+contains a list of source files (including headers), functions within
+those files, and line numbers corresponding to each basic block in the
+source file.
+
+   The `.bb' file format consists of several lists of 4-byte integers
+which correspond to the line numbers of each basic block in the file.
+Each list is terminated by a line number of 0.  A line number of -1 is
+used to designate that the source file name (padded to a 4-byte
+boundary and followed by another -1) follows.  In addition, a line
+number of -2 is used to designate that the name of a function (also
+padded to a 4-byte boundary and followed by a -2) follows.
+
+   The `.bbg' file is used to reconstruct the program flow graph for
+the source file.  It contains a list of the program flow arcs (possible
+branches taken from one basic block to another) for each function which,
+in combination with the `.bb' file, enables gcov to reconstruct the
+program flow.
+
+   In the `.bbg' file, the format is:
+             number of basic blocks for function #0 (4-byte number)
+             total number of arcs for function #0 (4-byte number)
+             count of arcs in basic block #0 (4-byte number)
+             destination basic block of arc #0 (4-byte number)
+             flag bits (4-byte number)
+             destination basic block of arc #1 (4-byte number)
+             flag bits (4-byte number)
              ...
-             }
-     
-           stmt = TREE_CHAIN (stmt);
-         }
-     }
-   In other words, while the `then' clause of an `if' statement in C++
-can be only one statement (although that one statement may be a
-compound statement), the intermediate representation will sometimes use
-several statements chained together.
+             destination basic block of arc #N (4-byte number)
+             flag bits (4-byte number)
+             count of arcs in basic block #1 (4-byte number)
+             destination basic block of arc #0 (4-byte number)
+             flag bits (4-byte number)
+             ...
 
-`ASM_STMT'
-     Used to represent an inline assembly statement.  For an inline
-     assembly statement like:
-          asm ("mov x, y");
-     The `ASM_STRING' macro will return a `STRING_CST' node for `"mov
-     x, y"'.  If the original statement made use of the
-     extended-assembly syntax, then `ASM_OUTPUTS', `ASM_INPUTS', and
-     `ASM_CLOBBERS' will be the outputs, inputs, and clobbers for the
-     statement, represented as `STRING_CST' nodes.  The
-     extended-assembly syntax looks like:
-          asm ("fsinx %1,%0" : "=f" (result) : "f" (angle));
-     The first string is the `ASM_STRING', containing the instruction
-     template.  The next two strings are the output and inputs,
-     respectively; this statement has no clobbers.  As this example
-     indicates, "plain" assembly statements are merely a special case
-     of extended assembly statements; they have no cv-qualifiers,
-     outputs, inputs, or clobbers.  All of the strings will be
-     `NUL'-terminated, and will contain no embedded `NUL'-characters.
+   A -1 (stored as a 4-byte number) is used to separate each function's
+list of basic blocks, and to verify that the file has been read
+correctly.
 
-     If the assembly statement is declared `volatile', or if the
-     statement was not an extended assembly statement, and is therefore
-     implicitly volatile, then the predicate `ASM_VOLATILE_P' will hold
-     of the `ASM_STMT'.
+   The `.da' file is generated when a program containing object files
+built with the GCC `-fprofile-arcs' option is executed.  A separate
+`.da' file is created for each source file compiled with this option,
+and the name of the `.da' file is stored as an absolute pathname in the
+resulting object file.  This path name is derived from the source file
+name by substituting a `.da' suffix.
 
-`BREAK_STMT'
-     Used to represent a `break' statement.  There are no additional
-     fields.
+   The format of the `.da' file is fairly simple.  The first 8-byte
+number is the number of counts in the file, followed by the counts
+(stored as 8-byte numbers).  Each count corresponds to the number of
+times each arc in the program is executed.  The counts are cumulative;
+each time the program is executed, it attempts to combine the existing
+`.da' files with the new counts for this invocation of the program.  It
+ignores the contents of any `.da' files whose number of arcs doesn't
+correspond to the current program, and merely overwrites them instead.
 
-`CASE_LABEL'
-     Use to represent a `case' label, range of `case' labels, or a
-     `default' label.  If `CASE_LOW' is `NULL_TREE', then this is a
-     `default' label.  Otherwise, if `CASE_HIGH' is `NULL_TREE', then
-     this is an ordinary `case' label.  In this case, `CASE_LOW' is an
-     expression giving the value of the label.  Both `CASE_LOW' and
-     `CASE_HIGH' are `INTEGER_CST' nodes.  These values will have the
-     same type as the condition expression in the switch statement.
-
-     Otherwise, if both `CASE_LOW' and `CASE_HIGH' are defined, the
-     statement is a range of case labels.  Such statements originate
-     with the extension that allows users to write things of the form:
-          case 2 ... 5:
-     The first value will be `CASE_LOW', while the second will be
-     `CASE_HIGH'.
-
-`CLEANUP_STMT'
-     Used to represent an action that should take place upon exit from
-     the enclosing scope.  Typically, these actions are calls to
-     destructors for local objects, but back ends cannot rely on this
-     fact.  If these nodes are in fact representing such destructors,
-     `CLEANUP_DECL' will be the `VAR_DECL' destroyed.  Otherwise,
-     `CLEANUP_DECL' will be `NULL_TREE'.  In any case, the
-     `CLEANUP_EXPR' is the expression to execute.  The cleanups
-     executed on exit from a scope should be run in the reverse order
-     of the order in which the associated `CLEANUP_STMT's were
-     encountered.
-
-`COMPOUND_STMT'
-     Used to represent a brace-enclosed block.  The first substatement
-     is given by `COMPOUND_BODY'.  Subsequent substatements are found by
-     following the `TREE_CHAIN' link from one substatement to the next.
-     The `COMPOUND_BODY' will be `NULL_TREE' if there are no
-     substatements.
-
-`CONTINUE_STMT'
-     Used to represent a `continue' statement.  There are no additional
-     fields.
-
-`CTOR_STMT'
-     Used to mark the beginning (if `CTOR_BEGIN_P' holds) or end (if
-     `CTOR_END_P' holds of the main body of a constructor.  See also
-     `SUBOBJECT' for more information on how to use these nodes.
-
-`DECL_STMT'
-     Used to represent a local declaration.  The `DECL_STMT_DECL' macro
-     can be used to obtain the entity declared.  This declaration may
-     be a `LABEL_DECL', indicating that the label declared is a local
-     label.  (As an extension, GCC allows the declaration of labels
-     with scope.)  In C, this declaration may be a `FUNCTION_DECL',
-     indicating the use of the GCC nested function extension.  For more
-     information, *note Functions::.
-
-`DO_STMT'
-     Used to represent a `do' loop.  The body of the loop is given by
-     `DO_BODY' while the termination condition for the loop is given by
-     `DO_COND'.  The condition for a `do'-statement is always an
-     expression.
-
-`EMPTY_CLASS_EXPR'
-     Used to represent a temporary object of a class with no data whose
-     address is never taken.  (All such objects are interchangeable.)
-     The `TREE_TYPE' represents the type of the object.
-
-`EXPR_STMT'
-     Used to represent an expression statement.  Use `EXPR_STMT_EXPR' to
-     obtain the expression.
-
-`FILE_STMT'
-     Used to record a change in filename within the body of a function.
-     Use `FILE_STMT_FILENAME' to obtain the new filename.
-
-`FOR_STMT'
-     Used to represent a `for' statement.  The `FOR_INIT_STMT' is the
-     initialization statement for the loop.  The `FOR_COND' is the
-     termination condition.  The `FOR_EXPR' is the expression executed
-     right before the `FOR_COND' on each loop iteration; often, this
-     expression increments a counter.  The body of the loop is given by
-     `FOR_BODY'.  Note that `FOR_INIT_STMT' and `FOR_BODY' return
-     statements, while `FOR_COND' and `FOR_EXPR' return expressions.
-
-`GOTO_STMT'
-     Used to represent a `goto' statement.  The `GOTO_DESTINATION' will
-     usually be a `LABEL_DECL'.  However, if the "computed goto"
-     extension has been used, the `GOTO_DESTINATION' will be an
-     arbitrary expression indicating the destination.  This expression
-     will always have pointer type.
-
-`IF_STMT'
-     Used to represent an `if' statement.  The `IF_COND' is the
-     expression.
-
-     If the condition is a `TREE_LIST', then the `TREE_PURPOSE' is a
-     statement (usually a `DECL_STMT').  Each time the condition is
-     evaluated, the statement should be executed.  Then, the
-     `TREE_VALUE' should be used as the conditional expression itself.
-     This representation is used to handle C++ code like this:
-
-          if (int i = 7) ...
-
-     where there is a new local variable (or variables) declared within
-     the condition.
-
-     The `THEN_CLAUSE' represents the statement given by the `then'
-     condition, while the `ELSE_CLAUSE' represents the statement given
-     by the `else' condition.
-
-`LABEL_STMT'
-     Used to represent a label.  The `LABEL_DECL' declared by this
-     statement can be obtained with the `LABEL_STMT_LABEL' macro.  The
-     `IDENTIFIER_NODE' giving the name of the label can be obtained from
-     the `LABEL_DECL' with `DECL_NAME'.
-
-`RETURN_INIT'
-     If the function uses the G++ "named return value" extension,
-     meaning that the function has been defined like:
-          S f(int) return s {...}
-     then there will be a `RETURN_INIT'.  There is never a named
-     returned value for a constructor.  The first argument to the
-     `RETURN_INIT' is the name of the object returned; the second
-     argument is the initializer for the object.  The object is
-     initialized when the `RETURN_INIT' is encountered.  The object
-     referred to is the actual object returned; this extension is a
-     manual way of doing the "return-value optimization."  Therefore,
-     the object must actually be constructed in the place where the
-     object will be returned.
-
-`RETURN_STMT'
-     Used to represent a `return' statement.  The `RETURN_EXPR' is the
-     expression returned; it will be `NULL_TREE' if the statement was
-     just
-          return;
-
-`SCOPE_STMT'
-     A scope-statement represents the beginning or end of a scope.  If
-     `SCOPE_BEGIN_P' holds, this statement represents the beginning of a
-     scope; if `SCOPE_END_P' holds this statement represents the end of
-     a scope.  On exit from a scope, all cleanups from `CLEANUP_STMT's
-     occurring in the scope must be run, in reverse order to the order
-     in which they were encountered.  If `SCOPE_NULLIFIED_P' or
-     `SCOPE_NO_CLEANUPS_P' holds of the scope, back ends should behave
-     as if the `SCOPE_STMT' were not present at all.
-
-`START_CATCH_STMT'
-     These statements represent the location to which control is
-     transferred when an exception is thrown.  The `START_CATCH_TYPE'
-     is the type of exception that will be caught by this handler; it
-     is equal (by pointer equality) to `CATCH_ALL_TYPE' if this handler
-     is for all types.
-
-`SUBOBJECT'
-     In a constructor, these nodes are used to mark the point at which a
-     subobject of `this' is fully constructed.  If, after this point, an
-     exception is thrown before a `CTOR_STMT' with `CTOR_END_P' set is
-     encountered, the `SUBOBJECT_CLEANUP' must be executed.  The
-     cleanups must be executed in the reverse order in which they
-     appear.
-
-`SWITCH_STMT'
-     Used to represent a `switch' statement.  The `SWITCH_COND' is the
-     expression on which the switch is occurring.  See the documentation
-     for an `IF_STMT' for more information on the representation used
-     for the condition.  The `SWITCH_BODY' is the body of the switch
-     statement.
-
-`TRY_BLOCK'
-     Used to represent a `try' block.  The body of the try block is
-     given by `TRY_STMTS'.  Each of the catch blocks is a `HANDLER'
-     node.  The first handler is given by `TRY_HANDLERS'.  Subsequent
-     handlers are obtained by following the `TREE_CHAIN' link from one
-     handler to the next.  The body of the handler is given by
-     `HANDLER_BODY'.
-
-     If `CLEANUP_P' holds of the `TRY_BLOCK', then the `TRY_HANDLERS'
-     will not be a `HANDLER' node.  Instead, it will be an expression
-     that should be executed if an exception is thrown in the try
-     block.  It must rethrow the exception after executing that code.
-     And, if an exception is thrown while the expression is executing,
-     `terminate' must be called.
-
-`USING_STMT'
-     Used to represent a `using' directive.  The namespace is given by
-     `USING_STMT_NAMESPACE', which will be a NAMESPACE_DECL.  This node
-     is needed inside template functions, to implement using directives
-     during instantiation.
-
-`WHILE_STMT'
-     Used to represent a `while' loop.  The `WHILE_COND' is the
-     termination condition for the loop.  See the documentation for an
-     `IF_STMT' for more information on the representation used for the
-     condition.
-
-     The `WHILE_BODY' is the body of the loop.
+   All three of these files use the functions in `gcov-io.h' to store
+integers; the functions in this header provide a machine-independent
+mechanism for storing and retrieving data from a stream.
 
 
-File: gcc.info,  Node: Attributes,  Next: Expression trees,  Prev: Declarations,  Up: Trees
+File: gcc.info,  Node: Trouble,  Next: Bugs,  Prev: Gcov,  Up: Top
 
-Attributes in trees
-===================
+Known Causes of Trouble with GCC
+********************************
 
-   Attributes, as specified using the `__attribute__' keyword, are
-represented internally as a `TREE_LIST'.  The `TREE_PURPOSE' is the
-name of the attribute, as an `IDENTIFIER_NODE'.  The `TREE_VALUE' is a
-`TREE_LIST' of the arguments of the attribute, if any, or `NULL_TREE'
-if there are no arguments; the arguments are stored as the `TREE_VALUE'
-of successive entries in the list, and may be identifiers or
-expressions.  The `TREE_CHAIN' of the attribute is the next attribute
-in a list of attributes applying to the same declaration or type, or
-`NULL_TREE' if there are no further attributes in the list.
+   This section describes known problems that affect users of GCC.  Most
+of these are not GCC bugs per se--if they were, we would fix them.  But
+the result for a user may be like the result of a bug.
 
-   Attributes may be attached to declarations and to types; these
-attributes may be accessed with the following macros.  At present only
-machine-dependent attributes are stored in this way (other attributes
-cause changes to the declaration or type or to other internal compiler
-data structures, but are not themselves stored along with the
-declaration or type), but in future all attributes may be stored like
-this.
+   Some of these problems are due to bugs in other software, some are
+missing features that are too much work to add, and some are places
+where people's opinions differ as to what is best.
 
- - Tree Macro: tree DECL_MACHINE_ATTRIBUTES (tree DECL)
-     This macro returns the attributes on the declaration DECL.
+* Menu:
 
- - Tree Macro: tree TYPE_ATTRIBUTES (tree TYPE)
-     This macro returns the attributes on the type TYPE.
+* Actual Bugs::		      Bugs we will fix later.
+* Cross-Compiler Problems::   Common problems of cross compiling with GCC.
+* Interoperation::      Problems using GCC with other compilers,
+			   and with certain linkers, assemblers and debuggers.
+* External Bugs::	Problems compiling certain programs.
+* Incompatibilities::   GCC is incompatible with traditional C.
+* Fixed Headers::       GCC uses corrected versions of system header files.
+                           This is necessary, but doesn't always work smoothly.
+* Standard Libraries::  GCC uses the system C library, which might not be
+                           compliant with the ISO C standard.
+* Disappointments::     Regrettable things we can't change, but not quite bugs.
+* C++ Misunderstandings::     Common misunderstandings with GNU C++.
+* Protoize Caveats::    Things to watch out for when using `protoize'.
+* Non-bugs::		Things we think are right, but some others disagree.
+* Warnings and Errors:: Which problems in your code get warnings,
+                         and which get errors.
+
+
+File: gcc.info,  Node: Actual Bugs,  Next: Cross-Compiler Problems,  Up: Trouble
+
+Actual Bugs We Haven't Fixed Yet
+================================
+
+   * The `fixincludes' script interacts badly with automounters; if the
+     directory of system header files is automounted, it tends to be
+     unmounted while `fixincludes' is running.  This would seem to be a
+     bug in the automounter.  We don't know any good way to work around
+     it.
+
+   * The `fixproto' script will sometimes add prototypes for the
+     `sigsetjmp' and `siglongjmp' functions that reference the
+     `jmp_buf' type before that type is defined.  To work around this,
+     edit the offending file and place the typedef in front of the
+     prototypes.
+
+   * When `-pedantic-errors' is specified, GCC will incorrectly give an
+     error message when a function name is specified in an expression
+     involving the comma operator.
+
+
+File: gcc.info,  Node: Cross-Compiler Problems,  Next: Interoperation,  Prev: Actual Bugs,  Up: Trouble
+
+Cross-Compiler Problems
+=======================
+
+   You may run into problems with cross compilation on certain machines,
+for several reasons.
+
+   * Cross compilation can run into trouble for certain machines because
+     some target machines' assemblers require floating point numbers to
+     be written as _integer_ constants in certain contexts.
+
+     The compiler writes these integer constants by examining the
+     floating point value as an integer and printing that integer,
+     because this is simple to write and independent of the details of
+     the floating point representation.  But this does not work if the
+     compiler is running on a different machine with an incompatible
+     floating point format, or even a different byte-ordering.
+
+     In addition, correct constant folding of floating point values
+     requires representing them in the target machine's format.  (The C
+     standard does not quite require this, but in practice it is the
+     only way to win.)
+
+     It is now possible to overcome these problems by defining macros
+     such as `REAL_VALUE_TYPE'.  But doing so is a substantial amount of
+     work for each target machine.  *Note Cross Compilation and
+     Floating Point: (gccint)Cross-compilation.
+
+   * At present, the program `mips-tfile' which adds debug support to
+     object files on MIPS systems does not work in a cross compile
+     environment.
+
+
+File: gcc.info,  Node: Interoperation,  Next: External Bugs,  Prev: Cross-Compiler Problems,  Up: Trouble
+
+Interoperation
+==============
+
+   This section lists various difficulties encountered in using GCC
+together with other compilers or with the assemblers, linkers,
+libraries and debuggers on certain systems.
+
+   * G++ does not do name mangling in the same way as other C++
+     compilers.  This means that object files compiled with one compiler
+     cannot be used with another.
+
+     This effect is intentional, to protect you from more subtle
+     problems.  Compilers differ as to many internal details of C++
+     implementation, including: how class instances are laid out, how
+     multiple inheritance is implemented, and how virtual function
+     calls are handled.  If the name encoding were made the same, your
+     programs would link against libraries provided from other
+     compilers--but the programs would then crash when run.
+     Incompatible libraries are then detected at link time, rather than
+     at run time.
+
+   * Older GDB versions sometimes fail to read the output of GCC version
+     2.  If you have trouble, get GDB version 4.4 or later.
+
+   * DBX rejects some files produced by GCC, though it accepts similar
+     constructs in output from PCC.  Until someone can supply a coherent
+     description of what is valid DBX input and what is not, there is
+     nothing I can do about these problems.  You are on your own.
+
+   * The GNU assembler (GAS) does not support PIC.  To generate PIC
+     code, you must use some other assembler, such as `/bin/as'.
+
+   * On some BSD systems, including some versions of Ultrix, use of
+     profiling causes static variable destructors (currently used only
+     in C++) not to be run.
+
+   * On some SGI systems, when you use `-lgl_s' as an option, it gets
+     translated magically to `-lgl_s -lX11_s -lc_s'.  Naturally, this
+     does not happen when you use GCC.  You must specify all three
+     options explicitly.
+
+   * On a Sparc, GCC aligns all values of type `double' on an 8-byte
+     boundary, and it expects every `double' to be so aligned.  The Sun
+     compiler usually gives `double' values 8-byte alignment, with one
+     exception: function arguments of type `double' may not be aligned.
+
+     As a result, if a function compiled with Sun CC takes the address
+     of an argument of type `double' and passes this pointer of type
+     `double *' to a function compiled with GCC, dereferencing the
+     pointer may cause a fatal signal.
+
+     One way to solve this problem is to compile your entire program
+     with GCC.  Another solution is to modify the function that is
+     compiled with Sun CC to copy the argument into a local variable;
+     local variables are always properly aligned.  A third solution is
+     to modify the function that uses the pointer to dereference it via
+     the following function `access_double' instead of directly with
+     `*':
+
+          inline double
+          access_double (double *unaligned_ptr)
+          {
+            union d2i { double d; int i[2]; };
+          
+            union d2i *p = (union d2i *) unaligned_ptr;
+            union d2i u;
+          
+            u.i[0] = p->i[0];
+            u.i[1] = p->i[1];
+          
+            return u.d;
+          }
+
+     Storing into the pointer can be done likewise with the same union.
+
+   * On Solaris, the `malloc' function in the `libmalloc.a' library may
+     allocate memory that is only 4 byte aligned.  Since GCC on the
+     Sparc assumes that doubles are 8 byte aligned, this may result in a
+     fatal signal if doubles are stored in memory allocated by the
+     `libmalloc.a' library.
+
+     The solution is to not use the `libmalloc.a' library.  Use instead
+     `malloc' and related functions from `libc.a'; they do not have
+     this problem.
+
+   * Sun forgot to include a static version of `libdl.a' with some
+     versions of SunOS (mainly 4.1).  This results in undefined symbols
+     when linking static binaries (that is, if you use `-static').  If
+     you see undefined symbols `_dlclose', `_dlsym' or `_dlopen' when
+     linking, compile and link against the file `mit/util/misc/dlsym.c'
+     from the MIT version of X windows.
+
+   * The 128-bit long double format that the Sparc port supports
+     currently works by using the architecturally defined quad-word
+     floating point instructions.  Since there is no hardware that
+     supports these instructions they must be emulated by the operating
+     system.  Long doubles do not work in Sun OS versions 4.0.3 and
+     earlier, because the kernel emulator uses an obsolete and
+     incompatible format.  Long doubles do not work in Sun OS version
+     4.1.1 due to a problem in a Sun library.  Long doubles do work on
+     Sun OS versions 4.1.2 and higher, but GCC does not enable them by
+     default.  Long doubles appear to work in Sun OS 5.x (Solaris 2.x).
+
+   * On HP-UX version 9.01 on the HP PA, the HP compiler `cc' does not
+     compile GCC correctly.  We do not yet know why.  However, GCC
+     compiled on earlier HP-UX versions works properly on HP-UX 9.01
+     and can compile itself properly on 9.01.
+
+   * On the HP PA machine, ADB sometimes fails to work on functions
+     compiled with GCC.  Specifically, it fails to work on functions
+     that use `alloca' or variable-size arrays.  This is because GCC
+     doesn't generate HP-UX unwind descriptors for such functions.  It
+     may even be impossible to generate them.
+
+   * Debugging (`-g') is not supported on the HP PA machine, unless you
+     use the preliminary GNU tools.
+
+   * Taking the address of a label may generate errors from the HP-UX
+     PA assembler.  GAS for the PA does not have this problem.
+
+   * Using floating point parameters for indirect calls to static
+     functions will not work when using the HP assembler.  There simply
+     is no way for GCC to specify what registers hold arguments for
+     static functions when using the HP assembler.  GAS for the PA does
+     not have this problem.
+
+   * In extremely rare cases involving some very large functions you may
+     receive errors from the HP linker complaining about an out of
+     bounds unconditional branch offset.  This used to occur more often
+     in previous versions of GCC, but is now exceptionally rare.  If
+     you should run into it, you can work around by making your
+     function smaller.
+
+   * GCC compiled code sometimes emits warnings from the HP-UX
+     assembler of the form:
+
+          (warning) Use of GR3 when
+            frame >= 8192 may cause conflict.
+
+     These warnings are harmless and can be safely ignored.
+
+   * On the IBM RS/6000, compiling code of the form
+
+          extern int foo;
+          
+          ... foo ...
+          
+          static int foo;
+
+     will cause the linker to report an undefined symbol `foo'.
+     Although this behavior differs from most other systems, it is not a
+     bug because redefining an `extern' variable as `static' is
+     undefined in ISO C.
+
+   * In extremely rare cases involving some very large functions you may
+     receive errors from the AIX Assembler complaining about a
+     displacement that is too large.  If you should run into it, you
+     can work around by making your function smaller.
+
+   * The `libstdc++.a' library in GCC relies on the SVR4 dynamic linker
+     semantics which merges global symbols between libraries and
+     applications, especially necessary for C++ streams functionality.
+     This is not the default behavior of AIX shared libraries and
+     dynamic linking.  `libstdc++.a' is built on AIX with
+     "runtime-linking" enabled so that symbol merging can occur.  To
+     utilize this feature, the application linked with `libstdc++.a'
+     must include the `-Wl,-brtl' flag on the link line.  G++ cannot
+     impose this because this option may interfere with the semantics
+     of the user program and users may not always use `g++' to link his
+     or her application. Applications are not required to use the
+     `-Wl,-brtl' flag on the link line--the rest of the `libstdc++.a'
+     library which is not dependent on the symbol merging semantics
+     will continue to function correctly.
+
+   * An application can interpose its own definition of functions for
+     functions invoked by `libstdc++.a' with "runtime-linking" enabled
+     on AIX.  To accomplish this the application must be linked with
+     "runtime-linking" option and the functions explicitly must be
+     exported by the application (`-Wl,-brtl,-bE:exportfile').
+
+   * AIX on the RS/6000 provides support (NLS) for environments outside
+     of the United States.  Compilers and assemblers use NLS to support
+     locale-specific representations of various objects including
+     floating-point numbers (`.' vs `,' for separating decimal
+     fractions). There have been problems reported where the library
+     linked with GCC does not produce the same floating-point formats
+     that the assembler accepts. If you have this problem, set the
+     `LANG' environment variable to `C' or `En_US'.
+
+   * Even if you specify `-fdollars-in-identifiers', you cannot
+     successfully use `$' in identifiers on the RS/6000 due to a
+     restriction in the IBM assembler.  GAS supports these identifiers.
+
+   * There is an assembler bug in versions of DG/UX prior to 5.4.2.01
+     that occurs when the `fldcr' instruction is used.  GCC uses
+     `fldcr' on the 88100 to serialize volatile memory references.  Use
+     the option `-mno-serialize-volatile' if your version of the
+     assembler has this bug.
+
+   * On VMS, GAS versions 1.38.1 and earlier may cause spurious warning
+     messages from the linker.  These warning messages complain of
+     mismatched psect attributes.  You can ignore them.
+
+   * On NewsOS version 3, if you include both of the files `stddef.h'
+     and `sys/types.h', you get an error because there are two typedefs
+     of `size_t'.  You should change `sys/types.h' by adding these
+     lines around the definition of `size_t':
+
+          #ifndef _SIZE_T
+          #define _SIZE_T
+          ACTUAL-TYPEDEF-HERE
+          #endif
+
+   * On the Alliant, the system's own convention for returning
+     structures and unions is unusual, and is not compatible with GCC
+     no matter what options are used.
+
+   * On the IBM RT PC, the MetaWare HighC compiler (hc) uses a different
+     convention for structure and union returning.  Use the option
+     `-mhc-struct-return' to tell GCC to use a convention compatible
+     with it.
+
+   * On Ultrix, the Fortran compiler expects registers 2 through 5 to
+     be saved by function calls.  However, the C compiler uses
+     conventions compatible with BSD Unix: registers 2 through 5 may be
+     clobbered by function calls.
+
+     GCC uses the same convention as the Ultrix C compiler.  You can use
+     these options to produce code compatible with the Fortran compiler:
+
+          -fcall-saved-r2 -fcall-saved-r3 -fcall-saved-r4 -fcall-saved-r5
+
+   * On the WE32k, you may find that programs compiled with GCC do not
+     work with the standard shared C library.  You may need to link with
+     the ordinary C compiler.  If you do so, you must specify the
+     following options:
+
+          -L/usr/local/lib/gcc-lib/we32k-att-sysv/2.8.1 -lgcc -lc_s
+
+     The first specifies where to find the library `libgcc.a' specified
+     with the `-lgcc' option.
+
+     GCC does linking by invoking `ld', just as `cc' does, and there is
+     no reason why it _should_ matter which compilation program you use
+     to invoke `ld'.  If someone tracks this problem down, it can
+     probably be fixed easily.
+
+   * On the Alpha, you may get assembler errors about invalid syntax as
+     a result of floating point constants.  This is due to a bug in the
+     C library functions `ecvt', `fcvt' and `gcvt'.  Given valid
+     floating point numbers, they sometimes print `NaN'.
+
+   * On Irix 4.0.5F (and perhaps in some other versions), an assembler
+     bug sometimes reorders instructions incorrectly when optimization
+     is turned on.  If you think this may be happening to you, try
+     using the GNU assembler; GAS version 2.1 supports ECOFF on Irix.
+
+     Or use the `-noasmopt' option when you compile GCC with itself,
+     and then again when you compile your program.  (This is a temporary
+     kludge to turn off assembler optimization on Irix.)  If this
+     proves to be what you need, edit the assembler spec in the file
+     `specs' so that it unconditionally passes `-O0' to the assembler,
+     and never passes `-O2' or `-O3'.
+
+
+File: gcc.info,  Node: External Bugs,  Next: Incompatibilities,  Prev: Interoperation,  Up: Trouble
+
+Problems Compiling Certain Programs
+===================================
+
+   Certain programs have problems compiling.
+
+   * Parse errors may occur compiling X11 on a Decstation running
+     Ultrix 4.2 because of problems in DEC's versions of the X11 header
+     files `X11/Xlib.h' and `X11/Xutil.h'.  People recommend adding
+     `-I/usr/include/mit' to use the MIT versions of the header files,
+     using the `-traditional' switch to turn off ISO C, or fixing the
+     header files by adding this:
+
+          #ifdef __STDC__
+          #define NeedFunctionPrototypes 0
+          #endif
+
+   * On various 386 Unix systems derived from System V, including SCO,
+     ISC, and ESIX, you may get error messages about running out of
+     virtual memory while compiling certain programs.
+
+     You can prevent this problem by linking GCC with the GNU malloc
+     (which thus replaces the malloc that comes with the system).  GNU
+     malloc is available as a separate package, and also in the file
+     `src/gmalloc.c' in the GNU Emacs 19 distribution.
+
+     If you have installed GNU malloc as a separate library package,
+     use this option when you relink GCC:
+
+          MALLOC=/usr/local/lib/libgmalloc.a
+
+     Alternatively, if you have compiled `gmalloc.c' from Emacs 19, copy
+     the object file to `gmalloc.o' and use this option when you relink
+     GCC:
+
+          MALLOC=gmalloc.o
+
+
+File: gcc.info,  Node: Incompatibilities,  Next: Fixed Headers,  Prev: External Bugs,  Up: Trouble
+
+Incompatibilities of GCC
+========================
+
+   There are several noteworthy incompatibilities between GNU C and K&R
+(non-ISO) versions of C.  The `-traditional' option eliminates many of
+these incompatibilities, _but not all_, by telling GCC to behave like a
+K&R C compiler.
+
+   * GCC normally makes string constants read-only.  If several
+     identical-looking string constants are used, GCC stores only one
+     copy of the string.
+
+     One consequence is that you cannot call `mktemp' with a string
+     constant argument.  The function `mktemp' always alters the string
+     its argument points to.
+
+     Another consequence is that `sscanf' does not work on some systems
+     when passed a string constant as its format control string or
+     input.  This is because `sscanf' incorrectly tries to write into
+     the string constant.  Likewise `fscanf' and `scanf'.
+
+     The best solution to these problems is to change the program to use
+     `char'-array variables with initialization strings for these
+     purposes instead of string constants.  But if this is not possible,
+     you can use the `-fwritable-strings' flag, which directs GCC to
+     handle string constants the same way most C compilers do.
+     `-traditional' also has this effect, among others.
+
+   * `-2147483648' is positive.
+
+     This is because 2147483648 cannot fit in the type `int', so
+     (following the ISO C rules) its data type is `unsigned long int'.
+     Negating this value yields 2147483648 again.
+
+   * GCC does not substitute macro arguments when they appear inside of
+     string constants.  For example, the following macro in GCC
+
+          #define foo(a) "a"
+
+     will produce output `"a"' regardless of what the argument A is.
+
+     The `-traditional' option directs GCC to handle such cases (among
+     others) in the old-fashioned (non-ISO) fashion.
+
+   * When you use `setjmp' and `longjmp', the only automatic variables
+     guaranteed to remain valid are those declared `volatile'.  This is
+     a consequence of automatic register allocation.  Consider this
+     function:
+
+          jmp_buf j;
+          
+          foo ()
+          {
+            int a, b;
+          
+            a = fun1 ();
+            if (setjmp (j))
+              return a;
+          
+            a = fun2 ();
+            /* `longjmp (j)' may occur in `fun3'. */
+            return a + fun3 ();
+          }
+
+     Here `a' may or may not be restored to its first value when the
+     `longjmp' occurs.  If `a' is allocated in a register, then its
+     first value is restored; otherwise, it keeps the last value stored
+     in it.
+
+     If you use the `-W' option with the `-O' option, you will get a
+     warning when GCC thinks such a problem might be possible.
+
+     The `-traditional' option directs GCC to put variables in the
+     stack by default, rather than in registers, in functions that call
+     `setjmp'.  This results in the behavior found in traditional C
+     compilers.
+
+   * Programs that use preprocessing directives in the middle of macro
+     arguments do not work with GCC.  For example, a program like this
+     will not work:
+
+          foobar (
+          #define luser
+                  hack)
+
+     ISO C does not permit such a construct.  It would make sense to
+     support it when `-traditional' is used, but it is too much work to
+     implement.
+
+   * K&R compilers allow comments to cross over an inclusion boundary
+     (i.e. started in an include file and ended in the including file).
+     I think this would be quite ugly and can't imagine it could be
+     needed.
+
+   * Declarations of external variables and functions within a block
+     apply only to the block containing the declaration.  In other
+     words, they have the same scope as any other declaration in the
+     same place.
+
+     In some other C compilers, a `extern' declaration affects all the
+     rest of the file even if it happens within a block.
+
+     The `-traditional' option directs GCC to treat all `extern'
+     declarations as global, like traditional compilers.
+
+   * In traditional C, you can combine `long', etc., with a typedef
+     name, as shown here:
+
+          typedef int foo;
+          typedef long foo bar;
+
+     In ISO C, this is not allowed: `long' and other type modifiers
+     require an explicit `int'.  Because this criterion is expressed by
+     Bison grammar rules rather than C code, the `-traditional' flag
+     cannot alter it.
+
+   * PCC allows typedef names to be used as function parameters.  The
+     difficulty described immediately above applies here too.
+
+   * When in `-traditional' mode, GCC allows the following erroneous
+     pair of declarations to appear together in a given scope:
+
+          typedef int foo;
+          typedef foo foo;
+
+   * GCC treats all characters of identifiers as significant, even when
+     in `-traditional' mode.  According to K&R-1 (2.2), "No more than
+     the first eight characters are significant, although more may be
+     used.".  Also according to K&R-1 (2.2), "An identifier is a
+     sequence of letters and digits; the first character must be a
+     letter.  The underscore _ counts as a letter.", but GCC also
+     allows dollar signs in identifiers.
+
+   * PCC allows whitespace in the middle of compound assignment
+     operators such as `+='.  GCC, following the ISO standard, does not
+     allow this.  The difficulty described immediately above applies
+     here too.
+
+   * GCC complains about unterminated character constants inside of
+     preprocessing conditionals that fail.  Some programs have English
+     comments enclosed in conditionals that are guaranteed to fail; if
+     these comments contain apostrophes, GCC will probably report an
+     error.  For example, this code would produce an error:
+
+          #if 0
+          You can't expect this to work.
+          #endif
+
+     The best solution to such a problem is to put the text into an
+     actual C comment delimited by `/*...*/'.  However, `-traditional'
+     suppresses these error messages.
+
+   * Many user programs contain the declaration `long time ();'.  In the
+     past, the system header files on many systems did not actually
+     declare `time', so it did not matter what type your program
+     declared it to return.  But in systems with ISO C headers, `time'
+     is declared to return `time_t', and if that is not the same as
+     `long', then `long time ();' is erroneous.
+
+     The solution is to change your program to use appropriate system
+     headers (`<time.h>' on systems with ISO C headers) and not to
+     declare `time' if the system header files declare it, or failing
+     that to use `time_t' as the return type of `time'.
+
+   * When compiling functions that return `float', PCC converts it to a
+     double.  GCC actually returns a `float'.  If you are concerned
+     with PCC compatibility, you should declare your functions to return
+     `double'; you might as well say what you mean.
+
+   * When compiling functions that return structures or unions, GCC
+     output code normally uses a method different from that used on most
+     versions of Unix.  As a result, code compiled with GCC cannot call
+     a structure-returning function compiled with PCC, and vice versa.
+
+     The method used by GCC is as follows: a structure or union which is
+     1, 2, 4 or 8 bytes long is returned like a scalar.  A structure or
+     union with any other size is stored into an address supplied by
+     the caller (usually in a special, fixed register, but on some
+     machines it is passed on the stack).  The machine-description
+     macros `STRUCT_VALUE' and `STRUCT_INCOMING_VALUE' tell GCC where
+     to pass this address.
+
+     By contrast, PCC on most target machines returns structures and
+     unions of any size by copying the data into an area of static
+     storage, and then returning the address of that storage as if it
+     were a pointer value.  The caller must copy the data from that
+     memory area to the place where the value is wanted.  GCC does not
+     use this method because it is slower and nonreentrant.
+
+     On some newer machines, PCC uses a reentrant convention for all
+     structure and union returning.  GCC on most of these machines uses
+     a compatible convention when returning structures and unions in
+     memory, but still returns small structures and unions in registers.
+
+     You can tell GCC to use a compatible convention for all structure
+     and union returning with the option `-fpcc-struct-return'.
+
+   * GCC complains about program fragments such as `0x74ae-0x4000'
+     which appear to be two hexadecimal constants separated by the minus
+     operator.  Actually, this string is a single "preprocessing token".
+     Each such token must correspond to one token in C.  Since this
+     does not, GCC prints an error message.  Although it may appear
+     obvious that what is meant is an operator and two values, the ISO
+     C standard specifically requires that this be treated as erroneous.
+
+     A "preprocessing token" is a "preprocessing number" if it begins
+     with a digit and is followed by letters, underscores, digits,
+     periods and `e+', `e-', `E+', `E-', `p+', `p-', `P+', or `P-'
+     character sequences.  (In strict C89 mode, the sequences `p+',
+     `p-', `P+' and `P-' cannot appear in preprocessing numbers.)
+
+     To make the above program fragment valid, place whitespace in
+     front of the minus sign.  This whitespace will end the
+     preprocessing number.
+
+
+File: gcc.info,  Node: Fixed Headers,  Next: Standard Libraries,  Prev: Incompatibilities,  Up: Trouble
+
+Fixed Header Files
+==================
+
+   GCC needs to install corrected versions of some system header files.
+This is because most target systems have some header files that won't
+work with GCC unless they are changed.  Some have bugs, some are
+incompatible with ISO C, and some depend on special features of other
+compilers.
+
+   Installing GCC automatically creates and installs the fixed header
+files, by running a program called `fixincludes' (or for certain
+targets an alternative such as `fixinc.svr4').  Normally, you don't
+need to pay attention to this.  But there are cases where it doesn't do
+the right thing automatically.
+
+   * If you update the system's header files, such as by installing a
+     new system version, the fixed header files of GCC are not
+     automatically updated.  The easiest way to update them is to
+     reinstall GCC.  (If you want to be clever, look in the makefile
+     and you can find a shortcut.)
+
+   * On some systems, in particular SunOS 4, header file directories
+     contain machine-specific symbolic links in certain places.  This
+     makes it possible to share most of the header files among hosts
+     running the same version of SunOS 4 on different machine models.
+
+     The programs that fix the header files do not understand this
+     special way of using symbolic links; therefore, the directory of
+     fixed header files is good only for the machine model used to
+     build it.
+
+     In SunOS 4, only programs that look inside the kernel will notice
+     the difference between machine models.  Therefore, for most
+     purposes, you need not be concerned about this.
+
+     It is possible to make separate sets of fixed header files for the
+     different machine models, and arrange a structure of symbolic
+     links so as to use the proper set, but you'll have to do this by
+     hand.
+
+   * On Lynxos, GCC by default does not fix the header files.  This is
+     because bugs in the shell cause the `fixincludes' script to fail.
+
+     This means you will encounter problems due to bugs in the system
+     header files.  It may be no comfort that they aren't GCC's fault,
+     but it does mean that there's nothing for us to do about them.
+
+
+File: gcc.info,  Node: Standard Libraries,  Next: Disappointments,  Prev: Fixed Headers,  Up: Trouble
+
+Standard Libraries
+==================
+
+   GCC by itself attempts to be a conforming freestanding
+implementation.  *Note Language Standards Supported by GCC: Standards,
+for details of what this means.  Beyond the library facilities required
+of such an implementation, the rest of the C library is supplied by the
+vendor of the operating system.  If that C library doesn't conform to
+the C standards, then your programs might get warnings (especially when
+using `-Wall') that you don't expect.
+
+   For example, the `sprintf' function on SunOS 4.1.3 returns `char *'
+while the C standard says that `sprintf' returns an `int'.  The
+`fixincludes' program could make the prototype for this function match
+the Standard, but that would be wrong, since the function will still
+return `char *'.
+
+   If you need a Standard compliant library, then you need to find one,
+as GCC does not provide one.  The GNU C library (called `glibc')
+provides ISO C, POSIX, BSD, SystemV and X/Open compatibility for
+GNU/Linux and HURD-based GNU systems; no recent version of it supports
+other systems, though some very old versions did.  Version 2.2 of the
+GNU C library includes nearly complete C99 support.  You could also ask
+your operating system vendor if newer libraries are available.
 

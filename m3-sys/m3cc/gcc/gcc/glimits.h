@@ -33,16 +33,15 @@
 #define CHAR_MAX 127
 #endif
 
+#ifndef __SHRT_MAX__
+#define __SHRT_MAX__ 32767
+#endif
+
 /* Minimum and maximum values a `signed short int' can hold.  */
 #undef SHRT_MIN
-/* For the sake of 16 bit hosts, we may not use -32768 */
-#define SHRT_MIN (-32767-1)
+#define SHRT_MIN (-SHRT_MAX-1)
 #undef SHRT_MAX
-#define SHRT_MAX 32767
-
-/* Maximum value an `unsigned short int' can hold.  (Minimum is 0).  */
-#undef USHRT_MAX
-#define USHRT_MAX 65535
+#define SHRT_MAX __SHRT_MAX__
 
 /* Minimum and maximum values a `signed int' can hold.  */
 #ifndef __INT_MAX__
@@ -53,6 +52,14 @@
 #undef INT_MAX
 #define INT_MAX __INT_MAX__
 
+/* Maximum value an `unsigned short int' can hold.  (Minimum is 0).  */
+#undef USHRT_MAX
+#if __SHRT_MAX__ == __INT_MAX__
+#define USHRT_MAX (SHRT_MAX * 2U + 1U)
+#else
+#define USHRT_MAX (SHRT_MAX * 2 + 1)
+#endif
+
 /* Maximum value an `unsigned int' can hold.  (Minimum is 0).  */
 #undef UINT_MAX
 #define UINT_MAX (INT_MAX * 2U + 1)
@@ -60,7 +67,7 @@
 /* Minimum and maximum values a `signed long int' can hold.
    (Same as `int').  */
 #ifndef __LONG_MAX__
-#if defined (__alpha__) || (defined (__sparc__) && defined(__arch64__)) || defined (__sparcv9) || defined (__s390x__)
+#if defined (__alpha__) || (defined (__sparc__) && defined(__arch64__)) || defined (__sparcv9)
 #define __LONG_MAX__ 9223372036854775807L
 #else
 #define __LONG_MAX__ 2147483647L

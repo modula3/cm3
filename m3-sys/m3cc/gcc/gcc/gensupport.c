@@ -1,22 +1,22 @@
 /* Support routines for the various generation passes.
-   Copyright (C) 2000 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001 Free Software Foundation, Inc.
 
-   This file is part of GNU CC.
+   This file is part of GCC.
 
-   GNU CC is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
-   GNU CC is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   along with GCC; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #include "hconfig.h"
 #include "system.h"
@@ -25,6 +25,9 @@
 #include "errors.h"
 #include "gensupport.h"
 
+
+/* In case some macros used by files we include need it, define this here.  */
+int target_flags;
 
 static struct obstack obstack;
 struct obstack *rtl_obstack = &obstack;
@@ -38,6 +41,8 @@ static int errors;
 static int predicable_default;
 static const char *predicable_true;
 static const char *predicable_false;
+
+static char *base_dir = NULL;
 
 /* We initially queue all patterns, process the define_insn and
    define_cond_exec patterns, then return them one at a time.  */
@@ -59,6 +64,23 @@ static struct queue_elem *other_queue;
 static struct queue_elem **other_tail = &other_queue;
 
 static void queue_pattern PARAMS ((rtx, struct queue_elem ***, int));
+
+/* Current maximum length of directory names in the search path
+   for include files.  (Altered as we get more of them.)  */
+
+size_t max_include_len;
+
+struct file_name_list
+  {
+    struct file_name_list *next;
+    const char *fname;
+  };
+
+struct file_name_list *include = 0;     /* First dir to search */
+        /* First dir to search for <file> */
+struct file_name_list *first_bracket_include = 0;
+struct file_name_list *last_include = 0;        /* Last in chain */
+
 static void remove_constraints PARAMS ((rtx));
 static void process_rtx PARAMS ((rtx, int));
 
@@ -75,28 +97,36 @@ static const char *alter_output_for_insn PARAMS ((struct queue_elem *,
 						  int, int));
 static void process_one_cond_exec PARAMS ((struct queue_elem *));
 static void process_define_cond_exec PARAMS ((void));
+static int process_include PARAMS ((rtx, int));
+static char *save_string PARAMS ((const char *, int));
+static int init_include_reader PARAMS ((FILE  *));
 
 void
 message_with_line VPARAMS ((int lineno, const char *msg, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  int lineno;
-  const char *msg;
-#endif
-  va_list ap;
-
-  VA_START (ap, msg);
-
-#ifndef ANSI_PROTOTYPES
-  lineno = va_arg (ap, int);
-  msg = va_arg (ap, const char *);
-#endif
+  VA_OPEN (ap, msg);
+  VA_FIXEDARG (ap, int, lineno);
+  VA_FIXEDARG (ap, const char *, msg);
 
   fprintf (stderr, "%s:%d: ", read_rtx_filename, lineno);
   vfprintf (stderr, msg, ap);
   fputc ('\n', stderr);
 
-  va_end (ap);
+  VA_CLOSE (ap);
+}
+
+/* Make a version of gen_rtx_CONST_INT so that GEN_INT can be used in
+   the gensupport programs.  */
+
+rtx
+gen_rtx_CONST_INT (mode, arg)
+     enum machine_mode mode ATTRIBUTE_UNUSED;
+     HOST_WIDE_INT arg;
+{
+  rtx rt = rtx_alloc (CONST_INT);
+
+  XWINT (rt, 0) = arg;
+  return rt;
 }
 
 /* Queue PATTERN on LIST_TAIL.  */
@@ -121,8 +151,8 @@ static void
 remove_constraints (part)
      rtx part;
 {
-  register int i, j;
-  register const char *format_ptr;
+  int i, j;
+  const char *format_ptr;
 
   if (part == 0)
     return;
@@ -149,6 +179,144 @@ remove_constraints (part)
       }
 }
 
+/* The entry point for initializing the reader.  */
+
+static int
+init_include_reader (inf)
+     FILE *inf;
+{
+  int c;
+
+  errors = 0;
+
+  /* Read the entire file.  */
+  while (1)
+    {
+      rtx desc;
+      int lineno;
+
+      c = read_skip_spaces (inf);
+      if (c == EOF)
+	break;
+
+      ungetc (c, inf);
+      lineno = read_rtx_lineno;
+      desc = read_rtx (inf);
+      process_rtx (desc, lineno);
+    }
+  fclose (inf);
+
+  /* Process define_cond_exec patterns.  */
+  if (define_cond_exec_queue != NULL)
+    process_define_cond_exec ();
+
+  return errors ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE;
+}
+
+/* Process an include file assuming that it lives in gcc/config/{target}/ 
+   if the include looks line (include "file" )  */
+static int
+process_include (desc, lineno)
+     rtx desc;
+     int lineno;
+{
+  const char *filename = XSTR (desc, 0);
+  char *pathname = NULL;
+  FILE *input_file;
+  char *fname = NULL;
+  struct file_name_list *stackp;
+  int flen;
+
+  stackp = include;
+
+  /* If specified file name is absolute, just open it.  */
+  if (IS_ABSOLUTE_PATHNAME (filename) || !stackp)
+    {
+      if (base_dir)
+        {
+          pathname = xmalloc (strlen (base_dir) + strlen (filename) + 1);
+          pathname = strcpy (pathname, base_dir);
+          strcat (pathname, filename);
+          strcat (pathname, "\0");
+	}
+      else
+        {
+	  pathname = xstrdup (filename);
+        }
+      read_rtx_filename = pathname;
+      input_file = fopen (pathname, "r");
+
+      if (input_file == 0)
+	{
+	  perror (pathname);
+	  return FATAL_EXIT_CODE;
+	}
+    }
+  else if (stackp)
+    {
+
+      flen = strlen (filename);
+
+      fname = (char *) xmalloc (max_include_len + flen + 2);
+
+      /* + 2 above for slash and terminating null.  */
+
+      /* Search directory path, trying to open the file.
+         Copy each filename tried into FNAME.  */
+
+      for (; stackp; stackp = stackp->next)
+	{
+	  if (stackp->fname)
+	    {
+	      strcpy (fname, stackp->fname);
+	      strcat (fname, "/");
+	      fname[strlen (fname) + flen] = 0;
+	    }
+	  else
+	    {
+	      fname[0] = 0;
+	    }
+	  strncat (fname, (const char *) filename, flen);
+	  read_rtx_filename = fname;
+	  input_file = fopen (fname, "r");
+	  if (input_file != NULL) 
+	    break;
+	}
+      if (stackp == NULL)
+	{
+	  if (strchr (fname, '/') == NULL || strchr (fname, '\\' ) || base_dir)
+	    {
+	      if (base_dir)
+		{
+		  pathname =
+		    xmalloc (strlen (base_dir) + strlen (filename) + 1);
+		  pathname = strcpy (pathname, base_dir);
+		  strcat (pathname, filename);
+		  strcat (pathname, "\0");
+		}
+	      else
+		pathname = xstrdup (filename);
+	    }
+	  read_rtx_filename = pathname;
+	  input_file = fopen (pathname, "r");
+
+	  if (input_file == 0)
+	    {
+	      perror (filename);
+	      return FATAL_EXIT_CODE;
+	    }
+	}
+
+    }
+
+  if (init_include_reader (input_file) == FATAL_EXIT_CODE)
+    message_with_line (lineno, "read errors found in include file  %s\n", pathname);
+
+  if (fname)
+    free (fname);
+  return SUCCESS_EXIT_CODE;
+}
+
 /* Process a top level rtx in some way, queueing as appropriate.  */
 
 static void
@@ -170,6 +338,15 @@ process_rtx (desc, lineno)
       queue_pattern (desc, &define_attr_tail, lineno);
       break;
 
+    case INCLUDE:
+      if (process_include (desc, lineno) == FATAL_EXIT_CODE)
+	{
+	  const char *filename = XSTR (desc, 0);
+	  message_with_line (lineno, "include file at  %s not found\n",
+			     filename);
+	}
+      break;
+
     case DEFINE_INSN_AND_SPLIT:
       {
 	const char *split_cond;
@@ -177,7 +354,7 @@ process_rtx (desc, lineno)
 	rtvec attr;
 	int i;
 
-	/* Create a split with values from the insn_and_split. */
+	/* Create a split with values from the insn_and_split.  */
 	split = rtx_alloc (DEFINE_SPLIT);
 
 	i = XVECLEN (desc, 1);
@@ -308,7 +485,7 @@ is_predicable (elem)
     return 0;
 
   message_with_line (elem->lineno,
-		     "Unknown value `%s' for `predicable' attribute",
+		     "unknown value `%s' for `predicable' attribute",
 		     value);
   errors = 1;
   return 0;
@@ -331,7 +508,7 @@ identify_predicable_attribute ()
       goto found;
 
   message_with_line (define_cond_exec_queue->lineno,
-		     "Attribute `predicable' not defined");
+		     "attribute `predicable' not defined");
   errors = 1;
   return;
 
@@ -345,7 +522,7 @@ identify_predicable_attribute ()
   if (p_true == NULL || strchr (++p_true, ',') != NULL)
     {
       message_with_line (elem->lineno,
-			 "Attribute `predicable' is not a boolean");
+			 "attribute `predicable' is not a boolean");
       errors = 1;
       return;
     }
@@ -362,13 +539,13 @@ identify_predicable_attribute ()
 
     case CONST:
       message_with_line (elem->lineno,
-			 "Attribute `predicable' cannot be const");
+			 "attribute `predicable' cannot be const");
       errors = 1;
       return;
 
     default:
       message_with_line (elem->lineno,
-			 "Attribute `predicable' must have a constant default");
+			 "attribute `predicable' must have a constant default");
       errors = 1;
       return;
     }
@@ -380,7 +557,7 @@ identify_predicable_attribute ()
   else
     {
       message_with_line (elem->lineno,
-			 "Unknown value `%s' for `predicable' attribute",
+			 "unknown value `%s' for `predicable' attribute",
 			 value);
       errors = 1;
     }
@@ -453,7 +630,7 @@ collect_insn_data (pattern, palt, pmax)
 	    collect_insn_data (XVECEXP (pattern, i, j), palt, pmax);
 	  break;
 
-	case 'i': case 'w': case '0': case 's': case 'S':
+	case 'i': case 'w': case '0': case 's': case 'S': case 'T':
 	  break;
 
 	default:
@@ -481,7 +658,7 @@ alter_predicate_for_insn (pattern, alt, max_op, lineno)
 	if (n_alternatives (c) != 1)
 	  {
 	    message_with_line (lineno,
-			       "Too many alternatives for operand %d",
+			       "too many alternatives for operand %d",
 			       XINT (pattern, 0));
 	    errors = 1;
 	    return NULL;
@@ -597,8 +774,7 @@ shift_output_template (new, old, disp)
 	  c = *old++;
 	  if (ISDIGIT ((unsigned char) c))
 	    c += disp;
-	  else if (ISUPPER ((unsigned char) c)
-		   || ISLOWER ((unsigned char) c))
+	  else if (ISALPHA (c))
 	    {
 	      *new++ = c;
 	      c = *old++ + disp;
@@ -622,7 +798,7 @@ alter_output_for_insn (ce_elem, insn_elem, alt, max_op)
   /* ??? Could coordinate with genoutput to not duplicate code here.  */
 
   ce_out = XSTR (ce_elem->data, 2);
-  insn_out = XSTR (insn_elem->data, 3);
+  insn_out = XTMPL (insn_elem->data, 3);
   if (!ce_out || *ce_out == '\0')
     return insn_out;
 
@@ -724,7 +900,7 @@ process_one_cond_exec (ce_elem)
 	}
 
       XSTR (insn, 2) = alter_test_for_insn (ce_elem, insn_elem);
-      XSTR (insn, 3) = alter_output_for_insn (ce_elem, insn_elem,
+      XTMPL (insn, 3) = alter_output_for_insn (ce_elem, insn_elem,
 					      alternatives, max_operand);
 
       /* ??? Set `predicable' to false.  Not crucial since it's really
@@ -760,6 +936,74 @@ process_define_cond_exec ()
   for (elem = define_cond_exec_queue; elem ; elem = elem->next)
     process_one_cond_exec (elem);
 }
+
+static char *
+save_string (s, len)
+     const char *s;
+     int len;
+{
+  register char *result = xmalloc (len + 1);
+
+  memcpy (result, s, len);
+  result[len] = 0;
+  return result;
+}
+
+
+/* The entry point for initializing the reader.  */
+
+int
+init_md_reader_args (argc, argv)
+     int argc;
+     char **argv;
+{
+  int i;
+  const char *in_fname;
+
+  max_include_len = 0;
+  in_fname = NULL;
+  for (i = 1; i < argc; i++)
+    {
+      if (argv[i][0] != '-')
+	{
+	  if (in_fname == NULL)
+	    in_fname = argv[i];
+	}
+      else
+	{
+	  int c = argv[i][1];
+	  switch (c)
+	    {
+	    case 'I':		/* Add directory to path for includes.  */
+	      {
+		struct file_name_list *dirtmp;
+
+		dirtmp = (struct file_name_list *)
+		  xmalloc (sizeof (struct file_name_list));
+		dirtmp->next = 0;	/* New one goes on the end */
+		if (include == 0)
+		  include = dirtmp;
+		else
+		  last_include->next = dirtmp;
+		last_include = dirtmp;	/* Tail follows the last one */
+		if (argv[i][1] == 'I' && argv[i][2] != 0)
+		  dirtmp->fname = argv[i] + 2;
+		else if (i + 1 == argc)
+		  fatal ("directory name missing after -I option");
+		else
+		  dirtmp->fname = argv[++i];
+		if (strlen (dirtmp->fname) > max_include_len)
+		  max_include_len = strlen (dirtmp->fname);
+	      }
+	      break;
+	    default:
+	      fatal ("invalid option `%s'", argv[i]);
+
+	    }
+	}
+    }
+    return init_md_reader (in_fname);
+}
 
 /* The entry point for initializing the reader.  */
 
@@ -769,6 +1013,14 @@ init_md_reader (filename)
 {
   FILE *input_file;
   int c;
+  char *lastsl;
+
+  if (!IS_ABSOLUTE_PATHNAME (filename))
+    {
+      lastsl = strrchr (filename, '/');
+      if (lastsl != NULL) 
+	base_dir = save_string (filename, lastsl - filename + 1 );
+    }
 
   read_rtx_filename = filename;
   input_file = fopen (filename, "r");
@@ -790,7 +1042,7 @@ init_md_reader (filename)
 
       c = read_skip_spaces (input_file);
       if (c == EOF)
-	break;
+        break;
 
       ungetc (c, input_file);
       lineno = read_rtx_lineno;
@@ -849,56 +1101,4 @@ read_md_rtx (lineno, seqnr)
     }
 
   return desc;
-}
-
-/* Until we can use the versions in libiberty.  */
-char *
-xstrdup (input)
-  const char *input;
-{
-  register size_t len = strlen (input) + 1;
-  register char *output = xmalloc (len);
-  memcpy (output, input, len);
-  return output;
-}
-
-PTR
-xcalloc (nelem, elsize)
-  size_t nelem, elsize;
-{
-  PTR newmem;
-
-  if (nelem == 0 || elsize == 0)
-    nelem = elsize = 1;
-
-  newmem = calloc (nelem, elsize);
-  if (!newmem)
-    fatal ("virtual memory exhausted");
-  return (newmem);
-}
-
-PTR
-xrealloc (old, size)
-  PTR old;
-  size_t size;
-{
-  register PTR ptr;
-  if (old)
-    ptr = (PTR) realloc (old, size);
-  else
-    ptr = (PTR) malloc (size);
-  if (!ptr)
-    fatal ("virtual memory exhausted");
-  return ptr;
-}
-
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR val = (PTR) malloc (size);
-
-  if (val == 0)
-    fatal ("virtual memory exhausted");
-  return val;
 }

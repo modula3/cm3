@@ -19,19 +19,7 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "h8300/h8300.h"
-
-/* Specify predefined symbols in preprocessor.  */
-
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "-Dh8300 \
   -D__LONG_MAX__=2147483647L -D__LONG_LONG_MAX__=2147483647L \
-  -D__rtems__ -Asystem(rtems) -Acpu(h8300) -Amachine(h8300)"
-
-/* Generate calls to memcpy, memcmp and memset.  */
-#ifndef TARGET_MEM_FUNCTIONS
-#define TARGET_MEM_FUNCTIONS
-#endif
-
-/* Get machine-independent configuration parameters for RTEMS.  */
-#include <rtems.h>
+  -D__rtems__ -Asystem=rtems"

@@ -18,6 +18,9 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+/* Let mips.c know we need the Irix6 functions.  */
+#define TARGET_IRIX6 1
+
 /* Default to -mabi=n32 and -mips3.  */
 #define MIPS_ISA_DEFAULT 3
 #define MIPS_ABI_DEFAULT ABI_N32
@@ -31,7 +34,7 @@ Boston, MA 02111-1307, USA.  */
 #include "mips/abi64.h"
 
 /* Irix6 assembler does handle DWARF2 directives.  Override setting in
- irix5.h file.  */
+   irix5.h file.  */
 #undef DWARF2_UNWIND_INFO
 
 /* The Irix6 assembler will sometimes assign labels to the wrong
@@ -121,6 +124,18 @@ Boston, MA 02111-1307, USA.  */
 %{mabi=64: -D__mips64} \
 %{!mabi*: -D__mips64}"
 
+/* The GNU C++ standard library requires that __EXTENSIONS__ and
+   _SGI_SOURCE be defined on at least irix6.2 and probably all irix6
+   prior to 6.5.  They normally get defined in SUBTARGET_CPP_SPEC if
+   !ansi, for g++ we want them regardless.  We don't need this on
+   irix6.5 itself, but it shouldn't hurt other than the namespace
+   pollution.  */
+#undef CPLUSPLUS_CPP_SPEC
+#define CPLUSPLUS_CPP_SPEC "\
+-D__LANGUAGE_C_PLUS_PLUS -D_LANGUAGE_C_PLUS_PLUS \
+%{ansi:-D__EXTENSIONS__ -D_SGI_SOURCE} %(cpp) \
+"
+
 /* Irix 6 uses DWARF-2.  */
 #define DWARF2_DEBUGGING_INFO
 #define MIPS_DEBUGGING_INFO
@@ -128,8 +143,9 @@ Boston, MA 02111-1307, USA.  */
 #define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
 /* Force the generation of dwarf .debug_frame sections even if not
-   compiling -g.  This guarantees that we can unwind the stack. */
+   compiling -g.  This guarantees that we can unwind the stack.  */
 #define DWARF2_FRAME_INFO 1
+
 /* The size in bytes of a DWARF field indicating an offset or length
    relative to a debug info section, specified to be 4 bytes in the DWARF-2
    specification.  The SGI/MIPS ABI defines it to be the same as PTR_SIZE.  */
@@ -155,8 +171,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_UNDEF_FUNCTION
 #undef ASM_OUTPUT_EXTERNAL_LIBCALL
 #undef ASM_DECLARE_FUNCTION_SIZE
-#undef UNALIGNED_SHORT_ASM_OP
-#undef UNALIGNED_INT_ASM_OP
 
 /* Stuff we need for Irix 6 that isn't in Irix 5.  */
 
@@ -217,16 +231,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define POPSECTION_ASM_OP	"\t.popsection"
 
-#define DEBUG_INFO_SECTION	".debug_info,0x7000001e,0,0,1"
-#define DEBUG_LINE_SECTION	".debug_line,0x7000001e,0,0,1"
-#define SFNAMES_SECTION		".debug_sfnames,0x7000001e,0,0,1"
-#define SRCINFO_SECTION		".debug_srcinfo,0x7000001e,0,0,1"
-#define MACINFO_SECTION		".debug_macinfo,0x7000001e,0,0,1"
-#define PUBNAMES_SECTION	".debug_pubnames,0x7000001e,0,0,1"
-#define ARANGES_SECTION		".debug_aranges,0x7000001e,0,0,1"
-#define FRAME_SECTION		".debug_frame,0x7000001e,0x08000000,0,1"
-#define ABBREV_SECTION		".debug_abbrev,0x7000001e,0,0,1"
-
 /* ??? If no mabi=X option give, but a mipsX option is, then should depend
    on the mipsX option.  */
 /* If no mips[3,4] option given, give the appropriate default for mabi=X */
@@ -234,7 +238,7 @@ Boston, MA 02111-1307, USA.  */
 #define SUBTARGET_ASM_SPEC "%{!mabi*:-n32} %{!mips*: %{!mabi*:-mips3} %{mabi=n32:-mips3} %{mabi=64:-mips4}}"
 
 /* Must pass -g0 to the assembler, otherwise it may overwrite our
-   debug info with its own debug info. */
+   debug info with its own debug info.  */
 /* Must pass -show instead of -v.  */
 /* Must pass -G 0 to the assembler, otherwise we may get warnings about
    GOT overflow.  */
@@ -252,8 +256,6 @@ Boston, MA 02111-1307, USA.  */
 #undef SUBTARGET_ASM_OPTIMIZING_SPEC
 #define SUBTARGET_ASM_OPTIMIZING_SPEC "-O0"
 
-/* Stuff for constructors.  Start here.  */
-
 /* The assembler now accepts .section pseudo-ops, but it does not allow
    one to change the section in the middle of a function, so we can't use
    the INIT_SECTION_ASM_OP code in crtstuff.  But we can build up the ctor
@@ -264,43 +266,13 @@ Boston, MA 02111-1307, USA.  */
 #define CONST_SECTION_ASM_OP_32	"\t.rdata"
 #define CONST_SECTION_ASM_OP_64	"\t.section\t.rodata"
 
-/* The IRIX 6 assembler .section directive takes four additional args:
-   section type, flags, entry size, and alignment.  The alignment of the
-   .ctors and .dtors sections needs to be the same as the size of a pointer
-   so that the linker doesn't add padding between elements.  */
-#if defined (CRT_BEGIN) || defined (CRT_END)
-
-/* If we are included from crtstuff.c, these need to be plain strings.
-   _MIPS_SZPTR is defined in SUBTARGET_CPP_SPEC above.  */
-#if _MIPS_SZPTR == 64
-#define CTORS_SECTION_ASM_OP "\t.section\t.ctors,1,2,0,8"
-#define DTORS_SECTION_ASM_OP "\t.section\t.dtors,1,2,0,8"
-#define EH_FRAME_SECTION_ASM_OP "\t.section\t.eh_frame,1,2,0,8"
-#else /* _MIPS_SZPTR != 64 */
-#define CTORS_SECTION_ASM_OP "\t.section\t.ctors,1,2,0,4"
-#define DTORS_SECTION_ASM_OP "\t.section\t.dtors,1,2,0,4"
-#define EH_FRAME_SECTION_ASM_OP "\t.section\t.eh_frame,1,2,0,4"
-
-#endif /* _MIPS_SZPTR == 64 */
-
-#else /* ! (defined (CRT_BEGIN) || defined (CRT_END)) */
-
-/* If we are included from varasm.c, these need to depend on -mabi.  */
-#define CTORS_SECTION_ASM_OP \
-  (Pmode == DImode ? "\t.section\t.ctors,1,2,0,8" : "\t.section\t.ctors,1,2,0,4")
-#define DTORS_SECTION_ASM_OP \
-  (Pmode == DImode ? "\t.section\t.dtors,1,2,0,8" : "\t.section\t.dtors,1,2,0,4")
-#define EH_FRAME_SECTION_ASM_OP \
-  (Pmode == DImode ? "\t.section\t.eh_frame,1,2,0,8" : "\t.section\t.eh_frame,1,2,0,4")
-#endif /* defined (CRT_BEGIN) || defined (CRT_END) */
-
 /* A default list of other sections which we might be "in" at any given
    time.  For targets that use additional sections (e.g. .tdesc) you
    should override this definition in the target-specific file which
    includes this file.  */
 
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_rdata, in_const, in_ctors, in_dtors
+#define EXTRA_SECTIONS in_sdata, in_rdata, in_const
 
 /* A default list of extra section function definitions.  For targets
    that use additional sections (e.g. .tdesc) you should override this
@@ -332,73 +304,60 @@ rdata_section ()							\
       in_section = in_rdata;						\
     }									\
 }									\
-  CTORS_SECTION_FUNCTION						\
-  DTORS_SECTION_FUNCTION
-
-#define CTORS_SECTION_FUNCTION						\
-void									\
-ctors_section ()							\
+									\
+const char *								\
+current_section_name ()							\
 {									\
-  if (in_section != in_ctors)						\
+  switch (in_section)							\
     {									\
-      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);		\
-      in_section = in_ctors;						\
+    case no_section:	return NULL;					\
+    case in_text:	return ".text";					\
+    case in_data:	return ".data";					\
+    case in_sdata:	return ".sdata";				\
+    case in_bss:	return ".bss";					\
+    case in_rdata:							\
+    case in_const:							\
+      if (mips_abi != ABI_32 && mips_abi != ABI_O64)			\
+	return ".rodata";						\
+      else								\
+	return ".rdata";						\
+    case in_named:							\
+      return in_named_name;						\
     }									\
+  abort ();								\
+}									\
+									\
+unsigned int								\
+current_section_flags ()						\
+{									\
+  switch (in_section)							\
+    {									\
+    case no_section:	return 0;					\
+    case in_text:	return SECTION_CODE;				\
+    case in_data:	return SECTION_WRITE;				\
+    case in_sdata:	return SECTION_WRITE | SECTION_SMALL;		\
+    case in_bss:	return SECTION_WRITE | SECTION_BSS;		\
+    case in_rdata:							\
+    case in_const:	return 0;					\
+    case in_named:	return get_named_section_flags (in_named_name);	\
+    }									\
+  abort ();								\
 }
 
-#define DTORS_SECTION_FUNCTION						\
-void									\
-dtors_section ()							\
-{									\
-  if (in_section != in_dtors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);		\
-      in_section = in_dtors;						\
-    }									\
-}
+/* Switch into a generic section.  */
+#undef TARGET_ASM_NAMED_SECTION
+#define TARGET_ASM_NAMED_SECTION  iris6_asm_named_section
 
-/* A C statement (sans semicolon) to output an element in the table of
-   global constructors.  */
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
-  do {									\
-    ctors_section ();							\
-    fprintf (FILE, "\t%s\t ",						\
-	     (Pmode == DImode) ? ".dword" : ".word");			\
-    assemble_name (FILE, NAME);						\
-    fprintf (FILE, "\n");						\
-  } while (0)
+/* SGI assembler needs all sorts of extra help to do alignment properly.  */
+#undef ASM_OUTPUT_ALIGN
+#define ASM_OUTPUT_ALIGN iris6_asm_output_align
+#undef ASM_FILE_START
+#define ASM_FILE_START  iris6_asm_file_start
+#undef ASM_FILE_END
+#define ASM_FILE_END	iris6_asm_file_end
 
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
-  do {									\
-    dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ",						\
-	     (Pmode == DImode) ? ".dword" : ".word");			\
-    assemble_name (FILE, NAME);              				\
-    fprintf (FILE, "\n");						\
-  } while (0)
-
-/* A C statement to output something to the assembler file to switch to section
-   NAME for object DECL which is either a FUNCTION_DECL, a VAR_DECL or
-   NULL_TREE.  */
-
-#define ASM_OUTPUT_SECTION_NAME(F, DECL, NAME, RELOC)			\
-do {									\
-  extern FILE *asm_out_text_file;					\
-  if ((DECL) && TREE_CODE (DECL) == FUNCTION_DECL)			\
-    fprintf (asm_out_text_file, "\t.section %s,1,6,4,4\n", (NAME));	\
-  else if ((DECL) && DECL_READONLY_SECTION (DECL, RELOC))		\
-    fprintf (F, "\t.section %s,1,2,0,8\n", (NAME));			\
-  else if (! strcmp (NAME, ".bss"))                         		\
-    fprintf (F, "\t.section %s,\"aw\",@nobits\n", (NAME));      	\
-  else									\
-    fprintf (F, "\t.section %s,1,3,0,8\n", (NAME));			\
-} while (0)
-
-/* Stuff for constructors.  End here.  */
-
-/* ??? Perhaps just include svr4.h in this file?  */
+#undef MAX_OFILE_ALIGNMENT
+#define MAX_OFILE_ALIGNMENT (32768*8)
 
 /* ??? SGI assembler may core dump when compiling with -g.
    Sometimes as succeeds, but then we get a linker error. (cmds.c in 072.sc)
@@ -420,11 +379,10 @@ do									   \
   {									   \
     if (mips_abi != ABI_32 && mips_abi != ABI_O64)			   \
       {									   \
-	fprintf (STREAM, "%s\n", BSS_SECTION_ASM_OP);			   \
+	bss_section ();							   \
 	mips_declare_object (STREAM, NAME, "", ":\n", 0);		   \
 	ASM_OUTPUT_ALIGN (STREAM, floor_log2 (ALIGN / BITS_PER_UNIT));	   \
 	ASM_OUTPUT_SKIP (STREAM, SIZE);					   \
-	fprintf (STREAM, "%s\n", POPSECTION_ASM_OP);			   \
       }									   \
     else								   \
       mips_declare_object (STREAM, NAME, "\n\t.lcomm\t", ",%u\n", (SIZE)); \
@@ -451,7 +409,9 @@ do									\
        size_directive_output = 1;					\
        fprintf (STREAM, "%s", SIZE_ASM_OP);				\
        assemble_name (STREAM, NAME);					\
-       fprintf (STREAM, ",%d\n", int_size_in_bytes (TREE_TYPE (DECL)));	\
+       fprintf (STREAM, ",");						\
+       fprintf (STREAM, HOST_WIDE_INT_PRINT_DEC, int_size_in_bytes (TREE_TYPE (DECL)));	\
+       fprintf (STREAM, "\n");						\
      }									\
    mips_declare_object (STREAM, NAME, "", ":\n", 0);			\
  }									\
@@ -480,7 +440,9 @@ do {									 \
 	 size_directive_output = 1;					 \
 	 fprintf (FILE, "%s", SIZE_ASM_OP);				 \
 	 assemble_name (FILE, name);					 \
-	 fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL))); \
+	 fprintf (FILE, ",");						 \
+	 fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, int_size_in_bytes (TREE_TYPE (DECL))); \
+	 fprintf (FILE, "\n");						 \
        }								 \
    } while (0)
 
@@ -557,6 +519,6 @@ do {									 \
 %{call_shared} %{no_archive} %{exact_version} %{w} \
 %{!shared: %{!non_shared: %{!call_shared: -call_shared -no_unresolved}}} \
 %{rpath} -init __do_global_ctors -fini __do_global_dtors \
-%{shared:-hidden_symbol __do_global_ctors,__do_global_dtors,__EH_FRAME_BEGIN__,__frame_dummy} \
+%{shared:-hidden_symbol __do_global_ctors,__do_global_ctors_1,__do_global_dtors} \
 -_SYSTYPE_SVR4 -woff 131 \
 %{mabi=32: -32}%{mabi=n32: -n32}%{mabi=64: -64}%{!mabi*: -n32}"

@@ -1,23 +1,23 @@
 /* Generate code from machine description to emit insns as rtl.
-   Copyright (C) 1987, 1988, 1991, 1994, 1995, 1997, 1998, 1999, 2000
+   Copyright (C) 1987, 1988, 1991, 1994, 1995, 1997, 1998, 1999, 2000, 2001
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 #include "hconfig.h"
@@ -44,6 +44,7 @@ struct clobber_pat
   rtx pattern;
   int first_clobber;
   struct clobber_pat *next;
+  int has_hard_reg;
 } *clobber_list;
 
 /* Records one insn that uses the clobber list.  */
@@ -57,11 +58,12 @@ struct clobber_ent
 static void max_operand_1		PARAMS ((rtx));
 static int max_operand_vec		PARAMS ((rtx, int));
 static void print_code			PARAMS ((RTX_CODE));
-static void gen_exp			PARAMS ((rtx, enum rtx_code));
+static void gen_exp			PARAMS ((rtx, enum rtx_code, char *));
 static void gen_insn			PARAMS ((rtx));
 static void gen_expand			PARAMS ((rtx));
 static void gen_split			PARAMS ((rtx));
 static void output_add_clobbers		PARAMS ((void));
+static void output_added_clobbers_hard_reg_p PARAMS ((void));
 static void gen_rtx_scratch		PARAMS ((rtx, enum rtx_code));
 static void output_peephole2_scratches	PARAMS ((rtx));
 
@@ -70,10 +72,10 @@ static void
 max_operand_1 (x)
      rtx x;
 {
-  register RTX_CODE code;
-  register int i;
-  register int len;
-  register const char *fmt;
+  RTX_CODE code;
+  int i;
+  int len;
+  const char *fmt;
 
   if (x == 0)
     return;
@@ -112,8 +114,8 @@ max_operand_vec (insn, arg)
      rtx insn;
      int arg;
 {
-  register int len = XVECLEN (insn, arg);
-  register int i;
+  int len = XVECLEN (insn, arg);
+  int i;
 
   max_opno = -1;
   max_dup_opno = -1;
@@ -129,7 +131,7 @@ static void
 print_code (code)
      RTX_CODE code;
 {
-  register const char *p1;
+  const char *p1;
   for (p1 = GET_RTX_NAME (code); *p1; p1++)
     putchar (TOUPPER(*p1));
 }
@@ -153,14 +155,15 @@ gen_rtx_scratch (x, subroutine_type)
    substituting any operand references appearing within.  */
 
 static void
-gen_exp (x, subroutine_type)
+gen_exp (x, subroutine_type, used)
      rtx x;
      enum rtx_code subroutine_type;
+     char *used;
 {
-  register RTX_CODE code;
-  register int i;
-  register int len;
-  register const char *fmt;
+  RTX_CODE code;
+  int i;
+  int len;
+  const char *fmt;
 
   if (x == 0)
     {
@@ -174,6 +177,15 @@ gen_exp (x, subroutine_type)
     {
     case MATCH_OPERAND:
     case MATCH_DUP:
+      if (used)
+	{
+	  if (used[XINT (x, 0)])
+	    {
+	      printf ("copy_rtx (operand%d)", XINT (x, 0));
+	      return;
+	    }
+	  used[XINT (x, 0)] = 1;
+	}
       printf ("operand%d", XINT (x, 0));
       return;
 
@@ -186,7 +198,7 @@ gen_exp (x, subroutine_type)
       for (i = 0; i < XVECLEN (x, 1); i++)
 	{
 	  printf (",\n\t\t");
-	  gen_exp (XVECEXP (x, 1, i), subroutine_type);
+	  gen_exp (XVECEXP (x, 1, i), subroutine_type, used);
 	}
       printf (")");
       return;
@@ -197,7 +209,7 @@ gen_exp (x, subroutine_type)
       for (i = 0; i < XVECLEN (x, 2); i++)
 	{
 	  printf (",\n\t\t");
-	  gen_exp (XVECEXP (x, 2, i), subroutine_type);
+	  gen_exp (XVECEXP (x, 2, i), subroutine_type, used);
 	}
       printf (")");
       return;
@@ -260,7 +272,7 @@ gen_exp (x, subroutine_type)
 	break;
       printf (",\n\t");
       if (fmt[i] == 'e' || fmt[i] == 'u')
-	gen_exp (XEXP (x, i), subroutine_type);
+	gen_exp (XEXP (x, i), subroutine_type, used);
       else if (fmt[i] == 'i')
 	printf ("%u", XINT (x, i));
       else if (fmt[i] == 's')
@@ -272,7 +284,7 @@ gen_exp (x, subroutine_type)
 	  for (j = 0; j < XVECLEN (x, i); j++)
 	    {
 	      printf (",\n\t\t");
-	      gen_exp (XVECEXP (x, i, j), subroutine_type);
+	      gen_exp (XVECEXP (x, i, j), subroutine_type, used);
 	    }
 	  printf (")");
 	}
@@ -289,7 +301,7 @@ gen_insn (insn)
      rtx insn;
 {
   int operands;
-  register int i;
+  int i;
 
   /* See if the pattern for this insn ends with a group of CLOBBERs of (hard)
      registers or MATCH_SCRATCHes.  If so, store away the information for
@@ -297,18 +309,25 @@ gen_insn (insn)
 
   if (XVEC (insn, 1))
     {
+      int has_hard_reg = 0;
+
       for (i = XVECLEN (insn, 1) - 1; i > 0; i--)
-	if (GET_CODE (XVECEXP (insn, 1, i)) != CLOBBER
-	    || (GET_CODE (XEXP (XVECEXP (insn, 1, i), 0)) != REG
-		&& GET_CODE (XEXP (XVECEXP (insn, 1, i), 0)) != MATCH_SCRATCH))
-	  break;
+	{
+	  if (GET_CODE (XVECEXP (insn, 1, i)) != CLOBBER)
+	    break;
+
+	  if (GET_CODE (XEXP (XVECEXP (insn, 1, i), 0)) == REG)
+	    has_hard_reg = 1;
+	  else if (GET_CODE (XEXP (XVECEXP (insn, 1, i), 0)) != MATCH_SCRATCH)
+	    break;
+	}
 
       if (i != XVECLEN (insn, 1) - 1)
 	{
-	  register struct clobber_pat *p;
-	  register struct clobber_ent *link
+	  struct clobber_pat *p;
+	  struct clobber_ent *link
 	    = (struct clobber_ent *) xmalloc (sizeof (struct clobber_ent));
-	  register int j;
+	  int j;
 
 	  link->code_number = insn_code_number;
 
@@ -349,6 +368,7 @@ gen_insn (insn)
 	      p->pattern = insn;
 	      p->first_clobber = i + 1;
 	      p->next = clobber_list;
+	      p->has_hard_reg = has_hard_reg;
 	      clobber_list = p;
 	    }
 
@@ -387,7 +407,7 @@ gen_insn (insn)
   if (XVECLEN (insn, 1) == 1)
     {
       printf ("  return ");
-      gen_exp (XVECEXP (insn, 1, 0), DEFINE_INSN);
+      gen_exp (XVECEXP (insn, 1, 0), DEFINE_INSN, NULL);
       printf (";\n}\n\n");
     }
   else
@@ -398,7 +418,7 @@ gen_insn (insn)
       for (i = 0; i < XVECLEN (insn, 1); i++)
 	{
 	  printf (",\n\t\t");
-	  gen_exp (XVECEXP (insn, 1, i), DEFINE_INSN);
+	  gen_exp (XVECEXP (insn, 1, i), DEFINE_INSN, NULL);
 	}
       printf ("));\n}\n\n");
     }
@@ -411,7 +431,7 @@ gen_expand (expand)
      rtx expand;
 {
   int operands;
-  register int i;
+  int i;
 
   if (strlen (XSTR (expand, 0)) == 0)
     fatal ("define_expand lacks a name");
@@ -444,7 +464,7 @@ gen_expand (expand)
       && XVECLEN (expand, 1) == 1)
     {
       printf ("  return ");
-      gen_exp (XVECEXP (expand, 1, 0), DEFINE_EXPAND);
+      gen_exp (XVECEXP (expand, 1, 0), DEFINE_EXPAND, NULL);
       printf (";\n}\n\n");
       return;
     }
@@ -454,7 +474,7 @@ gen_expand (expand)
   for (i = operands; i <= max_dup_opno; i++)
     printf ("  rtx operand%d;\n", i);
   for (; i <= max_scratch_opno; i++)
-    printf ("  rtx operand%d;\n", i);
+    printf ("  rtx operand%d ATTRIBUTE_UNUSED;\n", i);
   printf ("  rtx _val = 0;\n");
   printf ("  start_sequence ();\n");
 
@@ -525,7 +545,7 @@ gen_expand (expand)
 	printf ("  emit (");
       else
 	printf ("  emit_insn (");
-      gen_exp (next, DEFINE_EXPAND);
+      gen_exp (next, DEFINE_EXPAND, NULL);
       printf (");\n");
       if (GET_CODE (next) == SET && GET_CODE (SET_DEST (next)) == PC
 	  && GET_CODE (SET_SRC (next)) == LABEL_REF)
@@ -546,12 +566,12 @@ static void
 gen_split (split)
      rtx split;
 {
-  register int i;
+  int i;
   int operands;
-  const char *name = "split";
-
-  if (GET_CODE (split) == DEFINE_PEEPHOLE2)
-    name = "peephole2";
+  const char *const name =
+    ((GET_CODE (split) == DEFINE_PEEPHOLE2) ? "peephole2" : "split");
+  const char *unused;
+  char *used;
 
   if (XVEC (split, 0) == 0)
     fatal ("define_%s (definition %d) lacks a pattern", name,
@@ -564,22 +584,24 @@ gen_split (split)
 
   max_operand_vec (split, 2);
   operands = MAX (max_opno, MAX (max_dup_opno, max_scratch_opno)) + 1;
+  unused = (operands == 0 ? " ATTRIBUTE_UNUSED" : "");
+  used = xcalloc (1, operands);
 
   /* Output the prototype, function name and argument declarations.  */
   if (GET_CODE (split) == DEFINE_PEEPHOLE2)
     {
       printf ("extern rtx gen_%s_%d PARAMS ((rtx, rtx *));\n",
 	      name, insn_code_number);
-      printf ("rtx\ngen_%s_%d (curr_insn, operands)\n\
-     rtx curr_insn ATTRIBUTE_UNUSED;\n\
-     rtx *operands;\n", 
+      printf ("rtx\ngen_%s_%d (curr_insn, operands)\n",
 	      name, insn_code_number);
+      printf ("     rtx curr_insn ATTRIBUTE_UNUSED;\n");
+      printf ("     rtx *operands%s;\n", unused);
     }
   else
     {
       printf ("extern rtx gen_split_%d PARAMS ((rtx *));\n", insn_code_number);
-      printf ("rtx\ngen_%s_%d (operands)\n     rtx *operands;\n", name,
-	      insn_code_number);
+      printf ("rtx\ngen_%s_%d (operands)\n", name, insn_code_number);
+      printf ("      rtx *operands%s;\n", unused);
     }
   printf ("{\n");
 
@@ -635,7 +657,7 @@ gen_split (split)
 	printf ("  emit (");
       else
 	printf ("  emit_insn (");
-      gen_exp (next, GET_CODE (split));
+      gen_exp (next, GET_CODE (split), used);
       printf (");\n");
       if (GET_CODE (next) == SET && GET_CODE (SET_DEST (next)) == PC
 	  && GET_CODE (SET_SRC (next)) == LABEL_REF)
@@ -648,6 +670,8 @@ gen_split (split)
   printf ("  _val = gen_sequence ();\n");
   printf ("  end_sequence ();\n");
   printf ("  return _val;\n}\n\n");
+
+  free (used);
 }
 
 /* Write a function, `add_clobbers', that is given a PARALLEL of sufficient
@@ -662,7 +686,7 @@ output_add_clobbers ()
   int i;
 
   printf ("\n\nvoid\nadd_clobbers (pattern, insn_code_number)\n");
-  printf ("     rtx pattern;\n     int insn_code_number;\n");
+  printf ("     rtx pattern ATTRIBUTE_UNUSED;\n     int insn_code_number;\n");
   printf ("{\n");
   printf ("  switch (insn_code_number)\n");
   printf ("    {\n");
@@ -676,7 +700,7 @@ output_add_clobbers ()
 	{
 	  printf ("      XVECEXP (pattern, 0, %d) = ", i);
 	  gen_exp (XVECEXP (clobber->pattern, 1, i),
-		   GET_CODE (clobber->pattern));
+		   GET_CODE (clobber->pattern), NULL);
 	  printf (";\n");
 	}
 
@@ -689,8 +713,46 @@ output_add_clobbers ()
   printf ("}\n");
 }
 
+/* Write a function, `added_clobbers_hard_reg_p' this is given an insn_code
+   number that needs clobbers and returns 1 if they include a clobber of a
+   hard reg and 0 if they just clobber SCRATCH.  */
+
+static void
+output_added_clobbers_hard_reg_p ()
+{
+  struct clobber_pat *clobber;
+  struct clobber_ent *ent;
+  int clobber_p, used;
+
+  printf ("\n\nint\nadded_clobbers_hard_reg_p (insn_code_number)\n");
+  printf ("     int insn_code_number;\n");
+  printf ("{\n");
+  printf ("  switch (insn_code_number)\n");
+  printf ("    {\n");
+
+  for (clobber_p = 0; clobber_p <= 1; clobber_p++)
+    {
+      used = 0;
+      for (clobber = clobber_list; clobber; clobber = clobber->next)
+	if (clobber->has_hard_reg == clobber_p)
+	  for (ent = clobber->insns; ent; ent = ent->next)
+	    {
+	      printf ("    case %d:\n", ent->code_number);
+	      used++;
+	    }
+
+      if (used)
+	printf ("      return %d;\n\n", clobber_p);
+    }
+
+  printf ("    default:\n");
+  printf ("      abort ();\n");
+  printf ("    }\n");
+  printf ("}\n");
+}
+
 /* Generate code to invoke find_free_register () as needed for the
-   scratch registers used by the peephole2 pattern in SPLIT. */
+   scratch registers used by the peephole2 pattern in SPLIT.  */
 
 static void
 output_peephole2_scratches (split)
@@ -744,9 +806,9 @@ main (argc, argv)
   progname = "genemit";
 
   if (argc <= 1)
-    fatal ("No input file name.");
+    fatal ("no input file name");
 
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
   /* Assign sequential codes to all entries in the machine description
@@ -764,6 +826,7 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"tm_p.h\"\n");
   printf ("#include \"function.h\"\n");
   printf ("#include \"expr.h\"\n");
+  printf ("#include \"optabs.h\"\n");
   printf ("#include \"real.h\"\n");
   printf ("#include \"flags.h\"\n");
   printf ("#include \"output.h\"\n");
@@ -772,6 +835,7 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"recog.h\"\n");
   printf ("#include \"resource.h\"\n");
   printf ("#include \"reload.h\"\n");
+  printf ("#include \"toplev.h\"\n");
   printf ("#include \"ggc.h\"\n\n");
   printf ("#define FAIL return (end_sequence (), _val)\n");
   printf ("#define DONE return (_val = gen_sequence (), end_sequence (), _val)\n");
@@ -810,8 +874,10 @@ from the machine description file `md'.  */\n\n");
       ++insn_index_number;
     }
 
-  /* Write out the routine to add CLOBBERs to a pattern.  */
+  /* Write out the routines to add CLOBBERs to a pattern and say whether they
+     clobber a hard reg.  */
   output_add_clobbers ();
+  output_added_clobbers_hard_reg_p ();
 
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);

@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -42,7 +39,7 @@ Options Controlling C Dialect
 =============================
 
    The following options control the dialect of C (or languages derived
-from C, such as C++ and Objective C) that the compiler accepts:
+from C, such as C++ and Objective-C) that the compiler accepts:
 
 `-ansi'
      In C mode, support all ISO C89 programs.  In C++ mode, remove GNU
@@ -97,14 +94,16 @@ from C, such as C++ and Objective C) that the compiler accepts:
     `iso9899:1999'
     `iso9899:199x'
           ISO C99.  Note that this standard is not yet fully supported;
-          see `http://gcc.gnu.org/c99status.html' for more information.
-          The names `c9x' and `iso9899:199x' are deprecated.
+          see `http://gcc.gnu.org/gcc-3.1/c99status.html' for more
+          information.  The names `c9x' and `iso9899:199x' are
+          deprecated.
 
     `gnu89'
           Default, ISO C89 plus GNU extensions (including some C99
           features).
 
     `gnu99'
+
     `gnu9x'
           ISO C99 plus GNU extensions.  When ISO C99 is fully
           implemented in GCC, this will become the default.  The name
@@ -153,6 +152,7 @@ from C, such as C++ and Objective C) that the compiler accepts:
      keyword in ISO C99.
 
 `-fno-builtin'
+`-fno-builtin-FUNCTION (C and Objective-C only)'
      Don't recognize built-in functions that do not begin with
      `__builtin_' as prefix.  *Note Other built-in functions provided
      by GCC: Other Builtins, for details of the functions affected,
@@ -176,6 +176,17 @@ from C, such as C++ and Objective C) that the compiler accepts:
      built-in functions to implement many functions (like
      `std::strchr'), so that you automatically get efficient code.
 
+     With the `-fno-builtin-FUNCTION' option, not available when
+     compiling C++, only the built-in function FUNCTION is disabled.
+     FUNCTION must not begin with `__builtin_'.  If a function is named
+     this is not built-in in this version of GCC, this option is
+     ignored.  There is no corresponding `-fbuiltin-FUNCTION' option;
+     if you wish to enable built-in functions selectively when using
+     `-fno-builtin' or `-ffreestanding', you may define macros such as:
+
+          #define abs(n)          __builtin_abs ((n))
+          #define strcpy(d, s)    __builtin_strcpy ((d), (s))
+
 `-fhosted'
      Assert that compilation takes place in a hosted environment.  This
      implies `-fbuiltin'.  A hosted environment is one in which the
@@ -196,6 +207,15 @@ from C, such as C++ and Objective C) that the compiler accepts:
 `-trigraphs'
      Support ISO C trigraphs.  The `-ansi' option (and `-std' options
      for strict ISO C conformance) implies `-trigraphs'.
+
+`-no-integrated-cpp'
+     Invoke the external cpp during compilation.  The default is to use
+     the integrated cpp (internal cpp).  This option also allows a
+     user-supplied cpp via the `-B' option.  This flag is applicable in
+     both C and C++ modes.
+
+     We do not guarantee to retain this option in future, and we may
+     change its semantics.
 
 `-traditional'
      Attempt to support some aspects of traditional C compilers.
@@ -235,6 +255,8 @@ from C, such as C++ and Objective C) that the compiler accepts:
           `-traditional', `\x' is a prefix for the hexadecimal
           representation of a character, and `\a' produces a bell.
 
+     This option is deprecated and may be removed.
+
      You may wish to use `-fno-builtin' as well as `-traditional' if
      your program uses names that are normally GNU C built-in functions
      for other purposes of its own.
@@ -244,42 +266,11 @@ from C, such as C++ and Objective C) that the compiler accepts:
      with ISO C header files and you cannot use `-traditional' on such
      systems to compile files that include any system headers.
 
-     The `-traditional' option also enables `-traditional-cpp', which
-     is described next.
+     The `-traditional' option also enables `-traditional-cpp'.
 
 `-traditional-cpp'
      Attempt to support some aspects of traditional C preprocessors.
-     Specifically:
-
-        * Comments convert to nothing at all, rather than to a space.
-          This allows traditional token concatenation.
-
-        * In a preprocessing directive, the `#' symbol must appear as
-          the first character of a line.
-
-        * Macro arguments are recognized within string constants in a
-          macro definition (and their values are stringified, though
-          without additional quote marks, when they appear in such a
-          context).  The preprocessor always considers a string
-          constant to end at a newline.
-
-        * The predefined macro `__STDC__' is not defined when you use
-          `-traditional', but `__GNUC__' is (since the GNU extensions
-          which `__GNUC__' indicates are not affected by
-          `-traditional').  If you need to write header files that work
-          differently depending on whether `-traditional' is in use, by
-          testing both of these predefined macros you can distinguish
-          four situations: GNU C, traditional GNU C, other ISO C
-          compilers, and other old C compilers.  The predefined macro
-          `__STDC_VERSION__' is also not defined when you use
-          `-traditional'.  *Note Standard Predefined Macros:
-          (cpp.info)Standard Predefined, for more discussion of these
-          and other predefined macros.
-
-        * The preprocessor considers a string constant to end at a
-          newline (unless the newline is escaped with `\').  (Without
-          `-traditional', string constants can contain the newline
-          character as typed.)
+     See the GNU CPP manual for details.
 
 `-fcond-mismatch'
      Allow conditional expressions with mismatched types in the second
@@ -427,10 +418,10 @@ GCC.
      specifications.
 
 `-fexternal-templates'
-     Cause template instantiations to obey `#pragma interface' and
-     `implementation'; template instances are emitted or not according
-     to the location of the template definition.  *Note Template
-     Instantiation::, for more information.
+     Cause `#pragma interface' and `implementation' to apply to
+     template instantiation; template instances are emitted or not
+     according to the location of the template definition.  *Note
+     Template Instantiation::, for more information.
 
      This option is deprecated.
 
@@ -505,9 +496,9 @@ GCC.
      for GNU C.
 
 `-frepo'
-     Enable automatic template instantiation.  This option also implies
-     `-fno-implicit-templates'.  *Note Template Instantiation::, for
-     more information.
+     Enable automatic template instantiation at link time.  This option
+     also implies `-fno-implicit-templates'.  *Note Template
+     Instantiation::, for more information.
 
 `-fno-rtti'
      Disable generation of information about every class with virtual
@@ -535,6 +526,17 @@ GCC.
      This option is required for fully standards-compliant handling of
      static destructors, but will only work if your C library supports
      `__cxa_atexit'.
+
+`-fvtable-gc'
+     Emit special relocations for vtables and virtual function
+     references so that the linker can identify unused virtual
+     functions and zero out vtable slots that refer to them.  This is
+     most useful with `-ffunction-sections' and `-Wl,--gc-sections', in
+     order to also discard the functions themselves.
+
+     This optimization requires GNU as and GNU ld.  Not all systems
+     support this option.  `-Wl,--gc-sections' is ignored without
+     `-static'.
 
 `-fno-weak'
      Do not use weak symbol support, even if it is provided by the
@@ -584,11 +586,34 @@ have meanings only for C++ programs:
    The following `-W...' options are not affected by `-Wall'.
 
 `-Weffc++ (C++ only)'
-     Warn about violations of various style guidelines from Scott
-     Meyers' `Effective C++' books.  If you use this option, you should
-     be aware that the standard library headers do not obey all of
-     these guidelines; you can use `grep -v' to filter out those
-     warnings.
+     Warn about violations of the following style guidelines from Scott
+     Meyers' `Effective C++' book:
+
+        * Item 11:  Define a copy constructor and an assignment
+          operator for classes with dynamically allocated memory.
+
+        * Item 12:  Prefer initialization to assignment in constructors.
+
+        * Item 14:  Make destructors virtual in base classes.
+
+        * Item 15:  Have `operator=' return a reference to `*this'.
+
+        * Item 23:  Don't try to return a reference when you must
+          return an object.
+
+
+     and about violations of the following style guidelines from Scott
+     Meyers' `More Effective C++' book:
+
+        * Item 6:  Distinguish between prefix and postfix forms of
+          increment and decrement operators.
+
+        * Item 7:  Never overload `&&', `||', or `,'.
+
+
+     If you use this option, you should be aware that the standard
+     library headers do not obey all of these guidelines; you can use
+     `grep -v' to filter out those warnings.
 
 `-Wno-deprecated (C++ only)'
      Do not warn about usage of deprecated features.  *Note Deprecated
@@ -611,19 +636,29 @@ have meanings only for C++ programs:
      compiler code but disables the helpful warning.
 
 `-Wold-style-cast (C++ only)'
-     Warn if an old-style (C-style) cast is used within a C++ program.
-     The new-style casts (`static_cast', `reinterpret_cast', and
-     `const_cast') are less vulnerable to unintended effects, and much
-     easier to grep for.
+     Warn if an old-style (C-style) cast to a non-void type is used
+     within a C++ program.  The new-style casts (`static_cast',
+     `reinterpret_cast', and `const_cast') are less vulnerable to
+     unintended effects, and much easier to grep for.
 
 `-Woverloaded-virtual (C++ only)'
-     Warn when a derived class function declaration may be an error in
-     defining a virtual function.  In a derived class, the definitions
-     of virtual functions must match the type signature of a virtual
-     function declared in the base class.  With this option, the
-     compiler warns when you define a function with the same name as a
-     virtual function, but with a type signature that does not match any
-     declarations from the base class.
+     Warn when a function declaration hides virtual functions from a
+     base class.  For example, in:
+
+          struct A {
+            virtual void f();
+          };
+          
+          struct B: public A {
+            void f(int);
+          };
+
+     the `A' class version of `f' is hidden in `B', and code like this:
+
+          B* b;
+          b->f();
+
+     will fail to compile.
 
 `-Wno-pmf-conversions (C++ only)'
      Disable the diagnostic for converting a bound pointer to member
@@ -726,7 +761,7 @@ correctly.
      is, in case the message is too long to fit on a single physical
      line and has to be wrapped, the source location won't be emitted
      (as prefix) again, over and over, in subsequent continuation
-     lines.  This is the default behaviour.
+     lines.  This is the default behavior.
 
 `-fdiagnostics-show-location=every-line'
      Only meaningful in line-wrapping mode.  Instructs the diagnostic

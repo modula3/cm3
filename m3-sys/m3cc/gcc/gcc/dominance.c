@@ -2,22 +2,22 @@
    Copyright (C) 2000 Free Software Foundation, Inc.
    Contributed by Michael Matz (matz@ifh.de).
   
-   This file is part of GNU CC.
+   This file is part of GCC.
  
-   GNU CC is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
-   GNU CC is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   along with GCC; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 /* This file implements the well known algorithm from Lengauer and Tarjan
    to compute the dominators in a control flow graph.  A basic block D is said
@@ -28,7 +28,7 @@
    block I(X), called the immediate dominator of X, which is the parent of X
    in the dominator tree.
 
-   The algorithm computes this dominator tree implicitely by computing for
+   The algorithm computes this dominator tree implicitly by computing for
    each block its immediate dominator.  We use tree balancing and path
    compression, so its the O(e*a(e,v)) variant, where a(e,v) is the very
    slowly growing functional inverse of the Ackerman function.  */
@@ -89,13 +89,13 @@ struct dom_info
      number of that node in DFS order counted from 1.  This is an index
      into most of the other arrays in this structure.  */
   TBB *dfs_order;
-  /* If x is the DFS-index of a node which correspondends with an basic block,
+  /* If x is the DFS-index of a node which corresponds with an basic block,
      dfs_to_bb[x] is that basic block.  Note, that in our structure there are
      more nodes that basic blocks, so only dfs_to_bb[dfs_order[bb->index]]==bb
      is true for every basic block bb, but not the opposite.  */
   basic_block *dfs_to_bb;
 
-  /* This is the next free DFS number when creating the DFS tree or forest. */
+  /* This is the next free DFS number when creating the DFS tree or forest.  */
   unsigned int dfsnum;
   /* The number of nodes in the DFS tree (==dfsnum-1).  */
   unsigned int nodes;
@@ -193,7 +193,7 @@ calc_dfs_tree_nonrec (di, bb, reverse)
      basic_block bb;
      enum cdi_direction reverse;
 {
-  /* We never call this with bb==EXIT_BLOCK_PTR (ENTRY_BLOCK_PTR if REVERSE). */
+  /* We never call this with bb==EXIT_BLOCK_PTR (ENTRY_BLOCK_PTR if REVERSE).  */
   /* We call this _only_ if bb is not already visited.  */
   edge e;
   TBB child_i, my_i = 0;
@@ -242,7 +242,7 @@ calc_dfs_tree_nonrec (di, bb, reverse)
 	      /* If the next node BN is either already visited or a border
 	         block the current edge is useless, and simply overwritten
 	         with the next edge out of the current node.  */
-	      if (di->dfs_order[bn->index] || bn == ex_block)
+	      if (bn == ex_block || di->dfs_order[bn->index])
 		{
 		  e = e->pred_next;
 		  continue;
@@ -253,7 +253,7 @@ calc_dfs_tree_nonrec (di, bb, reverse)
 	  else
 	    {
 	      bn = e->dest;
-	      if (di->dfs_order[bn->index] || bn == ex_block)
+	      if (bn == ex_block || di->dfs_order[bn->index])
 		{
 		  e = e->succ_next;
 		  continue;
@@ -523,7 +523,7 @@ calc_idoms (di, reverse)
       v--;
     }
 
-  /* Explicitely define the dominators.  */
+  /* Explicitly define the dominators.  */
   di->dom[1] = 0;
   for (v = 2; v <= di->nodes; v++)
     if (di->dom[v] != di->key[v])

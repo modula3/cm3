@@ -1,26 +1,24 @@
 #!/bin/sh
 # Construct makefile for libgcc.
-#   Copyright (C) 2000 Free Software Foundation, Inc.
+#   Copyright (C) 2000, 2002 Free Software Foundation, Inc.
 #
-# This file is part of GNU CC.
+# This file is part of GCC.
 
 # Arguments, taken from the environment, since there are a lot
 # of them, and positional args becomes quite ugly.
 #
 # objext
-# OLDCC
-# LIBGCC1
-# LIB1FUNCS
 # LIB1ASMFUNCS
-# LIB1FUNCS_EXTRA
-# LIB2FUNCS
+# LIB2FUNCS_1
+# LIB2FUNCS_2
 # LIB2FUNCS_ST
 # LIB2ADD
+# LIB2ADD_ST 
 # LIB2ADDEH
 # LIB2ADDEHDEP
-# LIB2ADD_ST
 # FPBIT
 # FPBIT_FUNCS
+# LIB2_DIVMOD_FUNCS
 # DPBIT
 # DPBIT_FUNCS
 # LIBGCC
@@ -30,9 +28,11 @@
 # SHLIB_LINK
 # SHLIB_MULTILIB
 # SHLIB_MKMAP
+# SHLIB_MKMAP_OPTS
 # SHLIB_MAPFILES
 # SHLIB_NM_FLAGS
 # SHLIB_INSTALL
+# SHLIB_SLIBDIR_SUFFIXES
 
 # Make needs VPATH to be literal.
 echo 'srcdir = @srcdir@'
@@ -42,23 +42,6 @@ echo
 echo 'force:'
 echo
 
-# Detect gcc as OLDCC.  This indicates a target for which LIB1FUNCS
-# is not needed.  This is not quite the same as libgcc1.null, even
-# on a target not using libgcc1-asm.a.
-
-if [ "@build_canonical@" = "@target@" ]; then
-  tmp="tmp-$$.c"
-  cat > $tmp <<EOF
-#ifdef __GNUC__
-  yes;
-#endif
-EOF
-  if $OLDCC -E $tmp | grep yes > /dev/null 2>&1; then
-    LIB1FUNCS=""
-  fi
-  rm -f $tmp
-fi
-
 # Disable SHLIB_LINK if shared libgcc not enabled.
 if [ "@enable_shared@" = "no" ]; then
   SHLIB_LINK=""
@@ -67,7 +50,6 @@ fi
 # Build lines.
 
 gcc_compile='$(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) $(INCLUDES)'
-oldcc_compile='$(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES)'
 make_compile='$(MAKE) GCC_FOR_TARGET="$(GCC_FOR_TARGET)" \
 	  AR_FOR_TARGET="$(AR_FOR_TARGET)" \
 	  AR_CREATE_FOR_TARGET="$(AR_CREATE_FOR_TARGET)" \
@@ -78,13 +60,10 @@ make_compile='$(MAKE) GCC_FOR_TARGET="$(GCC_FOR_TARGET)" \
 	  HOST_PREFIX_1="$(HOST_PREFIX_1)" \
 	  LANGUAGES="$(LANGUAGES)"'
 
-# Dependancies for libgcc1.c
-libgcc1_c_dep='stmp-dirs $(srcdir)/libgcc1.c $(CONFIG_H)'
-
-# Dependancies for libgcc2.c
+# Dependencies for libgcc2.c
 libgcc2_c_dep='stmp-dirs $(srcdir)/libgcc2.c $(CONFIG_H) $(MACHMODE_H) longlong.h gbl-ctors.h config.status stmp-int-hdrs tsystem.h'" $LIB2ADDEHDEP"
 
-# Dependancies for fp-bit.c
+# Dependencies for fp-bit.c
 fpbit_c_dep='stmp-dirs config.status tsystem.h'
 
 #
@@ -93,76 +72,30 @@ fpbit_c_dep='stmp-dirs config.status tsystem.h'
 
 libgcc1_objs=""
 
-case X"$LIBGCC1" in
-  Xlibgcc1.null | X)
-    ;;
+for name in $LIB1ASMFUNCS; do
+  for ml in $MULTILIBS; do
+    dir=`echo ${ml} | sed -e 's/;.*$//' -e 's/=/$(EQ)/g'`
+    flags=`echo ${ml} | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`;
+    out="libgcc/${dir}/${name}${objext}"
 
-  Xlibgcc1.cross)
-    echo "You must find a way to make libgcc1 components yourself" 1>&2
-    ;;
-
-  Xlibgcc1-asm.a)
-    for name in $LIB1ASMFUNCS; do
-      for ml in $MULTILIBS; do
-        dir=`echo ${ml} | sed -e 's/;.*$//' -e 's/=/$(EQ)/g'`
-        flags=`echo ${ml} | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`;
-        out="libgcc/${dir}/${name}${objext}"
-
-        echo ${out}: stmp-dirs '$(srcdir)/config/$(LIB1ASMSRC)'
-	echo "	$gcc_compile" $flags -DL$name -xassembler-with-cpp \
+    echo ${out}: stmp-dirs '$(srcdir)/config/$(LIB1ASMSRC)'
+    echo "	$gcc_compile" $flags -DL$name -xassembler-with-cpp \
 	  -c '$(srcdir)/config/$(LIB1ASMSRC)' -o $out
 
-	# Remove any objects from LIB2FUNCS that are defined as optimized
-	# assembly code in LIB1ASMFUNCS.
-	LIB2FUNCS=`echo $LIB2FUNCS | sed -e 's/^'$name' //' \
+    # Remove any objects from LIB2FUNCS and LIB2_DIVMOD_FUNCS that are
+    # defined as optimized assembly code in LIB1ASMFUNCS.
+    LIB2FUNCS_1=`echo $LIB2FUNCS_1 | sed -e 's/^'$name' //' \
 				         -e 's/ '$name' / /' \
-					 -e 's/ '$name'$//'`
-      done
-      libgcc1_objs="$libgcc1_objs ${name}${objext}"
-    done
-    ;;
-
-  Xlibgcc1.a)
-    for name in $LIB1FUNCS; do
-      out="libgcc/${name}${objext}"
-
-      echo $out: $libgcc1_c_dep
-      if [ -z "@NO_MINUS_C_MINUS_O@" ]; then
-	echo "	$oldcc_compile" -DL$name $flags -c '$(srcdir)/libgcc1.c' -o $out
-      else
-	echo "	$oldcc_compile" -DL$name $flags -c '$(srcdir)/libgcc1.c'
-	echo "	mv libgcc1${objext} $out"
-      fi
-
-      libgcc1_objs="$libgcc1_objs ${name}${objext}"
-    done
-
-    for file in $LIB1FUNCS_EXTRA; do
-      name=`echo $file | sed -e 's/[.][cS]$//' -e 's/[.]asm$//'`
-      out="libgcc/${name}${objext}"
-
-      echo $out: $file
-      if [ ${name}.asm = $file ]; then
-        echo "	cp $file ${name}.s"
-        file=${name}.s
-      fi
-
-      if [ -z "@NO_MINUS_C_MINUS_O@" ]; then
-	echo "	$oldcc_compile" -c $file -o $out
-      else
-	echo "	$oldcc_compile" -c $file
-	tmp=`echo $file | sed -e 's/[.][cs]$/'${objext}/ -e 's,.*/,,'`
-	echo "	mv $tmp $out"
-      fi
-
-      libgcc1_objs="$libgcc1_objs ${name}${objext}"
-    done
-    ;;
-  *)
-    echo "I'm confused about libgcc1." 1>&2
-    exit 1
-    ;;
-esac
+				         -e 's/ '$name'$//'`
+    LIB2FUNCS_2=`echo $LIB2FUNCS_2 | sed -e 's/^'$name' //' \
+				         -e 's/ '$name' / /' \
+				         -e 's/ '$name'$//'`
+    LIB2_DIVMOD_FUNCS=`echo $LIB2_DIVMOD_FUNCS | sed -e 's/^'$name' //' \
+				                     -e 's/ '$name' / /' \
+				                     -e 's/ '$name'$//'`
+  done
+  libgcc1_objs="$libgcc1_objs ${name}${objext}"
+done
 
 #
 # Build libgcc2 components.
@@ -170,8 +103,9 @@ esac
 
 libgcc2_objs=""
 libgcc2_st_objs=""
+libgcc2_eh_objs=""
 
-for name in $LIB2FUNCS; do
+for name in $LIB2FUNCS_1 $LIB2FUNCS_2; do
   for ml in $MULTILIBS; do
     dir=`echo ${ml} | sed -e 's/;.*$//' -e 's/=/$(EQ)/g'`
     flags=`echo ${ml} | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`;
@@ -195,6 +129,19 @@ for name in $LIB2FUNCS_ST; do
       -c '$(srcdir)/libgcc2.c' -o $out
   done
   libgcc2_st_objs="$libgcc2_st_objs ${name}${objext}"
+done
+
+for name in $LIB2_DIVMOD_FUNCS; do
+  for ml in $MULTILIBS; do
+    dir=`echo ${ml} | sed -e 's/;.*$//' -e 's/=/$(EQ)/g'`
+    flags=`echo ${ml} | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`;
+    out="libgcc/${dir}/${name}${objext}"
+
+    echo $out: $libgcc2_c_dep
+    echo "	$gcc_compile" '$(MAYBE_USE_COLLECT2)' $flags -DL$name \
+      -c '$(srcdir)/libgcc2.c' -fexceptions -fnon-call-exceptions -o $out
+  done
+  libgcc2_objs="$libgcc2_objs ${name}${objext}"
 done
 
 if [ "$FPBIT" ]; then
@@ -260,7 +207,11 @@ for file in $LIB2ADDEH; do
     echo $out: stmp-dirs $file
     echo "	$gcc_compile" $flags -fexceptions -c $file -o $out
   done
-  libgcc2_objs="$libgcc2_objs ${oname}${objext}"
+  if [ "$SHLIB_LINK" ]; then
+    libgcc2_eh_objs="$libgcc2_eh_objs ${oname}${objext}"
+  else
+    libgcc2_objs="$libgcc2_objs ${oname}${objext}"
+  fi
 done
 
 for file in $LIB2ADD_ST; do
@@ -282,35 +233,41 @@ for file in $LIB2ADD_ST; do
 done
 
 # SHLIB_MKMAP
+# SHLIB_MKMAP_OPTS
 # SHLIB_MAPFILES
 for ml in $MULTILIBS; do
   dir=`echo ${ml} | sed -e 's/;.*$//' -e 's/=/$(EQ)/g'`
   flags=`echo ${ml} | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`;
 
   libgcc_objs=""
+  libgcc_eh_objs=""
   for o in $libgcc1_objs; do
-    if [ "$LIBGCC1" = libgcc1-asm.a ]; then
-      libgcc_objs="$libgcc_objs libgcc/${dir}/$o"
-    else
-      libgcc_objs="$libgcc_objs libgcc/$o"
-    fi
+    libgcc_objs="$libgcc_objs libgcc/${dir}/$o"
   done
   for o in $libgcc2_objs; do
     libgcc_objs="$libgcc_objs libgcc/${dir}/$o"
   done
-  shlib_deps="$libgcc_objs"
+  for o in $libgcc2_eh_objs; do
+    libgcc_eh_objs="$libgcc_eh_objs libgcc/${dir}/$o"
+  done
+  libgcc_sh_objs="$libgcc_objs $libgcc_eh_objs"
+  shlib_deps="$libgcc_sh_objs"
 
   libgcc_st_objs=""
   for o in $libgcc2_st_objs; do
     libgcc_st_objs="$libgcc_st_objs libgcc/${dir}/$o"
   done
 
-  if [ "$SHLIB_LINK" -a "$SHLIB_MKMAP" -a -z "$mapfile" ]; then
-    mapfile="libgcc.map"
+  if [ "$SHLIB_LINK" -a "$SHLIB_MKMAP" ]; then
+    mapfile="libgcc/${dir}/libgcc.map"
+    tmpmapfile="libgcc/${dir}/tmp-libgcc.map"
     echo ""
-    echo "${mapfile}: $SHLIB_MKMAP $SHLIB_MAPFILES $libgcc_objs"
-    echo '	{ $(NM_FOR_TARGET)'" $SHLIB_NM_FLAGS $libgcc_objs; echo %%; cat $SHLIB_MAPFILES; } | "'$(AWK)'" -f $SHLIB_MKMAP > "'tmp-$@'
-    echo '	mv tmp-$@ $@'
+    echo "${mapfile}: $SHLIB_MKMAP $SHLIB_MAPFILES $libgcc_sh_objs"
+    echo '	{ $(NM_FOR_TARGET)'" $SHLIB_NM_FLAGS $libgcc_sh_objs; echo %%; \\"
+    echo "	  cat $SHLIB_MAPFILES | sed -e "'"/^[ 	]*#/d" -e '\''s/^%\(if\|else\|elif\|endif\|define\)/#\1/'\'" \\"
+    echo "	  | $gcc_compile $flags -E -xassembler-with-cpp -; \\"
+    echo '	} | $(AWK)'" -f $SHLIB_MKMAP $SHLIB_MKMAP_OPTS > ${tmpmapfile}"
+    echo '	mv '"$tmpmapfile"' $@'
   fi
   shlib_deps="$shlib_deps $mapfile"
 
@@ -320,29 +277,74 @@ for ml in $MULTILIBS; do
     shlib_deps="$shlib_deps $dir/$f"
   done
 
+  libgcc_a_objs="$libgcc_objs $libgcc_st_objs"
+
+  if [ "@libgcc_visibility@" = yes -a "$SHLIB_LINK" ]; then
+    libgcc_a_objs=
+    echo ""
+    for o in $libgcc_objs $libgcc_st_objs; do
+      # .oS objects will have all non-local symbol definitions .hidden
+      oS=`echo ${o} | sed s~${objext}'$~.oS~g'`
+      echo "${oS}: stmp-dirs ${o}"
+      echo '	@$(NM_FOR_TARGET) '${SHLIB_NM_FLAGS} ${o}' | $(AWK) '\''NF == 3 { print "\t.hidden", $$3 }'\'' | $(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) '${flags}' -r -nostdinc -nostdlib -o $@ '${o}' -xassembler -'
+      libgcc_a_objs="${libgcc_a_objs} ${oS}"
+    done
+  fi
+
   echo ""
-  echo "${dir}/libgcc.a: $libgcc_objs $libgcc_st_objs"
+  echo "${dir}/libgcc.a: $libgcc_a_objs"
   echo "	-rm -rf ${dir}/libgcc.a"
-  echo '	$(AR_CREATE_FOR_TARGET)' ${dir}/libgcc.a $libgcc_objs $libgcc_st_objs
+  echo '	$(AR_CREATE_FOR_TARGET)' ${dir}/libgcc.a $libgcc_a_objs
   echo '	if $(RANLIB_TEST_FOR_TARGET) ; then' \\
   echo '	  $(RANLIB_FOR_TARGET)' ${dir}/libgcc.a ';' \\
   echo '	else true; fi;'
 
   if [ "$SHLIB_LINK" ]; then
+
+    echo ""
+    echo "${dir}/libgcc_eh.a: $libgcc_eh_objs"
+    echo "	-rm -rf ${dir}/libgcc_eh.a"
+    echo '	$(AR_CREATE_FOR_TARGET)' ${dir}/libgcc_eh.a $libgcc_eh_objs
+    echo '	if $(RANLIB_TEST_FOR_TARGET) ; then' \\
+    echo '	  $(RANLIB_FOR_TARGET)' ${dir}/libgcc_eh.a ';' \\
+    echo '	else true; fi;'
+
     if [ -z "$SHLIB_MULTILIB" ]; then
-      if [ "$dir" = "." ]; then
-	shlib_base_name="libgcc_s";
+      if [ "$dir" = . ]; then
+	shlib_base_name=libgcc_s
       else
 	shlib_base_name=libgcc_s_`echo $dir | sed s,/,_,g`
+      fi
+      shlib_so_name="$shlib_base_name"
+      shlib_dir=
+      if [ -n "$SHLIB_SLIBDIR_SUFFIXES" ]; then
+	if [ "$dir" != . ]; then
+	  shlib_dir="$dir"/
+	  for suffix_pair in $SHLIB_SLIBDIR_SUFFIXES ; do
+	    base_ml_dir=`echo ${suffix_pair} | sed -e 's/:.*$//' -e 's/=/$(EQ)/g'`
+	    if [ "$dir" = "$base_ml_dir" ]; then
+	      shlib_so_name=libgcc_s
+	      break
+	    else
+	      canon_dir=`echo $dir | sed -n -e "s:$base_ml_dir/::p"`
+	      if [ -n "$canon_dir" ]; then
+		shlib_so_name=libgcc_s_`echo $canon_dir | sed s,/,_,g`
+		break
+	      fi
+	    fi
+	  done
+	fi
       fi
       echo ""
       echo "${dir}/${shlib_base_name}${SHLIB_EXT}: $shlib_deps"
       echo "	$SHLIB_LINK" \
 	 | sed -e "s%@multilib_flags@%$flags%g" \
 	       -e "s%@multilib_dir@%$dir%g" \
-	       -e "s%@shlib_objs@%$libgcc_objs%g" \
+	       -e "s%@shlib_objs@%$libgcc_sh_objs%g" \
 	       -e "s%@shlib_base_name@%$shlib_base_name%g" \
-	       -e "s%@shlib_map_file@%$mapfile%g"
+	       -e "s%@shlib_map_file@%$mapfile%g" \
+	       -e "s%@shlib_so_name@%$shlib_so_name%g" \
+	       -e "s%@shlib_dir@%$shlib_dir%g"
     elif [ "$SHLIB_MULTILIB" = "$dir" ]; then
       shlib_base_name="libgcc_s";
       echo ""
@@ -350,9 +352,11 @@ for ml in $MULTILIBS; do
       echo "	$SHLIB_LINK" \
 	 | sed -e "s%@multilib_flags@%$flags%g" \
 	       -e "s%@multilib_dir@%$dir%g" \
-	       -e "s%@shlib_objs@%$libgcc_objs%g" \
+	       -e "s%@shlib_objs@%$libgcc_sh_objs%g" \
 	       -e "s%@shlib_base_name@%$shlib_base_name%g" \
-	       -e "s%@shlib_map_file@%$mapfile%g"
+	       -e "s%@shlib_map_file@%$mapfile%g" \
+	       -e "s%@shlib_so_name@%$shlib_base_name%g" \
+	       -e "s%@shlib_dir@%%g"
     fi
   fi
 done
@@ -384,6 +388,7 @@ for ml in $MULTILIBS; do
   fi
   all="$all ${dir}/libgcc.a"
   if [ "$SHLIB_LINK" ]; then
+    all="$all ${dir}/libgcc_eh.a"
     if [ -z "$SHLIB_MULTILIB" ]; then
       if [ "$dir" = "." ]; then
 	suff="";
@@ -399,7 +404,7 @@ done
 
 echo 'stmp-dirs: force'
 echo '	for d in '"$dirs"'; do \'
-echo '	  if [ -d $$d ]; then true; else mkdir $$d; fi; \'
+echo '	  if [ -d $$d ]; then true; else '$mkinstalldirs' $$d; fi; \'
 echo '	done'
 echo '	if [ -f stmp-dirs ]; then true; else touch stmp-dirs; fi'
 
@@ -443,18 +448,65 @@ for ml in $MULTILIBS; do
   echo '	$(RANLIB_FOR_TARGET)' ${ldir}/libgcc.a
 
   if [ "$SHLIB_LINK" ]; then
+    echo '	$(INSTALL_DATA)' ${dir}/libgcc_eh.a ${ldir}/
+    echo '	$(RANLIB_FOR_TARGET)' ${ldir}/libgcc_eh.a
+
     if [ -z "$SHLIB_MULTILIB" ]; then
-      if [ "$dir" = "." ]; then
-	shlib_base_name="libgcc_s";
+      if [ "$dir" = . ]; then
+	shlib_base_name=libgcc_s
       else
 	shlib_base_name=libgcc_s_`echo $dir | sed s,/,_,g`
       fi
+      shlib_so_name="$shlib_base_name"
+      shlib_dir=
+      shlib_slibdir_qual=
+      if [ -n "$SHLIB_SLIBDIR_SUFFIXES" ]; then
+	shlib_slibdir_qual=none
+	if [ "$dir" != . ]; then
+	  shlib_dir="$dir"/
+	  for suffix_pair in $SHLIB_SLIBDIR_SUFFIXES ; do
+	    base_ml_dir=`echo ${suffix_pair} | sed -e 's/:.*$//' -e 's/=/$(EQ)/g'`
+	    if [ "$dir" = "$base_ml_dir" ]; then
+	      shlib_so_name=libgcc_s
+	      shlib_slibdir_qual=`echo ${suffix_pair} | sed -e 's/^[^:]*://'`
+	      break
+	    else
+	      canon_dir=`echo $dir | sed -n -e "s:$base_ml_dir/::p"`
+	      if [ -n "$canon_dir" ]; then
+		shlib_so_name=libgcc_s_`echo $canon_dir | sed s,/,_,g`
+		shlib_slibdir_qual=`echo ${suffix_pair} | sed -e 's/^[^:]*://'`
+		break
+	      fi
+	    fi
+	  done
+	fi
+	if [ "$shlib_slibdir_qual" = none ]; then
+	  for suffix_pair in $SHLIB_SLIBDIR_SUFFIXES ; do
+	    base_ml_dir=`echo ${suffix_pair} | sed -e 's/:.*$//' -e 's/=/$(EQ)/g'`
+	    shlib_slibdir_qual=`echo ${suffix_pair} | sed -e 's/^[^:]*://'`
+	    for ml2 in $MULTILIBS; do
+	      dir2=`echo ${ml2} | sed -e 's/;.*$//' -e 's/=/$(EQ)/g'`
+	      if [ "$base_ml_dir" = "$dir2" ]; then
+		shlib_slibdir_qual=
+		break
+	      fi
+	    done
+	    if [ -n "$shlib_slibdir_qual" ]; then break; fi
+	  done
+	fi
+      fi
       echo "	$SHLIB_INSTALL" \
-	| sed -e "s%@shlib_base_name@%$shlib_base_name%g"
+	| sed -e "s%@shlib_base_name@%$shlib_base_name%g" \
+	      -e "s%@shlib_so_name@%$shlib_so_name%g" \
+	      -e "s%@shlib_dir@%$shlib_dir%g" \
+	      -e "s%@shlib_slibdir_qual@%$shlib_slibdir_qual%g"
     elif [ "$SHLIB_MULTILIB" = "$dir" ]; then
       shlib_base_name="libgcc_s";
       echo "	$SHLIB_INSTALL" \
-	| sed -e "s%@shlib_base_name@%$shlib_base_name%g"
+	| sed -e "s%@shlib_base_name@%$shlib_base_name%g" \
+	      -e "s%@shlib_so_name@%$shlib_base_name%g" \
+	      -e "s%@shlib_dir@%%g" \
+	      -e "s%@shlib_slibdir_qual@%%g"
     fi
   fi
 done

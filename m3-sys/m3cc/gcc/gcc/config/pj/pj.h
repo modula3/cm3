@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler for picoJava
-   Copyright (C) 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -892,12 +892,6 @@ struct pj_args
 
 #define CASE_VECTOR_PC_RELATIVE 1
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR  FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR  TRUNC_DIV_EXPR
-
 /* 'char' is signed by default.  */
 #define DEFAULT_SIGNED_CHAR  1
 
@@ -937,11 +931,6 @@ struct pj_args
 /* Define if loading short immediate values into registers sign extends.  */
 
 #define SHORT_IMMEDIATES_SIGN_EXTEND
-
-/* Define this if zero-extension is slow (more than one real
-   instruction).  */
-
-/* #define SLOW_ZERO_EXTEND  */
 
 /* Nonzero if access to memory by bytes is no faster than for words.  */
 #define SLOW_BYTE_ACCESS 1
@@ -1049,7 +1038,6 @@ struct pj_args
   fprintf (FILE,"\t! %s\n", TARGET_LITTLE_ENDIAN ? ".little" : ".big");      \
   fprintf (FILE,"\t.align 4\n");
 
-#define ASM_LONG ".long"
 #define ASM_APP_ON              ""
 #define ASM_APP_OFF             ""
 #define FILE_ASM_OP             "\t.file\n"
@@ -1162,10 +1150,12 @@ do { fputs (current_function_varargs || current_function_stdarg         \
 #define LOCAL_LABEL_PREFIX "."
 
 /* Make an internal label into a string.  */
+#undef  ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(STRING, PREFIX, NUM) \
   sprintf ((STRING), "*%s%s%ld", LOCAL_LABEL_PREFIX, (PREFIX), (long)(NUM))
 
 /* Output an internal label definition.  */
+#undef  ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM) \
   asm_fprintf ((FILE), "%L%s%d:\n", (PREFIX), (NUM))
 
@@ -1183,43 +1173,10 @@ do { fputs (current_function_varargs || current_function_stdarg         \
 
 /* Output various types of constants.  */
 
-/* This is how to output an assembler line defining a `double'.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)                   \
-do { char dstr[30];                                     \
-     REAL_VALUE_TO_DECIMAL ((VALUE), "%.20e", dstr);    \
-     fprintf ((FILE), "\t.double %s\n", dstr);          \
-   } while (0)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)                    \
-do { char dstr[30];                                     \
-     REAL_VALUE_TO_DECIMAL ((VALUE), "%.20e", dstr);    \
-     fprintf ((FILE), "\t.float %s\n", dstr);           \
-   } while (0)
-
-#define ASM_OUTPUT_INT(STREAM, EXP)             \
-  (fprintf ((STREAM), "\t.long\t"),             \
-   output_addr_const ((STREAM), (EXP)),         \
-   fputc ('\n', (STREAM)))
-
-#define ASM_OUTPUT_SHORT(STREAM, EXP)   \
-  (fprintf ((STREAM), "\t.short\t"),    \
-   output_addr_const ((STREAM), (EXP)), \
-   fputc ('\n', (STREAM)))
-
-#define ASM_OUTPUT_CHAR(STREAM, EXP)            \
-  (fprintf ((STREAM), "\t.byte\t"),             \
-   output_addr_const ((STREAM), (EXP)),         \
-   fputc ('\n', (STREAM)))
-
-#define ASM_OUTPUT_BYTE(STREAM, VALUE)          \
-  fprintf ((STREAM), "\t.byte\t%d\n", (VALUE))  
-
 /* This is how to output an assembler line
    that says to advance the location counter by SIZE bytes.  */
 
+#undef  ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE) \
   fprintf ((FILE), "\t.space %d\n", (SIZE))
 
@@ -1239,22 +1196,9 @@ do { char dstr[30];                                     \
   assemble_name ((FILE), (NAME)),                       \
   fprintf ((FILE), ",%d\n", (SIZE)))
 
-/* The assembler's parentheses characters.  */
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
 /* We don't want the default switch handling.  */
 #undef ASM_OUTPUT_BEFORE_CASE_LABEL
 #undef ASM_OUTPUT_CASE_LABEL
-
-/* Target characters.  */
-#define TARGET_BELL     007
-#define TARGET_BS       010
-#define TARGET_TAB      011
-#define TARGET_NEWLINE  012
-#define TARGET_VT       013
-#define TARGET_FF       014
-#define TARGET_CR       015
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or star or 0 if no letter was specified.
@@ -1298,7 +1242,7 @@ do { char dstr[30];                                     \
 #define CAN_DEBUG_WITHOUT_FP 
 
 /* How to renumber registers for dbx and gdb.  */
-extern short pj_debugreg_renumber_vec[];
+extern short pj_debugreg_renumber_vec[FIRST_PSEUDO_REGISTER];
 
 #define DBX_REGISTER_NUMBER(REG) (pj_debugreg_renumber_vec[REG])
 
@@ -1308,7 +1252,6 @@ extern short pj_debugreg_renumber_vec[];
 #undef  PREFERRED_DEBUGGING_TYPE 
 #define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 #define DWARF2_UNWIND_INFO 1
-#define DWARF_LINE_MIN_INSTR_LENGTH 1
 
 
 /* varargs and stdarg builtins.  */
@@ -1333,9 +1276,6 @@ do {                                                                          \
 /* Before the prologue, the return address is just above optop.  */
 #define INCOMING_RETURN_ADDR_RTX  \
   plus_constant (gen_rtx_REG (Pmode, OPTOP_REG), 4)
-
-/* Use thunks for vtables.  */
-#define DEFAULT_VTABLE_THUNKS 1
 
 /* Rewrite the rtl to use take advantage of the opstack.  */
 #define MACHINE_DEPENDENT_REORG(INSNS) pj_machine_dependent_reorg(INSNS)

@@ -1,23 +1,23 @@
 /* Convert RTL to assembler code and output it, for GNU compiler.
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
-   1998, 1999, 2000, 2001 Free Software Foundation, Inc.
+   1998, 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 /* This is the final pass of the compiler.
    It looks at the rtl code for a function and outputs assembler code.
@@ -41,8 +41,8 @@ Boston, MA 02111-1307, USA.  */
    (the one that tests the condition codes) to be modified.
 
    The code for the function prologue and epilogue are generated
-   directly as assembler code by the macros FUNCTION_PROLOGUE and
-   FUNCTION_EPILOGUE.  Those instructions never exist as rtl.  */
+   directly in assembler by the target functions function_prologue and
+   function_epilogue.  Those instructions never exist as rtl.  */
 
 #include "config.h"
 #include "system.h"
@@ -65,42 +65,17 @@ Boston, MA 02111-1307, USA.  */
 #include "reload.h"
 #include "intl.h"
 #include "basic-block.h"
-
-/* Get N_SLINE and N_SOL from stab.h if we can expect the file to exist.  */
-#if defined (DBX_DEBUGGING_INFO) || defined (XCOFF_DEBUGGING_INFO)
-#include "dbxout.h"
-#if defined (USG) || !defined (HAVE_STAB_H)
-#include "gstab.h"  /* If doing DBX on sysV, use our own stab.h.  */
-#else
-#include <stab.h>
-#endif
-
-#endif /* DBX_DEBUGGING_INFO || XCOFF_DEBUGGING_INFO */
+#include "target.h"
+#include "debug.h"
+#include "expr.h"
 
 #ifdef XCOFF_DEBUGGING_INFO
-#include "xcoffout.h"
-#endif
-
-#ifdef DWARF_DEBUGGING_INFO
-#include "dwarfout.h"
+#include "xcoffout.h"		/* Needed for external data
+				   declarations for e.g. AIX 4.x.  */
 #endif
 
 #if defined (DWARF2_UNWIND_INFO) || defined (DWARF2_DEBUGGING_INFO)
 #include "dwarf2out.h"
-#endif
-
-#ifdef SDB_DEBUGGING_INFO
-#include "sdbout.h"
-#endif
-
-/* .stabd code for line number.  */
-#ifndef N_SLINE
-#define	N_SLINE	0x44
-#endif
-
-/* .stabs code for included file name.  */
-#ifndef N_SOL
-#define	N_SOL 0x84
 #endif
 
 /* If we aren't using cc0, CC_STATUS_INIT shouldn't exist.  So define a
@@ -138,10 +113,6 @@ static int high_function_linenum;
 
 /* Filename of last NOTE.  */
 static const char *last_filename;
-
-/* Number of basic blocks seen so far;
-   used if profile_block_flag is set.  */
-static int count_basic_blocks;
 
 /* Number of instrumented arcs when profile_arc_flag is set.  */
 extern int count_instrumented_edges;
@@ -199,10 +170,6 @@ char regs_ever_live[FIRST_PSEUDO_REGISTER];
 
 int frame_pointer_needed;
 
-/* Assign unique numbers to labels generated for profiling.  */
-
-int profile_label_no;
-
 /* Number of unmatched NOTE_INSN_BLOCK_BEG notes we have seen.  */
 
 static int block_depth;
@@ -231,45 +198,16 @@ static char *line_note_exists;
 rtx current_insn_predicate;
 #endif
 
-/* Linked list to hold line numbers for each basic block.  */
-
-struct bb_list
-{
-  struct bb_list *next;		/* pointer to next basic block */
-  int line_num;			/* line number */
-  int file_label_num;		/* LPBC<n> label # for stored filename */
-  int func_label_num;		/* LPBC<n> label # for stored function name */
-};
-
-static struct bb_list *bb_head	= 0;		/* Head of basic block list */
-static struct bb_list **bb_tail = &bb_head;	/* Ptr to store next bb ptr */
-static int bb_file_label_num	= -1;		/* Current label # for file */
-static int bb_func_label_num	= -1;		/* Current label # for func */
-
-/* Linked list to hold the strings for each file and function name output.  */
-
-struct bb_str
-{
-  struct bb_str *next;		/* pointer to next string */
-  const char *string;		/* string */
-  int label_num;		/* label number */
-  int length;			/* string length */
-};
-
-static struct bb_str *sbb_head	= 0;		/* Head of string list.  */
-static struct bb_str **sbb_tail	= &sbb_head;	/* Ptr to store next bb str */
-static int sbb_label_num	= 0;		/* Last label used */
-
 #ifdef HAVE_ATTR_length
 static int asm_insn_count	PARAMS ((rtx));
 #endif
 static void profile_function	PARAMS ((FILE *));
 static void profile_after_prologue PARAMS ((FILE *));
-static void add_bb		PARAMS ((FILE *));
-static int add_bb_string	PARAMS ((const char *, int));
-static void output_source_line	PARAMS ((FILE *, rtx));
-static rtx walk_alter_subreg	PARAMS ((rtx));
+static void notice_source_line	PARAMS ((rtx));
+static rtx walk_alter_subreg	PARAMS ((rtx *));
 static void output_asm_name	PARAMS ((void));
+static tree get_mem_expr_from_op	PARAMS ((rtx, int *));
+static void output_asm_operand_names PARAMS ((rtx *, int *, int));
 static void output_operand	PARAMS ((rtx, int));
 #ifdef LEAF_REGISTERS
 static void leaf_renumber_regs	PARAMS ((rtx));
@@ -305,27 +243,28 @@ void
 end_final (filename)
      const char *filename;
 {
-  int i;
-
-  if (profile_block_flag || profile_arc_flag)
+  if (profile_arc_flag)
     {
       char name[20];
       int align = exact_log2 (BIGGEST_ALIGNMENT / BITS_PER_UNIT);
       int size, rounded;
-      struct bb_list *ptr;
-      struct bb_str *sptr;
       int long_bytes = LONG_TYPE_SIZE / BITS_PER_UNIT;
+      int gcov_type_bytes = GCOV_TYPE_SIZE / BITS_PER_UNIT;
       int pointer_bytes = POINTER_SIZE / BITS_PER_UNIT;
+      unsigned int align2 = LONG_TYPE_SIZE;
 
-      if (profile_block_flag)
-	size = long_bytes * count_basic_blocks;
-      else
-	size = long_bytes * count_instrumented_edges;
+      size = gcov_type_bytes * count_instrumented_edges;
       rounded = size;
 
       rounded += (BIGGEST_ALIGNMENT / BITS_PER_UNIT) - 1;
       rounded = (rounded / (BIGGEST_ALIGNMENT / BITS_PER_UNIT)
 		 * (BIGGEST_ALIGNMENT / BITS_PER_UNIT));
+
+      /* ??? This _really_ ought to be done with a structure layout
+	 and with assemble_constructor.  If long_bytes != pointer_bytes
+	 we'll be emitting unaligned data at some point.  */
+      if (long_bytes != pointer_bytes)
+	abort ();
 
       data_section ();
 
@@ -348,70 +287,44 @@ end_final (filename)
       ASM_OUTPUT_ALIGN (asm_out_file, align);
 
       ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 0);
-      /* zero word */
-      assemble_integer (const0_rtx, long_bytes, 1);
 
-      /* address of filename */
+      /* Zero word.  */
+      assemble_integer (const0_rtx, long_bytes, align2, 1);
+
+      /* Address of filename.  */
       ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 1);
-      assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes, 1);
+      assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes,
+			align2, 1);
 
-      /* address of count table */
+      /* Address of count table.  */
       ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 2);
-      assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes, 1);
+      assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes,
+			align2, 1);
 
-      /* count of the # of basic blocks or # of instrumented arcs */
-      if (profile_block_flag)
-	assemble_integer (GEN_INT (count_basic_blocks), long_bytes, 1);
-      else
-	assemble_integer (GEN_INT (count_instrumented_edges), long_bytes, 1);
+      /* Count of the # of instrumented arcs.  */
+      assemble_integer (GEN_INT (count_instrumented_edges),
+			long_bytes, align2, 1);
 
-      /* zero word (link field) */
-      assemble_integer (const0_rtx, pointer_bytes, 1);
+      /* Zero word (link field).  */
+      assemble_integer (const0_rtx, pointer_bytes, align2, 1);
 
-      /* address of basic block start address table */
-      if (profile_block_flag)
-	{
-	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 3);
-	  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes,
-			    1);
-	}
-      else
-	assemble_integer (const0_rtx, pointer_bytes, 1);
+      assemble_integer (const0_rtx, pointer_bytes, align2, 1);
 
-      /* byte count for extended structure.  */
-      assemble_integer (GEN_INT (11 * UNITS_PER_WORD), long_bytes, 1);
+      /* Byte count for extended structure.  */
+      assemble_integer (GEN_INT (11 * UNITS_PER_WORD), long_bytes, align2, 1);
 
-      /* address of function name table */
-      if (profile_block_flag)
-	{
-	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 4);
-	  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes,
-			    1);
-	}
-      else
-	assemble_integer (const0_rtx, pointer_bytes, 1);
+      /* Address of function name table.  */
+      assemble_integer (const0_rtx, pointer_bytes, align2, 1);
 
-      /* address of line number and filename tables if debugging.  */
-      if (write_symbols != NO_DEBUG && profile_block_flag)
-	{
-	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 5);
-	  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name),
-			    pointer_bytes, 1);
-	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 6);
-	  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name),
-			    pointer_bytes, 1);
-	}
-      else
-	{
-	  assemble_integer (const0_rtx, pointer_bytes, 1);
-	  assemble_integer (const0_rtx, pointer_bytes, 1);
-	}
+      /* Address of line number and filename tables if debugging.  */
+      assemble_integer (const0_rtx, pointer_bytes, align2, 1);
+      assemble_integer (const0_rtx, pointer_bytes, align2, 1);
 
-      /* space for extension ptr (link field) */
-      assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+      /* Space for extension ptr (link field).  */
+      assemble_integer (const0_rtx, UNITS_PER_WORD, align2, 1);
 
-      /* Output the file name changing the suffix to .d for Sun tcov
-	 compatibility.  */
+      /* Output the file name changing the suffix to .d for
+	 Sun tcov compatibility.  */
       ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 1);
       {
 	char *cwd = getpwd ();
@@ -422,10 +335,7 @@ end_final (filename)
 	strcat (data_file, "/");
 	strcat (data_file, filename);
 	strip_off_ending (data_file, len);
-	if (profile_block_flag)
-	  strcat (data_file, ".d");
-	else
-	  strcat (data_file, ".da");
+	strcat (data_file, ".da");
 	assemble_string (data_file, strlen (data_file) + 1);
       }
 
@@ -458,96 +368,25 @@ end_final (filename)
 #endif
 #endif
 	}
-
-      /* Output any basic block strings */
-      if (profile_block_flag)
-	{
-	  readonly_data_section ();
-	  if (sbb_head)
-	    {
-	      ASM_OUTPUT_ALIGN (asm_out_file, align);
-	      for (sptr = sbb_head; sptr != 0; sptr = sptr->next)
-		{
-		  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBC",
-					     sptr->label_num);
-		  assemble_string (sptr->string, sptr->length);
-		}
-	    }
-	}
-
-      /* Output the table of addresses.  */
-      if (profile_block_flag)
-	{
-	  /* Realign in new section */
-	  ASM_OUTPUT_ALIGN (asm_out_file, align);
-	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 3);
-	  for (i = 0; i < count_basic_blocks; i++)
-	    {
-	      ASM_GENERATE_INTERNAL_LABEL (name, "LPB", i);
-	      assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name),
-				pointer_bytes, 1);
-	    }
-	}
-
-      /* Output the table of function names.  */
-      if (profile_block_flag)
-	{
-	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 4);
-	  for ((ptr = bb_head), (i = 0); ptr != 0; (ptr = ptr->next), i++)
-	    {
-	      if (ptr->func_label_num >= 0)
-		{
-		  ASM_GENERATE_INTERNAL_LABEL (name, "LPBC",
-					       ptr->func_label_num);
-		  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name),
-				    pointer_bytes, 1);
-		}
-	      else
-		assemble_integer (const0_rtx, pointer_bytes, 1);
-	    }
-
-	  for (; i < count_basic_blocks; i++)
-	    assemble_integer (const0_rtx, pointer_bytes, 1);
-	}
-
-      if (write_symbols != NO_DEBUG && profile_block_flag)
-	{
-	  /* Output the table of line numbers.  */
-	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 5);
-	  for ((ptr = bb_head), (i = 0); ptr != 0; (ptr = ptr->next), i++)
-	    assemble_integer (GEN_INT (ptr->line_num), long_bytes, 1);
-
-	  for (; i < count_basic_blocks; i++)
-	    assemble_integer (const0_rtx, long_bytes, 1);
-
-	  /* Output the table of file names.  */
-	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 6);
-	  for ((ptr = bb_head), (i = 0); ptr != 0; (ptr = ptr->next), i++)
-	    {
-	      if (ptr->file_label_num >= 0)
-		{
-		  ASM_GENERATE_INTERNAL_LABEL (name, "LPBC",
-					       ptr->file_label_num);
-		  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name),
-				    pointer_bytes, 1);
-		}
-	      else
-		assemble_integer (const0_rtx, pointer_bytes, 1);
-	    }
-
-	  for (; i < count_basic_blocks; i++)
-	    assemble_integer (const0_rtx, pointer_bytes, 1);
-	}
-
-      /* End with the address of the table of addresses,
-	 so we can find it easily, as the last word in the file's text.  */
-      if (profile_block_flag)
-	{
-	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 3);
-	  assemble_integer (gen_rtx_SYMBOL_REF (Pmode, name), pointer_bytes,
-			    1);
-	}
     }
+}
+
+/* Default target function prologue and epilogue assembler output.
+
+   If not overridden for epilogue code, then the function body itself
+   contains return instructions wherever needed.  */
+void
+default_function_pro_epilogue (file, size)
+     FILE *file ATTRIBUTE_UNUSED;
+     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
+{
+}
+
+/* Default target hook that outputs nothing to a stream.  */
+void
+no_asm_to_stream (file)
+     FILE *file ATTRIBUTE_UNUSED;
+{
 }
 
 /* Enable APP processing of subsequent output.
@@ -612,7 +451,7 @@ int insn_current_address;
 /* Address of insn being processed in previous iteration.  */
 int insn_last_address;
 
-/* konwn invariant alignment of insn being processed.  */
+/* known invariant alignment of insn being processed.  */
 int insn_current_align;
 
 /* After shorten_branches, for any insn, uid_align[INSN_UID (insn)]
@@ -639,11 +478,6 @@ static struct label_alignment *label_align;
 void
 init_insn_lengths ()
 {
-  if (label_align)
-    {
-      free (label_align);
-      label_align = 0;
-    }
   if (uid_shuid)
     {
       free (uid_shuid);
@@ -775,7 +609,7 @@ get_attr_length (insn)
 #endif
 
 #ifndef LABEL_ALIGN_MAX_SKIP
-#define LABEL_ALIGN_MAX_SKIP (align_labels-1)
+#define LABEL_ALIGN_MAX_SKIP align_labels_max_skip
 #endif
 
 #ifndef LOOP_ALIGN
@@ -783,15 +617,23 @@ get_attr_length (insn)
 #endif
 
 #ifndef LOOP_ALIGN_MAX_SKIP
-#define LOOP_ALIGN_MAX_SKIP (align_loops-1)
+#define LOOP_ALIGN_MAX_SKIP align_loops_max_skip
 #endif
 
 #ifndef LABEL_ALIGN_AFTER_BARRIER
-#define LABEL_ALIGN_AFTER_BARRIER(LABEL) align_jumps_log
+#define LABEL_ALIGN_AFTER_BARRIER(LABEL) 0
 #endif
 
 #ifndef LABEL_ALIGN_AFTER_BARRIER_MAX_SKIP
-#define LABEL_ALIGN_AFTER_BARRIER_MAX_SKIP (align_jumps-1)
+#define LABEL_ALIGN_AFTER_BARRIER_MAX_SKIP 0
+#endif
+
+#ifndef JUMP_ALIGN
+#define JUMP_ALIGN(LABEL) align_jumps_log
+#endif
+
+#ifndef JUMP_ALIGN_MAX_SKIP
+#define JUMP_ALIGN_MAX_SKIP align_jumps_max_skip
 #endif
 
 #ifndef ADDR_VEC_ALIGN
@@ -851,7 +693,7 @@ label_to_alignment (label)
    For casesi tables, we also want to know worst case minimum amounts of
    address difference, in case a machine description wants to introduce
    some common offset that is added to all offsets in a table.
-   For this purpose, align_fuzz with a growth argument of 0 comuptes the
+   For this purpose, align_fuzz with a growth argument of 0 computes the
    appropriate adjustment.  */
 
 /* Compute the maximum delta by which the difference of the addresses of
@@ -925,7 +767,7 @@ insn_current_reference_address (branch)
     return insn_current_address;
   dest = JUMP_LABEL (branch);
 
-  /* BRANCH has no proper alignment chain set, so use SEQ.  
+  /* BRANCH has no proper alignment chain set, so use SEQ.
      BRANCH also has no INSN_SHUID.  */
   if (INSN_SHUID (seq) < INSN_SHUID (dest))
     {
@@ -942,6 +784,88 @@ insn_current_reference_address (branch)
 }
 #endif /* HAVE_ATTR_length */
 
+void
+compute_alignments ()
+{
+  int i;
+  int log, max_skip, max_log;
+
+  if (label_align)
+    {
+      free (label_align);
+      label_align = 0;
+    }
+
+  max_labelno = max_label_num ();
+  min_labelno = get_first_label_num ();
+  label_align = (struct label_alignment *)
+    xcalloc (max_labelno - min_labelno + 1, sizeof (struct label_alignment));
+
+  /* If not optimizing or optimizing for size, don't assign any alignments.  */
+  if (! optimize || optimize_size)
+    return;
+
+  for (i = 0; i < n_basic_blocks; i++)
+    {
+      basic_block bb = BASIC_BLOCK (i);
+      rtx label = bb->head;
+      int fallthru_frequency = 0, branch_frequency = 0, has_fallthru = 0;
+      edge e;
+
+      if (GET_CODE (label) != CODE_LABEL)
+	continue;
+      max_log = LABEL_ALIGN (label);
+      max_skip = LABEL_ALIGN_MAX_SKIP;
+
+      for (e = bb->pred; e; e = e->pred_next)
+	{
+	  if (e->flags & EDGE_FALLTHRU)
+	    has_fallthru = 1, fallthru_frequency += EDGE_FREQUENCY (e);
+	  else
+	    branch_frequency += EDGE_FREQUENCY (e);
+	}
+
+      /* There are two purposes to align block with no fallthru incoming edge:
+	 1) to avoid fetch stalls when branch destination is near cache boundary
+	 2) to improve cache efficiency in case the previous block is not executed
+	    (so it does not need to be in the cache).
+
+	 We to catch first case, we align frequently executed blocks.
+	 To catch the second, we align blocks that are executed more frequently
+	 than the predecessor and the predecessor is likely to not be executed
+	 when function is called.  */
+
+      if (!has_fallthru
+	  && (branch_frequency > BB_FREQ_MAX / 10
+	      || (bb->frequency > BASIC_BLOCK (i - 1)->frequency * 10
+		  && (BASIC_BLOCK (i - 1)->frequency
+		      <= ENTRY_BLOCK_PTR->frequency / 2))))
+	{
+	  log = JUMP_ALIGN (label);
+	  if (max_log < log)
+	    {
+	      max_log = log;
+	      max_skip = JUMP_ALIGN_MAX_SKIP;
+	    }
+	}
+      /* In case block is frequent and reached mostly by non-fallthru edge,
+	 align it.  It is most likely an first block of loop.  */
+      if (has_fallthru
+	  && branch_frequency + fallthru_frequency > BB_FREQ_MAX / 10
+	  && branch_frequency > fallthru_frequency * 5)
+	{
+	  log = LOOP_ALIGN (label);
+	  if (max_log < log)
+	    {
+	      max_log = log;
+	      max_skip = LOOP_ALIGN_MAX_SKIP;
+	    }
+	}
+      LABEL_TO_ALIGNMENT (label) = max_log;
+      LABEL_TO_MAX_SKIP (label) = max_skip;
+    }
+}
+
 /* Make a pass over all insns and compute their actual lengths by shortening
    any branches of variable length if possible.  */
 
@@ -955,7 +879,7 @@ insn_current_reference_address (branch)
    port splits out-of-range conditional branches in MACHINE_DEPENDENT_REORG.
    In order to do this, it needs proper length information, which it obtains
    by calling shorten_branches.  This cannot be collapsed with
-   shorten_branches itself into a single pass unless we also want to intergate
+   shorten_branches itself into a single pass unless we also want to integrate
    reorg.c, since the branch splitting exposes new instructions with delay
    slots.  */
 
@@ -977,42 +901,35 @@ shorten_branches (first)
   int uid;
   rtx align_tab[MAX_CODE_ALIGN];
 
-  /* In order to make sure that all instructions have valid length info,
-     we must split them before we compute the address/length info.  */
-
-  for (insn = NEXT_INSN (first); insn; insn = NEXT_INSN (insn))
-    if (INSN_P (insn))
-      {
-	rtx old = insn;
-	/* Don't split the insn if it has been deleted.  */
-	if (! INSN_DELETED_P (old))
-	  insn = try_split (PATTERN (old), old, 1);
-	/* When not optimizing, the old insn will be still left around
-	   with only the 'deleted' bit set.  Transform it into a note
-	   to avoid confusion of subsequent processing.  */
-	if (INSN_DELETED_P (old))
-	  {
-	    PUT_CODE (old, NOTE);
-	    NOTE_LINE_NUMBER (old) = NOTE_INSN_DELETED;
-	    NOTE_SOURCE_FILE (old) = 0;
-	  }
-      }
 #endif
-
-  /* We must do some computations even when not actually shortening, in
-     order to get the alignment information for the labels.  */
-
-  init_insn_lengths ();
 
   /* Compute maximum UID and allocate label_align / uid_shuid.  */
   max_uid = get_max_uid ();
 
-  max_labelno = max_label_num ();
-  min_labelno = get_first_label_num ();
-  label_align = (struct label_alignment *)
-    xcalloc ((max_labelno - min_labelno + 1), sizeof (struct label_alignment));
-
   uid_shuid = (int *) xmalloc (max_uid * sizeof *uid_shuid);
+
+  if (max_labelno != max_label_num ())
+    {
+      int old = max_labelno;
+      int n_labels;
+      int n_old_labels;
+
+      max_labelno = max_label_num ();
+
+      n_labels = max_labelno - min_labelno + 1;
+      n_old_labels = old - min_labelno + 1;
+
+      label_align = (struct label_alignment *) xrealloc
+	(label_align, n_labels * sizeof (struct label_alignment));
+
+      /* Range of labels grows monotonically in the function.  Abort here
+         means that the initialization of array got lost.  */
+      if (n_old_labels > n_labels)
+	abort ();
+
+      memset (label_align + n_old_labels, 0,
+	      (n_labels - n_old_labels) * sizeof (struct label_alignment));
+    }
 
   /* Initialize label_align and set up uid_shuid to be strictly
      monotonically rising with insn order.  */
@@ -1039,6 +956,14 @@ shorten_branches (first)
       else if (GET_CODE (insn) == CODE_LABEL)
 	{
 	  rtx next;
+
+	  /* Merge in alignments computed by compute_alignments.  */
+	  log = LABEL_TO_ALIGNMENT (insn);
+	  if (max_log < log)
+	    {
+	      max_log = log;
+	      max_skip = LABEL_TO_MAX_SKIP (insn);
+	    }
 
 	  log = LABEL_ALIGN (insn);
 	  if (max_log < log)
@@ -1090,41 +1015,6 @@ shorten_branches (first)
 		break;
 	      }
 	}
-      /* Again, we allow NOTE_INSN_LOOP_BEG - INSN - CODE_LABEL
-	 sequences in order to handle reorg output efficiently.  */
-      else if (GET_CODE (insn) == NOTE
-	       && NOTE_LINE_NUMBER (insn) == NOTE_INSN_LOOP_BEG)
-	{
-	  rtx label;
-	  int nest = 0;
-
-	  /* Search for the label that starts the loop.
-	     Don't skip past the end of the loop, since that could
-	     lead to putting an alignment where it does not belong.
-	     However, a label after a nested (non-)loop would be OK.  */
-	  for (label = insn; label; label = NEXT_INSN (label))
-	    {
-	      if (GET_CODE (label) == NOTE
-		  && NOTE_LINE_NUMBER (label) == NOTE_INSN_LOOP_BEG)
-		nest++;
-	      else if (GET_CODE (label) == NOTE
-		       && NOTE_LINE_NUMBER (label) == NOTE_INSN_LOOP_END
-		       && --nest == 0)
-		break;
-	      else if (GET_CODE (label) == CODE_LABEL)
-		{
-		  log = LOOP_ALIGN (label);
-		  if (max_log < log)
-		    {
-		      max_log = log;
-		      max_skip = LOOP_ALIGN_MAX_SKIP;
-		    }
-		  break;
-		}
-	    }
-	}
-      else
-	continue;
     }
 #ifdef HAVE_ATTR_length
 
@@ -1312,7 +1202,7 @@ shorten_branches (first)
 #ifdef ADJUST_INSN_LENGTH
       ADJUST_INSN_LENGTH (insn, insn_lengths[uid]);
       if (insn_lengths[uid] < 0)
-	fatal_insn ("Negative insn length", insn);
+	fatal_insn ("negative insn length", insn);
 #endif
     }
 
@@ -1369,12 +1259,15 @@ shorten_branches (first)
 	      rtx rel_lab = XEXP (XEXP (body, 0), 0);
 	      rtx min_lab = XEXP (XEXP (body, 2), 0);
 	      rtx max_lab = XEXP (XEXP (body, 3), 0);
-	      addr_diff_vec_flags flags = ADDR_DIFF_VEC_FLAGS (body);
 	      int rel_addr = INSN_ADDRESSES (INSN_UID (rel_lab));
 	      int min_addr = INSN_ADDRESSES (INSN_UID (min_lab));
 	      int max_addr = INSN_ADDRESSES (INSN_UID (max_lab));
 	      rtx prev;
 	      int rel_align = 0;
+	      addr_diff_vec_flags flags;
+
+	      /* Avoid automatic aggregate initialization.  */
+	      flags = ADDR_DIFF_VEC_FLAGS (body);
 
 	      /* Try to find a known alignment for rel_lab.  */
 	      for (prev = rel_lab;
@@ -1472,9 +1365,28 @@ shorten_branches (first)
 
 	  if (! (varying_length[uid]))
 	    {
-	      insn_current_address += insn_lengths[uid];
+	      if (GET_CODE (insn) == INSN
+		  && GET_CODE (PATTERN (insn)) == SEQUENCE)
+		{
+		  int i;
+
+		  body = PATTERN (insn);
+		  for (i = 0; i < XVECLEN (body, 0); i++)
+		    {
+		      rtx inner_insn = XVECEXP (body, 0, i);
+		      int inner_uid = INSN_UID (inner_insn);
+
+		      INSN_ADDRESSES (inner_uid) = insn_current_address;
+
+		      insn_current_address += insn_lengths[inner_uid];
+		    }
+                }
+	      else
+		insn_current_address += insn_lengths[uid];
+
 	      continue;
 	    }
+
 	  if (GET_CODE (insn) == INSN && GET_CODE (PATTERN (insn)) == SEQUENCE)
 	    {
 	      int i;
@@ -1549,8 +1461,7 @@ asm_insn_count (body)
   if (GET_CODE (body) == ASM_INPUT)
     template = XSTR (body, 0);
   else
-    template = decode_asm_operands (body, NULL_PTR, NULL_PTR,
-				    NULL_PTR, NULL_PTR);
+    template = decode_asm_operands (body, NULL, NULL, NULL, NULL);
 
   for (; *template; template++)
     if (IS_ASM_LOGICAL_LINE_SEPARATOR (*template) || *template == '\n')
@@ -1593,37 +1504,16 @@ final_start_function (first, file, optimize)
     }
 #endif
 
-  /* Initial line number is supposed to be output
-     before the function's prologue and label
-     so that the function's address will not appear to be
-     in the last statement of the preceding function.  */
   if (NOTE_LINE_NUMBER (first) != NOTE_INSN_DELETED)
-    last_linenum = high_block_linenum = high_function_linenum
-      = NOTE_LINE_NUMBER (first);
+    notice_source_line (first);
+  high_block_linenum = high_function_linenum = last_linenum;
 
-#if defined (DWARF2_UNWIND_INFO) || defined (IA64_UNWIND_INFO) \
-    || defined (DWARF2_DEBUGGING_INFO)
-  dwarf2out_begin_prologue ();
-#endif
+  (*debug_hooks->begin_prologue) (last_linenum, last_filename);
 
-  /* For SDB and XCOFF, the function beginning must be marked between
-     the function label and the prologue.  We always need this, even when
-     -g1 was used.  Defer on MIPS systems so that parameter descriptions
-     follow function entry.  */
-#if defined(SDB_DEBUGGING_INFO) && !defined(MIPS_DEBUGGING_INFO)
-  if (write_symbols == SDB_DEBUG)
-    sdbout_begin_function (last_linenum);
-  else
+#if defined (DWARF2_UNWIND_INFO) || defined (IA64_UNWIND_INFO)
+  if (write_symbols != DWARF2_DEBUG && write_symbols != VMS_AND_DWARF2_DEBUG)
+    dwarf2out_begin_prologue (0, NULL);
 #endif
-#ifdef XCOFF_DEBUGGING_INFO
-    if (write_symbols == XCOFF_DEBUG)
-      xcoffout_begin_function (file, last_linenum);
-    else
-#endif
-      /* But only output line number for other debug info types if -g2
-	 or better.  */
-      if (NOTE_LINE_NUMBER (first) != NOTE_INSN_DELETED)
-	output_source_line (file, first);
 
 #ifdef LEAF_REG_REMAP
   if (current_function_uses_only_leaf_regs)
@@ -1633,7 +1523,7 @@ final_start_function (first, file, optimize)
   /* The Sun386i and perhaps other machines don't work right
      if the profiling code comes after the prologue.  */
 #ifdef PROFILE_BEFORE_PROLOGUE
-  if (profile_flag)
+  if (current_function_profile)
     profile_function (file);
 #endif /* PROFILE_BEFORE_PROLOGUE */
 
@@ -1646,17 +1536,22 @@ final_start_function (first, file, optimize)
      function.  */
   if (write_symbols)
     {
-      number_blocks (current_function_decl);
       remove_unnecessary_notes ();
+      reorder_blocks ();
+      number_blocks (current_function_decl);
       /* We never actually put out begin/end notes for the top-level
 	 block in the function.  But, conceptually, that block is
 	 always needed.  */
       TREE_ASM_WRITTEN (DECL_INITIAL (current_function_decl)) = 1;
     }
 
-#ifdef FUNCTION_PROLOGUE
   /* First output the function prologue: code to set up the stack frame.  */
-  FUNCTION_PROLOGUE (file, get_frame_size ());
+  (*targetm.asm_out.function_prologue) (file, get_frame_size ());
+
+#ifdef VMS_DEBUGGING_INFO
+  /* Output label after the prologue of the function.  */
+  if (write_symbols == VMS_DEBUG || write_symbols == VMS_AND_DWARF2_DEBUG)
+    vmsdbgout_after_prologue ();
 #endif
 
   /* If the machine represents the prologue as RTL, the profiling code must
@@ -1665,39 +1560,21 @@ final_start_function (first, file, optimize)
   if (! HAVE_prologue)
 #endif
     profile_after_prologue (file);
-
-  profile_label_no++;
-
-  /* If we are doing basic block profiling, remember a printable version
-     of the function name.  */
-  if (profile_block_flag)
-    {
-      bb_func_label_num =
-	add_bb_string ((*decl_printable_name) (current_function_decl, 2),
-		       FALSE);
-    }
 }
 
 static void
 profile_after_prologue (file)
      FILE *file ATTRIBUTE_UNUSED;
 {
-#ifdef FUNCTION_BLOCK_PROFILER
-  if (profile_block_flag)
-    {
-      FUNCTION_BLOCK_PROFILER (file, count_basic_blocks);
-    }
-#endif /* FUNCTION_BLOCK_PROFILER */
-
 #ifndef PROFILE_BEFORE_PROLOGUE
-  if (profile_flag)
+  if (current_function_profile)
     profile_function (file);
 #endif /* not PROFILE_BEFORE_PROLOGUE */
 }
 
 static void
 profile_function (file)
-     FILE *file;
+     FILE *file ATTRIBUTE_UNUSED;
 {
 #ifndef NO_PROFILE_COUNTERS
   int align = MIN (BIGGEST_ALIGNMENT, LONG_TYPE_SIZE);
@@ -1714,8 +1591,8 @@ profile_function (file)
 #ifndef NO_PROFILE_COUNTERS
   data_section ();
   ASM_OUTPUT_ALIGN (file, floor_log2 (align / BITS_PER_UNIT));
-  ASM_OUTPUT_INTERNAL_LABEL (file, "LP", profile_label_no);
-  assemble_integer (const0_rtx, LONG_TYPE_SIZE / BITS_PER_UNIT, 1);
+  ASM_OUTPUT_INTERNAL_LABEL (file, "LP", current_function_profile_label_no);
+  assemble_integer (const0_rtx, LONG_TYPE_SIZE / BITS_PER_UNIT, align, 1);
 #endif
 
   function_section (current_function_decl);
@@ -1744,7 +1621,7 @@ profile_function (file)
 #endif
 #endif
 
-  FUNCTION_PROFILER (file, profile_label_no);
+  FUNCTION_PROFILER (file, current_function_profile_label_no);
 
 #if defined(STATIC_CHAIN_INCOMING_REGNUM) && defined(ASM_OUTPUT_REG_PUSH)
   if (cxt)
@@ -1776,141 +1653,24 @@ profile_function (file)
    even though not all of them are needed.  */
 
 void
-final_end_function (first, file, optimize)
-     rtx first ATTRIBUTE_UNUSED;
-     FILE *file ATTRIBUTE_UNUSED;
-     int optimize ATTRIBUTE_UNUSED;
+final_end_function ()
 {
   app_disable ();
 
-#ifdef SDB_DEBUGGING_INFO
-  if (write_symbols == SDB_DEBUG)
-    sdbout_end_function (high_function_linenum);
-#endif
+  (*debug_hooks->end_function) (high_function_linenum);
 
-#ifdef DWARF_DEBUGGING_INFO
-  if (write_symbols == DWARF_DEBUG)
-    dwarfout_end_function ();
-#endif
-
-#ifdef XCOFF_DEBUGGING_INFO
-  if (write_symbols == XCOFF_DEBUG)
-    xcoffout_end_function (file, high_function_linenum);
-#endif
-
-#ifdef FUNCTION_EPILOGUE
   /* Finally, output the function epilogue:
      code to restore the stack frame and return to the caller.  */
-  FUNCTION_EPILOGUE (file, get_frame_size ());
-#endif
+  (*targetm.asm_out.function_epilogue) (asm_out_file, get_frame_size ());
 
-#ifdef SDB_DEBUGGING_INFO
-  if (write_symbols == SDB_DEBUG)
-    sdbout_end_epilogue ();
-#endif
+  /* And debug output.  */
+  (*debug_hooks->end_epilogue) ();
 
-#ifdef DWARF_DEBUGGING_INFO
-  if (write_symbols == DWARF_DEBUG)
-    dwarfout_end_epilogue ();
-#endif
-
-#if defined (DWARF2_UNWIND_INFO) || defined (DWARF2_DEBUGGING_INFO)
-  if (dwarf2out_do_frame ())
+#if defined (DWARF2_UNWIND_INFO)
+  if (write_symbols != DWARF2_DEBUG && write_symbols != VMS_AND_DWARF2_DEBUG
+      && dwarf2out_do_frame ())
     dwarf2out_end_epilogue ();
 #endif
-
-#ifdef XCOFF_DEBUGGING_INFO
-  if (write_symbols == XCOFF_DEBUG)
-    xcoffout_end_epilogue (file);
-#endif
-
-  bb_func_label_num = -1;	/* not in function, nuke label # */
-
-  /* If FUNCTION_EPILOGUE is not defined, then the function body
-     itself contains return instructions wherever needed.  */
-}
-
-/* Add a block to the linked list that remembers the current line/file/function
-   for basic block profiling.  Emit the label in front of the basic block and
-   the instructions that increment the count field.  */
-
-static void
-add_bb (file)
-     FILE *file;
-{
-  struct bb_list *ptr =
-    (struct bb_list *) permalloc (sizeof (struct bb_list));
-
-  /* Add basic block to linked list.  */
-  ptr->next = 0;
-  ptr->line_num = last_linenum;
-  ptr->file_label_num = bb_file_label_num;
-  ptr->func_label_num = bb_func_label_num;
-  *bb_tail = ptr;
-  bb_tail = &ptr->next;
-
-  /* Enable the table of basic-block use counts
-     to point at the code it applies to.  */
-  ASM_OUTPUT_INTERNAL_LABEL (file, "LPB", count_basic_blocks);
-
-  /* Before first insn of this basic block, increment the
-     count of times it was entered.  */
-#ifdef BLOCK_PROFILER
-  BLOCK_PROFILER (file, count_basic_blocks);
-#endif
-#ifdef HAVE_cc0
-  CC_STATUS_INIT;
-#endif
-
-  new_block = 0;
-  count_basic_blocks++;
-}
-
-/* Add a string to be used for basic block profiling.  */
-
-static int
-add_bb_string (string, perm_p)
-     const char *string;
-     int perm_p;
-{
-  int len;
-  struct bb_str *ptr = 0;
-
-  if (!string)
-    {
-      string = "<unknown>";
-      perm_p = TRUE;
-    }
-
-  /* Allocate a new string if the current string isn't permanent.  If
-     the string is permanent search for the same string in other
-     allocations.  */
-
-  len = strlen (string) + 1;
-  if (!perm_p)
-    {
-      char *p = (char *) permalloc (len);
-      memcpy (p, string, len);
-      string = p;
-    }
-  else
-    for (ptr = sbb_head; ptr != (struct bb_str *) 0; ptr = ptr->next)
-      if (ptr->string == string)
-	break;
-
-  /* Allocate a new string block if we need to.  */
-  if (!ptr)
-    {
-      ptr = (struct bb_str *) permalloc (sizeof (*ptr));
-      ptr->next = 0;
-      ptr->length = len;
-      ptr->label_num = sbb_label_num++;
-      ptr->string = string;
-      *sbb_tail = ptr;
-      sbb_tail = &ptr->next;
-    }
-
-  return ptr->label_num;
 }
 
 /* Output assembler code for some insns: all or part of a function.
@@ -1931,7 +1691,7 @@ final (first, file, optimize, prescan)
      int optimize;
      int prescan;
 {
-  register rtx insn;
+  rtx insn;
   int max_line = 0;
   int max_uid = 0;
 
@@ -1955,8 +1715,7 @@ final (first, file, optimize, prescan)
 		     && NOTE_LINE_NUMBER (insn) == NOTE_LINE_NUMBER (last)
 		     && NOTE_SOURCE_FILE (insn) == NOTE_SOURCE_FILE (last)))
 	      {
-		NOTE_LINE_NUMBER (insn) = NOTE_INSN_DELETED;
-		NOTE_SOURCE_FILE (insn) = 0;
+		delete_insn (insn);	/* Use delete_note.  */
 		continue;
 	      }
 	    last = insn;
@@ -2002,7 +1761,7 @@ final (first, file, optimize, prescan)
   for (insn = NEXT_INSN (first); insn;)
     {
 #ifdef HAVE_ATTR_length
-      if (INSN_UID (insn) >= INSN_ADDRESSES_SIZE ())
+      if ((unsigned) INSN_UID (insn) >= INSN_ADDRESSES_SIZE ())
 	{
 #ifdef STACK_REGS
 	  /* Irritatingly, the reg-stack pass is creating new instructions
@@ -2021,11 +1780,6 @@ final (first, file, optimize, prescan)
 
       insn = final_scan_insn (insn, file, optimize, prescan, 0);
     }
-
-  /* Do basic-block profiling here
-     if the last insn was a conditional branch.  */
-  if (profile_block_flag && new_block)
-    add_bb (file);
 
   free (line_note_exists);
   line_note_exists = NULL;
@@ -2091,10 +1845,10 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	case NOTE_INSN_DELETED:
 	case NOTE_INSN_LOOP_BEG:
 	case NOTE_INSN_LOOP_END:
+	case NOTE_INSN_LOOP_END_TOP_COND:
 	case NOTE_INSN_LOOP_CONT:
 	case NOTE_INSN_LOOP_VTOP:
 	case NOTE_INSN_FUNCTION_END:
-	case NOTE_INSN_SETJMP:
 	case NOTE_INSN_REPEATED_LINE_NUMBER:
 	case NOTE_INSN_RANGE_BEG:
 	case NOTE_INSN_RANGE_END:
@@ -2122,44 +1876,26 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	  break;
 
 	case NOTE_INSN_PROLOGUE_END:
-#ifdef FUNCTION_END_PROLOGUE
-	  FUNCTION_END_PROLOGUE (file);
-#endif
+	  (*targetm.asm_out.function_end_prologue) (file);
 	  profile_after_prologue (file);
 	  break;
 
 	case NOTE_INSN_EPILOGUE_BEG:
-#ifdef FUNCTION_BEGIN_EPILOGUE
-	  FUNCTION_BEGIN_EPILOGUE (file);
-#endif
+	  (*targetm.asm_out.function_begin_epilogue) (file);
 	  break;
 
 	case NOTE_INSN_FUNCTION_BEG:
-#if defined(SDB_DEBUGGING_INFO) && defined(MIPS_DEBUGGING_INFO)
-	  /* MIPS stabs require the parameter descriptions to be after the
-	     function entry point rather than before.  */
-	  if (write_symbols == SDB_DEBUG)
-	    {
-	      app_disable ();
-	      sdbout_begin_function (last_linenum);
-	    }
-#endif
-#ifdef DWARF_DEBUGGING_INFO
-	  /* This outputs a marker where the function body starts, so it
-	     must be after the prologue.  */
-	  if (write_symbols == DWARF_DEBUG)
-	    {
-	      app_disable ();
-	      dwarfout_begin_function ();
-	    }
-#endif
+	  app_disable ();
+	  (*debug_hooks->end_prologue) (last_linenum);
 	  break;
 
 	case NOTE_INSN_BLOCK_BEG:
 	  if (debug_info_level == DINFO_LEVEL_NORMAL
 	      || debug_info_level == DINFO_LEVEL_VERBOSE
 	      || write_symbols == DWARF_DEBUG
-	      || write_symbols == DWARF2_DEBUG)
+	      || write_symbols == DWARF2_DEBUG
+	      || write_symbols == VMS_AND_DWARF2_DEBUG
+	      || write_symbols == VMS_DEBUG)
 	    {
 	      int n = BLOCK_NUMBER (NOTE_BLOCK (insn));
 
@@ -2167,27 +1903,8 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	      ++block_depth;
 	      high_block_linenum = last_linenum;
 
-	    /* Output debugging info about the symbol-block beginning.  */
-#ifdef SDB_DEBUGGING_INFO
-	      if (write_symbols == SDB_DEBUG)
-		sdbout_begin_block (file, last_linenum, n);
-#endif
-#ifdef XCOFF_DEBUGGING_INFO
-	      if (write_symbols == XCOFF_DEBUG)
-		xcoffout_begin_block (file, last_linenum, n);
-#endif
-#ifdef DBX_DEBUGGING_INFO
-	      if (write_symbols == DBX_DEBUG)
-		ASM_OUTPUT_INTERNAL_LABEL (file, "LBB", n);
-#endif
-#ifdef DWARF_DEBUGGING_INFO
-	      if (write_symbols == DWARF_DEBUG)
-		dwarfout_begin_block (n);
-#endif
-#ifdef DWARF2_DEBUGGING_INFO
-	      if (write_symbols == DWARF2_DEBUG)
-		dwarf2out_begin_block (n);
-#endif
+	      /* Output debugging info about the symbol-block beginning.  */
+	      (*debug_hooks->begin_block) (last_linenum, n);
 
 	      /* Mark this block as output.  */
 	      TREE_ASM_WRITTEN (NOTE_BLOCK (insn)) = 1;
@@ -2198,7 +1915,9 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	  if (debug_info_level == DINFO_LEVEL_NORMAL
 	      || debug_info_level == DINFO_LEVEL_VERBOSE
 	      || write_symbols == DWARF_DEBUG
-	      || write_symbols == DWARF2_DEBUG)
+	      || write_symbols == DWARF2_DEBUG
+	      || write_symbols == VMS_AND_DWARF2_DEBUG
+	      || write_symbols == VMS_DEBUG)
 	    {
 	      int n = BLOCK_NUMBER (NOTE_BLOCK (insn));
 
@@ -2209,26 +1928,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	      if (block_depth < 0)
 		abort ();
 
-#ifdef XCOFF_DEBUGGING_INFO
-	      if (write_symbols == XCOFF_DEBUG)
-		xcoffout_end_block (file, high_block_linenum, n);
-#endif
-#ifdef DBX_DEBUGGING_INFO
-	      if (write_symbols == DBX_DEBUG)
-		ASM_OUTPUT_INTERNAL_LABEL (file, "LBE", n);
-#endif
-#ifdef SDB_DEBUGGING_INFO
-	      if (write_symbols == SDB_DEBUG)
-		sdbout_end_block (file, high_block_linenum, n);
-#endif
-#ifdef DWARF_DEBUGGING_INFO
-	      if (write_symbols == DWARF_DEBUG)
-		dwarfout_end_block (n);
-#endif
-#ifdef DWARF2_DEBUGGING_INFO
-	      if (write_symbols == DWARF2_DEBUG)
-		dwarf2out_end_block (n);
-#endif
+	      (*debug_hooks->end_block) (high_block_linenum, n);
 	    }
 	  break;
 
@@ -2248,7 +1948,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 
 	  /* This note is a line-number.  */
 	  {
-	    register rtx note;
+	    rtx note;
 	    int note_after = 0;
 
 	    /* If there is anything real after this note, output it.
@@ -2285,7 +1985,10 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	    /* Output this line note if it is the first or the last line
 	       note in a row.  */
 	    if (!note_after)
-	      output_source_line (file, insn);
+	      {
+		notice_source_line (insn);
+		(*debug_hooks->source_line) (last_linenum, last_filename);
+	      }
 	  }
 	  break;
 	}
@@ -2309,11 +2012,13 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 #endif
 
 	  if (align && NEXT_INSN (insn))
+	    {
 #ifdef ASM_OUTPUT_MAX_SKIP_ALIGN
-	    ASM_OUTPUT_MAX_SKIP_ALIGN (file, align, max_skip);
+	      ASM_OUTPUT_MAX_SKIP_ALIGN (file, align, max_skip);
 #else
-	    ASM_OUTPUT_ALIGN (file, align);
+	      ASM_OUTPUT_ALIGN (file, align);
 #endif
+	    }
 	}
 #ifdef HAVE_cc0
       CC_STATUS_INIT;
@@ -2347,13 +2052,12 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
       new_block = 1;
 
 #ifdef FINAL_PRESCAN_LABEL
-      FINAL_PRESCAN_INSN (insn, NULL_PTR, 0);
+      FINAL_PRESCAN_INSN (insn, NULL, 0);
 #endif
 
-#ifdef SDB_DEBUGGING_INFO
-      if (write_symbols == SDB_DEBUG && LABEL_NAME (insn))
-	sdbout_label (insn);
-#endif
+      if (LABEL_NAME (insn))
+	(*debug_hooks->label) (insn);
+
       if (app_on)
 	{
 	  fputs (ASM_APP_OFF, file);
@@ -2378,12 +2082,16 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 #else
 	      if (! JUMP_TABLES_IN_TEXT_SECTION)
 		{
+		  int log_align;
+
 		  readonly_data_section ();
-#ifdef READONLY_DATA_SECTION
-		  ASM_OUTPUT_ALIGN (file,
-				    exact_log2 (BIGGEST_ALIGNMENT
-						/ BITS_PER_UNIT));
-#endif /* READONLY_DATA_SECTION */
+
+#ifdef ADDR_VEC_ALIGN
+		  log_align = ADDR_VEC_ALIGN (NEXT_INSN (insn));
+#else
+		  log_align = exact_log2 (BIGGEST_ALIGNMENT / BITS_PER_UNIT);
+#endif
+		  ASM_OUTPUT_ALIGN (file, log_align);
 		}
 	      else
 		function_section (current_function_decl);
@@ -2409,12 +2117,10 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 
     default:
       {
-	register rtx body = PATTERN (insn);
+	rtx body = PATTERN (insn);
 	int insn_code_number;
 	const char *template;
-#ifdef HAVE_cc0
 	rtx note;
-#endif
 
 	/* An INSN, JUMP_INSN or CALL_INSN.
 	   First check for special kinds that recog doesn't recognize.  */
@@ -2443,7 +2149,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	if (GET_CODE (body) == ADDR_VEC || GET_CODE (body) == ADDR_DIFF_VEC)
 	  {
 #if !(defined(ASM_OUTPUT_ADDR_VEC) || defined(ASM_OUTPUT_ADDR_DIFF_VEC))
-	    register int vlen, idx;
+	    int vlen, idx;
 #endif
 
 	    if (prescan > 0)
@@ -2510,23 +2216,24 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	    break;
 	  }
 
-	/* Do basic-block profiling when we reach a new block.
-	   Done here to avoid jump tables.  */
-	if (profile_block_flag && new_block)
-	  add_bb (file);
-
 	if (GET_CODE (body) == ASM_INPUT)
 	  {
+	    const char *string = XSTR (body, 0);
+
 	    /* There's no telling what that did to the condition codes.  */
 	    CC_STATUS_INIT;
 	    if (prescan > 0)
 	      break;
-	    if (! app_on)
+
+	    if (string[0])
 	      {
-		fputs (ASM_APP_ON, file);
-		app_on = 1;
+		if (! app_on)
+		  {
+		    fputs (ASM_APP_ON, file);
+		    app_on = 1;
+		  }
+		fprintf (asm_out_file, "\t%s\n", string);
 	      }
-	    fprintf (asm_out_file, "\t%s\n", XSTR (body, 0));
 	    break;
 	  }
 
@@ -2542,21 +2249,23 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	    if (prescan > 0)
 	      break;
 
-	    if (! app_on)
-	      {
-		fputs (ASM_APP_ON, file);
-		app_on = 1;
-	      }
-
 	    /* Get out the operand values.  */
-	    string = decode_asm_operands (body, ops, NULL_PTR,
-					  NULL_PTR, NULL_PTR);
+	    string = decode_asm_operands (body, ops, NULL, NULL, NULL);
 	    /* Inhibit aborts on what would otherwise be compiler bugs.  */
 	    insn_noperands = noperands;
 	    this_is_asm_operands = insn;
 
 	    /* Output the insn using them.  */
-	    output_asm_insn (string, ops);
+	    if (string[0])
+	      {
+		if (! app_on)
+		  {
+		    fputs (ASM_APP_ON, file);
+		    app_on = 1;
+		  }
+	        output_asm_insn (string, ops);
+	      }
+
 	    this_is_asm_operands = 0;
 	    break;
 	  }
@@ -2570,7 +2279,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	if (GET_CODE (body) == SEQUENCE)
 	  {
 	    /* A delayed-branch sequence */
-	    register int i;
+	    int i;
 	    rtx next;
 
 	    if (prescan > 0)
@@ -2613,22 +2322,6 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	      {
 		CC_STATUS_INIT;
 	      }
-
-	    /* Following a conditional branch sequence, we have a new basic
-	       block.  */
-	    if (profile_block_flag)
-	      {
-		rtx insn = XVECEXP (body, 0, 0);
-		rtx body = PATTERN (insn);
-
-		if ((GET_CODE (insn) == JUMP_INSN && GET_CODE (body) == SET
-		     && GET_CODE (SET_SRC (body)) != LABEL_REF)
-		    || (GET_CODE (insn) == JUMP_INSN
-			&& GET_CODE (body) == PARALLEL
-			&& GET_CODE (XVECEXP (body, 0, 0)) == SET
-			&& GET_CODE (SET_SRC (XVECEXP (body, 0, 0))) != LABEL_REF))
-		  new_block = 1;
-	      }
 	    break;
 	  }
 
@@ -2658,15 +2351,15 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 		&& insn != last_ignored_compare)
 	      {
 		if (GET_CODE (SET_SRC (set)) == SUBREG)
-		  SET_SRC (set) = alter_subreg (SET_SRC (set));
+		  SET_SRC (set) = alter_subreg (&SET_SRC (set));
 		else if (GET_CODE (SET_SRC (set)) == COMPARE)
 		  {
 		    if (GET_CODE (XEXP (SET_SRC (set), 0)) == SUBREG)
 		      XEXP (SET_SRC (set), 0)
-			= alter_subreg (XEXP (SET_SRC (set), 0));
+			= alter_subreg (&XEXP (SET_SRC (set), 0));
 		    if (GET_CODE (XEXP (SET_SRC (set), 1)) == SUBREG)
 		      XEXP (SET_SRC (set), 1)
-			= alter_subreg (XEXP (SET_SRC (set), 1));
+			= alter_subreg (&XEXP (SET_SRC (set), 1));
 		  }
 		if ((cc_status.value1 != 0
 		     && rtx_equal_p (SET_SRC (set), cc_status.value1))
@@ -2674,7 +2367,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 			&& rtx_equal_p (SET_SRC (set), cc_status.value2)))
 		  {
 		    /* Don't delete insn if it has an addressing side-effect.  */
-		    if (! FIND_REG_INC_NOTE (insn, 0)
+		    if (! FIND_REG_INC_NOTE (insn, NULL_RTX)
 			/* or if anything in it is volatile.  */
 			&& ! volatile_refs_p (PATTERN (insn)))
 		      {
@@ -2686,17 +2379,6 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	      }
 	  }
 #endif
-
-	/* Following a conditional branch, we have a new basic block.
-	   But if we are inside a sequence, the new block starts after the
-	   last insn of the sequence.  */
-	if (profile_block_flag && final_sequence == 0
-	    && ((GET_CODE (insn) == JUMP_INSN && GET_CODE (body) == SET
-		 && GET_CODE (SET_SRC (body)) != LABEL_REF)
-		|| (GET_CODE (insn) == JUMP_INSN && GET_CODE (body) == PARALLEL
-		    && GET_CODE (XVECEXP (body, 0, 0)) == SET
-		    && GET_CODE (SET_SRC (XVECEXP (body, 0, 0))) != LABEL_REF)))
-	  new_block = 1;
 
 #ifndef STACK_REGS
 	/* Don't bother outputting obvious no-ops, even without -O.
@@ -2734,7 +2416,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	       It may also return 1 meaning condition now always true
 	       or -1 meaning condition now always false
 	       or 2 meaning condition nontrivial but altered.  */
-	    register int result = alter_cond (XEXP (SET_SRC (body), 0));
+	    int result = alter_cond (XEXP (SET_SRC (body), 0));
 	    /* If condition now has fixed value, replace the IF_THEN_ELSE
 	       with its then-operand or its else-operand.  */
 	    if (result == 1)
@@ -2747,9 +2429,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	       (It would not be recognized.)  */
 	    if (SET_SRC (body) == pc_rtx)
 	      {
-		PUT_CODE (insn, NOTE);
-		NOTE_LINE_NUMBER (insn) = NOTE_INSN_DELETED;
-		NOTE_SOURCE_FILE (insn) = 0;
+	        delete_insn (insn);
 		break;
 	      }
 	    else if (GET_CODE (SET_SRC (body)) == RETURN)
@@ -2797,7 +2477,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	      case EQ:
 	      case NE:
 		{
-		  register int result;
+		  int result;
 		  if (XEXP (cond_rtx, 0) != cc0_rtx)
 		    break;
 		  result = alter_cond (cond_rtx);
@@ -2808,11 +2488,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 		  else if (result == 2)
 		    INSN_CODE (insn) = -1;
 		  if (SET_DEST (set) == SET_SRC (set))
-		    {
-		      PUT_CODE (insn, NOTE);
-		      NOTE_LINE_NUMBER (insn) = NOTE_INSN_DELETED;
-		      NOTE_SOURCE_FILE (insn) = 0;
-		    }
+		    delete_insn (insn);
 		}
 		break;
 
@@ -2834,7 +2510,6 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	    if (next != 0 && next != NEXT_INSN (insn))
 	      {
 		rtx prev = PREV_INSN (insn);
-		rtx note;
 
 		for (note = NEXT_INSN (insn); note != next;
 		     note = NEXT_INSN (note))
@@ -2871,7 +2546,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
            print_rtl_single (asm_out_file, insn);
            print_rtx_head = "";
          }
-       
+
 	if (! constrain_operands_cached (1))
 	  fatal_insn_not_found (insn);
 
@@ -2930,10 +2605,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 		 prev = PREV_INSN (prev))
 	      {
 		if (GET_CODE (prev) == NOTE)
-		  {
-		    NOTE_LINE_NUMBER (prev) = NOTE_INSN_DELETED;
-		    NOTE_SOURCE_FILE (prev) = 0;
-		  }
+		  delete_insn (prev);	/* Use delete_note.  */
 	      }
 
 	    return prev;
@@ -2947,7 +2619,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 
 	    /* If we didn't split the insn, go away.  */
 	    if (new == insn && PATTERN (new) == body)
-	      fatal_insn ("Could not split insn", insn);
+	      fatal_insn ("could not split insn", insn);
 
 #ifdef HAVE_ATTR_length
 	    /* This instruction should have been split in shorten_branches,
@@ -2991,6 +2663,12 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	INSN_DELETED_P (insn) = 1;
 #endif
 
+	/* Emit information for vtable gc.  */
+	note = find_reg_note (insn, REG_VTABLE_REF, NULL_RTX);
+	if (note)
+	  assemble_vtable_entry (XEXP (XEXP (note, 0), 0),
+				 INTVAL (XEXP (XEXP (note, 0), 1)));
+
 	current_output_insn = debug_insn = 0;
       }
     }
@@ -3001,66 +2679,15 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
    based on the NOTE-insn INSN, assumed to be a line number.  */
 
 static void
-output_source_line (file, insn)
-     FILE *file ATTRIBUTE_UNUSED;
+notice_source_line (insn)
      rtx insn;
 {
-  register const char *filename = NOTE_SOURCE_FILE (insn);
-
-  /* Remember filename for basic block profiling.
-     Filenames are allocated on the permanent obstack
-     or are passed in ARGV, so we don't have to save
-     the string.  */
-
-  if (profile_block_flag && last_filename != filename)
-    bb_file_label_num = add_bb_string (filename, TRUE);
+  const char *filename = NOTE_SOURCE_FILE (insn);
 
   last_filename = filename;
   last_linenum = NOTE_LINE_NUMBER (insn);
   high_block_linenum = MAX (last_linenum, high_block_linenum);
   high_function_linenum = MAX (last_linenum, high_function_linenum);
-
-  if (write_symbols != NO_DEBUG)
-    {
-#ifdef SDB_DEBUGGING_INFO
-      if (write_symbols == SDB_DEBUG
-#if 0 /* People like having line numbers even in wrong file!  */
-	  /* COFF can't handle multiple source files--lose, lose.  */
-	  && !strcmp (filename, main_input_filename)
-#endif
-	  /* COFF relative line numbers must be positive.  */
-	  && last_linenum > sdb_begin_function_line)
-	{
-#ifdef ASM_OUTPUT_SOURCE_LINE
-	  ASM_OUTPUT_SOURCE_LINE (file, last_linenum);
-#else
-	  fprintf (file, "\t.ln\t%d\n",
-		   ((sdb_begin_function_line > -1)
-		    ? last_linenum - sdb_begin_function_line : 1));
-#endif
-	}
-#endif
-
-#if defined (DBX_DEBUGGING_INFO)
-      if (write_symbols == DBX_DEBUG)
-	dbxout_source_line (file, filename, NOTE_LINE_NUMBER (insn));
-#endif
-
-#if defined (XCOFF_DEBUGGING_INFO)
-      if (write_symbols == XCOFF_DEBUG)
-	xcoffout_source_line (file, filename, insn);
-#endif
-
-#ifdef DWARF_DEBUGGING_INFO
-      if (write_symbols == DWARF_DEBUG)
-	dwarfout_line (filename, NOTE_LINE_NUMBER (insn));
-#endif
-
-#ifdef DWARF2_DEBUGGING_INFO
-      if (write_symbols == DWARF2_DEBUG)
-	dwarf2out_line (filename, NOTE_LINE_NUMBER (insn));
-#endif
-    }
 }
 
 /* For each operand in INSN, simplify (subreg (reg)) so that it refers
@@ -3074,22 +2701,27 @@ cleanup_subreg_operands (insn)
   extract_insn_cached (insn);
   for (i = 0; i < recog_data.n_operands; i++)
     {
-      if (GET_CODE (recog_data.operand[i]) == SUBREG)
-	recog_data.operand[i] = alter_subreg (recog_data.operand[i]);
+      /* The following test cannot use recog_data.operand when tesing
+	 for a SUBREG: the underlying object might have been changed
+	 already if we are inside a match_operator expression that
+	 matches the else clause.  Instead we test the underlying
+	 expression directly.  */
+      if (GET_CODE (*recog_data.operand_loc[i]) == SUBREG)
+	recog_data.operand[i] = alter_subreg (recog_data.operand_loc[i]);
       else if (GET_CODE (recog_data.operand[i]) == PLUS
 	       || GET_CODE (recog_data.operand[i]) == MULT
 	       || GET_CODE (recog_data.operand[i]) == MEM)
-	recog_data.operand[i] = walk_alter_subreg (recog_data.operand[i]);
+	recog_data.operand[i] = walk_alter_subreg (recog_data.operand_loc[i]);
     }
 
   for (i = 0; i < recog_data.n_dups; i++)
     {
       if (GET_CODE (*recog_data.dup_loc[i]) == SUBREG)
-	*recog_data.dup_loc[i] = alter_subreg (*recog_data.dup_loc[i]);
+	*recog_data.dup_loc[i] = alter_subreg (recog_data.dup_loc[i]);
       else if (GET_CODE (*recog_data.dup_loc[i]) == PLUS
 	       || GET_CODE (*recog_data.dup_loc[i]) == MULT
 	       || GET_CODE (*recog_data.dup_loc[i]) == MEM)
-	*recog_data.dup_loc[i] = walk_alter_subreg (*recog_data.dup_loc[i]);
+	*recog_data.dup_loc[i] = walk_alter_subreg (recog_data.dup_loc[i]);
     }
 }
 
@@ -3097,83 +2729,68 @@ cleanup_subreg_operands (insn)
    based on the thing it is a subreg of.  */
 
 rtx
-alter_subreg (x)
-     register rtx x;
+alter_subreg (xp)
+     rtx *xp;
 {
-  register rtx y = SUBREG_REG (x);
+  rtx x = *xp;
+  rtx y = SUBREG_REG (x);
 
-  if (GET_CODE (y) == SUBREG)
-    y = alter_subreg (y);
-
-  /* If reload is operating, we may be replacing inside this SUBREG.
-     Check for that and make a new one if so.  */
-  if (reload_in_progress && find_replacement (&SUBREG_REG (x)) != 0)
-    x = copy_rtx (x);
-
-  if (GET_CODE (y) == REG)
+  /* simplify_subreg does not remove subreg from volatile references.
+     We are required to.  */
+  if (GET_CODE (y) == MEM)
+    *xp = adjust_address (y, GET_MODE (x), SUBREG_BYTE (x));
+  else
     {
-      int regno;
-      /* If the word size is larger than the size of this register,
-	 adjust the register number to compensate.  */
-      /* ??? Note that this just catches stragglers created by/for
-	 integrate.  It would be better if we either caught these
-	 earlier, or kept _all_ subregs until now and eliminate
-	 gen_lowpart and friends.  */
+      rtx new = simplify_subreg (GET_MODE (x), y, GET_MODE (y),
+				 SUBREG_BYTE (x));
 
-#ifdef ALTER_HARD_SUBREG
-      regno = ALTER_HARD_SUBREG (GET_MODE (x), SUBREG_WORD (x),
-				 GET_MODE (y), REGNO (y));
-#else
-      regno = REGNO (y) + SUBREG_WORD (x);
-#endif
-      PUT_CODE (x, REG);
-      REGNO (x) = regno;
-      ORIGINAL_REGNO (x) = ORIGINAL_REGNO (y);
-      /* This field has a different meaning for REGs and SUBREGs.  Make sure
-	 to clear it!  */
-      x->used = 0;
-    }
-  else if (GET_CODE (y) == MEM)
-    {
-      register int offset = SUBREG_WORD (x) * UNITS_PER_WORD;
-
-      if (BYTES_BIG_ENDIAN)
-	offset -= (MIN (UNITS_PER_WORD, GET_MODE_SIZE (GET_MODE (x)))
-		   - MIN (UNITS_PER_WORD, GET_MODE_SIZE (GET_MODE (y))));
-      PUT_CODE (x, MEM);
-      MEM_COPY_ATTRIBUTES (x, y);
-      XEXP (x, 0) = plus_constant (XEXP (y, 0), offset);
+      if (new != 0)
+	*xp = new;
+      /* Simplify_subreg can't handle some REG cases, but we have to.  */
+      else if (GET_CODE (y) == REG)
+	{
+	  unsigned int regno = subreg_hard_regno (x, 1);
+	  PUT_CODE (x, REG);
+	  REGNO (x) = regno;
+	  ORIGINAL_REGNO (x) = ORIGINAL_REGNO (y);
+	  /* This field has a different meaning for REGs and SUBREGs.  Make
+	     sure to clear it!  */
+	  x->used = 0;
+	}
+      else
+	abort ();
     }
 
-  return x;
+  return *xp;
 }
 
 /* Do alter_subreg on all the SUBREGs contained in X.  */
 
 static rtx
-walk_alter_subreg (x)
-     rtx x;
+walk_alter_subreg (xp)
+     rtx *xp;
 {
+  rtx x = *xp;
   switch (GET_CODE (x))
     {
     case PLUS:
     case MULT:
-      XEXP (x, 0) = walk_alter_subreg (XEXP (x, 0));
-      XEXP (x, 1) = walk_alter_subreg (XEXP (x, 1));
+      XEXP (x, 0) = walk_alter_subreg (&XEXP (x, 0));
+      XEXP (x, 1) = walk_alter_subreg (&XEXP (x, 1));
       break;
 
     case MEM:
-      XEXP (x, 0) = walk_alter_subreg (XEXP (x, 0));
+      XEXP (x, 0) = walk_alter_subreg (&XEXP (x, 0));
       break;
 
     case SUBREG:
-      return alter_subreg (x);
+      return alter_subreg (xp);
 
     default:
       break;
     }
 
-  return x;
+  return *xp;
 }
 
 #ifdef HAVE_cc0
@@ -3189,7 +2806,7 @@ walk_alter_subreg (x)
 
 static int
 alter_cond (cond)
-     register rtx cond;
+     rtx cond;
 {
   int value = 0;
 
@@ -3342,19 +2959,128 @@ alter_cond (cond)
    In an `asm', it's the user's fault; otherwise, the compiler's fault.  */
 
 void
-output_operand_lossage (msgid)
-     const char *msgid;
+output_operand_lossage VPARAMS ((const char *msgid, ...))
 {
+  char *fmt_string;
+  char *new_message;
+  const char *pfx_str;
+  VA_OPEN (ap, msgid);
+  VA_FIXEDARG (ap, const char *, msgid);
+
+  pfx_str = this_is_asm_operands ? _("invalid `asm': ") : "output_operand: ";
+  asprintf (&fmt_string, "%s%s", pfx_str, _(msgid));
+  vasprintf (&new_message, fmt_string, ap);
+  
   if (this_is_asm_operands)
-    error_for_asm (this_is_asm_operands, "invalid `asm': %s", _(msgid));
+    error_for_asm (this_is_asm_operands, "%s", new_message);
   else
-    {
-      error ("output_operand: %s", _(msgid));
-      abort ();
-    }
+    internal_error ("%s", new_message);
+
+  free (fmt_string);
+  free (new_message);
+  VA_CLOSE (ap);
 }
 
 /* Output of assembler code from a template, and its subroutines.  */
+
+/* Annotate the assembly with a comment describing the pattern and
+   alternative used.  */
+
+static void
+output_asm_name ()
+{
+  if (debug_insn)
+    {
+      int num = INSN_CODE (debug_insn);
+      fprintf (asm_out_file, "\t%s %d\t%s",
+	       ASM_COMMENT_START, INSN_UID (debug_insn),
+	       insn_data[num].name);
+      if (insn_data[num].n_alternatives > 1)
+	fprintf (asm_out_file, "/%d", which_alternative + 1);
+#ifdef HAVE_ATTR_length
+      fprintf (asm_out_file, "\t[length = %d]",
+	       get_attr_length (debug_insn));
+#endif
+      /* Clear this so only the first assembler insn
+	 of any rtl insn will get the special comment for -dp.  */
+      debug_insn = 0;
+    }
+}
+
+/* If OP is a REG or MEM and we can find a MEM_EXPR corresponding to it
+   or its address, return that expr .  Set *PADDRESSP to 1 if the expr
+   corresponds to the address of the object and 0 if to the object.  */
+
+static tree
+get_mem_expr_from_op (op, paddressp)
+     rtx op;
+     int *paddressp;
+{
+  tree expr;
+  int inner_addressp;
+
+  *paddressp = 0;
+
+  if (op == NULL)
+    return 0;
+
+  if (GET_CODE (op) == REG && ORIGINAL_REGNO (op) >= FIRST_PSEUDO_REGISTER)
+    return REGNO_DECL (ORIGINAL_REGNO (op));
+  else if (GET_CODE (op) != MEM)
+    return 0;
+
+  if (MEM_EXPR (op) != 0)
+    return MEM_EXPR (op);
+
+  /* Otherwise we have an address, so indicate it and look at the address.  */
+  *paddressp = 1;
+  op = XEXP (op, 0);
+
+  /* First check if we have a decl for the address, then look at the right side
+     if it is a PLUS.  Otherwise, strip off arithmetic and keep looking.
+     But don't allow the address to itself be indirect.  */
+  if ((expr = get_mem_expr_from_op (op, &inner_addressp)) && ! inner_addressp)
+    return expr;
+  else if (GET_CODE (op) == PLUS
+	   && (expr = get_mem_expr_from_op (XEXP (op, 1), &inner_addressp)))
+    return expr;
+
+  while (GET_RTX_CLASS (GET_CODE (op)) == '1'
+	 || GET_RTX_CLASS (GET_CODE (op)) == '2')
+    op = XEXP (op, 0);
+
+  expr = get_mem_expr_from_op (op, &inner_addressp);
+  return inner_addressp ? 0 : expr;
+}
+
+/* Output operand names for assembler instructions.  OPERANDS is the
+   operand vector, OPORDER is the order to write the operands, and NOPS
+   is the number of operands to write.  */
+
+static void
+output_asm_operand_names (operands, oporder, nops)
+     rtx *operands;
+     int *oporder;
+     int nops;
+{
+  int wrote = 0;
+  int i;
+
+  for (i = 0; i < nops; i++)
+    {
+      int addressp;
+      tree expr = get_mem_expr_from_op (operands[oporder[i]], &addressp);
+
+      if (expr)
+	{
+	  fprintf (asm_out_file, "%c%s %s",
+		   wrote ? ',' : '\t', wrote ? "" : ASM_COMMENT_START,
+		   addressp ? "*" : "");
+	  print_mem_expr (asm_out_file, expr);
+	  wrote = 1;
+	}
+    }
+}
 
 /* Output text from TEMPLATE to the assembler output file,
    obeying %-directions to substitute operands taken from
@@ -3372,45 +3098,26 @@ output_operand_lossage (msgid)
       and print a constant expression for minus the value
       of the operand, with no other punctuation.  */
 
-static void
-output_asm_name ()
-{
-  if (flag_print_asm_name)
-    {
-      /* Annotate the assembly with a comment describing the pattern and
-	 alternative used.  */
-      if (debug_insn)
-	{
-	  register int num = INSN_CODE (debug_insn);
-	  fprintf (asm_out_file, "\t%s %d\t%s",
-		   ASM_COMMENT_START, INSN_UID (debug_insn),
-		   insn_data[num].name);
-	  if (insn_data[num].n_alternatives > 1)
-	    fprintf (asm_out_file, "/%d", which_alternative + 1);
-#ifdef HAVE_ATTR_length
-	  fprintf (asm_out_file, "\t[length = %d]",
-		   get_attr_length (debug_insn));
-#endif
-	  /* Clear this so only the first assembler insn
-	     of any rtl insn will get the special comment for -dp.  */
-	  debug_insn = 0;
-	}
-    }
-}
-
 void
 output_asm_insn (template, operands)
      const char *template;
      rtx *operands;
 {
-  register const char *p;
-  register int c;
+  const char *p;
+  int c;
+#ifdef ASSEMBLER_DIALECT
+  int dialect = 0;
+#endif
+  int oporder[MAX_RECOG_OPERANDS];
+  char opoutput[MAX_RECOG_OPERANDS];
+  int ops = 0;
 
   /* An insn may return a null string template
      in a case where no assembler code is needed.  */
   if (*template == 0)
     return;
 
+  memset (opoutput, 0, sizeof opoutput);
   p = template;
   putc ('\t', asm_out_file);
 
@@ -3422,7 +3129,14 @@ output_asm_insn (template, operands)
     switch (c)
       {
       case '\n':
-	output_asm_name ();
+	if (flag_verbose_asm)
+	  output_asm_operand_names (operands, oporder, ops);
+	if (flag_print_asm_name)
+	  output_asm_name ();
+
+	ops = 0;
+	memset (opoutput, 0, sizeof opoutput);
+
 	putc (c, asm_out_file);
 #ifdef ASM_OUTPUT_OPCODE
 	while ((c = *p) == '\t')
@@ -3437,7 +3151,12 @@ output_asm_insn (template, operands)
 #ifdef ASSEMBLER_DIALECT
       case '{':
 	{
-	  register int i;
+	  int i;
+
+	  if (dialect)
+	    output_operand_lossage ("nested assembly dialect alternatives");
+	  else
+	    dialect = 1;
 
 	  /* If we want the first dialect, do nothing.  Otherwise, skip
 	     DIALECT_NUMBER of strings ending with '|'.  */
@@ -3450,16 +3169,35 @@ output_asm_insn (template, operands)
 	      if (*p == '|')
 		p++;
 	    }
+
+	  if (*p == '\0')
+	    output_operand_lossage ("unterminated assembly dialect alternative");
 	}
 	break;
 
       case '|':
-	/* Skip to close brace.  */
-	while (*p && *p++ != '}')
-	  ;
+	if (dialect)
+	  {
+	    /* Skip to close brace.  */
+	    do
+	      {
+		if (*p == '\0')
+		  {
+		    output_operand_lossage ("unterminated assembly dialect alternative");
+		    break;
+		  }
+	      }
+	    while (*p++ != '}');
+	    dialect = 0;
+	  }
+	else
+	  putc (c, asm_out_file);
 	break;
 
       case '}':
+	if (! dialect)
+	  putc (c, asm_out_file);
+	dialect = 0;
 	break;
 #endif
 
@@ -3483,14 +3221,15 @@ output_asm_insn (template, operands)
 	   Letters `acln' are implemented directly.
 	   Other letters are passed to `output_operand' so that
 	   the PRINT_OPERAND macro can define them.  */
-	else if (ISLOWER (*p) || ISUPPER (*p))
+	else if (ISALPHA (*p))
 	  {
 	    int letter = *p++;
 	    c = atoi (p);
 
-	    if (! (*p >= '0' && *p <= '9'))
-	      output_operand_lossage ("operand number missing after %-letter");
-	    else if (this_is_asm_operands && (c < 0 || (unsigned int) c >= insn_noperands))
+	    if (! ISDIGIT (*p))
+	      output_operand_lossage ("operand number missing after %%-letter");
+	    else if (this_is_asm_operands
+		     && (c < 0 || (unsigned int) c >= insn_noperands))
 	      output_operand_lossage ("operand number out of range");
 	    else if (letter == 'l')
 	      output_asm_label (operands[c]);
@@ -3517,11 +3256,15 @@ output_asm_insn (template, operands)
 	    else
 	      output_operand (operands[c], letter);
 
-	    while ((c = *p) >= '0' && c <= '9')
+	    if (!opoutput[c])
+	      oporder[ops++] = c;
+	    opoutput[c] = 1;
+
+	    while (ISDIGIT (c = *p))
 	      p++;
 	  }
 	/* % followed by a digit outputs an operand the default way.  */
-	else if (*p >= '0' && *p <= '9')
+	else if (ISDIGIT (*p))
 	  {
 	    c = atoi (p);
 	    if (this_is_asm_operands
@@ -3529,7 +3272,12 @@ output_asm_insn (template, operands)
 	      output_operand_lossage ("operand number out of range");
 	    else
 	      output_operand (operands[c], 0);
-	    while ((c = *p) >= '0' && c <= '9')
+
+	    if (!opoutput[c])
+	      oporder[ops++] = c;
+	    opoutput[c] = 1;
+
+	    while (ISDIGIT (c = *p))
 	      p++;
 	  }
 	/* % followed by punctuation: output something for that
@@ -3547,7 +3295,11 @@ output_asm_insn (template, operands)
 	putc (c, asm_out_file);
       }
 
-  output_asm_name ();
+  /* Write out the variable names for operands, if we know them.  */
+  if (flag_verbose_asm)
+    output_asm_operand_names (operands, oporder, ops);
+  if (flag_print_asm_name)
+    output_asm_name ();
 
   putc ('\n', asm_out_file);
 }
@@ -3567,7 +3319,7 @@ output_asm_label (x)
 	  && NOTE_LINE_NUMBER (x) == NOTE_INSN_DELETED_LABEL))
     ASM_GENERATE_INTERNAL_LABEL (buf, "L", CODE_LABEL_NUMBER (x));
   else
-    output_operand_lossage ("`%l' operand isn't a label");
+    output_operand_lossage ("`%%l' operand isn't a label");
 
   assemble_name (asm_out_file, buf);
 }
@@ -3588,7 +3340,7 @@ output_operand (x, code)
      int code ATTRIBUTE_UNUSED;
 {
   if (x && GET_CODE (x) == SUBREG)
-    x = alter_subreg (x);
+    x = alter_subreg (&x);
 
   /* If X is a pseudo-register, abort now rather than writing trash to the
      assembler file.  */
@@ -3607,7 +3359,7 @@ void
 output_address (x)
      rtx x;
 {
-  walk_alter_subreg (x);
+  walk_alter_subreg (&x);
   PRINT_OPERAND_ADDRESS (asm_out_file, x);
 }
 
@@ -3626,10 +3378,7 @@ output_addr_const (file, x)
   switch (GET_CODE (x))
     {
     case PC:
-      if (flag_pic)
-	putc ('.', file);
-      else
-	abort ();
+      putc ('.', file);
       break;
 
     case SYMBOL_REF:
@@ -3645,7 +3394,11 @@ output_addr_const (file, x)
       /* Fall through.  */
     case CODE_LABEL:
       ASM_GENERATE_INTERNAL_LABEL (buf, "L", CODE_LABEL_NUMBER (x));
+#ifdef ASM_OUTPUT_LABEL_REF
+      ASM_OUTPUT_LABEL_REF (file, buf);
+#else
       assemble_name (file, buf);
+#endif
       break;
 
     case CONST_INT:
@@ -3704,20 +3457,21 @@ output_addr_const (file, x)
 
       output_addr_const (file, XEXP (x, 0));
       fprintf (file, "-");
-      if ((GET_CODE (XEXP (x, 1)) == CONST_INT
-	   && INTVAL (XEXP (x, 1)) < 0)
-	  || GET_CODE (XEXP (x, 1)) != CONST_INT)
-	{
-	  fprintf (file, "%s", ASM_OPEN_PAREN);
-	  output_addr_const (file, XEXP (x, 1));
-	  fprintf (file, "%s", ASM_CLOSE_PAREN);
-	}
-      else
+      if ((GET_CODE (XEXP (x, 1)) == CONST_INT && INTVAL (XEXP (x, 1)) >= 0)
+	  || GET_CODE (XEXP (x, 1)) == PC
+	  || GET_CODE (XEXP (x, 1)) == SYMBOL_REF)
 	output_addr_const (file, XEXP (x, 1));
+      else
+	{
+	  fputs (targetm.asm_out.open_paren, file);
+	  output_addr_const (file, XEXP (x, 1));
+	  fputs (targetm.asm_out.close_paren, file);
+	}
       break;
 
     case ZERO_EXTEND:
     case SIGN_EXTEND:
+    case SUBREG:
       output_addr_const (file, XEXP (x, 0));
       break;
 
@@ -3745,20 +3499,12 @@ output_addr_const (file, x)
 void
 asm_fprintf VPARAMS ((FILE *file, const char *p, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  FILE *file;
-  const char *p;
-#endif
-  va_list argptr;
   char buf[10];
   char *q, c;
 
-  VA_START (argptr, p);
-
-#ifndef ANSI_PROTOTYPES
-  file = va_arg (argptr, FILE *);
-  p = va_arg (argptr, const char *);
-#endif
+  VA_OPEN (argptr, p);
+  VA_FIXEDARG (argptr, FILE *, file);
+  VA_FIXEDARG (argptr, const char *, p);
 
   buf[0] = '%';
 
@@ -3796,7 +3542,7 @@ asm_fprintf VPARAMS ((FILE *file, const char *p, ...))
       case '%':
 	c = *p++;
 	q = &buf[1];
-	while ((c >= '0' && c <= '9') || c == '.')
+	while (ISDIGIT (c) || c == '.')
 	  {
 	    *q++ = c;
 	    c = *p++;
@@ -3906,7 +3652,7 @@ asm_fprintf VPARAMS ((FILE *file, const char *p, ...))
       default:
 	fputc (c, file);
       }
-  va_end (argptr);
+  VA_CLOSE (argptr);
 }
 
 /* Split up a CONST_DOUBLE or integer constant rtx
@@ -4086,7 +3832,7 @@ leaf_function_p ()
   rtx insn;
   rtx link;
 
-  if (profile_flag || profile_block_flag || profile_arc_flag)
+  if (current_function_profile || profile_arc_flag)
     return 0;
 
   for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
@@ -4117,6 +3863,25 @@ leaf_function_p ()
     }
 
   return 1;
+}
+
+/* Return 1 if branch is an forward branch.
+   Uses insn_shuid array, so it works only in the final pass.  May be used by
+   output templates to customary add branch prediction hints.
+ */
+int
+final_forward_branch_p (insn)
+     rtx insn;
+{
+  int insn_id, label_id;
+  if (!uid_shuid)
+    abort ();
+  insn_id = INSN_SHUID (insn);
+  label_id = INSN_SHUID (JUMP_LABEL (insn));
+  /* We've hit some insns that does not have id information available.  */
+  if (!insn_id || !label_id)
+    abort ();
+  return insn_id < label_id;
 }
 
 /* On some machines, a function with no call insns
@@ -4180,10 +3945,10 @@ leaf_renumber_regs (first)
 
 void
 leaf_renumber_regs_insn (in_rtx)
-     register rtx in_rtx;
+     rtx in_rtx;
 {
-  register int i, j;
-  register const char *format_ptr;
+  int i, j;
+  const char *format_ptr;
 
   if (in_rtx == 0)
     return;

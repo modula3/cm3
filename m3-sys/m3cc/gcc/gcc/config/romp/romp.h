@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for ROMP chip.
-   Copyright (C) 1989, 1991, 1993, 1995, 1996, 1998, 1999, 2000, 2001
+   Copyright (C) 1989, 1991, 1993, 1995, 1996, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@nyu.edu)
 
@@ -44,7 +44,7 @@ Boston, MA 02111-1307, USA.  */
 /* Flag to pass and return floating point values in floating point registers.
    Since this violates the linkage convention, we feel free to destroy fr2
    and fr3 on function calls.
-   fr1-fr3 are used to pass the arguments. */
+   fr1-fr3 are used to pass the arguments.  */
 #define TARGET_FP_REGS (target_flags & 4)
 
 /* Flag to return structures of more than one word in memory.  This is for
@@ -75,8 +75,8 @@ extern int target_flags;
 /* target machine storage layout */
 
 /* Define this if most significant bit is lowest numbered
-   in instructions that operate on numbered bit-fields. */
-/* That is true on ROMP. */
+   in instructions that operate on numbered bit-fields.  */
+/* That is true on ROMP.  */
 #define BITS_BIG_ENDIAN 1
 
 /* Define this if most significant byte of a word is the lowest numbered.  */
@@ -87,7 +87,7 @@ extern int target_flags;
    numbered. 
 
    For ROMP we can decide arbitrarily since there are no machine instructions
-   for them.  Might as well be consistent with bits and bytes. */
+   for them.  Might as well be consistent with bits and bytes.  */
 #define WORDS_BIG_ENDIAN 1
 
 /* number of bits in an addressable storage unit */
@@ -226,7 +226,7 @@ extern int target_flags;
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
    On ROMP, the cpu registers can hold any mode but the float registers
-   can hold only floating point. */
+   can hold only floating point.  */
 #define HARD_REGNO_MODE_OK(REGNO, MODE) \
   (! FP_REGNO_P (REGNO) || GET_MODE_CLASS (MODE) == MODE_FLOAT	\
    || GET_MODE_CLASS (MODE) == MODE_COMPLEX_FLOAT)
@@ -396,7 +396,7 @@ enum reg_class { NO_REGS, R0_REGS, R15_REGS, BASE_REGS, GENERAL_REGS,
    just in move insns as that is the only place it is likely to occur.
 
    `S' means that this is the address of a constant pool location.  This is
-   equal to r14 plus a constant.  We also only check for this in move insns. */
+   equal to r14 plus a constant.  We also only check for this in move insns.  */
 
 #define EXTRA_CONSTRAINT(OP, C)				\
   ((C) == 'Q' ?						\
@@ -474,7 +474,7 @@ enum reg_class { NO_REGS, R0_REGS, R15_REGS, BASE_REGS, GENERAL_REGS,
    of the first local allocated.
    On the ROMP, if we set the frame pointer to 15 words below the highest
    address of the highest local variable, the first 16 words will be
-   addressable via D-short insns. */
+   addressable via D-short insns.  */
 #define STARTING_FRAME_OFFSET 64
 
 /* If we generate an insn to push BYTES bytes,
@@ -717,17 +717,7 @@ struct rt_cargs {int gregs, fregs; };
 
    On ROMP, all constants are in the data area.  */
 
-#define SELECT_RTX_SECTION(MODE, X)	data_section ()
-
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.  */
-
-#define FUNCTION_PROLOGUE(FILE, SIZE) output_prolog (FILE, SIZE)
+#define SELECT_RTX_SECTION(MODE, X, ALIGN)	data_section ()
 
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
@@ -740,18 +730,6 @@ struct rt_cargs {int gregs, fregs; };
    functions that have frame pointers.
    No definition is equivalent to always zero.  */
 /* #define EXIT_IGNORE_STACK	1	*/
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#define FUNCTION_EPILOGUE(FILE, SIZE) output_epilog (FILE, SIZE)
 
 /* Output assembler code for a block containing the constant parts
    of a trampoline, leaving space for the variable parts.
@@ -807,37 +785,7 @@ struct rt_cargs {int gregs, fregs; };
    data area.  */
 
 #define INITIALIZE_TRAMPOLINE(ADDR, FNADDR, CXT)		\
-{								\
-  rtx _addr, _temp;						\
-  rtx _val;							\
-								\
-  _temp = expand_binop (SImode, add_optab, ADDR,		\
-			GEN_INT (4),				\
-			0, 1, OPTAB_LIB_WIDEN);			\
-  emit_move_insn (gen_rtx_MEM (SImode,				\
-			       memory_address (SImode, ADDR)), _temp); \
-								\
-  _val = force_reg (SImode, CXT);				\
-  _addr = memory_address (HImode, plus_constant (ADDR, 10));	\
-  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
-		  gen_lowpart (HImode, _val));			\
-  _temp = expand_shift (RSHIFT_EXPR, SImode, _val,		\
-			build_int_2 (16, 0), 0, 1);		\
-  _addr = memory_address (HImode, plus_constant (ADDR, 6));	\
-  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
-		  gen_lowpart (HImode, _temp));			\
-								\
-  _val = force_reg (SImode, FNADDR);				\
-  _addr = memory_address (HImode, plus_constant (ADDR, 24));	\
-  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
-		  gen_lowpart (HImode, _val));			\
-  _temp = expand_shift (RSHIFT_EXPR, SImode, _val,		\
-			build_int_2 (16, 0), 0, 1);		\
-  _addr = memory_address (HImode, plus_constant (ADDR, 20));	\
-  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
-		  gen_lowpart (HImode, _temp));			\
-								\
-}
+	romp_initialize_trampoline (ADDR, FNADDR, CXT)
 
 /* Definitions for register eliminations.
 
@@ -1144,14 +1092,8 @@ struct rt_cargs {int gregs, fregs; };
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
-   Do not define this if the table should contain absolute addresses. */
+   Do not define this if the table should contain absolute addresses.  */
 /* #define CASE_VECTOR_PC_RELATIVE 1 */
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 0
@@ -1345,7 +1287,7 @@ struct rt_cargs {int gregs, fregs; };
 /* Set if condition code (really not-Z) is stored in `test bit'.  */
 #define CC_IN_TB	 01000
 
-/* Set if condition code is set by an unsigned compare. */
+/* Set if condition code is set by an unsigned compare.  */
 #define	CC_UNSIGNED        02000
 
 /* Store in cc_status the expressions
@@ -1399,10 +1341,6 @@ struct rt_cargs {int gregs, fregs; };
  "r10", "r11", "r12", "r13", "r14", "r15", "ap",		\
  "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7" }
 
-/* How to renumber registers for dbx and gdb.  */
-
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
 
@@ -1415,7 +1353,7 @@ struct rt_cargs {int gregs, fregs; };
 #define ASM_GLOBALIZE_LABEL(FILE,NAME)	\
   do { fputs ("\t.globl ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #define USER_LABEL_PREFIX "_"
 
@@ -1427,7 +1365,7 @@ struct rt_cargs {int gregs, fregs; };
 
 /* This is how to output a label for a jump table.  Arguments are the same as
    for ASM_OUTPUT_INTERNAL_LABEL, except the insn for the jump table is
-   passed. */
+   passed.  */
 
 #define ASM_OUTPUT_CASE_LABEL(FILE,PREFIX,NUM,TABLEINSN)	\
 { ASM_OUTPUT_ALIGN (FILE, 2); ASM_OUTPUT_INTERNAL_LABEL (FILE, PREFIX, NUM); }
@@ -1439,50 +1377,6 @@ struct rt_cargs {int gregs, fregs; };
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*%s%d", PREFIX, NUM)
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)		\
-  fprintf (FILE, "\t.double 0d%.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining a `float' constant.
-
-   WARNING:  Believe it or not, the ROMP assembler has a bug in its
-   handling of single-precision floating-point values making it impossible
-   to output such values in the expected way.  Therefore, it must be output
-   in hex.  THIS WILL NOT WORK IF CROSS-COMPILING FROM A MACHINE THAT DOES
-   NOT USE IEEE-FORMAT FLOATING-POINT, but there is nothing that can be done
-   about it short of fixing the assembler.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)		\
-  do { union { int i; float f; } u_i_f;		\
-       u_i_f.f = (VALUE);			\
-       fprintf (FILE, "\t.long 0x%x\n", u_i_f.i);\
-     } while (0)
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.long "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.short "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
 
 /* This is how to output code to push a register on the stack.
    It need not be very fast code.  */
@@ -1502,7 +1396,7 @@ struct rt_cargs {int gregs, fregs; };
   fprintf (FILE, "\t.long L%d\n", VALUE)
 
 /* This is how to output an element of a case-vector that is relative.
-   Don't define this if it is not supported. */
+   Don't define this if it is not supported.  */
 
 /* #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, VALUE, REL) */
 
@@ -1540,21 +1434,6 @@ struct rt_cargs {int gregs, fregs; };
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.

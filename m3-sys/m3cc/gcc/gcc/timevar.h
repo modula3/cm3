@@ -2,22 +2,22 @@
    Copyright (C) 2000 Free Software Foundation, Inc.
    Contributed by Alex Samuel <samuel@codesourcery.com>
 
-   This file is part of GNU CC.
+   This file is part of GCC.
 
-   GNU CC is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
-   GNU CC is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   along with GCC; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #ifndef GCC_TIMEVAR_H
 #define GCC_TIMEVAR_H
@@ -45,7 +45,7 @@
 */
    
 /* This structure stores the various varieties of time that can be
-   measured.  Times are stored in microseconds.  The time may be an
+   measured.  Times are stored in seconds.  The time may be an
    absolute time or a time difference; in the former case, the time
    base is undefined, except that the difference between two times
    produces a valid time difference.  */
@@ -53,17 +53,17 @@
 struct timevar_time_def
 {
   /* User time in this process.  */
-  long user;
+  float user;
 
   /* System time (if applicable for this host platform) in this
      process.  */
-  long sys;
+  float sys;
 
   /* Wall clock time.  */
-  long wall;
+  float wall;
 };
 
-/* An enumeration of timing variable indentifiers.  Constructed from
+/* An enumeration of timing variable identifiers.  Constructed from
    the contents of timevar.def.  */
 
 #define DEFTIMEVAR(identifier__, name__) \
@@ -88,4 +88,4 @@ extern void timevar_print PARAMS ((FILE *));
 extern long get_run_time PARAMS ((void));
 extern void print_time PARAMS ((const char *, long));
 
-#endif
+#endif /* ! GCC_TIMEVAR_H */

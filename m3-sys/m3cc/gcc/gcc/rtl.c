@@ -1,43 +1,36 @@
-/* Allocate and read RTL for GNU C Compiler.
-   Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000
+/* RTL utility routines.
+   Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
-
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
 #include "rtl.h"
 #include "real.h"
-#include "bitmap.h"
 #include "ggc.h"
-#include "obstack.h"
-#include "toplev.h"
-#include "hashtab.h"
-
-#define	obstack_chunk_alloc	xmalloc
-#define	obstack_chunk_free	free
+#include "errors.h"
 
 
 /* Calculate the format for CONST_DOUBLE.  This depends on the relative
    widths of HOST_WIDE_INT and REAL_VALUE_TYPE.
 
-   We need to go out to e0wwwww, since REAL_ARITHMETIC assumes 16-bits
+   We need to go out to 0wwwww, since REAL_ARITHMETIC assumes 16-bits
    per element in REAL_VALUE_TYPE.
 
    This is duplicated in gengenrtl.c.
@@ -77,19 +70,19 @@ Boston, MA 02111-1307, USA.  */
 #endif /* REAL_WIDTH */
 
 #if REAL_WIDTH == 1
-# define CONST_DOUBLE_FORMAT	"e0ww"
+# define CONST_DOUBLE_FORMAT	"0ww"
 #else
 # if REAL_WIDTH == 2
-#  define CONST_DOUBLE_FORMAT	"e0ww"
+#  define CONST_DOUBLE_FORMAT	"0ww"
 # else
 #  if REAL_WIDTH == 3
-#   define CONST_DOUBLE_FORMAT	"e0www"
+#   define CONST_DOUBLE_FORMAT	"0www"
 #  else
 #   if REAL_WIDTH == 4
-#    define CONST_DOUBLE_FORMAT	"e0wwww"
+#    define CONST_DOUBLE_FORMAT	"0wwww"
 #   else
 #    if REAL_WIDTH == 5
-#     define CONST_DOUBLE_FORMAT	"e0wwwww"
+#     define CONST_DOUBLE_FORMAT	"0wwwww"
 #    else
 #     define CONST_DOUBLE_FORMAT	/* nothing - will cause syntax error */
 #    endif
@@ -103,7 +96,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   sizeof FORMAT - 1 ,
 
-const int rtx_length[NUM_RTX_CODE + 1] = {
+const unsigned char rtx_length[NUM_RTX_CODE] = {
 #include "rtl.def"
 };
 
@@ -113,7 +106,7 @@ const int rtx_length[NUM_RTX_CODE + 1] = {
 
 #define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   NAME ,
 
-const char * const rtx_name[] = {
+const char * const rtx_name[NUM_RTX_CODE] = {
 #include "rtl.def"		/* rtl expressions are documented here */
 };
 
@@ -122,22 +115,19 @@ const char * const rtx_name[] = {
 /* Indexed by machine mode, gives the name of that machine mode.
    This name does not include the letters "mode".  */
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  NAME,
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  NAME,
 
-const char * const mode_name[(int) MAX_MACHINE_MODE + 1] = {
+const char * const mode_name[NUM_MACHINE_MODES] = {
 #include "machmode.def"
-  /* Add an extra field to avoid a core dump if someone tries to convert
-     MAX_MACHINE_MODE to a string.   */
-  ""
 };
 
 #undef DEF_MACHMODE
 
 /* Indexed by machine mode, gives the class mode for GET_MODE_CLASS.  */
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  CLASS,
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  CLASS,
 
-const enum mode_class mode_class[(int) MAX_MACHINE_MODE] = {
+const enum mode_class mode_class[NUM_MACHINE_MODES] = {
 #include "machmode.def"
 };
 
@@ -146,9 +136,9 @@ const enum mode_class mode_class[(int) MAX_MACHINE_MODE] = {
 /* Indexed by machine mode, gives the length of the mode, in bits.
    GET_MODE_BITSIZE uses this.  */
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  BITSIZE,
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  BITSIZE,
 
-const unsigned int mode_bitsize[(int) MAX_MACHINE_MODE] = {
+const unsigned short mode_bitsize[NUM_MACHINE_MODES] = {
 #include "machmode.def"
 };
 
@@ -157,9 +147,9 @@ const unsigned int mode_bitsize[(int) MAX_MACHINE_MODE] = {
 /* Indexed by machine mode, gives the length of the mode, in bytes.
    GET_MODE_SIZE uses this.  */
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  SIZE,
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  SIZE,
 
-const unsigned int mode_size[(int) MAX_MACHINE_MODE] = {
+const unsigned char mode_size[NUM_MACHINE_MODES] = {
 #include "machmode.def"
 };
 
@@ -168,9 +158,9 @@ const unsigned int mode_size[(int) MAX_MACHINE_MODE] = {
 /* Indexed by machine mode, gives the length of the mode's subunit.
    GET_MODE_UNIT_SIZE uses this.  */
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  UNIT,
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  UNIT,
 
-const unsigned int mode_unit_size[(int) MAX_MACHINE_MODE] = {
+const unsigned char mode_unit_size[NUM_MACHINE_MODES] = {
 #include "machmode.def"		/* machine modes are documented here */
 };
 
@@ -180,21 +170,32 @@ const unsigned int mode_unit_size[(int) MAX_MACHINE_MODE] = {
    (QI -> HI -> SI -> DI, etc.)  Widening multiply instructions
    use this.  */
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  \
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  \
   (unsigned char) WIDER,
 
-const unsigned char mode_wider_mode[(int) MAX_MACHINE_MODE] = {
+const unsigned char mode_wider_mode[NUM_MACHINE_MODES] = {
 #include "machmode.def"		/* machine modes are documented here */
 };
 
 #undef DEF_MACHMODE
 
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER)  \
-  ((BITSIZE) >= HOST_BITS_PER_WIDE_INT) ? ~(unsigned HOST_WIDE_INT)0 : ((unsigned HOST_WIDE_INT) 1 << (BITSIZE)) - 1,
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  \
+  ((BITSIZE) >= HOST_BITS_PER_WIDE_INT) ? ~(unsigned HOST_WIDE_INT) 0 : ((unsigned HOST_WIDE_INT) 1 << (BITSIZE)) - 1,
 
 /* Indexed by machine mode, gives mask of significant bits in mode.  */
 
-const unsigned HOST_WIDE_INT mode_mask_array[(int) MAX_MACHINE_MODE] = {
+const unsigned HOST_WIDE_INT mode_mask_array[NUM_MACHINE_MODES] = {
+#include "machmode.def"
+};
+
+#undef DEF_MACHMODE
+
+#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER) INNER,
+
+/* Indexed by machine mode, gives the mode of the inner elements in a
+   vector type.  */
+
+const enum machine_mode inner_mode_array[NUM_MACHINE_MODES] = {
 #include "machmode.def"
 };
 
@@ -224,7 +225,7 @@ const enum machine_mode class_narrowest_mode[(int) MAX_MODE_CLASS] = {
    rtx's of that code.  The sequence is a C string in which
    each character describes one operand.  */
 
-const char * const rtx_format[] = {
+const char * const rtx_format[NUM_RTX_CODE] = {
   /* "*" undefined.
          can cause a warning message
      "0" field is unused (or used in a phase-dependent manner)
@@ -238,6 +239,8 @@ const char * const rtx_format[] = {
          prints the string
      "S" like "s", but optional:
 	 the containing rtx may end before this operand
+     "T" like "s", but treated specially by the RTL reader;
+         only found in machine description patterns.
      "e" a pointer to an rtl expression
          prints the expression
      "E" a pointer to a vector that points to a number of rtl expressions
@@ -247,7 +250,7 @@ const char * const rtx_format[] = {
      "u" a pointer to another insn
          prints the uid of the insn.
      "b" is a pointer to a bitmap header.
-     "t" is a tree pointer. */
+     "t" is a tree pointer.  */
 
 #define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   FORMAT ,
 #include "rtl.def"		/* rtl expressions are defined here */
@@ -257,7 +260,7 @@ const char * const rtx_format[] = {
 /* Indexed by rtx code, gives a character representing the "class" of
    that rtx code.  See rtl.def for documentation on the defined classes.  */
 
-const char rtx_class[] = {
+const char rtx_class[NUM_RTX_CODE] = {
 #define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   CLASS,
 #include "rtl.def"		/* rtl expressions are defined here */
 #undef DEF_RTL_EXPR
@@ -270,8 +273,8 @@ const char * const note_insn_name[NOTE_INSN_MAX - NOTE_INSN_BIAS] =
   "", "NOTE_INSN_DELETED",
   "NOTE_INSN_BLOCK_BEG", "NOTE_INSN_BLOCK_END",
   "NOTE_INSN_LOOP_BEG", "NOTE_INSN_LOOP_END",
-  "NOTE_INSN_LOOP_CONT", "NOTE_INSN_LOOP_VTOP", "NOTE_INSN_LOOP_END_TOP_COND",
-  "NOTE_INSN_FUNCTION_END", "NOTE_INSN_SETJMP",
+  "NOTE_INSN_LOOP_CONT", "NOTE_INSN_LOOP_VTOP",
+  "NOTE_INSN_LOOP_END_TOP_COND", "NOTE_INSN_FUNCTION_END",
   "NOTE_INSN_PROLOGUE_END", "NOTE_INSN_EPILOGUE_BEG",
   "NOTE_INSN_DELETED_LABEL", "NOTE_INSN_FUNCTION_BEG",
   "NOTE_INSN_EH_REGION_BEG", "NOTE_INSN_EH_REGION_END",
@@ -288,19 +291,10 @@ const char * const reg_note_name[] =
   "REG_LABEL", "REG_DEP_ANTI", "REG_DEP_OUTPUT", "REG_BR_PROB",
   "REG_EXEC_COUNT", "REG_NOALIAS", "REG_SAVE_AREA", "REG_BR_PRED",
   "REG_FRAME_RELATED_EXPR", "REG_EH_CONTEXT", "REG_EH_REGION",
-  "REG_EH_RETHROW", "REG_SAVE_NOTE", "REG_MAYBE_DEAD", "REG_NORETURN",
-  "REG_NON_LOCAL_GOTO"
+  "REG_SAVE_NOTE", "REG_MAYBE_DEAD", "REG_NORETURN",
+  "REG_NON_LOCAL_GOTO", "REG_SETJMP", "REG_ALWAYS_RETURN",
+  "REG_VTABLE_REF"
 };
-
-static htab_t md_constants;
-
-static void fatal_with_file_and_line PARAMS ((FILE *, const char *, ...))
-  ATTRIBUTE_PRINTF_2 ATTRIBUTE_NORETURN;
-static void fatal_expected_char PARAMS ((FILE *, int, int)) ATTRIBUTE_NORETURN;
-static void read_name		PARAMS ((char *, FILE *));
-static unsigned def_hash PARAMS ((const void *));
-static int def_name_eq_p PARAMS ((const void *, const void *));
-static void read_constants PARAMS ((FILE *infile, char *tmp_char));
 
 
 /* Allocate an rtx vector of N elements.
@@ -348,12 +342,12 @@ rtx_alloc (code)
 
 rtx
 copy_rtx (orig)
-     register rtx orig;
+     rtx orig;
 {
-  register rtx copy;
-  register int i, j;
-  register RTX_CODE code;
-  register const char *format_ptr;
+  rtx copy;
+  int i, j;
+  RTX_CODE code;
+  const char *format_ptr;
 
   code = GET_CODE (orig);
 
@@ -363,6 +357,7 @@ copy_rtx (orig)
     case QUEUED:
     case CONST_INT:
     case CONST_DOUBLE:
+    case CONST_VECTOR:
     case SYMBOL_REF:
     case CODE_LABEL:
     case PC:
@@ -435,6 +430,7 @@ copy_rtx (orig)
 	case 'i':
 	case 's':
 	case 'S':
+	case 'T':
 	case 'u':
 	case '0':
 	  /* These are left unchanged.  */
@@ -447,113 +443,15 @@ copy_rtx (orig)
   return copy;
 }
 
-/* Similar to `copy_rtx' except that if MAY_SHARE is present, it is
-   placed in the result directly, rather than being copied.  */
-
-rtx
-copy_most_rtx (orig, may_share)
-     register rtx orig;
-     register rtx may_share;
-{
-  register rtx copy;
-  register int i, j;
-  register RTX_CODE code;
-  register const char *format_ptr;
-
-  if (orig == may_share)
-    return orig;
-
-  code = GET_CODE (orig);
-
-  switch (code)
-    {
-    case REG:
-    case QUEUED:
-    case CONST_INT:
-    case CONST_DOUBLE:
-    case SYMBOL_REF:
-    case CODE_LABEL:
-    case PC:
-    case CC0:
-      return orig;
-    default:
-      break;
-    }
-
-  copy = rtx_alloc (code);
-  PUT_MODE (copy, GET_MODE (orig));
-  copy->in_struct = orig->in_struct;
-  copy->volatil = orig->volatil;
-  copy->unchanging = orig->unchanging;
-  copy->integrated = orig->integrated;
-  copy->frame_related = orig->frame_related;
-
-  format_ptr = GET_RTX_FORMAT (GET_CODE (copy));
-
-  for (i = 0; i < GET_RTX_LENGTH (GET_CODE (copy)); i++)
-    {
-      switch (*format_ptr++)
-	{
-	case 'e':
-	  XEXP (copy, i) = XEXP (orig, i);
-	  if (XEXP (orig, i) != NULL && XEXP (orig, i) != may_share)
-	    XEXP (copy, i) = copy_most_rtx (XEXP (orig, i), may_share);
-	  break;
-
-	case 'u':
-	  XEXP (copy, i) = XEXP (orig, i);
-	  break;
-
-	case 'E':
-	case 'V':
-	  XVEC (copy, i) = XVEC (orig, i);
-	  if (XVEC (orig, i) != NULL)
-	    {
-	      XVEC (copy, i) = rtvec_alloc (XVECLEN (orig, i));
-	      for (j = 0; j < XVECLEN (copy, i); j++)
-		XVECEXP (copy, i, j)
-		  = copy_most_rtx (XVECEXP (orig, i, j), may_share);
-	    }
-	  break;
-
-	case 'w':
-	  XWINT (copy, i) = XWINT (orig, i);
-	  break;
-
-	case 'n':
-	case 'i':
-	  XINT (copy, i) = XINT (orig, i);
-	  break;
-
-	case 't':
-	  XTREE (copy, i) = XTREE (orig, i);
-	  break;
-
-	case 's':
-	case 'S':
-	  XSTR (copy, i) = XSTR (orig, i);
-	  break;
-
-	case '0':
-	  /* Copy this through the wide int field; that's safest. */
-	  X0WINT (copy, i) = X0WINT (orig, i);
-	  break;
-
-	default:
-	  abort ();
-	}
-    }
-  return copy;
-}
-
 /* Create a new copy of an rtx.  Only copy just one level.  */
+
 rtx
 shallow_copy_rtx (orig)
      rtx orig;
 {
-  register int i;
-  register RTX_CODE code = GET_CODE (orig);
-  register rtx copy = rtx_alloc (code);
+  int i;
+  RTX_CODE code = GET_CODE (orig);
+  rtx copy = rtx_alloc (code);
 
   PUT_MODE (copy, GET_MODE (orig));
   copy->in_struct = orig->in_struct;
@@ -566,6 +464,29 @@ shallow_copy_rtx (orig)
     copy->fld[i] = orig->fld[i];
 
   return copy;
+}
+
+/* Return the alignment of MODE. This will be bounded by 1 and
+   BIGGEST_ALIGNMENT.  */
+
+unsigned int
+get_mode_alignment (mode)
+     enum machine_mode mode;
+{
+  unsigned int alignment;
+
+  if (GET_MODE_CLASS (mode) == MODE_COMPLEX_FLOAT
+      || GET_MODE_CLASS (mode) == MODE_COMPLEX_INT)
+    alignment = GET_MODE_UNIT_SIZE (mode);
+  else
+    alignment = GET_MODE_SIZE (mode);
+  
+  /* Extract the LSB of the size.  */
+  alignment = alignment & -alignment;
+  alignment *= BITS_PER_UNIT;
+
+  alignment = MIN (BIGGEST_ALIGNMENT, MAX (1, alignment));
+  return alignment;
 }
 
 /* This is 1 until after the rtl generation pass.  */
@@ -581,10 +502,10 @@ int
 rtx_equal_p (x, y)
      rtx x, y;
 {
-  register int i;
-  register int j;
-  register enum rtx_code code;
-  register const char *fmt;
+  int i;
+  int j;
+  enum rtx_code code;
+  const char *fmt;
 
   if (x == y)
     return 1;
@@ -606,10 +527,11 @@ rtx_equal_p (x, y)
   switch (code)
     {
     case REG:
-      /* Until rtl generation is complete, don't consider a reference to the
-	 return register of the current function the same as the return from a
-	 called function.  This eases the job of function integration.  Once the
-	 distinction is no longer needed, they can be considered equivalent.  */
+      /* Until rtl generation is complete, don't consider a reference
+	 to the return register of the current function the same as
+	 the return from a called function.  This eases the job of
+	 function integration.  Once the distinction is no longer
+	 needed, they can be considered equivalent.  */
       return (REGNO (x) == REGNO (y)
 	      && (! rtx_equal_function_value_matters
 		  || REG_FUNCTION_VALUE_P (x) == REG_FUNCTION_VALUE_P (y)));
@@ -623,6 +545,7 @@ rtx_equal_p (x, y)
     case SCRATCH:
     case CONST_DOUBLE:
     case CONST_INT:
+    case CONST_VECTOR:
       return 0;
 
     default:
@@ -667,7 +590,9 @@ rtx_equal_p (x, y)
 
 	case 'S':
 	case 's':
-	  if (strcmp (XSTR (x, i), XSTR (y, i)))
+	  if ((XSTR (x, i) || XSTR (y, i))
+	      && (! XSTR (x, i) || ! XSTR (y, i)
+		  || strcmp (XSTR (x, i), XSTR (y, i))))
 	    return 0;
 	  break;
 
@@ -689,593 +614,6 @@ rtx_equal_p (x, y)
   return 1;
 }
 
-/* Subroutines of read_rtx.  */
-
-/* The current line number for the file.  */
-int read_rtx_lineno = 1;
-
-/* The filename for aborting with file and line.  */
-const char *read_rtx_filename = "<unknown>";
-
-static void
-fatal_with_file_and_line VPARAMS ((FILE *infile, const char *msg, ...))
-{
-#ifndef ANSI_PROTOTYPES
-  FILE *infile;
-  const char *msg;
-#endif
-  va_list ap;
-  char context[64];
-  size_t i;
-  int c;
-
-  VA_START (ap, msg);
-
-#ifndef ANSI_PROTOTYPES
-  infile = va_arg (ap, FILE *);
-  msg = va_arg (ap, const char *);
-#endif
-
-  fprintf (stderr, "%s:%d: ", read_rtx_filename, read_rtx_lineno);
-  vfprintf (stderr, msg, ap);
-  putc ('\n', stderr);
-
-  /* Gather some following context.  */
-  for (i = 0; i < sizeof(context)-1; ++i)
-    {
-      c = getc (infile);
-      if (c == EOF)
-	break;
-      if (c == '\r' || c == '\n')
-	break;
-      context[i] = c;
-    }
-  context[i] = '\0';
-
-  fprintf (stderr, "%s:%d: following context is `%s'\n",
-	   read_rtx_filename, read_rtx_lineno, context);
-
-  va_end (ap);
-  exit (1);
-}
-
-/* Dump code after printing a message.  Used when read_rtx finds
-   invalid data.  */
-
-static void
-fatal_expected_char (infile, expected_c, actual_c)
-     FILE *infile;
-     int expected_c, actual_c;
-{
-  fatal_with_file_and_line (infile, "expected character `%c', found `%c'",
-			    expected_c, actual_c);
-}
-
-/* Read chars from INFILE until a non-whitespace char
-   and return that.  Comments, both Lisp style and C style,
-   are treated as whitespace.
-   Tools such as genflags use this function.  */
-
-int
-read_skip_spaces (infile)
-     FILE *infile;
-{
-  register int c;
-  while (1)
-    {
-      c = getc (infile);
-      switch (c)
-	{
-	case '\n':
-	  read_rtx_lineno++;
-	  break;
-
-	case ' ': case '\t': case '\f': case '\r':
-	  break;
-
-	case ';':
-	  do
-	    c = getc (infile);
-	  while (c != '\n' && c != EOF);
-	  read_rtx_lineno++;
-	  break;
-
-	case '/':
-	  {
-	    register int prevc;
-	    c = getc (infile);
-	    if (c != '*')
-	      fatal_expected_char (infile, '*', c);
-
-	    prevc = 0;
-	    while ((c = getc (infile)) && c != EOF)
-	      {
-		if (c == '\n')
-		   read_rtx_lineno++;
-	        else if (prevc == '*' && c == '/')
-		  break;
-	        prevc = c;
-	      }
-	  }
-	  break;
-
-	default:
-	  return c;
-	}
-    }
-}
-
-/* Read an rtx code name into the buffer STR[].
-   It is terminated by any of the punctuation chars of rtx printed syntax.  */
-
-static void
-read_name (str, infile)
-     char *str;
-     FILE *infile;
-{
-  register char *p;
-  register int c;
-
-  c = read_skip_spaces(infile);
-
-  p = str;
-  while (1)
-    {
-      if (c == ' ' || c == '\n' || c == '\t' || c == '\f' || c == '\r')
-	break;
-      if (c == ':' || c == ')' || c == ']' || c == '"' || c == '/'
-	  || c == '(' || c == '[')
-	{
-	  ungetc (c, infile);
-	  break;
-	}
-      *p++ = c;
-      c = getc (infile);
-    }
-  if (p == str)
-    fatal_with_file_and_line (infile, "missing name or number");
-  if (c == '\n')
-    read_rtx_lineno++;
-
-  *p = 0;
-
-  if (md_constants)
-    {
-      /* Do constant expansion.  */
-      struct md_constant *def;
-
-      p = str;
-      do
-	{
-	  struct md_constant tmp_def;
-
-	  tmp_def.name = p;
-	  def = htab_find (md_constants, &tmp_def);
-	  if (def)
-	    p = def->value;
-	} while (def);
-      if (p != str)
-	strcpy (str, p);
-    }
-}
-
-/* Provide a version of a function to read a long long if the system does
-   not provide one.  */
-#if HOST_BITS_PER_WIDE_INT > HOST_BITS_PER_LONG && !defined(HAVE_ATOLL) && !defined(HAVE_ATOQ)
-HOST_WIDE_INT
-atoll(p)
-    const char *p;
-{
-  int neg = 0;
-  HOST_WIDE_INT tmp_wide;
-
-  while (ISSPACE(*p))
-    p++;
-  if (*p == '-')
-    neg = 1, p++;
-  else if (*p == '+')
-    p++;
-
-  tmp_wide = 0;
-  while (ISDIGIT(*p))
-    {
-      HOST_WIDE_INT new_wide = tmp_wide*10 + (*p - '0');
-      if (new_wide < tmp_wide)
-	{
-	  /* Return INT_MAX equiv on overflow.  */
-	  tmp_wide = (~(unsigned HOST_WIDE_INT)0) >> 1;
-	  break;
-	}
-      tmp_wide = new_wide;
-      p++;
-    }
-
-  if (neg)
-    tmp_wide = -tmp_wide;
-  return tmp_wide;
-}
-#endif
-
-/* Given a constant definition, return a hash code for its name.  */
-static unsigned
-def_hash (def)
-     const void *def;
-{
-  unsigned result, i;
-  const char *string = ((const struct md_constant *)def)->name;
-
-  for (result = i = 0;*string++ != '\0'; i++)
-    result += ((unsigned char) *string << (i % CHAR_BIT));
-  return result;
-}
-
-/* Given two constant definitions, return true if they have the same name.  */
-static int
-def_name_eq_p (def1, def2)
-     const void *def1, *def2;
-{
-  return ! strcmp (((const struct md_constant *)def1)->name,
-		   ((const struct md_constant *)def2)->name);
-}
-
-/* INFILE is a FILE pointer to read text from.  TMP_CHAR is a buffer suitable
-   to read a name or number into.  Process a define_constants directive,
-   starting with the optional space after the "define_constants".  */
-static void
-read_constants (infile, tmp_char)
-     FILE *infile;
-     char *tmp_char;
-{
-  int c;
-  htab_t defs;
-
-  c = read_skip_spaces (infile);
-  if (c != '[')
-    fatal_expected_char (infile, '[', c);
-  defs = md_constants;
-  if (! defs)
-    defs = htab_create (32, def_hash, def_name_eq_p, (htab_del) 0);
-  /* Disable constant expansion during definition processing.  */
-  md_constants = 0;
-  while ( (c = read_skip_spaces (infile)) != ']')
-    {
-      struct md_constant *def;
-      void **entry_ptr;
-
-      if (c != '(')
-	fatal_expected_char (infile, '(', c);
-      def = xmalloc (sizeof (struct md_constant));
-      def->name = tmp_char;
-      read_name (tmp_char, infile);
-      entry_ptr = htab_find_slot (defs, def, TRUE);
-      if (! *entry_ptr)
-	def->name = xstrdup (tmp_char);
-      c = read_skip_spaces (infile);
-      ungetc (c, infile);
-      read_name (tmp_char, infile);
-      if (! *entry_ptr)
-	{
-	  def->value = xstrdup (tmp_char);
-	  *entry_ptr = def;
-	}
-      else
-	{
-	  def = *entry_ptr;
-	  if (strcmp (def->value, tmp_char))
-	    fatal_with_file_and_line (infile,
-				      "redefinition of %s, was %s, now %s",
-				      def->name, def->value, tmp_char);
-	}
-      c = read_skip_spaces (infile);
-      if (c != ')')
-	fatal_expected_char (infile, ')', c);
-    }
-  md_constants = defs;
-  c = read_skip_spaces (infile);
-  if (c != ')')
-    fatal_expected_char (infile, ')', c);
-}
-
-/* For every constant definition, call CALLBACK with two arguments:
-   a pointer a pointer to the constant definition and INFO.
-   Stops when CALLBACK returns zero.  */
-void
-traverse_md_constants (callback, info)
-     htab_trav callback;
-     void *info;
-{
-  if (md_constants)
-    htab_traverse (md_constants, callback, info);
-}
-
-/* Read an rtx in printed representation from INFILE
-   and return an actual rtx in core constructed accordingly.
-   read_rtx is not used in the compiler proper, but rather in
-   the utilities gen*.c that construct C code from machine descriptions.  */
-
-rtx
-read_rtx (infile)
-     FILE *infile;
-{
-  register int i, j, list_counter;
-  RTX_CODE tmp_code;
-  register const char *format_ptr;
-  /* tmp_char is a buffer used for reading decimal integers
-     and names of rtx types and machine modes.
-     Therefore, 256 must be enough.  */
-  char tmp_char[256];
-  rtx return_rtx;
-  register int c;
-  int tmp_int;
-  HOST_WIDE_INT tmp_wide;
-
-  /* Obstack used for allocating RTL objects.  */
-  static struct obstack rtl_obstack;
-  static int initialized;
-
-  /* Linked list structure for making RTXs: */
-  struct rtx_list
-    {
-      struct rtx_list *next;
-      rtx value;		/* Value of this node.  */
-    };
-
-  if (!initialized) {
-    _obstack_begin (&rtl_obstack,0, 0,
-		    (void *(*) PARAMS ((long))) xmalloc,
-		    (void (*) PARAMS ((void *))) free);
-    initialized = 1;
-  }
-
-again:
-  c = read_skip_spaces (infile); /* Should be open paren.  */
-  if (c != '(')
-    fatal_expected_char (infile, '(', c);
-
-  read_name (tmp_char, infile);
-
-  tmp_code = UNKNOWN;
-
-  if (! strcmp (tmp_char, "define_constants"))
-    {
-      read_constants (infile, tmp_char);
-      goto again;
-    }
-  for (i = 0; i < NUM_RTX_CODE; i++)
-    if (! strcmp (tmp_char, GET_RTX_NAME (i)))
-      {
-	tmp_code = (RTX_CODE) i;	/* get value for name */
-	break;
-      }
-
-  if (tmp_code == UNKNOWN)
-    fatal_with_file_and_line (infile, "unknown rtx code `%s'", tmp_char);
-
-  /* (NIL) stands for an expression that isn't there.  */
-  if (tmp_code == NIL)
-    {
-      /* Discard the closeparen.  */
-      while ((c = getc (infile)) && c != ')')
-	;
-
-      return 0;
-    }
-
-  /* If we end up with an insn expression then we free this space below.  */
-  return_rtx = rtx_alloc (tmp_code);
-  format_ptr = GET_RTX_FORMAT (GET_CODE (return_rtx));
-
-  /* If what follows is `: mode ', read it and
-     store the mode in the rtx.  */
-
-  i = read_skip_spaces (infile);
-  if (i == ':')
-    {
-      read_name (tmp_char, infile);
-      for (j = 0; j < NUM_MACHINE_MODES; j++)
-	if (! strcmp (GET_MODE_NAME (j), tmp_char))
-	  break;
-
-      if (j == MAX_MACHINE_MODE)
-	fatal_with_file_and_line (infile, "unknown mode `%s'", tmp_char);
-
-      PUT_MODE (return_rtx, (enum machine_mode) j);
-    }
-  else
-    ungetc (i, infile);
-
-  for (i = 0; i < GET_RTX_LENGTH (GET_CODE (return_rtx)); i++)
-    switch (*format_ptr++)
-      {
-	/* 0 means a field for internal use only.
-	   Don't expect it to be present in the input.  */
-      case '0':
-	break;
-
-      case 'e':
-      case 'u':
-	XEXP (return_rtx, i) = read_rtx (infile);
-	break;
-
-      case 'V':
-	/* 'V' is an optional vector: if a closeparen follows,
-	   just store NULL for this element.  */
-	c = read_skip_spaces (infile);
-	ungetc (c, infile);
-	if (c == ')')
-	  {
-	    XVEC (return_rtx, i) = 0;
-	    break;
- 	  }
-	/* Now process the vector.  */
-
-      case 'E':
-	{
-	  register struct rtx_list *next_rtx, *rtx_list_link;
-	  struct rtx_list *list_rtx = NULL;
-
-	  c = read_skip_spaces (infile);
-	  if (c != '[')
-	    fatal_expected_char (infile, '[', c);
-
-	  /* add expressions to a list, while keeping a count */
-	  next_rtx = NULL;
-	  list_counter = 0;
-	  while ((c = read_skip_spaces (infile)) && c != ']')
-	    {
-	      ungetc (c, infile);
-	      list_counter++;
-	      rtx_list_link = (struct rtx_list *)
-		alloca (sizeof (struct rtx_list));
-	      rtx_list_link->value = read_rtx (infile);
-	      if (next_rtx == 0)
-		list_rtx = rtx_list_link;
-	      else
-		next_rtx->next = rtx_list_link;
-	      next_rtx = rtx_list_link;
-	      rtx_list_link->next = 0;
-	    }
-	  /* get vector length and allocate it */
-	  XVEC (return_rtx, i) = (list_counter
-				  ? rtvec_alloc (list_counter) : NULL_RTVEC);
-	  if (list_counter > 0)
-	    {
-	      next_rtx = list_rtx;
-	      for (j = 0; j < list_counter; j++,
-		   next_rtx = next_rtx->next)
-		XVECEXP (return_rtx, i, j) = next_rtx->value;
-	    }
-	  /* close bracket gotten */
-	}
-	break;
-
-      case 'S':
-	/* 'S' is an optional string: if a closeparen follows,
-	   just store NULL for this element.  */
-	c = read_skip_spaces (infile);
-	ungetc (c, infile);
-	if (c == ')')
-	  {
-	    XSTR (return_rtx, i) = 0;
-	    break;
-	  }
-
-      case 's':
-	{
-	  int saw_paren = 0;
-	  register char *stringbuf;
-	  int saw_anything = 0;
-
-	  c = read_skip_spaces (infile);
-	  if (c == '(')
-	    {
-	      saw_paren = 1;
-	      c = read_skip_spaces (infile);
-	    }
-	  if (c != '"')
-	    fatal_expected_char (infile, '"', c);
-
-	  while (1)
-	    {
-	      c = getc (infile); /* Read the string  */
-	      if (c == '\n')
-		read_rtx_lineno++;
-	      if (c == '\\')
-		{
-		  c = getc (infile);	/* Read the string  */
-		  /* \; makes stuff for a C string constant containing
-		     newline and tab.  */
-		  if (c == ';')
-		    {
-		      obstack_grow (&rtl_obstack, "\\n\\t", 4);
-		      continue;
-		    }
-		  if (c == '\n')
-		    read_rtx_lineno++;
-		}
-	      else if (c == '"')
-		break;
-
-	      obstack_1grow (&rtl_obstack, c);
-	      saw_anything = 1;
-	    }
-
-	  /* For insn patterns, we want to provide a default name
-	     based on the file and line, like "*foo.md:12", if the
-	     given name is blank.  These are only for define_insn and
-	     define_insn_and_split, to aid debugging.  */
-	  if (!saw_anything
-	      && i == 0
-	      && (GET_CODE (return_rtx) == DEFINE_INSN
-		  || GET_CODE (return_rtx) == DEFINE_INSN_AND_SPLIT))
-	    {
-	      char line_name[20];
-	      const char *fn = (read_rtx_filename ? read_rtx_filename : "rtx");
-	      const char *slash;
-	      for (slash = fn; *slash; slash ++)
-		if (*slash == '/' || *slash == '\\' || *slash == ':')
-		  fn = slash + 1;
-	      obstack_1grow (&rtl_obstack, '*');
-	      obstack_grow (&rtl_obstack, fn, strlen (fn));
-	      sprintf (line_name, ":%d", read_rtx_lineno);
-	      obstack_grow (&rtl_obstack, line_name, strlen (line_name));
-	    }
-
-	  obstack_1grow (&rtl_obstack, 0);
-	  stringbuf = (char *) obstack_finish (&rtl_obstack);
-
-	  if (saw_paren)
-	    {
-	      c = read_skip_spaces (infile);
-	      if (c != ')')
-		fatal_expected_char (infile, ')', c);
-	    }
-	  XSTR (return_rtx, i) = stringbuf;
-	}
-	break;
-
-      case 'w':
-	read_name (tmp_char, infile);
-#if HOST_BITS_PER_WIDE_INT == HOST_BITS_PER_INT
-	tmp_wide = atoi (tmp_char);
-#else
-#if HOST_BITS_PER_WIDE_INT == HOST_BITS_PER_LONG
-	tmp_wide = atol (tmp_char);
-#else
-	/* Prefer atoll over atoq, since the former is in the ISO C99 standard.
-	   But prefer not to use our hand-rolled function above either.  */
-#if defined(HAVE_ATOLL) || !defined(HAVE_ATOQ)
-	tmp_wide = atoll (tmp_char);
-#else
-	tmp_wide = atoq (tmp_char);
-#endif
-#endif
-#endif
-	XWINT (return_rtx, i) = tmp_wide;
-	break;
-
-      case 'i':
-      case 'n':
-	read_name (tmp_char, infile);
-	tmp_int = atoi (tmp_char);
-	XINT (return_rtx, i) = tmp_int;
-	break;
-
-      default:
-	fprintf (stderr,
-		 "switch format wrong in rtl.read_rtx(). format was: %c.\n",
-		 format_ptr[-1]);
-	fprintf (stderr, "\tfile position: %ld\n", ftell (infile));
-	abort ();
-      }
-
-  c = read_skip_spaces (infile);
-  if (c != ')')
-    fatal_expected_char (infile, ')', c);
-
-  return return_rtx;
-}
-
 #if defined ENABLE_RTL_CHECKING && (GCC_VERSION >= 2007)
 void
 rtl_check_failed_bounds (r, n, file, line, func)

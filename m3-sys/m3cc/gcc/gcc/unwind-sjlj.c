@@ -1,32 +1,38 @@
 /* DWARF2 exception handling and frame unwind runtime interface routines.
-   Copyright (C) 1997, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002
+   Free Software Foundation, Inc.
 
-   This file is part of GNU CC.
+   This file is part of GCC.
 
-   GNU CC is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
-   GNU CC is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   along with GCC; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
 
 #include "tconfig.h"
 #include "tsystem.h"
 #include "unwind.h"
 #include "gthr.h"
 
-#if USING_SJLJ_EXCEPTIONS
+#ifdef __USING_SJLJ_EXCEPTIONS__
 
 #ifdef DONT_USE_BUILTIN_SETJMP
+#ifndef inhibit_libc
 #include <setjmp.h>
+#else
+typedef void *jmp_buf[JMP_BUF_SIZE];
+extern void longjmp(jmp_buf, int) __attribute__((noreturn));
+#endif
 #else
 #define setjmp __builtin_setjmp
 #define longjmp __builtin_longjmp
@@ -197,20 +203,20 @@ _Unwind_GetLanguageSpecificData (struct _Unwind_Context *context)
 }
 
 _Unwind_Ptr
-_Unwind_GetRegionStart (struct _Unwind_Context *context)
+_Unwind_GetRegionStart (struct _Unwind_Context *context __attribute__((unused)) )
 {
   return 0;
 }
 
 #ifndef __ia64__
 _Unwind_Ptr
-_Unwind_GetDataRelBase (struct _Unwind_Context *context)
+_Unwind_GetDataRelBase (struct _Unwind_Context *context __attribute__((unused)) )
 {
   return 0;
 }
 
 _Unwind_Ptr
-_Unwind_GetTextRelBase (struct _Unwind_Context *context)
+_Unwind_GetTextRelBase (struct _Unwind_Context *context __attribute__((unused)) )
 {
   return 0;
 }
@@ -246,11 +252,13 @@ uw_init_context (struct _Unwind_Context *context)
 
 /* ??? There appear to be bugs in integrate.c wrt __builtin_longjmp and
    virtual-stack-vars.  An inline version of this segfaults on Sparc.  */
-#define uw_install_context(CURRENT, TARGET)	\
-  do {						\
-    _Unwind_SjLj_SetContext ((TARGET)->fc);	\
-    longjmp ((TARGET)->fc->jbuf, 1);		\
-  } while (0)
+#define uw_install_context(CURRENT, TARGET)		\
+  do							\
+    {							\
+      _Unwind_SjLj_SetContext ((TARGET)->fc);		\
+      longjmp ((TARGET)->fc->jbuf, 1);			\
+    }							\
+  while (0)
 
 
 static inline _Unwind_Ptr

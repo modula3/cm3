@@ -1,24 +1,24 @@
 /* Instruction scheduling pass.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com) Enhanced by,
    and currently maintained by, Jim Wilson (wilson@cygnus.com)
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 2, or (at your option) any
-later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to the Free
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
 /* This pass implements list scheduling within basic blocks.  It is
@@ -60,7 +60,19 @@ the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "except.h"
 #include "toplev.h"
 #include "recog.h"
+#include "cfglayout.h"
 #include "sched-int.h"
+
+/* Define when we want to do count REG_DEAD notes before and after scheduling
+   for sanity checking.  We can't do that when conditional execution is used,
+   as REG_DEAD exist only for unconditional deaths.  */
+
+#if !defined (HAVE_conditional_execution) && defined (ENABLE_CHECKING)
+#define CHECK_DEAD_NOTES 1
+#else
+#define CHECK_DEAD_NOTES 0
+#endif
+
 
 #ifdef INSN_SCHEDULING
 /* Some accessor macros for h_i_d members only used within this file.  */
@@ -152,10 +164,6 @@ static int current_blocks;
 /* The mapping from bb to block.  */
 #define BB_TO_BLOCK(bb) (rgn_bb_table[current_blocks + (bb)])
 
-/* Bit vectors and bitset operations are needed for computations on
-   the control flow graph.  */
-
-typedef unsigned HOST_WIDE_INT *bitset;
 typedef struct
 {
   int *first_member;		/* Pointer to the list start in bitlst_table.  */
@@ -167,8 +175,7 @@ static int bitlst_table_last;
 static int bitlst_table_size;
 static int *bitlst_table;
 
-static char bitset_member PARAMS ((bitset, int, int));
-static void extract_bitlst PARAMS ((bitset, int, int, bitlst *));
+static void extract_bitlst PARAMS ((sbitmap, bitlst *));
 
 /* Target info declarations.
 
@@ -214,22 +221,16 @@ static void compute_trg_info PARAMS ((int));
 void debug_candidate PARAMS ((int));
 void debug_candidates PARAMS ((int));
 
-/* Bit-set of bbs, where bit 'i' stands for bb 'i'.  */
-typedef bitset bbset;
-
-/* Number of words of the bbset.  */
-static int bbset_size;
-
-/* Dominators array: dom[i] contains the bbset of dominators of
+/* Dominators array: dom[i] contains the sbitmap of dominators of
    bb i in the region.  */
-static bbset *dom;
+static sbitmap *dom;
 
 /* bb 0 is the only region entry.  */
 #define IS_RGN_ENTRY(bb) (!bb)
 
 /* Is bb_src dominated by bb_trg.  */
 #define IS_DOMINATED(bb_src, bb_trg)                                 \
-( bitset_member (dom[bb_src], bb_trg, bbset_size) )
+( TEST_BIT (dom[bb_src], bb_trg) )
 
 /* Probability: Prob[i] is a float in [0, 1] which is the probability
    of bb i relative to the region entry.  */
@@ -242,7 +243,7 @@ static float *prob;
 						      prob[bb_trg])))
 
 /* Bit-set of edges, where bit i stands for edge i.  */
-typedef bitset edgeset;
+typedef sbitmap edgeset;
 
 /* Number of edges in the region.  */
 static int rgn_nr_edges;
@@ -250,11 +251,6 @@ static int rgn_nr_edges;
 /* Array of size rgn_nr_edges.  */
 static int *rgn_edges;
 
-/* Number of words in an edgeset.  */
-static int edgeset_size;
-
-/* Number of bits in an edgeset.  */
-static int edgeset_bitsize;
 
 /* Mapping from each edge in the graph to its number in the rgn.  */
 static int *edge_to_bit;
@@ -298,12 +294,16 @@ static int haifa_classify_insn PARAMS ((rtx));
 static int is_prisky PARAMS ((rtx, int, int));
 static int is_exception_free PARAMS ((rtx, int, int));
 
+static bool sets_likely_spilled PARAMS ((rtx));
+static void sets_likely_spilled_1 PARAMS ((rtx, rtx, void *));
 static void add_branch_dependences PARAMS ((rtx, rtx));
 static void compute_block_backward_dependences PARAMS ((int));
 void debug_dependencies PARAMS ((void));
 
 static void init_regions PARAMS ((void));
 static void schedule_region PARAMS ((int));
+static rtx concat_INSN_LIST PARAMS ((rtx, rtx));
+static void concat_insn_mem_list PARAMS ((rtx, rtx, rtx *, rtx *));
 static void propagate_deps PARAMS ((int, struct deps *));
 static void free_pending_lists PARAMS ((void));
 
@@ -339,7 +339,7 @@ is_cfg_nonregular ()
   /* If we have exception handlers, then we consider the cfg not well
      structured.  ?!?  We should be able to handle this now that flow.c
      computes an accurate cfg for EH.  */
-  if (exception_handler_labels)
+  if (current_function_has_exception_handlers ())
     return 1;
 
   /* If we have non-jumping insns which refer to labels, then we consider
@@ -482,81 +482,14 @@ new_edge (source, target)
     }
 }
 
-/* BITSET macros for operations on the control flow graph.  */
-
-/* Compute bitwise union of two bitsets.  */
-#define BITSET_UNION(set1, set2, len)                                \
-do { register bitset tp = set1, sp = set2;                           \
-     register int i;                                                 \
-     for (i = 0; i < len; i++)                                       \
-       *(tp++) |= *(sp++); } while (0)
-
-/* Compute bitwise intersection of two bitsets.  */
-#define BITSET_INTER(set1, set2, len)                                \
-do { register bitset tp = set1, sp = set2;                           \
-     register int i;                                                 \
-     for (i = 0; i < len; i++)                                       \
-       *(tp++) &= *(sp++); } while (0)
-
-/* Compute bitwise difference of two bitsets.  */
-#define BITSET_DIFFER(set1, set2, len)                               \
-do { register bitset tp = set1, sp = set2;                           \
-     register int i;                                                 \
-     for (i = 0; i < len; i++)                                       \
-       *(tp++) &= ~*(sp++); } while (0)
-
-/* Inverts every bit of bitset 'set'.  */
-#define BITSET_INVERT(set, len)                                      \
-do { register bitset tmpset = set;                                   \
-     register int i;                                                 \
-     for (i = 0; i < len; i++, tmpset++)                             \
-       *tmpset = ~*tmpset; } while (0)
-
-/* Turn on the index'th bit in bitset set.  */
-#define BITSET_ADD(set, index, len)                                  \
-{                                                                    \
-  if (index >= HOST_BITS_PER_WIDE_INT * len)                         \
-    abort ();                                                        \
-  else                                                               \
-    set[index/HOST_BITS_PER_WIDE_INT] |=			     \
-      ((unsigned HOST_WIDE_INT) 1) << (index % HOST_BITS_PER_WIDE_INT); \
-}
-
-/* Turn off the index'th bit in set.  */
-#define BITSET_REMOVE(set, index, len)                               \
-{                                                                    \
-  if (index >= HOST_BITS_PER_WIDE_INT * len)                         \
-    abort ();                                                        \
-  else                                                               \
-    set[index/HOST_BITS_PER_WIDE_INT] &=			     \
-      ~(((unsigned HOST_WIDE_INT) 1) << (index % HOST_BITS_PER_WIDE_INT)); \
-}
-
-/* Check if the index'th bit in bitset set is on.  */
-
-static char
-bitset_member (set, index, len)
-     bitset set;
-     int index, len;
-{
-  if (index >= HOST_BITS_PER_WIDE_INT * len)
-    abort ();
-  return ((set[index / HOST_BITS_PER_WIDE_INT] &
-	   ((unsigned HOST_WIDE_INT) 1) << (index % HOST_BITS_PER_WIDE_INT))
-	  ? 1 : 0);
-}
-
 /* Translate a bit-set SET to a list BL of the bit-set members.  */
 
 static void
-extract_bitlst (set, len, bitlen, bl)
-     bitset set;
-     int len;
-     int bitlen;
+extract_bitlst (set, bl)
+     sbitmap set;
      bitlst *bl;
 {
-  int i, j, offset;
-  unsigned HOST_WIDE_INT word;
+  int i;
 
   /* bblst table space is reused in each call to extract_bitlst.  */
   bitlst_table_last = 0;
@@ -565,24 +498,11 @@ extract_bitlst (set, len, bitlen, bl)
   bl->nr_members = 0;
 
   /* Iterate over each word in the bitset.  */
-  for (i = 0; i < len; i++)
-    {
-      word = set[i];
-      offset = i * HOST_BITS_PER_WIDE_INT;
-
-      /* Iterate over each bit in the word, but do not
-	 go beyond the end of the defined bits.  */
-      for (j = 0; offset < bitlen && word; j++)
-	{
-	  if (word & 1)
-	    {
-	      bitlst_table[bitlst_table_last++] = offset;
-	      (bl->nr_members)++;
-	    }
-	  word >>= 1;
-	  ++offset;
-	}
-    }
+  EXECUTE_IF_SET_IN_SBITMAP (set, 0, i,
+  {
+    bitlst_table[bitlst_table_last++] = i;
+    (bl->nr_members)++;
+  });
 
 }
 
@@ -1112,11 +1032,11 @@ find_rgns (edge_list, dom)
   free (max_hdr);
   free (dfs_nr);
   free (stack);
-  free (passed);
-  free (header);
-  free (inner);
-  free (in_queue);
-  free (in_stack);
+  sbitmap_free (passed);
+  sbitmap_free (header);
+  sbitmap_free (inner);
+  sbitmap_free (in_queue);
+  sbitmap_free (in_stack);
 }
 
 /* Functions for regions scheduling information.  */
@@ -1134,34 +1054,32 @@ compute_dom_prob_ps (bb)
   prob[bb] = 0.0;
   if (IS_RGN_ENTRY (bb))
     {
-      BITSET_ADD (dom[bb], 0, bbset_size);
+      SET_BIT (dom[bb], 0);
       prob[bb] = 1.0;
       return;
     }
 
   fst_in_edge = nxt_in_edge = IN_EDGES (BB_TO_BLOCK (bb));
 
-  /* Intialize dom[bb] to '111..1'.  */
-  BITSET_INVERT (dom[bb], bbset_size);
+  /* Initialize dom[bb] to '111..1'.  */
+  sbitmap_ones (dom[bb]);
 
   do
     {
       pred = FROM_BLOCK (nxt_in_edge);
-      BITSET_INTER (dom[bb], dom[BLOCK_TO_BB (pred)], bbset_size);
+      sbitmap_a_and_b (dom[bb], dom[bb], dom[BLOCK_TO_BB (pred)]);
+      sbitmap_a_or_b (ancestor_edges[bb], ancestor_edges[bb], ancestor_edges[BLOCK_TO_BB (pred)]);
 
-      BITSET_UNION (ancestor_edges[bb], ancestor_edges[BLOCK_TO_BB (pred)],
-		    edgeset_size);
-
-      BITSET_ADD (ancestor_edges[bb], EDGE_TO_BIT (nxt_in_edge), edgeset_size);
+      SET_BIT (ancestor_edges[bb], EDGE_TO_BIT (nxt_in_edge));
 
       nr_out_edges = 1;
       nr_rgn_out_edges = 0;
       fst_out_edge = OUT_EDGES (pred);
       nxt_out_edge = NEXT_OUT (fst_out_edge);
-      BITSET_UNION (pot_split[bb], pot_split[BLOCK_TO_BB (pred)],
-		    edgeset_size);
 
-      BITSET_ADD (pot_split[bb], EDGE_TO_BIT (fst_out_edge), edgeset_size);
+      sbitmap_a_or_b (pot_split[bb], pot_split[bb], pot_split[BLOCK_TO_BB (pred)]);
+
+      SET_BIT (pot_split[bb], EDGE_TO_BIT (fst_out_edge));
 
       /* The successor doesn't belong in the region?  */
       if (CONTAINING_RGN (TO_BLOCK (fst_out_edge)) !=
@@ -1175,7 +1093,7 @@ compute_dom_prob_ps (bb)
 	  if (CONTAINING_RGN (TO_BLOCK (nxt_out_edge)) !=
 	      CONTAINING_RGN (BB_TO_BLOCK (bb)))
 	    ++nr_rgn_out_edges;
-	  BITSET_ADD (pot_split[bb], EDGE_TO_BIT (nxt_out_edge), edgeset_size);
+        SET_BIT (pot_split[bb], EDGE_TO_BIT (nxt_out_edge));
 	  nxt_out_edge = NEXT_OUT (nxt_out_edge);
 
 	}
@@ -1192,8 +1110,8 @@ compute_dom_prob_ps (bb)
     }
   while (fst_in_edge != nxt_in_edge);
 
-  BITSET_ADD (dom[bb], bb, bbset_size);
-  BITSET_DIFFER (pot_split[bb], ancestor_edges[bb], edgeset_size);
+  SET_BIT (dom[bb], bb);
+  sbitmap_difference (pot_split[bb], pot_split[bb], ancestor_edges[bb]);
 
   if (sched_verbose >= 2)
     fprintf (sched_dump, ";;  bb_prob(%d, %d) = %3d\n", bb, BB_TO_BLOCK (bb),
@@ -1211,14 +1129,12 @@ split_edges (bb_src, bb_trg, bl)
      int bb_trg;
      edgelst *bl;
 {
-  int es = edgeset_size;
-  edgeset src = (edgeset) xcalloc (es, sizeof (HOST_WIDE_INT));
+  sbitmap src = (edgeset) sbitmap_alloc (pot_split[bb_src]->n_bits);
+  sbitmap_copy (src, pot_split[bb_src]);
 
-  while (es--)
-    src[es] = (pot_split[bb_src])[es];
-  BITSET_DIFFER (src, pot_split[bb_trg], edgeset_size);
-  extract_bitlst (src, edgeset_size, edgeset_bitsize, bl);
-  free (src);
+  sbitmap_difference (src, src, pot_split[bb_trg]);
+  extract_bitlst (src, bl);
+  sbitmap_free (src);
 }
 
 /* Find the valid candidate-source-blocks for the target block TRG, compute
@@ -1229,7 +1145,7 @@ static void
 compute_trg_info (trg)
      int trg;
 {
-  register candidate *sp;
+  candidate *sp;
   edgelst el;
   int check_block, update_idx;
   int i, j, k, fst_edge, nxt_edge;
@@ -1384,9 +1300,9 @@ check_live_1 (src, x)
      int src;
      rtx x;
 {
-  register int i;
-  register int regno;
-  register rtx reg = SET_DEST (x);
+  int i;
+  int regno;
+  rtx reg = SET_DEST (x);
 
   if (reg == 0)
     return 1;
@@ -1398,7 +1314,7 @@ check_live_1 (src, x)
 
   if (GET_CODE (reg) == PARALLEL)
     {
-      register int i;
+      int i;
 
       for (i = XVECLEN (reg, 0) - 1; i >= 0; i--)
 	if (XEXP (XVECEXP (reg, 0, i), 0) != 0)
@@ -1464,9 +1380,9 @@ update_live_1 (src, x)
      int src;
      rtx x;
 {
-  register int i;
-  register int regno;
-  register rtx reg = SET_DEST (x);
+  int i;
+  int regno;
+  rtx reg = SET_DEST (x);
 
   if (reg == 0)
     return;
@@ -1478,7 +1394,7 @@ update_live_1 (src, x)
 
   if (GET_CODE (reg) == PARALLEL)
     {
-      register int i;
+      int i;
 
       for (i = XVECLEN (reg, 0) - 1; i >= 0; i--)
 	if (XEXP (XVECEXP (reg, 0, i), 0) != 0)
@@ -1647,17 +1563,16 @@ enum INSN_TRAP_CLASS
 #define IS_REACHABLE(bb_from, bb_to)					\
 (bb_from == bb_to                                                       \
    || IS_RGN_ENTRY (bb_from)						\
-   || (bitset_member (ancestor_edges[bb_to],				\
-		      EDGE_TO_BIT (IN_EDGES (BB_TO_BLOCK (bb_from))),	\
-		      edgeset_size)))
+   || (TEST_BIT (ancestor_edges[bb_to],                               \
+                    EDGE_TO_BIT (IN_EDGES (BB_TO_BLOCK (bb_from))))))
 
 /* Non-zero iff the address is comprised from at most 1 register.  */
 #define CONST_BASED_ADDRESS_P(x)			\
   (GET_CODE (x) == REG					\
    || ((GET_CODE (x) == PLUS || GET_CODE (x) == MINUS   \
 	|| (GET_CODE (x) == LO_SUM))	                \
-       && (GET_CODE (XEXP (x, 0)) == CONST_INT		\
-	   || GET_CODE (XEXP (x, 1)) == CONST_INT)))
+       && (CONSTANT_P (XEXP (x, 0))		\
+	   || CONSTANT_P (XEXP (x, 1)))))
 
 /* Turns on the fed_by_spec_load flag for insns fed by load_insn.  */
 
@@ -1770,7 +1685,7 @@ is_pfree (load_insn, bb_src, bb_trg)
      int bb_src, bb_trg;
 {
   rtx back_link;
-  register candidate *candp = candidate_table + bb_src;
+  candidate *candp = candidate_table + bb_src;
 
   if (candp->split_bbs.nr_members != 1)
     /* Must have exactly one escape block.  */
@@ -1828,7 +1743,7 @@ may_trap_exp (x, is_store)
   code = GET_CODE (x);
   if (is_store)
     {
-      if (code == MEM)
+      if (code == MEM && may_trap_p (x))
 	return TRAP_RISKY;
       else
 	return TRAP_FREE;
@@ -2148,7 +2063,7 @@ init_ready_list (ready)
 	      {
 		rtx next;
 
-		/* Note that we havn't squirrled away the notes for
+		/* Note that we haven't squirreled away the notes for
 		   blocks other than the current.  So if this is a
 		   speculative insn, NEXT might otherwise be a note.  */
 		next = next_nonnote_insn (insn);
@@ -2201,7 +2116,7 @@ can_schedule_ready_p (insn)
       while (SCHED_GROUP_P (temp))
 	temp = PREV_INSN (temp);
 
-      /* Update source block boundaries.   */
+      /* Update source block boundaries.  */
       b1 = BLOCK_FOR_INSN (temp);
       if (temp == b1->head && insn == b1->end)
 	{
@@ -2352,8 +2267,33 @@ static struct sched_info region_sched_info =
 
   NULL, NULL,
   NULL, NULL,
-  0
+  0, 0
 };
+
+/* Determine if PAT sets a CLASS_LIKELY_SPILLED_P register.  */
+
+static bool
+sets_likely_spilled (pat)
+     rtx pat;
+{
+  bool ret = false;
+  note_stores (pat, sets_likely_spilled_1, &ret);
+  return ret;
+}
+
+static void
+sets_likely_spilled_1 (x, pat, data)
+     rtx x, pat;
+     void *data;
+{
+  bool *ret = (bool *) data;
+
+  if (GET_CODE (pat) == SET
+      && REG_P (x)
+      && REGNO (x) < FIRST_PSEUDO_REGISTER
+      && CLASS_LIKELY_SPILLED_P (REGNO_REG_CLASS (REGNO (x))))
+    *ret = true;
+}
 
 /* Add dependences so that branches are scheduled to run last in their
    block.  */
@@ -2364,15 +2304,22 @@ add_branch_dependences (head, tail)
 {
   rtx insn, last;
 
-  /* For all branches, calls, uses, clobbers, and cc0 setters, force them
-     to remain in order at the end of the block by adding dependencies and
-     giving the last a high priority.  There may be notes present, and
-     prev_head may also be a note.
+  /* For all branches, calls, uses, clobbers, cc0 setters, and instructions
+     that can throw exceptions, force them to remain in order at the end of
+     the block by adding dependencies and giving the last a high priority.
+     There may be notes present, and prev_head may also be a note.
 
      Branches must obviously remain at the end.  Calls should remain at the
      end since moving them results in worse register allocation.  Uses remain
-     at the end to ensure proper register allocation.  cc0 setters remaim
-     at the end because they can't be moved away from their cc0 user.  */
+     at the end to ensure proper register allocation.
+
+     cc0 setters remaim at the end because they can't be moved away from
+     their cc0 user.
+
+     Insns setting CLASS_LIKELY_SPILLED_P registers (usually return values)
+     are not moved before reload because we can wind up with register
+     allocation failures.  */
+
   insn = tail;
   last = 0;
   while (GET_CODE (insn) == CALL_INSN
@@ -2380,16 +2327,17 @@ add_branch_dependences (head, tail)
 	 || (GET_CODE (insn) == INSN
 	     && (GET_CODE (PATTERN (insn)) == USE
 		 || GET_CODE (PATTERN (insn)) == CLOBBER
+		 || can_throw_internal (insn)
 #ifdef HAVE_cc0
 		 || sets_cc0_p (PATTERN (insn))
 #endif
-	     ))
+		 || (!reload_completed
+		     && sets_likely_spilled (PATTERN (insn)))))
 	 || GET_CODE (insn) == NOTE)
     {
       if (GET_CODE (insn) != NOTE)
 	{
-	  if (last != 0
-	      && !find_insn_list (insn, LOG_LINKS (last)))
+	  if (last != 0 && !find_insn_list (insn, LOG_LINKS (last)))
 	    {
 	      add_dependence (last, insn, REG_DEP_ANTI);
 	      INSN_REF_COUNT (insn)++;
@@ -2445,125 +2393,124 @@ add_branch_dependences (head, tail)
 
 static struct deps *bb_deps;
 
+/* Duplicate the INSN_LIST elements of COPY and prepend them to OLD.  */
+
+static rtx
+concat_INSN_LIST (copy, old)
+     rtx copy, old;
+{
+  rtx new = old;
+  for (; copy ; copy = XEXP (copy, 1))
+    new = alloc_INSN_LIST (XEXP (copy, 0), new);
+  return new;
+}
+
+static void
+concat_insn_mem_list (copy_insns, copy_mems, old_insns_p, old_mems_p)
+     rtx copy_insns, copy_mems;
+     rtx *old_insns_p, *old_mems_p;
+{
+  rtx new_insns = *old_insns_p;
+  rtx new_mems = *old_mems_p;
+
+  while (copy_insns)
+    {
+      new_insns = alloc_INSN_LIST (XEXP (copy_insns, 0), new_insns);
+      new_mems = alloc_EXPR_LIST (VOIDmode, XEXP (copy_mems, 0), new_mems);
+      copy_insns = XEXP (copy_insns, 1);
+      copy_mems = XEXP (copy_mems, 1);
+    }
+
+  *old_insns_p = new_insns;
+  *old_mems_p = new_mems;
+}
+
 /* After computing the dependencies for block BB, propagate the dependencies
    found in TMP_DEPS to the successors of the block.  */
 static void
-propagate_deps (bb, tmp_deps)
+propagate_deps (bb, pred_deps)
      int bb;
-     struct deps *tmp_deps;
+     struct deps *pred_deps;
 {
   int b = BB_TO_BLOCK (bb);
   int e, first_edge;
-  int reg;
-  rtx link_insn, link_mem;
-  rtx u;
-
-  /* These lists should point to the right place, for correct
-     freeing later.  */
-  bb_deps[bb].pending_read_insns = tmp_deps->pending_read_insns;
-  bb_deps[bb].pending_read_mems = tmp_deps->pending_read_mems;
-  bb_deps[bb].pending_write_insns = tmp_deps->pending_write_insns;
-  bb_deps[bb].pending_write_mems = tmp_deps->pending_write_mems;
 
   /* bb's structures are inherited by its successors.  */
   first_edge = e = OUT_EDGES (b);
-  if (e <= 0)
-    return;
+  if (e > 0)
+    do
+      {
+	int b_succ = TO_BLOCK (e);
+	int bb_succ = BLOCK_TO_BB (b_succ);
+	struct deps *succ_deps = bb_deps + bb_succ;
+	int reg;
 
-  do
-    {
-      rtx x;
-      int b_succ = TO_BLOCK (e);
-      int bb_succ = BLOCK_TO_BB (b_succ);
-      struct deps *succ_deps = bb_deps + bb_succ;
+	/* Only bbs "below" bb, in the same region, are interesting.  */
+	if (CONTAINING_RGN (b) != CONTAINING_RGN (b_succ)
+	    || bb_succ <= bb)
+	  {
+	    e = NEXT_OUT (e);
+	    continue;
+	  }
 
-      /* Only bbs "below" bb, in the same region, are interesting.  */
-      if (CONTAINING_RGN (b) != CONTAINING_RGN (b_succ)
-	  || bb_succ <= bb)
-	{
-	  e = NEXT_OUT (e);
-	  continue;
-	}
+	/* The reg_last lists are inherited by bb_succ.  */
+	EXECUTE_IF_SET_IN_REG_SET (&pred_deps->reg_last_in_use, 0, reg,
+	  {
+	    struct deps_reg *pred_rl = &pred_deps->reg_last[reg];
+	    struct deps_reg *succ_rl = &succ_deps->reg_last[reg];
 
-      /* The reg_last lists are inherited by bb_succ.  */
-      EXECUTE_IF_SET_IN_REG_SET (&tmp_deps->reg_last_in_use, 0, reg,
-	{
-	  struct deps_reg *tmp_deps_reg = &tmp_deps->reg_last[reg];
-	  struct deps_reg *succ_deps_reg = &succ_deps->reg_last[reg];
+	    succ_rl->uses = concat_INSN_LIST (pred_rl->uses, succ_rl->uses);
+	    succ_rl->sets = concat_INSN_LIST (pred_rl->sets, succ_rl->sets);
+	    succ_rl->clobbers = concat_INSN_LIST (pred_rl->clobbers,
+						  succ_rl->clobbers);
+	    succ_rl->uses_length += pred_rl->uses_length;
+	    succ_rl->clobbers_length += pred_rl->clobbers_length;
+	  });
+	IOR_REG_SET (&succ_deps->reg_last_in_use, &pred_deps->reg_last_in_use);
 
-	  for (u = tmp_deps_reg->uses; u; u = XEXP (u, 1))
-	    if (! find_insn_list (XEXP (u, 0), succ_deps_reg->uses))
-	      succ_deps_reg->uses
-		= alloc_INSN_LIST (XEXP (u, 0), succ_deps_reg->uses);
+	/* Mem read/write lists are inherited by bb_succ.  */
+	concat_insn_mem_list (pred_deps->pending_read_insns,
+			      pred_deps->pending_read_mems,
+			      &succ_deps->pending_read_insns,
+			      &succ_deps->pending_read_mems);
+	concat_insn_mem_list (pred_deps->pending_write_insns,
+			      pred_deps->pending_write_mems,
+			      &succ_deps->pending_write_insns,
+			      &succ_deps->pending_write_mems);
 
-	  for (u = tmp_deps_reg->sets; u; u = XEXP (u, 1))
-	    if (! find_insn_list (XEXP (u, 0), succ_deps_reg->sets))
-	      succ_deps_reg->sets
-		= alloc_INSN_LIST (XEXP (u, 0), succ_deps_reg->sets);
+	succ_deps->last_pending_memory_flush
+	  = concat_INSN_LIST (pred_deps->last_pending_memory_flush,
+			      succ_deps->last_pending_memory_flush);
+	
+	succ_deps->pending_lists_length += pred_deps->pending_lists_length;
+	succ_deps->pending_flush_length += pred_deps->pending_flush_length;
 
-	  for (u = tmp_deps_reg->clobbers; u; u = XEXP (u, 1))
-	    if (! find_insn_list (XEXP (u, 0), succ_deps_reg->clobbers))
-	      succ_deps_reg->clobbers
-		= alloc_INSN_LIST (XEXP (u, 0), succ_deps_reg->clobbers);
-	});
-      IOR_REG_SET (&succ_deps->reg_last_in_use, &tmp_deps->reg_last_in_use);
+	/* last_function_call is inherited by bb_succ.  */
+	succ_deps->last_function_call
+	  = concat_INSN_LIST (pred_deps->last_function_call,
+			      succ_deps->last_function_call);
 
-      /* Mem read/write lists are inherited by bb_succ.  */
-      link_insn = tmp_deps->pending_read_insns;
-      link_mem = tmp_deps->pending_read_mems;
-      while (link_insn)
-	{
-	  if (!(find_insn_mem_list (XEXP (link_insn, 0),
-				    XEXP (link_mem, 0),
-				    succ_deps->pending_read_insns,
-				    succ_deps->pending_read_mems)))
-	    add_insn_mem_dependence (succ_deps, &succ_deps->pending_read_insns,
-				     &succ_deps->pending_read_mems,
-				     XEXP (link_insn, 0), XEXP (link_mem, 0));
-	  link_insn = XEXP (link_insn, 1);
-	  link_mem = XEXP (link_mem, 1);
-	}
+	/* sched_before_next_call is inherited by bb_succ.  */
+	succ_deps->sched_before_next_call
+	  = concat_INSN_LIST (pred_deps->sched_before_next_call,
+			      succ_deps->sched_before_next_call);
 
-      link_insn = tmp_deps->pending_write_insns;
-      link_mem = tmp_deps->pending_write_mems;
-      while (link_insn)
-	{
-	  if (!(find_insn_mem_list (XEXP (link_insn, 0),
-				    XEXP (link_mem, 0),
-				    succ_deps->pending_write_insns,
-				    succ_deps->pending_write_mems)))
-	    add_insn_mem_dependence (succ_deps,
-				     &succ_deps->pending_write_insns,
-				     &succ_deps->pending_write_mems,
-				     XEXP (link_insn, 0), XEXP (link_mem, 0));
+	e = NEXT_OUT (e);
+      }
+    while (e != first_edge);
 
-	  link_insn = XEXP (link_insn, 1);
-	  link_mem = XEXP (link_mem, 1);
-	}
+  /* These lists should point to the right place, for correct
+     freeing later.  */
+  bb_deps[bb].pending_read_insns = pred_deps->pending_read_insns;
+  bb_deps[bb].pending_read_mems = pred_deps->pending_read_mems;
+  bb_deps[bb].pending_write_insns = pred_deps->pending_write_insns;
+  bb_deps[bb].pending_write_mems = pred_deps->pending_write_mems;
 
-      /* last_function_call is inherited by bb_succ.  */
-      for (u = tmp_deps->last_function_call; u; u = XEXP (u, 1))
-	if (! find_insn_list (XEXP (u, 0), succ_deps->last_function_call))
-	  succ_deps->last_function_call
-	    = alloc_INSN_LIST (XEXP (u, 0), succ_deps->last_function_call);
-
-      /* last_pending_memory_flush is inherited by bb_succ.  */
-      for (u = tmp_deps->last_pending_memory_flush; u; u = XEXP (u, 1))
-	if (! find_insn_list (XEXP (u, 0),
-			      succ_deps->last_pending_memory_flush))
-	  succ_deps->last_pending_memory_flush
-	    = alloc_INSN_LIST (XEXP (u, 0),
-			       succ_deps->last_pending_memory_flush);
-
-      /* sched_before_next_call is inherited by bb_succ.  */
-      x = LOG_LINKS (tmp_deps->sched_before_next_call);
-      for (; x; x = XEXP (x, 1))
-	add_dependence (succ_deps->sched_before_next_call,
-			XEXP (x, 0), REG_DEP_ANTI);
-
-      e = NEXT_OUT (e);
-    }
-  while (e != first_edge);
+  /* Can't allow these to be freed twice.  */
+  pred_deps->pending_read_insns = 0;
+  pred_deps->pending_read_mems = 0;
+  pred_deps->pending_write_insns = 0;
+  pred_deps->pending_write_mems = 0;
 }
 
 /* Compute backward dependences inside bb.  In a multiple blocks region:
@@ -2747,11 +2694,8 @@ schedule_region (rgn)
 
       prob = (float *) xmalloc ((current_nr_blocks) * sizeof (float));
 
-      bbset_size = current_nr_blocks / HOST_BITS_PER_WIDE_INT + 1;
-      dom = (bbset *) xmalloc (current_nr_blocks * sizeof (bbset));
-      for (i = 0; i < current_nr_blocks; i++)
-	dom[i] = (bbset) xcalloc (bbset_size, sizeof (HOST_WIDE_INT));
-
+      dom = sbitmap_vector_alloc (current_nr_blocks, current_nr_blocks);
+      sbitmap_vector_zero (dom, current_nr_blocks);
       /* Edge to bit.  */
       rgn_nr_edges = 0;
       edge_to_bit = (int *) xmalloc (nr_edges * sizeof (int));
@@ -2766,18 +2710,10 @@ schedule_region (rgn)
 	  rgn_edges[rgn_nr_edges++] = i;
 
       /* Split edges.  */
-      edgeset_size = rgn_nr_edges / HOST_BITS_PER_WIDE_INT + 1;
-      edgeset_bitsize = rgn_nr_edges;
-      pot_split = (edgeset *) xmalloc (current_nr_blocks * sizeof (edgeset));
-      ancestor_edges
-	= (edgeset *) xmalloc (current_nr_blocks * sizeof (edgeset));
-      for (i = 0; i < current_nr_blocks; i++)
-	{
-	  pot_split[i] =
-	    (edgeset) xcalloc (edgeset_size, sizeof (HOST_WIDE_INT));
-	  ancestor_edges[i] =
-	    (edgeset) xcalloc (edgeset_size, sizeof (HOST_WIDE_INT));
-	}
+      pot_split = sbitmap_vector_alloc (current_nr_blocks, rgn_nr_edges);
+      sbitmap_vector_zero (pot_split, current_nr_blocks);
+      ancestor_edges = sbitmap_vector_alloc (current_nr_blocks, rgn_nr_edges);
+      sbitmap_vector_zero (ancestor_edges, current_nr_blocks);
 
       /* Compute probabilities, dominators, split_edges.  */
       for (bb = 0; bb < current_nr_blocks; bb++)
@@ -2809,10 +2745,7 @@ schedule_region (rgn)
  	 or after the last real insn of the block.  So if the first insn
 	 has a REG_SAVE_NOTE which would otherwise be emitted before the
 	 insn, it is redundant with the note before the start of the
-	 block, and so we have to take it out.
-
-	 FIXME: Probably the same thing should be done with REG_SAVE_NOTEs
-	 referencing NOTE_INSN_SETJMP at the end of the block.  */
+	 block, and so we have to take it out.  */
       if (INSN_P (head))
 	{
 	  rtx note;
@@ -2820,14 +2753,9 @@ schedule_region (rgn)
 	  for (note = REG_NOTES (head); note; note = XEXP (note, 1))
 	    if (REG_NOTE_KIND (note) == REG_SAVE_NOTE)
 	      {
-		if (INTVAL (XEXP (note, 0)) != NOTE_INSN_SETJMP)
-		  {
-		    remove_note (head, note);
-		    note = XEXP (note, 1);
-		    remove_note (head, note);
-		  }
-		else
-		  note = XEXP (note, 1);
+		remove_note (head, note);
+		note = XEXP (note, 1);
+		remove_note (head, note);
 	      }
 	}
 
@@ -2883,20 +2811,12 @@ schedule_region (rgn)
 
   if (current_nr_blocks > 1)
     {
-      int i;
-
       free (prob);
-      for (i = 0; i < current_nr_blocks; ++i)
-	{
-	  free (dom[i]);
-	  free (pot_split[i]);
-	  free (ancestor_edges[i]);
-	}
-      free (dom);
+      sbitmap_vector_free (dom);
+      sbitmap_vector_free (pot_split);
+      sbitmap_vector_free (ancestor_edges);
       free (edge_to_bit);
       free (rgn_edges);
-      free (pot_split);
-      free (ancestor_edges);
     }
 }
 
@@ -2917,8 +2837,6 @@ init_regions ()
   rgn_bb_table = (int *) xmalloc ((n_basic_blocks) * sizeof (int));
   block_to_bb = (int *) xmalloc ((n_basic_blocks) * sizeof (int));
   containing_rgn = (int *) xmalloc ((n_basic_blocks) * sizeof (int));
-
-  blocks = sbitmap_alloc (n_basic_blocks);
 
   /* Compute regions for scheduling.  */
   if (reload_completed
@@ -2977,21 +2895,26 @@ init_regions ()
 	}
     }
 
-  deaths_in_region = (int *) xmalloc (sizeof (int) * nr_regions);
 
-  /* Remove all death notes from the subroutine.  */
-  for (rgn = 0; rgn < nr_regions; rgn++)
+  if (CHECK_DEAD_NOTES)
     {
-      int b;
+      blocks = sbitmap_alloc (n_basic_blocks);
+      deaths_in_region = (int *) xmalloc (sizeof (int) * nr_regions);
+      /* Remove all death notes from the subroutine.  */
+      for (rgn = 0; rgn < nr_regions; rgn++)
+	{
+	  int b;
 
-      sbitmap_zero (blocks);
-      for (b = RGN_NR_BLOCKS (rgn) - 1; b >= 0; --b)
-	SET_BIT (blocks, rgn_bb_table[RGN_BLOCKS (rgn) + b]);
+	  sbitmap_zero (blocks);
+	  for (b = RGN_NR_BLOCKS (rgn) - 1; b >= 0; --b)
+	    SET_BIT (blocks, rgn_bb_table[RGN_BLOCKS (rgn) + b]);
 
-      deaths_in_region[rgn] = count_or_remove_death_notes (blocks, 1);
+	  deaths_in_region[rgn] = count_or_remove_death_notes (blocks, 1);
+	}
+      sbitmap_free (blocks);
     }
-
-  sbitmap_free (blocks);
+  else
+    count_or_remove_death_notes (NULL, 1);
 }
 
 /* The one entry point in this file.  DUMP_FILE is the dump file for
@@ -3010,6 +2933,8 @@ schedule_insns (dump_file)
   if (n_basic_blocks == 0)
     return;
 
+  scope_to_insns_initialize ();
+
   nr_inter = 0;
   nr_spec = 0;
 
@@ -3025,7 +2950,7 @@ schedule_insns (dump_file)
 
   /* Update life analysis for the subroutine.  Do single block regions
      first so that we can verify that live_at_start didn't change.  Then
-     do all other blocks.   */
+     do all other blocks.  */
   /* ??? There is an outside possibility that update_life_info, or more
      to the point propagate_block, could get called with non-zero flags
      more than once for one basic block.  This would be kinda bad if it
@@ -3044,37 +2969,47 @@ schedule_insns (dump_file)
   sbitmap_ones (large_region_blocks);
 
   blocks = sbitmap_alloc (n_basic_blocks);
+  sbitmap_zero (blocks);
 
+  /* Update life information.  For regions consisting of multiple blocks
+     we've possibly done interblock scheduling that affects global liveness.
+     For regions consisting of single blocks we need to do only local
+     liveness.  */
   for (rgn = 0; rgn < nr_regions; rgn++)
     if (RGN_NR_BLOCKS (rgn) > 1)
       any_large_regions = 1;
     else
       {
-	sbitmap_zero (blocks);
 	SET_BIT (blocks, rgn_bb_table[RGN_BLOCKS (rgn)]);
 	RESET_BIT (large_region_blocks, rgn_bb_table[RGN_BLOCKS (rgn)]);
-
-	/* Don't update reg info after reload, since that affects
-	   regs_ever_live, which should not change after reload.  */
-	update_life_info (blocks, UPDATE_LIFE_LOCAL,
-			  (reload_completed ? PROP_DEATH_NOTES
-			   : PROP_DEATH_NOTES | PROP_REG_INFO));
-
-#ifndef HAVE_conditional_execution
-	/* ??? REG_DEAD notes only exist for unconditional deaths.  We need
-	   a count of the conditional plus unconditional deaths for this to
-	   work out.  */
-	/* In the single block case, the count of registers that died should
-	   not have changed during the schedule.  */
-	if (count_or_remove_death_notes (blocks, 0) != deaths_in_region[rgn])
-	  abort ();
-#endif
       }
 
+  /* Don't update reg info after reload, since that affects
+     regs_ever_live, which should not change after reload.  */
+  update_life_info (blocks, UPDATE_LIFE_LOCAL,
+		    (reload_completed ? PROP_DEATH_NOTES
+		     : PROP_DEATH_NOTES | PROP_REG_INFO));
   if (any_large_regions)
     {
       update_life_info (large_region_blocks, UPDATE_LIFE_GLOBAL,
 			PROP_DEATH_NOTES | PROP_REG_INFO);
+    }
+
+  if (CHECK_DEAD_NOTES)
+    {
+      /* Verify the counts of basic block notes in single the basic block
+         regions.  */
+      for (rgn = 0; rgn < nr_regions; rgn++)
+	if (RGN_NR_BLOCKS (rgn) == 1)
+	  {
+	    sbitmap_zero (blocks);
+	    SET_BIT (blocks, rgn_bb_table[RGN_BLOCKS (rgn)]);
+
+	    if (deaths_in_region[rgn]
+		!= count_or_remove_death_notes (blocks, 0))
+	      abort ();
+	  }
+      free (deaths_in_region);
     }
 
   /* Reposition the prologue and epilogue notes in case we moved the
@@ -3085,6 +3020,8 @@ schedule_insns (dump_file)
   /* Delete redundant line notes.  */
   if (write_symbols != NO_DEBUG)
     rm_redundant_line_notes ();
+
+  scope_to_insns_finalize ();
 
   if (sched_verbose)
     {
@@ -3129,7 +3066,5 @@ schedule_insns (dump_file)
 
   sbitmap_free (blocks);
   sbitmap_free (large_region_blocks);
-
-  free (deaths_in_region);
 }
 #endif

@@ -1,23 +1,23 @@
 /* Output xcoff-format symbol table information from GNU compiler.
-   Copyright (C) 1992, 1994, 1995, 1997, 1998, 1999, 2000
+   Copyright (C) 1992, 1994, 1995, 1997, 1998, 1999, 2000, 2002
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 /* Output xcoff-format symbol table data.  The main functionality is contained
    in dbxout.c.  This file implements the sdbout-like parts of the xcoff
@@ -36,16 +36,10 @@ Boston, MA 02111-1307, USA.  */
 #ifdef XCOFF_DEBUGGING_INFO
 
 /* This defines the C_* storage classes.  */
-#include <dbxstclass.h>
-
+#include "dbxstclass.h"
 #include "xcoffout.h"
 #include "dbxout.h"
-
-#if defined (USG) || !defined (HAVE_STAB_H)
 #include "gstab.h"
-#else
-#include <stab.h>
-#endif
 
 /* Line number of beginning of current function, minus one.
    Negative means not in a function or not using xcoff.  */
@@ -81,11 +75,13 @@ const char *xcoff_lastfile;
 ((xcoff_inlining) ? (LINENO) : (LINENO) - xcoff_begin_function_line)
 
 /* Output source line numbers via ".line" rather than ".stabd".  */
-#define ASM_OUTPUT_SOURCE_LINE(FILE,LINENUM) \
-  do {						\
-    if (xcoff_begin_function_line >= 0)		\
-      fprintf (FILE, "\t.line\t%d\n", ABS_OR_RELATIVE_LINENO (LINENUM)); \
-  } while (0)
+#define ASM_OUTPUT_SOURCE_LINE(FILE,LINENUM) 				   \
+  do									   \
+    {									   \
+      if (xcoff_begin_function_line >= 0)				   \
+	fprintf (FILE, "\t.line\t%d\n", ABS_OR_RELATIVE_LINENO (LINENUM)); \
+    }									   \
+  while (0)
 
 #define ASM_OUTPUT_LFB(FILE,LINENUM) \
 {						\
@@ -99,11 +95,13 @@ const char *xcoff_lastfile;
        ? xcoff_current_include_file : main_input_filename); \
 }
 
-#define ASM_OUTPUT_LFE(FILE,LINENUM) \
-  do {						\
-    fprintf (FILE, "\t.ef\t%d\n", (LINENUM));	\
-    xcoff_begin_function_line = -1;		\
-  } while (0)
+#define ASM_OUTPUT_LFE(FILE,LINENUM) 		\
+  do						\
+    {						\
+      fprintf (FILE, "\t.ef\t%d\n", (LINENUM));	\
+      xcoff_begin_function_line = -1;		\
+    }						\
+  while (0)
 
 #define ASM_OUTPUT_LBB(FILE,LINENUM,BLOCKNUM) \
   fprintf (FILE, "\t.bb\t%d\n", ABS_OR_RELATIVE_LINENO (LINENUM))
@@ -173,7 +171,7 @@ xcoff_output_standard_types (syms)
 /* Print an error message for unrecognized stab codes.  */
 
 #define UNKNOWN_STAB(STR)	\
-  internal_error ("No sclass for %s stab (0x%x)\n", STR, stab)
+  internal_error ("no sclass for %s stab (0x%x)\n", STR, stab)
 
 /* Conversion routine from BSD stabs to AIX storage classes.  */
 
@@ -196,10 +194,8 @@ stab_to_sclass (stab)
     case N_LCSYM:
       return C_STSYM;
 
-#ifdef N_MAIN
     case N_MAIN:
       UNKNOWN_STAB ("N_MAIN");
-#endif
 
     case N_RSYM:
       return C_RSYM;
@@ -228,30 +224,20 @@ stab_to_sclass (stab)
     case N_SLINE:
       UNKNOWN_STAB ("N_SLINE");
 
-#ifdef N_DSLINE
     case N_DSLINE:
       UNKNOWN_STAB ("N_DSLINE");
-#endif
 
-#ifdef N_BSLINE
     case N_BSLINE:
       UNKNOWN_STAB ("N_BSLINE");
-#endif
 
-#ifdef N_BINCL
     case N_BINCL:
       UNKNOWN_STAB ("N_BINCL");
-#endif
 
-#ifdef N_EINCL
     case N_EINCL:
       UNKNOWN_STAB ("N_EINCL");
-#endif
 
-#ifdef N_EXCL
     case N_EXCL:
       UNKNOWN_STAB ("N_EXCL");
-#endif
 
     case N_LBRAC:
       UNKNOWN_STAB ("N_LBRAC");
@@ -272,25 +258,17 @@ stab_to_sclass (stab)
     case N_PC:
       UNKNOWN_STAB ("N_PC");
 
-#ifdef N_M2C
     case N_M2C:
       UNKNOWN_STAB ("N_M2C");
-#endif
 
-#ifdef N_SCOPE
     case N_SCOPE:
       UNKNOWN_STAB ("N_SCOPE");
-#endif
 
-#ifdef N_CATCH
     case N_CATCH:
       UNKNOWN_STAB ("N_CATCH");
-#endif
 
-#ifdef N_OPT
     case N_OPT:
       UNKNOWN_STAB ("N_OPT");
-#endif
 
     default:
       UNKNOWN_STAB ("?");
@@ -330,18 +308,19 @@ xcoffout_source_file (file, filename, inline_p)
     }
 }
 
-/* Output a line number symbol entry into output stream FILE,
-   for source file FILENAME and line number NOTE.  */
+/* Output a line number symbol entry for location (FILENAME, LINE).  */
 
 void
-xcoffout_source_line (file, filename, note)
-     FILE *file;
+xcoffout_source_line (line, filename)
+     unsigned int line;
      const char *filename;
-     rtx note;
 {
-  xcoffout_source_file (file, filename, RTX_INTEGRATED_P (note));
+  bool inline_p = (strcmp (xcoff_current_function_file, filename) != 0
+		   || (int) line < xcoff_begin_function_line);
 
-  ASM_OUTPUT_SOURCE_LINE (file, NOTE_LINE_NUMBER (note));
+  xcoffout_source_file (asm_out_file, filename, inline_p);
+
+  ASM_OUTPUT_SOURCE_LINE (asm_out_file, line);
 }
 
 /* Output the symbols defined in block number DO_BLOCK.
@@ -353,7 +332,7 @@ static int do_block = 0;
 
 static void
 xcoffout_block (block, depth, args)
-     register tree block;
+     tree block;
      int depth;
      tree args;
 {
@@ -394,17 +373,16 @@ xcoffout_block (block, depth, args)
    if the count starts at 0 for the outermost one.  */
 
 void
-xcoffout_begin_block (file, line, n)
-     FILE *file;
-     int line;
-     int n;
+xcoffout_begin_block (line, n)
+     unsigned int line;
+     unsigned int n;
 {
   tree decl = current_function_decl;
 
   /* The IBM AIX compiler does not emit a .bb for the function level scope,
      so we avoid it here also.  */
   if (n != 1)
-    ASM_OUTPUT_LBB (file, line, n);
+    ASM_OUTPUT_LBB (asm_out_file, line, n);
 
   do_block = n;
   xcoffout_block (DECL_INITIAL (decl), 0, DECL_ARGUMENTS (decl));
@@ -413,13 +391,12 @@ xcoffout_begin_block (file, line, n)
 /* Describe the end line-number of an internal block within a function.  */
 
 void
-xcoffout_end_block (file, line, n)
-     FILE *file;
-     int line;
-     int n;
+xcoffout_end_block (line, n)
+     unsigned int line;
+     unsigned int n;
 {
   if (n != 1)
-    ASM_OUTPUT_LBE (file, line, n);
+    ASM_OUTPUT_LBE (asm_out_file, line, n);
 }
 
 /* Called at beginning of function (before prologue).
@@ -460,17 +437,17 @@ xcoffout_declare_function (file, decl, name)
 	   name, name, name, name);
 }
 
-/* Called at beginning of function body (after prologue).
+/* Called at beginning of function body (at start of prologue).
    Record the function's starting line number, so we can output
    relative line numbers for the other lines.
    Record the file name that this function is contained in.  */
 
 void
-xcoffout_begin_function (file, last_linenum)
-     FILE *file;
-     int last_linenum;
+xcoffout_begin_prologue (line, file)
+     unsigned int line;
+     const char *file ATTRIBUTE_UNUSED;
 {
-  ASM_OUTPUT_LFB (file, last_linenum);
+  ASM_OUTPUT_LFB (asm_out_file, line);
   dbxout_parms (DECL_ARGUMENTS (current_function_decl));
 
   /* Emit the symbols for the outermost BLOCK's variables.  sdbout.c does this
@@ -481,26 +458,24 @@ xcoffout_begin_function (file, last_linenum)
   xcoffout_block (DECL_INITIAL (current_function_decl), 0,
 		  DECL_ARGUMENTS (current_function_decl));
 
-  ASM_OUTPUT_SOURCE_LINE (file, last_linenum);
+  ASM_OUTPUT_SOURCE_LINE (asm_out_file, line);
 }
 
 /* Called at end of function (before epilogue).
    Describe end of outermost block.  */
 
 void
-xcoffout_end_function (file, last_linenum)
-     FILE *file;
-     int last_linenum;
+xcoffout_end_function (last_linenum)
+     unsigned int last_linenum;
 {
-  ASM_OUTPUT_LFE (file, last_linenum);
+  ASM_OUTPUT_LFE (asm_out_file, last_linenum);
 }
 
 /* Output xcoff info for the absolute end of a function.
    Called after the epilogue is output.  */
 
 void
-xcoffout_end_epilogue (file)
-     FILE *file;
+xcoffout_end_epilogue ()
 {
   /* We need to pass the correct function size to .function, otherwise,
      the xas assembler can't figure out the correct size for the function
@@ -510,7 +485,7 @@ xcoffout_end_epilogue (file)
   const char *fname = XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0);
   if (*fname == '*')
     ++fname;
-  fprintf (file, "FE..");
-  ASM_OUTPUT_LABEL (file, fname);
+  fprintf (asm_out_file, "FE..");
+  ASM_OUTPUT_LABEL (asm_out_file, fname);
 }
 #endif /* XCOFF_DEBUGGING_INFO */

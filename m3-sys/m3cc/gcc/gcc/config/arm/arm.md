@@ -1,6 +1,6 @@
 ;;- Machine description for ARM for GNU compiler
-;;  Copyright 1991, 1993, 1994, 1995, 1996, 1996, 1997, 1998, 1999, 2000, 2001
-;;  Free Software Foundation, Inc.
+;;  Copyright 1991, 1993, 1994, 1995, 1996, 1996, 1997, 1998, 1999, 2000,
+;;  2001, 2002  Free Software Foundation, Inc.
 ;;  Contributed by Pieter `Tiggr' Schoenmakers (rcpieter@win.tue.nl)
 ;;  and Martin Simmons (@harleqn.co.uk).
 ;;  More major hacks by Richard Earnshaw (rearnsha@arm.com).
@@ -64,6 +64,11 @@
    (UNSPEC_CLZ	     5) ; `clz' instruction, count leading zeros (SImode):
 			;   operand 0 is the result,
 			;   operand 1 is the parameter.
+   (UNSPEC_PROLOGUE_USE 6) ; As USE insns are not meaningful after reload,
+   			; this unspec is used to prevent the deletion of
+   			; instructions setting registers for EH handling
+   			; and stack frame generation.  Operand 0 is the
+   			; register to "use".
   ]
 )
 
@@ -88,8 +93,6 @@
 			;   a 32-bit object.
    (VUNSPEC_POOL_8   7) ; `pool-entry(8)'.  An entry in the constant pool for
 			;   a 64-bit object.
-   (VUNSPEC_PREFETCH 8) ; `pld' insn to prefetch a cache line:
-			;   operand 0 is the address to fetch.
   ]
 )
 
@@ -132,8 +135,12 @@
 (define_attr "neg_pool_range" "" (const_int 0))
 
 ; An assembler sequence may clobber the condition codes without us knowing.
+; If such an insn references the pool, then we have no way of knowing how,
+; so use the most conservative value for pool_range.
 (define_asm_attributes
- [(set_attr "conds" "clob")])
+ [(set_attr "conds" "clob")
+  (set_attr "length" "4")
+  (set_attr "pool_range" "250")])
 
 ; TYPE attribute is used to detect floating point instructions which, if
 ; running on a co-processor can run in parallel with other, basic instructions
@@ -3383,7 +3390,7 @@
   [(set (match_operand:SI 0 "s_register_operand" "")
 	(zero_extend:SI (subreg:QI (match_operand:SI 1 "" "") 0)))
    (clobber (match_operand:SI 2 "s_register_operand" ""))]
-  "TARGET_ARM && (GET_CODE (operands[1]) != MEM)"
+  "TARGET_ARM && (GET_CODE (operands[1]) != MEM) && ! BYTES_BIG_ENDIAN"
   [(set (match_dup 2) (match_dup 1))
    (set (match_dup 0) (and:SI (match_dup 2) (const_int 255)))]
   ""
@@ -3956,7 +3963,7 @@
   [(set_attr "length" "8")
    (set_attr "type" "*,load,store2")
    (set_attr "pool_range" "*,1020,*")
-   (set_attr "neg_pool_range" "*,1012,*")]
+   (set_attr "neg_pool_range" "*,1008,*")]
 )
 
 ;;; ??? This should have alternatives for constants.
@@ -4129,27 +4136,6 @@
   }"
 )
 
-(define_expand "movaddr"
-  [(set (match_operand:SI 0 "s_register_operand" "")
-	(match_operand:DI 1 "address_operand" ""))]
-  "TARGET_ARM"
-  ""
-)
-
-(define_insn "*movaddr_insn"
-  [(set (match_operand:SI 0 "s_register_operand" "=r")
-	(match_operand:DI 1 "address_operand" "p"))]
-  "TARGET_ARM
-   && reload_completed
-   && (GET_CODE (operands[1]) == LABEL_REF
-       || (GET_CODE (operands[1]) == CONST
-	   && GET_CODE (XEXP (operands[1], 0)) == PLUS
-	   && GET_CODE (XEXP (XEXP (operands[1], 0), 0)) == LABEL_REF
-	   && GET_CODE (XEXP (XEXP (operands[1], 0), 1)) == CONST_INT))"
-  "adr%?\\t%0, %a1"
-  [(set_attr "predicable" "yes")]
-)
-
 ;; When generating pic, we need to load the symbol offset into a register.
 ;; So that the optimizer does not confuse this with a normal symbol load
 ;; we use an unspec.  The offset will be loaded from a constant pool entry,
@@ -4282,16 +4268,16 @@
   "TARGET_ARM"
   "
   {
-    rtx addr = XEXP (operands[1], 0);
+    rtx op1 = operands[1];
+    rtx addr = XEXP (op1, 0);
     enum rtx_code code = GET_CODE (addr);
 
     if ((code == PLUS && GET_CODE (XEXP (addr, 1)) != CONST_INT)
 	|| code == MINUS)
-      addr = force_reg (SImode, addr);
+      op1 = replace_equiv_address (operands[1], force_reg (SImode, addr));
 
-    operands[4] = change_address (operands[1], QImode,
-				  plus_constant (addr, 1));
-    operands[1] = change_address (operands[1], QImode, NULL_RTX);
+    operands[4] = adjust_address (op1, QImode, 1);
+    operands[1] = adjust_address (operands[1], QImode, 0);
     operands[3] = gen_lowpart (QImode, operands[0]);
     operands[0] = gen_lowpart (SImode, operands[0]);
     operands[2] = gen_reg_rtx (SImode); 
@@ -4302,20 +4288,20 @@
   [(set (match_dup 4) (match_dup 3))
    (set (match_dup 2)
 	(ashiftrt:SI (match_operand 0 "" "") (const_int 8)))
-   (set (match_operand 1 "" "")	(subreg:QI (match_dup 2) 0))]
+   (set (match_operand 1 "" "")	(subreg:QI (match_dup 2) 3))]
   "TARGET_ARM"
   "
   {
-    rtx addr = XEXP (operands[1], 0);
+    rtx op1 = operands[1];
+    rtx addr = XEXP (op1, 0);
     enum rtx_code code = GET_CODE (addr);
 
     if ((code == PLUS && GET_CODE (XEXP (addr, 1)) != CONST_INT)
 	|| code == MINUS)
-      addr = force_reg (SImode, addr);
+      op1 = replace_equiv_address (op1, force_reg (SImode, addr));
 
-    operands[4] = change_address (operands[1], QImode,
-				  plus_constant (addr, 1));
-    operands[1] = change_address (operands[1], QImode, NULL_RTX);
+    operands[4] = adjust_address (op1, QImode, 1);
+    operands[1] = adjust_address (operands[1], QImode, 0);
     operands[3] = gen_lowpart (QImode, operands[0]);
     operands[0] = gen_lowpart (SImode, operands[0]);
     operands[2] = gen_reg_rtx (SImode);
@@ -4326,17 +4312,18 @@
 (define_expand "storeinthi"
   [(set (match_operand 0 "" "")
 	(subreg:QI (match_operand 1 "" "") 0))
-   (set (match_dup 3) (subreg:QI (match_dup 2) 0))]
+   (set (match_dup 3) (match_dup 2))]
   "TARGET_ARM"
   "
   {
     HOST_WIDE_INT value = INTVAL (operands[1]);
     rtx addr = XEXP (operands[0], 0);
+    rtx op0 = operands[0];
     enum rtx_code code = GET_CODE (addr);
 
     if ((code == PLUS && GET_CODE (XEXP (addr, 1)) != CONST_INT)
 	|| code == MINUS)
-      addr = force_reg (SImode, addr);
+      op0 = replace_equiv_address (op0, force_reg (SImode, addr));
 
     operands[1] = gen_reg_rtx (SImode);
     if (BYTES_BIG_ENDIAN)
@@ -4362,9 +4349,9 @@
 	  }
       }
 
-    operands[3] = change_address (operands[0], QImode,
-				  plus_constant (addr, 1));
-    operands[0] = change_address (operands[0], QImode, NULL_RTX);
+    operands[3] = adjust_address (op0, QImode, 1);
+    operands[0] = adjust_address (operands[0], QImode, 0);
+    operands[2] = gen_lowpart (QImode, operands[2]);
   }"
 )
 
@@ -4427,7 +4414,7 @@
 	        }
 
 	      emit_insn (gen_movsi (reg, GEN_INT (val)));
-	      operands[1] = gen_rtx_SUBREG (HImode, reg, 0);
+	      operands[1] = gen_lowpart (HImode, reg);
 	    }
           else if (!arm_arch4)
 	    {
@@ -4550,18 +4537,16 @@
           if (GET_CODE (operands[0]) == MEM
 	      && !memory_address_p (GET_MODE (operands[0]),
 				    XEXP (operands[0], 0)))
-	    {
-	      rtx temp = copy_to_reg (XEXP (operands[0], 0));
-	      operands[0] = change_address (operands[0], VOIDmode, temp);
-	    }
+	    operands[0]
+	      = replace_equiv_address (operands[0],
+				       copy_to_reg (XEXP (operands[0], 0)));
    
           if (GET_CODE (operands[1]) == MEM
 	      && !memory_address_p (GET_MODE (operands[1]),
 				    XEXP (operands[1], 0)))
-	    {
-	      rtx temp = copy_to_reg (XEXP (operands[1], 0));
-	      operands[1] = change_address (operands[1], VOIDmode, temp);
-	    }
+	    operands[1]
+	      = replace_equiv_address (operands[1],
+				       copy_to_reg (XEXP (operands[1], 0)));
         }
       /* Handle loading a large integer during reload */
       else if (GET_CODE (operands[1]) == CONST_INT
@@ -4826,7 +4811,7 @@
 	      rtx reg = gen_reg_rtx (SImode);
 
 	      emit_insn (gen_movsi (reg, operands[1]));
-	      operands[1] = gen_rtx_SUBREG (QImode, reg, 0);
+	      operands[1] = gen_lowpart (QImode, reg);
 	    }
          if (GET_CODE (operands[0]) == MEM)
 	   operands[1] = force_reg (QImode, operands[1]);
@@ -4850,17 +4835,15 @@
           if (GET_CODE (operands[0]) == MEM
 	      && !memory_address_p (GET_MODE (operands[0]),
 		  		     XEXP (operands[0], 0)))
-	    {
-	      rtx temp = copy_to_reg (XEXP (operands[0], 0));
-	      operands[0] = change_address (operands[0], VOIDmode, temp);
-	    }
+	    operands[0]
+	      = replace_equiv_address (operands[0],
+				       copy_to_reg (XEXP (operands[0], 0)));
           if (GET_CODE (operands[1]) == MEM
 	      && !memory_address_p (GET_MODE (operands[1]),
 				    XEXP (operands[1], 0)))
-	    {
-	       rtx temp = copy_to_reg (XEXP (operands[1], 0));
-	       operands[1] = change_address (operands[1], VOIDmode, temp);
-	    }
+	     operands[1]
+	       = replace_equiv_address (operands[1],
+					copy_to_reg (XEXP (operands[1], 0)));
         }
       /* Handle loading a large integer during reload */
       else if (GET_CODE (operands[1]) == CONST_INT
@@ -4871,7 +4854,7 @@
           if (GET_CODE (operands[0]) != REG)
 	    abort ();
 
-          operands[0] = gen_rtx (SUBREG, SImode, operands[0], 0);
+          operands[0] = gen_rtx_SUBREG (SImode, operands[0], 0);
           emit_insn (gen_movsi (operands[0], operands[1]));
           DONE;
        }
@@ -5111,8 +5094,8 @@
    (set_attr "predicable" "yes")
    (set_attr "type"
     "load,store2,*,store2,load,ffarith,ffarith,f_load,f_store,r_mem_f,f_mem_r")
-   (set_attr "pool_range" "*,*,*,*,252,*,*,1024,*,*,*")
-   (set_attr "neg_pool_range" "*,*,*,*,244,*,*,1012,*,*,*")]
+   (set_attr "pool_range" "*,*,*,*,1020,*,*,1024,*,*,*")
+   (set_attr "neg_pool_range" "*,*,*,*,1008,*,*,1008,*,*,*")]
 )
 
 ;; Software floating point version.  This is essentially the same as movdi.
@@ -5127,8 +5110,8 @@
   "* return output_move_double (operands);"
   [(set_attr "length" "8,8,8")
    (set_attr "type" "*,load,store2")
-   (set_attr "pool_range" "252")
-   (set_attr "neg_pool_range" "244")]
+   (set_attr "pool_range" "1020")
+   (set_attr "neg_pool_range" "1008")]
 )
 
 ;;; ??? This should have alternatives for constants.
@@ -5202,7 +5185,7 @@
    (set_attr "predicable" "yes")
    (set_attr "type" "ffarith,ffarith,f_load,f_store,r_mem_f,f_mem_r,*")
    (set_attr "pool_range" "*,*,1024,*,*,*,*")
-   (set_attr "neg_pool_range" "*,*,1012,*,*,*,*")]
+   (set_attr "neg_pool_range" "*,*,1004,*,*,*,*")]
 )
 
 
@@ -6656,7 +6639,8 @@
    (use (match_operand 2 "" ""))
    (clobber (reg:SI LR_REGNUM))]
   "TARGET_THUMB
-   && operands[2] == const0_rtx && (GET_CODE (operands[0]) == SYMBOL_REF)"
+   && GET_CODE (operands[0]) == SYMBOL_REF
+   && !arm_is_longcall_p (operands[0], INTVAL (operands[2]), 1)"
   "bl\\t%a0"
   [(set_attr "length" "4")
    (set_attr "type" "call")]
@@ -6669,7 +6653,8 @@
    (use (match_operand 3 "" ""))
    (clobber (reg:SI LR_REGNUM))]
   "TARGET_THUMB
-   && operands[3] == const0_rtx && (GET_CODE (operands[1]) == SYMBOL_REF)"
+   && GET_CODE (operands[1]) == SYMBOL_REF
+   && !arm_is_longcall_p (operands[1], INTVAL (operands[3]), 1)"
   "bl\\t%a1"
   [(set_attr "length" "4")
    (set_attr "type" "call")]
@@ -7375,7 +7360,7 @@
   "TARGET_ARM"
   "*
   {
-    const char * opcodes[4][2] =
+    static const char *const opcodes[4][2] =
     {
       {\"cmp\\t%2, %3\;cmp%d5\\t%0, %1\",
        \"cmp\\t%0, %1\;cmp%d4\\t%2, %3\"},
@@ -7410,7 +7395,7 @@
   "TARGET_ARM"
   "*
 {
-  const char * opcodes[4][2] =
+  static const char *const opcodes[4][2] =
   {
     {\"cmp\\t%0, %1\;cmp%D4\\t%2, %3\",
      \"cmp\\t%2, %3\;cmp%D5\\t%0, %1\"},
@@ -8298,6 +8283,7 @@
   "TARGET_ARM
    && !BYTES_BIG_ENDIAN
    && !TARGET_MMU_TRAPS
+   && !arm_arch4
    && REGNO (operands[0]) != FRAME_POINTER_REGNUM
    && REGNO (operands[1]) != FRAME_POINTER_REGNUM
    && (GET_CODE (operands[2]) != REG
@@ -8316,6 +8302,7 @@
   "TARGET_ARM
    && !BYTES_BIG_ENDIAN
    && !TARGET_MMU_TRAPS
+   && !arm_arch4
    && REGNO (operands[0]) != FRAME_POINTER_REGNUM
    && REGNO (operands[1]) != FRAME_POINTER_REGNUM
    && (GET_CODE (operands[2]) != REG
@@ -8480,6 +8467,7 @@
   "TARGET_ARM
    && !BYTES_BIG_ENDIAN
    && !TARGET_MMU_TRAPS
+   && !arm_arch4
    && REGNO (operands[0]) != FRAME_POINTER_REGNUM
    && REGNO (operands[1]) != FRAME_POINTER_REGNUM
    && REGNO (operands[3]) != FRAME_POINTER_REGNUM"
@@ -8500,6 +8488,7 @@
   "TARGET_ARM
    && !BYTES_BIG_ENDIAN
    && !TARGET_MMU_TRAPS
+   && !arm_arch4
    && REGNO (operands[0]) != FRAME_POINTER_REGNUM
    && REGNO (operands[1]) != FRAME_POINTER_REGNUM
    && REGNO (operands[3]) != FRAME_POINTER_REGNUM"
@@ -8563,6 +8552,7 @@
   "TARGET_ARM
    && !BYTES_BIG_ENDIAN
    && !TARGET_MMU_TRAPS
+   && !arm_arch4
    && REGNO (operands[0]) != REGNO(operands[1])
    && (GET_CODE (operands[2]) != REG
        || REGNO(operands[0]) != REGNO (operands[2]))"
@@ -9068,7 +9058,7 @@
   "TARGET_THUMB"
   "*
   making_const_table = TRUE;
-  assemble_integer (operands[0], 1, 1);
+  assemble_integer (operands[0], 1, BITS_PER_WORD, 1);
   assemble_zeros (3);
   return \"\";
   "
@@ -9080,7 +9070,7 @@
   "TARGET_THUMB"
   "*
   making_const_table = TRUE;
-  assemble_integer (operands[0], 2, 1);
+  assemble_integer (operands[0], 2, BITS_PER_WORD, 1);
   assemble_zeros (2);
   return \"\";
   "
@@ -9099,11 +9089,11 @@
       {
         union real_extract u;
         memcpy (&u, &CONST_DOUBLE_LOW (operands[0]), sizeof u);
-        assemble_real (u.d, GET_MODE (operands[0]));
+        assemble_real (u.d, GET_MODE (operands[0]), BITS_PER_WORD);
         break;
       }
       default:
-        assemble_integer (operands[0], 4, 1);
+        assemble_integer (operands[0], 4, BITS_PER_WORD, 1);
         break;
       }
     return \"\";
@@ -9123,11 +9113,11 @@
         {
           union real_extract u;
           memcpy (&u, &CONST_DOUBLE_LOW (operands[0]), sizeof u);
-          assemble_real (u.d, GET_MODE (operands[0]));
+          assemble_real (u.d, GET_MODE (operands[0]), BITS_PER_WORD);
           break;
         }
       default:
-        assemble_integer (operands[0], 8, 1);
+        assemble_integer (operands[0], 8, BITS_PER_WORD, 1);
         break;
       }
     return \"\";
@@ -9137,11 +9127,28 @@
 
 ;; Miscellaneous Thumb patterns
 
-(define_insn "tablejump"
+(define_expand "tablejump"
+  [(parallel [(set (pc) (match_operand:SI 0 "register_operand" "l*r"))
+	      (use (label_ref (match_operand 1 "" "")))])]
+  "TARGET_THUMB"
+  "
+  if (flag_pic)
+    {
+      /* Hopefully, CSE will eliminate this copy.  */
+      rtx reg1 = copy_addr_to_reg (gen_rtx_LABEL_REF (Pmode, operands[1]));
+      rtx reg2 = gen_reg_rtx (SImode);
+
+      emit_insn (gen_addsi3 (reg2, operands[0], reg1));
+      operands[0] = reg2;
+    }
+  "
+)
+
+(define_insn "*thumb_tablejump"
   [(set (pc) (match_operand:SI 0 "register_operand" "l*r"))
    (use (label_ref (match_operand 1 "" "")))]
   "TARGET_THUMB"
-  "mov	pc, %0"
+  "mov\\t%|pc, %0"
   [(set_attr "length" "2")]
 )
 
@@ -9177,10 +9184,11 @@
 ;; V5E instructions.
 
 (define_insn "prefetch"
-  [(unspec_volatile
-    [(match_operand:SI 0 "offsettable_memory_operand" "o")] VUNSPEC_PREFETCH)]
+  [(prefetch (match_operand:SI 0 "address_operand" "p")
+	     (match_operand:SI 1 "" "")
+	     (match_operand:SI 2 "" ""))]
   "TARGET_ARM && arm_arch5e"
-  "pld\\t%0")
+  "pld\\t%a0")
 
 ;; General predication pattern
 
@@ -9192,3 +9200,8 @@
   ""
 )
 
+(define_insn "prologue_use"
+  [(unspec:SI [(match_operand:SI 0 "register_operand" "")] UNSPEC_PROLOGUE_USE)]
+  ""
+  "%@ %0 needed for prologue"
+)

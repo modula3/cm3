@@ -492,7 +492,7 @@ Fri Nov 28 12:34:03 1997  Scott Christley  <scottc@net-community.com>
 
 	* objc/Make-lang.in (runtime-info.h): Add comment in file.
 
-	* objc/selector.c: Replace all occurences of sarray_get
+	* objc/selector.c: Replace all occurrences of sarray_get
 	with sarray_get_safe.
 	* objc/sendmsg.c: Likewise.
 
@@ -4070,7 +4070,7 @@ Sat Aug  2 13:25:33 1997  Tristan Gingold  (gingold@email.enst.fr)
 	* stmt.c (expand_computed_goto): If -fcheck-memory-usage, check that
 	computed address of a goto is executable.
 	(expand_asm, expand_asm_operands): If -fcheck-memory-usage,
-	disallow asm statments.
+	disallow asm statements.
 	* toplev.c (flag_check_memory_usage, flag_prefix_function_name): New
 	variable.
 	(f_options): Add `check-memory-usage' and `prefix_function_name'.
@@ -5434,7 +5434,7 @@ Thu Jun  5 13:40:33 1997  Mike Meissner  <meissner@cygnus.com>
 	(life_analysis): Don't allocate the space to hold to vector of
 	regsets here.
 	(init_regset_vector): Add pointer parameter and delete space
-	paramter.  Use OBSTACK_ALLOC_REG_SET to allocate.  Change callers.
+	parameter.  Use OBSTACK_ALLOC_REG_SET to allocate.  Change callers.
 	(propagate_block): Use ALLOCA_REG_SET instead of bare alloca.
 
 	* sched.c (schedule_block): Fix typo in yesterday's changes.
@@ -7666,7 +7666,7 @@ Sun Feb  2 19:43:17 1997  Scott Christley <scottc@net-community.com>
 	(__alpha__): Remove unneeded code.
 	(objc_error): Allow user specified error handler function to
 	trap and handle the objc error.  Added an error code parameter
-	which indicates the specific error that occured.
+	which indicates the specific error that occurred.
 	(objc_malloc, objc_atomic_malloc): Replace call to objc_fatal
 	function with call to objc_error function.
 	(objc_valloc, objc_realloc, objc_calloc): Likewise.
@@ -8809,7 +8809,7 @@ Sun Nov 24 17:06:58 1996  Bernd Schmidt  (crux@Pool.Informatik.RWTH-Aachen.DE)
 Sun Nov 24 16:37:18 1996  Dave Love  <d.love@dl.ac.uk>
 
 	* configure (objc_thread_file): Set conditionally in each case so
-	may be overidden with `--enable-objcthreads=posix'.
+	may be overridden with `--enable-objcthreads=posix'.
 	Change GNU/Linux default to `single'.
 
 Fri Nov 22 17:53:15 1996  Jason Merrill  <jason@yorick.cygnus.com>
@@ -9480,7 +9480,7 @@ Sat Oct 26 14:04:09 1996  Ben Harris  <bjh21@cam.ac.uk>
 Sat Oct 26 13:59:05 1996  Richard Kenner  (kenner@vlsi1.ultra.nyu.edu)
 
 	* explow.c (allocate_dynamic_stack_space): Delete reference to
-	nonexistant macro ALLOCATE_OUTGOING_ARGS.
+	nonexistent macro ALLOCATE_OUTGOING_ARGS.
 
 	* next.h (CPP_PREDEFINES): Add -D_NEXT_SOURCE.
 

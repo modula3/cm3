@@ -877,7 +877,7 @@ Fri Dec 15 14:48:37 MET 2000  Jan Hubicka  <jh@suse.cz>
 	* genrecog.c (add_to_sequence): Remove special case for
 	const_int_operand.
 	(maybe_both_true): Return 1 when falling out of sequence when
-	trying to find common possition in the pattern.
+	trying to find common position in the pattern.
 
 Fri Dec 15 14:44:51 MET 2000  Jan Hubicka  <jh@suse.cz>
 
@@ -4017,7 +4017,7 @@ Tue Nov 14 12:34:56 2000  Richard Kenner  <kenner@vlsi1.ultra.nyu.edu>
 
 2000-11-12  Mark Mitchell  <mark@codesourcery.com>
 
-	* jump.c (delete_computation): Don't assume that just becuase an
+	* jump.c (delete_computation): Don't assume that just because an
 	instruction sets a register, that register is dead.
 
 2000-11-12  Neil Booth  <neilb@earthling.net>
@@ -4104,7 +4104,7 @@ Sat Nov 11 18:41:20 2000  Mark P Mitchell  <mark@codesourcery.com>
 	(cpp_get_token): Handle empty macro expansions.  Don't worry
 	about CPP_PLACEMARKERs.
 	(_cpp_create_definition): Empty macros are now empty.
-	(cpp_macro_defintion): Don't special case empty macros.
+	(cpp_macro_definition): Don't special case empty macros.
 	* scan-decls.c: Don't bother with CPP_PLACEMARKERs.
 	* c-lex.c: Similarly.
 
@@ -5361,7 +5361,7 @@ Tue Oct 31 15:33:27 2000  J"orn Rennecke <amylaar@redhat.com>
 
 	* regrename.c: Rewrite to handle multi-register modes and
 	cond_exec instructions.
-	* Makefile.in (regrename.o): Update dependancies.
+	* Makefile.in (regrename.o): Update dependencies.
 	* recog.h (struct operand_alternative): Add is_address.
 	* recog.c (preprocess_constraints) [case 'p']: Set it.
 
@@ -6719,8 +6719,8 @@ Tue Oct 10 23:14:33 2000  Denis Chertykov  <denisc@overta.ru>
 2000-10-07  Will Cohen  <wcohen@redhat.com>, Kazu Hirata  <kazu@hxi.com>
 
 	* config/h8300/h8300.md: Remove the memory alternative and correct
-	the insn lengths in the templates for sign extention and zero
-	extention.
+	the insn lengths in the templates for sign extension and zero
+	extension.
 
 2000-10-07  Richard Henderson  <rth@cygnus.com>
 
@@ -8208,7 +8208,7 @@ Sun Sep 17 10:46:17 2000  Richard Kenner  <kenner@vlsi1.ultra.nyu.edu>
 	(struct language_function): Add x_scope_stmt_stack and
 	x_function_name_declared_p.
 	(RECHAIN_STMTS): Move definition.
-	(lang_statment_code_p): Likewise.
+	(lang_statement_code_p): Likewise.
 	(lang_expand_stmt): Likewise.
 	(lang_expand_decl_stmt): New variable.
 	(lang_expand_function_end): Likewise.
@@ -10131,7 +10131,7 @@ Tue Aug 29 22:29:58 2000  Denis Chertykov  <denisc@overta.ru> & Marek Michalkiew
 	(adjust_insn_length): Use output_movsisf, output_movqi,
 	output_movhi for insn length adjusting.
 	(reg_unused_after): Use dead_or_set_p.
-	(preferred_reload_class): Now havn't any restriction.
+	(preferred_reload_class): Now haven't any restriction.
 	(reg_was_0): New function.
 	(io_address_p): Likewise.
 	(const_int_pow2_p): Likewise.
@@ -11026,7 +11026,7 @@ Mon Aug 21 07:41:12 2000  Jeffrey A Law  (law@cygnus.com)
 	(lang_diagnostic_starter, lang_diagnostic_finalizer): New objects.
 	(error_module_changed, record_last_error_module,
 	error_function_changed, record_last_error_function): New functions.
-	(initialize_diagnostics): Default intialize
+	(initialize_diagnostics): Default initialize
 	lang_diagnostic_starter, lang_diagnostic_finalizer.
 	(init_output_buffer): Tweak.
 	(file_name_as_prefix): New function.
@@ -13466,7 +13466,7 @@ Tue Jul 25 23:08:33 2000  J"orn Rennecke <amylaar@cygnus.co.uk>
 2000-07-24  Nick Clifton  <nickc@cygnus.com>
 
 	* config/arm/arm.c (emit_multi_reg_push): Generate a
-	REG_FRAME_RELEATED_NOTE that is compatable with the code in
+	REG_FRAME_RELEATED_NOTE that is compatible with the code in
 	dwarf2out_debug_frame_expr.
 
 2000-07-24  Jason Merrill  <jason@redhat.com>
@@ -14103,7 +14103,7 @@ Fri Jul 14 10:25:53 2000  Clinton Popetz  <cpopetz@cygnus.com>
 
 2000-07-14  Neil Booth  <NeilB@earthling.net>
 
-	* cpplex.c (adjust_column): New funcion.
+	* cpplex.c (adjust_column): New function.
 	(skip_whitespace): Use it.
 	(skip_block_comment): Use it, and warn about /*/* with
 	-Wcomments.
@@ -14340,7 +14340,7 @@ Wed Jul 12 13:15:16 2000  Marc Espie <espie@openbsd.org>
 	* cpphash.c: (struct macro_info, alloc_macro, free_macro,
 	struct toklist_dummy): New.
 	(cpp_free_definition): Free macros with free_macro.
-	(count_params): Don't save paramter spellings.  Save macro
+	(count_params): Don't save parameter spellings.  Save macro
 	information in a struct macro_info.
 	(parse_define): Don't allocate a token list.
 	(save_expansion): Allocate the macro's token list, and

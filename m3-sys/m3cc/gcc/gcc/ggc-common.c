@@ -1,20 +1,20 @@
 /* Simple garbage collection for the GNU compiler.
-   Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 2, or (at your option) any
-later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to the Free
+along with GCC; see the file COPYING.  If not, write to the Free
 Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
@@ -27,6 +27,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "tree.h"
 #include "tm_p.h"
 #include "hash.h"
+#include "hashtab.h"
 #include "varray.h"
 #include "ggc.h"
 
@@ -42,14 +43,16 @@ void (*lang_mark_false_label_stack) PARAMS ((struct label_node *));
 /* Trees that have been marked, but whose children still need marking.  */
 varray_type ggc_pending_trees;
 
+static void ggc_mark_rtx_children_1 PARAMS ((rtx));
 static void ggc_mark_rtx_ptr PARAMS ((void *));
 static void ggc_mark_tree_ptr PARAMS ((void *));
 static void ggc_mark_rtx_varray_ptr PARAMS ((void *));
 static void ggc_mark_tree_varray_ptr PARAMS ((void *));
 static void ggc_mark_tree_hash_table_ptr PARAMS ((void *));
+static int ggc_htab_delete PARAMS ((void **, void *));
 static void ggc_mark_trees PARAMS ((void));
 static bool ggc_mark_tree_hash_table_entry PARAMS ((struct hash_entry *,
-						       hash_table_key));
+						    hash_table_key));
 
 /* Maintain global roots that are preserved during GC.  */
 
@@ -163,7 +166,73 @@ ggc_del_root (base)
       x = x->next;
     }
 
-  abort();
+  abort ();
+}
+
+/* Add a hash table to be scanned when all roots have been processed.  We
+   delete any entry in the table that has not been marked.  */
+
+struct d_htab_root
+{
+  struct d_htab_root *next;
+  htab_t htab;
+  ggc_htab_marked_p marked_p;
+  ggc_htab_mark mark;
+};
+
+static struct d_htab_root *d_htab_roots;
+
+/* Add X, an htab, to a list of htabs that contain objects which are allocated
+   from GC memory.  Once all other roots are marked, we check each object in
+   the htab to see if it has already been marked.  If not, it is deleted.
+
+   MARKED_P, if specified, is a function that returns 1 if the entry is to
+   be considered as "marked".  If not present, the data structure pointed to
+   by the htab slot is tested.  This function should be supplied if some
+   other object (such as something pointed to by that object) should be tested
+   in which case the function tests whether that object (or objects) are
+   marked (using ggc_marked_p) and returns nonzero if it is.
+
+   MARK, if specified, is a function that is passed the contents of a slot
+   that has been determined to have been "marked" (via the above function)
+   and marks any other objects pointed to by that object.  For example,
+   we might have a hash table of memory attribute blocks, which are pointed
+   to by a MEM RTL but have a pointer to a DECL.  MARKED_P in that case will
+   not be specified because we want to know if the attribute block is pointed
+   to by the MEM, but MARK must be specified because if the block has been
+   marked, we need to mark the DECL.  */
+
+void
+ggc_add_deletable_htab (x, marked_p, mark)
+     PTR x;
+     ggc_htab_marked_p marked_p;
+     ggc_htab_mark mark;
+{
+  struct d_htab_root *r
+    = (struct d_htab_root *) xmalloc (sizeof (struct d_htab_root));
+
+  r->next = d_htab_roots;
+  r->htab = (htab_t) x;
+  r->marked_p = marked_p ? marked_p : ggc_marked_p;
+  r->mark = mark;
+  d_htab_roots = r;
+}
+
+/* Process a slot of an htab by deleting it if it has not been marked.  */
+
+static int
+ggc_htab_delete (slot, info)
+     void **slot;
+     void *info;
+{
+  struct d_htab_root *r = (struct d_htab_root *) info;
+
+  if (! (*r->marked_p) (*slot))
+    htab_clear_slot (r->htab, slot);
+  else if (r->mark)
+    (*r->mark) (*slot);
+
+  return 1;
 }
 
 /* Iterate through all registered roots and mark each element.  */
@@ -171,7 +240,8 @@ ggc_del_root (base)
 void
 ggc_mark_roots ()
 {
-  struct ggc_root* x;
+  struct ggc_root *x;
+  struct d_htab_root *y;
   
   VARRAY_TREE_INIT (ggc_pending_trees, 4096, "ggc_pending_trees");
 
@@ -189,6 +259,16 @@ ggc_mark_roots ()
   /* Mark all the queued up trees, and their children.  */
   ggc_mark_trees ();
   VARRAY_FREE (ggc_pending_trees);
+
+  /* Now scan all hash tables that have objects which are to be deleted if
+     they are not already marked.  Since these may mark more trees, we need
+     to reinitialize that varray.  */
+  VARRAY_TREE_INIT (ggc_pending_trees, 1024, "ggc_pending_trees");
+
+  for (y = d_htab_roots; y != NULL; y = y->next)
+    htab_traverse (y->htab, ggc_htab_delete, (PTR) y);
+  ggc_mark_trees ();
+  VARRAY_FREE (ggc_pending_trees);
 }
 
 /* R had not been previously marked, but has now been marked via
@@ -196,6 +276,43 @@ ggc_mark_roots ()
 
 void
 ggc_mark_rtx_children (r)
+     rtx r;
+{
+  rtx i, last;
+
+  /* Special case the instruction chain.  This is a data structure whose
+     chain length is potentially unbounded, and which contain references
+     within the chain (e.g. label_ref and insn_list).  If do nothing here,
+     we risk blowing the stack recursing through a long chain of insns.
+
+     Combat this by marking all of the instructions in the chain before
+     marking the contents of those instructions.  */
+
+  switch (GET_CODE (r))
+    {
+    case INSN:
+    case JUMP_INSN:
+    case CALL_INSN:
+    case NOTE:
+    case CODE_LABEL:
+    case BARRIER:
+      for (i = NEXT_INSN (r); ; i = NEXT_INSN (i))
+	if (! ggc_test_and_set_mark (i))
+	  break;
+      last = i;
+
+      for (i = NEXT_INSN (r); i != last; i = NEXT_INSN (i))
+	ggc_mark_rtx_children_1 (i);
+
+    default:
+      break;
+    }
+
+  ggc_mark_rtx_children_1 (r);
+}
+
+static void
+ggc_mark_rtx_children_1 (r)
      rtx r;
 {
   const char *fmt;
@@ -219,6 +336,9 @@ ggc_mark_rtx_children (r)
 	 have any right poking our noses in?  */
       switch (code)
 	{
+	case MEM:
+	  ggc_mark (MEM_ATTRS (r));
+	  break;
 	case JUMP_INSN:
 	  ggc_mark_rtx (JUMP_LABEL (r));
 	  break;
@@ -374,13 +494,20 @@ ggc_mark_trees ()
 	  ggc_mark_tree (DECL_INITIAL (t));
 	  ggc_mark_tree (DECL_ABSTRACT_ORIGIN (t));
 	  ggc_mark_tree (DECL_SECTION_NAME (t));
-	  ggc_mark_tree (DECL_MACHINE_ATTRIBUTES (t));
+	  ggc_mark_tree (DECL_ATTRIBUTES (t));
 	  if (DECL_RTL_SET_P (t))
 	    ggc_mark_rtx (DECL_RTL (t));
 	  ggc_mark_rtx (DECL_LIVE_RANGE_RTL (t));
 	  ggc_mark_tree (DECL_VINDEX (t));
 	  if (DECL_ASSEMBLER_NAME_SET_P (t))
 	    ggc_mark_tree (DECL_ASSEMBLER_NAME (t));
+	  if (TREE_CODE (t) == FUNCTION_DECL)
+	    {
+	      ggc_mark_tree (DECL_SAVED_TREE (t));
+	      ggc_mark_tree (DECL_INLINED_FNS (t));
+	      if (DECL_SAVED_INSNS (t))
+		ggc_mark_struct_function (DECL_SAVED_INSNS (t));
+	    }
 	  lang_mark_tree (t);
 	  break;
 
@@ -397,7 +524,6 @@ ggc_mark_trees ()
 	  ggc_mark_tree (TYPE_NEXT_VARIANT (t));
 	  ggc_mark_tree (TYPE_MAIN_VARIANT (t));
 	  ggc_mark_tree (TYPE_BINFO (t));
-	  ggc_mark_tree (TYPE_NONCOPIED_PARTS (t));
 	  ggc_mark_tree (TYPE_CONTEXT (t));
 	  lang_mark_tree (t);
 	  break;
@@ -462,7 +588,7 @@ ggc_mark_tree_varray (v)
       ggc_mark_tree (VARRAY_TREE (v, i));
 }
 
-/* Mark the hash table-entry HE.  It's key field is really a tree.  */
+/* Mark the hash table-entry HE.  Its key field is really a tree.  */
 
 static bool
 ggc_mark_tree_hash_table_entry (he, k)

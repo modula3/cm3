@@ -1,14 +1,33 @@
-2002-02-20  Release Manager
+2002-07-25  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1.1 Released.
 
-2002-02-20  Release Manager
+2002-07-22  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
-	* GCC 3.0.4 Released.
+	* gennews (files): Add proper files for the GCC 3.1 release series.
+	Simplify and reformat introductory wording.
 
-2002-02-03  Franz Sirl  <Franz.Sirl-kernel@lauterbach.com>
+2002-05-14  Release Manager
 
-	* PR3145.patch: Update.
+	* GCC 3.1 Released.
+
+2002-05-14  Release Manager
+
+	* GCC 3.1 Released.
+
+2002-04-03  Zack Weinberg  <zack@codesourcery.com>
+
+	* texi2pod.pl: Handle @end ftable and @end vtable.
+
+2002-03-12  Zack Weinberg  <zack@codesourcery.com>
+
+	* texi2pod.pl: Handle @include, @ftable, @vtable.
+	Reformat some code for clarity.
+
+2002-02-24  Christian Jönsson  <c.christian.joensson@telia.com>
+
+	* test_summary: Additional to XPASS and FAIL, add UNRESOLVED,
+	WARNING and ERROR output from the *.sum files.
 
 2002-01-26  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
@@ -22,21 +41,19 @@
 	egcs-1.1/egcs-1.1.1.html, and egcs-1.1/egcs-1.1.html by
 	egcs-1.1/index.html.
 
-2001-12-20  Release Manager
+2002-01-01  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
 
-	* GCC 3.0.3 Released.
+	* warn_summary: Add -ada subdirectory flag.
 
-2001-12-10  Franz Sirl  <Franz.Sirl-kernel@lauterbach.com>
+2001-12-12  Matthias Klose  <doko@debian.org>
 
-	* PR3145.patch: Update.
-
-2001-12-01  Franz Sirl  <Franz.Sirl-kernel@lauterbach.com>
-
-	* PR3145.patch: Backported bugfix.
-
-2001-11-18  Joseph S. Myers  <jsm28@cam.ac.uk>
-
-	* gcc_update (files_and_dependencies): Add the new *.7 man pages.
+	* texi2pod.pl: Merge changes from binutils' texi2pod.pl. Allows
+	generation of more than one man page from one source.
+	Add '-' to set of valid chars for an identifier.
+	Let -D option accept flags of the form <flag>=<value>.
+	Use \s+ for whitespace detection in '@c man' lines.
+	Handle @set and @clear independent of $output.
+	Substitute all @value{}'s in a line.
 
 2001-11-14  Joseph S. Myers  <jsm28@cam.ac.uk>
 
@@ -45,117 +62,112 @@
 	and @center.  Allow [a-z] after @enumerate.  Handle 0 and numbers
 	greater than 9 in enumerations.
 
-2001-10-23  Release Manager
+2001-11-07  Laurent Guerby <guerby@acm.org>
 
-	* GCC 3.0.2 Released.
+	* gcc_update (files_and_dependencies): Add Ada dependencies.
 
-2001-08-24  Mark Mitchell  <mark@codesourcery.com>
+2001-10-08  Joseph S. Myers  <jsm28@cam.ac.uk>
 
-	* gcc_release: Correct quoting.
+	* snapshot: Remove.
 
-2001-08-19  Release Manager
+2001-09-07  Richard Sandiford  <rsandifo@redhat.com>
 
-	* GCC 3.0.1 Released.
+	Revert:
+	* gcc_update: (files_and_dependencies) Add gcc/java/parse.c
+	gcc/java/parse-scan.c and gcc/java/keyword.h to list of files to
+	touch.
 
-2001-08-19  Release Manager
+2001-09-04  David.Billinghurst <David.Billinghurst@riotinto.com>
 
-	* GCC 3.0.1 Released.
+	* gcc_update: (files_and_dependencies) Add gcc/java/parse.c
+	gcc/java/parse-scan.c and gcc/java/keyword.h to list of files to
+	touch.
 
-2001-08-13  Mark Mitchell  <mark@codesourcery.com>
+Mon Aug 13 02:29:08 CEST 2001  Jan Hubicka  <jh@suse.cz>
 
-	* gcc_release: Remove restriction against minor revisions.
+	* analyze_brprob: Update for changes in gcc debug output.
 
-2001-07-28  Richard Henderson  <rth@redhat.com>
+Sat Jul 28 22:37:49 CEST 2001  Jan Hubicka  <jh@suse.cz>
 
-        * test_summary: Copy LAST_UPDATED UTC time to head of summary.
-        * gcc_update: Dump timestamp in LAST_UPDATED.
+	* analyze_brprob: Avoid more overflows.
+
+2001-07-27  Richard Henderson  <rth@redhat.com>
+
+	* test_summary: Copy LAST_UPDATED UTC time to head of summary.
+
+Fri Jul 27 18:01:21 CEST 2001  Jan Hubicka  <jh@suse.cz>
+
+	* analyze_brprob: Avoid overflows.
+
+2001-07-27  Richard Henderson  <rth@redhat.com>
+
+	* gcc_update: Dump timestamp in LAST_UPDATED.
+
+2001-07-26  Andreas Jaeger  <aj@suse.de>,
+	    Hans-Peter Nilsson <hp@bitrange.com>
+
+	* analyze_brprob: Fix documentation.
+
+Mon Jul 23 15:47:19 CEST 2001  Jan Hubicka  <jh@suse.cz>
+
+	* analyze_brprob: Fix awk compatibility problems; update comment.
+
+2001-07-23  Andreas Jaeger  <aj@suse.de>
+
+	* analyze_brprob: Fix more typos.
+
+2001-07-23  Andreas Jaeger  <aj@suse.de>
+
+	* analyze_brprob: Fix typos.
 
 2001-07-03  Joseph S. Myers  <jsm28@cam.ac.uk>
 
 	* texi2pod.pl: Handle @r inside @item.
 
-2001-06-21  Joseph S. Myers  <jsm28@cam.ac.uk>
+2001-07-02  Zack Weinberg  <zackw@stanford.edu>
 
-	* gcc_release: Add another space to ChangeLog headers.  Use tab to
-	indent ChangeLog message.  Update release status in Fortran
-	version files.
+	* gcc_update: Remove entries for gcc.1, cpp.1, gcov.1.
 
-2001-06-18  Mark Mitchell  <mark@codesourcery.com>
+2001-07-01  Zoltan Felleg <zfelleg@telnet.hu>
 
-	* gcc_release (build_sources): Fix dates generated
-	for ChangeLogs.
-
-	* gcc_release: Add support for modifying ChangeLogs and
-	updating versions.
-
-20010617 Release Manager
-
-        * GCC 3.0 Released.
+	* warn_summary: Fix typo in a comment.
 
 2001-06-14  Albert Chin-A-Young  <china@thewrittenword.com>
 
         * contrib/gcc_update: Fix timestamp on gcc/f/intdoc.texi.
 
-2001-06-14  Mark Mitchell  <mark@codesourcery.com>
-            Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-
-	* gcc_release (build_sources): Generate more files from 
-	web documents.
-	(CVS): Use compression everywhere.
-
-2001-06-14  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-
-	* gcc_release (build_sources): Obtain some documentation files
-	from the wwwdocs module.
-
 2001-06-13  Mark Mitchell  <mark@codesourcery.com>
 
-	* gcc_release (-b): Remove option. 
-	(build_sources): Generate NEWS files.
-	(build_tarfiles): Set permissions on directories and files.
-	Always generate BZIP2 files.
 	* gennews: Set TERM to vt100 for Lynx.
-
-2001-06-13  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-
-	* gcc_release (build_sources): Generate documentation in HTML from
-	gcc/doc/install.texi.
 
 2001-06-13  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
 	* release: Remove.
 
+Tue Jun 12 12:21:40 CEST 2001  Jan Hubicka  <jh@suse.cz>
+
+	* analyze_brprob: New file.
+
 2001-06-11  Mark Mitchell  <mark@codesourcery.com>
 
-	* gcc_build: Output information about the commands used to 
+	* gcc_build: Output information about the commands used to
 	configure the compiler.
-
-2001-06-09  Joseph S. Myers  <jsm28@cam.ac.uk>
-
-	* gcc_update: Update for move of documentation to gcc/doc.
 
 2001-06-07  Joseph S. Myers  <jsm28@cam.ac.uk>
 
 	* gennews: Update for GCC 3.0.
 
-2001-06-07  Nathan Sidwell  <nathan@codesourcery.com>
+2001-06-02  Joseph S. Myers  <jsm28@cam.ac.uk>
 
-	* gcc_release: Tweaks for solaris /bin/sh.
-
-2001-06-02  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-
-	* gcc_release: Fail for unknown modes instead of ignoring them.
+	* gcc_update: Update for move of documentation to gcc/doc.
 
 2001-05-28  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
 
 	* contrib/test_summary (files): Sort before evaluating.
 
-2001-05-27  Joseph S. Myers  <jsm28@cam.ac.uk>
+2001-05-23  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
-	* gcc_release: Support creating diffs.  Support creating .bz2
-	files.  Support creating CVS tags.  Support creating snapshots
-	without generated files.  Move generated .gmo files to the source
-	directory.  Update comments.  Fix typos.
+	* gcc_update (UPDATE_OPTIONS): Add -d to the default settings.
 
 2001-05-21  Mark Mitchell  <mark@codesourcery.com>
 

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  NS32000 version.
    Copyright (C) 1988, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-   2001 Free Software Foundation, Inc.
+   2001, 2002 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com)
 
 This file is part of GNU CC.
@@ -113,8 +113,8 @@ extern int target_flags;
     { "sb", -32,							\
       N_("Register sb is zero. Use for absolute addressing")},		\
     { "nosb", 32, N_("Do not use register sb")},			\
-    { "bitfield", -64, N_("Do not use bitfield instructions")},		\
-    { "nobitfield", 64, N_("Use bitfield instructions")},		\
+    { "bitfield", -64, N_("Do not use bit-field instructions")},	\
+    { "nobitfield", 64, N_("Use bit-field instructions")},		\
     { "himem", 128, N_("Generate code for high memory")},		\
     { "nohimem", -128, N_("Generate code for low memory")},		\
     { "32381", 256, N_("32381 fpu")},					\
@@ -236,7 +236,7 @@ while (0)
    crossing a page boundary cause unpredictable results.  */
 #define STRICT_ALIGNMENT 1
 
-/* If bit field type is int, dont let it cross an int,
+/* If bit field type is int, don't let it cross an int,
    and give entire struct the alignment of an int.  */
 /* Required on the 386 since it doesn't have a full set of bitfield insns.
    (There is no signed extv insn.)  */
@@ -678,119 +678,6 @@ enum reg_class
 		      : GET_MODE_SIZE (MODE))))  		\
  ? 2 - (CUM) / 4 : 0)
 
-#ifndef MAIN_FUNCTION_PROLOGUE
-#define MAIN_FUNCTION_PROLOGUE
-#endif
-
-/*
- * The function prologue for the ns32k is fairly simple.
- * If a frame pointer is needed (decided in reload.c ?) then
- * we need assembler of the form
- *
- *  # Save the oldframe pointer, set the new frame pointer, make space
- *  # on the stack and save any general purpose registers necessary
- *
- *  enter [<general purpose regs to save>], <local stack space>
- *
- *  movf  fn, tos    # Save any floating point registers necessary
- *  .
- *  .
- *
- * If a frame pointer is not needed we need assembler of the form
- *
- *  # Make space on the stack
- *
- *  adjspd <local stack space + 4>
- *
- *  # Save any general purpose registers necessary
- *
- *  save [<general purpose regs to save>]
- *
- *  movf  fn, tos    # Save any floating point registers necessary
- *  .
- *  .
- */
-#if defined(IMMEDIATE_PREFIX) && IMMEDIATE_PREFIX
-#define ADJSP(FILE, n) \
-        fprintf (FILE, "\tadjspd %c%d\n", IMMEDIATE_PREFIX, (n))
-#else
-#define ADJSP(FILE, n) \
-        fprintf (FILE, "\tadjspd %d\n", (n))
-#endif
-
-#define FUNCTION_PROLOGUE(FILE, SIZE)     \
-{ register int regno, g_regs_used = 0;				\
-  int used_regs_buf[8], *bufp = used_regs_buf;			\
-  int used_fregs_buf[17], *fbufp = used_fregs_buf;		\
-  extern char call_used_regs[];					\
-  MAIN_FUNCTION_PROLOGUE;					\
-  for (regno = R0_REGNUM; regno < F0_REGNUM; regno++)		\
-    if (regs_ever_live[regno]					\
-	&& ! call_used_regs[regno])				\
-      {								\
-        *bufp++ = regno; g_regs_used++;				\
-      }								\
-  *bufp = -1;							\
-  for (; regno < FRAME_POINTER_REGNUM; regno++)			\
-    if (regs_ever_live[regno] && !call_used_regs[regno])	\
-      {								\
-        *fbufp++ = regno;					\
-      }								\
-  *fbufp = -1;							\
-  bufp = used_regs_buf;						\
-  if (frame_pointer_needed)					\
-    fprintf (FILE, "\tenter [");				\
-  else								\
-    {								\
-      if (SIZE)							\
-        ADJSP (FILE, SIZE + 4);					\
-      if (g_regs_used && g_regs_used > 4)			\
-        fprintf (FILE, "\tsave [");				\
-      else							\
-	{							\
-	  while (*bufp >= 0)					\
-            fprintf (FILE, "\tmovd r%d,tos\n", *bufp++);	\
-	  g_regs_used = 0;					\
-	}							\
-    }								\
-  while (*bufp >= 0)						\
-    {								\
-      fprintf (FILE, "r%d", *bufp++);				\
-      if (*bufp >= 0)						\
-	fputc (',', FILE);					\
-    }								\
-  if (frame_pointer_needed)					\
-    fprintf (FILE, "],%d\n", SIZE);				\
-  else if (g_regs_used)						\
-    fprintf (FILE, "]\n");					\
-  fbufp = used_fregs_buf;					\
-  while (*fbufp >= 0)						\
-    {								\
-      if ((*fbufp & 1) || (fbufp[0] != fbufp[1] - 1))	\
-	fprintf (FILE, "\tmovf %s,tos\n", ns32k_out_reg_names[*fbufp++]); \
-      else							\
-	{							\
-	  fprintf (FILE, "\tmovl %s,tos\n",                     \
-		   ns32k_out_reg_names[fbufp[0]]);                    \
-	  fbufp += 2;						\
-	}							\
-    }								\
-  if (flag_pic && current_function_uses_pic_offset_table)	\
-    {								\
-      fprintf (FILE, "\tsprd sb,tos\n");			\
-      if (TARGET_REGPARM)					\
-	{							\
-	  fprintf (FILE, "\taddr __GLOBAL_OFFSET_TABLE_(pc),tos\n"); \
-	  fprintf (FILE, "\tlprd sb,tos\n");			\
-	}							\
-      else							\
-	{							\
-	  fprintf (FILE, "\taddr __GLOBAL_OFFSET_TABLE_(pc),r0\n"); \
-	  fprintf (FILE, "\tlprd sb,r0\n");			\
-	}							\
-    }								\
-}
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.
 
@@ -804,100 +691,10 @@ enum reg_class
    functions that have frame pointers.
    No definition is equivalent to always zero.
 
-   We use 0, because using 1 requires hair in FUNCTION_EPILOGUE
+   We use 0, because using 1 requires hair in output_function_epilogue()
    that is worse than the stack adjust we could save.  */
 
 /* #define EXIT_IGNORE_STACK 1 */
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer,
-   if EXIT_IGNORE_STACK is nonzero.  That doesn't apply here.
-
-   If a frame pointer is needed (decided in reload.c ?) then
-   we need assembler of the form
-
-    movf  tos, fn	# Restore any saved floating point registers
-    .
-    .
-
-    # Restore any saved general purpose registers, restore the stack
-    # pointer from the frame pointer, restore the old frame pointer.
-    exit [<general purpose regs to save>]
-
-   If a frame pointer is not needed we need assembler of the form
-    # Restore any general purpose registers saved
-
-    movf  tos, fn	# Restore any saved floating point registers
-    .
-    .
-    .
-    restore [<general purpose regs to save>]
-
-    # reclaim space allocated on stack
-
-    adjspd <-(local stack space + 4)> */
-
-
-#define FUNCTION_EPILOGUE(FILE, SIZE) \
-{ register int regno, g_regs_used = 0, f_regs_used = 0;		\
-  int used_regs_buf[8], *bufp = used_regs_buf;			\
-  int used_fregs_buf[17], *fbufp = used_fregs_buf;		\
-  extern char call_used_regs[];					\
-  if (flag_pic && current_function_uses_pic_offset_table)	\
-    fprintf (FILE, "\tlprd sb,tos\n");				\
-  *fbufp++ = -2;						\
-  for (regno = F0_REGNUM; regno < FRAME_POINTER_REGNUM; regno++) \
-    if (regs_ever_live[regno] && !call_used_regs[regno])	\
-      {								\
-       *fbufp++ = regno; f_regs_used++;				\
-      }								\
-  fbufp--;							\
-  for (regno = 0; regno < F0_REGNUM; regno++)			\
-    if (regs_ever_live[regno]					\
-	&& ! call_used_regs[regno])				\
-      {                                                        	\
-        *bufp++ = regno; g_regs_used++;				\
-      }                                                        	\
-  while (fbufp > used_fregs_buf)				\
-    {								\
-      if ((*fbufp & 1) && fbufp[0] == fbufp[-1] + 1)	        \
-	{							\
-	  fprintf (FILE, "\tmovl tos,%s\n",                     \
-		   ns32k_out_reg_names[fbufp[-1]]);                   \
-	  fbufp -= 2;						\
-	}							\
-      else fprintf (FILE, "\tmovf tos,%s\n", ns32k_out_reg_names[*fbufp--]); \
-    }								\
-  if (frame_pointer_needed)					\
-    fprintf (FILE, "\texit [");					\
-  else								\
-    {								\
-      if (g_regs_used && g_regs_used > 4)			\
-        fprintf (FILE, "\trestore [");				\
-      else							\
-        {							\
-	  while (bufp > used_regs_buf)				\
-            fprintf (FILE, "\tmovd tos,r%d\n", *--bufp);	\
-	  g_regs_used = 0;					\
-        }							\
-    }								\
-  while (bufp > used_regs_buf)					\
-    {								\
-      fprintf (FILE, "r%d", *--bufp);				\
-      if (bufp > used_regs_buf)					\
-	fputc (',', FILE);					\
-    }								\
-  if (g_regs_used || frame_pointer_needed)			\
-    fprintf (FILE, "]\n");					\
-  if (SIZE && !frame_pointer_needed)				\
-    ADJSP (FILE, -(SIZE + 4));					\
-  if (current_function_pops_args)				\
-    fprintf (FILE, "\tret %d\n", current_function_pops_args);	\
-  else fprintf (FILE, "\tret 0\n"); }
 
 /* Store in the variable DEPTH the initial difference between the
    frame pointer reg contents and the stack pointer reg contents,
@@ -939,8 +736,8 @@ operands on the 32k are stored).  */
   fprintf (FILE, "\tjump " );						\
   PUT_ABSOLUTE_PREFIX (FILE);						\
   fprintf (FILE, "__trampoline\n" );					\
-  ASM_OUTPUT_INT (FILE, const0_rtx);					\
-  ASM_OUTPUT_INT (FILE, const0_rtx);					\
+  assemble_aligned_integer (UNITS_PER_WORD, const0_rtx);		\
+  assemble_aligned_integer (UNITS_PER_WORD, const0_rtx);		\
 }
 
 /* Length in units of the trampoline for entering a nested function.  */
@@ -1058,7 +855,7 @@ __transfer_from_trampoline ()		\
    because registers of CLASS are needed for spill registers.
 
    The default definition won't do because class LONG_FLOAT_REG0 has two
-   registers which are always acessed as a pair */
+   registers which are always accessed as a pair */
 
 #define CLASS_LIKELY_SPILLED_P(CLASS) \
   (reg_class_size[(int) (CLASS)] == 1 || (CLASS) == LONG_FLOAT_REG0)
@@ -1294,33 +1091,6 @@ while (0)
  { if (GET_CODE (ADDR) == POST_INC || GET_CODE (ADDR) == PRE_DEC)	\
      goto LABEL;}
 
-/* If defined, a C expression whose value is nonzero if IDENTIFIER
-   with arguments ARGS is a valid machine specific attribute for DECL.
-   The attributes in ATTRIBUTES have previously been assigned to DECL.  */
-
-#define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, NAME, ARGS) \
-  (ns32k_valid_decl_attribute_p (DECL, ATTRIBUTES, NAME, ARGS))
-
-/* If defined, a C expression whose value is nonzero if IDENTIFIER
-   with arguments ARGS is a valid machine specific attribute for TYPE.
-   The attributes in ATTRIBUTES have previously been assigned to TYPE.  */
-
-#define VALID_MACHINE_TYPE_ATTRIBUTE(TYPE, ATTRIBUTES, NAME, ARGS) \
-  (ns32k_valid_type_attribute_p (TYPE, ATTRIBUTES, NAME, ARGS))
-
-/* If defined, a C expression whose value is zero if the attributes on
-   TYPE1 and TYPE2 are incompatible, one if they are compatible, and
-   two if they are nearly compatible (which causes a warning to be
-   generated).  */
-
-#define COMP_TYPE_ATTRIBUTES(TYPE1, TYPE2) \
-  (ns32k_comp_type_attributes (TYPE1, TYPE2))
-
-/* If defined, a C statement that assigns default attributes to newly
-   defined TYPE.  */
-
-/* #define SET_DEFAULT_TYPE_ATTRIBUTES (TYPE) */
-
 /* Specify the machine mode that this machine uses
    for the index in the tablejump instruction.
    HI mode is more efficient but the range is not wide enough for
@@ -1332,12 +1102,6 @@ while (0)
    table.
    Do not define this if the table should contain absolute addresses. */
 #define CASE_VECTOR_PC_RELATIVE 1
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 1
@@ -1351,9 +1115,6 @@ while (0)
    
    We have a smart movstrsi insn */
 #define MOVE_RATIO 0
-
-/* Define this if zero-extension is slow (more than one real instruction).  */
-/* #define SLOW_ZERO_EXTEND */
 
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 #define SLOW_BYTE_ACCESS 0
@@ -1513,40 +1274,6 @@ while (0)
 
 /* Output of Data */
 
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-  fprintf (FILE, "\t.double 0d%.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-  fprintf (FILE, "\t.float 0f%.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.long "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.word "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
-
 /* This is how to output an assembler line defining an external/static
    address which is not in tree format (for collect.c).  */
 
@@ -1655,21 +1382,6 @@ do {									\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
 
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
-
 /* Print an instruction operand X on file FILE.
    CODE is the code from the %-spec that requested printing this operand;
    if `%z3' was used to print operand 3, then CODE is 'z'. */
@@ -1686,8 +1398,7 @@ do {									\
 #define PRINT_OPERAND_ADDRESS(FILE, ADDR) print_operand_address(FILE, ADDR)
 
 extern unsigned int ns32k_reg_class_contents[N_REG_CLASSES][1];
-extern const char *const ns32k_out_reg_names[];
-extern enum reg_class regclass_map[];		/* smallest class containing REGNO */
+extern enum reg_class regclass_map[FIRST_PSEUDO_REGISTER]; /* smallest class containing REGNO */
 
 /*
 Local variables:

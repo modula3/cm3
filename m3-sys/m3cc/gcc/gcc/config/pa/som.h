@@ -1,5 +1,5 @@
 /* Definitions for SOM assembler support.
-   Copyright (C) 1999, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -42,7 +42,7 @@ Boston, MA 02111-1307, USA.  */
     last_function_decl = current_function_decl;		\
     sym_lineno += 1; }
 
-/* gdb needs a null N_SO at the end of each file for scattered loading. */
+/* gdb needs a null N_SO at the end of each file for scattered loading.  */
 
 #undef	DBX_OUTPUT_MAIN_SOURCE_FILE_END
 #define DBX_OUTPUT_MAIN_SOURCE_FILE_END(FILE, FILENAME) \
@@ -50,6 +50,15 @@ Boston, MA 02111-1307, USA.  */
   fputs ("\t.SPACE $TEXT$\n\t.NSUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n", FILE); \
   fprintf (FILE,							\
 	   "\t.stabs \"\",%d,0,0,L$text_end0000\nL$text_end0000:\n", N_SO)
+
+/* Select a format to encode pointers in exception handling data.  CODE
+   is 0 for data, 1 for code labels, 2 for function pointers.  GLOBAL is
+   true if the symbol may be affected by dynamic relocations.  Because
+   the HP assembler does auto alignment, it is necessary to use
+   DW_EH_PE_aligned instead of the default DW_EH_PE_absptr.  */
+
+#define ASM_PREFERRED_EH_DATA_FORMAT(CODE, GLOBAL) \
+  (TARGET_GAS ? DW_EH_PE_absptr : DW_EH_PE_aligned)
 
 /* HPUX has a program 'chatr' to list the dependencies of dynamically
    linked executables and shared libraries.  */
@@ -256,17 +265,11 @@ do {  \
    complain.
 
    So, we force exception information into the data section.  */
-#define EXCEPTION_SECTION data_section
+#define TARGET_ASM_EXCEPTION_SECTION data_section
 
-/* Define the .bss section for ASM_OUTPUT_LOCAL to use. */
+/* Define the .bss section for ASM_OUTPUT_LOCAL to use.  */
 
-#ifndef CTORS_SECTION_FUNCTION
 #define EXTRA_SECTIONS in_readonly_data
-#define CTORS_SECTION_FUNCTION
-#define DTORS_SECTION_FUNCTION
-#else
-#define EXTRA_SECTIONS in_readonly_data, in_ctors, in_dtors
-#endif
 
 /* FIXME: HPUX ld generates incorrect GOT entries for "T" fixups
    which reference data within the $TEXT$ space (for example constant
@@ -282,6 +285,7 @@ do {  \
    works correctly).  */
 
 #define EXTRA_SECTION_FUNCTIONS						\
+extern void readonly_data PARAMS ((void));				\
 void									\
 readonly_data ()							\
 {									\
@@ -293,9 +297,7 @@ readonly_data ()							\
 	fprintf (asm_out_file, "%s\n", READONLY_DATA_ASM_OP);		\
       in_section = in_readonly_data;					\
     }									\
-}									\
-CTORS_SECTION_FUNCTION							\
-DTORS_SECTION_FUNCTION
+}
 
 /* This is how to output a command to make the user-level label named NAME
    defined for reference from other files.
@@ -311,8 +313,8 @@ DTORS_SECTION_FUNCTION
 #define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)	\
   do { int save_referenced;					\
        save_referenced = TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (DECL)); \
-       fputs ("\t.IMPORT ", FILE);					\
-	 assemble_name (FILE, NAME);				\
+       fputs ("\t.IMPORT ", FILE);				\
+       assemble_name (FILE, NAME);				\
        if (FUNCTION_NAME_P (NAME))     				\
 	 fputs (",CODE\n", FILE);				\
        else							\
@@ -326,17 +328,26 @@ DTORS_SECTION_FUNCTION
 
    Also note not all libcall names are passed to ENCODE_SECTION_INFO
    (__main for example).  To make sure all libcall names have section
-   info recorded in them, we do it here.  */
+   info recorded in them, we do it here.  We must also ensure that
+   we don't import a libcall that has been previously exported since
+   the HP assembler may change an ENTRY symbol to a CODE symbol.  */
 
 #define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, RTL) \
-  do { fputs ("\t.IMPORT ", FILE);					\
+  do { const char *name;						\
+       tree id;								\
+									\
        if (!function_label_operand (RTL, VOIDmode))			\
 	 hppa_encode_label (RTL);					\
-       assemble_name (FILE, XSTR ((RTL), 0));		       		\
-       fputs (",CODE\n", FILE);						\
+									\
+       STRIP_NAME_ENCODING (name, XSTR ((RTL), 0));			\
+       id = maybe_get_identifier (name);				\
+       if (! id || ! TREE_SYMBOL_REFERENCED (id))			\
+	 {								\
+	   fputs ("\t.IMPORT ", FILE);					\
+	   assemble_name (FILE, XSTR ((RTL), 0));		       	\
+	   fputs (",CODE\n", FILE);					\
+	 }								\
      } while (0)
-
-#define ASM_FILE_END(FILE) output_deferred_plabels (FILE)
 
 /* We want __gcc_plt_call to appear in every program built by
    gcc, so we make a reference to it out of __main.

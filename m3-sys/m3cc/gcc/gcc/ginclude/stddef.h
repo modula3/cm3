@@ -115,7 +115,7 @@ _TYPE_wchar_t;
 #endif
 
 /* In case nobody has defined these types, but we aren't running under
-   GCC 2.00, make sure that __PTRDIFF_TYPE__, __SIZE__TYPE__, and
+   GCC 2.00, make sure that __PTRDIFF_TYPE__, __SIZE_TYPE__, and
    __WCHAR_TYPE__ have reasonable values.  This can happen if the
    parts of GCC is compiled by an older compiler, that actually
    include gstddef.h, such as collect2.  */
@@ -165,6 +165,7 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
    or if we want this type in particular.  */
 #if defined (_STDDEF_H) || defined (__need_size_t)
 #ifndef __size_t__	/* BeOS */
+#ifndef __SIZE_T__	/* Cray Unicos/Mk */
 #ifndef _SIZE_T	/* in case <sys/types.h> has defined it. */
 #ifndef _SYS_SIZE_T_H
 #ifndef _T_SIZE_
@@ -179,6 +180,7 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #ifndef _SIZET_
 #ifndef __size_t
 #define __size_t__	/* BeOS */
+#define __SIZE_T__	/* Cray Unicos/Mk */
 #define _SIZE_T
 #define _SYS_SIZE_T_H
 #define _T_SIZE_
@@ -214,6 +216,7 @@ typedef long ssize_t;
 #endif /* _T_SIZE_ */
 #endif /* _SYS_SIZE_T_H */
 #endif /* _SIZE_T */
+#endif /* __SIZE_T__ */
 #endif /* __size_t__ */
 #undef	__need_size_t
 #endif /* _STDDEF_H or __need_size_t.  */
@@ -228,12 +231,14 @@ typedef long ssize_t;
    or if we want this type in particular.  */
 #if defined (_STDDEF_H) || defined (__need_wchar_t)
 #ifndef __wchar_t__	/* BeOS */
+#ifndef __WCHAR_T__	/* Cray Unicos/Mk */
 #ifndef _WCHAR_T
 #ifndef _T_WCHAR_
 #ifndef _T_WCHAR
 #ifndef __WCHAR_T
 #ifndef _WCHAR_T_
 #ifndef _BSD_WCHAR_T_
+#ifndef _BSD_WCHAR_T_DEFINED_    /* Darwin */
 #ifndef _WCHAR_T_DEFINED_
 #ifndef _WCHAR_T_DEFINED
 #ifndef _WCHAR_T_H
@@ -241,6 +246,7 @@ typedef long ssize_t;
 #ifndef __INT_WCHAR_T_H
 #ifndef _GCC_WCHAR_T
 #define __wchar_t__	/* BeOS */
+#define __WCHAR_T__	/* Cray Unicos/Mk */
 #define _WCHAR_T
 #define _T_WCHAR_
 #define _T_WCHAR
@@ -269,6 +275,7 @@ typedef long ssize_t;
 #ifdef _BSD_RUNE_T_
 #if !defined (_ANSI_SOURCE) && !defined (_POSIX_SOURCE)
 typedef _BSD_RUNE_T_ rune_t;
+#define _BSD_WCHAR_T_DEFINED_
 #if defined (__FreeBSD__)
 /* Why is this file so hard to maintain properly?  In constrast to
    the comment above regarding BSD/386 1.1, on FreeBSD for as long
@@ -298,6 +305,8 @@ typedef __WCHAR_TYPE__ wchar_t;
 #endif
 #endif
 #endif
+#endif
+#endif /* __WCHAR_T__ */
 #endif /* __wchar_t__ */
 #undef	__need_wchar_t
 #endif /* _STDDEF_H or __need_wchar_t.  */

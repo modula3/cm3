@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -36,699 +33,716 @@ software.  Copies published by the Free Software Foundation raise
 funds for GNU development.
 
 
-File: gcc.info,  Node: Machine Constraints,  Prev: Modifiers,  Up: Constraints
+File: gcc.info,  Node: Index,  Prev: Option Index,  Up: Top
+
+Index
+*****
+
+* Menu:
+
+* ! in constraint:                       Multi-Alternative.
+* # in constraint:                       Modifiers.
+* #pragma:                               Pragmas.
+* #pragma implementation:                C++ Interface.
+* #pragma implementation, implied:       C++ Interface.
+* #pragma interface:                     C++ Interface.
+* #pragma, reason for not using:         Function Attributes.
+* $:                                     Dollar Signs.
+* % in constraint:                       Modifiers.
+* %include:                              Spec Files.
+* %include_noerr:                        Spec Files.
+* %rename:                               Spec Files.
+* & in constraint:                       Modifiers.
+* ':                                     Incompatibilities.
+* * in constraint:                       Modifiers.
+* + in constraint:                       Modifiers.
+* -lgcc, use with -nodefaultlibs:        Link Options.
+* -lgcc, use with -nostdlib:             Link Options.
+* -nodefaultlibs and unresolved references: Link Options.
+* -nostdlib and unresolved references:   Link Options.
+* .sdata/.sdata2 references (PowerPC):   RS/6000 and PowerPC Options.
+* //:                                    C++ Comments.
+* 0 in constraint:                       Simple Constraints.
+* < in constraint:                       Simple Constraints.
+* <?:                                    Min and Max.
+* = in constraint:                       Modifiers.
+* > in constraint:                       Simple Constraints.
+* >?:                                    Min and Max.
+* ? in constraint:                       Multi-Alternative.
+* ?: extensions <1>:                     Conditionals.
+* ?: extensions:                         Lvalues.
+* ?: side effect:                        Conditionals.
+* \a:                                    C Dialect Options.
+* \x:                                    C Dialect Options.
+* _ in variables in macros:              Naming Types.
+* __builtin_apply:                       Constructing Calls.
+* __builtin_apply_args:                  Constructing Calls.
+* __builtin_choose_expr:                 Other Builtins.
+* __builtin_constant_p:                  Other Builtins.
+* __builtin_expect:                      Other Builtins.
+* __builtin_frame_address:               Return Address.
+* __builtin_isgreater:                   Other Builtins.
+* __builtin_isgreaterequal:              Other Builtins.
+* __builtin_isless:                      Other Builtins.
+* __builtin_islessequal:                 Other Builtins.
+* __builtin_islessgreater:               Other Builtins.
+* __builtin_isunordered:                 Other Builtins.
+* __builtin_prefetch:                    Other Builtins.
+* __builtin_return:                      Constructing Calls.
+* __builtin_return_address:              Return Address.
+* __builtin_types_compatible_p:          Other Builtins.
+* __complex__ keyword:                   Complex.
+* __extension__:                         Alternate Keywords.
+* __func__ identifier:                   Function Names.
+* __FUNCTION__ identifier:               Function Names.
+* __imag__ keyword:                      Complex.
+* __PRETTY_FUNCTION__ identifier:        Function Names.
+* __real__ keyword:                      Complex.
+* __STDC_HOSTED__:                       Standards.
+* _Complex keyword:                      Complex.
+* _Exit:                                 Other Builtins.
+* _exit:                                 Other Builtins.
+* abort:                                 Other Builtins.
+* abs:                                   Other Builtins.
+* accessing volatiles:                   Volatiles.
+* Ada:                                   G++ and GCC.
+* address constraints:                   Simple Constraints.
+* address of a label:                    Labels as Values.
+* address_operand:                       Simple Constraints.
+* alias attribute:                       Function Attributes.
+* aliasing of parameters:                Code Gen Options.
+* aligned attribute <1>:                 Type Attributes.
+* aligned attribute:                     Variable Attributes.
+* alignment:                             Alignment.
+* Alliant:                               Interoperation.
+* alloca:                                Other Builtins.
+* alloca vs variable-length arrays:      Variable Length.
+* alternate keywords:                    Alternate Keywords.
+* always_inline function attribute:      Function Attributes.
+* AMD x86-64 Options:                    i386 and x86-64 Options.
+* AMD1:                                  Standards.
+* AMD29K options:                        AMD29K Options.
+* ANSI C:                                Standards.
+* ANSI C standard:                       Standards.
+* ANSI C89:                              Standards.
+* ANSI support:                          C Dialect Options.
+* ANSI X3.159-1989:                      Standards.
+* apostrophes:                           Incompatibilities.
+* ARC Options:                           ARC Options.
+* arguments in frame (88k):              M88K Options.
+* ARM [Annotated C++ Reference Manual]:  Backwards Compatibility.
+* ARM options:                           ARM Options.
+* arrays of length zero:                 Zero Length.
+* arrays of variable length:             Variable Length.
+* arrays, non-lvalue:                    Subscripting.
+* asm constraints:                       Constraints.
+* asm expressions:                       Extended Asm.
+* assembler instructions:                Extended Asm.
+* assembler names for identifiers:       Asm Labels.
+* assembler syntax, 88k:                 M88K Options.
+* assembly code, invalid:                Bug Criteria.
+* attribute of types:                    Type Attributes.
+* attribute of variables:                Variable Attributes.
+* attribute syntax:                      Attribute Syntax.
+* autoincrement/decrement addressing:    Simple Constraints.
+* automatic inline for C++ member fns:   Inline.
+* AVR Options:                           AVR Options.
+* backtrace for bug reports:             Bug Reporting.
+* Backwards Compatibility:               Backwards Compatibility.
+* bcmp:                                  Other Builtins.
+* bit shift overflow (88k):              M88K Options.
+* bound pointer to member function:      Bound member functions.
+* bug criteria:                          Bug Criteria.
+* bug report mailing lists:              Bug Lists.
+* bugs:                                  Bugs.
+* bugs, known:                           Trouble.
+* built-in functions <1>:                Other Builtins.
+* built-in functions:                    C Dialect Options.
+* byte writes (29k):                     AMD29K Options.
+* bzero:                                 Other Builtins.
+* C compilation options:                 Invoking GCC.
+* C intermediate output, nonexistent:    G++ and GCC.
+* C language extensions:                 C Extensions.
+* C language, traditional:               C Dialect Options.
+* C standard:                            Standards.
+* C standards:                           Standards.
+* c++:                                   Invoking G++.
+* C++:                                   G++ and GCC.
+* C++ comments:                          C++ Comments.
+* C++ compilation options:               Invoking GCC.
+* C++ interface and implementation headers: C++ Interface.
+* C++ language extensions:               C++ Extensions.
+* C++ member fns, automatically inline:  Inline.
+* C++ misunderstandings:                 C++ Misunderstandings.
+* C++ options, command line:             C++ Dialect Options.
+* C++ pragmas, effect on inlining:       C++ Interface.
+* C++ source file suffixes:              Invoking G++.
+* C++ static data, declaring and defining: Static Definitions.
+* C89:                                   Standards.
+* C90:                                   Standards.
+* C94:                                   Standards.
+* C95:                                   Standards.
+* C99:                                   Standards.
+* C9X:                                   Standards.
+* C_INCLUDE_PATH:                        Environment Variables.
+* calling functions through the function vector on the H8/300 processors: Function Attributes.
+* case labels in initializers:           Designated Inits.
+* case ranges:                           Case Ranges.
+* case sensitivity and VMS:              VMS Misc.
+* cast to a union:                       Cast to Union.
+* casts as lvalues:                      Lvalues.
+* cimag:                                 Other Builtins.
+* cimagf:                                Other Builtins.
+* cimagl:                                Other Builtins.
+* code generation conventions:           Code Gen Options.
+* code, mixed with declarations:         Mixed Declarations.
+* command options:                       Invoking GCC.
+* comments, C++ style:                   C++ Comments.
+* comparison of signed and unsigned values, warning: Warning Options.
+* compiler bugs, reporting:              Bug Reporting.
+* compiler compared to C++ preprocessor: G++ and GCC.
+* compiler options, C++:                 C++ Dialect Options.
+* compiler options, Objective-C:         Objective-C Dialect Options.
+* compiler version, specifying:          Target Options.
+* COMPILER_PATH:                         Environment Variables.
+* complex conjugation:                   Complex.
+* complex numbers:                       Complex.
+* compound expressions as lvalues:       Lvalues.
+* compound literals:                     Compound Literals.
+* computed gotos:                        Labels as Values.
+* conditional expressions as lvalues:    Lvalues.
+* conditional expressions, extensions:   Conditionals.
+* conflicting types:                     Disappointments.
+* conj:                                  Other Builtins.
+* conjf:                                 Other Builtins.
+* conjl:                                 Other Builtins.
+* const applied to function:             Function Attributes.
+* const function attribute:              Function Attributes.
+* constants in constraints:              Simple Constraints.
+* constraint modifier characters:        Modifiers.
+* constraint, matching:                  Simple Constraints.
+* constraints, asm:                      Constraints.
+* constraints, machine specific:         Machine Constraints.
+* constructing calls:                    Constructing Calls.
+* constructor expressions:               Compound Literals.
+* constructor function attribute:        Function Attributes.
+* contributors:                          Contributors.
+* Convex options:                        Convex Options.
+* core dump:                             Bug Criteria.
+* cos:                                   Other Builtins.
+* cosf:                                  Other Builtins.
+* cosl:                                  Other Builtins.
+* CPATH:                                 Environment Variables.
+* CPLUS_INCLUDE_PATH:                    Environment Variables.
+* creal:                                 Other Builtins.
+* crealf:                                Other Builtins.
+* creall:                                Other Builtins.
+* CRIS Options:                          CRIS Options.
+* cross compiling:                       Target Options.
+* D30V Options:                          D30V Options.
+* DBX:                                   Interoperation.
+* deallocating variable length arrays:   Variable Length.
+* debug_rtx:                             Bug Reporting.
+* debugging information options:         Debugging Options.
+* debugging, 88k OCS:                    M88K Options.
+* declaration scope:                     Incompatibilities.
+* declarations inside expressions:       Statement Exprs.
+* declarations, mixed with code:         Mixed Declarations.
+* declaring attributes of functions:     Function Attributes.
+* declaring static data in C++:          Static Definitions.
+* defining static data in C++:           Static Definitions.
+* dependencies for make as output:       Environment Variables.
+* dependencies, make:                    Preprocessor Options.
+* DEPENDENCIES_OUTPUT:                   Environment Variables.
+* deprecated attribute.:                 Function Attributes.
+* designated initializers:               Designated Inits.
+* designator lists:                      Designated Inits.
+* designators:                           Designated Inits.
+* destructor function attribute:         Function Attributes.
+* diagnostic messages:                   Language Independent Options.
+* dialect options:                       C Dialect Options.
+* digits in constraint:                  Simple Constraints.
+* directory options:                     Directory Options.
+* divide instruction, 88k:               M88K Options.
+* dollar signs in identifier names:      Dollar Signs.
+* double-word arithmetic:                Long Long.
+* downward funargs:                      Nested Functions.
+* DW bit (29k):                          AMD29K Options.
+* E in constraint:                       Simple Constraints.
+* earlyclobber operand:                  Modifiers.
+* eight bit data on the H8/300 and H8/300H: Function Attributes.
+* environment variables:                 Environment Variables.
+* error messages:                        Warnings and Errors.
+* escape sequences, traditional:         C Dialect Options.
+* escaped newlines:                      Escaped Newlines.
+* exclamation point:                     Multi-Alternative.
+* exit:                                  Other Builtins.
+* exit status and VMS:                   VMS Misc.
+* explicit register variables:           Explicit Reg Vars.
+* expressions containing statements:     Statement Exprs.
+* expressions, compound, as lvalues:     Lvalues.
+* expressions, conditional, as lvalues:  Lvalues.
+* expressions, constructor:              Compound Literals.
+* extended asm:                          Extended Asm.
+* extensible constraints:                Simple Constraints.
+* extensions, ?: <1>:                    Conditionals.
+* extensions, ?::                        Lvalues.
+* extensions, C language:                C Extensions.
+* extensions, C++ language:              C++ Extensions.
+* external declaration scope:            Incompatibilities.
+* F in constraint:                       Simple Constraints.
+* fabs:                                  Other Builtins.
+* fabsf:                                 Other Builtins.
+* fabsl:                                 Other Builtins.
+* fatal signal:                          Bug Criteria.
+* FDL, GNU Free Documentation License:   GNU Free Documentation License.
+* ffs:                                   Other Builtins.
+* file name suffix:                      Overall Options.
+* file names:                            Link Options.
+* flexible array members:                Zero Length.
+* float as function value type:          Incompatibilities.
+* floating point precision <1>:          Disappointments.
+* floating point precision:              Optimize Options.
+* format function attribute:             Function Attributes.
+* format_arg function attribute:         Function Attributes.
+* Fortran:                               G++ and GCC.
+* forwarding calls:                      Constructing Calls.
+* fprintf:                               Other Builtins.
+* fprintf_unlocked:                      Other Builtins.
+* fputs:                                 Other Builtins.
+* fputs_unlocked:                        Other Builtins.
+* freestanding environment:              Standards.
+* freestanding implementation:           Standards.
+* fscanf, and constant strings:          Incompatibilities.
+* function addressability on the M32R/D: Function Attributes.
+* function attributes:                   Function Attributes.
+* function pointers, arithmetic:         Pointer Arith.
+* function prototype declarations:       Function Prototypes.
+* function without a prologue/epilogue code: Function Attributes.
+* function, size of pointer to:          Pointer Arith.
+* functions called via pointer on the RS/6000 and PowerPC: Function Attributes.
+* functions in arbitrary sections:       Function Attributes.
+* functions that are passed arguments in registers on the 386: Function Attributes.
+* functions that behave like malloc:     Function Attributes.
+* functions that do not pop the argument stack on the 386: Function Attributes.
+* functions that do pop the argument stack on the 386: Function Attributes.
+* functions that have no side effects:   Function Attributes.
+* functions that never return:           Function Attributes.
+* functions that pop the argument stack on the 386: Function Attributes.
+* functions which are exported from a dll on PowerPC Windows NT: Function Attributes.
+* functions which are imported from a dll on PowerPC Windows NT: Function Attributes.
+* functions which specify exception handling on PowerPC Windows NT: Function Attributes.
+* functions with printf, scanf, strftime or strfmon style arguments: Function Attributes.
+* g in constraint:                       Simple Constraints.
+* G in constraint:                       Simple Constraints.
+* g++:                                   Invoking G++.
+* G++:                                   G++ and GCC.
+* GCC:                                   G++ and GCC.
+* GCC command options:                   Invoking GCC.
+* gcc-bugs@gcc.gnu.org or bug-gcc@gnu.org: Bug Lists.
+* GCC_EXEC_PREFIX:                       Environment Variables.
+* gccbug script:                         gccbug.
+* generalized lvalues:                   Lvalues.
+* global offset table:                   Code Gen Options.
+* global register after longjmp:         Global Reg Vars.
+* global register variables:             Global Reg Vars.
+* GLOBALDEF:                             Global Declarations.
+* GLOBALREF:                             Global Declarations.
+* GLOBALVALUEDEF:                        Global Declarations.
+* GLOBALVALUEREF:                        Global Declarations.
+* GNAT:                                  G++ and GCC.
+* goto with computed label:              Labels as Values.
+* gp-relative references (MIPS):         MIPS Options.
+* gprof:                                 Debugging Options.
+* grouping options:                      Invoking GCC.
+* H in constraint:                       Simple Constraints.
+* hardware models and configurations, specifying: Submodel Options.
+* header files and VMS:                  Include Files and VMS.
+* hex floats:                            Hex Floats.
+* hosted environment <1>:                C Dialect Options.
+* hosted environment:                    Standards.
+* hosted implementation:                 Standards.
+* HPPA Options:                          HPPA Options.
+* I in constraint:                       Simple Constraints.
+* i in constraint:                       Simple Constraints.
+* i386 Options:                          i386 and x86-64 Options.
+* IA-64 Options:                         IA-64 Options.
+* IBM RS/6000 and PowerPC Options:       RS/6000 and PowerPC Options.
+* IBM RT options:                        RT Options.
+* IBM RT PC:                             Interoperation.
+* identifier names, dollar signs in:     Dollar Signs.
+* identifiers, names in assembler code:  Asm Labels.
+* identifying source, compiler (88k):    M88K Options.
+* imaxabs:                               Other Builtins.
+* implementation-defined behavior, C language: C Implementation.
+* implied #pragma implementation:        C++ Interface.
+* include files and VMS:                 Include Files and VMS.
+* incompatibilities of GCC:              Incompatibilities.
+* increment operators:                   Bug Criteria.
+* index:                                 Other Builtins.
+* indirect calls on ARM:                 Function Attributes.
+* init_priority attribute:               C++ Attributes.
+* initializations in expressions:        Compound Literals.
+* initializers with labeled elements:    Designated Inits.
+* initializers, non-constant:            Initializers.
+* inline automatic for C++ member fns:   Inline.
+* inline functions:                      Inline.
+* inline functions, omission of:         Inline.
+* inlining and C++ pragmas:              C++ Interface.
+* installation trouble:                  Trouble.
+* integrating function code:             Inline.
+* Intel 386 Options:                     i386 and x86-64 Options.
+* interface and implementation headers, C++: C++ Interface.
+* intermediate C version, nonexistent:   G++ and GCC.
+* interrupt handler functions:           Function Attributes.
+* interrupt handler functions on the H8/300 and SH processors: Function Attributes.
+* introduction:                          Top.
+* invalid assembly code:                 Bug Criteria.
+* invalid input:                         Bug Criteria.
+* invoking g++:                          Invoking G++.
+* ISO 9899:                              Standards.
+* ISO C:                                 Standards.
+* ISO C standard:                        Standards.
+* ISO C89:                               Standards.
+* ISO C90:                               Standards.
+* ISO C94:                               Standards.
+* ISO C95:                               Standards.
+* ISO C99:                               Standards.
+* ISO C9X:                               Standards.
+* ISO support:                           C Dialect Options.
+* ISO/IEC 9899:                          Standards.
+* Java:                                  G++ and GCC.
+* java_interface attribute:              C++ Attributes.
+* kernel and user registers (29k):       AMD29K Options.
+* keywords, alternate:                   Alternate Keywords.
+* known causes of trouble:               Trouble.
+* labeled elements in initializers:      Designated Inits.
+* labels as values:                      Labels as Values.
+* labs:                                  Other Builtins.
+* LANG:                                  Environment Variables.
+* language dialect options:              C Dialect Options.
+* large bit shifts (88k):                M88K Options.
+* LC_ALL:                                Environment Variables.
+* LC_CTYPE:                              Environment Variables.
+* LC_MESSAGES:                           Environment Variables.
+* length-zero arrays:                    Zero Length.
+* Libraries:                             Link Options.
+* LIBRARY_PATH:                          Environment Variables.
+* link options:                          Link Options.
+* LL integer suffix:                     Long Long.
+* llabs:                                 Other Builtins.
+* load address instruction:              Simple Constraints.
+* local labels:                          Local Labels.
+* local variables in macros:             Naming Types.
+* local variables, specifying registers: Local Reg Vars.
+* locale:                                Environment Variables.
+* locale definition:                     Environment Variables.
+* long long data types:                  Long Long.
+* longjmp:                               Global Reg Vars.
+* longjmp and automatic variables:       C Dialect Options.
+* longjmp incompatibilities:             Incompatibilities.
+* longjmp warnings:                      Warning Options.
+* lvalues, generalized:                  Lvalues.
+* m in constraint:                       Simple Constraints.
+* M32R/D options:                        M32R/D Options.
+* M680x0 options:                        M680x0 Options.
+* M68hc1x options:                       M68hc1x Options.
+* M88k options:                          M88K Options.
+* machine dependent options:             Submodel Options.
+* machine specific constraints:          Machine Constraints.
+* macro with variable arguments:         Variadic Macros.
+* macros containing asm:                 Extended Asm.
+* macros, inline alternative:            Inline.
+* macros, local labels:                  Local Labels.
+* macros, local variables in:            Naming Types.
+* macros, statements in expressions:     Statement Exprs.
+* macros, types of arguments:            Typeof.
+* main and the exit status:              VMS Misc.
+* make:                                  Preprocessor Options.
+* malloc attribute:                      Function Attributes.
+* matching constraint:                   Simple Constraints.
+* maximum operator:                      Min and Max.
+* MCore options:                         MCore Options.
+* member fns, automatically inline:      Inline.
+* memcmp:                                Other Builtins.
+* memcpy:                                Other Builtins.
+* memory model (29k):                    AMD29K Options.
+* memory references in constraints:      Simple Constraints.
+* memset:                                Other Builtins.
+* message formatting:                    Language Independent Options.
+* messages, warning:                     Warning Options.
+* messages, warning and error:           Warnings and Errors.
+* middle-operands, omitted:              Conditionals.
+* minimum operator:                      Min and Max.
+* MIPS options:                          MIPS Options.
+* misunderstandings in C++:              C++ Misunderstandings.
+* mixed declarations and code:           Mixed Declarations.
+* mktemp, and constant strings:          Incompatibilities.
+* MMIX Options:                          MMIX Options.
+* MN10200 options:                       MN10200 Options.
+* MN10300 options:                       MN10300 Options.
+* mode attribute:                        Variable Attributes.
+* modifiers in constraints:              Modifiers.
+* multi-line string literals:            Multi-line Strings.
+* multiple alternative constraints:      Multi-Alternative.
+* multiprecision arithmetic:             Long Long.
+* n in constraint:                       Simple Constraints.
+* name augmentation:                     VMS Misc.
+* names used in assembler code:          Asm Labels.
+* naming convention, implementation headers: C++ Interface.
+* naming types:                          Naming Types.
+* nested functions:                      Nested Functions.
+* newlines (escaped):                    Escaped Newlines.
+* no_instrument_function function attribute: Function Attributes.
+* nocommon attribute:                    Variable Attributes.
+* noinline function attribute:           Function Attributes.
+* non-constant initializers:             Initializers.
+* non-static inline function:            Inline.
+* noreturn function attribute:           Function Attributes.
+* NS32K options:                         NS32K Options.
+* o in constraint:                       Simple Constraints.
+* OBJC_INCLUDE_PATH:                     Environment Variables.
+* Objective-C:                           G++ and GCC.
+* Objective-C options, command line:     Objective-C Dialect Options.
+* OCS (88k):                             M88K Options.
+* offsettable address:                   Simple Constraints.
+* old-style function definitions:        Function Prototypes.
+* omitted middle-operands:               Conditionals.
+* open coding:                           Inline.
+* operand constraints, asm:              Constraints.
+* optimize options:                      Optimize Options.
+* options to control diagnostics formatting: Language Independent Options.
+* options to control warnings:           Warning Options.
+* options, C++:                          C++ Dialect Options.
+* options, code generation:              Code Gen Options.
+* options, debugging:                    Debugging Options.
+* options, dialect:                      C Dialect Options.
+* options, directory search:             Directory Options.
+* options, GCC command:                  Invoking GCC.
+* options, grouping:                     Invoking GCC.
+* options, linking:                      Link Options.
+* options, Objective-C:                  Objective-C Dialect Options.
+* options, optimization:                 Optimize Options.
+* options, order:                        Invoking GCC.
+* options, preprocessor:                 Preprocessor Options.
+* order of evaluation, side effects:     Non-bugs.
+* order of options:                      Invoking GCC.
+* other register constraints:            Simple Constraints.
+* output file option:                    Overall Options.
+* overloaded virtual fn, warning:        C++ Dialect Options.
+* p in constraint:                       Simple Constraints.
+* packed attribute:                      Variable Attributes.
+* parameter forward declaration:         Variable Length.
+* parameters, aliased:                   Code Gen Options.
+* PDP-11 Options:                        PDP-11 Options.
+* PIC:                                   Code Gen Options.
+* pmf:                                   Bound member functions.
+* pointer arguments:                     Function Attributes.
+* pointer to member function:            Bound member functions.
+* portions of temporary objects, pointers to: Temporaries.
+* pragma, extern_prefix:                 Tru64 Pragmas.
+* pragma, long_calls:                    ARM Pragmas.
+* pragma, long_calls_off:                ARM Pragmas.
+* pragma, mark:                          Darwin Pragmas.
+* pragma, no_long_calls:                 ARM Pragmas.
+* pragma, options align:                 Darwin Pragmas.
+* pragma, reason for not using:          Function Attributes.
+* pragma, redefine_extname:              Solaris Pragmas.
+* pragma, segment:                       Darwin Pragmas.
+* pragma, unused:                        Darwin Pragmas.
+* pragmas:                               Pragmas.
+* pragmas in C++, effect on inlining:    C++ Interface.
+* pragmas, interface and implementation: C++ Interface.
+* pragmas, warning of unknown:           Warning Options.
+* preprocessing numbers:                 Incompatibilities.
+* preprocessing tokens:                  Incompatibilities.
+* preprocessor options:                  Preprocessor Options.
+* printf:                                Other Builtins.
+* printf_unlocked:                       Other Builtins.
+* processor selection (29k):             AMD29K Options.
+* prof:                                  Debugging Options.
+* promotion of formal parameters:        Function Prototypes.
+* pure function attribute:               Function Attributes.
+* push address instruction:              Simple Constraints.
+* qsort, and global register variables:  Global Reg Vars.
+* question mark:                         Multi-Alternative.
+* r in constraint:                       Simple Constraints.
+* r0-relative references (88k):          M88K Options.
+* ranges in case statements:             Case Ranges.
+* read-only strings:                     Incompatibilities.
+* register positions in frame (88k):     M88K Options.
+* register variable after longjmp:       Global Reg Vars.
+* registers:                             Extended Asm.
+* registers for local variables:         Local Reg Vars.
+* registers in constraints:              Simple Constraints.
+* registers, global allocation:          Explicit Reg Vars.
+* registers, global variables in:        Global Reg Vars.
+* reordering, warning <1>:               Warning Options.
+* reordering, warning:                   C++ Dialect Options.
+* reporting bugs:                        Bugs.
+* rest argument (in macro):              Variadic Macros.
+* restricted pointers:                   Restricted Pointers.
+* restricted references:                 Restricted Pointers.
+* restricted this pointer:               Restricted Pointers.
+* return value of main:                  VMS Misc.
+* rindex:                                Other Builtins.
+* RS/6000 and PowerPC Options:           RS/6000 and PowerPC Options.
+* RT options:                            RT Options.
+* RT PC:                                 Interoperation.
+* RTTI:                                  Vague Linkage.
+* run-time options:                      Code Gen Options.
+* s in constraint:                       Simple Constraints.
+* S/390 and zSeries Options:             S/390 and zSeries Options.
+* scanf, and constant strings:           Incompatibilities.
+* scope of a variable length array:      Variable Length.
+* scope of declaration:                  Disappointments.
+* scope of external declarations:        Incompatibilities.
+* search path:                           Directory Options.
+* section function attribute:            Function Attributes.
+* section variable attribute:            Variable Attributes.
+* sequential consistency on 88k:         M88K Options.
+* setjmp:                                Global Reg Vars.
+* setjmp incompatibilities:              Incompatibilities.
+* shared strings:                        Incompatibilities.
+* shared variable attribute:             Variable Attributes.
+* shared VMS run time system:            VMS Misc.
+* side effect in ?::                     Conditionals.
+* side effects, macro argument:          Statement Exprs.
+* side effects, order of evaluation:     Non-bugs.
+* signal handler functions on the AVR processors: Function Attributes.
+* signed and unsigned values, comparison warning: Warning Options.
+* simple constraints:                    Simple Constraints.
+* sin:                                   Other Builtins.
+* sinf:                                  Other Builtins.
+* sinl:                                  Other Builtins.
+* sizeof:                                Typeof.
+* smaller data references:               M32R/D Options.
+* smaller data references (88k):         M88K Options.
+* smaller data references (MIPS):        MIPS Options.
+* smaller data references (PowerPC):     RS/6000 and PowerPC Options.
+* SPARC options:                         SPARC Options.
+* Spec Files:                            Spec Files.
+* specified registers:                   Explicit Reg Vars.
+* specifying compiler version and target machine: Target Options.
+* specifying hardware config:            Submodel Options.
+* specifying machine version:            Target Options.
+* specifying registers for local variables: Local Reg Vars.
+* sqrt:                                  Other Builtins.
+* sqrtf:                                 Other Builtins.
+* sqrtl:                                 Other Builtins.
+* sscanf, and constant strings:          Incompatibilities.
+* stack checks (29k):                    AMD29K Options.
+* statements inside expressions:         Statement Exprs.
+* static data in C++, declaring and defining: Static Definitions.
+* stdarg.h and RT PC:                    RT Options.
+* storem bug (29k):                      AMD29K Options.
+* strcat:                                Other Builtins.
+* strchr:                                Other Builtins.
+* strcmp:                                Other Builtins.
+* strcpy:                                Other Builtins.
+* strcspn:                               Other Builtins.
+* string constants:                      Incompatibilities.
+* strlen:                                Other Builtins.
+* strncat:                               Other Builtins.
+* strncmp:                               Other Builtins.
+* strncpy:                               Other Builtins.
+* strpbrk:                               Other Builtins.
+* strrchr:                               Other Builtins.
+* strspn:                                Other Builtins.
+* strstr:                                Other Builtins.
+* struct:                                Unnamed Fields.
+* structure passing (88k):               M88K Options.
+* structures:                            Incompatibilities.
+* structures, constructor expression:    Compound Literals.
+* submodel options:                      Submodel Options.
+* subscripting:                          Subscripting.
+* subscripting and function values:      Subscripting.
+* suffixes for C++ source:               Invoking G++.
+* SUNPRO_DEPENDENCIES:                   Environment Variables.
+* suppressing warnings:                  Warning Options.
+* surprises in C++:                      C++ Misunderstandings.
+* SVr4:                                  M88K Options.
+* syntax checking:                       Warning Options.
+* synthesized methods, warning:          C++ Dialect Options.
+* system headers, warnings from:         Warning Options.
+* target machine, specifying:            Target Options.
+* target options:                        Target Options.
+* TC1:                                   Standards.
+* TC2:                                   Standards.
+* tcov:                                  Debugging Options.
+* Technical Corrigenda:                  Standards.
+* Technical Corrigendum 1:               Standards.
+* Technical Corrigendum 2:               Standards.
+* template instantiation:                Template Instantiation.
+* temporaries, lifetime of:              Temporaries.
+* thunks:                                Nested Functions.
+* tiny data section on the H8/300H:      Function Attributes.
+* TMPDIR:                                Environment Variables.
+* TMS320C3x/C4x Options:                 TMS320C3x/C4x Options.
+* traditional C language:                C Dialect Options.
+* type alignment:                        Alignment.
+* type attributes:                       Type Attributes.
+* type_info:                             Vague Linkage.
+* typedef names as function parameters:  Incompatibilities.
+* typeof:                                Typeof.
+* ULL integer suffix:                    Long Long.
+* Ultrix calling convention:             Interoperation.
+* undefined behavior:                    Bug Criteria.
+* undefined function value:              Bug Criteria.
+* underscores in variables in macros:    Naming Types.
+* underscores, avoiding (88k):           M88K Options.
+* union:                                 Unnamed Fields.
+* union, casting to a:                   Cast to Union.
+* unions:                                Incompatibilities.
+* unknown pragmas, warning:              Warning Options.
+* unresolved references and -nodefaultlibs: Link Options.
+* unresolved references and -nostdlib:   Link Options.
+* unused attribute.:                     Function Attributes.
+* used attribute.:                       Function Attributes.
+* V in constraint:                       Simple Constraints.
+* V850 Options:                          V850 Options.
+* vague linkage:                         Vague Linkage.
+* value after longjmp:                   Global Reg Vars.
+* varargs.h and RT PC:                   RT Options.
+* variable addressability on the M32R/D: Variable Attributes.
+* variable alignment:                    Alignment.
+* variable attributes:                   Variable Attributes.
+* variable number of arguments:          Variadic Macros.
+* variable-length array scope:           Variable Length.
+* variable-length arrays:                Variable Length.
+* variables in specified registers:      Explicit Reg Vars.
+* variables, local, in macros:           Naming Types.
+* variadic macros:                       Variadic Macros.
+* VAX calling convention:                Interoperation.
+* VAX options:                           VAX Options.
+* VAXCRTL:                               VMS Misc.
+* VLAs:                                  Variable Length.
+* VMS and case sensitivity:              VMS Misc.
+* VMS and include files:                 Include Files and VMS.
+* void pointers, arithmetic:             Pointer Arith.
+* void, size of pointer to:              Pointer Arith.
+* volatile access:                       Volatiles.
+* volatile applied to function:          Function Attributes.
+* volatile read:                         Volatiles.
+* volatile write:                        Volatiles.
+* vtable:                                Vague Linkage.
+* warning for comparison of signed and unsigned values: Warning Options.
+* warning for overloaded virtual fn:     C++ Dialect Options.
+* warning for reordering of member initializers <1>: Warning Options.
+* warning for reordering of member initializers: C++ Dialect Options.
+* warning for synthesized methods:       C++ Dialect Options.
+* warning for unknown pragmas:           Warning Options.
+* warning messages:                      Warning Options.
+* warnings from system headers:          Warning Options.
+* warnings vs errors:                    Warnings and Errors.
+* weak attribute:                        Function Attributes.
+* whitespace:                            Incompatibilities.
+* X in constraint:                       Simple Constraints.
+* X3.159-1989:                           Standards.
+* x86-64 Options:                        i386 and x86-64 Options.
+* Xstormy16 Options:                     Xstormy16 Options.
+* Xtensa Options:                        Xtensa Options.
+* zero division on 88k:                  M88K Options.
+* zero-length arrays:                    Zero Length.
 
-Constraints for Particular Machines
------------------------------------
-
-   Whenever possible, you should use the general-purpose constraint
-letters in `asm' arguments, since they will convey meaning more readily
-to people reading your code.  Failing that, use the constraint letters
-that usually have very similar meanings across architectures.  The most
-commonly used constraints are `m' and `r' (for memory and
-general-purpose registers respectively; *note Simple Constraints::), and
-`I', usually the letter indicating the most common immediate-constant
-format.
-
-   For each machine architecture, the `config/MACHINE.h' file defines
-additional constraints.  These constraints are used by the compiler
-itself for instruction generation, as well as for `asm' statements;
-therefore, some of the constraints are not particularly interesting for
-`asm'.  The constraints are defined through these macros:
-
-`REG_CLASS_FROM_LETTER'
-     Register class constraints (usually lower case).
-
-`CONST_OK_FOR_LETTER_P'
-     Immediate constant constraints, for non-floating point constants of
-     word size or smaller precision (usually upper case).
-
-`CONST_DOUBLE_OK_FOR_LETTER_P'
-     Immediate constant constraints, for all floating point constants
-     and for constants of greater than word size precision (usually
-     upper case).
-
-`EXTRA_CONSTRAINT'
-     Special cases of registers or memory.  This macro is not required,
-     and is only defined for some machines.
-
-   Inspecting these macro definitions in the compiler source for your
-machine is the best way to be certain you have the right constraints.
-However, here is a summary of the machine-dependent constraints
-available on some particular machines.
-
-_ARM family--`arm.h'_
-
-    `f'
-          Floating-point register
-
-    `F'
-          One of the floating-point constants 0.0, 0.5, 1.0, 2.0, 3.0,
-          4.0, 5.0 or 10.0
-
-    `G'
-          Floating-point constant that would satisfy the constraint `F'
-          if it were negated
-
-    `I'
-          Integer that is valid as an immediate operand in a data
-          processing instruction.  That is, an integer in the range 0
-          to 255 rotated by a multiple of 2
-
-    `J'
-          Integer in the range -4095 to 4095
-
-    `K'
-          Integer that satisfies constraint `I' when inverted (ones
-          complement)
-
-    `L'
-          Integer that satisfies constraint `I' when negated (twos
-          complement)
-
-    `M'
-          Integer in the range 0 to 32
-
-    `Q'
-          A memory reference where the exact address is in a single
-          register (``m'' is preferable for `asm' statements)
-
-    `R'
-          An item in the constant pool
-
-    `S'
-          A symbol in the text segment of the current file
-
-_AMD 29000 family--`a29k.h'_
-
-    `l'
-          Local register 0
-
-    `b'
-          Byte Pointer (`BP') register
-
-    `q'
-          `Q' register
-
-    `h'
-          Special purpose register
-
-    `A'
-          First accumulator register
-
-    `a'
-          Other accumulator register
-
-    `f'
-          Floating point register
-
-    `I'
-          Constant greater than 0, less than 0x100
-
-    `J'
-          Constant greater than 0, less than 0x10000
-
-    `K'
-          Constant whose high 24 bits are on (1)
-
-    `L'
-          16-bit constant whose high 8 bits are on (1)
-
-    `M'
-          32-bit constant whose high 16 bits are on (1)
-
-    `N'
-          32-bit negative constant that fits in 8 bits
-
-    `O'
-          The constant 0x80000000 or, on the 29050, any 32-bit constant
-          whose low 16 bits are 0.
-
-    `P'
-          16-bit negative constant that fits in 8 bits
-
-    `G'
-    `H'
-          A floating point constant (in `asm' statements, use the
-          machine independent `E' or `F' instead)
-
-_AVR family--`avr.h'_
-
-    `l'
-          Registers from r0 to r15
-
-    `a'
-          Registers from r16 to r23
-
-    `d'
-          Registers from r16 to r31
-
-    `w'
-          Registers from r24 to r31.  These registers can be used in
-          `adiw' command
-
-    `e'
-          Pointer register (r26-r31)
-
-    `b'
-          Base pointer register (r28-r31)
-
-    `q'
-          Stack pointer register (SPH:SPL)
-
-    `t'
-          Temporary register r0
-
-    `x'
-          Register pair X (r27:r26)
-
-    `y'
-          Register pair Y (r29:r28)
-
-    `z'
-          Register pair Z (r31:r30)
-
-    `I'
-          Constant greater than -1, less than 64
-
-    `J'
-          Constant greater than -64, less than 1
-
-    `K'
-          Constant integer 2
-
-    `L'
-          Constant integer 0
-
-    `M'
-          Constant that fits in 8 bits
-
-    `N'
-          Constant integer -1
-
-    `O'
-          Constant integer 8, 16, or 24
-
-    `P'
-          Constant integer 1
-
-    `G'
-          A floating point constant 0.0
-
-_IBM RS6000--`rs6000.h'_
-
-    `b'
-          Address base register
-
-    `f'
-          Floating point register
-
-    `h'
-          `MQ', `CTR', or `LINK' register
-
-    `q'
-          `MQ' register
-
-    `c'
-          `CTR' register
-
-    `l'
-          `LINK' register
-
-    `x'
-          `CR' register (condition register) number 0
-
-    `y'
-          `CR' register (condition register)
-
-    `z'
-          `FPMEM' stack memory for FPR-GPR transfers
-
-    `I'
-          Signed 16-bit constant
-
-    `J'
-          Unsigned 16-bit constant shifted left 16 bits (use `L'
-          instead for `SImode' constants)
-
-    `K'
-          Unsigned 16-bit constant
-
-    `L'
-          Signed 16-bit constant shifted left 16 bits
-
-    `M'
-          Constant larger than 31
-
-    `N'
-          Exact power of 2
-
-    `O'
-          Zero
-
-    `P'
-          Constant whose negation is a signed 16-bit constant
-
-    `G'
-          Floating point constant that can be loaded into a register
-          with one instruction per word
-
-    `Q'
-          Memory operand that is an offset from a register (`m' is
-          preferable for `asm' statements)
-
-    `R'
-          AIX TOC entry
-
-    `S'
-          Constant suitable as a 64-bit mask operand
-
-    `T'
-          Constant suitable as a 32-bit mask operand
-
-    `U'
-          System V Release 4 small data area reference
-
-_Intel 386--`i386.h'_
-
-    `q'
-          `a', `b', `c', or `d' register
-
-    `A'
-          Specifies the `a' or `d' registers.  This is primarily useful
-          for 64-bit integer values intended to be returned with the `d'
-          register holding the most significant bits and the `a'
-          register holding the least significant bits.
-
-    `f'
-          Floating point register
-
-    `t'
-          First (top of stack) floating point register
-
-    `u'
-          Second floating point register
-
-    `a'
-          `a' register
-
-    `b'
-          `b' register
-
-    `c'
-          `c' register
-
-    `d'
-          `d' register
-
-    `D'
-          `di' register
-
-    `S'
-          `si' register
-
-    `I'
-          Constant in range 0 to 31 (for 32-bit shifts)
-
-    `J'
-          Constant in range 0 to 63 (for 64-bit shifts)
-
-    `K'
-          `0xff'
-
-    `L'
-          `0xffff'
-
-    `M'
-          0, 1, 2, or 3 (shifts for `lea' instruction)
-
-    `N'
-          Constant in range 0 to 255 (for `out' instruction)
-
-    `G'
-          Standard 80387 floating point constant
-
-_Intel 960--`i960.h'_
-
-    `f'
-          Floating point register (`fp0' to `fp3')
-
-    `l'
-          Local register (`r0' to `r15')
-
-    `b'
-          Global register (`g0' to `g15')
-
-    `d'
-          Any local or global register
-
-    `I'
-          Integers from 0 to 31
-
-    `J'
-          0
-
-    `K'
-          Integers from -31 to 0
-
-    `G'
-          Floating point 0
-
-    `H'
-          Floating point 1
-
-_MIPS--`mips.h'_
-
-    `d'
-          General-purpose integer register
-
-    `f'
-          Floating-point register (if available)
-
-    `h'
-          `Hi' register
-
-    `l'
-          `Lo' register
-
-    `x'
-          `Hi' or `Lo' register
-
-    `y'
-          General-purpose integer register
-
-    `z'
-          Floating-point status register
-
-    `I'
-          Signed 16-bit constant (for arithmetic instructions)
-
-    `J'
-          Zero
-
-    `K'
-          Zero-extended 16-bit constant (for logic instructions)
-
-    `L'
-          Constant with low 16 bits zero (can be loaded with `lui')
-
-    `M'
-          32-bit constant which requires two instructions to load (a
-          constant which is not `I', `K', or `L')
-
-    `N'
-          Negative 16-bit constant
-
-    `O'
-          Exact power of two
-
-    `P'
-          Positive 16-bit constant
-
-    `G'
-          Floating point zero
-
-    `Q'
-          Memory reference that can be loaded with more than one
-          instruction (`m' is preferable for `asm' statements)
-
-    `R'
-          Memory reference that can be loaded with one instruction (`m'
-          is preferable for `asm' statements)
-
-    `S'
-          Memory reference in external OSF/rose PIC format (`m' is
-          preferable for `asm' statements)
-
-_Motorola 680x0--`m68k.h'_
-
-    `a'
-          Address register
-
-    `d'
-          Data register
-
-    `f'
-          68881 floating-point register, if available
-
-    `x'
-          Sun FPA (floating-point) register, if available
-
-    `y'
-          First 16 Sun FPA registers, if available
-
-    `I'
-          Integer in the range 1 to 8
-
-    `J'
-          16-bit signed number
-
-    `K'
-          Signed number whose magnitude is greater than 0x80
-
-    `L'
-          Integer in the range -8 to -1
-
-    `M'
-          Signed number whose magnitude is greater than 0x100
-
-    `G'
-          Floating point constant that is not a 68881 constant
-
-    `H'
-          Floating point constant that can be used by Sun FPA
-
-_Motorola 68HC11 & 68HC12 families--`m68hc11.h'_
-
-    `a'
-          Register 'a'
-
-    `b'
-          Register 'b'
-
-    `d'
-          Register 'd'
-
-    `q'
-          An 8-bit register
-
-    `t'
-          Temporary soft register _.tmp
-
-    `u'
-          A soft register _.d1 to _.d31
-
-    `w'
-          Stack pointer register
-
-    `x'
-          Register 'x'
-
-    `y'
-          Register 'y'
-
-    `z'
-          Pseudo register 'z' (replaced by 'x' or 'y' at the end)
-
-    `A'
-          An address register: x, y or z
-
-    `B'
-          An address register: x or y
-
-    `D'
-          Register pair (x:d) to form a 32-bit value
-
-    `L'
-          Constants in the range -65536 to 65535
-
-    `M'
-          Constants whose 16-bit low part is zero
-
-    `N'
-          Constant integer 1 or -1
-
-    `O'
-          Constant integer 16
-
-    `P'
-          Constants in the range -8 to 2
-
-_SPARC--`sparc.h'_
-
-    `f'
-          Floating-point register that can hold 32- or 64-bit values.
-
-    `e'
-          Floating-point register that can hold 64- or 128-bit values.
-
-    `I'
-          Signed 13-bit constant
-
-    `J'
-          Zero
-
-    `K'
-          32-bit constant with the low 12 bits clear (a constant that
-          can be loaded with the `sethi' instruction)
-
-    `G'
-          Floating-point zero
-
-    `H'
-          Signed 13-bit constant, sign-extended to 32 or 64 bits
-
-    `Q'
-          Floating-point constant whose integral representation can be
-          moved into an integer register using a single sethi
-          instruction
-
-    `R'
-          Floating-point constant whose integral representation can be
-          moved into an integer register using a single mov instruction
-
-    `S'
-          Floating-point constant whose integral representation can be
-          moved into an integer register using a high/lo_sum
-          instruction sequence
-
-    `T'
-          Memory address aligned to an 8-byte boundary
-
-    `U'
-          Even register
-
-_TMS320C3x/C4x--`c4x.h'_
-
-    `a'
-          Auxiliary (address) register (ar0-ar7)
-
-    `b'
-          Stack pointer register (sp)
-
-    `c'
-          Standard (32-bit) precision integer register
-
-    `f'
-          Extended (40-bit) precision register (r0-r11)
-
-    `k'
-          Block count register (bk)
-
-    `q'
-          Extended (40-bit) precision low register (r0-r7)
-
-    `t'
-          Extended (40-bit) precision register (r0-r1)
-
-    `u'
-          Extended (40-bit) precision register (r2-r3)
-
-    `v'
-          Repeat count register (rc)
-
-    `x'
-          Index register (ir0-ir1)
-
-    `y'
-          Status (condition code) register (st)
-
-    `z'
-          Data page register (dp)
-
-    `G'
-          Floating-point zero
-
-    `H'
-          Immediate 16-bit floating-point constant
-
-    `I'
-          Signed 16-bit constant
-
-    `J'
-          Signed 8-bit constant
-
-    `K'
-          Signed 5-bit constant
-
-    `L'
-          Unsigned 16-bit constant
-
-    `M'
-          Unsigned 8-bit constant
-
-    `N'
-          Ones complement of unsigned 16-bit constant
-
-    `O'
-          High 16-bit constant (32-bit constant with 16 LSBs zero)
-
-    `Q'
-          Indirect memory reference with signed 8-bit or index register
-          displacement
-
-    `R'
-          Indirect memory reference with unsigned 5-bit displacement
-
-    `S'
-          Indirect memory reference with 1 bit or index register
-          displacement
-
-    `T'
-          Direct memory reference
-
-    `U'
-          Symbolic address
-
-_S/390 and zSeries--`s390.h'_
-
-    `a'
-          Address register (general purpose register except r0)
-
-    `d'
-          Data register (arbitrary general purpose register)
-
-    `f'
-          Floating-point register
-
-    `I'
-          Unsigned 8-bit constant (0-255)
-
-    `J'
-          Unsigned 12-bit constant (0-4095)
-
-    `K'
-          Signed 16-bit constant (-32768-32767)
-
-    `L'
-          Unsigned 16-bit constant (0-65535)
-
-    `Q'
-          Memory reference without index register
-
-    `S'
-          Symbolic constant suitable for use with the `larl' instruction
-
-_Xtensa--`xtensa.h'_
-
-    `a'
-          General-purpose 32-bit register
-
-    `b'
-          One-bit boolean register
-
-    `A'
-          MAC16 40-bit accumulator register
-
-    `I'
-          Signed 12-bit integer constant, for use in MOVI instructions
-
-    `J'
-          Signed 8-bit integer constant, for use in ADDI instructions
-
-    `K'
-          Integer constant valid for BccI instructions
-
-    `L'
-          Unsigned constant valid for BccUI instructions
 

@@ -31,14 +31,14 @@ Boston, MA 02111-1307, USA.  */
    suffix consisting of an atsign (@) followed by the number of bytes of 
    arguments */
 
-char *
+const char *
 gen_stdcall_suffix (decl)
   tree decl;
 {
   int total = 0;
   /* ??? This probably should use XSTR (XEXP (DECL_RTL (decl), 0), 0) instead
      of DECL_ASSEMBLER_NAME.  */
-  char *asmname = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
+  const char *const asmname = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
   char *newsym;
 
   if (TYPE_ARG_TYPES (TREE_TYPE (decl)))
@@ -68,7 +68,7 @@ gen_stdcall_suffix (decl)
 #if 0	
 /* Turn this back on when the linker is updated to handle grouped
    .data$ sections correctly. See corresponding note in i386/interix.h. 
-   MK. */
+   MK.  */
 
 /* Cover function for UNIQUE_SECTION.  */
 

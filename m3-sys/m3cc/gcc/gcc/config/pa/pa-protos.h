@@ -1,5 +1,5 @@
 /* Prototypes for pa.c functions used in the md file & elsewhere.
-   Copyright (C) 2000 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -19,13 +19,13 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #ifdef RTX_CODE
-/* Prototype function used in MACHINE_DEPENDENT_REORG macro. */
+/* Prototype function used in MACHINE_DEPENDENT_REORG macro.  */
 extern void pa_reorg PARAMS ((rtx));
 
-/* Prototype function used in various macros. */
+/* Prototype function used in various macros.  */
 extern int symbolic_operand PARAMS ((rtx, enum machine_mode));
 
-/* Used in insn-*.c. */
+/* Used in insn-*.c.  */
 extern int following_call PARAMS ((rtx));
 extern int function_label_operand PARAMS ((rtx, enum machine_mode));
 extern int lhs_lshift_cint_operand PARAMS ((rtx, enum machine_mode));
@@ -63,10 +63,10 @@ extern rtx legitimize_pic_address PARAMS ((rtx, enum machine_mode, rtx));
 extern struct rtx_def *gen_cmp_fp PARAMS ((enum rtx_code, rtx, rtx));
 extern void hppa_encode_label PARAMS ((rtx));
 extern int arith11_operand PARAMS ((rtx, enum machine_mode));
+extern int adddi3_operand PARAMS ((rtx, enum machine_mode));
 extern int symbolic_expression_p PARAMS ((rtx));
 extern int hppa_address_cost PARAMS ((rtx));
 extern int symbolic_memory_operand PARAMS ((rtx, enum machine_mode));
-extern int pa_adjust_cost PARAMS ((rtx, rtx, rtx, int));
 extern int pa_adjust_insn_length PARAMS ((rtx, int));
 extern int int11_operand PARAMS ((rtx, enum machine_mode));
 extern int reg_or_cint_move_operand PARAMS ((rtx, enum machine_mode));
@@ -84,6 +84,7 @@ extern int ior_operand PARAMS ((rtx, enum machine_mode));
 extern int arith32_operand PARAMS ((rtx, enum machine_mode));
 extern int uint32_operand PARAMS ((rtx, enum machine_mode));
 extern int reg_or_nonsymb_mem_operand PARAMS ((rtx, enum machine_mode));
+extern int reg_before_reload_operand PARAMS ((rtx, enum machine_mode));
 extern int reg_or_0_operand PARAMS ((rtx, enum machine_mode));
 extern int reg_or_0_or_nonsymb_mem_operand PARAMS ((rtx, enum machine_mode));
 extern int pre_cint_operand PARAMS ((rtx, enum machine_mode));
@@ -124,16 +125,17 @@ extern int eq_neq_comparison_operator PARAMS ((rtx, enum machine_mode));
 extern int insn_refs_are_delayed PARAMS ((rtx));
 #endif /* RTX_CODE */
 
-/* Prototype function used in macro CONST_OK_FOR_LETTER_P. */
+/* Prototype function used in macro ASM_OUTPUT_MI_THUNK.  */
+extern void pa_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+
+/* Prototype function used in macro CONST_OK_FOR_LETTER_P.  */
 extern int zdepi_cint_p PARAMS ((unsigned HOST_WIDE_INT));
 
 extern struct rtx_def *hppa_builtin_saveregs PARAMS ((void));
 
 extern void output_deferred_plabels PARAMS ((FILE *));
 extern void override_options PARAMS ((void));
-extern void output_ascii PARAMS ((FILE *, const unsigned char *, int));
-extern void output_function_prologue PARAMS ((FILE *, int));
-extern void output_function_epilogue PARAMS ((FILE *, int));
+extern void output_ascii PARAMS ((FILE *, const char *, int));
 extern int compute_frame_size PARAMS ((int, int *));
 extern int and_mask_p PARAMS ((unsigned HOST_WIDE_INT));
 extern int cint_ok_for_move PARAMS ((HOST_WIDE_INT));

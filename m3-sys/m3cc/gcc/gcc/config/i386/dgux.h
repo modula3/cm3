@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Intel 80x86 running DG/ux
-   Copyright (C) 1993, 1995, 1996, 1997, 1998, 2000
+   Copyright (C) 1993, 1995, 1996, 1997, 1998, 2000, 2001
    Free Software Foundation, Inc.
    Currently maintained by gcc@dg-rtp.dg.com.
 
@@ -24,10 +24,8 @@ Boston, MA 02111-1307, USA.  */
    few hacks
 */
 
-#include "i386/sysv4.h"
-
 #ifndef VERSION_INFO2
-#define VERSION_INFO2   "$Revision: 1.1.1.2 $"
+#define VERSION_INFO2   "$Revision: 1.1.1.3 $"
 #endif
 
 #ifndef VERSION_STRING
@@ -80,13 +78,18 @@ Boston, MA 02111-1307, USA.  */
 #undef  DBX_DEBUGGING_INFO
 #define DBX_DEBUGGING_INFO
 
+#undef  PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DWARF_DEBUG
 
-/* Override svr[34].h.  */
+/* Override svr[34].h.  Switch to the data section so that the coffsem
+   symbol isn't in the text section.  */
 #undef	ASM_FILE_START
 #define ASM_FILE_START(FILE) \
-  output_file_start (FILE, f_options, ARRAY_SIZE (f_options), \
-		     W_options, ARRAY_SIZE (W_options))
+  do { \
+    output_file_directive (FILE, main_input_filename); \
+    fprintf (FILE, "\t.version\t\"01.01\"\n"); \
+    data_section (); \
+  } while (0)
 
 /* ix86 abi specified type for wchar_t */
 
@@ -232,7 +235,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Must use data section for relocatable constants when pic.  */
 #undef SELECT_RTX_SECTION
-#define SELECT_RTX_SECTION(MODE,RTX)            \
+#define SELECT_RTX_SECTION(MODE,RTX,ALIGN)      \
 {                                               \
   if (flag_pic && symbolic_operand (RTX, VOIDmode)) \
     data_section ();                            \

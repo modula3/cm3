@@ -19,8 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "sparc/sparc.h"
-
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "-Dsparc -Dsparclite -Acpu=sparc -Amachine=sparc"
 
@@ -30,9 +28,8 @@ Boston, MA 02111-1307, USA.  */
 /* Enable app-regs and epilogue options.  Do not enable the fpu.  */
 
 #undef TARGET_DEFAULT
-#define TARGET_DEFAULT (MASK_APP_REGS + MASK_EPILOGUE)
+#define TARGET_DEFAULT MASK_APP_REGS
 
 /* US Software GOFAST library support.  */
-#include "gofast.h"
 #undef INIT_SUBTARGET_OPTABS
 #define INIT_SUBTARGET_OPTABS INIT_GOFAST_OPTABS

@@ -1,5 +1,5 @@
 /* Subroutines for assembler code output on the NS32000.
-   Copyright (C) 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Copyright (C) 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
    Free Software Foundation, Inc.
 
 This file is part of GNU CC.
@@ -35,6 +35,9 @@ Boston, MA 02111-1307, USA.  */
 #include "flags.h"
 #include "recog.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
+#include "toplev.h"
 
 #ifdef OSF_OS
 int ns32k_num_files = 0;
@@ -57,11 +60,403 @@ enum reg_class regclass_map[FIRST_PSEUDO_REGISTER] =
   FRAME_POINTER_REG, STACK_POINTER_REG
 };
 
-const char *const ns32k_out_reg_names[] = OUTPUT_REGISTER_NAMES;
+static const char *const ns32k_out_reg_names[] = OUTPUT_REGISTER_NAMES;
 
 static rtx gen_indexed_expr PARAMS ((rtx, rtx, rtx));
 static const char *singlemove_string PARAMS ((rtx *));
 static void move_tail PARAMS ((rtx[], int, int));
+static tree ns32k_handle_fntype_attribute PARAMS ((tree *, tree, tree, int, bool *));
+const struct attribute_spec ns32k_attribute_table[];
+static void ns32k_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void ns32k_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ATTRIBUTE_TABLE
+#define TARGET_ATTRIBUTE_TABLE ns32k_attribute_table
+
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\t.word\t"
+
+#ifdef ENCORE_ASM
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP "\t.double\t"
+#endif
+
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE ns32k_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE ns32k_output_function_epilogue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
+/* Generate the assembly code for function entry.  FILE is a stdio
+   stream to output the code to.  SIZE is an int: how many units of
+   temporary storage to allocate.
+
+   Refer to the array `regs_ever_live' to determine which registers to
+   save; `regs_ever_live[I]' is nonzero if register number I is ever
+   used in the function.  This function is responsible for knowing
+   which registers should not be saved even if used.  */
+
+/*
+ * The function prologue for the ns32k is fairly simple.
+ * If a frame pointer is needed (decided in reload.c ?) then
+ * we need assembler of the form
+ *
+ *  # Save the oldframe pointer, set the new frame pointer, make space
+ *  # on the stack and save any general purpose registers necessary
+ *
+ *  enter [<general purpose regs to save>], <local stack space>
+ *
+ *  movf  fn, tos    # Save any floating point registers necessary
+ *  .
+ *  .
+ *
+ * If a frame pointer is not needed we need assembler of the form
+ *
+ *  # Make space on the stack
+ *
+ *  adjspd <local stack space + 4>
+ *
+ *  # Save any general purpose registers necessary
+ *
+ *  save [<general purpose regs to save>]
+ *
+ *  movf  fn, tos    # Save any floating point registers necessary
+ *  .
+ *  .
+ */
+
+#if !defined (MERLIN_TARGET) && !defined (UTEK_ASM)
+
+#if defined(IMMEDIATE_PREFIX) && IMMEDIATE_PREFIX
+#define ADJSP(FILE, N) \
+        fprintf (FILE, "\tadjspd %c%d\n", IMMEDIATE_PREFIX, (N))
+#else
+#define ADJSP(FILE, N) \
+        fprintf (FILE, "\tadjspd %d\n", (N))
+#endif
+
+static void
+ns32k_output_function_prologue (file, size)
+     FILE *file;
+     HOST_WIDE_INT size;
+{
+  register int regno, g_regs_used = 0;
+  int used_regs_buf[8], *bufp = used_regs_buf;
+  int used_fregs_buf[17], *fbufp = used_fregs_buf;
+
+  for (regno = R0_REGNUM; regno < F0_REGNUM; regno++)
+    if (regs_ever_live[regno]
+	&& ! call_used_regs[regno])
+      {
+        *bufp++ = regno; g_regs_used++;
+      }
+  *bufp = -1;
+
+  for (; regno < FRAME_POINTER_REGNUM; regno++)
+    if (regs_ever_live[regno] && !call_used_regs[regno])
+      {
+        *fbufp++ = regno;
+      }
+  *fbufp = -1;
+
+  bufp = used_regs_buf;
+  if (frame_pointer_needed)
+    fprintf (file, "\tenter [");
+  else
+    {
+      if (size)
+        ADJSP (file, size + 4);
+      if (g_regs_used && g_regs_used > 4)
+        fprintf (file, "\tsave [");
+      else
+	{
+	  while (*bufp >= 0)
+            fprintf (file, "\tmovd r%d,tos\n", *bufp++);
+	  g_regs_used = 0;
+	}
+    }
+
+  while (*bufp >= 0)
+    {
+      fprintf (file, "r%d", *bufp++);
+      if (*bufp >= 0)
+	fputc (',', file);
+    }
+
+  if (frame_pointer_needed)
+    fprintf (file, "],%d\n", size);
+  else if (g_regs_used)
+    fprintf (file, "]\n");
+
+  fbufp = used_fregs_buf;
+  while (*fbufp >= 0)
+    {
+      if ((*fbufp & 1) || (fbufp[0] != fbufp[1] - 1))
+	fprintf (file, "\tmovf %s,tos\n", ns32k_out_reg_names[*fbufp++]);
+      else
+	{
+	  fprintf (file, "\tmovl %s,tos\n",
+		   ns32k_out_reg_names[fbufp[0]]);
+	  fbufp += 2;
+	}
+    }
+
+  if (flag_pic && current_function_uses_pic_offset_table)
+    {
+      fprintf (file, "\tsprd sb,tos\n");
+      if (TARGET_REGPARM)
+	{
+	  fprintf (file, "\taddr __GLOBAL_OFFSET_TABLE_(pc),tos\n");
+	  fprintf (file, "\tlprd sb,tos\n");
+	}
+      else
+	{
+	  fprintf (file, "\taddr __GLOBAL_OFFSET_TABLE_(pc),r0\n");
+	  fprintf (file, "\tlprd sb,r0\n");
+	}
+    }
+}
+
+#else /* MERLIN_TARGET || UTEK_ASM  */
+
+/* This differs from the standard one above in printing a bitmask
+   rather than a register list in the enter or save instruction.  */
+
+static void
+ns32k_output_function_prologue (file, size)
+     FILE *file;
+     HOST_WIDE_INT size;
+{
+  register int regno, g_regs_used = 0;
+  int used_regs_buf[8], *bufp = used_regs_buf;
+  int used_fregs_buf[8], *fbufp = used_fregs_buf;
+
+  for (regno = 0; regno < 8; regno++)
+    if (regs_ever_live[regno]
+	&& ! call_used_regs[regno])
+      {
+	*bufp++ = regno; g_regs_used++;
+      }
+  *bufp = -1;
+
+  for (; regno < 16; regno++)
+    if (regs_ever_live[regno] && !call_used_regs[regno]) {
+      *fbufp++ = regno;
+    }
+  *fbufp = -1;
+
+  bufp = used_regs_buf;
+  if (frame_pointer_needed)
+    fprintf (file, "\tenter ");
+  else if (g_regs_used)
+    fprintf (file, "\tsave ");
+
+  if (frame_pointer_needed || g_regs_used)
+    {
+      char mask = 0;
+      while (*bufp >= 0)
+	mask |= 1 << *bufp++;
+      fprintf (file, "$0x%x", (int) mask & 0xff);
+    }
+
+  if (frame_pointer_needed)
+#ifdef UTEK_ASM
+    fprintf (file, ",$%d\n", size);
+#else
+    fprintf (file, ",%d\n", size);
+#endif
+  else if (g_regs_used)
+    fprintf (file, "\n");
+
+  fbufp = used_fregs_buf;
+  while (*fbufp >= 0)
+    {
+      if ((*fbufp & 1) || (fbufp[0] != fbufp[1] - 1))
+	fprintf (file, "\tmovf f%d,tos\n", *fbufp++ - 8);
+      else
+	{
+	  fprintf (file, "\tmovl f%d,tos\n", fbufp[0] - 8);
+	  fbufp += 2;
+	}
+    }
+}
+
+#endif /* MERLIN_TARGET || UTEK_ASM  */
+
+/* This function generates the assembly code for function exit,
+   on machines that need it.
+
+   The function epilogue should not depend on the current stack pointer,
+   if EXIT_IGNORE_STACK is nonzero.  That doesn't apply here.
+
+   If a frame pointer is needed (decided in reload.c ?) then
+   we need assembler of the form
+
+    movf  tos, fn	# Restore any saved floating point registers
+    .
+    .
+
+    # Restore any saved general purpose registers, restore the stack
+    # pointer from the frame pointer, restore the old frame pointer.
+    exit [<general purpose regs to save>]
+
+   If a frame pointer is not needed we need assembler of the form
+    # Restore any general purpose registers saved
+
+    movf  tos, fn	# Restore any saved floating point registers
+    .
+    .
+    .
+    restore [<general purpose regs to save>]
+
+    # reclaim space allocated on stack
+
+    adjspd <-(local stack space + 4)> */
+
+#if !defined (MERLIN_TARGET) && !defined (UTEK_ASM)
+
+static void
+ns32k_output_function_epilogue (file, size)
+     FILE *file;
+     HOST_WIDE_INT size;
+{
+  register int regno, g_regs_used = 0, f_regs_used = 0;
+  int used_regs_buf[8], *bufp = used_regs_buf;
+  int used_fregs_buf[17], *fbufp = used_fregs_buf;
+
+  if (flag_pic && current_function_uses_pic_offset_table)
+    fprintf (file, "\tlprd sb,tos\n");
+
+  *fbufp++ = -2;
+  for (regno = F0_REGNUM; regno < FRAME_POINTER_REGNUM; regno++)
+    if (regs_ever_live[regno] && !call_used_regs[regno])
+      {
+	*fbufp++ = regno; f_regs_used++;
+      }
+  fbufp--;
+
+  for (regno = 0; regno < F0_REGNUM; regno++)
+    if (regs_ever_live[regno]
+	&& ! call_used_regs[regno])
+      {
+        *bufp++ = regno; g_regs_used++;
+      }
+
+  while (fbufp > used_fregs_buf)
+    {
+      if ((*fbufp & 1) && fbufp[0] == fbufp[-1] + 1)
+	{
+	  fprintf (file, "\tmovl tos,%s\n",
+		   ns32k_out_reg_names[fbufp[-1]]);
+	  fbufp -= 2;
+	}
+      else fprintf (file, "\tmovf tos,%s\n", ns32k_out_reg_names[*fbufp--]);
+    }
+
+  if (frame_pointer_needed)
+    fprintf (file, "\texit [");
+  else
+    {
+      if (g_regs_used && g_regs_used > 4)
+        fprintf (file, "\trestore [");
+      else
+        {
+	  while (bufp > used_regs_buf)
+            fprintf (file, "\tmovd tos,r%d\n", *--bufp);
+	  g_regs_used = 0;
+        }
+    }
+
+  while (bufp > used_regs_buf)
+    {
+      fprintf (file, "r%d", *--bufp);
+      if (bufp > used_regs_buf)
+	fputc (',', file);
+    }
+
+  if (g_regs_used || frame_pointer_needed)
+    fprintf (file, "]\n");
+
+  if (size && !frame_pointer_needed)
+    ADJSP (file, -(size + 4));
+
+  if (current_function_pops_args)
+    fprintf (file, "\tret %d\n", current_function_pops_args);
+  else
+    fprintf (file, "\tret 0\n");
+}
+
+#else /* MERLIN_TARGET || UTEK_ASM  */
+
+/* This differs from the standard one above in printing a bitmask
+   rather than a register list in the exit or restore instruction.  */
+
+static void
+ns32k_output_function_epilogue (file, size)
+     FILE *file;
+     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
+{
+  register int regno, g_regs_used = 0, f_regs_used = 0;
+  int used_regs_buf[8], *bufp = used_regs_buf;
+  int used_fregs_buf[8], *fbufp = used_fregs_buf;
+
+  *fbufp++ = -2;
+  for (regno = 8; regno < 16; regno++)
+    if (regs_ever_live[regno] && !call_used_regs[regno]) {
+      *fbufp++ = regno; f_regs_used++;
+    }
+  fbufp--;
+
+  for (regno = 0; regno < 8; regno++)
+    if (regs_ever_live[regno]
+	&& ! call_used_regs[regno])
+      {
+	*bufp++ = regno; g_regs_used++;
+      }
+
+  while (fbufp > used_fregs_buf)
+    {
+      if ((*fbufp & 1) && fbufp[0] == fbufp[-1] + 1)
+	{
+	  fprintf (file, "\tmovl tos,f%d\n", fbufp[-1] - 8);
+	  fbufp -= 2;
+	}
+      else fprintf (file, "\tmovf tos,f%d\n", *fbufp-- - 8);
+    }
+
+  if (frame_pointer_needed)
+    fprintf (file, "\texit ");
+  else if (g_regs_used)
+    fprintf (file, "\trestore ");
+
+  if (g_regs_used || frame_pointer_needed)
+    {
+      char mask = 0;
+
+      while (bufp > used_regs_buf)
+	{
+	  /* Utek assembler takes care of reversing this */
+	  mask |= 1 << *--bufp;
+	}
+      fprintf (file, "$0x%x\n", (int) mask & 0xff);
+    }
+
+#ifdef UTEK_ASM
+  if (current_function_pops_args)
+    fprintf (file, "\tret $%d\n", current_function_pops_args);
+  else
+    fprintf (file, "\tret $0\n");
+#else
+  if (current_function_pops_args)
+    fprintf (file, "\tret %d\n", current_function_pops_args);
+  else
+    fprintf (file, "\tret 0\n");
+#endif
+}
+
+#endif /* MERLIN_TARGET || UTEK_ASM  */
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE. */ 
 int
@@ -246,7 +641,7 @@ split_di (operands, num, lo_half, hi_half)
       else if (offsettable_memref_p (operands[num]))
 	{
 	  lo_half[num] = operands[num];
-	  hi_half[num] = adj_offsettable_operand (operands[num], 4);
+	  hi_half[num] = adjust_address (operands[num], SImode, 4);
 	}
       else
 	abort ();
@@ -316,14 +711,14 @@ output_move_double (operands)
   if (optype0 == REGOP)
     latehalf[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 1);
   else if (optype0 == OFFSOP)
-    latehalf[0] = adj_offsettable_operand (operands[0], 4);
+    latehalf[0] = adjust_address (operands[0], SImode, 4);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
     latehalf[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 1);
   else if (optype1 == OFFSOP)
-    latehalf[1] = adj_offsettable_operand (operands[1], 4);
+    latehalf[1] = adjust_address (operands[1], SImode, 4);
   else if (optype1 == CNSTOP)
     split_double (operands[1], &operands[1], &latehalf[1]);
   else
@@ -373,7 +768,7 @@ output_move_double (operands)
 	  xops[1] = operands[0];
 	  output_asm_insn ("addr %a0,%1", xops);
 	  operands[1] = gen_rtx_MEM (DImode, operands[0]);
-	  latehalf[1] = adj_offsettable_operand (operands[1], 4);
+	  latehalf[1] = adjust_address (operands[1], SImode, 4);
 	  /* The first half has the overlap, Do the late half first.  */
 	  output_asm_insn (singlemove_string (latehalf), latehalf);
 	  /* Then clobber.  */
@@ -414,23 +809,13 @@ move_tail (operands, bytes, offset)
 {
   if (bytes & 2)
     {
-      rtx src, dest;
-      dest = change_address (operands[0], HImode,
-			    plus_constant (XEXP (operands[0], 0), offset));
-      src = change_address (operands[1], HImode,
-			   plus_constant (XEXP (operands[1], 0), offset));
-      emit_move_insn (dest, src);
+      emit_move_insn (adjust_address (operands[0], HImode, offset),
+		      adjust_address (operands[1], HImode, offset));
       offset += 2;
     }
   if (bytes & 1)
-    {
-      rtx src, dest;
-      dest = change_address (operands[0], QImode,
-			    plus_constant (XEXP (operands[0], 0), offset));
-      src = change_address (operands[1], QImode,
-			   plus_constant (XEXP (operands[1], 0), offset));
-      emit_move_insn (dest, src);
-    }
+    emit_move_insn (adjust_address (operands[0], QImode, offset),
+		    adjust_address (operands[1], QImode, offset));
 }
 
 void
@@ -452,20 +837,16 @@ expand_block_move (operands)
   if (constp && bytes < 20)
     {
       int words = bytes >> 2;
+
       if (words)
 	{
 	  if (words < 3 || flag_unroll_loops)
 	    {
 	      int offset = 0;
+
 	      for (; words; words--, offset += 4)
-		{
-		  rtx src, dest;
-		  dest = change_address (operands[0], SImode,
-					plus_constant (XEXP (operands[0], 0), offset));
-		  src = change_address (operands[1], SImode,
-				       plus_constant (XEXP (operands[1], 0), offset));
-		  emit_move_insn (dest, src);
-		}
+		emit_move_insn (adjust_address (operands[0], SImode, offset),
+				adjust_address (operands[1], SImode, offset));
 	    }
 	  else
 	    {
@@ -633,58 +1014,39 @@ symbolic_reference_mentioned_p (op)
   return 0;
 }
 
-/* Return nonzero if IDENTIFIER with arguments ARGS is a valid machine specific
-   attribute for DECL.  The attributes in ATTRIBUTES have previously been
-   assigned to DECL.  */
+/* Table of machine-specific attributes.  */
 
-int
-ns32k_valid_decl_attribute_p (decl, attributes, identifier, args)
-     tree decl ATTRIBUTE_UNUSED;
-     tree attributes ATTRIBUTE_UNUSED;
-     tree identifier ATTRIBUTE_UNUSED;
-     tree args ATTRIBUTE_UNUSED;
+const struct attribute_spec ns32k_attribute_table[] =
 {
-  return 0;
-}
-
-/* Return nonzero if IDENTIFIER with arguments ARGS is a valid machine specific
-   attribute for TYPE.  The attributes in ATTRIBUTES have previously been
-   assigned to TYPE.  */
-
-int
-ns32k_valid_type_attribute_p (type, attributes, identifier, args)
-     tree type;
-     tree attributes ATTRIBUTE_UNUSED;
-     tree identifier;
-     tree args;
-{
-  if (TREE_CODE (type) != FUNCTION_TYPE
-      && TREE_CODE (type) != FIELD_DECL
-      && TREE_CODE (type) != TYPE_DECL)
-    return 0;
-
+  /* { name, min_len, max_len, decl_req, type_req, fn_type_req, handler } */
   /* Stdcall attribute says callee is responsible for popping arguments
      if they are not variable.  */
-  if (is_attribute_p ("stdcall", identifier))
-    return (args == NULL_TREE);
-
+  { "stdcall", 0, 0, false, true,  true,  ns32k_handle_fntype_attribute },
   /* Cdecl attribute says the callee is a normal C declaration */
-  if (is_attribute_p ("cdecl", identifier))
-    return (args == NULL_TREE);
+  { "cdecl",   0, 0, false, true,  true,  ns32k_handle_fntype_attribute },
+  { NULL,      0, 0, false, false, false, NULL }
+};
 
-  return 0;
-}
-
-/* Return 0 if the attributes for two types are incompatible, 1 if they
-   are compatible, and 2 if they are nearly compatible (which causes a
-   warning to be generated).  */
-
-int
-ns32k_comp_type_attributes (type1, type2)
-     tree type1 ATTRIBUTE_UNUSED;
-     tree type2 ATTRIBUTE_UNUSED;
+/* Handle an attribute requiring a FUNCTION_TYPE, FIELD_DECL or TYPE_DECL;
+   arguments as in struct attribute_spec.handler.  */
+static tree
+ns32k_handle_fntype_attribute (node, name, args, flags, no_add_attrs)
+     tree *node;
+     tree name;
+     tree args ATTRIBUTE_UNUSED;
+     int flags ATTRIBUTE_UNUSED;
+     bool *no_add_attrs;
 {
-  return 1;
+  if (TREE_CODE (*node) != FUNCTION_TYPE
+      && TREE_CODE (*node) != FIELD_DECL
+      && TREE_CODE (*node) != TYPE_DECL)
+    {
+      warning ("`%s' attribute only applies to functions",
+	       IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+
+  return NULL_TREE;
 }
 
 
@@ -787,7 +1149,7 @@ print_operand (file, x, code)
 	  {
 	    union { float f; long l; } uu;
 	    uu.f = u.d;
-	    fprintf (file, "0Fx%08x", uu.l);
+	    fprintf (file, "0Fx%08lx", uu.l);
 	  }
 #else
 	  fprintf (file, "0f%.20e", u.d); 
@@ -837,7 +1199,7 @@ print_operand_address (file, addr)
      register FILE *file;
      register rtx addr;
 {
-  static char scales[] = { 'b', 'w', 'd', 0, 'q', };
+  static const char scales[] = { 'b', 'w', 'd', 0, 'q', };
   rtx offset, base, indexexp, tmp;
   int scale;
   extern int flag_pic;

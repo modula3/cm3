@@ -32,17 +32,18 @@ Boston, MA 02111-1307, USA.  */
 
 #define ASM_SHORT "\t.value\t"
 #define ASM_LONG "\t.long\t"
+#define ASM_QUAD "\t.quad\t"  /* Should not be used for 32bit compilation.  */
 
 /* How to output an ASCII string constant.  */
 
-#define ASM_OUTPUT_ASCII(FILE, p, size) \
+#define ASM_OUTPUT_ASCII(FILE, PTR, SIZE)			\
 do								\
-{ int i = 0; 							\
-  while (i < (size))						\
+{ size_t i = 0, limit = (SIZE); 				\
+  while (i < limit)						\
     { if (i%10 == 0) { if (i!=0) fprintf ((FILE), "\n");	\
-		       fprintf ((FILE), "%s", ASM_BYTE_OP); }	\
+		       fputs ("\t.byte\t", (FILE)); }		\
       else fprintf ((FILE), ",");				\
-	fprintf ((FILE), "0x%x", ((p)[i++] & 0377)) ;}		\
+	fprintf ((FILE), "0x%x", ((PTR)[i++] & 0377)) ;}	\
       fprintf ((FILE), "\n");					\
 } while (0)
 
@@ -52,7 +53,7 @@ do								\
 #define ASM_FILE_START(FILE)						\
   do {									\
 	output_file_directive (FILE, main_input_filename);		\
-	if (target_flags & MASK_INTEL_SYNTAX)				\
+	if (ix86_asm_dialect == ASM_INTEL)				\
 	  fputs ("\t.intel_syntax\n", FILE);				\
   } while (0)
 
@@ -90,7 +91,7 @@ do								\
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(BUF,PREFIX,NUMBER)	\
-  sprintf ((BUF), "%s%s%d", LOCAL_LABEL_PREFIX, (PREFIX), (NUMBER))
+  sprintf ((BUF), "%s%s%ld", LOCAL_LABEL_PREFIX, (PREFIX), (long)(NUMBER))
 
 /* This is how to output an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
@@ -99,7 +100,7 @@ do								\
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
   fprintf (FILE, "%s%s%d:\n", LOCAL_LABEL_PREFIX, PREFIX, NUM)
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""

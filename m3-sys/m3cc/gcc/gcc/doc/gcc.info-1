@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -41,40 +38,31 @@ File: gcc.info,  Node: Top,  Next: G++ and GCC,  Up: (DIR)
 Introduction
 ************
 
-   This manual documents how to run, install and port the GNU compiler,
-as well as its new features and incompatibilities, and how to report
-bugs.  It corresponds to GCC version 3.0.
+   This manual documents how to use the GNU compilers, as well as their
+features and incompatibilities, and how to report bugs.  It corresponds
+to GCC version 3.1.  The internals of the GNU compilers, including how
+to port them to new targets and some information about how to write
+front ends for new languages, are documented in a separate manual.
+*Note Introduction: (gccint)Top.
 
 * Menu:
-
 
 * G++ and GCC::     You can compile C or C++ programs.
 * Standards::       Language standards supported by GCC.
 * Invoking GCC::    Command options supported by `gcc'.
-* Installation::    How to configure, compile and install GCC.
+* C Implementation:: How GCC implements the ISO C specification.
 * C Extensions::    GNU extensions to the C language family.
 * C++ Extensions::  GNU extensions to the C++ language.
-* Objective C::     GNU Objective-C runtime features.
+* Objective-C::     GNU Objective-C runtime features.
 * Gcov::	    gcov: a GCC test coverage program.
-* Trouble::         If you have trouble installing GCC.
+* Trouble::         If you have trouble using GCC.
 * Bugs::            How, why and where to report bugs.
 * Service::         How to find suppliers of support for GCC.
 * Contributing::    How to contribute to testing and developing GCC.
 * VMS::             Using GCC on VMS.
-* Makefile::        Additional Makefile and configure information.
-
-* Portability::     Goals of GCC's portability features.
-* Interface::       Function-call interface of GCC output.
-* Passes::          Order of passes, what they do, and what each file is for.
-* Trees::           The source representation used by the C and C++ front ends.
-* RTL::             The intermediate representation that most passes work on.
-* Machine Desc::    How to write machine description instruction patterns.
-* Target Macros::   How to write the machine description C macros.
-* Config::          Writing the `xm-MACHINE.h' file.
-* Fragments::       Writing the `t-TARGET' and `x-HOST' files.
 
 * Funding::         How to help assure funding for free software.
-* GNU/Linux::       Linux and the GNU Project
+* GNU Project::     The GNU Project and GNU/Linux.
 
 * Copying::         GNU General Public License says
                      how you can copy and share GCC.
@@ -87,14 +75,14 @@ bugs.  It corresponds to GCC version 3.0.
 
 File: gcc.info,  Node: G++ and GCC,  Next: Standards,  Prev: Top,  Up: Top
 
-Compile C, C++, Objective C, Fortran, Java
-******************************************
+Compile C, C++, Objective-C, Ada, Fortran, or Java
+**************************************************
 
-   Several versions of the compiler (C, C++, Objective C, Fortran,
-Java) are integrated; this is why we use the name "GNU Compiler
+   Several versions of the compiler (C, C++, Objective-C, Ada, Fortran,
+and Java) are integrated; this is why we use the name "GNU Compiler
 Collection".  GCC can compile programs written in any of these
-languages.  The Fortran and Java compilers are described in separate
-manuals.
+languages.  The Ada, Fortran, and Java compilers are described in
+separate manuals.
 
    "GCC" is a common shorthand term for the GNU Compiler Collection.
 This is both the most general name for the compiler, and the name used
@@ -106,16 +94,19 @@ formerly stood for "GNU C Compiler").
 it "GCC" no matter what the language context; however, the term "G++"
 is more useful when the emphasis is on compiling C++ programs.
 
+   Similarly, when we talk about Ada compilation, we usually call the
+compiler "GNAT", for the same reasons.
+
    We use the name "GCC" to refer to the compilation system as a whole,
 and more specifically to the language-independent part of the compiler.
 For example, we refer to the optimization options as affecting the
 behavior of "GCC" or sometimes just "the compiler".
 
-   Front ends for other languages, such as Ada 95 and Pascal exist but
+   Front ends for other languages, such as Mercury and Pascal exist but
 have not yet been integrated into GCC.  These front ends, like that for
 C++, are built in subdirectories of GCC and link to it.  The result is
 an integrated compiler that can compile programs written in C, C++,
-Objective C, or any of the languages for which you have installed front
+Objective-C, or any of the languages for which you have installed front
 ends.
 
    In this manual, we only discuss the options for the C, Objective-C,
@@ -175,9 +166,13 @@ required diagnostics).
    A new edition of the ISO C standard was published in 1999 as ISO/IEC
 9899:1999, and is commonly known as "C99".  GCC has incomplete support
 for this standard version; see
-`http://gcc.gnu.org/gcc-3.0/c99status.html' for details.  To select this
+`http://gcc.gnu.org/gcc-3.1/c99status.html' for details.  To select this
 standard, use `-std=c99' or `-std=iso9899:1999'.  (While in
 development, drafts of this standard version were referred to as "C9X".)
+
+   Errors in the 1999 ISO C standard were corrected in a Technical
+Corrigendum published in 2001.  GCC does not support the uncorrected
+version.
 
    GCC also has some limited support for traditional (pre-ISO) C with
 the `-traditional' option.  This support may be of use for compiling
@@ -225,15 +220,24 @@ defined in the standard.  To make it act as a conforming freestanding
 implementation for a freestanding environment, use the option
 `-ffreestanding'; it will then define `__STDC_HOSTED__' to `0' and not
 make assumptions about the meanings of function names from the standard
-library.  To build an OS kernel, you may well still need to make your
-own arrangements for linking and startup.  *Note Options Controlling C
-Dialect: C Dialect Options.
+library, with exceptions noted below.  To build an OS kernel, you may
+well still need to make your own arrangements for linking and startup.
+*Note Options Controlling C Dialect: C Dialect Options.
 
    GCC does not provide the library facilities required only of hosted
 implementations, nor yet all the facilities required by C99 of
 freestanding implementations; to use the facilities of a hosted
 environment, you will need to find them elsewhere (for example, in the
 GNU C library).  *Note Standard Libraries: Standard Libraries.
+
+   Most of the compiler support routines used by GCC are present in
+`libgcc', but there are a few exceptions.  GCC requires the
+freestanding environment provide `memcpy', `memmove', `memset' and
+`memcmp'.  Some older ports of GCC are configured to use the BSD
+`bcopy', `bzero' and `bcmp' functions instead, but this is deprecated
+for new ports.  Finally, if `__builtin_trap' is used, and the target
+does not implement the `trap' pattern, then GCC will emit a call to
+`abort'.
 
    For references to Technical Corrigenda, Rationale documents and
 information concerning the history of C that is available online, see
@@ -247,6 +251,9 @@ recent version, while `http://www.toodarkpark.org/computers/objc/' is
 an older example.  `http://www.gnustep.org' includes useful information
 as well.
 
+   *Note GNAT Reference Manual: (gnat_rm)Top, for information on
+standard conformance and compatibility of the Ada compiler.
+
    *Note The GNU Fortran Language: (g77)Language, for details of the
 Fortran language supported by GCC.
 
@@ -254,7 +261,7 @@ Fortran language supported by GCC.
 details of compatibility between `gcj' and the Java Platform.
 
 
-File: gcc.info,  Node: Invoking GCC,  Next: Installation,  Prev: Standards,  Up: Top
+File: gcc.info,  Node: Invoking GCC,  Next: C Implementation,  Prev: Standards,  Up: Top
 
 GCC Command Options
 *******************
@@ -338,14 +345,14 @@ are in the following sections.
 _Overall Options_
      *Note Options Controlling the Kind of Output: Overall Options.
           -c  -S  -E  -o FILE  -pipe  -pass-exit-codes  -x LANGUAGE 
-          -v  --target-help  --help
+          -v  -###  --target-help  --help
 
 _C Language Options_
      *Note Options Controlling C Dialect: C Dialect Options.
           -ansi  -std=STANDARD  -aux-info FILENAME 
-          -fno-asm  -fno-builtin 
+          -fno-asm  -fno-builtin -fno-builtin-FUNCTION 
           -fhosted  -ffreestanding 
-          -trigraphs  -traditional  -traditional-cpp 
+          -trigraphs  -no-integrated-cpp  -traditional  -traditional-cpp 
           -fallow-single-precision  -fcond-mismatch 
           -fsigned-bitfields  -fsigned-char 
           -funsigned-bitfields  -funsigned-char 
@@ -365,7 +372,7 @@ _C++ Language Options_
           -fno-nonansi-builtins  -fno-operator-names 
           -fno-optional-diags  -fpermissive 
           -frepo  -fno-rtti  -fstats  -ftemplate-depth-N 
-          -fuse-cxa-atexit  -fno-weak  -nostdinc++ 
+          -fuse-cxa-atexit  -fvtable-gc  -fno-weak  -nostdinc++ 
           -fno-default-inline  -Wctor-dtor-privacy 
           -Wnon-virtual-dtor  -Wreorder 
           -Weffc++  -Wno-deprecated 
@@ -391,17 +398,18 @@ _Warning Options_
           -fsyntax-only  -pedantic  -pedantic-errors 
           -w  -W  -Wall  -Waggregate-return 
           -Wcast-align  -Wcast-qual  -Wchar-subscripts  -Wcomment 
-          -Wconversion  -Wdisabled-optimization -Werror 
+          -Wconversion  -Wno-deprecated-declarations 
+          -Wdisabled-optimization  -Wdiv-by-zero  -Werror 
           -Wfloat-equal  -Wformat  -Wformat=2 
           -Wformat-nonliteral  -Wformat-security 
-          -Wid-clash-LEN  -Wimplicit -Wimplicit-int 
+          -Wimplicit  -Wimplicit-int  
           -Wimplicit-function-declaration 
           -Werror-implicit-function-declaration 
           -Wimport  -Winline 
           -Wlarger-than-LEN  -Wlong-long 
           -Wmain  -Wmissing-braces  -Wmissing-declarations 
           -Wmissing-format-attribute  -Wmissing-noreturn 
-          -Wmultichar  -Wno-format-extra-args -Wno-format-y2k 
+          -Wmultichar  -Wno-format-extra-args  -Wno-format-y2k 
           -Wno-import  -Wpacked  -Wpadded 
           -Wparentheses  -Wpointer-arith  -Wredundant-decls 
           -Wreturn-type  -Wsequence-point  -Wshadow 
@@ -417,14 +425,15 @@ _C-only Warning Options_
 
 _Debugging Options_
      *Note Options for Debugging Your Program or GCC: Debugging Options.
-          -a  -ax  -dLETTERS  -dumpspecs  -dumpmachine  -dumpversion 
+          -dLETTERS  -dumpspecs  -dumpmachine  -dumpversion 
           -fdump-unnumbered -fdump-translation-unit[-N] 
           -fdump-class-hierarchy[-N] 
-          -fdump-ast-original[-N] -fdump-ast-optimized[-N] 
+          -fdump-tree-original[-N] -fdump-tree-optimized[-N] 
+          -fdump-tree-inlined[-N] 
           -fmem-report  -fpretend-float 
           -fprofile-arcs  -ftest-coverage  -ftime-report 
           -g  -gLEVEL  -gcoff  -gdwarf  -gdwarf-1  -gdwarf-1+  -gdwarf-2 
-          -ggdb  -gstabs  -gstabs+  -gxcoff  -gxcoff+ 
+          -ggdb  -gstabs  -gstabs+  -gvms  -gxcoff  -gxcoff+ 
           -p  -pg  -print-file-name=LIBRARY  -print-libgcc-file-name 
           -print-multi-directory  -print-multi-lib 
           -print-prog-name=PROGRAM  -print-search-dirs  -Q 
@@ -434,22 +443,24 @@ _Optimization Options_
      *Note Options that Control Optimization: Optimize Options.
           -falign-functions=N  -falign-jumps=N 
           -falign-labels=N  -falign-loops=N  
-          -fbranch-probabilities  -fcaller-saves 
-          -fcse-follow-jumps  -fcse-skip-blocks  -fdata-sections  -fdce 
+          -fbranch-probabilities  -fcaller-saves -fcprop-registers 
+          -fcse-follow-jumps  -fcse-skip-blocks  -fdata-sections 
           -fdelayed-branch  -fdelete-null-pointer-checks 
           -fexpensive-optimizations  -ffast-math  -ffloat-store 
-          -fforce-addr  -fforce-mem  -ffunction-sections  -fgcse  
+          -fforce-addr  -fforce-mem  -ffunction-sections 
+          -fgcse  -fgcse-lm  -fgcse-sm 
           -finline-functions  -finline-limit=N  -fkeep-inline-functions 
-          -fkeep-static-consts  -fmove-all-movables 
-          -fno-default-inline  -fno-defer-pop 
+          -fkeep-static-consts  -fmerge-constants  -fmerge-all-constants 
+          -fmove-all-movables  -fno-default-inline  -fno-defer-pop 
           -fno-function-cse  -fno-guess-branch-probability 
           -fno-inline  -fno-math-errno  -fno-peephole  -fno-peephole2 
+          -funsafe-math-optimizations -fno-trapping-math 
           -fomit-frame-pointer  -foptimize-register-move 
-          -foptimize-sibling-calls  -freduce-all-givs 
-          -fregmove  -frename-registers 
+          -foptimize-sibling-calls  -fprefetch-loop-arrays 
+          -freduce-all-givs -fregmove  -frename-registers 
           -frerun-cse-after-loop  -frerun-loop-opt 
           -fschedule-insns  -fschedule-insns2 
-          -fsingle-precision-constant  -fssa 
+          -fsingle-precision-constant  -fssa -fssa-ccp -fssa-dce 
           -fstrength-reduce  -fstrict-aliasing  -fthread-jumps  -ftrapv 
           -funroll-all-loops  -funroll-loops  
           --param NAME=VALUE
@@ -489,9 +500,10 @@ _Target Options_
 
 _Machine Dependent Options_
      *Note Hardware Models and Configurations: Submodel Options.
+
      _M680x0 Options_
           -m68000  -m68020  -m68020-40  -m68020-60  -m68030  -m68040 
-          -m68060  -mcpu32 -m5200  -m68881  -mbitfield  -mc68000  -mc68020   
+          -m68060  -mcpu32  -m5200  -m68881  -mbitfield  -mc68000  -mc68020   
           -mfpa  -mnobitfield  -mrtd  -mshort  -msoft-float  -mpcrel 
           -malign-int  -mstrict-align
 
@@ -508,10 +520,10 @@ _Machine Dependent Options_
           -mcmodel=CODE-MODEL 
           -m32  -m64 
           -mapp-regs  -mbroken-saverestore  -mcypress 
-          -mepilogue  -mfaster-structs -mflat 
+          -mfaster-structs  -mflat 
           -mfpu  -mhard-float  -mhard-quad-float 
           -mimpure-text  -mlive-g0  -mno-app-regs 
-          -mno-epilogue  -mno-faster-structs  -mno-flat  -mno-fpu 
+          -mno-faster-structs  -mno-flat  -mno-fpu 
           -mno-impure-text  -mno-stack-bias  -mno-unaligned-doubles 
           -msoft-float  -msoft-quad-float  -msparclite  -mstack-bias 
           -msupersparc  -munaligned-doubles  -mv8
@@ -563,7 +575,7 @@ _Machine Dependent Options_
           -mno-crt0  -mrelax
 
      _M32R/D Options_
-          -mcode-model=MODEL-TYPE  -msdata=SDATA-TYPE 
+          -m32rx -m32r -mcode-model=MODEL-TYPE  -msdata=SDATA-TYPE 
           -G NUM
 
      _M88K Options_
@@ -583,20 +595,24 @@ _Machine Dependent Options_
           -mtune=CPU-TYPE 
           -mpower  -mno-power  -mpower2  -mno-power2 
           -mpowerpc  -mpowerpc64  -mno-powerpc 
+          -maltivec -mno-altivec 
           -mpowerpc-gpopt  -mno-powerpc-gpopt 
           -mpowerpc-gfxopt  -mno-powerpc-gfxopt 
           -mnew-mnemonics  -mold-mnemonics 
-          -mfull-toc   -mminimal-toc  -mno-fop-in-toc  -mno-sum-in-toc 
-          -m64  -m32  -mxl-call  -mno-xl-call  -mthreads  -mpe 
+          -mfull-toc   -mminimal-toc  -mno-fp-in-toc  -mno-sum-in-toc 
+          -m64  -m32  -mxl-call  -mno-xl-call  -mpe 
           -msoft-float  -mhard-float  -mmultiple  -mno-multiple 
           -mstring  -mno-string  -mupdate  -mno-update 
           -mfused-madd  -mno-fused-madd  -mbit-align  -mno-bit-align 
           -mstrict-align  -mno-strict-align  -mrelocatable 
           -mno-relocatable  -mrelocatable-lib  -mno-relocatable-lib 
           -mtoc  -mno-toc -mlittle  -mlittle-endian  -mbig  -mbig-endian 
-          -mcall-aix -mcall-sysv -mcall-netbsd -mprototype  -mno-prototype 
+          -mcall-aix -mcall-sysv -mcall-netbsd 
+          -maix-struct-return -msvr4-struct-return
+          -mabi=altivec -mabi=no-altivec 
+          -mprototype  -mno-prototype 
           -msim  -mmvme  -mads  -myellowknife  -memb -msdata 
-          -msdata=OPT  -mvxworks -G NUM
+          -msdata=OPT  -mvxworks -G NUM -pthread
 
      _RT Options_
           -mcall-lib-mul  -mfp-arg-in-fpregs  -mfp-arg-in-gregs 
@@ -604,9 +620,10 @@ _Machine Dependent Options_
           -mminimum-fp-blocks  -mnohc-struct-return
 
      _MIPS Options_
-          -mabicalls  -mcpu=CPU-TYPE 
-          -membedded-data  -muninit-const-in-rodata 
-          -membedded-pic  -mfp32  -mfp64  -mgas  -mgp32  -mgp64 
+          -mabicalls -march=CPU-TYPE -mtune=CPU=TYPE 
+          -mcpu=CPU-TYPE -membedded-data  -muninit-const-in-rodata 
+          -membedded-pic  -mfp32  -mfp64  -mfused-madd  -mno-fused-madd 
+          -mgas  -mgp32  -mgp64 
           -mgpopt  -mhalf-pic  -mhard-float  -mint64  -mips1 
           -mips2  -mips3  -mips4  -mlong64  -mlong32  -mlong-calls  -mmemcpy 
           -mmips-as  -mmips-tfile  -mno-abicalls 
@@ -617,30 +634,31 @@ _Machine Dependent Options_
           -m4650  -msingle-float  -mmad 
           -mstats  -EL  -EB  -G NUM  -nocpp 
           -mabi=32  -mabi=n32  -mabi=64  -mabi=eabi 
-          -mfix7000  -mno-crt0
+          -mfix7000  -mno-crt0 -mflush-func=FUNC -mno-flush-func
 
-     _i386 Options_
-          -mcpu=CPU-TYPE  -march=CPU-TYPE 
-          -mintel-syntax -mieee-fp  -mno-fancy-math-387 
+     _i386 and x86-64 Options_
+          -mcpu=CPU-TYPE  -march=CPU-TYPE -mfpmath=UNIT 
+          -masm=DIALECT  -mno-fancy-math-387 
           -mno-fp-ret-in-387  -msoft-float  -msvr3-shlib 
           -mno-wide-multiply  -mrtd  -malign-double 
-          -mreg-alloc=LIST  -mregparm=NUM 
-          -malign-jumps=NUM  -malign-loops=NUM 
-          -malign-functions=NUM  -mpreferred-stack-boundary=NUM 
+          -mpreferred-stack-boundary=NUM 
+          -mmmx  -msse -msse2 -msse-math -m3dnow 
           -mthreads  -mno-align-stringops  -minline-all-stringops 
           -mpush-args  -maccumulate-outgoing-args  -m128bit-long-double 
-          -m96bit-long-double  -momit-leaf-frame-pointer
+          -m96bit-long-double  -mregparm=NUM  -momit-leaf-frame-pointer 
+          -mno-red-zone
+          -m32 -m64
 
      _HPPA Options_
           -march=ARCHITECTURE-TYPE 
           -mbig-switch  -mdisable-fpregs  -mdisable-indexing 
-          -mfast-indirect-calls -mgas  -mjump-in-delay 
+          -mfast-indirect-calls  -mgas  -mjump-in-delay 
           -mlong-load-store  -mno-big-switch  -mno-disable-fpregs 
           -mno-disable-indexing  -mno-fast-indirect-calls  -mno-gas 
           -mno-jump-in-delay  -mno-long-load-store 
           -mno-portable-runtime  -mno-soft-float 
           -mno-space-regs  -msoft-float  -mpa-risc-1-0 
-          -mpa-risc-1-1  -mpa-risc-2-0 -mportable-runtime 
+          -mpa-risc-1-1  -mpa-risc-2-0  -mportable-runtime 
           -mschedule=CPU-TYPE  -mspace-regs
 
      _Intel 960 Options_
@@ -654,14 +672,18 @@ _Machine Dependent Options_
           -mtail-call
 
      _DEC Alpha Options_
-          -mfp-regs  -mno-fp-regs  -mno-soft-float  -msoft-float 
-          -malpha-as  -mgas 
+          -mno-fp-regs  -msoft-float  -malpha-as  -mgas 
           -mieee  -mieee-with-inexact  -mieee-conformant 
           -mfp-trap-mode=MODE  -mfp-rounding-mode=MODE 
           -mtrap-precision=MODE  -mbuild-constants 
-          -mcpu=CPU-TYPE 
-          -mbwx  -mno-bwx  -mcix  -mno-cix  -mmax  -mno-max 
+          -mcpu=CPU-TYPE  -mtune=CPU-TYPE 
+          -mbwx  -mmax  -mfix  -mcix 
+          -mfloat-vax  -mfloat-ieee 
+          -mexplicit-relocs  -msmall-data  -mlarge-data 
           -mmemory-latency=TIME
+
+     _DEC Alpha/VMS Options_
+          -mvms-return-codes
 
      _Clipper Options_
           -mc300  -mc400
@@ -672,6 +694,9 @@ _Machine Dependent Options_
      _SH Options_
           -m1  -m2  -m3  -m3e 
           -m4-nofpu  -m4-single-only  -m4-single  -m4 
+          -m5-64media -m5-64media-nofpu 
+          -m5-32media -m5-32media-nofpu 
+          -m5-compact -m5-compact-nofpu 
           -mb  -ml  -mdalign  -mrelax 
           -mbigtable  -mfmovd  -mhitachi  -mnomacsave 
           -mieee  -misize  -mpadstruct  -mspace 
@@ -699,7 +724,7 @@ _Machine Dependent Options_
 
      _NS32K Options_
           -m32032  -m32332  -m32532  -m32081  -m32381 
-          -mmult-add  -mnomult-add -msoft-float  -mrtd  -mnortd 
+          -mmult-add  -mnomult-add  -msoft-float  -mrtd  -mnortd 
           -mregparam  -mnoregparam  -msb  -mnosb 
           -mbitfield  -mnobitfield  -mhimem  -mnohimem
 
@@ -708,11 +733,17 @@ _Machine Dependent Options_
           -mcall-prologues  -mno-tablejump  -mtiny-stack
 
      _MCore Options_
-          -mhardlit  -mno-hardlit  -mdiv  -mno-div  -mrelax-immediates  
+          -mhardlit  -mno-hardlit  -mdiv  -mno-div  -mrelax-immediates 
           -mno-relax-immediates  -mwide-bitfields  -mno-wide-bitfields 
           -m4byte-functions  -mno-4byte-functions  -mcallgraph-data 
           -mno-callgraph-data  -mslow-bytes  -mno-slow-bytes  -mno-lsim 
           -mlittle-endian  -mbig-endian  -m210  -m340  -mstack-increment
+
+     _MMIX Options_
+          -mlibfuncs -mno-libfuncs -mepsilon -mno-epsilon -mabi=gnu 
+          -mabi=mmixware -mzero-extend -mknuthdiv -mtoplevel-symbols 
+          -melf -mbranch-predict -mno-branch-predict -mbase-addresses 
+          -mno-base-addresses
 
      _IA-64 Options_
           -mbig-endian  -mlittle-endian  -mgnu-as  -mgnu-ld  -mno-pic 
@@ -721,10 +752,33 @@ _Machine Dependent Options_
           -minline-divide-max-throughput  -mno-dwarf2-asm 
           -mfixed-range=REGISTER-RANGE
 
+     _D30V Options_
+          -mextmem  -mextmemory  -monchip  -mno-asm-optimize  -masm-optimize 
+          -mbranch-cost=N -mcond-exec=N
+
      _S/390 and zSeries Options_
           -mhard-float  -msoft-float  -mbackchain  -mno-backchain 
           -msmall-exec  -mno-small-exec  -mmvcle -mno-mvcle 
           -m64 -m31 -mdebug -mno-debug
+
+     _CRIS Options_
+          -mcpu=CPU -march=CPU -mtune=CPU 
+          -mmax-stack-frame=N -melinux-stacksize=N 
+          -metrax4 -metrax100 -mpdebug -mcc-init -mno-side-effects 
+          -mstack-align -mdata-align -mconst-align 
+          -m32-bit -m16-bit -m8-bit -mno-prologue-epilogue -mno-gotplt 
+          -melf -maout -melinux -mlinux -sim -sim2
+
+     _PDP-11 Options_
+          -mfpu  -msoft-float  -mac0  -mno-ac0  -m40  -m45  -m10 
+          -mbcopy  -mbcopy-builtin  -mint32  -mno-int16 
+          -mint16  -mno-int32  -mfloat32  -mno-float64 
+          -mfloat64  -mno-float32  -mabshi  -mno-abshi 
+          -mbranch-expensive  -mbranch-cheap 
+          -msplit  -mno-split  -munix-asm  -mdec-asm
+
+     _Xstormy16 Options_
+          -msim
 
      _Xtensa Options_
           -mbig-endian -mlittle-endian 
@@ -748,8 +802,8 @@ _Code Generation Options_
           -fcall-saved-REG  -fcall-used-REG 
           -ffixed-REG -fexceptions 
           -fnon-call-exceptions  -funwind-tables 
+          -fasynchronous-unwind-tables 
           -finhibit-size-directive  -finstrument-functions 
-          -fcheck-memory-usage  -fprefix-function-name 
           -fno-common  -fno-ident  -fno-gnu-linker 
           -fpcc-struct-return  -fpic  -fPIC 
           -freg-struct-return  -fshared-data  -fshort-enums 
@@ -844,6 +898,17 @@ of compilation is done:
      *Note Options Controlling the Kind of Output: (g77)Overall
      Options, for more details of the handling of Fortran input files.
 
+`FILE.ads'
+     Ada source code file which contains a library unit declaration (a
+     declaration of a package, subprogram, or generic, or a generic
+     instantiation), or a library unit renaming declaration (a package,
+     generic, or subprogram renaming declaration).  Such files are also
+     called "specs".
+
+`FILE.adb'
+     Ada source code file containing a library unit body (a subprogram
+     or package body).  Such files are also called "bodies".
+
 `FILE.s'
      Assembler code.
 
@@ -866,6 +931,7 @@ of compilation is done:
           c++  c++-cpp-output
           objective-c  objc-cpp-output
           assembler  assembler-with-cpp
+          ada
           f77  f77-cpp-input  ratfor
           java
 
@@ -934,6 +1000,11 @@ do nothing at all.
      stages of compilation.  Also print the version number of the
      compiler driver program and of the preprocessor and the compiler
      proper.
+
+`-###'
+     Like `-v' except the commands are not executed and all command
+     arguments are quoted.  This is useful for shell scripts to capture
+     the driver-generated command lines.
 
 `-pipe'
      Use pipes rather than temporary files for communication between the

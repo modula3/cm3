@@ -24,6 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #include "config.h"
 #include "system.h"
 #include "rtl.h"
+#include "tree.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
@@ -36,14 +37,19 @@ Boston, MA 02111-1307, USA.  */
 #include "function.h"
 #include "expr.h"
 #include "obstack.h"
-#include "tree.h"
 #include "reload.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 static int shift_constant_operand PARAMS ((rtx, enum machine_mode, int));
 static void a29k_set_memflags_1 PARAMS ((rtx, int, int, int, int));
 static void compute_regstack_size PARAMS ((void));
 static void check_epilogue_internal_label PARAMS ((FILE *));
+static void output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static void a29k_asm_named_section PARAMS ((const char *, unsigned int));
+static int a29k_adjust_cost PARAMS ((rtx, rtx, rtx, int));
 
 #define min(A,B)	((A) < (B) ? (A) : (B))
 
@@ -90,7 +96,22 @@ int a29k_debug_reg_map[FIRST_PSEUDO_REGISTER];
 rtx a29k_compare_op0, a29k_compare_op1;
 int a29k_compare_fp_p;
 
-/* Returns 1 if OP is a 8-bit constant. */
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\t.hword\t"
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP "\t.word\t"
+
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE output_function_epilogue
+#undef TARGET_SCHED_ADJUST_COST
+#define TARGET_SCHED_ADJUST_COST a29k_adjust_cost
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
+/* Returns 1 if OP is a 8-bit constant.  */
 
 int
 cint_8_operand (op, mode)
@@ -262,9 +283,10 @@ gpc_reg_operand (op, mode)
     regno = REGNO (op);
   else if (GET_CODE (op) == SUBREG && GET_CODE (SUBREG_REG (op)) == REG)
     {
-      regno = REGNO (SUBREG_REG (op));
-      if (regno < FIRST_PSEUDO_REGISTER)
-	regno += SUBREG_WORD (op);
+      if (REGNO (SUBREG_REG (op)) < FIRST_PSEUDO_REGISTER)
+	regno = subreg_regno (op);
+      else
+	regno = REGNO (SUBREG_REG (op));
     }
   else
     return 0;
@@ -334,7 +356,7 @@ and_operand (op, mode)
 
 /* Return 1 if OP can be used as the second operand of an ADD insn.
    This is the same as above, except we use negative, rather than
-   complement.   */
+   complement.  */
 
 int
 add_operand (op, mode)
@@ -467,7 +489,7 @@ a29k_get_reloaded_address (op)
 {
   if (GET_CODE (op) == SUBREG)
     {
-      if (SUBREG_WORD (op) != 0)
+      if (SUBREG_BYTE (op) != 0)
 	abort ();
 
       op = SUBREG_REG (op);
@@ -1081,6 +1103,7 @@ print_operand (file, x, code)
       else if (a29k_last_prologue_insn)
 	{
 	  fprintf (file, "\n\t%s", a29k_last_prologue_insn);
+	  free (a29k_last_prologue_insn);
 	  a29k_last_prologue_insn = 0;
 	}
       else if (optimize && flag_delayed_branch
@@ -1104,6 +1127,7 @@ print_operand (file, x, code)
 	  if (a29k_last_prologue_insn)
 	    {
 	      fprintf (file, "\n\t%s", a29k_last_prologue_insn);
+	      free (a29k_last_prologue_insn);
 	      a29k_last_prologue_insn = 0;
 	    }
 	  else if (GET_CODE (x) == SYMBOL_REF
@@ -1158,6 +1182,7 @@ print_operand (file, x, code)
 	  if (a29k_last_prologue_insn)
 	    {
 	      fprintf (file, "\n\t%s", a29k_last_prologue_insn);
+	      free (a29k_last_prologue_insn);
 	      a29k_last_prologue_insn = 0;
 	    }
 	  else
@@ -1184,7 +1209,8 @@ print_operand (file, x, code)
       if (GET_MODE (SUBREG_REG (XEXP (x, 0))) == SFmode)
 	fprintf (file, "$float");
       else
-	fprintf (file, "$double%d", SUBREG_WORD (XEXP (x, 0)));
+	fprintf (file, "$double%d", 
+		 (SUBREG_BYTE (XEXP (x, 0)) / GET_MODE_SIZE (GET_MODE (x))));      
       memcpy ((char *) &u,
 	      (char *) &CONST_DOUBLE_LOW (SUBREG_REG (XEXP (x, 0))), sizeof u);
       fprintf (file, "(%.20e)", u.d);
@@ -1204,7 +1230,7 @@ print_operand (file, x, code)
     output_addr_const (file, x);
 }
 
-/* This page contains routines to output function prolog and epilog code. */
+/* This page contains routines to output function prolog and epilog code.  */
 
 /* Compute the size of the register stack, and determine if there are any
    call instructions.  */
@@ -1282,10 +1308,10 @@ a29k_compute_reg_names ()
 
 /* Output function prolog code to file FILE.  Memory stack size is SIZE.  */
 
-void
-output_prolog (file, size)
+static void
+output_function_prologue (file, size)
      FILE *file;
-     int size;
+     HOST_WIDE_INT size;
 {
   int i;
   int arg_count = 0;
@@ -1386,7 +1412,7 @@ output_prolog (file, size)
 
 		if (num_delay_slots (insn) > 0)
 		  {
-		    a29k_last_prologue_insn = (char *) oballoc (100);
+		    a29k_last_prologue_insn = (char *) xmalloc (100);
 		    sprintf (a29k_last_prologue_insn, "add lr1,gr1,%d", i);
 		    break;
 		  }
@@ -1403,7 +1429,7 @@ output_prolog (file, size)
   if (size == 0 && a29k_regstack_size == 0 && ! frame_pointer_needed)
     a29k_first_epilogue_insn = 0;
   else
-    a29k_first_epilogue_insn = (char *) oballoc (100);
+    a29k_first_epilogue_insn = (char *) xmalloc (100);
 
   if (frame_pointer_needed)
     sprintf (a29k_first_epilogue_insn, "sll %s,%s,0",
@@ -1454,14 +1480,14 @@ check_epilogue_internal_label (file)
    stack size.  The register stack size is in the variable
    A29K_REGSTACK_SIZE.  */
 
-void
-output_epilog (file, size)
+static void
+output_function_epilogue (file, size)
      FILE *file;
-     int size;
+     HOST_WIDE_INT size;
 {
   rtx insn;
   int locals_unavailable = 0;	/* True until after first insn
-				   after gr1 update. */
+				   after gr1 update.  */
 
   /* If we hit a BARRIER before a real insn or CODE_LABEL, we don't
      need to do anything because we are never jumped to.  */
@@ -1546,4 +1572,35 @@ output_epilog (file, size)
 		     file, 1, -2, 1);
   else
     fprintf (file, "\tnop\n");
+  
+  if (a29k_first_epilogue_insn)
+    free (a29k_first_epilogue_insn);
+  a29k_first_epilogue_insn = 0;
+}
+
+static void
+a29k_asm_named_section (name, flags)
+     const char *name;
+     unsigned int flags ATTRIBUTE_UNUSED;
+{
+  /* ??? Is it really correct to mark all sections as "bss"?  */
+  fprintf (asm_out_file, "\t.sect %s, bss\n\t.use %s\n", name, name);
+}
+
+/* Return a new value for COST based on the relationship between INSN
+   that is dependent on DEP_INSN through the dependence LINK.  The
+   default is to make no adjustment to COST.
+
+   On the a29k, ignore the cost of anti- and output-dependencies.  */
+static int
+a29k_adjust_cost (insn, link, dep_insn, cost)
+     rtx insn ATTRIBUTE_UNUSED;
+     rtx link;
+     rtx dep_insn ATTRIBUTE_UNUSED;
+     int cost;
+{
+  if (REG_NOTE_KIND (link) != 0)
+    return 0;	/* Anti or output dependence.  */
+
+  return cost;
 }

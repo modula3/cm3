@@ -5,7 +5,7 @@
  * files which are fixed to work correctly with ANSI C and placed in a
  * directory that GNU C will search.
  *
- * This file contains 144 fixup descriptions.
+ * This file contains 142 fixup descriptions.
  *
  * See README for more information.
  *
@@ -32,196 +32,6 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- *  Description of Aaa_Bad_Fixes fix
- */
-tSCC zAaa_Bad_FixesName[] =
-     "AAA_bad_fixes";
-
-/*
- *  File name selection pattern
- */
-tSCC zAaa_Bad_FixesList[] =
-  "|sundev/ipi_error.h|";
-/*
- *  Machine/OS name selection pattern
- */
-#define apzAaa_Bad_FixesMachs (const char**)NULL
-#define AAA_BAD_FIXES_TEST_CT  0
-#define aAaa_Bad_FixesTests   (tTestDesc*)NULL
-
-/*
- *  Fix Command Arguments for Aaa_Bad_Fixes
- */
-static const char* apzAaa_Bad_FixesPatch[] = {
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Description of Aaa_Ki fix
- */
-tSCC zAaa_KiName[] =
-     "AAA_ki";
-
-/*
- *  File name selection pattern
- */
-tSCC zAaa_KiList[] =
-  "|sys/ki.h|";
-/*
- *  Machine/OS name selection pattern
- */
-#define apzAaa_KiMachs (const char**)NULL
-
-/*
- *  content selection pattern - do fix if pattern found
- */
-tSCC zAaa_KiSelect0[] =
-       "11.00 HP-UX LP64";
-
-#define    AAA_KI_TEST_CT  1
-static tTestDesc aAaa_KiTests[] = {
-  { TT_EGREP,    zAaa_KiSelect0, (regex_t*)NULL }, };
-
-/*
- *  Fix Command Arguments for Aaa_Ki
- */
-static const char* apzAaa_KiPatch[] = {
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Description of Aaa_Ki_Calls fix
- */
-tSCC zAaa_Ki_CallsName[] =
-     "AAA_ki_calls";
-
-/*
- *  File name selection pattern
- */
-tSCC zAaa_Ki_CallsList[] =
-  "|sys/ki_calls.h|";
-/*
- *  Machine/OS name selection pattern
- */
-#define apzAaa_Ki_CallsMachs (const char**)NULL
-
-/*
- *  content selection pattern - do fix if pattern found
- */
-tSCC zAaa_Ki_CallsSelect0[] =
-       "kthread_create_caller_t";
-
-#define    AAA_KI_CALLS_TEST_CT  1
-static tTestDesc aAaa_Ki_CallsTests[] = {
-  { TT_EGREP,    zAaa_Ki_CallsSelect0, (regex_t*)NULL }, };
-
-/*
- *  Fix Command Arguments for Aaa_Ki_Calls
- */
-static const char* apzAaa_Ki_CallsPatch[] = {
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Description of Aaa_Ki_Defs fix
- */
-tSCC zAaa_Ki_DefsName[] =
-     "AAA_ki_defs";
-
-/*
- *  File name selection pattern
- */
-tSCC zAaa_Ki_DefsList[] =
-  "|sys/ki_defs.h|";
-/*
- *  Machine/OS name selection pattern
- */
-#define apzAaa_Ki_DefsMachs (const char**)NULL
-
-/*
- *  content selection pattern - do fix if pattern found
- */
-tSCC zAaa_Ki_DefsSelect0[] =
-       "Kernel Instrumentation Definitions";
-
-#define    AAA_KI_DEFS_TEST_CT  1
-static tTestDesc aAaa_Ki_DefsTests[] = {
-  { TT_EGREP,    zAaa_Ki_DefsSelect0, (regex_t*)NULL }, };
-
-/*
- *  Fix Command Arguments for Aaa_Ki_Defs
- */
-static const char* apzAaa_Ki_DefsPatch[] = {
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Description of Aaa_Ki_Iface fix
- */
-tSCC zAaa_Ki_IfaceName[] =
-     "AAA_ki_iface";
-
-/*
- *  File name selection pattern
- */
-tSCC zAaa_Ki_IfaceList[] =
-  "|sys/ki_iface.h|";
-/*
- *  Machine/OS name selection pattern
- */
-#define apzAaa_Ki_IfaceMachs (const char**)NULL
-
-/*
- *  content selection pattern - do fix if pattern found
- */
-tSCC zAaa_Ki_IfaceSelect0[] =
-       "These definitions are for HP Internal developers";
-
-#define    AAA_KI_IFACE_TEST_CT  1
-static tTestDesc aAaa_Ki_IfaceTests[] = {
-  { TT_EGREP,    zAaa_Ki_IfaceSelect0, (regex_t*)NULL }, };
-
-/*
- *  Fix Command Arguments for Aaa_Ki_Iface
- */
-static const char* apzAaa_Ki_IfacePatch[] = {
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Description of Aaa_Standards fix
- */
-tSCC zAaa_StandardsName[] =
-     "AAA_standards";
-
-/*
- *  File name selection pattern
- */
-tSCC zAaa_StandardsList[] =
-  "|standards.h|";
-/*
- *  Machine/OS name selection pattern
- */
-#define apzAaa_StandardsMachs (const char**)NULL
-
-/*
- *  content selection pattern - do fix if pattern found
- */
-tSCC zAaa_StandardsSelect0[] =
-       "GNU and MIPS C compilers define __STDC__ differently";
-
-#define    AAA_STANDARDS_TEST_CT  1
-static tTestDesc aAaa_StandardsTests[] = {
-  { TT_EGREP,    zAaa_StandardsSelect0, (regex_t*)NULL }, };
-
-/*
- *  Fix Command Arguments for Aaa_Standards
- */
-static const char* apzAaa_StandardsPatch[] = {
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
  *  Description of Aab_Dgux_Int_Varargs fix
  */
 tSCC zAab_Dgux_Int_VarargsName[] =
@@ -245,9 +55,9 @@ tSCC zAab_Dgux_Int_VarargsList[] =
 static const char* apzAab_Dgux_Int_VarargsPatch[] = {
 "#ifndef __INT_VARARGS_H\n\
 #define __INT_VARARGS_H\n\n\
-/************************************************************************/\n\
-/* _INT_VARARGS.H - Define the common stuff for varargs/stdarg/stdio.   */\n\
-/************************************************************************/\n\n\
+/********************************************************/\n\
+/*  Define the common stuff for varargs/stdarg/stdio.   */\n\
+/********************************************************/\n\n\
 /*\n\
 ** This file is a DG internal header.  Never include this\n\
 ** file directly.\n\
@@ -288,7 +98,7 @@ typedef char * va_list;\n\
 #endif  /*  _IX86_ANY */\n\n\
 #endif /* __LINT__ */\n\
 #endif /*  !(defined(_VA_LIST) || defined(_VA_LIST_)) */\n\
-#endif /*  #ifndef __INT_VARARGS_H  */\n",
+#endif /*  #ifndef __INT_VARARGS_H  */",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -334,14 +144,14 @@ static const char* apzAab_Fd_Zero_Asm_Posix_Types_HPatch[] = {
 #define __FD_ZERO(fdsetp) \\\n\
   do { \\\n\
     int __d0, __d1; \\\n\
-\t\t__asm__ __volatile__(\"cld ; rep ; stosl\" \\\n\
-\t\t\t: \"=&c\" (__d0), \"=&D\" (__d1) \\\n\
-\t\t\t: \"a\" (0), \"0\" (__FDSET_LONGS), \\\n\
-\t\t\t  \"1\" ((__kernel_fd_set *) (fdsetp)) :\"memory\"); \\\n\
+__asm__ __volatile__(\"cld ; rep ; stosl\" \\\n\
+: \"=&c\" (__d0), \"=&D\" (__d1) \\\n\
+: \"a\" (0), \"0\" (__FDSET_LONGS), \\\n\
+  \"1\" ((__kernel_fd_set *) (fdsetp)) :\"memory\"); \\\n\
   } while (0)\n\
 #endif\n\n\
 #define _POSIX_TYPES_H_WRAPPER\n\
-#endif /* _POSIX_TYPES_H_WRAPPER */\n",
+#endif /* _POSIX_TYPES_H_WRAPPER */",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -483,6 +293,38 @@ extern char *memset();\n\
 #endif /* __STDC__ */\n\n\
 extern int memcmp();\n\n\
 #endif /* __memory_h__ */\n",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Aab_Solaris_Sys_Varargs_H fix
+ */
+tSCC zAab_Solaris_Sys_Varargs_HName[] =
+     "AAB_solaris_sys_varargs_h";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zAab_Solaris_Sys_Varargs_HList[] =
+  "|sys/varargs.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzAab_Solaris_Sys_Varargs_HMachs[] = {
+        "*-*-solaris*",
+        (const char*)NULL };
+#define AAB_SOLARIS_SYS_VARARGS_H_TEST_CT  0
+#define aAab_Solaris_Sys_Varargs_HTests   (tTestDesc*)NULL
+
+/*
+ *  Fix Command Arguments for Aab_Solaris_Sys_Varargs_H
+ */
+static const char* apzAab_Solaris_Sys_Varargs_HPatch[] = {
+"#ifdef __STDC__\n\
+#include <stdarg.h>\n\
+#else\n\
+#include <varargs.h>\n\
+#endif\n",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -930,6 +772,41 @@ static tTestDesc aAlpha___AssertTests[] = {
 static const char* apzAlpha___AssertPatch[] = {
     "format",
     "__assert(const char *, const char *, int)",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Alpha_Assert fix
+ */
+tSCC zAlpha_AssertName[] =
+     "alpha_assert";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zAlpha_AssertList[] =
+  "|assert.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzAlpha_AssertMachs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zAlpha_AssertSelect0[] =
+       "(#define assert\\(EX\\).*)\\(\\(int\\) \\(EX\\)\\)";
+
+#define    ALPHA_ASSERT_TEST_CT  1
+static tTestDesc aAlpha_AssertTests[] = {
+  { TT_EGREP,    zAlpha_AssertSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Alpha_Assert
+ */
+static const char* apzAlpha_AssertPatch[] = {
+    "format",
+    "%1(EX)",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -3817,6 +3694,85 @@ static const char* apzSolaris_Mutex_InitPatch[] = {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ *  Description of Solaris_Stdio_Tag fix
+ */
+tSCC zSolaris_Stdio_TagName[] =
+     "solaris_stdio_tag";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zSolaris_Stdio_TagList[] =
+  "|stdio_tag.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzSolaris_Stdio_TagMachs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zSolaris_Stdio_TagSelect0[] =
+       "__cplusplus < 54321L";
+
+#define    SOLARIS_STDIO_TAG_TEST_CT  1
+static tTestDesc aSolaris_Stdio_TagTests[] = {
+  { TT_EGREP,    zSolaris_Stdio_TagSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Solaris_Stdio_Tag
+ */
+static const char* apzSolaris_Stdio_TagPatch[] = { "sed",
+    "-e", "s/defined(__cplusplus) && (__cplusplus < 54321L)/0/",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Solaris_Widec fix
+ */
+tSCC zSolaris_WidecName[] =
+     "solaris_widec";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zSolaris_WidecList[] =
+  "|widec.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzSolaris_WidecMachs[] = {
+        "*-*-solaris2.[0-5]*",
+        (const char*)NULL };
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zSolaris_WidecSelect0[] =
+       "#include <euc.h>";
+
+/*
+ *  content bypass pattern - skip fix if pattern found
+ */
+tSCC zSolaris_WidecBypass0[] =
+       "include.*wchar\\.h";
+
+#define    SOLARIS_WIDEC_TEST_CT  2
+static tTestDesc aSolaris_WidecTests[] = {
+  { TT_NEGREP,   zSolaris_WidecBypass0, (regex_t*)NULL },
+  { TT_EGREP,    zSolaris_WidecSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Solaris_Widec
+ */
+static const char* apzSolaris_WidecPatch[] = {
+    "format",
+    "%0\n\
+#include <wchar.h>",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
  *  Description of Statsswtch fix
  */
 tSCC zStatsswtchName[] =
@@ -3954,13 +3910,20 @@ tSCC zStrict_Ansi_NotSelect0[] =
        "^([ \t]*#[ \t]*if.*)(!__STDC__|__STDC__[ \t]*==[ \t]*0|__STDC__[ \t]*!=[ \t]*1|__STDC__[ \t]*-[ \t]*0[ \t]*==[ \t]*0)";
 
 /*
+ *  content bypass pattern - skip fix if pattern found
+ */
+tSCC zStrict_Ansi_NotBypass0[] =
+       "GNU and MIPS C compilers define __STDC__ differently";
+
+/*
  *  perform the C function call test
  */
 tSCC zStrict_Ansi_NotFTst0[] = "stdc_0_in_system_headers";
 
-#define    STRICT_ANSI_NOT_TEST_CT  2
+#define    STRICT_ANSI_NOT_TEST_CT  3
 static tTestDesc aStrict_Ansi_NotTests[] = {
   { TT_FUNCTION, zStrict_Ansi_NotFTst0,   0 /* unused */ },
+  { TT_NEGREP,   zStrict_Ansi_NotBypass0, (regex_t*)NULL },
   { TT_EGREP,    zStrict_Ansi_NotSelect0, (regex_t*)NULL }, };
 
 /*
@@ -5620,23 +5583,18 @@ static const char* apzX11_SprintfPatch[] = {
  */
 #define REGEX_COUNT          151
 #define MACH_LIST_SIZE_LIMIT 279
-#define FIX_COUNT            144
+#define FIX_COUNT            142
 
 /*
  *  Enumerate the fixes
  */
 typedef enum {
-    AAA_BAD_FIXES_FIXIDX,
-    AAA_KI_FIXIDX,
-    AAA_KI_CALLS_FIXIDX,
-    AAA_KI_DEFS_FIXIDX,
-    AAA_KI_IFACE_FIXIDX,
-    AAA_STANDARDS_FIXIDX,
     AAB_DGUX_INT_VARARGS_FIXIDX,
     AAB_FD_ZERO_ASM_POSIX_TYPES_H_FIXIDX,
     AAB_FD_ZERO_GNU_TYPES_H_FIXIDX,
     AAB_FD_ZERO_SELECTBITS_H_FIXIDX,
     AAB_SUN_MEMCPY_FIXIDX,
+    AAB_SOLARIS_SYS_VARARGS_H_FIXIDX,
     AAB_SVR4_REPLACE_BYTEORDER_FIXIDX,
     AAB_ULTRIX_ANSI_COMPAT_FIXIDX,
     AAB_ULTRIX_LIMITS_FIXIDX,
@@ -5647,6 +5605,7 @@ typedef enum {
     AIX_SYSWAIT_FIXIDX,
     AIX_VOLATILE_FIXIDX,
     ALPHA___ASSERT_FIXIDX,
+    ALPHA_ASSERT_FIXIDX,
     ALPHA_GETOPT_FIXIDX,
     ALPHA_PARENS_FIXIDX,
     ALPHA_SBRK_FIXIDX,
@@ -5723,6 +5682,8 @@ typedef enum {
     SCO_STATIC_FUNC_FIXIDX,
     SCO_UTIME_FIXIDX,
     SOLARIS_MUTEX_INIT_FIXIDX,
+    SOLARIS_STDIO_TAG_FIXIDX,
+    SOLARIS_WIDEC_FIXIDX,
     STATSSWTCH_FIXIDX,
     STDIO_STDARG_H_FIXIDX,
     STDIO_VA_LIST_FIXIDX,
@@ -5773,36 +5734,6 @@ typedef enum {
 } t_fixinc_idx;
 
 tFixDesc fixDescList[ FIX_COUNT ] = {
-  {  zAaa_Bad_FixesName,    zAaa_Bad_FixesList,
-     apzAaa_Bad_FixesMachs,
-     AAA_BAD_FIXES_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAaa_Bad_FixesTests,   apzAaa_Bad_FixesPatch, 0 },
-
-  {  zAaa_KiName,    zAaa_KiList,
-     apzAaa_KiMachs,
-     AAA_KI_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAaa_KiTests,   apzAaa_KiPatch, 0 },
-
-  {  zAaa_Ki_CallsName,    zAaa_Ki_CallsList,
-     apzAaa_Ki_CallsMachs,
-     AAA_KI_CALLS_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAaa_Ki_CallsTests,   apzAaa_Ki_CallsPatch, 0 },
-
-  {  zAaa_Ki_DefsName,    zAaa_Ki_DefsList,
-     apzAaa_Ki_DefsMachs,
-     AAA_KI_DEFS_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAaa_Ki_DefsTests,   apzAaa_Ki_DefsPatch, 0 },
-
-  {  zAaa_Ki_IfaceName,    zAaa_Ki_IfaceList,
-     apzAaa_Ki_IfaceMachs,
-     AAA_KI_IFACE_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAaa_Ki_IfaceTests,   apzAaa_Ki_IfacePatch, 0 },
-
-  {  zAaa_StandardsName,    zAaa_StandardsList,
-     apzAaa_StandardsMachs,
-     AAA_STANDARDS_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAaa_StandardsTests,   apzAaa_StandardsPatch, 0 },
-
   {  zAab_Dgux_Int_VarargsName,    zAab_Dgux_Int_VarargsList,
      apzAab_Dgux_Int_VarargsMachs,
      AAB_DGUX_INT_VARARGS_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
@@ -5827,6 +5758,11 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      apzAab_Sun_MemcpyMachs,
      AAB_SUN_MEMCPY_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
      aAab_Sun_MemcpyTests,   apzAab_Sun_MemcpyPatch, 0 },
+
+  {  zAab_Solaris_Sys_Varargs_HName,    zAab_Solaris_Sys_Varargs_HList,
+     apzAab_Solaris_Sys_Varargs_HMachs,
+     AAB_SOLARIS_SYS_VARARGS_H_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
+     aAab_Solaris_Sys_Varargs_HTests,   apzAab_Solaris_Sys_Varargs_HPatch, 0 },
 
   {  zAab_Svr4_Replace_ByteorderName,    zAab_Svr4_Replace_ByteorderList,
      apzAab_Svr4_Replace_ByteorderMachs,
@@ -5877,6 +5813,11 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      apzAlpha___AssertMachs,
      ALPHA___ASSERT_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aAlpha___AssertTests,   apzAlpha___AssertPatch, 0 },
+
+  {  zAlpha_AssertName,    zAlpha_AssertList,
+     apzAlpha_AssertMachs,
+     ALPHA_ASSERT_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aAlpha_AssertTests,   apzAlpha_AssertPatch, 0 },
 
   {  zAlpha_GetoptName,    zAlpha_GetoptList,
      apzAlpha_GetoptMachs,
@@ -6257,6 +6198,16 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      apzSolaris_Mutex_InitMachs,
      SOLARIS_MUTEX_INIT_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aSolaris_Mutex_InitTests,   apzSolaris_Mutex_InitPatch, 0 },
+
+  {  zSolaris_Stdio_TagName,    zSolaris_Stdio_TagList,
+     apzSolaris_Stdio_TagMachs,
+     SOLARIS_STDIO_TAG_TEST_CT, FD_MACH_ONLY,
+     aSolaris_Stdio_TagTests,   apzSolaris_Stdio_TagPatch, 0 },
+
+  {  zSolaris_WidecName,    zSolaris_WidecList,
+     apzSolaris_WidecMachs,
+     SOLARIS_WIDEC_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aSolaris_WidecTests,   apzSolaris_WidecPatch, 0 },
 
   {  zStatsswtchName,    zStatsswtchList,
      apzStatsswtchMachs,

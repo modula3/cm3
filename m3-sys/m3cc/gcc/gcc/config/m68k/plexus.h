@@ -34,7 +34,7 @@ Boston, MA 02111-1307, USA.  */
 #include "m68k/m68k.h"
 
 /* Define __HAVE_68881 in preprocessor only if -m68881 is specified.
-   This will control the use of inline 68881 insns in certain macros. */
+   This will control the use of inline 68881 insns in certain macros.  */
 
 #define TARGET_DEFAULT (MASK_BITFIELD|MASK_68020)
 
@@ -46,7 +46,7 @@ Boston, MA 02111-1307, USA.  */
 #define CPP_PREDEFINES "-Dm68 -Dunix -Dplexus -Asystem=unix  -Acpu=m68k -Amachine=m68k"
 
 #if TARGET_DEFAULT & MASK_68020
-#define ASM_SPEC\
+#define ASM_SPEC \
 "%{m68000:-mc68000}%{mc68000:-mc68000}%{!mc68000:%{!m68000:-mc68020}}"
 #undef STRICT_ALIGNMENT
 #define STRICT_ALIGNMENT 0
@@ -102,6 +102,5 @@ Boston, MA 02111-1307, USA.  */
 /***********************************************************************/
 
 #define NM_FLAGS ""
-#define NO_DUP2
 
 #define SIZE_TYPE "int"

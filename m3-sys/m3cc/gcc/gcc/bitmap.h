@@ -1,25 +1,26 @@
 /* Functions to support general ended bitmaps.
-   Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
-#ifndef _BITMAP_H
-#define _BITMAP_H 1
+#ifndef GCC_BITMAP_H
+#define GCC_BITMAP_H 
 
 /* Number of words to use for each element in the linked list.  */
 
@@ -41,17 +42,18 @@ Boston, MA 02111-1307, USA.  */
 
 typedef struct bitmap_element_def
 {
-  struct bitmap_element_def *next;		/* Next element. */
-  struct bitmap_element_def *prev;		/* Previous element. */
-  unsigned int indx;			/* regno/BITMAP_ELEMENT_ALL_BITS. */
-  unsigned HOST_WIDE_INT bits[BITMAP_ELEMENT_WORDS]; /* Bits that are set. */
+  struct bitmap_element_def *next;		/* Next element.  */
+  struct bitmap_element_def *prev;		/* Previous element.  */
+  unsigned int indx;			/* regno/BITMAP_ELEMENT_ALL_BITS.  */
+  unsigned HOST_WIDE_INT bits[BITMAP_ELEMENT_WORDS]; /* Bits that are set.  */
 } bitmap_element;
 
 /* Head of bitmap linked list.  */
 typedef struct bitmap_head_def {
-  bitmap_element *first;	/* First element in linked list. */
-  bitmap_element *current;	/* Last element looked at. */
-  unsigned int indx;		/* Index of last element looked at. */
+  bitmap_element *first;	/* First element in linked list.  */
+  bitmap_element *current;	/* Last element looked at.  */
+  unsigned int indx;		/* Index of last element looked at.  */
+
 } bitmap_head, *bitmap;
 
 /* Enumeration giving the various operations we support.  */
@@ -59,17 +61,17 @@ enum bitmap_bits {
   BITMAP_AND,			/* TO = FROM1 & FROM2 */
   BITMAP_AND_COMPL,		/* TO = FROM1 & ~ FROM2 */
   BITMAP_IOR,			/* TO = FROM1 | FROM2 */
-  BITMAP_XOR			/* TO = FROM1 ^ FROM2 */
+  BITMAP_XOR,			/* TO = FROM1 ^ FROM2 */
+  BITMAP_IOR_COMPL			/* TO = FROM1 | ~FROM2 */
 };
 
 /* Global data */
-extern bitmap_element *bitmap_free;	/* Freelist of bitmap elements */
-extern bitmap_element bitmap_zero;	/* Zero bitmap element */
+extern bitmap_element bitmap_zero_bits;	/* Zero bitmap element */
 
 /* Clear a bitmap by freeing up the linked list.  */
 extern void bitmap_clear PARAMS ((bitmap));
 
-/* Copy a bitmap to another bitmap. */
+/* Copy a bitmap to another bitmap.  */
 extern void bitmap_copy PARAMS ((bitmap, bitmap));
 
 /* True if two bitmaps are identical.  */
@@ -104,16 +106,30 @@ extern bitmap bitmap_initialize PARAMS ((bitmap));
 /* Release all memory held by bitmaps.  */
 extern void bitmap_release_memory PARAMS ((void));
 
-extern void debug_bitmap PARAMS ((bitmap));
+/* A few compatibility/functions macros for compatibility with sbitmaps */
+#define dump_bitmap(file, bitmap) bitmap_print (file, bitmap, "", "\n")
+#define bitmap_zero(a) bitmap_clear (a)
+#define bitmap_a_or_b(a,b,c) bitmap_operation (a, b, c, BITMAP_IOR)
+#define bitmap_a_and_b(a,b,c) bitmap_operation (a, b, c, BITMAP_AND)
+extern int bitmap_union_of_diff PARAMS((bitmap, bitmap, bitmap, bitmap));
+extern int bitmap_first_set_bit PARAMS((bitmap));
+extern int bitmap_last_set_bit PARAMS((bitmap));
 
 /* Allocate a bitmap with oballoc.  */
 #define BITMAP_OBSTACK_ALLOC(OBSTACK)				\
   bitmap_initialize ((bitmap) obstack_alloc (OBSTACK, sizeof (bitmap_head)))
 
-/* Allocate a bitmap with alloca.  */
-#define BITMAP_ALLOCA()						\
-  bitmap_initialize ((bitmap) alloca (sizeof (bitmap_head)))
-
+/* Allocate a bitmap with alloca.  Note alloca cannot be passed as an
+   argument to a function, so we set a temporary variable to the value
+   returned by alloca and pass that variable to bitmap_initialize().
+   PTR is then set to the value returned from bitmap_initialize() to
+   avoid having it appear more than once in case it has side effects.  */
+#define BITMAP_ALLOCA(PTR) \
+do { \
+  bitmap temp_bitmap_ = (bitmap) alloca (sizeof (bitmap_head)); \
+  (PTR) = bitmap_initialize (temp_bitmap_); \
+} while (0)
+  
 /* Allocate a bitmap with xmalloc.  */
 #define BITMAP_XMALLOC()                                        \
   bitmap_initialize ((bitmap) xmalloc (sizeof (bitmap_head)))
@@ -143,7 +159,7 @@ do {						\
 #define BITMAP_INIT_ONCE()
 
 /* Loop over all bits in BITMAP, starting with MIN, setting BITNUM to the
-   bit number and executing CODE for all bits that are set. */
+   bit number and executing CODE for all bits that are set.  */
 
 #define EXECUTE_IF_SET_IN_BITMAP(BITMAP, MIN, BITNUM, CODE)		\
 do {									\
@@ -200,7 +216,7 @@ do {									\
 
 /* Loop over all bits in BITMAP1 and BITMAP2, starting with MIN, setting
    BITNUM to the bit number and executing CODE for all bits that are set in
-   the first bitmap and not set in the second. */
+   the first bitmap and not set in the second.  */
 
 #define EXECUTE_IF_AND_COMPL_IN_BITMAP(BITMAP1, BITMAP2, MIN, BITNUM, CODE) \
 do {									\
@@ -231,7 +247,7 @@ do {									\
 	ptr2_ = ptr2_->next;						\
 									\
       tmp2_ = ((ptr2_ != 0 && ptr2_->indx == ptr1_->indx)		\
-	       ? ptr2_ : &bitmap_zero); 				\
+	       ? ptr2_ : &bitmap_zero_bits); 				\
 									\
       for (; word_num_ < BITMAP_ELEMENT_WORDS; word_num_++)		\
 	{								\
@@ -267,7 +283,7 @@ do {									\
 
 /* Loop over all bits in BITMAP1 and BITMAP2, starting with MIN, setting
    BITNUM to the bit number and executing CODE for all bits that are set in
-   the both bitmaps. */
+   the both bitmaps.  */
 
 #define EXECUTE_IF_AND_IN_BITMAP(BITMAP1, BITMAP2, MIN, BITNUM, CODE)	\
 do {									\
@@ -296,7 +312,7 @@ do {									\
 									\
       if (ptr2_ == 0)							\
 	{								\
-	  /* If there are no more elements in BITMAP2, exit loop now.*/	\
+	  /* If there are no more elements in BITMAP2, exit loop now.  */ \
 	  ptr1_ = (bitmap_element *)0;					\
 	  break;							\
 	}								\
@@ -338,4 +354,4 @@ do {									\
     }									\
 } while (0)
 
-#endif /* _BITMAP_H */
+#endif /* GCC_BITMAP_H */

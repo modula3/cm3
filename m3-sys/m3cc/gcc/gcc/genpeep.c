@@ -2,22 +2,22 @@
    Copyright (C) 1987, 1989, 1992, 1997, 1998,
    1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 #include "hconfig.h"
@@ -97,7 +97,7 @@ gen_peephole (peep)
       /* Walk the insn's pattern, remembering at all times the path
 	 down to the walking point.  */
 
-      match_rtx (XVECEXP (peep, 0, i), NULL_PTR, insn_code_number);
+      match_rtx (XVECEXP (peep, 0, i), NULL, insn_code_number);
     }
 
   /* We get this far if the pattern matches.
@@ -119,7 +119,7 @@ gen_peephole (peep)
   printf ("  if (want_jump && GET_CODE (ins1) != JUMP_INSN)\n");
   printf ("    {\n");
   printf ("      rtx insn2 = emit_jump_insn_before (PATTERN (ins1), ins1);\n");
-  printf ("      delete_insn (ins1);\n");
+  printf ("      delete_related_insns (ins1);\n");
   printf ("      ins1 = ins2;\n");
   printf ("    }\n");
 #endif
@@ -146,10 +146,10 @@ match_rtx (x, path, fail_label)
      struct link *path;
      int fail_label;
 {
-  register RTX_CODE code;
-  register int i;
-  register int len;
-  register const char *fmt;
+  RTX_CODE code;
+  int i;
+  int len;
+  const char *fmt;
   struct link link;
 
   if (x == 0)
@@ -364,7 +364,7 @@ static void
 print_code (code)
      RTX_CODE code;
 {
-  register const char *p1;
+  const char *p1;
   for (p1 = GET_RTX_NAME (code); *p1; p1++)
     putchar (TOUPPER(*p1));
 }
@@ -383,9 +383,9 @@ main (argc, argv)
   progname = "genpeep";
 
   if (argc <= 1)
-    fatal ("No input file name.");
+    fatal ("no input file name");
 
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
   printf ("/* Generated automatically by the program `genpeep'\n\

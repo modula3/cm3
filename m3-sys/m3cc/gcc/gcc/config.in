@@ -1,4 +1,4 @@
-/* config.in.  Generated automatically from configure.in by autoheader 2.13.  */
+/* config.in.  Generated automatically from configure.in by autoheader.  */
 
 /* Define if using alloca.c.  */
 #undef C_ALLOCA
@@ -23,9 +23,6 @@
 /* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
 #undef HAVE_ALLOCA_H
 
-/* Define if you don't have vprintf but do have _doprnt.  */
-#undef HAVE_DOPRNT
-
 /* Define if you have the ANSI # stringizing operator in cpp. */
 #undef HAVE_STRINGIZE
 
@@ -34,9 +31,6 @@
 
 /* Define if you have <vfork.h>.  */
 #undef HAVE_VFORK_H
-
-/* Define if you have the vprintf function.  */
-#undef HAVE_VPRINTF
 
 /* Define as __inline if that's what the C compiler calls it.  */
 #undef inline
@@ -74,23 +68,8 @@
 /* Define vfork as fork if vfork does not work.  */
 #undef vfork
 
-/* Define to 1 if NLS is requested.  */
-#undef ENABLE_NLS
-
-/* Define as 1 if you have catgets and don't want to use GNU gettext.  */
-#undef HAVE_CATGETS
-
-/* Define as 1 if you have gettext and don't want to use GNU gettext.  */
-#undef HAVE_GETTEXT
-
-/* Define if your locale.h file contains LC_MESSAGES.  */
-#undef HAVE_LC_MESSAGES
-
-/* Define as 1 if you have the stpcpy function.  */
-#undef HAVE_STPCPY
-
 /* Define if your assembler supports specifying the maximum number
-   of bytes to skip when using the GAS .p2align command. */
+   of bytes to skip when using the GAS .p2align command.  */
 #undef HAVE_GAS_MAX_SKIP_P2ALIGN
 
 /* Define if your assembler supports .balign and .p2align.  */
@@ -102,7 +81,7 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef ssize_t
 
-/* Define if cpp should also search $prefix/include. */
+/* Define if cpp should also search $prefix/include.  */
 #undef PREFIX_INCLUDE_DIR
 
 /* Define if you have the __argz_count function.  */
@@ -120,14 +99,23 @@
 /* Define if you have the atoq function.  */
 #undef HAVE_ATOQ
 
-/* Define if you have the bcopy function.  */
-#undef HAVE_BCOPY
-
-/* Define if you have the bsearch function.  */
-#undef HAVE_BSEARCH
+/* Define if you have the clock function.  */
+#undef HAVE_CLOCK
 
 /* Define if you have the dcgettext function.  */
 #undef HAVE_DCGETTEXT
+
+/* Define if you have the dup2 function.  */
+#undef HAVE_DUP2
+
+/* Define if you have the feof_unlocked function.  */
+#undef HAVE_FEOF_UNLOCKED
+
+/* Define if you have the fgets_unlocked function.  */
+#undef HAVE_FGETS_UNLOCKED
+
+/* Define if you have the fprintf_unlocked function.  */
+#undef HAVE_FPRINTF_UNLOCKED
 
 /* Define if you have the fputc_unlocked function.  */
 #undef HAVE_FPUTC_UNLOCKED
@@ -135,8 +123,20 @@
 /* Define if you have the fputs_unlocked function.  */
 #undef HAVE_FPUTS_UNLOCKED
 
+/* Define if you have the fwrite_unlocked function.  */
+#undef HAVE_FWRITE_UNLOCKED
+
 /* Define if you have the getcwd function.  */
 #undef HAVE_GETCWD
+
+/* Define if you have the getegid function.  */
+#undef HAVE_GETEGID
+
+/* Define if you have the geteuid function.  */
+#undef HAVE_GETEUID
+
+/* Define if you have the getgid function.  */
+#undef HAVE_GETGID
 
 /* Define if you have the getpagesize function.  */
 #undef HAVE_GETPAGESIZE
@@ -147,11 +147,8 @@
 /* Define if you have the getrusage function.  */
 #undef HAVE_GETRUSAGE
 
-/* Define if you have the gettimeofday function.  */
-#undef HAVE_GETTIMEOFDAY
-
-/* Define if you have the isascii function.  */
-#undef HAVE_ISASCII
+/* Define if you have the getuid function.  */
+#undef HAVE_GETUID
 
 /* Define if you have the kill function.  */
 #undef HAVE_KILL
@@ -159,14 +156,14 @@
 /* Define if you have the lstat function.  */
 #undef HAVE_LSTAT
 
+/* Define if you have the mempcpy function.  */
+#undef HAVE_MEMPCPY
+
 /* Define if you have the munmap function.  */
 #undef HAVE_MUNMAP
 
 /* Define if you have the nl_langinfo function.  */
 #undef HAVE_NL_LANGINFO
-
-/* Define if you have the popen function.  */
-#undef HAVE_POPEN
 
 /* Define if you have the putc_unlocked function.  */
 #undef HAVE_PUTC_UNLOCKED
@@ -195,20 +192,20 @@
 /* Define if you have the strdup function.  */
 #undef HAVE_STRDUP
 
-/* Define if you have the strrchr function.  */
-#undef HAVE_STRRCHR
-
 /* Define if you have the strsignal function.  */
 #undef HAVE_STRSIGNAL
-
-/* Define if you have the strstr function.  */
-#undef HAVE_STRSTR
 
 /* Define if you have the strtoul function.  */
 #undef HAVE_STRTOUL
 
 /* Define if you have the sysconf function.  */
 #undef HAVE_SYSCONF
+
+/* Define if you have the times function.  */
+#undef HAVE_TIMES
+
+/* Define if you have the tsearch function.  */
+#undef HAVE_TSEARCH
 
 /* Define if you have the <argz.h> header file.  */
 #undef HAVE_ARGZ_H
@@ -233,9 +230,6 @@
 
 /* Define if you have the <nl_types.h> header file.  */
 #undef HAVE_NL_TYPES_H
-
-/* Define if you have the <stab.h> header file.  */
-#undef HAVE_STAB_H
 
 /* Define if you have the <stddef.h> header file.  */
 #undef HAVE_STDDEF_H
@@ -273,9 +267,6 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the i library (-li).  */
-#undef HAVE_LIBI
-
 /* Define to enable the use of a default linker. */
 #undef DEFAULT_LINKER
 
@@ -305,21 +296,51 @@
    every opportunity.  This is extremely expensive. */
 #undef ENABLE_GC_ALWAYS_COLLECT
 
+/* Define if you want to use __cxa_atexit, rather than atexit, to
+   register C++ destructors for local statics and global objects.
+   This is essential for fully standards-compliant handling of
+   destructors, but requires __cxa_atexit in libc. */
+#undef DEFAULT_USE_CXA_ATEXIT
+
 /* Define if you want the C and C++ compilers to support multibyte
    character sets for source code. */
 #undef MULTIBYTE_CHARS
 
+/* Define if your compiler understands volatile. */
+#undef HAVE_VOLATILE
+
 /* Define if your compiler supports the `long double' type. */
 #undef HAVE_LONG_DOUBLE
+
+/* Define if your compiler supports the `long long' type. */
+#undef HAVE_LONG_LONG
+
+/* Define if your compiler supports the `__int64' type. */
+#undef HAVE___INT64
 
 /* Define if the `_Bool' type is built-in. */
 #undef HAVE__BOOL
 
+/* The number of bytes in type short */
+#undef SIZEOF_SHORT
+
+/* The number of bytes in type int */
+#undef SIZEOF_INT
+
+/* The number of bytes in type long */
+#undef SIZEOF_LONG
+
+/* The number of bytes in type long long */
+#undef SIZEOF_LONG_LONG
+
+/* The number of bytes in type __int64 */
+#undef SIZEOF___INT64
+
+/* Define if the host execution character set is EBCDIC. */
+#undef HOST_EBCDIC
+
 /* Always define this when using the GNU C Library */
 #undef _GNU_SOURCE
-
-/* Define if your compiler understands volatile. */
-#undef HAVE_VOLATILE
 
 /* Define if you have a working <stdbool.h> header file. */
 #undef HAVE_STDBOOL_H
@@ -327,11 +348,26 @@
 /* Define if you can safely include both <string.h> and <strings.h>. */
 #undef STRING_WITH_STRINGS
 
+/* Define as the number of bits in a byte, if `limits.h' doesn't. */
+#undef CHAR_BIT
+
+/* Define if the host machine stores words of multi-word integers in
+   big-endian order. */
+#undef HOST_WORDS_BIG_ENDIAN
+
+/* Define to the floating point format of the host machine, if not IEEE. */
+#undef HOST_FLOAT_FORMAT
+
+/* Define to 1 if the host machine stores floating point numbers in
+   memory with the word containing the sign bit at the lowest address,
+   or to 0 if it does it the other way around.
+
+   This macro should not be defined if the ordering is the same as for
+   multi-word integers. */
+#undef HOST_FLOAT_WORDS_BIG_ENDIAN
+
 /* Define if you have a working <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Define if enumerated bitfields are treated as unsigned values. */
-#undef ENUM_BITFIELDS_ARE_UNSIGNED
 
 /* Define if printf supports %p. */
 #undef HAVE_PRINTF_PTR
@@ -350,9 +386,6 @@
 
 /* Define as const if the declaration of iconv() needs const. */
 #undef ICONV_CONST
-
-/* Define to 1 if we found this declaration otherwise define to 0. */
-#undef HAVE_DECL_BCOPY
 
 /* Define to 1 if we found this declaration otherwise define to 0. */
 #undef HAVE_DECL_GETENV
@@ -385,10 +418,16 @@
 #undef HAVE_DECL_FPUTS_UNLOCKED
 
 /* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_FWRITE_UNLOCKED
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_FPRINTF_UNLOCKED
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
 #undef HAVE_DECL_STRSTR
 
 /* Define to 1 if we found this declaration otherwise define to 0. */
-#undef HAVE_DECL_ENVIRON
+#undef HAVE_DECL_ERRNO
 
 /* Define to 1 if we found this declaration otherwise define to 0. */
 #undef HAVE_DECL_MALLOC
@@ -409,6 +448,9 @@
 #undef HAVE_DECL_GETOPT
 
 /* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_CLOCK
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
 #undef HAVE_DECL_GETRLIMIT
 
 /* Define to 1 if we found this declaration otherwise define to 0. */
@@ -417,14 +459,43 @@
 /* Define to 1 if we found this declaration otherwise define to 0. */
 #undef HAVE_DECL_GETRUSAGE
 
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_TIMES
+
+/* Define if <sys/times.h> defines struct tms. */
+#undef HAVE_STRUCT_TMS
+
+/* Define if <time.h> defines clock_t. */
+#undef HAVE_CLOCK_T
+
 /* Define if host mkdir takes a single argument. */
 #undef MKDIR_TAKES_ONE_ARG
 
-/* Define to the name of the distribution. */
-#undef PACKAGE
+/* Define if you have the iconv() function. */
+#undef HAVE_ICONV
 
-/* Define to the version of the distribution. */
-#undef VERSION
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
+
+/* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
+#undef HAVE_LANGINFO_CODESET
+
+/* Define if your <locale.h> file defines LC_MESSAGES. */
+#undef HAVE_LC_MESSAGES
+
+/* Define to 1 if translation of program messages to the user's native language
+   is requested. */
+#undef ENABLE_NLS
+
+/* Define if you have the <libintl.h> header file. */
+#undef HAVE_LIBINTL_H
+
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#undef HAVE_GETTEXT
+
+/* Define to use the libintl included with this package instead of any
+   version in the system libraries. */
+#undef USE_INCLUDED_LIBINTL
 
 /* Define to 1 if installation paths should be looked up in Windows32
    Registry. Ignored on non windows32 hosts. */
@@ -449,23 +520,42 @@
 /* Define if your assembler mis-optimizes .eh_frame data. */
 #undef USE_AS_TRADITIONAL_FORMAT
 
+/* Define if your assembler supports marking sections with SHF_MERGE flag. */
+#undef HAVE_GAS_SHF_MERGE
+
+/* Define if your assembler supports explicit relocations. */
+#undef HAVE_AS_EXPLICIT_RELOCS
+
 /* Define if your assembler supports .register. */
 #undef HAVE_AS_REGISTER_PSEUDO_OP
 
 /* Define if your assembler supports -relax option. */
 #undef HAVE_AS_RELAX_OPTION
 
-/* Define if the assembler supports 64bit sparc. */
-#undef AS_SPARC64_FLAG
+/* Define if your assembler and linker support unaligned PC relative relocs. */
+#undef HAVE_AS_SPARC_UA_PCREL
+
+/* Define if your assembler and linker support unaligned PC relative relocs against hidden symbols. */
+#undef HAVE_AS_SPARC_UA_PCREL_HIDDEN
 
 /* Define if your assembler supports offsetable %lo(). */
 #undef HAVE_AS_OFFSETABLE_LO10
 
-/* Define if your assembler supports dwarf2 .file/.loc directives. */
+/* Define true if the assembler supports '.long foo@GOTOFF'. */
+#undef HAVE_AS_GOTOFF_IN_DATA
+
+/* Define if your assembler supports dwarf2 .file/.loc directives,
+   and preserves file table indices exactly as given. */
 #undef HAVE_AS_DWARF2_DEBUG_LINE
 
-/* Define to 1 if you want to enable namespaces (-fhonor-std) by default. */
-#undef ENABLE_STD_NAMESPACE
+/* Define if your assembler supports the --gdwarf2 option. */
+#undef HAVE_AS_GDWARF2_DEBUG_FLAG
+
+/* Define if your assembler supports the --gstabs option. */
+#undef HAVE_AS_GSTABS_DEBUG_FLAG
+
+/* Define if your linker supports --eh-frame-hdr option. */
+#undef HAVE_LD_EH_FRAME_HDR
 
 /* Define 0/1 to force the choice for exception handling model. */
 #undef CONFIG_SJLJ_EXCEPTIONS

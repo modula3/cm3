@@ -1,6 +1,364 @@
-@c Copyright (C) 1988,1989,1992,1993,1994,1996,1998,1999,2000,2001 Free Software Foundation, Inc.
+@c Copyright (C) 1988,1989,1992,1993,1994,1996,1998,1999,2000,2001,2002 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
+
+@node C Implementation
+@chapter C Implementation-defined behavior
+@cindex implementation-defined behavior, C language
+
+A conforming implementation of ISO C is required to document its
+choice of behavior in each of the areas that are designated
+``implementation defined.''  The following lists all such areas,
+along with the section number from the ISO/IEC 9899:1999 standard.
+
+@menu
+* Translation implementation::
+* Environment implementation::
+* Identifiers implementation::
+* Characters implementation::
+* Integers implementation::
+* Floating point implementation::
+* Arrays and pointers implementation::
+* Hints implementation::
+* Structures unions enumerations and bit-fields implementation::
+* Qualifiers implementation::
+* Preprocessing directives implementation::
+* Library functions implementation::
+* Architecture implementation::
+* Locale-specific behavior implementation::
+@end menu
+
+@node Translation implementation
+@section Translation
+
+@itemize @bullet
+@item
+@cite{How a diagnostic is identified (3.10, 5.1.1.3).}
+
+@item
+@cite{Whether each nonempty sequence of white-space characters other than
+new-line is retained or replaced by one space character in translation
+phase 3 (5.1.1.2).}
+@end itemize
+
+@node Environment implementation
+@section Environment
+
+The behavior of these points are dependent on the implementation
+of the C library, and are not defined by GCC itself.
+
+@node Identifiers implementation
+@section Identifiers
+
+@itemize @bullet
+@item
+@cite{Which additional multibyte characters may appear in identifiers
+and their correspondence to universal character names (6.4.2).}
+
+@item
+@cite{The number of significant initial characters in an identifier
+(5.2.4.1, 6.4.2).}
+@end itemize
+
+@node Characters implementation
+@section Characters
+
+@itemize @bullet
+@item
+@cite{The number of bits in a byte (3.6).}
+
+@item
+@cite{The values of the members of the execution character set (5.2.1).}
+
+@item
+@cite{The unique value of the member of the execution character set produced
+for each of the standard alphabetic escape sequences (5.2.2).}
+
+@item
+@cite{The value of a @code{char} object into which has been stored any
+character other than a member of the basic execution character set (6.2.5).}
+
+@item
+@cite{Which of @code{signed char} or @code{unsigned char} has the same range,
+representation, and behavior as ``plain'' @code{char} (6.2.5, 6.3.1.1).}
+
+@item
+@cite{The mapping of members of the source character set (in character
+constants and string literals) to members of the execution character
+set (6.4.4.4, 5.1.1.2).}
+
+@item
+@cite{The value of an integer character constant containing more than one
+character or containing a character or escape sequence that does not map
+to a single-byte execution character (6.4.4.4).}
+
+@item
+@cite{The value of a wide character constant containing more than one
+multibyte character, or containing a multibyte character or escape
+sequence not represented in the extended execution character set (6.4.4.4).}
+
+@item
+@cite{The current locale used to convert a wide character constant consisting
+of a single multibyte character that maps to a member of the extended
+execution character set into a corresponding wide character code (6.4.4.4).}
+
+@item
+@cite{The current locale used to convert a wide string literal into
+corresponding wide character codes (6.4.5).}
+
+@item
+@cite{The value of a string literal containing a multibyte character or escape
+sequence not represented in the execution character set (6.4.5).}
+@end itemize
+
+@node Integers implementation
+@section Integers
+
+@itemize @bullet
+@item
+@cite{Any extended integer types that exist in the implementation (6.2.5).}
+
+@item
+@cite{Whether signed integer types are represented using sign and magnitude,
+two's complement, or one's complement, and whether the extraordinary value
+is a trap representation or an ordinary value (6.2.6.2).}
+
+@item
+@cite{The rank of any extended integer type relative to another extended
+integer type with the same precision (6.3.1.1).}
+
+@item
+@cite{The result of, or the signal raised by, converting an integer to a
+signed integer type when the value cannot be represented in an object of
+that type (6.3.1.3).}
+
+@item
+@cite{The results of some bitwise operations on signed integers (6.5).}
+@end itemize
+
+@node Floating point implementation
+@section Floating point
+
+@itemize @bullet
+@item
+@cite{The accuracy of the floating-point operations and of the library
+functions in @code{<math.h>} and @code{<complex.h>} that return floating-point
+results (5.2.4.2.2).}
+
+@item
+@cite{The rounding behaviors characterized by non-standard values
+of @code{FLT_ROUNDS} @gol
+(5.2.4.2.2).}
+
+@item
+@cite{The evaluation methods characterized by non-standard negative
+values of @code{FLT_EVAL_METHOD} (5.2.4.2.2).}
+
+@item
+@cite{The direction of rounding when an integer is converted to a
+floating-point number that cannot exactly represent the original
+value (6.3.1.4).}
+
+@item
+@cite{The direction of rounding when a floating-point number is
+converted to a narrower floating-point number (6.3.1.5).}
+
+@item
+@cite{How the nearest representable value or the larger or smaller
+representable value immediately adjacent to the nearest representable
+value is chosen for certain floating constants (6.4.4.2).}
+
+@item
+@cite{Whether and how floating expressions are contracted when not
+disallowed by the @code{FP_CONTRACT} pragma (6.5).}
+
+@item
+@cite{The default state for the @code{FENV_ACCESS} pragma (7.6.1).}
+
+@item
+@cite{Additional floating-point exceptions, rounding modes, environments,
+and classifications, and their macro names (7.6, 7.12).}
+
+@item
+@cite{The default state for the @code{FP_CONTRACT} pragma (7.12.2).}
+
+@item
+@cite{Whether the ``inexact'' floating-point exception can be raised
+when the rounded result actually does equal the mathematical result
+in an IEC 60559 conformant implementation (F.9).}
+
+@item
+@cite{Whether the ``underflow'' (and ``inexact'') floating-point
+exception can be raised when a result is tiny but not inexact in an
+IEC 60559 conformant implementation (F.9).}
+
+@end itemize
+
+@node Arrays and pointers implementation
+@section Arrays and pointers
+
+@itemize @bullet
+@item
+@cite{The result of converting a pointer to an integer or
+vice versa (6.3.2.3).}
+
+A cast from pointer to integer discards most-significant bits if the
+pointer representation is larger than the integer type,
+sign-extends@footnote{Future versions of GCC may zero-extend, or use
+a target-defined @code{ptr_extend} pattern.  Do not rely on sign extension.}
+if the pointer representation is smaller than the integer type, otherwise
+the bits are unchanged.
+@c ??? We've always claimed that pointers were unsigned entities.
+@c Shouldn't we therefore be doing zero-extension?  If so, the bug
+@c is in convert_to_integer, where we call type_for_size and request
+@c a signed integral type.  On the other hand, it might be most useful
+@c for the target if we extend according to POINTERS_EXTEND_UNSIGNED.
+
+A cast from integer to pointer discards most-significant bits if the
+pointer representation is smaller than the integer type, extends according
+to the signedness of the integer type if the pointer representation
+is larger than the integer type, otherwise the bits are unchanged.
+
+When casting from pointer to integer and back again, the resulting
+pointer must reference the same object as the original pointer, otherwise
+the behavior is undefined.  That is, one may not use integer arithmetic to
+avoid the undefined behavior of pointer arithmetic as proscribed in 6.5.6/8.
+
+@item
+@cite{The size of the result of subtracting two pointers to elements
+of the same array (6.5.6).}
+
+@end itemize
+
+@node Hints implementation
+@section Hints
+
+@itemize @bullet
+@item
+@cite{The extent to which suggestions made by using the @code{register}
+storage-class specifier are effective (6.7.1).}
+
+@item
+@cite{The extent to which suggestions made by using the inline function
+specifier are effective (6.7.4).}
+
+@end itemize
+
+@node Structures unions enumerations and bit-fields implementation
+@section Structures, unions, enumerations, and bit-fields
+
+@itemize @bullet
+@item
+@cite{Whether a ``plain'' int bit-field is treated as a @code{signed int}
+bit-field or as an @code{unsigned int} bit-field (6.7.2, 6.7.2.1).}
+
+@item
+@cite{Allowable bit-field types other than @code{_Bool}, @code{signed int},
+and @code{unsigned int} (6.7.2.1).}
+
+@item
+@cite{Whether a bit-field can straddle a storage-unit boundary (6.7.2.1).}
+
+@item
+@cite{The order of allocation of bit-fields within a unit (6.7.2.1).}
+
+@item
+@cite{The alignment of non-bit-field members of structures (6.7.2.1).}
+
+@item
+@cite{The integer type compatible with each enumerated type (6.7.2.2).}
+
+@end itemize
+
+@node Qualifiers implementation
+@section Qualifiers
+
+@itemize @bullet
+@item
+@cite{What constitutes an access to an object that has volatile-qualified
+type (6.7.3).}
+
+@end itemize
+
+@node Preprocessing directives implementation
+@section Preprocessing directives
+
+@itemize @bullet
+@item
+@cite{How sequences in both forms of header names are mapped to headers
+or external source file names (6.4.7).}
+
+@item
+@cite{Whether the value of a character constant in a constant expression
+that controls conditional inclusion matches the value of the same character
+constant in the execution character set (6.10.1).}
+
+@item
+@cite{Whether the value of a single-character character constant in a
+constant expression that controls conditional inclusion may have a
+negative value (6.10.1).}
+
+@item
+@cite{The places that are searched for an included @samp{<>} delimited
+header, and how the places are specified or the header is
+identified (6.10.2).}
+
+@item
+@cite{How the named source file is searched for in an included @samp{""}
+delimited header (6.10.2).}
+
+@item
+@cite{The method by which preprocessing tokens (possibly resulting from
+macro expansion) in a @code{#include} directive are combined into a header
+name (6.10.2).}
+
+@item
+@cite{The nesting limit for @code{#include} processing (6.10.2).}
+
+@item
+@cite{Whether the @samp{#} operator inserts a @samp{\} character before
+the @samp{\} character that begins a universal character name in a
+character constant or string literal (6.10.3.2).}
+
+@item
+@cite{The behavior on each recognized non-@code{STDC #pragma}
+directive (6.10.6).}
+
+@item
+@cite{The definitions for @code{__DATE__} and @code{__TIME__} when
+respectively, the date and time of translation are not available (6.10.8).}
+
+@end itemize
+
+@node Library functions implementation
+@section Library functions
+
+The behavior of these points are dependent on the implementation
+of the C library, and are not defined by GCC itself.
+
+@node Architecture implementation
+@section Architecture
+
+@itemize @bullet
+@item
+@cite{The values or expressions assigned to the macros specified in the
+headers @code{<float.h>}, @code{<limits.h>}, and @code{<stdint.h>}
+(5.2.4.2, 7.18.2, 7.18.3).}
+
+@item
+@cite{The number, order, and encoding of bytes in any object
+(when not explicitly specified in this International Standard) (6.2.6.1).}
+
+@item
+@cite{The value of the result of the sizeof operator (6.5.3.4).}
+
+@end itemize
+
+@node Locale-specific behavior implementation
+@section Locale-specific behavior
+
+The behavior of these points are dependent on the implementation
+of the C library, and are not defined by GCC itself.
 
 @node C Extensions
 @chapter Extensions to the C Language Family
@@ -14,68 +372,13 @@ any of these features is used.)  To test for the availability of these
 features in conditional compilation, check for a predefined macro
 @code{__GNUC__}, which is always defined under GCC@.
 
-These extensions are available in C and Objective C@.  Most of them are
+These extensions are available in C and Objective-C@.  Most of them are
 also available in C++.  @xref{C++ Extensions,,Extensions to the
 C++ Language}, for extensions that apply @emph{only} to C++.
 
 Some features that are in ISO C99 but not C89 or C++ are also, as
 extensions, accepted by GCC in C89 mode and in C++.
 
-@c The only difference between the two versions of this menu is that the
-@c version for clear INTERNALS has an extra node, "Constraints" (which
-@c appears in a separate chapter in the other version of the manual).
-@ifset INTERNALS
-@menu
-* Statement Exprs::     Putting statements and declarations inside expressions.
-* Local Labels::        Labels local to a statement-expression.
-* Labels as Values::    Getting pointers to labels, and computed gotos.
-* Nested Functions::    As in Algol and Pascal, lexical scoping of functions.
-* Constructing Calls::	Dispatching a call to another function.
-* Naming Types::        Giving a name to the type of some expression.
-* Typeof::              @code{typeof}: referring to the type of an expression.
-* Lvalues::             Using @samp{?:}, @samp{,} and casts in lvalues.
-* Conditionals::        Omitting the middle operand of a @samp{?:} expression.
-* Long Long::		Double-word integers---@code{long long int}.
-* Complex::             Data types for complex numbers.
-* Hex Floats::          Hexadecimal floating-point constants.
-* Zero Length::         Zero-length arrays.
-* Variable Length::     Arrays whose length is computed at run time.
-* Variadic Macros::	Macros with a variable number of arguments.
-* Escaped Newlines::    Slightly looser rules for escaped newlines.
-* Multi-line Strings::  String literals with embedded newlines.
-* Subscripting::        Any array can be subscripted, even if not an lvalue.
-* Pointer Arith::       Arithmetic on @code{void}-pointers and function pointers.
-* Initializers::        Non-constant initializers.
-* Compound Literals::   Compound literals give structures, unions
-                         or arrays as values.
-* Designated Inits::	Labeling elements of initializers.
-* Cast to Union::       Casting to union type from any member of the union.
-* Case Ranges::		`case 1 ... 9' and such.
-* Mixed Declarations::	Mixing declarations and code.
-* Function Attributes:: Declaring that functions have no side effects,
-                         or that they can never return.
-* Attribute Syntax::    Formal syntax for attributes.
-* Function Prototypes:: Prototype declarations and old-style definitions.
-* C++ Comments::        C++ comments are recognized.
-* Dollar Signs::        Dollar sign is allowed in identifiers.
-* Character Escapes::   @samp{\e} stands for the character @key{ESC}.
-* Variable Attributes::	Specifying attributes of variables.
-* Type Attributes::	Specifying attributes of types.
-* Alignment::           Inquiring about the alignment of a type or variable.
-* Inline::              Defining inline functions (as fast as macros).
-* Extended Asm::        Assembler instructions with C expressions as operands.
-                         (With them you can define ``built-in'' functions.)
-* Asm Labels::          Specifying the assembler name to use for a C symbol.
-* Explicit Reg Vars::   Defining variables residing in specified registers.
-* Alternate Keywords::  @code{__const__}, @code{__asm__}, etc., for header files.
-* Incomplete Enums::    @code{enum foo;}, with details to follow.
-* Function Names::	Printable strings which are the name of the current
-			 function.
-* Return Address::      Getting the return or frame address of a function.
-* Other Builtins::      Other built-in functions.
-@end menu
-@end ifset
-@ifclear INTERNALS
 @menu
 * Statement Exprs::     Putting statements and declarations inside expressions.
 * Local Labels::        Labels local to a statement-expression.
@@ -124,9 +427,12 @@ extensions, accepted by GCC in C89 mode and in C++.
 * Function Names::	Printable strings which are the name of the current
 			 function.
 * Return Address::      Getting the return or frame address of a function.
+* Vector Extensions::   Using vector instructions through built-in functions.
 * Other Builtins::      Other built-in functions.
+* Target Builtins::     Built-in functions specific to particular targets.
+* Pragmas::             Pragmas accepted by GCC.
+* Unnamed Fields::      Unnamed struct/union fields within structs/unions.
 @end menu
-@end ifclear
 
 @node Statement Exprs
 @section Statements and Declarations in Expressions
@@ -429,9 +735,11 @@ but it's not wise to take the risk.  If, however, the nested function
 does not refer to anything that has gone out of scope, you should be
 safe.
 
-GCC implements taking the address of a nested function using a
-technique called @dfn{trampolines}.   A paper describing them is
-available as @uref{http://people.debian.org/~karlheg/Usenix88-lexic.pdf}.
+GCC implements taking the address of a nested function using a technique
+called @dfn{trampolines}.  A paper describing them is available as
+
+@noindent
+@uref{http://people.debian.org/~karlheg/Usenix88-lexic.pdf}.
 
 A nested function can jump to a label inherited from a containing
 function, provided the label was explicitly declared in the containing
@@ -941,17 +1249,17 @@ of zero-length arrays, @code{sizeof} evaluates to zero.
 
 @item
 Flexible array members may only appear as the last member of a
-@code{struct} that is otherwise non-empty.  GCC currently allows
-zero-length arrays anywhere.  You may encounter problems, however,
-defining structures containing only a zero-length array.  Such usage
-is deprecated, and we recommend using zero-length arrays only in
-places in which flexible array members would be allowed.
+@code{struct} that is otherwise non-empty.
 @end itemize
 
 GCC versions before 3.0 allowed zero-length arrays to be statically
-initialized.  In addition to those cases that were useful, it also
-allowed initializations in situations that would corrupt later data.
-Non-empty initialization of zero-length arrays is now deprecated.
+initialized, as if they were flexible arrays.  In addition to those
+cases that were useful, it also allowed initializations in situations
+that would corrupt later data.  Non-empty initialization of zero-length
+arrays is now treated like any case where there are more initializer
+elements than the array holds, in that a suitable warning about "excess
+elements in array" is given, and the excess elements (all of them, in
+this case) are ignored.
 
 Instead GCC allows static initialization of flexible array members.
 This is equivalent to defining a new structure containing the original
@@ -1175,10 +1483,12 @@ removed.
 @cindex arrays, non-lvalue
 
 @cindex subscripting and function values
-Subscripting is allowed on arrays that are not lvalues, even though the
-unary @samp{&} operator is not.  (In ISO C99, both are allowed (though
-the array may not be used after the next sequence point), but this ISO
-C99 feature is not yet fully supported in GCC@.)  For example,
+In ISO C99, arrays that are not lvalues still decay to pointers, and
+may be subscripted, although they may not be modified or used after
+the next sequence point and the unary @samp{&} operator may not be
+applied to them.  As an extension, GCC allows such arrays to be
+subscripted in C89 mode, though otherwise they do not decay to
+pointers outside C99 mode.  For example,
 this is valid in GNU C though not valid in C89:
 
 @example
@@ -1241,9 +1551,8 @@ foo (float f, float g)
 ISO C99 supports compound literals.  A compound literal looks like
 a cast containing an initializer.  Its value is an object of the
 type specified in the cast, containing the elements specified in
-the initializer.  (GCC does not yet implement the full ISO C99 semantics
-for compound literals.)  As an extension, GCC supports compound literals
-in C89 mode and in C++.
+the initializer; it is an lvalue.  As an extension, GCC supports
+compound literals in C89 mode and in C++.
 
 Usually, the specified type is a structure.  Assume that
 @code{struct foo} and @code{structure} are declared as shown:
@@ -1271,31 +1580,40 @@ This is equivalent to writing the following:
 
 You can also construct an array.  If all the elements of the compound literal
 are (made up of) simple constant expressions, suitable for use in
-initializers, then the compound literal is an lvalue and can be coerced to a
-pointer to its first element, as shown here:
+initializers of objects of static storage duration, then the compound
+literal can be coerced to a pointer to its first element and used in
+such an initializer, as shown here:
 
 @example
 char **foo = (char *[]) @{ "x", "y", "z" @};
 @end example
 
-Array compound literals whose elements are not simple constants are
-not very useful, because the compound literal is not an lvalue; ISO C99
-specifies that it is, being a temporary object with automatic storage
-duration associated with the enclosing block, but GCC does not yet
-implement this.  There are currently only two valid ways to use it with
-GCC: to subscript it, or initialize
-an array variable with it.  The former is probably slower than a
-@code{switch} statement, while the latter does the same thing an
-ordinary C initializer would do.  Here is an example of
-subscripting an array compound literal:
-
-@example
-output = ((int[]) @{ 2, x, 28 @}) [input];
-@end example
-
 Compound literals for scalar types and union types are is
 also allowed, but then the compound literal is equivalent
 to a cast.
+
+As a GNU extension, GCC allows initialization of objects with static storage
+duration by compound literals (which is not possible in ISO C99, because
+the initializer is not a constant).
+It is handled as if the object was initialized only with the bracket
+enclosed list if compound literal's and object types match.
+The initializer list of the compound literal must be constant.
+If the object being initialized has array type of unknown size, the size is
+determined by compound literal size.
+
+@example
+static struct foo x = (struct foo) @{1, 'a', 'b'@};
+static int y[] = (int []) @{1, 2, 3@};
+static int z[] = (int [3]) @{1@};
+@end example
+
+@noindent
+The above lines are equivalent to the following:
+@example
+static struct foo x = @{1, 'a', 'b'@};
+static int y[] = @{1, 2, 3@};
+static int z[] = @{1, 0, 0@};
+@end example
 
 @node Designated Inits
 @section Designated Initializers
@@ -1560,15 +1878,17 @@ carefully.
 
 The keyword @code{__attribute__} allows you to specify special
 attributes when making a declaration.  This keyword is followed by an
-attribute specification inside double parentheses.  Fourteen attributes,
-@code{noreturn}, @code{pure}, @code{const}, @code{format},
-@code{format_arg}, @code{no_instrument_function}, @code{section},
-@code{constructor}, @code{destructor}, @code{unused}, @code{weak},
-@code{malloc}, @code{alias} and @code{no_check_memory_usage} are
-currently defined for functions.  Several other attributes are defined
-for functions on particular target systems.  Other attributes, including
-@code{section} are supported for variables declarations (@pxref{Variable
-Attributes}) and for types (@pxref{Type Attributes}).
+attribute specification inside double parentheses.  The following
+attributes are currently defined for functions on all targets:
+@code{noreturn}, @code{noinline}, @code{always_inline},
+@code{pure}, @code{const},
+@code{format}, @code{format_arg}, @code{no_instrument_function},
+@code{section}, @code{constructor}, @code{destructor}, @code{used},
+@code{unused}, @code{deprecated}, @code{weak}, @code{malloc}, and
+@code{alias}.  Several other attributes are defined for functions on
+particular target systems.  Other attributes, including @code{section}
+are supported for variables declarations (@pxref{Variable Attributes})
+and for types (@pxref{Type Attributes}).
 
 You may also specify attributes with @samp{__} preceding and following
 each keyword.  This allows you to use them in header files without
@@ -1621,6 +1941,17 @@ typedef void voidfn ();
 
 volatile voidfn fatal;
 @end smallexample
+
+@cindex @code{noinline} function attribute
+@item noinline
+This function attribute prevents a function from being considered for
+inlining.
+
+@cindex @code{always_inline} function attribute
+@item always_inline
+Generally, functions are not inlined unless optimization is specified.
+For functions declared inline, this attribute inlines the function even
+if no optimization level was specified.
 
 @cindex @code{pure} function attribute
 @item pure
@@ -1723,7 +2054,8 @@ warnings are requested (using @option{-Wformat}), so there is no need to
 modify the header file @file{stdio.h}.  In C99 mode, the functions
 @code{snprintf}, @code{vsnprintf}, @code{vscanf}, @code{vfscanf} and
 @code{vsscanf} are also checked.  Except in strictly conforming C
-standard modes, the X/Open function @code{strfmon} is also checked.
+standard modes, the X/Open function @code{strfmon} is also checked as
+are @code{printf_unlocked} and @code{fprintf_unlocked}.
 @xref{C Dialect Options,,Options Controlling C Dialect}.
 
 @item format_arg (@var{string-index})
@@ -1807,13 +2139,42 @@ been called.  Functions with these attributes are useful for
 initializing data that will be used implicitly during the execution of
 the program.
 
-These attributes are not currently implemented for Objective C@.
+These attributes are not currently implemented for Objective-C@.
 
+@cindex @code{unused} attribute.
 @item unused
 This attribute, attached to a function, means that the function is meant
 to be possibly unused.  GCC will not produce a warning for this
 function.  GNU C++ does not currently support this attribute as
 definitions without parameters are valid in C++.
+
+@cindex @code{used} attribute.
+@item used
+This attribute, attached to a function, means that code must be emitted
+for the function even if it appears that the function is not referenced.
+This is useful, for example, when the function is referenced only in
+inline assembly.
+
+@cindex @code{deprecated} attribute.
+@item deprecated
+The @code{deprecated} attribute results in a warning if the function
+is used anywhere in the source file.  This is useful when identifying
+functions that are expected to be removed in a future version of a
+program.  The warning also includes the location of the declaration
+of the deprecated function, to enable users to easily find further
+information about why the function is deprecated, or what they should
+do instead.  Note that the warnings only occurs for uses:
+
+@smallexample
+int old_fn () __attribute__ ((deprecated));
+int old_fn ();
+int (*fn_ptr)() = old_fn;
+@end smallexample
+
+results in a warning on line 3 but not line 2.
+
+The @code{deprecated} attribute can also be used for variables and
+types (@pxref{Variable Attributes}, @pxref{Type Attributes}.)
 
 @item weak
 @cindex @code{weak} attribute
@@ -1845,23 +2206,6 @@ declares @samp{f} to be a weak alias for @samp{__f}.  In C++, the
 mangled name for the target must be used.
 
 Not all target machines support this attribute.
-
-@item no_check_memory_usage
-@cindex @code{no_check_memory_usage} function attribute
-@opindex fcheck-memory-usage
-The @code{no_check_memory_usage} attribute causes GCC to omit checks
-of memory references when it generates code for that function.  Normally
-if you specify @option{-fcheck-memory-usage} (see @pxref{Code Gen
-Options}), GCC generates calls to support routines before most memory
-accesses to permit support code to record usage and detect uses of
-uninitialized or unallocated storage.  Since GCC cannot handle
-@code{asm} statements properly they are not allowed in such functions.
-If you declare a function with this attribute, GCC will not generate
-memory checking code for that function, permitting the use of @code{asm}
-statements without having to compile that function with different
-options.  This also allows you to write support routines of your own if
-you wish, without getting infinite recursion if they get compiled with
-@option{-fcheck-memory-usage}.
 
 @item regparm (@var{number})
 @cindex functions that are passed arguments in registers on the 386
@@ -1936,21 +2280,21 @@ structured exception table.
 
 @item function_vector
 @cindex calling functions through the function vector on the H8/300 processors
-Use this option on the H8/300 and H8/300H to indicate that the specified
+Use this attribute on the H8/300 and H8/300H to indicate that the specified
 function should be called through the function vector.  Calling a
 function through the function vector will reduce code size, however;
 the function vector has a limited size (maximum 128 entries on the H8/300
 and 64 entries on the H8/300H) and shares space with the interrupt vector.
 
 You must use GAS and GLD from GNU binutils version 2.7 or later for
-this option to work correctly.
+this attribute to work correctly.
 
 @item interrupt
 @cindex interrupt handler functions
-Use this option on the ARM, AVR and M32R/D ports to indicate that the
-specified function is an interrupt handler.  The compiler will generate
-function entry and exit sequences suitable for use in an interrupt
-handler when this attribute is present.
+Use this attribute on the ARM, AVR, M32R/D and Xstormy16 ports to indicate
+that the specified function is an interrupt handler.  The compiler will
+generate function entry and exit sequences suitable for use in an
+interrupt handler when this attribute is present.
 
 Note, interrupt handlers for the H8/300, H8/300H and SH processors can
 be specified via the @code{interrupt_handler} attribute.
@@ -1968,13 +2312,13 @@ Permissible values for this parameter are: IRQ, FIQ, SWI, ABORT and UNDEF@.
 
 @item interrupt_handler
 @cindex interrupt handler functions on the H8/300 and SH processors
-Use this option on the H8/300, H8/300H and SH to indicate that the
+Use this attribute on the H8/300, H8/300H and SH to indicate that the
 specified function is an interrupt handler.  The compiler will generate
 function entry and exit sequences suitable for use in an interrupt
 handler when this attribute is present.
 
 @item sp_switch
-Use this option on the SH to indicate an @code{interrupt_handler}
+Use this attribute on the SH to indicate an @code{interrupt_handler}
 function should switch to an alternate stack.  It expects a string
 argument that names a global variable holding the address of the
 alternate stack.
@@ -1986,24 +2330,24 @@ void f () __attribute__ ((interrupt_handler,
 @end smallexample
 
 @item trap_exit
-Use this option on the SH for an @code{interrupt_handle} to return using
+Use this attribute on the SH for an @code{interrupt_handle} to return using
 @code{trapa} instead of @code{rte}.  This attribute expects an integer
 argument specifying the trap number to be used.
 
 @item eightbit_data
 @cindex eight bit data on the H8/300 and H8/300H
-Use this option on the H8/300 and H8/300H to indicate that the specified
+Use this attribute on the H8/300 and H8/300H to indicate that the specified
 variable should be placed into the eight bit data section.
 The compiler will generate more efficient code for certain operations
 on data in the eight bit data area.  Note the eight bit data area is limited to
 256 bytes of data.
 
 You must use GAS and GLD from GNU binutils version 2.7 or later for
-this option to work correctly.
+this attribute to work correctly.
 
 @item tiny_data
 @cindex tiny data section on the H8/300H
-Use this option on the H8/300H to indicate that the specified
+Use this attribute on the H8/300H to indicate that the specified
 variable should be placed into the tiny data section.
 The compiler will generate more efficient code for loads and stores
 on data in the tiny data section.  Note the tiny data area is limited to
@@ -2011,14 +2355,14 @@ slightly under 32kbytes of data.
 
 @item signal
 @cindex signal handler functions on the AVR processors
-Use this option on the AVR to indicate that the specified
+Use this attribute on the AVR to indicate that the specified
 function is an signal handler.  The compiler will generate function
 entry and exit sequences suitable for use in an signal handler when this
 attribute is present.  Interrupts will be disabled inside function.
 
 @item naked
 @cindex function without a prologue/epilogue code
-Use this option on the ARM or AVR ports to indicate that the specified
+Use this attribute on the ARM or AVR ports to indicate that the specified
 function do not need prologue/epilogue sequences generated by the
 compiler.  It is up to the programmer to provide these sequences.
 
@@ -2083,9 +2427,17 @@ Preprocessing Directives, cpp, The C Preprocessor}.
 
 This section describes the syntax with which @code{__attribute__} may be
 used, and the constructs to which attribute specifiers bind, for the C
-language.  Some details may vary for C++ and Objective C@.  Because of
+language.  Some details may vary for C++ and Objective-C@.  Because of
 infelicities in the grammar for attributes, some forms described here
 may not be successfully parsed in all cases.
+
+There are some problems with the semantics of attributes in C++.  For
+example, there are no manglings for attributes, although they may affect
+code generation, so problems may arise when attributed types are used in
+conjunction with templates or overloading.  Similarly, @code{typeid}
+does not distinguish between types with different attributes.  Support
+for attributes in C++ may be restricted in future to attributes on
+declarations only, but not on nested declarators.
 
 @xref{Function Attributes}, for details of the semantics of attributes
 applying to functions.  @xref{Variable Attributes}, for details of the
@@ -2158,9 +2510,8 @@ defined is not complete until after the attribute specifiers.
 Otherwise, an attribute specifier appears as part of a declaration,
 counting declarations of unnamed parameters and type names, and relates
 to that declaration (which may be nested in another declaration, for
-example in the case of a parameter declaration).  In future, attribute
-specifiers in some places may however apply to a particular declarator
-within a declaration instead; these cases are noted below.  Where an
+example in the case of a parameter declaration), or to a particular declarator
+within a declaration.  Where an
 attribute specifier is applied to a parameter declared as a function or
 an array, it should apply to the function or array rather than the
 pointer to which the parameter is implicitly converted, but this is not
@@ -2186,45 +2537,60 @@ other specifiers or qualifiers.
 An attribute specifier list may appear immediately before a declarator
 (other than the first) in a comma-separated list of declarators in a
 declaration of more than one identifier using a single list of
-specifiers and qualifiers.  At present, such attribute specifiers apply
-not only to the identifier before whose declarator they appear, but to
-all subsequent identifiers declared in that declaration, but in future
-they may apply only to that single identifier.  For example, in
-@code{__attribute__((noreturn)) void d0 (void),
-__attribute__((format(printf, 1, 2))) d1 (const char *, ...), d2
-(void)}, the @code{noreturn} attribute applies to all the functions
-declared; the @code{format} attribute should only apply to @code{d1},
-but at present applies to @code{d2} as well (and so causes an error).
+specifiers and qualifiers.  Such attribute specifiers apply
+only to the identifier before whose declarator they appear.  For
+example, in
+
+@smallexample
+__attribute__((noreturn)) void d0 (void),
+    __attribute__((format(printf, 1, 2))) d1 (const char *, ...),
+     d2 (void)
+@end smallexample
+
+@noindent
+the @code{noreturn} attribute applies to all the functions
+declared; the @code{format} attribute only applies to @code{d1}.
 
 An attribute specifier list may appear immediately before the comma,
 @code{=} or semicolon terminating the declaration of an identifier other
 than a function definition.  At present, such attribute specifiers apply
 to the declared object or function, but in future they may attach to the
 outermost adjacent declarator.  In simple cases there is no difference,
-but, for example, in @code{void (****f)(void)
-__attribute__((noreturn));}, at present the @code{noreturn} attribute
-applies to @code{f}, which causes a warning since @code{f} is not a
-function, but in future it may apply to the function @code{****f}.  The
-precise semantics of what attributes in such cases will apply to are not
-yet specified.  Where an assembler name for an object or function is
-specified (@pxref{Asm Labels}), at present the attribute must follow the
-@code{asm} specification; in future, attributes before the @code{asm}
-specification may apply to the adjacent declarator, and those after it
-to the declared object or function.
+but, for example, in
+
+@smallexample
+void (****f)(void) __attribute__((noreturn));
+@end smallexample
+
+@noindent
+at present the @code{noreturn} attribute applies to @code{f}, which
+causes a warning since @code{f} is not a function, but in future it may
+apply to the function @code{****f}.  The precise semantics of what
+attributes in such cases will apply to are not yet specified.  Where an
+assembler name for an object or function is specified (@pxref{Asm
+Labels}), at present the attribute must follow the @code{asm}
+specification; in future, attributes before the @code{asm} specification
+may apply to the adjacent declarator, and those after it to the declared
+object or function.
 
 An attribute specifier list may, in future, be permitted to appear after
 the declarator in a function definition (before any old-style parameter
 declarations or the function body).
 
+Attribute specifiers may be mixed with type qualifiers appearing inside
+the @code{[]} of a parameter array declarator, in the C99 construct by
+which such qualifiers are applied to the pointer to which the array is
+implicitly converted.  Such attribute specifiers apply to the pointer,
+not to the array, but at present this is not implemented and they are
+ignored.
+
 An attribute specifier list may appear at the start of a nested
 declarator.  At present, there are some limitations in this usage: the
-attributes apply to the identifier declared, and to all subsequent
-identifiers declared in that declaration (if it includes a
-comma-separated list of declarators), rather than to a specific
-declarator.  When attribute specifiers follow the @code{*} of a pointer
-declarator, they must presently follow any type qualifiers present, and
-cannot be mixed with them.  The following describes intended future
-semantics which make this syntax more useful only.  It will make the
+attributes correctly apply to the declarator, but for most individual
+attributes the semantics this implies are not implemented.
+When attribute specifiers follow the @code{*} of a pointer
+declarator, they may be mixed with any type qualifiers present.
+The following describes the formal semantics of this syntax.  It will make the
 most sense if you are familiar with the formal specification of
 declarators in the ISO C standard.
 
@@ -2249,12 +2615,42 @@ declaration @code{T D} specifies the type
 @var{type-qualifier-and-attribute-specifier-list} @var{Type}'' for
 @var{ident}.
 
-For example, @code{void (__attribute__((noreturn)) ****f)();} specifies
-the type ``pointer to pointer to pointer to pointer to non-returning
-function returning @code{void}''.  As another example, @code{char
-*__attribute__((aligned(8))) *f;} specifies the type ``pointer to
-8-byte-aligned pointer to @code{char}''.  Note again that this describes
-intended future semantics, not current implementation.
+For example,
+
+@smallexample
+void (__attribute__((noreturn)) ****f) (void);
+@end smallexample
+
+@noindent
+specifies the type ``pointer to pointer to pointer to pointer to
+non-returning function returning @code{void}''.  As another example,
+
+@smallexample
+char *__attribute__((aligned(8))) *f;
+@end smallexample
+
+@noindent
+specifies the type ``pointer to 8-byte-aligned pointer to @code{char}''.
+Note again that this does not work with most attributes; for example,
+the usage of @samp{aligned} and @samp{noreturn} attributes given above
+is not yet supported.
+
+For compatibility with existing code written for compiler versions that
+did not implement attributes on nested declarators, some laxity is
+allowed in the placing of attributes.  If an attribute that only applies
+to types is applied to a declaration, it will be treated as applying to
+the type of that declaration.  If an attribute that only applies to
+declarations is applied to the type of a declaration, it will be treated
+as applying to that declaration; and, for compatibility with code
+placing the attributes immediately before the identifier declared, such
+an attribute applied to a function return type will be treated as
+applying to the function type, and such an attribute applied to an array
+element type will be treated as applying to the array type.  If an
+attribute that only applies to function types is applied to a
+pointer-to-function type, it will be treated as applying to the pointer
+target type; if such an attribute is applied to a function return type
+that is not a pointer-to-function type, it will be treated as applying
+to the function type.
 
 @node Function Prototypes
 @section Prototypes and Old-Style Function Definitions
@@ -2311,6 +2707,7 @@ isroot (uid_t x)
 @}
 @end example
 
+@noindent
 GNU C++ does not support old-style function definitions, so this
 extension is irrelevant.
 
@@ -2387,13 +2784,14 @@ It is an error to ask for the alignment of an incomplete type.
 
 The keyword @code{__attribute__} allows you to specify special
 attributes of variables or structure fields.  This keyword is followed
-by an attribute specification inside double parentheses.  Eight
+by an attribute specification inside double parentheses.  Ten
 attributes are currently defined for variables: @code{aligned},
 @code{mode}, @code{nocommon}, @code{packed}, @code{section},
-@code{transparent_union}, @code{unused}, and @code{weak}.  Some other
-attributes are defined for variables on particular target systems.  Other
-attributes are available for functions (@pxref{Function Attributes}) and
-for types (@pxref{Type Attributes}).  Other front ends might define more
+@code{transparent_union}, @code{unused}, @code{deprecated},
+@code{vector_size}, and @code{weak}.  Some other attributes are defined
+for variables on particular target systems.  Other attributes are
+available for functions (@pxref{Function Attributes}) and for types
+(@pxref{Type Attributes}).  Other front ends might define more
 attributes (@pxref{C++ Extensions,,Extensions to the C++ Language}).
 
 You may also specify attributes with @samp{__} preceding and following
@@ -2430,11 +2828,6 @@ struct foo @{ int x[2] __attribute__ ((aligned (8))); @};
 @noindent
 This is an alternative to creating a union with a @code{double} member
 that forces the union to be double-word aligned.
-
-It is not possible to specify the alignment of functions; the alignment
-of functions is determined by the machine's requirements and cannot be
-changed.  You cannot specify alignment for a typedef name because such a
-name is just an alias, not a distinct type.
 
 As in the preceding examples, you can explicitly specify the alignment
 (in bytes) that you wish the compiler to use for a given variable or
@@ -2596,6 +2989,55 @@ This attribute, attached to a variable, means that the variable is meant
 to be possibly unused.  GCC will not produce a warning for this
 variable.
 
+@item deprecated
+The @code{deprecated} attribute results in a warning if the variable
+is used anywhere in the source file.  This is useful when identifying
+variables that are expected to be removed in a future version of a
+program.  The warning also includes the location of the declaration
+of the deprecated variable, to enable users to easily find further
+information about why the variable is deprecated, or what they should
+do instead.  Note that the warnings only occurs for uses:
+
+@smallexample
+extern int old_var __attribute__ ((deprecated));
+extern int old_var;
+int new_fn () @{ return old_var; @}
+@end smallexample
+
+results in a warning on line 3 but not line 2.
+
+The @code{deprecated} attribute can also be used for functions and
+types (@pxref{Function Attributes}, @pxref{Type Attributes}.)
+
+@item vector_size (@var{bytes})
+This attribute specifies the vector size for the variable, measured in
+bytes.  For example, the declaration:
+
+@smallexample
+int foo __attribute__ ((vector_size (16)));
+@end smallexample
+
+@noindent
+causes the compiler to set the mode for @code{foo}, to be 16 bytes,
+divided into @code{int} sized units.  Assuming a 32-bit int (a vector of
+4 units of 4 bytes), the corresponding mode of @code{foo} will be V4SI@.
+
+This attribute is only applicable to integral and float scalars,
+although arrays, pointers, and function return values are allowed in
+conjunction with this construct.
+
+Aggregates with this attribute are invalid, even if they are of the same
+size as a corresponding scalar.  For example, the declaration:
+
+@smallexample
+struct S @{ int a; @};
+struct S  __attribute__ ((vector_size (16))) foo;
+@end smallexample
+
+@noindent
+is invalid even if the size of the structure is the same as the size of
+the @code{int}.
+
 @item weak
 The @code{weak} attribute is described in @xref{Function Attributes}.
 
@@ -2626,10 +3068,10 @@ packed))}.
 The keyword @code{__attribute__} allows you to specify special
 attributes of @code{struct} and @code{union} types when you define such
 types.  This keyword is followed by an attribute specification inside
-double parentheses.  Four attributes are currently defined for types:
-@code{aligned}, @code{packed}, @code{transparent_union}, and @code{unused}.
-Other attributes are defined for functions (@pxref{Function Attributes}) and
-for variables (@pxref{Variable Attributes}).
+double parentheses.  Five attributes are currently defined for types:
+@code{aligned}, @code{packed}, @code{transparent_union}, @code{unused},
+and @code{deprecated}.  Other attributes are defined for functions
+(@pxref{Function Attributes}) and for variables (@pxref{Variable Attributes}).
 
 You may also specify any one of these attributes with @samp{__}
 preceding and following its keyword.  This allows you to use these
@@ -2812,6 +3254,34 @@ the case with lock or thread classes, which are usually defined and then
 not referenced, but contain constructors and destructors that have
 nontrivial bookkeeping functions.
 
+@item deprecated
+The @code{deprecated} attribute results in a warning if the type
+is used anywhere in the source file.  This is useful when identifying
+types that are expected to be removed in a future version of a program.
+If possible, the warning also includes the location of the declaration
+of the deprecated type, to enable users to easily find further
+information about why the type is deprecated, or what they should do
+instead.  Note that the warnings only occur for uses and then only
+if the type is being applied to an identifier that itself is not being
+declared as deprecated.
+
+@smallexample
+typedef int T1 __attribute__ ((deprecated));
+T1 x;
+typedef T1 T2;
+T2 y;
+typedef T1 T3 __attribute__ ((deprecated));
+T3 z __attribute__ ((deprecated));
+@end smallexample
+
+results in a warning on line 2 and 3 but not lines 4, 5, or 6.  No
+warning is issued for line 4 because T2 is not explicitly
+deprecated.  Line 5 has no warning because T3 is explicitly
+deprecated.  Similarly for line 6.
+
+The @code{deprecated} attribute can also be used for functions and
+variables (@pxref{Function Attributes}, @pxref{Variable Attributes}.)
+
 @end table
 
 To specify multiple attributes, separate them by commas within the
@@ -2865,7 +3335,7 @@ and nested functions (@pxref{Nested Functions}).  Using @option{-Winline}
 will warn when a function marked @code{inline} could not be substituted,
 and will give the reason for the failure.
 
-Note that in C and Objective C, unlike C++, the @code{inline} keyword
+Note that in C and Objective-C, unlike C++, the @code{inline} keyword
 does not affect the linkage of the function.
 
 @cindex automatic @code{inline} for C++ member fns
@@ -2920,10 +3390,13 @@ existing semantics will remain available when @option{-std=gnu89} is
 specified, but eventually the default will be @option{-std=gnu99} and
 that will implement the C99 semantics, though it does not do so yet.)
 
-GCC does not inline any functions when not optimizing.  It is not
-clear whether it is better to inline or not, in this case, but we found
-that a correct implementation when not optimizing was difficult.  So we
-did the easy thing, and turned it off.
+GCC does not inline any functions when not optimizing unless you specify
+the @samp{always_inline} attribute for the function, like this:
+
+@example
+/* Prototype.  */
+inline void foo (const char) __attribute__((always_inline));
+@end example
 
 @node Extended Asm
 @section Assembler Instructions with C Expression Operands
@@ -2959,13 +3432,33 @@ Each operand is described by an operand-constraint string followed by
 the C expression in parentheses.  A colon separates the assembler
 template from the first output operand and another separates the last
 output operand from the first input, if any.  Commas separate the
-operands within each group.  The total number of operands is limited to
-ten or to the maximum number of operands in any instruction pattern in
-the machine description, whichever is greater.
+operands within each group.  The total number of operands is currently
+limited to 30; this limitation may be lifted in some future version of
+GCC.
 
 If there are no output operands but there are input operands, you must
 place two consecutive colons surrounding the place where the output
 operands would go.
+
+As of GCC version 3.1, it is also possible to specify input and output
+operands using symbolic names which can be referenced within the
+assembler code.  These names are specified inside square brackets
+preceding the constraint string, and can be referenced inside the
+assembler code using @code{%[@var{name}]} instead of a percentage sign
+followed by the operand number.  Using named operands the above example
+could look like:
+
+@example
+asm ("fsinx %[angle],%[output]"
+     : [output] "=f" (result)
+     : [angle] "f" (angle));
+@end example
+
+@noindent
+Note that the symbolic operand names have no relation whatsoever to
+other C identifiers.  You may use any name you like, even those of
+existing C symbols, but must ensure that no two operands within the same
+assembler construct use the same symbolic name.
 
 Output operand expressions must be lvalues; the compiler can check this.
 The input operands need not be lvalues.  The compiler cannot check
@@ -3002,10 +3495,10 @@ asm ("combine %2,%0" : "=r" (foo) : "0" (foo), "g" (bar));
 
 @noindent
 The constraint @samp{"0"} for operand 1 says that it must occupy the
-same location as operand 0.  A digit in constraint is allowed only in an
-input operand and it must refer to an output operand.
+same location as operand 0.  A number in constraint is allowed only in
+an input operand and it must refer to an output operand.
 
-Only a digit in the constraint can guarantee that one operand will be in
+Only a number in the constraint can guarantee that one operand will be in
 the same place as another.  The mere fact that @code{foo} is the value
 of both operands is not enough to guarantee that they will be in the
 same place in the generated assembler code.  The following would not
@@ -3022,6 +3515,15 @@ use it for operand 1, but generate the output operand 0 in a different
 register (copying it afterward to @code{foo}'s own address).  Of course,
 since the register for operand 1 is not even mentioned in the assembler
 code, the result will not work, but GCC can't tell that.
+
+As of GCC version 3.1, one may write @code{[@var{name}]} instead of
+the operand number for a matching constraint.  For example:
+
+@example
+asm ("cmoveq %1,%2,%[result]"
+     : [result] "=r"(result)
+     : "r" (test), "r"(new), "[result]"(old));
+@end example
 
 Some instructions clobber specific hard registers.  To describe this,
 write a third colon after the input operands, followed by the names of
@@ -3301,11 +3803,7 @@ clobber for reg-stack.c to know that @code{fyl2xp1} pops both inputs.
 asm ("fyl2xp1" : "=t" (result) : "0" (x), "u" (y) : "st(1)");
 @end example
 
-@ifclear INTERNALS
-@c Show the details on constraints if they do not appear elsewhere in
-@c the manual
 @include md.texi
-@end ifclear
 
 @node Asm Labels
 @section Controlling Names Used in Assembler Code
@@ -3643,8 +4141,8 @@ __PRETTY_FUNCTION__ = int  a::sub (int)
 The compiler automagically replaces the identifiers with a string
 literal containing the appropriate name.  Thus, they are neither
 preprocessor macros, like @code{__FILE__} and @code{__LINE__}, nor
-variables.  This means that they catenate with other string literals,
-and that they can be used to initialize char arrays.  For example
+variables.  This means that they catenate with other string literals, and
+that they can be used to initialize char arrays.  For example
 
 @smallexample
 char here[] = "Function " __FUNCTION__ " in " __FILE__;
@@ -3695,7 +4193,9 @@ The @var{level} argument must be a constant integer.
 
 On some machines it may be impossible to determine the return address of
 any function other than the current one; in such cases, or when the top
-of the stack has been reached, this function will return @code{0}.
+of the stack has been reached, this function will return @code{0} or a
+random value. In addition, @code{__builtin_frame_address} may be used
+to determine if the top of the stack has been reached.
 
 This function should only be used with a nonzero argument for debugging
 purposes.
@@ -3717,9 +4217,83 @@ has a dedicated frame pointer register, and the function has a frame,
 then @code{__builtin_frame_address} will return the value of the frame
 pointer register.
 
-The caveats that apply to @code{__builtin_return_address} apply to this
-function as well.
+On some machines it may be impossible to determine the frame address of
+any function other than the current one; in such cases, or when the top
+of the stack has been reached, this function will return @code{0} if
+the first frame pointer is properly initialized by the startup code.
+
+This function should only be used with a nonzero argument for debugging
+purposes.
 @end deftypefn
+
+@node Vector Extensions
+@section Using vector instructions through built-in functions
+
+On some targets, the instruction set contains SIMD vector instructions that
+operate on multiple values contained in one large register at the same time.
+For example, on the i386 the MMX, 3Dnow! and SSE extensions can be used
+this way.
+
+The first step in using these extensions is to provide the necessary data
+types.  This should be done using an appropriate @code{typedef}:
+
+@example
+typedef int v4si __attribute__ ((mode(V4SI)));
+@end example
+
+The base type @code{int} is effectively ignored by the compiler, the
+actual properties of the new type @code{v4si} are defined by the
+@code{__attribute__}.  It defines the machine mode to be used; for vector
+types these have the form @code{V@var{n}@var{B}}; @var{n} should be the
+number of elements in the vector, and @var{B} should be the base mode of the
+individual elements.  The following can be used as base modes:
+
+@table @code
+@item QI
+An integer that is as wide as the smallest addressable unit, usually 8 bits.
+@item HI
+An integer, twice as wide as a QI mode integer, usually 16 bits.
+@item SI
+An integer, four times as wide as a QI mode integer, usually 32 bits.
+@item DI
+An integer, eight times as wide as a QI mode integer, usually 64 bits.
+@item SF
+A floating point value, as wide as a SI mode integer, usually 32 bits.
+@item DF
+A floating point value, as wide as a DI mode integer, usually 64 bits.
+@end table
+
+Not all base types or combinations are always valid; which modes can be used
+is determined by the target machine.  For example, if targetting the i386 MMX
+extensions, only @code{V8QI}, @code{V4HI} and @code{V2SI} are allowed modes.
+
+There are no @code{V1xx} vector modes - they would be identical to the
+corresponding base mode.
+
+There is no distinction between signed and unsigned vector modes.  This
+distinction is made by the operations that perform on the vectors, not
+by the data type.
+
+The types defined in this manner are somewhat special, they cannot be
+used with most normal C operations (i.e., a vector addition can @emph{not}
+be represented by a normal addition of two vector type variables).  You
+can declare only variables and use them in function calls and returns, as
+well as in assignments and some casts.  It is possible to cast from one
+vector type to another, provided they are of the same size (in fact, you
+can also cast vectors to and from other datatypes of the same size).
+
+A port that supports vector operations provides a set of built-in functions
+that can be used to operate on vectors.  For example, a function to add two
+vectors and multiply the result by a third could look like this:
+
+@example
+v4si f (v4si a, v4si b, v4si c)
+@{
+  v4si tmp = __builtin_addv4si (a, b);
+  return __builtin_mulv4si (tmp, c);
+@}
+
+@end example
 
 @node Other Builtins
 @section Other built-in functions provided by GCC
@@ -3755,7 +4329,9 @@ function as well.
 @findex fabsl
 @findex ffs
 @findex fprintf
+@findex fprintf_unlocked
 @findex fputs
+@findex fputs_unlocked
 @findex imaxabs
 @findex index
 @findex labs
@@ -3764,6 +4340,7 @@ function as well.
 @findex memcpy
 @findex memset
 @findex printf
+@findex printf_unlocked
 @findex rindex
 @findex sin
 @findex sinf
@@ -3794,11 +4371,11 @@ recommend general use of these functions.
 The remaining functions are provided for optimization purposes.
 
 @opindex fno-builtin
-GCC includes built-in versions of many of the functions in the
-standard C library.  The versions prefixed with @code{__builtin_} will
-always be treated as having the same meaning as the C library function
-even if you specify the @option{-fno-builtin} (@pxref{C Dialect Options})
-option.  Many of these functions are only optimized in certain cases; if
+GCC includes built-in versions of many of the functions in the standard
+C library.  The versions prefixed with @code{__builtin_} will always be
+treated as having the same meaning as the C library function even if you
+specify the @option{-fno-builtin} option. (@pxref{C Dialect Options})
+Many of these functions are only optimized in certain cases; if they are
 not optimized in a particular case, a call to the library function will
 be emitted.
 
@@ -3811,38 +4388,130 @@ in.  @code{_exit} is not recognized in strict ISO C mode (@option{-ansi},
 strict C89 mode (@option{-ansi} or @option{-std=c89}).
 
 Outside strict ISO C mode, the functions @code{alloca}, @code{bcmp},
-@code{bzero}, @code{index}, @code{rindex} and @code{ffs} may be handled
-as built-in functions.  Corresponding versions @code{__builtin_alloca},
-@code{__builtin_bcmp}, @code{__builtin_bzero}, @code{__builtin_index},
-@code{__builtin_rindex} and @code{__builtin_ffs} are also recognized in
-strict ISO C mode.
+@code{bzero}, @code{index}, @code{rindex}, @code{ffs}, @code{fputs_unlocked},
+@code{printf_unlocked} and @code{fprintf_unlocked} may be handled as
+built-in functions.  All these functions have corresponding versions
+prefixed with @code{__builtin_}, which may be used even in strict C89
+mode.
 
 The ISO C99 functions @code{conj}, @code{conjf}, @code{conjl},
 @code{creal}, @code{crealf}, @code{creall}, @code{cimag}, @code{cimagf},
-@code{cimagl}, @code{llabs} and @code{imaxabs} are handled as built-in functions
-except in strict ISO C89 mode.  There are also built-in versions of the ISO C99
-functions @code{cosf}, @code{cosl}, @code{fabsf}, @code{fabsl},
-@code{sinf}, @code{sinl}, @code{sqrtf}, and @code{sqrtl}, that are
-recognized in any mode since ISO C89 reserves these names for the
-purpose to which ISO C99 puts them.  All these functions have
-corresponding versions prefixed with @code{__builtin_}.
+@code{cimagl}, @code{llabs} and @code{imaxabs} are handled as built-in
+functions except in strict ISO C89 mode.  There are also built-in
+versions of the ISO C99 functions @code{cosf}, @code{cosl},
+@code{fabsf}, @code{fabsl}, @code{sinf}, @code{sinl}, @code{sqrtf}, and
+@code{sqrtl}, that are recognized in any mode since ISO C89 reserves
+these names for the purpose to which ISO C99 puts them.  All these
+functions have corresponding versions prefixed with @code{__builtin_}.
 
-The following ISO C89 functions are recognized as built-in functions unless
-@option{-fno-builtin} is specified: @code{abs}, @code{cos}, @code{fabs},
+The ISO C89 functions @code{abs}, @code{cos}, @code{fabs},
 @code{fprintf}, @code{fputs}, @code{labs}, @code{memcmp}, @code{memcpy},
 @code{memset}, @code{printf}, @code{sin}, @code{sqrt}, @code{strcat},
 @code{strchr}, @code{strcmp}, @code{strcpy}, @code{strcspn},
 @code{strlen}, @code{strncat}, @code{strncmp}, @code{strncpy},
-@code{strpbrk}, @code{strrchr}, @code{strspn}, and @code{strstr}.  All
-of these functions have corresponding versions prefixed with
-@code{__builtin_}.
+@code{strpbrk}, @code{strrchr}, @code{strspn}, and @code{strstr} are all
+recognized as built-in functions unless @option{-fno-builtin} is
+specified (or @option{-fno-builtin-@var{function}} is specified for an
+individual function).  All of these functions have corresponding
+versions prefixed with @code{__builtin_}.
 
-GCC provides built-in versions of the ISO C99 floating point
-comparison macros (that avoid raising exceptions for unordered
-operands): @code{__builtin_isgreater}, @code{__builtin_isgreaterequal},
-@code{__builtin_isless}, @code{__builtin_islessequal},
-@code{__builtin_islessgreater}, and @code{__builtin_isunordered}.
+GCC provides built-in versions of the ISO C99 floating point comparison
+macros that avoid raising exceptions for unordered operands.  They have
+the same names as the standard macros ( @code{isgreater},
+@code{isgreaterequal}, @code{isless}, @code{islessequal},
+@code{islessgreater}, and @code{isunordered}) , with @code{__builtin_}
+prefixed.  We intend for a library implementor to be able to simply
+@code{#define} each standard macro to its built-in equivalent.
 
+@deftypefn {Built-in Function} int __builtin_types_compatible_p (@var{type1}, @var{type2})
+
+You can use the built-in function @code{__builtin_types_compatible_p} to
+determine whether two types are the same.
+
+This built-in function returns 1 if the unqualified versions of the
+types @var{type1} and @var{type2} (which are types, not expressions) are
+compatible, 0 otherwise.  The result of this built-in function can be
+used in integer constant expressions.
+
+This built-in function ignores top level qualifiers (e.g., @code{const},
+@code{volatile}).  For example, @code{int} is equivalent to @code{const
+int}.
+
+The type @code{int[]} and @code{int[5]} are compatible.  On the other
+hand, @code{int} and @code{char *} are not compatible, even if the size
+of their types, on the particular architecture are the same.  Also, the
+amount of pointer indirection is taken into account when determining
+similarity.  Consequently, @code{short *} is not similar to
+@code{short **}.  Furthermore, two types that are typedefed are
+considered compatible if their underlying types are compatible.
+
+An @code{enum} type is considered to be compatible with another
+@code{enum} type.  For example, @code{enum @{foo, bar@}} is similar to
+@code{enum @{hot, dog@}}.
+
+You would typically use this function in code whose execution varies
+depending on the arguments' types.  For example:
+
+@smallexample
+#define foo(x)                                                  \
+  (@{                                                           \
+    typeof (x) tmp;                                             \
+    if (__builtin_types_compatible_p (typeof (x), long double)) \
+      tmp = foo_long_double (tmp);                              \
+    else if (__builtin_types_compatible_p (typeof (x), double)) \
+      tmp = foo_double (tmp);                                   \
+    else if (__builtin_types_compatible_p (typeof (x), float))  \
+      tmp = foo_float (tmp);                                    \
+    else                                                        \
+      abort ();                                                 \
+    tmp;                                                        \
+  @})
+@end smallexample
+
+@emph{Note:} This construct is only available for C.
+
+@end deftypefn
+
+@deftypefn {Built-in Function} @var{type} __builtin_choose_expr (@var{const_exp}, @var{exp1}, @var{exp2})
+
+You can use the built-in function @code{__builtin_choose_expr} to
+evaluate code depending on the value of a constant expression.  This
+built-in function returns @var{exp1} if @var{const_exp}, which is a
+constant expression that must be able to be determined at compile time,
+is nonzero.  Otherwise it returns 0.
+
+This built-in function is analogous to the @samp{? :} operator in C,
+except that the expression returned has its type unaltered by promotion
+rules.  Also, the built-in function does not evaluate the expression
+that was not chosen.  For example, if @var{const_exp} evaluates to true,
+@var{exp2} is not evaluated even if it has side-effects.
+
+This built-in function can return an lvalue if the chosen argument is an
+lvalue.
+
+If @var{exp1} is returned, the return type is the same as @var{exp1}'s
+type.  Similarly, if @var{exp2} is returned, its return type is the same
+as @var{exp2}.
+
+Example:
+
+@smallexample
+#define foo(x)                                                               \
+  __builtin_choose_expr (__builtin_types_compatible_p (typeof (x), double),  \
+    foo_double (x),                                                          \
+    __builtin_choose_expr (__builtin_types_compatible_p (typeof (x), float), \
+      foo_float (x),                                                         \
+      /* @r{The void expression results in a compile-time error}             \
+         @r{when assigning the result to something.}  */                     \
+      (void)0))
+@end smallexample
+
+@emph{Note:} This construct is only available for C.  Furthermore, the
+unused expression (@var{exp1} or @var{exp2} depending on the value of
+@var{const_exp}) may still generate syntax errors.  This may change in
+future revisions.
+
+@end deftypefn
 
 @deftypefn {Built-in Function} int __builtin_constant_p (@var{exp})
 You can use the built-in function @code{__builtin_constant_p} to
@@ -3927,6 +4596,1515 @@ if (__builtin_expect (ptr != NULL, 1))
 @noindent
 when testing pointer or floating-point values.
 @end deftypefn
+
+@deftypefn {Built-in Function} void __builtin_prefetch (const void *@var{addr}, ...)
+This function is used to minimize cache-miss latency by moving data into
+a cache before it is accessed.
+You can insert calls to @code{__builtin_prefetch} into code for which
+you know addresses of data in memory that is likely to be accessed soon.
+If the target supports them, data prefetch instructions will be generated.
+If the prefetch is done early enough before the access then the data will
+be in the cache by the time it is accessed.
+
+The value of @var{addr} is the address of the memory to prefetch.
+There are two optional arguments, @var{rw} and @var{locality}.
+The value of @var{rw} is a compile-time constant one or zero; one
+means that the prefetch is preparing for a write to the memory address
+and zero, the default, means that the prefetch is preparing for a read.
+The value @var{locality} must be a compile-time constant integer between
+zero and three.  A value of zero means that the data has no temporal
+locality, so it need not be left in the cache after the access.  A value
+of three means that the data has a high degree of temporal locality and
+should be left in all levels of cache possible.  Values of one and two
+mean, respectively, a low or moderate degree of temporal locality.  The
+default is three.
+
+@smallexample
+for (i = 0; i < n; i++)
+  @{
+    a[i] = a[i] + b[i];
+    __builtin_prefetch (&a[i+j], 1, 1);
+    __builtin_prefetch (&b[i+j], 0, 1);
+    /* ... */
+  @}
+@end smallexample
+
+Data prefetch does not generate faults if @var{addr} is invalid, but
+the address expression itself must be valid.  For example, a prefetch
+of @code{p->next} will not fault if @code{p->next} is not a valid
+address, but evaluation will fault if @code{p} is not a valid address.
+
+If the target does not support data prefetch, the address expression
+is evaluated if it includes side effects but no other code is generated
+and GCC does not issue a warning.
+@end deftypefn
+
+@node Target Builtins
+@section Built-in Functions Specific to Particular Target Machines
+
+On some target machines, GCC supports many built-in functions specific
+to those machines.  Generally these generate calls to specific machine
+instructions, but allow the compiler to schedule those calls.
+
+@menu
+* X86 Built-in Functions::
+* PowerPC AltiVec Built-in Functions::
+@end menu
+
+@node X86 Built-in Functions
+@subsection X86 Built-in Functions
+
+These built-in functions are available for the i386 and x86-64 family
+of computers, depending on the command-line switches used.
+
+The following machine modes are available for use with MMX built-in functions
+(@pxref{Vector Extensions}): @code{V2SI} for a vector of two 32-bit integers,
+@code{V4HI} for a vector of four 16-bit integers, and @code{V8QI} for a
+vector of eight 8-bit integers.  Some of the built-in functions operate on
+MMX registers as a whole 64-bit entity, these use @code{DI} as their mode.
+
+If 3Dnow extensions are enabled, @code{V2SF} is used as a mode for a vector
+of two 32-bit floating point values.
+
+If SSE extensions are enabled, @code{V4SF} is used for a vector of four 32-bit
+floating point values.  Some instructions use a vector of four 32-bit
+integers, these use @code{V4SI}.  Finally, some instructions operate on an
+entire vector register, interpreting it as a 128-bit integer, these use mode
+@code{TI}.
+
+The following built-in functions are made available by @option{-mmmx}.
+All of them generate the machine instruction that is part of the name.
+
+@example
+v8qi __builtin_ia32_paddb (v8qi, v8qi)
+v4hi __builtin_ia32_paddw (v4hi, v4hi)
+v2si __builtin_ia32_paddd (v2si, v2si)
+v8qi __builtin_ia32_psubb (v8qi, v8qi)
+v4hi __builtin_ia32_psubw (v4hi, v4hi)
+v2si __builtin_ia32_psubd (v2si, v2si)
+v8qi __builtin_ia32_paddsb (v8qi, v8qi)
+v4hi __builtin_ia32_paddsw (v4hi, v4hi)
+v8qi __builtin_ia32_psubsb (v8qi, v8qi)
+v4hi __builtin_ia32_psubsw (v4hi, v4hi)
+v8qi __builtin_ia32_paddusb (v8qi, v8qi)
+v4hi __builtin_ia32_paddusw (v4hi, v4hi)
+v8qi __builtin_ia32_psubusb (v8qi, v8qi)
+v4hi __builtin_ia32_psubusw (v4hi, v4hi)
+v4hi __builtin_ia32_pmullw (v4hi, v4hi)
+v4hi __builtin_ia32_pmulhw (v4hi, v4hi)
+di __builtin_ia32_pand (di, di)
+di __builtin_ia32_pandn (di,di)
+di __builtin_ia32_por (di, di)
+di __builtin_ia32_pxor (di, di)
+v8qi __builtin_ia32_pcmpeqb (v8qi, v8qi)
+v4hi __builtin_ia32_pcmpeqw (v4hi, v4hi)
+v2si __builtin_ia32_pcmpeqd (v2si, v2si)
+v8qi __builtin_ia32_pcmpgtb (v8qi, v8qi)
+v4hi __builtin_ia32_pcmpgtw (v4hi, v4hi)
+v2si __builtin_ia32_pcmpgtd (v2si, v2si)
+v8qi __builtin_ia32_punpckhbw (v8qi, v8qi)
+v4hi __builtin_ia32_punpckhwd (v4hi, v4hi)
+v2si __builtin_ia32_punpckhdq (v2si, v2si)
+v8qi __builtin_ia32_punpcklbw (v8qi, v8qi)
+v4hi __builtin_ia32_punpcklwd (v4hi, v4hi)
+v2si __builtin_ia32_punpckldq (v2si, v2si)
+v8qi __builtin_ia32_packsswb (v4hi, v4hi)
+v4hi __builtin_ia32_packssdw (v2si, v2si)
+v8qi __builtin_ia32_packuswb (v4hi, v4hi)
+@end example
+
+The following built-in functions are made available either with
+@option{-msse}, or with a combination of @option{-m3dnow} and
+@option{-march=athlon}.  All of them generate the machine
+instruction that is part of the name.
+
+@example
+v4hi __builtin_ia32_pmulhuw (v4hi, v4hi)
+v8qi __builtin_ia32_pavgb (v8qi, v8qi)
+v4hi __builtin_ia32_pavgw (v4hi, v4hi)
+v4hi __builtin_ia32_psadbw (v8qi, v8qi)
+v8qi __builtin_ia32_pmaxub (v8qi, v8qi)
+v4hi __builtin_ia32_pmaxsw (v4hi, v4hi)
+v8qi __builtin_ia32_pminub (v8qi, v8qi)
+v4hi __builtin_ia32_pminsw (v4hi, v4hi)
+int __builtin_ia32_pextrw (v4hi, int)
+v4hi __builtin_ia32_pinsrw (v4hi, int, int)
+int __builtin_ia32_pmovmskb (v8qi)
+void __builtin_ia32_maskmovq (v8qi, v8qi, char *)
+void __builtin_ia32_movntq (di *, di)
+void __builtin_ia32_sfence (void)
+@end example
+
+The following built-in functions are available when @option{-msse} is used.
+All of them generate the machine instruction that is part of the name.
+
+@example
+int __builtin_ia32_comieq (v4sf, v4sf)
+int __builtin_ia32_comineq (v4sf, v4sf)
+int __builtin_ia32_comilt (v4sf, v4sf)
+int __builtin_ia32_comile (v4sf, v4sf)
+int __builtin_ia32_comigt (v4sf, v4sf)
+int __builtin_ia32_comige (v4sf, v4sf)
+int __builtin_ia32_ucomieq (v4sf, v4sf)
+int __builtin_ia32_ucomineq (v4sf, v4sf)
+int __builtin_ia32_ucomilt (v4sf, v4sf)
+int __builtin_ia32_ucomile (v4sf, v4sf)
+int __builtin_ia32_ucomigt (v4sf, v4sf)
+int __builtin_ia32_ucomige (v4sf, v4sf)
+v4sf __builtin_ia32_addps (v4sf, v4sf)
+v4sf __builtin_ia32_subps (v4sf, v4sf)
+v4sf __builtin_ia32_mulps (v4sf, v4sf)
+v4sf __builtin_ia32_divps (v4sf, v4sf)
+v4sf __builtin_ia32_addss (v4sf, v4sf)
+v4sf __builtin_ia32_subss (v4sf, v4sf)
+v4sf __builtin_ia32_mulss (v4sf, v4sf)
+v4sf __builtin_ia32_divss (v4sf, v4sf)
+v4si __builtin_ia32_cmpeqps (v4sf, v4sf)
+v4si __builtin_ia32_cmpltps (v4sf, v4sf)
+v4si __builtin_ia32_cmpleps (v4sf, v4sf)
+v4si __builtin_ia32_cmpgtps (v4sf, v4sf)
+v4si __builtin_ia32_cmpgeps (v4sf, v4sf)
+v4si __builtin_ia32_cmpunordps (v4sf, v4sf)
+v4si __builtin_ia32_cmpneqps (v4sf, v4sf)
+v4si __builtin_ia32_cmpnltps (v4sf, v4sf)
+v4si __builtin_ia32_cmpnleps (v4sf, v4sf)
+v4si __builtin_ia32_cmpngtps (v4sf, v4sf)
+v4si __builtin_ia32_cmpngeps (v4sf, v4sf)
+v4si __builtin_ia32_cmpordps (v4sf, v4sf)
+v4si __builtin_ia32_cmpeqss (v4sf, v4sf)
+v4si __builtin_ia32_cmpltss (v4sf, v4sf)
+v4si __builtin_ia32_cmpless (v4sf, v4sf)
+v4si __builtin_ia32_cmpgtss (v4sf, v4sf)
+v4si __builtin_ia32_cmpgess (v4sf, v4sf)
+v4si __builtin_ia32_cmpunordss (v4sf, v4sf)
+v4si __builtin_ia32_cmpneqss (v4sf, v4sf)
+v4si __builtin_ia32_cmpnlts (v4sf, v4sf)
+v4si __builtin_ia32_cmpnless (v4sf, v4sf)
+v4si __builtin_ia32_cmpngtss (v4sf, v4sf)
+v4si __builtin_ia32_cmpngess (v4sf, v4sf)
+v4si __builtin_ia32_cmpordss (v4sf, v4sf)
+v4sf __builtin_ia32_maxps (v4sf, v4sf)
+v4sf __builtin_ia32_maxss (v4sf, v4sf)
+v4sf __builtin_ia32_minps (v4sf, v4sf)
+v4sf __builtin_ia32_minss (v4sf, v4sf)
+v4sf __builtin_ia32_andps (v4sf, v4sf)
+v4sf __builtin_ia32_andnps (v4sf, v4sf)
+v4sf __builtin_ia32_orps (v4sf, v4sf)
+v4sf __builtin_ia32_xorps (v4sf, v4sf)
+v4sf __builtin_ia32_movss (v4sf, v4sf)
+v4sf __builtin_ia32_movhlps (v4sf, v4sf)
+v4sf __builtin_ia32_movlhps (v4sf, v4sf)
+v4sf __builtin_ia32_unpckhps (v4sf, v4sf)
+v4sf __builtin_ia32_unpcklps (v4sf, v4sf)
+v4sf __builtin_ia32_cvtpi2ps (v4sf, v2si)
+v4sf __builtin_ia32_cvtsi2ss (v4sf, int)
+v2si __builtin_ia32_cvtps2pi (v4sf)
+int __builtin_ia32_cvtss2si (v4sf)
+v2si __builtin_ia32_cvttps2pi (v4sf)
+int __builtin_ia32_cvttss2si (v4sf)
+v4sf __builtin_ia32_rcpps (v4sf)
+v4sf __builtin_ia32_rsqrtps (v4sf)
+v4sf __builtin_ia32_sqrtps (v4sf)
+v4sf __builtin_ia32_rcpss (v4sf)
+v4sf __builtin_ia32_rsqrtss (v4sf)
+v4sf __builtin_ia32_sqrtss (v4sf)
+v4sf __builtin_ia32_shufps (v4sf, v4sf, int)
+void __builtin_ia32_movntps (float *, v4sf)
+int __builtin_ia32_movmskps (v4sf)
+@end example
+
+The following built-in functions are available when @option{-msse} is used.
+
+@table @code
+@item v4sf __builtin_ia32_loadaps (float *)
+Generates the @code{movaps} machine instruction as a load from memory.
+@item void __builtin_ia32_storeaps (float *, v4sf)
+Generates the @code{movaps} machine instruction as a store to memory.
+@item v4sf __builtin_ia32_loadups (float *)
+Generates the @code{movups} machine instruction as a load from memory.
+@item void __builtin_ia32_storeups (float *, v4sf)
+Generates the @code{movups} machine instruction as a store to memory.
+@item v4sf __builtin_ia32_loadsss (float *)
+Generates the @code{movss} machine instruction as a load from memory.
+@item void __builtin_ia32_storess (float *, v4sf)
+Generates the @code{movss} machine instruction as a store to memory.
+@item v4sf __builtin_ia32_loadhps (v4sf, v2si *)
+Generates the @code{movhps} machine instruction as a load from memory.
+@item v4sf __builtin_ia32_loadlps (v4sf, v2si *)
+Generates the @code{movlps} machine instruction as a load from memory
+@item void __builtin_ia32_storehps (v4sf, v2si *)
+Generates the @code{movhps} machine instruction as a store to memory.
+@item void __builtin_ia32_storelps (v4sf, v2si *)
+Generates the @code{movlps} machine instruction as a store to memory.
+@end table
+
+The following built-in functions are available when @option{-m3dnow} is used.
+All of them generate the machine instruction that is part of the name.
+
+@example
+void __builtin_ia32_femms (void)
+v8qi __builtin_ia32_pavgusb (v8qi, v8qi)
+v2si __builtin_ia32_pf2id (v2sf)
+v2sf __builtin_ia32_pfacc (v2sf, v2sf)
+v2sf __builtin_ia32_pfadd (v2sf, v2sf)
+v2si __builtin_ia32_pfcmpeq (v2sf, v2sf)
+v2si __builtin_ia32_pfcmpge (v2sf, v2sf)
+v2si __builtin_ia32_pfcmpgt (v2sf, v2sf)
+v2sf __builtin_ia32_pfmax (v2sf, v2sf)
+v2sf __builtin_ia32_pfmin (v2sf, v2sf)
+v2sf __builtin_ia32_pfmul (v2sf, v2sf)
+v2sf __builtin_ia32_pfrcp (v2sf)
+v2sf __builtin_ia32_pfrcpit1 (v2sf, v2sf)
+v2sf __builtin_ia32_pfrcpit2 (v2sf, v2sf)
+v2sf __builtin_ia32_pfrsqrt (v2sf)
+v2sf __builtin_ia32_pfrsqrtit1 (v2sf, v2sf)
+v2sf __builtin_ia32_pfsub (v2sf, v2sf)
+v2sf __builtin_ia32_pfsubr (v2sf, v2sf)
+v2sf __builtin_ia32_pi2fd (v2si)
+v4hi __builtin_ia32_pmulhrw (v4hi, v4hi)
+@end example
+
+The following built-in functions are available when both @option{-m3dnow}
+and @option{-march=athlon} are used.  All of them generate the machine
+instruction that is part of the name.
+
+@example
+v2si __builtin_ia32_pf2iw (v2sf)
+v2sf __builtin_ia32_pfnacc (v2sf, v2sf)
+v2sf __builtin_ia32_pfpnacc (v2sf, v2sf)
+v2sf __builtin_ia32_pi2fw (v2si)
+v2sf __builtin_ia32_pswapdsf (v2sf)
+v2si __builtin_ia32_pswapdsi (v2si)
+@end example
+
+@node PowerPC AltiVec Built-in Functions
+@subsection PowerPC AltiVec Built-in Functions
+
+These built-in functions are available for the PowerPC family
+of computers, depending on the command-line switches used.
+
+The following machine modes are available for use with AltiVec built-in
+functions (@pxref{Vector Extensions}): @code{V4SI} for a vector of four
+32-bit integers, @code{V4SF} for a vector of four 32-bit floating point
+numbers, @code{V8HI} for a vector of eight 16-bit integers, and
+@code{V16QI} for a vector of sixteen 8-bit integers.
+
+The following functions are made available by including
+@code{<altivec.h>} and using @option{-maltivec} and
+@option{-mabi=altivec}.  The functions implement the functionality
+described in Motorola's AltiVec Programming Interface Manual.
+
+@emph{Note:} Only the @code{<altivec.h>} interface is supported.
+Internally, GCC uses built-in functions to achieve the functionality in
+the aforementioned header file, but they are not supported and are
+subject to change without notice.
+
+@smallexample
+vector signed char vec_abs (vector signed char, vector signed char);
+vector signed short vec_abs (vector signed short, vector signed short);
+vector signed int vec_abs (vector signed int, vector signed int);
+vector signed float vec_abs (vector signed float, vector signed float);
+
+vector signed char vec_abss (vector signed char, vector signed char);
+vector signed short vec_abss (vector signed short, vector signed short);
+
+vector signed char vec_add (vector signed char, vector signed char);
+vector unsigned char vec_add (vector signed char, vector unsigned char);
+
+vector unsigned char vec_add (vector unsigned char, vector signed char);
+
+vector unsigned char vec_add (vector unsigned char,
+                              vector unsigned char);
+vector signed short vec_add (vector signed short, vector signed short);
+vector unsigned short vec_add (vector signed short,
+                               vector unsigned short);
+vector unsigned short vec_add (vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_add (vector unsigned short,
+                               vector unsigned short);
+vector signed int vec_add (vector signed int, vector signed int);
+vector unsigned int vec_add (vector signed int, vector unsigned int);
+vector unsigned int vec_add (vector unsigned int, vector signed int);
+vector unsigned int vec_add (vector unsigned int, vector unsigned int);
+vector float vec_add (vector float, vector float);
+
+vector unsigned int vec_addc (vector unsigned int, vector unsigned int);
+
+vector unsigned char vec_adds (vector signed char,
+                               vector unsigned char);
+vector unsigned char vec_adds (vector unsigned char,
+                               vector signed char);
+vector unsigned char vec_adds (vector unsigned char,
+                               vector unsigned char);
+vector signed char vec_adds (vector signed char, vector signed char);
+vector unsigned short vec_adds (vector signed short,
+                                vector unsigned short);
+vector unsigned short vec_adds (vector unsigned short,
+                                vector signed short);
+vector unsigned short vec_adds (vector unsigned short,
+                                vector unsigned short);
+vector signed short vec_adds (vector signed short, vector signed short);
+
+vector unsigned int vec_adds (vector signed int, vector unsigned int);
+vector unsigned int vec_adds (vector unsigned int, vector signed int);
+vector unsigned int vec_adds (vector unsigned int, vector unsigned int);
+
+vector signed int vec_adds (vector signed int, vector signed int);
+
+vector float vec_and (vector float, vector float);
+vector float vec_and (vector float, vector signed int);
+vector float vec_and (vector signed int, vector float);
+vector signed int vec_and (vector signed int, vector signed int);
+vector unsigned int vec_and (vector signed int, vector unsigned int);
+vector unsigned int vec_and (vector unsigned int, vector signed int);
+vector unsigned int vec_and (vector unsigned int, vector unsigned int);
+vector signed short vec_and (vector signed short, vector signed short);
+vector unsigned short vec_and (vector signed short,
+                               vector unsigned short);
+vector unsigned short vec_and (vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_and (vector unsigned short,
+                               vector unsigned short);
+vector signed char vec_and (vector signed char, vector signed char);
+vector unsigned char vec_and (vector signed char, vector unsigned char);
+
+vector unsigned char vec_and (vector unsigned char, vector signed char);
+
+vector unsigned char vec_and (vector unsigned char,
+                              vector unsigned char);
+
+vector float vec_andc (vector float, vector float);
+vector float vec_andc (vector float, vector signed int);
+vector float vec_andc (vector signed int, vector float);
+vector signed int vec_andc (vector signed int, vector signed int);
+vector unsigned int vec_andc (vector signed int, vector unsigned int);
+vector unsigned int vec_andc (vector unsigned int, vector signed int);
+vector unsigned int vec_andc (vector unsigned int, vector unsigned int);
+
+vector signed short vec_andc (vector signed short, vector signed short);
+
+vector unsigned short vec_andc (vector signed short,
+                                vector unsigned short);
+vector unsigned short vec_andc (vector unsigned short,
+                                vector signed short);
+vector unsigned short vec_andc (vector unsigned short,
+                                vector unsigned short);
+vector signed char vec_andc (vector signed char, vector signed char);
+vector unsigned char vec_andc (vector signed char,
+                               vector unsigned char);
+vector unsigned char vec_andc (vector unsigned char,
+                               vector signed char);
+vector unsigned char vec_andc (vector unsigned char,
+                               vector unsigned char);
+
+vector unsigned char vec_avg (vector unsigned char,
+                              vector unsigned char);
+vector signed char vec_avg (vector signed char, vector signed char);
+vector unsigned short vec_avg (vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_avg (vector signed short, vector signed short);
+vector unsigned int vec_avg (vector unsigned int, vector unsigned int);
+vector signed int vec_avg (vector signed int, vector signed int);
+
+vector float vec_ceil (vector float);
+
+vector signed int vec_cmpb (vector float, vector float);
+
+vector signed char vec_cmpeq (vector signed char, vector signed char);
+vector signed char vec_cmpeq (vector unsigned char,
+                              vector unsigned char);
+vector signed short vec_cmpeq (vector signed short,
+                               vector signed short);
+vector signed short vec_cmpeq (vector unsigned short,
+                               vector unsigned short);
+vector signed int vec_cmpeq (vector signed int, vector signed int);
+vector signed int vec_cmpeq (vector unsigned int, vector unsigned int);
+vector signed int vec_cmpeq (vector float, vector float);
+
+vector signed int vec_cmpge (vector float, vector float);
+
+vector signed char vec_cmpgt (vector unsigned char,
+                              vector unsigned char);
+vector signed char vec_cmpgt (vector signed char, vector signed char);
+vector signed short vec_cmpgt (vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_cmpgt (vector signed short,
+                               vector signed short);
+vector signed int vec_cmpgt (vector unsigned int, vector unsigned int);
+vector signed int vec_cmpgt (vector signed int, vector signed int);
+vector signed int vec_cmpgt (vector float, vector float);
+
+vector signed int vec_cmple (vector float, vector float);
+
+vector signed char vec_cmplt (vector unsigned char,
+                              vector unsigned char);
+vector signed char vec_cmplt (vector signed char, vector signed char);
+vector signed short vec_cmplt (vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_cmplt (vector signed short,
+                               vector signed short);
+vector signed int vec_cmplt (vector unsigned int, vector unsigned int);
+vector signed int vec_cmplt (vector signed int, vector signed int);
+vector signed int vec_cmplt (vector float, vector float);
+
+vector float vec_ctf (vector unsigned int, const char);
+vector float vec_ctf (vector signed int, const char);
+
+vector signed int vec_cts (vector float, const char);
+
+vector unsigned int vec_ctu (vector float, const char);
+
+void vec_dss (const char);
+
+void vec_dssall (void);
+
+void vec_dst (void *, int, const char);
+
+void vec_dstst (void *, int, const char);
+
+void vec_dststt (void *, int, const char);
+
+void vec_dstt (void *, int, const char);
+
+vector float vec_expte (vector float, vector float);
+
+vector float vec_floor (vector float, vector float);
+
+vector float vec_ld (int, vector float *);
+vector float vec_ld (int, float *):
+vector signed int vec_ld (int, int *);
+vector signed int vec_ld (int, vector signed int *);
+vector unsigned int vec_ld (int, vector unsigned int *);
+vector unsigned int vec_ld (int, unsigned int *);
+vector signed short vec_ld (int, short *, vector signed short *);
+vector unsigned short vec_ld (int, unsigned short *,
+                              vector unsigned short *);
+vector signed char vec_ld (int, signed char *);
+vector signed char vec_ld (int, vector signed char *);
+vector unsigned char vec_ld (int, unsigned char *);
+vector unsigned char vec_ld (int, vector unsigned char *);
+
+vector signed char vec_lde (int, signed char *);
+vector unsigned char vec_lde (int, unsigned char *);
+vector signed short vec_lde (int, short *);
+vector unsigned short vec_lde (int, unsigned short *);
+vector float vec_lde (int, float *);
+vector signed int vec_lde (int, int *);
+vector unsigned int vec_lde (int, unsigned int *);
+
+void float vec_ldl (int, float *);
+void float vec_ldl (int, vector float *);
+void signed int vec_ldl (int, vector signed int *);
+void signed int vec_ldl (int, int *);
+void unsigned int vec_ldl (int, unsigned int *);
+void unsigned int vec_ldl (int, vector unsigned int *);
+void signed short vec_ldl (int, vector signed short *);
+void signed short vec_ldl (int, short *);
+void unsigned short vec_ldl (int, vector unsigned short *);
+void unsigned short vec_ldl (int, unsigned short *);
+void signed char vec_ldl (int, vector signed char *);
+void signed char vec_ldl (int, signed char *);
+void unsigned char vec_ldl (int, vector unsigned char *);
+void unsigned char vec_ldl (int, unsigned char *);
+
+vector float vec_loge (vector float);
+
+vector unsigned char vec_lvsl (int, void *, int *);
+
+vector unsigned char vec_lvsr (int, void *, int *);
+
+vector float vec_madd (vector float, vector float, vector float);
+
+vector signed short vec_madds (vector signed short, vector signed short,
+                               vector signed short);
+
+vector unsigned char vec_max (vector signed char, vector unsigned char);
+
+vector unsigned char vec_max (vector unsigned char, vector signed char);
+
+vector unsigned char vec_max (vector unsigned char,
+                              vector unsigned char);
+vector signed char vec_max (vector signed char, vector signed char);
+vector unsigned short vec_max (vector signed short,
+                               vector unsigned short);
+vector unsigned short vec_max (vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_max (vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_max (vector signed short, vector signed short);
+vector unsigned int vec_max (vector signed int, vector unsigned int);
+vector unsigned int vec_max (vector unsigned int, vector signed int);
+vector unsigned int vec_max (vector unsigned int, vector unsigned int);
+vector signed int vec_max (vector signed int, vector signed int);
+vector float vec_max (vector float, vector float);
+
+vector signed char vec_mergeh (vector signed char, vector signed char);
+vector unsigned char vec_mergeh (vector unsigned char,
+                                 vector unsigned char);
+vector signed short vec_mergeh (vector signed short,
+                                vector signed short);
+vector unsigned short vec_mergeh (vector unsigned short,
+                                  vector unsigned short);
+vector float vec_mergeh (vector float, vector float);
+vector signed int vec_mergeh (vector signed int, vector signed int);
+vector unsigned int vec_mergeh (vector unsigned int,
+                                vector unsigned int);
+
+vector signed char vec_mergel (vector signed char, vector signed char);
+vector unsigned char vec_mergel (vector unsigned char,
+                                 vector unsigned char);
+vector signed short vec_mergel (vector signed short,
+                                vector signed short);
+vector unsigned short vec_mergel (vector unsigned short,
+                                  vector unsigned short);
+vector float vec_mergel (vector float, vector float);
+vector signed int vec_mergel (vector signed int, vector signed int);
+vector unsigned int vec_mergel (vector unsigned int,
+                                vector unsigned int);
+
+vector unsigned short vec_mfvscr (void);
+
+vector unsigned char vec_min (vector signed char, vector unsigned char);
+
+vector unsigned char vec_min (vector unsigned char, vector signed char);
+
+vector unsigned char vec_min (vector unsigned char,
+                              vector unsigned char);
+vector signed char vec_min (vector signed char, vector signed char);
+vector unsigned short vec_min (vector signed short,
+                               vector unsigned short);
+vector unsigned short vec_min (vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_min (vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_min (vector signed short, vector signed short);
+vector unsigned int vec_min (vector signed int, vector unsigned int);
+vector unsigned int vec_min (vector unsigned int, vector signed int);
+vector unsigned int vec_min (vector unsigned int, vector unsigned int);
+vector signed int vec_min (vector signed int, vector signed int);
+vector float vec_min (vector float, vector float);
+
+vector signed short vec_mladd (vector signed short, vector signed short,
+                               vector signed short);
+vector signed short vec_mladd (vector signed short,
+                               vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_mladd (vector unsigned short,
+                               vector signed short,
+                               vector signed short);
+vector unsigned short vec_mladd (vector unsigned short,
+                                 vector unsigned short,
+                                 vector unsigned short);
+
+vector signed short vec_mradds (vector signed short,
+                                vector signed short,
+                                vector signed short);
+
+vector unsigned int vec_msum (vector unsigned char,
+                              vector unsigned char,
+                              vector unsigned int);
+vector signed int vec_msum (vector signed char, vector unsigned char,
+                            vector signed int);
+vector unsigned int vec_msum (vector unsigned short,
+                              vector unsigned short,
+                              vector unsigned int);
+vector signed int vec_msum (vector signed short, vector signed short,
+                            vector signed int);
+
+vector unsigned int vec_msums (vector unsigned short,
+                               vector unsigned short,
+                               vector unsigned int);
+vector signed int vec_msums (vector signed short, vector signed short,
+                             vector signed int);
+
+void vec_mtvscr (vector signed int);
+void vec_mtvscr (vector unsigned int);
+void vec_mtvscr (vector signed short);
+void vec_mtvscr (vector unsigned short);
+void vec_mtvscr (vector signed char);
+void vec_mtvscr (vector unsigned char);
+
+vector unsigned short vec_mule (vector unsigned char,
+                                vector unsigned char);
+vector signed short vec_mule (vector signed char, vector signed char);
+vector unsigned int vec_mule (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_mule (vector signed short, vector signed short);
+
+vector unsigned short vec_mulo (vector unsigned char,
+                                vector unsigned char);
+vector signed short vec_mulo (vector signed char, vector signed char);
+vector unsigned int vec_mulo (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_mulo (vector signed short, vector signed short);
+
+vector float vec_nmsub (vector float, vector float, vector float);
+
+vector float vec_nor (vector float, vector float);
+vector signed int vec_nor (vector signed int, vector signed int);
+vector unsigned int vec_nor (vector unsigned int, vector unsigned int);
+vector signed short vec_nor (vector signed short, vector signed short);
+vector unsigned short vec_nor (vector unsigned short,
+                               vector unsigned short);
+vector signed char vec_nor (vector signed char, vector signed char);
+vector unsigned char vec_nor (vector unsigned char,
+                              vector unsigned char);
+
+vector float vec_or (vector float, vector float);
+vector float vec_or (vector float, vector signed int);
+vector float vec_or (vector signed int, vector float);
+vector signed int vec_or (vector signed int, vector signed int);
+vector unsigned int vec_or (vector signed int, vector unsigned int);
+vector unsigned int vec_or (vector unsigned int, vector signed int);
+vector unsigned int vec_or (vector unsigned int, vector unsigned int);
+vector signed short vec_or (vector signed short, vector signed short);
+vector unsigned short vec_or (vector signed short,
+                              vector unsigned short);
+vector unsigned short vec_or (vector unsigned short,
+                              vector signed short);
+vector unsigned short vec_or (vector unsigned short,
+                              vector unsigned short);
+vector signed char vec_or (vector signed char, vector signed char);
+vector unsigned char vec_or (vector signed char, vector unsigned char);
+vector unsigned char vec_or (vector unsigned char, vector signed char);
+vector unsigned char vec_or (vector unsigned char,
+                             vector unsigned char);
+
+vector signed char vec_pack (vector signed short, vector signed short);
+vector unsigned char vec_pack (vector unsigned short,
+                               vector unsigned short);
+vector signed short vec_pack (vector signed int, vector signed int);
+vector unsigned short vec_pack (vector unsigned int,
+                                vector unsigned int);
+
+vector signed short vec_packpx (vector unsigned int,
+                                vector unsigned int);
+
+vector unsigned char vec_packs (vector unsigned short,
+                                vector unsigned short);
+vector signed char vec_packs (vector signed short, vector signed short);
+
+vector unsigned short vec_packs (vector unsigned int,
+                                 vector unsigned int);
+vector signed short vec_packs (vector signed int, vector signed int);
+
+vector unsigned char vec_packsu (vector unsigned short,
+                                 vector unsigned short);
+vector unsigned char vec_packsu (vector signed short,
+                                 vector signed short);
+vector unsigned short vec_packsu (vector unsigned int,
+                                  vector unsigned int);
+vector unsigned short vec_packsu (vector signed int, vector signed int);
+
+vector float vec_perm (vector float, vector float,
+                       vector unsigned char);
+vector signed int vec_perm (vector signed int, vector signed int,
+                            vector unsigned char);
+vector unsigned int vec_perm (vector unsigned int, vector unsigned int,
+                              vector unsigned char);
+vector signed short vec_perm (vector signed short, vector signed short,
+                              vector unsigned char);
+vector unsigned short vec_perm (vector unsigned short,
+                                vector unsigned short,
+                                vector unsigned char);
+vector signed char vec_perm (vector signed char, vector signed char,
+                             vector unsigned char);
+vector unsigned char vec_perm (vector unsigned char,
+                               vector unsigned char,
+                               vector unsigned char);
+
+vector float vec_re (vector float);
+
+vector signed char vec_rl (vector signed char, vector unsigned char);
+vector unsigned char vec_rl (vector unsigned char,
+                             vector unsigned char);
+vector signed short vec_rl (vector signed short, vector unsigned short);
+
+vector unsigned short vec_rl (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_rl (vector signed int, vector unsigned int);
+vector unsigned int vec_rl (vector unsigned int, vector unsigned int);
+
+vector float vec_round (vector float);
+
+vector float vec_rsqrte (vector float);
+
+vector float vec_sel (vector float, vector float, vector signed int);
+vector float vec_sel (vector float, vector float, vector unsigned int);
+vector signed int vec_sel (vector signed int, vector signed int,
+                           vector signed int);
+vector signed int vec_sel (vector signed int, vector signed int,
+                           vector unsigned int);
+vector unsigned int vec_sel (vector unsigned int, vector unsigned int,
+                             vector signed int);
+vector unsigned int vec_sel (vector unsigned int, vector unsigned int,
+                             vector unsigned int);
+vector signed short vec_sel (vector signed short, vector signed short,
+                             vector signed short);
+vector signed short vec_sel (vector signed short, vector signed short,
+                             vector unsigned short);
+vector unsigned short vec_sel (vector unsigned short,
+                               vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_sel (vector unsigned short,
+                               vector unsigned short,
+                               vector unsigned short);
+vector signed char vec_sel (vector signed char, vector signed char,
+                            vector signed char);
+vector signed char vec_sel (vector signed char, vector signed char,
+                            vector unsigned char);
+vector unsigned char vec_sel (vector unsigned char,
+                              vector unsigned char,
+                              vector signed char);
+vector unsigned char vec_sel (vector unsigned char,
+                              vector unsigned char,
+                              vector unsigned char);
+
+vector signed char vec_sl (vector signed char, vector unsigned char);
+vector unsigned char vec_sl (vector unsigned char,
+                             vector unsigned char);
+vector signed short vec_sl (vector signed short, vector unsigned short);
+
+vector unsigned short vec_sl (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_sl (vector signed int, vector unsigned int);
+vector unsigned int vec_sl (vector unsigned int, vector unsigned int);
+
+vector float vec_sld (vector float, vector float, const char);
+vector signed int vec_sld (vector signed int, vector signed int,
+                           const char);
+vector unsigned int vec_sld (vector unsigned int, vector unsigned int,
+                             const char);
+vector signed short vec_sld (vector signed short, vector signed short,
+                             const char);
+vector unsigned short vec_sld (vector unsigned short,
+                               vector unsigned short, const char);
+vector signed char vec_sld (vector signed char, vector signed char,
+                            const char);
+vector unsigned char vec_sld (vector unsigned char,
+                              vector unsigned char,
+                              const char);
+
+vector signed int vec_sll (vector signed int, vector unsigned int);
+vector signed int vec_sll (vector signed int, vector unsigned short);
+vector signed int vec_sll (vector signed int, vector unsigned char);
+vector unsigned int vec_sll (vector unsigned int, vector unsigned int);
+vector unsigned int vec_sll (vector unsigned int,
+                             vector unsigned short);
+vector unsigned int vec_sll (vector unsigned int, vector unsigned char);
+
+vector signed short vec_sll (vector signed short, vector unsigned int);
+vector signed short vec_sll (vector signed short,
+                             vector unsigned short);
+vector signed short vec_sll (vector signed short, vector unsigned char);
+
+vector unsigned short vec_sll (vector unsigned short,
+                               vector unsigned int);
+vector unsigned short vec_sll (vector unsigned short,
+                               vector unsigned short);
+vector unsigned short vec_sll (vector unsigned short,
+                               vector unsigned char);
+vector signed char vec_sll (vector signed char, vector unsigned int);
+vector signed char vec_sll (vector signed char, vector unsigned short);
+vector signed char vec_sll (vector signed char, vector unsigned char);
+vector unsigned char vec_sll (vector unsigned char,
+                              vector unsigned int);
+vector unsigned char vec_sll (vector unsigned char,
+                              vector unsigned short);
+vector unsigned char vec_sll (vector unsigned char,
+                              vector unsigned char);
+
+vector float vec_slo (vector float, vector signed char);
+vector float vec_slo (vector float, vector unsigned char);
+vector signed int vec_slo (vector signed int, vector signed char);
+vector signed int vec_slo (vector signed int, vector unsigned char);
+vector unsigned int vec_slo (vector unsigned int, vector signed char);
+vector unsigned int vec_slo (vector unsigned int, vector unsigned char);
+
+vector signed short vec_slo (vector signed short, vector signed char);
+vector signed short vec_slo (vector signed short, vector unsigned char);
+
+vector unsigned short vec_slo (vector unsigned short,
+                               vector signed char);
+vector unsigned short vec_slo (vector unsigned short,
+                               vector unsigned char);
+vector signed char vec_slo (vector signed char, vector signed char);
+vector signed char vec_slo (vector signed char, vector unsigned char);
+vector unsigned char vec_slo (vector unsigned char, vector signed char);
+
+vector unsigned char vec_slo (vector unsigned char,
+                              vector unsigned char);
+
+vector signed char vec_splat (vector signed char, const char);
+vector unsigned char vec_splat (vector unsigned char, const char);
+vector signed short vec_splat (vector signed short, const char);
+vector unsigned short vec_splat (vector unsigned short, const char);
+vector float vec_splat (vector float, const char);
+vector signed int vec_splat (vector signed int, const char);
+vector unsigned int vec_splat (vector unsigned int, const char);
+
+vector signed char vec_splat_s8 (const char);
+
+vector signed short vec_splat_s16 (const char);
+
+vector signed int vec_splat_s32 (const char);
+
+vector unsigned char vec_splat_u8 (const char);
+
+vector unsigned short vec_splat_u16 (const char);
+
+vector unsigned int vec_splat_u32 (const char);
+
+vector signed char vec_sr (vector signed char, vector unsigned char);
+vector unsigned char vec_sr (vector unsigned char,
+                             vector unsigned char);
+vector signed short vec_sr (vector signed short, vector unsigned short);
+
+vector unsigned short vec_sr (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_sr (vector signed int, vector unsigned int);
+vector unsigned int vec_sr (vector unsigned int, vector unsigned int);
+
+vector signed char vec_sra (vector signed char, vector unsigned char);
+vector unsigned char vec_sra (vector unsigned char,
+                              vector unsigned char);
+vector signed short vec_sra (vector signed short,
+                             vector unsigned short);
+vector unsigned short vec_sra (vector unsigned short,
+                               vector unsigned short);
+vector signed int vec_sra (vector signed int, vector unsigned int);
+vector unsigned int vec_sra (vector unsigned int, vector unsigned int);
+
+vector signed int vec_srl (vector signed int, vector unsigned int);
+vector signed int vec_srl (vector signed int, vector unsigned short);
+vector signed int vec_srl (vector signed int, vector unsigned char);
+vector unsigned int vec_srl (vector unsigned int, vector unsigned int);
+vector unsigned int vec_srl (vector unsigned int,
+                             vector unsigned short);
+vector unsigned int vec_srl (vector unsigned int, vector unsigned char);
+
+vector signed short vec_srl (vector signed short, vector unsigned int);
+vector signed short vec_srl (vector signed short,
+                             vector unsigned short);
+vector signed short vec_srl (vector signed short, vector unsigned char);
+
+vector unsigned short vec_srl (vector unsigned short,
+                               vector unsigned int);
+vector unsigned short vec_srl (vector unsigned short,
+                               vector unsigned short);
+vector unsigned short vec_srl (vector unsigned short,
+                               vector unsigned char);
+vector signed char vec_srl (vector signed char, vector unsigned int);
+vector signed char vec_srl (vector signed char, vector unsigned short);
+vector signed char vec_srl (vector signed char, vector unsigned char);
+vector unsigned char vec_srl (vector unsigned char,
+                              vector unsigned int);
+vector unsigned char vec_srl (vector unsigned char,
+                              vector unsigned short);
+vector unsigned char vec_srl (vector unsigned char,
+                              vector unsigned char);
+
+vector float vec_sro (vector float, vector signed char);
+vector float vec_sro (vector float, vector unsigned char);
+vector signed int vec_sro (vector signed int, vector signed char);
+vector signed int vec_sro (vector signed int, vector unsigned char);
+vector unsigned int vec_sro (vector unsigned int, vector signed char);
+vector unsigned int vec_sro (vector unsigned int, vector unsigned char);
+
+vector signed short vec_sro (vector signed short, vector signed char);
+vector signed short vec_sro (vector signed short, vector unsigned char);
+
+vector unsigned short vec_sro (vector unsigned short,
+                               vector signed char);
+vector unsigned short vec_sro (vector unsigned short,
+                               vector unsigned char);
+vector signed char vec_sro (vector signed char, vector signed char);
+vector signed char vec_sro (vector signed char, vector unsigned char);
+vector unsigned char vec_sro (vector unsigned char, vector signed char);
+
+vector unsigned char vec_sro (vector unsigned char,
+                              vector unsigned char);
+
+void vec_st (vector float, int, float *);
+void vec_st (vector float, int, vector float *);
+void vec_st (vector signed int, int, int *);
+void vec_st (vector signed int, int, unsigned int *);
+void vec_st (vector unsigned int, int, unsigned int *);
+void vec_st (vector unsigned int, int, vector unsigned int *);
+void vec_st (vector signed short, int, short *);
+void vec_st (vector signed short, int, vector unsigned short *);
+void vec_st (vector signed short, int, vector signed short *);
+void vec_st (vector unsigned short, int, unsigned short *);
+void vec_st (vector unsigned short, int, vector unsigned short *);
+void vec_st (vector signed char, int, signed char *);
+void vec_st (vector signed char, int, unsigned char *);
+void vec_st (vector signed char, int, vector signed char *);
+void vec_st (vector unsigned char, int, unsigned char *);
+void vec_st (vector unsigned char, int, vector unsigned char *);
+
+void vec_ste (vector signed char, int, unsigned char *);
+void vec_ste (vector signed char, int, signed char *);
+void vec_ste (vector unsigned char, int, unsigned char *);
+void vec_ste (vector signed short, int, short *);
+void vec_ste (vector signed short, int, unsigned short *);
+void vec_ste (vector unsigned short, int, void *);
+void vec_ste (vector signed int, int, unsigned int *);
+void vec_ste (vector signed int, int, int *);
+void vec_ste (vector unsigned int, int, unsigned int *);
+void vec_ste (vector float, int, float *);
+
+void vec_stl (vector float, int, vector float *);
+void vec_stl (vector float, int, float *);
+void vec_stl (vector signed int, int, vector signed int *);
+void vec_stl (vector signed int, int, int *);
+void vec_stl (vector signed int, int, unsigned int *);
+void vec_stl (vector unsigned int, int, vector unsigned int *);
+void vec_stl (vector unsigned int, int, unsigned int *);
+void vec_stl (vector signed short, int, short *);
+void vec_stl (vector signed short, int, unsigned short *);
+void vec_stl (vector signed short, int, vector signed short *);
+void vec_stl (vector unsigned short, int, unsigned short *);
+void vec_stl (vector unsigned short, int, vector signed short *);
+void vec_stl (vector signed char, int, signed char *);
+void vec_stl (vector signed char, int, unsigned char *);
+void vec_stl (vector signed char, int, vector signed char *);
+void vec_stl (vector unsigned char, int, unsigned char *);
+void vec_stl (vector unsigned char, int, vector unsigned char *);
+
+vector signed char vec_sub (vector signed char, vector signed char);
+vector unsigned char vec_sub (vector signed char, vector unsigned char);
+
+vector unsigned char vec_sub (vector unsigned char, vector signed char);
+
+vector unsigned char vec_sub (vector unsigned char,
+                              vector unsigned char);
+vector signed short vec_sub (vector signed short, vector signed short);
+vector unsigned short vec_sub (vector signed short,
+                               vector unsigned short);
+vector unsigned short vec_sub (vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_sub (vector unsigned short,
+                               vector unsigned short);
+vector signed int vec_sub (vector signed int, vector signed int);
+vector unsigned int vec_sub (vector signed int, vector unsigned int);
+vector unsigned int vec_sub (vector unsigned int, vector signed int);
+vector unsigned int vec_sub (vector unsigned int, vector unsigned int);
+vector float vec_sub (vector float, vector float);
+
+vector unsigned int vec_subc (vector unsigned int, vector unsigned int);
+
+vector unsigned char vec_subs (vector signed char,
+                               vector unsigned char);
+vector unsigned char vec_subs (vector unsigned char,
+                               vector signed char);
+vector unsigned char vec_subs (vector unsigned char,
+                               vector unsigned char);
+vector signed char vec_subs (vector signed char, vector signed char);
+vector unsigned short vec_subs (vector signed short,
+                                vector unsigned short);
+vector unsigned short vec_subs (vector unsigned short,
+                                vector signed short);
+vector unsigned short vec_subs (vector unsigned short,
+                                vector unsigned short);
+vector signed short vec_subs (vector signed short, vector signed short);
+
+vector unsigned int vec_subs (vector signed int, vector unsigned int);
+vector unsigned int vec_subs (vector unsigned int, vector signed int);
+vector unsigned int vec_subs (vector unsigned int, vector unsigned int);
+
+vector signed int vec_subs (vector signed int, vector signed int);
+
+vector unsigned int vec_sum4s (vector unsigned char,
+                               vector unsigned int);
+vector signed int vec_sum4s (vector signed char, vector signed int);
+vector signed int vec_sum4s (vector signed short, vector signed int);
+
+vector signed int vec_sum2s (vector signed int, vector signed int);
+
+vector signed int vec_sums (vector signed int, vector signed int);
+
+vector float vec_trunc (vector float);
+
+vector signed short vec_unpackh (vector signed char);
+vector unsigned int vec_unpackh (vector signed short);
+vector signed int vec_unpackh (vector signed short);
+
+vector signed short vec_unpackl (vector signed char);
+vector unsigned int vec_unpackl (vector signed short);
+vector signed int vec_unpackl (vector signed short);
+
+vector float vec_xor (vector float, vector float);
+vector float vec_xor (vector float, vector signed int);
+vector float vec_xor (vector signed int, vector float);
+vector signed int vec_xor (vector signed int, vector signed int);
+vector unsigned int vec_xor (vector signed int, vector unsigned int);
+vector unsigned int vec_xor (vector unsigned int, vector signed int);
+vector unsigned int vec_xor (vector unsigned int, vector unsigned int);
+vector signed short vec_xor (vector signed short, vector signed short);
+vector unsigned short vec_xor (vector signed short,
+                               vector unsigned short);
+vector unsigned short vec_xor (vector unsigned short,
+                               vector signed short);
+vector unsigned short vec_xor (vector unsigned short,
+                               vector unsigned short);
+vector signed char vec_xor (vector signed char, vector signed char);
+vector unsigned char vec_xor (vector signed char, vector unsigned char);
+
+vector unsigned char vec_xor (vector unsigned char, vector signed char);
+
+vector unsigned char vec_xor (vector unsigned char,
+                              vector unsigned char);
+
+vector signed int vec_all_eq (vector signed char, vector unsigned char);
+
+vector signed int vec_all_eq (vector signed char, vector signed char);
+vector signed int vec_all_eq (vector unsigned char, vector signed char);
+
+vector signed int vec_all_eq (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_all_eq (vector signed short,
+                              vector unsigned short);
+vector signed int vec_all_eq (vector signed short, vector signed short);
+
+vector signed int vec_all_eq (vector unsigned short,
+                              vector signed short);
+vector signed int vec_all_eq (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_all_eq (vector signed int, vector unsigned int);
+vector signed int vec_all_eq (vector signed int, vector signed int);
+vector signed int vec_all_eq (vector unsigned int, vector signed int);
+vector signed int vec_all_eq (vector unsigned int, vector unsigned int);
+
+vector signed int vec_all_eq (vector float, vector float);
+
+vector signed int vec_all_ge (vector signed char, vector unsigned char);
+
+vector signed int vec_all_ge (vector unsigned char, vector signed char);
+
+vector signed int vec_all_ge (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_all_ge (vector signed char, vector signed char);
+vector signed int vec_all_ge (vector signed short,
+                              vector unsigned short);
+vector signed int vec_all_ge (vector unsigned short,
+                              vector signed short);
+vector signed int vec_all_ge (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_all_ge (vector signed short, vector signed short);
+
+vector signed int vec_all_ge (vector signed int, vector unsigned int);
+vector signed int vec_all_ge (vector unsigned int, vector signed int);
+vector signed int vec_all_ge (vector unsigned int, vector unsigned int);
+
+vector signed int vec_all_ge (vector signed int, vector signed int);
+vector signed int vec_all_ge (vector float, vector float);
+
+vector signed int vec_all_gt (vector signed char, vector unsigned char);
+
+vector signed int vec_all_gt (vector unsigned char, vector signed char);
+
+vector signed int vec_all_gt (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_all_gt (vector signed char, vector signed char);
+vector signed int vec_all_gt (vector signed short,
+                              vector unsigned short);
+vector signed int vec_all_gt (vector unsigned short,
+                              vector signed short);
+vector signed int vec_all_gt (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_all_gt (vector signed short, vector signed short);
+
+vector signed int vec_all_gt (vector signed int, vector unsigned int);
+vector signed int vec_all_gt (vector unsigned int, vector signed int);
+vector signed int vec_all_gt (vector unsigned int, vector unsigned int);
+
+vector signed int vec_all_gt (vector signed int, vector signed int);
+vector signed int vec_all_gt (vector float, vector float);
+
+vector signed int vec_all_in (vector float, vector float);
+
+vector signed int vec_all_le (vector signed char, vector unsigned char);
+
+vector signed int vec_all_le (vector unsigned char, vector signed char);
+
+vector signed int vec_all_le (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_all_le (vector signed char, vector signed char);
+vector signed int vec_all_le (vector signed short,
+                              vector unsigned short);
+vector signed int vec_all_le (vector unsigned short,
+                              vector signed short);
+vector signed int vec_all_le (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_all_le (vector signed short, vector signed short);
+
+vector signed int vec_all_le (vector signed int, vector unsigned int);
+vector signed int vec_all_le (vector unsigned int, vector signed int);
+vector signed int vec_all_le (vector unsigned int, vector unsigned int);
+
+vector signed int vec_all_le (vector signed int, vector signed int);
+vector signed int vec_all_le (vector float, vector float);
+
+vector signed int vec_all_lt (vector signed char, vector unsigned char);
+
+vector signed int vec_all_lt (vector unsigned char, vector signed char);
+
+vector signed int vec_all_lt (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_all_lt (vector signed char, vector signed char);
+vector signed int vec_all_lt (vector signed short,
+                              vector unsigned short);
+vector signed int vec_all_lt (vector unsigned short,
+                              vector signed short);
+vector signed int vec_all_lt (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_all_lt (vector signed short, vector signed short);
+
+vector signed int vec_all_lt (vector signed int, vector unsigned int);
+vector signed int vec_all_lt (vector unsigned int, vector signed int);
+vector signed int vec_all_lt (vector unsigned int, vector unsigned int);
+
+vector signed int vec_all_lt (vector signed int, vector signed int);
+vector signed int vec_all_lt (vector float, vector float);
+
+vector signed int vec_all_nan (vector float);
+
+vector signed int vec_all_ne (vector signed char, vector unsigned char);
+
+vector signed int vec_all_ne (vector signed char, vector signed char);
+vector signed int vec_all_ne (vector unsigned char, vector signed char);
+
+vector signed int vec_all_ne (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_all_ne (vector signed short,
+                              vector unsigned short);
+vector signed int vec_all_ne (vector signed short, vector signed short);
+
+vector signed int vec_all_ne (vector unsigned short,
+                              vector signed short);
+vector signed int vec_all_ne (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_all_ne (vector signed int, vector unsigned int);
+vector signed int vec_all_ne (vector signed int, vector signed int);
+vector signed int vec_all_ne (vector unsigned int, vector signed int);
+vector signed int vec_all_ne (vector unsigned int, vector unsigned int);
+
+vector signed int vec_all_ne (vector float, vector float);
+
+vector signed int vec_all_nge (vector float, vector float);
+
+vector signed int vec_all_ngt (vector float, vector float);
+
+vector signed int vec_all_nle (vector float, vector float);
+
+vector signed int vec_all_nlt (vector float, vector float);
+
+vector signed int vec_all_numeric (vector float);
+
+vector signed int vec_any_eq (vector signed char, vector unsigned char);
+
+vector signed int vec_any_eq (vector signed char, vector signed char);
+vector signed int vec_any_eq (vector unsigned char, vector signed char);
+
+vector signed int vec_any_eq (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_any_eq (vector signed short,
+                              vector unsigned short);
+vector signed int vec_any_eq (vector signed short, vector signed short);
+
+vector signed int vec_any_eq (vector unsigned short,
+                              vector signed short);
+vector signed int vec_any_eq (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_any_eq (vector signed int, vector unsigned int);
+vector signed int vec_any_eq (vector signed int, vector signed int);
+vector signed int vec_any_eq (vector unsigned int, vector signed int);
+vector signed int vec_any_eq (vector unsigned int, vector unsigned int);
+
+vector signed int vec_any_eq (vector float, vector float);
+
+vector signed int vec_any_ge (vector signed char, vector unsigned char);
+
+vector signed int vec_any_ge (vector unsigned char, vector signed char);
+
+vector signed int vec_any_ge (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_any_ge (vector signed char, vector signed char);
+vector signed int vec_any_ge (vector signed short,
+                              vector unsigned short);
+vector signed int vec_any_ge (vector unsigned short,
+                              vector signed short);
+vector signed int vec_any_ge (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_any_ge (vector signed short, vector signed short);
+
+vector signed int vec_any_ge (vector signed int, vector unsigned int);
+vector signed int vec_any_ge (vector unsigned int, vector signed int);
+vector signed int vec_any_ge (vector unsigned int, vector unsigned int);
+
+vector signed int vec_any_ge (vector signed int, vector signed int);
+vector signed int vec_any_ge (vector float, vector float);
+
+vector signed int vec_any_gt (vector signed char, vector unsigned char);
+
+vector signed int vec_any_gt (vector unsigned char, vector signed char);
+
+vector signed int vec_any_gt (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_any_gt (vector signed char, vector signed char);
+vector signed int vec_any_gt (vector signed short,
+                              vector unsigned short);
+vector signed int vec_any_gt (vector unsigned short,
+                              vector signed short);
+vector signed int vec_any_gt (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_any_gt (vector signed short, vector signed short);
+
+vector signed int vec_any_gt (vector signed int, vector unsigned int);
+vector signed int vec_any_gt (vector unsigned int, vector signed int);
+vector signed int vec_any_gt (vector unsigned int, vector unsigned int);
+
+vector signed int vec_any_gt (vector signed int, vector signed int);
+vector signed int vec_any_gt (vector float, vector float);
+
+vector signed int vec_any_le (vector signed char, vector unsigned char);
+
+vector signed int vec_any_le (vector unsigned char, vector signed char);
+
+vector signed int vec_any_le (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_any_le (vector signed char, vector signed char);
+vector signed int vec_any_le (vector signed short,
+                              vector unsigned short);
+vector signed int vec_any_le (vector unsigned short,
+                              vector signed short);
+vector signed int vec_any_le (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_any_le (vector signed short, vector signed short);
+
+vector signed int vec_any_le (vector signed int, vector unsigned int);
+vector signed int vec_any_le (vector unsigned int, vector signed int);
+vector signed int vec_any_le (vector unsigned int, vector unsigned int);
+
+vector signed int vec_any_le (vector signed int, vector signed int);
+vector signed int vec_any_le (vector float, vector float);
+
+vector signed int vec_any_lt (vector signed char, vector unsigned char);
+
+vector signed int vec_any_lt (vector unsigned char, vector signed char);
+
+vector signed int vec_any_lt (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_any_lt (vector signed char, vector signed char);
+vector signed int vec_any_lt (vector signed short,
+                              vector unsigned short);
+vector signed int vec_any_lt (vector unsigned short,
+                              vector signed short);
+vector signed int vec_any_lt (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_any_lt (vector signed short, vector signed short);
+
+vector signed int vec_any_lt (vector signed int, vector unsigned int);
+vector signed int vec_any_lt (vector unsigned int, vector signed int);
+vector signed int vec_any_lt (vector unsigned int, vector unsigned int);
+
+vector signed int vec_any_lt (vector signed int, vector signed int);
+vector signed int vec_any_lt (vector float, vector float);
+
+vector signed int vec_any_nan (vector float);
+
+vector signed int vec_any_ne (vector signed char, vector unsigned char);
+
+vector signed int vec_any_ne (vector signed char, vector signed char);
+vector signed int vec_any_ne (vector unsigned char, vector signed char);
+
+vector signed int vec_any_ne (vector unsigned char,
+                              vector unsigned char);
+vector signed int vec_any_ne (vector signed short,
+                              vector unsigned short);
+vector signed int vec_any_ne (vector signed short, vector signed short);
+
+vector signed int vec_any_ne (vector unsigned short,
+                              vector signed short);
+vector signed int vec_any_ne (vector unsigned short,
+                              vector unsigned short);
+vector signed int vec_any_ne (vector signed int, vector unsigned int);
+vector signed int vec_any_ne (vector signed int, vector signed int);
+vector signed int vec_any_ne (vector unsigned int, vector signed int);
+vector signed int vec_any_ne (vector unsigned int, vector unsigned int);
+
+vector signed int vec_any_ne (vector float, vector float);
+
+vector signed int vec_any_nge (vector float, vector float);
+
+vector signed int vec_any_ngt (vector float, vector float);
+
+vector signed int vec_any_nle (vector float, vector float);
+
+vector signed int vec_any_nlt (vector float, vector float);
+
+vector signed int vec_any_numeric (vector float);
+
+vector signed int vec_any_out (vector float, vector float);
+@end smallexample
+
+@node Pragmas
+@section Pragmas Accepted by GCC
+@cindex pragmas
+@cindex #pragma
+
+GCC supports several types of pragmas, primarily in order to compile
+code originally written for other compilers.  Note that in general
+we do not recommend the use of pragmas; @xref{Function Attributes},
+for further explanation.
+
+@menu
+* ARM Pragmas::
+* Darwin Pragmas::
+* Solaris Pragmas::
+* Tru64 Pragmas::
+@end menu
+
+@node ARM Pragmas
+@subsection ARM Pragmas
+
+The ARM target defines pragmas for controlling the default addition of
+@code{long_call} and @code{short_call} attributes to functions.
+@xref{Function Attributes}, for information about the effects of these
+attributes.
+
+@table @code
+@item long_calls
+@cindex pragma, long_calls
+Set all subsequent functions to have the @code{long_call} attribute.
+
+@item no_long_calls
+@cindex pragma, no_long_calls
+Set all subsequent functions to have the @code{short_call} attribute.
+
+@item long_calls_off
+@cindex pragma, long_calls_off
+Do not affect the @code{long_call} or @code{short_call} attributes of
+subsequent functions.
+@end table
+
+@c Describe c4x pragmas here.
+@c Describe h8300 pragmas here.
+@c Describe i370 pragmas here.
+@c Describe i960 pragmas here.
+@c Describe sh pragmas here.
+@c Describe v850 pragmas here.
+
+@node Darwin Pragmas
+@subsection Darwin Pragmas
+
+The following pragmas are available for all architectures running the
+Darwin operating system.  These are useful for compatibility with other
+MacOS compilers.
+
+@table @code
+@item mark @var{tokens}@dots{}
+@cindex pragma, mark
+This pragma is accepted, but has no effect.
+
+@item options align=@var{alignment}
+@cindex pragma, options align
+This pragma sets the alignment of fields in structures.  The values of
+@var{alignment} may be @code{mac68k}, to emulate m68k alignment, or
+@code{power}, to emulate PowerPC alignment.  Uses of this pragma nest
+properly; to restore the previous setting, use @code{reset} for the
+@var{alignment}.
+
+@item segment @var{tokens}@dots{}
+@cindex pragma, segment
+This pragma is accepted, but has no effect.
+
+@item unused (@var{var} [, @var{var}]@dots{})
+@cindex pragma, unused
+This pragma declares variables to be possibly unused.  GCC will not
+produce warnings for the listed variables.  The effect is similar to
+that of the @code{unused} attribute, except that this pragma may appear
+anywhere within the variables' scopes.
+@end table
+
+@node Solaris Pragmas
+@subsection Solaris Pragmas
+
+For compatibility with the SunPRO compiler, the following pragma
+is supported.
+
+@table @code
+@item redefine_extname @var{oldname} @var{newname}
+@cindex pragma, redefine_extname
+
+This pragma gives the C function @var{oldname} the assembler label
+@var{newname}.  The pragma must appear before the function declaration.
+This pragma is equivalent to the asm labels extension (@pxref{Asm
+Labels}).  The preprocessor defines @code{__PRAGMA_REDEFINE_EXTNAME}
+if the pragma is available.
+@end table
+
+@node Tru64 Pragmas
+@subsection Tru64 Pragmas
+
+For compatibility with the Compaq C compiler, the following pragma
+is supported.
+
+@table @code
+@item extern_prefix @var{string}
+@cindex pragma, extern_prefix
+
+This pragma renames all subsequent function and variable declarations
+such that @var{string} is prepended to the name.  This effect may be
+terminated by using another @code{extern_prefix} pragma with the 
+empty string.
+
+This pragma is similar in intent to to the asm labels extension
+(@pxref{Asm Labels}) in that the system programmer wants to change
+the assembly-level ABI without changing the source-level API.  The
+preprocessor defines @code{__EXTERN_PREFIX} if the pragma is available.
+@end table
+
+@node Unnamed Fields
+@section Unnamed struct/union fields within structs/unions.
+@cindex struct
+@cindex union
+
+For compatibility with other compilers, GCC allows you to define
+a structure or union that contains, as fields, structures and unions
+without names.  For example:
+
+@example
+struct @{
+  int a;
+  union @{
+    int b;
+    float c;
+  @};
+  int d;
+@} foo;
+@end example
+
+In this example, the user would be able to access members of the unnamed
+union with code like @samp{foo.b}.  Note that only unnamed structs and
+unions are allowed, you may not have, for example, an unnamed
+@code{int}.
+
+You must never create such structures that cause ambiguous field definitions.
+For example, this structure:
+
+@example
+struct @{
+  int a;
+  struct @{
+    int a;
+  @};
+@} foo;
+@end example
+
+It is ambiguous which @code{a} is being referred to with @samp{foo.a}.
+Such constructs are not supported and must be avoided.  In the future,
+such constructs may be detected and treated as compilation errors.
 
 @node C++ Extensions
 @chapter Extensions to the C++ Language
@@ -4493,9 +6671,10 @@ using code written for the Cfront model, the file containing a class
 template and the file containing its member templates should be
 implemented in the same translation unit.
 
+@item
 @opindex falt-external-templates
-A slight variation on this approach is to instead use the flag
-@option{-falt-external-templates}; this flag causes template
+A slight variation on this approach is to use the flag
+@option{-falt-external-templates} instead.  This flag causes template
 instances to be emitted in the translation unit that implements the
 header where they are first instantiated, rather than the one which
 implements the file where the templates are defined.  This header must
@@ -4579,7 +6758,6 @@ Some_Class  B  __attribute__ ((init_priority (543)));
 Note that the particular values of @var{priority} do not matter; only their
 relative ordering.
 
-
 @item java_interface
 @cindex java_interface attribute
 
@@ -4598,11 +6776,11 @@ from C++.  Normally, GNU C++ will automatically detect when you are
 writing C++ code that uses Java exceptions, and handle them
 appropriately.  However, if C++ code only needs to execute destructors
 when Java exceptions are thrown through it, GCC will guess incorrectly.
-Sample problematic code:
+Sample problematic code is:
 
 @example
   struct S @{ ~S(); @};
-  extern void bar();    // is implemented in Java and may throw exceptions
+  extern void bar();    // is written in Java, and may throw exceptions
   void foo()
   @{
     S s;
@@ -4622,8 +6800,8 @@ exceptions, or run destructors when exceptions are thrown through them.
 
 You cannot mix Java and C++ exceptions in the same translation unit.  It
 is believed to be safe to throw a C++ exception from one file through
-another file compiled for the for the Java exception model, or vice
-versa, but there may be bugs in this area.
+another file compiled for the Java exception model, or vice versa, but
+there may be bugs in this area.
 
 @node Deprecated Features
 @section Deprecated Features
@@ -4655,14 +6833,19 @@ parameters, as C++ demands.  This feature has been removed, except where
 it is required for backwards compatibility @xref{Backwards Compatibility}.
 @end table
 
-The named return value extension has been deprecated, and will be
-removed from g++ at some point.
+The named return value extension has been deprecated, and is now
+removed from g++.
 
 The use of initializer lists with new expressions has been deprecated,
-and will be removed from g++ at some point.
+and is now removed from g++.
 
-Floating point and complex template constant parameters are deprecated,
-and will be removed from g++ at some point.
+Floating and complex non-type template parameters have been deprecated,
+and are now removed from g++.
+
+The implicit typename extension has been deprecated and will be removed
+from g++ at some point.  In some cases g++ determines that a dependant
+type such as @code{TPL<T>::X} is a type without needing a
+@code{typename} keyword, contrary to the standard.
 
 @node Backwards Compatibility
 @section Backwards Compatibility
@@ -4685,11 +6868,10 @@ the end of the scope which contained the for statement (rather than just
 within the for scope).  G++ retains this, but issues a warning, if such a
 variable is accessed outside the for scope.
 
-@item implicit C language
+@item Implicit C language
 Old C system header files did not contain an @code{extern "C" @{@dots{}@}}
 scope to set the language.  On such systems, all header files are
 implicitly scoped inside a C language scope.  Also, an empty prototype
 @code{()} will be treated as an unspecified number of arguments, rather
 than no arguments, as C++ demands.
 @end table
-

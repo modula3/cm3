@@ -222,7 +222,7 @@ extern const UQItype __clz_tab[];
 	     "rIJ" ((USItype) (bh)),					\
 	     "r" ((USItype) (al)),					\
 	     "rIJ" ((USItype) (bl)))
-/* Call libgcc1 routine.  */
+/* Call libgcc routine.  */
 #define umul_ppmm(w1, w0, u, v) \
 do {									\
   DWunion __w;								\
@@ -585,7 +585,7 @@ UDItype __umulsidi3 (USItype, USItype);
 	     "1" ((USItype) (al)),					\
 	     "g" ((USItype) (bl)))
 
-/* The '020, '030, '040 and CPU32 have 32x32->64 and 64/32->32q-32r. */
+/* The '020, '030, '040 and CPU32 have 32x32->64 and 64/32->32q-32r.  */
 #if defined (__mc68020__) || defined(mc68020) \
 	|| defined(__mc68030__) || defined(mc68030) \
 	|| defined(__mc68040__) || defined(mc68040) \
@@ -654,7 +654,7 @@ UDItype __umulsidi3 (USItype, USItype);
 #endif /* not mcf5200 */
 #endif /* not mc68020 */
 
-/* The '020, '030, '040 and '060 have bitfield insns. */
+/* The '020, '030, '040 and '060 have bitfield insns.  */
 #if defined (__mc68020__) || defined(mc68020) \
 	|| defined(__mc68030__) || defined(mc68030) \
 	|| defined(__mc68040__) || defined(mc68040) \
@@ -1002,6 +1002,21 @@ UDItype __umulsidi3 (USItype, USItype);
 #define UMUL_TIME 5
 #endif
 
+#if defined (__SH5__) && __SHMEDIA__ && W_TYPE_SIZE == 32
+#define __umulsidi3(u,v) ((UDItype)(USItype)u*(USItype)v)
+#define count_leading_zeros(count, x) \
+  do									\
+    {									\
+      UDItype x_ = (USItype)(x);					\
+      SItype c_;							\
+									\
+      __asm__ ("nsb %1, %0" : "=r" (c_) : "r" (x_));			\
+      (count) = c_ - 31;						\
+    }									\
+  while (0)
+#define COUNT_LEADING_ZEROS_0 32
+#endif
+
 #if defined (__sparc__) && !defined (__arch64__) && !defined (__sparcv9) \
     && W_TYPE_SIZE == 32
 #define add_ssaaaa(sh, sl, ah, al, bh, bl) \
@@ -1184,7 +1199,7 @@ UDItype __umulsidi3 (USItype, USItype);
 	   : "r" ((USItype) (__d)),					\
 	     "1" ((USItype) (__n1)),					\
 	     "0" ((USItype) (__n0)) : "g1" __AND_CLOBBER_CC)
-#define UDIV_TIME (3+7*32)	/* 7 instructions/iteration. 32 iterations. */
+#define UDIV_TIME (3+7*32)	/* 7 instructions/iteration. 32 iterations.  */
 #endif /* __sparclite__ */
 #endif /* __sparc_v8__ */
 #endif /* sparc32 */
@@ -1377,7 +1392,7 @@ UDItype __umulsidi3 (USItype, USItype);
     __x1 += __ll_highpart (__x0);/* this can't give carry */		\
     __x1 += __x2;		/* but this indeed can */		\
     if (__x1 < __x2)		/* did we get it? */			\
-      __x3 += __ll_B;		/* yes, add it in the proper pos. */	\
+      __x3 += __ll_B;		/* yes, add it in the proper pos.  */	\
 									\
     (w1) = __x3 + __ll_highpart (__x1);					\
     (w0) = __ll_lowpart (__x1) * __ll_B + __ll_lowpart (__x0);		\

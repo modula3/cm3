@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  Clipper version.
    Copyright (C) 1987, 1988, 1991, 1993, 1994, 1995, 1996, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Holger Teutsch (holger@hotbso.rhein-main.de)
 
 This file is part of GNU CC.
@@ -338,10 +338,6 @@ enum reg_class { NO_REGS, GENERAL_REGS, FLOAT_REGS, ALL_REGS, LIM_REG_CLASSES};
    makes the stack pointer a smaller address.  */
 #define STACK_GROWS_DOWNWARD
 
-/* Define this if longjmp restores from saved registers
-   rather than from what setjmp saved.  */
-/* #define LONGJMP_RESTORE_FROM_STACK */
-
 /* Define this if the nominal address of the stack frame
    is at the high-address end of the local variables;
    that is, each additional local variable allocated
@@ -550,30 +546,10 @@ do									      \
 
 #define EXPAND_BUILTIN_SAVEREGS() clipper_builtin_saveregs ()
 
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.  */
-
-#define FUNCTION_PROLOGUE(FILE, SIZE) output_function_prologue (FILE,SIZE)
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
 #define FUNCTION_PROFILER(FILE, LABELNO)  /* FIXME */
-
-/* Output assembler code to FILE to initialize this source file's
-   basic block profiling info, if that has not already been done.  */
-
-#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO)  /* FIXME */
-
-/* Output assembler code to FILE to increment the entry-count for
-   the BLOCKNO'th basic block in this source file.  */
-
-#define BLOCK_PROFILER(FILE, BLOCKNO)	/* FIXME */
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -581,13 +557,6 @@ do									      \
    No definition is equivalent to always zero.  */
 
 #define EXIT_IGNORE_STACK 1
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.  */
-
-#define FUNCTION_EPILOGUE(FILE, SIZE) output_function_epilogue(FILE,SIZE)
 
 /* Store in the variable DEPTH the initial difference between the
    frame pointer reg contents and the stack pointer reg contents,
@@ -797,12 +766,6 @@ do									      \
    done, NIL if none.  */
 #define LOAD_EXTEND_OP(MODE) SIGN_EXTEND
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
-
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 1
 
@@ -822,9 +785,6 @@ do									      \
    block move require much reload work. */
 
 #define MOVE_RATIO 20
-
-/* Define this if zero-extension is slow (more than one real instruction).  */
-/* #define SLOW_ZERO_EXTEND */
 
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 #define SLOW_BYTE_ACCESS 0
@@ -984,12 +944,6 @@ do									      \
  "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", \
  "f9", "f10", "f11", "f12", "f13", "f14", "f15" }
 
-/* How to renumber registers for dbx and gdb.
-   Clipper needs no change in the numeration.  */
-
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
-
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
 
@@ -1002,30 +956,6 @@ do									      \
 #define ASM_GLOBALIZE_LABEL(FILE,NAME)	\
   do { fputs (".globl ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
 
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.long "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.word "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
-
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code.  */
 
@@ -1037,7 +967,7 @@ do									      \
    It need not be very fast code.  */
 
 #define ASM_OUTPUT_REG_POP(FILE,REGNO)  \
-  fprintf (FILE, "\t%s  (sp),%s\n\t\addq  $8,sp\n",	\
+  fprintf (FILE, "\t%s  (sp),%s\n\taddq  $8,sp\n",	\
 	   (REGNO) < 16 ? "loadw" : "loadd", reg_names[REGNO])
 /* This is how to output an element of a case-vector that is absolute */
 
@@ -1072,21 +1002,6 @@ do									      \
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
 
 /* Print an instruction operand X on file FILE.
    CODE is the code from the %-spec that requested printing this operand;

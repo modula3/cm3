@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA. */
+Boston, MA 02111-1307, USA.  */
 
 /* Variables defined in ia64.c.  */
 
@@ -62,6 +62,7 @@ extern int not_postinc_memory_operand PARAMS((rtx, enum machine_mode));
 extern int predicate_operator PARAMS((rtx, enum machine_mode));
 extern int ar_lc_reg_operand PARAMS((rtx, enum machine_mode));
 extern int ar_ccv_reg_operand PARAMS((rtx, enum machine_mode));
+extern int ar_pfs_reg_operand PARAMS((rtx, enum machine_mode));
 extern int general_tfmode_operand PARAMS((rtx, enum machine_mode));
 extern int destination_tfmode_operand PARAMS((rtx, enum machine_mode));
 extern int tfreg_or_fp01_operand PARAMS((rtx, enum machine_mode));
@@ -77,8 +78,6 @@ extern void ia64_expand_call PARAMS((rtx, rtx, rtx, int));
 extern HOST_WIDE_INT ia64_initial_elimination_offset PARAMS((int, int));
 extern void ia64_expand_prologue PARAMS((void));
 extern void ia64_expand_epilogue PARAMS((int));
-extern void ia64_function_prologue PARAMS((FILE *, int));
-extern void ia64_function_epilogue PARAMS((FILE *, int));
 
 extern int ia64_direct_return PARAMS((void));
 extern void ia64_expand_load_address PARAMS((rtx, rtx, rtx));
@@ -93,13 +92,6 @@ extern enum reg_class ia64_secondary_reload_class PARAMS((enum reg_class,
 extern void ia64_reorg PARAMS((rtx));
 extern void process_for_unwind_directive PARAMS ((FILE *, rtx));
 extern const char *get_bundle_name PARAMS ((int));
-extern int ia64_issue_rate PARAMS ((void));
-extern int ia64_adjust_cost PARAMS ((rtx, rtx, rtx, int));
-extern void ia64_sched_init PARAMS ((FILE *, int, int));
-extern void ia64_sched_finish PARAMS ((FILE *, int));
-extern int ia64_sched_reorder PARAMS ((FILE *, int, rtx *, int *, int));
-extern int ia64_sched_reorder2 PARAMS ((FILE *, int, rtx *, int *, int));
-extern int ia64_variable_issue PARAMS ((FILE *, int, rtx, int));
 #endif /* RTX_CODE */
 
 #ifdef TREE_CODE
@@ -121,17 +113,20 @@ extern int ia64_function_arg_partial_nregs PARAMS((CUMULATIVE_ARGS *,
 extern void ia64_function_arg_advance PARAMS((CUMULATIVE_ARGS *,
 					      enum machine_mode,
 					      tree, int));
+extern int ia64_function_arg_pass_by_reference PARAMS((CUMULATIVE_ARGS *,
+						       enum machine_mode,
+						       tree, int));
 extern int ia64_return_in_memory PARAMS((tree));
 extern void ia64_asm_output_external PARAMS((FILE *, tree, const char *));
 
-extern int ia64_valid_type_attribute PARAMS((tree, tree, tree, tree));
 extern void ia64_encode_section_info PARAMS((tree));
 #endif /* TREE_CODE */
 
-extern int ia64_register_move_cost PARAMS((enum reg_class, enum reg_class));
+extern int ia64_register_move_cost PARAMS((enum machine_mode, enum reg_class,
+					   enum reg_class));
 extern int ia64_epilogue_uses PARAMS((int));
+extern int ia64_eh_uses PARAMS((int));
 extern void emit_safe_across_calls PARAMS((FILE *));
-extern void ia64_output_end_prologue PARAMS((FILE *));
 extern void ia64_init_builtins PARAMS((void));
 extern void ia64_override_options PARAMS((void));
 extern int ia64_dbx_register_number PARAMS((int));
@@ -143,3 +138,8 @@ extern void sdata_section PARAMS ((void));
 #ifdef SBSS_SECTION_ASM_OP
 extern void sbss_section PARAMS ((void));
 #endif
+
+#ifdef ARGS_SIZE_RTX
+/* expr.h defines ARGS_SIZE_RTX and `enum direction'.  */
+extern enum direction ia64_hpux_function_arg_padding PARAMS ((enum machine_mode, tree));
+#endif /* ARGS_SIZE_RTX */

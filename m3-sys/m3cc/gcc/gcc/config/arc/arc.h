@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, Argonaut ARC cpu.
-   Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001
+   Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
 This file is part of GNU CC.
@@ -28,8 +28,6 @@ Boston, MA 02111-1307, USA.  */
    - print active compiler options in assembler output
 */
 
-/* ??? Create elf.h and have svr4.h include it.  */
-#include "svr4.h"
 
 #undef ASM_SPEC
 #undef LINK_SPEC
@@ -132,23 +130,6 @@ extern int target_flags;
 /* Non-zero means the cpu has a barrel shifter.  */
 #define TARGET_SHIFTER 0
 
-/* This macro is similar to `TARGET_SWITCHES' but defines names of
-   command options that have values.  Its definition is an
-   initializer with a subgrouping for each command option.
-
-   Each subgrouping contains a string constant, that defines the
-   fixed part of the option name, and the address of a variable. 
-   The variable, type `char *', is set to the variable part of the
-   given option if the fixed part matches.  The actual option name
-   is made by appending `-m' to the specified name.
-
-   Here is an example which defines `-mshort-data-NUMBER'.  If the
-   given option is `-mshort-data-512', the variable `m88k_short_data'
-   will be set to the string `"512"'.
-
-	extern char *m88k_short_data;
-	#define TARGET_OPTIONS { { "short-data-", &m88k_short_data } }  */
-
 extern const char *arc_cpu_string;
 extern const char *arc_text_string,*arc_data_string,*arc_rodata_string;
 
@@ -188,7 +169,7 @@ do {				\
 /* Target machine storage layout.  */
 
 /* Define to use software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion. */
+   decimal <-> binary conversion.  */
 #define REAL_ARITHMETIC
 
 /* Define this if most significant bit is lowest numbered
@@ -312,15 +293,6 @@ if (GET_MODE_CLASS (MODE) == MODE_INT		\
 #define PTRDIFF_TYPE "long int"
 #define WCHAR_TYPE "short unsigned int"
 #define WCHAR_TYPE_SIZE 16
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
 
 /* Standard register usage.  */
 
@@ -400,6 +372,16 @@ if (GET_MODE_CLASS (MODE) == MODE_INT		\
   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,		\
   27, 28, 29, 30 }
 
+/* Macro to conditionally modify fixed_regs/call_used_regs.  */
+#define CONDITIONAL_REGISTER_USAGE			\
+do {							\
+  if (PIC_OFFSET_TABLE_REGNUM != INVALID_REGNUM)	\
+    {							\
+      fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
+      call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;	\
+    }							\
+} while (0)
+
 /* Return number of consecutive hard regs needed starting at reg REGNO
    to hold something of mode MODE.
    This is ordinarily the length in words of a value of mode MODE
@@ -408,7 +390,7 @@ if (GET_MODE_CLASS (MODE) == MODE_INT		\
 ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.  */
-extern unsigned int arc_hard_regno_mode_ok[];
+extern const unsigned int arc_hard_regno_mode_ok[];
 extern unsigned int arc_mode_class[];
 #define HARD_REGNO_MODE_OK(REGNO, MODE) \
 ((arc_hard_regno_mode_ok[REGNO] & arc_mode_class[MODE]) != 0)
@@ -459,7 +441,7 @@ enum reg_class {
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 #define REG_CLASS_NAMES \
 { "NO_REGS", "LPCOUNT_REG", "GENERAL_REGS", "ALL_REGS" }
 
@@ -475,7 +457,7 @@ enum reg_class {
    Return the class number of the smallest class containing
    reg number REGNO.  This could be a conditional expression
    or could index an array.  */
-extern enum reg_class arc_regno_reg_class[];
+extern enum reg_class arc_regno_reg_class[FIRST_PSEUDO_REGISTER];
 #define REGNO_REG_CLASS(REGNO) \
 (arc_regno_reg_class[REGNO])
 
@@ -843,35 +825,11 @@ arc_setup_incoming_varargs(&ARGS_SO_FAR, MODE, TYPE, &PRETEND_SIZE, NO_RTL)
    is passed to a function, or 0 to use `invisible' first argument.  */
 #define STRUCT_VALUE 0
 
-/* Function entry and exit.  */
-
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.  */
-#define FUNCTION_PROLOGUE(FILE, SIZE) \
-arc_output_function_prologue (FILE, SIZE)
-
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
    functions that have frame pointers.
    No definition is equivalent to always zero.  */
 #define EXIT_IGNORE_STACK 0
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-#define FUNCTION_EPILOGUE(FILE, SIZE) \
-arc_output_function_epilogue (FILE, SIZE)
 
 /* Epilogue delay slots.  */
 #define DELAY_SLOTS_FOR_EPILOGUE arc_delay_slots_for_epilogue ()
@@ -898,10 +856,10 @@ arc_eligible_for_epilogue_delay (TRIAL, SLOTS_FILLED)
 */
 #define TRAMPOLINE_TEMPLATE(FILE) \
 do { \
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x631f7c00)); \
-  ASM_OUTPUT_INT (FILE, const0_rtx); \
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x381f0000)); \
-  ASM_OUTPUT_INT (FILE, const0_rtx); \
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x631f7c00)); \
+  assemble_aligned_integer (UNITS_PER_WORD, const0_rtx); \
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x381f0000)); \
+  assemble_aligned_integer (UNITS_PER_WORD, const0_rtx); \
 } while (0)
 
 /* Length in units of the trampoline for entering a nested function.  */
@@ -1075,7 +1033,7 @@ arc_select_cc_mode (OP, X, Y)
    of a switch statement.  If the code is computed here,
    return it with a return statement.  Otherwise, break from the switch.  */
 /* Small integers are as cheap as registers.  4 byte values can be fetched
-   as immediate constants - let's give that the cost of an extra insn. */
+   as immediate constants - let's give that the cost of an extra insn.  */
 #define CONST_COSTS(X, CODE, OUTER_CODE) \
   case CONST_INT :						\
     if (SMALL_INT (INTVAL (X)))					\
@@ -1221,7 +1179,7 @@ do {							\
    pointer and frame pointer registers.  If this macro is not defined, it
    is up to the machine-dependent files to allocate such a register (if
    necessary).  */
-#define PIC_OFFSET_TABLE_REGNUM 26
+#define PIC_OFFSET_TABLE_REGNUM  (flag_pic ? 26 : INVALID_REGNUM)
 
 /* Define this macro if the register defined by PIC_OFFSET_TABLE_REGNUM is
    clobbered by calls.  Do not define this macro if PIC_OFFSET_TABLE_REGNUM
@@ -1272,67 +1230,6 @@ do {							\
 /* Output to assembler file text saying following lines
    no longer contain unusual constructs.  */
 #define ASM_APP_OFF ""
-
-/* This is how to output an assembler line defining a `char' constant.  */
-#define ASM_OUTPUT_CHAR(FILE, VALUE) \
-( fprintf (FILE, "\t.byte\t"),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line defining a `short' constant.  */
-#define ASM_OUTPUT_SHORT(FILE, VALUE) \
-( fprintf (FILE, "\t.hword\t"),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line defining an `int' constant.
-   We also handle symbol output here.  Code addresses must be right shifted
-   by 2 because that's how the jump instruction wants them.  */
-#define ASM_OUTPUT_INT(FILE, VALUE) \
-do {									\
-  fprintf (FILE, "\t.word\t");						\
-  if ((GET_CODE (VALUE) == SYMBOL_REF && SYMBOL_REF_FLAG (VALUE))	\
-      || GET_CODE (VALUE) == LABEL_REF)					\
-    {									\
-      fprintf (FILE, "%%st(");						\
-      output_addr_const (FILE, (VALUE));				\
-      fprintf (FILE, ")");						\
-    }									\
-  else									\
-    output_addr_const (FILE, (VALUE));					\
-  fprintf (FILE, "\n");							\
-} while (0)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-#define ASM_OUTPUT_FLOAT(FILE, VALUE) \
-{							\
-  long t;						\
-  char str[30];						\
-  REAL_VALUE_TO_TARGET_SINGLE ((VALUE), t);		\
-  REAL_VALUE_TO_DECIMAL ((VALUE), "%.20e", str);	\
-  fprintf (FILE, "\t.word\t0x%lx %s %s\n",		\
-	   t, ASM_COMMENT_START, str);			\
-}
-
-/* This is how to output an assembler line defining a `double' constant.  */
-#define ASM_OUTPUT_DOUBLE(FILE, VALUE) \
-{							\
-  long t[2];						\
-  char str[30];						\
-  REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), t);		\
-  REAL_VALUE_TO_DECIMAL ((VALUE), "%.20e", str);	\
-  fprintf (FILE, "\t.word\t0x%lx %s %s\n\t.word\t0x%lx\n", \
-	   t[0], ASM_COMMENT_START, str, t[1]);		\
-}
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-#define ASM_BYTE_OP	"\t.byte\t"
-#define ASM_OUTPUT_BYTE(FILE, VALUE)  \
-  fprintf (FILE, "%s0x%x\n", ASM_BYTE_OP, (VALUE))
-
-/* The assembler's parentheses characters.  */
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
 
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
@@ -1410,28 +1307,6 @@ do {						\
    that we use).  */
 #define SET_ASM_OP "\t.set\t"
 
-/* A C statement (sans semicolon) to output an element in the table of
-   global constructors.  */
-#undef ASM_OUTPUT_CONSTRUCTOR
-#define ASM_OUTPUT_CONSTRUCTOR(FILE, NAME) \
-do {					\
-  ctors_section ();			\
-  fprintf (FILE, "\t.word\t%%st(");	\
-  assemble_name (FILE, NAME);		\
-  fprintf (FILE, ")\n");		\
-} while (0)
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-#undef ASM_OUTPUT_DESTRUCTOR
-#define ASM_OUTPUT_DESTRUCTOR(FILE, NAME) \
-do {					\
-  dtors_section ();			\
-  fprintf (FILE, "\t.word\t%%st(");	\
-  assemble_name (FILE, NAME);		\
-  fprintf (FILE, ")\n");		\
-} while (0)
-
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
 #define REGISTER_NAMES \
@@ -1450,7 +1325,7 @@ arc_final_prescan_insn (INSN, OPVEC, NOPERANDS)
 
 /* A C expression which evaluates to true if CODE is a valid
    punctuation character for use in the `PRINT_OPERAND' macro.  */
-extern char arc_punct_chars[];
+extern char arc_punct_chars[256];
 #define PRINT_OPERAND_PUNCT_VALID_P(CHAR) \
 arc_punct_chars[(unsigned char) (CHAR)]
 
@@ -1520,9 +1395,6 @@ do { if ((LOG) != 0) fprintf (FILE, "\t.align %d\n", 1 << (LOG)); } while (0)
 #undef PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 
-/* How to renumber registers for dbx and gdb.  */
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
 /* Turn off splitting of long stabs.  */
 #define DBX_CONTIN_LENGTH 0
 
@@ -1535,7 +1407,7 @@ do { if ((LOG) != 0) fprintf (FILE, "\t.align %d\n", 1 << (LOG)); } while (0)
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
-   Do not define this if the table should contain absolute addresses. */
+   Do not define this if the table should contain absolute addresses.  */
 /* It's not clear what PIC will look like or whether we want to use -fpic
    for the embedded form currently being talked about.  For now require -fpic
    to get pc relative switch tables.  */
@@ -1551,18 +1423,12 @@ do { if ((LOG) != 0) fprintf (FILE, "\t.align %d\n", 1 << (LOG)); } while (0)
    done, NIL if none.  */
 #define LOAD_EXTEND_OP(MODE) ZERO_EXTEND
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
-
 /* Max number of bytes we can move from memory to memory
    in one reasonably fast instruction.  */
 #define MOVE_MAX 4
 
 /* Define this to be nonzero if shift instructions ignore all but the low-order
-   few bits. */
+   few bits.  */
 #define SHIFT_COUNT_TRUNCATED 1
 
 /* Value is 1 if truncating an integer of INPREC bits to OUTPREC bits
@@ -1584,22 +1450,6 @@ do { if ((LOG) != 0) fprintf (FILE, "\t.align %d\n", 1 << (LOG)); } while (0)
 /* A function address in a call instruction.  */
 #define FUNCTION_MODE SImode
 
-/* A C expression whose value is nonzero if IDENTIFIER with arguments ARGS
-   is a valid machine specific attribute for DECL.
-   The attributes in ATTRIBUTES have previously been assigned to TYPE.  */
-#define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, IDENTIFIER, ARGS) \
-arc_valid_machine_decl_attribute (DECL, ATTRIBUTES, IDENTIFIER, ARGS)
-
-/* A C expression that returns zero if the attributes on TYPE1 and TYPE2 are
-   incompatible, one if they are compatible, and two if they are
-   nearly compatible (which causes a warning to be generated).  */
-#define COMP_TYPE_ATTRIBUTES(TYPE1, TYPE2) \
-arc_comp_type_attributes (TYPE1, TYPE2)
-
-/* Give newly defined TYPE some default attributes.  */
-#define SET_DEFAULT_TYPE_ATTRIBUTES(TYPE) \
-arc_set_default_type_attributes (TYPE)
-
 /* alloca should avoid clobbering the old register save area.  */
 /* ??? Not defined in tm.texi.  */
 #define SETJMP_VIA_SAVE_AREA
@@ -1609,7 +1459,7 @@ arc_set_default_type_attributes (TYPE)
    since it hasn't been defined!  */
 extern struct rtx_def *arc_compare_op0, *arc_compare_op1;
 
-/* ARC function types.   */
+/* ARC function types.  */
 enum arc_function_type {
   ARC_FUNCTION_UNKNOWN, ARC_FUNCTION_NORMAL,
   /* These are interrupt handlers.  The name corresponds to the register
