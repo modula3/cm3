@@ -191,9 +191,22 @@ IO.Put("remain after Sub " & UF.Fmt(remain) & "\n");
         ucPos := CUList.AppendD(ucFirst,ucPos);
       END;
     END;
-    RETURN CUList.AppendD(ucPos,ucNeg);
+    ucList := CUList.AppendD(ucPos,ucNeg);
   END;
+  <*ASSERT U.Equal(ComposeUnit(ucList),unit)*>
+  RETURN ucList;
 END DecomposeUnit;
+
+PROCEDURE ComposeUnit(cu:CUList.T):U.T=
+  VAR
+    unit:=U.New();
+  BEGIN
+    WHILE cu#NIL DO
+      unit := U.Add(unit,U.Scale(cu.head.uu.head.unit,cu.head.exp));
+      cu   := cu.tail;
+    END;
+    RETURN unit;
+  END ComposeUnit;
 
 BEGIN
 END UnitDatabase.

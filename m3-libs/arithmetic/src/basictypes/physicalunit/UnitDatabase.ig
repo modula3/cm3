@@ -34,5 +34,6 @@ PROCEDURE AddUnit(VAR db:T;
                   READONLY scales:ScaledUnitInitArray);
 
 PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CUList.T;
+PROCEDURE ComposeUnit(cu:CUList.T):U.T;
 
 END UnitDatabase.
