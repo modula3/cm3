@@ -988,13 +988,20 @@ PROCEDURE ImportVersion (t: T;  pkg, vers: M3ID.T)
 
 PROCEDURE DoImportObj (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
-  VAR t := Self (m);  file: TEXT;  name: M3ID.T;  loc: M3Loc.T;
-  BEGIN
+  VAR 
+    t := Self (m);
     file := PathOf (t, PopText (t));
-    name := M3ID.Add (Pathname.Last (file));
-    loc  := Location (t, M3Loc.noPkg, M3ID.Add (Pathname.Prefix (file)));
-    M3Unit.AddNew (t.units, name, UK.Unknown, loc,
-                   imported := FALSE, hidden := FALSE);
+    dir  := M3Path.New (PkgSubdir (t), Pathname.Prefix (file));
+    base := M3ID.Add (Pathname.Last (file));
+    loc  := Location (t, t.cur_pkg, M3ID.Add (dir));
+    unit := M3Unit.New (base, UK.O, loc, hidden := FALSE, imported := FALSE);
+    fn   := M3Unit.FileName(unit);
+    pn   := Pathname.Join(loc.path, fn, NIL);
+  BEGIN
+    M3Unit.AddNew (t.units, base, UK.O, loc,
+                   imported := FALSE, hidden := TRUE);
+    M3Unit.Add (t.units, unit);
+    Utils.LinkFile (pn, fn);
   END DoImportObj;
 
 PROCEDURE DoImportLib (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -2038,10 +2045,10 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
   CONST HTag = ARRAY BOOLEAN OF TEXT { "", "hidden" };
   CONST KindTag = ARRAY UK OF TEXT {
      NIL,
-     "_map_add_interface", NIL, NIL, "import_object",
-     "_map_add_module", NIL, NIL, "import_object",
+     "_map_add_interface", NIL, NIL, NIL,
+     "_map_add_module", NIL, NIL, NIL,
      "_map_add_generic_interface", "_map_add_generic_module",
-     "_map_add_c", "_map_add_h", "_map_add_s", "import_object",
+     "_map_add_c", "_map_add_h", "_map_add_s", NIL,
      "_import_m3lib", "_import_otherlib", NIL, NIL, NIL, "template" } ;
 
   VAR fail_msg: TEXT := NIL;
@@ -2073,10 +2080,10 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
         WHILE (u # NIL) DO
           IF (NOT u.imported) THEN
             CASE u.kind OF
-            | UK.Unknown, UK.IC, UK.IS, UK.MC, UK.MS, UK.PGM, UK.LIBX, UK.PGMX =>
+            | UK.Unknown, UK.IC, UK.IS, UK.MC, UK.MS, UK.PGM, UK.LIBX,
+              UK.PGMX, UK.IO, UK.MO, UK.O =>
                 <*ASSERT KindTag[u.kind] = NIL *>
-            | UK.I3, UK.IO, UK.M3, UK.MO, UK.IG, UK.MG,
-              UK.C, UK.H, UK.S, UK.O =>
+            | UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.H, UK.S =>
                 <*ASSERT KindTag[u.kind] # NIL *>
                 Out (wr, KindTag[u.kind], "(\"");
                 Out (wr, M3Path.Escape (M3Unit.FileName (u)), QCQ);

@@ -530,9 +530,9 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "5.1.5");       (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050105");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2001-10-28");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", "5.1.6");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050106");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2001-11-13");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
