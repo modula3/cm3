@@ -22,6 +22,7 @@ TYPE
       (*asking for the offset is non-sense since we are working with a
          finite supported signal which has always zero offset*)
       sum (): R.T;
+      inner (with:T): R.T;
 
       upsample   (factor: IndexType): T;
       downsample (factor: IndexType): T;

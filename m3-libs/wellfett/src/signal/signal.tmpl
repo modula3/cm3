@@ -9,10 +9,11 @@ readonly proc Signal (nm, field, rimpl, vimpl, pimpl) is
   local rfmtlex = field & "FmtLex"
   local rfield  = field & rimpl
   local vfield  = field & "Vector" & vimpl
+  local vecsup  = field & "VectorSupport"
   local pfield  = field & "Polynomial" & pimpl
 
-  build_generic_intf (signal, "Signal",       [rfield,              pfield], VISIBLE)
-  build_generic_impl (signal, "Signal",       [rfield, rep, vfield, pfield])
+  build_generic_intf (signal, "Signal",       [rfield,                      pfield], VISIBLE)
+  build_generic_impl (signal, "Signal",       [rfield, rep, vfield, vecsup, pfield])
 
   build_generic_intf (fmtlex, "SignalFmtLex", [rfmtlex, signal], VISIBLE)
   build_generic_impl (fmtlex, "SignalFmtLex", [rfmtlex, rep])

@@ -26,16 +26,29 @@ PROCEDURE ShowFilters () =
                   ARRAY OF TEXT{SF.Fmt(BSpl.WaveletMask(2, 2))}));
   END ShowFilters;
 
-PROCEDURE CheckPerfectReconstruction () =
-  <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
+PROCEDURE Reconstruction (hdual, gdual: S.T): S.T =
+  <*FATAL BSpl.DifferentParity*>
   VAR
-    hdual := BSpl.GeneratorMask(2);
-    gdual := BSpl.WaveletMask(2, 2);
     prod0 := gdual.alternate().convolve(hdual);
     prod1 := hdual.alternate().convolve(gdual);
-    one   := prod0.superpose(prod1.negate());
   BEGIN
-    IO.Put(Fmt.FN("is this a one: %s ?\n", ARRAY OF TEXT{SF.Fmt(one)}));
+    RETURN prod0.superpose(prod1.negate());
+  END Reconstruction;
+
+PROCEDURE CheckPerfectReconstruction () =
+  <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
+  VAR hdual, gdual: S.T;
+  BEGIN
+    FOR i := 0 TO 5 DO
+      FOR j := i MOD 2 TO 5 BY 2 DO
+        IO.Put(
+          Fmt.FN("CDF-%s,%s: %s\n",
+                 ARRAY OF
+                   TEXT{Fmt.Int(i), Fmt.Int(j),
+                        SF.Fmt(Reconstruction(BSpl.GeneratorMask(i),
+                                              BSpl.WaveletMask(i, j)))}));
+      END;
+    END;
   END CheckPerfectReconstruction;
 
 PROCEDURE Test () =
