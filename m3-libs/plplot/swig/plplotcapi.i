@@ -43,6 +43,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
      for named argument calls, e.g. PlotLines(x:=xdata,y:=ydata);
    - removed plParseOpts because I don't know what it does,
      what are inputs and what are outputs?
+   - made some char * 'const' in
+      plsetopt, plstripc, plSetUsage
 */
 
 /* For passing user data, as with X's XtPointer */
@@ -568,7 +570,7 @@ plsesc(char esc);
 
 DOC(plsetopt, "Process input strings, treating them as an option and argument pair. The first is for the external API, the second the work routine declared here for backward compatibilty.")
 PLINT
-plsetopt(char *opt, char *optarg);
+plsetopt(const char *opt, const char *optarg);
 
 DOC(plsfam, "Set family file parameters.")
 void
@@ -647,13 +649,13 @@ plstripa(PLINT id, PLINT pen, PLFLT x, PLFLT y);
 
 DOC(plstripc, "Create 1d stripchart.")
 void
-plstripc(PLINTOutput id, char *xspec, char *yspec,
+plstripc(PLINTOutput id, const char *xspec, const char *yspec,
 	PLFLT xmin, PLFLT xmax, PLFLT xjump, PLFLT ymin, PLFLT ymax,
 	PLFLT xlpos, PLFLT ylpos,
 	PLINT y_ascl, PLINT acc,
 	PLINT colbox, PLINT collab,
 	PLINTArrayFst colline, PLINTArrayCk styline, char *legline[4],
-	char *labx, char *laby, char *labtop);
+	const char *labx, const char *laby, const char *labtop);
 
 DOC(plstripd, "Deletes and releases memory used by a stripchart. ")
 void
@@ -908,7 +910,7 @@ plMergeOpts(PLOptionTable *options, char *name, char **notes);
 /* Set the strings used in usage and syntax messages. */
 
 void
-plSetUsage(char *program_string, char *usage_string);
+plSetUsage(const char *program_string, const char *usage_string);
 
 #if 0
 /* This is wrapped by common API plsetopt so ignore. */
