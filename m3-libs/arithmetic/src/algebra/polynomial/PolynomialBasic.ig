@@ -17,17 +17,19 @@ TYPE
   TBody = ARRAY OF R.T;
   T = BRANDED "Polynomial" REF TBody;
 
-(* Isn't possible to obtain a pointer to a constant array?
+(* It's not possible to obtain a pointer to a constant array.
+   We can not turn T from a reference type to an array type,
+   because some routines have to return a result via a VAR parameter.
 CONST
   Zero    =  TBody{R.Zero};
   One     =  TBody{R.One};
 *)
 
 VAR
-  Zero    : T;
-  One     : T;
+  (*CONST*) Zero : T;
+  (*CONST*) One  : T;
 
-PROCEDURE New(n:CARDINAL):T;    (*make a poly for a0..an*)
+PROCEDURE New(n:CARDINAL):T;  (*make a poly for a0..an*)
 PROCEDURE Copy(p:T):T;        (*copy p to a New poly*)
 (*
 PROCEDURE Zero(p:T);          (*set p to zeros*)
@@ -42,7 +44,7 @@ PROCEDURE Sub(p1,p2:T):T;  (*return p1-p2*)
 PROCEDURE Equal(p1,p2:T):BOOLEAN;  (*return p1=p2*)
 
 PROCEDURE Mul(p1,p2:T):T;  (*return p1*p2*)
-PROCEDURE Div(p1,p2:T):T RAISES {Error};  (*return p1/p2 if possible*)
+PROCEDURE Div(p1,p2:T):T RAISES {Error};  (*return p1/p2 if possible, will fail for floating point numbers often*)
 PROCEDURE DivMod(p1,p2:T;                 (*compute p1/p2 *) 
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
 (*
