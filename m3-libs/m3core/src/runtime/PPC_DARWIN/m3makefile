@@ -1,0 +1,15 @@
+% Copyright according to COPYRIGHT-CMASS.
+
+Interface      ("RTMachine")
+implementation ("RTHeapDep")
+implementation ("RTSignal")
+implementation ("RTThread")
+% The native gcc on Darwin/MacOS X produces the undefined non-relocatable
+% symbols saveFP and restFP which save and restore the floating point
+% context; my bootstrapped gcc 3.2.1 didn't do this. As a workaround
+% until somebody has found out how to avoid these non-relocatable references
+% I've added the assembler source produced by my gcc which explicitly saves
+% and restores the floating point registers.
+%c_source       ("RTThreadC")
+s_source       ("RTThreadC")
+
