@@ -147,6 +147,7 @@ PROCEDURE SolveTriDiag(a,b,c,r:V.T;
 |                  0   aN   bN
 |  Solve for u in A*u=r
 *)
+<*UNUSED*>
 CONST
   ftn = Module & "SolveTriDiag";
 VAR
@@ -244,6 +245,7 @@ A is real nxn
 index is integer nx1
 return value "d" is used for BackSubst and det
 *)
+<*UNUSED*>
 CONST ftn = "LUFactor";
 VAR
   imax:=0;
@@ -353,6 +355,7 @@ A is real nxn
 B is real nx1
 index is integer nx1
 *)
+<*UNUSED*>
 CONST ftn = "LUBackSubst";
 VAR
   Af:=FIRST(A^); Al:=LAST(A^);
@@ -404,6 +407,7 @@ A is real nxn
 B is real nxn
 index is integer nx1
 *)
+<*UNUSED*>
 CONST ftn = "LUInverse";
 VAR
   n:=NUMBER(A^);
@@ -439,27 +443,26 @@ PROCEDURE LUDet(A:M.T;
 returns determinant
 "d" is the parity marker from LUFactor
 *)
+<*UNUSED*>
 CONST ftn = "LUDet";
 VAR
-  m:=LAST(A^);   (*num rows*)
-  n:=LAST(A[0]); (*num cols*)
-  tmp:R.T;
+  (*---set sign due to row switching---*)
+  prod:=FLOAT(d,R.T);
 BEGIN
   (*---could do more checking here to assure LU form---*)
-  (*---set sign due to row switching---*)
-  tmp:=FLOAT(d,R.T);
 
   (*---compute value---*)
-  FOR i:=0 TO n DO
-    tmp:=tmp * A[i,i];
+  FOR i:=0 TO LAST(A[0]) DO
+    prod:=prod * A[i,i];
   END (* for *);
-  RETURN tmp;
+  RETURN prod;
 END LUDet;
 
 (*=============================*)
 (* Singular Value Decomposition*)
 (*=============================*)
 
+(*
 (*----------------------*)
 PROCEDURE SVDGolub(
            A:M.T;         (*mxn matrix*)
@@ -496,6 +499,7 @@ PROCEDURE SVDSolve(U,V,W:M.T; (*decomposition*)
 
 BEGIN
 END SVDSolve;
+*)
 (*-----------------*)
 BEGIN
 END MatrixDecomposition.
