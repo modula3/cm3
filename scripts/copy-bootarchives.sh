@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: copy-bootarchives.sh,v 1.1 2003-01-29 23:07:17 wagner Exp $
+# $Id: copy-bootarchives.sh,v 1.2 2003-07-10 23:17:41 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -81,7 +81,7 @@ if [ -n "${PKGS}" ] ; then
 fi
 
 for p in ${P}; do
-  echo ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/PPC_DARWIN/${p}/${CROSS_TARGET}/
-  ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/PPC_DARWIN/${p}/${CROSS_TARGET}/
+  echo ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
+  ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
 done
 
