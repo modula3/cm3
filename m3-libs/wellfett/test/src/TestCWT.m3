@@ -71,7 +71,7 @@ PROCEDURE DiracTransform () =
     scales := V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0));
     y := CWA.Do(
            S.One, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
-    z := CWS.Do(y, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
+    z := CWS.Do(y^, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
     m := NEW(M.T, numScales, width);
   BEGIN
     IO.Put(Fmt.F("y.first %s, z.first %s\n", Fmt.Int(y[0].getFirst()),

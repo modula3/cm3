@@ -14,7 +14,7 @@ TYPE
    based on discrete convolutions and can provide only an approximate
    reconstruction depending on the wavelet and the scales used. *)
 
-PROCEDURE Do (         w      : CWT.T;
+PROCEDURE Do (READONLY w      : CWT.TBody;
                        wavelet: Wavelet;
                        width  : Width;
               READONLY scales : RV.T;

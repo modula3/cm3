@@ -11,14 +11,14 @@ REVEAL
                   END;
 
 
-PROCEDURE Do (         w      : CWT.T;
+PROCEDURE Do (READONLY w      : CWT.TBody;
                        wavelet: Wavelet;
                        width  : Width;
               READONLY scales : V.T;
                        conv   : Conv.Handle := NIL; ): S.T =
   VAR synthesis := New(wavelet, width, conv);
   BEGIN
-    <* ASSERT NUMBER(w^) = NUMBER(scales), "Number of scales must match" *>
+    <* ASSERT NUMBER(w) = NUMBER(scales), "Number of scales must match" *>
     FOR i := FIRST(scales) TO LAST(scales) DO
       PutScale(synthesis, w[i], scales[i]);
     END;
