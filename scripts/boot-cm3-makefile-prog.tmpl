@@ -7,6 +7,7 @@ CC    := gcc
 CM3CG := cm3cg
 AS    := as
 AR    := ar
+#STATIC := -static
 
 .PHONY: clean-as clean-obj clean all
 
@@ -25,16 +26,22 @@ OBJECTS  := $(OBJ_IO) $(OBJ_MO) $(OBJ_O)
 
 all: $(PROGNAME)
 $(PROGNAME): $(OBJECTS)
-	$(CC) -static -o $(PROGNAME) $(OBJECTS) $(LIBS)
+	$(CC) $(STATIC) -o $(PROGNAME) $(OBJECTS) $(LIBS)
 
 %.o: %.c
 	$(CC) -o $@ -c $<
 
-%.mo: %.mc
+%.ms: %.mc
 	$(CM3CG) -quiet -o $@ $<
 
-%.io: %.ic
+%.is: %.ic
 	$(CM3CG) -quiet -o $@ $<
+
+%.mo: %.ms
+	$(AS) -o $@ $<
+
+%.io: %.is
+	$(AS) -o $@ $<
 
 clean-as:
 	rm -f $(FILES_IS)

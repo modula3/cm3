@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.1 2003-01-10 01:18:50 wagner Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.2 2003-01-18 22:42:31 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -32,6 +32,8 @@ fi
 
 L=""
 P=""
+L="${L} m3-libs/m3gc-simple"
+#L="${L} m3-libs/m3gc-enhanced"
 L="${L} m3-libs/m3core"
 L="${L} m3-libs/libm3"
 L="${L} m3-sys/m3middle"
@@ -73,46 +75,56 @@ show_usage $@
 shift
 
 get_libs() {
+  p="${ROOT}/${CROSS_TARGET}"
   case $1 in
     cm3)
-      echo "m3-libs/m3core/${CROSS_TARGET}/libm3core.a";
-      echo "m3-libs/libm3/${CROSS_TARGET}/libm3.a";
-      echo "m3-sys/m3middle/${CROSS_TARGET}/libm3middle.a";
-      echo "m3-sys/m3linker/${CROSS_TARGET}/libm3link.a";
-      echo "m3-sys/m3front/${CROSS_TARGET}/libm3front.a";
-      echo "m3-sys/m3quake/${CROSS_TARGET}/libm3quake.a";
-    ;
+      echo -n "${p}/m3-sys/m3quake/${CROSS_TARGET}/libm3quake.a ";
+      echo -n "${p}/m3-sys/m3front/${CROSS_TARGET}/libm3front.a ";
+      echo -n "${p}/m3-sys/m3linker/${CROSS_TARGET}/libm3linker.a ";
+      echo -n "${p}/m3-sys/m3middle/${CROSS_TARGET}/libm3middle.a ";
+      echo -n "${p}/m3-libs/libm3/${CROSS_TARGET}/libm3.a ";
+      echo -n "${p}/m3-libs/m3core/${CROSS_TARGET}/libm3core.a ";
+      echo -n "${p}/m3-libs/m3gc-simple/${CROSS_TARGET}/libm3gc-simple.a ";
+      echo -n "-lm ";
+    ;;
     m3bundle)
-      echo "m3-libs/m3core/${CROSS_TARGET}/libm3core.a";
-      echo "m3-libs/libm3/${CROSS_TARGET}/libm3.a";
-      echo "-lm";
-    ;
+      echo -n "${p}/m3-libs/libm3/${CROSS_TARGET}/libm3.a ";
+      echo -n "${p}/m3-libs/m3core/${CROSS_TARGET}/libm3core.a ";
+      echo -n "${p}/m3-libs/m3gc-simple/${CROSS_TARGET}/libm3gc-simple.a ";
+      echo -n "-lm ";
+    ;;
   esac
 }
 
 # build all libraries
 for p in ${L}; do
-  cd ../${CROSS_TARGET} || exit 1
+  cd ${ROOT}/${CROSS_TARGET} || exit 1
   pkg=`basename ${p}`
-  bdir="${p}/${CROSS_TARGET}"
+  bdir="${ROOT}/${CROSS_TARGET}/${p}/${CROSS_TARGET}"
   case ${pkg} in
     lib*) lib="${pkg}.a";;
     *)    lib="lib${pkg}.a";;
   esac
-  cp ../scripts/boot-cm3-makefile-lib.tmpl ${bdir}/Makefile
+  header "building in ${bdir}" 
+  cp ${ROOT}/scripts/boot-cm3-makefile-lib.tmpl ${bdir}/Makefile
   cd ${bdir}
-  ${GMAKE} LIBNAME="${lib}" clean
-  ${GMAKE} LIBNAME="${lib}" all
+  if [ "$DOCLEAN" = yes ] ; then
+    ${GMAKE} LIBNAME="${lib}" clean
+  fi
+  ${GMAKE} LIBNAME="${lib}" all || exit 1
 done
 
 # build all programs
 for p in ${P}; do
-  cd ../${CROSS_TARGET} || exit 1
+  cd ${ROOT}/${CROSS_TARGET} || exit 1
   pkg=`basename ${p}`
-  bdir="${p}/${CROSS_TARGET}"
-  cp ../scripts/boot-cm3-makefile-prog.tmpl ${bdir}/Makefile
+  bdir="${ROOT}/${CROSS_TARGET}/${p}/${CROSS_TARGET}"
+  header "building in ${bdir}" 
+  cp ${ROOT}/scripts/boot-cm3-makefile-prog.tmpl ${bdir}/Makefile
   cd ${bdir}
-  ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean
+  if [ "$DOCLEAN" = yes ] ; then
+    ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean
+  fi
   ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" all
 done
 

@@ -3,10 +3,11 @@
 
 # LIBNAME must be set on the command line
 
-CC    := gcc
-CM3CG := cm3cg
-AS    := as
-AR    := ar
+CC      := gcc
+CM3CG   := cm3cg
+AS      := as
+AR      := ar
+RANLIB  := ranlib
 
 .PHONY: clean-as clean-obj clean all
 
@@ -26,15 +27,22 @@ OBJECTS  := $(OBJ_IO) $(OBJ_MO) $(OBJ_O)
 all: $(LIBNAME)
 $(LIBNAME): $(OBJECTS)
 	$(AR) cru $(LIBNAME) $(OBJECTS)
+	$(RANLIB) $(LIBNAME)
 
 %.o: %.c
 	$(CC) -o $@ -c $<
 
-%.mo: %.mc
+%.ms: %.mc
 	$(CM3CG) -quiet -o $@ $<
 
-%.io: %.ic
+%.is: %.ic
 	$(CM3CG) -quiet -o $@ $<
+
+%.mo: %.ms
+	$(AS) -o $@ $<
+
+%.io: %.is
+	$(AS) -o $@ $<
 
 clean-as:
 	rm -f $(FILES_IS)
