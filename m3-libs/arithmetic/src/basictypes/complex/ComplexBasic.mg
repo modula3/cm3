@@ -13,7 +13,7 @@ was xComplex.m3
                           The ones with beginning caps are wds's
 *)
 
-FROM xUtils IMPORT Error, Err;
+FROM xUtils IMPORT Error;
 
 <*UNUSED*> CONST Module = "ComplexBasic.";
 (*==========================*)
@@ -73,9 +73,7 @@ VAR
   denom : R.T;
 BEGIN
   denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
-  IF R.Equal (denom, R.Zero) THEN
-    RAISE Error(Err.divide_by_zero);
-  END;
+  (* Err.divide_by_zero will be thrown by Div*)
   RETURN T{R.Div(x.re,denom),R.Div(x.im,denom)};
 END DivScale;
 
@@ -90,6 +88,41 @@ PROCEDURE Rec(READONLY x : T) : T RAISES {Error} =
   BEGIN
     RETURN DivScale(Conj(x),x);
   END Rec;
+
+(*-------------------*)
+(*I have not found a measure which matches the needs
+  of the Euclidean algorithm, it may work for Gaussian numbers though*)
+PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
+  VAR
+    denom : R.T;
+    r     : T;
+  BEGIN
+    denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
+    (* Err.divide_by_zero will be thrown by Div*)
+    r.re := R.Mod(x.re,denom);
+	r.im := R.Mod(x.im,denom);
+	r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
+	r.re := R.Div(r.re,denom);  (*is always divisible*)
+    r.im := R.Div(r.im,denom);
+    RETURN r;
+  END Mod;
+
+(*-------------------*)
+PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
+  VAR
+    denom : R.T;
+    q     : T;
+  BEGIN
+    denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
+    (* Err.divide_by_zero will be thrown by Div*)
+    q.re := R.DivMod(x.re,denom,r.re);
+	q.im := R.DivMod(x.im,denom,r.im);
+	r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
+	r.re := R.Div(r.re,denom);  (*is always divisible*)
+    r.im := R.Div(r.im,denom);
+    RETURN q;
+  END DivMod;
+
 
 (*-------------------*)
 PROCEDURE Square(READONLY x : T) : T =
