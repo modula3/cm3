@@ -1,11 +1,8 @@
+% automatically generated quake file for FFTWExtended
+
 % compiled / works with with CM3 5.2.6 2003-06-27
 import_lib("fftw3","/usr/lib")
 import("libm3")
-
-module("FFTWLongRealRaw")
-module("FFTWLongReal")
-module("FFTWRealRaw")
-module("FFTWReal")
 module("FFTWExtendedRaw")
 module("FFTWExtended")
 
