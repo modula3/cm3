@@ -1,4 +1,5 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* A "WideChar.T" is an "WIDECHAR".  This interface is intended to be
    used as an actual interface for generic interfaces and modules such
