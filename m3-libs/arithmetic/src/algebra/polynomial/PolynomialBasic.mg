@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialBasic(R);
+GENERIC MODULE PolynomialBasic(R,VS);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Polynomials.
@@ -22,22 +22,31 @@ END New;
 PROCEDURE Strip(
                 x:T):T=
 VAR
-  n:=LAST(x^);
+  n:=Size(x);
 BEGIN
-  IF NOT R.IsZero(x[n]) THEN
+  IF n=NUMBER(x^) THEN
     RETURN x;
   ELSE
-    REPEAT
-      DEC(n);
-    UNTIL n=FIRST(x^) OR NOT R.IsZero(x[n]);
-  END;
-  VAR
-    y:=NEW(T,n+1);
-  BEGIN
-    y^:=SUBARRAY(x^,0,NUMBER(y^));
-    RETURN y;
+    VAR
+      y:=NEW(T,n);
+    BEGIN
+      y^:=SUBARRAY(x^,0,n);
+      RETURN y;
+    END;
   END;
 END Strip;
+
+(*--------------------*)
+PROCEDURE Size(
+                 x:T):CARDINAL=
+BEGIN
+  FOR n:=LAST(x^) TO FIRST(x^) BY -1 DO
+    IF NOT R.IsZero(x[n]) THEN
+      RETURN n+1;
+    END;
+  END;
+  RETURN 0;
+END Size;
 
 
 (*-----------------*)
@@ -109,16 +118,20 @@ END Equal;
 PROCEDURE Mul(
                x,y:T):T=
 VAR
-  z:=NEW(T,NUMBER(x^)+NUMBER(y^)-1);
+  xnum:=Size(x);
+  ynum:=Size(y);
+  z:=NEW(T,xnum+ynum-1);
 BEGIN
-  FOR i:=FIRST(z^) TO LAST(z^) DO z[i]:=R.Zero; END;
+  VS.Clear(z^);
 
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    FOR j:=FIRST(y^) TO LAST(y^) DO
-      z[i+j]:=R.Add(z[i+j],R.Mul(x[i],y[j]));
+  FOR i := 0 TO xnum-1 DO
+    WITH zdata = SUBARRAY(z^, i, NUMBER(y^)) DO
+      FOR j := 0 TO ynum-1 DO
+        zdata[j] := R.Add(zdata[j], R.Mul(x[i], y[j]));
+      END;
     END;
   END;
-  RETURN Strip(z);
+  RETURN z;
 END Mul;
 
 (*---------------------*)

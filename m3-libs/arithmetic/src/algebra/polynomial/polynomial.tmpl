@@ -5,18 +5,18 @@
 readonly proc PolynomialBasic (nm, field, rimpl) is
   local basic  = nm & "PolynomialBasic"
   local vfield = nm & "VectorBasic"
+  local vecsup = nm & "VectorSupport"
   local rfield = field & rimpl
   build_generic_intf (basic, "PolynomialBasic", [rfield, vfield], VISIBLE)
-  build_generic_impl (basic, "PolynomialBasic", [rfield])
+  build_generic_impl (basic, "PolynomialBasic", [rfield, vecsup])
 end
 
 readonly proc PolynomialFast (nm, field, rimpl) is
+  PolynomialBasic(nm,field,rimpl)
   local basic  = nm & "PolynomialBasic"
   local fast   = nm & "PolynomialFast"
   local rfield = field & rimpl
   local vfield = field & "VectorFast"
-  build_generic_intf (basic, "PolynomialBasic", [rfield, vfield], VISIBLE)
-  build_generic_impl (basic, "PolynomialBasic", [rfield])
   build_generic_intf (fast,  "PolynomialFast",  [rfield, vfield, basic], VISIBLE)
   build_generic_impl (fast,  "PolynomialFast",  [rfield])
 end

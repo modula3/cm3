@@ -9,6 +9,7 @@ VectorFast("LongReal", "LongReal", "Basic")
 VectorFast("Extended", "Extended", "Basic")
 
 generic_module("VectorBasic")
+generic_module("VectorSupport")
 VectorBasic("RealComplex",        "RealComplex",        "Fast")
 VectorBasic("LongRealComplex",    "LongRealComplex",    "Fast")
 VectorBasic("ExtendedComplex",    "ExtendedComplex",    "Fast")

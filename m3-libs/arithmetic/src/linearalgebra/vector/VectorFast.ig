@@ -39,16 +39,6 @@ PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
 PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)
 *)
 
-TYPE
-  ApplyFtn  = VB.ApplyFtn;
-  MapFtn    = VB.MapFtn;
-  ReduceFtn = VB.ReduceFtn;
-
-CONST
-  Apply  = VB.Apply;
-  Map    = VB.Map;
-  Reduce = VB.Reduce;
-
 PROCEDURE Sum(READONLY x:TBody):R.T;
 PROCEDURE Max(READONLY x:TBody):R.T;
 PROCEDURE Min(READONLY x:TBody):R.T;

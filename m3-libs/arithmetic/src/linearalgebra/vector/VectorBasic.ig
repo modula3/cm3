@@ -1,4 +1,4 @@
-GENERIC INTERFACE VectorBasic(R);
+GENERIC INTERFACE VectorBasic(R,VS);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Vector math
@@ -39,20 +39,9 @@ PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
 PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)
 *)
 
-TYPE
-  ApplyFtn  = PROCEDURE (x:R.T);
-  MapFtn    = PROCEDURE (x:R.T):R.T;
-  ReduceFtn = PROCEDURE (x,y:R.T):R.T;
-
-PROCEDURE Apply(x:T;f:ApplyFtn);
-PROCEDURE Map(x:T;f:MapFtn):T;
-PROCEDURE Reduce(x:T;f:ReduceFtn;init:R.T):R.T;
-
-PROCEDURE Sum(READONLY x:TBody):R.T;
-
 PROCEDURE ArithSeq(num:CARDINAL;from:R.T;by:R.T):T;
 PROCEDURE GeomSeq(num:CARDINAL;from:R.T;by:R.T):T;
-PROCEDURE RecursiveSeq(num:CARDINAL;from:R.T;by:MapFtn):T;
+PROCEDURE RecursiveSeq(num:CARDINAL;from:R.T;by:VS.MapFtn):T;
 
 (*==========================*)
 END VectorBasic.
