@@ -5,8 +5,8 @@
 
 CC     := gcc
 CM3CG  := cm3cg
-CCOPTS := -fPIC
-AS     := as
+CCOPTS := -fPIC -g
+AS     := as #-g
 AR     := ar
 #STATIC := -static
 
@@ -24,11 +24,12 @@ OBJ_IO   := $(addsuffix .io, $(BASES_IC))
 OBJ_MO   := $(addsuffix .mo, $(BASES_MC))
 OBJ_O    := $(addsuffix .o, $(BASES_C))
 OBJECTS  := $(OBJ_IO) $(OBJ_MO) $(OBJ_O)
+LIBFILES := $(shell for f in $(LIBS); do if [ -f "$${f}" ] ; then  echo $${f}; fi; done)
 
 .PHONY: all clean clean-as clean-obj
 
 all: $(PROGNAME)
-$(PROGNAME): $(OBJECTS)
+$(PROGNAME): $(OBJECTS) $(LIBFILES)
 	$(CC) $(STATIC) -o $(PROGNAME) $(OBJECTS) $(LIBS)
 
 %.o: %.c

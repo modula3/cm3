@@ -111,6 +111,9 @@ for p in ${L}; do
   if [ "$DOCLEAN" = yes ] ; then
     ${GMAKE} LIBNAME="${lib}" clean
   fi
+  if [ "$DOCLEAN" = obj ] ; then
+    ${GMAKE} LIBNAME="${lib}" clean-obj
+  fi
   ${GMAKE} LIBNAME="${lib}" all || exit 1
 done
 
@@ -124,6 +127,9 @@ for p in ${P}; do
   cd ${bdir}
   if [ "$DOCLEAN" = yes ] ; then
     ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean
+  fi
+  if [ "$DOCLEAN" = obj ] ; then
+    ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean-obj
   fi
   ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" all
 done
