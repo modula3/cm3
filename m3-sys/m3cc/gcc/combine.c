@@ -392,8 +392,6 @@ static void set_nonzero_bits_and_sign_copies  PROTO((rtx, rtx));
 static int can_combine_p	PROTO((rtx, rtx, rtx, rtx, rtx *, rtx *));
 static int combinable_i3pat	PROTO((rtx, rtx *, rtx, rtx, int, rtx *));
 static rtx try_combine		PROTO((rtx, rtx, rtx));
-static void undo_start		PROTO((void));
-static void undo_stop		PROTO((void));
 static void undo_all		PROTO((void));
 static rtx *find_split_point	PROTO((rtx *, rtx));
 static rtx subst		PROTO((rtx, rtx, rtx, int, int));
@@ -1242,7 +1240,12 @@ try_combine (i3, i2, i1)
 
   combine_attempts++;
 
-  undo_start ();
+  undobuf.num_undo = previous_num_undos = 0;
+  undobuf.other_insn = 0;
+
+  /* Save the current high-water-mark so we can free storage if we didn't
+     accept this combination.  */
+  undobuf.storage = (char *) oballoc (0);
 
   /* Reset the hard register usage information.  */
   CLEAR_HARD_REG_SET (newpat_used_regs);
@@ -2359,7 +2362,9 @@ try_combine (i3, i2, i1)
 
   combine_successes++;
 
-  undo_stop ();
+  /* Clear this here, so that subsequent get_last_value calls are not
+     affected.  */
+  subst_prev_insn = NULL_RTX;
 
   if (added_links_insn
       && (newi2pat == 0 || INSN_CUID (added_links_insn) < INSN_CUID (i2))
@@ -2369,31 +2374,6 @@ try_combine (i3, i2, i1)
     return newi2pat ? i2 : i3;
 }
 
-static void
-undo_start ()
-{
-  push_obstacks_nochange ();
-  temporary_allocation ();
-  rtl_in_current_obstack ();
-
-  undobuf.num_undo = previous_num_undos = 0;
-  undobuf.other_insn = 0;
-
-  /* Save the current high-water-mark so we can free storage if we didn't
-     accept this combination.  */
-  undobuf.storage = (char *) oballoc (0);
-}
-
-static void
-undo_stop ()
-{
-  /* Clear this here, so that subsequent get_last_value calls are not
-     affected.  */
-  subst_prev_insn = NULL_RTX;
-
-  pop_obstacks ();
-}
-
 /* Undo all the modifications recorded in undobuf.  */
 
 static void
@@ -2414,7 +2394,9 @@ undo_all ()
   obfree (undobuf.storage);
   undobuf.num_undo = 0;
 
-  undo_stop ();
+  /* Clear this here, so that subsequent get_last_value calls are not
+     affected.  */
+  subst_prev_insn = NULL_RTX;
 }
 
 /* Find the innermost point within the rtx at LOC, possibly LOC itself,
@@ -2952,15 +2934,8 @@ subst (x, from, to, in_dest, unique_copy)
     {
       /* If X is sufficiently simple, don't bother trying to do anything
 	 with it.  */
-      if (code != CONST_INT && code != REG && code != CLOBBER) {
+      if (code != CONST_INT && code != REG && code != CLOBBER)
 	x = simplify_rtx (x, op0_mode, i == 3, in_dest);
-	/*******
-        rtx tmp = simplify_rtx (x, op0_mode, i == 3, in_dest);
-	if ((tmp == XEXP(tmp,0)) || (tmp == XEXP(tmp,1)))
-	  error ("**CYCLE IN RTL**");
-        x = tmp;
-	*********/
-      }
 
       if (GET_CODE (x) == code)
 	break;

@@ -3012,8 +3012,6 @@ output_epilog (file, size)
 	i = 2;
       else if (! strcmp (language_string, "GNU C++"))
 	i = 9;
-      else if (! strcmp (language_string, "Critical Mass Modula-3"))
-	i = 2; /* use Pascal for Modula-3. */
       else
 	abort ();
       fprintf (file, "%d,", i);

@@ -875,15 +875,6 @@ sdbout_symbol (decl, local)
 	  PUT_SDB_INT_VAL (DEBUGGER_AUTO_OFFSET (XEXP (value, 0)));
 	  PUT_SDB_SCL (C_AUTO);
 	}
-      else if (GET_CODE (value) == MEM
-	       && GET_CODE (XEXP (value, 0)) == REG)
-	{
-	  /* DECL_RTL looks like (MEM (REG...)).
-	     Same as above, with implicit 0 for CONST_INT.  */
-	  PUT_SDB_DEF (name);
-	  PUT_SDB_INT_VAL (DEBUGGER_AUTO_OFFSET (XEXP (value, 0)));
-	  PUT_SDB_SCL (C_AUTO);
-	}
       else if (GET_CODE (value) == MEM && GET_CODE (XEXP (value, 0)) == CONST)
 	{
 	  /* Handle an obscure case which can arise when optimizing and

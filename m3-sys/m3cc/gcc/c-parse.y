@@ -1119,9 +1119,9 @@ after_type_declarator:
 	  '(' after_type_declarator ')'
 		{ $$ = $2; }
 	| after_type_declarator '(' parmlist_or_identifiers  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE, NULL_TREE); }
+		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE); }
 /*	| after_type_declarator '(' error ')'  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, NULL_TREE, NULL_TREE, NULL_TREE);
+		{ $$ = build_nt (CALL_EXPR, $1, NULL_TREE, NULL_TREE);
 		  poplevel (0, 0, 0); }  */
 	| after_type_declarator '[' expr ']'  %prec '.'
 		{ $$ = build_nt (ARRAY_REF, $1, $3); }
@@ -1141,9 +1141,9 @@ after_type_declarator:
 
 parm_declarator:
 	  parm_declarator '(' parmlist_or_identifiers  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE, NULL_TREE); }
+		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE); }
 /*	| parm_declarator '(' error ')'  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, NULL_TREE, NULL_TREE, NULL_TREE);
+		{ $$ = build_nt (CALL_EXPR, $1, NULL_TREE, NULL_TREE);
 		  poplevel (0, 0, 0); }  */
 	| parm_declarator '[' expr ']'  %prec '.'
 		{ $$ = build_nt (ARRAY_REF, $1, $3); }
@@ -1161,9 +1161,9 @@ parm_declarator:
 
 notype_declarator:
 	  notype_declarator '(' parmlist_or_identifiers  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE, NULL_TREE); }
+		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE); }
 /*	| notype_declarator '(' error ')'  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, NULL_TREE, NULL_TREE, NULL_TREE);
+		{ $$ = build_nt (CALL_EXPR, $1, NULL_TREE, NULL_TREE);
 		  poplevel (0, 0, 0); }  */
 	| '(' notype_declarator ')'
 		{ $$ = $2; }
@@ -1360,13 +1360,13 @@ absdcl1:  /* a nonempty absolute declarator */
 	| '*' type_quals  %prec UNARY
 		{ $$ = make_pointer_declarator ($2, NULL_TREE); }
 	| absdcl1 '(' parmlist  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE, NULL_TREE); }
+		{ $$ = build_nt (CALL_EXPR, $1, $3, NULL_TREE); }
 	| absdcl1 '[' expr ']'  %prec '.'
 		{ $$ = build_nt (ARRAY_REF, $1, $3); }
 	| absdcl1 '[' ']'  %prec '.'
 		{ $$ = build_nt (ARRAY_REF, $1, NULL_TREE); }
 	| '(' parmlist  %prec '.'
-		{ $$ = build_nt (CALL_EXPR, NULL_TREE, $2, NULL_TREE, NULL_TREE); }
+		{ $$ = build_nt (CALL_EXPR, NULL_TREE, $2, NULL_TREE); }
 	| '[' expr ']'  %prec '.'
 		{ $$ = build_nt (ARRAY_REF, NULL_TREE, $2); }
 	| '[' ']'  %prec '.'

@@ -4449,10 +4449,6 @@ forward_branch_p (insn)
 {
   rtx label = JUMP_LABEL (insn);
 
-  /* JUMP_LABELs are only set when optimization is enabled!!
-     And even then they don't appear to be set for computed
-     gotos.  This procedure is bogus. -- WKK 8/9/96 */
-
   while (insn)
     {
       if (insn == label)
