@@ -18,6 +18,7 @@ IMPORT LongRealBSplineWavelet AS BSpl;
 
 IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealVectorFmtLex AS VF;
+IMPORT LongRealMatrixFmtLex AS MF;
 IMPORT LongRealSignalFmtLex AS SF;
 (*IMPORT LongRealWaveletPlot AS WP;*)
 IMPORT PLPlot AS PL;
@@ -112,13 +113,14 @@ PROCEDURE ComputeDRho (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
     RETURN z;
   END ComputeDRho;
 
+(*
 PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
     p12 := p1 * p1;
     c0  := 6.0D0 * p12 - 2.0D0 * p2;
-    c1  := 3.0D0 * p2 - p12;
+    c1  := 2.0D0*(3.0D0 * p2 - p12);
 
     z := M.New(NUMBER(y), NUMBER(y));
   BEGIN
@@ -129,26 +131,61 @@ PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
       END;
       z[i, i] := z[i, i] + c1;
     END;
-    RETURN M.Scale(z,6.0D0);
+    RETURN M.Scale(z, 6.0D0);
   END ComputeDDRho;
+*)
 
+PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
+  (*derived with mathematica*)
+  VAR
+    p1 := VS.Sum(y);
+    p2 := VS.Inner(y, y);
+
+    z := M.New(NUMBER(y), NUMBER(y));
+  BEGIN
+    FOR i := 0 TO LAST(y) DO
+      FOR j := i TO LAST(y) DO
+        z[i, j] := (p1 + y[i] - y[j]) * (p1 - y[i] + y[j]);
+        z[j, i] := z[i, j];
+      END;
+      z[i, i] := z[i, i] + (3.0D0 * y[i] - 2.0D0 * p1) * y[i] + p2;
+    END;
+    RETURN M.Scale(z, 24.0D0);
+  END ComputeDDRho;
 
 PROCEDURE TestRho (x: V.T) =
   VAR
-    dx0     := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
-    dx1     := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
-    dx2     := V.FromArray(ARRAY OF R.T{0.0D0, 0.0D0, 1.0D-8});
-    rho     := ComputeRho(x^);
-    rho0    := ComputeRho(V.Add(x, dx0)^);
-    rho1    := ComputeRho(V.Add(x, dx1)^);
-    rho2    := ComputeRho(V.Add(x, dx2)^);
-    gradrho := V.Scale(ComputeDRho(x^), 1.0D-8);
+    dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
+    dx1 := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
+    dx2 := V.FromArray(ARRAY OF R.T{0.0D0, 0.0D0, 1.0D-8});
   BEGIN
-    IO.Put(
-      Fmt.FN("rho(%s) difrho={%s,%s,%s}, approxdiff=%s\n",
-             ARRAY OF
-               TEXT{RF.Fmt(rho), RF.Fmt(rho0 - rho), RF.Fmt(rho1 - rho),
-                    RF.Fmt(rho2 - rho), VF.Fmt(gradrho)}));
+    VAR
+      rho     := ComputeRho(x^);
+      rho0    := ComputeRho(V.Add(x, dx0)^);
+      rho1    := ComputeRho(V.Add(x, dx1)^);
+      rho2    := ComputeRho(V.Add(x, dx2)^);
+      gradrho := V.Scale(ComputeDRho(x^), 1.0D-8);
+    BEGIN
+      IO.Put(
+        Fmt.FN("rho %s, difrho={%s,%s,%s}, approxdiff=%s\n",
+               ARRAY OF
+                 TEXT{RF.Fmt(rho), RF.Fmt(rho0 - rho), RF.Fmt(rho1 - rho),
+                      RF.Fmt(rho2 - rho), VF.Fmt(gradrho)}));
+    END;
+    VAR
+      gradrho   := ComputeDRho(x^);
+      gradrho0  := ComputeDRho(V.Add(x, dx0)^);
+      gradrho1  := ComputeDRho(V.Add(x, dx1)^);
+      gradrho2  := ComputeDRho(V.Add(x, dx2)^);
+      jacobirho := M.Scale(ComputeDDRho(x^), 1.0D-8);
+    BEGIN
+      IO.Put(
+        Fmt.FN("gradrho %s, difgradrho={%s,%s,%s}, approxdiff=%s\n",
+               ARRAY OF
+                 TEXT{VF.Fmt(gradrho), VF.Fmt(V.Sub(gradrho0, gradrho)),
+                      VF.Fmt(V.Sub(gradrho1, gradrho)),
+                      VF.Fmt(V.Sub(gradrho2, gradrho)), MF.Fmt(jacobirho)}));
+    END;
   END TestRho;
 
 PROCEDURE MaximizeSmoothness (x: V.T) =
