@@ -2,6 +2,7 @@ import("libm3")
 
 template("gcd")
 template("integerpower")
+template("combinatoric")
 
 
 generic_module("IntegerPower")
@@ -21,3 +22,7 @@ GCD("BigIntegerComplex",            "BigIntegerComplexBasic")
 GCD("BigIntegerFractionPolynomial", "BigIntegerFractionPolynomialBasic")
 % GCD will not work with floating point numbers,
 % because values that should be zero, aren't zero most often
+
+generic_module("Combinatoric")
+Combinatoric("Cardinal32",          "Cardinal32Basic")
+Combinatoric("BigInteger",          "BigIntegerBasic")
