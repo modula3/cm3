@@ -18,3 +18,5 @@ BSplineWavelet("Extended",        "Extended",        "Basic")
 %BSplineWavelet("RealComplex",     "RealComplex",     "Fast")
 %BSplineWavelet("LongRealComplex", "LongRealComplex", "Fast")
 %BSplineWavelet("ExtendedComplex", "ExtendedComplex", "Fast")
+
+module("LongRealWaveletPlot")
