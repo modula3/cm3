@@ -107,7 +107,7 @@ END Compare;
 (*---------------------*)
 PROCEDURE IsZero(x:T):BOOLEAN =
 BEGIN
-  RETURN x=NIL OR R.IsZero(x[0]);
+  RETURN x=NIL OR NUMBER(x^)=0 OR R.IsZero(x[0]);
 END IsZero;
 
 (*---------------------*)
@@ -130,15 +130,12 @@ END Equal;
 PROCEDURE Mul( 
                x,y:T):T=
 VAR
-  xn:=NUMBER(x^);
-  yn:=NUMBER(y^);
-  zn:=xn+yn-1;
-  z:=NEW(T,zn);
+  z:=NEW(T,NUMBER(x^)+NUMBER(y^)-1);
 BEGIN
-  FOR i:=FIRST(x^) TO LAST(x^) DO x[i]:=R.Zero; END;
+  FOR i:=FIRST(z^) TO LAST(z^) DO z[i]:=R.Zero; END;
 
-  FOR i:=0 TO xn-1 DO
-    FOR j:=0 TO yn-1 DO
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    FOR j:=FIRST(y^) TO LAST(y^) DO
       z[i+j]:=R.Add(z[i+j],R.Mul(x[i],y[j]));
     END;
   END;
