@@ -45,13 +45,13 @@ PROCEDURE Advance (page: INTEGER; ) =
     PLPlotRaw.pladv(page);
   END Advance;
 
-PROCEDURE DrawAxes (x0, y0: LONGREAL;
-                    xopt  : TEXT;
-                    xtick : LONGREAL;
-                    nxsub : INTEGER;
-                    yopt  : TEXT;
-                    ytick : LONGREAL;
-                    nysub : INTEGER;  ) =
+PROCEDURE DrawAxes (    x0, y0: LONGREAL;
+                    VAR xopt  : TEXT;
+                        xtick : LONGREAL;
+                        nxsub : INTEGER;
+                    VAR yopt  : TEXT;
+                        ytick : LONGREAL;
+                        nysub : INTEGER;  ) =
   VAR
     arg3: C.char_star;
     arg6: C.char_star;
@@ -76,12 +76,12 @@ PROCEDURE StartPage () =
     PLPlotRaw.plbop();
   END StartPage;
 
-PROCEDURE DrawBox (xopt : TEXT;
-                   xtick: LONGREAL;
-                   nxsub: INTEGER;
-                   yopt : TEXT;
-                   ytick: LONGREAL;
-                   nysub: INTEGER;  ) =
+PROCEDURE DrawBox (VAR xopt : TEXT;
+                       xtick: LONGREAL;
+                       nxsub: INTEGER;
+                   VAR yopt : TEXT;
+                       ytick: LONGREAL;
+                       nysub: INTEGER;  ) =
   VAR
     arg1: C.char_star;
     arg4: C.char_star;
@@ -93,15 +93,15 @@ PROCEDURE DrawBox (xopt : TEXT;
     M3toC.FreeSharedS(yopt, arg4);
   END DrawBox;
 
-PROCEDURE DrawBox3D (xopt, xlabel: TEXT;
-                     xtick       : LONGREAL;
-                     nsubx       : INTEGER;
-                     yopt, ylabel: TEXT;
-                     ytick       : LONGREAL;
-                     nsuby       : INTEGER;
-                     zopt, zlabel: TEXT;
-                     ztick       : LONGREAL;
-                     nsubz       : INTEGER;  ) =
+PROCEDURE DrawBox3D (VAR xopt, xlabel: TEXT;
+                         xtick       : LONGREAL;
+                         nsubx       : INTEGER;
+                     VAR yopt, ylabel: TEXT;
+                         ytick       : LONGREAL;
+                         nsuby       : INTEGER;
+                     VAR zopt, zlabel: TEXT;
+                         ztick       : LONGREAL;
+                         nsubz       : INTEGER;  ) =
   VAR
     arg1 : C.char_star;
     arg2 : C.char_star;
@@ -462,7 +462,7 @@ PROCEDURE PlotLineSegment (x1, y1, x2, y2: LONGREAL; ) =
     PLPlotRaw.pljoin(x1, y1, x2, y2);
   END PlotLineSegment;
 
-PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
+PROCEDURE SetLabels (VAR xlabel, ylabel, tlabel: TEXT; ) =
   VAR
     arg1: C.char_star;
     arg2: C.char_star;
@@ -544,7 +544,9 @@ PROCEDURE CreateStream (): INTEGER =
     RETURN strm;
   END CreateStream;
 
-PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: LONGREAL; text: TEXT; ) =
+PROCEDURE PrintTextVP (VAR side           : TEXT;
+                           disp, pos, just: LONGREAL;
+                       VAR text           : TEXT;     ) =
   VAR
     arg1: C.char_star;
     arg5: C.char_star;
@@ -652,8 +654,13 @@ PROCEDURE SetFillStyle (patt: INTEGER; ) =
     PLPlotRaw.plpsty(patt);
   END SetFillStyle;
 
+<<<<<<< PLPlot.m3
+PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; VAR text: TEXT; ) =
+  VAR arg6 := M3toC.SharedTtoS(text);
+=======
 PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; text: TEXT; ) =
   VAR arg6: C.char_star;
+>>>>>>> 1.9
   BEGIN
     arg6 := M3toC.SharedTtoS(text);
     PLPlotRaw.plptex(x, y, dx, dy, just, arg6);
@@ -732,8 +739,13 @@ PROCEDURE SetCompression (compression: INTEGER; ) =
     PLPlotRaw.plscompression(compression);
   END SetCompression;
 
+<<<<<<< PLPlot.m3
+PROCEDURE SetDevice (VAR devname: TEXT; ) =
+  VAR arg1 := M3toC.SharedTtoS(devname);
+=======
 PROCEDURE SetDevice (devname: TEXT; ) =
   VAR arg1: C.char_star;
+>>>>>>> 1.9
   BEGIN
     arg1 := M3toC.SharedTtoS(devname);
     PLPlotRaw.plsdev(arg1);
@@ -791,8 +803,13 @@ PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; ) =
     PLPlotRaw.plsfam(fam, num, bmax);
   END SetFamilyFile;
 
+<<<<<<< PLPlot.m3
+PROCEDURE SetFileName (VAR fnam: TEXT; ) =
+  VAR arg1 := M3toC.SharedTtoS(fnam);
+=======
 PROCEDURE SetFileName (fnam: TEXT; ) =
   VAR arg1: C.char_star;
+>>>>>>> 1.9
   BEGIN
     arg1 := M3toC.SharedTtoS(fnam);
     PLPlotRaw.plsfnam(arg1);
@@ -890,8 +907,13 @@ PROCEDURE Start (nx, ny: INTEGER; ) =
     PLPlotRaw.plstar(nx, ny);
   END Start;
 
+<<<<<<< PLPlot.m3
+PROCEDURE StartDev (VAR devname: TEXT; nx, ny: INTEGER; ) =
+  VAR arg1 := M3toC.SharedTtoS(devname);
+=======
 PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; ) =
   VAR arg1: C.char_star;
+>>>>>>> 1.9
   BEGIN
     arg1 := M3toC.SharedTtoS(devname);
     PLPlotRaw.plstart(arg1, nx, ny);

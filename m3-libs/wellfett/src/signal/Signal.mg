@@ -11,6 +11,7 @@ REVEAL
         fromVector := FromVector;
         copy       := Copy;
 
+        clip         := Clip;
         clipToArray  := ClipToArray;
         clipToVector := ClipToVector;
 
@@ -47,14 +48,19 @@ REVEAL
         superpose     := Add;
         convolve      := Mul;
         autocorrelate := Autocorrelate;
+
+        convolveDown  := ConvolveDown;
+        upConvolve    := UpConvolve;
+        convolveShort := ConvolveShort;
       END;
 
 
-PROCEDURE Init (SELF: T; first, number: IndexType): T =
+PROCEDURE Init (SELF: T; first: IndexType; number: SizeType): T =
   BEGIN
     SELF.data := NEW(V.T, number);
     SELF.first := first;
-    FOR j := 0 TO LAST(SELF.data^) DO SELF.data[j] := R.Zero; END;
+    VS.Clear(SELF.data^);
+    (*FOR j := 0 TO LAST(SELF.data^) DO SELF.data[j] := R.Zero; END;*)
     RETURN SELF;
   END Init;
 
@@ -88,6 +94,13 @@ PROCEDURE Copy (SELF: T): T =
     RETURN z;
   END Copy;
 
+
+PROCEDURE Clip (x: T; first: IndexType; size: SizeType): T =
+  VAR z := NEW(T, data := V.New(size), first := first);
+  BEGIN
+    ClipToArray(x, first, z.data^);
+    RETURN z;
+  END Clip;
 
 PROCEDURE ClipToArray (x: T; first: IndexType; VAR y: V.TBody) =
   VAR
@@ -123,7 +136,7 @@ PROCEDURE ClipToArray (x: T; first: IndexType; VAR y: V.TBody) =
     VS.Clear(SUBARRAY(y, yr, NUMBER(y) - yr));
   END ClipToArray;
 
-PROCEDURE ClipToVector (x: T; first, size: IndexType): V.T =
+PROCEDURE ClipToVector (x: T; first: IndexType; size: SizeType): V.T =
   VAR z := V.New(size);
   BEGIN
     ClipToArray(x, first, z^);
@@ -247,14 +260,14 @@ PROCEDURE TranslateD (SELF: T; dist: IndexType) =
     INC(SELF.first, dist);
   END TranslateD;
 
-PROCEDURE UpSample (x: T; factor: IndexType): T =
+PROCEDURE UpSample (x: T; factor: CARDINAL): T =
   VAR z := NEW(T).init(x.first * factor, LAST(x.data^) * factor + 1);
   BEGIN
     FOR i := 0 TO LAST(x.data^) DO z.data[i * factor] := x.data[i]; END;
     RETURN z;
   END UpSample;
 
-PROCEDURE DownSample (x: T; factor: IndexType): T =
+PROCEDURE DownSample (x: T; factor: CARDINAL): T =
   VAR
     z               := NEW(T);
     last: IndexType := x.getLast() DIV factor;
@@ -270,7 +283,7 @@ PROCEDURE DownSample (x: T; factor: IndexType): T =
     RETURN z;
   END DownSample;
 
-PROCEDURE WrapCyclic (x: T; length: IndexType): T =
+PROCEDURE WrapCyclic (x: T; length: CARDINAL): T =
   VAR
     z            := NEW(T).init(0, length);
     j: IndexType;
@@ -288,7 +301,7 @@ PROCEDURE WrapCyclic (x: T; length: IndexType): T =
     RETURN z;
   END WrapCyclic;
 
-PROCEDURE Slice (x: T; num: IndexType): REF ARRAY OF T =
+PROCEDURE Slice (x: T; num: CARDINAL): REF ARRAY OF T =
   VAR slice := NEW(REF ARRAY OF T, num);
   BEGIN
     FOR j := 0 TO LAST(slice^) DO
@@ -321,15 +334,19 @@ PROCEDURE Interleave (x: T; READONLY slice: ARRAY OF T): T =
     RETURN x;
   END Interleave;
 
-PROCEDURE Reverse (x: T): T =
-  VAR z := NEW(T);
+PROCEDURE ReverseV (x: V.T): V.T =
+  VAR
+    z := NEW(V.T, NUMBER(x^));
+    i := NUMBER(x^);
   BEGIN
-    z.data := NEW(V.T, NUMBER(x.data^));
-    z.first := -(x.first + LAST(x.data^));
-    FOR j := FIRST(z.data^) TO LAST(z.data^) DO
-      z.data[j] := x.data[LAST(x.data^) + FIRST(z.data^) - j];
-    END;
+    FOR j := FIRST(z^) TO LAST(z^) DO DEC(i); z[j] := x[i]; END;
     RETURN z;
+  END ReverseV;
+
+PROCEDURE Reverse (x: T): T =
+  BEGIN
+    RETURN NEW(T, first := -(x.first + LAST(x.data^)),
+               data := ReverseV(x.data));
   END Reverse;
 
 PROCEDURE Conj (x: T): T =
@@ -361,7 +378,8 @@ PROCEDURE ScaleD (x: T; factor: R.T) =
     END;
   END ScaleD;
 
-PROCEDURE Raise (x: T; offset: R.T; first, number: IndexType): T =
+PROCEDURE Raise (x: T; offset: R.T; first: IndexType; number: SizeType):
+  T =
   VAR
     zFirst := MIN(x.first, first);
     zLast  := MAX(x.first + NUMBER(x.data^), first + number) - 1;
@@ -407,13 +425,13 @@ PROCEDURE AlternateBool (x: T): T =
     RETURN z;
   END AlternateBool;
 
-PROCEDURE Mul (x: T; y: T): T =
+PROCEDURE Mul (x, y: T): T =
   BEGIN
     RETURN
       NEW(T, first := x.first + y.first, data := P.Mul(x.data, y.data));
   END Mul;
 
-PROCEDURE Add (x: T; y: T): T =
+PROCEDURE Add (x, y: T): T =
   VAR
     first := MIN(x.getFirst(), y.getFirst());
     last  := MAX(x.getLast(), y.getLast());
@@ -434,7 +452,7 @@ PROCEDURE Add (x: T; y: T): T =
   END Add;
 
 (*inefficient, but I hope that no-one will need it*)
-PROCEDURE Sub (x: T; y: T): T =
+PROCEDURE Sub (x, y: T): T =
   BEGIN
     RETURN Add(x, Neg(y));
   END Sub;
@@ -443,6 +461,67 @@ PROCEDURE Autocorrelate (x: T): T =
   BEGIN
     RETURN x.adjoint().convolve(x);
   END Autocorrelate;
+
+
+(*this implementation avoids unnecessary multipications but involves much
+   memory management*)
+PROCEDURE ConvolveDown (x, y: T; factor: CARDINAL): T =
+  VAR
+    (*
+    xlast := x.first + LAST(x.data^);
+    ylast := y.first + LAST(y.data^);
+    z := NEW(T).initFL(
+           (-(x.first + y.first)) DIV factor, (xlast + ylast) DIV factor);
+    *)
+    sliceX := Slice(x, factor);
+    sliceY := Slice(y, factor);
+    z      := sliceX[0].convolve(sliceY[0]);
+    j      := factor;
+  BEGIN
+    FOR i := 1 TO factor DO
+      DEC(j);
+      z := z.superpose(sliceX[i].convolve(sliceY[j]).translate(1));
+    END;
+    <*ASSERT z.equal(x.convolve(y).downsample(factor))*>
+    RETURN z;
+  END ConvolveDown;
+
+PROCEDURE UpConvolve (x, y: T; factor: CARDINAL): T =
+  VAR
+    xlast := x.first + LAST(x.data^);
+    ylast := y.first + LAST(y.data^);
+    z := NEW(T).initFL(x.first + y.first * factor, xlast + ylast * factor);
+  <*FATAL Error*>(*size mismatches can't occur*)
+  BEGIN
+    FOR i := FIRST(y.data^) TO LAST(y.data^) DO
+      WITH zdata = SUBARRAY(z.data^, i * factor, NUMBER(x.data^)) DO
+        VS.Add(zdata, zdata, V.Scale(x.data, y.data[i])^);
+      END;
+    END;
+    RETURN z;
+  END UpConvolve;
+
+PROCEDURE ConvolveShort (x, y: T): T =
+  VAR
+    z := NEW(T, first := x.first,
+             data := NEW(V.T, NUMBER(x.data^) - NUMBER(y.data^) + 1));
+  BEGIN
+    FOR i := 0 TO LAST(z.data^) DO
+      WITH xdata = SUBARRAY(x.data^, i, NUMBER(y.data^)) DO
+        VAR
+          sum := R.Zero;
+          k   := NUMBER(y.data^);
+        BEGIN
+          FOR j := 0 TO LAST(y.data^) DO
+            DEC(k);
+            sum := R.Add(sum, R.Mul(xdata[j], y.data[k]));
+          END;
+          z.data[i] := sum;
+        END;
+      END;
+    END;
+    RETURN z;
+  END ConvolveShort;
 
 
 BEGIN
