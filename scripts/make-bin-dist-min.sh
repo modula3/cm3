@@ -99,6 +99,11 @@ sed -e '
 ' "${ROOT}/m3-sys/cm3/src/config/${TARGET}" > "${INSTALLROOT}/bin/cm3.cfg"
 
 #-----------------------------------------------------------------------------
+# clean everything
+header "clean evrything for build with new compiler"
+"${ROOT}/scripts/do-cm3-min.sh" realclean || exit 1
+
+#-----------------------------------------------------------------------------
 # compile and install all needed packages
 header "stage 3: compiling libraries using new cm3 compiler"
 CM3="${INSTALLROOT}/bin/cm3${EXE}"
