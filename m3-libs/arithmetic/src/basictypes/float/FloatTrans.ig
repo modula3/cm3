@@ -48,8 +48,6 @@ CONST
   RadPerDeg   = FLOAT(0.017453292519943D0,T);  (*radians per degree*)
 
 CONST
-
-CONST
   Base            = R.Base;
   Precision       = R.Precision;
   MaxFinite       = R.MaxFinite;
