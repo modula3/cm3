@@ -12,10 +12,12 @@ FloatBasic("LongReal", "LongReal", "LongrealType")
 FloatBasic("Extended", "Extended", "ExtendedType")
 
 generic_module("FloatTrans")
-FloatTrans("Real",     "Real")
-FloatTrans("LongReal", "LongReal")
-FloatTrans("Extended", "Extended")
+FloatTrans("Real",     "Real",     "RealBasic")
+FloatTrans("LongReal", "LongReal", "LongRealBasic")
+FloatTrans("Extended", "Extended", "ExtendedBasic")
 
 Module("RealFmtLex")
 Module("LongRealFmtLex")
 Module("ExtendedFmtLex")
+
+Module("SpecialFunction")

@@ -1,4 +1,4 @@
-GENERIC MODULE FloatTrans();
+GENERIC MODULE FloatTrans(R);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for (mainly) transcendent functions
@@ -12,7 +12,7 @@ Abstract: Generic wrapper routines for (mainly) transcendent functions
 *)
 
 IMPORT Math;
-  
+
 <*UNUSED*> CONST Module = "FloatTrans.";
 (*==========================*)
 
@@ -167,5 +167,40 @@ BEGIN
 END ATanH;
 
 
+
+PROCEDURE Sgn(x:T):T=
 BEGIN
+  IF x > Zero THEN
+    RETURN One;
+  ELSIF x < Zero THEN
+    RETURN MinusOne;
+  ELSE
+    RETURN Zero;
+  END;
+END Sgn;
+
+
+PROCEDURE FrExp (x: T;  VAR exp: INTEGER): T =
+BEGIN
+  RETURN FLOAT(Math.frexp(FLOAT(x,LONGREAL),exp),T);
+END FrExp;
+
+PROCEDURE LdExp (x: T; exp: INTEGER): T =
+BEGIN
+  RETURN FLOAT(Math.ldexp(FLOAT(x,LONGREAL),exp),T);
+END LdExp;
+
+PROCEDURE ModF (x: T; VAR(*OUT*) i: T): T =
+VAR
+  result : T;
+  int    : LONGREAL;
+BEGIN
+  result := FLOAT(Math.modf(FLOAT(x,LONGREAL),int),T);
+  i := FLOAT(int,T);
+  RETURN result;
+END ModF;
+
+
+BEGIN
+  Eps := LdExp(One,-R.Precision);  (*approx relative machine precision*)
 END FloatTrans.
