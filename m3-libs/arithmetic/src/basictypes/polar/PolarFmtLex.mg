@@ -1,11 +1,12 @@
 GENERIC MODULE PolarFmtLex(R, RF);
 (*Copyright (c) 1996, m3na project*)
 
-IMPORT Rd, Wr, Thread;
-IMPORT Fmt AS F;
+IMPORT Rd, Thread;
+(*IMPORT Fmt AS F;*)
 IMPORT Lex AS L;
 IMPORT FloatMode;
-FROM FmtLexSupport IMPORT Precedence, Parenthesize;
+IMPORT FmtLexSupport AS FSup;
+FROM FmtLexSupport IMPORT Precedence;
 
 <*UNUSED*>
 CONST Module = "PolarFmtLex.";
@@ -26,16 +27,24 @@ PROCEDURE Tex (READONLY x     : T;
     IF R.IsZero(x.radius) OR R.IsZero(x.angle) THEN
       t := RF.Tex(x.radius, style.elemStyle, within);
     ELSE
-      t :=
-        Parenthesize(RF.Tex(x.radius, style.elemStyle, Precedence.product)
-                       & " \\cdot e^{"
-                       & RF.Tex(x.angle, style.elemStyle, Precedence.sum)
-                       & " i}", Precedence.product, within);
+      t := FSup.Parenthesize(
+             RF.Tex(x.radius, style.elemStyle, Precedence.product)
+               & " \\cdot e^{"
+               & RF.Tex(x.angle, style.elemStyle, Precedence.sum) & " i}",
+             Precedence.product, within);
     END;
     RETURN t;
   END Tex;
 
-PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
+PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+  VAR z: T;
+  BEGIN
+    z.radius := RF.Lex(rd);
+    FSup.AssertSeparator(rd, style.sep);
+    z.angle := RF.Lex(rd);
+    RETURN z;
+  END Lex;
 
 BEGIN
 END PolarFmtLex.

@@ -26,7 +26,7 @@ TYPE TexStyle = RECORD base: F.Base := 10;  END;
 PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
   TEXT;
 
-TYPE LexStyle = RECORD END;
+TYPE LexStyle = RECORD base: F.Base := 10;  END;
 
 PROCEDURE Lex (rd: Rd.T; READONLY style := LexStyle{}; ): T
   RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted};

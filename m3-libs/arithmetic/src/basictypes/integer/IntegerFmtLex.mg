@@ -16,11 +16,6 @@ FROM FmtLexSupport IMPORT Precedence;
 CONST Module = "IntegerFmtLex.";
 
 PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT =
-  PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
-    RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
-    BEGIN
-    END Lex;
-
   BEGIN
     RETURN F.Int(x, style.base);
   END Fmt;
@@ -36,10 +31,6 @@ PROCEDURE FmtArray (READONLY a        : ARRAY OF I.T;
     n1        := 0;
     nn        := n - 1;
     currwidth := 0;
-  PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
-    RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
-    BEGIN
-    END Lex;
 
   BEGIN
     Wr.PutText(wr, "A" & Fmt(n) & "{");
@@ -71,6 +62,7 @@ PROCEDURE Tex (         x     : T;
 PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
   RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
   BEGIN
+    RETURN L.Int(rd, style.base);
   END Lex;
 
 BEGIN

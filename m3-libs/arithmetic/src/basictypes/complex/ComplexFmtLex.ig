@@ -25,7 +25,7 @@ PROCEDURE Tex (READONLY x     : T;
 
 TYPE
   LexStyle = RECORD
-               sep       := ' ';
+               sep       := '+';
                elemStyle := RF.LexStyle{};
              END;
 

@@ -29,11 +29,11 @@ readonly proc VectorTrans (nm, field) is
   build_generic_impl (vtrans, "VectorTrans", [rfield, rtrans, ctrans])
 end
 
-readonly proc VectorFmtLex (nm) is
+readonly proc VectorFmtLex (nm, rfield) is
   local rfmt   = nm & "FmtLex"
   local vfield = nm & "Vector"
   local vfmt   = nm & "VectorFmtLex"
   local vrep   = nm & "VectorRep"
-  build_generic_intf (vfmt, "VectorFmtLex", [rfmt, vfield], VISIBLE)
-  build_generic_impl (vfmt, "VectorFmtLex", [rfmt])
+  build_generic_intf (vfmt, "VectorFmtLex", [        rfmt, vfield], VISIBLE)
+  build_generic_impl (vfmt, "VectorFmtLex", [rfield, rfmt, vfield])
 end

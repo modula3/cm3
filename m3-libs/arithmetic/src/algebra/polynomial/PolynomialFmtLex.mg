@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialFmtLex(R, RF);
+GENERIC MODULE PolynomialFmtLex(R, RF, VF);
 (*Copyright (c) 1995, Harry George*)
 
 IMPORT Rd, Wr, TextWr, Thread;
@@ -16,11 +16,6 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
   (*Generate a text object for the polynomial poly, in form:
      T3{a0,a1,a2} *)
   VAR wr := NEW(TextWr.T).init();
-  PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
-    RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
-    BEGIN
-    END Lex;
-
   BEGIN
     Wr.PutText(wr, "Polynomial" & F.Int(NUMBER(x^)) & "{");
     FOR i := FIRST(x^) TO LAST(x^) DO
@@ -109,10 +104,6 @@ PROCEDURE Tex (         x     : T;
   VAR
     wr        := TextWr.New();
     sep: TEXT;
-  PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
-    RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
-    BEGIN
-    END Lex;
 
   BEGIN
     <*ASSERT NOT (NUMBER(x^)>1 AND R.IsZero(x[LAST(x^)]))*>
@@ -139,6 +130,8 @@ PROCEDURE Tex (         x     : T;
 PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
   RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
   BEGIN
+    RETURN VF.Lex(rd, VF.LexStyle{
+                        sep := style.sep, elemStyle := style.elemStyle});
   END Lex;
 
 BEGIN
