@@ -19,22 +19,24 @@ MODULE TextExtras;
 (* of this software.                                                       *)
 (***************************************************************************)
 
-IMPORT TextF;
-FROM TextF IMPORT New;
-FROM Text IMPORT Length, Sub;
+FROM Text IMPORT GetChar, Length, Sub;
 IMPORT ASCII;
+IMPORT Text, TextCat;
 
 PROCEDURE Compare(t, u: T): INTEGER RAISES {} =
   VAR
     minLength := Length(t);
     otherLength := Length(u);
-    lengthDiff := minLength - otherLength;
+    lengthDiff: INTEGER := minLength - otherLength;
     i: CARDINAL := 0;
   BEGIN
     IF lengthDiff > 0 THEN minLength := otherLength END;
     WHILE i < minLength DO
-      WITH diff = ORD(t[i]) - ORD(u[i]) DO
-        IF diff # 0 THEN RETURN diff ELSE INC(i) END;
+      VAR ti := ORD(GetChar(t,i)); ui := ORD(GetChar(u,i));
+      BEGIN
+        WITH diff = ti - ui DO
+          IF diff # 0 THEN RETURN diff ELSE INC(i) END;
+        END;
       END;
     END;
     RETURN lengthDiff;
@@ -50,7 +52,8 @@ PROCEDURE CICompare(t, u: T): INTEGER RAISES {} =
   BEGIN
     IF lengthDiff > 0 THEN minLength := otherLength END;
     WHILE i < minLength DO
-      WITH diff = ORD(ASCII.Upper[t[i]]) - ORD(ASCII.Upper[u[i]]) DO
+      WITH diff = ORD(ASCII.Upper[GetChar(t,i)]) - 
+                  ORD(ASCII.Upper[GetChar(u,i)]) DO
         IF diff # 0 THEN RETURN diff ELSE INC(i) END;
       END;
     END;
@@ -66,7 +69,7 @@ PROCEDURE CIEqual(t, u: T): BOOLEAN RAISES {} =
   BEGIN
     IF lt = lu THEN 
       WHILE i<lt DO
-        IF ASCII.Upper[t[i]] # ASCII.Upper[u[i]] THEN 
+        IF ASCII.Upper[GetChar(t,i)] # ASCII.Upper[GetChar(u,i)] THEN 
           RETURN FALSE 
         ELSE INC(i) 
         END;
@@ -88,14 +91,14 @@ PROCEDURE FindChar(t: T; ch: CHAR; VAR index: CARDINAL): BOOLEAN RAISES {} =
         <*FATAL BadFind *> BEGIN RAISE BadFind END;
       END;
     END;
-    REPEAT
-      IF t[i] = ch THEN index := i; RETURN TRUE END;
-      INC(i);
-    UNTIL i = lt;
-    index := i;
+    i := Text.FindChar(t,ch,index);
+    IF i > 0 THEN
+      index := i;
+      RETURN TRUE;
+    END;
+    index := lt;
     RETURN FALSE;
   END FindChar;
-
 
 PROCEDURE FindCharSet(
     t: T;
@@ -113,13 +116,12 @@ PROCEDURE FindCharSet(
       END
     END;
     REPEAT
-      IF t[i] IN charSet THEN index := i; RETURN TRUE END;
+      IF GetChar(t,i) IN charSet THEN index := i; RETURN TRUE END;
       INC(i);
     UNTIL i = lt;
     index := i;
     RETURN FALSE;
   END FindCharSet;
-
 
 PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
   VAR
@@ -134,10 +136,10 @@ PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
       IF lsub <= lt THEN
         VAR
           lastStart := lt - lsub;
-          firstCh := sub[0];
+          firstCh := GetChar(sub,0);
         BEGIN
           WHILE i <= lastStart DO
-            IF t[i] = firstCh THEN 
+            IF GetChar(t,i) = firstCh THEN 
               VAR 
                 j: CARDINAL := 1;
               BEGIN
@@ -145,7 +147,7 @@ PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
                   IF j = lsub THEN
                     index := i;
                     RETURN TRUE;
-                  ELSIF i + j >= lt OR t[i+j] # sub[j] THEN
+                  ELSIF i + j >= lt OR GetChar(t,i+j) # GetChar(sub,j) THEN
                     EXIT
                   ELSE
                     INC(j);
@@ -162,12 +164,10 @@ PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
     END;
   END FindSub;
 
-
 <*INLINE*> PROCEDURE Extract(t: T; fx, tx: CARDINAL): T RAISES {} =
   BEGIN
     RETURN Sub(t, fx, tx-fx);
   END Extract;
-
 
 EXCEPTION
   JoinFailed;
@@ -188,35 +188,14 @@ PROCEDURE Join(t1, t2, t3, t4, t5: T := NIL): T RAISES {}=
     END;
   END Join;
 
-
 PROCEDURE JoinN(READONLY texts: ARRAY OF TEXT): T RAISES {}=
   VAR
-    n := NUMBER(texts);
-    result: T;
   BEGIN
-    IF n = 0 THEN <*FATAL JoinFailed*> BEGIN RAISE JoinFailed END; END;
-
-    VAR
-      length := 0;
-    BEGIN
-      FOR i := 0 TO n - 1 DO INC(length, Length(texts[i])) END;
-      result := New(length);
+    IF NUMBER(texts) = 0 THEN 
+      <*FATAL JoinFailed*> BEGIN RAISE JoinFailed END;
     END;
 
-    VAR
-      pos := 0;
-    BEGIN
-      FOR i := 0 TO n - 1 DO
-        WITH t = texts[i], tl = Length(t) DO
-          IF tl > 0 THEN
-            SUBARRAY(result^, pos, tl) := SUBARRAY(t^, 0, tl);
-            INC(pos, tl);
-          END;
-        END;
-      END; (* for *)
-    END;
-
-    RETURN result;
+    RETURN TextCat.NewMulti(texts);
   END JoinN;
 
 CONST
@@ -226,11 +205,65 @@ CONST
 PROCEDURE CIHash (t: T): INTEGER =
   VAR result := 0;
   BEGIN
-    FOR i := 0 TO NUMBER (t^) - 1 DO
-      result := result * Multiplier + ORD (ASCII.Upper[t [i]]);
+    FOR i := 0 TO Length(t) - 1 DO
+      result := result * Multiplier + ORD (ASCII.Upper[GetChar(t,i)]);
     END;
     RETURN result;
   END CIHash;
+
+(* In pattern, '*' matches any sequence of 0 or characters
+               '?' matches any single character
+               '\x' matches the character 'x'
+   Might get false match if pattern ends with a '\' 
+ *)
+PROCEDURE OnlyStarsLeft(pattern: TEXT; ip, len: INTEGER): BOOLEAN =
+  BEGIN
+    FOR i := ip TO len - 1 DO
+      IF GetChar(pattern, i) # '*' THEN RETURN FALSE END;
+    END;
+    RETURN TRUE;
+  END OnlyStarsLeft;
+
+PROCEDURE PatternMatch1 (t, pattern: TEXT;
+                         it, ip    : INTEGER;
+                         lenT, lenP: INTEGER  ): BOOLEAN =
+  VAR chT, chP: CHAR;
+  BEGIN
+    IF it = lenT THEN
+      RETURN ip = lenP OR OnlyStarsLeft(pattern, ip, lenP);
+    ELSIF ip = lenP THEN
+      RETURN FALSE;
+    END;
+    chP := GetChar(pattern, ip);
+    chT := GetChar(t, it);
+    CASE chP OF
+    | '*' =>
+        INC(ip);
+        WHILE NOT PatternMatch1(t, pattern, it, ip, lenT, lenP) DO
+          INC(it);
+          IF it = lenT THEN RETURN ip = lenP END;
+        END;
+        RETURN TRUE;
+    | '?' =>
+        INC(ip);
+        INC(it);
+        RETURN PatternMatch1(t, pattern, it, ip, lenT, lenP);
+    | '\\' =>
+        INC(ip);
+        RETURN PatternMatch1(t, pattern, it, ip, lenT, lenP);
+    ELSE
+      IF chP # chT THEN RETURN FALSE; END;
+      INC(ip);
+      INC(it);
+      RETURN PatternMatch1(t, pattern, it, ip, lenT, lenP);
+    END;
+  END PatternMatch1;
+
+PROCEDURE PatternMatch (t, pattern: TEXT): BOOLEAN =
+  BEGIN
+    RETURN
+      PatternMatch1(t, pattern, 0, 0, Length(t), Length(pattern));
+  END PatternMatch;
 
 BEGIN
 

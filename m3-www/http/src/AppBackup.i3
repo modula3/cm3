@@ -1,6 +1,6 @@
 (* Copyright (C) 1996, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Thu Aug 15 10:23:58 PDT 1996 by steveg *)
+(* Last modified on Thu Feb 27 20:08:24 PST 1997 by steveg *)
 
 INTERFACE AppBackup;
 
@@ -30,7 +30,7 @@ TYPE
     init(fileName: TEXT; wait: Time.T; log: App.Log): T RAISES {App.Error};
     modified();
     (* called to indicate the related data structure has changed and the
-       backup file should be written with "self.wait" seconds. *)
+       backup file should be written within "self.wait" seconds. *)
     read(rd: Rd.T; initial: BOOLEAN) RAISES {App.Error};
     <* LL = self *>
     write(wr: Wr.T) RAISES {App.Error};

@@ -87,5 +87,12 @@ runtime error if any element of 'texts' is NIL or if 'NUMBER(texts) = 0'  *)
 PROCEDURE CIHash(t: T): INTEGER;
 (* Case insensitive version of "Text.Hash", for case-insensitive tables. *)
 
+PROCEDURE PatternMatch (t, pattern: TEXT): BOOLEAN;
+(* In pattern, '*' matches any sequence of 0 or characters
+               '?' matches any single character
+               '\x' matches the character 'x'
+   A lone '\' at the end of pattern will match at the end of "t"
+     ie. "abc\" will match "abc"
+ *)
 
 END TextExtras.

@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Mon Aug 12 21:29:22 PDT 1996 by steveg *)
+(* Last modified on Sat Feb 22 15:13:48 PST 1997 by steveg *)
 
 INTERFACE HTTP;
 
@@ -113,8 +113,9 @@ TYPE
       equivalent (url: URL): BOOLEAN;
       (* "equivalent" returns TRUE if "self" and "url" are equal in
          canonical format *)
-      local (): BOOLEAN;
-      (* "local" returns TRUE if the URL is local to the server *)
+      local (service: INTEGER): BOOLEAN;
+      (* "local" returns TRUE if the URL is local to the server associated
+         with the service numberer "service"*)
       derelativize (url: URL): URL;
       (* if "self" is a relative URL, then "derelativize" returns the
          absolute URL produced by making self relative to "url".  If "self"
@@ -247,10 +248,10 @@ TYPE
   Request <: RequestPublic;
   RequestPublic =
     Header OBJECT
-      method : Method;
-      url    : URL;
-      version: Version  := CurrentVersion;
-      client : TEXT := "";
+      method  : Method;
+      url     : URL;
+      version : Version  := CurrentVersion;
+      postData: TEXT     := NIL;
     METHODS
       parse (rd: Rd.T; log: App.Log): Request RAISES {App.Error};
       (* Parse the HTTP request in "rd", sends any messages to "log", and
@@ -309,6 +310,12 @@ PROCEDURE WriteSimpleReplyHeader (wr     : Wr.T;
      If "style" is NIL, then DefaultStyle() is used.
 
   *)
+
+PROCEDURE WriteRedirectReply(wr: Wr.T; url, htmlMsg: TEXT; log: App.Log) 
+  RAISES {App.Error};
+  (* write a redirect to "url" with content of "htmlMsg" reply to "wr".
+     IF "htmlMsg" is NIL then a generic resource has moved message is
+     given.  *)
 
 PROCEDURE WriteTime(wr: Wr.T; time: Time.T; log: App.Log) RAISES {App.Error};
 PROCEDURE ReadTime(rd: Rd.T; log: App.Log): Time.T RAISES {App.Error};
@@ -371,15 +378,20 @@ PROCEDURE AuthorizedRequest (request: Request;
                              account: TEXT;
                              log    : App.Log   ): BOOLEAN
   RAISES {App.Error};
-  (* Returns TRUE is "request" has valid authentication for
+  (* Returns TRUE if "request" has valid authentication for
      "account" (formatted as: "name:password") on either the server or proxy *)
 
-PROCEDURE ReplyUnauthorized (wr   : Wr.T;
-                             auth : AuthType;
-                             realm: TEXT;
-                             log  : App.Log   ) RAISES {App.Error};
+PROCEDURE ReplyUnauthorized (wr        : Wr.T;
+                             auth      : AuthType;
+                             realm     : TEXT;
+                             log       : App.Log;
+                             defaultMsg: BOOLEAN    := TRUE)
+  RAISES {App.Error};
   (* Write an "unauthorized" reply to "wr" covering "realm" for 
-     either the server or proxy *)
+     either the server or proxy.  Send "Content-type: text/html".
+     If "defaultMsg" then a simple
+     default message is given.  Otherwise the client is responsible for
+     providing the message. *)
 
 CONST
   Base64Decode = ARRAY CHAR OF INTEGER{
@@ -402,6 +414,13 @@ CONST
     'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 
     'w', 'x', 'y', 'z', '0', '1', '2', '3', 
     '4', '5', '6', '7', '8', '9', '+', '/'};
+
+(* Decode and return the <user>:<password> authorization field in a header,
+   or NIL if not there *)
+PROCEDURE AuthorizationAccount (request: Request;
+                                auth   : AuthType;
+                                log    : App.Log   ): TEXT
+  RAISES {App.Error};
 
 EXCEPTION CopyError;
 
@@ -444,7 +463,7 @@ PROCEDURE ReadBody (requestOrReply: Header;
                     rd            : Rd.T;
                     dest          : Dest;
                     log           : App.Log ) RAISES {App.Error};
-(* read the body from "rd" callin "dest.copy" as necessary.  The
+(* read the body from "rd" calling "dest.copy" as necessary.  The
    body is read using the transfer coding specifed in the "requestOrReply"
    header fields, content-length, chunked, closing the connection or 
    whatever. *)
@@ -468,12 +487,10 @@ PROCEDURE WriteBody (requestOrReply: Header;
    "src.fill" runs out of characters (returns fewer than possible on some
    call). *)
 
-
 PROCEDURE EscapeURLEntry(entry: TEXT): TEXT;
 PROCEDURE UnescapeURLEntry(entry: TEXT; log: App.Log): TEXT RAISES {App.Error};
 (* Escape or Unescape the characters in a URL body.  Reserved characters
    are escaped as %xx where xx is the hex code for the character. *)
-
 
 PROCEDURE EncodeTextForHTML(text: TEXT): TEXT;
 PROCEDURE DecodeTextForHTML(text: TEXT; log: App.Log): TEXT RAISES {App.Error};
@@ -485,4 +502,15 @@ CONST
                CHAR{'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/',
                     '[', ']', '?', '=', '{', '}', ' ', '\t'};
   Token = SET OF CHAR {'\000' .. '\377'} - Ctl - TSpecial;
+
+TYPE
+  UserAgent = {Netscape, InternetExplorer, Other};
+
+CONST
+  NoVersion = -1;
+
+(* Get the user agent and its version from the request. *)
+PROCEDURE GetUserAgent (req: Request; VAR (* out *) version: INTEGER):
+  UserAgent;
+
 END HTTP.

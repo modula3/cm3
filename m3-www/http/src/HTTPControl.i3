@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Fri Mar 15 14:27:38 PST 1996 by steveg *)
+(* Last modified on Tue Feb  4 10:14:13 PST 1997 by steveg *)
 
 INTERFACE HTTPControl;
 
@@ -18,6 +18,9 @@ INTERFACE HTTPControl;
 IMPORT
   App, HTTP, Wr;
 
+EXCEPTION
+  NotAuthorized;
+
 TYPE
   Form <: FormPublic;
   FormPublic = OBJECT
@@ -33,7 +36,7 @@ TYPE
     *)
     respond(request: HTTP.Request; query: HTTP.FormQuery; 
             wr: Wr.T; log: App.Log;
-            READONLY acceptState: REFANY) RAISES {App.Error};
+            READONLY acceptState: REFANY) RAISES {App.Error, NotAuthorized};
     (* "request" is the parsed request header. 
        "query" is the parsed query of submitted form.
        "wr" is the writer for the outgoing response header and result.
@@ -98,47 +101,31 @@ PROCEDURE RootForm(): StaticForm;
 (* The default form answers to the URL: http://<server>:<port>/ *)
 
 PROCEDURE AddToForm(form: StaticForm; subForm: Form; name, url: TEXT);
-(* Equivalent to form.addValue(NEW(FormValue, form := form).init(url)) *)
+(* Equivalent to form.addValue(NEW(FormValue, form := subForm).init(url)) *)
 
 TYPE
   Value <: ValuePublic;
-  ValuePublic = OBJECT
-    id: TEXT;
-    leader, label, trailer: TEXT := "";
-    editable: BOOLEAN := TRUE;
-  METHODS
-    setText(v: TEXT; log: App.Log) RAISES {App.Error};
-    getText(): TEXT;
-    setDefault(log: App.Log) RAISES {App.Error};
-    writeFormItem(wr: Wr.T; log: App.Log) RAISES {App.Error};
-  END;
+  ValuePublic =
+    OBJECT
+      id                    : TEXT;
+      leader, label, trailer: TEXT    := "";
+      editable              : BOOLEAN := TRUE;
+    METHODS
+      setText (req: HTTP.Request; v: TEXT; log: App.Log)
+               RAISES {App.Error, NotAuthorized};
+      getText    (req: HTTP.Request): TEXT RAISES {NotAuthorized};
+      setDefault (req: HTTP.Request; log: App.Log) RAISES {App.Error, NotAuthorized};
+      writeFormItem (req: HTTP.Request; wr: Wr.T; log: App.Log)
+                     RAISES {App.Error, NotAuthorized};
+    END;
 
 TYPE
   ContainerValue <: ContainerValuePublic;
-  ContainerValuePublic = Value OBJECT
-  METHODS
-    setValues(query: HTTP.FormQuery; log: App.Log) RAISES {App.Error};
-  END;
-
-(* All URLs referring to control forms are protected by the basic
-   HTTP authorization scheme:
-
-   http://www.w3.org/pub/WWW/Protocols/HTTP1.0/draft-ietf-http-spec.html#BasicAA
-   
-   If no user is given, then the empty string "" is used.
-
-   If an authorization password is given as an argument then that
-   password is used.  If no password is given (NIL), then HTTPControl
-   generates one randomly and writes it to stderr (presumably, only
-   the user running the application is able to view and know the
-   random password).  If an empty password ("") is given then no
-   authorization is required to access the control forms.
-
-   The arguments for the password are:
-
-   switch      env              config      default
-   -password   HTTP_PASSWORD    password:   NIL
-   -user       USER             user:       ""
-*)
+  ContainerValuePublic =
+    Value OBJECT
+    METHODS
+      setValues (req: HTTP.Request; query: HTTP.FormQuery; log: App.Log)
+                 RAISES {App.Error, NotAuthorized};
+    END;
 
 END HTTPControl.

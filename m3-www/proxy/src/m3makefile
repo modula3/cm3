@@ -1,8 +1,9 @@
+import ("http")
+import ("vbtkit")
 
-import ("libm3")
-import ("tcp")
+resource("noads.gif")
+bundle ("ProxyBundle")
 
-module ("Web")
-implementation ("Main")
+implementation ("Proxy")
 
-program ("proxy")
+Program("Proxy")
