@@ -58,6 +58,8 @@ Point: Add, Sub, Mul, Div
 
 Conventions for names of Array and Reference types?
 
+List of conventions for names for modules, types, variables, constants, record entries, exceptions, order of procedure parameters
+
 ---------------
 
 How can I access the name of a module that another module imports?
