@@ -8,6 +8,8 @@ TYPE T = V.TBody;
 PROCEDURE Clear (VAR (*OUT*) z: T);
 
 CONST
+  Copy = V.FromArray;
+
   IsZero = VI.IsZero;
   Equal  = VI.Equal;
 

@@ -23,7 +23,7 @@ GCD("Integer32",                    "Integer32",                    "Basic")
 GCD("Integer32Complex",             "Integer32Complex",             "Basic")
 GCD("BigInteger",                   "BigInteger",                   "Basic")
 GCD("BigIntegerComplex",            "BigIntegerComplex",            "Basic")
-GCD("BigIntegerFractionPolynomial", "BigIntegerFractionPolynomial", "Basic")
+GCD("BigIntegerFractionPolynomial", "BigIntegerFractionPolynomial", "")
 % GCD will not work with floating point numbers,
 % because values that should be zero, aren't zero most often
 

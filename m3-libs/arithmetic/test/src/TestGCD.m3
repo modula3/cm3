@@ -11,9 +11,9 @@ IMPORT
   BigIntegerBasic            AS B,
   BigIntegerComplexBasic     AS BC,
   BigIntegerComplexGCD       AS BCG,
-  BigIntegerFractionBasic            AS BFr,
-  BigIntegerFractionPolynomialBasic  AS BFrP,
-  BigIntegerFractionPolynomialGCD    AS BFrPG,
+  BigIntegerFractionBasic         AS BFr,
+  BigIntegerFractionPolynomial    AS BFrP,
+  BigIntegerFractionPolynomialGCD AS BFrPG,
 (*
   Integer32ComplexFmtLex     AS ICF,
   BigIntegerFmtLex           AS BF,

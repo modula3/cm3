@@ -18,6 +18,7 @@ PROCEDURE New (n: CARDINAL): T;  (*make new vector with n components T*)
 <*INLINE*>
 PROCEDURE FromArray (READONLY x: TBody): T;
 PROCEDURE FromVectorArray (READONLY x: TVBody): T;
+<*INLINE*>
 PROCEDURE FromScalar (x: R.T): T;
 <*INLINE*>
 PROCEDURE Copy (x: T): T;

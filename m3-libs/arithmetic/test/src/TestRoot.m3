@@ -1,12 +1,5 @@
 MODULE TestRoot EXPORTS Test;
-(*Copyright (c) 1996, Harry George
-Abstract: Test driver for Modula-3 rendition of
-          Numerical Recipes in C, 1992.
-
-1/2/96    Harry George   Initial version
-1/28/96   Harry George   converted to m3na
-2/17/96   Harry George   Converted to ADT format
-*)
+(*Copyright (c) 1996, Harry George*)
 FROM NADefinitions IMPORT Error,Err;
 IMPORT Fmt,
        LongRealBasic  AS R,
@@ -15,14 +8,14 @@ IMPORT Fmt,
        LongRealComplexFast   AS C,
        LongRealComplexTrans  AS CT,
        LongRealComplexFmtLex AS CF,
-       LongRealComplexPolynomialBasic  AS CP,
+       LongRealComplexPolynomial       AS CP,
        LongRealComplexPolynomialFmtLex AS CPF,
        LongRealComplexRootBasic        AS Rt,
        LongRealRootApproximation       AS RtA,
        LongRealFindZero      AS FZ,
        Integer32Basic        AS I,
        Integer32RootBasic    AS IR,
-       Integer32PolynomialBasic  AS IP,
+       Integer32Polynomial       AS IP,
        Integer32PolynomialFmtLex AS IPF,
        Thread,Wr;
 

@@ -8,7 +8,7 @@ IMPORT LongRealEigenSystem    AS EigenSys,
        LongRealCharPolynomial AS CP,
        LongRealMatrixFast     AS M,
        LongRealVector         AS V,
-       LongRealPolynomialFast AS P,
+       LongRealPolynomial     AS P,
        LongRealMatrixFmtLex     AS MF,
        LongRealPolynomialFmtLex AS PF;
 IMPORT Wr, Stdio, Thread, Fmt, NADefinitions;

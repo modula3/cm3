@@ -57,7 +57,9 @@ BEGIN
   NewLine(); EVAL TestInteger();
   NewLine(); EVAL TestReal64();
   NewLine(); EVAL TestComplex();
+*)
   NewLine(); EVAL TestPolynomial();
+(*
   NewLine(); EVAL TestRoot();
   NewLine(); EVAL TestInterpolation();
   NewLine(); EVAL TestVector();
@@ -72,9 +74,7 @@ BEGIN
   NewLine(); EVAL TestUnit();
   NewLine(); EVAL TestLapack();
   NewLine(); EVAL TestTex();
-*)
   NewLine(); EVAL TestPLPlot();
-(*
   NewLine(); EVAL TestFunctional();
 *)
 END Test.
