@@ -262,14 +262,14 @@ PROCEDURE TranslateD (SELF: T; dist: IndexType) =
     INC(SELF.first, dist);
   END TranslateD;
 
-PROCEDURE UpSample (x: T; factor: CARDINAL): T =
+PROCEDURE UpSample (x: T; factor: ScalingType): T =
   VAR z := NEW(T).init(x.first * factor, LAST(x.data^) * factor + 1);
   BEGIN
     FOR i := 0 TO LAST(x.data^) DO z.data[i * factor] := x.data[i]; END;
     RETURN z;
   END UpSample;
 
-PROCEDURE DownSample (x: T; factor: CARDINAL): T =
+PROCEDURE DownSample (x: T; factor: ScalingType): T =
   VAR
     z               := NEW(T);
     last: IndexType := x.getLast() DIV factor;
@@ -492,7 +492,7 @@ PROCEDURE Autocorrelate (x: T): T =
 
 (*this implementation avoids unnecessary multipications but involves much
    memory management*)
-PROCEDURE ConvolveDown (x, y: T; factor: CARDINAL): T =
+PROCEDURE ConvolveDown (x, y: T; factor: ScalingType): T =
   VAR
     (*
     xlast := x.first + LAST(x.data^);
@@ -505,7 +505,7 @@ PROCEDURE ConvolveDown (x, y: T; factor: CARDINAL): T =
     z      := sliceX[0].convolve(sliceY[0]);
     j      := factor;
   BEGIN
-    FOR i := 1 TO factor DO
+    FOR i := 1 TO factor - 1 DO
       DEC(j);
       z := z.superpose(sliceX[i].convolve(sliceY[j]).translate(1));
     END;
@@ -513,7 +513,7 @@ PROCEDURE ConvolveDown (x, y: T; factor: CARDINAL): T =
     RETURN z;
   END ConvolveDown;
 
-PROCEDURE UpConvolve (x, y: T; factor: CARDINAL): T =
+PROCEDURE UpConvolve (x, y: T; factor: ScalingType): T =
   VAR
     xlast := x.first + LAST(x.data^);
     ylast := y.first + LAST(y.data^);
