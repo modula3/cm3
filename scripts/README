@@ -25,6 +25,13 @@ You are probably most interested in one of the following:
 
  o Use do-pkg.sh to compile or clean one or more arbitrary packages.
 
+ o Use do-cm3-core.sh to build (and install) a core cm3 system, i.e.
+   the compiler with some useful base libraries.
+
+ o Use install-cm3-compiler.sh to install the actual compiler
+   (front-end and back-end) from the workspace.
+
+
 Please read the file README.BOOT for booting and porting instructions.
 Read the file README.ELEGO for instructions how to use CM3 together
 with the Elego ComPact project manager, which also allows you to
@@ -113,6 +120,41 @@ do-cm3-core.sh [callable]
   no GCC_BACKEND => m3back, m3staloneback
   M3GDB => m3gdb
   HAVE_TCL => tcl
+  OMIT_GCC => omit package m3cc
+  M3GC_SIMPLE => don't compile m3gc-enhanced
+
+install-cm3-compiler.sh [callable]
+-----------------------
+  install-cm3-compiler.sh [ -n ] backup | newversion | upgrade
+  install-cm3-compiler.sh [ -n ] restore <version_number>
+
+    backup
+      will make copies of cm3 front-end and back-end with the cm3
+      version number as suffix, e.g.
+      /usr/local/cm3/bin/cm3 --> /usr/local/cm3/bin/cm3-x.y.z
+      /usr/local/cm3/bin/cm3cg --> /usr/local/cm3/bin/cm3cg-x.y.z
+
+    restore <version_number>
+      will restore copies with suffixed version number as current
+      version, e.g.
+      /usr/local/cm3/bin/cm3-x.y.z --> /usr/local/cm3/bin/cm3
+      /usr/local/cm3/bin/cm3cg-x.y.z --> /usr/local/cm3/bin/cm3cg
+
+    newversion
+      will install the version from the current workspace with
+      version number suffixes, e.g.
+      /home/wagner/work/cm3/m3-sys/cm3/FreeBSD4/cm3 
+        --> /usr/local/cm3/bin/cm3-x.y.z
+      /home/wagner/work/cm3/m3-sys/m3cc/FreeBSD4/cm3cg
+         --> /usr/local/cm3/bin/cm3cg-x.y.z
+
+    upgrade
+      will backup the existing version, install new executables
+      with suffixes and restore them as the current version
+
+    Beware: This script relies on the cm3 executable to correctly
+    identify its version (cm3 -version). If it does not, things will
+    get messed up.
 
 do-cm3-gui.sh [callable]
 -------------
@@ -149,6 +191,8 @@ do-cm3-std.sh [callable]
   M3GDB => m3gdb
   HAVE_TCL => tcl
   HAVE_SERIAL => serial
+  OMIT_GCC => omit package m3cc
+  M3GC_SIMPLE => don't compile m3gc-enhanced
 
 do-pkg.sh [callable]
 ---------
@@ -162,3 +206,7 @@ make-bin-dist-min.sh [callable]
   and the installation program. Uses STAGE [TMPDIR] as working
   area. You only need this if you want to create your own CM3
   distributions. 
+
+ppc-cross-build.sh [callable]
+------------------
+  example for a cross-compilation script for bootstrapping new platforms
