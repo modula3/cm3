@@ -37,10 +37,10 @@ while [ -n "$1" ] ; do
       PKG_ACTION="${PKG_ACTION} ; $2"
     fi
     shift
-  elif [ -d "$1" ] ; then
-    PKGS="${PKGS} $1"
   elif [ -d "$ROOT/$1" ] ; then
     PKGS="${PKGS} $ROOT/$1"
+  elif [ -d "$1" ] ; then
+    PKGS="${PKGS} $1"
   else
     p=`pkgpath $1`
     if [ -d "$p" ] ; then
