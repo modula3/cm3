@@ -1,5 +1,5 @@
 import("libm3")
-import("m3na")
+import("arithmetic")
 import("plplot")
 
 include_dir("signal")

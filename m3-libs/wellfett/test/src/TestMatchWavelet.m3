@@ -1341,7 +1341,7 @@ PROCEDURE Test () =
                testSSE, testInverseDSSE, testDeriveWSSE, testNormalEqu};
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE Example.matchRamp OF
+    CASE Example.matchRampSmooth OF
     | Example.matchBSpline =>
         TestMatchPattern(
           Refn.Refine(
