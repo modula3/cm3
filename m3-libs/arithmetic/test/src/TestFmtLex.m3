@@ -4,22 +4,16 @@ MODULE TestFmtLex EXPORTS Test;
 (*Abstract: Tests for FmtLex module.*)
 
 IMPORT LongRealBasic AS R;
-IMPORT LongRealVector AS V;
-IMPORT LongRealVectorRep AS VS;
 IMPORT LongRealMatrix AS M;
 
 IMPORT LongRealFmtLex AS RF;
-IMPORT LongRealVectorFmtLex AS VF;
 IMPORT LongRealMatrixFmtLex AS MF;
 
-IMPORT IO, Fmt, TextRd;
+IMPORT IO, Lex, TextRd;
 
-
-IMPORT Rd, Wr, TextWr, Thread;
-IMPORT Fmt AS F;
-IMPORT Lex AS L;
+IMPORT Rd, Wr, Thread;
 IMPORT FloatMode;
-IMPORT FmtLexSupport AS FSup;
+IMPORT NADefinitions AS NA;
 
 (*=======================*)
 CONST Module = "TestFmtLex.";
@@ -38,6 +32,8 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
     result := TRUE;
     text   := "";
 
+  <*FATAL FloatMode.Trap, Lex.Error, Rd.Failure, Wr.Failure,
+          Thread.Alerted, NA.Error*>
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -57,12 +53,14 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
       IO.Put(MF.Fmt(newMat) & "\n");
       (* <*ASSERT MS.Equal(mat,newMat^)*> *)
       <*ASSERT M.Equal(M.FromArray(mat),newMat)*>
+      Rd.Close(rd);
     END;
 
     RETURN result;
   END TestMatrixIO;
 (*-------------------------*)
 PROCEDURE TestFmtLex (): BOOLEAN =
+  <*UNUSED*>
   CONST ftn = Module & "TestFmtLex";
   VAR result := TRUE;
   BEGIN
