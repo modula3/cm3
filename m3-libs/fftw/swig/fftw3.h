@@ -44,6 +44,16 @@ extern "C"
 #define FFTW_MANGLE_FLOAT(name) FFTW_CONCAT(fftwf_, name)
 #define FFTW_MANGLE_LONG_DOUBLE(name) FFTW_CONCAT(fftwl_, name)
 
+#define C1 complex_array_1d
+#define C2 complex_array_2d
+#define C3 complex_array_3d
+#define Cn complex_tensor
+
+#define R1 real_array_1d
+#define R2 real_array_2d
+#define R3 real_array_3d
+#define Rn real_tensor
+
 
 enum fftw_r2r_kind_do_not_use_me {
      FFTW_R2HC=0, FFTW_HC2R=1, FFTW_DHT=2,
@@ -72,6 +82,16 @@ FFTW_DEFINE_COMPLEX(R, C);						\
 									\
 typedef struct X(plan_s) *X(plan);					\
 									\
+typedef struct C X(C1);							\
+typedef struct C X(C2);							\
+typedef struct C X(C3);							\
+typedef struct C X(Cn);							\
+									\
+typedef R X(R1);							\
+typedef R X(R2);							\
+typedef R X(R3);							\
+typedef R X(Rn);							\
+									\
 typedef struct fftw_iodim_do_not_use_me X(iodim);			\
 									\
 typedef enum fftw_r2r_kind_do_not_use_me X(r2r_kind);			\
@@ -79,27 +99,27 @@ typedef enum fftw_r2r_kind_do_not_use_me X(r2r_kind);			\
 void X(execute)(const X(plan) p);					\
 									\
 X(plan) X(plan_dft)(int rank, const int *n,				\
-		    C *in, C *out, int sign, unsigned flags);		\
+		    X(Cn) *in, X(Cn) *out, int sign, unsigned flags);	\
 									\
-X(plan) X(plan_dft_1d)(int n, C *in, C *out, int sign,			\
+X(plan) X(plan_dft_1d)(int n, X(C1) *in, X(C1) *out, int sign,		\
 		       unsigned flags);					\
 X(plan) X(plan_dft_2d)(int nx, int ny,					\
-		       C *in, C *out, int sign, unsigned flags);	\
+		       X(C2) *in, X(C2) *out, int sign, unsigned flags);\
 X(plan) X(plan_dft_3d)(int nx, int ny, int nz,				\
-		       C *in, C *out, int sign, unsigned flags);	\
+		       X(C3) *in, X(C3) *out, int sign, unsigned flags);\
 									\
 X(plan) X(plan_many_dft)(int rank, const int *n,			\
                          int howmany,					\
-                         C *in, const int *inembed,			\
+                         X(Cn) *in, const int *inembed,			\
                          int istride, int idist,			\
-                         C *out, const int *onembed,			\
+                         X(Cn) *out, const int *onembed,		\
                          int ostride, int odist,			\
                          int sign, unsigned flags);			\
 									\
 X(plan) X(plan_guru_dft)(int rank, const X(iodim) *dims,		\
 			 int howmany_rank,				\
 			 const X(iodim) *howmany_dims,			\
-			 C *in, C *out,					\
+			 X(Cn) *in, X(Cn) *out,				\
 			 int sign, unsigned flags);			\
 X(plan) X(plan_guru_split_dft)(int rank, const X(iodim) *dims,		\
 			 int howmany_rank,				\
@@ -107,101 +127,104 @@ X(plan) X(plan_guru_split_dft)(int rank, const X(iodim) *dims,		\
 			 R *ri, R *ii, R *ro, R *io,			\
 			 unsigned flags);				\
 									\
-void X(execute_dft)(const X(plan) p, C *in, C *out);			\
-void X(execute_split_dft)(const X(plan) p, R *ri, R *ii, R *ro, R *io);	\
+void X(execute_dft)(const X(plan) p, X(Cn) *in, X(Cn) *out);		\
+void X(execute_split_dft)(const X(plan) p,				\
+			 X(n)R *ri, X(Rn) *ii, X(Rn) *ro, X(Rn) *io);	\
 									\
 X(plan) X(plan_many_dft_r2c)(int rank, const int *n,			\
                              int howmany,				\
-                             R *in, const int *inembed,			\
+                             X(Rn) *in, const int *inembed,		\
                              int istride, int idist,			\
-                             C *out, const int *onembed,		\
+                             X(Cn) *out, const int *onembed,		\
                              int ostride, int odist,			\
                              unsigned flags);				\
 									\
 X(plan) X(plan_dft_r2c)(int rank, const int *n,				\
-                        R *in, C *out, unsigned flags);			\
+                        X(Rn) *in, X(Cn) *out, unsigned flags);		\
 									\
-X(plan) X(plan_dft_r2c_1d)(int n,R *in,C *out,unsigned flags);		\
+X(plan) X(plan_dft_r2c_1d)(int n,					\
+			   X(R1) *in, X(C1) *out, unsigned flags);	\
 X(plan) X(plan_dft_r2c_2d)(int nx, int ny,				\
-			   R *in, C *out, unsigned flags);		\
-X(plan) X(plan_dft_r2c_3d)(int nx, int ny,				\
-			   int nz,					\
-			   R *in, C *out, unsigned flags);		\
+			   X(R2) *in, X(C2) *out, unsigned flags);	\
+X(plan) X(plan_dft_r2c_3d)(int nx, int ny, int nz,			\
+			   X(R3) *in, X(C3) *out, unsigned flags);	\
 									\
 									\
 X(plan) X(plan_many_dft_c2r)(int rank, const int *n,			\
 			     int howmany,				\
-			     C *in, const int *inembed,			\
+			     X(Cn) *in, const int *inembed,		\
 			     int istride, int idist,			\
-			     R *out, const int *onembed,		\
+			     X(Rn) *out, const int *onembed,		\
 			     int ostride, int odist,			\
 			     unsigned flags);				\
 									\
 X(plan) X(plan_dft_c2r)(int rank, const int *n,				\
-                        C *in, R *out, unsigned flags);			\
+                        X(Cn) *in, X(Rn) *out, unsigned flags);		\
 									\
-X(plan) X(plan_dft_c2r_1d)(int n,C *in,R *out,unsigned flags);		\
+X(plan) X(plan_dft_c2r_1d)(int n,					\
+			   X(C1) *in, X(R1) *out, unsigned flags);	\
 X(plan) X(plan_dft_c2r_2d)(int nx, int ny,				\
-			   C *in, R *out, unsigned flags);		\
-X(plan) X(plan_dft_c2r_3d)(int nx, int ny,				\
-			   int nz,					\
-			   C *in, R *out, unsigned flags);		\
+			   X(C2) *in, X(R2) *out, unsigned flags);	\
+X(plan) X(plan_dft_c2r_3d)(int nx, int ny, int nz,			\
+			   X(C3) *in, X(R3) *out, unsigned flags);	\
 									\
 X(plan) X(plan_guru_dft_r2c)(int rank, const X(iodim) *dims,		\
 			     int howmany_rank,				\
 			     const X(iodim) *howmany_dims,		\
-			     R *in, C *out,				\
+			     X(Rn) *in, X(Cn) *out,			\
 			     unsigned flags);				\
 X(plan) X(plan_guru_dft_c2r)(int rank, const X(iodim) *dims,		\
 			     int howmany_rank,				\
 			     const X(iodim) *howmany_dims,		\
-			     C *in, R *out,				\
+			     X(Cn) *in, X(Rn) *out,			\
 			     unsigned flags);				\
 									\
 X(plan) X(plan_guru_split_dft_r2c)(int rank, const X(iodim) *dims,	\
 			     int howmany_rank,				\
 			     const X(iodim) *howmany_dims,		\
-			     R *in, R *ro, R *io,			\
+			     X(Rn) *in, X(Rn) *ro, X(Rn) *io,		\
 			     unsigned flags);				\
 X(plan) X(plan_guru_split_dft_c2r)(int rank, const X(iodim) *dims,	\
 			     int howmany_rank,				\
 			     const X(iodim) *howmany_dims,		\
-			     R *ri, R *ii, R *out,			\
+			     X(Rn) *ri, X(Rn) *ii, X(Rn) *out,		\
 			     unsigned flags);				\
 									\
-void X(execute_dft_r2c)(const X(plan) p, R *in, C *out);		\
-void X(execute_dft_c2r)(const X(plan) p, C *in, R *out);		\
+void X(execute_dft_r2c)(const X(plan) p, X(Rn) *in, X(Cn) *out);	\
+void X(execute_dft_c2r)(const X(plan) p, X(Cn) *in, X(Rn) *out);	\
 									\
-void X(execute_split_dft_r2c)(const X(plan) p, R *in, R *ro, R *io);	\
-void X(execute_split_dft_c2r)(const X(plan) p, R *ri, R *ii, R *out);	\
+void X(execute_split_dft_r2c)(const X(plan) p,				\
+			 X(Rn) *in, X(Rn) *ro, X(Rn) *io);		\
+void X(execute_split_dft_c2r)(const X(plan) p,				\
+			 X(Rn) *ri, X(Rn) *ii, X(Rn) *out);		\
 									\
 X(plan) X(plan_many_r2r)(int rank, const int *n,			\
                          int howmany,					\
-                         R *in, const int *inembed,			\
+                         X(Rn) *in, const int *inembed,			\
                          int istride, int idist,			\
-                         R *out, const int *onembed,			\
+                         X(Rn) *out, const int *onembed,		\
                          int ostride, int odist,			\
                          const X(r2r_kind) *kind, unsigned flags);	\
 									\
-X(plan) X(plan_r2r)(int rank, const int *n, R *in, R *out,		\
+X(plan) X(plan_r2r)(int rank, const int *n, X(Rn) *in, X(Rn) *out,	\
                     const X(r2r_kind) *kind, unsigned flags);		\
 									\
-X(plan) X(plan_r2r_1d)(int n, R *in, R *out,				\
+X(plan) X(plan_r2r_1d)(int n, X(R1) *in, X(R1) *out,			\
                        X(r2r_kind) kind, unsigned flags);		\
-X(plan) X(plan_r2r_2d)(int nx, int ny, R *in, R *out,			\
+X(plan) X(plan_r2r_2d)(int nx, int ny, X(R2) *in, X(R2) *out,		\
                        X(r2r_kind) kindx, X(r2r_kind) kindy,		\
                        unsigned flags);					\
 X(plan) X(plan_r2r_3d)(int nx, int ny, int nz,				\
-                       R *in, R *out, X(r2r_kind) kindx,		\
+                       X(R3) *in, X(R3) *out, X(r2r_kind) kindx,	\
                        X(r2r_kind) kindy, X(r2r_kind) kindz,		\
                        unsigned flags);					\
 									\
 X(plan) X(plan_guru_r2r)(int rank, const X(iodim) *dims,		\
                          int howmany_rank,				\
                          const X(iodim) *howmany_dims,			\
-                         R *in, R *out,					\
+                         X(Rn) *in, X(Rn) *out,				\
                          const X(r2r_kind) *kind, unsigned flags);	\
-void X(execute_r2r)(const X(plan) p, R *in, R *out);			\
+void X(execute_r2r)(const X(plan) p, X(Rn) *in, X(Rn) *out);		\
 									\
 void X(destroy_plan)(X(plan) p);					\
 void X(forget_wisdom)(void);						\
