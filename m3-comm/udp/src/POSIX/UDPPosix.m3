@@ -4,8 +4,8 @@
 
 UNSAFE MODULE UDPPosix EXPORTS UDP;
 
-IMPORT Atom, AtomList, Ctypes, IP;
-IMPORT OSErrorPosix, SchedulerPosix, TextF, Thread;
+IMPORT Atom, AtomList, Ctypes, IP, M3toC;
+IMPORT OSErrorPosix, SchedulerPosix, Thread;
 IMPORT Uerror, Uin, Unix, Usocket, Utypes;
 
 REVEAL
@@ -86,17 +86,30 @@ PROCEDURE Send(self: T; READONLY d: Datagram): INTEGER RAISES {IP.Error} =
     RETURN numSent
   END Send;
 
+PROCEDURE Len(cstr: Ctypes.char_star) : INTEGER =
+  VAR l := 0;
+  BEGIN
+    WHILE LOOPHOLE(cstr^, CHAR) # '\000' DO INC(l) END;
+    RETURN l;
+  END Len;
+
 PROCEDURE SendText(self: T; READONLY other: IP.Endpoint; t: TEXT): INTEGER
     RAISES {IP.Error} =
-  VAR numSent: INTEGER; sockaddr: Uin.struct_sockaddr_in; BEGIN
+  VAR 
+    numSent: INTEGER; 
+    sockaddr: Uin.struct_sockaddr_in; 
+    cstr: Ctypes.char_star;
+  BEGIN
     <* ASSERT self.open *>
     sockaddr.sin_family := Usocket.AF_INET;
     sockaddr.sin_port := Uin.htons(other.port);
     sockaddr.sin_addr.s_addr := LOOPHOLE(other.addr, Utypes.u_int);
     sockaddr.sin_zero := SinZero;
-    numSent := Usocket.sendto(self.fileno, 
-      LOOPHOLE(ADR(t[0]), Ctypes.char_star), NUMBER(t^) - 1, (*flags=*) 0,
+    cstr := M3toC.SharedTtoS(t);
+    numSent := Usocket.sendto(self.fileno, cstr, Len(cstr), (*flags=*) 0,
+(*    LOOPHOLE(ADR(t[0]), Ctypes.char_star), NUMBER(t^) - 1, (*flags=*) 0, *)
       ADR(sockaddr), BYTESIZE(Uin.struct_sockaddr_in));
+    M3toC.FreeSharedS(t, cstr);
     IF numSent < 0 THEN RaiseUnexpected("sendto(2)") END;
     RETURN numSent
   END SendText;
