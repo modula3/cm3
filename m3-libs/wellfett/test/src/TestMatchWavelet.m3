@@ -723,6 +723,9 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       smoothFac  = 2.5D0;
       maxSubIter = 30;
 
+      ymin = -1.5D0;
+      ymax = 1.5D0;
+
       tol     = 1.0D-4;
       difdist = 1.0D-5;
 
@@ -780,7 +783,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                        mc.lift.scale(R.One / mc.amp).upsample(2)));
         BEGIN
           PL.StartPage();
-          WP.PlotWavelets(hdual, gdual, levels);
+          WP.PlotWaveletsYLim(hdual, gdual, levels, ymin, ymax);
           (*PL.StopPage();*)
         END;
         smoothWeightFade := smoothWeightFade * smoothFac;
