@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.6 2003-07-25 23:18:17 wagner Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.7 2003-09-19 14:29:45 wagner Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -8,8 +8,9 @@ those intended for inclusion only. They are all standard Bourne shell
 scripts and should be executable on every system (sometimes probably
 some minor tweaks might be needed). On Windows, you can use the Cygwin
 distribution which comes with bash and most of the GNU tools, or the
-MKS tool kit and its Korn shell. I'm sorry, but there is currently no
-support for the standard NT/2000 cmd shell.
+MKS tool kit and its Korn shell. Alternatively, you may want to use
+the Windows CMD scripts contributed by Randy Coleburn. See README-WIN32
+for details.
 
 You are probably most interested in one of the following:
 
@@ -222,3 +223,8 @@ make-bin-dist-min.sh [callable]
 ppc-cross-build.sh [callable]
 ------------------
   example for a cross-compilation script for bootstrapping new platforms
+
+
+<!-- Local Variables: -->
+<!-- mode: html -->
+<!-- End: -->
