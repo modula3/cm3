@@ -147,9 +147,7 @@ PROCEDURE Max(READONLY x:TBody):R.T=
     max:=R.NegInf;
   BEGIN
     FOR i:=FIRST(x) TO LAST(x) DO
-      IF max<x[i] THEN
-        max:=x[i];
-      END;
+      max:=MAX(max,x[i]);
     END;
     RETURN max;
   END Max;
@@ -159,9 +157,7 @@ PROCEDURE Min(READONLY x:TBody):R.T=
     min:=R.PosInf;
   BEGIN
     FOR i:=FIRST(x) TO LAST(x) DO
-      IF min>x[i] THEN
-        min:=x[i];
-      END;
+      min:=MIN(min,x[i]);
     END;
     RETURN min;
   END Min;
