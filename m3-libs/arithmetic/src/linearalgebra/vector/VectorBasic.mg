@@ -205,5 +205,47 @@ PROCEDURE Sum(READONLY x:TBody):R.T=
   END Sum;
 
 (*-----------------*)
+PROCEDURE ArithSeq(num:CARDINAL;from:R.T;by:R.T):T=
+VAR
+  x:=NEW(T,num);
+BEGIN
+  FOR j:=0 TO num-1 DO
+    x[j] := from;
+    IF j<num-1 THEN
+      from := R.Add(from,by);
+    END;
+  END;
+  RETURN x;
+END ArithSeq;
+
+(*-----------------*)
+PROCEDURE GeomSeq(num:CARDINAL;from:R.T;by:R.T):T=
+VAR
+  x:=NEW(T,num);
+BEGIN
+  FOR j:=0 TO num-1 DO
+    x[j] := from;
+    IF j<num-1 THEN
+      from := R.Mul(from,by);
+    END;
+  END;
+  RETURN x;
+END GeomSeq;
+
+(*-----------------*)
+PROCEDURE RecursiveSeq(num:CARDINAL;from:R.T;by:MapFtn):T=
+VAR
+  x:=NEW(T,num);
+BEGIN
+  FOR j:=0 TO num-1 DO
+    x[j] := from;
+    IF j<num-1 THEN
+      from := by(from);
+    END;
+  END;
+  RETURN x;
+END RecursiveSeq;
+
+(*-----------------*)
 BEGIN
 END VectorBasic.

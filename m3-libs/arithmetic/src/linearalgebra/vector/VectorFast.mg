@@ -164,5 +164,35 @@ PROCEDURE Min(READONLY x:TBody):R.T=
 
 
 (*-----------------*)
+PROCEDURE ArithSeq(num:CARDINAL;from:R.T;by:R.T):T=
+VAR
+  x:=NEW(T,num);
+BEGIN
+  FOR j:=0 TO num-1 DO
+    x[j] := from;
+    IF j<num-1 THEN
+      from := from+by;
+    END;
+  END;
+  RETURN x;
+END ArithSeq;
+
+(*-----------------*)
+PROCEDURE GeomSeq(num:CARDINAL;from:R.T;by:R.T):T=
+VAR
+  x:=NEW(T,num);
+BEGIN
+  FOR j:=0 TO num-1 DO
+    x[j] := from;
+    IF j<num-1 THEN
+      from := from*by;
+    END;
+  END;
+  RETURN x;
+END GeomSeq;
+
+
+
+(*-----------------*)
 BEGIN
 END VectorFast.

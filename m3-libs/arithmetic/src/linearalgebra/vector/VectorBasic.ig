@@ -50,5 +50,9 @@ PROCEDURE Reduce(x:T;f:ReduceFtn;init:R.T):R.T;
 
 PROCEDURE Sum(READONLY x:TBody):R.T;
 
+PROCEDURE ArithSeq(num:CARDINAL;from:R.T;by:R.T):T;
+PROCEDURE GeomSeq(num:CARDINAL;from:R.T;by:R.T):T;
+PROCEDURE RecursiveSeq(num:CARDINAL;from:R.T;by:MapFtn):T;
+
 (*==========================*)
 END VectorBasic.
