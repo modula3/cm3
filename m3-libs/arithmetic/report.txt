@@ -1,7 +1,6 @@
 for myself:
 
 todo:
-  - RootApproximation -> root, nonlinear
   - physical units
   - xBits, xWordEx -> low level
   - Interpolation, Random/RNG01/RNG02, Stat

@@ -21,6 +21,7 @@ include_dir("root")
 include_dir("algebra")
 
 include_dir("nonlinear")
+include_dir("lowlevel")
 
 
 module("xUtils")
