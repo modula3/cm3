@@ -6,11 +6,11 @@
 
 /* m3makefile for /proj/m3/pkg/juno-compiler/tests/ScopeTest/src */
 
-implementation(ScopeTest)
+implementation("ScopeTest")
 
-import(juno-machine)
-import(juno-compiler)
-import(libm3)
+import("juno-machine")
+import("juno-compiler")
+import("libm3")
 
 build_standalone()
-program(ScopeTest)
+program("ScopeTest")

@@ -16,6 +16,12 @@ import		("vbtkit")
 import		("formsvbt")
 import		("juno-machine")
 import		("juno-compiler")
+%import         ("pkl-fonts") % explicitly define the dependency
+
+/* build the font pickles first */
+PKLPKG=         ".." & SL & "pkl-fonts"
+PKLDIR=         PKLPKG & SL & TARGET
+exec            ("cd " & PKLDIR & " && ./PklFonts > FontData.pkl")
 
 /* private interfaces */
 interface       ("EditorUI")
@@ -81,9 +87,9 @@ m3_option	("-O")                          % compile optimized code
 % Cmon_prog	("Juno", cmon_mips, cmon_alpha)
 
 /* commands to build static executable on PM3 (Linux) */
-if equal(TARGET,"LINUXLIBC6")
-  option("standalone","T")
-end
+%if equal(TARGET,"LINUXLIBC6")
+%  option("standalone","T")
+%end
 
 /* plain old stand-alone Juno */
 Program		("Juno")

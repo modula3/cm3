@@ -6,4 +6,6 @@
 
 /* m3overrides for /proj/m3/pkg/juno-machine/tests/nonlinear/src */
 
-override("juno-machine", WDROOT)
+%override("juno-machine", WDROOT)
+override ("libm3", ROOT & "/m3-libs")
+override ("juno-machine", ROOT & "/m3-ui/juno-2")

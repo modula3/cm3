@@ -6,13 +6,13 @@
 
 /* m3makefile for /proj/m3/pkg/juno-compiler/tests/lexer/src */
 
-implementation(LexerTest)
+implementation("LexerTest")
 
-import(juno-machine)
-import(juno-compiler)
-import(libm3)
-export_interface(JunoLex)
-export_interface(JunoToken)
+import("juno-machine")
+import("juno-compiler")
+import("libm3")
+export_interface("JunoLex")
+export_interface("JunoToken")
 
 build_standalone()
-program(LexerTest)
+program("LexerTest")
