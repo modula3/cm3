@@ -116,4 +116,7 @@ PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
 <*EXTERNAL "m3_asLong"*>
 PROCEDURE asLong(val: off_t): long;
 
+<*EXTERNAL "m3_assignOffT"*>
+PROCEDURE assignOffT (VAR dest: off_t; src: long);
+
 END Utypes.

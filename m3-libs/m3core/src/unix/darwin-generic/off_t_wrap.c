@@ -18,6 +18,12 @@ m3_asLong (off_t val)
   return v;
 }
 
+void
+m3_assignOffT (off_t* dest, long src)
+{
+  *dest = (off_t)src;
+}
+
 void *
 m3_mmap(caddr_t addr, size_t len, int prot, int flags, int fd, int offset)
 {
