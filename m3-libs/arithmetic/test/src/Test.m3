@@ -57,7 +57,7 @@ BEGIN
   NewLine(); EVAL TestComplex();
   (*NewLine(); EVAL TestVector();*)
   (*NewLine(); EVAL TestMatrix();*)
-  (*NewLine(); EVAL TestPolynomial();*)
+  NewLine(); EVAL TestPolynomial();
   NewLine(); EVAL TestRoot();
   (*NewLine(); EVAL TestInterpolation();*)
   (*NewLine(); EVAL TestSLE();*)

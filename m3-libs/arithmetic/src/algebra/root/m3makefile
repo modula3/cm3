@@ -14,6 +14,6 @@ RootBasic("Integer32",          "Integer32PolynomialBasic",          "Integer32B
 RootBasic("BigInteger",         "BigIntegerPolynomialBasic",         "BigIntegerBasic")
 
 generic_module("RootApproximation")
-RootApproximation("Real",     "RealComplexRootBasic",     "RealComplexTrans",     "RealComplexFast",     "RealRootBasic",     "RealTrans",     "RealBasic")
-RootApproximation("LongReal", "LongRealComplexRootBasic", "LongRealComplexTrans", "LongRealComplexFast", "LongRealRootBasic", "LongRealTrans", "LongRealBasic")
-RootApproximation("Extended", "ExtendedComplexRootBasic", "ExtendedComplexTrans", "ExtendedComplexFast", "ExtendedRootBasic", "ExtendedTrans", "ExtendedBasic")
+RootApproximation("Real",     "RealComplexPolynomialBasic",     "RealComplexRootBasic",     "RealComplexTrans",     "RealComplexFast",     "RealRootBasic",     "RealTrans",     "RealBasic")
+RootApproximation("LongReal", "LongRealComplexPolynomialBasic", "LongRealComplexRootBasic", "LongRealComplexTrans", "LongRealComplexFast", "LongRealRootBasic", "LongRealTrans", "LongRealBasic")
+RootApproximation("Extended", "ExtendedComplexPolynomialBasic", "ExtendedComplexRootBasic", "ExtendedComplexTrans", "ExtendedComplexFast", "ExtendedRootBasic", "ExtendedTrans", "ExtendedBasic")

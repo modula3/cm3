@@ -15,9 +15,10 @@ IMPORT Fmt,
        LongRealComplexFast   AS C,
        LongRealComplexTrans  AS CT,
        LongRealComplexFmtLex AS CF,
-       LongRealComplexPolynomialBasic AS CP,
-       LongRealComplexRootBasic       AS Rt,
-       LongRealRootApproximation      AS RtA,
+       LongRealComplexPolynomialBasic  AS CP,
+       LongRealComplexPolynomialFmtLex AS CPF,
+       LongRealComplexRootBasic        AS Rt,
+       LongRealRootApproximation       AS RtA,
        LongRealFindZero      AS FZ,
        Integer32Basic        AS I,
        Integer32RootBasic    AS IR,
@@ -67,7 +68,7 @@ PROCEDURE TestQuadratic():BOOLEAN=
   BEGIN
     Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
                ARRAY OF TEXT{RF.Fmt(x[0]), RF.Fmt(x[1]), RF.Fmt(x[2])}));
-    rt := RtA.QuadraticReal(x);
+    rt := RtA.RealQuadratic(x);
 
     (*evaluate polynomial for the found roots*)
     xc := CP.New(2);
@@ -81,7 +82,7 @@ PROCEDURE TestQuadratic():BOOLEAN=
     xc[2] := C.T{x[2], x[2]};
     Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
                ARRAY OF TEXT{CF.Fmt(xc[0]), CF.Fmt(xc[1]), CF.Fmt(xc[2])}));
-    rt := RtA.QuadraticComplex(xc^);
+    rt := RtA.ComplexQuadratic(xc^);
     TestPolyRoots (xc, rt);
 
     xc[0] := C.T{x[0], x[0]+R.One};
@@ -89,7 +90,7 @@ PROCEDURE TestQuadratic():BOOLEAN=
     xc[2] := C.T{x[2], x[2]};
     Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
                ARRAY OF TEXT{CF.Fmt(xc[0]), CF.Fmt(xc[1]), CF.Fmt(xc[2])}));
-    rt := RtA.QuadraticComplex(xc^);
+    rt := RtA.ComplexQuadratic(xc^);
     TestPolyRoots (xc, rt);
   END TestSingle;
 
@@ -109,6 +110,59 @@ BEGIN
 
   RETURN result;
 END TestQuadratic;
+
+PROCEDURE TestRootApproximation():BOOLEAN=
+
+  PROCEDURE TestSingle (READONLY rt : Rt.RootArray) =
+  VAR
+    p:=Rt.FromRoots(rt);
+    art:REF Rt.RootArray;
+  BEGIN
+    Msg("zeros given {");
+    FOR j:=0 TO LAST(rt) DO
+      Msg(CF.Fmt(rt[j]) & ", ");
+    END;
+    Msg("}\nPolynomial: " & CPF.Fmt(p) & "\n");
+    art:=RtA.ComplexNewtonMaehli(p);
+    TestPolyRoots (p, art^);
+  END TestSingle;
+
+CONST
+  ftn = Module & "TestRootApproximation";
+VAR
+  result:=TRUE;
+BEGIN
+  Debug(1,ftn,"begin\n");
+  TestSingle(Rt.RootArray{
+               C.T{-10.0D0, R.Zero},
+               C.T{  2.0D0, R.Zero},
+               C.T{ 10.0D0, R.Zero}
+             });
+  TestSingle(Rt.RootArray{
+               C.T{-10.0D0, 1.0D0},
+               C.T{-10.0D0, 1.0D0},
+               C.T{ 10.0D0, 1.0D0},
+               C.T{ 10.0D0, 1.0D0}
+             });
+  TestSingle(Rt.RootArray{
+               C.T{ -1.0D0, 1.2D0},
+               C.T{-10.0D0, 3.7D0},
+               C.T{ 12.7D0,-5.1D0},
+               C.T{  8.2D0, 1.0D0}
+             });
+  VAR
+    rt:ARRAY [0..20] OF C.T;
+    pow:C.T:=C.One;
+  BEGIN
+    FOR j:=0 TO LAST(rt) DO
+      rt[j]:=pow;
+      pow:=C.Scale(pow,RT.Half);
+    END;
+    TestSingle(rt);
+  END;
+
+  RETURN result;
+END TestRootApproximation;
 
 CONST
   prec3Style = RF.FmtStyle{style:=Fmt.Style.Fix,prec:=3};
@@ -215,6 +269,7 @@ VAR
   result:=TRUE;
   x:FZ.Bracket;
   tol,root:R.T;
+<*FATAL Error*>
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & RF.Fmt(r1)
@@ -401,6 +456,7 @@ PROCEDURE TestPowerSeq():BOOLEAN=
   VAR
     p : IR.T;
     y : REF IR.PowerSumSeq;
+  <*FATAL Error*>
   BEGIN
     p := IR.FromPowerSumSeq(x);
     Msg(IPF.Fmt(p) & "\n");
@@ -417,6 +473,7 @@ PROCEDURE TestPowerSeq():BOOLEAN=
   VAR
     y : IR.T;
     s : REF IR.PowerSumSeq;
+  <*FATAL Error*>
   BEGIN
     s := IR.ToPowerSumSeq(x,LAST(x^));
     WritePowerSeq(s);
@@ -647,10 +704,12 @@ END TestRootOp;
 
 (*-------------------------*)
 PROCEDURE TestRoot():BOOLEAN=
-CONST ftn = Module & "TestCh09_root";
+<*UNUSED*>
+CONST ftn = Module & "TestRoot";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestQuadratic();
+  NewLine(); EVAL TestRootApproximation();
   NewLine(); EVAL TestBracketOut();
   NewLine(); EVAL TestBracketIn();
   NewLine(); EVAL TestBisection();
