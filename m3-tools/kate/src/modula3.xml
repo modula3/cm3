@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE language SYSTEM "language.dtd">
 <!-- Modula-3 syntax highlighting by Henning Thielemann <modula3@henning-thielemann.de> -->
-<language name="Modula 3" version="1.00" kateversion="2.1" section="Sources" extensions="*.i3;*.m3;*.ig;*.mg" mimetype="text/x-modula3">
+<language name="Modula-3" version="1.00" kateversion="2.1" section="Sources" extensions="*.i3;*.m3;*.ig;*.mg" mimetype="text/x-modula3">
 	<highlighting>
 		<list name="keywords">
 			<item>AND</item>
@@ -196,10 +196,7 @@
 		</itemDatas>
   </highlighting>
   <general>
-    <keywords casesensitive="1" />
-    <types casesensitive="1" />
-    <functions casesensitive="1" />
-    <constants casesensitive="1" />
+    <keywords casesensitive="true" />
     <comments>
       <comment name="multiLine" start="(*" end="*)" />
     </comments>
