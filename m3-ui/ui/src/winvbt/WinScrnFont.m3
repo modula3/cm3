@@ -11,7 +11,7 @@ UNSAFE MODULE WinScrnFont;
 IMPORT ASCII, Ctypes, Fingerprint, FloatMode, Fmt, Font, Lex, PaintPrivate, 
        Rect, Scan, ScrnFont, Text, WinDef, WinGDI, WinUser, Word;
 
-IMPORT RTIO; (* for debugging *)
+IMPORT RTIO, IO; (* for debugging *)
 CONST DEBUG = FALSE;
 
 EXCEPTION FatalError; <* FATAL FatalError *>
@@ -111,6 +111,11 @@ PROCEDURE List (<*UNUSED*> self      : Oracle;
     END;
   END List;
 
+PROCEDURE ListFonts (pat       : TEXT; 
+                     maxResults: INTEGER): REF ARRAY OF TEXT =
+  BEGIN
+    RETURN List(NIL, pat, maxResults);
+  END ListFonts;
 
 (*
  * "Match" is almost an exact copy of the "XScrnFont.FontMatch" procedure. 
@@ -224,7 +229,13 @@ PROCEDURE Lookup (<* UNUSED *> self: Oracle; name: TEXT): ScrnFont.T
  *****************************************************************************)
 
 CONST 
-  Preferred = "-*-Courier New-Normal-R-*-*-*-100-*-*-P-*-iso8859-ANSI";
+  Preferred = ARRAY [0..3] OF TEXT {
+    "-*-Courier New-Normal-R-*-*-*-120-*-*-P-*-iso8859-ANSI",
+    "-*-Courier New-Normal-R-*-*-*-100-*-*-P-*-iso8859-ANSI",
+    "-*-Arial-Normal-R-*-*-*-120-*-*-P-*-iso8859-ANSI",
+    "-*-Arial-*-*-*-*-*-*-*-*-*-*-iso8859-ANSI"
+  };
+
   (* was "-*-Arial-Normal-R-*-*-*-120-*-*-P-*-iso8859-ANSI" *)
 
 
@@ -233,24 +244,21 @@ PROCEDURE BuiltIn (self: Oracle; id: Font.Predefined): ScrnFont.T =
     IF id # Font.BuiltIn.fnt THEN 
       RAISE FatalError 
     END;
-    TRY
-      (* 
-       * Once "list" is implemented, we should allow for an array of 
-       * preferred fonts.
-       *)
-      RETURN Lookup (self, Preferred);
-    EXCEPT
-    | ScrnFont.Failure =>
-      RETURN NEW(ScrnFont.T, 
-                 id := 0,
-                 metrics := NEW(NullMetrics,
-                                minBounds := ScrnFont.CharMetric{0,Rect.Empty},
-                                maxBounds := ScrnFont.CharMetric{0,Rect.Empty},
-                                firstChar := 0, 
-                                lastChar := 0,
-                                selfClearing := TRUE, 
-                                charMetrics := NIL));
+    FOR i := 0 TO LAST(Preferred) DO
+      TRY
+        RETURN Lookup (self, Preferred[i]);
+      EXCEPT
+      | ScrnFont.Failure => (* skip *)
+      END;
     END;
+    RETURN NEW(ScrnFont.T, id := 0,
+               metrics := NEW(NullMetrics,
+                              minBounds := ScrnFont.CharMetric{0,Rect.Empty},
+                              maxBounds := ScrnFont.CharMetric{0,Rect.Empty},
+                              firstChar := 0, 
+                              lastChar := 0,
+                              selfClearing := TRUE, 
+                              charMetrics := NIL));
   END BuiltIn;
 
 
@@ -307,7 +315,14 @@ PROCEDURE DetermineFontNames () =
       (* get the logical pixel size for the display, so we can scale fonts later *)
       LogicalPixelsPerVertInch := WinGDI.GetDeviceCaps(er.hdc, WinGDI.LOGPIXELSY);
       FontScaleFactor := - FLOAT (LogicalPixelsPerVertInch) / 720.0;
-
+      IF DEBUG THEN
+        IO.Put("LPPVI: ");
+        IO.PutInt(LogicalPixelsPerVertInch);
+        IO.Put("\n");
+        IO.Put("FontScaleFactor: ");
+        IO.PutReal(FontScaleFactor);
+        IO.Put("\n");
+      END;
       (* First, count how many fonts are installed *)
       EVAL WinGDI.EnumFontFamilies(er.hdc, 
                                    NIL,
@@ -421,7 +436,7 @@ PROCEDURE LogFontToName (READONLY lf: WinGDI.LOGFONT): TEXT =
   END LogFontToName;
 
 CONST
-  Fixed = "-*-Courier New-Normal-R-*-*-*-120-*-*-P-*-iso8859-ANSI";
+  Fixed = "-*-Courier New-Normal-R-*-*-*-120-*-*-M-*-iso8859-ANSI";
 
 PROCEDURE NameToLogFont (name: TEXT): WinGDI.LOGFONT RAISES {BadFontName} =
   VAR
@@ -863,7 +878,13 @@ PROCEDURE HeightToXPoints (<*UNUSED*> logicalHeight: INTEGER;
 
 PROCEDURE XPointsToHeight (pointSize: INTEGER): INTEGER =
   BEGIN
-    RETURN ROUND (FLOAT (pointSize) * FontScaleFactor);
+    WITH pts =  ROUND (FLOAT (pointSize) * FontScaleFactor) DO
+      IF pointSize > 30 THEN
+        RETURN pts;
+      ELSE
+        RETURN pts * 10;
+      END;
+    END;
   END XPointsToHeight;
 
 PROCEDURE ToPointSize (<*UNUSED*> READONLY lf: WinGDI.LOGFONT): TEXT =
