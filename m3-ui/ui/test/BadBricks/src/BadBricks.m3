@@ -721,6 +721,7 @@ PROCEDURE GameMenu(): HVSplit.T =
     RETURN menu;
   END GameMenu;
 
+<*UNUSED*>
 PROCEDURE SensorMenu(): HVSplit.T =
   VAR menu: HVSplit.T;
   BEGIN
@@ -732,6 +733,7 @@ PROCEDURE SensorMenu(): HVSplit.T =
     RETURN menu;
   END SensorMenu;
 
+<*UNUSED*>
 PROCEDURE Deadlock () =
   VAR mu := NEW (MUTEX);
   BEGIN

@@ -14,8 +14,6 @@ IMPORT VBT, Trestle, Point, Rect, Path, ButtonVBT, PaintOp,
   Region, HVSplit, TextVBT, Axis, Pixmap, Filter, Text,
   TrestleComm;
 
-FROM VBT IMPORT ClickType;
-
 <*FATAL Path.Malformed, TrestleComm.Failure*>
 
 TYPE Elem = RECORD 

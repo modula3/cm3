@@ -9,7 +9,7 @@
 
 MODULE Track EXPORTS Main;
 
-IMPORT VBT, Trestle, TextVBT, Fmt, Wr, Stdio;
+IMPORT VBT, Trestle, TextVBT, Fmt, TrestleComm;
 
 TYPE
   TrackVBT = TextVBT.T OBJECT 
@@ -57,7 +57,9 @@ PROCEDURE Position (v: TrackVBT; READONLY cd: VBT.PositionRec) =
     VBT.SetCage(v, VBT.CageFromPosition(cd.cp))
   END Position;
 
-VAR v := NEW(TrackVBT).init(); BEGIN
+VAR v := NEW(TrackVBT).init();
+<*FATAL TrestleComm.Failure*>
+BEGIN
   Trestle.Install(v);
   Trestle.AwaitDelete(v)
 END Track.
