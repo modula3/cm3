@@ -1,4 +1,4 @@
-GENERIC MODULE Convolution(P, VS, C, CV, FFT);
+GENERIC MODULE Convolution(R,P, VS, C, CV, FFT);
 
 
 (* One can improve performance a lot here: Eliminate the monolithic Fourier
@@ -25,7 +25,11 @@ PROCEDURE HandleFourierInit (h: HandleFourier; x: P.T; width: Width; ):
     number  := xNumber + width - 1;
     padded  := NEW(P.T, number);
   BEGIN
-    SUBARRAY(padded^, 0, xNumber) := x^;
+    (* After two discrete Fourier transforms we have to scale the resulting
+       signal by the size of the signal data.  We do the scaling now once
+       instead of scaling after each synthesis transformation. *)
+    SUBARRAY(padded^, 0, xNumber) :=
+      P.Scale(x, R.One / R.FromInteger(number))^;
     VS.Clear(SUBARRAY(padded^, xNumber, number - xNumber));
     h.xFT := FFT.DFTR2C1D(padded^);
     h.number := number;

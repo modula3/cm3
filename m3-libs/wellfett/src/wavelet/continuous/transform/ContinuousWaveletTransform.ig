@@ -13,8 +13,9 @@ TYPE
    continuous wavelet transform. *)
 
 
-PROCEDURE DiscretizeWavelet (wavelet: Wavelet; scale: R.T; width: Width; ):
-  CV.T;
+PROCEDURE DiscretizeWavelet (wavelet   : Wavelet;
+                             scale, amp: R.T;
+                             width     : Width;   ): CV.T;
 (* Helper function for discretizing wavelet for analysis and synthesis. *)
 
 

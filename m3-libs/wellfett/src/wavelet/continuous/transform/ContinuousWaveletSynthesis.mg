@@ -1,4 +1,4 @@
-GENERIC MODULE ContinuousWaveletSynthesis(R, V, S, Conv, CWT);
+GENERIC MODULE ContinuousWaveletSynthesis(R, RT, V, S, Conv, CWT);
 
 FROM CWT IMPORT Wavelet, Width;
 
@@ -19,8 +19,21 @@ PROCEDURE Do (READONLY w      : CWT.TBody;
   VAR synthesis := New(wavelet, width, conv);
   BEGIN
     <* ASSERT NUMBER(w) = NUMBER(scales), "Number of scales must match" *>
+    <* ASSERT NUMBER(scales) >= 2,
+                "You need at least scales, otherwise differencing won't work." *>
     FOR i := FIRST(scales) TO LAST(scales) DO
-      PutScale(synthesis, w[i], scales[i]);
+      VAR dif: R.T;
+      BEGIN
+        IF i = FIRST(scales) THEN
+          dif := scales[i + 1] - scales[i];
+        ELSIF i = LAST(scales) THEN
+          dif := scales[i] - scales[i - 1];
+        ELSE
+          dif := R.Half * (scales[i + 1] - scales[i - 1]);
+        END;
+        PutScale(synthesis, w[i], scales[i],
+                 dif / (scales[i] * RT.SqRt(scales[i])));
+      END;
     END;
     RETURN Finish(synthesis);
   END Do;
@@ -41,9 +54,9 @@ PROCEDURE New (wavelet: Wavelet; width: Width; conv: Conv.Handle := NIL; ):
     RETURN h;
   END New;
 
-PROCEDURE PutScale (h: T; w: S.T; scale: R.T; ) =
+PROCEDURE PutScale (h: T; w: S.T; scale, amp: R.T; ) =
   VAR
-    wav := CWT.DiscretizeWavelet(h.wavelet, scale, h.width);
+    wav := CWT.DiscretizeWavelet(h.wavelet, scale, amp, h.width);
     y   := h.conv.init(w.getData(), h.width).convolve(wav);
     ys  := NEW(S.T).fromVector(y, w.getFirst() - h.width DIV 2);
   BEGIN

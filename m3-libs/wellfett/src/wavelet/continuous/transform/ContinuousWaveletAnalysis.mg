@@ -1,4 +1,4 @@
-GENERIC MODULE ContinuousWaveletAnalysis(R, V, S, Conv, CWT);
+GENERIC MODULE ContinuousWaveletAnalysis(R, RT, V, S, Conv, CWT);
 
 FROM CWT IMPORT Wavelet, Width;
 
@@ -21,7 +21,7 @@ PROCEDURE Do (         x      : S.T;
     analysis := New(x, wavelet, width, conv);
   BEGIN
     FOR i := FIRST(scales) TO LAST(scales) DO
-      y[i] := GetScale(analysis, scales[i]);
+      y[i] := GetScale(analysis, scales[i], R.One / RT.SqRt(scales[i]));
     END;
     RETURN y;
   END Do;
@@ -44,8 +44,8 @@ PROCEDURE New (x      : S.T;
     RETURN h;
   END New;
 
-PROCEDURE GetScale (h: T; scale: R.T; ): S.T =
-  VAR wav := CWT.DiscretizeWavelet(h.wavelet, scale, h.width);
+PROCEDURE GetScale (h: T; scale, amp: R.T; ): S.T =
+  VAR wav := CWT.DiscretizeWavelet(h.wavelet, scale, amp, h.width);
   BEGIN
     RETURN
       NEW(S.T).fromVector(h.conv.convolve(wav), h.first - h.width DIV 2);

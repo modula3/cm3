@@ -1,5 +1,6 @@
 GENERIC MODULE ComplexConvolution(CP, CVS, C, CV, FFT);
 
+IMPORT Arithmetic AS Arith;
 
 (* One can improve performance a lot here: Eliminate the monolithic Fourier
    transforms by using overlapping blocks for convolution.  Maybe FFTW
@@ -24,8 +25,14 @@ PROCEDURE HandleFourierInit (h: HandleFourier; x: CP.T; width: Width; ):
     xNumber := NUMBER(x^);
     number  := xNumber + width - 1;
     padded  := NEW(CP.T, number);
+  <* FATAL Arith.Error *>        (* zero data size is a programming
+                                    error *)
   BEGIN
-    SUBARRAY(padded^, 0, xNumber) := x^;
+    (* After two discrete Fourier transforms we have to scale the resulting
+       signal by the size of the signal data.  We do the scaling now once
+       instead of scaling after each synthesis transformation. *)
+    SUBARRAY(padded^, 0, xNumber) :=
+      CP.Scale(x, C.Rec(C.FromInteger(number)))^;
     CVS.Clear(SUBARRAY(padded^, xNumber, number - xNumber));
     h.xFT := FFT.DFTC2C1D(padded^);
     h.number := number;

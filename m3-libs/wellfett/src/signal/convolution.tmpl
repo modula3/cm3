@@ -17,7 +17,7 @@ readonly proc Convolution (nm, stem, impl) is
 
   build_generic_intf (base, "Convolution", [vector], VISIBLE)
   build_generic_impl (base, "Convolution",
-     [poly, vsupport, complex, cvector, fourier])
+     [field, poly, vsupport, complex, cvector, fourier])
 
   build_generic_intf (cbase, "Convolution", [cvector], VISIBLE)
   build_generic_impl (cbase, "ComplexConvolution",
