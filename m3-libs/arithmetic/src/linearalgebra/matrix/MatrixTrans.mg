@@ -32,9 +32,9 @@ VAR
   xax:T;
 BEGIN
   IF NUMBER(x^)<NUMBER(x[0]) THEN
-    xax:=M.MMA(x);
+    xax:=M.MulMMA(x);
   ELSE
-    xax:=M.MAM(x);
+    xax:=M.MulMAM(x);
   END;
   RETURN RT.SqRt(Eigen.SquareMethod(xax).value);
 END Norm2;

@@ -253,7 +253,7 @@ PROCEDURE Transpose (x: T): T =
   END Transpose;
 
 (*-----------------*)
-PROCEDURE MAM (x: T): T =
+PROCEDURE MulMAM (x: T): T =
   VAR z := New(NUMBER(x[0]), NUMBER(x[0]));
   BEGIN
     FOR i := 0 TO LAST(x[0]) DO
@@ -267,10 +267,10 @@ PROCEDURE MAM (x: T): T =
       END;
     END;
     RETURN z;
-  END MAM;
+  END MulMAM;
 
 (*-----------------*)
-PROCEDURE MMA (x: T): T =
+PROCEDURE MulMMA (x: T): T =
   VAR z := New(NUMBER(x^), NUMBER(x^));
   BEGIN
     FOR i := 0 TO LAST(x^) DO
@@ -284,7 +284,7 @@ PROCEDURE MMA (x: T): T =
       END;
     END;
     RETURN z;
-  END MMA;
+  END MulMMA;
 
 (*-----------------*)
 PROCEDURE Trace (x: T): R.T =

@@ -51,8 +51,8 @@ PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Error}; (*A * b*)
 PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Error}; (*A^T * b or b^T*A *)
 PROCEDURE Transpose (x: T): T;   (*x^T*)
 CONST Adjoint = Transpose;
-PROCEDURE MMA (x: T): T;         (*x*x^**)
-PROCEDURE MAM (x: T): T;         (*x^**x*)
+PROCEDURE MulMMA (x: T): T;         (*x*x^**)
+PROCEDURE MulMAM (x: T): T;         (*x^**x*)
 
 PROCEDURE Trace (x: T): R.T;     (*sum of the diagonal elements*)
 (*PROCEDURE Determinant(x:T):R.T;*)
