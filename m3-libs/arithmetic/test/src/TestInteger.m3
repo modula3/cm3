@@ -9,6 +9,7 @@ Abstract:  Tests for Integer module.
 IMPORT Cardinal32Basic  AS Cd,
        Cardinal32GCD    AS CdG,
        Cardinal32FmtLex AS CdF,
+       Cardinal32IntegerPower AS PowCd,
        IntegerTrans     AS IT,
        LongRealBasic    AS R,
        LongRealTrans    AS RT,
@@ -49,11 +50,15 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  FOR i:=0 TO 100 BY 7 DO
-    FOR j:=0 TO 100 BY 13 DO
-      Msg("GCD(" & CdF.Fmt(i) & "," & CdF.Fmt(j) & ")="
-        & CdF.Fmt(CdG.GCD(i,j))
-        & "\n");
+  FOR i:=0 TO 500 DO
+    FOR j:=0 TO 500 DO
+(*
+      Msg(Fmt.FN("GCD(%s,%s) = %s =?= %s\n",
+        ARRAY OF TEXT{CdF.Fmt(i), CdF.Fmt(j),
+                      CdF.Fmt(CdG.GCD(i,j)),
+                      CdF.Fmt(Cd. GCD(i,j))}));
+*)
+      <*ASSERT CdG.GCD(i,j)=Cd.GCD(i,j)*>
     END;
   END;
   RETURN result;
@@ -66,10 +71,11 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  FOR i:=46500 TO 47500  DO
+  FOR i:=46000 TO 49000  DO
     IF NT.IsPrime(i) THEN
       Msg(" " & CdF.Fmt(i));
     END;
+    <*ASSERT NT.IsPrime(i)=(NUMBER(NT.Factor(i)^)=1)*>
   END;
   Msg("\n");
   RETURN result;
@@ -80,16 +86,35 @@ CONST
   ftn = Module & "TestFactor";
 VAR
   result:=TRUE;
+(*
+  pl:NT.Array;
+*)
   p:NT.PowerArray;
+  n:Cd.T;
 BEGIN
   Debug(1,ftn,"begin\n");
-  FOR i:=1111 TO 100000 BY 4321 DO
+  FOR i:=1111 TO 1000000 BY 4321 DO
+(*
     Msg(CdF.Fmt(i) & ": ");
+*)
+(*
+    pl:=NT.Factor(i);
+    FOR j:=0 TO LAST(pl^) DO
+      Msg(CdF.Fmt(pl[j]) & " ");
+    END;
+*)
+    n:=Cd.One;
     p:=NT.FactorPower(i);
     FOR j:=0 TO LAST(p^) DO
+(*
       Msg(CdF.Fmt(p[j].p) & "^" & CdF.Fmt(p[j].exp) & " ");
+*)
+      n:=Cd.Mul(n,PowCd.Power(p[j].p,p[j].exp));
     END;
+    <*ASSERT n=i*>
+(*
     Msg("\n");
+*)
   END;
   RETURN result;
 END TestFactor;

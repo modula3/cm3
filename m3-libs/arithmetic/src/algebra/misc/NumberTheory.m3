@@ -15,8 +15,6 @@ CONST Module = "NumberTheory.";
 (* Factoring                  *)
 (*============================*)
 
-TYPE
-  
 
 (*------------------------*)
 PROCEDURE FactorPrivate (n:T;VAR pl:ARRAY PowerRange OF T) : PowerRange =
@@ -105,8 +103,9 @@ BEGIN
         ELSE
           INC(j);
           res[j].p   := pl[i];
-          res[j].exp := 0;
+          res[j].exp := 1;
         END;
+        lastfac:=pl[i];
       END;
     END;
     RETURN res;
