@@ -22,6 +22,7 @@ implementation("TestChebyshev")
 implementation("TestUnit")
 implementation("TestLapack")
 implementation("TestTex")
+implementation("TestFmtLex")
 implementation("TestFunctional")
 
 Module("Test")
