@@ -187,16 +187,14 @@ PROCEDURE CubicHermite(
 BEGIN
   IF x<=xa[1] THEN
     RETURN InterpolateQuadratic(SUBARRAY(xa,0,3),SUBARRAY(ya,0,3));
-  ELSIF x>=xa[LAST(xa)-1] THEN
-    RETURN InterpolateQuadratic(SUBARRAY(xa,LAST(xa)-2,3),SUBARRAY(xa,LAST(xa)-2,3));
   ELSE
-    FOR j:=1 TO LAST(xa)-2 DO
-      IF (*xa[j]<x AND*) x<=xa[j+1] THEN
-        RETURN InterpolatePiece(SUBARRAY(xa,j-1,4),SUBARRAY(ya,j-1,4));
+    FOR j:=2 TO LAST(xa)-1 DO
+      IF (*xa[j-1]<x AND*) x<=xa[j] THEN
+        RETURN InterpolatePiece(SUBARRAY(xa,j-2,4),SUBARRAY(ya,j-2,4));
       END;
     END;
+    RETURN InterpolateQuadratic(SUBARRAY(xa,LAST(xa)-2,3),SUBARRAY(xa,LAST(xa)-2,3));
   END;
-  <*ASSERT FALSE*>
 END CubicHermite;
 
 
