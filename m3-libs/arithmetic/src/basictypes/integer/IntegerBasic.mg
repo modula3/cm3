@@ -28,8 +28,18 @@ PROCEDURE Div(x,y:T):T RAISES {Error} =
   BEGIN
     IF y=0 THEN RAISE Error(Err.divide_by_zero) END;
     IF x MOD y # 0 THEN RAISE Error(Err.indivisible) END;
-    RETURN x DIV y
+    RETURN x DIV y;
   END Div;
+PROCEDURE Rec(x:T):T RAISES {Error} =
+  BEGIN
+    CASE x OF
+      | 0 => RAISE Error(Err.divide_by_zero);
+      | 1 => RETURN 1;
+    ELSE
+      RAISE Error(Err.indivisible);
+    END;
+  END Rec;
+
 PROCEDURE Mod(x,y:T):T RAISES {Error} =
   BEGIN
     IF y=0 THEN RAISE Error(Err.divide_by_zero) END;

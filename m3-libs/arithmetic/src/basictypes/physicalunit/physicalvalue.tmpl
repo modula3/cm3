@@ -1,0 +1,16 @@
+%
+%  Quake functions to instantiate operations on generic physical entities.
+%
+
+readonly proc PhysicalValue (nm, field) is
+  local basic = nm & "PhysicalValue"
+  build_generic_intf (basic, "PhysicalValue", [field], VISIBLE)
+  build_generic_impl (basic, "PhysicalValue", [field])
+end
+
+
+readonly proc PhysicalValueFmtLex (nm, cfield, rfield, rfmt) is
+  local basic = nm & "PhysicalValueFmtLex"
+  build_generic_intf (basic, "PhysicalValueFmtLex", [cfield, rfmt], VISIBLE)
+  build_generic_impl (basic, "PhysicalValueFmtLex", [rfield, rfmt])
+end

@@ -63,27 +63,33 @@ PROCEDURE IsZero (x : T) : BOOLEAN =
     RETURN x.size()=0;
   END IsZero;
 
+PROCEDURE Put (x : T; unit : INTEGER; exp : ExpType) =
+  BEGIN
+    IF exp#0 THEN
+      VAR
+        success:=x.put(unit,exp);
+      BEGIN
+        <*ASSERT success*>
+      END;
+    END;
+  END Put;
+
 PROCEDURE Add  (x, y : T) : T =
   VAR
     z := New();
     it := x.iterate();
     unit,
     xexp,yexp : ExpType;
-    success:BOOLEAN;
   BEGIN
     WHILE it.next(unit,xexp) DO
-      IF y.get(unit,yexp) THEN
-        success:=z.put(unit,xexp+yexp);
-      ELSE
-        success:=z.put(unit,xexp);
-      END;
-      <*ASSERT success*>
+      yexp:=0;
+      EVAL y.get(unit,yexp);
+      Put(z,unit,xexp+yexp);
     END;
     it := y.iterate();
     WHILE it.next(unit,yexp) DO
       IF NOT x.get(unit,xexp) THEN
-        success:=z.put(unit,yexp);
-        <*ASSERT success*>
+        Put(z,unit,yexp);
       END;
     END;
     RETURN z;
@@ -95,21 +101,16 @@ PROCEDURE Sub  (x, y : T) : T =
     it := x.iterate();
     unit,
     xexp,yexp : ExpType;
-    success:BOOLEAN;
   BEGIN
     WHILE it.next(unit,xexp) DO
-      IF y.get(unit,yexp) THEN
-        success:=z.put(unit,xexp-yexp);
-      ELSE
-        success:=z.put(unit,xexp);
-      END;
-      <*ASSERT success*>
+      yexp:=0;
+      EVAL y.get(unit,yexp);
+      Put(z,unit,xexp-yexp);
     END;
     it := y.iterate();
     WHILE it.next(unit,yexp) DO
       IF NOT x.get(unit,xexp) THEN
-        success:=z.put(unit,-yexp);
-        <*ASSERT success*>
+        Put(z,unit,-yexp);
       END;
     END;
     RETURN z;
@@ -136,9 +137,11 @@ PROCEDURE Scale     (x : T; y : ExpType) : T =
     unit,exp : ExpType;
     success:BOOLEAN;
   BEGIN
-    WHILE it.next(unit,exp) DO
-      success:=z.put(unit,exp*y);
-      <*ASSERT success*>
+    IF y#0 THEN
+      WHILE it.next(unit,exp) DO
+        success:=z.put(unit,exp*y);
+        <*ASSERT success*>
+      END;
     END;
     RETURN z;
   END Scale;
@@ -163,7 +166,6 @@ PROCEDURE ScaleReal (x : T; y : R.T) : T RAISES {Error} =
     it := x.iterate();
     unit,xexp,zexp : ExpType;
     zexpr : R.T;
-    success:BOOLEAN;
   BEGIN
     WHILE it.next(unit,xexp) DO
       zexpr := FLOAT(xexp,R.T) * y;
@@ -171,8 +173,7 @@ PROCEDURE ScaleReal (x : T; y : R.T) : T RAISES {Error} =
       IF ABS(FLOAT(zexp,R.T)-zexpr) > RT.Eps THEN
         RAISE Error(Err.indivisible);
       END;
-      success:=z.put(unit,zexp);
-      <*ASSERT success*>
+      Put(z,unit,zexp);
     END;
     RETURN z;
   END ScaleReal;

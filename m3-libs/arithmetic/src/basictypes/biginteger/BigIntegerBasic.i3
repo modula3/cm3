@@ -55,6 +55,7 @@ PROCEDURE Compare (READONLY x, y : T) : [-1..1];
 
 PROCEDURE Mul (READONLY x, y : T) : T;
 PROCEDURE Div (READONLY x, y : T) : T RAISES {Error};
+PROCEDURE Rec (READONLY x : T) : T RAISES {Error}; 
 PROCEDURE Mod (READONLY x, y : T) : T RAISES {Error};
 PROCEDURE DivMod (READONLY x, y : T; VAR r : T) : T RAISES {Error};
 
