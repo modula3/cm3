@@ -7,13 +7,16 @@ Abstract:  Tests for XYZ module.
 *)
 
 IMPORT Fmt;
-IMPORT LongRealBasic          AS R,
-       LongRealVectorBasic    AS V,
-       LongRealVectorFmtLex   AS VF,
-       LongRealMatrixFast     AS M,
-       LongRealMatrixLapack   AS ML,
-       LongRealMatrixFmtLex   AS MF,
-       LongRealCharPolynomial AS MCP;
+IMPORT LongRealBasic              AS R,
+       LongRealVectorBasic        AS V,
+       LongRealComplexVectorBasic AS CV,
+       LongRealMatrixFast         AS M,
+       LongRealEigenSystem        AS ES,
+       LongRealMatrixLapack       AS ML,
+       LongRealCharPolynomial     AS MCP,
+       LongRealComplexFmtLex      AS CF,
+       LongRealVectorFmtLex       AS VF,
+       LongRealMatrixFmtLex       AS MF;
 
 (*=======================*)
 CONST
@@ -43,9 +46,6 @@ PROCEDURE TestLinAlg():BOOLEAN=
 CONST
   ftn = Module & "TestLinAlg";
 
-CONST
-  size = 3;
-
 VAR
   result:=TRUE;
   (*A:=MCP.CompanionMatrix(V.FromArray(ARRAY OF R.T{1.0D0,3.0D0,3.0D0,1.0D0}));*)
@@ -53,34 +53,19 @@ VAR
   (*
   A:=NEW(REF ARRAY OF ARRAY OF LONGREAL,3,3);
   *)
-  Atmp:=M.Transpose(A);
-  eigRe:=V.New(3);
-  eigIm:=V.New(3);
-  sdim:INTEGER;
-  worksize:=MAX(1,3*size);
-  work:=V.New(worksize);
-  vs:LONGREAL;
-  bwork:=NEW(REF ARRAY OF BOOLEAN,size);
-  success:INTEGER;
+  ev:ES.EV;
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  Msg(MF.Fmt(Atmp) & "\n");
-
-  ML.GEES ('N', 'N', NIL, 3, Atmp[0,0], 3, sdim, eigRe[0], eigIm[0],
-           vs, 1, work[0], worksize, bwork[0], success);
-
-  Msg(MF.Fmt(Atmp) & "\n");
-  A:=M.Transpose(Atmp);
   Msg(MF.Fmt(A) & "\n");
 
-  FOR j:=0 TO LAST(eigRe^) DO
-(*
-    Msg(Fmt.FN("%s: %s + i %s\n", ARRAY OF TEXT
-         {Fmt.Int(j), Fmt.LongReal(eigRe[j]), Fmt.LongReal(eigIm[j])}));
-*)
-    Msg(Fmt.FN("%s: %s + i %s\n", ARRAY OF TEXT
-         {Fmt.Int(j), Fmt.LongReal(eigRe[j]), Fmt.LongReal(eigIm[j])}));
+  ev := ES.EigenValuesGen(A);
+
+  Msg(MF.Fmt(ev.upperTri) & "\n");
+
+  FOR j:=0 TO LAST(ev.eigenvalues^) DO
+    Msg(Fmt.FN("%s: %s\n", ARRAY OF TEXT
+         {Fmt.Int(j), CF.Fmt(ev.eigenvalues[j])}));
   END;
 
   RETURN result;

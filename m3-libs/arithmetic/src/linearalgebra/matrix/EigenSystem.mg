@@ -11,7 +11,7 @@
 
    *)
 
-GENERIC MODULE EigenSystem(R,RT,V,M);
+GENERIC MODULE EigenSystem(R,RT,C,V,CV,M,ML);
 (*
 IMPORT Wr, Stdio, IO, Fmt,
        LongRealVectorFmtLex AS VF,
@@ -144,6 +144,48 @@ IO.Put(Fmt.FN("err %s, tol %s, maxcol %s, v2 %s, x2 %s, vx %s,\ndx %s, v %s, x %
        lambda*v with respect to the Euclidean norm*)
     RETURN R.Div(vx,v2);
   END SquareMethod;
+
+
+PROCEDURE EigenValuesGen (A: M.T; flags:= EVGenFlagSet{}): EV RAISES {Error} =
+  VAR
+    eigRe:=V.New(NUMBER(A^));
+    eigIm:=V.New(NUMBER(A^));
+    job:CHAR;
+    sdim:INTEGER;
+    work:=V.New(MAX(1,3*NUMBER(A^)));
+    bwork:=NEW(REF ARRAY OF BOOLEAN,NUMBER(A^));
+    success:INTEGER;
+    result:EV;
+  BEGIN
+    IF NUMBER(A^) # NUMBER(A[0]) THEN
+      RAISE Error(Err.bad_size);
+    END;
+
+    result.eigenvalues:=CV.New(NUMBER(A^));
+
+    IF EVGenFlag.schurVectors IN flags THEN
+      job:='V';
+      result.schur:=M.New(NUMBER(A^),NUMBER(A[0]));
+    ELSE
+      job:='N';
+      result.schur:=M.New(1,1);
+    END;
+
+    A := M.Transpose(A);
+    ML.GEES (job, 'N', NIL, NUMBER(A^), A[0,0], NUMBER(A^),
+             sdim, eigRe[0], eigIm[0],
+             result.schur[0,0], NUMBER(result.schur^),
+	     work[0], NUMBER(work^), bwork[0], success);
+
+    result.upperTri := M.Transpose(A);
+
+    FOR j:=0 TO LAST(eigRe^) DO
+      result.eigenvalues[j] := C.T{eigRe[j],eigIm[j]};
+    END;
+
+    RETURN result;
+  END EigenValuesGen;
+
 
 
 CONST tol = RT.MinPos / RT.MinPosNormal;
