@@ -45,6 +45,7 @@ CONST
   Tiny = R.MinPos*FLOAT(1000.0,T); (*nearly 0.0*)
   Huge = R.MaxFinite/FLOAT(1000.0,T); (*nearly infinite*)
   (*Eps  = Pow(FLOAT(R.Base,T),-FLOAT(R.Precision,T));  (*approx relative machine precision*)  *)
+  (*Eps  = LongFloat.Scalb(One,-R.Precision);*)
 
 (*============================*)
 (* Handy collectors           *)
@@ -88,26 +89,6 @@ TYPE Array = REF ARRAY OF T;
 (*============================*)
 
 <*INLINE*> PROCEDURE Sgn   (x: T): T; (*returns One if x is positive, MinusOne if x is negative, Zero if x is zero *)
-
-
-(*---- Floating point representations ----*)
-
-<*INLINE*> PROCEDURE FrExp (x: T;  VAR exp: INTEGER): T;
-(* returns a value y and sets exp such that x = y * 2^exp,
-    where ABS(X) is in the interval [0.5, 1). *)
-
-<*INLINE*> PROCEDURE LdExp (x: T; exp: INTEGER): T;
-(* returns x * 2^exp. *)
-
-<*INLINE*> PROCEDURE ModF (x: T; VAR(*OUT*) i: T): T;
-(* splits the argument "x" into an integer part "i" and a fractional part "f"
-   such that "f + i = x" and such that "f" and "i" both have the same sign as
-   "x", and returns "f". Although "i" is a LONGREAL, it is set to an integral
-   value. *)
-
-(* Should be a constant in LongReal.i3 etc. ! *)
-VAR
-  Eps : T;  (*approx relative machine precision*)
 
 
 (*==========================*)
