@@ -2,7 +2,6 @@ MODULE TestMatchWavelet;
 
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
-IMPORT LongRealIntegerPower AS RIntPow;
 IMPORT Integer32IntegerPower AS IIntPow;
 
 IMPORT LongRealVectorFast AS V;
@@ -321,13 +320,29 @@ PROCEDURE ExtendDervTarget (READONLY x        : Deriv2;
                   M.FromScalar(V.Inner(target, target) * R.Two)}})};
   END ExtendDervTarget;
 
+PROCEDURE TranslatesBasis (generatorvan: S.T;
+                           first       : INTEGER;
+                           twonit, size: CARDINAL;
+                           translates  : CARDINAL  ): M.T =
+  VAR basis := M.New(2 * translates, size);
+  BEGIN
+    FOR j := -translates TO translates - 1 DO
+      generatorvan.clipToArray(first - twonit * j, basis[j + translates]);
+      (*
+            targetCor[j + translates] :=
+              VS.Inner(basis[j + translates], targetVec^);
+      *)
+    END;
+    RETURN basis;
+  END TranslatesBasis;
+
 TYPE
   MatchCoef = RECORD
                 lift     : S.T;
                 targetAmp: R.T;  (*coefficient of the target function*)
               END;
 
-PROCEDURE MatchPatternSmooth (target                : S.T;
+PROCEDURE MatchPatternSmooth (wavelet               : S.T;
                               hdual, gdual, hdualvan: S.T;
                               levels, translates    : CARDINAL;
                               smoothWeight          : R.T;      ):
@@ -339,7 +354,8 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
       delta = 1.0D-8;
       cf    = 0.7D0;
     VAR
-      (*this array length can only be used if a total of 6 translates is considered*)
+      (*this array length can only be used if a total of 6 translates is
+         considered*)
       y := NEW(S.T).fromArray(
              ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
       der := AddDerv(
@@ -373,23 +389,9 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
       PutDervDif(extder, extderArr^, delta);
     END CheckDerivatives;
 
-
-  PROCEDURE TranslatesBasis (): M.T =
-    VAR basis := M.New(2 * translates, size);
-    BEGIN
-      FOR j := -translates TO translates - 1 DO
-        generatorvan.clipToArray(first - twonit * j, basis[j + translates]);
-        (*
-              targetCor[j + translates] :=
-                VS.Inner(basis[j + translates], targetVec^);
-        *)
-      END;
-      RETURN basis;
-    END TranslatesBasis;
-
   VAR
     generatorvan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
-    wavelet := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
+    target := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
@@ -406,7 +408,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
     (* the target vector might have been clipped, thus
        V.Inner(target.getData(),target.getData()) may be different *)
 
-    basis      := TranslatesBasis();
+    basis := TranslatesBasis(generatorvan, first, twonit, size, translates);
     normalMat  := M.MMA(basis);
     targetCor  := M.MulV(basis, targetVec);
     waveletCor := M.MulV(basis, waveletVec);
@@ -422,8 +424,8 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
       y      := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, yfirst);
       cf     := R.One;
     (*
-          y := V.FromVectorArray(
-                 ARRAY OF V.T{V.ArithSeq(2 * translates), V.FromScalar(R.One)});
+      y := V.FromVectorArray(
+             ARRAY OF V.T{V.ArithSeq(2 * translates), V.FromScalar(R.One)});
     *)
     BEGIN
       FOR j := 0 TO 100 DO
@@ -441,10 +443,10 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
             RETURN MatchCoef{y, cf};
           END;
           (*
-                    IO.Put(Fmt.FN("derivatives %s, %s, %s\n",
-                                  ARRAY OF
-                                    TEXT{RF.Fmt(der.zeroth), VF.Fmt(der.first),
-                                         MF.Fmt(der.second)}));
+            IO.Put(Fmt.FN("derivatives %s, %s, %s\n",
+                          ARRAY OF
+                            TEXT{RF.Fmt(der.zeroth), VF.Fmt(der.first),
+                                 MF.Fmt(der.second)}));
           *)
           VAR
             vec := LA.LeastSquaresGen(
@@ -472,38 +474,49 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     ymin = -1.5D0;
     ymax = 1.5D0;
   VAR
-    hdual := BSpl.GeneratorMask(smooth);
-    gdual := BSpl.WaveletMask(smooth, vanishing);
+    hdual  := BSpl.GeneratorMask(smooth);
+    gdual0 := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
                                           ARRAY OF R.T{1.0D0, -1.0D0}, -1),
                                  vanishing);
-    mc := MatchPatternSmooth(target, hdual, gdual, hdualvan, levels,
+    mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, levels,
                              translates, smoothWeight);
-    s        := mc.lift;
-    gdualopt := gdual.superpose(s.upsample(2).convolve(hdualvan).scale(-8.0D0));
+    s     := mc.lift;
+    gdual := gdual0.scale(1.0D0/RT.SqRtTwo).superpose(s.upsample(2).convolve(hdualvan.scale(
+                                      RT.SqRtTwo/mc.targetAmp)));
+    (*
+        gdual := gdual0.superpose(s.upsample(2).convolve(hdualvan).scale(
+                                      -8.0D0));
+    *)
+    unit          := IIntPow.Power(2, levels);
+    twopow        := FLOAT(unit, R.T);
+    grid          := R.One / twopow;
+    psidual0      := Refn.Refine(gdual0, hdual, levels).scale(twopow);
+    psidual       := Refn.Refine(gdual, hdual, levels).scale(twopow);
+    leftpsidual0  := FLOAT(psidual0.getFirst(), R.T) * grid;
+    rightpsidual0 := FLOAT(psidual0.getLast(), R.T) * grid;
+    leftpsidual   := FLOAT(psidual.getFirst(), R.T) * grid;
+    rightpsidual  := FLOAT(psidual.getLast(), R.T) * grid;
+    lefttarget    := FLOAT(target.getFirst(), R.T) * grid;
+    righttarget   := FLOAT(target.getLast(), R.T) * grid;
 
-    unit         := IIntPow.Power(2, levels);
-    grid         := R.One / FLOAT(unit, R.T);
-    twopow       := RIntPow.Power(R.Two, levels);
-    psidual      := Refn.Refine(gdualopt, hdual, levels).scale(twopow);
-    leftpsidual  := FLOAT(psidual.getFirst(), R.T) * grid;
-    rightpsidual := FLOAT(psidual.getLast(), R.T) * grid;
-    lefttarget   := FLOAT(target.getFirst(), R.T) * grid;
-    righttarget  := FLOAT(target.getLast(), R.T) * grid;
   BEGIN
     IO.Put(
-      Fmt.FN("optimal lift %s,\ncyclice wrap of gdual %s\n",
-             ARRAY OF
-               TEXT{SF.Fmt(s), SF.Fmt(gdualopt.alternate().wrapCyclic(3))}));
+      Fmt.FN(
+        "optimal lift %s,\ncyclic wrap of gdual %s\n",
+        ARRAY OF TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))}));
     PL.Init();
     CASE 1 OF
-    | 0 => WP.PlotWavelets(hdual, gdualopt, levels);
+    | 0 => WP.PlotWavelets(hdual, gdual, levels);
     | 1 =>
         PL.SetEnvironment(MIN(lefttarget, leftpsidual),
                           MAX(righttarget, rightpsidual), ymin, ymax);
         PL.PlotLines(V.ArithSeq(target.getNumber(), lefttarget, grid)^,
-                     target.scale(mc.targetAmp).getData()^);
-		     PL.SetColor0(2);
+                     target.scale(twopow/mc.targetAmp).getData()^);
+        PL.SetColor0(2);
+        PL.PlotLines(V.ArithSeq(psidual0.getNumber(), leftpsidual0, grid)^,
+                     psidual0.getData()^);
+        PL.SetColor0(3);
         PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
                      psidual.getData()^);
     ELSE
@@ -515,7 +528,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 2 OF
+    CASE 3 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -524,25 +537,27 @@ PROCEDURE Test () =
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10), 6, 4,
           2, 5);
-(*
-0.515299272019265, 1.09394334049039, 2.37421841031068, 0.167484610002095, -1.6496475444949, -4.50118081829745, -2.99168284568131, -2.07333727163662, -1.13262489000281, -0.469773425085895
--0.482838852151025
-*)
+      (*
+      0.515299272019265, 1.09394334049039, 2.37421841031068, 0.167484610002095, -1.6496475444949, -4.50118081829745, -2.99168284568131, -2.07333727163662, -1.13262489000281, -0.469773425085895
+      -0.482838852151025
+      *)
     | 2 =>
         MatchPattern(
           NEW(S.T).fromArray(
             V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5);
-(*
-y Signal[-5..4]{0.0591062446152401, 0.0903181993065596, 0.285545159210211, -0.136564892299842, 1.27478030776691, -0.587901480689649, -0.234139988943924, -0.21826373576695, -0.103008677224905, -0.0482341791772408}, cf -0.096377134505568
-*)
+      (*
+      y Signal[-5..4]{0.0591062446152401, 0.0903181993065596, 0.285545159210211, -0.136564892299842, 1.27478030776691, -0.587901480689649, -0.234139988943924, -0.21826373576695, -0.103008677224905, -0.0482341791772408}, cf -0.096377134505568
+      *)
     | 3 =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5, 0.0D0);
+            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5,
+          0.0D0);
     | 4 =>
-        TestMatchPatternSmooth(NEW(S.T).fromArray(
-                                 V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
-                                 -1024), 6, 3, 9, 1, 100.0D0);
+        TestMatchPatternSmooth(
+          NEW(S.T).fromArray(
+            V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^, -1024), 6, 3, 9,
+          1, 100.0D0);
     | 5 =>
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
