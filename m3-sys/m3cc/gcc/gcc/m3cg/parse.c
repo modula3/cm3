@@ -719,7 +719,6 @@ m3_push_block (b)
 	    = chainon (BLOCK_SUBBLOCKS (current_block), b);
 	}
     }
-  else
     {
       tree elmt = make_node (TREE_LIST);
       TREE_VALUE (elmt) = current_block;
@@ -736,7 +735,8 @@ m3_pop_block (b)
 {
   if (b == 0)
     {
-      current_block = BLOCK_SUPERCONTEXT (current_block);
+      current_block = TREE_VALUE (pending_blocks);
+      pending_blocks = TREE_CHAIN (pending_blocks);
     }
   else
     {
@@ -751,13 +751,6 @@ m3_pop_block (b)
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
 
-static int current_proc_nb_params = 0;
-static int current_proc_call_conv = 0;
-static int current_proc_decl_type = 0; /* 1 import, 0 declaration */
-static tree current_proc_decl;
-static tree current_proc_return_type;
-static tree current_proc_args_list;
-
 static int compiling_body;
 static const char *current_unit_name;
 static int max_lineno;
@@ -766,9 +759,9 @@ static int max_lineno;
 static int exported_interfaces;
 static char *exported_interfaces_names [100];
 
-/* names for nameless variables and parameters */
-static int noname_count = 0;
-static char buf[32];
+static int ignore_params = 0;
+/* are the following DECLARE_PARAMs for an IMPORT_PROCEDURE or 
+   a DECLARE_PROCEDURE ? */
 
 /*================================= SUPPORT FOR INITIALIZED DATA CREATION ===*/
 
@@ -886,7 +879,6 @@ static tree declare_temp (t, in_mem, v) /* GCC32OK */
   layout_decl (v, 0);
   TREE_UNSIGNED (v) = TREE_UNSIGNED (t);
   TREE_ADDRESSABLE (v) = in_mem;
-  DECL_REGISTER (v) = !in_mem;
   DECL_CONTEXT (v) = current_function_decl;
 
   TREE_CHAIN (v) = BLOCK_VARS (BLOCK_SUBBLOCKS
@@ -2150,11 +2142,10 @@ m3cg_do_import_global () /* GCC32OK */
   RETURN_VAR (v, VAR_DECL);
 
 
+  DECL_NAME(v) = fix_name (n, id);
   if (debug_vars)
-    fprintf(stderr, "  import var %s type %d size %ld alignment %ld\n", n, t, 
-            s, a);
-
-  DECL_NAME     (v) = fix_name (n, id);
+    fprintf(stderr, "  import var %s type %d size %ld alignment %ld\n",
+	    IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
 
@@ -2176,13 +2167,9 @@ m3cg_do_declare_segment () /* GCC32OK */
   BOOLEAN    (is_const);
   RETURN_VAR (v, VAR_DECL);
       
-  if (n == 0) {
-    sprintf(buf, "incognito_%08d", noname_count++);
-    n = buf;
-  }
-  if (debug_vars)
-    fprintf(stderr, "  segment %s typeid %ld\n", n, id);
   DECL_NAME (v) = fix_name (n, id);
+  if (debug_vars) fprintf(stderr, "  segment %s typeid %ld\n",
+			  IDENTIFIER_POINTER(DECL_NAME(v)), id);
   DECL_EXTERNAL (v) = 0;
   TREE_PUBLIC (v) = 1;
   /* we really don't have an idea of what the type of this var is; 
@@ -2243,11 +2230,10 @@ m3cg_do_declare_global () /* GCC32OK */
   BOOLEAN    (initialized);
   RETURN_VAR (v, VAR_DECL);
 
+  DECL_NAME (v) = fix_name (n, id);
   if (debug_vars)
     fprintf(stderr, "  global var %s type %d size %ld alignment %ld\n",
-            n, t, s, a);
-
-  DECL_NAME (v) = fix_name (n, id);
+            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
   DECL_EXTERNAL (v) = 0;
   DECL_COMMON (v) = (initialized == 0);  /*** -- in gcc 2.6.0 ***/
   TREE_PUBLIC (v) = exported;
@@ -2298,15 +2284,10 @@ m3cg_do_declare_local () /* GCC32OK */
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, VAR_DECL);
 
-  if (n == 0) {
-    sprintf(buf, "incognito_%08d", noname_count++);
-    n = buf;
-  }
+  DECL_NAME (v) = fix_name (n, id);
   if (debug_vars)
     fprintf(stderr, "  local var %s type %d size %ld alignment %ld\n",
-            n, t, s, a);
-
-  DECL_NAME (v) = fix_name (n, id);
+            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
   DECL_NONLOCAL (v) = up_level;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl; 
@@ -2321,7 +2302,12 @@ m3cg_do_declare_local () /* GCC32OK */
     BLOCK_VARS (subblocks) = v;
   }
 
-  if (compiling_body) { compile_local (v); }
+  if (compiling_body) {
+    compile_local (v);
+    /* force to memory
+       -- necessary for init_offset vars (for exception scope tables) */
+    if (TREE_ADDRESSABLE(v)) flush_addressof (DECL_RTL(v));
+  }
 }
 
 static void
@@ -2337,47 +2323,23 @@ m3cg_do_declare_param () /* GCC32OK */
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, PARM_DECL);
 
-  if (n == 0) {
-    sprintf(buf, "incognito_%08d", noname_count++);
-    n = buf;
-  }
-  if (debug_procs)
-    fprintf(stderr, "  param %s type %d typeid %ld\n", n, t, id);
+  if (ignore_params) { return; }
 
-  /* For IMPORT_PROCEDURE, that is external procedures, we can simply
-     ignore the parameters. */
-  
-  if (current_proc_decl_type != 1 || current_proc_nb_params == 0) {
-    DECL_NAME (v) = fix_name (n, id);
-    DECL_NONLOCAL (v) = up_level;
-    TREE_ADDRESSABLE (v) = in_memory;
-    fix_type (v, t, s, a);
-    DECL_ARG_TYPE (v) = TREE_TYPE (v);
-    DECL_CONTEXT (v) = current_function_decl;
-    
-    TREE_CHAIN (v) = DECL_ARGUMENTS (current_function_decl);
-    DECL_ARGUMENTS (current_function_decl) = v;
-    if (DECL_MODE (v) == VOIDmode) { DECL_MODE (v) = Pmode; }
-    
-    rest_of_decl_compilation (v, 0, 0, 1);
-  }
-  /* The arguments are accumulated in the argument list */
-  if (current_proc_nb_params > 0) {
-    if (strcmp(n,"_return") != 0) {
-      current_proc_args_list = tree_cons(NULL_TREE,
-                                         m3_build_type(t, s, a),
-                                         current_proc_args_list);
-    }
-    current_proc_nb_params--;
-    /* We have all the arguments. The declaration of the current procedure
-       can now be completed. */
-    if (current_proc_nb_params == 0)
-      finish_procedure_declaration(current_proc_decl, 
-                                   current_proc_args_list,
-                                   current_proc_return_type, 
-                                   current_proc_call_conv,
-                                   current_proc_decl_type);
-  }
+  DECL_NAME (v) = fix_name (n, id);
+  if (debug_procs)
+    fprintf(stderr, "  param %s type %d typeid %ld\n",
+	    IDENTIFIER_POINTER(DECL_NAME(v)), t, id);
+  DECL_NONLOCAL (v) = up_level;
+  TREE_ADDRESSABLE (v) = in_memory;
+  fix_type (v, t, s, a);
+  DECL_ARG_TYPE (v) = TREE_TYPE (v);
+  DECL_CONTEXT (v) = current_function_decl;
+
+  TREE_CHAIN (v) = DECL_ARGUMENTS (current_function_decl);
+  DECL_ARGUMENTS (current_function_decl) = v;
+  if (DECL_MODE (v) == VOIDmode) { DECL_MODE (v) = Pmode; }
+
+  rest_of_decl_compilation (v, 0, 0, 1);
 }
 
 static void
@@ -2597,37 +2559,20 @@ m3cg_do_import_procedure () /* GCC32OK */
     DECL_NAME (p) = get_identifier (n);
   }
 
-  /* TREE_TYPE (p) = typ; */
+  TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   TREE_PUBLIC (p) = 1;
   TREE_THIS_VOLATILE (p) = 0;
   TREE_SIDE_EFFECTS (p) = 1;
   DECL_EXTERNAL (p) = 1;
   DECL_CONTEXT (p) = NULL_TREE;
   DECL_MODE (p) = FUNCTION_MODE;
-  /* FIXME
-     make_function_rtl (p);
-     assemble_external (p);
-  */
+
+  make_decl_rtl (p, 0);
+  assemble_external (p);
+
   TREE_USED (p) = 1;
 
-  /* Remember all this while we collect the argument list provided by
-     DECLARE_PARAM statements. */
-  
-  current_proc_decl = p;
-  current_proc_return_type = return_type;
-  current_proc_decl_type = 1;
-  current_proc_args_list = tree_cons(NULL_TREE,void_type_node,NULL_TREE);
-  current_proc_call_conv = call_conv;
-  current_proc_nb_params = n_params;
-  
-  /* We already have all the arguments */
-  
-  if (current_proc_nb_params == 0)
-    finish_procedure_declaration(p,
-                                 current_proc_args_list,
-                                 return_type,
-                                 current_proc_call_conv,
-                                 current_proc_decl_type);
+  ignore_params = 1; /* we don't declare the formals for imported procs */
 }
 
 static void
@@ -2667,6 +2612,7 @@ m3cg_do_declare_procedure () /* GCC32OK */
   DECL_CONTEXT (DECL_RESULT (p)) = p;
   TREE_STATIC (p) = 1;
   TREE_PUBLIC (p) = exported;
+  TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
 
   DECL_CONTEXT (p) = parent;
 
@@ -2678,39 +2624,28 @@ m3cg_do_declare_procedure () /* GCC32OK */
   BLOCK_SUBBLOCKS (parm_block) = top_block;
   TREE_USED (top_block) = 1;
 
-  /* Remember all this while we collect the argument list provided by
-     the DECLARE_PARAM statements. */
-  
-  current_proc_decl = p;
-  current_proc_return_type = return_type;
-  current_proc_decl_type = 0;
-  current_proc_args_list = tree_cons(NULL_TREE, void_type_node, NULL_TREE);
-  current_proc_call_conv = call_conv;
-  current_proc_nb_params = n_params;
+  make_decl_rtl(p, 0);
   current_function_decl = p;
-  
-  /* We already have all the arguments */
-  
-  if (current_proc_nb_params == 0)
-    finish_procedure_declaration(p,
-                                 current_proc_args_list,
-                                 return_type,
-                                 current_proc_call_conv,
-                                 current_proc_decl_type);
+  ignore_params = 0;
 }
 
 static void
 m3cg_do_begin_procedure () /* GCC32OK */
 {
   PROC (p);
-  tree local;
+  tree parm, local, args_types;
 
   if (debug_procs)
     fprintf(stderr, "  procedure %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
 
   DECL_SOURCE_LINE (p) = lineno;
-  DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
 
+  args_types = tree_cons (NULL_TREE, t_void, NULL_TREE);
+  for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
+    args_types = tree_cons (NULL_TREE, TREE_TYPE (parm), args_types);
+  }
+  TREE_TYPE (p) = build_function_type (TREE_TYPE (DECL_RESULT (p)), args_types);
+  DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
   announce_function (p);
   make_decl_rtl (p, NULL);
 
@@ -2789,7 +2724,14 @@ m3cg_do_set_label () /* GCC32OK */
 
   DECL_CONTEXT (l) = current_function_decl;
   expand_label (l);
-  if (barrier) { LABEL_PRESERVE_P (label_rtx (l)) = 1; }
+  if (barrier) {
+    rtx r = label_rtx(l);
+    LABEL_PRESERVE_P (r) = 1;
+    current_function_has_nonlocal_label = 1;
+    nonlocal_goto_handler_labels
+      = gen_rtx_EXPR_LIST (VOIDmode, r, nonlocal_goto_handler_labels);
+    forced_labels = gen_rtx_EXPR_LIST (VOIDmode, r, forced_labels);
+  }
 }
 
 static void
@@ -2885,7 +2827,7 @@ m3cg_do_exit_proc () /* GCC32OK */
     expand_null_return ();
   } else {
     tree res = m3_build2 (MODIFY_EXPR, t, DECL_RESULT (current_function_decl),
-			  EXPR_REF (-1));
+			  build1 (CONVERT_EXPR, t, EXPR_REF (-1)));
     TREE_SIDE_EFFECTS (res) = 1;
     expand_return (res);
     EXPR_POP ();
@@ -4187,13 +4129,14 @@ int yyparse ()
 
   op = (int)LAST_OPCODE;
   while (op != (int)M3CG_END_UNIT) {
-    op = get_int ();   m3cg_lineno ++;
+    op = get_int ();
     if (op < 0 || (int)LAST_OPCODE <= op) {
       fatal_error (" *** bad opcode: %ld, at m3cg_lineno %d", op, m3cg_lineno);
     }
     if (debug_show_opcodes) { 
       fprintf (stderr, "(%d) %s\n", m3cg_lineno, M3CG_opnames[op]);
     }
+    m3cg_lineno ++;
     ops[op].proc ();
   }
 
