@@ -55,5 +55,8 @@ PROCEDURE GEES_ADDR (READONLY JOBVS : CHAR;
                          BWORK : ADDRESS; (*  VAR      BWORK : ARRAY OF BOOLEAN;*)
                 VAR      INFO  : INTEGER                     );
 
+<*EXTERNAL xlamch_*>
+PROCEDURE GetMachineParameter(READONLY cmach : CHAR):LONGREAL;
+
 (*==========================*)
 END FloatMatrixLapack.

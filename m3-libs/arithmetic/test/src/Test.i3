@@ -35,7 +35,4 @@ PROCEDURE TestUnit():BOOLEAN;
 PROCEDURE TestLapack():BOOLEAN;
 PROCEDURE TestTex():BOOLEAN;
 
-<*EXTERNAL dlamch_*>
-PROCEDURE GetMachineParameter(READONLY cmach : CHAR):LONGREAL;
-
 END Test.
