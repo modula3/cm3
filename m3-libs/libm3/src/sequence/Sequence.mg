@@ -40,6 +40,14 @@ PROCEDURE Init(s: Seq.T; sizeHint: CARDINAL): Seq.T =
   BEGIN
     IF s.elem = NIL OR NUMBER(s.elem^) = 0 THEN
       s.elem := NEW(Rep.RefArray, MAX(sizeHint, 1))
+    ELSE
+      (* Clear the previous entries to help the GC *)
+      FOR i := s.st TO MIN(s.st + s.sz - 1, LAST(s.elem^)) DO
+        s.elem[i] := zero;
+      END;
+      FOR i := 0 TO MAX(-1, s.st + s.sz - 1 - NUMBER(s.elem^)) DO
+        s.elem[i] := zero;
+      END;
     END (* IF *);
     s.sz := 0; s.st := 0;
     RETURN s

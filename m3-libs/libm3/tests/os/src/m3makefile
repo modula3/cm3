@@ -4,12 +4,12 @@
 
 /* Last modified on Thu Apr 14 15:50:57 PDT 1994 by mcjones */
 
-import(libm3)
+import("libm3")
 
 build_standalone()
 
-module(PathnameTests)
-interface(Subr)
-module(TextSubrTbl)
-implementation(OSTest)
-program(OSTest)
+module("PathnameTests")
+interface("Subr")
+module("TextSubrTbl")
+implementation("OSTest")
+program("OSTest")
