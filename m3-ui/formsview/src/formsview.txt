@@ -187,5 +187,5 @@ See the FormsVBT Reference Manual for details.
 
 
 Copyright © 1992-1993, Digital Equipment Corporation.
-Copyright © 1997, Critical Mass, Inc.
-
+Copyright © 1996-2000, Critical Mass, Inc.
+See File COPYRIGHT-CMASS for details.

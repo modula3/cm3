@@ -1,5 +1,5 @@
-(* Copyright (C) 1996, Critical Mass, Inc.  All Rights Reserved. *)
-(* See the file COPYRIGHT.CM for a full description              *)
+(* Copyright (C) 1996-2000, Critical Mass, Inc.  All Rights Reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* 
    DB is the safe Modula-3 interface for relational databases.  It

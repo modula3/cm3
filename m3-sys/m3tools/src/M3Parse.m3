@@ -1,4 +1,5 @@
-(* Copyright 1995-96 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE M3Parse EXPORTS M3AST;
 
@@ -33,7 +34,7 @@ FROM M3Scanner IMPORT TK_Comment, TK_EOF, TK_Error,
 FROM M3Lexer IMPORT TK,
   (* pragmas *)
   TK_Inline, TK_External, TK_Assert, TK_Unused,
-  TK_Obsolete, TK_Trace, TK_CallConv, TK_Fatal;
+  TK_Obsolete, <*NOWARN*>TK_Trace, TK_CallConv, TK_Fatal;
 
 TYPE
   TKSet = SET OF TK;

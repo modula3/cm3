@@ -22,6 +22,8 @@ readonly _RandomPieces = {
   "DS3100_OSF" : [ _LittleEndian ],
   "FreeBSD"    : [ _LittleEndian ],
   "FreeBSD2"   : [ _LittleEndian ],
+  "FreeBSD3"   : [ _LittleEndian ],
+  "FreeBSD4"   : [ _LittleEndian ],
   "HP300"      : [ _BigEndian ],
   "HPPA"       : [ _BigEndian ],
   "IBMR2"      : [ _BigEndian ],
