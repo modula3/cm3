@@ -2245,8 +2245,9 @@ xtensa_reorg (first)
 	continue;
 
       pat = PATTERN (insn);
-      if (GET_CODE (pat) == UNSPEC_VOLATILE
-	  && (XINT (pat, 1) == UNSPECV_SET_FP))
+      if (GET_CODE (pat) == SET
+	  && GET_CODE (SET_SRC (pat)) == UNSPEC_VOLATILE
+	  && (XINT (SET_SRC (pat), 1) == UNSPECV_SET_FP))
 	{
 	  set_frame_ptr_insn = insn;
 	  break;
@@ -2729,6 +2730,10 @@ order_regs_for_local_alloc ()
       for (i = 0; i < num_arg_regs; i++)
 	reg_alloc_order[nxt++] = GP_ARG_FIRST + i;
 
+      /* list the coprocessor registers in order */
+      for (i = 0; i < BR_REG_NUM; i++)
+	reg_alloc_order[nxt++] = BR_REG_FIRST + i;
+
       /* list the FP registers in order for now */
       for (i = 0; i < 16; i++)
 	reg_alloc_order[nxt++] = FP_REG_FIRST + i;
@@ -2738,10 +2743,6 @@ order_regs_for_local_alloc ()
       reg_alloc_order[nxt++] = 1;	/* a1 = stack pointer */
       reg_alloc_order[nxt++] = 16;	/* pseudo frame pointer */
       reg_alloc_order[nxt++] = 17;	/* pseudo arg pointer */
-
-      /* list the coprocessor registers in order */
-      for (i = 0; i < BR_REG_NUM; i++)
-	reg_alloc_order[nxt++] = BR_REG_FIRST + i;
 
       reg_alloc_order[nxt++] = ACC_REG_FIRST;	/* MAC16 accumulator */
     }
