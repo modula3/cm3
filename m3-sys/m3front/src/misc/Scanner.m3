@@ -294,6 +294,11 @@ PROCEDURE DoFail (msg: TEXT;  stop: TK) =
             THEN Error.Int (i, t);
             ELSE Error.Txt ("<integer>", t);
           END;
+      | TK.tLONGCARDCONST =>
+          IF TInt.ToInt (cur.int, i)
+            THEN Error.Int (i, t);
+            ELSE Error.Txt ("<long-integer>", t);
+          END;
       | TK.tCHARCONST =>
           IF TInt.ToInt (cur.int, i)
             THEN Error.Txt (CharLiteral (i), t);
@@ -527,7 +532,7 @@ PROCEDURE ScanNumber () =
         val := TInt.Zero;
       END;
       cur.token := TK.tCARDCONST;
-      cur.int   := val;
+      cur.int   := TInt.Trim (val);
 
     ELSIF (ch = '.') THEN
       (* scan a floating point number *)
@@ -600,6 +605,16 @@ PROCEDURE ScanNumber () =
         Error.Msg ("illegal floating-point literal");
       END;
 
+    ELSIF (ch = 'L') THEN
+      GetCh ();
+      (* already scanned a long decimal integer *)
+      IF NOT TInt.New (SUBARRAY (buf, 0, len), val) THEN
+        Error.Msg ("illegal long integer literal, zero used");
+        val := TInt.Zero;
+      END;
+      cur.token := TK.tLONGCARDCONST;
+      cur.int   := val;
+
     ELSE
       (* already scanned a decimal integer *)
       IF NOT TInt.New (SUBARRAY (buf, 0, len), val) THEN
@@ -607,7 +622,7 @@ PROCEDURE ScanNumber () =
         val := TInt.Zero;
       END;
       cur.token := TK.tCARDCONST;
-      cur.int   := val;
+      cur.int   := TInt.Trim (val);
     END;
 
   END ScanNumber;

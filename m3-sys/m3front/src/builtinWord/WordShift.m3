@@ -68,7 +68,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
     THEN
       TWord.Shift (w0, i1, result);
-      RETURN IntegerExpr.New (result);
+      RETURN IntegerExpr.New (TWord.Trim (result));
     ELSE
       RETURN NIL;
     END;
@@ -86,7 +86,7 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
       AND TInt.LT (i1, max)
     THEN
       TWord.Shift (w0, i1, result);
-      RETURN IntegerExpr.New (result);
+      RETURN IntegerExpr.New (TWord.Trim (result));
     ELSE
       RETURN NIL;
     END;
@@ -105,7 +105,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
       AND TInt.Subtract (TInt.Zero, i1, neg_i1)
     THEN
       TWord.Shift (w0, neg_i1, result);
-      RETURN IntegerExpr.New (result);
+      RETURN IntegerExpr.New (TWord.Trim (result));
     ELSE
       RETURN NIL;
     END;

@@ -403,6 +403,7 @@ store_indirect (o: ByteOffset;  t: ZType;  u: MType);
 
 load_nil     ();                         (*push; s0.A := NIL*)
 load_integer (t: IType;  READONLY i: Target.Int);   (*push; s0.t := i *)
+load_longint (t: IType;  READONLY i: Target.Int);   (*push; s0.t := i *)
 load_float   (t: RType;  READONLY f: Target.Float); (*push; s0.t := f *)
 
 (*------------------------------------------------------------ arithmetic ---*)

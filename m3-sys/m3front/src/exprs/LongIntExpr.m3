@@ -2,16 +2,14 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-(* File: IntegerExpr.m3                                        *)
-(* Last modified on Fri Feb 24 16:43:29 PST 1995 by kalsow     *)
-(*      modified on Tue Apr 10 22:35:24 1990 by muller         *)
+(* File: LongIntExpr.m3                                        *)
 
-MODULE IntegerExpr;
+MODULE LongIntExpr;
 
-IMPORT M3, CG, Expr, ExprRep, Type, Int, Error, M3Buf, Target, TInt;
+IMPORT M3, CG, Expr, ExprRep, Type, LongInt, Error, M3Buf, Target, TInt;
 
 TYPE
-  P = Expr.T BRANDED "IntegerExpr.T" OBJECT
+  P = Expr.T BRANDED "LongIntExpr.T" OBJECT
         value: Target.Int;
       OVERRIDES
         typeOf       := ExprRep.NoType;
@@ -47,8 +45,8 @@ PROCEDURE New (READONLY value: Target.Int): Expr.T =
     END;
     p := NEW (P);
     ExprRep.Init (p);
-    p.value   := TInt.Trim (value);
-    p.type    := Int.T;
+    p.value   := value;
+    p.type    := LongInt.T;
     p.checked := TRUE;
     IF TInt.ToInt (value, n)
       AND (FIRST (cache) <= n) AND (n <= LAST (cache)) THEN
@@ -68,13 +66,13 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    CG.Load_integer (p.value);
+    CG.Load_longint (p.value);
   END Compile;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
   BEGIN
-    min := TInt.Expand (p.value);
-    max := min;
+    min := p.value;
+    max := p.value;
   END Bounder;
 
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
@@ -93,7 +91,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TInt.Add (x, y, res) THEN RETURN FALSE END;
-    c := New (TInt.Trim (res));
+    c := New (res);
     RETURN TRUE;
   END Add;
 
@@ -102,7 +100,7 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TInt.Subtract (x, y, res) THEN RETURN FALSE END;
-    c := New (TInt.Trim (res));
+    c := New (res);
     RETURN TRUE;
   END Subtract;
 
@@ -111,7 +109,7 @@ PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TInt.Multiply (x, y, res) THEN RETURN FALSE END;
-    c := New (TInt.Trim (res));
+    c := New (res);
     RETURN TRUE;
   END Multiply;
 
@@ -124,7 +122,7 @@ PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
       RETURN FALSE;
     END;
     IF NOT TInt.Div (x, y, res) THEN RETURN FALSE END;
-    c := New (TInt.Trim (res));
+    c := New (res);
     RETURN TRUE;
   END Div;
 
@@ -137,7 +135,7 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
       RETURN FALSE;
     END;
     IF NOT TInt.Mod (x, y, res) THEN RETURN FALSE END;
-    c := New (TInt.Trim (res));
+    c := New (res);
     RETURN TRUE;
   END Mod;
 
@@ -149,8 +147,7 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
     | P(p) => IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
                 RETURN FALSE;
               END;
-              (* TInt.OutInt("Negate.res", TInt.Trim(res)); *)
-              c := New (TInt.Trim (res));  RETURN TRUE;
+              c := New (res);  RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Negate;
@@ -185,7 +182,7 @@ PROCEDURE IsZeroes (p: P): BOOLEAN =
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
   BEGIN
-    M3Buf.PutText (buf, "INT<");
+    M3Buf.PutText (buf, "LONGINT<");
     M3Buf.PutIntt (buf, p.value);
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
@@ -198,4 +195,4 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
   END GenLiteral;
 
 BEGIN
-END IntegerExpr.
+END LongIntExpr.

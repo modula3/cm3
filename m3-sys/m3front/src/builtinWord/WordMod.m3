@@ -31,7 +31,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1) AND TWord.Mod (w0, w1, result)
+    IF WordPlus.GetArgs (ce.args, w0, w1) AND 
+      TWord.Mod (TWord.Trim (w0), TWord.Trim (w1), result)
       THEN RETURN IntegerExpr.New (result);
       ELSE RETURN NIL;
     END;
@@ -49,6 +50,8 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
       min := TInt.Zero;
       TWord.Subtract (max_b, TInt.One, max);
     END;
+    min := TInt.Trim(min);
+    max := TInt.Trim(max);
   END GetBounds;
 
 PROCEDURE Initialize () =

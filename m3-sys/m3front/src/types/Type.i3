@@ -16,9 +16,16 @@ TYPE
   ModuleInfo <: REFANY;
 
 TYPE
-  Class = { Error, Named, Integer, Real, Longreal, Extended,
+  Class = { Error, Named, Integer, LongInt, Real, Longreal, Extended,
             Array, Enum, Object, Opaque, OpenArray, Packed,
             Procedure, Record, Ref, Set, Subrange };
+
+CONST
+  ClassName = ARRAY Class OF TEXT{
+    "Error", "Named", "Integer", "LongInt", "Real", "Longreal", "Extended",
+    "Array", "Enum", "Object", "Opaque", "OpenArray", "Packed",
+    "Procedure", "Record", "Ref", "Set", "Subrange"  
+  };
 
 VAR
   recursionDepth: INTEGER := 0;
@@ -164,6 +171,9 @@ PROCEDURE GenCells (): INTEGER;
 PROCEDURE GenCellPtrs (): INTEGER;
 (* generate the current module's linked list of pointers to typecells
    and return its offset in the module global data. *)
+
+PROCEDURE DumpInfo (i: Info);
+(* dump the type information for debugging purposes *)
 
 END Type.
 

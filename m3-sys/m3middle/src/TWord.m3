@@ -10,6 +10,7 @@ MODULE TWord;
 
 IMPORT Word, TInt;
 FROM Target IMPORT Int, Integer, IChunks, ChunkSize, last_chunk;
+IMPORT Target; (* nedd qualification: name conflict for Word *)
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -392,5 +393,37 @@ PROCEDURE Insert (READONLY x, y, iI, nI: Int;  VAR r: Int): BOOLEAN =
     RETURN TRUE;
   END Insert;
 
+PROCEDURE Trim (READONLY a: Int): Int =
+  VAR res := a;
+  BEGIN
+    IF Target.Integer.size >= Target.Int64.size OR 
+      Target.Word.size >= Target.Word64.size THEN
+      RETURN res;
+    END;
+    IF NOT inited THEN Init() END;
+    (* we need lazy init since Integer isn't initialized at module link time *)
+    And(res, mask, res);
+    RETURN res;
+  END Trim;
+
+PROCEDURE Init () =
+  VAR
+    byte_mask, byte_shift: Int;
+    target_int_bytesize := Integer.size DIV 8;
+  BEGIN
+    IF inited THEN RETURN END;
+    EVAL TInt.FromInt(255, byte_mask);
+    EVAL TInt.FromInt(8, byte_shift);
+    mask := byte_mask;
+    FOR i := 2 TO target_int_bytesize DO
+      Shift(mask, byte_shift, mask);
+      Or(mask, byte_mask, mask);
+    END;
+    inited := TRUE;
+  END Init;
+
+VAR
+  inited := FALSE;
+  mask: Int;
 BEGIN
 END TWord.

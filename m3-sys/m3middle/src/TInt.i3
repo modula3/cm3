@@ -69,4 +69,14 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ByteArray): INTEGER;
    which when sign-extended equal 'i'.  Returns the number of
    significant bytes in the result. *)
 
+PROCEDURE Trim (READONLY a: Int): Int;
+(* Trim the integer a to the `real' platform-specific word size; sets
+   the unused high-order bits to 0 for positive and 1 for negative
+   values. *)
+
+PROCEDURE Expand (READONLY a: Int): Int;
+
+PROCEDURE OutInt (READONLY name: TEXT; READONLY a: Int; nl := TRUE);
+(* output chunks of a for debugging purposes *)
+
 END TInt.

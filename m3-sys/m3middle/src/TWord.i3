@@ -73,4 +73,8 @@ PROCEDURE Extract (READONLY a, b, c: Int;  VAR i: Int): BOOLEAN;
 PROCEDURE Insert (READONLY a, b, c, d: Int;  VAR i: Int): BOOLEAN;
 (* returns 'Word.Insert (a, b, c, d)' *)
 
+PROCEDURE Trim (READONLY a: Int): Int;
+(* Trim the integer a to the `real' platform-specific word size; sets
+   the unused high-order bits to 0. *)
+
 END TWord.

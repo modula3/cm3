@@ -19,6 +19,7 @@ PROCEDURE msgR (r: REAL);
 PROCEDURE check (b: BOOLEAN);
 PROCEDURE checkB (b, shouldBe: BOOLEAN);
 PROCEDURE checkI (i, shouldBe: INTEGER);
+PROCEDURE checkN (i, shouldBe: LONGINT);
 PROCEDURE checkC (i, shouldBe: CHAR);
 PROCEDURE checkR (r, shouldBe: REAL);
 PROCEDURE checkL (r, shouldBe: LONGREAL);

@@ -14,7 +14,7 @@ CONST
   Keywords = ARRAY T OF TEXT { 
     "*EOF*",
 
-    "*id*", "*cardinal*", "*real*", "*longreal*",
+    "*id*", "*cardinal*", "*longcardinal*", "*real*", "*longreal*",
     "*extended*", "*char*", "*wchar*", "*text*", "*wtext*",
 
     "+", "-", "*", "/", ":=", "&", ".", ",",
@@ -50,7 +50,7 @@ CONST
     "ABS", "ADDRESS", "ADR", "ADRSIZE", "BITSIZE", "BOOLEAN",
     "BYTESIZE", "CARDINAL", "CEILING", "CHAR", "DEC", "DISPOSE",
     "EXTENDED", "FALSE", "FIRST", "FLOAT", "FLOOR", "INC",
-    "INTEGER", "ISTYPE", "LAST", "LONGREAL", "LOOPHOLE", "MAX",
+    "INTEGER", "ISTYPE", "LAST", "LONGINT", "LONGREAL", "LOOPHOLE", "MAX",
     "MIN", "MUTEX", "NARROW", "NEW", "NIL", "NULL", "NUMBER",
     "ORD", "REAL", "REFANY", "ROOT", "ROUND", "SUBARRAY", "TEXT",
     "TRUE", "TRUNC", "TYPECODE", "VAL", "WIDECHAR"

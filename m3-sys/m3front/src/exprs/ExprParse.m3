@@ -11,7 +11,7 @@ MODULE ExprParse;
 IMPORT M3ID, Token, Expr, ExprRep, Error, Type, Charr, ObjectType;
 IMPORT AndExpr, OrExpr, EqualExpr, CompareExpr, MultiplyExpr, DivExpr;
 IMPORT DivideExpr, ModExpr, AddExpr, SubtractExpr, InExpr, PlusExpr;
-IMPORT NegateExpr, NotExpr, ConcatExpr, IntegerExpr, ReelExpr;
+IMPORT NegateExpr, NotExpr, ConcatExpr, IntegerExpr, LongIntExpr, ReelExpr;
 IMPORT TextExpr, DerefExpr, QualifyExpr, SubscriptExpr, TypeExpr;
 IMPORT CallExpr, ConsExpr, RangeExpr, NamedExpr, KeywordExpr, EnumExpr;
 IMPORT NamedType, TInt, WCharr, CG, Brand;
@@ -175,6 +175,7 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
     CASE cur.token OF
     | TK.tIDENT        => a := NamedExpr.New (cur.id, cur.defn);    GetToken ();
     | TK.tCARDCONST    => a := IntegerExpr.New (cur.int);           GetToken ();
+    | TK.tLONGCARDCONST=> a := LongIntExpr.New (cur.int);           GetToken ();
     | TK.tCHARCONST    => a := EnumExpr.New (Charr.T, cur.int);     GetToken ();
     | TK.tWCHARCONST   => a := EnumExpr.New (WCharr.T, cur.int);    GetToken ();
     | TK.tTEXTCONST    => a := TextExpr.New8 (cur.str);             GetToken ();

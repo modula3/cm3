@@ -30,6 +30,7 @@ import ("libm3")
 Module ("Test")
 library ("test")
 
+if not defined ("LIB_ONLY")
 %------------------------------------------------------------------------------
 % misc. utilities
 %
@@ -555,3 +556,5 @@ c_test ("c1", "c131", "unknown")
 c_test ("c1", "c132", "unknown")
 c_test ("c1", "c133", "unknown")
 c_test ("c1", "c134", "statically initialized fields")
+
+end % NOT LIB_ONLY

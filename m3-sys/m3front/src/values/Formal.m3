@@ -447,7 +447,8 @@ PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
     CASE t.kind OF
     | Type.Class.Error, Type.Class.Named, Type.Class.Packed
         =>  <*ASSERT FALSE*>
-    | Type.Class.Integer, Type.Class.Enum, Type.Class.Subrange
+    | Type.Class.Integer, Type.Class.LongInt, Type.Class.Enum, 
+      Type.Class.Subrange
         =>  GenOrdinal (t, actual);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended
         =>  GenFloat (t, actual);

@@ -106,6 +106,7 @@ TYPE
         store_indirect := store_indirect;
         load_nil      := load_nil;
         load_integer  := load_integer;
+        load_longint  := load_longint;
         load_float    := load_float;
         compare  := compare;
         add      := add;
@@ -530,6 +531,10 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
     Cmd  (u, Bop.declare_subrange);
     Tipe (u, t);
     Tipe (u, domain);
+    (*
+    TargetInt.OutInt("smin", min);
+    TargetInt.OutInt("smax", max);
+    *)
     TInt (u, min);
     TInt (u, max); 
     BInt (u, s);
@@ -1062,6 +1067,14 @@ PROCEDURE load_integer  (u: U;  t: IType;  READONLY i: Target.Int) =
     TName (u, t);
     TInt  (u, i);
   END load_integer;
+
+PROCEDURE load_longint  (u: U;  t: IType;  READONLY i: Target.Int) =
+  (* push ; s0.t:= i *)
+  BEGIN
+    Cmd   (u, Bop.load_integer);
+    TName (u, t);
+    TInt  (u, i);
+  END load_longint;
 
 PROCEDURE load_float    (u: U;  t: RType;  READONLY f: Target.Float) =
   (* push ; s0.t := f *)

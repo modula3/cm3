@@ -31,7 +31,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
     IF WordPlus.GetArgs (ce.args, w0, w1)
-      THEN TWord.Or (w0, w1, result);  RETURN IntegerExpr.New (result);
+      THEN w0 := TWord.Trim (w0); w1 := TWord.Trim (w1);
+           TWord.Or (w0, w1, result);  RETURN IntegerExpr.New (result);
       ELSE RETURN NIL;
     END;
   END Fold;

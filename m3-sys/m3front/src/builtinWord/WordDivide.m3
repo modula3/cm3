@@ -9,7 +9,7 @@
 MODULE WordDivide;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, ProcType;
-IMPORT Int, IntegerExpr, WordPlus, Value, Formal, Target, TWord;
+IMPORT Int, IntegerExpr, WordPlus, Value, Formal, Target, TWord, TInt;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -31,8 +31,16 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1) AND TWord.Div (w0, w1, result)
-      THEN RETURN IntegerExpr.New (result);
+    IF WordPlus.GetArgs (ce.args, w0, w1) AND 
+      TWord.Div (TWord.Trim (w0), TWord.Trim (w1), result)
+      THEN 
+       (*
+       TInt.OutInt("WordDivide.Fold.w0", w0);
+       TInt.OutInt("WordDivide.Fold.w1", w1);
+       TInt.OutInt("WordDivide.Fold.result", result);
+       TInt.OutInt("WordDivide.Fold.result.trim", TWord.Trim(result));
+       *)
+       RETURN IntegerExpr.New (result);
       ELSE RETURN NIL;
     END;
   END Fold;

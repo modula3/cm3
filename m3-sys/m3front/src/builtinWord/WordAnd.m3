@@ -31,7 +31,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
     IF WordPlus.GetArgs (ce.args, w0, w1)
-      THEN TWord.And (w0, w1, result); RETURN IntegerExpr.New (result);
+      THEN w0 := TWord.Trim (w0); w1 := TWord.Trim (w1);
+           TWord.And (w0, w1, result); RETURN IntegerExpr.New (result);
       ELSE RETURN NIL;
     END;
   END Fold;
@@ -41,6 +42,12 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   BEGIN
     Expr.GetBounds (ce.args[0], min_a, max_a);
     Expr.GetBounds (ce.args[1], min_b, max_b);
+    (* 
+    min_a := TInt.Trim (min_a);
+    max_a := TInt.Trim (max_a);
+    min_b := TInt.Trim (min_b);
+    max_b := TInt.Trim (max_b);
+    *)
     IF TInt.LT (min_a, TInt.Zero) OR TInt.LT (max_a, TInt.Zero) THEN
       (* "a" could be 16_ffff...  => any bits from "b" can survive *)
       IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
@@ -61,6 +68,8 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
       min := TInt.Zero;  (* no bits in common *)
       TWord.And (max_a, max_b, max);
     END;
+    min := TInt.Trim (min);
+    max := TInt.Trim (max);
   END GetBounds;
 
 PROCEDURE Initialize () =
