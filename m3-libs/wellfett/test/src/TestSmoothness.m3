@@ -12,6 +12,7 @@ IMPORT LongRealBasic                AS R,
        LongRealComplexVectorSupport AS CVS,
        LongRealComplexVectorTrans   AS CVT,
        LongRealComplexVectorFmtLex  AS CVF,
+       LongRealComplexInterpolation AS CVIp,
        LongRealMatrix               AS M,
        LongRealSignal               AS S,
        LongRealComplexSignal        AS CS,
@@ -189,7 +190,7 @@ PROCEDURE UpSample2Linear (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
     RETURN z;
   END UpSample2Linear;
 
-(* geometric interpolation *)
+(* geometric average *)
 PROCEDURE UpSample2Geom (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
   BEGIN
@@ -201,7 +202,7 @@ PROCEDURE UpSample2Geom (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
     RETURN z;
   END UpSample2Geom;
 
-(* geometric interpolation *)
+(* square average *)
 PROCEDURE UpSample2Quad (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
   BEGIN
@@ -215,7 +216,21 @@ PROCEDURE UpSample2Quad (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
     RETURN z;
   END UpSample2Quad;
 
-CONST UpSample2 = UpSample2Linear;
+(* interpolate piecewise cubic *)
+PROCEDURE UpSample2Cubic (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
+  VAR
+    z := NEW(CV.T, 2 * NUMBER(x) - 1);
+    y := V.ArithSeq(NUMBER(x), R.Zero, R.One);
+  BEGIN
+    FOR i := FIRST(x) TO LAST(x) - 1 DO
+      z[2 * i] := x[i];
+      z[2 * i + 1] := CVIp.CubicHermite(y^, x, FLOAT(i, R.T) + R.Half);
+    END;
+    z[LAST(z^)] := x[LAST(x)];
+    RETURN z;
+  END UpSample2Cubic;
+
+CONST UpSample2 = UpSample2Cubic;
 
 PROCEDURE FourierDecay () =
   VAR
