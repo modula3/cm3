@@ -19,6 +19,9 @@ FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 
+CONST
+  Brand = R.Brand & "Complex";
+
 TYPE
   T = RECORD re,im: R.T; END;
 

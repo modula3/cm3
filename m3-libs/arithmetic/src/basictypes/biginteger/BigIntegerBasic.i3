@@ -13,6 +13,9 @@ Daniel Beer
 
 FROM NADefinitions IMPORT Error;
 
+CONST
+  Brand = "BigInteger";
+
 (*
 BigIntegers are immutable, do not change them manually,
 because some routines use references to existing BigIntegers

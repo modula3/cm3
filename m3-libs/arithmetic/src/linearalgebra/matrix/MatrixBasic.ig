@@ -8,6 +8,10 @@ Abstract: Direct access to matrix functions
 FROM NADefinitions IMPORT Error;
 (*==========================*)
 (*-----------------*)
+
+CONST
+  Brand = R.Brand & "Matrix";
+
 TYPE
 (*
 |   text form: "M2x6{

@@ -10,6 +10,9 @@ Abstract: Complex numbers in polar coordinates
 
 FROM NADefinitions IMPORT Error;
 
+CONST
+  Brand = R.Brand & "Polar";
+
 TYPE
    (*polar angles are in radians*)
    T  = RECORD radius,angle:R.T; END;

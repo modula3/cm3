@@ -1,14 +1,16 @@
 for myself:
 
 todo:
-  - ODE
-  - physical units
-     - unit norms, cleaner FindBestUU
-     - complex values
-     - predefined values for each usual SI unit, problem with complex values
+  - quake templates, generic modules
+     - generic parameter should be ordered in increasing complexity
+        this is opposite to the current ordering
+        but conforms to libm3
+     - reduce number parameters to template procedures,
+       build final module names within that procedures
   - Hash routines
   - BRANDED strings
   - (*OUT*) for remainder of DivMod
+  - ODE
   - Tex output of numbers
      - check for necessarity of parentheses by giving the precedence of the surrounding operation
      - polynomials: vector (1,2,3) or variable based output 1x^0+2x^1+3x^2, optionally output x^0 as 1 and x^1 as x and suppress zero coefficients
