@@ -1086,8 +1086,8 @@ PROCEDURE Test () =
                                    -256), numlevel, 4, 4, 5, 20.0D0);
         *)
         TestMatchPatternSmooth(NEW(S.T).fromArray(
-                                 V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
-                                 -256), numlevel, 3, 5, 1, 5, R.Zero);
+                                 V.ArithSeq(1024, -1.0D0, 2.0D0 / 1024.0D0)^,
+                                 -512), numlevel, 3, 5, 1, 7, 1.0D-5);
     | Example.matchBSplineWavelet =>
         (*
           MatchPattern(
