@@ -17,7 +17,7 @@ PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
 
 PROCEDURE TransitionEV (mask: S.T): Eigen.EV RAISES {NA.Error} =
   BEGIN
-    RETURN Eigen.EigenValuesGen(
+    RETURN Eigen.EigenValues(
              TransitionMatrix(mask.adjoint().convolve(mask)));
   END TransitionEV;
 

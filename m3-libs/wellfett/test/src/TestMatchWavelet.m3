@@ -89,9 +89,9 @@ PROCEDURE MatchPattern (target                               : S.T;
                     TEXT{MF.Fmt(M.MulMMA(basis)),
                          VF.Fmt(M.MulV(basis, targetvec))}));
 
-    coef := LA.LeastSquaresGen(
-              basis, ARRAY OF V.T{targetvec},
-              flags := LA.LSGenFlagSet{LA.LSGenFlag.transposed})[0];
+    coef :=
+      LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
+                      flags := LA.LSFlagSet{LA.LSFlag.transposed})[0];
 
     IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
                   ARRAY OF
@@ -203,7 +203,7 @@ PROCEDURE InverseDSSE (x: V.T): V.T RAISES {NA.Error} =
       BEGIN
         IF VT.Norm1(V.Sub(ax, x)) <= tol * VT.Norm1(x) THEN RETURN y; END;
         y :=
-          V.Add(y, LA.LeastSquaresGen(
+          V.Add(y, LA.LeastSquares(
                      ComputeDDSSE(y^), ARRAY OF V.T{V.Sub(x, ax)})[0].x);
         (*
           IO.Put(Fmt.FN("y %s, DSSE(y) %s\n",
@@ -503,7 +503,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
     CONST tol = 1.0D-10;
     VAR yfirst := -translates;
 
-    PROCEDURE ComputeOptCritDeriv (x: V.T): FD.T RAISES {NA.Error}=
+    PROCEDURE ComputeOptCritDeriv (x: V.T): FD.T RAISES {NA.Error} =
       VAR
         cf := x[LAST(x^)];
         y := NEW(S.T).fromArray(
