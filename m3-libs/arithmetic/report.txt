@@ -21,6 +21,8 @@ METHODS
 
 match, but if the RAISES statement is also given the compiler seems to see a difference in both declarations and thus outputs "procedure redefined (Uniform)"
 
+---------------
+
 It would be of great help, if the compiler tells me with which (implicitly given) declaration the new one conflicts and where it is was done, e.g.
 
 "Rand.m3", line 123: procedure redefined (Uniform), in
@@ -32,3 +34,23 @@ the compiler should give a more precise error diagnostic.
 
 Modula-3 definition says: MOD (x, y: Float) : Float
 but cm3 expects: infix    MOD (x, y: Float) : Float
+
+---------------
+
+Design question:
+
+Is it better to create a pair interface,module for every set of functions for the same datatype
+or is it better to create one interface and multiple modules that export to this interface.
+The reason is that I don't want to mix low level computation routines
+with high level formatting routines.
+
+---------------
+
+Modules with computations of a different naming scheme:
+m3core/fingerprint/Poly: Sum, Product, TimesX, Power
+m3core/word/Word: Plus, Minus, Times, Divide
+Point: Add, Sub, Mul, Div
+
+---------------
+
+Conventions for names of Array and Reference types?
