@@ -6,27 +6,30 @@ Abstract:  Tests for Rand module.
 3/17/96    Warren Smith   Normal, Gamma, and Dirichlet
 *)
 IMPORT LongRealBasic  AS R,
-       LongRealFmtLex AS RF;
-IMPORT xRand,xRNG01,xRNG02,Statistic,Fmt;
+       LongRealFmtLex AS RF,
+       RandomBasic,
+       RandomDECSRC             AS DECSRC,
+       RandomParkMiller         AS ParkMill,
+       RandomBayesDurham        AS BayDur,
+       RandomCombinedSlow       AS CombSlow,
+       RandomCombinedFast       AS CombFast,
+       RandomIteratedSquaring   AS IterSqr,
+       RandomSubtractiveFibo1   AS SubFibo1,
+       RandomSubtractiveFibo2   AS SubFibo2,
+       RandomMultiplicativeFibo AS MulFibo,
+       RandomQuaternaryFibo     AS QuaFibo,
+       RandomImprovedMcGill     AS McGill,
+       RandomWolframCA          AS Wolf;
+IMPORT Statistic,Fmt,xUtils;
+
+<*FATAL xUtils.Error*>
 
 (*=======================*)
 CONST
   Module = "TestRandom.";
 
-(*----------------------*)
-PROCEDURE TestABC():BOOLEAN=
-CONST
-  ftn = Module & "TestABC";
-VAR
-  result:=TRUE;
-BEGIN
-  Debug(1,ftn,"begin\n");
-
-  RETURN result;
-END TestABC;
-
 (*--------------------------*)
-PROCEDURE printstats(name:TEXT;
+PROCEDURE PrintStats(name:TEXT;
                      data:R.Array)=
   CONST
     fmtStyle=RF.FmtStyle{prec:=6,style:=Fmt.Style.Fix};
@@ -45,7 +48,7 @@ PROCEDURE printstats(name:TEXT;
      & " skew=" & RF.Fmt(r.skew,fmtStyle)
      & " kurt=" & RF.Fmt(r.kurt,fmtStyle)
      & "\n");
-END printstats;
+END PrintStats;
 (*----------------------*)
 PROCEDURE TestEngines():BOOLEAN=
 CONST
@@ -53,35 +56,70 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  decsrc:=NEW(xRNG01.DECSRC).init();
-  ran0  :=NEW(xRNG01.ran0).init();
-  ran1  :=NEW(xRNG01.ran1).init();
-  slow  :=NEW(xRNG02.slow).init();
-  fast  :=NEW(xRNG02.fast).init();
+  decsrc  :=DECSRC.New();
+  parkmill:=ParkMill.New();
+  baydur  :=BayDur.New();
+  combslow:=CombSlow.New();
+  combfast:=CombFast.New();
 
-  data:=NEW(R.Array,N);
   (*------------------------*)
-  PROCEDURE do_engine(name:TEXT; rand:xRand.RandomGen)=
+  PROCEDURE DoEngine(name:TEXT; rand:RandomBasic.T)=
+  VAR
+    data:=NEW(R.Array,N);
   BEGIN
     FOR i:= n1 TO nn DO
       data[i]:=rand.uniform();
     END;
-    printstats(name,data);
-  END do_engine;
+    PrintStats(name,data);
+  END DoEngine;
   (*----------------------*)
+
 BEGIN
   Debug(1,ftn,"begin\n");
 
   Msg("N=" & Fmt.Int(N) & "\n");
 
-  do_engine("DECSRC",decsrc);
-  do_engine("ran0  ",ran0);
-  do_engine("ran1  ",ran1);
-  do_engine("slow  ",slow);
-  do_engine("fast  ",fast);
+  DoEngine("DECSRC  ",decsrc);
+  DoEngine("parkmill",parkmill);
+  DoEngine("baydur  ",baydur);
+  DoEngine("combslow",combslow);
+  DoEngine("combfast",combfast);
 
   RETURN result;
 END TestEngines;
+(*----------------------------------------*)
+PROCEDURE TestCombined():BOOLEAN=
+CONST
+  ftn = Module & "TestCombined";
+VAR
+  is:=IterSqr.New();
+  subfibo1:=SubFibo1.New(is);
+  subfibo2:=SubFibo2.New(is);
+  mulfibo :=MulFibo.New(is);
+  quafibo :=QuaFibo.New(is);
+  mcgill  :=McGill.New(is);
+  wolf    :=Wolf.New(is);
+  result:=TRUE;
+BEGIN
+  Debug(1,ftn,"begin\n");
+(*
+  IO.Put( Fmt.LongReal( Uni01() ) & "\n");
+*)
+
+(*
+  FOR i:=0 TO 10000000 DO
+*)
+  FOR i:=0 TO 1000000 DO
+    EVAL subfibo1.engine();
+    EVAL subfibo2.engine();
+    EVAL mulfibo .engine();
+    EVAL quafibo .engine();
+    EVAL mcgill  .engine();
+    EVAL wolf    .engine();
+  END;
+
+  RETURN result;
+END TestCombined;
 (*----------------------*)
 PROCEDURE TestUniform():BOOLEAN=
 CONST
@@ -89,7 +127,7 @@ CONST
   N = 10000; n1 = 0; nn = N-1;
 VAR
   result:=TRUE;
-  rand:=NEW(xRNG02.fast).init();
+  rand:=CombFast.New();
   data1:=NEW(R.Array,N);
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
@@ -101,9 +139,9 @@ BEGIN
     data2[i]:=rand.uniform(min:=-1.0D0, max:=+1.0D0);
     data3[i]:=rand.uniform(min:=+200.0D0, max:=+1000.0D0);
   END;
-  printstats("0..1",data1);
-  printstats("-1..+1",data2);
-  printstats("200..1000",data3);
+  PrintStats("0..1",data1);
+  PrintStats("-1..+1",data2);
+  PrintStats("200..1000",data3);
 
   RETURN result;
 END TestUniform;
@@ -114,14 +152,14 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=NEW(xRNG02.fast).init();
+  rand:=CombFast.New();
   data1:=NEW(R.Array,N);
 BEGIN
   Debug(1,ftn,"begin\n");
   FOR i:=n1 TO nn DO
     data1[i]:=rand.exponential();
   END;
-  printstats("exponential, mean=1",data1);
+  PrintStats("exponential, mean=1",data1);
 
   RETURN result;
 END TestExponential;
@@ -133,7 +171,7 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=NEW(xRNG02.fast).init();
+  rand:=CombFast.New();
   data1:=NEW(R.Array,N);
 BEGIN
   Debug(1,ftn,"begin\n");
@@ -141,9 +179,27 @@ BEGIN
   FOR i:=n1 TO nn DO
     data1[i]:=rand.gaussian();
   END;
-  printstats("Normal (Gaussian): mean=0, var=1",data1);
+  PrintStats("Normal (Gaussian): mean=0, var=1",data1);
   RETURN result;
 END TestNormal;
+(*----------------------*)
+PROCEDURE TestBinomial():BOOLEAN=
+CONST
+  ftn = Module & "TestBinomial";
+  N = 10000; n1=0; nn=N-1;
+VAR
+  result:=TRUE;
+  rand:=CombFast.New();
+  data1:=NEW(R.Array,N);
+BEGIN
+  Debug(1,ftn,"begin\n");
+
+  FOR i:=n1 TO nn DO
+    data1[i]:=FLOAT(rand.binomial(0.3D0,20),R.T);
+  END;
+  PrintStats("Binomial 20",data1);
+  RETURN result;
+END TestBinomial;
 (*----------------------*)
 PROCEDURE TestGamma():BOOLEAN=
 CONST
@@ -151,7 +207,7 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=NEW(xRNG02.fast).init();
+  rand:=CombFast.New();
   data1:=NEW(R.Array,N);
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
@@ -163,9 +219,9 @@ BEGIN
     data2[i]:=rand.gamma(2.5d0);
     data3[i]:=rand.gamma(5.1d0);
   END;
-  printstats("gamma(1.0)",data1);
-  printstats("gamma(2.5)",data2);
-  printstats("gamma(5.1)",data3);
+  PrintStats("gamma(1.0)",data1);
+  PrintStats("gamma(2.5)",data2);
+  PrintStats("gamma(5.1)",data3);
   RETURN result;
 END TestGamma;
 (*----------------------*)
@@ -175,10 +231,12 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=NEW(xRNG02.fast).init();
+(*
+  rand:=CombFast.New();
   data1:=NEW(R.Array,N);
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
+*)
 BEGIN
   Debug(1,ftn,"begin\n");
 
@@ -189,13 +247,15 @@ END TestDirichlet;
 
 (*-------------------------*)
 PROCEDURE TestRandom():BOOLEAN=
-CONST ftn = Module & "TestRandom";
+<*UNUSED*> CONST ftn = Module & "TestRandom";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestEngines();
+  NewLine(); EVAL TestCombined();
   NewLine(); EVAL TestUniform();
   NewLine(); EVAL TestExponential();
   NewLine(); EVAL TestNormal();
+  NewLine(); EVAL TestBinomial();
   NewLine(); EVAL TestGamma();
   NewLine(); EVAL TestDirichlet();
   RETURN result;

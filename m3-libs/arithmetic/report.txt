@@ -1,8 +1,9 @@
 for myself:
 
 todo:
+  - Binomial: do n trials
   - physical units
-  - Interpolation, Random/RNG01/RNG02, Stat
+  - Random/RNG01/RNG02, Stat
   - ODE
   - Hash routines
   - BRANDED strings
