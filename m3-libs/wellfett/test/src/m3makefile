@@ -1,9 +1,0 @@
-import("libm3")
-import("m3na")
-import("wavelib")
-
-module("TestDaubechies")
-module("TestTransition")
-implementation("Main")
-
-program("test")
