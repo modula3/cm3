@@ -19,9 +19,8 @@ if not defined ("SCOREDIR")
   else
     SCOREDIR = "c:\\temp"
   end
-  write (CR, "WARNING: Fours will put its score files in \"",SCOREDIR,"\"", CR)
-  write ("  To reconfigure Fours, run", CR, CR)
-  write ("       m3build -DSCOREDIR=/your/path", CR, CR)
+  write (CR, "NOTE: Fours will put its score files in \"",SCOREDIR,"\"", CR)
+  write ("To reconfigure Fours, run:  cm3 -DSCOREDIR=/your/path", CR, CR)
 end
 > "ScoreDir.i0" in
   write ("INTERFACE ScoreDir;", CR)
@@ -36,5 +35,6 @@ module ("ScoreFile")
 module ("Config")
 implementation ("Main")
 
+m3_option ("-gui")
 Program ("Fours")
 ManPage ("Fours", "1")

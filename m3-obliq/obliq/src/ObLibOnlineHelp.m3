@@ -17,6 +17,7 @@ IMPORT SynWr, Text, ObLib, ObCommand, Bundle, ObliqBdl, ObliqBdl2,
     ObLib.RegisterHelp("text", HelpText);
     ObLib.RegisterHelp("array", HelpArray);
     ObLib.RegisterHelp("net", HelpNet);
+    ObLib.RegisterHelp("replica", HelpReplica);
     
     ObCommand.Register(ObLib.helpCommandSet,
       NEW(ObCommand.T, name:="syntax", sortingName:="syntax", 
@@ -321,6 +322,21 @@ PROCEDURE PrintHelpEnv(self: ObCommand.T; arg: TEXT; data: REFANY:=NIL) =
 	SynWr.NewLine(SynWr.out);
       END;
     END HelpNet;
+
+  PROCEDURE HelpReplica(self: ObCommand.T; arg: TEXT; 
+                       <*UNUSED*>data: REFANY:=NIL)  =
+    BEGIN
+      IF Text.Equal(arg, "!") THEN
+        SynWr.Text(SynWr.out, "  replica           (the built-in replicated object library)\n");
+      ELSIF Text.Equal(arg, "?") THEN
+        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpReplica"));
+        SynWr.NewLine(SynWr.out);
+      ELSE
+	SynWr.Text(SynWr.out, "Command " & self.name 
+	  & ": bad argument: " & arg);
+	SynWr.NewLine(SynWr.out);
+      END;
+    END HelpReplica; 
 
 BEGIN
 END ObLibOnlineHelp.

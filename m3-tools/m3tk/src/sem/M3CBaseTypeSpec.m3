@@ -36,7 +36,8 @@ PROCEDURE Set(an: M3AST.NODE) RAISES {}=
         ts := M3CTypesMisc.CheckedUnpack(
             subrangeType1.as_range.as_exp1.sm_exp_type_spec);
         TYPECASE ts OF
-        | M3AST_AS.Integer_type, M3AST_AS.Enumeration_type =>
+        | M3AST_AS.Integer_type, M3AST_AS.WideChar_type,
+          M3AST_AS.Enumeration_type =>
             (* trivial (includes NIL case) *)
         | M3AST_AS.Subrange_type(subrangeType2) =>
             IF subrangeType2.sm_base_type_spec = NIL THEN

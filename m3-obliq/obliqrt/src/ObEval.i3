@@ -10,7 +10,7 @@ IMPORT SynLocation, ObTree, ObValue;
   VAR interrupt: BOOLEAN := FALSE;
 
     PROCEDURE Term(term: ObTree.Term; VAR (*in-out*)env: ObValue.Env; 
-      glob: ObValue.GlobalEnv; mySelf: ObValue.RemObj): ObValue.Val 
+      glob: ObValue.GlobalEnv; mySelf: ObValue.ValObj): ObValue.Val 
     RAISES {ObValue.Error, ObValue.Exception};
 
   PROCEDURE Call(clos: ObValue.ValFun; READONLY args: ObValue.Vals; 

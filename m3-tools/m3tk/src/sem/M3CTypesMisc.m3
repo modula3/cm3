@@ -159,6 +159,7 @@ PROCEDURE Index(
         | NULL =>
             RETURN Ix.Unknown;
         | M3AST_AS.Integer_type,
+          M3AST_AS.WideChar_type,
           M3AST_AS.Enumeration_type,
           M3AST_AS.Subrange_type =>
             RETURN Ix.Ordinal;

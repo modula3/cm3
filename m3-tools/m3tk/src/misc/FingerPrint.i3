@@ -119,6 +119,9 @@ PROCEDURE DataIncrementalSingle(addr: ADDRESS;
 PROCEDURE TextIncremental(text: TEXT;
                           VAR (* out *) h1, h2: INTEGER) RAISES {};
 
+PROCEDURE TextSubIncremental(text: TEXT;   start, len: CARDINAL;
+                          VAR (* out *) h1, h2: INTEGER) RAISES {};
+
 PROCEDURE TextIncrementalSingle(text: TEXT;
                                 VAR (* out *) h: INTEGER) RAISES {};
 

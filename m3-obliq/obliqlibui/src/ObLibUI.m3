@@ -4,7 +4,7 @@
 UNSAFE MODULE ObLibUI;
 
 IMPORT Color, ColorName, FormsVBT, FVTypes, MultiFilter, MultiSplit, Obliq, 
-       ObBuiltIn, ObEval, ObLib, ObValue, Random, Rd, Rect, SourceVBT, Split, 
+       ObBuiltIn, ObEval, ObLib, ObValue, Rd, Rect, SourceVBT, Split, 
        SynLocation, SynWr, Text, Thread, TranslateVBT, Trestle, TrestleComm, 
        VBT, VBTClass, ZSplit;
 
@@ -21,7 +21,6 @@ VAR setupDone := FALSE;
   PROCEDURE Setup() =
   BEGIN
     SetupColor();
-    SetupRandom();
     SetupVBT();
     SetupZSplit ();
     SetupForm();
@@ -101,7 +100,7 @@ TYPE
           EXCEPT ColorName.NotFound => rgb1 := Color.Black;
           END;
           RETURN NEW(ValColor,  what:="<a Color.T>", picklable:=TRUE,
-              color:=rgb1);
+                     tag := "Color`T", color:=rgb1);
       | ColorCode.RGB => 
           TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
           ELSE ObValue.BadArgType(1, "real", self.name, opCode.name,
@@ -122,6 +121,7 @@ TYPE
           END;
           rgb1 := Color.T{r:=FLOAT(real1), g:=FLOAT(real2), b:=FLOAT(real3)};
           RETURN NEW(ValColor, what:="<a Color.T>", picklable:=TRUE,
+                     tag := "Color`T",
             color:=rgb1);
       | ColorCode.HSV => 
           TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
@@ -145,40 +145,40 @@ TYPE
           END;
           rgb1 := Color.FromHSV(
               Color.HSV{h:=FLOAT(real1), s:=FLOAT(real2), v:=FLOAT(real3)});
-          RETURN NEW(ValColor, what:="<a Color.T>", picklable:=TRUE,
+          RETURN NEW(ValColor, what:="<a Color.T>", tag:="Color`T",picklable:=TRUE,
             color:=rgb1);
       | ColorCode.R => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);
             <*ASSERT FALSE*> 
           END;
           RETURN NEW(ObValue.ValReal, real:=FLOAT(rgb1.r, LONGREAL), temp:=temp);
       | ColorCode.G => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
           RETURN NEW(ObValue.ValReal, real:=FLOAT(rgb1.g, LONGREAL), temp:=temp);
       | ColorCode.B => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
           RETURN NEW(ObValue.ValReal, real:=FLOAT(rgb1.b, LONGREAL), temp:=temp);
       | ColorCode.H => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
           hsv1 := Color.ToHSV(rgb1);
           RETURN NEW(ObValue.ValReal, real:=FLOAT(hsv1.h, LONGREAL), temp:=temp);
       | ColorCode.S => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
           hsv1 := Color.ToHSV(rgb1);
           RETURN NEW(ObValue.ValReal, real:=FLOAT(hsv1.s, LONGREAL), temp:=temp);
       | ColorCode.V => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
           hsv1 := Color.ToHSV(rgb1);
           RETURN NEW(ObValue.ValReal, real:=FLOAT(hsv1.v, LONGREAL), temp:=temp);
       | ColorCode.Brightness => 
           TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
-          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
+          ELSE ObValue.BadArgType(1, "Color`T", self.name, opCode.name, loc);<*ASSERT FALSE*> END;
           RETURN NEW(ObValue.ValReal, 
             real:=FLOAT(Color.Brightness(rgb1), LONGREAL), temp:=temp);
       ELSE
@@ -186,75 +186,6 @@ TYPE
       END;
     END EvalColor;
 
-
-(* ============ "random" package ============ *)
-
-TYPE
-
-  RandomCode = {Int, Real};
-
-  RandomOpCode =  
-    ObLib.OpCode OBJECT
-        code: RandomCode;
-      END;
-    
-  PackageRandom = 
-    ObLib.T OBJECT
-      OVERRIDES
-        Eval:=EvalRandom;
-      END;
-
-  PROCEDURE NewRandomOC(name: TEXT; arity: INTEGER; code: RandomCode)
-    : RandomOpCode =
-  BEGIN
-    RETURN NEW(RandomOpCode, name:=name, arity:=arity, code:=code);
-  END NewRandomOC;
-
-  PROCEDURE SetupRandom() =
-  TYPE OpCodes = ARRAY OF ObLib.OpCode;
-  VAR opCodes: REF OpCodes;
-  BEGIN
-    opCodes := NEW(REF OpCodes, NUMBER(RandomCode));
-    opCodes^ :=
-      OpCodes{
-      NewRandomOC("int",  2, RandomCode.Int),
-      NewRandomOC("real", 2, RandomCode.Real)
-      };
-    ObLib.Register(
-      NEW(PackageRandom, name:="random", opCodes:=opCodes));
-  END SetupRandom;
-
-  PROCEDURE EvalRandom(self: PackageRandom; opCode: ObLib.OpCode; 
-                       <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
-                       <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
-      : ObValue.Val RAISES {ObValue.Error} =
-    VAR real1, real2: LONGREAL; int1, int2: INTEGER;
-    BEGIN
-      CASE NARROW(opCode, RandomOpCode).code OF
-      | RandomCode.Int => 
-          TYPECASE args[1] OF | ObValue.ValInt(node) => int1:=node.int;
-          ELSE ObValue.BadArgType(1, "int", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
-          TYPECASE args[2] OF | ObValue.ValInt(node) => int2:=node.int;
-          ELSE ObValue.BadArgType(2, "int", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
-          LOCK randomMu DO
-            RETURN Obliq.NewInt(random.integer(int1,int2))
-          END;
-      | RandomCode.Real => 
-          TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
-          ELSE ObValue.BadArgType(1, "real", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
-          TYPECASE args[2] OF | ObValue.ValReal(node) => real2:=node.real;
-          ELSE ObValue.BadArgType(2, "real", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
-          LOCK randomMu DO
-            RETURN Obliq.NewReal(random.longreal(real1,real2))
-          END;
-      ELSE
-        ObValue.BadOp(self.name, opCode.name, loc);<*ASSERT FALSE*> 
-      END;
-    END EvalRandom;
-
-VAR 
-  randomMu := NEW(MUTEX);
-  random := NEW(Random.Default).init();
 
 (* ============ "vbt" package ============= *)
 
@@ -286,6 +217,7 @@ PROCEDURE SetupVBT () =
     BEGIN
       RETURN NEW (ObBuiltIn.ValMutex, 
                   what := "<a Thread.Mutex>", 
+                  tag := "Thread`Mutex",
                   picklable := FALSE,
                   mutex := mu);
     END NewMutex;
@@ -662,7 +594,7 @@ PROCEDURE SourceCallback (self: Source; READONLY cd: VBT.MouseRec) =
           TYPECASE args[1] OF | ObValue.ValText(node) => text1:=node.text;
           ELSE ObValue.BadArgType(1, "text", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
           fv1 :=NEW(Form).init(text1);
-          RETURN NEW(ValForm, what:="<a FormsVBT.T>", picklable:=FALSE, 
+          RETURN NEW(ValForm, what:="<a FormsVBT.T>", tag:="FormsVBT`T", picklable:=FALSE, 
               vbt:=fv1);
       | FormCode.FromFile => 
           TYPECASE args[1] OF | ObValue.ValText(node) => text1:=node.text;
@@ -673,7 +605,7 @@ PROCEDURE SourceCallback (self: Source; READONLY cd: VBT.MouseRec) =
           | Rd.Failure =>
             ObValue.RaiseException(formException, opCode.name, loc);<*ASSERT FALSE*> 
           END;
-          RETURN NEW(ValForm, what:="<a FormsVBT.T>", picklable:=FALSE, 
+          RETURN NEW(ValForm, what:="<a FormsVBT.T>", tag:="FormsVBT`T", picklable:=FALSE, 
               vbt:=fv1);
       | FormCode.FromURL => 
           TYPECASE args[1] OF | ObValue.ValText(node) => text1:=node.text;
@@ -684,7 +616,7 @@ PROCEDURE SourceCallback (self: Source; READONLY cd: VBT.MouseRec) =
           | Rd.Failure =>
             ObValue.RaiseException(formException, opCode.name, loc);<*ASSERT FALSE*> 
           END;
-          RETURN NEW(ValForm, what:="<a FormsVBT.T>", picklable:=FALSE, 
+          RETURN NEW(ValForm, what:="<a FormsVBT.T>", picklable:=FALSE, tag:="FormsVBT`T", 
               vbt:=fv1);
       | FormCode.Attach => 
           TYPECASE args[1] OF | ValForm(node) => fv1:=node.vbt;
@@ -1098,7 +1030,8 @@ PROCEDURE SourceCallback (self: Source; READONLY cd: VBT.MouseRec) =
               ObValue.RaiseException(formException, opCode.name, loc);
               <*ASSERT FALSE*>
             END;
-            RETURN NEW (ValVBT, what:="<a VBT.T>", picklable:=FALSE, vbt := v);
+            RETURN NEW (ValVBT, what:="<a VBT.T>", picklable:=FALSE,
+                        tag:= "VBT`T",vbt := v);
           END;
       | FormCode.BeTarget =>
           TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;

@@ -81,7 +81,7 @@ CONST
       M3CToken.ARRAY_, M3CToken.BITS_, M3CToken.INTEGER_, M3CToken.LONGREAL_, M3CToken.NULL_,
       M3CToken.OBJECT_, M3CToken.REAL_, M3CToken.RECORD_, M3CToken.REF_, M3CToken.REFANY_,
       M3CToken.ROOT_, M3CToken.SET_, M3CToken.BRANDED_, M3CToken.UNTRACED_,
-      M3CToken.EXTENDED_};
+      M3CToken.EXTENDED_, M3CToken.WIDECHAR_};
   StartOfType = AlwaysStartOfType +
       TokenSet{M3CToken.Identifier, M3CToken.Bra, M3CToken.PROCEDURE_};
       
@@ -1134,6 +1134,12 @@ PROCEDURE Type(
               Pos(t, integer, TRUE);
               type := integer;
             END;
+        | M3CToken.WIDECHAR_ =>
+            VAR widechar: M3AST_AS.WideChar_type := NEW(M3AST_AS.WideChar_type).init();
+    BEGIN
+              Pos(t, widechar, TRUE);
+              type := widechar;
+            END;
         | M3CToken.LONGREAL_ =>
             VAR longreal: M3AST_AS.LongReal_type := NEW(M3AST_AS.LongReal_type).init();
     BEGIN
@@ -1239,14 +1245,30 @@ PROCEDURE E8(
             result := numeric;
           END;
         ELSIF token = M3CToken.TextLiteral THEN
-          VAR text: M3AST_AS.Text_literal := NEW(M3AST_AS.Text_literal).init();
-    BEGIN
+          VAR
+            text: M3AST_AS.Text_literal := NEW(M3AST_AS.Text_literal).init();
+          BEGIN
             text.lx_litrep := t.lexer.literal();
             result := text;
           END;
-        ELSE
-          VAR char: M3AST_AS.Char_literal := NEW(M3AST_AS.Char_literal).init();
-    BEGIN
+        ELSIF token = M3CToken.WideTextLiteral THEN
+          VAR
+            text: M3AST_AS.WideText_literal := NEW(M3AST_AS.WideText_literal).init();
+          BEGIN
+            text.lx_litrep := t.lexer.literal();
+            result := text;
+          END;
+        ELSIF token = M3CToken.CharLiteral THEN
+          VAR
+            char: M3AST_AS.Char_literal := NEW(M3AST_AS.Char_literal).init();
+          BEGIN
+            char.lx_litrep := t.lexer.literal();
+            result := char;
+          END;
+        ELSE <*ASSERT token = M3CToken.WideCharLiteral*>
+          VAR
+            char: M3AST_AS.WideChar_literal := NEW(M3AST_AS.WideChar_literal).init();
+          BEGIN
             char.lx_litrep := t.lexer.literal();
             result := char;
           END;
@@ -1254,14 +1276,14 @@ PROCEDURE E8(
         Pos(t, result, TRUE);
     | M3CToken.NIL_ =>
         VAR nil: M3AST_AS.Nil_literal := NEW(M3AST_AS.Nil_literal).init();
-    BEGIN
+        BEGIN
           Pos(t, nil, TRUE);
           nil.lx_litrep := t.nil_litrep;
           result := nil;
         END;
     | M3CToken.Identifier =>
         VAR expUsedId: M3AST_AS.Exp_used_id := NEW(M3AST_AS.Exp_used_id).init();
-    BEGIN
+        BEGIN
           Pos(t, expUsedId);
           Id(t, expUsedId.vUSED_ID);
           t.lastSrcPosNode := expUsedId; (* cos Id sets it wrong *)

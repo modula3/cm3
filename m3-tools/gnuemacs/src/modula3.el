@@ -1,3 +1,4 @@
+;;; Font-lock support added on Fri Aug 16 09:24:32 EDT 1996 by Marc Paquette
 ;;; Last modified on Fri Oct  7 10:55:23 PDT 1994 by detlefs
 ;;;      modified on Fri May 15 17:13:12 PDT 1992 by heydon
 
@@ -399,6 +400,39 @@ The following list gives the key bindings.
   (setq comment-indent-function 'c-comment-indent)
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments t)
+
+  ;; Hack when using paren.el for highlighting parenthesised expressions
+  ;; Added by Marc Paquette <marcpa@positron.qc.ca>
+  (if (or (string-match "Lucid" emacs-version)
+	  (string-match "XEmacs" emacs-version))
+      ;; XEmacs
+      (defadvice paren-highlight (around fix-parse-sexp-ignore-comments
+					 activate compile)
+	"Set `parse-sexp-ignore-comments' to nil in order to correctly
+highlight/blink the parenthesis for comment sequences.  Otherwise, we would
+always have a mismatched parenthesis."
+	(let ((parse-sexp-ignore-comments nil))
+	  ad-do-it))
+    ;; FSF Emacs
+    (defadvice show-paren-command-hook (around fix-parse-sexp-ignore-comments
+					       activate compile)
+    "Set `parse-sexp-ignore-comments' to nil in order to correctly
+highlight/blink the parenthesis for comment sequences.  Otherwise, we would
+always have a mismatched parenthesis."
+    (let ((parse-sexp-ignore-comments nil))
+      ad-do-it)))
+
+  (if (boundp 'font-lock-maximum-decoration)
+      (setq-default font-lock-maximum-decoration t)
+    (and (boundp 'font-lock-use-maximal-decoration)
+	 (setq-default font-lock-use-maximal-decoration t)))
+  ;; The function font-lock-set-defaults exists in XEmacs 19.14 and
+  ;; up: it computes font-lock parameters in a number of way.  Use it
+  ;; if it exists.  Otherwise, the brute force method will be used.
+  ;; See comment at the end of this file.
+  ;; --Marc Paquette <marcpa@positron.qc.ca>
+  (if (fboundp 'font-lock-set-defaults)
+      (font-lock-set-defaults))
 
   (run-hooks 'm3::mode-hook))
 
@@ -2624,6 +2658,7 @@ in buffer."
 		      (m3::in-arg-list 0)))))
 
     ("WHILE" . (1 (ls-only)))
+    ("WIDECHAR" . (3 (ls-of)))
     ("WITH" . (2 (ls-only)))))
 
 
@@ -2911,11 +2946,13 @@ Otherwise, indents the current line."
 	   (or (eq (point) (point-max))
 	       (eq (following-char) ?\ )
 	       (eq (following-char) ?\t)
-	       (eq (following-char) ?\n)))
+	       (eq (following-char) ?\n)
+	       (eq (following-char) ?\;)
+	       (eq (following-char) ?\))
+	       ))
       (progn (m3::complete-abbrev)
 	     (m3::indent-line))
     (m3::indent-line)))
-
 
 ;;; ----------------- M3PP pretty printing ------------------
 
@@ -3316,7 +3353,16 @@ new screen of the Modula-3 pool; the screens in that pool are in the
 class m3::poolclass. The Modula-3 pool is of size m3::poolsize."
   (interactive)
   (let ((interface (if (stringp arg) arg (m3::ident-around-point))))
-    (m3::show-file-work interface 'interface)))
+    (condition-case nil
+	(m3::show-file-work interface 'interface)
+      (error
+       ;; Retry with the buffer filename without the .m3 or .mg extension
+       (let ((f (buffer-file-name)))
+	 (if (string-match "[mM][gG3]$" f)
+	     (progn
+	       (setq interface (replace-in-string f "\.[mM][gG3]$" ""))
+	       (m3::show-file-work interface 'interface))))))
+    ))
 
 (defun m3::show-spec (&optional arg)
   "Find a Modula-3 spec file."
@@ -3365,7 +3411,7 @@ class m3::poolclass. The Modula-3 pool is of size m3::poolsize."
 		(m3::locate-file (concat interface ".lm3")  m3::path-default)
 		))))
     (if (not filename)
-	(message "Unable to locate %s '%s'" kind interface)
+	(error "Unable to locate %s '%s'" kind interface)
       (message "found.")
       (m3::show-file filename))))
 
@@ -3459,3 +3505,44 @@ screen."
 "Strips .ext from the given string (where ext is any extension)"
   (let ((dot-pos (string-match "\\." name)))
     (if dot-pos (substring name 0 dot-pos) name)))
+
+;;;-----------------------------------------------------------------
+;;; Font-lock support (added by marcpa@positron.qc.ca)
+(defconst m3::fl-keywords (purecopy
+  (list			   
+   (cons (mapconcat (lambda (e)
+		      (concat "\\b" (car e) "\\b"))
+		    m3::keyword-completions
+		    "\\|")
+	 'font-lock-keyword-face)
+   (cons (concat "^PROCEDURE[ \t]+"
+		 "\\(" m3::poss-qual-ident-re "\\)")
+	 (list 1 'font-lock-function-name-face))
+   (cons (concat "^\\(GENERIC[ \t]+\\)?\\(INTERFACE\\|MODULE\\)[ \t]+"
+		 "\\(" m3::poss-qual-ident-re "\\)")
+	 (list 3 'font-lock-function-name-face))
+   (cons (concat "^END[ \t]+"
+		 "\\(" m3::poss-qual-ident-re "\\)"
+		 "[ \t]*\.")
+	 (list 1 'font-lock-function-name-face))
+   ))
+  "Regexp for identifying Modula3 keywords to be rendered in 
+`font-lock-keyword-face'")
+
+(cond
+ ((and (string-match "XEmacs" emacs-version)
+       (boundp 'emacs-major-version)
+       (or (and
+            (= emacs-major-version 19)
+            (>= emacs-minor-version 14))
+           (= emacs-major-version 20))
+       (fboundp 'font-lock-set-defaults))
+  ;; XEmacs 19.14 or better: Use the font-lock-defaults facility
+  (put 'modula-3-mode 'font-lock-defaults '(m3::fl-keywords nil nil)))
+ ((and (fboundp 'font-lock-mode))
+  ;; XEmacs before 19.14 or FSF Emacs: use brute force
+  (add-hook 'm3::mode-hook (lambda nil
+			     (setq font-lock-keywords
+				   m3::fl-keywords)
+			     (turn-on-font-lock)))))
+

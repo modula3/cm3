@@ -37,7 +37,7 @@ IMPORT M3CTypesMisc, M3CStdTypes, M3CBackEnd, M3CExpValue;
 IMPORT M3CBackEnd_C; (* for representation of brands *)
 
 VAR
-  char_g, boolean_g, cardinal_g, text_g: INTEGER;
+  char_g, widechar_g, boolean_g, cardinal_g, text_g: INTEGER;
 
 PROCEDURE Initialize() RAISES {}=
   BEGIN
@@ -46,6 +46,7 @@ PROCEDURE Initialize() RAISES {}=
        and that doesn't occur until much later. 
     *)
     char_g := M3CStdTypes.Char().tmp_type_code;
+    widechar_g := M3CStdTypes.WideChar().tmp_type_code;
     boolean_g := M3CStdTypes.Boolean().tmp_type_code;
     cardinal_g := M3CStdTypes.Cardinal().tmp_type_code;
     text_g := M3CStdTypes.Text().tmp_type_code;
@@ -197,6 +198,8 @@ PROCEDURE Enumeration(
   BEGIN
     IF e.tmp_type_code = char_g THEN
       Wr.PutChar(s, CharCh);
+    ELSIF e.tmp_type_code = widechar_g THEN
+      Wr.PutChar(s, WideCharCh);
     ELSIF e.tmp_type_code = boolean_g THEN
       Wr.PutChar(s, BooleanCh);
     ELSE
@@ -449,7 +452,7 @@ PROCEDURE ComponentType(s: Wr.T; t: M3AST_AS.M3TYPE) RAISES {Wr.Failure, Thread.
   BEGIN
     M3CTypesMisc.GetTYPE_SPECFromM3TYPE(t, ts);
     TYPECASE ts OF
-    | M3AST_AS.Integer_type, M3AST_AS.FLOAT_TYPE,
+    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.FLOAT_TYPE,
       M3AST_AS.RefAny_type,
       M3AST_AS.Address_type, M3AST_AS.Null_type,
       M3AST_AS.Root_type =>
@@ -460,6 +463,8 @@ PROCEDURE ComponentType(s: Wr.T; t: M3AST_AS.M3TYPE) RAISES {Wr.Failure, Thread.
         Wr.PutChar(s, BooleanCh);
       ELSIF tc = char_g THEN
         Wr.PutChar(s, CharCh);
+      ELSIF tc = widechar_g THEN
+        Wr.PutChar(s, WideCharCh);
       ELSIF tc = cardinal_g THEN
         Wr.PutChar(s, CardinalCh);
       ELSE 
@@ -477,6 +482,8 @@ PROCEDURE TypeSpec(
     TYPECASE t OF <*NOWARN*>
     | M3AST_AS.Integer_type =>
         Wr.PutChar(s, IntegerCh);
+    | M3AST_AS.WideChar_type =>
+        Wr.PutChar(s, WideCharCh);
     | M3AST_AS.Real_type =>
         Wr.PutChar(s, RealCh);
     | M3AST_AS.LongReal_type =>

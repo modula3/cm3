@@ -47,7 +47,7 @@ value immediately.
 (* Type classification *)
 
 TYPE
-  Class = {Null, Integer, Real, LongReal, Extended,
+  Class = {Null, Integer, WideChar, Real, LongReal, Extended,
       RefAny, Address, Root, UntracedRoot,
       Enumeration, IntegerSubrange, EnumerationSubrange, Set, Packed,
       Array, OpenArray, Procedure, Function, Record,

@@ -62,6 +62,7 @@
 /* not compile by itself, because it lacks the #define's for	*/
 /* the names of the lexemes.					*/
 
+#include <stdlib.h>
 #include <ctype.h>
 	
 #define NUMKEYWORDS (sizeof(aok)/sizeof(struct keywordEntry))

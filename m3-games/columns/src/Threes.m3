@@ -19,7 +19,7 @@ PROCEDURE Build () : Game =
     p[4] := New3 (1,0,   1,1,  0,1);  f[4] := 0.125;
     p[5] := New3 (1,1,   0,1,  0,0);  f[5] := 0.125;
     RETURN NEW (Game,
-                  name     := "Threes",
+                  name     := "Threees",
                   speed    := 500,
                   nRows    := 15,
                   nCols    := 6,

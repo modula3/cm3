@@ -368,6 +368,7 @@ subtype ("Enumeration_type" for "BOOLEAN"). *)
   Extended_type <: FLOAT_TYPE;           (* EXTENDED *)
 
   Integer_type <: TYPE_SPEC;             (* INTEGER *)
+  WideChar_type <: TYPE_SPEC;            (* WIDECHAR *)
   Null_type <: TYPE_SPEC;                (* NULL *)
   RefAny_type <: TYPE_SPEC;              (* REFANY *)
   Address_type <: TYPE_SPEC;             (* ADDRESS *)
@@ -544,7 +545,9 @@ TYPE
   Extended_literal <: NUMERIC_LITERAL;
 
   Char_literal <: M3AST_LX.LITERAL;
+  WideChar_literal <: M3AST_LX.LITERAL;
   Text_literal <: M3AST_LX.LITERAL;
+  WideText_literal <: M3AST_LX.LITERAL;
 
 (* Although we could simply represent "NIL" by an "Exp_used_id", it
 occurs sufficiently frequently that we choose to denote it by a

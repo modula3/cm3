@@ -137,6 +137,7 @@ TYPE
       body: Term;
       globals: Globals;
       globalsNo: INTEGER;
+      update: BOOLEAN := FALSE;  (* will be set true if created as "umeth" *)
     END;
 
   TermAlias =
@@ -149,12 +150,14 @@ TYPE
     Term BRANDED "TermObj" OBJECT
       protected: BOOLEAN; 
       sync: Sync; (* NIL if not synchronized. *)
+      semantics: SharingSemantics;
       fields: TermObjFields;
       fieldsNo: INTEGER;
     END;
 
   Sync = {None, Monitored, Reentrant};
-    
+  SharingSemantics = {Remote, Replicated, Simple};
+
   TermObjFields =
     SynLocation.Located BRANDED "TermObjFields" OBJECT
       label: IdeName;
@@ -162,10 +165,39 @@ TYPE
       rest: TermObjFields;
     END;
 
+  TermNotify =
+    Term BRANDED "TermNotify" OBJECT
+      obj: Term;
+      withObj: Term;
+    END;
+
+  TermPickler =
+    Term BRANDED "TermPickler" OBJECT
+      obj: Term;
+      pklIn: Term;
+      pklOut: Term;
+    END;
+
   TermClone =
     Term BRANDED "TermClone" OBJECT
       objs: TermList;
       objsNo: INTEGER;
+    END;
+
+  TermReplicate =
+    Term BRANDED "TermReplicate" OBJECT
+      args: TermList;
+      argsNo: INTEGER;
+    END;
+
+  TermRemote =
+    Term BRANDED "TermRemote" OBJECT
+      obj: Term;
+    END;
+
+  TermSimple =
+    Term BRANDED "TermSimple" OBJECT
+      obj: Term;
     END;
 
   TermRedirect =

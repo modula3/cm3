@@ -320,6 +320,7 @@ TYPE
   TYPE_SPEC = M3AST_AS.M3TYPE OBJECT END;
 
   Integer_type = M3AST_AS.TYPE_SPEC OBJECT END;
+  WideChar_type = M3AST_AS.TYPE_SPEC OBJECT END;
   FLOAT_TYPE = M3AST_AS.TYPE_SPEC OBJECT END;
   Real_type = M3AST_AS.FLOAT_TYPE OBJECT END;
   LongReal_type = M3AST_AS.FLOAT_TYPE OBJECT END;
@@ -436,6 +437,7 @@ REVEAL
   M3AST_AS.Named_type <: Named_type;
   M3AST_AS.TYPE_SPEC <: TYPE_SPEC;
   M3AST_AS.Integer_type <: Integer_type;
+  M3AST_AS.WideChar_type <: WideChar_type;
   M3AST_AS.FLOAT_TYPE <: FLOAT_TYPE;
   M3AST_AS.Real_type <: Real_type;
   M3AST_AS.LongReal_type <: LongReal_type;
@@ -491,7 +493,13 @@ TYPE
   Char_literal = M3AST_LX.LITERAL OBJECT
   END;
 
+  WideChar_literal = M3AST_LX.LITERAL OBJECT
+  END;
+
   Text_literal = M3AST_LX.LITERAL OBJECT
+  END;
+
+  WideText_literal = M3AST_LX.LITERAL OBJECT
   END;
 
   Exp_used_id = M3AST_AS.EXP OBJECT
@@ -586,7 +594,9 @@ REVEAL
   M3AST_AS.Extended_literal <: Extended_literal;
   M3AST_AS.Nil_literal <: Nil_literal; 
   M3AST_AS.Char_literal <: Char_literal;
+  M3AST_AS.WideChar_literal <: WideChar_literal;
   M3AST_AS.Text_literal <: Text_literal;
+  M3AST_AS.WideText_literal <: WideText_literal;
   M3AST_AS.Constructor <: Constructor;
   M3AST_AS.CONS_ELEM <: CONS_ELEM;
   M3AST_AS.RANGE_EXP_elem <: RANGE_EXP_elem;

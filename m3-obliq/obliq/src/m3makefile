@@ -6,6 +6,10 @@
 %      modified on Sat Jun  4 18:21:04 1994 by luca
 %      modified on Wed Dec 22 15:25:31 PST 1993 by kalsow
 
+%%%%  if AT_SRC m3_option("-O") end   --- old m3build
+%%%% remove_m3_option("-w1")		--- old m3build
+%%%% m3_option("-w2")			--- old m3build
+
 import("netobj")
 import("synloc")
 import("synex")
@@ -33,6 +37,7 @@ resource_named("ObliqHelpChar","char.hlp")
 resource_named("ObliqHelpText","text.hlp")
 resource_named("ObliqHelpArray","array.hlp")
 resource_named("ObliqHelpNet","net.hlp")
+resource_named("ObliqHelpReplica","replica.hlp")
 resource_named("ObliqHelpRd","rd.hlp")
 resource_named("ObliqHelpWr","wr.hlp")
 resource_named("ObliqHelpLex","lex.hlp")
@@ -41,6 +46,7 @@ resource_named("ObliqHelpPickle","pickle.hlp")
 resource_named("ObliqHelpProcess","process.hlp")
 resource_named("ObliqHelpVBT","vbt.hlp")
 resource_named("ObliqHelpThread","thread.hlp")
+resource_named("ObliqHelpRandom","random.hlp")
 resource_named("ObliqHelpColor","color.hlp")
 resource_named("ObliqHelpForm","form.hlp")
 resource_named("ObliqHelpRects","rects.hlp")
