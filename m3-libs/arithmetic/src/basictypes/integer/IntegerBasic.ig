@@ -30,6 +30,7 @@ CONST
 <*INLINE*> PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y*)
 <*INLINE*> PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
 <*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
+CONST ScaleInt = Mul;
 
 (*============================*)
 (* Factoring                  *)

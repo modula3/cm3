@@ -144,6 +144,14 @@ BEGIN
   RETURN z;
 END Scale;
 
+PROCEDURE ScaleInt(x:T;y:INTEGER):T=
+VAR
+  z:T;
+BEGIN
+  z.re:=R.ScaleInt(x.re,y);
+  z.im:=R.ScaleInt(x.im,y);
+  RETURN z;
+END ScaleInt;
 
 
 (*==========================*)

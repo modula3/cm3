@@ -1,4 +1,4 @@
-GENERIC INTERFACE PolynomialFast(R);
+GENERIC INTERFACE PolynomialBasic(R);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to Polynomial functions
@@ -35,7 +35,7 @@ PROCEDURE Add(p1,p2:T):T;  (*return p1+p2*)
 PROCEDURE Sub(p1,p2:T):T;  (*return p1-p2*)
 PROCEDURE Mul(p1,p2:T):T;  (*return p1*p2*)
 PROCEDURE DivMod(p1,p2:T;        (*compute p1/p2 *) 
-              VAR r:T):T;     (*giving quotient with remainder r*)
+              VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
 (*
 PROCEDURE deflate(p:T;        (*divide this polynomial*)
                   c:R.T;      (* by (x-c) *)
@@ -52,4 +52,4 @@ PROCEDURE EvalDerivate(p:T;          (*Eval this polynomial*)
                Err.bad_size if nd>NUMBER(pd)+1
           *)
 (*==========================*)
-END PolynomialFast.
+END PolynomialBasic.
