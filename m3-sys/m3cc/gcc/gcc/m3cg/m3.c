@@ -2692,6 +2692,11 @@ do_begin_procedure ()
     push_function_context ();
   } else {
     compiling_body = 1;
+    /* make sure there is a difference between saveable_obstack and
+       current_obstack: the back-end optimizers rely on this (e.g.,
+       varasm) */
+    push_obstacks_nochange();
+    temporary_allocation();
   }
 
   current_function_decl = p;
@@ -2726,6 +2731,10 @@ do_end_procedure ()
     pop_function_context ();
   } else {
     compiling_body = 0;
+    /* Go back to permanent allocation, but without freeing objects
+       created in the interim, since M3 holds on to some nested
+       allocations until the end of the module */
+    pop_obstacks ();
   }
 }
 
