@@ -18,37 +18,37 @@ fi
 . "$sysinfo"
 
 # define build and ship programs for Critical Mass Modula-3
-CM3_BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT='${CM3ROOT}' ${BUILDARGS}}"
-CM3_CLEANLOCAL="${CLEANLOCAL:-cm3 -clean -override -DROOT='${CM3ROOT}' ${CLEANARGS}}"
-CM3_BUILDGLOBAL="${BUILDGLOBAL:-cm3 -build  -DROOT='${CM3ROOT}' ${BUILDARGS}}"
-CM3_CLEANGLOBAL="${CLEANGLOBAL:-cm3 -clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
-CM3_SHIP="${SHIP:-cm3 -ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
+CM3_BUILDLOCAL="${BUILDLOCAL:-${CM3} -build -override -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+CM3_CLEANLOCAL="${CLEANLOCAL:-${CM3} -clean -override -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+CM3_BUILDGLOBAL="${BUILDGLOBAL:-${CM3} -build  -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+CM3_CLEANGLOBAL="${CLEANGLOBAL:-${CM3} -clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+CM3_SHIP="${SHIP:-${CM3} -ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
-PM3_BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT='${CM3ROOT}' ${BUILDARGS}}"
-PM3_CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT='${CM3ROOT}' ${CLEANARGS}}"
-PM3_BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT='${CM3ROOT}' ${BUILDARGS}}"
-PM3_CLEANGLOBAL="${CLEANGLOBAL:-m3build clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
-PM3_SHIP="${SHIP:-m3ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
+PM3_BUILDLOCAL="${BUILDLOCAL:-${M3BUILD} -O -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+PM3_CLEANLOCAL="${CLEANLOCAL:-${M3BUILD} clean -O -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+PM3_BUILDGLOBAL="${BUILDGLOBAL:-${M3BUILD} -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+PM3_CLEANGLOBAL="${CLEANGLOBAL:-${M3BUILD} clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+PM3_SHIP="${SHIP:-${M3SHIP} -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 
 # define build and ship programs for DEC SRC Modula-3
-SRC_BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT='${CM3ROOT}' ${BUILDARGS}}"
-SRC_CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT='${CM3ROOT}' ${CLEANARGS}}"
-SRC_BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT='${CM3ROOT}' ${BUILDARGS}}"
-SRC_CLEANGLOBAL="${CLEANGLOBAL:-m3build clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
-SRC_SHIP="${SHIP:-m3ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
+SRC_BUILDLOCAL="${BUILDLOCAL:-${M3BUILD} -O -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+SRC_CLEANLOCAL="${CLEANLOCAL:-${M3BUILD} clean -O -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+SRC_BUILDGLOBAL="${BUILDGLOBAL:-${M3BUILD} -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+SRC_CLEANGLOBAL="${CLEANGLOBAL:-${M3BUILD} clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+SRC_SHIP="${SHIP:-${M3SHIP} -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 
 # other commands
 REALCLEAN="${REALCLEAN:-rm -rf ${TARGET}}"
 
 # choose the compiler to use
-if type cm3 2>/dev/null >/dev/null ; then
+if type ${CM3C} 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${CM3_BUILDLOCAL}"
   CLEANLOCAL="${CM3_CLEANLOCAL}"
   BUILDGLOBAL="${CM3_BUILDGLOBAL}"
   CLEANGLOBAL="${CM3_CLEANGLOBAL}"
   SHIP="${CM3_SHIP}"
-elif type m3build 2>/dev/null >/dev/null ; then
+elif type ${M3BUILD} 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${PM3_BUILDLOCAL}"
   CLEANLOCAL="${PM3_CLEANLOCAL}"
   BUILDGLOBAL="${PM3_BUILDGLOBAL}"
@@ -56,7 +56,7 @@ elif type m3build 2>/dev/null >/dev/null ; then
   SHIP="${CM3_SHIP}"
 else
   if [ -z "${BUILDLOCAL}" -o -z "${BUILDGLOBAL}" -o -z "${SHIP}" ] ; then
-    echo "cm3 or m3build not found in your path, don't know how to compile" \
+    echo "${CM3C} or ${M3BUILD} not found in your path, don't know how to compile" \
       1>&2
     exit 1
   fi
