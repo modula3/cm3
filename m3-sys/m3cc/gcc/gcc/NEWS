@@ -7,49 +7,66 @@ see ONEWS.
 ======================================================================
 http://gcc.gnu.org/gcc-3.2/index.html
 
-                                  GCC 3.2
+                           GCC 3.2 Release Series
 
-   November 19, 2002
+   February 5, 2003
 
    The [1]GNU project and the GCC developers are pleased to announce the
-   release of GCC 3.2.1.
+   release of GCC 3.2.2.
 
-   The links below still apply to GCC 3.2.1.
+   The purpose of the GCC 3.2 release series is to provide a stable
+   platform for OS distributors to use building their next releases. A
+   primary objective was to stabilize the C++ ABI; we believe that the
+   interface to the compiler and the C++ standard library are now
+   relatively stable.
 
-   August 14, 2002
+   Be aware that C++ code compiled by GCC 3.2.x will (in general) not
+   interoperate with code compiled by GCC 3.1.1 or earlier.
 
-   The [2]GNU project and the GCC developers are pleased to announce the
-   release of GCC 3.2.
+   Please refer to our [2]detailed list of news, caveats, and bug-fixes
+   for further information.
+
+Release History
+
+   GCC 3.2.2
+          February 5, 2003 ([3]changes)
+
+   GCC 3.2.1
+          November 19, 2002 ([4]changes)
+
+   GCC 3.2
+          August 14, 2002 ([5]changes)
+
+References and Acknowledgements
 
    GCC used to stand for the GNU C Compiler, but since the compiler
    supports several other languages aside from C, it now stands for the
    GNU Compiler Collection.
 
-   A list of [3]successful builds is updated as new information becomes
+   A list of [6]successful builds is updated as new information becomes
    available.
 
    The GCC developers would like to thank the numerous people that have
-   contributed [4]new features, improvements, bug fixes, and other
-   changes as well as test results to GCC. This [5]amazing group of
-   volunteers is what makes GCC successful.
+   contributed new features, improvements, bug fixes, and other changes
+   as well as test results to GCC. This [7]amazing group of volunteers is
+   what makes GCC successful.
 
-   For additional information about GCC please refer to the [6]GCC
-   project web site or contact the [7]GCC development mailing list.
+   For additional information about GCC please refer to the [8]GCC
+   project web site or contact the [9]GCC development mailing list.
 
-   To obtain GCC please use [8]our mirror sites, one of the [9]GNU mirror
-   sites, or [10]our CVS server.
+   To obtain GCC please use [10]our mirror sites, one of the [11]GNU
+   mirror sites, or [12]our CVS server.
      _________________________________________________________________
-     _________________________________________________________________
 
-   Please send FSF & GNU inquiries & questions to [11]gnu@gnu.org. There
-   are also [12]other ways to contact the FSF.
+   Please send FSF & GNU inquiries & questions to [13]gnu@gnu.org. There
+   are also [14]other ways to contact the FSF.
 
-   These pages are maintained by [13]The GCC team.
+   These pages are maintained by [15]The GCC team.
 
 
     Please send comments on these web pages and GCC to our public
-    mailing list at [14]gcc@gnu.org or [15]gcc@gcc.gnu.org, send other
-    questions to [16]gnu@gnu.org.
+    mailing list at [16]gcc@gnu.org or [17]gcc@gcc.gnu.org, send other
+    questions to [18]gnu@gnu.org.
 
    Copyright (C) Free Software Foundation, Inc., 59 Temple Place - Suite
    330, Boston, MA 02111, USA.
@@ -57,86 +74,38 @@ http://gcc.gnu.org/gcc-3.2/index.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-18 [17]Valid XHTML 1.0 
+   Last modified 2003-02-21 [19]Valid XHTML 1.0 
 
 References
 
    1. http://www.gnu.org/
-   2. http://www.gnu.org/
-   3. http://gcc.gnu.org/gcc-3.2/buildstat.html
-   4. http://gcc.gnu.org/gcc-3.2/changes.html
-   5. http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
-   6. http://gcc.gnu.org/index.html
-   7. mailto:gcc@gcc.gnu.org
-   8. http://gcc.gnu.org/mirrors.html
-   9. http://www.gnu.org/order/ftp.html
-  10. http://gcc.gnu.org/cvs.html
-  11. mailto:gnu@gnu.org
-  12. http://www.gnu.org/home.html#ContactInfo
-  13. http://gcc.gnu.org/about.html
-  14. mailto:gcc@gnu.org
-  15. mailto:gcc@gcc.gnu.org
-  16. mailto:gnu@gnu.org
-  17. http://validator.w3.org/check/referer
+   2. http://gcc.gnu.org/gcc-3.2/changes.html
+   3. http://gcc.gnu.org/gcc-3.2/changes.html#3.2.2
+   4. http://gcc.gnu.org/gcc-3.2/changes.html#3.2.1
+   5. http://gcc.gnu.org/gcc-3.2/changes.html#3.2
+   6. http://gcc.gnu.org/gcc-3.2/buildstat.html
+   7. http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
+   8. http://gcc.gnu.org/index.html
+   9. mailto:gcc@gcc.gnu.org
+  10. http://gcc.gnu.org/mirrors.html
+  11. http://www.gnu.org/order/ftp.html
+  12. http://gcc.gnu.org/cvs.html
+  13. mailto:gnu@gnu.org
+  14. http://www.gnu.org/home.html#ContactInfo
+  15. http://gcc.gnu.org/about.html
+  16. mailto:gcc@gnu.org
+  17. mailto:gcc@gcc.gnu.org
+  18. mailto:gnu@gnu.org
+  19. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.2/changes.html
 
-         GCC 3.2 Release Series -- Changes, New Features, and Fixes
+                           GCC 3.2 Release Series
+                      Changes, New Features, and Fixes
 
-   The purpose of this release series is to provide a stable platform for
-   OS distributors to use building their next releases. A primary
-   objective was to stabilize the C++ ABI; we believe that the interface
-   to the compiler and the C++ standard library are now stable.
+Caveats and New Features
 
-   Be aware that C++ code compiled by GCC 3.2.x will not interoperate
-   with code compiled by GCC 3.1.1 or earlier.
-
-Frontend Enhancements
-
-     * C/C++/Objective-C
-          + The method of constructing the list of directories to be
-            searched for header files has been revised. If a directory
-            named by a -I option is a standard system include directory,
-            the option is ignored to ensure that the default search order
-            for system directories and the special treatment of system
-            header files are not defeated.
-          + The C and Objective-C compilers no longer accept the "Naming
-            Types" extension (typedef foo = bar); it was already
-            unavailable in C++. Code which uses it will need to be
-            changed to use the "typeof" extension instead: typedef
-            typeof(bar) foo. (We have removed this extension without a
-            period of deprecation because it has caused the compiler to
-            crash since version 3.0 and no one noticed until very
-            recently. Thus we conclude it is not in widespread use.)
-     * C++
-          + There are now no known differences between the C++ ABI
-            implemented in GCC and the multi-vendor standard. We believe
-            that the ABI for the C++ standard library is now stable and
-            will not change in future versions of the compiler. However,
-            hard experience has taught us to be cautious; it is possible
-            that more problems will be found. It is our intention to make
-            changes to the ABI only if they are necessary for correct
-            compilation of C++, as opposed to conformance to the ABI
-            documents.
-          + For details on how to build an ABI compliant compiler for
-            GNU/Linux systems, check the [1]common C++ ABI page.
-
-New Targets and Target Specific Improvements
-
-     * IA-32
-          + Fixed a number of bugs in SSE and MMX intrinsics.
-          + Fixed common compiler crashes with SSE instruction set
-            enabled (implied by -march=pentium3, pentium4, athlon-xp)
-          + __m128 and __m128i is not 128bit aligned when used in
-            structures.
-     * x86-64
-          + A bug whereby the compiler could generate bad code for bzero
-            has been fixed.
-          + ABI fixes (implying ABI incompatibilities with previous
-            version in some corner cases)
-          + Fixed prefetch code generation
-
-Caveats
+  Caveats
 
      * The C++ compiler does not correctly zero-initialize
        pointers-to-data members. You must explicitly initialize them. For
@@ -145,19 +114,208 @@ Caveats
        fixed in GCC 3.2 without inducing unacceptable risks. It will be
        fixed in GCC 3.3.
      * This GCC release is based on the GCC 3.1 sourcebase, and thus has
-       all the [2]changes in the GCC 3.1 series. In addition, GCC 3.2 has
+       all the [1]changes in the GCC 3.1 series. In addition, GCC 3.2 has
        a number of C++ ABI fixes which make its C++ compiler generate
        binary code which is incompatible with the C++ compilers found in
        earlier GCC releases, including GCC 3.1 and GCC 3.1.1.
 
-                                 GCC 3.2.2
+  Frontend Enhancements
 
-Miscellaneous Improvements
+    C/C++/Objective-C
 
-     * As of 3.2.2, the Makefile suite supports redirection of make
-       install by means of the DESTDIR variable.
+     * The method of constructing the list of directories to be searched
+       for header files has been revised. If a directory named by a -I
+       option is a standard system include directory, the option is
+       ignored to ensure that the default search order for system
+       directories and the special treatment of system header files are
+       not defeated.
+     * The C and Objective-C compilers no longer accept the "Naming
+       Types" extension (typedef foo = bar); it was already unavailable
+       in C++. Code which uses it will need to be changed to use the
+       "typeof" extension instead: typedef typeof(bar) foo. (We have
+       removed this extension without a period of deprecation because it
+       has caused the compiler to crash since version 3.0 and no one
+       noticed until very recently. Thus we conclude it is not in
+       widespread use.)
 
-                                 GCC 3.2.1
+    C++
+
+     * There are now no known differences between the C++ ABI implemented
+       in GCC and the multi-vendor standard. We believe that the ABI for
+       the C++ standard library is now stable and will not change in
+       future versions of the compiler. However, hard experience has
+       taught us to be cautious; it is possible that more problems will
+       be found. It is our intention to make changes to the ABI only if
+       they are necessary for correct compilation of C++, as opposed to
+       conformance to the ABI documents.
+     * For details on how to build an ABI compliant compiler for
+       GNU/Linux systems, check the [2]common C++ ABI page.
+
+  New Targets and Target Specific Improvements
+
+    IA-32
+
+     * Fixed a number of bugs in SSE and MMX intrinsics.
+     * Fixed common compiler crashes with SSE instruction set enabled
+       (implied by -march=pentium3, pentium4, athlon-xp)
+     * __m128 and __m128i is not 128bit aligned when used in structures.
+
+    x86-64
+
+     * A bug whereby the compiler could generate bad code for bzero has
+       been fixed.
+     * ABI fixes (implying ABI incompatibilities with previous version in
+       some corner cases)
+     * Fixed prefetch code generation
+     _________________________________________________________________
+
+GCC 3.2.2
+
+   Beginning with 3.2.2, GCC's Makefile suite supports redirection of
+   make install by means of the DESTDIR variable. Parts of the GCC tree
+   have featured that support long before, but now it is available even
+   from the top level.
+
+   Other than that, GCC 3.2.2 is a bug fix release only; there are no new
+   features that were not present in GCC 3.2.1.
+
+  Bug Fixes
+
+   On the following i386-based systems GCC 3.2.1 broke the C ABI wrt.
+   functions returning structures: Cygwin, FreeBSD (GCC 3.2.1 as shipped
+   with FreeBSD 5.0 does not have this problem), Interix, a.out-based
+   Linux and NetBSD, OpenBSD, and Darwin. GCC 3.2.2 reverts this ABI
+   change, and thus restores ABI-compatibility with previous releases
+   (except GCC 3.2.1) on these platforms.
+
+   This section lists the problem reports (PRs) from GCC's bug tracking
+   system (GNATS) that are known to be fixed in the 3.2.2 release. This
+   list might not be complete (that is, it is possible that some PRs that
+   have been fixed are not listed here).
+
+   The sorting is slightly different from the GNATS categories, and some
+   of the titles have been changed to make them more clear.
+
+    Internal Compiler Errors (multi-platform)
+
+     * [3]5919: (c++) ICE when passing variable array to template
+       function
+     * [4]7129: (c++) ICE with min/max assignment operators (<?= and >?=)
+     * [5]7507: ICE with -O2 when address of called function is a
+       complicated expression
+     * [6]7622: ICE with nested inline functions if function's address is
+       taken
+     * [7]7681: (fortran) ICE in compensate_edge, in reg-stack.c (also PR
+       [8]9258)
+     * [9]8031: (c++) ICE in code comparing typeids and casting from
+       virtual base
+     * [10]8275: ICE in simplify_subreg
+     * [11]8332: (c++) builtin strlen/template interaction causes ICE
+     * [12]8372: (c++) ICE on explicit call of destructor
+     * [13]8439: (c, not c++) empty struct causes ICE
+     * [14]8442: (c++) ICE with nested template classes
+     * [15]8518: ICE when compiling mplayer ("extern inline" issue)
+     * [16]8615: (c++) ICE with out-of-range character constant template
+       argument
+     * [17]8663: (c++) ICE in cp_expr_size, at cp-lang.c:307
+     * [18]8799: (c++) ICE: error reporting routines re-entered
+     * [19]9328: (c++) ICE with typeof(X) for overloaded X
+     * [20]9465: (preprocessor) cpp -traditional ICE on null bytes
+
+    C++ (compiler and library) bugs
+
+     * [21]47: scoping in nested classes is broken
+     * [22]6745: problems with iostream rdbuf() member function
+     * [23]8214: conversion from const char* const to char* sometimes
+       accepted illegally
+     * [24]8493: builtin strlen and overload resolution (same bug as
+       [25]8332)
+     * [26]8503: strange behaviour of function types
+     * [27]8727: compiler confused by inheritance from an anonymous
+       struct
+     * [28]7445: poor performance of std::locale::classic() in
+       multi-threaded applications
+     * [29]8230: mishandling of overflow in vector<T>::resize
+     * [30]8399: sync_with_stdio(false) breaks unformatted input
+     * [31]8662: illegal access of private member of unnamed class is
+       accepted
+     * [32]8707: "make distclean" fails in libstdc++-v3 directory
+     * [33]8708: __USE_MALLOC doesn't work
+     * [34]8790: Use of non-thread-safe strtok in src/localename.cc
+     * [35]8887: Bug in date formats with --enable-clocale=generic
+     * [36]9076: Call Frame Instructions are not handled correctly during
+       unwind operation
+     * [37]9151: std::setprecision limited to 16 digits when outputting a
+       double to a stream
+     * [38]9168: codecvt<char, char, mbstate_t> overwrites output buffers
+     * [39]9269: libstdc++ headers: explicit specialization of function
+       must precede its first use
+     * [40]9322: return value of basic_streambuf<>::getloc affected by
+       locale::global
+     * [41]9433: segfault in runtime support for dynamic_cast
+
+    C and optimizer bugs
+
+     * [42]8032: GCC incorrectly initializes static structs that have
+       flexible arrays
+     * [43]8639: simple arithmetic expression broken
+     * [44]8794: optimization improperly eliminates certain expressions
+     * [45]8832: traditional "asm volatile" code is illegally optimized
+     * [46]8988: loop optimizer bug: with -O2, code is generated that
+       segfaults (found on i386, bug present for all platforms)
+     * [47]9492: structure copy clobbers subsequent stores to structure
+
+    Objective-C bugs
+
+     * [48]9267: Objective-C parser won't build with newer bison versions
+       (e.g. 1.875)
+
+    Ada bugs
+
+     * [49]8344: Ada build problem due to conflict between gcc/final.o,
+       gcc/ada/final.o
+
+    Preprocessor bugs
+
+     * [50]8524: _Pragma within macros is improperly expanded
+     * [51]8880: __WCHAR_TYPE__ macro incorrectly set to "long int" with
+       -fshort-wchar
+
+    ARM-specific
+
+     * [52]9090: arm ICE with >= -O2; regression from gcc-2.95
+
+    x86-specific (Intel/AMD)
+
+     * [53]8588: ICE in extract_insn, at recog.c:NNNN (shift instruction)
+     * [54]8599: loop unroll bug with -march=k6-3
+     * [55]9506: ABI breakage in structure return (affects BSD and
+       Cygwin, but not GNU/Linux)
+
+    FreeBSD 5.0 specific
+
+     * [56]9484: GCC 3.2.1 Bootstrap failure on FreeBSD 5.0
+
+    RTEMS-specific
+
+     * [57]9292: hppa1.1-rtems configurery problems
+     * [58]9293: [m68k-elf/rtems] config/m68k/t-crtstuff bug
+     * [59]9295: [mips-rtems] config/mips/rtems.h init/fini issue
+     * [60]9296: gthr-rtems regression
+     * [61]9316: powerpc-rtems: extending multilibs
+
+    HP-PA specific
+
+     * [62]9493: ICE with -O2 when building a simple function
+
+    Documentation
+
+     * [63]7341: hyperlink to gcov in GCC documentation doesn't work
+     * [64]8947: Please add a warning about "-malign-double" in docs
+     * [65]7448, [66]8882: typo cleanups
+     _________________________________________________________________
+
+GCC 3.2.1
 
    3.2.1 adds a new warning, -Wabi. This option warns when GNU C++
    generates code that is known not to be binary-compatible with the
@@ -173,175 +331,199 @@ Miscellaneous Improvements
    the new warning there are no new features that were not present in GCC
    3.2.
 
-   In addition, the previous fix for [3]PR 7445 (poor performance of
+   In addition, the previous fix for [67]PR 7445 (poor performance of
    std::locale::classic() in multi-threaded applications) was reverted
    ("unfixed"), because the "fix" was not thread-safe.
 
-Bug Fixes
+  Bug Fixes
 
-   This document lists the problem reports (PRs) from GCC's bug tracking
-   system ([4]GNATS) that are known to be fixed in the 3.2.1 release.
+   This section lists the problem reports (PRs) from GCC's bug tracking
+   system ([68]GNATS) that are known to be fixed in the 3.2.1 release.
    This list might not be complete (that is, it is possible that some PRs
    that have been fixed are not listed here). As you can see, the number
    of bug fixes is quite large, so it is strongly recommended that users
    of earlier gcc 3.x releases upgrade to GCC 3.2.1.
-     * Internal Compiler Errors (multi-platform)
-          + [5]2521: (c++) ICE in build_ptrmemfunc, in cp/typeck.c
-          + [6]5661: (c++) ICE instantiating template on array of unknown
-            size (bad code)
-          + [7]6419: (c++) ICE in make_decl_rtl for "longest" attribute
-            on 64-bit platforms
-          + [8]6994: (c++) ICE in find_function_data
-          + [9]7150: preprocessor: GCC -dM -E gives an ICE
-          + [10]7160: ICE when optimizing branches without a return value
-          + [11]7228: (c++) ICE when using member template and template
-            function
-          + [12]7266: (c++) ICE with -pedantic on missing typename
-          + [13]7353: ICE from use of "Naming Types" extension, see above
-          + [14]7411: ICE in instantiate_virtual_regs_1, in function.c
-          + [15]7478: (c++) ICE on static_cast inside template
-          + [16]7526: preprocessor core dump when _Pragma implies #pragma
-            dependency
-          + [17]7721: (c++) ICE on simple (but incorrect) template
-            ([18]7803 is a duplicate)
-          + [19]7754: (c++) ICE on union with template parameter
-          + [20]7788: (c++) redeclaring a definition as an incomplete
-            class causes ICE
-          + [21]8031: (c++) ICE in comptypes, in cp/typeck.c
-          + [22]8055: preprocessor dies with SIG11 when building FreeBSD
-            kernel
-          + [23]8067: (c++) ICE due to mishandling of __FUNCTION__ and
-            related variables
-          + [24]8134: (c++) ICE in force_store_init_value on legal code
-          + [25]8149: (c++) ICE on incomplete type
-          + [26]8160: (c++) ICE in build_modify_expr, in cp/typeck.c:
-            array initialization
-     * C++ (compiler and library) bugs
-          + [27]5607: No pointer adjustment in covariant return types
-          + [28]6579: Infinite loop with statement expressions in member
-            initialization
-          + [29]6803: Default copy constructor bug in GCC 3.1
-          + [30]7176: g++ confused by friend and static member with same
-            name
-          + [31]7188: Segfault with template class and recursive
-            (incorrect) initializer list
-          + [32]7306: Regression: GCC 3.x fails to compile code with
-            virtual inheritance if a method has a variable number of
-            arguments
-          + [33]7461: ctype<char>::classic_table() returns offset array
-            on Cygwin
-          + [34]7524: f(const float arg[3]) fails
-          + [35]7584: Erroneous ambiguous base error on using declaration
-          + [36]7676: Member template overloading problem
-          + [37]7679: infinite loop when a right parenthesis is missing
-          + [38]7811: default locale not taken from environment
-          + [39]7961: compare( char *) implemented incorrectly in
-            basic_string<>
-          + [40]8071: basic_ostream::operator<<(streambuf*) loops forever
-            if streambuf::underflow() leaves gptr() NULL (dups: [41]8127,
-            [42]6745)
-          + [43]8096: deque::at() throws std::range_error instead of
-            std::out_of_range
-          + [44]8127: cout << cin.rdbuf() infinite loop
-          + [45]8218: Excessively large memory consumed for classes with
-            large array members
-          + [46]8287: GCC 3.2: Destructor called for non-constructed
-            local object
-          + [47]8347: empty vector range used in string construction
-            causes core dump
-          + [48]8348: fail() flag is set in istringstream when eof() flag
-            is set
-          + [49]8391: regression: infinite loop in
-            cp/decl2.c(finish_file)
-     * C and optimizer bugs
-          + [50]6627: -fno-align-functions doesn't seem to disable
-            function alignment
-          + [51]6631: life_analysis misoptimizes code to initialize
-            fields of a structure
-          + [52]7102: unsigned char division results in floating
-            exception
-          + [53]7120: Run once loop should *always* be unrolled
-            (pessimization)
-          + [54]7209: Bug involving array referencing and ?: operator
-          + [55]7515: invalid inlining of global function with -O3
-          + [56]7814: incorrect scheduling for glibc-2.2.92 strcpy test
-          + [57]8467: bug in sibling call optimization
-     * Preprocessor bugs
-          + [58]4890: incorrect line markers from the traditional
-            preprocessor
-          + [59]7357: -M option omits system headers files (making it the
-            same as -MM)
-          + [60]7358: Changes to Sun's make Dependencies
-          + [61]7602: C++ header files found in CPLUS_INCLUDE_PATH
-            treated as C headers
-          + [62]7862: Interrupting GCC -MD removes .d file but not .o
-          + [63]8190: Failed compilation deletes -MD dependency file
-          + [64]8524: _Pragma within macro is improperly expanded
-     * x86 specific (Intel/AMD)
-          + [65]5351: (i686-only) function pass-by-value structure copy
-            corrupts stack ([66]7591 is a duplicate)
-          + [67]6845, [68]7034, [69]7124, [70]7174: ICE's with
-            -march=pentium3/pentium2/athlon (these are all the same
-            underlying bug, in MMX register use)
-          + [71]7134, [72]7375, [73]7390: ICE with -march=athlon (maybe
-            same as above?)
-          + [74]6890: xmmintrin.h, _MM_TRANSPOSE4_PS is broken
-          + [75]6981: wrong code in 64-bit manipulation on x86
-          + [76]7242: GCC -mcpu=pentium[23] doesn't define
-            __tune_pentiumpro__ macro
-          + [77]7396: ix86: cmpgt_ss, cmpge_ss, cmpngt_ss, and cmpnge_ss
-            SSE intrinsics are broken
-          + [78]7630: GCC 3.2 breaks on Mozilla 1.0's JS sources with
-            -march=pentium4
-          + [79]7693: Typo in i386 mmintrin.h header
-          + [80]7723: ICE - Pentium3 sse - GCC 3.2
-          + [81]7951: ICE on -march=pentium4 -O2 -mfpmath=sse
-          + [82]8146: (i686 only) gcc 3.2 miscompiles gcc 2.95.3
-     * PowerPC specific
-          + [83]5967: GCC bug when profiling nested functions on powerpc
-          + [84]6984: wrong code generated with -O2, -O3, -Os for
-            do-while loop on PowerPC
-          + [85]7114: PowerPC: ICE building strcoll.op from glibc-2.2.5
-          + [86]7130: miscompiled code for GCC-3.1 in powerpc linux with
-            -funroll-all-loops
-          + [87]7133: PowerPC ICE: unrecognizable insn
-          + [88]7380: ICE in extract_insn, at recog.c:2148
-          + [89]8252: ICE on Altivec code with optimization turned on
-          + [90]8451: Altivec ICE in GCC 3.2
-     * HP/PA specific
-          + [91]7250: __ashrdi3 returns wrong value on 32 bit hppa
-     * SPARC specific
-          + [92]6668: when using --disable-multilib, libgcc_s.so is
-            installed in the wrong place on sparc-solaris
-          + [93]7151: ICE when compiling for UltraSPARC
-          + [94]7335: SPARC: ICE in verify_wide_reg (flow.c:557) with
-            long double and -O1
-          + [95]7842: [REGRESSION] SPARC code gen bug
-     * ARM specific
-          + [96]7856: [arm] invalid offset in constant pool reference
-          + [97]7967: optimization produces wrong code (ARM)
-     * Alpha specific
-          + [98]7374: __builtin_fabsl broken on alpha
-     * IBM s390 specific
-          + [99]7370: ICE in fixup_var_refs_1 on s390x
-          + [100]7409: loop optimization bug on s390x-linux-gnu
-          + [101]8232: s390x: ICE when using bcmp with int length
-            argument
-     * SCO specific
-          + [102]7623: SCO OpenServer build fails with machmode.def:
-            undefined symbol: BITS_PER_UNIT
-     * m68k/Coldfire specific
-          + [103]8314: crtbegin, crtend need to be multilib'ed for this
-            platform
-     * Documentation
-          + [104]761: Document some undocumented options
-          + [105]5610: Fix documentation about invoking SSE instructions
-            (-mfpmath=sse)
-          + [106]7484: List -Wmissing-declarations as C-only option
-          + [107]7531: -mcmodel not documented for x86-64
-          + [108]8120: Update documentation of bad use of ##
 
-                                  GCC 3.2
+    Internal Compiler Errors (multi-platform)
+
+     * [69]2521: (c++) ICE in build_ptrmemfunc, in cp/typeck.c
+     * [70]5661: (c++) ICE instantiating template on array of unknown
+       size (bad code)
+     * [71]6419: (c++) ICE in make_decl_rtl for "longest" attribute on
+       64-bit platforms
+     * [72]6994: (c++) ICE in find_function_data
+     * [73]7150: preprocessor: GCC -dM -E gives an ICE
+     * [74]7160: ICE when optimizing branches without a return value
+     * [75]7228: (c++) ICE when using member template and template
+       function
+     * [76]7266: (c++) ICE with -pedantic on missing typename
+     * [77]7353: ICE from use of "Naming Types" extension, see above
+     * [78]7411: ICE in instantiate_virtual_regs_1, in function.c
+     * [79]7478: (c++) ICE on static_cast inside template
+     * [80]7526: preprocessor core dump when _Pragma implies #pragma
+       dependency
+     * [81]7721: (c++) ICE on simple (but incorrect) template ([82]7803
+       is a duplicate)
+     * [83]7754: (c++) ICE on union with template parameter
+     * [84]7788: (c++) redeclaring a definition as an incomplete class
+       causes ICE
+     * [85]8031: (c++) ICE in comptypes, in cp/typeck.c
+     * [86]8055: preprocessor dies with SIG11 when building FreeBSD
+       kernel
+     * [87]8067: (c++) ICE due to mishandling of __FUNCTION__ and related
+       variables
+     * [88]8134: (c++) ICE in force_store_init_value on legal code
+     * [89]8149: (c++) ICE on incomplete type
+     * [90]8160: (c++) ICE in build_modify_expr, in cp/typeck.c: array
+       initialization
+
+    C++ (compiler and library) bugs
+
+     * [91]5607: No pointer adjustment in covariant return types
+     * [92]6579: Infinite loop with statement expressions in member
+       initialization
+     * [93]6803: Default copy constructor bug in GCC 3.1
+     * [94]7176: g++ confused by friend and static member with same name
+     * [95]7188: Segfault with template class and recursive (incorrect)
+       initializer list
+     * [96]7306: Regression: GCC 3.x fails to compile code with virtual
+       inheritance if a method has a variable number of arguments
+     * [97]7461: ctype<char>::classic_table() returns offset array on
+       Cygwin
+     * [98]7524: f(const float arg[3]) fails
+     * [99]7584: Erroneous ambiguous base error on using declaration
+     * [100]7676: Member template overloading problem
+     * [101]7679: infinite loop when a right parenthesis is missing
+     * [102]7811: default locale not taken from environment
+     * [103]7961: compare( char *) implemented incorrectly in
+       basic_string<>
+     * [104]8071: basic_ostream::operator<<(streambuf*) loops forever if
+       streambuf::underflow() leaves gptr() NULL (dups: [105]8127,
+       [106]6745)
+     * [107]8096: deque::at() throws std::range_error instead of
+       std::out_of_range
+     * [108]8127: cout << cin.rdbuf() infinite loop
+     * [109]8218: Excessively large memory consumed for classes with
+       large array members
+     * [110]8287: GCC 3.2: Destructor called for non-constructed local
+       object
+     * [111]8347: empty vector range used in string construction causes
+       core dump
+     * [112]8348: fail() flag is set in istringstream when eof() flag is
+       set
+     * [113]8391: regression: infinite loop in cp/decl2.c(finish_file)
+
+    C and optimizer bugs
+
+     * [114]6627: -fno-align-functions doesn't seem to disable function
+       alignment
+     * [115]6631: life_analysis misoptimizes code to initialize fields of
+       a structure
+     * [116]7102: unsigned char division results in floating exception
+     * [117]7120: Run once loop should *always* be unrolled
+       (pessimization)
+     * [118]7209: Bug involving array referencing and ?: operator
+     * [119]7515: invalid inlining of global function with -O3
+     * [120]7814: incorrect scheduling for glibc-2.2.92 strcpy test
+     * [121]8467: bug in sibling call optimization
+
+    Preprocessor bugs
+
+     * [122]4890: incorrect line markers from the traditional
+       preprocessor
+     * [123]7357: -M option omits system headers files (making it the
+       same as -MM)
+     * [124]7358: Changes to Sun's make Dependencies
+     * [125]7602: C++ header files found in CPLUS_INCLUDE_PATH treated as
+       C headers
+     * [126]7862: Interrupting GCC -MD removes .d file but not .o
+     * [127]8190: Failed compilation deletes -MD dependency file
+     * [128]8524: _Pragma within macro is improperly expanded
+
+    x86 specific (Intel/AMD)
+
+     * [129]5351: (i686-only) function pass-by-value structure copy
+       corrupts stack ([130]7591 is a duplicate)
+     * [131]6845, [132]7034, [133]7124, [134]7174: ICE's with
+       -march=pentium3/pentium2/athlon (these are all the same underlying
+       bug, in MMX register use)
+     * [135]7134, [136]7375, [137]7390: ICE with -march=athlon (maybe
+       same as above?)
+     * [138]6890: xmmintrin.h, _MM_TRANSPOSE4_PS is broken
+     * [139]6981: wrong code in 64-bit manipulation on x86
+     * [140]7242: GCC -mcpu=pentium[23] doesn't define
+       __tune_pentiumpro__ macro
+     * [141]7396: ix86: cmpgt_ss, cmpge_ss, cmpngt_ss, and cmpnge_ss SSE
+       intrinsics are broken
+     * [142]7630: GCC 3.2 breaks on Mozilla 1.0's JS sources with
+       -march=pentium4
+     * [143]7693: Typo in i386 mmintrin.h header
+     * [144]7723: ICE - Pentium3 sse - GCC 3.2
+     * [145]7951: ICE on -march=pentium4 -O2 -mfpmath=sse
+     * [146]8146: (i686 only) gcc 3.2 miscompiles gcc 2.95.3
+
+    PowerPC specific
+
+     * [147]5967: GCC bug when profiling nested functions on powerpc
+     * [148]6984: wrong code generated with -O2, -O3, -Os for do-while
+       loop on PowerPC
+     * [149]7114: PowerPC: ICE building strcoll.op from glibc-2.2.5
+     * [150]7130: miscompiled code for GCC-3.1 in powerpc linux with
+       -funroll-all-loops
+     * [151]7133: PowerPC ICE: unrecognizable insn
+     * [152]7380: ICE in extract_insn, at recog.c:2148
+     * [153]8252: ICE on Altivec code with optimization turned on
+     * [154]8451: Altivec ICE in GCC 3.2
+
+    HP/PA specific
+
+     * [155]7250: __ashrdi3 returns wrong value on 32 bit hppa
+
+    SPARC specific
+
+     * [156]6668: when using --disable-multilib, libgcc_s.so is installed
+       in the wrong place on sparc-solaris
+     * [157]7151: ICE when compiling for UltraSPARC
+     * [158]7335: SPARC: ICE in verify_wide_reg (flow.c:557) with long
+       double and -O1
+     * [159]7842: [REGRESSION] SPARC code gen bug
+
+    ARM specific
+
+     * [160]7856: [arm] invalid offset in constant pool reference
+     * [161]7967: optimization produces wrong code (ARM)
+
+    Alpha specific
+
+     * [162]7374: __builtin_fabsl broken on alpha
+
+    IBM s390 specific
+
+     * [163]7370: ICE in fixup_var_refs_1 on s390x
+     * [164]7409: loop optimization bug on s390x-linux-gnu
+     * [165]8232: s390x: ICE when using bcmp with int length argument
+
+    SCO specific
+
+     * [166]7623: SCO OpenServer build fails with machmode.def: undefined
+       symbol: BITS_PER_UNIT
+
+    m68k/Coldfire specific
+
+     * [167]8314: crtbegin, crtend need to be multilib'ed for this
+       platform
+
+    Documentation
+
+     * [168]761: Document some undocumented options
+     * [169]5610: Fix documentation about invoking SSE instructions
+       (-mfpmath=sse)
+     * [170]7484: List -Wmissing-declarations as C-only option
+     * [171]7531: -mcmodel not documented for x86-64
+     * [172]8120: Update documentation of bad use of ##
+     _________________________________________________________________
+
+GCC 3.2
 
    3.2 is a small bug fix release, but there is a change to the
    application binary interface (ABI), hence the change to the second
@@ -351,39 +533,41 @@ Bug Fixes
    in the C++ ABI, with the intention of providing a stable interface
    going forward.  Accordingly, 3.2 is only a small change to 3.1.1.
 
-Bug Fixes
+  Bug Fixes
 
-     * C++
-          + [109]7320: g++ 3.2 relocation problem
-          + [110]7470: vtable: virtual function pointers not in
-            declaration order
-     * libstdc++
-          + [111]6410: Trouble with non-ASCII monetary symbols and
-            wchar_t
-          + [112]6503, [113]6642, [114]7186: Problems with comparing or
-            subtracting various types of const and non-const iterators
-          + [115]7216: ambiguity with basic_iostream::traits_type
-          + [116]7220: problem with basic_istream::ignore(0,delimiter)
-          + [117]7222: locale::operator==() doesn't work on
-            std::locale("")
-          + [118]7286: placement operator delete issue
-          + [119]7442: cxxabi.h does not match the C++ ABI
-          + [120]7445: poor performance of std::locale::classic() in
-            multi-threaded applications
-     * x86-64 specific
-          + [121]7291: off-by-one in generated inline bzero code for
-            x86-64
+    C++
+
+     * [173]7320: g++ 3.2 relocation problem
+     * [174]7470: vtable: virtual function pointers not in declaration
+       order
+
+    libstdc++
+
+     * [175]6410: Trouble with non-ASCII monetary symbols and wchar_t
+     * [176]6503, [177]6642, [178]7186: Problems with comparing or
+       subtracting various types of const and non-const iterators
+     * [179]7216: ambiguity with basic_iostream::traits_type
+     * [180]7220: problem with basic_istream::ignore(0,delimiter)
+     * [181]7222: locale::operator==() doesn't work on std::locale("")
+     * [182]7286: placement operator delete issue
+     * [183]7442: cxxabi.h does not match the C++ ABI
+     * [184]7445: poor performance of std::locale::classic() in
+       multi-threaded applications
+
+    x86-64 specific
+
+     * [185]7291: off-by-one in generated inline bzero code for x86-64
      _________________________________________________________________
 
-   Please send FSF & GNU inquiries & questions to [122]gnu@gnu.org. There
-   are also [123]other ways to contact the FSF.
+   Please send FSF & GNU inquiries & questions to [186]gnu@gnu.org. There
+   are also [187]other ways to contact the FSF.
 
-   These pages are maintained by [124]The GCC team.
+   These pages are maintained by [188]The GCC team.
 
 
     Please send comments on these web pages and GCC to our public
-    mailing list at [125]gcc@gnu.org or [126]gcc@gcc.gnu.org, send other
-    questions to [127]gnu@gnu.org.
+    mailing list at [189]gcc@gnu.org or [190]gcc@gcc.gnu.org, send other
+    questions to [191]gnu@gnu.org.
 
    Copyright (C) Free Software Foundation, Inc., 59 Temple Place - Suite
    330, Boston, MA 02111, USA.
@@ -391,138 +575,202 @@ Bug Fixes
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2003-01-28 [128]Valid XHTML 1.0 
+   Last modified 2003-03-21 [192]Valid XHTML 1.0 
 
 References
 
-   1. http://gcc.gnu.org/gcc-3.2/c++-abi.html
-   2. http://gcc.gnu.org/gcc-3.1/changes.html
-   3. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7445
-   4. http://gcc.gnu.org/cgi-bin/gnatsweb.pl
-   5. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=2521
-   6. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5661
-   7. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6419
-   8. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6994
-   9. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7150
-  10. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7160
-  11. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7228
-  12. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7266
-  13. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7353
-  14. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7411
-  15. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7478
-  16. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7526
-  17. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7721
-  18. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7803
-  19. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7754
-  20. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7788
-  21. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8031
-  22. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8055
-  23. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8067
-  24. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8134
-  25. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8149
-  26. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8160
-  27. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5607
-  28. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6579
-  29. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6803
-  30. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7176
-  31. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7188
-  32. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7306
-  33. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7461
-  34. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7524
-  35. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7584
-  36. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7676
-  37. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7679
-  38. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7811
-  39. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7961
-  40. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8071
-  41. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8127
-  42. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6745
-  43. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8096
-  44. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8127
-  45. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8218
-  46. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8287
-  47. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8347
-  48. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8348
-  49. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8391
-  50. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6627
-  51. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6631
-  52. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7102
-  53. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7120
-  54. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7209
-  55. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7515
-  56. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7814
-  57. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8467
-  58. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=4890
-  59. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7357
-  60. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7358
-  61. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7602
-  62. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7862
-  63. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8190
-  64. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8524
-  65. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5351
-  66. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7591
-  67. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6845
-  68. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7034
-  69. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7124
-  70. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7174
-  71. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7134
-  72. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7375
-  73. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7390
-  74. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6890
-  75. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6981
-  76. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7242
-  77. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7396
-  78. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7630
-  79. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7693
-  80. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7723
-  81. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7951
-  82. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8146
-  83. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5967
-  84. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6984
-  85. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7114
-  86. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7130
-  87. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7133
-  88. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7380
-  89. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8252
-  90. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8451
-  91. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7250
-  92. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6668
-  93. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7151
-  94. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7335
-  95. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7842
-  96. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7856
-  97. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7967
-  98. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7374
-  99. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7370
- 100. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7409
- 101. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8232
- 102. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7623
- 103. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8314
- 104. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=761
- 105. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5610
- 106. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7484
- 107. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7531
- 108. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8120
- 109. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7320
- 110. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7470
- 111. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6410
- 112. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6503
- 113. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6642
- 114. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7186
- 115. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7216
- 116. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7220
- 117. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7222
- 118. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7286
- 119. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7442
- 120. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7445
- 121. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7291
- 122. mailto:gnu@gnu.org
- 123. http://www.gnu.org/home.html#ContactInfo
- 124. http://gcc.gnu.org/about.html
- 125. mailto:gcc@gnu.org
- 126. mailto:gcc@gcc.gnu.org
- 127. mailto:gnu@gnu.org
- 128. http://validator.w3.org/check/referer
+   1. http://gcc.gnu.org/gcc-3.1/changes.html
+   2. http://gcc.gnu.org/gcc-3.2/c++-abi.html
+   3. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5919
+   4. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7129
+   5. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7507
+   6. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7622
+   7. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7681
+   8. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9528
+   9. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8031
+  10. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8275
+  11. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8332
+  12. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8372
+  13. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8439
+  14. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8442
+  15. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8518
+  16. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8615
+  17. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8663
+  18. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8799
+  19. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9328
+  20. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9465
+  21. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=47
+  22. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6745
+  23. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8214
+  24. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8493
+  25. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8332
+  26. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8503
+  27. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8727
+  28. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7445
+  29. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8230
+  30. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8399
+  31. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8662
+  32. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8707
+  33. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8708
+  34. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8790
+  35. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8887
+  36. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9076
+  37. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9151
+  38. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9168
+  39. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9269
+  40. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9322
+  41. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9433
+  42. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8032
+  43. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8639
+  44. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8794
+  45. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8832
+  46. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8988
+  47. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9492
+  48. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9267
+  49. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8344
+  50. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8524
+  51. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8880
+  52. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9090
+  53. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8588
+  54. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8599
+  55. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9506
+  56. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9484
+  57. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9292
+  58. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9293
+  59. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9295
+  60. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9296
+  61. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9316
+  62. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=9493
+  63. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7341
+  64. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8947
+  65. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7448
+  66. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8882
+  67. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7445
+  68. http://gcc.gnu.org/cgi-bin/gnatsweb.pl
+  69. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=2521
+  70. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5661
+  71. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6419
+  72. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6994
+  73. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7150
+  74. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7160
+  75. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7228
+  76. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7266
+  77. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7353
+  78. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7411
+  79. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7478
+  80. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7526
+  81. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7721
+  82. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7803
+  83. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7754
+  84. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7788
+  85. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8031
+  86. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8055
+  87. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8067
+  88. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8134
+  89. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8149
+  90. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8160
+  91. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5607
+  92. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6579
+  93. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6803
+  94. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7176
+  95. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7188
+  96. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7306
+  97. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7461
+  98. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7524
+  99. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7584
+ 100. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7676
+ 101. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7679
+ 102. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7811
+ 103. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7961
+ 104. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8071
+ 105. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8127
+ 106. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6745
+ 107. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8096
+ 108. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8127
+ 109. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8218
+ 110. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8287
+ 111. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8347
+ 112. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8348
+ 113. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8391
+ 114. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6627
+ 115. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6631
+ 116. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7102
+ 117. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7120
+ 118. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7209
+ 119. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7515
+ 120. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7814
+ 121. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8467
+ 122. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=4890
+ 123. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7357
+ 124. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7358
+ 125. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7602
+ 126. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7862
+ 127. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8190
+ 128. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8524
+ 129. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5351
+ 130. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7591
+ 131. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6845
+ 132. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7034
+ 133. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7124
+ 134. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7174
+ 135. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7134
+ 136. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7375
+ 137. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7390
+ 138. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6890
+ 139. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6981
+ 140. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7242
+ 141. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7396
+ 142. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7630
+ 143. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7693
+ 144. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7723
+ 145. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7951
+ 146. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8146
+ 147. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5967
+ 148. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6984
+ 149. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7114
+ 150. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7130
+ 151. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7133
+ 152. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7380
+ 153. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8252
+ 154. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8451
+ 155. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7250
+ 156. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6668
+ 157. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7151
+ 158. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7335
+ 159. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7842
+ 160. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7856
+ 161. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7967
+ 162. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7374
+ 163. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7370
+ 164. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7409
+ 165. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8232
+ 166. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7623
+ 167. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8314
+ 168. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=761
+ 169. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=5610
+ 170. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7484
+ 171. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7531
+ 172. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=8120
+ 173. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7320
+ 174. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7470
+ 175. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6410
+ 176. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6503
+ 177. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=6642
+ 178. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7186
+ 179. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7216
+ 180. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7220
+ 181. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7222
+ 182. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7286
+ 183. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7442
+ 184. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7445
+ 185. http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view%20audit-trail&pr=7291
+ 186. mailto:gnu@gnu.org
+ 187. http://www.gnu.org/home.html#ContactInfo
+ 188. http://gcc.gnu.org/about.html
+ 189. mailto:gcc@gnu.org
+ 190. mailto:gcc@gcc.gnu.org
+ 191. mailto:gnu@gnu.org
+ 192. http://validator.w3.org/check/referer
 ======================================================================
 http://gcc.gnu.org/gcc-3.1/index.html
 
@@ -576,7 +824,7 @@ http://gcc.gnu.org/gcc-3.1/index.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [17]Valid XHTML 1.0 
+   Last modified 2003-02-21 [17]Valid XHTML 1.0 
 
 References
 
@@ -600,7 +848,8 @@ References
 ======================================================================
 http://gcc.gnu.org/gcc-3.1/changes.html
 
-         GCC 3.1 Release Series -- Changes, New Features, and Fixes
+                           GCC 3.1 Release Series
+                      Changes, New Features, and Fixes
 
 Additional changes in GCC 3.1.1
 
@@ -939,7 +1188,7 @@ Documentation improvements
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2003-01-28 [25]Valid XHTML 1.0 
+   Last modified 2003-03-21 [25]Valid XHTML 1.0 
 
 References
 
@@ -1028,7 +1277,7 @@ Previous 3.0.x Releases
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [17]Valid XHTML 1.0 
+   Last modified 2003-02-21 [17]Valid XHTML 1.0 
 
 References
 
@@ -1229,7 +1478,7 @@ Other significant improvements
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2003-01-04 [20]Valid XHTML 1.0 
+   Last modified 2003-02-21 [20]Valid XHTML 1.0 
 
 References
 
@@ -1308,7 +1557,7 @@ http://gcc.gnu.org/gcc-3.0/caveats.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [10]Valid XHTML 1.0 
+   Last modified 2003-02-21 [10]Valid XHTML 1.0 
 
 References
 
@@ -1387,7 +1636,7 @@ http://gcc.gnu.org/gcc-2.95/index.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [19]Valid XHTML 1.0 
+   Last modified 2003-02-21 [19]Valid XHTML 1.0 
 
 References
 
@@ -1662,7 +1911,7 @@ Additional Changes in GCC 2.95.3
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-12-30 [23]Valid XHTML 1.0 
+   Last modified 2003-02-21 [23]Valid XHTML 1.0 
 
 References
 
@@ -1751,7 +2000,7 @@ http://gcc.gnu.org/gcc-2.95/caveats.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-12-30 [8]Valid XHTML 1.0 
+   Last modified 2003-02-21 [8]Valid XHTML 1.0 
 
 References
 
@@ -1978,7 +2227,7 @@ http://gcc.gnu.org/egcs-1.1/index.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2003-01-04 [17]Valid XHTML 1.0 
+   Last modified 2003-02-21 [17]Valid XHTML 1.0 
 
 References
 
@@ -2053,15 +2302,18 @@ http://gcc.gnu.org/egcs-1.1/features.html
           + Alpha port has been tuned for the EV6 processor and has an
             optimized expansion of memcpy/bzero. The Alpha port now uses
             the Haifa scheduler.
-          + RS6000/PowerPC: EGCS 1.1 includes support for the Power64
-            architecture and aix4.3 support. The RS6000/PowerPC port now
-            uses the Haifa scheduler.
+          + RS6000/PowerPC: support for the Power64 architecture and AIX
+            4.3. The RS6000/PowerPC port now uses the Haifa scheduler.
           + x86: Alignment of static store data and jump targets is per
             Intel recommendations now. Various improvements throughout
-            the x86 port to improve performance on Pentium processors.
-            Conditional move support has been fixed and enabled for PPro
-            processors. The x86 port also better supports 64bit
-            operations now.
+            the x86 port to improve performance on Pentium processors
+            (including improved epilogue sequences for Pentium chips and
+            backend improvements which should help register allocation on
+            all x86 variants. Conditional move support has been fixed and
+            enabled for PPro processors. The x86 port also better
+            supports 64bit operations now. Unixware 7, a System V Release
+            5 target, is now supported and SCO OpenServer targets can
+            support GAS.
           + MIPS has improved multiply/multiply-add support and now
             includes mips16 ISA support.
           + M68k has many micro-optimizations and Coldfire fixes.
@@ -2085,7 +2337,7 @@ http://gcc.gnu.org/egcs-1.1/features.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [12]Valid XHTML 1.0 
+   Last modified 2003-03-29 [12]Valid XHTML 1.0 
 
 References
 
@@ -2146,7 +2398,7 @@ http://gcc.gnu.org/egcs-1.1/caveats.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-12-30 [7]Valid XHTML 1.0 
+   Last modified 2003-02-21 [7]Valid XHTML 1.0 
 
 References
 
@@ -2250,7 +2502,7 @@ http://gcc.gnu.org/egcs-1.0/egcs-1.0.3.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [12]Valid XHTML 1.0 
+   Last modified 2003-02-21 [12]Valid XHTML 1.0 
 
 References
 
@@ -2390,7 +2642,7 @@ http://gcc.gnu.org/egcs-1.0/egcs-1.0.2.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2003-01-04 [12]Valid XHTML 1.0 
+   Last modified 2003-02-21 [12]Valid XHTML 1.0 
 
 References
 
@@ -2530,7 +2782,7 @@ http://gcc.gnu.org/egcs-1.0/egcs-1.0.1.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [12]Valid XHTML 1.0 
+   Last modified 2003-02-21 [12]Valid XHTML 1.0 
 
 References
 
@@ -2627,7 +2879,7 @@ http://gcc.gnu.org/egcs-1.0/egcs-1.0.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [12]Valid XHTML 1.0 
+   Last modified 2003-02-21 [12]Valid XHTML 1.0 
 
 References
 
@@ -2701,7 +2953,7 @@ http://gcc.gnu.org/egcs-1.0/features.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-11-11 [9]Valid XHTML 1.0 
+   Last modified 2003-02-21 [9]Valid XHTML 1.0 
 
 References
 
@@ -2761,7 +3013,7 @@ http://gcc.gnu.org/egcs-1.0/caveats.html
    Verbatim copying and distribution of this entire article is permitted
    in any medium, provided this notice is preserved.
 
-   Last modified 2002-12-30 [7]Valid XHTML 1.0 
+   Last modified 2003-02-21 [7]Valid XHTML 1.0 
 
 References
 
