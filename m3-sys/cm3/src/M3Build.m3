@@ -122,7 +122,6 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     Quake.Define (t, "DEFAULT_BUILD_DIR", GetConfig (t, "BUILD_DIR"));
     Quake.Define (t, "M3", M3Path.New (GetConfig (t, "BIN_USE"),
                               M3Path.ProgramName ("cm3", host := TRUE)));
-    Quake.Define (t, "PACKAGE_DIR", pkg);
 
     t.build_pkg       := M3ID.Add (Pathname.Last (pkg));
     t.build_pkg_dir   := M3ID.Add (pkg);
@@ -535,7 +534,7 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
       IF M3Options.major_mode = MM.Depend THEN
         Msg.Verbose ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
       ELSE
-        Msg.Info ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
+        Msg.Out ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
       END;
       t.already_warned := TRUE;
     ELSIF t.pkg_overrides.get (pkg, ref) THEN
@@ -544,8 +543,8 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
           Msg.Verbose ("package \"", pkg_txt, "\" is already overridden to ",
                        ref, ", ignoring new override to " & dir & Wr.EOL);
         ELSE
-          Msg.Info ("package \"", pkg_txt, "\" is already overridden to ",
-                    ref, ", ignoring new override to ", dir & Wr.EOL);
+          Msg.Out ("package \"", pkg_txt, "\" is already overridden to ",
+                   ref, ", ignoring new override to ", dir, Wr.EOL);
         END;
       END;
     ELSE
@@ -904,7 +903,7 @@ PROCEDURE DoRemoveM3Option (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   VAR t := Self (m);  arg: TEXT;
   BEGIN
     arg := PopText (t);
-    Msg.Info ("remove_m3_option (\"", arg, "\") is being ignored.", Wr.EOL)
+    Msg.Out ("remove_m3_option (\"", arg, "\") is being ignored.", Wr.EOL)
   END DoRemoveM3Option;
 
 (*--------------------------------------------------------------- deleting --*)

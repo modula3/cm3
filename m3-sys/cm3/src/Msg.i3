@@ -27,7 +27,6 @@ PROCEDURE Debug (a, b, c, d: TEXT := NIL);
 PROCEDURE Verbose (a, b, c, d, e: TEXT := NIL);
 PROCEDURE Commands (a, b, c, d, e, f: TEXT := NIL);
 PROCEDURE Explain (a, b, c, d: TEXT := NIL);
-PROCEDURE Info (a, b, c, d, e, f: TEXT := NIL);
 
 PROCEDURE Out (a, b, c, d, e, f, g: TEXT := NIL);
 PROCEDURE OutL (a, b: TEXT;  l: Arg.List);

@@ -150,7 +150,6 @@ END_CONFIG % executables
 SYSTEM_LIBS = {
   "LIBC"       : [ DEV_LIB & "\\msvcrt.lib",
                    DEV_LIB & "\\winspool.lib",
-                   LIB_USE & "\\wsock32.lib",
                    LIB_USE & "\\comdlg32.lib",
                    LIB_USE & "\\netapi32.lib",
                    LIB_USE & "\\gdi32.lib",
@@ -163,7 +162,7 @@ SYSTEM_LIBS = {
                    LIB_USE & "\\odbccp32.lib" ],
   "OPENGL"     : [ LIB_USE & "\\opengl32.lib",
                    LIB_USE & "\\glu32.lib" ],
-  "TCP"        : [ ]
+  "TCP"        : [ LIB_USE & "\\wsock32.lib" ]
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be

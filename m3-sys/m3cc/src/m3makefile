@@ -39,7 +39,7 @@ readonly Platform_info = {
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
   "I386_DARWIN" : "i486-unknown-bsd",
-  "PPC_DARWIN"  : "powerpc-apple-darwin6.3"
+  "PPC_DARWIN"  : "powerpc-apple-darwin5.4"
 }
 
 if not defined("SL")
@@ -49,16 +49,6 @@ if not defined("SL")
   else
     SL = "/"
   end
-end
-
-if equal(TARGET, "PPC_DARWIN")
-  write(EOL)
-  write("  Please note that you need a bootstrapped gcc 3.2.1 in order to" &
-        EOL)
-  write("  compile this package. All attempts to build cm3cg with Apple's" &
-        EOL)
-  write("  native version of gcc 3.1 have failed so far." & EOL)
-  write(EOL)
 end
 
 readonly proc GNU_platform (x) is

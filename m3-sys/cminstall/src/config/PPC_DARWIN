@@ -148,7 +148,7 @@ SYSTEM_LIBS = {
 %                  END_CONFIG, "-ll" ],
   "FLEX-BISON" : [ BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
-                       11 "libfl.a"
+                       11 "libflx.a"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
@@ -334,7 +334,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     ret_code = try_exec ("@libtool -dynamic -flat_namespace",
                          "-undefined suppress -compatibility_version", vmaj,
                          "-current_version", version, "-install_name", lib_pn,
-                         "-o", lib_soxx, objects, "-lcc_dynamic")
+                         "-o", lib_soxx, objects)
     if not equal (ret_code, 0)
       delete_file (lib_a)
       return ret_code

@@ -2176,8 +2176,8 @@ PROCEDURE LoadAcceleratorsW (hInstance: HINSTANCE; lpTableName: LPCWSTR): HACCEL
 
 CONST LoadAccelerators = LoadAcceleratorsA;
 
-<*EXTERNAL CreateAcceleratorTableA:WINAPI*>
-PROCEDURE CreateAcceleratorTable (lpaccl: LPACCEL; count: int): HACCEL;
+<*EXTERNAL CreateAcceleratorTable:WINAPI*>
+PROCEDURE CreateAcceleratorTable (int: LPACCEL): HACCEL;
 
 <*EXTERNAL DestroyAcceleratorTable:WINAPI*>
 PROCEDURE DestroyAcceleratorTable (a1: HACCEL): BOOL;
@@ -4077,124 +4077,5 @@ CONST SystemParametersInfo = SystemParametersInfoA;
 CONST
   SPIF_UPDATEINIFILE    = 16_0001;
   SPIF_SENDWININICHANGE = 16_0002;
-
-(* misc stuff added by darkov March 2003 *)
-
-(* constants *)
-
-CONST
-	SS_OWNERDRAW       = 16_0000000D;
-	SS_BITMAP          = 16_0000000E;
-	SS_ENHMETAFILE     = 16_0000000F;
-	SS_ETCHEDHORZ      = 16_00000010;
-	SS_ETCHEDVERT      = 16_00000011;
-	SS_ETCHEDFRAME     = 16_00000012;
-	SS_TYPEMASK        = 16_0000001F;
-
-	WS_EX_CLIENTEDGE   = 16_00000200;
-	
-	WM_NOTIFY          = 16_004E;
-
-	DEFAULT_GUI_FONT   = 17;
-
-
-	STM_SETIMAGE       = 16_0172;
-	STM_GETIMAGE       = 16_0173;
-
-	IMAGE_ENHMETAFILE  = 3;
-
-(* structures *)
-TYPE
-
-	LPNMHDR = UNTRACED REF NMHDR;
-	NMHDR = RECORD
-	    hwndFrom:	HWND  ;
-	    idFrom:		UINT  ;
-	    code:			UINT  ;         (* NM_ code *)
-	END;
-(*
-
-<*EXTERNAL GetSysColorBrush:WINAPI*>
-PROCEDURE GetSysColorBrush(nIndex: INTEGER): HBRUSH;
-*)
-
-	
-CONST	
-	MFS_GRAYED          = 16_00000003;
-	MFS_DISABLED        = MFS_GRAYED;
-	MFS_CHECKED         = MF_CHECKED;
-	MFS_HILITE          = MF_HILITE;
-	MFS_ENABLED         = MF_ENABLED;
-	MFS_UNCHECKED       = MF_UNCHECKED;
-	MFS_UNHILITE        = MF_UNHILITE;
-	MFS_DEFAULT         = 16_00001000;
-	MFS_MASK            = 16_0000108B;
-	MFS_HOTTRACKDRAWN   = 16_10000000;
-	MFS_CACHEDBMP       = 16_20000000;
-	MFS_BOTTOMGAPDROP   = 16_40000000;
-	MFS_TOPGAPDROP      = 16_80000000;
-	MFS_GAPDROP         = 16_C0000000;
-
-
-
-(* menu stuff *)
-
-	MIIM_STATE       = 16_00000001;
-	MIIM_ID          = 16_00000002;
-	MIIM_SUBMENU     = 16_00000004;
-	MIIM_CHECKMARKS  = 16_00000008;
-	MIIM_TYPE        = 16_00000010;
-	MIIM_DATA        = 16_00000020;
-	MIIM_STRING      = 16_00000040;
-	MIIM_BITMAP      = 16_00000080;
-	MIIM_FTYPE       = 16_00000100;
-
-TYPE
-	LPMENUITEMINFO = UNTRACED REF MENUITEMINFO;
-	MENUITEMINFO = RECORD
-		cbSize: UINT;
-		fMask: UINT;
-		fType: UINT;
-		fState: UINT;       
-		wID: UINT;          
-		hSubMenu: HMENU;      
-		hbmpChecked: HBITMAP;  
-		hbmpUnchecked: HBITMAP; 
-		dwItemData: DWORD;  
-		dwTypeData: LPSTR;    
-		cch: UINT;         
-		hbmpItem: HBITMAP;     
-	END;
-
-<*EXTERNAL InsertMenuItemA:WINAPI*>
-PROCEDURE InsertMenuItem( hMenu: HMENU; uItem: UINT; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
-
-<*EXTERNAL GetMenuItemInfoA:WINAPI*>
-PROCEDURE GetMenuItemInfo(hMenu: HMENU; uItem: UINT; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
-
-<*EXTERNAL SetMenuItemInfoA:WINAPI*>
-PROCEDURE SetMenuItemInfo(hMenu: HMENU; uItem: UINT; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
-
-<*EXTERNAL GetMenuDefaultItem:WINAPI*>
-PROCEDURE GetMenuDefaultItem( hMenu: HMENU;  fByPos: UINT;  gmdiFlags: UINT): UINT;
-
-<*EXTERNAL SetMenuDefaultItem:WINAPI*>
-PROCEDURE SetMenuDefaultItem( hMenu: HMENU;  uItem: UINT;  fByPos: UINT): BOOL;
-
-<*EXTERNAL GetMenuItemRect:WINAPI*>
-PROCEDURE GetMenuItemRect( hWnd: HWND;  hMenu: HMENU;  uItem: UINT;  lprcItem: LPRECT): BOOL;
-
-<*EXTERNAL MenuItemFromPoint:WINAPI*>
-PROCEDURE MenuItemFromPoint( hWnd: HWND;  hMenu: HMENU;  ptScreen: POINT): int;
-
-
-<*EXTERNAL SetDCBrushColor:WINAPI*>
-PROCEDURE SetDCBrushColor(hdc: HDC; cr: COLORREF): COLORREF;
-
-<*EXTERNAL SetDCPenColor:WINAPI*>
-PROCEDURE SetDCPenColor(hdc: HDC; cr: COLORREF): COLORREF;
-
-
-
 
 END WinUser.
