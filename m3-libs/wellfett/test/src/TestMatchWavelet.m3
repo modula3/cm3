@@ -141,6 +141,7 @@ PROCEDURE TestRho (x: V.T) =
     dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
     dx1 := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
     dx2 := V.FromArray(ARRAY OF R.T{0.0D0, 0.0D0, 1.0D-8});
+  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
   BEGIN
     VAR
       rho     := ComputeRho(x^);
@@ -194,7 +195,7 @@ PROCEDURE InverseDRho (x: V.T): V.T RAISES {NA.Error} =
   END InverseDRho;
 
 PROCEDURE TestInverseDRho (READONLY x0: ARRAY [0 .. 2] OF R.T) =
-  <*FATAL NA.Error*>
+  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
   VAR
     x := V.FromArray(x0);
     y := InverseDRho(x);
@@ -211,49 +212,60 @@ TYPE
              second: M.T;
            END;
 
-PROCEDURE Derivatives (hdual, gdual0, s: S.T;
-                       smoothWeight    : R.T;
-                       normalMat       : M.T;
-                       targetCor       : V.T;
-                       targetNormSqr   : R.T; ): Deriv2 =
+PROCEDURE DeriveDist (normalMat    : M.T;
+                      targetCor    : V.T;
+                      targetNormSqr: R.T;
+                      s            : S.T; ): Deriv2 RAISES {NA.Error} =
+  VAR
+    normals := M.MulV(normalMat, s.getData());
+    dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
+              + targetNormSqr;
+
+  BEGIN
+    RETURN Deriv2{zeroth := dist, first :=
+                  V.Scale(V.Sub(normals, targetCor), R.Two), second :=
+                  M.Scale(normalMat, R.Two)};
+  END DeriveDist;
+
+PROCEDURE DeriveRho (hdual, gdual0, s: S.T; ): Deriv2 RAISES {NA.Error} =
   VAR
     gdual   := gdual0.superpose(s.upsample(2).convolve(hdual));
     hprimal := gdual.alternate();
     gprimal := hdual.alternate();
 
-    normals := M.MulV(normalMat, s.getData());
-    dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
-              + targetNormSqr;
-    linpart := Deriv2{zeroth := dist, first :=
-                      V.Scale(V.Sub(normals, targetCor), R.Two), second :=
-                      M.Scale(normalMat, R.Two)};
-
     hsums := hprimal.wrapCyclic(3).getData();
     dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(
                         3).getData(), s.getNumber(), -1);
-    polypart := Deriv2{zeroth := ComputeRho(hsums^), first :=
-                       M.MulV(dsums, ComputeDRho(hsums^)), second :=
-                       M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)),
-                             M.Transpose(dsums))};
   BEGIN
     (*
     IO.Put(MF.Fmt(dsums) & "\n");
     RETURN polypart;
     *)
     RETURN
-      Deriv2{
-        zeroth := linpart.zeroth + polypart.zeroth * smoothWeight, first :=
-        V.Add(linpart.first, V.Scale(polypart.first, smoothWeight)),
-        second :=
-        M.Add(linpart.second, M.Scale(polypart.second, smoothWeight))};
-  END Derivatives;
+      Deriv2{zeroth := ComputeRho(hsums^), first :=
+             M.MulV(dsums, ComputeDRho(hsums^)), second :=
+             M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)), M.Transpose(dsums))};
+  END DeriveRho;
+
+PROCEDURE AddDerv (READONLY x, y: Deriv2): Deriv2 RAISES {NA.Error} =
+  BEGIN
+    RETURN
+      Deriv2{zeroth := x.zeroth + y.zeroth, first :=
+             V.Add(x.first, y.first), second := M.Add(x.second, y.second)};
+  END AddDerv;
+
+PROCEDURE ScaleDerv (READONLY x: Deriv2; y: R.T): Deriv2
+   =
+  BEGIN
+    RETURN Deriv2{zeroth := x.zeroth * y, first := V.Scale(x.first, y),
+                  second := M.Scale(x.second, y)};
+  END ScaleDerv;
 
 PROCEDURE MatchPatternSmooth (target                : S.T;
                               hdual, gdual, hdualvan: S.T;
                               levels, translates    : CARDINAL;
                               smoothWeight          : R.T;      ): S.T
-  RAISES {BSpl.DifferentParity} =
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  RAISES {NA.Error} =
   VAR
     phivan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
     psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
@@ -325,8 +337,9 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
     BEGIN
       FOR j := 0 TO 100 DO
         VAR
-          der := Derivatives(hdualvan, gdual, y, smoothWeight, normalMat,
-                             targetCor, targetNormSqr);
+          der := AddDerv(
+                   DeriveDist(normalMat, targetCor, targetNormSqr, y),
+                   ScaleDerv(DeriveRho(hdualvan, gdual, y), smoothWeight));
         (*targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
            targetdist := V.Inner(targetdiff, targetdiff); *)
         BEGIN
