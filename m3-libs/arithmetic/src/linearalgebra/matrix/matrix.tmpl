@@ -75,7 +75,7 @@ end
 readonly proc InstantiateFortranPart (nm, field, src, ext, prefix) is
   local floatsrc = "Float" & src & ext
   local target   = nm      & src & ext
-  local fullsrc  = path()&"/"&floatsrc
+  local fullsrc  = path()&SL&floatsrc
   source(floatsrc)
   if stale(target,fullsrc)
     exec("perl -p -e \"s/Float/"&field&"/;s/EXTERNAL x/EXTERNAL "&prefix&"/\"", fullsrc, ">" & target)
