@@ -14,6 +14,7 @@ IMPORT LongRealBasic               AS R,
        LongRealMatrixFmtLex        AS MF,
        LongRealMatrixDecomposition AS MD,
        LongRealVectorTrans         AS VT,
+       LongRealMatrixTrans         AS MT,
        RandomBayesDurham           AS Rand,
        Fmt;
 
@@ -168,61 +169,69 @@ PROCEDURE TestTridiag (): BOOLEAN =
 
     RETURN result;
   END TestTridiag;
-(*---------------------*)
-(* LU factor *)
-(*---------------------*)
-(*------------------------*)
+
+(*--------- LU factor ---------*)
 PROCEDURE TestLU (): BOOLEAN RAISES {} =
   CONST ftn = Module & "TestLU";
-  CONST n = 4;
   VAR
-    A, Acopy: M.T;
-    B       : V.T;
-    C       : M.T;
-    D       : M.T;
+    U1 := M.FromArray(M.TBody{V.TBody{1.0D0, 2.3D0, -0.3D0, 0.7D0},
+                              V.TBody{0.0D0, -1.2D0, -0.5D0, 0.1D0},
+                              V.TBody{0.0D0, 0.0D0, -0.3D0, 0.7D0},
+                              V.TBody{0.0D0, 0.0D0, 0.0D0, 0.4D0}});
+    Ms := ARRAY [0 .. 3] OF
+            M.T{U1, M.Transpose(U1),
+                M.FromArray(M.TBody{V.TBody{1.0D0, 2.3D0, -0.3D0, 0.7D0},
+                                    V.TBody{0.3D0, -1.2D0, -0.5D0, 0.1D0},
+                                    V.TBody{0.0D0, 2.3D0, -0.3D0, 0.7D0},
+                                    V.TBody{0.0D0, 0.0D0, -0.1D0, 0.4D0}}),
+                M.FromArray(M.TBody{V.TBody{1.0D0, 0.0D0, 0.0D0, 0.0D0},
+                                    V.TBody{0.0D0, 0.0D0, 0.0D0, 0.1D0},
+                                    V.TBody{0.0D0, 0.8D0, 0.0D0, 0.0D0},
+                                    V.TBody{0.0D0, 0.0D0, -0.1D0, 0.0D0}})};
 
-    knownX: V.T;                 (*X is an nx1 matrix*)
-    foundX: V.T;
-
-    det  : R.T;
-    d    : [-1 .. 1];
-    index            := NEW(REF MD.IndexArray, n);
+    knownX := V.FromArray(V.TBody{0.7D0, 1.3D0, -0.2D0, 0.3D0}); (*X is an
+                                                                    nx1
+                                                                    matrix*)
 
   BEGIN
     Debug(1, ftn, "begin\n");
 
-    BuildData(A, C, D, B, knownX, foundX, n);
-    TRY
-      Msg(Fmt.Int(NUMBER(A^)) & "\n");
-      Msg(Fmt.Int(NUMBER(A[0])) & "\n");
-      Msg(Fmt.Int(NUMBER(index^)) & "\n");
-      MD.LUFactorD(A, index^, d);
-      Msg("after LUFactor: d=" & Fmt.Int(d) & ", A=" & MF.Fmt(A));
-      (*---make a copy so we can reuse the decomp---*)
-      Acopy := M.Copy(A);
-      det := MD.LUDet(Acopy, d);
-      Msg("det =" & RF.Fmt(det) & "\n");
+    FOR i := FIRST(Ms) TO LAST(Ms) DO
+      TRY
+        VAR
+          A      := Ms[i];
+          lu     := MD.LUFactor(A);
+          b      := M.MulV(A, knownX);
+          foundX := MD.LUBackSubst(lu, b);
+          det    := MD.LUDet(lu);
+          AI     := MD.LUInverse(lu);
 
-      Acopy := M.Copy(A);
-      D := MD.LUInverseD(A, index^);
-      Msg("A inverse =" & MF.Fmt(D));
+        BEGIN
+          Msg("Factorize " & MF.Fmt(A) & "\n");
+          Msg("LU factors: sign =" & Fmt.Int(lu.sign) & "\n");
+          Msg("L = " & MF.Fmt(lu.L) & "\n");
+          Msg("U = " & MF.Fmt(lu.U) & "\n");
+          Msg("det = " & RF.Fmt(det) & "\n");
+          Msg("Inverse(A) =" & MF.Fmt(AI));
+          Msg("Inverse(A)*A =" & MF.Fmt(M.Mul(AI,A)));
 
-      Acopy := M.Copy(A);
-      foundX^ := B^;
-      MD.LUBackSubstD(Acopy, foundX, index^);
+          Msg("knownX = " & VF.Fmt(knownX));
+          Msg("foundX = " & VF.Fmt(foundX));
 
-    EXCEPT
-    | Arith.Error (err) =>
-        Msg("LU fails, error code " & Fmt.Int(TYPECODE(err)) & "\n");
-        RETURN FALSE;
+          (* check solution of the equation system *)
+          <* ASSERT VT.NormInf(V.Sub(foundX, knownX))
+                      < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
+          (* verify the matrix inversion *)
+          <* ASSERT MT.Norm1(M.Sub(M.Mul(AI, A), M.NewOne(NUMBER(A^))))
+                      < RT.Eps * 10.0D0 * MT.Norm1(A) *>
+        END;
+
+      EXCEPT
+      | Arith.Error (err) =>
+          Msg("LU fails, error code " & Fmt.Int(TYPECODE(err)) & "\n");
+          RETURN FALSE;
+      END;
     END;
-
-    (*---report results---*)
-    Msg("knownX= " & VF.Fmt(knownX));
-    Msg("foundX= " & VF.Fmt(foundX));
-
-    <* ASSERT VT.NormInf(V.Sub(foundX, knownX))
-                < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
 
     RETURN TRUE;
   END TestLU;

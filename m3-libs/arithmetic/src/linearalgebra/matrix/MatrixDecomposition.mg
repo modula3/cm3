@@ -234,26 +234,26 @@ END GaussElim;
 
 (* This routine recycles the results of LUFactorD in order to avoid writing
    a separate routine with its own bugs :-) *)
-PROCEDURE LUFactor (A: M.T; ): LUFactors RAISES {Arith.Error} =
+PROCEDURE LUFactor (Aorig: M.T; ): LUFactors RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = "LUFactor";
 
   VAR
-    Acopy            := M.Copy(A);
+    A                := M.Copy(Aorig);
     index            := NEW(REF IndexArray, NUMBER(A^));
-    d    : [-1 .. 1];
+    sign : [-1 .. 1];
     L, U             := M.NewZero(NUMBER(A^), NUMBER(A[0]));
   BEGIN
-    LUFactorD(Acopy, index^, d);
-    FOR j := FIRST(Acopy^) TO LAST(Acopy^) DO
+    LUFactorD(A^, index^, sign);
+    FOR j := FIRST(A^) TO LAST(A^) DO
       SUBARRAY(L[j], 0, j) := SUBARRAY(A[j], 0, j);
       L[j, j] := R.One;
       WITH l = NUMBER(U[j]) - j DO
         SUBARRAY(U[j], j, l) := SUBARRAY(A[j], j, l);
       END;
     END;
-    RETURN LUFactors{L, U, index, d};
+    RETURN LUFactors{L, U, index, sign};
   END LUFactor;
 
 PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Arith.Error} =
@@ -262,22 +262,88 @@ PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Arith.Error} =
     ftn = "LUBackSubst";
   VAR B := V.Copy(b);
   BEGIN
-    LUBackSubstSep(LU.L, LU.U, B, LU.index^);
+    LUBackSubstSep(LU.L^, LU.U^, B^, LU.index^);
     RETURN B;
   END LUBackSubst;
 
+PROCEDURE LUInverse (LU: LUFactors; ): M.T RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = "LUInverse";
+  VAR
+    n         := NUMBER(LU.index^);
+    unit      := V.NewZero(n);
+    B   : M.T;
+
+  BEGIN
+    IF n # NUMBER(LU.L^) OR n # NUMBER(LU.L[0]) OR n # NUMBER(LU.U^)
+         OR n # NUMBER(LU.U[0]) THEN
+      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
+    END;
+
+    B := M.New(n, n);
+    FOR i := 0 TO n - 1 DO
+      unit[i] := R.One;
+      B[i] := LUBackSubst(LU, unit)^;
+      unit[i] := R.Zero;
+    END;
+    RETURN M.Transpose(B);
+  END LUInverse;
+
+PROCEDURE Inverse (Aorig: M.T; ): M.T RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = "LUInverse";
+  VAR
+    n                     := NUMBER(A^);
+    A                     := M.Transpose(Aorig);
+    B    : M.T;
+    index: REF IndexArray;
+    sign : [-1 .. 1];
+
+  BEGIN
+    IF n # NUMBER(A[0]) THEN
+      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
+    END;
+
+    B := M.NewOne(n);
+    index := NEW(REF IndexArray, n);
+    LUFactorD(A^, index^, sign);
+    FOR i := 0 TO LAST(B^) DO LUBackSubstD(A^, B[i], index^); END;
+    RETURN B;
+  END Inverse;
+
+PROCEDURE LUDet (LU: LUFactors; ): R.T =
+  <* UNUSED *>
+  CONST
+    ftn = "LUDet";
+  VAR
+    (*---set sign due to row switching---*)
+    prod := FLOAT(LU.sign, R.T);
+    A    := LU.U;
+  BEGIN
+    (*---could do more checking here to assure LU form---*)
+
+    (*---compute value---*)
+    FOR i := 0 TO LAST(A[0]) DO prod := prod * A[i, i]; END (* for *);
+    RETURN prod;
+  END LUDet;
+
+
+
 (* Destructive LU factoring *)
-PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: [-1 .. 1]; )
-  RAISES {Arith.Error} =
+PROCEDURE LUFactorD (VAR A    : M.TBody;
+                     VAR index: IndexArray;
+                     VAR d    : [-1 .. 1];  ) RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = "LUFactorD";
   VAR
     imax                    := 0;
     sum, dum, max, tmp: R.T;
-    Af                      := FIRST(A^);
-    Al                      := LAST(A^);
-    m1                      := LAST(A^); (*num rows*)
+    Af                      := FIRST(A);
+    Al                      := LAST(A);
+    m1                      := LAST(A); (*num rows*)
     n1                      := LAST(A[0]); (*num cols*)
     n2                      := LAST(index);
     scale                   := NEW(V.T, n1 + 1);
@@ -362,24 +428,27 @@ PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: [-1 .. 1]; )
   END LUFactorD;
 
 (*-----------------*)
-PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
-  RAISES {Arith.Error} =
+PROCEDURE LUBackSubstD (VAR      A    : M.TBody;
+                        VAR      B    : V.TBody;
+                        READONLY index: IndexArray) RAISES {Arith.Error} =
   BEGIN
     LUBackSubstSep(A, A, B, index);
   END LUBackSubstD;
 
-PROCEDURE LUBackSubstSep (A, U: M.T; B: V.T; READONLY index: IndexArray)
+PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
+                          VAR      B    : V.TBody;
+                          READONLY index: IndexArray)
   RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = "LUBackSubstSep";
   VAR
-    Af               := FIRST(A^);
-    Al               := LAST(A^);
-    m1               := LAST(A^); (*num rows*)
-    n1               := LAST(A[0]); (*num cols*)
-    m2               := LAST(B^); (*num rows*)
-    ii, ip: CARDINAL;
+    Af                             := FIRST(A);
+    Al                             := LAST(A);
+    m1                             := LAST(A); (*num rows*)
+    n1                             := LAST(A[0]); (*num cols*)
+    m2                             := LAST(B); (*num rows*)
+    ii, ip: [-1 .. LAST(CARDINAL)];
     sum   : R.T;
   BEGIN
     IF m1 # n1 OR m2 # m1 THEN
@@ -410,61 +479,25 @@ PROCEDURE LUBackSubstSep (A, U: M.T; B: V.T; READONLY index: IndexArray)
     END (* for *);
   END LUBackSubstSep;
 (*-----------------*)
-PROCEDURE LUInverseD (A: M.T; READONLY index: IndexArray): M.T
+PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T
   RAISES {Arith.Error} =
-  (**
-  Inverse of A goes to B
-  Must have done LUFactor on A first
-  Destroys A's values.
-  A is real nxn
-  B is real nxn
-  index is integer nx1
-  *)
   <* UNUSED *>
   CONST
     ftn = "LUInverse";
   VAR
-    n      := NUMBER(A^);
+    n      := NUMBER(A);
     B: M.T;
-    C: V.T;
+
   BEGIN
-    IF (n # NUMBER(A[0])) THEN
+    IF n # NUMBER(A[0]) THEN
       RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
     END;
 
     B := M.NewOne(n);
-    (*we need C as a column vector from B*)
-    C := NEW(V.T, n);
 
-    FOR i := 0 TO LAST(B^) DO
-      C^ := B[i];
-      LUBackSubstD(A, C, index);
-      B[i] := C^;
-      (*
-          FOR j:=0 TO LAST(C^) DO C[j]:=B[i,j]; END;
-          LUBackSubst(A,C,index);
-          FOR j:=0 TO LAST(C^) DO B[i,j]:=C[j]; END;
-      *)
-    END (* for *);
+    FOR i := 0 TO LAST(B^) DO LUBackSubstD(A, B[i], index); END (* for *);
     RETURN B;
   END LUInverseD;
-(*-----------------*)
-PROCEDURE LUDet (A: M.T; d: [-1 .. 1]): R.T =
-  (*after LUFactor on A and no backsubs, returns determinant "d" is the
-     parity marker from LUFactor *)
-  <* UNUSED *>
-  CONST
-    ftn = "LUDet";
-  VAR
-    (*---set sign due to row switching---*)
-    prod := FLOAT(d, R.T);
-  BEGIN
-    (*---could do more checking here to assure LU form---*)
-
-    (*---compute value---*)
-    FOR i := 0 TO LAST(A[0]) DO prod := prod * A[i, i]; END (* for *);
-    RETURN prod;
-  END LUDet;
 
 (* Singular Value Decomposition*)
 

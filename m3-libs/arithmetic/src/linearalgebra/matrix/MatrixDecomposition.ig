@@ -74,43 +74,41 @@ TYPE
   LUFactors = RECORD
                 L, U : M.T;
                 index: REF IndexArray;
-                d    : [-1 .. 1];
+                sign : [-1 .. 1];
               END;
 
 PROCEDURE LUFactor (A: M.T; ): LUFactors RAISES {Error};
 
 PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Error};
 
+PROCEDURE LUInverse (LU: LUFactors; ): M.T RAISES {Error};
 
-PROCEDURE LUFactorD (A: M.T;     (* in: matrix to factorize, out: merged
-                                    lower and upper triangular factor
-                                    matrixes *)
+PROCEDURE LUDet (LU: LUFactors; ): R.T RAISES {Error};
+(*after LUFactor on A and no backsubs, returns determinant *)
+
+
+PROCEDURE LUFactorD (VAR A: M.TBody;  (* in: matrix to factorize, out:
+                                         merged lower and upper triangular
+                                         factor matrixes *)
                      VAR index: IndexArray;  (* line permutations *)
                      VAR d: [-1 .. 1];  (* parity of permutations, needed
                                            for determinant computation *))
   RAISES {Error};
 (* Factor A into Lower/Upper portions Destroys A's values. *)
 
-PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
-  RAISES {Error};
-(*After LUfactor on A, solves A dot X = B.  X is returned in B.  B's values
-   are destroyed.  A is real nxn B is real nx1 index is integer nx1 *)
+PROCEDURE LUBackSubstD (VAR A: M.TBody;
+                        VAR B: V.TBody;  (* in: right hand side b, out:
+                                            solution vector x *)
+                        READONLY index: IndexArray) RAISES {Error};
+(*After LUfactor on A, solves A dot x = b. *)
 
-PROCEDURE LUInverseD (A: M.T; READONLY index: IndexArray): M.T
-  RAISES {Error};
-(*
-Inverse of A goes to B
-Must have done LUFactor on A first
-Destroys A's values.
-A is real nxn
-B is real nxn
-index is integer nx1
-*)
+PROCEDURE LUInverseD (VAR A: M.TBody;  (* A must be LU factorized inplace,
+                                          it will be destroyed *)
+                      READONLY index: IndexArray): M.T RAISES {Error};
 
-PROCEDURE LUDet (A: M.T; d: [-1 .. 1]): R.T RAISES {Error};
-(*after LUFactor on A and no backsubs, returns determinant "d" is the
-   parity marker from LUDecomp *)
 
+
+PROCEDURE Inverse (A: M.T; ): M.T RAISES {Error};
 
 
 (* QR Factoring *)
