@@ -7,7 +7,7 @@ install:
 	cm3 -ship
 
 plplot:	src/m3makefile $(patsubst %, src/%, $(M3FILES))
-	cm3
+	cm3 -O
 
 src/m3makefile:	swig/plplotmodula3.i swig/plplotcapi.i
 	cd swig; swig -modula3 plplotmodula3.i
