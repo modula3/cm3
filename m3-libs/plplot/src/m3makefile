@@ -1,8 +1,8 @@
 % automatically generated quake file for PLPlot
 
+import_lib("plplotd","/usr/lib")
 import("m3na")
 import("libm3")
-import_lib("PLPlot","/usr/lib")
 module("PLPlotRaw")
 module("PLPlot")
 
