@@ -10,7 +10,6 @@ IMPORT Random;
 
 FROM RandomBasic IMPORT T,Min,Max;
 IMPORT RandomRep;
-FROM RandomRep IMPORT TableSize;
 
 CONST Module = "RandomNumber01.";
 (*==========================*)
@@ -49,6 +48,8 @@ END DECSRC_engine;
 
 (*------------------*)
 REVEAL ran0 = T BRANDED OBJECT
+    start:BOOLEAN;
+    z1:INTEGER;
   OVERRIDES
     init:=ran0_init;
     engine:=ran0_engine;
@@ -101,7 +102,13 @@ END ran0_engine;
 
 (*-----------------------------------*)
 (*------------------*)
+CONST
+  TableSize = 32; (*for Bayes-Durham shuffle*)
+
 REVEAL ran1 = T BRANDED OBJECT
+    start:BOOLEAN;
+    z1,table_z:INTEGER;
+    table:ARRAY[0..TableSize-1] OF INTEGER;
   OVERRIDES
     init:=ran1_init;
     engine:=ran1_engine;
