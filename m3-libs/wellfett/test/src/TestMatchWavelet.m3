@@ -35,9 +35,10 @@ PROCEDURE MatchPattern (target                               : S.T;
   VAR
     hdual := BSpl.GeneratorMask(smooth);
     gdual := BSpl.WaveletMask(smooth, vanishing);
-    vancore := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
-                                         ARRAY OF R.T{1.0D0, -1.0D0}, -1),
-                                vanishing);
+    vancore := SIntPow.MulPower(
+                 hdual, NEW(S.T).fromArray(
+                          ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}, -2),
+                 vanishing);
     phivan := Refn.Refine(vancore.scale(RT.SqRtTwo), hdual, levels);
     psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
 
@@ -476,18 +477,19 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
   VAR
     hdual  := BSpl.GeneratorMask(smooth);
     gdual0 := BSpl.WaveletMask(smooth, vanishing);
-    hdualvan := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
-                                          ARRAY OF R.T{1.0D0, -1.0D0}, -1),
-                                 vanishing);
+    hdualvan := SIntPow.MulPower(
+                  hdual, NEW(S.T).fromArray(
+                           ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}, -2),
+                  vanishing);
     mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, levels,
                              translates, smoothWeight);
-    s     := mc.lift;
-    gdual := gdual0.scale(1.0D0/RT.SqRtTwo).superpose(s.upsample(2).convolve(hdualvan.scale(
-                                      RT.SqRtTwo/mc.targetAmp)));
-    (*
-        gdual := gdual0.superpose(s.upsample(2).convolve(hdualvan).scale(
-                                      -8.0D0));
-    *)
+    s := SIntPow.MulPower(
+           mc.lift, NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0}, -1),
+           vanishing);
+    gdual := gdual0.scale(1.0D0 / RT.SqRtTwo).superpose(
+               s.upsample(2).convolve(
+                 hdual.scale(RT.SqRtTwo / mc.targetAmp)));
+
     unit          := IIntPow.Power(2, levels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
@@ -512,7 +514,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
         PL.SetEnvironment(MIN(lefttarget, leftpsidual),
                           MAX(righttarget, rightpsidual), ymin, ymax);
         PL.PlotLines(V.ArithSeq(target.getNumber(), lefttarget, grid)^,
-                     target.scale(twopow/mc.targetAmp).getData()^);
+                     target.scale(twopow / mc.targetAmp).getData()^);
         PL.SetColor0(2);
         PL.PlotLines(V.ArithSeq(psidual0.getNumber(), leftpsidual0, grid)^,
                      psidual0.getData()^);
