@@ -1,23 +1,7 @@
-GENERIC MODULE VectorTrans(Ct,R,Rt);
+GENERIC MODULE VectorTrans(CT,R,RT);
 (*
 Abstract:
 
-6/6/87    hgeorge
-          Initial version.
-
-2/11/89   hgeorge
-          To work with generic matrices.
-
-11/20/94  Harry George
-          Converted to Modula3 dynamic arrays.
-
-12/18/95  Harry George
-          ...and back to fully instantiated for REAL32.
-
-1/27/96   Harry George
-          Converted to OO format, and R.T
-
-2/17/96   Harry George   Converted from OO to ADT format
 *)
 
 <*UNUSED*> CONST Module = "VectorTrans.";
@@ -30,7 +14,7 @@ VAR
 BEGIN
   sum:=R.Zero;
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    sum:=R.Add(sum,Ct.Abs(x[i]));
+    sum:=R.Add(sum,CT.Abs(x[i]));
   END;
   RETURN sum;
 END Norm1;
@@ -43,9 +27,9 @@ VAR
 BEGIN
   sum:=R.Zero;
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    sum:=R.Add(sum,Ct.AbsSqr(x[i]));
+    sum:=R.Add(sum,CT.AbsSqr(x[i]));
   END;
-  RETURN Rt.SqRt(sum);
+  RETURN RT.SqRt(sum);
 END Norm2;
 
 (*-----------------*)
@@ -56,7 +40,7 @@ VAR
 BEGIN
   max:=R.Zero;
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    abs:=Ct.Abs(x[i]);
+    abs:=CT.Abs(x[i]);
     IF R.Compare(max,abs)<0 THEN
       max:=abs;
     END;

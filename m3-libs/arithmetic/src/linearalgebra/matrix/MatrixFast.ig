@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixFast(V,R);
+GENERIC INTERFACE MatrixFast(MB,V,R);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to matrix functions
@@ -40,6 +40,22 @@ PROCEDURE Mul(x,y:T):T RAISES {Error};   (*x * y*)
 PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
 CONST Adjungate = Transpose;
+
+CONST
+  GetRow    = MB.GetRow;
+  GetColumn = MB.GetColumn;
+
+TYPE
+  ApplyFtn  = MB.ApplyFtn;
+  MapFtn    = MB.MapFtn;
+  ReduceFtn = MB.ReduceFtn;
+
+CONST
+  Apply         = MB.Apply;
+  Map           = MB.Map;
+  ReduceRows    = MB.ReduceRows;
+  ReduceColumns = MB.ReduceColumns;
+
 
 PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
 

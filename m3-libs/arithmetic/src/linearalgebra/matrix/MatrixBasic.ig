@@ -36,6 +36,9 @@ PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
 PROCEDURE Adjungate(x:T):T;                  (*x^**)
 
+PROCEDURE GetRow(x:T;k:CARDINAL):V.T;
+PROCEDURE GetColumn(x:T;k:CARDINAL):V.T;
+
 PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
 (*PROCEDURE Determinant(x:T):R.T;*)
 
