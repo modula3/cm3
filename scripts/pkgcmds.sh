@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
+# $Id: pkgcmds.sh,v 1.3 2001-02-12 22:43:04 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -192,7 +192,8 @@ print_list2() {
   N=36; export N
   while [ -n "$1" ] ; do
     echo "${INDENT} `format_one $1` `format_one $2`"
-    shift; shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
   done
 }
 
@@ -201,7 +202,10 @@ print_list4() {
   N=18; export N
   while [ -n "$1" ] ; do
     echo "${INDENT} `format_one $1` `format_one $2` `format_one $3` `format_one $4`"
-    shift; shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
   done
 }
 
