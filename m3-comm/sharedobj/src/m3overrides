@@ -14,6 +14,10 @@
 %  override("embutils", "/proj/graphics/arm3/bm-work")
 %end
 
+_SHAREDOBJ_STUBGEN = 
+  format(ROOT & "/m3-comm/sharedobjgen/%s/shobjcodegen", BUILD_DIR)
+_SHAREDOBJ_OVERRIDE="T"
+
 override ("m3core", ROOT & "/m3-libs")
 override ("libm3", ROOT & "/m3-libs")
 override ("debug", ROOT & "/m3-libs")
