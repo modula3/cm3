@@ -21,9 +21,17 @@ Usage:  You can call these directly, or use the T OBJECTS:
 
 IMPORT Word,RandomBasic;
 
+(** The random words output by these generators ought to be extremely
+random since the engine is a combination of 5 generators, each pretty good by
+itself, and all 5 work according to different principles. I think
+they will be good enough for any application except cryptography, and
+quite likely good enough even for that. Its only
+disadvantage is it is too slow for applications which do
+a very small amount of computing per random number.
+**********************************************)
+
 TYPE
   T <: RandomBasic.T;
-
 
 
 (*==========================*)
@@ -33,17 +41,6 @@ If fixed=FALSE (the default) will incorporate the
 If TRUE will use a particular fixed seed.
 *************************************************************)
 PROCEDURE New(fixed : BOOLEAN := FALSE):T;
-
-(** The random words output by these generators ought to be extremely
-random since RandWord is a combination of 5 generators, each pretty good by
-itSELF, and all 5 work according to different principles. I think
-they will be good enough for any application except cryptography, and
-quite likely good enough even for that. Its only
-disadvantage is it is too slow for applications which do
-a very small amount of computing per random number.
-**********************************************)
-PROCEDURE RandWord() : Word.T;
-PROCEDURE Uni01() : LONGREAL;
 
 (*-----------------------*)
 PROCEDURE Test();
