@@ -23,7 +23,7 @@ PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
 
 CONST
-  FramePadBottom = 2;
+  FramePadBottom = 14;
   FramePadTop    = 0;
   (* Additional padding words from above and below an existing
      thread's stack pointer to copy when creating a new thread *)
@@ -35,10 +35,10 @@ CONST
    reasonable page size.  The page size must be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 8192;        (* bytes per page *)
-  LogBytesPerHeapPage = 13;
-  AdrPerHeapPage      = 8192;        (* addresses per page *)
-  LogAdrPerHeapPage   = 13;
+  BytesPerHeapPage    = 4096;        (* bytes per page *)
+  LogBytesPerHeapPage = 12;
+  AdrPerHeapPage      = 4096;        (* addresses per page *)
+  LogAdrPerHeapPage   = 12;
 
 <*EXTERNAL*> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
 <*EXTERNAL*> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
