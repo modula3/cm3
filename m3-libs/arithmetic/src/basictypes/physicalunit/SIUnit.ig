@@ -1,4 +1,11 @@
 GENERIC INTERFACE SIUnit(UDB);
+(*
+  Some common quantities, their units according to the SI standard
+  are packed into a database by CreateDatabase.
+
+  One might predefine values for each usual SI unit,
+  but it is difficult to mix with complex numbers.
+*)
 
 IMPORT PhysicalUnit AS U;
 
