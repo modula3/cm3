@@ -2,22 +2,22 @@
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1997, 1998,
    1999, 2000, 2001 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 /* If secondary reloads are the same for inputs and outputs, define those
@@ -82,7 +82,7 @@ enum reload_type
   RELOAD_OTHER, RELOAD_FOR_OTHER_ADDRESS
 };
 
-#ifdef MAX_INSN_CODE
+#ifdef GCC_INSN_CODES_H
 /* Each reload is recorded with a structure like this.  */
 struct reload
 {
@@ -183,7 +183,7 @@ extern int reload_first_uid;
 
 /* Nonzero if indirect addressing is supported when the innermost MEM is
    of the form (MEM (SYMBOL_REF sym)).  It is assumed that the level to
-   which these are valid is the same as spill_indirect_levels, above.   */
+   which these are valid is the same as spill_indirect_levels, above.  */
 
 extern char indirect_symref_ok;
 
@@ -191,14 +191,6 @@ extern char indirect_symref_ok;
 extern char double_reg_address_ok;
 
 extern int num_not_at_initial_offset;
-
-#ifdef MAX_INSN_CODE
-/* These arrays record the insn_code of insns that may be needed to
-   perform input and output reloads of special objects.  They provide a
-   place to pass a scratch register.  */
-extern enum insn_code reload_in_optab[];
-extern enum insn_code reload_out_optab[];
-#endif
 
 struct needs
 {
@@ -286,7 +278,7 @@ extern int remove_address_replacements PARAMS ((rtx in_rtx));
    autoincrement and autodecrement.  */
 extern int operands_match_p PARAMS ((rtx, rtx));
 
-/* Return 1 if altering OP will not modify the value of CLOBBER. */
+/* Return 1 if altering OP will not modify the value of CLOBBER.  */
 extern int safe_from_earlyclobber PARAMS ((rtx, rtx));
 
 /* Search the body of INSN for values that need reloading and record them
@@ -339,10 +331,16 @@ extern int regno_clobbered_p PARAMS ((unsigned int, rtx, enum machine_mode,
 				      int));
 
 /* Return 1 if X is an operand of an insn that is being earlyclobbered.  */
-int earlyclobber_operand_p PARAMS ((rtx));
+extern int earlyclobber_operand_p PARAMS ((rtx));
+
+/* Record one reload that needs to be performed.  */
+extern int push_reload PARAMS ((rtx, rtx, rtx *, rtx *, enum reg_class,
+				enum machine_mode, enum machine_mode,
+				int, int, int, enum reload_type));
 
 /* Functions in reload1.c:  */
 
+extern void reload_cse_regs		PARAMS ((rtx));
 extern int reloads_conflict		PARAMS ((int, int));
 
 /* Initialize the reload pass once per compilation.  */

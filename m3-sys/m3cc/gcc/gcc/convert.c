@@ -2,22 +2,22 @@
    Copyright (C) 1987, 1988, 1991, 1992, 1993, 1994, 1995, 1997,
    1998 Free Software Foundation, Inc.
 
-This file is part of GNU C.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 /* These routines are somewhat language-independent utility function
@@ -227,9 +227,11 @@ convert_to_integer (type, expr)
 
 	case LSHIFT_EXPR:
 	  /* We can pass truncation down through left shifting
-	     when the shift count is a nonnegative constant.  */
+	     when the shift count is a nonnegative constant and
+	     the target type is unsigned.  */
 	  if (TREE_CODE (TREE_OPERAND (expr, 1)) == INTEGER_CST
 	      && tree_int_cst_sgn (TREE_OPERAND (expr, 1)) >= 0
+	      && TREE_UNSIGNED (type)
 	      && TREE_CODE (TYPE_SIZE (type)) == INTEGER_CST)
 	    {
 	      /* If shift count is less than the width of the truncated type,
@@ -295,7 +297,7 @@ convert_to_integer (type, expr)
 	      {
 		/* Do the arithmetic in type TYPEX,
 		   then convert result to TYPE.  */
-		register tree typex = type;
+		tree typex = type;
 
 		/* Can't do arithmetic in enumeral types
 		   so use an integer type that will hold the values.  */
@@ -311,12 +313,15 @@ convert_to_integer (type, expr)
 		    /* Don't do unsigned arithmetic where signed was wanted,
 		       or vice versa.
 		       Exception: if both of the original operands were
-		       unsigned then can safely do the work as unsigned.
+		       unsigned then we can safely do the work as unsigned;
+		       if we are distributing through a LSHIFT_EXPR, we must
+		       do the work as unsigned to avoid a signed overflow.
 		       And we may need to do it as unsigned
 		       if we truncate to the original size.  */
 		    typex = ((TREE_UNSIGNED (TREE_TYPE (expr))
 			      || (TREE_UNSIGNED (TREE_TYPE (arg0))
-				  && TREE_UNSIGNED (TREE_TYPE (arg1))))
+				  && TREE_UNSIGNED (TREE_TYPE (arg1)))
+			      || ex_form == LSHIFT_EXPR)
 			     ? unsigned_type (typex) : signed_type (typex));
 		    return convert (type,
 				    fold (build (ex_form, typex,
@@ -333,7 +338,7 @@ convert_to_integer (type, expr)
 	  /* This is not correct for ABS_EXPR,
 	     since we must test the sign before truncation.  */
 	  {
-	    register tree typex = type;
+	    tree typex = type;
 
 	    /* Can't do arithmetic in enumeral types
 	       so use an integer type that will hold the values.  */

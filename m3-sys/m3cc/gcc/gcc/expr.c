@@ -1,23 +1,23 @@
 /* Convert tree expression to rtl instructions, for GNU compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-   2000, 2001 Free Software Foundation, Inc.
+   2000, 2001, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -31,14 +31,18 @@ Boston, MA 02111-1307, USA.  */
 #include "except.h"
 #include "function.h"
 #include "insn-config.h"
+#include "insn-attr.h"
 /* Include expr.h after insn-config.h so we get HAVE_conditional_move.  */
 #include "expr.h"
+#include "optabs.h"
+#include "libfuncs.h"
 #include "recog.h"
 #include "reload.h"
 #include "output.h"
 #include "typeclass.h"
 #include "toplev.h"
 #include "ggc.h"
+#include "langhooks.h"
 #include "intl.h"
 #include "tm_p.h"
 
@@ -69,15 +73,6 @@ Boston, MA 02111-1307, USA.  */
 #define CASE_VECTOR_PC_RELATIVE 0
 #endif
 
-/* Hook called by safe_from_p for language-specific tree codes.  It is
-   up to the language front-end to install a hook if it has any such
-   codes that safe_from_p needs to know about.  Since same_from_p will
-   recursively explore the TREE_OPERANDs of an expression, this hook
-   should not reexamine those pieces.  This routine may recursively
-   call safe_from_p; it should always pass `0' as the TOP_P
-   parameter.  */
-int (*lang_safe_from_p) PARAMS ((rtx, tree));
-
 /* If this is nonzero, we do not bother generating VOLATILE
    around volatile memory references, and we are willing to
    output indirect addresses.  If cse is to follow, we reject
@@ -85,11 +80,6 @@ int (*lang_safe_from_p) PARAMS ((rtx, tree));
    if it is used only once, instruction combination will produce
    the same indirect address eventually.  */
 int cse_not_expected;
-
-/* Don't check memory usage, since code is being emitted to check a memory
-   usage.  Used when current_function_check_memory_usage is true, to avoid
-   infinite recursion.  */
-static int in_check_memory_usage;
 
 /* Chain of pending expressions for PLACEHOLDER_EXPR to replace.  */
 static tree placeholder_list = 0;
@@ -129,8 +119,6 @@ struct store_by_pieces
 
 extern struct obstack permanent_obstack;
 
-static rtx get_push_address	PARAMS ((int));
-
 static rtx enqueue_insn		PARAMS ((rtx, rtx));
 static unsigned HOST_WIDE_INT move_by_pieces_ninsns
 				PARAMS ((unsigned HOST_WIDE_INT,
@@ -151,27 +139,26 @@ static int is_zeros_p		PARAMS ((tree));
 static int mostly_zeros_p	PARAMS ((tree));
 static void store_constructor_field PARAMS ((rtx, unsigned HOST_WIDE_INT,
 					     HOST_WIDE_INT, enum machine_mode,
-					     tree, tree, unsigned int, int,
-					     int));
-static void store_constructor	PARAMS ((tree, rtx, unsigned int, int,
-					 HOST_WIDE_INT));
+					     tree, tree, int, int));
+static void store_constructor	PARAMS ((tree, rtx, int, HOST_WIDE_INT));
 static rtx store_field		PARAMS ((rtx, HOST_WIDE_INT,
 					 HOST_WIDE_INT, enum machine_mode,
-					 tree, enum machine_mode, int,
-					 unsigned int, HOST_WIDE_INT, int));
-static enum memory_use_mode
-  get_memory_usage_from_modifier PARAMS ((enum expand_modifier));
-static tree save_noncopied_parts PARAMS ((tree, tree));
-static tree init_noncopied_parts PARAMS ((tree, tree));
-static int fixed_type_p		PARAMS ((tree));
+					 tree, enum machine_mode, int, tree,
+					 int));
 static rtx var_rtx		PARAMS ((tree));
-static rtx expand_expr_unaligned PARAMS ((tree, unsigned int *));
+static HOST_WIDE_INT highest_pow2_factor PARAMS ((tree));
+static HOST_WIDE_INT highest_pow2_factor_for_type PARAMS ((tree, tree));
+static int is_aligning_offset	PARAMS ((tree, tree));
 static rtx expand_increment	PARAMS ((tree, int, int));
 static void do_jump_by_parts_greater PARAMS ((tree, int, rtx, rtx));
 static void do_jump_by_parts_equality PARAMS ((tree, rtx, rtx));
 static void do_compare_and_jump	PARAMS ((tree, enum rtx_code, enum rtx_code,
 					 rtx, rtx));
 static rtx do_store_flag	PARAMS ((tree, rtx, enum machine_mode, int));
+#ifdef PUSH_ROUNDING
+static void emit_single_push_insn PARAMS ((enum machine_mode, rtx, tree));
+#endif
+static void do_tablejump PARAMS ((rtx, enum machine_mode, rtx, rtx, rtx));
 
 /* Record for each mode whether we can move a register directly to or
    from an object of that mode in memory.  If we can't, we won't try
@@ -362,10 +349,10 @@ enqueue_insn (var, body)
 
 rtx
 protect_from_queue (x, modify)
-     register rtx x;
+     rtx x;
      int modify;
 {
-  register RTX_CODE code = GET_CODE (x);
+  RTX_CODE code = GET_CODE (x);
 
 #if 0  /* A QUEUED can hang around after the queue is forced out.  */
   /* Shortcut for most common case.  */
@@ -383,23 +370,23 @@ protect_from_queue (x, modify)
       if (code == MEM && GET_MODE (x) != BLKmode
 	  && GET_CODE (XEXP (x, 0)) == QUEUED && !modify)
 	{
-	  register rtx y = XEXP (x, 0);
-	  register rtx new = gen_rtx_MEM (GET_MODE (x), QUEUED_VAR (y));
-
-	  MEM_COPY_ATTRIBUTES (new, x);
+	  rtx y = XEXP (x, 0);
+	  rtx new = replace_equiv_address_nv (x, QUEUED_VAR (y));
 
 	  if (QUEUED_INSN (y))
 	    {
-	      register rtx temp = gen_reg_rtx (GET_MODE (new));
+	      rtx temp = gen_reg_rtx (GET_MODE (x));
+
 	      emit_insn_before (gen_move_insn (temp, new),
 				QUEUED_INSN (y));
 	      return temp;
 	    }
+
 	  /* Copy the address into a pseudo, so that the returned value
 	     remains correct across calls to emit_queue.  */
-	  XEXP (new, 0) = copy_to_reg (XEXP (new, 0));
-	  return new;
+	  return replace_equiv_address (new, copy_to_reg (XEXP (new, 0)));
 	}
+
       /* Otherwise, recursively protect the subexpressions of all
 	 the kinds of rtx's that can contain a QUEUED.  */
       if (code == MEM)
@@ -450,7 +437,7 @@ int
 queued_subexp_p (x)
      rtx x;
 {
-  register enum rtx_code code = GET_CODE (x);
+  enum rtx_code code = GET_CODE (x);
   switch (code)
     {
     case QUEUED:
@@ -472,7 +459,7 @@ queued_subexp_p (x)
 void
 emit_queue ()
 {
-  register rtx p;
+  rtx p;
   while ((p = pending_chain))
     {
       rtx body = QUEUED_BODY (p);
@@ -495,7 +482,7 @@ emit_queue ()
 
 void
 convert_move (to, from, unsignedp)
-     register rtx to, from;
+     rtx to, from;
      int unsignedp;
 {
   enum machine_mode to_mode = GET_MODE (to);
@@ -540,9 +527,9 @@ convert_move (to, from, unsignedp)
 	abort ();
 
       if (VECTOR_MODE_P (to_mode))
-	from = gen_rtx_SUBREG (to_mode, from, 0);
+	from = simplify_gen_subreg (to_mode, from, GET_MODE (from), 0);
       else
-	to = gen_rtx_SUBREG (from_mode, to, 0);
+	to = simplify_gen_subreg (from_mode, to, GET_MODE (to), 0);
 
       emit_move_insn (to, from);
       return;
@@ -874,7 +861,7 @@ convert_move (to, from, unsignedp)
 	      && STORE_FLAG_VALUE == -1)
 	    {
 	      emit_cmp_insn (lowfrom, const0_rtx, NE, NULL_RTX,
-			     lowpart_mode, 0, 0);
+			     lowpart_mode, 0);
 	      fill_value = gen_reg_rtx (word_mode);
 	      emit_insn (gen_slt (fill_value));
 	    }
@@ -1067,6 +1054,9 @@ convert_move (to, from, unsignedp)
       if ((code = can_extend_p (to_mode, from_mode, unsignedp))
 	  != CODE_FOR_nothing)
 	{
+	  if (flag_force_mem)
+	    from = force_not_mem (from);
+
 	  emit_unop_insn (code, to, from, equiv_code);
 	  return;
 	}
@@ -1291,7 +1281,7 @@ convert_modes (mode, oldmode, x, unsignedp)
      rtx x;
      int unsignedp;
 {
-  register rtx temp;
+  rtx temp;
 
   /* If FROM is a SUBREG that indicates that we have already done at least
      the required extension, strip it.  */
@@ -1364,7 +1354,7 @@ convert_modes (mode, oldmode, x, unsignedp)
 	      && (val & ((HOST_WIDE_INT) 1 << (width - 1))))
 	    val |= (HOST_WIDE_INT) (-1) << width;
 
-	  return GEN_INT (val);
+	  return GEN_INT (trunc_int_for_mode (val, mode));
 	}
 
       return gen_lowpart (mode, x);
@@ -1386,10 +1376,13 @@ convert_modes (mode, oldmode, x, unsignedp)
 #define MOVE_MAX_PIECES   MOVE_MAX
 #endif
 
-/* Generate several move instructions to copy LEN bytes
-   from block FROM to block TO.  (These are MEM rtx's with BLKmode).
-   The caller must pass FROM and TO
-    through protect_from_queue before calling.
+/* Generate several move instructions to copy LEN bytes from block FROM to
+   block TO.  (These are MEM rtx's with BLKmode).  The caller must pass FROM
+   and TO through protect_from_queue before calling.
+
+   If PUSH_ROUNDING is defined and TO is NULL, emit_single_push_insn is
+   used to push FROM to the stack.
+
    ALIGN is maximum alignment we can assume.  */
 
 void
@@ -1399,19 +1392,36 @@ move_by_pieces (to, from, len, align)
      unsigned int align;
 {
   struct move_by_pieces data;
-  rtx to_addr = XEXP (to, 0), from_addr = XEXP (from, 0);
+  rtx to_addr, from_addr = XEXP (from, 0);
   unsigned int max_size = MOVE_MAX_PIECES + 1;
   enum machine_mode mode = VOIDmode, tmode;
   enum insn_code icode;
 
   data.offset = 0;
-  data.to_addr = to_addr;
   data.from_addr = from_addr;
-  data.to = to;
+  if (to)
+    {
+      to_addr = XEXP (to, 0);
+      data.to = to;
+      data.autinc_to
+	= (GET_CODE (to_addr) == PRE_INC || GET_CODE (to_addr) == PRE_DEC
+	   || GET_CODE (to_addr) == POST_INC || GET_CODE (to_addr) == POST_DEC);
+      data.reverse
+	= (GET_CODE (to_addr) == PRE_DEC || GET_CODE (to_addr) == POST_DEC);
+    }
+  else
+    {
+      to_addr = NULL_RTX;
+      data.to = NULL_RTX;
+      data.autinc_to = 1;
+#ifdef STACK_GROWS_DOWNWARD
+      data.reverse = 1;
+#else
+      data.reverse = 0;
+#endif
+    }
+  data.to_addr = to_addr;
   data.from = from;
-  data.autinc_to
-    = (GET_CODE (to_addr) == PRE_INC || GET_CODE (to_addr) == PRE_DEC
-       || GET_CODE (to_addr) == POST_INC || GET_CODE (to_addr) == POST_DEC);
   data.autinc_from
     = (GET_CODE (from_addr) == PRE_INC || GET_CODE (from_addr) == PRE_DEC
        || GET_CODE (from_addr) == POST_INC
@@ -1419,8 +1429,6 @@ move_by_pieces (to, from, len, align)
 
   data.explicit_inc_from = 0;
   data.explicit_inc_to = 0;
-  data.reverse
-    = (GET_CODE (to_addr) == PRE_DEC || GET_CODE (to_addr) == POST_DEC);
   if (data.reverse) data.offset = len;
   data.len = len;
 
@@ -1546,37 +1554,45 @@ move_by_pieces_1 (genfun, mode, data)
      struct move_by_pieces *data;
 {
   unsigned int size = GET_MODE_SIZE (mode);
-  rtx to1, from1;
+  rtx to1 = NULL_RTX, from1;
 
   while (data->len >= size)
     {
       if (data->reverse)
 	data->offset -= size;
 
-      if (data->autinc_to)
+      if (data->to)
 	{
-	  to1 = gen_rtx_MEM (mode, data->to_addr);
-	  MEM_COPY_ATTRIBUTES (to1, data->to);
+	  if (data->autinc_to)
+	    to1 = adjust_automodify_address (data->to, mode, data->to_addr,
+					     data->offset);
+	  else
+	    to1 = adjust_address (data->to, mode, data->offset);
 	}
-      else
-	to1 = change_address (data->to, mode,
-			      plus_constant (data->to_addr, data->offset));
 
       if (data->autinc_from)
-	{
-	  from1 = gen_rtx_MEM (mode, data->from_addr);
-	  MEM_COPY_ATTRIBUTES (from1, data->from);
-	}
+	from1 = adjust_automodify_address (data->from, mode, data->from_addr,
+					   data->offset);
       else
-	from1 = change_address (data->from, mode,
-				plus_constant (data->from_addr, data->offset));
+	from1 = adjust_address (data->from, mode, data->offset);
 
       if (HAVE_PRE_DECREMENT && data->explicit_inc_to < 0)
-	emit_insn (gen_add2_insn (data->to_addr, GEN_INT (-size)));
+	emit_insn (gen_add2_insn (data->to_addr,
+				  GEN_INT (-(HOST_WIDE_INT)size)));
       if (HAVE_PRE_DECREMENT && data->explicit_inc_from < 0)
-	emit_insn (gen_add2_insn (data->from_addr, GEN_INT (-size)));
+	emit_insn (gen_add2_insn (data->from_addr,
+				  GEN_INT (-(HOST_WIDE_INT)size)));
 
-      emit_insn ((*genfun) (to1, from1));
+      if (data->to)
+	emit_insn ((*genfun) (to1, from1));
+      else
+	{
+#ifdef PUSH_ROUNDING
+	  emit_single_push_insn (mode, from1, NULL);
+#else
+	  abort ();
+#endif
+	}
 
       if (HAVE_POST_INCREMENT && data->explicit_inc_to > 0)
 	emit_insn (gen_add2_insn (data->to_addr, GEN_INT (size)));
@@ -1603,16 +1619,16 @@ move_by_pieces_1 (genfun, mode, data)
    0 otherwise.  */
 
 rtx
-emit_block_move (x, y, size, align)
+emit_block_move (x, y, size)
      rtx x, y;
      rtx size;
-     unsigned int align;
 {
   rtx retval = 0;
 #ifdef TARGET_MEM_FUNCTIONS
   static tree fn;
   tree call_expr, arg_list;
 #endif
+  unsigned int align = MIN (MEM_ALIGN (x), MEM_ALIGN (y));
 
   if (GET_MODE (x) != BLKmode)
     abort ();
@@ -1748,7 +1764,7 @@ emit_block_move (x, y, size, align)
 	  TREE_PUBLIC (fn) = 1;
 	  DECL_ARTIFICIAL (fn) = 1;
 	  TREE_NOTHROW (fn) = 1;
-	  make_decl_rtl (fn, NULL_PTR);
+	  make_decl_rtl (fn, NULL);
 	  assemble_external (fn);
 	}
 
@@ -1780,6 +1796,12 @@ emit_block_move (x, y, size, align)
 					  TREE_UNSIGNED (integer_type_node)),
 			 TYPE_MODE (integer_type_node));
 #endif
+
+      /* If we are initializing a readonly value, show the above call
+	 clobbered it.  Otherwise, a load from it may erroneously be hoisted
+	 from a loop.  */
+      if (RTX_UNCHANGING_P (x))
+	emit_insn (gen_rtx_CLOBBER (VOIDmode, x));
     }
 
   return retval;
@@ -1853,17 +1875,19 @@ move_block_from_reg (regno, x, nregs, size)
   /* If SIZE is that of a mode no bigger than a word, just use that
      mode's store operation.  */
   if (size <= UNITS_PER_WORD
-      && (mode = mode_for_size (size * BITS_PER_UNIT, MODE_INT, 0)) != BLKmode)
+      && (mode = mode_for_size (size * BITS_PER_UNIT, MODE_INT, 0)) != BLKmode
+      && !FUNCTION_ARG_REG_LITTLE_ENDIAN)
     {
-      emit_move_insn (change_address (x, mode, NULL),
-		      gen_rtx_REG (mode, regno));
+      emit_move_insn (adjust_address (x, mode, 0), gen_rtx_REG (mode, regno));
       return;
     }
 
   /* Blocks smaller than a word on a BYTES_BIG_ENDIAN machine must be aligned
      to the left before storing to memory.  Note that the previous test
      doesn't handle all cases (e.g. SIZE == 3).  */
-  if (size < UNITS_PER_WORD && BYTES_BIG_ENDIAN)
+  if (size < UNITS_PER_WORD
+      && BYTES_BIG_ENDIAN
+      && !FUNCTION_ARG_REG_LITTLE_ENDIAN)
     {
       rtx tem = operand_subword (x, 0, 1, BLKmode);
       rtx shift;
@@ -1909,9 +1933,8 @@ move_block_from_reg (regno, x, nregs, size)
 
 /* Emit code to move a block SRC to a block DST, where DST is non-consecutive
    registers represented by a PARALLEL.  SSIZE represents the total size of
-   block SRC in bytes, or -1 if not known.  ALIGN is the known alignment of
-   SRC in bits.  */
-/* ??? If SSIZE % UNITS_PER_WORD != 0, we make the blatent assumption that
+   block SRC in bytes, or -1 if not known.  */
+/* ??? If SSIZE % UNITS_PER_WORD != 0, we make the blatant assumption that
    the balance will be in what would be the low-order memory addresses, i.e.
    left justified for big endian, right justified for little endian.  This
    happens to be true for the targets currently using this support.  If this
@@ -1919,9 +1942,8 @@ move_block_from_reg (regno, x, nregs, size)
    would be needed.  */
 
 void
-emit_group_load (dst, orig_src, ssize, align)
+emit_group_load (dst, orig_src, ssize)
      rtx dst, orig_src;
-     unsigned int align;
      int ssize;
 {
   rtx *tmps, src;
@@ -1969,29 +1991,39 @@ emit_group_load (dst, orig_src, ssize, align)
 	    src = gen_reg_rtx (mode);
 	  else
 	    src = gen_reg_rtx (GET_MODE (orig_src));
+
 	  emit_move_insn (src, orig_src);
 	}
 
       /* Optimize the access just a bit.  */
       if (GET_CODE (src) == MEM
-	  && align >= GET_MODE_ALIGNMENT (mode)
+	  && MEM_ALIGN (src) >= GET_MODE_ALIGNMENT (mode)
 	  && bytepos * BITS_PER_UNIT % GET_MODE_ALIGNMENT (mode) == 0
 	  && bytelen == GET_MODE_SIZE (mode))
 	{
 	  tmps[i] = gen_reg_rtx (mode);
-	  emit_move_insn (tmps[i],
-			  change_address (src, mode,
-					  plus_constant (XEXP (src, 0),
-							 bytepos)));
+	  emit_move_insn (tmps[i], adjust_address (src, mode, bytepos));
 	}
       else if (GET_CODE (src) == CONCAT)
 	{
-	  if (bytepos == 0
-	      && bytelen == GET_MODE_SIZE (GET_MODE (XEXP (src, 0))))
-	    tmps[i] = XEXP (src, 0);
-	  else if (bytepos == (HOST_WIDE_INT) GET_MODE_SIZE (GET_MODE (XEXP (src, 0)))
-		   && bytelen == GET_MODE_SIZE (GET_MODE (XEXP (src, 1))))
-	    tmps[i] = XEXP (src, 1);
+	  if ((bytepos == 0
+	       && bytelen == GET_MODE_SIZE (GET_MODE (XEXP (src, 0))))
+	      || (bytepos == (HOST_WIDE_INT) GET_MODE_SIZE (GET_MODE (XEXP (src, 0)))
+		  && bytelen == GET_MODE_SIZE (GET_MODE (XEXP (src, 1)))))
+	    {
+	      tmps[i] = XEXP (src, bytepos != 0);
+	      if (! CONSTANT_P (tmps[i])
+		  && (GET_CODE (tmps[i]) != REG || GET_MODE (tmps[i]) != mode))
+		tmps[i] = extract_bit_field (tmps[i], bytelen * BITS_PER_UNIT,
+					     0, 1, NULL_RTX, mode, mode, ssize);
+	    }
+	  else if (bytepos == 0)
+	    {
+	      rtx mem = assign_stack_temp (GET_MODE (src),
+					   GET_MODE_SIZE (GET_MODE (src)), 0);
+	      emit_move_insn (mem, src);
+	      tmps[i] = adjust_address (mem, mode, 0);
+	    }
 	  else
 	    abort ();
 	}
@@ -2001,7 +2033,7 @@ emit_group_load (dst, orig_src, ssize, align)
       else
 	tmps[i] = extract_bit_field (src, bytelen * BITS_PER_UNIT,
 				     bytepos * BITS_PER_UNIT, 1, NULL_RTX,
-				     mode, mode, align, ssize);
+				     mode, mode, ssize);
 
       if (BYTES_BIG_ENDIAN && shift)
 	expand_binop (mode, ashl_optab, tmps[i], GEN_INT (shift),
@@ -2017,13 +2049,12 @@ emit_group_load (dst, orig_src, ssize, align)
 
 /* Emit code to move a block SRC to a block DST, where SRC is non-consecutive
    registers represented by a PARALLEL.  SSIZE represents the total size of
-   block DST, or -1 if not known.  ALIGN is the known alignment of DST.  */
+   block DST, or -1 if not known.  */
 
 void
-emit_group_store (orig_dst, src, ssize, align)
+emit_group_store (orig_dst, src, ssize)
      rtx orig_dst, src;
      int ssize;
-     unsigned int align;
 {
   rtx *tmps, dst;
   int start, i;
@@ -2067,11 +2098,11 @@ emit_group_store (orig_dst, src, ssize, align)
 	 the temporary.  */
 
       temp = assign_stack_temp (GET_MODE (dst), ssize, 0);
-      emit_group_store (temp, src, ssize, align);
-      emit_group_load (dst, temp, ssize, align);
+      emit_group_store (temp, src, ssize);
+      emit_group_load (dst, temp, ssize);
       return;
     }
-  else if (GET_CODE (dst) != MEM)
+  else if (GET_CODE (dst) != MEM && GET_CODE (dst) != CONCAT)
     {
       dst = gen_reg_rtx (GET_MODE (orig_dst));
       /* Make life a bit easier for combine.  */
@@ -2084,6 +2115,7 @@ emit_group_store (orig_dst, src, ssize, align)
       HOST_WIDE_INT bytepos = INTVAL (XEXP (XVECEXP (src, 0, i), 1));
       enum machine_mode mode = GET_MODE (tmps[i]);
       unsigned int bytelen = GET_MODE_SIZE (mode);
+      rtx dest = dst;
 
       /* Handle trailing fragments that run over the size of the struct.  */
       if (ssize >= 0 && bytepos + (HOST_WIDE_INT) bytelen > ssize)
@@ -2097,18 +2129,28 @@ emit_group_store (orig_dst, src, ssize, align)
 	  bytelen = ssize - bytepos;
 	}
 
+      if (GET_CODE (dst) == CONCAT)
+	{
+	  if (bytepos + bytelen <= GET_MODE_SIZE (GET_MODE (XEXP (dst, 0))))
+	    dest = XEXP (dst, 0);
+	  else if (bytepos >= GET_MODE_SIZE (GET_MODE (XEXP (dst, 0))))
+	    {
+	      bytepos -= GET_MODE_SIZE (GET_MODE (XEXP (dst, 0)));
+	      dest = XEXP (dst, 1);
+	    }
+	  else
+	    abort ();
+	}
+
       /* Optimize the access just a bit.  */
-      if (GET_CODE (dst) == MEM
-	  && align >= GET_MODE_ALIGNMENT (mode)
+      if (GET_CODE (dest) == MEM
+	  && MEM_ALIGN (dest) >= GET_MODE_ALIGNMENT (mode)
 	  && bytepos * BITS_PER_UNIT % GET_MODE_ALIGNMENT (mode) == 0
 	  && bytelen == GET_MODE_SIZE (mode))
-	emit_move_insn (change_address (dst, mode,
-					plus_constant (XEXP (dst, 0),
-						       bytepos)),
-			tmps[i]);
+	emit_move_insn (adjust_address (dest, mode, bytepos), tmps[i]);
       else
-	store_bit_field (dst, bytelen * BITS_PER_UNIT, bytepos * BITS_PER_UNIT,
-			   mode, tmps[i], align, ssize);
+	store_bit_field (dest, bytelen * BITS_PER_UNIT, bytepos * BITS_PER_UNIT,
+			 mode, tmps[i], ssize);
     }
 
   emit_queue ();
@@ -2147,17 +2189,28 @@ copy_blkmode_from_reg (tgtblk, srcreg, type)
       preserve_temp_slots (tgtblk);
     }
 
-  /* This code assumes srcreg is at least a full word.  If it isn't,
-     copy it into a new pseudo which is a full word.  */
+  /* This code assumes srcreg is at least a full word.  If it isn't, copy it
+     into a new pseudo which is a full word.
+
+     If FUNCTION_ARG_REG_LITTLE_ENDIAN is set and convert_to_mode does a copy,
+     the wrong part of the register gets copied so we fake a type conversion
+     in place.  */
   if (GET_MODE (srcreg) != BLKmode
       && GET_MODE_SIZE (GET_MODE (srcreg)) < UNITS_PER_WORD)
-    srcreg = convert_to_mode (word_mode, srcreg, TREE_UNSIGNED (type));
+    {
+      if (FUNCTION_ARG_REG_LITTLE_ENDIAN)
+	srcreg = simplify_gen_subreg (word_mode, srcreg, GET_MODE (srcreg), 0);
+      else
+	srcreg = convert_to_mode (word_mode, srcreg, TREE_UNSIGNED (type));
+    }
 
   /* Structures whose size is not a multiple of a word are aligned
      to the least significant byte (to the right).  On a BYTES_BIG_ENDIAN
      machine, this means we must skip the empty high order bytes when
      calculating the bit offset.  */
-  if (BYTES_BIG_ENDIAN && bytes % UNITS_PER_WORD)
+  if (BYTES_BIG_ENDIAN
+      && !FUNCTION_ARG_REG_LITTLE_ENDIAN
+      && bytes % UNITS_PER_WORD)
     big_endian_correction
       = (BITS_PER_WORD - ((bytes % UNITS_PER_WORD) * BITS_PER_UNIT));
 
@@ -2175,7 +2228,8 @@ copy_blkmode_from_reg (tgtblk, srcreg, type)
 	 (the first time through).  */
       if (xbitpos % BITS_PER_WORD == 0
 	  || xbitpos == big_endian_correction)
-	src = operand_subword_force (srcreg, xbitpos / BITS_PER_WORD, BLKmode);
+	src = operand_subword_force (srcreg, xbitpos / BITS_PER_WORD,
+				     GET_MODE (srcreg));
 
       /* We need a new destination operand each time bitpos is on
 	 a word boundary.  */
@@ -2188,8 +2242,8 @@ copy_blkmode_from_reg (tgtblk, srcreg, type)
 		       extract_bit_field (src, bitsize,
 					  xbitpos % BITS_PER_WORD, 1,
 					  NULL_RTX, word_mode, word_mode,
-					  bitsize, BITS_PER_WORD),
-		       bitsize, BITS_PER_WORD);
+					  BITS_PER_WORD),
+		       BITS_PER_WORD);
     }
 
   return tgtblk;
@@ -2365,7 +2419,7 @@ clear_by_pieces (to, len, align)
   struct store_by_pieces data;
 
   data.constfun = clear_by_pieces_1;
-  data.constfundata = NULL_PTR;
+  data.constfundata = NULL;
   data.len = len;
   data.to = to;
   store_by_pieces_1 (&data, align);
@@ -2489,13 +2543,10 @@ store_by_pieces_2 (genfun, mode, data)
 	data->offset -= size;
 
       if (data->autinc_to)
-	{
-	  to1 = gen_rtx_MEM (mode, data->to_addr);
-	  MEM_COPY_ATTRIBUTES (to1, data->to);
-	}
+	to1 = adjust_automodify_address (data->to, mode, data->to_addr,
+					 data->offset);
       else
-	to1 = change_address (data->to, mode,
-			      plus_constant (data->to_addr, data->offset));
+	to1 = adjust_address (data->to, mode, data->offset);
 
       if (HAVE_PRE_DECREMENT && data->explicit_inc_to < 0)
 	emit_insn (gen_add2_insn (data->to_addr,
@@ -2515,21 +2566,20 @@ store_by_pieces_2 (genfun, mode, data)
 }
 
 /* Write zeros through the storage of OBJECT.  If OBJECT has BLKmode, SIZE is
-   its length in bytes and ALIGN is the maximum alignment we can is has.
-
-   If we call a function that returns the length of the block, return it.  */
+   its length in bytes.  */
 
 rtx
-clear_storage (object, size, align)
+clear_storage (object, size)
      rtx object;
      rtx size;
-     unsigned int align;
 {
 #ifdef TARGET_MEM_FUNCTIONS
   static tree fn;
   tree call_expr, arg_list;
 #endif
   rtx retval = 0;
+  unsigned int align = (GET_CODE (object) == MEM ? MEM_ALIGN (object)
+			: GET_MODE_ALIGNMENT (GET_MODE (object)));
 
   /* If OBJECT is not BLKmode and SIZE is the same size as its mode,
      just move a zero.  Otherwise, do this a piece at a time.  */
@@ -2652,14 +2702,14 @@ clear_storage (object, size, align)
 	      TREE_PUBLIC (fn) = 1;
 	      DECL_ARTIFICIAL (fn) = 1;
 	      TREE_NOTHROW (fn) = 1;
-	      make_decl_rtl (fn, NULL_PTR);
+	      make_decl_rtl (fn, NULL);
 	      assemble_external (fn);
 	    }
 
 	  /* We need to make an argument list for the function call.
 
 	     memset has three arguments, the first is a void * addresses, the
-	     second a integer with the initialization value, the last is a
+	     second an integer with the initialization value, the last is a
 	     size_t byte count for the copy.  */
 	  arg_list
 	    = build_tree_list (NULL_TREE,
@@ -2685,6 +2735,12 @@ clear_storage (object, size, align)
 			     VOIDmode, 2, object, Pmode, size,
 			     TYPE_MODE (integer_type_node));
 #endif
+
+	  /* If we are initializing a readonly value, show the above call
+	     clobbered it.  Otherwise, a load from it may erroneously be
+	     hoisted from a loop.  */
+	  if (RTX_UNCHANGING_P (object))
+	    emit_insn (gen_rtx_CLOBBER (VOIDmode, object));
 	}
     }
 
@@ -2728,13 +2784,13 @@ emit_move_insn (x, y)
 	   && ! push_operand (x, GET_MODE (x)))
 	  || (flag_force_addr
 	      && CONSTANT_ADDRESS_P (XEXP (x, 0)))))
-    x = change_address (x, VOIDmode, XEXP (x, 0));
+    x = validize_mem (x);
 
   if (GET_CODE (y) == MEM
       && (! memory_address_p (GET_MODE (y), XEXP (y, 0))
 	  || (flag_force_addr
 	      && CONSTANT_ADDRESS_P (XEXP (y, 0)))))
-    y = change_address (y, VOIDmode, XEXP (y, 0));
+    y = validize_mem (y);
 
   if (mode == BLKmode)
     abort ();
@@ -2742,8 +2798,7 @@ emit_move_insn (x, y)
   last_insn = emit_move_insn_1 (x, y);
 
   if (y_cst && GET_CODE (x) == REG)
-    REG_NOTES (last_insn)
-      = gen_rtx_EXPR_LIST (REG_EQUAL, y_cst, REG_NOTES (last_insn));
+    set_unique_reg_note (last_insn, REG_EQUAL, y_cst);
 
   return last_insn;
 }
@@ -2759,7 +2814,6 @@ emit_move_insn_1 (x, y)
   enum machine_mode mode = GET_MODE (x);
   enum machine_mode submode;
   enum mode_class class = GET_MODE_CLASS (mode);
-  unsigned int i;
 
   if ((unsigned int) mode >= (unsigned int) MAX_MACHINE_MODE)
     abort ();
@@ -2781,6 +2835,55 @@ emit_move_insn_1 (x, y)
       /* Don't split destination if it is a stack push.  */
       int stack = push_operand (x, GET_MODE (x));
 
+#ifdef PUSH_ROUNDING
+      /* In case we output to the stack, but the size is smaller machine can
+	 push exactly, we need to use move instructions.  */
+      if (stack
+	  && (PUSH_ROUNDING (GET_MODE_SIZE (submode))
+	      != GET_MODE_SIZE (submode)))
+	{
+	  rtx temp;
+	  HOST_WIDE_INT offset1, offset2;
+
+	  /* Do not use anti_adjust_stack, since we don't want to update
+	     stack_pointer_delta.  */
+	  temp = expand_binop (Pmode,
+#ifdef STACK_GROWS_DOWNWARD
+			       sub_optab,
+#else
+			       add_optab,
+#endif
+			       stack_pointer_rtx,
+			       GEN_INT
+				 (PUSH_ROUNDING
+				  (GET_MODE_SIZE (GET_MODE (x)))),
+			       stack_pointer_rtx, 0, OPTAB_LIB_WIDEN);
+
+	  if (temp != stack_pointer_rtx)
+	    emit_move_insn (stack_pointer_rtx, temp);
+
+#ifdef STACK_GROWS_DOWNWARD
+	  offset1 = 0;
+	  offset2 = GET_MODE_SIZE (submode);
+#else
+	  offset1 = -PUSH_ROUNDING (GET_MODE_SIZE (GET_MODE (x)));
+	  offset2 = (-PUSH_ROUNDING (GET_MODE_SIZE (GET_MODE (x)))
+		     + GET_MODE_SIZE (submode));
+#endif
+
+	  emit_move_insn (change_address (x, submode,
+					  gen_rtx_PLUS (Pmode,
+						        stack_pointer_rtx,
+							GEN_INT (offset1))),
+			  gen_realpart (submode, y));
+	  emit_move_insn (change_address (x, submode,
+					  gen_rtx_PLUS (Pmode,
+						        stack_pointer_rtx,
+							GEN_INT (offset2))),
+			  gen_imagpart (submode, y));
+	}
+      else
+#endif
       /* If this is a stack, push the highpart first, so it
 	 will be in the argument order.
 
@@ -2823,8 +2926,10 @@ emit_move_insn_1 (x, y)
 	  if (GET_MODE_BITSIZE (mode) < 2 * BITS_PER_WORD
 	      && (reload_in_progress | reload_completed) == 0)
 	    {
-	      int packed_dest_p = (REG_P (x) && REGNO (x) < FIRST_PSEUDO_REGISTER);
-	      int packed_src_p  = (REG_P (y) && REGNO (y) < FIRST_PSEUDO_REGISTER);
+	      int packed_dest_p
+		= (REG_P (x) && REGNO (x) < FIRST_PSEUDO_REGISTER);
+	      int packed_src_p
+		= (REG_P (y) && REGNO (y) < FIRST_PSEUDO_REGISTER);
 
 	      if (packed_dest_p || packed_src_p)
 		{
@@ -2838,7 +2943,7 @@ emit_move_insn_1 (x, y)
 		    {
 		      rtx mem = assign_stack_temp (reg_mode,
 						   GET_MODE_SIZE (mode), 0);
-		      rtx cmem = change_address (mem, mode, NULL_RTX);
+		      rtx cmem = adjust_address (mem, mode, 0);
 
 		      cfun->cannot_inline
 			= N_("function using short complex types cannot be inline");
@@ -2846,12 +2951,14 @@ emit_move_insn_1 (x, y)
 		      if (packed_dest_p)
 			{
 			  rtx sreg = gen_rtx_SUBREG (reg_mode, x, 0);
+
 			  emit_move_insn_1 (cmem, y);
 			  return emit_move_insn_1 (sreg, mem);
 			}
 		      else
 			{
 			  rtx sreg = gen_rtx_SUBREG (reg_mode, y, 0);
+
 			  emit_move_insn_1 (mem, sreg);
 			  return emit_move_insn_1 (x, cmem);
 			}
@@ -2872,9 +2979,7 @@ emit_move_insn_1 (x, y)
 	      && ! (reload_in_progress || reload_completed)
 	      && (GET_CODE (realpart_x) == SUBREG
 		  || GET_CODE (imagpart_x) == SUBREG))
-	    {
-	      emit_insn (gen_rtx_CLOBBER (VOIDmode, x));
-	    }
+	    emit_insn (gen_rtx_CLOBBER (VOIDmode, x));
 
 	  emit_insn (GEN_FCN (mov_optab->handlers[(int) submode].insn_code)
 		     (realpart_x, realpart_y));
@@ -2893,6 +2998,7 @@ emit_move_insn_1 (x, y)
       rtx last_insn = 0;
       rtx seq, inner;
       int need_clobber;
+      int i;
 
 #ifdef PUSH_ROUNDING
 
@@ -2900,8 +3006,40 @@ emit_move_insn_1 (x, y)
 	 X with a reference to the stack pointer.  */
       if (push_operand (x, GET_MODE (x)))
 	{
-	  anti_adjust_stack (GEN_INT (GET_MODE_SIZE (GET_MODE (x))));
-	  x = change_address (x, VOIDmode, stack_pointer_rtx);
+	  rtx temp;
+	  enum rtx_code code;
+	  
+	  /* Do not use anti_adjust_stack, since we don't want to update
+	     stack_pointer_delta.  */
+	  temp = expand_binop (Pmode,
+#ifdef STACK_GROWS_DOWNWARD
+			       sub_optab,
+#else
+			       add_optab,
+#endif
+			       stack_pointer_rtx,
+			       GEN_INT
+				 (PUSH_ROUNDING
+				  (GET_MODE_SIZE (GET_MODE (x)))),
+			       stack_pointer_rtx, 0, OPTAB_LIB_WIDEN);
+
+          if (temp != stack_pointer_rtx)
+            emit_move_insn (stack_pointer_rtx, temp);
+
+	  code = GET_CODE (XEXP (x, 0));
+
+	  /* Just hope that small offsets off SP are OK.  */
+	  if (code == POST_INC)
+	    temp = gen_rtx_PLUS (Pmode, stack_pointer_rtx, 
+				GEN_INT (-((HOST_WIDE_INT)
+					   GET_MODE_SIZE (GET_MODE (x)))));
+	  else if (code == POST_DEC)
+	    temp = gen_rtx_PLUS (Pmode, stack_pointer_rtx, 
+				GEN_INT (GET_MODE_SIZE (GET_MODE (x))));
+	  else
+	    temp = stack_pointer_rtx;
+
+	  x = change_address (x, VOIDmode, temp);
 	}
 #endif
 
@@ -2909,20 +3047,10 @@ emit_move_insn_1 (x, y)
 	 is scheduled for replacement.  */
       if (reload_in_progress && GET_CODE (x) == MEM
 	  && (inner = find_replacement (&XEXP (x, 0))) != XEXP (x, 0))
-	{
-	  rtx new = gen_rtx_MEM (GET_MODE (x), inner);
-
-	  MEM_COPY_ATTRIBUTES (new, x);
-	  x = new;
-	}
+	x = replace_equiv_address_nv (x, inner);
       if (reload_in_progress && GET_CODE (y) == MEM
 	  && (inner = find_replacement (&XEXP (y, 0))) != XEXP (y, 0))
-	{
-	  rtx new = gen_rtx_MEM (GET_MODE (y), inner);
-
-	  MEM_COPY_ATTRIBUTES (new, y);
-	  y = new;
-	}
+	y = replace_equiv_address_nv (y, inner);
 
       start_sequence ();
 
@@ -2963,9 +3091,7 @@ emit_move_insn_1 (x, y)
       if (x != y
 	  && ! (reload_in_progress || reload_completed)
 	  && need_clobber != 0)
-	{
-	  emit_insn (gen_rtx_CLOBBER (VOIDmode, x));
-	}
+	emit_insn (gen_rtx_CLOBBER (VOIDmode, x));
 
       emit_insn (seq);
 
@@ -2991,7 +3117,7 @@ push_block (size, extra, below)
      rtx size;
      int extra, below;
 {
-  register rtx temp;
+  rtx temp;
 
   size = convert_modes (Pmode, ptr_mode, size, 1);
   if (CONSTANT_P (size))
@@ -3008,18 +3134,11 @@ push_block (size, extra, below)
     }
 
 #ifndef STACK_GROWS_DOWNWARD
-#ifdef ARGS_GROW_DOWNWARD
-  if (!ACCUMULATE_OUTGOING_ARGS)
-#else
   if (0)
-#endif
 #else
   if (1)
 #endif
     {
-      /* Return the lowest stack address when STACK or ARGS grow downward and
-	 we are not aaccumulating outgoing arguments (the c4x port uses such
-	 conventions).  */
       temp = virtual_outgoing_args_rtx;
       if (extra != 0 && below)
 	temp = plus_constant (temp, extra);
@@ -3040,30 +3159,64 @@ push_block (size, extra, below)
   return memory_address (GET_CLASS_NARROWEST_MODE (MODE_INT), temp);
 }
 
-rtx
-gen_push_operand ()
+#ifdef PUSH_ROUNDING
+
+/* Emit single push insn.  */
+
+static void
+emit_single_push_insn (mode, x, type)
+     rtx x;
+     enum machine_mode mode;
+     tree type;
 {
-  return gen_rtx_fmt_e (STACK_PUSH_CODE, Pmode, stack_pointer_rtx);
-}
+  rtx dest_addr;
+  unsigned rounded_size = PUSH_ROUNDING (GET_MODE_SIZE (mode));
+  rtx dest;
+  enum insn_code icode;
+  insn_operand_predicate_fn pred;
 
-/* Return an rtx for the address of the beginning of a as-if-it-was-pushed
-   block of SIZE bytes.  */
-
-static rtx
-get_push_address (size)
-     int size;
-{
-  register rtx temp;
-
-  if (STACK_PUSH_CODE == POST_DEC)
-    temp = gen_rtx_PLUS (Pmode, stack_pointer_rtx, GEN_INT (size));
-  else if (STACK_PUSH_CODE == POST_INC)
-    temp = gen_rtx_MINUS (Pmode, stack_pointer_rtx, GEN_INT (size));
+  stack_pointer_delta += PUSH_ROUNDING (GET_MODE_SIZE (mode));
+  /* If there is push pattern, use it.  Otherwise try old way of throwing
+     MEM representing push operation to move expander.  */
+  icode = push_optab->handlers[(int) mode].insn_code;
+  if (icode != CODE_FOR_nothing)
+    {
+      if (((pred = insn_data[(int) icode].operand[0].predicate)
+	   && !((*pred) (x, mode))))
+	x = force_reg (mode, x);
+      emit_insn (GEN_FCN (icode) (x));
+      return;
+    }
+  if (GET_MODE_SIZE (mode) == rounded_size)
+    dest_addr = gen_rtx_fmt_e (STACK_PUSH_CODE, Pmode, stack_pointer_rtx);
   else
-    temp = stack_pointer_rtx;
+    {
+#ifdef STACK_GROWS_DOWNWARD
+      dest_addr = gen_rtx_PLUS (Pmode, stack_pointer_rtx,
+				GEN_INT (-(HOST_WIDE_INT) rounded_size));
+#else
+      dest_addr = gen_rtx_PLUS (Pmode, stack_pointer_rtx,
+				GEN_INT (rounded_size));
+#endif
+      dest_addr = gen_rtx_PRE_MODIFY (Pmode, stack_pointer_rtx, dest_addr);
+    }
 
-  return copy_to_reg (temp);
+  dest = gen_rtx_MEM (mode, dest_addr);
+
+  if (type != 0)
+    {
+      set_mem_attributes (dest, type, 1);
+
+      if (flag_optimize_sibling_calls)
+	/* Function incoming arguments may overlap with sibling call
+	   outgoing arguments and we cannot allow reordering of reads
+	   from function arguments with stores to outgoing arguments
+	   of sibling calls.  */
+	set_mem_alias_set (dest, 0);
+    }
+  emit_move_insn (dest, x);
 }
+#endif
 
 /* Generate code to push X onto the stack, assuming it has mode MODE and
    type TYPE.
@@ -3101,7 +3254,7 @@ void
 emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 		args_addr, args_so_far, reg_parm_stack_space,
                 alignment_pad)
-     register rtx x;
+     rtx x;
      enum machine_mode mode;
      tree type;
      rtx size;
@@ -3127,8 +3280,9 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
      Default is below for small data on big-endian machines; else above.  */
   enum direction where_pad = FUNCTION_ARG_PADDING (mode, type);
 
-  /* Invert direction if stack is post-update.  */
-  if (STACK_PUSH_CODE == POST_INC || STACK_PUSH_CODE == POST_DEC)
+  /* Invert direction if stack is post-decrement. 
+     FIXME: why?  */
+  if (STACK_PUSH_CODE == POST_DEC)
     if (where_pad != none)
       where_pad = (where_pad == downward ? upward : downward);
 
@@ -3138,7 +3292,7 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
     {
       /* Copy a block into the stack, entirely or partially.  */
 
-      register rtx temp;
+      rtx temp;
       int used = partial * UNITS_PER_WORD;
       int offset = used % (PARM_BOUNDARY / BITS_PER_UNIT);
       int skip;
@@ -3152,8 +3306,7 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 	 because registers will take care of them.  */
 
       if (partial != 0)
-	xinner = change_address (xinner, BLKmode,
-				 plus_constant (XEXP (xinner, 0), used));
+	xinner = adjust_address (xinner, BLKmode, used);
 
       /* If the partial register-part of the arg counts in its stack size,
 	 skip the part of stack space corresponding to the registers.
@@ -3186,31 +3339,7 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 	      && where_pad != none && where_pad != stack_direction)
 	    anti_adjust_stack (GEN_INT (extra));
 
-	  stack_pointer_delta += INTVAL (size) - used;
-	  move_by_pieces (gen_rtx_MEM (BLKmode, gen_push_operand ()), xinner,
-			  INTVAL (size) - used, align);
-
-	  if (current_function_check_memory_usage && ! in_check_memory_usage)
-	    {
-	      rtx temp;
-
-	      in_check_memory_usage = 1;
-	      temp = get_push_address (INTVAL (size) - used);
-	      if (GET_CODE (x) == MEM && type && AGGREGATE_TYPE_P (type))
-		emit_library_call (chkr_copy_bitmap_libfunc,
-				   LCT_CONST_MAKE_BLOCK, VOIDmode, 3, temp,
-				   Pmode, XEXP (xinner, 0), Pmode,
-				   GEN_INT (INTVAL (size) - used),
-				   TYPE_MODE (sizetype));
-	      else
-		emit_library_call (chkr_set_right_libfunc,
-				   LCT_CONST_MAKE_BLOCK, VOIDmode, 3, temp,
-				   Pmode, GEN_INT (INTVAL (size) - used),
-				   TYPE_MODE (sizetype),
-				   GEN_INT (MEMORY_USE_RW),
-				   TYPE_MODE (integer_type_node));
-	      in_check_memory_usage = 0;
-	    }
+	  move_by_pieces (NULL, xinner, INTVAL (size) - used, align);
 	}
       else
 #endif /* PUSH_ROUNDING  */
@@ -3249,26 +3378,6 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 								args_addr,
 								args_so_far),
 						  skip));
-	  if (current_function_check_memory_usage && ! in_check_memory_usage)
-	    {
-	      in_check_memory_usage = 1;
-	      target = copy_to_reg (temp);
-	      if (GET_CODE (x) == MEM && type && AGGREGATE_TYPE_P (type))
-		emit_library_call (chkr_copy_bitmap_libfunc,
-				   LCT_CONST_MAKE_BLOCK, VOIDmode, 3,
-				   target, Pmode,
-				   XEXP (xinner, 0), Pmode,
-				   size, TYPE_MODE (sizetype));
-	      else
-	        emit_library_call (chkr_set_right_libfunc,
-				   LCT_CONST_MAKE_BLOCK, VOIDmode, 3,
-				   target, Pmode,
-			 	   size, TYPE_MODE (sizetype),
-				   GEN_INT (MEMORY_USE_RW),
-				   TYPE_MODE (integer_type_node));
-	      in_check_memory_usage = 0;
-	    }
-
 	  target = gen_rtx_MEM (BLKmode, temp);
 
 	  if (type != 0)
@@ -3278,8 +3387,10 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 		 outgoing arguments and we cannot allow reordering of reads
 		 from function arguments with stores to outgoing arguments
 		 of sibling calls.  */
-	      MEM_ALIAS_SET (target) = 0;
+	      set_mem_alias_set (target, 0);
 	    }
+	  else
+	    set_mem_align (target, align);
 
 	  /* TEMP is the address of the block.  Copy the data there.  */
 	  if (GET_CODE (size) == CONST_INT
@@ -3440,10 +3551,7 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 
 #ifdef PUSH_ROUNDING
       if (args_addr == 0 && PUSH_ARGS)
-	{
-	  addr = gen_push_operand ();
-	  stack_pointer_delta += PUSH_ROUNDING (GET_MODE_SIZE (mode));
-	}
+	emit_single_push_insn (mode, x, type);
       else
 #endif
 	{
@@ -3456,42 +3564,20 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
 	    addr = memory_address (mode, gen_rtx_PLUS (Pmode, args_addr,
 						       args_so_far));
 	  target = addr;
+	  dest = gen_rtx_MEM (mode, addr);
+	  if (type != 0)
+	    {
+	      set_mem_attributes (dest, type, 1);
+	      /* Function incoming arguments may overlap with sibling call
+		 outgoing arguments and we cannot allow reordering of reads
+		 from function arguments with stores to outgoing arguments
+		 of sibling calls.  */
+	      set_mem_alias_set (dest, 0);
+	    }
+
+	  emit_move_insn (dest, x);
 	}
 
-      dest = gen_rtx_MEM (mode, addr);
-      if (type != 0)
-	{
-	  set_mem_attributes (dest, type, 1);
-	  /* Function incoming arguments may overlap with sibling call
-	     outgoing arguments and we cannot allow reordering of reads
-	     from function arguments with stores to outgoing arguments
-	     of sibling calls.  */
-	  MEM_ALIAS_SET (dest) = 0;
-	}
-
-      emit_move_insn (dest, x);
-
-      if (current_function_check_memory_usage && ! in_check_memory_usage)
-	{
-	  in_check_memory_usage = 1;
-	  if (target == 0)
-	    target = get_push_address (GET_MODE_SIZE (mode));
-
-	  if (GET_CODE (x) == MEM && type && AGGREGATE_TYPE_P (type))
-	    emit_library_call (chkr_copy_bitmap_libfunc,
-			       LCT_CONST_MAKE_BLOCK, VOIDmode, 3, target,
-			       Pmode, XEXP (x, 0), Pmode,
-			       GEN_INT (GET_MODE_SIZE (mode)),
-			       TYPE_MODE (sizetype));
-	  else
-	    emit_library_call (chkr_set_right_libfunc,
-			       LCT_CONST_MAKE_BLOCK, VOIDmode, 3, target,
-			       Pmode, GEN_INT (GET_MODE_SIZE (mode)),
-			       TYPE_MODE (sizetype),
-			       GEN_INT (MEMORY_USE_RW),
-			       TYPE_MODE (integer_type_node));
-	  in_check_memory_usage = 0;
-	}
     }
 
  ret:
@@ -3503,7 +3589,7 @@ emit_push_insn (x, mode, type, size, align, partial, reg, extra,
       /* Handle calls that pass values in multiple non-contiguous locations.
 	 The Irix 6 ABI has examples of this.  */
       if (GET_CODE (reg) == PARALLEL)
-	emit_group_load (reg, x, -1, align);  /* ??? size? */
+	emit_group_load (reg, x, -1);  /* ??? size? */
       else
 	move_block_to_reg (REGNO (reg), x, partial, mode);
     }
@@ -3552,7 +3638,7 @@ expand_assignment (to, from, want_value, suggest_reg)
      int want_value;
      int suggest_reg ATTRIBUTE_UNUSED;
 {
-  register rtx to_rtx = 0;
+  rtx to_rtx = 0;
   rtx result;
 
   /* Don't crash if the lhs of the assignment was erroneous.  */
@@ -3570,19 +3656,19 @@ expand_assignment (to, from, want_value, suggest_reg)
      problem.  */
 
   if (TREE_CODE (to) == COMPONENT_REF || TREE_CODE (to) == BIT_FIELD_REF
-      || TREE_CODE (to) == ARRAY_REF)
+      || TREE_CODE (to) == ARRAY_REF || TREE_CODE (to) == ARRAY_RANGE_REF)
     {
       enum machine_mode mode1;
       HOST_WIDE_INT bitsize, bitpos;
+      rtx orig_to_rtx;
       tree offset;
       int unsignedp;
       int volatilep = 0;
       tree tem;
-      unsigned int alignment;
 
       push_temp_slots ();
       tem = get_inner_reference (to, &bitsize, &bitpos, &offset, &mode1,
-				 &unsignedp, &volatilep, &alignment);
+				 &unsignedp, &volatilep);
 
       /* If we are going to use store_bit_field and extract_bit_field,
 	 make sure to_rtx will be safe for multiple use.  */
@@ -3590,153 +3676,106 @@ expand_assignment (to, from, want_value, suggest_reg)
       if (mode1 == VOIDmode && want_value)
 	tem = stabilize_reference (tem);
 
-      to_rtx = expand_expr (tem, NULL_RTX, VOIDmode, EXPAND_MEMORY_USE_DONT);
+      orig_to_rtx = to_rtx = expand_expr (tem, NULL_RTX, VOIDmode, 0);
+
       if (offset != 0)
 	{
-	  rtx offset_rtx = expand_expr (offset, NULL_RTX, VOIDmode, 0);
+	  rtx offset_rtx = expand_expr (offset, NULL_RTX, VOIDmode, EXPAND_SUM);
 
 	  if (GET_CODE (to_rtx) != MEM)
 	    abort ();
 
-	  if (GET_MODE (offset_rtx) != ptr_mode)
-	    {
 #ifdef POINTERS_EXTEND_UNSIGNED
-	      offset_rtx = convert_memory_address (ptr_mode, offset_rtx);
+	  if (GET_MODE (offset_rtx) != Pmode)
+	    offset_rtx = convert_memory_address (Pmode, offset_rtx);
 #else
-	      offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
+	  if (GET_MODE (offset_rtx) != ptr_mode)
+	    offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
 #endif
-	    }
 
 	  /* A constant address in TO_RTX can have VOIDmode, we must not try
 	     to call force_reg for that case.  Avoid that case.  */
 	  if (GET_CODE (to_rtx) == MEM
 	      && GET_MODE (to_rtx) == BLKmode
 	      && GET_MODE (XEXP (to_rtx, 0)) != VOIDmode
-	      && bitsize
+	      && bitsize > 0
 	      && (bitpos % bitsize) == 0
 	      && (bitsize % GET_MODE_ALIGNMENT (mode1)) == 0
-	      && alignment == GET_MODE_ALIGNMENT (mode1))
+	      && MEM_ALIGN (to_rtx) == GET_MODE_ALIGNMENT (mode1))
 	    {
-	      rtx temp = change_address (to_rtx, mode1,
-				         plus_constant (XEXP (to_rtx, 0),
-						        (bitpos /
-						         BITS_PER_UNIT)));
-	      if (GET_CODE (XEXP (temp, 0)) == REG)
-	        to_rtx = temp;
-	      else
-		to_rtx = change_address (to_rtx, mode1,
-				         force_reg (GET_MODE (XEXP (temp, 0)),
-						    XEXP (temp, 0)));
+	      to_rtx = adjust_address (to_rtx, mode1, bitpos / BITS_PER_UNIT);
 	      bitpos = 0;
 	    }
 
-	  to_rtx = change_address (to_rtx, VOIDmode,
-				   gen_rtx_PLUS (ptr_mode, XEXP (to_rtx, 0),
-						 force_reg (ptr_mode,
-							    offset_rtx)));
+	  to_rtx = offset_address (to_rtx, offset_rtx,
+				   highest_pow2_factor_for_type (TREE_TYPE (to),
+								 offset));
 	}
 
-      if (volatilep)
+      if (GET_CODE (to_rtx) == MEM)
 	{
-	  if (GET_CODE (to_rtx) == MEM)
-	    {
-	      /* When the offset is zero, to_rtx is the address of the
-		 structure we are storing into, and hence may be shared.
-		 We must make a new MEM before setting the volatile bit.  */
-	      if (offset == 0)
-		to_rtx = copy_rtx (to_rtx);
+	  tree old_expr = MEM_EXPR (to_rtx);
 
-	      MEM_VOLATILE_P (to_rtx) = 1;
-	    }
-#if 0  /* This was turned off because, when a field is volatile
-	  in an object which is not volatile, the object may be in a register,
-	  and then we would abort over here.  */
-	  else
-	    abort ();
-#endif
+	  /* If the field is at offset zero, we could have been given the
+	     DECL_RTX of the parent struct.  Don't munge it.  */
+	  to_rtx = shallow_copy_rtx (to_rtx);
+
+	  set_mem_attributes (to_rtx, to, 0);
+
+	  /* If we changed MEM_EXPR, that means we're now referencing
+	     the COMPONENT_REF, which means that MEM_OFFSET must be
+	     relative to that field.  But we've not yet reflected BITPOS
+	     in TO_RTX.  This will be done in store_field.  Adjust for
+	     that by biasing MEM_OFFSET by -bitpos.  */
+	  if (MEM_EXPR (to_rtx) != old_expr && MEM_OFFSET (to_rtx)
+	      && (bitpos / BITS_PER_UNIT) != 0)
+	    set_mem_offset (to_rtx, GEN_INT (INTVAL (MEM_OFFSET (to_rtx))
+					     - (bitpos / BITS_PER_UNIT)));
+	}
+
+      /* Deal with volatile and readonly fields.  The former is only done
+	 for MEM.  Also set MEM_KEEP_ALIAS_SET_P if needed.  */
+      if (volatilep && GET_CODE (to_rtx) == MEM)
+	{
+	  if (to_rtx == orig_to_rtx)
+	    to_rtx = copy_rtx (to_rtx);
+	  MEM_VOLATILE_P (to_rtx) = 1;
 	}
 
       if (TREE_CODE (to) == COMPONENT_REF
 	  && TREE_READONLY (TREE_OPERAND (to, 1)))
 	{
-	  if (offset == 0)
+	  if (to_rtx == orig_to_rtx)
 	    to_rtx = copy_rtx (to_rtx);
-
 	  RTX_UNCHANGING_P (to_rtx) = 1;
 	}
 
-      /* Check the access.  */
-      if (current_function_check_memory_usage && GET_CODE (to_rtx) == MEM)
+      if (GET_CODE (to_rtx) == MEM && ! can_address_p (to))
 	{
-	  rtx to_addr;
-	  int size;
-	  int best_mode_size;
-	  enum machine_mode best_mode;
-
-	  best_mode = get_best_mode (bitsize, bitpos,
-	  			     TYPE_ALIGN (TREE_TYPE (tem)),
-	  			     mode1, volatilep);
-	  if (best_mode == VOIDmode)
-	    best_mode = QImode;
-
-	  best_mode_size = GET_MODE_BITSIZE (best_mode);
-	  to_addr = plus_constant (XEXP (to_rtx, 0), (bitpos / BITS_PER_UNIT));
-	  size = CEIL ((bitpos % best_mode_size) + bitsize, best_mode_size);
-	  size *= GET_MODE_SIZE (best_mode);
-
-	  /* Check the access right of the pointer.  */
-	  in_check_memory_usage = 1;
-	  if (size)
-	    emit_library_call (chkr_check_addr_libfunc, LCT_CONST_MAKE_BLOCK,
-			       VOIDmode, 3, to_addr, Pmode,
-			       GEN_INT (size), TYPE_MODE (sizetype),
-			       GEN_INT (MEMORY_USE_WO),
-			       TYPE_MODE (integer_type_node));
-	  in_check_memory_usage = 0;
+	  if (to_rtx == orig_to_rtx)
+	    to_rtx = copy_rtx (to_rtx);
+	  MEM_KEEP_ALIAS_SET_P (to_rtx) = 1;
 	}
 
-      /* If this is a varying-length object, we must get the address of
-	 the source and do an explicit block move.  */
-      if (bitsize < 0)
-	{
-	  unsigned int from_align;
-	  rtx from_rtx = expand_expr_unaligned (from, &from_align);
-	  rtx inner_to_rtx
-	    = change_address (to_rtx, VOIDmode,
-			      plus_constant (XEXP (to_rtx, 0),
-					     bitpos / BITS_PER_UNIT));
+      result = store_field (to_rtx, bitsize, bitpos, mode1, from,
+			    (want_value
+			     /* Spurious cast for HPUX compiler.  */
+			     ? ((enum machine_mode)
+				TYPE_MODE (TREE_TYPE (to)))
+			     : VOIDmode),
+			    unsignedp, TREE_TYPE (tem), get_alias_set (to));
 
-	  emit_block_move (inner_to_rtx, from_rtx, expr_size (from),
-			   MIN (alignment, from_align));
-	  free_temp_slots ();
-	  pop_temp_slots ();
-	  return to_rtx;
-	}
-      else
-	{
-	  result = store_field (to_rtx, bitsize, bitpos, mode1, from,
-				(want_value
-				 /* Spurious cast for HPUX compiler.  */
-				 ? ((enum machine_mode)
-				    TYPE_MODE (TREE_TYPE (to)))
-				 : VOIDmode),
-				unsignedp,
-				alignment,
-				int_size_in_bytes (TREE_TYPE (tem)),
-				get_alias_set (to));
+      preserve_temp_slots (result);
+      free_temp_slots ();
+      pop_temp_slots ();
 
-	  preserve_temp_slots (result);
-	  free_temp_slots ();
-	  pop_temp_slots ();
-
-	  /* If the value is meaningful, convert RESULT to the proper mode.
-	     Otherwise, return nothing.  */
-	  return (want_value ? convert_modes (TYPE_MODE (TREE_TYPE (to)),
-					      TYPE_MODE (TREE_TYPE (from)),
-					      result,
-					      TREE_UNSIGNED (TREE_TYPE (to)))
-		  : NULL_RTX);
-	}
+      /* If the value is meaningful, convert RESULT to the proper mode.
+	 Otherwise, return nothing.  */
+      return (want_value ? convert_modes (TYPE_MODE (TREE_TYPE (to)),
+					  TYPE_MODE (TREE_TYPE (from)),
+					  result,
+					  TREE_UNSIGNED (TREE_TYPE (to)))
+	      : NULL_RTX);
     }
 
   /* If the rhs is a function call and its value is not an aggregate,
@@ -3759,21 +3798,19 @@ expand_assignment (to, from, want_value, suggest_reg)
       push_temp_slots ();
       value = expand_expr (from, NULL_RTX, VOIDmode, 0);
       if (to_rtx == 0)
-	to_rtx = expand_expr (to, NULL_RTX, VOIDmode, EXPAND_MEMORY_USE_WO);
+	to_rtx = expand_expr (to, NULL_RTX, VOIDmode, EXPAND_WRITE);
 
       /* Handle calls that return values in multiple non-contiguous locations.
 	 The Irix 6 ABI has examples of this.  */
       if (GET_CODE (to_rtx) == PARALLEL)
-	emit_group_load (to_rtx, value, int_size_in_bytes (TREE_TYPE (from)),
-			 TYPE_ALIGN (TREE_TYPE (from)));
+	emit_group_load (to_rtx, value, int_size_in_bytes (TREE_TYPE (from)));
       else if (GET_MODE (to_rtx) == BLKmode)
-	emit_block_move (to_rtx, value, expr_size (from),
-			 TYPE_ALIGN (TREE_TYPE (from)));
+	emit_block_move (to_rtx, value, expr_size (from));
       else
 	{
 #ifdef POINTERS_EXTEND_UNSIGNED
-	  if (TREE_CODE (TREE_TYPE (to)) == REFERENCE_TYPE
-	     || TREE_CODE (TREE_TYPE (to)) == POINTER_TYPE)
+	  if (POINTER_TYPE_P (TREE_TYPE (to))
+	      && GET_MODE (to_rtx) != GET_MODE (value))
 	    value = convert_memory_address (GET_MODE (to_rtx), value);
 #endif
 	  emit_move_insn (to_rtx, value);
@@ -3788,11 +3825,7 @@ expand_assignment (to, from, want_value, suggest_reg)
      Don't re-expand if it was expanded already (in COMPONENT_REF case).  */
 
   if (to_rtx == 0)
-    {
-      to_rtx = expand_expr (to, NULL_RTX, VOIDmode, EXPAND_MEMORY_USE_WO);
-      if (GET_CODE (to_rtx) == MEM)
-	MEM_ALIAS_SET (to_rtx) = get_alias_set (to);
-    }
+    to_rtx = expand_expr (to, NULL_RTX, VOIDmode, EXPAND_WRITE);
 
   /* Don't move directly into a return register.  */
   if (TREE_CODE (to) == RESULT_DECL
@@ -3804,8 +3837,7 @@ expand_assignment (to, from, want_value, suggest_reg)
       temp = expand_expr (from, 0, GET_MODE (to_rtx), 0);
 
       if (GET_CODE (to_rtx) == PARALLEL)
-	emit_group_load (to_rtx, temp, int_size_in_bytes (TREE_TYPE (from)),
-			 TYPE_ALIGN (TREE_TYPE (from)));
+	emit_group_load (to_rtx, temp, int_size_in_bytes (TREE_TYPE (from)));
       else
 	emit_move_insn (to_rtx, temp);
 
@@ -3826,17 +3858,7 @@ expand_assignment (to, from, want_value, suggest_reg)
 
       push_temp_slots ();
       size = expr_size (from);
-      from_rtx = expand_expr (from, NULL_RTX, VOIDmode,
-			      EXPAND_MEMORY_USE_DONT);
-
-      /* Copy the rights of the bitmap.  */
-      if (current_function_check_memory_usage)
-	emit_library_call (chkr_copy_bitmap_libfunc, LCT_CONST_MAKE_BLOCK,
-			   VOIDmode, 3, XEXP (to_rtx, 0), Pmode,
-			   XEXP (from_rtx, 0), Pmode,
-			   convert_to_mode (TYPE_MODE (sizetype),
-					    size, TREE_UNSIGNED (sizetype)),
-			   TYPE_MODE (sizetype));
+      from_rtx = expand_expr (from, NULL_RTX, VOIDmode, 0);
 
 #ifdef TARGET_MEM_FUNCTIONS
       emit_library_call (memmove_libfunc, LCT_NORMAL,
@@ -3895,12 +3917,13 @@ expand_assignment (to, from, want_value, suggest_reg)
 
 rtx
 store_expr (exp, target, want_value)
-     register tree exp;
-     register rtx target;
+     tree exp;
+     rtx target;
      int want_value;
 {
-  register rtx temp;
+  rtx temp;
   int dont_return_target = 0;
+  int dont_store_target = 0;
 
   if (TREE_CODE (exp) == COMPOUND_EXPR)
     {
@@ -3971,7 +3994,15 @@ store_expr (exp, target, want_value)
     {
       temp = expand_expr (exp, target, GET_MODE (target), 0);
       if (GET_MODE (temp) != BLKmode && GET_MODE (temp) != VOIDmode)
-	temp = copy_to_reg (temp);
+	{
+	  /* If TEMP is already in the desired TARGET, only copy it from
+	     memory and don't store it there again.  */
+	  if (temp == target
+	      || (rtx_equal_p (temp, target)
+		  && ! side_effects_p (temp) && ! side_effects_p (target)))
+	    dont_store_target = 1;
+	  temp = copy_to_reg (temp);
+	}
       dont_return_target = 1;
     }
   else if (GET_CODE (target) == SUBREG && SUBREG_PROMOTED_VAR_P (target))
@@ -3980,6 +4011,8 @@ store_expr (exp, target, want_value)
        and then convert to the wider mode.  Our value is the computed
        expression.  */
     {
+      rtx inner_target = 0;
+
       /* If we don't want a value, we can do the conversion inside EXP,
 	 which will often result in some optimizations.  Do the conversion
 	 in two steps: first change the signedness, if needed, then
@@ -4000,9 +4033,11 @@ store_expr (exp, target, want_value)
 	  exp = convert (type_for_mode (GET_MODE (SUBREG_REG (target)),
 					SUBREG_PROMOTED_UNSIGNED_P (target)),
 			 exp);
+
+	  inner_target = SUBREG_REG (target);
 	}
 
-      temp = expand_expr (exp, NULL_RTX, VOIDmode, 0);
+      temp = expand_expr (exp, inner_target, VOIDmode, 0);
 
       /* If TEMP is a volatile MEM and we want a result value, make
 	 the access now so it gets done only once.  Likewise if
@@ -4015,9 +4050,13 @@ store_expr (exp, target, want_value)
       /* If TEMP is a VOIDmode constant, use convert_modes to make
 	 sure that we properly convert it.  */
       if (CONSTANT_P (temp) && GET_MODE (temp) == VOIDmode)
-	temp = convert_modes (GET_MODE (SUBREG_REG (target)),
-			      TYPE_MODE (TREE_TYPE (exp)), temp,
-			      SUBREG_PROMOTED_UNSIGNED_P (target));
+	{
+	  temp = convert_modes (GET_MODE (target), TYPE_MODE (TREE_TYPE (exp)),
+				temp, SUBREG_PROMOTED_UNSIGNED_P (target));
+	  temp = convert_modes (GET_MODE (SUBREG_REG (target)),
+			        GET_MODE (target), temp,
+			        SUBREG_PROMOTED_UNSIGNED_P (target));
+	}
 
       convert_move (SUBREG_REG (target), temp,
 		    SUBREG_PROMOTED_UNSIGNED_P (target));
@@ -4026,13 +4065,19 @@ store_expr (exp, target, want_value)
 	 target.  Otherwise, the caller might get confused by a result whose
 	 mode is larger than expected.  */
 
-      if (want_value && GET_MODE (temp) != GET_MODE (target)
-	  && GET_MODE (temp) != VOIDmode)
+      if (want_value && GET_MODE (temp) != GET_MODE (target))
 	{
-	  temp = gen_rtx_SUBREG (GET_MODE (target), temp, 0);
-	  SUBREG_PROMOTED_VAR_P (temp) = 1;
-	  SUBREG_PROMOTED_UNSIGNED_P (temp)
-	    = SUBREG_PROMOTED_UNSIGNED_P (target);
+	  if (GET_MODE (temp) != VOIDmode)
+	    {
+	      temp = gen_lowpart_SUBREG (GET_MODE (target), temp);
+	      SUBREG_PROMOTED_VAR_P (temp) = 1;
+	      SUBREG_PROMOTED_UNSIGNED_P (temp)
+		= SUBREG_PROMOTED_UNSIGNED_P (target);
+	    }
+	  else
+	    temp = convert_modes (GET_MODE (target),
+				  GET_MODE (SUBREG_REG (target)),
+				  temp, SUBREG_PROMOTED_UNSIGNED_P (target));
 	}
 
       return want_value ? temp : NULL_RTX;
@@ -4065,28 +4110,9 @@ store_expr (exp, target, want_value)
     temp = convert_modes (GET_MODE (target), TYPE_MODE (TREE_TYPE (exp)),
 			  temp, TREE_UNSIGNED (TREE_TYPE (exp)));
 
-  if (current_function_check_memory_usage
-      && GET_CODE (target) == MEM
-      && AGGREGATE_TYPE_P (TREE_TYPE (exp)))
-    {
-      in_check_memory_usage = 1;
-      if (GET_CODE (temp) == MEM)
-	emit_library_call (chkr_copy_bitmap_libfunc, LCT_CONST_MAKE_BLOCK,
-			   VOIDmode, 3, XEXP (target, 0), Pmode,
-			   XEXP (temp, 0), Pmode,
-			   expr_size (exp), TYPE_MODE (sizetype));
-      else
-	emit_library_call (chkr_check_addr_libfunc, LCT_CONST_MAKE_BLOCK,
-			   VOIDmode, 3, XEXP (target, 0), Pmode,
-			   expr_size (exp), TYPE_MODE (sizetype),
-			   GEN_INT (MEMORY_USE_WO),
-			   TYPE_MODE (integer_type_node));
-      in_check_memory_usage = 0;
-    }
-
   /* If value was not generated in the target, store it there.
-     Convert the value to TARGET's type first if nec.  */
-  /* If TEMP and TARGET compare equal according to rtx_equal_p, but
+     Convert the value to TARGET's type first if necessary.
+     If TEMP and TARGET compare equal according to rtx_equal_p, but
      one or both of them are volatile memory refs, we have to distinguish
      two cases:
      - expand_expr has used TARGET.  In this case, we must not generate
@@ -4101,7 +4127,13 @@ store_expr (exp, target, want_value)
   if ((! rtx_equal_p (temp, target)
        || (temp != target && (side_effects_p (temp)
 			      || side_effects_p (target))))
-      && TREE_CODE (exp) != ERROR_MARK)
+      && TREE_CODE (exp) != ERROR_MARK
+      && ! dont_store_target
+	 /* If store_expr stores a DECL whose DECL_RTL(exp) == TARGET,
+	    but TARGET is not valid memory reference, TEMP will differ
+	    from TARGET although it is really the same location.  */
+      && (TREE_CODE_CLASS (TREE_CODE (exp)) != 'd'
+	  || target != DECL_RTL_IF_SET (exp)))
     {
       target = protect_from_queue (target, 1);
       if (GET_MODE (temp) != GET_MODE (target)
@@ -4122,18 +4154,15 @@ store_expr (exp, target, want_value)
 
       else if (GET_MODE (temp) == BLKmode && TREE_CODE (exp) == STRING_CST)
 	{
-	  /* Handle copying a string constant into an array.
-	     The string constant may be shorter than the array.
-	     So copy just the string's actual length, and clear the rest.  */
-	  rtx size;
-	  rtx addr;
+	  /* Handle copying a string constant into an array.  The string
+	     constant may be shorter than the array.  So copy just the string's
+	     actual length, and clear the rest.  First get the size of the data
+	     type of the string, which is actually the size of the target.  */
+	  rtx size = expr_size (exp);
 
-	  /* Get the size of the data type of the string,
-	     which is actually the size of the target.  */
-	  size = expr_size (exp);
 	  if (GET_CODE (size) == CONST_INT
 	      && INTVAL (size) < TREE_STRING_LENGTH (exp))
-	    emit_block_move (target, temp, size, TYPE_ALIGN (TREE_TYPE (exp)));
+	    emit_block_move (target, temp, size);
 	  else
 	    {
 	      /* Compute the size of the data to copy from the string.  */
@@ -4141,66 +4170,43 @@ store_expr (exp, target, want_value)
 		= size_binop (MIN_EXPR,
 			      make_tree (sizetype, size),
 			      size_int (TREE_STRING_LENGTH (exp)));
-	      unsigned int align = TYPE_ALIGN (TREE_TYPE (exp));
 	      rtx copy_size_rtx = expand_expr (copy_size, NULL_RTX,
 					       VOIDmode, 0);
 	      rtx label = 0;
 
 	      /* Copy that much.  */
-	      emit_block_move (target, temp, copy_size_rtx,
-			       TYPE_ALIGN (TREE_TYPE (exp)));
+	      copy_size_rtx = convert_to_mode (ptr_mode, copy_size_rtx, 0);
+	      emit_block_move (target, temp, copy_size_rtx);
 
 	      /* Figure out how much is left in TARGET that we have to clear.
 		 Do all calculations in ptr_mode.  */
-
-	      addr = XEXP (target, 0);
-	      addr = convert_modes (ptr_mode, Pmode, addr, 1);
-
 	      if (GET_CODE (copy_size_rtx) == CONST_INT)
 		{
-		  addr = plus_constant (addr, TREE_STRING_LENGTH (exp));
-		  size = plus_constant (size, -TREE_STRING_LENGTH (exp));
-		  align = MIN (align,
-			       (unsigned int) (BITS_PER_UNIT
-					       * (INTVAL (copy_size_rtx)
-						  & - INTVAL (copy_size_rtx))));
+		  size = plus_constant (size, -INTVAL (copy_size_rtx));
+		  target = adjust_address (target, BLKmode,
+					   INTVAL (copy_size_rtx));
 		}
 	      else
 		{
-		  addr = force_reg (ptr_mode, addr);
-		  addr = expand_binop (ptr_mode, add_optab, addr,
+		  size = expand_binop (TYPE_MODE (sizetype), sub_optab, size,
 				       copy_size_rtx, NULL_RTX, 0,
 				       OPTAB_LIB_WIDEN);
 
-		  size = expand_binop (ptr_mode, sub_optab, size,
-				       copy_size_rtx, NULL_RTX, 0,
-				       OPTAB_LIB_WIDEN);
+#ifdef POINTERS_EXTEND_UNSIGNED
+		  if (GET_MODE (copy_size_rtx) != Pmode)
+		    copy_size_rtx = convert_memory_address (Pmode,
+							    copy_size_rtx);
+#endif
 
-		  align = BITS_PER_UNIT;
+		  target = offset_address (target, copy_size_rtx,
+					   highest_pow2_factor (copy_size));
 		  label = gen_label_rtx ();
 		  emit_cmp_and_jump_insns (size, const0_rtx, LT, NULL_RTX,
-					   GET_MODE (size), 0, 0, label);
+					   GET_MODE (size), 0, label);
 		}
-	      align = MIN (align, expr_align (copy_size));
 
 	      if (size != const0_rtx)
-		{
-		  rtx dest = gen_rtx_MEM (BLKmode, addr);
-
-		  MEM_COPY_ATTRIBUTES (dest, target);
-
-		  /* Be sure we can write on ADDR.  */
-		  in_check_memory_usage = 1;
-		  if (current_function_check_memory_usage)
-		    emit_library_call (chkr_check_addr_libfunc,
-				       LCT_CONST_MAKE_BLOCK, VOIDmode, 3,
-				       addr, Pmode,
-				       size, TYPE_MODE (sizetype),
- 				       GEN_INT (MEMORY_USE_WO),
-				       TYPE_MODE (integer_type_node));
-		  in_check_memory_usage = 0;
-		  clear_storage (dest, size, align);
-		}
+		clear_storage (target, size);
 
 	      if (label)
 		emit_label (label);
@@ -4209,11 +4215,9 @@ store_expr (exp, target, want_value)
       /* Handle calls that return values in multiple non-contiguous locations.
 	 The Irix 6 ABI has examples of this.  */
       else if (GET_CODE (target) == PARALLEL)
-	emit_group_load (target, temp, int_size_in_bytes (TREE_TYPE (exp)),
-			 TYPE_ALIGN (TREE_TYPE (exp)));
+	emit_group_load (target, temp, int_size_in_bytes (TREE_TYPE (exp)));
       else if (GET_MODE (temp) == BLKmode)
-	emit_block_move (target, temp, expr_size (exp),
-			 TYPE_ALIGN (TREE_TYPE (exp)));
+	emit_block_move (target, temp, expr_size (exp));
       else
 	emit_move_insn (target, temp);
     }
@@ -4250,6 +4254,7 @@ is_zeros_p (exp)
     case CONVERT_EXPR:
     case NOP_EXPR:
     case NON_LVALUE_EXPR:
+    case VIEW_CONVERT_EXPR:
       return is_zeros_p (TREE_OPERAND (exp, 0));
 
     case INTEGER_CST:
@@ -4261,6 +4266,14 @@ is_zeros_p (exp)
 
     case REAL_CST:
       return REAL_VALUES_IDENTICAL (TREE_REAL_CST (exp), dconst0);
+
+    case VECTOR_CST:
+      for (elt = TREE_VECTOR_CST_ELTS (exp); elt;
+	   elt = TREE_CHAIN (elt))
+	if (!is_zeros_p (TREE_VALUE (elt)))
+	  return 0;
+
+      return 1;
 
     case CONSTRUCTOR:
       if (TREE_TYPE (exp) && TREE_CODE (TREE_TYPE (exp)) == SET_TYPE)
@@ -4312,7 +4325,7 @@ mostly_zeros_p (exp)
 /* Helper function for store_constructor.
    TARGET, BITSIZE, BITPOS, MODE, EXP are as for store_field.
    TYPE is the type of the CONSTRUCTOR, not the element type.
-   ALIGN and CLEARED are as for store_constructor.
+   CLEARED is as for store_constructor.
    ALIAS_SET is the alias set to use for any stores.
 
    This provides a recursive shortcut back to store_constructor when it isn't
@@ -4321,14 +4334,13 @@ mostly_zeros_p (exp)
    clear a substructure if the outer structure has already been cleared.  */
 
 static void
-store_constructor_field (target, bitsize, bitpos,
-			 mode, exp, type, align, cleared, alias_set)
+store_constructor_field (target, bitsize, bitpos, mode, exp, type, cleared,
+			 alias_set)
      rtx target;
      unsigned HOST_WIDE_INT bitsize;
      HOST_WIDE_INT bitpos;
      enum machine_mode mode;
      tree exp, type;
-     unsigned int align;
      int cleared;
      int alias_set;
 {
@@ -4339,44 +4351,42 @@ store_constructor_field (target, bitsize, bitpos,
 	 generate unnecessary clear instructions anyways.  */
       && (bitpos == 0 || GET_CODE (target) == MEM))
     {
-      if (bitpos != 0)
+      if (GET_CODE (target) == MEM)
 	target
-	  = change_address (target,
+	  = adjust_address (target,
 			    GET_MODE (target) == BLKmode
 			    || 0 != (bitpos
 				     % GET_MODE_ALIGNMENT (GET_MODE (target)))
-			    ? BLKmode : VOIDmode,
-			    plus_constant (XEXP (target, 0),
-					   bitpos / BITS_PER_UNIT));
+			    ? BLKmode : VOIDmode, bitpos / BITS_PER_UNIT);
 
 
-      /* Show the alignment may no longer be what it was and update the alias
-	 set, if required.  */
-      if (bitpos != 0)
-	align = MIN (align, (unsigned int) bitpos & - bitpos);
-      if (GET_CODE (target) == MEM)
-	MEM_ALIAS_SET (target) = alias_set;
+      /* Update the alias set, if required.  */
+      if (GET_CODE (target) == MEM && ! MEM_KEEP_ALIAS_SET_P (target)
+	  && MEM_ALIAS_SET (target) != 0)
+	{
+	  target = copy_rtx (target);
+	  set_mem_alias_set (target, alias_set);
+	}
 
-      store_constructor (exp, target, align, cleared, bitsize / BITS_PER_UNIT);
+      store_constructor (exp, target, cleared, bitsize / BITS_PER_UNIT);
     }
   else
-    store_field (target, bitsize, bitpos, mode, exp, VOIDmode, 0, align,
-		 int_size_in_bytes (type), alias_set);
+    store_field (target, bitsize, bitpos, mode, exp, VOIDmode, 0, type,
+		 alias_set);
 }
 
 /* Store the value of constructor EXP into the rtx TARGET.
-   TARGET is either a REG or a MEM.
-   ALIGN is the maximum known alignment for TARGET.
+   TARGET is either a REG or a MEM; we know it cannot conflict, since
+   safe_from_p has been called.
    CLEARED is true if TARGET is known to have been zero'd.
    SIZE is the number of bytes of TARGET we are allowed to modify: this
    may not be the same as the size of EXP if we are assigning to a field
    which has been packed to exclude padding bits.  */
 
 static void
-store_constructor (exp, target, align, cleared, size)
+store_constructor (exp, target, cleared, size)
      tree exp;
      rtx target;
-     unsigned int align;
      int cleared;
      HOST_WIDE_INT size;
 {
@@ -4385,47 +4395,30 @@ store_constructor (exp, target, align, cleared, size)
   HOST_WIDE_INT exp_size = int_size_in_bytes (type);
 #endif
 
-  /* We know our target cannot conflict, since safe_from_p has been called.  */
-#if 0
-  /* Don't try copying piece by piece into a hard register
-     since that is vulnerable to being clobbered by EXP.
-     Instead, construct in a pseudo register and then copy it all.  */
-  if (GET_CODE (target) == REG && REGNO (target) < FIRST_PSEUDO_REGISTER)
-    {
-      rtx temp = gen_reg_rtx (GET_MODE (target));
-      store_constructor (exp, temp, align, cleared, size);
-      emit_move_insn (target, temp);
-      return;
-    }
-#endif
-
   if (TREE_CODE (type) == RECORD_TYPE || TREE_CODE (type) == UNION_TYPE
       || TREE_CODE (type) == QUAL_UNION_TYPE)
     {
-      register tree elt;
+      tree elt;
 
-      /* Inform later passes that the whole union value is dead.  */
+      /* We either clear the aggregate or indicate the value is dead.  */
       if ((TREE_CODE (type) == UNION_TYPE
 	   || TREE_CODE (type) == QUAL_UNION_TYPE)
-	  && ! cleared)
+	  && ! cleared
+	  && ! CONSTRUCTOR_ELTS (exp))
+	/* If the constructor is empty, clear the union.  */
 	{
-	  emit_insn (gen_rtx_CLOBBER (VOIDmode, target));
-
-	  /* If the constructor is empty, clear the union.  */
-	  if (! CONSTRUCTOR_ELTS (exp)  && ! cleared)
-	    clear_storage (target, expr_size (exp), TYPE_ALIGN (type));
+	  clear_storage (target, expr_size (exp));
+	  cleared = 1;
 	}
 
       /* If we are building a static constructor into a register,
 	 set the initial value as zero so we can fold the value into
 	 a constant.  But if more than one register is involved,
 	 this probably loses.  */
-      else if (GET_CODE (target) == REG && TREE_STATIC (exp)
+      else if (! cleared && GET_CODE (target) == REG && TREE_STATIC (exp)
 	       && GET_MODE_SIZE (GET_MODE (target)) <= UNITS_PER_WORD)
 	{
-	  if (! cleared)
-	    emit_move_insn (target, CONST0_RTX (GET_MODE (target)));
-
+	  emit_move_insn (target, CONST0_RTX (GET_MODE (target)));
 	  cleared = 1;
 	}
 
@@ -4434,20 +4427,19 @@ store_constructor (exp, target, align, cleared, size)
 	 clear the whole structure first.  Don't do this if TARGET is a
 	 register whose mode size isn't equal to SIZE since clear_storage
 	 can't handle this case.  */
-      else if (size > 0
+      else if (! cleared && size > 0
 	       && ((list_length (CONSTRUCTOR_ELTS (exp))
 		    != fields_length (type))
 		   || mostly_zeros_p (exp))
 	       && (GET_CODE (target) != REG
-		   || (HOST_WIDE_INT) GET_MODE_SIZE (GET_MODE (target)) == size))
+		   || ((HOST_WIDE_INT) GET_MODE_SIZE (GET_MODE (target))
+		       == size)))
 	{
-	  if (! cleared)
-	    clear_storage (target, GEN_INT (size), align);
-
+	  clear_storage (target, GEN_INT (size));
 	  cleared = 1;
 	}
-      else if (! cleared)
-	/* Inform later passes that the old value is dead.  */
+
+      if (! cleared)
 	emit_insn (gen_rtx_CLOBBER (VOIDmode, target));
 
       /* Store each element of the constructor into
@@ -4455,11 +4447,9 @@ store_constructor (exp, target, align, cleared, size)
 
       for (elt = CONSTRUCTOR_ELTS (exp); elt; elt = TREE_CHAIN (elt))
 	{
-	  register tree field = TREE_PURPOSE (elt);
-#ifdef WORD_REGISTER_OPERATIONS
+	  tree field = TREE_PURPOSE (elt);
 	  tree value = TREE_VALUE (elt);
-#endif
-	  register enum machine_mode mode;
+	  enum machine_mode mode;
 	  HOST_WIDE_INT bitsize;
 	  HOST_WIDE_INT bitpos = 0;
 	  int unsignedp;
@@ -4472,7 +4462,7 @@ store_constructor (exp, target, align, cleared, size)
 	  if (field == 0)
 	    continue;
 
-	  if (cleared && is_zeros_p (TREE_VALUE (elt)))
+	  if (cleared && is_zeros_p (value))
 	    continue;
 
 	  if (host_integerp (DECL_SIZE (field), 1))
@@ -4507,21 +4497,16 @@ store_constructor (exp, target, align, cleared, size)
 	      if (GET_CODE (to_rtx) != MEM)
 		abort ();
 
-	      if (GET_MODE (offset_rtx) != ptr_mode)
-		{
 #ifdef POINTERS_EXTEND_UNSIGNED
-                  offset_rtx = convert_memory_address (ptr_mode, offset_rtx);
+	      if (GET_MODE (offset_rtx) != Pmode)
+		offset_rtx = convert_memory_address (Pmode, offset_rtx);
 #else
-                  offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
+	      if (GET_MODE (offset_rtx) != ptr_mode)
+		offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
 #endif
-                }
 
-	      to_rtx
-		= change_address (to_rtx, VOIDmode,
-				  gen_rtx_PLUS (ptr_mode, XEXP (to_rtx, 0),
-						force_reg (ptr_mode,
-							   offset_rtx)));
-	      align = DECL_OFFSET_ALIGN (field);
+	      to_rtx = offset_address (to_rtx, offset_rtx,
+				       highest_pow2_factor (offset));
 	    }
 
 	  if (TREE_READONLY (field))
@@ -4546,11 +4531,13 @@ store_constructor (exp, target, align, cleared, size)
 	      && bitpos + BITS_PER_WORD <= exp_size * BITS_PER_UNIT)
 	    {
 	      tree type = TREE_TYPE (value);
+
 	      if (TYPE_PRECISION (type) < BITS_PER_WORD)
 		{
 		  type = type_for_size (BITS_PER_WORD, TREE_UNSIGNED (type));
 		  value = convert (type, value);
 		}
+
 	      if (BYTES_BIG_ENDIAN)
 		value
 		  = fold (build (LSHIFT_EXPR, type, value,
@@ -4559,27 +4546,46 @@ store_constructor (exp, target, align, cleared, size)
 	      mode = word_mode;
 	    }
 #endif
+
+	  if (GET_CODE (to_rtx) == MEM && !MEM_KEEP_ALIAS_SET_P (to_rtx)
+	      && DECL_NONADDRESSABLE_P (field))
+	    {
+	      to_rtx = copy_rtx (to_rtx);
+	      MEM_KEEP_ALIAS_SET_P (to_rtx) = 1;
+	    }
+
 	  store_constructor_field (to_rtx, bitsize, bitpos, mode,
-				   TREE_VALUE (elt), type, align, cleared,
-				   (DECL_NONADDRESSABLE_P (field)
-				    && GET_CODE (to_rtx) == MEM)
-				   ? MEM_ALIAS_SET (to_rtx)
-				   : get_alias_set (TREE_TYPE (field)));
+				   value, type, cleared,
+				   get_alias_set (TREE_TYPE (field)));
 	}
     }
-  else if (TREE_CODE (type) == ARRAY_TYPE)
+  else if (TREE_CODE (type) == ARRAY_TYPE
+	   || TREE_CODE (type) == VECTOR_TYPE)
     {
-      register tree elt;
-      register int i;
+      tree elt;
+      int i;
       int need_to_clear;
       tree domain = TYPE_DOMAIN (type);
       tree elttype = TREE_TYPE (type);
-      int const_bounds_p = (TYPE_MIN_VALUE (domain)
-			    && TYPE_MAX_VALUE (domain)
-			    && host_integerp (TYPE_MIN_VALUE (domain), 0)
-			    && host_integerp (TYPE_MAX_VALUE (domain), 0));
-      HOST_WIDE_INT minelt;
-      HOST_WIDE_INT maxelt;
+      int const_bounds_p;
+      HOST_WIDE_INT minelt = 0;
+      HOST_WIDE_INT maxelt = 0;
+
+      /* Vectors are like arrays, but the domain is stored via an array
+	 type indirectly.  */
+      if (TREE_CODE (type) == VECTOR_TYPE)
+	{
+	  /* Note that although TYPE_DEBUG_REPRESENTATION_TYPE uses
+	     the same field as TYPE_DOMAIN, we are not guaranteed that
+	     it always will.  */
+	  domain = TYPE_DEBUG_REPRESENTATION_TYPE (type);
+	  domain = TYPE_DOMAIN (TREE_TYPE (TYPE_FIELDS (domain)));
+	}
+
+      const_bounds_p = (TYPE_MIN_VALUE (domain)
+			&& TYPE_MAX_VALUE (domain)
+			&& host_integerp (TYPE_MIN_VALUE (domain), 0)
+			&& host_integerp (TYPE_MAX_VALUE (domain), 0));
 
       /* If we have constant bounds for the range of the type, get them.  */
       if (const_bounds_p)
@@ -4641,10 +4647,15 @@ store_constructor (exp, target, align, cleared, size)
       if (need_to_clear && size > 0)
 	{
 	  if (! cleared)
-	    clear_storage (target, GEN_INT (size), align);
+	    {
+	      if (REG_P (target))
+		emit_move_insn (target,  CONST0_RTX (GET_MODE (target)));
+	      else
+		clear_storage (target, GEN_INT (size));
+	    }
 	  cleared = 1;
 	}
-      else
+      else if (REG_P (target))
 	/* Inform later passes that the old value is dead.  */
 	emit_insn (gen_rtx_CLOBBER (VOIDmode, target));
 
@@ -4655,12 +4666,11 @@ store_constructor (exp, target, align, cleared, size)
 	   elt;
 	   elt = TREE_CHAIN (elt), i++)
 	{
-	  register enum machine_mode mode;
+	  enum machine_mode mode;
 	  HOST_WIDE_INT bitsize;
 	  HOST_WIDE_INT bitpos;
 	  int unsignedp;
 	  tree value = TREE_VALUE (elt);
-	  unsigned int align = TYPE_ALIGN (TREE_TYPE (value));
 	  tree index = TREE_PURPOSE (elt);
 	  rtx xtarget = target;
 
@@ -4680,7 +4690,7 @@ store_constructor (exp, target, align, cleared, size)
 	    {
 	      tree lo_index = TREE_OPERAND (index, 0);
 	      tree hi_index = TREE_OPERAND (index, 1);
-	      rtx index_r, pos_rtx, addr, hi_r, loop_top, loop_end;
+	      rtx index_r, pos_rtx, hi_r, loop_top, loop_end;
 	      struct nesting *loop;
 	      HOST_WIDE_INT lo, hi, count;
 	      tree position;
@@ -4702,11 +4712,19 @@ store_constructor (exp, target, align, cleared, size)
 		  for (; lo <= hi; lo++)
 		    {
 		      bitpos = lo * tree_low_cst (TYPE_SIZE (elttype), 0);
+
+		      if (GET_CODE (target) == MEM
+			  && !MEM_KEEP_ALIAS_SET_P (target)
+			  && TREE_CODE (type) == ARRAY_TYPE
+			  && TYPE_NONALIASED_COMPONENT (type))
+			{
+			  target = copy_rtx (target);
+			  MEM_KEEP_ALIAS_SET_P (target) = 1;
+			}
+
 		      store_constructor_field
-			(target, bitsize, bitpos, mode, value, type, align,
-			 cleared,
-			 TYPE_NONALIASED_COMPONENT (type)
-			 ? MEM_ALIAS_SET (target) : get_alias_set (elttype));
+			(target, bitsize, bitpos, mode, value, type, cleared,
+			 get_alias_set (elttype));
 		    }
 		}
 	      else
@@ -4744,10 +4762,11 @@ store_constructor (exp, target, align, cleared, size)
 						  TYPE_SIZE_UNIT (elttype)));
 
 		  pos_rtx = expand_expr (position, 0, VOIDmode, 0);
-		  addr = gen_rtx_PLUS (Pmode, XEXP (target, 0), pos_rtx);
-		  xtarget = change_address (target, mode, addr);
+		  xtarget = offset_address (target, pos_rtx,
+					    highest_pow2_factor (position));
+		  xtarget = adjust_address (xtarget, mode, 0);
 		  if (TREE_CODE (value) == CONSTRUCTOR)
-		    store_constructor (value, xtarget, align, cleared,
+		    store_constructor (value, xtarget, cleared,
 				       bitsize / BITS_PER_UNIT);
 		  else
 		    store_expr (value, xtarget, 0);
@@ -4766,7 +4785,6 @@ store_constructor (exp, target, align, cleared, size)
 	  else if ((index != 0 && ! host_integerp (index, 0))
 		   || ! host_integerp (TYPE_SIZE (elttype), 1))
 	    {
-	      rtx pos_rtx, addr;
 	      tree position;
 
 	      if (index == 0)
@@ -4780,9 +4798,10 @@ store_constructor (exp, target, align, cleared, size)
 	      position = size_binop (MULT_EXPR, index,
 				     convert (ssizetype,
 					      TYPE_SIZE_UNIT (elttype)));
-	      pos_rtx = expand_expr (position, 0, VOIDmode, 0);
-	      addr = gen_rtx_PLUS (Pmode, XEXP (target, 0), pos_rtx);
-	      xtarget = change_address (target, mode, addr);
+	      xtarget = offset_address (target,
+					expand_expr (position, 0, VOIDmode, 0),
+					highest_pow2_factor (position));
+	      xtarget = adjust_address (xtarget, mode, 0);
 	      store_expr (value, xtarget, 0);
 	    }
 	  else
@@ -4793,12 +4812,16 @@ store_constructor (exp, target, align, cleared, size)
 	      else
 		bitpos = (i * tree_low_cst (TYPE_SIZE (elttype), 1));
 
+	      if (GET_CODE (target) == MEM && !MEM_KEEP_ALIAS_SET_P (target)
+		  && TREE_CODE (type) == ARRAY_TYPE
+		  && TYPE_NONALIASED_COMPONENT (type))
+		{
+		  target = copy_rtx (target);
+		  MEM_KEEP_ALIAS_SET_P (target) = 1;
+		}
+
 	      store_constructor_field (target, bitsize, bitpos, mode, value,
-				       type, align, cleared,
-				       TYPE_NONALIASED_COMPONENT (type)
-				       && GET_CODE (target) == MEM
-				       ? MEM_ALIAS_SET (target) :
-				       get_alias_set (elttype));
+				       type, cleared, get_alias_set (elttype));
 
 	    }
 	}
@@ -4826,7 +4849,7 @@ store_constructor (exp, target, align, cleared, size)
       if (elt == NULL_TREE && size > 0)
 	{
 	  if (!cleared)
-	    clear_storage (target, GEN_INT (size), TYPE_ALIGN (type));
+	    clear_storage (target, GEN_INT (size));
 	  return;
 	}
 
@@ -4875,10 +4898,7 @@ store_constructor (exp, target, align, cleared, size)
 			 XEXP if the set is multi-word, but not if
 			 it's single-word.  */
 		      if (GET_CODE (target) == MEM)
-			{
-			  to_rtx = plus_constant (XEXP (target, 0), offset);
-			  to_rtx = change_address (target, mode, to_rtx);
-			}
+			to_rtx = adjust_address (target, mode, offset);
 		      else if (offset == 0)
 			to_rtx = target;
 		      else
@@ -4904,7 +4924,7 @@ store_constructor (exp, target, align, cleared, size)
 		   || (tree_low_cst (TREE_VALUE (elt), 0)
 		       - tree_low_cst (TREE_PURPOSE (elt), 0) + 1
 		       != (HOST_WIDE_INT) nbits))))
-	  clear_storage (target, expr_size (exp), TYPE_ALIGN (type));
+	  clear_storage (target, expr_size (exp));
 
       for (; elt != NULL_TREE; elt = TREE_CHAIN (elt))
 	{
@@ -5001,16 +5021,15 @@ store_constructor (exp, target, align, cleared, size)
    has mode VALUE_MODE if that is convenient to do.
    In this case, UNSIGNEDP must be nonzero if the value is an unsigned type.
 
-   ALIGN is the alignment that TARGET is known to have.
-   TOTAL_SIZE is the size in bytes of the structure, or -1 if varying.
+   TYPE is the type of the underlying object,
 
    ALIAS_SET is the alias set for the destination.  This value will
    (in general) be different from that for TARGET, since TARGET is a
    reference to the containing structure.  */
 
 static rtx
-store_field (target, bitsize, bitpos, mode, exp, value_mode,
-	     unsignedp, align, total_size, alias_set)
+store_field (target, bitsize, bitpos, mode, exp, value_mode, unsignedp, type,
+	     alias_set)
      rtx target;
      HOST_WIDE_INT bitsize;
      HOST_WIDE_INT bitpos;
@@ -5018,8 +5037,7 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
      tree exp;
      enum machine_mode value_mode;
      int unsignedp;
-     unsigned int align;
-     HOST_WIDE_INT total_size;
+     tree type;
      int alias_set;
 {
   HOST_WIDE_INT width_mask = 0;
@@ -5031,8 +5049,7 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
      side-effects.  */
   if (bitsize == 0)
     return expand_expr (exp, const0_rtx, VOIDmode, 0);
-
-  if (bitsize < HOST_BITS_PER_WIDE_INT)
+  else if (bitsize >=0 && bitsize < HOST_BITS_PER_WIDE_INT)
     width_mask = ((HOST_WIDE_INT) 1 << bitsize) - 1;
 
   /* If we are storing into an unaligned field of an aligned union that is
@@ -5051,23 +5068,19 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
     {
       rtx object
 	= assign_temp
-	  (build_qualified_type (type_for_mode (GET_MODE (target), 0),
-				 TYPE_QUAL_CONST),
+	  (build_qualified_type (type, TYPE_QUALS (type) | TYPE_QUAL_CONST),
 	   0, 1, 1);
-      rtx blk_object = copy_rtx (object);
-
-      PUT_MODE (blk_object, BLKmode);
+      rtx blk_object = adjust_address (object, BLKmode, 0);
 
       if (bitsize != (HOST_WIDE_INT) GET_MODE_BITSIZE (GET_MODE (target)))
 	emit_move_insn (object, target);
 
-      store_field (blk_object, bitsize, bitpos, mode, exp, VOIDmode, 0,
-		   align, total_size, alias_set);
+      store_field (blk_object, bitsize, bitpos, mode, exp, VOIDmode, 0, type,
+		   alias_set);
 
-      /* Even though we aren't returning target, we need to
-	 give it the updated value.  */
       emit_move_insn (target, object);
 
+      /* We want to return the BLKmode version of the data.  */
       return blk_object;
     }
 
@@ -5092,12 +5105,9 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
       || GET_CODE (target) == SUBREG
       /* If the field isn't aligned enough to store as an ordinary memref,
 	 store it as a bit field.  */
-      || (mode != BLKmode && SLOW_UNALIGNED_ACCESS (mode, align)
-	  && (align < GET_MODE_ALIGNMENT (mode)
+      || (mode != BLKmode && SLOW_UNALIGNED_ACCESS (mode, MEM_ALIGN (target))
+	  && (MEM_ALIGN (target) < GET_MODE_ALIGNMENT (mode)
 	      || bitpos % GET_MODE_ALIGNMENT (mode)))
-      || (mode == BLKmode && SLOW_UNALIGNED_ACCESS (mode, align)
-	  && (TYPE_ALIGN (TREE_TYPE (exp)) > align
-	      || bitpos % TYPE_ALIGN (TREE_TYPE (exp)) != 0))
       /* If the RHS and field are a constant size and the size of the
 	 RHS isn't the same size as the bitfield, we must use bitfield
 	 operations.  */
@@ -5112,7 +5122,7 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
 	 low-order bits.  However, if EXP's type is a record and this is
 	 big-endian machine, we want the upper BITSIZE bits.  */
       if (BYTES_BIG_ENDIAN && GET_MODE_CLASS (GET_MODE (temp)) == MODE_INT
-	  && bitsize < GET_MODE_BITSIZE (GET_MODE (temp))
+	  && bitsize < (HOST_WIDE_INT) GET_MODE_BITSIZE (GET_MODE (temp))
 	  && TREE_CODE (TREE_TYPE (exp)) == RECORD_TYPE)
 	temp = expand_shift (RSHIFT_EXPR, GET_MODE (temp), temp,
 			     size_int (GET_MODE_BITSIZE (GET_MODE (temp))
@@ -5130,63 +5140,57 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
 	 boundary.  If so, we simply do a block copy.  */
       if (GET_MODE (target) == BLKmode && GET_MODE (temp) == BLKmode)
 	{
-	  unsigned int exp_align = expr_align (exp);
-
 	  if (GET_CODE (target) != MEM || GET_CODE (temp) != MEM
 	      || bitpos % BITS_PER_UNIT != 0)
 	    abort ();
 
-	  target = change_address (target, VOIDmode,
-				   plus_constant (XEXP (target, 0),
-						bitpos / BITS_PER_UNIT));
-
-	  /* Make sure that ALIGN is no stricter than the alignment of EXP.  */
-	  align = MIN (exp_align, align);
-
-	  /* Find an alignment that is consistent with the bit position.  */
-	  while ((bitpos % align) != 0)
-	    align >>= 1;
-
+	  target = adjust_address (target, VOIDmode, bitpos / BITS_PER_UNIT);
 	  emit_block_move (target, temp,
-			   bitsize == -1 ? expr_size (exp)
-			   : GEN_INT ((bitsize + BITS_PER_UNIT - 1)
-				      / BITS_PER_UNIT),
-			   align);
+			   GEN_INT ((bitsize + BITS_PER_UNIT - 1)
+				    / BITS_PER_UNIT));
 
 	  return value_mode == VOIDmode ? const0_rtx : target;
 	}
 
       /* Store the value in the bitfield.  */
-      store_bit_field (target, bitsize, bitpos, mode, temp, align, total_size);
+      store_bit_field (target, bitsize, bitpos, mode, temp,
+		       int_size_in_bytes (type));
+
       if (value_mode != VOIDmode)
 	{
-	  /* The caller wants an rtx for the value.  */
-	  /* If possible, avoid refetching from the bitfield itself.  */
+	  /* The caller wants an rtx for the value.
+	     If possible, avoid refetching from the bitfield itself.  */
 	  if (width_mask != 0
 	      && ! (GET_CODE (target) == MEM && MEM_VOLATILE_P (target)))
 	    {
 	      tree count;
 	      enum machine_mode tmode;
 
-	      if (unsignedp)
-		return expand_and (temp, GEN_INT (width_mask), NULL_RTX);
 	      tmode = GET_MODE (temp);
 	      if (tmode == VOIDmode)
 		tmode = value_mode;
+
+	      if (unsignedp)
+		return expand_and (tmode, temp,
+				   GEN_INT (trunc_int_for_mode (width_mask,
+								tmode)),
+				   NULL_RTX);
+
 	      count = build_int_2 (GET_MODE_BITSIZE (tmode) - bitsize, 0);
 	      temp = expand_shift (LSHIFT_EXPR, tmode, temp, count, 0, 0);
 	      return expand_shift (RSHIFT_EXPR, tmode, temp, count, 0, 0);
 	    }
+
 	  return extract_bit_field (target, bitsize, bitpos, unsignedp,
-				    NULL_RTX, value_mode, 0, align,
-				    total_size);
+				    NULL_RTX, value_mode, VOIDmode,
+				    int_size_in_bytes (type));
 	}
       return const0_rtx;
     }
   else
     {
       rtx addr = XEXP (target, 0);
-      rtx to_rtx;
+      rtx to_rtx = target;
 
       /* If a value is wanted, it must be the lhs;
 	 so make the address stable for multiple use.  */
@@ -5198,33 +5202,26 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
 		&& GET_CODE (XEXP (addr, 1)) == CONST_INT
 		&& (XEXP (addr, 0) == virtual_incoming_args_rtx
 		    || XEXP (addr, 0) == virtual_stack_vars_rtx)))
-	addr = copy_to_reg (addr);
+	to_rtx = replace_equiv_address (to_rtx, copy_to_reg (addr));
 
       /* Now build a reference to just the desired component.  */
 
-      to_rtx = copy_rtx (change_address (target, mode,
-					 plus_constant (addr,
-							(bitpos
-							 / BITS_PER_UNIT))));
+      to_rtx = adjust_address (target, mode, bitpos / BITS_PER_UNIT);
+
+      if (to_rtx == target)
+	to_rtx = copy_rtx (to_rtx);
+
       MEM_SET_IN_STRUCT_P (to_rtx, 1);
-      /* If the address of the structure varies, then it might be on
-	 the stack.  And, stack slots may be shared across scopes.
-	 So, two different structures, of different types, can end up
-	 at the same location.  We will give the structures alias set
-	 zero; here we must be careful not to give non-zero alias sets
-	 to their fields.  */
-      if (!rtx_varies_p (addr, /*for_alias=*/0))
-	MEM_ALIAS_SET (to_rtx) = alias_set;
-      else
-	MEM_ALIAS_SET (to_rtx) = 0;
+      if (!MEM_KEEP_ALIAS_SET_P (to_rtx) && MEM_ALIAS_SET (to_rtx) != 0)
+	set_mem_alias_set (to_rtx, alias_set);
 
       return store_expr (exp, to_rtx, value_mode != VOIDmode);
     }
 }
 
 /* Given an expression EXP that may be a COMPONENT_REF, a BIT_FIELD_REF,
-   or an ARRAY_REF, look for nested COMPONENT_REFs, BIT_FIELD_REFs, or
-   ARRAY_REFs and find the ultimate containing object, which we return.
+   an ARRAY_REF, or an ARRAY_RANGE_REF, look for nested operations of these
+   codes and find the ultimate containing object, which we return.
 
    We set *PBITSIZE to the size in bits that we want, *PBITPOS to the
    bit position, and *PUNSIGNEDP to the signedness of the field.
@@ -5232,9 +5229,6 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
    giving the variable offset (in units) in *POFFSET.
    This offset is in addition to the bit position.
    If the position is not variable, we store 0 in *POFFSET.
-   We set *PALIGNMENT to the alignment of the address that will be
-   computed.  This is the alignment of the thing we return if *POFFSET
-   is zero, but can be more less strictly aligned if *POFFSET is nonzero.
 
    If any of the extraction expressions is volatile,
    we store 1 in *PVOLATILEP.  Otherwise we don't change that.
@@ -5245,11 +5239,11 @@ store_field (target, bitsize, bitpos, mode, exp, value_mode,
 
    If the field describes a variable-sized object, *PMODE is set to
    VOIDmode and *PBITSIZE is set to -1.  An access cannot be made in
-   this case, but the address of the object can be found.   */
+   this case, but the address of the object can be found.  */
 
 tree
 get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
-		     punsignedp, pvolatilep, palignment)
+		     punsignedp, pvolatilep)
      tree exp;
      HOST_WIDE_INT *pbitsize;
      HOST_WIDE_INT *pbitpos;
@@ -5257,13 +5251,12 @@ get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
      enum machine_mode *pmode;
      int *punsignedp;
      int *pvolatilep;
-     unsigned int *palignment;
 {
   tree size_tree = 0;
   enum machine_mode mode = VOIDmode;
   tree offset = size_zero_node;
   tree bit_offset = bitsize_zero_node;
-  unsigned int alignment = BIGGEST_ALIGNMENT;
+  tree placeholder_ptr = 0;
   tree tem;
 
   /* First get the mode, signedness, and size.  We do this from just the
@@ -5324,16 +5317,17 @@ get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
 	  bit_offset = size_binop (PLUS_EXPR, bit_offset,
 				   DECL_FIELD_BIT_OFFSET (field));
 
-	  if (! host_integerp (offset, 0))
-	    alignment = MIN (alignment, DECL_OFFSET_ALIGN (field));
+	  /* ??? Right now we don't do anything with DECL_OFFSET_ALIGN.  */
 	}
 
-      else if (TREE_CODE (exp) == ARRAY_REF)
+      else if (TREE_CODE (exp) == ARRAY_REF
+	       || TREE_CODE (exp) == ARRAY_RANGE_REF)
 	{
 	  tree index = TREE_OPERAND (exp, 1);
-	  tree domain = TYPE_DOMAIN (TREE_TYPE (TREE_OPERAND (exp, 0)));
+	  tree array = TREE_OPERAND (exp, 0);
+	  tree domain = TYPE_DOMAIN (TREE_TYPE (array));
 	  tree low_bound = (domain ? TYPE_MIN_VALUE (domain) : 0);
-	  tree unit_size = TYPE_SIZE_UNIT (TREE_TYPE (exp));
+	  tree unit_size = TYPE_SIZE_UNIT (TREE_TYPE (TREE_TYPE (array)));
 
 	  /* We assume all arrays have sizes that are a multiple of a byte.
 	     First subtract the lower bound, if any, in the type of the
@@ -5351,8 +5345,7 @@ get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
 	    index = build (WITH_RECORD_EXPR, TREE_TYPE (index), index, exp);
 	  if (! TREE_CONSTANT (unit_size)
 	      && contains_placeholder_p (unit_size))
-	    unit_size = build (WITH_RECORD_EXPR, sizetype, unit_size,
-			       TREE_OPERAND (exp, 0));
+	    unit_size = build (WITH_RECORD_EXPR, sizetype, unit_size, array);
 
 	  offset = size_binop (PLUS_EXPR, offset,
 			       size_binop (MULT_EXPR,
@@ -5360,7 +5353,22 @@ get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
 					   unit_size));
 	}
 
+      else if (TREE_CODE (exp) == PLACEHOLDER_EXPR)
+	{
+	  tree new = find_placeholder (exp, &placeholder_ptr);
+
+	  /* If we couldn't find the replacement, return the PLACEHOLDER_EXPR.
+	     We might have been called from tree optimization where we
+	     haven't set up an object yet.  */
+	  if (new == 0)
+	    break;
+	  else
+	    exp = new;
+
+	  continue;
+	}
       else if (TREE_CODE (exp) != NON_LVALUE_EXPR
+	       && TREE_CODE (exp) != VIEW_CONVERT_EXPR
 	       && ! ((TREE_CODE (exp) == NOP_EXPR
 		      || TREE_CODE (exp) == CONVERT_EXPR)
 		     && (TYPE_MODE (TREE_TYPE (exp))
@@ -5371,18 +5379,8 @@ get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
       if (TREE_THIS_VOLATILE (exp))
 	*pvolatilep = 1;
 
-      /* If the offset is non-constant already, then we can't assume any
-	 alignment more than the alignment here.  */
-      if (! TREE_CONSTANT (offset))
-	alignment = MIN (alignment, TYPE_ALIGN (TREE_TYPE (exp)));
-
       exp = TREE_OPERAND (exp, 0);
     }
-
-  if (DECL_P (exp))
-    alignment = MIN (alignment, DECL_ALIGN (exp));
-  else if (TREE_TYPE (exp) != 0)
-    alignment = MIN (alignment, TYPE_ALIGN (TREE_TYPE (exp)));
 
   /* If OFFSET is constant, see if we can return the whole thing as a
      constant bit position.  Otherwise, split it up.  */
@@ -5396,38 +5394,32 @@ get_inner_reference (exp, pbitsize, pbitpos, poffset, pmode,
     *pbitpos = tree_low_cst (bit_offset, 0), *poffset = offset;
 
   *pmode = mode;
-  *palignment = alignment;
   return exp;
 }
 
-/* Subroutine of expand_exp: compute memory_usage from modifier.  */
+/* Return 1 if T is an expression that get_inner_reference handles.  */
 
-static enum memory_use_mode
-get_memory_usage_from_modifier (modifier)
-     enum expand_modifier modifier;
+int
+handled_component_p (t)
+     tree t;
 {
-  switch (modifier)
+  switch (TREE_CODE (t))
     {
-    case EXPAND_NORMAL:
-    case EXPAND_SUM:
-      return MEMORY_USE_RO;
-      break;
-    case EXPAND_MEMORY_USE_WO:
-      return MEMORY_USE_WO;
-      break;
-    case EXPAND_MEMORY_USE_RW:
-      return MEMORY_USE_RW;
-      break;
-    case EXPAND_MEMORY_USE_DONT:
-      /* EXPAND_CONST_ADDRESS and EXPAND_INITIALIZER are converted into
-	 MEMORY_USE_DONT, because they are modifiers to a call of
-	 expand_expr in the ADDR_EXPR case of expand_expr.  */
-    case EXPAND_CONST_ADDRESS:
-    case EXPAND_INITIALIZER:
-      return MEMORY_USE_DONT;
-    case EXPAND_MEMORY_USE_BAD:
+    case BIT_FIELD_REF:
+    case COMPONENT_REF:
+    case ARRAY_REF:
+    case ARRAY_RANGE_REF:
+    case NON_LVALUE_EXPR:
+    case VIEW_CONVERT_EXPR:
+      return 1;
+
+    case NOP_EXPR:
+    case CONVERT_EXPR:
+      return (TYPE_MODE (TREE_TYPE (t))
+	      == TYPE_MODE (TREE_TYPE (TREE_OPERAND (t, 0))));
+
     default:
-      abort ();
+      return 0;
     }
 }
 
@@ -5442,17 +5434,16 @@ rtx
 force_operand (value, target)
      rtx value, target;
 {
-  register optab binoptab = 0;
+  optab binoptab = 0;
   /* Use a temporary to force order of execution of calls to
      `force_operand'.  */
   rtx tmp;
-  register rtx op2;
+  rtx op2;
   /* Use subtarget as the target for operand 0 of a binary operation.  */
-  register rtx subtarget = get_subtarget (target);
+  rtx subtarget = get_subtarget (target);
 
   /* Check for a PIC address load.  */
-  if (flag_pic
-      && (GET_CODE (value) == PLUS || GET_CODE (value) == MINUS)
+  if ((GET_CODE (value) == PLUS || GET_CODE (value) == MINUS)
       && XEXP (value, 0) == pic_offset_table_rtx
       && (GET_CODE (XEXP (value, 1)) == SYMBOL_REF
 	  || GET_CODE (XEXP (value, 1)) == LABEL_REF
@@ -5519,72 +5510,25 @@ force_operand (value, target)
       /* We give UNSIGNEDP = 0 to expand_binop
 	 because the only operations we are expanding here are signed ones.  */
     }
+
+#ifdef INSN_SCHEDULING
+  /* On machines that have insn scheduling, we want all memory reference to be
+     explicit, so we need to deal with such paradoxical SUBREGs.  */
+  if (GET_CODE (value) == SUBREG && GET_CODE (SUBREG_REG (value)) == MEM
+      && (GET_MODE_SIZE (GET_MODE (value))
+	  > GET_MODE_SIZE (GET_MODE (SUBREG_REG (value)))))
+    value
+      = simplify_gen_subreg (GET_MODE (value),
+			     force_reg (GET_MODE (SUBREG_REG (value)),
+					force_operand (SUBREG_REG (value),
+						       NULL_RTX)),
+			     GET_MODE (SUBREG_REG (value)),
+			     SUBREG_BYTE (value));
+#endif
+
   return value;
 }
 
-/* Subroutine of expand_expr:
-   save the non-copied parts (LIST) of an expr (LHS), and return a list
-   which can restore these values to their previous values,
-   should something modify their storage.  */
-
-static tree
-save_noncopied_parts (lhs, list)
-     tree lhs;
-     tree list;
-{
-  tree tail;
-  tree parts = 0;
-
-  for (tail = list; tail; tail = TREE_CHAIN (tail))
-    if (TREE_CODE (TREE_VALUE (tail)) == TREE_LIST)
-      parts = chainon (parts, save_noncopied_parts (lhs, TREE_VALUE (tail)));
-    else
-      {
-	tree part = TREE_VALUE (tail);
-	tree part_type = TREE_TYPE (part);
-	tree to_be_saved = build (COMPONENT_REF, part_type, lhs, part);
-	rtx target
-	  = assign_temp (build_qualified_type (part_type,
-					       (TYPE_QUALS (part_type)
-						| TYPE_QUAL_CONST)),
-			 0, 1, 1);
-
-	if (! memory_address_p (TYPE_MODE (part_type), XEXP (target, 0)))
-	  target = change_address (target, TYPE_MODE (part_type), NULL_RTX);
-	parts = tree_cons (to_be_saved,
-			   build (RTL_EXPR, part_type, NULL_TREE,
-				  (tree) target),
-			   parts);
-	store_expr (TREE_PURPOSE (parts), RTL_EXPR_RTL (TREE_VALUE (parts)), 0);
-      }
-  return parts;
-}
-
-/* Subroutine of expand_expr:
-   record the non-copied parts (LIST) of an expr (LHS), and return a list
-   which specifies the initial values of these parts.  */
-
-static tree
-init_noncopied_parts (lhs, list)
-     tree lhs;
-     tree list;
-{
-  tree tail;
-  tree parts = 0;
-
-  for (tail = list; tail; tail = TREE_CHAIN (tail))
-    if (TREE_CODE (TREE_VALUE (tail)) == TREE_LIST)
-      parts = chainon (parts, init_noncopied_parts (lhs, TREE_VALUE (tail)));
-    else if (TREE_PURPOSE (tail))
-      {
-	tree part = TREE_VALUE (tail);
-	tree part_type = TREE_TYPE (part);
-	tree to_be_initialized = build (COMPONENT_REF, part_type, lhs, part);
-	parts = tree_cons (TREE_PURPOSE (tail), to_be_initialized, parts);
-      }
-  return parts;
-}
-
 /* Subroutine of expand_expr: return nonzero iff there is no way that
    EXP can reference X, which is being modified.  TOP_P is nonzero if this
    call is going to be used to determine whether we need a temporary
@@ -5661,7 +5605,7 @@ safe_from_p (x, exp, top_p)
   switch (TREE_CODE_CLASS (TREE_CODE (exp)))
     {
     case 'd':
-      exp_rtl = DECL_RTL_SET_P (exp) ? DECL_RTL (exp) : NULL_RTX;
+      exp_rtl = DECL_RTL_IF_SET (exp);
       break;
 
     case 'c':
@@ -5696,9 +5640,26 @@ safe_from_p (x, exp, top_p)
       switch (TREE_CODE (exp))
 	{
 	case ADDR_EXPR:
-	  return (staticp (TREE_OPERAND (exp, 0))
-		  || TREE_STATIC (exp)
-		  || safe_from_p (x, TREE_OPERAND (exp, 0), 0));
+	  /* If the operand is static or we are static, we can't conflict.
+	     Likewise if we don't conflict with the operand at all.  */
+	  if (staticp (TREE_OPERAND (exp, 0))
+	      || TREE_STATIC (exp)
+	      || safe_from_p (x, TREE_OPERAND (exp, 0), 0))
+	    return 1;
+
+	  /* Otherwise, the only way this can conflict is if we are taking
+	     the address of a DECL a that address if part of X, which is
+	     very rare.  */
+	  exp = TREE_OPERAND (exp, 0);
+	  if (DECL_P (exp))
+	    {
+	      if (!DECL_RTL_SET_P (exp)
+		  || GET_CODE (DECL_RTL (exp)) != MEM)
+		return 0;
+	      else
+		exp_rtl = XEXP (DECL_RTL (exp), 0);
+	    }
+	  break;
 
 	case INDIRECT_REF:
 	  if (GET_CODE (x) == MEM
@@ -5726,7 +5687,7 @@ safe_from_p (x, exp, top_p)
 	  break;
 
 	case WITH_CLEANUP_EXPR:
-	  exp_rtl = RTL_EXPR_RTL (exp);
+	  exp_rtl = WITH_CLEANUP_EXPR_RTL (exp);
 	  break;
 
 	case CLEANUP_POINT_EXPR:
@@ -5759,7 +5720,7 @@ safe_from_p (x, exp, top_p)
 	  return safe_from_p (x, TREE_OPERAND (exp, 1), 0);
 
 	case METHOD_CALL_EXPR:
-	  /* This takes a rtx argument, but shouldn't appear here.  */
+	  /* This takes an rtx argument, but shouldn't appear here.  */
 	  abort ();
 
 	default:
@@ -5780,8 +5741,7 @@ safe_from_p (x, exp, top_p)
 	 special handling.  */
       if ((unsigned int) TREE_CODE (exp)
 	  >= (unsigned int) LAST_AND_UNUSED_TREE_CODE
-	  && lang_safe_from_p
-	  && !(*lang_safe_from_p) (x, exp))
+	  && !(*lang_hooks.safe_from_p) (x, exp))
 	return 0;
     }
 
@@ -5801,28 +5761,12 @@ safe_from_p (x, exp, top_p)
 	 are memory and they conflict.  */
       return ! (rtx_equal_p (x, exp_rtl)
 		|| (GET_CODE (x) == MEM && GET_CODE (exp_rtl) == MEM
-		    && true_dependence (exp_rtl, GET_MODE (x), x,
+		    && true_dependence (exp_rtl, VOIDmode, x,
 					rtx_addr_varies_p)));
     }
 
   /* If we reach here, it is safe.  */
   return 1;
-}
-
-/* Subroutine of expand_expr: return nonzero iff EXP is an
-   expression whose type is statically determinable.  */
-
-static int
-fixed_type_p (exp)
-     tree exp;
-{
-  if (TREE_CODE (exp) == PARM_DECL
-      || TREE_CODE (exp) == VAR_DECL
-      || TREE_CODE (exp) == CALL_EXPR || TREE_CODE (exp) == TARGET_EXPR
-      || TREE_CODE (exp) == COMPONENT_REF
-      || TREE_CODE (exp) == ARRAY_REF)
-    return 1;
-  return 0;
 }
 
 /* Subroutine of expand_expr: return rtx if EXP is a
@@ -5898,6 +5842,157 @@ check_max_integer_computation_mode (exp)
 }
 #endif
 
+/* Return the highest power of two that EXP is known to be a multiple of.
+   This is used in updating alignment of MEMs in array references.  */
+
+static HOST_WIDE_INT
+highest_pow2_factor (exp)
+     tree exp;
+{
+  HOST_WIDE_INT c0, c1;
+
+  switch (TREE_CODE (exp))
+    {
+    case INTEGER_CST:
+      /* We can find the lowest bit that's a one.  If the low
+	 HOST_BITS_PER_WIDE_INT bits are zero, return BIGGEST_ALIGNMENT.
+	 We need to handle this case since we can find it in a COND_EXPR,
+	 a MIN_EXPR, or a MAX_EXPR.  If the constant overlows, we have an
+	 erroneous program, so return BIGGEST_ALIGNMENT to avoid any
+	 later ICE.  */
+      if (TREE_CONSTANT_OVERFLOW (exp))
+	return BIGGEST_ALIGNMENT;
+      else
+	{
+	  /* Note: tree_low_cst is intentionally not used here,
+	     we don't care about the upper bits.  */
+	  c0 = TREE_INT_CST_LOW (exp);
+	  c0 &= -c0;
+	  return c0 ? c0 : BIGGEST_ALIGNMENT;
+	}
+      break;
+
+    case PLUS_EXPR:  case MINUS_EXPR:  case MIN_EXPR:  case MAX_EXPR:
+      c0 = highest_pow2_factor (TREE_OPERAND (exp, 0));
+      c1 = highest_pow2_factor (TREE_OPERAND (exp, 1));
+      return MIN (c0, c1);
+
+    case MULT_EXPR:
+      c0 = highest_pow2_factor (TREE_OPERAND (exp, 0));
+      c1 = highest_pow2_factor (TREE_OPERAND (exp, 1));
+      return c0 * c1;
+
+    case ROUND_DIV_EXPR:  case TRUNC_DIV_EXPR:  case FLOOR_DIV_EXPR:
+    case CEIL_DIV_EXPR:
+      if (integer_pow2p (TREE_OPERAND (exp, 1))
+	  && host_integerp (TREE_OPERAND (exp, 1), 1))
+	{
+	  c0 = highest_pow2_factor (TREE_OPERAND (exp, 0));
+	  c1 = tree_low_cst (TREE_OPERAND (exp, 1), 1);
+	  return MAX (1, c0 / c1);
+	}
+      break;
+
+    case NON_LVALUE_EXPR:  case NOP_EXPR:  case CONVERT_EXPR:
+    case SAVE_EXPR: case WITH_RECORD_EXPR:
+      return highest_pow2_factor (TREE_OPERAND (exp, 0));
+
+    case COMPOUND_EXPR:
+      return highest_pow2_factor (TREE_OPERAND (exp, 1));
+
+    case COND_EXPR:
+      c0 = highest_pow2_factor (TREE_OPERAND (exp, 1));
+      c1 = highest_pow2_factor (TREE_OPERAND (exp, 2));
+      return MIN (c0, c1);
+
+    default:
+      break;
+    }
+
+  return 1;
+}
+
+/* Similar, except that it is known that the expression must be a multiple
+   of the alignment of TYPE.  */
+
+static HOST_WIDE_INT
+highest_pow2_factor_for_type (type, exp)
+     tree type;
+     tree exp;
+{
+  HOST_WIDE_INT type_align, factor;
+
+  factor = highest_pow2_factor (exp);
+  type_align = TYPE_ALIGN (type) / BITS_PER_UNIT;
+  return MAX (factor, type_align);
+}
+
+/* Return an object on the placeholder list that matches EXP, a
+   PLACEHOLDER_EXPR.  An object "matches" if it is of the type of the
+   PLACEHOLDER_EXPR or a pointer type to it.  For further information, see
+   tree.def.  If no such object is found, return 0.  If PLIST is nonzero, it
+   is a location which initially points to a starting location in the
+   placeholder list (zero means start of the list) and where a pointer into
+   the placeholder list at which the object is found is placed.  */
+
+tree
+find_placeholder (exp, plist)
+     tree exp;
+     tree *plist;
+{
+  tree type = TREE_TYPE (exp);
+  tree placeholder_expr;
+
+  for (placeholder_expr
+       = plist && *plist ? TREE_CHAIN (*plist) : placeholder_list;
+       placeholder_expr != 0;
+       placeholder_expr = TREE_CHAIN (placeholder_expr))
+    {
+      tree need_type = TYPE_MAIN_VARIANT (type);
+      tree elt;
+
+      /* Find the outermost reference that is of the type we want.  If none,
+	 see if any object has a type that is a pointer to the type we
+	 want.  */
+      for (elt = TREE_PURPOSE (placeholder_expr); elt != 0;
+	   elt = ((TREE_CODE (elt) == COMPOUND_EXPR
+		   || TREE_CODE (elt) == COND_EXPR)
+		  ? TREE_OPERAND (elt, 1)
+		  : (TREE_CODE_CLASS (TREE_CODE (elt)) == 'r'
+		     || TREE_CODE_CLASS (TREE_CODE (elt)) == '1'
+		     || TREE_CODE_CLASS (TREE_CODE (elt)) == '2'
+		     || TREE_CODE_CLASS (TREE_CODE (elt)) == 'e')
+		  ? TREE_OPERAND (elt, 0) : 0))
+	if (TYPE_MAIN_VARIANT (TREE_TYPE (elt)) == need_type)
+	  {
+	    if (plist)
+	      *plist = placeholder_expr;
+	    return elt;
+	  }
+
+      for (elt = TREE_PURPOSE (placeholder_expr); elt != 0;
+	   elt
+	   = ((TREE_CODE (elt) == COMPOUND_EXPR
+	       || TREE_CODE (elt) == COND_EXPR)
+	      ? TREE_OPERAND (elt, 1)
+	      : (TREE_CODE_CLASS (TREE_CODE (elt)) == 'r'
+		 || TREE_CODE_CLASS (TREE_CODE (elt)) == '1'
+		 || TREE_CODE_CLASS (TREE_CODE (elt)) == '2'
+		 || TREE_CODE_CLASS (TREE_CODE (elt)) == 'e')
+	      ? TREE_OPERAND (elt, 0) : 0))
+	if (POINTER_TYPE_P (TREE_TYPE (elt))
+	    && (TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (elt)))
+		== need_type))
+	  {
+	    if (plist)
+	      *plist = placeholder_expr;
+	    return build1 (INDIRECT_REF, need_type, elt);
+	  }
+    }
+
+  return 0;
+}
+
 /* expand_expr: generate code for computing expression EXP.
    An rtx for the computed value is returned.  The value is never null.
    In the case of a void EXP, const0_rtx is returned.
@@ -5935,22 +6030,20 @@ check_max_integer_computation_mode (exp)
 
 rtx
 expand_expr (exp, target, tmode, modifier)
-     register tree exp;
+     tree exp;
      rtx target;
      enum machine_mode tmode;
      enum expand_modifier modifier;
 {
-  register rtx op0, op1, temp;
+  rtx op0, op1, temp;
   tree type = TREE_TYPE (exp);
   int unsignedp = TREE_UNSIGNED (type);
-  register enum machine_mode mode;
-  register enum tree_code code = TREE_CODE (exp);
+  enum machine_mode mode;
+  enum tree_code code = TREE_CODE (exp);
   optab this_optab;
   rtx subtarget, original_target;
   int ignore;
   tree context;
-  /* Used by check-memory-usage to make modifier read only.  */
-  enum expand_modifier ro_modifier;
 
   /* Handle ERROR_MARK before anybody tries to access its type.  */
   if (TREE_CODE (exp) == ERROR_MARK || TREE_CODE (type) == ERROR_MARK)
@@ -5968,15 +6061,8 @@ expand_expr (exp, target, tmode, modifier)
   ignore = (target == const0_rtx
 	    || ((code == NON_LVALUE_EXPR || code == NOP_EXPR
 		 || code == CONVERT_EXPR || code == REFERENCE_EXPR
-		 || code == COND_EXPR)
+		 || code == COND_EXPR || code == VIEW_CONVERT_EXPR)
 		&& TREE_CODE (type) == VOID_TYPE));
-
-  /* Make a read-only version of the modifier.  */
-  if (modifier == EXPAND_NORMAL || modifier == EXPAND_SUM
-      || modifier == EXPAND_CONST_ADDRESS || modifier == EXPAND_INITIALIZER)
-    ro_modifier = modifier;
-  else
-    ro_modifier = EXPAND_NORMAL;
 
   /* If we are going to ignore this result, we need only do something
      if there is a side-effect somewhere in the expression.  If there
@@ -5996,7 +6082,7 @@ expand_expr (exp, target, tmode, modifier)
 	  && mode != VOIDmode && mode != BLKmode
 	  && modifier != EXPAND_CONST_ADDRESS)
 	{
-	  temp = expand_expr (exp, NULL_RTX, VOIDmode, ro_modifier);
+	  temp = expand_expr (exp, NULL_RTX, VOIDmode, modifier);
 	  if (GET_CODE (temp) == MEM)
 	    temp = copy_to_reg (temp);
 	  return const0_rtx;
@@ -6004,29 +6090,30 @@ expand_expr (exp, target, tmode, modifier)
 
       if (TREE_CODE_CLASS (code) == '1' || code == COMPONENT_REF
 	  || code == INDIRECT_REF || code == BUFFER_REF)
-	return expand_expr (TREE_OPERAND (exp, 0), const0_rtx,
-			    VOIDmode, ro_modifier);
+	return expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode,
+			    modifier);
+
       else if (TREE_CODE_CLASS (code) == '2' || TREE_CODE_CLASS (code) == '<'
-	       || code == ARRAY_REF)
+	       || code == ARRAY_REF || code == ARRAY_RANGE_REF)
 	{
-	  expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode, ro_modifier);
-	  expand_expr (TREE_OPERAND (exp, 1), const0_rtx, VOIDmode, ro_modifier);
+	  expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode, modifier);
+	  expand_expr (TREE_OPERAND (exp, 1), const0_rtx, VOIDmode, modifier);
 	  return const0_rtx;
 	}
       else if ((code == TRUTH_ANDIF_EXPR || code == TRUTH_ORIF_EXPR)
 	       && ! TREE_SIDE_EFFECTS (TREE_OPERAND (exp, 1)))
 	/* If the second operand has no side effects, just evaluate
 	   the first.  */
-	return expand_expr (TREE_OPERAND (exp, 0), const0_rtx,
-			    VOIDmode, ro_modifier);
+	return expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode,
+			    modifier);
       else if (code == BIT_FIELD_REF)
 	{
-	  expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode, ro_modifier);
-	  expand_expr (TREE_OPERAND (exp, 1), const0_rtx, VOIDmode, ro_modifier);
-	  expand_expr (TREE_OPERAND (exp, 2), const0_rtx, VOIDmode, ro_modifier);
+	  expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode, modifier);
+	  expand_expr (TREE_OPERAND (exp, 1), const0_rtx, VOIDmode, modifier);
+	  expand_expr (TREE_OPERAND (exp, 2), const0_rtx, VOIDmode, modifier);
 	  return const0_rtx;
 	}
-      ;
+
       target = 0;
     }
 
@@ -6040,6 +6127,7 @@ expand_expr (exp, target, tmode, modifier)
       && TREE_CODE (exp) != INTEGER_CST
       && TREE_CODE (exp) != PARM_DECL
       && TREE_CODE (exp) != ARRAY_REF
+      && TREE_CODE (exp) != ARRAY_RANGE_REF
       && TREE_CODE (exp) != COMPONENT_REF
       && TREE_CODE (exp) != BIT_FIELD_REF
       && TREE_CODE (exp) != INDIRECT_REF
@@ -6058,6 +6146,7 @@ expand_expr (exp, target, tmode, modifier)
       && TREE_CODE (exp) != INTEGER_CST
       && TREE_CODE (exp) != PARM_DECL
       && TREE_CODE (exp) != ARRAY_REF
+      && TREE_CODE (exp) != ARRAY_RANGE_REF
       && TREE_CODE (exp) != COMPONENT_REF
       && TREE_CODE (exp) != BIT_FIELD_REF
       && TREE_CODE (exp) != INDIRECT_REF
@@ -6074,10 +6163,12 @@ expand_expr (exp, target, tmode, modifier)
   /* If will do cse, generate all results into pseudo registers
      since 1) that allows cse to find more things
      and 2) otherwise cse could produce an insn the machine
-     cannot support.  */
+     cannot support.  And exception is a CONSTRUCTOR into a multi-word
+     MEM: that's much more likely to be most efficient into the MEM.  */
 
   if (! cse_not_expected && mode != BLKmode && target
-      && (GET_CODE (target) != REG || REGNO (target) < FIRST_PSEUDO_REGISTER))
+      && (GET_CODE (target) != REG || REGNO (target) < FIRST_PSEUDO_REGISTER)
+      && ! (code == CONSTRUCTOR && GET_MODE_SIZE (mode) > UNITS_PER_WORD))
     target = subtarget;
 
   switch (code)
@@ -6125,36 +6216,19 @@ expand_expr (exp, target, tmode, modifier)
       if (DECL_SIZE (exp) == 0 && COMPLETE_TYPE_P (TREE_TYPE (exp))
 	  && (TREE_STATIC (exp) || DECL_EXTERNAL (exp)))
 	{
+	  rtx value = DECL_RTL_IF_SET (exp);
+
 	  layout_decl (exp, 0);
-	  PUT_MODE (DECL_RTL (exp), DECL_MODE (exp));
-	}
 
-      /* Although static-storage variables start off initialized, according to
-	 ANSI C, a memcpy could overwrite them with uninitialized values.  So
-	 we check them too.  This also lets us check for read-only variables
-	 accessed via a non-const declaration, in case it won't be detected
-	 any other way (e.g., in an embedded system or OS kernel without
-	 memory protection).
-
-	 Aggregates are not checked here; they're handled elsewhere.  */
-      if (cfun && current_function_check_memory_usage
-	  && code == VAR_DECL
-	  && GET_CODE (DECL_RTL (exp)) == MEM
-	  && ! AGGREGATE_TYPE_P (TREE_TYPE (exp)))
-	{
-	  enum memory_use_mode memory_usage;
-	  memory_usage = get_memory_usage_from_modifier (modifier);
-
-	  in_check_memory_usage = 1;
-	  if (memory_usage != MEMORY_USE_DONT)
-	    emit_library_call (chkr_check_addr_libfunc,
-			       LCT_CONST_MAKE_BLOCK, VOIDmode, 3,
-			       XEXP (DECL_RTL (exp), 0), Pmode,
-			       GEN_INT (int_size_in_bytes (type)),
-			       TYPE_MODE (sizetype),
-			       GEN_INT (memory_usage),
-			       TYPE_MODE (integer_type_node));
-	  in_check_memory_usage = 0;
+	  /* If the RTL was already set, update its mode and memory
+	     attributes.  */
+	  if (value != 0)
+	    {
+	      PUT_MODE (value, DECL_MODE (exp));
+	      SET_DECL_RTL (exp, 0);
+	      set_mem_attributes (value, exp, 1);
+	      SET_DECL_RTL (exp, value);
+	    }
 	}
 
       /* ... fall through ...  */
@@ -6201,12 +6275,13 @@ expand_expr (exp, target, tmode, modifier)
 	    abort ();
 	  addr = XEXP (DECL_RTL (exp), 0);
 	  if (GET_CODE (addr) == MEM)
-	    addr = change_address (addr, Pmode,
-				   fix_lexical_addr (XEXP (addr, 0), exp));
+	    addr
+	      = replace_equiv_address (addr,
+				       fix_lexical_addr (XEXP (addr, 0), exp));
 	  else
 	    addr = fix_lexical_addr (addr, exp);
 
-	  temp = change_address (DECL_RTL (exp), mode, addr);
+	  temp = replace_equiv_address (DECL_RTL (exp), addr);
 	}
 
       /* This is the case of an array whose size is to be determined
@@ -6215,8 +6290,7 @@ expand_expr (exp, target, tmode, modifier)
 
       else if (GET_CODE (DECL_RTL (exp)) == MEM
 	       && GET_CODE (XEXP (DECL_RTL (exp), 0)) == REG)
-	temp = change_address (DECL_RTL (exp), GET_MODE (DECL_RTL (exp)),
-			       XEXP (DECL_RTL (exp), 0));
+	temp = validize_mem (DECL_RTL (exp));
 
       /* If DECL_RTL is memory, we are in the normal case and either
 	 the address is not valid or it is not a register and -fforce-addr
@@ -6230,8 +6304,8 @@ expand_expr (exp, target, tmode, modifier)
 				       XEXP (DECL_RTL (exp), 0))
 		   || (flag_force_addr
 		       && GET_CODE (XEXP (DECL_RTL (exp), 0)) != REG)))
-	temp = change_address (DECL_RTL (exp), VOIDmode,
-			       copy_rtx (XEXP (DECL_RTL (exp), 0)));
+	temp = replace_equiv_address (DECL_RTL (exp),
+				      copy_rtx (XEXP (DECL_RTL (exp), 0)));
 
       /* If we got something, return it.  But first, set the alignment
 	 if the address is a register.  */
@@ -6248,15 +6322,16 @@ expand_expr (exp, target, tmode, modifier)
 	 but mark it so that we know that it was already extended.  */
 
       if (GET_CODE (DECL_RTL (exp)) == REG
-	  && GET_MODE (DECL_RTL (exp)) != mode)
+	  && GET_MODE (DECL_RTL (exp)) != DECL_MODE (exp))
 	{
 	  /* Get the signedness used for this variable.  Ensure we get the
 	     same mode we got when the variable was declared.  */
 	  if (GET_MODE (DECL_RTL (exp))
-	      != promote_mode (type, DECL_MODE (exp), &unsignedp, 0))
+	      != promote_mode (type, DECL_MODE (exp), &unsignedp, 
+			       (TREE_CODE (exp) == RESULT_DECL ? 1 : 0)))
 	    abort ();
 
-	  temp = gen_rtx_SUBREG (mode, DECL_RTL (exp), 0);
+	  temp = gen_lowpart_SUBREG (mode, DECL_RTL (exp));
 	  SUBREG_PROMOTED_VAR_P (temp) = 1;
 	  SUBREG_PROMOTED_UNSIGNED_P (temp) = unsignedp;
 	  return temp;
@@ -6265,12 +6340,22 @@ expand_expr (exp, target, tmode, modifier)
       return DECL_RTL (exp);
 
     case INTEGER_CST:
-      return immed_double_const (TREE_INT_CST_LOW (exp),
+      temp = immed_double_const (TREE_INT_CST_LOW (exp),
 				 TREE_INT_CST_HIGH (exp), mode);
 
+      /* ??? If overflow is set, fold will have done an incomplete job,
+	 which can result in (plus xx (const_int 0)), which can get
+	 simplified by validate_replace_rtx during virtual register
+	 instantiation, which can result in unrecognizable insns.
+	 Avoid this by forcing all overflows into registers.  */
+      if (TREE_CONSTANT_OVERFLOW (exp)
+	  && modifier != EXPAND_INITIALIZER)
+	temp = force_reg (mode, temp);
+
+      return temp;
+
     case CONST_DECL:
-      return expand_expr (DECL_INITIAL (exp), target, VOIDmode,
-			  EXPAND_MEMORY_USE_BAD);
+      return expand_expr (DECL_INITIAL (exp), target, VOIDmode, 0);
 
     case REAL_CST:
       /* If optimized, generate immediate CONST_DOUBLE
@@ -6300,8 +6385,8 @@ expand_expr (exp, target, tmode, modifier)
 	  && (! memory_address_p (mode, XEXP (TREE_CST_RTL (exp), 0))
 	      || (flag_force_addr
 		  && GET_CODE (XEXP (TREE_CST_RTL (exp), 0)) != REG)))
-	return change_address (TREE_CST_RTL (exp), VOIDmode,
-			       copy_rtx (XEXP (TREE_CST_RTL (exp), 0)));
+	return replace_equiv_address (TREE_CST_RTL (exp),
+				      copy_rtx (XEXP (TREE_CST_RTL (exp), 0)));
       return TREE_CST_RTL (exp);
 
     case EXPR_WITH_FILE_LOCATION:
@@ -6313,7 +6398,7 @@ expand_expr (exp, target, tmode, modifier)
 	lineno = EXPR_WFL_LINENO (exp);
 	if (EXPR_WFL_EMIT_LINE_NOTE (exp))
 	  emit_line_note (input_filename, lineno);
-	/* Possibly avoid switching back and force here.  */
+	/* Possibly avoid switching back and forth here.  */
 	to_return = expand_expr (EXPR_WFL_NODE (exp), target, tmode, modifier);
 	input_filename = saved_input_filename;
 	lineno = saved_lineno;
@@ -6350,8 +6435,9 @@ expand_expr (exp, target, tmode, modifier)
 	    }
 	  if (temp == 0 || GET_CODE (temp) != MEM)
 	    abort ();
-	  return change_address (temp, mode,
-				 fix_lexical_addr (XEXP (temp, 0), exp));
+	  return
+	    replace_equiv_address (temp,
+				   fix_lexical_addr (XEXP (temp, 0), exp));
 	}
       if (SAVE_EXPR_RTL (exp) == 0)
 	{
@@ -6376,14 +6462,13 @@ expand_expr (exp, target, tmode, modifier)
 
 	  if (GET_CODE (temp) == REG && GET_MODE (temp) != mode)
 	    {
-	      temp = gen_rtx_SUBREG (mode, SAVE_EXPR_RTL (exp), 0);
+	      temp = gen_lowpart_SUBREG (mode, SAVE_EXPR_RTL (exp));
 	      SUBREG_PROMOTED_VAR_P (temp) = 1;
 	      SUBREG_PROMOTED_UNSIGNED_P (temp) = unsignedp;
 	    }
 
 	  if (temp == const0_rtx)
-	    expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode,
-			 EXPAND_MEMORY_USE_BAD);
+	    expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode, 0);
 	  else
 	    store_expr (TREE_OPERAND (exp, 0), temp, 0);
 
@@ -6399,7 +6484,7 @@ expand_expr (exp, target, tmode, modifier)
 	{
 	  /* Compute the signedness and make the proper SUBREG.  */
 	  promote_mode (type, mode, &unsignedp, 0);
-	  temp = gen_rtx_SUBREG (mode, SAVE_EXPR_RTL (exp), 0);
+	  temp = gen_lowpart_SUBREG (mode, SAVE_EXPR_RTL (exp));
 	  SUBREG_PROMOTED_VAR_P (temp) = 1;
 	  SUBREG_PROMOTED_UNSIGNED_P (temp) = unsignedp;
 	  return temp;
@@ -6417,66 +6502,17 @@ expand_expr (exp, target, tmode, modifier)
 
     case PLACEHOLDER_EXPR:
       {
-	tree placeholder_expr;
+	tree old_list = placeholder_list;
+	tree placeholder_expr = 0;
 
-	/* If there is an object on the head of the placeholder list,
-	   see if some object in it of type TYPE or a pointer to it.  For
-	   further information, see tree.def.  */
-	for (placeholder_expr = placeholder_list;
-	     placeholder_expr != 0;
-	     placeholder_expr = TREE_CHAIN (placeholder_expr))
-	  {
-	    tree need_type = TYPE_MAIN_VARIANT (type);
-	    tree object = 0;
-	    tree old_list = placeholder_list;
-	    tree elt;
+	exp = find_placeholder (exp, &placeholder_expr);
+	if (exp == 0)
+	  abort ();
 
-	    /* Find the outermost reference that is of the type we want.
-	       If none, see if any object has a type that is a pointer to
-	       the type we want.  */
-	    for (elt = TREE_PURPOSE (placeholder_expr);
-		 elt != 0 && object == 0;
-		 elt
-		 = ((TREE_CODE (elt) == COMPOUND_EXPR
-		     || TREE_CODE (elt) == COND_EXPR)
-		    ? TREE_OPERAND (elt, 1)
-		    : (TREE_CODE_CLASS (TREE_CODE (elt)) == 'r'
-		       || TREE_CODE_CLASS (TREE_CODE (elt)) == '1'
-		       || TREE_CODE_CLASS (TREE_CODE (elt)) == '2'
-		       || TREE_CODE_CLASS (TREE_CODE (elt)) == 'e')
-		    ? TREE_OPERAND (elt, 0) : 0))
-	      if (TYPE_MAIN_VARIANT (TREE_TYPE (elt)) == need_type)
-		object = elt;
-
-	    for (elt = TREE_PURPOSE (placeholder_expr);
-		 elt != 0 && object == 0;
-		 elt
-		 = ((TREE_CODE (elt) == COMPOUND_EXPR
-		     || TREE_CODE (elt) == COND_EXPR)
-		    ? TREE_OPERAND (elt, 1)
-		    : (TREE_CODE_CLASS (TREE_CODE (elt)) == 'r'
-		       || TREE_CODE_CLASS (TREE_CODE (elt)) == '1'
-		       || TREE_CODE_CLASS (TREE_CODE (elt)) == '2'
-		       || TREE_CODE_CLASS (TREE_CODE (elt)) == 'e')
-		    ? TREE_OPERAND (elt, 0) : 0))
-	      if (POINTER_TYPE_P (TREE_TYPE (elt))
-		  && (TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (elt)))
-		      == need_type))
-		object = build1 (INDIRECT_REF, need_type, elt);
-
-	    if (object != 0)
-	      {
-		/* Expand this object skipping the list entries before
-		   it was found in case it is also a PLACEHOLDER_EXPR.
-		   In that case, we want to translate it using subsequent
-		   entries.  */
-		placeholder_list = TREE_CHAIN (placeholder_expr);
-		temp = expand_expr (object, original_target, tmode,
-				    ro_modifier);
-		placeholder_list = old_list;
-		return temp;
-	      }
-	  }
+	placeholder_list = TREE_CHAIN (placeholder_expr);
+	temp = expand_expr (exp, original_target, tmode, modifier);
+	placeholder_list = old_list;
+	return temp;
       }
 
       /* We can't find the object or there was a missing WITH_RECORD_EXPR.  */
@@ -6487,8 +6523,8 @@ expand_expr (exp, target, tmode, modifier)
 	 and pop the list.  */
       placeholder_list = tree_cons (TREE_OPERAND (exp, 1), NULL_TREE,
 				    placeholder_list);
-      target = expand_expr (TREE_OPERAND (exp, 0), original_target,
-			    tmode, ro_modifier);
+      target = expand_expr (TREE_OPERAND (exp, 0), original_target, tmode,
+			    modifier);
       placeholder_list = TREE_CHAIN (placeholder_list);
       return target;
 
@@ -6500,14 +6536,14 @@ expand_expr (exp, target, tmode, modifier)
       return const0_rtx;
 
     case EXIT_EXPR:
-      expand_exit_loop_if_false (NULL_PTR,
+      expand_exit_loop_if_false (NULL,
 				 invert_truthvalue (TREE_OPERAND (exp, 0)));
       return const0_rtx;
 
     case LABELED_BLOCK_EXPR:
       if (LABELED_BLOCK_BODY (exp))
-	expand_expr_stmt (LABELED_BLOCK_BODY (exp));
-      /* Should perhaps use expand_label, but this is simpler and safer. */
+	expand_expr_stmt_value (LABELED_BLOCK_BODY (exp), 0, 1);
+      /* Should perhaps use expand_label, but this is simpler and safer.  */
       do_pending_stack_adjust ();
       emit_label (label_rtx (LABELED_BLOCK_LABEL (exp)));
       return const0_rtx;
@@ -6521,7 +6557,7 @@ expand_expr (exp, target, tmode, modifier)
     case LOOP_EXPR:
       push_temp_slots ();
       expand_start_loop (1);
-      expand_expr_stmt (TREE_OPERAND (exp, 0));
+      expand_expr_stmt_value (TREE_OPERAND (exp, 0), 0, 1);
       expand_end_loop ();
       pop_temp_slots ();
 
@@ -6553,7 +6589,7 @@ expand_expr (exp, target, tmode, modifier)
 	    vars = TREE_CHAIN (vars);
 	  }
 
-	temp = expand_expr (TREE_OPERAND (exp, 1), target, tmode, ro_modifier);
+	temp = expand_expr (TREE_OPERAND (exp, 1), target, tmode, modifier);
 
 	expand_end_bindings (TREE_OPERAND (exp, 0), 0, 0);
 
@@ -6578,9 +6614,10 @@ expand_expr (exp, target, tmode, modifier)
       if (ignore)
 	{
 	  tree elt;
+
 	  for (elt = CONSTRUCTOR_ELTS (exp); elt; elt = TREE_CHAIN (elt))
-	    expand_expr (TREE_VALUE (elt), const0_rtx, VOIDmode,
-	    		 EXPAND_MEMORY_USE_BAD);
+	    expand_expr (TREE_VALUE (elt), const0_rtx, VOIDmode, 0);
+
 	  return const0_rtx;
 	}
 
@@ -6606,13 +6643,9 @@ expand_expr (exp, target, tmode, modifier)
 
 	  if (modifier != EXPAND_CONST_ADDRESS
 	      && modifier != EXPAND_INITIALIZER
-	      && modifier != EXPAND_SUM
-	      && (! memory_address_p (GET_MODE (constructor),
-				      XEXP (constructor, 0))
-		  || (flag_force_addr
-		      && GET_CODE (XEXP (constructor, 0)) != REG)))
-	    constructor = change_address (constructor, VOIDmode,
-					  XEXP (constructor, 0));
+	      && modifier != EXPAND_SUM)
+	    constructor = validize_mem (constructor);
+
 	  return constructor;
 	}
       else
@@ -6626,9 +6659,9 @@ expand_expr (exp, target, tmode, modifier)
 						   (TYPE_QUALS (type)
 						    | (TREE_READONLY (exp)
 						       * TYPE_QUAL_CONST))),
-			     TREE_ADDRESSABLE (exp), 1, 1);
+			     0, TREE_ADDRESSABLE (exp), 1);
 
-	  store_constructor (exp, target, TYPE_ALIGN (TREE_TYPE (exp)), 0,
+	  store_constructor (exp, target, 0,
 			     int_size_in_bytes (TREE_TYPE (exp)));
 	  return target;
 	}
@@ -6646,46 +6679,20 @@ expand_expr (exp, target, tmode, modifier)
 	    && compare_tree_int (index, TREE_STRING_LENGTH (string)) < 0
  	    && GET_MODE_CLASS (mode) == MODE_INT
  	    && GET_MODE_SIZE (mode) == 1
-	    && modifier != EXPAND_MEMORY_USE_WO)
+	    && modifier != EXPAND_WRITE)
  	  return
-	    GEN_INT (TREE_STRING_POINTER (string)[TREE_INT_CST_LOW (index)]);
+	    GEN_INT (trunc_int_for_mode (TREE_STRING_POINTER (string)
+					 [TREE_INT_CST_LOW (index)], mode));
 
 	op0 = expand_expr (exp1, NULL_RTX, VOIDmode, EXPAND_SUM);
 	op0 = memory_address (mode, op0);
-
-	if (cfun && current_function_check_memory_usage
-	    && ! AGGREGATE_TYPE_P (TREE_TYPE (exp)))
-	  {
-	    enum memory_use_mode memory_usage;
-	    memory_usage = get_memory_usage_from_modifier (modifier);
-
-            if (memory_usage != MEMORY_USE_DONT)
-	      {
-		in_check_memory_usage = 1;
-		emit_library_call (chkr_check_addr_libfunc,
-				   LCT_CONST_MAKE_BLOCK, VOIDmode, 3, op0,
-				   Pmode, GEN_INT (int_size_in_bytes (type)),
-				   TYPE_MODE (sizetype),
-				   GEN_INT (memory_usage),
-				   TYPE_MODE (integer_type_node));
-		in_check_memory_usage = 0;
-	      }
-	  }
-
 	temp = gen_rtx_MEM (mode, op0);
 	set_mem_attributes (temp, exp, 0);
-
-	/* It is incorrect to set RTX_UNCHANGING_P from TREE_READONLY
-	   here, because, in C and C++, the fact that a location is accessed
-	   through a pointer to const does not mean that the value there can
-	   never change.  Languages where it can never change should
-	   also set TREE_STATIC.  */
-	RTX_UNCHANGING_P (temp) = TREE_READONLY (exp) & TREE_STATIC (exp);
 
 	/* If we are writing to this object and its type is a record with
 	   readonly fields, we must mark it as readonly so it will
 	   conflict with readonly references to those fields.  */
-	if (modifier == EXPAND_MEMORY_USE_WO && readonly_fields_p (type))
+	if (modifier == EXPAND_WRITE && readonly_fields_p (type))
 	  RTX_UNCHANGING_P (temp) = 1;
 
 	return temp;
@@ -6718,20 +6725,23 @@ expand_expr (exp, target, tmode, modifier)
 	   Don't fold if this is for wide characters since it's too
 	   difficult to do correctly and this is a very rare case.  */
 
-	if (TREE_CODE (array) == STRING_CST
+	if (modifier != EXPAND_CONST_ADDRESS && modifier != EXPAND_INITIALIZER
+	    && TREE_CODE (array) == STRING_CST
 	    && TREE_CODE (index) == INTEGER_CST
 	    && compare_tree_int (index, TREE_STRING_LENGTH (array)) < 0
 	    && GET_MODE_CLASS (mode) == MODE_INT
 	    && GET_MODE_SIZE (mode) == 1)
 	  return
-	    GEN_INT (TREE_STRING_POINTER (array)[TREE_INT_CST_LOW (index)]);
+	    GEN_INT (trunc_int_for_mode (TREE_STRING_POINTER (array)
+					 [TREE_INT_CST_LOW (index)], mode));
 
 	/* If this is a constant index into a constant array,
 	   just get the value from the array.  Handle both the cases when
 	   we have an explicit constructor and when our operand is a variable
 	   that was declared const.  */
 
-	if (TREE_CODE (array) == CONSTRUCTOR && ! TREE_SIDE_EFFECTS (array)
+	if (modifier != EXPAND_CONST_ADDRESS && modifier != EXPAND_INITIALIZER
+	    && TREE_CODE (array) == CONSTRUCTOR && ! TREE_SIDE_EFFECTS (array)
 	    && TREE_CODE (index) == INTEGER_CST
 	    && 0 > compare_tree_int (index,
 				     list_length (CONSTRUCTOR_ELTS
@@ -6745,11 +6755,13 @@ expand_expr (exp, target, tmode, modifier)
 	      ;
 
 	    if (elem)
-	      return expand_expr (fold (TREE_VALUE (elem)), target,
-				  tmode, ro_modifier);
+	      return expand_expr (fold (TREE_VALUE (elem)), target, tmode,
+				  modifier);
 	  }
 
 	else if (optimize >= 1
+		 && modifier != EXPAND_CONST_ADDRESS
+		 && modifier != EXPAND_INITIALIZER
 		 && TREE_READONLY (array) && ! TREE_SIDE_EFFECTS (array)
 		 && TREE_CODE (array) == VAR_DECL && DECL_INITIAL (array)
 		 && TREE_CODE (DECL_INITIAL (array)) != ERROR_MARK)
@@ -6770,7 +6782,7 @@ expand_expr (exp, target, tmode, modifier)
 
 		    if (elem && !TREE_SIDE_EFFECTS (TREE_VALUE (elem)))
 		      return expand_expr (fold (TREE_VALUE (elem)), target,
-					  tmode, ro_modifier);
+					  tmode, modifier);
 		  }
 		else if (TREE_CODE (init) == STRING_CST
 			 && 0 > compare_tree_int (index,
@@ -6781,9 +6793,9 @@ expand_expr (exp, target, tmode, modifier)
 
 		    if (GET_MODE_CLASS (mode) == MODE_INT
 			&& GET_MODE_SIZE (mode) == 1)
-		      return (GEN_INT
-			      (TREE_STRING_POINTER
-			       (init)[TREE_INT_CST_LOW (index)]));
+		      return GEN_INT (trunc_int_for_mode
+				      (TREE_STRING_POINTER (init)
+				       [TREE_INT_CST_LOW (index)], mode));
 		  }
 	      }
 	  }
@@ -6792,11 +6804,12 @@ expand_expr (exp, target, tmode, modifier)
 
     case COMPONENT_REF:
     case BIT_FIELD_REF:
+    case ARRAY_RANGE_REF:
       /* If the operand is a CONSTRUCTOR, we can just extract the
 	 appropriate field if it is present.  Don't do this if we have
 	 already written the data since we want to refer to that copy
 	 and varasm.c assumes that's what we'll do.  */
-      if (code != ARRAY_REF
+      if (code == COMPONENT_REF
 	  && TREE_CODE (TREE_OPERAND (exp, 0)) == CONSTRUCTOR
 	  && TREE_CST_RTL (TREE_OPERAND (exp, 0)) == 0)
 	{
@@ -6823,16 +6836,16 @@ expand_expr (exp, target, tmode, modifier)
 		  {
 		    HOST_WIDE_INT bitsize
 		      = TREE_INT_CST_LOW (DECL_SIZE (TREE_PURPOSE (elt)));
+		    enum machine_mode imode
+		      = TYPE_MODE (TREE_TYPE (TREE_PURPOSE (elt)));
 
 		    if (TREE_UNSIGNED (TREE_TYPE (TREE_PURPOSE (elt))))
 		      {
 			op1 = GEN_INT (((HOST_WIDE_INT) 1 << bitsize) - 1);
-			op0 = expand_and (op0, op1, target);
+			op0 = expand_and (imode, op0, op1, target);
 		      }
 		    else
 		      {
-			enum machine_mode imode
-			  = TYPE_MODE (TREE_TYPE (TREE_PURPOSE (elt)));
 			tree count
 			  = build_int_2 (GET_MODE_BITSIZE (imode) - bitsize,
 					 0);
@@ -6853,10 +6866,9 @@ expand_expr (exp, target, tmode, modifier)
 	HOST_WIDE_INT bitsize, bitpos;
 	tree offset;
 	int volatilep = 0;
-	unsigned int alignment;
 	tree tem = get_inner_reference (exp, &bitsize, &bitpos, &offset,
-					&mode1, &unsignedp, &volatilep,
-					&alignment);
+					&mode1, &unsignedp, &volatilep);
+	rtx orig_op0;
 
 	/* If we got back the original object, something is wrong.  Perhaps
 	   we are evaluating an expression too early.  In any event, don't
@@ -6868,15 +6880,16 @@ expand_expr (exp, target, tmode, modifier)
 	   computation, since it will need a temporary and TARGET is known
 	   to have to do.  This occurs in unchecked conversion in Ada.  */
 
-	op0 = expand_expr (tem,
-			   (TREE_CODE (TREE_TYPE (tem)) == UNION_TYPE
-			    && (TREE_CODE (TYPE_SIZE (TREE_TYPE (tem)))
-				!= INTEGER_CST)
-			    ? target : NULL_RTX),
-			   VOIDmode,
-			   (modifier == EXPAND_INITIALIZER
-			    || modifier == EXPAND_CONST_ADDRESS)
-			   ? modifier : EXPAND_NORMAL);
+	orig_op0 = op0
+	  = expand_expr (tem,
+			 (TREE_CODE (TREE_TYPE (tem)) == UNION_TYPE
+			  && (TREE_CODE (TYPE_SIZE (TREE_TYPE (tem)))
+			      != INTEGER_CST)
+			  ? target : NULL_RTX),
+			 VOIDmode,
+			 (modifier == EXPAND_INITIALIZER
+			  || modifier == EXPAND_CONST_ADDRESS)
+			 ? modifier : EXPAND_NORMAL);
 
 	/* If this is a constant, put it into a register if it is a
 	   legitimate constant and OFFSET is 0 and memory if it isn't.  */
@@ -6892,36 +6905,45 @@ expand_expr (exp, target, tmode, modifier)
 
 	if (offset != 0)
 	  {
-	    rtx offset_rtx = expand_expr (offset, NULL_RTX, VOIDmode, 0);
+	    rtx offset_rtx = expand_expr (offset, NULL_RTX, VOIDmode, EXPAND_SUM);
 
-	    /* If this object is in memory, put it into a register.
+	    /* If this object is in a register, put it into memory.
 	       This case can't occur in C, but can in Ada if we have
 	       unchecked conversion of an expression from a scalar type to
 	       an array or record type.  */
 	    if (GET_CODE (op0) == REG || GET_CODE (op0) == SUBREG
 		|| GET_CODE (op0) == CONCAT || GET_CODE (op0) == ADDRESSOF)
 	      {
-		tree nt = build_qualified_type (TREE_TYPE (tem),
-						(TYPE_QUALS (TREE_TYPE (tem))
-						 | TYPE_QUAL_CONST));
-		rtx memloc = assign_temp (nt, 1, 1, 1);
+		/* If the operand is a SAVE_EXPR, we can deal with this by
+		   forcing the SAVE_EXPR into memory.  */
+		if (TREE_CODE (TREE_OPERAND (exp, 0)) == SAVE_EXPR)
+		  {
+		    put_var_into_stack (TREE_OPERAND (exp, 0));
+		    op0 = SAVE_EXPR_RTL (TREE_OPERAND (exp, 0));
+		  }
+		else
+		  {
+		    tree nt
+		      = build_qualified_type (TREE_TYPE (tem),
+					      (TYPE_QUALS (TREE_TYPE (tem))
+					       | TYPE_QUAL_CONST));
+		    rtx memloc = assign_temp (nt, 1, 1, 1);
 
-		mark_temp_addr_taken (memloc);
-		emit_move_insn (memloc, op0);
-		op0 = memloc;
+		    emit_move_insn (memloc, op0);
+		    op0 = memloc;
+		  }
 	      }
 
 	    if (GET_CODE (op0) != MEM)
 	      abort ();
 
-	    if (GET_MODE (offset_rtx) != ptr_mode)
-	      {
 #ifdef POINTERS_EXTEND_UNSIGNED
-		offset_rtx = convert_memory_address (ptr_mode, offset_rtx);
+	    if (GET_MODE (offset_rtx) != Pmode)
+	      offset_rtx = convert_memory_address (Pmode, offset_rtx);
 #else
-		offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
+	    if (GET_MODE (offset_rtx) != ptr_mode)
+	      offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
 #endif
-	      }
 
 	    /* A constant address in OP0 can have VOIDmode, we must not try
 	       to call force_reg for that case.  Avoid that case.  */
@@ -6931,60 +6953,39 @@ expand_expr (exp, target, tmode, modifier)
 		&& bitsize != 0
 		&& (bitpos % bitsize) == 0
 		&& (bitsize % GET_MODE_ALIGNMENT (mode1)) == 0
-		&& alignment == GET_MODE_ALIGNMENT (mode1))
+		&& MEM_ALIGN (op0) == GET_MODE_ALIGNMENT (mode1))
 	      {
-		rtx temp = change_address (op0, mode1,
-					   plus_constant (XEXP (op0, 0),
-							  (bitpos /
-							   BITS_PER_UNIT)));
-		if (GET_CODE (XEXP (temp, 0)) == REG)
-		  op0 = temp;
-		else
-		  op0 = change_address (op0, mode1,
-					force_reg (GET_MODE (XEXP (temp, 0)),
-						   XEXP (temp, 0)));
+		op0 = adjust_address (op0, mode1, bitpos / BITS_PER_UNIT);
 		bitpos = 0;
 	      }
 
-	    op0 = change_address (op0, VOIDmode,
-				  gen_rtx_PLUS (ptr_mode, XEXP (op0, 0),
-						force_reg (ptr_mode,
-							   offset_rtx)));
+	    op0 = offset_address (op0, offset_rtx,
+				  highest_pow2_factor (offset));
 	  }
+
+	/* If OFFSET is making OP0 more aligned than BIGGEST_ALIGNMENT,
+	   record its alignment as BIGGEST_ALIGNMENT.  */
+	if (GET_CODE (op0) == MEM && bitpos == 0 && offset != 0
+	    && is_aligning_offset (offset, tem))
+	  set_mem_align (op0, BIGGEST_ALIGNMENT);
 
 	/* Don't forget about volatility even if this is a bitfield.  */
 	if (GET_CODE (op0) == MEM && volatilep && ! MEM_VOLATILE_P (op0))
 	  {
-	    op0 = copy_rtx (op0);
+	    if (op0 == orig_op0)
+	      op0 = copy_rtx (op0);
+
 	    MEM_VOLATILE_P (op0) = 1;
 	  }
 
-	/* Check the access.  */
-	if (cfun != 0 && current_function_check_memory_usage
-	    && GET_CODE (op0) == MEM)
+	/* The following code doesn't handle CONCAT.
+	   Assume only bitpos == 0 can be used for CONCAT, due to
+	   one element arrays having the same mode as its element.  */
+	if (GET_CODE (op0) == CONCAT)
 	  {
-	    enum memory_use_mode memory_usage;
-	    memory_usage = get_memory_usage_from_modifier (modifier);
-
-	    if (memory_usage != MEMORY_USE_DONT)
-	      {
-		rtx to;
-		int size;
-
-		to = plus_constant (XEXP (op0, 0), (bitpos / BITS_PER_UNIT));
-		size = (bitpos % BITS_PER_UNIT) + bitsize + BITS_PER_UNIT - 1;
-
-        	/* Check the access right of the pointer.  */
-		in_check_memory_usage = 1;
-		if (size > BITS_PER_UNIT)
-		  emit_library_call (chkr_check_addr_libfunc,
-				     LCT_CONST_MAKE_BLOCK, VOIDmode, 3, to,
-				     Pmode, GEN_INT (size / BITS_PER_UNIT),
-				     TYPE_MODE (sizetype),
-				     GEN_INT (memory_usage),
-				     TYPE_MODE (integer_type_node));
-		in_check_memory_usage = 0;
-	      }
+	    if (bitpos != 0 || bitsize != GET_MODE_BITSIZE (GET_MODE (op0)))
+	      abort ();
+	    return op0;
 	  }
 
 	/* In cases where an aligned union has an unaligned object
@@ -6992,37 +6993,29 @@ expand_expr (exp, target, tmode, modifier)
 	   an integer-mode (e.g., SImode) object.  Handle this case
 	   by doing the extract into an object as wide as the field
 	   (which we know to be the width of a basic mode), then
-	   storing into memory, and changing the mode to BLKmode.
-	   If we ultimately want the address (EXPAND_CONST_ADDRESS or
-	   EXPAND_INITIALIZER), then we must not copy to a temporary.  */
+	   storing into memory, and changing the mode to BLKmode.  */
 	if (mode1 == VOIDmode
 	    || GET_CODE (op0) == REG || GET_CODE (op0) == SUBREG
-	    || (modifier != EXPAND_CONST_ADDRESS
-		&& modifier != EXPAND_INITIALIZER
-		&& ((mode1 != BLKmode && ! direct_load[(int) mode1]
-		     && GET_MODE_CLASS (mode) != MODE_COMPLEX_INT
-		     && GET_MODE_CLASS (mode) != MODE_COMPLEX_FLOAT)
-		    /* If the field isn't aligned enough to fetch as a memref,
-		       fetch it as a bit field.  */
-		    || (mode1 != BLKmode
-			&& SLOW_UNALIGNED_ACCESS (mode1, alignment)
-			&& ((TYPE_ALIGN (TREE_TYPE (tem))
-			     < GET_MODE_ALIGNMENT (mode))
-			    || (bitpos % GET_MODE_ALIGNMENT (mode) != 0)))
-		    /* If the type and the field are a constant size and the
-		       size of the type isn't the same size as the bitfield,
-		       we must use bitfield operations.  */
-		    || ((bitsize >= 0
-			 && (TREE_CODE (TYPE_SIZE (TREE_TYPE (exp)))
-			     == INTEGER_CST)
-			 && 0 != compare_tree_int (TYPE_SIZE (TREE_TYPE (exp)),
-						   bitsize)))))
-	    || (modifier != EXPAND_CONST_ADDRESS
-		&& modifier != EXPAND_INITIALIZER
-		&& mode == BLKmode
-		&& SLOW_UNALIGNED_ACCESS (mode, alignment)
-		&& (TYPE_ALIGN (type) > alignment
-		    || bitpos % TYPE_ALIGN (type) != 0)))
+	    || (mode1 != BLKmode && ! direct_load[(int) mode1]
+		&& GET_MODE_CLASS (mode) != MODE_COMPLEX_INT
+		&& GET_MODE_CLASS (mode) != MODE_COMPLEX_FLOAT
+		&& modifier != EXPAND_CONST_ADDRESS
+		&& modifier != EXPAND_INITIALIZER)
+	    /* If the field isn't aligned enough to fetch as a memref,
+	       fetch it as a bit field.  */
+	    || (mode1 != BLKmode
+		&& SLOW_UNALIGNED_ACCESS (mode1, MEM_ALIGN (op0))
+		&& ((TYPE_ALIGN (TREE_TYPE (tem))
+		     < GET_MODE_ALIGNMENT (mode))
+		    || (bitpos % GET_MODE_ALIGNMENT (mode) != 0)))
+	    /* If the type and the field are a constant size and the
+	       size of the type isn't the same size as the bitfield,
+	       we must use bitfield operations.  */
+	    || (bitsize >= 0
+		&& (TREE_CODE (TYPE_SIZE (TREE_TYPE (exp)))
+		    == INTEGER_CST)
+		&& 0 != compare_tree_int (TYPE_SIZE (TREE_TYPE (exp)),
+					  bitsize)))
 	  {
 	    enum machine_mode ext_mode = mode;
 
@@ -7041,17 +7034,13 @@ expand_expr (exp, target, tmode, modifier)
 		    || bitpos % BITS_PER_UNIT != 0)
 		  abort ();
 
-		op0 = change_address (op0, VOIDmode,
-				      plus_constant (XEXP (op0, 0),
-						     bitpos / BITS_PER_UNIT));
+		op0 = adjust_address (op0, VOIDmode, bitpos / BITS_PER_UNIT);
 		if (target == 0)
 		  target = assign_temp (type, 0, 1, 1);
 
 		emit_block_move (target, op0,
-				 bitsize == -1 ? expr_size  (exp)
-				 : GEN_INT ((bitsize + BITS_PER_UNIT - 1)
-					    / BITS_PER_UNIT),
-				 BITS_PER_UNIT);
+				 GEN_INT ((bitsize + BITS_PER_UNIT - 1)
+					  / BITS_PER_UNIT));
 
 		return target;
 	      }
@@ -7059,11 +7048,10 @@ expand_expr (exp, target, tmode, modifier)
 	    op0 = validize_mem (op0);
 
 	    if (GET_CODE (op0) == MEM && GET_CODE (XEXP (op0, 0)) == REG)
-	      mark_reg_pointer (XEXP (op0, 0), alignment);
+	      mark_reg_pointer (XEXP (op0, 0), MEM_ALIGN (op0));
 
 	    op0 = extract_bit_field (op0, bitsize, bitpos,
 				     unsignedp, target, ext_mode, ext_mode,
-				     alignment,
 				     int_size_in_bytes (TREE_TYPE (tem)));
 
 	    /* If the result is a record type and BITSIZE is narrower than
@@ -7071,7 +7059,7 @@ expand_expr (exp, target, tmode, modifier)
 	       machine, we must put the field into the high-order bits.  */
 	    if (TREE_CODE (type) == RECORD_TYPE && BYTES_BIG_ENDIAN
 		&& GET_MODE_CLASS (GET_MODE (op0)) == MODE_INT
-		&& bitsize < GET_MODE_BITSIZE (GET_MODE (op0)))
+		&& bitsize < (HOST_WIDE_INT) GET_MODE_BITSIZE (GET_MODE (op0)))
 	      op0 = expand_shift (LSHIFT_EXPR, GET_MODE (op0), op0,
 				  size_int (GET_MODE_BITSIZE (GET_MODE (op0))
 					    - bitsize),
@@ -7079,13 +7067,14 @@ expand_expr (exp, target, tmode, modifier)
 
 	    if (mode == BLKmode)
 	      {
-		tree nt = build_qualified_type (type_for_mode (ext_mode, 0),
-						TYPE_QUAL_CONST);
-		rtx new = assign_temp (nt, 0, 1, 1);
+		rtx new = assign_temp (build_qualified_type
+				       (type_for_mode (ext_mode, 0),
+					TYPE_QUAL_CONST), 0, 1, 1);
 
 		emit_move_insn (new, op0);
 		op0 = copy_rtx (new);
 		PUT_MODE (op0, BLKmode);
+		set_mem_attributes (op0, exp, 1);
 	      }
 
 	    return op0;
@@ -7099,22 +7088,16 @@ expand_expr (exp, target, tmode, modifier)
 	/* Get a reference to just this component.  */
 	if (modifier == EXPAND_CONST_ADDRESS
 	    || modifier == EXPAND_SUM || modifier == EXPAND_INITIALIZER)
-	  {
-	    rtx new = gen_rtx_MEM (mode1,
-				   plus_constant (XEXP (op0, 0),
-						  (bitpos / BITS_PER_UNIT)));
-
-	    MEM_COPY_ATTRIBUTES (new, op0);
-	    op0 = new;
-	  }
+	  op0 = adjust_address_nv (op0, mode1, bitpos / BITS_PER_UNIT);
 	else
-	  op0 = change_address (op0, mode1,
-				plus_constant (XEXP (op0, 0),
-					       (bitpos / BITS_PER_UNIT)));
+	  op0 = adjust_address (op0, mode1, bitpos / BITS_PER_UNIT);
+
+	if (op0 == orig_op0)
+	  op0 = copy_rtx (op0);
 
 	set_mem_attributes (op0, exp, 0);
 	if (GET_CODE (XEXP (op0, 0)) == REG)
-	  mark_reg_pointer (XEXP (op0, 0), alignment);
+	  mark_reg_pointer (XEXP (op0, 0), MEM_ALIGN (op0));
 
 	MEM_VOLATILE_P (op0) |= volatilep;
 	if (mode == mode1 || mode1 == BLKmode || mode1 == tmode
@@ -7125,6 +7108,43 @@ expand_expr (exp, target, tmode, modifier)
 	  target = gen_reg_rtx (tmode != VOIDmode ? tmode : mode);
 
 	convert_move (target, op0, unsignedp);
+	return target;
+      }
+
+    case VTABLE_REF:
+      {
+	rtx insn, before = get_last_insn (), vtbl_ref;
+
+	/* Evaluate the interior expression.  */
+	subtarget = expand_expr (TREE_OPERAND (exp, 0), target,
+				 tmode, modifier);
+
+	/* Get or create an instruction off which to hang a note.  */
+	if (REG_P (subtarget))
+	  {
+	    target = subtarget;
+	    insn = get_last_insn ();
+	    if (insn == before)
+	      abort ();
+	    if (! INSN_P (insn))
+	      insn = prev_nonnote_insn (insn);
+	  }
+	else
+	  {
+	    target = gen_reg_rtx (GET_MODE (subtarget));
+	    insn = emit_move_insn (target, subtarget);
+	  }
+
+	/* Collect the data for the note.  */
+	vtbl_ref = XEXP (DECL_RTL (TREE_OPERAND (exp, 1)), 0);
+	vtbl_ref = plus_constant (vtbl_ref,
+				  tree_low_cst (TREE_OPERAND (exp, 2), 0));
+	/* Discard the initial CONST that was added.  */
+	vtbl_ref = XEXP (vtbl_ref, 0);
+
+	REG_NOTES (insn)
+	  = gen_rtx_EXPR_LIST (REG_VTABLE_REF, vtbl_ref, REG_NOTES (insn));
+
 	return target;
       }
 
@@ -7184,17 +7204,13 @@ expand_expr (exp, target, tmode, modifier)
 
 	if (! (GET_CODE (index_val) == CONST_INT
 	       && GET_CODE (lo_r) == CONST_INT))
-	  {
-	    emit_cmp_and_jump_insns (index_val, lo_r, LT, NULL_RTX,
-				     GET_MODE (index_val), iunsignedp, 0, op1);
-	  }
+	  emit_cmp_and_jump_insns (index_val, lo_r, LT, NULL_RTX,
+				   GET_MODE (index_val), iunsignedp, op1);
 
 	if (! (GET_CODE (index_val) == CONST_INT
 	       && GET_CODE (hi_r) == CONST_INT))
-	  {
-	    emit_cmp_and_jump_insns (index_val, hi_r, GT, NULL_RTX,
-				     GET_MODE (index_val), iunsignedp, 0, op1);
-	  }
+	  emit_cmp_and_jump_insns (index_val, hi_r, GT, NULL_RTX,
+				   GET_MODE (index_val), iunsignedp, op1);
 
 	/* Calculate the element number of bit zero in the first word
 	   of the set.  */
@@ -7240,16 +7256,16 @@ expand_expr (exp, target, tmode, modifier)
       }
 
     case WITH_CLEANUP_EXPR:
-      if (RTL_EXPR_RTL (exp) == 0)
+      if (WITH_CLEANUP_EXPR_RTL (exp) == 0)
 	{
-	  RTL_EXPR_RTL (exp)
-	    = expand_expr (TREE_OPERAND (exp, 0), target, tmode, ro_modifier);
-	  expand_decl_cleanup (NULL_TREE, TREE_OPERAND (exp, 2));
+	  WITH_CLEANUP_EXPR_RTL (exp)
+	    = expand_expr (TREE_OPERAND (exp, 0), target, tmode, modifier);
+	  expand_decl_cleanup (NULL_TREE, TREE_OPERAND (exp, 1));
 
 	  /* That's it for this cleanup.  */
-	  TREE_OPERAND (exp, 2) = 0;
+	  TREE_OPERAND (exp, 1) = 0;
 	}
-      return RTL_EXPR_RTL (exp);
+      return WITH_CLEANUP_EXPR_RTL (exp);
 
     case CLEANUP_POINT_EXPR:
       {
@@ -7259,7 +7275,7 @@ expand_expr (exp, target, tmode, modifier)
 
 	target_temp_slot_level = temp_slot_level;
 
-	op0 = expand_expr (TREE_OPERAND (exp, 0), target, tmode, ro_modifier);
+	op0 = expand_expr (TREE_OPERAND (exp, 0), target, tmode, modifier);
 	/* If we're going to use this value, load it up now.  */
 	if (! ignore)
 	  op0 = force_not_mem (op0);
@@ -7295,14 +7311,17 @@ expand_expr (exp, target, tmode, modifier)
 	{
 	  tree valtype = TREE_TYPE (TREE_OPERAND (exp, 0));
 
-	  /* If both input and output are BLKmode, this conversion
-	     isn't actually doing anything unless we need to make the
-	     alignment stricter.  */
-	  if (mode == BLKmode && TYPE_MODE (valtype) == BLKmode
-	      && (TYPE_ALIGN (type) <= TYPE_ALIGN (valtype)
-		  || TYPE_ALIGN (type) >= BIGGEST_ALIGNMENT))
-	    return expand_expr (TREE_OPERAND (exp, 0), target, tmode,
-				modifier);
+	  /* If both input and output are BLKmode, this conversion isn't doing
+	     anything except possibly changing memory attribute.  */
+	  if (mode == BLKmode && TYPE_MODE (valtype) == BLKmode)
+	    {
+	      rtx result = expand_expr (TREE_OPERAND (exp, 0), target, tmode,
+					modifier);
+
+	      result = copy_rtx (result);
+	      set_mem_attributes (result, exp, 0);
+	      return result;
+	    }
 
 	  if (target == 0)
 	    target = assign_temp (type, 0, 1, 1);
@@ -7310,7 +7329,7 @@ expand_expr (exp, target, tmode, modifier)
 	  if (GET_CODE (target) == MEM)
 	    /* Store data into beginning of memory target.  */
 	    store_expr (TREE_OPERAND (exp, 0),
-			change_address (target, TYPE_MODE (valtype), 0), 0);
+			adjust_address (target, TYPE_MODE (valtype), 0), 0);
 
 	  else if (GET_CODE (target) == REG)
 	    /* Store this field into a union of the proper type.  */
@@ -7320,8 +7339,7 @@ expand_expr (exp, target, tmode, modifier)
 			       * BITS_PER_UNIT),
 			      (HOST_WIDE_INT) GET_MODE_BITSIZE (mode)),
 			 0, TYPE_MODE (valtype), TREE_OPERAND (exp, 0),
-			 VOIDmode, 0, BITS_PER_UNIT,
-			 int_size_in_bytes (type), 0);
+			 VOIDmode, 0, type, 0);
 	  else
 	    abort ();
 
@@ -7332,7 +7350,7 @@ expand_expr (exp, target, tmode, modifier)
       if (mode == TYPE_MODE (TREE_TYPE (TREE_OPERAND (exp, 0))))
 	{
 	  op0 = expand_expr (TREE_OPERAND (exp, 0), target, VOIDmode,
-			     ro_modifier);
+			     modifier);
 
 	  /* If the signedness of the conversion differs and OP0 is
 	     a promoted SUBREG, clear that indication since we now
@@ -7344,15 +7362,24 @@ expand_expr (exp, target, tmode, modifier)
 	  return op0;
 	}
 
-      op0 = expand_expr (TREE_OPERAND (exp, 0), NULL_RTX, mode, 0);
+      op0 = expand_expr (TREE_OPERAND (exp, 0), NULL_RTX, mode, modifier);
       if (GET_MODE (op0) == mode)
 	return op0;
 
       /* If OP0 is a constant, just convert it into the proper mode.  */
       if (CONSTANT_P (op0))
-	return
-	  convert_modes (mode, TYPE_MODE (TREE_TYPE (TREE_OPERAND (exp, 0))),
-			 op0, TREE_UNSIGNED (TREE_TYPE (TREE_OPERAND (exp, 0))));
+	{
+	  tree inner_type = TREE_TYPE (TREE_OPERAND (exp, 0));
+	  enum machine_mode inner_mode = TYPE_MODE (inner_type);
+
+          if (modifier == EXPAND_INITIALIZER)
+	    return simplify_gen_subreg (mode, op0, inner_mode,
+					subreg_lowpart_offset (mode,
+							       inner_mode));
+	  else
+	    return convert_modes (mode, inner_mode, op0,
+				  TREE_UNSIGNED (inner_type));
+	}
 
       if (modifier == EXPAND_INITIALIZER)
 	return gen_rtx_fmt_e (unsignedp ? ZERO_EXTEND : SIGN_EXTEND, mode, op0);
@@ -7366,12 +7393,84 @@ expand_expr (exp, target, tmode, modifier)
 		      TREE_UNSIGNED (TREE_TYPE (TREE_OPERAND (exp, 0))));
       return target;
 
+    case VIEW_CONVERT_EXPR:
+      op0 = expand_expr (TREE_OPERAND (exp, 0), NULL_RTX, mode, modifier);
+
+      /* If the input and output modes are both the same, we are done.
+	 Otherwise, if neither mode is BLKmode and both are within a word, we
+	 can use gen_lowpart.  If neither is true, make sure the operand is
+	 in memory and convert the MEM to the new mode.  */
+      if (TYPE_MODE (type) == GET_MODE (op0))
+	;
+      else if (TYPE_MODE (type) != BLKmode && GET_MODE (op0) != BLKmode
+	       && GET_MODE_SIZE (TYPE_MODE (type)) <= UNITS_PER_WORD
+	       && GET_MODE_SIZE (GET_MODE (op0)) <= UNITS_PER_WORD)
+	op0 = gen_lowpart (TYPE_MODE (type), op0);
+      else if (GET_CODE (op0) != MEM)
+	{
+	  /* If the operand is not a MEM, force it into memory.  Since we
+	     are going to be be changing the mode of the MEM, don't call
+	     force_const_mem for constants because we don't allow pool
+	     constants to change mode.  */
+	  tree inner_type = TREE_TYPE (TREE_OPERAND (exp, 0));
+
+	  if (TREE_ADDRESSABLE (exp))
+	    abort ();
+
+	  if (target == 0 || GET_MODE (target) != TYPE_MODE (inner_type))
+	    target
+	      = assign_stack_temp_for_type
+		(TYPE_MODE (inner_type),
+		 GET_MODE_SIZE (TYPE_MODE (inner_type)), 0, inner_type);
+
+	  emit_move_insn (target, op0);
+	  op0 = target;
+	}
+
+      /* At this point, OP0 is in the correct mode.  If the output type is such
+	 that the operand is known to be aligned, indicate that it is.
+	 Otherwise, we need only be concerned about alignment for non-BLKmode
+	 results.  */
+      if (GET_CODE (op0) == MEM)
+	{
+	  op0 = copy_rtx (op0);
+
+	  if (TYPE_ALIGN_OK (type))
+	    set_mem_align (op0, MAX (MEM_ALIGN (op0), TYPE_ALIGN (type)));
+	  else if (TYPE_MODE (type) != BLKmode && STRICT_ALIGNMENT
+		   && MEM_ALIGN (op0) < GET_MODE_ALIGNMENT (TYPE_MODE (type)))
+	    {
+	      tree inner_type = TREE_TYPE (TREE_OPERAND (exp, 0));
+	      HOST_WIDE_INT temp_size
+		= MAX (int_size_in_bytes (inner_type),
+		       (HOST_WIDE_INT) GET_MODE_SIZE (TYPE_MODE (type)));
+	      rtx new = assign_stack_temp_for_type (TYPE_MODE (type),
+						    temp_size, 0, type);
+	      rtx new_with_op0_mode = adjust_address (new, GET_MODE (op0), 0);
+
+	      if (TREE_ADDRESSABLE (exp))
+		abort ();
+
+	      if (GET_MODE (op0) == BLKmode)
+		emit_block_move (new_with_op0_mode, op0,
+				 GEN_INT (GET_MODE_SIZE (TYPE_MODE (type))));
+	      else
+		emit_move_insn (new_with_op0_mode, op0);
+
+	      op0 = new;
+	    }
+      
+	  op0 = adjust_address (op0, TYPE_MODE (type), 0);
+	}
+
+      return op0;
+
     case PLUS_EXPR:
       /* We come here from MINUS_EXPR when the second operand is a
          constant.  */
     plus_expr:
       this_optab = ! unsignedp && flag_trapv
-                   && (GET_MODE_CLASS(mode) == MODE_INT)
+                   && (GET_MODE_CLASS (mode) == MODE_INT)
                    ? addv_optab : add_optab;
 
       /* If we are adding a constant, an RTL_EXPR that is sp, fp, or ap, and
@@ -7438,7 +7537,8 @@ expand_expr (exp, target, tmode, modifier)
 	      rtx constant_part;
 
 	      op0 = expand_expr (TREE_OPERAND (exp, 0), subtarget, VOIDmode,
-				 EXPAND_SUM);
+				 (modifier == EXPAND_INITIALIZER
+				 ? EXPAND_INITIALIZER : EXPAND_SUM));
 	      if (! CONSTANT_P (op0))
 		{
 		  op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX,
@@ -7475,8 +7575,8 @@ expand_expr (exp, target, tmode, modifier)
       if (! safe_from_p (subtarget, TREE_OPERAND (exp, 1), 1))
 	subtarget = 0;
 
-      op0 = expand_expr (TREE_OPERAND (exp, 0), subtarget, VOIDmode, ro_modifier);
-      op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX, VOIDmode, ro_modifier);
+      op0 = expand_expr (TREE_OPERAND (exp, 0), subtarget, VOIDmode, modifier);
+      op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX, VOIDmode, modifier);
 
     both_summands:
       /* Make sure any term that's a sum with a constant comes last.  */
@@ -7535,10 +7635,10 @@ expand_expr (exp, target, tmode, modifier)
 	  && really_constant_p (TREE_OPERAND (exp, 0))
 	  && really_constant_p (TREE_OPERAND (exp, 1)))
 	{
-	  rtx op0 = expand_expr (TREE_OPERAND (exp, 0), NULL_RTX,
-				 VOIDmode, ro_modifier);
-	  rtx op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX,
-				 VOIDmode, ro_modifier);
+	  rtx op0 = expand_expr (TREE_OPERAND (exp, 0), NULL_RTX, VOIDmode,
+				 modifier);
+	  rtx op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX, VOIDmode,
+				 modifier);
 
 	  /* If the last operand is a CONST_INT, use plus_constant of
 	     the negated constant.  Else make the MINUS.  */
@@ -7575,7 +7675,7 @@ expand_expr (exp, target, tmode, modifier)
 	 check the second operand.  */
       if (TREE_CODE (TREE_OPERAND (exp, 0)) == INTEGER_CST)
 	{
-	  register tree t1 = TREE_OPERAND (exp, 0);
+	  tree t1 = TREE_OPERAND (exp, 0);
 	  TREE_OPERAND (exp, 0) = TREE_OPERAND (exp, 1);
 	  TREE_OPERAND (exp, 1) = t1;
 	}
@@ -7584,23 +7684,20 @@ expand_expr (exp, target, tmode, modifier)
 	 indexed address, for machines that support that.  */
 
       if (modifier == EXPAND_SUM && mode == ptr_mode
-	  && TREE_CODE (TREE_OPERAND (exp, 1)) == INTEGER_CST
-	  && GET_MODE_BITSIZE (mode) <= HOST_BITS_PER_WIDE_INT)
+	  && host_integerp (TREE_OPERAND (exp, 1), 0))
 	{
 	  op0 = expand_expr (TREE_OPERAND (exp, 0), subtarget, VOIDmode,
 			     EXPAND_SUM);
 
-	  /* Apply distributive law if OP0 is x+c.  */
-	  if (GET_CODE (op0) == PLUS
-	      && GET_CODE (XEXP (op0, 1)) == CONST_INT)
-	    return
-	      gen_rtx_PLUS
-		(mode,
-		 gen_rtx_MULT
-		 (mode, XEXP (op0, 0),
-		  GEN_INT (TREE_INT_CST_LOW (TREE_OPERAND (exp, 1)))),
-		 GEN_INT (TREE_INT_CST_LOW (TREE_OPERAND (exp, 1))
-			  * INTVAL (XEXP (op0, 1))));
+	  /* If we knew for certain that this is arithmetic for an array
+	     reference, and we knew the bounds of the array, then we could
+	     apply the distributive law across (PLUS X C) for constant C.
+	     Without such knowledge, we risk overflowing the computation
+	     when both X and C are large, but X+C isn't.  */
+	  /* ??? Could perhaps special-case EXP being unsigned and C being
+	     positive.  In that case we are certain that X+C is no smaller
+	     than X and so the transformed expression will overflow iff the
+	     original would have.  */
 
 	  if (GET_CODE (op0) != REG)
 	    op0 = force_operand (op0, NULL_RTX);
@@ -7609,7 +7706,7 @@ expand_expr (exp, target, tmode, modifier)
 
 	  return
 	    gen_rtx_MULT (mode, op0,
-			  GEN_INT (TREE_INT_CST_LOW (TREE_OPERAND (exp, 1))));
+			  GEN_INT (tree_low_cst (TREE_OPERAND (exp, 1), 0)));
 	}
 
       if (! safe_from_p (subtarget, TREE_OPERAND (exp, 1), 1))
@@ -7706,7 +7803,18 @@ expand_expr (exp, target, tmode, modifier)
       return expand_divmod (0, code, mode, op0, op1, target, unsignedp);
 
     case RDIV_EXPR:
-      this_optab = flodiv_optab;
+      /* Emit a/b as a*(1/b).  Later we may manage CSE the reciprocal saving
+         expensive divide.  If not, combine will rebuild the original
+         computation.  */
+      if (flag_unsafe_math_optimizations && optimize && !optimize_size
+	  && TREE_CODE (type) == REAL_TYPE
+	  && !real_onep (TREE_OPERAND (exp, 0)))
+        return expand_expr (build (MULT_EXPR, type, TREE_OPERAND (exp, 0),
+				   build (RDIV_EXPR, type,
+					  build_real (type, dconst1),
+					  TREE_OPERAND (exp, 1))),
+			    target, tmode, unsignedp);
+      this_optab = sdiv_optab;
       goto binop;
 
     case TRUNC_MOD_EXPR:
@@ -7821,7 +7929,7 @@ expand_expr (exp, target, tmode, modifier)
 	{
 	  int unsignedp = TREE_UNSIGNED (TREE_TYPE (TREE_OPERAND (exp, 1)));
 	  do_compare_rtx_and_jump (target, op1, code == MAX_EXPR ? GE : LE,
-				   unsignedp, mode, NULL_RTX, 0, NULL_RTX,
+				   unsignedp, mode, NULL_RTX, NULL_RTX,
 				   op0);
 	}
       emit_move_insn (target, op1);
@@ -7909,12 +8017,29 @@ expand_expr (exp, target, tmode, modifier)
 	  temp = expand_expr (TREE_OPERAND (exp, 0), original_target,
 			      VOIDmode, 0);
 
+	  /* If temp is constant, we can just compute the result.  */
+	  if (GET_CODE (temp) == CONST_INT)
+	    {
+	      if (INTVAL (temp) != 0)
+	        emit_move_insn (target, const1_rtx);
+	      else
+	        emit_move_insn (target, const0_rtx);
+
+	      return target;
+	    }
+
 	  if (temp != original_target)
-	    temp = copy_to_reg (temp);
+	    {
+	      enum machine_mode mode1 = GET_MODE (temp);
+	      if (mode1 == VOIDmode)
+		mode1 = tmode != VOIDmode ? tmode : mode;
+	      
+	      temp = copy_to_mode_reg (mode1, temp);
+	    }
 
 	  op1 = gen_label_rtx ();
 	  emit_cmp_and_jump_insns (temp, const0_rtx, EQ, NULL_RTX,
-				   GET_MODE (temp), unsignedp, 0, op1);
+				   GET_MODE (temp), unsignedp, op1);
 	  emit_move_insn (temp, const1_rtx);
 	  emit_label (op1);
 	  return temp;
@@ -8010,11 +8135,11 @@ expand_expr (exp, target, tmode, modifier)
 	    if (ignore)
 	      {
 		expand_expr (TREE_OPERAND (exp, 0), const0_rtx, VOIDmode,
-			     ro_modifier);
+			     modifier);
 		return const0_rtx;
 	      }
 
-	    op0 = expand_expr (TREE_OPERAND (exp, 0), target, mode, ro_modifier);
+	    op0 = expand_expr (TREE_OPERAND (exp, 0), target, mode, modifier);
 	    if (GET_MODE (op0) == mode)
 	      return op0;
 
@@ -8065,8 +8190,8 @@ expand_expr (exp, target, tmode, modifier)
 		     || GET_CODE (original_target) == REG
 		     || TREE_ADDRESSABLE (type))
 #endif
-		 && ! (GET_CODE (original_target) == MEM
-		       && MEM_VOLATILE_P (original_target)))
+		 && (GET_CODE (original_target) != MEM
+		     || TREE_ADDRESSABLE (type)))
 	  temp = original_target;
 	else if (TREE_ADDRESSABLE (type))
 	  abort ();
@@ -8355,35 +8480,23 @@ expand_expr (exp, target, tmode, modifier)
       {
 	tree lhs = TREE_OPERAND (exp, 0);
 	tree rhs = TREE_OPERAND (exp, 1);
-	tree noncopied_parts = 0;
-	tree lhs_type = TREE_TYPE (lhs);
 
 	temp = expand_assignment (lhs, rhs, ! ignore, original_target != 0);
-	if (TYPE_NONCOPIED_PARTS (lhs_type) != 0 && !fixed_type_p (rhs))
-	  noncopied_parts = init_noncopied_parts (stabilize_reference (lhs),
-						  TYPE_NONCOPIED_PARTS (lhs_type));
-	while (noncopied_parts != 0)
-	  {
-	    expand_assignment (TREE_VALUE (noncopied_parts),
-			       TREE_PURPOSE (noncopied_parts), 0, 0);
-	    noncopied_parts = TREE_CHAIN (noncopied_parts);
-	  }
 	return temp;
       }
 
     case MODIFY_EXPR:
       {
 	/* If lhs is complex, expand calls in rhs before computing it.
-	   That's so we don't compute a pointer and save it over a call.
-	   If lhs is simple, compute it first so we can give it as a
-	   target if the rhs is just a call.  This avoids an extra temp and copy
-	   and that prevents a partial-subsumption which makes bad code.
-	   Actually we could treat component_ref's of vars like vars.  */
+	   That's so we don't compute a pointer and save it over a
+	   call.  If lhs is simple, compute it first so we can give it
+	   as a target if the rhs is just a call.  This avoids an
+	   extra temp and copy and that prevents a partial-subsumption
+	   which makes bad code.  Actually we could treat
+	   component_ref's of vars like vars.  */
 
 	tree lhs = TREE_OPERAND (exp, 0);
 	tree rhs = TREE_OPERAND (exp, 1);
-	tree noncopied_parts = 0;
-	tree lhs_type = TREE_TYPE (lhs);
 
 	temp = 0;
 
@@ -8419,18 +8532,8 @@ expand_expr (exp, target, tmode, modifier)
 	    return const0_rtx;
 	  }
 
-	if (TYPE_NONCOPIED_PARTS (lhs_type) != 0
-	    && ! (fixed_type_p (lhs) && fixed_type_p (rhs)))
-	  noncopied_parts = save_noncopied_parts (stabilize_reference (lhs),
-						  TYPE_NONCOPIED_PARTS (lhs_type));
-
 	temp = expand_assignment (lhs, rhs, ! ignore, original_target != 0);
-	while (noncopied_parts != 0)
-	  {
-	    expand_assignment (TREE_PURPOSE (noncopied_parts),
-			       TREE_VALUE (noncopied_parts), 0, 0);
-	    noncopied_parts = TREE_CHAIN (noncopied_parts);
-	  }
+	
 	return temp;
       }
 
@@ -8451,10 +8554,6 @@ expand_expr (exp, target, tmode, modifier)
       return expand_increment (exp, ! ignore, ignore);
 
     case ADDR_EXPR:
-      /* If nonzero, TEMP will be set to the address of something that might
-	 be a MEM corresponding to a stack slot.  */
-      temp = 0;
-
       /* Are we taking the address of a nested function?  */
       if (TREE_CODE (TREE_OPERAND (exp, 0)) == FUNCTION_DECL
 	  && decl_function_context (TREE_OPERAND (exp, 0)) != 0
@@ -8468,6 +8567,14 @@ expand_expr (exp, target, tmode, modifier)
 	 return a zero.  */
       else if (TREE_CODE (TREE_OPERAND (exp, 0)) == ERROR_MARK)
 	return const0_rtx;
+      /* If we are taking the address of a constant and are at the
+	 top level, we have to use output_constant_def since we can't
+	 call force_const_mem at top level.  */
+      else if (cfun == 0
+	       && (TREE_CODE (TREE_OPERAND (exp, 0)) == CONSTRUCTOR
+		   || (TREE_CODE_CLASS (TREE_CODE (TREE_OPERAND (exp, 0)))
+		       == 'c')))
+	op0 = XEXP (output_constant_def (TREE_OPERAND (exp, 0), 0), 0);
       else
 	{
 	  /* We make sure to pass const0_rtx down if we came in with
@@ -8494,64 +8601,96 @@ expand_expr (exp, target, tmode, modifier)
 	  if (CONSTANT_P (op0))
 	    op0 = force_const_mem (TYPE_MODE (TREE_TYPE (TREE_OPERAND (exp, 0))),
 				   op0);
-	  else if (GET_CODE (op0) == MEM)
-	    {
-	      mark_temp_addr_taken (op0);
-	      temp = XEXP (op0, 0);
-	    }
-
 	  else if (GET_CODE (op0) == REG || GET_CODE (op0) == SUBREG
 		   || GET_CODE (op0) == CONCAT || GET_CODE (op0) == ADDRESSOF
 		   || GET_CODE (op0) == PARALLEL)
 	    {
-	      /* If this object is in a register, it must be not
-		 be BLKmode.  */
-	      tree inner_type = TREE_TYPE (TREE_OPERAND (exp, 0));
-	      tree nt = build_qualified_type (inner_type,
-					      (TYPE_QUALS (inner_type)
-					       | TYPE_QUAL_CONST));
-	      rtx memloc = assign_temp (nt, 1, 1, 1);
-
-	      mark_temp_addr_taken (memloc);
-	      if (GET_CODE (op0) == PARALLEL)
-		/* Handle calls that pass values in multiple non-contiguous
-		   locations.  The Irix 6 ABI has examples of this.  */
-		emit_group_store (memloc, op0,
-				  int_size_in_bytes (inner_type),
-				  TYPE_ALIGN (inner_type));
+	      /* If the operand is a SAVE_EXPR, we can deal with this by
+		 forcing the SAVE_EXPR into memory.  */
+	      if (TREE_CODE (TREE_OPERAND (exp, 0)) == SAVE_EXPR)
+		{
+		  put_var_into_stack (TREE_OPERAND (exp, 0));
+		  op0 = SAVE_EXPR_RTL (TREE_OPERAND (exp, 0));
+		}
 	      else
-		emit_move_insn (memloc, op0);
-	      op0 = memloc;
+		{
+		  /* If this object is in a register, it can't be BLKmode.  */
+		  tree inner_type = TREE_TYPE (TREE_OPERAND (exp, 0));
+		  rtx memloc = assign_temp (inner_type, 1, 1, 1);
+
+		  if (GET_CODE (op0) == PARALLEL)
+		    /* Handle calls that pass values in multiple
+		       non-contiguous locations.  The Irix 6 ABI has examples
+		       of this.  */
+		    emit_group_store (memloc, op0, 
+				      int_size_in_bytes (inner_type));
+		  else
+		    emit_move_insn (memloc, op0);
+		  
+		  op0 = memloc;
+		}
 	    }
 
 	  if (GET_CODE (op0) != MEM)
 	    abort ();
 
+	  mark_temp_addr_taken (op0);
 	  if (modifier == EXPAND_SUM || modifier == EXPAND_INITIALIZER)
 	    {
-	      temp = XEXP (op0, 0);
+	      op0 = XEXP (op0, 0);
 #ifdef POINTERS_EXTEND_UNSIGNED
-	      if (GET_MODE (temp) == Pmode && GET_MODE (temp) != mode
+	      if (GET_MODE (op0) == Pmode && GET_MODE (op0) != mode
 		  && mode == ptr_mode)
-		temp = convert_memory_address (ptr_mode, temp);
+		op0 = convert_memory_address (ptr_mode, op0);
 #endif
-	      return temp;
+	      return op0;
+	    }
+
+	  /* If OP0 is not aligned as least as much as the type requires, we
+	     need to make a temporary, copy OP0 to it, and take the address of
+	     the temporary.  We want to use the alignment of the type, not of
+	     the operand.  Note that this is incorrect for FUNCTION_TYPE, but
+	     the test for BLKmode means that can't happen.  The test for
+	     BLKmode is because we never make mis-aligned MEMs with
+	     non-BLKmode.
+
+	     We don't need to do this at all if the machine doesn't have
+	     strict alignment.  */
+	  if (STRICT_ALIGNMENT && GET_MODE (op0) == BLKmode
+	      && (TYPE_ALIGN (TREE_TYPE (TREE_OPERAND (exp, 0)))
+		  > MEM_ALIGN (op0))
+	      && MEM_ALIGN (op0) < BIGGEST_ALIGNMENT)
+	    {
+	      tree inner_type = TREE_TYPE (TREE_OPERAND (exp, 0));
+	      rtx new
+		= assign_stack_temp_for_type
+		  (TYPE_MODE (inner_type),
+		   MEM_SIZE (op0) ? INTVAL (MEM_SIZE (op0))
+		   : int_size_in_bytes (inner_type),
+		   1, build_qualified_type (inner_type,
+					    (TYPE_QUALS (inner_type)
+					     | TYPE_QUAL_CONST)));
+
+	      if (TYPE_ALIGN_OK (inner_type))
+		abort ();
+
+	      emit_block_move (new, op0, expr_size (TREE_OPERAND (exp, 0)));
+	      op0 = new;
 	    }
 
 	  op0 = force_operand (XEXP (op0, 0), target);
 	}
 
-      if (flag_force_addr && GET_CODE (op0) != REG)
+      if (flag_force_addr
+	  && GET_CODE (op0) != REG
+	  && modifier != EXPAND_CONST_ADDRESS
+	  && modifier != EXPAND_INITIALIZER
+	  && modifier != EXPAND_SUM)
 	op0 = force_reg (Pmode, op0);
 
       if (GET_CODE (op0) == REG
 	  && ! REG_USERVAR_P (op0))
 	mark_reg_pointer (op0, TYPE_ALIGN (TREE_TYPE (type)));
-
-      /* If we might have had a temp slot, add an equivalent address
-	 for it.  */
-      if (temp != 0)
-	update_temp_slot_address (temp, op0);
 
 #ifdef POINTERS_EXTEND_UNSIGNED
       if (GET_MODE (op0) == Pmode && GET_MODE (op0) != mode
@@ -8732,318 +8871,54 @@ expand_expr (exp, target, tmode, modifier)
   return temp;
 }
 
-/* Similar to expand_expr, except that we don't specify a target, target
-   mode, or modifier and we return the alignment of the inner type.  This is
-   used in cases where it is not necessary to align the result to the
-   alignment of its type as long as we know the alignment of the result, for
-   example for comparisons of BLKmode values.  */
+/* Subroutine of above: returns 1 if OFFSET corresponds to an offset that
+   when applied to the address of EXP produces an address known to be
+   aligned more than BIGGEST_ALIGNMENT.  */
 
-static rtx
-expand_expr_unaligned (exp, palign)
-     register tree exp;
-     unsigned int *palign;
+static int
+is_aligning_offset (offset, exp)
+     tree offset;
+     tree exp;
 {
-  register rtx op0;
-  tree type = TREE_TYPE (exp);
-  register enum machine_mode mode = TYPE_MODE (type);
+  /* Strip off any conversions and WITH_RECORD_EXPR nodes.  */
+  while (TREE_CODE (offset) == NON_LVALUE_EXPR
+	 || TREE_CODE (offset) == NOP_EXPR
+	 || TREE_CODE (offset) == CONVERT_EXPR
+	 || TREE_CODE (offset) == WITH_RECORD_EXPR)
+    offset = TREE_OPERAND (offset, 0);
 
-  /* Default the alignment we return to that of the type.  */
-  *palign = TYPE_ALIGN (type);
+  /* We must now have a BIT_AND_EXPR with a constant that is one less than
+     power of 2 and which is larger than BIGGEST_ALIGNMENT.  */
+  if (TREE_CODE (offset) != BIT_AND_EXPR
+      || !host_integerp (TREE_OPERAND (offset, 1), 1)
+      || compare_tree_int (TREE_OPERAND (offset, 1), BIGGEST_ALIGNMENT) <= 0
+      || !exact_log2 (tree_low_cst (TREE_OPERAND (offset, 1), 1) + 1) < 0)
+    return 0;
 
-  /* The only cases in which we do anything special is if the resulting mode
-     is BLKmode.  */
-  if (mode != BLKmode)
-    return expand_expr (exp, NULL_RTX, VOIDmode, EXPAND_NORMAL);
+  /* Look at the first operand of BIT_AND_EXPR and strip any conversion.
+     It must be NEGATE_EXPR.  Then strip any more conversions.  */
+  offset = TREE_OPERAND (offset, 0);
+  while (TREE_CODE (offset) == NON_LVALUE_EXPR
+	 || TREE_CODE (offset) == NOP_EXPR
+	 || TREE_CODE (offset) == CONVERT_EXPR)
+    offset = TREE_OPERAND (offset, 0);
 
-  switch (TREE_CODE (exp))
-    {
-    case CONVERT_EXPR:
-    case NOP_EXPR:
-    case NON_LVALUE_EXPR:
-      /* Conversions between BLKmode values don't change the underlying
-         alignment or value.  */
-      if (TYPE_MODE (TREE_TYPE (TREE_OPERAND (exp, 0))) == BLKmode)
-	return expand_expr_unaligned (TREE_OPERAND (exp, 0), palign);
-      break;
+  if (TREE_CODE (offset) != NEGATE_EXPR)
+    return 0;
 
-    case ARRAY_REF:
-      /* Much of the code for this case is copied directly from expand_expr.
-	 We need to duplicate it here because we will do something different
-	 in the fall-through case, so we need to handle the same exceptions
-	 it does.  */
-      {
-	tree array = TREE_OPERAND (exp, 0);
-	tree domain = TYPE_DOMAIN (TREE_TYPE (array));
-	tree low_bound = domain ? TYPE_MIN_VALUE (domain) : integer_zero_node;
-	tree index = convert (sizetype, TREE_OPERAND (exp, 1));
-	HOST_WIDE_INT i;
+  offset = TREE_OPERAND (offset, 0);
+  while (TREE_CODE (offset) == NON_LVALUE_EXPR
+	 || TREE_CODE (offset) == NOP_EXPR
+	 || TREE_CODE (offset) == CONVERT_EXPR)
+    offset = TREE_OPERAND (offset, 0);
 
-	if (TREE_CODE (TREE_TYPE (TREE_OPERAND (exp, 0))) != ARRAY_TYPE)
-	  abort ();
-
-	/* Optimize the special-case of a zero lower bound.
-
-	   We convert the low_bound to sizetype to avoid some problems
-	   with constant folding.  (E.g. suppose the lower bound is 1,
-	   and its mode is QI.  Without the conversion,  (ARRAY
-	   +(INDEX-(unsigned char)1)) becomes ((ARRAY+(-(unsigned char)1))
-	   +INDEX), which becomes (ARRAY+255+INDEX).  Oops!)  */
-
-	if (! integer_zerop (low_bound))
-	  index = size_diffop (index, convert (sizetype, low_bound));
-
-	/* If this is a constant index into a constant array,
-	   just get the value from the array.  Handle both the cases when
-	   we have an explicit constructor and when our operand is a variable
-	   that was declared const.  */
-
-	if (TREE_CODE (array) == CONSTRUCTOR && ! TREE_SIDE_EFFECTS (array)
-	    && host_integerp (index, 0)
-	    && 0 > compare_tree_int (index,
-				     list_length (CONSTRUCTOR_ELTS
-						  (TREE_OPERAND (exp, 0)))))
-	  {
-	    tree elem;
-
-	    for (elem = CONSTRUCTOR_ELTS (TREE_OPERAND (exp, 0)),
-		 i = tree_low_cst (index, 0);
-		 elem != 0 && i != 0; i--, elem = TREE_CHAIN (elem))
-	      ;
-
-	    if (elem)
-	      return expand_expr_unaligned (fold (TREE_VALUE (elem)), palign);
-	  }
-
-	else if (optimize >= 1
-		 && TREE_READONLY (array) && ! TREE_SIDE_EFFECTS (array)
-		 && TREE_CODE (array) == VAR_DECL && DECL_INITIAL (array)
-		 && TREE_CODE (DECL_INITIAL (array)) != ERROR_MARK)
-	  {
-	    if (TREE_CODE (index) == INTEGER_CST)
-	      {
-		tree init = DECL_INITIAL (array);
-
-		if (TREE_CODE (init) == CONSTRUCTOR)
-		  {
-		    tree elem;
-
-		    for (elem = CONSTRUCTOR_ELTS (init);
-			 ! tree_int_cst_equal (TREE_PURPOSE (elem), index);
-			 elem = TREE_CHAIN (elem))
-		      ;
-
-		    if (elem)
-		      return expand_expr_unaligned (fold (TREE_VALUE (elem)),
-						    palign);
-		  }
-	      }
-	  }
-      }
-      /* Fall through.  */
-
-    case COMPONENT_REF:
-    case BIT_FIELD_REF:
-      /* If the operand is a CONSTRUCTOR, we can just extract the
-	 appropriate field if it is present.  Don't do this if we have
-	 already written the data since we want to refer to that copy
-	 and varasm.c assumes that's what we'll do.  */
-      if (TREE_CODE (exp) != ARRAY_REF
-	  && TREE_CODE (TREE_OPERAND (exp, 0)) == CONSTRUCTOR
-	  && TREE_CST_RTL (TREE_OPERAND (exp, 0)) == 0)
-	{
-	  tree elt;
-
-	  for (elt = CONSTRUCTOR_ELTS (TREE_OPERAND (exp, 0)); elt;
-	       elt = TREE_CHAIN (elt))
-	    if (TREE_PURPOSE (elt) == TREE_OPERAND (exp, 1))
-	      /* Note that unlike the case in expand_expr, we know this is
-		 BLKmode and hence not an integer.  */
-	      return expand_expr_unaligned (TREE_VALUE (elt), palign);
-	}
-
-      {
-	enum machine_mode mode1;
-	HOST_WIDE_INT bitsize, bitpos;
-	tree offset;
-	int volatilep = 0;
-	unsigned int alignment;
-	int unsignedp;
-	tree tem = get_inner_reference (exp, &bitsize, &bitpos, &offset,
-					&mode1, &unsignedp, &volatilep,
-					&alignment);
-
-	/* If we got back the original object, something is wrong.  Perhaps
-	   we are evaluating an expression too early.  In any event, don't
-	   infinitely recurse.  */
-	if (tem == exp)
-	  abort ();
-
-	op0 = expand_expr (tem, NULL_RTX, VOIDmode, EXPAND_NORMAL);
-
-	/* If this is a constant, put it into a register if it is a
-	   legitimate constant and OFFSET is 0 and memory if it isn't.  */
-	if (CONSTANT_P (op0))
-	  {
-	    enum machine_mode inner_mode = TYPE_MODE (TREE_TYPE (tem));
-
-	    if (inner_mode != BLKmode && LEGITIMATE_CONSTANT_P (op0)
-		&& offset == 0)
-	      op0 = force_reg (inner_mode, op0);
-	    else
-	      op0 = validize_mem (force_const_mem (inner_mode, op0));
-	  }
-
-	if (offset != 0)
-	  {
-	    rtx offset_rtx = expand_expr (offset, NULL_RTX, VOIDmode, 0);
-
-	    /* If this object is in a register, put it into memory.
-	       This case can't occur in C, but can in Ada if we have
-	       unchecked conversion of an expression from a scalar type to
-	       an array or record type.  */
-	    if (GET_CODE (op0) == REG || GET_CODE (op0) == SUBREG
-		|| GET_CODE (op0) == CONCAT || GET_CODE (op0) == ADDRESSOF)
-	      {
-		tree nt = build_qualified_type (TREE_TYPE (tem),
-						(TYPE_QUALS (TREE_TYPE (tem))
-						 | TYPE_QUAL_CONST));
-		rtx memloc = assign_temp (nt, 1, 1, 1);
-
-		mark_temp_addr_taken (memloc);
-		emit_move_insn (memloc, op0);
-		op0 = memloc;
-	      }
-
-	    if (GET_CODE (op0) != MEM)
-	      abort ();
-
-	    if (GET_MODE (offset_rtx) != ptr_mode)
-	      {
-#ifdef POINTERS_EXTEND_UNSIGNED
-		offset_rtx = convert_memory_address (ptr_mode, offset_rtx);
-#else
-		offset_rtx = convert_to_mode (ptr_mode, offset_rtx, 0);
-#endif
-	      }
-
-	    op0 = change_address (op0, VOIDmode,
-				  gen_rtx_PLUS (ptr_mode, XEXP (op0, 0),
-						force_reg (ptr_mode,
-							   offset_rtx)));
-	  }
-
-	/* Don't forget about volatility even if this is a bitfield.  */
-	if (GET_CODE (op0) == MEM && volatilep && ! MEM_VOLATILE_P (op0))
-	  {
-	    op0 = copy_rtx (op0);
-	    MEM_VOLATILE_P (op0) = 1;
-	  }
-
-	/* Check the access.  */
-	if (current_function_check_memory_usage && GET_CODE (op0) == MEM)
-	  {
-	    rtx to;
-	    int size;
-
-	    to = plus_constant (XEXP (op0, 0), (bitpos / BITS_PER_UNIT));
-	    size = (bitpos % BITS_PER_UNIT) + bitsize + BITS_PER_UNIT - 1;
-
-	    /* Check the access right of the pointer.  */
-	    in_check_memory_usage = 1;
-	    if (size > BITS_PER_UNIT)
-	      emit_library_call (chkr_check_addr_libfunc,
-				 LCT_CONST_MAKE_BLOCK, VOIDmode, 3,
-				 to, ptr_mode, GEN_INT (size / BITS_PER_UNIT),
-				 TYPE_MODE (sizetype),
-				 GEN_INT (MEMORY_USE_RO),
-				 TYPE_MODE (integer_type_node));
-	    in_check_memory_usage = 0;
-	  }
-
-	/* In cases where an aligned union has an unaligned object
-	   as a field, we might be extracting a BLKmode value from
-	   an integer-mode (e.g., SImode) object.  Handle this case
-	   by doing the extract into an object as wide as the field
-	   (which we know to be the width of a basic mode), then
-	   storing into memory, and changing the mode to BLKmode.
-	   If we ultimately want the address (EXPAND_CONST_ADDRESS or
-	   EXPAND_INITIALIZER), then we must not copy to a temporary.  */
-	if (mode1 == VOIDmode
-	    || GET_CODE (op0) == REG || GET_CODE (op0) == SUBREG
-	    || (SLOW_UNALIGNED_ACCESS (mode1, alignment)
-		&& (TYPE_ALIGN (type) > alignment
-		    || bitpos % TYPE_ALIGN (type) != 0)))
-	  {
-	    enum machine_mode ext_mode = mode_for_size (bitsize, MODE_INT, 1);
-
-	    if (ext_mode == BLKmode)
-	      {
-		/* In this case, BITPOS must start at a byte boundary.  */
-		if (GET_CODE (op0) != MEM
-		    || bitpos % BITS_PER_UNIT != 0)
-		  abort ();
-
-		op0 = change_address (op0, VOIDmode,
-				      plus_constant (XEXP (op0, 0),
-						     bitpos / BITS_PER_UNIT));
-	      }
-	    else
-	      {
-		tree nt = build_qualified_type (type_for_mode (ext_mode, 0),
-						TYPE_QUAL_CONST);
-		rtx new = assign_temp (nt, 0, 1, 1);
-
-		op0 = extract_bit_field (validize_mem (op0), bitsize, bitpos,
-					 unsignedp, NULL_RTX, ext_mode,
-					 ext_mode, alignment,
-					 int_size_in_bytes (TREE_TYPE (tem)));
-
-		/* If the result is a record type and BITSIZE is narrower than
-		   the mode of OP0, an integral mode, and this is a big endian
-		   machine, we must put the field into the high-order bits.  */
-		if (TREE_CODE (type) == RECORD_TYPE && BYTES_BIG_ENDIAN
-		    && GET_MODE_CLASS (GET_MODE (op0)) == MODE_INT
-		    && bitsize < GET_MODE_BITSIZE (GET_MODE (op0)))
-		  op0 = expand_shift (LSHIFT_EXPR, GET_MODE (op0), op0,
-				      size_int (GET_MODE_BITSIZE
-						(GET_MODE (op0))
-						- bitsize),
-				      op0, 1);
-
-		emit_move_insn (new, op0);
-		op0 = copy_rtx (new);
-		PUT_MODE (op0, BLKmode);
-	      }
-	  }
-	else
-	  /* Get a reference to just this component.  */
-	  op0 = change_address (op0, mode1,
-				plus_constant (XEXP (op0, 0),
-					       (bitpos / BITS_PER_UNIT)));
-
-	MEM_ALIAS_SET (op0) = get_alias_set (exp);
-
-	/* Adjust the alignment in case the bit position is not
-	   a multiple of the alignment of the inner object.  */
-	while (bitpos % alignment != 0)
-	  alignment >>= 1;
-
-	if (GET_CODE (XEXP (op0, 0)) == REG)
-	  mark_reg_pointer (XEXP (op0, 0), alignment);
-
-	MEM_IN_STRUCT_P (op0) = 1;
-	MEM_VOLATILE_P (op0) |= volatilep;
-
-	*palign = alignment;
-	return op0;
-      }
-
-    default:
-      break;
-
-    }
-
-  return expand_expr (exp, NULL_RTX, VOIDmode, EXPAND_NORMAL);
+  /* This must now be the address either of EXP or of a PLACEHOLDER_EXPR
+     whose type is the same as EXP.  */
+  return (TREE_CODE (offset) == ADDR_EXPR
+	  && (TREE_OPERAND (offset, 0) == exp
+	      || (TREE_CODE (TREE_OPERAND (offset, 0)) == PLACEHOLDER_EXPR
+		  && (TREE_TYPE (TREE_OPERAND (offset, 0))
+		      == TREE_TYPE (exp)))));
 }
 
 /* Return the tree node if a ARG corresponds to a string constant or zero
@@ -9095,12 +8970,12 @@ string_constant (arg, ptr_offset)
 
 static rtx
 expand_increment (exp, post, ignore)
-     register tree exp;
+     tree exp;
      int post, ignore;
 {
-  register rtx op0, op1;
-  register rtx temp, value;
-  register tree incremented = TREE_OPERAND (exp, 0);
+  rtx op0, op1;
+  rtx temp, value;
+  tree incremented = TREE_OPERAND (exp, 0);
   optab this_optab = add_optab;
   int icode;
   enum machine_mode mode = TYPE_MODE (TREE_TYPE (exp));
@@ -9129,10 +9004,10 @@ expand_increment (exp, post, ignore)
   /* Compute the operands as RTX.
      Note whether OP0 is the actual lvalue or a copy of it:
      I believe it is a copy iff it is a register or subreg
-     and insns were generated in computing it.   */
+     and insns were generated in computing it.  */
 
   temp = get_last_insn ();
-  op0 = expand_expr (incremented, NULL_RTX, VOIDmode, EXPAND_MEMORY_USE_RW);
+  op0 = expand_expr (incremented, NULL_RTX, VOIDmode, 0);
 
   /* If OP0 is a SUBREG made for a promoted variable, we cannot increment
      in place but instead must do sign- or zero-extension during assignment,
@@ -9163,8 +9038,7 @@ expand_increment (exp, post, ignore)
 
   op0_is_copy = ((GET_CODE (op0) == SUBREG || GET_CODE (op0) == REG)
 		 && temp != get_last_insn ());
-  op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX, VOIDmode,
-		     EXPAND_MEMORY_USE_BAD);
+  op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX, VOIDmode, 0);
 
   /* Decide whether incrementing or decrementing.  */
   if (TREE_CODE (exp) == POSTDECREMENT_EXPR
@@ -9180,7 +9054,7 @@ expand_increment (exp, post, ignore)
     }
 
   if (TYPE_TRAP_SIGNED (TREE_TYPE (exp)))
-     this_optab = this_optab == add_optab ? addv_optab : subv_optab;
+    this_optab = this_optab == add_optab ? addv_optab : subv_optab;
 
   /* For a preincrement, see if we can do this with a single instruction.  */
   if (!post)
@@ -9260,7 +9134,7 @@ expand_increment (exp, post, ignore)
 		      : copy_to_reg (XEXP (op0, 0)));
 	  rtx temp, result;
 
-	  op0 = change_address (op0, VOIDmode, addr);
+	  op0 = replace_equiv_address (op0, addr);
 	  temp = force_reg (GET_MODE (op0), op0);
 	  if (! (*insn_data[icode].operand[2].predicate) (op1, mode))
 	    op1 = force_reg (mode, op1);
@@ -9285,9 +9159,9 @@ expand_increment (exp, post, ignore)
     temp = copy_rtx (value = op0);
 
   /* Increment however we can.  */
-  op1 = expand_binop (mode, this_optab, value, op1,
-		      current_function_check_memory_usage ? NULL_RTX : op0,
+  op1 = expand_binop (mode, this_optab, value, op1, op0,
 		      TREE_UNSIGNED (TREE_TYPE (exp)), OPTAB_LIB_WIDEN);
+
   /* Make sure the value is stored into OP0.  */
   if (op1 != op0)
     emit_move_insn (op0, op1);
@@ -9380,7 +9254,7 @@ do_jump (exp, if_false_label, if_true_label)
      tree exp;
      rtx if_false_label, if_true_label;
 {
-  register enum tree_code code = TREE_CODE (exp);
+  enum tree_code code = TREE_CODE (exp);
   /* Some cases need to create a label to jump to
      in order to properly fall through.
      These cases set DROP_THROUGH_LABEL nonzero.  */
@@ -9419,7 +9293,8 @@ do_jump (exp, if_false_label, if_true_label)
     case NOP_EXPR:
       if (TREE_CODE (TREE_OPERAND (exp, 0)) == COMPONENT_REF
 	  || TREE_CODE (TREE_OPERAND (exp, 0)) == BIT_FIELD_REF
-	  || TREE_CODE (TREE_OPERAND (exp, 0)) == ARRAY_REF)
+	  || TREE_CODE (TREE_OPERAND (exp, 0)) == ARRAY_REF
+	  || TREE_CODE (TREE_OPERAND (exp, 0)) == ARRAY_RANGE_REF)
 	goto normal;
     case CONVERT_EXPR:
       /* If we are narrowing the operand, we have to do the compare in the
@@ -9525,6 +9400,7 @@ do_jump (exp, if_false_label, if_true_label)
     case COMPONENT_REF:
     case BIT_FIELD_REF:
     case ARRAY_REF:
+    case ARRAY_RANGE_REF:
       {
 	HOST_WIDE_INT bitsize, bitpos;
 	int unsignedp;
@@ -9532,12 +9408,11 @@ do_jump (exp, if_false_label, if_true_label)
 	tree type;
 	tree offset;
 	int volatilep = 0;
-	unsigned int alignment;
 
 	/* Get description of this reference.  We don't actually care
 	   about the underlying object here.  */
 	get_inner_reference (exp, &bitsize, &bitpos, &offset, &mode,
-			     &unsignedp, &volatilep, &alignment);
+			     &unsignedp, &volatilep);
 
 	type = type_for_size (bitsize, unsignedp);
 	if (! SLOW_BYTE_ACCESS
@@ -9564,7 +9439,7 @@ do_jump (exp, if_false_label, if_true_label)
 
       else
 	{
-	  register rtx label1 = gen_label_rtx ();
+	  rtx label1 = gen_label_rtx ();
 	  drop_through_label = gen_label_rtx ();
 
 	  do_jump (TREE_OPERAND (exp, 0), label1, NULL_RTX);
@@ -9775,6 +9650,39 @@ do_jump (exp, if_false_label, if_true_label)
       }
       break;
 
+      /* Special case:
+		__builtin_expect (<test>, 0)	and
+		__builtin_expect (<test>, 1)
+
+	 We need to do this here, so that <test> is not converted to a SCC
+	 operation on machines that use condition code registers and COMPARE
+	 like the PowerPC, and then the jump is done based on whether the SCC
+	 operation produced a 1 or 0.  */
+    case CALL_EXPR:
+      /* Check for a built-in function.  */
+      if (TREE_CODE (TREE_OPERAND (exp, 0)) == ADDR_EXPR)
+	{
+	  tree fndecl = TREE_OPERAND (TREE_OPERAND (exp, 0), 0);
+	  tree arglist = TREE_OPERAND (exp, 1);
+
+	  if (TREE_CODE (fndecl) == FUNCTION_DECL
+	      && DECL_BUILT_IN (fndecl)
+	      && DECL_FUNCTION_CODE (fndecl) == BUILT_IN_EXPECT
+	      && arglist != NULL_TREE
+	      && TREE_CHAIN (arglist) != NULL_TREE)
+	    {
+	      rtx seq = expand_builtin_expect_jump (exp, if_false_label,
+						    if_true_label);
+
+	      if (seq != NULL_RTX)
+		{
+		  emit_insn (seq);
+		  return;
+		}
+	    }
+	}
+      /* fall through and generate the normal code.  */
+
     default:
     normal:
       temp = expand_expr (exp, NULL_RTX, VOIDmode, 0);
@@ -9806,7 +9714,7 @@ do_jump (exp, if_false_label, if_true_label)
       else if (GET_MODE (temp) != VOIDmode)
 	do_compare_rtx_and_jump (temp, CONST0_RTX (GET_MODE (temp)),
 				 NE, TREE_UNSIGNED (TREE_TYPE (exp)),
-				 GET_MODE (temp), NULL_RTX, 0,
+				 GET_MODE (temp), NULL_RTX,
 				 if_false_label, if_true_label);
       else
 	abort ();
@@ -9881,12 +9789,12 @@ do_jump_by_parts_greater_rtx (mode, unsignedp, op0, op1, if_false_label, if_true
 
       /* All but high-order word must be compared as unsigned.  */
       do_compare_rtx_and_jump (op0_word, op1_word, GT,
-			       (unsignedp || i > 0), word_mode, NULL_RTX, 0,
+			       (unsignedp || i > 0), word_mode, NULL_RTX,
 			       NULL_RTX, if_true_label);
 
       /* Consider lower words only if these are equal.  */
       do_compare_rtx_and_jump (op0_word, op1_word, NE, unsignedp, word_mode,
-			       NULL_RTX, 0, NULL_RTX, if_false_label);
+			       NULL_RTX, NULL_RTX, if_false_label);
     }
 
   if (if_false_label)
@@ -9917,8 +9825,7 @@ do_jump_by_parts_equality (exp, if_false_label, if_true_label)
     do_compare_rtx_and_jump (operand_subword_force (op0, i, mode),
 			     operand_subword_force (op1, i, mode),
 			     EQ, TREE_UNSIGNED (TREE_TYPE (exp)),
-			     word_mode, NULL_RTX, 0, if_false_label,
-			     NULL_RTX);
+			     word_mode, NULL_RTX, if_false_label, NULL_RTX);
 
   if (if_true_label)
     emit_jump (if_true_label);
@@ -9955,7 +9862,7 @@ do_jump_by_parts_equality_rtx (op0, if_false_label, if_true_label)
   if (part != 0)
     {
       do_compare_rtx_and_jump (part, const0_rtx, EQ, 1, word_mode,
-			       NULL_RTX, 0, if_false_label, if_true_label);
+			       NULL_RTX, if_false_label, if_true_label);
 
       return;
     }
@@ -9966,7 +9873,7 @@ do_jump_by_parts_equality_rtx (op0, if_false_label, if_true_label)
 
   for (i = 0; i < nwords; i++)
     do_compare_rtx_and_jump (operand_subword_force (op0, i, GET_MODE (op0)),
-			     const0_rtx, EQ, 1, word_mode, NULL_RTX, 0,
+			     const0_rtx, EQ, 1, word_mode, NULL_RTX,
 			     if_false_label, NULL_RTX);
 
   if (if_true_label)
@@ -9985,27 +9892,22 @@ do_jump_by_parts_equality_rtx (op0, if_false_label, if_true_label)
    things pushed on the stack that aren't yet used.
 
    If MODE is BLKmode, SIZE is an RTX giving the size of the objects being
-   compared.
-
-   If ALIGN is non-zero, it is the alignment of this type; if zero, the
-   size of MODE should be used.  */
+   compared.  */
 
 rtx
-compare_from_rtx (op0, op1, code, unsignedp, mode, size, align)
-     register rtx op0, op1;
+compare_from_rtx (op0, op1, code, unsignedp, mode, size)
+     rtx op0, op1;
      enum rtx_code code;
      int unsignedp;
      enum machine_mode mode;
      rtx size;
-     unsigned int align;
 {
   rtx tem;
 
   /* If one operand is constant, make it the second one.  Only do this
      if the other operand is not constant as well.  */
 
-  if ((CONSTANT_P (op0) && ! CONSTANT_P (op1))
-      || (GET_CODE (op0) == CONST_INT && GET_CODE (op1) != CONST_INT))
+  if (swap_commutative_operands_p (op0, op1))
     {
       tem = op0;
       op0 = op1;
@@ -10047,7 +9949,7 @@ compare_from_rtx (op0, op1, code, unsignedp, mode, size, align)
     }
 #endif
 
-  emit_cmp_insn (op0, op1, code, size, mode, unsignedp, align);
+  emit_cmp_insn (op0, op1, code, size, mode, unsignedp);
 
   return gen_rtx_fmt_ee (code, VOIDmode, cc0_rtx, const0_rtx);
 }
@@ -10056,20 +9958,16 @@ compare_from_rtx (op0, op1, code, unsignedp, mode, size, align)
    The decision as to signed or unsigned comparison must be made by the caller.
 
    If MODE is BLKmode, SIZE is an RTX giving the size of the objects being
-   compared.
-
-   If ALIGN is non-zero, it is the alignment of this type; if zero, the
-   size of MODE should be used.  */
+   compared.  */
 
 void
-do_compare_rtx_and_jump (op0, op1, code, unsignedp, mode, size, align,
+do_compare_rtx_and_jump (op0, op1, code, unsignedp, mode, size,
 			 if_false_label, if_true_label)
-     register rtx op0, op1;
+     rtx op0, op1;
      enum rtx_code code;
      int unsignedp;
      enum machine_mode mode;
      rtx size;
-     unsigned int align;
      rtx if_false_label, if_true_label;
 {
   rtx tem;
@@ -10087,8 +9985,7 @@ do_compare_rtx_and_jump (op0, op1, code, unsignedp, mode, size, align,
   /* If one operand is constant, make it the second one.  Only do this
      if the other operand is not constant as well.  */
 
-  if ((CONSTANT_P (op0) && ! CONSTANT_P (op1))
-      || (GET_CODE (op0) == CONST_INT && GET_CODE (op1) != CONST_INT))
+  if (swap_commutative_operands_p (op0, op1))
     {
       tem = op0;
       op0 = op1;
@@ -10148,7 +10045,7 @@ do_compare_rtx_and_jump (op0, op1, code, unsignedp, mode, size, align,
       if_true_label = gen_label_rtx ();
     }
 
-  emit_cmp_and_jump_insns (op0, op1, code, size, mode, unsignedp, align,
+  emit_cmp_and_jump_insns (op0, op1, code, size, mode, unsignedp,
 			   if_true_label);
 
   if (if_false_label)
@@ -10170,23 +10067,22 @@ do_compare_rtx_and_jump (op0, op1, code, unsignedp, mode, size, align,
 static void
 do_compare_and_jump (exp, signed_code, unsigned_code, if_false_label,
 		     if_true_label)
-     register tree exp;
+     tree exp;
      enum rtx_code signed_code, unsigned_code;
      rtx if_false_label, if_true_label;
 {
-  unsigned int align0, align1;
-  register rtx op0, op1;
-  register tree type;
-  register enum machine_mode mode;
+  rtx op0, op1;
+  tree type;
+  enum machine_mode mode;
   int unsignedp;
   enum rtx_code code;
 
   /* Don't crash if the comparison was erroneous.  */
-  op0 = expand_expr_unaligned (TREE_OPERAND (exp, 0), &align0);
+  op0 = expand_expr (TREE_OPERAND (exp, 0), NULL_RTX, VOIDmode, 0);
   if (TREE_CODE (TREE_OPERAND (exp, 0)) == ERROR_MARK)
     return;
 
-  op1 = expand_expr_unaligned (TREE_OPERAND (exp, 1), &align1);
+  op1 = expand_expr (TREE_OPERAND (exp, 1), NULL_RTX, VOIDmode, 0);
   if (TREE_CODE (TREE_OPERAND (exp, 1)) == ERROR_MARK)
     return;
 
@@ -10238,7 +10134,6 @@ do_compare_and_jump (exp, signed_code, unsigned_code, if_false_label,
   do_compare_rtx_and_jump (op0, op1, code, unsignedp, mode,
 			   ((mode == BLKmode)
 			    ? expr_size (TREE_OPERAND (exp, 0)) : NULL_RTX),
-			   MIN (align0, align1),
 			   if_false_label, if_true_label);
 }
 
@@ -10452,7 +10347,7 @@ do_store_flag (exp, target, mode, only_cheap)
 
       /* Put the AND last so it can combine with more things.  */
       if (bitnum != TYPE_PRECISION (type) - 1)
-	op0 = expand_and (op0, const1_rtx, subtarget);
+	op0 = expand_and (mode, op0, const1_rtx, subtarget);
 
       return op0;
     }
@@ -10517,11 +10412,19 @@ do_store_flag (exp, target, mode, only_cheap)
 
   emit_move_insn (target, invert ? const0_rtx : const1_rtx);
   result = compare_from_rtx (op0, op1, code, unsignedp,
-			     operand_mode, NULL_RTX, 0);
+			     operand_mode, NULL_RTX);
   if (GET_CODE (result) == CONST_INT)
     return (((result == const0_rtx && ! invert)
 	     || (result != const0_rtx && invert))
 	    ? const0_rtx : const1_rtx);
+
+  /* The code of RESULT may not match CODE if compare_from_rtx
+     decided to swap its operands and reverse the original code.
+
+     We know that compare_from_rtx returns either a CONST_INT or
+     a new comparison code, so it is safe to just extract the
+     code from RESULT.  */
+  code = GET_CODE (result);
 
   label = gen_label_rtx ();
   if (bcc_gen_fctn[(int) code] == 0)
@@ -10534,11 +10437,112 @@ do_store_flag (exp, target, mode, only_cheap)
   return target;
 }
 
-/* Generate a tablejump instruction (used for switch statements).  */
 
-#ifdef HAVE_tablejump
+/* Stubs in case we haven't got a casesi insn.  */
+#ifndef HAVE_casesi
+# define HAVE_casesi 0
+# define gen_casesi(a, b, c, d, e) (0)
+# define CODE_FOR_casesi CODE_FOR_nothing
+#endif
 
-/* INDEX is the value being switched on, with the lowest value
+/* If the machine does not have a case insn that compares the bounds,
+   this means extra overhead for dispatch tables, which raises the
+   threshold for using them.  */
+#ifndef CASE_VALUES_THRESHOLD
+#define CASE_VALUES_THRESHOLD (HAVE_casesi ? 4 : 5)
+#endif /* CASE_VALUES_THRESHOLD */
+
+unsigned int
+case_values_threshold ()
+{
+  return CASE_VALUES_THRESHOLD;
+}
+
+/* Attempt to generate a casesi instruction.  Returns 1 if successful,
+   0 otherwise (i.e. if there is no casesi instruction).  */
+int
+try_casesi (index_type, index_expr, minval, range,
+	    table_label, default_label)
+     tree index_type, index_expr, minval, range;
+     rtx table_label ATTRIBUTE_UNUSED;
+     rtx default_label;
+{
+  enum machine_mode index_mode = SImode;
+  int index_bits = GET_MODE_BITSIZE (index_mode);
+  rtx op1, op2, index;
+  enum machine_mode op_mode;
+
+  if (! HAVE_casesi)
+    return 0;
+
+  /* Convert the index to SImode.  */
+  if (GET_MODE_BITSIZE (TYPE_MODE (index_type)) > GET_MODE_BITSIZE (index_mode))
+    {
+      enum machine_mode omode = TYPE_MODE (index_type);
+      rtx rangertx = expand_expr (range, NULL_RTX, VOIDmode, 0);
+
+      /* We must handle the endpoints in the original mode.  */
+      index_expr = build (MINUS_EXPR, index_type,
+			  index_expr, minval);
+      minval = integer_zero_node;
+      index = expand_expr (index_expr, NULL_RTX, VOIDmode, 0);
+      emit_cmp_and_jump_insns (rangertx, index, LTU, NULL_RTX,
+			       omode, 1, default_label);
+      /* Now we can safely truncate.  */
+      index = convert_to_mode (index_mode, index, 0);
+    }
+  else
+    {
+      if (TYPE_MODE (index_type) != index_mode)
+	{
+	  index_expr = convert (type_for_size (index_bits, 0),
+				index_expr);
+	  index_type = TREE_TYPE (index_expr);
+	}
+
+      index = expand_expr (index_expr, NULL_RTX, VOIDmode, 0);
+    }
+  emit_queue ();
+  index = protect_from_queue (index, 0);
+  do_pending_stack_adjust ();
+
+  op_mode = insn_data[(int) CODE_FOR_casesi].operand[0].mode;
+  if (! (*insn_data[(int) CODE_FOR_casesi].operand[0].predicate)
+      (index, op_mode))
+    index = copy_to_mode_reg (op_mode, index);
+
+  op1 = expand_expr (minval, NULL_RTX, VOIDmode, 0);
+
+  op_mode = insn_data[(int) CODE_FOR_casesi].operand[1].mode;
+  op1 = convert_modes (op_mode, TYPE_MODE (TREE_TYPE (minval)),
+		       op1, TREE_UNSIGNED (TREE_TYPE (minval)));
+  if (! (*insn_data[(int) CODE_FOR_casesi].operand[1].predicate)
+      (op1, op_mode))
+    op1 = copy_to_mode_reg (op_mode, op1);
+
+  op2 = expand_expr (range, NULL_RTX, VOIDmode, 0);
+
+  op_mode = insn_data[(int) CODE_FOR_casesi].operand[2].mode;
+  op2 = convert_modes (op_mode, TYPE_MODE (TREE_TYPE (range)),
+		       op2, TREE_UNSIGNED (TREE_TYPE (range)));
+  if (! (*insn_data[(int) CODE_FOR_casesi].operand[2].predicate)
+      (op2, op_mode))
+    op2 = copy_to_mode_reg (op_mode, op2);
+
+  emit_jump_insn (gen_casesi (index, op1, op2,
+			      table_label, default_label));
+  return 1;
+}
+
+/* Attempt to generate a tablejump instruction; same concept.  */
+#ifndef HAVE_tablejump
+#define HAVE_tablejump 0
+#define gen_tablejump(x, y) (0)
+#endif
+
+/* Subroutine of the next function.
+
+   INDEX is the value being switched on, with the lowest value
    in the table already subtracted.
    MODE is its expected mode (needed if INDEX is constant).
    RANGE is the length of the jump table.
@@ -10547,12 +10551,12 @@ do_store_flag (exp, target, mode, only_cheap)
    DEFAULT_LABEL is a CODE_LABEL rtx to jump to if the
    index value is out of range.  */
 
-void
+static void
 do_tablejump (index, mode, range, table_label, default_label)
      rtx index, range, table_label, default_label;
      enum machine_mode mode;
 {
-  register rtx temp, vector;
+  rtx temp, vector;
 
   /* Do an unsigned comparison (in the proper mode) between the index
      expression and the value which represents the length of the range.
@@ -10563,7 +10567,7 @@ do_tablejump (index, mode, range, table_label, default_label)
      the maximum value of the range.  */
 
   emit_cmp_and_jump_insns (index, range, GTU, NULL_RTX, mode, 1,
-			   0, default_label);
+			   default_label);
 
   /* If index is in range, it must fit in Pmode.
      Convert to Pmode so we can index with it.  */
@@ -10609,4 +10613,31 @@ do_tablejump (index, mode, range, table_label, default_label)
     emit_barrier ();
 }
 
-#endif /* HAVE_tablejump  */
+int
+try_tablejump (index_type, index_expr, minval, range,
+	       table_label, default_label)
+     tree index_type, index_expr, minval, range;
+     rtx table_label, default_label;
+{
+  rtx index;
+
+  if (! HAVE_tablejump)
+    return 0;
+
+  index_expr = fold (build (MINUS_EXPR, index_type,
+			    convert (index_type, index_expr),
+			    convert (index_type, minval)));
+  index = expand_expr (index_expr, NULL_RTX, VOIDmode, 0);
+  emit_queue ();
+  index = protect_from_queue (index, 0);
+  do_pending_stack_adjust ();
+
+  do_tablejump (index, TYPE_MODE (index_type),
+		convert_modes (TYPE_MODE (index_type),
+			       TYPE_MODE (TREE_TYPE (range)),
+			       expand_expr (range, NULL_RTX,
+					    VOIDmode, 0),
+			       TREE_UNSIGNED (TREE_TYPE (range))),
+		table_label, default_label);
+  return 1;
+}

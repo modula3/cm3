@@ -30,9 +30,12 @@ $section = "";
 @icstack = ();
 @endwstack = ();
 @skstack = ();
+@instack = ();
 $shift = "";
 %defs = ();
 $fnno = 1;
+$inf = "";
+$ibase = "";
 
 while ($_ = shift) {
     if (/^-D(.*)$/) {
@@ -41,11 +44,13 @@ while ($_ = shift) {
 	} else {
 	    $flag = shift;
 	}
+	$value = "";
+	($flag, $value) = ($flag =~ /^([^=]+)(?:=(.+))?/);
 	die "no flag specified for -D\n"
 	    unless $flag ne "";
-	die "flags may only contain letters, digits, hyphens, and underscores\n"
+	die "flags may only contain letters, digits, hyphens, dashes and underscores\n"
 	    unless $flag =~ /^[a-zA-Z0-9_-]+$/;
-	$defs{$flag} = "";
+	$defs{$flag} = $value;
     } elsif (/^-/) {
 	usage();
     } else {
@@ -56,14 +61,19 @@ while ($_ = shift) {
 }
 
 if (defined $in) {
-    open(STDIN, $in) or die "opening \"$in\": $!\n";
+    $inf = gensym();
+    open($inf, "<$in") or die "opening \"$in\": $!\n";
+    $ibase = $1 if $in =~ m|^(.+)/[^/]+$|;
+} else {
+    $inf = \*STDIN;
 }
+
 if (defined $out) {
     open(STDOUT, ">$out") or die "opening \"$out\": $!\n";
 }
 
-while(<STDIN>)
-{
+while(defined $inf) {
+while(<$inf>) {
     # Certain commands are discarded without further processing.
     /^\@(?:
 	 [a-z]+index		# @*index: useful only in complete manual
@@ -73,24 +83,49 @@ while(<STDIN>)
 	 |node			# @node: useful only in .info file
 	 |(?:end\s+)?ifnottex   # @ifnottex .. @end ifnottex: use contents
 	)\b/x and next;
-    
+
     chomp;
 
     # Look for filename and title markers.
     /^\@setfilename\s+([^.]+)/ and $fn = $1, next;
-    /^\@settitle\s+([^.]+)/ and $tl = $1, next;
+    /^\@settitle\s+([^.]+)/ and $tl = postprocess($1), next;
+
+    # Identify a man title but keep only the one we are interested in.
+    /^\@c\s+man\s+title\s+([A-Za-z0-9-]+)\s+(.+)/ and do {
+	if (exists $defs{$1}) {
+	    $fn = $1;
+	    $tl = postprocess($2);
+	}
+	next;
+    };
 
     # Look for blocks surrounded by @c man begin SECTION ... @c man end.
     # This really oughta be @ifman ... @end ifman and the like, but such
     # would require rev'ing all other Texinfo translators.
-    /^\@c man begin ([A-Z]+)/ and $sect = $1, $output = 1, next;
-    /^\@c man end/ and do {
+    /^\@c\s+man\s+begin\s+([A-Z]+)\s+([A-Za-z0-9-]+)/ and do {
+	$output = 1 if exists $defs{$2};
+        $sect = $1;
+	next;
+    };
+    /^\@c\s+man\s+begin\s+([A-Z]+)/ and $sect = $1, $output = 1, next;
+    /^\@c\s+man\s+end/ and do {
 	$sects{$sect} = "" unless exists $sects{$sect};
 	$sects{$sect} .= postprocess($section);
 	$section = "";
 	$output = 0;
 	next;
     };
+
+    # handle variables
+    /^\@set\s+([a-zA-Z0-9_-]+)\s*(.*)$/ and do {
+	$defs{$1} = $2;
+	next;
+    };
+    /^\@clear\s+([a-zA-Z0-9_-]+)/ and do {
+	delete $defs{$1};
+	next;
+    };
+
     next unless $output;
 
     # Discard comments.  (Can't do it above, because then we'd never see
@@ -116,7 +151,7 @@ while(<STDIN>)
 	} elsif ($ended =~ /^(?:example|smallexample|display)$/) {
 	    $shift = "";
 	    $_ = "";	# need a paragraph break
-	} elsif ($ended =~ /^(?:itemize|enumerate|table)$/) {
+	} elsif ($ended =~ /^(?:itemize|enumerate|[fv]?table)$/) {
 	    $_ = "\n=back\n";
 	    $ic = pop @icstack;
 	} else {
@@ -188,11 +223,22 @@ while(<STDIN>)
     }
 
     # Single line command handlers.
-    /^\@set\s+([a-zA-Z0-9_-]+)\s*(.*)$/ and $defs{$1} = $2, next;
-    /^\@clear\s+([a-zA-Z0-9_-]+)/ and delete $defs{$1}, next;
 
-    /^\@(?:section|unnumbered|unnumberedsec|center)\s+(.+)$/ and $_ = "\n=head2 $1\n";
-    /^\@subsection\s+(.+)$/ and $_ = "\n=head3 $1\n";
+    /^\@include\s+(.+)$/ and do {
+	push @instack, $inf;
+	$inf = gensym();
+
+	# Try cwd and $ibase.
+	open($inf, "<" . $1) 
+	    or open($inf, "<" . $ibase . "/" . $1)
+		or die "cannot open $1 or $ibase/$1: $!\n";
+	next;
+    };
+
+    /^\@(?:section|unnumbered|unnumberedsec|center)\s+(.+)$/
+	and $_ = "\n=head2 $1\n";
+    /^\@subsection\s+(.+)$/
+	and $_ = "\n=head3 $1\n";
 
     # Block command handlers:
     /^\@itemize\s+(\@[a-z]+|\*|-)/ and do {
@@ -215,16 +261,16 @@ while(<STDIN>)
 	$endw = "enumerate";
     };
 
-    /^\@table\s+(\@[a-z]+)/ and do {
+    /^\@([fv]?table)\s+(\@[a-z]+)/ and do {
 	push @endwstack, $endw;
 	push @icstack, $ic;
-	$ic = $1;
+	$endw = $1;
+	$ic = $2;
 	$ic =~ s/\@(?:samp|strong|key|gcctabopt|env)/B/;
 	$ic =~ s/\@(?:code|kbd)/C/;
 	$ic =~ s/\@(?:dfn|var|emph|cite|i)/I/;
 	$ic =~ s/\@(?:file)/F/;
 	$_ = "\n=over 4\n";
-	$endw = "table";
     };
 
     /^\@((?:small)?example|display)/ and do {
@@ -246,6 +292,10 @@ while(<STDIN>)
     };
 
     $section .= $shift.$_."\n";
+}
+# End of current file.
+close($inf);
+$inf = pop @instack;
 }
 
 die "No filename or title\n" unless defined $fn && defined $tl;
@@ -274,7 +324,15 @@ sub postprocess
     local $_ = $_[0];
 
     # @value{foo} is replaced by whatever 'foo' is defined as.
-    s/\@value\{([a-zA-Z0-9_-]+)\}/$defs{$1}/g;
+    while (m/(\@value\{([a-zA-Z0-9_-]+)\})/g) {
+	if (! exists $defs{$2}) {
+	    print STDERR "Option $2 not defined\n";
+	    s/\Q$1\E//;
+	} else {
+	    $value = $defs{$2};
+	    s/\Q$1\E/$value/;
+	}
+    }
 
     # Formatting commands.
     # Temporary escape for @r.
@@ -355,4 +413,15 @@ sub add_footnote
     $sects{FOOTNOTES} .= $_[0];
     $sects{FOOTNOTES} .= "\n\n";
 }
-    
+
+# stolen from Symbol.pm
+{
+    my $genseq = 0;
+    sub gensym
+    {
+	my $name = "GEN" . $genseq++;
+	my $ref = \*{$name};
+	delete $::{$name};
+	return $ref;
+    }
+}

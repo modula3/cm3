@@ -1,6 +1,6 @@
 /* Definitions for Motorola 68k running Linux-based GNU systems with
    ELF format.
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2002 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -23,11 +23,15 @@ Boston, MA 02111-1307, USA.  */
 #define MOTOROLA		/* Use Motorola syntax */
 #define USE_GAS			/* But GAS wants jbsr instead of jsr */
 
+/* TODO: convert includes to ${tm_file} list in config.gcc.  */
 #include <m68k/m68k.h>
 
-/* Make sure CC1 is undefined. */
+/* Make sure CC1 is undefined.  */
 #undef CC1_SPEC
 
+#include "dbxelf.h"
+#include "elfos.h"
+#include "svr4.h"
 #include <linux.h>		/* some common stuff */
 
 #undef TARGET_VERSION
@@ -58,12 +62,12 @@ Boston, MA 02111-1307, USA.  */
 #define REGISTER_PREFIX "%"
 
 /* The prefix for local (compiler generated) labels.
-   These labels will not appear in the symbol table. */
+   These labels will not appear in the symbol table.  */
 
 #undef LOCAL_LABEL_PREFIX
 #define LOCAL_LABEL_PREFIX "."
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""
@@ -72,7 +76,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number.
-   Motorola format uses different register names than defined in m68k.h. */
+   Motorola format uses different register names than defined in m68k.h.  */
 
 #undef REGISTER_NAMES
 
@@ -109,7 +113,7 @@ Boston, MA 02111-1307, USA.  */
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
 
 #define CPP_PREDEFINES \
-  "-D__ELF__ -Dunix -Dmc68000 -Dmc68020 -Dlinux -Asystem=unix -Asystem=posix -Acpu=m68k -Amachine=m68k"
+  "-D__ELF__ -Dunix -Dmc68000 -Dmc68020 -D__gnu_linux__ -Dlinux -Asystem=unix -Asystem=posix -Acpu=m68k -Amachine=m68k"
 
 #undef CPP_SPEC
 #ifdef USE_GNULIBC_1
@@ -151,7 +155,7 @@ Boston, MA 02111-1307, USA.  */
    When the -shared link option is used a final link is not being
    done.  */
 
-/* If ELF is the default format, we should not use /lib/elf. */
+/* If ELF is the default format, we should not use /lib/elf.  */
 
 #undef	LINK_SPEC
 #ifdef USE_GNULIBC_1
@@ -266,7 +270,7 @@ Boston, MA 02111-1307, USA.  */
    function.  VALTYPE is the data type of the value (as a tree).  If
    the precise function being called is known, FUNC is its
    FUNCTION_DECL; otherwise, FUNC is 0.  For m68k/SVR4 generate the
-   result in d0, a0, or fp0 as appropriate. */
+   result in d0, a0, or fp0 as appropriate.  */
    
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)					\
@@ -303,14 +307,15 @@ do {									\
    : gen_rtx_REG ((MODE), 0))
 
 /* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is
-   an operand of a function call. */
+   an operand of a function call.  */
 #undef LEGITIMATE_PIC_OPERAND_P
 #define LEGITIMATE_PIC_OPERAND_P(X) \
   ((! symbolic_operand (X, VOIDmode) \
-    && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
-	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
-	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       \
+    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X) != 0	\
+	  && GET_CODE (mem_for_const_double (X)) == MEM			\
+	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
+			       VOIDmode))) 				\
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       	\
    || PCREL_GENERAL_OPERAND_OK)
 
 /* Turn off function cse if we are doing PIC. We always want function
@@ -323,7 +328,7 @@ do {									\
   if (flag_pic) flag_no_function_cse = 1;
 
 /* For m68k SVR4, structures are returned using the reentrant
-   technique. */
+   technique.  */
 #undef PCC_STATIC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 0
 

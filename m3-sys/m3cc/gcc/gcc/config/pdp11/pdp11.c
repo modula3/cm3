@@ -1,5 +1,5 @@
 /* Subroutines for gcc2 for pdp11.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2001
    Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
@@ -34,7 +34,11 @@ Boston, MA 02111-1307, USA.  */
 #include "flags.h"
 #include "recog.h"
 #include "tree.h"
+#include "expr.h"
+#include "toplev.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 /*
 #define FPU_REG_P(X)	((X)>=8 && (X)<14)
@@ -49,8 +53,33 @@ int current_first_parm_offset;
 /* rtx cc0_reg_rtx; - no longer needed? */
 
 static rtx find_addr_reg PARAMS ((rtx)); 
-static const char *singlemove_string PARAMS ((rtx *)); 
+static const char *singlemove_string PARAMS ((rtx *));
+static bool pdp11_assemble_integer PARAMS ((rtx, unsigned int, int));
+static void pdp11_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void pdp11_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_BYTE_OP
+#define TARGET_ASM_BYTE_OP NULL
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP NULL
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP NULL
+#undef TARGET_ASM_INTEGER
+#define TARGET_ASM_INTEGER pdp11_assemble_integer
 
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE pdp11_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE pdp11_output_function_epilogue
+
+#undef TARGET_ASM_OPEN_PAREN
+#define TARGET_ASM_OPEN_PAREN "["
+#undef TARGET_ASM_CLOSE_PAREN
+#define TARGET_ASM_CLOSE_PAREN "]"
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* Nonzero if OP is a valid second operand for an arithmetic insn.  */
 
 int
@@ -96,23 +125,43 @@ expand_shift_operand (op, mode)
    knowing which registers should not be saved even if used.  
 */
 
-void 
-output_function_prologue(stream, size)
-  FILE *stream;
-  int size;
-{							       
-    int fsize = ((size) + 1) & ~1;      				
-    int regno;
+#ifdef TWO_BSD
 
+static void
+pdp11_output_function_prologue (stream, size)
+     FILE *stream;
+     HOST_WIDE_INT size;
+{							       
+  fprintf (stream, "\tjsr	r5, csv\n");
+  if (size)
+    {
+      fprintf (stream, "\t/*abuse empty parameter slot for locals!*/\n");
+      if (size > 2)
+	fprintf(stream, "\tsub $%d, sp\n", size - 2);
+
+    }
+}
+
+#else  /* !TWO_BSD */
+
+static void
+pdp11_output_function_prologue (stream, size)
+     FILE *stream;
+     HOST_WIDE_INT size;
+{							       
+    HOST_WIDE_INT fsize = ((size) + 1) & ~1;
+    int regno;
     int via_ac = -1;
-    
-    fprintf (stream, "\n\t;	/* function prologue %s*/\n", current_function_name);		
+
+    fprintf (stream,
+	     "\n\t;	/* function prologue %s*/\n", current_function_name);
 
     /* if we are outputting code for main, 
        the switch FPU to right mode if TARGET_FPU */
     if (MAIN_NAME_P (DECL_NAME (current_function_decl)) && TARGET_FPU)
     {
-	fprintf(stream, "\t;/* switch cpu to double float, single integer */\n");
+	fprintf(stream,
+		"\t;/* switch cpu to double float, single integer */\n");
 	fprintf(stream, "\tsetd\n");
 	fprintf(stream, "\tseti\n\n");
     }
@@ -170,6 +219,8 @@ output_function_prologue(stream, size)
     fprintf (stream, "\t;/* end of prologue */\n\n");		
 }
 
+#endif /* !TWO_BSD */
+
 /*
    The function epilogue should not depend on the current stack pointer!
    It should use the frame pointer only.  This is mandatory because
@@ -189,13 +240,25 @@ output_function_prologue(stream, size)
 
    maybe as option if you want to generate code for kernel mode? */
 
+#ifdef TWO_BSD
 
-void 
-output_function_epilogue(stream, size)
-  FILE *stream;
-  int size;
+static void
+pdp11_output_function_epilogue (stream, size)
+     FILE *stream;
+     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
 {								
-    int fsize = ((size) + 1) & ~1;      				
+  fprintf (stream, "\t/* SP ignored by cret? */\n");
+  fprintf (stream, "\tjmp cret\n");
+}
+
+#else  /* !TWO_BSD */
+
+static void
+pdp11_output_function_epilogue (stream, size)
+     FILE *stream;
+     HOST_WIDE_INT size;
+{								
+    HOST_WIDE_INT fsize = ((size) + 1) & ~1;
     int i, j, k;
 
     int via_ac;
@@ -293,6 +356,8 @@ output_function_epilogue(stream, size)
     fprintf (stream, "\trts pc\n");					
     fprintf (stream, "\t;/* end of epilogue*/\n\n\n");		
 }
+
+#endif /* !TWO_BSD */
 	
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
@@ -398,14 +463,14 @@ output_move_double (operands)
   if (optype0 == REGOP)
     latehalf[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
   else if (optype0 == OFFSOP)
-    latehalf[0] = adj_offsettable_operand (operands[0], 2);
+    latehalf[0] = adjust_address (operands[0], HImode, 2);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
     latehalf[1] = gen_rtx_REG (HImode, REGNO (operands[1]) + 1);
   else if (optype1 == OFFSOP)
-    latehalf[1] = adj_offsettable_operand (operands[1], 2);
+    latehalf[1] = adjust_address (operands[1], HImode, 2);
   else if (optype1 == CNSTOP)
     {
 	if (CONSTANT_P (operands[1]))
@@ -610,14 +675,14 @@ output_move_quad (operands)
   if (optype0 == REGOP)
     latehalf[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 2);
   else if (optype0 == OFFSOP)
-    latehalf[0] = adj_offsettable_operand (operands[0], 4);
+    latehalf[0] = adjust_address (operands[0], SImode, 4);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
     latehalf[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 2);
   else if (optype1 == OFFSOP)
-    latehalf[1] = adj_offsettable_operand (operands[1], 4);
+    latehalf[1] = adjust_address (operands[1], SImode, 4);
   else if (optype1 == CNSTOP)
     {
       if (GET_CODE (operands[1]) == CONST_DOUBLE)
@@ -888,6 +953,34 @@ print_operand_address (file, addr)
       output_addr_const_pdp11 (file, addr);
     }
 }
+
+/* Target hook to assemble integer objects.  We need to use the
+   pdp-specific version of output_addr_const.  */
+
+static bool
+pdp11_assemble_integer (x, size, aligned_p)
+     rtx x;
+     unsigned int size;
+     int aligned_p;
+{
+  if (aligned_p)
+    switch (size)
+      {
+      case 1:
+	fprintf (asm_out_file, "\t.byte\t");
+	output_addr_const_pdp11 (asm_out_file, x);
+	fprintf (asm_out_file, " /* char */\n");
+	return true;
+
+      case 2:
+	fprintf (asm_out_file, TARGET_UNIX_ASM ? "\t" : "\t.word\t");
+	output_addr_const_pdp11 (asm_out_file, x);
+	fprintf (asm_out_file, " /* short */\n");
+	return true;
+      }
+  return default_assemble_integer (x, size, aligned_p);
+}
+
 
 /* register move costs, indexed by regs */
 
@@ -1507,9 +1600,9 @@ output_addr_const_pdp11 (file, x)
       if (GET_CODE (XEXP (x, 1)) == CONST_INT
 	  && INTVAL (XEXP (x, 1)) < 0)
 	{
-	  fprintf (file, ASM_OPEN_PAREN);
+	  fprintf (file, targetm.asm_out.open_paren);
 	  output_addr_const_pdp11 (file, XEXP (x, 1));
-	  fprintf (file, ASM_CLOSE_PAREN);
+	  fprintf (file, targetm.asm_out.close_paren);
 	}
       else
 	output_addr_const_pdp11 (file, XEXP (x, 1));

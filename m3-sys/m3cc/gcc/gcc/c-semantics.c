@@ -1,25 +1,25 @@
 /* This file contains the definitions and documentation for the common
    tree codes used in the GNU C and C++ compilers (see c-common.def
    for the standard codes).  
-   Copyright (C) 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002 Free Software Foundation, Inc.
    Written by Benjamin Chelf (chelf@codesourcery.com).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -33,6 +33,7 @@ Boston, MA 02111-1307, USA.  */
 #include "flags.h"
 #include "ggc.h"
 #include "rtl.h"
+#include "expr.h"
 #include "output.h"
 #include "timevar.h"
 
@@ -46,8 +47,6 @@ void (*lang_expand_stmt) PARAMS ((tree));
    defined, it is assumed that declarations other than those for
    variables and labels do not require any RTL generation.  */
 void (*lang_expand_decl_stmt) PARAMS ((tree));
-
-static tree prune_unused_decls PARAMS ((tree *, int *, void *));
 
 /* Create an empty statement tree rooted at T.  */
 
@@ -86,8 +85,9 @@ add_stmt (t)
   /* Add T to the statement-tree.  */
   TREE_CHAIN (last_tree) = t;
   last_tree = t;
+  
   /* When we expand a statement-tree, we must know whether or not the
-     statements are full-expresions.  We record that fact here.  */
+     statements are full-expressions.  We record that fact here.  */
   STMT_IS_FULL_EXPR_P (last_tree) = stmts_are_full_exprs_p ();
 
   /* Keep track of the number of statements in this function.  */
@@ -118,7 +118,7 @@ add_decl_stmt (decl)
    returns a new TREE_LIST representing the top of the SCOPE_STMT
    stack.  The TREE_PURPOSE is the new SCOPE_STMT.  If BEGIN_P is
    zero, returns a TREE_LIST whose TREE_VALUE is the new SCOPE_STMT,
-   and whose TREE_PURPOSE is the matching SCOPE_STMT iwth
+   and whose TREE_PURPOSE is the matching SCOPE_STMT with
    SCOPE_BEGIN_P set.  */
 
 tree
@@ -126,8 +126,9 @@ add_scope_stmt (begin_p, partial_p)
      int begin_p;
      int partial_p;
 {
+  tree *stack_ptr = current_scope_stmt_stack ();
   tree ss;
-  tree top;
+  tree top = *stack_ptr;
 
   /* Build the statement.  */
   ss = build_stmt (SCOPE_STMT, NULL_TREE);
@@ -137,79 +138,19 @@ add_scope_stmt (begin_p, partial_p)
   /* Keep the scope stack up to date.  */
   if (begin_p)
     {
-      *current_scope_stmt_stack () 
-	= tree_cons (ss, NULL_TREE, *current_scope_stmt_stack ());
-      top = *current_scope_stmt_stack ();
+      top = tree_cons (ss, NULL_TREE, top);
+      *stack_ptr = top;
     }
   else
     {
-      top = *current_scope_stmt_stack ();
       TREE_VALUE (top) = ss;
-      *current_scope_stmt_stack () = TREE_CHAIN (top);
+      *stack_ptr = TREE_CHAIN (top);
     }
 
   /* Add the new statement to the statement-tree.  */
   add_stmt (ss);
 
   return top;
-}
-
-/* Remove declarations of internal variables that are not used from a
-   stmt tree.  To qualify, the variable must have a name and must have
-   a zero DECL_SOURCE_LINE.  We tried to remove all variables for
-   which TREE_USED was false, but it turns out that there's tons of
-   variables for which TREE_USED is false but that are still in fact
-   used.  */
-
-static tree
-prune_unused_decls (tp, walk_subtrees, data)
-     tree *tp;
-     int *walk_subtrees ATTRIBUTE_UNUSED;
-     void *data ATTRIBUTE_UNUSED;
-{
-  tree t = *tp;
-
-  if (t == NULL_TREE)
-    {
-      *walk_subtrees = 0;
-      return NULL_TREE;
-    }
-
-  if (TREE_CODE (t) == DECL_STMT)
-    {
-      tree d = DECL_STMT_DECL (t);
-      if (!TREE_USED (d) && DECL_NAME (d) && DECL_SOURCE_LINE (d) == 0)
-	{
-	  *tp = TREE_CHAIN (t);
-	  /* Recurse on the new value of tp, otherwise we will skip
-	     the next statement.  */
-	  return prune_unused_decls (tp, walk_subtrees, data);
-	}
-    }
-  else if (TREE_CODE (t) == SCOPE_STMT)
-    {
-      /* Remove all unused decls from the BLOCK of this SCOPE_STMT.  */
-      tree block = SCOPE_STMT_BLOCK (t);
-
-      if (block)
-	{
-	  tree *vp;
-
-	  for (vp = &BLOCK_VARS (block); *vp; )
-	    {
-	      tree v = *vp;
-	      if (! TREE_USED (v) && DECL_NAME (v) && DECL_SOURCE_LINE (v) == 0)
-		*vp = TREE_CHAIN (v);  /* drop */
-	      else
-		vp = &TREE_CHAIN (v);  /* advance */
-	    }
-	  /* If there are now no variables, the entire BLOCK can be dropped.
-	     (This causes SCOPE_NULLIFIED_P (t) to be true.)  */
-	  if (BLOCK_VARS (block) == NULL_TREE)
-	    SCOPE_STMT_BLOCK (t) = NULL_TREE;
-	}
-    }
-  return NULL_TREE;
 }
 
 /* Finish the statement tree rooted at T.  */
@@ -224,9 +165,6 @@ finish_stmt_tree (t)
   stmt = TREE_CHAIN (*t);
   *t = stmt;
   last_tree = NULL_TREE;
-
-  /* Remove unused decls from the stmt tree.  */
-  walk_stmt_tree (t, prune_unused_decls, NULL);
 
   if (cfun && stmt)
     {
@@ -246,19 +184,12 @@ finish_stmt_tree (t)
 tree
 build_stmt VPARAMS ((enum tree_code code, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  enum tree_code code;
-#endif
-  va_list p;
-  register tree t;
-  register int length;
-  register int i;
+  tree t;
+  int length;
+  int i;
 
-  VA_START (p, code);
-
-#ifndef ANSI_PROTOTYPES
-  code = va_arg (p, enum tree_code);
-#endif
+  VA_OPEN (p, code);
+  VA_FIXEDARG (p, enum tree_code, code);
 
   t = make_node (code);
   length = TREE_CODE_LENGTH (code);
@@ -267,7 +198,7 @@ build_stmt VPARAMS ((enum tree_code code, ...))
   for (i = 0; i < length; i++)
     TREE_OPERAND (t, i) = va_arg (p, tree);
 
-  va_end (p);
+  VA_CLOSE (p);
   return t;
 }
 
@@ -319,7 +250,7 @@ make_rtl_for_local_static (decl)
      already create RTL, which means that the modification to
      DECL_ASSEMBLER_NAME came only via the explicit extension.  */
   if (DECL_ASSEMBLER_NAME (decl) != DECL_NAME (decl)
-      && !DECL_RTL (decl))
+      && !DECL_RTL_SET_P (decl))
     asmspec = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
 
   rest_of_decl_compilation (decl, asmspec, /*top_level=*/0, /*at_end=*/0);
@@ -354,7 +285,7 @@ emit_local_var (decl)
     expand_end_target_temps ();
 }
 
-/* Helper for generating the RTL at the beginning of a scope. */
+/* Helper for generating the RTL at the beginning of a scope.  */
 
 void
 genrtl_do_pushlevel ()
@@ -363,7 +294,7 @@ genrtl_do_pushlevel ()
   clear_last_expr ();
 }
 
-/* Generate the RTL for DESTINATION, which is a GOTO_STMT. */
+/* Generate the RTL for DESTINATION, which is a GOTO_STMT.  */
 
 void
 genrtl_goto_stmt (destination)
@@ -388,11 +319,28 @@ genrtl_goto_stmt (destination)
     expand_computed_goto (destination);
 }
 
-/* Generate the RTL for EXPR, which is an EXPR_STMT. */
+/* Generate the RTL for EXPR, which is an EXPR_STMT.  Provided just
+   for backward compatibility.  genrtl_expr_stmt_value() should be
+   used for new code.  */
 
-void 
+void
 genrtl_expr_stmt (expr)
      tree expr;
+{
+  genrtl_expr_stmt_value (expr, -1, 1);
+}
+
+/* Generate the RTL for EXPR, which is an EXPR_STMT.  WANT_VALUE tells
+   whether to (1) save the value of the expression, (0) discard it or
+   (-1) use expr_stmts_for_value to tell.  The use of -1 is
+   deprecated, and retained only for backward compatibility.
+   MAYBE_LAST is non-zero if this EXPR_STMT might be the last statement
+   in expression statement.  */
+
+void 
+genrtl_expr_stmt_value (expr, want_value, maybe_last)
+     tree expr;
+     int want_value, maybe_last;
 {
   if (expr != NULL_TREE)
     {
@@ -402,14 +350,14 @@ genrtl_expr_stmt (expr)
 	expand_start_target_temps ();
       
       if (expr != error_mark_node)
-	expand_expr_stmt (expr);
+	expand_expr_stmt_value (expr, want_value, maybe_last);
       
       if (stmts_are_full_exprs_p ())
 	expand_end_target_temps ();
     }
 }
 
-/* Generate the RTL for T, which is a DECL_STMT. */
+/* Generate the RTL for T, which is a DECL_STMT.  */
 
 void
 genrtl_decl_stmt (t)
@@ -436,15 +384,7 @@ genrtl_decl_stmt (t)
 				DECL_ANON_UNION_ELEMS (decl));
     }
   else if (TREE_CODE (decl) == VAR_DECL && TREE_STATIC (decl))
-    {
-      if (DECL_ARTIFICIAL (decl) && ! TREE_USED (decl))
-	/* Do not emit unused decls. This is not just an
-	   optimization. We really do not want to emit
-	   __PRETTY_FUNCTION__ etc, if they're never used.  */
-	DECL_IGNORED_P (decl) = 1;
-      else
-	make_rtl_for_local_static (decl);
-    }
+    make_rtl_for_local_static (decl);
   else if (TREE_CODE (decl) == LABEL_DECL 
 	   && C_DECLARED_LABEL_FLAG (decl))
     declare_nonlocal_label (decl);
@@ -452,7 +392,7 @@ genrtl_decl_stmt (t)
     (*lang_expand_decl_stmt) (t);
 }
 
-/* Generate the RTL for T, which is an IF_STMT. */
+/* Generate the RTL for T, which is an IF_STMT.  */
 
 void
 genrtl_if_stmt (t)
@@ -473,7 +413,7 @@ genrtl_if_stmt (t)
   expand_end_cond ();
 }
 
-/* Generate the RTL for T, which is a WHILE_STMT. */
+/* Generate the RTL for T, which is a WHILE_STMT.  */
 
 void
 genrtl_while_stmt (t)
@@ -495,7 +435,7 @@ genrtl_while_stmt (t)
   expand_end_loop ();
 }
 
-/* Generate the RTL for T, which is a DO_STMT. */
+/* Generate the RTL for T, which is a DO_STMT.  */
 
 void
 genrtl_do_stmt (t)
@@ -529,7 +469,7 @@ genrtl_do_stmt (t)
     }
 }
 
-/* Build the node for a return statement and return it. */
+/* Build the node for a return statement and return it.  */
 
 tree
 build_return_stmt (expr)
@@ -538,13 +478,15 @@ build_return_stmt (expr)
   return (build_stmt (RETURN_STMT, expr));
 }
 
-/* Generate the RTL for STMT, which is a RETURN_STMT. */
+/* Generate the RTL for STMT, which is a RETURN_STMT.  */
 
 void
 genrtl_return_stmt (stmt)
      tree stmt;
 {
-  tree expr = RETURN_EXPR (stmt);
+  tree expr;
+
+  expr = RETURN_EXPR (stmt);
 
   emit_line_note (input_filename, lineno);
   if (!expr)
@@ -557,7 +499,7 @@ genrtl_return_stmt (stmt)
     }
 }
 
-/* Generate the RTL for T, which is a FOR_STMT. */
+/* Generate the RTL for T, which is a FOR_STMT.  */
 
 void
 genrtl_for_stmt (t)
@@ -603,7 +545,7 @@ genrtl_for_stmt (t)
   expand_end_loop ();
 }
 
-/* Build a break statement node and return it. */
+/* Build a break statement node and return it.  */
 
 tree
 build_break_stmt ()
@@ -611,7 +553,7 @@ build_break_stmt ()
   return (build_stmt (BREAK_STMT));
 }
 
-/* Generate the RTL for a BREAK_STMT. */
+/* Generate the RTL for a BREAK_STMT.  */
 
 void
 genrtl_break_stmt ()
@@ -621,7 +563,7 @@ genrtl_break_stmt ()
     error ("break statement not within loop or switch");
 }
 
-/* Build a continue statement node and return it. */
+/* Build a continue statement node and return it.  */
 
 tree
 build_continue_stmt ()
@@ -629,7 +571,7 @@ build_continue_stmt ()
   return (build_stmt (CONTINUE_STMT));
 }
 
-/* Generate the RTL for a CONTINUE_STMT. */
+/* Generate the RTL for a CONTINUE_STMT.  */
 
 void
 genrtl_continue_stmt ()
@@ -639,7 +581,7 @@ genrtl_continue_stmt ()
     error ("continue statement not within a loop");   
 }
 
-/* Generate the RTL for T, which is a SCOPE_STMT. */
+/* Generate the RTL for T, which is a SCOPE_STMT.  */
 
 void
 genrtl_scope_stmt (t)
@@ -684,7 +626,7 @@ genrtl_scope_stmt (t)
     }
 }
 
-/* Generate the RTL for T, which is a SWITCH_STMT. */
+/* Generate the RTL for T, which is a SWITCH_STMT.  */
 
 void
 genrtl_switch_stmt (t)
@@ -696,16 +638,16 @@ genrtl_switch_stmt (t)
   cond = expand_cond (SWITCH_COND (t));
   if (cond == error_mark_node)
     /* The code is in error, but we don't want expand_end_case to
-       crash. */
+       crash.  */
     cond = boolean_false_node;
 
   emit_line_note (input_filename, lineno);
   expand_start_case (1, cond, TREE_TYPE (cond), "switch statement");
   expand_stmt (SWITCH_BODY (t));
-  expand_end_case (cond);
+  expand_end_case_type (cond, SWITCH_TYPE (t));
 }
 
-/* Create a CASE_LABEL tree node and return it. */
+/* Create a CASE_LABEL tree node and return it.  */
 
 tree
 build_case_label (low_value, high_value, label_decl)
@@ -717,7 +659,7 @@ build_case_label (low_value, high_value, label_decl)
 }
 
 
-/* Generate the RTL for a CASE_LABEL. */
+/* Generate the RTL for a CASE_LABEL.  */
 
 void 
 genrtl_case_label (case_label)
@@ -744,16 +686,26 @@ genrtl_case_label (case_label)
 		 CASE_LABEL_DECL (case_label), &duplicate);
 }
 
-/* Generate the RTL for T, which is a COMPOUND_STMT. */
+/* Generate the RTL for T, which is a COMPOUND_STMT.  */
 
 void
 genrtl_compound_stmt (t)
     tree t;
 {
+#ifdef ENABLE_CHECKING
+  struct nesting *n = current_nesting_level ();
+#endif
+
   expand_stmt (COMPOUND_BODY (t));
+
+#ifdef ENABLE_CHECKING
+  /* Make sure that we've pushed and popped the same number of levels.  */
+  if (!COMPOUND_STMT_NO_SCOPE (t) && n != current_nesting_level ())
+    abort ();
+#endif
 }
 
-/* Generate the RTL for an ASM_STMT. */
+/* Generate the RTL for an ASM_STMT.  */
 
 void
 genrtl_asm_stmt (cv_qualifier, string, output_operands,
@@ -782,15 +734,15 @@ genrtl_asm_stmt (cv_qualifier, string, output_operands,
 			   input_filename, lineno);
 }
 
-/* Generate the RTL for a DECL_CLEANUP. */
+/* Generate the RTL for a DECL_CLEANUP.  */
 
 void 
-genrtl_decl_cleanup (decl, cleanup)
-     tree decl;
-     tree cleanup;
+genrtl_decl_cleanup (t)
+     tree t;
 {
+  tree decl = CLEANUP_DECL (t);
   if (!decl || (DECL_SIZE (decl) && TREE_TYPE (decl) != error_mark_node))
-    expand_decl_cleanup (decl, cleanup);
+    expand_decl_cleanup_eh (decl, CLEANUP_EXPR (t), CLEANUP_EH_ONLY (t));
 }
 
 /* We're about to expand T, a statement.  Set up appropriate context
@@ -806,7 +758,7 @@ prep_stmt (t)
 }
 
 /* Generate the RTL for the statement T, its substatements, and any
-   other statements at its nesting level. */
+   other statements at its nesting level.  */
 
 void
 expand_stmt (t)
@@ -831,7 +783,10 @@ expand_stmt (t)
 	  break;
 
 	case EXPR_STMT:
-	  genrtl_expr_stmt (EXPR_STMT_EXPR (t));
+	  genrtl_expr_stmt_value (EXPR_STMT_EXPR (t), TREE_ADDRESSABLE (t),
+				  TREE_CHAIN (t) == NULL
+				  || (TREE_CODE (TREE_CHAIN (t)) == SCOPE_STMT
+				      && TREE_CHAIN (TREE_CHAIN (t)) == NULL));
 	  break;
 
 	case DECL_STMT:
@@ -892,6 +847,10 @@ expand_stmt (t)
 	  genrtl_scope_stmt (t);
 	  break;
 
+	case CLEANUP_STMT:
+	  genrtl_decl_cleanup (t);
+	  break;
+
 	default:
 	  if (lang_expand_stmt)
 	    (*lang_expand_stmt) (t);
@@ -901,11 +860,10 @@ expand_stmt (t)
 	}
 
       /* Restore saved state.  */
-      current_stmt_tree ()->stmts_are_full_exprs_p = 
-	saved_stmts_are_full_exprs_p;
+      current_stmt_tree ()->stmts_are_full_exprs_p
+	= saved_stmts_are_full_exprs_p;
 
       /* Go on to the next statement in this scope.  */
       t = TREE_CHAIN (t);
     }
 }
-

@@ -3,14 +3,12 @@
 <title>Installing GCC: Configuration</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name=description content="Installing GCC: Configuration">
-<meta name=generator content="makeinfo 4.0b">
-<link href="http://texinfo.org/" rel=generator-home>
+<meta name=generator content="makeinfo 4.2">
+<link href="http://www.gnu.org/software/texinfo/" rel=generator-home>
 </head>
-
 <body>
-<h1 align="center">Installing GCC: Configuration</h1>
-
-<p>Like most GNU software, GCC must be configured before it can be built. 
+<h1>Installing GCC: Configuration</h1>
+Like most GNU software, GCC must be configured before it can be built. 
 This document describes the recommended configuration procedure
 for both native and cross targets.
 
@@ -50,12 +48,12 @@ affected by this requirement, see
 
 <p>To configure GCC:
 
-<pre>   % mkdir <var>objdir</var>
+<br><pre>   % mkdir <var>objdir</var>
    % cd <var>objdir</var>
    % <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
 </pre>
 
-<h2><a name="TOC0">Target specification</h2>
+<h3><a name="TOC0"></a>Target specification</h3>
 
 <ul>
 <li>GCC has code to correctly determine the correct value for <var>target</var>
@@ -70,7 +68,7 @@ i960-rtems, m68k-coff, sh-elf, etc.
 implies that the host defaults to <var>target</var>. 
 </ul>
 
-<h2><a name="TOC1">Options specification</h2>
+<h3><a name="TOC1"></a>Options specification</h3>
 
 <p>Use <var>options</var> to override several configure time options for
 GCC.  A list of supported <var>options</var> follows; <code>configure
@@ -126,6 +124,51 @@ the installation directory for G++ header files.  The default is
 <code><var>prefix</var>/include/g++-v3</code>.
 
 </dl>
+
+<br><dt><code>--program-prefix=<var>prefix</var></code>
+<dd>GCC supports some transformations of the names of its programs when
+installing them. This option prepends <var>prefix</var> to the names of
+programs to install in <var>bindir</var> (see above). For example, specifying
+<code>--program-prefix=foo-</code> would result in <code>gcc</code>
+being installed as <code>/usr/local/bin/foo-gcc</code>.
+
+<br><dt><code>--program-suffix=<var>suffix</var></code>
+<dd>Appends <var>suffix</var> to the names of programs to install in <var>bindir</var>
+(see above). For example, specifying <code>--program-suffix=-3.1</code>
+would result in <code>gcc</code> being installed as
+<code>/usr/local/bin/gcc-3.1</code>.
+
+<br><dt><code>--program-transform-name=<var>pattern</var></code>
+<dd>Applies the <code>sed</code> script <var>pattern</var> to be applied to the names
+of programs to install in <var>bindir</var> (see above). <var>pattern</var> has to
+consist of one or more basic <code>sed</code> editing commands, separated by
+semicolons. For example, if you want the <code>gcc</code> program name to be
+transformed to the installed program <code>/usr/local/bin/myowngcc</code> and
+the <code>g++</code> program name to be transformed to
+<code>/usr/local/bin/gspecial++</code> without changing other program names,
+you could use the pattern
+<code>--program-transform-name='s/^gcc$/myowngcc/; s/^g++$/gspecial++/'</code>
+to achieve this effect.
+
+<p>All three options can be combined and used together, resulting in more
+complex conversion patterns. As a basic rule, <var>prefix</var> (and
+<var>suffix</var>) are prepended (appended) before further transformations
+can happen with a special transformation script <var>pattern</var>.
+
+<p>As currently implemented, this options only take effect for native
+builds; cross compiler binaries' names are not transformed even when a
+transformation is explicitly asked for by one of this options.
+
+<p>For native builds, some of the installed programs are also installed
+with the target alias in front of their name, as in
+<code>i686-pc-linux-gnu-gcc</code>. All of the above transformations happen
+before the target alias is prepended to the name - so, specifying
+<code>--program-prefix=foo-</code> and <code>program-suffix=-3.1</code>, the
+resulting binary would be installed as
+<code>/usr/local/bin/i686-pc-linux-gnu-foo-gcc-3.1</code>.
+
+<p>As a last shortcoming, none of the installed Ada programs are
+transformed yet, which will be fixed in some time.
 
 <br><dt><code>--with-local-prefix=<var>dirname</var></code>
 <dd>Specify the
@@ -353,6 +396,12 @@ SPARC.  If configure does not recognize the model name (e.g. arm700,
 603e, or ultrasparc) you provide, please check the configure script
 for a complete list of supported models.
 
+<br><dt><code>--enable-altivec</code>
+<dd>Specify that the target supports AltiVec vector enhancements.  This
+option will adjust the ABI for AltiVec enhancements, as well as generate
+AltiVec code when appropriate.  This option is only available for
+PowerPC systems.
+
 <br><dt><code>--enable-target-optspace</code>
 <dd>Specify that target
 libraries should be optimized for code space instead of code speed. 
@@ -391,12 +440,11 @@ changed in this case.
 their runtime libraries should be built.  For a list of valid values for
 <var>langN</var> you can issue the following command in the
 <code>gcc</code> directory of your GCC source tree:<br>
-<pre>grep language= */config-lang.in
+<br><pre>grep language= */config-lang.in
 </pre>
 Currently, you can use any of the following:
-<code>c</code>, <code>c++</code>, <code>f77</code>, <code>java</code> and <code>objc</code>. 
-<code>CHILL</code> is not currently maintained, and will almost
-certainly fail to compile.<br>
+<code>ada</code>, <code>c</code>, <code>c++</code>, <code>f77</code>, <code>java</code>, <code>objc</code>. 
+Building the Ada compiler has special requirements, see below.<br>
 If you do not pass this flag, all languages available in the <code>gcc</code>
 sub-tree will be configured.  Re-defining <code>LANGUAGES</code> when calling
 <code>make bootstrap</code> <strong>does not</strong> work anymore, as those
@@ -424,7 +472,7 @@ use DWARF 2 debugging information as the default.
 <dd>The <code>--enable-win32-registry</code> option enables Windows-hosted GCC
 to look up installations paths in the registry using the following key:
 
-<pre><code>HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\<var>key</var></code>
+<br><pre><code>HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\<var>key</var></code>
 </pre>
 
 <p><var>key</var> defaults to GCC version number, and can be overridden by the
@@ -472,9 +520,23 @@ ignores <code>catgets</code> and instead uses GCC's copy of the GNU
 <code>gettext</code> library.  The <code>--with-catgets</code> option causes the
 build procedure to use the host's <code>catgets</code> in this situation.
 
+<br><dt><code>--with-libiconv-prefix=<var>dir</var></code>
+<dd>Search for libiconv header files in <code><var>dir</var>/include</code> and
+libiconv library files in <code><var>dir</var>/lib</code>.
+
 <br><dt><code>--with-system-zlib</code>
 <dd>Use installed zlib rather than that included with GCC.  This option
-only applies if the Java front end is being built. 
+only applies if the Java front end is being built.
+
+<br><dt><code>--enable-obsolete</code>
+<dd>Enable configuration for an obsoleted system.  If you attempt to
+configure GCC for a system (build, host, or target) which has been
+obsoleted, and you do not specify this flag, configure will halt with an
+error message.
+
+<p>All support for systems which have been obsoleted in one release of GCC
+is removed entirely in the next major release, unless someone steps
+forward to maintain the port. 
 </dl>
 
 <p>Some options which only apply to building cross compilers:

@@ -1,5 +1,5 @@
 /* Definitions for Linux for S/390.
-   Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Hartmut Penner (hpenner@de.ibm.com) and
                   Ulrich Weigand (uweigand@de.ibm.com).
 
@@ -23,52 +23,114 @@ Boston, MA 02111-1307, USA.  */
 #ifndef _LINUX_H
 #define _LINUX_H
 
-#undef SIZE_TYPE                       /* use default                      */
+/* Target specific version string.  */
 
-#undef TARGET_VERSION
-#define TARGET_VERSION fprintf (stderr, " (Linux for S/390)");
-
-/* Names to predefine in the preprocessor for this target machine.  */
-
-#define CPP_PREDEFINES "-Dlinux -Asystem(linux) -Acpu(s390) -Amachine(s390) -D__s390__ -Asystem(unix) -Dunix -D__ELF__"
-
-/* 
- * Caller save not (always) working in gcc-2.95.2
- */
-
-#undef CC1_SPEC
-#define CC1_SPEC "-fno-caller-saves"
-#define CC1PLUS_SPEC "-fno-caller-saves"
-
-#undef	LINK_SPEC
-#ifdef CROSS_COMPILE
-#define LINK_SPEC "-m elf_s390 %{shared:-shared} \
-  %{!shared: \
-    %{!ibcs: \
-      %{!static: \
-	%{rdynamic:-export-dynamic} \
-	%{!dynamic-linker:-dynamic-linker /lib/ld.so.1 \
-        -rpath-link=/usr/local/s390-ibm-linux/lib}} \
-	%{static:-static}}}"
+#ifdef DEFAULT_TARGET_64BIT
+#undef  TARGET_VERSION
+#define TARGET_VERSION fprintf (stderr, " (Linux for zSeries)");
 #else
-#define LINK_SPEC "-m elf_s390 %{shared:-shared} \
-  %{!shared: \
-    %{!ibcs: \
-      %{!static: \
-	%{rdynamic:-export-dynamic} \
-	%{!dynamic-linker:-dynamic-linker /lib/ld.so.1}} \
-	%{static:-static}}}"
+#undef  TARGET_VERSION
+#define TARGET_VERSION fprintf (stderr, " (Linux for S/390)");
 #endif
 
-/* Need to define this. Otherwise define to BITS_PER_WORD in cexp.c.
-   But BITS_PER_WORD depends on target flags, which are not defined in 
-   cexpc.c.  */
+
+/* Target specific type definitions.  */
+
+/* ??? Do we really want long as size_t on 31-bit?  */
+#undef  SIZE_TYPE
+#define SIZE_TYPE (TARGET_64BIT ? "long unsigned int" : "long unsigned int")
+#undef  PTRDIFF_TYPE
+#define PTRDIFF_TYPE (TARGET_64BIT ? "long int" : "int")
 
 #undef  WCHAR_TYPE
 #define WCHAR_TYPE "int"
 #undef  WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 32
-#define MAX_LONG_TYPE_SIZE 64
+
+
+/* Target specific preprocessor settings.  */
+
+#define NO_BUILTIN_SIZE_TYPE
+#define NO_BUILTIN_PTRDIFF_TYPE
+
+#define CPP_PREDEFINES \
+  "-Dunix -Asystem(unix) -D__gnu_linux__ -Dlinux -Asystem(linux) -D__ELF__ \
+   -Acpu(s390) -Amachine(s390) -D__s390__"
+
+#define CPP_ARCH31_SPEC \
+  "-D__SIZE_TYPE__=long\\ unsigned\\ int -D__PTRDIFF_TYPE__=int"
+#define CPP_ARCH64_SPEC \
+  "-D__SIZE_TYPE__=long\\ unsigned\\ int -D__PTRDIFF_TYPE__=long\\ int \
+   -D__s390x__ -D__LONG_MAX__=9223372036854775807L"
+
+#ifdef DEFAULT_TARGET_64BIT
+#undef  CPP_SPEC
+#define CPP_SPEC "%{m31:%(cpp_arch31)} %{!m31:%(cpp_arch64)}"
+#else
+#undef  CPP_SPEC
+#define CPP_SPEC "%{m64:%(cpp_arch64)} %{!m64:%(cpp_arch31)}"
+#endif
+
+
+/* Target specific compiler settings.  */
+
+/* ??? -fcaller-saves sometimes doesn't work.  Fix this! */
+#undef  CC1_SPEC
+#define CC1_SPEC "-fno-caller-saves"
+#undef  CC1PLUS_SPEC
+#define CC1PLUS_SPEC "-fno-caller-saves"
+
+
+/* Target specific assembler settings.  */
+
+#ifdef DEFAULT_TARGET_64BIT
+#undef  ASM_SPEC
+#define ASM_SPEC "%{m31:-m31 -Aesa}"
+#else
+#undef  ASM_SPEC
+#define ASM_SPEC "%{m64:-m64 -Aesame}"
+#endif
+
+
+/* Target specific linker settings.  */
+
+#define LINK_ARCH31_SPEC \
+  "-m elf_s390 \
+   %{shared:-shared} \
+   %{!shared: \
+      %{static:-static} \
+      %{!static: \
+	%{rdynamic:-export-dynamic} \
+	%{!dynamic-linker:-dynamic-linker /lib/ld.so.1}}}"
+
+#define LINK_ARCH64_SPEC \
+  "-m elf64_s390 \
+   %{shared:-shared} \
+   %{!shared: \
+      %{static:-static} \
+      %{!static: \
+	%{rdynamic:-export-dynamic} \
+	%{!dynamic-linker:-dynamic-linker /lib/ld64.so.1}}}"
+
+#ifdef DEFAULT_TARGET_64BIT
+#undef  LINK_SPEC
+#define LINK_SPEC "%{m31:%(link_arch31)} %{!m31:%(link_arch64)}"
+#else
+#undef  LINK_SPEC
+#define LINK_SPEC "%{m64:%(link_arch64)} %{!m64:%(link_arch31)}"
+#endif
+
+
+/* This macro defines names of additional specifications to put in the specs
+   that can be used in various specifications like CC1_SPEC.  Its definition
+   is an initializer with a subgrouping for each command option.  */
+
+#define EXTRA_SPECS \
+  { "cpp_arch31",	CPP_ARCH31_SPEC },	\
+  { "cpp_arch64",	CPP_ARCH64_SPEC },	\
+  { "link_arch31",	LINK_ARCH31_SPEC },	\
+  { "link_arch64",	LINK_ARCH64_SPEC },	\
+
 
 /* Character to start a comment.  */
 
@@ -77,17 +139,13 @@ Boston, MA 02111-1307, USA.  */
 
 /* Assembler pseudos to introduce constants of various size.  */
 
-#define ASM_SHORT "\t.word"
-#define ASM_LONG "\t.long"
-#define ASM_QUAD "\t.quad"
 #define ASM_DOUBLE "\t.double"
 
+/* The LOCAL_LABEL_PREFIX variable is used by dbxelf.h.  */
+#define LOCAL_LABEL_PREFIX "."
 
 /* Prefix for internally generated assembler labels.  */
 #define LPREFIX ".L"
-
-#define ASM_OUTPUT_LABELREF(FILE, NAME) \
-  fprintf (FILE, "%s", NAME);  
 
 
 /* This is how to output the definition of a user-level label named NAME,
@@ -96,30 +154,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_LABEL
 #define ASM_OUTPUT_LABEL(FILE, NAME)     \
   (assemble_name (FILE, NAME), fputs (":\n", FILE))
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE, VALUE)			\
-  {							\
-    long t[2];						\
-    REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), t);		\
-    fprintf (FILE, "\t.long 0x%lx\n\t.long 0x%lx\n",	\
-	     t[0] & 0xffffffff, t[1] & 0xffffffff);	\
-  }
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE, VALUE)			\
-  {							\
-    long t;						\
-    REAL_VALUE_TO_TARGET_SINGLE ((VALUE), t);		\
-    fprintf (FILE, "\t.long 0x%lx\n", t & 0xffffffff);	\
-  }
 
 /* Store in OUTPUT a string (made with alloca) containing
    an assembler-name for a local static variable named NAME.
@@ -131,40 +165,6 @@ Boston, MA 02111-1307, USA.  */
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
 
 
-#define ASM_OUTPUT_DOUBLE_INT(FILE, VALUE)      \
-do { fprintf (FILE, "%s\t", ASM_QUAD);          \
-  output_addr_const (FILE, (VALUE));            \
-  putc ('\n',FILE);                             \
- } while (0)
-
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#undef ASM_OUTPUT_INT
-#define ASM_OUTPUT_INT(FILE, VALUE)             \
-do { fprintf (FILE, "%s\t", ASM_LONG);          \
-  output_addr_const (FILE, (VALUE));            \
-  putc ('\n',FILE);                             \
- } while (0)
-
-/* Likewise for `char' and `short' constants. 
-   is this supposed to do align too?? */
-
-#define ASM_OUTPUT_SHORT(FILE, VALUE)           \
-( fprintf (FILE, "%s ", ASM_SHORT),             \
-  output_addr_const (FILE, (VALUE)),            \
-  putc ('\n',FILE))
-
-#define ASM_OUTPUT_CHAR(FILE, VALUE)            \
-( fprintf (FILE, "%s ", ASM_BYTE_OP),           \
-  output_addr_const (FILE, (VALUE)),            \
-  putc ('\n', FILE))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE, VALUE)  \
-  fprintf ((FILE), "%s 0x%x\n", ASM_BYTE_OP, (VALUE))
-
      /* internal macro to output long */
 #define _ASM_OUTPUT_LONG(FILE, VALUE)                                   \
       fprintf (FILE, "\t.long\t0x%lX\n", VALUE);
@@ -173,99 +173,38 @@ do { fprintf (FILE, "%s\t", ASM_LONG);          \
 /* This is how to output an element of a case-vector that is absolute.  */
 
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  			\
-  fprintf (FILE, "%s\t%s%d\n", TARGET_64BIT?ASM_QUAD:ASM_LONG, 	\
+  fprintf (FILE, "%s%s%d\n", integer_asm_op (UNITS_PER_WORD, TRUE), \
 	   LPREFIX, VALUE)
 
 /* This is how to output an element of a case-vector that is relative.  */
 
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) 		\
-  fprintf (FILE, "%s\t%s%d-%s%d\n", TARGET_64BIT?ASM_QUAD:ASM_LONG, 	\
+  fprintf (FILE, "%s%s%d-%s%d\n", integer_asm_op (UNITS_PER_WORD, TRUE), \
 	   LPREFIX, VALUE, LPREFIX, REL)
 
 
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#undef ASM_OPEN_PAREN
-#undef ASM_CLOSE_PAREN
-#define ASM_OPEN_PAREN ""
-#define ASM_CLOSE_PAREN ""
-
-
 
 /* This is how to output an assembler line
    that says to advance the location counter
    to a multiple of 2**LOG bytes.  */
 
-#define ASM_OUTPUT_ALIGN(FILE, LOG)      \
-    if ((LOG)!=0) fprintf ((FILE), "\t.align %d\n", 1<<(LOG))
-
-/* This is how to output an assembler line
-   that says to advance the location counter by SIZE bytes.  */
-
-#undef ASM_OUTPUT_SKIP 
-#define ASM_OUTPUT_SKIP(FILE, SIZE)  \
-  fprintf ((FILE), "\t.set .,.+%u\n", (SIZE))
-
-/* This is how to output an assembler line
-   that says to advance the location counter
-   to a multiple of 2**LOG bytes.  */
-
+#undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE, LOG)	\
-    if ((LOG)!=0) fprintf ((FILE), "\t.align %d\n", 1<<(LOG))
+    if ((LOG)!=0) fprintf ((FILE), "\t.align\t%d\n", 1<<(LOG))
 
 /* This is how to output an assembler line
    that says to advance the location counter by SIZE bytes.  */
 
+#undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE, SIZE)  \
-  fprintf ((FILE), "\t.set .,.+%u\n", (SIZE))
+  fprintf ((FILE), "\t.set\t.,.+%u\n", (SIZE))
 
-/* The routine used to output sequences of byte values.  We use a special
-   version of this for most svr4 targets because doing so makes the
-   generated assembly code more compact (and thus faster to assemble)
-   as well as more readable.  Note that if we find subparts of the
-   character sequence which end with NUL (and which are shorter than
-   STRING_LIMIT) we output those using ASM_OUTPUT_LIMITED_STRING.  */
+/* This is how to output assembler code to declare an
+   uninitialized external linkage data object.  */
 
-#undef ASM_OUTPUT_ASCII
-#define ASM_OUTPUT_ASCII(FILE, STR, LENGTH)                             \
-do {                                                                    \
-      register unsigned char *_ascii_bytes = (unsigned char *) (STR);   \
-      register unsigned char *limit = _ascii_bytes + (LENGTH);          \
-      register unsigned bytes_in_chunk = 0;                             \
-      for (; _ascii_bytes < limit; _ascii_bytes++)                      \
-        {                                                               \
-          register unsigned char *p;                                    \
-          if (bytes_in_chunk >= 64)                                     \
-            {                                                           \
-              fputc ('\n', (FILE));                                     \
-              bytes_in_chunk = 0;                                       \
-            }                                                           \
-          for (p = _ascii_bytes; p < limit && *p != '\0'; p++)          \
-            continue;                                                   \
-          if (p < limit && (p - _ascii_bytes) <= STRING_LIMIT)          \
-            {                                                           \
-              if (bytes_in_chunk > 0)                                   \
-                {                                                       \
-                  fputc ('\n', (FILE));                                 \
-                  bytes_in_chunk = 0;                                   \
-                }                                                       \
-              ASM_OUTPUT_LIMITED_STRING ((FILE), _ascii_bytes);         \
-              _ascii_bytes = p;                                         \
-            }                                                           \
-          else                                                          \
-            {                                                           \
-              if (bytes_in_chunk == 0)                                  \
-                fprintf ((FILE), "%s\t", ASM_BYTE_OP);                  \
-              else                                                      \
-                fputc (',', (FILE));                                    \
-              fprintf ((FILE), "0x%02x", *_ascii_bytes);                \
-              bytes_in_chunk += 5;                                      \
-            }                                                           \
-        }                                                               \
-      if (bytes_in_chunk > 0)                                           \
-        fprintf ((FILE), "\n");                                         \
-} while (0)
+#undef ASM_OUTPUT_ALIGNED_BSS
+#define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
+  asm_output_aligned_bss (FILE, DECL, NAME, SIZE, ALIGN)
 
 /* Output before read-only data.  */
 
@@ -285,33 +224,13 @@ do {                                                                    \
 #define ASM_GLOBALIZE_LABEL(FILE, NAME)  \
   (fputs (".globl ", FILE), assemble_name (FILE, NAME), fputs ("\n", FILE))
 
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
-/*
- * This macro generates the assembly code for function entry.
- */
-
-#define FUNCTION_PROLOGUE(FILE, LSIZE) s390_function_prologue (FILE, LSIZE)
-
-/* This macro generates the assembly code for function exit, on machines
-   that need it.  If FUNCTION_EPILOGUE is not defined then individual
-   return instructions are generated for each return statement.  Args are
-   same as for FUNCTION_PROLOGUE.
-  
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#define FUNCTION_EPILOGUE(FILE, LSIZE) s390_function_epilogue(FILE, LSIZE)
-
 /* Select section for constant in constant pool. 
    We are in the right section. 
    undef for 64 bit mode (linux64.h).
  */
 
 #undef SELECT_RTX_SECTION
-#define SELECT_RTX_SECTION(MODE, X)
+#define SELECT_RTX_SECTION(MODE, X, ALIGN)
 
 
 /* Output code to add DELTA to the first argument, and then jump to FUNCTION.
@@ -331,7 +250,9 @@ do {                                                                          \
           fprintf (FILE, "@GOTENT\n");                                        \
           fprintf (FILE, "\tlg    1,0(1)\n");                                 \
           fprintf (FILE, "\tbr    1\n");                                      \
-          fprintf (FILE, "0:\t.long  %d\n",DELTA);                            \
+          fprintf (FILE, "0:\t.long  ");	                              \
+          fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, (DELTA));                   \
+          fprintf (FILE, "\n");			                              \
         }                                                                     \
       else                                                                    \
         {                                                                     \
@@ -342,7 +263,9 @@ do {                                                                          \
           fprintf (FILE, "\tjg  ");                                           \
           assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));      \
           fprintf (FILE, "\n");                                               \
-          fprintf (FILE, "0:\t.long  %d\n",DELTA);                            \
+          fprintf (FILE, "0:\t.long  ");		                      \
+          fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, (DELTA));                   \
+          fprintf (FILE, "\n");			                              \
         }                                                                     \
     }                                                                         \
   else                                                                        \
@@ -354,7 +277,9 @@ do {                                                                          \
           fprintf (FILE, "\t.long  ");                                        \
           assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));      \
           fprintf (FILE, "@GOT\n");                                           \
-          fprintf (FILE, "\t.long  %d\n",DELTA);                              \
+          fprintf (FILE, "\t.long  ");		                              \
+          fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, (DELTA));                   \
+          fprintf (FILE, "\n");			                              \
           fprintf (FILE, "0:\tal  %d,8(1)\n",                                 \
                    aggregate_value_p (TREE_TYPE                               \
                                       (TREE_TYPE (FUNCTION))) ? 3 : 2 );      \
@@ -368,7 +293,9 @@ do {                                                                          \
           fprintf (FILE, "\t.long  ");                                        \
           assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));      \
           fprintf (FILE, "-.\n");                                             \
-          fprintf (FILE, "\t.long  %d\n",DELTA);                              \
+          fprintf (FILE, "\t.long  ");		                              \
+          fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, (DELTA));                   \
+          fprintf (FILE, "\n");			                              \
           fprintf (FILE, "0:\tal  %d,4(1)\n",                                 \
                    aggregate_value_p (TREE_TYPE                               \
                                       (TREE_TYPE (FUNCTION))) ? 3 : 2 );      \

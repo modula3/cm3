@@ -12,7 +12,7 @@
 @cindex Trees
 @cindex C/C++ Internal Representation
 
-This chapter documents the internal representation used by GCC and C++ to
+This chapter documents the internal representation used by GCC to
 represent C and C++ source programs.  When presented with a C or C++
 source program, GCC parses the program, performs semantic analysis
 (including the generation of error messages), and then produces the
@@ -27,7 +27,7 @@ the ability to process C or C++ code.
 This chapter explains the internal representation.  In particular, it
 documents the internal representation for C and C++ source
 constructs, and the macros, functions, and variables that can be used to
-access these constructs.  The C++ representation which is largely a superset
+access these constructs.  The C++ representation is largely a superset
 of the representation used in the C front end.  There is only one
 construct used in C that does not appear in the C++ front end and that
 is the GNU ``nested function'' extension.  Many of the macros documented
@@ -523,13 +523,32 @@ in the array.
 
 @item RECORD_TYPE
 Used to represent @code{struct} and @code{class} types, as well as
-pointers to member functions.  If @code{TYPE_PTRMEMFUNC_P} holds, then
-this type is a pointer-to-member type.  In that case, the
-@code{TYPE_PTRMEMFUNC_FN_TYPE} is a @code{POINTER_TYPE} pointing to a
-@code{METHOD_TYPE}.  The @code{METHOD_TYPE} is the type of a function
-pointed to by the pointer-to-member function.  If
-@code{TYPE_PTRMEMFUNC_P} does not hold, this type is a class type.  For
-more information, see @pxref{Classes}.
+pointers to member functions and similar constructs in other languages.
+@code{TYPE_FIELDS} contains the items contained in this type, each of
+which can be a @code{FIELD_DECL}, @code{VAR_DECL}, @code{CONST_DECL}, or
+@code{TYPE_DECL}.  You may not make any assumptions about the ordering
+of the fields in the type or whether one or more of them overlap.  If
+@code{TYPE_PTRMEMFUNC_P} holds, then this type is a pointer-to-member
+type.  In that case, the @code{TYPE_PTRMEMFUNC_FN_TYPE} is a
+@code{POINTER_TYPE} pointing to a @code{METHOD_TYPE}.  The
+@code{METHOD_TYPE} is the type of a function pointed to by the
+pointer-to-member function.  If @code{TYPE_PTRMEMFUNC_P} does not hold,
+this type is a class type.  For more information, see @pxref{Classes}.
+
+@item UNION_TYPE
+Used to represent @code{union} types.  Similar to @code{RECORD_TYPE}
+except that all @code{FIELD_DECL} nodes in @code{TYPE_FIELD} start at
+bit position zero.
+
+@item QUAL_UNION_TYPE
+Used to represent part of a variant record in Ada.  Similar to
+@code{UNION_TYPE} except that each @code{FIELD_DECL} has a
+@code{DECL_QUALIFIER} field, which contains a boolean expression that
+indicates whether the field is present in the object.  The type will only
+have one field, so each field's @code{DECL_QUALIFIER} is only evaluated
+if none of the expressions in the previous fields in @code{TYPE_FIELDS}
+are nonzero.  Normally these expressions will reference a field in the
+outer object using a @code{PLACEHOLDER_EXPR}.
 
 @item UNKNOWN_TYPE
 This node is used to represent a type the knowledge of which is
@@ -556,9 +575,6 @@ base-class.
 Used to represent the @code{__typeof__} extension.  The
 @code{TYPE_FIELDS} is the expression the type of which is being
 represented.
-
-@item UNION_TYPE
-Used to represent @code{union} types.  For more information, @pxref{Classes}.
 @end table
 
 There are variables whose values represent some of the basic types.
@@ -619,22 +635,6 @@ However, except for the fact that it is distinguished as the root of the
 representation, the global namespace is no different from any other
 namespace.  Thus, in what follows, we describe namespaces generally,
 rather than the global namespace in particular.
-
-The @code{::std} namespace, however, @emph{is} special when
-@code{flag_honor_std} is not set.  When @code{flag_honor_std} is set,
-the @code{std} namespace is just like any other namespace.  When
-@code{flag_honor_std} is not set, however, the @code{::std} namespace is
-treated as a synonym for the global namespace, thereby allowing users to
-write code that will work with compilers that put the standard library
-in the @code{::std} namespace.  The @code{std} namespace is represented
-by the variable @code{std_node}.  Although @code{std_node} is a
-@code{NAMESPACE_DECL}, it does not have all the fields required of a
-real namespace, and the macros and functions described here do not work,
-in general.  It is safest simply to ignore @code{std_node} should you
-encounter it while examining the internal representation.  In
-particular, you will encounter @code{std_node} while looking at the
-members of the global namespace.  Just skip it without attempting to
-examine its members.
 
 The following macros and functions can be used on a @code{NAMESPACE_DECL}:
 
@@ -760,8 +760,8 @@ binfo is given by @code{BINFO_TYPE}.  It is always the case that
 qualifiers.  However, it is not always the case that @code{TYPE_BINFO
 (BINFO_TYPE (y))} is always the same binfo as @code{y}.  The reason is
 that if @code{y} is a binfo representing a base-class @code{B} of a
-derived class @code{D}, then @code{BINFO_TYPE (y)} will be @code{B}, and
-@code{TYPE_INFO (BINFO_TYPE (y))} will be @code{B} as its own
+derived class @code{D}, then @code{BINFO_TYPE (y)} will be @code{B},
+and @code{TYPE_BINFO (BINFO_TYPE (y))} will be @code{B} as its own
 base-class, rather than as a base-class of @code{D}.
 
 The @code{BINFO_BASETYPES} is a @code{TREE_VEC} (@pxref{Containers}).
@@ -773,8 +773,6 @@ these macros takes a @code{BINFO} and is true if and only if the
 indicated kind of inheritance was used.  If @code{TREE_VIA_VIRTUAL}
 holds of a binfo, then its @code{BINFO_TYPE} was inherited from
 virtually.
-
-FIXME: Talk about @code{TYPE_NONCOPIED_PARTS}.
 
 The following macros can be used on a tree node representing a class-type.
 
@@ -1298,6 +1296,7 @@ This predicate holds if the function an overloaded
 @findex FILE_STMT_FILENAME
 @tindex GOTO_STMT
 @findex GOTO_DESTINATION
+@findex GOTO_FAKE_P
 @tindex HANDLER
 @tindex IF_STMT
 @findex IF_COND
@@ -1312,8 +1311,6 @@ This predicate holds if the function an overloaded
 @findex SCOPE_BEGIN_P
 @findex SCOPE_END_P
 @findex SCOPE_NULLIFIED_P
-@tindex START_CATCH_STMT
-@findex START_CATCH_TYPE
 @tindex SUBOBJECT
 @findex SUBOBJECT_CLEANUP
 @tindex SWITCH_STMT
@@ -1538,11 +1535,22 @@ expressions.
 
 @item GOTO_STMT
 
-Used to represent a @code{goto} statement.  The @code{GOTO_DESTINATION}
-will usually be a @code{LABEL_DECL}.  However, if the ``computed
-goto'' extension has been used, the @code{GOTO_DESTINATION} will be an
-arbitrary expression indicating the destination.  This expression will
-always have pointer type.
+Used to represent a @code{goto} statement.  The @code{GOTO_DESTINATION} will
+usually be a @code{LABEL_DECL}.  However, if the ``computed goto'' extension
+has been used, the @code{GOTO_DESTINATION} will be an arbitrary expression
+indicating the destination.  This expression will always have pointer type.
+Additionally the @code{GOTO_FAKE_P} flag is set whenever the goto statement
+does not come from source code, but it is generated implicitly by the compiler.
+This is used for branch prediction.
+
+@item HANDLER
+
+Used to represent a C++ @code{catch} block.  The @code{HANDLER_TYPE}
+is the type of exception that will be caught by this handler; it is
+equal (by pointer equality) to @code{CATCH_ALL_TYPE} if this handler
+is for all types.  @code{HANDLER_PARMS} is the @code{DECL_STMT} for
+the catch parameter, and @code{HANDLER_BODY} is the
+@code{COMPOUND_STMT} for the block itself.
 
 @item IF_STMT
 
@@ -1609,13 +1617,6 @@ which they were encountered.  If @code{SCOPE_NULLIFIED_P} or
 @code{SCOPE_NO_CLEANUPS_P} holds of the scope, back ends should behave
 as if the @code{SCOPE_STMT} were not present at all.
 
-@item START_CATCH_STMT
-
-These statements represent the location to which control is transferred
-when an exception is thrown.  The @code{START_CATCH_TYPE} is the type of
-exception that will be caught by this handler; it is equal (by pointer
-equality) to @code{CATCH_ALL_TYPE} if this handler is for all types.
-
 @item SUBOBJECT
 
 In a constructor, these nodes are used to mark the point at which a
@@ -1630,7 +1631,8 @@ Used to represent a @code{switch} statement.  The @code{SWITCH_COND} is
 the expression on which the switch is occurring.  See the documentation
 for an @code{IF_STMT} for more information on the representation used
 for the condition.  The @code{SWITCH_BODY} is the body of the switch
-statement.
+statement.   The @code{SWITCH_TYPE} is the original type of switch
+expression as given in the source, before any compiler conversions.
 
 @item TRY_BLOCK
 Used to represent a @code{try} block.  The body of the try block is
@@ -1683,14 +1685,11 @@ to the same declaration or type, or @code{NULL_TREE} if there are no
 further attributes in the list.
 
 Attributes may be attached to declarations and to types; these
-attributes may be accessed with the following macros.  At present only
-machine-dependent attributes are stored in this way (other attributes
-cause changes to the declaration or type or to other internal compiler
-data structures, but are not themselves stored along with the
-declaration or type), but in future all attributes may be stored like
-this.
+attributes may be accessed with the following macros.  All attributes
+are stored in this way, and many also cause other changes to the
+declaration or type or to other internal compiler data structures.
 
-@deftypefn {Tree Macro} tree DECL_MACHINE_ATTRIBUTES (tree @var{decl})
+@deftypefn {Tree Macro} tree DECL_ATTRIBUTES (tree @var{decl})
 This macro returns the attributes on the declaration @var{decl}.
 @end deftypefn
 
@@ -1713,6 +1712,7 @@ This macro returns the attributes on the type @var{type}.
 @findex tree_int_cst_equal
 @tindex REAL_CST
 @tindex COMPLEX_CST
+@tindex VECTOR_CST
 @tindex STRING_CST
 @findex TREE_STRING_LENGTH
 @findex TREE_STRING_POINTER
@@ -1763,12 +1763,14 @@ This macro returns the attributes on the type @var{type}.
 @tindex COND_EXPR
 @tindex CALL_EXPR
 @tindex CONSTRUCTOR
+@tindex COMPOUND_LITERAL_EXPR
 @tindex STMT_EXPR
 @tindex BIND_EXPR
 @tindex LOOP_EXPR
 @tindex EXIT_EXPR
 @tindex CLEANUP_POINT_EXPR
 @tindex ARRAY_REF
+@tindex VTABLE_REF
 
 The internal representation for expressions is for the most part quite
 straightforward.  However, there are a few facts that one must bear in
@@ -1856,6 +1858,12 @@ These nodes are used to represent complex number constants, that is a
 @code{__complex__} whose parts are constant nodes.  The
 @code{TREE_REALPART} and @code{TREE_IMAGPART} return the real and the
 imaginary parts respectively.
+
+@item VECTOR_CST
+These nodes are used to represent vector constants, whose parts are
+constant nodes.  Each individual constant node is either an integer or a
+double constant node.  The first operand is a @code{TREE_LIST} of the
+constant nodes and is accessed through @code{TREE_VECTOR_CST_ELTS}.
 
 @item STRING_CST
 These nodes represent string-constants.  The @code{TREE_STRING_LENGTH}
@@ -2010,6 +2018,9 @@ second operand is an expression for the number of bits by which to
 shift.  Right shift should be treated as arithmetic, i.e., the
 high-order bits should be zero-filled when the expression has unsigned
 type and filled with the sign bit when the expression has signed type.
+Note that the result is undefined if the second operand is larger
+than the first operand's type size.
+
 
 @item BIT_IOR_EXPR
 @itemx BIT_XOR_EXPR
@@ -2058,7 +2069,15 @@ always @code{a - a/b} where the division is as if computed by a
 These nodes represent array accesses.  The first operand is the array;
 the second is the index.  To calculate the address of the memory
 accessed, you must scale the index by the size of the type of the array
-elements.
+elements.  The type of these expressions must be the type of a component of
+the array.
+
+@item ARRAY_RANGE_REF
+These nodes represent access to a range (or ``slice'') of an array.  The
+operands are the same as that for @code{ARRAY_REF} and have the same
+meanings.  The type of these expressions must be an array whose component
+type is the same as that of the first operand.  The range of that array
+type determines the amount of data these expressions access.
 
 @item EXACT_DIV_EXPR
 Document.
@@ -2214,6 +2233,18 @@ next available array element.
 Conceptually, before any initialization is done, the entire area of
 storage is initialized to zero.
 
+@item COMPOUND_LITERAL_EXPR
+@findex COMPOUND_LITERAL_EXPR_DECL_STMT
+@findex COMPOUND_LITERAL_EXPR_DECL
+These nodes represent ISO C99 compound literals.  The
+@code{COMPOUND_LITERAL_EXPR_DECL_STMT} is a @code{DECL_STMT}
+containing an anonymous @code{VAR_DECL} for
+the unnamed object represented by the compound literal; the
+@code{DECL_INITIAL} of that @code{VAR_DECL} is a @code{CONSTRUCTOR}
+representing the brace-enclosed list of initializers in the compound
+literal.  That anonymous @code{VAR_DECL} can also be accessed directly
+by the @code{COMPOUND_LITERAL_EXPR_DECL} macro.
+
 @item SAVE_EXPR
 
 A @code{SAVE_EXPR} represents an expression (possibly involving
@@ -2269,5 +2300,16 @@ is taken, and this value replaces the first argument in the argument
 list.  In this case, the value of the expression is the @code{VAR_DECL}
 given by the third operand to the @code{AGGR_INIT_EXPR}; constructors do
 not return a value.
+
+@item VTABLE_REF
+A @code{VTABLE_REF} indicates that the interior expression computes
+a value that is a vtable entry.  It is used with @option{-fvtable-gc}
+to track the reference through to front end to the middle end, at
+which point we transform this to a @code{REG_VTABLE_REF} note, which
+survives the balance of code generation.
+
+The first operand is the expression that computes the vtable reference.
+The second operand is the @code{VAR_DECL} of the vtable.  The third
+operand is an @code{INTEGER_CST} of the byte offset into the vtable.
 
 @end table

@@ -21,7 +21,7 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* Don't assume anything about the header files. */
+/* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
 #undef MD_EXEC_PREFIX
@@ -69,10 +69,10 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_APP_OFF
 #define ASM_APP_OFF "#NO_APP\n"
 
-#undef DEFAULT_VTABLE_THUNKS
-#ifndef USE_GNULIBC_1
-#define DEFAULT_VTABLE_THUNKS 1
-#endif
+/* For backward compatibility, we must continue to use the AIX
+   structure return convention.  */
+#undef DRAFT_V4_STRUCT_RET
+#define DRAFT_V4_STRUCT_RET 1
 
 /* Do code reading to identify a signal frame, and set the frame
    state data appropriately.  See unwind-dw2.c for the structs.  */

@@ -37,8 +37,6 @@ extern int          mcore_naked_function_p       	PARAMS ((void));
 #ifdef TREE_CODE
 extern void         mcore_unique_section         	PARAMS ((tree, int));
 extern void         mcore_encode_section_info    	PARAMS ((tree));
-extern int          mcore_valid_machine_decl_attribute	PARAMS ((tree, tree, tree, tree));
-extern tree         mcore_merge_machine_decl_attributes PARAMS ((tree, tree));
 
 #ifdef HAVE_MACHINE_MODES
 extern int          mcore_function_arg_partial_nregs	PARAMS ((CUMULATIVE_ARGS, enum machine_mode, tree, int));
@@ -59,13 +57,12 @@ extern rtx arch_compare_op1;
 
 extern const char * mcore_output_bclri         		PARAMS ((rtx, int));
 extern const char * mcore_output_bseti         		PARAMS ((rtx, int));
-extern const char * mcore_output_cmov          		PARAMS ((rtx *, int, char *));
+extern const char * mcore_output_cmov          		PARAMS ((rtx *, int, const char *));
 extern char *       mcore_output_call          		PARAMS ((rtx *, int));
 extern int          mcore_is_dead                	PARAMS ((rtx, rtx));
 extern int          mcore_expand_insv            	PARAMS ((rtx *));
 extern int          mcore_modify_comparison      	PARAMS ((RTX_CODE));
 extern void         mcore_expand_block_move      	PARAMS ((rtx, rtx, rtx *));
-extern rtx          mcore_dependent_simplify_rtx	PARAMS ((rtx, int, int, int, int *));
 extern void         mcore_dependent_reorg        	PARAMS ((rtx));
 extern int          mcore_const_costs            	PARAMS ((rtx, RTX_CODE));
 extern int          mcore_and_cost               	PARAMS ((rtx));

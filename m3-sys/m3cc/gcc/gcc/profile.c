@@ -1,26 +1,26 @@
-/* Calculate branch probabilities, and basic block execution counts. 
+/* Calculate branch probabilities, and basic block execution counts.
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999,
    2000, 2001  Free Software Foundation, Inc.
    Contributed by James E. Wilson, UC Berkeley/Cygnus Support;
    based on some ideas from Dain Samples of UC Berkeley.
    Further mangling by Bob Manson, Cygnus Support.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 /* ??? Register allocation should use basic block execution counts to
    give preference to the most commonly executed blocks.  */
@@ -43,11 +43,12 @@ Boston, MA 02111-1307, USA.  */
 #include "regs.h"
 #include "expr.h"
 #include "function.h"
-#include "gcov-io.h"
 #include "toplev.h"
 #include "ggc.h"
 #include "hard-reg-set.h"
 #include "basic-block.h"
+#include "gcov-io.h"
+#include "target.h"
 
 /* Additional information about the edges we need.  */
 struct edge_info
@@ -59,20 +60,20 @@ struct edge_info
 struct bb_info
   {
     unsigned int count_valid : 1;
-    int succ_count;
-    int pred_count;
+    gcov_type succ_count;
+    gcov_type pred_count;
   };
 
 #define EDGE_INFO(e)  ((struct edge_info *) (e)->aux)
 #define BB_INFO(b)  ((struct bb_info *) (b)->aux)
 
 /* Keep all basic block indexes nonnegative in the gcov output.  Index 0
-   is used for entry block, last block exit block.   */
+   is used for entry block, last block exit block.  */
 #define GCOV_INDEX_TO_BB(i)  ((i) == 0 ? ENTRY_BLOCK_PTR		\
-    			      : (((i) == n_basic_blocks + 1)		\
+			      : (((i) == n_basic_blocks + 1)		\
 			         ? EXIT_BLOCK_PTR : BASIC_BLOCK ((i)-1)))
-#define BB_TO_GCOV_INDEX(bb)  ((bb) == ENTRY_BLOCK_PTR ? 0 		\
-  			       : ((bb) == EXIT_BLOCK_PTR		\
+#define BB_TO_GCOV_INDEX(bb)  ((bb) == ENTRY_BLOCK_PTR ? 0		\
+			       : ((bb) == EXIT_BLOCK_PTR		\
 				  ? n_basic_blocks + 1 : (bb)->index + 1))
 
 /* Name and file pointer of the output file for the basic block graph.  */
@@ -83,10 +84,10 @@ static FILE *bbg_file;
 
 static FILE *da_file;
 
-/* Pointer of the output file for the basic block/line number map. */
+/* Pointer of the output file for the basic block/line number map.  */
 static FILE *bb_file;
 
-/* Last source file name written to bb_file. */
+/* Last source file name written to bb_file.  */
 
 static char *last_bb_file_name;
 
@@ -120,7 +121,7 @@ static basic_block find_group PARAMS ((basic_block));
 static void union_groups PARAMS ((basic_block, basic_block));
 
 /* If non-zero, we need to output a constructor to set up the
-   per-object-file data. */
+   per-object-file data.  */
 static int need_func_profiler = 0;
 
 /* Add edge instrumentation code to the entire insn chain.
@@ -151,7 +152,7 @@ instrument_edges (el)
 	      if (rtl_dump_file)
 		fprintf (rtl_dump_file, "Edge %d to %d instrumented%s\n",
 			 e->src->index, e->dest->index,
-			 e->flags & EDGE_CRITICAL ? " (and split)" : "");
+			 EDGE_CRITICAL_P (e) ? " (and split)" : "");
 	      need_func_profiler = 1;
 	      insert_insn_on_edge (
 			 gen_edge_profiler (total_num_edges_instrumented
@@ -179,7 +180,7 @@ output_gcov_string (string, delimiter)
      long delimiter;
 {
   long temp;
-			
+
   /* Write a delimiter to indicate that a file name follows.  */
   __write_long (delimiter, bb_file, 4);
 
@@ -216,19 +217,15 @@ compute_branch_probabilities ()
   int hist_br_prob[20];
   int num_never_executed;
   int num_branches;
-  int bad_counts = 0;
-  struct bb_info *bb_infos;
 
   /* Attach extra info block to each bb.  */
 
-  bb_infos = (struct bb_info *)
-    xcalloc (n_basic_blocks + 2, sizeof (struct bb_info));
+  alloc_aux_for_blocks (sizeof (struct bb_info));
   for (i = 0; i < n_basic_blocks + 2; i++)
     {
       basic_block bb = GCOV_INDEX_TO_BB (i);
       edge e;
 
-      bb->aux = &bb_infos[i];
       for (e = bb->succ; e; e = e->succ_next)
 	if (!EDGE_INFO (e)->ignore)
 	  BB_INFO (bb)->succ_count++;
@@ -257,8 +254,8 @@ compute_branch_probabilities ()
 	    num_edges++;
 	    if (da_file)
 	      {
-		long value;
-		__read_long (&value, da_file, 8);
+		gcov_type value;
+		__read_gcov_type (&value, da_file, 8);
 		e->count = value;
 	      }
 	    else
@@ -266,11 +263,18 @@ compute_branch_probabilities ()
 	    EDGE_INFO (e)->count_valid = 1;
 	    BB_INFO (bb)->succ_count--;
 	    BB_INFO (e->dest)->pred_count--;
+	    if (rtl_dump_file)
+	      {
+		fprintf (rtl_dump_file, "\nRead edge from %i to %i, count:",
+			 bb->index, e->dest->index);
+		fprintf (rtl_dump_file, HOST_WIDEST_INT_PRINT_DEC,
+			 (HOST_WIDEST_INT) e->count);
+	      }
 	  }
     }
 
   if (rtl_dump_file)
-    fprintf (rtl_dump_file, "%d edge counts read\n", num_edges);
+    fprintf (rtl_dump_file, "\n%d edge counts read\n", num_edges);
 
   /* For every block in the file,
      - if every exit/entrance edge has a known count, then set the block count
@@ -304,7 +308,7 @@ compute_branch_probabilities ()
 	      if (bi->succ_count == 0)
 		{
 		  edge e;
-		  int total = 0;
+		  gcov_type total = 0;
 
 		  for (e = bb->succ; e; e = e->succ_next)
 		    total += e->count;
@@ -315,7 +319,7 @@ compute_branch_probabilities ()
 	      else if (bi->pred_count == 0)
 		{
 		  edge e;
-		  int total = 0;
+		  gcov_type total = 0;
 
 		  for (e = bb->pred; e; e = e->pred_next)
 		    total += e->count;
@@ -329,7 +333,7 @@ compute_branch_probabilities ()
 	      if (bi->succ_count == 1)
 		{
 		  edge e;
-		  int total = 0;
+		  gcov_type total = 0;
 
 		  /* One of the counts will be invalid, but it is zero,
 		     so adding it in also doesn't hurt.  */
@@ -349,14 +353,14 @@ compute_branch_probabilities ()
 		  EDGE_INFO (e)->count_valid = 1;
 		  e->count = total;
 		  bi->succ_count--;
-		  
+
 		  BB_INFO (e->dest)->pred_count--;
 		  changes = 1;
 		}
 	      if (bi->pred_count == 1)
 		{
 		  edge e;
-		  int total = 0;
+		  gcov_type total = 0;
 
 		  /* One of the counts will be invalid, but it is zero,
 		     so adding it in also doesn't hurt.  */
@@ -376,7 +380,7 @@ compute_branch_probabilities ()
 		  EDGE_INFO (e)->count_valid = 1;
 		  e->count = total;
 		  bi->pred_count--;
-		  
+
 		  BB_INFO (e->src)->succ_count--;
 		  changes = 1;
 		}
@@ -407,88 +411,89 @@ compute_branch_probabilities ()
   num_never_executed = 0;
   num_branches = 0;
 
-  for (i = 0; i < n_basic_blocks; i++)
+  for (i = 0; i <= n_basic_blocks + 1; i++)
     {
-      basic_block bb = BASIC_BLOCK (i);
+      basic_block bb = GCOV_INDEX_TO_BB (i);
       edge e;
-      rtx insn;
-      int total;
+      gcov_type total;
       rtx note;
 
       total = bb->count;
-      if (!total)
-	continue;
-      for (e = bb->succ; e; e = e->succ_next)
+      if (total)
 	{
-	  if (any_condjump_p (e->src->end)
-	      && !EDGE_INFO (e)->ignore
-	      && !(e->flags & (EDGE_ABNORMAL | EDGE_ABNORMAL_CALL | EDGE_FAKE)))
+	  for (e = bb->succ; e; e = e->succ_next)
+	    {
+		e->probability = (e->count * REG_BR_PROB_BASE + total / 2) / total;
+		if (e->probability < 0 || e->probability > REG_BR_PROB_BASE)
+		  {
+		    error ("corrupted profile info: prob for %d-%d thought to be %d",
+			   e->src->index, e->dest->index, e->probability);
+		    e->probability = REG_BR_PROB_BASE / 2;
+		  }
+	    }
+	  if (bb->index >= 0
+	      && any_condjump_p (bb->end)
+	      && bb->succ->succ_next)
 	    {
 	      int prob;
-	      /* This calculates the branch probability as an integer between
-		 0 and REG_BR_PROB_BASE, properly rounded to the nearest
-		 integer.  Perform the arithmetic in double to avoid
-		 overflowing the range of ints.  */
-	      if (total == 0)
-		prob = -1;
-	      else
-		{
-		  prob = (((double)e->count * REG_BR_PROB_BASE)
-			  + (total >> 1)) / total;
-		  if (prob < 0 || prob > REG_BR_PROB_BASE)
-		    {
-		      if (rtl_dump_file)
-			fprintf (rtl_dump_file, "bad count: prob for %d-%d thought to be %d (forcibly normalized)\n",
-				 e->src->index, e->dest->index, prob);
+	      edge e;
+	      int index;
 
-		      bad_counts = 1;
-		      prob = REG_BR_PROB_BASE / 2;
-		    }
-		  
-		  /* Match up probability with JUMP pattern.  */
-		  if (e->flags & EDGE_FALLTHRU)
-		    prob = REG_BR_PROB_BASE - prob;
-		}
-	      
-	      if (prob == -1)
-		num_never_executed++;
-	      else
-		{
-		  int index = prob * 20 / REG_BR_PROB_BASE;
-		  if (index == 20)
-		    index = 19;
-		  hist_br_prob[index]++;
-		}
-	      num_branches++;
-	      
-	      note = find_reg_note (e->src->end, REG_BR_PROB, 0);
+	      /* Find the branch edge.  It is possible that we do have fake
+		 edges here.  */
+	      for (e = bb->succ; e->flags & (EDGE_FAKE | EDGE_FALLTHRU);
+		   e = e->succ_next)
+		continue; /* Loop body has been intentionally left blank.  */
+
+	      prob = e->probability;
+	      index = prob * 20 / REG_BR_PROB_BASE;
+
+	      if (index == 20)
+		index = 19;
+	      hist_br_prob[index]++;
+
+	      note = find_reg_note (bb->end, REG_BR_PROB, 0);
 	      /* There may be already note put by some other pass, such
-	         as builtin_expect expander.  */
+		 as builtin_expect expander.  */
 	      if (note)
 		XEXP (note, 0) = GEN_INT (prob);
 	      else
-		REG_NOTES (e->src->end)
+		REG_NOTES (bb->end)
 		  = gen_rtx_EXPR_LIST (REG_BR_PROB, GEN_INT (prob),
-				       REG_NOTES (e->src->end));
+				       REG_NOTES (bb->end));
+	      num_branches++;
 	    }
 	}
-
-      /* Add a REG_EXEC_COUNT note to the first instruction of this block.  */
-      insn = next_nonnote_insn (bb->head);
-
-      if (GET_CODE (bb->head) == CODE_LABEL)
-	insn = next_nonnote_insn (insn);
-
-      /* Avoid crash on empty basic blocks.  */
-      if (insn && INSN_P (insn))
-	REG_NOTES (insn)
-	  = gen_rtx_EXPR_LIST (REG_EXEC_COUNT, GEN_INT (total),
-			       REG_NOTES (insn));
+      /* Otherwise distribute the probabilities evenly so we get sane sum.
+	 Use simple heuristics that if there are normal edges, give all abnormals
+	 frequency of 0, otherwise distribute the frequency over abnormals
+	 (this is the case of noreturn calls).  */
+      else
+	{
+	  for (e = bb->succ; e; e = e->succ_next)
+	    if (!(e->flags & (EDGE_COMPLEX | EDGE_FAKE)))
+	      total ++;
+	  if (total)
+	    {
+	      for (e = bb->succ; e; e = e->succ_next)
+		if (!(e->flags & (EDGE_COMPLEX | EDGE_FAKE)))
+		  e->probability = REG_BR_PROB_BASE / total;
+		else
+		  e->probability = 0;
+	    }
+	  else
+	    {
+	      for (e = bb->succ; e; e = e->succ_next)
+		total ++;
+	      for (e = bb->succ; e; e = e->succ_next)
+		e->probability = REG_BR_PROB_BASE / total;
+	    }
+	  if (bb->index >= 0
+	      && any_condjump_p (bb->end)
+	      && bb->succ->succ_next)
+	    num_branches++, num_never_executed;
+	}
     }
-  
-  /* This should never happen.  */
-  if (bad_counts)
-    warning ("Arc profiling: some edge counts were bad.");
 
   if (rtl_dump_file)
     {
@@ -510,7 +515,7 @@ compute_branch_probabilities ()
       fputc ('\n', rtl_dump_file);
     }
 
-  free (bb_infos);
+  free_aux_for_blocks ();
 }
 
 /* Instrument and/or analyze program behavior based on program flow graph.
@@ -534,7 +539,6 @@ branch_prob ()
 {
   int i;
   int num_edges, ignored_edges;
-  struct edge_info *edge_infos;
   struct edge_list *el;
 
   /* Start of a function.  */
@@ -543,22 +547,53 @@ branch_prob ()
 
   total_num_times_called++;
 
+  flow_call_edges_add (NULL);
+  add_noreturn_fake_exit_edges ();
+
   /* We can't handle cyclic regions constructed using abnormal edges.
      To avoid these we replace every source of abnormal edge by a fake
      edge from entry node and every destination by fake edge to exit.
      This keeps graph acyclic and our calculation exact for all normal
      edges except for exit and entrance ones.
-   
+
      We also add fake exit edges for each call and asm statement in the
      basic, since it may not return.  */
 
   for (i = 0; i < n_basic_blocks ; i++)
     {
-      rtx insn;
       int need_exit_edge = 0, need_entry_edge = 0;
       int have_exit_edge = 0, have_entry_edge = 0;
       basic_block bb = BASIC_BLOCK (i);
+      rtx insn;
       edge e;
+
+      /* Add fake edges from entry block to the call insns that may return
+	 twice.  The CFG is not quite correct then, as call insn plays more
+	 role of CODE_LABEL, but for our purposes, everything should be OK,
+	 as we never insert code to the beggining of basic block.  */
+      for (insn = bb->head; insn != NEXT_INSN (bb->end);
+	   insn = NEXT_INSN (insn))
+	{
+	  if (GET_CODE (insn) == CALL_INSN
+	      && find_reg_note (insn, REG_SETJMP, NULL))
+	    {
+	      if (GET_CODE (bb->head) == CODE_LABEL
+		  || insn != NEXT_INSN (bb->head))
+		{
+		  e = split_block (bb, PREV_INSN (insn));
+		  make_edge (ENTRY_BLOCK_PTR, e->dest, EDGE_FAKE);
+		  break;
+		}
+	      else
+		{
+		  /* We should not get abort here, as call to setjmp should not
+		     be the very first instruction of function.  */
+		  if (!i)
+		    abort ();
+		  make_edge (ENTRY_BLOCK_PTR, bb, EDGE_FAKE);
+		}
+	    }
+	}
 
       for (e = bb->succ; e; e = e->succ_next)
 	{
@@ -577,63 +612,39 @@ branch_prob ()
 	    have_entry_edge = 1;
 	}
 
-      /* ??? Not strictly needed unless flag_test_coverage, but adding
-	 them anyway keeps the .da file consistent.  */
-      /* ??? Currently inexact for basic blocks with multiple calls. 
-	 We need to split blocks here.  */
-      for (insn = bb->head;
-	   insn != NEXT_INSN (bb->end);
-	   insn = NEXT_INSN (insn))
-	{
-	  rtx set;
-	  if (GET_CODE (insn) == CALL_INSN && !CONST_CALL_P (insn))
-	    need_exit_edge = 1;
-	  else if (GET_CODE (insn) == INSN)
-	    {
-	      set = PATTERN (insn);
-	      if (GET_CODE (set) == PARALLEL)
-		set = XVECEXP (set, 0, 0);
-	      if ((GET_CODE (set) == ASM_OPERANDS && MEM_VOLATILE_P (set))
-		  || GET_CODE (set) == ASM_INPUT)
-		need_exit_edge = 1;
-	    }
-	}
-
       if (need_exit_edge && !have_exit_edge)
 	{
 	  if (rtl_dump_file)
 	    fprintf (rtl_dump_file, "Adding fake exit edge to bb %i\n",
 		     bb->index);
-          make_edge (NULL, bb, EXIT_BLOCK_PTR, EDGE_FAKE);
+          make_edge (bb, EXIT_BLOCK_PTR, EDGE_FAKE);
 	}
       if (need_entry_edge && !have_entry_edge)
 	{
 	  if (rtl_dump_file)
 	    fprintf (rtl_dump_file, "Adding fake entry edge to bb %i\n",
 		     bb->index);
-          make_edge (NULL, ENTRY_BLOCK_PTR, bb, EDGE_FAKE);
+          make_edge (ENTRY_BLOCK_PTR, bb, EDGE_FAKE);
 	}
     }
 
   el = create_edge_list ();
   num_edges = NUM_EDGES (el);
-  edge_infos = (struct edge_info *)
-    xcalloc (num_edges, sizeof (struct edge_info));
+  alloc_aux_for_edges (sizeof (struct edge_info));
 
   ignored_edges = 0;
   for (i = 0 ; i < num_edges ; i++)
     {
       edge e = INDEX_EDGE (el, i);
       e->count = 0;
-      e->aux = &edge_infos[i];
 
       /* Mark edges we've replaced by fake edges above as ignored.  */
       if ((e->flags & (EDGE_ABNORMAL | EDGE_ABNORMAL_CALL))
 	  && e->src != ENTRY_BLOCK_PTR && e->dest != EXIT_BLOCK_PTR)
-	{
+        {
 	  EDGE_INFO (e)->ignore = 1;
 	  ignored_edges++;
-	}
+        }
     }
 
 #ifdef ENABLE_CHECKING
@@ -708,21 +719,21 @@ branch_prob ()
 
   /* Create spanning tree from basic block graph, mark each edge that is
      on the spanning tree.  We insert as many abnormal and critical edges
-     as possible to minimize number of edge splits necesary. */
+     as possible to minimize number of edge splits necessary.  */
 
   find_spanning_tree (el);
 
   /* Fake edges that are not on the tree will not be instrumented, so
-     mark them ignored. */
+     mark them ignored.  */
   for (i = 0; i < num_edges; i++)
     {
       edge e = INDEX_EDGE (el, i);
       struct edge_info *inf = EDGE_INFO (e);
       if ((e->flags & EDGE_FAKE) && !inf->ignore && !inf->on_tree)
-	{
-	  inf->ignore = 1;
-	  ignored_edges++;
-	}
+        {
+          inf->ignore = 1;
+          ignored_edges++;
+        }
     }
 
   total_num_blocks += n_basic_blocks + 2;
@@ -779,7 +790,7 @@ branch_prob ()
 	        }
 	    }
 	}
-      /* Emit fake loopback edge for EXIT block to maitain compatibility with
+      /* Emit fake loopback edge for EXIT block to maintain compatibility with
          old gcov format.  */
       __write_long (1, bbg_file, 4);
       __write_long (0, bbg_file, 4);
@@ -802,12 +813,18 @@ branch_prob ()
     }
 
   remove_fake_edges ();
-  free (edge_infos);
+  /* Re-merge split basic blocks and the mess introduced by
+     insert_insn_on_edge.  */
+  cleanup_cfg (profile_arc_flag ? CLEANUP_EXPENSIVE : 0);
+  if (rtl_dump_file)
+    dump_flow_info (rtl_dump_file);
+
+  free_aux_for_edges ();
   free_edge_list (el);
 }
 
 /* Union find algorithm implementation for the basic blocks using
-   aux fields. */
+   aux fields.  */
 
 static basic_block
 find_group (bb)
@@ -883,7 +900,7 @@ find_spanning_tree (el)
   for (i = 0; i < num_edges; i++)
     {
       edge e = INDEX_EDGE (el, i);
-      if ((e->flags & EDGE_CRITICAL)
+      if ((EDGE_CRITICAL_P (e))
 	  && !EDGE_INFO (e)->ignore
 	  && (find_group (e->src) != find_group (e->dest)))
 	{
@@ -903,6 +920,11 @@ find_spanning_tree (el)
 	  union_groups (e->src, e->dest);
 	}
     }
+
+  EXIT_BLOCK_PTR->aux = NULL;
+  ENTRY_BLOCK_PTR->aux = NULL;
+  for (i = 0; i < n_basic_blocks; i++)
+    BASIC_BLOCK (i)->aux = NULL;
 }
 
 /* Perform file-level initialization for branch-prob processing.  */
@@ -950,7 +972,7 @@ init_branch_prob (filename)
       strip_off_ending (da_file_name, len);
       strcat (da_file_name, ".da");
       if ((da_file = fopen (da_file_name, "rb")) == 0)
-	warning ("file %s not found, execution counts assumed to be zero.",
+	warning ("file %s not found, execution counts assumed to be zero",
 		 da_file_name);
 
       /* The first word in the .da file gives the number of instrumented
@@ -995,12 +1017,12 @@ end_branch_prob ()
 	  long temp;
 	  /* This seems slightly dangerous, as it presumes the EOF
 	     flag will not be set until an attempt is made to read
-	     past the end of the file. */
+	     past the end of the file.  */
 	  if (feof (da_file))
-	    warning (".da file contents exhausted too early\n");
+	    error (".da file contents exhausted too early");
 	  /* Should be at end of file now.  */
 	  if (__read_long (&temp, da_file, 8) == 0)
-	    warning (".da file contents not exhausted\n");
+	    error (".da file contents not exhausted");
 	  fclose (da_file);
 	}
     }
@@ -1061,18 +1083,18 @@ static rtx
 gen_edge_profiler (edgeno)
      int edgeno;
 {
-  enum machine_mode mode = mode_for_size (LONG_TYPE_SIZE, MODE_INT, 0);
+  enum machine_mode mode = mode_for_size (GCOV_TYPE_SIZE, MODE_INT, 0);
   rtx mem_ref, tmp;
   rtx sequence;
 
   start_sequence ();
 
   tmp = force_reg (Pmode, profiler_label);
-  tmp = plus_constant (tmp, LONG_TYPE_SIZE / BITS_PER_UNIT * edgeno);
+  tmp = plus_constant (tmp, GCOV_TYPE_SIZE / BITS_PER_UNIT * edgeno);
   mem_ref = validize_mem (gen_rtx_MEM (mode, tmp));
 
-  tmp = expand_binop (mode, add_optab, mem_ref, const1_rtx,
-		      mem_ref, 0, OPTAB_WIDEN);
+  tmp = expand_simple_binop (mode, PLUS, mem_ref, const1_rtx,
+			     mem_ref, 0, OPTAB_WIDEN);
 
   if (tmp != mem_ref)
     emit_move_insn (copy_rtx (mem_ref), tmp);
@@ -1083,7 +1105,7 @@ gen_edge_profiler (edgeno)
 }
 
 /* Output code for a constructor that will invoke __bb_init_func, if
-   this has not already been done. */
+   this has not already been done.  */
 
 void
 output_func_start_profiler ()
@@ -1093,30 +1115,29 @@ output_func_start_profiler ()
   char buf[20];
   const char *cfnname;
   rtx table_address;
-  enum machine_mode mode = mode_for_size (LONG_TYPE_SIZE, MODE_INT, 0);
+  enum machine_mode mode = mode_for_size (GCOV_TYPE_SIZE, MODE_INT, 0);
   int save_flag_inline_functions = flag_inline_functions;
   int save_flag_test_coverage = flag_test_coverage;
   int save_profile_arc_flag = profile_arc_flag;
   int save_flag_branch_probabilities = flag_branch_probabilities;
 
   /* It's either already been output, or we don't need it because we're
-     not doing profile-edges. */
+     not doing profile-edges.  */
   if (! need_func_profiler)
     return;
 
   need_func_profiler = 0;
 
   /* Synthesize a constructor function to invoke __bb_init_func with a
-     pointer to this object file's profile block. */
+     pointer to this object file's profile block.  */
 
   /* Try and make a unique name given the "file function name".
 
-     And no, I don't like this either. */
+     And no, I don't like this either.  */
 
   fnname = get_file_function_name ('I');
   cfnname = IDENTIFIER_POINTER (fnname);
-  name = xmalloc (strlen (cfnname) + 5);
-  sprintf (name, "%sGCOV",cfnname);
+  name = concat (cfnname, "GCOV", NULL);
   fnname = get_identifier (name);
   free (name);
 
@@ -1124,13 +1145,11 @@ output_func_start_profiler ()
 		       build_function_type (void_type_node, NULL_TREE));
   DECL_EXTERNAL (fndecl) = 0;
 
-#if defined(ASM_OUTPUT_CONSTRUCTOR) && defined(ASM_OUTPUT_DESTRUCTOR)
   /* It can be a static function as long as collect2 does not have
      to scan the object file to find its ctor/dtor routine.  */
-  TREE_PUBLIC (fndecl) = 0;
-#else
-  TREE_PUBLIC (fndecl) = 1;
-#endif
+  TREE_PUBLIC (fndecl) = ! targetm.have_ctors_dtors;
+
+  TREE_USED (fndecl) = 1;
 
   DECL_RESULT (fndecl) = build_decl (RESULT_DECL, NULL_TREE, void_type_node);
 
@@ -1144,11 +1163,11 @@ output_func_start_profiler ()
   pushlevel (0);
   expand_function_start (fndecl, 0);
 
-  /* Actually generate the code to call __bb_init_func. */
+  /* Actually generate the code to call __bb_init_func.  */
   ASM_GENERATE_INTERNAL_LABEL (buf, "LPBX", 0);
   table_address = force_reg (Pmode,
 			     gen_rtx_SYMBOL_REF (Pmode, ggc_strdup (buf)));
-  emit_library_call (gen_rtx_SYMBOL_REF (Pmode, "__bb_init_func"), 0,
+  emit_library_call (gen_rtx_SYMBOL_REF (Pmode, "__bb_init_func"), LCT_NORMAL,
 		     mode, 1, table_address, Pmode);
 
   expand_function_end (input_filename, lineno, 0);
@@ -1178,5 +1197,7 @@ output_func_start_profiler ()
     fflush (asm_out_file);
   current_function_decl = NULL_TREE;
 
-  assemble_constructor (IDENTIFIER_POINTER (DECL_NAME (fndecl)));
+  if (targetm.have_ctors_dtors)
+    (* targetm.asm_out.constructor) (XEXP (DECL_RTL (fndecl), 0),
+				     DEFAULT_INIT_PRIORITY);
 }

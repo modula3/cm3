@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for IBM S/390
-   Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Hartmut Penner (hpenner@de.ibm.com) and
                   Ulrich Weigand (uweigand@de.ibm.com).
 This file is part of GNU CC.
@@ -22,8 +22,6 @@ Boston, MA 02111-1307, USA.  */
 #ifndef _S390_H
 #define _S390_H
 
-#define TARGET_VERSION fprintf (stderr, " (S/390)");
-
 extern int flag_pic; 
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
@@ -33,14 +31,21 @@ extern int target_flags;
 /* Target macros checked at runtime of compiler.  */
 
 #define TARGET_HARD_FLOAT          (target_flags & 1)
+#define TARGET_SOFT_FLOAT          (!(target_flags & 1))
 #define TARGET_BACKCHAIN           (target_flags & 2)
 #define TARGET_SMALL_EXEC          (target_flags & 4)
 #define TARGET_DEBUG_ARG           (target_flags & 8)
 #define TARGET_64BIT               (target_flags & 16)
 #define TARGET_MVCLE               (target_flags & 32)
 
+#ifdef DEFAULT_TARGET_64BIT
+#define TARGET_DEFAULT             0x13
+#define TARGET_VERSION fprintf (stderr, " (zSeries)");
+#else
 #define TARGET_DEFAULT             0x3
-#define TARGET_SOFT_FLOAT          (!(target_flags & 1))
+#define TARGET_VERSION fprintf (stderr, " (S/390)");
+#endif
+
 
 /* Macro to define tables used to set the flags.  This is a list in braces
    of pairs in braces, each pair being { "NAME", VALUE }
@@ -64,6 +69,14 @@ extern int target_flags;
 
 /* Define this to change the optimizations performed by default.  */
 #define OPTIMIZATION_OPTIONS(LEVEL, SIZE) optimization_options(LEVEL, SIZE)
+
+/* Sometimes certain combinations of command options do not make sense
+   on a particular target machine.  You can define a macro
+   `OVERRIDE_OPTIONS' to take account of this.  This macro, if
+   defined, is executed once just after all the command options have
+   been parsed.  */
+#define OVERRIDE_OPTIONS override_options ()
+
 
 /* Defines for REAL_ARITHMETIC.  */
 #define IEEE_FLOAT 1
@@ -184,7 +197,7 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
 
 #define EMPTY_FIELD_BOUNDARY 32
 
-/* Alignment on even adresses for LARL instruction.  */
+/* Alignment on even addresses for LARL instruction.  */
 
 #define CONSTANT_ALIGNMENT(EXP, ALIGN) (ALIGN) < 16 ? 16 : (ALIGN)
 
@@ -214,11 +227,11 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
 {  1, 2, 3, 4, 5, 0, 14, 13, 12, 11, 10, 9, 8, 7, 6,            \
    16, 17, 18, 19, 20, 21, 22, 23,                              \
    24, 25, 26, 27, 28, 29, 30, 31,                              \
-   15, 32, 33 }
+   15, 32, 33, 34 }
 
 /* Standard register usage.  */
  
-#define INT_REGNO_P(N)   ( (N) >= 0 && (N) < 16 )
+#define INT_REGNO_P(N)   ( (int)(N) >= 0 && (N) < 16 )
 #ifdef IEEE_FLOAT
 #define FLOAT_REGNO_P(N) ( (N) >= 16 && (N) < 32 )
 #else
@@ -236,7 +249,12 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
    G5 and following have 16 IEEE floating point register,
    which get numbers 16-31.  */
 
-#define FIRST_PSEUDO_REGISTER 34
+#define FIRST_PSEUDO_REGISTER 35
+
+/* Number of hardware registers that go into the DWARF-2 unwind info.
+   If not defined, equals FIRST_PSEUDO_REGISTER.  */
+
+#define DWARF_FRAME_REGISTERS 34
 
 /* The following register have a fix usage
    GPR 12: GOT register points to the GOT, setup in prologue,
@@ -246,7 +264,7 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
    GPR 14: Return registers holds the return address
    GPR 15: Stack pointer */
 
-#define PIC_OFFSET_TABLE_REGNUM 12
+#define PIC_OFFSET_TABLE_REGNUM (flag_pic ? 12 : INVALID_REGNUM)
 #define BASE_REGISTER 13
 #define RETURN_REGNUM 14
 #define STACK_POINTER_REGNUM 15
@@ -260,7 +278,7 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
   0, 0, 0, 0, 					\
   0, 0, 0, 0, 					\
   0, 0, 0, 0, 					\
-  1, 1 }
+  1, 1, 1 }
 
 /* 1 for registers not available across function calls.  These must include
    the FIXED_REGISTERS and also any registers that can be used without being
@@ -273,21 +291,48 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
   1, 1, 0, 0, 					\
   0, 0, 0, 0, 					\
   0, 1, 1, 1,					\
-  1, 1, 0, 0, 					\
   1, 1, 1, 1, 					\
   1, 1, 1, 1, 					\
   1, 1, 1, 1, 					\
-  1, 1 }
+  1, 1, 1, 1, 					\
+  1, 1, 1 }
 
-/* If not pic code, gpr 12 can be used.  */
+/* Like `CALL_USED_REGISTERS' except this macro doesn't require that
+   the entire set of `FIXED_REGISTERS' be included.
+   (`CALL_USED_REGISTERS' must be a superset of `FIXED_REGISTERS').  */
+
+#define CALL_REALLY_USED_REGISTERS		\
+{ 1, 1, 1, 1, 					\
+  1, 1, 0, 0, 					\
+  0, 0, 0, 0, 					\
+  0, 0, 0, 0,					\
+  1, 1, 1, 1, 					\
+  1, 1, 1, 1, 					\
+  1, 1, 1, 1, 					\
+  1, 1, 1, 1, 					\
+  1, 1, 1 }
+
+/* Macro to conditionally modify fixed_regs/call_used_regs.  */
 
 #define CONDITIONAL_REGISTER_USAGE				\
 do								\
   {								\
+    int i;							\
+								\
     if (flag_pic)						\
       {								\
 	fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
 	call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
+      }								\
+    if (TARGET_64BIT)						\
+      {								\
+        for (i = 24; i < 32; i++)				\
+	    call_used_regs[i] = call_really_used_regs[i] = 0;	\
+      }								\
+    else							\
+      {								\
+        for (i = 18; i < 20; i++)				\
+	    call_used_regs[i] = call_really_used_regs[i] = 0;	\
       }								\
  } while (0)
 
@@ -298,7 +343,8 @@ do								\
 	   with stack- or frame-pointer. 
    GPR 33: Condition code 'register' */
 
-#define FRAME_POINTER_REGNUM 11
+#define HARD_FRAME_POINTER_REGNUM 11
+#define FRAME_POINTER_REGNUM 34
 
 #define ARG_POINTER_REGNUM 32
 
@@ -333,7 +379,8 @@ do								\
 #define HARD_REGNO_MODE_OK(REGNO, MODE)                             \
   (FLOAT_REGNO_P(REGNO)?                                            \
    (GET_MODE_CLASS(MODE) == MODE_FLOAT ||                           \
-    GET_MODE_CLASS(MODE) == MODE_COMPLEX_FLOAT) :                   \
+    GET_MODE_CLASS(MODE) == MODE_COMPLEX_FLOAT ||                   \
+    (MODE) == SImode || (MODE) == DImode) :                         \
    INT_REGNO_P(REGNO)?                                              \
     (HARD_REGNO_NREGS(REGNO, MODE) == 1 || !((REGNO) & 1)) :        \
    CC_REGNO_P(REGNO)?                                               \
@@ -349,6 +396,15 @@ do								\
    (((MODE1) == SFmode || (MODE1) == DFmode)	\
    == ((MODE2) == SFmode || (MODE2) == DFmode))
 
+/* If defined, gives a class of registers that cannot be used as the
+   operand of a SUBREG that changes the mode of the object illegally.  */
+
+#define CLASS_CANNOT_CHANGE_MODE FP_REGS
+
+/* Defines illegal mode changes for CLASS_CANNOT_CHANGE_MODE.  */
+
+#define CLASS_CANNOT_CHANGE_MODE_P(FROM,TO) \
+  (GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO))
 
 /* Define this macro if references to a symbol must be treated
    differently depending on something about the variable or
@@ -383,18 +439,25 @@ while (0)
 
 #define ELIMINABLE_REGS				        \
 {{ FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM},	        \
+ { FRAME_POINTER_REGNUM, HARD_FRAME_POINTER_REGNUM},    \
  { ARG_POINTER_REGNUM, STACK_POINTER_REGNUM},	        \
- { ARG_POINTER_REGNUM, FRAME_POINTER_REGNUM}}  
+ { ARG_POINTER_REGNUM, HARD_FRAME_POINTER_REGNUM}}  
 
 #define CAN_ELIMINATE(FROM, TO) (1)
 
 #define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET) 			  \
 { if ((FROM) == FRAME_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM) 	  \
   { (OFFSET) = 0; }     						  \
-  else if ((FROM) == ARG_POINTER_REGNUM && (TO) == FRAME_POINTER_REGNUM)  \
+  else  if ((FROM) == FRAME_POINTER_REGNUM                                \
+	    && (TO) == HARD_FRAME_POINTER_REGNUM)                	  \
+  { (OFFSET) = 0; }     						  \
+  else if ((FROM) == ARG_POINTER_REGNUM                                   \
+            && (TO) == HARD_FRAME_POINTER_REGNUM)                         \
   { (OFFSET) = s390_arg_frame_offset (); }     				  \
   else if ((FROM) == ARG_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM)  \
   { (OFFSET) = s390_arg_frame_offset (); }     				  \
+  else									  \
+    abort();								  \
 }
 
 #define CAN_DEBUG_WITHOUT_FP
@@ -431,7 +494,8 @@ while (0)
 enum reg_class
 {
   NO_REGS, ADDR_REGS, GENERAL_REGS,
-  FP_REGS, ALL_REGS, LIM_REG_CLASSES
+  FP_REGS, ADDR_FP_REGS, GENERAL_FP_REGS,
+  ALL_REGS, LIM_REG_CLASSES
 };
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
@@ -439,7 +503,8 @@ enum reg_class
 /* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES                                                 \
-{ "NO_REGS","ADDR_REGS", "GENERAL_REGS", "FP_REGS", "ALL_REGS" }
+{ "NO_REGS", "ADDR_REGS", "GENERAL_REGS", 				\
+  "FP_REGS", "ADDR_FP_REGS", "GENERAL_FP_REGS", "ALL_REGS" }
 
 /* Define which registers fit in which classes.  This is an initializer for
    a vector of HARD_REG_SET of length N_REG_CLASSES.
@@ -448,10 +513,12 @@ enum reg_class
 #define REG_CLASS_CONTENTS \
 {				       			\
   { 0x00000000, 0x00000000 },	/* NO_REGS */		\
-  { 0x0000fffe, 0x00000001 },	/* ADDR_REGS */		\
-  { 0x0000ffff, 0x00000001 },	/* GENERAL_REGS */	\
+  { 0x0000fffe, 0x00000005 },	/* ADDR_REGS */		\
+  { 0x0000ffff, 0x00000005 },	/* GENERAL_REGS */	\
   { 0xffff0000, 0x00000000 },	/* FP_REGS */		\
-  { 0xffffffff, 0x00000003 },	/* ALL_REGS */		\
+  { 0xfffffffe, 0x00000005 },	/* ADDR_FP_REGS */	\
+  { 0xffffffff, 0x00000005 },	/* GENERAL_FP_REGS */	\
+  { 0xffffffff, 0x00000007 },	/* ALL_REGS */		\
 }
 
 
@@ -462,7 +529,7 @@ enum reg_class
 
 #define REGNO_REG_CLASS(REGNO) (regclass_map[REGNO])
 
-extern enum reg_class regclass_map[];	/* smalled class containing REGNO   */
+extern enum reg_class regclass_map[FIRST_PSEUDO_REGISTER]; /* smalled class containing REGNO   */
 
 /* The class value for index registers, and the one for base regs.  */
 
@@ -504,15 +571,8 @@ extern enum reg_class regclass_map[];	/* smalled class containing REGNO   */
    but on some machines in some cases it is preferable to use a more
    restrictive class.  */
 
-#define PREFERRED_RELOAD_CLASS(X, CLASS)                                 \
-    (GET_CODE (X) == CONST_DOUBLE ?                                      \
-     (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT ? FP_REGS : ADDR_REGS) :\
-     (GET_CODE (X) == CONST_INT ?                                        \
-     (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT ? FP_REGS : ADDR_REGS) :\
-     GET_CODE (X) == PLUS ||                                            \
-     GET_CODE (X) == LABEL_REF ||                                        \
-     GET_CODE (X) == SYMBOL_REF ||                                       \
-     GET_CODE (X) == CONST ? ADDR_REGS : (CLASS)))
+#define PREFERRED_RELOAD_CLASS(X, CLASS)	\
+	s390_preferred_reload_class ((X), (CLASS))
 
 /* Return the maximum number of consecutive registers needed to represent
    mode MODE in a register of class CLASS.  */
@@ -522,6 +582,12 @@ extern enum reg_class regclass_map[];	/* smalled class containing REGNO   */
       (GET_MODE_CLASS (MODE) == MODE_COMPLEX_FLOAT ? 2 : 1) :  		\
       (GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
 
+/* We need a secondary reload when loading a PLUS which is 
+   not a valid operand for LOAD ADDRESS.  */
+
+#define SECONDARY_INPUT_RELOAD_CLASS(CLASS, MODE, IN)	\
+	s390_secondary_input_reload_class ((CLASS), (MODE), (IN))
+
 /* If we are copying between FP registers and anything else, we need a memory
    location.  */
 
@@ -529,7 +595,7 @@ extern enum reg_class regclass_map[];	/* smalled class containing REGNO   */
  ((CLASS1) != (CLASS2) && ((CLASS1) == FP_REGS || (CLASS2) == FP_REGS))
 
 /* Get_secondary_mem widens its argument to BITS_PER_WORD which loses on 64bit
-   because the movsi and movsf patterns don't handle r/f moves. */
+   because the movsi and movsf patterns don't handle r/f moves.  */
 
 #define SECONDARY_MEMORY_NEEDED_MODE(MODE)		\
  (GET_MODE_BITSIZE (MODE) < 32				\
@@ -555,26 +621,21 @@ extern enum reg_class regclass_map[];	/* smalled class containing REGNO   */
 
 /* Stack layout; function entry, exit and calling.  */
 
-/* The current return address is on Offset 56 of the current frame
-   if we are in an leaf_function. Otherwise we have to go one stack
-   back.
-   The return address of anything farther back is accessed normally
-   at an offset of 56 from the frame pointer.
+/* The return address of the current frame is retrieved 
+   from the initial value of register RETURN_REGNUM.
+   For frames farther back, we use the stack slot where
+   the corresponding RETURN_REGNUM register was saved.  */
 
-   FIXME: builtin_return_addr does not work correctly in a leaf
-          function, we need to find way to find out, if we
-          are in a leaf function
-  */
-
-#define _RETURN_ADDR_OFFSET (TARGET_64BIT ? 112 : 56)
-
-#define RETURN_ADDR_RTX(count, frame)                                   \
-   gen_rtx (MEM, Pmode,                                                 \
-            memory_address (Pmode,                                      \
-                              plus_constant (                           \
-                              copy_to_reg (gen_rtx (MEM, Pmode,         \
-                              memory_address (Pmode, frame))),          \
-                              _RETURN_ADDR_OFFSET)));
+#define DYNAMIC_CHAIN_ADDRESS(FRAME)						\
+  ((FRAME) != hard_frame_pointer_rtx ? (FRAME) :				\
+   plus_constant (arg_pointer_rtx, -STACK_POINTER_OFFSET))
+     
+#define RETURN_ADDR_RTX(COUNT, FRAME)						\
+  ((COUNT) == 0 ? get_hard_reg_initial_val (Pmode, RETURN_REGNUM) :		\
+   gen_rtx_MEM (Pmode,								\
+                memory_address (Pmode, 						\
+                                plus_constant (DYNAMIC_CHAIN_ADDRESS ((FRAME)),	\
+                                               RETURN_REGNUM * UNITS_PER_WORD))))
 
 /* The following macros will turn on dwarf2 exception hndling
    Other code location for this exception handling are 
@@ -584,7 +645,12 @@ extern enum reg_class regclass_map[];	/* smalled class containing REGNO   */
 
 /* We have 31 bit mode.  */
 
-#define MASK_RETURN_ADDR (GEN_INT (0x7fffffff))
+#define MASK_RETURN_ADDR (TARGET_64BIT ? GEN_INT (-1) : GEN_INT (0x7fffffff))
+
+/* The offset from the incoming value of %sp to the top of the stack frame
+   for the current function.  */
+
+#define INCOMING_FRAME_SP_OFFSET STACK_POINTER_OFFSET
 
 /* Location, from where return address to load.  */
 
@@ -811,495 +877,9 @@ CUMULATIVE_ARGS;
    for profiling a function entry.  */
 
 #define FUNCTION_PROFILER(FILE, LABELNO) 			\
-do {                                     			\
-  extern rtx s390_profile[];  					\
-  extern s390_pool_count;     					\
-  rtx tmp;                                    			\
-  static char label[128];                     			\
-  fprintf (FILE, "# function profiler \n");   			\
-  if (TARGET_64BIT) 						\
-    {								\
-      rtx tmp[1];						\
-      output_asm_insn ("stg\t14,8(15)", tmp);			\
-      sprintf (label, "%sP%d", LPREFIX, LABELNO);       	\
-      tmp[0] = gen_rtx_SYMBOL_REF (Pmode, label);		\
-      SYMBOL_REF_FLAG (tmp[0]) = 1;				\
-      output_asm_insn ("larl\t1,%0", tmp);      		\
-      tmp[0] = gen_rtx_SYMBOL_REF (Pmode, "_mcount");	        \
-      if (flag_pic)						\
-        {							\
-          tmp[0] = gen_rtx_UNSPEC (Pmode, gen_rtvec (1, tmp[0]), 113); \
-          tmp[0] = gen_rtx_CONST (Pmode, tmp[0]);		\
-        }							\
-      output_asm_insn ("brasl\t14,%0", tmp);			\
-      output_asm_insn ("lg\t14,8(15)", tmp);			\
-    }								\
-  else								\
-    {  								\
-      output_asm_insn ("l     14,4(15)", s390_profile);		\
-      s390_pool_count = 0;                             		\
-      output_asm_insn ("st    14,4(15)", s390_profile);		\
-      output_asm_insn ("l     14,%4", s390_profile);		\
-      output_asm_insn ("l     1,%9", s390_profile);		\
-      if (flag_pic) 						\
-	{   							\
-	  output_asm_insn ("ar    1,13", s390_profile);   	\
-	  output_asm_insn ("bas   14,0(14,13)", s390_profile); 	\
-	} 							\
-      else 							\
-	{							\
-	  output_asm_insn ("basr  14,14", s390_profile);	\
-	}                  					\
-      output_asm_insn ("l     14,4(15)", s390_profile);		\
-    }                     					\
-} while (0)
+	s390_function_profiler ((FILE), ((LABELNO)))
 
-/* #define PROFILE_BEFORE_PROLOGUE */
-
-/* There are three profiling modes for basic blocks available.
-   The modes are selected at compile time by using the options
-   -a or -ax of the gnu compiler.
-   The variable `profile_block_flag' will be set according to the
-   selected option.
-
-   profile_block_flag == 0, no option used:
-
-      No profiling done.
-
-   profile_block_flag == 1, -a option used.
-
-      Count frequency of execution of every basic block.
-
-   profile_block_flag == 2, -ax option used.
-
-      Generate code to allow several different profiling modes at run time. 
-      Available modes are:
-             Produce a trace of all basic blocks.
-             Count frequency of jump instructions executed.
-      In every mode it is possible to start profiling upon entering
-      certain functions and to disable profiling of some other functions.
-
-    The result of basic-block profiling will be written to a file `bb.out'.
-    If the -ax option is used parameters for the profiling will be read
-    from file `bb.in'.
-
-*/
-
-/* The following macro shall output assembler code to FILE
-   to initialize basic-block profiling.
-
-   If profile_block_flag == 2
-
-	Output code to call the subroutine `__bb_init_trace_func'
-	and pass two parameters to it. The first parameter is
-	the address of a block allocated in the object module.
-	The second parameter is the number of the first basic block
-	of the function.
-
-	The name of the block is a local symbol made with this statement:
-	
-	    ASM_GENERATE_INTERNAL_LABEL (BUFFER, "LPBX", 0);
-
-	Of course, since you are writing the definition of
-	`ASM_GENERATE_INTERNAL_LABEL' as well as that of this macro, you
-	can take a short cut in the definition of this macro and use the
-	name that you know will result.
-
-	The number of the first basic block of the function is
-	passed to the macro in BLOCK_OR_LABEL.
-
-	If described in a virtual assembler language the code to be
-	output looks like:
-
-		parameter1 <- LPBX0
-		parameter2 <- BLOCK_OR_LABEL
-		call __bb_init_trace_func
-
-    else if profile_block_flag != 0
-
-	Output code to call the subroutine `__bb_init_func'
-	and pass one single parameter to it, which is the same
-	as the first parameter to `__bb_init_trace_func'.
-
-	The first word of this parameter is a flag which will be nonzero if
-	the object module has already been initialized.  So test this word
-	first, and do not call `__bb_init_func' if the flag is nonzero.
-	Note: When profile_block_flag == 2 the test need not be done
-	but `__bb_init_trace_func' *must* be called.
-
-	BLOCK_OR_LABEL may be used to generate a label number as a
-	branch destination in case `__bb_init_func' will not be called.
-
-	If described in a virtual assembler language the code to be
-	output looks like:
-
-		cmp (LPBX0),0
-		jne local_label
-		parameter1 <- LPBX0
-		call __bb_init_func
-local_label:
-
-*/
-
-#undef	FUNCTION_BLOCK_PROFILER
-#define FUNCTION_BLOCK_PROFILER(FILE, BLOCK_OR_LABEL)			            \
-do									            \
-  {									            \
-    if (TARGET_64BIT) 						                    \
-      {								                    \
-    	rtx tmp[1];	                                                            \
-	fprintf (FILE, "# function block profiler %d \n", profile_block_flag);      \
-	output_asm_insn ("ipm   0", tmp);              		    	            \
-	output_asm_insn ("aghi  15,-224", tmp);                           	    \
-	output_asm_insn ("stmg  14,5,160(15)", tmp);             		    \
-	output_asm_insn ("larl  2,.LPBX0", tmp);               		    	    \
-	switch (profile_block_flag) 					            \
-	  {									    \
-	  case 2:								    \
-	    if (BLOCK_OR_LABEL < 0x10000) {                                         \
-	      tmp[0] = gen_rtx_CONST_INT (Pmode, (BLOCK_OR_LABEL));                 \
-	      output_asm_insn ("llill 3,%x0", tmp);                                 \
-	    } else {                                         	     	            \
-	      int bo = BLOCK_OR_LABEL;                                              \
-	      tmp[0] = gen_rtx_CONST_INT (Pmode, bo&0x7fff);                        \
-	      output_asm_insn ("llill 3,%x0", tmp);                                 \
-	      tmp[0] = gen_rtx_CONST_INT (Pmode, (bo&0xffff0000)>>16);              \
-	      output_asm_insn ("iilh 3,%x0", tmp);                                  \
- 	    }                                                                       \
-            tmp[0] = gen_rtx_SYMBOL_REF (Pmode, "__bb_init_trace_func");            \
-            if (flag_pic)							    \
-              {									    \
-                tmp[0] = gen_rtx_UNSPEC (Pmode, gen_rtvec (1, tmp[0]), 113); 	    \
-                tmp[0] = gen_rtx_CONST (Pmode, tmp[0]);				    \
-              }									    \
-            output_asm_insn ("brasl\t14,%0", tmp);			            \
-	    break;								    \
-	  default:								    \
-	    output_asm_insn ("cli   7(2),0", tmp);                       	    \
-	    output_asm_insn ("jne   2f", tmp);	        		            \
-            tmp[0] = gen_rtx_SYMBOL_REF (Pmode, "__bb_init_func");                  \
-            if (flag_pic)							    \
-              {									    \
-                tmp[0] = gen_rtx_UNSPEC (Pmode, gen_rtvec (1, tmp[0]), 113); 	    \
-                tmp[0] = gen_rtx_CONST (Pmode, tmp[0]);				    \
-              }									    \
-            output_asm_insn ("brasl\t14,%0", tmp);			            \
-	    break;								    \
-	  }									    \
-	output_asm_insn ("2:", tmp);                                                \
-	output_asm_insn ("lmg   14,5,160(15)", tmp);                                \
-	output_asm_insn ("aghi  15,224", tmp);    		                    \
-	output_asm_insn ("spm   0", tmp);       				    \
-      }								                    \
-    else                                                                            \
-      {								                    \
-    	extern rtx s390_profile[];						    \
-	fprintf (FILE, "# function block profiler %d \n", profile_block_flag);      \
-	output_asm_insn ("ipm   0", s390_profile);     		    	            \
-	output_asm_insn ("ahi   15,-128", s390_profile);                  	    \
-	output_asm_insn ("stm   14,5,96(15)", s390_profile);     		    \
-	output_asm_insn ("l     2,%6", s390_profile);     		    	    \
-	if (flag_pic)							            \
-	  output_asm_insn ("ar    2,13", s390_profile);			            \
-	switch (profile_block_flag) 					            \
-	  {									    \
-	  case 2:								    \
-	    output_asm_insn ("l     4,%1", s390_profile);		       	    \
-	    if (BLOCK_OR_LABEL < 0x8000) {                                          \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, (BLOCK_OR_LABEL));        \
-	      output_asm_insn ("lhi   3,%8", s390_profile);                         \
-	    } else {                                         	     	            \
-	      int bo = BLOCK_OR_LABEL;                                              \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, (bo&0xffff8000)>>15);     \
-	      output_asm_insn ("lhi   3,%8", s390_profile);                         \
-	      output_asm_insn ("sll   3,15", s390_profile);                         \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, bo&0x7fff);               \
-	      output_asm_insn ("ahi   3,%8", s390_profile);                         \
-	    }                                                                       \
-	    break;								    \
-	  default:								    \
-	    output_asm_insn ("l     4,%0", s390_profile);	      		    \
-	    output_asm_insn ("cli   3(2),0", s390_profile);              	    \
-	    output_asm_insn ("jne   2f", s390_profile);			            \
-	    break;								    \
-	  }									    \
-	if (flag_pic)							            \
-	  output_asm_insn ("bas   14,0(4,13)", s390_profile);	       	            \
-	else								            \
-	  output_asm_insn ("basr  14,4", s390_profile);	                            \
-	output_asm_insn ("2:", s390_profile);                                       \
-	output_asm_insn ("lm    14,5,96(15)", s390_profile);                        \
-	output_asm_insn ("ahi   15,128", s390_profile);		                    \
-	output_asm_insn ("spm   0", s390_profile);				    \
-      }								                    \
-  } while (0)
-
-/* The following macro shall output assembler code to FILE
-   to increment a counter associated with basic block number BLOCKNO.
-
-   If profile_block_flag == 2
-
-	Output code to initialize the global structure `__bb' and
-	call the function `__bb_trace_func' which will increment the
-	counter.
-
-	`__bb' consists of two words. In the first word the number
-	of the basic block has to be stored. In the second word
-	the address of a block allocated in the object module 
-	has to be stored.
-
-	The basic block number is given by BLOCKNO.
-
-	The address of the block is given by the label created with 
-
-	    ASM_GENERATE_INTERNAL_LABEL (BUFFER, "LPBX", 0);
-
-	by FUNCTION_BLOCK_PROFILER.
-
-	Of course, since you are writing the definition of
-	`ASM_GENERATE_INTERNAL_LABEL' as well as that of this macro, you
-	can take a short cut in the definition of this macro and use the
-	name that you know will result.
-
-	If described in a virtual assembler language the code to be
-	output looks like:
-
-		move BLOCKNO -> (__bb)
-		move LPBX0 -> (__bb+4)
-		call __bb_trace_func
-
-	Note that function `__bb_trace_func' must not change the
-	machine state, especially the flag register. To grant
-	this, you must output code to save and restore registers
-	either in this macro or in the macros MACHINE_STATE_SAVE
-	and MACHINE_STATE_RESTORE. The last two macros will be
-	used in the function `__bb_trace_func', so you must make
-	sure that the function prologue does not change any 
-	register prior to saving it with MACHINE_STATE_SAVE.
-
-   else if profile_block_flag != 0
-
-	Output code to increment the counter directly.
-	Basic blocks are numbered separately from zero within each
-	compiled object module. The count associated with block number
-	BLOCKNO is at index BLOCKNO in an array of words; the name of 
-	this array is a local symbol made with this statement:
-
-	    ASM_GENERATE_INTERNAL_LABEL (BUFFER, "LPBX", 2);
-
-	Of course, since you are writing the definition of
-	`ASM_GENERATE_INTERNAL_LABEL' as well as that of this macro, you
-	can take a short cut in the definition of this macro and use the
-	name that you know will result. 
-
-	If described in a virtual assembler language the code to be
-	output looks like:
-
-		inc (LPBX2+4*BLOCKNO)
-
-*/
-
-#define BLOCK_PROFILER(FILE, BLOCKNO)		                	           \
-do									           \
-  {									           \
-    if (TARGET_64BIT)				                                   \
-      {						                                   \
-    	rtx tmp[1];	                                                           \
-	fprintf (FILE, "# block profiler %d block %d \n",                          \
-			 profile_block_flag, BLOCKNO); 	                           \
-	output_asm_insn ("ipm   14", tmp);              		           \
-	output_asm_insn ("aghi  15,-224", tmp);                           	   \
-	output_asm_insn ("stmg  14,5,160(15)", tmp);             		   \
-	output_asm_insn ("larl  2,_bb", tmp);                      		   \
-        if ((BLOCKNO*8) < 0x10000) {                                               \
-	  tmp[0] = gen_rtx_CONST_INT (Pmode, (BLOCKNO*8));                         \
-	  output_asm_insn ("llill 3,%x0", tmp);                                    \
-	} else {                                              	                   \
-	  int bo = BLOCKNO*8;                                                      \
-	  tmp[0] = gen_rtx_CONST_INT (Pmode, bo&0xffff);                           \
-	  output_asm_insn ("llill 3,%x0", tmp);                                    \
-	  tmp[0] = gen_rtx_CONST_INT (Pmode, (bo&0xffff0000)>>16);                 \
-	  output_asm_insn ("iilh 3,%x0", tmp);                                     \
-	}                                                       	           \
-    	switch (profile_block_flag) 					           \
-	  {									   \
-	  case 2:								   \
-	    output_asm_insn ("stg   3,0(2)", tmp);              	     	   \
-    	    output_asm_insn ("larl  3,.LPBX0", tmp);                   		   \
-	    output_asm_insn ("stg   3,0(2)", tmp);              	     	   \
-            tmp[0] = gen_rtx_SYMBOL_REF (Pmode, "__bb_trace_func");                \
-            if (flag_pic)							   \
-              {									   \
-                tmp[0] = gen_rtx_UNSPEC (Pmode, gen_rtvec (1, tmp[0]), 113); 	   \
-                tmp[0] = gen_rtx_CONST (Pmode, tmp[0]);				   \
-              }									   \
-            output_asm_insn ("brasl\t14,%0", tmp);			           \
-	    break;								   \
-	  default:								   \
-            output_asm_insn ("larl  2,.LPBX2", tmp);                   		   \
-            output_asm_insn ("la    2,0(2,3)", tmp);                   		   \
-	    output_asm_insn ("lg    3,0(2)", tmp);              	     	   \
-    	    output_asm_insn ("aghi  3,1", tmp);                  	     	   \
-    	    output_asm_insn ("stg   3,0(2)", tmp);              	     	   \
-    	    break;								   \
-         }					                                   \
-	output_asm_insn ("lmg   14,5,160(15)", tmp);                               \
-	output_asm_insn ("ahi   15,224", tmp);          	                   \
-	output_asm_insn ("spm   14", tmp);          				   \
-      }						                                   \
-    else					                                   \
-      {						                                   \
-    	extern rtx s390_profile[];                                                 \
-	fprintf (FILE, "# block profiler %d block %d \n",                          \
-			 profile_block_flag,BLOCKNO); 	                           \
-	output_asm_insn ("ipm   14", s390_profile);     		    	   \
-	output_asm_insn ("ahi   15,-128", s390_profile);     	       	           \
-	output_asm_insn ("stm   14,5,96(15)", s390_profile);     		   \
-	switch (profile_block_flag) 					           \
-	  {									   \
-	  case 2:								   \
-	    output_asm_insn ("l     4,%2", s390_profile);     	     	           \
-	    output_asm_insn ("l     2,%5", s390_profile);     	     	           \
-	    if (flag_pic)							   \
-	      output_asm_insn ("ar    2,13", s390_profile);			   \
-	    if (BLOCKNO < 0x8000) {                                                \
-	      s390_profile[7] = gen_rtx_CONST_INT (Pmode, (BLOCKNO)*4);            \
-	      output_asm_insn ("lhi   3,%8", s390_profile);                        \
-	    } else {                                         	     	           \
-	      int bo = BLOCKNO;                                                    \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, (bo&0xffff8000)>>15);    \
-	      output_asm_insn ("lhi   3,%8", s390_profile);                        \
-	      output_asm_insn ("sll   3,15", s390_profile);                        \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, bo&0x7fff);              \
-	      output_asm_insn ("ahi   3,%7", s390_profile);                        \
-	    }                                                                      \
-	    output_asm_insn ("st    3,0(2)", s390_profile);     	     	   \
-	    output_asm_insn ("mvc   0(4,2),%5", s390_profile);     	     	   \
-	    if (flag_pic)							   \
-	      output_asm_insn ("bas   14,0(4,13)", s390_profile);		   \
-	    else								   \
-	      output_asm_insn ("basr  14,4", s390_profile);	                   \
-	    break;								   \
-	  default:								   \
-	    if (BLOCKNO < 0x2000) {                                                \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, (BLOCKNO)*4);            \
-	      output_asm_insn ("lhi   2,%8", s390_profile);                        \
-	    } else {                                         	     	           \
-	      int bo = BLOCKNO*4;                                                  \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, (bo&0xffff8000)>>15);    \
-	      output_asm_insn ("lhi   2,%8", s390_profile);                        \
-	      output_asm_insn ("sll   2,15", s390_profile);                        \
-	      s390_profile[8] = gen_rtx_CONST_INT (Pmode, bo&0x7fff);              \
-	      output_asm_insn ("ahi   2,%8", s390_profile);                        \
-	    }                                                                      \
-	    output_asm_insn ("a     2,%7", s390_profile);     	     	           \
-	    if (flag_pic)							   \
-	      output_asm_insn ("l     3,0(2,13)", s390_profile);           	   \
-	    else                                                                   \
-	      output_asm_insn ("l     3,0(2)", s390_profile);     	     	   \
-	    output_asm_insn ("ahi   3,1", s390_profile);         	     	   \
-	    if (flag_pic)							   \
-	      output_asm_insn ("st    3,0(2,13)", s390_profile);          	   \
-	    else                                                                   \
-	      output_asm_insn ("st    3,0(2)", s390_profile);     	     	   \
-	    break;								   \
-	  }									   \
-	output_asm_insn ("lm    14,5,96(15)", s390_profile);                       \
-	output_asm_insn ("ahi   15,128", s390_profile);		                   \
-	output_asm_insn ("spm   14", s390_profile);				   \
-     }                                                                             \
-  } while (0)
-
-
-/* The following macro shall output assembler code to FILE
-   to indicate a return from function during basic-block profiling.
-
-   If profiling_block_flag == 2:
-
-	Output assembler code to call function `__bb_trace_ret'.
-
-	Note that function `__bb_trace_ret' must not change the
-	machine state, especially the flag register. To grant
-	this, you must output code to save and restore registers
-	either in this macro or in the macros MACHINE_STATE_SAVE_RET
-	and MACHINE_STATE_RESTORE_RET. The last two macros will be
-	used in the function `__bb_trace_ret', so you must make
-	sure that the function prologue does not change any 
-	register prior to saving it with MACHINE_STATE_SAVE_RET.
-
-   else if profiling_block_flag != 0:
-
-	The macro will not be used, so it need not distinguish
-	these cases.
-*/
-
-#define FUNCTION_BLOCK_PROFILER_EXIT(FILE) \
-do {                                                                       \
-    if (TARGET_64BIT)				                           \
-      {						                           \
-    	rtx tmp[1];	                                                   \
-	fprintf (FILE, "# block profiler exit \n");                        \
-	output_asm_insn ("ipm   14", tmp);                                 \
-	output_asm_insn ("aghi  15,-224", tmp);              	       	   \
-	output_asm_insn ("stmg  14,5,160(15)", tmp);              	   \
-        tmp[0] = gen_rtx_SYMBOL_REF (Pmode, "__bb_trace_ret");             \
-        if (flag_pic)							   \
-          {								   \
-            tmp[0] = gen_rtx_UNSPEC (Pmode, gen_rtvec (1, tmp[0]), 113);   \
-            tmp[0] = gen_rtx_CONST (Pmode, tmp[0]);			   \
-          }								   \
-    	output_asm_insn ("brasl 14,%0", tmp);                       	   \
-	output_asm_insn ("lmg   14,5,160(15)", tmp);              	   \
-	output_asm_insn ("aghi  15,224", tmp);              	       	   \
-    	output_asm_insn ("spm   14", tmp);                                 \
-      }                                                                    \
-    else                                                                   \
-      {                                                                    \
-    	extern rtx s390_profile[];				           \
-	fprintf (FILE, "# block profiler exit \n");                        \
-	output_asm_insn ("ipm   14", s390_profile);     		   \
-	output_asm_insn ("ahi   15,-128", s390_profile);     	       	   \
-	output_asm_insn ("stm   14,5,96(15)", s390_profile);     	   \
-	output_asm_insn ("l     4,%3", s390_profile);		      	   \
-	if (flag_pic)							   \
-	  output_asm_insn ("bas   14,0(4,13)", s390_profile);	           \
-	else								   \
-	  output_asm_insn ("basr  14,4", s390_profile);	                   \
-	output_asm_insn ("lm    14,5,96(15)", s390_profile);               \
-	output_asm_insn ("ahi   15,128", s390_profile);		           \
-	output_asm_insn ("spm   14", s390_profile);			   \
-     }                                                                     \
-  } while (0)
-
-/* The function `__bb_trace_func' is called in every basic block
-   and is not allowed to change the machine state. Saving (restoring)
-   the state can either be done in the BLOCK_PROFILER macro,
-   before calling function (rsp. after returning from function)
-   `__bb_trace_func', or it can be done inside the function by
-   defining the macros:
-
-	MACHINE_STATE_SAVE(ID)
-	MACHINE_STATE_RESTORE(ID)
-
-   In the latter case care must be taken, that the prologue code
-   of function `__bb_trace_func' does not already change the
-   state prior to saving it with MACHINE_STATE_SAVE.
-
-   The parameter `ID' is a string identifying a unique macro use.
-
-   On the s390 all save/restore is done in macros above
-*/
-
-/*
-#define MACHINE_STATE_SAVE(ID) \
-      fprintf (FILE, "\tahi   15,-128 # save state\n");			  \
-      fprintf (FILE, "\tstm   14,5,96(15)\n");				  \
-
-#define MACHINE_STATE_RESTORE(ID) \
-      fprintf (FILE, "\tlm    14,5,96(15) # restore state\n");            \
-      fprintf (FILE, "\tahi   15,128\n");		 		  \
-*/
-
+#define PROFILE_BEFORE_PROLOGUE 1
 
 /* Define EXIT_IGNORE_STACK if, when returning from a function, the stack
    pointer does not matter (provided there is a frame pointer).  */
@@ -1319,9 +899,9 @@ do {                                                                       \
    reg currently allocated to a suitable hard reg.
    These definitions are NOT overridden anywhere.  */
 
-#define REGNO_OK_FOR_INDEX_P(REGNO)                                     \
-  (((REGNO) > 0 && (REGNO) < 16) || (REGNO) == ARG_POINTER_REGNUM       \
-   /* || (REGNO) == FRAME_POINTER_REGNUM */                                 \
+#define REGNO_OK_FOR_INDEX_P(REGNO)					\
+    (((REGNO) < FIRST_PSEUDO_REGISTER 					\
+     && REGNO_REG_CLASS ((REGNO)) == ADDR_REGS) 			\
     || (reg_renumber[REGNO] > 0 && reg_renumber[REGNO] < 16))
 
 #define REGNO_OK_FOR_BASE_P(REGNO) REGNO_OK_FOR_INDEX_P (REGNO)
@@ -1391,11 +971,10 @@ do {                                                                       \
  * a pseudo reg.  
  */
 
-#define REG_OK_FOR_INDEX_NONSTRICT_P(X)               			\
-((GET_MODE (X) == Pmode) &&						\
- ((REGNO (X) > 0 && REGNO (X) < 16) ||					\
-  (REGNO (X) == ARG_POINTER_REGNUM) ||					\
-  (REGNO (X) >= FIRST_PSEUDO_REGISTER)))
+#define REG_OK_FOR_INDEX_NONSTRICT_P(X)   	\
+((GET_MODE (X) == Pmode) &&			\
+ ((REGNO (X) >= FIRST_PSEUDO_REGISTER) 		\
+  || REGNO_REG_CLASS (REGNO (X)) == ADDR_REGS))  
 
 /* Nonzero if X is a hard reg that can be used as a base reg or if it is
    a pseudo reg.  */
@@ -1480,10 +1059,6 @@ do {                                                                       \
                  (MODE) == HImode ? SIGN_EXTEND : NIL)          \
               : ((MODE) == HImode ? SIGN_EXTEND : NIL))
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
 /* Define this if fixuns_trunc is the same as fix_trunc.  */
 
 /* #define FIXUNS_TRUNC_LIKE_FIX_TRUNC */
@@ -1492,18 +1067,10 @@ do {                                                                       \
 
 #define DEFAULT_SIGNED_CHAR 0
 
-/* This is the kind of divide that is easiest to do in the general case.  */
-
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
-
 /* Max number of bytes we can move from memory to memory in one reasonably
    fast instruction.  */
 
 #define MOVE_MAX 256
-
-/* Define this if zero-extension is slow (more than one real instruction).  */
-
-#define SLOW_ZERO_EXTEND
 
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 
@@ -1524,10 +1091,6 @@ do {                                                                       \
 
 /* #define STORE_FLAG_VALUE -1 */
 
-/* When a prototype says `char' or `short', really pass an `int'.  */
-
-#define PROMOTE_PROTOTYPES 1
-
 /* Don't perform CSE on function addresses.  */
 
 #define NO_FUNCTION_CSE
@@ -1536,7 +1099,7 @@ do {                                                                       \
    After generation of rtl, the compiler makes no further distinction
    between pointers and any other objects of this machine mode.  */
 
-#define Pmode (TARGET_64BIT ? DImode : SImode)
+#define Pmode ((enum machine_mode) (TARGET_64BIT ? DImode : SImode))
 
 /* A function address in a call instruction is a byte address (for
    indexing purposes) so give the MEM rtx a byte's mode.  */
@@ -1560,7 +1123,7 @@ do {                                                                       \
    is set to reload_obstack, which does not live long enough. 
    Because of this we cannot use force_const_mem in addsi3.
    This leads to problems with gen_add2_insn with a constant greater
-   than a short. Because of that we give a addition of greater
+   than a short. Because of that we give an addition of greater
    constants a cost of 3 (reload1.c 10096).  */
 
 
@@ -1664,8 +1227,10 @@ do {                                                                       \
 /* On s390, copy between fprs and gprs is expensive.  */
 
 #define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2)                        \
-  (((CLASS1 != CLASS2) &&                                               \
-   (CLASS1 == FP_REGS || CLASS2 == FP_REGS)) ? 10 : 1)
+  ((   (   reg_classes_intersect_p ((CLASS1), GENERAL_REGS)		\
+        && reg_classes_intersect_p ((CLASS2), FP_REGS))			\
+    || (   reg_classes_intersect_p ((CLASS1), FP_REGS)			\
+        && reg_classes_intersect_p ((CLASS2), GENERAL_REGS))) ? 10 : 1)
 
 
 /* A C expression for the cost of moving data of mode M between a
@@ -1683,24 +1248,19 @@ do {                                                                       \
 
 #define BRANCH_COST 1
 
-/* Add any extra modes needed to represent the condition code. */
+/* Add any extra modes needed to represent the condition code.  */
 #define EXTRA_CC_MODES \
 	CC (CCZmode, "CCZ") \
 	CC (CCAmode, "CCA") \
+	CC (CCLmode, "CCL") \
 	CC (CCUmode, "CCU") \
 	CC (CCSmode, "CCS") \
 	CC (CCTmode, "CCT")
  
 /* Given a comparison code (EQ, NE, etc.) and the first operand of a COMPARE,
-   return the mode to be used for the comparison. */
+   return the mode to be used for the comparison.  */
  
-#define SELECT_CC_MODE(OP, X, Y)            \
- (   (OP) == EQ  || (OP) == NE  ? CCZmode   \
-   : (OP) == LE  || (OP) == LT  ||          \
-     (OP) == GE  || (OP) == GT  ? CCSmode   \
-   : (OP) == LEU || (OP) == LTU ||          \
-     (OP) == GEU || (OP) == GTU ? CCUmode   \
-   : CCmode )
+#define SELECT_CC_MODE(OP, X, Y) s390_select_ccmode ((OP), (X), (Y))
  
  
 /* Define the information needed to generate branch and scc insns.  This is
@@ -1708,8 +1268,6 @@ do {                                                                       \
    since it hasn't been defined!  */
  
 extern struct rtx_def *s390_compare_op0, *s390_compare_op1;
- 
-extern int s390_match_ccmode PARAMS ((struct rtx_def *, int));
 
 
 /* How to refer to registers in assembler output.  This sequence is
@@ -1720,23 +1278,17 @@ extern int s390_match_ccmode PARAMS ((struct rtx_def *, int));
   "%r8",  "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15",	\
   "%f0",  "%f2",  "%f4",  "%f6",  "%f1",  "%f3",  "%f5",  "%f7",	\
   "%f8",  "%f10", "%f12", "%f14", "%f9", "%f11", "%f13", "%f15",	\
-  "%ap", "%cc"								\
+  "%ap",  "%cc",  "%fp"							\
 }
 
 /* implicit call of memcpy, not bcopy   */
 
 #define TARGET_MEM_FUNCTIONS
 
+/* Either simplify a location expression, or return the original.  */
 
-/* Define results of standard character escape sequences.  */
-
-#define TARGET_BELL     (0x07)
-#define TARGET_BS       (0x08)
-#define TARGET_TAB      (0x09)
-#define TARGET_NEWLINE  (0x0A)
-#define TARGET_VT       11
-#define TARGET_FF       12
-#define TARGET_CR       13
+#define ASM_SIMPLIFY_DWARF_ADDR(X) \
+  s390_simplify_dwarf_addr (X)
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -1749,47 +1301,40 @@ extern int s390_match_ccmode PARAMS ((struct rtx_def *, int));
 
 /* Define the codes that are matched by predicates in aux-output.c.  */
 
-#define PREDICATE_CODES                                                 \
-  {"s_operand",       { MEM }},                                          \
-  {"bras_sym_operand",{ SYMBOL_REF, CONST }},                            \
-  {"r_or_s_operand",  { MEM, SUBREG, REG }},                             \
-  {"r_or_im8_operand",  { CONST_INT, SUBREG, REG }},                     \
-  {"r_or_s_or_im8_operand",  { MEM, SUBREG, REG, CONST_INT }},           \
-  {"r_or_x_or_im16_operand", { MEM, SUBREG, REG, CONST_INT }},           \
-  {"const0_operand", { CONST_INT, CONST_DOUBLE }},	                 \
-  {"const1_operand", { CONST_INT, CONST_DOUBLE }},	                 \
-  {"tmxx_operand", { CONST_INT, MEM }},
+#define PREDICATE_CODES							\
+  {"s_operand",       { SUBREG, MEM }},					\
+  {"s_imm_operand",   { CONST_INT, CONST_DOUBLE, SUBREG, MEM }},	\
+  {"bras_sym_operand",{ SYMBOL_REF, CONST }},				\
+  {"larl_operand",    { SYMBOL_REF, CONST, CONST_INT, CONST_DOUBLE }},	\
+  {"load_multiple_operation", {PARALLEL}},			        \
+  {"store_multiple_operation", {PARALLEL}},			        \
+  {"const0_operand",  { CONST_INT, CONST_DOUBLE }},			\
+  {"consttable_operand", { SYMBOL_REF, LABEL_REF, CONST, 		\
+			   CONST_INT, CONST_DOUBLE }},			\
+  {"s390_plus_operand", { PLUS }},
 
 
-/* A C statement (sans semicolon) to update the integer variable COST
-   based on the relationship between INSN that is dependent on
-   DEP_INSN through the dependence LINK.  The default is to make no
-   adjustment to COST.  This can be used for example to specify to
-   the scheduler that an output- or anti-dependence does not incur
-   the same cost as a data-dependence.  */
-
-#define ADJUST_COST(insn, link, dep_insn, cost) \
-  (cost) = s390_adjust_cost (insn, link, dep_insn, cost)
-
+/* S/390 constant pool breaks the devices in crtstuff.c to control section
+   in where code resides.  We have to write it as asm code.  */
+#ifndef __s390x__
+#define CRT_CALL_STATIC_FUNCTION(SECTION_OP, FUNC) \
+    asm (SECTION_OP "\n\
+	bras\t%r2,1f\n\
+0:	.long\t" USER_LABEL_PREFIX #FUNC " - 0b\n\
+1:	l\t%r3,0(%r2)\n\
+	bas\t%r14,0(%r3,%r2)\n\
+	.previous");
+#endif
 
 /* Constant Pool for all symbols operands which are changed with
    force_const_mem during insn generation (expand_insn).  */
 
-extern struct rtx_def *s390_pool_start_insn;
 extern int s390_pool_count;
 extern int s390_nr_constants;
-
-/* Function is splitted in chunk, if literal pool could overflow
-   Value need to be lowered, if problems with displacement overflow.  */
-
-#define S390_REL_MAX 55000
-#define S390_CHUNK_MAX 0x2000
-#define S390_CHUNK_OV 0x8000
-#define S390_POOL_MAX 0xe00
+extern int s390_pool_overflow;
 
 #define ASM_OUTPUT_POOL_PROLOGUE(FILE, FUNNAME, fndecl, size)  	        \
 {								       	\
-  register rtx insn;						       	\
   struct pool_constant *pool;					       	\
 								        \
     if (s390_pool_count == -1)                                        	\
@@ -1799,83 +1344,46 @@ extern int s390_nr_constants;
 	 if (pool->mark) s390_nr_constants++;		                \
        return;                                      	                \
      }                                                                  \
-    if (first_pool == 0) {                                              \
-      s390_asm_output_pool_prologue (FILE, FUNNAME, fndecl, size);    	\
-      return;							      	\
-    }								       	\
-    for (pool = first_pool; pool; pool = pool->next)		       	\
-      pool->mark = 0;						       	\
-  								       	\
-    insn = s390_pool_start_insn;				       	\
-  								       	\
-    if (insn==NULL_RTX)	 					       	\
-      insn = get_insns ();		 		                \
-    else		       			                        \
-      insn = NEXT_INSN (insn);		                                \
-    for (; insn; insn = NEXT_INSN (insn)) {    		                \
-      if (GET_RTX_CLASS (GET_CODE (insn)) == 'i') {		       	\
-        if (s390_stop_dump_lit_p (insn)) { 	       		       	\
-	  mark_constants (PATTERN (insn));			       	\
-	  break;						       	\
-        } else							       	\
-	  mark_constants (PATTERN (insn));			       	\
-      }								       	\
-    }								       	\
-								       	\
-    /* Mark entries referenced by other entries */			\
-    for (pool = first_pool; pool; pool = pool->next)		       	\
-      if (pool->mark)							\
-        mark_constants (pool->constant);					\
-								       	\
-    s390_asm_output_pool_prologue (FILE, FUNNAME, fndecl, size);     	\
 }
 
-/* We need to return, because otherwise the pool is deleted of the 
-   constant pool after the first output.  */
-
-#define ASM_OUTPUT_POOL_EPILOGUE(FILE, FUNNAME, fndecl, size) return;
-
 #define ASM_OUTPUT_SPECIAL_POOL_ENTRY(FILE, EXP, MODE, ALIGN, LABELNO, WIN) \
-{                                                                       \
-  if ((s390_pool_count == 0) || (s390_pool_count > 0 && LABELNO >= 0)) 	\
-    {									\
-      fprintf (FILE, ".LC%d:\n", LABELNO);                              \
-      LABELNO = ~LABELNO;                                               \
-    }                                                                   \
-  if (s390_pool_count > 0)						\
-    {									\
-      fprintf (FILE, ".LC%d_%X:\n", ~LABELNO, s390_pool_count);         \
-    }                            					\
-									\
-  /* Output the value of the constant itself.  */			\
-  switch (GET_MODE_CLASS (pool->mode))					\
-    {									\
-    case MODE_FLOAT:							\
-      if (GET_CODE (x) != CONST_DOUBLE)					\
-	abort ();							\
-      									\
-      memcpy ((char *) &u, (char *) &CONST_DOUBLE_LOW (x), sizeof u);	\
-      assemble_real (u.d, pool->mode);					\
-      break;								\
-      									\
-    case MODE_INT:							\
-    case MODE_PARTIAL_INT:						\
-      if (flag_pic && (GET_CODE (x) == CONST ||                         \
-		   GET_CODE (x) == SYMBOL_REF ||                        \
-                   GET_CODE (x) == LABEL_REF ))                         \
-        {								\
-          fprintf (FILE, "%s\t",TARGET_64BIT ? ASM_QUAD : ASM_LONG);	\
-          s390_output_symbolic_const (FILE, x); 			\
-          fputc ('\n', (FILE));						\
-	}                                                               \
-      else                                                              \
-        assemble_integer (x, GET_MODE_SIZE (pool->mode), 1);		\
-      break;								\
-      									\
-    default:								\
-      abort ();								\
-    }									\
-  goto WIN;								\
+{									    \
+  fprintf (FILE, ".LC%d:\n", LABELNO);					    \
+									    \
+  /* Output the value of the constant itself.  */			    \
+  switch (GET_MODE_CLASS (MODE))					    \
+    {									    \
+    case MODE_FLOAT:							    \
+      if (GET_CODE (EXP) != CONST_DOUBLE)				    \
+	abort ();							    \
+									    \
+      memcpy ((char *) &u, (char *) &CONST_DOUBLE_LOW (EXP), sizeof u);	    \
+      assemble_real (u.d, MODE, ALIGN);					    \
+      break;								    \
+									    \
+    case MODE_INT:							    \
+    case MODE_PARTIAL_INT:						    \
+      if (flag_pic							    \
+	  && (GET_CODE (EXP) == CONST					    \
+	      || GET_CODE (EXP) == SYMBOL_REF				    \
+	      || GET_CODE (EXP) == LABEL_REF ))				    \
+        {								    \
+	  fputs (integer_asm_op (UNITS_PER_WORD, TRUE), FILE);		    \
+          s390_output_symbolic_const (FILE, EXP);			    \
+          fputc ('\n', (FILE));						    \
+	}								    \
+      else								    \
+	{								    \
+	  assemble_integer (EXP, GET_MODE_SIZE (MODE), ALIGN, 1);	    \
+	  if (GET_MODE_SIZE (MODE) == 1)				    \
+	    ASM_OUTPUT_SKIP ((FILE), 1);				    \
+	}								    \
+      break;								    \
+									    \
+    default:								    \
+      abort ();								    \
+    }									    \
+  goto WIN;								    \
 }
 
 #endif 

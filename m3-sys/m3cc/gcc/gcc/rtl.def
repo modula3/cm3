@@ -4,22 +4,22 @@
    Copyright (C) 1987, 88, 92, 94, 95, 97, 98, 1999, 2000
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 /* Expression definitions and descriptions for all targets are in this file.
@@ -72,6 +72,11 @@ DEF_RTL_EXPR(UNKNOWN, "UnKnown", "*", 'x')
 /* (NIL) is used by rtl reader and printer to represent a null pointer.  */
 
 DEF_RTL_EXPR(NIL, "nil", "*", 'x')
+
+
+/* include a file */
+
+DEF_RTL_EXPR(INCLUDE, "include", "s", 'x')
 
 /* ---------------------------------------------------------------------
    Expressions used in constructing lists.
@@ -184,7 +189,7 @@ DEF_RTL_EXPR(MATCH_INSN, "match_insn", "is", 'm')
       template to use.
    4: optionally, a vector of attributes for this insn.
      */
-DEF_RTL_EXPR(DEFINE_INSN, "define_insn", "sEssV", 'x')
+DEF_RTL_EXPR(DEFINE_INSN, "define_insn", "sEsTV", 'x')
 
 /* Definition of a peephole optimization.
    1st operand: vector of insn patterns to match
@@ -192,7 +197,7 @@ DEF_RTL_EXPR(DEFINE_INSN, "define_insn", "sEssV", 'x')
    3rd operand: template or C code to produce assembler output.
    4: optionally, a vector of attributes for this insn.
      */
-DEF_RTL_EXPR(DEFINE_PEEPHOLE, "define_peephole", "EssV", 'x')
+DEF_RTL_EXPR(DEFINE_PEEPHOLE, "define_peephole", "EsTV", 'x')
 
 /* Definition of a split operation.
    1st operand: insn pattern to match
@@ -200,8 +205,9 @@ DEF_RTL_EXPR(DEFINE_PEEPHOLE, "define_peephole", "EssV", 'x')
    3rd operand: vector of insn patterns to place into a SEQUENCE
    4th operand: optionally, some C code to execute before generating the
 	insns.  This might, for example, create some RTX's and store them in
-	elements of `recog_operand' for use by the vector of insn-patterns.
-	(`operands' is an alias here for `recog_operand').   */
+	elements of `recog_data.operand' for use by the vector of
+	insn-patterns.
+	(`operands' is an alias here for `recog_data.operand').   */
 DEF_RTL_EXPR(DEFINE_SPLIT, "define_split", "EsES", 'x')
 
 /* Definition of an insn and associated split.
@@ -226,10 +232,11 @@ DEF_RTL_EXPR(DEFINE_SPLIT, "define_split", "EsES", 'x')
    5: vector of insn patterns to place into a SEQUENCE
    6: optionally, some C code to execute before generating the
 	insns.  This might, for example, create some RTX's and store them in
-	elements of `recog_operand' for use by the vector of insn-patterns.
-	(`operands' is an alias here for `recog_operand').  
+	elements of `recog_data.operand' for use by the vector of
+	insn-patterns.
+	(`operands' is an alias here for `recog_data.operand').  
    7: optionally, a vector of attributes for this insn.  */
-DEF_RTL_EXPR(DEFINE_INSN_AND_SPLIT, "define_insn_and_split", "sEsssESV", 'x')
+DEF_RTL_EXPR(DEFINE_INSN_AND_SPLIT, "define_insn_and_split", "sEsTsESV", 'x')
 
 /* Definition of an RTL peephole operation.
    Follows the same arguments as define_split.  */
@@ -242,13 +249,14 @@ DEF_RTL_EXPR(DEFINE_COMBINE, "define_combine", "Ess", 'x')
 /* Define how to generate multiple insns for a standard insn name.
    1st operand: the insn name.
    2nd operand: vector of insn-patterns.
-	Use match_operand to substitute an element of `recog_operand'.
+	Use match_operand to substitute an element of `recog_data.operand'.
    3rd operand: C expression that must be true for this to be available.
 	This may not test any operands.
    4th operand: Extra C code to execute before generating the insns.
 	This might, for example, create some RTX's and store them in
-	elements of `recog_operand' for use by the vector of insn-patterns.
-	(`operands' is an alias here for `recog_operand').  */
+	elements of `recog_data.operand' for use by the vector of
+	insn-patterns.
+	(`operands' is an alias here for `recog_data.operand').  */
 DEF_RTL_EXPR(DEFINE_EXPAND, "define_expand", "sEss", 'x')
    
 /* Define a requirement for delay slots.
@@ -509,6 +517,17 @@ DEF_RTL_EXPR(ADDR_VEC, "addr_vec", "E", 'x')
      
 DEF_RTL_EXPR(ADDR_DIFF_VEC, "addr_diff_vec", "eEee0", 'x')
 
+/* Memory prefetch, with attributes supported on some targets.
+   Operand 1 is the address of the memory to fetch.
+   Operand 2 is 1 for a write access, 0 otherwise.
+   Operand 3 is the level of temporal locality; 0 means there is no
+   temporal locality and 1, 2, and 3 are for increasing levels of temporal
+   locality.
+
+   The attributes specified by operands 2 and 3 are ignored for targets
+   whose prefetch instructions do not support them.  */
+DEF_RTL_EXPR(PREFETCH, "prefetch", "eee", 'x')
+
 /* ----------------------------------------------------------------------
    At the top level of an instruction (perhaps under PARALLEL).
    ---------------------------------------------------------------------- */
@@ -560,14 +579,14 @@ DEF_RTL_EXPR(RESX, "resx", "i", 'x')
 DEF_RTL_EXPR(CONST_INT, "const_int", "w", 'o')
 
 /* numeric floating point constant.
-   Operand 0 ('e') is the MEM that stores this constant in memory, or
-   various other things (see comments at immed_double_const in
-   varasm.c).
-   Operand 1 ('0') is a chain of all CONST_DOUBLEs in use in the
+   Operand 0 ('0') is a chain of all CONST_DOUBLEs in use in the
    current function.
    Remaining operands hold the actual value.  They are all 'w' and
    there may be from 1 to 4; see rtl.c.  */
 DEF_RTL_EXPR(CONST_DOUBLE, "const_double", CONST_DOUBLE_FORMAT, 'o')
+
+/* Describes a vector constant.  */
+DEF_RTL_EXPR(CONST_VECTOR, "const_vector", "E", 'x')
 
 /* String constant.  Used only for attributes right now.  */
 DEF_RTL_EXPR(CONST_STRING, "const_string", "s", 'o')
@@ -630,10 +649,9 @@ DEF_RTL_EXPR(STRICT_LOW_PART, "strict_low_part", "e", 'x')
    in DECL_RTLs and during RTL generation, but not in the insn chain.  */
 DEF_RTL_EXPR(CONCAT, "concat", "ee", 'o')
 
-/* A memory location; operand is the address.  Can be nested inside a
-   VOLATILE.  The second operand is the alias set to which this MEM
-   belongs.  We use `0' instead of `w' for this field so that the
-   field need not be specified in machine descriptions.  */
+/* A memory location; operand is the address.  The second operand is the
+   alias set to which this MEM belongs.  We use `0' instead of `w' for this
+   field so that the field need not be specified in machine descriptions.  */
 DEF_RTL_EXPR(MEM, "mem", "e0", 'o')
 
 /* Reference to an assembler label in the code for this function.
@@ -956,10 +974,6 @@ DEF_RTL_EXPR(VEC_SELECT, "vec_select", "ee", 'x')
    vectors, the result is a vector that is as long as operands 0 and 1
    combined and is the concatenation of the two source vectors.  */
 DEF_RTL_EXPR(VEC_CONCAT, "vec_concat", "ee", 'x')
-
-/* Describes a vector constant.  Each part of the PARALLEL that is operand 0
-   describes a constant for one of the subparts.  */
-DEF_RTL_EXPR(VEC_CONST, "vec_const", "e", 'x')
 
 /* Describes an operation that converts a small vector into a larger one by
    duplicating the input values.  The output vector mode must have the same

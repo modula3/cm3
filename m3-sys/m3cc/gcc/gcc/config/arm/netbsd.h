@@ -1,4 +1,4 @@
-/* NetBSD/arm (RiscBSD) version.
+/* NetBSD/arm a.out version.
    Copyright (C) 1993, 1994, 1997, 1998 Free Software Foundation, Inc.
    Contributed by Mark Brinicombe (amb@physig.ph.kcl.ac.uk)
 
@@ -20,9 +20,11 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 /* Run-time Target Specification.  */
+#undef  TARGET_VERSION
 #define TARGET_VERSION fputs (" (ARM/NetBSD)", stderr);
 
 /* This is used in ASM_FILE_START.  */
+#undef ARM_OS_NAME
 #define ARM_OS_NAME "NetBSD"
 
 /* Unsigned chars produces much better code than signed.  */
@@ -37,21 +39,15 @@ Boston, MA 02111-1307, USA.  */
 #define SUBTARGET_CPU_DEFAULT TARGET_CPU_arm6
 
 /* Default is to use APCS-32 mode.  */
+#undef TARGET_DEFAULT
 #define TARGET_DEFAULT (ARM_FLAG_APCS_32 | ARM_FLAG_SOFT_FLOAT | ARM_FLAG_APCS_FRAME)
-
-#include "arm/aout.h"
-
-/* This gets redefined in config/netbsd.h.  */
-#undef TARGET_MEM_FUNCTIONS
-
-#include <netbsd.h>
 
 /* Some defines for CPP.
    arm32 is the NetBSD port name, so we always define arm32 and __arm32__.  */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "\
 -Dunix -Driscbsd -Darm32 -D__arm32__ -D__arm__ -D__NetBSD__ \
--Asystem=unix -Asystem=NetBSD -Acpu=arm -Amachine=arm"
+-Asystem=unix -Asystem=NetBSD"
 
 /* Define _POSIX_SOURCE if necessary.  */
 #undef CPP_SPEC
@@ -71,8 +67,8 @@ Boston, MA 02111-1307, USA.  */
 /* Pass -X to the linker so that it will strip symbols starting with 'L' */
 #undef LINK_SPEC
 #define LINK_SPEC "\
--X %{!nostdlib:%{!r*:%{!e*:-e start}}} -dc -dp %{R*} \
-%{static:-Bstatic} %{assert*} \
+-X %{!shared:%{!nostdlib:%{!r*:%{!e*:-e start}}} -dc -dp %{R*} \
+%{static:-Bstatic}} %{shared} %{assert*} \
 "
 
 #undef SIZE_TYPE
@@ -80,15 +76,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef PTRDIFF_TYPE
 #define PTRDIFF_TYPE "int"
-
-#undef WCHAR_TYPE
-#define WCHAR_TYPE "int"
-
-#undef WCHAR_UNSIGNED
-#define WCHAR_UNSIGNED 0
-
-#undef WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE 32
 
 #define HANDLE_SYSV_PRAGMA
 

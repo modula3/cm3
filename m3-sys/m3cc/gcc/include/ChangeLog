@@ -1,39 +1,182 @@
-2002-02-20  Release Manager
+2002-07-25  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1.1 Released.
 
-2001-12-20  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.3 Released.
+	* GCC 3.1 Released.
 
-2001-10-23  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.2 Released.
+	* GCC 3.1 Released.
 
-2001-08-19  Release Manager
+2002-04-16  David S. Miller  <davem@redhat.com>
 
-	* GCC 3.0.1 Released.
+	* xregex2.h (__restrict_arr): Define to __restrict on GCC
+	3.1 and later.  Do not redefine.
 
-2001-08-19  Release Manager
+2002-04-01  Phil Edwards  <pme@gcc.gnu.org>
 
-	* GCC 3.0.1 Released.
+	* dyn-string.h:  Also allow IN_GLIBCPP_V3 to redefine names.
 
-20010617 Release Manager
+2002-02-22  Jim Blandy  <jimb@redhat.com>
 
-        * GCC 3.0 Released.
+	Allow the user to specify functions for allocating memory for
+	splay tree roots and nodes.
+	* splay-tree.h (splay_tree_allocate_fn, splay_tree_deallocate_fn):
+	New types.
+	(splay_tree): New fields: `allocate', `deallocate', and
+	`allocate_data'.
+	(splay_tree_new_with_allocator): New function declaration.
+
+2002-02-05  Jason Merrill  <jason@redhat.com>
+
+	* demangle.h (cplus_demangle_v3): Add "options" parm.
+	(cplus_demangle_v3_type): Remove prototype.
+	(DMGL_VERBOSE): New macro.
+	(DMGL_TYPES): New macro.
+
+2002-02-02  H.J. Lu  (hjl@gnu.org)
+
+	* demangle.h (cplus_demangle_v3_type): New prototype.
+
+2002-01-28  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (C_alloca): Add ATTRIBUTE_MALLOC.
+
+2001-12-06  Richard Henderson  <rth@redhat.com>
+
+	* demangle.h (no_demangling): New.
+	(NO_DEMANGLING_STYLE_STRING): New.
+
+2001-10-24  Neil Booth  <neil@daikokuya.demon.co.uk>
+
+	* safe-ctype.h (_sch_isbasic, IS_ISOBASIC): New.
+
+2001-10-22  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (hex_init): Revert delete.
+
+	* libiberty.h (_hex_value): Const-ify.
+	(hex_init): Delete.
+
+2001-10-07  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* demangle.h (demangler_engine): Const-ify.
+	* libiberty.h (buildargv): Likewise.
+
+2001-09-24  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (reconcat): New function.
+
+2001-09-18  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (concat, concat_length, concat_copy, concat_copy2,
+	ACONCAT): Improve comments.
+
+2001-09-18  Alan Modra  <amodra@bigpond.net.au>
+
+	* objalloc.h (OBJALLOC_ALIGN): Define using offsetof.
+
+2001-09-17  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (concat_length, concat_copy, concat_copy2,
+	libiberty_concat_ptr, ACONCAT): New.
+
+	* libiberty.h (ASTRDUP): New macro.
+	libiberty_optr, libiberty_nptr, libiberty_len): Declare.
+
+2001-08-29  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* ansidecl.h: Update comments reflecting previous change.
+
+2001-08-27  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* ansidecl.h (VA_OPEN, VA_CLOSE): Allow multiple uses.
+
+2001-08-23  Lars Brinkhoff  <lars@nocrew.org>
+
+	* dyn-string.h, fibheap.h, partition.h, sort.h, splay-tree.h:
+	replace "GNU CC" with "GCC".
+
+2001-08-21  Richard Henderson  <rth@redhat.com>
+
+	* fibheap.h: Tidy formatting.
+	(fibnode_t): Limit degree to 31 bits to avoid warning.
+
+2001-08-20  Andrew Cagney  <ac131313@redhat.com>
+
+	* floatformat.h (floatformat_arm_ext): Document as deprecated.
+	(floatformat_arm_ext_big, floatformat_arm_ext_littlebyte_bigword)
+	(floatformat_ia64_spill_little, floatformat_ia64_quad_little)
+	(floatformat_ia64_spill_big, floatformat_ia64_quad_big)
+	(floatformat_m88110_harris_ext): Declare.
+
+2001-08-20  Daniel Berlin  <dan@cgsoftware.com>
+
+	* fibheap.h: New file. Fibonacci heap.
+
+2001-08-18  Zack Weinberg  <zackw@panix.com>
+
+	* ansidecl.h: Reorganize for readability, remove documentation
+	of obsolete macros, document PARAMS and VPARAMS.  Add new
+	macros VA_OPEN, VA_CLOSE, and VA_FIXEDARG for nicer variadic
+	function implementation.
+
+2001-08-16  Richard Henderson  <rth@redhat.com>
+
+	* hashtab.h (htab_hash_string): Declare.
+
+2001-08-10  Andrew Cagney  <ac131313@redhat.com>
+
+	* libiberty.h (lbasename): Change function declaration to return a
+	const char pointer.
+
+2001-08-02  Mark Kettenis  <kettenis@gnu.org>
+
+	* xregex.h (_REGEX_RE_COMP): Define.
+	(re_comp): Define to xre_comp.
+	(re_exec): Define to xre_exec.
+
+2001-07-18  Andreas Jaeger  <aj@suse.de>
+
+	* xregex2.h: Place under LGPL version 2.1.
+
+2001-07-10  Jeff Johnston  <jjohnstn@redhat.com>
+
+	* xregex.h: New file to support libiberty regex.
+	* xregex2.h: Ditto.
+
+2001-05-16  Matt Kraai  <kraai@alumni.carnegiemellon.edu>
+
+	* partition.h: Fix misspelling of `implementation'.
+
+2001-05-10  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* ansidecl.h (NULL_PTR): Delete.
 
 2001-05-07  Zack Weinberg  <zackw@stanford.edu>
 
 	* demangle.h: Use PARAMS for all prototypes.
+	* ternary.h: Use PARAMS for all prototypes.  Use PTR, not void *.
+	Make arguments constant where possible.
 
 2001-05-07  Mark Mitchell  <mark@codesourcery.com>
 
 	* splay-tree.h (splay_tree_max): New function.
 	(splay_tree_min): Likewise.
 
-2001-03-20  Neil Booth  <neil@daikokuya.demon.co.uk>
+2001-04-15  Daniel Berlin  <dan@cgsoftware.com>
 
-	* libiberty.h: Declare lbasename ().
+	* ternary.h: New file - Ternary search tree header.
+
+2001-04-03  Zack Weinberg  <zackw@stanford.edu>
+
+	* ansidecl.h: All logic from gcc/gansidecl.h moved here.
+
+2001-03-31  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (alloca): Handle setting C_ALLOCA.
 
 2001-03-20  Jim Blandy  <jimb@redhat.com>
 
@@ -41,9 +184,31 @@
 	is_gnu_v3_mangled_ctor, enum gnu_v3_destructor_kinds,
 	is_gnu_v3_mangled_dtor): New declarations.
 
+2001-03-14  Nick Clifton  <nickc@redhat.com>
+
+	* ansidecl.h: Fix copyright dates.
+	* demangle.h: Fix copyright dates.
+	* floatformat.h: Fix copyright dates.
+	* fnmatch.h: Fix copyright dates.
+	* getopt.h: Fix copyright dates.
+	* libiberty.h: Add FSF copyright notice.
+	* md5.h: Fix copyright dates.
+	* obstack.h: Fix copyright dates.
+	* splay-tree.h: Fix copyright dates.
+
+2001-03-10  Neil Booth  <neil@daikokuya.demon.co.uk>
+	    John David Anglin  <dave@hiauly1.hia.nrc.ca>
+
+	* libiberty.h: Add lbasename.
+
+2001-03-06  Zack Weinberg  <zackw@stanford.edu>
+
+	* libiberty.h: Prototype C_alloca; define alloca to either
+	__builtin_alloca or C_alloca as appropriate.
+
 2001-03-01  John David Anglin  <dave@hiauly1.hia.nrc.ca>
 
-	* safe-ctype.h (_sch_test): Cast enum bit to short int for pcc
+	* safe-ctype.h (_sch_test): Cast enum bit to unsigned short int for pcc
 	compatibility.
 
 2000-12-18  Joseph S. Myers  <jsm28@cam.ac.uk>

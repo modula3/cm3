@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-   2000, 2001 Free Software Foundation, Inc.
+   2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
 This file is part of GNU CC.
@@ -21,14 +21,20 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
+/* For C++ we need to ensure that __LANGUAGE_C_PLUS_PLUS is defined independent
+   of the source file extension.  */
+#define CPLUSPLUS_CPP_SPEC "\
+-D__LANGUAGE_C_PLUS_PLUS__ -D__LANGUAGE_C_PLUS_PLUS -D__cplusplus \
+%(cpp) \
+"
+
 /* Write out the correct language type definition for the header files.  
    Unless we have assembler language, write out the symbols for C.  */
 #define CPP_SPEC "\
 %{!undef:\
 %{.S:-D__LANGUAGE_ASSEMBLY__ -D__LANGUAGE_ASSEMBLY %{!ansi:-DLANGUAGE_ASSEMBLY }}\
-%{.cc|.cxx|.C:-D__LANGUAGE_C_PLUS_PLUS__ -D__LANGUAGE_C_PLUS_PLUS -D__cplusplus }\
 %{.m:-D__LANGUAGE_OBJECTIVE_C__ -D__LANGUAGE_OBJECTIVE_C }\
-%{!.S:%{!.cc:%{!.cxx:%{!.C:%{!.m:-D__LANGUAGE_C__ -D__LANGUAGE_C %{!ansi:-DLANGUAGE_C }}}}}}\
+%{!.S:%{!.cc:%{!.cxx:%{!.cpp:%{!.cp:%{!.c++:%{!.C:%{!.m:-D__LANGUAGE_C__ -D__LANGUAGE_C %{!ansi:-DLANGUAGE_C }}}}}}}}}\
 %{mieee:-D_IEEE_FP }\
 %{mieee-with-inexact:-D_IEEE_FP -D_IEEE_FP_INEXACT }}\
 %(cpp_cpu) %(cpp_subtarget)"
@@ -36,12 +42,6 @@ Boston, MA 02111-1307, USA.  */
 #ifndef CPP_SUBTARGET_SPEC
 #define CPP_SUBTARGET_SPEC ""
 #endif
-
-/* Set the spec to use for signed char.  The default tests the above macro
-   but DEC's compiler can't handle the conditional in a "constant"
-   operand.  */
-
-#define SIGNED_CHAR_SPEC "%{funsigned-char:-D__CHAR_UNSIGNED__}"
 
 #define WORD_SWITCH_TAKES_ARG(STR)		\
  (!strcmp (STR, "rpath") || DEFAULT_WORD_SWITCH_TAKES_ARG(STR))
@@ -65,20 +65,20 @@ enum alpha_trap_precision
 {
   ALPHA_TP_PROG,	/* No precision (default).  */
   ALPHA_TP_FUNC,      	/* Trap contained within originating function.  */
-  ALPHA_TP_INSN		/* Instruction accuracy and code is resumption safe. */
+  ALPHA_TP_INSN		/* Instruction accuracy and code is resumption safe.  */
 };
 
 enum alpha_fp_rounding_mode
 {
   ALPHA_FPRM_NORM,	/* Normal rounding mode.  */
   ALPHA_FPRM_MINF,	/* Round towards minus-infinity.  */
-  ALPHA_FPRM_CHOP,	/* Chopped rounding mode (towards 0). */
+  ALPHA_FPRM_CHOP,	/* Chopped rounding mode (towards 0).  */
   ALPHA_FPRM_DYN	/* Dynamic rounding mode.  */
 };
 
 enum alpha_fp_trap_mode
 {
-  ALPHA_FPTM_N,		/* Normal trap mode. */
+  ALPHA_FPTM_N,		/* Normal trap mode.  */
   ALPHA_FPTM_U,		/* Underflow traps enabled.  */
   ALPHA_FPTM_SU,	/* Software completion, w/underflow traps */
   ALPHA_FPTM_SUI	/* Software completion, w/underflow & inexact traps */
@@ -107,7 +107,7 @@ extern enum alpha_fp_trap_mode alpha_fptm;
 #define MASK_GAS	(1 << 2)
 #define TARGET_GAS	(target_flags & MASK_GAS)
 
-/* This means that we should mark procedures as IEEE conformant. */
+/* This means that we should mark procedures as IEEE conformant.  */
 
 #define MASK_IEEE_CONFORMANT (1 << 3)
 #define TARGET_IEEE_CONFORMANT	(target_flags & MASK_IEEE_CONFORMANT)
@@ -152,6 +152,14 @@ extern enum alpha_fp_trap_mode alpha_fptm;
 #define MASK_CIX	(1 << 11)
 #define TARGET_CIX	(target_flags & MASK_CIX)
 
+/* This means use !literal style explicit relocations.  */
+#define MASK_EXPLICIT_RELOCS (1 << 12)
+#define TARGET_EXPLICIT_RELOCS (target_flags & MASK_EXPLICIT_RELOCS)
+
+/* This means use 16-bit relocations to .sdata/.sbss.  */
+#define MASK_SMALL_DATA (1 << 13)
+#define TARGET_SMALL_DATA (target_flags & MASK_SMALL_DATA)
+
 /* This means that the processor is an EV5, EV56, or PCA56.
    Unlike alpha_cpu this is not affected by -mtune= setting.  */
 #define MASK_CPU_EV5	(1 << 28)
@@ -167,15 +175,18 @@ extern enum alpha_fp_trap_mode alpha_fptm;
 #define TARGET_SUPPORT_ARCH	(target_flags & MASK_SUPPORT_ARCH)
 
 /* These are for target os support and cannot be changed at runtime.  */
-#ifndef TARGET_WINDOWS_NT
-#define TARGET_WINDOWS_NT 0
-#endif
-#ifndef TARGET_OPEN_VMS
-#define TARGET_OPEN_VMS 0
-#endif
+#define TARGET_ABI_WINDOWS_NT 0
+#define TARGET_ABI_OPEN_VMS 0
+#define TARGET_ABI_UNICOSMK 0
+#define TARGET_ABI_OSF (!TARGET_ABI_WINDOWS_NT	\
+			&& !TARGET_ABI_OPEN_VMS	\
+			&& !TARGET_ABI_UNICOSMK)
 
 #ifndef TARGET_AS_CAN_SUBTRACT_LABELS
 #define TARGET_AS_CAN_SUBTRACT_LABELS TARGET_GAS
+#endif
+#ifndef TARGET_AS_SLASH_BEFORE_SUFFIX
+#define TARGET_AS_SLASH_BEFORE_SUFFIX TARGET_GAS
 #endif
 #ifndef TARGET_CAN_FAULT_IN_PROLOGUE
 #define TARGET_CAN_FAULT_IN_PROLOGUE 0
@@ -188,6 +199,9 @@ extern enum alpha_fp_trap_mode alpha_fptm;
 #endif
 #ifndef TARGET_LD_BUGGY_LDGP
 #define TARGET_LD_BUGGY_LDGP 0
+#endif
+#ifndef TARGET_FIXUP_EV5_PREFETCH
+#define TARGET_FIXUP_EV5_PREFETCH 0
 #endif
 
 /* Macro to define tables used to set the flags.
@@ -224,7 +238,15 @@ extern enum alpha_fp_trap_mode alpha_fptm;
     {"no-fix", -MASK_FIX, ""},						\
     {"cix", MASK_CIX, N_("Emit code for the counting ISA extension")},	\
     {"no-cix", -MASK_CIX, ""},						\
-    {"", TARGET_DEFAULT | TARGET_CPU_DEFAULT, ""} }
+    {"explicit-relocs", MASK_EXPLICIT_RELOCS,				\
+     N_("Emit code using explicit relocation directives")},		\
+    {"no-explicit-relocs", -MASK_EXPLICIT_RELOCS, ""},			\
+    {"small-data", MASK_SMALL_DATA,					\
+     N_("Emit 16-bit relocations to the small data areas")},		\
+    {"large-data", -MASK_SMALL_DATA,					\
+     N_("Emit 32-bit relocations to the small data areas")},		\
+    {"", TARGET_DEFAULT | TARGET_CPU_DEFAULT				\
+	 | TARGET_DEFAULT_EXPLICIT_RELOCS, ""} }
 
 #define TARGET_DEFAULT MASK_FP|MASK_FPREGS
 
@@ -232,22 +254,13 @@ extern enum alpha_fp_trap_mode alpha_fptm;
 #define TARGET_CPU_DEFAULT 0
 #endif
 
-/* This macro is similar to `TARGET_SWITCHES' but defines names of
-   command options that have values.  Its definition is an initializer
-   with a subgrouping for each command option.
-
-   Each subgrouping contains a string constant, that defines the fixed
-   part of the option name, and the address of a variable.  The
-   variable, type `char *', is set to the variable part of the given
-   option if the fixed part matches.  The actual option name is made
-   by appending `-m' to the specified name.
-
-   Here is an example which defines `-mshort-data-NUMBER'.  If the
-   given option is `-mshort-data-512', the variable `m88k_short_data'
-   will be set to the string `"512"'.
-
-	extern char *m88k_short_data;
-	#define TARGET_OPTIONS { { "short-data-", &m88k_short_data } }  */
+#ifndef TARGET_DEFAULT_EXPLICIT_RELOCS
+#ifdef HAVE_AS_EXPLICIT_RELOCS
+#define TARGET_DEFAULT_EXPLICIT_RELOCS MASK_EXPLICIT_RELOCS
+#else
+#define TARGET_DEFAULT_EXPLICIT_RELOCS 0
+#endif
+#endif
 
 extern const char *alpha_cpu_string;	/* For -mcpu= */
 extern const char *alpha_tune_string;	/* For -mtune= */
@@ -274,13 +287,13 @@ extern const char *alpha_mlat_string;	/* For -mmemory-latency= */
 
 /* Attempt to describe CPU characteristics to the preprocessor.  */
 
-/* Corresponding to amask... */
+/* Corresponding to amask...  */
 #define CPP_AM_BWX_SPEC	"-D__alpha_bwx__ -Acpu=bwx"
 #define CPP_AM_MAX_SPEC	"-D__alpha_max__ -Acpu=max"
 #define CPP_AM_FIX_SPEC	"-D__alpha_fix__ -Acpu=fix"
 #define CPP_AM_CIX_SPEC	"-D__alpha_cix__ -Acpu=cix"
 
-/* Corresponding to implver... */
+/* Corresponding to implver...  */
 #define CPP_IM_EV4_SPEC	"-D__alpha_ev4__ -Acpu=ev4"
 #define CPP_IM_EV5_SPEC	"-D__alpha_ev5__ -Acpu=ev5"
 #define CPP_IM_EV6_SPEC	"-D__alpha_ev6__ -Acpu=ev6"
@@ -382,35 +395,22 @@ extern const char *alpha_mlat_string;	/* For -mmemory-latency= */
    On the Alpha, we use this to disable the floating-point registers when
    they don't exist.  */
 
-#define CONDITIONAL_REGISTER_USAGE	\
-  if (! TARGET_FPREGS)			\
-    for (i = 32; i < 63; i++)		\
-      fixed_regs[i] = call_used_regs[i] = 1;
+#define CONDITIONAL_REGISTER_USAGE		\
+{						\
+  int i;					\
+  if (! TARGET_FPREGS)				\
+    for (i = 32; i < 63; i++)			\
+      fixed_regs[i] = call_used_regs[i] = 1;	\
+}
+
 
 /* Show we can debug even without a frame pointer.  */
 #define CAN_DEBUG_WITHOUT_FP
 
 /* target machine storage layout */
 
-/* Define to enable software floating point emulation. */
+/* Define to enable software floating point emulation.  */
 #define REAL_ARITHMETIC
-
-/* The following #defines are used when compiling the routines in
-   libgcc1.c.  Since the Alpha calling conventions require single
-   precision floats to be passed in the floating-point registers
-   (rather than in the general registers) we have to build the
-   libgcc1.c routines in such a way that they know the actual types
-   of their formal arguments and the actual types of their return
-   values.  Otherwise, gcc will generate calls to the libgcc1.c
-   routines, passing arguments in the floating-point registers,
-   but the libgcc1.c routines will expect their arguments on the
-   stack (where the Alpha calling conventions require structs &
-   unions to be passed).  */
-
-#define FLOAT_VALUE_TYPE	double
-#define INTIFY(FLOATVAL)	(FLOATVAL)
-#define FLOATIFY(INTVAL)	(INTVAL)
-#define FLOAT_ARG_TYPE		double
 
 /* Define the size of `int'.  The default is the same as the word size.  */
 #define INT_TYPE_SIZE 32
@@ -471,7 +471,7 @@ extern const char *alpha_mlat_string;	/* For -mmemory-latency= */
    numbered.
 
    For Alpha we can decide arbitrarily since there are no machine instructions
-   for them.  Might as well be consistent with bytes. */
+   for them.  Might as well be consistent with bytes.  */
 #define WORDS_BIG_ENDIAN 0
 
 /* number of bits in an addressable storage unit */
@@ -681,6 +681,18 @@ extern const char *alpha_mlat_string;	/* For -mmemory-latency= */
    doesn't seem to specify this.  */
 #define STATIC_CHAIN_REGNUM 1
 
+/* The register number of the register used to address a table of
+   static data addresses in memory.  */
+#define PIC_OFFSET_TABLE_REGNUM 29
+
+/* Define this macro if the register defined by `PIC_OFFSET_TABLE_REGNUM'
+   is clobbered by calls.  */
+/* ??? It is and it isn't.  It's required to be valid for a given
+   function when the function returns.  It isn't clobbered by
+   current_file functions.  Moreover, we do not expose the ldgp
+   until after reload, so we're probably safe.  */
+/* #define PIC_OFFSET_TABLE_REG_CALL_CLOBBERED */
+
 /* Register in which address to store a structure value
    arrives in the function.  On the Alpha, the address is passed
    as a hidden argument.  */
@@ -706,22 +718,32 @@ extern const char *alpha_mlat_string;	/* For -mmemory-latency= */
    For any two classes, it is very desirable that there be another
    class that represents their union.  */
    
-enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
-		 LIM_REG_CLASSES };
+enum reg_class {
+  NO_REGS, R24_REG, R25_REG, R27_REG,
+  GENERAL_REGS, FLOAT_REGS, ALL_REGS,
+  LIM_REG_CLASSES
+};
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES				\
- {"NO_REGS", "PV_REG", "GENERAL_REGS", "FLOAT_REGS", "ALL_REGS" }
+ {"NO_REGS", "R24_REG", "R25_REG", "R27_REG",	\
+  "GENERAL_REGS", "FLOAT_REGS", "ALL_REGS" }
 
 /* Define which registers fit in which classes.
    This is an initializer for a vector of HARD_REG_SET
    of length N_REG_CLASSES.  */
 
-#define REG_CLASS_CONTENTS	\
-  { {0, 0}, {0x08000000, 0}, {~0, 0x80000000}, {0, 0x7fffffff}, {~0, ~0} }
+#define REG_CLASS_CONTENTS				\
+{ {0x00000000, 0x00000000},	/* NO_REGS */		\
+  {0x01000000, 0x00000000},	/* R24_REG */		\
+  {0x02000000, 0x00000000},	/* R25_REG */		\
+  {0x08000000, 0x00000000},	/* R27_REG */		\
+  {0xffffffff, 0x80000000},	/* GENERAL_REGS */	\
+  {0x00000000, 0x7fffffff},	/* FLOAT_REGS */	\
+  {0xffffffff, 0xffffffff} }
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -729,7 +751,9 @@ enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
    or could index an array.  */
 
 #define REGNO_REG_CLASS(REGNO)			\
- ((REGNO) == 27 ? PV_REG			\
+ ((REGNO) == 24 ? R24_REG			\
+  : (REGNO) == 25 ? R25_REG			\
+  : (REGNO) == 27 ? R27_REG			\
   : (REGNO) >= 32 && (REGNO) <= 62 ? FLOAT_REGS	\
   : GENERAL_REGS)
 
@@ -740,7 +764,11 @@ enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
 /* Get reg_class from a letter such as appears in the machine description.  */
 
 #define REG_CLASS_FROM_LETTER(C)	\
- ((C) == 'c' ? PV_REG : (C) == 'f' ? FLOAT_REGS : NO_REGS)
+ ((C) == 'a' ? R24_REG			\
+  : (C) == 'b' ? R25_REG		\
+  : (C) == 'c' ? R27_REG		\
+  : (C) == 'f' ? FLOAT_REGS		\
+  : NO_REGS)
 
 /* Define this macro to change register usage conditional on target flags.  */
 /* #define CONDITIONAL_REGISTER_USAGE  */
@@ -761,17 +789,7 @@ enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
    `O' is used for negated 8-bit constants.
    `P' is used for the constants 1, 2 and 3.  */
 
-#define CONST_OK_FOR_LETTER_P(VALUE, C)				\
-  ((C) == 'I' ? (unsigned HOST_WIDE_INT) (VALUE) < 0x100	\
-   : (C) == 'J' ? (VALUE) == 0					\
-   : (C) == 'K' ? (unsigned HOST_WIDE_INT) ((VALUE) + 0x8000) < 0x10000	\
-   : (C) == 'L' ? (((VALUE) & 0xffff) == 0			\
-                  && (((VALUE)) >> 31 == -1 || (VALUE) >> 31 == 0)) \
-   : (C) == 'M' ? zap_mask (VALUE)				\
-   : (C) == 'N' ? (unsigned HOST_WIDE_INT) (~ (VALUE)) < 0x100	\
-   : (C) == 'O' ? (unsigned HOST_WIDE_INT) (- (VALUE)) < 0x100	\
-   : (C) == 'P' ? (VALUE) == 1 || (VALUE) == 2 || (VALUE) == 3	\
-   : 0)
+#define CONST_OK_FOR_LETTER_P   alpha_const_ok_for_letter_p
 
 /* Similar, but for floating or large integer constants, and defining letters
    G and H.   Here VALUE is the CONST_DOUBLE rtx itself.
@@ -779,13 +797,7 @@ enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
    For Alpha, `G' is the floating-point constant zero.  `H' is a CONST_DOUBLE
    that is the operand of a ZAP insn.  */
 
-#define CONST_DOUBLE_OK_FOR_LETTER_P(VALUE, C)  			\
-  ((C) == 'G' ? (GET_MODE_CLASS (GET_MODE (VALUE)) == MODE_FLOAT	\
-		 && (VALUE) == CONST0_RTX (GET_MODE (VALUE)))		\
-   : (C) == 'H' ? (GET_MODE (VALUE) == VOIDmode				\
-		   && zap_mask (CONST_DOUBLE_LOW (VALUE))		\
-		   && zap_mask (CONST_DOUBLE_HIGH (VALUE)))		\
-   : 0)
+#define CONST_DOUBLE_OK_FOR_LETTER_P  alpha_const_double_ok_for_letter_p
 
 /* Optional extra constraints for this machine.
 
@@ -795,34 +807,27 @@ enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
    `R' is a SYMBOL_REF that has SYMBOL_REF_FLAG set or is the current
    function.
 
-   'S' is a 6-bit constant (valid for a shift insn).  */
+   'S' is a 6-bit constant (valid for a shift insn).  
 
-#define EXTRA_CONSTRAINT(OP, C)				\
-  ((C) == 'Q' ? normal_memory_operand (OP, VOIDmode)			\
-   : (C) == 'R' ? current_file_function_operand (OP, Pmode)		\
-   : (C) == 'S' ? (GET_CODE (OP) == CONST_INT				\
-		   && (unsigned HOST_WIDE_INT) INTVAL (OP) < 64)	\
-   : 0)
+   'T' is a HIGH.
+
+   'U' is a symbolic operand.  */
+
+#define EXTRA_CONSTRAINT  alpha_extra_constraint
 
 /* Given an rtx X being reloaded into a reg required to be
    in class CLASS, return the class of reg to actually use.
    In general this is just CLASS; but on some machines
-   in some cases it is preferable to use a more restrictive class.
+   in some cases it is preferable to use a more restrictive class.  */
 
-   On the Alpha, all constants except zero go into a floating-point
-   register via memory.  */
-
-#define PREFERRED_RELOAD_CLASS(X, CLASS)		\
-  (CONSTANT_P (X) && (X) != const0_rtx && (X) != CONST0_RTX (GET_MODE (X)) \
-   ? ((CLASS) == FLOAT_REGS || (CLASS) == NO_REGS ? NO_REGS : GENERAL_REGS)\
-   : (CLASS))
+#define PREFERRED_RELOAD_CLASS  alpha_preferred_reload_class
 
 /* Loading and storing HImode or QImode values to and from memory
    usually requires a scratch register.  The exceptions are loading
    QImode and HImode from an aligned address to a general register
    unless byte instructions are permitted.
    We also cannot load an unaligned address or a paradoxical SUBREG into an
-   FP register.   */
+   FP register.  */
 
 #define SECONDARY_INPUT_RELOAD_CLASS(CLASS,MODE,IN) \
   secondary_reload_class((CLASS), (MODE), (IN), 1)
@@ -834,7 +839,8 @@ enum reg_class { NO_REGS, PV_REG, GENERAL_REGS, FLOAT_REGS, ALL_REGS,
    location unless the FIX extension is available.  */
 
 #define SECONDARY_MEMORY_NEEDED(CLASS1,CLASS2,MODE) \
- (! TARGET_FIX && (CLASS1) != (CLASS2))
+ (! TARGET_FIX && (((CLASS1) == FLOAT_REGS && (CLASS2) != FLOAT_REGS) \
+                   || ((CLASS2) == FLOAT_REGS && (CLASS1) != FLOAT_REGS)))
 
 /* Specify the mode to be used for memory when a secondary memory
    location is needed.  If MODE is floating-point, use it.  Otherwise,
@@ -884,11 +890,6 @@ extern int alpha_memory_latency;
 
 /* Provide the cost of a branch.  Exact meaning under development.  */
 #define BRANCH_COST 5
-
-/* Adjust the cost of dependencies.  */
-
-#define ADJUST_COST(INSN,LINK,DEP,COST) \
-  (COST) = alpha_adjust_cost (INSN, LINK, DEP, COST)
 
 /* Stack layout; function entry, exit and calling.  */
 
@@ -931,7 +932,7 @@ extern int alpha_memory_latency;
    We have two registers that can be eliminated on the Alpha.  First, the
    frame pointer register can often be eliminated in favor of the stack
    pointer register.  Secondly, the argument pointer register can always be
-   eliminated; it is replaced with either the stack or frame pointer. */
+   eliminated; it is replaced with either the stack or frame pointer.  */
 
 /* This is an array of structures.  Each structure initializes one pair
    of eliminable registers.  The "from" register number is given first,
@@ -1095,7 +1096,7 @@ extern int alpha_memory_latency;
    reference.  If nonzero for an argument, a copy of that argument is
    made in memory and a pointer to the argument is passed instead of
    the argument itself.  The pointer is passed in whatever way is
-   appropriate for passing a pointer to that type. */
+   appropriate for passing a pointer to that type.  */
 
 #define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED) \
   ((MODE) == TFmode || (MODE) == TCmode)
@@ -1152,7 +1153,7 @@ extern int alpha_memory_latency;
 	  tmp = gen_rtx_MEM (BLKmode,					\
 		             plus_constant (virtual_incoming_args_rtx,	\
 				            ((CUM) + 6)* UNITS_PER_WORD)); \
-	  MEM_ALIAS_SET (tmp) = set;					\
+	  set_mem_alias_set (tmp, set);					\
 	  move_block_from_reg						\
 	    (16 + CUM, tmp,						\
 	     6 - (CUM), (6 - (CUM)) * UNITS_PER_WORD);			\
@@ -1160,7 +1161,7 @@ extern int alpha_memory_latency;
 	  tmp = gen_rtx_MEM (BLKmode,					\
 		             plus_constant (virtual_incoming_args_rtx,	\
 				            (CUM) * UNITS_PER_WORD));	\
-	  MEM_ALIAS_SET (tmp) = set;					\
+	  set_mem_alias_set (tmp, set);					\
 	  move_block_from_reg						\
 	    (16 + (TARGET_FPREGS ? 32 : 0) + CUM, tmp,			\
 	     6 - (CUM), (6 - (CUM)) * UNITS_PER_WORD);			\
@@ -1196,17 +1197,6 @@ struct alpha_compare
 
 extern struct alpha_compare alpha_compare;
 
-/* Machine specific function data.  */
-
-struct machine_function
-{
-  /* If non-null, this rtx holds the return address for the function.  */
-  struct rtx_def *ra_rtx;
-
-  /* If non-null, this rtx holds a saved copy of the GP for the function.  */
-  struct rtx_def *gp_save_rtx;
-};
-
 /* Make (or fake) .linkage entry for function call.
    IS_LOCAL is 0 if name is used in call, 1 if name is used in definition.  */
 
@@ -1224,10 +1214,6 @@ struct machine_function
 #define ASM_DECLARE_FUNCTION_SIZE(FILE,NAME,DECL) \
   alpha_end_function(FILE,NAME,DECL)
    
-/* This macro notes the end of the prologue.  */
-
-#define FUNCTION_END_PROLOGUE(FILE)  output_end_prologue (FILE)
-
 /* Output any profiling code before the prologue.  */
 
 #define PROFILE_BEFORE_PROLOGUE 1
@@ -1237,42 +1223,6 @@ struct machine_function
    by simply passing -pg to the assembler and linker.  */
 
 #define FUNCTION_PROFILER(FILE, LABELNO)
-
-/* Output assembler code to FILE to initialize this source file's
-   basic block profiling info, if that has not already been done.
-   This assumes that __bb_init_func doesn't garble a1-a5. */
-
-#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO)			\
-    do {							\
-	ASM_OUTPUT_REG_PUSH (FILE, 16);				\
-	fputs ("\tlda $16,$PBX32\n", (FILE));			\
-	fputs ("\tldq $26,0($16)\n", (FILE));			\
-	fputs ("\tbne $26,1f\n", (FILE));			\
-	fputs ("\tlda $27,__bb_init_func\n", (FILE));		\
-	fputs ("\tjsr $26,($27),__bb_init_func\n", (FILE));	\
-	fputs ("\tldgp $29,0($26)\n", (FILE));			\
-	fputs ("1:\n", (FILE));					\
-	ASM_OUTPUT_REG_POP (FILE, 16);				\
-    } while (0);
-
-/* Output assembler code to FILE to increment the entry-count for
-   the BLOCKNO'th basic block in this source file.  */
-
-#define BLOCK_PROFILER(FILE, BLOCKNO)				\
-    do {							\
-	int blockn = (BLOCKNO);					\
-	fputs ("\tsubq $30,16,$30\n", (FILE));			\
-	fputs ("\tstq $26,0($30)\n", (FILE));			\
-	fputs ("\tstq $27,8($30)\n", (FILE));			\
-	fputs ("\tlda $26,$PBX34\n", (FILE));			\
-	fprintf ((FILE), "\tldq $27,%d($26)\n", 8*blockn);	\
-	fputs ("\taddq $27,1,$27\n", (FILE));			\
-	fprintf ((FILE), "\tstq $27,%d($26)\n", 8*blockn);	\
-	fputs ("\tldq $26,0($30)\n", (FILE));			\
-	fputs ("\tldq $27,8($30)\n", (FILE));			\
-	fputs ("\taddq $30,16,$30\n", (FILE));			\
-    } while (0)
-
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -1291,8 +1241,7 @@ struct machine_function
    The trampoline should set the static chain pointer to value placed
    into the trampoline and should branch to the specified routine.  
    Note that $27 has been set to the address of the trampoline, so we can
-   use it for addressability of the two data items.  Trampolines are always
-   aligned to FUNCTION_BOUNDARY, which is 64 bits.  */
+   use it for addressability of the two data items.  */
 
 #define TRAMPOLINE_TEMPLATE(FILE)		\
 do {						\
@@ -1312,6 +1261,10 @@ do {						\
 
 #define TRAMPOLINE_SIZE    32
 
+/* The alignment of a trampoline, in bits.  */
+
+#define TRAMPOLINE_ALIGNMENT  64
+
 /* Emit RTL insns to initialize the variable parts of a trampoline.
    FNADDR is an RTX for the address of the function's pure code.
    CXT is an RTX for the static chain value for the function.  */
@@ -1326,7 +1279,7 @@ do {						\
 
 #define RETURN_ADDR_RTX  alpha_return_addr
 
-/* Before the prologue, RA lives in $26. */
+/* Before the prologue, RA lives in $26.  */
 #define INCOMING_RETURN_ADDR_RTX  gen_rtx_REG (Pmode, 26)
 #define DWARF_FRAME_RETURN_COLUMN DWARF_FRAME_REGNUM (26)
 
@@ -1389,223 +1342,77 @@ do {						\
    After reload, it makes no difference, since pseudo regs have
    been eliminated by then.  */
 
-#ifndef REG_OK_STRICT
-
 /* Nonzero if X is a hard reg that can be used as an index
    or if it is a pseudo reg.  */
 #define REG_OK_FOR_INDEX_P(X) 0
 
 /* Nonzero if X is a hard reg that can be used as a base reg
    or if it is a pseudo reg.  */
-#define REG_OK_FOR_BASE_P(X)  \
+#define NONSTRICT_REG_OK_FOR_BASE_P(X)  \
   (REGNO (X) < 32 || REGNO (X) == 63 || REGNO (X) >= FIRST_PSEUDO_REGISTER)
 
 /* ??? Nonzero if X is the frame pointer, or some virtual register
    that may eliminate to the frame pointer.  These will be allowed to
    have offsets greater than 32K.  This is done because register
    elimination offsets will change the hi/lo split, and if we split
-   before reload, we will require additional instructions.   */
-#define REG_OK_FP_BASE_P(X)			\
+   before reload, we will require additional instructions.  */
+#define NONSTRICT_REG_OK_FP_BASE_P(X)		\
   (REGNO (X) == 31 || REGNO (X) == 63		\
    || (REGNO (X) >= FIRST_PSEUDO_REGISTER	\
        && REGNO (X) < LAST_VIRTUAL_REGISTER))
 
-#else
-
-/* Nonzero if X is a hard reg that can be used as an index.  */
-#define REG_OK_FOR_INDEX_P(X) REGNO_OK_FOR_INDEX_P (REGNO (X))
-
 /* Nonzero if X is a hard reg that can be used as a base reg.  */
-#define REG_OK_FOR_BASE_P(X) REGNO_OK_FOR_BASE_P (REGNO (X))
+#define STRICT_REG_OK_FOR_BASE_P(X) REGNO_OK_FOR_BASE_P (REGNO (X))
 
-#define REG_OK_FP_BASE_P(X) 0
-
+#ifdef REG_OK_STRICT
+#define REG_OK_FOR_BASE_P(X)	STRICT_REG_OK_FOR_BASE_P (X)
+#else
+#define REG_OK_FOR_BASE_P(X)	NONSTRICT_REG_OK_FOR_BASE_P (X)
 #endif
 
-/* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression
-   that is a valid memory address for an instruction.
-   The MODE argument is the machine mode for the MEM expression
-   that wants to use this address. 
+/* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression that is a
+   valid memory address for an instruction.  */
 
-   For Alpha, we have either a constant address or the sum of a register
-   and a constant address, or just a register.  For DImode, any of those
-   forms can be surrounded with an AND that clear the low-order three bits;
-   this is an "unaligned" access.
-
-   First define the basic valid address.  */
-
-#define GO_IF_LEGITIMATE_SIMPLE_ADDRESS(MODE, X, ADDR)			\
-{									\
-  rtx tmp = (X);							\
-  if (GET_CODE (tmp) == SUBREG						\
-      && (GET_MODE_SIZE (GET_MODE (tmp))				\
-	  < GET_MODE_SIZE (GET_MODE (SUBREG_REG (tmp)))))		\
-    tmp = SUBREG_REG (tmp);						\
-  if (REG_P (tmp) && REG_OK_FOR_BASE_P (tmp))				\
-    goto ADDR;								\
-  if (CONSTANT_ADDRESS_P (X))						\
-    goto ADDR;								\
-  if (GET_CODE (X) == PLUS)						\
-    {									\
-      tmp = XEXP (X, 0);						\
-      if (GET_CODE (tmp) == SUBREG					\
-          && (GET_MODE_SIZE (GET_MODE (tmp))				\
-	      < GET_MODE_SIZE (GET_MODE (SUBREG_REG (tmp)))))		\
-        tmp = SUBREG_REG (tmp);						\
-      if (REG_P (tmp))							\
-	{								\
-	  if (REG_OK_FP_BASE_P (tmp)					\
-	      && GET_CODE (XEXP (X, 1)) == CONST_INT)			\
-	    goto ADDR;							\
-	  if (REG_OK_FOR_BASE_P (tmp)					\
-	      && CONSTANT_ADDRESS_P (XEXP (X, 1)))			\
-	    goto ADDR;							\
-	}								\
-      else if (GET_CODE (tmp) == ADDRESSOF				\
-	       && CONSTANT_ADDRESS_P (XEXP (X, 1)))			\
-	goto ADDR;							\
-    }									\
-}
-
-/* Now accept the simple address, or, for DImode only, an AND of a simple
-   address that turns off the low three bits.  */
-
-#define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR) \
-{ GO_IF_LEGITIMATE_SIMPLE_ADDRESS (MODE, X, ADDR); \
-  if ((MODE) == DImode				\
-      && GET_CODE (X) == AND			\
-      && GET_CODE (XEXP (X, 1)) == CONST_INT	\
-      && INTVAL (XEXP (X, 1)) == -8)		\
-    GO_IF_LEGITIMATE_SIMPLE_ADDRESS (MODE, XEXP (X, 0), ADDR); \
-}
+#ifdef REG_OK_STRICT
+#define GO_IF_LEGITIMATE_ADDRESS(MODE, X, WIN)	\
+do {						\
+  if (alpha_legitimate_address_p (MODE, X, 1))	\
+    goto WIN;					\
+} while (0)
+#else
+#define GO_IF_LEGITIMATE_ADDRESS(MODE, X, WIN)	\
+do {						\
+  if (alpha_legitimate_address_p (MODE, X, 0))	\
+    goto WIN;					\
+} while (0)
+#endif
 
 /* Try machine-dependent ways of modifying an illegitimate address
    to be legitimate.  If we find one, return the new, valid address.
-   This macro is used in only one place: `memory_address' in explow.c.
-
-   OLDX is the address as it was before break_out_memory_refs was called.
-   In some cases it is useful to look at this to decide what needs to be done.
-
-   MODE and WIN are passed so that this macro can use
-   GO_IF_LEGITIMATE_ADDRESS.
-
-   It is always safe for this macro to do nothing.  It exists to recognize
-   opportunities to optimize the output. 
-
-   For the Alpha, there are three cases we handle:
-
-   (1) If the address is (plus reg const_int) and the CONST_INT is not a
-       valid offset, compute the high part of the constant and add it to the
-       register.  Then our address is (plus temp low-part-const).
-   (2) If the address is (const (plus FOO const_int)), find the low-order
-       part of the CONST_INT.  Then load FOO plus any high-order part of the
-       CONST_INT into a register.  Our address is (plus reg low-part-const).
-       This is done to reduce the number of GOT entries.
-   (3) If we have a (plus reg const), emit the load as in (2), then add
-       the two registers, and finally generate (plus reg low-part-const) as
-       our address.  */
+   This macro is used in only one place: `memory_address' in explow.c.  */
 
 #define LEGITIMIZE_ADDRESS(X,OLDX,MODE,WIN)			\
-{ if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == REG	\
-      && GET_CODE (XEXP (X, 1)) == CONST_INT			\
-      && ! CONSTANT_ADDRESS_P (XEXP (X, 1)))			\
+do {								\
+  rtx new_x = alpha_legitimize_address (X, NULL_RTX, MODE);	\
+  if (new_x)							\
     {								\
-      HOST_WIDE_INT val = INTVAL (XEXP (X, 1));			\
-      HOST_WIDE_INT lowpart = (val & 0xffff) - 2 * (val & 0x8000); \
-      HOST_WIDE_INT highpart = val - lowpart;			\
-      rtx high = GEN_INT (highpart);				\
-      rtx temp = expand_binop (Pmode, add_optab, XEXP (x, 0),	\
-			       high, NULL_RTX, 1, OPTAB_LIB_WIDEN); \
-								\
-      (X) = plus_constant (temp, lowpart);			\
+      X = new_x;						\
       goto WIN;							\
     }								\
-  else if (GET_CODE (X) == CONST				\
-	   && GET_CODE (XEXP (X, 0)) == PLUS			\
-	   && GET_CODE (XEXP (XEXP (X, 0), 1)) == CONST_INT)	\
-    {								\
-      HOST_WIDE_INT val = INTVAL (XEXP (XEXP (X, 0), 1));	\
-      HOST_WIDE_INT lowpart = (val & 0xffff) - 2 * (val & 0x8000); \
-      HOST_WIDE_INT highpart = val - lowpart;			\
-      rtx high = XEXP (XEXP (X, 0), 0);				\
-								\
-      if (highpart)						\
-	high = plus_constant (high, highpart);			\
-								\
-      (X) = plus_constant (force_reg (Pmode, high), lowpart);	\
-      goto WIN;							\
-    }								\
-  else if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == REG \
-	   && GET_CODE (XEXP (X, 1)) == CONST			\
-	   && GET_CODE (XEXP (XEXP (X, 1), 0)) == PLUS		\
-	   && GET_CODE (XEXP (XEXP (XEXP (X, 1), 0), 1)) == CONST_INT) \
-    {								\
-      HOST_WIDE_INT val = INTVAL (XEXP (XEXP (XEXP (X, 1), 0), 1)); \
-      HOST_WIDE_INT lowpart = (val & 0xffff) - 2 * (val & 0x8000); \
-      HOST_WIDE_INT highpart = val - lowpart;			\
-      rtx high = XEXP (XEXP (XEXP (X, 1), 0), 0);		\
-								\
-      if (highpart)						\
-	high = plus_constant (high, highpart);			\
-								\
-      high = expand_binop (Pmode, add_optab, XEXP (X, 0),	\
-			   force_reg (Pmode, high),		\
-			   high, 1, OPTAB_LIB_WIDEN);		\
-      (X) = plus_constant (high, lowpart);			\
-      goto WIN;							\
-    }								\
-}
+} while (0)
 
 /* Try a machine-dependent way of reloading an illegitimate address
    operand.  If we find one, push the reload and jump to WIN.  This
-   macro is used in only one place: `find_reloads_address' in reload.c.
-
-   For the Alpha, we wish to handle large displacements off a base
-   register by splitting the addend across an ldah and the mem insn.
-   This cuts number of extra insns needed from 3 to 1.  */
+   macro is used in only one place: `find_reloads_address' in reload.c.  */
    
-#define LEGITIMIZE_RELOAD_ADDRESS(X,MODE,OPNUM,TYPE,IND_LEVELS,WIN)	\
-do {									\
-  /* We must recognize output that we have already generated ourselves.  */ \
-  if (GET_CODE (X) == PLUS						\
-      && GET_CODE (XEXP (X, 0)) == PLUS					\
-      && GET_CODE (XEXP (XEXP (X, 0), 0)) == REG			\
-      && GET_CODE (XEXP (XEXP (X, 0), 1)) == CONST_INT			\
-      && GET_CODE (XEXP (X, 1)) == CONST_INT)				\
-    {									\
-      push_reload (XEXP (X, 0), NULL_RTX, &XEXP (X, 0), NULL_PTR,	\
-		   BASE_REG_CLASS, GET_MODE (X), VOIDmode, 0, 0,	\
-		   OPNUM, TYPE);					\
-      goto WIN;								\
-    }									\
-  if (GET_CODE (X) == PLUS						\
-      && GET_CODE (XEXP (X, 0)) == REG					\
-      && REGNO (XEXP (X, 0)) < FIRST_PSEUDO_REGISTER			\
-      && REG_MODE_OK_FOR_BASE_P (XEXP (X, 0), MODE)			\
-      && GET_CODE (XEXP (X, 1)) == CONST_INT)				\
-    {									\
-      HOST_WIDE_INT val = INTVAL (XEXP (X, 1));				\
-      HOST_WIDE_INT low = ((val & 0xffff) ^ 0x8000) - 0x8000;		\
-      HOST_WIDE_INT high						\
-	= (((val - low) & 0xffffffff) ^ 0x80000000) - 0x80000000;	\
-									\
-      /* Check for 32-bit overflow.  */					\
-      if (high + low != val)						\
-	break;								\
-									\
-      /* Reload the high part into a base reg; leave the low part	\
-	 in the mem directly.  */					\
-									\
-      X = gen_rtx_PLUS (GET_MODE (X),					\
-			gen_rtx_PLUS (GET_MODE (X), XEXP (X, 0),	\
-				      GEN_INT (high)),			\
-			GEN_INT (low));					\
-	  								\
-      push_reload (XEXP (X, 0), NULL_RTX, &XEXP (X, 0), NULL_PTR,	\
-		   BASE_REG_CLASS, GET_MODE (X), VOIDmode, 0, 0,	\
-		   OPNUM, TYPE);					\
-      goto WIN;								\
-    }									\
+#define LEGITIMIZE_RELOAD_ADDRESS(X,MODE,OPNUM,TYPE,IND_L,WIN)		     \
+do {									     \
+  rtx new_x = alpha_legitimize_reload_address (X, MODE, OPNUM, TYPE, IND_L); \
+  if (new_x)								     \
+    {									     \
+      X = new_x;							     \
+      goto WIN;								     \
+    }									     \
 } while (0)
 
 /* Go to LABEL if ADDR (a legitimate address expression)
@@ -1621,7 +1428,7 @@ do {									\
 
 #define ADDRESS_COST(X)  0
 
-/* Machine-dependent reorg pass.   */
+/* Machine-dependent reorg pass.  */
 #define MACHINE_DEPENDENT_REORG(X)	alpha_reorg(X)
 
 /* Specify the machine mode that this machine uses
@@ -1637,12 +1444,6 @@ do {									\
    of the table, but we pretend that it is PC-relative; this should be OK,
    but we should try to find some better way sometime.  */
 #define CASE_VECTOR_PC_RELATIVE 1
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 1
@@ -1664,7 +1465,7 @@ do {									\
    move-instruction pairs, we will do a movstr or libcall instead.
 
    Without byte/word accesses, we want no more than four instructions;
-   with, several single byte accesses are better.   */
+   with, several single byte accesses are better.  */
 
 #define MOVE_RATIO  (TARGET_BWX ? 7 : 2)
 
@@ -1733,7 +1534,7 @@ do {									\
    between pointers and any other objects of this machine mode.  */
 #define Pmode DImode
 
-/* Mode of a function address in a call instruction (for indexing purposes). */
+/* Mode of a function address in a call instruction (for indexing purposes).  */
 
 #define FUNCTION_MODE Pmode
 
@@ -1750,17 +1551,8 @@ do {									\
 #define NO_FUNCTION_CSE
 
 /* Define this to be nonzero if shift instructions ignore all but the low-order
-   few bits. */
+   few bits.  */
 #define SHIFT_COUNT_TRUNCATED 1
-
-/* The EV4 is dual issue; EV5/EV6 are quad issue.  */
-#define ISSUE_RATE  (alpha_cpu == PROCESSOR_EV4 ? 2 : 4)
-
-/* Describe the fact that MULTI instructions are multiple instructions
-   and so to assume they don't pair with anything.  */
-#define MD_SCHED_VARIABLE_ISSUE(DUMP, SCHED_VERBOSE, INSN, CAN_ISSUE_MORE) \
-  if (recog_memoized (INSN) < 0 || get_attr_type (INSN) == TYPE_MULTI)	   \
-     (CAN_ISSUE_MORE) = 0
 
 /* Compute the cost of computing a constant rtl expression RTX
    whose rtx-code is CODE.  The body of this macro is a portion
@@ -1845,7 +1637,7 @@ do {									\
     if (GET_CODE (XEXP (X, 1)) == CONST_INT		\
 	&& INTVAL (XEXP (X, 1)) <= 3)			\
       break;						\
-    /* ... fall through ... */				\
+    /* ... fall through ...  */				\
   case ASHIFTRT:  case LSHIFTRT:			\
     switch (alpha_cpu)					\
       {							\
@@ -1905,7 +1697,7 @@ do {									\
   case NEG:  case ABS:					\
     if (! FLOAT_MODE_P (GET_MODE (X)))			\
       break;						\
-    /* ... fall through ... */				\
+    /* ... fall through ...  */				\
   case FLOAT:  case UNSIGNED_FLOAT:  case FIX:  case UNSIGNED_FIX: \
   case FLOAT_EXTEND:  case FLOAT_TRUNCATE:		\
     switch (alpha_cpu)					\
@@ -1922,13 +1714,11 @@ do {									\
 
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
-
-#define ASM_APP_ON ""
+#define ASM_APP_ON (TARGET_EXPLICIT_RELOCS ? "\t.set\tmacro\n" : "")
 
 /* Output to assembler file text saying following lines
    no longer contain unusual constructs.  */
-
-#define ASM_APP_OFF ""
+#define ASM_APP_OFF (TARGET_EXPLICIT_RELOCS ? "\t.set\tnomacro\n" : "")
 
 #define TEXT_SECTION_ASM_OP "\t.text"
 
@@ -1961,7 +1751,7 @@ literal_section ()						\
       if (firsttime)						\
 	{							\
 	  firsttime = 0;				        \
-	  ASM_OUTPUT_DOUBLE_INT (asm_out_file, const0_rtx);	\
+	  assemble_aligned_integer (8, const0_rtx);		\
 	}							\
 								\
       in_section = readonly_data;				\
@@ -1970,13 +1760,29 @@ literal_section ()						\
 
 #define READONLY_DATA_SECTION	literal_section
 
-/* If we are referencing a function that is static, make the SYMBOL_REF
-   special.  We use this to see indicate we can branch to this function
-   without setting PV or restoring GP.  */
+/* Define this macro if references to a symbol must be treated differently
+   depending on something about the variable or function named by the symbol
+   (such as what section it is in).  */
 
-#define ENCODE_SECTION_INFO(DECL)  \
-  if (TREE_CODE (DECL) == FUNCTION_DECL && ! TREE_PUBLIC (DECL)) \
-    SYMBOL_REF_FLAG (XEXP (DECL_RTL (DECL), 0)) = 1;
+#define ENCODE_SECTION_INFO(DECL)  alpha_encode_section_info (DECL)
+
+/* If a variable is weakened, made one only or moved into a different
+   section, it may be necessary to redo the section info to move the
+   variable out of sdata.  */
+
+#define REDO_SECTION_INFO_P(DECL)                                       \
+   ((TREE_CODE (DECL) == VAR_DECL)                                      \
+    && (DECL_ONE_ONLY (DECL) || DECL_WEAK (DECL) || DECL_COMMON (DECL)  \
+        || DECL_SECTION_NAME (DECL) != 0))
+
+#define STRIP_NAME_ENCODING(VAR,SYMBOL_NAME)	\
+do {						\
+  (VAR) = (SYMBOL_NAME);			\
+  if ((VAR)[0] == '@')				\
+    (VAR) += 2;					\
+  if ((VAR)[0] == '*')				\
+    (VAR)++;					\
+} while (0)
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1991,9 +1797,19 @@ literal_section ()						\
  "$f16", "$f17", "$f18", "$f19", "$f20", "$f21", "$f22", "$f23",\
  "$f24", "$f25", "$f26", "$f27", "$f28", "$f29", "$f30", "FP"}
 
-/* How to renumber registers for dbx and gdb.  */
+/* Strip name encoding when emitting labels.  */
 
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
+#define ASM_OUTPUT_LABELREF(STREAM, NAME)	\
+do {						\
+  const char *name_ = NAME;			\
+  if (*name_ == '@')				\
+    name_ += 2;					\
+  if (*name_ == '*')				\
+    name_++;					\
+  else						\
+    fputs (user_label_prefix, STREAM);		\
+  fputs (name_, STREAM);			\
+} while (0)
 
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
@@ -2007,7 +1823,7 @@ literal_section ()						\
 #define ASM_GLOBALIZE_LABEL(FILE,NAME)	\
   do { fputs ("\t.globl ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #define USER_LABEL_PREFIX ""
 
@@ -2019,7 +1835,7 @@ literal_section ()						\
 
 /* This is how to output a label for a jump table.  Arguments are the same as
    for ASM_OUTPUT_INTERNAL_LABEL, except the insn for the jump table is
-   passed. */
+   passed.  */
 
 #define ASM_OUTPUT_CASE_LABEL(FILE,PREFIX,NUM,TABLEINSN)	\
 { ASM_OUTPUT_ALIGN (FILE, 2); ASM_OUTPUT_INTERNAL_LABEL (FILE, PREFIX, NUM); }
@@ -2036,63 +1852,6 @@ literal_section ()						\
 
 #define CHECK_FLOAT_VALUE(MODE, D, OVERFLOW) \
   ((OVERFLOW) = check_float_value (MODE, &D, OVERFLOW))
-
-/* This is how to output an assembler line defining a `long double'
-   constant.  */
-
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)				\
-  do {									\
-    long t[4];								\
-    REAL_VALUE_TO_TARGET_LONG_DOUBLE ((VALUE), t);			\
-    fprintf (FILE, "\t.quad 0x%lx%08lx,0x%lx%08lx\n",			\
-	     t[1] & 0xffffffff, t[0] & 0xffffffff,			\
-	     t[3] & 0xffffffff, t[2] & 0xffffffff);			\
-  } while (0)
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)					\
-  do {									\
-    long t[2];								\
-    REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), t);				\
-    fprintf (FILE, "\t.quad 0x%lx%08lx\n",				\
-	     t[1] & 0xffffffff, t[0] & 0xffffffff);			\
-  } while (0)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)				\
-  do {								\
-    long t;							\
-    REAL_VALUE_TO_TARGET_SINGLE ((VALUE), t);			\
-    fprintf (FILE, "\t.long 0x%lx\n", t & 0xffffffff);		\
-  } while (0)
-  
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  		\
-( fprintf (FILE, "\t.long "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line defining a `long' constant.  */
-
-#define ASM_OUTPUT_DOUBLE_INT(FILE,VALUE)	\
-( fprintf (FILE, "\t.quad "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-  fprintf (FILE, "\t.word %d\n",		\
-    (int)(GET_CODE (VALUE) == CONST_INT		\
-     ? INTVAL (VALUE) & 0xffff : (abort (), 0)))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)		\
-  fprintf (FILE, "\t.byte %d\n",		\
-    (int)(GET_CODE (VALUE) == CONST_INT		\
-     ? INTVAL (VALUE) & 0xff : (abort (), 0)))
 
 /* We use the default ASCII-output routine, except that we don't write more
    than 50 characters since the assembler doesn't support very long lines.  */
@@ -2126,11 +1885,10 @@ literal_section ()						\
 	      fprintf (asm_out_file, "\\%o", c);			      \
 	      /* After an octal-escape, if a digit follows,		      \
 		 terminate one string constant and start another.	      \
-		 The Vax assembler fails to stop reading the escape	      \
+		 The VAX assembler fails to stop reading the escape	      \
 		 after three digits, so this is the only way we		      \
 		 can get it to parse the data properly.  */		      \
-	      if (i < thissize - 1					      \
-		  && p[i + 1] >= '0' && p[i + 1] <= '9')		      \
+	      if (i < thissize - 1 && ISDIGIT (p[i + 1]))		      \
 		_size_so_far = 0, fprintf (asm_out_file, "\"\n\t.ascii \"");  \
 	  }								      \
 	}								      \
@@ -2138,11 +1896,6 @@ literal_section ()						\
     }									      \
   }									      \
   while (0)
-
-/* To get unaligned data, we have to turn off auto alignment.  */
-#define UNALIGNED_SHORT_ASM_OP		"\t.align 0\n\t.word\t"
-#define UNALIGNED_INT_ASM_OP		"\t.align 0\n\t.long\t"
-#define UNALIGNED_DOUBLE_INT_ASM_OP	"\t.align 0\n\t.quad\t"
 
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code.  */
@@ -2160,11 +1913,6 @@ literal_section ()						\
 	  (REGNO) > 32 ? "t" : "q", (REGNO) > 32 ? "f" : "",		\
 	  (REGNO) & 31);
 
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (int) ((VALUE) & 0xff))
-
 /* This is how to output an element of a case-vector that is absolute.
    (Alpha does not use such vectors, but we must define this macro anyway.)  */
 
@@ -2173,7 +1921,7 @@ literal_section ()						\
 /* This is how to output an element of a case-vector that is relative.  */
 
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
-  fprintf (FILE, "\t.%s $L%d\n", TARGET_WINDOWS_NT ? "long" : "gprel32", \
+  fprintf (FILE, "\t.%s $L%d\n", TARGET_ABI_WINDOWS_NT ? "long" : "gprel32", \
 	   (VALUE))
 
 /* This is how to output an assembler line
@@ -2212,60 +1960,7 @@ literal_section ()						\
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Output code to add DELTA to the first argument, and then jump to FUNCTION.
-   Used for C++ multiple inheritance.  */
-/* ??? This is only used with the v2 ABI, and alpha.c makes assumptions
-   about current_function_is_thunk that are not valid with the v3 ABI.  */
-#if 0
-#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION)	\
-do {									\
-  const char *fn_name = XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0);	\
-  int reg;								\
-									\
-  if (! TARGET_OPEN_VMS && ! TARGET_WINDOWS_NT)				\
-    fprintf (FILE, "\tldgp $29,0($27)\n");				\
-									\
-  /* Mark end of prologue.  */						\
-  output_end_prologue (FILE);						\
-									\
-  /* Rely on the assembler to macro expand a large delta.  */		\
-  fprintf (FILE, "\t.set at\n");					\
-  reg = aggregate_value_p (TREE_TYPE (TREE_TYPE (FUNCTION))) ? 17 : 16;	\
-  fprintf (FILE, "\tlda $%d,%ld($%d)\n", reg, (long)(DELTA), reg);	\
-									\
-  if (current_file_function_operand (XEXP (DECL_RTL (FUNCTION), 0),	\
-				     VOIDmode))				\
-    {									\
-      fprintf (FILE, "\tbr $31,$");					\
-      assemble_name (FILE, fn_name);					\
-      fprintf (FILE, "..ng\n");						\
-    }									\
-  else									\
-    {									\
-      fprintf (FILE, "\tjmp $31,");					\
-      assemble_name (FILE, fn_name);					\
-      fputc ('\n', FILE);						\
-    }									\
-  fprintf (FILE, "\t.set noat\n");					\
-} while (0)
-#endif
 
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -2278,26 +1973,8 @@ do {									\
 
    ~    Generates the name of the current function.
 
-   &	Generates fp-rounding mode suffix: nothing for normal, 'c' for
-   	chopped, 'm' for minus-infinity, and 'd' for dynamic rounding
-	mode.  alpha_fprm controls which suffix is generated.
-
-   '	Generates trap-mode suffix for instructions that accept the
-        su suffix only (cmpt et al).
-
-   `    Generates trap-mode suffix for instructions that accept the
-	v and sv suffix.  The only instruction that needs this is cvtql.
-
-   (	Generates trap-mode suffix for instructions that accept the
-	v, sv, and svi suffix.  The only instruction that needs this
-	is cvttq.
-
-   )    Generates trap-mode suffix for instructions that accept the
-	u, su, and sui suffix.  This is the bulk of the IEEE floating
-	point instructions (addt et al).
-
-   +    Generates trap-mode suffix for instructions that accept the
-	sui suffix (cvtqt and cvtqs).
+   /	Generates the instruction suffix.  The TRAP_SUFFIX and ROUND_SUFFIX
+	attributes are examined to determine what is appropriate.
 
    ,    Generates single precision suffix for floating point
 	instructions (s for IEEE, f for VAX)
@@ -2306,10 +1983,9 @@ do {									\
 	instructions (t for IEEE, g for VAX)
    */
 
-#define PRINT_OPERAND_PUNCT_VALID_P(CODE)				\
-  ((CODE) == '&' || (CODE) == '`' || (CODE) == '\'' || (CODE) == '('	\
-   || (CODE) == ')' || (CODE) == '+' || (CODE) == ',' || (CODE) == '-'	\
-   || (CODE) == '~')
+#define PRINT_OPERAND_PUNCT_VALID_P(CODE) \
+  ((CODE) == '/' || (CODE) == ',' || (CODE) == '-' || (CODE) == '~' \
+   || (CODE) == '#' || (CODE) == '*')
 
 /* Print a memory address as an operand to reference that memory location.  */
 
@@ -2341,11 +2017,15 @@ do {									\
   {"divmod_operator", {DIV, MOD, UDIV, UMOD}},				\
   {"fp0_operand", {CONST_DOUBLE}},					\
   {"current_file_function_operand", {SYMBOL_REF}},			\
+  {"direct_call_operand", {SYMBOL_REF}},				\
+  {"local_symbolic_operand", {SYMBOL_REF, CONST, LABEL_REF}},		\
+  {"small_symbolic_operand", {SYMBOL_REF, CONST}},			\
+  {"global_symbolic_operand", {SYMBOL_REF, CONST}},			\
   {"call_operand", {REG, SYMBOL_REF}},					\
   {"input_operand", {SUBREG, REG, MEM, CONST_INT, CONST_DOUBLE,		\
-		     SYMBOL_REF, CONST, LABEL_REF}},			\
+		     SYMBOL_REF, CONST, LABEL_REF, HIGH}},		\
   {"some_operand", {SUBREG, REG, MEM, CONST_INT, CONST_DOUBLE,		\
-		    SYMBOL_REF, CONST, LABEL_REF}},			\
+		    SYMBOL_REF, CONST, LABEL_REF, HIGH}},		\
   {"some_ni_operand", {SUBREG, REG, MEM}},				\
   {"aligned_memory_operand", {MEM}},					\
   {"unaligned_memory_operand", {MEM}},					\
@@ -2355,7 +2035,10 @@ do {									\
   {"hard_int_register_operand", {SUBREG, REG}},				\
   {"reg_not_elim_operand", {SUBREG, REG}},				\
   {"reg_no_subreg_operand", {REG}},					\
-  {"addition_operation", {PLUS}},
+  {"addition_operation", {PLUS}},					\
+  {"symbolic_operand", {SYMBOL_REF, LABEL_REF, CONST}},			\
+  {"some_small_symbolic_operand", {SET, PARALLEL, PREFETCH, UNSPEC,	\
+				   UNSPEC_VOLATILE}},
 
 /* Define the `__builtin_va_list' type for the ABI.  */
 #define BUILD_VA_LIST_TYPE(VALIST) \
@@ -2497,7 +2180,7 @@ do {							\
    mips-tdump.c to print them out.
 
    These must match the corresponding definitions in gdb/mipsread.c.
-   Unfortunately, gcc and gdb do not currently share any directories. */
+   Unfortunately, gcc and gdb do not currently share any directories.  */
 
 #define CODE_MASK 0x8F300
 #define MIPS_IS_STAB(sym) (((sym)->index & 0xFFF00) == CODE_MASK)
@@ -2516,5 +2199,10 @@ do {							\
 /* The system headers under Alpha systems are generally C++-aware.  */
 #define NO_IMPLICIT_EXTERN_C
 
-/* Generate calls to memcpy, etc., not bcopy, etc. */
+/* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS 1
+
+/* Output code to add DELTA to the first argument, and then jump to FUNCTION.
+   Used for C++ multiple inheritance.  */
+#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION) \
+  alpha_output_mi_thunk_osf (FILE, THUNK_FNDECL, DELTA, FUNCTION)

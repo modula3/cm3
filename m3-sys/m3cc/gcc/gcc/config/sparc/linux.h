@@ -1,5 +1,5 @@
 /* Definitions for SPARC running Linux-based GNU systems with ELF.
-   Copyright (C) 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2002 Free Software Foundation, Inc.
    Contributed by Eddie C. Dost (ecd@skynet.be)
 
 This file is part of GNU CC.
@@ -21,30 +21,16 @@ Boston, MA 02111-1307, USA.  */
 
 #define LINUX_DEFAULT_ELF
 
-/* Don't assume anything about the header files. */
+/* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
 /* GNU/Linux uses ctype from glibc.a. I am not sure how complete it is.
-   For now, we play safe. It may change later. */
+   For now, we play safe. It may change later.  */
 
 #if 0
 #undef MULTIBYTE_CHARS
 #define MULTIBYTE_CHARS 1
 #endif
-
-/* The GNU C++ standard library requires that these macros be defined.  */
-#undef CPLUSPLUS_CPP_SPEC
-#define CPLUSPLUS_CPP_SPEC "-D_GNU_SOURCE %(cpp)"
-
-#ifndef USE_GNULIBC_1
-#undef DEFAULT_VTABLE_THUNKS
-#define DEFAULT_VTABLE_THUNKS 1
-#endif
-
-/* Use stabs instead of DWARF debug format.  */
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
-
-#include <sparc/sysv4.h>
 
 #undef MD_EXEC_PREFIX
 #undef MD_STARTFILE_PREFIX
@@ -52,13 +38,21 @@ Boston, MA 02111-1307, USA.  */
 /* Provide a STARTFILE_SPEC appropriate for GNU/Linux.  Here we add
    the GNU/Linux magical crtbegin.o file (see crtstuff.c) which
    provides part of the support for getting C++ file-scope static
-   object constructed before entering `main'. */
+   object constructed before entering `main'.  */
    
 #undef  STARTFILE_SPEC
+#ifdef USE_GNULIBC_1
 #define STARTFILE_SPEC \
   "%{!shared: \
      %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}}\
    crti.o%s %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
+#else
+#define STARTFILE_SPEC \
+  "%{!shared: \
+     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}}\
+   crti.o%s %{static:crtbeginT.o%s}\
+   %{!static:%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}}"
+#endif
 
 /* Provide a ENDFILE_SPEC appropriate for GNU/Linux.  Here we tack on
    the GNU/Linux magical crtend.o file (see crtstuff.c) which
@@ -68,9 +62,10 @@ Boston, MA 02111-1307, USA.  */
 
 #undef  ENDFILE_SPEC
 #define ENDFILE_SPEC \
-  "%{!shared:crtend.o%s} %{shared:crtendS.o%s} crtn.o%s"
+  "%{ffast-math|funsafe-math-optimizations:crtfastmath.o%s} \
+   %{!shared:crtend.o%s} %{shared:crtendS.o%s} crtn.o%s"
 
-/* This is for -profile to use -lc_p instead of -lc. */
+/* This is for -profile to use -lc_p instead of -lc.  */
 #undef	CC1_SPEC
 #define	CC1_SPEC "%{profile:-p} \
 %{sun4:} %{target:} \
@@ -78,6 +73,10 @@ Boston, MA 02111-1307, USA.  */
 %{msparclite:-mcpu=sparclite} %{mf930:-mcpu=f930} %{mf934:-mcpu=f934} \
 %{mv8:-mcpu=v8} %{msupersparc:-mcpu=supersparc} \
 "
+
+/* The GNU C++ standard library requires that these macros be defined.  */
+#undef CPLUSPLUS_CPP_SPEC
+#define CPLUSPLUS_CPP_SPEC "-D_GNU_SOURCE %(cpp)"
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (sparc GNU/Linux with ELF)");
@@ -99,10 +98,8 @@ Boston, MA 02111-1307, USA.  */
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 32
 
-#undef MAX_WCHAR_TYPE_SIZE
-    
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__ELF__ -Dunix -D__sparc__ -Dlinux -Asystem=unix -Asystem=posix"
+#define CPP_PREDEFINES "-D__ELF__ -Dunix -D__sparc__ -D__gnu_linux__ -Dlinux -Asystem=unix -Asystem=posix"
 
 #undef CPP_SUBTARGET_SPEC
 #ifdef USE_GNULIBC_1
@@ -151,7 +148,7 @@ Boston, MA 02111-1307, USA.  */
    When the -shared link option is used a final link is not being
    done.  */
 
-/* If ELF is the default format, we should not use /lib/elf. */
+/* If ELF is the default format, we should not use /lib/elf.  */
 
 #undef  LINK_SPEC
 #ifdef USE_GNULIBC_1
@@ -184,20 +181,15 @@ Boston, MA 02111-1307, USA.  */
 #endif
 
 /* The sun bundled assembler doesn't accept -Yd, (and neither does gas).
-   It's safe to pass -s always, even if -g is not used. */
+   It's safe to pass -s always, even if -g is not used.  */
 #undef ASM_SPEC
 #define ASM_SPEC \
   "%{V} %{v:%{!V:-V}} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Wa,*:%*} -s %{fpic:-K PIC} \
-   %{fPIC:-K PIC} %(asm_relax)"
+   %{fPIC:-K PIC} %(asm_cpu) %(asm_relax)"
 
 /* Same as sparc.h */
 #undef DBX_REGISTER_NUMBER
 #define DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
-/* We use stabs-in-elf for debugging, because that is what the native
-   toolchain uses.  XXX */
-#undef PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 
 #undef ASM_OUTPUT_ALIGNED_LOCAL
 #define ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGN)		\
@@ -210,6 +202,9 @@ do {									\
 
 #undef COMMON_ASM_OP
 #define COMMON_ASM_OP "\t.common\t"
+
+#undef  LOCAL_LABEL_PREFIX
+#define LOCAL_LABEL_PREFIX  "."
 
 /* This is how to output a definition of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
@@ -232,7 +227,7 @@ do {									\
 
 #undef  ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
-  sprintf (LABEL, "*.L%s%d", PREFIX, NUM)
+  sprintf (LABEL, "*.L%s%ld", PREFIX, (long)(NUM))
 
 
 /* Define for support of TFmode long double and REAL_ARITHMETIC.
@@ -249,22 +244,78 @@ do {									\
 #else
 #define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 64
 #endif
-
-/* Override MACHINE_STATE_{SAVE,RESTORE} because we have special
-   traps available which can get and set the condition codes
-   reliably.  */
-#undef MACHINE_STATE_SAVE
-#define MACHINE_STATE_SAVE(ID)				\
-  unsigned long int ms_flags, ms_saveret;		\
-  asm volatile("ta	0x20\n\t"			\
-	       "mov	%%g1, %0\n\t"			\
-	       "mov	%%g2, %1\n\t"			\
-	       : "=r" (ms_flags), "=r" (ms_saveret));
 
-#undef MACHINE_STATE_RESTORE
-#define MACHINE_STATE_RESTORE(ID)			\
-  asm volatile("mov	%0, %%g1\n\t"			\
-	       "mov	%1, %%g2\n\t"			\
-	       "ta	0x21\n\t"			\
-	       : /* no outputs */			\
-	       : "r" (ms_flags), "r" (ms_saveret));
+#if !defined(USE_GNULIBC_1) && defined(HAVE_LD_EH_FRAME_HDR)
+#define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "
+#endif
+
+/* Don't be different from other Linux platforms in this regard.  */
+#define HANDLE_PRAGMA_PACK_PUSH_POP
+
+/* We use GNU ld so undefine this so that attribute((init_priority)) works.  */
+#undef CTORS_SECTION_ASM_OP
+#undef DTORS_SECTION_ASM_OP
+
+/* Do code reading to identify a signal frame, and set the frame
+   state data appropriately.  See unwind-dw2.c for the structs.  */
+
+#define MD_FALLBACK_FRAME_STATE_FOR(CONTEXT, FS, SUCCESS)		\
+  do {									\
+    unsigned int *pc_ = (CONTEXT)->ra;					\
+    int new_cfa_, i_, oldstyle_;					\
+    int regs_off_, fpu_save_off_;					\
+    int fpu_save_, this_cfa_;						\
+									\
+    if (pc_[1] != 0x91d02010)		/* ta 0x10 */			\
+      break;								\
+    if (pc_[0] == 0x821020d8)		/* mov NR_sigreturn, %g1 */	\
+      oldstyle_ = 1;							\
+    else if (pc_[0] == 0x82102065)	/* mov NR_rt_sigreturn, %g1 */	\
+      oldstyle_ = 0;							\
+    else								\
+      break;								\
+    if (oldstyle_)							\
+      {									\
+        regs_off_ = 96;							\
+        fpu_save_off_ = regs_off_ + (4 * 4) + (16 * 4);			\
+      }									\
+    else								\
+      {									\
+        regs_off_ = 96 + 128;						\
+        fpu_save_off_ = regs_off_ + (4 * 4) + (16 * 4) + (2 * 4);	\
+      }									\
+    this_cfa_ = (int) (CONTEXT)->cfa;					\
+    new_cfa_ = *(int *)(((CONTEXT)->cfa) + (regs_off_+(4*4)+(14 * 4)));	\
+    fpu_save_ = *(int *)((this_cfa_) + (fpu_save_off_));		\
+    (FS)->cfa_how = CFA_REG_OFFSET;					\
+    (FS)->cfa_reg = 14;							\
+    (FS)->cfa_offset = new_cfa_ - (int) (CONTEXT)->cfa;			\
+    for (i_ = 1; i_ < 16; ++i_)						\
+      {									\
+        if (i_ == 14)							\
+          continue;							\
+	(FS)->regs.reg[i_].how = REG_SAVED_OFFSET;			\
+	(FS)->regs.reg[i_].loc.offset =					\
+	   this_cfa_ + (regs_off_+(4 * 4)+(i_ * 4)) - new_cfa_;		\
+      }									\
+    for (i_ = 0; i_ < 16; ++i_)						\
+      {									\
+	(FS)->regs.reg[i_ + 16].how = REG_SAVED_OFFSET;			\
+	(FS)->regs.reg[i_ + 16].loc.offset =				\
+	  this_cfa_ + (i_ * 4) - new_cfa_;				\
+      }									\
+    if (fpu_save_)							\
+      {									\
+	for (i_ = 0; i_ < 32; ++i_)					\
+	  {								\
+	    (FS)->regs.reg[i_ + 32].how = REG_SAVED_OFFSET;		\
+	    (FS)->regs.reg[i_ + 32].loc.offset =			\
+	      (fpu_save_ + (i_ * 4)) - new_cfa_;			\
+	  }								\
+      }									\
+    /* Stick return address into %g0, same trick Alpha uses.  */	\
+    (FS)->regs.reg[0].how = REG_SAVED_OFFSET;				\
+    (FS)->regs.reg[0].loc.offset = this_cfa_+(regs_off_+4)-new_cfa_;	\
+    (FS)->retaddr_column = 0;						\
+    goto SUCCESS;							\
+  } while (0)

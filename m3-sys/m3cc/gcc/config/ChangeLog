@@ -1,30 +1,18 @@
-2002-02-20  Release Manager
+2002-07-25  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1.1 Released.
 
-2002-02-20  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1 Released.
 
-2001-12-20  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.3 Released.
+	* GCC 3.1 Released.
 
-2001-10-23  Release Manager
+2001-10-07  Joseph S. Myers  <jsm28@cam.ac.uk>
 
-	* GCC 3.0.2 Released.
-
-2001-08-19  Release Manager
-
-	* GCC 3.0.1 Released.
-
-2001-08-19  Release Manager
-
-	* GCC 3.0.1 Released.
-
-20010617 Release Manager
-
-        * GCC 3.0 Released.
+	* acinclude.m4: Fix spelling error of "separate" as "seperate".
 
 2001-05-22  Jason Merrill  <jason_merrill@redhat.com>
 

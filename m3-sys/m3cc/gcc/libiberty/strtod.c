@@ -1,5 +1,5 @@
 /* Implementation of strtod for systems with atof.
-   Copyright (C) 1991, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1995, 2002 Free Software Foundation, Inc.
 
 This file is part of the libiberty library.  This library is free
 software; you can redistribute it and/or modify it under the
@@ -21,6 +21,21 @@ compiled with a GNU compiler to produce an executable, this does not cause
 the resulting executable to be covered by the GNU General Public License.
 This exception does not however invalidate any other reasons why
 the executable file might be covered by the GNU General Public License. */
+
+/*
+
+@deftypefn Supplemental double strtod (const char *@var{string}, char **@var{endptr})
+
+This ISO C function converts the initial portion of @var{string} to a
+@code{double}.  If @var{endptr} is not @code{NULL}, a pointer to the
+character after the last character used in the conversion is stored in
+the location referenced by @var{endptr}.  If no conversion is
+performed, zero is returned and the value of @var{string} is stored in
+the location referenced by @var{endptr}.
+
+@end deftypefn
+
+*/
 
 #include "ansidecl.h"
 #include "safe-ctype.h"
@@ -60,7 +75,7 @@ strtod (str, ptr)
 	  && (p[6] == 't' || p[6] == 'T')
 	  && (p[7] == 'y' || p[7] == 'Y'))
 	{
-	  *ptr = p + 7;
+	  *ptr = p + 8;
 	  return atof (str);
 	}
       else

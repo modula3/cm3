@@ -35,7 +35,7 @@ Boston, MA 02111-1307, USA.  */
 
 static int  pop_data_area          PARAMS ((v850_data_area));
 static int  push_data_area         PARAMS ((v850_data_area));
-static int  mark_current_function_as_interrupt PARAMS ((void));
+static void mark_current_function_as_interrupt PARAMS ((void));
 
 /* Push a data area onto the stack.  */
 
@@ -85,27 +85,27 @@ pop_data_area (data_area)
 
 /* Set the machine specific 'interrupt' attribute on the current function.  */
 
-static int
+static void
 mark_current_function_as_interrupt ()
 {
   tree name;
   
   if (current_function_decl ==  NULL_TREE)
     {
-      warning ("Cannot set interrupt attribute: no current function");
-      return 0;
+      warning ("cannot set interrupt attribute: no current function");
+      return;
     }
 
   name = get_identifier ("interrupt");
 
   if (name == NULL_TREE || TREE_CODE (name) != IDENTIFIER_NODE)
     {
-      warning ("Cannot set interrupt attribute: no such identifier");
-      return 0;
+      warning ("cannot set interrupt attribute: no such identifier");
+      return;
     }
   
-  return valid_machine_attribute
-    (name, NULL_TREE, current_function_decl, NULL_TREE);
+  decl_attributes (&current_function_decl,
+		   tree_cons (name, NULL_TREE, NULL_TREE), 0);
 }
 
 
@@ -163,7 +163,7 @@ ghs_pragma_section (pfile)
       else if (streq (sect, "zbss"))    kind = GHS_SECTION_KIND_ZDATA;
       else
 	{
-	  warning ("unrecognised section name \"%s\"", sect);
+	  warning ("unrecognized section name \"%s\"", sect);
 	  return;
 	}
       

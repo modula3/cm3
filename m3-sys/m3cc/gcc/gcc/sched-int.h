@@ -3,21 +3,21 @@
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000, 2001 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 2, or (at your option) any
-later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to the Free
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
 /* Forward declaration.  */
@@ -68,19 +68,20 @@ struct deps
      too large.  */
   rtx last_pending_memory_flush;
 
-  /* The last function call we have seen.  All hard regs, and, of course,
-     the last function call, must depend on this.  */
+  /* A list of the last function calls we have seen.  We use a list to
+     represent last function calls from multiple predecessor blocks.
+     Used to prevent register lifetimes from expanding unnecessarily.  */
   rtx last_function_call;
+
+  /* A list of insns which use a pseudo register that does not already
+     cross a call.  We create dependencies between each of those insn
+     and the next call insn, to ensure that they won't cross a call after
+     scheduling is done.  */
+  rtx sched_before_next_call;
 
   /* Used to keep post-call psuedo/hard reg movements together with
      the call.  */
-  int in_post_call_group_p;
-
-  /* The LOG_LINKS field of this is a list of insns which use a pseudo
-     register that does not already cross a call.  We create
-     dependencies between each of those insn and the next call insn,
-     to ensure that they won't cross a call after scheduling is done.  */
-  rtx sched_before_next_call;
+  bool in_post_call_group_p;
 
   /* The maximum register number for the following arrays.  Before reload
      this is max_reg_num; after reload it is FIRST_PSEUDO_REGISTER.  */
@@ -95,6 +96,8 @@ struct deps
       rtx uses;
       rtx sets;
       rtx clobbers;
+      int uses_length;
+      int clobbers_length;
     } *reg_last;
 
   /* Element N is set for each register that has any non-zero element
@@ -146,7 +149,12 @@ struct sched_info
   rtx head, tail;
 
   /* If nonzero, enables an additional sanity check in schedule_block.  */
-  int queue_must_finish_empty;
+  unsigned int queue_must_finish_empty:1;
+  /* Nonzero if we should use cselib for better alias analysis.  This
+     must be 0 if the dependency information is used after sched_analyze
+     has completed, e.g. if we're using it to initialize state for successor
+     blocks in region scheduling.  */
+  unsigned int use_cselib:1;
 };
 
 extern struct sched_info *current_sched_info;
@@ -157,7 +165,7 @@ extern struct sched_info *current_sched_info;
 struct haifa_insn_data
 {
   /* A list of insns which depend on the instruction.  Unlike LOG_LINKS,
-     it represents forward dependancies.  */
+     it represents forward dependencies.  */
   rtx depend;
 
   /* The line number note in effect for each insn.  For line number
@@ -198,7 +206,7 @@ struct haifa_insn_data
   /* Some insns (e.g. call) are not allowed to move across blocks.  */
   unsigned int cant_move : 1;
 
-  /* Set if there's DEF-USE dependance between some speculatively
+  /* Set if there's DEF-USE dependence between some speculatively
      moved load insn and this one.  */
   unsigned int fed_by_spec_load : 1;
   unsigned int is_load_insn : 1;
@@ -269,7 +277,6 @@ extern void free_deps PARAMS ((struct deps *));
 extern void init_deps_global PARAMS ((void));
 extern void finish_deps_global PARAMS ((void));
 extern void compute_forward_dependences PARAMS ((rtx, rtx));
-extern int find_insn_mem_list PARAMS ((rtx, rtx, rtx, rtx));
 extern rtx find_insn_list PARAMS ((rtx, rtx));
 extern void init_dependency_caches PARAMS ((int));
 extern void free_dependency_caches PARAMS ((void));
@@ -287,6 +294,7 @@ extern void rm_other_notes PARAMS ((rtx, rtx));
 extern int insn_issue_delay PARAMS ((rtx));
 extern int set_priorities PARAMS ((rtx, rtx));
 
+extern rtx sched_emit_insn PARAMS ((rtx));
 extern void schedule_block PARAMS ((int, int));
 extern void sched_init PARAMS ((FILE *));
 extern void sched_finish PARAMS ((void));

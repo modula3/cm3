@@ -140,7 +140,9 @@ Boston, MA 02111-1307, USA.  */
 /* Implicit calls to library routines.  */
 
 /* Use memcpy and memset instead of bcopy and bzero.  */
+#ifndef TARGET_MEM_FUNCTIONS
 #define TARGET_MEM_FUNCTIONS
+#endif
 
 /* Miscellaneous parameters.  */
 
@@ -294,11 +296,6 @@ do {									 \
 
 
 /* Storage layout.  */
-
-/* We don't have to worry about binary compatibility with older C++ code,
-   but there is a big known bug with vtable thunks which has not been
-   fixed yet, so DON'T activate it by default.  */
-/* #define DEFAULT_VTABLE_THUNKS 1 */
 
 
 /* Otherwise, since we support weak, gthr.h erroneously tries to use

@@ -1,5 +1,5 @@
 /* Configuration for GNU C-compiler for Intel 80386 running DJGPP.
-   Copyright (C) 1988, 1996, 1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1996, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,14 +18,10 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#define __MSDOS__ 1
-
-#include "i386/xm-i386.h"
-
 /* Use semicolons to separate elements of a path.  */
 #define PATH_SEPARATOR ';'
 
-#define EXECUTABLE_SUFFIX ".exe"
+#define HOST_EXECUTABLE_SUFFIX ".exe"
 
 /* Even though we support "/", allow "\" since everybody tests both.  */
 #define DIR_SEPARATOR '/'
@@ -34,7 +30,7 @@ Boston, MA 02111-1307, USA.  */
 /* Allow test for DOS drive names.  */
 #define HAVE_DOS_BASED_FILE_SYSTEM
 
-/* System dependant initialization for collect2
+/* System dependent initialization for collect2
    to tell system() to act like Unix.  */
 #define COLLECT2_HOST_INITIALIZATION \
   do { __system_flags |= (__system_allow_multiple_cmds			\
@@ -72,42 +68,30 @@ Boston, MA 02111-1307, USA.  */
            to try and figure out what's wrong.  */ \
         char *djgpp = getenv ("DJGPP"); \
         if (djgpp == NULL) \
-          fatal ("Environment variable DJGPP not defined."); \
+          fatal ("environment variable DJGPP not defined"); \
         else if (access (djgpp, R_OK) == 0) \
-          fatal ("Environment variable DJGPP points to missing file '%s'.", \
+          fatal ("environment variable DJGPP points to missing file '%s'", \
                  djgpp); \
         else \
-          fatal ("Environment variable DJGPP points to corrupt file '%s'.", \
+          fatal ("environment variable DJGPP points to corrupt file '%s'", \
                   djgpp); \
       } \
     standard_exec_prefix = update_path (standard_exec_prefix, NULL); \
     standard_bindir_prefix = update_path (standard_bindir_prefix, NULL); \
     standard_startfile_prefix = update_path (standard_startfile_prefix, NULL); \
-    md_exec_prefix = update_path (md_exec_prefix, NULL); \
   } while (0)
 
-/* Canonicalize paths containing '/dev/env/', especially those in
-   prefix.c.  */
-#define UPDATE_PATH_HOST_CANONICALIZE(PATH, KEY) \
-  do { \
-    if (strncmp (PATH, "/dev/env/", sizeof("/dev/env/") - 1) == 0) \
-      { \
-        static char *djdir; \
-        static int djdir_len; \
-        static char fixed_path[FILENAME_MAX + 1]; \
-        char *new_path; \
-        /* The default prefixes all use '/dev/env/DJDIR', so optimize \
-           for this. All other uses of '/dev/env/' go through \
-           libc's canonicalization function.  */ \
-        _fixpath (PATH, fixed_path); \
-        /* _fixpath removes any trailing '/', so add it back.  */ \
-        strcat (fixed_path, "/"); \
-        new_path = xstrdup (fixed_path); \
-        PATH = new_path; \
-        return PATH; \
-      } \
-    /* If DIR_SEPARATOR_2 isn't in PATH, nothing more need be done.  */ \
-    if (strchr (PATH, DIR_SEPARATOR_2) == NULL) \
-      return PATH; \
-  } while (0)
-
+/* Canonicalize paths containing '/dev/env/'; used in prefix.c.
+   _fixpath is a djgpp-specific function to canonicalize a path.
+   "/dev/env/DJDIR" evaluates to "c:/djgpp" if DJDIR is "c:/djgpp" for
+   example.  It removes any trailing '/', so add it back.  */
+/* We cannot free PATH below as it can point to string constant  */
+#define UPDATE_PATH_HOST_CANONICALIZE(PATH) \
+  if (memcmp ((PATH), "/dev/env/", sizeof("/dev/env/") - 1) == 0) \
+    {						\
+      static char fixed_path[FILENAME_MAX + 1];	\
+						\
+      _fixpath ((PATH), fixed_path);		\
+      strcat (fixed_path, "/");			\
+      (PATH) = xstrdup (fixed_path);		\
+    } 

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for BeOS.
-   Copyright (C) 1997, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1997, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Fred Fish (fnf@cygnus.com), based on aix41.h
    from David Edelsohn (edelsohn@npac.syr.edu).
 
@@ -20,6 +20,8 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#undef  TARGET_VERSION
+#define TARGET_VERSION fprintf (stderr, " (BeOS/PowerPC)");
 
 /* Enable AIX XL compiler calling convention breakage compatibility.  */
 #define MASK_XL_CALL		0x40000000
@@ -51,7 +53,7 @@ Boston, MA 02111-1307, USA.  */
    relatively low default stack size of 256K with no way to expand it.
    So anything we compile for the BeOS target should not use the
    builtin alloca.  This also has the unwanted side effect of
-   disabling all builtin functions though. */
+   disabling all builtin functions though.  */
 
 #undef CC1_SPEC
 #define CC1_SPEC "%{!fbuiltin: -fno-builtin}"
@@ -84,7 +86,7 @@ Boston, MA 02111-1307, USA.  */
    On BeOS the ld executable is actually a linker front end that first runs
    the GNU linker with the -r option to generate a relocatable XCOFF output
    file, and then runs Metrowork's linker (mwld) to generate a fully linked
-   executable. */
+   executable.  */
 
 #undef LIB_SPEC
 #define LIB_SPEC ""
@@ -96,11 +98,17 @@ Boston, MA 02111-1307, USA.  */
 #define STARTFILE_SPEC ""
 
 /* Text to write out after a CALL that may be replaced by glue code by
-   the loader. */
+   the loader.  */
 
 #undef RS6000_CALL_GLUE
 #define RS6000_CALL_GLUE "cror 15,15,15"
 
-/* Struct alignments are done on 4 byte boundaries for all types. */
+/* Struct alignments are done on 4 byte boundaries for all types.  */
 #undef BIGGEST_FIELD_ALIGNMENT
 #define BIGGEST_FIELD_ALIGNMENT 32
+
+/* STANDARD_INCLUDE_DIR is the equivalent of "/usr/include" on UNIX.  */
+#define STANDARD_INCLUDE_DIR	"/boot/develop/headers/posix"
+
+/* SYSTEM_INCLUDE_DIR is the location for system specific, non-POSIX headers.  */
+#define SYSTEM_INCLUDE_DIR	"/boot/develop/headers/be"

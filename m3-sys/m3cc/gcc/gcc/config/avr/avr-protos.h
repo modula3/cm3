@@ -35,8 +35,6 @@ extern int    frame_pointer_required_p          PARAMS ((void));
 extern void   asm_globalize_label         PARAMS ((FILE *file, const char *name));
 extern void   order_regs_for_local_alloc  PARAMS ((void));
 extern int    initial_elimination_offset  PARAMS ((int from, int to));
-extern void   function_prologue           PARAMS ((FILE *file, int size));
-extern void   function_epilogue           PARAMS ((FILE *file, int size));
 extern void   progmem_section             PARAMS ((void));
 extern int    mask_one_bit_p              PARAMS ((HOST_WIDE_INT mask));
 extern void   gas_output_limited_string PARAMS ((FILE *file, const char *str));
@@ -47,15 +45,6 @@ extern void   asm_output_external          PARAMS ((FILE *file, tree decl,
 						   char *name));
 extern void   unique_section               PARAMS ((tree decl, int reloc));
 extern void   encode_section_info          PARAMS ((tree decl));
-extern void   asm_output_section_name      PARAMS ((FILE *file, tree decl,
-						   const char *name,
-						   int reloc));
-extern int    valid_machine_type_attribute PARAMS ((tree type, tree attributes,
-						   tree identifier,
-						   tree args));
-extern int    valid_machine_decl_attribute PARAMS ((tree decl, tree attributes,
-						   tree attr, tree args));
-
 extern int    avr_progmem_p                PARAMS ((tree decl));
 
 
@@ -126,9 +115,6 @@ extern const char * output_reload_insisf PARAMS ((rtx insn, rtx *operands,
 						int *len));
 extern int    default_rtx_costs      PARAMS ((rtx X, RTX_CODE code,
 					     RTX_CODE outer_code));
-extern void   asm_output_char        PARAMS ((FILE *file, rtx value));
-extern void   asm_output_short       PARAMS ((FILE *file, rtx value));
-extern void   asm_output_byte        PARAMS ((FILE *file, int value));
 extern enum reg_class secondary_input_reload_class PARAMS ((enum reg_class,
 							   enum machine_mode,
 							   rtx));

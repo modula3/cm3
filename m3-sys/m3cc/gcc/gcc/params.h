@@ -2,22 +2,22 @@
    Copyright (C) 2001 Free Software Foundation, Inc.
    Written by Mark Mitchell <mark@codesourcery.com>.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.
 
 */
 
@@ -32,8 +32,8 @@ Boston, MA 02111-1307, USA.
    Since their values can be set on the command-line, these parameters
    should not be used for non-dynamic memory allocation.  */
 
-#ifndef PARAMS_H
-#define PARAMS_H
+#ifndef GCC_PARAMS_H
+#define GCC_PARAMS_H
 
 /* No parameter shall have this value.  */
 
@@ -45,11 +45,11 @@ typedef struct param_info
 {
   /* The name used with the `--param <name>=<value>' switch to set this
      value.  */
-  const char *option;
+  const char *const option;
   /* The associated value.  */
   int value;
   /* A short description of the option.  */
-  const char *help;
+  const char *const help;
 } param_info;
 
 /* An array containing the compiler parameters and their current
@@ -72,8 +72,8 @@ extern void set_param_value
 
 typedef enum compiler_param
 {
-#define DEFPARAM(ENUM, OPTION, HELP, DEFAULT) \
-  ENUM,
+#define DEFPARAM(enumerator, option, msgid, default) \
+  enumerator,
 #include "params.def"
 #undef DEFPARAM  
   LAST_PARAM
@@ -90,10 +90,10 @@ typedef enum compiler_param
   PARAM_VALUE (PARAM_MAX_DELAY_SLOT_INSN_SEARCH)
 #define MAX_DELAY_SLOT_LIVE_SEARCH \
   PARAM_VALUE (PARAM_MAX_DELAY_SLOT_LIVE_SEARCH)
-#define MAX_GCSE_MEMORY \
-  ((size_t) PARAM_VALUE (PARAM_MAX_GCSE_MEMORY))
 #define MAX_PENDING_LIST_LENGTH \
   PARAM_VALUE (PARAM_MAX_PENDING_LIST_LENGTH)
-  
-
-#endif /* PARAMS_H */
+#define MAX_GCSE_MEMORY \
+  ((size_t) PARAM_VALUE (PARAM_MAX_GCSE_MEMORY))
+#define MAX_GCSE_PASSES \
+  PARAM_VALUE (PARAM_MAX_GCSE_PASSES)
+#endif /* ! GCC_PARAMS_H */

@@ -1,23 +1,24 @@
 /* This file contains the definitions and documentation for the
    tree codes used in the GNU C compiler.
-   Copyright (C) 1987, 1988, 1993, 1995, 1997, 1998, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1993, 1995, 1997, 1998, 2000, 2001
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
  
 /* The third argument can be:
@@ -49,11 +50,6 @@ DEFTREECODE (ERROR_MARK, "error_mark", 'x', 0)
    There is only one IDENTIFIER_NODE ever made for any particular name.
    Use `get_identifier' to get it (or create it, the first time).  */
 DEFTREECODE (IDENTIFIER_NODE, "identifier_node", 'x', -1)
-
-/* Used to hold information to identify an operator (or combination
-   of two operators) considered as a `noun' rather than a `verb'.
-   The first operand is encoded in the TREE_TYPE field.  */
-DEFTREECODE (OP_IDENTIFIER, "op_identifier", 'x', 2)
 
 /* Has the TREE_VALUE and TREE_PURPOSE fields.  */
 /* These nodes are made into lists by chaining through the
@@ -273,6 +269,9 @@ DEFTREECODE (REAL_CST, "real_cst", 'c', 3)
    Also there is TREE_CST_RTL.  */
 DEFTREECODE (COMPLEX_CST, "complex_cst", 'c', 3)
 
+/* Contents are in TREE_VECTOR_CST_ELTS field.  */
+DEFTREECODE (VECTOR_CST, "vector_cst", 'c', 3)     
+
 /* Contents are TREE_STRING_LENGTH and TREE_STRING_POINTER fields.
    Also there is TREE_CST_RTL.  */
 DEFTREECODE (STRING_CST, "string_cst", 'c', 3)
@@ -369,9 +368,21 @@ DEFTREECODE (INDIRECT_REF, "indirect_ref", 'r', 1)
 /* Pascal `^` on a file.  One operand, an expression for the file.  */
 DEFTREECODE (BUFFER_REF, "buffer_ref", 'r', 1)
 
-/* Array indexing in languages other than C.
+/* Array indexing.
    Operand 0 is the array; operand 1 is a (single) array index. */
 DEFTREECODE (ARRAY_REF, "array_ref", 'r', 2)
+
+/* Likewise, except that the result is a range ("slice") of the array.  The
+   starting index of the resulting array is taken from operand 1 and the size
+   of the range is taken from the type of the expression.  */
+DEFTREECODE (ARRAY_RANGE_REF, "array_range_ref", 'r', 2)
+
+/* Vtable indexing.  Carries data useful for emitting information
+   for vtable garbage collection.
+   Operand 0: an array_ref (or equivalent expression)
+   Operand 1: the vtable base (must be a var_decl)
+   Operand 2: index into vtable (must be an integer_cst).  */
+DEFTREECODE (VTABLE_REF, "vtable_ref", 'r', 3)
 
 /* Constructor: return an aggregate value made from specified components.
    In C, this is used only for structure and array initializers.
@@ -466,8 +477,8 @@ DEFTREECODE (METHOD_CALL_EXPR, "method_call_expr", 'e', 4)
 
 /* Specify a value to compute along with its corresponding cleanup.
    Operand 0 argument is an expression whose value needs a cleanup.
-   Operand 1 is an RTL_EXPR which will eventually represent that value.
-   Operand 2 is the cleanup expression for the object.
+   Operand 1 is the cleanup expression for the object.
+   Operand 2 is an RTL_EXPR which will eventually represent that value.
      The RTL_EXPR is used in this expression, which is how the expression
      manages to act on the proper value.
    The cleanup is executed by the first enclosing CLEANUP_POINT_EXPR, if
@@ -593,10 +604,6 @@ DEFTREECODE (FIX_ROUND_EXPR, "fix_round_expr", '1', 1)
 /* Conversion of an integer to a real.  */
 DEFTREECODE (FLOAT_EXPR, "float_expr", '1', 1)
 
-/* Exponentiation.  Operands may have any types;
-   constraints on value type are not known yet.  */
-DEFTREECODE (EXPON_EXPR, "expon_expr", '2', 2)
-
 /* Unary negation.  */
 DEFTREECODE (NEGATE_EXPR, "negate_expr", '1', 1)
 
@@ -615,7 +622,9 @@ DEFTREECODE (FFS_EXPR, "ffs_expr", '1', 1)
    Shift means logical shift if done on an
    unsigned type, arithmetic shift if done on a signed type.
    The second operand is the number of bits to
-   shift by; it need not be the same type as the first operand and result.  */
+   shift by; it need not be the same type as the first operand and result.
+   Note that the result is undefined if the second operand is larger
+   than the first operand's type size.  */
 DEFTREECODE (LSHIFT_EXPR, "lshift_expr", '2', 2)
 DEFTREECODE (RSHIFT_EXPR, "rshift_expr", '2', 2)
 DEFTREECODE (LROTATE_EXPR, "lrotate_expr", '2', 2)
@@ -684,6 +693,18 @@ DEFTREECODE (NOP_EXPR, "nop_expr", '1', 1)
 
 /* Value is same as argument, but guaranteed not an lvalue.  */
 DEFTREECODE (NON_LVALUE_EXPR, "non_lvalue_expr", '1', 1)
+
+/* Represents viewing something of one type as being of a second type.
+   This corresponds to an "Unchecked Conversion" in Ada and roughly to
+   the idiom *(type2 *)&X in C.  The only operand is the value to be
+   viewed as being of another type.  It is undefined if the type of the
+   input and of the expression have different sizes.
+
+   This code may also be used within the LHS of a MODIFY_EXPR, in which
+   case no actual data motion may occur.  TREE_ADDRESSABLE will be set in
+   this case and GCC must abort if it could not do the operation without
+   generating insns.  */
+DEFTREECODE (VIEW_CONVERT_EXPR, "view_convert_expr", '1', 1)
 
 /* Represents something we computed once and will use multiple times.
    First operand is that expression.  Second is the function decl

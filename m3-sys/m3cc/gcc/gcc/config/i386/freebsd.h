@@ -1,5 +1,5 @@
 /* Definitions for Intel 386 running FreeBSD with ELF format
-   Copyright (C) 1996, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1996, 2000, 2002 Free Software Foundation, Inc.
    Contributed by Eric Youngdale.
    Modified for stabs-in-ELF by H.J. Lu.
    Adapted from GNU/Linux version by John Polstra.
@@ -22,42 +22,33 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#undef TARGET_VERSION
+
+#undef  TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 FreeBSD/ELF)");
 
 /* Override the default comment-starter of "/".  */
-#undef ASM_COMMENT_START
+#undef  ASM_COMMENT_START
 #define ASM_COMMENT_START "#"
 
-#undef ASM_APP_ON
+#undef  ASM_APP_ON
 #define ASM_APP_ON "#APP\n"
 
-#undef ASM_APP_OFF
+#undef  ASM_APP_OFF
 #define ASM_APP_OFF "#NO_APP\n"
 
-#undef SET_ASM_OP
+#undef  SET_ASM_OP
 #define SET_ASM_OP	"\t.set\t"
 
-/* This is how to output an element of a case-vector that is relative.
-   This is only used for PIC code.  See comments by the `casesi' insn in
-   i386.md for an explanation of the expression this outputs. */
-#undef ASM_OUTPUT_ADDR_DIFF_ELT
-#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
-  fprintf ((FILE), "\t.long _GLOBAL_OFFSET_TABLE_+[.-%s%d]\n", LPREFIX, VALUE)
-
-/* Indicate that jump tables go in the text section.  This is
-   necessary when compiling PIC code.  */
-#define JUMP_TABLES_IN_TEXT_SECTION (flag_pic)
-
-#undef DBX_REGISTER_NUMBER
-#define DBX_REGISTER_NUMBER(n)  svr4_dbx_register_map[n]
+#undef  DBX_REGISTER_NUMBER
+#define DBX_REGISTER_NUMBER(n) \
+  (TARGET_64BIT ? dbx64_register_map[n] : svr4_dbx_register_map[n])
 
 #undef  NO_PROFILE_COUNTERS
 #define NO_PROFILE_COUNTERS
 
 /* Tell final.c that we don't need a label passed to mcount.  */
 
-#undef FUNCTION_PROFILER
+#undef  FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABELNO)  \
 {									\
   if (flag_pic)								\
@@ -68,19 +59,19 @@ Boston, MA 02111-1307, USA.  */
 
 /* Make gcc agree with <machine/ansi.h>.  */
 
-#undef SIZE_TYPE
+#undef  SIZE_TYPE
 #define SIZE_TYPE "unsigned int"
  
-#undef PTRDIFF_TYPE
+#undef  PTRDIFF_TYPE
 #define PTRDIFF_TYPE "int"
   
-#undef WCHAR_TYPE_SIZE
+#undef  WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
     
 /* Provide a STARTFILE_SPEC appropriate for FreeBSD.  Here we add
    the magical crtbegin.o file (see crtstuff.c) which provides part 
 	of the support for getting C++ file-scope static object constructed 
-	before entering `main'. */
+	before entering `main'.  */
    
 #undef	STARTFILE_SPEC
 #define STARTFILE_SPEC \
@@ -115,7 +106,7 @@ Boston, MA 02111-1307, USA.  */
    done.  */
 
 #undef	LINK_SPEC
-#define LINK_SPEC "-m elf_i386 \
+#define LINK_SPEC "\
   %{Wl,*:%*} \
   %{v:-V} \
   %{assert*} %{R*} %{rpath*} %{defsym*} \
@@ -140,3 +131,11 @@ Boston, MA 02111-1307, USA.  */
     else fprintf ((FILE), "\t.p2align %d,,%d\n", (LOG), (MAX_SKIP));	\
   }
 #endif
+
+/* Don't default to pcc-struct-return, we want to retain compatibility with
+   older gcc versions AND pcc-struct-return is nonreentrant.
+   (even though the SVR4 ABI for the i386 says that records and unions are
+   returned in memory).  */
+
+#undef  DEFAULT_PCC_STRUCT_RETURN
+#define DEFAULT_PCC_STRUCT_RETURN 0

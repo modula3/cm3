@@ -2,32 +2,22 @@
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
-
-
-#if !defined(NULL_TREE) && !defined(tree)
-typedef union union_node *_function_tree;
-#define tree _function_tree
-#endif
-#if !defined(NULL_RTX) && !defined(rtx)
-typedef struct rtx_def *_function_rtx;
-#define rtx _function_rtx
-#endif
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 struct var_refs_queue
 {
@@ -97,16 +87,20 @@ struct emit_status
   int x_last_linenum;
   const char *x_last_filename;
 
-  /* The length of the regno_pointer_align and x_regno_reg_rtx vectors.
-     Since these vectors are needed during the expansion phase when
-     the total number of registers in the function is not yet known,
-     the vectors are copied and made bigger when necessary.  */
+  /* The length of the regno_pointer_align, regno_decl, and x_regno_reg_rtx
+     vectors.  Since these vectors are needed during the expansion phase when
+     the total number of registers in the function is not yet known, the
+     vectors are copied and made bigger when necessary.  */
   int regno_pointer_align_length;
 
   /* Indexed by pseudo register number, if nonzero gives the known alignment
      for that pseudo (if REG_POINTER is set in x_regno_reg_rtx).
      Allocated in parallel with x_regno_reg_rtx.  */
   unsigned char *regno_pointer_align;
+
+  /* Indexed by pseudo register number, if nonzero gives the decl
+     corresponding to that register.  */
+  tree *regno_decl;
 
   /* Indexed by pseudo register number, gives the rtx for that pseudo.
      Allocated in parallel with regno_pointer_align.  */
@@ -120,6 +114,7 @@ struct emit_status
 #define seq_stack (cfun->emit->sequence_stack)
 
 #define REGNO_POINTER_ALIGN(REGNO) (cfun->emit->regno_pointer_align[REGNO])
+#define REGNO_DECL(REGNO) (cfun->emit->regno_decl[REGNO])
 
 struct expr_status
 {
@@ -178,9 +173,6 @@ struct expr_status
 
 struct function
 {
-  struct function *next_global;
-  struct function *next;
-
   struct eh_status *eh;
   struct stmt_status *stmt;
   struct expr_status *expr;
@@ -192,8 +184,11 @@ struct function
   /* Name of this function.  */
   const char *name;
 
-  /* Points to the FUNCTION_DECL of this function. */
+  /* Points to the FUNCTION_DECL of this function.  */
   tree decl;
+
+  /* Function containing this function, if any.  */
+  struct function *outer;
 
   /* Number of bytes of args popped by function being compiled on its return.
      Zero if no bytes are to be popped.
@@ -234,6 +229,10 @@ struct function
   /* Language-specific reason why the current function cannot be made
      inline.  */
   const char *cannot_inline;
+
+  /* Opaque pointer used by get_hard_reg_initial_val and
+     has_hard_reg_initial_val (see integrate.[hc]).  */
+  struct initial_value_struct *hard_reg_initial_vals;
 
   /* Number of function calls seen so far in current function.  */
   int x_function_call_count;
@@ -325,7 +324,7 @@ struct function
   rtx x_last_parm_insn;
 
   /* 1 + last pseudo register number possibly used for loading a copy
-     of a parameter of this function. */
+     of a parameter of this function.  */
   unsigned int x_max_parm_reg;
 
   /* Vector indexed by REGNO, containing location on stack in which
@@ -364,6 +363,9 @@ struct function
   rtx inl_last_parm_insn;
   /* Highest label number in current function.  */
   int inl_max_label_num;
+
+  /* Profile label number.  */
+  int profile_label_no;
 
   /* For md files.  */
 
@@ -435,8 +437,8 @@ struct function
      generated.  */
   unsigned int instrument_entry_exit : 1;
 
-  /* Nonzero if memory access checking be enabled in the current function.  */
-  unsigned int check_memory_usage : 1;
+  /* Nonzero if profiling code should be generated.  */
+  unsigned int profile : 1;
 
   /* Nonzero if stack limit checking should be enabled in the current
      function.  */
@@ -473,13 +475,16 @@ struct function
 
   /* Nonzero if the current function needs an lsda for exception handling.  */
   unsigned int uses_eh_lsda : 1;
+
+  /* Nonzero if code to initialize arg_pointer_save_area has been emited.  */
+  unsigned int arg_pointer_save_area_init : 1;
 };
 
 /* The function currently being compiled.  */
 extern struct function *cfun;
 
-/* A list of all functions we have compiled so far.  */
-extern struct function *all_functions;
+/* Nonzero if we've already converted virtual regs to hard regs.  */
+extern int virtuals_instantiated;
 
 /* For backward compatibility... eventually these should all go away.  */
 #define current_function_name (cfun->name)
@@ -505,7 +510,8 @@ extern struct function *all_functions;
 #define current_function_internal_arg_pointer (cfun->internal_arg_pointer)
 #define current_function_return_rtx (cfun->return_rtx)
 #define current_function_instrument_entry_exit (cfun->instrument_entry_exit)
-#define current_function_check_memory_usage (cfun->check_memory_usage)
+#define current_function_profile (cfun->profile)
+#define current_function_profile_label_no (cfun->profile_label_no)
 #define current_function_limit_stack (cfun->limit_stack)
 #define current_function_uses_pic_offset_table (cfun->uses_pic_offset_table)
 #define current_function_uses_const_pool (cfun->uses_const_pool)
@@ -545,9 +551,6 @@ extern tree inline_function_decl;
 /* Given a function decl for a containing function,
    return the `struct function' for it.  */
 struct function *find_function_data PARAMS ((tree));
-
-/* Pointer to chain of `struct function' for containing functions.  */
-extern struct function *outer_function_chain;
 
 /* Set NOTE_BLOCK for each block note in the current function.  */
 extern void identify_blocks PARAMS ((void));
@@ -602,15 +605,9 @@ extern void clobber_return_register	PARAMS ((void));
 extern void use_return_register		PARAMS ((void));
 #endif
 
+extern rtx get_arg_pointer_save_area	PARAMS ((struct function *));
+
 extern void init_virtual_regs		PARAMS ((struct emit_status *));
 
 /* Called once, at initialization, to initialize function.c.  */
 extern void init_function_once          PARAMS ((void));
-
-#ifdef rtx
-#undef rtx
-#endif
-
-#ifdef tree
-#undef tree
-#endif

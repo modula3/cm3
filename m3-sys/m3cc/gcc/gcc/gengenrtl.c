@@ -1,22 +1,22 @@
 /* Generate code to allocate RTL structures.
    Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 #include "hconfig.h"
@@ -71,19 +71,19 @@ Boston, MA 02111-1307, USA.  */
 #endif /* REAL_WIDTH */
 
 #if REAL_WIDTH == 1
-# define CONST_DOUBLE_FORMAT	"e0ww"
+# define CONST_DOUBLE_FORMAT	"0ww"
 #else
 # if REAL_WIDTH == 2
-#  define CONST_DOUBLE_FORMAT	"e0ww"
+#  define CONST_DOUBLE_FORMAT	"0ww"
 # else
 #  if REAL_WIDTH == 3
-#   define CONST_DOUBLE_FORMAT	"e0www"
+#   define CONST_DOUBLE_FORMAT	"0www"
 #  else
 #   if REAL_WIDTH == 4
-#    define CONST_DOUBLE_FORMAT	"e0wwww"
+#    define CONST_DOUBLE_FORMAT	"0wwww"
 #   else
 #    if REAL_WIDTH == 5
-#     define CONST_DOUBLE_FORMAT	"e0wwwww"
+#     define CONST_DOUBLE_FORMAT	"0wwwww"
 #    else
 #     define CONST_DOUBLE_FORMAT /* nothing - will cause syntax error */
 #    endif
@@ -95,17 +95,17 @@ Boston, MA 02111-1307, USA.  */
 
 struct rtx_definition 
 {
-  const char *enumname, *name, *format;
+  const char *const enumname, *const name, *const format;
 };
 
-#define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS) { STRINGIFY(ENUM), NAME, FORMAT },
+#define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS) { STRINGX(ENUM), NAME, FORMAT },
 
-struct rtx_definition defs[] = 
+static const struct rtx_definition defs[] = 
 {  
 #include "rtl.def"		/* rtl expressions are documented here */
 };
 
-const char *formats[NUM_RTX_CODE];
+static const char *formats[NUM_RTX_CODE];
 
 static const char *type_from_format	PARAMS ((int));
 static const char *accessor_from_format	PARAMS ((int));
@@ -208,10 +208,11 @@ special_rtx (idx)
   return (strcmp (defs[idx].enumname, "CONST_INT") == 0
 	  || strcmp (defs[idx].enumname, "CONST_DOUBLE") == 0
 	  || strcmp (defs[idx].enumname, "REG") == 0
+	  || strcmp (defs[idx].enumname, "SUBREG") == 0
 	  || strcmp (defs[idx].enumname, "MEM") == 0);
 }
 
-/* Place a list of all format specifiers we use into the array FORMAT. */
+/* Place a list of all format specifiers we use into the array FORMAT.  */
 
 static void
 find_formats ()
@@ -351,7 +352,10 @@ genheader ()
 {
   int i;
   const char **fmt;
-  
+
+  puts ("#ifndef GCC_GENRTL_H");
+  puts ("#define GCC_GENRTL_H\n");
+
   for (fmt = formats; *fmt; ++fmt)
     gendecl (*fmt);
 
@@ -360,6 +364,8 @@ genheader ()
   for (i = 0; i < NUM_RTX_CODE; i++)
     if (! special_format (defs[i].format))
       genmacro (i);
+
+  puts ("\n#endif /* GCC_GENRTL_H */");
 }
 
 /* Generate the text of the code file we write, genrtl.c.  */
@@ -384,24 +390,6 @@ gencode ()
     gendef (*fmt);
 }
 
-#if defined(USE_C_ALLOCA)
-PTR
-xmalloc (nbytes)
-  size_t nbytes;
-{
-  register PTR tmp = (PTR) malloc (nbytes);
-
-  if (!tmp)
-    {
-      fprintf (stderr, "can't allocate %d bytes (out of virtual memory)\n",
-	       nbytes);
-      exit (FATAL_EXIT_CODE);
-    }
-
-  return tmp;
-}
-#endif /* USE_C_ALLOCA */
-
 /* This is the main program.  We accept only one argument, "-h", which
    says we are writing the genrtl.h file.  Otherwise we are writing the
    genrtl.c file.  */
@@ -420,6 +408,8 @@ main (argc, argv)
   else
     gencode ();
 
-  fflush (stdout);
-  return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
+  if (ferror (stdout) || fflush (stdout) || fclose (stdout))
+    return FATAL_EXIT_CODE;
+
+  return SUCCESS_EXIT_CODE;
 }
