@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Tue Feb 25 16:15:24 1997
@@ -15,11 +16,14 @@
  * Update Count    : 3
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobjgen/src/SOxIntfPklCode.m3,v $
- * $Date: 2001-12-02 13:15:54 $
+ * $Date: 2001-12-03 17:23:37 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
+ * Blair MacIntyre's sharedobjgen package
+ *
  * Revision 1.1  1997/05/25 20:27:50  bm
  * Pickling code for SharedObjects
  *

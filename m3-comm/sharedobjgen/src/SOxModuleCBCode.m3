@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Tobias Hoellerer (htobias)
  * Created On      : Fri Nov 10 17:37:04 EST 1995
@@ -15,11 +16,14 @@
  * Update Count    : 44
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobjgen/src/SOxModuleCBCode.m3,v $
- * $Date: 2001-12-02 13:15:54 $
+ * $Date: 2001-12-03 17:23:37 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
+ * Blair MacIntyre's sharedobjgen package
+ *
  * Revision 1.5  1997/10/22 14:45:12  bm
  * Bug fix.  Naming conflicts.
  *
