@@ -94,7 +94,9 @@ CONST
    (* SUN3      *)  "SunOS",
    (* SUN386    *)  "SunOS",
    (* UMAX      *)  "Unix",
-   (* VAX       *)  "Ultrix"
+   (* VAX       *)  "Ultrix",
+   (* FreeBSD3  *)  "FreeBSD",
+   (* FreeBSD4  *)  "FreeBSD"
   };
 
 CONST
@@ -124,7 +126,9 @@ CONST
    (* SUN3      *)  "sparc3",
    (* SUN386    *)  "i386",
    (* UMAX      *)  "m68K",
-   (* VAX       *)  "vax"
+   (* VAX       *)  "vax",
+   (* FreeBSD3  *)  "i486",
+   (* FreeBSD4  *)  "i486"
   };
 
 PROCEDURE InitUserName () =
