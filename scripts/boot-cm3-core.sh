@@ -22,7 +22,7 @@ if [ -z "$1" ] ; then
   exit 1
 fi
 CROSS_TARGET=$1
-BUILDARGS='-DM3_BOOTSTRAP=TRUE -DBIN_USE=${ROOT}/m3-sys/m3cc/${TARGET}-${CROSS_TARGET}'
+BUILDARGS='-DM3_BOOTSTRAP=TRUE -DBIN_USE=${ROOT}/m3-sys/m3cc/${TARGET}-${CROSS_TARGET} -keep'
 M3CONFIG=${ROOT}/m3-sys/cm3/src/config/${CROSS_TARGET}
 export M3CONFIG
 . "$ROOT/scripts/pkginfo.sh"
