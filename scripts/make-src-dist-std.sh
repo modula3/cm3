@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-std.sh,v 1.1 2001-02-16 17:13:53 wagner Exp $
+# $Id: make-src-dist-std.sh,v 1.2 2001-03-07 15:54:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -35,6 +35,7 @@ PKGS=`pkgpath ${P}`
 #echo ${PKGS}
 cd "${ROOT}" || exit 1
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts ${PKGS} > .tar-include
+/bin/ls -1d compat-quake >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 echo "building exclude list..."
 find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \

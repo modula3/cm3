@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-sys.sh,v 1.2 2001-03-01 21:29:35 wagner Exp $
+# $Id: make-src-dist-sys.sh,v 1.3 2001-03-07 15:54:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -38,6 +38,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d m3-sys/m3quake m3-sys/m3scanner m3-sys/scripts >> .tar-include
 /bin/ls -1d m3-sys/m3staloneback m3-sys/m3tools m3-sys/mklib >> .tar-include
 /bin/ls -1d m3-libs/m3core m3-libs/libm3 >> .tar-include
+/bin/ls -1d compat-quake >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 echo "building exclude list..."
 find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
