@@ -9,7 +9,7 @@
 UNSAFE MODULE M3ID;
 
 IMPORT Cstring, Ctypes, Text, Word;
-IMPORT M3Buf;
+IMPORT M3Buf, IO;
 
 CONST
   MaxLength   = 8192 - BYTESIZE(ADDRESS) (* allocator goo *);
@@ -50,8 +50,11 @@ PROCEDURE Add (x: TEXT;  class: [0..255]): T =
   VAR
     t   : T;
     len := Text.Length (x);
-    buf : ARRAY [0..127] OF CHAR;
+    buf : ARRAY [0..1024] OF CHAR;
   BEGIN
+    IF len > NUMBER(buf) THEN
+      IO.Put(x);
+    END;
     <*ASSERT len <= NUMBER (buf) *>
     Text.SetChars (buf, x);
     t := FromStr (buf, len);
