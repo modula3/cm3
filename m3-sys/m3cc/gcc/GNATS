@@ -1,21 +1,23 @@
 
-                              gccbug and gnatsweb
+                      Submitting Bug Reports using GNATS
 
-   GNATS  is the GNU bug tracking system, and it is now used to track GCC
-   bug  reports, as well. Before submitting a bug report, please read the
-   [1]general instructions.
+gnatsweb and gccbug
 
-   The preferred way of submitting a bug report is by means of the gccbug
-   program  that  is automatically installed with current versions of GCC
-   and submits the bug report by e-mail.
+   GNATS,  the GNU bug tracking system, is used to track GCC bug reports.
+   Before   submitting   a   bug   report,  please  read  the  [1]general
+   instructions.
 
-   If  this  is  not possible, please use the [2]gnatsweb interface. Make
-   sure  you  include  an  e-mail  address, so we can inform you when the
-   status of your report changes.
+   The  preferred  way  to  submit  a  bug  report  is  by  means  of the
+   [2]gnatsweb  interface. Make sure you include an e-mail address, so we
+   can inform you when the status of your report changes.
 
-   Both techniques use the same bug database.
+   Another  way  is  to  use  the  gccbug  program  that is automatically
+   installed  with  current versions of GCC, which submits the bug report
+   by e-mail.
 
-                             Filling out a report
+   Both techniques use the same GNATS bug database.
+
+Filling out a report
 
    The  bug  report  form  provides  a  number  of fields; you'll need to
    fill-out  most  of  those  (as  indicated below) to provide a complete

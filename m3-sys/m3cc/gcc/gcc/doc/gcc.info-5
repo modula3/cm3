@@ -726,15 +726,14 @@ libraries and for parts of the compiler:
      system directories come after.
 
      If a standard system include directory, or a directory specified
-     with `-isystem', is also specified with `-I', it will be searched
-     only in the position requested by `-I'.  Also, it will not be
-     considered a system include directory.  If that directory really
-     does contain system headers, there is a good chance that they will
-     break.  For instance, if GCC's installation procedure edited the
-     headers in `/usr/include' to fix bugs, `-I/usr/include' will cause
-     the original, buggy headers to be found instead of the corrected
-     ones.  GCC will issue a warning when a system include directory is
-     hidden in this way.
+     with `-isystem', is also specified with `-I', the `-I' option will
+     be ignored.  The directory will still be searched but as a system
+     directory at its normal position in the system include chain.
+     This is to ensure that GCC's procedure to fix buggy system headers
+     and the ordering for the include_next directive are not
+     inadvertantly changed.  If you really need to change the search
+     order for system directories, use the `-nostdinc' and/or
+     `-isystem' options.
 
 `-I-'
      Any directories you specify with `-I' options before the `-I-'

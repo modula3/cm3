@@ -712,11 +712,21 @@ in use.
 
    You can add to this list with the `-IDIR' command line option.  All
 the directories named by `-I' are searched, in left-to-right order,
-_before_ the default directories.  You can also prevent GCC from
-searching any of the default directories with the `-nostdinc' option.
-This is useful when you are compiling an operating system kernel or
-some other program that does not use the standard C library facilities,
-or the standard C library itself.
+_before_ the default directories.  The only exception is when `dir' is
+already searched by default.  In this case, the option is ignored and
+the search order for system directories remains unchanged.
+
+   Duplicate directories are removed from the quote and bracket search
+chains before the two chains are merged to make the final search chain.
+Thus, it is possible for a directory to occur twice in the final search
+chain if it was specified in both the quote and bracket chains.
+
+   You can prevent GCC from searching any of the default directories
+with the `-nostdinc' option.  This is useful when you are compiling an
+operating system kernel or some other program that does not use the
+standard C library facilities, or the standard C library itself.  `-I'
+options are not ignored as described above when `-nostdinc' is in
+effect.
 
    GCC looks for headers requested with `#include "FILE"' first in the
 directory containing the current file, then in the same places it would
@@ -724,12 +734,6 @@ have looked for a header requested with angle brackets.  For example,
 if `/usr/include/sys/stat.h' contains `#include "types.h"', GCC looks
 for `types.h' first in `/usr/include/sys', then in its usual search
 path.
-
-   If you name a search directory with `-IDIR' that is also a system
-include directory, the `-I' wins; the directory will be searched
-according to the `-I' ordering, and it will not be treated as a system
-include directory. GCC will warn you when a system include directory is
-hidden in this way.
 
    `#line' (*note Line Control::) does not change GCC's idea of the
 directory containing the current file.
@@ -948,8 +952,8 @@ in that directory will be considered system headers.
    All directories named by `-isystem' are searched _after_ all
 directories named by `-I', no matter what their order was on the
 command line.  If the same directory is named by both `-I' and
-`-isystem', `-I' wins; it is as if the `-isystem' option had never been
-specified at all. GCC warns you when this happens.
+`-isystem', the `-I' option is ignored.  GCC provides an informative
+message when this occurs if `-v' is used.
 
    There is also a directive, `#pragma GCC system_header', which tells
 GCC to consider the rest of the current include file a system header,

@@ -40,7 +40,7 @@ Introduction
 
    This manual documents how to use the GNU compilers, as well as their
 features and incompatibilities, and how to report bugs.  It corresponds
-to GCC version 3.1.  The internals of the GNU compilers, including how
+to GCC version 3.2.  The internals of the GNU compilers, including how
 to port them to new targets and some information about how to write
 front ends for new languages, are documented in a separate manual.
 *Note Introduction: (gccint)Top.
@@ -54,6 +54,7 @@ front ends for new languages, are documented in a separate manual.
 * C Extensions::    GNU extensions to the C language family.
 * C++ Extensions::  GNU extensions to the C++ language.
 * Objective-C::     GNU Objective-C runtime features.
+* Compatibility::   Binary Compatibility
 * Gcov::	    gcov: a GCC test coverage program.
 * Trouble::         If you have trouble using GCC.
 * Bugs::            How, why and where to report bugs.
@@ -245,11 +246,14 @@ information concerning the history of C that is available online, see
 
    There is no formal written standard for Objective-C.  The most
 authoritative manual is "Object-Oriented Programming and the
-Objective-C Language", available at a number of web sites;
-`http://developer.apple.com/techpubs/macosx/Cocoa/ObjectiveC/' has a
-recent version, while `http://www.toodarkpark.org/computers/objc/' is
-an older example.  `http://www.gnustep.org' includes useful information
-as well.
+Objective-C Language", available at a number of web sites
+
+   * `http://developer.apple.com/techpubs/macosx/Cocoa/ObjectiveC/' is
+     a recent version
+
+   * `http://www.toodarkpark.org/computers/objc/' is an older example
+
+   * `http://www.gnustep.org' has additional useful information
 
    *Note GNAT Reference Manual: (gnat_rm)Top, for information on
 standard conformance and compatibility of the Ada compiler.
@@ -345,7 +349,7 @@ are in the following sections.
 _Overall Options_
      *Note Options Controlling the Kind of Output: Overall Options.
           -c  -S  -E  -o FILE  -pipe  -pass-exit-codes  -x LANGUAGE 
-          -v  -###  --target-help  --help
+          -v  -###  --help  --target-help  --version
 
 _C Language Options_
      *Note Options Controlling C Dialect: C Dialect Options.
@@ -356,7 +360,7 @@ _C Language Options_
           -fallow-single-precision  -fcond-mismatch 
           -fsigned-bitfields  -fsigned-char 
           -funsigned-bitfields  -funsigned-char 
-          -fwritable-strings  -fshort-wchar
+          -fwritable-strings
 
 _C++ Language Options_
      *Note Options Controlling C++ Dialect: C++ Dialect Options.
@@ -373,7 +377,7 @@ _C++ Language Options_
           -fno-optional-diags  -fpermissive 
           -frepo  -fno-rtti  -fstats  -ftemplate-depth-N 
           -fuse-cxa-atexit  -fvtable-gc  -fno-weak  -nostdinc++ 
-          -fno-default-inline  -Wctor-dtor-privacy 
+          -fno-default-inline -Wabi -Wctor-dtor-privacy 
           -Wnon-virtual-dtor  -Wreorder 
           -Weffc++  -Wno-deprecated 
           -Wno-non-template-friend  -Wold-style-cast 
@@ -396,7 +400,7 @@ _Language Independent Options_
 _Warning Options_
      *Note Options to Request or Suppress Warnings: Warning Options.
           -fsyntax-only  -pedantic  -pedantic-errors 
-          -w  -W  -Wall  -Waggregate-return 
+          -w  -W  -Wall -Waggregate-return 
           -Wcast-align  -Wcast-qual  -Wchar-subscripts  -Wcomment 
           -Wconversion  -Wno-deprecated-declarations 
           -Wdisabled-optimization  -Wdiv-by-zero  -Werror 
@@ -407,7 +411,7 @@ _Warning Options_
           -Werror-implicit-function-declaration 
           -Wimport  -Winline 
           -Wlarger-than-LEN  -Wlong-long 
-          -Wmain  -Wmissing-braces  -Wmissing-declarations 
+          -Wmain  -Wmissing-braces 
           -Wmissing-format-attribute  -Wmissing-noreturn 
           -Wmultichar  -Wno-format-extra-args  -Wno-format-y2k 
           -Wno-import  -Wpacked  -Wpadded 
@@ -420,7 +424,8 @@ _Warning Options_
           -Wunused-value  -Wunused-variable  -Wwrite-strings
 
 _C-only Warning Options_
-          -Wbad-function-cast  -Wmissing-prototypes  -Wnested-externs 
+          -Wbad-function-cast  -Wmissing-declarations 
+          -Wmissing-prototypes  -Wnested-externs 
           -Wstrict-prototypes  -Wtraditional
 
 _Debugging Options_
@@ -431,7 +436,8 @@ _Debugging Options_
           -fdump-tree-original[-N] -fdump-tree-optimized[-N] 
           -fdump-tree-inlined[-N] 
           -fmem-report  -fpretend-float 
-          -fprofile-arcs  -ftest-coverage  -ftime-report 
+          -fprofile-arcs  -fsched-verbose=N 
+          -ftest-coverage  -ftime-report 
           -g  -gLEVEL  -gcoff  -gdwarf  -gdwarf-1  -gdwarf-1+  -gdwarf-2 
           -ggdb  -gstabs  -gstabs+  -gvms  -gxcoff  -gxcoff+ 
           -p  -pg  -print-file-name=LIBRARY  -print-libgcc-file-name 
@@ -443,6 +449,7 @@ _Optimization Options_
      *Note Options that Control Optimization: Optimize Options.
           -falign-functions=N  -falign-jumps=N 
           -falign-labels=N  -falign-loops=N  
+          -fbounds-check 
           -fbranch-probabilities  -fcaller-saves -fcprop-registers 
           -fcse-follow-jumps  -fcse-skip-blocks  -fdata-sections 
           -fdelayed-branch  -fdelete-null-pointer-checks 
@@ -451,7 +458,8 @@ _Optimization Options_
           -fgcse  -fgcse-lm  -fgcse-sm 
           -finline-functions  -finline-limit=N  -fkeep-inline-functions 
           -fkeep-static-consts  -fmerge-constants  -fmerge-all-constants 
-          -fmove-all-movables  -fno-default-inline  -fno-defer-pop 
+          -fmove-all-movables  -fno-branch-count-reg 
+          -fno-default-inline  -fno-defer-pop 
           -fno-function-cse  -fno-guess-branch-probability 
           -fno-inline  -fno-math-errno  -fno-peephole  -fno-peephole2 
           -funsafe-math-optimizations -fno-trapping-math 
@@ -460,9 +468,11 @@ _Optimization Options_
           -freduce-all-givs -fregmove  -frename-registers 
           -frerun-cse-after-loop  -frerun-loop-opt 
           -fschedule-insns  -fschedule-insns2 
+          -fno-sched-interblock  -fno-sched-spec 
+          -fsched-spec-load  -fsched-spec-load-dangerous 
           -fsingle-precision-constant  -fssa -fssa-ccp -fssa-dce 
-          -fstrength-reduce  -fstrict-aliasing  -fthread-jumps  -ftrapv 
-          -funroll-all-loops  -funroll-loops  
+          -fstrength-reduce  -fstrict-aliasing  -fthread-jumps 
+          -ftrapv -funroll-all-loops  -funroll-loops  
           --param NAME=VALUE
           -O  -O0  -O1  -O2  -O3  -Os
 
@@ -608,7 +618,7 @@ _Machine Dependent Options_
           -mno-relocatable  -mrelocatable-lib  -mno-relocatable-lib 
           -mtoc  -mno-toc -mlittle  -mlittle-endian  -mbig  -mbig-endian 
           -mcall-aix -mcall-sysv -mcall-netbsd 
-          -maix-struct-return -msvr4-struct-return
+          -maix-struct-return -msvr4-struct-return 
           -mabi=altivec -mabi=no-altivec 
           -mprototype  -mno-prototype 
           -msim  -mmvme  -mads  -myellowknife  -memb -msdata 
@@ -642,11 +652,12 @@ _Machine Dependent Options_
           -mno-fp-ret-in-387  -msoft-float  -msvr3-shlib 
           -mno-wide-multiply  -mrtd  -malign-double 
           -mpreferred-stack-boundary=NUM 
-          -mmmx  -msse -msse2 -msse-math -m3dnow 
+          -mmmx  -msse -msse2 -m3dnow 
           -mthreads  -mno-align-stringops  -minline-all-stringops 
           -mpush-args  -maccumulate-outgoing-args  -m128bit-long-double 
           -m96bit-long-double  -mregparm=NUM  -momit-leaf-frame-pointer 
           -mno-red-zone
+          -mcmodel=CODE-MODEL 
           -m32 -m64
 
      _HPPA Options_
@@ -753,8 +764,8 @@ _Machine Dependent Options_
           -mfixed-range=REGISTER-RANGE
 
      _D30V Options_
-          -mextmem  -mextmemory  -monchip  -mno-asm-optimize  -masm-optimize 
-          -mbranch-cost=N -mcond-exec=N
+          -mextmem  -mextmemory  -monchip  -mno-asm-optimize 
+          -masm-optimize -mbranch-cost=N -mcond-exec=N
 
      _S/390 and zSeries Options_
           -mhard-float  -msoft-float  -mbackchain  -mno-backchain 
@@ -807,7 +818,7 @@ _Code Generation Options_
           -fno-common  -fno-ident  -fno-gnu-linker 
           -fpcc-struct-return  -fpic  -fPIC 
           -freg-struct-return  -fshared-data  -fshort-enums 
-          -fshort-double  -fvolatile 
+          -fshort-double  -fshort-wchar -fvolatile 
           -fvolatile-global  -fvolatile-static 
           -fverbose-asm  -fpack-struct  -fstack-check 
           -fstack-limit-register=REG  -fstack-limit-symbol=SYM 
@@ -1024,6 +1035,9 @@ do nothing at all.
 `--target-help'
      Print (on the standard output) a description of target specific
      command line options for each tool.
+
+`--version'
+     Display the version number and copyrights of the invoked GCC.
 
 
 File: gcc.info,  Node: Invoking G++,  Next: C Dialect Options,  Prev: Overall Options,  Up: Invoking GCC

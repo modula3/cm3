@@ -126,6 +126,7 @@ look up both forms.
 * fargument-alias:                       Code Gen Options.
 * fargument-noalias:                     Code Gen Options.
 * fargument-noalias-global:              Code Gen Options.
+* fbounds-check:                         Optimize Options.
 * fbranch-probabilities:                 Optimize Options.
 * fcall-saved <1>:                       Interoperation.
 * fcall-saved:                           Code Gen Options.
@@ -183,6 +184,7 @@ look up both forms.
 * fnext-runtime:                         Objective-C Dialect Options.
 * fno-access-control:                    C++ Dialect Options.
 * fno-asm:                               C Dialect Options.
+* fno-branch-count-reg:                  Optimize Options.
 * fno-builtin <1>:                       Other Builtins.
 * fno-builtin:                           C Dialect Options.
 * fno-common <1>:                        Variable Attributes.
@@ -214,6 +216,8 @@ look up both forms.
 * fno-peephole:                          Optimize Options.
 * fno-peephole2:                         Optimize Options.
 * fno-rtti:                              C++ Dialect Options.
+* fno-sched-interblock:                  Optimize Options.
+* fno-sched-spec:                        Optimize Options.
 * fno-show-column:                       Preprocessor Options.
 * fno-signed-bitfields:                  C Dialect Options.
 * fno-stack-limit:                       Code Gen Options.
@@ -243,6 +247,9 @@ look up both forms.
 * frepo:                                 C++ Dialect Options.
 * frerun-cse-after-loop:                 Optimize Options.
 * frerun-loop-opt:                       Optimize Options.
+* fsched-spec-load:                      Optimize Options.
+* fsched-spec-load-dangerous:            Optimize Options.
+* fsched-verbose:                        Debugging Options.
 * fschedule-insns:                       Optimize Options.
 * fschedule-insns2:                      Optimize Options.
 * fshared-data:                          Code Gen Options.
@@ -250,7 +257,7 @@ look up both forms.
 * fshort-enums <1>:                      Non-bugs.
 * fshort-enums <2>:                      Type Attributes.
 * fshort-enums:                          Code Gen Options.
-* fshort-wchar:                          C Dialect Options.
+* fshort-wchar:                          Code Gen Options.
 * fsigned-bitfields <1>:                 Non-bugs.
 * fsigned-bitfields:                     C Dialect Options.
 * fsigned-char:                          C Dialect Options.
@@ -478,9 +485,13 @@ look up both forms.
 * mcheck-zero-division:                  M88K Options.
 * mcix:                                  DEC Alpha Options.
 * mcmodel=embmedany:                     SPARC Options.
+* mcmodel=kernel:                        i386 and x86-64 Options.
+* mcmodel=large:                         i386 and x86-64 Options.
 * mcmodel=medany:                        SPARC Options.
+* mcmodel=medium:                        i386 and x86-64 Options.
 * mcmodel=medlow:                        SPARC Options.
 * mcmodel=medmid:                        SPARC Options.
+* mcmodel=small:                         i386 and x86-64 Options.
 * mcode-align:                           Intel 960 Options.
 * mcode-model=large:                     M32R/D Options.
 * mcode-model=medium:                    M32R/D Options.
@@ -1103,12 +1114,14 @@ look up both forms.
 * V:                                     Target Options.
 * v <1>:                                 Preprocessor Options.
 * v:                                     Overall Options.
-* version:                               Preprocessor Options.
+* version <1>:                           Preprocessor Options.
+* version:                               Overall Options.
 * W:                                     Incompatibilities.
 * w:                                     Preprocessor Options.
 * W:                                     Warning Options.
 * w:                                     Warning Options.
 * Wa:                                    Assembler Options.
+* Wabi:                                  C++ Dialect Options.
 * Waggregate-return:                     Warning Options.
 * Wall <1>:                              Standard Libraries.
 * Wall <2>:                              Preprocessor Options.

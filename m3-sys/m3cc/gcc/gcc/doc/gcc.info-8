@@ -560,6 +560,9 @@ computers:
      *Note X86 Built-in Functions::, for details of the functions
      enabled and disabled by these switches.
 
+     To have SSE/SSE2 instructions generated automatically from
+     floating-point code, see `-mfpmath=sse'.
+
 `-mpush-args'
 `-mno-push-args'
      Use PUSH operations to store outgoing parameters.  This method is
@@ -621,6 +624,29 @@ x86-64 processors in 64-bit environments.
      or interrupt handlers and therefore can be used for temporary data
      without adjusting the stack pointer.  The flag `-mno-red-zone'
      disables this red zone.
+
+`-mcmodel=small'
+     Generate code for the small code model: the program and its
+     symbols must be linked in the lower 2 GB of the address space.
+     Pointers are 64 bits.  Programs can be statically or dynamically
+     linked.  This is the default code model.
+
+`-mcmodel=kernel'
+     Generate code for the kernel code model.  The kernel runs in the
+     negative 2 GB of the address space.  This model has to be used for
+     Linux kernel code.
+
+`-mcmodel=medium'
+     Generate code for the medium model: The program is linked in the
+     lower 2 GB of the address space but symbols can be located
+     anywhere in the address space.  Programs can be statically or
+     dynamically linked, but building of shared libraries are not
+     supported with the medium model.
+
+`-mcmodel=large'
+     Generate code for the large model: This model makes no assumptions
+     about addresses and sizes of sections.  Currently GCC does not
+     implement this model.
 
 
 File: gcc.info,  Node: HPPA Options,  Next: Intel 960 Options,  Prev: i386 and x86-64 Options,  Up: Submodel Options

@@ -74,7 +74,7 @@ Index
 * ?: side effect:                        Conditionals.
 * \a:                                    C Dialect Options.
 * \x:                                    C Dialect Options.
-* _ in variables in macros:              Naming Types.
+* _ in variables in macros:              Constructing Calls.
 * __builtin_apply:                       Constructing Calls.
 * __builtin_apply_args:                  Constructing Calls.
 * __builtin_choose_expr:                 Other Builtins.
@@ -102,6 +102,7 @@ Index
 * _Complex keyword:                      Complex.
 * _Exit:                                 Other Builtins.
 * _exit:                                 Other Builtins.
+* ABI:                                   Compatibility.
 * abort:                                 Other Builtins.
 * abs:                                   Other Builtins.
 * accessing volatiles:                   Volatiles.
@@ -128,6 +129,7 @@ Index
 * ANSI support:                          C Dialect Options.
 * ANSI X3.159-1989:                      Standards.
 * apostrophes:                           Incompatibilities.
+* application binary interface:          Compatibility.
 * ARC Options:                           ARC Options.
 * arguments in frame (88k):              M88K Options.
 * ARM [Annotated C++ Reference Manual]:  Backwards Compatibility.
@@ -150,6 +152,7 @@ Index
 * backtrace for bug reports:             Bug Reporting.
 * Backwards Compatibility:               Backwards Compatibility.
 * bcmp:                                  Other Builtins.
+* binary compatibility:                  Compatibility.
 * bit shift overflow (88k):              M88K Options.
 * bound pointer to member function:      Bound member functions.
 * bug criteria:                          Bug Criteria.
@@ -433,7 +436,7 @@ Index
 * llabs:                                 Other Builtins.
 * load address instruction:              Simple Constraints.
 * local labels:                          Local Labels.
-* local variables in macros:             Naming Types.
+* local variables in macros:             Constructing Calls.
 * local variables, specifying registers: Local Reg Vars.
 * locale:                                Environment Variables.
 * locale definition:                     Environment Variables.
@@ -454,7 +457,7 @@ Index
 * macros containing asm:                 Extended Asm.
 * macros, inline alternative:            Inline.
 * macros, local labels:                  Local Labels.
-* macros, local variables in:            Naming Types.
+* macros, local variables in:            Constructing Calls.
 * macros, statements in expressions:     Statement Exprs.
 * macros, types of arguments:            Typeof.
 * main and the exit status:              VMS Misc.
@@ -490,7 +493,6 @@ Index
 * name augmentation:                     VMS Misc.
 * names used in assembler code:          Asm Labels.
 * naming convention, implementation headers: C++ Interface.
-* naming types:                          Naming Types.
 * nested functions:                      Nested Functions.
 * newlines (escaped):                    Escaped Newlines.
 * no_instrument_function function attribute: Function Attributes.
@@ -689,7 +691,7 @@ Index
 * Ultrix calling convention:             Interoperation.
 * undefined behavior:                    Bug Criteria.
 * undefined function value:              Bug Criteria.
-* underscores in variables in macros:    Naming Types.
+* underscores in variables in macros:    Constructing Calls.
 * underscores, avoiding (88k):           M88K Options.
 * union:                                 Unnamed Fields.
 * union, casting to a:                   Cast to Union.
@@ -711,7 +713,7 @@ Index
 * variable-length array scope:           Variable Length.
 * variable-length arrays:                Variable Length.
 * variables in specified registers:      Explicit Reg Vars.
-* variables, local, in macros:           Naming Types.
+* variables, local, in macros:           Constructing Calls.
 * variadic macros:                       Variadic Macros.
 * VAX calling convention:                Interoperation.
 * VAX options:                           VAX Options.

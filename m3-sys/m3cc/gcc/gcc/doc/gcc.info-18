@@ -100,7 +100,153 @@ class name, it should replace it with `GSWApplication' (that is,
 
 
 
-File: gcc.info,  Node: Gcov,  Next: Trouble,  Prev: Objective-C,  Up: Top
+File: gcc.info,  Node: Compatibility,  Next: Gcov,  Prev: Objective-C,  Up: Top
+
+Binary Compatibility
+********************
+
+   Binary compatibility encompasses several related concepts:
+
+"application binary interface (ABI)"
+     The set of runtime conventions followed by all of the tools that
+     deal with binary representations of a program, including
+     compilers, assemblers, linkers, and language runtime support.
+     Some ABIs are formal with a written specification, possibly
+     designed by multiple interested parties.  Others are simply the
+     way things are actually done by a particular set of tools.
+
+"ABI conformance"
+     A compiler conforms to an ABI if it generates code that follows
+     all of the specifications enumerated by that ABI.  A library
+     conforms to an ABI if it is implemented according to that ABI.  An
+     application conforms to an ABI if it is built using tools that
+     conform to that ABI and does not contain source code that
+     specifically changes behavior specified by the ABI.
+
+"calling conventions"
+     Calling conventions are a subset of an ABI that specify of how
+     arguments are passed and function results are returned.
+
+"interoperability"
+     Different sets of tools are interoperable if they generate files
+     that can be used in the same program.  The set of tools includes
+     compilers, assemblers, linkers, libraries, header files, startup
+     files, and debuggers.  Binaries produced by different sets of
+     tools are not interoperable unless they implement the same ABI.
+     This applies to different versions of the same tools as well as
+     tools from different vendors.
+
+"intercallability"
+     Whether a function in a binary built by one set of tools can call a
+     function in a binary built by a different set of tools is a subset
+     of interoperability.
+
+"implementation-defined features"
+     Language standards include lists of implementation-defined
+     features whose behavior can vary from one implementation to
+     another.  Some of these features are normally covered by a
+     platform's ABI and others are not.  The features that are not
+     covered by an ABI generally affect how a program behaves, but not
+     intercallability.
+
+"compatibility"
+     Conformance to the same ABI and the same behavior of
+     implementation-defined features are both relevant for
+     compatibility.
+
+   The application binary interface implemented by a C or C++ compiler
+affects code generation and runtime support for:
+
+   * size and alignment of data types
+
+   * layout of structured types
+
+   * calling conventions
+
+   * register usage conventions
+
+   * interfaces for runtime arithmetic support
+
+   * object file formats
+
+   In addition, the application binary interface implemented by a C++
+compiler affects code generation and runtime support for:
+   * name mangling
+
+   * exception handling
+
+   * invoking constructors and destructors
+
+   * layout, alignment, and padding of classes
+
+   * layout and alignment of virtual tables
+
+   Some GCC compilation options cause the compiler to generate code that
+does not conform to the platform's default ABI.  Other options cause
+different program behavior for implementation-defined features that are
+not covered by an ABI.  These options are provided for consistency with
+other compilers that do not follow the platform's default ABI or the
+usual behavior of implementation-defined features for the platform.  Be
+very careful about using such options.
+
+   Most platforms have a well-defined ABI that covers C code, but ABIs
+that cover C++ functionality are not yet common.
+
+   Starting with GCC 3.2, GCC binary conventions for C++ are based on a
+written, vendor-neutral C++ ABI that was designed to be specific to
+64-bit Itanium but also includes generic specifications that apply to
+any platform.  This C++ ABI is also implemented by other compiler
+vendors on some platforms, notably GNU/Linux and BSD systems.  We have
+tried hard to provide a stable ABI that will be compatible with future
+GCC releases, but it is possible that we will encounter problems that
+make this difficult.  Such problems could include different
+interpretations of the C++ ABI by different vendors, bugs in the ABI, or
+bugs in the implementation of the ABI in different compilers.  GCC's
+`-Wabi' switch warns when G++ generates code that is probably not
+compatible with the C++ ABI.
+
+   The C++ library used with a C++ compiler includes the Standard C++
+Library, with functionality defined in the C++ Standard, plus language
+runtime support.  The runtime support is included in a C++ ABI, but
+there is no formal ABI for the Standard C++ Library.  Two
+implementations of that library are interoperable if one follows the
+de-facto ABI of the other and if they are both built with the same
+compiler, or with compilers that conform to the same ABI for C++
+compiler and runtime support.
+
+   When G++ and another C++ compiler conform to the same C++ ABI, but
+the implementations of the Standard C++ Library that they normally use
+do not follow the same ABI for the Standard C++ Library, object files
+built with those compilers can be used in the same program only if they
+use the same C++ library.  This requires specifying the location of the
+C++ library header files when invoking the compiler whose usual library
+is not being used.  The location of GCC's C++ header files depends on
+how the GCC build was configured, but can be seen by using the G++ `-v'
+option.  With default configuration options for G++ 3.2 the compile
+line for a different C++ compiler needs to include
+
+         -IGCC_INSTALL_DIRECTORY/include/c++/3.2
+
+   Similarly, compiling code with G++ that must use a C++ library other
+than the GNU C++ library requires specifying the location of the header
+files for that other library.
+
+   The most straightforward way to link a program to use a particular
+C++ library is to use a C++ driver that specifies that C++ library by
+default.  The `g++' driver, for example, tells the linker where to find
+GCC's C++ library (`libstdc++') plus the other libraries and startup
+files it needs, in the proper order.
+
+   If a program must use a different C++ library and it's not possible
+to do the final link using a C++ driver that uses that library by
+default, it is necessary to tell `g++' the location and name of that
+library.  It might also be necessary to specify different startup files
+and other runtime support libraries, and to suppress the use of GCC's
+support libraries with one or more of the options `-nostdlib',
+`-nostartfiles', and `-nodefaultlibs'.
+
+
+File: gcc.info,  Node: Gcov,  Next: Trouble,  Prev: Compatibility,  Up: Top
 
 `gcov': a Test Coverage Program
 *******************************
@@ -540,17 +686,18 @@ Interoperation
 together with other compilers or with the assemblers, linkers,
 libraries and debuggers on certain systems.
 
-   * G++ does not do name mangling in the same way as other C++
-     compilers.  This means that object files compiled with one compiler
-     cannot be used with another.
+   * On many platforms, GCC supports a different ABI for C++ than do
+     other compilers, so the object files compiled by GCC cannot be
+     used with object files generated by another C++ compiler.
 
-     This effect is intentional, to protect you from more subtle
-     problems.  Compilers differ as to many internal details of C++
-     implementation, including: how class instances are laid out, how
-     multiple inheritance is implemented, and how virtual function
-     calls are handled.  If the name encoding were made the same, your
-     programs would link against libraries provided from other
-     compilers--but the programs would then crash when run.
+     An area where the difference is most apparent is name mangling.
+     The use of different name mangling is intentional, to protect you
+     from more subtle problems.  Compilers differ as to many internal
+     details of C++ implementation, including: how class instances are
+     laid out, how multiple inheritance is implemented, and how virtual
+     function calls are handled.  If the name encoding were made the
+     same, your programs would link against libraries provided from
+     other compilers--but the programs would then crash when run.
      Incompatible libraries are then detected at link time, rather than
      at run time.
 
@@ -835,300 +982,4 @@ Problems Compiling Certain Programs
      GCC:
 
           MALLOC=gmalloc.o
-
-
-File: gcc.info,  Node: Incompatibilities,  Next: Fixed Headers,  Prev: External Bugs,  Up: Trouble
-
-Incompatibilities of GCC
-========================
-
-   There are several noteworthy incompatibilities between GNU C and K&R
-(non-ISO) versions of C.  The `-traditional' option eliminates many of
-these incompatibilities, _but not all_, by telling GCC to behave like a
-K&R C compiler.
-
-   * GCC normally makes string constants read-only.  If several
-     identical-looking string constants are used, GCC stores only one
-     copy of the string.
-
-     One consequence is that you cannot call `mktemp' with a string
-     constant argument.  The function `mktemp' always alters the string
-     its argument points to.
-
-     Another consequence is that `sscanf' does not work on some systems
-     when passed a string constant as its format control string or
-     input.  This is because `sscanf' incorrectly tries to write into
-     the string constant.  Likewise `fscanf' and `scanf'.
-
-     The best solution to these problems is to change the program to use
-     `char'-array variables with initialization strings for these
-     purposes instead of string constants.  But if this is not possible,
-     you can use the `-fwritable-strings' flag, which directs GCC to
-     handle string constants the same way most C compilers do.
-     `-traditional' also has this effect, among others.
-
-   * `-2147483648' is positive.
-
-     This is because 2147483648 cannot fit in the type `int', so
-     (following the ISO C rules) its data type is `unsigned long int'.
-     Negating this value yields 2147483648 again.
-
-   * GCC does not substitute macro arguments when they appear inside of
-     string constants.  For example, the following macro in GCC
-
-          #define foo(a) "a"
-
-     will produce output `"a"' regardless of what the argument A is.
-
-     The `-traditional' option directs GCC to handle such cases (among
-     others) in the old-fashioned (non-ISO) fashion.
-
-   * When you use `setjmp' and `longjmp', the only automatic variables
-     guaranteed to remain valid are those declared `volatile'.  This is
-     a consequence of automatic register allocation.  Consider this
-     function:
-
-          jmp_buf j;
-          
-          foo ()
-          {
-            int a, b;
-          
-            a = fun1 ();
-            if (setjmp (j))
-              return a;
-          
-            a = fun2 ();
-            /* `longjmp (j)' may occur in `fun3'. */
-            return a + fun3 ();
-          }
-
-     Here `a' may or may not be restored to its first value when the
-     `longjmp' occurs.  If `a' is allocated in a register, then its
-     first value is restored; otherwise, it keeps the last value stored
-     in it.
-
-     If you use the `-W' option with the `-O' option, you will get a
-     warning when GCC thinks such a problem might be possible.
-
-     The `-traditional' option directs GCC to put variables in the
-     stack by default, rather than in registers, in functions that call
-     `setjmp'.  This results in the behavior found in traditional C
-     compilers.
-
-   * Programs that use preprocessing directives in the middle of macro
-     arguments do not work with GCC.  For example, a program like this
-     will not work:
-
-          foobar (
-          #define luser
-                  hack)
-
-     ISO C does not permit such a construct.  It would make sense to
-     support it when `-traditional' is used, but it is too much work to
-     implement.
-
-   * K&R compilers allow comments to cross over an inclusion boundary
-     (i.e. started in an include file and ended in the including file).
-     I think this would be quite ugly and can't imagine it could be
-     needed.
-
-   * Declarations of external variables and functions within a block
-     apply only to the block containing the declaration.  In other
-     words, they have the same scope as any other declaration in the
-     same place.
-
-     In some other C compilers, a `extern' declaration affects all the
-     rest of the file even if it happens within a block.
-
-     The `-traditional' option directs GCC to treat all `extern'
-     declarations as global, like traditional compilers.
-
-   * In traditional C, you can combine `long', etc., with a typedef
-     name, as shown here:
-
-          typedef int foo;
-          typedef long foo bar;
-
-     In ISO C, this is not allowed: `long' and other type modifiers
-     require an explicit `int'.  Because this criterion is expressed by
-     Bison grammar rules rather than C code, the `-traditional' flag
-     cannot alter it.
-
-   * PCC allows typedef names to be used as function parameters.  The
-     difficulty described immediately above applies here too.
-
-   * When in `-traditional' mode, GCC allows the following erroneous
-     pair of declarations to appear together in a given scope:
-
-          typedef int foo;
-          typedef foo foo;
-
-   * GCC treats all characters of identifiers as significant, even when
-     in `-traditional' mode.  According to K&R-1 (2.2), "No more than
-     the first eight characters are significant, although more may be
-     used.".  Also according to K&R-1 (2.2), "An identifier is a
-     sequence of letters and digits; the first character must be a
-     letter.  The underscore _ counts as a letter.", but GCC also
-     allows dollar signs in identifiers.
-
-   * PCC allows whitespace in the middle of compound assignment
-     operators such as `+='.  GCC, following the ISO standard, does not
-     allow this.  The difficulty described immediately above applies
-     here too.
-
-   * GCC complains about unterminated character constants inside of
-     preprocessing conditionals that fail.  Some programs have English
-     comments enclosed in conditionals that are guaranteed to fail; if
-     these comments contain apostrophes, GCC will probably report an
-     error.  For example, this code would produce an error:
-
-          #if 0
-          You can't expect this to work.
-          #endif
-
-     The best solution to such a problem is to put the text into an
-     actual C comment delimited by `/*...*/'.  However, `-traditional'
-     suppresses these error messages.
-
-   * Many user programs contain the declaration `long time ();'.  In the
-     past, the system header files on many systems did not actually
-     declare `time', so it did not matter what type your program
-     declared it to return.  But in systems with ISO C headers, `time'
-     is declared to return `time_t', and if that is not the same as
-     `long', then `long time ();' is erroneous.
-
-     The solution is to change your program to use appropriate system
-     headers (`<time.h>' on systems with ISO C headers) and not to
-     declare `time' if the system header files declare it, or failing
-     that to use `time_t' as the return type of `time'.
-
-   * When compiling functions that return `float', PCC converts it to a
-     double.  GCC actually returns a `float'.  If you are concerned
-     with PCC compatibility, you should declare your functions to return
-     `double'; you might as well say what you mean.
-
-   * When compiling functions that return structures or unions, GCC
-     output code normally uses a method different from that used on most
-     versions of Unix.  As a result, code compiled with GCC cannot call
-     a structure-returning function compiled with PCC, and vice versa.
-
-     The method used by GCC is as follows: a structure or union which is
-     1, 2, 4 or 8 bytes long is returned like a scalar.  A structure or
-     union with any other size is stored into an address supplied by
-     the caller (usually in a special, fixed register, but on some
-     machines it is passed on the stack).  The machine-description
-     macros `STRUCT_VALUE' and `STRUCT_INCOMING_VALUE' tell GCC where
-     to pass this address.
-
-     By contrast, PCC on most target machines returns structures and
-     unions of any size by copying the data into an area of static
-     storage, and then returning the address of that storage as if it
-     were a pointer value.  The caller must copy the data from that
-     memory area to the place where the value is wanted.  GCC does not
-     use this method because it is slower and nonreentrant.
-
-     On some newer machines, PCC uses a reentrant convention for all
-     structure and union returning.  GCC on most of these machines uses
-     a compatible convention when returning structures and unions in
-     memory, but still returns small structures and unions in registers.
-
-     You can tell GCC to use a compatible convention for all structure
-     and union returning with the option `-fpcc-struct-return'.
-
-   * GCC complains about program fragments such as `0x74ae-0x4000'
-     which appear to be two hexadecimal constants separated by the minus
-     operator.  Actually, this string is a single "preprocessing token".
-     Each such token must correspond to one token in C.  Since this
-     does not, GCC prints an error message.  Although it may appear
-     obvious that what is meant is an operator and two values, the ISO
-     C standard specifically requires that this be treated as erroneous.
-
-     A "preprocessing token" is a "preprocessing number" if it begins
-     with a digit and is followed by letters, underscores, digits,
-     periods and `e+', `e-', `E+', `E-', `p+', `p-', `P+', or `P-'
-     character sequences.  (In strict C89 mode, the sequences `p+',
-     `p-', `P+' and `P-' cannot appear in preprocessing numbers.)
-
-     To make the above program fragment valid, place whitespace in
-     front of the minus sign.  This whitespace will end the
-     preprocessing number.
-
-
-File: gcc.info,  Node: Fixed Headers,  Next: Standard Libraries,  Prev: Incompatibilities,  Up: Trouble
-
-Fixed Header Files
-==================
-
-   GCC needs to install corrected versions of some system header files.
-This is because most target systems have some header files that won't
-work with GCC unless they are changed.  Some have bugs, some are
-incompatible with ISO C, and some depend on special features of other
-compilers.
-
-   Installing GCC automatically creates and installs the fixed header
-files, by running a program called `fixincludes' (or for certain
-targets an alternative such as `fixinc.svr4').  Normally, you don't
-need to pay attention to this.  But there are cases where it doesn't do
-the right thing automatically.
-
-   * If you update the system's header files, such as by installing a
-     new system version, the fixed header files of GCC are not
-     automatically updated.  The easiest way to update them is to
-     reinstall GCC.  (If you want to be clever, look in the makefile
-     and you can find a shortcut.)
-
-   * On some systems, in particular SunOS 4, header file directories
-     contain machine-specific symbolic links in certain places.  This
-     makes it possible to share most of the header files among hosts
-     running the same version of SunOS 4 on different machine models.
-
-     The programs that fix the header files do not understand this
-     special way of using symbolic links; therefore, the directory of
-     fixed header files is good only for the machine model used to
-     build it.
-
-     In SunOS 4, only programs that look inside the kernel will notice
-     the difference between machine models.  Therefore, for most
-     purposes, you need not be concerned about this.
-
-     It is possible to make separate sets of fixed header files for the
-     different machine models, and arrange a structure of symbolic
-     links so as to use the proper set, but you'll have to do this by
-     hand.
-
-   * On Lynxos, GCC by default does not fix the header files.  This is
-     because bugs in the shell cause the `fixincludes' script to fail.
-
-     This means you will encounter problems due to bugs in the system
-     header files.  It may be no comfort that they aren't GCC's fault,
-     but it does mean that there's nothing for us to do about them.
-
-
-File: gcc.info,  Node: Standard Libraries,  Next: Disappointments,  Prev: Fixed Headers,  Up: Trouble
-
-Standard Libraries
-==================
-
-   GCC by itself attempts to be a conforming freestanding
-implementation.  *Note Language Standards Supported by GCC: Standards,
-for details of what this means.  Beyond the library facilities required
-of such an implementation, the rest of the C library is supplied by the
-vendor of the operating system.  If that C library doesn't conform to
-the C standards, then your programs might get warnings (especially when
-using `-Wall') that you don't expect.
-
-   For example, the `sprintf' function on SunOS 4.1.3 returns `char *'
-while the C standard says that `sprintf' returns an `int'.  The
-`fixincludes' program could make the prototype for this function match
-the Standard, but that would be wrong, since the function will still
-return `char *'.
-
-   If you need a Standard compliant library, then you need to find one,
-as GCC does not provide one.  The GNU C library (called `glibc')
-provides ISO C, POSIX, BSD, SystemV and X/Open compatibility for
-GNU/Linux and HURD-based GNU systems; no recent version of it supports
-other systems, though some very old versions did.  Version 2.2 of the
-GNU C library includes nearly complete C99 support.  You could also ask
-your operating system vendor if newer libraries are available.
 
