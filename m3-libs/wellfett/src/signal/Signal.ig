@@ -1,6 +1,8 @@
 
 GENERIC INTERFACE Signal(R, V);
 
+CONST Brand = "Signal";
+
 TYPE
   IndexType = INTEGER;
 
@@ -25,6 +27,9 @@ TYPE
               getNumber (): IndexType;
               getData   (): V.T;
               getValue  (pos: IndexType): R.T;
+
+              equal  (y: T): BOOLEAN;
+              isZero (): BOOLEAN;
 
               sum (): R.T;       (*asking for the offset is non-sense since
                                     we are working with a finite supported
@@ -58,10 +63,19 @@ TYPE
               autocorrelate (): T;
             END;
 
+(*interface compatible to the arithmetic modules*)
+
 VAR Zero, One: T;
 
-PROCEDURE Add (x: T; y: T): T;
-PROCEDURE Mul (x: T; y: T): T;
+PROCEDURE IsZero (x: T): BOOLEAN;
+PROCEDURE Equal (x, y: T): BOOLEAN;
+
+PROCEDURE Neg (x: T): T;
+PROCEDURE Conj (x: T): T;
+
+PROCEDURE Add (x, y: T): T;
+PROCEDURE Sub (x, y: T): T;
+PROCEDURE Mul (x, y: T): T;
 
 
 END Signal.

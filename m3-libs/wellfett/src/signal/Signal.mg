@@ -20,6 +20,9 @@ REVEAL
         getData   := GetData;
         getValue  := GetValue;
 
+        equal  := Equal;
+        isZero := IsZero;
+
         sum   := Sum;
         inner := Inner;
 
@@ -29,7 +32,7 @@ REVEAL
         slice      := Slice;
         interleave := Interleave;
         reverse    := Reverse;
-        adjoint    := Adjoint;
+        adjoint    := Conj;
 
         translate := Translate;
         scale     := Scale;
@@ -157,6 +160,59 @@ PROCEDURE GetValue (SELF: T; pos: IndexType): R.T =
   END GetValue;
 
 
+PROCEDURE IsZero (x: T): BOOLEAN =
+  BEGIN
+    RETURN V.IsZero(x.data);
+  END IsZero;
+
+PROCEDURE Equal (x, y: T): BOOLEAN =
+  <*FATAL Error*>
+  BEGIN
+    RETURN V.Equal(x.data, y.data); (* this is nonsense but I haven't yet
+                                       access to Vector Rep *)
+    (*
+        IF x.first > y.first THEN
+          VAR z := y;
+          BEGIN
+            y := x;
+            x := z;
+          END;
+        END;
+        (**remaining cases:
+          support(x)   [  ]         [   ]        [     ]
+          support(y)       [  ]       [   ]        [ ]
+        **)
+        VAR
+          xlast := x.first + NUMBER(x.data^);
+          ylast := y.first + NUMBER(y.data^);
+        BEGIN
+          IF xlast <= y.first THEN
+            RETURN V.IsZero(x.data) AND V.IsZero(y.data);
+          ELSE
+            VAR
+              xHeadZero := VS.IsZero(SUBARRAY(x.data^, 0, y.first - x.first));
+            BEGIN
+              IF xlast <= ylast THEN
+                RETURN xHeadZero
+                         AND VS.IsZero(SUBARRAY(y.data^, xlast - y.first,
+                                                ylast - xlast))
+                         AND VS.Equal(SUBARRAY(x.data^, y.first - x.first,
+                                               xlast - y.first),
+                                      SUBARRAY(y.data^, 0, xlast - y.first));
+              ELSE
+                RETURN xHeadZero
+                         AND VS.IsZero(SUBARRAY(x.data^, ylast - x.first,
+                                                xlast - ylast))
+                         AND VS.Equal(SUBARRAY(x.data^, y.first - x.first,
+                                               NUMBER(y.data^)), y.data^);
+              END;
+            END;
+          END;
+        END
+    *)
+  END Equal;
+
+
 PROCEDURE Sum (SELF: T): R.T =
   BEGIN
     RETURN VS.Sum(SELF.data^);
@@ -276,7 +332,7 @@ PROCEDURE Reverse (x: T): T =
     RETURN z;
   END Reverse;
 
-PROCEDURE Adjoint (x: T): T =
+PROCEDURE Conj (x: T): T =
   VAR z := NEW(T);
   BEGIN
     z.data := NEW(V.T, NUMBER(x.data^));
@@ -285,27 +341,17 @@ PROCEDURE Adjoint (x: T): T =
       z.data[j] := R.Conj(x.data[LAST(x.data^) + FIRST(z.data^) - j]);
     END;
     RETURN z;
-  END Adjoint;
+  END Conj;
 
 
 PROCEDURE Scale (x: T; factor: R.T): T =
-  VAR z := NEW(T);
   BEGIN
-    z.data := NEW(V.T, NUMBER(x.data^));
-    z.first := x.first;
-    FOR i := 0 TO LAST(x.data^) DO
-      z.data[i] := R.Mul(x.data[i], factor);
-    END;
-    RETURN z;
+    RETURN NEW(T, first := x.first, data := V.Scale(x.data, factor));
   END Scale;
 
 PROCEDURE Neg (x: T): T =
-  VAR z := NEW(T);
   BEGIN
-    z.data := NEW(V.T, NUMBER(x.data^));
-    z.first := x.first;
-    FOR i := 0 TO LAST(x.data^) DO z.data[i] := R.Neg(x.data[i]); END;
-    RETURN z;
+    RETURN NEW(T, first := x.first, data := V.Neg(x.data));
   END Neg;
 
 PROCEDURE ScaleD (x: T; factor: R.T) =
@@ -386,6 +432,12 @@ PROCEDURE Add (x: T; y: T): T =
     END;
     RETURN z;
   END Add;
+
+(*inefficient, but I hope that no-one will need it*)
+PROCEDURE Sub (x: T; y: T): T =
+  BEGIN
+    RETURN Add(x, Neg(y));
+  END Sub;
 
 PROCEDURE Autocorrelate (x: T): T =
   BEGIN
