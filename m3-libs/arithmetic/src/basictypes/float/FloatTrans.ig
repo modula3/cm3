@@ -17,7 +17,7 @@ TYPE T = R.T;
 (*=================*)
 TYPE
   Ftn    = PROCEDURE(x:T):T;
-  
+
 CONST
   (*---distinguished elements---*)
   Zero        = Rb.Zero;
@@ -69,7 +69,7 @@ TYPE Array = REF ARRAY OF T;
 <*INLINE*> PROCEDURE Sin     (x: T): T; (*returns the sine of x radians. *)
 <*INLINE*> PROCEDURE Tan     (x: T): T; (*returns the tangent of x radians. *)
 <*INLINE*> PROCEDURE ArcCos  (x: T): T; (*returns the arc cosine of x in radians. *)
-<*INLINE*> PROCEDURE ArcSin  (x: T): T; (*returns the arc sine of x in radians. *) 
+<*INLINE*> PROCEDURE ArcSin  (x: T): T; (*returns the arc sine of x in radians. *)
 <*INLINE*> PROCEDURE ArcTan  (x: T): T; (*returns the arc tangent of x in radians. *)
 <*INLINE*> PROCEDURE ArcTan2 (y, x: T): T; (*returns the arc tangent of y/x in radians. *)
 

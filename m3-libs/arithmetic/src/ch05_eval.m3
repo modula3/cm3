@@ -1,6 +1,6 @@
 MODULE ch05_eval EXPORTS nr;
 (*Copyright (c) 1995, Harry George
-  
+
 Abstract: Implementation of Modula-3 version of
           NR92, ch 5.
 
@@ -30,7 +30,7 @@ BEGIN
   IF nterm+1 > LAST(wksp^) THEN
     RAISE Error(Err.bad_size);
   END;
-  
+
   IF jterm=1 THEN
     nterm:=1;
     wksp[1]:=term;
@@ -76,7 +76,7 @@ END ratval;
 
 (*---------------------*)
 PROCEDURE quadreal (a,b,c:REAL32;       (*coefs*)
-                    VAR x1,x2:COMPLEX)= (*results*)  
+                    VAR x1,x2:COMPLEX)= (*results*)
 (*Given a*x^2+b*x+c=0, solve for x.*)
 VAR
   disc,q:REAL32;
@@ -95,13 +95,13 @@ BEGIN
 END quadreal;
 (*---------------------*)
 PROCEDURE quadcmpx (a,b,c:COMPLEX;       (*coefs*)
-                    VAR x1,x2:COMPLEX)= (*results*)  
+                    VAR x1,x2:COMPLEX)= (*results*)
 (*Given a*x^2+b*x+c=0, solve for x.*)
 CONST
   c4=COMPLEX{re:=4.0,im:=0.0};
   c05=COMPLEX{re:=-0.5,im:=0.0};
 VAR
-  disc,disc_sqrt,q:COMPLEX;  
+  disc,disc_sqrt,q:COMPLEX;
 BEGIN
   disc:=Csub(Cmul(b,b),Cmul(c4,Cmul(a,c)));
   disc_sqrt:=Csqrt(disc);
@@ -111,7 +111,7 @@ BEGIN
     disc_sqrt.re:=-disc_sqrt.re;
   END;
 
-  (*---calculate per eqn 5.6.4, 5.6.5.---*)  
+  (*---calculate per eqn 5.6.4, 5.6.5.---*)
   q:=Cmul(c05,Cadd(b,disc_sqrt));
   x1:=Cdiv(q,a);
   x2:=Cdiv(c,q);
@@ -190,7 +190,7 @@ and the coefs a[i] are in the vector p[i].
 *)
 CONST ftn = Module & "Pdiv";
 VAR
-  un:=NUMBER(u^); u0:=FIRST(u^); unn:=LAST(u^); 
+  un:=NUMBER(u^); u0:=FIRST(u^); unn:=LAST(u^);
   vn:=NUMBER(v^); v0:=FIRST(v^); vnn:=LAST(v^);
   qtmp,vmax:REAL32;
   qn,q0,qnn,qi,ri2:CARDINAL;
@@ -237,7 +237,7 @@ PROCEDURE ddpoly(c:Vector;    (*evaluate the poly with these coefs*)
 and nd more derivatives as pd[1]..pd[nd].
 
 raises:
-   Err.bad_size if nd>NUMBER(pd)+1 
+   Err.bad_size if nd>NUMBER(pd)+1
 *)
 VAR
   cn:=NUMBER(c^); c0:=FIRST(c^); cnn:=LAST(c^);
@@ -250,7 +250,7 @@ BEGIN
   (*---initialize f(x) and clear f'(x), f"(x)...---*)
   pd[0]:=c[cnn];
   FOR i:=1 TO pdnn DO pd[i]:=0.0; END;
-  
+
   (*---collect the raw values---*)
   FOR i:=cnn-1 TO c0 BY -1 DO
     FOR j:=pdnn TO 1 BY -1 DO
@@ -259,15 +259,15 @@ BEGIN
     pd[0]:=pd[0]*x+c[i];
   END;
 
-  (*---fix the factorials---*) 
+  (*---fix the factorials---*)
   FOR i:=0 TO pdnn DO
     pd[i]:=factrl(i)*pd[i];
   END;
- 
-END ddpoly; 
+
+END ddpoly;
 (*----------------------*)
 PROCEDURE Ptext(poly:Vector;
-                x:TEXT:="x";       
+                x:TEXT:="x";
                 style:Fmt.Style:=Fmt.Style.Fix;
                 prec:CARDINAL:=1
                 ):TEXT=
@@ -277,7 +277,7 @@ PROCEDURE Ptext(poly:Vector;
 *)
 VAR
   n:=NUMBER(poly^); n1:=0; nn:=n-1;
-  wr:=NEW(TextWr.T).init(); 
+  wr:=NEW(TextWr.T).init();
 BEGIN
   Wr.PutText(wr,"(" & Fmt.Real(poly[n1],style,prec));
   FOR i:=n1+1 TO nn DO
@@ -289,7 +289,7 @@ BEGIN
 END Ptext;
 (*----------------------*)
 PROCEDURE dPtext(poly:dVector;
-                x:TEXT:="x";       
+                x:TEXT:="x";
                 style:Fmt.Style:=Fmt.Style.Fix;
                 prec:CARDINAL:=1
                 ):TEXT=
@@ -299,7 +299,7 @@ PROCEDURE dPtext(poly:dVector;
 *)
 VAR
   n:=NUMBER(poly^); n1:=0; nn:=n-1;
-  wr:=NEW(TextWr.T).init(); 
+  wr:=NEW(TextWr.T).init();
 BEGIN
   Wr.PutText(wr,"(" & Fmt.LongReal(poly[n1],style,prec));
   FOR i:=n1+1 TO nn DO
@@ -357,7 +357,7 @@ END ChebyInit;
 PROCEDURE ChebyFindM(self:ChebyApprox;
                      prec:REAL32:=0.0001 (*use m coeffs to get precision*)
                         ):CARDINAL RAISES {Error}=
-                   
+
 CONST ftn = Module & "ChebyFindM";
 VAR
   m:CARDINAL:=0;
@@ -368,7 +368,7 @@ BEGIN
     END;
   END;
   RAISE Error(Err.not_converging);
-  RETURN 0;  
+  RETURN 0;
 END ChebyFindM;
 
 (*--------------------------*)
@@ -416,14 +416,14 @@ BEGIN
   IF x<-1.0 OR x > 1.0 THEN
     (*need -1<x<+1*)
     RAISE Error(Err.out_of_range);
-  END;  
+  END;
   FOR j:=m-1 TO 1 BY -1 DO
     dj:=2.0*x*djp1-djp2+self.c[j];
     djp2:=djp1;
-    djp1:=dj;  
+    djp1:=dj;
   END;
   RETURN x*djp1-djp2+0.5*self.c[0];
-    
+
 END ChebyEval;
 (*==========================*)
 BEGIN

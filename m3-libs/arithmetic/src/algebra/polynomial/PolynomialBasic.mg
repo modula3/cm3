@@ -12,14 +12,14 @@ FROM xUtils IMPORT Error,Err;
 CONST Module = "PolynomialBasic.";
 
 (*--------------------*)
-PROCEDURE New( 
+PROCEDURE New(
                n:CARDINAL):T=
 BEGIN
   RETURN NEW(T,n+1);
 END New;
 
 (*--------------------*)
-PROCEDURE Copy( 
+PROCEDURE Copy(
                x:T):T=
 VAR
   y:=NEW(T,NUMBER(x^));
@@ -29,7 +29,7 @@ BEGIN
 END Copy;
 
 (*--------------------*)
-PROCEDURE Strip( 
+PROCEDURE Strip(
                 x:T):T=
 VAR
   n:=LAST(x^);
@@ -51,7 +51,7 @@ END Strip;
 
 
 (*-----------------*)
-PROCEDURE Add( 
+PROCEDURE Add(
                x,y:T):T=
 VAR
   xl:=LAST(x^);
@@ -69,7 +69,7 @@ BEGIN
   RETURN Strip(z);
 END Add;
 (*-----------------*)
-PROCEDURE Sub( 
+PROCEDURE Sub(
                x,y:T):T=
 VAR
   xl:=LAST(x^);
@@ -127,7 +127,7 @@ BEGIN
 END Equal;
 
 (*---------------------*)
-PROCEDURE Mul( 
+PROCEDURE Mul(
                x,y:T):T=
 VAR
   z:=NEW(T,NUMBER(x^)+NUMBER(y^)-1);
@@ -143,12 +143,12 @@ BEGIN
 END Mul;
 
 (*---------------------*)
-PROCEDURE Div( 
+PROCEDURE Div(
                x,y:T):T RAISES {Error}=
 <*UNUSED*>
 CONST ftn = Module & "Div";
 VAR
-  xn:=NUMBER(x^);                xl:=LAST(x^); 
+  xn:=NUMBER(x^);                xl:=LAST(x^);
   yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
   q,r:T;
   qtmp,ymax:R.T;
@@ -195,13 +195,13 @@ BEGIN
 END Div;
 
 (*---------------------*)
-PROCEDURE DivMod( 
+PROCEDURE DivMod(
                x,y:T;
            VAR r:T):T RAISES {Error} =
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
-  xn:=NUMBER(x^);                xl:=LAST(x^); 
+  xn:=NUMBER(x^);                xl:=LAST(x^);
   yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
   q:T;
   qtmp,ymax:R.T;
@@ -255,7 +255,7 @@ END Mod;
 
 (*--------------------*)
 (*Horner's scheme*)
-PROCEDURE Eval( 
+PROCEDURE Eval(
                 x:T;
                 xi:R.T
                 ):R.T=
@@ -271,7 +271,7 @@ END Eval;
 
 (*-----------------------*)
 (*
-PROCEDURE deflate( 
+PROCEDURE deflate(
                    x:T;
                    c:R.T;
                    VAR rem:R.T)=
@@ -303,7 +303,7 @@ BEGIN
 END Derive;
 
 (*---------------------*)
-PROCEDURE EvalDerivate( 
+PROCEDURE EvalDerivate(
                  x:T;      (*Evaluate the poly with these coefs*)
                  xi:R.T;    (*for this argument*)
              VAR pd:ARRAY OF R.T;  (*returning x(xi), x'(xi)...*)
@@ -328,7 +328,7 @@ BEGIN
     pd[0]:=R.Add(x[i],R.Mul(xi,pd[0]));
   END;
 
-  (*---fix the factorials---*) 
+  (*---fix the factorials---*)
   fact:=R.One;
   fac:=R.Zero;
   FOR i:=0 TO pdl DO

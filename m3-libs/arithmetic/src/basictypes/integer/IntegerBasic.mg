@@ -1,6 +1,6 @@
 GENERIC MODULE IntegerBasic();
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Integers
 
 2/17/96  Harry George    Initial version
@@ -43,7 +43,7 @@ PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error} =
 
 (*============================*)
 (* Factoring                  *)
-(*============================*)  
+(*============================*)
 
 (*------------------------*)
 PROCEDURE Factor(n:T;      (*factor this number*)

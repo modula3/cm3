@@ -12,14 +12,14 @@ Abstract: Generic computations on integer types
 
 (*============================*)
 (* Integer Approximations     *)
-(*============================*)  
+(*============================*)
 
 PROCEDURE SqRt(N:[0..1073741823]):CARDINAL;
 (*returns integer sqrt of N.*)
 
 (*============================*)
 (* CORDIC Functions           *)
-(*============================*)  
+(*============================*)
 CONST
   CordicBits = 16;
   CordicBase = 65536;  (*2^CordicBits*)
@@ -30,7 +30,7 @@ CONST
 TYPE
   Cordic= [0..CordicBase*4];
 
-PROCEDURE SinCos(theta:Cordic;     (*given this angle*)   
+PROCEDURE SinCos(theta:Cordic;     (*given this angle*)
                  VAR s,c:INTEGER); (*return sin and cos*)
 (*E.g.:
   theta:=ROUND(theta_in_radians*RadToCordic);
@@ -41,7 +41,7 @@ Of course, in real life you wouldn't be moving in and out
 of floating point.  theta would be computed in cordics to begin with.
 Thus 100*sin(theta) is obtained by:
   sin_cos(theta:=theta,s:=s,c:=c);
-  answer:=Word.RightShift(100*s + CordicHalf),CordicBits); 
-*) 
+  answer:=Word.RightShift(100*s + CordicHalf),CordicBits);
+*)
 (*==========================*)
 END IntegerTrans.

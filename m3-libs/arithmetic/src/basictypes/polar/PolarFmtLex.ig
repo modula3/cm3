@@ -1,6 +1,6 @@
 GENERIC INTERFACE PolarFmtLex(P,RF);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Complex numbers in polar coordinates
 
 1/1/96  Harry George    Initial version
@@ -17,6 +17,6 @@ TYPE
 
 PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
         (*as "POLAR{radius:=<r>; angle:=<r>}"*)
-        
+
 (*==========================*)
 END PolarFmtLex.

@@ -20,7 +20,7 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  
+
     Msg("a=" & C.fmt(a) & "\n" &
         "b=" & C.fmt(b) & "\n");
     Msg("|a|   =" & Fmt.LongReal(C.abs(a)) & "\n");
@@ -53,7 +53,7 @@ BEGIN
     Msg("fromPolar(p2) =" & C.fmt(C.fromPolar(p2)) & "\n");
     Msg("p1*p2 =" & C.fmtPolar(C.pmul(p1,p2)) & "\n");
     Msg("p1/p2 =" & C.fmtPolar(C.pdiv(p1,p2)) & "\n");
-    
+
   RETURN result;
 END TestComplex;
 

@@ -15,7 +15,7 @@ Abstract:
           ...and back to fully instantiated for REAL32.
 
 1/27/96   Harry George
-          Converted to OO format and R.T          
+          Converted to OO format and R.T
 
 2/17/96   Harry George   ...and back to ADT format
 *)

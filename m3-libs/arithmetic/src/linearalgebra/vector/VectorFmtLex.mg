@@ -15,7 +15,7 @@ Abstract:
           ...and back to fully instantiated for REAL32.
 
 1/27/96   Harry George
-          Converted to OO format, and R.T          
+          Converted to OO format, and R.T
 
 2/17/96   Harry George   Converted from OO to ADT format
 *)
@@ -26,7 +26,7 @@ IMPORT Wr,TextWr,Fmt AS F,Thread;
 
 (*-----------------*)
 <*UNUSED*>
-PROCEDURE Lex( 
+PROCEDURE Lex(
                str:TEXT):T =
 BEGIN
   RAISE Error(Err.not_implemented);
@@ -40,7 +40,7 @@ VAR
 BEGIN
   Wr.PutText(wr,"V" & F.Int(NUMBER(x^)) & "{");
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    Wr.PutText(wr,F.Pad(RF.Fmt(x[i],style.elemStyle),width)); 
+    Wr.PutText(wr,F.Pad(RF.Fmt(x[i],style.elemStyle),width));
     IF i#LAST(x^) THEN Wr.PutText(wr,", "); END;
   END;
   Wr.PutText(wr,"}\n");

@@ -23,7 +23,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 
 (*--------------------------*)
@@ -52,8 +52,8 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  decsrc:=NEW(xRNG01.DECSRC).init(); 
-  ran0  :=NEW(xRNG01.ran0).init(); 
+  decsrc:=NEW(xRNG01.DECSRC).init();
+  ran0  :=NEW(xRNG01.ran0).init();
   ran1  :=NEW(xRNG01.ran1).init();
   slow  :=NEW(xRNG02.slow).init();
   fast  :=NEW(xRNG02.fast).init();
@@ -65,21 +65,21 @@ VAR
     FOR i:= n1 TO nn DO
       data[i]:=rand.uniform();
     END;
-    printstats(name,data);  
+    printstats(name,data);
   END do_engine;
   (*----------------------*)
 BEGIN
   Debug(1,ftn,"begin\n");
 
   Msg("N=" & I.fmt(N) & "\n");
-  
-  do_engine("DECSRC",decsrc);  
-  do_engine("ran0  ",ran0);  
-  do_engine("ran1  ",ran1);  
-  do_engine("slow  ",slow);  
-  do_engine("fast  ",fast);  
 
-  RETURN result;   
+  do_engine("DECSRC",decsrc);
+  do_engine("ran0  ",ran0);
+  do_engine("ran1  ",ran1);
+  do_engine("slow  ",slow);
+  do_engine("fast  ",fast);
+
+  RETURN result;
 END TestEngines;
 (*----------------------*)
 PROCEDURE TestUniform():BOOLEAN=
@@ -103,8 +103,8 @@ BEGIN
   printstats("0..1",data1);
   printstats("-1..+1",data2);
   printstats("200..1000",data3);
-  
-  RETURN result;   
+
+  RETURN result;
 END TestUniform;
 (*----------------------*)
 PROCEDURE TestExponential():BOOLEAN=
@@ -122,7 +122,7 @@ BEGIN
   END;
   printstats("exponential, mean=1",data1);
 
-  RETURN result;   
+  RETURN result;
 END TestExponential;
 
 (*----------------------*)
@@ -141,7 +141,7 @@ BEGIN
     data1[i]:=rand.gaussian();
   END;
   printstats("Normal (Gaussian): mean=0, var=1",data1);
-  RETURN result;   
+  RETURN result;
 END TestNormal;
 (*----------------------*)
 PROCEDURE TestGamma():BOOLEAN=
@@ -165,7 +165,7 @@ BEGIN
   printstats("gamma(1.0)",data1);
   printstats("gamma(2.5)",data2);
   printstats("gamma(5.1)",data3);
-  RETURN result;   
+  RETURN result;
 END TestGamma;
 (*----------------------*)
 PROCEDURE TestDirichlet():BOOLEAN=
@@ -183,7 +183,7 @@ BEGIN
 
   FOR i:=n1 TO nn DO
   END;
-  RETURN result;   
+  RETURN result;
 END TestDirichlet;
 
 (*-------------------------*)

@@ -20,7 +20,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*----------------------*)
 PROCEDURE TestSqrt():BOOLEAN=
@@ -44,7 +44,7 @@ BEGIN
        & I.fmt(i) & "=" & I.fmt(iisqrt)
        & "\n");
   END;
-  RETURN result;   
+  RETURN result;
 END TestSqrt;
 (*----------------------*)
 PROCEDURE TestGcd():BOOLEAN=
@@ -61,7 +61,7 @@ BEGIN
         & "\n");
     END;
   END;
-  RETURN result;   
+  RETURN result;
 END TestGcd;
 (*----------------------*)
 PROCEDURE TestIsprime():BOOLEAN=
@@ -77,7 +77,7 @@ BEGIN
     END;
   END;
   Msg("\n");
-  RETURN result;   
+  RETURN result;
 END TestIsprime;
 (*----------------------*)
 PROCEDURE TestFactor():BOOLEAN=
@@ -96,8 +96,8 @@ BEGIN
       Msg(I.fmt(p[j]) & "^" & I.fmt(m[j]) & " ");
     END;
     Msg("\n");
-  END; 
-  RETURN result;   
+  END;
+  RETURN result;
 END TestFactor;
 (*----------------------*)
 PROCEDURE TestCordic():BOOLEAN=
@@ -121,14 +121,14 @@ BEGIN
       &" truesin=" & R.fmt(truesin) & "\n");
 
     theta:=ROUND(rad*I.RadToCordic);
-    
+
     I.sin_cos(theta:=theta,s:=s,c:=c);
     calcsin:=FLOAT(s,R.T)*I.CordicToReal;
     calccos:=FLOAT(c,R.T)*I.CordicToReal;
     Msg("calccos=" & R.fmt(calccos)
       &" calcsin=" & R.fmt(calcsin) & "\n\n");
   END;
-  RETURN result;   
+  RETURN result;
 END TestCordic;
 (*-------------------------*)
 PROCEDURE TestInteger():BOOLEAN=

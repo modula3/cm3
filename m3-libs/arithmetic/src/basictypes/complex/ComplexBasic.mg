@@ -1,6 +1,6 @@
 GENERIC MODULE ComplexBasic(R);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Complex numbers and basic operations
 
 was xComplex.m3

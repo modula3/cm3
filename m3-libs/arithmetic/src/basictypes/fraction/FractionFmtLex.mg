@@ -16,7 +16,7 @@ Abstract: Formatting and parsing fraction numbers
 
 (*------------------------*)
 (*
-PROCEDURE Lex( 
+PROCEDURE Lex(
                str:TEXT):Fr.T RAISES {Error}=
 BEGIN
   RAISE Error(Err.not_implemented);

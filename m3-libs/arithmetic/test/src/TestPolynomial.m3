@@ -22,7 +22,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*=======================*)
 TYPE
@@ -42,8 +42,8 @@ BEGIN
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
   Msg("u="   & P.fmt(u) & "\n");
   Msg("v="   & P.fmt(v) & "\n");
-  Msg("u+v=" & P.fmt(P.add(u,v)) & "\n");          
-  Msg("v+u=" & P.fmt(P.add(v,u)) & "\n");          
+  Msg("u+v=" & P.fmt(P.add(u,v)) & "\n");
+  Msg("v+u=" & P.fmt(P.add(v,u)) & "\n");
   RETURN result;
 END TestAdd;
 (*-----------------------*)
@@ -60,8 +60,8 @@ BEGIN
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
   Msg("u="   & P.fmt(u) & "\n");
   Msg("v="   & P.fmt(v) & "\n");
-  Msg("u-v=" & P.fmt(P.sub(u,v)) & "\n");          
-  Msg("v-u=" & P.fmt(P.sub(v,u)) & "\n");          
+  Msg("u-v=" & P.fmt(P.sub(u,v)) & "\n");
+  Msg("v-u=" & P.fmt(P.sub(v,u)) & "\n");
   RETURN result;
 END TestSub;
 (*-----------------------*)
@@ -78,8 +78,8 @@ BEGIN
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
   Msg("u="   & P.fmt(u) & "\n");
   Msg("v="   & P.fmt(v) & "\n");
-  Msg("u*v=" & P.fmt(P.mul(u,v)) & "\n");          
-  Msg("v*u=" & P.fmt(P.mul(v,u)) & "\n");          
+  Msg("u*v=" & P.fmt(P.mul(u,v)) & "\n");
+  Msg("v*u=" & P.fmt(P.mul(v,u)) & "\n");
   RETURN result;
 END TestMul;
 (*-----------------------*)
@@ -98,9 +98,9 @@ BEGIN
   Msg("u="   & P.fmt(u) & "\n");
   Msg("v="   & P.fmt(v) & "\n");
   Msg("u/v="); P.div(u,v,q,r);
-      Msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");          
+      Msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");
   Msg("v/u="); P.div(v,u,q,r);
-      Msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");          
+      Msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");
   RETURN result;
 END TestDiv;
 (*-----------------------*)

@@ -9,7 +9,7 @@ PROCEDURE NewLine();
 PROCEDURE Debug(level:[0..3]; ftn,str:TEXT);
 PROCEDURE Verify(ftn,str:TEXT;
                  expected,found:REAL64;
-                 eps:REAL64:=EPS 
+                 eps:REAL64:=EPS
                  ):BOOLEAN;
 
 (*---from the Test units---*)

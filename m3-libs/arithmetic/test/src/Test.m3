@@ -1,5 +1,5 @@
 MODULE Test EXPORTS Test,Main;
-(*Copyright (c) 1996, 
+(*Copyright (c) 1996,
 Abstract: Test driver for m3na library.
 
 12/13/95  Harry George   Initial version
@@ -28,7 +28,7 @@ END Debug;
 (*---------------------*)
 PROCEDURE Verify(ftn,str:TEXT;
                  expected,found:REAL64;
-                 eps:REAL64:=EPS 
+                 eps:REAL64:=EPS
                  ):BOOLEAN=
 BEGIN
   IF ABS(expected-found)<eps THEN
@@ -38,7 +38,7 @@ BEGIN
     Msg(ftn & ":" & str & ":failed\n");
     RETURN FALSE;
   END;
-END Verify;  
+END Verify;
 (*---------------------*)
 PROCEDURE NewLine()=
 BEGIN

@@ -29,7 +29,7 @@ VAR
 BEGIN
   Wr.PutText(wr,"A" & Fmt(n) & "{");
   FOR i:=n1 TO nn DO
-    Wr.PutText(wr,F.Pad(Fmt(a[i],style),cellwidth)); 
+    Wr.PutText(wr,F.Pad(Fmt(a[i],style),cellwidth));
     IF i#nn THEN Wr.PutText(wr,", "); END;
     INC(currwidth,cellwidth+2);
     IF currwidth>linewidth THEN
@@ -38,7 +38,7 @@ BEGIN
     END;
   END;
   Wr.PutText(wr,"}\n");
-  RETURN TextWr.ToText(wr);  
+  RETURN TextWr.ToText(wr);
 END FmtArray;
 
 (*==========================*)

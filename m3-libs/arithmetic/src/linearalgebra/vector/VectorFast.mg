@@ -15,7 +15,7 @@ Abstract:
           ...and back to fully instantiated for REAL32.
 
 1/27/96   Harry George
-          Converted to OO format, and R.T          
+          Converted to OO format, and R.T
 
 2/17/96   Harry George   Converted from OO to ADT format
 *)
@@ -40,7 +40,7 @@ END Copy;
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize( 
+PROCEDURE AssertEqualSize(
                  x,y:T) RAISES {Error}=
 BEGIN
   IF NUMBER(x^) # NUMBER(y^) THEN
@@ -49,7 +49,7 @@ BEGIN
 END AssertEqualSize;
 
 (*-----------------*)
-PROCEDURE Add( 
+PROCEDURE Add(
                  x,y:T):T RAISES {Error}=
 VAR
   z:T;
@@ -63,7 +63,7 @@ BEGIN
 END Add;
 
 (*-----------------*)
-PROCEDURE Sub( 
+PROCEDURE Sub(
                x,y:T):T RAISES {Error}=
 VAR
   z:T;
@@ -101,7 +101,7 @@ END Equal;
 
 
 (*-----------------*)
-PROCEDURE Scale( 
+PROCEDURE Scale(
                  x:T; factor:R.T)=
 BEGIN
   FOR i:=FIRST(x^) TO LAST(x^) DO
@@ -111,7 +111,7 @@ END Scale;
 
 
 (*-----------------*)
-PROCEDURE Inner( 
+PROCEDURE Inner(
                 x,y:T):R.T RAISES {Error}=
 VAR
   sum:R.T;
@@ -126,7 +126,7 @@ END Inner;
 
 (*-----------------*)
 (*
-PROCEDURE Cross( 
+PROCEDURE Cross(
                 x,y:T):T RAISES {Error}=
 BEGIN
   RAISE Error(Err.not_implemented);
