@@ -125,22 +125,34 @@
 				<Float attribute="Number" context="#stay"/>
 				<Int attribute="Number" context="#stay"/>
 				<RegExpr attribute="Qualifier" context="#stay" String="[A-Z][a-zA-Z0-9_]*\." />
-				<DetectChar attribute="Char" context="single_char" char="'" />
+				<RegExpr attribute="Char" context="#stay" String="'[^']'" />
 				<DetectChar attribute="String" context="String" char="&quot;" />
 				<Detect2Chars attribute="Pragma" context="Pragma1" char="&lt;" char1="*"/>
-				<Detect2Chars attribute="Comment" context="Comment1" char="(" char1="*"/>
-			</context>
-			<context attribute="Char" lineEndContext="#pop" name="single_char">
-				<RegExpr attribute="Char" context="#stay" String="\\." />
-				<DetectChar attribute="Char" context="#pop" char="'" />
+				<Detect2Chars attribute="Comment" context="CommentNest0" char="(" char1="*"/>
+				<!-- Modula 3 allows for arbitrary nesting of comments -  Kate does not so.
+				     Instead we used a maximum nesting of four levels
+					  which should be enough for most cases.
+					  This comment seems to block parsing of the rest of the 'context' environment. -->
 			</context>
 			<context attribute="String" lineEndContext="#pop" name="String">
 				<DetectChar attribute="String" context="#pop" char="&quot;"/>
 			</context>
-			<context attribute="Pragma" lineEndContext="#pop" name="Pragma1">
+			<context attribute="Pragma" lineEndContext="#stay" name="Pragma1">
 				<Detect2Chars attribute="Pragma" context="#pop" char="*" char1="&gt;"/>
 			</context>
-			<context attribute="Comment" lineEndContext="#stay" name="Comment1">
+			<context attribute="Comment" lineEndContext="#stay" name="CommentNest0">
+				<Detect2Chars attribute="Comment" context="#pop" char="*" char1=")"/>
+				<Detect2Chars attribute="Comment" context="CommentNest1" char="(" char1="*"/>
+			</context>
+			<context attribute="Comment" lineEndContext="#stay" name="CommentNest1">
+				<Detect2Chars attribute="Comment" context="#pop" char="*" char1=")"/>
+				<Detect2Chars attribute="Comment" context="CommentNest2" char="(" char1="*"/>
+			</context>
+			<context attribute="Comment" lineEndContext="#stay" name="CommentNest2">
+				<Detect2Chars attribute="Comment" context="#pop" char="*" char1=")"/>
+				<Detect2Chars attribute="Comment" context="CommentNest3" char="(" char1="*"/>
+			</context>
+			<context attribute="Comment" lineEndContext="#stay" name="CommentNest3">
 				<Detect2Chars attribute="Comment" context="#pop" char="*" char1=")"/>
 			</context>
 		</contexts>
