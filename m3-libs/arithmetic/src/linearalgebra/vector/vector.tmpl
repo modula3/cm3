@@ -35,5 +35,5 @@ readonly proc VectorFmtLex (nm, rfield) is
   local vfmt   = nm & "VectorFmtLex"
   local vrep   = nm & "VectorRep"
   build_generic_intf (vfmt, "VectorFmtLex", [        rfmt, vfield], VISIBLE)
-  build_generic_impl (vfmt, "VectorFmtLex", [rfield, rfmt, vfield])
+  build_generic_impl (vfmt, "VectorFmtLex", [rfield, rfmt])
 end
