@@ -9,13 +9,15 @@ Abstract: Test driver for LongRealMatrixDecomposition
 *)
 FROM NADefinitions IMPORT Error;
 IMPORT LongRealBasic  AS R,
+       LongRealTrans  AS RT,
        LongRealFmtLex AS RF,
        LongRealVectorFast AS V,
        LongRealMatrixFast AS M,
        LongRealVectorFmtLex AS VF,
        LongRealMatrixFmtLex AS MF,
        LongRealMatrixDecomposition AS MD,
-       xRNG01,
+       LongRealVectorTrans AS VT,
+       RandomBayesDurham AS Rand,
        Fmt;
 
 CONST Module = "TestSLE.";
@@ -27,25 +29,16 @@ TYPE
   V3   = ARRAY [0..2] OF R.T;
 
 VAR
-  rand:=NEW(xRNG01.ran1).init();
-
-  (*---must do build_data before using these---*)
-  n:=0; n1:=0; nn:=n-1;
-  A:M.T;
-  B:V.T;
-  C:M.T;
-  D:M.T;
-
-  knownX:V.T;  (*X is an nx1 matrix*)
-  foundX:V.T;
+  rand:=Rand.New();
 
 (*---------------------*)
 (*---------------------*)
-PROCEDURE build_AX(size:CARDINAL:=3)=
+PROCEDURE BuildAX(VAR (*OUT*) A,C,D:M.T; VAR (*OUT*) knownX,foundX:V.T; size:CARDINAL:=3)=
 <*UNUSED*>
-CONST ftn = Module & "build_AX";
-BEGIN
+CONST ftn = Module & "BuildAX";
+VAR
   n:=size; n1:=0; nn:=n-1;
+BEGIN
   A:=NEW(M.T,n,n);
   C:=NEW(M.T,n,n);
   D:=NEW(M.T,n,n);
@@ -62,45 +55,56 @@ BEGIN
     knownX[i]:=rand.uniform(0.0d0,9.99d0);
   END (*for*);
 
-END build_AX;
+END BuildAX;
 (*---------------------*)
-PROCEDURE build_B(<*UNUSED*>size:CARDINAL:=3)=
+PROCEDURE BuildB(VAR (*OUT*)B:V.T; A:M.T; knownX:V.T)=
 <*UNUSED*>
-CONST ftn = Module & "build_B";
+CONST ftn = Module & "BuildB";
 BEGIN
   B:=M.MulV(A,knownX);
-END build_B;
+END BuildB;
 (*---------------------*)
-PROCEDURE build_data(size:CARDINAL:=3)=
+PROCEDURE BuildData(VAR (*OUT*) A,C,D:M.T; VAR (*OUT*) B,knownX,foundX:V.T; size:CARDINAL:=3)=
 <*UNUSED*>
-CONST ftn = Module & "build_data";
+CONST ftn = Module & "BuildData";
 BEGIN
-  build_AX(size);
-  build_B(size);
-END build_data;
+  BuildAX(A,C,D,knownX,foundX,size);
+  BuildB(B,A,knownX);
+END BuildData;
 (*--------------------*)
 PROCEDURE TestBacksub():BOOLEAN=
 CONST
   ftn = Module & "TestBacksub";
 VAR
   size:=4;
+  A:M.T;
+  B:V.T;
+  C:M.T;
+  D:M.T;
+
+  knownX:V.T;  (*X is an nx1 matrix*)
+  foundX:V.T;
+
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  build_AX(size);
+  BuildAX(A,C,D,knownX,foundX,size);
   (*---zero out lower triangle---*)
-  FOR row:=n1 TO nn DO
-    FOR col:=n1 TO row-1 DO
+  FOR row:=0 TO LAST(A^) DO
+    FOR col:=0 TO row-1 DO
       A[row,col]:=R.Zero;
     END;
   END;
-  build_B(size);
+  BuildB(B,A,knownX);
 
   Msg("A=" & MF.Fmt(A));
   Msg("B=" & VF.Fmt(B));
   MD.BackSubst(A,x:=foundX,b:=B);
   Msg("knownX=" & VF.Fmt(knownX));
   Msg("foundX=" & VF.Fmt(foundX));
+
+  <*ASSERT VT.NormInf(V.Sub(foundX,knownX)) < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
+
   RETURN result;
 END TestBacksub;
 (*--------------------*)
@@ -108,10 +112,18 @@ PROCEDURE TestHouseholder():BOOLEAN=
 CONST
   ftn = Module & "TestHouseholder";
 VAR
+  A:M.T;
+  B:V.T;
+  C:M.T;
+  D:M.T;
+
+  knownX:V.T;  (*X is an nx1 matrix*)
+  foundX:V.T;
+
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  build_data(4);
+  BuildData(A,C,D,B,knownX,foundX,4);
 
   Msg("A=" & MF.Fmt(A));
   MD.HouseHolder(A);
@@ -150,6 +162,9 @@ BEGIN
 
   MD.SolveTriDiag(a,b,c,r,foundX);
   Msg("foundX=" & VF.Fmt(foundX));
+
+  <*ASSERT VT.NormInf(V.Sub(foundX,knownX)) < RT.Eps * VT.NormInf(knownX) *>
+
   RETURN result;
 END TestTridiag;
 (*---------------------*)
@@ -158,7 +173,17 @@ END TestTridiag;
 (*------------------------*)
 PROCEDURE TestLU():BOOLEAN RAISES {} =
 CONST ftn = Module & "TestLU";
+CONST
+  n = 4;
 VAR
+  A:M.T;
+  B:V.T;
+  C:M.T;
+  D:M.T;
+
+  knownX:V.T;  (*X is an nx1 matrix*)
+  foundX:V.T;
+
   Acopy:=NEW(M.T,n,n);
   det:R.T;
   d:INTEGER;
@@ -166,8 +191,11 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  build_data();
+  BuildData(A,C,D,B,knownX,foundX,n);
   TRY
+    Msg(Fmt.Int(NUMBER(A^))&"\n");
+    Msg(Fmt.Int(NUMBER(A[0]))&"\n");
+    Msg(Fmt.Int(NUMBER(index^))&"\n");
     MD.LUFactor(A,index^,d);
     Msg("after LUFactor: d=" & Fmt.Int(d)
       & ", A=" & MF.Fmt(A));
@@ -186,14 +214,16 @@ BEGIN
 
   EXCEPT
   | Error(err) =>
-    EVAL err;
-    Msg("LU fails\n");
+    Msg("LU fails, error code " & Fmt.Int(ORD(err)) & "\n");
     RETURN FALSE;
   END;
 
   (*---report results---*)
   Msg("knownX= " & VF.Fmt(knownX));
   Msg("foundX= " & VF.Fmt(foundX));
+
+  <*ASSERT VT.NormInf(V.Sub(foundX,knownX)) < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
+
   RETURN TRUE;
 END TestLU;
 (*------------------------*)

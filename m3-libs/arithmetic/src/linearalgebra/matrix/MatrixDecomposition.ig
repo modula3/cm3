@@ -87,7 +87,7 @@ return value "d" is used for BackSubst and det
 (*-----------------*)
 PROCEDURE LUBackSubst(A     :M.T;
                       B     :V.T;
-             READONLY index :IndexArray) RAISES ANY;
+             READONLY index :IndexArray) RAISES {Error};
 (*After LUfactor on A, solves A dot X = B.
 X is returned in B.  B's values are destroyed.
 A is real nxn
@@ -96,7 +96,7 @@ index is integer nx1
 *)
 (*-----------------*)
 PROCEDURE LUInverse(A     :M.T;
-            READONLY index:IndexArray):M.T RAISES ANY;
+            READONLY index:IndexArray):M.T RAISES {Error};
 (*
 Inverse of A goes to B
 Must have done LUFactor on A first
@@ -107,7 +107,7 @@ index is integer nx1
 *)
 (*-----------------*)
 PROCEDURE LUDet(A:M.T;
-                d:INTEGER):R.T RAISES ANY;
+                d:INTEGER):R.T RAISES {Error};
 (*after LUFactor on A and no backsubs,
 returns determinant
 "d" is the parity marker from LUDecomp
