@@ -11,12 +11,12 @@
 (*|      modified on Wed Mar 10 11:01:47 PST 1993 by mjordan *)
 (*|      modified on Tue Mar  9 08:45:18 PST 1993 by jdd     *)
 
-UNSAFE MODULE RTAllocator EXPORTS RTAllocator, RTAllocCnts, RTHooks;
+UNSAFE MODULE RTAllocator
+EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTHeap, RTHeapRep, RTMisc, RTOS, RTType;
+IMPORT Cstdlib, RT0, RTHeap, RTMisc, RTOS, RTType;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
-FROM RTHeapRep IMPORT Header, RefHeader, AllocTraced, newPool;
 
 (* In the following procedures, "RTType.Get(tc)" will fail if "tc" is not
    proper. *)
@@ -79,8 +79,8 @@ PROCEDURE Clone (ref: REFANY): REFANY
     | ORD (RT0.TypeKind.Ref), ORD (RT0.TypeKind.Obj) =>
         x := NewTraced (tc);
     | ORD (RT0.TypeKind.Array) =>
-        VAR nDims: INTEGER;  shape: RTHeapRep.ArrayShape;  BEGIN
-          RTHeapRep.UnsafeGetShape (ref, nDims, shape);
+        VAR nDims: INTEGER;  shape: UnsafeArrayShape;  BEGIN
+          UnsafeGetShape (ref, nDims, shape);
           x := NewTracedArray (tc, SUBARRAY (shape^, 0, nDims));
         END;
     ELSE

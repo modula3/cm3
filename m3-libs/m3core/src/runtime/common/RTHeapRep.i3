@@ -146,11 +146,11 @@ CONST
    pointer to the first data element, then N integers that hold the
    dimensions. *)
 
-TYPE ArrayShape = UNTRACED REF ARRAY [0 .. (*N-1*) 999] OF INTEGER;
+TYPE UnsafeArrayShape = UNTRACED REF ARRAY [0 .. (*N-1*) 999] OF INTEGER;
 
 PROCEDURE UnsafeGetShape (    r          : REFANY;
                           VAR nDimensions: INTEGER;
-                          VAR s          : ArrayShape);
+                          VAR s          : UnsafeArrayShape);
 (* if r is a reference to an open array, the number of open dimensions,
    nDimensions, and size of each dimension, s, is returned.  The array's
    shape vector is valid as long as r exists.  If r is not a reference to
