@@ -9,9 +9,7 @@ Daniel Beer
 IMPORT Word AS W, xWordEx AS Wx;
 FROM xUtils IMPORT Error, Err;
 FROM BigIntegerBasic  IMPORT Zero;
-(*
-IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
-*)
+(*IMPORT IO,Fmt,BigIntegerFmtLex AS BF;*)
 
 <*UNUSED*> CONST Module = "BigIntegerRep.";
 (*==========================*)
@@ -301,8 +299,8 @@ END BitPosEndToBegin;
 PROCEDURE GetMSBPos (READONLY x : T) : BitPos =
 BEGIN
 (*
-IO.Put(Fmt.FN("GetMSBPos (size %s) 16_%s\n",
-       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,16)}));
+IO.Put(Fmt.FN("GetMSBPos (size %s) 16_%s\t",
+       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=BF.FmtStyle{base:=16})}));
 IO.Put(Fmt.FN("MSB of %s: %s\n",
        ARRAY OF TEXT {Fmt.Unsigned(x.data[x.size-1]),
                       Fmt.Int(Wx.FindMostSignifBit(x.data[x.size-1]))}));
@@ -391,13 +389,20 @@ IO.Put(Fmt.FN("q 16_%s (size %s) + SHL (q' 16_%s, {%s,%s})\n",
   END;
 END AddShifted;
 
-PROCEDURE DivModU (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
+(*x and y cannot be READONLY parameters, otherwise conflicts arise,
+  when someone passes the same variable to x and r*)
+PROCEDURE DivModU (x, y : T; VAR r : T) : T RAISES {Error} =
 VAR
   q : T;
   qmswstartpos : BitPos;
   qmsbpos, rmsbpos, ymsbpos : BitPos;
   qmsw,    rmsw,    ymsw    : W.T;
 BEGIN
+(*
+IO.Put(Fmt.FN("DivModU (size %s) 16_%s by (size %s) 16_%s\n",
+       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=BF.FmtStyle{base:=16}),
+                      Fmt.Int(y.size),BF.Fmt(y,style:=BF.FmtStyle{base:=16})}));
+*)
   IF y.size = 0 THEN
     RAISE Error(Err.divide_by_zero);
   END;
@@ -406,17 +411,19 @@ BEGIN
   q.data := NEW(Value,x.size-y.size+1);
   r.size := x.size;
   SUBARRAY(r.data^,0,r.size) := SUBARRAY(x.data^,0,r.size);
-  r.data[x.size  ] := 0;
-  r.data[x.size+1] := 0;
+  r.data[r.size  ] := 0;
+  r.data[r.size+1] := 0;
   Clear(q.data);
 
   (*normalize remainder and divisor temporarily
     divide most significant 32 bit of r by the most significant 16 bit of y*)
+(*IO.Put("GetMSBPos (y)\t");*)
   ymsbpos := GetMSBPos(y);
   ymsw    := GetSubword(y,BitPosEndToBegin(ymsbpos));
   ymsw    := W.RightShift (ymsw, W.Size DIV 2);  (*the division algorithm is fastest if the divisor is clipped to the half number of bits compared with the approximation of the dividend*)
   INC(ymsw);  (*round up to get a lower estimate for quotient*)
 
+(*IO.Put("GetMSBPos (r)\t");*)
   rmsbpos := GetMSBPos(r);
   WHILE CompareBitPos (rmsbpos, ymsbpos) > 0 DO
     rmsw := GetSubword(r,BitPosEndToBegin(rmsbpos));
@@ -429,11 +436,12 @@ IO.Put(Fmt.FN("rmsw %s, ymsw %s, qmsw %s, ymsw*qmsw %s\n",
 *)
     qmsbpos := SubBitPos(rmsbpos,ymsbpos);
     qmswstartpos := SubBitPos(qmsbpos,BitPos{0,W.Size DIV 2});
-    <*ASSERT qmswstartpos.word>=-1 *>
     IF qmswstartpos.word=-1 THEN
       qmsw := W.RightShift(qmsw,W.Size-qmswstartpos.bit);
       qmswstartpos.word:=0;
       qmswstartpos.bit:=0;
+    ELSE
+      <*ASSERT qmswstartpos.word>=0 *>
     END;
     AddShifted     (q,    qmsw, qmswstartpos);
     SubShiftedProd (r, y, qmsw, qmswstartpos);
