@@ -12,9 +12,6 @@ IMPORT NetObjMon, RTParams;
 IMPORT Atom, AtomList, IP, SpecialObj, Transport, NetObjInit, NetObjMonInit,
        TCPNetObj, TCPTransport, Thread;
 
-<*NOWARN*> IMPORT ListPkl;   (* remove when the special is added to List pkg *)
-<*NOWARN*> IMPORT AtomPkl;   (* remove when the special is added to Atom pkg *)
-
 <* PRAGMA LL *>
 
 PROCEDURE Locate(host: TEXT) : Address

@@ -414,6 +414,8 @@ PROCEDURE MarshalTypedVal(fmtWr: Formatter.T;
     TYPECASE t OF
     | Type.Char (ch) => 
           Enumeration(fmtWr, varName, ch, d, 0, ORD(LAST(CHAR)));
+    | Type.WideChar (wch) => 
+          Enumeration(fmtWr, varName, wch, d, 0, ORD(LAST(WIDECHAR)));
     | Type.UserDefined (ud) => 
           Enumeration(fmtWr, varName, t, d, 0, LAST(ud.elts^));
     | Type.Subrange (sub) => 
