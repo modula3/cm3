@@ -2,7 +2,8 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* Portions Copyright 1996, Critical Mass, Inc.                *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.           *)
+(* See file COPYRIGHT-CMASS for details.                       *)
 (*                                                             *)
 (* Last modified on Thu Aug 31 14:03:19 PDT 1995 by steveg     *)
 (*      modified on Wed Dec 21 11:15:30 PST 1994 by kalsow     *)
@@ -55,12 +56,12 @@ PROCEDURE New(handle: WinNT.HANDLE; ds: DirectionSet)
   BEGIN 
     CASE ft OF
     | WinBase.FILE_TYPE_DISK =>
-        RETURN NEW(RegularFile.T, handle := handle, ds := ds)
+      RETURN NEW(RegularFile.T, handle := handle, ds := ds)
     | WinBase.FILE_TYPE_CHAR =>
-        WITH isCon = (WinCon.GetConsoleMode(handle, ADR(cm)) # 0) DO
-          (* If GetConsoleMode succeeds, assume it's a console *)
-          RETURN NEW(Terminal.T, handle := handle, ds := ds, isConsole := isCon);
-        END;
+      WITH isCon = (WinCon.GetConsoleMode(handle, ADR(cm)) = 1) DO
+	(* If GetConsoleMode succeeds, assume it's a console *)
+	RETURN NEW(Terminal.T, handle := handle, ds := ds, isConsole := isCon);
+      END;
     | WinBase.FILE_TYPE_PIPE => RETURN NewPipe(handle, ds)
     ELSE (* includes FILE_TYPE_UNKNOWN, FILE_TYPE_REMOTE *)
       OSErrorWin32.Raise0(WinError.ERROR_INVALID_HANDLE);
@@ -108,7 +109,9 @@ PROCEDURE FileStatus(h: File.T): File.Status  RAISES {OSError.E}=
         status.size := ffd.nFileSizeLow
     | WinBase.FILE_TYPE_CHAR => status.type := Terminal.FileType
     | WinBase.FILE_TYPE_PIPE => status.type := Pipe.FileType
-    ELSE (* includes FILE_TYPE_UNKNOWN, FILE_TYPE_REMOTE *)
+    | WinBase.FILE_TYPE_UNKNOWN => 
+      OSErrorWin32.Raise0(WinError.ERROR_INVALID_HANDLE);
+    ELSE (* includes FILE_TYPE_REMOTE *)
       <* ASSERT FALSE *>
     END;
     RETURN status
