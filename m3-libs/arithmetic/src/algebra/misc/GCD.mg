@@ -68,10 +68,10 @@ BEGIN
   c[1,0] := R.Zero;
   c[1,1] := R.One;
   TRY
-    WHILE NOT R.IsZero(u) DO
-      q:=R.DivMod(v,u,w);
-      v:=u;
-      u:=w;
+    WHILE NOT R.IsZero(v) DO
+      q:=R.DivMod(u,v,w);
+      u:=v;
+      v:=w;
       next[0]:=R.Sub(c[0,0],R.Mul(c[0,0],q));
       next[1]:=R.Sub(c[0,1],R.Mul(c[0,1],q));
       c[0] := c[1];
@@ -80,7 +80,7 @@ BEGIN
   EXCEPT
     Error(err) => <*ASSERT err#Err.divide_by_zero*>
   END;
-  RETURN v;
+  RETURN u;
 END BezoutGCD;
 
 PROCEDURE Bezout(u,v,w:T; VAR (*OUT*) c : ARRAY [0..1],[0..1] OF T) RAISES {Error} =
@@ -108,6 +108,29 @@ BEGIN
   c[0,0] := r;
   c[0,1] := R.Sub(c[0,1],R.Mul(f,c[1,1]));
 END Bezout;
+
+PROCEDURE MACDecompose(u,v:T; VAR (*OUT*) mac : MAC) : T =
+VAR
+  w:T;
+BEGIN
+  TRY
+    mac:=NIL;
+    WHILE NOT R.IsZero(v) DO
+      VAR
+        newmac := NEW(MAC);
+      BEGIN
+        newmac.factor:=R.DivMod(u,v,w);
+        newmac.next:=mac;
+        mac:=newmac;
+      END;
+      u:=v;
+      v:=w;
+    END;
+  EXCEPT
+    Error(err) => <*ASSERT err#Err.divide_by_zero*>
+  END;
+  RETURN u;
+END MACDecompose;
 
 (*==========================*)
 BEGIN
