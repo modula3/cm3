@@ -2,21 +2,23 @@
 %  Quake functions to instantiate operations on generic polynomials.
 %
 
-readonly proc PolynomialBasic (nm, field) is
+readonly proc PolynomialBasic (nm, field, rimpl) is
   local basic  = nm & "PolynomialBasic"
   local vfield = nm & "VectorBasic"
-  build_generic_intf (basic, "PolynomialBasic", [field, vfield], VISIBLE)
-  build_generic_impl (basic, "PolynomialBasic", [field])
+  local rfield = field & rimpl
+  build_generic_intf (basic, "PolynomialBasic", [rfield, vfield], VISIBLE)
+  build_generic_impl (basic, "PolynomialBasic", [rfield])
 end
 
-readonly proc PolynomialFast (nm, field) is
+readonly proc PolynomialFast (nm, field, rimpl) is
   local basic  = nm & "PolynomialBasic"
   local fast   = nm & "PolynomialFast"
-  local vfield = nm & "VectorFast"
-  build_generic_intf (basic, "PolynomialBasic", [field, vfield], VISIBLE)
-  build_generic_impl (basic, "PolynomialBasic", [field])
-  build_generic_intf (fast,  "PolynomialFast",  [field, vfield, basic], VISIBLE)
-  build_generic_impl (fast,  "PolynomialFast",  [field])
+  local rfield = field & rimpl
+  local vfield = field & "VectorFast"
+  build_generic_intf (basic, "PolynomialBasic", [rfield, vfield], VISIBLE)
+  build_generic_impl (basic, "PolynomialBasic", [rfield])
+  build_generic_intf (fast,  "PolynomialFast",  [rfield, vfield, basic], VISIBLE)
+  build_generic_impl (fast,  "PolynomialFast",  [rfield])
 end
 
 readonly proc PolynomialFmtLex (nm, pimpl) is
