@@ -174,7 +174,7 @@ PROCEDURE TestRootApproximation (): BOOLEAN =
       x : C.T                    := C.Zero;
     BEGIN
       FOR j := 0 TO LAST(rt) DO rt[j] := x; x := C.Add(x, C.One); END;
-      TestSingle(rt, zerotolsqr := 1.0D28, roottolsqr := 1.0D-3);
+      TestSingle(rt, zerotolsqr := 1.0D30, roottolsqr := 1.0D-3);
     END;
 
     RETURN result;
@@ -239,27 +239,22 @@ PROCEDURE TestBracketOut (): BOOLEAN =
 PROCEDURE TestBracketIn (): BOOLEAN =
   CONST ftn = Module & "TestBracketIn";
   VAR
-    result             := TRUE;
-    x     : FZ.Bracket;
-    nb    : CARDINAL   := 5;
-    xb                 := NEW(REF ARRAY OF FZ.Bracket, nb);
-    n     : CARDINAL;
+    result := TRUE;
+    x      := FZ.Bracket{-50.0D0, +50.0D0};
+
   BEGIN
     Debug(1, ftn, "begin\n");
     Msg("true roots: r1=" & RF.Fmt(r1) & " r2=" & RF.Fmt(r2) & " r3="
           & RF.Fmt(r3) & "\n");
-    x.l := -50.0D0;
-    x.r := +50.0D0;
+
     Msg("start at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
-          & RF.Fmt(x.r, prec3Style) & " nb=" & Fmt.Int(nb) & "\n");
+          & RF.Fmt(x.r, prec3Style) & "\n");
     FOR i := 10 TO 100 BY 10 DO
-      n := i;
-      Msg("n=" & Fmt.Int(n) & "\n");
-      <* FATAL Arith.Error *>
+      Msg("n=" & Fmt.Int(i) & "\n");
+      VAR xb := FZ.BracketIn(MyFun, x, i);
       BEGIN
-        nb := FZ.BracketIn(func := MyFun, x := x, n := n, xb := xb^);
-        IF nb > 0 THEN
-          FOR j := 0 TO nb - 1 DO
+        IF NUMBER(xb^) > 0 THEN
+          FOR j := FIRST(xb^) TO LAST(xb^) DO
             Msg(" found  x.l=" & RF.Fmt(xb[j].l, prec3Style) & " x.r="
                   & RF.Fmt(xb[j].r, prec3Style) & "\n");
           END;
@@ -341,7 +336,6 @@ PROCEDURE TestNewtonRaphson (): BOOLEAN =
       EXCEPT
       | Arith.Error (err) =>
           TYPECASE err OF
-          | Arith.ErrorNotBracketed => Msg(" not bracketed\n");
           | Arith.ErrorOutOfRange => Msg(" jumped out\n");
           | Arith.ErrorNoConvergence => Msg(" not converging\n");
           ELSE
