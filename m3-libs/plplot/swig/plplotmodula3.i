@@ -277,67 +277,67 @@ We should use exceptions to indicate errors.
 %pragma(modula3) constset="prefix=PL_PARSE_;set;srcstyle=underscore,prefix=parse;ParseSet,Parse";
 
 
-%typemap("rawintype") PLINT  * %{C.int%}
-%typemap("rawintype") PLFLT  * %{C.double%}
-%typemap("rawintype") double * %{C.double%}
+%typemap("m3rawintype") PLINT  * %{C.int%}
+%typemap("m3rawintype") PLFLT  * %{C.double%}
+%typemap("m3rawintype") double * %{C.double%}
 
-%typemap("m3intype",numinputs=0) PLArraySize n %{%}
+%typemap("m3wrapintype",numinputs=0) PLArraySize n %{%}
 
-%typemap("rawinmode") PLFLTArray %{READONLY%}
-%typemap("m3inmode")  PLFLTArray %{READONLY%}
-%typemap("rawintype") PLFLTArray %{(*ARRAY OF*) C.double%}
-%typemap("m3intype")  PLFLTArray %{V.TBody%}
-%typemap("m3argraw")  PLFLTArray %{$1_name[0]%}
-%typemap("m3intype:import") PLFLTArray %{LongRealVector AS V%}
+%typemap("m3rawinmode")   PLFLTArray %{READONLY%}
+%typemap("m3wrapinmode")  PLFLTArray %{READONLY%}
+%typemap("m3rawintype")   PLFLTArray %{(*ARRAY OF*) C.double%}
+%typemap("m3wrapintype")  PLFLTArray %{V.TBody%}
+%typemap("m3wrapargraw")  PLFLTArray %{$1_name[0]%}
+%typemap("m3wrapintype:import") PLFLTArray %{LongRealVector AS V%}
 
-%typemap("m3argdecl") PLFLTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3argdecl") PLFLTArrayX   %{nx:=NUMBER($1_name);%}
-%typemap("m3argdecl") PLFLTArrayY   %{ny:=NUMBER($1_name);%}
-//%typemap("m3incheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-//%typemap("m3incheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3incheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3incheck:throws") PLFLTArrayCk %{NA.Error%}
-%typemap("m3incheck:throws:import") PLFLTArrayCk %{NADefinitions AS NA%}
-
-
-%typemap("rawinmode") PLINTArray %{READONLY%}
-%typemap("m3inmode")  PLINTArray %{READONLY%}
-%typemap("rawintype") PLINTArray %{C.int%}
-%typemap("m3intype")  PLINTArray %{ARRAY OF INTEGER%}
-%typemap("m3argraw")  PLINTArray %{$1_name[0]%}
-
-%typemap("m3argdecl") PLINTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3incheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3incheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3incheck:throws") PLINTArrayCk        %{NA.Error%}
-%typemap("m3incheck:throws") PLINTArrayCkInterim %{NA.Error%}
+%typemap("m3wrapargvar")  PLFLTArrayFst %{n:=NUMBER($1_name);%}
+%typemap("m3wrapargvar")  PLFLTArrayX   %{nx:=NUMBER($1_name);%}
+%typemap("m3wrapargvar")  PLFLTArrayY   %{ny:=NUMBER($1_name);%}
+//%typemap("m3wrapincheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;%}
+//%typemap("m3wrapincheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;%}
+%typemap("m3wrapincheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(NA.Err.bad_size) END;%}
+%typemap("m3wrapincheck:throws") PLFLTArrayCk %{NA.Error%}
+%typemap("m3wrapincheck:throws:import") PLFLTArrayCk %{NADefinitions AS NA%}
 
 
-%typemap("rawinmode") PLFLTMatrix %{READONLY%}
-%typemap("m3inmode")  PLFLTMatrix %{READONLY%}
-%typemap("rawintype") PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
-%typemap("m3intype")  PLFLTMatrix %{M.TBody%}
-%typemap("m3argraw")  PLFLTMatrix %{$1[0]%}
-%typemap("m3intype:import") PLFLTMatrix %{LongRealMatrix AS M%}
+%typemap("m3rawinmode")   PLINTArray %{READONLY%}
+%typemap("m3wrapinmode")  PLINTArray %{READONLY%}
+%typemap("m3rawintype")   PLINTArray %{C.int%}
+%typemap("m3wrapintype")  PLINTArray %{ARRAY OF INTEGER%}
+%typemap("m3wrapargraw")  PLINTArray %{$1_name[0]%}
 
-%typemap("m3intype",numinputs=0) PLArraySize nx %{%}
-%typemap("m3intype",numinputs=0) PLArraySize ny %{%}
+%typemap("m3wrapargvar")  PLINTArrayFst %{n:=NUMBER($1_name);%}
+%typemap("m3wrapincheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(NA.Err.bad_size) END;%}
+%typemap("m3wrapincheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(NA.Err.bad_size) END;%}
+%typemap("m3wrapincheck:throws") PLINTArrayCk        %{NA.Error%}
+%typemap("m3wrapincheck:throws") PLINTArrayCkInterim %{NA.Error%}
 
-%typemap("m3argdecl") PLFLTMatrixFst %{$1:REF ARRAY OF ADDRESS;
+
+%typemap("m3rawinmode")   PLFLTMatrix %{READONLY%}
+%typemap("m3wrapinmode")  PLFLTMatrix %{READONLY%}
+%typemap("m3rawintype")   PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+%typemap("m3wrapintype")  PLFLTMatrix %{M.TBody%}
+%typemap("m3wrapargraw")  PLFLTMatrix %{$1[0]%}
+%typemap("m3wrapintype:import") PLFLTMatrix %{LongRealMatrix AS M%}
+
+%typemap("m3wrapintype",numinputs=0) PLArraySize nx %{%}
+%typemap("m3wrapintype",numinputs=0) PLArraySize ny %{%}
+
+%typemap("m3wrapargvar")  PLFLTMatrixFst %{$1:REF ARRAY OF ADDRESS;
 nx:=NUMBER($1_name);
 ny:=NUMBER($1_name[0]);%}
-%typemap("m3inconv")  PLFLTMatrixFst
+%typemap("m3wrapinconv")  PLFLTMatrixFst
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 
-%typemap("m3argdecl") PLFLTMatrixCk %{$1:REF ARRAY OF ADDRESS;%}
-%typemap("m3inconv")  PLFLTMatrixCk
+%typemap("m3wrapargvar")  PLFLTMatrixCk %{$1:REF ARRAY OF ADDRESS;%}
+%typemap("m3wrapinconv")  PLFLTMatrixCk
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
-%typemap("m3incheck") PLFLTMatrixCk
+%typemap("m3wrapincheck") PLFLTMatrixCk
 %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
 IF NUMBER($1_name[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3incheck:throws") PLFLTMatrixCk %{NA.Error%}
+%typemap("m3wrapincheck:throws") PLFLTMatrixCk %{NA.Error%}
 
 
 
@@ -360,58 +360,58 @@ TYPE
 PROCEDURE CallbackM3()=BEGIN END CallbackM3;
 %}
 
-%typemap(rawintype) pltr_func %{PlotterFunc%}
-%typemap(rawintype) PLPointer %{REFANY%}
-%typemap(rawinmode) PLPointer %{%}
+%typemap(m3rawintype) pltr_func %{PlotterFunc%}
+%typemap(m3rawintype) PLPointer %{REFANY%}
+%typemap(m3rawinmode) PLPointer %{%}
 
-%typemap(m3intype)  pltr_func %{CallbackM3Proc%}
-%typemap(m3intype)  PLPointer %{REFANY%}
-%typemap(m3inmode)  PLPointer %{%}
+%typemap(m3wrapintype)  pltr_func %{CallbackM3Proc%}
+%typemap(m3wrapintype)  PLPointer %{REFANY%}
+%typemap(m3wrapinmode)  PLPointer %{%}
 
-%typemap(m3argraw) (pltr_func pltr, PLPointer OBJECT_DATA)
+%typemap(m3wrapargraw) (pltr_func pltr, PLPointer OBJECT_DATA)
 %{CallbackM3, NEW(REF CallbackM3Data,callback:=$1_name,callbackData:=$2_name)%}
 
-%typemap(rawintype) defined_func %{PlotterFunc%}
-%typemap(m3intype,numinputs=0)  defined_func %{PROCEDURE (x: R.T): R.T%}
-%typemap(m3argraw)  defined_func %{NIL (*not yet supported*)%}
+%typemap(m3rawintype) defined_func %{PlotterFunc%}
+%typemap(m3wrapintype,numinputs=0)  defined_func %{PROCEDURE (x: R.T): R.T%}
+%typemap(m3wrapargraw)  defined_func %{NIL (*not yet supported*)%}
 
-%typemap(rawintype) fill_func %{PlotterFunc%}
-%typemap(m3intype,numinputs=0)  fill_func %{PROCEDURE ()%}
-%typemap(m3argraw)  fill_func %{NIL (*not yet supported*)%}
+%typemap(m3rawintype) fill_func %{PlotterFunc%}
+%typemap(m3wrapintype,numinputs=0)  fill_func %{PROCEDURE ()%}
+%typemap(m3wrapargraw)  fill_func %{NIL (*not yet supported*)%}
 
 
-%typemap(rawintype) char *legline[4] %{READONLY%}
-%typemap(m3intype)  char *legline[4] %{READONLY%}
-%typemap(rawintype) char *legline[4] %{ARRAY [0..3] OF C.char_star%}
-%typemap(m3intype)  char *legline[4] %{ARRAY [0..3] OF TEXT%}
-%typemap(m3argdecl) char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
-%typemap("m3argdecl:import") char *legline[4] "Ctypes AS C"
-%typemap(m3inconv)  char *legline[4]
+%typemap(m3rawintype)   char *legline[4] %{READONLY%}
+%typemap(m3wrapintype)  char *legline[4] %{READONLY%}
+%typemap(m3rawintype)   char *legline[4] %{ARRAY [0..3] OF C.char_star%}
+%typemap(m3wrapintype)  char *legline[4] %{ARRAY [0..3] OF TEXT%}
+%typemap(m3wrapargvar)  char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
+%typemap("m3wrapargdecl:import") char *legline[4] "Ctypes AS C"
+%typemap(m3wrapinconv)  char *legline[4]
 %{FOR i:=FIRST($1_name) TO LAST($1_name) DO
 $1[i]:=M3toC.SharedTtoS($1_name[i]);
 END;%}
-%typemap(m3argraw)  char *legline[4]
+%typemap(m3wrapargraw)  char *legline[4]
 %{$1%}
-%typemap(m3freearg) char *legline[4]
+%typemap(m3wrapfreearg) char *legline[4]
 %{FOR i:=FIRST($1_name) TO LAST($1_name) DO
 M3toC.FreeSharedS($1_name[i],$1[i]);
 END;%}
 
-%typemap(m3indefault) PLINT oldwin "0"
+%typemap(m3wrapindefault) PLINT oldwin "0"
 
 %insert(m3wrapintf) %{TYPE
 AxesScaling = {none, independent, equal, square};
 Tile = {box, ticks, axes, gridMajor, gridMinor, xTicksLog, yTicksLog};
 TileSet = SET OF Tile;
 %}
-%typemap(m3intype)    PLINT just %{AxesScaling%}
-%typemap(m3indefault) PLINT just %{AxesScaling.independent%}
-%typemap(m3argraw)    PLINT just %{ORD($1_name)-1%}
-%typemap(m3intype)    PLINT axis %{TileSet%}
-%typemap(m3indefault) PLINT axis %{TileSet{Tile.box,Tile.ticks}%}
-%typemap(m3argdecl)   PLINT axis %{$1: C.int;%}
-%typemap(m3argraw)    PLINT axis %{$1%}
-%typemap(m3inconv) PLINT axis
+%typemap(m3wrapintype)    PLINT just %{AxesScaling%}
+%typemap(m3wrapindefault) PLINT just %{AxesScaling.independent%}
+%typemap(m3wrapargraw)    PLINT just %{ORD($1_name)-1%}
+%typemap(m3wrapintype)    PLINT axis %{TileSet%}
+%typemap(m3wrapindefault) PLINT axis %{TileSet{Tile.box,Tile.ticks}%}
+%typemap(m3wrapargvar)    PLINT axis %{$1: C.int;%}
+%typemap(m3wrapargraw)    PLINT axis %{$1%}
+%typemap(m3wrapinconv) PLINT axis
 %{IF $1_name = TileSet{} THEN
 $1:=-2;
 ELSIF $1_name = TileSet{Tile.box} THEN
@@ -444,14 +444,14 @@ DirTileSet = SET OF DirTile;
 %insert(m3wrapimpl) %{CONST
 tileToChar = ARRAY DirTile OF CHAR {'a','b','c','f','g','h','i','l','m','n','s','t'};
 %}
-%typemap(rawintype) const char *xopt, const char *yopt, const char *zopt %{(*ARRAY OF*) CHAR%}
-%typemap(rawinmode) const char *xopt, const char *yopt, const char *zopt %{READONLY%}
-%typemap(m3intype)  const char *xopt, const char *yopt, const char *zopt %{DirTileSet%}
-%typemap(m3argdecl) const char *xopt, const char *yopt, const char *zopt
+%typemap(m3rawintype)   const char *xopt, const char *yopt, const char *zopt %{(*ARRAY OF*) CHAR%}
+%typemap(m3rawinmode)   const char *xopt, const char *yopt, const char *zopt %{READONLY%}
+%typemap(m3wrapintype)  const char *xopt, const char *yopt, const char *zopt %{DirTileSet%}
+%typemap(m3wrapargvar)  const char *xopt, const char *yopt, const char *zopt
 %{$1: ARRAY [0..ORD(LAST(Tile))+1] OF CHAR;
 $1i: CARDINAL := 0;%}
-%typemap(m3argraw)  const char *xopt, const char *yopt, const char *zopt %{$1[0]%}
-%typemap(m3inconv)  const char *xopt, const char *yopt, const char *zopt
+%typemap(m3wrapargraw)  const char *xopt, const char *yopt, const char *zopt %{$1[0]%}
+%typemap(m3wrapinconv)  const char *xopt, const char *yopt, const char *zopt
 %{FOR t:=FIRST(DirTile) TO LAST(DirTile) DO
 IF t IN $1_name THEN
 $1[$1i]:=tileToChar[t];
@@ -460,7 +460,7 @@ END;
 END;
 $1[$1i]:='\000';
 %}
-%typemap(m3freearg)  const char *xopt, const char *yopt, const char *zopt %{%}
+%typemap(m3wrapfreearg)  const char *xopt, const char *yopt, const char *zopt %{%}
 
 
 
@@ -469,61 +469,61 @@ TYPE
   LineStyle = {none, continuous, shortDash, longDash, longDashShortGap,
                   dotDash, complex0, complex1, complex2};
 %}
-%typemap(m3intype)  PLINT lin     %{[LineStyle.continuous..LAST(LineStyle)]%}
-%typemap(m3argraw)  PLINT lin     %{ORD($1_name)%}
+%typemap(m3wrapintype)  PLINT lin     %{[LineStyle.continuous..LAST(LineStyle)]%}
+%typemap(m3wrapargraw)  PLINT lin     %{ORD($1_name)%}
 
-%typemap(m3intype)  PLINT mode    %{BOOLEAN%}
-%typemap(m3argraw)  PLINT mode    %{ORD($1_name)%}
+%typemap(m3wrapintype)  PLINT mode    %{BOOLEAN%}
+%typemap(m3wrapargraw)  PLINT mode    %{ORD($1_name)%}
 
-%typemap(m3outconv) PLINTOutput status %{$1#0%}
-%typemap(m3outtype) PLINTOutput status %{BOOLEAN%}
+%typemap(m3wrapoutconv) PLINTOutput status %{$1#0%}
+%typemap(m3wrapouttype) PLINTOutput status %{BOOLEAN%}
 
-%typemap(m3inmode)  PLINT *p_argc %{VAR%}
-%typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
+%typemap(m3wrapinmode)  PLINT *p_argc %{VAR%}
+%typemap(m3wrapintype)  PLINT *p_argc %{CARDINAL%}
 
-%typemap(rawinmode) char **argv   %{READONLY%}
-%typemap(m3inmode)  char **argv   %{READONLY%}
-%typemap(rawintype) char **argv   %{(*ARRAY OF*) C.char_star%}
-%typemap(m3intype)  char **argv   %{ARRAY OF TEXT%}
+%typemap(m3rawinmode)   char **argv   %{READONLY%}
+%typemap(m3wrapinmode)  char **argv   %{READONLY%}
+%typemap(m3rawintype)   char **argv   %{(*ARRAY OF*) C.char_star%}
+%typemap(m3wrapintype)  char **argv   %{ARRAY OF TEXT%}
 
-%typemap("m3intype")         PLFLT "R.T"
-%typemap("m3intype:import")  PLFLT "LongRealBasic AS R"
+%typemap("m3wrapintype")         PLFLT "R.T"
+%typemap("m3wrapintype:import")  PLFLT "LongRealBasic AS R"
 
-%typemap("m3argdir")         PLFLTOutput "out"
-%typemap("m3outtype")        PLFLTOutput "R.T"
-%typemap("m3outtype:import") PLFLTOutput "LongRealBasic AS R"
+%typemap("m3wrapargdir")         PLFLTOutput "out"
+%typemap("m3wrapouttype")        PLFLTOutput "R.T"
+%typemap("m3wrapouttype:import") PLFLTOutput "LongRealBasic AS R"
 
-%typemap("m3argdir")  PLINTOutput "out"
-%typemap("m3argdecl") PLINTOutput %{$1: C.int;%}
-%typemap("m3argraw")  PLINTOutput %{$1%}
-%typemap("m3outconv") PLINTOutput %{$1%}
-%typemap("m3outtype") PLINTOutput %{INTEGER%}
+%typemap("m3wrapargdir")  PLINTOutput "out"
+%typemap("m3wrapargvar")  PLINTOutput %{$1: C.int;%}
+%typemap("m3wrapargraw")  PLINTOutput %{$1%}
+%typemap("m3wrapoutconv") PLINTOutput %{$1%}
+%typemap("m3wrapouttype") PLINTOutput %{INTEGER%}
 /*this is a workaround and can be removed sometimes, I hope*/
-%typemap("m3outdecl") PLINTOutput %{$1_name:C.int%}
-%typemap("m3outname") PLINTOutput %{$1_name%}
+%typemap("m3outvar")  PLINTOutput %{$1_name:C.int%}
+%typemap("m3wrapoutname") PLINTOutput %{$1_name%}
 %typemap("m3outdecl:import") PLINTOutput %{Ctypes AS C%}
 
-%typemap(m3argraw) char %{ORD($1_name)%}
+%typemap(m3wrapargraw) char %{ORD($1_name)%}
 
 
 
 
-%feature("modula3:multiretval") plcalc_world;
-%feature("modula3:multiretval") plgchr;
-%feature("modula3:multiretval") plgcol0;
-%feature("modula3:multiretval") plgcolbg;
-%feature("modula3:multiretval") plgdidev;
-%feature("modula3:multiretval") plgdiplt;
-%feature("modula3:multiretval") plgfam;
-%feature("modula3:multiretval") plgpage;
-%feature("modula3:multiretval") plgspa;
-%feature("modula3:multiretval") plgvpd;
-%feature("modula3:multiretval") plgvpw;
-%feature("modula3:multiretval") plgxax;
-%feature("modula3:multiretval") plgyax;
-%feature("modula3:multiretval") plgzax;
-%feature("modula3:multiretval") plHLS_RGB;
-%feature("modula3:multiretval") plRGB_HLS;
+%m3multiretval plcalc_world;
+%m3multiretval plgchr;
+%m3multiretval plgcol0;
+%m3multiretval plgcolbg;
+%m3multiretval plgdidev;
+%m3multiretval plgdiplt;
+%m3multiretval plgfam;
+%m3multiretval plgpage;
+%m3multiretval plgspa;
+%m3multiretval plgvpd;
+%m3multiretval plgvpw;
+%m3multiretval plgxax;
+%m3multiretval plgyax;
+%m3multiretval plgzax;
+%m3multiretval plHLS_RGB;
+%m3multiretval plRGB_HLS;
 
 
 /* swig compatible PLplot API definitions from here on. */
