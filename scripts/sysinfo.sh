@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.34 2003-07-10 23:17:41 wagner Exp $
+# $Id: sysinfo.sh,v 1.35 2003-07-16 10:51:41 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -93,7 +93,8 @@ strip_exe() {
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
-export GCWRAPFLAGS=""
+GCWRAPFLAGS=""
+export GCWRAPFLAGS
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
