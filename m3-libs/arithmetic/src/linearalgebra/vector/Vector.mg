@@ -2,8 +2,9 @@ GENERIC MODULE Vector(R, VR);
 (*Arithmetic for Modula-3, see doc for details*)
 FROM Arithmetic IMPORT Error;
 
-<*UNUSED*>
-CONST Module = "Vector.";
+<* UNUSED *>
+CONST
+  Module = "Vector.";
 
 (*-----------------*)
 PROCEDURE New (n: CARDINAL): T =
@@ -67,6 +68,16 @@ PROCEDURE Copy (x: T): T =
     z^ := x^;
     RETURN z;
   END Copy;
+
+(*-----------------*)
+PROCEDURE Reverse (x: T): T =
+  VAR
+    z           := NEW(T, NUMBER(x^));
+    j: CARDINAL := LAST(x^) + 1;
+  BEGIN
+    FOR i := FIRST(z^) TO LAST(z^) DO DEC(j); z[i] := x[j]; END;
+    RETURN z;
+  END Reverse;
 
 
 (*---------------------*)
