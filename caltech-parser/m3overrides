@@ -66,3 +66,8 @@ vbtkit = ROOT & "/m3-ui/vbtkit"
 if not stale(vbtkit, vbtkit)
   override("vbtkit", ROOT & "/m3-ui")
 end
+
+parseparams = ROOT & "/m3-libs/parseparams"
+if not stale(parseparams, parseparams)
+  override("parseparams", ROOT & "/m3-libs")
+end
