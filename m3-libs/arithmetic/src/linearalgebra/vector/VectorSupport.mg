@@ -1,8 +1,5 @@
 GENERIC MODULE VectorSupport(R);
-(*
-Abstract:
-
-*)
+(*Copyright (c) 1996, m3na project *)
 FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*>
@@ -63,23 +60,6 @@ PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error} =
     RETURN sum;
   END Inner;
 
-
-PROCEDURE Apply (READONLY x: T; f: ApplyFtn) =
-  BEGIN
-    FOR j := 0 TO LAST(x) DO f(x[j]); END;
-  END Apply;
-
-PROCEDURE Map (VAR y: T; READONLY x: T; f: MapFtn) RAISES {Error} =
-  BEGIN
-    AssertEqualSize(x, y);
-    FOR j := 0 TO LAST(x) DO y[j] := f(x[j]); END;
-  END Map;
-
-PROCEDURE Reduce (READONLY x: T; f: ReduceFtn; accu: R.T): R.T =
-  BEGIN
-    FOR j := 0 TO LAST(x) DO accu := f(accu, x[j]); END;
-    RETURN accu;
-  END Reduce;
 
 
 PROCEDURE Sum (READONLY x: T): R.T =

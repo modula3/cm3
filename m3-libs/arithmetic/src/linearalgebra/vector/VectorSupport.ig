@@ -18,10 +18,6 @@ PROCEDURE Neg (VAR (*OUT*) z: T; READONLY x: T) RAISES {Error};
 PROCEDURE Scale (VAR (*OUT*) z: T; READONLY x: T; y: R.T) RAISES {Error};
 PROCEDURE Inner (READONLY (*OUT*) x, y: T): R.T RAISES {Error};
 
-PROCEDURE Apply(READONLY x:T;f:ApplyFtn);
-PROCEDURE Map(VAR z:T;READONLY x:T;f:MapFtn) RAISES {Error};
-PROCEDURE Reduce(READONLY x:T;f:ReduceFtn;init:R.T):R.T;
-
 PROCEDURE Sum(READONLY x:T):R.T;
 
 (*==========================*)
