@@ -14,7 +14,7 @@ TYPE
 
 <*UNUSED*>
 PROCEDURE Lex(str:TEXT):T RAISES {Error};
-PROCEDURE Fmt(mat:T;
+PROCEDURE Fmt(x:T;
               style:=F.Style.Fix;
               prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure};
 
