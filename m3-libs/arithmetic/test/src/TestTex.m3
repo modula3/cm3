@@ -1,5 +1,5 @@
 MODULE TestTex EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Tests for Tex module. *)
 
@@ -27,9 +27,9 @@ IMPORT LongRealBasic             AS R,
 
 IMPORT Arithmetic AS Arith;
 
-(*=======================*)
+
 CONST Module = "TestTex.";
-(*----------------------*)
+
 PROCEDURE TestTexVector (): BOOLEAN =
   CONST
     ftn      = Module & "TestTexVector";
@@ -66,7 +66,7 @@ PROCEDURE TestTexVector (): BOOLEAN =
         out, "\\cdot" & VF.Tex(x,
                                style := VF.TexStyle{
                                           flags := VF.TexFlagSet{
-                                                     VF.TexFlag.vertical}}));
+                                                     VF.TexFlag.Vertical}}));
       Wr.PutText(out, "$$\n");
     END;
 
@@ -101,7 +101,7 @@ PROCEDURE TestTexVector (): BOOLEAN =
           out, FrF.Tex(
                  Fr.T{y, x},
                  style := FrF.TexStyle{
-                            flags := FrF.TexFlagSet{FrF.TexFlag.fraction}})
+                            flags := FrF.TexFlagSet{FrF.TexFlag.Fraction}})
                  & "&=&");
         <* FATAL Arith.Error *>
         VAR
@@ -141,14 +141,14 @@ PROCEDURE TestTexVector (): BOOLEAN =
         Wr.PutText(out, "\\lefteqn{" & PF.Tex(y[j]) & ":}\\\\\n");
         Wr.PutText(out, PF.Tex(y[j], style := PF.TexStyle{
                                                 flags := PF.TexFlagSet{
-                                                           Flag.powerSum}})
+                                                           Flag.PowerSum}})
                           & "&=&");
         Wr.PutText(
           out, PF.Tex(y[j], style :=
                               PF.TexStyle{
                                 flags := PF.TexFlagSet{
-                                           Flag.powerSum, Flag.simplePower,
-                                           Flag.omitZero, Flag.reverse}})
+                                           Flag.PowerSum, Flag.SimplePower,
+                                           Flag.OmitZero, Flag.Reverse}})
                  & "\\\\\n");
       END;
       Wr.PutText(out, "\\end{eqnarray*}\n");
@@ -166,7 +166,7 @@ PROCEDURE TestTexVector (): BOOLEAN =
 
     RETURN result;
   END TestTexVector;
-(*-------------------------*)
+
 PROCEDURE TestTex (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -177,6 +177,6 @@ PROCEDURE TestTex (): BOOLEAN =
     EVAL TestTexVector();
     RETURN result;
   END TestTex;
-(*=======================*)
+
 BEGIN
 END TestTex.

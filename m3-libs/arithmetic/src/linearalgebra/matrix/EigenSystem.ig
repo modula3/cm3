@@ -1,5 +1,5 @@
 GENERIC INTERFACE EigenSystem(RT, V, M, LA);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Routines to solve eigenvalue problems. *)
 
@@ -11,15 +11,13 @@ TYPE
                 vector: V.T;
               END;
 
-PROCEDURE PowerMethod (A      : M.T;
-                       tol               := RT.Eps * FLOAT(100, RT.T);
-                       maxiter: CARDINAL := 100;                       ):
+PROCEDURE PowerMethod
+  (A: M.T; tol := RT.Eps * FLOAT(100, RT.T); maxiter: CARDINAL := 100; ):
   EigenPair RAISES {Error};
 (* May raise Arith.ErrorNoConvergence *)
 
-PROCEDURE SquareMethod (A      : M.T;
-                        tol               := RT.Eps * FLOAT(100, RT.T);
-                        maxiter: CARDINAL := 100;                       ):
+PROCEDURE SquareMethod
+  (A: M.T; tol := RT.Eps * FLOAT(100, RT.T); maxiter: CARDINAL := 100; ):
   EigenPair RAISES {Error};
 (* May raise Arith.ErrorNoConvergence *)
 
@@ -45,7 +43,7 @@ PROCEDURE Jacobi (VAR a        : M.T;
                   VAR d        : V.T;
                   VAR vects    : M.T;
                   VAR nrot     : INTEGER;
-                      eigenvals            := FALSE);
+                      eigenvals            := FALSE; );
 (*
   It must hold
 
@@ -54,28 +52,22 @@ PROCEDURE Jacobi (VAR a        : M.T;
   NUMBER(v^) >= n AND NUMBER(v[0]) >= n
 *)
 
-PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T);
+PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T; );
 
-PROCEDURE Tred1 (n: CARDINAL; VAR a: M.T; VAR d, e, e2: V.T);
+PROCEDURE Tred1 (n: CARDINAL; VAR a: M.T; VAR d, e, e2: V.T; );
 
-PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T);
+PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T; );
 
-PROCEDURE Trbak1 (    n     : CARDINAL;
-                      a     : M.T;
-                      d, e  : V.T;
-                  VAR z     : M.T;
-                      m1, m2: CARDINAL  );
+PROCEDURE Trbak1
+  (n: CARDINAL; a: M.T; d, e: V.T; VAR z: M.T; m1, m2: CARDINAL; );
 
-PROCEDURE Trbak3 (    n     : CARDINAL;
-                      a     : V.T;
-                      d, e  : V.T;
-                  VAR z     : M.T;
-                      m1, m2: CARDINAL  );
+PROCEDURE Trbak3
+  (n: CARDINAL; a: V.T; d, e: V.T; VAR z: M.T; m1, m2: CARDINAL; );
 
-PROCEDURE Tql1 (VAR d, e: V.T) RAISES {Error};
+PROCEDURE Tql1 (VAR d, e: V.T; ) RAISES {Error};
 (* May raise Arith.ErrorNoConvergence *)
 
-PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T) RAISES {Error};
+PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T; ) RAISES {Error};
 (* May raise Arith.ErrorNoConvergence *)
 
 END EigenSystem.

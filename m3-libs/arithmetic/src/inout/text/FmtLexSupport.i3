@@ -7,9 +7,9 @@ IMPORT Rd, Thread;
 IMPORT Lex AS L;
 
 TYPE
-  Precedence = {sum              (* a-b is considered as a+b*(-1) *)
-                , product        (* a/b is considered as a*b^(-1) *)
-                , power          (* this refers to parentheses of the
+  Precedence = {Sum              (* a-b is considered as a+b*(-1) *)
+                , Product        (* a/b is considered as a*b^(-1) *)
+                , Power          (* this refers to parentheses of the
                                     basis, the exponent can always live
                                     without parentheses*)
                };

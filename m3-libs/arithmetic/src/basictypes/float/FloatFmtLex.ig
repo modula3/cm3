@@ -30,7 +30,7 @@ TYPE
                prec : CARDINAL := R.MaxSignifDigits - 3;
              END;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
+PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.Sum):
   TEXT;
 
 

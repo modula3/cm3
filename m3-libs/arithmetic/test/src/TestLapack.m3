@@ -1,9 +1,5 @@
 UNSAFE MODULE TestLapack EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for XYZ module.
-
-   1/1/96 <name> Initial version
-
-   *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Fmt, Wr, Thread;
 IMPORT LongRealBasic  AS R,
@@ -18,11 +14,12 @@ IMPORT LongRealBasic  AS R,
        LongRealMatrixFmtLex AS MF;
 IMPORT Arithmetic;
 
-<*FATAL Arithmetic.Error, Thread.Alerted, Wr.Failure*>
-(*=======================*)
-CONST Module = "TestLapack.";
+<* FATAL Arithmetic.Error, Thread.Alerted, Wr.Failure *>
+  
+CONST
+  Module = "TestLapack.";
 
-(*----------------------*)
+
 PROCEDURE TestBasic (): BOOLEAN =
   CONST ftn = Module & "TestBasic";
 
@@ -39,7 +36,7 @@ PROCEDURE TestBasic (): BOOLEAN =
 
     RETURN result;
   END TestBasic;
-(*----------------------*)
+
 PROCEDURE TestLinAlg (): BOOLEAN =
   CONST ftn = Module & "TestLinAlg";
 
@@ -58,7 +55,7 @@ PROCEDURE TestLinAlg (): BOOLEAN =
 
     Msg(MF.Fmt(A) & "\n");
 
-    ev := ES.EigenValues(A, flags := ES.EVFlagSet{ES.EVFlag.schurVectors});
+    ev := ES.EigenValues(A, flags := ES.EVFlagSet{ES.EVFlag.SchurVectors});
 
     Msg(MF.Fmt(ev.upperTri) & "\n");
     Msg(MF.Fmt(ev.schur) & "\n");
@@ -70,10 +67,11 @@ PROCEDURE TestLinAlg (): BOOLEAN =
 
     RETURN result;
   END TestLinAlg;
-(*-------------------------*)
+
 PROCEDURE TestLapack (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestLapack";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestLapack";
   VAR result := TRUE;
   BEGIN
     NewLine();
@@ -82,6 +80,6 @@ PROCEDURE TestLapack (): BOOLEAN =
     EVAL TestLinAlg();
     RETURN result;
   END TestLapack;
-(*=======================*)
+
 BEGIN
 END TestLapack.
