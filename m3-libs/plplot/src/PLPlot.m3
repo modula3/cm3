@@ -40,6 +40,11 @@ PROCEDURE Clear () =
     PL.plclear();
   END Clear;
 
+PROCEDURE Advance (page: INTEGER) =
+  BEGIN
+    PL.pladv(page);
+  END Advance;
+
 PROCEDURE SetXORMode (mode: BOOLEAN): BOOLEAN =
   VAR success: PL.PLINT;
   BEGIN

@@ -41,6 +41,10 @@ PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
 PROCEDURE Clear ();
 (* Clear current subpage. *)
 
+PROCEDURE Advance (page: INTEGER);
+(* pladv: "Advance to subpage \"page\", or to the next one if \"page\" =
+   0." *)
+
 <*INLINE*>
 PROCEDURE SetXORMode (mode: BOOLEAN): BOOLEAN;
 (* set xor mode; mode = TRUE-enter, FALSE-leave, return TRUE if interactive
