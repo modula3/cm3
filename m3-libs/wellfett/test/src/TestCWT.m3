@@ -16,7 +16,7 @@ IMPORT LongRealContinuousWaveletAnalysis  AS CWA,
        LongRealContinuousWaveletSynthesis AS CWS;
 
 IMPORT PLPlot AS PL, PLPlotRaw AS PLRaw;
-IMPORT IO, Fmt, Wr, Thread;
+IMPORT IO, Fmt;
 
 
 
@@ -107,9 +107,8 @@ PROCEDURE DiracTransform () =
       FOR i := FIRST(m^) TO LAST(m^) DO m[i] := yn[i].getData()^; END;
       PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -200.0D0,
                    200.0D0, xmin, xmax, ymin, ymax);
-      PL.PlotLines(
-        V.ArithSeq(width, xmin, R.One)^,
-        V.Scale(zf.clipToVector(-(width DIV 2), width), 4.0D1)^);
+      PL.PlotLines(V.ArithSeq(width, xmin, R.One)^,
+                   V.Scale(zf.clipToVector(-(width DIV 2), width), 4.0D1)^);
       (* PL.PlotLines(V.ArithSeq(width * 2 - 1, xmin, R.Half)^,
          V.Scale(z.getData(), 5.0D-6)^); *)
     END;

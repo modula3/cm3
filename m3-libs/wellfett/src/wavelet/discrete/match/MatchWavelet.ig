@@ -1,5 +1,6 @@
 GENERIC INTERFACE MatchWavelet(R, V, M, S);
 
+
 CONST MatchPattern = MatchPatternGenWav;
 
 TYPE
@@ -27,6 +28,23 @@ PROCEDURE MatchPatternGenWav (target                                : S.T;
    starting from 'firstTranslate' of 'generatorMask' refined with respect
    to 'refineMask' and a single copy of the 'waveletMask' refined by
    'refineMask'.  We refine over 'numLevels' levels. *)
+
+TYPE
+  NormalEqu = RECORD
+                mat: M.T;
+                vec: V.T;
+              END;
+
+PROCEDURE ComputeNormalEqu (target                                : S.T;
+                            refineMask, generatorMask, waveletMask: S.T;
+                            numLevels     : CARDINAL;
+                            firstTranslate: INTEGER;
+                            numTranslates : CARDINAL; ): NormalEqu;
+(* The linear least squares problem that arises in MatchPatternGenWav could
+   be solved more efficiently by normal equations.  I don't know if the
+   numerical properties are still good, at least the normal equations can
+   be computed efficiently due to the special structure of the matrix. *)
+
 
 TYPE
   MatchGen = RECORD
