@@ -6,7 +6,7 @@ Abstract: Test driver for Complex
 *)
 
 IMPORT Fmt,
-       LongRealComplexFast   AS C,
+       LongRealComplex       AS C,
        LongRealComplexTrans  AS CT,
        LongRealComplexFmtLex AS CF,
        LongRealPolar       AS P,

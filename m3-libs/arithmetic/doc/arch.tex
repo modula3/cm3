@@ -24,12 +24,31 @@ Each type has its own directory containing modules
 which follow the same guidelines.
 Let's have a look to some files from the \filename{vector}
 directory to illustrate that:\\
-\begin{tabular}{lp{0.7\hsize}}
-\filename{VectorBasic.ig}  & general basic routines \\
+\begin{tabular}{lp{0.75\hsize}}
+\filename{Vector.ig}       & main type and basic operations
+  that are imported from \filename{VectorRep},
+  the interface is designed for maximum genericity. \\
+\filename{Vector.mg}       & \\
+\filename{VectorRep.ig}    & basic operations
+  which work on arrays instead of references
+  and thus are more robust and efficient to use -
+  This module imports routines from
+  either \filename{VectorBasic.ig}
+  or \filename{VectorFast.ig} \\
+\filename{VectorRep.mg}    & \\
+\filename{VectorBasic.ig}  & routines that invoke
+  the functional interface of the underlying field,
+  the implementation is more generic and less efficient -
+  Avoid calling this module directly,
+  this will simplify changes in the implementation of this datatype. \\
 \filename{VectorBasic.mg}  & \\
-\filename{VectorFast.ig}   & basic routines for built-in types \\
+\filename{VectorFast.ig}   & routines that invoke
+  built-in Modula 3 operations
+  and thus are fast and compact -
+  Avoid calling this module directly,
+  this will simplify changes in the implementation of this datatype. \\
 \filename{VectorFast.mg}   & \\
-\filename{VectorFmtLex.ig} & formatting of vectors \\
+\filename{VectorFmtLex.ig} & formatting for output \\
 \filename{VectorFmtLex.mg} & \\
 \filename{m3makefile}      & quake code for this directory \\
 \filename{vector.tmpl}     & quake templates for instantiating vectors of arbitrary types
@@ -45,6 +64,23 @@ Since these modules makes use of the infix operators
 plus, minus, and so on,
 they are instantiated for floating point types only.
 Later they were also extended by specific numerical code.
+
+Unfortunately it is not easy to find a module naming convention
+that does not collide with existing standard modules
+but guarants for easy usage.
+E.g. the Modula 3 inventors suggested for each data structure
+to put the main type along with common operations into one module.
+E.g. there is a module called \filename{LongReal}
+which contains type \sourcecode{T} and
+some basic operations that allow the usage
+of \sourcecode{LongReal}s as part of \sourcecode{List}s and so on.
+But we need more basic operations
+like addition, subtraction, multiplication \dots{}.
+Thus I have created a new module with suffix \filename{Basic}.
+Now the situation is that some modules have this suffix
+and some have not.
+This makes the handling of instantiation procedures
+for \filename{quake} a nightmare.
 
 \subsubsection{\filename{test} - Test suite}
 
@@ -181,8 +217,8 @@ Examples:
 \item \sourcecode{LongRealTrans AS RT}
 \item \sourcecode{LongRealFmtLex AS RF}
 \item \sourcecode{RootBasic AS Rt}
-\item \sourcecode{VectorFast AS V}
-\item \sourcecode{ComplexVectorBasic AS CV}
+\item \sourcecode{Vector AS V}
+\item \sourcecode{ComplexVector AS CV}
 \item \sourcecode{ComplexVectorFmtLex AS CVF}
 \end{itemize}
 \item Generic formals should be ordered in increasing complexity.
@@ -204,8 +240,8 @@ because the user has to provide dummy variables,
 if he doesn't need the result.
 Furthermore VAR paramaters don't make clear
 that it is only a result.
-Use RECORD results instead.
-(DivMod?)
+Use RECORD results instead,
+see \sourcecode{DivMod} for example.
 
 \subsection{Arrays}
 An array is a collection of items, all of the same type,
@@ -213,7 +249,7 @@ which can be accessed by an index into the array.
 Array types can be distinguished by their cell type.
 Further on they could be distinguished by their meaning.
 For example, a Vector is not really a general purpose array --
-Instead, it has known operations such as dot product.
+Instead, it supports certain operations such as a dot product.
 Similarly, a polynomial might be stored in an array,
 but it has specific operations such as evaluation,
 or differentation.
@@ -231,9 +267,9 @@ There is (or may be) some overhead for
 dynamic linking, and some for allocation,
 but the payoff in readability is high.
 
-In a few cases (e.g., interpolation tables), we can expect
-the array to be static or constant.  So the appropriate
-formal is an open array.
+In a few cases (e.g., interpolation tables),
+we can expect the array to be static or constant.
+So the appropriate formal is an open array.
 If a dynamic array happens to be used as the actual parameter,
 it can be dereferenced prior to the call:
 

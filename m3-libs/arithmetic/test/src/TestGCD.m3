@@ -7,9 +7,9 @@ Abstract:  Tests for GCD module.
 IMPORT
   Integer32GCD               AS IG,
   Integer32ComplexGCD        AS ICG,
-  Integer32ComplexBasic      AS IC,
+  Integer32Complex           AS IC,
   BigInteger                 AS B,
-  BigIntegerComplexBasic     AS BC,
+  BigIntegerComplex          AS BC,
   BigIntegerComplexGCD       AS BCG,
   BigIntegerFraction              AS BFr,
   BigIntegerFractionPolynomial    AS BFrP,

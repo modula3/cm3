@@ -2,8 +2,10 @@
 %  Quake functions to instantiate generic Euler summation.
 %
 
-readonly proc EulerSum (nm, trans, field) is
-  local basic = nm & "EulerSum"
-  build_generic_intf (basic, "EulerSum", [field], VISIBLE)
-  build_generic_impl (basic, "EulerSum", [trans, field])
+readonly proc EulerSum (nm, field, rimpl) is
+  local basic  = nm & "EulerSum"
+  local rfield = field & rimpl
+  local rtrans = field & "Trans"
+  build_generic_intf (basic, "EulerSum", [rfield], VISIBLE)
+  build_generic_impl (basic, "EulerSum", [rfield, rtrans])
 end

@@ -13,15 +13,15 @@ readonly proc Matrix (nm, impl, rfield) is
   build_generic_impl (instimpl, "Matrix" & impl, [rfield, vfield, vrep])
 end
 
-readonly proc MatrixTrans (nm, real, rimpl, complex, cimpl, mimpl) is
-  local basic  = nm & "MatrixTrans"
-  local rfield = real & rimpl
-  local rtrans = real & "Trans"
-  local ctrans = real & complex & "Trans"
+readonly proc MatrixTrans (nm, field) is
+  local rfield = field & "Basic"
+  local rtrans = field & "Trans"
+  local ctrans = nm & "Trans"
   local eigen  = nm & "EigenSystem"
-  local mfield = nm & "Matrix" & mimpl
-  build_generic_intf (basic, "MatrixTrans", [rfield,                        mfield], VISIBLE)
-  build_generic_impl (basic, "MatrixTrans", [rfield, rtrans, ctrans, eigen, mfield])
+  local mfield = nm & "Matrix"
+  local mtrans = nm & "MatrixTrans"
+  build_generic_intf (mtrans, "MatrixTrans", [rfield,                        mfield], VISIBLE)
+  build_generic_impl (mtrans, "MatrixTrans", [rfield, rtrans, ctrans, eigen, mfield])
 end
 
 readonly proc MatrixDecomposition (nm, rfield) is
@@ -34,11 +34,10 @@ readonly proc MatrixDecomposition (nm, rfield) is
   build_generic_impl (basic, "MatrixDecomposition", [rfield, rtrans, vfield, mfield])
 end
 
-readonly proc EigenSystem (nm, impl) is
+readonly proc EigenSystem (nm, rfield) is
   local basic   = nm & "EigenSystem"
-  local rfield  = nm & "Basic"
   local rtrans  = nm & "Trans"
-  local cfield  = nm & "Complex" & impl
+  local cfield  = nm & "Complex"
   local vfield  = nm & "Vector"
   local vrep    = nm & "VectorRep"
   local mfield  = nm & "Matrix"
@@ -47,17 +46,16 @@ readonly proc EigenSystem (nm, impl) is
   build_generic_impl (basic, "EigenSystem", [rfield, rtrans, vfield, mfield])
 end
 
-readonly proc CharPolynomial (nm, rimpl) is
+readonly proc CharPolynomial (nm, rfield) is
   local basic   = nm & "CharPolynomial"
-  local rfield  = nm & rimpl
   local rtfield = nm & "Root"
   local mfield  = nm & "Matrix"
   build_generic_intf (basic, "CharPolynomial", [        rtfield, mfield], VISIBLE)
   build_generic_impl (basic, "CharPolynomial", [rfield, rtfield, mfield])
 end
 
-readonly proc MatrixFmtLex (nm, mimpl) is
-  local mfield = nm & "Matrix" & mimpl
+readonly proc MatrixFmtLex (nm, rfield) is
+  local mfield = nm & "Matrix"
   local mfmt   = nm & "MatrixFmtLex"
   local rfmt   = nm & "FmtLex"
   build_generic_intf (mfmt, "MatrixFmtLex", [rfmt, mfield], VISIBLE)
@@ -69,10 +67,9 @@ readonly proc LAPACKToModula3 (nm, field, src, prefix, Prefix) is
   exec(path()&SL&"lapack2i3.sh",raw,prefix,Prefix,">"&path()&SL&raw&".i3")
 end
 
-readonly proc Lapack (nm, impl) is
-  local rfield  = nm & "Basic"
+readonly proc Lapack (nm, rfield) is
   local rtrans  = nm & "Trans"
-  local cfield  = nm & "Complex" & impl
+  local cfield  = nm & "Complex"
   local vfield  = nm & "Vector"
   local vrep    = nm & "VectorRep"
   local cvfield = nm & "ComplexVector"
