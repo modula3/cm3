@@ -1,3 +1,0 @@
-%override("m3na",WDROOT)
-%override("m3na",ROOT)
-override("m3na","/home/thielema/programming/m3/pkg")
