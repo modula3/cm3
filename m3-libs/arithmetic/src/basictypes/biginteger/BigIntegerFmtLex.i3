@@ -13,6 +13,7 @@ IMPORT BigIntegerBasic AS B, Lex AS L, FloatMode, Rd, Thread;
 TYPE
   T = B.T;
   Base = [2..16];
+  FmtStyle = RECORD base : Base := 10; END;
 
 (*
 PROCEDURE Lex(rd: Rd.T; defaultBase: Base := 10): INTEGER
@@ -20,7 +21,7 @@ PROCEDURE Lex(rd: Rd.T; defaultBase: Base := 10): INTEGER
 PROCEDURE Scan(txt: TEXT; defaultBase: Base := 10): INTEGER
   RAISES {L.Error, FloatMode.Trap};
 *)
-PROCEDURE Fmt(READONLY x : T; base: Base := 10): TEXT;
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
 
 (*==========================*)
 END BigIntegerFmtLex.

@@ -6,17 +6,19 @@ Abstract: Generic formatting and parsing of integer types
 2/17/96  Harry George    Initial version
 *)
 
-IMPORT Fmt AS F, Thread, Wr;
+IMPORT Thread, Wr;
 
 (*==========================*)
+TYPE
+  T = I.T;
+  Base = [2..16];
+  FmtStyle = RECORD base : Base := 10; END;
 
-(*============================*)
-(* Functions                  *)
-(*============================*)  
-CONST Fmt = F.Int;
+<*INLINE*>
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
 
-PROCEDURE FmtArray(READONLY a:ARRAY OF I.T;
-                   base      :CARDINAL:=10;
+PROCEDURE FmtArray(READONLY a:ARRAY OF T;
+                   style     :=FmtStyle{};
                    cellwidth :CARDINAL:=4;
                    linewidth :CARDINAL:=60):TEXT RAISES {Thread.Alerted, Wr.Failure};
 

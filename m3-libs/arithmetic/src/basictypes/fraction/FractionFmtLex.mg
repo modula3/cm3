@@ -1,4 +1,4 @@
-GENERIC MODULE FractionFmtLex(C,R,RF);
+GENERIC MODULE FractionFmtLex(RF);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Formatting and parsing fraction numbers
@@ -11,29 +11,24 @@ Abstract: Formatting and parsing fraction numbers
                           The ones with beginning caps are wds's
 *)
 (*FROM xUtils IMPORT Error,Err;*)
-IMPORT Fmt AS F;
 
 <*UNUSED*> CONST Module = "FractionFmtLex.";
 
 (*------------------------*)
 (*
 PROCEDURE Lex( 
-               str:TEXT):C.T RAISES {Error}=
+               str:TEXT):Fr.T RAISES {Error}=
 BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
 *)
 (*----------------------------*)
-PROCEDURE Fmt ( 
-                VALUE c:C.T;
-                style:F.Style:=F.Style.Fix;
-                base:CARDINAL:=3
-                ):TEXT=
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT =
 VAR
   t:TEXT;
 BEGIN
-  t:="FRACTION{n:=" & RF.Fmt(c.n,base) & "D0,"
-            & "d:=" & RF.Fmt(c.d,base) & "D0}";
+  t:="FRACTION{n:=" & RF.Fmt(x.n,style.elemStyle) & "D0,"
+            & "d:=" & RF.Fmt(x.d,style.elemStyle) & "D0}";
 	RETURN t;
 END Fmt;
 

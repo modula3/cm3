@@ -1,4 +1,4 @@
-GENERIC INTERFACE FractionFmtLex(C);
+GENERIC INTERFACE FractionFmtLex(Fr,RF);
 (*Copyright (c) 1996, m3na project
   
 Abstract: Formatting and parsing fraction numbers
@@ -9,15 +9,18 @@ Abstract: Formatting and parsing fraction numbers
 *)
 
 FROM xUtils IMPORT Error;
-IMPORT Fmt AS F;
 
-PROCEDURE Lex(str:TEXT):C.T RAISES {Error};
-        (*reads after the "COMPLEX{" in COMPLEX{re:=<r>; im:=<r>},
+(*==========================*)
+TYPE
+  T = Fr.T;
+  Base = [2..16];
+  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
+
+PROCEDURE Lex(str:TEXT):Fr.T RAISES {Error};
+        (*reads after the "FRACTION{" in FRACTION{re:=<r>; im:=<r>},
         thru the "}"*)
-PROCEDURE Fmt(x:C.T; 
-        style:F.Style:=F.Style.Fix;
-        prec:CARDINAL:=3):TEXT;
-        (*outputs as "COMPLEX{re:=<r>; im:=<r>}"
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
+        (*outputs as "FRACTION{re:=<r>; im:=<r>}"
         Uses simple F.Real if x.im=0.0.*)
 
 (*==========================*)
