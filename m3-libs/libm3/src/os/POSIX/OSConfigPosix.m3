@@ -102,6 +102,9 @@ CONST
    (* LINUXLIBC6 *)  "Linux",
    (* I386_DARWIN*)  "Darwin",
    (* PPC_DARWIN *)  "Darwin",
+   (* BSDI4	 *)  "BSD/OS",
+   (* NT386GNU	 *)  "Cygwin",
+   (* Tru64v5	 *)  "Tru64",
    ..
   };
 
@@ -139,6 +142,9 @@ CONST
    (* LINUXLIBC6 *)  "i486",
    (* I386_DARWIN*)  "i486",
    (* PPC_DARWIN *)  "ppc",
+   (* BSDI4	 *)  "i486",
+   (* NT386GNU	 *)  "i486",
+   (* Tru64v5	 *)  "alpha",
    ..
   };
 
