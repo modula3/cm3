@@ -1,6 +1,0 @@
-
-import ("m3middle")
-import ("m3quake")
-
-implementation ("Main")
-program ("m3cgcat")
