@@ -38,6 +38,7 @@ if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
 fi
 P="${P} m3core"
 P="${P} libm3"
+P="${P} patternmatching"
 P="${P} m3bundle"
 P="${P} m3middle"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"

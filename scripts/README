@@ -28,6 +28,11 @@ You are probably most interested in one of the following:
  o Use do-cm3-core.sh to build (and install) a core cm3 system, i.e.
    the compiler with some useful base libraries.
 
+ o Use upgrade.sh to build and install a new compiler version from
+   sources. This may be difficult, since packages have to be built and
+   shipped in the correct order, and once you've shipped something
+   wrong, you may be stuck.
+
  o Use install-cm3-compiler.sh to install the actual compiler
    (front-end and back-end) from the workspace.
 
@@ -122,6 +127,13 @@ do-cm3-core.sh [callable]
   HAVE_TCL => tcl
   OMIT_GCC => omit package m3cc
   M3GC_SIMPLE => don't compile m3gc-enhanced
+
+upgrade.sh [callable]
+----------
+  builds and ships several core cm3 packages in the correct order
+  (some two times) to perform a correct bootstrapping of a new
+  compiler version with different target platforms. The packages
+  concerned are the same as in do-cm3-core.sh.
 
 install-cm3-compiler.sh [callable]
 -----------------------
