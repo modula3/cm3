@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.11 2001-02-16 11:43:55 wagner Exp $
+# $Id: sysinfo.sh,v 1.12 2001-02-16 17:13:53 wagner Exp $
 
 if [ "$SYSINFO_DONE" = "yes" ] ; then
   return 0
@@ -10,6 +10,7 @@ UNAME=`uname`
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
+#-----------------------------------------------------------------------------
 # set some defaults
 CM3VERSION="5.1.0"
 CM3_GCC_BACKEND=yes
@@ -52,6 +53,8 @@ if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   fi
 fi
 
+#-----------------------------------------------------------------------------
+# some localization functions
 find_dir() {
   for d in $@ ; do
     if [ -d "$d" ] ; then
@@ -75,6 +78,8 @@ find_file() {
   return 1
 }
 
+#-----------------------------------------------------------------------------
+# abstraction functions
 cygpath() {
   echo "$2"
 }
@@ -83,6 +88,7 @@ strip_exe() {
   strip $@
 }
 
+#-----------------------------------------------------------------------------
 # evaluate uname information
 case "${UNAME}" in
 
@@ -157,6 +163,7 @@ case "${UNAME}" in
   # more need to be added here, I haven't got all the platform info ready
 esac
 
+#-----------------------------------------------------------------------------
 # define the exported values
 if [ -n "$root" ] ; then
   ROOT=${ROOT:-${root}}
@@ -173,13 +180,16 @@ PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 QGREP=${QGREP:-"egrep >/dev/null 2>/dev/null"}
 GREP=${GREP:-egrep}
 
+
+#-----------------------------------------------------------------------------
+# output functions
 debug() {
   if [ -n "$CM3_DEBUG" ] ; then
     echo "$*"
   fi
 }
 
-head() {
+header() {
   echo ""
   echo '----------------------------------------------------------------------------'
   echo $@
@@ -187,6 +197,22 @@ head() {
   echo ""
 }
 
+#-----------------------------------------------------------------------------
+# elego customizations
+#
+# uncomment these if they interfere with your environment
+if [ "${M3OSTYPE}" = "POSIX" -a \
+     "`domainname 2>/dev/null`" = "iceflower" ] ; then
+  STAGE=/t/wagner/cm3
+  export STAGE
+fi
+if [ "${M3OSTYPE}" = "WIN32" -a "${HOSTNAME}" = "FIR" ] ; then
+  STAGE=//luthien/t/wagner/cm3
+  export STAGE
+fi
+
+#-----------------------------------------------------------------------------
+# debug output
 debug "ROOT        = $ROOT"
 debug "SCRIPTS     = $SCRIPTS"
 debug "M3GDB       = $M3GDB"
