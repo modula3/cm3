@@ -27,6 +27,7 @@ readonly _FloatPieces = {
   "IRIX5"      : [ "IEEE", "IEEE-be", "IRIX5" ],
   "LINUX"      : _float_le,
   "LINUXELF"   : _float_le,
+  "LINUXLIBC6" : _float_le,
   "NEXT"       : _float_be,
   "NT386"      : _float_le,
   "OKI"        : _float_le,
