@@ -1,0 +1,9 @@
+% Copyright according to COPYRIGHT-CMASS.
+
+Interface      ("RTMachine")
+implementation ("RTHeapDep")
+implementation ("RTSignal")
+implementation ("RTThread")
+c_source       ("RTThreadC")
+Interface      ("RTHeapDepC")
+
