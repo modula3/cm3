@@ -69,7 +69,7 @@ PROCEDURE PlotApproximation (fileName                              : TEXT;
     grid := R.Half / FLOAT(unit, R.T);
     approx := TestMatchWavelet.MatchPattern(
                 target, refineMask, generatorMask, waveletMask, numLevels,
-                numTranslates);
+                -numTranslates, 2 * numTranslates);
 
     bounds := Box{horizontal :=
                   ARRAY OF
