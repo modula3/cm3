@@ -1,5 +1,5 @@
 /* Definitions for Unix assembler syntax for the Intel 80386.
-   Copyright (C) 1988, 1994, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1994, 1999, 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -67,7 +67,7 @@ Boston, MA 02111-1307, USA.  */
 /* By default, target has a 80387, uses IEEE compatible arithmetic,
    and returns float values in the 387.  */
 
-#define TARGET_DEFAULT (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS)
+#define TARGET_SUBTARGET_DEFAULT (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS)
 
 /* Floating-point return values come in the FP register.  */
 
@@ -77,58 +77,7 @@ Boston, MA 02111-1307, USA.  */
    : (MODE) == TImode || VECTOR_MODE_P (MODE) ? FIRST_SSE_REG	\
    : 0)
 
-/* 1 if N is a possible register number for a function value. */
-
-#define FUNCTION_VALUE_REGNO_P(N) \
-  ((N) == 0 || ((N)== FIRST_FLOAT_REG && TARGET_FLOAT_RETURNS_IN_80387))
-
 /* Output code to add DELTA to the first argument, and then jump to FUNCTION.
    Used for C++ multiple inheritance.  */
-#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION)	    \
-do {									    \
-  tree parm;								    \
-  rtx xops[3];								    \
-									    \
-  if (ix86_regparm > 0)							    \
-    parm = TYPE_ARG_TYPES (TREE_TYPE (function));			    \
-  else									    \
-    parm = NULL_TREE;							    \
-  for (; parm; parm = TREE_CHAIN (parm))				    \
-    if (TREE_VALUE (parm) == void_type_node)				    \
-      break;								    \
-									    \
-  xops[0] = GEN_INT (DELTA);						    \
-  if (parm)								    \
-    xops[1] = gen_rtx_REG (SImode, 0);					    \
-  else if (aggregate_value_p (TREE_TYPE (TREE_TYPE (FUNCTION))))	    \
-    xops[1] = gen_rtx_MEM (SImode, plus_constant (stack_pointer_rtx, 8));   \
-  else									    \
-    xops[1] = gen_rtx_MEM (SImode, plus_constant (stack_pointer_rtx, 4));   \
-  output_asm_insn ("add{l} {%0, %1|%1, %0}", xops);			    \
-									    \
-  if (flag_pic)								    \
-    {									    \
-      xops[0] = pic_offset_table_rtx;					    \
-      xops[1] = gen_label_rtx ();					    \
-      xops[2] = gen_rtx_SYMBOL_REF (Pmode, "_GLOBAL_OFFSET_TABLE_");        \
-									    \
-      if (ix86_regparm > 2)						    \
-	abort ();							    \
-      output_asm_insn ("push{l}\t%0", xops);				    \
-      output_asm_insn ("call\t%P1", xops);				    \
-      ASM_OUTPUT_INTERNAL_LABEL (FILE, "L", CODE_LABEL_NUMBER (xops[1]));   \
-      output_asm_insn ("pop{l}\t%0", xops);				    \
-      output_asm_insn ("add{l}\t{%2+[.-%P1], %0|%0, OFFSET FLAT: %2+[.-%P1]}", xops); \
-      xops[0] = gen_rtx_MEM (SImode, XEXP (DECL_RTL (FUNCTION), 0));	    \
-      output_asm_insn ("mov{l}\t{%0@GOT(%%ebx), %%ecx|%%ecx, %0@GOT[%%ebx]}",\
-	               xops);						    \
-      asm_fprintf (FILE, "\tpop{l\t%%ebx|\t%%ebx}\n");			    \
-      asm_fprintf (FILE, "\tjmp\t{*%%ecx|%%ecx}\n");			    \
-    }									    \
-  else									    \
-    {									    \
-      fprintf (FILE, "\tjmp ");						    \
-      assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));	    \
-      fprintf (FILE, "\n");						    \
-    }									    \
-} while (0)
+#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION) \
+    x86_output_mi_thunk (FILE, DELTA, FUNCTION);

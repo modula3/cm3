@@ -2,22 +2,22 @@
    Copyright (C) 1987, 1988, 1992, 1994, 1995, 1997, 1998, 1999, 2000
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 /* This program reads the machine description for the compiler target machine
@@ -222,6 +222,8 @@ output_prologue ()
   printf ("#include \"flags.h\"\n");
   printf ("#include \"ggc.h\"\n");
   printf ("#include \"rtl.h\"\n");
+  printf ("#include \"expr.h\"\n");
+  printf ("#include \"insn-codes.h\"\n");
   printf ("#include \"tm_p.h\"\n");
   printf ("#include \"function.h\"\n");
   printf ("#include \"regs.h\"\n");
@@ -239,13 +241,14 @@ output_prologue ()
 /* We need to define all predicates used.  Keep a list of those we
    have defined so far.  There normally aren't very many predicates
    used, so a linked list should be fast enough.  */
+struct predicate { const char *name; struct predicate *next; };
 
 static void
 output_predicate_decls ()
 {
-  struct predicate { const char *name; struct predicate *next; } *predicates = 0;
-  register struct operand_data *d;
-  struct predicate *p;
+  struct predicate *predicates = 0;
+  struct operand_data *d;
+  struct predicate *p, *next;
 
   for (d = odata; d; d = d->next)
     if (d->predicate && d->predicate[0])
@@ -258,7 +261,7 @@ output_predicate_decls ()
 	  {
 	    printf ("extern int %s PARAMS ((rtx, enum machine_mode));\n",
 		    d->predicate);
-	    p = (struct predicate *) alloca (sizeof (struct predicate));
+	    p = (struct predicate *) xmalloc (sizeof (struct predicate));
 	    p->name = d->predicate;
 	    p->next = predicates;
 	    predicates = p;
@@ -266,12 +269,17 @@ output_predicate_decls ()
       }
 
   printf ("\n\n");
+  for (p = predicates; p; p = next)
+    {
+      next = p->next;
+      free (p);
+    }
 }
 
 static void
 output_operand_data ()
 {
-  register struct operand_data *d;
+  struct operand_data *d;
 
   printf ("\nstatic const struct insn_operand_data operand_data[] = \n{\n");
 
@@ -298,12 +306,12 @@ output_operand_data ()
 static void
 output_insn_data ()
 {
-  register struct data *d;
+  struct data *d;
   int name_offset = 0;
   int next_name_offset;
   const char * last_name = 0;
   const char * next_name = 0;
-  register struct data *n;
+  struct data *n;
 
   for (n = idata, next_name_offset = 1; n; n = n->next, next_name_offset++)
     if (n->name)
@@ -358,8 +366,13 @@ output_insn_data ()
 	    printf ("    \"");
 	    while (*p)
 	      {
-		if (*p == '\n' && prev != '\\')
-		  printf ("\\n\\\n");
+		if (IS_VSPACE (*p) && prev != '\\')
+		  {
+		    /* Preserve two consecutive \n's or \r's, but treat \r\n
+		       as a single newline.  */
+		    if (*p == '\n' && prev != '\r')
+		      printf ("\\n\\\n");
+		  }
 		else
 		  putchar (*p);
 		prev = *p;
@@ -421,8 +434,8 @@ scan_operands (d, part, this_address_p, this_strict_low)
      int this_address_p;
      int this_strict_low;
 {
-  register int i, j;
-  register const char *format_ptr;
+  int i, j;
+  const char *format_ptr;
   int opno;
 
   if (part == 0)
@@ -522,7 +535,7 @@ scan_operands (d, part, this_address_p, this_strict_low)
     case MATCH_OP_DUP:
     case MATCH_PAR_DUP:
       ++num_dups;
-      return;
+      break;
 
     case ADDRESS:
       scan_operands (d, XEXP (part, 0), 1, 0);
@@ -654,8 +667,8 @@ process_template (d, template)
     struct data *d;
     const char *template;
 {
-  register const char *cp;
-  register int i;
+  const char *cp;
+  int i;
 
   /* Templates starting with * contain straight code to be run.  */
   if (template[0] == '*')
@@ -686,11 +699,11 @@ process_template (d, template)
 
       for (i = 0, cp = &template[1]; *cp; )
 	{
-	  while (*cp == '\n' || *cp == ' ' || *cp== '\t')
+	  while (ISSPACE (*cp))
 	    cp++;
 
 	  printf ("  \"");
-	  while (*cp != '\n' && *cp != '\0')
+	  while (!IS_VSPACE (*cp) && *cp != '\0')
 	    {
 	      putchar (*cp);
 	      cp++;
@@ -705,7 +718,7 @@ process_template (d, template)
       if (i != d->n_alternatives)
 	{
 	  message_with_line (d->lineno,
-			     "Wrong number of alternatives in the output template");
+			     "wrong number of alternatives in the output template");
 	  have_error = 1;
 	}
 
@@ -724,7 +737,7 @@ static void
 validate_insn_alternatives (d)
      struct data *d;
 {
-  register int n = 0, start;
+  int n = 0, start;
 
   /* Make sure all the operands have the same number of alternatives
      in their constraints.  Let N be that number.  */
@@ -771,8 +784,8 @@ gen_insn (insn, lineno)
      rtx insn;
      int lineno;
 {
-  register struct data *d = (struct data *) xmalloc (sizeof (struct data));
-  register int i;
+  struct data *d = (struct data *) xmalloc (sizeof (struct data));
+  int i;
 
   d->code_number = next_code_number;
   d->index_number = next_index_number;
@@ -801,7 +814,7 @@ gen_insn (insn, lineno)
   validate_insn_operands (d);
   validate_insn_alternatives (d);
   place_operands (d);
-  process_template (d, XSTR (insn, 3));
+  process_template (d, XTMPL (insn, 3));
 }
 
 /* Look at a define_peephole just read.  Assign its code number.
@@ -813,8 +826,8 @@ gen_peephole (peep, lineno)
      rtx peep;
      int lineno;
 {
-  register struct data *d = (struct data *) xmalloc (sizeof (struct data));
-  register int i;
+  struct data *d = (struct data *) xmalloc (sizeof (struct data));
+  int i;
 
   d->code_number = next_code_number;
   d->index_number = next_index_number;
@@ -842,7 +855,7 @@ gen_peephole (peep, lineno)
 
   validate_insn_alternatives (d);
   place_operands (d);
-  process_template (d, XSTR (peep, 2));
+  process_template (d, XTMPL (peep, 2));
 }
 
 /* Process a define_expand just read.  Assign its code number,
@@ -853,8 +866,8 @@ gen_expand (insn, lineno)
      rtx insn;
      int lineno;
 {
-  register struct data *d = (struct data *) xmalloc (sizeof (struct data));
-  register int i;
+  struct data *d = (struct data *) xmalloc (sizeof (struct data));
+  int i;
 
   d->code_number = next_code_number;
   d->index_number = next_index_number;
@@ -898,8 +911,8 @@ gen_split (split, lineno)
      rtx split;
      int lineno;
 {
-  register struct data *d = (struct data *) xmalloc (sizeof (struct data));
-  register int i;
+  struct data *d = (struct data *) xmalloc (sizeof (struct data));
+  int i;
 
   d->code_number = next_code_number;
   d->index_number = next_index_number;
@@ -943,9 +956,9 @@ main (argc, argv)
   progname = "genoutput";
 
   if (argc <= 1)
-    fatal ("No input file name.");
+    fatal ("no input file name");
 
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
   output_prologue ();

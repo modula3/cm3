@@ -1,61 +1,177 @@
-2002-02-20  Release Manager
+2002-07-25  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1.1 Released.
 
-2002-02-20  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1 Released.
 
-2001-12-20  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.3 Released.
+	* GCC 3.1 Released.
 
-2001-11-05  Zack Weinberg  <zack@codesourcery.com>
+2002-05-10  Philipp Thomas  <pthomas@suse.de>
 
-	* POTFILES.in: Add config/rs6000/freebsd.h and the s390 directory.
+	* es.po, tr.po, fr.po: Update to version
+	for the 20020415 snapshot.
 
-2001-11-03  David O'Brien  <obrien@FreeBSD.org>
+2002-04-24  Philipp Thomas  <pthomas@suse.de>
 
-	* POTFILES.in: Add config/ia64/freebsd.h.
+	* gcc.pot: Regenerate.
 
-2001-10-23  Release Manager
+2002-04-15  Philipp Thomas  <pthomas@suse.de>
 
-	* GCC 3.0.2 Released.
+	* tr.po: Update to latest revision.
 
-2001-08-19  Release Manager
+2002-03-14  Philipp Thomas  <pthomas@suse.de>
 
-	* GCC 3.0.1 Released.
+	* fr.po: Update to latest revision.
 
-2001-08-19  Release Manager
+2002-02-18  Philipp Thomas  <pthomas@suse.de>
 
-	* GCC 3.0.1 Released.
+	* es.po, fr.po: Updated to newest version.
+	* nl.po: New files.
 
-20010617 Release Manager
+2002-02-17  Philipp Thomas  <pthomas@suse.de>
 
-        * GCC 3.0 Released.
+	* gcc.pot: Regenerate.
+
+2002-02-11  Zack Weinberg  <zack@codesourcery.com>
+
+	* gcc.pot: Regenerate.
+
+2002-02-04  Zack Weinberg  <zack@codesourcery.com>
+
+	* gcc.pot: Regenerate.
+
+2002-01-31  Philipp Thomas  <pthomas@suse.de>
+
+	* el.po: New file.
+
+2002-01-29  Philipp Thomas  <pthomas@suse.de>
+
+	* es.po, fr.po, ja.po: Updated to current versions.
+
+2002-01-23  Philipp Thomas  <pthomas@suse.de>
+
+	* tr.po: New file.
+
+2002-01-22  Zack Weinberg  <zack@codesourcery.com>
+
+	* gcc.pot: Regenerate - now includes Fortran error messages.
+
+	* exgettext: Merge changes from diffutils.  Scan .def files in
+	addition to .c and .h.  Add --language=c to xgettext command line.
+
+2001-12-05  Martin v. Löwis  <loewis@informatik.hu-berlin.de>
+
+	* es.po: Update to 3.0 template.
+
+2001-12-05  Martin v. Löwis  <loewis@informatik.hu-berlin.de>
+
+	* da.po, es.po, fr.po, ja.po: New files.
+
+2001-11-08  Zack Weinberg  <zack@codesourcery.com>
+
+	* exgettext: Deposit new potfile in po subdir.
+
+2001-10-31  Zack Weinberg  <zack@codesourcery.com>
+
+	* EXCLUDES: New file.
+	* exgettext: New helper script; completely rewritten.
+	* Makefile.in.in, POTFILES.in: Delete.
+
+2001-10-12  Zack Weinberg  <zack@codesourcery.com>
+
+	* Makefile.in.in: Upgrade to gettext-0.10.40.
+	* cat-id-tbl.c: Remove file.
+	* stamp-cat-id: Remove file.
+
+2001-10-08  Alexandre Oliva  <aoliva@redhat.com>
+
+	* POTFILES.in: Add newly-added files.
+
+2001-09-30  Zack Weinberg  <zack@codesourcery.com>
+
+	* POTFILES.in: Add all missing files.
+
+2001-09-23  Zack Weinberg  <zack@codesourcery.com>
+
+	* POTFILES.in: Remove cp/errfn.c.
+
+2001-08-01  Nick Clifton  <nickc@cambridge.redhat.com>
+
+	* POTFILES.in: Remove chorus.h files from i386, rs6000 and sparc
+	config directories.  Add config/chorus.h instead.
+
+Mon Jul  9 13:27:15 2001  Jeffrey A Law  (law@cygnus.com)
+
+	* POTFILES.in: Add ssa-ccp.c
+
+Thu Jun 28 16:11:30 2001  Jeffrey A Law  (law@cygnus.com)
+
+	* POTFILES.in: Add df.c and df.h
+
+Tue Jun 19 08:03:43 2001  Jeffrey A Law  (law@cygnus.com)
+
+	* POTFILES.in: Replace dce.c with ssa-dce.c.
+
+2001-06-15  Dennis Bjorklund  <db@zigo.dhs.org>
+
+	* sv.po: Updated.  Approximately 1100 of 3600 strings translated.
 
 2001-06-11  Zack Weinberg  <zackw@stanford.edu>
 
-	* Makefile.in.in: Take --defines switch off of xgettext   
-	command line.                                           
+	* POTFILES.in: Comment out config/float-*.
+	No need to regenerate gcc.pot.
+
+2001-06-11  Zack Weinberg  <zackw@stanford.edu>
+
+	* gcc.pot: Regenerate, again.  You go away for five minutes
+	and someone tweaks the messages on you.
+	* cat-id-tbl.c: Regenerate this too.
+
+2001-06-11  Zack Weinberg  <zackw@stanford.edu>
+
+	* Makefile.in.in: Take --defines switch off of xgettext
+	command line.
 	* POTFILES.in: Massive update, removing all dead files and
 	adding approximately 300 files which had been left out.
 	Clarify comments on what should and should not appear here.
 
-	* gcc.pot, cat-id-tbl.c: Regenerate.
+	* gcc.pot: Regenerate.
 
 2001-05-23  Zack Weinberg  <zackw@stanford.edu>
 
-	* POTFILES.in: Remove frame-dwarf2.c, frame.c, and frame.h.
+	* POTFILES.in: Remove config/rs6000/xm-darwin.h and
+	config/pa/pa-gas.h.
 
 2001-05-16  Zack Weinberg  <zackw@stanford.edu>
 
-	* POTFILES.in: Remove assert.h.
+	* POTFILES.in: Remove libgcc1-test.c and libgcc1.c.
 
 2001-05-13  Mark Mitchell  <mark@codesourcery.com>
 
 	* Makefile.in.in (STAMP): New macro.
 	Replace all uses of `touch' with $(STAMP).
+
+2001-05-11  Zack Weinberg  <zackw@stanford.edu>
+
+	* POTFILES.in: Remove assert.h.
+
+2001-05-07  Zack Weinberg  <zackw@stanford.edu>
+
+	* POTFILES.in: Remove config/i386/sco.h, config/i386/sco4.h,
+	config/i386/sco4dbx.h, and config/i386/scodbx.h.
+
+2001-04-04  Zack Weinberg  <zackw@stanford.edu>
+
+	* POTFILES.in: Remove config/romp/xm-romp.h.
+
+2001-04-03  Zack Weinberg  <zackw@stanford.edu>
+
+	* POTFILES.in: Remove all the files deleted by the xm-host.h
+	purge, also frame.c, frame-dwarf2.c, and gansidecl.h.
 
 2001-01-30  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
@@ -105,7 +221,7 @@ Thu Nov 30 01:28:08 2000  Jeffrey A Law  (law@cygnus.com)
 
 	* POTFILES.in: Remove the files from the nuked
 	dead ports.
-	* ChangeLog: Correct David's entry. 
+	* ChangeLog: Correct David's entry.
 
 2000-09-28  David O'Brien  <obrien@FreeBSD.org>
 
@@ -116,7 +232,7 @@ Thu Nov 30 01:28:08 2000  Jeffrey A Law  (law@cygnus.com)
 2000-09-26  Philipp Thomas  <pthomas@suse.de>
 
 	* Makefile.in.in: Remove stamp-check-pot from list
-	of default targets as checks are only possible in a 
+	of default targets as checks are only possible in a
 	complete source tree and all languages configured.
 
 2000-09-13  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>

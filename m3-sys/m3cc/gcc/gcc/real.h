@@ -1,26 +1,26 @@
 /* Definitions of floating-point access for GNU compiler.
    Copyright (C) 1989, 1991, 1994, 1996, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
-#ifndef REAL_H_INCLUDED
-#define REAL_H_INCLUDED
+#ifndef GCC_REAL_H
+#define GCC_REAL_H
 
 /* Define codes for all the float formats that we know of.  */
 #define UNKNOWN_FLOAT_FORMAT 0
@@ -37,6 +37,10 @@ Boston, MA 02111-1307, USA.  */
 
 #ifndef HOST_FLOAT_FORMAT
 #define	HOST_FLOAT_FORMAT	IEEE_FLOAT_FORMAT
+#endif
+
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
+#define INTEL_EXTENDED_IEEE_FORMAT 0
 #endif
 
 #if TARGET_FLOAT_FORMAT == IEEE_FLOAT_FORMAT
@@ -85,7 +89,7 @@ Boston, MA 02111-1307, USA.  */
 /* **** Start of software floating point emulator interface macros **** */
 
 /* Support 80-bit extended real XFmode if LONG_DOUBLE_TYPE_SIZE
-   has been defined to be 96 in the tm.h machine file. */
+   has been defined to be 96 in the tm.h machine file.  */
 #if (MAX_LONG_DOUBLE_TYPE_SIZE == 96)
 #define REAL_IS_NOT_DOUBLE
 #define REAL_ARITHMETIC
@@ -109,7 +113,7 @@ typedef struct {
 
 #if HOST_FLOAT_FORMAT != TARGET_FLOAT_FORMAT
 /* If no XFmode support, then a REAL_VALUE_TYPE is 64 bits wide
-   but it is not necessarily a host machine double. */
+   but it is not necessarily a host machine double.  */
 #define REAL_IS_NOT_DOUBLE
 typedef struct {
   HOST_WIDE_INT r[(7 + sizeof (HOST_WIDE_INT))/(sizeof (HOST_WIDE_INT))];
@@ -117,7 +121,7 @@ typedef struct {
 #define REAL_VALUE_TYPE realvaluetype
 #else
 /* If host and target formats are compatible, then a REAL_VALUE_TYPE
-   is actually a host machine double. */
+   is actually a host machine double.  */
 #define REAL_VALUE_TYPE double
 #endif
 
@@ -136,12 +140,11 @@ extern unsigned int significand_size	PARAMS ((enum machine_mode));
 #define REAL_ARITHMETIC(value, code, d1, d2) \
   earith (&(value), (code), &(d1), &(d2))
 
-/* Declare functions in real.c. */
+/* Declare functions in real.c.  */
 extern void earith		PARAMS ((REAL_VALUE_TYPE *, int,
 				       REAL_VALUE_TYPE *, REAL_VALUE_TYPE *));
 extern REAL_VALUE_TYPE etrunci	PARAMS ((REAL_VALUE_TYPE));
 extern REAL_VALUE_TYPE etruncui	PARAMS ((REAL_VALUE_TYPE));
-extern REAL_VALUE_TYPE ereal_atof PARAMS ((const char *, enum machine_mode));
 extern REAL_VALUE_TYPE ereal_negate PARAMS ((REAL_VALUE_TYPE));
 extern HOST_WIDE_INT efixi	PARAMS ((REAL_VALUE_TYPE));
 extern unsigned HOST_WIDE_INT efixui PARAMS ((REAL_VALUE_TYPE));
@@ -176,15 +179,13 @@ extern REAL_VALUE_TYPE ereal_from_double PARAMS ((HOST_WIDE_INT *));
 /* These return REAL_VALUE_TYPE: */
 #define REAL_VALUE_RNDZINT(x) (etrunci (x))
 #define REAL_VALUE_UNSIGNED_RNDZINT(x) (etruncui (x))
-extern REAL_VALUE_TYPE real_value_truncate	PARAMS ((enum machine_mode,
-							REAL_VALUE_TYPE));
 #define REAL_VALUE_TRUNCATE(mode, x)  real_value_truncate (mode, x)
 
 /* These return HOST_WIDE_INT: */
 /* Convert a floating-point value to integer, rounding toward zero.  */
 #define REAL_VALUE_FIX(x) (efixi (x))
 /* Convert a floating-point value to unsigned integer, rounding
-   toward zero. */
+   toward zero.  */
 #define REAL_VALUE_UNSIGNED_FIX(x) (efixui (x))
 
 /* Convert ASCII string S to floating point in mode M.
@@ -206,32 +207,28 @@ extern REAL_VALUE_TYPE real_value_truncate	PARAMS ((enum machine_mode,
 #define REAL_VALUE_FROM_UNSIGNED_INT(d, lo, hi, mode) \
   ereal_from_uint (&d, lo, hi, mode)
 
-/* IN is a REAL_VALUE_TYPE.  OUT is an array of longs. */
-#if defined(INTEL_EXTENDED_IEEE_FORMAT) && MAX_LONG_DOUBLE_TYPE_SIZE == 128
-#define REAL_VALUE_TO_TARGET_LONG_DOUBLE(IN, OUT) (etarldouble ((IN), (OUT)))
-#else
+/* IN is a REAL_VALUE_TYPE.  OUT is an array of longs.  */
 #define REAL_VALUE_TO_TARGET_LONG_DOUBLE(IN, OUT) 		\
    (LONG_DOUBLE_TYPE_SIZE == 64 ? etardouble ((IN), (OUT))	\
     : LONG_DOUBLE_TYPE_SIZE == 96 ? etarldouble ((IN), (OUT))	\
     : LONG_DOUBLE_TYPE_SIZE == 128 ? etartdouble ((IN), (OUT))  \
-    : abort())
-#endif
+    : abort ())
 #define REAL_VALUE_TO_TARGET_DOUBLE(IN, OUT) (etardouble ((IN), (OUT)))
 
-/* IN is a REAL_VALUE_TYPE.  OUT is a long. */
+/* IN is a REAL_VALUE_TYPE.  OUT is a long.  */
 #define REAL_VALUE_TO_TARGET_SINGLE(IN, OUT) ((OUT) = etarsingle ((IN)))
 
-/* Inverse of REAL_VALUE_TO_TARGET_DOUBLE. */
+/* Inverse of REAL_VALUE_TO_TARGET_DOUBLE.  */
 #define REAL_VALUE_UNTO_TARGET_DOUBLE(d)  (ereal_unto_double (d))
 
-/* Inverse of REAL_VALUE_TO_TARGET_SINGLE. */
+/* Inverse of REAL_VALUE_TO_TARGET_SINGLE.  */
 #define REAL_VALUE_UNTO_TARGET_SINGLE(f)  (ereal_unto_float (f))
 
 /* d is an array of HOST_WIDE_INT that holds a double precision
-   value in the target computer's floating point format. */
+   value in the target computer's floating point format.  */
 #define REAL_VALUE_FROM_TARGET_DOUBLE(d)  (ereal_from_double (d))
 
-/* f is a HOST_WIDE_INT containing a single precision target float value. */
+/* f is a HOST_WIDE_INT containing a single precision target float value.  */
 #define REAL_VALUE_FROM_TARGET_SINGLE(f)  (ereal_from_float (f))
 
 /* Conversions to decimal ASCII string.  */
@@ -288,7 +285,7 @@ do {							\
     HOST_WIDE_INT l;					\
   } u;							\
   if (sizeof(HOST_WIDE_INT) < sizeof(float))		\
-    abort();						\
+    abort ();						\
   u.l = 0;						\
   u.f = (IN);						\
   (OUT) = u.l;						\
@@ -306,7 +303,7 @@ do {									\
     HOST_WIDE_INT l[2];							\
   } u;									\
   if (sizeof(HOST_WIDE_INT) * 2 < sizeof(REAL_VALUE_TYPE))		\
-    abort();								\
+    abort ();								\
   u.l[0] = u.l[1] = 0;							\
   u.f = (IN);								\
   if (HOST_FLOAT_WORDS_BIG_ENDIAN == FLOAT_WORDS_BIG_ENDIAN)		\
@@ -317,7 +314,7 @@ do {									\
 #endif
 #endif /* HOST_FLOAT_FORMAT == TARGET_FLOAT_FORMAT */
 
-/* In this configuration, double and long double are the same. */
+/* In this configuration, double and long double are the same.  */
 #ifndef REAL_VALUE_TO_TARGET_LONG_DOUBLE
 #define REAL_VALUE_TO_TARGET_LONG_DOUBLE(a, b) REAL_VALUE_TO_TARGET_DOUBLE (a, b)
 #endif
@@ -355,7 +352,7 @@ do {									\
 #endif
 
 /* Convert a floating-point value to unsigned integer, rounding
-   toward zero. */
+   toward zero.  */
 #ifndef REAL_VALUE_UNSIGNED_FIX
 #define REAL_VALUE_UNSIGNED_FIX(x) ((unsigned int) (x))
 #endif
@@ -369,8 +366,7 @@ extern double ldexp PARAMS ((double, int));
 /* Convert the string X to a floating-point value.  */
 #ifndef REAL_VALUE_ATOF
 #if 1
-/* Use real.c to convert decimal numbers to binary, ... */
-extern REAL_VALUE_TYPE ereal_atof PARAMS ((const char *, enum machine_mode));
+/* Use real.c to convert decimal numbers to binary, ...  */
 #define REAL_VALUE_ATOF(x, s) ereal_atof (x, s)
 /* Could use ereal_atof here for hexadecimal floats too, but real_hex_to_f
    is OK and it uses faster native fp arithmetic.  */
@@ -392,7 +388,8 @@ extern double (atof) ();
 /* Hexadecimal floating constant input for use with host computer's
    fp arithmetic.  */
 #ifndef REAL_VALUE_HTOF
-extern REAL_VALUE_TYPE real_hex_to_f PARAMS ((char *, enum machine_mode));
+extern REAL_VALUE_TYPE real_hex_to_f PARAMS ((const char *,
+					      enum machine_mode));
 #define REAL_VALUE_HTOF(s,m) real_hex_to_f(s,m)
 #endif
 
@@ -415,26 +412,22 @@ extern REAL_VALUE_TYPE real_value_truncate PARAMS ((enum machine_mode,
   ? (float) (x) : (x))
 #endif
 
-/* Determine whether a floating-point value X is infinite. */
+/* Determine whether a floating-point value X is infinite.  */
 #ifndef REAL_VALUE_ISINF
 #define REAL_VALUE_ISINF(x) (target_isinf (x))
 #endif
 
-/* Determine whether a floating-point value X is a NaN. */
+/* Determine whether a floating-point value X is a NaN.  */
 #ifndef REAL_VALUE_ISNAN
 #define REAL_VALUE_ISNAN(x) (target_isnan (x))
 #endif
 
-/* Determine whether a floating-point value X is negative. */
+/* Determine whether a floating-point value X is negative.  */
 #ifndef REAL_VALUE_NEGATIVE
 #define REAL_VALUE_NEGATIVE(x) (target_negative (x))
 #endif
 
-extern int target_isnan			PARAMS ((REAL_VALUE_TYPE));
-extern int target_isinf			PARAMS ((REAL_VALUE_TYPE));
-extern int target_negative		PARAMS ((REAL_VALUE_TYPE));
-
-/* Determine whether a floating-point value X is minus 0. */
+/* Determine whether a floating-point value X is minus 0.  */
 #ifndef REAL_VALUE_MINUS_ZERO
 #define REAL_VALUE_MINUS_ZERO(x) ((x) == 0 && REAL_VALUE_NEGATIVE (x))
 #endif
@@ -487,13 +480,6 @@ extern int target_isnan		PARAMS ((REAL_VALUE_TYPE));
 extern int target_isinf		PARAMS ((REAL_VALUE_TYPE));
 extern int target_negative	PARAMS ((REAL_VALUE_TYPE));
 extern void debug_real		PARAMS ((REAL_VALUE_TYPE));
+extern REAL_VALUE_TYPE ereal_atof PARAMS ((const char *, enum machine_mode));
 
-/* In varasm.c */
-extern void assemble_real		PARAMS ((REAL_VALUE_TYPE,
-					       enum machine_mode));
-extern void debug_real			PARAMS ((REAL_VALUE_TYPE));
-
-/* In varasm.c */
-extern void assemble_real		PARAMS ((REAL_VALUE_TYPE,
-					       enum machine_mode));
-#endif /* Not REAL_H_INCLUDED */
+#endif /* ! GCC_REAL_H */

@@ -16,7 +16,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU CC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; the Free Software Foundation, 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
 
 ;;- See file "rtl.def" for documentation on define_insn, match_*, et. al.
 
@@ -1179,9 +1180,9 @@
     int low, high;
 
     if (TARGET_LITTLE_END)
-      low = 0, high = 1;
+      low = 0, high = 4;
     else
-      low = 1, high = 0;
+      low = 4, high = 0;
     
     emit_insn (gen_rtx_SET (VOIDmode, gen_rtx_SUBREG (SImode, operands[0], low),
 	      operands[1]));
@@ -3409,7 +3410,7 @@
  ""
  "*
 {
-  assemble_integer (operands[0], 4, 1);
+  assemble_integer (operands[0], 4, BITS_PER_WORD, 1);
   return \"\";
 }"
  [(set_attr "length" "4")])

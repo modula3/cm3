@@ -1,23 +1,30 @@
 @c Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
-@c For copying conditions, see the file gcc.texi.
+@c For copying conditions, see the file install.texi.
 
-@node Installation
-@chapter Installing GNU CC
-@cindex installing GNU CC
+@ifnothtml
+@comment node-name,     next,          previous, up
+@node    Old, GNU Free Documentation License, Specific, Top
+@end ifnothtml
+@html
+<h1 align="center">Old installation documentation</h1>
+@end html
+@ifnothtml
+@chapter Old installation documentation
+@end ifnothtml
 
 Note most of this information is out of date and superseded by the
-new GCC install manual @file{gcc/doc/install.texi}.  It is
-provided for historical reference only.
+previous chapters of this manual.  It is provided for historical
+reference only, because of a lack of volunteers to merge it into the
+main manual.
 
+@ifnothtml
 @menu
-* Configuration Files::  Files created by running @code{configure}.
 * Configurations::    Configurations Supported by GNU CC.
 * Cross-Compiler::   Building and installing a cross-compiler.
 * VMS Install::   See below for installation on VMS.
-* Collect2::	  How @code{collect2} works; how it finds @code{ld}.
-* Header Dirs::   Understanding the standard header file directories.
 @end menu
+@end ifnothtml
 
 Here is the procedure for installing GNU CC on a GNU or Unix system.
 See @ref{VMS Install}, for VMS systems.
@@ -86,58 +93,13 @@ section before proceeding any further with the installation of GNU CC@.
 
 @end enumerate
 
-@node Configuration Files
-@section Files Created by @code{configure}
-
-Here we spell out what files will be set up by @code{configure}.  Normally
-you need not be concerned with these files.
-
-@itemize @bullet
-@item
-@ifset INTERNALS
-A file named @file{config.h} is created that contains a @samp{#include}
-of the top-level config file for the machine you will run the compiler
-on (@pxref{Config}).  This file is responsible for defining information
-about the host machine.  It includes @file{tm.h}.
-@end ifset
-@ifclear INTERNALS
-A file named @file{config.h} is created that contains a @samp{#include}
-of the top-level config file for the machine you will run the compiler
-on (@pxref{Config,,The Configuration File, gcc.info, Using and Porting
-GCC}).  This file is responsible for defining information about the host
-machine.  It includes @file{tm.h}.
-@end ifclear
-
-The top-level config file is located in the subdirectory @file{config}.
-Its name is always @file{xm-@var{something}.h}; usually
-@file{xm-@var{machine}.h}, but there are some exceptions.
-
-If your system does not support symbolic links, you might want to
-set up @file{config.h} to contain a @samp{#include} command which
-refers to the appropriate file.
-
-@item
-A file named @file{tconfig.h} is created which includes the top-level config
-file for your target machine.  This is used for compiling certain
-programs to run on that machine.
-
-@item
-A file named @file{tm.h} is created which includes the
-machine-description macro file for your target machine.  It should be in
-the subdirectory @file{config} and its name is often
-@file{@var{machine}.h}.
-
-@item
-The command file @file{configure} also constructs the file
-@file{Makefile} by adding some text to the template file
-@file{Makefile.in}.  The additional text comes from files in the
-@file{config} directory, named @file{t-@var{target}} and
-@file{x-@var{host}}.  If these files do not exist, it means nothing
-needs to be added for a given target or host.
-@end itemize
-
-@node Configurations
+@ifnothtml
+@node Configurations, Cross-Compiler, , Old
 @section Configurations Supported by GNU CC
+@end ifnothtml
+@html
+<h2>@anchor{Configurations}Configurations Supported by GNU CC</h2>
+@end html
 @cindex configurations supported by GNU CC
 
 Here are the possible CPU types:
@@ -245,8 +207,13 @@ things you must know:
 See @ref{VMS Install}, for details on how to install GNU CC on VMS@.
 @end table
 
-@node Cross-Compiler
+@ifnothtml
+@node Cross-Compiler, VMS Install, Configurations, Old
 @section Building and Installing a Cross-Compiler
+@end ifnothtml
+@html
+<h2>@anchor{Cross-Compiler}Building and Installing a Cross-Compiler</h2>
+@end html
 @cindex cross-compiler, installation
 
 GNU CC can function as a cross-compiler for many machines, but not all.
@@ -276,6 +243,7 @@ If you want to link on other than the target machine, you need a
 cross-linker as well.  You also need header files and libraries suitable
 for the target machine that you can install on the host machine.
 
+@ifnothtml
 @menu
 * Steps of Cross::      Using a cross-compiler involves several steps
                           that may be carried out on different machines.
@@ -285,9 +253,15 @@ for the target machine that you can install on the host machine.
                           for a cross-compiler.
 * Build Cross::         Actually compiling the cross-compiler.
 @end menu
+@end ifnothtml
 
-@node Steps of Cross
+@ifnothtml
+@node Steps of Cross, Configure Cross, , Cross-Compiler
 @subsection Steps of Cross-Compilation
+@end ifnothtml
+@html
+<h2>Steps of Cross-Compilation</h2>
+@end html
 
 To compile and run a program using a cross-compiler involves several
 steps:
@@ -315,8 +289,13 @@ since then you can do it all with a single invocation of GNU CC@.  This
 requires a suitable cross-assembler and cross-linker.  For some targets,
 the GNU assembler and linker are available.
 
-@node Configure Cross
+@ifnothtml
+@node Configure Cross, Tools and Libraries, Steps of Cross, Cross-Compiler
 @subsection Configuring a Cross-Compiler
+@end ifnothtml
+@html
+<h2>Configuring a Cross-Compiler</h2>
+@end html
 
 To build GNU CC as a cross-compiler, you start out by running
 @file{configure}.  Use the @option{--target=@var{target}} to specify the
@@ -330,8 +309,13 @@ produces code for an HP 68030 system running BSD on a system that
 ./configure --target=m68k-hp-bsd4.3
 @end smallexample
 
-@node Tools and Libraries
+@ifnothtml
+@node Tools and Libraries, Cross Headers, Configure Cross, Cross-Compiler
 @subsection Tools and Libraries for a Cross-Compiler
+@end ifnothtml
+@html
+<h2>Tools and Libraries for a Cross-Compiler</h2>
+@end html
 
 If you have a cross-assembler and cross-linker available, you should
 install them now.  Put them in the directory
@@ -406,8 +390,13 @@ mget *crt*.o
 quit
 @end example
 
-@node Cross Headers
+@ifnothtml
+@node Cross Headers, Build Cross, Tools and Libraries, Cross-Compiler
 @subsection Cross-Compilers and Header Files
+@end ifnothtml
+@html
+<h2>Cross-Compilers and Header Files</h2>
+@end html
 
 If you are cross-compiling a standalone program or a program for an
 embedded system, then you may not need any header files except the few
@@ -430,11 +419,11 @@ machine, the cross-compiler can use them also.
 Otherwise, you're on your own in finding header files to use when
 cross-compiling.
 
-When you have found suitable header files, put them in the directory
-@file{/usr/local/@var{target}/include}, before building the cross
-compiler.  Then installation will run fixincludes properly and install
-the corrected versions of the header files where the compiler will use
-them.
+When you have found suitable header files, you should put them in the
+directory @file{/usr/local/@var{target}/include}, before building the
+cross compiler.  Then installation will run fixincludes properly and
+install the corrected versions of the header files where the compiler
+will use them.
 
 Provide the header files before you build the cross-compiler, because
 the build stage actually runs the cross-compiler to produce parts of
@@ -458,8 +447,13 @@ quit
 tar xf tarfile
 @end example
 
-@node Build Cross
+@ifnothtml
+@node Build Cross, , Cross Headers, Cross-Compiler
 @subsection Actually Building the Cross-Compiler
+@end ifnothtml
+@html
+<h2>Actually Building the Cross-Compiler</h2>
+@end html
 
 Now you can proceed just as for compiling a single-machine compiler
 through the step of building stage 1.
@@ -486,8 +480,13 @@ must specify a 68030 as the host when you configure it.
 
 To install the cross-compiler, use @samp{make install}, as usual.
 
-@node VMS Install
+@ifnothtml
+@node VMS Install, , Cross-Compiler, Old
 @section Installing GNU CC on VMS
+@end ifnothtml
+@html
+<h2>@anchor{VMS Install}Installing GNU CC on VMS</h2>
+@end html
 @cindex VMS installation
 @cindex installing GNU CC on VMS
 
@@ -613,9 +612,9 @@ $ install replace sys$common:[syslib]dcltables
 @end smallexample
 
 @item
-Type @samp{@@make-gcc} to recompile everything (alternatively, submit
-the file @file{make-gcc.com} to a batch queue).  If you wish to build
-the GNU C++ compiler as well as the GNU CC compiler, you must first edit
+Type @samp{@@make-gcc} to recompile everything, or submit the file
+@file{make-gcc.com} to a batch queue.  If you wish to build the GNU C++
+compiler as well as the GNU CC compiler, you must first edit
 @file{make-gcc.com} and follow the instructions that appear in the
 comments.
 
@@ -680,12 +679,6 @@ the read-only bit set, and the linker will generate warning messages
 about mismatched psect attributes for these variables.  These warning
 messages are merely a nuisance, and can safely be ignored.
 
-If you are compiling with a version of GNU CC older than 1.33, specify
-@samp{/DEFINE=("inline=")} as an option in all the compilations.  This
-requires editing all the @code{gcc} commands in @file{make-cc1.com}.
-(The older versions had problems supporting @code{inline}.)  Once you
-have a working 1.33 or newer GNU CC, you can change this file back.
-
 @item
 If you want to build GNU CC with the VAX C compiler, you will need to
 make minor changes in @file{make-cccp.com} and @file{make-cc1.com}
@@ -730,114 +723,3 @@ by @file{vmsconfig.com}) to define the macro @code{QSORT_WORKAROUND}.
 @code{QSORT_WORKAROUND} is always defined when GNU CC is compiled with
 VAX C, to avoid a problem in case @file{gcclib.olb} is not yet
 available.
-
-@node Collect2
-@section @code{collect2}
-
-GNU CC uses a utility called @code{collect2} on nearly all systems to arrange
-to call various initialization functions at start time.
-
-The program @code{collect2} works by linking the program once and
-looking through the linker output file for symbols with particular names
-indicating they are constructor functions.  If it finds any, it
-creates a new temporary @samp{.c} file containing a table of them,
-compiles it, and links the program a second time including that file.
-
-@findex __main
-@cindex constructors, automatic calls
-The actual calls to the constructors are carried out by a subroutine
-called @code{__main}, which is called (automatically) at the beginning
-of the body of @code{main} (provided @code{main} was compiled with GNU
-CC)@.  Calling @code{__main} is necessary, even when compiling C code, to
-allow linking C and C++ object code together.  (If you use
-@option{-nostdlib}, you get an unresolved reference to @code{__main},
-since it's defined in the standard GCC library.  Include @option{-lgcc} at
-the end of your compiler command line to resolve this reference.)
-
-The program @code{collect2} is installed as @code{ld} in the directory
-where the passes of the compiler are installed.  When @code{collect2}
-needs to find the @emph{real} @code{ld}, it tries the following file
-names:
-
-@itemize @bullet
-@item
-@file{real-ld} in the directories listed in the compiler's search
-directories.
-
-@item
-@file{real-ld} in the directories listed in the environment variable
-@code{PATH}.
-
-@item
-The file specified in the @code{REAL_LD_FILE_NAME} configuration macro,
-if specified.
-
-@item
-@file{ld} in the compiler's search directories, except that
-@code{collect2} will not execute itself recursively.
-
-@item
-@file{ld} in @code{PATH}.
-@end itemize
-
-``The compiler's search directories'' means all the directories where
-@code{gcc} searches for passes of the compiler.  This includes
-directories that you specify with @option{-B}.
-
-Cross-compilers search a little differently:
-
-@itemize @bullet
-@item
-@file{real-ld} in the compiler's search directories.
-
-@item
-@file{@var{target}-real-ld} in @code{PATH}.
-
-@item
-The file specified in the @code{REAL_LD_FILE_NAME} configuration macro,
-if specified.
-
-@item
-@file{ld} in the compiler's search directories.
-
-@item
-@file{@var{target}-ld} in @code{PATH}.
-@end itemize
-
-@code{collect2} explicitly avoids running @code{ld} using the file name
-under which @code{collect2} itself was invoked.  In fact, it remembers
-up a list of such names---in case one copy of @code{collect2} finds
-another copy (or version) of @code{collect2} installed as @code{ld} in a
-second place in the search path.
-
-@code{collect2} searches for the utilities @code{nm} and @code{strip}
-using the same algorithm as above for @code{ld}.
-
-@node Header Dirs
-@section Standard Header File Directories
-
-@code{GCC_INCLUDE_DIR} means the same thing for native and cross.  It is
-where GNU CC stores its private include files, and also where GNU CC
-stores the fixed include files.  A cross compiled GNU CC runs
-@code{fixincludes} on the header files in @file{$(tooldir)/include}.
-(If the cross compilation header files need to be fixed, they must be
-installed before GNU CC is built.  If the cross compilation header files
-are already suitable for ISO C and GNU CC, nothing special need be
-done).
-
-@code{GPLUSPLUS_INCLUDE_DIR} means the same thing for native and cross.  It
-is where @code{g++} looks first for header files.  The C++ library
-installs only target independent header files in that directory.
-
-@code{LOCAL_INCLUDE_DIR} is used only for a native compiler.  It is
-normally @file{/usr/local/include}.  GNU CC searches this directory so
-that users can install header files in @file{/usr/local/include}.
-
-@code{CROSS_INCLUDE_DIR} is used only for a cross compiler.  GNU CC
-doesn't install anything there.
-
-@code{TOOL_INCLUDE_DIR} is used for both native and cross compilers.  It
-is the place for other packages to install header files that GNU CC will
-use.  For a cross-compiler, this is the equivalent of
-@file{/usr/include}.  When you build a cross-compiler,
-@code{fixincludes} processes any header files in this directory.

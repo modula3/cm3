@@ -3,22 +3,22 @@
    Copyright (C) 1987, 1991, 1997, 1998,
    1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 #include "hconfig.h"
@@ -67,9 +67,9 @@ walk_insn_part (part, recog_p, non_pc_set_src)
      int recog_p;
      int non_pc_set_src;
 {
-  register int i, j;
-  register RTX_CODE code;
-  register const char *format_ptr;
+  int i, j;
+  RTX_CODE code;
+  const char *format_ptr;
 
   if (part == 0)
     return;
@@ -275,16 +275,20 @@ main (argc, argv)
   progname = "genconfig";
 
   if (argc <= 1)
-    fatal ("No input file name.");
+    fatal ("no input file name");
 
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
-  printf ("/* Generated automatically by the program `genconfig'\n\
-from the machine description file `md'.  */\n\n");
+  puts ("/* Generated automatically by the program `genconfig'");
+  puts ("   from the machine description file `md'.  */\n");
+  puts ("#ifndef GCC_INSN_CONFIG_H");
+  puts ("#define GCC_INSN_CONFIG_H\n");
 
-  /* Allow at least 10 operands for the sake of asm constructs.  */
-  max_recog_operands = 9;  /* We will add 1 later.  */
+  /* Allow at least 30 operands for the sake of asm constructs.  */
+  /* ??? We *really* ought to reorganize things such that there
+     is no fixed upper bound.  */
+  max_recog_operands = 29;  /* We will add 1 later.  */
   max_dup_operands = 1;
 
   /* Read the machine description.  */
@@ -356,8 +360,12 @@ from the machine description file `md'.  */\n\n");
       printf ("#define MAX_INSNS_PER_PEEP2 %d\n", max_insns_per_peep2);
     }
 
-  fflush (stdout);
-  return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
+  puts("\n#endif /* GCC_INSN_CONFIG_H */");
+
+  if (ferror (stdout) || fflush (stdout) || fclose (stdout))
+    return FATAL_EXIT_CODE;
+
+  return SUCCESS_EXIT_CODE;
 }
 
 /* Define this so we can link with print-rtl.o to get debug_rtx function.  */

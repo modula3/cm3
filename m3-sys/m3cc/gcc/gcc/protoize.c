@@ -1,27 +1,28 @@
 /* Protoize program - Original version by Ron Guilmette (rfg@segfault.us.com).
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
 #include "intl.h"
+#include "cppdefault.h"
 
 #include <setjmp.h>
 #include <signal.h>
@@ -34,7 +35,7 @@ Boston, MA 02111-1307, USA.  */
 #undef abort
 #include "version.h"
 
-/* Include getopt.h for the sake of getopt_long. */
+/* Include getopt.h for the sake of getopt_long.  */
 #include "getopt.h"
 
 /* Macro to see if the path elements match.  */
@@ -167,8 +168,8 @@ static char * syscalls_absolute_filename;
 /* Type of the structure that holds information about macro unexpansions.  */
 
 struct unexpansion_struct {
-  const char *expanded;
-  const char *contracted;
+  const char *const expanded;
+  const char *const contracted;
 };
 typedef struct unexpansion_struct unexpansion;
 
@@ -194,54 +195,6 @@ static const unexpansion unexpansions[] = {
 
 static const int hash_mask = (HASH_TABLE_SIZE - 1);
 
-/* Make a table of default system include directories
-   just as it is done in cpp.  */
-
-#ifndef STANDARD_INCLUDE_DIR
-#define STANDARD_INCLUDE_DIR "/usr/include"
-#endif
-
-#ifndef LOCAL_INCLUDE_DIR
-#define LOCAL_INCLUDE_DIR "/usr/local/include"
-#endif
-
-struct default_include { const char *fname; 
-			 const char *component;
-			 int x1, x2; } include_defaults[]
-#ifdef INCLUDE_DEFAULTS
-  = INCLUDE_DEFAULTS;
-#else
-  = {
-    /* Pick up GNU C++ specific include files.  */
-    { GPLUSPLUS_INCLUDE_DIR, "G++", 1, 1 },
-#ifdef CROSS_COMPILE
-    /* This is the dir for fixincludes.  Put it just before
-       the files that we fix.  */
-    { GCC_INCLUDE_DIR, "GCC", 0, 0 },
-    /* For cross-compilation, this dir name is generated
-       automatically in Makefile.in.  */
-    { CROSS_INCLUDE_DIR, 0, 0, 0 },
-    /* This is another place that the target system's headers might be.  */
-    { TOOL_INCLUDE_DIR, "BINUTILS", 0, 0 },
-#else /* not CROSS_COMPILE */
-    /* This should be /use/local/include and should come before
-       the fixincludes-fixed header files.  */
-    { LOCAL_INCLUDE_DIR, 0, 0, 1 },
-    /* This is here ahead of GCC_INCLUDE_DIR because assert.h goes here.
-       Likewise, behind LOCAL_INCLUDE_DIR, where glibc puts its assert.h.  */
-    { TOOL_INCLUDE_DIR, "BINUTILS", 0, 0 },
-    /* This is the dir for fixincludes.  Put it just before
-       the files that we fix.  */
-    { GCC_INCLUDE_DIR, "GCC", 0, 0 },
-    /* Some systems have an extra dir of include files.  */
-#ifdef SYSTEM_INCLUDE_DIR
-    { SYSTEM_INCLUDE_DIR, 0, 0, 0 },
-#endif
-    { STANDARD_INCLUDE_DIR, 0, 0, 0},
-#endif /* not CROSS_COMPILE */
-    { 0, 0, 0, 0}
-    };
-#endif /* no INCLUDE_DEFAULTS */
 
 /* Datatype for lists of directories or filenames.  */
 struct string_list
@@ -278,7 +231,7 @@ static const char * const other_var_style = "stdarg";
 static const char * const other_var_style = "varargs";
 /* Note that this is a string containing the expansion of va_alist.
    But in `main' we discard all but the first token.  */
-static const char *varargs_style_indicator = STRINGIFY (va_alist);
+static const char *varargs_style_indicator = STRINGX (va_alist);
 #endif /* !defined (UNPROTOIZE) */
 
 /* The following two types are used to create hash tables.  In this program,
@@ -564,19 +517,11 @@ static char * saved_repl_write_ptr;
 static void
 notice VPARAMS ((const char *msgid, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  const char *msgid;
-#endif
-  va_list ap;
-
-  VA_START (ap, msgid);
-
-#ifndef ANSI_PROTOTYPES
-  msgid = va_arg (ap, const char *);
-#endif
+  VA_OPEN (ap, msgid);
+  VA_FIXEDARG (ap, const char *, msgid);
 
   vfprintf (stderr, _(msgid), ap);
-  va_end (ap);
+  VA_CLOSE (ap);
 }
 
 
@@ -663,7 +608,7 @@ safe_read (desc, ptr, len)
       }
     if (nchars == 0)
       break;
-    /* Arithmetic on void pointers is a gcc extention.  */
+    /* Arithmetic on void pointers is a gcc extension.  */
     ptr = (char *) ptr + nchars;
     left -= nchars;
   }
@@ -693,7 +638,7 @@ safe_write (desc, ptr, len, out_fname)
 		pname, shortpath (NULL, out_fname), xstrerror (errno_val));
 	return;
       }
-    /* Arithmetic on void pointers is a gcc extention.  */
+    /* Arithmetic on void pointers is a gcc extension.  */
     ptr = (char *) ptr + written;
     len -= written;
   }
@@ -724,7 +669,7 @@ static int
 is_id_char (ch)
      int ch;
 {
-  return (ISALNUM (ch) || (ch == '_') || (ch == '$'));
+  return (ISIDNUM (ch) || (ch == '$'));
 }
 
 /* Give a message indicating the proper way to invoke this program and then
@@ -751,12 +696,12 @@ static int
 in_system_include_dir (path)
      const char *path;
 {
-  struct default_include *p;
+  const struct default_include *p;
 
   if (! is_abspath (path))
     abort ();		/* Must be an absolutized filename.  */
 
-  for (p = include_defaults; p->fname; p++)
+  for (p = cpp_include_defaults; p->fname; p++)
     if (!strncmp (path, p->fname, strlen (p->fname))
 	&& IS_DIR_SEPARATOR (path[strlen (p->fname)]))
       return 1;
@@ -1143,7 +1088,7 @@ unexpand_if_needed (aux_info_line)
               strcpy (copy_p, unexp_p->contracted);
               copy_p += size;
 
-              /* Assume the there will not be another replacement required
+              /* Assume that there will not be another replacement required
                  within the text just replaced.  */
 
               s += len;
@@ -1173,7 +1118,7 @@ continue_outer: ;
   return (got_unexpanded ? savestring (line_buf, copy_p - line_buf) : 0);
 }
 
-/* Return 1 if pathname is absolute. */
+/* Return 1 if pathname is absolute.  */
 
 static int
 is_abspath (path)
@@ -1203,7 +1148,7 @@ abspath (cwd, rel_filename)
      const char *rel_filename;
 {
   /* Setup the current working directory as needed.  */
-  const char *cwd2 = (cwd) ? cwd : cwd_buffer;
+  const char *const cwd2 = (cwd) ? cwd : cwd_buffer;
   char *const abs_buffer
     = (char *) alloca (strlen (cwd2) + strlen (rel_filename) + 2);
   char *endp = abs_buffer;
@@ -2237,7 +2182,7 @@ start_over: ;
   
     fd_flags = O_RDONLY;
 #ifdef O_BINARY
-    /* Use binary mode to avoid having to deal with different EOL characters. */
+    /* Use binary mode to avoid having to deal with different EOL characters.  */
     fd_flags |= O_BINARY;
 #endif
     if ((aux_info_file = open (aux_info_filename, fd_flags, 0444 )) == -1)
@@ -2475,20 +2420,20 @@ reverse_def_dec_list (hp)
 {
   file_info *file_p = hp->fip;
   def_dec_info *prev = NULL;
-  def_dec_info *current = (def_dec_info *)file_p->defs_decs;
+  def_dec_info *current = (def_dec_info *) file_p->defs_decs;
 
   if (!current)
     return;        		/* no list to reverse */
 
   prev = current;
-  if (! (current = (def_dec_info *)current->next_in_file))
+  if (! (current = (def_dec_info *) current->next_in_file))
     return;        		/* can't reverse a single list element */
 
   prev->next_in_file = NULL;
 
   while (current)
     {
-      def_dec_info *next = (def_dec_info *)current->next_in_file;
+      def_dec_info *next = (def_dec_info *) current->next_in_file;
 
       current->next_in_file = prev;
       prev = current;
@@ -2546,7 +2491,7 @@ find_extern_def (head, user)
      code being converted contains its own definition of a function which
      could have been supplied by libc.a.  In such cases, we should avoid
      issuing the normal warning, and defer to the definition given in the
-     user's own code.   */
+     user's own code.  */
 
   for (dd_p = head; dd_p; dd_p = dd_p->next_for_func)
     if (dd_p->is_func_def && !dd_p->is_static)
@@ -2833,7 +2778,7 @@ connect_defs_and_decs (hp)
       for (dd_p2 = dd_p->next_for_func; dd_p2; dd_p2 = dd_p2->next_for_func)
         if (!dd_p2->is_func_def && dd_p2->is_static
          && !dd_p2->definition && (dd_p2->file == dd_p->file))
-          ((NONCONST def_dec_info *)dd_p2)->definition = dd_p->definition;
+          ((NONCONST def_dec_info *) dd_p2)->definition = dd_p->definition;
       }
 
   /* Convert any dummy (-1) definitions we created in the step above back to
@@ -3468,7 +3413,7 @@ find_rightmost_formals_list (clean_text_p)
          by an alphabetic character, while others *cannot* validly be followed
          by such characters.  */
 
-      if ((ch == '{') || ISALPHA ((unsigned char)ch))
+      if ((ch == '{') || ISALPHA ((unsigned char) ch))
         break;
 
       /* At this point, we have found a right paren, but we know that it is
@@ -3653,7 +3598,7 @@ add_global_decls (file_p, clean_text_p)
   /* Now write out full prototypes for all of the things that had been
      implicitly declared in this file (but only those for which we were
      actually able to find unique matching definitions).  Avoid duplicates
-     by marking things that we write out as we go.   */
+     by marking things that we write out as we go.  */
 
   {
     int some_decls_added = 0;
@@ -3814,7 +3759,7 @@ edit_fn_definition (def_dec_p, clean_text_p)
             have_newlines |= (*scan_orig == '\n');
             /* Leave identical whitespace alone.  */
             if (!ISSPACE ((const unsigned char)*scan_orig))
-              *((NONCONST char *)scan_orig) = ' '; /* identical - so whiteout */
+              *((NONCONST char *) scan_orig) = ' '; /* identical - so whiteout */
           }
         else
           have_flotsam = 1;
@@ -3885,7 +3830,7 @@ do_cleaning (new_clean_text_base, new_clean_text_limit)
             while (scan_p[1] != '\'' || scan_p[0] == '\\')
               {
                 if (scan_p[0] == '\\'
-		    && !ISSPACE ((const unsigned char)scan_p[1]))
+		    && !ISSPACE ((const unsigned char) scan_p[1]))
                   scan_p[1] = ' ';
                 if (!ISSPACE ((const unsigned char)*scan_p))
                   *scan_p = ' ';
@@ -3900,7 +3845,7 @@ do_cleaning (new_clean_text_base, new_clean_text_limit)
             while (scan_p[1] != '"' || scan_p[0] == '\\')
               {
                 if (scan_p[0] == '\\'
-		    && !ISSPACE ((const unsigned char)scan_p[1]))
+		    && !ISSPACE ((const unsigned char) scan_p[1]))
                   scan_p[1] = ' ';
                 if (!ISSPACE ((const unsigned char)*scan_p))
                   *scan_p = ' ';
@@ -4191,7 +4136,7 @@ edit_file (hp)
 
     fd_flags = O_RDONLY;
 #ifdef O_BINARY
-    /* Use binary mode to avoid having to deal with different EOL characters. */
+    /* Use binary mode to avoid having to deal with different EOL characters.  */
     fd_flags |= O_BINARY;
 #endif
     if ((input_file = open (convert_filename, fd_flags, 0444)) == -1)
@@ -4539,7 +4484,7 @@ do_processing ()
 #endif /* !defined (UNPROTOIZE) */
 }
 
-static struct option longopts[] =
+static const struct option longopts[] =
 {
   {"version", 0, 0, 'V'},
   {"file_name", 0, 0, 'p'},
@@ -4592,18 +4537,7 @@ main (argc, argv)
   signal (SIGCHLD, SIG_DFL);
 #endif
 
-/* LC_CTYPE determines the character set used by the terminal so it has be set
-   to output messages correctly.  */
-
-#ifdef HAVE_LC_MESSAGES
-  setlocale (LC_CTYPE, "");
-  setlocale (LC_MESSAGES, "");
-#else
-  setlocale (LC_ALL, "");
-#endif
-
-  (void) bindtextdomain (PACKAGE, localedir);
-  (void) textdomain (PACKAGE);
+  gcc_init_libintl ();
 
   cwd_buffer = getpwd ();
   if (!cwd_buffer)
@@ -4719,8 +4653,7 @@ main (argc, argv)
   {
     const char *cp;
 
-    for (cp = varargs_style_indicator;
-	 ISALNUM ((const unsigned char)*cp) || *cp == '_'; cp++)
+    for (cp = varargs_style_indicator; ISIDNUM (*cp); cp++)
       continue;
     if (*cp != 0)
       varargs_style_indicator = savestring (varargs_style_indicator,

@@ -23,18 +23,4 @@ Boston, MA 02111-1307, USA.  */
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "-DPPC -D__rtems__ \
-   -Asystem=rtems -Acpu=powerpc -Amachine=powerpc -D__USE_INIT_FINI__"
-
-/* Generate calls to memcpy, memcmp and memset.  */
-#ifndef TARGET_MEM_FUNCTIONS
-#define TARGET_MEM_FUNCTIONS
-#endif
-
-#undef STARTFILE_DEFAULT_SPEC
-#define STARTFILE_DEFAULT_SPEC "ecrti.o%s crt0.o%s"
-
-#undef ENDFILE_DEFAULT_SPEC
-#define ENDFILE_DEFAULT_SPEC "ecrtn.o%s"
-
-/* Get machine-independent configuration parameters for RTEMS.  */
-#include <rtems.h>
+   -Asystem=rtems -Acpu=powerpc -Amachine=powerpc"

@@ -5,7 +5,7 @@
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "-D__ELF__ -DMACH -Asystem=mach \
-  -Dunix -Asystem=unix -Asystem=posix -D__GNU__ -Asystem=gnu"
+  -Dunix -Asystem=unix -Asystem=posix -D__gnu_hurd__ -D__GNU__ -Asystem=gnu"
 
 #undef CPP_SPEC
 #define CPP_SPEC "%(cpp_cpu) \
@@ -29,7 +29,8 @@
      %{!static: \
        %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}} \
      %{static:crt0.o%s}} \
-   crti.o%s %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
+   crti.o%s %{static:crtbeginT.o%s}\
+   %{!static:%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}}"
 
 /* FIXME: Is a Hurd-specific fallback mechanism necessary?  */
 #undef MD_FALLBACK_FRAME_STATE_FOR

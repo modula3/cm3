@@ -1,6 +1,6 @@
 #!/bin/sh
 # Submit a problem report to a GNATS site.
-# Copyright (C) 1993, 2000, 2001 Free Software Foundation, Inc.
+# Copyright (C) 1993, 2000, 2001, 2002 Free Software Foundation, Inc.
 # Contributed by Brendan Kehoe (brendan@cygnus.com), based on a
 # version written by Heinz G. Seidl (hgs@cygnus.com).
 #
@@ -18,7 +18,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with GNU GNATS; see the file COPYING.  If not, write to
-# the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+# the Free Software Foundation, 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
 # The version of this send-pr.
 VERSION=3.113
@@ -182,7 +183,14 @@ while [ $# -gt 0 ]; do
     -l | -CL | --lisp) FORMAT=lisp ;;
     --request-id) REQUEST_ID=true ;;
     -h | --help) echo "$USAGE"; $REMOVE_TEMP; exit 0 ;;
-    -V | --version) echo "$VERSION"; $REMOVE_TEMP; exit 0 ;;
+    -V | --version) cat <<EOF
+gccbug (GCC) $DEFAULT_RELEASE
+Copyright (C) 2002 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+EOF
+	$REMOVE_TEMP; exit 0 ;;
     -*) echo "$USAGE" ; $REMOVE_TEMP; exit 1 ;;
     *) echo "$USAGE" ; $REMOVE_TEMP; exit 1
  esac
@@ -190,7 +198,7 @@ while [ $# -gt 0 ]; do
 done
 
 # spam does not need to be listed here
-CATEGORIES="bootstrap c++ c debug fortran java libf2c libgcj libobjc libstdc++ middle-end objc optimization other preprocessor target web"
+CATEGORIES="ada bootstrap c++ c debug fortran java libf2c libgcj libobjc libstdc++ middle-end objc optimization other preprocessor target web"
 
 case "$FORMAT" in
   lisp) echo "$CATEGORIES" | \

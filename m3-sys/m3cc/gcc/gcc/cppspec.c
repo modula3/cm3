@@ -1,22 +1,22 @@
 /* Specific flags and argument handling of the C preprocessor.
    Copyright (C) 1999 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -27,7 +27,7 @@ Boston, MA 02111-1307, USA.  */
    are errors.  It defaults to -x c for files with unrecognized
    extensions, unless -x options appear in argv, in which case we
    assume the user knows what they're doing.  If no explicit input is
-   mentioned, it will read stdin. */
+   mentioned, it will read stdin.  */
 
 /* Snarfed from gcc.c: */
 
@@ -69,7 +69,7 @@ static const char *const known_suffixes[] =
   NULL
 };
 
-/* Filter argc and argv before processing by the gcc driver proper. */
+/* Filter argc and argv before processing by the gcc driver proper.  */
 void
 lang_specific_driver (in_argc, in_argv, in_added_libraries)
      int *in_argc;
@@ -92,7 +92,7 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
   int seen_input = 0;
   
   /* Positions to insert -xc, -xassembler-with-cpp, and -o, if necessary.
-     0 means unnecessary. */
+     0 means unnecessary.  */
   int lang_c_here = 0;
   int lang_S_here = 0;
   int o_here = 0;
@@ -230,11 +230,11 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
   *in_argv = new_argv;
 } 
 
-/* Called before linking.  Returns 0 on success and -1 on failure. */
+/* Called before linking.  Returns 0 on success and -1 on failure.  */
 int lang_specific_pre_link ()
 {
-  return 0;  /* Not used for cpp. */
+  return 0;  /* Not used for cpp.  */
 }
 
-/* Number of extra output files that lang_specific_pre_link may generate. */
-int lang_specific_extra_outfiles = 0;  /* Not used for cpp. */
+/* Number of extra output files that lang_specific_pre_link may generate.  */
+int lang_specific_extra_outfiles = 0;  /* Not used for cpp.  */

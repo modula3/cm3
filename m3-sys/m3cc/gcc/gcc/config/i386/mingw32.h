@@ -1,8 +1,6 @@
 /* Operating system specific defines to be used when targeting GCC for
-   hosting on Windows32, using GNU tools and the Windows32 API Library,
-   as distinct from winnt.h, which is used to build GCC for use with a
-   windows style library and tool set and uses the Microsoft tools.
-   Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
+   hosting on Windows32, using GNU tools and the Windows32 API Library.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -19,22 +17,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA. */
+Boston, MA 02111-1307, USA.  */
 
 /* Most of this is the same as for cygwin, except for changing some
    specs.  */
 
 /* Mingw GCC, unlike Cygwin's, must be relocatable. This macro must 
-   be defined before any other files are included. */
+   be defined before any other files are included.  */
 #ifndef WIN32_NO_ABSOLUTE_INST_DIRS
 #define WIN32_NO_ABSOLUTE_INST_DIRS 1
 #endif
 
 #include "i386/cygwin.h"
 
+#define TARGET_EXECUTABLE_SUFFIX ".exe"
+
 /* Please keep changes to CPP_PREDEFINES in sync with i386/crtdll. The
    only difference between the two should be __MSVCRT__ needed to 
-   distinguish MSVC from CRTDLL runtime in mingw headers. */
+   distinguish MSVC from CRTDLL runtime in mingw headers.  */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "-D_WIN32 -D__WIN32 -D__WIN32__ -DWIN32 \
   -D__MINGW32__ -D__MSVCRT__ -DWINNT -D_X86_=1 \
@@ -80,7 +80,7 @@ Boston, MA 02111-1307, USA. */
 #define STARTFILE_SPEC "%{shared|mdll:dllcrt2%O%s} \
   %{!shared:%{!mdll:crt2%O%s}} %{pg:gcrt2%O%s}"
 
-/* MS runtime does not need a separate math library. */
+/* MS runtime does not need a separate math library.  */
 #undef MATH_LIBRARY
 #define MATH_LIBRARY ""
 

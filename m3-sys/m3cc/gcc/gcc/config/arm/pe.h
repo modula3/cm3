@@ -25,10 +25,9 @@ Boston, MA 02111-1307, USA.  */
 #define ARM_PE_FLAG_CHAR '@'
 
 /* Ensure that @x. will be stripped from the function name.  */
+#undef SUBTARGET_NAME_ENCODING_LENGTHS
 #define SUBTARGET_NAME_ENCODING_LENGTHS  \
   case ARM_PE_FLAG_CHAR: return 3;
-
-#include "arm/coff.h"
 
 #undef  USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX "_"
@@ -37,6 +36,10 @@ Boston, MA 02111-1307, USA.  */
 /* Run-time Target Specification.  */
 #undef  TARGET_VERSION
 #define TARGET_VERSION fputs (" (ARM/pe)", stderr)
+
+/* Get tree.c to declare a target-specific specialization of
+   merge_decl_attributes.  */
+#define TARGET_DLLIMPORT_DECL_ATTRIBUTES
 
 /* Support the __declspec keyword by turning them into attributes.
    We currently only support: naked, dllimport, and dllexport.
@@ -91,16 +94,6 @@ Boston, MA 02111-1307, USA.  */
   1,1,1			\
 }
 
-/* A C expression whose value is nonzero if IDENTIFIER with arguments ARGS
-   is a valid machine specific attribute for DECL.
-   The attributes in ATTRIBUTES have previously been assigned to DECL.  */
-#undef  VALID_MACHINE_DECL_ATTRIBUTE
-#define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, IDENTIFIER, ARGS) \
-  arm_pe_valid_machine_decl_attribute (DECL, ATTRIBUTES, IDENTIFIER, ARGS)
-
-#define MERGE_MACHINE_DECL_ATTRIBUTES(OLD, NEW) \
-  arm_pe_merge_machine_decl_attributes ((OLD), (NEW))
-
 /* In addition to the stuff done in arm.h, we must mark dll symbols specially.
    Definitions of dllexport'd objects install some info in the .drectve
    section.  References to dllimport'd objects are fetched indirectly via
@@ -124,35 +117,13 @@ Boston, MA 02111-1307, USA.  */
    symbols must be explicitly imported from shared libraries (DLLs).  */
 #define MULTIPLE_SYMBOL_SPACES
 
-#define UNIQUE_SECTION_P(DECL) DECL_ONE_ONLY (DECL)
-
 #define UNIQUE_SECTION(DECL, RELOC) arm_pe_unique_section (DECL, RELOC)
 
 #define SUPPORTS_ONE_ONLY 1
 
-/* A C statement to output something to the assembler file to switch to section
-   NAME for object DECL which is either a FUNCTION_DECL, a VAR_DECL or
-   NULL_TREE.  Some target formats do not support arbitrary sections.  Do not
-   define this macro in such cases.  */
-#undef  ASM_OUTPUT_SECTION_NAME
-#define ASM_OUTPUT_SECTION_NAME(STREAM, DECL, NAME, RELOC) 	\
-  do								\
-    {								\
-      if ((DECL) && TREE_CODE (DECL) == FUNCTION_DECL)		\
-	fprintf (STREAM, "\t.section %s,\"x\"\n", (NAME));	\
-      else if ((DECL) && DECL_READONLY_SECTION (DECL, RELOC))	\
-	fprintf (STREAM, "\t.section %s,\"\"\n", (NAME));	\
-      else							\
-	fprintf (STREAM, "\t.section %s,\"w\"\n", (NAME));	\
-      /* Functions may have been compiled at various levels of	\
-	 optimization so we can't use `same_size' here.		\
-	 Instead, have the linker pick one.  */			\
-      if ((DECL) && DECL_ONE_ONLY (DECL))			\
-	fprintf (STREAM, "\t.linkonce %s\n",			\
-		 TREE_CODE (DECL) == FUNCTION_DECL		\
-		 ? "discard" : "same_size");			\
-    }								\
-  while (0)
+/* Switch into a generic section.  */
+#undef TARGET_ASM_NAMED_SECTION
+#define TARGET_ASM_NAMED_SECTION  default_pe_asm_named_section
 
 /* This outputs a lot of .req's to define alias for various registers.
    Let's try to avoid this.  */
@@ -263,7 +234,8 @@ drectve_section ()							\
    ASM_DECLARE_OBJECT_NAME and then switch back to the original section
    afterwards.  */
 #define SWITCH_TO_SECTION_FUNCTION				\
-void								\
+static void switch_to_section PARAMS ((enum in_section, tree)); \
+static void							\
 switch_to_section (section, decl)				\
      enum in_section section;					\
      tree decl;							\

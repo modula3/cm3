@@ -38,10 +38,13 @@
 
 
 # Default options used when updating via CVS.
-UPDATE_OPTIONS=-P
-# Add -d to create any directories that exist in the repository but not
-#        locally.
-# Add -A to reset any sticky tags, dates, or `-k' options.
+UPDATE_OPTIONS=-Pd
+# Use -P to prune empty directories.
+# Use -d to create any directories that exist in the repository but not
+#           locally.
+# Use -A to reset any sticky tags, dates, or `-k' options.
+
+######## Anything below shouldn't be changed by regular users.
 
 # Arrange for the value of $0 to be available for functions
 self=$0
@@ -66,14 +69,13 @@ gcc/configure: gcc/configure.in
 gcc/cstamp-h.in: gcc/configure.in gcc/acconfig.h
 gcc/config.in: gcc/cstamp-h.in
 gcc/fixinc/fixincl.x: gcc/fixinc/fixincl.tpl gcc/fixinc/inclhack.def
-gcc/doc/gcov.1: gcc/doc/gcov.texi
-gcc/doc/cpp.1: gcc/doc/cpp.texi
-gcc/doc/gcc.1: gcc/doc/invoke.texi
-gcc/doc/fsf-funding.7: gcc/doc/include/funding.texi
-gcc/doc/gfdl.7: gcc/doc/include/fdl.texi
-gcc/doc/gpl.7: gcc/doc/include/gpl.texi
 # And then, language-specific files
 gcc/f/intdoc.texi: gcc/f/intdoc.in gcc/f/intdoc.c gcc/f/intrin.h gcc/f/intrin.def
+gcc/ada/treeprs.ads: gcc/ada/treeprs.adt gcc/ada/sinfo.ads gcc/ada/xtreeprs.adb
+gcc/ada/einfo.h: gcc/ada/einfo.ads gcc/ada/einfo.adb gcc/ada/xeinfo.adb
+gcc/ada/sinfo.h: gcc/ada/sinfo.ads gcc/ada/xsinfo.adb
+gcc/ada/nmake.adb: gcc/ada/sinfo.ads gcc/ada/nmake.adt gcc/ada/xnmake.adb
+gcc/ada/nmake.ads: gcc/ada/sinfo.ads gcc/ada/nmake.adt gcc/ada/xnmake.adb
 # And libraries, at last
 libchill/configure: libchill/configure.in
 libf2c/configure: libf2c/configure.in

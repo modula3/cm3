@@ -2,22 +2,22 @@
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998,
    1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 #include "hconfig.h"
@@ -56,7 +56,7 @@ Boston, MA 02111-1307, USA.  */
    used for comparisons.  In that case, $c and $C are the lower-case and
    upper-case forms of the comparison, respectively.  */
 
-const char * const optabs[] =
+static const char * const optabs[] =
 { "extendtab[$B][$A][0] = CODE_FOR_$(extend$a$b2$)",
   "extendtab[$B][$A][1] = CODE_FOR_$(zero_extend$a$b2$)",
   "fixtab[$A][$B][0] = CODE_FOR_$(fix$F$a$I$b2$)",
@@ -81,14 +81,13 @@ const char * const optabs[] =
   "smul_highpart_optab->handlers[$A].insn_code = CODE_FOR_$(smul$a3_highpart$)",
   "smul_widen_optab->handlers[$B].insn_code = CODE_FOR_$(mul$a$b3$)$N",
   "umul_widen_optab->handlers[$B].insn_code = CODE_FOR_$(umul$a$b3$)$N",
-  "sdiv_optab->handlers[$A].insn_code = CODE_FOR_$(div$I$a3$)",
+  "sdiv_optab->handlers[$A].insn_code = CODE_FOR_$(div$a3$)",
   "sdivv_optab->handlers[(int) $A].insn_code = CODE_FOR_$(div$V$I$a3$)",
   "udiv_optab->handlers[$A].insn_code = CODE_FOR_$(udiv$I$a3$)",
   "sdivmod_optab->handlers[$A].insn_code = CODE_FOR_$(divmod$a4$)",
   "udivmod_optab->handlers[$A].insn_code = CODE_FOR_$(udivmod$a4$)",
   "smod_optab->handlers[$A].insn_code = CODE_FOR_$(mod$a3$)",
   "umod_optab->handlers[$A].insn_code = CODE_FOR_$(umod$a3$)",
-  "flodiv_optab->handlers[$A].insn_code = CODE_FOR_$(div$F$a3$)",
   "ftrunc_optab->handlers[$A].insn_code = CODE_FOR_$(ftrunc$F$a2$)",
   "and_optab->handlers[$A].insn_code = CODE_FOR_$(and$a3$)",
   "ior_optab->handlers[$A].insn_code = CODE_FOR_$(ior$a3$)",
@@ -128,6 +127,7 @@ const char * const optabs[] =
   "cbranch_optab->handlers[$A].insn_code = CODE_FOR_$(cbranch$a4$)",
   "cmov_optab->handlers[$A].insn_code = CODE_FOR_$(cmov$a6$)",
   "cstore_optab->handlers[$A].insn_code = CODE_FOR_$(cstore$a4$)",
+  "push_optab->handlers[$A].insn_code = CODE_FOR_$(push$a1$)",
   "reload_in_optab[$A] = CODE_FOR_$(reload_in$a$)",
   "reload_out_optab[$A] = CODE_FOR_$(reload_out$a$)",
   "movstr_optab[$A] = CODE_FOR_$(movstr$a$)",
@@ -219,11 +219,14 @@ gen_insn (insn)
 			break;
 
 		    if (*p == 0
-			&& (! force_int || mode_class[i] == MODE_INT)
+			&& (! force_int || mode_class[i] == MODE_INT 
+			    || mode_class[i] == MODE_VECTOR_INT)
 		        && (! force_partial_int
                             || mode_class[i] == MODE_INT
-                            || mode_class[i] == MODE_PARTIAL_INT)
-			&& (! force_float || mode_class[i] == MODE_FLOAT))
+                            || mode_class[i] == MODE_PARTIAL_INT
+			    || mode_class[i] == MODE_VECTOR_INT)
+			&& (! force_float || mode_class[i] == MODE_FLOAT 
+			    || mode_class[i] == MODE_VECTOR_FLOAT))
 		      break;
 		  }
 
@@ -314,9 +317,9 @@ main (argc, argv)
   progname = "genopinit";
 
   if (argc <= 1)
-    fatal ("No input file name.");
+    fatal ("no input file name");
 
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
   printf ("/* Generated automatically by the program `genopinit'\n\
@@ -329,6 +332,7 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"insn-config.h\"\n");
   printf ("#include \"recog.h\"\n");
   printf ("#include \"expr.h\"\n");
+  printf ("#include \"optabs.h\"\n");
   printf ("#include \"reload.h\"\n\n");
 
   printf ("void\ninit_all_optabs ()\n{\n");

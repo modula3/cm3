@@ -60,9 +60,6 @@ extern int shift_operator PARAMS ((rtx, enum machine_mode));
 
 #ifdef TREE_CODE
 extern enum arc_function_type arc_compute_function_type PARAMS ((tree));
-extern int arc_comp_type_attributes PARAMS ((tree, tree));
-extern void arc_set_default_type_attributes PARAMS ((tree));
-extern int arc_valid_machine_decl_attribute PARAMS ((tree, tree, tree, tree));
 extern void arc_setup_incoming_varargs PARAMS ((CUMULATIVE_ARGS *,
 						enum machine_mode, tree,
 						int *, int));
@@ -74,8 +71,6 @@ extern void arc_asm_file_start PARAMS ((FILE *));
 extern unsigned int arc_compute_frame_size PARAMS ((int));
 extern void arc_save_restore PARAMS ((FILE *, const char *, unsigned int,
 				      unsigned int, const char *));
-extern void arc_output_function_prologue PARAMS ((FILE *, int));
-extern void arc_output_function_epilogue PARAMS ((FILE *, int));
 extern int arc_delay_slots_for_epilogue PARAMS ((void));
 extern void arc_finalize_pic PARAMS ((void));
 extern void arc_ccfsm_at_label PARAMS ((const char *, int));

@@ -2,25 +2,25 @@
    based on target macros.
    Copyright (C) 2000, 2001 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
-#ifndef __GCC_TSYSTEM_H__
-#define __GCC_TSYSTEM_H__
+#ifndef GCC_TSYSTEM_H
+#define GCC_TSYSTEM_H
 
 /* System headers (e.g. stdio.h, stdlib.h, unistd.h) sometimes
    indirectly include getopt.h.  Our -I flags will cause gcc's gnu
@@ -33,7 +33,7 @@ Boston, MA 02111-1307, USA.  */
 #define HAVE_DECL_GETOPT 1
 #endif
 
-/* GCC supplies this header. */
+/* GCC supplies this header.  */
 #include <stddef.h>
 
 #ifdef inhibit_libc
@@ -56,34 +56,34 @@ extern int atexit (void (*)(void));
 /* ??? This is not a good solution, since prototypes may be required in
    some cases for correct code.  */
 
-/* GCC supplies this header. */
+/* GCC supplies this header.  */
 #include <stdarg.h>
 
-/* All systems have this header. */
+/* All systems have this header.  */
 #include <stdio.h>
 
-/* All systems have this header. */
+/* All systems have this header.  */
 #include <sys/types.h>
 
-/* All systems have this header. */
+/* All systems have this header.  */
 #include <errno.h>
 
 #ifndef errno
 extern int errno;
 #endif
 
-#if defined(POSIX) || defined(USG)
+#ifdef POSIX
 #include <string.h>
 #endif
 
-/* GCC (fixproto) guarantees these system headers exist. */
+/* GCC (fixproto) guarantees these system headers exist.  */
 #include <stdlib.h>
 #include <unistd.h>
 
-/* GCC supplies this header. */
+/* GCC supplies this header.  */
 #include <limits.h>
 
-#if defined(POSIX) || defined(USG)
+#ifdef POSIX
 #include <time.h>
 #endif
 
@@ -94,4 +94,4 @@ extern int errno;
 #define NULL 0
 #endif
 
-#endif /* __GCC_TSYSTEM_H__ */
+#endif /* ! GCC_TSYSTEM_H */

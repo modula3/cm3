@@ -39,6 +39,3 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_DEFAULT		(MASK_M6812)
 
 #define TARGET_M68HC12
-
-#include "m68hc11/m68hc11.h"
-

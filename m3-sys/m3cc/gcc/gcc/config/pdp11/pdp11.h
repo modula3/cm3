@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for the pdp-11
-   Copyright (C) 1994, 1995, 1996, 1998, 1999, 2000, 2001
+   Copyright (C) 1994, 1995, 1996, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
@@ -649,10 +649,6 @@ maybe ac0 ? - as option someday! */
 
 #define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) 0
 
-/* This macro generates the assembly code for function entry. */
-#define FUNCTION_PROLOGUE(FILE, SIZE) \
-    output_function_prologue(FILE, SIZE);
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
@@ -668,15 +664,6 @@ extern int may_call_alloca;
 
 #define EXIT_IGNORE_STACK	1
 
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-*/
-
-#define FUNCTION_EPILOGUE(FILE, SIZE) \
-    output_function_epilogue(FILE, SIZE);
-  
 #define INITIAL_FRAME_POINTER_OFFSET(DEPTH_VAR)	\
 {								\
   int offset, regno;		      				\
@@ -892,12 +879,6 @@ extern int may_call_alloca;
    Do not define this if the table should contain absolute addresses. */
 /* #define CASE_VECTOR_PC_RELATIVE 1 */
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
-
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 1
 
@@ -906,9 +887,6 @@ extern int may_call_alloca;
 */
 
 #define MOVE_MAX 2
-
-/* Zero extension is faster if the target is known to be zero */
-/* #define SLOW_ZERO_EXTEND */
 
 /* Nonzero if access to memory by byte is slow and undesirable. -
 */
@@ -1072,10 +1050,6 @@ fprintf (FILE, "$help$: . = .+8 ; space for tmp moves!\n")	\
 {"r0", "r1", "r2", "r3", "r4", "r5", "sp", "pc",     \
  "ac0", "ac1", "ac2", "ac3", "ac4", "ac5" }
 
-/* How to renumber registers for dbx and gdb.  */
-
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
 
@@ -1105,35 +1079,6 @@ fprintf (FILE, "$help$: . = .+8 ; space for tmp moves!\n")	\
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*%s_%d", PREFIX, NUM)
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-  fprintf (FILE, "\tdouble %.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-  fprintf (FILE, "\tfloat %.12e\n", (VALUE))
-
-/* Likewise for `short' and `char' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, TARGET_UNIX_ASM ? "\t" : "\t.word "),	\
-  output_addr_const_pdp11 (FILE, (VALUE)),		\
-  fprintf (FILE, " /*short*/\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const_pdp11 (FILE, (VALUE)),		\
-  fprintf (FILE, " /* char */\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.
-   This won't actually be used since we define ASM_OUTPUT_CHAR.
-*/
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte %o\n", (VALUE))
 
 #define ASM_OUTPUT_ASCII(FILE, P, SIZE)  \
   output_ascii (FILE, P, SIZE)
@@ -1196,21 +1141,6 @@ fprintf (FILE, "$help$: . = .+8 ; space for tmp moves!\n")	\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
 
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "["
-#define ASM_CLOSE_PAREN "]"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
-
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
    For `%' followed by punctuation, CODE is the punctuation and X is null.
@@ -1260,14 +1190,14 @@ JMP	FUNCTION	0x0058  0x0000 <- FUNCTION
   if (TARGET_SPLIT)			\
     abort();				\
 					\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x9400+STATIC_CHAIN_REGNUM)); \
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT(0x0058));			\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);				\
+  assemble_aligned_integer (2, GEN_INT (0x9400+STATIC_CHAIN_REGNUM));	\
+  assemble_aligned_integer (2, const0_rtx);				\
+  assemble_aligned_integer (2, GEN_INT(0x0058));			\
+  assemble_aligned_integer (2, const0_rtx);				\
 }
 
 #define TRAMPOLINE_SIZE 8
-#define TRAMPOLINE_ALIGN 16
+#define TRAMPOLINE_ALIGNMENT 16
 
 /* Emit RTL insns to initialize the variable parts of a trampoline.
    FNADDR is an RTX for the address of the function's pure code.
@@ -1394,4 +1324,3 @@ JMP	FUNCTION	0x0058  0x0000 <- FUNCTION
 
 
 #define COMPARE_FLAG_MODE HImode
-

@@ -2,36 +2,111 @@
    Copyright (C) 2000 Free Software Foundation, Inc.
    Contributed by Alex Samuel <samuel@codesourcery.com>
 
-   This file is part of GNU CC.
+This file is part of GCC.
 
-   GNU CC is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-   GNU CC is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+You should have received a copy of the GNU General Public License
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
 #include "intl.h"
+#include "rtl.h"
 
 #ifdef HAVE_SYS_TIMES_H
 # include <sys/times.h>
 #endif
-
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
-#ifdef NEED_DECLARATION_GETRUSAGE
+
+#ifndef HAVE_CLOCK_T
+typedef int clock_t;
+#endif
+
+#ifndef HAVE_STRUCT_TMS
+struct tms
+{
+  clock_t tms_utime;
+  clock_t tms_stime;
+  clock_t tms_cutime;
+  clock_t tms_cstime;
+};
+#endif
+
+#if defined HAVE_DECL_GETRUSAGE && !HAVE_DECL_GETRUSAGE
 extern int getrusage PARAMS ((int, struct rusage *));
+#endif
+#if defined HAVE_DECL_TIMES && !HAVE_DECL_TIMES
+extern clock_t times PARAMS ((struct tms *));
+#endif
+#if defined HAVE_DECL_CLOCK && !HAVE_DECL_CLOCK
+extern clock_t clock PARAMS ((void));
+#endif
+
+#ifndef RUSAGE_SELF
+# define RUSAGE_SELF 0
+#endif
+
+/* Calculation of scale factor to convert ticks to microseconds.
+   We mustn't use CLOCKS_PER_SEC except with clock().  */
+#if HAVE_SYSCONF && defined _SC_CLK_TCK
+# define TICKS_PER_SECOND sysconf (_SC_CLK_TCK) /* POSIX 1003.1-1996 */
+#else
+# ifdef CLK_TCK
+#  define TICKS_PER_SECOND CLK_TCK /* POSIX 1003.1-1988; obsolescent */
+# else
+#  ifdef HZ
+#   define TICKS_PER_SECOND HZ  /* traditional UNIX */
+#  else
+#   define TICKS_PER_SECOND 100 /* often the correct value */
+#  endif
+# endif
+#endif
+
+/* Prefer times to getrusage to clock (each gives successively less
+   information).  */
+#ifdef HAVE_TIMES
+# define USE_TIMES
+# define HAVE_USER_TIME
+# define HAVE_SYS_TIME
+# define HAVE_WALL_TIME
+#else
+#ifdef HAVE_GETRUSAGE
+# define USE_GETRUSAGE
+# define HAVE_USER_TIME
+# define HAVE_SYS_TIME
+#else
+#ifdef HAVE_CLOCK
+# define USE_CLOCK
+# define HAVE_USER_TIME
+#endif
+#endif
+#endif
+
+/* libc is very likely to have snuck a call to sysconf() into one of
+   the underlying constants, and that can be very slow, so we have to
+   precompute them.  Whose wonderful idea was it to make all those
+   _constants_ variable at run time, anyway?  */
+#ifdef USE_TIMES
+static float ticks_to_msec;
+#define TICKS_TO_MSEC (1 / (float)TICKS_PER_SECOND)
+#endif
+
+#ifdef USE_CLOCK
+static float clocks_to_msec;
+#define CLOCKS_TO_MSEC (1 / (float)CLOCKS_PER_SEC)
 #endif
 
 #include "flags.h"
@@ -39,7 +114,7 @@ extern int getrusage PARAMS ((int, struct rusage *));
 
 /* See timevar.h for an explanation of timing variables.  */
 
-/* This macro evaluates to non-zero if timing variables are enabled. */
+/* This macro evaluates to non-zero if timing variables are enabled.  */
 #define TIMEVAR_ENABLE (time_report)
 
 /* A timing variable.  */
@@ -114,86 +189,24 @@ get_time (now)
   if (!TIMEVAR_ENABLE)
     return;
 
-#ifdef __BEOS__
-  /* Nothing.  */
-#else /* not BeOS */
-#if defined (_WIN32) && !defined (__CYGWIN__)
-  if (clock () >= 0)
-    now->user = clock () * 1000;
-#define HAVE_USER_TIME
-
-#else /* not _WIN32 */
-#ifdef _SC_CLK_TCK
   {
-    static int tick;
+#ifdef USE_TIMES
     struct tms tms;
-    if (tick == 0)
-      tick = 1000000 / sysconf (_SC_CLK_TCK);
-    now->wall = times (&tms) * tick;
-    now->user = tms.tms_utime * tick;
-    now->sys = tms.tms_stime * tick;
-  }
-#define HAVE_USER_TIME
-#define HAVE_SYS_TIME
-#define HAVE_WALL_TIME
-
-#else
-#ifdef USG
-  {
-    struct tms tms;
-#   if HAVE_SYSCONF && defined _SC_CLK_TCK
-#    define TICKS_PER_SECOND sysconf (_SC_CLK_TCK) /* POSIX 1003.1-1996 */
-#   else
-#    ifdef CLK_TCK
-#     define TICKS_PER_SECOND CLK_TCK /* POSIX 1003.1-1988; obsolescent */
-#    else
-#     define TICKS_PER_SECOND HZ /* traditional UNIX */
-#    endif
-#   endif
-    now->wall = times (&tms) * (1000000 / TICKS_PER_SECOND);
-    now->user = tms.tms_utime * (1000000 / TICKS_PER_SECOND);
-    now->sys = tms.tms_stime * (1000000 / TICKS_PER_SECOND);
-  }
-#define HAVE_USER_TIME
-#define HAVE_SYS_TIME
-#define HAVE_WALL_TIME
-
-#else
-#ifndef VMS
-  {
+    now->wall = times (&tms)  * ticks_to_msec;
+    now->user = tms.tms_utime * ticks_to_msec;
+    now->sys  = tms.tms_stime * ticks_to_msec;
+#endif
+#ifdef USE_GETRUSAGE
     struct rusage rusage;
-    getrusage (0, &rusage);
-    now->user 
-      = rusage.ru_utime.tv_sec * 1000000 + rusage.ru_utime.tv_usec;
-    now->sys 
-      = rusage.ru_stime.tv_sec * 1000000 + rusage.ru_stime.tv_usec;
+    getrusage (RUSAGE_SELF, &rusage);
+    now->user = rusage.ru_utime.tv_sec + rusage.ru_utime.tv_usec * 1e-6;
+    now->sys  = rusage.ru_stime.tv_sec + rusage.ru_stime.tv_usec * 1e-6;
+#endif
+#ifdef USE_CLOCK
+    now->user = clock () * clocks_to_msec;
+#endif
   }
-#define HAVE_USER_TIME
-#define HAVE_SYS_TIME
-
-#else /* VMS */
-  {
-    struct
-      {
-        int proc_user_time;
-        int proc_system_time;
-        int child_user_time;
-        int child_system_time;
-      } vms_times;
-    now->wall = times ((void *) &vms_times) * 10000;
-    now->user = vms_times.proc_user_time * 10000;
-    now->sys = vms_times.proc_system_time * 10000;
-  }
-#define HAVE_USER_TIME
-#define HAVE_SYS_TIME
-#define HAVE_WALL_TIME
-
-#endif	/* VMS */
-#endif	/* USG */
-#endif  /* _SC_CLK_TCK */
-#endif	/* _WIN32 */
-#endif	/* __BEOS__ */
-}  
+}
 
 /* Add the difference between STOP_TIME and START_TIME to TIMER.  */
 
@@ -220,10 +233,17 @@ init_timevar ()
   memset ((void *) timevars, 0, sizeof (timevars));
 
   /* Initialize the names of timing variables.  */
-#define DEFTIMEVAR(identifer__, name__) \
-  timevars[identifer__].name = name__;
+#define DEFTIMEVAR(identifier__, name__) \
+  timevars[identifier__].name = name__;
 #include "timevar.def"
 #undef DEFTIMEVAR
+
+#ifdef USE_TIMES
+  ticks_to_msec = TICKS_TO_MSEC;
+#endif
+#ifdef USE_CLOCK
+  clocks_to_msec = CLOCKS_TO_MSEC;
+#endif
 }
 
 /* Push TIMEVAR onto the timing stack.  No further elapsed time is
@@ -260,7 +280,7 @@ timevar_push (timevar)
     timevar_accumulate (&stack->timevar->elapsed, &start_time, &now);
 
   /* Reset the start time; from now on, time is attributed to
-     TIMEVAR. */
+     TIMEVAR.  */
   start_time = now;
 
   /* See if we have a previously-allocated stack instance.  If so,
@@ -422,13 +442,14 @@ timevar_print (fp)
     timevar_accumulate (&stack->timevar->elapsed, &start_time, &now);
 
   /* Reset the start time; from now on, time is attributed to
-     TIMEVAR. */
+     TIMEVAR.  */
   start_time = now;
 
-  fprintf (fp, _("\nExecution times (seconds)\n"));
+  fputs (_("\nExecution times (seconds)\n"), fp);
   for (id = 0; id < (unsigned int) TIMEVAR_LAST; ++id)
     {
       struct timevar_def *tv = &timevars[(timevar_id_t) id];
+      const float tiny = 5e-3;
 
       /* Don't print the total execution time here; that goes at the
 	 end.  */
@@ -439,52 +460,50 @@ timevar_print (fp)
       if (!tv->used)
 	continue;
 
+      /* Don't print timing variables if we're going to get a row of
+         zeroes.  */
+      if (tv->elapsed.user < tiny
+	  && tv->elapsed.sys < tiny
+	  && tv->elapsed.wall < tiny)
+	continue;
+
       /* The timing variable name.  */
       fprintf (fp, " %-22s:", tv->name);
 
 #ifdef HAVE_USER_TIME
       /* Print user-mode time for this process.  */
-      fprintf (fp, "%4ld.%02ld (%2.0f%%) usr", 
-	       tv->elapsed.user / 1000000, 
-	       (tv->elapsed.user % 1000000) / 10000,
-	       (total->user == 0) ? 0.0 
-	       : (100.0 * tv->elapsed.user / (double) total->user));
+      fprintf (fp, "%7.2f (%2.0f%%) usr", 
+	       tv->elapsed.user,
+	       (total->user == 0 ? 0 : tv->elapsed.user / total->user) * 100);
 #endif /* HAVE_USER_TIME */
 
 #ifdef HAVE_SYS_TIME
       /* Print system-mode time for this process.  */
-      fprintf (fp, "%4ld.%02ld (%2.0f%%) sys", 
-	       tv->elapsed.sys / 1000000, 
-	       (tv->elapsed.sys % 1000000) / 10000,
-	       (total->sys == 0) ? 0.0 
-	       : (100.0 * tv->elapsed.sys / (double) total->sys));
+      fprintf (fp, "%7.2f (%2.0f%%) sys", 
+	       tv->elapsed.sys,
+	       (total->sys == 0 ? 0 : tv->elapsed.sys / total->sys) * 100);
 #endif /* HAVE_SYS_TIME */
 
 #ifdef HAVE_WALL_TIME
       /* Print wall clock time elapsed.  */
-      fprintf (fp, "%4ld.%02ld (%2.0f%%) wall", 
-	       tv->elapsed.wall / 1000000, 
-	       (tv->elapsed.wall % 1000000) / 10000,
-	       (total->wall == 0) ? 0.0 
-	       : (100.0 * tv->elapsed.wall / (double) total->wall));
+      fprintf (fp, "%7.2f (%2.0f%%) wall", 
+	       tv->elapsed.wall,
+	       (total->wall == 0 ? 0 : tv->elapsed.wall / total->wall) * 100);
 #endif /* HAVE_WALL_TIME */
 
-      fprintf (fp, "\n");
+      putc ('\n', fp);
     }
 
   /* Print total time.  */
-  fprintf (fp, _(" TOTAL                 :"));
+  fputs (_(" TOTAL                 :"), fp);
 #ifdef HAVE_USER_TIME
-  fprintf (fp, "%4ld.%02ld          ", 
-	   total->user / 1000000, (total->user % 1000000) / 10000);
+  fprintf (fp, "%7.2f          ", total->user);
 #endif 
 #ifdef HAVE_SYS_TIME
-  fprintf (fp, "%4ld.%02ld          ", 
-	   total->sys  / 1000000, (total->sys  % 1000000) / 10000);
+  fprintf (fp, "%7.2f          ", total->sys);
 #endif
 #ifdef HAVE_WALL_TIME
-  fprintf (fp, "%4ld.%02ld\n",
-	   total->wall / 1000000, (total->wall % 1000000) / 10000);
+  fprintf (fp, "%7.2f\n", total->wall);
 #endif
   
 #endif /* defined (HAVE_USER_TIME) || defined (HAVE_SYS_TIME) 

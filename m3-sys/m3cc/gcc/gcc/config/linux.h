@@ -37,13 +37,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_APP_OFF
 #define ASM_APP_OFF "#NO_APP\n"
 
-#define SET_ASM_OP	"\t.set\t"
-
-/* Use stabs instead of DWARF debug format.  */
-#undef PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
-#include "svr4.h"
-
 #undef MD_EXEC_PREFIX
 #undef MD_STARTFILE_PREFIX
 
@@ -53,12 +46,22 @@ Boston, MA 02111-1307, USA.  */
    object constructed before entering `main'. */
    
 #undef	STARTFILE_SPEC
+#ifdef USE_GNULIBC_1
 #define STARTFILE_SPEC \
   "%{!shared: \
      %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} \
 		       %{!p:%{profile:gcrt1.o%s} \
 			 %{!profile:crt1.o%s}}}} \
    crti.o%s %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
+#else
+#define STARTFILE_SPEC \
+  "%{!shared: \
+     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} \
+		       %{!p:%{profile:gcrt1.o%s} \
+			 %{!profile:crt1.o%s}}}} \
+   crti.o%s %{static:crtbeginT.o%s}\
+   %{!static:%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}}"
+#endif
 
 /* Provide a ENDFILE_SPEC appropriate for GNU/Linux.  Here we tack on
    the GNU/Linux magical crtend.o file (see crtstuff.c) which
@@ -78,11 +81,6 @@ Boston, MA 02111-1307, USA.  */
 /* The GNU C++ standard library requires that these macros be defined.  */
 #undef CPLUSPLUS_CPP_SPEC
 #define CPLUSPLUS_CPP_SPEC "-D_GNU_SOURCE %(cpp)"
-
-#ifndef USE_GNULIBC_1
-#undef DEFAULT_VTABLE_THUNKS
-#define DEFAULT_VTABLE_THUNKS 1
-#endif
 
 #undef	LIB_SPEC
 /* We no longer link with libc_p.a or libg.a by default. If you
@@ -104,6 +102,10 @@ Boston, MA 02111-1307, USA.  */
   "%{!shared: \
      %{p:-lgmon -lc_p} %{pg:-lgmon -lc_p} \
        %{!p:%{!pg:%{!g*:-lc} %{g*:-lg}}}}"
+#endif
+
+#if !defined(USE_GNULIBC_1) && defined(HAVE_LD_EH_FRAME_HDR)
+#define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "
 #endif
 
 /* Define this so we can compile MS code for use with WINE.  */

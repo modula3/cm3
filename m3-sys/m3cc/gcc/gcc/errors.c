@@ -1,22 +1,22 @@
 /* Basic error reporting routines.
    Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 /* warning, error, and fatal.  These definitions are suitable for use
    in the generator programs; eventually we would like to use them in
@@ -39,20 +39,12 @@ int have_error = 0;
 void
 warning VPARAMS ((const char *format, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
+  VA_OPEN (ap, format);
+  VA_FIXEDARG (ap, const char *, format);
 
   fprintf (stderr, "%s: warning: ", progname);
   vfprintf (stderr, format, ap);
-  va_end (ap);
+  VA_CLOSE (ap);
   fputc('\n', stderr);
 }
 
@@ -62,20 +54,12 @@ warning VPARAMS ((const char *format, ...))
 void
 error VPARAMS ((const char *format, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
+  VA_OPEN (ap, format);
+  VA_FIXEDARG (ap, const char *, format);
 
   fprintf (stderr, "%s: ", progname);
   vfprintf (stderr, format, ap);
-  va_end (ap);
+  VA_CLOSE (ap);
   fputc('\n', stderr);
 
   have_error = 1;
@@ -87,20 +71,12 @@ error VPARAMS ((const char *format, ...))
 void
 fatal VPARAMS ((const char *format, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
+  VA_OPEN (ap, format);
+  VA_FIXEDARG (ap, const char *, format);
 
   fprintf (stderr, "%s: ", progname);
   vfprintf (stderr, format, ap);
-  va_end (ap);
+  VA_CLOSE (ap);
   fputc('\n', stderr);
   exit (FATAL_EXIT_CODE);
 }
@@ -110,20 +86,12 @@ fatal VPARAMS ((const char *format, ...))
 void
 internal_error VPARAMS ((const char *format, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
+  VA_OPEN (ap, format);
+  VA_FIXEDARG (ap, const char *, format);
 
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
-
-  fprintf (stderr, "%s: Internal error", progname);
+  fprintf (stderr, "%s: Internal error: ", progname);
   vfprintf (stderr, format, ap);
-  va_end (ap);
+  VA_CLOSE (ap);
   fputc ('\n', stderr);
   exit (FATAL_EXIT_CODE);
 }
@@ -132,7 +100,7 @@ internal_error VPARAMS ((const char *format, ...))
    shares no directory elements with the pathname of __FILE__.  This
    is used by fancy_abort() to print `Internal compiler error in expr.c'
    instead of `Internal compiler error in ../../GCC/gcc/expr.c'.  This
-   version if for the gen* programs and so neededn't handle subdirectories.  */
+   version if for the gen* programs and so needn't handle subdirectories.  */
 
 const char *
 trim_filename (name)

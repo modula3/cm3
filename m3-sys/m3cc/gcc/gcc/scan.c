@@ -1,5 +1,5 @@
 /* Utility functions for scan-decls and fix-header programs.
-   Copyright (C) 1993, 1994, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1998, 2002 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -45,9 +45,10 @@ sstring_append (dst, src)
      sstring *dst;
      sstring *src;
 {
-  register char *d, *s;
-  register int count = SSTRING_LENGTH(src);
-  MAKE_SSTRING_SPACE(dst, count + 1);
+  char *d, *s;
+  int count = SSTRING_LENGTH (src);
+
+  MAKE_SSTRING_SPACE (dst, count + 1);
   d = dst->ptr;
   s = src->base;
   while (--count >= 0) *d++ = *s++;
@@ -57,33 +58,34 @@ sstring_append (dst, src)
 
 int
 scan_ident (fp, s, c)
-     register FILE *fp;
-     register sstring *s;
+     FILE *fp;
+     sstring *s;
      int c;
 {
   s->ptr = s->base;
-  if (ISALPHA(c) || c == '_')
+  if (ISIDST (c))
     {
       for (;;)
 	{
-	  SSTRING_PUT(s, c);
+	  SSTRING_PUT (s, c);
 	  c = getc (fp);
-	  if (c == EOF || !(ISALNUM(c) || c == '_'))
+	  if (c == EOF || ! ISIDNUM (c))
 	    break;
 	}
     }
-  MAKE_SSTRING_SPACE(s, 1);
+  MAKE_SSTRING_SPACE (s, 1);
   *s->ptr = 0;
   return c;
 }
 
 int
 scan_string (fp, s, init)
-     register FILE *fp;
-     register sstring *s;
+     FILE *fp;
+     sstring *s;
      int init;
 {
   int c;
+
   for (;;)
     {
       c = getc (fp);
@@ -102,9 +104,9 @@ scan_string (fp, s, init)
 	  if (c == '\n')
 	    continue;
 	}
-      SSTRING_PUT(s, c);
+      SSTRING_PUT (s, c);
     }
-  MAKE_SSTRING_SPACE(s, 1);
+  MAKE_SSTRING_SPACE (s, 1);
   *s->ptr = 0;
   return c;
 }
@@ -113,7 +115,7 @@ scan_string (fp, s, init)
 
 int
 skip_spaces (fp, c)
-     register FILE *fp;
+     FILE *fp;
      int c;
 {
   for (;;)
@@ -156,24 +158,26 @@ read_upto (fp, str, delim)
      int delim;
 {
   int ch;
+
   for (;;)
     {
       ch = getc (fp);
       if (ch == EOF || ch == delim)
 	break;
-      SSTRING_PUT(str, ch);
+      SSTRING_PUT (str, ch);
     }
-  MAKE_SSTRING_SPACE(str, 1);
+  MAKE_SSTRING_SPACE (str, 1);
   *str->ptr = 0;
   return ch;
 }
 
 int
 get_token (fp, s)
-     register FILE *fp;
-     register sstring *s;
+     FILE *fp;
+     sstring *s;
 {
   int c;
+
   s->ptr = s->base;
  retry:
   c = ' ';
@@ -211,14 +215,14 @@ get_token (fp, s)
     {
       do
 	{
-	  SSTRING_PUT(s, c);
+	  SSTRING_PUT (s, c);
 	  c = getc (fp);
-	} while (c != EOF && ISDIGIT(c));
+	} while (c != EOF && ISDIGIT (c));
       ungetc (c, fp);
       c = INT_TOKEN;
       goto done;
     }
-  if (ISALPHA (c) || c == '_')
+  if (ISIDST (c))
     {
       c = scan_ident (fp, s, c);
       ungetc (c, fp);
@@ -230,9 +234,9 @@ get_token (fp, s)
       ungetc (c, fp);
       return c == '\'' ? CHAR_TOKEN : STRING_TOKEN;
     }
-  SSTRING_PUT(s, c);
+  SSTRING_PUT (s, c);
  done:
-  MAKE_SSTRING_SPACE(s, 1);
+  MAKE_SSTRING_SPACE (s, 1);
   *s->ptr = 0;
   return c;
 }
@@ -244,7 +248,7 @@ hashstr (str, len)
 {
   unsigned int n = len;
   unsigned int r = 0;
-  const unsigned char *s = (const unsigned char *)str;
+  const unsigned char *s = (const unsigned char *) str;
 
   do
     r = r * 67 + (*s++ - 113);

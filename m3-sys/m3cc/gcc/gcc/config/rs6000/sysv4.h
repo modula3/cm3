@@ -56,7 +56,7 @@ extern enum rs6000_sdata_type rs6000_sdata;
 #define	MASK_LITTLE_ENDIAN	0x04000000	/* Target is little endian.  */
 #define	MASK_REGNAMES		0x02000000	/* Use alternate register names.  */
 #define	MASK_PROTOTYPE		0x01000000	/* Only prototyped fcns pass variable args.  */
-#define MASK_LONG_DOUBLE_128	0x00800000	/* Use IEEE quad long double.  */
+#define MASK_NO_BITFIELD_WORD	0x00800000	/* Bitfields cannot cross word boundaries */
 
 #define	TARGET_NO_BITFIELD_TYPE	(target_flags & MASK_NO_BITFIELD_TYPE)
 #define	TARGET_STRICT_ALIGN	(target_flags & MASK_STRICT_ALIGN)
@@ -65,7 +65,7 @@ extern enum rs6000_sdata_type rs6000_sdata;
 #define	TARGET_LITTLE_ENDIAN	(target_flags & MASK_LITTLE_ENDIAN)
 #define	TARGET_REGNAMES		(target_flags & MASK_REGNAMES)
 #define	TARGET_PROTOTYPE	(target_flags & MASK_PROTOTYPE)
-#define TARGET_LONG_DOUBLE_128	(target_flags & MASK_LONG_DOUBLE_128)
+#define TARGET_NO_BITFIELD_WORD	(target_flags & MASK_NO_BITFIELD_WORD)
 #define	TARGET_TOC		((target_flags & MASK_64BIT)		\
 				 || ((target_flags & (MASK_RELOCATABLE	\
 						      | MASK_MINIMAL_TOC)) \
@@ -85,8 +85,8 @@ extern const char *rs6000_sdata_name;
 /* Override rs6000.h definition.  */
 #undef	SUBTARGET_OPTIONS
 #define	SUBTARGET_OPTIONS						\
-  { "call-",  &rs6000_abi_name, N_("Select ABI calling convention.") },	\
-  { "sdata=", &rs6000_sdata_name, N_("Select method for sdata handling.") }
+  { "call-",  &rs6000_abi_name, N_("Select ABI calling convention") },	\
+  { "sdata=", &rs6000_sdata_name, N_("Select method for sdata handling") }
 
 /* Max # of bytes for variables to automatically be put into the .sdata
    or .sdata2 sections.  */
@@ -101,59 +101,57 @@ extern int g_switch_set;		/* Whether -G xx was passed.  */
 #undef	SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES						\
   { "bit-align",	-MASK_NO_BITFIELD_TYPE,				\
-    N_("Align to the base type of the bitfield.") },			\
+    N_("Align to the base type of the bit-field") },			\
   { "no-bit-align",	 MASK_NO_BITFIELD_TYPE,				\
-    N_("Don't align to the base type of the bitfield.") },		\
+    N_("Don't align to the base type of the bit-field") },		\
   { "strict-align",	 MASK_STRICT_ALIGN,				\
     N_("Don't assume that unaligned accesses are handled by the system") }, \
   { "no-strict-align",	-MASK_STRICT_ALIGN,				\
     N_("Assume that unaligned accesses are handled by the system") },	\
   { "relocatable",	 MASK_RELOCATABLE | MASK_MINIMAL_TOC | MASK_NO_FP_IN_TOC, \
-    N_("Produce code relocatable at runtime.") },			\
+    N_("Produce code relocatable at runtime") },			\
   { "no-relocatable",	-MASK_RELOCATABLE,				\
-    N_("Don't produce code relocatable at runtime.") },			\
+    N_("Don't produce code relocatable at runtime") },			\
   { "relocatable-lib",	 MASK_RELOCATABLE | MASK_MINIMAL_TOC | MASK_NO_FP_IN_TOC, \
-    N_("Produce code relocatable at runtime.") },			\
+    N_("Produce code relocatable at runtime") },			\
   { "no-relocatable-lib", -MASK_RELOCATABLE,				\
-    N_("Don't produce code relocatable at runtime.") },			\
+    N_("Don't produce code relocatable at runtime") },			\
   { "little-endian",	 MASK_LITTLE_ENDIAN,				\
-    N_("Produce little endian code.") },				\
+    N_("Produce little endian code") },					\
   { "little",		 MASK_LITTLE_ENDIAN,				\
-    N_("Produce little endian code.") },				\
+    N_("Produce little endian code") },					\
   { "big-endian",	-MASK_LITTLE_ENDIAN,				\
-    N_("Produce big endian code.") },					\
+    N_("Produce big endian code") },					\
   { "big",		-MASK_LITTLE_ENDIAN,				\
-    N_("Produce big endian code.") },					\
-  { "long-double-64",	-MASK_LONG_DOUBLE_128,				\
-    N_("Use 64 bit long doubles") },					\
-  { "long-double-128",	 MASK_LONG_DOUBLE_128, 				\
-    N_("Use 128 bit long doubles") },					\
+    N_("Produce big endian code") },					\
   { "no-toc",		 0, N_("no description yet") },			\
   { "toc",		 MASK_MINIMAL_TOC, N_("no description yet") },	\
   { "full-toc",		 MASK_MINIMAL_TOC, N_("no description yet") },	\
   { "prototype",	 MASK_PROTOTYPE, N_("no description yet") },	\
   { "no-prototype",	-MASK_PROTOTYPE, N_("no description yet") },	\
   { "no-traceback",	 0, N_("no description yet") },			\
-  { "eabi",		 MASK_EABI, N_("Use EABI.") },			\
-  { "no-eabi",		-MASK_EABI, N_("Don't use EABI.") },		\
+  { "eabi",		 MASK_EABI, N_("Use EABI") },			\
+  { "no-eabi",		-MASK_EABI, N_("Don't use EABI") },		\
+  { "bit-word",		-MASK_NO_BITFIELD_WORD, "" },			\
+  { "no-bit-word",	 MASK_NO_BITFIELD_WORD,				\
+    N_("Do not allow bit-fields to cross word boundaries") },		\
   { "regnames",		  MASK_REGNAMES,				\
-    N_("Use alternate register names.") },				\
+    N_("Use alternate register names") },				\
   { "no-regnames",	 -MASK_REGNAMES,				\
-    N_("Don't use alternate register names.") },			\
+    N_("Don't use alternate register names") },				\
   { "sdata",		 0, N_("no description yet") },			\
   { "no-sdata",		 0, N_("no description yet") },			\
   { "sim",		 0,						\
-    N_("Link with libsim.a, libc.a and sim-crt0.o.") },			\
+    N_("Link with libsim.a, libc.a and sim-crt0.o") },			\
   { "ads",		 0,						\
-    N_("Link with libads.a, libc.a and crt0.o.") },			\
+    N_("Link with libads.a, libc.a and crt0.o") },			\
   { "yellowknife",	 0,						\
-    N_("Link with libyk.a, libc.a and crt0.o.") },			\
+    N_("Link with libyk.a, libc.a and crt0.o") },			\
   { "mvme",		 0,						\
-    N_("Link with libmvme.a, libc.a and crt0.o.") },			\
+    N_("Link with libmvme.a, libc.a and crt0.o") },			\
   { "emb",		 0,						\
     N_("Set the PPC_EMB bit in the ELF flags header") },		\
   { "vxworks",		 0, N_("no description yet") },			\
-  { "solaris-cclib",	 0, N_("no description yet") },			\
   { "shlib",		 0, N_("no description yet") },			\
   EXTRA_SUBTARGET_SWITCHES						\
   { "newlib",		 0, N_("no description yet") },
@@ -195,16 +193,25 @@ do {									\
     }									\
   else if (!strcmp (rs6000_abi_name, "aixdesc"))			\
     rs6000_current_abi = ABI_AIX;					\
+  else if (!strcmp (rs6000_abi_name, "freebsd"))			\
+    rs6000_current_abi = ABI_V4;					\
   else if (!strcmp (rs6000_abi_name, "linux"))				\
+    rs6000_current_abi = ABI_V4;					\
+  else if (!strcmp (rs6000_abi_name, "gnu"))				\
     rs6000_current_abi = ABI_V4;					\
   else if (!strcmp (rs6000_abi_name, "netbsd"))				\
     rs6000_current_abi = ABI_V4;					\
-  else if (!strcmp (rs6000_abi_name, "solaris"))			\
-    rs6000_current_abi = ABI_SOLARIS;					\
+  else if (!strcmp (rs6000_abi_name, "i960-old"))			\
+    {									\
+      rs6000_current_abi = ABI_V4;					\
+      target_flags |= (MASK_LITTLE_ENDIAN | MASK_EABI			\
+		       | MASK_NO_BITFIELD_WORD);			\
+      target_flags &= ~MASK_STRICT_ALIGN;				\
+    }									\
   else									\
     {									\
       rs6000_current_abi = ABI_V4;					\
-      error ("Bad value for -mcall-%s", rs6000_abi_name);		\
+      error ("bad value for -mcall-%s", rs6000_abi_name);		\
     }									\
 									\
   if (rs6000_sdata_name)						\
@@ -220,9 +227,9 @@ do {									\
       else if (!strcmp (rs6000_sdata_name, "eabi"))			\
 	rs6000_sdata = SDATA_EABI;					\
       else								\
-	error ("Bad value for -msdata=%s", rs6000_sdata_name);		\
+	error ("bad value for -msdata=%s", rs6000_sdata_name);		\
     }									\
-  else if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS)		\
+  else if (DEFAULT_ABI == ABI_V4)					\
     {									\
       rs6000_sdata = SDATA_DATA;					\
       rs6000_sdata_name = "data";					\
@@ -237,7 +244,7 @@ do {									\
       (rs6000_sdata == SDATA_EABI || rs6000_sdata == SDATA_SYSV))	\
     {									\
       rs6000_sdata = SDATA_DATA;					\
-      error ("-mrelocatable and -msdata=%s are incompatible.",		\
+      error ("-mrelocatable and -msdata=%s are incompatible",		\
 	     rs6000_sdata_name);					\
     }									\
 									\
@@ -245,36 +252,35 @@ do {									\
 	   (rs6000_sdata == SDATA_EABI || rs6000_sdata == SDATA_SYSV))	\
     {									\
       rs6000_sdata = SDATA_DATA;					\
-      error ("-f%s and -msdata=%s are incompatible.",			\
+      error ("-f%s and -msdata=%s are incompatible",			\
 	     (flag_pic > 1) ? "PIC" : "pic",				\
 	     rs6000_sdata_name);					\
     }									\
 									\
-  if (rs6000_sdata != SDATA_NONE && DEFAULT_ABI != ABI_V4		\
-      && DEFAULT_ABI != ABI_SOLARIS)					\
+  if (rs6000_sdata != SDATA_NONE && DEFAULT_ABI != ABI_V4)		\
     {									\
       rs6000_sdata = SDATA_NONE;					\
-      error ("-msdata=%s and -mcall-%s are incompatible.",		\
+      error ("-msdata=%s and -mcall-%s are incompatible",		\
 	     rs6000_sdata_name, rs6000_abi_name);			\
     }									\
 									\
   if (TARGET_RELOCATABLE && !TARGET_MINIMAL_TOC)			\
     {									\
       target_flags |= MASK_MINIMAL_TOC;					\
-      error ("-mrelocatable and -mno-minimal-toc are incompatible.");	\
+      error ("-mrelocatable and -mno-minimal-toc are incompatible");	\
     }									\
 									\
   if (TARGET_RELOCATABLE && rs6000_current_abi == ABI_AIX)		\
     {									\
       target_flags &= ~MASK_RELOCATABLE;				\
-      error ("-mrelocatable and -mcall-%s are incompatible.",		\
+      error ("-mrelocatable and -mcall-%s are incompatible",		\
 	     rs6000_abi_name);						\
     }									\
 									\
   if (flag_pic > 1 && rs6000_current_abi == ABI_AIX)			\
     {									\
       flag_pic = 0;							\
-      error ("-fPIC and -mcall-%s are incompatible.",			\
+      error ("-fPIC and -mcall-%s are incompatible",			\
 	     rs6000_abi_name);						\
     }									\
 									\
@@ -302,9 +308,9 @@ do {									\
 #undef	PROCESSOR_DEFAULT
 #define	PROCESSOR_DEFAULT PROCESSOR_PPC750
 
+#define FIXED_R2 1
 /* System V.4 uses register 13 as a pointer to the small data area,
    so it is not available to the normal user.  */
-
 #define FIXED_R13 1
 
 /* Size of the V.4 varargs area if needed.  */
@@ -354,26 +360,13 @@ do {									\
 #undef	WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 32
 
-/* Define for support of TFmode long double and REAL_ARITHMETIC.
-   PowerPC SVR4 ABI says that long double is 4 words.  */
-#undef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE (TARGET_LONG_DOUBLE_128 ? 128 : 64)
-
-/* Constant which presents upper bound of the above value.  */
-#define MAX_LONG_DOUBLE_TYPE_SIZE 128
-
-/* Define this to set long double type size to use in libgcc2.c, which can
-   not depend on target_flags.  */
-#ifdef __LONG_DOUBLE_128__
-#define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 128
-#else
-#define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 64
-#endif
-
 /* Make int foo : 8 not cause structures to be aligned to an int boundary.  */
 /* Override elfos.h definition.  */
 #undef	PCC_BITFIELD_TYPE_MATTERS
 #define	PCC_BITFIELD_TYPE_MATTERS (TARGET_BITFIELD_TYPE)
+
+#undef	BITFIELD_NBYTES_LIMITED
+#define	BITFIELD_NBYTES_LIMITED (TARGET_NO_BITFIELD_WORD)
 
 /* Define this macro to be the value 1 if instructions will fail to
    work if given data not on the nominal alignment.  If instructions
@@ -385,18 +378,32 @@ do {									\
    one set of libraries with -mno-eabi instead of eabi libraries and non-eabi
    versions, just use 64 as the stack boundary.  */
 #undef	STACK_BOUNDARY
-#define	STACK_BOUNDARY	64
+#define	STACK_BOUNDARY	(TARGET_ALTIVEC_ABI ? 128 : 64)
 
 /* Real stack boundary as mandated by the appropriate ABI.  */
-#define ABI_STACK_BOUNDARY ((TARGET_EABI) ? 64 : 128)
+#define ABI_STACK_BOUNDARY ((TARGET_EABI && !TARGET_ALTIVEC_ABI) ? 64 : 128)
 
 /* No data type wants to be aligned rounder than this.  */
 #undef	BIGGEST_ALIGNMENT
-#define BIGGEST_ALIGNMENT ((TARGET_EABI) ? 64 : 128)
+#define BIGGEST_ALIGNMENT ((TARGET_EABI && !TARGET_ALTIVEC) ? 64 : 128)
+
+/* An expression for the alignment of a structure field FIELD if the
+   alignment computed in the usual way is COMPUTED.  */
+#define ADJUST_FIELD_ALIGN(FIELD, COMPUTED)				      \
+	((TARGET_ALTIVEC && TREE_CODE (TREE_TYPE (FIELD)) == VECTOR_TYPE)     \
+	 ? 128 : COMPUTED)
+
+/* Define this macro as an expression for the alignment of a type
+   (given by TYPE as a tree node) if the alignment computed in the
+   usual way is COMPUTED and the alignment explicitly specified was
+   SPECIFIED.  */
+#define ROUND_TYPE_ALIGN(TYPE, COMPUTED, SPECIFIED)			\
+	((TARGET_ALTIVEC  && TREE_CODE (TYPE) == VECTOR_TYPE)	        \
+	 ? MAX (MAX ((COMPUTED), (SPECIFIED)), 128)                     \
+         : MAX (COMPUTED, SPECIFIED))
 
 #undef  BIGGEST_FIELD_ALIGNMENT
 #undef  ADJUST_FIELD_ALIGN
-#undef  ROUND_TYPE_ALIGN
 
 /* Use ELF style section commands.  */
 
@@ -422,21 +429,17 @@ do {									\
 
 #define	SDATA_SECTION_ASM_OP "\t.section\t\".sdata\",\"aw\""
 #define	SDATA2_SECTION_ASM_OP "\t.section\t\".sdata2\",\"a\""
-#define	SBSS_SECTION_ASM_OP \
-  ((DEFAULT_ABI == ABI_SOLARIS) ? "\t.section\t\".sbss\",\"aw\"" : "\t.section\t\".sbss\",\"aw\",@nobits")
-
+#define	SBSS_SECTION_ASM_OP "\t.section\t\".sbss\",\"aw\",@nobits"
 
 /* Besides the usual ELF sections, we need a toc section.  */
 /* Override elfos.h definition.  */
 #undef	EXTRA_SECTIONS
-#define	EXTRA_SECTIONS in_const, in_ctors, in_dtors, in_toc, in_sdata, in_sdata2, in_sbss, in_init, in_fini
+#define	EXTRA_SECTIONS in_const, in_toc, in_sdata, in_sdata2, in_sbss, in_init, in_fini
 
 /* Override elfos.h definition.  */
 #undef	EXTRA_SECTION_FUNCTIONS
 #define	EXTRA_SECTION_FUNCTIONS						\
   CONST_SECTION_FUNCTION						\
-  CTORS_SECTION_FUNCTION						\
-  DTORS_SECTION_FUNCTION						\
   TOC_SECTION_FUNCTION							\
   SDATA_SECTION_FUNCTION						\
   SDATA2_SECTION_FUNCTION						\
@@ -485,6 +488,12 @@ toc_section ()								\
 	    }								\
 	}								\
     }									\
+}									\
+									\
+extern int in_toc_section PARAMS ((void));				\
+int in_toc_section ()							\
+{									\
+  return in_section == in_toc;						\
 }
 
 #define	SDATA_SECTION_FUNCTION						\
@@ -553,7 +562,7 @@ fini_section ()								\
 
 /* Override elfos.h definition.  */
 #undef	SELECT_RTX_SECTION
-#define	SELECT_RTX_SECTION(MODE, X) rs6000_select_rtx_section (MODE, X)
+#define	SELECT_RTX_SECTION(MODE, X, ALIGN) rs6000_select_rtx_section (MODE, X)
 
 /* A C statement or statements to switch to the appropriate
    section for output of DECL.  DECL is either a `VAR_DECL' node
@@ -562,14 +571,14 @@ fini_section ()								\
 
 /* Override elfos.h definition.  */
 #undef	SELECT_SECTION
-#define	SELECT_SECTION(DECL, RELOC) rs6000_select_section (DECL, RELOC)
+#define	SELECT_SECTION(DECL, RELOC, ALIGN) rs6000_select_section (DECL, RELOC)
 
 /* A C statement to build up a unique section name, expressed as a
    STRING_CST node, and assign it to DECL_SECTION_NAME (decl).
    RELOC indicates whether the initial value of EXP requires
    link-time relocations.  If you do not define this macro, GCC will use
    the symbol name prefixed by `.' as the section name.  Note - this
-   macro can now be called for unitialised data items as well as
+   macro can now be called for uninitialized data items as well as
    initialised data and functions.  */
 
 /* Override elfos.h definition.  */
@@ -617,9 +626,10 @@ extern int rs6000_pic_labelno;
 #undef	ASM_DECLARE_FUNCTION_NAME
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)			\
   do {									\
-    const char *init_ptr = (TARGET_64BIT) ? ".quad" : ".long";		\
+    const char *const init_ptr = (TARGET_64BIT) ? ".quad" : ".long";	\
 									\
-    if (TARGET_RELOCATABLE && (get_pool_size () != 0 || profile_flag)	\
+    if (TARGET_RELOCATABLE 						\
+	&& (get_pool_size () != 0 || current_function_profile)		\
 	&& uses_TOC())							\
       {									\
 	char buf[256];							\
@@ -698,10 +708,6 @@ extern int rs6000_pic_labelno;
 #define	ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION) \
   output_mi_thunk (FILE, THUNK_FNDECL, DELTA, FUNCTION)
 
-/* How to renumber registers for dbx and gdb.  */
-
-#define	DBX_REGISTER_NUMBER(REGNO) (REGNO)
-
 /* The USER_LABEL_PREFIX stuff is affected by the -fleading-underscore
    flag.  The LOCAL_LABEL_PREFIX variable is used by dbxelf.h.  */
 
@@ -722,14 +728,6 @@ extern int rs6000_pic_labelno;
 #define	ASM_GLOBALIZE_LABEL(FILE,NAME)	\
   do { fputs ("\t.globl ", FILE);	\
        assemble_name (FILE, NAME); putc ('\n', FILE);} while (0)
-
-/* This is how to allocate empty space in some section.  Use .space
-   instead of .zero because the Solaris PowerPC assembler doesn't
-   like it, and gas accepts either syntax.  */
-
-/* Override elfos.h definition.  */
-#undef	SKIP_ASM_OP
-#define SKIP_ASM_OP	"\t.space\t"
 
 /* This says how to output assembler code to declare an
    uninitialized internal linkage data object.  Under SVR4,
@@ -796,68 +794,17 @@ do {									\
 
 extern int fixuplabelno;
 
-/* This is how to output an assembler line defining an `int' constant.
-   For -mrelocatable, we mark all addresses that need to be fixed up
-   in the .fixup section.  */
-/* Override rs6000.h definition.  */
-#undef	ASM_OUTPUT_INT
-#define ASM_OUTPUT_INT(FILE,VALUE)					\
-do {									\
-  static int recurse = 0;						\
-  if (TARGET_RELOCATABLE						\
-      && in_section != in_toc						\
-      && in_section != in_text						\
-      && in_section != in_ctors						\
-      && in_section != in_dtors						\
-      && !recurse							\
-      && GET_CODE (VALUE) != CONST_INT					\
-      && GET_CODE (VALUE) != CONST_DOUBLE				\
-      && CONSTANT_P (VALUE))						\
-    {									\
-      char buf[256];							\
-									\
-      recurse = 1;							\
-      ASM_GENERATE_INTERNAL_LABEL (buf, "LCP", fixuplabelno);		\
-      fixuplabelno++;							\
-      ASM_OUTPUT_LABEL (FILE, buf);					\
-      fprintf (FILE, "\t.long (");					\
-      output_addr_const (FILE, (VALUE));				\
-      fprintf (FILE, ")@fixup\n");					\
-      fprintf (FILE, "\t.section\t\".fixup\",\"aw\"\n");		\
-      ASM_OUTPUT_ALIGN (FILE, 2);					\
-      fprintf (FILE, "\t.long\t");					\
-      assemble_name (FILE, buf);					\
-      fprintf (FILE, "\n\t.previous\n");				\
-      recurse = 0;							\
-    }									\
-  /* Remove initial .'s to turn a -mcall-aixdesc function		\
-     address into the address of the descriptor, not the function	\
-     itself.  */							\
-  else if (GET_CODE (VALUE) == SYMBOL_REF				\
-	   && XSTR (VALUE, 0)[0] == '.'					\
-	   && DEFAULT_ABI == ABI_AIX)					\
-    {									\
-      const char *name = XSTR (VALUE, 0);				\
-      while (*name == '.')						\
-	name++;								\
-									\
-      fprintf (FILE, "\t.long %s\n", name);				\
-    }									\
-  else									\
-    {									\
-      fprintf (FILE, "\t.long ");					\
-      output_addr_const (FILE, (VALUE));				\
-      fprintf (FILE, "\n");						\
-    }									\
-} while (0)
+/* Handle constructors specially for -mrelocatable.  */
+#define TARGET_ASM_CONSTRUCTOR  rs6000_elf_asm_out_constructor
+#define TARGET_ASM_DESTRUCTOR   rs6000_elf_asm_out_destructor
 
 /* This is the end of what might become sysv4.h.  */
 
-/* Allow stabs and dwarf, for now, make stabs the default debugging type,
-   not dwarf since G++ doesn't support dwarf.  */
+/* Use DWARF 2 debugging information by default.  */
 #undef	PREFERRED_DEBUGGING_TYPE
-#define	PREFERRED_DEBUGGING_TYPE DBX_DEBUG
+#define	PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
+/* Historically we have also supported stabs debugging.  */
 #define	DBX_DEBUGGING_INFO
 
 /* If we are referencing a function that is static or is known to be
@@ -904,103 +851,6 @@ do {						\
     asm_fprintf (FILE, "%U%s", _name);		\
 } while (0)
 
-/* Switch into a generic section.
-
-   We make the section read-only and executable for a function decl,
-   read-only for a const data decl, and writable for a non-const data decl.
-
-   If the section has already been defined, we must not
-   emit the attributes here. The SVR4 assembler does not
-   recognize section redefinitions.
-   If DECL is NULL, no attributes are emitted.
-
-   Note, Solaris as doesn't like @nobits, and gas can handle .sbss without
-   needing @nobits.  */
-
-/* Override elfos.h definition.  */
-#undef	ASM_OUTPUT_SECTION_NAME
-#define	ASM_OUTPUT_SECTION_NAME(FILE, DECL, NAME, RELOC)		\
-do {									\
-  static struct section_info						\
-    {									\
-      struct section_info *next;				        \
-      char *name;						        \
-      enum sect_enum {SECT_RW, SECT_RO, SECT_EXEC} type;		\
-    } *sections;							\
-  struct section_info *s;						\
-  const char *mode;							\
-  enum sect_enum type;							\
-									\
-  for (s = sections; s; s = s->next)					\
-    if (!strcmp (NAME, s->name))					\
-      break;								\
-									\
-  if (DECL && TREE_CODE (DECL) == FUNCTION_DECL)			\
-    type = SECT_EXEC, mode = "ax";					\
-  else if (DECL && DECL_READONLY_SECTION (DECL, RELOC) && !TARGET_RELOCATABLE && !flag_pic) \
-    type = SECT_RO, mode = "a";						\
-  else									\
-    type = SECT_RW, mode = "aw";					\
-									\
-  if (s == 0)								\
-    {									\
-      s = (struct section_info *) xmalloc (sizeof (struct section_info));  \
-      s->name = xmalloc ((strlen (NAME) + 1) * sizeof (*NAME));		\
-      strcpy (s->name, NAME);						\
-      s->type = type;							\
-      s->next = sections;						\
-      sections = s;							\
-      fprintf (FILE, "\t.section\t\"%s\",\"%s\"\n", NAME, mode);	\
-    }									\
-  else									\
-    {									\
-      if (DECL && s->type != type)					\
-	error_with_decl (DECL, "%s causes a section type conflict");	\
-									\
-      fprintf (FILE, "\t.section\t\"%s\"\n", NAME);			\
-    }									\
-} while (0)
-
-/* Override elfos.h definition.  */
-#undef	ASM_OUTPUT_CONSTRUCTOR
-#define	ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
-  do {									\
-    if (DEFAULT_ABI != ABI_SOLARIS)					\
-      {									\
-	ctors_section ();						\
-	fprintf (FILE, "%s", INT_ASM_OP);				\
-	assemble_name (FILE, NAME);					\
-      }									\
-    else								\
-      {									\
-	init_section ();						\
-	fputs ("\tbl ", FILE);						\
-	assemble_name (FILE, NAME);					\
-      }									\
-    fputs ("\n", FILE);							\
-  } while (0)
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-/* Override elfos.h definition.  */
-#undef	ASM_OUTPUT_DESTRUCTOR
-#define	ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
-  do {									\
-    if (DEFAULT_ABI != ABI_SOLARIS)					\
-      {									\
-	dtors_section ();						\
-	fprintf (FILE, "%s", INT_ASM_OP);				\
-	assemble_name (FILE, NAME);					\
-      }									\
-    else								\
-      {									\
-	fini_section ();						\
-	fputs ("\tbl ", FILE);						\
-	assemble_name (FILE, NAME);					\
-      }									\
-    fputs ("\n", FILE);							\
-  } while (0)
-
 /* But, to make this work, we have to output the stabs for the function
    name *first*...  */
 
@@ -1008,13 +858,14 @@ do {									\
 
 /* This is the end of what might become sysv4dbx.h.  */
 
-/* Override rs6000.h definition.  */
-#undef	TARGET_VERSION
+#ifndef	TARGET_VERSION
 #define	TARGET_VERSION fprintf (stderr, " (PowerPC System V.4)");
+#endif
 
-#undef	CPP_PREDEFINES
-#define CPP_PREDEFINES \
+#ifndef	CPP_PREDEFINES
+#define	CPP_PREDEFINES \
   "-DPPC -Dunix -D__svr4__ -Asystem=unix -Asystem=svr4 -Acpu=powerpc -Amachine=powerpc"
+#endif
 
 /* Pass various options to the assembler.  */
 /* Override svr4.h definition.  */
@@ -1026,18 +877,23 @@ do {									\
 %{memb} %{!memb: %{msdata: -memb} %{msdata=eabi: -memb}} \
 %{mlittle} %{mlittle-endian} %{mbig} %{mbig-endian} \
 %{!mlittle: %{!mlittle-endian: %{!mbig: %{!mbig-endian: \
-    %{mcall-solaris: -mlittle -msolaris} \
+    %{mcall-freebsd: -mbig} \
+    %{mcall-i960-old: -mlittle} \
     %{mcall-linux: -mbig} \
-    %{mcall-netbsd: -mbig} }}}}"
+    %{mcall-gnu: -mbig} \
+    %{mcall-netbsd: -mbig} \
+}}}}"
 
 #define	CC1_ENDIAN_BIG_SPEC ""
 
 #define	CC1_ENDIAN_LITTLE_SPEC "\
 %{!mstrict-align: %{!mno-strict-align: \
+    %{!mcall-i960-old: \
 	-mstrict-align \
+    } \
 }}"
 
-#define	CC1_ENDIAN_DEFAULT_SPEC "%(cc1_endian_big_spec)"
+#define	CC1_ENDIAN_DEFAULT_SPEC "%(cc1_endian_big)"
 
 /* Pass -G xxx to the compiler and set correct endian mode.  */
 #define	CC1_SPEC "%{G*} \
@@ -1045,20 +901,23 @@ do {									\
 %{mbig: %(cc1_endian_big)} %{!mbig: %{mbig-endian: %(cc1_endian_big)}} \
 %{!mlittle: %{!mlittle-endian: %{!mbig: %{!mbig-endian: \
     %{mcall-aixdesc: -mbig %(cc1_endian_big) } \
-    %{mcall-solaris: -mlittle %(cc1_endian_little) } \
+    %{mcall-freebsd: -mbig %(cc1_endian_big) } \
+    %{mcall-i960-old: -mlittle %(cc1_endian_little) } \
     %{mcall-linux: -mbig %(cc1_endian_big) } \
+    %{mcall-gnu: -mbig %(cc1_endian_big) } \
     %{mcall-netbsd: -mbig %(cc1_endian_big) } \
-    %{!mcall-aixdesc: %{!mcall-solaris: %{!mcall-linux: %{!mcall-netbsd: \
+    %{!mcall-aixdesc: %{!mcall-freebsd: %{!mcall-i960-old: %{!mcall-linux: %{!mcall-gnu: %{!mcall-netbsd: \
 	    %(cc1_endian_default) \
-    }}}} \
+    }}}}}} \
 }}}} \
-%{mcall-solaris: -mregnames } \
 %{mno-sdata: -msdata=none } \
 %{meabi: %{!mcall-*: -mcall-sysv }} \
 %{!meabi: %{!mno-eabi: \
     %{mrelocatable: -meabi } \
-    %{mcall-solaris: -mno-eabi } \
+    %{mcall-freebsd: -mno-eabi } \
+    %{mcall-i960-old: -meabi } \
     %{mcall-linux: -mno-eabi } \
+    %{mcall-gnu: -mno-eabi } \
     %{mcall-netbsd: -mno-eabi }}} \
 %{msdata: -msdata=default} \
 %{mno-sdata: -msdata=none} \
@@ -1087,18 +946,20 @@ do {									\
 %{myellowknife: %(link_start_yellowknife) } \
 %{mmvme: %(link_start_mvme) } \
 %{msim: %(link_start_sim) } \
+%{mcall-freebsd: %(link_start_freebsd) } \
 %{mcall-linux: %(link_start_linux) } \
+%{mcall-gnu: %(link_start_gnu) } \
 %{mcall-netbsd: %(link_start_netbsd) } \
-%{mcall-solaris: %(link_start_solaris) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-solaris: %(link_start_default) }}}}}}}"
+%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-gnu: \
+	%{!mcall-netbsd: %{!mcall-freebsd: %(link_start_default) }}}}}}}}"
 
 #define LINK_START_DEFAULT_SPEC ""
 
 /* Override svr4.h definition.  */
 #undef	LINK_SPEC
 #define	LINK_SPEC "\
-%{h*} %{v:-V} %{G*} \
-%{Wl,*:%*} %{YP,*} %{R*} \
+%{h*} %{v:-V} %{!msdata=none:%{G*}} %{msdata=none:-G0} \
+%{YP,*} %{R*} \
 %{Qy:} %{!Qn:-Qy} \
 %(link_shlib) \
 %{!Wl,-T*: %{!T*: %(link_start) }} \
@@ -1133,7 +994,7 @@ do {									\
 #define	LINK_TARGET_SPEC "\
 %{mlittle: --oformat elf32-powerpcle } %{mlittle-endian: --oformat elf32-powerpcle } \
 %{!mlittle: %{!mlittle-endian: %{!mbig: %{!mbig-endian: \
-    %{mcall-solaris: --oformat elf32-powerpcle} \
+    %{mcall-i960-old: --oformat elf32-powerpcle} \
   }}}}"
 
 /* Any specific OS flags.  */
@@ -1142,10 +1003,11 @@ do {									\
 %{myellowknife: %(link_os_yellowknife) } \
 %{mmvme: %(link_os_mvme) } \
 %{msim: %(link_os_sim) } \
+%{mcall-freebsd: %(link_os_freebsd) } \
 %{mcall-linux: %(link_os_linux) } \
+%{mcall-gnu: %(link_os_gnu) } \
 %{mcall-netbsd: %(link_os_netbsd) } \
-%{mcall-solaris: %(link_os_solaris) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-solaris: %(link_os_default) }}}}}}}"
+%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-freebsd: %{!mcall-linux: %{!mcall-gnu: %{!mcall-netbsd: %(link_os_default) }}}}}}}}"
 
 #define LINK_OS_DEFAULT_SPEC ""
 
@@ -1162,6 +1024,7 @@ do {									\
 %{!msoft-float: %{!mhard-float: \
     %{mcpu=401: -D_SOFT_FLOAT} \
     %{mcpu=403: -D_SOFT_FLOAT} \
+    %{mcpu=405: -D_SOFT_FLOAT} \
     %{mcpu=ec603e: -D_SOFT_FLOAT} \
     %{mcpu=801: -D_SOFT_FLOAT} \
     %{mcpu=821: -D_SOFT_FLOAT} \
@@ -1181,20 +1044,19 @@ do {									\
 
 #define CPP_ENDIAN_LITTLE_SPEC "-D_LITTLE_ENDIAN -D__LITTLE_ENDIAN__ -Amachine=littleendian"
 
-#define CPP_ENDIAN_SOLARIS_SPEC "-D__LITTLE_ENDIAN__ -Amachine=littleendian"
-
-/* For solaris, don't define _LITTLE_ENDIAN, it conflicts with a header file.  */
 #define	CPP_ENDIAN_SPEC \
 "%{mlittle: %(cpp_endian_little) } \
 %{mlittle-endian: %(cpp_endian_little) } \
 %{mbig: %(cpp_endian_big) } \
 %{mbig-endian: %(cpp_endian_big) } \
 %{!mlittle: %{!mlittle-endian: %{!mbig: %{!mbig-endian: \
-    %{mcall-solaris: %(cpp_endian_solaris) } \
+    %{mcall-freebsd: %(cpp_endian_big) } \
     %{mcall-linux: %(cpp_endian_big) } \
+    %{mcall-gnu: %(cpp_endian_big) } \
     %{mcall-netbsd: %(cpp_endian_big) } \
+    %{mcall-i960-old: %(cpp_endian_little) } \
     %{mcall-aixdesc:  %(cpp_endian_big) } \
-    %{!mcall-solaris: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-aixdesc: %(cpp_endian_default) }}}}}}}}"
+    %{!mcall-linux: %{!mcall-gnu: %{!mcall-freebsd: %{!mcall-netbsd: %{!mcall-aixdesc: %(cpp_endian_default) }}}}}}}}}"
 
 #define	CPP_ENDIAN_DEFAULT_SPEC "%(cpp_endian_big)"
 
@@ -1205,10 +1067,11 @@ do {									\
 %{myellowknife: %(cpp_os_yellowknife) } \
 %{mmvme: %(cpp_os_mvme) } \
 %{msim: %(cpp_os_sim) } \
+%{mcall-freebsd: %(cpp_os_freebsd) } \
 %{mcall-linux: %(cpp_os_linux) } \
+%{mcall-gnu: %(cpp_os_gnu) } \
 %{mcall-netbsd: %(cpp_os_netbsd) } \
-%{mcall-solaris: %(cpp_os_solaris) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-solaris: %(cpp_os_default) }}}}}}}"
+%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-freebsd: %{!mcall-linux: %{!mcall-gnu: %{!mcall-netbsd: %(cpp_os_default) }}}}}}}}"
 
 #define	CPP_OS_DEFAULT_SPEC ""
 
@@ -1219,10 +1082,11 @@ do {									\
 %{myellowknife: %(startfile_yellowknife) } \
 %{mmvme: %(startfile_mvme) } \
 %{msim: %(startfile_sim) } \
+%{mcall-freebsd: %(startfile_freebsd) } \
 %{mcall-linux: %(startfile_linux) } \
+%{mcall-gnu: %(startfile_gnu) } \
 %{mcall-netbsd: %(startfile_netbsd) } \
-%{mcall-solaris: %(startfile_solaris) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-solaris: %(startfile_default) }}}}}}}"
+%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-freebsd: %{!mcall-linux: %{!mcall-gnu: %{!mcall-netbsd: %(startfile_default) }}}}}}}}"
 
 #define	STARTFILE_DEFAULT_SPEC ""
 
@@ -1233,25 +1097,27 @@ do {									\
 %{myellowknife: %(lib_yellowknife) } \
 %{mmvme: %(lib_mvme) } \
 %{msim: %(lib_sim) } \
+%{mcall-freebsd: %(lib_freebsd) } \
 %{mcall-linux: %(lib_linux) } \
+%{mcall-gnu: %(lib_gnu) } \
 %{mcall-netbsd: %(lib_netbsd) } \
-%{mcall-solaris: %(lib_solaris) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-solaris: %(lib_default) }}}}}}}"
+%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-freebsd: %{!mcall-linux: %{!mcall-gnu: %{!mcall-netbsd: %(lib_default) }}}}}}}}"
 
 #define LIB_DEFAULT_SPEC ""
 
 /* Override svr4.h definition.  */
 #undef	ENDFILE_SPEC
-#define	ENDFILE_SPEC "\
+#define	ENDFILE_SPEC "crtsavres.o%s \
 %{mads: %(endfile_ads)} \
 %{myellowknife: %(endfile_yellowknife)} \
 %{mmvme: %(endfile_mvme)} \
 %{msim: %(endfile_sim)} \
+%{mcall-freebsd: %(endfile_freebsd) } \
 %{mcall-linux: %(endfile_linux) } \
+%{mcall-gnu: %(endfile_gnu) } \
 %{mcall-netbsd: %(endfile_netbsd) } \
-%{mcall-solaris: %(endfile_solaris)} \
 %{mvxworks: %(endfile_vxworks) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-netbsd: %{!mcall-solaris: %{!mvxworks: %(endfile_default) }}}}}}}}"
+%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-freebsd: %{!mcall-linux: %{!mcall-gnu: %{!mcall-netbsd: %{!mvxworks: %(endfile_default) }}}}}}}}}"
 
 #define	ENDFILE_DEFAULT_SPEC ""
 
@@ -1307,6 +1173,20 @@ do {									\
 
 #define CPP_OS_SIM_SPEC ""
 
+/* FreeBSD support.  */
+
+#define CPP_OS_FREEBSD_SPEC	"\
+  -D__PPC__ -D__ppc__ -D__PowerPC__ -D__powerpc__ \
+  -Acpu=powerpc -Amachine=powerpc"
+
+#define	STARTFILE_FREEBSD_SPEC	FBSD_STARTFILE_SPEC
+#define ENDFILE_FREEBSD_SPEC	FBSD_ENDFILE_SPEC
+#define LIB_FREEBSD_SPEC	FBSD_LIB_SPEC
+#define LINK_START_FREEBSD_SPEC	""
+
+#define LINK_OS_FREEBSD_SPEC "\
+  %{symbolic:-Bsymbolic}"
+
 /* GNU/Linux support.  */
 #ifdef USE_GNULIBC_1
 #define LIB_LINUX_SPEC "%{mnewlib: --start-group -llinux -lc --end-group } \
@@ -1317,10 +1197,18 @@ do {									\
 %{profile:-lc_p} %{!profile:-lc}}}"
 #endif
 
+#ifdef USE_GNULIBC_1
 #define	STARTFILE_LINUX_SPEC "\
 %{!shared: %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}} \
 %{mnewlib: ecrti.o%s} %{!mnewlib: crti.o%s} \
 %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
+#else
+#define	STARTFILE_LINUX_SPEC "\
+%{!shared: %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}} \
+%{mnewlib: ecrti.o%s} %{!mnewlib: crti.o%s} \
+%{static:crtbeginT.o%s} \
+%{!static:%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}}"
+#endif
 
 #define	ENDFILE_LINUX_SPEC "%{!shared:crtend.o%s} %{shared:crtendS.o%s} \
 %{mnewlib: ecrtn.o%s} %{!mnewlib: crtn.o%s}"
@@ -1331,21 +1219,50 @@ do {									\
   %{rdynamic:-export-dynamic} \
   %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}}}"
 
+#if !defined(USE_GNULIBC_1) && defined(HAVE_LD_EH_FRAME_HDR)
+# define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "
+#endif
+
 #ifdef USE_GNULIBC_1
-#define CPP_OS_LINUX_SPEC "-D__unix__ -D__linux__		\
-%{!undef:							\
-  %{!ansi:							\
-    %{!std=*:-Dunix -D__unix -Dlinux -D__linux}			\
-    %{std=gnu*:-Dunix -D__unix -Dlinux -D__linux}}}		\
+#define CPP_OS_LINUX_SPEC "-D__unix__ -D__gnu_linux__ -D__linux__ \
+%{!undef:							  \
+  %{!ansi:							  \
+    %{!std=*:-Dunix -D__unix -Dlinux -D__linux}	                  \
+    %{std=gnu*:-Dunix -D__unix -Dlinux -D__linux}}}		  \
 -Asystem=unix -Asystem=posix"
 #else
-#define CPP_OS_LINUX_SPEC "-D__unix__ -D__linux__		\
-%{!undef:							\
-  %{!ansi:							\
-    %{!std=*:-Dunix -D__unix -Dlinux -D__linux}			\
-    %{std=gnu*:-Dunix -D__unix -Dlinux -D__linux}}}		\
+#define CPP_OS_LINUX_SPEC "-D__unix__ -D__gnu_linux__ -D__linux__ \
+%{!undef:							  \
+  %{!ansi:							  \
+    %{!std=*:-Dunix -D__unix -Dlinux -D__linux}			  \
+    %{std=gnu*:-Dunix -D__unix -Dlinux -D__linux}}}		  \
 -Asystem=unix -Asystem=posix %{pthread:-D_REENTRANT}"
 #endif
+
+/* GNU/Hurd support.  */
+#define LIB_GNU_SPEC "%{mnewlib: --start-group -lgnu -lc --end-group } \
+%{!mnewlib: %{shared:-lc} %{!shared: %{pthread:-lpthread } \
+%{profile:-lc_p} %{!profile:-lc}}}"
+
+#define	STARTFILE_GNU_SPEC "\
+%{!shared: %{!static: %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}}} \
+%{static: %{pg:gcrt0.o%s} %{!pg:%{p:gcrt0.o%s} %{!p:crt0.o%s}}} \
+%{mnewlib: ecrti.o%s} %{!mnewlib: crti.o%s} \
+%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
+
+#define	ENDFILE_GNU_SPEC "%{!shared:crtend.o%s} %{shared:crtendS.o%s} \
+%{mnewlib: ecrtn.o%s} %{!mnewlib: crtn.o%s}"
+
+#define LINK_START_GNU_SPEC ""
+
+#define LINK_OS_GNU_SPEC "-m elf32ppclinux %{!shared: %{!static: \
+  %{rdynamic:-export-dynamic} \
+  %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}}}"
+
+#define CPP_OS_GNU_SPEC "-D__unix__ -D__gnu_hurd__ -D__GNU__	\
+%{!undef:					                \
+  %{!ansi: -Dunix -D__unix}}			                \
+-Asystem=gnu -Asystem=unix -Asystem=posix %{pthread:-D_REENTRANT}"
 
 /* NetBSD support.  */
 #define LIB_NETBSD_SPEC "\
@@ -1369,48 +1286,6 @@ ncrtn.o%s"
 
 #define CPP_OS_NETBSD_SPEC "\
 -D__powerpc__ -D__NetBSD__ -D__ELF__ -D__KPRINTF_ATTRIBUTE__"
-
-/* Solaris support.  */
-/* For Solaris, Gcc automatically adds in one of the files
-   /usr/ccs/lib/values-Xc.o, /usr/ccs/lib/values-Xa.o, or
-   /usr/ccs/lib/values-Xt.o for each final link step (depending upon the other
-   gcc options selected, such as -traditional and -ansi).  These files each
-   contain one (initialized) copy of a special variable called `_lib_version'.
-   Each one of these files has `_lib_version' initialized to a different (enum)
-   value.  The SVR4 library routines query the value of `_lib_version' at run
-   to decide how they should behave.  Specifically, they decide (based upon the
-   value of `_lib_version') if they will act in a strictly ANSI conforming
-   manner or not.  */
-
-#define LIB_SOLARIS_SPEC "\
-%{mnewlib: --start-group -lsolaris -lc --end-group } \
-%{!mnewlib: \
-    %{ansi:values-Xc.o%s} \
-    %{!ansi: \
-	%{traditional:values-Xt.o%s} \
-	%{!traditional:values-Xa.o%s}} \
-	%{compat-bsd:-lucb -lsocket -lnsl -lelf -laio} \
-    %{solaris-cclib: /opt/SUNWspro/SC4.0/lib/libabi.a} \
-    %{!shared: %{!symbolic: -lc }}}"
-
-#define	STARTFILE_SOLARIS_SPEC "\
-%{!msolaris-cclib: scrti.o%s scrt0.o%s} \
-%{msolaris-cclib: /opt/SUNWspro/SC4.0/lib/crti.o%s /opt/SUNWspro/SC4.0/lib/crt1.o%s} \
-%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
-
-#define	ENDFILE_SOLARIS_SPEC "\
-%{!shared:crtend.o%s} %{shared:crtendS.o%s} \
-%{!msolaris-cclib: scrtn.o%s} \
-%{msolaris-cclib: /opt/SUNWspro/SC4.0/lib/crtn.o%s}"
-
-#define LINK_START_SOLARIS_SPEC ""
-
-#define LINK_OS_SOLARIS_SPEC ""
-
-#define CPP_OS_SOLARIS_SPEC "-D__ppc -D__sun__=1 -D__unix__ -D__svr4__  -D__SVR4__ \
-%{!undef:%{!ansi:%{!std=*:-Dsun=1 -Dunix -DSVR4 -D__EXTENSIONS__} \
-               %{std=gnu*:-Dsun=1 -Dunix -DSVR4 -D__EXTENSIONS__}}} \
--Amachine=prep"
 
 /* VxWorks support.  */
 /* VxWorks does all the library stuff itself.  */
@@ -1437,6 +1312,7 @@ ncrtn.o%s"
 %{mcpu=powerpc: -DCPU=PPC603} \
 %{mcpu=401: -DCPU=PPC403} \
 %{mcpu=403: -DCPU=PPC403} \
+%{mcpu=405: -DCPU=PPC405} \
 %{mcpu=601: -DCPU=PPC601} \
 %{mcpu=602: -DCPU=PPC603} \
 %{mcpu=603: -DCPU=PPC603} \
@@ -1446,6 +1322,7 @@ ncrtn.o%s"
 %{mcpu=604e: -DCPU=PPC604} \
 %{mcpu=620: -DCPU=PPC604} \
 %{mcpu=740: -DCPU=PPC603} \
+%{mcpu=7450: -DCPU=PPC603} \
 %{mcpu=750: -DCPU=PPC603} \
 %{mcpu=801: -DCPU=PPC603} \
 %{mcpu=821: -DCPU=PPC603} \
@@ -1464,27 +1341,30 @@ ncrtn.o%s"
   { "lib_yellowknife",		LIB_YELLOWKNIFE_SPEC },			\
   { "lib_mvme",			LIB_MVME_SPEC },			\
   { "lib_sim",			LIB_SIM_SPEC },				\
+  { "lib_freebsd",		LIB_FREEBSD_SPEC },			\
+  { "lib_gnu",			LIB_GNU_SPEC },				\
   { "lib_linux",		LIB_LINUX_SPEC },			\
   { "lib_netbsd",		LIB_NETBSD_SPEC },			\
-  { "lib_solaris",		LIB_SOLARIS_SPEC },			\
   { "lib_vxworks",		LIB_VXWORKS_SPEC },			\
   { "lib_default",		LIB_DEFAULT_SPEC },			\
   { "startfile_ads",		STARTFILE_ADS_SPEC },			\
   { "startfile_yellowknife",	STARTFILE_YELLOWKNIFE_SPEC },		\
   { "startfile_mvme",		STARTFILE_MVME_SPEC },			\
   { "startfile_sim",		STARTFILE_SIM_SPEC },			\
+  { "startfile_freebsd",	STARTFILE_FREEBSD_SPEC },		\
+  { "startfile_gnu",		STARTFILE_GNU_SPEC },			\
   { "startfile_linux",		STARTFILE_LINUX_SPEC },			\
   { "startfile_netbsd",		STARTFILE_NETBSD_SPEC },		\
-  { "startfile_solaris",	STARTFILE_SOLARIS_SPEC },		\
   { "startfile_vxworks",	STARTFILE_VXWORKS_SPEC },		\
   { "startfile_default",	STARTFILE_DEFAULT_SPEC },		\
   { "endfile_ads",		ENDFILE_ADS_SPEC },			\
   { "endfile_yellowknife",	ENDFILE_YELLOWKNIFE_SPEC },		\
   { "endfile_mvme",		ENDFILE_MVME_SPEC },			\
   { "endfile_sim",		ENDFILE_SIM_SPEC },			\
+  { "endfile_freebsd",		ENDFILE_FREEBSD_SPEC },			\
+  { "endfile_gnu",		ENDFILE_GNU_SPEC },			\
   { "endfile_linux",		ENDFILE_LINUX_SPEC },			\
   { "endfile_netbsd",		ENDFILE_NETBSD_SPEC },			\
-  { "endfile_solaris",		ENDFILE_SOLARIS_SPEC },			\
   { "endfile_vxworks",		ENDFILE_VXWORKS_SPEC },			\
   { "endfile_default",		ENDFILE_DEFAULT_SPEC },			\
   { "link_path",		LINK_PATH_SPEC },			\
@@ -1495,9 +1375,10 @@ ncrtn.o%s"
   { "link_start_yellowknife",	LINK_START_YELLOWKNIFE_SPEC },		\
   { "link_start_mvme",		LINK_START_MVME_SPEC },			\
   { "link_start_sim",		LINK_START_SIM_SPEC },			\
+  { "link_start_freebsd",	LINK_START_FREEBSD_SPEC },		\
+  { "link_start_gnu",		LINK_START_GNU_SPEC },			\
   { "link_start_linux",		LINK_START_LINUX_SPEC },		\
   { "link_start_netbsd",	LINK_START_NETBSD_SPEC },		\
-  { "link_start_solaris",	LINK_START_SOLARIS_SPEC },		\
   { "link_start_vxworks",	LINK_START_VXWORKS_SPEC },		\
   { "link_start_default",	LINK_START_DEFAULT_SPEC },		\
   { "link_os",			LINK_OS_SPEC },				\
@@ -1505,9 +1386,10 @@ ncrtn.o%s"
   { "link_os_yellowknife",	LINK_OS_YELLOWKNIFE_SPEC },		\
   { "link_os_mvme",		LINK_OS_MVME_SPEC },			\
   { "link_os_sim",		LINK_OS_SIM_SPEC },			\
+  { "link_os_freebsd",		LINK_OS_FREEBSD_SPEC },			\
   { "link_os_linux",		LINK_OS_LINUX_SPEC },			\
+  { "link_os_gnu",		LINK_OS_GNU_SPEC },			\
   { "link_os_netbsd",		LINK_OS_NETBSD_SPEC },			\
-  { "link_os_solaris",		LINK_OS_SOLARIS_SPEC },			\
   { "link_os_vxworks",		LINK_OS_VXWORKS_SPEC },			\
   { "link_os_default",		LINK_OS_DEFAULT_SPEC },			\
   { "cc1_endian_big",		CC1_ENDIAN_BIG_SPEC },			\
@@ -1515,16 +1397,16 @@ ncrtn.o%s"
   { "cc1_endian_default",	CC1_ENDIAN_DEFAULT_SPEC },		\
   { "cpp_endian_big",		CPP_ENDIAN_BIG_SPEC },			\
   { "cpp_endian_little",	CPP_ENDIAN_LITTLE_SPEC },		\
-  { "cpp_endian_solaris",	CPP_ENDIAN_SOLARIS_SPEC },		\
   { "cpp_float_default",	CPP_FLOAT_DEFAULT_SPEC },		\
   { "cpp_longdouble_default",	CPP_LONGDOUBLE_DEFAULT_SPEC },		\
   { "cpp_os_ads",		CPP_OS_ADS_SPEC },			\
   { "cpp_os_yellowknife",	CPP_OS_YELLOWKNIFE_SPEC },		\
   { "cpp_os_mvme",		CPP_OS_MVME_SPEC },			\
   { "cpp_os_sim",		CPP_OS_SIM_SPEC },			\
+  { "cpp_os_freebsd",		CPP_OS_FREEBSD_SPEC },			\
+  { "cpp_os_gnu",		CPP_OS_GNU_SPEC },			\
   { "cpp_os_linux",		CPP_OS_LINUX_SPEC },			\
   { "cpp_os_netbsd",		CPP_OS_NETBSD_SPEC },			\
-  { "cpp_os_solaris",		CPP_OS_SOLARIS_SPEC },			\
   { "cpp_os_vxworks",		CPP_OS_VXWORKS_SPEC },			\
   { "cpp_os_default",		CPP_OS_DEFAULT_SPEC },
 
@@ -1594,7 +1476,7 @@ ncrtn.o%s"
 	  = init_one_libfunc (NEGTF2_LIBCALL);				\
 	smul_optab->handlers[(int) TFmode].libfunc			\
 	  = init_one_libfunc (MULTF3_LIBCALL);				\
-	flodiv_optab->handlers[(int) TFmode].libfunc			\
+	sdiv_optab->handlers[(int) TFmode].libfunc			\
 	  = init_one_libfunc (DIVTF3_LIBCALL);				\
 	eqtf2_libfunc = init_one_libfunc (EQTF2_LIBCALL);		\
 	netf2_libfunc = init_one_libfunc (NETF2_LIBCALL);		\
@@ -1624,4 +1506,9 @@ ncrtn.o%s"
    ? (((GLOBAL) ? DW_EH_PE_indirect : 0) | DW_EH_PE_pcrel | DW_EH_PE_sdata4) \
    : DW_EH_PE_absptr)
 
-#define EXCEPTION_SECTION readonly_data_section
+#define TARGET_ASM_EXCEPTION_SECTION readonly_data_section
+
+#define DOUBLE_INT_ASM_OP "\t.quad\t"
+
+/* Generate entries in .fixup for relocatable addresses.  */
+#define RELOCATABLE_NEEDS_FIXUP

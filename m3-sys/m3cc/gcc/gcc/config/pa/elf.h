@@ -21,6 +21,13 @@ Boston, MA 02111-1307, USA.  */
 /* So we can conditionalize small amounts of code in pa.c or pa.md.  */
 #define OBJ_ELF
 
+#define ENDFILE_SPEC "crtend.o%s"
+
+#define STARTFILE_SPEC "%{!shared: \
+			 %{!symbolic: \
+			  %{pg:gcrt0.o%s}%{!pg:%{p:mcrt0.o%s}%{!p:crt0.o%s}}}}\
+			crtbegin.o%s"
+
 #define TEXT_SECTION_ASM_OP "\t.text"
 #define DATA_SECTION_ASM_OP "\t.data"
 #define BSS_SECTION_ASM_OP "\t.section\t.bss"
@@ -40,6 +47,7 @@ do {  \
        output_file_directive ((FILE), main_input_filename); \
    } while (0)
 
+#undef ASM_DECLARE_FUNCTION_NAME
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL) \
 do {  \
   if (TREE_PUBLIC (DECL)) \
@@ -81,6 +89,7 @@ do {  \
    (__main for example).  To make sure all libcall names have section
    info recorded in them, we do it here.  */
 
+#undef ASM_OUTPUT_EXTERNAL_LIBCALL
 #define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, RTL) \
   do { fputs ("\t.IMPORT ", FILE);					\
        if (!function_label_operand (RTL, VOIDmode))			\

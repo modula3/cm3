@@ -1,5 +1,5 @@
 /* Routines for GCC for ARM/pe.
-   Copyright (C) 1995, 1996, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 2000, 2001 Free Software Foundation, Inc.
    Contributed by Doug Evans (dje@cygnus.com).
 
 This file is part of GNU CC.
@@ -31,93 +31,6 @@ Boston, MA 02111-1307, USA.  */
 
 extern int current_function_anonymous_args;
 
-/* ARM/PE specific attribute support.
-
-   ARM/PE has three new attributes:
-   naked - for interrupt functions
-   dllexport - for exporting a function/variable that will live in a dll
-   dllimport - for importing a function/variable from a dll
-
-   Microsoft allows multiple declspecs in one __declspec, separating
-   them with spaces.  We do NOT support this.  Instead, use __declspec
-   multiple times.
-*/
-
-/* Return nonzero if ATTR is a valid attribute for DECL.
-   ATTRIBUTES are any existing attributes and ARGS are the arguments
-   supplied with ATTR.  */
-
-int
-arm_pe_valid_machine_decl_attribute (decl, attributes, attr, args)
-     tree decl;
-     tree attributes ATTRIBUTE_UNUSED;
-     tree attr;
-     tree args;
-{
-  if (args != NULL_TREE)
-    return 0;
-
-  if (is_attribute_p ("dllexport", attr))
-    return 1;
-  
-  if (is_attribute_p ("dllimport", attr))
-    return 1;
-
-  return arm_valid_machine_decl_attribute (decl, attr, args);
-}
-
-/* Merge attributes in decls OLD and NEW.
-
-   This handles the following situation:
-
-   __declspec (dllimport) int foo;
-   int foo;
-
-   The second instance of `foo' nullifies the dllimport.  */
-
-tree
-arm_pe_merge_machine_decl_attributes (old, new)
-     tree old, new;
-{
-  tree a;
-  int delete_dllimport_p;
-
-  old = DECL_MACHINE_ATTRIBUTES (old);
-  new = DECL_MACHINE_ATTRIBUTES (new);
-
-  /* What we need to do here is remove from `old' dllimport if it doesn't
-     appear in `new'.  dllimport behaves like extern: if a declaration is
-     marked dllimport and a definition appears later, then the object
-     is not dllimport'd.  */
-
-  if (lookup_attribute ("dllimport", old) != NULL_TREE
-      && lookup_attribute ("dllimport", new) == NULL_TREE)
-    delete_dllimport_p = 1;
-  else
-    delete_dllimport_p = 0;
-
-  a = merge_attributes (old, new);
-
-  if (delete_dllimport_p)
-    {
-      tree prev,t;
-
-      /* Scan the list for dllimport and delete it.  */
-      for (prev = NULL_TREE, t = a; t; prev = t, t = TREE_CHAIN (t))
-	{
-	  if (is_attribute_p ("dllimport", TREE_PURPOSE (t)))
-	    {
-	      if (prev == NULL_TREE)
-		a = TREE_CHAIN (a);
-	      else
-		TREE_CHAIN (prev) = TREE_CHAIN (t);
-	      break;
-	    }
-	}
-    }
-
-  return a;
-}
 
 /* Return non-zero if DECL is a dllexport'd object.  */
 
@@ -132,7 +45,7 @@ arm_dllexport_p (decl)
   if (TREE_CODE (decl) != VAR_DECL
       && TREE_CODE (decl) != FUNCTION_DECL)
     return 0;
-  exp = lookup_attribute ("dllexport", DECL_MACHINE_ATTRIBUTES (decl));
+  exp = lookup_attribute ("dllexport", DECL_ATTRIBUTES (decl));
   if (exp)
     return 1;
 
@@ -154,7 +67,7 @@ arm_dllimport_p (decl)
   if (TREE_CODE (decl) != VAR_DECL
       && TREE_CODE (decl) != FUNCTION_DECL)
     return 0;
-  imp = lookup_attribute ("dllimport", DECL_MACHINE_ATTRIBUTES (decl));
+  imp = lookup_attribute ("dllimport", DECL_ATTRIBUTES (decl));
   if (imp)
     return 1;
 
@@ -344,7 +257,7 @@ arm_pe_unique_section (decl, reloc)
   int len;
   const char * name;
   char * string;
-  char * prefix;
+  const char * prefix;
 
   name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
   /* Strip off any encoding in fnname.  */
