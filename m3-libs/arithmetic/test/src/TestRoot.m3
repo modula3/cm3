@@ -518,11 +518,16 @@ BEGIN
       x:=NewOneChain(j,2);
       (*Msg("x"&IPF.Fmt(x));*)
       FOR k:=1 TO 7 DO
+        y:=NewOneChain(k,3);
+        (*Msg("y"&IPF.Fmt(y));*)
         IF j+k<8 THEN (*otherwise internal overflow*)
-          y:=NewOneChain(k,3);
-          (*Msg("y"&IPF.Fmt(y));*)
           z:=IR.Mul(x,y);
-          Msg(Fmt.FN("%s,%s - %s x %s = %s\n", ARRAY OF TEXT
+          Msg(Fmt.FN("%s,%s - %s * %s = %s\n", ARRAY OF TEXT
+            {Fmt.Int(j), Fmt.Int(k), IPF.Fmt(x), IPF.Fmt(y), IPF.Fmt(z)}));
+        END;
+        IF j+k<7 THEN (*otherwise internal overflow*)
+          z:=IR.Add(x,y);
+          Msg(Fmt.FN("%s,%s - %s + %s = %s\n", ARRAY OF TEXT
             {Fmt.Int(j), Fmt.Int(k), IPF.Fmt(x), IPF.Fmt(y), IPF.Fmt(z)}));
         END;
       END;

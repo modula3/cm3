@@ -117,17 +117,19 @@ PROCEDURE Add(
                x,y:T):T=
 <*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
-  qx,qy:T;  (*polynomials with scaled roots, necessary for eliminating non-one leading coefficients*)
+  qx,qy,qz:T;  (*polynomials with scaled roots, necessary for eliminating non-one leading coefficients*)
   px,py,pz:REF PowerSumSeq;
   cx,cy:R.T;
   nrx,nry:R.T;  (*number of roots*)
   binom,
   rn,rk,rnp,
   sum:R.T;
-  nz:CARDINAL:=LAST(x^)*LAST(y^);
+  nx:CARDINAL:=LAST(x^);
+  ny:CARDINAL:=LAST(y^);
+  nz:CARDINAL:=nx*ny;
 BEGIN
-  cx:=x[LAST(x^)];
-  cy:=y[LAST(y^)];
+  cx:=x[nx];
+  cy:=y[ny];
   qx:=ScaleUpRoots(x);
   qy:=ScaleUpRoots(y);
   ScaleUpRootsFull(qx^,cy);
@@ -135,8 +137,8 @@ BEGIN
   px:=ToPowerSumSeq(qx,nz);
   py:=ToPowerSumSeq(qy,nz);
   pz:=NEW(REF PowerSumSeq,nz);
-  nrx:=FromCardinal(LAST(x^));
-  nry:=FromCardinal(LAST(y^));
+  nrx:=FromCardinal(nx);
+  nry:=FromCardinal(ny);
   rn:=R.Zero;
   FOR n:=0 TO LAST(pz^) DO
     rn:=R.Add(rn,R.One);
@@ -154,7 +156,10 @@ BEGIN
     END;
     pz[n]:=sum;
   END;
-  RETURN FromPowerSumSeq(pz^);
+  qz:=FromPowerSumSeq(pz^);
+  ScaleDownRoots(qz^,cx,nz-ny);
+  ScaleDownRoots(qz^,cy,nz-nx);
+  RETURN qz;
 END Add;
 (*-----------------*)
 PROCEDURE Sub(
