@@ -174,9 +174,33 @@ PROCEDURE Exit () =
   END Exit;
 
 PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: LONGREAL;
-                          just, axis            : INTEGER;  ) =
+                          just: AxesScaling := AxesScaling.independent;
+                          axis: TileSet := TileSet{Tile.box, Tile.ticks}; ) =
+  VAR arg6: C.int;
   BEGIN
-    PLPlotRaw.plenv(xmin, xmax, ymin, ymax, just, axis);
+    IF axis = TileSet{} THEN
+      arg6 := -2;
+    ELSIF axis = TileSet{Tile.box} THEN
+      arg6 := -1;
+    ELSE
+      arg6 := 0;
+      IF Tile.xTicksLog IN axis THEN INC(arg6, 10); END;
+      IF Tile.yTicksLog IN axis THEN INC(arg6, 20); END;
+      axis := axis - TileSet{Tile.xTicksLog, Tile.yTicksLog};
+      IF axis = TileSet{Tile.box, Tile.ticks} THEN
+        INC(arg6, 0);
+      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes} THEN
+        INC(arg6, 1);
+      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes, Tile.gridMinor} THEN
+        INC(arg6, 2);
+      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes, Tile.gridMinor,
+                           Tile.gridMajor} THEN
+        INC(arg6, 3);
+      ELSE
+        <*ASSERT FALSE*>(*combination not supported by PLPlot :-( *)
+      END;
+    END;
+    PLPlotRaw.plenv(xmin, xmax, ymin, ymax, ORD(just) - 1, arg6);
   END SetEnvironment;
 
 PROCEDURE StopPage () =

@@ -36,6 +36,11 @@ TYPE
 
 TYPE CallbackM3Proc = PROCEDURE (data: REFANY);
 
+TYPE
+  AxesScaling = {none, independent, equal, square};
+  Tile = {box, ticks, axes, gridMinor, gridMajor, xTicksLog, yTicksLog};
+  TileSet = SET OF Tile;
+
 
 CONST
   plescSetRgb               = 1;
@@ -185,7 +190,8 @@ PROCEDURE Exit ();
 
 (* plenv: "Simple interface for defining viewport and window." *)
 PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: LONGREAL;
-                          just, axis            : INTEGER;  );
+                          just: AxesScaling := AxesScaling.independent;
+                          axis: TileSet := TileSet{Tile.box, Tile.ticks}; );
 
 (* pleop: "End current page.  Should only be used with plbop()." *)
 PROCEDURE StopPage ();
