@@ -73,7 +73,7 @@ PROCEDURE Div(READONLY x,y : T) : T =
     denom : R.T;
   BEGIN
     denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
-    <* ASSERT denom > R.Zero *>
+    <* ASSERT R.Compare (denom, R.Zero) > 0 *>
     z.re := R.Div (R.Add(      R.Mul(x.re,y.re) ,R.Mul(x.im,y.im)), denom);
     z.im := R.Div (R.Add(R.Neg(R.Mul(x.re,y.im)),R.Mul(x.im,y.re)), denom);
     RETURN z;
@@ -86,7 +86,7 @@ PROCEDURE Rec(READONLY x : T) : T =
     denom : R.T;
   BEGIN
     denom := R.Add(R.Mul(x.re,x.re),R.Mul(x.im,x.im));
-    <* ASSERT denom > R.Zero *>
+    <* ASSERT R.Compare (denom, R.Zero) > 0 *>
     z.re :=       R.Div(x.re,denom);
     z.im := R.Neg(R.Div(x.im,denom));
     RETURN z;
