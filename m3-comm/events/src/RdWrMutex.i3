@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Mon May 15 17:26:50 1995
@@ -15,11 +16,14 @@
  * Update Count    : 23
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/RdWrMutex.i3,v $
- * $Date: 2001-12-02 00:06:45 $
+ * $Date: 2001-12-02 00:20:38 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
+ * Blair MacIntyre's events library
+ *
  * Revision 1.4  1997/01/23 15:26:41  bm
  * Lots of little bug fixes.
  *

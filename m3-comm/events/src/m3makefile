@@ -1,5 +1,5 @@
 import ("libm3")
-import ("sequences")
+%import ("sequences")
 import ("listfuncs")
 import ("parseparams")
 

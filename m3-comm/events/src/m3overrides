@@ -1,9 +1,13 @@
-if not equal (OS_TYPE, "WIN32")
-	override("sequences", "/proj/graphics/arm3/bm-work")
-	override("listfuncs", "/proj/graphics/arm3/bm-work")
+%if not equal (OS_TYPE, "WIN32")
+%	override("sequences", "/proj/graphics/arm3/bm-work")
+%	override("listfuncs", "/proj/graphics/arm3/bm-work")
 %	override("m3core", "/proj/graphics/software/src/modula3-3.5.3/m3")
 %	override("libm3", "/proj/graphics/software/src/modula3-3.5.3/m3")
-else
-	override("sequences", "\\arm3\\bm-work")
-	override("listfuncs", "\\arm3\\bm-work")
-end
+%else
+%	override("sequences", "\\arm3\\bm-work")
+%	override("listfuncs", "\\arm3\\bm-work")
+%end
+override ("libm3", ROOT & "/m3-libs")
+override ("listfuncs", ROOT & "/m3-libs")
+override ("parseparams", ROOT & "/m3-libs")
+
