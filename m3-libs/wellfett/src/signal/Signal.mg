@@ -370,5 +370,6 @@ PROCEDURE Add (x: T; y: T): T =
 
 
 BEGIN
+  Zero := NEW(T).fromArray(ARRAY OF R.T{R.Zero});
   One := NEW(T).fromArray(ARRAY OF R.T{R.One});
 END Signal.

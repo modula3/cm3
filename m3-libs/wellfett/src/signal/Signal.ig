@@ -54,7 +54,7 @@ TYPE
               superpose (with: T): T;
             END;
 
-VAR One: T;
+VAR Zero, One: T;
 
 PROCEDURE Add (x: T; y: T): T;
 PROCEDURE Mul (x: T; y: T): T;
