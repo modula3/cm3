@@ -9,7 +9,7 @@ IMPORT LongRealBSplineWavelet AS BSpl;
 IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT LongRealWaveletPlot AS WP;
-IMPORT PLPlot AS PL;
+IMPORT LongRealPLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 (*IMPORT Arithmetic AS Arith;*)
 

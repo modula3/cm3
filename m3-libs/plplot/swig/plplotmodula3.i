@@ -33,7 +33,7 @@ you must further process PLPlotRaw.i3 with
 
 */
 
-%module PLPlot
+%module LongRealPLPlot
 //%include typemaps.i
 #define PL_DOUBLE
 
@@ -585,9 +585,9 @@ TYPE
 
 (* The <*CALLBACK*> pragma may be necessary for use under Windows *)
 PROCEDURE PlotterCallback(
- x,y: PLPlotRaw.PLFLT;
- VAR (*OUT*) tx,ty: PLPlotRaw.PLFLT;
- data:PLPlotRaw.PLPointer;)=
+ x,y: LongRealPLPlotRaw.PLFLT;
+ VAR (*OUT*) tx,ty: LongRealPLPlotRaw.PLFLT;
+ data:LongRealPLPlotRaw.PLPointer;)=
 BEGIN
 WITH
  d = LOOPHOLE(data,UNTRACED REF PlotterData)^,
@@ -617,11 +617,11 @@ END PlotterCallback;
 %typemap(m3wrapinname) PLPointer OBJECT_DATA %{plotterData%}
 
 %typemap(m3rawintype)   defined_func %{DefinedFunc%}
-%typemap(m3wrapintype)  defined_func %{PLPlotRaw.DefinedFunc%}
-%typemap("m3wrapintype:import")  defined_func %{PLPlotRaw%}
+%typemap(m3wrapintype)  defined_func %{LongRealPLPlotRaw.DefinedFunc%}
+%typemap("m3wrapintype:import")  defined_func %{LongRealPLPlotRaw%}
 
 %typemap(m3rawintype)   fill_func %{FillFunc%}
-%typemap(m3wrapintype)  fill_func %{PLPlotRaw.FillFunc%}
+%typemap(m3wrapintype)  fill_func %{LongRealPLPlotRaw.FillFunc%}
 
 
 %typemap(m3rawintype)   char *legline[4] %{READONLY%}

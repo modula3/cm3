@@ -22,7 +22,7 @@ IMPORT LongRealFmtLex AS RF,
                                      LongRealComplexVectorFmtLex AS CVF,
                                      LongRealMatrixFmtLex AS MF*);
 
-IMPORT PLPlot AS PL;
+IMPORT LongRealPLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 IMPORT Arithmetic AS Arith;
 
