@@ -1,8 +1,9 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 UNSAFE MODULE TextSub EXPORTS Text, TextSub;
 
-IMPORT TextClass, Text8, Text16, TextLiteral;
+IMPORT TextCat, TextClass, Text8, Text16, TextLiteral;
 
 REVEAL
   TT = Public BRANDED "TextSub.T" OBJECT OVERRIDES
@@ -20,7 +21,7 @@ PROCEDURE New (t: TEXT; start, length: CARDINAL): TEXT =
 
 (* Text.Sub *)
 PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
-  VAR info: TextClass.Info;  new_len: INTEGER;
+  VAR info: TextClass.Info;  new_len: INTEGER;  root: TEXT;
   BEGIN
     t.get_info (info);
     new_len := MIN (info.length - start, length);
@@ -28,10 +29,29 @@ PROCEDURE Sub (t: TEXT; start, length: CARDINAL): TEXT =
     IF (new_len = info.length)  THEN RETURN t;  END;
     IF (new_len = 1) THEN RETURN FromWideChar (t.get_wide_char (start)); END;
 
-    (* Avoid building subtexts of subtexts... *)
-    TYPECASE t OF
-    | TT(tt) =>  t := tt.base;  INC (start, tt.start);
-    ELSE         (* skip *)
+    (* Descend as far as possible through subtexts and concatenations. *)
+    root := t;
+    LOOP
+      TYPECASE t OF
+      | TT(tt) =>  t := tt.base;  INC (start, tt.start);
+      | TextCat.T(tc) =>
+          IF start + new_len <= tc.a_len THEN
+            t := tc.a;
+          ELSIF start >= tc.a_len THEN
+            t := tc.b;
+            DEC (start, tc.a_len);
+          ELSE
+            EXIT;
+          END;
+      ELSE
+        EXIT;
+      END;
+    END;
+    IF t # root THEN
+      t.get_info (info);
+      IF start = 0 AND new_len = info.length THEN
+        RETURN t;
+      END;
     END;
     
     IF  (info.length >= 256)          (* It's big *)

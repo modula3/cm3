@@ -1,4 +1,5 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* A "Text8Cstring.T" is a text that references a null-terminated
    C string containing only 8-bit or "CHAR" characters. *)
