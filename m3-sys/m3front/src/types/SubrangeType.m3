@@ -184,8 +184,13 @@ PROCEDURE Check (p: P) =
 PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   VAR
     sz := TargetMap.CG_Size[p.rep];
-    z0 := offset DIV Target.Integer.align * Target.Integer.align;
+    z0: INTEGER;
   BEGIN
+    IF p.info.lazyAligned THEN
+      z0 := offset DIV 8 * 8;
+    ELSE
+      z0 := offset DIV Target.Integer.align * Target.Integer.align;
+    END;
     RETURN (offset + sz) <= (z0 + Target.Integer.size);
   END CheckAlign;
 

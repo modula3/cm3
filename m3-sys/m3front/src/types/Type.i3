@@ -38,6 +38,7 @@ TYPE
     isTraced  : M3.Flag;
     isEmpty   : M3.Flag;
     isSolid   : M3.Flag;
+    lazyAligned: M3.Flag;
   END;
 
 (*** phase 0 ***)
@@ -87,6 +88,10 @@ PROCEDURE IsStructured (t: T): BOOLEAN;
 PROCEDURE LoadScalar (t: T);
 (* If 't' is not a structured type, generate code to load the scalar
    pointed to by the address on the CG stack *)
+
+PROCEDURE IsLazyAligned (t: T): BOOLEAN;
+
+PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN);
 
 (*** phase 3 ***)
 

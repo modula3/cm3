@@ -597,7 +597,7 @@ PROCEDURE IsExternalProcedure (e: Expr.T): BOOLEAN =
 
 PROCEDURE GenRecord (t: T;  actual: Expr.T) =
   BEGIN
-    <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *>
+    (* <* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *> *)
     CASE t.mode OF
     | Mode.mVALUE =>
         Expr.Compile (actual);

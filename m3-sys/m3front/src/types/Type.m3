@@ -123,6 +123,7 @@ PROCEDURE Init (t: T;  c: Class) =
     t.checked    := FALSE;
     t.errored    := FALSE;
     t.next       := cur.module_types;   cur.module_types := t;
+    t.info.lazyAligned := FALSE;
   END Init;
 
 PROCEDURE SetModule (new: ModuleInfo): ModuleInfo =
@@ -292,6 +293,20 @@ PROCEDURE LoadScalar (t: T) =
         (* skip -- either it's structured or it's an error *)
     END;
   END LoadScalar;
+
+PROCEDURE IsLazyAligned (t: T): BOOLEAN =
+  BEGIN
+    IF t = NIL THEN RETURN FALSE END;
+    RETURN t.info.lazyAligned;
+  END IsLazyAligned;
+
+PROCEDURE SetLazyAlignment (t: T; on: BOOLEAN) =
+  BEGIN
+    IF t # NIL THEN
+      t.info.lazyAligned := on;
+    END;
+  END SetLazyAlignment;
+
 
 PROCEDURE BeginSetGlobals () =
   BEGIN
@@ -885,7 +900,11 @@ PROCEDURE GenRefDesc (t: T) =
 PROCEDURE ScalarAlign (t: TT;  offset: INTEGER): BOOLEAN =
   VAR u := Check (t);
   BEGIN
-    RETURN (offset MOD u.info.alignment = 0);
+    IF u.info.lazyAligned THEN
+      RETURN (offset MOD 8 = 0);
+    ELSE
+      RETURN (offset MOD u.info.alignment = 0);
+    END;
   END ScalarAlign;
 
 BEGIN

@@ -17,7 +17,7 @@ PROCEDURE Split (t: Type.T;  VAR fields: Value.T): BOOLEAN;
 
 PROCEDURE LookUp (t: Type.T;  name: M3ID.T;  VAR field: Value.T): BOOLEAN;
 
-PROCEDURE SizeAndAlignment (fields: Scope.T;
+PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN;
                             VAR(*OUT*) recSize, recAlign: INTEGER;
                             VAR(*OUT*) is_solid: BOOLEAN);
 

@@ -9,7 +9,7 @@
 MODULE Tipe;
 
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, OpaqueType, WebInfo;
-IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType;
+IMPORT Token, Type, Decl, Scanner, NamedType, RefType, ObjectType, Module;
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
 TYPE
@@ -33,28 +33,46 @@ TYPE
         fp_type     := ToType;
       END;
 
-PROCEDURE Parse (READONLY att: Decl.Attributes) =
+PROCEDURE Parse (att: Decl.Attributes) =
   VAR t: T;  id: M3ID.T;
   BEGIN
     Match (Token.T.tTYPE);
 
-    WHILE (cur.token = Token.T.tIDENT) DO
-      id := MatchID ();
-      t := Create (id);
-      t.unused := att.isUnused;
-      t.obsolete := att.isObsolete;
-      Scope.Insert (t);
-      CASE cur.token OF
-      | Token.T.tEQUAL =>
+    WHILE (cur.token = Token.T.tIDENT OR
+           cur.token = Token.T.tLAZYALIGN OR
+           cur.token = Token.T.tSTRICTALIGN) DO
+      IF cur.token = Token.T.tLAZYALIGN THEN
+        att.isLazyAligned := TRUE;
+        Module.SetLazyAlignment (TRUE);
+        GetToken (); (* LAZYALIGN *)
+        Match (Token.T.tENDPRAGMA);
+      ELSIF cur.token = Token.T.tSTRICTALIGN THEN
+        att.isLazyAligned := FALSE;
+        Module.SetLazyAlignment (FALSE);
+        GetToken (); (* LAZYALIGN *)
+        Match (Token.T.tENDPRAGMA);
+      END;
+      IF cur.token = Token.T.tIDENT THEN
+        id := MatchID ();
+        t := Create (id);
+        t.unused := att.isUnused;
+        t.obsolete := att.isObsolete;
+        t.lazyAligned := att.isLazyAligned;
+        Scope.Insert (t);
+        CASE cur.token OF
+        | Token.T.tEQUAL =>
           GetToken (); (* = *)
-	  t.value := Type.Parse ();
-      | Token.T.tSUBTYPE =>
+          t.value := Type.Parse ();
+          Type.SetLazyAlignment (t.value, t.lazyAligned);
+        | Token.T.tSUBTYPE =>
           GetToken (); (* <: *)
           t.value := OpaqueType.New (Type.Parse (), t);
-      ELSE
+          Type.SetLazyAlignment (t.value, t.lazyAligned);
+        ELSE
           Fail ("missing \'=\' or \'<:\'");
+        END;
+        Match (Token.T.tSEMI);
       END;
-      Match (Token.T.tSEMI);
     END;
 
   END Parse;
