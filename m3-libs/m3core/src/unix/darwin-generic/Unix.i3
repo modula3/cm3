@@ -15,13 +15,18 @@
 
 INTERFACE Unix;
 
-FROM Word IMPORT Or, And, Shift;
+FROM Word
+IMPORT Or, And, Shift;
 
-FROM Ctypes IMPORT short, int, long, char_star, 
-                   char_star_star;
-FROM Utypes IMPORT dev_t, off_t, mode_t, pid_t, (*tcflag_t,*) u_long, 
-                   (*cc_t, speed_t,*) uid_t, gid_t, size_t;
-FROM Utime IMPORT struct_timeval;
+FROM Ctypes
+IMPORT short, int, long, char_star, char_star_star, const_char_star;
+
+FROM Utypes
+IMPORT dev_t, off_t, mode_t, pid_t, u_long, uid_t, gid_t, size_t,
+       u_int, caddr_t;
+
+FROM Utime
+IMPORT struct_timeval_star;
 
 CONST
   MaxPathLen = 1024;
@@ -63,62 +68,49 @@ CONST
 
 (*** access - determine the accessibility of file ***)
 <*EXTERNAL*> PROCEDURE access (path: char_star; mod: int): int;
-(* ok *)
 
 (*** acct - turn accounting on or off ***)
 <*EXTERNAL*> PROCEDURE acct (path: char_star): int;
-(* ok *)
 
 (*** brk, sbrk - change data segment space allocation *)
 <*EXTERNAL*> PROCEDURE brk (addr: ADDRESS): int;
-(* ok *)
 <*EXTERNAL*> PROCEDURE sbrk (inc: int): char_star;
-(* ok *)
 
 (*** chdir - change working directory ***)
 <*EXTERNAL*> PROCEDURE chdir (path: char_star): int;
-(* ok *)
 
 (*** chmod, fchmod - change mde of file ***)
 <*EXTERNAL*> PROCEDURE chmod (path: char_star; mode: mode_t): int;
 <*EXTERNAL*> PROCEDURE fchmod (fd, mode: mode_t): int;
-(* ok *)
 
 (*** chown, fchown, lchown - change owner and group of a file ***)
-<*EXTERNAL*> PROCEDURE chown (path: char_star; owner: uid_t; group: gid_t): int;
+<*EXTERNAL*> PROCEDURE chown (path: char_star; owner: uid_t;
+                              group: gid_t): int;
+
 <*EXTERNAL*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
-<*EXTERNAL*> PROCEDURE lchown (path: char_star; owner: uid_t; group: gid_t): int;
-(* ok *)
 
 (*** chroot - change root directory ***)
 <*EXTERNAL*> PROCEDURE chroot (dirname: char_star): int;
-(* ok *)
 
 (*** close - delete a descriptor ***)
 <*EXTERNAL "m3_close"*> PROCEDURE close (d: int): int;
-(* ok *)
 
 (*** creat - create a new file ***)
 <*EXTERNAL*> PROCEDURE creat (name: char_star; mode: mode_t): int;
-(* ok, but obsolete *)
 
 (*** dup, dup2 - duplicate an open file descriptor ***)
 <*EXTERNAL "m3_dup"*> PROCEDURE dup (oldd: int): int;
 <*EXTERNAL "m3_dup2"*> PROCEDURE dup2 (oldd, newd: int): int;
-(* ok *)
 
 (*** execve - execute a file ***)
-<*EXTERNAL*> PROCEDURE execve (name: char_star; 
-                           argv, envp: char_star_star): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE execve (name: char_star;
+                               argv, envp: char_star_star): int;
 
 (*** exit - terminate a process ***)
 <*EXTERNAL*> PROCEDURE exit (i: int);
-(* ok *)
 
 (*** _exit - terminate a process without performing C I/O library cleanup ***)
 <*EXTERNAL "_exit"*> PROCEDURE underscore_exit (i: int);
-(* ok *)
 
 (*** fcntl - file control ***)
 CONST   (* request *)
@@ -148,15 +140,13 @@ TYPE
     l_type:   short;			 (* lock type: read/write, etc. *)
     l_whence: short;			 (* type of l_start *)
   END;
-(* ok *)
 
 CONST (* l_type values *)
   F_RDLCK = 1; (* Read lock *) 
   F_WRLCK = 3; (* Write lock *)
   F_UNLCK = 2; (* Remove lock(s) *)
 
-<*EXTERNAL "ufcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
-(* ok *)
+<*EXTERNAL "m3_fcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
 
 (*** flock - apply or remove an advisory lock on an open file ***)
 CONST
@@ -166,53 +156,41 @@ CONST
   LOCK_UN = 8;   (* unlock *)
 
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
-(* ok *)
 
 (*** fork - create a new process ***)
 <*EXTERNAL*> PROCEDURE fork (): pid_t;
-(* ok *)
 
 (*** fsync - synchronize a file's in-core state with that on disk ***)
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
-(* ok *)
 
 (*** getdirentries - gets directory entries in a generic directory format ***)
-<*EXTERNAL*> PROCEDURE getdirentries (fd: int; buf: ADDRESS;
-                                  nbytes: int; VAR basep: long): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE getdirentries (fd: int; buf: ADDRESS; nbytes: int;
+                                      VAR basep: long): int;
 
 (*** getdomainname, setdomainname - get or set name of current domain ***)
 <*EXTERNAL*> PROCEDURE getdomainname (name: char_star; namelen: int): int;
 <*EXTERNAL*> PROCEDURE setdomainname (name: char_star; namelen: int): int;
-(* ok *)
 
 (*** getdtablesize - get descriptor table size ***)
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
-(* ok *)
 
 (*** getgroups - get group access list ***)
 <*EXTERNAL*> PROCEDURE getgroups (gidsetsize: int; VAR gidset: int): int;
-(* ok *)
 
 (*** gethostid, sethostid - get/set unique identifier of current host ***)
 <*EXTERNAL*> PROCEDURE gethostid (): long;
 <*EXTERNAL*> PROCEDURE sethostid (hostid: long): int;
-(* ok *)
-
 
 (*** gethostname, sethostname - get/set name of current host ***)
 <*EXTERNAL*> PROCEDURE gethostname (name: char_star; namelen: int): int;
 <*EXTERNAL*> PROCEDURE sethostname (name: char_star; namelen: int): int;
-(* ok *)
 
 (*** getpagesize - get system page size ***)
 <*EXTERNAL*> PROCEDURE getpagesize (): int;
-(* ok *)
 
 (*** getwd - get current working directory pathname ***)
 <*EXTERNAL*> PROCEDURE getwd (pathname: char_star): char_star;
 <*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
-(* ok *)
 
 (*** ioctl - control device ***)
 (* this is a temptative declaration of the types of the arguments. 
@@ -227,7 +205,6 @@ TYPE
 	sg_kill:   char;		(* kill character *)
 	sg_flags:  short;		(* mode flags *)
         END;
-(* ok *)
 
   struct_tchars = RECORD
 	t_intrc:  char;		/* Interrupt			*/
@@ -237,7 +214,6 @@ TYPE
 	t_eofc:   char; 	/* End-of-file (EOF)		*/
 	t_brkc:   char; 	/* Input delimiter (like nl)	*/
 	END;
-(* ok *)
 
   struct_ltchars = RECORD
 	t_suspc:  char;		/* Stop process signal		*/
@@ -247,13 +223,11 @@ TYPE
 	t_werasc: char;		/* Word erase			*/
 	t_lnextc: char;		/* Literal next character	*/
 	END;
-(* ok *)
 
   struct_winsize = RECORD
 	ws_row, ws_col:       u_short; 	/* Window charact. size */
 	ws_xpixel, ws_ypixel: u_short;	/* Window pixel size	*/
 	END;
-(* ok *)
 
 (*
   struct_termio = RECORD
@@ -275,7 +249,6 @@ TYPE
 	c_ispeed,
 	c_ospeed:   speed_t;
 	END;
-(* ok *)
 
 (* This is how far I got. I don't think anybody will ever need it,
    so I stop here. ow Sun Nov  6 17:12:47 MET 1994 *)
@@ -751,13 +724,10 @@ CONST
 
 (* Somebody will have to work really hard to get all those ioctl
    parameters right. Beware when using them! *)
-<*EXTERNAL *> PROCEDURE ioctl (d: int; request: u_long; 
-                                         argp: ADDRESS): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE ioctl (d: int; request: u_long; argp: ADDRESS): int;
 
 (*** link - link to a file ***)
 <*EXTERNAL*> PROCEDURE link (name1, name2: char_star): int;
-(* ok *)
 
 (*** lseek, tell - move read/write pointer ***)
 CONST (* whence *)
@@ -765,16 +735,14 @@ CONST (* whence *)
   L_INCR = 1;
   L_XTND = 2;
 
-<*EXTERNAL "m3_lseek"*>
-PROCEDURE lseek (d: int; offset: int; whence: int): int;
-(* ok *)
+<*EXTERNAL "m3_lseek"*> PROCEDURE lseek (d: int; offset: int;
+                                         whence: int): int;
 
 (*** mkfifo - make a FIFO (named pipe) ***)
 <*EXTERNAL*> PROCEDURE mkfifo (path: char_star; mode: mode_t): int;
 
 (*** mkdir - make a directory file ***)
 <*EXTERNAL*> PROCEDURE mkdir (path: char_star; mode: mode_t): int;
-(* ok *)
 
 (*** mknod - make a directory or a special file ***)
 CONST (* mode *)
@@ -794,20 +762,16 @@ CONST (* mode *)
   (* lower bits used for the access permissions *)
 
 <*EXTERNAL*> PROCEDURE mknod (path: char_star; mode: mode_t; dev: dev_t): int;
-(* ok *)
 
 (*** mount, umount - mount or unmount a file system ***)
 CONST (* rwflag *)
   writable = 0;
   write_protected = 1;
 
-<*EXTERNAL*> PROCEDURE mount (type: int;
-                              dir: char_star; flags: int; 
+<*EXTERNAL*> PROCEDURE mount (type: int; dir: char_star; flags: int;
                               data: ADDRESS): int;
-(* ok *)
 
 <*EXTERNAL*> PROCEDURE unmount (dir: char_star; flags: int): int;
-(* ok *)
 
 
 (*** open - open for reading or writing ***)
@@ -826,16 +790,13 @@ CONST (* flags *)
 
   M3_NONBLOCK = O_NONBLOCK;  (* -1 => would block, 0 => EOF *)
 
-<*EXTERNAL "uopen" *> PROCEDURE open (name: char_star; 
-                                       flags, mode: int): int;
-(* ok *)
+<*EXTERNAL "m3_open"*> PROCEDURE open (name: char_star; flags, mode: int): int;
 
 (*** pipe - create an interprocess channel ***)
 CONST
   readEnd = 0;
   writeEnd = 1;
 <*EXTERNAL*> PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
-(* ok *)
 
 (* not implemented
 (*** plock - lock process, text, or data in memory ***)
@@ -848,19 +809,16 @@ CONST (* op *)
 *)
 
 (*** profil - execution time profile ***)
-<*EXTERNAL*> PROCEDURE profil (buff: ADDRESS; 
-                               size, offset, scale: int): int;
-(* ok *)
+<*EXTERNAL "m3_profil"*> PROCEDURE profil (samples: char_star; size: size_t;
+                                           offset: u_long; scale: u_int): int;
 
 (*** ptrace - process trace ***)
-<*EXTERNAL*> PROCEDURE ptrace (request: int; pid: pid_t;
-                               addr: ADDRESS;
+<*EXTERNAL*> PROCEDURE ptrace (request: int; pid: pid_t; addr: caddr_t;
                                data: int): int;
-(* ok *)
 
 (*** readlink - read value of a symbolic link ***)
-<*EXTERNAL*> PROCEDURE readlink (path: char_star; buf: ADDRESS; bufsize: int): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE readlink (path: const_char_star; buf: char_star;
+                                 bufsize: int): int;
 
 (*** reboot - reboot system or halt processor ***)
 CONST (* howto *)
@@ -870,15 +828,12 @@ CONST (* howto *)
   RB_AUTOREBOOT = 16_0;         (* flag for system auto-booting itself *)
 
 <*EXTERNAL*> PROCEDURE reboot (howto: int): int;
-(* ok *)
 
 (*** rename - change the name of a file ***)
 <*EXTERNAL*> PROCEDURE rename (from, to: char_star): int;
-(* ok *)
 
 (*** rmdir - remove a directory file ***)
 <*EXTERNAL*> PROCEDURE rmdir (path: char_star): int;
-(* ok *)
 
 (*** select - synchronous I/O mutiplexing ***)
 CONST
@@ -886,43 +841,33 @@ CONST
 
 TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
+  FDSet_star = UNTRACED REF FDSet;
 
 <*EXTERNAL "m3_select"*> PROCEDURE select (nfds: int;
-                           readfds, writefds, exceptfds: UNTRACED REF FDSet;
-                           timeout: UNTRACED REF struct_timeval): int;
-(* ok *)
+                                           readfds,
+                                           writefds,
+                                           exceptfds: FDSet_star;
+                                           timeout: struct_timeval_star): int;
 
 (*** setgroups - set group access list ***)
-<*EXTERNAL*> PROCEDURE setgroups (ngroups: int; VAR gidset: int): int;
-(* ok *)
-
-(* not implemented
-(*** setquota - enable/disable quotas on a file system ***)
-<*EXTERNAL*> PROCEDURE setquota (special, file: char_star): int;
-*)
+<*EXTERNAL*> PROCEDURE setgroups (ngroups: int; READONLY gidset: gid_t): int;
 
 (*** shutdown - shut down full-duplex connection ***)
 <*EXTERNAL*> PROCEDURE shutdown (s, how: int): int;
-(* ok *)
 
 (*** swapon - add a swap device for interleaved paging/swapping ***)
 <*EXTERNAL*> PROCEDURE swapon (special: char_star): int;
-(* ok *)
 
 (*** symlink - make symbolic link to a file ***)
 <*EXTERNAL*> PROCEDURE symlink (name1, name2: char_star): int;
-(* ok *)
 
 (*** sync - update super-block ***)
 <*EXTERNAL*> PROCEDURE sync ();
-(* ok *)
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
-<*EXTERNAL "m3_truncate"*>
-PROCEDURE truncate (path: char_star; length: int): int;
-<*EXTERNAL "m3_ftruncate"*>
-PROCEDURE ftruncate (fd: int; length: int): int;
-(* ok *)
+<*EXTERNAL "m3_truncate"*> PROCEDURE truncate (path: const_char_star;
+                                               length: int): int;
+<*EXTERNAL "m3_ftruncate"*> PROCEDURE ftruncate (fd: int; length: int): int;
 
 (* not implemented 
 (*** ulimit - get and set user limits ***)
@@ -931,41 +876,22 @@ PROCEDURE ftruncate (fd: int; length: int): int;
 
 (*** umask - set file creation mask ***)
 <*EXTERNAL*> PROCEDURE umask (numask: mode_t): mode_t;
-(* ok *)
 
 (*** unlink - remove directory entry ***)
-<*EXTERNAL*> PROCEDURE unlink (path: char_star): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE unlink (path: const_char_star): int;
 
 (*** utimes - set file times ***)
-<*EXTERNAL*> PROCEDURE utimes (file: char_star;
-                    tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE utimes(path: const_char_star;
+                              times: struct_timeval_star): int;
 
 (*** vfork - spawn new process in a virtual memory efficient way ***)
 <*EXTERNAL*> PROCEDURE vfork (): int;
-(* ok *)
-
-(* not implemented, obsolete
-(*** vhangup - virtually hang up the current control terminal ***)
-<*EXTERNAL*> PROCEDURE vhangup (): int;
-*)
-
-(* not implemented
-(*** rexec(3x) - return stream to a remote command ***)
-<*EXTERNAL*> PROCEDURE rexec (VAR ahost: char_star; 
-                              inport: u_short;
-                              user, passwd, cmd: char_star;
-                              fd2p: int_star): int;
-*)
 
 (*** isatty(3) ***)
 <*EXTERNAL*> PROCEDURE isatty (filedes: int): int;
-(* ok *)
 
 (*** system(3) ***)
 <*EXTERNAL*> PROCEDURE system (string: char_star): int;
-(* ok *)
 
 
 END Unix.

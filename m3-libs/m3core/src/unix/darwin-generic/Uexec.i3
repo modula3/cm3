@@ -8,32 +8,19 @@
 
 UNSAFE INTERFACE Uexec;
 
-IMPORT Ctypes, Utypes, Uresource;
+FROM Utypes IMPORT pid_t;
+FROM Ctypes IMPORT char_star, char_star_star, int, unsigned_int, void_star;
+FROM Uresource IMPORT struct_rusage_star;
 
 (* Some of the Unix library process control calls. This is not a complete
 interface, and should be added to as needed *)
 
-<*EXTERNAL*> 
-PROCEDURE execv(
-    name: Ctypes.char_star;
-    argv: Ctypes.char_star_star)
-    : Ctypes.int
-    RAISES {};
+<*EXTERNAL*> PROCEDURE execv(name: char_star; argv: char_star_star): int;
     
-<*EXTERNAL*> 
-PROCEDURE execvp(
-    name: Ctypes.char_star;
-    argv: Ctypes.char_star_star)
-    : Ctypes.int
-    RAISES {};
+<*EXTERNAL*> PROCEDURE execvp(name: char_star; argv: char_star_star): int;
     
-<*EXTERNAL*> 
-PROCEDURE exect(
-    name: Ctypes.char_star;
-    argv: Ctypes.char_star_star;
-    envp: Ctypes.char_star_star)
-    : Ctypes.int
-    RAISES {};
+<*EXTERNAL*> PROCEDURE exect(name: char_star; argv: char_star_star;
+                             envp: char_star_star): int;
 
 (* options bits for the second argument of wait3. *)
 CONST
@@ -41,7 +28,7 @@ CONST
   WUNTRACED = 2;		 (* tell about stopped, untraced children *)
 
 TYPE
-  w_A = Ctypes.unsigned_int;
+  w_A = unsigned_int;
 
   (* terminated process status *)
   w_T = RECORD
@@ -72,10 +59,10 @@ TYPE
 
   (* Wait queues (needed for Umsg.i3) *)
   wait_queue = RECORD
-     task : Ctypes.void_star;  (* : task_struct;  see below *)
+     task : void_star;			 (* : task_struct;  see below *)
      next : UNTRACED REF wait_queue;
    END;
-   (* task_struct - use Ctypes.void_star because task_struct
+   (* task_struct - use void_star because task_struct
      should never be touched and is very very hard to emulate in Modula-3
    *)
 
@@ -83,15 +70,15 @@ TYPE
 
 (*** wait, wait3, waitpid - wait for process to terminate ***)
 
-<*EXTERNAL*> 
-PROCEDURE wait (status: w_A_star): Utypes.pid_t;
+<*EXTERNAL*> PROCEDURE wait (status: w_A_star): pid_t;
 
-<*EXTERNAL*>
-PROCEDURE wait3 (status: w_A_star; options: Ctypes.int;
-                 rusage: Uresource.struct_rusage_star): Utypes.pid_t;
+<*EXTERNAL*> PROCEDURE wait3 (status: w_A_star; options: int;
+                              rusage: struct_rusage_star): pid_t;
 
-<*EXTERNAL*>
-PROCEDURE waitpid (pid: Utypes.pid_t; status: w_A_star; 
-                   options: Ctypes.int): Utypes.pid_t;
+<*EXTERNAL*> PROCEDURE wait4 (wpid: pid_t; status: w_A_star; options: int;
+                              rusage: struct_rusage_star): pid_t;
+
+<*EXTERNAL*> PROCEDURE waitpid (pid: pid_t; status: w_A_star;
+                                options: int): pid_t;
 
 END Uexec.

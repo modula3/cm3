@@ -9,7 +9,12 @@
 INTERFACE Usocket;
 
 
-IMPORT Ctypes, Utypes, Uuio;
+FROM Uuio IMPORT struct_iovec_star;
+FROM Utypes IMPORT size_t, ssize_t, caddr_t;
+
+FROM Ctypes
+IMPORT int, int_star, unsigned_int, char, unsigned_char, unsigned_short,
+       void_star, const_void_star;
 
 (*** sys/socket.h ***)
 
@@ -60,8 +65,8 @@ CONST
  *)
 TYPE
   struct_linger = RECORD
-    l_onoff: Ctypes.int;		(* option on/off *)
-    l_linger: Ctypes.int;		(* linger time *)
+    l_onoff: int;			 (* option on/off *)
+    l_linger: int;			 (* linger time *)
   END;
 
 
@@ -115,19 +120,19 @@ CONST
  *)
 TYPE
   struct_sockaddr = RECORD
-    sa_len: Ctypes.unsigned_char;            (* total length *)
-    sa_family: Ctypes.unsigned_char;         (* address family *)
-    sa_data: ARRAY [0..13] OF Ctypes.char;   (* address; actually longer *)
+    sa_len: unsigned_char;		 (* total length *)
+    sa_family: unsigned_char;		 (* address family *)
+    sa_data: ARRAY [0..13] OF char;	 (* address; actually longer *)
   END;
-
+  struct_sockaddr_star = UNTRACED REF struct_sockaddr;
 
 (*
  * Structure used by kernel to pass protocol
  * information in raw sockets.
  *)
   struct_sockproto = RECORD
-    sp_family: Ctypes.unsigned_short;        (* address family *)
-    sp_protocol: Ctypes.unsigned_short;      (* protocol *)
+    sp_family: unsigned_short;		 (* address family *)
+    sp_protocol: unsigned_short;	 (* protocol *)
   END;
 
 (*
@@ -177,15 +182,15 @@ CONST
  *)
 TYPE
   struct_msghdr = RECORD
-    msg_name: Utypes.caddr_t;            (* optional address *)
-    msg_namelen: Ctypes.unsigned_int;    (* size of address *)
-    msg_iov: Uuio.struct_iovec_star;     (* scatter/gather array *)
-    msg_iovlen: Ctypes.unsigned_int;     (* # elements in msg_iov *)
-    msg_control: Utypes.caddr_t;         (* ancillary data, see below *)
-    msg_controllen: Ctypes.unsigned_int; (* ancillary data buffer len *)
-    msg_flags: Ctypes.int;               (* flags on received message *)
+    msg_name: caddr_t;			 (* optional address *)
+    msg_namelen: unsigned_int;		 (* size of address *)
+    msg_iov: struct_iovec_star;		 (* scatter/gather array *)
+    msg_iovlen: unsigned_int;		 (* # elements in msg_iov *)
+    msg_control: caddr_t;		 (* ancillary data, see below *)
+    msg_controllen: unsigned_int;	 (* ancillary data buffer len *)
+    msg_flags: int;			 (* flags on received message *)
   END;
-
+  struct_msghdr_star = UNTRACED REF struct_msghdr;
 
 CONST
   MSG_OOB         = 16_1;             (* process out-of-band data *)
@@ -207,9 +212,9 @@ CONST
  *)
 TYPE
   struct_cmsghdr = RECORD
-    cmsg_len: Ctypes.unsigned_int;  (* data byte count, including hdr *)
-    cmsg_level: Ctypes.int;         (* originating protocol *)
-    cmsg_type: Ctypes.int;          (* protocol-specific type *)
+    cmsg_len: unsigned_int;		 (* data byte count, including hdr *)
+    cmsg_level: int;			 (* originating protocol *)
+    cmsg_type: int;			 (* protocol-specific type *)
     (* followed by  u_char cmsg_data[]; *)
   END;
 
@@ -223,125 +228,65 @@ CONST
  *)
 TYPE
   struct_sockaddr_un = RECORD
-    sun_len: Ctypes.unsigned_char;            (* sockaddr len including null *)
-    sun_family: Ctypes.unsigned_char;         (* AF_UNIX *)
-    sun_path: ARRAY [0..103] OF Ctypes.char;  (* path name (gag) *)
+    sun_len: unsigned_char;		 (* sockaddr len including null *)
+    sun_family: unsigned_char;		 (* AF_UNIX *)
+    sun_path: ARRAY [0..103] OF char;	 (* path name (gag) *)
   END;
 
 <*EXTERNAL "m3_accept"*>
-PROCEDURE accept(
-    s: Ctypes.int;
-    addr: UNTRACED REF struct_sockaddr;
-    addrlen: Ctypes.int_star)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE accept(s: int; addr: struct_sockaddr_star; addrlen: int_star): int;
 
 <*EXTERNAL "m3_bind"*>
-PROCEDURE bind(
-    s: Ctypes.int;
-    name: UNTRACED REF struct_sockaddr;
-    namelen: Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE bind(s: int; name: struct_sockaddr_star; namelen: int): int;
 
 <*EXTERNAL "m3_connect"*>
-PROCEDURE connect(
-    s: Ctypes.int;
-    name: UNTRACED REF struct_sockaddr;
-    namelen: Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE connect(s: int; name: struct_sockaddr_star; namelen: int): int;
 
 <*EXTERNAL "m3_getpeername"*>
-PROCEDURE getpeername(
-    s: Ctypes.int;
-    name: UNTRACED REF struct_sockaddr;
-    namelen: Ctypes.int_star)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE getpeername(s: int; name: struct_sockaddr_star;
+                      namelen: int_star): int;
 
 <*EXTERNAL "m3_getsockname"*>
-PROCEDURE getsockname(
-    s: Ctypes.int;
-    name: UNTRACED REF struct_sockaddr;
-    namelen: Ctypes.int_star)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE getsockname(s: int; name: struct_sockaddr_star;
+                      namelen: int_star): int;
 
 <*EXTERNAL*>
-PROCEDURE getsockopt(
-    s, level, optname: Ctypes.int;
-    optval: Ctypes.void_star;
-    optlen: Ctypes.int_star)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE getsockopt(s, level, optname: int; optval: void_star;
+                     optlen: int_star): int;
 
 <*EXTERNAL "m3_listen"*>
-PROCEDURE listen(s, backlog: Ctypes.int): Ctypes.int RAISES {};
+PROCEDURE listen(s, backlog: int): int;
 
 <*EXTERNAL "m3_recv"*>
-PROCEDURE recv(
-    s: Ctypes.int;
-    buf: Ctypes.void_star;
-    len: Utypes.size_t;
-    flags: Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE recv(s: int; buf: void_star; len: size_t; flags: int): int;
 
 <*EXTERNAL "m3_recvfrom"*>
-PROCEDURE recvfrom(
-    s: Ctypes.int;
-    buf: Ctypes.void_star;
-    len: Utypes.size_t;
-    flags: Ctypes.int;
-    from: UNTRACED REF struct_sockaddr;
-    fromlen: Ctypes.int_star)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int;
+                   from: struct_sockaddr_star; fromlen: int_star): int;
 
-(* FIXME - recvmsg *)
+<*EXTERNAL*>
+PROCEDURE recvmsg(s: int; msg: struct_msghdr_star; flags: int): ssize_t;
 
 <*EXTERNAL "m3_send"*>
-PROCEDURE send(
-    s: Ctypes.int;
-    msg: Ctypes.const_void_star;
-    len: Utypes.size_t;
-    flags: Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE send(s: int; msg: const_void_star; len: size_t; flags: int): int;
 
 <*EXTERNAL "m3_sendto"*>
-PROCEDURE sendto(
-    s: Ctypes.int;
-    msg: Ctypes.const_void_star;
-    len: Utypes.size_t;
-    flags: Ctypes.int;
-    to: UNTRACED REF struct_sockaddr;
-    tolen: Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int;
+                 to: struct_sockaddr_star; tolen: int): int;
 
 (* FIXME - sendmsg *)
 
 <*EXTERNAL*>
-PROCEDURE setsockopt(
-    s, level, optname: Ctypes.int;
-    optval: Ctypes.const_void_star;
-    optlen: Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE setsockopt(s, level, optname: int; optval: const_void_star;
+                     optlen: int): int;
 
 <*EXTERNAL "m3_shutdown"*>
-PROCEDURE shutdown(s, how: Ctypes.int): Ctypes.int RAISES {};
+PROCEDURE shutdown(s, how: int): int;
 
 <*EXTERNAL "m3_socket" *>
-PROCEDURE socket(af, type, protocol: Ctypes.int): Ctypes.int RAISES {};
+PROCEDURE socket(af, type, protocol: int): int;
 
 <*EXTERNAL*>
-PROCEDURE socketpair(
-    d, type, protocol: Ctypes.int;
-    sv: UNTRACED REF ARRAY [0..1] OF Ctypes.int)
-    : Ctypes.int
-    RAISES {};
+PROCEDURE socketpair(d, type, protocol: int; sv: int_star): int;
 
 END Usocket.

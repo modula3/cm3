@@ -19,11 +19,15 @@ FROM Ctypes IMPORT char_star, int, long, long_star,
 TYPE
   struct_timeval = RECORD
     tv_sec: long;          (* seconds *)
-    tv_usec: long;         (* and microseconds *) END;
+    tv_usec: long;         (* and microseconds *)
+  END;
+  struct_timeval_star = UNTRACED REF struct_timeval;
 
   struct_timezone = RECORD
     tz_minuteswest:  int; (* minutes west of Greenwich *)
-    tz_dsttime:      int; (* type of dst correction *) END;
+    tz_dsttime:      int; (* type of dst correction *)
+  END;
+  struct_timezone_star = UNTRACED REF struct_timezone;
 
 CONST
   DST_NONE = 0;  (* not on dst *)
@@ -97,12 +101,10 @@ TYPE
 (*** gettimeofday(2), settimeofday(2) - get/set date and time ***)
 
 <*EXTERNAL*>
-PROCEDURE gettimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+PROCEDURE gettimeofday (VAR t: struct_timeval; VAR z: struct_timezone): int;
 
 <*EXTERNAL*>
-PROCEDURE settimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+PROCEDURE settimeofday (VAR t: struct_timeval; VAR z: struct_timezone): int;
 
 (*** getitimer(2), setitimer(2) - get/set value of interval timer ***)
 
@@ -115,14 +117,7 @@ CONST (* which *)
 PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
 
 <*EXTERNAL*>
-PROCEDURE setitimer (which: int; 
-                     VAR value, ovalue: struct_itimerval): int;
-
-(*** stime(2) - set time ***)
-(* not in FreeBSD
-<*EXTERNAL*> PROCEDURE stime (VAR tp: long): int;
-*)
-
+PROCEDURE setitimer (which: int; VAR value, ovalue: struct_itimerval): int;
 
 (*** clock(3) - report CPU time used (in micro-seconds) ***)
 
