@@ -15,8 +15,18 @@ PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
 PROCEDURE Conj(x:T):T  = BEGIN RETURN  x  END Conj;
 
+<*INLINE*>
+PROCEDURE CheckDivisor(x:T) RAISES {Error} =
+  BEGIN
+    IF x=Zero THEN
+      RAISE Error(Err.divide_by_zero);
+    END;
+  END CheckDivisor;
+
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
-PROCEDURE Div(x,y:T):T RAISES {Error} = BEGIN IF y=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN x/y END Div;
+PROCEDURE Div(x,y:T):T RAISES {Error} = BEGIN CheckDivisor(y); RETURN x/y END Div;
+PROCEDURE Mod(<*UNUSED*>x:T;y:T):T RAISES {Error} = BEGIN CheckDivisor(y); RETURN Zero END Mod;
+PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error} = BEGIN CheckDivisor(y); r := Zero; RETURN x/y END DivMod;
 PROCEDURE IntMod(x,y:T):T RAISES {Error} = BEGIN IF y=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN x MOD y END IntMod;
 PROCEDURE Rec(x:T):T RAISES {Error}   = BEGIN IF x=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN One/x END Rec;
 PROCEDURE ScaleInt(x:T;y:INTEGER):T = BEGIN RETURN x*FLOAT(y,T) END ScaleInt;
