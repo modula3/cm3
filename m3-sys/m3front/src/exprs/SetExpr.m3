@@ -242,12 +242,14 @@ PROCEDURE Member (set, elt: Expr.T;  VAR c: Expr.T): BOOLEAN =
   END Member;
 
 PROCEDURE ConstElt (elt: Expr.T;  VAR i: INTEGER): BOOLEAN =
-  VAR t: Type.T;  int: Target.Int;
+  VAR t: Type.T;  int: Target.Int; res: BOOLEAN;
   BEGIN
     elt := Expr.ConstValue (elt);
     IF (elt = NIL) THEN RETURN FALSE END;
-    RETURN (IntegerExpr.Split (elt, int) OR EnumExpr.Split (elt, int, t))
+    res := (IntegerExpr.Split (elt, int) OR EnumExpr.Split (elt, int, t))
        AND TInt.ToInt (int, i);
+    (* TInt.OutInt("SetExpr.ConstElt.int", int); *)
+    RETURN res;
   END ConstElt;
 
 PROCEDURE CheckPair (a, b: Expr.T;  VAR p, q: P): BOOLEAN =
@@ -754,6 +756,8 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     <*ASSERT Type.IsEqual (type, p.tipe, NIL) *>
     b := SetType.Split (p.tipe, range);  <*ASSERT b*>
     EVAL Type.GetBounds (range, min_T, max_T);
+    (* TInt.OutInt("SetExpr.GenLiteral.min_T", min_T); *)
+    (* TInt.OutInt("SetExpr.GenLiteral.max_T", max_T); *)
     IF NOT TInt.ToInt (min_T, minT)
       OR NOT TInt.ToInt (max_T, maxT) THEN
       Error.Msg ("set constant's domain is too large");
@@ -772,35 +776,39 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
       b2 := (n.max - minT) MOD Grain;
       IF (w1 # curWord) THEN
         (* write the mask we've accumulated *)
-        IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+        IF NOT TInt.EQ (TWord.Trim(curMask), TInt.Zero) THEN
           CG.Init_int (offset + curWord*Target.Integer.pack,
-                        Target.Integer.size, curMask, is_const);
+                        Target.Integer.size, TInt.Expand(curMask), is_const);
         END;
         curWord := w1;
         curMask := TInt.Zero;
       END;
       IF (w1 # w2) THEN
         (* write the full words [w1..w2-1] *)
-        TWord.Or (curMask, left [b1], tmp);
+        TWord.Or (TWord.Trim(curMask), left [b1], tmp);
+        (* TInt.OutInt("SetExpr.GenLiteral.tmp", tmp); *)
         CG.Init_int (offset + w1 * Target.Integer.pack, Target.Integer.size,
-                     tmp, is_const);
+                     TInt.Expand(tmp), is_const);
         FOR i := w1 + 1 TO w2 - 1 DO
           CG.Init_int (offset + i * Target.Integer.pack, Target.Integer.size,
-                       full, is_const);
+                       TInt.Expand(full), is_const);
         END;
         curWord := w2;
-        curMask := right [b2];
+        curMask := TWord.Trim(right [b2]);
+        (* TInt.OutInt("SetExpr.GenLiteral.curMask", curMask); *)
       ELSE
-        TWord.And (left [b1], right[b2], tmp);
-        TWord.Or (curMask, tmp, curMask);
+        TWord.And (TWord.Trim(left [b1]), TWord.Trim(right[b2]), tmp);
+        (* TInt.OutInt("SetExpr.GenLiteral.tmp", tmp); *)
+        TWord.Or (TWord.Trim(curMask), TWord.Trim(tmp), curMask);
+        (* TInt.OutInt("SetExpr.GenLiteral.curMask", curMask); *)
       END;
       n := n.next;
     END;
 
     (* write the last mask *)
-    IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+    IF NOT TInt.EQ (TWord.Trim(curMask), TInt.Zero) THEN
       CG.Init_int (offset + curWord * Target.Integer.pack,
-                   Target.Integer.size, curMask, is_const);
+                   Target.Integer.size, TInt.Expand(curMask), is_const);
     END;
   END GenLiteral;
 
@@ -809,6 +817,7 @@ PROCEDURE Init () =
   BEGIN
     Grain := MAX (Target.Integer.size, Target.Set_grain);
     TWord.Not (TInt.Zero, full);
+    full := TWord.Trim(full);
     FOR i := 0 TO Grain - 1 DO
       b := TInt.FromInt (i + 1 - Grain, s);  <*ASSERT b*>
       TWord.Shift (full, s, right [i]);
