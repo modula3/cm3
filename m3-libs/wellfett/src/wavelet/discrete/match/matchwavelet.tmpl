@@ -7,8 +7,9 @@ readonly proc MatchWavelet (nm, rfield) is
   local vector = nm  & "Vector"
   local matrix = nm  & "Matrix"
   local lapack = nm  & "MatrixLapack"
+  local mpower = nm  & "MatrixIntegerPower"
   local signal = nm  & "Signal"
   local refine = nm  & "RefinableFunc"
   build_generic_intf (basic, "MatchWavelet", [rfield, vector, matrix, signal], VISIBLE)
-  build_generic_impl (basic, "MatchWavelet", [        vector, matrix, lapack, signal, refine])
+  build_generic_impl (basic, "MatchWavelet", [rfield, vector, matrix, mpower, lapack, signal, refine])
 end

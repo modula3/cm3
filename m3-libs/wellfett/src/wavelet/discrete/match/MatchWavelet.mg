@@ -1,9 +1,6 @@
-GENERIC MODULE MatchWavelet(V, M, LA, S, Refn);
-
-IMPORT LongRealBasic AS R;
+GENERIC MODULE MatchWavelet(R, V, M, MIntPow, LA, S, Refn);
 
 IMPORT Integer32IntegerPower AS IIntPow;
-IMPORT LongRealMatrixIntegerPower AS MIntPow;
 
 (*
 IMPORT LongRealFmtLex AS RF;
@@ -13,6 +10,7 @@ IMPORT IO, Fmt, Wr, Thread;
 *)
 
 IMPORT Arithmetic AS Arith;
+
 
 PROCEDURE MatchPatternGenWav (target                                : S.T;
                               refineMask, generatorMask, waveletMask: S.T;
@@ -74,6 +72,59 @@ PROCEDURE MatchPatternGenWav (target                                : S.T;
                     NEW(S.T).fromVector(approx, first), basis, targetVec};
     END;
   END MatchPatternGenWav;
+
+PROCEDURE ComputeNormalEqu (target                                : S.T;
+                            refineMask, generatorMask, waveletMask: S.T;
+                            numLevels     : CARDINAL;
+                            firstTranslate: INTEGER;
+                            numTranslates : CARDINAL; ): NormalEqu =
+  <* FATAL Arith.Error *>        (*MulPower can't fail*)
+  VAR
+    refineSize := refineMask.getNumber() - 1;
+
+    refineTrans := Refn.TransitionMatrix(refineMask);
+
+    generatorMaskAutoCor := generatorMask.autocorrelate();
+    waveletMaskAutoCor   := waveletMask.autocorrelate();
+
+    refinePower := MIntPow.Power(refineTrans, numLevels);
+    (* extract the center column of the refinement matrix power *)
+    refineAutoCor := NEW(S.T).fromVector(
+                       M.GetColumn(refinePower, refineSize), -refineSize);
+    generatorAutoCor := refineAutoCor.convolveDown(generatorMaskAutoCor, 2);
+    generatorAutoCorMat := NEW(M.T, numTranslates, numTranslates);
+    generatorWaveletCor := refineAutoCor.convolveDown(
+                             generatorMask.adjoint().convolve(waveletMask),
+                             2).clipToVector(firstTranslate, numTranslates);
+    waveletAutoCor := refineAutoCor.inner(waveletMaskAutoCor);
+
+    targetCor := NEW(V.T, numTranslates + 1);
+
+  BEGIN
+    FOR i := 0 TO numTranslates - 1 DO
+      generatorAutoCor.clipToArray(-i, generatorAutoCorMat[i]);
+    END;
+    (* DWT routine is only of little help here *)
+    VAR
+      x := target;
+      y := refineMask.adjoint();
+    BEGIN
+      FOR i := 0 TO numLevels - 1 DO x := x.convolveDown(y, 2); END;
+      x.convolveDown(generatorMask.adjoint(), 2).clipToArray(
+        firstTranslate, SUBARRAY(targetCor^, 0, numTranslates));
+      targetCor[numTranslates] :=
+        x.convolveDown(waveletMask.adjoint(), 2).getValue(0);
+    END;
+
+    RETURN NormalEqu{
+             M.FromMatrixArray(
+               M.TMBody{ARRAY [0 .. 1] OF
+                          M.T{generatorAutoCorMat,
+                              M.ColumnFromVector(generatorWaveletCor)},
+                        ARRAY [0 .. 1] OF
+                          M.T{M.RowFromVector(generatorWaveletCor),
+                              M.FromScalar(waveletAutoCor)}}), targetCor};
+  END ComputeNormalEqu;
 
 PROCEDURE MatchPatternGen (target                   : S.T;
                            refineMask, generatorMask: S.T;

@@ -10,10 +10,9 @@ IMPORT LongRealVector      AS V,
        LongRealVectorFast  AS VFs,
        LongRealVectorTrans AS VT;
 
-IMPORT LongRealMatrix             AS M,
-       LongRealMatrixTrans        AS MT,
-       LongRealMatrixLapack       AS LA,
-       LongRealMatrixIntegerPower AS MIntPow;
+IMPORT LongRealMatrix       AS M,
+       LongRealMatrixTrans  AS MT,
+       LongRealMatrixLapack AS LA;
 
 IMPORT LongRealFunctional       AS Fn,
        LongRealFunctionalDeriv2 AS FnD,
@@ -150,65 +149,6 @@ PROCEDURE TestMatchPattern (target: S.T;
   END TestMatchPattern;
 
 
-TYPE
-  NormEqu = RECORD
-              mat: M.T;
-              vec: V.T;
-            END;
-
-PROCEDURE ComputeNormalEqu (target                                : S.T;
-                            refineMask, generatorMask, waveletMask: S.T;
-                            numLevels     : CARDINAL;
-                            firstTranslate: INTEGER;
-                            numTranslates : CARDINAL; ): NormEqu
-  RAISES {Arith.Error} =
-  VAR
-    refineSize := refineMask.getNumber() - 1;
-
-    refineTrans := Refn.TransitionMatrix(refineMask);
-
-    generatorMaskAutoCor := generatorMask.autocorrelate();
-    waveletMaskAutoCor   := waveletMask.autocorrelate();
-
-    refinePower := MIntPow.Power(refineTrans, numLevels);
-    (* extract the center column of the refinement matrix power *)
-    refineAutoCor := NEW(S.T).fromVector(
-                       M.GetColumn(refinePower, refineSize), -refineSize);
-    generatorAutoCor := refineAutoCor.convolveDown(generatorMaskAutoCor, 2);
-    generatorAutoCorMat := NEW(M.T, numTranslates, numTranslates);
-    generatorWaveletCor := refineAutoCor.convolveDown(
-                             generatorMask.adjoint().convolve(waveletMask),
-                             2).clipToVector(firstTranslate, numTranslates);
-    waveletAutoCor := refineAutoCor.inner(waveletMaskAutoCor);
-
-    targetCor := NEW(V.T, numTranslates + 1);
-
-  BEGIN
-    FOR i := 0 TO numTranslates - 1 DO
-      generatorAutoCor.clipToArray(-i, generatorAutoCorMat[i]);
-    END;
-    (* DWT routine is only of little help here *)
-    VAR
-      x := target;
-      y := refineMask.adjoint();
-    BEGIN
-      FOR i := 0 TO numLevels - 1 DO x := x.convolveDown(y, 2); END;
-      x.convolveDown(generatorMask.adjoint(), 2).clipToArray(
-        firstTranslate, SUBARRAY(targetCor^, 0, numTranslates));
-      targetCor[numTranslates] :=
-        x.convolveDown(waveletMask.adjoint(), 2).getValue(0);
-    END;
-
-    RETURN
-      NormEqu{M.FromMatrixArray(
-                M.TMBody{ARRAY [0 .. 1] OF
-                           M.T{generatorAutoCorMat,
-                               M.ColumnFromVector(generatorWaveletCor)},
-                         ARRAY [0 .. 1] OF
-                           M.T{M.RowFromVector(generatorWaveletCor),
-                               M.FromScalar(waveletAutoCor)}}), targetCor};
-  END ComputeNormalEqu;
-
 PROCEDURE TestNormalEqu () =
   CONST
     numLevels      = 7;
@@ -231,13 +171,13 @@ PROCEDURE TestNormalEqu () =
     covar     := M.MulMMA(approx.basis);
     targetCor := M.MulV(approx.basis, approx.targetPad);
 
-    normEqu := ComputeNormalEqu(
+    normEqu := WM.ComputeNormalEqu(
                  target, refineMask, generatorMask, waveletMask, numLevels,
                  firstTranslate, numTranslate);
 
     error := MT.Norm1(M.Sub(covar, normEqu.mat)) / MT.Norm1(covar);
 
-  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -1486,7 +1426,7 @@ PROCEDURE Test () =
           clipFirst  = 15500;
           clipNumber = 2500;
         <* FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure,
-                 Thread.Alerted *>
+          Thread.Alerted *>
         VAR
           rd := FileRd.Open(
                   "/home/thielema/projects/industry/bruker/data/Datasets"
