@@ -17,7 +17,7 @@ else
 end
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486-unknown-freebsdelf" 
+readonly GNU_PLATFORM = "powerpc-apple-darwin6.3" 
                                           % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
@@ -272,7 +272,7 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object ]
+  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   if M3_PROFILING args += "-p" end
@@ -292,7 +292,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fpic", options ]
+  local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   if M3_PROFILING args += "-pg" end
@@ -313,11 +313,15 @@ end
 % a library.
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
+  local vmaj     = "5"
+  local vmin     = "2"
+  local version  = vmaj & "." & vmin
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
-  local lib_so   = format ("lib%s.so", lib)
-  local lib_sox  = format ("lib%s.so.5", lib)
-  local lib_soxx = format ("lib%s.so.5.1", lib)
+  local lib_so   = format ("lib%s.dylib", lib)
+  local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
+  local lib_soxx = format ("lib%s.%s.dylib", lib, version)
+  local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
@@ -326,28 +330,31 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if not equal (ret_code, 0) return ret_code end
 
   if shared
-    % build the shared library
-    if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared -Wl,-soname,"  & 
-                           lib_sox, "-o", lib_sox, objects)
-    else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared -Wl,-soname,"  & 
-                           lib_sox, "-o", lib_sox, objects)
+    % build the shared library   
+    ret_code = try_exec ("@libtool -dynamic -flat_namespace",
+                         "-undefined suppress -compatibility_version", vmaj,
+                         "-current_version", version, "-install_name", lib_pn,
+                         "-o", lib_soxx, objects)
+    if not equal (ret_code, 0)
+      delete_file (lib_a)
+      return ret_code
     end
-    if not equal (ret_code, 0) return ret_code end
 
     % create the version aliases
-    %link_file(lib_soxx, lib_sox)
+    link_file(lib_soxx, lib_sox)
     link_file(lib_sox, lib_so)
 
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_sox)
+    install_derived (lib_soxx)
+    install_derived_link (lib_soxx, lib_sox)
     install_derived_link (lib_sox, lib_so)
+    install_link_to_derived (lib_soxx, LIB_INSTALL)
     install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
     delete_file (lib_sox)
+    delete_file (lib_soxx)
   end
 
   return 0
@@ -359,19 +366,30 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
-  local lib_so   = format ("lib%s.so", lib)
-  local lib_sox  = format ("lib%s.so.5", lib)
+  local vmaj     = "5"
+  local vmin     = "2"
+  local version  = vmaj & "." & vmin
+  local ret_code = 0
+  local lib_a    = format ("lib%s.a", lib)
+  local lib_so   = format ("lib%s.dylib", lib)
+  local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
+  local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
   if shared
     % make sure the shared library stuff gets installed properly
+    install_derived (lib_soxx)
     install_derived (lib_sox)
     install_derived (lib_so)
+    install_link_to_derived (lib_soxx, LIB_INSTALL)
     install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
     delete_file (lib_sox)
+    delete_file (lib_soxx)
   end
+
+  return 0
 
   return 0
 end
@@ -383,14 +401,9 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, options, objects, imported_libs ]
-  if shared
-    return try_exec ("@" & SYSTEM_CC, args)
-  else
-    return try_exec ("@" & SYSTEM_CC, "-static", args)
-    %%% -- see M3_NEED_STANDALONE_LINKS  below
-    %%%return try_exec ("@" & SYSTEM_CC, args)
-  end
+  args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
+  args += [ "-shared-libgcc" ]
+  return try_exec ("@" & SYSTEM_CC, args)
 end
 
 %-------------------------------------------------------------------
@@ -425,10 +438,15 @@ M3_OPTIONS = [ ]
 M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
-M3_SPLIT_LIBNAMES = TRUE
+% M3_SPLIT_LIBNAMES = TRUE
 % --- split library names and pass -L/-l arguments to the linker
 
-M3_SHARED_LIB_ARG = "-Wl,-R"
+M3_SPLIT_LIBNAMES_IF_SHARED = TRUE
+% --- split library names and pass -L/-l arguments to the linker if linking
+%     dynamically, pass full library names else
+%     (assumes M3_SPLIT_LIBNAMES = FALSE)
+
+% M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
@@ -473,5 +491,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-O"
-GNU_MAKE   = "gmake"
+GNU_CFLAGS = "-g"
+GNU_MAKE   = "make"
