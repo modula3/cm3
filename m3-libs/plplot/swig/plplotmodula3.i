@@ -67,9 +67,13 @@ import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)%}
 
 %insert(m3rawintf) %{
 TYPE
-PlotterFunc = PROCEDURE();
 PLINT = C.int;
 PLFLT = C.double;
+PLPointer = C.void_star;
+
+DefinedFunc = PROCEDURE (x,y: PLFLT;): PLINT;
+FillFunc = PROCEDURE (n: PLINT; READONLY x, y: (*ARRAY OF*) PLFLT; );
+PlotterFunc = PROCEDURE (x,y: PLFLT; VAR (*OUT*) tx,ty: PLFLT; data:PLPointer;);
 %}
 
 %insert(m3wrapintf) %{
@@ -90,6 +94,11 @@ TYPE
 Float = LONGREAL;
 FloatVector = ARRAY OF Float;
 FloatMatrix = ARRAY OF ARRAY OF Float;
+
+DefinedFunc = PROCEDURE (x,y: Float;): BOOLEAN;
+FillFunc = PROCEDURE (READONLY x, y: ARRAY OF Float; );
+Point = RECORD x,y: Float; END;
+PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %}
 
 
@@ -184,8 +193,8 @@ FloatMatrix = ARRAY OF ARRAY OF Float;
 %rename("SetOption") plsetopt;
 %rename("SetFamilyFile") plsfam;
 %rename("SetFileName") plsfnam;
-%rename("ShadeRegions") plshades;
-%rename("ShadeRegion") plshade;
+%rename("PlotShades") plshades;
+%rename("PlotShade") plshade;
 %rename("SetMajorTickSize") plsmaj;
 %rename("SetMinorTickSize") plsmin;
 %rename("SetGlobalOrientation") plsori;
@@ -224,22 +233,23 @@ FloatMatrix = ARRAY OF ARRAY OF Float;
 %rename("fcont") plfcont;
 %rename("map") plmap;
 %rename("meridians") plmeridians;
-%rename("fshade") plfshade;
+%rename("PlotFShade") plfshade;
 %rename("did2pc") pldid2pc;
 %rename("dip2dc") pldip2dc;
 %rename("image") plimage;
-%rename("gFileDevs") plgFileDevs;
-%rename("gDevs") plgDevs;
-%rename("sKeyEH") plsKeyEH;
-%rename("sButtonEH") plsButtonEH;
-%rename("sError") plsError;
-%rename("sexit") plsexit;
-%rename("tr2p") pltr2p;
-%rename("tr0f") pltr0f;
-%rename("tr2f") pltr2f;
-%rename("f2eval2") plf2eval2;
-%rename("f2eval") plf2eval;
-%rename("f2evalr") plf2evalr;
+%rename("GetFileDevs") plgFileDevs;
+%rename("GetDevs") plgDevs;
+%rename("SetKeyEH") plsKeyEH;
+%rename("SetButtonEH") plsButtonEH;
+%rename("SetError") plsError;
+%rename("SetExit") plsexit;
+%rename("Plotter0") pltr0;
+%rename("Plotter1") pltr1;
+%rename("Plotter2") pltr2;
+%rename("Plotter2P") pltr2p;
+%rename("F2Eval2") plf2eval2;
+%rename("F2Eval") plf2eval;
+%rename("F2EvalR") plf2evalr;
 %rename("ClearOpts") plClearOpts;
 %rename("ResetOpts") plResetOpts;
 %rename("MergeOpts") plMergeOpts;
@@ -247,8 +257,8 @@ FloatMatrix = ARRAY OF ARRAY OF Float;
 %rename("SetOpt") plSetOpt;
 %rename("ParseOpts") plParseOpts;
 %rename("OptUsage") plOptUsage;
-%rename("gfile") plgfile;
-%rename("sfile") plsfile;
+%rename("GetFile") plgfile;
+%rename("SetFile") plsfile;
 %rename("gesc") plgesc;
 %rename("Cmd") pl_cmd;
 %rename("FindName") plFindName;
@@ -263,6 +273,10 @@ FloatMatrix = ARRAY OF ARRAY OF Float;
 %rename("RGB_HLS") plRGB_HLS;
 %rename("GetCursor") plGetCursor;
 %rename("TranslateCursor") plTranslateCursor;
+
+/* Ignore FORTRAN routines */
+%ignore pltr0f;
+%ignore pltr2f;
 
 %pragma(modula3) enumitem="prefix=PLESPLFLTBUFFERING_;int;srcstyle=underscore;Buffering";
 %pragma(modula3) enumitem="prefix=PLESC_;set;srcstyle=underscore;Escape";
@@ -323,7 +337,7 @@ FloatMatrix = ARRAY OF ARRAY OF Float;
 
 %typemap("m3rawinmode")   PLFLTMatrix %{READONLY%}
 %typemap("m3wrapinmode")  PLFLTMatrix %{READONLY%}
-%typemap("m3rawintype")   PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+%typemap("m3rawintype")   PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF Float*)%}
 %typemap("m3wrapintype")  PLFLTMatrix %{FloatMatrix%}
 %typemap("m3wrapargraw")  PLFLTMatrix %{$1[0]%}
 
@@ -360,40 +374,53 @@ FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 //%rename("plotter") pltr;
 //%rename("objectData") OBJECT_DATA;
 
-%insert(m3wrapintf) %{
-TYPE
-  CallbackM3Proc = PROCEDURE (data: REFANY);
-%}
-
 %insert(m3wrapimpl) %{
 TYPE
-  CallbackM3Data =
+  PlotterData =
     RECORD
-      callback    : CallbackM3Proc;
+      callback    : PlotterFunc;
       callbackData: REFANY;
     END;
 
-PROCEDURE CallbackM3()=BEGIN END CallbackM3;
+(* The <*CALLBACK*> pragma may be necessary for use under Windows *)
+PROCEDURE PlotterCallback(
+ x,y: PLPlotRaw.PLFLT;
+ VAR (*OUT*) tx,ty: PLPlotRaw.PLFLT;
+ data:PLPlotRaw.PLPointer;)=
+BEGIN
+WITH
+ d = LOOPHOLE(data,UNTRACED REF PlotterData)^,
+ t=d.callback(x,y,d.callbackData)
+  DO
+ tx:=t.x;
+ ty:=t.y;
+END;
+END PlotterCallback;
 %}
 
 %typemap(m3rawintype) pltr_func %{PlotterFunc%}
 %typemap(m3rawintype) PLPointer %{REFANY%}
 %typemap(m3rawinmode) PLPointer %{%}
 
-%typemap(m3wrapintype)  pltr_func %{CallbackM3Proc%}
+%typemap(m3wrapintype)  pltr_func %{PlotterFunc%}
 %typemap(m3wrapintype)  PLPointer %{REFANY%}
 %typemap(m3wrapinmode)  PLPointer %{%}
 
+%typemap(m3wrapoutname) PLFLTOutput tx %{x%}
+%typemap(m3wrapoutname) PLFLTOutput ty %{y%}
+
 %typemap(m3wrapargraw) (pltr_func pltr, PLPointer OBJECT_DATA)
-%{CallbackM3, NEW(REF CallbackM3Data,callback:=$1_name,callbackData:=$2_name)%}
+%{PlotterCallback, NEW(REF PlotterData,callback:=plotter,callbackData:=plotterData)%}
 
-%typemap(m3rawintype) defined_func %{PlotterFunc%}
-%typemap(m3wrapintype,numinputs=0)  defined_func %{PROCEDURE (x: R.T): R.T%}
-%typemap(m3wrapargraw)  defined_func %{NIL (*not yet supported*)%}
+%typemap(m3wrapinname) pltr_func %{plotter%}
+%typemap(m3wrapinname) PLPointer OBJECT_DATA %{plotterData%}
 
-%typemap(m3rawintype) fill_func %{PlotterFunc%}
-%typemap(m3wrapintype,numinputs=0)  fill_func %{PROCEDURE ()%}
-%typemap(m3wrapargraw)  fill_func %{NIL (*not yet supported*)%}
+%typemap(m3rawintype)   defined_func %{DefinedFunc%}
+%typemap(m3wrapintype)  defined_func %{PLPlotRaw.DefinedFunc%}
+%typemap("m3wrapintype:import")  defined_func %{PLPlotRaw%}
+
+%typemap(m3rawintype)   fill_func %{FillFunc%}
+%typemap(m3wrapintype)  fill_func %{PLPlotRaw.FillFunc%}
 
 
 %typemap(m3rawintype)   char *legline[4] %{READONLY%}
@@ -536,6 +563,10 @@ TYPE
 %m3multiretval plgzax;
 %m3multiretval plHLS_RGB;
 %m3multiretval plRGB_HLS;
+%m3multiretval pltr0;
+%m3multiretval pltr1;
+%m3multiretval pltr2;
+%m3multiretval pltr2p;
 
 
 /* swig compatible PLplot API definitions from here on. */

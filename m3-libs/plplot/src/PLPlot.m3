@@ -15,14 +15,22 @@ IMPORT Fmt;
 
 
 TYPE
-  CallbackM3Data = RECORD
-                     callback    : CallbackM3Proc;
-                     callbackData: REFANY;
-                   END;
+  PlotterData = RECORD
+                  callback    : PlotterFunc;
+                  callbackData: REFANY;
+                END;
 
-PROCEDURE CallbackM3 () =
+(* The <*CALLBACK*> pragma may be necessary for use under Windows *)
+PROCEDURE PlotterCallback (            x, y  : PLPlotRaw.PLFLT;
+                           VAR (*OUT*) tx, ty: PLPlotRaw.PLFLT;
+                                       data  : PLPlotRaw.PLPointer; ) =
   BEGIN
-  END CallbackM3;
+    WITH d = LOOPHOLE(data, UNTRACED REF PlotterData)^,
+         t = d.callback(x, y, d.callbackData)           DO
+      tx := t.x;
+      ty := t.y;
+    END;
+  END PlotterCallback;
 
 CONST
   tileToChar = ARRAY DirTile OF
@@ -194,8 +202,8 @@ PROCEDURE SetFGColorCont (col1: Float; ) =
 PROCEDURE PlotContour (READONLY z             : FloatMatrix;
                                 kx, lx, ky, ly: INTEGER;
                        READONLY x             : FloatVector;
-                                pltr          : CallbackM3Proc;
-                                OBJECT_DATA   : REFANY;         ) =
+                                plotter       : PlotterFunc;
+                                plotterData   : REFANY;      ) =
   VAR
     arg1: REF ARRAY OF ADDRESS;
     nx                         := NUMBER(z);
@@ -205,9 +213,9 @@ PROCEDURE PlotContour (READONLY z             : FloatMatrix;
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg1[i] := ADR(z[i, 0]) END;
     PLPlotRaw.PlotContour(
-      arg1[0], nx, ny, kx, lx, ky, ly, x[0], n, CallbackM3,
+      arg1[0], nx, ny, kx, lx, ky, ly, x[0], n, PlotterCallback,
       NEW(
-        REF CallbackM3Data, callback := pltr, callbackData := OBJECT_DATA));
+        REF PlotterData, callback := plotter, callbackData := plotterData));
   END PlotContour;
 
 PROCEDURE CopyStateFrom (iplsr, flags: INTEGER; ) =
@@ -951,13 +959,15 @@ PROCEDURE SetFileName (fnam: TEXT; ) =
     M3toC.FreeSharedS(fnam, arg1);
   END SetFileName;
 
-PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
-                                 xmin, xmax, ymin, ymax: Float;
-                        READONLY x                     : FloatVector;
-                        fill_width, cont_color, cont_width: INTEGER;
-                        rectangular                       : BOOLEAN;
-                        pltr       : CallbackM3Proc;
-                        OBJECT_DATA: REFANY;         ) =
+PROCEDURE PlotShades (READONLY a : FloatMatrix;
+                               df: PLPlotRaw.DefinedFunc;
+                               xmin, xmax, ymin, ymax: Float;
+                      READONLY x                     : FloatVector;
+                      fill_width, cont_color, cont_width: INTEGER;
+                      ff         : PLPlotRaw.FillFunc;
+                      rectangular: BOOLEAN;
+                      plotter    : PlotterFunc;
+                      plotterData: REFANY;             ) =
   VAR
     arg1: REF ARRAY OF ADDRESS;
     nx                         := NUMBER(a);
@@ -966,22 +976,23 @@ PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
   BEGIN
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
     FOR i := 0 TO LAST(a) DO arg1[i] := ADR(a[i, 0]) END;
-    PLPlotRaw.ShadeRegions(
-      arg1[0], nx, ny, NIL (*not yet supported*), xmin, xmax, ymin, ymax,
-      x[0], n, fill_width, cont_color, cont_width,
-      NIL (*not yet supported*), ORD(rectangular), CallbackM3,
+    PLPlotRaw.PlotShades(
+      arg1[0], nx, ny, df, xmin, xmax, ymin, ymax, x[0], n, fill_width,
+      cont_color, cont_width, ff, ORD(rectangular), PlotterCallback,
       NEW(
-        REF CallbackM3Data, callback := pltr, callbackData := OBJECT_DATA));
-  END ShadeRegions;
+        REF PlotterData, callback := plotter, callbackData := plotterData));
+  END PlotShades;
 
-PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
-                       left, right, bottom, top, shade_min, shade_max: Float;
-                       sh_cmap : INTEGER;
-                       sh_color: Float;
-                       sh_width, min_color, min_width, max_color, max_width: INTEGER;
-                       rectangular: BOOLEAN;
-                       pltr       : CallbackM3Proc;
-                       OBJECT_DATA: REFANY;         ) =
+PROCEDURE PlotShade (READONLY a : FloatMatrix;
+                              df: PLPlotRaw.DefinedFunc;
+                     left, right, bottom, top, shade_min, shade_max: Float;
+                     sh_cmap : INTEGER;
+                     sh_color: Float;
+                     sh_width, min_color, min_width, max_color, max_width: INTEGER;
+                     ff         : PLPlotRaw.FillFunc;
+                     rectangular: BOOLEAN;
+                     plotter    : PlotterFunc;
+                     plotterData: REFANY;             ) =
   VAR
     arg1: REF ARRAY OF ADDRESS;
     nx                         := NUMBER(a);
@@ -989,14 +1000,13 @@ PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
   BEGIN
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
     FOR i := 0 TO LAST(a) DO arg1[i] := ADR(a[i, 0]) END;
-    PLPlotRaw.ShadeRegion(
-      arg1[0], nx, ny, NIL (*not yet supported*), left, right, bottom, top,
-      shade_min, shade_max, sh_cmap, sh_color, sh_width, min_color,
-      min_width, max_color, max_width, NIL (*not yet supported*),
-      ORD(rectangular), CallbackM3,
+    PLPlotRaw.PlotShade(
+      arg1[0], nx, ny, df, left, right, bottom, top, shade_min, shade_max,
+      sh_cmap, sh_color, sh_width, min_color, min_width, max_color,
+      max_width, ff, ORD(rectangular), PlotterCallback,
       NEW(
-        REF CallbackM3Data, callback := pltr, callbackData := OBJECT_DATA));
-  END ShadeRegion;
+        REF PlotterData, callback := plotter, callbackData := plotterData));
+  END PlotShade;
 
 PROCEDURE SetMajorTickSize (def, scale: Float; ) =
   BEGIN
@@ -1198,6 +1208,34 @@ PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN =
     status := arg2 # 0;
     RETURN status;
   END SetXORMode;
+
+PROCEDURE Plotter0 (x, y: Float; pltr_data: REFANY; ): Plotter0Result =
+  VAR result: Plotter0Result;
+  BEGIN
+    PLPlotRaw.Plotter0(x, y, result.x, result.y, pltr_data);
+    RETURN result;
+  END Plotter0;
+
+PROCEDURE Plotter1 (x, y: Float; pltr_data: REFANY; ): Plotter1Result =
+  VAR result: Plotter1Result;
+  BEGIN
+    PLPlotRaw.Plotter1(x, y, result.x, result.y, pltr_data);
+    RETURN result;
+  END Plotter1;
+
+PROCEDURE Plotter2 (x, y: Float; pltr_data: REFANY; ): Plotter2Result =
+  VAR result: Plotter2Result;
+  BEGIN
+    PLPlotRaw.Plotter2(x, y, result.x, result.y, pltr_data);
+    RETURN result;
+  END Plotter2;
+
+PROCEDURE Plotter2P (x, y: Float; pltr_data: REFANY; ): Plotter2PResult =
+  VAR result: Plotter2PResult;
+  BEGIN
+    PLPlotRaw.Plotter2P(x, y, result.x, result.y, pltr_data);
+    RETURN result;
+  END Plotter2P;
 
 PROCEDURE ClearOpts () =
   BEGIN
