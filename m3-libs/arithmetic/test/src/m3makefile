@@ -3,7 +3,7 @@ remove_m3_option("-g")
 remove_m3_option("-map")
 
 import("libm3")
-override("m3na","c:\\m3tmp\\m3na")
+override("m3na","m3tmp/m3na")
 import("m3na")
 implementation("tWordEx")
 implementation("tBits")
