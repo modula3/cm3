@@ -212,6 +212,8 @@ PROCEDURE Classify (path: TEXT): Kind =
       RETURN Kind.IG;
     ELSIF CIEqual(ext, "mg") THEN
       RETURN Kind.MG;
+    ELSIF CIEqual(ext, "tmpl") THEN
+      RETURN Kind.TMPL;
     END;
     RETURN Kind.other;
   END Classify;

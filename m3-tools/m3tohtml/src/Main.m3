@@ -40,14 +40,28 @@ CONST u = ARRAY OF TEXT {
   "  where also a file named m3db will be found. This file contains all", 
   "  symbol information from the parsed M3 sources needed for the hypertext.",
   "",
+  "  As m3tohtml actually understands the complete Modula-3 syntax, it is",
+  "  much more than a documentation generator based on comment extraction.",
+  "  It is possible to navigate with a few clicks directly to the definition",
+  "  or implementation of a given entity, which is a great help for",
+  "  programmers.",
+  "  ",
+  "  The generated tree will have exactly the same structure as the package",
+  "  sub-tree used as input; the suffix `.html' will be appended to all",
+  "  file names. Additionally, a new `href' hierarchy may be created, which",
+  "  contains partial index files for intermediate index levels.",
+  "  If the first form with automatic package scanning is used, only",
+  "  files with the extensions `.i3', `.m3', `.ig', `.mg', and `.tmpl'",
+  "  will be used for HTML generation.",
+  "",
   "HISTORY",
   "",
   "  The m3tohtml man page says that Bill Kalsow wrote it as part of his",
   "  HTML browser for /proj/m3. He didn't write a man page.",
-  "  Later part of the functionality of the program has been incorporated",
+  "  Later, part of the functionality of the program has been incorporated",
   "  into Reactor, the graphical CM3 frontend from Critical Mass.",
   "  The changes from CM3 4.1 to 5.1 broke this code in several ways.",
-  "  It was made usable again at at Elego GmbH, where an easier-to-use",
+  "  It was made usable again at Elego GmbH, where an easier-to-use",
   "  interface was implemented, too. The second (original) form which",
   "  reads all the file and package names from standard input in a non-",
   "  documented format should still work, too.",
@@ -126,22 +140,29 @@ PROCEDURE ReadFileList () =
   <*FATAL Rd.EndOfFile, Rd.Failure, Thread.Alerted*>
 
   PROCEDURE AddFile(file, pkg, pkgpath: TEXT) =
+
+    PROCEDURE Add() =
+      BEGIN
+        sources := NEW (Source, next := sources,
+                        from := Pathname.Join(pkgpath, file, NIL),
+                        to   := Pathname.Join(pkg, FixDerived (file), NIL),
+                        kind := kind);
+        V("  ", fk, ": ", sources.from, " -> ", sources.to);
+      END Add;
+
     BEGIN
       INC (n_sources);
       kind := FilePath.Classify (file);
-      sources := NEW (Source, next := sources,
-                      from := Pathname.Join(pkgpath, file, NIL),
-                      to   := Pathname.Join(pkg, FixDerived (file), NIL),
-                      kind := kind);
       CASE kind OF
-        FilePath.Kind.I3 => fk := "I3";
-      | FilePath.Kind.M3 => fk := "M3";
-      | FilePath.Kind.IG => fk := "IG";
-      | FilePath.Kind.MG => fk := "Mg";
+        FilePath.Kind.I3 => fk := "I3"; Add();
+      | FilePath.Kind.M3 => fk := "M3"; Add();
+      | FilePath.Kind.IG => fk := "IG"; Add();
+      | FilePath.Kind.MG => fk := "MG"; Add();
+      | FilePath.Kind.TMPL => fk := "TMPL"; Add();
       ELSE
         fk := "??";
+        V("  ", fk, ": ", file);
       END;
-      V("  ", fk, ": ", sources.from, " -> ", sources.to);
     END AddFile;
 
   PROCEDURE AddPkg(pkg: TEXT) =
@@ -291,7 +312,18 @@ PROCEDURE GenerateHTML () =
         args[1] := TmpFile;
         IF Process.Wait (Process.Create ("PREPROCESS", args)) = 0 THEN
           rd := FileRd.Open (TmpFile);
-          wr := FileWr.Open (s.to & ".html");
+          WITH dir = Pathname.Prefix(s.to) DO
+            IF dir # NIL THEN
+              IF NOT FSUtils.IsDir(dir) THEN
+                FSUtils.MakeDir(dir);
+              END;
+            END;
+          END;
+          TRY
+            wr := FileWr.Open (s.to & ".html");
+          EXCEPT ELSE
+            F("cannot open ", s.to & ".html");
+          END;
           MarkUp.Annotate (rd, wr, s.to);
           Wr.Close (wr);
           Rd.Close (rd);
