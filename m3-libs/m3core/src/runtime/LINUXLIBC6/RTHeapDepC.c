@@ -565,7 +565,11 @@ int grouplist[];
   return result;
 }
 
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
+int getitimer(__itimer_which_t which, struct itimerval *value)
+#else
 int getitimer(enum __itimer_which which, struct itimerval *value)
+#endif
 { int result;
 
   ENTER_CRITICAL;
@@ -611,7 +615,11 @@ int getpeername(int sockfd, struct sockaddr *addr, socklen_t *paddrlen)
   return result;
 }
 
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
+int getrlimit(__rlimit_resource_t resource, struct rlimit *rlp)
+#else
 int getrlimit(enum __rlimit_resource resource, struct rlimit *rlp)
+#endif
 { int result;
 
   ENTER_CRITICAL;
@@ -867,7 +875,11 @@ int msgrcv(int msqid, void *msgp, size_t msgsz, long int msgtyp, int msgflg)
   return result;
 }
 
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
+int msgsnd(int msqid, __const void *msgp, size_t msgsz, int msgflg)
+#else
 int msgsnd(int msqid, void *msgp, size_t msgsz, int msgflg)
+#endif
 { int result;
 
   ENTER_CRITICAL;
@@ -1273,8 +1285,13 @@ int namelen;
   return result;
 }
 
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
+int setitimer(__itimer_which_t which, __const struct itimerval *value,
+              struct itimerval *ovalue)
+#else
 int setitimer(enum __itimer_which which, const struct itimerval *value, 
    struct itimerval *ovalue)
+#endif
 { int result;
 
   ENTER_CRITICAL;
@@ -1300,7 +1317,11 @@ char *file;
 }
 */
 
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
+int setrlimit(__rlimit_resource_t resource, __const struct rlimit *rlp)
+#else
 int setrlimit(enum __rlimit_resource resource, const struct rlimit *rlp)
+#endif
 { int result;
 
   ENTER_CRITICAL;
