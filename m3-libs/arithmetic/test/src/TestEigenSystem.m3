@@ -1,5 +1,7 @@
-(* -*- modula-3 -*- * * Test Tred[1234]. *)
 MODULE TestEigenSystem EXPORTS Test;
+(* Arithmetic for Modula-3, see doc for details
+
+   Abstract: Test driver for Eigensystem *)
 
 IMPORT LongRealEigenSystem      AS EigenSys,
        LongRealCharPolynomial   AS CP,
@@ -10,14 +12,13 @@ IMPORT LongRealEigenSystem      AS EigenSys,
        LongRealPolynomialFmtLex AS PF;
 IMPORT Wr, IO, Thread, Fmt, Arithmetic AS Arith;
 
-<* FATAL Wr.Failure *>
-<* FATAL Thread.Alerted *>
+<* FATAL Wr.Failure, Thread.Alerted *>
 
-  (*=======================*)
+
 CONST
   Module = "TestEigenSystem.";
 
-PROCEDURE Print2 (d, e: V.T; READONLY dWR, eWR: V.TBody) =
+PROCEDURE Print2 (d, e: V.T; READONLY dWR, eWR: V.TBody; ) =
   BEGIN
     IO.Put(Fmt.Pad("i", 4) & Fmt.Pad("Diagonal", 18)
              & Fmt.Pad("Sub-Diagonal", 18) & "\n");
@@ -35,7 +36,7 @@ PROCEDURE Print2 (d, e: V.T; READONLY dWR, eWR: V.TBody) =
 
   END Print2;
 
-PROCEDURE Print3 (d, e, e2: V.T; READONLY dWR, eWR, e2WR: V.TBody) =
+PROCEDURE Print3 (d, e, e2: V.T; READONLY dWR, eWR, e2WR: V.TBody; ) =
   BEGIN
     IO.Put(Fmt.Pad("i", 4) & Fmt.Pad("Diagonal", 18)
              & Fmt.Pad("Sub-Diagonal", 18) & Fmt.Pad("Sub-Diagonal**2", 18)
@@ -58,7 +59,7 @@ PROCEDURE Print3 (d, e, e2: V.T; READONLY dWR, eWR, e2WR: V.TBody) =
   END Print3;
 
 
-PROCEDURE RunTql1 (VAR d, e: V.T) =
+PROCEDURE RunTql1 (VAR d, e: V.T; ) =
   <* FATAL Arith.Error *>
   BEGIN
     EigenSys.Tql1(d, e);
@@ -68,7 +69,7 @@ PROCEDURE RunTql1 (VAR d, e: V.T) =
     END;                         (* for *)
   END RunTql1;
 
-PROCEDURE RunTql2 (VAR d, e: V.T; VAR z: M.T) =
+PROCEDURE RunTql2 (VAR d, e: V.T; VAR z: M.T; ) =
   <* FATAL Arith.Error *>
   BEGIN
     EigenSys.Tql2(d, e, z);
@@ -78,7 +79,7 @@ PROCEDURE RunTql2 (VAR d, e: V.T; VAR z: M.T) =
     END;                         (* for *)
   END RunTql2;
 
-PROCEDURE RunTred1 (a: M.T; READONLY dWR, eWR, e2WR: V.TBody) =
+PROCEDURE RunTred1 (a: M.T; READONLY dWR, eWR, e2WR: V.TBody; ) =
   VAR
     z  := M.Copy(a);
     d  := NEW(V.T, NUMBER(a^));
@@ -175,7 +176,7 @@ PROCEDURE TestCharPolynomial () =
     <* ASSERT P.Equal(p, cp) *>
   END TestCharPolynomial;
 
-(*-------------------------*)
+
 PROCEDURE TestEigenSystem (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -188,7 +189,7 @@ PROCEDURE TestEigenSystem (): BOOLEAN =
     TestCharPolynomial();
     RETURN result;
   END TestEigenSystem;
-(*=======================*)
+
 
 BEGIN
 END TestEigenSystem.

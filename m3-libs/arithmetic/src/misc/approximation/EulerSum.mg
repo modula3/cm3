@@ -1,25 +1,26 @@
 GENERIC MODULE EulerSum(R, RT);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Implementation of Modula-3 version of NR92, ch 5. *)
 
 CONST Module = "EulerSum.";
-(*----------------------*)
-PROCEDURE EulerSum (VAR sum  : R.T;       (*partial sum to date*)
-                        term : R.T;       (*jth value*)
-                        jterm: CARDINAL;  (*which j*)
-                    VAR nterm: CARDINAL (*how high is n so far*)
+
+PROCEDURE EulerSum (VAR sum  : R.T;       (* partial sum to date *)
+                        term : R.T;       (* j-th value *)
+                        jterm: CARDINAL;  (* which j *)
+                    VAR nterm: CARDINAL;  (* how high is n so far *)
   ) =
-  (*Used to evaluate summation series.  The caller has to provide vars for
+  (* Used to evaluate summation series.  The caller has to provide vars for
      wksp and nterm, but never modify them directly.  Start with jterm:=1
      and term:=<first value>.  Then for each call thereafter do the next
      jterm and term, in order.  Sum remains up to date, so you can quit
      whenever your exit criteria are met. *)
-  <*UNUSED*>
-  CONST ftn = Module & "EulerSum";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "EulerSum";
   VAR
     tmp1, tmp2: R.T;
-    wksp := NEW(REF ARRAY OF R.T, nterm + 1); (*workspace for calcs*)
+    wksp := NEW(REF ARRAY OF R.T, nterm + 1); (* workspace for calcs *)
   BEGIN
     IF jterm = 1 THEN
       nterm := 1;
@@ -34,15 +35,15 @@ PROCEDURE EulerSum (VAR sum  : R.T;       (*partial sum to date*)
       END;
       wksp[nterm + 1] := RT.Half * (wksp[nterm] + tmp1);
       IF ABS(wksp[nterm + 1]) < ABS(wksp[nterm]) THEN
-        (*increase p, and use longer table*)
+        (* increase p, and use longer table *)
         INC(nterm);
         sum := sum + RT.Half * wksp[nterm];
       ELSE
-        (*increase n, table doesn't change*)
+        (* increase n, table doesn't change *)
         sum := sum + wksp[nterm + 1];
       END;
     END;
   END EulerSum;
-(*==========================*)
+
 BEGIN
 END EulerSum.

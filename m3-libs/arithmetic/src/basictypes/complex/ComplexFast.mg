@@ -1,5 +1,5 @@
 GENERIC MODULE ComplexFast(R);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Complex numbers and basic operations *)
 
@@ -9,21 +9,20 @@ IMPORT Arithmetic AS Arith;
 <* UNUSED *>
 CONST
   Module = "ComplexFast.";
-(*==========================*)
 
 (*
   All routines with direct access to infix operators.
   May be useful as long as the compiler cannot handle INLINE procedures.
 *)
 
-(*--------------*)
-PROCEDURE FromInteger (x: INTEGER): T =
+
+PROCEDURE FromInteger (x: INTEGER; ): T =
   BEGIN
     RETURN T{FLOAT(x, R.T), R.Zero};
   END FromInteger;
 
-(*--------------*)
-PROCEDURE Add (READONLY x, y: T): T =
+
+PROCEDURE Add (READONLY x, y: T; ): T =
   VAR z: T;
   BEGIN
     z.re := x.re + y.re;
@@ -31,8 +30,8 @@ PROCEDURE Add (READONLY x, y: T): T =
     RETURN z;
   END Add;
 
-(*--------------*)
-PROCEDURE Sub (READONLY x, y: T): T =
+
+PROCEDURE Sub (READONLY x, y: T; ): T =
   VAR z: T;
   BEGIN
     z.re := x.re - y.re;
@@ -40,8 +39,8 @@ PROCEDURE Sub (READONLY x, y: T): T =
     RETURN z;
   END Sub;
 
-(*-------------------*)
-PROCEDURE Neg (READONLY x: T): T =
+
+PROCEDURE Neg (READONLY x: T; ): T =
   VAR z: T;
   BEGIN
     z.re := -x.re;
@@ -49,8 +48,8 @@ PROCEDURE Neg (READONLY x: T): T =
     RETURN z;
   END Neg;
 
-(*----------------*)
-PROCEDURE Conj (READONLY x: T): T =
+
+PROCEDURE Conj (READONLY x: T; ): T =
   VAR z: T;
   BEGIN
     z.re := x.re;
@@ -58,21 +57,21 @@ PROCEDURE Conj (READONLY x: T): T =
     RETURN z;
   END Conj;
 
-(*----------------*)
-PROCEDURE IsZero (READONLY x: T): BOOLEAN =
+
+PROCEDURE IsZero (READONLY x: T; ): BOOLEAN =
   BEGIN
     RETURN x.re = R.Zero AND x.im = R.Zero;
   END IsZero;
 
-(*----------------*)
-PROCEDURE Equal (READONLY x, y: T): BOOLEAN =
+
+PROCEDURE Equal (READONLY x, y: T; ): BOOLEAN =
   BEGIN
     RETURN x.re = y.re AND x.im = y.im;
   END Equal;
 
 
-(*----------------*)
-PROCEDURE Mul (READONLY x, y: T): T =
+
+PROCEDURE Mul (READONLY x, y: T; ): T =
   VAR z: T;
   BEGIN
     z.re := x.re * y.re - x.im * y.im;
@@ -80,8 +79,8 @@ PROCEDURE Mul (READONLY x, y: T): T =
     RETURN z;
   END Mul;
 
-(*-------------------*)
-PROCEDURE Div (READONLY x0, y0: T): T RAISES {Arith.Error} =
+
+PROCEDURE Div (READONLY x0, y0: T; ): T RAISES {Arith.Error} =
   VAR
     x        := Normalize(x0);
     y        := Scalb(y0, -x.exp);
@@ -98,8 +97,8 @@ PROCEDURE Div (READONLY x0, y0: T): T RAISES {Arith.Error} =
     RETURN z;
   END Div;
 
-(*-------------------*)
-PROCEDURE Rec (READONLY x0: T): T RAISES {Arith.Error} =
+
+PROCEDURE Rec (READONLY x0: T; ): T RAISES {Arith.Error} =
   VAR
     x        := Normalize(x0);
     denom    := x.val.re * x.val.re + x.val.im * x.val.im;
@@ -114,8 +113,8 @@ PROCEDURE Rec (READONLY x0: T): T RAISES {Arith.Error} =
     RETURN Scalb(z, -x.exp);
   END Rec;
 
-(*-------------------*)
-PROCEDURE Mod (<* UNUSED *> READONLY x: T; READONLY y: T): T
+
+PROCEDURE Mod (<* UNUSED *> READONLY x: T; READONLY y: T; ): T
   RAISES {Arith.Error} =
   BEGIN
     IF y.re = R.Zero AND y.im = R.Zero THEN
@@ -124,14 +123,14 @@ PROCEDURE Mod (<* UNUSED *> READONLY x: T; READONLY y: T): T
     RETURN Zero;
   END Mod;
 
-(*-------------------*)
-PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Arith.Error} =
+
+PROCEDURE DivMod (READONLY x, y: T; ): QuotRem RAISES {Arith.Error} =
   BEGIN
     RETURN QuotRem{Div(x, y), Zero};
   END DivMod;
 
-(*-------------------*)
-PROCEDURE Square (READONLY x: T): T =
+
+PROCEDURE Square (READONLY x: T; ): T =
   VAR z: T;
   BEGIN
     z.re := x.re * x.re - x.im * x.im;
@@ -139,8 +138,8 @@ PROCEDURE Square (READONLY x: T): T =
     RETURN z;
   END Square;
 
-(*----------------*)
-PROCEDURE Scale (READONLY x: T; y: R.T): T =
+
+PROCEDURE Scale (READONLY x: T; y: R.T; ): T =
   VAR z: T;
   BEGIN
     z.re := y * x.re;
@@ -148,9 +147,9 @@ PROCEDURE Scale (READONLY x: T; y: R.T): T =
     RETURN z;
   END Scale;
 
-(*----------------*)
+
 <* UNUSED *>
-PROCEDURE ScaleInt (x: T; y: INTEGER): T =
+PROCEDURE ScaleInt (x: T; y: INTEGER; ): T =
   VAR
     yr    := FLOAT(y, R.T);
     z : T;
@@ -161,9 +160,9 @@ PROCEDURE ScaleInt (x: T; y: INTEGER): T =
   END ScaleInt;
 
 
-(*-------------------*)
 
-PROCEDURE Normalize (READONLY x: T): TExp =
+
+PROCEDURE Normalize (READONLY x: T; ): TExp =
   <* FATAL FloatMode.Trap *>
   BEGIN
     IF NOT IsZero(x) THEN
@@ -178,7 +177,7 @@ PROCEDURE Normalize (READONLY x: T): TExp =
   END Normalize;
 
 (*
-PROCEDURE Normalize (READONLY x: T; VAR exp: INTEGER): T =
+PROCEDURE Normalize (READONLY x: T; VAR exp:INTEGER;): T =
   BEGIN
     exp:=0;
     IF x.re#R.Zero THEN exp:=exp+R.ILogb(x.re) END;
@@ -189,17 +188,17 @@ PROCEDURE Normalize (READONLY x: T; VAR exp: INTEGER): T =
   END Normalize;
 *)
 
-PROCEDURE ILogb (READONLY x: T): INTEGER =
+PROCEDURE ILogb (READONLY x: T; ): INTEGER =
   BEGIN
     RETURN R.ILogb(ABS(x.re) + ABS(x.im)) DIV 2;
   END ILogb;
 
-PROCEDURE Scalb (READONLY x: T; exp: INTEGER): T RAISES {FloatMode.Trap} =
+PROCEDURE Scalb (READONLY x: T; exp: INTEGER; ): T
+  RAISES {FloatMode.Trap} =
   BEGIN
     RETURN T{R.Scalb(x.re, exp), R.Scalb(x.im, exp)};
   END Scalb;
 
 
-(*==========================*)
 BEGIN
 END ComplexFast.

@@ -1,22 +1,23 @@
 GENERIC MODULE Interpolation(R, RT, V);
-(*Arithmetic for Modula-3, see doc for details *)
+(* Arithmetic for Modula-3, see doc for details *)
 IMPORT Arithmetic AS Arith;
 
 CONST Module = "Interpolation.";
-(*==========================*)
 
-PROCEDURE CheckSizes (READONLY xa: ARRAY OF R.T; READONLY ya: ARRAY OF V.T; ) =
+
+PROCEDURE CheckSizes
+  (READONLY xa: ARRAY OF R.T; READONLY ya: ARRAY OF V.T; ) =
   BEGIN
     <* ASSERT NUMBER(xa) = NUMBER(ya),
                 "The number of interpolation nodes and the number of node values must match." *>
   END CheckSizes;
 
-(*------------------*)
-PROCEDURE Linear (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
-                  READONLY ya: ARRAY OF V.T;  (*interpolation values*)
-                           x : R.T;                                   ):
+
+PROCEDURE Linear (READONLY xa: ARRAY OF R.T;  (* interpolation nodes *)
+                  READONLY ya: ARRAY OF V.T;  (* interpolation values *)
+                           x : R.T;                                     ):
   V.T =
-  (*Given an interpolation table with xa input and ya output, do linear
+  (* Given an interpolation table with xa input and ya output, do linear
      interpolation for x. *)
   VAR
     n                         := NUMBER(xa);
@@ -31,13 +32,13 @@ PROCEDURE Linear (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     CheckSizes(xa, ya);
 
     (*---find the best start point---*)
-    ndx := n1;                   (*this is arbitrary, but fix the FOR loop
-                                    if you change*)
+    ndx := n1;                   (* this is arbitrary, but fix the FOR loop
+                                    if you change *)
     diffbest := ABS(x - xa[ndx]);
     FOR i := n1 + 1 TO nn DO
       diff := ABS(x - xa[i]);
       IF diff < RT.Tiny THEN
-        (*quick victory*)
+        (* quick victory *)
         RETURN ya[i];
       ELSIF diff < diffbest THEN
         ndx := i;
@@ -69,13 +70,13 @@ PROCEDURE Linear (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     RETURN V.Add(V.Scale(y1, (x - x2) / x12), V.Scale(y2, (x1 - x) / x12));
   END Linear;
 
-(*------------------*)
-PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
-                  READONLY ya: ARRAY OF V.T;  (*interpolation values*)
+
+PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (* interpolation nodes *)
+                  READONLY ya: ARRAY OF V.T;  (* interpolation values *)
                            x : R.T;
-                  VAR      dy: V.T;                                   ):
+                  VAR      dy: V.T;                                     ):
   V.T RAISES {Arith.Error} =
-  (*Given an interpolation table with xa input and ya output, do Newton
+  (* Given an interpolation table with xa input and ya output, do Newton
      polynomial interpolation for x.  Report error estimate as dy.  Partial
      access: Give the starting index and the length to be used. *)
   <* UNUSED *>
@@ -85,7 +86,7 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     col_n: CARDINAL;
     c               := NEW(REF ARRAY OF V.T, NUMBER(xa));
     d               := NEW(REF ARRAY OF V.T, NUMBER(xa));
-    ndx             := LAST(xa); (*get a starter x*)
+    ndx             := LAST(xa); (* get a starter x *)
     y    : V.T;
 
   BEGIN
@@ -94,7 +95,7 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     VAR
       difftmp: R.T;
       (*---find starting y---*)
-      diff := ABS(x - xa[ndx]);  (*and its difference from true x*)
+      diff := ABS(x - xa[ndx]);  (* and its difference from true x *)
     BEGIN
       FOR i := 0 TO LAST(xa) DO
         difftmp := ABS(x - xa[i]);
@@ -103,21 +104,21 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
           dy := V.Sub(y, y);
           (*dy:=V.NewCompliantZero(y);*)
           RETURN y;
-        ELSIF difftmp < diff THEN (*found a better one*)
+        ELSIF difftmp < diff THEN (* found a better one *)
           ndx := i;
           diff := difftmp;
         END;
-        c[i] := ya[i];           (*c and d are 1..NUMBER(xa)*)
+        c[i] := ya[i];           (* c and d are 1..NUMBER(xa) *)
       END;
     END;
-    d^ := c^;                    (*load d from c, thus from ya*)
+    d^ := c^;                    (* load d from c, thus from ya *)
 
-    y := ya[ndx];                (*use the best ndx to get starting y*)
+    y := ya[ndx];                (* use the best ndx to get starting y *)
 
     (*---compute and use c and d---*)
-    col_n := NUMBER(xa);         (*originally there are n in the col*)
+    col_n := NUMBER(xa);         (* originally there are n in the col *)
     FOR m := 1 TO LAST(xa) DO
-      DEC(col_n);                (*each col recalc loses 1 cell*)
+      DEC(col_n);                (* each col recalc loses 1 cell *)
       FOR i := 0 TO col_n - 1 DO
         VAR
           xi    := xa[i];
@@ -134,14 +135,14 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
       END;
       (*---which correction to use?---*)
       IF ndx * 2 >= col_n THEN
-        (*we are at or below the center, need to move up*)
+        (* we are at or below the center, need to move up *)
         DEC(ndx);
         dy := d[ndx];
       ELSE
-        (*we are above the center, need to move down*)
+        (* we are above the center, need to move down *)
         dy := c[ndx];
-        (*don't need to adjust ndx, because it is effectively moved down
-           when we slide the next col up*)
+        (* don't need to adjust ndx, because it is effectively moved down
+           when we slide the next col up *)
       END;
       (*---update y---*)
       y := V.Add(y, dy);
@@ -149,11 +150,11 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     RETURN y;
   END Newton;
 
-(*------------------*)
-PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
-                        READONLY ya: ARRAY OF V.T;  (*interpolation
-                                                       values*)
-                        x: R.T;  (*the function argument*)
+
+PROCEDURE CubicHermite
+  (READONLY xa: ARRAY OF R.T;    (* interpolation nodes *)
+   READONLY ya: ARRAY OF V.T;    (* interpolation values *)
+            x : R.T;             (* the function argument *)
   ): V.T =
 
   PROCEDURE InterpolateQuadratic (READONLY xb: ARRAY [0 .. 2] OF R.T;
@@ -174,7 +175,7 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
       RETURN sum;
     END InterpolateQuadratic;
 
-  (*probably not very efficient*)
+  (* probably not very efficient *)
   PROCEDURE InterpolateHalf (READONLY xb: ARRAY [0 .. 2] OF R.T;
                              READONLY yb: ARRAY [0 .. 2] OF V.T  ): V.T =
     (* for some datatypes no Error can occur *)
@@ -185,9 +186,9 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
       x02    := xb[0] - xb[2];
       xin12  := (x - xb[2]) / x12;
       hermy1 := xin12 * xin12 * (Three - R.Two * xin12);
-      (*p(x[1])=1, p(x'[1])=0, p(x[2])=0, p(x'[2])=0*)
+      (* p(x[1])=1, p(x'[1])=0, p(x[2])=0, p(x'[2])=0 *)
       hermdy1 := xin12 * xin12 * (x - xb[1]);
-      (*p(x[1])=0, p(x'[1])=1, p(x[2])=0, p(x'[2])=0*)
+      (* p(x[1])=0, p(x'[1])=1, p(x[2])=0, p(x'[2])=0 *)
       sum := V.Scale(yb[1], hermdy1 * (x01 - x12) / (x01 * x12) + hermy1);
     BEGIN
       sum := V.Add(sum, V.Scale(yb[0], hermdy1 * x12 / (x01 * x02)));
@@ -210,7 +211,7 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
       RETURN InterpolateQuadratic(SUBARRAY(xa, 0, 3), SUBARRAY(ya, 0, 3));
     ELSE
       FOR j := 2 TO LAST(xa) - 1 DO
-        IF (*xa[j-1]<x AND*) x <= xa[j] THEN
+        IF (* xa[j-1]<x AND *) x <= xa[j] THEN
           RETURN InterpolatePiece(
                    SUBARRAY(xa, j - 2, 4), SUBARRAY(ya, j - 2, 4));
         END;
@@ -221,6 +222,5 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
   END CubicHermite;
 
 
-(*==========================*)
 BEGIN
 END Interpolation.

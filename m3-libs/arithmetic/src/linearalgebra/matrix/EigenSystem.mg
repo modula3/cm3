@@ -26,13 +26,13 @@ PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
     x2, vx  : R.T;
   BEGIN
     x := V.New(NUMBER(A^));
-    x^ := A[0];                  (*is this initialization random enough?*)
+    x^ := A[0];                  (* is this initialization random enough?*)
     x2 := V.Inner(x, x);
     REPEAT
       NoConvergence(maxiter = 0);
       DEC(maxiter);
 
-      (*turn new into old*)
+      (* turn new into old *)
       v := x;
 
       x := M.MulV(A, v);
@@ -42,19 +42,19 @@ PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
       (*
       x2 := V.Inner(x, x);
       vx := V.Inner(v, x);
-      (*the error cannot become negative mathematically,
-        but numerically it is sometimes*)
+      (* the error cannot become negative mathematically,
+        but numerically it is sometimes *)
       err := ABS(x2-vx*vx);
     UNTIL err <= tol2*vx*vx;
       IO.Put(Fmt.FN("err %s, tol %s, x2 %s, vx %s, x %s\n",ARRAY OF TEXT{
         RF.Fmt(err), RF.Fmt(tol), RF.Fmt(x2), RF.Fmt(vx), VF.Fmt(x)}));
       *)
 
-      (*compute the minimum possible Euclidean distance from lambda*v to
-         x*)
+      (* compute the minimum possible Euclidean distance from lambda*v to
+         x *)
       x2 := V.Inner(x, x);
-      vx := V.Inner(v, x);       (*approximation for largest eigenvalue
-                                    lambda*)
+      vx := V.Inner(v, x);       (* approximation for largest eigenvalue
+                                    lambda *)
       dx := V.Sub(v, V.Scale(x, R.Rec(vx)));
       err := V.Inner(dx, dx);
       (*
@@ -63,14 +63,14 @@ PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
       *)
       x := V.Scale(x, R.Rec(RT.SqRt(x2)));
     UNTIL err <= tol2;
-    (*calculate the lambda for which x is optimally approximated by
-       lambda*v with respect to the Euclidean norm*)
-    (*RETURN R.Div(vx,v2);*)
+    (* calculate the lambda for which x is optimally approximated by
+       lambda*v with respect to the Euclidean norm *)
+    (* RETURN R.Div(vx,v2);*)
     RETURN EigenPair{vx, v};
   END PowerMethod;
 
 
-PROCEDURE MaxColumn (x: M.T; VAR max: R.T): CARDINAL =
+PROCEDURE MaxColumn (x: M.T; VAR max: R.T; ): CARDINAL =
   VAR
     sum   : R.T;
     maxcol: CARDINAL := 0;
@@ -86,7 +86,7 @@ PROCEDURE MaxColumn (x: M.T; VAR max: R.T): CARDINAL =
     RETURN maxcol;
   END MaxColumn;
 
-(*The same idea as for PowerMethod, iterated squaring of A instead of
+(* The same idea as for PowerMethod, iterated squaring of A instead of
    taking successive powers; needs less but more expensive iterations.  One
    have to compare whether computing the whole eigenvalue spectrum using
    other methods is faster. *)
@@ -107,7 +107,7 @@ PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
       END;
       DEC(maxiter);
 
-      (*turn new into old*)
+      (* turn new into old *)
       B := C;
 
       B := M.Mul(B, B);
@@ -116,11 +116,11 @@ PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
       j := MaxColumn(B, norm1);
       v := M.GetColumn(B, j);
       x := M.GetColumn(C, j);
-      (*compute the minimum possible Euclidean distance from lambda*v to
-         x*)
+      (* compute the minimum possible Euclidean distance from lambda*v to
+         x *)
       v2 := V.Inner(v, v);
       x2 := V.Inner(x, x);
-      vx := V.Inner(v, x);       (*approximation for largest eigenvalue*)
+      vx := V.Inner(v, x);       (* approximation for largest eigenvalue *)
       dx := V.Sub(V.Scale(v, vx), V.Scale(x, v2));
       err := V.Inner(dx, dx);
       (*
@@ -131,8 +131,8 @@ PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
       *)
       C := M.Scale(C, R.Rec(norm1));
     UNTIL err <= tol2 * v2 * v2 * x2;
-    (*calculate the lambda for which x is optimally approximated by
-       lambda*v with respect to the Euclidean norm*)
+    (* calculate the lambda for which x is optimally approximated by
+       lambda*v with respect to the Euclidean norm *)
     RETURN EigenPair{R.Div(vx, v2), v};
   END SquareMethod;
 
@@ -150,7 +150,7 @@ PROCEDURE Jacobi (VAR a        : M.T;
                   VAR d        : V.T;
                   VAR v        : M.T;
                   VAR nrot     : INTEGER;
-                      eigenVect            := FALSE) =
+                      eigenVect: BOOLEAN; ) =
   VAR
     tresh, theta, tau, t, sm, s, h, g, c: R.T;
     b                                         := NEW(V.T, n);
@@ -258,7 +258,7 @@ PROCEDURE Jacobi (VAR a        : M.T;
 (*
 (* Just a support routine to mimick FORTRANs SIGN *)
 
-PROCEDURE sign(a,b: R.T): R.T =
+PROCEDURE sign(a,b:R.T;): R.T =
 BEGIN
    IF b < 0 THEN sign := -ABS(a) ELSE sign := ABS(a); END;
 END sign;
@@ -335,7 +335,7 @@ BEGIN
 END;
 *)
 
-PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T) =
+PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T; ) =
   VAR p, q: R.T;
   BEGIN
     <* ASSERT NUMBER(vals^) = NUMBER(vects[0]), "Array sizes don't match." *>
@@ -425,7 +425,7 @@ PROCEDURE Tred1 (n: CARDINAL; VAR a: M.T; VAR d, e, e2: V.T; ) =
     END;                         (* for *)
   END Tred1;
 
-PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T) =
+PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T; ) =
   VAR
     l          : INTEGER;
     firstD               := FIRST(d^);
@@ -510,11 +510,8 @@ PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T) =
     END;                         (* for *)
   END Tred2;
 
-PROCEDURE Trbak1 (    n     : CARDINAL;
-                      a     : M.T;
-                      d, e  : V.T;
-                  VAR z     : M.T;
-                      m1, m2: CARDINAL  ) =
+PROCEDURE Trbak1
+  (n: CARDINAL; a: M.T; d, e: V.T; VAR z: M.T; m1, m2: CARDINAL; ) =
   VAR
     l   : INTEGER;
     h, s: R.T;
@@ -542,11 +539,8 @@ PROCEDURE Trbak1 (    n     : CARDINAL;
     END;                         (* for *)
   END Trbak1;
 
-PROCEDURE Trbak3 (    n     : CARDINAL;
-                      a     : V.T;
-                      d, e  : V.T;
-                  VAR z     : M.T;
-                      m1, m2: CARDINAL  ) =
+PROCEDURE Trbak3
+  (n: CARDINAL; a: V.T; d, e: V.T; VAR z: M.T; m1, m2: CARDINAL; ) =
   VAR
     l, iz: INTEGER;
     h, s : R.T;
@@ -575,7 +569,7 @@ PROCEDURE Trbak3 (    n     : CARDINAL;
     END;                         (* for *)
   END Trbak3;
 
-PROCEDURE Tql1 (VAR d, e: V.T) RAISES {Arith.Error} =
+PROCEDURE Tql1 (VAR d, e: V.T; ) RAISES {Arith.Error} =
   VAR
     iter, m               : INTEGER;
     b, c, f, g, h, p, r, s: R.T;
@@ -649,7 +643,7 @@ PROCEDURE Tql1 (VAR d, e: V.T) RAISES {Arith.Error} =
     END;                         (* for *)
   END Tql1;
 
-PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T) RAISES {Arith.Error} =
+PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T; ) RAISES {Arith.Error} =
   VAR
     k, m, iter            : INTEGER;
     b, c, f, g, h, r, s, p: R.T;

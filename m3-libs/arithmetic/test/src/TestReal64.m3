@@ -1,25 +1,24 @@
 MODULE TestReal64 EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details 
+(* Arithmetic for Modula-3, see doc for details
 
-   Abstract: Test driver for numerical
-   analysis
+   Abstract: Test driver for numerical analysis
 
-   12/24/95 Harry George Initial version 2/17/96 Harry George Rebuilt into
-   Real64
+   12/24/95 Harry George Initial version
 
-   *)
+   2/17/96 Harry George Rebuilt into Real64 *)
 
 IMPORT SpecialFunction AS SF,
        LongRealBasic   AS R,
        LongRealFmtLex  AS RF,
        Arithmetic;
 FROM SF IMPORT T;
-<*FATAL Arithmetic.Error*>
-(*=======================*)
-CONST Module = "TestReal64.";
-(*=======================*)
+<* FATAL Arithmetic.Error *>
 
-(*----------------------*)
+CONST
+  Module = "TestReal64.";
+
+
+
 PROCEDURE TestLnGamma (): BOOLEAN =
   CONST ftn = Module & "TestLnGamma";
   VAR
@@ -40,7 +39,7 @@ PROCEDURE TestLnGamma (): BOOLEAN =
     END;
     RETURN result;
   END TestLnGamma;
-(*----------------------*)
+
 PROCEDURE TestBetaI (): BOOLEAN =
   CONST ftn = Module & "TestBetaI";
   VAR
@@ -61,7 +60,7 @@ PROCEDURE TestBetaI (): BOOLEAN =
     END;
     RETURN result;
   END TestBetaI;
-(*----------------------*)
+
 PROCEDURE TestGammaP (): BOOLEAN =
   CONST ftn = Module & "TestGammaP";
   VAR
@@ -83,7 +82,7 @@ PROCEDURE TestGammaP (): BOOLEAN =
     END;
     RETURN result;
   END TestGammaP;
-(*----------------------*)
+
 PROCEDURE TestGammaQ (): BOOLEAN =
   CONST ftn = Module & "TestGammaQ";
   VAR
@@ -106,10 +105,11 @@ PROCEDURE TestGammaQ (): BOOLEAN =
     END;
     RETURN result;
   END TestGammaQ;
-(*-------------------------*)
+
 PROCEDURE TestReal64 (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestReal64";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestReal64";
   VAR result := TRUE;
   BEGIN
     NewLine();
@@ -122,6 +122,6 @@ PROCEDURE TestReal64 (): BOOLEAN =
     EVAL TestGammaQ();
     RETURN result;
   END TestReal64;
-(*=======================*)
+
 BEGIN
 END TestReal64.

@@ -1,5 +1,5 @@
 GENERIC INTERFACE IntegerBasic(I, It);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 FROM Arithmetic IMPORT Error;
 
@@ -20,30 +20,29 @@ CONST
   Equal   = It.Equal;
   Compare = It.Compare;
 
-<*INLINE*>
-PROCEDURE Add (x, y: T): T;      (*return x+y*)
-<*INLINE*>
-PROCEDURE Sub (x, y: T): T;      (*return x-y*)
-<*INLINE*>
-PROCEDURE Neg (x: T): T;         (*return -x *)
-<*INLINE*>
-PROCEDURE Conj (x: T): T;        (*return x*)
-<*INLINE*>
-PROCEDURE IsZero (x: T): BOOLEAN;
+<* INLINE *>
+PROCEDURE Add (x, y: T; ): T;    (* x+y *)
+<* INLINE *>
+PROCEDURE Sub (x, y: T; ): T;    (* x-y *)
+<* INLINE *>
+PROCEDURE Neg (x: T; ): T;       (* -x *)
+<* INLINE *>
+PROCEDURE Conj (x: T; ): T;      (* x *)
+<* INLINE *>
+PROCEDURE IsZero (x: T; ): BOOLEAN;
 
-<*INLINE*>
-PROCEDURE Mul (x, y: T): T;      (*return x*y*)
-<*INLINE*>
-PROCEDURE Div (x, y: T): T RAISES {Error}; (*return x/y*)
-<*INLINE*>
-PROCEDURE Rec (x: T): T RAISES {Error}; (*return 1/x*)
-<*INLINE*>
-PROCEDURE Mod (x, y: T): T RAISES {Error}; (*return x mod y*)
-<*INLINE*>
-PROCEDURE DivMod (x, y: T): QuotRem RAISES {Error}; (*return x/y and write
-                                                       the remainder in r*)
+<* INLINE *>
+PROCEDURE Mul (x, y: T; ): T;    (* x*y *)
+<* INLINE *>
+PROCEDURE Div (x, y: T; ): T RAISES {Error}; (* x/y *)
+<* INLINE *>
+PROCEDURE Rec (x: T; ): T RAISES {Error}; (* 1/x *)
+<* INLINE *>
+PROCEDURE Mod (x, y: T; ): T RAISES {Error}; (* x mod y *)
+<* INLINE *>
+PROCEDURE DivMod (x, y: T; ): QuotRem RAISES {Error}; (* x/y and x mod y *)
 
-PROCEDURE GCD (x, y: T): T;
-(*greatest common divisor for machines with slow division*)
+PROCEDURE GCD (x, y: T; ): T;
+(* greatest common divisor for machines with slow division *)
 
 END IntegerBasic.

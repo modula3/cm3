@@ -1,5 +1,5 @@
 GENERIC INTERFACE FloatFmtLex(R);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 (* Abstract: Generic interface for formatting and parsing of float
    numbers *)
@@ -20,8 +20,8 @@ TYPE
                literal           := FALSE;
              END;
 
-<*INLINE*>
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT;
+<* INLINE *>
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT;
 
 
 TYPE
@@ -30,8 +30,8 @@ TYPE
                prec : CARDINAL := R.MaxSignifDigits - 3;
              END;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.Sum):
-  TEXT;
+PROCEDURE Tex
+  (x: T; READONLY style := TexStyle{}; within := Precedence.Sum; ): TEXT;
 
 
 TYPE LexStyle = RECORD END;

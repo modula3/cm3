@@ -1,5 +1,5 @@
 GENERIC MODULE FindZero(R, RT);
-(*Arithmetic for Modula-3, see doc for details *)
+(* Arithmetic for Modula-3, see doc for details *)
 IMPORT Arithmetic AS Arith;
 
 CONST Module = "FindZero.";
@@ -25,8 +25,8 @@ PROCEDURE AssertXOrder (READONLY xb: Bracket; ) =
 
 
 
-PROCEDURE BracketOut (func: Ftn; VAR xb: Bracket; maxiter: CARDINAL := 55; ):
-  BOOLEAN =
+PROCEDURE BracketOut
+  (func: Ftn; VAR xb: Bracket; maxiter: CARDINAL := 55; ): BOOLEAN =
 
   <* UNUSED *>
   CONST
@@ -48,11 +48,11 @@ PROCEDURE BracketOut (func: Ftn; VAR xb: Bracket; maxiter: CARDINAL := 55; ):
           (*---grow the smallest one---*)
           IF ABS(f1) < ABS(f2) THEN
             xb.l :=
-              xb.l - RT.GoldenRatio * diff; (*xb.l gets more negative*)
+              xb.l - RT.GoldenRatio * diff; (* xb.l gets more negative *)
             f1 := func(xb.l);
           ELSE
             xb.r :=
-              xb.r + RT.GoldenRatio * diff; (*xb.r gets more positive*)
+              xb.r + RT.GoldenRatio * diff; (* xb.r gets more positive *)
             f2 := func(xb.r);
           END;
         END;
@@ -62,9 +62,8 @@ PROCEDURE BracketOut (func: Ftn; VAR xb: Bracket; maxiter: CARDINAL := 55; ):
   END BracketOut;
 
 
-PROCEDURE BracketIn (         func: Ftn;
-                     READONLY xb  : Bracket;
-                              n   : [1 .. LAST(CARDINAL)]; ):
+PROCEDURE BracketIn
+  (func: Ftn; READONLY xb: Bracket; n: [1 .. LAST(CARDINAL)]; ):
   REF ARRAY OF Bracket =
   <* UNUSED *>
   CONST
@@ -99,10 +98,8 @@ PROCEDURE BracketIn (         func: Ftn;
   END BracketIn;
 
 
-PROCEDURE Bisection (         func   : Ftn;
-                     READONLY xb     : Bracket;
-                              tol    : R.T;
-                              maxiter            := 45; ): R.T
+PROCEDURE Bisection
+  (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 45; ): R.T
   RAISES {Arith.Error} =
 
   <* UNUSED *>
@@ -144,8 +141,9 @@ PROCEDURE Bisection (         func   : Ftn;
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END Bisection;
 
-PROCEDURE Brent (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100):
-  R.T RAISES {Arith.Error} =
+PROCEDURE Brent
+  (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100; ): R.T
+  RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = Module & "Brent";
@@ -171,12 +169,12 @@ PROCEDURE Brent (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100):
     (*---loop---*)
     FOR i := 1 TO maxiter DO
       (*---establish preconditions for loop---*)
-      (*1.  a and c are same side, with b opposite*)
+      (* 1.  a and c are same side, with b opposite *)
       IF NOT AreBracketing(fb, fc) THEN c := a; fc := fa; END;
-      (*2.  fb is smallest of the three*)
+      (* 2.  fb is smallest of the three *)
       IF ABS(fc) < ABS(fb) THEN
-        (*use the smallest one for b*)
-        (*and keep c with a*)
+        (* use the smallest one for b *)
+        (* and keep c with a *)
         a := b;
         fa := fb;
         b := c;
@@ -186,24 +184,24 @@ PROCEDURE Brent (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100):
       END;
 
       (*---check for convergence---*)
-      (*1.  check for quick victory*)
+      (* 1.  check for quick victory *)
       IF ABS(fb) < RT.Tiny THEN RETURN b; END;
-      (*2.  get estimate of length if we go again*)
+      (* 2.  get estimate of length if we go again *)
       diffnext := RT.Half * (c - b);
       diff2 := R.Two * diffnext;
-      (*3.  get practical tolerance*)
-      (*the idea is to do worst case machine tol or requested tol*)
-      (*where one typically swamps the other*)
+      (* 3.  get practical tolerance *)
+      (* the idea is to do worst case machine tol or requested tol *)
+      (* where one typically swamps the other *)
       tolnext := RT.Eps * ABS(b) + RT.Half * tol;
-      (*4.  check estimate for being too small*)
+      (* 4.  check estimate for being too small *)
       IF ABS(diffnext) < tolnext THEN RETURN b; END;
 
       (*---ready for another attempt---*)
       IF ABS(a - b) >= tolnext AND ABS(fa) > ABS(fb) THEN
         (*---try for quadratic---*)
-        (*1.  build p and q, using reduction if possible*)
+        (* 1.  build p and q, using reduction if possible *)
         s := fb / fa;
-        IF a = c THEN            (*reduces to linear*)
+        IF a = c THEN            (* reduces to linear *)
           p := diff2 * s;
           q := R.One - s;
         ELSE
@@ -212,26 +210,26 @@ PROCEDURE Brent (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100):
           p := s * (t * (r - t) * diff2 - (R.One - r) * (b - a));
           q := (t - R.One) * (r - R.One) * (s - R.One);
         END;
-        (*2.  need p < q *)
+        (* 2.  need p < q *)
         min1 := FLOAT(1.5D0, R.T) * diff2 * q - ABS(tolnext * q);
         min2 := ABS(diff2 * q);
         IF p < MIN(min1, min2) THEN
-          (*ok to interpolate*)
+          (* ok to interpolate *)
           delta := p / q;
         ELSE
-          (*use bisection*)
+          (* use bisection *)
           delta := diffnext;
         END;
-      ELSE                       (*bad candidate for quadratic, need
-                                    bisection*)
+      ELSE                       (* bad candidate for quadratic, need
+                                    bisection *)
         delta := diffnext;
       END;
 
       (*---have diff, so use it---*)
-      (*1.  save old b as new a*)
+      (* 1.  save old b as new a *)
       a := b;
       fa := fb;
-      (*2.  get new b*)
+      (* 2.  get new b *)
       b := b + delta;
       fb := func(b);
     END;
@@ -239,10 +237,8 @@ PROCEDURE Brent (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100):
   END Brent;
 
 
-PROCEDURE NewtonRaphson (         func   : DifFtn;
-                         READONLY xb     : Bracket;
-                                  xtol   : R.T;
-                                  maxiter            := 25; ): R.T
+PROCEDURE NewtonRaphson
+  (func: DifFtn; READONLY xb: Bracket; xtol: R.T; maxiter := 25; ): R.T
   RAISES {Arith.Error} =
 
   <* UNUSED *>
@@ -284,10 +280,10 @@ PROCEDURE NewtonRaphson (         func   : DifFtn;
       delta := y[0] / y[1];
       rootnext := root - delta;
       IF (a - rootnext) * (rootnext - b) >= R.Zero THEN
-        (*in bounds and fast enough for newton-raphson*)
+        (* in bounds and fast enough for newton-raphson *)
         root := rootnext;
       ELSE
-        (*out of bounds, need bisect*)
+        (* out of bounds, need bisect *)
         tmp := root;
         root := RT.Half * (a + b);
         delta := root - tmp;

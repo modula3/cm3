@@ -22,34 +22,34 @@ TYPE
   ErrorOperationAborted = ErrorRoot BRANDED OBJECT END;
 
   ErrorOutOfRange =
-    ErrorBadParameters BRANDED OBJECT END; (*parameter is out of range*)
+    ErrorBadParameters BRANDED OBJECT END; (* parameter is out of range *)
   ErrorDivisionByZero =
-    ErrorBadParameters BRANDED OBJECT END; (*x/0 condition detected*)
+    ErrorBadParameters BRANDED OBJECT END; (* x/0 condition detected *)
   ErrorUnitMismatch =
-    ErrorBadParameters BRANDED OBJECT END; (*physical units of values
+    ErrorBadParameters BRANDED OBJECT END; (* physical units of values
                                               didn't meet the requirements
-                                              of the operation*)
+                                              of the operation *)
   ErrorNeedMoreData =
-    ErrorBadParameters BRANDED OBJECT END; (*e.g., more data points in
-                                              statistics*)
+    ErrorBadParameters BRANDED OBJECT END; (* e.g., more data points in
+                                              statistics *)
 
   ErrorOverflow = ErrorOperationAborted BRANDED OBJECT END;
   ErrorIndivisible =
-    ErrorOperationAborted BRANDED OBJECT END; (*division is not possible in
-                                                 the considered field,
+    ErrorOperationAborted BRANDED OBJECT END; (* division is not possible
+                                                 in the considered field,
                                                  DivMod should always
-                                                 work*)
+                                                 work *)
   ErrorMatrixSingular =
-    ErrorOperationAborted BRANDED OBJECT END; (*matrix can't be inverted*)
+    ErrorOperationAborted BRANDED OBJECT END; (* matrix can't be
+                                                 inverted *)
   ErrorAlmostZero =
-    ErrorOperationAborted BRANDED OBJECT END; (*in tridiagonal, rewrite for
-                                                 n-1 eqns*)
+    ErrorOperationAborted BRANDED OBJECT END; (* in tridiagonal, rewrite
+                                                 for n-1 eqns *)
   ErrorNoConvergence =
-    ErrorOperationAborted BRANDED OBJECT END; (*e.g., eps or maxiter too
-                                                 small*)
+    ErrorOperationAborted BRANDED OBJECT END; (* e.g., eps or maxiter too
+                                                 small *)
 
-PROCEDURE ErrorInit (err   : ErrorRoot;
-                     msg   : TEXT        := "";
-                     oldErr: ErrorRoot   := NIL; ): ErrorRoot;
+PROCEDURE ErrorInit
+  (err: ErrorRoot; msg: TEXT := ""; oldErr: ErrorRoot := NIL; ): ErrorRoot;
 
 END Arithmetic.

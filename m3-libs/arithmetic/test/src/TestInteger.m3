@@ -1,9 +1,9 @@
 MODULE TestInteger EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Integer module.
+(* Arithmetic for Modula-3, see doc for details
 
-   3/6/96 Harry George Initial version
+   Abstract: Tests for Integer module.
 
-   *)
+   3/6/96 Harry George Initial version *)
 
 IMPORT Cardinal32Basic        AS Cd,
        Cardinal32GCD          AS CdG,
@@ -14,10 +14,10 @@ IMPORT Cardinal32Basic        AS Cd,
        LongRealTrans          AS RT,
        LongRealFmtLex         AS RF,
        NumberTheory           AS NT,
-       Arithmetic          AS Arith;
-(*=======================*)
+       Arithmetic             AS Arith;
+
 CONST Module = "TestInteger.";
-(*----------------------*)
+
 PROCEDURE TestSqRt (): BOOLEAN =
   CONST ftn = Module & "TestSqRt";
   VAR
@@ -40,7 +40,7 @@ PROCEDURE TestSqRt (): BOOLEAN =
     END;
     RETURN result;
   END TestSqRt;
-(*----------------------*)
+
 PROCEDURE TestCardinalGCD (): BOOLEAN =
   CONST ftn = Module & "TestCardinalGCD";
   VAR result := TRUE;
@@ -59,7 +59,7 @@ PROCEDURE TestCardinalGCD (): BOOLEAN =
     END;
     RETURN result;
   END TestCardinalGCD;
-(*----------------------*)
+
 PROCEDURE TestIsPrime (): BOOLEAN =
   CONST ftn = Module & "TestIsPrime";
   VAR result := TRUE;
@@ -72,7 +72,7 @@ PROCEDURE TestIsPrime (): BOOLEAN =
     Msg("\n");
     RETURN result;
   END TestIsPrime;
-(*----------------------*)
+
 PROCEDURE TestFactor (): BOOLEAN =
   CONST ftn = Module & "TestFactor";
   VAR
@@ -110,7 +110,7 @@ PROCEDURE TestFactor (): BOOLEAN =
     END;
     RETURN result;
   END TestFactor;
-(*----------------------*)
+
 PROCEDURE TestCordic (): BOOLEAN =
   CONST
     ftn = Module & "TestCordic";
@@ -141,7 +141,7 @@ PROCEDURE TestCordic (): BOOLEAN =
     END;
     RETURN result;
   END TestCordic;
-(*-------------------------*)
+
 PROCEDURE TestInteger (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -161,6 +161,6 @@ PROCEDURE TestInteger (): BOOLEAN =
 
     RETURN result;
   END TestInteger;
-(*=======================*)
+
 BEGIN
 END TestInteger.

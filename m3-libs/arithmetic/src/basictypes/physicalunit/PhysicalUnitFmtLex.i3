@@ -1,5 +1,5 @@
 INTERFACE PhysicalUnitFmtLex;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 (*
 Abstract: Formatter for unit vectors.
@@ -11,7 +11,7 @@ IMPORT PhysicalUnit AS U;
 
 TYPE T = U.T;
 
-PROCEDURE Fmt (unit: T): TEXT;
+PROCEDURE Fmt (unit: T; ): TEXT;
 
 (*
 TYPE

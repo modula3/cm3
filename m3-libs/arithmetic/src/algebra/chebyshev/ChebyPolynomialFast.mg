@@ -1,5 +1,5 @@
 GENERIC MODULE ChebyPolynomialFast(R, RT);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Implementation of Modula-3 version of NR92, ch 5. *)
 IMPORT Arithmetic AS Arith;
@@ -7,13 +7,11 @@ FROM RT IMPORT Cos, Pi;
 
 CONST Module = "ChebyPolynomialFast.";
 
-(*---------------------------*)
-PROCEDURE Expand (func: Ftn;       (*differentiate polynomial*)
-                  n   : CARDINAL;  (*order*)
-  ): T =
+
+PROCEDURE Expand (func: Ftn; n: CARDINAL; ): T =
   VAR
-    nr                          := FLOAT(n, R.T);
-    f                           := NEW(T, n + 1); (*we skip f[0]*)
+    nr := FLOAT(n, R.T);
+    f  := NEW(T, n + 1);         (* we skip f[0] *)
     x, factor, sum, jr, kr: R.T;
     z                           := NEW(T, n);
   BEGIN
@@ -37,8 +35,8 @@ PROCEDURE Expand (func: Ftn;       (*differentiate polynomial*)
     END;
     RETURN z;
   END Expand;
-(*--------------------------*)
-PROCEDURE FindUpperExp (x: T; prec: R.T): CARDINAL =
+
+PROCEDURE FindUpperExp (x: T; prec: R.T; ): CARDINAL =
   <* UNUSED *>
   CONST
     ftn = Module & "FindUpperExp";
@@ -50,19 +48,17 @@ PROCEDURE FindUpperExp (x: T; prec: R.T): CARDINAL =
     END;
     RETURN 0;
   END FindUpperExp;
-(*--------------------------*)
-PROCEDURE Abort (x: T;           (*abort the expansion*)
-                 m: CARDINAL;    (*before the m-th term*)
+
+PROCEDURE Abort (x: T;           (* abort the expansion *)
+                 m: CARDINAL;    (* before the m-th term *)
   ): T =
   VAR z := NEW(T, m);
   BEGIN
     z^ := SUBARRAY(x^, 0, m);
     RETURN z;
   END Abort;
-(*--------------------------*)
-PROCEDURE Eval (x: T;            (*eval this polynomial*)
-                xi: R.T          (*at this point*)
-  ): R.T RAISES {Arith.Error} =
+
+PROCEDURE Eval (x: T; xi: R.T; ): R.T RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = Module & "Eval";
@@ -72,7 +68,7 @@ PROCEDURE Eval (x: T;            (*eval this polynomial*)
     djp2 := R.Zero;
   BEGIN
     IF xi < -R.One OR xi > R.One THEN
-      (*need -1<x<+1*)
+      (* need -1<x<+1 *)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     FOR j := LAST(x^) TO 1 BY -1 DO
@@ -82,9 +78,8 @@ PROCEDURE Eval (x: T;            (*eval this polynomial*)
     END;
     RETURN xi * djp1 - djp2 + RT.Half * x[0];
   END Eval;
-(*--------------------------*)
-PROCEDURE Derive (x: T;          (*differentiate polynomial*)
-  ): T =
+
+PROCEDURE Derive (x: T; ): T =
   VAR
     n := NUMBER(x^);
     z := NEW(T, n - 1);
@@ -100,9 +95,8 @@ PROCEDURE Derive (x: T;          (*differentiate polynomial*)
     END;
     RETURN z;
   END Derive;
-(*--------------------------*)
-PROCEDURE Integrate (x: T;       (*differentiate polynomial*)
-  ): T =
+
+PROCEDURE Integrate (x: T; ): T =
   VAR
     n := NUMBER(x^);
     z := NEW(T, n + 1);
@@ -117,6 +111,6 @@ PROCEDURE Integrate (x: T;       (*differentiate polynomial*)
     END;
     RETURN z;
   END Integrate;
-(*==========================*)
+
 BEGIN
 END ChebyPolynomialFast.

@@ -1,5 +1,5 @@
 GENERIC MODULE PolarFmtLex(R, RF);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Thread;
 (*IMPORT Fmt AS F;*)
@@ -8,10 +8,11 @@ IMPORT FloatMode;
 IMPORT FmtLexSupport AS FSup;
 FROM FmtLexSupport IMPORT Precedence;
 
-<*UNUSED*>
-CONST Module = "PolarFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "PolarFmtLex.";
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT =
   VAR t: TEXT;
   BEGIN
     t := "Polar{radius:=" & RF.Fmt(x.radius, style.elemStyle) & ","
@@ -21,7 +22,7 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.Sum): TEXT =
+                        within      := Precedence.Sum; ): TEXT =
   VAR t: TEXT;
   BEGIN
     IF R.IsZero(x.radius) OR R.IsZero(x.angle) THEN

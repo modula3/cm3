@@ -1,5 +1,5 @@
 MODULE TestRoot EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 IMPORT Arithmetic AS Arith;
 IMPORT Fmt,
        LongRealBasic                   AS R,
@@ -21,14 +21,13 @@ IMPORT Fmt,
        Wr;
 
 <* FATAL Arith.Error *>
-  (*=======================*)
+
 CONST
   Module = "TestRoot.";
 
-(*---------------------*)
-PROCEDURE TestPolyRoots (         p     : CP.T;
-                         READONLY rt    : Rt.RootArray;
-                                  epssqr: R.T            := RT.Eps) =
+
+PROCEDURE TestPolyRoots
+  (p: CP.T; READONLY rt: Rt.RootArray; epssqr: R.T := RT.Eps; ) =
   BEGIN
     (*
       Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
@@ -51,13 +50,13 @@ PROCEDURE TestPolyRoots (         p     : CP.T;
     Msg("\n");
   END TestPolyRoots;
 
-(*=========================*)
+
 (* Quadratics *)
-(*=========================*)
-(*-----------------------*)
+
+
 PROCEDURE TestQuadratic (): BOOLEAN =
 
-  PROCEDURE TestSingle (READONLY x: RtA.RealPolynomial2) =
+  PROCEDURE TestSingle (READONLY x: RtA.RealPolynomial2; ) =
     VAR
       rt: RtA.RootArray2;
       xc: CP.T;
@@ -66,7 +65,7 @@ PROCEDURE TestQuadratic (): BOOLEAN =
                  ARRAY OF TEXT{RF.Fmt(x[0]), RF.Fmt(x[1]), RF.Fmt(x[2])}));
       rt := RtA.RealQuadratic(x);
 
-      (*evaluate polynomial for the found roots*)
+      (* evaluate polynomial for the found roots*)
       xc := CP.New(2);
       xc[0] := C.T{x[0], R.Zero};
       xc[1] := C.T{x[1], R.Zero};
@@ -111,7 +110,7 @@ PROCEDURE TestRootApproximation (): BOOLEAN =
 
   PROCEDURE TestSingle (READONLY rt        : Rt.RootArray;
                                  zerotolsqr: R.T            := RT.Eps;
-                        roottolsqr: R.T := RT.Eps * 10.0D0) =
+                        roottolsqr: R.T := RT.Eps * 10.0D0; ) =
     VAR
       p                     := Rt.FromRoots(rt);
       art: REF Rt.RootArray;
@@ -184,29 +183,29 @@ CONST
   prec3Style = RF.FmtStyle{style := Fmt.Style.Fix, prec := 3};
   prec5Style = RF.FmtStyle{style := Fmt.Style.Fix, prec := 5};
 
-(*---------------------*)
-VAR                              (*globally visible*)
+
+VAR                              (* globally visible*)
   r1 := -10.0D0;
   r2 := 2.0D0;
   r3 := 10.0D0;
 
-(*---------------------*)
-PROCEDURE MyFun (x: R.T): R.T =
+
+PROCEDURE MyFun (x: R.T; ): R.T =
   BEGIN
     RETURN (x - r1) * (x - r2) * (x - r3);
   END MyFun;
-(*---------------------*)
-PROCEDURE MyFun2 (x: R.T): FZ.DerivativeArray2 =
+
+PROCEDURE MyFun2 (x: R.T; ): FZ.DerivativeArray2 =
   BEGIN
     RETURN FZ.DerivativeArray2{(x - r1) * (x - r2) * (x - r3),
                                (x - r2) * (x - r3) + (x - r1) * (x - r3)
                                  + (x - r1) * (x - r2)};
   END MyFun2;
 
-(*=========================*)
+
 (* NonLinears *)
-(*=========================*)
-(*----------------------*)
+
+
 PROCEDURE TestBracketOut (): BOOLEAN =
   CONST
     ftn     = Module & "TestBracketOut";
@@ -232,7 +231,7 @@ PROCEDURE TestBracketOut (): BOOLEAN =
     END;
     RETURN result;
   END TestBracketOut;
-(*----------------------*)
+
 PROCEDURE TestBracketIn (): BOOLEAN =
   CONST ftn = Module & "TestBracketIn";
   VAR
@@ -262,7 +261,7 @@ PROCEDURE TestBracketIn (): BOOLEAN =
     END;
     RETURN result;
   END TestBracketIn;
-(*----------------------*)
+
 PROCEDURE TestBisection (): BOOLEAN =
   CONST ftn = Module & "TestBisection";
   VAR
@@ -283,7 +282,7 @@ PROCEDURE TestBisection (): BOOLEAN =
     Msg(" found  root=" & RF.Fmt(root, prec3Style) & "\n");
     RETURN result;
   END TestBisection;
-(*----------------------*)
+
 PROCEDURE TestBrent (): BOOLEAN =
   CONST ftn = Module & "TestBrent";
   VAR
@@ -306,7 +305,7 @@ PROCEDURE TestBrent (): BOOLEAN =
     Msg(" found  root=" & RF.Fmt(root, prec3Style) & "\n");
     RETURN result;
   END TestBrent;
-(*----------------------*)
+
 PROCEDURE TestNewtonRaphson (): BOOLEAN =
   CONST ftn = Module & "TestNewtonRaphson";
   VAR
@@ -348,7 +347,7 @@ PROCEDURE TestNewtonRaphson (): BOOLEAN =
 
 
 (****************************
-(*----------------------*)
+
 
 PROCEDURE TestLaguer():BOOLEAN=
 CONST
@@ -386,7 +385,7 @@ FOR i:=0 TO 10 DO
 END;
   RETURN result;
 END TestLaguer;
-(*----------------------*)
+
 PROCEDURE TestZRoots():BOOLEAN=
 CONST
   ftn = Module & "TestZRoots";
@@ -430,17 +429,17 @@ BEGIN
   RETURN result;
 END TestZRoots;
 ******************************)
-PROCEDURE WritePowerSeq (s: REF IR.PowerSumSeq) =
+PROCEDURE WritePowerSeq (s: REF IR.PowerSumSeq; ) =
   BEGIN
     FOR j := 0 TO LAST(s^) DO Msg(Fmt.Int(s[j]) & ", "); END;
     Msg("\n");
   END WritePowerSeq;
 
 <* FATAL Thread.Alerted, Wr.Failure *>
-  (*-----------------------*)
+
 PROCEDURE TestPowerSeq (): BOOLEAN =
 
-  PROCEDURE TestPowerPoly (READONLY x: IR.PowerSumSeq) =
+  PROCEDURE TestPowerPoly (READONLY x: IR.PowerSumSeq; ) =
     VAR
       p: IR.T;
       y: REF IR.PowerSumSeq;
@@ -457,7 +456,7 @@ PROCEDURE TestPowerSeq (): BOOLEAN =
       Msg("\n");
     END TestPowerPoly;
 
-  PROCEDURE TestPolyPower (x: IR.T) =
+  PROCEDURE TestPolyPower (x: IR.T; ) =
     VAR
       y: IR.T;
       s: REF IR.PowerSumSeq;
@@ -497,12 +496,12 @@ PROCEDURE TestPowerSeq (): BOOLEAN =
 
     RETURN result;
   END TestPowerSeq;
-(*----------------------*)
+
 PROCEDURE TestRootOp (): BOOLEAN =
 
   PROCEDURE TestSingle (READONLY rootx, rooty: ARRAY OF I.T;
-                                 op          : PROCEDURE (x, y: I.T): I.T;
-                                 opr         : PROCEDURE (x, y: IR.T): IR.T) =
+                        op : PROCEDURE (x, y: I.T; ): I.T;
+                        opr: PROCEDURE (x, y: IR.T; ): IR.T; ) =
     VAR x, y, z: IR.T;
     BEGIN
       x := IR.FromRoots(rootx);
@@ -557,7 +556,7 @@ PROCEDURE TestRootOp (): BOOLEAN =
       *)
     END TestPower;
 
-  PROCEDURE NewOneChain (len: CARDINAL; c: I.T): IR.T =
+  PROCEDURE NewOneChain (len: CARDINAL; c: I.T; ): IR.T =
     VAR x: IR.T;
     BEGIN
       x := IR.New(len);
@@ -595,14 +594,14 @@ PROCEDURE TestRootOp (): BOOLEAN =
         FOR k := 1 TO 7 DO
           y := NewOneChain(k, 3);
           (*Msg("y"&IPF.Fmt(y));*)
-          IF j + k < 8 THEN      (*otherwise internal overflow*)
+          IF j + k < 8 THEN      (* otherwise internal overflow*)
             z := IR.Mul(x, y);
             (*
                       Msg(Fmt.FN("%s,%s - %s * %s = %s\n", ARRAY OF TEXT
                         {Fmt.Int(j), Fmt.Int(k), IPF.Fmt(x), IPF.Fmt(y), IPF.Fmt(z)}));
             *)
           END;
-          IF j + k < 7 THEN      (*otherwise internal overflow*)
+          IF j + k < 7 THEN      (* otherwise internal overflow*)
             z := IR.Add(x, y);
             (*
                       Msg(Fmt.FN("%s,%s - %s + %s = %s\n", ARRAY OF TEXT
@@ -685,7 +684,7 @@ PROCEDURE TestRootOp (): BOOLEAN =
     RETURN result;
   END TestRootOp;
 
-(*-------------------------*)
+
 PROCEDURE TestRoot (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -713,6 +712,6 @@ PROCEDURE TestRoot (): BOOLEAN =
 
     RETURN result;
   END TestRoot;
-(*=======================*)
+
 BEGIN
 END TestRoot.

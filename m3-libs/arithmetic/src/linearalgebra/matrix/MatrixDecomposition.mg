@@ -1,5 +1,5 @@
 GENERIC MODULE MatrixDecomposition(R, RT, V, M);
-(*Arithmetic for Modula-3, see doc for details *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Arithmetic AS Arith;
 FROM RT IMPORT Tiny, Eps;
@@ -12,9 +12,9 @@ PROCEDURE AssertSquareForm (READONLY x: M.TBody; ) =
   END AssertSquareForm;
 
 
-(*==========================*)
+
 (* Triangluar Matrices *)
-(*==========================*)
+
 (**
 A triangular matrix A is of the form:
 | a11 a12 a13 a14
@@ -24,7 +24,7 @@ A triangular matrix A is of the form:
 
 A x = b can be solved for b by back substitution
 *)
-PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Arith.Error} =
+PROCEDURE BackSubst (A: M.T; x, b: V.T; ) RAISES {Arith.Error} =
 
   VAR
     m  := NUMBER(A^);
@@ -48,9 +48,9 @@ PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Arith.Error} =
   END BackSubst;
 
 (* Tridiagonal Matrices *)
-(*------------------------*)
-PROCEDURE HouseHolderD (A: M.T) = (*nxn*)
-  (*Convert A to tridiagonal form (destroying original A)*)
+
+PROCEDURE HouseHolderD (A: M.T; ) = (* nxn *)
+  (* Convert A to tridiagonal form (destroying original A)*)
   VAR
     n                                 := NUMBER(A^);
     n1                                := FIRST(A^);
@@ -89,8 +89,8 @@ PROCEDURE HouseHolderD (A: M.T) = (*nxn*)
             END;
             t[i, j] := A[i, j] + b23 / h;
           END;
-        END;                     (*for j*)
-      END;                       (*for i*)
+        END;                     (* for j *)
+      END;                       (* for i *)
       uau := uau / h / h;
       FOR i := n1 TO nn DO
         FOR j := n1 TO nn DO
@@ -98,10 +98,10 @@ PROCEDURE HouseHolderD (A: M.T) = (*nxn*)
           IF ABS(A[i, j]) < Eps THEN A[i, j] := R.Zero; END;
         END;
       END;
-    END;                         (*for row*)
+    END;                         (* for row *)
   END HouseHolderD;
 
-(*---------------------*)
+
 PROCEDURE SplitTridiagonal (A: M.T; ): Tridiagonals =
 
   VAR
@@ -129,8 +129,8 @@ PROCEDURE SplitTridiagonal (A: M.T; ): Tridiagonals =
 
     RETURN Tridiagonals{a, b, c};
   END SplitTridiagonal;
-(*-----------------------*)
-PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T)
+
+PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T; )
   RAISES {Arith.Error} =
   (**Given tridiagonal matrix A, with diagonals a,b,c:
   |  b1 c1  0    ...
@@ -199,7 +199,7 @@ PROCEDURE GaussElim(A:  M.T;
                     x,b:V.T;
                     pivot:BOOLEAN:=TRUE
                     ) RAISES {Arith.Error}=
-(*Generally, we need to pivot to assure division by the largest
+(* Generally, we need to pivot to assure division by the largest
 coeff.  However, sometimes we already know the matrix is in
 the correct form and can avoid pivoting.  In that case, set
 pivot:=FALSE
@@ -326,9 +326,9 @@ PROCEDURE LUDet (LU: LUFactors; ): R.T =
 
 
 (* Destructive LU factoring *)
-PROCEDURE LUFactorD (VAR A    : M.TBody;
-                     VAR index: IndexArray;
-                     VAR d    : [-1 .. 1];  ) RAISES {Arith.Error} =
+PROCEDURE LUFactorD
+  (VAR A: M.TBody; VAR index: IndexArray; VAR d: [-1 .. 1]; )
+  RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = "LUFactorD";
@@ -337,8 +337,8 @@ PROCEDURE LUFactorD (VAR A    : M.TBody;
     sum, dum, max, tmp: R.T;
     Af                      := FIRST(A);
     Al                      := LAST(A);
-    m1                      := LAST(A); (*num rows*)
-    n1                      := LAST(A[0]); (*num cols*)
+    m1                      := LAST(A); (* num rows *)
+    n1                      := LAST(A[0]); (* num cols *)
     n2                      := LAST(index);
     scale                   := NEW(V.T, n1 + 1);
     tmprow                  := NEW(V.T, n1 + 1);
@@ -393,16 +393,16 @@ PROCEDURE LUFactorD (VAR A    : M.TBody;
         (*---is this a better pivot?---*)
         dum := scale[i] * ABS(sum);
         IF dum > max THEN imax := i; max := dum; END (* if *);
-      END (* for j to n*);
+      END (* for j to n *);
 
       (*---exchange rows?---*)
       IF j # imax THEN
-        (*swap rows*)
+        (* swap rows *)
         tmprow^ := A[imax];
         A[imax] := A[j];
         A[j] := tmprow^;
-        d := -d;                 (*fix parity*)
-        scale[imax] := scale[j]; (*fix scale*)
+        d := -d;                 (* fix parity *)
+        scale[imax] := scale[j]; (* fix scale *)
       END (* if *);
 
       (*---set the index for this row---*)
@@ -414,32 +414,30 @@ PROCEDURE LUFactorD (VAR A    : M.TBody;
         dum := R.One / A[j, j];
         FOR i := j + 1 TO Al DO A[i, j] := A[i, j] * dum; END (* for *);
       END (* if *);
-    END (* for next column*);
+    END (* for next column *);
 
     (*---last item---*)
     IF A[Al, Al] = R.Zero THEN A[Al, Al] := Tiny; END (* if *);
   END LUFactorD;
 
-(*-----------------*)
-PROCEDURE LUBackSubstD (VAR      A    : M.TBody;
-                        VAR      B    : V.TBody;
-                        READONLY index: IndexArray) =
+
+PROCEDURE LUBackSubstD
+  (VAR A: M.TBody; VAR B: V.TBody; READONLY index: IndexArray; ) =
   BEGIN
     LUBackSubstSep(A, A, B, index);
   END LUBackSubstD;
 
-PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
-                          VAR      B    : V.TBody;
-                          READONLY index: IndexArray) =
+PROCEDURE LUBackSubstSep
+  (VAR A, U: M.TBody; VAR B: V.TBody; READONLY index: IndexArray; ) =
   <* UNUSED *>
   CONST
     ftn = "LUBackSubstSep";
   VAR
     Af                             := FIRST(A);
     Al                             := LAST(A);
-    m1                             := LAST(A); (*num rows*)
-    n1                             := LAST(A[0]); (*num cols*)
-    m2                             := LAST(B); (*num rows*)
+    m1                             := LAST(A); (* num rows *)
+    n1                             := LAST(A[0]); (* num cols *)
+    m2                             := LAST(B); (* num rows *)
     ii, ip: [-1 .. LAST(CARDINAL)];
     sum   : R.T;
 
@@ -447,7 +445,7 @@ PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
     <* ASSERT m1 = n1 AND m1 = m2, "Matrix and vector sizes must match." *>
 
     (*---find first non-zero---*)
-    ii := Af - 1;                (*marker for first non-zero coeff*)
+    ii := Af - 1;                (* marker for first non-zero coeff *)
     FOR i := Af TO Al DO
       ip := index[i];
       sum := B[ip];
@@ -469,8 +467,8 @@ PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
       B[i] := sum / U[i, i];
     END (* for *);
   END LUBackSubstSep;
-(*-----------------*)
-PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T =
+
+PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray; ): M.T =
   <* UNUSED *>
   CONST
     ftn = "LUInverse";
@@ -490,7 +488,7 @@ PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T =
 
 
 
-PROCEDURE Cholesky (A: M.T): CholeskyResult =
+PROCEDURE Cholesky (A: M.T; ): CholeskyResult =
   VAR
     L := M.NewOne(NUMBER(A^));
     D := V.New(NUMBER(A^));
@@ -516,46 +514,46 @@ PROCEDURE Cholesky (A: M.T): CholeskyResult =
   END Cholesky;
 
 
-(* Singular Value Decomposition*)
+(* Singular Value Decomposition *)
 
 (*
-(*----------------------*)
+
 PROCEDURE SVDGolub(
-           A:M.T;         (*mxn matrix*)
-           b:V.T;         (*nx1 col matrix for each set of *)
-           rhs:CARDINAL;       (*number of right hand sides*)
-           matU:BOOLEAN;       (*make U in the decomposition*)
-           matV:BOOLEAN;       (*make V in the decomposition*)
-           VAR U,V,W:M.T  (*decomposition products*)
+           A:M.T;         (* mxn matrix *)
+           b:V.T;         (* nx1 col matrix for each set of *)
+           rhs:CARDINAL;       (* number of right hand sides *)
+           matU:BOOLEAN;       (* make U in the decomposition *)
+           matV:BOOLEAN;       (* make V in the decomposition *)
+           VAR U,V,W:M.T  (* decomposition products *)
            ) RAISES {Arith.Error}=
-(*Do SVD via Golub and Reinsch *)
+(* Do SVD via Golub and Reinsch *)
 BEGIN
 
 END SVDGolub;
 
-(*------------------------*)
+
 PROCEDURE SVDChan(
-           A:M.T;         (*mxn matrix*)
-           b:V.T;         (*nx1 col matrix*)
-           rhs:CARDINAL;       (*number of right hand sides*)
-           matU:BOOLEAN;       (*make U in the decomposition*)
-           matV:BOOLEAN;       (*make V in the decomposition*)
-           VAR U,V,W:M.T  (*decomposition products*)
+           A:M.T;         (* mxn matrix *)
+           b:V.T;         (* nx1 col matrix *)
+           rhs:CARDINAL;       (* number of right hand sides *)
+           matU:BOOLEAN;       (* make U in the decomposition *)
+           matV:BOOLEAN;       (* make V in the decomposition *)
+           VAR U,V,W:M.T  (* decomposition products *)
            ) RAISES {Arith.Error}=
-(*Do SVD via T. Chan's ACM algorithm 581*)
+(* Do SVD via T. Chan's ACM algorithm 581 *)
 BEGIN
 END SVDChan;
 
-(*-----------------------*)
-PROCEDURE SVDSolve(U,V,W:M.T; (*decomposition*)
-                    b:V.T;     (*rightside*)
-                    VAR x:V.T  (*result*)
+
+PROCEDURE SVDSolve(U,V,W:M.T; (* decomposition *)
+                    b:V.T;     (* rightside *)
+                    VAR x:V.T  (* result *)
                    ) RAISES {Arith.Error}=
 
 
 BEGIN
 END SVDSolve;
 *)
-(*-----------------*)
+
 BEGIN
 END MatrixDecomposition.

@@ -6,7 +6,7 @@ IMPORT Fmt AS F;
 (*IMPORT FloatMode;*)
 IMPORT Arithmetic;
 
-PROCEDURE FmtUnitPart (READONLY name: TEXT; exp: INTEGER): TEXT =
+PROCEDURE FmtUnitPart (READONLY name: TEXT; exp: INTEGER; ): TEXT =
   VAR res: TEXT;
   BEGIN
     IF exp < 0 THEN res := "/"; exp := -exp; ELSE res := " "; END;
@@ -23,7 +23,7 @@ PROCEDURE FmtUnitPart (READONLY name: TEXT; exp: INTEGER): TEXT =
     RETURN res;
   END FmtUnitPart;
 
-PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle): TEXT =
+PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle; ): TEXT =
   VAR
     cu                := UDB.DecomposeUnit(style.unitDataBase, x.unit);
     realExp, abs: R.T;
@@ -37,7 +37,7 @@ PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle): TEXT =
       VAR
         factor := R.One;
         cup    := cu.tail;
-      <*FATAL Arithmetic.Error*>
+      <* FATAL Arithmetic.Error *>
       BEGIN
         WHILE cup # NIL DO
           factor := factor * cup.head.uu.head.scales[

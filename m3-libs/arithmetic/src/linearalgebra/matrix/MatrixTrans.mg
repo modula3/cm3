@@ -1,5 +1,5 @@
 GENERIC MODULE MatrixTrans(R, RT, CT, CVR, M, Eigen);
-(*Arithmetic for Modula-3, see doc for details *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 FROM Arithmetic IMPORT Error;
 
@@ -7,7 +7,7 @@ FROM Arithmetic IMPORT Error;
 CONST
   Module = "MatrixTrans.";
 
-PROCEDURE Norm1 (x: T): R.T =
+PROCEDURE Norm1 (x: T; ): R.T =
   VAR max := R.Zero;
   BEGIN
     FOR j := FIRST(x[0]) TO LAST(x[0]) DO
@@ -22,12 +22,12 @@ PROCEDURE Norm1 (x: T): R.T =
     RETURN max;
   END Norm1;
 
-PROCEDURE Norm2 (x: T): R.T RAISES {Error} =
+PROCEDURE Norm2 (x: T; ): R.T RAISES {Error} =
   BEGIN
     RETURN RT.SqRt(Norm2Sqr(x));
   END Norm2;
 
-PROCEDURE Norm2Sqr (x: T): R.T RAISES {Error} =
+PROCEDURE Norm2Sqr (x: T; ): R.T RAISES {Error} =
   VAR xax: T;
   BEGIN
     IF NUMBER(x^) < NUMBER(x[0]) THEN
@@ -38,12 +38,12 @@ PROCEDURE Norm2Sqr (x: T): R.T RAISES {Error} =
     RETURN Eigen.SquareMethod(xax).value;
   END Norm2Sqr;
 
-PROCEDURE NormFrob (x: T): R.T =
+PROCEDURE NormFrob (x: T; ): R.T =
   BEGIN
     RETURN RT.SqRt(NormFrobSqr(x));
   END NormFrob;
 
-PROCEDURE NormFrobSqr (x: T): R.T =
+PROCEDURE NormFrobSqr (x: T; ): R.T =
   VAR sum := R.Zero;
   BEGIN
     FOR i := FIRST(x^) TO LAST(x^) DO
@@ -52,7 +52,7 @@ PROCEDURE NormFrobSqr (x: T): R.T =
     RETURN sum;
   END NormFrobSqr;
 
-PROCEDURE NormInf (x: T): R.T =
+PROCEDURE NormInf (x: T; ): R.T =
   VAR max := R.Zero;
   BEGIN
     FOR i := FIRST(x^) TO LAST(x^) DO

@@ -1,5 +1,5 @@
 MODULE TestFunctional EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details*)
 
 IMPORT LongRealBasic       AS R,
        LongRealTrans       AS RT,
@@ -16,13 +16,13 @@ IMPORT LongRealFunctional AS Fn, LongRealFunctionalDeriv2 AS FnD;
 
 IMPORT IO, Fmt;
 
-(*=======================*)
-CONST Module = "TestFunctional.";
-(*----------------------*)
-PROCEDURE TestDeriv (): BOOLEAN =
-  <*FATAL ANY*>
 
-  PROCEDURE SquareForm (x: V.T): R.T =
+CONST Module = "TestFunctional.";
+
+PROCEDURE TestDeriv (): BOOLEAN =
+  <* FATAL ANY *>
+
+  PROCEDURE SquareForm (x: V.T; ): R.T =
     BEGIN
       RETURN V.Inner(x, M.MulV(mat, x));
     END SquareForm;
@@ -40,7 +40,7 @@ PROCEDURE TestDeriv (): BOOLEAN =
     Debug(1, ftn, "begin\n");
     FOR i := FIRST(mat^) TO LAST(mat^) DO
       vec[i] := RT.Cos(FLOAT(i, R.T));
-      (*choose this around a third of the number precision, don't make it
+      (* choose this around a third of the number precision, don't make it
          to small otherwise heavy cancelations will occur*)
       dvec[i] := 1.0D-5;
       FOR j := FIRST(mat[0]) TO LAST(mat[0]) DO
@@ -58,20 +58,21 @@ PROCEDURE TestDeriv (): BOOLEAN =
              ARRAY OF
                TEXT{VF.Fmt(der.first), VF.Fmt(diff.first), RF.Fmt(err1),
                     MF.Fmt(der.second), MF.Fmt(diff.second), RF.Fmt(err2)}));
-    <*ASSERT ABS(err1)<1.0D-7*>
-    <*ASSERT ABS(err2)<1.0D-5*>
+    <* ASSERT ABS(err1) < 1.0D-7 *>
+    <* ASSERT ABS(err2) < 1.0D-5 *>
     RETURN result;
   END TestDeriv;
-(*-------------------------*)
+
 PROCEDURE TestFunctional (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestFunctional";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestFunctional";
   VAR result := TRUE;
   BEGIN
     NewLine();
     EVAL TestDeriv();
     RETURN result;
   END TestFunctional;
-(*=======================*)
+
 BEGIN
 END TestFunctional.

@@ -7,14 +7,6 @@ IMPORT IO, Fmt,
        PhysicalUnitFmtLex AS UF;
 *)
 
-(*
-PROCEDURE NextItem(VAR uu:UU.T):BOOLEAN=
-  BEGIN
-    uu:=uu.next;
-    RETURN uu#NIL;
-  END NextItem;
-*)
-
 (* should be part of the List module *)
 PROCEDURE RemoveFirst (VAR l: CUList.T; ): CUList.T =
   VAR fst: CUList.T;
@@ -29,7 +21,7 @@ PROCEDURE RemoveFirst (VAR l: CUList.T; ): CUList.T =
 PROCEDURE AddUnit (VAR      db    : T;
                    READONLY unit  : ARRAY OF U.ExpType;
                             flags : UU.FlagSet;
-                   READONLY scales: ARRAY OF ScaledUnitInit) =
+                   READONLY scales: ARRAY OF ScaledUnitInit; ) =
   VAR
     newScales: REF ARRAY OF UU.ScaledUnit;
     defScale : CARDINAL;

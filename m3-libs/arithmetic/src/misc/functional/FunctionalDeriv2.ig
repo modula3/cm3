@@ -4,8 +4,6 @@ GENERIC INTERFACE FunctionalDeriv2(R, V, M);
    Abstract: Up to the second derivative of a functional on a finite vector
    space *)
 
-(*==========================*)
-
 TYPE
   T = RECORD
         zeroth: R.T;
@@ -13,8 +11,7 @@ TYPE
         second: M.T;
       END;
 
-PROCEDURE Add (READONLY x, y: T): T;
-PROCEDURE Scale (READONLY x: T; y: R.T): T;
+PROCEDURE Add (READONLY x, y: T; ): T;
+PROCEDURE Scale (READONLY x: T; y: R.T; ): T;
 
-(*==========================*)
 END FunctionalDeriv2.

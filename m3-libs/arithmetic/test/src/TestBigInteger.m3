@@ -1,9 +1,9 @@
 MODULE TestBigInteger EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for BigInteger module.
+(* Arithmetic for Modula-3, see doc for details
 
-   3/6/96 Harry George Initial version
+   Abstract: Tests for BigInteger module.
 
-   *)
+   3/6/96 Harry George Initial version *)
 
 IMPORT BigInteger             AS B,
        BigIntegerRep          AS BR,
@@ -19,14 +19,14 @@ IMPORT BigInteger             AS B,
        Thread,
        Arithmetic;
 FROM BigIntegerMatrixIntegerPower IMPORT Power;
-(*=======================*)
+
 CONST Module = "TestBigInteger.";
 
 CONST
   base2Style  = BF.FmtStyle{base := 2};
   base16Style = BF.FmtStyle{base := 16};
-(*----------------------*)
-<*FATAL Arithmetic.Error*>
+
+<* FATAL Arithmetic.Error *>
 PROCEDURE TestBasic (): BOOLEAN =
   CONST ftn = Module & "TestBasic";
   VAR
@@ -52,16 +52,16 @@ PROCEDURE TestBasic (): BOOLEAN =
     *)
     x := B.FromInteger(16_800000);
     y := B.Mul(B.FromInteger(16_8000), B.FromInteger(16_10000));
-    <*ASSERT B.Equal(B.Mod(x,y),x) *>
+    <* ASSERT B.Equal(B.Mod(x, y), x) *>
     x := B.Add(B.Mul(B.FromInteger(16_d6c5), B.FromInteger(16_10000)),
                B.FromInteger(16_61ad));
     y := B.Add(B.Mul(B.FromInteger(16_d63c), B.FromInteger(16_10000)),
                B.FromInteger(16_8e1d));
-    <*ASSERT B.Equal(B.Mod(x,y),B.Sub(x,y)) *>
+    <* ASSERT B.Equal(B.Mod(x, y), B.Sub(x, y)) *>
 
     RETURN result;
   END TestBasic;
-(*----------------------*)
+
 PROCEDURE TestPower (): BOOLEAN =
   CONST
     ftn    = Module & "TestPower";
@@ -77,25 +77,25 @@ PROCEDURE TestPower (): BOOLEAN =
     z := B.Zero;
 
     FOR j := 0 TO cycles - 1 DO
-      (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j),
+      (* Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j),
          BF.Fmt(z,base16Style), BF.Fmt(z,base2Style)}));*)
       z := BR.AddU(z, y);
       y := BR.MulU(y, x);
     END;
-    (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles),
+    (* Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles),
        BF.Fmt(z,base16Style), BF.Fmt(z,base2Style)}));*)
     z := BR.MulU(z, B.FromInteger(7));
     fff := BF.Fmt(z, base16Style);
     Msg(
       "multiply with 7: 16_" & fff & ": 2_" & BF.Fmt(z, base2Style) & "\n");
-    <*ASSERT Text.Length(fff) = (cycles DIV 4)*3 *>
+    <* ASSERT Text.Length(fff) = (cycles DIV 4) * 3 *>
     FOR j := 0 TO Text.Length(fff) - 1 DO
-      <*ASSERT Text.GetChar(fff,j)='f'*>
+      <* ASSERT Text.GetChar(fff, j) = 'f' *>
     END;
 
     RETURN result;
   END TestPower;
-(*----------------------*)
+
 PROCEDURE TestAddshift (): BOOLEAN =
   CONST
     ftn    = Module & "TestAddshift";
@@ -168,14 +168,15 @@ PROCEDURE TestAddshift (): BOOLEAN =
                                              BF.Fmt(qr.rem, base16Style)}));
     qr.quot.sign := FALSE;
     qr.rem.sign := FALSE;
-    <*ASSERT B.Equal(x,BR.AddU(qr.rem,BR.MulU(qr.quot,y)))*>
+    <* ASSERT B.Equal(x, BR.AddU(qr.rem, BR.MulU(qr.quot, y))) *>
 
-    <*ASSERT NOT B.IsZero(B.Mod(B.FromInteger(16_4f7d3f), B.FromInteger(16_37))) *>
+    <* ASSERT NOT B.IsZero(
+                    B.Mod(B.FromInteger(16_4f7d3f), B.FromInteger(16_37))) *>
 
     RETURN result;
   END TestAddshift;
-(*----------------------*)
-<*FATAL Wr.Failure, Thread.Alerted*>
+
+<* FATAL Wr.Failure, Thread.Alerted *>
 PROCEDURE TestFibonacci (): BOOLEAN =
   CONST ftn = Module & "TestFibonacci";
   TYPE
@@ -212,7 +213,7 @@ PROCEDURE TestFibonacci (): BOOLEAN =
             }
           ));
       *)
-      <*ASSERT B.Equal(y,pow[1,1])*>
+      <* ASSERT B.Equal(y, pow[1, 1]) *>
     END;
     Msg(BF.Fmt(x, base16Style));
     NewLine();
@@ -220,11 +221,11 @@ PROCEDURE TestFibonacci (): BOOLEAN =
     pow := Power(base, cycles);
     Msg(BMF.Fmt(pow, BMF.FmtStyle{elemStyle := base16Style}));
     NewLine();
-    <*ASSERT B.Equal(x,pow[1,1])*>
+    <* ASSERT B.Equal(x, pow[1, 1]) *>
 
     RETURN result;
   END TestFibonacci;
-(*-------------------------*)
+
 PROCEDURE TestPseudoprime (): BOOLEAN =
   (*
   This prime Test works for many numbers but not for all.
@@ -243,7 +244,7 @@ PROCEDURE TestPseudoprime (): BOOLEAN =
 
     FOR j := 3 TO 1000 DO
       x[3] := B.Add(x[0], x[1]);
-      (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {BF.Fmt(x[3],base16Style),
+      (* Msg(F.FN("%s / %s\n", ARRAY OF TEXT {BF.Fmt(x[3],base16Style),
          F.Int(j,16)}));*)
       mod := B.Mod(x[3], B.FromInteger(j));
       prime0 := B.IsZero(mod);
@@ -252,17 +253,18 @@ PROCEDURE TestPseudoprime (): BOOLEAN =
       Msg(F.FN("%2s: %s, mod %s prime %s vs. %s\n",
         ARRAY OF TEXT {F.Int(j), BF.Fmt(x[3],10), BF.Fmt(mod,10), F.Bool(prime0), F.Bool(prime1)}));
       *)
-      <*ASSERT prime0=prime1*>
+      <* ASSERT prime0 = prime1 *>
       x[0] := x[1];
       x[1] := x[2];
       x[2] := x[3];
     END;
     RETURN result;
   END TestPseudoprime;
-(*-------------------------*)
+
 PROCEDURE TestBigInteger (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestBigInteger";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestBigInteger";
   VAR result := TRUE;
   BEGIN
     NewLine();
@@ -278,6 +280,6 @@ PROCEDURE TestBigInteger (): BOOLEAN =
 
     RETURN result;
   END TestBigInteger;
-(*=======================*)
+
 BEGIN
 END TestBigInteger.

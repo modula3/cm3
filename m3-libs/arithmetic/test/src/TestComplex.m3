@@ -1,5 +1,5 @@
 MODULE TestComplex EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details 
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Test driver for Complex
 
@@ -11,11 +11,11 @@ IMPORT Fmt,
        LongRealComplexFmtLex AS CF,
        LongRealPolar         AS P,
        LongRealPolarFmtLex   AS PF;
-(*=======================*)
+
 CONST Module = "TestComplex.";
 
-(*------------------------------*)
-<*FATAL ANY*>
+
+<* FATAL ANY *>
 PROCEDURE TestComplex (): BOOLEAN =
   CONST ftn = Module & "TestComplex";
   VAR
@@ -62,6 +62,6 @@ PROCEDURE TestComplex (): BOOLEAN =
     RETURN result;
   END TestComplex;
 
-(*=======================*)
+
 BEGIN
 END TestComplex.

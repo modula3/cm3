@@ -1,11 +1,12 @@
 GENERIC MODULE PolynomialBasic(R, VR);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
+
 IMPORT Arithmetic AS Arith;
 
 CONST Module = "PolynomialBasic.";
 
-(*--------------------*)
-PROCEDURE Strip (x: T): T =
+
+PROCEDURE Strip (x: T; ): T =
   VAR n := Size(x);
   BEGIN
     IF n = NUMBER(x^) THEN
@@ -19,8 +20,8 @@ PROCEDURE Strip (x: T): T =
     END;
   END Strip;
 
-(*--------------------*)
-PROCEDURE Size (x: T): CARDINAL =
+
+PROCEDURE Size (x: T; ): CARDINAL =
   BEGIN
     FOR n := LAST(x^) TO FIRST(x^) BY -1 DO
       IF NOT R.IsZero(x[n]) THEN RETURN n + 1; END;
@@ -29,8 +30,8 @@ PROCEDURE Size (x: T): CARDINAL =
   END Size;
 
 
-(*-----------------*)
-PROCEDURE Add (x, y: T): T =
+
+PROCEDURE Add (x, y: T; ): T =
   VAR
     xl := LAST(x^);
     yl := LAST(y^);
@@ -48,8 +49,8 @@ PROCEDURE Add (x, y: T): T =
     END;
     RETURN Strip(z);
   END Add;
-(*-----------------*)
-PROCEDURE Sub (x, y: T): T =
+
+PROCEDURE Sub (x, y: T; ): T =
   VAR
     xl := LAST(x^);
     yl := LAST(y^);
@@ -67,20 +68,20 @@ PROCEDURE Sub (x, y: T): T =
     RETURN Strip(z);
   END Sub;
 
-(*---------------------*)
-PROCEDURE Compare (<* UNUSED *> x, y: T): [-1 .. 1] =
+
+PROCEDURE Compare (<* UNUSED *> x, y: T; ): [-1 .. 1] =
   BEGIN
     <* ASSERT FALSE *>
   END Compare;
 
-(*---------------------*)
-PROCEDURE IsZero (x: T): BOOLEAN =
+
+PROCEDURE IsZero (x: T; ): BOOLEAN =
   BEGIN
     RETURN x = NIL OR NUMBER(x^) = 0 OR R.IsZero(x[0]);
   END IsZero;
 
-(*---------------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN =
+
+PROCEDURE Equal (x, y: T; ): BOOLEAN =
   VAR
     xn := NUMBER(x^);
     yn := NUMBER(y^);
@@ -94,8 +95,8 @@ PROCEDURE Equal (x, y: T): BOOLEAN =
     END;
   END Equal;
 
-(*---------------------*)
-PROCEDURE Mul (x, y: T): T =
+
+PROCEDURE Mul (x, y: T; ): T =
   VAR
     xnum := Size(x);
     ynum := Size(y);
@@ -113,8 +114,8 @@ PROCEDURE Mul (x, y: T): T =
     RETURN z;
   END Mul;
 
-(*---------------------*)
-PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
+
+PROCEDURE Div (x, y: T; ): T RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = Module & "Div";
@@ -134,7 +135,7 @@ PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
 
     (*---check for quick exit---*)
     IF xl < yl THEN
-      (*can't do any Divides at all*)
+      (* can't do any Divides at all *)
       q := NEW(T, 1);
       q[0] := R.Zero;
       RETURN q;
@@ -157,15 +158,15 @@ PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
       qtmp := R.Div(r[ri], ymax);
       q[qi] := qtmp;
       ri2 := ri;
-      r[ri2] := R.Zero;          (*subtraction of values that should be
+      r[ri2] := R.Zero;          (* subtraction of values that should be
                                     equal does not work for floating point
-                                    numbers*)
+                                    numbers *)
       FOR yi := yl - 1 TO y0 BY -1 DO
         DEC(ri2);
         r[ri2] := R.Sub(r[ri2], R.Mul(qtmp, y[yi]));
       END;
     END;
-    (*This check will probably fail on floating point numbers*)
+    (* This check will probably fail on floating point numbers *)
     FOR ri := (xl - ql) - 1 TO 0 BY -1 DO
       IF NOT R.Equal(r[ri], R.Zero) THEN
         RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
@@ -174,8 +175,8 @@ PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
     RETURN q;
   END Div;
 
-(*---------------------*)
-PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
+
+PROCEDURE DivMod (x, y: T; ): QuotRem RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = Module & "DivMod";
@@ -196,7 +197,7 @@ PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
 
     (*---check for quick exit---*)
     IF xl < yl THEN
-      (*can't do any Divides at all*)
+      (* can't do any Divides at all *)
       q := NEW(T, 1);
       q[0] := R.Zero;
       RETURN QuotRem{q, r};
@@ -227,18 +228,18 @@ PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
     RETURN QuotRem{Strip(q), Strip(r)};
   END DivMod;
 
-(*--------------------*)
-PROCEDURE Mod (x, y: T): T RAISES {Arith.Error} =
-  (*Using DivMod is not optimal.  One may save a bit space for the
-     quotient.*)
+
+PROCEDURE Mod (x, y: T; ): T RAISES {Arith.Error} =
+  (* Using DivMod is not optimal.  One may save a bit space for the
+     quotient. *)
   BEGIN
     RETURN DivMod(x, y).rem;
   END Mod;
 
 
-(*--------------------*)
-(*Horner's scheme*)
-PROCEDURE Eval (x: T; xi: R.T): R.T =
+
+(* Horner's scheme *)
+PROCEDURE Eval (x: T; xi: R.T; ): R.T =
   VAR
     l := LAST(x^);
     y := x[l];
@@ -247,9 +248,8 @@ PROCEDURE Eval (x: T; xi: R.T): R.T =
     RETURN y;
   END Eval;
 
-(*---------------------*)
-PROCEDURE Derive (x: T;          (*differentiate polynomial*)
-  ): T =
+
+PROCEDURE Derive (x: T; ): T =
   VAR
     y   := NEW(T, LAST(x^));
     fac := R.Zero;
@@ -261,9 +261,9 @@ PROCEDURE Derive (x: T;          (*differentiate polynomial*)
     RETURN y;
   END Derive;
 
-(*---------------------*)
+
 PROCEDURE EvalDerivative (x: T; xi: R.T; n: CARDINAL; ): REF ARRAY OF R.T =
-  (*Given a poly with coefs x, find the value at xi as pd[0], and nd more
+  (* Given a poly with coefs x, find the value at xi as pd[0], and nd more
      EvalDerivativeatives as pd[1]..pd[pdl]. *)
   VAR
     xf             := FIRST(x^);
@@ -296,9 +296,9 @@ PROCEDURE EvalDerivative (x: T; xi: R.T; n: CARDINAL; ): REF ARRAY OF R.T =
     RETURN pd;
   END EvalDerivative;
 
-(*--------------------*)
-(*Horner's scheme with polynomial as argument*)
-PROCEDURE Compose (x, y: T;      (*y(x) - apply y on the values of x*)
+
+(* Horner's scheme with polynomial as argument *)
+PROCEDURE Compose (x, y: T;      (* y(x) - apply y on the values of x *)
   ): T =
   (*VAR z := V.FromScalar(y[LAST(y^)]);*)
   VAR z := NEW(T, 1);
@@ -311,6 +311,5 @@ PROCEDURE Compose (x, y: T;      (*y(x) - apply y on the values of x*)
     RETURN z;
   END Compose;
 
-(*==========================*)
 BEGIN
 END PolynomialBasic.

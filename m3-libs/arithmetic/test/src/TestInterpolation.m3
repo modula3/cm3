@@ -1,22 +1,22 @@
 MODULE TestInterpolation EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Test driver for interpolation.
 
    12/28/95 Harry George Initial version
-    1/29/96 Harry George converted to
-   m3na format *)
+
+   1/29/96 Harry George converted to m3na format *)
 
 IMPORT LongRealBasic         AS R,
        LongRealFmtLex        AS RF,
        LongRealInterpolation AS Ip,
        Arithmetic;
 FROM LongRealTrans IMPORT Sin;
-(*=======================*)
+
 CONST Module = "TestInterpolation.";
-(*=======================*)
-<*FATAL Arithmetic.Error*>
-(*----------------------*)
+
+<* FATAL Arithmetic.Error *>
+
 PROCEDURE TestLinear (): BOOLEAN =
   CONST
     ftn        = Module & "TestLinear";
@@ -34,7 +34,7 @@ PROCEDURE TestLinear (): BOOLEAN =
 
     scale := rangewidth / FLOAT(numsample, R.T);
     FOR i := 0 TO LAST(xa^) DO
-      xa[i] := FLOAT(i, R.T) * scale; (*range of 0..3.0*)
+      xa[i] := FLOAT(i, R.T) * scale; (* range of 0..3.0 *)
       ya[i] := Sin(xa[i]);
     END;
 
@@ -49,13 +49,13 @@ PROCEDURE TestLinear (): BOOLEAN =
           & RF.Fmt(y2) & "\t dy=" & RF.Fmt(y2 - y1) & "\t relerr="
           & RF.Fmt((y2 - y1) / y1) & "\n y3=" & RF.Fmt(y3) & "\t dy="
           & RF.Fmt(y3 - y1) & "\t relerr=" & RF.Fmt((y3 - y1) / y1) & "\n");
-      <*ASSERT ABS(y2-y1)<=ABS(y1)*0.0002D0*>
-      <*ASSERT ABS(y3-y1)<=ABS(y1)*0.00001D0*>
+      <* ASSERT ABS(y2 - y1) <= ABS(y1) * 0.0002D0 *>
+      <* ASSERT ABS(y3 - y1) <= ABS(y1) * 0.00001D0 *>
     END;
     RETURN result;
   END TestLinear;
 
-(*----------------------*)
+
 PROCEDURE TestNewton (): BOOLEAN =
   CONST ftn = Module & "TestNewton";
   VAR
@@ -72,7 +72,7 @@ PROCEDURE TestNewton (): BOOLEAN =
     Debug(1, ftn, "begin\n");
 
     FOR i := n1 TO nn DO
-      xa[i] := 3.0D0 * FLOAT(i, R.T) * scale; (*range of 0..3.0*)
+      xa[i] := 3.0D0 * FLOAT(i, R.T) * scale; (* range of 0..3.0 *)
       ya[i] := Sin(xa[i]);
     END;
 
@@ -84,7 +84,7 @@ PROCEDURE TestNewton (): BOOLEAN =
       Msg("10-point: x=" & RF.Fmt(x) & "\n y1=" & RF.Fmt(y1) & "\n y2="
             & RF.Fmt(y2) & "\n dy=" & RF.Fmt(dy) & " relerr="
             & RF.Fmt((y2 - y1) / y1) & "\n");
-      <*ASSERT ABS(y2-y1)<ABS(y1)*0.000001D0*>
+      <* ASSERT ABS(y2 - y1) < ABS(y1) * 0.000001D0 *>
     END;
 
     offset := 0.1D0;
@@ -95,15 +95,16 @@ PROCEDURE TestNewton (): BOOLEAN =
       Msg("4-point: x=" & RF.Fmt(x) & "\n y1=" & RF.Fmt(y1) & "\n y2="
             & RF.Fmt(y2) & "\n dy=" & RF.Fmt(dy) & " relerr="
             & RF.Fmt((y2 - y1) / y1) & "\n");
-      <*ASSERT ABS(y2-y1)<ABS(y1)*0.0005D0*>
+      <* ASSERT ABS(y2 - y1) < ABS(y1) * 0.0005D0 *>
     END;
 
     RETURN result;
   END TestNewton;
-(*-------------------------*)
+
 PROCEDURE TestInterpolation (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestInterpolation";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestInterpolation";
   VAR result := TRUE;
   BEGIN
     NewLine();
@@ -112,6 +113,6 @@ PROCEDURE TestInterpolation (): BOOLEAN =
     EVAL TestNewton();
     RETURN result;
   END TestInterpolation;
-(*=======================*)
+
 BEGIN
 END TestInterpolation.

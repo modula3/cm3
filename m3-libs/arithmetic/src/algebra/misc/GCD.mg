@@ -93,7 +93,7 @@ PROCEDURE Bezout (u, v, w: T; VAR (*OUT*) c: ARRAY [0 .. 1], [0 .. 1] OF T)
   BEGIN
     c[0, 0] := R.Mul(c[0, 0], k);
     c[0, 1] := R.Mul(c[0, 1], k);
-    (*reduce c[0,0] and c[0,1]*)
+    (* reduce c[0,0] and c[0,1]*)
     fr := R.DivMod(c[0, 0], c[1, 0]);
     c[0, 0] := fr.rem;
     c[0, 1] := R.Sub(c[0, 1], R.Mul(fr.quot, c[1, 1]));

@@ -9,7 +9,7 @@ CONST
 
 (* it is trace(x^n) = lambda[1]^n+...+lambda[n]^n thus we get sequence of
    power sums if we compute the trace of successive powers of x *)
-PROCEDURE CharPolynomial (x: M.T): Rt.T =
+PROCEDURE CharPolynomial (x: M.T; ): Rt.T =
   BEGIN
     <* ASSERT NUMBER(x^) = NUMBER(x[0]), "Matrix must have square form!" *>
     VAR
@@ -29,7 +29,7 @@ PROCEDURE CharPolynomial (x: M.T): Rt.T =
     END;
   END CharPolynomial;
 
-PROCEDURE CompanionMatrix (x: Rt.T): M.T =
+PROCEDURE CompanionMatrix (x: Rt.T; ): M.T =
   BEGIN
     <* ASSERT R.Equal(x[LAST(x^)], R.One),
                 "The leading coefficient of the polynomial must be one." *>

@@ -1,5 +1,5 @@
 GENERIC MODULE FloatFmtLex(FI);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Thread;
 (*IMPORT Fmt AS F;*)
@@ -9,12 +9,12 @@ IMPORT Text AS Tx;
 IMPORT TextExtras AS Txe;
 FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT =
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT =
   BEGIN
     RETURN FI.Fmt(x, style.style, style.prec, style.literal);
   END Fmt;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within: Precedence):
+PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within: Precedence; ):
   TEXT =
   VAR
     result           := FI.Fmt(x, style.style, style.prec);
@@ -31,7 +31,7 @@ PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within: Precedence):
   END Tex;
 
 
-PROCEDURE Lex (rd: Rd.T;  <*UNUSED*>READONLY style: LexStyle; ): T
+PROCEDURE Lex (rd: Rd.T; <* UNUSED *> READONLY style: LexStyle; ): T
   RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
   BEGIN
     RETURN FI.Lex(rd);

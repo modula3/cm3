@@ -8,7 +8,6 @@ INTERFACE BigInteger;
 
    Daniel Beer, Henning Thielemann *)
 
-(*==========================*)
 
 FROM Arithmetic IMPORT Error;
 
@@ -58,5 +57,4 @@ PROCEDURE Rec (READONLY x: T; ): T RAISES {Error};
 PROCEDURE Mod (READONLY x, y: T; ): T RAISES {Error};
 PROCEDURE DivMod (READONLY x, y: T; ): QuotRem RAISES {Error};
 
-(*==========================*)
 END BigInteger.

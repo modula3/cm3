@@ -14,7 +14,6 @@ CONST base16Style = BF.FmtStyle{base := 16};
 <* UNUSED *>
 CONST
   Module = "BigIntegerRep.";
-(*==========================*)
 
 
 PROCEDURE Clear ( (*OUT*)v: Value; ) =
@@ -238,13 +237,13 @@ a=2^-i   b=2^-j
 
 
 (**
-PROCEDURE FmtBitPos (sh : BitPos) : TEXT =
+PROCEDURE FmtBitPos (sh: BitPos;) : TEXT =
 BEGIN
   RETURN Fmt.FN("{%s,%s}",
             ARRAY OF TEXT {Fmt.Int(sh.word),Fmt.Int(sh.bit)});
 END FmtBitPos;
 
-PROCEDURE FmtBig (x: T): TEXT =
+PROCEDURE FmtBig (x: T;): TEXT =
   BEGIN
     RETURN
       Fmt.FN(
@@ -495,6 +494,6 @@ PROCEDURE DivModU (x, y: T; ): QuotRem RAISES {Arith.Error} =
     RETURN QuotRem{q, r};
   END DivModU;
 
-(*==========================*)
+
 BEGIN
 END BigIntegerRep.

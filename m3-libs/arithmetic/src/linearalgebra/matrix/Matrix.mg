@@ -1,17 +1,17 @@
 GENERIC MODULE Matrix(R, V);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 
 <* UNUSED *>
 CONST
   Module = "Matrix.";
 
-PROCEDURE New (m, n: CARDINAL): T =
+PROCEDURE New (m, n: CARDINAL; ): T =
   BEGIN
     RETURN NEW(T, m, n);
   END New;
 
-PROCEDURE FromArray (READONLY x: TBody): T =
+PROCEDURE FromArray (READONLY x: TBody; ): T =
   VAR
     m := NUMBER(x);
     n := NUMBER(x[0]);
@@ -21,14 +21,14 @@ PROCEDURE FromArray (READONLY x: TBody): T =
     RETURN z;
   END FromArray;
 
-PROCEDURE FromMatrixArray (READONLY x: TMBody): T =
+PROCEDURE FromMatrixArray (READONLY x: TMBody; ): T =
   BEGIN
     IF NUMBER(x) = 0 OR NUMBER(x[0]) = 0 THEN
       RETURN New(0, 0);
     ELSE
       VAR m, n: CARDINAL := 0;
       BEGIN
-        (*check matching row numbers and sum them up*)
+        (* check matching row numbers and sum them up *)
         FOR i := 0 TO LAST(x) DO
           WITH size = NUMBER(x[i, 0]^) DO
             FOR j := 1 TO LAST(x[0]) DO
@@ -37,7 +37,7 @@ PROCEDURE FromMatrixArray (READONLY x: TMBody): T =
             INC(m, size);
           END;
         END;
-        (*check matching column numbers and sum them up*)
+        (* check matching column numbers and sum them up *)
         FOR j := 0 TO LAST(x[0]) DO
           WITH size = NUMBER(x[0, j][0]) DO
             FOR i := 1 TO LAST(x) DO
@@ -70,21 +70,21 @@ PROCEDURE FromMatrixArray (READONLY x: TMBody): T =
     END;
   END FromMatrixArray;
 
-PROCEDURE RowFromArray (READONLY x: V.TBody): T =
+PROCEDURE RowFromArray (READONLY x: V.TBody; ): T =
   VAR z := NEW(T, 1, NUMBER(x));
   BEGIN
     z[0] := x;
     RETURN z;
   END RowFromArray;
 
-PROCEDURE ColumnFromArray (READONLY x: V.TBody): T =
+PROCEDURE ColumnFromArray (READONLY x: V.TBody; ): T =
   VAR z := NEW(T, NUMBER(x), 1);
   BEGIN
     FOR i := 0 TO LAST(x) DO z[i, 0] := x[i]; END;
     RETURN z;
   END ColumnFromArray;
 
-PROCEDURE DiagonalFromArray (READONLY x: V.TBody): T =
+PROCEDURE DiagonalFromArray (READONLY x: V.TBody; ): T =
   VAR z := NEW(T, NUMBER(x), NUMBER(x));
   BEGIN
     FOR i := FIRST(x) TO LAST(x) DO
@@ -97,29 +97,29 @@ PROCEDURE DiagonalFromArray (READONLY x: V.TBody): T =
     RETURN z;
   END DiagonalFromArray;
 
-PROCEDURE RowFromVector (x: V.T): T =
+PROCEDURE RowFromVector (x: V.T; ): T =
   BEGIN
     RETURN RowFromArray(x^);
   END RowFromVector;
 
-PROCEDURE ColumnFromVector (x: V.T): T =
+PROCEDURE ColumnFromVector (x: V.T; ): T =
   BEGIN
     RETURN ColumnFromArray(x^);
   END ColumnFromVector;
 
-PROCEDURE DiagonalFromVector (x: V.T): T =
+PROCEDURE DiagonalFromVector (x: V.T; ): T =
   BEGIN
     RETURN DiagonalFromArray(x^);
   END DiagonalFromVector;
 
-PROCEDURE FromScalar (x: R.T): T =
+PROCEDURE FromScalar (x: R.T; ): T =
   VAR z := NEW(T, 1, 1);
   BEGIN
     z[0, 0] := x;
     RETURN z;
   END FromScalar;
 
-PROCEDURE Copy (x: T): T =
+PROCEDURE Copy (x: T; ): T =
   VAR
     m := NUMBER(x^);
     n := NUMBER(x[0]);
@@ -130,7 +130,7 @@ PROCEDURE Copy (x: T): T =
   END Copy;
 
 
-PROCEDURE NewZero (m, n: CARDINAL): T = (*create zero matrix*)
+PROCEDURE NewZero (m, n: CARDINAL; ): T =
   VAR
     mf := 0;
     ml := m - 1;
@@ -142,7 +142,7 @@ PROCEDURE NewZero (m, n: CARDINAL): T = (*create zero matrix*)
     RETURN z;
   END NewZero;
 
-PROCEDURE NewOne (n: CARDINAL): T = (*create identity matrix*)
+PROCEDURE NewOne (n: CARDINAL; ): T =
   VAR
     nf := 0;
     nl := n - 1;
@@ -155,7 +155,7 @@ PROCEDURE NewOne (n: CARDINAL): T = (*create identity matrix*)
     RETURN z;
   END NewOne;
 
-PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER): T =
+PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER; ): T =
   VAR
     z             := New(size, NUMBER(x^));
     rem: CARDINAL;
@@ -183,14 +183,14 @@ PROCEDURE Transpose (x: T; ): T =
 
 
 
-PROCEDURE GetRow (x: T; k: CARDINAL): V.T =
+PROCEDURE GetRow (x: T; k: CARDINAL; ): V.T =
   VAR y := V.New(NUMBER(x[0]));
   BEGIN
     y^ := x[k];
     RETURN y;
   END GetRow;
 
-PROCEDURE GetColumn (x: T; k: CARDINAL): V.T =
+PROCEDURE GetColumn (x: T; k: CARDINAL; ): V.T =
   VAR y := V.New(NUMBER(x^));
   BEGIN
     FOR j := 0 TO LAST(y^) DO y[j] := x[j, k]; END;
@@ -198,14 +198,14 @@ PROCEDURE GetColumn (x: T; k: CARDINAL): V.T =
   END GetColumn;
 
 
-PROCEDURE Apply (x: T; f: ApplyFtn) =
+PROCEDURE Apply (x: T; f: ApplyFtn; ) =
   BEGIN
     FOR i := 0 TO LAST(x^) DO
       FOR j := 0 TO LAST(x[0]) DO f(x[i, j]); END;
     END;
   END Apply;
 
-PROCEDURE Map (x: T; f: MapFtn): T =
+PROCEDURE Map (x: T; f: MapFtn; ): T =
   VAR y := NEW(T, NUMBER(x^), NUMBER(x[0]));
   BEGIN
     FOR i := 0 TO LAST(x^) DO
@@ -214,7 +214,7 @@ PROCEDURE Map (x: T; f: MapFtn): T =
     RETURN y;
   END Map;
 
-PROCEDURE ReduceRows (x: T; f: ReduceFtn; READONLY init: V.TBody): V.T =
+PROCEDURE ReduceRows (x: T; f: ReduceFtn; READONLY init: V.TBody; ): V.T =
   VAR y := NEW(V.T, NUMBER(init));
   BEGIN
     y^ := init;
@@ -224,7 +224,8 @@ PROCEDURE ReduceRows (x: T; f: ReduceFtn; READONLY init: V.TBody): V.T =
     RETURN y;
   END ReduceRows;
 
-PROCEDURE ReduceColumns (x: T; f: ReduceFtn; READONLY init: V.TBody): V.T =
+PROCEDURE ReduceColumns (x: T; f: ReduceFtn; READONLY init: V.TBody; ):
+  V.T =
   VAR y := NEW(V.T, NUMBER(init));
   BEGIN
     y^ := init;

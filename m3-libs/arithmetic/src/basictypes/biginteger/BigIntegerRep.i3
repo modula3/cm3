@@ -7,7 +7,6 @@ IMPORT Word AS W;
 IMPORT BigInteger AS BI;
 FROM Arithmetic IMPORT Error;
 
-(*==========================*)
 
 REVEAL BI.Value = BRANDED "BigIntegerValue" REF ARRAY OF W.T;
 

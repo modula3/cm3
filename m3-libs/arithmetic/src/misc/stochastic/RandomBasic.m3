@@ -18,7 +18,7 @@ IMPORT LongRealBasic        AS R,
 
 CONST Module = "RandomBasic.";
 
-(*======================================*)
+
 REVEAL
   TBoolean = TBooleanPublic BRANDED OBJECT
              OVERRIDES
@@ -28,13 +28,13 @@ REVEAL
              END;
 
 <* INLINE *>
-PROCEDURE GenerateBooleanFromBoolean (SELF: TBoolean): BOOLEAN =
+PROCEDURE GenerateBooleanFromBoolean (SELF: TBoolean; ): BOOLEAN =
   BEGIN
     RETURN SELF.engine();
   END GenerateBooleanFromBoolean;
 
 (* Generates a word, bit by bit *)
-PROCEDURE GenerateWordFromBoolean (SELF: TBoolean): W.T =
+PROCEDURE GenerateWordFromBoolean (SELF: TBoolean; ): W.T =
   VAR x: W.T := 0;
   BEGIN
     FOR i := 0 TO W.Size DO
@@ -44,7 +44,7 @@ PROCEDURE GenerateWordFromBoolean (SELF: TBoolean): W.T =
   END GenerateWordFromBoolean;
 
 (* Generates a longreal, bit by bit *)
-PROCEDURE GenerateRealFromBoolean (SELF: TBoolean): R.T =
+PROCEDURE GenerateRealFromBoolean (SELF: TBoolean; ): R.T =
   VAR x: R.T := R.Zero;
   BEGIN
     FOR i := 0 TO RSpec.Precision - 1 DO
@@ -55,7 +55,7 @@ PROCEDURE GenerateRealFromBoolean (SELF: TBoolean): R.T =
     RETURN x;
   END GenerateRealFromBoolean;
 
-(*======================================*)
+
 REVEAL
   TWord = TWordPublic BRANDED OBJECT
           OVERRIDES
@@ -63,12 +63,12 @@ REVEAL
           END;
 
 <* INLINE *>
-PROCEDURE GenerateWordFromWord (SELF: TWord): W.T =
+PROCEDURE GenerateWordFromWord (SELF: TWord; ): W.T =
   BEGIN
     RETURN SELF.engine();
   END GenerateWordFromWord;
 
-(*======================================*)
+
 REVEAL
   TReal = TRealPublic BRANDED OBJECT
           OVERRIDES
@@ -76,12 +76,12 @@ REVEAL
           END;
 
 <* INLINE *>
-PROCEDURE GenerateRealFromReal (SELF: TReal): R.T =
+PROCEDURE GenerateRealFromReal (SELF: TReal; ): R.T =
   BEGIN
     RETURN SELF.engine();
   END GenerateRealFromReal;
 
-(*======================================*)
+
 REVEAL
   T = TPrivate BRANDED OBJECT
       OVERRIDES
@@ -95,12 +95,12 @@ REVEAL
         *)
         binomial := Binomial;
       END;
-(*========================================*)
-(*-------------------*)
+
+
 PROCEDURE Uniform (SELF: T;
-                   min : R.T := R.Zero; (*from min*)
-                   max : R.T := R.One; (*up to but not including max*)
-  ): R.T                         (*return uniform deviate*)
+                   min : R.T := R.Zero; (* from min *)
+                   max : R.T := R.One; (* up to but not including max *)
+  ): R.T                         (* return uniform deviate *)
   RAISES {Arith.Error} =
   VAR t: R.T;
   BEGIN
@@ -113,47 +113,43 @@ PROCEDURE Uniform (SELF: T;
 
     RETURN min + t * (max - min);
   END Uniform;
-(*-------------------*)
-PROCEDURE Exponential (SELF: T): R.T =
-  (*exponential, mean=1 *)
+
+PROCEDURE Exponential (SELF: T; ): R.T =
+  (* exponential, mean=1 *)
   BEGIN
     RETURN -RT.Ln(SELF.generateReal());
   END Exponential;
-(*-------------------*)
-(**********************
-PROCEDURE Gaussian1(SELF:T):R.T=
-(*gaussian, mean=0, var=1 *)
-(*based on NR92*)
-VAR
-  v1,v2,Rsq,tmp,result:R.T;
-BEGIN
-  IF NOT SELF.start THEN
-    SELF.start:=TRUE;
-    RETURN SELF.gauss_y;
-  END;
 
-  REPEAT
-    v1:=R.Two*SELF.generateReal() - R.One;
-    v2:=R.Two*SELF.generateReal() - R.One;
-    Rsq:=v1*v1 + v2*v2;
-  UNTIL (Rsq > R.Zero) AND (Rsq < R.One);
-  tmp:=R.sqrt(-R.Two*R.log(Rsq))/Rsq;
-  result:=v1*tmp;
-  SELF.gauss_y:=v2*tmp;
-  SELF.start:=FALSE;
-  RETURN result;
-END Gaussian1;
+(**********************
+PROCEDURE Gaussian1 (SELF: T; ): R.T =
+  (* gaussian, mean=0, var=1 *)
+  (* based on NR92 *)
+  VAR v1, v2, Rsq, tmp, result: R.T;
+  BEGIN
+    IF NOT SELF.start THEN SELF.start := TRUE; RETURN SELF.gauss_y; END;
+
+    REPEAT
+      v1 := R.Two * SELF.generateReal() - R.One;
+      v2 := R.Two * SELF.generateReal() - R.One;
+      Rsq := v1 * v1 + v2 * v2;
+    UNTIL (Rsq > R.Zero) AND (Rsq < R.One);
+    tmp := R.sqrt(-R.Two * R.log(Rsq)) / Rsq;
+    result := v1 * tmp;
+    SELF.gauss_y := v2 * tmp;
+    SELF.start := FALSE;
+    RETURN result;
+  END Gaussian1;
 *********************************)
-(*---------------------------*)
+
 (*---Warren Smith's Normal---*)
 (**Generates a normal (Gaussian) deviate with mean 0 and variance 1.
  * The "series method" [Devroye page 170] is buggy, so I am
  * using Marsaglia-Bray method on page 390 Devroye, see
  * G.Marsaglia & T.A. Bray: A convenient method for
  * generating normal random variables, SIAM Review 6 (1964) 260-264.**)
-PROCEDURE NormalDev (SELF: T): R.T =
-  <* FATAL Arith.Error *>        (*we preserve, that it is always
-                                    min<=max*)
+PROCEDURE NormalDev (SELF: T; ): R.T =
+  <* FATAL Arith.Error *>        (* we preserve, that it is always
+                                    min<=max *)
   VAR
     v, u, w, x, sum: R.T;
   BEGIN
@@ -192,12 +188,12 @@ PROCEDURE NormalDev (SELF: T): R.T =
       RETURN x;
     END;
   END NormalDev;
-(*-------------------*)
+
 (***************************************
 PROCEDURE Gamma1(SELF:T;
-                event:[1..LAST(INTEGER)]):R.T=
-(*gamma, waiting time for event in Poisson process, mean=1*)
-(*based on NR92*)
+                event:[1..LAST(INTEGER)]; ): R.T=
+(* gamma, waiting time for event in Poisson process, mean=1 *)
+(* based on NR92 *)
 CONST
   cutoff=7;
 VAR
@@ -217,17 +213,17 @@ BEGIN
         REPEAT
           v1:=R.Two*SELF.generateReal()-R.One;
           v2:=SELF.generateReal();
-        UNTIL (v1*v1+v2*v2) <= R.One; (*within unit half-circle*)
+        UNTIL (v1*v1+v2*v2) <= R.One; (* within unit half-circle *)
         tanU:=v2/v1;
         x:=a0*tanU+x0;
-      UNTIL x > R.Zero;  (*within positive probabilities*)
+      UNTIL x > R.Zero;  (* within positive probabilities *)
       ratio:=(R.One+tanU*tanU)*R.exp(x0*R.log(x/x0) - a0*tanU);
     UNTIL SELF.generateReal() > ratio;
   END;
   RETURN x;
 END Gamma1;
 ***********************************)
-(*-------------------*)
+
 (** Returns a Gamma deviate with parameter a>=0.
  * Density(x) = x^(a-1) * exp(-x) / GAMMA(a)  for x>=0.
  * mean = a. variance = a.
@@ -244,7 +240,7 @@ END Gamma1;
  * p88-90. It appears to work now
  * according to mean and variance tests at a=.3,.5,.6,.9,1,2,3.
 ***************************************)
-PROCEDURE GammaDev (SELF: T; a: R.T): R.T =
+PROCEDURE GammaDev (SELF: T; a: R.T; ): R.T =
   BEGIN
     <* ASSERT a > R.Zero *>
     IF a < R.One THEN
@@ -297,13 +293,13 @@ PROCEDURE GammaDev (SELF: T; a: R.T): R.T =
       RETURN -RT.Ln(SELF.generateReal());
     END;
   END GammaDev;
-(*----------------------*)
+
 (** Will generate a sample from a Dirichlet distribution
  * with parameters p[].
  * Follows L.Devroye: Non-uniform random variate generation,
  * Springer 1986.   p[] is overwritten by the Dirichlet deviate.
  *)
-PROCEDURE Dirichlet (SELF: T; p: R.Array) =
+PROCEDURE Dirichlet (SELF: T; p: R.Array; ) =
   VAR
     t, sum: R.T;
     n1          := FIRST(p^);
@@ -320,27 +316,27 @@ PROCEDURE Dirichlet (SELF: T; p: R.Array) =
   END Dirichlet;
 
 (*
-(*-------------------*)
+
 PROCEDURE Poisson(SELF:T;
-                     m:R.T    (*mean*)
+                     m:R.T    (* mean *)
                      ):R.T=
-(*Poisson, integer returned as real*)
+(* Poisson, integer returned as real *)
 <*UNUSED*> CONST ftn = Module & "Poisson";
 BEGIN
 END Poisson;
 *)
-(*-------------------*)
-(*an alternative for Binomial which is probably slower than Binomial but
+
+(* an alternative for Binomial which is probably slower than Binomial but
    has the potential to be sped up if one can sum up the first n binomial
-   coefficients fast*)
-(*partition the interval [0,1] into pieces with sizes according to the
+   coefficients fast *)
+(* partition the interval [0,1] into pieces with sizes according to the
    probabilities *)
 <* UNUSED *>
-PROCEDURE BinomialIntervalPartition (SELF: T; p: R.T; n: CARDINAL):
+PROCEDURE BinomialIntervalPartition (SELF: T; p: R.T; n: CARDINAL; ):
   CARDINAL =
 
-  PROCEDURE Calc (p, q: R.T): CARDINAL =
-    <* FATAL Arith.Error *>      (*bad_size can't be raised by RP.Power*)
+  PROCEDURE Calc (p, q: R.T; ): CARDINAL =
+    <* FATAL Arith.Error *>      (* bad_size can't be raised by RP.Power *)
     VAR
       pq             := p / q;
       prob           := RP.Power(q, n);
@@ -372,8 +368,8 @@ PROCEDURE BinomialIntervalPartition (SELF: T; p: R.T; n: CARDINAL):
     END;
   END BinomialIntervalPartition;
 
-(*-------------------*)
-PROCEDURE Binomial (SELF: T; p: R.T; n: CARDINAL): CARDINAL =
+
+PROCEDURE Binomial (SELF: T; p: R.T; n: CARDINAL; ): CARDINAL =
   <* UNUSED *>
   CONST
     ftn = Module & "Binomial";
@@ -385,6 +381,6 @@ PROCEDURE Binomial (SELF: T; p: R.T; n: CARDINAL): CARDINAL =
     RETURN cnt;
   END Binomial;
 
-(*==========================*)
+
 BEGIN
 END RandomBasic.
