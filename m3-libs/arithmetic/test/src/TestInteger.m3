@@ -13,7 +13,8 @@ IMPORT Cardinal32Basic        AS Cd,
        LongRealBasic          AS R,
        LongRealTrans          AS RT,
        LongRealFmtLex         AS RF,
-       NumberTheory           AS NT;
+       NumberTheory           AS NT,
+       NADefinitions          AS NA;
 (*=======================*)
 CONST Module = "TestInteger.";
 (*----------------------*)
@@ -53,7 +54,7 @@ PROCEDURE TestCardinalGCD (): BOOLEAN =
                               CdF.Fmt(CdG.GCD(i,j)),
                               CdF.Fmt(Cd. GCD(i,j))}));
         *)
-        <*ASSERT CdG.GCD(i,j)=Cd.GCD(i,j)*>
+        <* ASSERT CdG.GCD(i, j) = Cd.GCD(i, j) *>
       END;
     END;
     RETURN result;
@@ -66,7 +67,7 @@ PROCEDURE TestIsPrime (): BOOLEAN =
     Debug(1, ftn, "begin\n");
     FOR i := 46000 TO 49000 DO
       IF NT.IsPrime(i) THEN Msg(" " & CdF.Fmt(i)); END;
-      <*ASSERT NT.IsPrime(i)=(NUMBER(NT.Factor(i)^)=1)*>
+      <* ASSERT NT.IsPrime(i) = (NUMBER(NT.Factor(i)^) = 1) *>
     END;
     Msg("\n");
     RETURN result;
@@ -81,6 +82,7 @@ PROCEDURE TestFactor (): BOOLEAN =
     *)
     p: NT.PowerArray;
     n: Cd.T;
+  <* FATAL NA.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
     FOR i := 1111 TO 1000000 BY 4321 DO
@@ -101,7 +103,7 @@ PROCEDURE TestFactor (): BOOLEAN =
         *)
         n := Cd.Mul(n, PowCd.Power(p[j].p, p[j].exp));
       END;
-      <*ASSERT n=i*>
+      <* ASSERT n = i *>
       (*
           Msg("\n");
       *)
@@ -141,8 +143,9 @@ PROCEDURE TestCordic (): BOOLEAN =
   END TestCordic;
 (*-------------------------*)
 PROCEDURE TestInteger (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestInteger";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestInteger";
   VAR result := TRUE;
   BEGIN
     NewLine();
