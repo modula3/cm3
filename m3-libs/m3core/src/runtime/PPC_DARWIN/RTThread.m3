@@ -2,7 +2,8 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal, Unix, Umman, RTMisc;
+IMPORT Usignal, Unix, RTMisc;
+(* IMPORT Umman; later, see below *) 
 
 CONST 
   SP_pos = 0;
@@ -19,7 +20,7 @@ VAR page_bytes : CARDINAL := 0;
 VAR stack_slop : CARDINAL;
 
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
-  VAR i: INTEGER;  start: ADDRESS;
+  VAR (* i: INTEGER; see below *) start: ADDRESS;
   BEGIN
     IF (page_bytes = 0) THEN
       page_bytes := Unix.getpagesize ();
@@ -45,7 +46,7 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
   END NewStack;
 
 PROCEDURE DisposeStack (VAR s: Stack) =
-  VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
+  (* VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes); *)
   BEGIN
     (* find the aligned page and re-map it *)
     (* see above
