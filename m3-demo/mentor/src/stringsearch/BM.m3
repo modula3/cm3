@@ -53,13 +53,13 @@ PROCEDURE Run (alg: T) RAISES {Thread.Alerted} =
 
 PROCEDURE InitSkip (pattern: TEXT): ARRAY CHAR OF INTEGER =
   VAR
-    n             := Text.Length(pattern) - 1;
-    skip          :  ARRAY CHAR OF INTEGER ;
+    n   := Text.Length(pattern);
+    skip:  ARRAY CHAR OF INTEGER ;
   BEGIN
     FOR c := FIRST(CHAR) TO LAST(CHAR) DO
       skip[c] := n;
     END;
-    FOR j := 0 TO n DO
+    FOR j := 0 TO n - 1 DO
       skip[Text.GetChar(pattern, j)] := n - j - 1;
     END;
     RETURN (skip);
