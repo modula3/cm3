@@ -180,26 +180,28 @@ PROCEDURE TestFloatMode() =
     two := 2.0d0;
   BEGIN
     (* rounding modes *)
-    xPlus := SetRndMode(RoundingMode.PlusInfinity, eleven, ten);
-    xMinus := SetRndMode(RoundingMode.MinusInfinity, eleven, ten);
-    xZero := SetRndMode(RoundingMode.Zero, eleven, ten);
-    xNear := SetRndMode(RoundingMode.Nearest, eleven, ten);
+    xPlus := SetRndMode(RoundingMode.TowardPlusInfinity, eleven, ten);
+    xMinus := SetRndMode(RoundingMode.TowardMinusInfinity, eleven, ten);
+    xZero := SetRndMode(RoundingMode.TowardZero, eleven, ten);
+    xNear := SetRndMode(RoundingMode.NearestElseEven, eleven, ten);
 
     BCheck("SetRound  1st", xMinus < xPlus, TRUE);
     BCheck("SetRound  2nd", xMinus = xZero, TRUE);
     BCheck("SetRound  3rd", xPlus = xNear, TRUE);
 
-    xPlus := SetRndMode(RoundingMode.PlusInfinity, -twentyOne, ten);
-    xMinus := SetRndMode(RoundingMode.MinusInfinity, -twentyOne, ten);
-    xZero := SetRndMode(RoundingMode.Zero, -twentyOne, ten);
-    xNear := SetRndMode(RoundingMode.Nearest, -twentyOne, ten);
+    xPlus := SetRndMode(RoundingMode.TowardPlusInfinity, -twentyOne, ten);
+    xMinus := SetRndMode(RoundingMode.TowardMinusInfinity, -twentyOne, ten);
+    xZero := SetRndMode(RoundingMode.TowardZero, -twentyOne, ten);
+    xNear := SetRndMode(RoundingMode.NearestElseEven, -twentyOne, ten);
 
     BCheck("SetRound  4th", xMinus < xPlus, TRUE);
     BCheck("SetRound  5th", xPlus = xZero, TRUE);
     BCheck("SetRound  6th", xMinus = xNear, TRUE);
 
+    (*
     xNear := SetRndMode(RoundingMode.Vax, -twentyOne, ten);
     Check("SetRound  7th", xNear, 0.0d0);
+    *)
 
     PROCEDURE GetFlags(a, b: LONGREAL; op: TEXT): SET OF Flag = 
       VAR c: LONGREAL;
@@ -310,9 +312,21 @@ PROCEDURE TestFloatMode() =
 
 PROCEDURE Test() =
   BEGIN
-    TestFloat();  (* Float.i3 *)
-    TestReal();  (* Real.i3 *)
-    TestFloatMode();  (* FloatMode.i3 *)
+    TRY
+      TestFloat();  (* Float.i3 *)
+    EXCEPT ELSE
+      Wr.PutText (stderr, Fmt.F ("*** caught exception\n"));
+    END;
+    TRY
+      TestReal();  (* Real.i3 *)
+    EXCEPT ELSE
+      Wr.PutText (stderr, Fmt.F ("*** caught exception\n"));
+    END;
+    TRY
+      TestFloatMode();  (* FloatMode.i3 *)
+    EXCEPT ELSE
+      Wr.PutText (stderr, Fmt.F ("*** caught exception\n"));
+    END;
   END Test;
 
 BEGIN

@@ -644,7 +644,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
         DEC (RT0u.inCritical);
       END;
       InternalYield ();
-      Cerrno.errno := self.select.errno;
+      Cerrno.SetErrno(self.select.errno);
       RETURN self.select.waitResult;
     END;
   END XIOWait;
@@ -874,7 +874,7 @@ BEGIN
                     CanRun(t);
                     EXIT;
                   ELSIF n < 0 THEN
-                    t.select.errno  := Cerrno.errno;
+                    t.select.errno  := Cerrno.GetErrno();
                     t.select.waitResult := WaitResult.Error;
                     CanRun(t);
                     EXIT;
@@ -1064,7 +1064,6 @@ PROCEDURE InitTopContext (VAR c: Context;  stackbase: ADDRESS) =
 
   END InitTopContext;
 
-
 PROCEDURE DetermineContext (oldSP: ADDRESS) =
   (* This routine looks at the stack frame for this call and takes
      it as a model for the frame to put in the stacks of forked
@@ -1085,6 +1084,11 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
       RTThread.FlushStackCache ();
 
+      IF debug THEN
+        OutAddr("modelSP:    ", modelSP);
+        OutAddr("oldSP:      ", oldSP);
+        OutInt("frame size: ", ABS (modelSP - oldSP));
+      END;
       modelFrame := NEW (UNTRACED REF ARRAY OF Word.T,
                          ABS (modelSP - oldSP) DIV ADRSIZE (Word.T)
                          + 1 + RTThread.FramePadBottom + RTThread.FramePadTop);
@@ -1103,7 +1107,7 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
     ELSE 
       (* we are starting the execution of a forked thread *)
       RTThread.handlerStack := self.context.handlers;
-      Cerrno.errno := self.context.errno;
+      Cerrno.SetErrno(self.context.errno);
       RTThread.allow_sigvtalrm ();
       DEC (RT0u.inCritical);
       
@@ -1137,7 +1141,7 @@ PROCEDURE InitContext (VAR c: Context;  size: INTEGER) =
       c.stackBottom := c.stack.first;
     END;
     c.handlers    := NIL;
-    c.errno       := Cerrno.errno;
+    c.errno       := Cerrno.GetErrno();
     
     (* mark the ends of the stack for a sanity check *)
     LOOPHOLE (c.stackTop, IntPtr)^ := seal;
@@ -1191,12 +1195,12 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
     IF (ADR (from) # ADR (to)) THEN
       RTThread.disallow_sigvtalrm ();
       from.handlers := RTThread.handlerStack;
-      from.errno := Cerrno.errno;
+      from.errno := Cerrno.GetErrno();
       self := new_self;
       myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
       RTThread.handlerStack := from.handlers;
-      Cerrno.errno := from.errno;
+      Cerrno.SetErrno(from.errno);
       RTThread.allow_sigvtalrm ();
     END;
   END Transfer;
@@ -1475,5 +1479,24 @@ PROCEDURE QQ(): ADDRESS =
     RETURN ADR (xx);
   END QQ;
 
+PROCEDURE OutAddr(s: TEXT; a: ADDRESS) =
+  BEGIN
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutAddr(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutAddr;
+
+PROCEDURE OutInt(s: TEXT; a: INTEGER) =
+  BEGIN 
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutInt(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutInt;
+
+VAR debug := FALSE;
 BEGIN
 END ThreadPosix.
