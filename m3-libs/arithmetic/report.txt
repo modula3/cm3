@@ -16,9 +16,22 @@ todo:
        The current solution with an enumeration type
        for Err is not expressive enough.
        What about objects?
+       What about List of objects?
      - overflow check (at least in integer modules)
 
-  - remove VAR parameters where unnecessary
+  - distinguishing between e.g. VectorBasic and VectorFast
+    makes things complicated,
+    I think the implementation method should not appear in the module name.
+    Instead use modules following this scheme:
+      Vector - basic vector operations on references to vectors,
+               vectors may be even opaque and branded,
+               the routines are all inlined and
+               forward the arguments to VectorRep routines
+      VectorRep - basic vector operations on READONLY ARRAYs,
+                  the procedures are constants imported from either
+                  VectorBasic or VectorFast
+      VectorBasic - operations on READONLY ARRAYs using Add, Mul, etc. from the entry type
+      VectorFast - operations on READONLY ARRAYs using +, *, etc. of the entry type
   - Hash routines
   - ODE by Simon Hood
   - Lex routines (I have not needed them so far)
@@ -206,3 +219,9 @@ ExtendedType.[im]3 -> main repository
 
 /usr/local/cm3/doc/reference/objects.html
 <A HREF="opaques.html#idx.129">opaque type</A>,
+
+---------------
+
+build_generic_intf
+build_generic_impl
+ aren't described in cm3/doc/help/cm3/
