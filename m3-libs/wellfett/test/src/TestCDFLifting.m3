@@ -13,9 +13,9 @@ IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 (*IMPORT Arithmetic AS Arith;*)
 
-<*UNUSED*>
+<* UNUSED *>
 PROCEDURE ShowFilters () =
-  <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(Fmt.FN("dual generator: %s\n",
                   ARRAY OF TEXT{SF.Fmt(BSpl.GeneratorMask(2))}));
@@ -43,8 +43,9 @@ PROCEDURE LiftCDFEven (order: R.T; num: CARDINAL) =
         g := h;
         h := swap;
       END;
-      <*FATAL Thread.Alerted, Wr.Failure*>
-      VAR hscaled := h.scale(R.One / fac);
+      <* FATAL Thread.Alerted, Wr.Failure *>
+      VAR
+        hscaled := h.scale(R.One / fac);
       BEGIN
         IO.Put(
           Fmt.FN("sum: %s, filter: %s\n",
@@ -68,7 +69,7 @@ PROCEDURE LiftCDFOdd (order: R.T; num: CARDINAL) =
     orderlower := order - R.One;
     g          := S.One;
     h          := S.One;
-  <*FATAL Thread.Alerted, Wr.Failure*>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     PL.Init();
     (*the first lifting step differs from the following ones*)
@@ -125,7 +126,7 @@ PROCEDURE Test () =
           LiftCDFOdd(FLOAT(halforder * 2 + 1, R.T), halforder);
         END;
     ELSE
-      <*ASSERT FALSE*>
+      <* ASSERT FALSE *>
     END;
   END Test;
 

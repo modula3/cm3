@@ -92,8 +92,7 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
    change.*)
 
 PROCEDURE TestMatchPattern (target: S.T;
-                            numLevels, smooth, vanishing, numTranslates: CARDINAL; )
-  RAISES {BSpl.DifferentParity} =
+                            numLevels, smooth, vanishing, numTranslates: CARDINAL; ) =
   (*The degree of freedom, i.e.  the number of parameters to minimize for,
      is 2*numTranslates*)
   <* FATAL Arith.Error *>        (*MulPower can't fail for signals*)
@@ -1025,7 +1024,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                   numLevels, smooth, vanishing,
                                     smallVanishing, numTranslates: CARDINAL;
                                   smoothWeight: R.T):
-  ARRAY [0 .. 1] OF FB.T RAISES {BSpl.DifferentParity} =
+  ARRAY [0 .. 1] OF FB.T =
   <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
   VAR
     shiftVan      := 2 - smooth - vanishing;
@@ -1335,7 +1334,6 @@ PROCEDURE Test () =
                matchRamp, matchRampSmooth, matchSincSmooth, matchGaussian,
                matchLongRamp, matchMassPeak, checkVanishingMoments,
                testSSE, testInverseDSSE, testDeriveWSSE, testNormalEqu};
-  <* FATAL BSpl.DifferentParity *>
   BEGIN
     CASE Example.matchRampSmooth OF
     | Example.matchBSpline =>

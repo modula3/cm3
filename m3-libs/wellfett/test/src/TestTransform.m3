@@ -131,7 +131,6 @@ PROCEDURE PlotDWT (         x        : S.T;
 
 
 PROCEDURE Test () =
-  <* FATAL BSpl.DifferentParity *>
   BEGIN
     CASE 1 OF
     | 0 =>
