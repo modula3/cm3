@@ -1,6 +1,6 @@
 # Copyright (c) 2000 California Institute of Technology
 # All rights reserved. See the file COPYRIGHT for a full description.
-# $Id: Makefile,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $
+# $Id: Makefile,v 1.2 2001-09-19 15:31:35 wagner Exp $
 
 SHIPS= ktoklib kyacclib klexlib ktok klex kyacc kext parserlib parserlib/test
 REVSHIPS= `echo $(SHIPS) | xargs -n1 echo | tail -r`

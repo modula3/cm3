@@ -13,5 +13,6 @@ echo "// generated macroizations" > ../macroizations
 rm itemp
 rm itemp2
 for file in *.html; do
+	echo "processing $file"
 	cpp -P -imacros html.h <$file >../$file
 done
