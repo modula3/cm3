@@ -32,7 +32,7 @@ CONST
   Module = "TestRoot.";
 
 (*---------------------*)
-PROCEDURE TestPolyRoots (p:CP.T; READONLY rt:Rt.RootArray) =
+PROCEDURE TestPolyRoots (p:CP.T; READONLY rt:Rt.RootArray; epssqr:R.T:=RT.Eps) =
 BEGIN
 (*
   Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
@@ -50,9 +50,9 @@ BEGIN
   Msg("zero check: ");
   FOR j:=0 TO LAST(rt) DO
 (*
-    Msg(CF.Fmt(CP.Eval(p,rt[j])) & ", ");
+    Msg(CF.Fmt(rt[j]) & " ->" & CF.Fmt(CP.Eval(p,rt[j])) & ",\n");
 *)
-    <*ASSERT CT.AbsSqr(CP.Eval(p,rt[j]))<RT.Eps*>
+    <*ASSERT CT.AbsSqr(CP.Eval(p,rt[j]))<epssqr*>
   END;
   Msg("\n");
 END TestPolyRoots;
@@ -115,7 +115,7 @@ END TestQuadratic;
 
 PROCEDURE TestRootApproximation():BOOLEAN=
 
-  PROCEDURE TestSingle (READONLY rt : Rt.RootArray) =
+  PROCEDURE TestSingle (READONLY rt : Rt.RootArray; zerotolsqr : R.T:=RT.Eps; roottolsqr : R.T:=RT.Eps*10.0D0) =
   VAR
     p:=Rt.FromRoots(rt);
     art:REF Rt.RootArray;
@@ -125,8 +125,33 @@ PROCEDURE TestRootApproximation():BOOLEAN=
       Msg(CF.Fmt(rt[j]) & ", ");
     END;
     Msg("}\nPolynomial: " & CPF.Fmt(p) & "\n");
+
     art:=RtA.ComplexNewtonMaehli(p);
-    TestPolyRoots (p, art^);
+
+    Msg("compare with given zeros, tolerance: " & RF.Fmt(roottolsqr) & "\n");
+    FOR j:=0 TO LAST(art^) DO
+      VAR
+        minerror:=CT.AbsSqr(C.Sub(rt[j],art[0]));
+        curerror:R.T;
+      BEGIN
+        FOR k:=1 TO LAST(rt) DO
+          curerror:=CT.AbsSqr(C.Sub(rt[j],art[k]));
+(* the root finding seems to be quite imprecise,
+   sometimes only the half precision of LONGREAL is reached
+          Msg(CF.Fmt(C.Sub(rt[j],art[k])) & "\n");
+*)
+          IF minerror>curerror THEN
+            minerror:=curerror;
+          END;
+        END;
+(*
+        Msg(CF.Fmt(rt[j]) & " - next approx " & RF.Fmt(minerror) & "\n");
+*)
+        <*ASSERT minerror < roottolsqr*>
+      END;
+    END;
+
+    TestPolyRoots (p, art^, zerotolsqr);
   END TestSingle;
 
 CONST
@@ -161,6 +186,19 @@ BEGIN
       pow:=C.Scale(pow,RT.Half);
     END;
     TestSingle(rt);
+  END;
+
+(* the killer example of Wilkinson contain the roots 1,..,20
+    - the results are very imprecise *)
+  VAR
+    rt:ARRAY [0..20] OF C.T;
+    x:C.T:=C.Zero;
+  BEGIN
+    FOR j:=0 TO LAST(rt) DO
+      rt[j]:=x;
+      x:=C.Add(x,C.One);
+    END;
+    TestSingle(rt,zerotolsqr:=1.0D28,roottolsqr:=1.0D-3);
   END;
 
   RETURN result;
