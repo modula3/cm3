@@ -6,8 +6,10 @@ Abstract: Test driver for m3na library.
 1/27/96   Harry George   converted to m3na format
 *)
 
-IMPORT Stdio,Wr,Fmt;
-FROM xReal64 IMPORT REAL64,EPS;
+IMPORT Stdio,Wr,LongRealBasic AS R,xReal64;
+(*FROM LongRealTrans IMPORT Eps;*)
+CONST Eps=xReal64.EPS;
+
 (*=======================*)
 <*UNUSED*> CONST Module = "Test.";
 (*-----------------*)
@@ -27,8 +29,8 @@ BEGIN
 END Debug;
 (*---------------------*)
 PROCEDURE Verify(ftn,str:TEXT;
-                 expected,found:REAL64;
-                 eps:REAL64:=EPS
+                 expected,found:R.T;
+                 eps:R.T:=Eps
                  ):BOOLEAN=
 BEGIN
   IF ABS(expected-found)<eps THEN
@@ -56,12 +58,12 @@ BEGIN
   (*NewLine(); EVAL TestVector();*)
   (*NewLine(); EVAL TestMatrix();*)
   (*NewLine(); EVAL TestPolynomial();*)
-  (*NewLine(); EVAL TestRoot();*)
+  NewLine(); EVAL TestRoot();
   (*NewLine(); EVAL TestInterpolation();*)
   (*NewLine(); EVAL TestSLE();*)
   (*NewLine(); EVAL TestRandom();*)
   (*NewLine(); EVAL TestFFT();*)
-  NewLine(); EVAL TestBigInteger();
-  NewLine(); EVAL TestGCD();
-  NewLine(); EVAL TestEigenSystem();
+  (*NewLine(); EVAL TestBigInteger();*)
+  (*NewLine(); EVAL TestGCD();*)
+  (*NewLine(); EVAL TestEigenSystem();*)
 END Test.

@@ -1,0 +1,15 @@
+%
+%  Quake functions to instantiate operations on generic roots.
+%
+
+readonly proc RootBasic (nm, pfield, field) is
+  local basic = nm & "RootBasic"
+  build_generic_intf (basic, "RootBasic", [pfield, field], VISIBLE)
+  build_generic_impl (basic, "RootBasic", [        field])
+end
+
+readonly proc RootApproximation (nm, root, field) is
+  local basic = nm & "RootApproximation"
+  build_generic_intf (basic, "RootApproximation", [root, field], VISIBLE)
+  build_generic_impl (basic, "RootApproximation", [root, field])
+end

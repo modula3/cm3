@@ -1,0 +1,17 @@
+import("libm3")
+
+template("root")
+
+
+generic_module("RootBasic")
+RootBasic("Real",               "RealPolynomialBasic",               "RealBasic")
+RootBasic("LongReal",           "LongRealPolynomialBasic",           "LongRealBasic")
+RootBasic("Extended",           "ExtendedPolynomialBasic",           "ExtendedBasic")
+RootBasic("LongRealComplex",    "LongRealComplexPolynomialBasic",    "LongRealComplexBasic")
+RootBasic("Integer32",          "Integer32PolynomialBasic",          "Integer32Basic")
+RootBasic("BigInteger",         "BigIntegerPolynomialBasic",         "BigIntegerBasic")
+
+%generic_module("RootApproximation")
+%RootApproximation("Real",     "RealRootBasic",     "RealBasic")
+%RootApproximation("LongReal", "LongRealRootBasic", "LongRealBasic")
+%RootApproximation("Extended", "ExtendedRootBasic", "ExtendedBasic")
