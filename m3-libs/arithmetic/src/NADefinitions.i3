@@ -3,7 +3,9 @@ INTERFACE NADefinitions;
 
    Abstract: Global definitions used by all m3na modules. *)
 
-EXCEPTION Error(Err);
+EXCEPTION
+  Error(Err);
+  ErrorNew(ErrorRoot);
 
 TYPE
   Err = {bad_size                (*e.g., vector sizes mismatched*)
@@ -21,12 +23,19 @@ TYPE
                                     requirements of the operation*)
         };
 
-  ErrorRoot = OBJECT END;
+  (* Error objects may carry more information than a simple enumeration
+     value.  Especially the LAPACK wrappers may benefit from the extended
+     facilities.  In future we might add a dynamic method to the objects
+     which generates an error message text or similar services. *)
+
+  ErrorRoot = OBJECT
+                tail: ErrorRoot;  (*exceptions of inner function calls*)
+              END;
   ErrorBadParameters = ErrorRoot OBJECT END;
   ErrorOperationAborted = ErrorRoot OBJECT END;
 
   ErrorOutOfRange = ErrorBadParameters OBJECT END;
-  ErrorDivideByZero = ErrorBadParameters OBJECT END;
+  ErrorDivisionByZero = ErrorBadParameters OBJECT END;
   ErrorSizeMismatch = ErrorBadParameters OBJECT END;
   ErrorUnitMismatch = ErrorBadParameters OBJECT END;
 
