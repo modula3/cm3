@@ -5,25 +5,29 @@ GENERIC INTERFACE EigenSystem(RT, V, M, LA);
 
 FROM NADefinitions IMPORT Error;
 
-PROCEDURE PowerMethod (    A      : M.T;
-                       VAR v      : V.T;
-                           tol               := RT.Eps * FLOAT(100, RT.T);
-                           maxiter: CARDINAL := 100;                       ):
-  RT.T RAISES {Error};
+TYPE
+  EigenPair = RECORD
+                value : RT.T;
+                vector: V.T;
+              END;
 
-PROCEDURE SquareMethod (    A  : M.T;
-                        VAR v  : V.T;
-                            tol        := RT.Eps * FLOAT(100, RT.T);
-                        maxiter: CARDINAL := 100; ): RT.T RAISES {Error};
+PROCEDURE PowerMethod (A      : M.T;
+                       tol               := RT.Eps * FLOAT(100, RT.T);
+                       maxiter: CARDINAL := 100;                       ):
+  EigenPair RAISES {Error};
+
+PROCEDURE SquareMethod (A      : M.T;
+                        tol               := RT.Eps * FLOAT(100, RT.T);
+                        maxiter: CARDINAL := 100;                       ):
+  EigenPair RAISES {Error};
 
 TYPE
-  EVGenFlag    = LA.EVGenFlag;
+  EVGenFlag = LA.EVGenFlag;
   EVGenFlagSet = LA.EVGenFlagSet;
 
-  EV           = LA.EV;
+  EV = LA.EV;
 
-CONST
-  EigenValuesGen = LA.EigenValuesGen;
+CONST EigenValuesGen = LA.EigenValuesGen;
 
 
 (* Unoptimised translations from
