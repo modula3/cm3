@@ -6,7 +6,7 @@
 
 UNSAFE MODULE ZIO;
 
-IMPORT TextF, Rd, Thread, Stdio, Wr, Fmt;
+IMPORT Rd, Thread, Stdio, Wr, Fmt, Text;
 
 PROCEDURE GetInt (): INTEGER RAISES {Rd.EndOfFile} =
   VAR
@@ -45,14 +45,14 @@ PROCEDURE GetText (): TEXT =
   <*FATAL Rd.EndOfFile *>
   VAR
     len := GetInt ();
-    txt := TextF.New (len);
+    arr := NEW(REF ARRAY OF CHAR, len);
   BEGIN
     TRY
-      EVAL Rd.GetSub (Stdio.stdin, SUBARRAY (txt^, 0, len));
+      EVAL Rd.GetSub (Stdio.stdin, arr^);
     EXCEPT Rd.Failure, Thread.Alerted =>
-      txt := "**FAILED READ***";
+      RETURN "**FAILED READ***";
     END;
-    RETURN txt;
+    RETURN Text.FromChars(arr^);
   END GetText;
 
 BEGIN

@@ -168,8 +168,9 @@ PROCEDURE ScanScore (buf: Buf.T;  cursor: INTEGER;  VAR s: Score)
     s.n_seconds  := FLOAT (GetInt (buf, cursor), Time.T) / 10.0d0;
   END ScanScore;
 
-PROCEDURE FixName (p: Player): Player =
+PROCEDURE FixName (pp: Player): Player =
   VAR
+    p    := UserName (pp);
     plen := Text.Length (p);
     buf  := NEW (REF ARRAY OF CHAR, plen + 6);
     blen := 0;
@@ -192,6 +193,12 @@ PROCEDURE FixName (p: Player): Player =
 
     RETURN Text.FromChars (SUBARRAY (buf^, 0, blen));
   END FixName;
+
+PROCEDURE UserName (nm: TEXT): TEXT =
+  BEGIN
+    IF (nm = NIL) THEN nm := "<unknown>"; END;
+    RETURN nm;
+  END UserName;
 
 PROCEDURE ScanName (buf: Buf.T;  VAR cursor: INTEGER): Player =
   VAR val := 0;  z := cursor;  len := NUMBER (buf^);  player: Player;

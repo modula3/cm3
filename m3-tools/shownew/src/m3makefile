@@ -10,6 +10,8 @@ import ("vbtkit")
 
 module ("ZIO")
 implementation ("ShowNew")
+
+build_standalone ()
 Program ("shownew")
 
 ManPage ("shownew","1")

@@ -2,20 +2,20 @@
 (* Distributed only by permission.                             *)
 
 INTERFACE ObBuiltIn;
-IMPORT SynLocation, ObValue, Thread;
+IMPORT SynLocation, ObValue, Thread, WorkerPool;
 
   PROCEDURE Setup();
   (* To be called before any other use of this module. *)
 
 (* ============ "net" package ============ *)
 
-  PROCEDURE NetObjectWho(remObj: ObValue.RemObj; loc: SynLocation.T)
+  PROCEDURE NetObjectWho(valObj: ObValue.ValObj; loc: SynLocation.T)
     : ObValue.Val RAISES {ObValue.Exception};
 
   PROCEDURE NetEngineWho(remObj: ObValue.RemEngine; loc: SynLocation.T)
     : ObValue.Val RAISES {ObValue.Exception};
 
-  PROCEDURE NetExport(name, server: TEXT; remObj: ObValue.RemObj; 
+  PROCEDURE NetExport(name, server: TEXT; valObj: ObValue.ValObj; 
     loc: SynLocation.T) RAISES {ObValue.Exception};
 
   PROCEDURE NetImport(name, server: TEXT;
@@ -26,6 +26,32 @@ IMPORT SynLocation, ObValue, Thread;
 
   PROCEDURE NetImportEngine(name, server: TEXT;
     loc: SynLocation.T): ObValue.Val RAISES {ObValue.Exception};
+
+(* ============ "replica" package ============ *)
+
+  PROCEDURE ReplicaAcquireLock(valObj: ObValue.ValObj; 
+                               loc: SynLocation.T) : ObValue.Val
+    RAISES {ObValue.Exception};
+
+  PROCEDURE ReplicaReleaseLock(valObj: ObValue.ValObj; 
+                               loc: SynLocation.T) : ObValue.Val
+    RAISES {ObValue.Exception};
+
+  PROCEDURE ReplicaSetNodeName(name: TEXT; loc: SynLocation.T) : ObValue.Val
+    RAISES {ObValue.Exception};
+
+  PROCEDURE ReplicaSetDefaultSequencer(host, name: TEXT := NIL;
+                                       loc: SynLocation.T) : ObValue.Val
+    RAISES {ObValue.Exception};
+
+  PROCEDURE ReplicaNotify(valObj: ObValue.Val; 
+                          notifyObj: ObValue.ValObj; 
+                          loc: SynLocation.T): ObValue.Val
+    RAISES {ObValue.Exception};
+
+  PROCEDURE ReplicaCancelNotifier(notifier: ObValue.Val; 
+                                  loc: SynLocation.T)
+    RAISES {ObValue.Exception};
 
 (* ============ "thread" package ============ *)
 
@@ -47,10 +73,16 @@ IMPORT SynLocation, ObValue, Thread;
         joined: BOOLEAN;
       OVERRIDES Is := IsThread;
       END;
-
+    ValPool = 
+      ObValue.ValAnything BRANDED OBJECT
+        pool: WorkerPool.T;
+      OVERRIDES Is := IsPool;
+      END;
+  
   PROCEDURE IsMutex(self: ValMutex; other: ObValue.ValAnything): BOOLEAN;
   PROCEDURE IsCondition(self: ValCondition; other: ObValue.ValAnything): BOOLEAN;
   PROCEDURE IsThread(self: ValThread; other: ObValue.ValAnything): BOOLEAN;
+  PROCEDURE IsPool(self: ValPool; other: ObValue.ValAnything): BOOLEAN;
 
   PROCEDURE CopyMutex(self: ObValue.ValAnything; tbl: ObValue.Tbl;
     loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error};

@@ -7,7 +7,7 @@
 %      modified on Fri Jun 25 13:33:11 PDT 1993 by owicki
 %      modified on Tue May 18 10:26:41 PDT 1993 by mjordan
 
-m3_option("-times")
+% m3_option("-times")
 
 import("libm3")
 

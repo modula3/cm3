@@ -151,7 +151,8 @@ PROCEDURE CheckOrdinal(
       | NULL =>
       | M3AST_AS.Integer_type =>
           RETURN;
-      | M3AST_AS.Enumeration_type =>
+      | M3AST_AS.WideChar_type,
+        M3AST_AS.Enumeration_type =>
           IF enumOk THEN RETURN END;
       ELSE
       END;

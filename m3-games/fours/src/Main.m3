@@ -8,8 +8,8 @@ MODULE Main;
 
 IMPORT Point, Rect, VBT, Thread, Trestle, Random, Time, HVSplit;
 IMPORT TextVBT, Wr, Axis, ButtonVBT, BorderedVBT, Text, Latin1Key;
-IMPORT PaintOp, Params, Stdio, TSplit, Word, Region;
-IMPORT Fmt, Split, TextWr, IO, Env, Font, Date;
+IMPORT OSConfig, OSError, PaintOp, Params, Stdio, TSplit, Word, Region;
+IMPORT Fmt, FS, Split, TextWr, IO, Env, Font, Date;
 IMPORT IntArraySort, RigidVBT, Process, TrestleComm;
 IMPORT Config, ScoreFile, ScoreDir;
 
@@ -979,29 +979,41 @@ PROCEDURE DumpScoreFiles () =
     FOR i := FIRST (games) TO LAST (games) DO
       config := games[i];
       ResetScoreFileName ();
-      Wr.PutText (wr, "\n------ ");
-      Wr.PutText (wr, config.name);
-      Wr.PutText (wr, " ------\n");
-      DumpScoreFile ();
+      IF ScoresExist () THEN
+        Wr.PutText (wr, Wr.EOL & "------ ");
+        Wr.PutText (wr, config.name);
+        Wr.PutText (wr, " ------" & Wr.EOL);
+        DumpScoreFile ();
+      END;
     END;
     Wr.Flush  (wr);
   END DumpScoreFiles;
+
+PROCEDURE ScoresExist (): BOOLEAN =
+  BEGIN
+    TRY
+      EVAL FS.Status (scoreFile);
+      RETURN TRUE;
+    EXCEPT OSError.E =>
+      RETURN FALSE;
+    END;
+  END ScoresExist;
 
 PROCEDURE DumpScoreFile () =
   <*FATAL Thread.Alerted, Wr.Failure*>
   VAR r := GetResults ();  wr := Stdio.stdout;
   BEGIN
-    Wr.PutText (wr, Title1);  Wr.PutChar (wr, '\n');
-    Wr.PutText (wr, Title2);  Wr.PutChar (wr, '\n');
-    Wr.PutText (wr, Title3);  Wr.PutChar (wr, '\n');
-    Wr.PutText (wr, Title4);  Wr.PutChar (wr, '\n');
+    Wr.PutText (wr, Title1);  Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Title2);  Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Title3);  Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Title4);  Wr.PutText (wr, Wr.EOL);
 
     WHILE (r # NIL) DO
       PrintResult (wr, r);
-      Wr.PutChar (wr, '\n');
+      Wr.PutText (wr, Wr.EOL);
       r := r.next;
     END;
-    Wr.PutText (wr, "\n");
+    Wr.PutText (wr, Wr.EOL);
     Wr.Flush (wr);
   END DumpScoreFile;
 
@@ -1090,7 +1102,9 @@ PROCEDURE PlayerName (): TEXT =
   BEGIN
     n := Env.Get (ALIAS);
     IF (n # NIL) THEN RETURN n END;
-    RETURN Env.Get ("USER");
+    n := OSConfig.UserName ();
+    IF (n # NIL) THEN RETURN n END;
+    RETURN "<unknown player>";
   END PlayerName;
 
 PROCEDURE ResetScoreFileName () =
@@ -1352,7 +1366,7 @@ PROCEDURE DoIt () =
         DumpScoreFiles ();
         RETURN;
       ELSE
-        IO.Put ("Unrecognized option: \"" & arg & "\", ignored\n");
+        IO.Put ("Unrecognized option: \"" & arg & "\", ignored" & Wr.EOL);
       END;
       INC (i);
     END;

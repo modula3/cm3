@@ -1,0 +1,5 @@
+
+%% override ("libm3", "n:\\m3-libs")
+override ("ui", "n:\\m3-ui")
+
+build_standalone ()

@@ -583,6 +583,7 @@ PROCEDURE Identical(t1, t2: M3AST_SM.TYPE_SPEC_UNSET): BOOLEAN RAISES {}=
       (* assert: neither type is NIL *)
       TYPECASE t1 OF
       | M3AST_AS.Integer_type,
+        M3AST_AS.WideChar_type,
         M3AST_AS.FLOAT_TYPE,
         M3AST_AS.RefAny_type, M3AST_AS.Address_type,
         M3AST_AS.Null_type =>

@@ -2,12 +2,16 @@
 (* Distributed only by permission.                             *)
 
 MODULE ObliqOnline;
-IMPORT Rd, SynWr, Stdio, SynLocation, Text, SynScan, MetaParser, Fmt, SynParse, ObTree, ObValue, ObPrintValue, ObEval, ObCommand, Env, Pathname, Obliq, ObliqParser, ObliqPrinter, ObLibOnline, ObLibOnlineHelp, OSError, FileRd, RTProcess;
+IMPORT Rd, SynWr, Stdio, SynLocation, Text, SynScan, MetaParser, Fmt,
+       SynParse, ObTree, ObValue, ObPrintValue, ObEval, ObCommand,
+       Env, Pathname, Obliq, ObliqParser, ObliqPrinter, ObLibOnline,
+       ObLibOnlineHelp, OSError, FileRd, RTProcess, Process,
+       ParseParams, TextRd;
 
 (* ============ Online flags ============ *)
 
 CONST
-  Version = 1; Enhancement = 1; BugFix = 0;
+  Version = 2; Enhancement = 2; BugFix = 0;
   DefaultPrintDepth = 4;
 
 PROCEDURE ShowVersion(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
@@ -105,7 +109,17 @@ PROCEDURE New(greetings: TEXT:=""; swr: SynWr.T:=NIL;
         SynWr.Flush(interpreter.swr);
         Interact(interpreter, filename, rd, TRUE, TRUE);
         SynWr.Flush(interpreter.swr);
-      EXCEPT OSError.E =>
+
+        WITH pp = NEW(ParseParams.T).init(Stdio.stderr) DO
+          WHILE pp.keywordPresent("-load") DO
+            WITH filename = pp.getNext() DO
+              rd := TextRd.New("load " & filename & ";\n");
+              Interact(interpreter, filename, rd, TRUE, TRUE);
+              SynWr.Flush(interpreter.swr);
+            END;
+          END;
+        END;
+      EXCEPT OSError.E, ParseParams.Error =>
       END;
     END;
 
@@ -202,14 +216,18 @@ PROCEDURE SignalSetup() =
   END SignalSetup;
 
 PROCEDURE Setup() =
-<*FATAL SynParse.Fail*>
 BEGIN
   (* Thread.IncDefaultStackSize(64*1024); *)
   (* mainThread := Thread.Self(); *)
 
   SynLocation.PackageSetup();
   SynParse.PackageSetup();
-  MetaParser.PackageSetup();
+  TRY
+    MetaParser.PackageSetup(); (* NOWARN *)
+  EXCEPT
+  | SynParse.Fail =>
+    Process.Crash("Fatal error trying to parse MetaSyn grammar");
+  END;
   Obliq.PackageSetup();
   ObliqParser.PackageSetup();
   ObliqPrinter.PackageSetup();

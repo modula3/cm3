@@ -395,6 +395,11 @@ TYPE
     copy := M3AST_AS_Copy.Integer_type;
     name := M3AST_AS_Name.Integer_type;
   END;
+  WideChar_type = Previous_View.WideChar_type OBJECT
+  OVERRIDES
+    copy := M3AST_AS_Copy.WideChar_type;
+    name := M3AST_AS_Name.WideChar_type;
+  END;
   Real_type = Previous_View.Real_type OBJECT
   OVERRIDES
     copy := M3AST_AS_Copy.Real_type;
@@ -593,10 +598,20 @@ TYPE
     copy := M3AST_AS_Copy.Text_literal;
     name := M3AST_AS_Name.Text_literal;
   END;
+  WideText_literal = Previous_View.WideText_literal OBJECT
+  OVERRIDES
+    copy := M3AST_AS_Copy.WideText_literal;
+    name := M3AST_AS_Name.WideText_literal;
+  END;
   Char_literal = Previous_View.Char_literal OBJECT
   OVERRIDES
     copy := M3AST_AS_Copy.Char_literal;
     name := M3AST_AS_Name.Char_literal;
+  END;
+  WideChar_literal = Previous_View.WideChar_literal OBJECT
+  OVERRIDES
+    copy := M3AST_AS_Copy.WideChar_literal;
+    name := M3AST_AS_Name.WideChar_literal;
   END;
   Nil_literal = Previous_View.Nil_literal OBJECT
   OVERRIDES
@@ -1013,6 +1028,7 @@ REVEAL
   M3AST_AS.Concrete_reveal <: Concrete_reveal;   
   M3AST_AS.Named_type <: Named_type;            
   M3AST_AS.Integer_type <: Integer_type;
+  M3AST_AS.WideChar_type <: WideChar_type;
   M3AST_AS.Real_type <: Real_type;
   M3AST_AS.LongReal_type <: LongReal_type;
   M3AST_AS.Extended_type <: Extended_type;
@@ -1044,7 +1060,9 @@ REVEAL
   M3AST_AS.LongReal_literal <: LongReal_literal;
   M3AST_AS.Extended_literal <: Extended_literal;
   M3AST_AS.Text_literal <: Text_literal;
+  M3AST_AS.WideText_literal <: WideText_literal;
   M3AST_AS.Char_literal <: Char_literal;
+  M3AST_AS.WideChar_literal <: WideChar_literal;
   M3AST_AS.Nil_literal <: Nil_literal;
   M3AST_AS.Exp_used_id <: Exp_used_id;      
   M3AST_AS.Constructor <: Constructor;

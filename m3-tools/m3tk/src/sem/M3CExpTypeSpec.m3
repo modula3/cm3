@@ -153,7 +153,7 @@ PROCEDURE BaseType(
    BEGIN
      LOOP
        TYPECASE ts OF
-       | M3AST_AS.Integer_type, M3AST_AS.Enumeration_type =>
+       | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =>
            RETURN ts; (* includes the NULL case *)
        | M3AST_AS.Packed_type(packedType) =>
            ts := M3CTypesMisc.Unpack(packedType);
@@ -517,7 +517,11 @@ PROCEDURE InternalSet(
         ts := M3CStdTypes.Extended();
     | M3AST_AS.Char_literal =>
         ts := M3CStdTypes.Char();
+    | M3AST_AS.WideChar_literal =>
+        ts := M3CStdTypes.WideChar();
     | M3AST_AS.Text_literal =>
+        ts := M3CStdTypes.Text();
+    | M3AST_AS.WideText_literal =>
         ts := M3CStdTypes.Text();
     | M3AST_AS.Nil_literal =>
         ts := M3CStdTypes.Null();

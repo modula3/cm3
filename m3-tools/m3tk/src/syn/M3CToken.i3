@@ -62,10 +62,10 @@ TYPE
        THEN_, TO_, TRY_, TYPE_, TYPECASE_,
        UNSAFE_, UNTIL_, UNTRACED_,
        VALUE_, VAR_,
-       WHILE_, WITH_,
+       WHILE_, WIDECHAR_, WITH_,
        Identifier,
-       CharLiteral, TextLiteral, IntegerLiteral, RealLiteral, LongRealLiteral,
-           ExtendedLiteral,
+       CharLiteral, WideCharLiteral, TextLiteral, WideTextLiteral,
+           IntegerLiteral, RealLiteral, LongRealLiteral, ExtendedLiteral,
        Plus, Minus, Times, Divide, Equal, NotEqual, LessThan, GreaterThan,
            LessThanOrEqual, GreaterThanOrEqual,
        Ampersand, Dereference, Dot,
@@ -154,10 +154,13 @@ CONST
   VALUE_: T = ORD(E.VALUE_);
   VAR_: T = ORD(E.VAR_);
   WHILE_: T = ORD(E.WHILE_);
+  WIDECHAR_: T = ORD(E.WIDECHAR_);
   WITH_: T = ORD(E.WITH_);
   Identifier: T = ORD(E.Identifier);
   CharLiteral: T = ORD(E.CharLiteral);
+  WideCharLiteral: T = ORD(E.WideCharLiteral);
   TextLiteral: T = ORD(E.TextLiteral);
+  WideTextLiteral: T = ORD(E.WideTextLiteral);
   IntegerLiteral: T = ORD(E.IntegerLiteral);
   RealLiteral: T = ORD(E.RealLiteral);
   LongRealLiteral: T = ORD(E.LongRealLiteral);
@@ -203,7 +206,7 @@ CONST
       "RAISE", "RAISES", "READONLY", "REAL", "RECORD", "REF", "REFANY",
       "REPEAT", "RETURN", "REVEAL", "ROOT", "SET", "THEN", "TO", "TRY", "TYPE",
       "TYPECASE", "UNSAFE", "UNTIL", "UNTRACED", "VALUE", "VAR", "WHILE",
-      "WITH"};
+      "WIDECHAR", "WITH"};
   Texts = ReservedWordTexts;
 
   ReservedTokenTexts = ARRAY ReservedToken OF TEXT{

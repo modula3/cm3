@@ -6,6 +6,10 @@
 %      modified on Mon Mar 21 23:12:55 PST 1994 by luca  
 %      modified on Wed Dec 22 15:02:37 PST 1993 by kalsow
 
+%%%%  if AT_SRC m3_option("-O") end   --- old m3build
+%%%% remove_m3_option("-w1")		--- old m3build
+%%%% m3_option("-w2")			--- old m3build
+
 import ("synex")
 import ("metasyn")
 import ("obliqrt")
@@ -15,16 +19,11 @@ Module ("ObParseFrame")
 Module ("ObParseTree")
 Module ("ObliqParser")
 
-if equal (OS_TYPE, "WIN32")
-  implementation ("ObPathSepWin32")
-else if equal (OS_TYPE, "POSIX")
-  implementation ("ObPathSepPosix")
-else
-  error ("obliqparse: unrecognized OS: " & OS_TYPE & CR)
-end end
+netobj("ObFrame", "OpCodeHandle")
 
 resource_named ("ObliqGram", "obliq.gr")
 bundle ("ObliqBdl")
+
 
 Library ("obliqparse")
 

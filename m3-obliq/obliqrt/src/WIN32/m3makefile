@@ -2,3 +2,5 @@
 % Distributed only by permission.
 
 implementation ("OpSys")
+implementation ("ObPathSepWin32")
+

@@ -1,9 +1,11 @@
 
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+<*PRAGMA SHARED *>
 
 INTERFACE ObValue;
 IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
+IMPORT SharedObj;
 
   EXCEPTION 
     Exception(ExceptionPacket); (* trappable     *)
@@ -122,7 +124,8 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
     ValAnything = (* to be subtyped *)
       Val BRANDED "ValAnything" OBJECT
         what: TEXT; (* Only used for printing. *)
-        picklable: BOOLEAN;
+        tag: TEXT := NIL; (* Used to identify the type with reflection *)
+        picklable: BOOLEAN := TRUE;
       METHODS
         Is(other: ValAnything): BOOLEAN := IsSelfOther; 
           (* Override with what you want the "is" primitive to do 
@@ -132,7 +135,8 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
           (* Override with a routine to print this value.
              The default method returns the "what"field. *)
         Copy(tbl: Tbl; loc: SynLocation.T): ValAnything 
-            RAISES {Error, NetObj.Error} := CopyError;
+            RAISES {Error, SharedObj.Error, NetObj.Error, 
+                    Thread.Alerted} := CopyError;
           (* Override with a routine that makes a copy of this value
              (the default CopyError raises error, CopyId returns self). 
                Use this pattern:
@@ -146,18 +150,61 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
           *)
       END;
 
+    (* There are 3 kinds of objects, Remote (Network Objects),
+       Replicated (Shared Objects) and Simple (normal Modula-3
+       Objects).  The Obliq wrappers contain a reference to the real
+       data objects in an appropriately typed data field.
+
+       These are ValObj wrapper methods allow each subtype to redirect
+       the method calls to their approriate data object (RemObj,
+       ReplObj or SimpleObj). *)
     ValObj =
-      Val BRANDED "ValObj" OBJECT
+      Val BRANDED "ValObj" OBJECT METHODS
+        Who(VAR(*out*) protected, serialized: BOOLEAN): TEXT 
+          RAISES {NetObj.Error, SharedObj.Error, Thread.Alerted};
+        Select(label: TEXT; internal: BOOLEAN; VAR hint: INTEGER): Val 
+          RAISES {Error, Exception, ServerError, SharedObj.Error, 
+                  NetObj.Error, Thread.Alerted};
+        Invoke(label: TEXT; argNo: INTEGER; READONLY args: Vals;
+               internal: BOOLEAN; VAR hint: INTEGER): Val
+          RAISES {Error, Exception, ServerError, SharedObj.Error,
+                  NetObj.Error, Thread.Alerted};
+        Update(label: TEXT; val: Val; internal: BOOLEAN; VAR hint: INTEGER) 
+          RAISES {ServerError, SharedObj.Error,
+                  NetObj.Error, Thread.Alerted};
+        Redirect(val: Val; internal: BOOLEAN) 
+          RAISES {ServerError, SharedObj.Error,
+                  NetObj.Error, Thread.Alerted};
+        Has(label: TEXT; VAR hint: INTEGER): BOOLEAN 
+          RAISES {NetObj.Error, Thread.Alerted, SharedObj.Error};
+        Obtain(internal: BOOLEAN): REF ObjFields
+          RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted};
+      END;
+
+    ValRemObj <: ValRemObjPublic;
+    ValRemObjPublic = ValObj OBJECT
         remote: RemObj;
       END;
 
-    ObjFields =
-      ARRAY OF RECORD
+    ValReplObj <: ValReplObjPublic;
+    ValReplObjPublic = ValObj OBJECT
+        replica: ReplObj;
+      END;
+
+    ValSimpleObj <: ValSimpleObjPublic;
+    ValSimpleObjPublic = ValObj OBJECT
+        simple: SimpleObj;
+      END;
+
+    ObjFields = ARRAY OF Field;
+    Field = RECORD
         label: TEXT;
         field: Val; 
         (* ValMeth for method fields, 
            ValAlias for alias fields, 
            other Val for value fields *)
+        update: BOOLEAN := FALSE;
+        (* TRUE for replicated object update method, FALSE otherwise *)
       END;
 
     ValEngine =
@@ -210,20 +257,24 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
    RemArrayServer <:
      RemArray;
 
-    RemObj =
+   RemObj =
       NetObj.T BRANDED "RemObj" OBJECT
       METHODS
         Who(VAR(*out*) protected, serialized: BOOLEAN): TEXT 
           RAISES {NetObj.Error, Thread.Alerted};
         Select(label: TEXT; internal: BOOLEAN; VAR hint: INTEGER): Val 
-          RAISES {Error, Exception, ServerError, NetObj.Error, Thread.Alerted};
+          RAISES {Error, Exception, ServerError, SharedObj.Error, 
+                  NetObj.Error, Thread.Alerted};
         Invoke(label: TEXT; argNo: INTEGER; READONLY args: Vals;
           internal: BOOLEAN; VAR hint: INTEGER): Val
-          RAISES {Error, Exception, ServerError, NetObj.Error, Thread.Alerted};
+          RAISES {Error, Exception, ServerError, SharedObj.Error,
+                  NetObj.Error, Thread.Alerted};
         Update(label: TEXT; val: Val; internal: BOOLEAN; VAR hint: INTEGER) 
-          RAISES {ServerError, NetObj.Error, Thread.Alerted};
+          RAISES {ServerError, SharedObj.Error,
+                  NetObj.Error, Thread.Alerted};
         Redirect(val: Val; internal: BOOLEAN) 
-          RAISES {ServerError, NetObj.Error, Thread.Alerted};
+          RAISES {ServerError, SharedObj.Error,
+                  NetObj.Error, Thread.Alerted};
         Has(label: TEXT; VAR hint: INTEGER): BOOLEAN 
           RAISES {NetObj.Error, Thread.Alerted};
           (* Whether a field called label exists. *)
@@ -250,6 +301,74 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
        Who and Obtain.
        *)
 
+    NonRemObjHookServer <: NonRemObjHook;
+    NonRemObjHook =
+      NetObj.T BRANDED "NonRemObjHook" OBJECT
+      METHODS
+        init(remObj: ValObj): NonRemObjHook  RAISES {NetObj.Error,
+                                                     Thread.Alerted}; 
+        Get(): ValObj RAISES {NetObj.Error, Thread.Alerted};
+      END;
+    (* NonRemObjHook is used by the obliq net_import and net_export
+       commands to allow replicated and simple objects to be exported and
+      imported. *)
+
+    ReplObjStd <: ReplObj;
+        <* SHARED UPDATE METHODS ReplObjStd.init, ReplObjStd.InvokeUpdate, 
+                                 ReplObjStd.Update *>
+
+    ReplObj <: ReplObjPublic;
+    ReplObjPublic = SharedObj.T BRANDED "ReplObjServerPublic" OBJECT
+      METHODS
+        init (): ReplObj RAISES {SharedObj.Error};
+        Who(VAR(*out*) protected: BOOLEAN): TEXT 
+          RAISES {SharedObj.Error};
+        (* All replicated objects are protected and serialized! *)
+        Select(label: TEXT; VAR hint: INTEGER): Val 
+          RAISES {Error, Exception, ServerError, SharedObj.Error};
+        Invoke(label: TEXT; argNo: INTEGER; READONLY args: Vals;
+               VAR hint: INTEGER): Val
+          RAISES {Error, Exception, ServerError, SharedObj.Error};
+        Update(label: TEXT; val: Val; internal: BOOLEAN; 
+               VAR hint: INTEGER) RAISES {ServerError, SharedObj.Error};
+        Has(label: TEXT; VAR hint: INTEGER): BOOLEAN RAISES {SharedObj.Error};
+          (* Whether a field called label exists. *)
+        Obtain(internal: BOOLEAN): REF ObjFields
+          RAISES {ServerError, SharedObj.Error};
+          (* Return self.fields. Modifying the result of Obtain may
+             violate network transparency. *)
+      END;
+    (* ReplObj is the implementation of replicated objects. 
+       The default internal implementation is ReplObjStd.  Further 
+       subtypes of ReplObj can be defined and used as client-specific 
+       pseudo-objects. 
+       *)
+
+   SimpleObj <: SimpleObjPublic;
+   SimpleObjPublic = BRANDED "SimpleObjPublic" OBJECT
+        who: TEXT; 
+        sync: Sync;
+      METHODS
+        Who(VAR(*out*) protected, serialized: BOOLEAN): TEXT;
+        Select(label: TEXT; internal: BOOLEAN; VAR hint: INTEGER): Val 
+          RAISES {Error, Exception, ServerError, 
+                  SharedObj.Error, NetObj.Error, Thread.Alerted};
+        Invoke(label: TEXT; argNo: INTEGER; READONLY args: Vals;
+          internal: BOOLEAN; VAR hint: INTEGER): Val
+          RAISES {Error, Exception, ServerError, 
+                  SharedObj.Error, NetObj.Error, Thread.Alerted};
+        Update(label: TEXT; val: Val; internal: BOOLEAN; VAR hint: INTEGER) 
+          RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted};
+        Redirect(val: Val; internal: BOOLEAN) 
+          RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted};
+        Has(label: TEXT; VAR hint: INTEGER): BOOLEAN;
+          (* Whether a field called label exists. *)
+        Obtain(internal: BOOLEAN): REF ObjFields RAISES {ServerError};
+          (* Return self.fields if local, or a copy of it if remote.
+             Modifying the result of Obtain may violate network transparency. 
+             *)
+      END;
+
     Sync =
       BRANDED "Sync" OBJECT
         mutex: Thread.Mutex;
@@ -259,7 +378,7 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
       NetObj.T BRANDED "RemEngine" OBJECT
       METHODS
         Who(): TEXT RAISES {NetObj.Error, Thread.Alerted};
-        Eval(proc: Val; mySelf: RemObj): Val 
+        Eval(proc: Val; mySelf: ValObj): Val 
           RAISES {Error, Exception, ServerError, NetObj.Error, Thread.Alerted};
       END;
 
@@ -289,7 +408,7 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
 
   VAR 
     valOk: Val;
-    netException, threadAlerted: ValException;
+    netException, threadAlerted, sharedException, sharedFatal: ValException;
     showNetObjMsgs: BOOLEAN;
     machineAddress: TEXT;
     localProcessor: ValProcessor;
@@ -312,26 +431,72 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
   PROCEDURE ArrayCat(vals1, vals2: REF Vals): Val RAISES {};
 
   PROCEDURE NewObject(READONLY fields: ObjFields; 
-    who: TEXT:=""; protected: BOOLEAN:=FALSE; sync: Sync:=NIL): ValObj;
+                      who: TEXT:=""; protected: BOOLEAN:=FALSE; 
+                      sync: Sync:=NIL): ValObj;
     (* Create a new object. *)
   PROCEDURE NewObjectFromFields(fields: REF ObjFields; 
-    who: TEXT; protected: BOOLEAN; sync: Sync): ValObj;
+                                who: TEXT; protected: BOOLEAN; 
+                                sync: Sync): ValObj;
     (* Careful: the fields passed in are shared and may get modified later. *)
-  PROCEDURE ObjClone1(remObj: RemObj; mySelf: RemObj): ValObj 
-      RAISES {ServerError, NetObj.Error, Thread.Alerted};
+  PROCEDURE NewReplObject(READONLY fields: ObjFields; 
+                      who: TEXT:=""; protected: BOOLEAN:=FALSE): ValObj
+    RAISES {SharedObj.Error};
+    (* Create a new replicated object. *)
+  PROCEDURE NewReplObjectFromFields(fields: REF ObjFields; 
+                                who: TEXT; protected: BOOLEAN): ValObj
+    RAISES {SharedObj.Error};
+    (* Careful: the fields passed in are shared and may get modified later. *)
+  PROCEDURE NewSimpleObject(READONLY fields: ObjFields; 
+                      who: TEXT:=""; protected: BOOLEAN:=FALSE; 
+                      sync: Sync:=NIL): ValObj;
+    (* Create a new simple object. *)
+  PROCEDURE NewSimpleObjectFromFields(fields: REF ObjFields; 
+                                who: TEXT; protected: BOOLEAN; 
+                                sync: Sync): ValObj;
+    (* Careful: the fields passed in are shared and may get modified later. *)
+
+  PROCEDURE ToSimpleObj(READONLY obj: ValObj; mySelf: ValObj): ValObj
+    RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted};
+    (* Create a SimpleObj from another ValObj. *)
+  PROCEDURE ToReplObj(READONLY obj: ValObj; mySelf: ValObj; 
+                      READONLY updateMethods: ARRAY OF TEXT): ValObj
+    RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted};
+    (* Create a ReplObj from another ValObj. *)
+  PROCEDURE ToRemObj(READONLY obj: ValObj; mySelf: ValObj): ValObj 
+    RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted};
+    (* Create a RemObj from another ValObj. *)
+
+  PROCEDURE SetObjPickler(obj: ValObj; picklerIn: ValSimpleObj;
+                          picklerOut: ValSimpleObj; mySelf: ValObj)
+      RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted};
+    (* mySelf is the object invoking the pickler setting.  
+       set the pickler objects "picklerIn" and "picklerOut" for an object 
+       "obj."  These objects are valid iff they have the set of fields
+       corresponding to {obj's fields - obj's method fields} (ie. all
+       of obj's non-method fields.) *)
+
+  PROCEDURE ObjClone1(remObj: ValObj; mySelf: ValObj): ValObj 
+      RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted};
     (* mySelf is the object invoking cloning, if any, or NIL. 
-       Then cloning is self-inflicted if remObj=mySelf. *)
-  PROCEDURE ObjClone(READONLY remObjs: ARRAY OF RemObj; 
-    mySelf: RemObj): ValObj 
-    RAISES {ServerError, NetObj.Error, Thread.Alerted};
+       Then cloning is self-inflicted if Is(remObj, mySelf) *)
+  PROCEDURE ObjClone(READONLY valObjs: ARRAY OF ValObj; 
+                     mySelf: ValObj): ValObj 
+    RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted};
     (* mySelf is the object invoking cloning, if any, or NIL. 
-       Then cloning is self-inflicted for any remObjs[i]=mySelf. *)
+       Then cloning is self-inflicted if for any Is(remObjs[i],mySelf). *)
+
+  PROCEDURE ObjNotify(val: Val; notifyProc: ValFun);
+    (* Create a NetObjNotifier on val if it is a remote data value.
+       When val becomes inaccesible, notifyProc is called. 
+       notifyProc should take two arguments, the value and a text
+       string which will contain "Dead" or "Failed".   See
+       NetObjNotifier.i3 for details. *)
 
   PROCEDURE NewAlias(obj: ValObj; label: TEXT; location: SynLocation.T)
     : ValAlias RAISES {Error, Exception};
 
   PROCEDURE EngineWho(self: RemEngineServer): TEXT RAISES {NetObj.Error};
-  PROCEDURE EngineEval(self: RemEngineServer; proc: Val; mySelf: RemObj): Val 
+  PROCEDURE EngineEval(self: RemEngineServer; proc: Val; mySelf: ValObj): Val 
           RAISES {Error, Exception, ServerError, NetObj.Error};
 
   PROCEDURE NewFileSystem(readOnly: BOOLEAN): ValFileSystem;
@@ -344,6 +509,8 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
     loc: SynLocation.T) RAISES {Exception};
   PROCEDURE RaiseNetException(msg: TEXT; atoms: AtomList.T; loc: SynLocation.T)
     RAISES {Exception};
+  PROCEDURE RaiseSharedException(msg: TEXT; atoms: AtomList.T;
+                                 loc: SynLocation.T) RAISES {Exception};
 
   PROCEDURE ErrorMsg(swr: SynWr.T; packet: ErrorPacket);
   PROCEDURE ExceptionMsg(wr: SynWr.T; packet: ExceptionPacket);
@@ -373,16 +540,19 @@ IMPORT SynWr, SynLocation, Rd, Wr, ObTree, NetObj, Thread, AtomList;
   PROCEDURE NewTbl(): Tbl;  
   (* A new empty table for CopyVal. *)
 
+  PROCEDURE TblGet (self: Tbl; old: REFANY; VAR (*out*) new: REFANY): BOOLEAN;
+  PROCEDURE TblPut (self: Tbl; old, new: REFANY);
+
   PROCEDURE CopyVal(val: Val; tbl: Tbl; loc: SynLocation.T): Val 
-    RAISES {Error, NetObj.Error, Thread.Alerted};
+    RAISES {Error, SharedObj.Error, NetObj.Error, Thread.Alerted};
   (* Make a complete local copy of val, preserving sharing and circularities.
      Substructures are fetched over the network, if necessary. Protected
      objects and non-transferrable values produce errors. *)
 
   PROCEDURE CopyValToLocal(val: Val; tbl: Tbl; loc: SynLocation.T)
-    : Val RAISES {Error, NetObj.Error, Thread.Alerted};
+    : Val RAISES {Error, SharedObj.Error, NetObj.Error, Thread.Alerted};
   PROCEDURE CopyLocalToVal(val: Val; tbl: Tbl; loc: SynLocation.T)
-    : Val RAISES {Error, NetObj.Error, Thread.Alerted};
+    : Val RAISES {Error, SharedObj.Error, NetObj.Error, Thread.Alerted};
   (* Internal use only. *)
 
   VAR
