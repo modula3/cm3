@@ -21,7 +21,7 @@ import_lib("fftw3","/usr/lib")%}
 %insert(m3rawintf) %{
 TYPE
   Plan    <: ADDRESS;
-  Complex = RECORD r, i: R.T; END;
+  Complex = RECORD re, im: R.T; END; (* compliant to 'arithmetic' library *)
   IODim   = RECORD n, is, os: CARDINAL; END;
 %}
 
@@ -66,7 +66,7 @@ REVEAL
 %insert(m3wrapintf) %{
 TYPE
   Plan    <: REFANY;
-  Complex = RECORD r, i: R.T; END;
+  Complex = RECORD re, im: R.T; END; (* compliant to 'arithmetic' library *)
   Dir = {Forward, Backward};
 
   FlagSet=SET OF Flag;

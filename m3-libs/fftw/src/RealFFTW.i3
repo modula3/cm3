@@ -15,7 +15,8 @@ IMPORT Real AS R;
 
 TYPE
   Plan <: REFANY;
-  Complex = RECORD r, i: R.T;  END;
+  Complex =
+    RECORD re, im: R.T;  END;    (* compliant to 'arithmetic' library *)
   Dir = {Forward, Backward};
 
   FlagSet = SET OF Flag;

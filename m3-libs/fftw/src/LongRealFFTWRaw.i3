@@ -17,7 +17,8 @@ IMPORT LongReal AS R;
 
 TYPE
   Plan <: ADDRESS;
-  Complex = RECORD r, i: R.T;  END;
+  Complex =
+    RECORD re, im: R.T;  END;    (* compliant to 'arithmetic' library *)
   IODim = RECORD n, is, os: CARDINAL;  END;
 
 
