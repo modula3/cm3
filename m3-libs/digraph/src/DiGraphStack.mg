@@ -84,8 +84,8 @@ REVEAL
     addEdgeAndClose := AddEdgeAndClose;
     printAsMatrix := PrintAsMatrix;
 
-    push: Push;
-    pop: Pop;
+    push := Push;
+    pop  := Pop;
   END;
 
 
