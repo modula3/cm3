@@ -1,0 +1,7 @@
+% automatically generated quake file for FFTW
+
+import("libm3")
+module("FFTWRaw")
+module("FFTW")
+
+library("m3FFTW")
