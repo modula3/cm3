@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id$
 
 if [ "$SYSINFO_DONE" = "yes" ] ; then
   return 0

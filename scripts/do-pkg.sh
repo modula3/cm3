@@ -20,16 +20,10 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} m3core"
-P="${P} libm3"
-
 USAGE="
-  `basename $0` [ generic_options ] [ generic_cmd ]
+  `basename $0` [ generic_options ] [ generic_cmd ] pkg+
 
-  will apply the given symbolic command to the following packages:
-
-`print_list4 ${P}`
+  will apply the given symbolic command to one or more CM3 packages.
 
   generic_options:
 ${GEN_OPTS}
@@ -40,8 +34,9 @@ ${GEN_CMDS}"
 show_usage $@
 
 OPTIONS=`extract_options $@`
-ACTION=`map_action $@`
+ACTION=`IGNORE_MISS=yes map_action $@`
 ADDARGS=`add_action_opts $@`
+P=`get_args $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
