@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.3 2003-01-26 23:37:22 wagner Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.4 2003-06-25 15:03:41 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -32,7 +32,9 @@ fi
 
 L=""
 P=""
-L="${L} m3-libs/m3gc-simple"
+if [ $CROSS_TARGET != NT386GNU ] ; then
+  L="${L} m3-libs/m3gc-simple"
+fi
 #L="${L} m3-libs/m3gc-enhanced"
 L="${L} m3-libs/m3core"
 L="${L} m3-libs/libm3"
