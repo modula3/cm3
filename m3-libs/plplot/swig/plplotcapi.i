@@ -130,18 +130,6 @@ typedef void* PLPointer;
 #define PLESPLFLTBUFFERING_DISABLE    2
 #define PLESPLFLTBUFFERING_QUERY      3
 
-/* Non-common API that are included here because they traditionally
- * were part of plmodule.c. */
-
-DOC(plarrows, "Plot an arrow.")
-void
-plarrows(PLFLT *Array, PLFLT *ArrayCk, PLFLT *ArrayCk, PLFLT *ArrayCk, PLINT n,
-         PLFLT scale, PLFLT dx, PLFLT dy) ;
-
-DOC(plsxwin, "Set inferior X window.")
-void
-plsxwin(PLINT window_id);
-
 /* Complete list of common API (has "c_" suffix version defined in plplot.h) */
 
 DOC(pl_setcontlabelformat, "Set the format of the contour labels.")
@@ -201,7 +189,7 @@ void
 plcont(PLFLT **Matrix, PLINT nx, PLINT ny, PLINT kx, PLINT lx,
 	 PLINT ky, PLINT ly, PLFLT *Array, PLINT n,
 	 pltr_func pltr,
-	 PLPointer PYOBJECT_DATA);
+	 PLPointer OBJECT_DATA);
 
 DOC(plcpstrm, "Copy state parameters from the reference stream to the current stream.")
 void
@@ -272,9 +260,13 @@ DOC(plgcompression, "Get the current compression setting.")
 void
 plgcompression(PLINT *OUTPUT);
 
+//temporary
+#if 0
 DOC(plgdev, "Get the current device (keyword) name.")
 void
 plgdev(char *OUTPUT);
+//temporary
+#endif
 
 DOC(plgdidev, "Retrieve current window into device space.")
 void
@@ -292,9 +284,13 @@ DOC(plgfam, "Get family file parameters.")
 void
 plgfam(PLINT *OUTPUT, PLINT *OUTPUT, PLINT *OUTPUT);
 
+//temporary
+#if 0
 DOC(plgfnam, "Get the (current) output file name.")
 void
 plgfnam(char *OUTPUT);
+//temporary
+#endif
 
 DOC(plglevel, "Get the (current) run level.")
 void
@@ -317,9 +313,12 @@ DOC(plgstrm, "Get current stream number.")
 void
 plgstrm(PLINT *OUTPUT);
 
+//temporary
+#if 0
 DOC(plgver, "Get current library version number.")
 void
 plgver(char *OUTPUT);
+#endif
 
 DOC(plgvpd, "Get viewport boundaries in normalized device coordinates.")
 void
@@ -535,7 +534,7 @@ plshades( PLFLT **Matrix, PLINT nx, PLINT ny, defined_func df,
 	  PLINT cont_color, PLINT cont_width,
 	  fill_func ff, PLINT rectangular,
 	  pltr_func pltr,
-	  PLPointer PYOBJECT_DATA);
+	  PLPointer OBJECT_DATA);
 
 DOC(plshade, "Shade region with discrete colour, pattern fill.")
 void 
@@ -547,7 +546,7 @@ plshade(PLFLT **Matrix, PLINT nx, PLINT ny, defined_func df,
 	  PLINT max_color, PLINT max_width,
 	  fill_func ff, PLINT rectangular,
 	  pltr_func pltr,
-	  PLPointer PYOBJECT_DATA);
+	  PLPointer OBJECT_DATA);
 
 DOC(plsmaj, "Set up lengths of major tick marks.")
 void
@@ -670,7 +669,7 @@ DOC(plxormod, "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not interact
 void
 plxormod(PLINT mode, PLINT *OUTPUT);
 
-# if 0
+#if 0
 
 /* Deprecated functions that are in common API, but we don't want to
  * propagate them to the python API. */
@@ -692,7 +691,7 @@ plshade1(PLFLT *Matrix, PLINT nx, PLINT ny, defined_func df,
 	 PLINT max_color, PLINT max_width,
 	 fill_func ff, PLINT rectangular,
 	 pltr_func pltr,
-	 PLPointer PYOBJECT_DATA);
+	 PLPointer OBJECT_DATA);
 
 #endif
 
@@ -711,11 +710,11 @@ plshade1(PLFLT *Matrix, PLINT nx, PLINT ny, defined_func df,
  */
 void
 plfcont(f2eval_func f2eval,
-	PLPointer PYOBJECT_DATA,
+	PLPointer OBJECT_DATA,
 	PLINT nx, PLINT ny, PLINT kx, PLINT lx,
 	PLINT ky, PLINT ly, PLFLT *clevel, PLINT nlevel,
 	pltr_func pltr,
-	PLPointer PYOBJECT_DATA);
+	PLPointer OBJECT_DATA);
 /* plot continental outline in world coordinates */
 
 void
@@ -731,7 +730,7 @@ plmeridians( void (*mapform)(PLINT, PLFLT *, PLFLT *),
 
 void 
 plfshade(f2eval_func,
-	 PLPointer PYOBJECT_DATA,
+	 PLPointer OBJECT_DATA,
 	 c2eval_func,
 	 PLPointer c2eval_data,
 	 PLINT nx, PLINT ny, 
@@ -742,7 +741,7 @@ plfshade(f2eval_func,
 	 PLINT max_color, PLINT max_width,
 	 fill_func, PLINT rectangular,
 	 pltr_func,
-	 PLPointer PYOBJECT_DATA);
+	 PLPointer OBJECT_DATA);
 
 /* Converts input values from relative device coordinates to relative plot */
 /* coordinates. */
@@ -943,17 +942,22 @@ plMinMax2dGrid(PLFLT **f, PLINT nx, PLINT ny, PLFLT *fmax, PLFLT *fmin);
 
 /* Functions for converting between HLS and RGB color space */
 
+#if 0
 void
 plHLS_RGB(PLFLT h, PLFLT l, PLFLT s, PLFLT *OUTPUT, PLFLT *OUTPUT, PLFLT *OUTPUT);
 
 void
 plRGB_HLS(PLFLT r, PLFLT g, PLFLT b, PLFLT *OUTPUT, PLFLT *OUTPUT, PLFLT *OUTPUT);
 
-DOC(plGetCursor, "Wait for graphics input event and translate to world coordinates")
+/* Wait for graphics input event and translate to world coordinates */
+#endif
+
+#if 0
 PLINT
 plGetCursor(PLGraphicsIn *gin);
 
 /* Translates relative device coordinates to world coordinates.  */
+#endif
 /* Use plcalc_world instead of plTranslateCursor. */
 #if 0
 int
