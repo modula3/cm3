@@ -118,6 +118,7 @@ TYPE
     has_loader    : BOOLEAN;            (* gen loader info file *)
     skip_link     : BOOLEAN;            (* don't bother linking final exe *)
     keep_resolved : BOOLEAN;            (* pass resolved library names to linker *)
+    split_if_shared: BOOLEAN;   (* pass resolved library names to linker only if linking static *)
     m3main_in_c   : BOOLEAN;            (* generate a C main program *)
     gui           : BOOLEAN;            (* generate a Windows GUI subsystem prog *)
     do_coverage   : BOOLEAN;            (* compile and link for coverage *)
@@ -193,6 +194,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.has_loader     := GetConfigBool (s, "SYS_HAS_LOADER");
     s.skip_link      := GetConfigBool (s, "M3_SKIP_LINK");
     s.keep_resolved  := NOT GetConfigBool (s, "M3_SPLIT_LIBNAMES");
+    s.split_if_shared:= GetConfigBool (s, "M3_SPLIT_LIBNAMES_IF_SHARED", FALSE);
     s.m3main_in_c    := GetConfigBool (s, "M3_MAIN_IN_C");
     s.gui            := GetConfigBool (s, "M3_WINDOWS_GUI");
     s.do_coverage    := GetConfigBool (s, "M3_COVERAGE");
@@ -1993,6 +1995,9 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
+    IF s.split_if_shared AND shared THEN
+      s.keep_resolved := FALSE;
+    END;
     IF s.skip_link
       THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, "linking ", pgm_file,
@@ -2054,6 +2059,9 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
+    IF s.split_if_shared AND shared THEN
+      s.keep_resolved := FALSE;
+    END;
     IF s.skip_link
       THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, "linking ", pgm_file,
@@ -2369,6 +2377,9 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       libValid := FALSE;
     END;
 
+    IF s.split_if_shared AND shared THEN
+      s.keep_resolved := FALSE;
+    END;
     lib_objects := GetObjects   (s, lib_time, libValid, "archiving ", lib_file);
     import_libs := GetLibraries (s, lib_time, libValid, "archiving ", lib_file,
                                  FALSE);
