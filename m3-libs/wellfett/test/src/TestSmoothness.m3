@@ -74,34 +74,46 @@ PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
       s.getData()^);
   END PlotReal;
 
-PROCEDURE PlotComplex (s: CS.T; l: CARDINAL; ) =
-  CONST magnify = 1.0D0;
+PROCEDURE PlotComplex (READONLY s: ARRAY OF CS.T; l: CARDINAL; ) =
+  CONST magnify = 100.0D0;
 
   VAR
-    unit     := IIntPow.MulPower(1, 2, l);
-    grid     := R.One / FLOAT(unit, R.T);
-    left     := FLOAT(s.getFirst(), R.T) * grid;
-    right    := FLOAT(s.getLast(), R.T) * grid;
-    vre, vim := NEW(V.T, s.getNumber());
+    unit        := IIntPow.MulPower(1, 2, l);
+    grid        := R.One / FLOAT(unit, R.T);
+    v           := NEW(REF ARRAY OF RECORD re, im: V.T;  END, NUMBER(s));
+    left, right := NEW(V.T, NUMBER(s));
+    min, max    := R.Zero;
+    color       := 2;
 
   <* FATAL PL.SizeMismatch *>
   BEGIN
-    WITH v = s.getData()^ DO
-      FOR i := FIRST(vre^) TO LAST(vre^) DO
-        vre[i] := v[i].re;
-        vim[i] := v[i].im;
+    FOR i := FIRST(s) TO LAST(s) DO
+      left[i] := FLOAT(s[i].getFirst(), R.T) * grid;
+      right[i] := FLOAT(s[i].getLast(), R.T) * grid;
+      v[i].re := NEW(V.T, s[i].getNumber());
+      v[i].im := NEW(V.T, s[i].getNumber());
+      WITH sig = s[i].getData()^ DO
+        FOR k := FIRST(sig) TO LAST(sig) DO
+          v[i].re[k] := sig[k].re;
+          v[i].im[k] := sig[k].im;
+        END;
+        min := MIN(min, VFs.Min(v[i].re^));
+        min := MIN(min, VFs.Min(v[i].im^));
+        max := MAX(max, VFs.Max(v[i].re^));
+        max := MAX(max, VFs.Max(v[i].im^));
       END;
     END;
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(
-      left, right, MIN(VFs.Min(vre^), VFs.Min(vim^)) / magnify,
-      MAX(VFs.Max(vre^), VFs.Max(vim^)) / magnify);
-    WITH abscissa = V.ArithSeq(s.getNumber(),
-                               FLOAT(s.getFirst(), R.T) * grid, grid)^ DO
-      PL.SetFGColorDiscr(3);
-      PL.PlotLines(abscissa, vim^);
-      PL.SetFGColorDiscr(2);
-      PL.PlotLines(abscissa, vre^);
+      VFs.Min(left^), VFs.Max(right^), min / magnify, max / magnify);
+    FOR i := FIRST(s) TO LAST(s) DO
+      WITH abscissa = V.ArithSeq(s[i].getNumber(), left[i], grid)^ DO
+        PL.SetFGColorDiscr(color);
+        PL.PlotLines(abscissa, v[i].im^);
+        PL.SetFGColorDiscr(color);
+        PL.PlotLines(abscissa, v[i].re^);
+        INC(color);
+      END;
     END;
   END PlotComplex;
 
@@ -172,7 +184,7 @@ PROCEDURE UpSample2Linear (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   END UpSample2Linear;
 
 (* geometric interpolation *)
-PROCEDURE UpSample2 (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
+PROCEDURE UpSample2Geom (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
   BEGIN
     FOR i := FIRST(x) TO LAST(x) - 1 DO
@@ -181,7 +193,9 @@ PROCEDURE UpSample2 (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
     END;
     z[LAST(z^)] := x[LAST(x)];
     RETURN z;
-  END UpSample2;
+  END UpSample2Geom;
+
+CONST UpSample2 = UpSample2Linear;
 
 PROCEDURE FourierDecay () =
   VAR
@@ -233,7 +247,7 @@ PROCEDURE FourierDecay () =
             bandDoub := band;    (* initialize it with something different
                                     from NIL *)
           BEGIN
-            PlotComplex(NEW(CS.T).fromVector(maskSpec), 0);
+            PlotComplex(ARRAY OF CS.T{NEW(CS.T).fromVector(maskSpec)}, 0);
             (*CVS.Clear(SUBARRAY(decaySpec^, 0, bandWidth));*)
             SUBARRAY(decaySpec^, 0, bandWidth) :=
               SUBARRAY(genSpec^, 0, bandWidth);
@@ -296,11 +310,11 @@ PROCEDURE FourierDecay () =
               rep := rep * 2;
               curBandWidth := curBandWidth * 2;
             END;
-            PlotComplex(NEW(CS.T).fromVector(decaySpec), l);
+            PlotComplex(ARRAY OF
+                          CS.T{NEW(CS.T).fromVector(genSpec),
+                               NEW(CS.T).fromVector(decaySpec)}, l);
           END;
         END;
-
-        PlotComplex(NEW(CS.T).fromVector(genSpec), l);
 
         (* High frequencies are equivalent to negative frequencies and must
            not be considered here.  They also don't appear in the spectrum
@@ -336,7 +350,7 @@ PROCEDURE TestUpsampleA () =
     spec0 := DFTR2C1D(vec0);
     spec1 := DFTR2C1D(vec1^);
     specLinIp := UpSample2Linear(spec0^);
-    specGeomIp := UpSample2(spec0^);
+    specGeomIp := UpSample2Geom(spec0^);
     IO.Put(Fmt.F("Original:\n%s\n" & "Fourier interpolated:\n%s\n"
                    & "Linearly interpolated:\n%s\n"
                    & "Geometrically interpolated:\n%s\n", CVF.Fmt(spec0),
