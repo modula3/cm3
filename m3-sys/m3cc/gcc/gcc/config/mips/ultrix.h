@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler; DECstation (Ultrix) version.
-   Copyright (C) 1991, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1997, 1998, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #define CPP_PREDEFINES "\
 -D__ANSI_COMPAT -DMIPSEL -DR3000 -DSYSTYPE_BSD -D_SYSTYPE_BSD \
 -Dbsd4_2 -Dhost_mips -Dmips -Dultrix -Dunix \
--Asystem(unix) -Asystem(bsd) -Acpu(mips) -Amachine(mips)"
+-Asystem=unix -Asystem=bsd -Acpu=mips -Amachine=mips"
 #endif
 
 #ifndef LIB_SPEC
@@ -44,10 +44,6 @@ Boston, MA 02111-1307, USA.  */
 #ifndef MACHINE_TYPE
 #define MACHINE_TYPE "DECstation running ultrix"
 #endif
-
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  Ultrix 4.x has this, 3.x probably does not.  */
-#define HAVE_ATEXIT
 
 /* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS

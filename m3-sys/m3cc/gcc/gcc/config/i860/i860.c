@@ -1,5 +1,6 @@
 /* Subroutines for insn-output.c for Intel 860
-   Copyright (C) 1989, 91, 97, 98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Derived from sparc.c.
 
    Written by Richard Stallman (rms@ai.mit.edu).
@@ -26,26 +27,34 @@ Boston, MA 02111-1307, USA.  */
 
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
 #include "flags.h"
 #include "rtl.h"
+#include "tree.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "recog.h"
 #include "insn-attr.h"
+#include "function.h"
+#include "expr.h"
+#include "tm_p.h"
 
-static rtx find_addr_reg ();
+static rtx find_addr_reg PARAMS ((rtx));
+static int reg_clobbered_p PARAMS ((rtx, rtx));
+static const char *singlemove_string PARAMS ((rtx *));
+static const char *load_opcode PARAMS ((enum machine_mode, const char *, rtx));
+static const char *store_opcode PARAMS ((enum machine_mode, const char *, rtx));
+static void output_size_for_block_move PARAMS ((rtx, rtx, rtx));
 
 #ifndef I860_REG_PREFIX
 #define I860_REG_PREFIX ""
 #endif
 
-char *i860_reg_prefix = I860_REG_PREFIX;
+const char *i860_reg_prefix = I860_REG_PREFIX;
 
 /* Save information from a "cmpxx" operation until the branch is emitted.  */
 
@@ -451,7 +460,7 @@ load_operand (op, mode)
 int
 small_int (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == CONST_INT && SMALL_INT (op));
 }
@@ -462,7 +471,7 @@ small_int (op, mode)
 int
 logic_int (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == CONST_INT && LOGIC_INT (op));
 }
@@ -475,7 +484,7 @@ logic_int (op, mode)
 int
 call_insn_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) == MEM
       && (CONSTANT_ADDRESS_P (XEXP (op, 0))
@@ -490,7 +499,7 @@ call_insn_operand (op, mode)
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
 
-static char *
+static const char *
 singlemove_string (operands)
      rtx *operands;
 {
@@ -519,7 +528,7 @@ singlemove_string (operands)
 	  rtx xoperands[2];
 
 	  cc_status.flags &= ~CC_F0_IS_0;
-	  xoperands[0] = gen_rtx (REG, SFmode, 32);
+	  xoperands[0] = gen_rtx_REG (SFmode, 32);
 	  xoperands[1] = operands[1];
 	  output_asm_insn (singlemove_string (xoperands), xoperands);
 	  xoperands[1] = xoperands[0];
@@ -556,6 +565,8 @@ singlemove_string (operands)
       return "adds %1,%?r0,%0";
      if((INTVAL (operands[1]) & 0x0000ffff) == 0)
       return "orh %H1,%?r0,%0";
+
+     return "orh %H1,%?r0,%0\n\tor %L1,%0,%0";
    }
   return "mov %1,%0";
 }
@@ -563,7 +574,7 @@ singlemove_string (operands)
 /* Output assembler code to perform a doubleword move insn
    with operands OPERANDS.  */
 
-char *
+const char *
 output_move_double (operands)
      rtx *operands;
 {
@@ -624,14 +635,14 @@ output_move_double (operands)
      operands in OPERANDS to be suitable for the low-numbered word.  */
 
   if (optype0 == REGOP)
-    latehalf[0] = gen_rtx (REG, SImode, REGNO (operands[0]) + 1);
+    latehalf[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 1);
   else if (optype0 == OFFSOP)
     latehalf[0] = adj_offsettable_operand (operands[0], 4);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
-    latehalf[1] = gen_rtx (REG, SImode, REGNO (operands[1]) + 1);
+    latehalf[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 1);
   else if (optype1 == OFFSOP)
     latehalf[1] = adj_offsettable_operand (operands[1], 4);
   else if (optype1 == CNSTOP)
@@ -690,7 +701,7 @@ output_move_double (operands)
 	  xops[0] = latehalf[0];
 	  xops[1] = operands[0];
 	  output_asm_insn ("adds %1,%0,%1", xops);
-	  operands[1] = gen_rtx (MEM, DImode, operands[0]);
+	  operands[1] = gen_rtx_MEM (DImode, operands[0]);
 	  latehalf[1] = adj_offsettable_operand (operands[1], 4);
 	  addreg1 = 0;
 	  highest_first = 1;
@@ -737,14 +748,14 @@ output_move_double (operands)
   return "";
 }
 
-char *
+const char *
 output_fp_move_double (operands)
      rtx *operands;
 {
   /* If the source operand is any sort of zero, use f0 instead.  */
 
   if (operands[1] == CONST0_RTX (GET_MODE (operands[1])))
-    operands[1] = gen_rtx (REG, DFmode, F0_REGNUM);
+    operands[1] = gen_rtx_REG (DFmode, F0_REGNUM);
 
   if (FP_REG_P (operands[0]))
     {
@@ -753,8 +764,8 @@ output_fp_move_double (operands)
       if (GET_CODE (operands[1]) == REG)
 	{
 	  output_asm_insn ("ixfr %1,%0", operands);
-	  operands[0] = gen_rtx (REG, VOIDmode, REGNO (operands[0]) + 1);
-	  operands[1] = gen_rtx (REG, VOIDmode, REGNO (operands[1]) + 1);
+	  operands[0] = gen_rtx_REG (VOIDmode, REGNO (operands[0]) + 1);
+	  operands[1] = gen_rtx_REG (VOIDmode, REGNO (operands[1]) + 1);
 	  return "ixfr %1,%0";
 	}
       if (operands[1] == CONST0_RTX (DFmode))
@@ -779,8 +790,8 @@ output_fp_move_double (operands)
       if (GET_CODE (operands[0]) == REG)
 	{
 	  output_asm_insn ("fxfr %1,%0", operands);
-	  operands[0] = gen_rtx (REG, VOIDmode, REGNO (operands[0]) + 1);
-	  operands[1] = gen_rtx (REG, VOIDmode, REGNO (operands[1]) + 1);
+	  operands[0] = gen_rtx_REG (VOIDmode, REGNO (operands[0]) + 1);
+	  operands[1] = gen_rtx_REG (VOIDmode, REGNO (operands[1]) + 1);
 	  return "fxfr %1,%0";
 	}
       if (CONSTANT_ADDRESS_P (XEXP (operands[0], 0)))
@@ -836,14 +847,14 @@ find_addr_reg (addr)
 
    This string is in static storage.   */
 
-static char *
+static const char *
 load_opcode (mode, args, reg)
      enum machine_mode mode;
-     char *args;
+     const char *args;
      rtx reg;
 {
   static char buf[30];
-  char *opcode;
+  const char *opcode;
 
   switch (mode)
     {
@@ -883,14 +894,14 @@ load_opcode (mode, args, reg)
 
    This string is in static storage.   */
 
-static char *
+static const char *
 store_opcode (mode, args, reg)
      enum machine_mode mode;
-     char *args;
+     const char *args;
      rtx reg;
 {
   static char buf[30];
-  char *opcode;
+  const char *opcode;
 
   switch (mode)
     {
@@ -934,13 +945,12 @@ store_opcode (mode, args, reg)
    It may also output some insns directly.
    It may alter the values of operands[0] and operands[1].  */
 
-char *
+const char *
 output_store (operands)
      rtx *operands;
 {
   enum machine_mode mode = GET_MODE (operands[0]);
   rtx address = XEXP (operands[0], 0);
-  char *string;
 
   cc_status.flags |= CC_KNOW_HI_R31 | CC_HI_R31_ADJ;
   cc_status.mdep = address;
@@ -976,7 +986,7 @@ output_store (operands)
    It may also output some insns directly.
    It may alter the values of operands[0] and operands[1].  */
 
-char *
+const char *
 output_load (operands)
      rtx *operands;
 {
@@ -1113,8 +1123,7 @@ output_size_for_block_move (size, reg, align)
     output_asm_insn ("sub %2,%1,%0", xoperands);
   else
     {
-      xoperands[1]
-	= GEN_INT (INTVAL (size) - INTVAL (align));
+      xoperands[1] = GEN_INT (INTVAL (size) - INTVAL (align));
       cc_status.flags &= ~ CC_KNOW_HI_R31;
       output_asm_insn ("mov %1,%0", xoperands);
     }
@@ -1129,16 +1138,18 @@ output_size_for_block_move (size, reg, align)
    OPERANDS[3] is the known safe alignment.
    OPERANDS[4..6] are pseudos we can safely clobber as temps.  */
 
-char *
+const char *
 output_block_move (operands)
      rtx *operands;
 {
   /* A vector for our computed operands.  Note that load_output_address
      makes use of (and can clobber) up to the 8th element of this vector.  */
   rtx xoperands[10];
+#if 0
   rtx zoperands[10];
+#endif
   static int movstrsi_label = 0;
-  int i, j;
+  int i;
   rtx temp1 = operands[4];
   rtx alignrtx = operands[3];
   int align = INTVAL (alignrtx);
@@ -1323,6 +1334,7 @@ output_block_move (operands)
   return "";
 }
 
+#if 0
 /* Output a delayed branch insn with the delay insn in its
    branch slot.  The delayed branch insn template is in TEMPLATE,
    with operands OPERANDS.  The insn in its delay slot is INSN.
@@ -1343,10 +1355,13 @@ output_block_move (operands)
 	or l%x,%0,%1
 
    */
+/* ??? Disabled because this re-recognition is incomplete and causes
+   constrain_operands to segfault.  Anyone who cares should fix up
+   the code to use the DBR pass.  */
 
-char *
+const char *
 output_delayed_branch (template, operands, insn)
-     char *template;
+     const char *template;
      rtx *operands;
      rtx insn;
 {
@@ -1385,7 +1400,7 @@ output_delayed_branch (template, operands, insn)
 	       && CONSTANT_ADDRESS_P (XEXP (dest, 0))))
     {
       rtx xoperands[2];
-      char *split_template;
+      const char *split_template;
       xoperands[0] = dest;
       xoperands[1] = src;
 
@@ -1425,8 +1440,8 @@ output_delayed_branch (template, operands, insn)
   else
     {
       int insn_code_number;
-      rtx pat = gen_rtx (SET, VOIDmode, dest, src);
-      rtx delay_insn = gen_rtx (INSN, VOIDmode, 0, 0, 0, pat, -1, 0, 0);
+      rtx pat = gen_rtx_SET (VOIDmode, dest, src);
+      rtx delay_insn = gen_rtx_INSN (VOIDmode, 0, 0, 0, pat, -1, 0, 0);
       int i;
 
       /* Output the branch instruction first.  */
@@ -1434,43 +1449,41 @@ output_delayed_branch (template, operands, insn)
 
       /* Now recognize the insn which we put in its delay slot.
 	 We must do this after outputting the branch insn,
-	 since operands may just be a pointer to `recog_operand'.  */
+	 since operands may just be a pointer to `recog_data.operand'.  */
       INSN_CODE (delay_insn) = insn_code_number
 	= recog (pat, delay_insn, NULL_PTR);
       if (insn_code_number == -1)
 	abort ();
 
-      for (i = 0; i < insn_n_operands[insn_code_number]; i++)
+      for (i = 0; i < insn_data[insn_code_number].n_operands; i++)
 	{
-	  if (GET_CODE (recog_operand[i]) == SUBREG)
-	    recog_operand[i] = alter_subreg (recog_operand[i]);
+	  if (GET_CODE (recog_data.operand[i]) == SUBREG)
+	    recog_data.operand[i] = alter_subreg (recog_data.operand[i]);
 	}
 
       insn_extract (delay_insn);
       if (! constrain_operands (1))
 	fatal_insn_not_found (delay_insn);
 
-      template = insn_template[insn_code_number];
-      if (template == 0)
-	template = (*insn_outfun[insn_code_number]) (recog_operand, delay_insn);
-      output_asm_insn (template, recog_operand);
+      template = get_insn_template (insn_code_number, delay_insn);
+      output_asm_insn (template, recog_data.operand);
     }
   CC_STATUS_INIT;
   return "";
 }
 
 /* Output a newly constructed insn DELAY_INSN.  */
-char *
+const char *
 output_delay_insn (delay_insn)
      rtx delay_insn;
 {
-  char *template;
+  const char *template;
   int insn_code_number;
   int i;
 
   /* Now recognize the insn which we put in its delay slot.
      We must do this after outputting the branch insn,
-     since operands may just be a pointer to `recog_operand'.  */
+     since operands may just be a pointer to `recog_data.operand'.  */
   insn_code_number = recog_memoized (delay_insn);
   if (insn_code_number == -1)
     abort ();
@@ -1483,16 +1496,14 @@ output_delay_insn (delay_insn)
      yet.  If this insn's operands don't appear in the peephole's
      actual operands, then they won't be fixed up by final, so we
      make sure they get fixed up here.  -- This is a kludge.  */
-  for (i = 0; i < insn_n_operands[insn_code_number]; i++)
+  for (i = 0; i < insn_data[insn_code_number].n_operands; i++)
     {
-      if (GET_CODE (recog_operand[i]) == SUBREG)
-	recog_operand[i] = alter_subreg (recog_operand[i]);
+      if (GET_CODE (recog_data.operand[i]) == SUBREG)
+	recog_data.operand[i] = alter_subreg (recog_data.operand[i]);
     }
 
-#ifdef REGISTER_CONSTRAINTS
   if (! constrain_operands (1))
     abort ();
-#endif
 
   cc_prev_status = cc_status;
 
@@ -1506,12 +1517,11 @@ output_delay_insn (delay_insn)
   /* Now get the template for what this insn would
      have been, without the branch.  */
 
-  template = insn_template[insn_code_number];
-  if (template == 0)
-    template = (*insn_outfun[insn_code_number]) (recog_operand, delay_insn);
-  output_asm_insn (template, recog_operand);
+  template = get_insn_template (insn_code_number, delay_insn);
+  output_asm_insn (template, recog_data.operand);
   return "";
 }
+#endif
 
 /* Special routine to convert an SFmode value represented as a
    CONST_DOUBLE into its equivalent unsigned long bit pattern.
@@ -1641,7 +1651,6 @@ sfmode_constant_to_ulong (x)
 #endif
 
 extern char call_used_regs[];
-extern int leaf_function_p ();
 
 char *current_function_original_name;
 
@@ -2034,7 +2043,7 @@ function_epilogue (asm_file, local_bytes)
       fprintf (asm_file, "\tfld.l %d(%sfp),%s%s\n",
 	must_preserve_bytes + (4 * restored_so_far++),
 	i860_reg_prefix, i860_reg_prefix, reg_names[i]);
-      if (i > 33 & i < 40)
+      if (i > 33 && i < 40)
 	flags->fregs |= mask;
     }
     if (i > 33 && i < 40)
@@ -2094,4 +2103,251 @@ function_epilogue (asm_file, local_bytes)
   fputs(".TDESC\n", asm_file);
   text_section();
 #endif
+}
+
+
+/* Expand a library call to __builtin_saveregs.  */
+rtx
+i860_saveregs ()
+{
+  rtx fn = gen_rtx_SYMBOL_REF (Pmode, "__builtin_saveregs");
+  rtx save = gen_reg_rtx (Pmode);
+  rtx valreg = LIBCALL_VALUE (Pmode);
+  rtx ret;
+
+  /* The return value register overlaps the first argument register.
+     Save and restore it around the call.  */
+  emit_move_insn (save, valreg);
+  ret = emit_library_call_value (fn, NULL_RTX, 1, Pmode, 0);
+  if (GET_CODE (ret) != REG || REGNO (ret) < FIRST_PSEUDO_REGISTER)
+    ret = copy_to_reg (ret);
+  emit_move_insn (valreg, save);
+
+  return ret;
+}
+
+tree
+i860_build_va_list ()
+{
+  tree field_ireg_used, field_freg_used, field_reg_base, field_mem_ptr;
+  tree record;
+
+  record = make_node (RECORD_TYPE);
+
+  field_ireg_used = build_decl (FIELD_DECL, get_identifier ("__ireg_used"),
+				unsigned_type_node);
+  field_freg_used = build_decl (FIELD_DECL, get_identifier ("__freg_used"),
+				unsigned_type_node);
+  field_reg_base = build_decl (FIELD_DECL, get_identifier ("__reg_base"),
+			       ptr_type_node);
+  field_mem_ptr = build_decl (FIELD_DECL, get_identifier ("__mem_ptr"),
+			      ptr_type_node);
+
+  DECL_FIELD_CONTEXT (field_ireg_used) = record;
+  DECL_FIELD_CONTEXT (field_freg_used) = record;
+  DECL_FIELD_CONTEXT (field_reg_base) = record;
+  DECL_FIELD_CONTEXT (field_mem_ptr) = record;
+
+#ifdef I860_SVR4_VA_LIST
+  TYPE_FIELDS (record) = field_ireg_used;
+  TREE_CHAIN (field_ireg_used) = field_freg_used;
+  TREE_CHAIN (field_freg_used) = field_reg_base;
+  TREE_CHAIN (field_reg_base) = field_mem_ptr;
+#else
+  TYPE_FIELDS (record) = field_reg_base;
+  TREE_CHAIN (field_reg_base) = field_mem_ptr;
+  TREE_CHAIN (field_mem_ptr) = field_ireg_used;
+  TREE_CHAIN (field_ireg_used) = field_freg_used;
+#endif
+
+  layout_type (record);
+  return record;
+}
+
+void
+i860_va_start (stdarg_p, valist, nextarg)
+     int stdarg_p;
+     tree valist;
+     rtx nextarg;
+{
+  tree saveregs, t;
+
+  saveregs = make_tree (build_pointer_type (va_list_type_node),
+			expand_builtin_saveregs ());
+  saveregs = build1 (INDIRECT_REF, va_list_type_node, saveregs);
+
+  if (stdarg_p)
+    {
+      tree field_ireg_used, field_freg_used, field_reg_base, field_mem_ptr;
+      tree ireg_used, freg_used, reg_base, mem_ptr;
+
+#ifdef I860_SVR4_VA_LIST
+      field_ireg_used = TYPE_FIELDS (va_list_type_node);
+      field_freg_used = TREE_CHAIN (field_ireg_used);
+      field_reg_base = TREE_CHAIN (field_freg_used);
+      field_mem_ptr = TREE_CHAIN (field_reg_base);
+#else
+      field_reg_base = TYPE_FIELDS (va_list_type_node);
+      field_mem_ptr = TREE_CHAIN (field_reg_base);
+      field_ireg_used = TREE_CHAIN (field_mem_ptr);
+      field_freg_used = TREE_CHAIN (field_ireg_used);
+#endif
+
+      ireg_used = build (COMPONENT_REF, TREE_TYPE (field_ireg_used),
+			 valist, field_ireg_used);
+      freg_used = build (COMPONENT_REF, TREE_TYPE (field_freg_used),
+			 valist, field_freg_used);
+      reg_base = build (COMPONENT_REF, TREE_TYPE (field_reg_base),
+			valist, field_reg_base);
+      mem_ptr = build (COMPONENT_REF, TREE_TYPE (field_mem_ptr),
+		       valist, field_mem_ptr);
+
+      t = build_int_2 (current_function_args_info.ints, 0);
+      t = build (MODIFY_EXPR, TREE_TYPE (ireg_used), ireg_used, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+      
+      t = build_int_2 (ROUNDUP (current_function_args_info.floats, 8), 0);
+      t = build (MODIFY_EXPR, TREE_TYPE (freg_used), freg_used, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+      
+      t = build (COMPONENT_REF, TREE_TYPE (field_reg_base),
+		 saveregs, field_reg_base);
+      t = build (MODIFY_EXPR, TREE_TYPE (reg_base), reg_base, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+
+      t = make_tree (ptr_type_node, nextarg);
+      t = build (MODIFY_EXPR, TREE_TYPE (mem_ptr), mem_ptr, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+    }
+  else
+    {
+      t = build (MODIFY_EXPR, va_list_type_node, valist, saveregs);
+      TREE_SIDE_EFFECTS (t) = 1;
+      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+    }
+}
+
+#define NUM_PARM_FREGS	8
+#define NUM_PARM_IREGS	12
+#ifdef I860_SVR4_VARARGS
+#define FREG_OFFSET 0
+#define IREG_OFFSET (NUM_PARM_FREGS * UNITS_PER_WORD)
+#else
+#define FREG_OFFSET (NUM_PARM_IREGS * UNITS_PER_WORD)
+#define IREG_OFFSET 0
+#endif
+
+rtx
+i860_va_arg (valist, type)
+     tree valist, type;
+{
+  tree field_ireg_used, field_freg_used, field_reg_base, field_mem_ptr;
+  tree type_ptr_node, t;
+  rtx lab_over = NULL_RTX;
+  rtx ret, val;
+  HOST_WIDE_INT align;
+
+#ifdef I860_SVR4_VA_LIST
+  field_ireg_used = TYPE_FIELDS (va_list_type_node);
+  field_freg_used = TREE_CHAIN (field_ireg_used);
+  field_reg_base = TREE_CHAIN (field_freg_used);
+  field_mem_ptr = TREE_CHAIN (field_reg_base);
+#else
+  field_reg_base = TYPE_FIELDS (va_list_type_node);
+  field_mem_ptr = TREE_CHAIN (field_reg_base);
+  field_ireg_used = TREE_CHAIN (field_mem_ptr);
+  field_freg_used = TREE_CHAIN (field_ireg_used);
+#endif
+
+  field_ireg_used = build (COMPONENT_REF, TREE_TYPE (field_ireg_used),
+			   valist, field_ireg_used);
+  field_freg_used = build (COMPONENT_REF, TREE_TYPE (field_freg_used),
+			   valist, field_freg_used);
+  field_reg_base = build (COMPONENT_REF, TREE_TYPE (field_reg_base),
+			  valist, field_reg_base);
+  field_mem_ptr = build (COMPONENT_REF, TREE_TYPE (field_mem_ptr),
+			 valist, field_mem_ptr);
+
+  ret = gen_reg_rtx (Pmode);
+  type_ptr_node = build_pointer_type (type);
+
+  if (! AGGREGATE_TYPE_P (type))
+    {
+      int nparm, incr, ofs;
+      tree field;
+      rtx lab_false;
+
+      if (FLOAT_TYPE_P (type))
+	{
+	  field = field_freg_used;
+	  nparm = NUM_PARM_FREGS;
+	  incr = 2;
+	  ofs = FREG_OFFSET;
+	}
+      else
+	{
+	  field = field_ireg_used;
+	  nparm = NUM_PARM_IREGS;
+	  incr = int_size_in_bytes (type) / UNITS_PER_WORD;
+	  ofs = IREG_OFFSET;
+	}
+
+      lab_false = gen_label_rtx ();
+      lab_over = gen_label_rtx ();
+
+      emit_cmp_and_jump_insns (expand_expr (field, NULL_RTX, 0, 0),
+			       GEN_INT (nparm - incr), GT, const0_rtx,
+			       TYPE_MODE (TREE_TYPE (field)),
+			       TREE_UNSIGNED (field), 0, lab_false);
+
+      t = fold (build (POSTINCREMENT_EXPR, TREE_TYPE (field), field,
+		       build_int_2 (incr, 0)));
+      TREE_SIDE_EFFECTS (t) = 1;
+
+      t = fold (build (MULT_EXPR, TREE_TYPE (field), field,
+		       build_int_2 (UNITS_PER_WORD, 0)));
+      TREE_SIDE_EFFECTS (t) = 1;
+      
+      t = fold (build (PLUS_EXPR, ptr_type_node, field_reg_base,
+		       fold (build (PLUS_EXPR, TREE_TYPE (field), t,
+				    build_int_2 (ofs, 0)))));
+      TREE_SIDE_EFFECTS (t) = 1;
+      
+      val = expand_expr (t, ret, VOIDmode, EXPAND_NORMAL);
+      if (val != ret)
+	emit_move_insn (ret, val);
+
+      emit_jump_insn (gen_jump (lab_over));
+      emit_barrier ();
+      emit_label (lab_false);
+    }
+
+  align = TYPE_ALIGN (type);
+  if (align < BITS_PER_WORD)
+    align = BITS_PER_WORD;
+  align /= BITS_PER_UNIT;
+
+  t = build (PLUS_EXPR, ptr_type_node, field_mem_ptr,
+	     build_int_2 (align - 1, 0));
+  t = build (BIT_AND_EXPR, ptr_type_node, t, build_int_2 (-align, -1));
+
+  val = expand_expr (t, ret, VOIDmode, EXPAND_NORMAL);
+  if (val != ret)
+    emit_move_insn (ret, val);
+
+  t = fold (build (PLUS_EXPR, ptr_type_node,
+		   make_tree (ptr_type_node, ret),
+		   build_int_2 (int_size_in_bytes (type), 0)));
+  t = build (MODIFY_EXPR, ptr_type_node, field_mem_ptr, t);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+
+  if (lab_over)
+    emit_label (lab_over);
+
+  return ret;
 }

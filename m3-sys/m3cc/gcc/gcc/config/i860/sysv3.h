@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Intel 80860 running System V.3
-   Copyright (C) 1991, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1996, 2000 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
 This file is part of GNU CC.
@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Provide a set of pre-definitions and pre-assertions appropriate for
    the i860 running svr3.  */
-#define CPP_PREDEFINES "-Di860 -Dunix -D__svr3__ -Asystem(unix) -Asystem(svr3) -Acpu(i860) -Amachine(i860)"
+#define CPP_PREDEFINES "-Di860 -Dunix -D__svr3__ -Asystem=unix -Asystem=svr3 -Acpu=i860 -Amachine=i860"
 
 /* Use crt1.o as a startup file and crtn.o as a closing file.  */
 
@@ -99,13 +99,13 @@ extern char *current_function_original_name;
 
 /* The routine used to output string literals.
 
-#define ASCII_DATA_ASM_OP	".byte"
+#define ASCII_DATA_ASM_OP	"\t.byte\t"
 
 #define ASM_OUTPUT_ASCII(FILE, STR, LENGTH)				\
   do									\
     {									\
-      register unsigned char *str = (unsigned char *) (STR);		\
-      register unsigned char *limit = str + (LENGTH);			\
+      register const unsigned char *str = (const unsigned char *) (STR); \
+      register const unsigned char *limit = str + (LENGTH);		\
       register unsigned bytes_in_chunk = 0;				\
       for (; str < limit; str++)					\
         {								\
@@ -117,7 +117,7 @@ extern char *current_function_original_name;
 	          fprintf ((FILE), "\"\n");				\
 	          bytes_in_chunk = 0;					\
 	        }							\
-	      fprintf ((FILE), "\t%s\t%d\n", ASM_BYTE_OP, ch);		\
+	      fprintf ((FILE), "%s%d\n", ASM_BYTE_OP, ch);		\
 	    }								\
           else								\
 	    {								\
@@ -127,7 +127,7 @@ extern char *current_function_original_name;
 	          bytes_in_chunk = 0;					\
 	        }							\
 	      if (bytes_in_chunk == 0)					\
-	        fprintf ((FILE), "\t%s\t\"", ASCII_DATA_ASM_OP);	\
+	        fprintf ((FILE), "%s\"", ASCII_DATA_ASM_OP);		\
 	      putc (ch, (FILE));					\
 	      bytes_in_chunk++;						\
 	    }								\
@@ -139,14 +139,14 @@ extern char *current_function_original_name;
 
 
 #undef CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"x\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"x\""
 #undef DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"x\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"x\""
 
 /* Add definitions to support the .tdesc section as specified in the svr4
    ABI for the i860.  */
 
-#define TDESC_SECTION_ASM_OP    ".section\t.tdesc"
+#define TDESC_SECTION_ASM_OP    "\t.section\t.tdesc"
 
 #undef EXTRA_SECTIONS
 #define EXTRA_SECTIONS in_const, in_ctors, in_dtors, in_tdesc

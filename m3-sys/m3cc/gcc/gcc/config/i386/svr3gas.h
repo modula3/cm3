@@ -1,5 +1,5 @@
 /* Definitions for Intel 386 running system V, using gas.
-   Copyright (C) 1992, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -37,8 +37,8 @@ Boston, MA 02111-1307, USA.  */
    Since a frame pointer will be required in such a function, it is OK
    that the stack pointer is not restored.  */
 
-#undef FRAME_POINTER_REQUIRED
-#define FRAME_POINTER_REQUIRED \
+#undef SUBTARGET_FRAME_POINTER_REQUIRED
+#define SUBTARGET_FRAME_POINTER_REQUIRED \
   (current_function_calls_setjmp || current_function_calls_longjmp)
 
 /* Modify ASM_OUTPUT_LOCAL slightly to test -msvr3-shlib, adapted to gas  */
@@ -105,9 +105,9 @@ Boston, MA 02111-1307, USA.  */
 
 #define USE_CONST_SECTION	0
 
-#define INIT_SECTION_ASM_OP     ".section\t.init"
-#define FINI_SECTION_ASM_OP     ".section .fini,\"x\""
-#define CONST_SECTION_ASM_OP	".section\t.rodata, \"x\""
+#define INIT_SECTION_ASM_OP     "\t.section\t.init"
+#define FINI_SECTION_ASM_OP     "\t.section .fini,\"x\""
+#define CONST_SECTION_ASM_OP	"\t.section\t.rodata, \"x\""
 #define CTORS_SECTION_ASM_OP	INIT_SECTION_ASM_OP
 #define DTORS_SECTION_ASM_OP    FINI_SECTION_ASM_OP
 
@@ -156,7 +156,7 @@ init_section ()							\
 {								\
   if (in_section != in_init)					\
     {								\
-      fprintf (asm_out_file, "\t%s\n", INIT_SECTION_ASM_OP);	\
+      fprintf (asm_out_file, "%s\n", INIT_SECTION_ASM_OP);	\
       in_section = in_init;					\
     }								\
 }
@@ -167,7 +167,7 @@ fini_section ()							\
 {								\
   if (in_section != in_fini)					\
     {								\
-      fprintf (asm_out_file, "\t%s\n", FINI_SECTION_ASM_OP);	\
+      fprintf (asm_out_file, "%s\n", FINI_SECTION_ASM_OP);	\
       in_section = in_fini;					\
     }								\
 }
@@ -178,7 +178,6 @@ fini_section ()							\
 void									\
 const_section ()							\
 {									\
-  extern void text_section();						\
   if (!USE_CONST_SECTION)						\
     text_section();							\
   else if (in_section != in_const)					\
@@ -221,8 +220,8 @@ dtors_section ()							\
    global destructors.  */
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
   do {									\
-    fini_section ();                   				\
-    fprintf (FILE, "%s\t ", ASM_LONG);					\
+    fini_section ();                   					\
+    fputs (ASM_LONG, FILE);						\
     assemble_name (FILE, NAME);              				\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -277,7 +276,7 @@ dtors_section ()							\
    constructor.  */
 
 #undef INIT_SECTION_ASM_OP
-#define INIT_SECTION_ASM_OP     ".section .init,\"x\""
+#define INIT_SECTION_ASM_OP     "\t.section .init,\"x\""
 
 #define CTOR_LIST_BEGIN				\
   asm (INIT_SECTION_ASM_OP);			\

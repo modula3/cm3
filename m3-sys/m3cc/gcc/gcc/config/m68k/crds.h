@@ -1,6 +1,7 @@
 /* Definitions of target machine for GNU compiler;
    Charles River Data Systems UNiverse/32.
-   Copyright (C) 1987, 1993, 1994, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Gary E. Miller (Gary_Edmunds_Miller@cup.portal.com)
 
 This file is part of GNU CC.
@@ -79,7 +80,7 @@ Boston, MA 02111-1307, USA.  */
 
 #if 0
 #define HAVE_probe 1
-#define gen_probe()  gen_rtx(ASM_INPUT, VOIDmode, "tstb -2048(sp)\t;probe\n")
+#define gen_probe()  gen_rtx_ASM_INPUT (VOIDmode, "tstb -2048(sp)\t;probe\n")
 #else
 #undef NEED_PROBE
 #define NEED_PROBE (-2048)
@@ -88,10 +89,6 @@ Boston, MA 02111-1307, USA.  */
 /* use memcpy, memset instead of bcopy, etc. */
 
 #define TARGET_MEM_FUNCTIONS
-
-/* Don't try to define `gcc_compiled.' since the assembler might not
-   accept symbols with periods and GDB doesn't run on this machine anyway.  */
-#define ASM_IDENTIFY_GCC(FILE)
 
 /* Define __HAVE_68881__ in preprocessor if -m68881 is specified.
    This will control the use of inline 68881 insns in certain macros.  */
@@ -102,17 +99,17 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dmc68k -DM68000 -Dmc68000 -Dunos -Dunix -D__motorola__ -Asystem(unix)  -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dmc68k -DM68000 -Dmc68000 -Dunos -Dunix -D__motorola__ -Asystem=unix  -Acpu=m68k -Amachine=m68k"
 
 /* Register in which address to store a structure value
    is passed to a function.  */
 /* unos uses ".comm c.sac" returns &c.sac in d0 */
 /* make pointer to c.sac ?
 #undef STRUCT_VALUE_REGNUM
-#define STRUCT_VALUE gen_rtx(MEM, Pmode, gen_rtx( , , ) )
+#define STRUCT_VALUE gen_rtx_MEM (Pmode, gen_rtx( , , ) )
 */
 
-#define BSS_SECTION_ASM_OP ".bss"
+#define BSS_SECTION_ASM_OP "\t.bss"
 
 /* Specify how to pad function arguments.
    Value should be `upward', `downward' or `none'.

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  64 bit ABI support.
-   Copyright (C) 1994, 1995, 1996, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1998, 1999, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -86,14 +86,22 @@ Boston, MA 02111-1307, USA.  */
 	      || GET_MODE_CLASS (MODE) == MODE_INT)))			\
       ? downward : upward))
 
+/* Under the old (i.e., 32 and O64 ABIs) all BLKmode objects are
+   returned in memory.  Under the new (N32 and 64-bit MIPS ABIs) small
+   structures are returned in a register.  Objects with varying size
+   must still be returned in memory, of course.  */
 #undef RETURN_IN_MEMORY
-#define RETURN_IN_MEMORY(TYPE)						\
-  ((mips_abi == ABI_32 || mips_abi == ABI_O64)				\
-   ? TYPE_MODE (TYPE) == BLKmode					\
-   : (int_size_in_bytes (TYPE)						\
-      > (mips_abi == ABI_EABI ? 2 * UNITS_PER_WORD : 16)))
+#define RETURN_IN_MEMORY(TYPE)						 \
+  ((mips_abi == ABI_32 || mips_abi == ABI_O64)				 \
+   ? TYPE_MODE (TYPE) == BLKmode					 \
+   : ((int_size_in_bytes (TYPE)						 \
+       > (2 * UNITS_PER_WORD)) 						 \
+      || (int_size_in_bytes (TYPE) == -1)))
 
-extern struct rtx_def *mips_function_value ();
+#ifdef ANSI_PROTOTYPES
+union tree_node;
+#endif
+extern struct rtx_def *mips_function_value PARAMS ((union tree_node *, union tree_node *));
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)	mips_function_value (VALTYPE, FUNC)
 
@@ -102,19 +110,21 @@ extern struct rtx_def *mips_function_value ();
    For stdarg, we do not need to save the current argument, because it
    is a real argument.  */
 #define SETUP_INCOMING_VARARGS(CUM,MODE,TYPE,PRETEND_SIZE,NO_RTL)	\
-{ int mips_off = (! current_function_varargs) && (! (CUM).last_arg_fp);	\
-  int mips_fp_off = (! current_function_varargs) && ((CUM).last_arg_fp); \
+{ unsigned int mips_off							\
+    = (! current_function_varargs) && (! (CUM).last_arg_fp);		\
+    unsigned int mips_fp_off						\
+    = (! current_function_varargs) && ((CUM).last_arg_fp); 		\
   if (((mips_abi != ABI_32 && mips_abi != ABI_O64)			\
        && (CUM).arg_words < MAX_ARGS_IN_REGISTERS - mips_off)		\
       || (mips_abi == ABI_EABI						\
 	  && ! TARGET_SOFT_FLOAT					\
 	  && (CUM).fp_arg_words < MAX_ARGS_IN_REGISTERS - mips_fp_off))	\
     {									\
-      int mips_save_gp_regs =						\
-        MAX_ARGS_IN_REGISTERS - (CUM).arg_words - mips_off;		\
-      int mips_save_fp_regs =						\
-        (mips_abi != ABI_EABI ? 0					\
-	 : MAX_ARGS_IN_REGISTERS - (CUM).fp_arg_words - mips_fp_off);	\
+      int mips_save_gp_regs						\
+        = MAX_ARGS_IN_REGISTERS - (CUM).arg_words - mips_off;		\
+      int mips_save_fp_regs						\
+        = (mips_abi != ABI_EABI ? 0					\
+	   : MAX_ARGS_IN_REGISTERS - (CUM).fp_arg_words - mips_fp_off);	\
 									\
       if (mips_save_gp_regs < 0)					\
 	mips_save_gp_regs = 0;						\
@@ -134,7 +144,7 @@ extern struct rtx_def *mips_function_value ();
 		ptr = plus_constant (virtual_incoming_args_rtx,		\
 				     - (mips_save_gp_regs		\
 					* UNITS_PER_WORD));		\
-	      mem = gen_rtx (MEM, BLKmode, ptr);			\
+	      mem = gen_rtx_MEM (BLKmode, ptr);			\
 	      /* va_arg is an array access in this case, which causes	\
 		 it to get MEM_IN_STRUCT_P set.  We must set it here	\
 		 so that the insn scheduler won't assume that these	\
@@ -167,15 +177,15 @@ extern struct rtx_def *mips_function_value ();
 	      for (i = 0; i < mips_save_fp_regs; i++)			\
 		{							\
 		  rtx tem =						\
-		    gen_rtx (MEM, mode,					\
-			     plus_constant (virtual_incoming_args_rtx,	\
-					    off));			\
+		    gen_rtx_MEM (mode,					\
+				 plus_constant (virtual_incoming_args_rtx, \
+						off));			\
 		  emit_move_insn (tem,					\
-				  gen_rtx (REG, mode,			\
-					   ((CUM).fp_arg_words		\
-					    + FP_ARG_FIRST		\
-					    + i				\
-					    + mips_fp_off)));		\
+				  gen_rtx_REG (mode,			\
+					       ((CUM).fp_arg_words	\
+						+ FP_ARG_FIRST		\
+						+ i			\
+						+ mips_fp_off)));	\
 		  off += size;						\
 		  if (! TARGET_FLOAT64 || TARGET_SINGLE_FLOAT)		\
 		    ++i;						\
@@ -193,8 +203,7 @@ extern struct rtx_def *mips_function_value ();
    argument itself.  The pointer is passed in whatever way is appropriate
    for passing a pointer to that type.  */
 #define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED)		\
-  (mips_abi == ABI_EABI							\
-   && function_arg_pass_by_reference (&CUM, MODE, TYPE, NAMED))
+  function_arg_pass_by_reference (&CUM, MODE, TYPE, NAMED)
 
 /* A C expression that indicates when it is the called function's
    responsibility to make a copy of arguments passed by invisible

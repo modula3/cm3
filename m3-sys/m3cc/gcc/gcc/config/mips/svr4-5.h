@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    MIPS RISC-OS 5.0 System V.4 version.
-   Copyright (C) 1992 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -25,7 +25,7 @@ Boston, MA 02111-1307, USA.  */
 "-Dmips -Dunix -Dhost_mips -DMIPSEB -DR3000 -DSYSTYPE_SVR4 \
 -D_mips -D_unix -D_host_mips -D_MIPSEB -D_R3000 -D_SYSTYPE_SVR4 \
 -D_MIPS_SZINT=32 -D_MIPS_SZLONG=32 -D_MIPS_SZPTR=32 \
--Asystem(unix) -Asystem(svr4) -Acpu(mips) -Amachine(mips)"
+-Asystem=unix -Asystem=svr4 -Acpu=mips -Amachine=mips"
 
 #define STANDARD_INCLUDE_DIR "/svr4/usr/include"
 
@@ -66,10 +66,6 @@ Boston, MA 02111-1307, USA.  */
 #define getpagesize()	sysconf(_SC_PAGE_SIZE)
 #endif /*  L_trampoline */
 
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
-
 /* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS
 
@@ -80,9 +76,9 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)			\
 do {							\
-  unsigned char *s;					\
+  const unsigned char *s;				\
   int i;						\
-  for (i = 0, s = (unsigned char *)(PTR); i < (LEN); s++, i++)	\
+  for (i = 0, s = (const unsigned char *)(PTR); i < (LEN); s++, i++) \
     {							\
       if ((i % 8) == 0)					\
 	fputs ("\n\t.byte\t", (FILE));			\

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    Motorola m88100 running the AT&T/Unisoft/Motorola V.3 reference port.
-   Copyright (C) 1990, 1991, 1997, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1997, 1998, 1999 Free Software Foundation, Inc.
    Contributed by Ray Essick (ressick@mot.com)
    Enhanced by Tom Wood (Tom_Wood@NeXT.com)
 
@@ -31,7 +31,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Macros to be automatically defined.  */
 #undef	CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dm88000 -Dm88k -Dunix -DsysV88 -D__CLASSIFY_TYPE__=2 -Asystem(unix) -Asystem(svr3) -Acpu(m88k) -Amachine(m88k)"
+#define CPP_PREDEFINES "-Dm88000 -Dm88k -Dunix -DsysV88 -D__CLASSIFY_TYPE__=2 -Asystem=unix -Asystem=svr3 -Acpu=m88k -Amachine=m88k"
 
 /* Override svr3.h to link with ?crt0.o instead of ?crt1.o and ?crtn.o.
    From arul@sdsu.edu.  */
@@ -69,10 +69,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* Although the .init section is used, it is not automatically invoked.  */
 #define INVOKE__main
-
-/* State that atexit exists so __do_global_ctors will register
-   __do_global_dtors.  */
-#define HAVE_ATEXIT
 
 #define CTOR_LIST_BEGIN	    		\
   asm (INIT_SECTION_ASM_OP);		\
@@ -145,10 +141,11 @@ do {									\
 #undef INITIALIZE_TRAMPOLINE 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 40)), FNADDR); \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 36)), CXT); \
-  emit_call_insn (gen_call (gen_rtx (MEM, SImode,			\
-				     gen_rtx (SYMBOL_REF, Pmode,	\
-					     "__enable_execute_stack")), \
-			   const0_rtx));				\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 40)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 36)), CXT); \
+  emit_call_insn (gen_call						\
+		  (gen_rtx_MEM						\
+		   (SImode,						\
+		    gen_rtx_SYMBOL_REF (Pmode, "__enable_execute_stack")), \
+		   const0_rtx));					\
 }

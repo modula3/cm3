@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  Clipper version.
-   Copyright (C) 1987, 88, 91, 93-95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1993, 1994, 1995, 1996, 1998,
+   1999, 2000 Free Software Foundation, Inc.
    Contributed by Holger Teutsch (holger@hotbso.rhein-main.de)
 
 This file is part of GNU CC.
@@ -19,9 +20,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-extern struct rtx_def *clipper_builtin_saveregs ();
-extern int clipper_frame_size ();
-
 /* Print subsidiary information on the compiler version in use.  */
 
 #define TARGET_VERSION fprintf (stderr, " (clipper)");
@@ -38,9 +36,9 @@ extern int target_flags;
    where VALUE is the bits to set or minus the bits to clear.
    An empty string NAME is used to identify the default VALUE.  */
 
-#define TARGET_SWITCHES		\
-  { { "c400", 1, "Generate code for the C400" },		\
-    { "c300", -1, "Generate code for the C300" },		\
+#define TARGET_SWITCHES						\
+  { { "c400", 1, N_("Generate code for the C400") },		\
+    { "c300", -1, N_("Generate code for the C300") },		\
     { "", TARGET_DEFAULT, NULL} }
 
 #define TARGET_C400 1
@@ -209,7 +207,7 @@ extern int target_flags;
 
 #define HARD_REGNO_MODE_OK(REGNO, MODE)					\
   ((REGNO) < 16 							\
-   ? ((MODE) != DImode && (MODE) != DFmode || ((REGNO) & 1) == 0)	\
+   ? (((MODE) != DImode && (MODE) != DFmode) || ((REGNO) & 1) == 0)	\
    : ((MODE) == SFmode || (MODE) == DFmode))
 
 /* Value is 1 if it is a good idea to tie two pseudo registers
@@ -282,7 +280,7 @@ enum reg_class { NO_REGS, GENERAL_REGS, FLOAT_REGS, ALL_REGS, LIM_REG_CLASSES};
    This is an initializer for a vector of HARD_REG_SET
    of length N_REG_CLASSES.  */
 
-#define REG_CLASS_CONTENTS {0, 0x0000ffff, 0xffff0000, 0xffffffff}
+#define REG_CLASS_CONTENTS { {0}, {0x0000ffff}, {0xffff0000}, {0xffffffff} }
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -370,7 +368,7 @@ enum reg_class { NO_REGS, GENERAL_REGS, FLOAT_REGS, ALL_REGS, LIM_REG_CLASSES};
 /* we can't set this for clipper as library calls may have 3 args and we pass
    only 2 args in regs. */
 
-/* #define ACCUMULATE_OUTGOING_ARGS */
+/* #define ACCUMULATE_OUTGOING_ARGS 1*/
   
 
 /* Offset of first parameter from the argument pointer register value.
@@ -393,15 +391,15 @@ enum reg_class { NO_REGS, GENERAL_REGS, FLOAT_REGS, ALL_REGS, LIM_REG_CLASSES};
    otherwise, FUNC is 0.  */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), ((TYPE_MODE (VALTYPE) == SFmode ||\
-				       TYPE_MODE (VALTYPE) == DFmode) ? \
-				        16 : 0))
+  gen_rtx_REG (TYPE_MODE (VALTYPE), ((TYPE_MODE (VALTYPE) == SFmode ||\
+				      TYPE_MODE (VALTYPE) == DFmode) ? \
+				     16 : 0))
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
 #define LIBCALL_VALUE(MODE)  \
-  gen_rtx (REG, (MODE), ((MODE) == SFmode || (MODE) == DFmode ? 16 : 0))
+  gen_rtx_REG ((MODE), ((MODE) == SFmode || (MODE) == DFmode ? 16 : 0))
 
 
 /* 1 if N is a possible register number for a function value
@@ -527,8 +525,9 @@ do									      \
     && (GET_MODE_SIZE (MODE) <= 8)					     \
     && ((TYPE) == NULL || !AGGREGATE_TYPE_P(TYPE))			     \
     && ((MODE) != DImode || (CUM).num == 0))				     \
-   ? gen_rtx (REG, (MODE),						     \
-	      GET_MODE_CLASS(MODE) == MODE_FLOAT ? (CUM).num+16 : (CUM).num) \
+   ? gen_rtx_REG ((MODE),						     \
+		  GET_MODE_CLASS(MODE) == MODE_FLOAT			     \
+		  ? (CUM).num+16 : (CUM).num)				     \
    : 0)
 
 /* If defined, a C expression that gives the alignment boundary, in bits,
@@ -549,7 +548,7 @@ do									      \
 /* Generate necessary RTL for __builtin_saveregs().
    ARGLIST is the argument list; see expr.c.  */
 
-#define EXPAND_BUILTIN_SAVEREGS(ARGLIST) clipper_builtin_saveregs (ARGLIST)
+#define EXPAND_BUILTIN_SAVEREGS() clipper_builtin_saveregs ()
 
 /* This macro generates the assembly code for function entry.
    FILE is a stdio stream to output the code to.
@@ -633,8 +632,8 @@ do									      \
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 24)), CXT); \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 28)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 24)), CXT); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 28)), FNADDR); \
 }
 
 /* Addressing modes, and classification of registers for them.  */
@@ -920,8 +919,8 @@ do									      \
     {									      \
     case CC_CHANGE0:							      \
       if (GET_CODE (EXP) == PARALLEL) abort();				      \
-      if (cc_status.value1 && rtx_equal_p (dest, cc_status.value1) ||	      \
-	  cc_status.value2 && rtx_equal_p (dest, cc_status.value2))	      \
+      if ((cc_status.value1 && rtx_equal_p (dest, cc_status.value1)) ||	      \
+	  (cc_status.value2 && rtx_equal_p (dest, cc_status.value2)))	      \
 	CC_STATUS_INIT;							      \
       break;								      \
 									      \
@@ -970,11 +969,11 @@ do									      \
 
 /* Output before read-only data.  */
 
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1103,8 +1102,7 @@ Clipper operand formatting codes:
   ((CODE) == 'C')
 
 #define PRINT_OPERAND(FILE, X, CODE)  \
-{ extern char *rev_cond_name ();					\
-  if (CODE == 'C')							\
+{ if (CODE == 'C')							\
     fputs (rev_cond_name (X), FILE);					\
   else if (GET_CODE (X) == REG)						\
     fprintf (FILE, "%s", reg_names[REGNO (X)]);				\
@@ -1123,3 +1121,15 @@ Clipper operand formatting codes:
 #define PREDICATE_CODES \
   {"int_reg_operand", {SUBREG, REG}},	\
   {"fp_reg_operand", {SUBREG, REG}},
+
+/* Define the `__builtin_va_list' type for the ABI.  */
+#define BUILD_VA_LIST_TYPE(VALIST) \
+  (VALIST) = clipper_build_va_list ()
+
+/* Implement `va_start' for varargs and stdarg.  */
+#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
+  clipper_va_start (stdarg, valist, nextarg)
+
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  clipper_va_arg (valist, type)

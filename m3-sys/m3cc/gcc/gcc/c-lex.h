@@ -1,5 +1,5 @@
 /* Define constants for communication with c-parse.y.
-   Copyright (C) 1987, 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1992, 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,71 +18,23 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#ifndef _C_LEX_H
+#define _C_LEX_H
 
+extern tree make_pointer_declarator PARAMS ((tree, tree));
+extern void position_after_white_space PARAMS ((void));
 
-enum rid
-{
-  RID_UNUSED,
-  RID_INT,
-  RID_CHAR,
-  RID_FLOAT,
-  RID_DOUBLE,
-  RID_VOID,
-  RID_UNUSED1,
+extern int c_lex PARAMS ((tree *));
+extern const char *init_c_lex PARAMS ((const char *));
 
-  RID_UNSIGNED,
-  RID_SHORT,
-  RID_LONG,
-  RID_AUTO,
-  RID_STATIC,
-  RID_EXTERN,
-  RID_REGISTER,
-  RID_TYPEDEF,
-  RID_SIGNED,
-  RID_CONST,
-  RID_RESTRICT,
-  RID_VOLATILE,
-  RID_INLINE,
-  RID_NOALIAS,
-  RID_ITERATOR,
-  RID_COMPLEX,
+extern void save_and_forget_protocol_qualifiers PARAMS ((void));
+extern void forget_protocol_qualifiers PARAMS ((void));
+extern void remember_protocol_qualifiers PARAMS ((void));
+extern tree is_class_name PARAMS ((tree));
 
-  RID_IN,
-  RID_OUT,
-  RID_INOUT,
-  RID_BYCOPY,
-  RID_BYREF,
-  RID_ONEWAY,
-  RID_ID,
+extern int indent_level;
 
-  RID_MAX
-};
+struct cpp_reader;
+extern struct cpp_reader* parse_in;
 
-#define NORID RID_UNUSED
-
-#define RID_FIRST_MODIFIER RID_UNSIGNED
-
-/* The elements of `ridpointers' are identifier nodes
-   for the reserved type names and storage classes.
-   It is indexed by a RID_... value.  */
-extern tree ridpointers[(int) RID_MAX];
-
-/* the declaration found for the last IDENTIFIER token read in.
-   yylex must look this up to detect typedefs, which get token type TYPENAME,
-   so it is left around in case the identifier is not a typedef but is
-   used in a context which makes it a reference to a variable.  */
-extern tree lastiddecl;
-
-extern char *token_buffer;	/* Pointer to token buffer.  */
-
-extern tree make_pointer_declarator PROTO((tree, tree));
-extern void reinit_parse_for_function PROTO((void));
-extern void position_after_white_space PROTO((void));
-extern int check_newline PROTO((void));
-
-extern int yylex PROTO((void));
-extern void yyerror PROTO((const char *));
-
-extern void forget_protocol_qualifiers PROTO((void));
-extern void remember_protocol_qualifiers PROTO((void));
-extern tree is_class_name PROTO((tree));
+#endif

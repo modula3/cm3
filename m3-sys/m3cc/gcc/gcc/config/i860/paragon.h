@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Intel 80860 running OSF/1AD
-   Copyright (C) 1991, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1996, 1999, 2000 Free Software Foundation, Inc.
    Based upon original work of Ron Guilmette (rfg@monkeys.com).
    Contributed by Andy Pfiffer (andyp@ssd.intel.com).
    Partially inspired by
@@ -23,15 +23,12 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* For the sake of libgcc2.c, indicate target supports atexit.  */
-#define HAVE_ATEXIT
-
 #undef TARGET_SWITCHES
 #define TARGET_SWITCHES  \
-  { {"xp", 1, "Generate code which uses the FPU"},              \
-    {"noxp", -1, "Do not generate code which uses the FPU"},    \
-    {"xr", -1, "Do not generate code which uses the FPU"},      \
-    {"noieee", -1, "Do not generate code which uses the FPU"},	\
+  { {"xp", 1, N_("Generate code which uses the FPU")},              \
+    {"noxp", -1, N_("Do not generate code which uses the FPU")},    \
+    {"xr", -1, N_("Do not generate code which uses the FPU")},      \
+    {"noieee", -1, N_("Do not generate code which uses the FPU")},	\
     {"nx", 2, NULL},                  \
     { "", TARGET_DEFAULT, NULL}}
  
@@ -77,7 +74,7 @@ Boston, MA 02111-1307, USA.  */
 #define DBX_REGISTER_NUMBER(REGNO) (REGNO)
 
 #undef ASCII_DATA_ASM_OP
-#define ASCII_DATA_ASM_OP	".byte"
+#define ASCII_DATA_ASM_OP	"\t.byte\t"
 
 /*
  *	the assembler we're using doesn't grok .ident...
@@ -125,8 +122,8 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_ASCII(FILE, STR, LENGTH)			\
   do								\
     {								\
-      register unsigned char *str = (unsigned char *) (STR);	\
-      register unsigned char *limit = str + (LENGTH);		\
+      register const unsigned char *str = (const unsigned char *) (STR); \
+      register const unsigned char *limit = str + (LENGTH);	\
       register unsigned bytes_in_chunk = 0;			\
       for (; str < limit; str++)				\
         {							\
@@ -138,7 +135,7 @@ Boston, MA 02111-1307, USA.  */
 	          fprintf ((FILE), "\"\n");			\
 	          bytes_in_chunk = 0;				\
 	        }						\
-	      fprintf ((FILE), "\t%s\t%d\n", ASM_BYTE_OP, ch);	\
+	      fprintf ((FILE), "%s%d\n", ASM_BYTE_OP, ch);	\
 	    }							\
           else							\
 	    {							\
@@ -148,7 +145,7 @@ Boston, MA 02111-1307, USA.  */
 	          bytes_in_chunk = 0;				\
 	        }						\
 	      if (bytes_in_chunk == 0)				\
-	        fprintf ((FILE), "\t%s\t\"", ASCII_DATA_ASM_OP);\
+	        fprintf ((FILE), "%s\"", ASCII_DATA_ASM_OP);	\
 	      putc (ch, (FILE));				\
 	      bytes_in_chunk++;					\
 	    }							\
@@ -173,12 +170,6 @@ Boston, MA 02111-1307, USA.  */
  *	when using g++ -- so, I'll define it.
  */
 #define	ASM_STABS_OP	"//.stabs"
-
-/* Define this macro if an argument declared as `char' or `short' in a
-   prototype should actually be passed as an `int'.  In addition to
-   avoiding errors in certain cases of mismatch, it also makes for
-   better code on certain machines. */
-/*#define PROMOTE_PROTOTYPES*/
 
 /* Define this macro if an instruction to load a value narrower
    than a word from memory into a register also zero-extends the
@@ -231,6 +222,6 @@ Boston, MA 02111-1307, USA.  */
 #undef SELECT_RTX_SECTION
 #undef READONLY_DATA_SECTION
 
-#define	BSS_SECTION_ASM_OP	".bss"		/* XXX */
+#define	BSS_SECTION_ASM_OP	"\t.bss"	/* XXX */
 #undef EXTRA_SECTIONS
 #undef EXTRA_SECTION_FUNCTIONS

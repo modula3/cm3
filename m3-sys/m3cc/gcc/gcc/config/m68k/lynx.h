@@ -1,5 +1,6 @@
 /* Definitions for Motorola 680x0 running LynxOS.
-   Copyright (C) 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1996, 1998, 1999, 2000
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -26,7 +27,7 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_DESTRUCTOR
 #undef SELECT_RTX_SECTION
 
-#define BSS_SECTION_ASM_OP ".bss"
+#define BSS_SECTION_ASM_OP "\t.bss"
 
 #define ASM_LONG ".long"
 
@@ -41,7 +42,7 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dunix -Dmc68000 -DM68K -DLynx -DIBITS32 -Asystem(unix) -Asystem(lynx) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dmc68000 -DM68K -DLynx -DIBITS32 -Asystem=unix -Asystem=lynx -Acpu=m68k -Amachine=m68k"
 
 /* Every structure or union's size must be a multiple of 2 bytes.  */
 
@@ -62,9 +63,10 @@ Boston, MA 02111-1307, USA.  */
 
 #undef LIBCALL_VALUE
 #define LIBCALL_VALUE(MODE)                                                \
- gen_rtx (REG, (MODE),                                                     \
-          ((TARGET_68881                                                   \
-            && ((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)) \
+ gen_rtx_REG ((MODE),						\
+	      ((TARGET_68881					\
+		&& ((MODE) == SFmode || (MODE) == DFmode	\
+		    || (MODE) == XFmode))			\
            ? 16 : 0))
 
 #undef FUNCTION_VALUE_REGNO_P

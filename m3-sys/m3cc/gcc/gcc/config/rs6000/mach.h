@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler,
    for IBM RS/6000 running MACH.
-   Copyright (C) 1992 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1999 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@nyu.edu)
 
 This file is part of GNU CC.
@@ -26,7 +26,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* We don't define AIX under MACH; instead we define `unix'.  */
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Drios -D_IBMR2 -Dunix -Asystem(unix) -Asystem(mach) -Acpu(rs6000) -Amachine(rs6000)"
+#define CPP_PREDEFINES "-Drios -D_IBMR2 -Dunix -Asystem=unix -Asystem=mach -Acpu=rs6000 -Amachine=rs6000"
 
 /* Define different binder options for MACH.  */
 #undef LINK_SPEC
@@ -35,7 +35,7 @@ Boston, MA 02111-1307, USA.  */
   -bnoso -berrmsg -btextro -bhalt:4 -bnodelcsect"
 
 /* MACH doesn't have atexit.  */
-#undef HAVE_ATEXIT
+#define NEED_ATEXIT
 
 /* Don't default to pcc-struct-return, because gcc is the only compiler, and
    we want to retain compatibility with older gcc versions.  */

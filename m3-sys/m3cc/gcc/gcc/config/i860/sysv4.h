@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Intel 80860 running System V.4
-   Copyright (C) 1991, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1996, 2000 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
 This file is part of GNU CC.
@@ -32,7 +32,11 @@ Boston, MA 02111-1307, USA.  */
    __svr4__ is our extension.  */
 
 #define CPP_PREDEFINES \
-  "-Di860 -Dunix -DSVR4 -D__svr4__ -Asystem(unix) -Asystem(svr4) -Acpu(i860) -Amachine(i860)"
+  "-Di860 -Dunix -DSVR4 -D__svr4__ -Asystem=unix -Asystem=svr4 -Acpu=i860 -Amachine=i860"
+
+/* For the benefit of i860_va_arg, flag it this way too.  */
+
+#define I860_SVR4_VA_LIST 1
 
 /* The prefix to be used in assembler output for all names of registers.
    This string gets prepended to all i860 register names (svr4 only).  */
@@ -161,14 +165,14 @@ extern char *current_function_original_name;
    via the SHF_WRITE attribute.)  */
  
 #undef CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"aw\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"aw\""
 #undef DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"aw\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"aw\""
 
 /* Add definitions to support the .tdesc section as specified in the svr4
    ABI for the i860.  */
 
-#define TDESC_SECTION_ASM_OP    ".section\t.tdesc"
+#define TDESC_SECTION_ASM_OP    "\t.section\t.tdesc"
 
 #undef EXTRA_SECTIONS
 #define EXTRA_SECTIONS in_const, in_ctors, in_dtors, in_tdesc

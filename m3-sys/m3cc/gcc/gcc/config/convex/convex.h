@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Convex version.
-   Copyright (C) 1988, 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1994, 1995, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -48,20 +48,26 @@ extern int target_flags;
 #define TARGET_DEFAULT 0
 #endif
 
-#define TARGET_SWITCHES \
-  { { "c1", 001 }, 	\
-    { "c2", 002 },	\
-    { "c32", 004 },	\
-    { "c34", 010 },	\
-    { "c38", 020 },	\
-    { "argcount", 0100 }, \
-    { "argcount-nop", 0200 }, \
-    { "no-argcount", -0300 }, \
-    { "volatile-cache", -0400 }, \
-    { "no-volatile-cache", 0400 }, \
-    { "volatile-nocache", 0400 }, \
-    { "long64", 01000 }, \
-    { "long32", -01000 }, \
+#define TARGET_SWITCHES							\
+  { { "c1", 001, N_("Generate code for c1") },				\
+    { "c2", 002, N_("Generate code for c2") },				\
+    { "c32", 004, N_("Generate code for c32") },			\
+    { "c34", 010, N_("Generate code for c34") },			\
+    { "c38", 020, N_("Generate code for c34") },			\
+    { "argcount", 0100,							\
+      N_("Use standard calling sequence, with arg count word")},	\
+    { "argcount-nop", 0200,						\
+      N_("Place arg count in a nop instruction (faster than push)") },	\
+    { "no-argcount", -0300,						\
+      N_("Don't push arg count, depend on symbol table") },		\
+    { "volatile-cache", -0400,						\
+      N_("Use data cache for volatile mem refs (default)") },		\
+    { "no-volatile-cache", 0400,					\
+      N_("Don't use data cache for volatile mem refs") },		\
+    { "volatile-nocache", 0400,						\
+      N_("Bypass data cache for volatile mem refs") },			\
+    { "long64", 01000, N_("Use 64-bit longs") },			\
+    { "long32", -01000, N_("Use cc- and libc-compatible 32-bit longs")},\
     { "", TARGET_DEFAULT | TARGET_CPU_DEFAULT}}
 
 /* Macros used in the machine description to test the flags.  */
@@ -92,7 +98,7 @@ extern int target_flags;
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dconvex -Dunix -Asystem(unix) -Acpu(convex) -Amachine(convex)"
+#define CPP_PREDEFINES "-Dconvex -Dunix -Asystem=unix -Acpu=convex -Amachine=convex"
 
 /* Print subsidiary information on the compiler version in use.  */
 
@@ -491,7 +497,6 @@ extern int target_flags;
 #define FLOAT_TYPE_SIZE		32
 #define DOUBLE_TYPE_SIZE	64
 #define LONG_DOUBLE_TYPE_SIZE	64
-/* This prevents cexp.c from depending on LONG_TYPE_SIZE.  */
 #define MAX_LONG_TYPE_SIZE      64
 
 /* Declare the standard types used by builtins to match convex stddef.h --
@@ -628,7 +633,7 @@ enum reg_class {
    of length N_REG_CLASSES.  */
 
 #define REG_CLASS_CONTENTS \
-  { 0, 0x00ff, 0xfe00, 0x0100, 0xff00, 0xfeff, 0xffff }
+  { {0}, {0x00ff}, {0xfe00}, {0x0100}, {0xff00}, {0xfeff}, {0xffff} }
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -1077,7 +1082,7 @@ enum reg_class {
 #define NO_FUNCTION_CSE
 
 /* When a prototype says `char' or `short', really pass an `int'.  */
-#define PROMOTE_PROTOTYPES
+#define PROMOTE_PROTOTYPES 1
 
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
@@ -1107,9 +1112,8 @@ enum reg_class {
 
 #define RTX_COSTS(RTX,CODE,OUTER_CODE) \
   case PLUS:								\
-    if (regno_pointer_flag != 0						\
-	&& GET_CODE (XEXP (RTX, 0)) == REG				\
-	&& REGNO_POINTER_FLAG (REGNO (XEXP (RTX, 0)))			\
+    if (GET_CODE (XEXP (RTX, 0)) == REG					\
+	&& REG_POINTER (XEXP (RTX, 0))					\
 	&& GET_CODE (XEXP (RTX, 1)) == CONST_INT)			\
       return 0;								\
     else break;								\
@@ -1172,11 +1176,10 @@ enum reg_class {
 
 /* But must prevent real.c from constructing Vax dfloats */
 #define REAL_VALUE_ATOF(X,S) atof (X)
-extern double atof();
 
 /* Check a `double' value for validity for a particular machine mode.  */
 #define CHECK_FLOAT_VALUE(MODE, D, OVERFLOW) \
-   OVERFLOW = check_float_value (MODE, &D, OVERFLOW)
+   (OVERFLOW = check_float_value (MODE, &D, OVERFLOW))
 
 /* Tell final.c how to eliminate redundant test instructions.  */
 
@@ -1221,27 +1224,27 @@ extern double atof();
 
 /* Output before read-only data.  */
 
-#define TEXT_SECTION_ASM_OP (current_section_is_text = 1, ".text")
+#define TEXT_SECTION_ASM_OP (current_section_is_text = 1, "\t.text")
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP (current_section_is_text = 0, ".data") 
+#define DATA_SECTION_ASM_OP (current_section_is_text = 0, "\t.data") 
 
 /* Output before uninitialized data.  */
 
-#define BSS_SECTION_ASM_OP (current_section_is_text = 0, ".bss") 
+#define BSS_SECTION_ASM_OP (current_section_is_text = 0, "\t.bss") 
 
 /* This is how to output an assembler line
    that says to advance the location counter
    to a multiple of 2**LOG bytes.  */
 
-#define ASM_OUTPUT_ALIGN(FILE,LOG)  \
+#define ASM_OUTPUT_ALIGN(FILE,LOG) do { \
   if (current_section_is_text && (LOG) > 1)				\
     fprintf (FILE, ".text %d\n", LOG);					\
   else if (current_section_is_text)					\
     fprintf (FILE, ".text\n.align %d\n", 1 << (LOG));			\
   else									\
-    fprintf (FILE, ".align %d\n", 1 << (LOG))
+    fprintf (FILE, ".align %d\n", 1 << (LOG)); } while (0)
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1493,11 +1496,3 @@ extern enum reg_class reg_class_from_letter[];
 extern char regno_ok_for_index_p_base[];
 #define regno_ok_for_index_p (regno_ok_for_index_p_base + 1)
 
-extern int const_double_low_int ();
-extern int const_double_high_int ();
-extern char *output_cmp ();
-extern char *output_condjump ();
-extern char *output_call ();
-extern void gen_ap_for_call ();
-extern int check_float_value ();
-extern void asm_declare_function_name ();

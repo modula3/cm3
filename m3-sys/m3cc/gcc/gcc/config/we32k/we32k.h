@@ -1,12 +1,13 @@
 /* Definitions of target machine for GNU compiler.  AT&T we32000 version.
-   Copyright (C) 1991, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by John Wehle (john@feith1.uucp)
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -22,7 +23,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dwe32000 -Du3b2 -Dunix -Asystem(unix) -Acpu(we32000) -Amachine(we32000)"
+#define CPP_PREDEFINES "-Dwe32000 -Du3b2 -Dunix -Asystem=unix -Acpu=we32000 -Amachine=we32000"
 
 /* Print subsidiary information on the compiler version in use.  */
 
@@ -41,7 +42,7 @@ extern int target_flags;
    An empty string NAME is used to identify the default VALUE.  */
 
 #define TARGET_SWITCHES  \
-  { { "", TARGET_DEFAULT}}
+  { { "", TARGET_DEFAULT, 0}}
 
 #define TARGET_DEFAULT 0
 
@@ -225,9 +226,9 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 
 #define REG_CLASS_CONTENTS \
 {							\
- 0,			/* NO_REGS */		\
- 0x000017ff,		/* GENERAL_REGS */	\
- 0x0000ffff,		/* ALL_REGS */		\
+ {0},			/* NO_REGS */		\
+ {0x000017ff},		/* GENERAL_REGS */	\
+ {0x0000ffff},		/* ALL_REGS */		\
 }
 
 /* The same information, inverted:
@@ -319,14 +320,14 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 /* On the we32000 the return value is in r0 regardless.  */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), 0)
+  gen_rtx_REG (TYPE_MODE (VALTYPE), 0)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
 /* On the we32000 the return value is in r0 regardless.  */
 
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, 0)
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, 0)
 
 /* 1 if N is a possible register number for a function value.
    On the we32000, r0 is the only register thus used.  */
@@ -478,15 +479,15 @@ enum reg_class { NO_REGS, GENERAL_REGS,
      mov #STATIC,%r8
      jmp #FUNCTION */
 
-#define TRAMPOLINE_TEMPLATE(FILE)					\
-{									\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x844f));				\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_CHAR (FILE, GEN_INT (0x48));				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x247f));				\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
+#define TRAMPOLINE_TEMPLATE(FILE)		\
+{						\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x844f));	\
+  ASM_OUTPUT_SHORT (FILE, const0_rtx);		\
+  ASM_OUTPUT_SHORT (FILE, const0_rtx);		\
+  ASM_OUTPUT_CHAR  (FILE, GEN_INT (0x48));	\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x247f));	\
+  ASM_OUTPUT_SHORT (FILE, const0_rtx);		\
+  ASM_OUTPUT_SHORT (FILE, const0_rtx);		\
 }
 
 /* Length in units of the trampoline for entering a nested function.  */
@@ -499,8 +500,8 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 2)), CXT); \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 9)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 2)), CXT); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 9)), FNADDR); \
 }
 
 /* Generate calls to memcpy() and memset() rather
@@ -661,10 +662,10 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 /* We assume that the store-condition-codes instructions store 0 for false
    and some other value for true.  This is the value stored for true.  */
 
-#define STORE_FLAG_VALUE -1
+#define STORE_FLAG_VALUE (-1)
 
 /* When a prototype says `char' or `short', really pass an `int'.  */
-#define PROMOTE_PROTOTYPES
+#define PROMOTE_PROTOTYPES 1
 
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
@@ -727,11 +728,11 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 
 /* Output before code.  */
 
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* Read-only data goes in the data section because
    AT&T's assembler doesn't guarantee the proper alignment
@@ -800,7 +801,7 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 
 /* Assembler pseudo to introduce byte constants.  */
 
-#define ASM_BYTE_OP "\t.byte"
+#define ASM_BYTE_OP "\t.byte\t"
 
 /* This is how to output an assembler line defining a `double' constant.  */
 
@@ -809,7 +810,7 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 /* AT&T's assembler can't handle floating constants written as floating.
    However, when cross-compiling, always use that in case format differs.  */
 
-#ifdef CROSS_COMPILER
+#ifdef CROSS_COMPILE
 
 #define ASM_OUTPUT_DOUBLE(FILE,VALUE)	\
   fprintf (FILE, "\t.double 0r%.20g\n", (VALUE))
@@ -822,16 +823,16 @@ enum reg_class { NO_REGS, GENERAL_REGS,
 #define ASM_OUTPUT_DOUBLE(FILE,VALUE)	\
 do { union { double d; long l[2];} tem;				\
      tem.d = (VALUE);						\
-     fprintf (FILE, "\t.word 0x%x, 0x%x\n", tem.l[0], tem.l[1]);\
+     fprintf (FILE, "\t.word 0x%lx, 0x%lx\n", tem.l[0], tem.l[1]);\
    } while (0)
 
 #define ASM_OUTPUT_FLOAT(FILE,VALUE)	\
 do { union { float f; long l;} tem;				\
      tem.f = (VALUE);						\
-     fprintf (FILE, "\t.word 0x%x\n", tem.l);			\
+     fprintf (FILE, "\t.word 0x%lx\n", tem.l);			\
    } while (0)
 
-#endif /* not CROSS_COMPILER */
+#endif /* not CROSS_COMPILE */
 
 /* This is how to output an assembler line defining an `int' constant.  */
 
@@ -859,9 +860,9 @@ do { union { float f; long l;} tem;				\
 
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)  \
 do {							\
-  unsigned char *s;					\
+  const unsigned char *s;				\
   int i;						\
-  for (i = 0, s = (unsigned char *)(PTR); i < (LEN); s++, i++)	\
+  for (i = 0, s = (const unsigned char *)(PTR); i < (LEN); s++, i++)	\
     {							\
       if ((i % 8) == 0)					\
 	fprintf ((FILE),"%s\t.byte\t",(i?"\n":""));	\
@@ -906,7 +907,7 @@ do {							\
 /* The `space' pseudo in the text segment outputs nop insns rather than 0s,
    so we must output 0s explicitly in the text segment.  */
 
-#define ASM_OUTPUT_SKIP(FILE,SIZE)  \
+#define ASM_OUTPUT_SKIP(FILE,SIZE) do { \
   if (in_text_section ())                                           	    \
     {									    \
       int i;								    \
@@ -922,7 +923,7 @@ do {							\
 	}								    \
     }									    \
   else									    \
-    fprintf ((FILE), "\t.set .,.+%u\n", (SIZE))
+    fprintf ((FILE), "\t.set .,.+%u\n", (SIZE)); } while (0)
 
 /* This says how to output an assembler line
    to define a global common symbol.  */
@@ -980,8 +981,7 @@ do {							\
 #define PRINT_OPERAND_PUNCT_VALID_P(CODE) 0
 
 #define PRINT_OPERAND(FILE, X, CODE)  \
-{ int i;								\
-  if (GET_CODE (X) == REG)						\
+{ if (GET_CODE (X) == REG)						\
     fprintf (FILE, "%%%s", reg_names[REGNO (X)]);			\
   else if (GET_CODE (X) == MEM)						\
     output_address (XEXP (X, 0));					\

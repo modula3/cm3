@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for "naked" Intel
    80960 using coff object format and coff debugging symbols.
-   Copyright (C) 1988, 1989, 1991, 1996 Free Software Foundation.
+   Copyright (C) 1988, 1989, 1991, 1996, 2000 Free Software Foundation.
    Contributed by Steven McGeady (mcg@omepd.intel.com)
    Additional work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
    Converted to GCC 2.0 by Michael Tiemann, Cygnus Support.
@@ -38,8 +38,8 @@ Boston, MA 02111-1307, USA.  */
 
 /* Support the ctors and dtors sections for g++.  */
 
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"x\""
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"x\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"x\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"x\""
 
 /* A list of other sections which the compiler might be "in" at any
    given time.  */
@@ -76,14 +76,14 @@ dtors_section ()							\
     }									\
 }
 
-#define INT_ASM_OP ".word"
+#define INT_ASM_OP "\t.word\t"
 
 /* A C statement (sans semicolon) to output an element in the table of
    global constructors.  */
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
   do {									\
     ctors_section ();							\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);						\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -93,7 +93,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
   do {									\
     dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);              				\
     fprintf (FILE, "\n");						\
   } while (0)

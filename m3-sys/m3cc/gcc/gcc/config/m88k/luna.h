@@ -32,12 +32,12 @@ Boston, MA 02111-1307, USA.  */
 
 /* Identify the compiler.  */
 #undef  VERSION_INFO1
-#define VERSION_INFO1 "Omron Luna/88k, "
+#define VERSION_INFO1 "Omron Luna/88k"
 
 /* Macros to be automatically defined.  */
 #undef	CPP_PREDEFINES
 #define CPP_PREDEFINES \
-    "-DMACH -Dm88k -Dunix -Dluna -Dluna88k -D__CLASSIFY_TYPE__=2 -Asystem(unix) -Asystem(mach) -Acpu(m88k) -Amachine(m88k)"
+    "-DMACH -Dm88k -Dunix -Dluna -Dluna88k -D__CLASSIFY_TYPE__=2 -Asystem=unix -Asystem=mach -Acpu=m88k -Amachine=m88k"
 
 /* If -m88000 is in effect, add -Dmc88000; similarly for -m88100 and -m88110.
    However, reproduce the effect of -Dmc88100 previously in CPP_PREDEFINES.

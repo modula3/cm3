@@ -1,12 +1,13 @@
 /* Definitions of target machine for GNU compiler.  AT&T DSP1600.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Michael Collison (collison@world.std.com).
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -19,20 +20,18 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-extern char *low_reg_names[];
-extern char *text_seg_name;
-extern char *rsect_text;
-extern char *data_seg_name;
-extern char *rsect_data;
-extern char *bss_seg_name;
-extern char *rsect_bss;
-extern char *const_seg_name;
-extern char *rsect_const;
-extern char *chip_name;
-extern char *save_chip_name;
+extern const char *low_reg_names[];
+extern const char *text_seg_name;
+extern const char *rsect_text;
+extern const char *data_seg_name;
+extern const char *rsect_data;
+extern const char *bss_seg_name;
+extern const char *rsect_bss;
+extern const char *const_seg_name;
+extern const char *rsect_const;
+extern const char *chip_name;
+extern const char *save_chip_name;
 extern struct rtx_def *dsp16xx_compare_op0, *dsp16xx_compare_op1;
-extern struct rtx_def *(*dsp16xx_compare_gen)();
-extern struct rtx_def *gen_compare_reg();
 extern struct rtx_def *dsp16xx_addhf3_libcall;
 extern struct rtx_def *dsp16xx_subhf3_libcall;
 extern struct rtx_def *dsp16xx_mulhf3_libcall;
@@ -55,30 +54,6 @@ extern struct rtx_def *dsp16xx_umodhi3_libcall;
 extern struct rtx_def *dsp16xx_ashrhi3_libcall;
 extern struct rtx_def *dsp16xx_ashlhi3_libcall;
 extern struct rtx_def *dsp16xx_lshrhi3_libcall;
-
-
-extern int hard_regno_mode_ok ();
-extern enum reg_class dsp16xx_reg_class_from_letter ();
-extern enum reg_class dsp16xx_limit_reload_class ();
-extern int hard_regno_nregs ();
-extern int regno_reg_class ();
-extern int move_operand ();
-extern int symbolic_address_p ();
-extern int Y_address ();
-extern int call_address_operand ();
-extern void notice_update_cc();
-extern void function_prologue ();
-extern void function_epilogue ();
-extern int  dsp1600_comparison_reverse ();
-extern void double_reg_from_memory ();
-extern void double_reg_to_memory ();
-extern void bss_section ();
-extern struct rtx_def *dsp16xx_function_arg ();
-extern void dsp16xx_function_arg_advance ();
-extern enum rtx_code next_cc_user_code ();
-extern int next_cc_user_unsigned ();
-extern struct rtx_def *gen_tst_reg ();
-extern char *output_block_move();
 
 /* RUN-TIME TARGET SPECIFICATION */
 #define DSP16XX   1
@@ -1096,7 +1071,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 
    It is not proper to define both 'PUSH_ROUNDING' and
    'ACCUMULATE_OUTGOING_ARGS'. */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Offset of first parameter from the argument pointer
    register value. */
@@ -1209,15 +1184,18 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry. */
 
-#define FUNCTION_PROFILER(FILE, LABELNO)        fatal("Profiling not implemented yet.")
+#define FUNCTION_PROFILER(FILE, LABELNO)        \
+  internal_error ("Profiling not implemented yet.")
 
 /* Output assembler code to FILE to initialize this source file's
    basic block profiling info, if that has not already been done. */
-#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO)  fatal("Profiling not implemented yet.")
+#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO)  \
+  internal_error ("Profiling not implemented yet.")
 
 /* Output assembler code to FILE to increment the entry-count for
    the BLOCKNO'th basic block in this source file. */
-#define BLOCK_PROFILER(FILE, BLOCKNO)	        fatal("Profiling not implemented yet.")
+#define BLOCK_PROFILER(FILE, BLOCKNO)	        \
+  internal_error ("Profiling not implemented yet.")
 
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
@@ -1227,7 +1205,8 @@ extern struct dsp16xx_frame_info current_frame_info;
 
 #define EXIT_IGNORE_STACK  (0)
 
-#define TRAMPOLINE_TEMPLATE(FILE) fatal ("Trampolines not yet implemented");
+#define TRAMPOLINE_TEMPLATE(FILE) \
+  internal_error ("Trampolines not yet implemented");
 
 /* Length in units of the trampoline for entering a nested function.
    This is a dummy value  */
@@ -1239,7 +1218,7 @@ extern struct dsp16xx_frame_info current_frame_info;
    CXT is an RTX for the static chain value for the function. */
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
-  fatal ("Trampolines not yet implemented");
+  internal_error ("Trampolines not yet implemented");
 
 /* This macro generates the assembly code for function exit,
    on machines that need it.  If FUNCTION_EPILOGUE is not defined
@@ -1542,7 +1521,7 @@ extern struct dsp16xx_frame_info current_frame_info;
    class FROM to one in class TO. The classes are expressed using
    the enumeration values such as GENERAL_REGS. A value of 2 is
    the default. */
-#define REGISTER_MOVE_COST(FROM,TO)  dsp16xx_register_move_cost (FROM, TO)
+#define REGISTER_MOVE_COST(MODE,FROM,TO)  dsp16xx_register_move_cost (FROM, TO)
 
 /* A C expression for the cost of moving data of mode MODE between
    a register and memory. A value of 2 is the default. */
@@ -1572,7 +1551,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 
 /* Define this macro if unaligned accesses have a cost many times greater than
    aligned accesses, for example if they are emulated in a trap handler */
-/* define SLOW_UNALIGNED_ACCESS */
+/* define SLOW_UNALIGNED_ACCESS(MODE, ALIGN) */
 
 /* Define this macro to inhibit strength reduction of memory addresses */
 /* #define DONT_REDUCE_ADDR */
@@ -1619,9 +1598,6 @@ const_section ()                                                   \
 
 /* Output at beginning of assembler file.  */
 #define ASM_FILE_START(FILE) dsp16xx_file_start () 
-
-/* Prevent output of .gcc_compiled */
-#define ASM_IDENTIFY_GCC(FILE)   
 
 /* A C string constant describing how to begin a comment in the target
    assembler language. */
@@ -1672,11 +1648,11 @@ const_section ()                                                   \
 #define ASM_OUTPUT_ASCII(MYFILE, MYSTRING, MYLENGTH) \
   do {									      \
     FILE *_hide_asm_out_file = (MYFILE);				      \
-    unsigned char *_hide_p = (unsigned char *) (MYSTRING);		      \
+    const unsigned char *_hide_p = (const unsigned char *) (MYSTRING);	      \
     int _hide_thissize = (MYLENGTH);					      \
     {									      \
       FILE *asm_out_file = _hide_asm_out_file;				      \
-      unsigned char *p = _hide_p;					      \
+      const unsigned char *p = _hide_p;					      \
       int thissize = _hide_thissize;					      \
       int i;								      \
 									      \
@@ -1860,11 +1836,13 @@ const_section ()                                                   \
 
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code since it is used only for profiling  */
-#define ASM_OUTPUT_REG_PUSH(FILE,REGNO)    fatal("Profiling not implemented yet.");
+#define ASM_OUTPUT_REG_PUSH(FILE,REGNO)    \
+  internal_error ("Profiling not implemented yet.");
 
 /* This is how to output an insn to pop a register from the stack.
    It need not be very fast code since it is used only for profiling  */
-#define ASM_OUTPUT_REG_POP(FILE,REGNO)     fatal("Profiling not implemented yet."); 
+#define ASM_OUTPUT_REG_POP(FILE,REGNO)     \
+  internal_error ("Profiling not implemented yet."); 
 
 /* OUTPUT OF DISPATCH TABLES */
 
@@ -1940,7 +1918,7 @@ const_section ()                                                   \
 #define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC) 1
 
 /* When a prototype says `char' or `short', really pass an `int'.  */
-#define PROMOTE_PROTOTYPES
+#define PROMOTE_PROTOTYPES 1
 
 /* An alias for the machine mode used for pointers */
 #define Pmode  QImode
@@ -1971,4 +1949,3 @@ const_section ()                                                   \
    are not currently supporting c++. */
 #define INIT_SECTION_ASM_OP  1
 
-void dsp16xx_invalid_register_for_compare ();

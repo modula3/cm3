@@ -1,5 +1,5 @@
 /* Definitions for SPARC running LynxOS.
-   Copyright (C) 1993, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1995, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #undef SELECT_SECTION
 #undef SELECT_RTX_SECTION
 
-#define BSS_SECTION_ASM_OP	".section\t\".bss\""
+#define BSS_SECTION_ASM_OP	"\t.section\t\".bss\""
 
 #include <lynx.h>
 
@@ -40,7 +40,7 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dunix -Dsparc -DSPARC -DLynx -DLYNX -DIBITS32 -Asystem(unix) -Asystem(lynx) -Acpu(sparc) -Amachine(sparc)"
+#define CPP_PREDEFINES "-Dunix -Dsparc -DSPARC -DLynx -DLYNX -DIBITS32 -Asystem=unix -Asystem=lynx -Acpu=sparc -Amachine=sparc"
 
 #undef LINK_SPEC
 

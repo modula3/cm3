@@ -1,21 +1,629 @@
+
 /* -*- Mode: C -*-  */
 
-autogen definitions inclhack;
+autogen definitions fixincl;
+
+/* Define all the fixes we know about for repairing damaged headers.
+   Please see the README before adding or changing entries in this file.
+
+   This is the sort command:
+
+   blocksort output=XXX \
+          pattern='^/\*$' \
+          start='DO +NOT +DO +BROKEN +FIXES' \
+          trailer='^/\*EOF\*[/]' \
+          input=inclhack.def \
+          key='hackname[ 	]*=[ 	]*(.*);'
+
+   Set up a debug test so we can make the templates emit special
+   code while debugging these fixes:  */
+
+#ifdef DEBUG
+FIXINC_DEBUG = yes;
+#endif
+
+/* DO NOT DO BROKEN FIXES (empty replacement fixes) */
 
 /*
- *  Define all the fixes we know about for repairing damaged headers
- */
-
-/*
- *  sys/wait.h on AIX 3.2.5 puts the declaration of wait3 before the definition
- *  of struct rusage, so the prototype (added by fixproto) causes havoc.
+ *  This file on SunOS 4 has a very large macro.  When the sed loop
+ *  tries pull it in, it overflows the pattern space size of the SunOS
+ *  sed (GNU sed does not have this problem).  Since the file does not
+ *  require fixing, we remove it from the fixed directory.
  */
 fix = {
-    hackname = aix_syswait;
-    files    = sys/wait.h;
-    select = "bos325,";
-    sed    = "/^extern pid_t wait3();$/i\\\n"
-             "struct rusage;\n";
+    hackname = AAA_bad_fixes;
+    files    = sundev/ipi_error.h;
+    /* shouldn't there be a select expression here??? */
+    replace; /* empty replacement -> no fixing the file */
+};
+
+
+/*
+ *  Purge some HP-UX 11 files that are only broken after they are "fixed".
+ */
+fix = {
+    hackname = AAA_ki;
+    files    = sys/ki.h;
+    select   = '11.00 HP-UX LP64';
+    replace; /* empty replacement -> no fixing the file */
+};
+
+
+/*
+ *  Purge some HP-UX 11 files that are only broken after they are "fixed".
+ */
+fix = {
+    hackname = AAA_ki_calls;
+    files    = sys/ki_calls.h;
+    select   = 'kthread_create_caller_t';
+    replace; /* empty replacement -> no fixing the file */
+};
+
+
+/*
+ *  Purge some HP-UX 11 files that are only broken after they are "fixed".
+ */
+fix = {
+    hackname = AAA_ki_defs;
+    files    = sys/ki_defs.h;
+    select   = 'Kernel Instrumentation Definitions';
+    replace; /* empty replacement -> no fixing the file */
+};
+
+
+/*
+ *  Purge some HP-UX 11 files that are only broken after they are "fixed".
+ */
+fix = {
+    hackname = AAA_ki_iface;
+    files    = sys/ki_iface.h;
+    select   = 'These definitions are for HP Internal developers';
+    replace; /* empty replacement -> no fixing the file */
+};
+
+
+/*
+ * Tru64 UNIX V4.0F/V5.1 <standards.h> defines _NO_PROTO and _NONSTD_TYPES
+ * correctly for GCC, but strict_ansi_not breaks it.
+ */
+fix = {
+    hackname = AAA_standards;
+    files    = standards.h;
+    select   = 'GNU and MIPS C compilers define __STDC__ differently';
+    replace; /* empty replacement -> no fixing the file */
+};
+
+/* And now, the real fixes, replacement text fixes first: */
+
+/*
+ *  Completely replace <_int_varargs.h> with a file that includes gcc's
+ *  stdarg.h or varargs.h files as appropriate on DG/UX
+ */
+fix = {
+    hackname = AAB_dgux_int_varargs;
+    files    = _int_varargs.h;
+    replace  =
+"#ifndef __INT_VARARGS_H
+\#define __INT_VARARGS_H
+
+/************************************************************************/
+/* _INT_VARARGS.H - Define the common stuff for varargs/stdarg/stdio.   */
+/************************************************************************/
+
+/*" "
+** This file is a DG internal header.  Never include this
+** file directly.
+*/
+
+\#ifndef ___int_features_h
+\#include <sys/_int_features.h>
+\#endif
+
+\#if !(defined(_VA_LIST) || defined(_VA_LIST_))
+\#define _VA_LIST
+\#define _VA_LIST_
+
+\#ifdef __LINT__
+
+\#ifdef __STDC__
+typedef void * va_list;
+\#else
+typedef char * va_list;
+\#endif
+
+\#else
+\#if _M88K_ANY
+
+\#if defined(__DCC__)
+
+typedef struct {
+      int     next_arg;
+      int     *mem_ptr;
+      int     *reg_ptr;
+} va_list;
+
+\#else  /* ! defined(__DCC__) */
+
+typedef struct {
+      int  __va_arg;       /* argument number */
+      int *__va_stk;       /* start of args passed on stack */
+      int *__va_reg;       /* start of args passed in regs */
+} va_list;
+
+\#endif  /* ! defined(__DCC__) */
+
+\#elif _IX86_ANY
+
+\#if defined(__GNUC__) || defined(__STDC__)
+typedef void * va_list;
+\#else
+typedef char * va_list;
+\#endif
+
+\#endif  /*  _IX86_ANY */
+
+\#endif /* __LINT__ */
+\#endif /*  !(defined(_VA_LIST) || defined(_VA_LIST_)) */
+\#endif /*  #ifndef __INT_VARARGS_H  */\n";
+};
+
+
+/*
+ *  This fixes __FD_ZERO bug for linux 2.x.y (x <= 2 && y <= some n)
+ */
+fix = {
+    hackname = AAB_fd_zero_asm_posix_types_h;
+    files    = asm/posix_types.h;
+    mach     = 'i[34567]86-*-linux*';
+    bypass   = '} while';
+
+    /*
+     * Define _POSIX_TYPES_H_WRAPPER at the end of the wrapper, not
+     * the start, so that if #include_next gets another instance of
+     * the wrapper, this will follow the #include_next chain until
+     * we arrive at the real <asm/posix_types.h>.
+     */
+    replace  =
+
+'/* This file fixes a bug in the __FD_ZERO macro
+   for older versions of the Linux kernel. */
+\#ifndef _POSIX_TYPES_H_WRAPPER
+\#include <features.h>
+ \#include_next <asm/posix_types.h>
+
+\#if defined(__FD_ZERO) && !defined(__GLIBC__)
+\#undef __FD_ZERO
+\#define __FD_ZERO(fdsetp) \\
+  do { \\
+    int __d0, __d1; \\
+		__asm__ __volatile__("cld ; rep ; stosl" \\
+			: "=&c" (__d0), "=&D" (__d1) \\
+			: "a" (0), "0" (__FDSET_LONGS), \\
+			  "1" ((__kernel_fd_set *) (fdsetp)) :"memory"); \\
+  } while (0)
+\#endif
+
+\#define _POSIX_TYPES_H_WRAPPER
+\#endif /* _POSIX_TYPES_H_WRAPPER */
+';
+};
+
+
+/*
+ *  This fixes __FD_ZERO bug for glibc-1.x
+ */
+fix = {
+    hackname = AAB_fd_zero_gnu_types_h;
+    files    = gnu/types.h;
+    mach     = 'i[34567]86-*-linux*';
+
+    /*
+     * Define _TYPES_H_WRAPPER at the end of the wrapper, not
+     * the start, so that if #include_next gets another instance of
+     * the wrapper, this will follow the #include_next chain until
+     * we arrive at the real <gnu/types.h>.
+     */
+    replace  =
+
+'/* This file fixes a bug in the __FD_ZERO macro present in glibc 1.x. */
+\#ifndef _TYPES_H_WRAPPER
+\#include <features.h>
+ \#include_next <gnu/types.h>
+
+\#if defined(__FD_ZERO) && !defined(__GLIBC__)
+\#undef __FD_ZERO
+\# define __FD_ZERO(fdsetp) \\
+  do { \\
+    int __d0, __d1; \\
+	__asm__ __volatile__("cld ; rep ; stosl" \\
+        	: "=&c" (__d0), "=&D" (__d1) \\
+        	: "a" (0), "0" (__FDSET_LONGS), \\
+		  "1" ((__fd_set *) (fdsetp)) :"memory"); \\
+  } while (0)
+\#endif
+
+\#define _TYPES_H_WRAPPER
+\#endif /* _TYPES_H_WRAPPER */
+';
+};
+
+
+/*
+ *  This fixes __FD_ZERO bug for glibc-2.0.x
+ */
+fix = {
+    hackname = AAB_fd_zero_selectbits_h;
+    files    = selectbits.h;
+    mach     = 'i[34567]86-*-linux*';
+
+    /*
+     * Define _SELECTBITS_H_WRAPPER at the end of the wrapper, not
+     * the start, so that if #include_next gets another instance of
+     * the wrapper, this will follow the #include_next chain until
+     * we arrive at the real <selectbits.h>.
+     */
+    replace  =
+
+'/* This file fixes a bug in the __FD_ZERO macro present in glibc 2.0.x. */
+\#ifndef _SELECTBITS_H_WRAPPER
+\#include <features.h>
+ \#include_next <selectbits.h>
+
+\#if defined(__FD_ZERO) && defined(__GLIBC__) \\
+	&& defined(__GLIBC_MINOR__) && __GLIBC__ == 2 \\
+	&& __GLIBC_MINOR__ == 0
+\#undef __FD_ZERO
+\#define __FD_ZERO(fdsetp) \\
+  do { \\
+    int __d0, __d1; \\
+  __asm__ __volatile__ ("cld; rep; stosl" \\
+                        : "=&c" (__d0), "=&D" (__d1) \\
+                        : "a" (0), "0" (sizeof (__fd_set) \\
+                                        / sizeof (__fd_mask)), \\
+                          "1" ((__fd_mask *) (fdsetp)) \\
+                        : "memory"); \\
+  } while (0)
+\#endif
+
+\#define _SELECTBITS_H_WRAPPER
+\#endif /* _SELECTBITS_H_WRAPPER */
+';
+};
+
+
+/*
+ *  Fix non-ANSI memcpy declaration that conflicts with gcc's builtin
+ *  declaration on Sun OS 4.x.  We must only fix this on Sun OS 4.x, because
+ *  many other systems have similar text but correct versions of the file.
+ *  To ensure only Sun's is fixed, we grep for a likely unique string.
+ *  Fix also on sysV68 R3V7.1 (head/memory.h\t50.1\t )
+ */
+fix = {
+    hackname = AAB_sun_memcpy;
+    files    = memory.h;
+    select = "/\\*\t@\\(#\\)"
+             "(head/memory.h\t50.1\t "
+             "|memory\\.h 1\\.[2-4] 8./../.. SMI; from S5R2 1\\.2\t)\\*/";
+
+    replace =
+'/* This file was generated by fixincludes */
+\#ifndef __memory_h__
+\#define __memory_h__
+
+\#ifdef __STDC__
+extern void *memccpy();
+extern void *memchr();
+extern void *memcpy();
+extern void *memset();
+\#else
+extern char *memccpy();
+extern char *memchr();
+extern char *memcpy();
+extern char *memset();
+\#endif /* __STDC__ */
+
+extern int memcmp();
+
+\#endif /* __memory_h__ */
+';
+
+};
+
+
+/*
+ *  Completely replace <sys/varargs.h> with a file that includes gcc's
+ *  stdarg.h or varargs.h files as appropriate.
+ */
+#ifdef SVR4
+fix = {
+    hackname = AAB_svr4_no_varargs;
+    files    = sys/varargs.h;
+    replace  = "/* This file was generated by fixincludes.  */\n"
+               "#ifndef _SYS_VARARGS_H\n"
+               "#define _SYS_VARARGS_H\n\n"
+
+               "#ifdef __STDC__\n"
+               "#include <stdarg.h>\n"
+               "#else\n"
+               "#include <varargs.h>\n"
+               "#endif\n\n"
+
+               "#endif  /* _SYS_VARARGS_H */\n";
+};
+#endif
+
+
+/*
+ *  Completely replace <sys/byteorder.h>; with a file that implements gcc's
+ *  optimized byteswapping.  Restricted to "SVR4" machines until either
+ *  it is shown to be safe to replace this file always, or we get bolder ;-)
+ */
+fix = {
+    hackname = AAB_svr4_replace_byteorder;
+#ifndef SVR5
+    mach = "*-*-sysv4*";
+    mach = "i[34567]86-*-sysv5*";
+    mach = "i[34567]86-*-udk*";
+    mach = "i[34567]86-*-solaris2.[0-4]";
+    mach = "powerpcle-*-solaris2.[0-4]";
+    mach = "sparc-*-solaris2.[0-4]";
+#endif /* SVR5 */
+    files    = sys/byteorder.h;
+    replace  = '#ifndef _SYS_BYTEORDER_H
+\#define _SYS_BYTEORDER_H
+
+/* Functions to convert `short\' and `long\' quantities from host byte order
+   to (internet) network byte order (i.e. big-endian).
+
+   Written by Ron Guilmette (rfg@ncd.com).
+
+   This isn\'t actually used by GCC.  It is installed by fixinc.svr4.
+
+   For big-endian machines these functions are essentially no-ops.
+
+   For little-endian machines, we define the functions using specialized
+   asm sequences in cases where doing so yields better code (e.g. i386).  */
+
+\#if !defined (__GNUC__) && !defined (__GNUG__)
+\#error You lose!  This file is only useful with GNU compilers.
+\#endif
+
+\#ifndef __BYTE_ORDER__
+/* Byte order defines.  These are as defined on UnixWare 1.1, but with
+   double underscores added at the front and back.  */
+\#define __LITTLE_ENDIAN__   1234
+\#define __BIG_ENDIAN__      4321
+\#define __PDP_ENDIAN__      3412
+\#endif
+
+\#ifdef __STDC__
+static __inline__ unsigned long htonl (unsigned long);
+static __inline__ unsigned short htons (unsigned int);
+static __inline__ unsigned long ntohl (unsigned long);
+static __inline__ unsigned short ntohs (unsigned int);
+\#endif /* defined (__STDC__) */
+
+\#if defined (__i386__)
+
+\#ifndef __BYTE_ORDER__
+\#define __BYTE_ORDER__ __LITTLE_ENDIAN__
+\#endif
+
+/* Convert a host long to a network long.  */
+
+/* We must use a new-style function definition, so that this will also
+   be valid for C++.  */
+static __inline__ unsigned long
+htonl (unsigned long __arg)
+{
+  register unsigned long __result;
+
+  __asm__ ("xchg%B0 %b0,%h0
+	ror%L0 $16,%0
+	xchg%B0 %b0,%h0" : "=q" (__result) : "0" (__arg));
+  return __result;
+}
+
+/* Convert a host short to a network short.  */
+
+static __inline__ unsigned short
+htons (unsigned int __arg)
+{
+  register unsigned short __result;
+
+  __asm__ ("xchg%B0 %b0,%h0" : "=q" (__result) : "0" (__arg));
+  return __result;
+}
+
+\#elif ((defined (__i860__) && !defined (__i860_big_endian__))	\\
+       || defined (__ns32k__) || defined (__vax__)		\\
+       || defined (__spur__) || defined (__arm__))
+
+\#ifndef __BYTE_ORDER__
+\#define __BYTE_ORDER__ __LITTLE_ENDIAN__
+\#endif
+
+/* For other little-endian machines, using C code is just as efficient as
+   using assembly code.  */
+
+/* Convert a host long to a network long.  */
+
+static __inline__ unsigned long
+htonl (unsigned long __arg)
+{
+  register unsigned long __result;
+
+  __result = (__arg >> 24) & 0x000000ff;
+  __result |= (__arg >> 8) & 0x0000ff00;
+  __result |= (__arg << 8) & 0x00ff0000;
+  __result |= (__arg << 24) & 0xff000000;
+  return __result;
+}
+
+/* Convert a host short to a network short.  */
+
+static __inline__ unsigned short
+htons (unsigned int __arg)
+{
+  register unsigned short __result;
+
+  __result = (__arg << 8) & 0xff00;
+  __result |= (__arg >> 8) & 0x00ff;
+  return __result;
+}
+
+\#else /* must be a big-endian machine */
+
+\#ifndef __BYTE_ORDER__
+\#define __BYTE_ORDER__ __BIG_ENDIAN__
+\#endif
+
+/* Convert a host long to a network long.  */
+
+static __inline__ unsigned long
+htonl (unsigned long __arg)
+{
+  return __arg;
+}
+
+/* Convert a host short to a network short.  */
+
+static __inline__ unsigned short
+htons (unsigned int __arg)
+{
+  return __arg;
+}
+
+\#endif /* big-endian */
+
+/* Convert a network long to a host long.  */
+
+static __inline__ unsigned long
+ntohl (unsigned long __arg)
+{
+  return htonl (__arg);
+}
+
+/* Convert a network short to a host short.  */
+
+static __inline__ unsigned short
+ntohs (unsigned int __arg)
+{
+  return htons (__arg);
+}
+\#endif
+';
+};
+
+
+/*
+ *  Cancel out ansi_compat.h on Ultrix.  Replace it with an empty file.
+ */
+fix = {
+    hackname = AAB_ultrix_ansi_compat;
+    files    = ansi_compat.h;
+    select   = ULTRIX;
+    replace  = "/* This file intentionally left blank.  */\n";
+};
+
+
+/*
+ *  The Ultrix 4.3 file limits.h is a symbolic link to sys/limits.h.
+ *  Replace limits.h with a file that includes sys/limits.h.
+ */
+fix = {
+    hackname = AAB_ultrix_limits;
+    files    = limits.h;
+    mach     = "*-*-ultrix4.3";
+    replace  =
+'#ifndef _LIMITS_INCLUDED
+\#define _LIMITS_INCLUDED
+\#include <sys/limits.h>
+\#endif /* _LIMITS_INCLUDED */
+';
+};
+
+
+/*
+ *  The ULTRIX 4.3 version of memory.h duplicates definitions
+ *  present in strings.h.  Replace memory.h with a file that includes
+ *  strings.h to prevent problems from multiple inclusion.
+ */
+fix = {
+    hackname = AAB_ultrix_memory;
+    files    = memory.h;
+    mach     = "*-*-ultrix4.3";
+    replace  =
+'#ifndef _MEMORY_INCLUDED
+\#define _MEMORY_INCLUDED
+\#include <strings.h>
+\#endif /* _MEMORY_INCLUDED */
+';
+};
+
+
+/*
+ *  The Ultrix 4.3 file string.h is a symbolic link to strings.h.
+ *  Replace string.h link with a file that includes strings.h to prevent
+ *  problems from multiple inclusion.
+ */
+fix = {
+    hackname = AAB_ultrix_string;
+    files    = string.h;
+    mach     = "*-*-ultrix4.3";
+    replace  =
+'#ifndef _STRING_INCLUDED
+\#define _STRING_INCLUDED
+\#include <strings.h>
+\#endif /* _STRING_INCLUDED */
+';
+};
+
+
+/*
+ *  pthread.h on AIX 4.3.3 tries to define a macro without whitspace
+ *  which violates a requirement of ISO C.
+ */
+fix = {
+    hackname  = aix_pthread;
+    files     = "pthread.h";
+    select    = "(#define [A-Za-z_0-9]+)(\\\\\n[^A-Za-z_0-9 \t\n(])";
+    c_fix     = format;
+    c_fix_arg = "%1 %2";
+    test_text = "#define PTHREAD_MUTEX_INITIALIZER\\\\\n"
+                "{...init stuff...}";
+};
+
+
+/*
+ *  sys/machine.h on AIX 4.3.3 puts whitespace between a \ and a newline
+ *  in an otherwise harmless (and #ifed out) macro definition
+ */
+fix = {
+    hackname  = aix_sysmachine;
+    files     = sys/machine.h;
+    select    = "\\\\ +\n";
+    c_fix     = format;
+    c_fix_arg = "\\\n";
+    test_text = "#define FOO \\\n"
+    " bar \\ \n baz \\ \n bat";
+};
+
+
+/*
+ *  sys/wait.h on AIX 3.2.5 puts the declaration of wait3 before the
+ *  definition of struct rusage, so the prototype added by fixproto fails.
+ */
+fix = {
+    hackname  = aix_syswait;
+    files     = sys/wait.h;
+    select    = "^extern pid_t wait3\\(\\);\n";
+    select    = "bos325,";
+    c_fix     = format;
+    c_fix_arg = "struct rusage;\n%0";
+    test_text = "/* bos325, */\n"
+    "extern pid_t wait3();\n"
+    "\t/* pid_t wait3(int *, int, struct rusage *); */";
 };
 
 
@@ -26,11 +634,25 @@ fix = {
  *  required by ANSI C.
  */
 fix = {
-    hackname = aix_volatile;
-    files    = sys/signal.h;
-    select   = "typedef volatile int sig_atomic_t";
-    sed      = "s/typedef volatile int sig_atomic_t"
-                "/typedef int sig_atomic_t/";
+    hackname  = aix_volatile;
+    files     = sys/signal.h;
+    select    = "typedef volatile int sig_atomic_t";
+    c_fix     = format;
+    c_fix_arg = "typedef int sig_atomic_t";
+    test_text = "typedef volatile int sig_atomic_t;";
+};
+
+
+/*
+ *  Fix __assert declaration in assert.h on Alpha OSF/1.
+ */
+fix = {
+    hackname  = alpha___assert;
+    files     = "assert.h";
+    select    = '__assert\(char \*, char \*, int\)';
+    c_fix     = format;
+    c_fix_arg = "__assert(const char *, const char *, int)";
+    test_text = 'extern void __assert(char *, char *, int);';
 };
 
 
@@ -38,23 +660,26 @@ fix = {
  *  Fix getopt declarations in stdio.h and stdlib.h on Alpha OSF/1 and AIX.
  */
 fix = {
-    hackname = alpha_getopt;
-    files  = "stdio.h";
-    files  = "stdlib.h";
-    select = 'getopt\(int, char \*\[';
-    sed    = 's/getopt(int, char \*\[\],[ ]*char \*)/'
-               'getopt(int, char *const[], const char *)/';
+    hackname  = alpha_getopt;
+    files     = "stdio.h";
+    files     = "stdlib.h";
+    select    = 'getopt\(int, char \*\[\], *char \*\)';
+    c_fix     = format;
+    c_fix_arg = "getopt(int, char *const[], const char *)";
+    test_text = 'extern int getopt(int, char *[], char *);';
 };
 
 
-/* 
+/*
  * Remove erroneous parentheses in sym.h on Alpha OSF/1.
  */
 fix = {
-    hackname = alpha_parens;
-    files    = sym.h;
-    select   = '#ifndef\(__mips64\)';
-    sed      = "s/#ifndef(__mips64)/#ifndef __mips64/";
+    hackname  = alpha_parens;
+    files     = sym.h;
+    select    = '#ifndef\(__mips64\)';
+    c_fix     = format;
+    c_fix_arg = "#ifndef __mips64";
+    test_text = "#ifndef(__mips64) /* bogus */\nextern int foo;\n#endif";
 };
 
 
@@ -65,7 +690,9 @@ fix = {
     hackname = alpha_sbrk;
     files    = unistd.h;
     select   = "char[ \t]*\\*[\t ]*sbrk[ \t]*\\(";
-    sed  = "s/char\\([ \t]*\\*[\t ]*sbrk[ \t]*(\\)/void\\1/";
+    c_fix     = format;
+    c_fix_arg = "void *sbrk(";
+    test_text = "extern char* sbrk(ptrdiff_t increment);";
 };
 
 
@@ -74,10 +701,12 @@ fix = {
  *  hint that is specific to the Norcroft compiler.
  */
 fix = {
-    hackname = arm_norcroft_hint;
-    select   = "___type p_type";
-    files    = "X11/Intrinsic.h";
-    sed      = "s/___type p_type/p_type/";
+    hackname  = arm_norcroft_hint;
+    select    = "___type p_type";
+    files     = "X11/Intrinsic.h";
+    c_fix     = format;
+    c_fix_arg = "p_type";
+    test_text = "___type p_type mumble;";
 };
 
 
@@ -89,8 +718,15 @@ fix = {
     hackname = arm_wchar;
     files  = stdlib.h;
     select = "#[ \t]*define[ \t]*__wchar_t";
-    sed    = "s/\\(#[ \t]*ifndef[ \t]*\\)__wchar_t/\\1_GCC_WCHAR_T/";
-    sed    = "s/\\(#[ \t]*define[ \t]*\\)__wchar_t/\\1_GCC_WCHAR_T/";
+
+    c_fix     = format;
+    c_fix_arg = "%1_GCC_WCHAR_T";
+    c_fix_arg = "(#[ \t]*(ifndef|define)[ \t]+)__wchar_t";
+
+    test_text =
+    "# ifndef \t __wchar_t /* we don't have wchar_t yet, ... */\n"
+    "#  define  __wchar_t  short\n"
+    "# endif /* __wchar_t */";
 };
 
 
@@ -102,8 +738,13 @@ fix = {
     hackname = aux_asm;
     files    = sys/param.h;
     select   = "#ifndef NOINLINE";
-    sed      = "s|#ifndef NOINLINE"
-                "|#if !defined(NOINLINE) \\&\\& !defined(__GNUC__)|";
+
+    c_fix     = format;
+    c_fix_arg = "#if !defined(NOINLINE) && !defined(__GNUC__)";
+
+    test_text =
+    "#ifndef NOINLINE /* ain't got no inline, so we got it */\n"
+    "#endif /* NOINLINE */";
 };
 
 
@@ -113,66 +754,53 @@ fix = {
  *  HP/UX 10.20 also has it in curses_colr/curses.h.
  */
 fix = {
-    hackname = avoid_bool;
+    hackname  = avoid_bool_define;
+    files     = curses.h;
+    files     = curses_colr/curses.h;
+    files     = term.h;
+    files     = tinfo.h;
+
+    select    = "#[ \t]*define[ \t]+bool[ \t]";
+    bypass    = "we must use the C\\+\\+ compiler's type";
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef __cplusplus\n%0\n#endif";
+    c_fix_arg = "^[ \t]*#[ \t]*define[ \t]+bool[ \t].*";
+
+    test_text = "# define bool\t char \n";
+};
+
+fix = {
+    hackname = avoid_bool_type;
     files    = curses.h;
     files    = curses_colr/curses.h;
     files    = term.h;
     files    = tinfo.h;
 
-    sed = "/^#[ \t]*define[ \t][ \t]*bool[ \t][ \t]*char[ \t]*$/i\\\n"
-                "#ifndef __cplusplus\n";
+    select    = "^[ \t]*typedef[ \t].*[ \t]bool[ \t]*;";
+    bypass    = "we must use the C\\+\\+ compiler's type";
 
-    sed = "/^#[ \t]*define[ \t][ \t]*bool[ \t][ \t]*char[ \t]*$/a\\\n"
-                "#endif\n";
+    c_fix     = format;
+    c_fix_arg = "#ifndef __cplusplus\n%0\n#endif";
 
-    sed = "/^typedef[ \t][ \t]*char[ \t][ \t]*bool[ \t]*;/i\\\n"
-                "#ifndef __cplusplus\n";
-
-    sed = "/^typedef[ \t][ \t]*char[ \t][ \t]*bool[ \t]*;/a\\\n"
-                "#endif\n";
-
-    sed = "/^[ ]*typedef[ \t][ \t]*unsigned char[ \t][ \t]*bool[ \t]*;/i\\\n"
-                "#ifndef __cplusplus\n";
-
-    sed = "/^[ ]*typedef[ \t][ \t]*unsigned char[ \t][ \t]*bool[ \t]*;/a\\\n"
-                "#endif\n";
-
-    sed = "/^typedef[ \t][ \t]*int[ \t][ \t]*bool[ \t]*;/i\\\n"
-                "#ifndef __cplusplus\n";
-
-    sed = "/^typedef[ \t][ \t]*int[ \t][ \t]*bool[ \t]*;/a\\\n"
-                "#endif\n";
-
-    sed = "/^[ ]*typedef[ \t][ \t]*unsigned int[ \t][ \t]*bool[ \t]*;/i\\\n"
-                "#ifndef __cplusplus\n";
-
-    sed = "/^[ ]*typedef[ \t][ \t]*unsigned int[ \t][ \t]*bool[ \t]*;/a\\\n"
-                "#endif\n";
+    test_text = "typedef unsigned int\tbool \t; /* bool\n type */";
 };
-
 
 /*
- *  Fix `typedef struct term;' on hppa1.1-hp-hpux9.
+ *  For C++, avoid any typedef definition of wchar_t,
+ *  and use the built in type instead.
  */
+
 fix = {
-    hackname = bad_struct_term;
-    files  = curses.h;
-    select = "^[ \t]*typedef[ \t]+struct[ \t]+term[ \t]*;";
-    sed    = "s/^[ \t]*typedef[ \t][ \t]*"
-             "\\(struct[ \t][ \t]*term[ \t]*;[ \t]*\\)$/\\1/";
+    hackname = avoid_wchar_t_type;
+
+    select    = "^[ \t]*typedef[ \t].*[ \t]wchar_t[ \t]*;";
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef __cplusplus\n%0\n#endif";
+
+    test_text = "typedef unsigned short\twchar_t \t; /* wchar_t\n type */";
 };
-
-
-/*
- *  Fix one other error in this file:
- *  a mismatched quote not inside a C comment.
- */
-fix = {
-    hackname = badquote;
-    files    = sundev/vuid_event.h;
-    sed      = "s/doesn't/does not/";
-};
-
 
 /*
  *  Fix #defines under Alpha OSF/1:
@@ -182,9 +810,18 @@ fix = {
  *  properly in most cases, they don't allow you to take a pointer to the
  *  "something" being modified.  To get around this limitation, change these
  *  statements to be of the form '#define something _FOOsomething'.
+ *
+ *  sed ain't egrep, lesson 2463:  sed can use self-referential
+ *  regular expressions.  In the substitute expression below,
+ *  "\\1" and "\\2" refer to subexpressions found earlier in the
+ *  same match.  So, we continue to use sed.  "extern_prefix" will
+ *  be a rare match anyway...
  */
 fix = {
     hackname = bad_lval;
+
+    select   = "^[ \t]*#[ \t]*pragma[ \t]+extern_prefix";
+
     files    = libgen.h;
     files    = dirent.h;
     files    = ftw.h;
@@ -199,9 +836,43 @@ fix = {
     files    = stropts.h;
     files    = time.h;
     files    = unistd.h;
+
     sed      =
-        "s/^[ \t]*#[ \t]*define[ \t]*\\([^(]*\\)\\(([^)]*)\\)[ \t]*"
-               "\\(_.\\)\\1\\2[ \t]*$/#define \\1 \\3\\1/";
+        "s/^[ \t]*#[ \t]*define[ \t][ \t]*\\([^(]*\\)\\(([^)]*)\\)[ \t]*"
+               "\\(_.*\\)\\1\\2[ \t]*$/#define \\1 \\3\\1/";
+
+    test_text = '#pragma extern_prefix "_FOO"'"\n"
+                "#define something(x,y,z) _FOOsomething(x,y,z)\n"
+                "#define mumble _FOOmumble";
+};
+
+
+/*
+ *  Fix `typedef struct term;' on hppa1.1-hp-hpux9.
+ */
+fix = {
+    hackname  = bad_struct_term;
+    files     = curses.h;
+    select    = "^[ \t]*typedef[ \t]+struct[ \t]+term[ \t]*;";
+    c_fix     = format;
+    c_fix_arg = "struct term;";
+
+    test_text = 'typedef struct term;';
+};
+
+
+/*
+ *  Fix one other error in this file:
+ *  a mismatched quote not inside a C comment.
+ */
+fix = {
+    hackname  = badquote;
+    files     = sundev/vuid_event.h;
+    select    = "doesn't";
+    c_fix     = format;
+    c_fix_arg = "does not";
+
+    test_text = "/* doesn't have matched single quotes */";
 };
 
 
@@ -209,12 +880,13 @@ fix = {
  *  check for broken assert.h that needs stdio.h
  */
 fix = {
-    hackname = broken_assert_stdio;
-    files    = assert.h;
-    select   = stderr;
-    bypass   = "include.*stdio.h";
-    sed      = "1i\\\n"
-               "#include <stdio.h>\n";
+    hackname  = broken_assert_stdio;
+    files     = assert.h;
+    select    = stderr;
+    bypass    = "include.*stdio\\.h";
+    c_fix     = wrap;
+    c_fix_arg = "#include <stdio.h>\n";
+    test_text = "extern FILE* stderr;";
 };
 
 
@@ -222,29 +894,108 @@ fix = {
  *  check for broken assert.h that needs stdlib.h
  */
 fix = {
-    hackname = broken_assert_stdlib;
-    files    = assert.h;
-    select   = 'exit *\(|abort *\(';
-    bypass   = "include.*stdlib.h";
-    sed      = "1i\\\n"
-               "#ifdef __cplusplus\\\n"
-               "#include <stdlib.h>\\\n"
-               "#endif\n";
+    hackname  = broken_assert_stdlib;
+    files     = assert.h;
+    select    = 'exit *\(|abort *\(';
+    bypass    = "include.*stdlib\\.h";
+    c_fix     = wrap;
+    c_fix_arg = "#ifdef __cplusplus\n"
+                "#include <stdlib.h>\n"
+                "#endif\n";
+    test_text = "extern void exit ( int );";
 };
 
 
 /*
- *  Note that BSD43_* are used on recent MIPS systems.
+ *  Remove `extern double cabs' declarations from math.h.
+ *  This conflicts with C99.  Discovered on AIX.
+ *  SunOS4 has its cabs() declaration followed by a comment which
+ *  terminates on the following line.
  */
 fix = {
-    hackname = bsd43_io_macros;
-    select   = "BSD43__IO";
+    hackname = broken_cabs;
+    files  = "math.h";
+    select = '^extern[ \t]+double[ \t]+cabs';
+
+    c_fix     = format;
+    c_fix_arg = "";
+    c_fix_arg = "^extern[ \t]+double[ \t]+cabs\\((struct dbl_hypot|)\\);";
+
+    test_text = "#ifdef __STDC__\n"
+                "extern     double   cabs(struct dbl_hypot);\n"
+                "#else\n"
+                "extern     double   cabs();\n"
+                "#endif\n"
+                "extern double cabs(); /* This is a comment\n"
+                "                         and it ends here. */";
+};
+
+
+/*
+ *  Fix various macros used to define ioctl numbers.
+ *  The traditional syntax was:
+ *
+ *    #define _CTRL(n, x) (('n'<<8)+x)
+ *    #define TCTRLCFOO _CTRL(T, 1)
+ *
+ *  but this does not work with the C standard, which disallows macro
+ *  expansion inside strings.  We have to rewrite it thus:
+ *
+ *    #define _CTRL(n, x) ((n<<8)+x)
+ *    #define TCTRLCFOO  _CTRL('T', 1)
+ *
+ *  The select expressions match too much, but the c_fix code is cautious.
+ *
+ *  CTRL might be: CTRL _CTRL ISCTRL BSD43_CTRL ...
+ */
+fix = {
+    hackname  = ctrl_quotes_def;
+    select    = "define[ \t]+[A-Z0-9_]+CTRL\\([a-zA-Z][,)]";
+    c_fix     = char_macro_def;
+    c_fix_arg = "CTRL";
+
     /*
-     *  Put single quotes aroung the character that appears after '('
-     *  and before ',', UNLESS it is a 'c' or 'g' or 'x'.
+     *  This is two tests in order to ensure that the "CTRL(c)" can
+     *  be selected in isolation from the multi-arg format
      */
-    sed = "/[ \t]BSD43__IO[A-Z]*[ \t]*(/"       's/(\(.\),/(\'\1\',/';
-    sed = "/#[ \t]*define[ \t]*[ \t]BSD43__IO/" 's/\'\([cgx]\)\'/\1/g';
+    test_text = "#define BSD43_CTRL(n, x) (('n'<<8)+x)\n";
+    test_text = "#define _CTRL(c) ('c'&037)";
+};
+
+fix = {
+    hackname  = ctrl_quotes_use;
+    select    = "define[ \t]+[A-Z0-9_]+[ \t]+[A-Z0-9_]+CTRL[ \t]*\\( *[^,']";
+    c_fix     = char_macro_use;
+    c_fix_arg = "CTRL";
+    test_text = "#define TCTRLFOO BSD43_CTRL(T, 1)";
+};
+
+
+/*
+ *  sys/mman.h on HP/UX is not C++ ready,
+ *  even though NO_IMPLICIT_EXTERN_C is defined on HP/UX.
+ *
+ *  rpc/types.h on OSF1/2.0 is not C++ ready,
+ *  even though NO_IMPLICIT_EXTERN_C is defined for the alpha.
+ *
+ *  The problem is the declaration of malloc.
+ */
+fix = {
+    hackname = cxx_unready;
+    files    = sys/mman.h;
+    files    = rpc/types.h;
+    select   = '[^#]+malloc.*;';  /* Catch any form of declaration
+				     not within a macro.  */
+    bypass   = '"C"|__BEGIN_DECLS';
+
+    c_fix     = wrap;
+    c_fix_arg = "#ifdef __cplusplus\n"
+                "extern \"C\" {\n"
+                "#endif\n";
+    c_fix_arg = "#ifdef __cplusplus\n"
+                "}\n"
+                "#endif\n";
+    test_text = "extern void* malloc( size_t );";
 };
 
 
@@ -259,199 +1010,114 @@ fix = {
     sed = "/^[ \t]*float[ \t]*fasm/i\\\n#ifdef __DECC\n";
     sed = "/^[ \t]*#[ \t]*pragma[ \t]*intrinsic([ \t]*dasm/a\\\n"
           "#endif\n";
-};
-
-
-#ifdef no_more
-/*
- *  And also with the HP-UX 10 and HP-UX 11 sys/pci.h file
- */
-fix = {
-    hackname = cxx_cmnt_hpux;
-    files    = sys/pci.h;
-    select   = "System Private Structures";
-    sed      = "s|//.*$||g";
+    test_text =
+    "float fasm {\n"
+    "    ... asm stuff ...\n"
+    "};\n#pragma intrinsic( dasm )\n/* END ASM TEST*/";
 };
 
 
 /*
- *  Turning // comments into normal comments trashes this IRIX 4.0.1
- *  header file, which embeds // comments inside multi-line
- *  comments.  If this looks like the IRIX header file, we refix it by
- *  just throwing away the // comments.
+ * Fix typo in <wchar.h> on DJGPP 2.03.
  */
 fix = {
-    hackname = cxx_cmnt_irix;
-    files    = fam.h;
-    select   = indigo.esd;
-    sed      = "s|//.*$||g";
+    hackname  = djgpp_wchar_h;
+    file      = wchar.h;
+    select    = "__DJ_wint_t";
+    bypass    = "sys/djtypes.h";
+    c_fix     = format;
+    c_fix_arg = "%0\n#include <sys/djtypes.h>";
+    c_fix_arg = "#include <stddef.h>";
+    test_text = "#include <stddef.h>\n"
+                "extern __DJ_wint_t x;\n";
 };
-
-
-/*
- *  Same problem with a file from SunOS 4.1.3 : a header file containing
- *  the string "//" embedded in "/ * * /"
- */
-fix = {
-    hackname = cxx_cmnt_sunos;
-    files    = sbusdev/audiovar.h;
-    files    = sys/audiovar.h;
-    sed      = "s|//.*$||g";
-};
-
-
-/*
- *  There is a similar problem with the VxWorks drv/netif/if_med.h file.
- */
-fix = {
-    hackname = cxx_cmnt_vxworks;
-    files    = drv/netif/if_med.h;
-    select   = "Wind River";
-    sed      = "s|//.*$||g";
-};
-#endif
-
-/*
- *  Remove the double-slash comments
- *  They *must* be removed so it will not create nested comments!!
- *  However, they will *not* be removed if the file name ends with
- *  any of "++", ".hh" or ".H", or if the file name contains "cxx/".
- *
- *  There *used* to be a number of similar problems in various OSes:
-
- *  Turning // comments into normal comments trashes this IRIX 4.0.1
- *  header file, which embeds // comments inside multi-line
- *  comments.  If this looks like the IRIX header file, we refix it by
- *  just throwing away the // comments.
-
- *  Same problem with a file from SunOS 4.1.3 : a header file containing
- *  the string "//" embedded in "/ * * /"
-
- *  There is a similar problem with the VxWorks drv/netif/if_med.h file.
-
- *  And also with the HP-UX 10 and HP-UX 11 sys/pci.h file
-
- *  Now that we delete the // comments instead of converting them to / * * /,
- *  traditional hacks like irix_bogus_cxx_cmnt, no longer work (which
- *  strangely enough was also used on alpha-dec-osf4.0d).  If we skip the
- *  hack whenever we see ``"//"'', then the need for the secondary hack
- *  disappears.  Note: it is painful to ensure that the first quote
- *  exists, so we just check for the trailing quote directly abutting
- *  the //.  Note: We should never touch a line that has // completely
- *  within quotes but this is somewhat hard to check for.
-
- *  Ultimately, this fix ought to go inside of C code where
- *  we can do a better analysis on the need and method for fixing.
- */
-fix = {
-    hackname = no_double_slash;
-    /*
-     *  Test that the file-to-fix does not from a C++ directory
-     *  Also, only accept double slashes that are not part of URL's
-     *  and are not the end of a quoted string.
-     */
-    test   = ' -z "`echo ${file} | egrep \'(CC|cxx|\+\+)/\'`"';
-    select = '(^|[^:])//[^"*]';
-    sed    = 's,^//.*$,,';
-    sed    = 's,[^:]//[^"].*$,,';
-};
-
 
 /*
  * Fix these Sun OS files to avoid an invalid identifier in an #ifdef.
  */
 fix = {
-    hackname = ecd_cursor;
-    files  = "sunwindow/win_lock.h";
-    files  = "sunwindow/win_cursor.h";
-    sed    = "s/ecd.cursor/ecd_cursor/";
-};
+    hackname  = ecd_cursor;
+    files     = "sunwindow/win_lock.h";
+    files     = "sunwindow/win_cursor.h";
+    select    = 'ecd\.cursor';
+    c_fix     = format;
+    c_fix_arg = 'ecd_cursor';
 
-/*
- *  On SCO OpenServer 5.0.0 through (at least) 5.0.5 <sys/stat.h> contains
- *  tiny static wrappers that aren't C++ safe.
- */
-fix = {
-    hackname = sco5_stat_wrappers;
-    mach     = "i*86-*-sco3.2v5*";
-    files    = "sys/stat.h";
-
-    sed = "/^static int[ \t]*[a-z]*stat(/i\\\n"
-	"#ifdef __cplusplus\\\n"
-	"extern \"C\"\\\n"
-	"{\\\n"
-	"#endif\\\n";
-
-    sed = "/^}$/a\\\n"
-	"#ifdef __cplusplus\\\n"
-	"}\\\n"
-	"#endif \/* __cplusplus *\/\\\n";
-};
-
-
-
-/*
- *  Fix else and endif directives that contain non-commentary text
- */
-fix = {
-    hackname = end_else_label;
-
-    /*
-     *  Select files that contain '#endif' or '#else' directives with
-     *  some sort of following junk.  (Between the ascii '.'
-     *  and '0' lies the character '/'.  This will *NOT*
-     *  match '#endif / * foo * /', but it also wont match
-     *  '#endif / done' either.
-     *
-     *  We have a second regexp in the selector to detect
-     *  #endif followed by a / followed by anything other
-     *  than a *.  For example "#endif / * foo * /" or 
-     *  "#endif /% blah %/ which appear on OSF4.0A and AIX4.2
-     *  repsectively.
-     * 
-     *  We use the pattern [!-.0-z{|}~] instead of [^/ \t] to match a
-     *  noncomment following #else or #endif because some buggy egreps
-     *  think [^/] matches newline, and they thus think `#else ' matches
-     *  `#e[ndiflse]*[ \t]+[^/ \t]'.
-     *  [!-.0-~] does not work properly on AIX 4.1.
-     */
-    select   = "^[ \t]*#[ \t]*(else|endif)[ \t]+"
-               "("  '[!-.0-z\{\|\}\~]'  "|"  '/[^\*]'  ")";
-
-    /*
-     *  First, join the continued input lines.
-     *  IF the resulting line is an endif preprocessing directive,
-     *  then trim off the following patterns:
-     *  1.  sequences that start with '/' and is *NOT* followed by '*'
-     *  2.  Sequences that start with '*' and is *NOT* followed by '/'
-     *  3.  sequences that do not start with any of '/', '*', '\t' or ' '.
-     *
-     * The fixinc_eol stuff is to work around a bug in the sed
-     */
-    sed =      ":loop\n"
-               '/\\\\$/'                       "N\n"
-               's/\\\\$/\\\\+++fixinc_eol+++/' "\n"
-               '/\\\\$/'                       "b loop\n"
-               's/\\\\+++fixinc_eol+++/\\\\/g' "\n"
-
-               "s%^\\([ \t]*#[ \t]*else\\)[ \t][ \t]*/[^*].*%\\1%\n"
-               "s%^\\([ \t]*#[ \t]*else\\)[ \t][ \t]*[^/ \t].*%\\1%\n"
-               "s%^\\([ \t]*#[ \t]*endif\\)[ \t][ \t]*/[^*].*%\\1%\n"
-               "s%^\\([ \t]*#[ \t]*endif\\)[ \t][ \t]*\*[^/].*%\\1%\n"
-               "s%^\\([ \t]*#[ \t]*endif\\)[ \t][ \t]*[^/* \t].*%\\1%";
+    test_text = "#ifdef ecd.cursor\n#error bogus\n#endif /* ecd+cursor */";
 };
 
 
 /*
- *  Fix HP's use of ../machine/inline.h to refer to
- *    /usr/include/machine/inline.h
+ *  fix-header doesn't fix fabs' prototype, and I have no idea why.
  */
 fix = {
-    hackname = hp_inline;
-    files  = sys/spinlock.h;
-    select = 'include.*"\.\./machine/';
-    sed    = "s,\"../machine/inline.h\",<machine/inline.h>,";
-    sed    = "s,\"../machine/psl.h\",<machine/psl.h>,";
+    hackname  = fix_header_breakage;
+    mach      = "m88k-motorola-sysv3*";
+    files     = "math.h";
+
+    select    = 'extern double floor\(\), ceil\(\), fmod\(\), fabs\(\);';
+    c_fix     = format;
+    c_fix_arg =
+    'extern double floor(), ceil(), fmod(), fabs _PARAMS((double));';
+    test_text = 'extern double floor(), ceil(), fmod(), fabs();';
+};
+
+
+/*
+ *  Between 8/24/1998 and 2/17/2001, FreeBSD system headers presume
+ *  neither the existence of GCC 3 nor its exact feature set yet break
+ *  (by design?) when __GNUC__ is set beyond 2.
+ */
+fix = {
+    hackname  = freebsd_gcc3_breakage;
+    mach      = *-*-freebsd*;
+    files     = sys/cdefs.h;
+    select    = '^#if __GNUC__ == 2 && __GNUC_MINOR__ >= 7$';
+    bypass    = '__GNUC__[ \t]*([>=]=[ \t]*[3-9]|>[ \t]*2)';
+    c_fix     = format;
+    c_fix_arg = '%0 || __GNUC__ >= 3';
+    test_text = '#if __GNUC__ == 2 && __GNUC_MINOR__ >= 7';
+};
+
+
+/*
+ * Fix these files to use the same types that we think they should.
+ */
+fix = {
+    hackname  = gnu_types;
+    files  = "sys/types.h";
+    files  = "stdlib.h";
+    files  = "sys/stdtypes.h";
+    files  = "stddef.h";
+    files  = "memory.h";
+    files  = "unistd.h";
+    bypass    = '_GCC_(PTRDIFF|SIZE|WCHAR)_T';
+    select    = "^[ \t]*typedef[ \t]+.*[ \t](ptrdiff|size|wchar)_t;";
+    c_fix     = gnu_type;
+
+    test_text = "typedef long int ptrdiff_t; /* long int */\n"
+                "typedef uint_t size_t; /* uint_t */\n"
+                "typedef ushort_t wchar_t; /* ushort_t */";
+};
+
+
+/*
+ *  Fix HP & Sony's use of "../machine/xxx.h"
+ *  to refer to:  <machine/xxx.h>
+ */
+fix = {
+    hackname  = hp_inline;
+    files     = sys/spinlock.h;
+    files     = machine/machparam.h;
+    select    = "[ \t]*#[ \t]*include[ \t]+"  '"\.\./machine/';
+
+    c_fix     = format;
+    c_fix_arg = "%1<machine/%2.h>";
+
+    c_fix_arg = "([ \t]*#[ \t]*include[ \t]+)"  '"\.\./machine/'
+                '([a-z]+)\.h"';
+
+    test_text = ' # include "../machine/mumble.h"';
 };
 
 
@@ -459,34 +1125,162 @@ fix = {
  *  Check for (...) in C++ code in HP/UX sys/file.h.
  */
 fix = {
-    hackname = hp_sysfile;
-    files    = sys/file.h;
-    select   = "HPUX_SOURCE";
-    sed      = 's/(\.\.\.)/(struct file * ...)/';
+    hackname  = hp_sysfile;
+    files     = sys/file.h;
+    select    = "HPUX_SOURCE";
+
+    c_fix     = format;
+    c_fix_arg = "(struct file *, ...)";
+    c_fix_arg = '\(\.\.\.\)';
+
+    test_text = "extern void foo(...); /* HPUX_SOURCE - bad varargs */";
 };
 
 
 /*
- *  sys/mman.h on HP/UX is not C++ ready,
- *  even though NO_IMPLICIT_EXTERN_C is defined on HP/UX.
- *
- *  rpc/types.h on OSF1/2.0 is not C++ ready, even though NO_IMPLICIT_EXTERN_C
- *  is defined for the alpha.  The problem is the declaration of malloc.
+ * Delete C++ double pow (double, int) inline function from HP-UX 10 & 11
+ * math.h to prevent clash with define in c_std/bits/std_cmath.h.
  */
 fix = {
-    hackname = cxx_unready;
-    files    = sys/mman.h;
-    files    = rpc/types.h;
-    bypass = '"C"|__BEGIN_DECLS';
+    hackname  = hpux10_cpp_pow_inline;
+    files     = fixinc-test-limits.h, math.h;
+    select    = <<-	END_POW_INLINE
+	^# +ifdef +__cplusplus
+	 +}
+	 +inline +double +pow\(double +__d,int +__expon\) +{
+	[ 	]+return +pow\(__d,\(double\)__expon\);
+	 +}
+	 +extern +"C" +{
+	#else
+	# +endif
+	END_POW_INLINE;
+ 
+    c_fix     = format;
+    c_fix_arg = "";
 
-    sed      = "1i\\\n"
-               "#ifdef __cplusplus\\\n"
-               "extern \"C\" {\\\n"
-               "#endif\\\n\n";
-    sed      = "$a\\\n"
-               "#ifdef __cplusplus\\\n"
-               "}\\\n"
-               "#endif\n";
+    test_text =
+	"#    ifdef __cplusplus\n"
+	"     }\n"
+	"     inline double pow(double __d,int __expon) {\n"
+	"\t return pow(__d,(double)__expon);\n"
+	"     }\n"
+	'     extern "C"' " {\n"
+	"#else\n"
+	"#    endif";
+};
+
+fix = {
+     hackname  = hpux11_cpp_pow_inline;
+     files     = math.h;
+     select    = " +inline double pow\\(double d,int expon\\) {\n"
+                 " +return pow\\(d, \\(double\\)expon\\);\n"
+                 " +}\n";
+     c_fix     = format;
+     c_fix_arg = "";
+
+     test_text =
+            "   inline double pow(double d,int expon) {\n"
+            "     return pow(d, (double)expon);\n"
+            "   }\n";
+};
+
+
+/*
+ *  Keep HP-UX 11 from stomping on C++ math namespace
+ *  with defines for fabsf.
+ */
+fix = {
+    hackname  = hpux11_fabsf;
+    files     = math.h;
+    select    = "^[ \t]*#[ \t]*define[ \t]+fabsf\\(.*";
+    bypass    = "__cplusplus";
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef __cplusplus\n%0\n#endif";
+
+    test_text =
+    "#ifdef _PA_RISC\n"
+    "#  define fabsf(x) ((float)fabs((double)(float)(x)))\n"
+    "#endif";
+};
+
+
+/*
+ * Prevent HP-UX 11 from defining __size_t and preventing size_t from
+ * being defined by having it define _hpux_size_t instead.
+ */
+fix = {
+    hackname  = hpux11_size_t;
+    mach      = "*-hp-hpux11*";
+    select    = "__size_t";
+
+    c_fix     = format;
+    c_fix_arg = "_hpux_size_t";
+
+    test_text =
+    "#define __size_t size_t\n"
+    "       extern int getpwuid_r( char *, __size_t, struct passwd **);\n";
+};
+
+
+/*
+ * In inttypes.h on HPUX 11, the use of __CONCAT__ in the definition
+ * of UINT32_C has undefined behavior according to ISO/ANSI:
+ * the arguments to __CONCAT__ are not macro expanded before the
+ * concatination happens so the trailing ')' in the first argument
+ * is concatinated with the 'l' in the second argument creating an
+ * invalid pp token.  The behavior of invalid pp tokens is undefined.
+ * GCC does not handle these invalid tokens the way the HP compiler does.
+ * This problem will potentially occur anytime macros are used in the
+ * arguments to __CONCAT__.  A general solution to this problem would be to
+ * insert another layer of macro between __CONCAT__ and its use
+ * in UINT32_C.  An example of this solution can be found in the C standard.
+ * A more specific solution, the one used here, is to change the UINT32_C
+ * macro to not used macros in the arguments to __CONCAT__.
+ */
+fix = {
+    hackname = hpux11_uint32_c;
+    files    = inttypes.h;
+    select   = "^#define UINT32_C\\(__c\\)[ \t]*"
+                         "__CONCAT__\\(__CONCAT_U__\\(__c\\),l\\)";
+    c_fix    = format;
+    c_fix_arg = '#define UINT32_C(__c) __CONCAT__(__c,ul)';
+    test_text =
+    "#define CONCAT_U__(__c)\t__CONCAT__(__c,u)\n"
+    "#define UINT32_C(__c)\t__CONCAT__(__CONCAT_U__(__c),l)";
+};
+
+
+/*
+ *  Fix hpux 11.00 broken vsnprintf declaration
+ */
+fix = {
+    hackname = hpux11_vsnprintf;
+    files    = stdio.h;
+    select   = '(extern int vsnprintf\(char \*, _[hpux]*_size_t, '
+                                     'const char \*,) __va__list\);';
+    c_fix     = format;
+    c_fix_arg = "%1 __va_list);";
+
+    test_text = 'extern int vsnprintf(char *, _hpux_size_t, const char *,'
+                                     ' __va__list);';
+};
+
+
+/*
+ *  get rid of bogus inline definitions in HP-UX 8.0
+ */
+fix = {
+    hackname = hpux8_bogus_inlines;
+    files    = math.h;
+    select   = inline;
+    sed = "s@inline int abs(int [a-z][a-z]*) {.*}"
+           "@extern \"C\" int abs(int);@";
+    sed = "s@inline double abs(double [a-z][a-z]*) {.*}@@";
+    sed = "s@inline int sqr(int [a-z][a-z]*) {.*}@@";
+    sed = "s@inline double sqr(double [a-z][a-z]*) {.*}@@";
+    test_text = "inline int abs(int v) { return (v>=0)?v:-v; }\n"
+                "inline double sqr(double v) { return v**0.5; }";
 };
 
 
@@ -494,13 +1288,19 @@ fix = {
  *  HPUX 10.x sys/param.h defines MAXINT which clashes with values.h
  */
 fix = {
-    hackname = hpux_maxint;
-    files    = sys/param.h;
-    sed      = "/^#[ \t]*define[ \t]*MAXINT[ \t]/i\\\n"
-               "#ifndef MAXINT\n";
+    hackname  = hpux_maxint;
+    files     = sys/param.h;
+    files     = values.h;
+    select    = "^#[ \t]*define[ \t]+MAXINT[ \t]";
+    bypass    = "^#[ \t]*ifndef[ \t]+MAXINT";
+    test =
+    "-n \"`egrep '#[ \t]*define[ \t]+MAXINT[ \t]' sys/param.h`\"";
 
-    sed      = "/^#[ \t]*define[ \t]*MAXINT[ \t]/a\\\n"
-               "#endif\n";
+    c_fix     = format;
+    c_fix_arg = "#ifndef MAXINT\n%0\n#endif";
+    c_fix_arg = "^#[ \t]*define[ \t]+MAXINT[ \t].*";
+
+    test_text = '#define MAXINT 0x7FFFFFFF';
 };
 
 
@@ -511,105 +1311,70 @@ fix = {
     hackname = hpux_systime;
     files    = sys/time.h;
     select   = "^extern struct sigevent;";
-    sed      = "s/^extern struct sigevent;/struct sigevent;/";
+
+    c_fix     = format;
+    c_fix_arg = "struct sigevent;";
+
+    test_text = 'extern struct sigevent;';
 };
 
 
 /*
- *  Determine if we're on Interactive Unix 2.2 or later, in which case we
- *  need to fix some additional files.  This is the same test for ISC that
- *  Autoconf uses.  On Interactive 2.2, certain traditional Unix
- *  definitions (notably getc and putc in stdio.h) are omitted if __STDC__
- *  is defined, not just if _POSIX_SOURCE is defined.  This makes it
- *  impossible to compile any nontrivial program except with -posix.
+ *  Fix return type of abort and free
  */
 fix = {
-    hackname = interactv_add1;
+    hackname  = int_abort_free_and_exit;
+    files     = stdlib.h;
+    select    = "int[ \t]+(abort|free|exit)[ \t]*\\(";
 
-    test   = " -d /etc/conf/kconfig.d";
-    test   = ' -n "`grep _POSIX_VERSION /usr/include/sys/unistd.h`"';
+    c_fix     = format;
+    c_fix_arg = "void\t%1(";
 
-    files  = "stdio.h";
-    files  = "math.h";
-    files  = "ctype.h";
-    files  = "sys/limits.h";
-    files  = "sys/fcntl.h";
-    files  = "sys/dirent.h";
-
-    sed    = "s/!defined(__STDC__) && !defined(_POSIX_SOURCE)/"
-               "!defined(_POSIX_SOURCE)/";
-};
-
-fix = {
-    hackname = interactv_add2;
-
-    test   = " -d /etc/conf/kconfig.d";
-    test   = ' -n "`grep _POSIX_VERSION /usr/include/sys/unistd.h`"';
-
-    files  = math.h;
-    sed    = "s/fmod(double)/fmod(double, double)/";
-};
-
-fix = {
-    hackname = interactv_add3;
-
-    test   = " -d /etc/conf/kconfig.d";
-    test   = ' -n "`grep _POSIX_VERSION /usr/include/sys/unistd.h`"';
-
-    files  = sys/limits.h;
-
-    sed    = "/CHILD_MAX/s,/\\* Max, Max,";
-    sed    = "/OPEN_MAX/s,/\\* Max, Max,";
+    test_text = "extern int abort(int);\n"
+                "extern int free(void*);\n"
+                "extern int exit(void*);";
 };
 
 
 /*
- *  Fix various _IO* defines, but do *not* quote the characters cgxtf.
- */
-fix = {
-    hackname = io_def_quotes;
-    select = "[ \t]*[ \t](_|DES)IO[A-Z]*[ \t]*\\( *[^,']";
-    sed = "s/\\([ \t]*[ \t]_IO[A-Z]*[ \t]*(\\)\\([^,']\\),/\\1'\\2',/";
-    sed = "s/\\([ \t]*[ \t]DESIO[A-Z]*[ \t]*(\\)\\([^,']\\),/\\1'\\2',/";
-    sed = "/#[ \t]*define[ \t]*[ \t]_IO/"       "s/'\\([cgxtf]\\)'/\\1/g";
-    sed = "/#[ \t]*define[ \t]*[ \t]DESIOC/"    's/\'\([cdgx]\)\'/\1/g';
-};
-
-
-/*
- *  Fix CTRL macros
+ *  Fix various macros used to define ioctl numbers.
+ *  The traditional syntax was:
  *
- * Basically, what is supposed to be happening is that every
- * _invocation_ of the "_CTRL()" or "CTRL()" macros is supposed to have
- * its argument inserted into single quotes.  We _must_ do this because
- * ANSI macro substitution rules prohibit looking inside quoted strings
- * for the substitution names.  A side effect is that the quotes are
- * inserted in the definitions of those macros as well.  So, the last
- * three sed expressions are supposed to clean up the definitions, as
- * long as those definitions are using "c", "g" or "x" as the macro
- * argument :).  Yuck.
+ *    #define _IO(n, x) (('n'<<8)+x)
+ *    #define TIOCFOO _IO(T, 1)
+ *
+ *  but this does not work with the C standard, which disallows macro
+ *  expansion inside strings.  We have to rewrite it thus:
+ *
+ *    #define _IO(n, x) ((n<<8)+x)
+ *    #define TIOCFOO  _IO('T', 1)
+ *
+ *  The select expressions match too much, but the c_fix code is cautious.
+ *
+ *  _IO might be: _IO DESIO BSD43__IO with W, R, WR, C, ... suffixes.
  */
 fix = {
-    hackname = ioctl_fix_ctrl;
-    select = "CTRL[ \t]*\\(";
+    hackname  = io_quotes_def;
+    select    = "define[ \t]+[A-Z0-9_]+IO[A-Z]*\\([a-zA-Z][,)]";
+    c_fix     = char_macro_def;
+    c_fix_arg = "IO";
+    test_text =
+    "#define BSD43__IOWR(n, x) (('n'<<8)+x)\n"
+    "#define _IOWN(x,y,t)  (_IOC_IN|(((t)&_IOCPARM_MASK)<<16)|('x'<<8)|y)\n"
+    "#define _IO(x,y)      ('x'<<8|y)";
+    test_text =
+    "#define XX_IO(x)        ('x'<<8|256)";
+};
 
-    sed = "/[^A-Z0-9_]CTRL[ \t]*(/"
-              "s/\\([^']\\))/'\\1')/";
-
-    sed = "/[^A-Z0-9]_CTRL[ \t]*(/"
-              "s/\\([^']\\))/'\\1')/";
-
-    sed = "/#[ \t]*define[ \t]*[ \t]CTRL/"
-              "s/'\\([cgx]\\)'/\\1/g";
-
-    sed = "/#[ \t]*define[ \t]*[ \t]_CTRL/"
-              "s/'\\([cgx]\\)'/\\1/g";
-
-    sed = "/#[ \t]*define[ \t]*[ \t]BSD43_CTRL/"
-              "s/'\\([cgx]\\)'/\\1/g";
-
-    sed = "/#[ \t]*define[ \t]*[ \t]_*ISCTRL/"
-              "s/'\\([cgx]\\)'/\\1/g";
+fix = {
+    hackname  = io_quotes_use;
+    select    = "define[ \t]+[A-Z0-9_]+[ \t]+[A-Z0-9_]+IO[A-Z]*[ \t]*"
+                "\\( *[^,']";
+    c_fix     = char_macro_use;
+    c_fix_arg = "IO";
+    test_text = "#define TIOCFOO BSD43__IOWR(T, 1)\n"
+                "#define TIOCFOO \\\\\n"
+                "BSD43__IOWR(T, 1) /* Some are multi-line */";
 };
 
 
@@ -619,44 +1384,60 @@ fix = {
 fix = {
     hackname = ip_missing_semi;
     files    = netinet/ip.h;
+    select   = "}$";
     sed      = "/^struct/,/^};/s/}$/};/";
+    test_text=
+    "struct mumble {\n"
+    "  union {\n"
+    "    int x;\n"
+    "  }\n"
+    "}; /* mumbled struct */\n";
 };
 
 
 /*
- *  IRIX 4.0.5 <rpc/auth.h> uses struct sockaddr
- *  in prototype without previous definition.
+ *  IRIX 5.2's <sys/asm.h> contains an asm comment with a contraction
+ *  that causes the assembly preprocessor to complain about an
+ *  unterminated character constant.
  */
 fix = {
-    hackname = irix_multiline_cmnt;
-    files    = sys/types.h;
+    hackname  = irix_asm_apostrophe;
+    files     = sys/asm.h;
 
-    sed   = "s@type of the result@type of the result */@";
-    sed   = "s@of the sizeof@/* of the sizeof@";
+    select    = "^[ \t]*#.*[Ww]e're";
+    c_fix     = format;
+    c_fix_arg = "%1 are";
+    c_fix_arg = "^([ \t]*#.*[Ww]e)'re";
+    test_text = "\t# and we're on vacation";
 };
 
 
 /*
- *  Some IRIX header files contain the string "//"
+ *  Non-traditional "const" declaration in Irix's limits.h.
  */
 fix = {
-    hackname = irix_sockaddr;
-    files    = rpc/auth.h;
-    select   = "authdes_create.*struct sockaddr";
-    sed      = "/authdes_create.*struct sockaddr/i\\\n"
-               "struct sockaddr;\n";
+    hackname    = irix_limits_const;
+    files       = fixinc-test-limits.h, limits.h;
+    select      = "^extern const ";
+    c_fix       = format;
+    c_fix_arg   = "extern __const ";
+    test_text   = "extern const char limit; /* test limits */";
 };
 
 
 /*
- *  IRIX 4.0.5 <rpc/xdr.h> uses struct __file_s
- *  in prototype without previous definition.
- */
+ *  IRIX 5.x's stdio.h declares some functions that take a va_list as
+ *  taking char *.  However, GCC uses void * for va_list, so
+ *  calling vfprintf with a va_list fails in C++.  */
 fix = {
-    hackname = irix_struct__file;
-    files = rpc/xdr.h;
-    sed   = "/xdrstdio_create.*struct __file_s/i\\\n"
-            "struct __file_s;\n";
+    hackname  = irix_stdio_va_list;
+    files     = stdio.h;
+
+    select = '(printf\(.*), /\* va_list \*/ char \*';
+    c_fix  = format;
+    c_fix_arg = "%1, __gnuc_va_list";
+    test_text =
+    "extern int printf( const char *, /* va_list */ char * );";
 };
 
 
@@ -664,37 +1445,36 @@ fix = {
  * Fixing ISC fmod declaration
  */
 fix = {
-    hackname = isc_fmod;
-    files    = math.h;
-    select   = 'fmod\(double\)';
-    sed      = "s/fmod(double)/fmod(double, double)/";
+    hackname  = isc_fmod;
+    files     = math.h;
+    select    = 'fmod\(double\)';
+    c_fix     = format;
+    c_fix_arg = "fmod(double, double)";
+    test_text = "extern double	fmod(double);";
 };
 
-  
-/*
- * Fix nested comments in Motorola's <limits.h> and <sys/limits.h>
- */
-fix = {
-    hackname = motorola_nested;
-    mach     = "m68k-motorola-sysv*";
-    files    = limits.h;
-    files    = sys/limits.h;
-    sed = "s@^\\(#undef[ \t][ \t]*PIPE_BUF[ \t]*"
-                   "/\\* max # bytes atomic in write to a\\)$@\\1 */@";
-    sed = "s@\\(/\\*#define\tHUGE_VAL\t3.40282346638528860e+38 \\)"
-          "\\(/\\*error value returned by Math lib\\*/\\)$@\\1*/ \\2@";
-};
 
-  
 /*
- * Fixing nested comments in ISC <sys/limits.h>
+ *  On Interactive Unix 2.2, certain traditional Unix definitions
+ *  (notably getc and putc in stdio.h) are omitted if __STDC__ is
+ *  defined, not just if _POSIX_SOURCE is defined.  This makes it
+ *  impossible to compile any nontrivial program except with -posix.
  */
 fix = {
-    hackname = isc_sys_limits;
-    files  = sys/limits.h;
-    select = CHILD_MAX;
-    sed    = "/CHILD_MAX/s,/\\* Max, Max,";
-    sed    = "/OPEN_MAX/s,/\\* Max, Max,";
+    hackname = isc_omits_with_stdc;
+
+    files     = "stdio.h";
+    files     = "math.h";
+    files     = "ctype.h";
+    files     = "sys/limits.h";
+    files     = "sys/fcntl.h";
+    files     = "sys/dirent.h";
+
+    select    = '!defined\(__STDC__\) && !defined\(_POSIX_SOURCE\)';
+    c_fix     = format;
+    c_fix_arg = '!defined(_POSIX_SOURCE)';
+    test_text = "#if !defined(__STDC__) && !defined(_POSIX_SOURCE) /* ? ! */"
+                "\nint foo;\n#endif";
 };
 
 
@@ -723,7 +1503,44 @@ fix = {
     files  = "Xm.acorn/XmP.h";
     files  = bsd43/bsd43_.h;
     select = '/\*\*/';
-    sed    = 's|/\*\*/|##|g';
+    c_fix     = format;
+    c_fix_arg = '##';
+    test_text = "#define __CONCAT__(a,b) a/**/b";
+};
+
+
+/*
+ *  GNU libc1 string.h does not prototype memcpy and memcmp for gcc
+ *  versions > 1.  This fix will open up the declaration for all
+ *  versions of GCC and for g++.
+ */
+fix = {
+    hackname  = libc1_ifdefd_memx;
+
+    /* The string.h result is overwritten by AAB_ultrix_string when doing
+       "make check" and will fail.  Therefore, we add the following kludgery
+       to insert the test_text into the special testing header.  :-}  */
+    files     = testing.h;
+    files     = string.h;
+
+    c_fix     = format;
+    select    = "' is a built-in function for gcc 2\\.x\\. \\*/";
+    bypass    = __cplusplus;
+    c_fix_arg = "%1";
+    c_fix_arg =
+       '/\* `mem...\' is a built-in function for gcc 2\.x\. \*/' "\n"
+       '#if defined\(__STDC__\) && __GNUC__ < 2'                 "\n"
+       "(/\\* .* \\*/\n"
+       "extern [a-z_]+ mem.*(\n[^#].*)*;)\n"
+       "#endif";
+
+    test_text =
+    "/* \\`memcpy' is a built-in function for gcc 2.x. */\n"
+    "#if defined(__STDC__) && __GNUC__ < 2\n"
+    "/* Copy N bytes of SRC to DEST.  */\n"
+    "extern __ptr_t memcpy __P ((__ptr_t __dest, __const __ptr_t __src,\n"
+    "                         size_t __n));\n"
+    "#endif";
 };
 
 
@@ -735,27 +1552,18 @@ fix = {
  *  comment.  Fortunately, HP/UX already uses #ifndefs in limits.h; if
  *  we find a #ifndef FLT_MIN we assume that all the required #ifndefs
  *  are there, and we do not add them ourselves.
- *  Also fix a nested comment problem in sys/limits.h on Motorola sysV68 R3V7.1
  */
 fix = {
     hackname = limits_ifndefs;
-    files  = "limits.h";
     files  = "sys/limits.h";
+    files  = "limits.h";
     bypass = "ifndef[ \t]+FLT_MIN";
 
-    sed  = "/[ \t]FLT_MIN[ \t]/i\\\n#ifndef FLT_MIN\n";
-    sed  = "/[ \t]FLT_MIN[ \t]/a\\\n#endif\n";
-    sed  = "/[ \t]FLT_MAX[ \t]/i\\\n#ifndef FLT_MAX\n";
-    sed  = "/[ \t]FLT_MAX[ \t]/a\\\n#endif\n";
-    sed  = "/[ \t]FLT_DIG[ \t]/i\\\n#ifndef FLT_DIG\n";
-    sed  = "/[ \t]FLT_DIG[ \t]/a\\\n#endif\n";
-    sed  = "/[ \t]DBL_MIN[ \t]/i\\\n#ifndef DBL_MIN\n";
-    sed  = "/[ \t]DBL_MIN[ \t]/a\\\n#endif\n";
-    sed  = "/[ \t]DBL_MAX[ \t]/i\\\n#ifndef DBL_MAX\n";
-    sed  = "/[ \t]DBL_MAX[ \t]/a\\\n#endif\n";
-    sed  = "/[ \t]DBL_DIG[ \t]/i\\\n#ifndef DBL_DIG\n";
-    sed  = "/[ \t]DBL_DIG[ \t]/a\\\n#endif\n";
-    sed  = "/^\\(\\/\\*#define\tHUGE_VAL\t3\\.[0-9e+]* *\\)\\/\\*/s//\\1/";
+    c_fix     = format;
+    c_fix_arg = "#ifndef %1\n%0\n#endif";
+    c_fix_arg = "^[ \t]*#[ \t]*define[ \t]+"
+                "((FLT|DBL)_(MIN|MAX|DIG))[ \t].*";
+    test_text = " #\tdefine\tDBL_DIG \t 0  /* somthin' */";
 };
 
 
@@ -763,10 +1571,12 @@ fix = {
  *  Delete the '#define void int' line from curses.h on Lynx
  */
 fix = {
-    hackname = lynx_void_int;
-    files    = curses.h;
-    select   = "#[ \t]*define[ \t]+void[ \t]+int";
-    sed      = "/#[ \t]*define[ \t][ \t]*void[ \t]int/d";
+    hackname  = lynx_void_int;
+    files     = curses.h;
+    select    = "#[ \t]*define[ \t]+void[ \t]+int[ \t]*";
+    c_fix     = format;
+    c_fix_arg = "";
+    test_text = "# define\tvoid\tint \t/* curses foiled again */";
 };
 
 
@@ -774,40 +1584,41 @@ fix = {
  *  Fix fcntl prototype in fcntl.h on LynxOS.
  */
 fix = {
-    hackname = lynxos_fcntl_proto;
-    files    = fcntl.h;
-    select   = 'fcntl.*\(int, int, int\)';
-    sed      = 's/\(fcntl.*(int, int, \)int)/\1...)/';
+    hackname  = lynxos_fcntl_proto;
+    files     = fcntl.h;
+    select    = "fcntl[ \t]*" '\(int, int, int\)';
+    c_fix     = format;
+    c_fix_arg = '%1...)';
+    c_fix_arg = "(fcntl[ \t]*" '\(int, int, )int\)';
+    test_text = "extern int fcntl(int, int, int);";
 };
 
 
 /*
  *  libm.a on m88k-motorola-sysv3 contains a stupid optimization for
  *  function hypot(), which returns the second argument without even
- *  looking at its value, if the other is 0.0.  Another drawback is
- *  that fix-header doesn't fix fabs' prototype, and I have no idea why.
+ *  looking at its value, if the other is 0.0.
  */
 fix = {
-    hackname = m88k_bad_hypot_opt;
-    mach     = "m88k-motorola-sysv3*";
-    files    = "math.h";
-
-    sed = "s/extern double floor(), ceil(), fmod(), fabs();/"
-            "extern double floor(), ceil(), fmod(), fabs _PARAMS((double));/";
-
-    sed = "/^extern double hypot();$/a\\\n"
-          "\\/* Workaround a stupid Motorola optimization if one\\\n"
-          "   of x or y is 0.0 and the other is negative!  *\\/\\\n"
-          "#ifdef __STDC__\\\n"
-          "static __inline__ double fake_hypot (double x, double y)\\\n"
-          "#else\\\n"
-          "static __inline__ double fake_hypot (x, y)\\\n"
-          "\tdouble x, y;\\\n"
-          "#endif\\\n"
-          "{\\\n"
-          "\treturn fabs (hypot (x, y));\\\n"
-          "}\\\n"
+    hackname  = m88k_bad_hypot_opt;
+    mach      = "m88k-motorola-sysv3*";
+    files     = "math.h";
+    select    = "^extern double hypot\\(\\);\n";
+    c_fix     = format;
+    c_fix_arg = "%0"
+          "/* Workaround a stupid Motorola optimization if one\n"
+          "   of x or y is 0.0 and the other is negative!  */\n"
+          "#ifdef __STDC__\n"
+          "static __inline__ double fake_hypot (double x, double y)\n"
+          "#else\n"
+          "static __inline__ double fake_hypot (x, y)\n"
+          "\tdouble x, y;\n"
+          "#endif\n"
+          "{\n"
+          "\treturn fabs (hypot (x, y));\n"
+          "}\n"
           "#define hypot\tfake_hypot\n";
+    test_text = "extern double hypot();";
 };
 
 
@@ -818,15 +1629,15 @@ fix = {
     hackname = m88k_bad_s_if;
     mach     = "m88k-*-sysv3*";
     files    = sys/stat.h;
-    select   = "#define[ \t]+S_IS[A-Z]*(m)[ \t]";
+    select   = "#define[ \t]+S_IS[A-Z]+\\(m\\)[ \t]+\\(m[ \t]*&";
 
-    sed = "s/^\\(#define[ \t]*S_IS[A-Z]*(m)\\)[ \t]*"
-            "(m[ \t]*&[ \t]*\\(S_IF[A-Z][A-Z][A-Z][A-Z]*\\)[ \t]*)/"
-            "\\1 (((m)\\&S_IFMT)==\\2)/";
-
-    sed = "s/^\\(#define[ \t]*S_IS[A-Z]*(m)\\)[ \t]*"
-            "(m[ \t]*&[ \t]*\\(0[0-9]*\\)[ \t]*)/"
-            "\\1 (((m)\\&S_IFMT)==\\2)/";
+    c_fix     = format;
+    c_fix_arg = '#define %1(m) (((m) & S_IFMT) == %2)';
+    c_fix_arg = "#define[ \t]+(S_IS[A-Z]+)\\(m\\)[ \t]+"
+                  "\\(m[ \t]*&[ \t]*"
+                    "(S_IF[A-Z][A-Z][A-Z]+|0[0-9]+)"
+                  "[ \t]*\\)";
+    test_text = '#define S_ISREG(m) (m & S_IFREG) /* is regular? */';
 };
 
 
@@ -839,105 +1650,41 @@ fix = {
     mach     = "m88k-tektronix-sysv3*";
     files    = "time.h";
     bypass   = "#ifndef";
-    shell    =
-      "echo Fixing $file, to protect against multiple inclusion. >&2
-      cpp_wrapper=`echo $file | sed -e 's,\\.,_,g' -e 's,/,_,g'`
-      echo \"#ifndef __GCC_GOT_${cpp_wrapper}_\"
-      echo \"#define __GCC_GOT_${cpp_wrapper}_\"
-      cat
-      echo \"#endif /* ! __GCC_GOT_${cpp_wrapper}_ */\"";
+    c_fix    = wrap;
+    test_text = "";
+};
+
+
+/*
+ * Fix BSD machine/ansi.h to use __builtin_va_list to define _BSD_VA_LIST_.
+ *
+ * On NetBSD, machine is a symbolic link to an architecture specific
+ * directory name, so we can't match a specific file name here.
+ */
+fix = {
+    hackname = machine_ansi_h_va_list;
+    select   = "define[ \t]+_BSD_VA_LIST_[ \t]";
+    bypass   = '__builtin_va_list';
+
+    c_fix     = format;
+    c_fix_arg = "%1__builtin_va_list";
+    c_fix_arg = "(define[ \t]+_BSD_VA_LIST_[ \t]+).*";
+
+    test_text = " # define _BSD_VA_LIST_\tchar**";
 };
 
 
 /*
  *  Fix non-ansi machine name defines
- *  File selection is split into two parts:  the shell version as
- *  a single patch, and the program version with each patch separate.
- *  Each is substantially faster for the particular environment.
- *  You have a dual maintenance problem here.
  */
 fix = {
-    hackname = machine_name;
-    /*
-     *  Select '#if.*' and '#elif" with possible non-ansi symbols
-     *  The only non-ansi symbols we know about start with one of:
-     *     MRS_bhimnprstuv
-     *  If any are added to the substitution list, then add it to
-     *  the selection list as well.  Hopefully we can avoid names
-     *  starting with "d" and "l", because this pattern would then
-     *  match "defined" and "lint" as well.  I suppose we could add
-     *  a "bypass = lint" if we had to though.
-     *
-     * The fixinc_eol stuff is to work around a bug in the sed
-     */
-    select = "^#[ \t]*(if|elif).*"
-             "[^a-zA-Z0-9_](_*[MSRrhim]|[Mbimnpstuv])[a-zA-Z0-9_]";
-    exesel = "^#[ \t]*(if|elif).*[^a-zA-Z0-9_]"
-             "("
-                  "M32"
-                 "|_*MIPSE[LB]"
-                 "|_*SYSTYPE_[A-Z0-9]"
-                 "|_*[Rr][34]000"
-                 "|_*host_mips"
-                 "|_*i386"
-                 "|_*mips"
-                 "|bsd4"
-                 "|is68k"
-                 "|m[68]8k"
-                 "|mc680"
-                 "|news"
-                 "|ns32000"
-                 "|pdp11"
-                 "|pyr"
-                 "|sel"
-                 "|sony_news"
-                 "|sparc"
-                 "|sun"
-                 "|tahoe"
-                 "|tower"
-                 "|u370"
-                 "|u3b"
-                 "|unix"
-                 "|vax"
-             ")";
+    hackname  = machine_name;
+    c_test    = machine_name;
+    c_fix     = machine_name;
 
-    sed =      ":loop\n"
-               '/\\\\$/'                       "N\n"
-               's/\\\\$/\\\\+++fixinc_eol+++/' "\n"
-               '/\\\\$/'                       "b loop\n"
-               's/\\\\+++fixinc_eol+++/\\\\/g' "\n"
-
-          "/#[\t ]*[el]*if/ {\n"
-                "\ts/[a-zA-Z0-9_][a-zA-Z0-9_]*/ & /g\n"
-
-                "\ts/ M32 / __M32__ /g\n"
-                "\ts/ _*MIPSE\\([LB]\\) / __MIPSE\\1__ /g\n"
-                "\ts/ _*SYSTYPE_\\([A-Z0-9]*\\) / __SYSTYPE_\\1__ /g\n"
-                "\ts/ _*\\([Rr][34]\\)000 / __\\1000__ /g\n"
-                "\ts/ _*host_mips / __host_mips__ /g\n"
-                "\ts/ _*i386 / __i386__ /g\n"
-                "\ts/ _*mips / __mips__ /g\n"
-                "\ts/ bsd4\\([0-9]\\) / __bsd4\\1__ /g\n"
-                "\ts/ is68k / __is68k__ /g\n"
-                "\ts/ m68k / __m68k__ /g\n"
-                "\ts/ m88k / __m88k__ /g\n"
-                "\ts/ mc680\\([0-9]\\)0 / __mc680\\10__ /g\n"
-                "\ts/ news\\([0-9]*\\) / __news\\1__ /g\n"
-                "\ts/ ns32000 / __ns32000__ /g\n"
-                "\ts/ pdp11 / __pdp11__ /g\n"
-                "\ts/ pyr / __pyr__ /g\n"
-                "\ts/ sel / __sel__ /g\n"
-                "\ts/ sony_news / __sony_news__ /g\n"
-                "\ts/ sparc / __sparc__ /g\n"
-                "\ts/ sun\\([a-z0-9]*\\) / __sun\\1__ /g\n"
-                "\ts/ tahoe / __tahoe__ /g\n"
-                "\ts/ tower\\([_0-9]*\\) / __tower\\1__ /g\n"
-                "\ts/ u370 / __u370__ /g\n"
-                "\ts/ u3b\\([0-9]*\\) / __u3b\\1__ /g\n"
-                "\ts/ unix / __unix__ /g\n"
-                "\ts/ vax / __vax__ /g\n"
-
-                "\ts/ \\([a-zA-Z0-9_][a-zA-Z0-9_]*\\) /\\1/g\n\t}";
+    test_text = "/* MACH_DIFF: */\n"
+    "#if defined( i386 ) || defined( sparc ) || defined( vax )"
+    "\n/* no uniform test, so be careful  :-) */";
 };
 
 
@@ -946,119 +1693,81 @@ fix = {
  *  the class exception defined in the C++ file std/stdexcept.h.  We
  *  redefine it to __math_exception.  This is not a great fix, but I
  *  haven't been able to think of anything better.
+ *  Note that we have to put the #ifdef/#endif blocks at beginning
+ *  and end of file, because fixproto runs after us and may insert
+ *  additional references to struct exception.
  */
 fix = {
-    hackname = math_exception;
-    files    = math.h;
-    select   = "struct exception";
-    sed      = "/struct exception/i\\\n"
-               "#ifdef __cplusplus\\\n"
-               "#define exception __math_exception\\\n"
-               "#endif\n";
-    sed      = "/struct exception/a\\\n"
-               "#ifdef __cplusplus\\\n"
-               "#undef exception\\\n"
-               "#endif\n";
+    hackname  = math_exception;
+    files     = math.h;
+    select    = "struct exception";
+    bypass    = 'We have a problem when using C\+\+';
+    c_fix     = wrap;
 
-    sed      = "/matherr/i\\\n"
-               "#ifdef __cplusplus\\\n"
-               "#define exception __math_exception\\\n"
-               "#endif\n";
+    c_fix_arg = "#ifdef __cplusplus\n"
+                "#define exception __math_exception\n"
+                "#endif\n";
 
-    sed      = "/matherr/a\\\n"
-               "#ifdef __cplusplus\\\n"
-               "#undef exception\\\n"
-               "#endif\n";
+    c_fix_arg = "#ifdef __cplusplus\n"
+                "#undef exception\n"
+                "#endif\n";
 
-#ifdef MATH_EXCEPTION_FIXED
-
-I think this patch needs some more thinking.
-This is from SVR4.2 (With '#' replaced with '@').
-Perhaps we could do without the "/matherr/a" entries?
-Can we bypass the entire fix if someone was astute
-enough to have '#ifdef __cplusplus' anywhere in the file?
-
-
-*** /usr/include/math.h Fri Apr  3 18:54:59 1998
---- math.h      Sun May  9 07:28:58 1999
-***************
-*** 25,31 ****
---- 25,37 ----
-  
-  @ifndef __cplusplus
-  
-+ @ifdef __cplusplus
-+ @define exception __math_exception
-+ @endif
-  struct exception
-+ @ifdef __cplusplus
-+ @undef exception
-+ @endif
-  {
-        int     type;
-        char    *name;
-***************
-*** 34,40 ****
---- 40,58 ----
-        double  retval;
-  };
-  
-+ @ifdef __cplusplus
-+ @define exception __math_exception
-+ @endif
-+ @ifdef __cplusplus
-+ @define exception __math_exception
-+ @endif
-  extern int    matherr(struct exception *);
-+ @ifdef __cplusplus
-+ @undef exception
-+ @endif
-+ @ifdef __cplusplus
-+ @undef exception
-+ @endif
-  
-  @endif /*__cplusplus*/
-#endif
+    test_text = "typedef struct exception t_math_exception;";
 };
 
 
 /*
- * In math.h, put #ifndefs around things that might be defined
- * in a gcc specific math-*.h file.
+ *  This looks pretty broken to me.  ``dbl_max_def'' will contain
+ *  "define DBL_MAX " at the start, when what we really want is just
+ *  the value portion.  Can't figure out how to write a test case
+ *  for this either  :-(
  */
 fix = {
-    hackname = math_gcc_ifndefs;
+    hackname = math_huge_val_from_dbl_max;
     files    = math.h;
+
+    /*
+     * IF HUGE_VAL is defined to be DBL_MAX *and* DBL_MAX is _not_ defined
+     * in math.h, this fix applies.
+     */
+    select   = "define[ \t]+HUGE_VAL[ \t]+DBL_MAX";
+    bypass   = "define[ \t]+DBL_MAX";
 
     shell    =
     /*
-     *  First see if we have a definition for DBL_MAX in float.h
+     *  See if we have a definition for DBL_MAX in float.h.
      *  If we do, we will replace the one in math.h with that one.
      */
 
-    /*
-     *  IF we have such a define *and* HUGE_VAL is defined to be DBL_MAX
-     *     *and* DBL_MAX is _not_ defined in the current file (math.h),
-     *  THEN replace the defined value of HUGE_VAL
-     *  ELSE just copy stdin to stdout so the main filter can process it
-     */
-
-    /*
-     *  Put conditional guards around the HUGE_VAL definition.
-     */
-
     "\tdbl_max_def=`egrep 'define[ \t]+DBL_MAX[ \t]+.*' float.h "
-                "2>/dev/null`\n\n"
+                   "| sed 's/.*DBL_MAX[ \t]*//' 2>/dev/null`\n\n"
 
-    "\tif ( test -n \"${dbl_max_def}\" \\\n"
-    "\t\t-a -n \"`egrep '#define[ \t]*HUGE_VAL[ \t]+DBL_MAX' $file`\" \\\n"
-    "\t\t-a -z \"`egrep '#define[ \t]+DBL_MAX[ \t]+' $file`\"\n"
-             "\t   ) > /dev/null 2>&1\n"
-    "\tthen sed -e '/define[ \t]HUGE_VAL[ \t]DBL_MAX/s/DBL_MAX/$dbl_max_def/'"
-    "\n\telse cat ; fi |\n"
+    "\tif ( test -n \"${dbl_max_def}\" ) > /dev/null 2>&1\n"
+    "\tthen sed -e '/define[ \t]*HUGE_VAL[ \t]*DBL_MAX/"
+			"s@DBL_MAX@'\"$dbl_max_def@\"\n"
+    "\telse cat\n"
+    "\tfi";
 
-    "\tsed -e '/define[ \t]HUGE_VAL[ \t]/i\\\n#ifndef HUGE_VAL\n' "
-          "-e '/define[ \t]HUGE_VAL[ \t]/a\\\n#endif\n'";
+    test_text =
+    "`echo '#define DBL_MAX\t3.1415e+9 /* really big */' >> float.h`\n"
+    "#define HUGE_VAL DBL_MAX";
+};
+
+
+/*
+ * In any case, put #ifndef .. #endif around #define HUGE_VAL in math.h.
+ */
+fix = {
+    hackname = math_huge_val_ifndef;
+    files    = math.h;
+    files    = math/math.h;
+    select   = "define[ \t]+HUGE_VAL";
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef HUGE_VAL\n%0\n#endif";
+    c_fix_arg = "^[ \t]*#[ \t]*define[ \t]+HUGE_VAL[ \t].*";
+
+    test_text = "# define\tHUGE_VAL 3.4e+40";
 };
 
 
@@ -1066,11 +1775,49 @@ fix = {
  *  nested comment
  */
 fix = {
-    hackname = nested_comment;
-    files    = rpc/rpc.h;
-    sed      = 's@^\(/\*.*rpc/auth_des.h>.*\)/\*@\1*/ /*@';
+    hackname  = nested_auth_des;
+    files     = rpc/rpc.h;
+    select    = '(/\*.*rpc/auth_des\.h>.*)/\*';
+    c_fix     = format;
+    c_fix_arg = "%1*/ /*";
+    test_text = "/*#include <rpc/auth_des.h> /* skip this */";
 };
 
+
+/*
+ * Fix nested comments in Motorola's <limits.h> and <sys/limits.h>
+ */
+fix = {
+    hackname = nested_motorola;
+    mach     = "m68k-motorola-sysv*";
+    files    = sys/limits.h;
+    files    = limits.h;
+    select   = "max # bytes atomic in write|error value returned by Math lib";
+
+    sed = "s@^\\(#undef[ \t][ \t]*PIPE_BUF[ \t]*"
+                   "/\\* max # bytes atomic in write to a\\)$@\\1 */@";
+    sed = "s@\\(/\\*#define\tHUGE_VAL\t3.[0-9e+]* \\)"
+          "\\(/\\*error value returned by Math lib\\*/\\)$@\\1*/ \\2@";
+
+    test_text =
+    "#undef PIPE_BUF /* max # bytes atomic in write to a\n"
+    "\t\t/* PIPE */\n"
+    "/*#define\tHUGE_VAL\t3.9e+9 /*error value returned by Math lib*/";
+};
+
+
+/*
+ * Fixing nested comments in ISC <sys/limits.h>
+ */
+fix = {
+    hackname = nested_sys_limits;
+    files  = sys/limits.h;
+    select = CHILD_MAX;
+    sed    = "/CHILD_MAX/s,/\\* Max, Max,";
+    sed    = "/OPEN_MAX/s,/\\* Max, Max,";
+    test_text = "/*\n#define CHILD_MAX 20 /* Max, Max, ... */ /*\n"
+                "#define OPEN_MAX  20 /* Max, Max, ... */\n";
+};
 
 /*
  *  fix bogus recursive stdlib.h in NEWS-OS 4.0C
@@ -1078,11 +1825,11 @@ fix = {
 fix = {
     hackname = news_os_recursion;
     files    = stdlib.h;
-    select   = "#include <stdlib.h>";
-    sed      = "/^#include <stdlib.h>/i\\\n"
-                    "#ifdef BOGUS_RECURSION\n";
-    sed      = "/^#include <stdlib.h>/a\\\n"
-                    "#endif\n";
+    select   = "[ \t]*#include <stdlib\\.h>.*";
+
+    c_fix     = format;
+    c_fix_arg = "#ifdef BOGUS_RECURSION\n%0\n#endif";
+    test_text = "#include <stdlib.h>";
 };
 
 
@@ -1091,32 +1838,32 @@ fix = {
  *  These conflict with the built-in functions.
  */
 fix = {
-    hackname = next_math_prefix;
-    files    = ansi/math.h;
-    select   = "^extern.*double.*__const__.*";
+    hackname  = next_math_prefix;
+    files     = ansi/math.h;
+    select    = "^extern[ \t]+double[ \t]+__const__[ \t]";
 
-    sed = "/^extern.*double.*__const__.*sqrt(/s/__const__//";
-    sed = "/^extern.*double.*__const__.*fabs(/s/__const__//";
-    sed = "/^extern.*double.*__const__.*cos(/s/__const__//";
-    sed = "/^extern.*double.*__const__.*hypot(/s/__const__//";
-    sed = "/^extern.*double.*__const__.*sin(/s/__const__//";
+    c_fix     = format;
+    c_fix_arg = "extern double %1(";
+    c_fix_arg = "^extern[ \t]+double[ \t]+__const__[ \t]+([a-z]+)\\(";
+
+    test_text = "extern\tdouble\t__const__\tmumble();";
 };
 
 
 /*
  *  NeXT 3.2 uses the word "template" as a parameter for some
  *  functions. GCC reports an invalid use of a reserved key word
- *  with the built-in functions. NeXT 3.2 includes the keyword
- *  volatile in the prototype for abort(). This conflicts with
- *  the built-in definition.
+ *  with the built-in functions.
  */
 fix = {
     hackname = next_template;
     files    = bsd/libc.h;
-    select   = template;
+    select   = "[ \t]template\\)";
 
-    sed = '/\(.*template\)/s/template//';
-    sed = "/extern.*volatile.*void.*abort/s/volatile//";
+    c_fix     = format;
+    c_fix_arg = "(%1)";
+    c_fix_arg = "\\(([^)]*)[ \t]template\\)";
+    test_text = "extern mumble( char * template); /* fix */";
 };
 
 
@@ -1127,10 +1874,13 @@ fix = {
 fix = {
     hackname = next_volitile;
     files    = ansi/stdlib.h;
-    select   = volatile;
+    select   = "^extern[ \t]+volatile[ \t]+void[ \t]";
 
-    sed    = "/extern.*volatile.*void.*exit/s/volatile//";
-    sed    = "/extern.*volatile.*void.*abort/s/volatile//";
+    c_fix     = format;
+    c_fix_arg = "extern void %1(";
+    c_fix_arg = "^extern[ \t]+volatile[ \t]+void[ \t]+(exit|abort)\\(";
+
+    test_text = "extern\tvolatile\tvoid\tabort();";
 };
 
 
@@ -1141,12 +1891,13 @@ fix = {
  *  conditional, so it doesn't need this fix.  So everything is okay.
  */
 fix = {
-    hackname = next_wait_union;
-    files    = sys/wait.h;
+    hackname  = next_wait_union;
+    files     = sys/wait.h;
 
-    select = 'wait\(union wait';
-
-    sed = "s@wait(union wait@wait(void@";
+    select    = 'wait\(union wait';
+    c_fix     = format;
+    c_fix_arg = "wait(void";
+    test_text = "extern pid_d wait(union wait*);";
 };
 
 
@@ -1154,9 +1905,12 @@ fix = {
  *  a missing semi-colon at the end of the nodeent structure definition.
  */
 fix = {
-    hackname = nodeent_syntax;
-    files    = netdnet/dnetdb.h;
-    sed      = "s/char.*na_addr *$/char *na_addr;/";
+    hackname  = nodeent_syntax;
+    files     = netdnet/dnetdb.h;
+    select    = "char[ \t]*\\*na_addr[ \t]*$";
+    c_fix     = format;
+    c_fix_arg = "%0;";
+    test_text = "char *na_addr\t";
 };
 
 
@@ -1174,23 +1928,33 @@ fix = {
     test     = " -n \"`grep '} regex_t;' reg_types.h`\"";
     test     = " -z \"`grep __regex_t regex.h`\"";
 
-    sed      = "s/regex_t/__regex_t/g";
-    sed      = "s/regoff_t/__regoff_t/g";
-    sed      = "s/regmatch_t/__regmatch_t/g";
+    c_fix     = format;
+    c_fix_arg = "__%0";
+    c_fix_arg = "reg(ex|off|match)_t";
+
+    test_text = "`touch sys/lc_core.h`"
+    "typedef struct {\n  int stuff, mo_suff;\n} regex_t;\n"
+    "extern regex_t    re;\n"
+    "extern regoff_t   ro;\n"
+    "extern regmatch_t rm;\n";
 };
 
 fix = {
-    hackname = osf_namespace_b;
+    hackname = osf_namespace_c;
     files    = regex.h;
     test     = " -r reg_types.h";
     test     = " -r sys/lc_core.h";
     test     = " -n \"`grep '} regex_t;' reg_types.h`\"";
     test     = " -z \"`grep __regex_t regex.h`\"";
 
-    sed      = "/#include <reg_types.h>/a\\\n"
-               "typedef __regex_t\tregex_t;\\\n"
-               "typedef __regoff_t\tregoff_t;\\\n"
-               "typedef __regmatch_t\tregmatch_t;\n";
+    select    = "#include <reg_types\.h>.*";
+    c_fix     = format;
+    c_fix_arg = "%0\n"
+                "typedef __regex_t\tregex_t;\n"
+                "typedef __regoff_t\tregoff_t;\n"
+                "typedef __regmatch_t\tregmatch_t;";
+
+    test_text = "#include <reg_types.h>";
 };
 
 
@@ -1200,37 +1964,43 @@ fix = {
  *  This is the default for all ANSI standard C++ compilers.
  */
 fix = {
-    hackname = pthread_page_size;
-    files    = pthread.h;
-    select   = "^int __page_size";
-    sed      = "s/^int __page_size/extern int __page_size/";
+    hackname  = pthread_page_size;
+    files     = pthread.h;
+    select    = "^int __page_size";
+    c_fix     = format;
+    c_fix_arg = "extern %0";
+    test_text = "int __page_size;";
 };
 
 
 /*
  *  Fix return type of fread and fwrite on sysV68
  */
-#ifdef LATER
 fix = {
     hackname = read_ret_type;
     files    = stdio.h;
-    sed      = "s/^\\(extern int\tfclose(), fflush()\\), "
-                 "\\(fread(), fwrite()\\)\\(.*\\)$"
-               "/extern unsigned int\t\\2;\\\n\\1\\3/";
+    select   = "extern int\t.*, fread\\(\\), fwrite\\(\\)";
+    c_fix     = format;
+    c_fix_arg = "extern unsigned int fread(), fwrite();\n%1%2";
+    c_fix_arg = "(extern int\t.*), fread\\(\\), fwrite\\(\\)(.*)";
+
+    test_text = "extern int\tfclose(), fflush(), fread(), fwrite(), foo();";
 };
-#endif
 
 
 /*
- *  function class(double x) conflicts with C++ keyword on rs/6000 
+ *  function class(double x) conflicts with C++ keyword on rs/6000
  */
 fix = {
-    hackname = rs6000_double;
-    files    = math.h;
-    select   = '[^a-zA-Z_]class\(';
-    
-    sed   = "/class[(]/i\\\n#ifndef __cplusplus\n";
-    sed   = "/class[(]/a\\\n#endif\n";
+    hackname  = rs6000_double;
+    files     = math.h;
+    select    = '[^a-zA-Z_]class\(';
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef __cplusplus\n%0\n#endif";
+    c_fix_arg = '^.*[^a-zA-Z_]class\(.*';
+
+    test_text = "extern int class();";
 };
 
 
@@ -1238,23 +2008,112 @@ fix = {
  *  Wrong fchmod prototype on RS/6000.
  */
 fix = {
-    hackname = rs6000_fchmod;
-    files    = sys/stat.h;
-    select   = 'fchmod\(char';
-    sed      = 's/fchmod(char \*/fchmod(int/';
+    hackname  = rs6000_fchmod;
+    files     = sys/stat.h;
+    select    = 'fchmod\(char \*';
+    c_fix     = format;
+    c_fix_arg = "fchmod(int";
+    test_text = "extern int fchmod(char *, mode_t);";
 };
 
 
 /*
- *  parameters conflict with C++ new on rs/6000 
+ *  parameters conflict with C++ new on rs/6000
  */
 fix = {
-    hackname = rs6000_param;
-    files  = "stdio.h";
-    files  = "unistd.h";
+    hackname  = rs6000_param;
+    files     = "stdio.h";
+    files     = "unistd.h";
 
-    sed = 's@rename(const char \*old, const char \*new)@'
-            'rename(const char *_old, const char *_new)@';
+    select    = 'rename\(const char \*old, const char \*new\)';
+    c_fix     = format;
+    c_fix_arg = 'rename(const char *_old, const char *_new)';
+
+    test_text = 'extern int rename(const char *old, const char *new);';
+};
+
+
+/*
+ *  The static functions lstat() and fchmod() in <sys/stat.h>
+ *  cause G++ grief since they're not wrapped in "if __cplusplus".
+ *
+ *  On SCO OpenServer 5.0.0 through (at least) 5.0.5 <sys/stat.h> contains
+ *  tiny static wrappers that aren't C++ safe.
+ */
+fix = {
+    hackname = sco_static_func;
+    files    = sys/stat.h;
+    mach     = "i?86-*-sco3.2*";
+    select   = "^static int";
+
+    sed      = "/^static int/i\\\n"
+               "#if __cplusplus\\\n"
+               "extern \"C\" {\\\n"
+               "#endif /* __cplusplus */";
+
+    sed      = "/^}$/a\\\n"
+               "#if __cplusplus\\\n"
+               " }\\\n"
+               "#endif /* __cplusplus */";
+
+    test_text =
+    "#ifdef __STDC__\n"
+    "static int\tstat(const char *__f, struct stat *__p) {\n"
+    "\treturn __stat32(__f, __p);\n"
+    "}\n\n#  else /* !__STDC__ */\n"
+
+    "static int\tstat(__f, __p)\n"
+    "\tchar *__f;\n"
+    "\tstruct stat *__p;\n"
+    "{\n"
+    "\treturn __stat32(__f, __p);\n"
+    "}\n"
+    "#endif";
+};
+
+
+/*
+ *  Fix prototype declaration of utime in sys/times.h.
+ *  In 3.2v4.0 the const is missing.
+ */
+fix = {
+    hackname  = sco_utime;
+    files     = sys/times.h;
+    mach      = "i?86-*-sco3.2v4*";
+
+    select    = '\(const char \*, struct utimbuf \*\);';
+    c_fix     = format;
+    c_fix_arg = '(const char *, const struct utimbuf *);';
+
+    test_text = "extern int utime(const char *, struct utimbuf *);";
+};
+
+
+/*
+ * Sun Solaris defines PTHREAD_MUTEX_INITIALIZER with a trailing
+ * "0" for the last field of the pthread_mutex_t structure, which is
+ * of type upad64_t, which itself is typedef'd to int64_t, but with
+ * __STDC__ defined (e.g. by -ansi) it is a union. So change the
+ * initializer to "{0}" instead
+ */
+fix = {
+    hackname = solaris_mutex_init;
+    select = '@\(#\)pthread.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
+    files = pthread.h;
+    c_fix = format;
+    c_fix_arg = "#if __STDC__ - 0 == 0 && !defined(_NO_LONGLONG)\n"
+                "%0\n"
+                "#else\n"
+                "%1, {0}}%3\n"
+                "#endif";
+    c_fix_arg = "(^#define[ \t]+PTHREAD_(MUTEX|COND)_INITIALIZER[ \t]+{.*)"
+                ",[ \t]*0}" "(|[ \t].*)$";
+    test_text =
+    '#ident "@(#)pthread.h  1.26  98/04/12 SMI"'"\n"
+    "#define PTHREAD_MUTEX_INITIALIZER\t{{{0},0}, {{{0}}}, 0}\n"
+    "#define PTHREAD_COND_INITIALIZER\t{{{0}, 0}, 0}\t/* DEFAULTCV */\n"
+    "#define PTHREAD_RWLOCK_INITIALIZER\t"
+             "{0, 0, 0, {0, 0, 0}, {0, 0}, {0, 0}}";
 };
 
 
@@ -1271,16 +2130,6 @@ fix = {
 };
 #endif
 
-/*
- *  Incorrect #include in Sony News-OS 3.2.
- */
-fix = {
-    hackname = sony_include;
-    files    = machine/machparam.h;
-    select   = '"\.\./machine/endian.h"';
-    sed      = 's@"../machine/endian.h"@<machine/endian.h>@';
-};
-
 
 /*
  *  Sony NEWSOS 5.0 does not support the complete ANSI C standard.
@@ -1296,6 +2145,7 @@ fix = {
                "s/__iob/_iob/g";
 };
 #endif
+
 
 /*
  *  Add a `static' declaration of `getrnge' into <regexp.h>.
@@ -1315,89 +2165,220 @@ fix = {
 };
 #endif
 
+
 /*
  *  a missing semi-colon at the end of the statsswtch structure definition.
  */
 fix = {
-    hackname = statsswtch;
-    files    = rpcsvc/rstat.h;
-    select   = "boottime$";
-    sed      = "s/boottime$/boottime;/";
+    hackname  = statsswtch;
+    files     = rpcsvc/rstat.h;
+    select    = "boottime$";
+    c_fix     = format;
+    c_fix_arg = "boottime;";
+    test_text = "struct statswtch {\n  int boottime\n};";
+};
+
+
+/*
+ *  Arrange for stdio.h to use stdarg.h to define __gnuc_va_list.
+ *  On 4BSD-derived systems, stdio.h defers to machine/ansi.h; that's
+ *  OK too.
+ */
+fix = {
+    hackname = stdio_stdarg_h;
+    files    = stdio.h;
+    bypass   = "include.*(stdarg\.h|machine/ansi\.h)";
+
+    c_fix     = wrap;
+
+    c_fix_arg = "#define __need___va_list\n#include <stdarg.h>\n";
+
+    test_text = "";
 };
 
 
 /*
  *  Don't use or define the name va_list in stdio.h.
  *  This is for ANSI and also to interoperate properly with gcc's varargs.h.
- *  Arrange for stdio.h to use stdarg.h to define __gnuc_va_list
+ *  Note _BSD_VA_LIST_ is dealt with elsewhere.
  */
 fix = {
     hackname = stdio_va_list;
     files    = stdio.h;
+    bypass   = '__gnuc_va_list|_BSD_VA_LIST_|__DJ_va_list';
 
     /*
      * Use __gnuc_va_list in arg types in place of va_list.
-     * On 386BSD use __gnuc_va_list instead of _VA_LIST_.  We're hoping the
+     * On 386BSD use __gnuc_va_list instead of _VA_LIST_.  On Tru64 UNIX V5.1A
+     * use __gnuc_va_list instead of __VA_LIST__.  We're hoping the
      * trailing parentheses and semicolon save all other systems from this.
-     * Define __va_list__ (something harmless and unused) instead of va_list.
+     * Define __not_va_list__ (something harmless and unused)
+     * instead of va_list.
      * Don't claim to have defined va_list.
      */
-    shell =
- "if ( egrep \"__need___va_list\" $file ) > /dev/null 2>&1 ; then
-    :
-  else
-    echo \"#define __need___va_list\"
-    echo \"#include <stdarg.h>\"
-  fi
-
-  sed -e 's@ va_list @ __gnuc_va_list @' \\
-      -e 's@ va_list)@ __gnuc_va_list)@' \\
-      -e 's@ _BSD_VA_LIST_));@ __gnuc_va_list));@' \\
-      -e 's@ _VA_LIST_));@ __gnuc_va_list));@' \\
-      -e 's@ va_list@ __va_list__@' \\
-      -e 's@\\*va_list@*__va_list__@' \\
-      -e 's@ __va_list)@ __gnuc_va_list)@' \\
-      -e 's@GNUC_VA_LIST@GNUC_Va_LIST@' \\
-      -e 's@_NEED___VA_LIST@_NEED___Va_LIST@' \\
-      -e 's@VA_LIST@DUMMY_VA_LIST@' \\
-      -e 's@_Va_LIST@_VA_LIST@'";
+    sed = "s@ va_list @ __gnuc_va_list @\n"
+          "s@ va_list)@ __gnuc_va_list)@\n"
+          "s@ _VA_LIST_));@ __gnuc_va_list));@\n"
+          "s@ __VA_LIST__));@ __gnuc_va_list));@\n"
+          "s@ va_list@ __not_va_list__@\n"
+          "s@\\*va_list@*__not_va_list__@\n"
+          "s@ __va_list)@ __gnuc_va_list)@\n"
+          "s@typedef[ \t]\\(.*\\)[ \t]va_list[ \t]*;"
+           "@typedef \\1 __not_va_list__;@\n"
+          "s@GNUC_VA_LIST@GNUC_Va_LIST@\n"
+          "s@_NEED___VA_LIST@_NEED___Va_LIST@\n"
+          "s@VA_LIST@DUMMY_VA_LIST@\n"
+          "s@_Va_LIST@_VA_LIST@";
+    test_text = "extern void mumble( va_list);";
 };
 
 
 /*
- *  Check for strict ansi compliance
+ *  "!__STDC__" or "__STDC__==0" or "__STDC__!=1" or "__STDC__-0==0"
+ *  is "!defined( __STRICT_ANSI__ )"
  */
-#ifdef STRICT_ANSI
 fix = {
-    hackname = strict_ansi;
-    select   = "__STDC__[ \t]*[=!]=[ \t]*[01]";
-    sed      = "s/__STDC__[ \t]*==[ \t]*0/!defined (__STRICT_ANSI__)/g";
-    sed      = "s/__STDC__[ \t]*!=[ \t]*0/defined (__STRICT_ANSI__)/g";
-    sed      = "s/__STDC__[ \t]*==[ \t]*1/defined (__STRICT_ANSI__)/g";
-    sed      = "s/__STDC__[ \t]*!=[ \t]*1/!defined (__STRICT_ANSI__)/g";
+    hackname = strict_ansi_not;
+    select   = "^([ \t]*#[ \t]*if.*)"
+               "(!__STDC__"
+               "|__STDC__[ \t]*==[ \t]*0"
+               "|__STDC__[ \t]*!=[ \t]*1"
+               "|__STDC__[ \t]*-[ \t]*0[ \t]*==[ \t]*0)";
+    c_test   = stdc_0_in_system_headers;
+
+    c_fix     = format;
+    c_fix_arg = "%1 !defined(__STRICT_ANSI__)";
+
+    test_text = "#if !__STDC__ \n"
+                "#if __STDC__ == 0\n"
+                "#if __STDC__ != 1\n"
+                "#if __STDC__ - 0 == 0"
+               "/* not std C */\nint foo;\n"
+               "\n#end-end-end-end-if :-)";
 };
-#endif
+
+/*
+ *  "__STDC__-0==0"
+ *  is "!defined( __STRICT_ANSI__ )" on continued #if-s
+ */
+fix = {
+    hackname = strict_ansi_not_ctd;
+    files    = math.h, limits.h, stdio.h, signal.h,
+               stdlib.h, sys/signal.h, time.h;
+    /*
+     * Starting at the beginning of a line, skip white space and
+     * a leading "(" or "&&" or "||".  One of those must be found.
+     * Then, zero, one or more copies of a "defined(_FOO_BAR_) &&"
+     * expression.  If these are nested, then they must accumulate
+     * because we won't match any closing parentheses.  Finally,
+     * after skipping over all that, we must then match our suspect
+     * phrase:  "__STDC__-0==0" with or without white space.
+     */
+    select   = "^([ \t]*" '(\(|&&|\|\|)'
+               "([ \t(]*!*[ \t]*defined\\([a-zA-Z_0-9]+\\)[ \t]*[|&][|&])*"
+               "[ \t(]*)"
+               "(__STDC__[ \t]*(|-[ \t]*0[ \t]*)==[ \t]*0)";
+    c_test   = stdc_0_in_system_headers;
+
+    c_fix     = format;
+    c_fix_arg = "%1 !defined(__STRICT_ANSI__)";
+
+    test_text = "#if 1 && \\\\\n"
+               "&& defined(mumbling) |& (__STDC__ - 0 == 0) \\\\\n"
+               "( __STDC__ == 0 && !defined(_XOPEN_SOURCE) \\\\\n"
+               "|| __STDC__ - 0 == 0 ) /* not std C */\n"
+               "int foo;\n#endif";
+};
+
+
+/*
+ *  "__STDC__!=0" or "__STDC__==1" or "__STDC__-0==1"
+ *  is "defined( __STRICT_ANSI__ )"
+ */
+fix = {
+    hackname = strict_ansi_only;
+    select   = "^([ \t]*#[ \t]*if.*)"
+               "(__STDC__[ \t]*!=[ \t]*0"
+               "|__STDC__[ \t]*==[ \t]*1"
+               "|__STDC__[ \t]*-[ \t]*0[ \t]*==[ \t]*1"
+               "|__STDC__[ \t]*-[ \t]*0[ \t]*!=[ \t]*0)";
+    c_test   = stdc_0_in_system_headers;
+
+    c_fix     = format;
+    c_fix_arg = "%1 defined(__STRICT_ANSI__)";
+
+    test_text = "#if __STDC__ == 1 /* is std C\n */\nint foo;\n#endif";
+};
+
+
+/*
+ *  IRIX 4.0.5 <rpc/xdr.h> uses struct __file_s
+ *  in prototype without previous definition.
+ */
+fix = {
+    hackname  = struct_file;
+    files     = rpc/xdr.h;
+    select    = '^.*xdrstdio_create.*struct __file_s';
+    c_fix     = format;
+    c_fix_arg = "struct __file_s;\n%0";
+    test_text = "extern void xdrstdio_create( struct __file_s* );";
+};
+
+
+/*
+ *  IRIX 4.0.5 <rpc/auth.h> uses struct sockaddr
+ *  in prototype without previous definition.
+ */
+fix = {
+    hackname  = struct_sockaddr;
+    files     = rpc/auth.h;
+    select    = "^.*authdes_create.*struct sockaddr";
+    bypass    = "<sys/socket\.h>";
+    c_fix     = format;
+    c_fix_arg = "struct sockaddr;\n%0";
+    test_text = "extern AUTH* authdes_create( struct sockaddr* );";
+};
+
+
+/*
+ *  Apply fix this to all OSs since this problem seems to effect
+ *  more than just SunOS.
+ */
+fix = {
+    hackname = sun_auth_proto;
+    files    = rpc/auth.h;
+    files    = rpc/clnt.h;
+    files    = rpc/svc.h;
+    files    = rpc/xdr.h;
+    /*
+     *  Select those files containing '(*name)()'.
+     */
+    select    = '\(\*[a-z][a-z_]*\)\(\)';
+
+    c_fix     = format;
+    c_fix_arg = "#ifdef __cplusplus\n%1(...);%2\n"
+                "#else\n%1();%2\n#endif";
+    c_fix_arg = '(.*\(\*[a-z][a-z_]*\))\(\);(.*)';
+
+    test_text =
+    "struct auth_t {\n"
+    "    int (*name)(); /* C++ bad */\n"
+    "};";
+};
+
 
 /*
  *  Fix bogus #ifdef on SunOS 4.1.
  */
 fix = {
-    hackname = sun_bogus_ifdef;
-    files  = "hsfs/hsfs_spec.h";
-    files  = "hsfs/iso_spec.h";
-    select = '#ifdef __i386__ || __vax__';
-    sed    = "s/\\#ifdef __i386__ || __vax__/\\#if __i386__ || __vax__/g";
-};
+    hackname  = sun_bogus_ifdef;
+    files     = "hsfs/hsfs_spec.h";
+    files     = "hsfs/iso_spec.h";
+    select    = '#ifdef(.*\|\|.*)';
+    c_fix     = format;
+    c_fix_arg = "#if%1";
 
-
-/*
- *  Fix bogus #ifdef on SunOS 4.1.
- */
-fix = {
-    hackname = sun_bogus_ifdef_sun4c;
-    files  = "hsfs/hsnode.h";
-    select = '#ifdef __i386__ || __sun4c__';
-    sed    = "s/\\#ifdef __i386__ || __sun4c__/\\#if __i386__ || __sun4c__/g";
+    test_text = "#ifdef  __i386__ || __vax__ || __sun4c__";
 };
 
 
@@ -1405,16 +2386,18 @@ fix = {
  *  Fix the CAT macro in SunOS memvar.h.
  */
 fix = {
-    hackname = sun_catmacro;
-    files  = pixrect/memvar.h;
-    select = "^#define[ \t]+CAT\\(a,b\\)";
-    sed    = "/^#define[ \t]CAT(a,b)/ i\\\n"
-                 "#ifdef __STDC__ \\\n"
-                 "#define CAT(a,b) a##b\\\n"
-                 "#else\n";
+    hackname  = sun_catmacro;
+    files     = pixrect/memvar.h;
+    select    = "^#define[ \t]+CAT\\(a,b\\).*";
+    c_fix     = format;
 
-    sed    = "/^#define[ \t]CAT(a,b)/ a\\\n"
-                 "#endif\n";
+    c_fix_arg =
+    "#ifdef __STDC__\n"
+    "#  define CAT(a,b) a##b\n"
+    "#else\n%0\n#endif";
+
+    test_text =
+    "#define CAT(a,b)\ta/**/b";
 };
 
 
@@ -1430,41 +2413,14 @@ fix = {
     sed   = "s/int[ \t][ \t]*free/void\tfree/g";
     sed   = "s/char\\([ \t]*\\*[ \t]*malloc\\)/void\\1/g";
     sed   = "s/char\\([ \t]*\\*[ \t]*realloc\\)/void\\1/g";
-};
+    sed   = "s/char\\([ \t]*\\*[ \t]*calloc\\)/void\\1/g";
 
-
-/*
- *  Fix non-ANSI memcpy declaration that conflicts with gcc's builtin
- *  declaration on Sun OS 4.x.  We must only fix this on Sun OS 4.x, because
- *  many other systems have similar text but correct versions of the file.
- *  To ensure only Sun's is fixed, we grep for a likely unique string.
- *  Fix also on sysV68 R3V7.1 (head/memory.h\t50.1\t )
- */
-fix = {
-    hackname = sun_memcpy;
-    files    = memory.h;
-    select = "/\\*\t@\\(#\\)"
-             "(head/memory.h\t50.1\t "
-             "|memory\\.h 1\\.[2-4] 8./../.. SMI; from S5R2 1\\.2\t)\\*/";
-
-    sed    = "1i\\\n/* This file was generated by fixincludes */\\\n"
-             "#ifndef __memory_h__\\\n"
-             "#define __memory_h__\\\n\\\n"
-             "#ifdef __STDC__\\\n"
-             "extern void *memccpy();\\\n"
-             "extern void *memchr();\\\n"
-             "extern void *memcpy();\\\n"
-             "extern void *memset();\\\n"
-             "#else\\\n"
-             "extern char *memccpy();\\\n"
-             "extern char *memchr();\\\n"
-             "extern char *memcpy();\\\n"
-             "extern char *memset();\\\n"
-             "#endif /* __STDC__ */\\\n\\\n"
-             "extern int memcmp();\\\n\\\n"
-             "#endif /* __memory_h__ */\n";
-
-    sed    = "1,$d";
+    test_text =
+    "typedef char *\tmalloc_t;\n"
+    "int \tfree();\n"
+    "char*\tmalloc();\n"
+    "char*\tcalloc();\n"
+    "char*\trealloc();";
 };
 
 
@@ -1476,6 +2432,7 @@ fix = {
     files    = rpcsvc/rusers.h;
     select   = "_cnt$";
     sed      = "/^struct/,/^};/s/_cnt$/_cnt;/";
+    test_text = "struct mumble\n  int _cnt\n};";
 };
 
 
@@ -1487,42 +2444,15 @@ fix = {
     hackname = sun_signal;
     files    = sys/signal.h;
     files    = signal.h;
-    select   = "^void\t" '\(\*signal\(\)\)\(\);';
+    select   = "^void\t" '\(\*signal\(\)\)\(\);.*';
 
-    sed = "/^void\t" '(\*signal())();$/i'  "\\\n"
-          "#ifdef __cplusplus"             "\\\n"
-          "void\t(*signal(...))(...);"     "\\\n"
-          "#else"                          "\n";
+    c_fix     = format;
+    c_fix_arg =
+          "#ifdef __cplusplus\n"
+          "void\t(*signal(...))(...);\n"
+          "#else\n%0\n#endif";
 
-    sed = "/^void\t" '(\*signal())();$/a'  "\\\n"
-          '#endif'                         "\n";
-};
-
-
-/*
- *  Apply fix this to all OSs since this problem seems to effect
- *  more than just SunOS.  In general, fixes which are triggered
- *  by a specific target are bad.
- */
-fix = {
-    hackname = sun_auth_proto;
-    files    = rpc/auth.h;
-    files    = rpc/clnt.h;
-    files    = rpc/svc.h;
-    files    = rpc/xdr.h;
-    /*
-     *  Select those files containing '(*name)()'.
-     */
-    select   = '\(\*[a-z][a-z_]*\)\(\)';
-    sed      = 's'
-                '/^\(.*(\*[a-z][a-z_]*)(\)'      '\();.*\)'
-                "/\\\n"
-                    "#ifdef __cplusplus\\\n"
-                    '\1...\2' "\\\n"
-                    "#else\\\n"
-                    '\1\2' "\\\n"
-                    "#endif"
-                "/";
+    test_text = "void\t(*signal())();";
 };
 
 
@@ -1531,14 +2461,17 @@ fix = {
  *  of struct exception, so the prototype (added by fixproto) causes havoc.
  */
 fix = {
-    hackname = sunos_matherr_decl;
-    files    = math.h;
-    /*
-     *  Once a declaration for 'struct exception' is found,
-     *  stop trying to insert a forward reference for it.
-     */
-    sed = "/^struct exception/,$b";
-    sed = "/matherr/i\\\nstruct exception;\n";
+    hackname  = sunos_matherr_decl;
+    files     = math.h;
+
+    /*  If matherr has a prototype already, the header needs no fix.  */
+    bypass    = 'matherr.*(struct exception|__MATH_EXCEPTION)';
+    select    = matherr;
+
+    c_fix     = wrap;
+    c_fix_arg = "struct exception;\n";
+
+    test_text = "extern int matherr();";
 };
 
 
@@ -1548,7 +2481,10 @@ fix = {
 fix = {
     hackname = sunos_strlen;
     files    = strings.h;
-    sed = "s/int[ \t]*strlen();/__SIZE_TYPE__ strlen();/";
+    select   = "int[ \t]*strlen\\(\\);(.*)";
+    c_fix     = format;
+    c_fix_arg = "__SIZE_TYPE__ strlen();%1";
+    test_text = " int\tstrlen(); /* string length */";
 };
 
 
@@ -1557,16 +2493,17 @@ fix = {
  *  which conflicts with the fixproto definition.  The fixproto
  *  definition and the Solaris definition are used the same way.
  */
-#ifdef SVR4
 fix = {
     hackname = svr4__p;
     files    = math.h;
     files    = floatingpoint.h;
-    select   = "^#define[ \t]*__P";
-    sed      = "/^#define[ \t]*__P/i\\\n#ifndef __P\n";
-    sed      = "/^#define[ \t]*__P/a\\\n#endif\n";
+    select   = "^#define[ \t]+__P.*";
+    c_fix     = format;
+    c_fix_arg = "#ifndef __P\n%0\n#endif";
+
+    test_text = "#define __P(a) a";
 };
-#endif
+
 
 /*
  *  Disable apparent native compiler optimization cruft in SVR4.2 <string.h>
@@ -1582,13 +2519,23 @@ fix = {
 };
 #endif
 
+
 /*
  *  Conditionalize some of <sys/endian.h> on __GNUC__ and __GNUG__.
+ *  On some systems (UnixWare 2, UnixWare 7), the file is byteorder.h
+ *  but we still "hijack" it and redirect it to the GNU byteorder.h..
  */
-#ifdef SVR4
+#ifdef SVR5
 fix = {
     hackname = svr4_endian;
     files    = sys/endian.h;
+#ifdef LATER
+    /*
+     * since we emit our own sys/byteorder.h,
+     * this fix can never be applied to that file.
+     */
+    files    = sys/byteorder.h;
+#endif
     bypass   = '__GNUC__';
 
     sed      = "/#\tifdef\t__STDC__/i\\\n"
@@ -1599,7 +2546,8 @@ fix = {
     sed      = "/#   include\t<sys\\/byteorder.h>/i\\\n"
                "#   endif /* !defined (__GNUC__) && !defined (__GNUG__) */\n";
 };
-#endif
+#endif /* SVR5 */
+
 
 /*
  *  Remove useless extern keyword from struct forward declarations
@@ -1667,16 +2615,19 @@ fix = {
 /*
  *   Fix broken decl of getcwd present on some svr4 systems.
  */
-#ifdef SVR4
 fix = {
     hackname = svr4_getcwd;
     files    = stdlib.h;
     files    = unistd.h;
+    files    = prototypes.h;
     select   = 'getcwd\(char \*, int\)';
 
-    sed = 's/getcwd(char \*, int)/getcwd(char *, size_t)/';
+    c_fix     = format;
+    c_fix_arg = "getcwd(char *, size_t)";
+
+    test_text = "extern char* getcwd(char *, int);";
 };
-#endif
+
 
 /*
  *  set ifdef _KERNEL
@@ -1693,8 +2644,11 @@ fix = {
     files    = sys/cmn_err.h;
     files    = sys/kdebugger.h;
     bypass   = '_KERNEL';
-    sed      = "1i\\\n#ifdef _KERNEL";
-    sed      = "$a\\\n#endif /* _KERNEL */";
+    c_fix     = wrap;
+
+    c_fix_arg = "#ifdef _KERNEL\n";
+    c_fix_arg = "#endif /* _KERNEL */\n";
+    test_text = "";
 };
 #endif
 
@@ -1714,33 +2668,23 @@ fix = {
 };
 #endif
 
+
 /*
  *  Fix declarations of `makedev', `major', and `minor' in <sys/mkdev.h>.
+ *  They are declared as non-static then immediately redeclared as static.
  */
-#ifdef SVR4
+#ifdef SVR5
 fix = {
     hackname = svr4_mkdev;
     files    = sys/mkdev.h;
+    select   = '^static';
 
-    sed      = "/^dev_t makedev(const/c\\\n"
-               "static dev_t makedev(const major_t, const minor_t);";
-
-    sed      = "/^dev_t makedev()/c\\\n"
-               "static dev_t makedev();";
-
-    sed      = "/^major_t major(const/c\\\n"
-               "static major_t major(const dev_t);";
-
-    sed      = "/^major_t major()/c\\\n"
-               "static major_t major();";
-
-    sed      = "/^minor_t minor(const/c\\\n"
-               "static minor_t minor(const dev_t);";
-
-    sed      = "/^minor_t minor()/c\\\n"
-               "static minor_t minor();";
+    sed      = "/^dev_t makedev(/s/^/static /";
+    sed      = "/^major_t major(/s/^/static /";
+    sed      = "/^minor_t minor(/s/^/static /";
 };
-#endif
+#endif /* SVR5 */
+
 
 /*
  *  Fix reference to NC_NPI_RAW in <sys/netcspace.h>.
@@ -1768,45 +2712,24 @@ fix = {
 };
 #endif
 
-/*
- *  Completely replace <sys/varargs.h> with a file that includes gcc's
- *  stdarg.h or varargs.h files as appropriate.
- */
-#ifdef SVR4
-fix = {
-    hackname = svr4_no_varargs;
-    files    = sys/varargs.h;
-    shell    = "cat > /dev/null\n"
-               "cat << _EOF_\n"
-               "/* This file was generated by fixincludes.  */\n"
-               "#ifndef _SYS_VARARGS_H\n"
-               "#define _SYS_VARARGS_H\n\n"
-
-               "#ifdef __STDC__\n"
-               "#include <stdarg.h>\n"
-               "#else\n"
-               "#include <varargs.h>\n"
-               "#endif\n\n"
-
-               "#endif  /* _SYS_VARARGS_H */\n"
-               "_EOF_";
-};
-#endif
 
 /*
  *   Fix broken decl of profil present on some svr4 systems.
  */
-#ifdef SVR4
 fix = {
     hackname = svr4_profil;
     files    = stdlib.h;
     files    = unistd.h;
 
-    sed = 's/profil(unsigned short \*, unsigned int, '
-                         'unsigned int, unsigned int)'
-           '/profil(unsigned short *, size_t, int, unsigned)/';
+    select    =
+    'profil\(unsigned short \*, unsigned int, unsigned int, unsigned int\)';
+    c_fix     = format;
+    c_fix_arg = 'profil(unsigned short *, size_t, int, unsigned int)';
+
+    test_text =
+    'profil(unsigned short *, unsigned int, unsigned int, unsigned int);';
 };
-#endif
+
 
 /*
  *  Convert functions to prototype form, and fix arg names in <sys/stat.h>.
@@ -1888,6 +2811,21 @@ fix = {
 };
 #endif
 
+
+/*
+ *  Like svr4_mach_defines, but with newfangled syntax.
+ *  Source lines are of #define __i386 #machine(i386).   Delete them.
+ */
+#ifdef SVR5
+fix = {
+    hackname = svr5_mach_defines;
+    files    = ieeefp.h;
+    select   = "#define[ \t]*__i386.*\(i386\)";
+    sed      = "/#define[ \t]*__i386.*/d";
+};
+#endif /*  SVR5 */
+
+
 /*
  *  Fix return value of mem{ccpy,chr,cpy,set} and str{len,spn,cspn}
  *  in string.h on sysV68
@@ -1897,72 +2835,60 @@ fix = {
  *  On sysV88 layout is slightly different.
  */
 fix = {
-    hackname = systypes;
-    files  = "sys/types.h";
-    files  = "stdlib.h";
-    files  = "sys/stdtypes.h";
-    files  = "stddef.h";
-    files  = "memory.h";
-    files  = "unistd.h";
-    select = "typedef[ \t]+[a-z_][ \ta-z_]*[ \t]"
-             "(size|ptrdiff|wchar)_t";
+    hackname = sysv68_string;
+    files    = testing.h;
+    files    = string.h;
 
-      sed  = "/^[ \t]*\\*[ \t]*typedef unsigned int size_t;/N";
+    sed = "s/extern[ \t]*int[ \t]*strlen();/extern unsigned int strlen();/";
+    sed = "s/extern[ \t]*int[ \t]*ffs[ \t]*(long);/extern int ffs(int);/";
+    sed = "s/strdup(char \\*s1);/strdup(const char *s1);/";
 
-      sed  = "s/^\\([ \t]*\\*[ \t]*typedef unsigned int size_t;\\n"
-               "[ \t]*\\*\\/\\)/\\1\\\n"
-             "#ifndef __SIZE_TYPE__\\\n"
-             "#define __SIZE_TYPE__ long unsigned int\\\n"
-             "#endif\\\n"
-             "typedef __SIZE_TYPE__ size_t;\\\n/";
+    sed = "/^extern char$/N";
+    sed = "s/^extern char\\(\\n\t\\*memccpy(),\\)$/extern void\\1/";
 
-      sed  = "/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]size_t/i\\\n"
-                   "#ifndef __SIZE_TYPE__\\\n"
-                   "#define __SIZE_TYPE__ long unsigned int\\\n"
-                   "#endif\n";
+    sed = "/^extern int$/N";
+    sed = "s/^extern int\\(\\n\tstrlen(),\\)/extern size_t\\1/";
 
-      sed  = "s/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]size_t/"
-               "typedef __SIZE_TYPE__ size_t/";
+    sed = "/^\tstrncmp(),$/N";
+    sed = 's/^\(' "\t" 'strncmp()\),\n\(' "\t" 'strlen(),\)$/'
+            '\1;' "\\\nextern unsigned int\\\n\\2/";
 
-      sed  = "/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]ptrdiff_t/i\\\n"
-                   "#ifndef __PTRDIFF_TYPE__\\\n"
-                   "#define __PTRDIFF_TYPE__ long int\\\n"
-                   "#endif\n";
+    test_text =
+    "extern int strlen();\n"
 
-      sed  = "s/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]ptrdiff_t/"
-               "typedef __PTRDIFF_TYPE__ ptrdiff_t/";
+    "extern int ffs(long);\n"
 
-      sed  = "/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]wchar_t/i\\\n"
-                   "#ifndef __WCHAR_TYPE__\\\n"
-                   "#define __WCHAR_TYPE__ int\\\n"
-                   "#endif\\\n"
-                   "#ifndef __cplusplus\n";
+    "extern char\n"
+    "\t*memccpy(),\n"
+    "\tmemcpy();\n"
 
-      sed  = "/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]wchar_t/a\\\n"
-                   "#endif\n";
+    "extern int\n"
+    "\tstrcmp(),\n"
+    "\tstrncmp(),\n"
+    "\tstrlen(),\n"
+    "\tstrspn();\n"
 
-      sed  = "s/typedef[ \t][ \t]*[a-z_][ \ta-z_]*[ \t]wchar_t/"
-               "typedef __WCHAR_TYPE__ wchar_t/";
+    "extern int\n"
+    "\tstrlen(), strspn();";
 };
 
 
 /*
- *  Fix return type of exit and abort in <stdlib.h> on SunOS 4.1.
- *  Also wrap protection around size_t for m88k-sysv3 systems.
- *  We use a funny name to ensure it follows 'systypes' fix.
+ *  Fix return type of calloc, malloc, realloc, bsearch and exit
  */
 fix = {
-    hackname = systypes_for_aix;
-    files    = sys/types.h;
-    select   = "typedef[ \t][ \t]*[A-Za-z_][ \tA-Za-z_]*[ \t]size_t";
-    bypass   = "_GCC_SIZE_T";
+    hackname = sysz_stdlib_for_sun;
+    files    = stdlib.h;
 
-    sed    = "/typedef[ \t][ \t]*[A-Za-z_][ \tA-Za-z_]*[ \t]size_t/i\\\n"
-                 "#ifndef _GCC_SIZE_T\\\n"
-                 "#define _GCC_SIZE_T\n";
+    select    = "char[ \t]*\\*[ \t]*(calloc|malloc|realloc|bsearch)[ \t]*\\(";
+    c_fix     = format;
+    c_fix_arg = "void *\t%1(";
 
-    sed    = "/typedef[ \t][ \t]*[A-Za-z_][ \tA-Za-z_]*[ \t]size_t/a\\\n"
-                 "#endif\n";
+    test_text =
+    "extern char*\tcalloc(size_t);\n"
+    "extern char*\tmalloc(size_t);\n"
+    "extern char*\trealloc(void*,size_t);\n"
+    "extern char*\tbsearch(void*,size_t,size_t);\n";
 };
 
 
@@ -1971,98 +2897,87 @@ fix = {
  *  that it should be
  */
 fix = {
-    hackname = sysv68_string;
-    files    = string.h;
-
-    sed = "s/extern[ \t]*int[ \t]*strlen();/extern unsigned int strlen();/";
-    sed = "s/extern[ \t]*int[ \t]*ffs[ \t]*(long);/extern int ffs(int);/";
-    sed = "s/strdup(char \\*s1);/strdup(const char *s1);/";
-    sed = "/^extern char$/N";
-    sed = "s/^extern char\\(\\n\t\\*memccpy(),\\)$/extern void\\1/";
-    sed = "/^\tstrncmp(),$/N";
-    sed = "s/^\\(\tstrncmp()\\),\\n\\(\tstrlen(),\\)$/\\1;\\\n"
-          "extern unsigned int\\\n\\2/";
-    sed = "/^extern int$/N";
-    sed = "s/^extern int\\(\\n\tstrlen(),\\)/extern size_t\\1/";
-};
-
-
-/*
- *  Fix return type of exit and abort in <stdlib.h>
- *  Also wrap protection around size_t.
- */
-fix = {
-    hackname = sysz_stdlib_for_sun;
-    files    = stdlib.h;
-
-    sed   = "s/int\tabort/void\tabort/g";
-    sed   = "s/int\tfree/void\tfree/g";
-    sed   = "s/char[ \t]*\\*[ \t]*calloc/void \\*\tcalloc/g";
-    sed   = "s/char[ \t]*\\*[ \t]*malloc/void \\*\tmalloc/g";
-    sed   = "s/char[ \t]*\\*[ \t]*realloc/void \\*\trealloc/g";
-    sed   = "s/char[ \t]*\\*[ \t]*bsearch/void \\*\tbsearch/g";
-    sed   = "s/int[ \t][ \t]*exit/void\texit/g";
-
-    sed   = "/typedef[ \ta-zA-Z_]*[ \t]size_t[ \t]*;/i\\\n"
-                "#ifndef _GCC_SIZE_T\\\n"
-                "#define _GCC_SIZE_T\n";
-
-    sed   = "/typedef[ \ta-zA-Z_]*[ \t]size_t[ \t]*;/a\\\n"
-                "#endif\n";
-};
-
-
-/*
- *  Fix this Sun file to avoid interfering with stddef.h.
- *  We use a funny name to ensure it follows 'systypes' fix.
- */
-fix = {
-    hackname = sysz_stdtypes_for_sun;
-    files = sys/stdtypes.h;
-    sed   = "/[\t ]size_t.*;/i\\\n"
-              "#ifndef _GCC_SIZE_T\\\n"
-              "#define _GCC_SIZE_T\n";
-
-    sed   = "/[\t ]size_t.*;/a\\\n"
-              "#endif\n";
-
-    sed   = "/[\t ]ptrdiff_t.*;/i\\\n"
-              "#ifndef _GCC_PTRDIFF_T\\\n"
-              "#define _GCC_PTRDIFF_T\n";
-
-    sed   = "/[\t ]ptrdiff_t.*;/a\\\n"
-              "#endif\n";
-
-    sed   = "/[\t ]wchar_t.*;/i\\\n"
-              "#ifndef _GCC_WCHAR_T\\\n"
-              "#define _GCC_WCHAR_T\n";
-
-    sed   = "/[\t ]wchar_t.*;/a\\\n"
-              "#endif\n";
-};
-
-
-/*
- *  Fix this file to avoid interfering with stddef.h,
- *  but don't mistakenly match ssize_t present in AIX for the ps/2,
- *  or typedefs which use (but do not set) size_t.
- */
-fix = {
     hackname = tinfo_cplusplus;
     files    = tinfo.h;
-    sed      = "s/[ \t]_cplusplus/ __cplusplus/";
+    select   = "[ \t]_cplusplus";
+
+    c_fix     = format;
+    c_fix_arg = " __cplusplus";
+    test_text = "#ifdef _cplusplus\nint bogus;\n#endif";
 };
 
 
 /*
- *  Cancel out ansi_compat.h on Ultrix.  Replace it with empty file.
+ *  function parameter to atexit is missing "void" on VAX Ultrix 4.3.
  */
 fix = {
-    hackname = ultrix_ansi_compat;
-    files    = ansi_compat.h;
-    select   = ULTRIX;
-    sed      = "1i\\\n/* This file intentionally left blank. */\n";
-    sed      = "1,$d";
+    hackname = ultrix_atexit_param;
+    files    = stdlib.h;
+    select   = 'atexit\(.*\(\)';
+
+    c_fix     = format;
+    c_fix_arg = "atexit( void (*__func)( void )";
+
+    test_text = "int atexit( void (*__func)() );\n";
+};
+
+
+/*
+ *  parameter to atof not const on DECstation Ultrix V4.0 and NEWS-OS 4.2R.
+ */
+fix = {
+    hackname = ultrix_atof_param;
+    files    = math.h;
+    select   = "atof\\([ \t]*char";
+
+    c_fix     = format;
+    c_fix_arg = "atof(const char";
+
+    test_text = "extern double atof( char *__nptr);\n";
+};
+
+
+/*
+ *  parameters not const on DECstation Ultrix V4.0 and OSF/1.
+ */
+fix = {
+    hackname  = ultrix_const;
+    files     = stdio.h;
+    select    = 'perror\( char \*';
+
+    c_fix     = format;
+    c_fix_arg = "%1 const %3 *__";
+    c_fix_arg = "([ \t*](perror|fputs|fwrite|scanf|fscanf)\\(.*)"
+                "[ \t]+(char|void) \\*__";
+
+    test_text =
+    "extern void perror( char *__s );\n"
+    "extern int fputs( char *__s, FILE *);\n"
+    "extern size_t fwrite( void *__ptr, size_t, size_t, FILE *);\n"
+    "extern int fscanf( FILE *__stream, char *__format, ...);\n"
+    "extern int scanf( char *__format, ...);\n";
+};
+
+
+/*
+ *  parameters not const on DECstation Ultrix V4.0 and OSF/1.
+ */
+fix = {
+    hackname  = ultrix_const2;
+    files     = stdio.h;
+
+    select    = '\*fopen\( char \*';
+    c_fix     = format;
+    c_fix_arg = "%1( const char *%3, const char *";
+    c_fix_arg = "([ \t*](fopen|sscanf|popen|tempnam))\\("
+               "[ \t]*char[ \t]*\\*([^,]*),"
+               "[ \t]*char[ \t]*\\*[ \t]*";
+
+    test_text =
+    "extern FILE *fopen( char *__filename, char *__type );\n"
+    "extern int sscanf( char *__s, char *__format, ...);\n"
+    "extern FILE *popen(char *, char *);\n"
+    "extern char *tempnam(char*,char*);\n";
 };
 
 
@@ -2074,46 +2989,13 @@ fix = {
     hackname = ultrix_fix_fixproto;
     files    = sys/utsname.h;
     select   = ULTRIX;
-    sed      = "/^[ \t]*extern[ \t]*int[ \t]*uname();$/i\\\n"
-               "struct utsname;\n";
-};
 
+    c_fix     = format;
+    c_fix_arg = "struct utsname;\n%0";
+    c_fix_arg = "^[ \t]*extern[ \t]*int[ \t]*uname\\(\\);";
 
-/*
- *  parameter to atof not const on DECstation Ultrix V4.0 and NEWS-OS 4.2R.
- *  also get rid of bogus inline definitions in HP-UX 8.0
- */
-fix = {
-    hackname = ultrix_atof_param;
-    files    = math.h;
-
-    sed = "s@atof(\\([ \t]*char[ \t]*\\*[^)]*\\))@atof(const \\1)@";
-    sed = "s@inline int abs(int [a-z][a-z]*) {.*}@extern \"C\" int abs(int);@";
-    sed = "s@inline double abs(double [a-z][a-z]*) {.*}@@";
-    sed = "s@inline int sqr(int [a-z][a-z]*) {.*}@@";
-    sed = "s@inline double sqr(double [a-z][a-z]*) {.*}@@";
-};
-
-
-/*
- *  parameters not const on DECstation Ultrix V4.0 and OSF/1.
- */
-fix = {
-    hackname = ultrix_const;
-    files    = stdio.h;
-
-    sed   = 's@perror( char \*__s );@perror( const char *__s );@';
-    sed   = 's@fputs( char \*__s,@fputs( const char *__s,@';
-    sed   = 's@fopen( char \*__filename, char \*__type );@'
-              'fopen( const char *__filename, const char *__type );@';
-    sed   = 's@fwrite( void \*__ptr,@fwrite( const void *__ptr,@';
-    sed   = 's@fscanf( FILE \*__stream, char \*__format,@'
-              'fscanf( FILE *__stream, const char *__format,@';
-    sed   = 's@scanf( char \*__format,@scanf( const char *__format,@';
-    sed   = 's@sscanf( char \*__s, char \*__format,@'
-              'sscanf( const char *__s, const char *__format,@';
-    sed   = 's@popen(char \*, char \*);@popen(const char *, const char *);@';
-    sed   = 's@tempnam(char\*,char\*);@tempnam(const char*,const char*);@';
+    test_text =
+    "/* ULTRIX's uname */\nextern\tint\tuname();";
 };
 
 
@@ -2122,9 +3004,30 @@ fix = {
  */
 fix = {
     hackname = ultrix_ifdef;
-    select   = "#ifdef KERNEL";
+    select   = "^#ifdef KERNEL[ \t]+&&";
     files    = sys/file.h;
-    sed      = "s/#ifdef KERNEL/#if defined(KERNEL)/";
+
+    c_fix     = format;
+    c_fix_arg = "#if defined(KERNEL) &&";
+
+    test_text =
+    "#ifdef KERNEL\t&& defined( mumbojumbo )\nint oops;\n#endif";
+};
+
+
+/*
+ * Strip "|| CC$gfloat" from Ultrix math headers.
+ */
+fix = {
+    hackname  = ultrix_math_ifdef;
+    files     = sys/limits.h;
+    files     = float.h;
+    files     = math.h;
+    select    = "^(#if.*)\\|\\|[ \t]+CC\\$[a-z]+";
+    c_fix     = format;
+    c_fix_arg = "%1";
+
+    test_text = '#if     defined(__GFLOAT) || CC\$gfloat';
 };
 
 
@@ -2132,9 +3035,45 @@ fix = {
  *  Avoid nested comments on Ultrix 4.3.
  */
 fix = {
-    hackname = ultrix_nested_cmnt;
+    hackname = ultrix_nested_ioctl;
+    files    = sys/ioctl.h;
+    select   = "^/\\* #define SIOCSCREEN";
+    sed      = "/^\\/\\* #define SIOCSCREEN/s@/\\* screend@*//* screend@";
+    test_text =
+    "/* #define SIOCSCREENON _IOWR('i', 49, int)"
+    "/* screend, net/gw_screen.h */\n";
+};
+
+
+fix = {
+    hackname = ultrix_nested_svc;
     files    = rpc/svc.h;
+    select   = "^ \\*[ \t]*int protocol;  */\\*";
     sed      = "s@^\\( \\*\tint protocol;  \\)/\\*@\\1*/ /*@";
+    test_text =
+    " *\tint protocol;  /* like TCP or UDP\n";
+};
+
+
+/*
+ *  Add missing prototype for lstat and define for S_ISLNK
+ *  in Ultrix V4.3 sys/stat.h.
+ */
+fix = {
+    hackname = ultrix_stat;
+    files  = sys/stat.h;
+    select = "@\\(#\\)stat\\.h.*6\\.1.*\\(ULTRIX\\)";
+    sed    = "/^#define[ \t]S_IFPORT[ \t]*S_IFIFO$/a\\\n"
+		"\\\n"
+		"/* macro to test for symbolic link */\\\n"
+		"#define S_ISLNK(mode) (((mode) & S_IFMT) == S_IFLNK)\\\n"
+		"\n";
+    sed    = "/^[ \t]*fstat(),$/a\\\n"
+		"\tlstat(),\n";
+    test_text =
+    "@(#)stat.h      6.1     (ULTRIX)\n"
+    "#define S_IFPORT S_IFIFO\n"
+    "\tfstat(),\n";
 };
 
 
@@ -2149,18 +3088,87 @@ fix = {
     sed    = "s/^static struct tlb_pid_state/struct tlb_pid_state/";
     sed    = 's/^#include "r3_cpu\.h"$/#include <machine\/r3_cpu\.h>/';
     sed    = 's/^#include "r4_cpu\.h"$/#include <machine\/r4_cpu\.h>/';
+    test_text =
+    "static struct tlb_pid_state {\n"
+    "#include \"r3_cpu.h\"\n";
 };
 
 
 /*
- *  Fix multiple defines for NULL
+ *  Add once-only latch to Ultrix V4.3 strings.h.
  */
 fix = {
-    hackname = undefine_null;
-    select = "^#[ \t]*define[ \t]*[ \t]NULL[ \t]";
-    bypass = "#[ \t]*(ifn|un)def[ \t]*[ \t]NULL($|[ \t])";
-    sed    = "/^#[ \t]*define[ \t][ \t]*NULL[ \t]/i\\\n"
-                "#undef NULL\n";
+    hackname = ultrix_strings;
+    files  = strings.h;
+    select = "@\\(#\\)strings\\.h.*6\\.1.*\\(ULTRIX\\)";
+    c_fix  = wrap;
+    test_text =
+    "@(#)strings.h   6.1     (ULTRIX)\n";
+};
+
+
+/*
+ *  Fix multiple defines for NULL.  Sometimes, we stumble into \r\n
+ *  terminated lines, so accommodate these.  Test both ways.
+ */
+fix = {
+    hackname  = undefine_null;
+    select    = "^#[ \t]*define[ \t]+NULL[ \t]";
+    bypass    = "#[ \t]*(ifn|un)def[ \t]+NULL($|[ \t\r])";
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef NULL%2\n#define NULL%1%2\n#endif%2\n";
+    c_fix_arg = "^#[ \t]*define[ \t]*[ \t]NULL([^\r\n]+)([\r]*)\n";
+
+    test_text = "#define NULL 0UL\r\n#define NULL\t((void*)0)\n";
+};
+
+/*
+ * On Cray Unicos/Mk some standard headers use the C99 keyword "restrict"
+ * which must be replaced by __restrict__ for GCC.
+ */
+fix = {
+    hackname = unicosmk_restrict;
+    files    = stdio.h;
+    files    = stdlib.h;
+    files    = wchar.h;
+    mach     = "*-*-unicosmk*";
+    select   = "(\\*[ \t]*)restrict([ \t]+)";
+
+    c_fix     = format;
+    c_fix_arg = "%1__restrict__%2";
+
+    test_text = "void f (char * restrict x);";
+};
+
+/*
+ * If arpa/inet.h prototypes are incompatible with the ones we just
+ * installed in <sys/byteorder.h>, just remove the protos.
+ * Because of this close association, this patch must be applied only
+ * on those systems where the replacement byteorder header is installed.
+ */
+fix = {
+    hackname = uw7_byteorder_fix;
+    files    = arpa/inet.h;
+    select   = "in_port_t";
+    test     = "-f sys/byteorder.h";
+#ifndef SVR5
+	mach = "*-*-sysv4*";
+	mach = "i?86-*-sysv5*";
+	mach = "i?86-*-udk*";
+	mach = "i?86-*-solaris2.[0-4]";
+	mach = "powerpcle-*-solaris2.[0-4]";
+	mach = "sparc-*-solaris2.[0-4]";
+#endif /* SVR5 */
+
+    c_fix     = format;
+    c_fix_arg = "";
+    c_fix_arg = "^extern.*[ \t](htons|ntohs).*\\(in_port_t\\).*;";
+
+    test_text = "extern in_port_t\thtons __P((in_port_t));\n"
+                "extern in_port_t\tntohs __P((in_port_t));"
+                "`[ ! -d $DESTDIR/sys ] && mkdir $DESTDIR/sys\n"
+                "echo '/* DUMMY */' >> sys/byteorder.h`";
 };
 
 
@@ -2168,13 +3176,18 @@ fix = {
  *  Fix definitions of macros used by va-i960.h in VxWorks header file.
  */
 fix = {
-    hackname = va_i960_macro;
-    files    = arch/i960/archI960.h;
-    select   = "__(vsiz|vali|vpad|alignof__)";
-    sed = "s/__vsiz/__vxvsiz/";
-    sed = "s/__vali/__vxvali/";
-    sed = "s/__vpad/__vxvpad/";
-    sed = "s/__alignof__/__vxalignof__/";
+    hackname  = va_i960_macro;
+    files     = arch/i960/archI960.h;
+    select    = "__(vsiz|vali|vpad|alignof__)";
+
+    c_fix     = format;
+    c_fix_arg = "__vx%1";
+
+    test_text =
+    "extern int __vsiz vsiz;\n"
+    "extern int __vali vali;\n"
+    "extern int __vpad vpad;\n"
+    "#define __alignof__(x) ...";
 };
 
 
@@ -2183,21 +3196,22 @@ fix = {
  *  which is illegal in ANSI C++.
  */
 fix = {
-    hackname = void_null;
-    files    = curses.h;
-    files    = dbm.h;
-    files    = locale.h;
-    files    = stdio.h;
-    files    = stdlib.h;
-    files    = string.h;
-    files    = time.h;
-    files    = unistd.h;
-    files    = sys/dir.h;
-    files    = sys/param.h;
-    files    = sys/types.h;
-    select   = "#[ \t]*define[ \t][ \t]*NULL[ \t].*void";
-    sed      = "s/^#[ \t]*define[ \t]*NULL[ \t]*((void[ \t]*\\*)0)"
-                "/#define NULL 0/";
+    hackname  = void_null;
+    files     = curses.h;
+    files     = dbm.h;
+    files     = locale.h;
+    files     = stdio.h;
+    files     = stdlib.h;
+    files     = string.h;
+    files     = time.h;
+    files     = unistd.h;
+    files     = sys/dir.h;
+    files     = sys/param.h;
+    files     = sys/types.h;
+    select    = "^#[ \t]*define[ \t]+NULL[ \t]+\\(\\(void[ \t]*\\*\\)0\\)";
+    c_fix     = format;
+    c_fix_arg = "#define NULL 0";
+    test_text = "# define\tNULL \t((void *)0)  /* typed NULL */";
 };
 
 
@@ -2232,6 +3246,13 @@ fix = {
 
     sed = "/[ \t]wchar_t/a\\\n"
         "#endif\n";
+
+    test_text =
+    "#ifdef __GNUC_TYPEOF_FEATURE_BROKEN_USE_DEFAULT_UNTIL_FIXED__\n"
+    "typedef unsigned int size_t;\n"
+    "typedef long ptrdiff_t;\n"
+    "typedef unsigned short wchar_t;\n"
+    "#endif /* __GNUC_TYPEOF_FEATURE_BROKEN_USE_DEFAULT_UNTIL_FIXED__ */\n";
 };
 
 
@@ -2239,10 +3260,12 @@ fix = {
  *  Fix VxWorks <time.h> to not require including <vxTypes.h>.
  */
 fix = {
-    hackname = vxworks_needs_vxtypes;
-    files    = time.h;
-    select   = "uint_t[ \t][ \t]*_clocks_per_sec";
-    sed      = "s/uint_t/unsigned int/";
+    hackname  = vxworks_needs_vxtypes;
+    files     = time.h;
+    select    = "uint_t([ \t]+_clocks_per_sec)";
+    c_fix     = format;
+    c_fix_arg = "unsigned int%1";
+    test_text = "uint_t\t_clocks_per_sec;";
 };
 
 
@@ -2255,10 +3278,14 @@ fix = {
     test     = " -r types/vxTypesOld.h";
     test     = " -n \"`egrep '#include' $file`\"";
     test     = " -n \"`egrep ULONG $file`\"";
-    select   = "#[ \t]define[ \t][ \t]*__INCstath";
+    select   = "#[ \t]define[ \t]+__INCstath";
 
     sed = "/#[ \t]define[ \t][ \t]*__INCstath/a\\\n"
           "#include <types/vxTypesOld.h>\n";
+
+    test_text = "`touch types/vxTypesOld.h`"
+    "#include </dev/null> /* ULONG */\n"
+    "# define\t__INCstath <sys/stat.h>";
 };
 
 
@@ -2268,19 +3295,24 @@ fix = {
 fix = {
     hackname = vxworks_time;
     files    = time.h;
-    select   = "VOIDFUNCPTR";
     test     = " -r vxWorks.h";
-    sed      = "/VOIDFUNCPTR/i\\\n"
-               "#ifndef __gcc_VOIDFUNCPTR_defined\\\n"
-               "#ifdef __cplusplus\\\n"
-               "typedef void (*__gcc_VOIDFUNCPTR) (...);\\\n"
-               "#else\\\n"
-               "typedef void (*__gcc_VOIDFUNCPTR) ();\\\n"
-               "#endif\\\n"
-               "#define __gcc_VOIDFUNCPTR_defined\\\n"
-               "#endif\n";
 
-    sed      = "s/VOIDFUNCPTR/__gcc_VOIDFUNCPTR/g";
+    select    = "#[ \t]*define[ \t]+VOIDFUNCPTR[ \t].*";
+    c_fix     = format;
+
+    c_fix_arg =
+    "#ifndef __gcc_VOIDFUNCPTR_defined\n"
+    "#ifdef __cplusplus\n"
+    "typedef void (*__gcc_VOIDFUNCPTR) (...);\n"
+    "#else\n"
+    "typedef void (*__gcc_VOIDFUNCPTR) ();\n"
+    "#endif\n"
+    "#define __gcc_VOIDFUNCPTR_defined\n"
+    "#endif\n"
+    "#define VOIDFUNCPTR __gcc_VOIDFUNCPTR";
+
+    test_text = "`touch vxWorks.h`"
+                "#define VOIDFUNCPTR (void(*)())";
 };
 
 
@@ -2290,15 +3322,17 @@ fix = {
  *  we find __cplusplus in the file.  These were found on the RS/6000.
  */
 fix = {
-    hackname = x11_class;
-    files    = X11/ShellP.h;
-    bypass   = __cplusplus;
-    sed      = "/char \\*class;/i\\\n"
-                   "#ifdef __cplusplus\\\n"
-                   "\tchar *c_class;\\\n"
-                   "#else\n";
-    sed      = "/char \\*class;/a\\\n"
-                   "#endif\n";
+    hackname  = x11_class;
+    files     = X11/ShellP.h;
+    bypass    = __cplusplus;
+    select    = "^([ \t]*char \\*)class;(.*)";
+    c_fix     = format;
+    c_fix_arg = "#ifdef __cplusplus\n%1c_class;%2\n"
+                "#else\n%1class;%2\n#endif";
+    test_text =
+    "struct {\n"
+    "   char *class;\n"
+    "} mumble;\n";
 };
 
 
@@ -2309,7 +3343,12 @@ fix = {
     hackname = x11_class_usage;
     files    = Xm/BaseClassI.h;
     bypass   = "__cplusplus";
-    sed      = "s/ class[)]/ c_class)/g";
+
+    select    = " class\\)";
+    c_fix     = format;
+    c_fix_arg = " c_class)";
+
+    test_text = "extern mumble (int  class);\n";
 };
 
 
@@ -2330,6 +3369,10 @@ fix = {
                    "#endif\n";
 
     sed      = "s/Widget new,/Widget c_new,/g";
+    test_text =
+    "struct wedge {\n"
+    "   Widget\told, new; /* fix the new */\n"
+    "};\nextern Wedged( Widget new, Widget old );";
 };
 
 
@@ -2338,106 +3381,14 @@ fix = {
  */
 fix = {
     hackname = x11_sprintf;
-    files    = X11*/Xmu.h;
-    sed      = "s,^extern char \\*\tsprintf();$,#ifndef __STDC__\\\n"
-               "extern char *\tsprintf();\\\n"
-               "#endif /* !defined __STDC__ */,";
+    files    = X11/Xmu.h;
+    files    = X11/Xmu/Xmu.h;
+    select   = "^extern char \\*\tsprintf\\(\\);$";
+
+    c_fix     = format;
+    c_fix_arg = "#ifndef __STDC__\n%0\n#endif /* !defined __STDC__ */";
+
+    test_text = "extern char *\tsprintf();";
 };
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  UNDO BROKEN FIXES
- *
- *  We sure do hope that broken fixes and needed fixes are never
- *  applied to the same file!!  :-}
- */
-
-/*
- *  Purge some HP-UX 11 files that are only borken after they are "fixed".
- */
-fix = {
-    hackname = zzz_ki_iface;
-    files    = sys/ki_iface.h;
-    select   = 'These definitions are for HP Internal developers';
-    shell    =
-         "echo \"Removing incorrect fix to <$file>\" >&2\n"
-         "rm -f ${DESTDIR}/$file ${DESTDIR}/fixinc.tmp\n"
-         "cat > /dev/null";
-};
-
-
-/*
- *  Purge some HP-UX 11 files that are only borken after they are "fixed".
- */
-fix = {
-    hackname = zzz_ki;
-    files    = sys/ki.h;
-    select   = '11.00 HP-UX LP64';
-    shell    =
-         "echo \"Removing incorrect fix to <$file>\" >&2\n"
-         "rm -f ${DESTDIR}/$file ${DESTDIR}/fixinc.tmp\n"
-         "cat > /dev/null";
-};
-
-
-/*
- *  Purge some HP-UX 11 files that are only borken after they are "fixed".
- */
-fix = {
-    hackname = zzz_ki_calls;
-    files    = sys/ki_calls.h;
-    select   = 'kthread_create_caller_t';
-    shell    =
-         "echo \"Removing incorrect fix to <$file>\" >&2\n"
-         "rm -f ${DESTDIR}/$file ${DESTDIR}/fixinc.tmp\n"
-         "cat > /dev/null";
-};
-
-
-/*
- *  Purge some HP-UX 11 files that are only borken after they are "fixed".
- */
-fix = {
-    hackname = zzz_ki_defs;
-    files    = sys/ki_defs.h;
-    select   = 'Kernel Instrumentation Definitions';
-    shell    =
-         "echo \"Removing incorrect fix to <$file>\" >&2\n"
-         "rm -f ${DESTDIR}/$file ${DESTDIR}/fixinc.tmp\n"
-         "cat > /dev/null";
-};
-
-
-/*
- *  This file on SunOS 4 has a very large macro.  When the sed loop
- *  tries pull it in, it overflows the pattern space size of the SunOS
- *  sed (GNU sed does not have this problem).  Since the file does not
- *  require fixing, we remove it from the fixed directory.
- */
-fix = {
-    hackname = zzz_bad_fixes;
-    files    = sundev/ipi_error.h;
-    /* shouldn't there be a select expression here??? */
-    shell    =
-         "echo \"Removing incorrect fix to <$file>\" >&2\n"
-         "rm -f ${DESTDIR}/$file ${DESTDIR}/fixinc.tmp\n"
-         "cat > /dev/null";
-};
-
-
-/*
- *  Purge some HP-UX 11 files that are only borken after they are "fixed".
- */
-fix = {
-    hackname = zzz_time;
-    files    = sys/time.h;
-    select   = '11.0 and later representation of ki time';
-    shell    =
-         "echo \"Removing incorrect fix to <$file>\" >&2\n"
-         "rm -f ${DESTDIR}/$file ${DESTDIR}/fixinc.tmp\n"
-         "cat > /dev/null";
-};
-
 
 /*EOF*/

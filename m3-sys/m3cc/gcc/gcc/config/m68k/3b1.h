@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    AT&T UNIX PC version (pc7300, 3b1)
-   Copyright (C) 1987, 1993, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1996, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Alex Crain (alex@umbc3.umd.edu).
 
 This file is part of GNU CC.
@@ -64,10 +64,6 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_FILE_START(FILE) \
 output_file_directive ((FILE), main_input_filename)
 
-/* Don't try to define `gcc_compiled.' since the assembler might not
-   accept symbols with periods and GDB doesn't run on this machine anyway.  */
-#define ASM_IDENTIFY_GCC(FILE)
-
 /* Define __HAVE_68881__ in preprocessor if -m68881 is specified.
    This will control the use of inline 68881 insns in certain macros.  */
 
@@ -78,7 +74,7 @@ output_file_directive ((FILE), main_input_filename)
 /* ihnp4!lmayk!lgm@eddie.mit.edu says mc68000 and m68k should not be here.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dmc68k -Dunix -Dunixpc -D__motorola__ -Asystem(unix)  -Asystem(svr3) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dmc68k -Dunix -Dunixpc -D__motorola__ -Asystem=unix  -Asystem=svr3 -Acpu=m68k -Amachine=m68k"
 
 #undef REGISTER_NAMES
 #define REGISTER_NAMES \
@@ -99,7 +95,7 @@ output_file_directive ((FILE), main_input_filename)
 
 /* The 3b1 does not have `atexit'.  */
 
-#undef HAVE_ATEXIT
+#define NEED_ATEXIT
 
 /* Override parts of m68k.h to fit the SGS-3b1 assembler.  */
 
@@ -199,7 +195,7 @@ do { long l;					\
     if (++sp < (LEN)) \
       {	if (lp > 60) \
 	  { lp = 0; \
-	    fprintf ((FILE), "\n\t%s ", ASCII_DATA_ASM_OP); }	\
+	    fprintf ((FILE), "\n%s", ASCII_DATA_ASM_OP); }	\
 	else \
 	  putc (',', (FILE)); \
 	goto loop; } \
@@ -508,6 +504,5 @@ do { fprintf (asm_out_file, "\ttag\t");	\
 /* Definitions for collect2.  */
 
 #define OBJECT_FORMAT_COFF
-#define NO_SYS_SIGLIST
 #define MY_ISCOFF(magic) \
  ((magic) == MC68KWRMAGIC || (magic) == MC68KROMAGIC || (magic) == MC68KPGMAGIC)

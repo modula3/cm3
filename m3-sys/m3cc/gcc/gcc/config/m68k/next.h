@@ -1,5 +1,6 @@
 /* Target definitions for GNU compiler for mc680x0 running NeXTSTEP
-   Copyright (C) 1989, 90-94, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -32,7 +33,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dmc68000 -Dm68k -DNeXT -Dunix -D__MACH__ -D__BIG_ENDIAN__ -D__ARCHITECTURE__=\"m68k\" -Asystem(unix)  -Asystem(mach) -Acpu(m68k) -Amachine(m68k) -D_NEXT_SOURCE"
+#define CPP_PREDEFINES "-Dmc68000 -Dm68k -DNeXT -Dunix -D__MACH__ -D__BIG_ENDIAN__ -D__ARCHITECTURE__=\"m68k\" -Asystem=unix  -Asystem=mach -Acpu=m68k -Amachine=m68k -D_NEXT_SOURCE"
 
 /* Every structure or union's size must be a multiple of 2 bytes.
    (Why isn't this in m68k.h?)  */
@@ -186,8 +187,8 @@ Boston, MA 02111-1307, USA.  */
 
 #undef FINALIZE_TRAMPOLINE
 #define FINALIZE_TRAMPOLINE(TRAMP) \
-  emit_library_call(gen_rtx(SYMBOL_REF, Pmode, "__enable_execute_stack"), \
-		    0, VOIDmode, 1, memory_address(SImode, (TRAMP)), Pmode)
+  emit_library_call(gen_rtx_SYMBOL_REF (Pmode, "__enable_execute_stack"), \
+		    0, VOIDmode, 1, memory_address (SImode, (TRAMP)), Pmode)
 
 /* A C expression used to clear the instruction cache from 
    address BEG to address END.   On NeXTSTEP this i a system trap. */

@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  ARM RISCiX version.
-   Copyright (C) 1993, 1994, 1995, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Richard Earnshaw (rwe11@cl.cam.ac.uk), based on original
 	      work by Pieter `Tiggr' Schoenmakers (rcpieter@win.tue.nl)
    	      and Martin Simmons (@harleqn.co.uk).
@@ -48,7 +49,7 @@ Boston, MA 02111-1307, USA.  */
 
 #ifndef CPP_PREDEFINES
 #define CPP_PREDEFINES  \
-    "-Darm -Driscix -Dunix -Asystem(unix) -Acpu(arm) -Amachine(arm)"
+    "-Darm -Driscix -Dunix -Asystem=unix -Acpu=arm -Amachine=arm"
 #endif
 
 
@@ -80,9 +81,9 @@ Boston, MA 02111-1307, USA.  */
    switches cc1 complains about them.  For the sake of argument lets allocate
    bit 31 of target flags for such options.  */
 #define SUBTARGET_SWITCHES						\
-  {"bsd",	   0x80000000, "Do symbol renaming for BSD"},		\
-  {"xopen",	   0x80000000, "Do symbol renaming for X/OPEN"},	\
-  {"no-symrename", 0x80000000, "Don't do symbol renaming"},
+  {"bsd",	   0x80000000, N_("Do symbol renaming for BSD")},	\
+  {"xopen",	   0x80000000, N_("Do symbol renaming for X/OPEN")},	\
+  {"no-symrename", 0x80000000, N_("Don't do symbol renaming")},
     
 
 /* Run-time Target Specification.  */
@@ -94,12 +95,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* Unsigned chars produces much better code than signed.  */
 #define DEFAULT_SIGNED_CHAR  0
-
-/* Define this if the target system supports the function atexit from the
-   ANSI C standard.  If this is not defined, and INIT_SECTION_ASM_OP is not
-   defined, a default exit function will be provided to support C++.  
-   The man page only describes on_exit, but atexit is also there.  */
-#define HAVE_ATEXIT 1
 
 /* Some systems use __main in a way incompatible with its use in gcc, in these
    cases use the macros NAME__MAIN to give a quoted symbol and SYMBOL__MAIN to

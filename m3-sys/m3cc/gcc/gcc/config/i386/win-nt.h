@@ -1,6 +1,6 @@
 /* Operating system specific defines to be used when targeting GCC for
    Windows NT 3.x on an i386.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1998, 1999 Free Software Foundation, Inc.
    Contributed by Douglas B. Rupp (drupp@cs.washington.edu).
 
 This file is part of GNU CC.
@@ -27,12 +27,12 @@ Boston, MA 02111-1307, USA. */
 #ifdef CPP_PREDEFINES
 #undef CPP_PREDEFINES
 #endif
-#define CPP_PREDEFINES "-Dunix -Di386 -DWIN32 -D_WIN32 \
+#define CPP_PREDEFINES "-Dunix -DWIN32 -D_WIN32 \
   -DWINNT -D_M_IX86=300 -D_X86_=1 -D__STDC__=0 -DALMOST_STDC -D_MSC_VER=800 \
   -D__stdcall=__attribute__((__stdcall__)) \
   -D__cdecl=__attribute__((__cdecl__)) \
   -D_cdecl=__attribute__((__cdecl__)) \
-  -Asystem(unix) -Asystem(winnt) -Acpu(i386) -Amachine(i386)"
+  -Asystem=unix -Asystem=winnt"
 
 #define SIZE_TYPE "unsigned int"
 #define PTRDIFF_TYPE "int"
@@ -41,7 +41,6 @@ Boston, MA 02111-1307, USA. */
 #define WCHAR_TYPE "short unsigned int"
 #undef LONG_DOUBLE_TYPE_SIZE
 #define LONG_DOUBLE_TYPE_SIZE 64
-#define HAVE_ATEXIT 1
 
 #undef EXTRA_SECTIONS
 #define EXTRA_SECTIONS in_ctor, in_dtor
@@ -76,7 +75,7 @@ dtor_section ()							\
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
   do {						\
     ctor_section ();				\
-    fprintf (FILE, "%s\t", ASM_LONG);		\
+    fputs (ASM_LONG, FILE);			\
     assemble_name (FILE, NAME);			\
     fprintf (FILE, "\n");			\
   } while (0)
@@ -84,7 +83,7 @@ dtor_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       	\
   do {						\
     dtor_section ();                   		\
-    fprintf (FILE, "%s\t", ASM_LONG);		\
+    fputs (ASM_LONG, FILE);			\
     assemble_name (FILE, NAME);              	\
     fprintf (FILE, "\n");			\
   } while (0)
@@ -118,7 +117,7 @@ do									\
       if (lookup_attribute ("stdcall",					\
 			    TYPE_ATTRIBUTES (TREE_TYPE (DECL))))	\
         XEXP (DECL_RTL (DECL), 0) = 					\
-          gen_rtx (SYMBOL_REF, Pmode, gen_stdcall_suffix (DECL)); 	\
+          gen_rtx_SYMBOL_REF (Pmode, gen_stdcall_suffix (DECL)); 	\
   }									\
 while (0)
 #endif

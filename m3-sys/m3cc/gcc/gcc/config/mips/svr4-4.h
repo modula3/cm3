@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    MIPS RISC-OS System V.4 version.
-   Copyright (C) 1992, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1998, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #define CPP_PREDEFINES "\
 -Dmips -Dunix -Dhost_mips -DMIPSEB -DR3000 -DSYSTYPE_SVR4 \
 -D_mips -D_unix -D_host_mips -D_MIPSEB -D_R3000 -D_SYSTYPE_SVR4 \
--Asystem(unix) -Asystem(svr4) -Acpu(mips) -Amachine(mips)"
+-Asystem=unix -Asystem=svr4 -Acpu=mips -Amachine=mips"
 
 #define STANDARD_INCLUDE_DIR "/svr4/usr/include"
 
@@ -52,10 +52,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define getpagesize()	sysconf(_SC_PAGE_SIZE)
 #endif /*  L_trampoline */
-
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
 
 /* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS

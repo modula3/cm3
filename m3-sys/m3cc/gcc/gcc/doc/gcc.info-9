@@ -1,0 +1,1137 @@
+This is doc/gcc.info, produced by makeinfo version 4.0b from
+doc/gcc.texi.
+
+INFO-DIR-SECTION Programming
+START-INFO-DIR-ENTRY
+* gcc: (gcc).                  The GNU Compiler Collection.
+END-INFO-DIR-ENTRY
+   This file documents the use and the internals of the GNU compiler.
+
+
+   Published by the Free Software Foundation
+59 Temple Place - Suite 330
+Boston, MA 02111-1307 USA
+
+
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+1999, 2000, 2001 Free Software Foundation, Inc.
+
+
+   Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with the
+Invariant Sections being "GNU General Public License" and "Funding Free
+Software", the Front-Cover texts being (a) (see below), and with the
+Back-Cover Texts being (b) (see below).  A copy of the license is
+included in the section entitled "GNU Free Documentation License".
+
+   (a) The FSF's Front-Cover Text is:
+
+   A GNU Manual
+
+   (b) The FSF's Back-Cover Text is:
+
+   You have freedom to copy and modify this GNU Manual, like GNU
+software.  Copies published by the Free Software Foundation raise
+funds for GNU development.
+
+
+File: gcc.info,  Node: Code Gen Options,  Next: Environment Variables,  Prev: Submodel Options,  Up: Invoking GCC
+
+Options for Code Generation Conventions
+=======================================
+
+   These machine-independent options control the interface conventions
+used in code generation.
+
+   Most of them have both positive and negative forms; the negative form
+of `-ffoo' would be `-fno-foo'.  In the table below, only one of the
+forms is listed--the one which is not the default.  You can figure out
+the other form by either removing `no-' or adding it.
+
+`-fexceptions'
+     Enable exception handling.  Generates extra code needed to
+     propagate exceptions.  For some targets, this implies GCC will
+     generate frame unwind information for all functions, which can
+     produce significant data size overhead, although it does not
+     affect execution.  If you do not specify this option, GCC will
+     enable it by default for languages like C++ which normally require
+     exception handling, and disable it for languages like C that do
+     not normally require it.  However, you may need to enable this
+     option when compiling C code that needs to interoperate properly
+     with exception handlers written in C++.  You may also wish to
+     disable this option if you are compiling older C++ programs that
+     don't use exception handling.
+
+`-fnon-call-exceptions'
+     Generate code that allows trapping instructions to throw
+     exceptions.  Note that this requires platform-specific runtime
+     support that does not exist everywhere.  Moreover, it only allows
+     _trapping_ instructions to throw exceptions, i.e. memory
+     references or floating point instructions.  It does not allow
+     exceptions to be thrown from arbitrary signal handlers such as
+     `SIGALRM'.
+
+`-funwind-tables'
+     Similar to `-fexceptions', except that it will just generate any
+     needed static data, but will not affect the generated code in any
+     other way.  You will normally not enable this option; instead, a
+     language processor that needs this handling would enable it on
+     your behalf.
+
+`-fpcc-struct-return'
+     Return "short" `struct' and `union' values in memory like longer
+     ones, rather than in registers.  This convention is less
+     efficient, but it has the advantage of allowing intercallability
+     between GCC-compiled files and files compiled with other compilers.
+
+     The precise convention for returning structures in memory depends
+     on the target configuration macros.
+
+     Short structures and unions are those whose size and alignment
+     match that of some integer type.
+
+`-freg-struct-return'
+     Use the convention that `struct' and `union' values are returned
+     in registers when possible.  This is more efficient for small
+     structures than `-fpcc-struct-return'.
+
+     If you specify neither `-fpcc-struct-return' nor its contrary
+     `-freg-struct-return', GCC defaults to whichever convention is
+     standard for the target.  If there is no standard convention, GCC
+     defaults to `-fpcc-struct-return', except on targets where GCC is
+     the principal compiler.  In those cases, we can choose the
+     standard, and we chose the more efficient register return
+     alternative.
+
+`-fshort-enums'
+     Allocate to an `enum' type only as many bytes as it needs for the
+     declared range of possible values.  Specifically, the `enum' type
+     will be equivalent to the smallest integer type which has enough
+     room.
+
+`-fshort-double'
+     Use the same size for `double' as for `float'.
+
+`-fshared-data'
+     Requests that the data and non-`const' variables of this
+     compilation be shared data rather than private data.  The
+     distinction makes sense only on certain operating systems, where
+     shared data is shared between processes running the same program,
+     while private data exists in one copy per process.
+
+`-fno-common'
+     In C, allocate even uninitialized global variables in the data
+     section of the object file, rather than generating them as common
+     blocks.  This has the effect that if the same variable is declared
+     (without `extern') in two different compilations, you will get an
+     error when you link them.  The only reason this might be useful is
+     if you wish to verify that the program will work on other systems
+     which always work this way.
+
+`-fno-ident'
+     Ignore the `#ident' directive.
+
+`-fno-gnu-linker'
+     Do not output global initializations (such as C++ constructors and
+     destructors) in the form used by the GNU linker (on systems where
+     the GNU linker is the standard method of handling them).  Use this
+     option when you want to use a non-GNU linker, which also requires
+     using the `collect2' program to make sure the system linker
+     includes constructors and destructors.  (`collect2' is included in
+     the GCC distribution.)  For systems which _must_ use `collect2',
+     the compiler driver `gcc' is configured to do this automatically.
+
+`-finhibit-size-directive'
+     Don't output a `.size' assembler directive, or anything else that
+     would cause trouble if the function is split in the middle, and the
+     two halves are placed at locations far apart in memory.  This
+     option is used when compiling `crtstuff.c'; you should not need to
+     use it for anything else.
+
+`-fverbose-asm'
+     Put extra commentary information in the generated assembly code to
+     make it more readable.  This option is generally only of use to
+     those who actually need to read the generated assembly code
+     (perhaps while debugging the compiler itself).
+
+     `-fno-verbose-asm', the default, causes the extra information to
+     be omitted and is useful when comparing two assembler files.
+
+`-fvolatile'
+     Consider all memory references through pointers to be volatile.
+
+`-fvolatile-global'
+     Consider all memory references to extern and global data items to
+     be volatile.  GCC does not consider static data items to be
+     volatile because of this switch.
+
+`-fvolatile-static'
+     Consider all memory references to static data to be volatile.
+
+`-fpic'
+     Generate position-independent code (PIC) suitable for use in a
+     shared library, if supported for the target machine.  Such code
+     accesses all constant addresses through a global offset table
+     (GOT).  The dynamic loader resolves the GOT entries when the
+     program starts (the dynamic loader is not part of GCC; it is part
+     of the operating system).  If the GOT size for the linked
+     executable exceeds a machine-specific maximum size, you get an
+     error message from the linker indicating that `-fpic' does not
+     work; in that case, recompile with `-fPIC' instead.  (These
+     maximums are 16k on the m88k, 8k on the Sparc, and 32k on the m68k
+     and RS/6000.  The 386 has no such limit.)
+
+     Position-independent code requires special support, and therefore
+     works only on certain machines.  For the 386, GCC supports PIC for
+     System V but not for the Sun 386i.  Code generated for the IBM
+     RS/6000 is always position-independent.
+
+`-fPIC'
+     If supported for the target machine, emit position-independent
+     code, suitable for dynamic linking and avoiding any limit on the
+     size of the global offset table.  This option makes a difference
+     on the m68k, m88k, and the Sparc.
+
+     Position-independent code requires special support, and therefore
+     works only on certain machines.
+
+`-ffixed-REG'
+     Treat the register named REG as a fixed register; generated code
+     should never refer to it (except perhaps as a stack pointer, frame
+     pointer or in some other fixed role).
+
+     REG must be the name of a register.  The register names accepted
+     are machine-specific and are defined in the `REGISTER_NAMES' macro
+     in the machine description macro file.
+
+     This flag does not have a negative form, because it specifies a
+     three-way choice.
+
+`-fcall-used-REG'
+     Treat the register named REG as an allocable register that is
+     clobbered by function calls.  It may be allocated for temporaries
+     or variables that do not live across a call.  Functions compiled
+     this way will not save and restore the register REG.
+
+     It is an error to used this flag with the frame pointer or stack
+     pointer.  Use of this flag for other registers that have fixed
+     pervasive roles in the machine's execution model will produce
+     disastrous results.
+
+     This flag does not have a negative form, because it specifies a
+     three-way choice.
+
+`-fcall-saved-REG'
+     Treat the register named REG as an allocable register saved by
+     functions.  It may be allocated even for temporaries or variables
+     that live across a call.  Functions compiled this way will save
+     and restore the register REG if they use it.
+
+     It is an error to used this flag with the frame pointer or stack
+     pointer.  Use of this flag for other registers that have fixed
+     pervasive roles in the machine's execution model will produce
+     disastrous results.
+
+     A different sort of disaster will result from the use of this flag
+     for a register in which function values may be returned.
+
+     This flag does not have a negative form, because it specifies a
+     three-way choice.
+
+`-fpack-struct'
+     Pack all structure members together without holes.  Usually you
+     would not want to use this option, since it makes the code
+     suboptimal, and the offsets of structure members won't agree with
+     system libraries.
+
+`-fcheck-memory-usage'
+     Generate extra code to check each memory access.  GCC will generate
+     code that is suitable for a detector of bad memory accesses such as
+     `Checker'.
+
+     Normally, you should compile all, or none, of your code with this
+     option.
+
+     If you do mix code compiled with and without this option, you must
+     ensure that all code that has side effects and that is called by
+     code compiled with this option is, itself, compiled with this
+     option.  If you do not, you might get erroneous messages from the
+     detector.
+
+     If you use functions from a library that have side-effects (such as
+     `read'), you might not be able to recompile the library and
+     specify this option.  In that case, you can enable the
+     `-fprefix-function-name' option, which requests GCC to encapsulate
+     your code and make other functions look as if they were compiled
+     with `-fcheck-memory-usage'.  This is done by calling "stubs",
+     which are provided by the detector.  If you cannot find or build
+     stubs for every function you call, you might have to specify
+     `-fcheck-memory-usage' without `-fprefix-function-name'.
+
+     If you specify this option, you can not use the `asm' or `__asm__'
+     keywords in functions with memory checking enabled.  GCC cannot
+     understand what the `asm' statement may do, and therefore cannot
+     generate the appropriate code, so it will reject it.  However, if
+     you specify the function attribute `no_check_memory_usage' (*note
+     Function Attributes::), GCC will disable memory checking within a
+     function; you may use `asm' statements inside such functions.  You
+     may have an inline expansion of a non-checked function within a
+     checked function; in that case GCC will not generate checks for
+     the inlined function's memory accesses.
+
+     If you move your `asm' statements to non-checked inline functions
+     and they do access memory, you can add calls to the support code
+     in your inline function, to indicate any reads, writes, or copies
+     being done.  These calls would be similar to those done in the
+     stubs described above.
+
+`-fprefix-function-name'
+     Request GCC to add a prefix to the symbols generated for function
+     names.  GCC adds a prefix to the names of functions defined as
+     well as functions called.  Code compiled with this option and code
+     compiled without the option can't be linked together, unless stubs
+     are used.
+
+     If you compile the following code with `-fprefix-function-name'
+          extern void bar (int);
+          void
+          foo (int a)
+          {
+            return bar (a + 5);
+          }
+
+     GCC will compile the code as if it was written:
+          extern void prefix_bar (int);
+          void
+          prefix_foo (int a)
+          {
+            return prefix_bar (a + 5);
+          }
+     This option is designed to be used with `-fcheck-memory-usage'.
+
+`-finstrument-functions'
+     Generate instrumentation calls for entry and exit to functions.
+     Just after function entry and just before function exit, the
+     following profiling functions will be called with the address of
+     the current function and its call site.  (On some platforms,
+     `__builtin_return_address' does not work beyond the current
+     function, so the call site information may not be available to the
+     profiling functions otherwise.)
+
+          void __cyg_profile_func_enter (void *this_fn,
+                                         void *call_site);
+          void __cyg_profile_func_exit  (void *this_fn,
+                                         void *call_site);
+
+     The first argument is the address of the start of the current
+     function, which may be looked up exactly in the symbol table.
+
+     This instrumentation is also done for functions expanded inline in
+     other functions.  The profiling calls will indicate where,
+     conceptually, the inline function is entered and exited.  This
+     means that addressable versions of such functions must be
+     available.  If all your uses of a function are expanded inline,
+     this may mean an additional expansion of code size.  If you use
+     `extern inline' in your C code, an addressable version of such
+     functions must be provided.  (This is normally the case anyways,
+     but if you get lucky and the optimizer always expands the
+     functions inline, you might have gotten away without providing
+     static copies.)
+
+     A function may be given the attribute `no_instrument_function', in
+     which case this instrumentation will not be done.  This can be
+     used, for example, for the profiling functions listed above,
+     high-priority interrupt routines, and any functions from which the
+     profiling functions cannot safely be called (perhaps signal
+     handlers, if the profiling routines generate output or allocate
+     memory).
+
+`-fstack-check'
+     Generate code to verify that you do not go beyond the boundary of
+     the stack.  You should specify this flag if you are running in an
+     environment with multiple threads, but only rarely need to specify
+     it in a single-threaded environment since stack overflow is
+     automatically detected on nearly all systems if there is only one
+     stack.
+
+     Note that this switch does not actually cause checking to be done;
+     the operating system must do that.  The switch causes generation
+     of code to ensure that the operating system sees the stack being
+     extended.
+
+`-fstack-limit-register=REG'
+`-fstack-limit-symbol=SYM'
+`-fno-stack-limit'
+     Generate code to ensure that the stack does not grow beyond a
+     certain value, either the value of a register or the address of a
+     symbol.  If the stack would grow beyond the value, a signal is
+     raised.  For most targets, the signal is raised before the stack
+     overruns the boundary, so it is possible to catch the signal
+     without taking special precautions.
+
+     For instance, if the stack starts at address `0x80000000' and grows
+     downwards you can use the flags `-fstack-limit-symbol=__stack_limit
+     -Wl,--defsym,__stack_limit=0x7ffe0000' which will enforce a stack
+     limit of 128K.
+
+`-fargument-alias'
+`-fargument-noalias'
+`-fargument-noalias-global'
+     Specify the possible relationships among parameters and between
+     parameters and global data.
+
+     `-fargument-alias' specifies that arguments (parameters) may alias
+     each other and may alias global storage.  `-fargument-noalias'
+     specifies that arguments do not alias each other, but may alias
+     global storage.  `-fargument-noalias-global' specifies that
+     arguments do not alias each other and do not alias global storage.
+
+     Each language will automatically use whatever option is required by
+     the language standard.  You should not need to use these options
+     yourself.
+
+`-fleading-underscore'
+     This option and its counterpart, `-fno-leading-underscore',
+     forcibly change the way C symbols are represented in the object
+     file.  One use is to help link with legacy assembly code.
+
+     Be warned that you should know what you are doing when invoking
+     this option, and that not all targets provide complete support for
+     it.
+
+
+File: gcc.info,  Node: Environment Variables,  Next: Running Protoize,  Prev: Code Gen Options,  Up: Invoking GCC
+
+Environment Variables Affecting GCC
+===================================
+
+   This section describes several environment variables that affect how
+GCC operates.  Some of them work by specifying directories or prefixes
+to use when searching for various kinds of files.  Some are used to
+specify other aspects of the compilation environment.
+
+   Note that you can also specify places to search using options such as
+`-B', `-I' and `-L' (*note Directory Options::).  These take precedence
+over places specified using environment variables, which in turn take
+precedence over those specified by the configuration of GCC.  *Note
+Driver::.
+
+`LANG'
+`LC_CTYPE'
+`LC_MESSAGES'
+`LC_ALL'
+     These environment variables control the way that GCC uses
+     localization information that allow GCC to work with different
+     national conventions.  GCC inspects the locale categories
+     `LC_CTYPE' and `LC_MESSAGES' if it has been configured to do so.
+     These locale categories can be set to any value supported by your
+     installation.  A typical value is `en_UK' for English in the United
+     Kingdom.
+
+     The `LC_CTYPE' environment variable specifies character
+     classification.  GCC uses it to determine the character boundaries
+     in a string; this is needed for some multibyte encodings that
+     contain quote and escape characters that would otherwise be
+     interpreted as a string end or escape.
+
+     The `LC_MESSAGES' environment variable specifies the language to
+     use in diagnostic messages.
+
+     If the `LC_ALL' environment variable is set, it overrides the value
+     of `LC_CTYPE' and `LC_MESSAGES'; otherwise, `LC_CTYPE' and
+     `LC_MESSAGES' default to the value of the `LANG' environment
+     variable.  If none of these variables are set, GCC defaults to
+     traditional C English behavior.
+
+`TMPDIR'
+     If `TMPDIR' is set, it specifies the directory to use for temporary
+     files.  GCC uses temporary files to hold the output of one stage of
+     compilation which is to be used as input to the next stage: for
+     example, the output of the preprocessor, which is the input to the
+     compiler proper.
+
+`GCC_EXEC_PREFIX'
+     If `GCC_EXEC_PREFIX' is set, it specifies a prefix to use in the
+     names of the subprograms executed by the compiler.  No slash is
+     added when this prefix is combined with the name of a subprogram,
+     but you can specify a prefix that ends with a slash if you wish.
+
+     If `GCC_EXEC_PREFIX' is not set, GCC will attempt to figure out an
+     appropriate prefix to use based on the pathname it was invoked
+     with.
+
+     If GCC cannot find the subprogram using the specified prefix, it
+     tries looking in the usual places for the subprogram.
+
+     The default value of `GCC_EXEC_PREFIX' is `PREFIX/lib/gcc-lib/'
+     where PREFIX is the value of `prefix' when you ran the `configure'
+     script.
+
+     Other prefixes specified with `-B' take precedence over this
+     prefix.
+
+     This prefix is also used for finding files such as `crt0.o' that
+     are used for linking.
+
+     In addition, the prefix is used in an unusual way in finding the
+     directories to search for header files.  For each of the standard
+     directories whose name normally begins with
+     `/usr/local/lib/gcc-lib' (more precisely, with the value of
+     `GCC_INCLUDE_DIR'), GCC tries replacing that beginning with the
+     specified prefix to produce an alternate directory name.  Thus,
+     with `-Bfoo/', GCC will search `foo/bar' where it would normally
+     search `/usr/local/lib/bar'.  These alternate directories are
+     searched first; the standard directories come next.
+
+`COMPILER_PATH'
+     The value of `COMPILER_PATH' is a colon-separated list of
+     directories, much like `PATH'.  GCC tries the directories thus
+     specified when searching for subprograms, if it can't find the
+     subprograms using `GCC_EXEC_PREFIX'.
+
+`LIBRARY_PATH'
+     The value of `LIBRARY_PATH' is a colon-separated list of
+     directories, much like `PATH'.  When configured as a native
+     compiler, GCC tries the directories thus specified when searching
+     for special linker files, if it can't find them using
+     `GCC_EXEC_PREFIX'.  Linking using GCC also uses these directories
+     when searching for ordinary libraries for the `-l' option (but
+     directories specified with `-L' come first).
+
+`C_INCLUDE_PATH'
+`CPLUS_INCLUDE_PATH'
+`OBJC_INCLUDE_PATH'
+     These environment variables pertain to particular languages.  Each
+     variable's value is a colon-separated list of directories, much
+     like `PATH'.  When GCC searches for header files, it tries the
+     directories listed in the variable for the language you are using,
+     after the directories specified with `-I' but before the standard
+     header file directories.
+
+`DEPENDENCIES_OUTPUT'
+     If this variable is set, its value specifies how to output
+     dependencies for Make based on the header files processed by the
+     compiler.  This output looks much like the output from the `-M'
+     option (*note Preprocessor Options::), but it goes to a separate
+     file, and is in addition to the usual results of compilation.
+
+     The value of `DEPENDENCIES_OUTPUT' can be just a file name, in
+     which case the Make rules are written to that file, guessing the
+     target name from the source file name.  Or the value can have the
+     form `FILE TARGET', in which case the rules are written to file
+     FILE using TARGET as the target name.
+
+`LANG'
+     This variable is used to pass locale information to the compiler.
+     One way in which this information is used is to determine the
+     character set to be used when character literals, string literals
+     and comments are parsed in C and C++.  When the compiler is
+     configured to allow multibyte characters, the following values for
+     `LANG' are recognized:
+
+    `C-JIS'
+          Recognize JIS characters.
+
+    `C-SJIS'
+          Recognize SJIS characters.
+
+    `C-EUCJP'
+          Recognize EUCJP characters.
+
+     If `LANG' is not defined, or if it has some other value, then the
+     compiler will use mblen and mbtowc as defined by the default
+     locale to recognize and translate multibyte characters.
+
+
+File: gcc.info,  Node: Running Protoize,  Prev: Environment Variables,  Up: Invoking GCC
+
+Running Protoize
+================
+
+   The program `protoize' is an optional part of GCC.  You can use it
+to add prototypes to a program, thus converting the program to ISO C in
+one respect.  The companion program `unprotoize' does the reverse: it
+removes argument types from any prototypes that are found.
+
+   When you run these programs, you must specify a set of source files
+as command line arguments.  The conversion programs start out by
+compiling these files to see what functions they define.  The
+information gathered about a file FOO is saved in a file named `FOO.X'.
+
+   After scanning comes actual conversion.  The specified files are all
+eligible to be converted; any files they include (whether sources or
+just headers) are eligible as well.
+
+   But not all the eligible files are converted.  By default,
+`protoize' and `unprotoize' convert only source and header files in the
+current directory.  You can specify additional directories whose files
+should be converted with the `-d DIRECTORY' option.  You can also
+specify particular files to exclude with the `-x FILE' option.  A file
+is converted if it is eligible, its directory name matches one of the
+specified directory names, and its name within the directory has not
+been excluded.
+
+   Basic conversion with `protoize' consists of rewriting most function
+definitions and function declarations to specify the types of the
+arguments.  The only ones not rewritten are those for varargs functions.
+
+   `protoize' optionally inserts prototype declarations at the
+beginning of the source file, to make them available for any calls that
+precede the function's definition.  Or it can insert prototype
+declarations with block scope in the blocks where undeclared functions
+are called.
+
+   Basic conversion with `unprotoize' consists of rewriting most
+function declarations to remove any argument types, and rewriting
+function definitions to the old-style pre-ISO form.
+
+   Both conversion programs print a warning for any function
+declaration or definition that they can't convert.  You can suppress
+these warnings with `-q'.
+
+   The output from `protoize' or `unprotoize' replaces the original
+source file.  The original file is renamed to a name ending with
+`.save' (for DOS, the saved filename ends in `.sav' without the
+original `.c' suffix).  If the `.save' (`.sav' for DOS) file already
+exists, then the source file is simply discarded.
+
+   `protoize' and `unprotoize' both depend on GCC itself to scan the
+program and collect information about the functions it uses.  So
+neither of these programs will work until GCC is installed.
+
+   Here is a table of the options you can use with `protoize' and
+`unprotoize'.  Each option works with both programs unless otherwise
+stated.
+
+`-B DIRECTORY'
+     Look for the file `SYSCALLS.c.X' in DIRECTORY, instead of the
+     usual directory (normally `/usr/local/lib').  This file contains
+     prototype information about standard system functions.  This option
+     applies only to `protoize'.
+
+`-c COMPILATION-OPTIONS'
+     Use  COMPILATION-OPTIONS as the options when running `gcc' to
+     produce the `.X' files.  The special option `-aux-info' is always
+     passed in addition, to tell `gcc' to write a `.X' file.
+
+     Note that the compilation options must be given as a single
+     argument to `protoize' or `unprotoize'.  If you want to specify
+     several `gcc' options, you must quote the entire set of
+     compilation options to make them a single word in the shell.
+
+     There are certain `gcc' arguments that you cannot use, because they
+     would produce the wrong kind of output.  These include `-g', `-O',
+     `-c', `-S', and `-o' If you include these in the
+     COMPILATION-OPTIONS, they are ignored.
+
+`-C'
+     Rename files to end in `.C' (`.cc' for DOS-based file systems)
+     instead of `.c'.  This is convenient if you are converting a C
+     program to C++.  This option applies only to `protoize'.
+
+`-g'
+     Add explicit global declarations.  This means inserting explicit
+     declarations at the beginning of each source file for each function
+     that is called in the file and was not declared.  These
+     declarations precede the first function definition that contains a
+     call to an undeclared function.  This option applies only to
+     `protoize'.
+
+`-i STRING'
+     Indent old-style parameter declarations with the string STRING.
+     This option applies only to `protoize'.
+
+     `unprotoize' converts prototyped function definitions to old-style
+     function definitions, where the arguments are declared between the
+     argument list and the initial `{'.  By default, `unprotoize' uses
+     five spaces as the indentation.  If you want to indent with just
+     one space instead, use `-i " "'.
+
+`-k'
+     Keep the `.X' files.  Normally, they are deleted after conversion
+     is finished.
+
+`-l'
+     Add explicit local declarations.  `protoize' with `-l' inserts a
+     prototype declaration for each function in each block which calls
+     the function without any declaration.  This option applies only to
+     `protoize'.
+
+`-n'
+     Make no real changes.  This mode just prints information about the
+     conversions that would have been done without `-n'.
+
+`-N'
+     Make no `.save' files.  The original files are simply deleted.
+     Use this option with caution.
+
+`-p PROGRAM'
+     Use the program PROGRAM as the compiler.  Normally, the name `gcc'
+     is used.
+
+`-q'
+     Work quietly.  Most warnings are suppressed.
+
+`-v'
+     Print the version number, just like `-v' for `gcc'.
+
+   If you need special compiler options to compile one of your program's
+source files, then you should generate that file's `.X' file specially,
+by running `gcc' on that source file with the appropriate options and
+the option `-aux-info'.  Then run `protoize' on the entire set of
+files.  `protoize' will use the existing `.X' file because it is newer
+than the source file.  For example:
+
+     gcc -Dfoo=bar file1.c -aux-info file1.X
+     protoize *.c
+
+You need to include the special files along with the rest in the
+`protoize' command, even though their `.X' files already exist, because
+otherwise they won't get converted.
+
+   *Note Protoize Caveats::, for more information on how to use
+`protoize' successfully.
+
+
+File: gcc.info,  Node: Installation,  Next: C Extensions,  Prev: Invoking GCC,  Up: Top
+
+Installing GNU CC
+*****************
+
+   Note most of this information is out of date and superseded by the
+new GCC install manual `gcc/doc/install.texi'.  It is provided for
+historical reference only.
+
+* Menu:
+
+* Configuration Files::  Files created by running `configure'.
+* Configurations::    Configurations Supported by GNU CC.
+* Cross-Compiler::   Building and installing a cross-compiler.
+* VMS Install::   See below for installation on VMS.
+* Collect2::	  How `collect2' works; how it finds `ld'.
+* Header Dirs::   Understanding the standard header file directories.
+
+   Here is the procedure for installing GNU CC on a GNU or Unix system.
+See *Note VMS Install::, for VMS systems.
+
+  1. If you have chosen a configuration for GNU CC which requires other
+     GNU tools (such as GAS or the GNU linker) instead of the standard
+     system tools, install the required tools in the build directory
+     under the names `as', `ld' or whatever is appropriate.  This will
+     enable the compiler to find the proper tools for compilation of
+     the program `enquire'.
+
+     Alternatively, you can do subsequent compilation using a value of
+     the `PATH' environment variable such that the necessary GNU tools
+     come before the standard system tools.
+
+  2. Specify the host, build and target machine configurations.  You do
+     this when you run the `configure' script.
+
+     The "build" machine is the system which you are using, the "host"
+     machine is the system where you want to run the resulting compiler
+     (normally the build machine), and the "target" machine is the
+     system for which you want the compiler to generate code.
+
+     If you are building a compiler to produce code for the machine it
+     runs on (a native compiler), you normally do not need to specify
+     any operands to `configure'; it will try to guess the type of
+     machine you are on and use that as the build, host and target
+     machines.  So you don't need to specify a configuration when
+     building a native compiler unless `configure' cannot figure out
+     what your configuration is or guesses wrong.
+
+     In those cases, specify the build machine's "configuration name"
+     with the `--host' option; the host and target will default to be
+     the same as the host machine.  (If you are building a
+     cross-compiler, see *Note Cross-Compiler::.)
+
+     Here is an example:
+
+          ./configure --host=sparc-sun-sunos4.1
+
+     A configuration name may be canonical or it may be more or less
+     abbreviated.
+
+     A canonical configuration name has three parts, separated by
+     dashes.  It looks like this: `CPU-COMPANY-SYSTEM'.  (The three
+     parts may themselves contain dashes; `configure' can figure out
+     which dashes serve which purpose.)  For example,
+     `m68k-sun-sunos4.1' specifies a Sun 3.
+
+     You can also replace parts of the configuration by nicknames or
+     aliases.  For example, `sun3' stands for `m68k-sun', so
+     `sun3-sunos4.1' is another way to specify a Sun 3.
+
+     You can specify a version number after any of the system types,
+     and some of the CPU types.  In most cases, the version is
+     irrelevant, and will be ignored.  So you might as well specify the
+     version if you know it.
+
+     See *Note Configurations::, for a list of supported configuration
+     names and notes on many of the configurations.  You should check
+     the notes in that section before proceeding any further with the
+     installation of GNU CC.
+
+
+
+File: gcc.info,  Node: Configuration Files,  Next: Configurations,  Up: Installation
+
+Files Created by `configure'
+============================
+
+   Here we spell out what files will be set up by `configure'.  Normally
+you need not be concerned with these files.
+
+   * A file named `config.h' is created that contains a `#include' of
+     the top-level config file for the machine you will run the compiler
+     on (*note Config::).  This file is responsible for defining
+     information about the host machine.  It includes `tm.h'.
+
+     The top-level config file is located in the subdirectory `config'.
+     Its name is always `xm-SOMETHING.h'; usually `xm-MACHINE.h', but
+     there are some exceptions.
+
+     If your system does not support symbolic links, you might want to
+     set up `config.h' to contain a `#include' command which refers to
+     the appropriate file.
+
+   * A file named `tconfig.h' is created which includes the top-level
+     config file for your target machine.  This is used for compiling
+     certain programs to run on that machine.
+
+   * A file named `tm.h' is created which includes the
+     machine-description macro file for your target machine.  It should
+     be in the subdirectory `config' and its name is often `MACHINE.h'.
+
+   * The command file `configure' also constructs the file `Makefile'
+     by adding some text to the template file `Makefile.in'.  The
+     additional text comes from files in the `config' directory, named
+     `t-TARGET' and `x-HOST'.  If these files do not exist, it means
+     nothing needs to be added for a given target or host.
+
+
+File: gcc.info,  Node: Configurations,  Next: Cross-Compiler,  Prev: Configuration Files,  Up: Installation
+
+Configurations Supported by GNU CC
+==================================
+
+   Here are the possible CPU types:
+
+     1750a, a29k, alpha, arm, avr, cN, clipper, dsp16xx, elxsi, fr30,
+     h8300, hppa1.0, hppa1.1, i370, i386, i486, i586, i686, i786, i860,
+     i960, m32r, m68000, m68k, m6811, m6812, m88k, mcore, mips, mipsel,
+     mips64, mips64el, mn10200, mn10300, ns32k, pdp11, powerpc,
+     powerpcle, romp, rs6000, sh, sparc, sparclite, sparc64, v850, vax,
+     we32k.
+
+   Here are the recognized company names.  As you can see, customary
+abbreviations are used rather than the longer official names.
+
+     acorn, alliant, altos, apollo, apple, att, bull, cbm, convergent,
+     convex, crds, dec, dg, dolphin, elxsi, encore, harris, hitachi,
+     hp, ibm, intergraph, isi, mips, motorola, ncr, next, ns, omron,
+     plexus, sequent, sgi, sony, sun, tti, unicom, wrs.
+
+   The company name is meaningful only to disambiguate when the rest of
+the information supplied is insufficient.  You can omit it, writing
+just `CPU-SYSTEM', if it is not needed.  For example, `vax-ultrix4.2'
+is equivalent to `vax-dec-ultrix4.2'.
+
+   Here is a list of system types:
+
+     386bsd, aix, acis, amigaos, aos, aout, aux, bosx, bsd, clix, coff,
+     ctix, cxux, dgux, dynix, ebmon, ecoff, elf, esix, freebsd, hms,
+     genix, gnu, linux, linux-gnu, hiux, hpux, iris, irix, isc, luna,
+     lynxos, mach, minix, msdos, mvs, netbsd, newsos, nindy, ns, osf,
+     osfrose, ptx, riscix, riscos, rtu, sco, sim, solaris, sunos, sym,
+     sysv, udi, ultrix, unicos, uniplus, unos, vms, vsta, vxworks,
+     winnt, xenix.
+
+You can omit the system type; then `configure' guesses the operating
+system from the CPU and company.
+
+   You can add a version number to the system type; this may or may not
+make a difference.  For example, you can write `bsd4.3' or `bsd4.4' to
+distinguish versions of BSD.  In practice, the version number is most
+needed for `sysv3' and `sysv4', which are often treated differently.
+
+   `linux-gnu' is the canonical name for the GNU/Linux target; however
+GNU CC will also accept `linux'.  The version of the kernel in use is
+not relevant on these systems.  A suffix such as `libc1' or `aout'
+distinguishes major versions of the C library; all of the suffixed
+versions are obsolete.
+
+   If you specify an impossible combination such as `i860-dg-vms', then
+you may get an error message from `configure', or it may ignore part of
+the information and do the best it can with the rest.  `configure'
+always prints the canonical name for the alternative that it used.  GNU
+CC does not support all possible alternatives.
+
+   Often a particular model of machine has a name.  Many machine names
+are recognized as aliases for CPU/company combinations.  Thus, the
+machine name `sun3', mentioned above, is an alias for `m68k-sun'.
+Sometimes we accept a company name as a machine name, when the name is
+popularly used for a particular machine.  Here is a table of the known
+machine names:
+
+     3300, 3b1, 3bN, 7300, altos3068, altos, apollo68, att-7300,
+     balance, convex-cN, crds, decstation-3100, decstation, delta,
+     encore, fx2800, gmicro, hp7NN, hp8NN, hp9k2NN, hp9k3NN, hp9k7NN,
+     hp9k8NN, iris4d, iris, isi68, m3230, magnum, merlin, miniframe,
+     mmax, news-3600, news800, news, next, pbd, pc532, pmax, powerpc,
+     powerpcle, ps2, risc-news, rtpc, sun2, sun386i, sun386, sun3,
+     sun4, symmetry, tower-32, tower.
+
+Remember that a machine name specifies both the cpu type and the company
+name.  If you want to install your own homemade configuration files,
+you can use `local' as the company name to access them.  If you use
+configuration `CPU-local', the configuration name without the cpu prefix
+is used to form the configuration file names.
+
+   Thus, if you specify `m68k-local', configuration uses files
+`m68k.md', `local.h', `m68k.c', `xm-local.h', `t-local', and `x-local',
+all in the directory `config/m68k'.
+
+   Here is a list of configurations that have special treatment or
+special things you must know:
+
+`vax-dec-vms'
+     See *Note VMS Install::, for details on how to install GNU CC on
+     VMS.
+
+
+File: gcc.info,  Node: Cross-Compiler,  Next: VMS Install,  Prev: Configurations,  Up: Installation
+
+Building and Installing a Cross-Compiler
+========================================
+
+   GNU CC can function as a cross-compiler for many machines, but not
+all.
+
+   * Cross-compilers for the Mips as target using the Mips assembler
+     currently do not work, because the auxiliary programs
+     `mips-tdump.c' and `mips-tfile.c' can't be compiled on anything
+     but a Mips.  It does work to cross compile for a Mips if you use
+     the GNU assembler and linker.
+
+   * Cross-compilers between machines with different floating point
+     formats have not all been made to work.  GNU CC now has a floating
+     point emulator with which these can work, but each target machine
+     description needs to be updated to take advantage of it.
+
+   * Cross-compilation between machines of different word sizes is
+     somewhat problematic and sometimes does not work.
+
+   Since GNU CC generates assembler code, you probably need a
+cross-assembler that GNU CC can run, in order to produce object files.
+If you want to link on other than the target machine, you need a
+cross-linker as well.  You also need header files and libraries suitable
+for the target machine that you can install on the host machine.
+
+* Menu:
+
+* Steps of Cross::      Using a cross-compiler involves several steps
+                          that may be carried out on different machines.
+* Configure Cross::     Configuring a cross-compiler.
+* Tools and Libraries:: Where to put the linker and assembler, and the C library.
+* Cross Headers::       Finding and installing header files
+                          for a cross-compiler.
+* Build Cross::         Actually compiling the cross-compiler.
+
+
+File: gcc.info,  Node: Steps of Cross,  Next: Configure Cross,  Up: Cross-Compiler
+
+Steps of Cross-Compilation
+--------------------------
+
+   To compile and run a program using a cross-compiler involves several
+steps:
+
+   * Run the cross-compiler on the host machine to produce assembler
+     files for the target machine.  This requires header files for the
+     target machine.
+
+   * Assemble the files produced by the cross-compiler.  You can do this
+     either with an assembler on the target machine, or with a
+     cross-assembler on the host machine.
+
+   * Link those files to make an executable.  You can do this either
+     with a linker on the target machine, or with a cross-linker on the
+     host machine.  Whichever machine you use, you need libraries and
+     certain startup files (typically `crt....o') for the target
+     machine.
+
+   It is most convenient to do all of these steps on the same host
+machine, since then you can do it all with a single invocation of GNU
+CC.  This requires a suitable cross-assembler and cross-linker.  For
+some targets, the GNU assembler and linker are available.
+
+
+File: gcc.info,  Node: Configure Cross,  Next: Tools and Libraries,  Prev: Steps of Cross,  Up: Cross-Compiler
+
+Configuring a Cross-Compiler
+----------------------------
+
+   To build GNU CC as a cross-compiler, you start out by running
+`configure'.  Use the `--target=TARGET' to specify the target type.  If
+`configure' was unable to correctly identify the system you are running
+on, also specify the `--build=BUILD' option.  For example, here is how
+to configure for a cross-compiler that produces code for an HP 68030
+system running BSD on a system that `configure' can correctly identify:
+
+     ./configure --target=m68k-hp-bsd4.3
+
+
+File: gcc.info,  Node: Tools and Libraries,  Next: Cross Headers,  Prev: Configure Cross,  Up: Cross-Compiler
+
+Tools and Libraries for a Cross-Compiler
+----------------------------------------
+
+   If you have a cross-assembler and cross-linker available, you should
+install them now.  Put them in the directory `/usr/local/TARGET/bin'.
+Here is a table of the tools you should put in this directory:
+
+`as'
+     This should be the cross-assembler.
+
+`ld'
+     This should be the cross-linker.
+
+`ar'
+     This should be the cross-archiver: a program which can manipulate
+     archive files (linker libraries) in the target machine's format.
+
+`ranlib'
+     This should be a program to construct a symbol table in an archive
+     file.
+
+   The installation of GNU CC will find these programs in that
+directory, and copy or link them to the proper place to for the
+cross-compiler to find them when run later.
+
+   The easiest way to provide these files is to build the Binutils
+package and GAS.  Configure them with the same `--host' and `--target'
+options that you use for configuring GNU CC, then build and install
+them.  They install their executables automatically into the proper
+directory.  Alas, they do not support all the targets that GNU CC
+supports.
+
+   If you want to install libraries to use with the cross-compiler,
+such as a standard C library, put them in the directory
+`/usr/local/TARGET/lib'; installation of GNU CC copies all the files in
+that subdirectory into the proper place for GNU CC to find them and
+link with them.  Here's an example of copying some libraries from a
+target machine:
+
+     ftp TARGET-MACHINE
+     lcd /usr/local/TARGET/lib
+     cd /lib
+     get libc.a
+     cd /usr/lib
+     get libg.a
+     get libm.a
+     quit
+
+The precise set of libraries you'll need, and their locations on the
+target machine, vary depending on its operating system.
+
+   Many targets require "start files" such as `crt0.o' and `crtn.o'
+which are linked into each executable; these too should be placed in
+`/usr/local/TARGET/lib'.  There may be several alternatives for
+`crt0.o', for use with profiling or other compilation options.  Check
+your target's definition of `STARTFILE_SPEC' to find out what start
+files it uses.  Here's an example of copying these files from a target
+machine:
+
+     ftp TARGET-MACHINE
+     lcd /usr/local/TARGET/lib
+     prompt
+     cd /lib
+     mget *crt*.o
+     cd /usr/lib
+     mget *crt*.o
+     quit
+
+
+File: gcc.info,  Node: Cross Headers,  Next: Build Cross,  Prev: Tools and Libraries,  Up: Cross-Compiler
+
+Cross-Compilers and Header Files
+--------------------------------
+
+   If you are cross-compiling a standalone program or a program for an
+embedded system, then you may not need any header files except the few
+that are part of GNU CC (and those of your program).  However, if you
+intend to link your program with a standard C library such as `libc.a',
+then you probably need to compile with the header files that go with
+the library you use.
+
+   The GNU C compiler does not come with these files, because (1) they
+are system-specific, and (2) they belong in a C library, not in a
+compiler.
+
+   If the GNU C library supports your target machine, then you can get
+the header files from there (assuming you actually use the GNU library
+when you link your program).
+
+   If your target machine comes with a C compiler, it probably comes
+with suitable header files also.  If you make these files accessible
+from the host machine, the cross-compiler can use them also.
+
+   Otherwise, you're on your own in finding header files to use when
+cross-compiling.
+
+   When you have found suitable header files, put them in the directory
+`/usr/local/TARGET/include', before building the cross compiler.  Then
+installation will run fixincludes properly and install the corrected
+versions of the header files where the compiler will use them.
+
+   Provide the header files before you build the cross-compiler, because
+the build stage actually runs the cross-compiler to produce parts of
+`libgcc.a'.  (These are the parts that _can_ be compiled with GNU CC.)
+Some of them need suitable header files.
+
+   Here's an example showing how to copy the header files from a target
+machine.  On the target machine, do this:
+
+     (cd /usr/include; tar cf - .) > tarfile
+
+   Then, on the host machine, do this:
+
+     ftp TARGET-MACHINE
+     lcd /usr/local/TARGET/include
+     get tarfile
+     quit
+     tar xf tarfile
+
+
+File: gcc.info,  Node: Build Cross,  Prev: Cross Headers,  Up: Cross-Compiler
+
+Actually Building the Cross-Compiler
+------------------------------------
+
+   Now you can proceed just as for compiling a single-machine compiler
+through the step of building stage 1.
+
+   If your target is exotic, you may need to provide the header file
+`float.h'.One way to do this is to compile `enquire' and run it on your
+target machine.  The job of `enquire' is to run on the target machine
+and figure out by experiment the nature of its floating point
+representation.  `enquire' records its findings in the header file
+`float.h'.  If you can't produce this file by running `enquire' on the
+target machine, then you will need to come up with a suitable `float.h'
+in some other way (or else, avoid using it in your programs).
+
+   Do not try to build stage 2 for a cross-compiler.  It doesn't work to
+rebuild GNU CC as a cross-compiler using the cross-compiler, because
+that would produce a program that runs on the target machine, not on the
+host.  For example, if you compile a 386-to-68030 cross-compiler with
+itself, the result will not be right either for the 386 (because it was
+compiled into 68030 code) or for the 68030 (because it was configured
+for a 386 as the host).  If you want to compile GNU CC into 68030 code,
+whether you compile it on a 68030 or with a cross-compiler on a 386, you
+must specify a 68030 as the host when you configure it.
+
+   To install the cross-compiler, use `make install', as usual.
+
