@@ -67,7 +67,7 @@ FROM FFTWLongRealRaw IMPORT R2RKind;
 TYPE
   Plan    <: REFANY;
   Complex = RECORD r, i: LONGREAL; END;
-  Sign = [-1..1];
+  Dir = {forward, backward};
 
 EXCEPTION
   SizeMismatch;
@@ -76,6 +76,9 @@ EXCEPTION
 
 %insert(m3wrapimpl) %{
 FROM FFTWLongRealRaw IMPORT R2RKind;
+
+CONST
+  dirToSign = ARRAY Dir OF [-1..1] {-1,1};
 
 REVEAL
   Plan = BRANDED REF FFTWLongRealRaw.Plan;
@@ -99,7 +102,9 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 
 %typemap(m3wrapintype)  double *        %{LONGREAL%};
 %typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
-%typemap(m3wrapintype)  int sign        %{Sign%};
+
+%typemap(m3wrapintype)  int sign        %{Dir%};
+%typemap(m3wrapargraw)  int sign        %{dirToSign[$input]%};
 
 %typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
 %typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
