@@ -16,15 +16,15 @@ IMPORT Fmt AS F;
 
 (*----------------*)
 PROCEDURE Fmt( 
-                p:P.T;
+                x:P.T;
                 style:F.Style:=F.Style.Fix;
                 prec:CARDINAL:=3
                 ):TEXT=
 VAR
   t:TEXT;
 BEGIN
-  t:="POLAR{radius:=" & RF.Fmt(p.radius,style,prec) & "D0,"
-         & "angle:="  & RF.Fmt(p.angle ,style,prec) & "D0}";
+  t:="POLAR{radius:=" & RF.Fmt(x.radius,style,prec) & "D0,"
+         & "angle:="  & RF.Fmt(x.angle ,style,prec) & "D0}";
   RETURN t;
 END Fmt;
 
