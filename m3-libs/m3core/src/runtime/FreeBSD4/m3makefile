@@ -1,0 +1,44 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Nov 21 10:43:13 PST 1994 by kalsow
+%      modified on Mon Dec 14 19:59:03 PST 1992 by jdd
+%      modified on Wed May 20 17:21:29 PDT 1992 by muller
+
+Interface      ("RTMachine")
+implementation ("RTHeapDep")
+implementation ("RTSignal")
+implementation ("RTThread")
+c_source       ("RTThreadC")
+c_source       ("RTHeapDepC")
+s_source       ("_fpsetjmp")
+c_source       ("malloc")
+
+% These wrappers were extracted from RTHeapDepC.c and modified slightly,
+% in order to make it possible to support SOCKS.
+h_source       ("socksconf")
+h_source       ("wrap")
+c_source       ("accept")
+c_source       ("bind")
+c_source       ("close")
+c_source       ("connect")
+c_source       ("dup")
+c_source       ("dup2")
+c_source       ("gethostbyaddr")
+c_source       ("gethostbyname")
+c_source       ("getpeername")
+c_source       ("getsockname")
+c_source       ("listen")
+c_source       ("read")
+c_source       ("recv")
+c_source       ("recvfrom")
+c_source       ("select")
+c_source       ("send")
+c_source       ("sendto")
+c_source       ("shutdown")
+c_source       ("socket")
+c_source       ("write")
+
+%% s_source (RTStackASM)
+
