@@ -16,5 +16,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)  RAISES {Quake.Error};
 PROCEDURE Run (t: T;  makefile: TEXT) RAISES {Quake.Error, Thread.Alerted};
 (* Evaluate the specified makefile... *)
 
+VAR
+  done := FALSE;
 END M3Build.
 

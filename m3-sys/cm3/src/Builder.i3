@@ -24,5 +24,8 @@ PROCEDURE JustCompile (READONLY units: M3Unit.Set;
 PROCEDURE CleanUp ();
 (* Last chance to dump state and clean up *)
 
+PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set);
+(* Output all imported packages *)
+
 END Builder.
 

@@ -103,7 +103,7 @@ CONST
   SExtensions    = ARRAY OF TEXT { ".o", ".obj" };
   NoExtension    = ARRAY OF TEXT { "" };
 
-(*-------------------------------------------------- external entry points ---*)
+(*-------------------------------------------------- external entry points --*)
 
 PROCEDURE NewMachine (): T =
   VAR
@@ -187,7 +187,7 @@ PROCEDURE NewMap (): IntRefTbl.T =
     RETURN NEW (IntRefTbl.Default).init ();
   END NewMap;
 
-(*-------------------------------------------- "global" var initialization ---*)
+(*-------------------------------------------- "global" var initialization --*)
 
 PROCEDURE InitGlobals (t: T) =
   (* initializes the global state for a new build.  That is, forget
@@ -205,7 +205,7 @@ PROCEDURE InitGlobals (t: T) =
     t.build_shared := TRUE;
   END InitGlobals;
 
-(*------------------------------------------------------------------ units ---*)
+(*------------------------------------------------------------------ units --*)
 
 PROCEDURE AddSource (t: T;  nm: M3ID.T;  kind: UK;  hidden: BOOLEAN)
   RAISES {Quake.Error} =
@@ -248,7 +248,7 @@ PROCEDURE DeleteObjects (t: T;  nm: M3ID.T;  kind: UK) =
     END;
   END DeleteObjects;
 
-(*------------------------------------------------------------- text lists ---*)
+(*------------------------------------------------------------- text lists --*)
 
 PROCEDURE InitTxtList (VAR x: TxtList) =
   BEGIN
@@ -272,7 +272,7 @@ PROCEDURE AddTexts (VAR x: TxtList;  a, b, c: TEXT := NIL) =
     IF (c # NIL) THEN AddText (x, c); END;
   END AddTexts;
 
-(*------------------------------------------------------ builtin functions ---*)
+(*------------------------------------------------------ builtin functions --*)
 
 TYPE
   Builtin = RECORD
@@ -494,7 +494,7 @@ PROCEDURE DetermineSlash (): TEXT =
     RETURN Slash [on_unix];
   END DetermineSlash;
 
-(*------------------------------------------------------ package locations ---*)
+(*------------------------------------------------------ package locations --*)
 
 PROCEDURE DoPkg (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -531,12 +531,21 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
   BEGIN
     IF t.build_pkg = pkg THEN
       IF t.already_warned THEN RETURN; END;
-      Msg.Out ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
+      IF M3Options.major_mode = MM.Depend THEN
+        Msg.Verbose ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
+      ELSE
+        Msg.Out ("ignoring override(\"", pkg_txt, QCQ, dir, QRPCR);
+      END;
       t.already_warned := TRUE;
     ELSIF t.pkg_overrides.get (pkg, ref) THEN
       IF NOT Text.Equal (dir, ref) THEN
-        Msg.Out ("package \"", pkg_txt, "\" is already overridden to ",
-                 ref, ", ignoring new override to ", dir, Wr.EOL);
+        IF M3Options.major_mode = MM.Depend THEN
+          Msg.Verbose ("package \"", pkg_txt, "\" is already overridden to ",
+                       ref, ", ignoring new override to " & dir & Wr.EOL);
+        ELSE
+          Msg.Out ("package \"", pkg_txt, "\" is already overridden to ",
+                   ref, ", ignoring new override to ", dir, Wr.EOL);
+        END;
       END;
     ELSE
       EVAL t.pkg_overrides.put (pkg, dir);
@@ -547,10 +556,40 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
 PROCEDURE Include (t: T;  file: TEXT)
   RAISES {Quake.Error, Thread.Alerted} =
   BEGIN
-    t.include (file);
+    (* We cannot be sure that _any_ packages are there when we compute
+       the package dependencies. If an appropriate .M3EXPORTS file cannot
+       be found, we simply create a dummy unit representing the package
+       import. *)
+    IF t.mode # MM.Depend OR Utils.IsFile(file) THEN
+      t.include (file);
+    ELSE
+      Msg.Debug ("simulating inclusion of ", file, Wr.EOL);
+      VAR
+        lib, pkg, subdir, last: TEXT;
+        pkg_id, subdir_id, lib_id: M3ID.T;
+        loc: M3Loc.T;
+      BEGIN
+        IF file # NIL THEN
+          last := Pathname.Last(file);
+          IF last # NIL AND Text.Equal(last, ".M3EXPORTS") THEN
+            file := Pathname.Prefix(file);
+            subdir := Pathname.Last(file);
+            file := Pathname.Prefix(file);
+            pkg := Pathname.Last(file);
+            pkg_id := M3ID.Add(pkg);
+            subdir_id := M3ID.Add(subdir);
+            lib := pkg & "_unknown";
+            lib_id := M3ID.Add(lib);
+            loc := Location (t, pkg_id, subdir_id);
+            M3Unit.AddNew (t.units, lib_id, UK.M3LIB, loc, hidden := TRUE,
+                           imported := TRUE); 
+          END;
+        END;
+      END;
+    END;
   END Include;
 
-(*------------------------------------------------------ general locations ---*)
+(*------------------------------------------------------ general locations --*)
 
 PROCEDURE Location (t: T;  pkg, subdir: M3ID.T): M3Loc.T =
   (* Return the full path that identifies the given subdirectory
@@ -564,7 +603,7 @@ PROCEDURE Location (t: T;  pkg, subdir: M3ID.T): M3Loc.T =
     RETURN M3Loc.New (pkg, subdir, pkg_dir);
   END Location;
 
-(*--------------------------------------------------------- relative paths ---*)
+(*--------------------------------------------------------- relative paths --*)
 
 PROCEDURE DoPathOf (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -615,7 +654,7 @@ PROCEDURE PkgSubdir (t: T): TEXT
     RETURN t.pkg_subdir_base;
   END PkgSubdir;
 
-(*------------------------------------------------------------------ names ---*)
+(*------------------------------------------------------------------ names --*)
 
 PROCEDURE DoProgramName (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -631,7 +670,7 @@ PROCEDURE DoLibraryName (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     PushText (t, M3Path.LibraryName (PopText (t), host := TRUE));
   END DoLibraryName;
 
-(*------------------------------------- calls used in generated files only ---*)
+(*------------------------------------- calls used in generated files only --*)
 
 PROCEDURE DoDefineLib (<*UNUSED*> m: QMachine.T;  <*UNUSED*> n_args: INTEGER) =
   BEGIN
@@ -739,7 +778,7 @@ PROCEDURE MapSource (t: T;  kind: UK)
                    hidden := vis, imported := TRUE);
   END MapSource;
 
-(*------------------------------------------------------------------ misc ----*)
+(*------------------------------------------------------------------ misc ---*)
 
 PROCEDURE DoDebug (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -797,7 +836,7 @@ PROCEDURE DoFinishUp (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     END;
   END DoFinishUp;
 
-(*-------------------------------------------- predefined system libraries ---*)
+(*-------------------------------------------- predefined system libraries --*)
 
 PROCEDURE DoImportSysLib (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -833,7 +872,7 @@ PROCEDURE SysLibs (t: T): Arg.List
     RETURN libs;
   END SysLibs;
 
-(*---------------------------------------------------------------- options ---*)
+(*---------------------------------------------------------------- options --*)
 (* These are hacks to provide some backward compatibility with the old m3build *)
 
 PROCEDURE DoM3Option (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -867,7 +906,7 @@ PROCEDURE DoRemoveM3Option (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     Msg.Out ("remove_m3_option (\"", arg, "\") is being ignored.", Wr.EOL)
   END DoRemoveM3Option;
 
-(*--------------------------------------------------------------- deleting ---*)
+(*--------------------------------------------------------------- deleting --*)
 (* We don't support "-clean".... *)
 
 PROCEDURE DoDeriveds (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -890,7 +929,7 @@ PROCEDURE DeleteDeriveds (t: T;  base: TEXT;   READONLY exts: ARRAY OF TEXT) =
     END;
   END DeleteDeriveds;
 
-(*---------------------------------------------------------------- imports ---*)
+(*---------------------------------------------------------------- imports --*)
 
 PROCEDURE DoIncludeDir (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error, Thread.Alerted} =
@@ -967,7 +1006,7 @@ PROCEDURE DoImportLib (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     ImportOtherLib (t, lib, path, imported := FALSE);
   END DoImportLib;
 
-(*---------------------------------------------------------------- objects ---*)
+(*---------------------------------------------------------------- objects --*)
 
 PROCEDURE DoPgmObject (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -977,7 +1016,7 @@ PROCEDURE DoPgmObject (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     t.pop (v);  (* filename base *)
   END DoPgmObject;
 
-(*---------------------------------------------------------------- sources ---*)
+(*---------------------------------------------------------------- sources --*)
 
 PROCEDURE DoSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1073,7 +1112,7 @@ PROCEDURE DoShipSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     M3Unit.Add (t.ship_units, unit);
   END DoShipSource;
 
-(*--------------------------------------------------------------- generics ---*)
+(*--------------------------------------------------------------- generics --*)
 
 PROCEDURE DoGenIntf (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1176,7 +1215,7 @@ PROCEDURE BuildGeneric (t: T;  kind, file, name, generic: TEXT;  args: QVSeq.T)
     END;
   END BuildGeneric;
 
-(*-------------------------------------------------------- derived sources ---*)
+(*-------------------------------------------------------- derived sources --*)
 
 PROCEDURE DoDerivedIntf (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1211,7 +1250,7 @@ PROCEDURE DoDerivedH (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     AddDerived (t, PopID (t), UK.H, hidden := FALSE);
   END DoDerivedH;
 
-(*------------------------------------------------------- hiding/exporting ---*)
+(*------------------------------------------------------- hiding/exporting --*)
 (* These are forwarded in the exports file *)
 
 PROCEDURE SetVis (t: T;  nm: M3ID.T;  kind: UK;  hidden: BOOLEAN) =
@@ -1279,7 +1318,7 @@ PROCEDURE DoExportGenImpl (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
               M3ID.ToText (nm), QRPCR);
   END DoExportGenImpl;
 
-(*-------------------------------------------------------------- templates ---*)
+(*-------------------------------------------------------------- templates --*)
 
 PROCEDURE DoTemplate (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error, Thread.Alerted} =
@@ -1289,7 +1328,7 @@ PROCEDURE DoTemplate (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     Include (t, M3Path.Join (NIL, M3ID.ToText (nm), UK.TMPL, host := TRUE));
   END DoTemplate;
 
-(*------------------------------------------------------- library building ---*)
+(*------------------------------------------------------- library building --*)
 
 PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1308,6 +1347,11 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       InstallSources (t);
     END;
     IF (t.mode = MM.Find) THEN FindUnits (t); END;
+    IF (t.mode = MM.Depend) THEN 
+      Msg.Out (M3ID.ToText(t.build_pkg), ":");
+      Builder.EmitPkgImports (t.units); 
+      done := TRUE;
+    END;
     DeleteDeriveds (t, lib_a, NoExtension);
     DeleteDeriveds (t, lib_m3x, NoExtension);
     DeleteDeriveds (t, M3Web, NoExtension);
@@ -1315,7 +1359,7 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoLibrary;
 
-(*------------------------------------------------------- program building ---*)
+(*------------------------------------------------------- program building --*)
 
 PROCEDURE DoProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1353,8 +1397,14 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
       InstallSources (t);
     END;
     IF (t.mode = MM.Find) THEN FindUnits (t); END;
+    IF (t.mode = MM.Depend) THEN 
+      Msg.Out (M3ID.ToText(t.build_pkg), ":");
+      Builder.EmitPkgImports (t.units);
+      done := TRUE;
+    END;
     DeleteDeriveds (t, M3Path.ProgramName (name, host := TRUE), NoExtension);
-    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX, host := TRUE), NoExtension);
+    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX, host := TRUE), 
+                    NoExtension);
     DeleteDeriveds (t, M3Web, NoExtension);
     DeleteDeriveds (t, name, Junk);
     DeleteDeriveds (t, "", Extras);
@@ -1369,6 +1419,11 @@ PROCEDURE DoCProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       Builder.BuildCPgm (name, t.units, SysLibs (t), t.build_shared, t);
     END;
     IF (t.mode = MM.Find) THEN FindUnits (t); END;
+    IF (t.mode = MM.Depend) THEN
+      Msg.Out (M3ID.ToText(t.build_pkg), ":");
+      Builder.EmitPkgImports (t.units);
+      done := TRUE;
+    END;
     DeleteDeriveds (t, M3Path.ProgramName (name, host := TRUE), NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoCProgram;
@@ -1381,13 +1436,18 @@ PROCEDURE DoCProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       Builder.BuildCPgm (name, t.units, SysLibs (t), t.build_shared, t);
     END;
     IF (t.mode = MM.Find) THEN FindUnits (t); END;
+    IF (t.mode = MM.Depend) THEN
+      Msg.Out (M3ID.ToText(t.build_pkg), ":");
+      Builder.EmitPkgImports (t.units);
+      done := TRUE;
+    END;
     prog := M3Path.ProgramName (name, host := TRUE);
     BindExport (t, prog);
     DeleteDeriveds (t, prog, NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoCProgramX;
 
-(*-------------------------------------------------------------- man pages ---*)
+(*-------------------------------------------------------------- man pages --*)
 
 PROCEDURE DoManPage (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1422,7 +1482,7 @@ PROCEDURE BuildManPage (t: T;  nm, sec: TEXT)
     DeleteDeriveds (t, dest, NoExtension);
   END BuildManPage;
 
-(*------------------------------------------------------------------ emacs ---*)
+(*------------------------------------------------------------------ emacs --*)
 
 PROCEDURE DoGnuEmacs (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1460,7 +1520,7 @@ PROCEDURE DoCompiledEmacs (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     END;
   END DoCompiledEmacs;
 
-(*-------------------------------------------------------- m3where support ---*)
+(*-------------------------------------------------------- m3where support --*)
 
 PROCEDURE DoFindUnit (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1521,7 +1581,7 @@ PROCEDURE DoEnumUnits (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     END;
   END DoEnumUnits;
 
-(*------------------------------------------------------- export functions ---*)
+(*------------------------------------------------------- export functions --*)
 
 PROCEDURE DoInstallSources (m: QMachine.T;  <*UNUSED*> n_args: INTEGER) =
   BEGIN
@@ -1686,7 +1746,7 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
     END;
   END MakeRoom;
 
-(*---------------------------------------------- internal export utilities ---*)
+(*---------------------------------------------- internal export utilities --*)
 
 PROCEDURE InstallDerived (t: T;  name: TEXT) =
 
@@ -1862,7 +1922,7 @@ PROCEDURE NoteOverrides (<*UNUSED*> t: T) =
     TouchFile (M3Overrides);
   END NoteOverrides;
 
-(*------------------------------------------ user callable export routines ---*)
+(*------------------------------------------ user callable export routines --*)
 
 PROCEDURE DoBindExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1963,7 +2023,7 @@ PROCEDURE DoHtmlExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     InstallSource (t, file, t.html_install, "0644");
   END DoHtmlExport;
 
-(*------------------------------------------------------------- .M3EXPORTS ---*)
+(*------------------------------------------------------------- .M3EXPORTS --*)
 
 PROCEDURE DoGenM3Exports (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -2073,7 +2133,7 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
     DeleteDeriveds (t, M3Exports, NoExtension);
   END GenM3Exports;
 
-(*------------------------------------------------------------- "-T" files ---*)
+(*------------------------------------------------------------- "-T" files --*)
 (* We don't need -T files any more.  This function is just here
    for backward compatibility with m3tk tools like stablegen... *)
 
@@ -2166,7 +2226,7 @@ PROCEDURE DoLinkFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     Utils.LinkFile (src, dest);
   END DoLinkFile;
 
-(*----------------------------------------------------------- file writing ---*)
+(*----------------------------------------------------------- file writing --*)
 
 PROCEDURE Out (wr: Wr.T;  a, b, c, d, e: TEXT := NIL)
   RAISES {Wr.Failure, Thread.Alerted} =
@@ -2184,7 +2244,7 @@ PROCEDURE TouchFile (file: TEXT) =
     Utils.CloseWriter (Utils.OpenWriter (file, fatal := TRUE), file);
   END TouchFile;
 
-(*------------------------------------------------------------------- misc ---*)
+(*------------------------------------------------------------------- misc --*)
 
 PROCEDURE Self (m: QMachine.T): T =
   BEGIN

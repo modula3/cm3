@@ -11,7 +11,7 @@ VAR
   major_mode : Mode     := Mode.Build;
 
 TYPE
-  Mode = { Build, Clean, Ship, Find };
+  Mode = { Build, Clean, Ship, Find, Depend };
 
 END M3Options.
 

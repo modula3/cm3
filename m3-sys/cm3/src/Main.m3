@@ -77,8 +77,10 @@ PROCEDURE DoIt () =
 
     EXCEPT
     | Quake.Error (msg) =>
-        Msg.Error (NIL, msg);
-	M3Options.exit_code := 2;
+        IF NOT M3Build.done THEN
+          Msg.Error (NIL, msg);
+          M3Options.exit_code := 2;
+        END;
     | Thread.Alerted =>
         Msg.FatalError (NIL, "interrupted");
     END;
