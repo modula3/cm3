@@ -81,16 +81,15 @@ and may contain bugs, irritating function names or
 improper types.
  We should use enumerations, sets, subranges
 whereever possible to increase safety for parameter passing.
-We should use exceptions to indicate errors.
+We should use EXCEPTIONs to indicate non-predictable errors.
+We should use ASSERTs to indicate obviously invalid parameter values,
+such as arrays of mismatching sizes.
 * * * *)
 
 TYPE
 Float = LONGREAL;
 FloatVector = ARRAY OF Float;
 FloatMatrix = ARRAY OF ARRAY OF Float;
-
-EXCEPTION
-SizeMismatch;
 %}
 
 
@@ -296,13 +295,18 @@ SizeMismatch;
 %typemap("m3wrapintype")  PLFLTArray %{FloatVector%}
 %typemap("m3wrapargraw")  PLFLTArray %{$1_name[0]%}
 
-%typemap("m3wrapargvar")  PLFLTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3wrapargvar")  PLFLTArrayX   %{nx:=NUMBER($1_name);%}
-%typemap("m3wrapargvar")  PLFLTArrayY   %{ny:=NUMBER($1_name);%}
-//%typemap("m3wrapincheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE SizeMismatch END;%}
-//%typemap("m3wrapincheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE SizeMismatch END;%}
-%typemap("m3wrapincheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE SizeMismatch END;%}
-%typemap("m3wrapincheck:throws") PLFLTArrayCk %{SizeMismatch%}
+%typemap("m3wrapargvar")   PLFLTArrayFst, PLINTArrayFst,
+                           PLFLTArraySzd, PLINTArraySzd %{n:=NUMBER($1_name);%}
+%typemap("m3wrapargconst") PLFLTArrayFst, PLINTArrayFst %{nName="$1_name";%}
+%typemap("m3wrapincheck")  PLFLTArrayCk,  PLINTArrayCk
+%{<* ASSERT NUMBER($1_name) = n,
+"Array sizes of $1_name (" & Fmt.Int(NUMBER($1_name)) &
+") and " & nName & " (" & Fmt.Int(n) & ") mismatch." *> %}
+%typemap("m3wrapincheck")  PLINTArrayCkInterim
+%{<* ASSERT NUMBER($1_name) = n-1,
+"Array size of $1_name (" & Fmt.Int(NUMBER($1_name)) &
+" must be one more than that of " & nName & " (" & Fmt.Int(n) & ")." *> %}
+%typemap("m3wrapincheck:import")  PLFLTArrayCk,  PLINTArrayCk, PLINTArrayCkInterim  %{Fmt%}
 
 
 %typemap("m3rawinmode")   PLINTArray %{READONLY%}
@@ -311,21 +315,12 @@ SizeMismatch;
 %typemap("m3wrapintype")  PLINTArray %{ARRAY OF INTEGER%}
 %typemap("m3wrapargraw")  PLINTArray %{$1_name[0]%}
 
-%typemap("m3wrapargvar")  PLINTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3wrapincheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE SizeMismatch END;%}
-%typemap("m3wrapincheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE SizeMismatch END;%}
-%typemap("m3wrapincheck:throws") PLINTArrayCk        %{SizeMismatch%}
-%typemap("m3wrapincheck:throws") PLINTArrayCkInterim %{SizeMismatch%}
-
 
 %typemap("m3rawinmode")   PLFLTMatrix %{READONLY%}
 %typemap("m3wrapinmode")  PLFLTMatrix %{READONLY%}
 %typemap("m3rawintype")   PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
 %typemap("m3wrapintype")  PLFLTMatrix %{FloatMatrix%}
 %typemap("m3wrapargraw")  PLFLTMatrix %{$1[0]%}
-
-%typemap("m3wrapintype",numinputs=0) PLArraySize nx %{%}
-%typemap("m3wrapintype",numinputs=0) PLArraySize ny %{%}
 
 %typemap("m3wrapargvar")  PLFLTMatrixFst %{$1:REF ARRAY OF ADDRESS;
 nx:=NUMBER($1_name);
@@ -334,14 +329,26 @@ ny:=NUMBER($1_name[0]);%}
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 
+%typemap("m3wrapintype",numinputs=0) PLArraySize nx %{%}
+%typemap("m3wrapintype",numinputs=0) PLArraySize ny %{%}
+
+%typemap("m3wrapargvar")   PLFLTArrayX   %{nx:=NUMBER($1_name);%}
+%typemap("m3wrapargvar")   PLFLTArrayY   %{ny:=NUMBER($1_name);%}
+%typemap("m3wrapargconst") PLFLTArrayX   %{nxName="$1_name";%}
+%typemap("m3wrapargconst") PLFLTArrayY   %{nyName="$1_name";%}
+
 %typemap("m3wrapargvar")  PLFLTMatrixCk %{$1:REF ARRAY OF ADDRESS;%}
 %typemap("m3wrapinconv")  PLFLTMatrixCk
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 %typemap("m3wrapincheck") PLFLTMatrixCk
-%{IF NUMBER($1_name) # nx THEN RAISE SizeMismatch END;
-IF NUMBER($1_name[0]) # ny THEN RAISE SizeMismatch END;%}
-%typemap("m3wrapincheck:throws") PLFLTMatrixCk %{SizeMismatch%}
+%{<* ASSERT NUMBER($1_name) = nx,
+"The x size of $1_name (" & Fmt.Int(NUMBER($1_name)) &
+") doesn't match the size of " & nxName & " (" & Fmt.Int(nx) & ")." *>
+<* ASSERT NUMBER($1_name[0]) = ny,
+"The y size of $1_name (" & Fmt.Int(NUMBER($1_name)) &
+") doesn't match the size of " & nyName & " (" & Fmt.Int(ny) & ")." *> %}
+%typemap("m3wrapincheck:import")  PLFLTMatrixCk  %{Fmt%}
 
 
 
