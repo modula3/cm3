@@ -1,6 +1,7 @@
 import("libm3")
 
-include("fraction.tmpl")
+template("fraction")
+
 
 generic_module("FractionBasic")
 FractionBasic("Integer32",     "Integer32Basic")

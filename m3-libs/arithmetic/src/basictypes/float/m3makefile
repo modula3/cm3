@@ -2,7 +2,8 @@
 import("libm3")
 
 
-include("float.tmpl")
+template("float")
+
 
 Module("ExtendedType")
 

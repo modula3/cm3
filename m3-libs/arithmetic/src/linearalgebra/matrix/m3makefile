@@ -1,6 +1,7 @@
 import("libm3")
 
-include("matrix.tmpl")
+template("matrix")
+
 
 generic_module("MatrixBasic")
 MatrixBasic("Real",	       "RealVectorBasic",             "RealBasic")
