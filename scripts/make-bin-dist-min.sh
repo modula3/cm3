@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.15 2001-12-20 11:59:36 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.16 2002-03-29 13:00:35 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -112,6 +112,13 @@ export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
 header "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-min.sh" buildglobal || exit 1
+
+header "stage 4a: applying library fixups"
+for d in m3core libm3; do
+  f="${INSTALLROOT}/pkg/${d}/${TARGET}/.M3EXPORTS"
+  echo "fixing ${f}"
+  perl -i -p -e 's;_import_otherlib\("m3gcdefs".*;_import_otherlib("m3gcdefs", LIB_USE, IMPORTED);' "${f}"
+done
 
 header "stage 5: re-adjusting cm3.cfg"
 echo ".../cminstall/src/config/${TARGET} -->" \
