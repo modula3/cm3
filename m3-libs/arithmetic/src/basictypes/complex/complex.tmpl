@@ -15,7 +15,7 @@ readonly proc ComplexFast (nm, field, rfast) is
   local rfield = field & rfast
   build_generic_intf (basic, "ComplexBasic", [rfield], VISIBLE)
   build_generic_impl (basic, "ComplexBasic", [rfield])
-  build_generic_intf (fast,  "ComplexFast",  [rfield], VISIBLE)
+  build_generic_intf (fast,  "ComplexFast",  [rfield, basic], VISIBLE)
   build_generic_impl (fast,  "ComplexFast",  [rfield])
 end
 

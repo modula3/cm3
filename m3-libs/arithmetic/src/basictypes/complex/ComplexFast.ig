@@ -1,9 +1,9 @@
-GENERIC INTERFACE ComplexFast(R);
+GENERIC INTERFACE ComplexFast(R,CB);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic complex number type
           Fast implementation using infix operators.
-		  Will become unnecessary if the compiler allows for INLINE procedures some day.
+          Will become unnecessary if the compiler allows for INLINE procedures some day.
           Instantiate with Real, LongReal, Extended
 
 Originally was xComplex
@@ -20,10 +20,10 @@ FROM NADefinitions IMPORT Error;
 (*==========================*)
 
 CONST
-  Brand = R.Brand & "Complex";
+  Brand = CB.Brand;
 
 TYPE
-  T = RECORD re,im: R.T; END;
+  T = CB.T;
 
 CONST
   Zero     = T{re:=FLOAT( 0.0,R.T), im:=FLOAT(0.0,R.T)};
