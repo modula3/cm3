@@ -8,6 +8,7 @@ Used to put object wrapper on RNG's.
 *)
 IMPORT LongRealBasic AS R;
 FROM RandomBasic IMPORT T,TPublic;
+FROM xUtils      IMPORT Error;
 
 (*==========================*)
 REVEAL
@@ -20,7 +21,8 @@ TYPE
 PROCEDURE Uniform(SELF:T;
                   min:R.T:=R.Zero;  (*from min*)
                   max:R.T:=R.One;   (*up to but not including max*)
-                  ):R.T;            (*return uniform deviate*)
+                  ):R.T
+                  RAISES {Error};   (*return uniform deviate*)
 
 PROCEDURE Exponential(SELF:T):R.T;
 
