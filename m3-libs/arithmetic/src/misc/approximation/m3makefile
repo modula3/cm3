@@ -2,6 +2,7 @@ import("libm3")
 
 template("findzero")
 template("interpolation")
+template("eulersum")
 
 
 generic_module("FindZero")
@@ -17,3 +18,8 @@ Interpolation("LongRealComplex",    "LongRealComplexFast",    "LongRealTrans", "
 Interpolation("LongRealVector",     "LongRealVectorFast",     "LongRealTrans", "LongRealBasic")
 Interpolation("LongRealMatrix",     "LongRealMatrixFast",     "LongRealTrans", "LongRealBasic")
 Interpolation("LongRealPolynomial", "LongRealPolynomialFast", "LongRealTrans", "LongRealBasic")
+
+generic_module("EulerSum")
+EulerSum("Real",     "RealTrans",     "RealBasic")
+EulerSum("LongReal", "LongRealTrans", "LongRealBasic")
+EulerSum("Extended", "ExtendedTrans", "ExtendedBasic")
