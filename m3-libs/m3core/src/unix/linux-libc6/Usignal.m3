@@ -6,17 +6,11 @@
 
 UNSAFE MODULE Usignal;
 
-IMPORT Word, Ctypes;
-
-PROCEDURE sigmask (n: Ctypes.int): Ctypes.int =
 BEGIN
-  RETURN Word.Shift (1, n-1);
-END sigmask;
-
-BEGIN
-  BADSIG   := LOOPHOLE (-1, SignalActionHandler);
   SIG_ERR  := LOOPHOLE (-1, SignalActionHandler);
   SIG_DFL  := LOOPHOLE ( 0, SignalActionHandler);
   SIG_IGN  := LOOPHOLE ( 1, SignalActionHandler);
-  SIG_HOLD := LOOPHOLE ( 3, SignalActionHandler);
+
+  SIGRTMIN := libc_current_sigrtmin();
+  SIGRTMAX := libc_current_sigrtmax();
 END Usignal.
