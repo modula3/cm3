@@ -19,6 +19,7 @@ include_dir("matrix")
 include_dir("fourier")
 
 include_dir("polynomial")
+include_dir("chebyshev")
 include_dir("root")
 include_dir("algebra")
 

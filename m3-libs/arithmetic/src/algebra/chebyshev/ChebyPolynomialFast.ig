@@ -41,8 +41,13 @@ PROCEDURE Expand
   the approximation error will get at most 'prec' higher*)
 PROCEDURE FindUpperExp
               (x:T;
-            prec:R.T:=FLOAT(0.0001D0,R.T);
+            prec:R.T:=FLOAT(0.00001D0,R.T);
                ):CARDINAL;
+
+(*the result of FindUpperExp can be passed to 'm'*)
+PROCEDURE Abort(x:T;          (*abort the expansion*)
+                m:CARDINAL;   (*before the m-th term*)
+                ):T;
 
 PROCEDURE Eval(x:T;           (*eval this polynomial*)
               xi:R.T;         (*at this point*)
