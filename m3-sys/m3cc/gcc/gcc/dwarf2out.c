@@ -4543,9 +4543,6 @@ AT_string_form (a)
       if (len <= DWARF_OFFSET_SIZE || node->refcount == 0)
 	return node->form = DW_FORM_string;
 
-#if AVOID_DW_FORM_STRP
-      return node->form = DW_FORM_string;
-#else
       /* If we cannot expect the linker to merge strings in .debug_str
 	 section, only put it into .debug_str if it is worth even in this
 	 single module.  */
@@ -4558,7 +4555,6 @@ AT_string_form (a)
       node->label = xstrdup (label);
 
       return node->form = DW_FORM_strp;
-#endif
     }
 
   abort ();
