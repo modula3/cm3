@@ -166,7 +166,7 @@ PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
 PROCEDURE TimeUsed (): REAL =
   VAR
     usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
+    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
   BEGIN
     <* ASSERT ret = 0 *>
     RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
