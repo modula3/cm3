@@ -136,7 +136,7 @@ PROCEDURE Test () =
     | 0 =>
         VAR
           dual := FB.T{BSpl.GeneratorMask(2), BSpl.WaveletMask(2, 2)};
-          primal := FB.GetComplement(
+          primal := FB.Complement(
                       ARRAY OF
                         S.T{dual[0].scale(R.Two), dual[1].scale(R.Two)});
         BEGIN
