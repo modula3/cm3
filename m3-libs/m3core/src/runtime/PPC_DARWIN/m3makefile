@@ -8,6 +8,6 @@ c_source       ("RTThreadC")
 % s_source       ("_fpsetjmp") 
 % If I understand the headers correctly, then the standard set/longjmp
 % procedures should save and restore floating point context in any case.
-c_source       ("malloc")
+%c_source       ("malloc")
 
 
