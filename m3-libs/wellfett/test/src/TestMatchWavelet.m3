@@ -87,15 +87,15 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
     PlotLines(abscissa, target);
   END PlotFrame;
 
-(*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
+(* {RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
    advantage that the sum of the coefficients of the primal filter doesn't
-   change.*)
+   change. *)
 
 PROCEDURE TestMatchPattern (target: S.T;
                             numLevels, smooth, vanishing, numTranslates: CARDINAL; ) =
-  (*The degree of freedom, i.e.  the number of parameters to minimize for,
-     is 2*numTranslates*)
-  <* FATAL Arith.Error *>        (*MulPower can't fail for signals*)
+  (* The degree of freedom, i.e.  the number of parameters to minimize for,
+     is 2*numTranslates *)
+  <* FATAL Arith.Error *>        (* MulPower can't fail for signals *)
   VAR
     hdual := BSpl.GeneratorMask(smooth).scale(R.Two).translate(2);
     gdual := BSpl.WaveletMask(smooth, vanishing).scale(R.Two);
@@ -171,7 +171,7 @@ PROCEDURE ComputeNormalEqu (target                                : S.T;
     waveletMaskAutoCor   := waveletMask.autocorrelate();
 
     refinePower := MIntPow.Power(refineTrans, numLevels);
-    (*extract the center column of the refinement matrix power*)
+    (* extract the center column of the refinement matrix power *)
     refineAutoCor := NEW(S.T).fromVector(
                        M.GetColumn(refinePower, refineSize), -refineSize);
     generatorAutoCor := refineAutoCor.convolveDown(generatorMaskAutoCor, 2);
@@ -187,7 +187,7 @@ PROCEDURE ComputeNormalEqu (target                                : S.T;
     FOR i := 0 TO numTranslates - 1 DO
       generatorAutoCor.clipToArray(-i, generatorAutoCorMat[i]);
     END;
-    (*DWT routine is only of little help here*)
+    (* DWT routine is only of little help here *)
     VAR
       x := target;
       y := refineMask.adjoint();
@@ -306,10 +306,10 @@ PROCEDURE TestSSE (x: V.T) =
   END TestSSE;
 
 PROCEDURE InverseDSSE (x: V.T): V.T RAISES {Arith.Error} =
-  (*Find the parameter vector y for which DSSE(y)=x*)
+  (* Find the parameter vector y for which DSSE(y)=x *)
   CONST tol = 1.0D-14;
-  (*VAR y := V.New(3);*)
-  VAR y := x;                    (*zero is a bad initial value*)
+  (* VAR y := V.New(3); *)
+  VAR y := x;                    (* zero is a bad initial value *)
   BEGIN
     FOR j := 0 TO 100 DO
       VAR ax := RefnSm.ComputeDSSE(y^);
@@ -455,31 +455,31 @@ PROCEDURE PutDervDif (READONLY der   : FnD.T;
                                delta : R.T             ) =
   <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
-    (*compare first derivative (gradient) with the first difference*)
+    (* compare first derivative (gradient) with the first difference *)
     IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
     FOR j := 0 TO LAST(derArr) DO
       IO.Put(Fmt.FN("der[%s] %s, %s\n",
                     ARRAY OF
-                      TEXT{Fmt.Int(j (* + y.getFirst()*)),
+                      TEXT{Fmt.Int(j (* + y.getFirst() *)),
                            RF.Fmt(derArr[j].zeroth - der.zeroth),
                            RF.Fmt(der.first[j] * delta)}));
     END;
 
-    (*compare second derivative with the first difference of the first
-       derivative*)
+    (* compare second derivative with the first difference of the first
+       derivative *)
     FOR j := 0 TO LAST(derArr) DO
       IO.Put(
         Fmt.FN("der[%s]\n %s %s\n",
                ARRAY OF
-                 TEXT{Fmt.Int(j (*+ y.getFirst()*)),
+                 TEXT{Fmt.Int(j (* + y.getFirst() *)),
                       VF.Fmt(V.Sub(derArr[j].first, der.first)),
                       VF.Fmt(V.Scale(M.GetRow(der.second, j), delta))}));
     END;
   END PutDervDif;
 
 
-(*extend derivatives by information that are contributed by optimizing the
-   amplitude of the target*)
+(* extend derivatives by information that are contributed by optimizing the
+   amplitude of the target *)
 PROCEDURE ExtendDervTarget (READONLY x        : FnD.T;
                                      lift     : V.T;
                                      targetAmp: R.T;
@@ -611,15 +611,16 @@ PROCEDURE FixDeriveRegularized (<* UNUSED *> SELF   : FixedWavAmpMatching;
 TYPE
   FilterBasis =
     OBJECT
-      lp,                        (*--h--*)
-        lpVan,                   (*lp*(1,0,-1)^m*)
-        lpSmallVan,              (*lp*(1,0,-1)^m0*(1,1)^m1 with m=m0+m1*)
-        lpNoVan,                 (*lp*(1,1)^m, lpVan with (1,-1)^m
-                                    removed*)
-        hp,                      (*--g0-- lp and hp are complementary*)
-        hpSmallVan,              (*hp*(1,-1)^m0*)
-        hpNoVan                  (*lpNoVan and hpNoVan are complementary*)
-                                                                          : S.T;
+      lp,                        (* --h-- *)
+        lpVan,                   (* lp*(1,0,-1)^m *)
+        lpSmallVan,              (* lp*(1,0,-1)^m0*(1,1)^m1 with m=m0+m1 *)
+        lpNoVan,                 (* lp*(1,1)^m, lpVan with (1,-1)^m
+                                    removed *)
+        hp,                      (* --g0-- lp and hp are complementary *)
+        hpSmallVan,              (* hp*(1,-1)^m0 *)
+        hpNoVan                  (* lpNoVan and hpNoVan are
+                                    complementary *)
+                                                    : S.T;
       shiftSmallVan: INTEGER;
       negateWavelet: BOOLEAN;
     METHODS
@@ -671,7 +672,7 @@ PROCEDURE GetLSWavelet0Mask (SELF: FilterBasis; ): S.T =
 
 PROCEDURE GetShapeWaveletMask (SELF: FilterBasis; READONLY mc: MatchCoef; ):
   S.T =
-  (*Reverse translation that was made to center the masks.*)
+  (* Reverse translation that was made to center the masks. *)
   BEGIN
     RETURN SELF.hpSmallVan.superpose(
              SELF.lpSmallVan.upConvolve(
@@ -710,8 +711,8 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
                               mc.lift.scale(R.One / mc.wavelet0Amp), 2))}),
                    FB.T{SELF.lp, SELF.getShapeWaveletMask(mc)}};
   BEGIN
-    (*I have still not understand why this negation is necessary, but it
-       doesn't work without it.*)
+    (* I have still not understand why this negation is necessary, but it
+       doesn't work without it. *)
     IF SELF.negateWavelet THEN
       RETURN ARRAY OF
                FB.T{FB.T{bank[0, 0].negate(), bank[0, 1].negate()},
@@ -769,11 +770,11 @@ PROCEDURE NoVanPlotBase (         SELF     : NoVanFilterBasis;
 
 
 TYPE
-  MatchCoef =
-    RECORD
-      lift                  : S.T;
-      wavelet0Amp, targetAmp: R.T;  (*coefficient of the target function*)
-    END;
+  MatchCoef = RECORD
+                lift: S.T;
+                wavelet0Amp, targetAmp: R.T;  (* coefficient of the target
+                                                 function *)
+              END;
 
 PROCEDURE MatchPatternSmooth (target                  : S.T;
                               dualBasis               : FilterBasis;
@@ -787,8 +788,8 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
       delta = 1.0D-8;
       cf    = 0.7D0;
     VAR
-      (*this array length can only be used if a total of 6 translates is
-         considered*)
+      (* this array length can only be used if a total of 6 translates is
+         considered *)
       y := NEW(S.T).fromArray(
              ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
       der := FnD.Add(DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
@@ -872,9 +873,9 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
     <* UNUSED *>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T =
       VAR
-        (*SplitParamVec may return initWavelet0Amp as waveletAmp and this
+        (* SplitParamVec may return initWavelet0Amp as waveletAmp and this
            won't work if we compute the real derivative instead of a finite
-           difference.*)
+           difference. *)
         mc := matching.splitParamVec(x);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
         derwavdist := ExtendDervTarget(
@@ -919,7 +920,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
 
         dx  := V.New(NUMBER(x^));
         dxv := VT.Norm1(x) * difdist;
-        (*dx := V.Scale(x, 1.0D-2);*)
+        (* dx := V.Scale(x, 1.0D-2); *)
         derwavdist := matching.deriveRegularized(
                         derdist, mc, waveletVec, waveletCor, targetVec);
         dersmooth: FnD.T;
@@ -988,7 +989,8 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
       ELSE
       END;
       PL.Init();
-      (*IO.Put(Fmt.FN("targetCor %s", ARRAY OF TEXT{VF.Fmt(targetCor)}));*)
+      (* IO.Put(Fmt.FN("targetCor %s", ARRAY OF
+         TEXT{VF.Fmt(targetCor)})); *)
       FOR iter := 0 TO maxIter DO
         VAR
           precOk            := FALSE;
@@ -1008,10 +1010,10 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
           END;
         END;
 
-        (*draw resulting wavelet base*)
+        (* draw resulting wavelet base *)
         PL.StartPage();
         dualBasis.plotBase(matching.splitParamVec(x), numLevels);
-        (*PL.StopPage();*)
+        (* PL.StopPage(); *)
 
         smoothWeightFade := smoothWeightFade * smoothWeightProgr;
       END;
@@ -1037,10 +1039,10 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     hdualvan := SIntPow.MulPower(hdual, bigVanAtom, vanishing).translate(
                   shiftVan);
 
-    (*GeneratorMask uses factors (0.5,0.5), Vanishing moments (0.5,-0.5),
+    (* GeneratorMask uses factors (0.5,0.5), Vanishing moments (0.5,-0.5),
        this results in (0.25,-0.25) but the lifting mask is convolved with
        (0.5,-0.5).  We have to compensate that with 'scale'. *)
-    (*Translate mask so that it is symmetric again.*)
+    (* Translate mask so that it is symmetric again. *)
     hdualsmallvan := SIntPow.MulPower(
                        BSpl.GeneratorMask(
                          smooth + vanishing - smallVanishing), bigVanAtom,
@@ -1052,14 +1054,14 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                        smallVanishing).translate(
                         shiftSmallVan);
 
-    (*compensate factors (0.5,0.5) from the mask*)
+    (* compensate factors (0.5,0.5) from the mask *)
     hdualnovan := BSpl.GeneratorMask(smooth + vanishing).translate(
                     shiftVan).scale(
                     RIntPow.MulPower(R.One, R.Two, vanishing));
 
     gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0);
 
-    dualBasis := NEW(            (*StdFilterBasis*)
+    dualBasis := NEW(            (* StdFilterBasis *)
                    NoVanFilterBasis, lp := hdual, hp := gdual0,
                    lpVan := hdualvan, lpSmallVan := hdualsmallvan,
                    hpSmallVan := gdual0smallvan, lpNoVan := hdualnovan,
@@ -1115,7 +1117,7 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
     IO.Put(
       Fmt.FN("optimal lift %s,\ncyclic wrap of gdual %s\n\n"
              (* & "hsdual\n%s\n%s\n\n" & "gdual0\n%s\n%s\n\n" &
-                "gdual\n%s\n%s\n"*),
+                "gdual\n%s\n%s\n" *),
              ARRAY OF
                TEXT{SF.Fmt(s), VF.Fmt(gdual.alternate().wrapCyclic(3))
                (*, SF.Fmt(hdual.upConvolve(s,2)),
@@ -1153,7 +1155,7 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
   END TestMatchPatternSmooth;
 
 
-(*create symmetric clip of the sin x / x curve*)
+(* create symmetric clip of the sin x / x curve *)
 PROCEDURE SincVector (size, width: CARDINAL): V.T =
   VAR
     z := V.New(2 * size + 1);
@@ -1190,8 +1192,8 @@ PROCEDURE GaussianVector (size, width: CARDINAL): V.T =
     RETURN z;
   END GaussianVector;
 
-(*a sinc function that is modulated such that it covers band ready for
-   dyadic partitioning*)
+(* a sinc function that is modulated such that it covers band ready for
+   dyadic partitioning *)
 PROCEDURE ModulateReal (x: V.T; period: R.T): V.T =
   VAR
     size := (NUMBER(x^) - 1) DIV 2;
@@ -1227,7 +1229,7 @@ PROCEDURE ModulateImag (x: V.T; period: R.T): V.T =
   END ModulateImag;
 
 
-(*multiplicate signal with ramp (linear progression)*)
+(* multiplicate signal with ramp (linear progression) *)
 PROCEDURE MulRamp (x: S.T; scale: R.T; ): S.T =
   VAR
     xData := x.getData();
@@ -1275,10 +1277,10 @@ PROCEDURE CheckVanishingMoments () =
         PL.Exit();
       END;
       *)
-      (*versions of the Sig multiplied with ...*)
+      (* versions of the Sig multiplied with ... *)
       VAR
-        polyDifSig      := difSig; (*...  power function*)
-        chebyDifSig     := difSig; (*...  chebyshev function*)
+        polyDifSig      := difSig; (* ...  power function *)
+        chebyDifSig     := difSig; (* ...  chebyshev function *)
         chebyDifSigPrev := MulRamp(difSig, scale);
       BEGIN
         FOR j := 0 TO i DO
@@ -1308,7 +1310,7 @@ PROCEDURE CheckVanishingMoments () =
           *)
 
           polyDifSig := MulRamp(polyDifSig, scale);
-          (*apply recursive construction of chebyshev polynomials*)
+          (* apply recursive construction of chebyshev polynomials *)
           VAR
             tmp := MulRamp(chebyDifSig, scale * R.Two).superpose(
                      chebyDifSigPrev.negate());
@@ -1480,8 +1482,8 @@ PROCEDURE Test () =
                  numlevel, 4, 4, 0, 6, 10.0D0);
         END;
     | Example.matchLongRamp =>
-        (*matching a pattern with 1 vanishing moment with a wavelet of 9
-           vanishing moments can't work obviously*)
+        (* matching a pattern with 1 vanishing moment with a wavelet of 9
+           vanishing moments can't work obviously *)
         TestMatchPattern(NEW(S.T).fromArray(
                            V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
                            unit - 1024), numlevel, 3, 9, 5);

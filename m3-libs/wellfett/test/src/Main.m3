@@ -1,6 +1,6 @@
 MODULE Main;
 
-FROM TestCWT IMPORT Test;
+FROM TestMatchWavelet IMPORT Test;
 
 BEGIN
   Test();
