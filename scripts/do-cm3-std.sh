@@ -37,6 +37,9 @@ ${GEN_CMDS}"
 
 show_usage $@
 
+type m3bundle >/dev/null 2>/dev/null || \
+  "$ROOT/scripts/do-pkg.sh" buildship m3bundle
+
 OPTIONS=`extract_options $@`
 ACTION=`map_action $@`
 ADDARGS=`add_action_opts $@`
