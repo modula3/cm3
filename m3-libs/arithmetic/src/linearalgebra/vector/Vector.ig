@@ -2,7 +2,7 @@ GENERIC INTERFACE Vector(R);
 (*Arithmetic for Modula-3, see doc for details
 
    Abstract: Vector math *)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 
 CONST Brand = R.Brand & "Vector";

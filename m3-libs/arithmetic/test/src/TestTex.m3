@@ -25,7 +25,7 @@ IMPORT LongRealBasic             AS R,
        LongRealMatrixFmtLex            AS MF,
        LongRealComplexPolynomialFmtLex AS PF;
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 (*=======================*)
 CONST Module = "TestTex.";
@@ -38,7 +38,7 @@ PROCEDURE TestTexVector (): BOOLEAN =
     result := TRUE;
     out    := FileWr.Open(filename & ".tex");
 
-  <*FATAL OSError.E, Thread.Alerted, Wr.Failure, NA.Error *>
+  <*FATAL OSError.E, Thread.Alerted, Wr.Failure, Arith.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -103,7 +103,7 @@ PROCEDURE TestTexVector (): BOOLEAN =
                  style := FrF.TexStyle{
                             flags := FrF.TexFlagSet{FrF.TexFlag.fraction}})
                  & "&=&");
-        <*FATAL NA.Error*>
+        <*FATAL Arith.Error*>
         VAR qr := B.DivMod(y, x);
         BEGIN
           Wr.PutText(

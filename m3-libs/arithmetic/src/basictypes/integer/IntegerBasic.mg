@@ -1,11 +1,11 @@
 GENERIC MODULE IntegerBasic();
 (*Arithmetic for Modula-3, see doc for details*)
 
-FROM NADefinitions IMPORT Error, Err;
-IMPORT Word AS W;
+IMPORT Word AS W, Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "IntegerBasic.";
+<* UNUSED *>
+CONST
+  Module = "IntegerBasic.";
 
 PROCEDURE Add (x, y: T): T =
   BEGIN
@@ -37,31 +37,39 @@ PROCEDURE Mul (x, y: T): T =
     RETURN x * y
   END Mul;
 
-PROCEDURE Div (x, y: T): T RAISES {Error} =
+PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
   BEGIN
-    IF y = 0 THEN RAISE Error(Err.divide_by_zero) END;
-    IF x MOD y # 0 THEN RAISE Error(Err.indivisible) END;
+    IF y = 0 THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
+    END;
+    IF x MOD y # 0 THEN
+      RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init())
+    END;
     RETURN x DIV y;
   END Div;
 
-PROCEDURE Rec (x: T): T RAISES {Error} =
+PROCEDURE Rec (x: T): T RAISES {Arith.Error} =
   BEGIN
     CASE x OF
-    | 0 => RAISE Error(Err.divide_by_zero);
+    | 0 => RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
     | 1 => RETURN 1;
     ELSE
-      RAISE Error(Err.indivisible);
+      RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
     END;
   END Rec;
 
-PROCEDURE Mod (x, y: T): T RAISES {Error} =
+PROCEDURE Mod (x, y: T): T RAISES {Arith.Error} =
   BEGIN
-    IF y = 0 THEN RAISE Error(Err.divide_by_zero) END;
+    IF y = 0 THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
+    END;
     RETURN x MOD y;
   END Mod;
-PROCEDURE DivMod (x, y: T): QuotRem RAISES {Error} =
+PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
   BEGIN
-    IF y = 0 THEN RAISE Error(Err.divide_by_zero) END;
+    IF y = 0 THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
+    END;
     RETURN QuotRem{x MOD y, x DIV y};
   END DivMod;
 

@@ -3,7 +3,7 @@ GENERIC INTERFACE ComplexTrans(R, C);
 
    Abstract: Transcendental functions of complex numbers. *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 TYPE T = C.T;
 

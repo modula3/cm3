@@ -6,7 +6,7 @@ Abstract: Integers
 2/17/96  Harry George    Initial version
 *)
 
-(*FROM NADefinitions IMPORT Error, Err;*)
+(*IMPORT Arithmetic AS Arith;*)
 
 CONST Module = "NumberTheory.";
 (*==========================*)

@@ -1,6 +1,7 @@
 MODULE TestUnit EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for PhysicalUnit and
-   related modules.
+(*Arithmetic for Modula-3, see doc for details Abstract:
+
+   Tests for PhysicalUnit and related modules.
 
    *)
 
@@ -14,9 +15,9 @@ IMPORT PhysicalUnit                       AS U,
        LongRealComplexPhysicalValue       AS CPV,
        LongRealComplexPhysicalValueFmtLex AS CPVF;
 
-IMPORT Fmt, NADefinitions;
+IMPORT Fmt;
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 (*=======================*)
 CONST Module = "TestUnit.";
@@ -28,27 +29,28 @@ PROCEDURE TestCalc (): BOOLEAN =
     x            := PV.T{1.0D0, U.FromArray(SI.voltage)};
     y            := PV.T{2.0D0, U.FromArray(SI.voltage)};
     z     : PV.T;
-  <*FATAL Error*>
+  <* FATAL Arith.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
-    <*ASSERT U.Equal(x.unit,y.unit)*>
+    <* ASSERT U.Equal(x.unit, y.unit) *>
     z := PV.Add(x, y);
-    <*ASSERT U.Equal(x.unit,z.unit)*>
-    <*ASSERT U.Equal(y.unit,z.unit)*>
+    <* ASSERT U.Equal(x.unit, z.unit) *>
+    <* ASSERT U.Equal(y.unit, z.unit) *>
     z := PV.Sub(x, y);
-    <*ASSERT U.Equal(x.unit,z.unit)*>
-    <*ASSERT U.Equal(y.unit,z.unit)*>
+    <* ASSERT U.Equal(x.unit, z.unit) *>
+    <* ASSERT U.Equal(y.unit, z.unit) *>
     z := PV.Mul(x, y);
-    <*ASSERT U.Equal(U.Scale(x.unit,2),z.unit)*>
+    <* ASSERT U.Equal(U.Scale(x.unit, 2), z.unit) *>
     z := PV.Div(x, y);
-    <*ASSERT U.IsZero(z.unit)*>
+    <* ASSERT U.IsZero(z.unit) *>
 
     TRY
       y := PV.T{2.0D0, U.FromArray(SI.length)};
       z := PV.Add(x, y);
-      <*ASSERT FALSE*>(*the previous should throw an exception*)
+      <* ASSERT FALSE *>         (*the previous should throw an exception*)
     EXCEPT
-    | Error (err) =>             <*ASSERT err=Err.unit_mismatch*>
+    | Arith.Error (err) =>
+        <* ASSERT NOT ISTYPE(err, Arith.ErrorUnitMismatch) *>
     END;
 
     RETURN result;
@@ -65,7 +67,7 @@ PROCEDURE TestFmt (): BOOLEAN =
     style     := PVF.FmtStyle{si, elemStyle := realStyle};
     stylec := CPVF.FmtStyle{
                 si, elemStyle := CF.FmtStyle{elemStyle := realStyle}};
-  <*FATAL Error*>
+  <* FATAL Arith.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -114,8 +116,9 @@ PROCEDURE TestFmt (): BOOLEAN =
   END TestFmt;
 (*-------------------------*)
 PROCEDURE TestUnit (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestUnit";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestUnit";
   VAR result := TRUE;
   BEGIN
     NewLine();

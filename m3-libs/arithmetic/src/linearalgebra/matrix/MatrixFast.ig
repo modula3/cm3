@@ -1,6 +1,6 @@
 GENERIC INTERFACE MatrixFast(R, V);
 (*Arithmetic for Modula-3, see doc for details*)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 TYPE
   TRow = ARRAY OF R.T;

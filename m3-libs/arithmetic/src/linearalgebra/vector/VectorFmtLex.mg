@@ -1,7 +1,7 @@
 GENERIC MODULE VectorFmtLex(R, RF);
 (*Arithmetic for Modula-3, see doc for details*)
 
-(*FROM NADefinitions IMPORT Error,Err;*)
+(*IMPORT Arithmetic AS Arith;*)
 IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;
 IMPORT Lex AS L;

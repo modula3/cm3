@@ -6,7 +6,7 @@ IMPORT Lex AS L;
 IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
 (*
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 *)
 
 

@@ -8,7 +8,7 @@ GENERIC INTERFACE ComplexFast(R);
    Real, LongReal, Extended *)
 
 IMPORT FloatMode;
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

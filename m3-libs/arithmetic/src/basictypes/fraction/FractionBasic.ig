@@ -4,7 +4,7 @@ GENERIC INTERFACE FractionBasic(R);
    Abstract: Generic fraction type Instantiate with integers,
    polynomials *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

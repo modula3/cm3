@@ -7,7 +7,7 @@ GENERIC INTERFACE FloatMatrixLapack(R, V, CV, M);
 
    *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

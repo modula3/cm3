@@ -10,12 +10,12 @@ MODULE TestInterpolation EXPORTS Test;
 IMPORT LongRealBasic         AS R,
        LongRealFmtLex        AS RF,
        LongRealInterpolation AS Ip,
-       NADefinitions;
+       Arithmetic;
 FROM LongRealTrans IMPORT Sin;
 (*=======================*)
 CONST Module = "TestInterpolation.";
 (*=======================*)
-<*FATAL NADefinitions.Error*>
+<*FATAL Arithmetic.Error*>
 (*----------------------*)
 PROCEDURE TestLinear (): BOOLEAN =
   CONST

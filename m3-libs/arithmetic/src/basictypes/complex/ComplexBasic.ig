@@ -6,7 +6,7 @@ GENERIC INTERFACE ComplexBasic(R);
    Instantiate with RealBasic, LongRealBasic, ExtendedBasic,
    IntegerBasic *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

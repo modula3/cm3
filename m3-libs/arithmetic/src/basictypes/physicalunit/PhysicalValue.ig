@@ -8,7 +8,7 @@ Abstract: Combines a numerical type with physical units.
 
 IMPORT PhysicalUnit AS U;
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

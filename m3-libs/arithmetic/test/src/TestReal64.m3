@@ -12,9 +12,9 @@ MODULE TestReal64 EXPORTS Test;
 IMPORT SpecialFunction AS SF,
        LongRealBasic   AS R,
        LongRealFmtLex  AS RF,
-       NADefinitions;
+       Arithmetic;
 FROM SF IMPORT T;
-<*FATAL NADefinitions.Error*>
+<*FATAL Arithmetic.Error*>
 (*=======================*)
 CONST Module = "TestReal64.";
 (*=======================*)

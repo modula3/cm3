@@ -9,13 +9,14 @@ IMPORT Atom;
 CONST
   Module = "Arithmetic.";
 
-PROCEDURE Raise (err: ErrorRoot; msg: TEXT; oldErr: ErrorRoot := NIL; )
-  RAISES {Error} =
+PROCEDURE ErrorInit (err   : ErrorRoot;
+                     msg   : TEXT        := "";
+                     oldErr: ErrorRoot   := NIL; ): ErrorRoot =
   BEGIN
     err.head := Atom.FromText(msg);
     err.tail := oldErr;
-    RAISE Error(err);
-  END Raise;
+    RETURN err;
+  END ErrorInit;
 
 BEGIN
 END Arithmetic.

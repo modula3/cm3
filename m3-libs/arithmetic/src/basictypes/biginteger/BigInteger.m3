@@ -5,14 +5,15 @@ MODULE BigInteger;
 
    Daniel Beer *)
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 IMPORT BigIntegerRep AS Rep;
 
-<*UNUSED*>
-CONST Module = "BigInteger.";
+<* UNUSED *>
+CONST
+  Module = "BigInteger.";
 (*==========================*)
 
-<*UNUSED*>
+<* UNUSED *>
 PROCEDURE FastCopy (READONLY x: T): T =
   VAR y := T{NEW(Value, NUMBER(x.data^)), x.size, x.sign};
 
@@ -140,29 +141,31 @@ PROCEDURE Mul (READONLY x, y: T): T =
 
 
 
-PROCEDURE Div (READONLY x, y: T): T RAISES {Error} =
+PROCEDURE Div (READONLY x, y: T): T RAISES {Arith.Error} =
   VAR qr := Rep.DivModU(x, y);
 
   BEGIN
     qr.quot.sign := x.sign # y.sign;
     (*IF NOT Equal(r,Zero) THEN*)
-    IF qr.rem.size # 0 THEN RAISE Error(Err.indivisible); END;
+    IF qr.rem.size # 0 THEN
+      RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
+    END;
     RETURN qr.quot;
   END Div;
 
-PROCEDURE Rec (READONLY x: T): T RAISES {Error} =
+PROCEDURE Rec (READONLY x: T): T RAISES {Arith.Error} =
   BEGIN
     IF IsZero(x) THEN
-      RAISE Error(Err.divide_by_zero);
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
     ELSIF Equal(x, One) THEN
       RETURN One;
     ELSE
-      RAISE Error(Err.indivisible);
+      RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
     END;
   END Rec;
 
 (*Is this correct?*)
-PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Error} =
+PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Arith.Error} =
   VAR qr := Rep.DivModU(x, y);
 
   BEGIN
@@ -179,7 +182,7 @@ PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Error} =
     RETURN qr;
   END DivMod;
 
-PROCEDURE Mod (READONLY x, y: T): T RAISES {Error} =
+PROCEDURE Mod (READONLY x, y: T): T RAISES {Arith.Error} =
   BEGIN
     RETURN DivMod(x, y).rem;
   END Mod;

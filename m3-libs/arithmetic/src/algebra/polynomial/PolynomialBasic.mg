@@ -1,6 +1,6 @@
 GENERIC MODULE PolynomialBasic(R, VR);
 (*Arithmetic for Modula-3, see doc for details*)
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 CONST Module = "PolynomialBasic.";
 
@@ -68,9 +68,9 @@ PROCEDURE Sub (x, y: T): T =
   END Sub;
 
 (*---------------------*)
-PROCEDURE Compare ( <*UNUSED*>x, y: T): [-1 .. 1] =
+PROCEDURE Compare (<* UNUSED *> x, y: T): [-1 .. 1] =
   BEGIN
-    <*ASSERT FALSE*>
+    <* ASSERT FALSE *>
   END Compare;
 
 (*---------------------*)
@@ -84,8 +84,9 @@ PROCEDURE Equal (x, y: T): BOOLEAN =
   VAR
     xn := NUMBER(x^);
     yn := NUMBER(y^);
-  <*FATAL Error*>(*we won't give VR.Equal a chance to complain about
-                    mismatching vector sizes*)
+  <* FATAL Arith.Error *>        (*we won't give VR.Equal a chance to
+                                    complain about mismatching vector
+                                    sizes*)
   BEGIN
     IF xn >= yn THEN
       RETURN VR.Equal(SUBARRAY(x^, 0, yn), SUBARRAY(y^, 0, yn))
@@ -116,9 +117,10 @@ PROCEDURE Mul (x, y: T): T =
   END Mul;
 
 (*---------------------*)
-PROCEDURE Div (x, y: T): T RAISES {Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "Div";
+PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Div";
   VAR
     xn                            := NUMBER(x^);
     xl                            := LAST(x^);
@@ -168,15 +170,18 @@ PROCEDURE Div (x, y: T): T RAISES {Error} =
     END;
     (*This check will probably fail on floating point numbers*)
     FOR ri := (xl - ql) - 1 TO 0 BY -1 DO
-      IF NOT R.Equal(r[ri], R.Zero) THEN RAISE Error(Err.indivisible); END;
+      IF NOT R.Equal(r[ri], R.Zero) THEN
+        RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
+      END;
     END;
     RETURN q;
   END Div;
 
 (*---------------------*)
-PROCEDURE DivMod (x, y: T): QuotRem RAISES {Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "DivMod";
+PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "DivMod";
   VAR
     xn                             := NUMBER(x^);
     xl                             := LAST(x^);
@@ -226,7 +231,7 @@ PROCEDURE DivMod (x, y: T): QuotRem RAISES {Error} =
   END DivMod;
 
 (*--------------------*)
-PROCEDURE Mod (x, y: T): T RAISES {Error} =
+PROCEDURE Mod (x, y: T): T RAISES {Arith.Error} =
   (*Using DivMod is not optimal.  One may save a bit space for the
      quotient.*)
   BEGIN

@@ -1,17 +1,15 @@
 MODULE BigIntegerFmtLex;
 (*Arithmetic for Modula-3, see doc for details*)
 
-IMPORT Rd, Thread;
-IMPORT Fmt AS F;
-IMPORT Lex AS L;
+IMPORT Rd, Thread, Fmt AS F, Lex AS L;
 IMPORT Word, Text;
-IMPORT BigIntegerRep AS BR;
-IMPORT BigInteger AS BB;
+IMPORT BigIntegerRep AS BR, BigInteger AS BB;
 FROM FmtLexSupport IMPORT Precedence;
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "BigIntegerFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "BigIntegerFmtLex.";
 
 
 PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
@@ -42,7 +40,7 @@ PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
       b := BB.FromInteger(base);
       WHILE NOT BB.IsZero(x) DO
         qr := BR.DivModU(qr.quot, b);
-        <*ASSERT qr.rem.size<=1*>
+        <* ASSERT qr.rem.size <= 1 *>
         digit := qr.rem.data[0];
         IF digit < 10 THEN
           txt := Text.FromChar(VAL(ORD('0') + digit, CHAR)) & txt;
@@ -51,7 +49,8 @@ PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
         END;
       END;
     EXCEPT
-    | Error (err) =>             <*ASSERT err#Err.divide_by_zero*>
+    | Arith.Error (err) =>
+        <* ASSERT NOT ISTYPE(err, Arith.ErrorDivisionByZero) *>
     END;
     IF Text.Empty(txt) THEN RETURN "0"; ELSE RETURN txt; END;
   END SlowFmtU;
@@ -69,9 +68,9 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
     IF x.sign THEN RETURN "-" & txt; ELSE RETURN txt; END;
   END Fmt;
 
-PROCEDURE Tex (         x     : T;
-               READONLY style              := TexStyle{}; <*UNUSED*>
-                        within: Precedence                           ):
+PROCEDURE Tex (                      x     : T;
+                            READONLY style              := TexStyle{};
+               <* UNUSED *>          within: Precedence                ):
   TEXT =
   BEGIN
     IF style.base = 10 THEN
@@ -82,7 +81,7 @@ PROCEDURE Tex (         x     : T;
     END;
   END Tex;
 
-PROCEDURE Lex (rd: Rd.T;  <*UNUSED*>READONLY style: LexStyle; ): T
+PROCEDURE Lex (rd: Rd.T; <* UNUSED *> READONLY style: LexStyle; ): T
   RAISES {L.Error, Rd.Failure, Thread.Alerted} =
   VAR
     z            := BB.Zero;

@@ -1,13 +1,13 @@
 GENERIC MODULE FunctionalDeriv2(R, V, M);
 (* Arithmetic for Modula-3, see doc for details *)
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 <*UNUSED*>
 CONST Module = "FunctionalDeriv2.";
 (*==========================*)
 
-PROCEDURE Add (READONLY x, y: T): T RAISES {NA.Error} =
+PROCEDURE Add (READONLY x, y: T): T RAISES {Arith.Error} =
   BEGIN
     RETURN T{zeroth := x.zeroth + y.zeroth, first :=
              V.Add(x.first, y.first), second := M.Add(x.second, y.second)};

@@ -3,7 +3,7 @@ GENERIC INTERFACE IntegerPower(R);
 
    Abstract: Fast generic computation of a power with integer exponent *)
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 (*==========================*)
 
@@ -11,12 +11,12 @@ TYPE
   T = R.T;
   PositiveInteger = [1 .. LAST(CARDINAL)];
 
-PROCEDURE Power (x: T; y: PositiveInteger): T RAISES {NA.Error};
+PROCEDURE Power (x: T; y: PositiveInteger): T RAISES {Arith.Error};
 (* returns the power x^y with respect to the multiplication of R.  This
    implementation needs only Log2(y) multiplications.  Requires y>0 because
    R may not provide a unique One *)
 
-PROCEDURE MulPower (x, y: T; z: CARDINAL): T RAISES {NA.Error};
+PROCEDURE MulPower (x, y: T; z: CARDINAL): T RAISES {Arith.Error};
 (* returns the x*y^z with respect to the multiplication of R.  This is as
    fast as Power but works for z=0, too.*)
 

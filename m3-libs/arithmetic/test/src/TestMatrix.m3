@@ -5,7 +5,7 @@ Abstract:  Tests for LongRealMatrix      module.
 1/1/96    <name>   Initial version
 
 **)
-(*FROM NADefinitions IMPORT Error,Err;*)
+(*IMPORT Arithmetic AS Arith;*)
 (*IMPORT IO,Wr,Fmt;*)
 IMPORT LongRealBasic        AS R,
        LongRealVector       AS V,

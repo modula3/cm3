@@ -4,7 +4,7 @@ GENERIC MODULE PhysicalValueFmtLex(R, RT, C, CT, CF, UDB);
 IMPORT Fmt AS F;
 (*IMPORT Lex AS L;*)
 (*IMPORT FloatMode;*)
-IMPORT NADefinitions;
+IMPORT Arithmetic;
 
 PROCEDURE FmtUnitPart (READONLY name: TEXT; exp: INTEGER): TEXT =
   VAR res: TEXT;
@@ -37,7 +37,7 @@ PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle): TEXT =
       VAR
         factor := R.One;
         cup    := cu.tail;
-      <*FATAL NADefinitions.Error*>
+      <*FATAL Arithmetic.Error*>
       BEGIN
         WHILE cup # NIL DO
           factor := factor * cup.head.uu.head.scales[

@@ -1,7 +1,7 @@
 GENERIC MODULE Matrix(R, V);
 (*Arithmetic for Modula-3, see doc for details*)
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 <*UNUSED*>
 CONST Module = "Matrix.";
@@ -24,7 +24,7 @@ PROCEDURE FromArray (READONLY x: TBody): T =
   END FromArray;
 
 (*-----------------*)
-PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Error} =
+PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Arith.Error} =
   BEGIN
     IF NUMBER(x) = 0 OR NUMBER(x[0]) = 0 THEN
       RETURN New(0, 0);
@@ -37,7 +37,7 @@ PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Error} =
           BEGIN
             FOR j := 1 TO LAST(x[0]) DO
               IF size # NUMBER(x[i, j]^) THEN
-                RAISE Error(Err.bad_size);
+                RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
               END;
             END;
             INC(m, size);
@@ -49,7 +49,7 @@ PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Error} =
           BEGIN
             FOR i := 1 TO LAST(x) DO
               IF size # NUMBER(x[i, j][0]) THEN
-                RAISE Error(Err.bad_size);
+                RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
               END;
             END;
             INC(n, size);

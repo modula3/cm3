@@ -1,16 +1,16 @@
 GENERIC MODULE MatrixBasic(R, V, VR);
 (*Arithmetic for Modula-3, see doc for details*)
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 CONST Module = "MatrixBasic.";
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize (x, y: T) RAISES {Error} =
+PROCEDURE AssertEqualSize (x, y: T) RAISES {Arith.Error} =
   BEGIN
     IF NUMBER(x^) # NUMBER(y^) OR NUMBER(x[0]) # NUMBER(y[0]) THEN
-      RAISE Error(Err.bad_size);
+      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
     END;
   END AssertEqualSize;
 
@@ -31,7 +31,7 @@ PROCEDURE IsZero (x: T): BOOLEAN =
   END IsZero;
 
 (*----------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
+PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Arith.Error} =
   (*return x=y*)
   (*each is mxn*)
   <*UNUSED*>
@@ -53,7 +53,7 @@ PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
   END Equal;
 
 (*----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Error} =
+PROCEDURE Add (x, y: T): T RAISES {Arith.Error} =
   (*return x+y*)
   (*each is mxn*)
   <*UNUSED*>
@@ -76,7 +76,7 @@ PROCEDURE Add (x, y: T): T RAISES {Error} =
     RETURN z;
   END Add;
 (*----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Error} =
+PROCEDURE Sub (x, y: T): T RAISES {Arith.Error} =
   (*return x-y*)
   (*each is mxn*)
   <*UNUSED*>
@@ -112,7 +112,7 @@ PROCEDURE Scale (x: T; y: R.T): T =
   END Scale;
 
 (*-----------------*)
-PROCEDURE Mul (x, y: T): T RAISES {Error} =
+PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
   (*return x*y*)
   (* x:mxn y:nxp return:mxp*)
   <*UNUSED*>
@@ -130,7 +130,7 @@ PROCEDURE Mul (x, y: T): T RAISES {Error} =
     z : T;
 
   BEGIN
-    IF NUMBER(y^) # n THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(y^) # n THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
     z := NEW(T, m, p);
     FOR i := mf TO ml DO
       FOR j := pf TO pl DO
@@ -147,7 +147,7 @@ PROCEDURE Mul (x, y: T): T RAISES {Error} =
   END Mul;
 
 (*-----------------*)
-PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Error} =
+PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Arith.Error} =
 
   <*UNUSED*>
   CONST ftn = Module & "MulV";
@@ -157,14 +157,14 @@ PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Error} =
     ml := m - 1;
     c  := NEW(V.T, m);
   BEGIN
-    IF NUMBER(A[0]) # NUMBER(b^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(A[0]) # NUMBER(b^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
 
     FOR i := mf TO ml DO c[i] := VR.Dot(A[i], b^); END;
     RETURN c;
   END MulV;
 
 (*-----------------*)
-PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Error} =
+PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Arith.Error} =
 
   <*UNUSED*>
   CONST ftn = Module & "MulTV";
@@ -175,7 +175,7 @@ PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Error} =
     nl := LAST(A[0]);
     c  := NEW(V.T, NUMBER(A[0]));
   BEGIN
-    IF NUMBER(A^) # NUMBER(b^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(A^) # NUMBER(b^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
 
     FOR i := nf TO nl DO
       VAR sum := R.Zero;
@@ -250,7 +250,7 @@ PROCEDURE MulMMA (x: T): T =
   BEGIN
     FOR i := 0 TO LAST(x^) DO
       FOR j := i TO LAST(x^) DO
-        <*FATAL Error*>(*x[i] and x[j] will have the same size*)
+        <*FATAL Arith.Error*>(*x[i] and x[j] will have the same size*)
         BEGIN
           z[i, j] := VR.Dot(x[i], x[j]);
         END;

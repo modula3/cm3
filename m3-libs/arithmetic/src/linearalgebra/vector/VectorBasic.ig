@@ -1,6 +1,6 @@
 GENERIC INTERFACE VectorBasic(R, V);
 (*Arithmetic for Modula-3, see doc for details *)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 
 TYPE T = V.TBody;

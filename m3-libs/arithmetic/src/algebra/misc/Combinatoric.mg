@@ -3,7 +3,7 @@ GENERIC MODULE Combinatoric(R);
 
    Abstract: Combinatoric operations *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 <*UNUSED*>
 CONST Module = "Combinatoric.";

@@ -3,7 +3,7 @@ GENERIC INTERFACE EigenSystem(RT, V, M, LA);
 
    Abstract: Routines to solve eigenvalue problems. *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 TYPE
   EigenPair = RECORD

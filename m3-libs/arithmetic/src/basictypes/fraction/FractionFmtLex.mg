@@ -7,7 +7,7 @@ IMPORT Rd, Thread;
 (*IMPORT Fmt AS F;*)
 IMPORT Lex AS L;
 IMPORT FloatMode;
-(*FROM NADefinitions IMPORT Error,Err;*)
+(*IMPORT Arithmetic AS Arith;*)
 IMPORT FmtLexSupport AS FSup;
 FROM FmtLexSupport IMPORT Precedence;
 

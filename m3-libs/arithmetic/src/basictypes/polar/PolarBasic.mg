@@ -3,7 +3,7 @@ GENERIC MODULE PolarBasic(R, RT, C, CT);
 
    Abstract: Complex numbers in polar coordinates *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 <*UNUSED*>
 CONST Module = "PolarBasic.";

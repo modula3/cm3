@@ -18,9 +18,9 @@ IMPORT LongRealBasic            AS R,
        RandomQuaternaryFibo     AS QuaFibo,
        RandomImprovedMcGill     AS McGill,
        RandomWolframCA          AS Wolf;
-IMPORT Statistic, Fmt, NADefinitions;
+IMPORT Statistic, Fmt, Arithmetic;
 
-<*FATAL NADefinitions.Error*>
+<*FATAL Arithmetic.Error*>
 
 (*=======================*)
 CONST Module = "TestRandom.";

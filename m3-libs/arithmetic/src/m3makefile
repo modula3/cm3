@@ -6,7 +6,6 @@ include_dir("algebra")
 include_dir("inout")
 include_dir("misc")
 
-Module("NADefinitions")
 Module("Arithmetic")
 
 % if the statement is given twice, no quake error is thrown

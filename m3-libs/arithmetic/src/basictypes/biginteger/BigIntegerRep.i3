@@ -7,7 +7,7 @@ INTERFACE BigIntegerRep;
 
 IMPORT Word AS W;
 IMPORT BigInteger AS BI;
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

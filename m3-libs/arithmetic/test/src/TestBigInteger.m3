@@ -17,7 +17,7 @@ IMPORT BigInteger             AS B,
        Text,
        Wr,
        Thread,
-       NADefinitions;
+       Arithmetic;
 FROM BigIntegerMatrixIntegerPower IMPORT Power;
 (*=======================*)
 CONST Module = "TestBigInteger.";
@@ -26,7 +26,7 @@ CONST
   base2Style  = BF.FmtStyle{base := 2};
   base16Style = BF.FmtStyle{base := 16};
 (*----------------------*)
-<*FATAL NADefinitions.Error*>
+<*FATAL Arithmetic.Error*>
 PROCEDURE TestBasic (): BOOLEAN =
   CONST ftn = Module & "TestBasic";
   VAR
