@@ -2,14 +2,14 @@
 %  Quake functions to instantiate operations on generic physical entities.
 %
 
-readonly proc PhysicalValue (nm, field, rfast) is
+readonly proc PhysicalValue (nm, field, rimpl) is
   local basic  = nm & "PhysicalValue"
-  local rfield = field & rfast
+  local rfield = field & rimpl
   build_generic_intf (basic, "PhysicalValue", [rfield], VISIBLE)
   build_generic_impl (basic, "PhysicalValue", [rfield])
 end
 
-readonly proc UnitDatabase (nm, field, rfast) is
+readonly proc UnitDatabase (nm, field, rimpl) is
   local udb    = nm & "UnitDatabase"
   local uu     = nm & "UsualUnit"
   local uulist = uu & "List"
@@ -17,7 +17,7 @@ readonly proc UnitDatabase (nm, field, rfast) is
   local cu     = nm & "CompositeUnit"
   local culist = cu & "List"
   list(cu, cu)
-  local rfield = field & rfast
+  local rfield = field & rimpl
   build_generic_intf (uu,  "UsualUnit",     [rfield], VISIBLE)
   build_generic_impl (uu,  "UsualUnit",     [])
   build_generic_intf (cu,  "CompositeUnit", [uulist], VISIBLE)
@@ -26,9 +26,9 @@ readonly proc UnitDatabase (nm, field, rfast) is
   build_generic_impl (udb, "UnitDatabase",  [        uu, uulist, cu, culist])
 end
 
-readonly proc SIUnit (nm, field, rfast) is
+readonly proc SIUnit (nm, field, rimpl) is
   local siunit  = nm & "SIUnit"
-  local rfield  = field & rfast
+  local rfield  = field & rimpl
   local rtrans  = field & "Trans"
   local ruu     = field & "UsualUnit"
   local ruulist = ruu & "List"
@@ -38,11 +38,11 @@ readonly proc SIUnit (nm, field, rfast) is
 end
 
 
-readonly proc PhysicalValueFmtLex (nm, field, rfast, complex, cfast) is
+readonly proc PhysicalValueFmtLex (nm, field, rimpl, complex, cimpl) is
   local fmt     = nm & "PhysicalValueFmtLex"
-  local rfield  = field & rfast
+  local rfield  = field & rimpl
   local rtrans  = field & "Trans"
-  local cfield  = nm & cfast
+  local cfield  = nm & cimpl
   local ctrans  = nm & "Trans"
   local cfmt    = nm & "FmtLex"
   local cpv     = nm & "PhysicalValue"
