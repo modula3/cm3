@@ -12,6 +12,11 @@ IMPORT LongRealBasic               AS R,
        LongRealMatrix              AS M,
        LongRealVectorFmtLex        AS VF,
        LongRealMatrixFmtLex        AS MF,
+       Integer32Vector             AS IntV,
+       Integer32Matrix             AS IntM,
+       BigInteger                  AS BI,
+       BigIntegerMatrix            AS BIM,
+       BigIntegerFmtLex            AS BIF,
        LongRealMatrixDecomposition AS MD,
        LongRealVectorTrans         AS VT,
        LongRealMatrixTrans         AS MT,
@@ -28,7 +33,6 @@ TYPE
 
 VAR rand := NEW(Rand.T).init();
 
-(*---------------------*)
 (*---------------------*)
 PROCEDURE BuildAX (VAR (*OUT*) A, C, D       : M.T;
                    VAR (*OUT*) knownX, foundX: V.T;
@@ -235,6 +239,70 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
 
     RETURN TRUE;
   END TestLU;
+
+
+(* ToDo: automatic checks, like det(A*B) = det(A) * det(B), Cramer's rule,
+   determinant of orthogonal, triangular matrices and permutation
+   matrices. *)
+PROCEDURE TestDeterminant (): BOOLEAN RAISES {} =
+  CONST ftn = Module & "TestDeterminant";
+  VAR
+    m := ARRAY [0 .. 5] OF
+           IntM.T{
+           IntM.FromArray(IntM.TBody{IntV.TBody{1, 1}, IntV.TBody{0, 1}}),
+           IntM.FromArray(IntM.TBody{IntV.TBody{1, 0}, IntV.TBody{1, 1}}),
+           IntM.FromArray(IntM.TBody{IntV.TBody{0, 1}, IntV.TBody{1, 1}}),
+           IntM.FromArray(
+             IntM.TBody{IntV.TBody{4, 7, 3}, IntV.TBody{5, 9, 8},
+                        IntV.TBody{2, 1, 5}}),
+           IntM.FromArray(
+             IntM.TBody{IntV.TBody{1, 2, 2}, IntV.TBody{2, -2, 1},
+                        IntV.TBody{-2, -1, 2}}),
+           IntM.FromArray(IntM.TBody{IntV.TBody{1, 1, 1, 1},
+                                     IntV.TBody{1, 1, -1, -1},
+                                     IntV.TBody{1, -1, 1, -1},
+                                     IntV.TBody{-1, 1, 1, -1}})};
+
+  BEGIN
+    Debug(1, ftn, "begin\n");
+
+    FOR i := FIRST(m) TO LAST(m) DO
+      WITH x = m[i] DO
+        VAR
+          xReal   := NEW(M.T, NUMBER(x^), NUMBER(x[0]));
+          xBigInt := NEW(BIM.T, NUMBER(x^), NUMBER(x[0]));
+
+          detReal  : R.T;
+          detInt   : INTEGER;
+          detBigInt: BI.T;
+
+        BEGIN
+          FOR j := FIRST(x^) TO LAST(x^) DO
+            FOR k := FIRST(x[0]) TO LAST(x[0]) DO
+              xReal[j, k] := FLOAT(x[j, k], R.T);
+              xBigInt[j, k] := BI.FromInteger(x[j, k]);
+            END;
+          END;
+
+          detInt := IntM.Determinant(x);
+          detBigInt := BIM.Determinant(xBigInt);
+          detReal := M.Determinant(xReal);
+
+          Msg("Determinants " & Fmt.Int(detInt));
+          Msg(" " & BIF.Fmt(detBigInt));
+          Msg(" " & RF.Fmt(detReal) & "\n");
+
+          (* check different algorithms for computing the determinant *)
+          <* ASSERT ROUND(detReal) = detInt *>
+          <* ASSERT BI.ToInteger(detBigInt) = detInt *>
+        END;
+      END;
+
+    END;
+
+    RETURN TRUE;
+  END TestDeterminant;
+
 (*------------------------*)
 PROCEDURE TestSLE (): BOOLEAN =
   BEGIN
@@ -246,6 +314,8 @@ PROCEDURE TestSLE (): BOOLEAN =
     EVAL TestTridiag();
     NewLine();
     EVAL TestLU();
+    NewLine();
+    EVAL TestDeterminant();
     RETURN TRUE;
   END TestSLE;
 (*=======================*)

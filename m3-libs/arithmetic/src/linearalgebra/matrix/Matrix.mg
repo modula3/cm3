@@ -6,13 +6,11 @@ GENERIC MODULE Matrix(R, V);
 CONST
   Module = "Matrix.";
 
-(*-----------------*)
 PROCEDURE New (m, n: CARDINAL): T =
   BEGIN
     RETURN NEW(T, m, n);
   END New;
 
-(*-----------------*)
 PROCEDURE FromArray (READONLY x: TBody): T =
   VAR
     m := NUMBER(x);
@@ -23,7 +21,6 @@ PROCEDURE FromArray (READONLY x: TBody): T =
     RETURN z;
   END FromArray;
 
-(*-----------------*)
 PROCEDURE FromMatrixArray (READONLY x: TMBody): T =
   BEGIN
     IF NUMBER(x) = 0 OR NUMBER(x[0]) = 0 THEN
@@ -73,7 +70,6 @@ PROCEDURE FromMatrixArray (READONLY x: TMBody): T =
     END;
   END FromMatrixArray;
 
-(*-----------------*)
 PROCEDURE RowFromArray (READONLY x: V.TBody): T =
   VAR z := NEW(T, 1, NUMBER(x));
   BEGIN
@@ -81,7 +77,6 @@ PROCEDURE RowFromArray (READONLY x: V.TBody): T =
     RETURN z;
   END RowFromArray;
 
-(*-----------------*)
 PROCEDURE ColumnFromArray (READONLY x: V.TBody): T =
   VAR z := NEW(T, NUMBER(x), 1);
   BEGIN
@@ -89,7 +84,6 @@ PROCEDURE ColumnFromArray (READONLY x: V.TBody): T =
     RETURN z;
   END ColumnFromArray;
 
-(*-----------------*)
 PROCEDURE DiagonalFromArray (READONLY x: V.TBody): T =
   VAR z := NEW(T, NUMBER(x), NUMBER(x));
   BEGIN
@@ -103,25 +97,21 @@ PROCEDURE DiagonalFromArray (READONLY x: V.TBody): T =
     RETURN z;
   END DiagonalFromArray;
 
-(*-----------------*)
 PROCEDURE RowFromVector (x: V.T): T =
   BEGIN
     RETURN RowFromArray(x^);
   END RowFromVector;
 
-(*-----------------*)
 PROCEDURE ColumnFromVector (x: V.T): T =
   BEGIN
     RETURN ColumnFromArray(x^);
   END ColumnFromVector;
 
-(*-----------------*)
 PROCEDURE DiagonalFromVector (x: V.T): T =
   BEGIN
     RETURN DiagonalFromArray(x^);
   END DiagonalFromVector;
 
-(*-----------------*)
 PROCEDURE FromScalar (x: R.T): T =
   VAR z := NEW(T, 1, 1);
   BEGIN
@@ -129,7 +119,6 @@ PROCEDURE FromScalar (x: R.T): T =
     RETURN z;
   END FromScalar;
 
-(*-----------------*)
 PROCEDURE Copy (x: T): T =
   VAR
     m := NUMBER(x^);
@@ -140,7 +129,7 @@ PROCEDURE Copy (x: T): T =
     RETURN z;
   END Copy;
 
-(*-----------------*)
+
 PROCEDURE NewZero (m, n: CARDINAL): T = (*create zero matrix*)
   VAR
     mf := 0;
@@ -152,7 +141,7 @@ PROCEDURE NewZero (m, n: CARDINAL): T = (*create zero matrix*)
     FOR i := mf TO ml DO FOR j := nf TO nl DO z[i, j] := R.Zero; END; END;
     RETURN z;
   END NewZero;
-(*-----------------*)
+
 PROCEDURE NewOne (n: CARDINAL): T = (*create identity matrix*)
   VAR
     nf := 0;
@@ -165,7 +154,7 @@ PROCEDURE NewOne (n: CARDINAL): T = (*create identity matrix*)
     END;
     RETURN z;
   END NewOne;
-(*-----------------*)
+
 PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER): T =
   VAR
     z             := New(size, NUMBER(x^));
@@ -182,6 +171,16 @@ PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER): T =
     END;
     RETURN z;
   END Cyclic;
+
+PROCEDURE Transpose (x: T; ): T =
+  VAR z := NEW(T, NUMBER(x[0]), NUMBER(x^));
+  BEGIN
+    FOR i := FIRST(x[0]) TO LAST(x[0]) DO
+      FOR j := FIRST(x^) TO LAST(x^) DO z[i, j] := x[j, i]; END;
+    END;
+    RETURN z;
+  END Transpose;
+
 
 
 PROCEDURE GetRow (x: T; k: CARDINAL): V.T =
@@ -235,6 +234,5 @@ PROCEDURE ReduceColumns (x: T; f: ReduceFtn; READONLY init: V.TBody): V.T =
     RETURN y;
   END ReduceColumns;
 
-(*-----------------*)
 BEGIN
 END Matrix.

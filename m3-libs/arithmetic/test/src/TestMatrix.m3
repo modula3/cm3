@@ -1,12 +1,11 @@
 MODULE TestMatrix EXPORTS Test;
-(**Arithmetic for Modula-3, see doc for details
-Abstract:  Tests for LongRealMatrix      module.
+(* Arithmetic for Modula-3, see doc for details
 
-1/1/96    <name>   Initial version
+   Abstract:  Tests for LongRealMatrix module. *)
 
-**)
-(*IMPORT Arithmetic AS Arith;*)
-(*IMPORT IO,Wr,Fmt;*)
+(* ToDo: automatically test laws like commutativity, associativity,
+         distributivity, (A*B)^T = B^T * A^T *)
+
 IMPORT LongRealBasic        AS R,
        LongRealVector       AS V,
        LongRealVectorFmtLex AS VF,
