@@ -145,6 +145,7 @@ DESCRIPTION
 <*EXTERNAL*> PROCEDURE strspn   (s1: const_char_star; s2: const_char_star): int;
 <*EXTERNAL*> PROCEDURE strcspn  (s1: const_char_star; s2: const_char_star): size_t;
 
+<*EXTERNAL*> PROCEDURE strerror (errnum: int): char_star;
 
 
 
@@ -156,7 +157,6 @@ DESCRIPTION
   <*EXTERNAL*> PROCEDURE strcoll  (s1: const_char_star; s2: const_char_star): int;
   <*EXTERNAL*> PROCEDURE strxrfm  (s1: char_star; s2: const_char_star; n: size_t): size_t;
   <*EXTERNAL*> PROCEDURE strstr   (s1: const_char_star; s2: const_char_star): char_star;
-  <*EXTERNAL*> PROCEDURE strerror (errnum: int): char_star;
 
 *)
 

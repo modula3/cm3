@@ -42,7 +42,6 @@
 extern int errno;
 
 extern int sys_nerr;
-extern char *sys_errlist[];
 
 /***************************************************************/
 /* Package constants                                           */
@@ -183,7 +182,7 @@ static string GetFolder(/* name */);
 static bool FolderIsBBoard(/* name */);
 static bool IsAMessage(/* name */);
 static void warning(/* msg, arg0 */);
-static char *errno2str(/* err */);
+static const char *errno2str(/* err */);
 static void ErrorHelp();
 
 extern stream popen();
@@ -1787,7 +1786,7 @@ va_dcl
   }
 }
 
-static char *errno2str(err)
+static const char *errno2str(err)
 {
     static char buf[50];
     if (err >= sys_nerr) {

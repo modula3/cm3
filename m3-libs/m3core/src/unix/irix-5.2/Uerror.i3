@@ -7,8 +7,6 @@
 
 INTERFACE Uerror;
 
-FROM Ctypes IMPORT int, char_star;
-
 (*** <errno.h> ***)
 
 CONST
@@ -164,29 +162,14 @@ CONST
   ESTALE		 = 151;		(* Stale NFS file handle *)
 
 
-<*EXTERNAL*>
-VAR
-  errno: int;
-
-
 (* Extention by mjordan *)
 CONST
   Max = ESTALE; (* should be exported from Uerror *)
   
-<*EXTERNAL*> VAR
-  sys_nerr: int;
-  sys_errlist: ARRAY [0..Max] OF char_star;
-
 (*** multi-threaded error routines ***)
 
 <*EXTERNAL*> PROCEDURE oserror(): int;
 <*EXTERNAL*> PROCEDURE goserror(): int;
 <*EXTERNAL*> PROCEDURE setoserror(err: int): int;
-
-PROCEDURE GetFrom_sys_errlist(n: INTEGER): char_star RAISES {};
-(* returns entry 'n' of the 'sys_errlist' array; a checked runtime error
-   unless 0 <= n <= sys_nerr. Its safer and more portable to use this 
-   procedure than to access the array directly.
-*)
 
 END Uerror.

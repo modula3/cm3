@@ -8,7 +8,7 @@
 
 UNSAFE MODULE FilePosix;
 
-IMPORT Ctypes, File, FS, M3toC, OSError, OSErrorPosix, Pipe,
+IMPORT Cerrno, Ctypes, File, FS, M3toC, OSError, OSErrorPosix, Pipe,
   RegularFile, SchedulerPosix, Terminal, Uerror, Unix, Ustat, Uuio,
   Word;
 
@@ -168,10 +168,12 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
     l_pid := 0}; (* don't care *)
   BEGIN
     IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
-    THEN
-
-      IF Uerror.errno = Uerror.EACCES
-      OR Uerror.errno = Uerror.EAGAIN THEN RETURN FALSE END;
+     THEN
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EACCES OR errno = Uerror.EAGAIN THEN
+          RETURN FALSE
+        END;
+      END;
       OSErrorPosix.Raise()
     END;
     RETURN TRUE
@@ -220,7 +222,7 @@ PROCEDURE IntermittentRead(
       END;
 
       status := Uuio.read(h.fd, p_b, NUMBER(b));
-      errno := Uerror.errno;
+      errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
 	OSErrorPosix.Raise()
@@ -261,7 +263,7 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
       END;
 
       status := Uuio.write(h.fd, p, n);
-      errno := Uerror.errno;
+      errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
 	OSErrorPosix.Raise()

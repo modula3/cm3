@@ -11,7 +11,7 @@
 
 UNSAFE MODULE UnixUtils;
 
-IMPORT Cerrno, M3toC, TextList, Udir, Unix, Ustat, Word, Uerror;
+IMPORT Cerrno, Cstring, M3toC, TextList, Udir, Unix, Ustat, Word;
 
 PROCEDURE Directory (dirname: TEXT): TextList.T RAISES {Error} =
   VAR list: TextList.T := NIL;
@@ -84,7 +84,7 @@ PROCEDURE GetWD (): TEXT RAISES {Error} =
 
 PROCEDURE RaiseError () RAISES {Error} =
   BEGIN
-    RAISE Error (M3toC.StoT (Uerror.GetFrom_sys_errlist (Cerrno.errno)))
+    RAISE Error (M3toC.StoT (Cstring.strerror (Cerrno.GetErrno())))
   END RaiseError;
 
 PROCEDURE Accessible (file: TEXT; modes := SET OF AccessMode {}): BOOLEAN =

@@ -8,11 +8,11 @@
 (*   Author:  Geoffrey Wyant - Sun Microsystems Labs BOS		   *)
 (***************************************************************************)
 
-(* $Revision: 1.1.1.1 $ *)
+(* $Revision: 1.2 $ *)
 
 MODULE Unix;
 
-IMPORT Uerror;
+IMPORT Cerrno;
 FROM   Ctypes IMPORT int;
 
 (*
@@ -22,11 +22,11 @@ FROM   Ctypes IMPORT int;
  *)
 PROCEDURE fcntl(fd, request, arg: int): int =
   VAR
-    errno := Uerror.errno;
+    errno := Cerrno.GetErrno();
     res   := raw_fcntl(fd, request, arg);
   BEGIN
     IF res = 0 THEN
-      Uerror.errno := errno;
+      Cerrno.SetErrno(errno);
     END;
     RETURN res;
   END fcntl;
@@ -39,11 +39,11 @@ PROCEDURE fcntl(fd, request, arg: int): int =
  *)
 PROCEDURE ioctl(fd, request: int; argp: ADDRESS): int =
   VAR
-    errno := Uerror.errno;
+    errno := Cerrno.GetErrno();
     res   := raw_ioctl(fd, request, argp);
   BEGIN
     IF res = 0 THEN
-      Uerror.errno := errno;
+      Cerrno.SetErrno(errno);
     END;
     RETURN res;
   END ioctl;

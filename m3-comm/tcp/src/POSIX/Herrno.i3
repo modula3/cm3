@@ -8,6 +8,13 @@ INTERFACE Herrno;
 
 FROM Ctypes IMPORT int;
 
-<*EXTERNAL*> VAR h_errno: int;
+(* We cannot access "h_errno" directly as a variable, because on some systems
+   it is a C macro that expands to something more complicated. *)
+
+<*EXTERNAL "m3_Herrno_Get_h_errno"*>
+PROCEDURE Get_h_errno(): int;
+
+<*EXTERNAL "m3_Herrno_Set_h_errno"*>
+PROCEDURE Set_h_errno(he: int);
 
 END Herrno.

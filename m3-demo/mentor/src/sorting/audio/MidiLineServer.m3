@@ -8,7 +8,8 @@
 UNSAFE MODULE MidiLineServer;
 
 IMPORT M3toC, Midi, MidiPrivate;
-IMPORT Ctypes, Uerror, Uin, Unetdb, Unix, Usocket, Utime;
+IMPORT Cerrno, Cstring, Ctypes;
+IMPORT Uerror, Uin, Unetdb, Unix, Usocket, Utime;
 FROM Midi IMPORT Failure;
 
 CONST
@@ -144,14 +145,14 @@ PROCEDURE Rpc (t: T; op: Operation; VAR request: Command; reqSize: INTEGER)
       readfds := Unix.FDSet {t.socket};
       result := Unix.select (t.socket + 1, ADR (readfds), NIL, NIL,
                              ADR (timeout));
-      IF (result < 0) AND (Uerror.errno # Uerror.EINTR) THEN
+      IF (result < 0) AND (Cerrno.GetErrno() # Uerror.EINTR) THEN
         UnixFail ("select");
       END;
       IF result > 0 THEN
         result :=
           Usocket.recv (t.socket, ADR (reply), BYTESIZE (reply), 0);
         IF result < 0 THEN
-          IF Uerror.errno # Uerror.EINTR THEN UnixFail ("recv"); END;
+          IF Cerrno.GetErrno() # Uerror.EINTR THEN UnixFail ("recv"); END;
         ELSIF (Uin.ntohl (reply.hdr.sequence) = t.seq) THEN
           IF Uin.ntohl (reply.hdr.param) < 0 THEN
             UnixFail ("LineServer operation failed");
@@ -166,8 +167,7 @@ PROCEDURE Rpc (t: T; op: Operation; VAR request: Command; reqSize: INTEGER)
 PROCEDURE UnixFail (msg: TEXT) RAISES {Failure} =
   BEGIN
     RAISE Failure (msg & ": unix error: "
-                     & M3toC.StoT (Uerror.GetFrom_sys_errlist (
-                                     Uerror.errno)));
+                     & M3toC.StoT (Cstring.strerror(Cerrno.GetErrno())));
   END UnixFail;
 
 BEGIN

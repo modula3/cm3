@@ -6,7 +6,7 @@ UNSAFE MODULE UDPPosix EXPORTS UDP;
 
 IMPORT Atom, AtomList, Ctypes, IP, M3toC;
 IMPORT OSErrorPosix, SchedulerPosix, Thread;
-IMPORT Uerror, Uin, Unix, Usocket, Utypes;
+IMPORT Cerrno, Uerror, Uin, Unix, Usocket, Utypes;
 
 REVEAL
   T = Public BRANDED "UDPPosix.T" OBJECT
@@ -29,7 +29,7 @@ CONST SinZero = ARRAY [0 .. 7] OF Ctypes.char{VAL(0, Ctypes.char), ..};
 
 PROCEDURE Raise(a: Atom.T) RAISES {IP.Error} =
   BEGIN
-    RAISE IP.Error(AtomList.List2(a, OSErrorPosix.ErrnoAtom(Uerror.errno)));
+    RAISE IP.Error(AtomList.List2(a, OSErrorPosix.ErrnoAtom(Cerrno.GetErrno())));
   END Raise;
 
 PROCEDURE RaiseUnexpected(syscall: TEXT) RAISES {IP.Error} =
@@ -47,9 +47,11 @@ PROCEDURE Init(self: T; myPort: IP.Port; myAddr: IP.Address): T
     (* create socket via socket(2) system call *)
     self.fileno := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_DGRAM, 0);
     IF self.fileno = -1 THEN
-      IF Uerror.errno = Uerror.EMFILE OR Uerror.errno = Uerror.ENFILE
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE
         THEN Raise(IP.NoResources)
         ELSE RaiseUnexpected("socket(2)")
+        END
       END
     END;
 
@@ -62,7 +64,7 @@ PROCEDURE Init(self: T; myPort: IP.Port; myAddr: IP.Address): T
       status := Usocket.bind(self.fileno,
         (*INOUT*) ADR(sockaddr), BYTESIZE(Uin.struct_sockaddr_in));
       IF status # 0 THEN
-        IF Uerror.errno = Uerror.EADDRINUSE
+        IF Cerrno.GetErrno() = Uerror.EADDRINUSE
           THEN Raise(IP.PortBusy)
           ELSE RaiseUnexpected("bind(2)")
         END

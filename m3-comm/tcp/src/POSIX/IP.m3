@@ -87,7 +87,7 @@ PROCEDURE GetHostAddr(): Address =
 
 PROCEDURE InterpretError() RAISES {Error} =
   BEGIN
-    CASE Herrno.h_errno OF
+    CASE Herrno.Get_h_errno() OF
     | Unetdb.TRY_AGAIN, Unetdb.NO_RECOVERY, Unetdb.NO_ADDRESS =>
         IPError.Raise (LookupFailure);
     ELSE

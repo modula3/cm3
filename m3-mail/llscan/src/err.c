@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <varargs.h>
+#include <errno.h>
 #include "SRCstdlib.h"
 #include "err.h"
 
@@ -26,7 +27,6 @@ static char errfmt[MAXERRMSG];
 static char errbuf[MAXERRMSG];
 
 extern int sys_nerr, errno;
-extern char *sys_errlist[];
 
 /***************************************************************/
 /* Local function declarations                                 */
@@ -84,7 +84,8 @@ va_dcl
 static void preprocess(msg)
 string msg;
 {
-    register char *src, *dst, *cp;
+    register char *src, *dst;
+    register const char *cp;
     char c;
 
     src = msg;

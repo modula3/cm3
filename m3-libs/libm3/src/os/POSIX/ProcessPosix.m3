@@ -7,7 +7,7 @@
 
 UNSAFE MODULE ProcessPosix EXPORTS Process;
 
-IMPORT Atom, AtomList, Ctypes, Env, File, FilePosix, M3toC, OSError,
+IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
   SchedulerPosix, Text, Thread, Unix, Uerror, Uexec, Uprocess, Ustat,
   Utime, Uugid, Word;
@@ -88,13 +88,13 @@ PROCEDURE Create(
       (* If ExecChild returns, the execve failed. Let's try to leave
         a note for our parent, in case we're still sharing their
         address space. *)
-      execErrno := Uerror.errno;
+      execErrno := Cerrno.GetErrno();
       Unix.underscore_exit(99)
     END;
 
     (* Back in parent. *)
 
-    forkErrno := Uerror.errno;
+    forkErrno := Cerrno.GetErrno();
 
     (* Enable scheduler. *)
     SchedulerPosix.EnableSwitching ();
@@ -170,7 +170,7 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
     ELSE (* pn contains '/' *)
       pname := M3toC.SharedTtoS(pn);
       IF Ustat.stat(pname, ADR(statBuf)) < 0 THEN
-        result := Uerror.errno;
+        result := Cerrno.GetErrno();
         M3toC.FreeSharedS(pn, pname);
         OSErrorPosix.Raise0(result)
       END;
@@ -238,7 +238,7 @@ PROCEDURE ExecChild(
 (* Modify Unix state using "stdin", ..., and invoke execve using
    "argx" and "envp".  Do not invoke scheduler, allocator, or
    exceptions.  Return only if a fatal Unix error is encountered, in
-   which case Uerror.errno is set. *)
+   which case Cerrno.GetErrno() is set. *)
   VAR res := 0; t: Ctypes.char_star;
   BEGIN
     IF wdstr # NIL THEN
@@ -254,7 +254,7 @@ PROCEDURE ExecChild(
     RTSignal.RestoreHandlers();
     res := Unix.execve((*path*)argx[0], ADR(argx[2]), envp);
     <* ASSERT res < 0 *>
-    IF Uerror.errno = Uerror.ENOEXEC THEN
+    IF Cerrno.GetErrno() = Uerror.ENOEXEC THEN
       t := argx[0]; argx[0] := argx[2]; argx[2] := t;
       res := Unix.execve(BinSh, ADR(argx[1]), envp);
       <* ASSERT res < 0 *>
@@ -271,7 +271,7 @@ PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
     ELSIF Unix.fcntl(fd, Unix.F_SETFD, 1) >= 0 THEN
       RETURN TRUE;
     ELSE (* EBADF => "fd" was already closed, don't panic *)
-      RETURN (Uerror.errno = Uerror.EBADF);
+      RETURN (Cerrno.GetErrno() = Uerror.EBADF);
     END;
   END SetFd;
 
@@ -362,7 +362,7 @@ PROCEDURE SetWorkingDirectory(pn: Pathname.T) RAISES {OSError.E} =
   BEGIN
     LOCK wdCacheMutex DO
       IF Unix.chdir(fname) < 0 THEN
-        err := Uerror.errno;
+        err := Cerrno.GetErrno();
         M3toC.FreeSharedS(pn, fname);
         OSErrorPosix.Raise0(err);
       END;

@@ -7,7 +7,7 @@
 %      modified on Thu Nov 12 11:54:47 PST 1992 by muller
 
 Module    (Udir)
-Module    (Uerror)
+Interface (Uerror)
 Interface (Uexec)
 Interface (Ugrp)
 Module    (Uin)
