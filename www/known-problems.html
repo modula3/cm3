@@ -63,6 +63,9 @@
       &nbsp;&nbsp;
       <a href="#p_5_3">5.3 Problems with efficient exception handling
         (`stack walkers') and gcc 3.2.1</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_5_4">5.4 Installation program fails with unhandled
+        OSError exception on SOLgnu platform</a><br>
     </p>
 
     <a name="p_1">
@@ -138,12 +141,12 @@
     <p>
       <b>Solution:</b>
       There is no easy solution to this problem. As a temporary
-      workaround, the installer has been modified to replace pathnames
+      work-around, the installer has been modified to replace pathnames
       with spaces by their 8.3 style equivalent on WIN32. If you
       cannot avoid using spaces in your CM3 projects, the 8.3 style
-      short form should be a possible though ugly workaround for that,
+      short form should be a possible though ugly work-around for that,
       too. Voluntary contributions in this area are more than welcome.
-      This workaround is incorporated in all installation programs
+      This work-around is incorporated in all installation programs
       since release 5.1.1.
     </p>
 
@@ -190,7 +193,7 @@
       suggested) to (a) not to shorten the symbols after the @ character,
       and (b) ignore the export of all symbols beginning with two
       underscores while writing the linker .def file (this even fails
-      for libm3). In CM3 5.1.3 a workaround has been implemented,
+      for libm3). In CM3 5.1.3 a work-around has been implemented,
       which cures the problem for all tested m3 packages; this is
       still no general solution, though, as it may break other
       existing code. The <tt>mklib</tt> program has been extended by
@@ -749,6 +752,35 @@ SYSTEM_LIBS = {
       frontend to the new gcc exception interface :-)
     </p>
 
+    <a name="p_5_4">
+    <h4>
+      5.4 Installation program fails with unhandled
+        OSError exception on SOLgnu platform
+    </h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> SOLgnu
+    </p>
+
+    <p>
+      <b>Description:</b>cminstall fails with the following message:
+    </p>
+    <pre>
+***
+*** runtime error:
+***    Unhandled exception: OSError.E
+***    file \"../src/os/POSIX/OSErrorPosix.m3\", line 50
+***
+
+Abort</pre>
+
+    <p>
+      <b>Solution:</b>
+      Use the cm3-min-POSIX-SOLgnu-d5.2.7.tgz instead. The
+      installation program in the 5.2.6 archive is broken. There is no
+      work-around.
+    </p>
     <!--
     <h4></h4>
 
@@ -769,7 +801,7 @@ SYSTEM_LIBS = {
     <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Sat Jul 19 23:01:11 CEST 2003
+Last modified: Fri Sep 19 17:25:22 CEST 2003
 <!-- hhmts end -->
   </body>
 </html>
