@@ -574,6 +574,7 @@ PROCEDURE GenConfig (): TEXT =
                   ELSE
                     IF AskBool("Would you like to continue nonetheless?",
                                "yes") THEN
+                      v0 := "-L" & v0;
                       EXIT;
                     END;
                     Out ();
