@@ -1,4 +1,4 @@
-MODULE xXYZ;
+MODULE XYZ;
 (*Copyright (c) 1996, m3na project
 
 Abstract: <describe>
@@ -11,4 +11,4 @@ Abstract: <describe>
 
 (*==========================*)
 BEGIN
-END xXYZ.
+END XYZ.
