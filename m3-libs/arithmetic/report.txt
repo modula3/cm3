@@ -16,18 +16,33 @@ todo:
        The current solution with an enumeration type
        for Err is not expressive enough.
        What about objects?
+     - overflow check (at least in integer modules)
 
   - Hash routines
-  - (*OUT*) for remainder of DivMod
   - ODE by Simon Hood
-  - Lex routines (I have needed them so far)
+  - Lex routines (I have not needed them so far)
   - Tex output of numbers
      - check for necessarity of parentheses by giving the precedence of the surrounding operation
      - polynomials: vector (1,2,3) or variable based output 1x^0+2x^1+3x^2, optionally output x^0 as 1 and x^1 as x and suppress zero coefficients
      - integer: output of base as subscript
      - complex: suppress imaginary part if zero
      - fraction: suppress denominator if one
-  - (overflow check in integer modules)
+  - object oriented interface
+     - In principle it is possible to create a general mathematical object class.
+       A good interpretation of such an object is "expression" and
+       it may be a sum, a product, a vector, a polynomial etc.
+       "Expression" is the main class and "sum" etc. are sub classes.
+       The sub classes could reuse the static types and their procedures.
+       The advantages are that there is no need to instantiate generic modules
+       and that repeated application is possible,
+       as needed for example for continued fractions.
+       The disadvantage is clearly the reduced performance
+       because of more dynamic memory allocation and
+       variable jumps to methods (dynamic linking).
+     - Both the object oriented and the static typed interface
+       could coexist kindly.
+     - We have to ask where to stop such development
+       because we definitely don't need a new computer algebra system.
 
 
 
