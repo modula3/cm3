@@ -13,3 +13,16 @@ readonly proc ComplexFast (nm, field) is
   build_generic_intf (basic, "ComplexFast", [field], VISIBLE)
   build_generic_impl (basic, "ComplexFast", [field])
 end
+
+
+readonly proc ComplexTrans (nm, cfield, rfield, rtrans) is
+  local basic = nm & "ComplexTrans"
+  build_generic_intf (basic, "ComplexTrans", [cfield, rfield], VISIBLE)
+  build_generic_impl (basic, "ComplexTrans", [cfield, rfield, rtrans])
+end
+
+readonly proc ComplexFmtLex (nm, cfield, rfield, rfmt) is
+  local basic = nm & "ComplexFmtLex"
+  build_generic_intf (basic, "ComplexFmtLex", [cfield], VISIBLE)
+  build_generic_impl (basic, "ComplexFmtLex", [cfield, rfield, rfmt])
+end

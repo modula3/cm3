@@ -7,8 +7,18 @@ ComplexBasic("Real",     "RealBasic")
 ComplexBasic("LongReal", "LongRealBasic")
 ComplexBasic("Extended", "ExtendedBasic")
 
-
 generic_module("ComplexFast")
 ComplexFast("Real",     "Real")
 ComplexFast("LongReal", "LongReal")
 ComplexFast("Extended", "Extended")
+
+
+generic_module("ComplexTrans")
+ComplexTrans("Real",     "RealComplexBasic",	 "RealBasic",	  "RealTrans")
+ComplexTrans("LongReal", "LongRealComplexBasic", "LongRealBasic", "LongRealTrans")
+ComplexTrans("Extended", "ExtendedComplexBasic", "ExtendedBasic", "ExtendedTrans")
+
+generic_module("ComplexFmtLex")
+ComplexFmtLex("Real",	  "RealComplexBasic",	  "RealBasic",     "RealFmtLex")
+ComplexFmtLex("LongReal", "LongRealComplexBasic", "LongRealBasic", "LongRealFmtLex")
+ComplexFmtLex("Extended", "ExtendedComplexBasic", "ExtendedBasic", "ExtendedFmtLex")

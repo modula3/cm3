@@ -32,25 +32,25 @@ BEGIN
 END Expm1;
 
 (*----------------*)
-PROCEDURE Log (x: T): T=
+PROCEDURE Ln (x: T): T=
 (* returns the natural logarithm of x (base E). *)
 BEGIN
   RETURN FLOAT(Math.log(FLOAT(x,LONGREAL)),T);
-END Log;
+END Ln;
 
 (*----------------*)
-PROCEDURE Log10 (x: T): T=
-(* returns the base 10 logarithm of x. *)
-BEGIN
-  RETURN FLOAT(Math.log10(FLOAT(x,LONGREAL)),T);
-END Log10;
-
-(*----------------*)
-PROCEDURE Log1p (x: T): T=
+PROCEDURE Ln1p (x: T): T=
 (* returns log(1+x), even for small x. *)
 BEGIN
   RETURN FLOAT(Math.log1p(FLOAT(x,LONGREAL)),T);
-END Log1p;
+END Ln1p;
+
+(*----------------*)
+PROCEDURE Lg (x: T): T=
+(* returns the base 10 logarithm of x. *)
+BEGIN
+  RETURN FLOAT(Math.log10(FLOAT(x,LONGREAL)),T);
+END Lg;
 
 (*----------------*)
 PROCEDURE Pow (x, y: T): T=
@@ -92,33 +92,33 @@ BEGIN
 END Tan;
 
 (*----------------*)
-PROCEDURE ACos (x: T): T=
+PROCEDURE ArcCos (x: T): T=
 (* returns the arc cosine of x in radians. *)
 BEGIN
   RETURN FLOAT(Math.acos(FLOAT(x,LONGREAL)),T);
-END ACos;
+END ArcCos;
 
 (*----------------*)
-PROCEDURE ASin (x: T): T=
+PROCEDURE ArcSin (x: T): T=
 (* returns the arc sine of x in radians. *)
 BEGIN
   RETURN FLOAT(Math.asin(FLOAT(x,LONGREAL)),T);
-END ASin;
+END ArcSin;
 
 (*----------------*)
-PROCEDURE ATan (x: T): T=
+PROCEDURE ArcTan (x: T): T=
 (* returns the arc tangent of x in radians. *)
 BEGIN
   RETURN FLOAT(Math.atan(FLOAT(x,LONGREAL)),T);
-END ATan;
+END ArcTan;
 
 (*----------------*)
-PROCEDURE ATan2 (y, x: T): T=
+PROCEDURE ArcTan2 (y, x: T): T=
 (* returns the arc tangent of y/x in radians. *)
 BEGIN
   RETURN FLOAT(Math.atan2(FLOAT(y,LONGREAL),
                           FLOAT(x,LONGREAL)),T);
-END ATan2;
+END ArcTan2;
 
 
 (*---- Hyperbolic trigonometric functions ----*)
@@ -146,25 +146,25 @@ END TanH;
 
 
 (*----------------*)
-PROCEDURE ACosH (x: T): T=
+PROCEDURE ArCosH (x: T): T=
 (* returns the inverse hyperbolic cosine of x *)
 BEGIN
   RETURN FLOAT(Math.acosh(FLOAT(x,LONGREAL)),T);
-END ACosH;
+END ArCosH;
 
 (*----------------*)
-PROCEDURE ASinH (x: T): T=
+PROCEDURE ArSinH (x: T): T=
 (* returns the inverse hyperbolic sine of x *)
 BEGIN
   RETURN FLOAT(Math.asinh(FLOAT(x,LONGREAL)),T);
-END ASinH;
+END ArSinH;
 
 (*----------------*)
-PROCEDURE ATanH (x: T): T=
+PROCEDURE ArTanH (x: T): T=
 (* returns the inverse hyperbolic tangent of x *)
 BEGIN
   RETURN FLOAT(Math.atanh(FLOAT(x,LONGREAL)),T);
-END ATanH;
+END ArTanH;
 
 
 
