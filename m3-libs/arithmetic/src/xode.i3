@@ -2,7 +2,7 @@
 (*****************************************************************************)
 (*****************************************************************************)
 
-INTERFACE ode_v1;
+INTERFACE ode;
 
 (*<T>Library of numerical integrators to ordinary differential equations
   of arbitrary order, linear or nonlinear.  Both initial value problems and
@@ -46,8 +46,8 @@ INTERFACE ode_v1;
   *)
 
 IMPORT
-  SimonH_Log_v01 AS Log,
-  Lin_Alg_v03 AS LA;
+  SimonH_Log AS Log,
+  Lin_Alg AS LA;
 
 TYPE
 
@@ -550,7 +550,7 @@ PROCEDURE BVP_OrdN_FD(          max_iters,
 (*****************************************************************************)
 (*****************************************************************************)
 
-END ode_v1.
+END ode.
 
 (*****************************************************************************)
 (*****************************************************************************)
