@@ -546,7 +546,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         *)
         RETURN FnD.Add(derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0,
                                                         mc.lift, mc.amp),
-                                             smoothWeight));
+                                             smoothWeightFade));
       END ComputeOptCritDeriv;
 
     PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
@@ -596,60 +596,72 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           <*ASSERT FALSE*>
         END;
         IO.Put(
-          Fmt.FN("dist %s, smooth %s, weight %s\n",
-                 ARRAY OF
-                   TEXT{RF.Fmt(derwavdist.zeroth),
-                        RF.Fmt(dersmooth.zeroth), RF.Fmt(smoothWeight)}));
+          Fmt.FN(
+            "dist %s, smooth %s, weight %s\n",
+            ARRAY OF
+              TEXT{RF.Fmt(derwavdist.zeroth), RF.Fmt(dersmooth.zeroth),
+                   RF.Fmt(smoothWeightFade)}));
         IO.Put(
           Fmt.FN("dist' %ssmooth' %s\n",
                  ARRAY OF
                    TEXT{VF.Fmt(derwavdist.first), VF.Fmt(dersmooth.first)}));
-        RETURN FnD.Add(derwavdist, FnD.Scale(dersmooth, smoothWeight));
+        RETURN FnD.Add(derwavdist, FnD.Scale(dersmooth, smoothWeightFade));
       END ComputeOptCritDiff;
 
 
     CONST
-      maxIter   = 5;
-      smoothFac = 2.0D0;
+      maxIter   = 20;
+      smoothFac = 1.5D0;
 
     VAR
       (*
       x := V.FromVectorArray(
              ARRAY OF V.T{V.New(2 * translates), V.FromScalar(R.One)});
       *)
+      (*
       x := V.FromVectorArray(
              ARRAY OF
                V.T{V.ArithSeq(2 * translates, -0.45D0, 0.1D0),
                    V.FromScalar(R.One)});
+      *)
       (* use this initialization if you want to compare the results with
          MatchPattern
 
-         x := V.New(2 * translates+1) *)
-      precOk : BOOLEAN;
-      subiter: CARDINAL;
+         x := V.New(2 * translates + 1); *)
+      initlift := NEW(S.T).init(yfirst, 2 * translates);
+      initderdist := DeriveDist(
+                       normalMat, targetCor, targetNormSqr, initlift);
+      initderwavdist := ExtendDervTarget(
+                          initderdist, initlift.getData(), R.Zero,
+                          waveletVec, waveletCor, targetVec);
+      x := V.Neg(LA.LeastSquares(initderwavdist.second,
+                                 ARRAY OF V.T{initderwavdist.first})[0].x);
+
+      smoothWeightFade := smoothWeight / RIntPow.Power(smoothFac, maxIter);
 
     BEGIN
-      smoothWeight := smoothWeight / RIntPow.Power(smoothFac, maxIter);
+      (*IO.Put(Fmt.FN("targetCor %s", ARRAY OF TEXT{VF.Fmt(targetCor)}));*)
       FOR iter := 0 TO maxIter DO
-        precOk := FALSE;
-        subiter := 0;
-        WHILE NOT precOk DO
-          IF subiter >= 15 THEN RAISE NA.Error(NA.Err.not_converging); END;
-          INC(subiter);
-          VAR der := ComputeOptCritDiff(x);
-          BEGIN
-            x := V.Sub(x, LA.LeastSquares(
-                            der.second, ARRAY OF V.T{der.first})[0].x);
-            precOk := VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth);
+        VAR
+          precOk            := FALSE;
+          subiter: CARDINAL := 0;
+        BEGIN
+          WHILE NOT precOk DO
+            IF subiter >= 15 THEN
+              RAISE NA.Error(NA.Err.not_converging);
+            END;
+            INC(subiter);
+            VAR der := ComputeOptCritDiff(x);
+            BEGIN
+              x := V.Sub(x, LA.LeastSquares(
+                              der.second, ARRAY OF V.T{der.first})[0].x);
+              precOk := VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth);
+            END;
           END;
         END;
-        smoothWeight := smoothWeight * smoothFac;
+        smoothWeightFade := smoothWeightFade * smoothFac;
       END;
-      IF precOk OR TRUE THEN
-        RETURN SplitParamVec(x);
-      ELSE
-        RAISE NA.Error(NA.Err.not_converging);
-      END;
+      RETURN SplitParamVec(x);
     END;
   END MatchPatternSmooth;
 
@@ -662,9 +674,9 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     hdual  := BSpl.GeneratorMask(smooth);
     gdual0 := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(
-                  hdual, NEW(S.T).fromArray(
-                           ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}).translate(
-                           2 - smooth - vanishing), vanishing);
+                  hdual,
+                  NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}),
+                  vanishing).translate(2 - smooth - vanishing);
     mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, levels,
                              translates, smoothWeight);
     s := SIntPow.MulPower(
@@ -778,13 +790,14 @@ PROCEDURE Test () =
                                  -256), 6, 4, 6, 5, 5.0D0);
     | Example.matchBSplineWavelet =>
         (*
-          MatchPattern(Refn.Refine(BSpl.WaveletMask(2, 2),
-                                   BSpl.GeneratorMask(2), 6).scale(64.0D0),
-                       6, 2, 2, 5);
+        MatchPattern(
+          Refn.Refine(
+            BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
+            64.0D0).translate(10), 6, 2, 6, 5);
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(-100), 6, 2, 8, 5, 1.0D0);
+                                 64.0D0).translate(60), 6, 2, 8, 5, 10.0D0);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
