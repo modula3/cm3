@@ -9,7 +9,7 @@
 RTThread__Transfer (from, to)
 jmp_buf *from, *to;
 {
-  if (_fpsetjmp(*from) == 0) _fplongjmp (*to, 1);
+  if (setjmp(*from) == 0) longjmp (*to, 1);
 }
 
 
