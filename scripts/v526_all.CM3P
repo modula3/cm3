@@ -1,0 +1,278 @@
+NAME v526_all
+PKG m3-libs\m3core
+;**TEST** PKG m3-libs\m3core\tests\float
+;**TEST** PKG m3-libs\m3core\tests\text
+PKG m3-libs\libm3
+;**TEST** PKG m3-libs\libm3\tests\fmtlex\fmt
+;**TEST** PKG m3-libs\libm3\tests\fmtlex\lex
+;**TEST** PKG m3-libs\libm3\tests\fmtlex\scan
+;**TEST** PKG m3-libs\libm3\tests\os
+;**TEST** PKG m3-libs\libm3\tests\pqueue\fromtty
+;**TEST** PKG m3-libs\libm3\tests\pqueue\heapsort1
+;**TEST** PKG m3-libs\libm3\tests\pqueue\heapsort2
+;**TEST** PKG m3-libs\libm3\tests\random
+;**TEST** PKG m3-libs\libm3\tests\rw\autotest
+;**TEST** PKG m3-libs\libm3\tests\rw\copy
+;**TEST** PKG m3-libs\libm3\tests\rw\pump
+;**TEST** PKG m3-libs\libm3\tests\rw\pumprd
+;**TEST** PKG m3-libs\libm3\tests\sequence
+;**TEST** PKG m3-libs\libm3\tests\sortedtable
+;**TEST** PKG m3-libs\libm3\tests\sqrt
+PKG m3-sys\m3middle
+PKG m3-sys\m3quake
+PKG m3-sys\m3scanner
+PKG m3-sys\m3tools
+PKG m3-sys\m3cgcat
+PKG m3-sys\m3cggen
+PKG m3-tools\m3bundle
+PKG m3-sys\mklib
+PKG m3-sys\dll2lib
+PKG m3-sys\fix_nl
+PKG m3-sys\libdump
+PKG m3-libs\bitvector
+;**TEST** PKG m3-libs\bitvector\test
+PKG m3-libs\digraph
+PKG m3-libs\parseparams
+PKG m3-libs\realgeometry
+PKG m3-libs\set
+PKG m3-libs\slisp
+;**TEST** PKG m3-libs\slisp\tests
+PKG m3-libs\sortedtableextras
+;**TEST** PKG m3-libs\sortedtableextras\tests\intperf
+;**TEST** PKG m3-libs\sortedtableextras\tests\leveltest
+;**TEST** PKG m3-libs\sortedtableextras\tests\randtest
+;**TEST** PKG m3-libs\sortedtableextras\tests\rbtest
+;**TEST** PKG m3-libs\sortedtableextras\tests\sltest
+PKG m3-libs\table-list
+PKG m3-libs\tempfiles
+PKG m3-comm\tcp
+PKG m3-libs\libsio
+PKG m3-libs\libbuf
+PKG m3-libs\debug
+PKG m3-libs\listfuncs
+PKG m3-libs\patternmatching
+;**TEST** PKG m3-libs\patternmatching\tests
+PKG m3-libs\embutils
+PKG m3-libs\m3tk-misc
+PKG m3-www\http
+PKG m3-libs\binIO
+;**TEST** PKG m3-libs\binIO\test
+PKG m3-comm\tapi
+PKG m3-comm\serial
+;**TEST** PKG m3-comm\serial\test
+PKG m3-tools\m3tk
+PKG m3-tools\mtex
+PKG m3-tools\m3totex
+PKG m3-tools\m3tohtml
+PKG m3-tools\m3scan
+PKG m3-tools\m3markup
+PKG m3-tools\m3browser
+PKG m3-tools\cmpdir
+PKG m3-tools\cmpfp
+PKG m3-tools\dirfp
+PKG m3-tools\uniq
+PKG m3-comm\netobj
+;**TEST** PKG m3-comm\netobj\tests\echorw
+;**TEST** PKG m3-comm\netobj\tests\fd
+;**TEST** PKG m3-comm\netobj\tests\fd1
+;**TEST** PKG m3-comm\netobj\tests\longcall
+;**TEST** PKG m3-comm\netobj\tests\luca
+;**TEST** PKG m3-comm\netobj\tests\perf
+;**TEST** PKG m3-comm\netobj\tests\pkl
+PKG m3-comm\netobjd
+PKG m3-comm\stubgen
+PKG m3-comm\events
+;**TEST** PKG m3-comm\events\tests\msg
+;**TEST** PKG m3-comm\events\tests\test
+;**TEST** PKG m3-comm\events\tests\work
+PKG m3-comm\rdwr
+;**TEST** PKG m3-comm\rdwr\test\echo
+;**TEST** PKG m3-comm\rdwr\test\john
+PKG m3-comm\sharedobj
+;**TEST** PKG m3-comm\sharedobj\tests\netobjtest
+;**TEST** PKG m3-comm\sharedobj\tests\obsequence
+;**TEST** PKG m3-comm\sharedobj\tests\tracker
+PKG m3-comm\sharedobjgen
+;**TEST** PKG m3-comm\sharedobjgen\test\trackerpos
+PKG m3-db\odbc
+;**TEST** PKG m3-db\odbc\test
+PKG m3-db\postgres95
+;**TEST** PKG m3-db\postgres95\test
+PKG m3-db\db
+;**TEST** PKG m3-db\db\test
+PKG m3-db\smalldb
+PKG m3-db\stable
+;**TEST** PKG m3-db\stable\example
+;**TEST** PKG m3-db\stable\test
+PKG m3-db\stablegen
+PKG m3-ui\ui
+;**TEST** PKG m3-ui\ui\test\Argus
+;**TEST** PKG m3-ui\ui\test\BadBricks
+;**TEST** PKG m3-ui\ui\test\ButtonTest
+;**TEST** PKG m3-ui\ui\test\Cards
+;**TEST** PKG m3-ui\ui\test\ColorMonster
+;**TEST** PKG m3-ui\ui\test\Draw
+;**TEST** PKG m3-ui\ui\test\EyesVBT
+;**TEST** PKG m3-ui\ui\test\Hello
+;**TEST** PKG m3-ui\ui\test\Monster
+;**TEST** PKG m3-ui\ui\test\Sketch2
+;**TEST** PKG m3-ui\ui\test\StarAnim
+;**TEST** PKG m3-ui\ui\test\Track
+;**TEST** PKG m3-ui\ui\test\TypeInTest
+;**TEST** PKG m3-ui\ui-tests\pixmapcomtest
+;**TEST** PKG m3-ui\ui-tests\pixtest
+;**TEST** PKG m3-ui\ui-tests\test18
+;**TEST** PKG m3-ui\ui-tests\test19
+;**TEST** PKG m3-ui\ui-tests\test25
+;**TEST** PKG m3-ui\ui-tests\test26
+;**TEST** PKG m3-ui\ui-tests\test27
+;**TEST** PKG m3-ui\ui-tests\test28
+;**TEST** PKG m3-ui\ui-tests\test29
+;**TEST** PKG m3-ui\ui-tests\test30
+;**TEST** PKG m3-ui\ui-tests\test31
+;**TEST** PKG m3-ui\ui-tests\test32
+;**TEST** PKG m3-ui\ui-tests\test33
+;**TEST** PKG m3-ui\ui-tests\test35
+;**TEST** PKG m3-ui\ui-tests\texturecomtest
+;**TEST** PKG m3-ui\ui-tests\tiles
+;**TEST** PKG m3-ui\ui-tests\track
+PKG m3-ui\PEX
+PKG m3-ui\vbtkit
+PKG m3-ui\cmvbt
+PKG m3-ui\jvideo
+PKG m3-ui\videovbt
+PKG m3-www\web
+PKG m3-ui\formsvbtpixmaps
+PKG m3-ui\formsvbt
+PKG m3-ui\formsview
+PKG m3-ui\formsedit
+PKG m3-ui\codeview
+PKG m3-ui\mg
+PKG m3-ui\mgkit
+PKG m3-ui\opengl
+PKG m3-ui\anim3D
+PKG m3-ui\zeus
+PKG m3-ui\m3zume
+PKG m3-obliq\synloc
+PKG m3-obliq\synex
+PKG m3-obliq\metasyn
+PKG m3-obliq\obliqrt
+PKG m3-obliq\obliqparse
+PKG m3-obliq\obliqprint
+PKG m3-obliq\obliq
+PKG m3-obliq\obliqlibemb
+PKG m3-obliq\obliqlibm3
+PKG m3-obliq\obliqlibui
+PKG m3-obliq\obliqlibanim
+PKG m3-obliq\obliqsrvstd
+PKG m3-obliq\obliqsrvui
+PKG m3-obliq\obliqbinmin
+PKG m3-obliq\obliqbinstd
+PKG m3-obliq\obliqbinui
+PKG m3-obliq\obliqbinanim
+PKG m3-obliq\visualobliq
+PKG m3-obliq\vocgi
+PKG m3-obliq\voquery
+;**FAILS ON NT386** PKG m3-obliq\vorun
+PKG m3-ui\webvbt
+PKG m3-tools\recordheap
+PKG m3-tools\rehearsecode
+PKG m3-tools\replayheap
+PKG m3-tools\showheap
+PKG m3-tools\shownew
+PKG m3-demo\cube
+PKG m3-demo\calculator
+PKG m3-demo\fisheye
+;
+;PKG m3-sys\cm3
+;PKG m3-sys\cminstall
+;PKG m3-sys\m3back
+;PKG m3-sys\m3cc
+;PKG m3-sys\m3front
+;PKG m3-sys\m3gdb
+;PKG m3-sys\m3linker
+;PKG m3-sys\m3loader
+;PKG m3-sys\m3objfile
+;PKG m3-sys\m3staloneback
+;**TEST** PKG m3-sys\m3tests
+;
+PKG m3-sys\windowsResources
+PKG m3-sys\reactor
+;
+;**FAILS ON NT386** PKG m3-libs\dps
+;**FAILS ON NT386** PKG m3-libs\m3gc-enhanced
+;**FAILS ON NT386** PKG m3-libs\m3gc-simple
+PKG m3-libs\tcl
+;**TEST** PKG m3-libs\tcl\test
+;
+;**FAILS ON NT386** PKG m3-tools\coverage
+;**NEEDS LEX/YACC/FLEX/BISON** PKG m3-tools\gnuemacs
+PKG m3-tools\hexdump
+;**NOT FOR NT386** PKG m3-tools\macapi
+;**NEEDS LEX/YACC/FLEX/BISON** PKG m3-tools\pp
+;**NOT FOR NT386** PKG m3-tools\showthread
+;
+;**FAILS ON NT386** PKG m3-pkgtools\pkgobj
+;**FAILS ON NT386** PKG m3-pkgtools\pkgfprint
+;**FAILS ON NT386** PKG m3-pkgtools\pkgq
+;**FAILS ON NT386** PKG m3-pkgtools\pkgsrv
+;**FAILS ON NT386** PKG m3-pkgtools\pkgtool
+;
+PKG m3-db\pgodbc
+;
+PKG m3-comm\udp
+;**TEST** PKG m3-comm\udp\test
+;
+PKG m3-ui\bicycle
+PKG m3-ui\images
+PKG m3-ui\juno-2\juno-machine
+;**TEST** PKG m3-ui\juno-2\juno-machine\linear
+;**TEST** PKG m3-ui\juno-2\juno-machine\nonlinear
+;**TEST** PKG m3-ui\juno-2\juno-machine\runtime
+;**TEST** PKG m3-ui\juno-2\juno-machine\solve
+PKG m3-ui\juno-2\juno-compiler
+;**TEST** PKG m3-ui\juno-2\juno-compiler\tests\compiler
+;**TEST** PKG m3-ui\juno-2\juno-compiler\tests\lexer
+;**TEST** PKG m3-ui\juno-2\juno-compiler\tests\parser
+;**TEST** PKG m3-ui\juno-2\juno-compiler\tests\scope
+PKG m3-ui\juno-2\juno-app\pkl-fonts
+PKG m3-ui\juno-2\juno-app
+PKG m3-ui\motif
+;**TEST** PKG m3-ui\motif\tests
+;**FAILS ON NT386** PKG m3-ui\webvbt\src\hyperpage
+PKG m3-ui\X11R4
+;
+;**FAILS ON NT386** PKG m3-mail\llscan
+;**FAILS ON NT386** PKG m3-mail\postcard
+;**FAILS ON NT386** PKG m3-mail\webcard
+;
+PKG m3-www\deckscape
+PKG m3-www\proxy
+PKG m3-www\webcat
+PKG m3-www\webscape
+;
+PKG m3-lectern\ocr
+;**FAILS ON NT386** PKG m3-lectern\lecterndoc
+;**FAILS ON NT386** PKG m3-lectern\buildlectern
+;**FAILS ON NT386** PKG m3-lectern\lecternclient
+;**FAILS ON NT386** PKG m3-lectern\editlectern
+;**FAILS ON NT386** PKG m3-lectern\lectern
+;**FAILS ON NT386** PKG m3-lectern\lecterntohtml
+;
+;**FAILS ON NT386** PKG m3-obliq\obliqlib3D
+;**FAILS ON NT386** PKG m3-obliq\obliqbin3D
+;
+;**FAILS ON NT386** PKG m3-demo\dpsslides
+PKG m3-demo\mentor
+PKG m3-demo\sharedboard\board
+;**FAILS ON NT386** PKG m3-demo\sharedboard\boardclient
+;**FAILS ON NT386** PKG m3-demo\sharedboard\boardserver
+PKG m3-demo\sharedboard\calendar
+;**FAILS ON NT386** PKG m3-demo\sil
+;
+PKG m3-games\badbricks
+PKG m3-games\columns
+PKG m3-games\fours
+PKG m3-games\maze
+PKG m3-games\solitaire
+PKG m3-games\tetris
