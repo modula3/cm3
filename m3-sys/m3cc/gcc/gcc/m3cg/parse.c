@@ -2816,42 +2816,25 @@ static void m3cg_do_if_le ()  { m3cg_do_if_compare (LE_EXPR); } /* GCC32OK */
 static void
 m3cg_do_case_jump () /* GCC32OK */
 {
-  UNUSED_MTYPE   (t);
+  MTYPE   (t);
   INTEGER (n);
 
-  {
-    tree index_type = build_index_type (size_int (n-1));
-    tree table_type = build_array_type (t_addr, index_type);
-    tree table = make_node (VAR_DECL);
-    tree labels = NULL_TREE;
-    tree dest_label;
-    int i;
+  tree index_expr = EXPR_REF (-1);
+  int i;
 
-    for (i = 0; i < n; i++) {
-      LABEL (ll);
-      tree l = m3_build1 (ADDR_EXPR, t_addr, ll);
+  expand_start_case (1, index_expr, t, "case_jump");
+  for (i = 0; i < n; i++) {
+    LABEL (target_label);
+    tree case_label;
+    tree duplicate;
 
-      TREE_CONSTANT (l) = 1;
-      if (labels == NULL_TREE) {
-        labels = build_tree_list (NULL_TREE, l);
-      } else {
-        labels = tree_cons (NULL_TREE, l, labels);
-      }
-    }
-
-    DECL_NAME (table) = fix_name (0, 0);
-    TREE_READONLY (table) = 1;
-    TREE_STATIC (table) = 1;
-    DECL_INITIAL (table) = make_node (CONSTRUCTOR);
-    TREE_CONSTANT (DECL_INITIAL (table)) = 1;
-    TREE_TYPE (DECL_INITIAL (table)) = table_type;
-    CONSTRUCTOR_ELTS (DECL_INITIAL (table)) = nreverse (labels);
-
-    declare_temp (table_type, 1, table);
-    dest_label = m3_build2 (ARRAY_REF, t_addr, table, EXPR_REF (-1));
-    expand_computed_goto (dest_label);
-    EXPR_POP();
+    case_label = build_decl (LABEL_DECL, NULL_TREE, t_addr);
+    DECL_CONTEXT (case_label) = current_function_decl;
+    add_case_node (m3_build_int (i), NULL, case_label, &duplicate);
+    expand_goto (target_label);
   }
+  expand_end_case_type (index_expr, t);
+  EXPR_POP();
 }
 
 static void
