@@ -6,6 +6,7 @@ MODULE Makefile;
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
 IMPORT MxConfig AS M3Config;
+IMPORT Dirs;
 
 TYPE
   NK = M3Path.Kind;
@@ -379,9 +380,12 @@ PROCEDURE NoteSourceFile (VAR s: State;  dir, name: TEXT;  cmd_line: BOOLEAN)
     END;
   END NoteSourceFile;
 
+VAR normalizedDerivedDir: TEXT := NIL;
+
 PROCEDURE VisitSourceDir (VAR s: State;  dir: TEXT;  cmd_line: BOOLEAN)
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR iter: FS.Iterator;  name: TEXT;
+      normalizedDir: TEXT;
   BEGIN
     Msg.Debug ("--- dir ", dir, " ---", Wr.EOL);
     IF NOT M3File.IsDirectory (dir) THEN
@@ -389,6 +393,23 @@ PROCEDURE VisitSourceDir (VAR s: State;  dir: TEXT;  cmd_line: BOOLEAN)
         Msg.FatalError (NIL, "unsupported file type \"", dir, "\"");
       END;
       Msg.Verbose ("ignoring ", dir, " (not a directory)");
+      RETURN;
+    END;
+    IF normalizedDerivedDir = NIL THEN
+      TRY
+        normalizedDerivedDir := FS.GetAbsolutePathname(Dirs.derived);
+      EXCEPT OSError.E (args) =>
+        Msg.FatalError (args, "unable to get absolute path for \"", 
+                        Dirs.derived, "\"");
+      END;
+    END;
+    TRY
+      normalizedDir := FS.GetAbsolutePathname(dir);
+    EXCEPT OSError.E (args) =>
+      Msg.FatalError (args, "unable to get absolute path for \"", dir, "\"");
+    END;
+    IF Text.Equal(normalizedDir, normalizedDerivedDir) THEN
+      Msg.Verbose ("ignoring ", dir, " (derived object directory)");
       RETURN;
     END;
     TRY
@@ -455,6 +476,9 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
       Out (s.wr, "include_dir (\"", M3Path.Escape (dir), "\")");
       s.found_work := TRUE;
     ELSE
+      Msg.Debug ("Dirs.derived   = ", Dirs.derived, Wr.EOL);
+      Msg.Debug ("Dirs.to_source = ", Dirs.to_source, Wr.EOL);
+      Msg.Debug ("dir            = ", dir, Wr.EOL);
       Out (s.wr, "import (\"libm3\")");
       VisitSourceDir (s, dir, cmd_line := FALSE);
       Out (s.wr, "program (\"prog\")");
@@ -608,9 +632,9 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "5.2.4");       (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050204");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2003-03-23");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", "5.2.5");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050205");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2003-04-23");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
