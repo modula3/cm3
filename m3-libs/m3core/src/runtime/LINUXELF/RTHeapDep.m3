@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
+IMPORT ThreadF, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
 IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utime, Utypes, Word;
 
 VAR
@@ -125,7 +125,7 @@ PROCEDURE Core (sig : Ctypes.int) =
     vec := Usignal.struct_sigaction{sa_handler := Usignal.SIG_DFL,
         sa_mask := 0, sa_flags := Usignal.SA_RESTART, sa_restorer := NIL};
   BEGIN
-    INC(RT0u.inCritical);
+    ThreadF.SuspendOthers();
     IF NOT dumped_core THEN
       dumped_core := TRUE;
       EVAL RTHeapRep.Crash();      (* clean up the heap *)
@@ -135,7 +135,7 @@ PROCEDURE Core (sig : Ctypes.int) =
       Cstdlib.abort (); (* dump core *)
       <* ASSERT FALSE *>
     END;
-    DEC(RT0u.inCritical);
+    ThreadF.ResumeOthers();
   END Core;
 
 (* System-call faults are handled in RTHeapDepC.c *)

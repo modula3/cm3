@@ -164,9 +164,9 @@ struct pgfree {
 #define ptr2index(foo) (((u_long)(foo) >> malloc_pageshift)-malloc_origo)
 
 #ifdef _THREAD_SAFE
-extern int RT0u__inCritical;  /* Flag set when in a critical region */
-#define THREAD_LOCK()		(++RT0u__inCritical)
-#define THREAD_UNLOCK()		(--RT0u__inCritical)
+extern int ThreadF__inCritical;  /* Flag set when in a critical region */
+#define THREAD_LOCK()		(++ThreadF__inCritical)
+#define THREAD_UNLOCK()		(--ThreadF__inCritical)
 #endif
 
 #ifndef THREAD_LOCK

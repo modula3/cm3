@@ -14,7 +14,7 @@
    the referents of all pointers about to passed to the system call, which
    ensures that the pages are not protected when the call is made.
 
-   Each wrapper is a critical section, with RT0u__inCritical non-zero, so that
+   Each wrapper is a critical section, with ThreadF__inCritical non-zero, so that
    another thread cannot cause the pages to become reprotected before the
    system call is performed.
 
@@ -97,9 +97,9 @@
 #define SOL_VERSION	20500
 #endif
 
-extern int RT0u__inCritical;
-#define ENTER_CRITICAL RT0u__inCritical++
-#define EXIT_CRITICAL  RT0u__inCritical--
+extern int ThreadF__inCritical;
+#define ENTER_CRITICAL ThreadF__inCritical++
+#define EXIT_CRITICAL  ThreadF__inCritical--
 
 void (*RTHeapRep_Fault)();
 void (*RTCSRC_FinishVM)();
@@ -297,7 +297,7 @@ int creat(const char *path, mode_t mode)
 }
 
 /* execve is implemented differently since it does not return, which
-   would leave RT0u__inCritical set in the parent if called in the child
+   would leave ThreadF__inCritical set in the parent if called in the child
    of a vfork. Many calls leave the process in an undefined state in the
    case of EFAULT, but we assume that execve is not one of these. */
 
