@@ -25,6 +25,7 @@ Boston, MA 02111-1307, USA.  */
    but what kind of conversions it does will depend on the language.  */
 
 #include "config.h"
+#include "system.h"
 #include "tree.h"
 #include "flags.h"
 #include "convert.h"
@@ -64,8 +65,10 @@ convert (type, expr)
   register enum tree_code code = TREE_CODE (type);
 
   if (type == TREE_TYPE (expr)
-      || TREE_CODE (expr) == ERROR_MARK)
+      || TREE_CODE (expr) == ERROR_MARK
+      || code == ERROR_MARK || TREE_CODE (TREE_TYPE (expr)) == ERROR_MARK)
     return expr;
+
   if (TYPE_MAIN_VARIANT (type) == TYPE_MAIN_VARIANT (TREE_TYPE (expr)))
     return fold (build1 (NOP_EXPR, type, expr));
   if (TREE_CODE (TREE_TYPE (expr)) == ERROR_MARK)
@@ -85,12 +88,24 @@ convert (type, expr)
 #endif
   if (code == INTEGER_TYPE || code == ENUMERAL_TYPE)
     return fold (convert_to_integer (type, e));
-  if (code == POINTER_TYPE)
+  if (code == BOOLEAN_TYPE)
+    {
+      tree t = truthvalue_conversion (expr);
+      /* If truthvalue_conversion returns a NOP_EXPR, we must fold it here
+	 to avoid infinite recursion between fold () and convert ().  */
+      if (TREE_CODE (t) == NOP_EXPR)
+	return fold (build1 (NOP_EXPR, type, TREE_OPERAND (t, 0)));
+      else
+	return fold (build1 (NOP_EXPR, type, t));
+    }
+  if (code == POINTER_TYPE || code == REFERENCE_TYPE)
     return fold (convert_to_pointer (type, e));
   if (code == REAL_TYPE)
     return fold (convert_to_real (type, e));
   if (code == COMPLEX_TYPE)
     return fold (convert_to_complex (type, e));
+  if (code == VECTOR_TYPE)
+    return fold (convert_to_vector (type, e));
 
   error ("conversion to non-scalar type requested");
   return error_mark_node;

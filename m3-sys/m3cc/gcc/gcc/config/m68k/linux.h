@@ -1,12 +1,12 @@
 /* Definitions for Motorola 68k running Linux-based GNU systems with
    ELF format.
-   Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -42,7 +42,8 @@ Boston, MA 02111-1307, USA.  */
 #define STRICT_ALIGNMENT 0
 
 #undef SUBTARGET_SWITCHES
-#define SUBTARGET_SWITCHES	{"ieee-fp", 0},
+#define SUBTARGET_SWITCHES	{"ieee-fp", 0, \
+  N_("Use IEEE math for fp comparisons")},
 
 /* Here are four prefixes that are used by asm_fprintf to
    facilitate customization for alternate assembler syntaxes.
@@ -108,7 +109,7 @@ Boston, MA 02111-1307, USA.  */
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
 
 #define CPP_PREDEFINES \
-  "-D__ELF__ -Dunix -Dmc68000 -Dmc68020 -Dlinux -Asystem(unix) -Asystem(posix) -Acpu(m68k) -Amachine(m68k)"
+  "-D__ELF__ -Dunix -Dmc68000 -Dmc68020 -Dlinux -Asystem=unix -Asystem=posix -Acpu=m68k -Amachine=m68k"
 
 #undef CPP_SPEC
 #ifdef USE_GNULIBC_1
@@ -203,13 +204,13 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG)				\
   if ((LOG) > 0)						\
-    fprintf ((FILE), "\t%s \t%u\n", ALIGN_ASM_OP, 1 << (LOG));
+    fprintf ((FILE), "%s%u\n", ALIGN_ASM_OP, 1 << (LOG));
 
 /* If defined, a C expression whose value is a string containing the
    assembler operation to identify the following data as uninitialized global
    data.  */
 
-#define BSS_SECTION_ASM_OP ".section\t.bss"
+#define BSS_SECTION_ASM_OP "\t.section\t.bss"
 
 /* A C statement (sans semicolon) to output to the stdio stream
    FILE the assembler definition of uninitialized global DECL named
@@ -282,11 +283,10 @@ Boston, MA 02111-1307, USA.  */
    callers that have neglected to properly declare the callee can
    still find the correct return value.  */
 
-extern int current_function_returns_pointer;
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
 do {									\
-  if ((current_function_returns_pointer) && 				\
-      ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
+  if (current_function_returns_pointer					\
+      && ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
     asm_fprintf (FILE, "\tmove.l %Ra0,%Rd0\n");				\
 } while (0);
 
@@ -299,8 +299,8 @@ do {									\
 #define LIBCALL_VALUE(MODE)						\
   ((((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)		\
     && TARGET_68881)							\
-   ? gen_rtx_REG (MODE, 16)						\
-   : gen_rtx_REG (MODE, 0))
+   ? gen_rtx_REG ((MODE), 16)						\
+   : gen_rtx_REG ((MODE), 0))
 
 /* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is
    an operand of a function call. */
@@ -310,7 +310,8 @@ do {									\
     && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
 	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
 	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X)))
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       \
+   || PCREL_GENERAL_OPERAND_OK)
 
 /* Turn off function cse if we are doing PIC. We always want function
    call to be done as `bsr foo@PLTPC', so it will force the assembler

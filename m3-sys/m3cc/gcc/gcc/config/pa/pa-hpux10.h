@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for HP PA-RISC 1.1
-   Copyright (C) 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 2000, 2001 Free Software Foundation, Inc.
    Contributed by Tim Moore (moore@defmacro.cs.utah.edu)
 
 This file is part of GNU CC.
@@ -34,37 +34,14 @@ Boston, MA 02111-1307, USA.  */
 #undef LIB_SPEC
 #define LIB_SPEC \
   "%{!shared:\
-     %{!p:\
-       %{!pg:\
-         %{!threads:-lc}\
-         %{threads:-lcma -lc_r}}\
-       %{p: -L/lib/libp/ -lc}\
-       %{pg: -L/lib/libp/ -lc}}}"
+     %{!p:%{!pg:\
+       %{!threads:-lc}\
+       %{threads:-lcma -lc_r}}}\
+     %{p: -L/lib/libp/ -lc}\
+     %{pg: -L/lib/libp/ -lc}}"
 
-/* The hpux10 assembler requires a .LEVEL pseudo-op at the start of
-   the assembly file.  */
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE) \
-do {  \
-     if (TARGET_PA_20) \
-       fputs("\t.LEVEL 2.0\n", FILE); \
-     else if (TARGET_PA_11) \
-       fputs("\t.LEVEL 1.1\n", FILE); \
-     else \
-       fputs("\t.LEVEL 1.0\n", FILE); \
-     fputs ("\t.SPACE $PRIVATE$\n\
-\t.SUBSPA $DATA$,QUAD=1,ALIGN=8,ACCESS=31\n\
-\t.SUBSPA $BSS$,QUAD=1,ALIGN=8,ACCESS=31,ZERO,SORT=82\n\
-\t.SPACE $TEXT$\n\
-\t.SUBSPA $LIT$,QUAD=0,ALIGN=8,ACCESS=44\n\
-\t.SUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n\
-\t.IMPORT $global$,DATA\n\
-\t.IMPORT $$dyncall,MILLICODE\n", FILE);\
-     if (profile_flag)\
-       fprintf (FILE, "\t.IMPORT _mcount, CODE\n");\
-     if (write_symbols != NO_DEBUG) \
-       output_file_directive ((FILE), main_input_filename); \
-   } while (0)
+#undef THREAD_MODEL_SPEC
+#define THREAD_MODEL_SPEC "%{!threads:single}%{threads:dce}"
 
 /* Under hpux10, the normal location of the `ld' and `as' programs is the
    /usr/ccs/bin directory.  */
@@ -74,12 +51,14 @@ do {  \
 #define MD_EXEC_PREFIX "/usr/ccs/bin/"
 #endif
 
-/* Under hpux10, the normal location of the various *crt*.o files is the
-   /usr/ccs/lib directory.  */
+/* Under hpux10, the normal location of the various *crt*.o files is
+   the /usr/ccs/lib directory.  However, the profiling files are in
+   /opt/langtools/lib.  */
 
 #ifndef CROSS_COMPILE
 #undef MD_STARTFILE_PREFIX
 #define MD_STARTFILE_PREFIX "/usr/ccs/lib/"
+#define MD_STARTFILE_PREFIX_1 "/opt/langtools/lib/"
 #endif
 
 /* hpux10 has the new HP assembler.  It's still lousy, but it's a whole lot

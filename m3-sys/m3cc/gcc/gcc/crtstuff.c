@@ -1,6 +1,7 @@
 /* Specialized bits of code needed to support construction and
    destruction of file-scope objects in C++ code.
-   Copyright (C) 1991, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000, 2001 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
 This file is part of GNU CC.
@@ -9,6 +10,15 @@ GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
+
+In addition to the permissions in the GNU General Public License, the
+Free Software Foundation gives you unlimited permission to link the
+compiled version of this file into combinations with other programs,
+and to distribute those combinations without any restriction coming
+from the use of this file.  (The General Public License restrictions
+do apply in other respects; for example, they cover modification of
+the file, and distribution when not linked into a combine
+executable.)
 
 GNU CC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,12 +29,6 @@ You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-/* As a special exception, if you link this library with files
-   compiled with GCC to produce an executable, this does not cause
-   the resulting executable to be covered by the GNU General Public License.
-   This exception does not however invalidate any other reasons why
-   the executable file might be covered by the GNU General Public License.  */
 
 /* This file is a bit like libgcc1.c/libgcc2.c in that it is compiled
    multiple times and yields multiple .o files.
@@ -51,14 +55,18 @@ Boston, MA 02111-1307, USA.  */
    compiled for the target, and hence definitions concerning only the host
    do not apply.  */
 
+#include "auto-host.h"
 #include "tm.h"
-#include "defaults.h"
-#include <stddef.h>
-#include "frame.h"
+#include "tsystem.h"
+#include "unwind-dw2-fde.h"
+
+#ifndef CRT_CALL_STATIC_FUNCTION
+# define CRT_CALL_STATIC_FUNCTION(func) func ()
+#endif
 
 /* We do not want to add the weak attribute to the declarations of these
-   routines in frame.h because that will cause the definition of these
-   symbols to be weak as well.
+   routines in unwind-dw2-fde.h because that will cause the definition of
+   these symbols to be weak as well.
 
    This exposes a core issue, how to handle creating weak references vs
    how to create weak definitions.  Either we have to have the definition
@@ -80,8 +88,12 @@ Boston, MA 02111-1307, USA.  */
    be weak in this file if at all possible.  */
 extern void __register_frame_info (void *, struct object *)
 				  TARGET_ATTRIBUTE_WEAK;
-
+extern void __register_frame_info_bases (void *, struct object *,
+					 void *, void *)
+				  TARGET_ATTRIBUTE_WEAK;
 extern void *__deregister_frame_info (void *)
+				     TARGET_ATTRIBUTE_WEAK;
+extern void *__deregister_frame_info_bases (void *)
 				     TARGET_ATTRIBUTE_WEAK;
 
 #ifndef OBJECT_FORMAT_MACHO
@@ -100,16 +112,16 @@ extern void *__deregister_frame_info (void *)
    an additional check that you are doing everything right.  But if you do
    use the `-z text' option when building a shared library, you will get
    errors unless the .ctors and .dtors sections are marked as writable
-   via the SHF_WRITE attribute.)  */
+   via the SHF_WRITE attribute.)
+
+   These defaults do not include leading spacing, as they will only be
+   used in asm:s here.  */
 
 #ifndef CTORS_SECTION_ASM_OP
 #define CTORS_SECTION_ASM_OP	".section\t.ctors,\"aw\""
 #endif
 #ifndef DTORS_SECTION_ASM_OP
 #define DTORS_SECTION_ASM_OP	".section\t.dtors,\"aw\""
-#endif
-#if !defined (EH_FRAME_SECTION_ASM_OP) && defined (DWARF2_UNWIND_INFO) && defined(ASM_OUTPUT_SECTION_NAME)
-#define EH_FRAME_SECTION_ASM_OP	".section\t.eh_frame,\"aw\""
 #endif
 
 #ifdef OBJECT_FORMAT_ELF
@@ -122,9 +134,6 @@ typedef void (*func_ptr) (void);
 
 #include "gbl-ctors.h"
 
-#ifndef ON_EXIT
-#define ON_EXIT(a, b)
-#endif
 #define STATIC
 
 #endif /* OBJECT_FORMAT_ELF */
@@ -134,6 +143,29 @@ typedef void (*func_ptr) (void);
 #ifdef INIT_SECTION_ASM_OP
 
 #ifdef OBJECT_FORMAT_ELF
+
+/* Declare the __dso_handle variable.  It should have a unique value
+   in every shared-object; in a main program its value is zero.  The
+   object should in any case be protected.  This means the instance
+   in one DSO or the main program is not used in another object.  The
+   dynamic linker takes care of this.  */
+
+/* XXX Ideally the following should be implemented using
+       __attribute__ ((__visibility__ ("hidden")))
+   but the __attribute__ support is not yet there.  */
+#ifdef HAVE_GAS_HIDDEN
+asm (".hidden\t__dso_handle");
+#endif
+
+#ifdef CRTSTUFFS_O
+void *__dso_handle = &__dso_handle;
+#else
+void *__dso_handle = 0;
+#endif
+
+/* The __cxa_finalize function may not be available so we use only a
+   weak declaration.  */
+extern void __cxa_finalize (void *) TARGET_ATTRIBUTE_WEAK;
 
 /* Run all the global destructors on exit from the program.  */
  
@@ -160,21 +192,35 @@ static void
 __do_global_dtors_aux (void)
 {
   static func_ptr *p = __DTOR_LIST__ + 1;
-  static int completed = 0;
+  static int completed;
+  func_ptr f;
 
-  if (completed)
+  if (__builtin_expect (completed, 0))
     return;
 
-  while (*p)
+#ifdef CRTSTUFFS_O
+  if (__cxa_finalize)
+    __cxa_finalize (__dso_handle);
+#endif
+
+  while ((f = *p))
     {
       p++;
-      (*(p-1)) ();
+      f ();
     }
 
 #ifdef EH_FRAME_SECTION_ASM_OP
+#if defined(CRT_GET_RFIB_TEXT) || defined(CRT_GET_RFIB_DATA)
+  /* If we used the new __register_frame_info_bases interface,
+     make sure that we deregister from the same place.  */
+  if (__deregister_frame_info_bases)
+    __deregister_frame_info_bases (__EH_FRAME_BEGIN__);
+#else
   if (__deregister_frame_info)
     __deregister_frame_info (__EH_FRAME_BEGIN__);
 #endif
+#endif
+
   completed = 1;
 }
 
@@ -185,7 +231,7 @@ static void __attribute__ ((__unused__))
 fini_dummy (void)
 {
   asm (FINI_SECTION_ASM_OP);
-  __do_global_dtors_aux ();
+  CRT_CALL_STATIC_FUNCTION (__do_global_dtors_aux);
 #ifdef FORCE_FINI_SECTION_ALIGN
   FORCE_FINI_SECTION_ALIGN;
 #endif
@@ -201,15 +247,31 @@ static void
 frame_dummy (void)
 {
   static struct object object;
+#if defined(CRT_GET_RFIB_TEXT) || defined(CRT_GET_RFIB_DATA)
+  void *tbase, *dbase;
+#ifdef CRT_GET_RFIB_TEXT
+  CRT_GET_RFIB_TEXT (tbase);
+#else
+  tbase = 0;
+#endif
+#ifdef CRT_GET_RFIB_DATA
+  CRT_GET_RFIB_DATA (dbase);
+#else
+  dbase = 0;
+#endif
+  if (__register_frame_info_bases)
+    __register_frame_info_bases (__EH_FRAME_BEGIN__, &object, tbase, dbase);
+#else
   if (__register_frame_info)
     __register_frame_info (__EH_FRAME_BEGIN__, &object);
+#endif
 }
 
 static void __attribute__ ((__unused__))
 init_dummy (void)
 {
   asm (INIT_SECTION_ASM_OP);
-  frame_dummy ();
+  CRT_CALL_STATIC_FUNCTION (frame_dummy);
 #ifdef FORCE_INIT_SECTION_ALIGN
   FORCE_INIT_SECTION_ALIGN;
 #endif
@@ -226,7 +288,7 @@ init_dummy (void)
    INVOKE__main is defined.  This has the additional effect of forcing cc1
    to switch to the .text section.  */
 
-static void __do_global_ctors_aux ();
+static void __do_global_ctors_aux (void);
 void
 __do_global_ctors (void)
 {
@@ -265,7 +327,7 @@ __do_global_ctors_aux (void)	/* prologue goes in .init section */
 #endif
   asm (TEXT_SECTION_ASM_OP);	/* don't put epilogue and body in .init */
   DO_GLOBAL_CTORS_BODY;
-  ON_EXIT (__do_global_dtors, 0);
+  atexit (__do_global_dtors);
 }
 
 #endif /* OBJECT_FORMAT_ELF */
@@ -282,9 +344,9 @@ static func_ptr __DTOR_LIST__[];
 void
 __do_global_dtors (void)
 {
-  func_ptr *p;
-  for (p = __DTOR_LIST__ + 1; *p; p++)
-    (*p) ();
+  func_ptr *p, f;
+  for (p = __DTOR_LIST__ + 1; (f = *p); p++)
+    f ();
 
 #ifdef EH_FRAME_SECTION_ASM_OP
   if (__deregister_frame_info)
@@ -309,7 +371,7 @@ __frame_dummy (void)
 #endif /* defined(INIT_SECTION_ASM_OP) */
 
 /* Force cc1 to switch to .data section.  */
-static func_ptr force_to_data[0] __attribute__ ((__unused__)) = { };
+static func_ptr force_to_data[1] __attribute__ ((__unused__)) = { };
 
 /* NOTE:  In order to be able to support SVR4 shared libraries, we arrange
    to have one set of symbols { __CTOR_LIST__, __DTOR_LIST__, __CTOR_END__,
@@ -374,25 +436,13 @@ static void __attribute__ ((__unused__))
 init_dummy (void)
 {
   asm (INIT_SECTION_ASM_OP);
-  __do_global_ctors_aux ();
+  CRT_CALL_STATIC_FUNCTION (__do_global_ctors_aux);
 #ifdef FORCE_INIT_SECTION_ALIGN
   FORCE_INIT_SECTION_ALIGN;
 #endif
   asm (TEXT_SECTION_ASM_OP);
-
-/* This is a kludge. The i386 GNU/Linux dynamic linker needs ___brk_addr,
-   __environ and atexit (). We have to make sure they are in the .dynsym
-   section. We accomplish it by making a dummy call here. This
-   code is never reached.  */
- 
-#if defined(__linux__) && defined(__PIC__) && defined(__i386__)
-  {
-    extern void *___brk_addr;
-    extern char **__environ;
-
-    ___brk_addr = __environ;
-    atexit ();
-  }
+#ifdef CRT_END_INIT_DUMMY
+  CRT_END_INIT_DUMMY;
 #endif
 }
 
@@ -424,7 +474,7 @@ __do_global_ctors_aux (void)	/* prologue goes in .text section */
 {
   asm (INIT_SECTION_ASM_OP);
   DO_GLOBAL_CTORS_BODY;
-  ON_EXIT (__do_global_dtors, 0);
+  atexit (__do_global_dtors);
 }				/* epilogue and body go in .init section */
 
 #ifdef FORCE_INIT_SECTION_ALIGN
@@ -460,7 +510,7 @@ __do_global_ctors (void)
 #endif /* defined(INIT_SECTION_ASM_OP) */
 
 /* Force cc1 to switch to .data section.  */
-static func_ptr force_to_data[0] __attribute__ ((__unused__)) = { };
+static func_ptr force_to_data[1] __attribute__ ((__unused__)) = { };
 
 /* Put a word containing zero at the end of each of our two lists of function
    addresses.  Note that the words defined here go into the .ctors and .dtors
@@ -519,7 +569,7 @@ extern const struct section *
 
 #ifdef CRT_BEGIN
 
-static void __reg_frame_ctor () __attribute__ ((constructor));
+static void __reg_frame_ctor (void) __attribute__ ((constructor));
 
 static void
 __reg_frame_ctor (void)
@@ -536,10 +586,9 @@ __reg_frame_ctor (void)
 
 #ifdef CRT_END
 
-static void __dereg_frame_dtor () __attribute__ ((destructor));
+static void __dereg_frame_dtor (void) __attribute__ ((destructor));
 
-static
-void
+static void
 __dereg_frame_dtor (void)
 {
   const struct section *eh_frame;
@@ -552,7 +601,7 @@ __dereg_frame_dtor (void)
 /* Terminate the frame section with a final zero. */
 
 /* Force cc1 to switch to .data section.  */
-static void * force_to_data[0] __attribute__ ((__unused__)) = { };
+static void * force_to_data[1] __attribute__ ((__unused__)) = { };
 
 typedef unsigned int ui32 __attribute__ ((mode (SI)));
 asm (EH_FRAME_SECTION_ASM_OP);

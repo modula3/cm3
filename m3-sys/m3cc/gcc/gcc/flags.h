@@ -1,5 +1,6 @@
 /* Compilation switch flag definitions for GNU CC.
-   Copyright (C) 1987, 88, 94-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,8 +19,11 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#ifndef GCC_FLAGS_H
+#define GCC_FLAGS_H
+
 /* Name of the input .c file being compiled.  */
-extern char *main_input_filename;
+extern const char *main_input_filename;
 
 enum debug_info_type
 {
@@ -57,27 +61,47 @@ extern int optimize;
 
 extern int optimize_size;
 
-/* Nonzero means do stupid register allocation.  -noreg.
-   Currently, this is 1 if `optimize' is 0.  */
-
-extern int obey_regdecls;
-
 /* Don't print functions as they are compiled and don't print
    times taken by the various passes.  -quiet.  */
 
 extern int quiet_flag;
 
+/* Print times taken by the various passes.  -ftime-report.  */
+
+extern int time_report;
+
+/* Print memory still in use at end of compilation (which may have little
+   to do with peak memory consumption).  -fmem-report.  */
+
+extern int mem_report;
+
 /* Don't print warning messages.  -w.  */
 
 extern int inhibit_warnings;
+
+/* Don't suppress warnings from system headers.  -Wsystem-headers.  */
+
+extern int warn_system_headers;
 
 /* Do print extra warnings (such as for uninitialized variables).  -W.  */
 
 extern int extra_warnings;
 
-/* Nonzero to warn about unused local variables.  */
+/* Nonzero to warn about unused variables, functions et.al.  Use
+   set_Wunused() to update the -Wunused-* flags that correspond to the
+   -Wunused option. */
 
-extern int warn_unused;
+extern void set_Wunused PARAMS ((int setting));
+
+extern int warn_unused_function;
+extern int warn_unused_label;
+extern int warn_unused_parameter;
+extern int warn_unused_variable;
+extern int warn_unused_value;
+
+/* Nonzero to warn about code which is never reached.  */
+
+extern int warn_notreached;
 
 /* Nonzero means warn if inline function is too large.  */
 
@@ -108,34 +132,45 @@ extern int warn_switch;
 
 extern int warn_return_type;
 
+/* Warn about functions which might be candidates for attribute noreturn. */
+
+extern int warn_missing_noreturn;
+
 /* Nonzero means warn about pointer casts that increase the required
    alignment of the target type (and might therefore lead to a crash
    due to a misaligned access).  */
 
 extern int warn_cast_align;
 
-/* Nonzero means warn that dbx info for template class methods isn't fully
-   supported yet.  */
-
-extern int warn_template_debugging;
-
 /* Nonzero means warn about any identifiers that match in the first N
    characters.  The value N is in `id_clash_len'.  */
 
 extern int warn_id_clash;
-extern unsigned id_clash_len;
+extern int id_clash_len;
 
 /* Nonzero means warn about any objects definitions whose size is larger
    than N bytes.  Also want about function definitions whose returned
    values are larger than N bytes. The value N is in `larger_than_size'.  */
 
 extern int warn_larger_than;
-extern unsigned larger_than_size;
+extern HOST_WIDE_INT larger_than_size;
 
 /* Warn if a function returns an aggregate,
    since there are often incompatible calling conventions for doing this.  */
 
 extern int warn_aggregate_return;
+
+/* Warn if packed attribute on struct is unnecessary and inefficient.  */
+
+extern int warn_packed;
+
+/* Warn when gcc pads a structure to an alignment boundary.  */
+
+extern int warn_padded;
+
+/* Warn when an optimization pass is disabled.  */
+
+extern int warn_disabled_optimization;
 
 /* Nonzero if generating code to do profiling.  */
 
@@ -156,6 +191,14 @@ extern int flag_test_coverage;
 /* Nonzero indicates that branch taken probabilities should be calculated. */
 
 extern int flag_branch_probabilities;
+
+/* Nonzero if basic blocks should be reordered.  */
+
+extern int flag_reorder_blocks;
+
+/* Nonzero if registers should be renamed.  */
+
+extern int flag_rename_registers;
 
 /* Nonzero for -pedantic switch: warn about anything
    that standard C forbids.  */
@@ -291,6 +334,10 @@ extern int flag_volatile_static;
 
 extern int flag_fast_math;
 
+/* Nonzero allows GCC to optimize sibling and tail recursive calls.  */
+
+extern int flag_optimize_sibling_calls;
+
 /* Nonzero means the front end generally wants `errno' maintained by math
    operations, like built-in SQRT, unless overridden by flag_fast_math.  */
 
@@ -298,7 +345,7 @@ extern int flag_errno_math;
 
 /* 0 means straightforward implementation of complex divide acceptable.
    1 means wide ranges of inputs must work for complex divide.
-   2 means C9X-like requirements for complex divide (not yet implemented).  */
+   2 means C99-like requirements for complex divide (not yet implemented).  */
 
 extern int flag_complex_divide_method;
 
@@ -345,7 +392,6 @@ extern int flag_shared_data;
 extern int flag_schedule_insns;
 extern int flag_schedule_insns_after_reload;
 
-#ifdef HAIFA
 /* The following flags have effect only for scheduling before register
    allocation:
 
@@ -360,12 +406,16 @@ extern int flag_schedule_interblock;
 extern int flag_schedule_speculative;
 extern int flag_schedule_speculative_load;
 extern int flag_schedule_speculative_load_dangerous;
-#endif  /* HAIFA */
 
-/* flag_on_branch_count_reg means try to replace add-1,compare,branch tupple
+/* flag_branch_on_count_reg means try to replace add-1,compare,branch tupple
    by a cheaper branch, on a count register. */
 extern int flag_branch_on_count_reg;
 
+/* This option is set to 1 on -fsingle-precision-constant option which is
+   used to convert the floating point constants to single precision 
+   constants. */
+
+extern int flag_single_precision_constant;
 
 /* Nonzero means put things in delayed-branch slots if supported. */
 
@@ -397,10 +447,9 @@ extern int flag_pic;
 
 extern int flag_exceptions;
 
-/* Nonzero means use the new model for exception handling. Replaces 
-   -DNEW_EH_MODEL as a compile option. */
+/* Nonzero means generate frame unwind info table when supported */
 
-extern int flag_new_exceptions;
+extern int flag_unwind_tables;
 
 /* Nonzero means don't place uninitialized global data in common storage
    by default.  */
@@ -440,6 +489,8 @@ extern int flag_verbose_asm;
 
 extern int flag_debug_asm;
 
+extern int flag_dump_rtl_in_asm;
+
 /* -fgnu-linker specifies use of the GNU linker for initializations.
    -fno-gnu-linker says that collect will be used.  */
 extern int flag_gnu_linker;
@@ -462,8 +513,8 @@ extern int flag_argument_noalias;
    if alias analysis (in general) is enabled.  */
 extern int flag_strict_aliasing;
 
-/* Emit code to check for stack overflow; also may cause large objects
-   to be allocated dynamically.  */
+/* Emit code to probe the stack, to help detect stack overflow; also
+   may cause large objects to be allocated dynamically.  */
 extern int flag_stack_check;
 
 /* Do the full regmove optimization pass.  */
@@ -471,6 +522,32 @@ extern int flag_regmove;
 
 /* Instrument functions with calls at entry and exit, for profiling.  */
 extern int flag_instrument_function_entry_exit;
+
+/* Perform a peephole pass before sched2. */
+extern int flag_peephole2;
+
+/* Try to guess branch probablities.  */
+extern int flag_guess_branch_prob;
+
+/* -fbounded-pointers causes gcc to compile pointers as composite
+   objects occupying three words: the pointer value, the base address
+   of the referent object, and the address immediately beyond the end
+   of the referent object.  The base and extent allow us to perform
+   runtime bounds checking.  -fbounded-pointers implies -fcheck-bounds.  */
+extern int flag_bounded_pointers;
+
+/* -fcheck-bounds causes gcc to generate array bounds checks.
+   For C, C++: defaults to value of flag_bounded_pointers.
+   For ObjC: defaults to off.
+   For Java: defaults to on.
+   For Fortran: defaults to off.
+   For CHILL: defaults to off.  */
+extern int flag_bounds_check;
+
+/* If one, renumber instruction UIDs to reduce the number of
+   unused UIDs if there are a lot of instructions.  If greater than
+   one, unconditionally renumber instruction UIDs.  */
+extern int flag_renumber_insns;
 
 /* Other basic status info about current function.  */
 
@@ -480,47 +557,36 @@ extern int flag_instrument_function_entry_exit;
 
 extern int frame_pointer_needed;
 
-/* Set nonzero if jump_optimize finds that control falls through
-   at the end of the function.  */
-
-extern int can_reach_end;
-
-/* Nonzero if function being compiled receives nonlocal gotos
-   from nested functions.  */
-
-extern int current_function_has_nonlocal_label;
-
-/* Nonzero if function being compiled has nonlocal gotos to parent
-   function.  */
-
-extern int current_function_has_nonlocal_goto;
-
-/* Nonzero if this function has a computed goto.
-
-   It is computed during find_basic_blocks or during stupid life
-   analysis.  */
-
-extern int current_function_has_computed_jump;
-
 /* Nonzero if GCC must add code to check memory access (used by Checker).  */
 
 extern int flag_check_memory_usage;
+
+/* Nonzero if the generated code should trap on signed overflow
+   for PLUS / SUB / MULT.  */
+extern int flag_trapv;
 
 /* Nonzero if GCC must prefix function names (used with
    flag_check_memory_usage).  */
 
 extern int flag_prefix_function_name;
-/* Nonzero if the current function is a thunk, so we should try to cut
-   corners where we can.  */
-extern int current_function_is_thunk;
 
 /* Value of the -G xx switch, and whether it was passed or not.  */
 extern int g_switch_value;
 extern int g_switch_set;
 
-/* Value of the -finline-limit flag.  */
+/* Values of the -falign-* flags: how much to align labels in code. 
+   0 means `use default', 1 means `don't align'.  
+   For each variable, there is an _log variant which is the power
+   of two not less than the variable, for .align output.  */
 
-extern int inline_max_insns;
+extern int align_loops;
+extern int align_loops_log;
+extern int align_jumps;
+extern int align_jumps_log;
+extern int align_labels;
+extern int align_labels_log;
+extern int align_functions;
+extern int align_functions_log;
 
 /* Nonzero if we dump in VCG format, not plain text.  */
 extern int dump_for_graph;
@@ -538,3 +604,16 @@ extern enum graph_dump_types graph_dump_format;
    string identifying the compiler.  */
 
 extern int flag_no_ident;
+
+/* Nonzero means we should do dwarf2 duplicate elimination.  */
+
+extern int flag_eliminate_dwarf2_dups;
+
+/* Non-zero means to collect statistics which might be expensive
+   and to print them when we are done.  */
+extern int flag_detailed_statistics;
+
+/* Nonzero means enable synchronous exceptions for non-call instructions.  */
+extern int flag_non_call_exceptions;
+
+#endif /* GCC_FLAGS_H */

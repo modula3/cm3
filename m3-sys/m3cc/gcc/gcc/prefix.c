@@ -1,5 +1,5 @@
 /* Utility to update paths from internal to external forms.
-   Copyright (C) 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -44,9 +44,10 @@ Boston, MA 02111-1307, USA.  */
    -- If this is a Win32 OS, then the Registry will be examined for
       an entry of "key" in 
 
-      HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\
+      HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\<KEY>
 
-      if found, that value will be used.
+      if found, that value will be used. <KEY> defaults to GCC version
+      string, but can be overridden at configuration time.
 
    -- If not found (or not a Win32 OS), the environment variable
       key_ROOT (the value of "key" concatenated with the constant "_ROOT")
@@ -65,32 +66,21 @@ Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
-#ifdef _WIN32
+#if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
 #include <windows.h>
 #endif
 #include "prefix.h"
 
 static const char *std_prefix = PREFIX;
 
-static const char *get_key_value	PROTO((char *));
-static const char *translate_name	PROTO((const char *));
-static char *save_string		PROTO((const char *, int));
+static const char *get_key_value	PARAMS ((char *));
+static const char *translate_name	PARAMS ((const char *));
+static char *save_string		PARAMS ((const char *, int));
 
-#ifdef _WIN32
-static char *lookup_key		PROTO((char *));
+#if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
+static char *lookup_key		PARAMS ((char *));
 static HKEY reg_key = (HKEY) INVALID_HANDLE_VALUE;
 #endif
-
-#ifndef DIR_SEPARATOR
-# define IS_DIR_SEPARATOR(ch) ((ch) == '/')
-#else /* DIR_SEPARATOR */
-# ifndef DIR_SEPARATOR_2
-#  define IS_DIR_SEPARATOR(ch) ((ch) == DIR_SEPARATOR)
-# else /* DIR_SEPARATOR && DIR_SEPARATOR_2 */
-#  define IS_DIR_SEPARATOR(ch) \
-	(((ch) == DIR_SEPARATOR) || ((ch) == DIR_SEPARATOR_2))
-# endif /* DIR_SEPARATOR && DIR_SEPARATOR_2 */
-#endif /* DIR_SEPARATOR */
 
 /* Given KEY, as above, return its value.  */
 
@@ -101,7 +91,7 @@ get_key_value (key)
   const char *prefix = 0;
   char *temp = 0;
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
   prefix = lookup_key (key);
 #endif
 
@@ -122,7 +112,7 @@ get_key_value (key)
    This function is based on the one in libiberty.  */
 
 char *
-concat VPROTO((const char *first, ...))
+concat VPARAMS ((const char *first, ...))
 {
   register int length;
   register char *newstr;
@@ -149,7 +139,7 @@ concat VPROTO((const char *first, ...))
       arg = va_arg (args, const char *);
     }
 
-  newstr = (char *) malloc (length + 1);
+  newstr = (char *) xmalloc (length + 1);
   va_end (args);
 
   /* Now copy the individual pieces to the result string.  */
@@ -182,12 +172,12 @@ save_string (s, len)
 {
   register char *result = xmalloc (len + 1);
 
-  bcopy (s, result, len);
+  memcpy (result, s, len);
   result[len] = 0;
   return result;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(ENABLE_WIN32_REGISTRY)
 
 /* Look up "key" in the registry, as above.  */
 
@@ -209,6 +199,10 @@ lookup_key (key)
 	res = RegOpenKeyExA (reg_key, "Free Software Foundation", 0,
 			     KEY_READ, &reg_key);
 
+      if (res == ERROR_SUCCESS)
+	res = RegOpenKeyExA (reg_key, WIN32_REGISTRY_KEY, 0,
+			     KEY_READ, &reg_key);
+
       if (res != ERROR_SUCCESS)
         {
           reg_key = (HKEY) INVALID_HANDLE_VALUE;
@@ -217,12 +211,12 @@ lookup_key (key)
     }
 
   size = 32;
-  dst = (char *) malloc (size);
+  dst = (char *) xmalloc (size);
 
   res = RegQueryValueExA (reg_key, key, 0, &type, dst, &size);
   if (res == ERROR_MORE_DATA && type == REG_SZ)
     {
-      dst = (char *) realloc (dst, size);
+      dst = (char *) xrealloc (dst, size);
       res = RegQueryValueExA (reg_key, key, 0, &type, dst, &size);
     }
 
@@ -274,13 +268,10 @@ translate_name (name)
   if (prefix == 0)
     prefix = PREFIX;
 
-  /* Remove any trailing directory separator from what we got.  */
-  if (IS_DIR_SEPARATOR (prefix[strlen (prefix) - 1]))
-    {
-      char * temp = save_string (prefix, strlen (prefix));
-      temp[strlen (temp) - 1] = 0;
-      prefix = temp;
-    }
+  /* We used to strip trailing DIR_SEPARATORs here, but that can
+     sometimes yield a result with no separator when one was coded
+     and intended by the user, causing two path components to run
+     together.  */
 
   return concat (prefix, name, NULL_PTR);
 }
@@ -303,32 +294,33 @@ update_path (path, key)
 	path = translate_name (path);
     }
 
+#ifdef UPDATE_PATH_HOST_CANONICALIZE
+/* Perform host dependant canonicalization when needed.  */
+UPDATE_PATH_HOST_CANONICALIZE (path, key);
+#endif
+
 #ifdef DIR_SEPARATOR_2
   /* Convert DIR_SEPARATOR_2 to DIR_SEPARATOR. */
   if (DIR_SEPARATOR != DIR_SEPARATOR_2)
     {
-      int i;
-      int len = strlen (path);
-      char *new_path = save_string (path, len);
-      for (i = 0; i < len; i++)
-        if (new_path[i] == DIR_SEPARATOR_2)
-          new_path[i] = DIR_SEPARATOR;
+      char *new_path = xstrdup (path);
       path = new_path;
+      do {
+	if (*new_path == DIR_SEPARATOR_2)
+	  *new_path = DIR_SEPARATOR;
+      } while (*new_path++);
     }
 #endif
       
 #if defined (DIR_SEPARATOR) && !defined (DIR_SEPARATOR_2)
   if (DIR_SEPARATOR != '/')
     {
-      int i;
-      int len = strlen (path);
-      char *new_path = save_string (path, len);
-
-      for (i = 0; i < len; i++)
-        if (new_path[i] == '/')
-          new_path[i] = DIR_SEPARATOR;
-
+      char *new_path = xstrdup (path);
       path = new_path;
+      do {
+	if (*new_path == '/')
+	  *new_path = DIR_SEPARATOR;
+      } while (*new_path++);
     }
 #endif
 

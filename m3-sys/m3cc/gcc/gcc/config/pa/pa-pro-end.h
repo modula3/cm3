@@ -30,13 +30,13 @@ Boston, MA 02111-1307, USA.  */
 #define LIB_SPEC "%{!p:%{!pg:-lc}}%{p: -L/lib/libp/ -lc}%{pg: -L/lib/libp/ -lc}"
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dhppa -DPWB -Acpu(hppa) -Amachine(hppa)"
+#define CPP_PREDEFINES "-Dhppa -DPWB -Acpu=hppa -Amachine=hppa"
 
 /* hpux8 and later have C++ compatible include files, so do not
    pretend they are `extern "C"'.  */
 #define NO_IMPLICIT_EXTERN_C
 
 /* We don't want a crt0.o to get linked in automatically, we want the
-   linker script to pull it in.
- */
+   linker script to pull it in.  */
+#undef STARTFILE_SPEC
 #define STARTFILE_SPEC ""

@@ -1,10 +1,10 @@
 # lib1funcs.asm is currently empty.
 CROSS_LIBGCC1 =
 
-# These are really part of libgcc1, but this will cause them to be
-# built correctly, so...
-
-LIB2FUNCS_EXTRA = fp-bit.c dp-bit.c
+# We want fine grained libraries, so use the new code to build the
+# floating point emulation libraries.
+FPBIT = fp-bit.c
+DPBIT = dp-bit.c
 
 # Turn off the SDA while compiling libgcc2.  There are no headers for it
 # and we want maximal upward compatibility here.
@@ -32,12 +32,12 @@ CRTSTUFF_T_CFLAGS =
 crtinit.o: $(srcdir)/config/m32r/initfini.c $(GCC_PASSES) $(CONFIG_H)
 	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
 	  -DCRT_INIT -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/config/m32r/initfini.c -o crtinit.o
+	  -g0 -mmodel=medium -c $(srcdir)/config/m32r/initfini.c -o crtinit.o
 
 crtfini.o: $(srcdir)/config/m32r/initfini.c $(GCC_PASSES) $(CONFIG_H)
 	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
 	  -DCRT_FINI -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/config/m32r/initfini.c -o crtfini.o
+	  -g0 -mmodel=medium -c $(srcdir)/config/m32r/initfini.c -o crtfini.o
 
 
 # -mmodel={small,medium} requires separate libraries.

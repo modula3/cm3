@@ -1,5 +1,5 @@
 /* Output variables, constants and external declarations, for GNU compiler.
-   Copyright (C) 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 1998, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -31,7 +31,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
-"-D__ALPHA -Dvms -DVMS -D__vms__ -D__VMS__ -Asystem(vms)"
+"-D__ALPHA -Dvms -DVMS -D__vms__ -D__VMS__ -Asystem=vms"
 
 #undef CPP_SUBTARGET_SPEC
 #define CPP_SUBTARGET_SPEC "\
@@ -60,9 +60,6 @@ Boston, MA 02111-1307, USA.  */
 #define SIZE_TYPE	"unsigned int"
 #define PTRDIFF_TYPE	"int"
 */
-
-/* Use memcpy for structure copying, and so forth.  */
-#define TARGET_MEM_FUNCTIONS
 
 /* By default, allow $ to be part of an identifier.  */
 #define DOLLARS_IN_IDENTIFIERS 2
@@ -143,7 +140,7 @@ Boston, MA 02111-1307, USA.  */
    Thus 6 or more means all following args should go on the stack.  */
 
 enum avms_arg_type {I64, FF, FD, FG, FS, FT};
-typedef struct {char num_args; enum avms_arg_type atypes[6];} avms_arg_info;
+typedef struct {int num_args; enum avms_arg_type atypes[6];} avms_arg_info;
 
 #undef CUMULATIVE_ARGS
 #define CUMULATIVE_ARGS avms_arg_info
@@ -157,41 +154,6 @@ typedef struct {char num_args; enum avms_arg_type atypes[6];} avms_arg_info;
   (CUM).num_args = 0;						\
   (CUM).atypes[0] = (CUM).atypes[1] = (CUM).atypes[2] = I64;	\
   (CUM).atypes[3] = (CUM).atypes[4] = (CUM).atypes[5] = I64;
-
-/* Update the data in CUM to advance over an argument
-   of mode MODE and data type TYPE.
-   (TYPE is null for libcalls where that information may not be available.)  */
-
-extern enum avms_arg_type alpha_arg_type ();
-
-/* Determine where to put an argument to a function.
-   Value is zero to push the argument on the stack,
-   or a hard register in which to store the argument.
-
-   MODE is the argument's machine mode (or VOIDmode for no more args).
-   TYPE is the data type of the argument (as a tree).
-    This is null for libcalls where that information may
-    not be available.
-   CUM is a variable of type CUMULATIVE_ARGS which gives info about
-    the preceding args and about the function being called.
-   NAMED is nonzero if this argument is a named parameter
-    (otherwise it is an extra parameter matching an ellipsis).
-
-   On Alpha the first 6 words of args are normally in registers
-   and the rest are pushed.  */
-
-extern struct rtx_def *alpha_arg_info_reg_val ();
-#undef FUNCTION_ARG
-#define FUNCTION_ARG(CUM, MODE, TYPE, NAMED)	\
-((MODE) == VOIDmode ? alpha_arg_info_reg_val (CUM)		\
- : ((CUM.num_args) < 6 && ! MUST_PASS_IN_STACK (MODE, TYPE)	\
-    ? gen_rtx(REG, (MODE),					\
-	      ((CUM).num_args + 16				\
-	       + ((TARGET_FPREGS				\
-		   && (GET_MODE_CLASS (MODE) == MODE_COMPLEX_FLOAT \
-		       || GET_MODE_CLASS (MODE) == MODE_FLOAT)) \
-		  * 32)))			\
-    : 0))
 
 #undef FUNCTION_ARG_ADVANCE
 #define FUNCTION_ARG_ADVANCE(CUM, MODE, TYPE, NAMED)			\
@@ -242,7 +204,7 @@ extern struct rtx_def *alpha_arg_info_reg_val ();
     {							\
       if (! (NO_RTL))					\
 	{						\
-	  emit_move_insn (gen_rtx (REG, DImode, 1),	\
+	  emit_move_insn (gen_rtx_REG (DImode, 1),	\
 			  virtual_incoming_args_rtx);	\
 	  emit_insn (gen_arg_home ());			\
 	}						\
@@ -279,11 +241,11 @@ extern struct rtx_def *alpha_arg_info_reg_val ();
       }									\
   }
 
-#define LINK_SECTION_ASM_OP ".link"
-#define READONLY_SECTION_ASM_OP ".rdata"
-#define LITERALS_SECTION_ASM_OP ".literals"
-#define CTORS_SECTION_ASM_OP ".ctors"
-#define DTORS_SECTION_ASM_OP ".dtors"
+#define LINK_SECTION_ASM_OP "\t.link"
+#define READONLY_SECTION_ASM_OP "\t.rdata"
+#define LITERALS_SECTION_ASM_OP "\t.literals"
+#define CTORS_SECTION_ASM_OP "\t.ctors"
+#define DTORS_SECTION_ASM_OP "\t.dtors"
 
 #undef EXTRA_SECTIONS
 #define EXTRA_SECTIONS	in_link, in_rdata, in_literals, in_ctors, in_dtors
@@ -336,6 +298,12 @@ dtors_section ()						\
     }								\
 }
 
+extern void readonly_section	PARAMS ((void));
+extern void link_section	PARAMS ((void));
+extern void literals_section	PARAMS ((void));
+extern void ctors_section	PARAMS ((void));
+extern void dtors_section	PARAMS ((void));
+
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) abort ()
 
@@ -359,17 +327,16 @@ dtors_section ()						\
 /* This says how to output assembler code to declare an                
    uninitialized external linkage data object.  */ 
 
-#define COMMON_ASM_OP ".comm"
+#define COMMON_ASM_OP "\t.comm\t"
 
 #undef ASM_OUTPUT_ALIGNED_COMMON
 #define ASM_OUTPUT_ALIGNED_COMMON(FILE, NAME, SIZE, ALIGN)		\
 do {									\
-  fprintf ((FILE), "\t%s\t", COMMON_ASM_OP);				\
+  fprintf ((FILE), "%s", COMMON_ASM_OP);				\
   assemble_name ((FILE), (NAME));					\
   fprintf ((FILE), ",%u,%u\n", (SIZE), (ALIGN) / BITS_PER_UNIT);	\
 } while (0)
 
-#define NO_MD_PROTOTYPES
 
 /* Output assembler code for a block containing the constant parts
    of a trampoline, leaving space for the variable parts.
@@ -423,7 +390,6 @@ do {									\
 
 #define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, NAME, ARGS) \
   (vms_valid_decl_attribute_p (DECL, ATTRIBUTES, NAME, ARGS))
-extern int vms_valid_decl_attribute_p ();
 
 #undef SDB_DEBUGGING_INFO
 #undef MIPS_DEBUGGING_INFO
@@ -448,7 +414,7 @@ extern int vms_valid_decl_attribute_p ();
 #define ASM_OUTPUT_SECTION_NAME(FILE,DECL,NAME,RELOC)		\
   do								\
     {								\
-      char *flags;					 	\
+      const char *flags;				 	\
       int ovr = 0;						\
       if (DECL && DECL_MACHINE_ATTRIBUTES (DECL)		\
 	  && lookup_attribute					\

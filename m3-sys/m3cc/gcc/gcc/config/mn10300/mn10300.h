@@ -1,5 +1,7 @@
-/* Definitions of target machine for GNU compiler. Matsushita MN10300 series
-   Copyright (C) 1996, 1997, 1998 Free Software Foundation, Inc.
+/* Definitions of target machine for GNU compiler.
+   Matsushita MN10300 series
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
 This file is part of GNU CC.
@@ -27,10 +29,13 @@ Boston, MA 02111-1307, USA.  */
 #undef ENDFILE_SPEC
 #undef LINK_SPEC
 #undef STARTFILE_SPEC
+#define STARTFILE_SPEC "%{!mno-crt0:%{!shared:%{pg:gcrt0%O%s}%{!pg:%{p:mcrt0%O%s}%{!p:crt0%O%s}}}}"
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
 #define CPP_PREDEFINES "-D__mn10300__ -D__MN10300__"
+
+#define CPP_SPEC "%{mam33:-D__AM33__}"
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
@@ -46,9 +51,17 @@ extern int target_flags;
 
 /* Generate code to work around mul/mulq bugs on the mn10300.  */
 #define TARGET_MULT_BUG			(target_flags & 0x1)
+
+/* Generate code for the AM33 processor.  */
+#define TARGET_AM33			(target_flags & 0x2)
+
 #define TARGET_SWITCHES  \
-  {{ "mult-bug",	0x1,  "Work around hardware multiply bug"},	\
-   { "no-mult-bug", 	-0x1, "Do not work around hardware multiply bug"},\
+  {{ "mult-bug",	0x1,  N_("Work around hardware multiply bug")},	\
+   { "no-mult-bug", 	-0x1, N_("Do not work around hardware multiply bug")},\
+   { "am33", 		0x2,  N_("Target the AM33 processor")},	\
+   { "am33", 		-(0x1), ""},\
+   { "no-am33", 	-0x2, ""},	\
+   { "no-crt0",		0,    N_("No default crt0.o") }, \
    { "", TARGET_DEFAULT, NULL}}
 
 #ifndef TARGET_DEFAULT
@@ -134,13 +147,38 @@ extern int target_flags;
    All registers that the compiler knows about must be given numbers,
    even those that are not normally considered general registers.  */
 
-#define FIRST_PSEUDO_REGISTER 10
+#define FIRST_PSEUDO_REGISTER 18
+
+/* Specify machine-specific register numbers.  */
+#define FIRST_DATA_REGNUM 0
+#define LAST_DATA_REGNUM 3
+#define FIRST_ADDRESS_REGNUM 4
+#define LAST_ADDRESS_REGNUM 8
+#define FIRST_EXTENDED_REGNUM 10
+#define LAST_EXTENDED_REGNUM 17
+
+/* Specify the registers used for certain standard purposes.
+   The values of these macros are register numbers.  */
+
+/* Register to use for pushing function arguments.  */
+#define STACK_POINTER_REGNUM (LAST_ADDRESS_REGNUM+1)
+
+/* Base register for access to local variables of the function.  */
+#define FRAME_POINTER_REGNUM (LAST_ADDRESS_REGNUM-1)
+
+/* Base register for access to arguments of the function.  This
+   is a fake register and will be eliminated into either the frame
+   pointer or stack pointer.  */
+#define ARG_POINTER_REGNUM LAST_ADDRESS_REGNUM
+
+/* Register in which static-chain is passed to a function.  */
+#define STATIC_CHAIN_REGNUM (FIRST_ADDRESS_REGNUM+1)
 
 /* 1 for registers that have pervasive standard uses
    and are not available for the register allocator.  */
 
 #define FIXED_REGISTERS \
-  { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}
+  { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}
 
 /* 1 for registers not available across function calls.
    These must include the FIXED_REGISTERS and also any
@@ -151,10 +189,20 @@ extern int target_flags;
    like.  */
 
 #define CALL_USED_REGISTERS \
-  { 1, 1, 0, 0, 1, 1, 0, 0, 1, 1}
+  { 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}
 
 #define REG_ALLOC_ORDER \
-  { 0, 1, 4, 5, 2, 3, 6, 7, 8, 9}
+  { 0, 1, 4, 5, 2, 3, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 8, 9}
+
+#define CONDITIONAL_REGISTER_USAGE \
+{						\
+  if (!TARGET_AM33)				\
+    {						\
+      for (i = FIRST_EXTENDED_REGNUM; 		\
+	   i <= LAST_EXTENDED_REGNUM; i++) 	\
+	fixed_regs[i] = call_used_regs[i] = 1; 	\
+    }						\
+}
 
 /* Return number of consecutive hard regs needed starting at reg REGNO
    to hold something of mode MODE.
@@ -169,7 +217,9 @@ extern int target_flags;
    MODE.  */
 
 #define HARD_REGNO_MODE_OK(REGNO, MODE) \
- (REGNO_REG_CLASS (REGNO) == DATA_REGS 			\
+ ((REGNO_REG_CLASS (REGNO) == DATA_REGS \
+   || (TARGET_AM33 && REGNO_REG_CLASS (REGNO) == ADDRESS_REGS) \
+   || REGNO_REG_CLASS (REGNO) == EXTENDED_REGS) \
   ? ((REGNO) & 1) == 0 || GET_MODE_SIZE (MODE) <= 4	\
   : ((REGNO) & 1) == 0 || GET_MODE_SIZE (MODE) == 4)
 
@@ -178,7 +228,9 @@ extern int target_flags;
    If HARD_REGNO_MODE_OK could produce different values for MODE1 and MODE2,
    for any hard reg, then this must be 0 for correct output.  */
 #define MODES_TIEABLE_P(MODE1, MODE2) \
-  (MODE1 == MODE2 || (GET_MODE_SIZE (MODE1) <= 4 && GET_MODE_SIZE (MODE2) <= 4))
+  (TARGET_AM33  \
+   || MODE1 == MODE2 \
+   || (GET_MODE_SIZE (MODE1) <= 4 && GET_MODE_SIZE (MODE2) <= 4))
 
 /* 4 data, and effectively 3 address registers is small as far as I'm
    concerned.  */
@@ -207,6 +259,8 @@ extern int target_flags;
 enum reg_class {
   NO_REGS, DATA_REGS, ADDRESS_REGS, SP_REGS,
   DATA_OR_ADDRESS_REGS, SP_OR_ADDRESS_REGS, 
+  EXTENDED_REGS, DATA_OR_EXTENDED_REGS, ADDRESS_OR_EXTENDED_REGS,
+  SP_OR_EXTENDED_REGS, SP_OR_ADDRESS_OR_EXTENDED_REGS, 
   GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES
 };
 
@@ -217,6 +271,9 @@ enum reg_class {
 #define REG_CLASS_NAMES \
 { "NO_REGS", "DATA_REGS", "ADDRESS_REGS", \
   "SP_REGS", "DATA_OR_ADDRESS_REGS", "SP_OR_ADDRESS_REGS", \
+  "EXTENDED_REGS", \
+  "DATA_OR_EXTENDED_REGS", "ADDRESS_OR_EXTENDED_REGS", \
+  "SP_OR_EXTENDED_REGS", "SP_OR_ADDRESS_OR_EXTENDED_REGS", \
   "GENERAL_REGS", "ALL_REGS", "LIM_REGS" }
 
 /* Define which registers fit in which classes.
@@ -224,14 +281,19 @@ enum reg_class {
    of length N_REG_CLASSES.  */
 
 #define REG_CLASS_CONTENTS  			\
-{      0,		/* No regs      */	\
-   0x00f,		/* DATA_REGS */		\
-   0x1f0,		/* ADDRESS_REGS */	\
-   0x200,		/* SP_REGS */		\
-   0x1ff,		/* DATA_OR_ADDRESS_REGS */\
-   0x1f0,		/* SP_OR_ADDRESS_REGS */\
-   0x1ff,		/* GENERAL_REGS */    	\
-   0x3ff,		/* ALL_REGS 	*/	\
+{      {0},		/* No regs      */	\
+   {0x0000f},		/* DATA_REGS */		\
+   {0x001f0},		/* ADDRESS_REGS */	\
+   {0x00200},		/* SP_REGS */		\
+   {0x001ff},		/* DATA_OR_ADDRESS_REGS */\
+   {0x003f0},		/* SP_OR_ADDRESS_REGS */\
+   {0x3fc00},		/* EXTENDED_REGS */	\
+   {0x3fc0f},		/* DATA_OR_EXTENDED_REGS */	\
+   {0x3fdf0},		/* ADDRESS_OR_EXTENDED_REGS */	\
+   {0x3fe00},		/* SP_OR_EXTENDED_REGS */	\
+   {0x3fff0},		/* SP_OR_ADDRESS_OR_EXTENDED_REGS */	\
+   {0x3fdff},		/* GENERAL_REGS */    	\
+   {0x3ffff},		/* ALL_REGS 	*/	\
 }
 
 /* The same information, inverted:
@@ -240,12 +302,14 @@ enum reg_class {
    or could index an array.  */
 
 #define REGNO_REG_CLASS(REGNO) \
-  ((REGNO) < 4 ? DATA_REGS : \
-   (REGNO) < 9 ? ADDRESS_REGS : \
-    (REGNO) == 9 ? SP_REGS : 0)
+  ((REGNO) <= LAST_DATA_REGNUM ? DATA_REGS : \
+   (REGNO) <= LAST_ADDRESS_REGNUM ? ADDRESS_REGS : \
+   (REGNO) == STACK_POINTER_REGNUM ? SP_REGS : \
+   (REGNO) <= LAST_EXTENDED_REGNUM ? EXTENDED_REGS : \
+   NO_REGS)
 
 /* The class value for index registers, and the one for base regs.  */
-#define INDEX_REG_CLASS DATA_REGS
+#define INDEX_REG_CLASS DATA_OR_EXTENDED_REGS
 #define BASE_REG_CLASS  SP_OR_ADDRESS_REGS
 
 /* Get reg_class from a letter such as appears in the machine description.  */
@@ -253,42 +317,90 @@ enum reg_class {
 #define REG_CLASS_FROM_LETTER(C) \
   ((C) == 'd' ? DATA_REGS : \
    (C) == 'a' ? ADDRESS_REGS : \
-   (C) == 'y' ? SP_REGS : NO_REGS)
+   (C) == 'y' ? SP_REGS : \
+   ! TARGET_AM33 ? NO_REGS : \
+   (C) == 'x' ? EXTENDED_REGS : \
+   NO_REGS)
 
 /* Macros to check register numbers against specific register classes.  */
+
+/* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
+   and check its validity for a certain class.
+   We have two alternate definitions for each of them.
+   The usual definition accepts all pseudo regs; the other rejects
+   them unless they have been allocated suitable hard regs.
+   The symbol REG_OK_STRICT causes the latter definition to be used.
+
+   Most source files want to accept pseudo regs in the hope that
+   they will get allocated to the class that the insn wants them to be in.
+   Source files for reload pass need to be strict.
+   After reload, it makes no difference, since pseudo regs have
+   been eliminated by then.  */
 
 /* These assume that REGNO is a hard or pseudo reg number.
    They give nonzero only if REGNO is a hard reg of the suitable class
    or a pseudo reg currently allocated to a suitable hard reg.
    Since they use reg_renumber, they are safe only once reg_renumber
    has been allocated, which happens in local-alloc.c.  */
- 
+
+#ifndef REG_OK_STRICT
+# define REGNO_IN_RANGE_P(regno,min,max) \
+  (((regno) >= (min) && (regno) <= (max)) || (regno) >= FIRST_PSEUDO_REGISTER)
+#else
+# define REGNO_IN_RANGE_P(regno,min,max) \
+  (((regno) >= (min) && (regno) <= (max)) \
+   || (reg_renumber \
+       && reg_renumber[(regno)] >= (min) && reg_renumber[(regno)] <= (max)))
+#endif
+
+#define REGNO_DATA_P(regno) \
+  REGNO_IN_RANGE_P ((regno), FIRST_DATA_REGNUM, LAST_DATA_REGNUM)
+#define REGNO_ADDRESS_P(regno) \
+  REGNO_IN_RANGE_P ((regno), FIRST_ADDRESS_REGNUM, LAST_ADDRESS_REGNUM)
+#define REGNO_SP_P(regno) \
+  REGNO_IN_RANGE_P ((regno), STACK_POINTER_REGNUM, STACK_POINTER_REGNUM)
+#define REGNO_EXTENDED_P(regno) \
+  REGNO_IN_RANGE_P ((regno), FIRST_EXTENDED_REGNUM, LAST_EXTENDED_REGNUM)
+#define REGNO_AM33_P(regno) \
+  (REGNO_DATA_P ((regno)) || REGNO_ADDRESS_P ((regno)) \
+   || REGNO_EXTENDED_P ((regno)))
+
 #define REGNO_OK_FOR_BASE_P(regno) \
-  (((regno) > 3 && regno < FIRST_PSEUDO_REGISTER)	\
-   || (reg_renumber[regno] > 3 && reg_renumber[regno] < FIRST_PSEUDO_REGISTER))
+  (REGNO_SP_P ((regno)) \
+   || REGNO_ADDRESS_P ((regno)) || REGNO_EXTENDED_P ((regno)))
+#define REG_OK_FOR_BASE_P(X) REGNO_OK_FOR_BASE_P (REGNO (X))
 
 #define REGNO_OK_FOR_BIT_BASE_P(regno) \
-  (((regno) > 3 && regno < 10)	\
-   || (reg_renumber[regno] > 3 && reg_renumber[regno] < 10))
+  (REGNO_SP_P ((regno)) || REGNO_ADDRESS_P ((regno)))
+#define REG_OK_FOR_BIT_BASE_P(X) REGNO_OK_FOR_BIT_BASE_P (REGNO (X))
 
 #define REGNO_OK_FOR_INDEX_P(regno) \
-  (((regno) >= 0 && regno < 4)	\
-   || (reg_renumber[regno] >= 0 && reg_renumber[regno] < 4))
-
+  (REGNO_DATA_P ((regno)) || REGNO_EXTENDED_P ((regno)))
+#define REG_OK_FOR_INDEX_P(X) REGNO_OK_FOR_INDEX_P (REGNO (X))
 
 /* Given an rtx X being reloaded into a reg required to be
    in class CLASS, return the class of reg to actually use.
    In general this is just CLASS; but on some machines
    in some cases it is preferable to use a more restrictive class.  */
 
-#define PREFERRED_RELOAD_CLASS(X,CLASS) \
-  (X == stack_pointer_rtx && CLASS != SP_REGS ? ADDRESS_REGS : CLASS)
+#define PREFERRED_RELOAD_CLASS(X,CLASS)				\
+  ((X) == stack_pointer_rtx && (CLASS) != SP_REGS		\
+   ? ADDRESS_OR_EXTENDED_REGS					\
+   : (GET_CODE (X) == MEM					\
+      || (GET_CODE (X) == REG					\
+	  && REGNO (X) >= FIRST_PSEUDO_REGISTER)		\
+      || (GET_CODE (X) == SUBREG				\
+	  && GET_CODE (SUBREG_REG (X)) == REG			\
+	  && REGNO (SUBREG_REG (X)) >= FIRST_PSEUDO_REGISTER)	\
+      ? LIMIT_RELOAD_CLASS (GET_MODE (X), CLASS)		\
+      : (CLASS)))
 
 #define PREFERRED_OUTPUT_RELOAD_CLASS(X,CLASS) \
-  (X == stack_pointer_rtx && CLASS != SP_REGS ? ADDRESS_REGS : CLASS)
+  (X == stack_pointer_rtx && CLASS != SP_REGS \
+   ? ADDRESS_OR_EXTENDED_REGS : CLASS)
 
 #define LIMIT_RELOAD_CLASS(MODE, CLASS) \
-  ((MODE == QImode || MODE == HImode) ? DATA_REGS : CLASS)
+  (!TARGET_AM33 && (MODE == QImode || MODE == HImode) ? DATA_REGS : CLASS)
 
 #define SECONDARY_RELOAD_CLASS(CLASS,MODE,IN) \
   secondary_reload_class(CLASS,MODE,IN)
@@ -361,23 +473,6 @@ enum reg_class {
 
 #define FIRST_PARM_OFFSET(FNDECL) 4
 
-/* Specify the registers used for certain standard purposes.
-   The values of these macros are register numbers.  */
-
-/* Register to use for pushing function arguments.  */
-#define STACK_POINTER_REGNUM 9
-
-/* Base register for access to local variables of the function.  */
-#define FRAME_POINTER_REGNUM 7
-
-/* Base register for access to arguments of the function.  This
-   is a fake register and will be eliminated into either the frame
-   pointer or stack pointer.  */
-#define ARG_POINTER_REGNUM 8
-
-/* Register in which static-chain is passed to a function.  */
-#define STATIC_CHAIN_REGNUM 5
-
 #define ELIMINABLE_REGS				\
 {{ ARG_POINTER_REGNUM, STACK_POINTER_REGNUM},	\
  { ARG_POINTER_REGNUM, FRAME_POINTER_REGNUM},	\
@@ -409,7 +504,7 @@ enum reg_class {
    for a register flushback area.  */
 #define REG_PARM_STACK_SPACE(DECL) 8
 #define OUTGOING_REG_PARM_STACK_SPACE
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* So we can allocate space for return pointers once for the function
    instead of around every call.  */
@@ -466,13 +561,11 @@ struct cum_arg {int nbytes; };
 
 /* On the MN10300 all args are pushed.  */   
 
-extern struct rtx_def *function_arg ();
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (&CUM, MODE, TYPE, NAMED)
 
 #define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
   function_arg_partial_nregs (&CUM, MODE, TYPE, NAMED)
-
 
 #define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED)		\
   ((TYPE) && int_size_in_bytes (TYPE) > 8)
@@ -486,16 +579,18 @@ extern struct rtx_def *function_arg ();
    otherwise, FUNC is 0.   */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC) \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), POINTER_TYPE_P (VALTYPE) ? 4 : 0)
+  gen_rtx_REG (TYPE_MODE (VALTYPE), POINTER_TYPE_P (VALTYPE) \
+	       ? FIRST_ADDRESS_REGNUM : FIRST_DATA_REGNUM)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE) gen_rtx (REG, MODE, 0)
+#define LIBCALL_VALUE(MODE) gen_rtx_REG (MODE, FIRST_DATA_REGNUM)
 
 /* 1 if N is a possible register number for a function value.  */
 
-#define FUNCTION_VALUE_REGNO_P(N) ((N) == 0 || (N) == 4)
+#define FUNCTION_VALUE_REGNO_P(N) \
+  ((N) == FIRST_DATA_REGNUM || (N) == FIRST_ADDRESS_REGNUM)
 
 /* Return values > 8 bytes in length in memory.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
@@ -506,7 +601,7 @@ extern struct rtx_def *function_arg ();
    is passed to a function.  On the MN10300 it's passed as
    the first parameter.  */
 
-#define STRUCT_VALUE 0
+#define STRUCT_VALUE FIRST_DATA_REGNUM
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -545,9 +640,9 @@ extern struct rtx_def *function_arg ();
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant ((TRAMP), 0x14)),	\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant ((TRAMP), 0x14)),	\
  		 (CXT));						\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant ((TRAMP), 0x18)),	\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant ((TRAMP), 0x18)),	\
 		 (FNADDR));						\
 }
 /* A C expression whose value is RTL representing the value of the return
@@ -561,7 +656,7 @@ extern struct rtx_def *function_arg ();
 
 #define RETURN_ADDR_RTX(COUNT, FRAME)   \
   ((COUNT == 0)                         \
-   ? gen_rtx (MEM, Pmode, arg_pointer_rtx) \
+   ? gen_rtx_MEM (Pmode, arg_pointer_rtx) \
    : (rtx) 0)
 
 /* Emit code for a call to builtin_saveregs.  We must emit USE insns which
@@ -569,8 +664,15 @@ extern struct rtx_def *function_arg ();
    Ordinarily they are not call used registers, but they are for
    _builtin_saveregs, so we must make this explicit.  */
 
-extern struct rtx_def *mn10300_builtin_saveregs ();
-#define EXPAND_BUILTIN_SAVEREGS(ARGLIST) mn10300_builtin_saveregs (ARGLIST)
+#define EXPAND_BUILTIN_SAVEREGS() mn10300_builtin_saveregs ()
+
+/* Implement `va_start' for varargs and stdarg.  */
+#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
+  mn10300_va_start (stdarg, valist, nextarg)
+
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  mn10300_va_arg (valist, type)
 
 /* Addressing modes, and classification of registers for them.  */
 
@@ -596,46 +698,17 @@ extern struct rtx_def *mn10300_builtin_saveregs ();
 	    && INT_8_BITS (INTVAL (XEXP (XEXP (OP, 0), 1))))))
 	 
 #define EXTRA_CONSTRAINT(OP, C) \
- ((C) == 'R' ? OK_FOR_R (OP) : (C) == 'S' ? GET_CODE (OP) == SYMBOL_REF : 0)
+ ((C) == 'R' ? OK_FOR_R (OP) \
+  : (C) == 'S' ? GET_CODE (OP) == SYMBOL_REF \
+  : 0)
 
 /* Maximum number of registers that can appear in a valid memory address.  */
 
 #define MAX_REGS_PER_ADDRESS 2
 
-/* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
-   and check its validity for a certain class.
-   We have two alternate definitions for each of them.
-   The usual definition accepts all pseudo regs; the other rejects
-   them unless they have been allocated suitable hard regs.
-   The symbol REG_OK_STRICT causes the latter definition to be used.
-
-   Most source files want to accept pseudo regs in the hope that
-   they will get allocated to the class that the insn wants them to be in.
-   Source files for reload pass need to be strict.
-   After reload, it makes no difference, since pseudo regs have
-   been eliminated by then.  */
-
-#ifndef REG_OK_STRICT
-/* Nonzero if X is a hard reg that can be used as an index
-   or if it is a pseudo reg.  */
-#define REG_OK_FOR_INDEX_P(X)  \
-  ((REGNO (X) >= 0 && REGNO(X) <= 3) || REGNO (X) >= 10)
-/* Nonzero if X is a hard reg that can be used as a base reg
-   or if it is a pseudo reg.  */
-#define REG_OK_FOR_BASE_P(X) \
-  ((REGNO (X) >= 4 && REGNO(X) <= 9) || REGNO (X) >= 10)
-#define REG_OK_FOR_BIT_BASE_P(X) \
-  ((REGNO (X) >= 4 && REGNO(X) <= 9))
-#else
-/* Nonzero if X is a hard reg that can be used as an index.  */
-#define REG_OK_FOR_INDEX_P(X) REGNO_OK_FOR_INDEX_P (REGNO (X))
-/* Nonzero if X is a hard reg that can be used as a base reg.  */
-#define REG_OK_FOR_BASE_P(X) REGNO_OK_FOR_BASE_P (REGNO (X))
-/* Nonzero if X is a hard reg that can be used as a base reg.  */
-#define REG_OK_FOR_BIT_BASE_P(X) REGNO_OK_FOR_BIT_BASE_P (REGNO (X))
-#endif
-
 
+#define HAVE_POST_INCREMENT (TARGET_AM33)
+
 /* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression
    that is a valid memory address for an instruction.
    The MODE argument is the machine mode for the MEM expression
@@ -669,6 +742,11 @@ extern struct rtx_def *mn10300_builtin_saveregs ();
     goto ADDR;						\
   if (RTX_OK_FOR_BASE_P (X))				\
     goto ADDR;						\
+  if (TARGET_AM33					\
+      && GET_CODE (X) == POST_INC			\
+      && RTX_OK_FOR_BASE_P (XEXP (X, 0))		\
+      && (MODE == SImode || MODE == SFmode || MODE == HImode))\
+    goto ADDR;						\
   if (GET_CODE (X) == PLUS)				\
     {							\
       rtx base = 0, index = 0;				\
@@ -700,7 +778,6 @@ extern struct rtx_def *mn10300_builtin_saveregs ();
    It is always safe for this macro to do nothing.  It exists to recognize
    opportunities to optimize the output.   */
 
-extern struct rtx_def *legitimize_address ();
 #define LEGITIMIZE_ADDRESS(X, OLDX, MODE, WIN)  \
 { rtx orig_x = (X);				\
   (X) = legitimize_address (X, OLDX, MODE);	\
@@ -710,7 +787,9 @@ extern struct rtx_def *legitimize_address ();
 /* Go to LABEL if ADDR (a legitimate address expression)
    has an effect that depends on the machine mode it is used for.  */
 
-#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL)  {}
+#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL)        \
+  if (GET_CODE (ADDR) == POST_INC) \
+    goto LABEL
 
 /* Nonzero if the constant value X is a legitimate general operand.
    It is given that X satisfies CONSTANT_P or is a CONST_DOUBLE.  */
@@ -763,8 +842,19 @@ extern struct rtx_def *legitimize_address ();
   case CONST_DOUBLE:							\
     return 8;
 
+#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2) \
+  ((CLASS1 == CLASS2 && (CLASS1 == ADDRESS_REGS || CLASS1 == DATA_REGS)) ? 2 :\
+   ((CLASS1 == ADDRESS_REGS || CLASS1 == DATA_REGS) && \
+    (CLASS2 == ADDRESS_REGS || CLASS2 == DATA_REGS)) ? 4 : \
+   (CLASS1 == SP_REGS && CLASS2 == ADDRESS_REGS) ? 2 : \
+   (CLASS1 == ADDRESS_REGS && CLASS2 == SP_REGS) ? 4 : \
+   ! TARGET_AM33 ? 6 : \
+   (CLASS1 == SP_REGS || CLASS2 == SP_REGS) ? 6 : \
+   (CLASS1 == CLASS2 && CLASS1 == EXTENDED_REGS) ? 6 : \
+   (CLASS1 == EXTENDED_REGS || CLASS2 == EXTENDED_REGS) ? 4 : \
+   4)
 
-#define REGISTER_MOVE_COST(CLASS1, CLASS2)  (CLASS1 != CLASS2 ? 4 : 2)
+#define ADDRESS_COST(X) mn10300_address_cost((X), 0)
 
 /* A crude cut at RTX_COSTS for the MN10300.  */
 
@@ -888,7 +978,7 @@ do { char dstr[30];					\
 #undef ASM_OUTPUT_LABELREF
 #define ASM_OUTPUT_LABELREF(FILE, NAME)	          \
   do {                                            \
-  char* real_name;                                \
+  const char* real_name;                          \
   STRIP_NAME_ENCODING (real_name, (NAME));        \
   fprintf (FILE, "_%s", real_name);               \
   } while (0)           
@@ -914,7 +1004,16 @@ do { char dstr[30];					\
    This sequence is indexed by compiler's hard-register-number (see above).  */
 
 #define REGISTER_NAMES \
-{ "d0", "d1", "d2", "d3", "a0", "a1", "a2", "a3", "ap", "sp" }
+{ "d0", "d1", "d2", "d3", "a0", "a1", "a2", "a3", "ap", "sp", \
+  "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7" \
+}
+
+#define ADDITIONAL_REGISTER_NAMES \
+{ {"r8",  4}, {"r9",  5}, {"r10", 6}, {"r11", 7}, \
+  {"r12", 0}, {"r13", 1}, {"r14", 2}, {"r15", 3}, \
+  {"e0", 10}, {"e1", 11}, {"e2", 12}, {"e3", 13}, \
+  {"e4", 14}, {"e5", 15}, {"e6", 16}, {"e7", 17} \
+}
 
 /* Print an instruction operand X on file FILE.
    look in mn10300.c for details */
@@ -946,11 +1045,13 @@ do { char dstr[30];					\
 /* We don't have to worry about dbx compatibility for the mn10300.  */
 #define DEFAULT_GDB_EXTENSIONS 1
 
-/* Use stabs debugging info by default.  */
+/* Use dwarf2 debugging info by default.  */
 #undef PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
+#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
-#define DBX_REGISTER_NUMBER(REGNO) REGNO
+#define DWARF2_ASM_LINE_DEBUG_INFO 1
+
+#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
 
 /* GDB always assumes the current function's frame begins at the value
    of the stack pointer upon entry to the current function.  Accessing
@@ -974,10 +1075,6 @@ do { char dstr[30];					\
   ((GET_CODE (X) == PLUS ? OFFSET : 0) \
     + (frame_pointer_needed \
        ? 0 : -initial_offset (ARG_POINTER_REGNUM, STACK_POINTER_REGNUM)))
-
-/* We need to prepend underscores.  */
-#define ASM_OUTPUT_DWARF2_ADDR_CONST(FILE,ADDR) \
-  fprintf ((FILE), "\t%s\t_%s", UNALIGNED_WORD_ASM_OP, (ADDR))
 
 /* Define to use software floating point emulator for REAL_ARITHMETIC and
    decimal <-> binary conversion. */
@@ -1030,16 +1127,3 @@ do { char dstr[30];					\
 
 #define FILE_ASM_OP "\t.file\n"
 
-extern void asm_file_start ();
-extern int const_costs ();
-extern void print_operand ();
-extern void print_operand_address ();
-extern void expand_prologue ();
-extern void expand_epilogue ();
-extern void notice_update_cc ();
-extern int call_address_operand ();
-extern int impossible_plus_operand ();
-extern enum reg_class secondary_reload_class ();
-extern int initial_offset ();
-extern char *output_tst ();
-int symbolic_operand ();

@@ -1,5 +1,5 @@
 /* Definitions for 64-bit SPARC running Linux-based GNU systems with ELF.
-   Copyright 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright 1996, 1997, 1998, 2000 Free Software Foundation, Inc.
    Contributed by David S. Miller (davem@caip.rutgers.edu)
 
 This file is part of GNU CC.
@@ -26,8 +26,12 @@ Boston, MA 02111-1307, USA.  */
 /* Don't assume anything about the header files. */
 #define NO_IMPLICIT_EXTERN_C
 
-#undef HAVE_ATEXIT
-#define HAVE_ATEXIT
+/* The GNU C++ standard library requires that these macros be defined.  */
+#undef CPLUSPLUS_CPP_SPEC
+#define CPLUSPLUS_CPP_SPEC "-D_GNU_SOURCE %(cpp)"
+
+#undef DEFAULT_VTABLE_THUNKS
+#define DEFAULT_VTABLE_THUNKS 1
 
 #include <sparc/sysv4.h>
 
@@ -41,20 +45,20 @@ Boston, MA 02111-1307, USA.  */
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT \
   (MASK_V9 + MASK_PTR64 + MASK_64BIT /* + MASK_HARD_QUAD */ \
-   + MASK_STACK_BIAS + MASK_APP_REGS + MASK_EPILOGUE + MASK_FPU)
+   + MASK_STACK_BIAS + MASK_APP_REGS + MASK_EPILOGUE + MASK_FPU + MASK_LONG_DOUBLE_128)
 #endif
 
-/* Output at beginning of assembler file.  */
-/* The .file command should always begin the output.  */
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE)                                            \
-  do {                                                                  \
-        output_file_directive (FILE, main_input_filename);              \
-        fprintf (FILE, "\t.version\t\"01.01\"\n");                      \
-  } while (0)
-  
 #undef ASM_CPU_DEFAULT_SPEC
 #define ASM_CPU_DEFAULT_SPEC "-Av9a"
+
+#ifdef SPARC_BI_ARCH
+
+#undef CPP_ARCH32_SPEC
+#define CPP_ARCH32_SPEC "%{mlong-double-128:-D__LONG_DOUBLE_128__} \
+-D__SIZE_TYPE__=unsigned\\ int -D__PTRDIFF_TYPE__=int \
+-D__GCC_NEW_VARARGS__ -Acpu=sparc -Amachine=sparc"
+
+#endif
 
 /* Provide a STARTFILE_SPEC appropriate for GNU/Linux.  Here we add
    the GNU/Linux magical crtbegin.o file (see crtstuff.c) which
@@ -134,17 +138,38 @@ Boston, MA 02111-1307, USA.  */
 #undef SPARC_DEFAULT_CMODEL
 #define SPARC_DEFAULT_CMODEL CM_MEDLOW
 
-#undef WCHAR_TYPE
-#define WCHAR_TYPE "long int"
-   
-#undef WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE BITS_PER_WORD
+#undef SUBTARGET_SWITCHES
+#define SUBTARGET_SWITCHES						    \
+{"long-double-64", -MASK_LONG_DOUBLE_128, N_("Use 64 bit long doubles") },  \
+{"long-double-128", MASK_LONG_DOUBLE_128, N_("Use 128 bit long doubles") },
 
+#undef WCHAR_TYPE
+#define WCHAR_TYPE "int"
+
+#undef WCHAR_TYPE_SIZE
+#define WCHAR_TYPE_SIZE 32
+
+#undef MAX_WCHAR_TYPE_SIZE
+
+/* Define for support of TFmode long double and REAL_ARITHMETIC.
+   Sparc ABI says that long double is 4 words.  */
 #undef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE 128
+#define LONG_DOUBLE_TYPE_SIZE (TARGET_LONG_DOUBLE_128 ? 128 : 64)
+
+/* Constant which presents upper bound of the above value.  */
+#undef MAX_LONG_DOUBLE_TYPE_SIZE
+#define MAX_LONG_DOUBLE_TYPE_SIZE 128
+
+/* Define this to set long double type size to use in libgcc2.c, which can
+   not depend on target_flags.  */
+#if defined(__arch64__) || defined(__LONG_DOUBLE_128__)
+#define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 128
+#else
+#define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 64
+#endif
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__ELF__ -Dunix -D_LONGLONG -D__sparc__ -Dlinux -Asystem(unix) -Asystem(posix)"
+#define CPP_PREDEFINES "-D__ELF__ -Dunix -D_LONGLONG -D__sparc__ -Dlinux -Asystem=unix -Asystem=posix"
 
 #undef CPP_SUBTARGET_SPEC
 #define CPP_SUBTARGET_SPEC "\
@@ -216,6 +241,7 @@ Boston, MA 02111-1307, USA.  */
 #define LINK_SPEC "\
 %(link_arch) \
 %{mlittle-endian:-EL} \
+%{!mno-relax:%{!r:-relax}} \
 "
 
 #undef	CC1_SPEC
@@ -225,7 +251,10 @@ Boston, MA 02111-1307, USA.  */
 %{mcypress:-mcpu=cypress} \
 %{msparclite:-mcpu=sparclite} %{mf930:-mcpu=f930} %{mf934:-mcpu=f934} \
 %{mv8:-mcpu=v8} %{msupersparc:-mcpu=supersparc} \
-%{m64:-mptr64 -mcpu=ultrasparc -mstack-bias} \
+%{m64:-mptr64 -mstack-bias -mlong-double-128 \
+  %{!mcpu*:%{!mcypress:%{!msparclite:%{!mf930:%{!mf934:%{!mv8:%{!msupersparc:-mcpu=ultrasparc}}}}}}} \
+  %{!mno-vis:%{!mcpu=v9:-mvis}}} \
+%{!m64:%{g*:%{!gs*:%{!gd*:%{!gx*:%{!gc*:-gstabs+}}}}}} \
 "
 #else
 #define CC1_SPEC "\
@@ -233,7 +262,11 @@ Boston, MA 02111-1307, USA.  */
 %{mcypress:-mcpu=cypress} \
 %{msparclite:-mcpu=sparclite} %{mf930:-mcpu=f930} %{mf934:-mcpu=f934} \
 %{mv8:-mcpu=v8} %{msupersparc:-mcpu=supersparc} \
-%{m32:-mptr32 -mcpu=cypress -mno-stack-bias} \
+%{m32:-mptr32 -mno-stack-bias %{!mlong-double-128:-mlong-double-64} \
+  %{!mcpu*:%{!mcypress:%{!msparclite:%{!mf930:%{!mf934:%{!mv8:%{!msupersparc:-mcpu=cypress}}}}}}} \
+  %{g*:%{!gs*:%{!gd*:%{!gx*:%{!gc*:-gstabs+}}}}}} \
+%{!m32:%{!mcpu*:-mcpu=ultrasparc}} \
+%{!mno-vis:%{!m32:%{!mcpu=v9:-mvis}}} \
 "
 #endif
 
@@ -246,7 +279,7 @@ Boston, MA 02111-1307, USA.  */
 #else /* !SPARC_BI_ARCH */
 
 #undef LINK_SPEC
-#define LINK_ARCH_SPEC "-m elf64_sparc -Y P,/usr/lib64 %{shared:-shared} \
+#define LINK_SPEC "-m elf64_sparc -Y P,/usr/lib64 %{shared:-shared} \
   %{!shared: \
     %{!ibcs: \
       %{!static: \
@@ -254,6 +287,7 @@ Boston, MA 02111-1307, USA.  */
         %{!dynamic-linker:-dynamic-linker /lib64/ld-linux.so.2}} \
         %{static:-static}}} \
 %{mlittle-endian:-EL} \
+%{!mno-relax:%{!r:-relax}} \
 "
 
 #endif /* !SPARC_BI_ARCH */
@@ -271,8 +305,7 @@ Boston, MA 02111-1307, USA.  */
 %{Wa,*:%*} \
 -s %{fpic:-K PIC} %{fPIC:-K PIC} \
 %{mlittle-endian:-EL} \
-%(asm_cpu) %(asm_arch) \
-"
+%(asm_cpu) %(asm_arch) %(asm_relax)"
 
 /* Same as sparc.h */
 #undef DBX_REGISTER_NUMBER
@@ -300,7 +333,7 @@ do {									\
 } while (0)
 
 #undef COMMON_ASM_OP
-#define COMMON_ASM_OP "\t.common"
+#define COMMON_ASM_OP "\t.common\t"
 
 /* This is how to output a definition of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
@@ -325,17 +358,12 @@ do {									\
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*.L%s%d", PREFIX, NUM)
 
-/* Stabs doesn't use this, and it confuses a simulator.  */
-/* ??? Need to see what DWARF needs, if anything.  */
-#undef ASM_IDENTIFY_GCC
-#define ASM_IDENTIFY_GCC(FILE)
-
 /* Define the names of various pseudo-ops used by the Sparc/svr4 assembler.
    ??? If ints are 64 bits then UNALIGNED_INT_ASM_OP (defined elsewhere) is
    misnamed.  These should all refer to explicit sizes (half/word/xword?),
    anything other than short/int/long/etc.  */
 
-#define UNALIGNED_DOUBLE_INT_ASM_OP	".uaxword"
+#define UNALIGNED_DOUBLE_INT_ASM_OP	"\t.uaxword\t"
 
 /* DWARF bits.  */
 
@@ -346,6 +374,7 @@ do {									\
 
 /* #define DWARF_OFFSET_SIZE PTR_SIZE */
 
+#if TARGET_ARCH32
 /* Override MACHINE_STATE_{SAVE,RESTORE} because we have special
    traps available which can get and set the condition codes
    reliably.  */
@@ -364,3 +393,32 @@ do {									\
 	       "ta	0x21\n\t"			\
 	       : /* no outputs */			\
 	       : "r" (ms_flags), "r" (ms_saveret));
+#endif /* sparc32 */
+
+/* A C statement (sans semicolon) to output an element in the table of
+   global constructors.  */
+#undef ASM_OUTPUT_CONSTRUCTOR
+#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
+  do {									\
+    ctors_section ();							\
+    if (TARGET_ARCH64)							\
+      fprintf (FILE, "\t%s\t ", ASM_LONGLONG);				\
+    else								\
+      fprintf (FILE, "%s", INT_ASM_OP);					\
+    assemble_name (FILE, NAME);						\
+    fprintf (FILE, "\n");						\
+  } while (0)
+
+/* A C statement (sans semicolon) to output an element in the table of
+   global destructors.  */
+#undef ASM_OUTPUT_DESTRUCTOR
+#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
+  do {									\
+    dtors_section ();                   				\
+    if (TARGET_ARCH64)							\
+      fprintf (FILE, "\t%s\t ", ASM_LONGLONG);				\
+    else								\
+      fprintf (FILE, "%s", INT_ASM_OP);					\
+    assemble_name (FILE, NAME);              				\
+    fprintf (FILE, "\n");						\
+  } while (0)

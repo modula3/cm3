@@ -1,5 +1,6 @@
 /* Generate code from machine description to perform peephole optimizations.
-   Copyright (C) 1987, 89, 92, 97, 98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1989, 1992, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -22,16 +23,9 @@ Boston, MA 02111-1307, USA.  */
 #include "hconfig.h"
 #include "system.h"
 #include "rtl.h"
-#include "obstack.h"
+#include "errors.h"
+#include "gensupport.h"
 
-static struct obstack obstack;
-struct obstack *rtl_obstack = &obstack;
-
-#define obstack_chunk_alloc xmalloc
-#define obstack_chunk_free free
-
-/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
-char **insn_name_ptr = 0;
 
 /* While tree-walking an instruction pattern, we keep a chain
    of these `struct link's to record how to get down to the
@@ -46,10 +40,6 @@ struct link
   int vecelt;
 };
 
-void fatal PVPROTO ((const char *, ...))
-  ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
-void fancy_abort PROTO((void)) ATTRIBUTE_NORETURN;
-
 static int max_opno;
 
 /* Number of operands used in current peephole definition.  */
@@ -61,10 +51,10 @@ static int n_operands;
 
 static int insn_code_number = 0;
 
-static void gen_peephole PROTO((rtx));
-static void match_rtx PROTO((rtx, struct link *, int));
-static void print_path PROTO((struct link *));
-static void print_code PROTO((RTX_CODE));
+static void gen_peephole PARAMS ((rtx));
+static void match_rtx PARAMS ((rtx, struct link *, int));
+static void print_path PARAMS ((struct link *));
+static void print_code PARAMS ((RTX_CODE));
 
 static void
 gen_peephole (peep)
@@ -159,7 +149,7 @@ match_rtx (x, path, fail_label)
   register RTX_CODE code;
   register int i;
   register int len;
-  register char *fmt;
+  register const char *fmt;
   struct link link;
 
   if (x == 0)
@@ -374,96 +364,29 @@ static void
 print_code (code)
      RTX_CODE code;
 {
-  register char *p1;
+  register const char *p1;
   for (p1 = GET_RTX_NAME (code); *p1; p1++)
-    {
-      if (*p1 >= 'a' && *p1 <= 'z')
-	putchar (*p1 + 'A' - 'a');
-      else
-	putchar (*p1);
-    }
-}
-
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR val = (PTR) malloc (size);
-
-  if (val == 0)
-    fatal ("virtual memory exhausted");
-  return val;
+    putchar (TOUPPER(*p1));
 }
 
-PTR
-xrealloc (old, size)
-  PTR old;
-  size_t size;
-{
-  register PTR ptr;
-  if (old)
-    ptr = (PTR) realloc (old, size);
-  else
-    ptr = (PTR) malloc (size);
-  if (!ptr)
-    fatal ("virtual memory exhausted");
-  return ptr;
-}
+extern int main PARAMS ((int, char **));
 
-void
-fatal VPROTO ((const char *format, ...))
-{
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
-
-  fprintf (stderr, "genpeep: ");
-  vfprintf (stderr, format, ap);
-  va_end (ap);
-  fprintf (stderr, "\n");
-  exit (FATAL_EXIT_CODE);
-}
-
-/* More 'friendly' abort that prints the line and file.
-   config.h can #define abort fancy_abort if you like that sort of thing.  */
-
-void
-fancy_abort ()
-{
-  fatal ("Internal gcc abort.");
-}
-
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
   rtx desc;
-  FILE *infile;
-  register int c;
 
   max_opno = -1;
 
-  obstack_init (rtl_obstack);
+  progname = "genpeep";
 
   if (argc <= 1)
     fatal ("No input file name.");
 
-  infile = fopen (argv[1], "r");
-  if (infile == 0)
-    {
-      perror (argv[1]);
-      exit (FATAL_EXIT_CODE);
-    }
-
-  init_rtl ();
+  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+    return (FATAL_EXIT_CODE);
 
   printf ("/* Generated automatically by the program `genpeep'\n\
 from the machine description file `md'.  */\n\n");
@@ -472,12 +395,15 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"system.h\"\n");
   printf ("#include \"insn-config.h\"\n");
   printf ("#include \"rtl.h\"\n");
+  printf ("#include \"tm_p.h\"\n");
   printf ("#include \"regs.h\"\n");
   printf ("#include \"output.h\"\n");
   printf ("#include \"real.h\"\n");
   printf ("#include \"recog.h\"\n");
   printf ("#include \"except.h\"\n\n");
+  printf ("#include \"function.h\"\n\n");
 
+  printf ("#ifdef HAVE_peephole\n");
   printf ("extern rtx peep_operand[];\n\n");
   printf ("#define operands peep_operand\n\n");
 
@@ -493,20 +419,21 @@ from the machine description file `md'.  */\n\n");
 
   while (1)
     {
-      c = read_skip_spaces (infile);
-      if (c == EOF)
-	break;
-      ungetc (c, infile);
+      int line_no, rtx_number = 0;
 
-      desc = read_rtx (infile);
-      if (GET_CODE (desc) == DEFINE_PEEPHOLE)
+      desc = read_md_rtx (&line_no, &rtx_number);
+      if (desc == NULL)
+	break;
+
+       if (GET_CODE (desc) == DEFINE_PEEPHOLE)
 	{
 	  gen_peephole (desc);
 	  insn_code_number++;
 	}
       if (GET_CODE (desc) == DEFINE_INSN
 	  || GET_CODE (desc) == DEFINE_EXPAND
-	  || GET_CODE (desc) == DEFINE_SPLIT)
+	  || GET_CODE (desc) == DEFINE_SPLIT
+	  || GET_CODE (desc) == DEFINE_PEEPHOLE2)
 	{
 	  insn_code_number++;
 	}
@@ -518,9 +445,16 @@ from the machine description file `md'.  */\n\n");
     max_opno = 1;
 
   printf ("rtx peep_operand[%d];\n", max_opno + 1);
+  printf ("#endif\n");
 
   fflush (stdout);
-  exit (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
-  /* NOTREACHED */
-  return 0;
+  return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
+}
+
+/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
+const char *
+get_insn_name (code)
+     int code ATTRIBUTE_UNUSED;
+{
+  return NULL;
 }

@@ -1,12 +1,13 @@
 /* Definitions of target machine for GNU compiler, for the pdp-11
-   Copyright (C) 1994, 1995, 1996, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -19,24 +20,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-
-/* declarations */
-int arith_operand ();
-int const_immediate_operand ();
-int expand_shift_operand ();
-int legitimate_address_p ();
-void notice_update_cc_on_set ();
-void output_addr_const_pdp11 ();
-void output_ascii ();
-void output_function_epilogue ();
-void output_function_prologue ();
-char *output_jump();
-char *output_move_double();
-char *output_move_quad();
-char *output_block_move();
-void print_operand_address ();
-int register_move_cost ();
-int simple_memory_operand ();
 
 /* check whether load_fpu_reg or not */
 #define LOAD_FPU_REG_P(x) ((x)>=8 && (x)<=11)
@@ -69,45 +52,45 @@ extern int target_flags;
    An empty string NAME is used to identify the default VALUE.  */
 
 #define TARGET_SWITCHES  \
-{   { "fpu", 1, "Use hardware floating point" },		\
-    { "soft-float", -1, "Do not use hardware floating point" }, \
-/* return float result in ac0 */				\
-    { "ac0", 2, "Return floating point results in ac0" },	\
-    { "no-ac0", -2, "Return floating point results in memory" },\
-/* is 11/40 */							\
-    { "40", 4, "Generate code for an 11/40" },			\
-    { "no-40", -4, "" },					\
-/* is 11/45 */							\
-    { "45", 8, "Generate code for an 11/45" },			\
-    { "no-45", -8, "" },					\
-/* is 11/10 */							\
-    { "10", -12, "Generate code for an 11/10" },		\
-/* use movstrhi for bcopy */					\
-    { "bcopy", 16, NULL },					\
-    { "bcopy-builtin", -16, NULL },				\
-/* use 32 bit for int */					\
-    { "int32", 32, "Use 32 bit int" },				\
-    { "no-int16", 32, "Use 32 bit int" },			\
-    { "int16", -32, "Use 16 bit int" },				\
-    { "no-int32", -32, "Use 16 bit int" },			\
-/* use 32 bit for float */					\
-    { "float32", 64, "Use 32 bit float" },			\
-    { "no-float64", 64, "Use 32 bit float" },			\
-    { "float64", -64, "Use 64 bit float" },			\
-    { "no-float32", -64, "Use 64 bit float" },			\
+{   { "fpu", 1, N_("Use hardware floating point") },			\
+    { "soft-float", -1, N_("Do not use hardware floating point") },	\
+/* return float result in ac0 */					\
+    { "ac0", 2, N_("Return floating point results in ac0") },		\
+    { "no-ac0", -2, N_("Return floating point results in memory") },	\
+/* is 11/40 */								\
+    { "40", 4, N_("Generate code for an 11/40") },			\
+    { "no-40", -4, "" },						\
+/* is 11/45 */								\
+    { "45", 8, N_("Generate code for an 11/45") },			\
+    { "no-45", -8, "" },						\
+/* is 11/10 */								\
+    { "10", -12, N_("Generate code for an 11/10") },			\
+/* use movstrhi for bcopy */						\
+    { "bcopy", 16, NULL },						\
+    { "bcopy-builtin", -16, NULL },					\
+/* use 32 bit for int */						\
+    { "int32", 32, N_("Use 32 bit int") },				\
+    { "no-int16", 32, N_("Use 32 bit int") },				\
+    { "int16", -32, N_("Use 16 bit int") },				\
+    { "no-int32", -32, N_("Use 16 bit int") },				\
+/* use 32 bit for float */						\
+    { "float32", 64, N_("Use 32 bit float") },				\
+    { "no-float64", 64, N_("Use 32 bit float") },			\
+    { "float64", -64, N_("Use 64 bit float") },				\
+    { "no-float32", -64, N_("Use 64 bit float") },			\
 /* allow abshi pattern? - can trigger "optimizations" which make code SLOW! */\
-    { "abshi", 128, NULL },					\
-    { "no-abshi", -128, NULL },					\
+    { "abshi", 128, NULL },						\
+    { "no-abshi", -128, NULL },						\
 /* is branching expensive - on a PDP, it's actually really cheap */ \
 /* this is just to play around and check what code gcc generates */ \
-    { "branch-expensive", 256, NULL }, 				\
-    { "branch-cheap", -256, NULL },				\
-/* split instruction and data memory? */ 			\
-    { "split", 1024, "Target has split I&D" },			\
-    { "no-split", -1024, "Target does not have split I&D" },	\
-/* UNIX assembler syntax?  */					\
-    { "unix-asm", 2048, "Use UNIX assembler syntax" },		\
-    { "dec-asm", -2048, "Use DEC assembler syntax" },		\
+    { "branch-expensive", 256, NULL }, 					\
+    { "branch-cheap", -256, NULL },					\
+/* split instruction and data memory? */ 				\
+    { "split", 1024, N_("Target has split I&D") },			\
+    { "no-split", -1024, N_("Target does not have split I&D") },	\
+/* UNIX assembler syntax?  */						\
+    { "unix-asm", 2048, N_("Use UNIX assembler syntax") },		\
+    { "dec-asm", -2048, N_("Use DEC assembler syntax") },		\
 /* default */			\
     { "", TARGET_DEFAULT, NULL}	\
 }
@@ -165,11 +148,6 @@ extern int target_flags;
 
 /* machine types from ansi */
 #define SIZE_TYPE "unsigned int" 	/* definition of size_t */
-
-/* is used in cexp.y - we don't have target_flags there, 
-   so just give default definition 
-
-   hope it does not come back to haunt us! */
 #define WCHAR_TYPE "int" 		/* or long int???? */
 #define WCHAR_TYPE_SIZE 16
 
@@ -215,6 +193,9 @@ extern int target_flags;
 
 /* Allocation boundary (in *bits*) for storing arguments in argument list.  */
 #define PARM_BOUNDARY 16
+
+/* Boundary (in *bits*) on which stack pointer should be aligned.  */
+#define STACK_BOUNDARY 16
 
 /* Allocation boundary (in *bits*) for the code of a function.  */
 #define FUNCTION_BOUNDARY 16
@@ -569,18 +550,18 @@ extern int current_first_parm_offset;
 not without FPU!!!! ) */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), BASE_RETURN_VALUE_REG(TYPE_MODE(VALTYPE)))
+  gen_rtx_REG (TYPE_MODE (VALTYPE), BASE_RETURN_VALUE_REG(TYPE_MODE(VALTYPE)))
 
 /* and the called function leaves it in the first register.
    Difference only on machines with register windows.  */
 
 #define FUNCTION_OUTGOING_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), BASE_RETURN_VALUE_REG(TYPE_MODE(VALTYPE)))
+  gen_rtx_REG (TYPE_MODE (VALTYPE), BASE_RETURN_VALUE_REG(TYPE_MODE(VALTYPE)))
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, BASE_RETURN_VALUE_REG(MODE))
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, BASE_RETURN_VALUE_REG(MODE))
 
 /* 1 if N is a possible register number for a function value
    as seen by the caller.
@@ -684,7 +665,6 @@ maybe ac0 ? - as option someday! */
    No definition is equivalent to always zero.  */
 
 extern int may_call_alloca;
-extern int current_function_pretend_args_size;
 
 #define EXIT_IGNORE_STACK	1
 
@@ -945,10 +925,7 @@ extern int current_function_pretend_args_size;
 /* Add any extra modes needed to represent the condition code.
 
    CCFPmode is used for FPU, but should we use a separate reg? */
-#define EXTRA_CC_MODES CCFPmode
-
-/* the name for the mode above */
-#define EXTRA_CC_NAMES "CCFPmode"
+#define EXTRA_CC_MODES CC(CCFPmode, "CCFP")
 
 /* Give a comparison code (EQ, NE etc) and the first operand of a COMPARE,
    return the mode to be used for the comparison.  For floating-point, CCFPmode
@@ -1002,7 +979,8 @@ extern int current_function_pretend_args_size;
     return 4;
 
 /* cost of moving one register class to another */
-#define REGISTER_MOVE_COST(CLASS1, CLASS2) register_move_cost(CLASS1, CLASS2)
+#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2) \
+  register_move_cost (CLASS1, CLASS2)
 
 /* Tell emit-rtl.c how to initialize special values on a per-function base.  */
 extern int optimize;
@@ -1065,7 +1043,7 @@ fprintf (FILE, "$help$: . = .+8 ; space for tmp moves!\n")	\
 /* do we need reg def's R0 = %0 etc ??? */			\
 )
 #else
-#define ASM_FILE_START(FILE)	(0)
+#define ASM_FILE_START(FILE)
 #endif
 
 
@@ -1267,10 +1245,6 @@ fprintf (FILE, "$help$: . = .+8 ; space for tmp moves!\n")	\
   fprintf (FILE, "\tmov (sp)+, %s\n", reg_names[REGNO])     	\
 )
 
-
-#define ASM_IDENTIFY_GCC(FILE)			\
-    fprintf(FILE, "gcc_compiled:\n")
-
 /* trampoline - how should i do it in separate i+d ? 
    have some allocate_trampoline magic??? 
 
@@ -1304,8 +1278,8 @@ JMP	FUNCTION	0x0058  0x0000 <- FUNCTION
   if (TARGET_SPLIT)			\
     abort();				\
 					\
-  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 2)), CXT); \
-  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 6)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (HImode, plus_constant (TRAMP, 2)), CXT); \
+  emit_move_insn (gen_rtx_MEM (HImode, plus_constant (TRAMP, 6)), FNADDR); \
 }
 
 

@@ -10,11 +10,12 @@ later version.
 
 In addition to the permissions in the GNU General Public License, the
 Free Software Foundation gives you unlimited permission to link the
-compiled version of this file with other programs, and to distribute
-those programs without any restriction coming from the use of this
-file.  (The General Public License restrictions do apply in other
-respects; for example, they cover modification of the file, and
-distribution when not linked into another program.)
+compiled version of this file into combinations with other programs,
+and to distribute those combinations without any restriction coming
+from the use of this file.  (The General Public License restrictions
+do apply in other respects; for example, they cover modification of
+the file, and distribution when not linked into a combine
+executable.)
 
 This file is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,69 +27,66 @@ along with this program; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* As a special exception, if you link this library with files
-   compiled with GCC to produce an executable, this does not cause
-   the resulting executable to be covered by the GNU General Public License.
-   This exception does not however invalidate any other reasons why
-   the executable file might be covered by the GNU General Public License.  */
-
 #ifdef L_mulsi3
 	.text
 	.globl ___mulsi3
 	.type  ___mulsi3,@function
 
 /*
- * In order to not deal with negative numbers (mulh is a signed multiply
- * and we want an unsigned multiply, code the multiplication as a series
- * of 7 bit multiplies).
+ * #define SHIFT 12
+ * #define MASK ((1 << SHIFT) - 1)
+ *  
+ * #define STEP(i, j)                             \
+ * ({                                             \
+ *     short a_part = (a >> (i)) & MASK;          \
+ *     short b_part = (b >> (j)) & MASK;          \
+ *     int res = (((int)a_part) * ((int)b_part)); \
+ *     res;                                       \
+ * })
  *
- * int __mulsi3 (unsigned a, unsigned b)
+ * int
+ * __mulsi3 (unsigned a, unsigned b)
  * {
- *   int i, j;
- *   int ret = 0;
- *
- *   for (i = 0; i < 32; i += 7)
- *     {
- *       short a_part = a & 0x7f;
- *       unsigned b_tmp = b;
- *       a >>= 7;
- * 
- *       for (j = 0; (i+j) < 32; j += 7)
- * 	{
- * 	  short b_part = b_tmp & 0x7f;
- * 	  ret += (((int)a_part) * ((int)b_part)) << (i+j);
- * 	  b_tmp >>= 7;
- * 	}
- *    }
- *
- *   return ret;
+ *    return STEP (0, 0) +
+ *        ((STEP (SHIFT, 0) + STEP (0, SHIFT)) << SHIFT) +
+ *        ((STEP (0, 2 * SHIFT) + STEP (SHIFT, SHIFT) + STEP (2 * SHIFT, 0))
+ *         << (2 * SHIFT));
  * }
  */
 
 ___mulsi3:
-	mov 0,r10			/* total */
-	mov 0,r14			/* i = 0, index for multiply a's part */
-	movea lo(31),r0,r16		/* upper bounds for loop */
-.L5:
-	mov r7,r13			/* b_tmp = b */
-	andi 0x7f,r6,r15		/* a_part = (a & 127) */
-	shr 7,r6			/* a >>= 7 */
-	mov r14,r12			/* i+j = i */
-.L9:
-	andi 0x7f,r13,r11		/* b_part = (b_tmp & 127) */
-	mulh r15,r11			/* ((int)a_part) * ((int)b_part) */
-	shr 7,r13			/* b_tmp >>= 7 */
-	shl r12,r11			/* (((int)a_part) * ((int)b_part)) << (i+j) */
-	add r11,r10			/* ret += (((int)a_part) * ((int)b_part)) << (i+j) */
-	add 7,r12			/* i+j += 7 */
-	cmp r16,r12			/* i+j < 32 */
-	ble .L9
-
-	add 7,r14			/* i += 7 */
-	cmp r16,r14			/* i < 32 */
-	ble .L5
-
-	jmp [r31]			/* return */
+        mov r6,r13
+        movea lo(4095),r0,r16
+        and r16,r13
+        mov r7,r15
+        and r16,r15
+        mov r13,r10
+        mulh r15,r10
+        shr 12,r6
+        mov r6,r14
+        and r16,r14
+        mov r14,r11
+        mulh r15,r11
+        shr 12,r7
+        mov r7,r12
+        and r16,r12
+        shr 12,r7
+        and r16,r7
+        mulh r13,r7
+        shr 12,r6
+        mulh r12,r13
+        and r16,r6
+        add r13,r11
+        shl 12,r11
+        add r11,r10
+        mov r14,r11
+        mulh r12,r11
+        mulh r15,r6
+        add r11,r7
+        add r6,r7
+        shl 24,r7
+        add r7,r10
+        jmp [r31]
 	.size ___mulsi3,.-___mulsi3
 #endif
 

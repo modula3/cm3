@@ -1,5 +1,5 @@
 /* IEEE floating point support routines, for GDB, the GNU Debugger.
-   Copyright (C) 1991, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1994, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GDB.
 
@@ -36,19 +36,27 @@ extern char *memset ();
 /* floatformats for IEEE single and double, big and little endian.  */
 const struct floatformat floatformat_ieee_single_big =
 {
-  floatformat_big, 32, 0, 1, 8, 127, 255, 9, 23, floatformat_intbit_no
+  floatformat_big, 32, 0, 1, 8, 127, 255, 9, 23,
+  floatformat_intbit_no,
+  "floatformat_ieee_single_big"
 };
 const struct floatformat floatformat_ieee_single_little =
 {
-  floatformat_little, 32, 0, 1, 8, 127, 255, 9, 23, floatformat_intbit_no
+  floatformat_little, 32, 0, 1, 8, 127, 255, 9, 23,
+  floatformat_intbit_no,
+  "floatformat_ieee_single_little"
 };
 const struct floatformat floatformat_ieee_double_big =
 {
-  floatformat_big, 64, 0, 1, 11, 1023, 2047, 12, 52, floatformat_intbit_no
+  floatformat_big, 64, 0, 1, 11, 1023, 2047, 12, 52,
+  floatformat_intbit_no,
+  "floatformat_ieee_double_big"
 };
 const struct floatformat floatformat_ieee_double_little =
 {
-  floatformat_little, 64, 0, 1, 11, 1023, 2047, 12, 52, floatformat_intbit_no
+  floatformat_little, 64, 0, 1, 11, 1023, 2047, 12, 52,
+  floatformat_intbit_no,
+  "floatformat_ieee_double_little"
 };
 
 /* floatformat for IEEE double, little endian byte order, with big endian word
@@ -56,24 +64,30 @@ const struct floatformat floatformat_ieee_double_little =
 
 const struct floatformat floatformat_ieee_double_littlebyte_bigword =
 {
-  floatformat_littlebyte_bigword, 64, 0, 1, 11, 1023, 2047, 12, 52, floatformat_intbit_no
+  floatformat_littlebyte_bigword, 64, 0, 1, 11, 1023, 2047, 12, 52,
+  floatformat_intbit_no,
+  "floatformat_ieee_double_little"
 };
 
 const struct floatformat floatformat_i387_ext =
 {
   floatformat_little, 80, 0, 1, 15, 0x3fff, 0x7fff, 16, 64,
-  floatformat_intbit_yes
+  floatformat_intbit_yes,
+  "floatformat_i387_ext"
 };
 const struct floatformat floatformat_m68881_ext =
 {
   /* Note that the bits from 16 to 31 are unused.  */
-  floatformat_big, 96, 0, 1, 15, 0x3fff, 0x7fff, 32, 64, floatformat_intbit_yes
+  floatformat_big, 96, 0, 1, 15, 0x3fff, 0x7fff, 32, 64,
+  floatformat_intbit_yes,
+  "floatformat_m68881_ext"
 };
 const struct floatformat floatformat_i960_ext =
 {
   /* Note that the bits from 0 to 15 are unused.  */
   floatformat_little, 96, 16, 17, 15, 0x3fff, 0x7fff, 32, 64,
-  floatformat_intbit_yes
+  floatformat_intbit_yes,
+  "floatformat_i960_ext"
 };
 const struct floatformat floatformat_m88110_ext =
 {
@@ -81,17 +95,20 @@ const struct floatformat floatformat_m88110_ext =
   /* Harris uses raw format 128 bytes long, but the number is just an ieee
      double, and the last 64 bits are wasted. */
   floatformat_big,128, 0, 1, 11,  0x3ff,  0x7ff, 12, 52,
-  floatformat_intbit_no
+  floatformat_intbit_no,
+  "floatformat_m88110_ext(harris)"
 #else
   floatformat_big, 80, 0, 1, 15, 0x3fff, 0x7fff, 16, 64,
-  floatformat_intbit_yes
+  floatformat_intbit_yes,
+  "floatformat_m88110_ext"
 #endif /* HARRIS_FLOAT_FORMAT */
 };
 const struct floatformat floatformat_arm_ext =
 {
   /* Bits 1 to 16 are unused.  */
   floatformat_big, 96, 0, 17, 15, 0x3fff, 0x7fff, 32, 64,
-  floatformat_intbit_yes
+  floatformat_intbit_yes,
+  "floatformat_arm_ext"
 };
 
 static unsigned long get_field PARAMS ((unsigned char *,
@@ -128,7 +145,7 @@ get_field (data, order, total_len, start, len)
     --cur_byte;
 
   /* Move towards the most significant part of the field.  */
-  while (cur_bitshift < len)
+  while ((unsigned int) cur_bitshift < len)
     {
       if (len - cur_bitshift < FLOATFORMAT_CHAR_BIT)
 	/* This is the last byte; zero out the bits which are not part of
@@ -179,7 +196,7 @@ floatformat_to_double (fmt, from, to)
   mant_off = fmt->man_start;
   dto = 0.0;
 
-  special_exponent = exponent == 0 || exponent == fmt->exp_nan;
+  special_exponent = exponent == 0 || (unsigned long) exponent == fmt->exp_nan;
 
   /* Don't bias zero's, denorms or NaNs.  */
   if (!special_exponent)
@@ -255,7 +272,7 @@ put_field (data, order, total_len, start, len, stuff_to_put)
     --cur_byte;
 
   /* Move towards the most significant part of the field.  */
-  while (cur_bitshift < len)
+  while ((unsigned int) cur_bitshift < len)
     {
       if (len - cur_bitshift < FLOATFORMAT_CHAR_BIT)
 	{
@@ -335,7 +352,7 @@ floatformat_from_double (fmt, from, to)
 	 If we are discarding a zero, we should be (but are not) creating
 	 a denormalized	number which means adjusting the exponent
 	 (I think).  */
-      if (mant_bits_left == fmt->man_len
+      if ((unsigned int) mant_bits_left == fmt->man_len
 	  && fmt->intbit == floatformat_intbit_no)
 	{
 	  mant_long &= 0x7fffffff;

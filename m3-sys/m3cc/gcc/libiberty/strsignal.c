@@ -17,24 +17,29 @@
    ignore any declaration in the system header files, and always
    declare it ourselves.  With luck, this will always work.  */
 #define sys_siglist no_such_symbol
+#define sys_nsig sys_nsig__no_such_symbol
 
 #include <stdio.h>
 #include <signal.h>
 
 /*  Routines imported from standard C runtime libraries. */
 
-#ifdef __STDC__
-#include <stddef.h>
-extern void *malloc (size_t size);				/* 4.10.3.3 */
-extern void *memset (void *s, int c, size_t n);			/* 4.11.6.1 */
-#else	/* !__STDC__ */
-extern char *malloc ();		/* Standard memory allocater */
-extern char *memset ();
-#endif	/* __STDC__ */
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#else
+extern PTR malloc ();
+#endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+extern PTR memset ();
+#endif
 
 /* Undefine the macro we used to hide the definition of sys_siglist
    found in the system header files.  */
 #undef sys_siglist
+#undef sys_nsig
 
 #ifndef NULL
 #  ifdef __STDC__

@@ -1,5 +1,5 @@
 /* Definitions for Rs6000 running LynxOS.
-   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 2000 Free Software Foundation, Inc.
    Contributed by David Henkel-Wallace, Cygnus Support (gumby@cygnus.com)
 
 This file is part of GNU CC.
@@ -56,7 +56,7 @@ Boston, MA 02111-1307, USA.  */
 #define DEFAULT_SIGNED_CHAR 1
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Acpu(rs6000) -Amachine(rs6000) -Asystem(lynx) -Asystem(unix) -DLynx -D_IBMR2 -Dunix -Drs6000 -Dlynx -DLYNX"
+#define CPP_PREDEFINES "-Acpu=rs6000 -Amachine=rs6000 -Asystem=lynx -Asystem=unix -DLynx -D_IBMR2 -Dunix -Drs6000 -Dlynx -DLYNX"
 
 #undef LINK_SPEC
 #define LINK_SPEC "-T0x10001000 -H0x1000 -D0x20000000 -btextro -bhalt:4 -bnodelcsect -bnso -bro -bnoglink %{v} %{b*}"
@@ -96,7 +96,6 @@ do {								\
 #undef OBJECT_FORMAT_ROSE
 #undef MD_EXEC_PREFIX
 #undef REAL_LD_FILE_NAME
-#undef REAL_NM_FILE_NAME
 #undef REAL_STRIP_FILE_NAME
 
 /* LynxOS doesn't have mcount. */

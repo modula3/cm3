@@ -37,7 +37,7 @@ Boston, MA 02111-1307, USA.  */
 #define SUBTARGET_CPU_DEFAULT TARGET_CPU_arm6
 
 /* Default is to use APCS-32 mode.  */
-#define TARGET_DEFAULT (ARM_FLAG_APCS_32 | ARM_FLAG_SOFT_FLOAT)
+#define TARGET_DEFAULT (ARM_FLAG_APCS_32 | ARM_FLAG_SOFT_FLOAT | ARM_FLAG_APCS_FRAME)
 
 #include "arm/aout.h"
 
@@ -46,16 +46,12 @@ Boston, MA 02111-1307, USA.  */
 
 #include <netbsd.h>
 
-/* Until they use ELF or something that handles dwarf2 unwinds
-   and initialization stuff better.  */
-#undef DWARF2_UNWIND_INFO
-
 /* Some defines for CPP.
    arm32 is the NetBSD port name, so we always define arm32 and __arm32__.  */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "\
 -Dunix -Driscbsd -Darm32 -D__arm32__ -D__arm__ -D__NetBSD__ \
--Asystem(unix) -Asystem(NetBSD) -Acpu(arm) -Amachine(arm)"
+-Asystem=unix -Asystem=NetBSD -Acpu=arm -Amachine=arm"
 
 /* Define _POSIX_SOURCE if necessary.  */
 #undef CPP_SPEC
@@ -105,8 +101,8 @@ Boston, MA 02111-1307, USA.  */
    compiling the profiling functions.  Since we break Acorn CC
    compatibility below a little more won't hurt.  */
 
-#undef FUNCTION_PROFILER
-#define FUNCTION_PROFILER(STREAM,LABELNO)  				    \
+#undef  ARM_FUNCTION_PROFILER
+#define ARM_FUNCTION_PROFILER(STREAM,LABELNO)  				    \
 {									    \
   fprintf(STREAM, "\tmov\t%sip, %slr\n", REGISTER_PREFIX, REGISTER_PREFIX); \
   fprintf(STREAM, "\tbl\tmcount\n");					    \
@@ -157,5 +153,5 @@ Boston, MA 02111-1307, USA.  */
    This modification is not encouraged but with the present state of the
    NetBSD source tree it is currently the only solution that meets the
    requirements.  */
-#undef STRUCTURE_SIZE_BOUNDARY
-#define STRUCTURE_SIZE_BOUNDARY 8
+#undef  DEFAULT_STRUCTURE_SIZE_BOUNDARY
+#define DEFAULT_STRUCTURE_SIZE_BOUNDARY 8
