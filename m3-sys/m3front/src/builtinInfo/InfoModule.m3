@@ -17,7 +17,8 @@ CONST
     "IBMRT", "IRIX5", "LINUX", "LINUXELF", "NEXT",
     "NT386", "OKI", "OS2", "SEQUENT", "SOLgnu", "SOLsun",
     "SPARC", "SUN3", "SUN386", "UMAX", "VAX", "FreeBSD3", 
-    "FreeBSD4", "FBSD_ALPHA", "LINUXLIBC6" };
+    "FreeBSD4", "FBSD_ALPHA", "LINUXLIBC6", "I386_DARWIN", 
+    "PPC_DARWIN" };
 
 PROCEDURE Initialize () =
   VAR zz: Scope.T;  os_type, platform_type: Type.T;  enum: Value.T;  nm: TEXT;
