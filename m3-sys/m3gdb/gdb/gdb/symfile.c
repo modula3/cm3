@@ -306,7 +306,7 @@ psymtab_to_symtab (pst)
       do_cleanups (back_to);
     }
 
-  if (pst->symtab->language == language_m3) {
+  if ((pst->symtab) && (pst->symtab->language == language_m3)) {
     m3_fix_symtab (pst->symtab); }
 
   return pst->symtab;

@@ -1449,7 +1449,7 @@
    && ! function_label_operand (operands[1])
    && ! read_only_operand (operands[1])
    && ! flag_pic"
-  "addil LR'%G1,%%r27"
+  "addil NLR'%G1,%%r27\;ldo N'%G1(%0),%0"
   [(set_attr "type" "binary")
    (set_attr "length" "4")])
 
