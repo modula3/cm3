@@ -22,7 +22,7 @@ fi
 
 P=""
 P="${P} tcp"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} tapi"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} tapi"
 [ "${HAVE_SERIAL}" = "yes" ] && P="${P} serial"
 P="${P} netobj"
 P="${P} netobjd"

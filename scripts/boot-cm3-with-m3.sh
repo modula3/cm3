@@ -25,7 +25,7 @@ export BUILDARGS
 
 P=""
 P="${P} m3middle"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
 P="${P} m3linker"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"

@@ -21,7 +21,7 @@ fi
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
-[ "${OSTYPE}" != "WIN32" ] && P="${P} X11R4"
+[ "${M3OSTYPE}" != "WIN32" ] && P="${P} X11R4"
 P="${P} ui"
 P="${P} vbtkit"
 P="${P} tcp"

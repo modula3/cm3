@@ -47,13 +47,13 @@ if type cm3 2>/dev/null >/dev/null ; then
   CLEANLOCAL="${CM3_CLEANLOCAL}"
   BUILDGLOBAL="${CM3_BUILDGLOBAL}"
   CLEANGLOBAL="${CM3_CLEANGLOBAL}"
-  SHIP="{$CM3_SHIP}"
+  SHIP="${CM3_SHIP}"
 elif type m3build 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${PM3_BUILDLOCAL}"
   CLEANLOCAL="${PM3_CLEANLOCAL}"
   BUILDGLOBAL="${PM3_BUILDGLOBAL}"
   CLEANGLOBAL="${PM3_CLEANGLOBAL}"
-  SHIP="{$CM3_SHIP}"
+  SHIP="${CM3_SHIP}"
 else
   if [ -z "${BUILDLOCAL}" -o -z "${BUILDGLOBAL}" -o -z "${SHIP}" ] ; then
     echo "cm3 or m3build not found in your path, don't know how to compile" \

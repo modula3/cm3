@@ -37,7 +37,7 @@ Here are some short notes about the purpose of each script:
 sysinfo.sh [include]
 ----------
   defines variables containing general system information, specifying
-  the OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
+  the M3OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
   the INSTALLROOT etc. This script needs to be adapted for every new
   supported platform.
 
