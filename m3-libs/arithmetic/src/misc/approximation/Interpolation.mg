@@ -71,8 +71,9 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
   (*Given an interpolation table with xa input and ya output, do Newton
      polynomial interpolation for x.  Report error estimate as dy.  Partial
      access: Give the starting index and the length to be used. *)
-  <*UNUSED*>
-  CONST ftn = Module & "Newton";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Newton";
   VAR
     col_n: CARDINAL;
     c               := NEW(REF ARRAY OF V.T, NUMBER(xa));
@@ -147,7 +148,8 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
 
   PROCEDURE InterpolateQuadratic (READONLY xb: ARRAY [0 .. 2] OF R.T;
                                   READONLY yb: ARRAY [0 .. 2] OF V.T  ):
-    V.T RAISES {Error} =
+    V.T RAISES {Error} <* NOWARN *> =
+    (* for some datatypes no Error can occur *)
     VAR
       x01 := xb[0] - xb[1];
       x12 := xb[1] - xb[2];
@@ -165,7 +167,8 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
   (*probably not very efficient*)
   PROCEDURE InterpolateHalf (READONLY xb: ARRAY [0 .. 2] OF R.T;
                              READONLY yb: ARRAY [0 .. 2] OF V.T  ): V.T
-    RAISES {Error} =
+    RAISES {Error} <* NOWARN *> =
+    (* for some datatypes no Error can occur *)
     CONST Three = FLOAT(3, R.T);
     VAR
       x01    := xb[0] - xb[1];
