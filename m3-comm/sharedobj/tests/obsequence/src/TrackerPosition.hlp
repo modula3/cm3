@@ -1,6 +1,0 @@
-  TrackerPosition_New(): T;
-WHERE
-  T <: SharedObj_T & { get: () => TrackerPositionData ! SharedObj_Error
-							Thread_alerted, 
-	               set: (TrackerPositionData) => Ok ! SharedObj_Error
-							  Thread_alerted }
