@@ -1,5 +1,5 @@
 INTERFACE BigInteger;
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Integers of arbitrary size
 
