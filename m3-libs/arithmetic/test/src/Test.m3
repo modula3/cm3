@@ -61,5 +61,6 @@ BEGIN
   (*NewLine(); EVAL TestSLE();*)
   (*NewLine(); EVAL TestRandom();*)
   (*NewLine(); EVAL TestFFT();*)
-  NewLine(); EVAL TestBigInteger();
+  (*NewLine(); EVAL TestBigInteger();*)
+  NewLine(); EVAL TestGCD();
 END Test.

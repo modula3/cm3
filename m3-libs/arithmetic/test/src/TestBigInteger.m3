@@ -220,7 +220,7 @@ BEGIN
   x[1] := B.Zero;
   x[2] := B.FromInteger(2);
 
-  FOR j:=3 TO 10000 DO
+  FOR j:=3 TO 1000 DO
     x[3] := B.Add (x[0], x[1]);
     (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {BF.Fmt(x[3],base16Style), F.Int(j,16)}));*)
     mod := B.Mod(x[3],B.FromInteger(j));
