@@ -8,7 +8,7 @@ Pseudo-random number generator by Warren D. Smith.
 IMPORT RandomBasic,
        LongRealBasic AS R,
        LongRealTrans AS RT,
-       Word;
+       Word, Tick, TimeStamp;
 IMPORT RandomRep;
 
 <*UNUSED*>
@@ -19,11 +19,10 @@ CONST Module = "RandomIteratedSquaring.";
 CONST
   moduis = 9739.0D0 * 9719.0D0;
       (* = 94653341. Factors are each primes, 3 mod 4. *)
-(*
+
   DefaultSeed1 = 3145981;
   DefaultSeed2 = 2718280;
   DefaultXis = 243213.0D0;
-*)
 
 REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
     xis : R.T;
@@ -32,6 +31,23 @@ REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
   OVERRIDES
     engine:=Engine;
   END;
+
+PROCEDURE New(fixed : BOOLEAN):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    IF NOT fixed THEN
+      SELF.seed1 := TimeStamp.Hash(TimeStamp.New());
+      SELF.seed2 := Tick.Now();
+      SELF.xis := ABS( DefaultXis + FLOAT(SELF.seed1, R.T)
+                      + FLOAT(SELF.seed1, R.T) ) MOD moduis;
+    ELSE
+      SELF.seed1 := DefaultSeed1;
+      SELF.seed2 := DefaultSeed2;
+      SELF.xis := DefaultXis;
+    END;
+    RETURN SELF;
+  END New;
 
 (** Note: period of the bit sequence this produces is
  * only 23658471. However, that should be adequate for its

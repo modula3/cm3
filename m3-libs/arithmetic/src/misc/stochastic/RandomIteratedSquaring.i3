@@ -14,7 +14,7 @@ IMPORT RandomBasic;
 TYPE
   T <: RandomBasic.TBoolean;
 
-PROCEDURE New():T;
+PROCEDURE New(fixed : BOOLEAN := FALSE):T;
 
 (*==========================*)
 END RandomIteratedSquaring.

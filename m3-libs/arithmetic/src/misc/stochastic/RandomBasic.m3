@@ -58,6 +58,32 @@ PROCEDURE GenerateRealFromBoolean(SELF:TBoolean) : R.T =
 
 (*======================================*)
 REVEAL
+  TWord = TWordPublic BRANDED OBJECT
+  OVERRIDES
+    generateWord:=GenerateWordFromWord;
+  END;
+
+<*INLINE*>
+PROCEDURE GenerateWordFromWord(SELF:TWord) : W.T =
+  BEGIN
+    RETURN SELF.engine();
+  END GenerateWordFromWord;
+
+(*======================================*)
+REVEAL
+  TReal = TRealPublic BRANDED OBJECT
+  OVERRIDES
+    generateReal:=GenerateRealFromReal;
+  END;
+
+<*INLINE*>
+PROCEDURE GenerateRealFromReal(SELF:TReal) : R.T =
+  BEGIN
+    RETURN SELF.engine();
+  END GenerateRealFromReal;
+
+(*======================================*)
+REVEAL
   T = TPrivate BRANDED OBJECT
   OVERRIDES
     uniform:=Uniform;

@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.T;
+  T <: RandomBasic.TBoolean;
 
-PROCEDURE New():T;
+PROCEDURE New(initrng:RandomBasic.T):T;
 
 (*==========================*)
 END RandomWolframCA.

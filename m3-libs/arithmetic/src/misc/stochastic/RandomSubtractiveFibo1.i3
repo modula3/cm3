@@ -14,7 +14,7 @@ IMPORT RandomBasic;
 TYPE
   T <: RandomBasic.TReal;
 
-PROCEDURE New():T;
+PROCEDURE New(initrng:RandomBasic.T):T;
 
 (*==========================*)
 END RandomSubtractiveFibo1.

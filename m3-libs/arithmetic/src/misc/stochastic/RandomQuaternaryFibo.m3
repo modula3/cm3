@@ -19,16 +19,14 @@ CONST
   dsf3 = 5;   (* x^89 + x^57 + x^14 + x^5 + 1 primitive mod 2 *)
 
 (*------------------*)
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TWord BRANDED OBJECT
     isf3 := asf3;
     jsf3 := bsf3;
     ksf3 := csf3;
     msf3 := dsf3;
     arrsf3 : ARRAY [0..asf3-1] OF Word.T; (* initialize to random words, not all even *)
-(*
   OVERRIDES
     engine:=Engine;
-*)
   END;
 
 (** Generates a new random Word.T; period at least 2^asf3 - 1;

@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.T;
+  T <: RandomBasic.TWord;
 
-PROCEDURE New():T;
+PROCEDURE New(initrng:RandomBasic.T):T;
 
 (*==========================*)
 END RandomMultiplicativeFibo.

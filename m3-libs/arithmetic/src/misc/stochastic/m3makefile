@@ -10,7 +10,7 @@ module("RandomBayesDurham")
 
 %%module("RandomNumber02")
 %module("RandomCombinedSlow")
-%module("RandomCombinedFast")
+module("RandomCombinedFast")
 module("RandomImprovedMcGill")
 module("RandomIteratedSquaring")
 module("RandomMultiplicativeFibo")
