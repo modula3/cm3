@@ -266,7 +266,7 @@ PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
   (* Make file descriptor "fd" refer to file "h", or set "fd"'s
      close-on-exec flag if "h=NoFile".  Return "TRUE" if succesful. *)
   BEGIN
-    IF h # NoFile THEN
+    IF h # NoFileDescriptor THEN
       RETURN NOT Unix.dup2(h, fd) < 0
     ELSIF Unix.fcntl(fd, Unix.F_SETFD, 1) >= 0 THEN
       RETURN TRUE;
