@@ -10,7 +10,7 @@
 
 MODULE Wheeler EXPORTS Wheeler;
 
-IMPORT Char, CharArraySort, Text, TextArraySort, TextF, VBT;
+IMPORT Char, CharArraySort, Text, TextClass, TextArraySort, VBT;
 IMPORT Thread, FormsVBT;
 
 (* Zeus stuff *)
@@ -22,6 +22,36 @@ TYPE T = WheelerAlgClass.T BRANDED OBJECT
   OVERRIDES
     run := Run
   END;
+
+TYPE String = REF ARRAY OF CHAR;
+
+PROCEDURE ToString(t: TEXT): String =
+  VAR 
+    res: String;
+    len := Text.Length(t);
+  BEGIN
+    res := NEW(String, len + 1);
+    TextClass.GetChars(t, res^, 0);
+    res^[len] := '\000';
+    RETURN res;
+  END ToString;
+
+PROCEDURE TFS(s: String): TEXT =
+  VAR l := SLength(s) - 1;
+  BEGIN
+    RETURN Text.FromChars(SUBARRAY(s^, 0, l));
+  END TFS;
+
+PROCEDURE SLength(s: String): CARDINAL =
+  VAR n: CARDINAL  := 0;
+  BEGIN
+    IF NUMBER(s^) = 0 THEN RETURN 0 END;
+    IF s[0] = '\000' THEN RETURN 0 END;
+    WHILE s[n] # '\000' AND n < NUMBER(s^) DO
+      INC(n);
+    END;
+    RETURN n;
+  END SLength;
 
 PROCEDURE New(): Algorithm.T =
   BEGIN
@@ -41,12 +71,12 @@ PROCEDURE New(): Algorithm.T =
 PROCEDURE Run(alg: T) RAISES {Thread.Alerted} =
   VAR codes: REF ARRAY OF INTEGER;
       pos: CARDINAL;
-      alphabet, string: TEXT;
+      alphabet, string: String;
       pause, finalOnly: BOOLEAN;
   BEGIN
     LOCK VBT.mu DO
-      alphabet := FormsVBT.GetText(alg.data, "alphabet");
-      string := FormsVBT.GetText(alg.data, "string");
+      alphabet := ToString(FormsVBT.GetText(alg.data, "alphabet"));
+      string := ToString(FormsVBT.GetText(alg.data, "string"));
       pause := FormsVBT.GetBoolean(alg.data, "pause");
       finalOnly := FormsVBT.GetBoolean(alg.data, "finalOnly");
     END;
@@ -56,7 +86,7 @@ PROCEDURE Run(alg: T) RAISES {Thread.Alerted} =
   END Run;
 
 PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
-             alpha, string: TEXT; VAR pos: CARDINAL
+             alpha, string: String; VAR pos: CARDINAL
   ): REF ARRAY OF INTEGER
     RAISES {Thread.Alerted} =
 (* Apply the Wheeler transformation to the input "string", with
@@ -66,11 +96,11 @@ PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
    return values and the alphabet as inputs, "UnWs" can reconstruct "string". 
 *)
 
-  PROCEDURE Rotate(s: TEXT; i: CARDINAL): TEXT =
+  PROCEDURE Rotate(s: String; i: CARDINAL): String =
     (* Return a new string that is "s" rotated "i" positions
        to the left (cyclically). *)
-    VAR sn := NUMBER(s^)-1;
-        res := NEW(TEXT, sn+1);
+    VAR sn := SLength(s); (* NUMBER(s^)-1; *)
+        res := NEW(String, sn+1);
     BEGIN
       FOR j := 0 TO sn-1 DO
         res[j] := string[(i+j) MOD sn]
@@ -81,14 +111,15 @@ PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
 
   VAR n := NUMBER(string^)-1;
       rotations := NEW(REF ARRAY OF TEXT, n);
-      lastchars := NEW(TEXT, n+1);
-      xchars: TEXT;
+      lastchars := NEW(String, n+1);
+      xchars: String;
   BEGIN
-    IF NOT finalOnly THEN WheelerIE.StartPermute(alg, string, alpha) END;
+    IF NOT finalOnly THEN WheelerIE.StartPermute(alg, TFS(string), 
+                                                 TFS(alpha)) END;
 
     (* generate an "n * n" array containing the "n" rotations of "string". *)
     FOR i := 0 TO n-1 DO
-      rotations[i] := Rotate(string, i);
+      rotations[i] := TFS(Rotate(string, i));
       IF NOT finalOnly THEN WheelerIE.NextRotation(alg, i, rotations[i]) END;
     END;
 
@@ -97,25 +128,25 @@ PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
 
     (* find the index of the original string in the list of sorted rotations *)
     pos := 0;
-    WHILE (NOT Text.Equal(string, rotations[pos])) DO INC(pos) END;
+    WHILE (NOT Text.Equal(TFS(string), rotations[pos])) DO INC(pos) END;
 
     WheelerIE.RotationsSorted(alg, rotations, pos);
 
     (* pick off the last character of each rotation *)
     FOR i := 0 TO n-1 DO
-      lastchars[i] := rotations[i][n-1]
+      lastchars[i] := Text.GetChar(rotations[i], n-1);
     END;
     lastchars[n] := '\000';
-    IF NOT finalOnly THEN WheelerIE.PermuteDone(alg, lastchars, pos) END;
+    IF NOT finalOnly THEN WheelerIE.PermuteDone(alg, TFS(lastchars), pos) END;
     IF pause AND NOT finalOnly THEN ZeusPanel.Pause(alg) END;
 
     (* append list of last characters to the alphabet *)
-    VAR alen := Text.Length(alpha); BEGIN
-      xchars := NEW(TEXT, alen + n + 1);
+    VAR alen := SLength(alpha); BEGIN
+      xchars := NEW(String, alen + n + 1);
       SUBARRAY(xchars^, 0, alen) := SUBARRAY(alpha^, 0, alen);
       SUBARRAY(xchars^, alen, n+1) := lastchars^
     END;
-    IF NOT finalOnly THEN WheelerIE.StartEncode(alg, alpha) END;
+    IF NOT finalOnly THEN WheelerIE.StartEncode(alg, TFS(alpha)) END;
 
     (* for each character in "lastchars", find the number of distinct
        characters between it and the preceding instance of the same character
@@ -127,7 +158,7 @@ PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
         VAR c := lastchars[i];
             seen := NEW(REF ARRAY OF BOOLEAN, 256);
             count := 0;
-            j := Text.Length(alpha) + i - 1;
+            j := SLength(alpha) + i - 1;
         BEGIN
           IF NOT finalOnly THEN WheelerIE.EncodeNextChar(alg, i, c) END;
           WHILE(xchars[j] # c) DO
@@ -147,13 +178,14 @@ PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
         END
       END;
       (* Return the position and the output array. *)
-      IF NOT finalOnly THEN WheelerIE.EncodeDone(alg, alpha, output, pos) END;
+      IF NOT finalOnly THEN WheelerIE.EncodeDone(alg, TFS(alpha), output, 
+                                                 pos) END;
       RETURN output
     END 
   END Ws;
 
 PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
-               alpha: TEXT; codes: REF ARRAY OF INTEGER; pos: CARDINAL
+               alpha: String; codes: REF ARRAY OF INTEGER; pos: CARDINAL
   ): TEXT
     RAISES {Thread.Alerted} =
 (* Undo a Wheeler transformation. "codes" is the sequence of
@@ -166,9 +198,9 @@ PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
 *******)
   VAR n := NUMBER(codes^);
       alen := NUMBER(alpha^) - 1;
-      xchars := NEW(TEXT, alen + n + 1);
-      lastchars := NEW(TEXT, n + 1);
-      firstchars := NEW(TEXT, n + 1);
+      xchars := NEW(String, alen + n + 1);
+      lastchars := NEW(String, n + 1);
+      firstchars := NEW(String, n + 1);
       charmap := NEW(REF ARRAY OF INTEGER, n);
   BEGIN
     (*ZeusCodeView.Enter(alg, procedureName := "Decompress");*)
@@ -176,7 +208,8 @@ PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
     (* rederive the "lastchars" string using "codes", the alphabet,
        and the row position*)
     (*At(2);*)
-    IF NOT finalOnly THEN WheelerIE.InitDecode(alg, alpha, codes, pos) END;
+    IF NOT finalOnly THEN WheelerIE.InitDecode(alg, TFS(alpha), codes,
+                                               pos) END;
     IF NOT finalOnly THEN WheelerIE.StartDecode(alg) END;
     SUBARRAY(xchars^, 0, alen+1) := alpha^;
     FOR i := 0 TO n-1 DO
@@ -206,10 +239,10 @@ PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
       lastchars[n] := '\000'
     END;
 
-    WheelerIE.DecodeDone(alg, lastchars, pos);
+    WheelerIE.DecodeDone(alg, TFS(lastchars), pos);
     IF pause AND NOT finalOnly THEN ZeusPanel.Pause(alg) END;
     (*At(3);*)
-    WheelerIE.StartReconstruct(alg, lastchars, pos);
+    WheelerIE.StartReconstruct(alg, TFS(lastchars), pos);
     WheelerIE.Reveal(alg, 1);
 
     (* obtain the array of initial characters in the sorted rotations
@@ -218,7 +251,7 @@ PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
     CharArraySort.Sort(SUBARRAY(firstchars^, 0, n), Char.Compare); 
 
     (*At(4);*)
-    WheelerIE.FirstChars(alg, firstchars);
+    WheelerIE.FirstChars(alg, TFS(firstchars));
     WheelerIE.Reveal(alg, 2);
 
     (* set "charmap[i]" to contain the index in "lastchars" of the character
@@ -246,7 +279,7 @@ PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
     (* construct the original string by reading through "firstchars" and
        "lastchars" using "charmap" *)
     (*At(6);*)
-    VAR ans := NEW(TEXT, n+1); BEGIN
+    VAR ans := NEW(String, n+1); BEGIN
       FOR i := 0 TO n-1 DO
         WheelerIE.ResultNextChar(alg, pos, i);
         ans[i] := firstchars[pos];
@@ -254,7 +287,7 @@ PROCEDURE UnWs(alg: T; pause, finalOnly: BOOLEAN;
       END;
       ans[n] := '\000';
       WheelerIE.EndResult(alg);
-      RETURN ans
+      RETURN TFS(ans);
     END;
   END UnWs;
 
