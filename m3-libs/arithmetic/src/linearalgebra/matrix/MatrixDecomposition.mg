@@ -35,9 +35,9 @@ CONST Module = "MatrixDecomposition";
 
 A x = b can be solved for b by back substitution
 *)
-PROCEDURE backsub(A:M.T;
-                  x,b:V.T
-                  ) RAISES {Error}=
+PROCEDURE BackSubst(A:M.T;
+                    x,b:V.T
+                    ) RAISES {Error}=
 
 VAR
   m:=NUMBER(A^);    m1:=FIRST(A^);   mm:=LAST(A^);
@@ -56,12 +56,12 @@ BEGIN
     END;
     x[row]:=tmp/A[row,row];
   END;
-END backsub;
+END BackSubst;
 (*==========================*)
 (* Tridiagonal Matrices     *)
 (*==========================*)
 (*------------------------*)
-PROCEDURE householder(A:M.T) RAISES{Error}=   (*nxn*)
+PROCEDURE HouseHolder(A:M.T) RAISES{Error}=   (*nxn*)
 (*Convert A to tridiagonal form (destroying original A)*)
 VAR
   n:=NUMBER(A^);    n1:=FIRST(A^);    nn:=LAST(A^);
@@ -109,7 +109,7 @@ BEGIN
       END;
     END;
   END; (*for row*)
-END householder;
+END HouseHolder;
 
 (*---------------------*)
 PROCEDURE matrix_to_arrays(A:M.T;        (*nxn tridiagonal*)
@@ -136,7 +136,7 @@ BEGIN
 
 END matrix_to_arrays;
 (*-----------------------*)
-PROCEDURE tridiag(a,b,c,r:V.T;
+PROCEDURE SolveTriDiag(a,b,c,r:V.T;
                   VAR u:V.T) RAISES {Error}=
 (*Given tridiagonal matrix A, with diagonals a,b,c:
 |  b1 c1  0    ...
@@ -148,7 +148,7 @@ PROCEDURE tridiag(a,b,c,r:V.T;
 |  Solve for u in A*u=r
 *)
 CONST
-  ftn = Module & "tridiag";
+  ftn = Module & "SolveTriDiag";
 VAR
   den:R.T;
   n:=NUMBER(r^); n1:=FIRST(r^); nn:=LAST(r^);
@@ -185,7 +185,7 @@ BEGIN
   FOR i:=nn-1 TO n1 BY -1 DO
     u[i]:=u[i]-d[i]*u[i+1];
   END;
-END tridiag;
+END SolveTriDiag;
 (*==========================*)
 (* nxn Matrices             *)
 (*==========================*)
@@ -235,16 +235,16 @@ END GaussElim;
 (*-----------------*)
 (* LU factoring    *)
 (*-----------------*)
-PROCEDURE LUfactor(A      :M.T;
+PROCEDURE LUFactor(A      :M.T;
                VAR index  :IndexArray;
                VAR d      :INTEGER) RAISES {Error} =
 (*Factor A into Lower/Upper portions
 Destroys A's values.
 A is real nxn
 index is integer nx1
-return value "d" is used for backsub and det
+return value "d" is used for BackSubst and det
 *)
-CONST ftn = "LUfactor";
+CONST ftn = "LUFactor";
 VAR
   imax:=0;
   sum,dum,max,tmp:R.T;
@@ -341,19 +341,19 @@ BEGIN
   IF A[Al,Al]=R.Zero THEN
     A[Al,Al]:=Tiny;
   END (* if *);
-END LUfactor;
+END LUFactor;
 
 (*-----------------*)
-PROCEDURE LUbacksub(A     :M.T;
+PROCEDURE LUBackSubst(A     :M.T;
                     B     :V.T;
            READONLY index :IndexArray) RAISES ANY=
-(*After LUfactor on A, solves A dot X = B.
+(*After LUFactor on A, solves A dot X = B.
 X is returned in B.  B's values are destroyed
 A is real nxn
 B is real nx1
 index is integer nx1
 *)
-CONST ftn = "LUbacksub";
+CONST ftn = "LUBackSubst";
 VAR
   Af:=FIRST(A^); Al:=LAST(A^);
   m1:=LAST(A^);   (*num rows*)
@@ -392,19 +392,19 @@ BEGIN
     END (* if *);
     B[i]:=sum / A[i,i];
   END (* for *);
-END LUbacksub;
+END LUBackSubst;
 (*-----------------*)
-PROCEDURE LUinverse(A    :M.T;
+PROCEDURE LUInverse(A    :M.T;
            READONLY index:IndexArray):M.T RAISES ANY=
 (*
 Inverse of A goes to B
-Must have done LUfactor on A first
+Must have done LUFactor on A first
 Destroys A's values.
 A is real nxn
 B is real nxn
 index is integer nx1
 *)
-CONST ftn = "LUinverse";
+CONST ftn = "LUInverse";
 VAR
   n:=NUMBER(A^);
   B:M.T;
@@ -422,24 +422,24 @@ BEGIN
 
   FOR i:=0 TO LAST(B^) DO
     C^:=B[i];
-    LUbacksub(A,C,index);
+    LUBackSubst(A,C,index);
     B[i]:=C^;
 (*
     FOR j:=0 TO LAST(C^) DO C[j]:=B[i,j]; END;
-    LUbacksub(A,C,index);
+    LUBackSubst(A,C,index);
     FOR j:=0 TO LAST(C^) DO B[i,j]:=C[j]; END;
 *)
   END (* for *);
   RETURN B;
-END LUinverse;
+END LUInverse;
 (*-----------------*)
-PROCEDURE LUdet(A:M.T;
+PROCEDURE LUDet(A:M.T;
                 d:INTEGER):R.T =
-(*after LUfactor on A and no backsubs,
+(*after LUFactor on A and no backsubs,
 returns determinant
-"d" is the parity marker from LUfactor
+"d" is the parity marker from LUFactor
 *)
-CONST ftn = "LUdet";
+CONST ftn = "LUDet";
 VAR
   m:=LAST(A^);   (*num rows*)
   n:=LAST(A[0]); (*num cols*)
@@ -454,14 +454,14 @@ BEGIN
     tmp:=tmp * A[i,i];
   END (* for *);
   RETURN tmp;
-END LUdet;
+END LUDet;
 
 (*=============================*)
 (* Singular Value Decomposition*)
 (*=============================*)
 
 (*----------------------*)
-PROCEDURE svd_golub(
+PROCEDURE SVDGolub(
            A:M.T;         (*mxn matrix*)
            b:V.T;         (*nx1 col matrix for each set of *)
            rhs:CARDINAL;       (*number of right hand sides*)
@@ -472,10 +472,10 @@ PROCEDURE svd_golub(
 (*Do SVD via Golub and Reinsch *)
 BEGIN
 
-END svd_golub;
+END SVDGolub;
 
 (*------------------------*)
-PROCEDURE svd_chan(
+PROCEDURE SVDChan(
            A:M.T;         (*mxn matrix*)
            b:V.T;         (*nx1 col matrix*)
            rhs:CARDINAL;       (*number of right hand sides*)
@@ -485,17 +485,17 @@ PROCEDURE svd_chan(
            ) RAISES {Error}=
 (*Do SVD via T. Chan's ACM algorithm 581*)
 BEGIN
-END svd_chan;
+END SVDChan;
 
 (*-----------------------*)
-PROCEDURE svd_solve(U,V,W:M.T; (*decomposition*)
+PROCEDURE SVDSolve(U,V,W:M.T; (*decomposition*)
                     b:V.T;     (*rightside*)
                     VAR x:V.T  (*result*)
                    ) RAISES {Error}=
 
 
 BEGIN
-END svd_solve;
+END SVDSolve;
 (*-----------------*)
 BEGIN
 END MatrixDecomposition.

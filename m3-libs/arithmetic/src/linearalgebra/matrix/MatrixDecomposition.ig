@@ -21,9 +21,9 @@ TYPE
 
 A x = b can be solved for x by back substitution
 *)
-PROCEDURE backsub(A:M.T;
-                  x,b:V.T
-                  ) RAISES {Error};
+PROCEDURE BackSubst(A:M.T;
+                    x,b:V.T
+                    ) RAISES {Error};
 
 (*==========================*)
 (* Tridiagonal Matrices     *)
@@ -37,14 +37,14 @@ PROCEDURE backsub(A:M.T;
 |                      aN   bN
 *)
 
-PROCEDURE householder(A:M.T) RAISES {Error};   (*nxn*)
+PROCEDURE HouseHolder(A:M.T) RAISES {Error};   (*nxn*)
 (*Convert A to tridiagonal form (destroying original A)*)
 
 PROCEDURE matrix_to_arrays(A:M.T;        (*nxn tridiagonal*)
                            VAR a,b,c:V.T  (*array form*)
                           ) RAISES {Error};
 
-PROCEDURE tridiag(a,b,c,r:V.T;
+PROCEDURE SolveTriDiag(a,b,c,r:V.T;
                     VAR u:V.T) RAISES {Error};
 (*Solve for u in A*u=r, where A is given as a,b,c*)
 
@@ -75,19 +75,19 @@ pivot:=FALSE
 (* LU Factoring             *)
 (*==========================*)
 (*-----------------*)
-PROCEDURE LUfactor(A      :M.T;
+PROCEDURE LUFactor(A      :M.T;
                VAR index  :IndexArray;
                VAR d      :INTEGER) RAISES {Error};
 (*Factor A into Lower/Upper portions
 Destroys A's values.
 A is real nxn
 index is integer nx1
-return value "d" is used for backsub and det
+return value "d" is used for BackSubst and det
 *)
 (*-----------------*)
-PROCEDURE LUbacksub(A     :M.T;
-	                  B     :V.T;
-           READONLY index :IndexArray) RAISES ANY;
+PROCEDURE LUBackSubst(A     :M.T;
+                      B     :V.T;
+             READONLY index :IndexArray) RAISES ANY;
 (*After LUfactor on A, solves A dot X = B.
 X is returned in B.  B's values are destroyed.
 A is real nxn
@@ -95,22 +95,22 @@ B is real nx1
 index is integer nx1
 *)
 (*-----------------*)
-PROCEDURE LUinverse(A     :M.T;
-           READONLY index:IndexArray):M.T RAISES ANY;
+PROCEDURE LUInverse(A     :M.T;
+            READONLY index:IndexArray):M.T RAISES ANY;
 (*
 Inverse of A goes to B
-Must have done LUfactor on A first
+Must have done LUFactor on A first
 Destroys A's values.
 A is real nxn
 B is real nxn
 index is integer nx1
 *)
 (*-----------------*)
-PROCEDURE LUdet(A:M.T;
+PROCEDURE LUDet(A:M.T;
                 d:INTEGER):R.T RAISES ANY;
-(*after LUfactor on A and no backsubs,
+(*after LUFactor on A and no backsubs,
 returns determinant
-"d" is the parity marker from LUdecomp
+"d" is the parity marker from LUDecomp
 *)
 
 (*==========================*)
@@ -125,7 +125,7 @@ Then x=V*diag(W)*U^T*b.  There are also others things which
 can be solved once we have U,V,W.
 *)
 
-PROCEDURE svd_golub(
+PROCEDURE SVDGolub(
            A:M.T;         (*mxn matrix*)
            b:V.T;         (*nx1 col matrix*)
            rhs:CARDINAL;       (*number of right hand sides*)
@@ -135,7 +135,7 @@ PROCEDURE svd_golub(
            ) RAISES {Error};
 (*Do SVD via Golub and Reinsch *)
 
-PROCEDURE svd_chan(
+PROCEDURE SVDChan(
            A:M.T;         (*mxn matrix*)
            b:V.T;         (*nx1 col matrix*)
            rhs:CARDINAL;       (*number of right hand sides*)
@@ -145,7 +145,7 @@ PROCEDURE svd_chan(
            ) RAISES {Error};
 (*Do SVD via T. Chan's ACM algorithm 581*)
 
-PROCEDURE svd_solve(U,V,W:M.T; (*decomposition*)
+PROCEDURE SVDSolve(U,V,W:M.T; (*decomposition*)
                     b:V.T;     (*rightside*)
                     VAR x:V.T    (*result*)
                    ) RAISES {Error};
