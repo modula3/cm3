@@ -287,6 +287,11 @@ FloatMatrix = ARRAY OF ARRAY OF Float;
 %typemap("m3rawintype") PLFLT  * %{C.double%}
 %typemap("m3rawintype") double * %{C.double%}
 
+%typemap("m3wrapintype") PLBOOL %{BOOLEAN%}
+%typemap("m3wrapargraw") PLBOOL %{ORD($1_name)%}
+
+%typemap("m3wrapargraw") char %{ORD($1_name)%}
+
 %typemap("m3wrapintype",numinputs=0) PLArraySize n %{%}
 
 %typemap("m3rawinmode")   PLFLTArray %{READONLY%}
@@ -511,8 +516,6 @@ TYPE
 %typemap("m3outvar")      PLINTOutput %{$1_name:C.int%}
 %typemap("m3wrapoutname") PLINTOutput %{$1_name%}
 %typemap("m3outvar:import") PLINTOutput %{Ctypes AS C%}
-
-%typemap(m3wrapargraw) char %{ORD($1_name)%}
 
 
 

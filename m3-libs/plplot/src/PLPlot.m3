@@ -954,7 +954,8 @@ PROCEDURE SetFileName (fnam: TEXT; ) =
 PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
                                  xmin, xmax, ymin, ymax: Float;
                         READONLY x                     : FloatVector;
-                        fill_width, cont_color, cont_width, rectangular: INTEGER;
+                        fill_width, cont_color, cont_width: INTEGER;
+                        rectangular                       : BOOLEAN;
                         pltr       : CallbackM3Proc;
                         OBJECT_DATA: REFANY;         ) =
   VAR
@@ -968,7 +969,7 @@ PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
     PLPlotRaw.ShadeRegions(
       arg1[0], nx, ny, NIL (*not yet supported*), xmin, xmax, ymin, ymax,
       x[0], n, fill_width, cont_color, cont_width,
-      NIL (*not yet supported*), rectangular, CallbackM3,
+      NIL (*not yet supported*), ORD(rectangular), CallbackM3,
       NEW(
         REF CallbackM3Data, callback := pltr, callbackData := OBJECT_DATA));
   END ShadeRegions;
@@ -977,8 +978,8 @@ PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
                        left, right, bottom, top, shade_min, shade_max: Float;
                        sh_cmap : INTEGER;
                        sh_color: Float;
-                       sh_width, min_color, min_width, max_color,
-                         max_width, rectangular: INTEGER;
+                       sh_width, min_color, min_width, max_color, max_width: INTEGER;
+                       rectangular: BOOLEAN;
                        pltr       : CallbackM3Proc;
                        OBJECT_DATA: REFANY;         ) =
   VAR
@@ -992,8 +993,9 @@ PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
       arg1[0], nx, ny, NIL (*not yet supported*), left, right, bottom, top,
       shade_min, shade_max, sh_cmap, sh_color, sh_width, min_color,
       min_width, max_color, max_width, NIL (*not yet supported*),
-      rectangular, CallbackM3, NEW(REF CallbackM3Data, callback := pltr,
-                                   callbackData := OBJECT_DATA));
+      ORD(rectangular), CallbackM3,
+      NEW(
+        REF CallbackM3Data, callback := pltr, callbackData := OBJECT_DATA));
   END ShadeRegion;
 
 PROCEDURE SetMajorTickSize (def, scale: Float; ) =

@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 typedef void* PLPointer;
 
 typedef PLINT  PLArraySize;
+typedef PLINT  PLBOOL;
 
 typedef const PLFLT* PLFLTArray;
 typedef PLFLTArray PLFLTArraySzd;
@@ -587,7 +588,7 @@ plshades( PLFLTMatrixFst a, PLArraySize nx, PLArraySize ny, defined_func df,
 	  PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
 	  PLFLTArraySzd x, PLArraySize n, PLINT fill_width,
 	  PLINT cont_color, PLINT cont_width,
-	  fill_func ff, PLINT rectangular,
+	  fill_func ff, PLBOOL rectangular,
 	  pltr_func pltr,
 	  PLPointer OBJECT_DATA);
 
@@ -599,7 +600,7 @@ plshade(PLFLTMatrixFst a, PLArraySize nx, PLArraySize ny, defined_func df,
 	  PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
 	  PLINT min_color, PLINT min_width,
 	  PLINT max_color, PLINT max_width,
-	  fill_func ff, PLINT rectangular,
+	  fill_func ff, PLBOOL rectangular,
 	  pltr_func pltr,
 	  PLPointer OBJECT_DATA);
 
@@ -744,7 +745,7 @@ plshade1(PLFLT *Matrix, PLArraySize nx, PLArraySize ny, defined_func df,
 	 PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
 	 PLINT min_color, PLINT min_width,
 	 PLINT max_color, PLINT max_width,
-	 fill_func ff, PLINT rectangular,
+	 fill_func ff, PLBOOL rectangular,
 	 pltr_func pltr,
 	 PLPointer OBJECT_DATA);
 
@@ -794,7 +795,7 @@ plfshade(f2eval_func,
 	 PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
 	 PLINT min_color, PLINT min_width,
 	 PLINT max_color, PLINT max_width,
-	 fill_func, PLINT rectangular,
+	 fill_func, PLBOOL rectangular,
 	 pltr_func,
 	 PLPointer OBJECT_DATA);
 
