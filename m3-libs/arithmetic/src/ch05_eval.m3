@@ -8,7 +8,7 @@ Abstract: Implementation of Modula-3 version of
 *)
 IMPORT IO,Fmt,Wr,TextWr,Math,nrp;
 
-CONST Module = "ch05_eval.";
+<*UNUSED*> CONST Module = "ch05_eval.";
 (*----------------------*)
 PROCEDURE eulsum(VAR sum:REAL32;    (*partial sum to date*)
                     term:REAL32;    (*jth value*)

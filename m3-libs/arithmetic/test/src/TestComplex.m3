@@ -8,7 +8,7 @@ Abstract: Test driver for Complex
 
 IMPORT Fmt, xComplex AS C;
 (*=======================*)
-CONST Module = "tCmplx.";
+<*UNUSED*> CONST Module = "tCmplx.";
 
 (*------------------------------*)
 PROCEDURE test_Cmplx():BOOLEAN=

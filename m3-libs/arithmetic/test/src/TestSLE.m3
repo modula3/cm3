@@ -16,7 +16,7 @@ IMPORT xInteger AS I,
 FROM xReal64 IMPORT REAL64;
 IMPORT xSLE;
 
-CONST Module = "tSLE.";
+<*UNUSED*> CONST Module = "tSLE.";
 
 (*=====================================*)
 TYPE
