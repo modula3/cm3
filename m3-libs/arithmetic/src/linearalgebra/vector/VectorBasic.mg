@@ -49,6 +49,29 @@ BEGIN
   END;
 END AssertEqualSize;
 
+(*---------------------*)
+PROCEDURE IsZero(x:T):BOOLEAN =
+BEGIN
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    IF NOT R.IsZero(x[i]) THEN
+      RETURN FALSE;
+    END
+  END;
+  RETURN TRUE;
+END IsZero;
+
+(*---------------------*)
+PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error} =
+BEGIN
+  AssertEqualSize(x,y);
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    IF NOT R.Equal(x[i],y[i]) THEN
+      RETURN FALSE;
+    END
+  END;
+  RETURN TRUE;
+END Equal;
+
 (*-----------------*)
 PROCEDURE Add(
                  x,y:T):T RAISES {Error}=
@@ -78,27 +101,15 @@ BEGIN
 END Sub;
 
 (*---------------------*)
-PROCEDURE IsZero(x:T):BOOLEAN =
+PROCEDURE Neg(x:T):T =    (*return -x *)
+VAR
+  y:=NEW(T,NUMBER(x^));
 BEGIN
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    IF NOT R.IsZero(x[i]) THEN
-      RETURN FALSE;
-    END
+    y[i] := R.Neg(x[i]);
   END;
-  RETURN TRUE;
-END IsZero;
-
-(*---------------------*)
-PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error} =
-BEGIN
-  AssertEqualSize(x,y);
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    IF NOT R.Equal(x[i],y[i]) THEN
-      RETURN FALSE;
-    END
-  END;
-  RETURN TRUE;
-END Equal;
+  RETURN y;
+END Neg;
 
 
 (*-----------------*)

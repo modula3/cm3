@@ -20,10 +20,12 @@ PROCEDURE Zero(x:T);                   (*set to zero*)
     (*NOTE: you should make unit vectors as needed*)
 *)
 
-PROCEDURE Add(x,y:T):T RAISES {Error};   (*x+y*)
-PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x-y*)
 PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return x=y*)
+
+PROCEDURE Add(x,y:T):T RAISES {Error};   (*x+y*)
+PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x-y*)
+PROCEDURE Neg(x:T):T;    (*return -x *)
 
 PROCEDURE Scale(x:T; y:R.T):T;            (*x:=x*factor*)
 PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
