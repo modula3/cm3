@@ -26,6 +26,11 @@ what they do.
 If you find some names irritating
 don't hesitate to suggest better ones.
 Be prepared for changes.
+
+Since the function names in libplplot.a have a 'c_' prepended
+you must further process PLPlotRaw.i3 with
+  perl -p -e "s/EXTERNAL pl/EXTERNAL c_pl/"
+
 */
 
 %module PLPlot
@@ -262,53 +267,69 @@ TYPE
 %rename("TranslateCursor") plTranslateCursor;
 
 
-%typemap("rawintype") PLINT * %{VAR $1_name: C.int%}
-%typemap("rawintype") PLFLT * %{VAR $1_name: C.double%}
-%typemap("rawintype") double * %{VAR $1_name: C.double%}
+%typemap("rawintype") PLINT  * %{C.int%}
+%typemap("rawintype") PLFLT  * %{C.double%}
+%typemap("rawintype") double * %{C.double%}
 
 %typemap("m3intype",numinputs=0) PLArraySize n %{%}
 
-%typemap("rawintype") PLFLTArray %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLFLTArray %{READONLY $1_name: V.TBody%}
+%typemap("rawinmode") PLFLTArray %{READONLY%}
+%typemap("m3inmode")  PLFLTArray %{READONLY%}
+%typemap("rawintype") PLFLTArray %{(*ARRAY OF*) C.double%}
+%typemap("m3intype")  PLFLTArray %{V.TBody%}
 %typemap("m3indecl")  PLFLTArray %{n:=NUMBER($1_name);%}
 %typemap("m3rawarg")  PLFLTArray %{$1_name[0]%}
 
-%typemap("rawintype") PLFLTArrayCk %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLFLTArrayCk %{READONLY $1_name: V.TBody%}
+%typemap("rawinmode") PLFLTArrayCk %{READONLY%}
+%typemap("m3inmode")  PLFLTArrayCk %{READONLY%}
+%typemap("rawintype") PLFLTArrayCk %{C.double%}
+%typemap("m3intype")  PLFLTArrayCk %{V.TBody%}
 %typemap("m3in")      PLFLTArrayCk %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
 %typemap("m3rawarg")  PLFLTArrayCk %{$1_name[0]%}
 
 
 
-%typemap("rawintype") PLFLTArrayX %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLFLTArrayX %{READONLY $1_name: V.TBody%}
+%typemap("rawinmode") PLFLTArrayX %{READONLY%}
+%typemap("m3inmode")  PLFLTArrayX %{READONLY%}
+%typemap("rawintype") PLFLTArrayX %{C.double%}
+%typemap("m3intype")  PLFLTArrayX %{V.TBody%}
 %typemap("m3rawarg")  PLFLTArrayX %{$1_name[0]%}
-%typemap("m3in")      PLINTArrayX %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3in")      PLFLTArrayX %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;%}
 
-%typemap("rawintype") PLFLTArrayY %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLFLTArrayY %{READONLY $1_name: V.TBody%}
+%typemap("rawinmode") PLFLTArrayY %{READONLY%}
+%typemap("m3inmode")  PLFLTArrayY %{READONLY%}
+%typemap("rawintype") PLFLTArrayY %{C.double%}
+%typemap("m3intype")  PLFLTArrayY %{V.TBody%}
 %typemap("m3rawarg")  PLFLTArrayY %{$1_name[0]%}
-%typemap("m3in")      PLINTArrayY %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3in")      PLFLTArrayY %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(Err.bad_size) END;%}
 
 
-%typemap("rawintype") PLINTArray %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLINTArray %{READONLY $1_name: ARRAY OF INTEGER%}
+%typemap("rawinmode") PLINTArray %{READONLY%}
+%typemap("m3inmode")  PLINTArray %{READONLY%}
+%typemap("rawintype") PLINTArray %{C.double%}
+%typemap("m3intype")  PLINTArray %{ARRAY OF INTEGER%}
 %typemap("m3indecl")  PLINTArray %{n:=NUMBER($1_name);%}
 %typemap("m3rawarg")  PLINTArray %{$1_name[0]%}
 
-%typemap("rawintype") PLINTArrayCk %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLINTArrayCk %{READONLY $1_name: ARRAY OF INTEGER%}
+%typemap("rawinmode") PLINTArrayCk %{READONLY%}
+%typemap("m3inmode")  PLINTArrayCk %{READONLY%}
+%typemap("rawintype") PLINTArrayCk %{C.double%}
+%typemap("m3intype")  PLINTArrayCk %{ARRAY OF INTEGER%}
 %typemap("m3in")      PLINTArrayCk %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
 %typemap("m3rawarg")  PLINTArrayCk %{$1_name[0]%}
 
-%typemap("rawintype") PLINTArrayCkInterim %{READONLY $1_name: C.double%}
-%typemap("m3intype")  PLINTArrayCkInterim %{READONLY $1_name: ARRAY OF INTEGER%}
+%typemap("rawinmode") PLINTArrayCkInterim %{READONLY%}
+%typemap("m3inmode")  PLINTArrayCkInterim %{READONLY%}
+%typemap("rawintype") PLINTArrayCkInterim %{C.int%}
+%typemap("m3intype")  PLINTArrayCkInterim %{ARRAY OF INTEGER%}
 %typemap("m3in")      PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(Err.bad_size) END;%}
 %typemap("m3rawarg")  PLINTArrayCkInterim %{$1_name[0]%}
 
 
-%typemap("rawintype") PLFLTMatrix %{VAR $1_name: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
-%typemap("m3intype")  PLFLTMatrix %{READONLY $1_name: M.TBody%}
+%typemap("rawinmode") PLFLTMatrix %{READONLY%}
+%typemap("m3inmode")  PLFLTMatrix %{READONLY%}
+%typemap("rawintype") PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+%typemap("m3intype")  PLFLTMatrix %{M.TBody%}
 %typemap("m3indecl")  PLFLTMatrix %{tmpmat:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 nx:=NUMBER($1_name);
 ny:=NUMBER($1_name[0]);%}
@@ -319,8 +340,10 @@ ny:=NUMBER($1_name[0]);%}
 %typemap("m3intype",numinputs=0) PLArraySize nx %{%}
 %typemap("m3intype",numinputs=0) PLArraySize ny %{%}
 
-%typemap("rawintype") PLFLTMatrixCk %{VAR $1_name: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
-%typemap("m3intype")  PLFLTMatrixCk %{READONLY $1_name: M.TBody%}
+%typemap("rawinmode") PLFLTMatrixCk %{READONLY%}
+%typemap("m3inmode")  PLFLTMatrixCk %{READONLY%}
+%typemap("rawintype") PLFLTMatrixCk %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+%typemap("m3intype")  PLFLTMatrixCk %{M.TBody%}
 %typemap("m3indecl")  PLFLTMatrixCk
 %{tmpmat:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 nx:=NUMBER($1_name);
@@ -336,52 +359,50 @@ FOR i:=0 TO LAST($1_name) DO tmpmat[i] := ADR($1_name[i,0]) END;%}
 %rename("plotter") pltr;
 %rename("objectData") OBJECT_DATA;
 
-%typemap(rawintype) pltr_func %{$1_name: PlotterFunc%}
-%typemap(rawintype) PLPointer %{$1_name: REFANY%}
+%typemap(rawintype) pltr_func %{PlotterFunc%}
+%typemap(rawintype) PLPointer %{REFANY%}
 
 %typemap(m3intype) (pltr_func pltr, PLPointer OBJECT_DATA)
-%{plotter: PROCEDURE (data: REF CallbackM3Data); objectData: REFANY%}
+%{PROCEDURE (data: REF CallbackM3Data) (* objectData: REFANY*)%}
 %typemap(m3rawarg) (pltr_func pltr, PLPointer OBJECT_DATA)
 %{CallbackM3, NEW(REF CallbackM3Data,callback:=plotter,callbackData:=objectData)%}
 
-%typemap(rawintype) defined_func %{$1_name: PlotterFunc%}
-%typemap(m3intype)  defined_func df
-%{$1_name: PROCEDURE (x: R.T): R.T%}
-%typemap(m3rawarg)  defined_func df
-%{NIL (*not yet supported*)%}
+%typemap(rawintype) defined_func %{PlotterFunc%}
+%typemap(m3intype)  defined_func %{PROCEDURE (x: R.T): R.T%}
+%typemap(m3rawarg)  defined_func %{NIL (*not yet supported*)%}
 
-%typemap(rawintype) fill_func %{$1_name: PlotterFunc%}
-%typemap(m3intype)  fill_func ff
-%{$1_name: PROCEDURE (x: R.T): R.T%}
-%typemap(m3rawarg)  fill_func ff
-%{NIL (*not yet supported*)%}
+%typemap(rawintype) fill_func %{PlotterFunc%}
+%typemap(m3intype)  fill_func %{PROCEDURE (x: R.T): R.T%}
+%typemap(m3rawarg)  fill_func %{NIL (*not yet supported*)%}
 
 
 %typemap(m3indecl)  (char *) %{$1 := M3toC.SharedTtoS($input);%}
 %typemap(m3freearg) (char *) %{M3toC.FreeSharedS($input,$1);%}
 %typemap(m3rawarg)  (char *) %{$1%}
 
-%typemap(rawintype) char *legline[4]
-%{READONLY $1_name: ARRAY [0..3] OF C.char_star%}
-%typemap(m3intype) char *legline[4]
-%{READONLY $1_name: ARRAY [0..3] OF TEXT%}
-%typemap(m3indecl) char *legline[4]
-%{tmp$1_name: ARRAY [0..3] OF C.char_star;%}
-%typemap(m3in) char *legline[4]
+%typemap(rawintype) char *legline[4] %{READONLY%}
+%typemap(m3intype)  char *legline[4] %{READONLY%}
+%typemap(rawintype) char *legline[4] %{ARRAY [0..3] OF C.char_star%}
+%typemap(m3intype)  char *legline[4] %{ARRAY [0..3] OF TEXT%}
+%typemap(m3indecl)  char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
+%typemap(m3in)      char *legline[4]
 %{FOR i:=FIRST($1_name) TO FIRST($1_name) DO
-tmp$1_name[i]:=M3toC.SharedTtoS($1_name[i]);
+$1[i]:=M3toC.SharedTtoS($1_name[i]);
 END;%}
 %typemap(m3rawarg) char *legline[4]
-%{tmp$1_name%}
+%{$1%}
 %typemap(m3freearg) char *legline[4]
 %{FOR i:=FIRST($1_name) TO FIRST($1_name) DO
-M3toC.FreeSharedS($1_name[i],tmp$1_name[i]);
+M3toC.FreeSharedS($1_name[i],$1[i]);
 END;%}
 
 
-%typemap(m3intype)  PLINT *p_argc %{VAR $1_name:CARDINAL%}
-%typemap(rawintype) char **argv   %{VAR $1_name:(*ARRAY OF*) C.char_star%}
-%typemap(m3intype)  char **argv   %{VAR $1_name:ARRAY OF C.char_star%}
+%typemap(m3inmode)  PLINT *p_argc %{VAR%}
+%typemap(rawinmode) char **argv   %{VAR%}
+%typemap(m3inmode)  char **argv   %{VAR%}
+%typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
+%typemap(rawintype) char **argv   %{(*ARRAY OF*) C.char_star%}
+%typemap(m3intype)  char **argv   %{ARRAY OF C.char_star%}
 
 
 %feature("m3:multiretval") plcalc_world;
