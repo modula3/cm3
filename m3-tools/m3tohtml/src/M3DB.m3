@@ -6,7 +6,7 @@
 
 MODULE M3DB;
 
-IMPORT Rd, TextList, TextDB, M3Token, M3Scanner, Text;
+IMPORT Rd, TextList, TextDB, M3Scanner, Text;
 
 VAR
   db := NEW (TextDB.T).init ();
@@ -95,8 +95,6 @@ PROCEDURE GenericMod (nm: TEXT): TextList.T =
 
 (*---------------------------------------------------------------- update ---*)
 
-TYPE TK = M3Token.T;
-
 PROCEDURE DeleteUnit (path: TEXT) =
   VAR x := db.all_relations ();
   BEGIN
@@ -118,11 +116,11 @@ PROCEDURE AddUnit (rd: Rd.T;  path: TEXT) =
 PROCEDURE UpdateUnit (lex: M3Scanner.T;  path: TEXT) =
   VAR unit: TEXT;
   BEGIN
-    IF lex.token = TK.Unsafe THEN NextToken (lex); END;
+    IF lex.token = M3Scanner.TK_Unsafe THEN NextToken (lex); END;
 
-    IF lex.token = TK.Generic THEN
+    IF lex.token = M3Scanner.TK_Generic THEN
       NextToken (lex); (*GENERIC*)
-      IF lex.token = TK.Interface THEN
+      IF lex.token = M3Scanner.TK_Interface THEN
         NextToken (lex); (*INTERFACE*)
         IF NOT GetID (lex, unit) THEN RETURN; END;
         genericIntf.insert (unit, path);
@@ -130,7 +128,7 @@ PROCEDURE UpdateUnit (lex: M3Scanner.T;  path: TEXT) =
         UpdateImports (lex, path);
         UpdateDecls (lex, path, TRUE);
 
-      ELSIF lex.token = TK.Module THEN
+      ELSIF lex.token = M3Scanner.TK_Module THEN
         NextToken (lex); (*MODULE*)
         IF NOT GetID (lex, unit) THEN RETURN; END;
         genericMod.insert (unit, path);
@@ -142,30 +140,30 @@ PROCEDURE UpdateUnit (lex: M3Scanner.T;  path: TEXT) =
         RETURN;
       END;
 
-    ELSIF lex.token = TK.Interface THEN
+    ELSIF lex.token = M3Scanner.TK_Interface THEN
       NextToken (lex); (*INTERFACE*)
       IF NOT GetID (lex, unit) THEN RETURN; END;
       interface.insert (unit, path);
-      IF lex.token = TK.Semi THEN
+      IF lex.token = M3Scanner.TK_Semi THEN
         NextToken (lex); (* ; *)
         UpdateImports (lex, path);
         UpdateDecls (lex, path, TRUE);
-      ELSIF lex.token = TK.Equal THEN
+      ELSIF lex.token = M3Scanner.TK_Equal THEN
         NextToken (lex); (* = *)
         UpdateGenericInstance (lex, path);
       ELSE RETURN;
       END;
 
-    ELSIF lex.token = TK.Module THEN
+    ELSIF lex.token = M3Scanner.TK_Module THEN
       NextToken (lex); (*MODULE*)
       IF NOT GetID (lex, unit) THEN RETURN; END;
       module.insert (unit, path);
       UpdateExports (lex, unit, path);
-      IF lex.token = TK.Semi THEN
+      IF lex.token = M3Scanner.TK_Semi THEN
         NextToken (lex); (* ; *)
         UpdateImports (lex, path);
         UpdateDecls (lex, path, FALSE);
-      ELSIF lex.token = TK.Equal THEN
+      ELSIF lex.token = M3Scanner.TK_Equal THEN
         NextToken (lex); (* = *)
         UpdateGenericInstance (lex, path);
       ELSE RETURN;
@@ -179,14 +177,14 @@ PROCEDURE UpdateUnit (lex: M3Scanner.T;  path: TEXT) =
 PROCEDURE UpdateExports (lex: M3Scanner.T;  unit, path: TEXT) =
   VAR id: TEXT;
   BEGIN
-    IF lex.token # TK.Exports THEN
+    IF lex.token # M3Scanner.TK_Exports THEN
       exports.insert (unit, path);
     ELSE
       NextToken (lex); (*EXPORTS*)
       LOOP
         IF NOT GetID (lex, id) THEN EXIT END;
         exports.insert (id, path);
-        IF lex.token # TK.Comma THEN EXIT END;
+        IF lex.token # M3Scanner.TK_Comma THEN EXIT END;
         NextToken (lex); (* , *)
       END;
     END;
@@ -196,21 +194,21 @@ PROCEDURE UpdateImports (lex: M3Scanner.T;  path: TEXT) =
   VAR id: TEXT;
   BEGIN
     LOOP
-      IF lex.token = TK.Import THEN
+      IF lex.token = M3Scanner.TK_Import THEN
         NextToken (lex); (*IMPORT*)
         LOOP
           IF NOT GetID (lex, id) THEN EXIT END;
           imports.insert (id, path);
-          IF lex.token = TK.As THEN
+          IF lex.token = M3Scanner.TK_As THEN
             NextToken (lex); (*IMPORT*)
-            IF lex.token = TK.Ident THEN
+            IF lex.token = M3Scanner.TK_Ident THEN
               NextToken (lex); (*ID*)
             END;
           END;
-          IF lex.token # TK.Comma THEN EXIT END;
+          IF lex.token # M3Scanner.TK_Comma THEN EXIT END;
           NextToken (lex); (* , *)
         END;
-      ELSIF lex.token = TK.From THEN
+      ELSIF lex.token = M3Scanner.TK_From THEN
         NextToken (lex); (*FROM*)
         IF GetID (lex, id) THEN imports.insert (id, path); END;
       ELSE EXIT;
@@ -224,12 +222,12 @@ PROCEDURE UpdateGenericInstance (lex: M3Scanner.T;  path: TEXT) =
   BEGIN
     IF NOT GetID (lex, id) THEN RETURN END;
     imports.insert (id, path);
-    IF lex.token # TK.L_paren THEN RETURN END;
+    IF lex.token # M3Scanner.TK_L_paren THEN RETURN END;
     NextToken (lex); (* ( *)
     LOOP
       IF NOT GetID (lex, id) THEN EXIT END;
       imports.insert (id, path);
-      IF lex.token # TK.Comma THEN EXIT END;
+      IF lex.token # M3Scanner.TK_Comma THEN EXIT END;
       NextToken (lex); (* , *)
     END;
   END UpdateGenericInstance;
@@ -239,13 +237,13 @@ PROCEDURE UpdateDecls (lex: M3Scanner.T;  path: TEXT;  is_intf: BOOLEAN) =
   BEGIN
     LOOP
       CASE lex.token OF
-      | TK.Type =>
+      | M3Scanner.TK_Type =>
           NextToken (lex); (*TYPE*)
           WHILE FindTypeID (lex, id, unit, eq) DO
             definesType.insert (id, path);
           END;
 
-      | TK.Procedure =>
+      | M3Scanner.TK_Procedure =>
           NextToken (lex); (*PROCEDURE*)
           IF is_intf THEN
             SkipToSemi (lex);
@@ -256,7 +254,7 @@ PROCEDURE UpdateDecls (lex: M3Scanner.T;  path: TEXT;  is_intf: BOOLEAN) =
             END;
           END;
 
-      | TK.Reveal =>
+      | M3Scanner.TK_Reveal =>
           NextToken (lex); (*REVEALS*)
           WHILE FindTypeID (lex, id, unit, eq) DO
             IF eq THEN
@@ -265,7 +263,7 @@ PROCEDURE UpdateDecls (lex: M3Scanner.T;  path: TEXT;  is_intf: BOOLEAN) =
             END;
           END;
 
-      | TK.EOF, TK.Error => EXIT;
+      | M3Scanner.TK_EOF, M3Scanner.TK_Error => EXIT;
       ELSE NextToken (lex);
       END;
     END;
@@ -278,31 +276,31 @@ PROCEDURE FindTypeID (lex: M3Scanner.T;  VAR id, unit: TEXT;
       id := NIL;
       unit := NIL;
       CASE lex.token OF
-      | TK.Ident =>
+      | M3Scanner.TK_Ident =>
           EVAL GetID (lex, id);
-          IF lex.token = TK.Dot THEN
+          IF lex.token = M3Scanner.TK_Dot THEN
             NextToken (lex); (* . *)
-            IF lex.token = TK.Ident THEN
+            IF lex.token = M3Scanner.TK_Ident THEN
               unit := id;
               EVAL GetID (lex, id);
             END;
           END;
-          IF lex.token = TK.Equal THEN
+          IF lex.token = M3Scanner.TK_Equal THEN
             NextToken (lex); (* = *)
             eq := TRUE;
             RETURN TRUE;
-          ELSIF lex.token = TK.Subtype THEN
+          ELSIF lex.token = M3Scanner.TK_Subtype THEN
             NextToken (lex); (* <: *)
             eq := FALSE;
             RETURN TRUE;
           ELSE (* skip *)
           END;
 
-      | TK.L_paren =>
+      | M3Scanner.TK_L_paren =>
           SkipParens (lex);
 
-      | TK.Const, TK.Type, TK.Exception, TK.Var, TK.Procedure, TK.Reveal,
-        TK.Begin, TK.EOF, TK.Error =>
+      | M3Scanner.TK_Const, M3Scanner.TK_Type, M3Scanner.TK_Exception, M3Scanner.TK_Var, M3Scanner.TK_Procedure, M3Scanner.TK_Reveal,
+        M3Scanner.TK_Begin, M3Scanner.TK_EOF, M3Scanner.TK_Error =>
           RETURN FALSE;
  
       ELSE
@@ -315,14 +313,14 @@ PROCEDURE SkipParens (lex: M3Scanner.T) =
   VAR depth: INTEGER := 0;
   BEGIN
     LOOP
-      IF lex.token = TK.L_paren THEN
+      IF lex.token = M3Scanner.TK_L_paren THEN
         INC (depth);
-      ELSIF lex.token = TK.R_paren THEN
+      ELSIF lex.token = M3Scanner.TK_R_paren THEN
         DEC (depth);
         IF (depth <= 0) THEN NextToken (lex); RETURN END;
-      ELSIF lex.token = TK.EOF THEN
+      ELSIF lex.token = M3Scanner.TK_EOF THEN
         RETURN;
-      ELSIF lex.token = TK.Error THEN
+      ELSIF lex.token = M3Scanner.TK_Error THEN
         RETURN;
       END;
       NextToken (lex);
@@ -333,10 +331,10 @@ PROCEDURE SkipProc (lex: M3Scanner.T;  proc_id: TEXT) =
   VAR id: TEXT;
   BEGIN
     LOOP
-      IF lex.token = TK.End THEN
+      IF lex.token = M3Scanner.TK_End THEN
         NextToken (lex); (*END*)
         IF GetID (lex, id) AND Text.Equal (proc_id, id) THEN EXIT; END;
-      ELSIF lex.token = TK.EOF OR lex.token = TK.Error THEN
+      ELSIF lex.token = M3Scanner.TK_EOF OR lex.token = M3Scanner.TK_Error THEN
         EXIT;
       ELSE
         NextToken (lex);
@@ -346,7 +344,7 @@ PROCEDURE SkipProc (lex: M3Scanner.T;  proc_id: TEXT) =
 
 PROCEDURE GetID (lex: M3Scanner.T;  VAR id: TEXT): BOOLEAN =
   BEGIN
-    IF lex.token # TK.Ident THEN  id := NIL; RETURN FALSE;  END;
+    IF lex.token # M3Scanner.TK_Ident THEN  id := NIL; RETURN FALSE;  END;
     id := Text.FromChars (SUBARRAY(lex.buffer^, lex.offset,lex.length));
     NextToken (lex);
     RETURN TRUE;
@@ -354,19 +352,19 @@ PROCEDURE GetID (lex: M3Scanner.T;  VAR id: TEXT): BOOLEAN =
 
 PROCEDURE SkipToSemi (lex: M3Scanner.T) =
   BEGIN
-    WHILE (lex.token # TK.Semi)
-      AND (lex.token # TK.EOF)
-      AND (lex.token # TK.Error) DO
+    WHILE (lex.token # M3Scanner.TK_Semi)
+      AND (lex.token # M3Scanner.TK_EOF)
+      AND (lex.token # M3Scanner.TK_Error) DO
       NextToken (lex);
     END;
-    IF (lex.token = TK.Semi) THEN NextToken (lex); END;
+    IF (lex.token = M3Scanner.TK_Semi) THEN NextToken (lex); END;
   END SkipToSemi;
 
 PROCEDURE NextToken (lex: M3Scanner.T) =
   BEGIN
     REPEAT
       lex.next ();
-    UNTIL (lex.token # TK.Begin_pragma);
+    UNTIL (lex.token # M3Scanner.TK_Begin_pragma);
   END NextToken;
 
 BEGIN

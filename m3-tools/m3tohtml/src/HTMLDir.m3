@@ -6,7 +6,8 @@
 
 MODULE HTMLDir;
 
-IMPORT Pathname, Fmt, Text, Wr, FileWr, FilePath;
+IMPORT Pathname, Fmt, Text, Wr, FileWr, FilePath, OSError, FSUtils;
+FROM Msg IMPORT M, D;
 
 TYPE
   Node = RECORD
@@ -40,6 +41,7 @@ PROCEDURE GenDir (READONLY names: ARRAY OF TEXT;
     s.limit   := limit;
     s.next_id := 1;
 
+    D("GenDir ", file);
     (* build the initial sorted list of nodes *)
     s.elts := NEW (REF ARRAY OF Node, NUMBER (names));
     FOR i := 0 TO LAST (names) DO
@@ -48,6 +50,7 @@ PROCEDURE GenDir (READONLY names: ARRAY OF TEXT;
         x.key   := Pathname.LastBase (names[i]);
         x.count := 0;
         x.start := 0;
+        D("  ", x.name, ", ", x.key);
       END;
     END;
     Sort (s.elts^);
@@ -89,7 +92,8 @@ PROCEDURE RemoveDuplicates (VAR s: State;  start, len: INTEGER) =
   BEGIN
     INC (s.next_id);
     Out (wr, "<HTML>\n<HEAD>\n<TITLE>", key, " locations</TITLE>\n</HEAD>\n");
-    Out (wr, "<BODY>\n<H2>", key, " is located in:<H2>\n<UL>\n");
+    Out (wr, "<BODY bgcolor=\"#eeeeee\">\n<H2>", key, 
+         " is located in:<H2>\n<UL>\n");
     FOR i := start TO start + len - 1 DO
       VAR nm := s.elts[i].name; BEGIN
         Out (wr, "<LI><A HREF=\"", FilePath.Normalize (nm, file), ".html\">");
@@ -104,6 +108,8 @@ PROCEDURE RemoveDuplicates (VAR s: State;  start, len: INTEGER) =
 PROCEDURE Generate (VAR s: State;  id, start, cnt, prefix: INTEGER): TEXT =
   VAR cnt0, cnt1, len: INTEGER;  file := FName (s, id);
   BEGIN
+    D("Generate ", file, ",  " & Fmt.Int(id), ", " & Fmt.Int(start),
+      ", " & Fmt.Int(cnt), ", " & Fmt.Int(prefix));
     (* count the elements with the specified prefix length *)
     len  := prefix;
     cnt1 := CntPrefixes (s, start, cnt, len);
@@ -208,7 +214,7 @@ PROCEDURE WriteDir (VAR s: State;  file: TEXT;  start, cnt, len: INTEGER) =
     wr         : Wr.T;
     base_file  : TEXT;
   BEGIN
-
+    D("WriteDir ", file);
     (* find the longest name and pack the elements *)
     FOR i := start TO start+cnt-1 DO
       VAR n := s.elts[i].count; BEGIN
@@ -234,9 +240,20 @@ PROCEDURE WriteDir (VAR s: State;  file: TEXT;  start, cnt, len: INTEGER) =
       wr := s.base_wr;
     ELSE
       base_file := file;
-      wr := FileWr.Open (file & ".html");
+      WITH dir = Pathname.Prefix(file) DO
+        IF dir # NIL THEN
+          IF NOT FSUtils.IsDir(dir) THEN
+            FSUtils.MakeDir(dir);
+          END;
+        END;
+      END;
+      TRY
+        wr := FileWr.Open (file & ".html");
+      EXCEPT
+        OSError.E => M("cannot open file ", file & ".html"); RETURN;
+      END;
       Out (wr, "<HTML>\n<HEAD>\n<TITLE>", s.title,
-               "</TITLE>\n</HEAD>\n<BODY>\n");
+               "</TITLE>\n</HEAD>\n<BODY bgcolor=\"#eeeeee\">\n");
     END;
     Out (wr, "<PRE>\n");
     FOR row := 0 TO n_rows-1 DO
@@ -244,7 +261,8 @@ PROCEDURE WriteDir (VAR s: State;  file: TEXT;  start, cnt, len: INTEGER) =
         j := col * n_rows + row;
         IF (j < n_elts) THEN
           WITH x = s.elts[elts[j]] DO
-            Out (wr, "<A HREF=\"", FilePath.Normalize (x.name, base_file), ".html\">");
+            Out (wr, "<A HREF=\"", FilePath.Normalize (x.name, base_file),
+                 ".html\">");
             nm := x.key;
             nm_len := Text.Length (nm);
             IF (x.count > 1) THEN
