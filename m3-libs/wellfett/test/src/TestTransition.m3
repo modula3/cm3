@@ -1,23 +1,30 @@
 MODULE TestTransition;
 
 IMPORT LongRealBasic               AS R,
+(*
        LongRealTrans               AS RT,
+*)
        LongRealSignal              AS S,
        LongRealVectorFast          AS V,
-       LongRealVectorBasic         AS VB,
+(*
        LongRealComplexVectorTrans  AS CVT,
        LongRealMatrixFast          AS M,
+*)
        LongRealEigenSystem         AS Eigen,
 
        LongRealRefinableFunc       AS Refn,
 
+(*
        LongRealFmtLex              AS RF,
+*)
        LongRealSignalFmtLex        AS SF,
+(*
        LongRealVectorFmtLex        AS VF,
        LongRealComplexVectorFmtLex AS CVF,
        LongRealMatrixFmtLex        AS MF,
+*)
        PLPlot AS PL,
-       IO, Fmt, Thread, Wr,
+       (*IO, Fmt, Wr,*) Thread,
        NADefinitions;
 
 PROCEDURE PlotTransitionEV (mask : S.T) =
@@ -55,6 +62,7 @@ PROCEDURE AnimateTransitionEV()=
     mask1 := NEW(S.T).fromArray(ARRAY OF R.T{ 2.0D0,0.0D0,1.0D0});
     delta := R.One/FLOAT(frames,R.T);
   BEGIN
+    PL.Init();
     (*PL.SetColor0(1);*)
     FOR fr:=0 TO frames DO
       VAR
@@ -63,21 +71,22 @@ PROCEDURE AnimateTransitionEV()=
 	PlotTransitionEV(mask0.scale(R.One-t).superpose(mask1.scale(t)));
       END;
     END;
+    PL.Exit();
   END AnimateTransitionEV;
 
 
 
-PROCEDURE CurveTransitionEV()=
+PROCEDURE CurveTransitionEV(READONLY maskcoef0,maskcoef1:ARRAY OF R.T)=
+  <*FATAL NADefinitions.Error*>
   CONST
-    frames = 20;
+    frames = 50;
   VAR
-    mask0 := NEW(S.T).fromArray(ARRAY OF R.T{-2.0D0,0.0D0,1.0D0});
-    mask1 := NEW(S.T).fromArray(ARRAY OF R.T{ 2.0D0,0.0D0,1.0D0});
+    mask0 := NEW(S.T).fromArray(maskcoef0);
+    mask1 := NEW(S.T).fromArray(maskcoef1);
     delta := R.One/FLOAT(frames,R.T);
   BEGIN
     PL.SetColor0(1);
     PL.SetEnvironment(-0.2D0,1.2D0,-10.0D0,10.0D0);
-    PL.SetColor0(2);
     FOR fr:=0 TO frames DO
       VAR
 	t:=FLOAT(fr,R.T)*delta;
@@ -87,26 +96,93 @@ PROCEDURE CurveTransitionEV()=
         	  mask.adjoint().convolve(mask)
                 )
               );
-        x  := NEW(V.T,NUMBER(ev.eigenvalues^));
-        y  := NEW(V.T,NUMBER(ev.eigenvalues^));
+        x   := NEW(V.T,NUMBER(ev.eigenvalues^));
+        yre := NEW(V.T,NUMBER(ev.eigenvalues^));
+        yim := NEW(V.T,NUMBER(ev.eigenvalues^));
       BEGIN
         FOR i:=0 TO LAST(ev.eigenvalues^) DO
-          x[i]:=t;
-          y[i]:=ev.eigenvalues[i].re;
+          x  [i]:=t;
+          yre[i]:=ev.eigenvalues[i].re;
+          yim[i]:=ev.eigenvalues[i].im;
         END;
-        PL.PlotPoints(x^,y^,3);
+        PL.SetColor0(2);
+        PL.PlotPoints(x^,yre^,17);
+        PL.SetColor0(3);
+        PL.PlotPoints(x^,yim^,20);
       END;
     END;
   END CurveTransitionEV;
+
+PROCEDURE CurveExamples()=
+  BEGIN
+    PL.Init();
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0, 1.0D0, 0.0D0, 1.0D0,-2.0D0},
+      ARRAY OF R.T{ 2.0D0, 1.0D0, 0.0D0, 1.0D0, 2.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-1.0D0, 0.0D0, 0.0D0, 1.0D0},
+      ARRAY OF R.T{-1.0D0, 0.0D0, 0.0D0, 2.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0, 1.0D0, 1.0D0,-2.0D0},
+      ARRAY OF R.T{ 2.0D0, 1.0D0, 1.0D0, 2.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{ 1.0D0, 1.0D0, 1.0D0, 3.0D0},
+      ARRAY OF R.T{-1.0D0, 1.0D0, 1.0D0, 3.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{ 1.0D0, 1.0D0, 1.0D0, 3.0D0},
+      ARRAY OF R.T{-1.0D0,-1.0D0,-1.0D0, 3.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-1.0D0,-1.0D0,-1.0D0, 1.0D0},
+      ARRAY OF R.T{-1.0D0, 1.0D0, 1.0D0, 1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0,-1.0D0,1.0D0},
+      ARRAY OF R.T{ 2.0D0,-1.0D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0,-0.5D0,1.0D0},
+      ARRAY OF R.T{ 2.0D0,-0.5D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0,0.0D0,1.0D0},
+      ARRAY OF R.T{ 2.0D0,0.0D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0,0.5D0,1.0D0},
+      ARRAY OF R.T{ 2.0D0,0.5D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0,1.0D0,1.0D0},
+      ARRAY OF R.T{ 2.0D0,1.0D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{ 1.0D0,-2.0D0,1.0D0},
+      ARRAY OF R.T{ 1.0D0, 2.0D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{ 1.0D0, 1.0D0,1.0D0},
+      ARRAY OF R.T{-1.0D0,-1.0D0,1.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{-2.0D0, 1.0D0,-2.0D0},
+      ARRAY OF R.T{ 2.0D0, 1.0D0, 2.0D0}
+    );
+    PL.Exit();
+  END CurveExamples;
 
 
 
 PROCEDURE Test()=
   BEGIN
-    PL.Init();
-    (*AnimateTransitionEV();*)
-    CurveTransitionEV();
-    PL.Exit();
+    CASE 1 OF
+    | 0 => AnimateTransitionEV();
+    | 1 => CurveExamples();
+    END;
   END Test;
 
 
