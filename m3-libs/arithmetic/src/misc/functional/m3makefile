@@ -1,0 +1,27 @@
+import("libm3")
+
+template("functional")
+
+
+generic_module("Functional")
+Functional("Real",     "Real",     "Basic")
+Functional("LongReal", "LongReal", "Basic")
+Functional("Extended", "Extended", "Basic")
+
+generic_module("FunctionalDeriv2")
+FunctionalDeriv2("Real",     "Real",     "Basic")
+FunctionalDeriv2("LongReal", "LongReal", "Basic")
+FunctionalDeriv2("Extended", "Extended", "Basic")
+
+%generic_module("FunctionalFast")
+%FunctionalFast("Real",     "Real",     "Basic")
+%FunctionalFast("LongReal", "LongReal", "Basic")
+%FunctionalFast("Extended", "Extended", "Basic")
+
+%generic_module("FunctionalBasic")
+%FunctionalBasic("RealComplex",        "RealComplex",        "Fast")
+%FunctionalBasic("LongRealComplex",    "LongRealComplex",    "Fast")
+%FunctionalBasic("ExtendedComplex",    "ExtendedComplex",    "Fast")
+%FunctionalBasic("Integer32",          "Integer32",          "Basic")
+%FunctionalBasic("BigInteger",         "BigInteger",         "Basic")
+%FunctionalBasic("BigIntegerFraction", "BigIntegerFraction", "Basic")
