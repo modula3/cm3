@@ -143,7 +143,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fpic", options ]
+  local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   if M3_PROFILING args += "-pg" end
