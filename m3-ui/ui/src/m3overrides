@@ -1,2 +1,3 @@
 
-override ("m3core", "h:\\m3-libs")
+override ("m3core", ROOT & "/m3-libs")
+override ("X11R4", ROOT & "/m3-ui")
