@@ -1,0 +1,15 @@
+%
+%  Quake functions to instantiate operations on generic complex numbers.
+%
+
+readonly proc ComplexBasic (nm, mod) is
+  local basic = nm & "ComplexBasic"
+  build_generic_intf (basic, "ComplexBasic", [mod], VISIBLE)
+  build_generic_impl (basic, "ComplexBasic", [mod])
+end
+
+readonly proc ComplexFast (nm, elt) is
+  local basic = nm & "ComplexFast"
+  build_generic_intf (basic, "ComplexFast", [elt], VISIBLE)
+  build_generic_impl (basic, "ComplexFast", [elt])
+end

@@ -1,0 +1,14 @@
+import("libm3")
+
+include("complex.tmpl")
+
+generic_module("ComplexBasic")
+ComplexBasic("Real",     "RealBasic")
+ComplexBasic("LongReal", "LongRealBasic")
+ComplexBasic("Extended", "ExtendedBasic")
+
+
+generic_module("ComplexFast")
+ComplexFast("Real",     "Real")
+ComplexFast("LongReal", "LongReal")
+ComplexFast("Extended", "Extended")

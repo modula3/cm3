@@ -1,0 +1,17 @@
+
+import("libm3")
+
+
+include("float.tmpl")
+
+Module("ExtendedType")
+
+generic_module("FloatBasic")
+FloatBasic("Real",     "Real",     "RealType")
+FloatBasic("LongReal", "LongReal", "LongrealType")
+FloatBasic("Extended", "Extended", "ExtendedType")
+
+generic_module("FloatTrans")
+FloatTrans("Real",     "Real")
+FloatTrans("LongReal", "LongReal")
+FloatTrans("Extended", "Extended")
