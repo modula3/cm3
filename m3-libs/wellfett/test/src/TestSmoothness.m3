@@ -1,7 +1,6 @@
 MODULE TestSmoothness;
 
 IMPORT LongRealBasic                AS R,
-       LongRealTrans                AS RT,
        LongRealComplex              AS C,
        LongRealComplexTrans         AS CT,
        LongRealVector               AS V,
@@ -13,41 +12,19 @@ IMPORT LongRealBasic                AS R,
        LongRealComplexVectorTrans   AS CVT,
        LongRealComplexVectorFmtLex  AS CVF,
        LongRealComplexInterpolation AS CVIp,
-       LongRealMatrix               AS M,
        LongRealSignal               AS S,
        LongRealComplexSignal        AS CS,
        LongRealBSplineWavelet       AS BSpl,
        LongRealFmtLex               AS RF,
        LongRealSignalFmtLex         AS SF,
        LongRealRefinableFunc        AS Refn,
-       LongRealWaveletPlot          AS WP,
-       LongRealFFTWRaw              AS FFT,
+       LongRealFFTW                 AS FFT,
        LongRealIntegerPower         AS RIntPow,
        Integer32IntegerPower        AS IIntPow,
        PLPlot                       AS PL;
 
 IMPORT IO, Fmt, Wr, Thread;
-(*IMPORT Arithmetic AS Arith;*)
-
-PROCEDURE DFTR2C1D (READONLY x: V.TBody;
-  (*flags := FFT.FlagSet{FFT.Flag.Estimate};*)): CV.T =
-  VAR
-    z    := CV.New(NUMBER(x) DIV 2 + 1);
-    plan := FFT.PlanDFTR2C1D(NUMBER(x), x[0], z[0], 2_1000000);
-  BEGIN
-    TRY FFT.Execute(plan); FINALLY FFT.DestroyPlan(plan); END;
-    RETURN z;
-  END DFTR2C1D;
-
-PROCEDURE DFTC2R1D (READONLY x: CV.TBody; parity: [0 .. 1];
-  (*flags := FFT.FlagSet{FFT.Flag.Estimate};*)): V.T =
-  VAR
-    z    := V.New(NUMBER(x) * 2 - 2 + parity);
-    plan := FFT.PlanDFTC2R1D(NUMBER(z^), x[0], z[0], 2_1000000);
-  BEGIN
-    TRY FFT.Execute(plan); FINALLY FFT.DestroyPlan(plan); END;
-    RETURN z;
-  END DFTC2R1D;
+IMPORT Arithmetic AS Arith;
 
 PROCEDURE SpecNorm (x: CV.T; rsize: CARDINAL; ): R.T =
   BEGIN
@@ -59,7 +36,9 @@ PROCEDURE SpecNorm (x: CV.T; rsize: CARDINAL; ): R.T =
     END;
   END SpecNorm;
 
+<* UNUSED *>
 PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
+  <* FATAL Arith.Error *>        (*MulPower cannot fail for integers*)
   VAR
     unit  := IIntPow.MulPower(1, 2, l);
     grid  := R.One / FLOAT(unit, R.T);
@@ -145,7 +124,7 @@ PROCEDURE BSplineNorm () =
         FOR l := FIRST(xn) TO LAST(xn) DO
           VAR
             padded  := xn[l].clipToVector(0, xn[l].getNumber() * 2);
-            spec    := DFTR2C1D(padded^);
+            spec    := FFT.DFTR2C1D(padded^);
             absspec := V.New(NUMBER(spec^));
           BEGIN
             FOR k := FIRST(absspec^) TO LAST(absspec^) DO
@@ -226,6 +205,7 @@ PROCEDURE UpSample2Cubic (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR
     z := NEW(CV.T, 2 * NUMBER(x) - 1);
     y := V.ArithSeq(NUMBER(x), R.Zero, R.One);
+  <* FATAL Arith.Error *>        (*y and x will always have the same size*)
   BEGIN
     FOR i := FIRST(x) TO LAST(x) - 1 DO
       z[2 * i] := x[i];
@@ -239,13 +219,13 @@ PROCEDURE UpSample2Cubic (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
 PROCEDURE UpSample2Fourier (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR
     pair := SplitComplexVector(x);
-    s    := DFTR2C1D(pair.re^);
+    s    := FFT.DFTR2C1D(pair.re^);
     sl   := CV.NewZero(NUMBER(s^) * 2);
     k    := R.One / FLOAT(NUMBER(x), R.T);
   BEGIN
     SUBARRAY(sl^, 0, NUMBER(s^)) := CV.Scale(s, C.T{k, R.Zero})^;
     WITH (* we must extend to an even number of samples to get an exact
-            doubling *) zr = DFTC2R1D(sl^, 0)^,
+            doubling *) zr = FFT.DFTC2R1D(sl^, 0)^,
                         z  = CV.New(NUMBER(zr) - 1) (* ignore last value *) DO
       FOR i := FIRST(z^) TO LAST(z^) DO
         z[i].re := zr[i];
@@ -265,7 +245,7 @@ PROCEDURE FourierDecay () =
     mask1 := NEW(S.T).fromArray(
                ARRAY OF R.T{0.26D0, 0.5D0, 0.24D0}, -1).autocorrelate();
     mask := NEW(S.T).fromArray(
-               ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
+              ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
     mask3 := NEW(S.T).fromArray(
                ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1).autocorrelate();
     mask4 := NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, 0.5D0}).autocorrelate();
@@ -283,18 +263,19 @@ PROCEDURE FourierDecay () =
         (*round up to the next multiple of twopow*)
         newsize   := minsize + (-minsize) MOD twopow;
         bandWidth := newsize DIV twopow;
-        genSpec   := DFTR2C1D(generator.wrapCyclic(newsize)^);
+        genSpec   := FFT.DFTR2C1D(generator.wrapCyclic(newsize)^);
 
         (*quite a random start filter*)
         refnMask := NEW(S.T).fromArray(
                       ARRAY OF R.T{-0.3D0, 1.85D0, -0.55D0}, -1);
 
+      <* FATAL Arith.Error *>    (* V.Sub and MulPower cannot fail *)
       BEGIN
 
         IF l > 1 THEN
           VAR
-            rep     : CARDINAL := 2;
-            maskSpec           := DFTR2C1D(mask.wrapCyclic(bandWidth)^);
+            rep: CARDINAL := 2;
+            maskSpec := FFT.DFTR2C1D(mask.wrapCyclic(bandWidth)^);
             band := CV.FromArray(
                       SUBARRAY(genSpec^, bandWidth, bandWidth + 1));
             curBandWidth           := bandWidth;
@@ -303,7 +284,7 @@ PROCEDURE FourierDecay () =
             (* we like to compare our naive interpolations with an
                interpolation found by transforming a generator that is zero
                padded to the double length *)
-            genDoubSpec := DFTR2C1D(generator.wrapCyclic(newsize * 2)^);
+            genDoubSpec := FFT.DFTR2C1D(generator.wrapCyclic(newsize * 2)^);
             bandDoub := band;    (* initialize it with something different
                                     from NIL *)
           BEGIN
@@ -424,10 +405,11 @@ PROCEDURE TestUpsampleA () =
   VAR
     vec1 := V.NewZero(NUMBER(vec0) * 2);
     spec0, spec1, specLinIp, specGeomIp: CV.T;
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     SUBARRAY(vec1^, 0, NUMBER(vec0)) := vec0;
-    spec0 := DFTR2C1D(vec0);
-    spec1 := DFTR2C1D(vec1^);
+    spec0 := FFT.DFTR2C1D(vec0);
+    spec1 := FFT.DFTR2C1D(vec1^);
     specLinIp := UpSample2Linear(spec0^);
     specGeomIp := UpSample2Geom(spec0^);
     IO.Put(Fmt.F("Original:\n%s\n" & "Fourier interpolated:\n%s\n"
@@ -449,18 +431,20 @@ PROCEDURE TestUpsampleB () =
     vec0, vec1, vec0up, vec1up: V.T;
     spec0up, spec1up          : CV.T;
     k0, k1                    : R.T;
+
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     SUBARRAY(spec1^, 0, NUMBER(spec0)) := spec0;
-    vec0 := DFTC2R1D(spec0, 0);
-    vec1 := DFTC2R1D(spec1^, 0);
+    vec0 := FFT.DFTC2R1D(spec0, 0);
+    vec1 := FFT.DFTC2R1D(spec1^, 0);
     vec0up := V.NewZero(NUMBER(vec0^) * 2);
     vec1up := V.NewZero(NUMBER(vec1^) * 2);
     k0 := R.Two / FLOAT(NUMBER(vec0up^), R.T);
     k1 := R.Two / FLOAT(NUMBER(vec1up^), R.T);
     SUBARRAY(vec0up^, 0, NUMBER(vec0^)) := V.Scale(vec0, k0)^;
     SUBARRAY(vec1up^, 0, NUMBER(vec1^)) := V.Scale(vec1, k1)^;
-    spec0up := DFTR2C1D(vec0up^);
-    spec1up := DFTR2C1D(vec1up^);
+    spec0up := FFT.DFTR2C1D(vec0up^);
+    spec1up := FFT.DFTR2C1D(vec1up^);
     IO.Put(Fmt.F("Original:\n%s\n" & "Fourier interpolated short:\n%s\n"
                    & "Fourier interpolated long:\n%s\n",
                  CVF.Fmt(CV.FromArray(spec0)), CVF.Fmt(spec0up),
