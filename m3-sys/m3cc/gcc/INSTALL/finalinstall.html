@@ -1,15 +1,13 @@
-<html lang="en">
-<head>
+<html lang="en"><head>
 <title>Installing GCC: Final installation</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name=description content="Installing GCC: Final installation">
-<meta name=generator content="makeinfo 4.2">
-<link href="http://www.gnu.org/software/texinfo/" rel=generator-home>
-</head>
-<body>
-<h1>Installing GCC: Final installation</h1>
-Now that GCC has been built (and optionally tested), you can install it with
-<br><pre>cd <var>objdir</var>; make install
+<meta name=generator content="makeinfo 4.0">
+<link href="http://texinfo.org/" rel=generator-home>
+</head><body>
+
+<p>N<p>ow that GCC has been built (and optionally tested), you can install it with
+<pre>cd <var>objdir</var>; make install
 </pre>
 
 <p>We strongly recommend to install into a target directory where there is
@@ -25,6 +23,33 @@ Java libraries are installed in <code><var>prefix</var>/include</code>; librarie
 in <code><var>libdir</var></code> (normally <code><var>prefix</var>/lib</code>); internal
 parts of the compiler in <code><var>libdir</var>/gcc-lib</code>; documentation in
 info format in <code><var>infodir</var></code> (normally <code><var>prefix</var>/info</code>).
+
+<p>When installing cross-compilers, GCC's executables
+are not only installed into <code><var>bindir</var></code>, that
+is, <code><var>exec-prefix</var>/bin</code>, but additionally into
+<code><var>exec-prefix</var>/<var>target-alias</var>/bin</code>, if that directory
+exists.  Typically, such <dfn>tooldirs</dfn> hold target-specific
+binutils, including assembler and linker.
+
+<p>Installation into a temporary staging area or into a <code>chroot</code>
+jail can be achieved with the command
+
+<pre>make DESTDIR=<var>path-to-rootdir</var> install
+</pre>
+
+<p>where <var>path-to-rootdir</var> is the absolute path of
+a directory relative to which all installation paths will be
+interpreted.  Note that the directory specified by <code>DESTDIR</code>
+need not exist yet; it will be created if necessary.
+
+<p>There is a subtle point with tooldirs and <code>DESTDIR</code>:
+If you relocate a cross-compiler installation with
+e.g. <code>DESTDIR=<var>rootdir</var></code>, then the directory
+<code><var>rootdir</var>/<var>exec-prefix</var>/<var>target-alias</var>/bin</code> will
+be filled with duplicated GCC executables only if it already exists,
+it will not be created otherwise.  This is regarded as a feature,
+not as a bug, because it gives slightly more control to the packagers
+using the <code>DESTDIR</code> feature.
 
 <p>If you built a released version of GCC using <code>make bootstrap</code> then please
 quickly review the build status page for your release, available from
