@@ -78,7 +78,6 @@ CONST
 VAR
   x, y    : B.T;
   q, r    : B.T;
-  divisor : W.T;
   result  := TRUE;
   sh      := Br.BitPos{0,0};
 BEGIN
@@ -143,6 +142,8 @@ BEGIN
   r.sign := FALSE;
   <*ASSERT B.Equal(x,Br.AddU(r,Br.MulU(q,y)))*>
 
+  <*ASSERT NOT B.IsZero(B.Mod(B.FromInteger(16_4f7d3f), B.FromInteger(16_37))) *>
+
   RETURN result;
 END test_addshift;
 (*----------------------*)
@@ -171,10 +172,14 @@ BEGIN
 END test_fibonacci;
 (*-------------------------*)
 PROCEDURE test_pseudoprime():BOOLEAN=
+(*
+This prime test works for many numbers but not for all.
+*)
 CONST
   ftn = Module & "test_pseudoprime";
 VAR
   x : ARRAY [0..3] OF B.T;
+  mod : B.T;
   result:=TRUE;
   prime0, prime1 : BOOLEAN;
 BEGIN
@@ -183,11 +188,16 @@ BEGIN
   x[1] := B.Zero;
   x[2] := B.FromInteger(2);
 
-  FOR j:=3 TO 100 DO
+  FOR j:=3 TO 10000 DO
     x[3] := B.Add (x[0], x[1]);
-    prime0 := B.Equal(B.Zero, B.Mod(x[3],B.FromInteger(j)));
+    (*msg(F.FN("%s / %s\n", ARRAY OF TEXT {FL.Fmt(x[3],16), F.Int(j,16)}));*)
+    mod := B.Mod(x[3],B.FromInteger(j));
+    prime0 := B.IsZero(mod);
     prime1 := I.isprime(j);
-    msg(F.Pad(F.Int(j),2) & ": " & FL.Fmt(x[3],10) & ", prime " & F.Bool(prime0) & "vs. " & F.Bool(prime1) & "\n");
+    (*
+    msg(F.FN("%2s: %s, mod %s prime %s vs. %s\n",
+      ARRAY OF TEXT {F.Int(j), FL.Fmt(x[3],10), FL.Fmt(mod,10), F.Bool(prime0), F.Bool(prime1)}));
+    *)
     <*ASSERT prime0=prime1*>
     x[0] := x[1];
     x[1] := x[2];

@@ -9,11 +9,8 @@ Daniel Beer
 IMPORT Word AS W, xWordEx AS Wx;
 FROM xUtils IMPORT Error, Err;
 FROM BigIntegerBasic  IMPORT Zero;
-IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
 (*
-IO.Put(Fmt.FN("m %s, y.data[k] %s\n", ARRAY OF  TEXT{Fmt.Unsigned(m),Fmt.Unsigned(y.data[k])}));
-IO.Put("hi " & Fmt.Unsigned(hi) & " lo " & Fmt.Unsigned(lo) & "\n");
-IO.Put("z.data[k] " & Fmt.Unsigned(z.data[k]) & "\n");
+IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
 *)
 
 <*UNUSED*> CONST Module = "BigIntegerRep.";
@@ -27,11 +24,6 @@ BEGIN
   END;
 END Clear;
 
-
-PROCEDURE IsZero (READONLY x : T) : BOOLEAN =
-BEGIN
-  RETURN x.size=0 OR x.size=1 AND x.data[0]=0;
-END IsZero;
 
 <*INLINE*>
 PROCEDURE MinMax (VAR min, max : INTEGER; a, b : INTEGER) =
@@ -200,72 +192,66 @@ END MulU;
 
 (*
 General problem with division:
-We cannot easily find a digit of the quotient
+We cannot easily find a digit (word) of the quotient
 if we only know the most significant digits of dividend and divisor.
-Thus we only determine a close lower estimate,
-which may cause several iterations for one digit of the quotient.
-*)
+Thus we only determine a close lower estimate
+and we don't try to obtain the quotient digit by digit
+but we move with a varying number of bits
+and accumulate the quotient.
 
-(*
-If we would use a Word by HalfWord division,
-we had to distinguish between more cases.
-*)
+That's the theory:
 
-(*
-PROCEDURE DoubleDivMod (lo, hi, div : W.T; VAR r : W.T) : W.T =
-CONST
-  HalfSize = W.Size DIV 2;
-VAR
-  sh       : INTEGER;
-  divsmall,
-  plo, phi,
-  carry    : W.T;
-  q        : W.T;
-  carrybit : BOOLEAN;
-BEGIN
-  <*ASSERT W.LT(lo,div)*>
-  sh  := W.Size-1 - Wx.FindMostSignifBit(div);
-  div := W.Shift(div,sh);
+We want to determine the division of x by y, that is
+for given x and y we search for q und r with:
 
-  carry := 0;
-  lo    := Wx.LeftShiftWithProbscosis(lo, sh, carry);
-  hi    := Wx.LeftShiftWithProbscosis(hi, sh, carry);
-  <*ASSERT carry=0*>
+x = q*y + r  and  0<=r  and  r<y
 
-  divsmall := W.Shift(div,-HalfSize)+1;
+But instead of working with full precision x and y
+we use approximations x' and y', respectively.
+For these x' and y' we determine q' and r' with
 
-  (*first lower estimation of the quotient*)
-  q := W.Shift(W.Divide(hi,divsmall),HalfSize);
-  Wx.DoubleLengthMultiply(q,div,plo,phi);
+x' = q'*y' + r'  and  0<=r' (preserving r'<y' is a problem)
 
-  carrybit := FALSE;
-  lo := Wx.MinusWithBorrow(lo,plo,carrybit);
-  hi := Wx.MinusWithBorrow(hi,phi,carrybit);
-  <*ASSERT NOT carrybit*>
+If we round x down to x' and y up to y'
+then q' <= q. We will multiply the approximative quotient q'
+by the exact divisor y and then we will subtract this product
+off x. This way we reduce x to x-y*q' and thus simplify the problem.
+This procedure is iterated until the remaining x is smaller than y,
+this will be the remainder r.
 
-  (*second lower estimation of the quotient*)
-  carry := 0;
-  hi    := Wx.LeftShiftWithProbscosis(hi, HalfSize, carry);
-  lo    := Wx.LeftShiftWithProbscosis(lo, HalfSize, carry);
-  <*ASSERT carry=0*>
+Will the x always be shortened, i.e. does the algorithm terminate?
 
-(*???
-  q := W.Shift(W.Divide(hi,divsmall),HalfSize);
-  Wx.DoubleLengthMultiply(q,div,plo,phi);
+What we want to estimate is x-y*q',
+what we know are some estimates for x' and y'.
+Say that our rounding has maximal relative errors a and b
+(a and b are positive but hopefully small)
+in this way (it looks strange but simplifies calculation)
 
-  carrybit := FALSE;
-  lo := MinusWithBorrow(lo,plo,carrybit);
-  hi := MinusWithBorrow(hi,phi,carrybit);
-  <*ASSERT NOT carrybit*>
-*)
+x  >= x' >= (1-a)*x
+y' >= y  >= (1-b)*y'
 
-  carry := 0;
-  hi    := Wx.RightShiftWithProbscosis(hi, sh, carry);
-  lo    := Wx.RightShiftWithProbscosis(lo, sh, carry);
-  <*ASSERT carry=0*>
-  r := lo;
-  RETURN q;
-END DoubleDivMod;
+then it holds
+
+x-y*q'
+  = x - y*(x'-r')/y'
+  = x - x'*y/y' + y*r'/y'
+ <= x - x'*(1-b) + y*r'/y'   | y<=y'
+ <= x - x'*(1-b) + r'
+ <= x - x*(1-a)*(1-b) + r'
+  = x*(a+b-ab) + r'
+ <= x*(a+b) + r'
+
+You see that the smaller a and b the faster the algorithm converges.
+This is nothing surprising.
+The problem is that if y' is precise the approximative division
+will loose precision due to the fixed precision of the hardware division.
+The loss of precision of the result will increase r'.
+I still cannot model this satisfyingly.
+
+So what are the values for a and b?
+
+a=2^-i   b=2^-j
+
 *)
 
 
@@ -327,14 +313,14 @@ END GetMSBPos;
 (*grab bits from sh to sh+W.Size-1*)
 PROCEDURE GetSubword (READONLY x : T; sh : BitPos) : W.T =
 VAR
-  lo : W.T;
+  probs : W.T := 0;
 BEGIN
+  EVAL Wx.RightShiftWithProbscosis(x.data[sh.word+1],sh.bit,probs);
   IF sh.word<0 THEN
-    lo := 0;
+    RETURN probs;
   ELSE
-    lo := W.RightShift(x.data[sh.word],sh.bit);
+    RETURN Wx.RightShiftWithProbscosis(x.data[sh.word],sh.bit,probs);
   END;
-  RETURN W.Or (lo, W.LeftShift(x.data[sh.word+1],W.Size-sh.bit));
 END GetSubword;
 
 
@@ -349,9 +335,11 @@ VAR
   borrow := FALSE;
   j      :  INTEGER;
 BEGIN
+(*
 IO.Put(Fmt.FN("x 16_%s - SHL (y 16_%s * z 16_%s, {%s,%s})\n",
             ARRAY OF TEXT {BF.Fmt(x,16),BF.Fmt(y,16),Fmt.Unsigned(z),
             Fmt.Int(sh.word),Fmt.Int(sh.bit)}));
+*)
   hi := 0;
   probs := 0;
   FOR k:=0 TO y.size-1 DO
@@ -375,18 +363,27 @@ IO.Put(Fmt.FN("x 16_%s - SHL (y 16_%s * z 16_%s, {%s,%s})\n",
     x.data[j] := Wx.MinusWithBorrow(x.data[j], 0, borrow);
   END;
   CorrectSize(x,x.size);
+(*
 IO.Put(Fmt.FN("x 16_%s\n", ARRAY OF TEXT {BF.Fmt(x,16)}));
+*)
 END SubShiftedProd;
 
 (*x := x+SHL(y,sh)   (inplace, make sure that x.data has enough space)*)
 PROCEDURE AddShifted(VAR x : T; y : W.T; sh : BitPos) =
 VAR
   carry := FALSE;
+  probs :  W.T := 0;
 BEGIN
-  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.LeftShift(y,sh.bit), carry);
-  IF sh.bit>0 THEN (*for sh.bit=0 RightShift will fail*)
+(*
+IO.Put(Fmt.FN("q 16_%s (size %s) + SHL (q' 16_%s, {%s,%s})\n",
+            ARRAY OF TEXT {BF.Fmt(x,16),Fmt.Int(NUMBER(x.data^)),Fmt.Unsigned(y),
+            Fmt.Int(sh.word),Fmt.Int(sh.bit)}));
+*)
+  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], Wx.LeftShiftWithProbscosis(y,sh.bit,probs), carry);
+  (*don't access fields that we need not really because they may not exist*)
+  IF probs#0 OR carry THEN
     INC(sh.word);
-    x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.RightShift(y,W.Size-sh.bit), carry);
+    x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], probs, carry);
   END;
   WHILE carry DO
     INC(sh.word);
@@ -425,9 +422,11 @@ BEGIN
     rmsw := GetSubword(r,BitPosEndToBegin(rmsbpos));
     (*round down by neglecting the following bits to get a lower estimate for quotient*)
     qmsw    := W.Divide(rmsw,ymsw);
+(*
 IO.Put(Fmt.FN("rmsw %s, ymsw %s, qmsw %s, ymsw*qmsw %s\n",
   ARRAY OF TEXT{Fmt.Unsigned(rmsw),Fmt.Unsigned(ymsw),Fmt.Unsigned(qmsw),
                 Fmt.Unsigned(W.Times(ymsw,qmsw))}));
+*)
     qmsbpos := SubBitPos(rmsbpos,ymsbpos);
     qmswstartpos := SubBitPos(qmsbpos,BitPos{0,W.Size DIV 2});
     <*ASSERT qmswstartpos.word>=-1 *>
@@ -455,143 +454,6 @@ IO.Put(Fmt.FN("rmsw %s, ymsw %s, qmsw %s, ymsw*qmsw %s\n",
   CorrectSize (q, LAST(q.data^));
   RETURN q;
 END DivModU;
-
-(*
-PROCEDURE DivModU (READONLY x, y : T; VAR r : T) :  T;
-VAR
-  sz, sy, move, j : INTEGER;
-  a, b, bSml, bBig, carry, d1, d2, t, quot : LONGCARD;
-  xRun, yRun, qRun, rRun : CARDPTR;
-
-BEGIN
-  IF y.size = 0 THEN
-    RAISE Error(divide_by_zero);
-  END;
-  z := Copy (x);
-
-  sz := z.size-1;
-  sy := y.size-1;
-  move := sz - sy;
-
-  IF move < 0 THEN
-    SetZero (q);
-    RETURN
-  END;
-
-  IF q.data=NIL THEN
-    NUMBER(q.data) := move+1;
-    memPool.NewPooled (q.data);
-  ELSIF NUMBER(q.data) < move+1 THEN
-    memPool.DisposePooled (q.data);
-    NUMBER(q.data) := move+1;
-    memPool.NewPooled (q.data);
-  END;
-
-  WITH qRun, j, move DO
-    qRun := q.data[0]'PTR;
-    FOR j:=0 TO move DO qRun+^ := 0 END;
-    q.size := move+1;
-
-    bSml := y.data[sy];
-    IF sy>0 THEN
-      bBig := bSml SHL 16 + y.data[sy-1] + 1;
-    ELSE
-      bBig := bSml SHL 16 + 1;
-    END;
-    INC (bSml);
-
-    WHILE move>=0 DO
-      IF sz>0 THEN
-        a := z.data[sz] SHL 16 + z.data[sz-1];
-      ELSE
-        a := z.data[sz] SHL 16;
-      END;
-
-      IF sz = sy + move THEN
-        b := bBig
-      ELSE
-        b := bSml
-      END;
-
-      IF a >= b THEN
-        quot := a DIV b;
-        (* Berechnung von neuem Rest *)
-        carry := 0;
-        FOR j:=move TO move+sy DO
-          d1 := z.data[j];
-          d2 := quot * y.data[j-move] + carry;
-
-          IF d1 < d2 THEN
-            t := d2 - d1 + 16_FFFF;
-            z.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
-            carry := t SHR 16;
-          ELSE
-            z.data[j] := d1 - d2;
-            carry := 0;
-          END;
-        END;
-        IF carry > 0 THEN
-          z.data[move+sy+1] := z.data[move+sy+1] - carry;   (* immer =Null ?? *)
-        END;
-
-        WHILE (sz>=0) AND (z.data[sz]=0) DO DEC (sz) END;
-
-        (* Berechnung von neuem Quotienten *)
-        carry := quot;
-        WHILE carry#0 DO
-          t := q.data[move] + carry;
-          q.data[move] := CARDINAL (CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
-          carry := t SHR 16;
-          INC (move);
-        END;
-
-        move := sz - sy;
-      ELSE
-        DEC (move);
-      END;
-
-  (*    WriteT (z); *)
-    END;
-  END;
-
-  z.size := sz + 1;             (* für Compare *)
-
-  IF CompareU (z, y) >= 0 THEN
-(*    WriteString ("Result is not smaller than Modul!"+&10); *)
-
-    (* r := r - y *)
-    carry := 0;
-    FOR j:=0 TO sy DO
-      d1 := z.data[j];
-      d2 := y.data[j] + carry;
-
-      IF d1 < d2 THEN
-        z.data[j] := 16_10000 + d1 - d2;
-        carry := 1;
-      ELSE
-        z.data[j] := d1 - d2;
-        carry := 0;
-      END;
-    END;
-    IF carry = 1 THEN
-      z.data[sy+1] := z.data[sy+1] - 1;
-      WriteString ("Carry"+&10);
-    END;
-    WHILE (sz>=0) AND (z.data[sz]=0) DO DEC (sz) END;
-
-    (* q := q + 1 *)
-    j := 0;
-    WHILE q.data[j] = 16_FFFF DO
-      q.data[j] := 0;
-      INC (j);
-    END;
-    INC (q.data[j]);
-  END;
-
-  z.size := sz + 1;
-  CorrectSize (q, q.size-1);
-END DivModU;
-*)
 
 (*==========================*)
 BEGIN

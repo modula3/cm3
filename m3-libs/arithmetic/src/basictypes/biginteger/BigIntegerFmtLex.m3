@@ -78,7 +78,7 @@ PROCEDURE SlowFmtU(x: T; base: Base): TEXT =
   BEGIN
     TRY
       b := BB.FromInteger(base);
-      WHILE NOT BR.IsZero(x) DO
+      WHILE NOT BB.IsZero(x) DO
         x := BR.DivModU(x,b,r);
         <*ASSERT r.size<=1*>
         digit := r.data[0];
