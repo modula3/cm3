@@ -13,12 +13,12 @@
   </head>
 
   <body bgcolor="#ffffff">
-    <h2>Critical Mass Modula-3 (CM3) release 5.1</h2>
+    <h2>Critical Mass Modula-3 (CM3) release 5.1/5.2</h2>
 
     <center>
     <p>
-      Welcome to the first official release of Critical Mass Modula-3
-      version 5.1!
+      Welcome to the official release of Critical Mass Modula-3
+      version 5.1/5.2!
     </p>
     </center>
 
@@ -115,6 +115,22 @@
     <a name="news"><h3>News</h3></a>
 
     <dl>
+      <dt>2003-02-10</dt>
+      <dd>
+        <p>
+          <b>CM3 5.2.0</b> has been released. It features a completely
+          new code generation back-end based on gcc 3.2.1 and support
+          for the new target platform PPC_DARWIN (Darwin, MacOS X on
+          PowerPC). The new code generator has one flaw: it cannot
+          work with the table based exception frame implementation of
+          the current front end, so this needs to be re-done. As a
+          consequence, the new back-end is not recommended for all
+          target platforms supporting stack walkers. This release is
+          made to make support for the new target platform available
+          for everybody. See <a href="RELNOTES_5_2_0">RELNOTES_5_2_0</a>
+          for details.
+        </p>
+      </dd>
       <dt>2002-04-08</dt>
       <dd>
         <p>
@@ -561,7 +577,7 @@
     <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
 <!-- Created: Fri Feb 16 14:00:24 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Tue Sep 24 10:56:47 CEST 2002
+Last modified: Mon Feb 10 18:00:35 CET 2003
 <!-- hhmts end -->
   </body>
 </html>
