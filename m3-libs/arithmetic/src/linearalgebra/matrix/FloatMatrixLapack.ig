@@ -32,8 +32,8 @@ TYPE
   LSGenFlagSet = SET OF LSGenFlag;
 
   LS = RECORD
-         x  : V.T;
-         res: R.T;
+         x  : V.T;               (*solution vector*)
+         res: R.T;               (*square of the minimal distance*)
        END;
 
 PROCEDURE LeastSquaresGen (         A    : M.T;

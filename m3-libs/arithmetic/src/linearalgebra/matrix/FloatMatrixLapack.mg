@@ -68,24 +68,27 @@ PROCEDURE LeastSquaresGen (         A    : M.T;
                                     much implementation specific and is
                                     ignored for now until one finds a
                                     sophisticated way of utilizing it*)
-    xsize  : CARDINAL;
+    bsize  : CARDINAL;           (*size of a target vector from 'b'*)
+    xsize  : CARDINAL;           (*size of a solution vector*)
     success: INTEGER;
     trans  : CHAR;
     work := NEW(REF ARRAY OF R.T, MAX(1, minmn + MAX(minmn, NUMBER(B))));
   BEGIN
     IF LSGenFlag.transposed IN flags THEN
-      xsize := NUMBER(A[0]);
+      bsize := NUMBER(A[0]);
+      xsize := NUMBER(A^);
       trans := 'N';              (*we have to think inverse because FORTRAN
                                     always considers the matrices to be
                                     transposed*)
     ELSE
-      xsize := NUMBER(A^);
+      bsize := NUMBER(A^);
+      xsize := NUMBER(A[0]);
       trans := 'T';
     END;
 
     FOR j := 0 TO LAST(X^) DO
-      IF NUMBER(X[j]) # xsize THEN RAISE Error(Err.bad_size); END;
-      SUBARRAY(X[j], 0, xsize) := B[j]^;
+      IF NUMBER(X[j]) # bsize THEN RAISE Error(Err.bad_size); END;
+      SUBARRAY(X[j], 0, bsize) := B[j]^;
     END;
 
     LA.GELS(trans, NUMBER(Atmp[0]), NUMBER(Atmp^), NUMBER(X^), Atmp[0, 0],
