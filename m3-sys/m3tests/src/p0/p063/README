@@ -1,0 +1,29 @@
+/* Copyright (C) 1990, Digital Equipment Corporation.         */
+/* All rights reserved.                                       */
+/* See the file COPYRIGHT for a full description.             */
+
+/* Last modified on Sat Jul 28 05:36:55 1990 by muller        */
+
+
+Delivery-Date: Fri, 27 Jul 90 20:08:52 PDT
+Sender: "James_Plank.PARC"@Xerox.COM
+Date: 27 Jul 90 16:04:24 PDT (Friday)
+Subject: Version stamp bug
+From: "James_Plank.PARC"@Xerox.COM
+To: m3
+Reply-To: "James_Plank.PARC"@Xerox.COM
+
+
+The following four files gave me a version stamp error when 
+compiled with the m3-1.5 compiler on a SPARC.  (I got the same 
+error with the 1.5-beta compiler as well)
+
+...
+
+When I compile them all together, I get the following:
+
+%m3 -g A.i3 B.i3 A.m3 Main.m3
+ld: Undefined symbol 
+   _VS_B__BT2__2a5dfe062d76bf04 
+   _VS_B__BT3__a5c1dbc638b36289 
+

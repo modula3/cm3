@@ -1,0 +1,3 @@
+Entire list -> ((blah, 0), (Blag, 25))
+List.Assoc(..., "blah") -> (blah, 0)
+List.Assoc(..., "Blag") -> (Blag, 25)

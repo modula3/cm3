@@ -1,0 +1,34 @@
+Return-Path: 
+Delivery-Date: Tue, 08 May 90 04:19:07 PDT
+Received: by jumbo.pa.dec.com; id AA09865; Tue, 8 May 90 04:18:58 -0700
+Received: by decwrl.dec.com; id AA28523; Tue, 8 May 90 04:18:53 -0700
+Received: from sun.nsfnet-relay.ac.uk by vax.NSFnet-Relay.AC.UK 
+           via Janet with NIFTP  id aa09409; 8 May 90 11:38 BST
+Received: from ashley.cl.cam.ac.uk by gnnt.Cl.Cam.AC.UK id aa04053;
+          8 May 90 11:06 BST
+To: m3-request
+Subject: Array bug
+Date: Tue, 08 May 90 11:06:43 +0100
+From: mjj%computer-lab.cambridge.ac.uk@NSFnet-Relay.AC.UK
+Message-Id:  <9005081106.aa04053@gnnt.Cl.Cam.AC.UK>
+
+The following code generates a compiler bug. The C structure declared for
+the constructor "Array{1,2}" doesn not have a 'size' field, leading to obvious
+problems in "Open".
+
+Mick
+ 
+MODULE Bug3 EXPORTS Main;
+
+
+TYPE
+  Array = ARRAY OF INTEGER;
+
+PROCEDURE Open(READONLY a: Array) RAISES {}=
+  VAR c := NEW(REF Array, NUMBER(a));
+  BEGIN
+  END Open;
+
+BEGIN
+   Open(Array{1,2});
+END Bug3.

@@ -1,0 +1,18 @@
+R> val = 12
+1> Changing val to 15
+2> Changing val to 22
+3> Changing val to 39
+1> Changing val to 42
+2> Changing val to 49
+3> Changing val to 66
+1> Changing val to 69
+2> Changing val to 76
+3> Changing val to 93
+1> Changing val to 96
+2> Changing val to 103
+2> Done.
+3> Changing val to 120
+3> Done.
+1> Changing val to 123
+1> Done.
+R> val = 123

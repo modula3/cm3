@@ -1,0 +1,100 @@
+Return-Path: 
+Delivery-Date: Tue, 24 Apr 90 16:41:54 PDT
+Received: by jumbo; id AA26159; Tue, 24 Apr 90 16:41:37 PDT
+Message-Id: <9004242341.AA26159@jumbo>
+To: harrison
+Cc: m3-request
+Subject: Re: Here's a stack backtrace for you enjoyment 
+In-Reply-To: Your message of Tue, 24 Apr 90 14:51:36 -0700.
+             <9004242151.AA18941@basalt.pa.dec.com> 
+Date: Tue, 24 Apr 90 16:41:35 PDT
+From: Eric Muller <muller>
+
+
+> 
+> Eric,
+
+> Can you tell by looking at this stack backtrace if this is a known
+> problem?  I did something like:
+
+>   TRY
+>     ConnectRemoteHosts(hostList);
+>     pics := RenderRemotely(hostList);
+>     DisconnectRemoteHosts(hostList);
+>   EXCEPT
+>   | Rd.Failure(reason) =>
+>       HandleException("Rd.Failure", reason);
+>   | Wr.Failure(reason) =>
+>       HandleException("Wr.Failure", reason);
+>   END;
+
+> Thanks,
+
+> /Stephen
+
+I guess that you got an error message before the core dump saying that
+either Rd.Failure or Wr.Failure was undefined; in other words that you
+forgot to import one of Rd or Wr (or both). I'll fix the compiler so
+that it doesn't dump core.
+
+thanks,
+eric.
+
+
+
+> --------------------------------8<--------------------------
+
+> elf12: /usr/local/lib/m3/m3compiler ./core
+> dbx version 2.0
+> Type 'help' for help.
+> Corefile produced from file "m3compiler"
+> Child died at pc 0x4dd4b4 of signal : Segmentation fault
+> reading symbolic information ...
+> [using memory image in ./core]
+> (dbx) where
+> >  0 _M3Runtime__Error(va_alist = 268570961) ["M3Runtime.c":96, 0x4dd4b0]
+>    1 _M3Runtime__AssertFault() ["M3Runtime.c":102, 0x4dd4e0]
+>    2 .block4054 ["Variable.m3":187, 0x4cf724]
+>    3 _Variable__Bind(_t = 0x101de804 = "") ["Variable.m3":187, 0x4cf724]
+>    4 .block3985 ["Value.m3":25, 0x4cb4e4]
+>    5 _Val> ue__Bind(_t = 0x101de804 = "") ["Value.m3":25, 0x4cb4e4]
+>    6 .block2182 ["Scope.m3":232, 0x468d28]
+>    7 .block2181 ["Scope.m3":232, 0x468d28]
+>    8 .block2180 ["Scope.m3":232, 0x468d28]
+>    9 _Scope__Bind(_t = 0x101e2080 = "\200\n^^^P\200\n^^^P", _finishDelays = 1
+) [
+> "Scope.m3":232, 0x468d28]
+>   10 .block2588 ["TryStmt.m3":181, 0x482090]
+>   11 _TryStmt__BindHandler(_h = 0x101e1640 = "@^W^^^P`^V^^^P") ["TryStmt.m3":
+181
+> , 0x482090]
+>   12 .block2586 ["TryStmt.m3":157, 0x481d20]
+>   13 _TryStmt__Bind(_p = 0x101e2044 = "\240\361^H^P\244^X^^^Pi") ["TryStmt.m3
+":1
+> 57, 0x481d20]
+>   14 .block2559 ["Stmt.m3":74, 0x47f9a4]
+>   15 _Stmt__Bind(_t = 0x101e2044 = "\240\361^H^P\244^X^^^Pi") ["Stmt.m3":74, 
+0x4
+> 7f9a4]
+>   16 .block3843 ["Procedure.m3":214, 0x4c350c]
+>   17 .block3836 ["Procedure.m3":214, 0x4c350c]
+>   18 _Procedure__BindBody(_p = 0x101de684 = "\200^P\t^PS")
+> ["Procedure.m3":214, 0x4c350c]
+>   19 .block2187 ["Scope.m3":238, 0x468f10]
+>   20 .block2186 ["Scope.m3":238, 0x468f10]
+>   21 .block2184 ["Scope.m3":238, 0x468f10]
+>   22 .bloc> k2183 ["Scope.m3":238, 0x468f10]
+>   23 _Scope__Bind(_t = 0x101ddb00 = "\300\331^]^P\300^H\t^P", _finishDelays =
+ 1)
+>  ["Scope.m3":238, 0x468f10]
+>   24 .block3758 ["Module.m3":401, 0x4be454]
+>   25 _Module__Bind(_t = 0x100c1104 = "") ["Module.m3":401, 0x4be454]
+>   26 .block2041 ["Main.m3":50, 0x46046c]
+>   27 _Main__Compile() ["Main.m3":50, 0x46046c]
+>   28 .block2047 ["Main.m3":97, 0x46092c]
+>   29 Main.Main__initProc() ["Main.m3":97, 0x46092c]
+>   30 _M3Runtime__InitModule(l = 0x10031e50) ["M3Runtime.c":210, 0x4dda64]
+>   31 m3ld_11999_c.main(argc = 6, argv = 0x7fffb694, envp = 0x7fffb6b0) ["m3ld
+_11
+> 999_c.c":1735, 0x4030b8]
+> (dbx) quit

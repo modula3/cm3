@@ -1,0 +1,56 @@
+Return-Path: 
+Delivery-Date: Wed, 14 Mar 90 17:03:21 PST
+Received: by jumbo; id AA01781; Wed, 14 Mar 90 17:03:04 PST
+From: stolfi (Jorge Stolfi)
+Message-Id: <9003150103.AA01781@jumbo>
+Date: 14 Mar 1990 1702-PST (Wednesday)
+To: muller, kalsow
+X-Folder-Carbon: sw-m3
+Subject: m3.1.4 outstanding bug list
+
+
+Eric and Bill
+
+What do you think of posting this do srcext.m3?
+
+If you approve, please feel free to correct and rewrite it at will.  
+Perhaps you want to add other people's bugs to this list, and 
+suggest code patches where appropriate?
+
+Thanks for all the good work,
+
+--jorge
+
+------------------------------------------------------------------------------
+Outstanding bugs in the SRC Modula-3 compiler, version 1.4:
+------------------------------------------------------------------------------
+
+#1. Long function results in WITH statements: 
+ 
+    Statements of the form 
+
+      WITH 
+        id1: BigRec = expr_1,
+        id2: BigRec = expr_2,
+        ...
+      DO ... END
+
+    may be compiled incorrectly.  If BigRec is a multi-word record 
+    or array type, and both expr_i are non-trivial expressions 
+    (other than constants and designators), the compiler will sometimes 
+    try to use the same temporary storage location to hold both 
+    results.  
+
+    The symptom is that the program compiles correctly but one of the
+    identifiers will get the wrong value. The workaround is to use local 
+    variables and ordinary assignment statements instead of WITH:
+
+      VAR id1, id2: BigRec;
+      BEGIN
+        id1 := expr1;
+        id2 := expr2;
+        ...
+      END
+
+    <Permanent fix? Next release?>
+

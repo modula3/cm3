@@ -1,0 +1,42 @@
+replied: Mon, 23 Apr 90 13:47:13 PDT
+replied: "Stephen Harrison <harrison> inbox"
+Return-Path: 
+Delivery-Date: Sun, 22 Apr 90 18:22:42 PDT
+Received: by jumbo; id AA00431; Sun, 22 Apr 90 18:22:38 PDT
+Received: by basalt.pa.dec.com; id AA21856; Sun, 22 Apr 90 18:22:36 -0700
+Message-Id: <9004230122.AA21856@basalt.pa.dec.com>
+To: muller
+Subject: Is this reasonable?
+Date: Sun, 22 Apr 90 18:22:34 PDT
+From: Stephen Harrison <harrison>
+
+
+Eric,
+
+What's the answer to this conundrum?
+
+/Stephen
+
+elf22: cat foo.m3
+
+MODULE foo EXPORTS Main;
+
+IMPORT Fmt, Stdio, Wr;
+
+TYPE
+  Short = [-16_8000 .. 16_7FFF];
+
+VAR
+  s: Short;
+
+BEGIN
+  Wr.PutText(Stdio.stderr, "BYTESIZE(s) = " & Fmt.Int(BYTESIZE(s)) & "\n");
+  Wr.PutText(Stdio.stderr, "BYTESIZE(Short) = " & Fmt.Int(BYTESIZE(Short)) & "\n");
+END foo.
+
+elf22: a.out
+
+BYTESIZE(s) = 4
+BYTESIZE(Short) = 2
+
+elf22:

@@ -1,0 +1,4 @@
+../c001/Main.m3: ERROR: bad linkfile (unrecognized header)
+../c001/Main.m3: ERROR: malformed linker file
+
+Fatal Error: bad link info file: Main.mx

@@ -1,0 +1,26 @@
+#! /bin/csh
+
+foreach x (????)
+  cd $x
+  cat /dev/null > m3makefile
+    foreach f (*.i3 *.m3 *.ig *.mg *.c)
+      switch ($f)
+      case *.i3:
+        echo 'interface ("'$f:r'")' >> m3makefile
+        breaksw
+      case *.m3:
+        echo 'implementation ("'$f:r'")' >> m3makefile
+        breaksw
+      case *.ig:
+        echo 'generic_interface ("'$f:r'")' >> m3makefile
+        breaksw
+      case *.mg:
+        echo 'generic_implementation ("'$f:r'")' >> m3makefile
+        breaksw
+      case *.c:
+        echo 'c_source ("'$f:r'")' >> m3makefile
+        breaksw
+      endsw
+    end
+  cd ..
+end

@@ -1,0 +1,32 @@
+/* Copyright (C) 1990, Digital Equipment Corporation.         */
+/* All rights reserved.                                       */
+/* See the file COPYRIGHT for a full description.             */
+
+/* Last modified on Thu Nov  1 01:44:36 1990 by muller        */
+
+Date: 24 Oct 90 09:17:11 +0100 (Wednesday)
+To: m3-request
+Cc: pr@computer-lab.cambridge.ac.uk
+From: Peter Robinson <pr@computer-lab.cambridge.ac.uk>
+Subject: M3 problem with CHAR literals >= '\200'
+Message-Id: <43520-30280-3798674122-holden@uk.ac.cam.cl>
+
+
+There is a problem with the C code geenrated by the SRC Modula-3 compiler for
+character literals expressed as escaped octal with values over 127.
+
+The C code represents them in the same textual form, but assigns them to
+integer variables which means that they are sign extended.  For example, the
+loop
+	FOR ch := '\000' TO '\377' DO ... END
+is vacuous.
+
+This manifests itself in the character conversion arrays Upper, Lower and
+Control in the Char module where precisely such a loop is used to initialise
+values in the arrays.
+
+The workaround for this particular manifestation is to change the loop to read
+	FOR ch := FIRST (CHAR) TO LAST (CHAR) DO ... END;
+(which is probably better Modula-3 anyway), but the problem is more general.
+
+- Peter Robinson.

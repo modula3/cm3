@@ -1,0 +1,7 @@
+"../src/B.i3", line 7: C -> A -> B -> C: circular imports
+"../src/B.i3", line 9: undefined (C.T)
+2 errors encountered
+"../src/B.i3", line 7: imported interface contains errors (C)
+1 error encountered
+"../src/A.i3", line 7: imported interface contains errors (B)
+1 error encountered

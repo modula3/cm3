@@ -1,0 +1,4 @@
+"../src/Main.m3", line 8: variable cannot be an open array (a)
+"../src/Main.m3", line 8: warning: ".." ignored in open array constructor
+"../src/Main.m3", line 8: warning: not used (a)
+1 error and 2 warnings encountered

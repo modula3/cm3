@@ -1,0 +1,36 @@
+Delivery-Date: Fri, 17 Aug 90 17:03:13 PDT
+Received: by jumbo.pa.dec.com; id AA03724; Fri, 17 Aug 90 16:55:19 -0700
+Received: by jumbo.pa.dec.com; id AA03713; Fri, 17 Aug 90 16:55:16 -0700
+Received: by decwrl.dec.com; id AA14274; Fri, 17 Aug 90 16:55:15 -0700
+Received: from sun0.UUCP by AMD.COM (4.1/SMI-4.1-AMD-90.4.28)
+	id AA17716; Fri, 17 Aug 90 16:53:36 PDT
+Received: from mri. by mri.uucp (3.2/SMI-3.2)
+	id AA11391; Fri, 17 Aug 90 16:22:41 PDT
+Received: from sun48. by mri. (4.0/SMI-4.0)
+	id AA12404; Fri, 17 Aug 90 16:17:46 PDT
+Date: Fri, 17 Aug 90 16:17:46 PDT
+From: sun0!mri!woolsey (Jeff Woolsey)
+Message-Id: <9008172317.AA12404@mri.>
+To: amdcad!m3%src.dec.com
+Subject: m3 compiler bug
+
+I finally tracked this one down.  I think a semantic error message
+would be a lot more helpful than the compiler dying with an assertion
+failure.  (Assuming, of course, that TEXT and ARRAY OF CHAR really are
+different (TEXT being opaque and all...).  Don't ask me how I feel
+about TEXT.)  This is on a SPARCstation 1+ running SunOS 4.0.3c .
+
+MODULE boom;
+
+PROCEDURE A(x: ARRAY OF CHAR)= BEGIN END A;
+
+VAR 
+  nameT: TEXT;
+
+BEGIN
+  A(nameT);
+END boom.
+
+-- 
+Jeff Woolsey	Microtec Research, Inc.	
+.!amdcad!sun0!woolsey		+1 408 980 1300 x585

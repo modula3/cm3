@@ -1,0 +1,32 @@
+Return-Path: 
+Delivery-Date: Tue, 08 May 90 10:05:36 PDT
+Received: by jumbo.pa.dec.com; id AA22476; Tue, 8 May 90 10:04:49 -0700
+Received: by decwrl.dec.com; id AA16286; Tue, 8 May 90 10:04:35 -0700
+Received: from sun.nsfnet-relay.ac.uk by vax.NSFnet-Relay.AC.UK 
+           via Janet with NIFTP  id aa25418; 8 May 90 16:51 BST
+Received: from ashley.cl.cam.ac.uk by gnnt.Cl.Cam.AC.UK id aa16218;
+          8 May 90 15:14 BST
+To: m3-request
+Subject: SUBARRAY bug
+Date: Tue, 08 May 90 15:14:11 +0100
+From: mjj%computer-lab.cambridge.ac.uk@NSFnet-Relay.AC.UK
+Message-Id:  <9005081514.aa16218@gnnt.Cl.Cam.AC.UK>
+
+I am having trouble with SUBARRAY, which uses bcopy, but with a size in
+bits rather than bytes. When I fix things up manually the programs work.
+
+Mick
+
+E.g.
+
+MODULE Bug5 EXPORTS Main;
+
+EXCEPTION Error;
+VAR x, y: ARRAY [0..9] OF INTEGER; i, j: INTEGER;
+BEGIN
+  FOR a := 0 TO 9 DO x[a] := a; END;
+  FOR a := 0 TO 9 DO y[a] := a+100; END;
+  i := 10; j := 10;
+  SUBARRAY(x, 0, i) := SUBARRAY(y, 0, j);
+  FOR a := 0 TO 9 DO IF x[a] # y[a] THEN RAISE Error; END; END;
+END Bug5.

@@ -1,0 +1,36 @@
+Received: by jumbo; id AA24866; Thu, 26 Apr 90 14:05:24 PDT
+Message-Id: <9004262105.AA24866@jumbo>
+To: mjj%computer-lab.cambridge.ac.uk@NSFnet-Relay.AC.UK
+Cc: m3-request
+Subject: Re: Auxiliary symbols for EXTERNALS 
+In-Reply-To: Your message of Thu, 26 Apr 90 14:43:19 +0100.
+             <9004261443.aa05342@gnnt.Cl.Cam.AC.UK> 
+Date: Thu, 26 Apr 90 14:05:22 PDT
+From: Eric Muller <muller>
+
+
+> Rather than edit my code to import Ultrix* instead of Unix*, I decided to
+> modify my Unix interface to work with the SRC interpretation of EXTERNAL.
+> I am now getting a multply defined on the auxiliary symbol for errno, which
+> is being defined by m3run.o (via UltrixError?) and via my Unix.io.
+> It doesnt seem right that an EXTERNAL should generate an EXPORT, but I can
+> see the problem in that someone has to. The effect is a bit like the problems
+> of name equivalence in Modula-2; there has to be only one true EXTERNAL
+> definition.  Any ideas for a workaround?
+
+The auxiliary symbol is the version stamp. For each exported name,
+there is a C symbol, of the form VS<name><fingerprint> where
+fingerprint is built from the name, type and value of the exported
+object. It turns out that the C name is used for external
+symbols. I changed that to use the qualified Modula name.
+
+In the mean time, you can use different names (-> different
+fingerprints -> different symbols). For example:
+
+INTERFACE Unix;
+
+<*EXTERNAL errno *> VAR myerrno : INTEGER;
+
+...
+
+eric.
