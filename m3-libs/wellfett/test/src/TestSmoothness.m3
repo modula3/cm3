@@ -21,6 +21,7 @@ IMPORT LongRealBasic                AS R,
        LongRealRefinableFunc        AS Refn,
        LongRealWaveletPlot          AS WP,
        LongRealFFTWRaw              AS FFT,
+       LongRealIntegerPower         AS RIntPow,
        Integer32IntegerPower        AS IIntPow,
        PLPlot                       AS PL;
 
@@ -74,12 +75,17 @@ PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
       s.getData()^);
   END PlotReal;
 
-PROCEDURE PlotComplex (READONLY s: ARRAY OF CS.T; l: CARDINAL; ) =
+TYPE
+  ScaledComplexSignal = RECORD
+                          sig: CS.T;  (* complex valued signal *)
+                          res: R.T;  (* resolution, that is the width of a
+                                        peak represented by a value *)
+                        END;
+
+PROCEDURE PlotComplex (READONLY s: ARRAY OF ScaledComplexSignal; ) =
   CONST magnify = 1.0D0;
 
   VAR
-    unit        := IIntPow.MulPower(1, 2, l);
-    grid        := R.One / FLOAT(unit, R.T);
     v           := NEW(REF ARRAY OF RECORD re, im: V.T;  END, NUMBER(s));
     left, right := NEW(V.T, NUMBER(s));
     min, max    := R.Zero;
@@ -88,11 +94,11 @@ PROCEDURE PlotComplex (READONLY s: ARRAY OF CS.T; l: CARDINAL; ) =
   <* FATAL PL.SizeMismatch *>
   BEGIN
     FOR i := FIRST(s) TO LAST(s) DO
-      left[i] := FLOAT(s[i].getFirst(), R.T) * grid;
-      right[i] := FLOAT(s[i].getLast(), R.T) * grid;
-      v[i].re := NEW(V.T, s[i].getNumber());
-      v[i].im := NEW(V.T, s[i].getNumber());
-      WITH sig = s[i].getData()^ DO
+      left[i] := FLOAT(s[i].sig.getFirst(), R.T) * s[i].res;
+      right[i] := FLOAT(s[i].sig.getLast(), R.T) * s[i].res;
+      v[i].re := NEW(V.T, s[i].sig.getNumber());
+      v[i].im := NEW(V.T, s[i].sig.getNumber());
+      WITH sig = s[i].sig.getData()^ DO
         FOR k := FIRST(sig) TO LAST(sig) DO
           v[i].re[k] := sig[k].re;
           v[i].im[k] := sig[k].im;
@@ -107,7 +113,7 @@ PROCEDURE PlotComplex (READONLY s: ARRAY OF CS.T; l: CARDINAL; ) =
     PL.SetEnvironment(
       VFs.Min(left^), VFs.Max(right^), min / magnify, max / magnify);
     FOR i := FIRST(s) TO LAST(s) DO
-      WITH abscissa = V.ArithSeq(s[i].getNumber(), left[i], grid)^ DO
+      WITH abscissa = V.ArithSeq(s[i].sig.getNumber(), left[i], s[i].res)^ DO
         PL.SetFGColorDiscr(color);
         PL.PlotLines(abscissa, v[i].im^);
         PL.SetFGColorDiscr(color);
@@ -195,6 +201,20 @@ PROCEDURE UpSample2Geom (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
     RETURN z;
   END UpSample2Geom;
 
+(* geometric interpolation *)
+PROCEDURE UpSample2Quad (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
+  VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
+  BEGIN
+    FOR i := FIRST(x) TO LAST(x) - 1 DO
+      z[2 * i] := x[i];
+      z[2 * i + 1] := CT.SqRt(
+                        C.Scale(C.Add(C.Square(x[i]), C.Square(x[i + 1])),
+                                R.Half));
+    END;
+    z[LAST(z^)] := x[LAST(x)];
+    RETURN z;
+  END UpSample2Quad;
+
 CONST UpSample2 = UpSample2Linear;
 
 PROCEDURE FourierDecay () =
@@ -281,16 +301,28 @@ PROCEDURE FourierDecay () =
                 DEC(k);
               END;
               IF k = 0 THEN EXIT END;
-              band := UpSample2(band^);
-              bandDoub :=
-                CV.FromArray(SUBARRAY(genDoubSpec^, curBandWidth * 2,
-                                      curBandWidth * 2 + 1));
-              PlotComplex(ARRAY OF
-                            CS.T{NEW(CS.T).fromVector(band),
-                                 NEW(CS.T).fromVector(bandDoub)}, l - k);
-              (* IO.Put(Fmt.FN( "diff upsampled - Fourier interpolated:
-                 %s\n", ARRAY OF TEXT{RF.Fmt(CVT.Norm2(CV.Sub(band,
-                 bandDoub)))})); *)
+              WITH bandNew = UpSample2(band^),
+                   res     = RIntPow.MulPower(R.One, R.Half, l - k) DO
+                (*band := UpSample2(band^);*)
+                bandDoub :=
+                  CV.FromArray(SUBARRAY(genDoubSpec^, curBandWidth * 2,
+                                        curBandWidth * 2 + 1));
+                PlotComplex(ARRAY OF
+                              ScaledComplexSignal{
+                              ScaledComplexSignal{
+                                NEW(CS.T).fromVector(band), res * 2.0D0},
+                              ScaledComplexSignal{
+                                NEW(CS.T).fromVector(bandNew), res},
+                              ScaledComplexSignal{
+                                NEW(CS.T).fromVector(bandDoub), res},
+                              ScaledComplexSignal{
+                                NEW(CS.T).fromVector(maskSpec).scale(
+                                  C.T{CVT.NormInf(band), R.Zero}), res}});
+                (* IO.Put(Fmt.FN( "diff upsampled - Fourier interpolated:
+                   %s\n", ARRAY OF TEXT{RF.Fmt(CVT.Norm2(CV.Sub(band,
+                   bandDoub)))})); *)
+                band := bandNew;
+              END;
 
               FOR i := 0 TO rep - 1 DO
                 WITH bandSpec = SUBARRAY(band^, bandWidth * i, bandWidth) DO
