@@ -7,7 +7,7 @@ IMPORT NADefinitions AS NA;
 CONST Module = "Functional.";
 (*==========================*)
 
-PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T): FD.T =
+PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T): FD.T RAISES {NA.Error} =
   VAR
     der := FD.T{
              f(x), NEW(V.T, NUMBER(x^)), NEW(M.T, NUMBER(x^), NUMBER(x^))};
