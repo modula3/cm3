@@ -96,11 +96,11 @@ sed -e '
 # compile and install all needed packages
 header "stage 3: compiling libraries using new cm3 compiler"
 CM3="${INSTALLROOT}/bin/cm3${EXE}"
-BUILDLOCAL="${CM3} -build -override -DROOT=${ROOT}"
-CLEANLOCAL="${CM3} -clean -override -DROOT=${ROOT}"
-BUILDGLOBAL="${CM3} -build  -DROOT=${ROOT}"
-CLEANGLOBAL="${CM3} -clean -DROOT=${ROOT}"
-SHIP="${CM3} -ship -DROOT=${ROOT}"
+BUILDLOCAL="${CM3} -build -override -DROOT='${CM3ROOT}'"
+CLEANLOCAL="${CM3} -clean -override -DROOT='${CM3ROOT}'"
+BUILDGLOBAL="${CM3} -build  -DROOT='${CM3ROOT}'"
+CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
+SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
 "${ROOT}/scripts/do-cm3-min.sh" buildlocal || exit 1

@@ -17,13 +17,6 @@ else
 fi
 . "$sysinfo"
 
-if [ "${M3OSTYPE}" = "WIN32" ] ; then
-  CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
-  #echo ${CM3ROOT}
-else
-  CM3ROOT="${ROOT}"
-fi
-
 # define build and ship programs for Critical Mass Modula-3
 CM3_BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT='${CM3ROOT}' ${BUILDARGS}}"
 CM3_CLEANLOCAL="${CLEANLOCAL:-cm3 -clean -override -DROOT='${CM3ROOT}' ${CLEANARGS}}"
