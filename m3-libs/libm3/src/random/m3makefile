@@ -49,7 +49,8 @@ readonly _RandomPieces = {
   "VAX"        : [ _VAX ],
   "I386_DARWIN": [ _LittleEndian ],
   "PPC_DARWIN" : [ _BigEndian ],
-  "PPC_LINUX"  : [ _BigEndian ]
+  "PPC_LINUX"  : [ _BigEndian ],
+  "NetBSD2_i386"  : [ _LittleEndian ]
 }
 
 if _RandomPieces contains TARGET

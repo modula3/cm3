@@ -105,6 +105,7 @@ CONST
    (* BSDI4	 *)  "BSD/OS",
    (* NT386GNU	 *)  "Cygwin",
    (* PPC_LINUX	 *)  "Linux",
+   (* NetBSD2_i386 *)  "NetBSD",
    ..
   };
 
@@ -145,6 +146,7 @@ CONST
    (* BSDI4	 *)  "i486",
    (* NT386GNU	 *)  "i486",
    (* PPC_LINUX	 *)  "ppc",
+   (* NetBSD2_i386 *)  "i386",
    ..
   };
 

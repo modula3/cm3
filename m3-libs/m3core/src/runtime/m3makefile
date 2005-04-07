@@ -38,7 +38,8 @@ readonly HAS_STACK_WALKER = {
   "VAX"        : FALSE,
   "I386_DARWIN": FALSE,
   "PPC_DARWIN" : FALSE,
-  "PPC_LINUX"  : FALSE
+  "PPC_LINUX"  : FALSE,
+  "NetBSD2_i386"  : FALSE
 }
 
 
