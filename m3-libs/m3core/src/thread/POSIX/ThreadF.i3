@@ -52,8 +52,8 @@ TYPE
 
 TYPE
   Hooks = OBJECT METHODS
-    fork (t: Thread.T);  (* called with RT0u.inCritical > 0 *)
-    die  (t: Thread.T);  (* called with RT0u.inCritical > 0 *)
+    fork (t: Thread.T);  (* called with inCritical > 0 *)
+    die  (t: Thread.T);  (* called with inCritical > 0 *)
   END;
 
 PROCEDURE RegisterHooks (h: Hooks; init := TRUE): Hooks RAISES {};
@@ -61,13 +61,24 @@ PROCEDURE RegisterHooks (h: Hooks; init := TRUE): Hooks RAISES {};
    call hooks.fork (t) for every thread t in the ring in a single
    critical section. *)
 
+(*-------------------------------------------------------------- identity ---*)
+
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
 
 <*EXTERNAL "ThreadF__myId"*>
-VAR
-  myId: Id;
-  (* The id of the currently running thread *)
+VAR myId: Id;
+(* The id of the currently running thread *)
+
+(*------------------------------------------------------ mutual exclusion ---*)
+
+<*EXTERNAL ThreadF__inCritical*>
+VAR inCritical: INTEGER;
+(* inCritical provides low-level mutual exclusion between the thread
+   runtime, garbage collector and the Unix signal that triggers thread
+   preemption.  If inCritical is greater than zero, thread preemption
+   is disabled.  We *ASSUME* that "INC(inCritical)" and "DEC(inCritical)"
+   generate code that is atomic with respect to Unix signal delivery. *)
 
 (*------------------------------------------------------------ preemption ---*)
 

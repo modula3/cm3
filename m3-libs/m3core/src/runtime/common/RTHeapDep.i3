@@ -31,7 +31,8 @@ TYPE Page = [0 .. Word.Divide(-1, AdrPerPage)];
    this architecture.  VM is TRUE for the DS3100, whose implementation you
    might use as a reference. *)
 
-CONST VM = RTMachine.VMHeap;
+(* CONST VM = RTMachine.VMHeap; *)
+VAR VM := FALSE;
 
 (* None of the procedures below will be called if VM is FALSE.  The
    descriptions given for each assume that VM is TRUE. *)

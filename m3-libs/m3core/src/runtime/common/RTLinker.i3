@@ -26,6 +26,10 @@ PROCEDURE AddUnit (b: RT0.Binder);
 (* Adds "b(0)" and any units it imports to the set of linked
    and initialized compilation units. *)
 
+PROCEDURE AddUnitImports (b: RT0.Binder);
+(* Adds any units "b(0)" imports but not "b(0)" itself to the set of linked
+   and initialized compilation units. *)
+
 PROCEDURE RunMainBody (m: RT0.ModulePtr);
 (* Invokes "m"s main body if it hasn't already been done.
    Note: this procedure is only exported so that stack walkers

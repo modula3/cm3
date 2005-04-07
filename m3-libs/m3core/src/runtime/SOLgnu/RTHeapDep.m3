@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTHeapRep, RTCollectorSRC, RTMachine;
+IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTProcedureSRC, RTMachine, RTVM;
 IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal;
 IMPORT Utime, Utypes, Uucontext, Word;
 
@@ -124,7 +124,7 @@ PROCEDURE Core (sig : Ctypes.int;
      <*UNUSED*> sip : Usignal.siginfo_t_fault_star;
      <*UNUSED*> uap : Uucontext.ucontext_t_star) =
   BEGIN
-    INC(RT0u.inCritical);
+    ThreadF.SuspendOthers();
     IF NOT dumped_core THEN
       (* indicate that this thread will dump core *)
       dumped_core := TRUE;
@@ -153,7 +153,7 @@ PROCEDURE Core (sig : Ctypes.int;
       Cstdlib.abort ();
       <* ASSERT FALSE *>
     END;
-    DEC(RT0u.inCritical);
+    ThreadF.ResumeOthers();
   END Core;
 
 (* System-call faults are handled in RTHeapDepC.c *)
@@ -166,7 +166,7 @@ PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
 PROCEDURE TimeUsed (): REAL =
   VAR
     usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
+    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
   BEGIN
     <* ASSERT ret = 0 *>
     RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
@@ -178,6 +178,9 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  RTMachine.RTHeapDep_Fault := LOOPHOLE(Fault, ADDRESS);
+  RTMachine.RTProcedureSRC_FromPC := LOOPHOLE (RTProcedureSRC.FromPC, ADDRESS);
+  VM := RTVM.VMHeap();
   IF VM THEN
     RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
     RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);

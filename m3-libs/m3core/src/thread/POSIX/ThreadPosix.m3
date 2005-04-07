@@ -4,17 +4,17 @@
 (*|                                                          *)
 (*| Last modified on Fri Apr  7 09:06:48 PDT 1995 by kalsow  *)
 (*|      modified on Mon Mar 21 17:40:31 PST 1994 by wobber  *)
-(*|      modified on Sat Jun 26 17:07:03 1993 by gnelson     *)
+(*|      modified on Sat Jun 26 17:07:03 PDT 1993 by gnelson     *)
 (*|      modified on Fri May 14 16:15:26 PDT 1993 by mjordan *)
 (*|      modified on Wed Apr 21 16:35:05 PDT 1993 by mcjones *)
 (*|      modified On Mon Apr  5 14:51:30 PDT 1993 by muller  *)
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
-UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix,
-    RTThreadInit;
+UNSAFE MODULE ThreadPosix
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTThreadInit, RTOS;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep,
-       RT0u, RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
+       RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
        Unix, Usignal, Utime, Word;
 
@@ -215,16 +215,16 @@ PROCEDURE GetDefaultStackSize (): CARDINAL =
 
 PROCEDURE MinDefaultStackSize (new_min: CARDINAL) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       defaultStackSize := MAX (defaultStackSize, new_min);      
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END MinDefaultStackSize;
 
 PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       INC (defaultStackSize, inc);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END IncDefaultStackSize;
 
 PROCEDURE Fork (cl: Closure): T =
@@ -234,7 +234,7 @@ PROCEDURE Fork (cl: Closure): T =
     INC (stats.n_forks);
     IF (stats.n_forks MOD ForkYieldRatio) = 0 THEN Yield () END;
 
-    INC (RT0u.inCritical);
+    INC (inCritical);
 
       IF NOT multipleThreads THEN
         (* this is the first time we have more than one thread; we can start to
@@ -268,7 +268,7 @@ PROCEDURE Fork (cl: Closure): T =
       CanRun (t);
 
       IF hooks # NIL THEN hooks.fork (t) END;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN t;
   END Fork;
 
@@ -288,22 +288,22 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
 PROCEDURE XJoin (t: T): REFANY RAISES {Alerted} =
   VAR c: Condition;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       WHILE (t.state # State.dying) AND (t.state # State.dead) DO
-        (*** INLINE Wait (RT0u.inCritical, t.endCondition) ***)
+        (*** INLINE Wait (inCritical, t.endCondition) ***)
         c := t.endCondition;
         ICannotRun (State.waiting);
         self.waitingForCondition := c;
         self.nextWaiting := c.waitingForMe;
         c.waitingForMe := self;
-        DEC (RT0u.inCritical);
+        DEC (inCritical);
           InternalYield ();
-        INC (RT0u.inCritical);
+        INC (inCritical);
       END;
       t.state := State.dead;
       IF perfOn THEN PerfChanged (t.id, State.dead); END;
       INC (stats.n_joins);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN t.result;
   END XJoin;
 
@@ -323,13 +323,13 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
 PROCEDURE XWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     TRY
-      INC (RT0u.inCritical);
+      INC (inCritical);
         EVAL XRelease (m);
         ICannotRun (State.waiting);
         self.waitingForCondition := c;
         self.nextWaiting := c.waitingForMe;
         c.waitingForMe := self;
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       InternalYield ();
     FINALLY
       LockMutex (m);
@@ -349,7 +349,7 @@ PROCEDURE Broadcast (c: Condition) =
 PROCEDURE XSignal (c: Condition; limit: INTEGER) =
   VAR t: T;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       LOOP
         t := c.waitingForMe;
         IF (t = NIL) THEN EXIT END;
@@ -358,23 +358,23 @@ PROCEDURE XSignal (c: Condition; limit: INTEGER) =
         DEC (limit);
         IF limit = 0 THEN EXIT END;
       END;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END XSignal;
 
 PROCEDURE Alert (t: T) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       t.alertPending := TRUE;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END Alert;
 
 PROCEDURE TestAlert (): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       result := self.alertPending;
       self.alertPending := FALSE;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN result; 
   END TestAlert;
 
@@ -409,11 +409,11 @@ PROCEDURE LockMutex (m: Mutex) =
   <*FATAL Alerted*>
   BEGIN
     LOOP
-      INC (RT0u.inCritical);
+      INC (inCritical);
         IF m.holder = NIL THEN
           <* ASSERT self # NIL *>
           m.holder := self;
-          DEC (RT0u.inCritical);
+          DEC (inCritical);
           RETURN;
         END;
         ICannotRun (State.locking);
@@ -422,7 +422,7 @@ PROCEDURE LockMutex (m: Mutex) =
         self.alertable := FALSE;
         m.waitingForMe := self;
         IF (m.holder = self) THEN ImpossibleAcquire (m); END;
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       InternalYield ();
     END;
   END LockMutex;
@@ -442,9 +442,9 @@ PROCEDURE UnlockMutex (m: Mutex) =
   <*FATAL Alerted*>
   VAR waiters: BOOLEAN;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       waiters := XRelease (m);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     IF waiters THEN
       self.alertable := FALSE;
       InternalYield ();
@@ -493,12 +493,12 @@ PROCEDURE SleazyRelease (m: Mutex) =
 
 PROCEDURE SuspendOthers () =
   BEGIN
-    INC(RT0u.inCritical);
+    INC(inCritical);
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   BEGIN
-    DEC(RT0u.inCritical);
+    DEC(inCritical);
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
@@ -534,11 +534,11 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted}=
 
 PROCEDURE XPause (READONLY until: UTime; alertable := FALSE) RAISES {Alerted} =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       self.waitingForTime := until;
       self.alertable := alertable;
       ICannotRun (State.pausing);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     InternalYield ();
   END XPause;
 
@@ -621,7 +621,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
           newWrite := NEW(FDS, fdindex+1);
           newExcept := NEW(FDS, fdindex+1);
         END;
-        INC (RT0u.inCritical);
+        INC (inCritical);
           IF fdindex >= gMaxActiveFDSet THEN
             gMaxActiveFDSet := fdindex + 1;
             IF gMaxFDSet < gMaxActiveFDSet THEN
@@ -641,10 +641,10 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
                 Time_Add(UTimeNow(), UTimeFromTime(interval));
           END;
           ICannotRun (State.blocking);
-        DEC (RT0u.inCritical);
+        DEC (inCritical);
       END;
       InternalYield ();
-      Cerrno.errno := self.select.errno;
+      Cerrno.SetErrno(self.select.errno);
       RETURN self.select.waitResult;
     END;
   END XIOWait;
@@ -720,12 +720,12 @@ PROCEDURE UTimeFromTime(time: Time.T): UTime =
 
 PROCEDURE DisableSwitching () =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
   END DisableSwitching;
 
 PROCEDURE EnableSwitching () =
   BEGIN
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END EnableSwitching;
 
 PROCEDURE StartSwitching () =
@@ -748,15 +748,15 @@ PROCEDURE switch_thread (<*UNUSED*> sig, code: INTEGER;
                          <*UNUSED*> scp: ADDRESS) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
-    IF RT0u.inCritical = 0 THEN InternalYield () END;
+    IF inCritical = 0 THEN InternalYield () END;
   END switch_thread;
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       selected_interval.tv_sec  := usec DIV 1000000;
       selected_interval.tv_usec := usec MOD 1000000;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     IF multipleThreads THEN StartSwitching () END;
   END SetSwitchingInterval;
 
@@ -797,8 +797,8 @@ VAR t, from: T;
     did_delete   : BOOLEAN;
 
 BEGIN
-  INC (RT0u.inCritical);
-  <*ASSERT RT0u.inCritical = 1 *>
+  INC (inCritical);
+  <*ASSERT inCritical = 1 *>
 
   from := self.next; (* remember where we started *)
   now            := UTimeNow ();
@@ -874,7 +874,7 @@ BEGIN
                     CanRun(t);
                     EXIT;
                   ELSIF n < 0 THEN
-                    t.select.errno  := Cerrno.errno;
+                    t.select.errno  := Cerrno.GetErrno();
                     t.select.waitResult := WaitResult.Error;
                     CanRun(t);
                     EXIT;
@@ -946,7 +946,7 @@ BEGIN
       do_alert := self.alertable AND self.alertPending;
       self.alertable := FALSE;
       IF do_alert THEN self.alertPending := FALSE END;
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       IF do_alert THEN RAISE Alerted END;
       RETURN;
 
@@ -1064,7 +1064,6 @@ PROCEDURE InitTopContext (VAR c: Context;  stackbase: ADDRESS) =
 
   END InitTopContext;
 
-
 PROCEDURE DetermineContext (oldSP: ADDRESS) =
   (* This routine looks at the stack frame for this call and takes
      it as a model for the frame to put in the stacks of forked
@@ -1085,6 +1084,11 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
       RTThread.FlushStackCache ();
 
+      IF debug THEN
+        OutAddr("modelSP:    ", modelSP);
+        OutAddr("oldSP:      ", oldSP);
+        OutInt("frame size: ", ABS (modelSP - oldSP));
+      END;
       modelFrame := NEW (UNTRACED REF ARRAY OF Word.T,
                          ABS (modelSP - oldSP) DIV ADRSIZE (Word.T)
                          + 1 + RTThread.FramePadBottom + RTThread.FramePadTop);
@@ -1103,18 +1107,18 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
     ELSE 
       (* we are starting the execution of a forked thread *)
       RTThread.handlerStack := self.context.handlers;
-      Cerrno.errno := self.context.errno;
+      Cerrno.SetErrno(self.context.errno);
       RTThread.allow_sigvtalrm ();
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       
       FloatMode.InitThread (self.floatState);
       self.result := self.closure.apply ();
       
-      INC (RT0u.inCritical);
+      INC (inCritical);
       Broadcast (self.endCondition);
       ICannotRun (State.dying);
       INC (stats.n_dead);
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       InternalYield ();
       <* ASSERT FALSE *> END;
   END DetermineContext;
@@ -1137,7 +1141,7 @@ PROCEDURE InitContext (VAR c: Context;  size: INTEGER) =
       c.stackBottom := c.stack.first;
     END;
     c.handlers    := NIL;
-    c.errno       := Cerrno.errno;
+    c.errno       := Cerrno.GetErrno();
     
     (* mark the ends of the stack for a sanity check *)
     LOOPHOLE (c.stackTop, IntPtr)^ := seal;
@@ -1191,12 +1195,12 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
     IF (ADR (from) # ADR (to)) THEN
       RTThread.disallow_sigvtalrm ();
       from.handlers := RTThread.handlerStack;
-      from.errno := Cerrno.errno;
+      from.errno := Cerrno.GetErrno();
       self := new_self;
       myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
       RTThread.handlerStack := from.handlers;
-      Cerrno.errno := from.errno;
+      Cerrno.SetErrno(from.errno);
       RTThread.allow_sigvtalrm ();
     END;
   END Transfer;
@@ -1208,7 +1212,7 @@ PROCEDURE SmashedStack (t: T) =
     OutI (t.id, 0);
     OutT ("'s stack overflowed its limits.\n");
     OutT ("*** Use Thread.IncDefaultStackSize to get bigger stacks.\n");
-    RTError.Msg ("ThreadPosix.m3", 1212, "corrupt thread stack");
+    RTError.Msg ("ThreadPosix.m3", 1215, "corrupt thread stack");
   END SmashedStack;
 
 PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
@@ -1243,7 +1247,7 @@ CONST
 PROCEDURE DumpEverybody () =
   VAR t: T;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       OutT ("\n\n*****************************");
       OutT ("**********************************\n");
       OutT ("  id    Thread.T     closure root");
@@ -1260,7 +1264,7 @@ PROCEDURE DumpEverybody () =
       OutT ("*****************************");
       OutT ("**********************************\n");
       RTIO.Flush ();
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END DumpEverybody;
 
 PROCEDURE DumpThread (t: T) =
@@ -1424,17 +1428,17 @@ PROCEDURE RegisterHooks(h: Hooks; init := TRUE): Hooks RAISES {}=
     oldHooks: Hooks; 
     t: T;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       oldHooks := hooks;
       hooks := h;
       IF init AND hooks # NIL THEN
       	t := self;
       	REPEAT 
       	  hooks.fork (t);
-      	  t := t.next;
+          t := t.next;
       	UNTIL (t = self);
       END;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN oldHooks;
   END RegisterHooks;
 
@@ -1448,7 +1452,7 @@ PROCEDURE MyId(): Id RAISES {}=
 PROCEDURE Init()=
   VAR xx: INTEGER;
   BEGIN
-    RT0u.inCritical := 1;
+    inCritical := 1;
       topThread := NEW (T, state := State.alive, id := nextId);
       FloatMode.InitThread (topThread.floatState);
 
@@ -1463,7 +1467,7 @@ PROCEDURE Init()=
 
       topThread.next := topThread;
       topThread.previous := topThread;
-    RT0u.inCritical := 0;
+    inCritical := 0;
 
     PerfStart ();
     preemption := NOT RTParams.IsPresent ("nopreemption");
@@ -1474,6 +1478,65 @@ PROCEDURE QQ(): ADDRESS =
   BEGIN
     RETURN ADR (xx);
   END QQ;
+
+(*------------------------------------------------------------- collector ---*)
+(* These procedures provide synchronization primitives for the allocator
+   and collector. *)
+
+VAR
+  lock_cnt  := 0;      (* LL = inCritical *)
+  do_signal := FALSE;  (* LL = inCritical *)
+  mutex     := NEW(MUTEX);
+  condition := NEW(Condition);
+
+PROCEDURE LockHeap () =
+  BEGIN
+    INC(inCritical);
+    INC(lock_cnt);
+  END LockHeap;
+
+PROCEDURE UnlockHeap () =
+  VAR sig := FALSE;
+  BEGIN
+    DEC(lock_cnt);
+    IF (lock_cnt = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
+    DEC(inCritical);
+    IF (sig) THEN Broadcast(condition); END;
+  END UnlockHeap;
+
+PROCEDURE WaitHeap () =
+  (* LL = 0 *)
+  BEGIN
+    LOCK mutex DO Wait(mutex, condition); END;
+  END WaitHeap;
+
+PROCEDURE BroadcastHeap () =
+  (* LL = inCritical *)
+  BEGIN
+    do_signal := TRUE;
+  END BroadcastHeap;
+
+(*------------------------------------------------------------- debugging ---*)
+
+PROCEDURE OutAddr(s: TEXT; a: ADDRESS) =
+  BEGIN
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutAddr(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutAddr;
+
+PROCEDURE OutInt(s: TEXT; a: INTEGER) =
+  BEGIN 
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutInt(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutInt;
+
+VAR debug := FALSE;
 
 BEGIN
 END ThreadPosix.

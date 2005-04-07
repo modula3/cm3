@@ -8,7 +8,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC;
+IMPORT ThreadF, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
 IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Utime, Word;
 
 VAR
@@ -145,7 +145,7 @@ PROCEDURE Core (             sig : Ctypes.int;
     vec := Usignal.struct_sigvec{sv_handler := Usignal.SIG_DFL,
                                  sv_mask := 0, sv_flags := 0};
   BEGIN
-    INC(RT0u.inCritical);
+    ThreadF.SuspendOthers();
     IF NOT dumped_core THEN
       dumped_core := TRUE;
       EVAL RTHeapRep.Crash();      (* clean up the heap *)
@@ -155,7 +155,7 @@ PROCEDURE Core (             sig : Ctypes.int;
       Cstdlib.abort (); (* dump core *)
       <* ASSERT FALSE *>
     END;
-    DEC(RT0u.inCritical);
+    ThreadF.ResumeOthers();
   END Core;
 
 (* System-call faults are handled in RTHeapDepC.c *)
@@ -182,6 +182,7 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  VM := RTVM.VMHeap();
   IF VM THEN
     RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
     RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);
