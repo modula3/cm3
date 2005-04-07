@@ -1,0 +1,17 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Oct 17 09:20:03 PDT 1994 by kalsow  
+%      modified on Fri Jun 18 13:20:32 PDT 1993 by harrison
+%      modified on Thu May  6 13:16:32 PDT 1993 by muller
+%      Olaf Wagner 16.09.1994
+
+Interface ("Csetjmp")
+Interface ("Csignal")
+Interface ("Cstring")
+Module ("Cstdio")
+
+c_source ("CstdioC")
+
+
