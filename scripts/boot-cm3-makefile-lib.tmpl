@@ -17,9 +17,10 @@ FILES_MC := $(wildcard *.mc)
 FILES_IS := $(wildcard *.is)
 FILES_MS := $(wildcard *.ms)
 FILES_C  := $(wildcard *.c)
+FILES_S  := $(wildcard *.s)
 BASES_IC := $(basename $(FILES_IC))
 BASES_MC := $(basename $(FILES_MC))
-BASES_C  := $(basename $(FILES_C))
+BASES_C  := $(basename $(FILES_C) $(FILES_S))
 OBJ_IO   := $(addsuffix .io, $(BASES_IC))
 OBJ_MO   := $(addsuffix .mo, $(BASES_MC))
 OBJ_O    := $(addsuffix .o, $(BASES_C))
@@ -32,6 +33,9 @@ $(LIBNAME): $(OBJECTS)
 
 %.o: %.c
 	$(CC) $(CCOPTS) -o $@ -c $<
+
+%.o: %.s
+	$(AS) -o $@ $<
 
 %.ms: %.mc
 	$(CM3CG) $(CCOPTS) -quiet -o $@ $<

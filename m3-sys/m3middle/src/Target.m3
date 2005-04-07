@@ -713,6 +713,25 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
+    | Systems.NetBSD2_i386 =>
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := 14 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 4 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := "_setjmp";
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := "\n";
+
     ELSE RETURN FALSE;
     END;
 

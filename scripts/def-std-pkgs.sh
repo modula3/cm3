@@ -150,3 +150,4 @@ P="${P} calculator"
 P="${P} fisheye"
 P="${P} mentor"
 
+export P # or NetBSD's /bin/sh will fail

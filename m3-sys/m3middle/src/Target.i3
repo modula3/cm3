@@ -29,7 +29,8 @@ TYPE
     NT386, OKI, OS2, SEQUENT, SOLgnu, SOLsun,
     SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
     FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
-    PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, Undefined
+    PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, NetBSD2_i386,
+    Undefined
   };
 
 CONST
@@ -68,7 +69,8 @@ CONST
     (* 31 *) "PPC_DARWIN",
     (* 32 *) "BSDI4",
     (* 33 *) "NT386GNU",
-    (* 34 *) "PPC_LINUX"
+    (* 34 *) "PPC_LINUX",
+    (* 35 *) "NetBSD2_i386"
   };
 
 (*-------------------------------------------------------- initialization ---*)

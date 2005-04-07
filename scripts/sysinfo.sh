@@ -204,6 +204,11 @@ case "${UNAME}" in
     fi
   ;;
 
+  NetBSD*)
+    CM3_OSTYPE=POSIX
+    GMAKE=${GMAKE:-gmake}
+    CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
+  ;;
   # more need to be added here, I haven't got all the platform info ready
 esac
 
