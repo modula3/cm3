@@ -20,6 +20,8 @@ readonly _UnixPieces = {
   "DS3100_OSF" : [ "osf-1.generic", "osf-1.DS3100" ],
   "FreeBSD"    : [ "freebsd-1" ],
   "FreeBSD2"   : [ "freebsd-2" ],
+  "FreeBSD3"   : [ "freebsd-3" ],
+  "FreeBSD4"   : [ "freebsd-4" ],
   "HP300"      : [ "hpux-7-0" ],
   "HPPA"       : [ "hpux-7-0" ],
   "IBMR2"      : [ "aix-3-2" ],
@@ -27,8 +29,10 @@ readonly _UnixPieces = {
   "IRIX5"      : [ "irix-5.2" ],
   "LINUX"      : [ "linux" ],
   "LINUXELF"   : [ "linux" ],
+  "LINUXLIBC6" : [ "linux-libc6", "linux-i386" ],
   "NEXT"       : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT" ],
   "NT386"      : [ ], % doesn't define a "Unix" interface
+  "NT386GNU"   : [ "cygwin" ],
   "OKI"        : [ "sysv-4.0" ],
   "OS2"        : [ "os2" ],
   "SEQUENT"    : [ "ultrix-3-1.generic", "ultrix-3-1.SEQUENT" ],
@@ -38,7 +42,11 @@ readonly _UnixPieces = {
   "SUN3"       : [ "ultrix-3-1.generic", "ultrix-3-1.SUN3" ],
   "SUN386"     : [ "ultrix-3-1.generic", "ultrix-3-1.SUN386" ],
   "UMAX"       : [ "ultrix-3-1.generic", "ultrix-3-1.UMAX" ],
-  "VAX"        : [ "ultrix-3-1.generic", "ultrix-3-1.VAX" ]
+  "VAX"        : [ "ultrix-3-1.generic", "ultrix-3-1.VAX" ],
+  "I386_DARWIN": [ "darwin-generic", "darwin-i386" ],
+  "PPC_DARWIN" : [ "darwin-generic", "darwin-ppc" ],
+  "PPC_LINUX"  : [ "linux-libc6", "linux-ppc" ],
+  "NetBSD2_i386" : [ "netbsd2-i386" ]
 }
 
 if _UnixPieces contains TARGET

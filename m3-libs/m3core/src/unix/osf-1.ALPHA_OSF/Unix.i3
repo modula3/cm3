@@ -12,7 +12,7 @@ FROM Word IMPORT Or, And, Shift;
 
 FROM Ctypes IMPORT short, int, long, char_star, char_star_star, int_star;
 FROM Ctypes IMPORT void_star;
-FROM Utypes IMPORT u_short, dev_t, off_t, pid_t, ssize_t;
+FROM Utypes IMPORT u_short, dev_t, off_t, pid_t, ssize_t, size_t;
 FROM Utime IMPORT struct_timeval;
 
 CONST
@@ -184,6 +184,7 @@ CONST
 
 (*** getwd - get current working directory pathname ***)
 <*EXTERNAL*> PROCEDURE getwd (pathname: char_star): char_star;
+<*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 (*** ioctl - control device ***)
 (* this is a temptative declaration of the types of the arguments. 
@@ -757,7 +758,7 @@ CONST (* mode *)
 
   (* lower bits used for the access permissions *)
 
-<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode, dev: int): int;
+<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode: int; dev: dev_t): int;
 
 
 (*** mount, umount - mount or unmount a file system ***)

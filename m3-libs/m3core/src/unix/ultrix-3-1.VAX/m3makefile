@@ -5,12 +5,12 @@
 % Last modified on Wed Jun  9 17:03:27 PDT 1993 by harrison
 %      modified on Mon Jan 11 14:47:12 PST 1993 by muller
 
-Interface (Udir)
-Interface (Uexec)
-Module (Usignal)
-Interface (Ustat)
-Interface (Unix)
-Module (Uin)
-Interface (Utypes)
-Interface (Umman)
-Interface (Ushm)
+Interface ("Udir")
+Interface ("Uexec")
+Module ("Usignal")
+Interface ("Ustat")
+Interface ("Unix")
+Module ("Uin")
+Interface ("Utypes")
+Interface ("Umman")
+Interface ("Ushm")
