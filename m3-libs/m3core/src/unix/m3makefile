@@ -45,7 +45,8 @@ readonly _UnixPieces = {
   "VAX"        : [ "ultrix-3-1.generic", "ultrix-3-1.VAX" ],
   "I386_DARWIN": [ "darwin-generic", "darwin-i386" ],
   "PPC_DARWIN" : [ "darwin-generic", "darwin-ppc" ],
-  "PPC_LINUX"  : [ "linux-libc6", "linux-ppc" ]
+  "PPC_LINUX"  : [ "linux-libc6", "linux-ppc" ],
+  "NetBSD2_i386" : [ "netbsd2-i386" ]
 }
 
 if _UnixPieces contains TARGET
