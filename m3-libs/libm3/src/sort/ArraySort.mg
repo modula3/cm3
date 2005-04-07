@@ -51,12 +51,12 @@ PROCEDURE QuickSort (VAR a: ARRAY OF Elem.T;  lo, hi: INTEGER;
       LOOP
         IF (i > j) THEN EXIT END;
 
-        WHILE cmp (a[i], key) < 0 DO INC (i) END;
+        WHILE i < hi AND cmp (a[i], key) < 0 DO INC (i) END;
         IF (i > j) THEN EXIT END;
         a[j+1] := a[i];
         INC (i);
 
-        WHILE cmp (a[j], key) > 0 DO DEC (j) END;
+        WHILE j > lo AND cmp (a[j], key) > 0 DO DEC (j) END;
         IF (i > j) THEN  IF (j = i-1) THEN  DEC (j)  END;  EXIT  END;
         a[i-1] := a[j];
         DEC (j);

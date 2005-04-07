@@ -1,4 +1,5 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 UNSAFE MODULE OSConfigPosix EXPORTS OSConfig;
 
@@ -61,70 +62,92 @@ PROCEDURE Init () =
       os_version := M3toC.CopyStoT (ADR (uts.release[0]));
     ELSE
       host_name  := "<unknown>";
-      host_arch  := DefaultArch [Compiler.ThisPlatform];
-      os_name    := DefaultOSName [Compiler.ThisPlatform];
+      host_arch  := DefaultArch [ORD(Compiler.ThisPlatform)];
+      os_name    := DefaultOSName [ORD(Compiler.ThisPlatform)];
       os_version := "";
     END;
   END Init;
 
 CONST
-  DefaultOSName = ARRAY Compiler.Platform OF TEXT {
-   (* AIX386    *)  "AIX",
-   (* ALPHA_OSF *)  "Digital Unix",
-   (* AP3000    *)  "Unix",
-   (* ARM       *)  "Unix",
-   (* DS3100    *)  "Ultrix",
-   (* FreeBSD   *)  "FreeBSD",
-   (* FreeBSD2  *)  "FreeBSD",
-   (* HP300     *)  "HP/UX",
-   (* HPPA      *)  "HP/UX",
-   (* IBMR2     *)  "AIX",
-   (* IBMRT     *)  "AIX",
-   (* IRIX5     *)  "Irix",
-   (* LINUX     *)  "Linux",
-   (* LINUXELF  *)  "Linux",
-   (* NEXT      *)  "NextOS",
-   (* NT386     *)  "Win32",
-   (* OKI       *)  "Unix",
-   (* OS2       *)  "OS/2",
-   (* SEQUENT   *)  "Unix",
-   (* SOLgnu    *)  "Solaris",
-   (* SOLsun    *)  "Solaris",
-   (* SPARC     *)  "SunOS",
-   (* SUN3      *)  "SunOS",
-   (* SUN386    *)  "SunOS",
-   (* UMAX      *)  "Unix",
-   (* VAX       *)  "Ultrix"
+  DefaultOSName = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
+   (* AIX386     *)  "AIX",
+   (* ALPHA_OSF  *)  "Digital Unix",
+   (* AP3000     *)  "Unix",
+   (* ARM        *)  "Unix",
+   (* DS3100     *)  "Ultrix",
+   (* FreeBSD    *)  "FreeBSD",
+   (* FreeBSD2   *)  "FreeBSD",
+   (* HP300      *)  "HP/UX",
+   (* HPPA       *)  "HP/UX",
+   (* IBMR2      *)  "AIX",
+   (* IBMRT      *)  "AIX",
+   (* IRIX5      *)  "Irix",
+   (* LINUX      *)  "Linux",
+   (* LINUXELF   *)  "Linux",
+   (* NEXT       *)  "NextOS",
+   (* NT386      *)  "Win32",
+   (* OKI        *)  "Unix",
+   (* OS2        *)  "OS/2",
+   (* SEQUENT    *)  "Unix",
+   (* SOLgnu     *)  "Solaris",
+   (* SOLsun     *)  "Solaris",
+   (* SPARC      *)  "SunOS",
+   (* SUN3       *)  "SunOS",
+   (* SUN386     *)  "SunOS",
+   (* UMAX       *)  "Unix",
+   (* VAX        *)  "Ultrix",
+   (* FreeBSD3   *)  "FreeBSD",
+   (* FreeBSD4   *)  "FreeBSD",
+   (* FBSD_ALPHA *)  "FreeBSD",
+   (* LINUXLIBC6 *)  "Linux",
+   (* I386_DARWIN*)  "Darwin",
+   (* PPC_DARWIN *)  "Darwin",
+   (* BSDI4	 *)  "BSD/OS",
+   (* NT386GNU	 *)  "Cygwin",
+   (* PPC_LINUX	 *)  "Linux",
+   (* NetBSD2_i386 *)  "NetBSD",
+   ..
   };
 
 CONST
-  DefaultArch = ARRAY Compiler.Platform OF TEXT {
-   (* AIX386    *)  "i386",
-   (* ALPHA_OSF *)  "alpha",
-   (* AP3000    *)  "apollo",
-   (* ARM       *)  "acorn risc",
-   (* DS3100    *)  "mips",
-   (* FreeBSD   *)  "i486",
-   (* FreeBSD2  *)  "i486",
-   (* HP300     *)  "hp300",
-   (* HPPA      *)  "hppa",
-   (* IBMR2     *)  "IBM romp",
-   (* IBMRT     *)  "IBM RT",
-   (* IRIX5     *)  "mips",
-   (* LINUX     *)  "i486",
-   (* LINUXELF  *)  "i486",
-   (* NEXT      *)  "m68K",
-   (* NT386     *)  "i486",
-   (* OKI       *)  "m68K",
-   (* OS2       *)  "i486",
-   (* SEQUENT   *)  "m68K",
-   (* SOLgnu    *)  "sparc",
-   (* SOLsun    *)  "sparc",
-   (* SPARC     *)  "sparc",
-   (* SUN3      *)  "sparc3",
-   (* SUN386    *)  "i386",
-   (* UMAX      *)  "m68K",
-   (* VAX       *)  "vax"
+  DefaultArch = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
+   (* AIX386     *)  "i386",
+   (* ALPHA_OSF  *)  "alpha",
+   (* AP3000     *)  "apollo",
+   (* ARM        *)  "acorn risc",
+   (* DS3100     *)  "mips",
+   (* FreeBSD    *)  "i486",
+   (* FreeBSD2   *)  "i486",
+   (* HP300      *)  "hp300",
+   (* HPPA       *)  "hppa",
+   (* IBMR2      *)  "IBM romp",
+   (* IBMRT      *)  "IBM RT",
+   (* IRIX5      *)  "mips",
+   (* LINUX      *)  "i486",
+   (* LINUXELF   *)  "i486",
+   (* NEXT       *)  "m68K",
+   (* NT386      *)  "i486",
+   (* OKI        *)  "m68K",
+   (* OS2        *)  "i486",
+   (* SEQUENT    *)  "m68K",
+   (* SOLgnu     *)  "sparc",
+   (* SOLsun     *)  "sparc",
+   (* SPARC      *)  "sparc",
+   (* SUN3       *)  "sparc3",
+   (* SUN386     *)  "i386",
+   (* UMAX       *)  "m68K",
+   (* VAX        *)  "vax",
+   (* FreeBSD3   *)  "i486",
+   (* FreeBSD4   *)  "i486",
+   (* FBSD_ALPHA *)  "i486",
+   (* LINUXLIBC6 *)  "i486",
+   (* I386_DARWIN*)  "i486",
+   (* PPC_DARWIN *)  "ppc",
+   (* BSDI4	 *)  "i486",
+   (* NT386GNU	 *)  "i486",
+   (* PPC_LINUX	 *)  "ppc",
+   (* NetBSD2_i386 *)  "i386",
+   ..
   };
 
 PROCEDURE InitUserName () =
