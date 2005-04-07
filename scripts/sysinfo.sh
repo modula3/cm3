@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.40 2005-03-31 08:35:46 micha Exp $
+# $Id: sysinfo.sh,v 1.41 2005-04-07 22:35:07 stsp Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -204,6 +204,11 @@ case "${UNAME}" in
     fi
   ;;
 
+  NetBSD*)
+    CM3_OSTYPE=POSIX
+    GMAKE=${GMAKE:-gmake}
+    CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
+  ;;
   # more need to be added here, I haven't got all the platform info ready
 esac
 
