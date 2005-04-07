@@ -1,8 +1,0 @@
-  TrackerPositionCB_New(obj: TrackerPosition_T, overrides: Obj): T;
-WHERE
-  T <: SharedObj_T & overrides;
-  overrides contains one or more of these callback methods:
-    pre`set(obj: TrackerPosition_T, val: Data_T): bool;
-    post`set(obj: TrackerPosition_T, val: Data_T): bool;
-    pre`anyChange(obj: TrackerPosition_T);
-    post`anyChange(obj: TrackerPosition_T);
