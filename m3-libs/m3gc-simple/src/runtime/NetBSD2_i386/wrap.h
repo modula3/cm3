@@ -49,9 +49,9 @@
   #define write         SOCKSwrite
 #endif /* } */
 
-extern int RT0u__inCritical;
-#define ENTER_CRITICAL RT0u__inCritical++
-#define EXIT_CRITICAL  RT0u__inCritical--
+extern int ThreadF__inCritical;
+#define ENTER_CRITICAL ThreadF__inCritical++
+#define EXIT_CRITICAL  ThreadF__inCritical--
 
 static char RTHeapDepC__c;
 #define MAKE_READABLE(x) \
