@@ -28,7 +28,6 @@ CONST
   RUSAGE_CHILDREN = -1;
 
 TYPE
-  struct_rusage_star = UNTRACED REF struct_rusage;
   struct_rusage = RECORD
     ru_utime    : Utime.struct_timeval;  (* user time used *)
     ru_stime    : Utime.struct_timeval;  (* system time used *)
@@ -47,6 +46,7 @@ TYPE
     ru_nvcsw    : long;            (* voluntary context switches *)
     ru_nivcsw   : long;            (* involuntary " *)
   END;
+  struct_rusage_star = UNTRACED REF struct_rusage;
 
 
 (* Resource limits *)
@@ -61,7 +61,7 @@ CONST
   RLIMIT_VMEM  = 6;          (* maximum mapped memory *)
   RLIMIT_AS    = RLIMIT_VMEM;
 
-  RLIMIT_NLIMITS = 7;          (* number of resource limits *)
+  RLIM_NLIMITS = 7;          (* number of resource limits *)
 
   RLIM_INFINITY = 16_7fffffff;
 
@@ -90,7 +90,7 @@ TYPE
 
 (*** getrusage(2) - get information about resource utilization ***)
 
-<*EXTERNAL*> PROCEDURE getrusage (who: int; rus: struct_rusage_star): int;
+<*EXTERNAL*> PROCEDURE getrusage (who: int; VAR rus: struct_rusage): int;
 
 
 (*** nice(3) - set program priority ***)

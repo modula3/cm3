@@ -69,10 +69,10 @@ PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
     INC (s.uc_mcontext.gregs.sp, offset);
   END UpdateStateForNewSP;
 
-PROCEDURE UpdateFrameForNewSP (a: ADDRESS; offset: INTEGER) =
+PROCEDURE UpdateFrameForNewSP (a: ADDRESS; <*UNUSED*> offset: INTEGER) =
   VAR f := LOOPHOLE(a, Uframe.struct_frame_star);
   BEGIN
-    INC (f.fr_savfp, offset);
+    f.fr_savfp := NIL;
     f.fr_savpc := 0;
   END UpdateFrameForNewSP;
 

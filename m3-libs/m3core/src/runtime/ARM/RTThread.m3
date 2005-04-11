@@ -6,7 +6,7 @@
 (*      modified on Wed Dec 23 17:25:54 PST 1992 by jdd       *)
 (*      modified on Thu Nov 12 15:56:28 PST 1992 by muller    *)
 
-UNSAFE MODULE RTThread EXOPRTS RTThread, RTHooks;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
 IMPORT Word, Usignal;
 

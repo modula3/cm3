@@ -4,7 +4,6 @@
 %
 % Last modified on Mon Nov 21 08:29:28 PST 1994 by kalsow 
 
-module         ("RT0u")
 implementation ("RTArgs")
 implementation ("RTOS")
 module         ("RTPerfTool")

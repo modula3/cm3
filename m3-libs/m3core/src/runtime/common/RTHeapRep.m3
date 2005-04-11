@@ -13,7 +13,8 @@ IMPORT RT0, RTType;
 
 (*----------------------------------------------------------- open arrays ---*)
 
-PROCEDURE UnsafeGetShape (r: REFANY;  VAR nDims: INTEGER;  VAR s: ArrayShape) =
+PROCEDURE UnsafeGetShape (r: REFANY;  VAR nDims: INTEGER;
+                          VAR s: UnsafeArrayShape) =
   TYPE TK = RT0.TypeKind;
   VAR def := RTType.Get (TYPECODE (r));
   BEGIN
@@ -21,7 +22,8 @@ PROCEDURE UnsafeGetShape (r: REFANY;  VAR nDims: INTEGER;  VAR s: ArrayShape) =
     IF (def.kind = ORD (TK.Array)) THEN
       nDims := LOOPHOLE (def, RT0.ArrayTypeDefn).nDimensions;
       IF nDims # 0 THEN
-        s := LOOPHOLE(LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS), ArrayShape);
+        s := LOOPHOLE(LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS),
+                      UnsafeArrayShape);
       END;
     END;
   END UnsafeGetShape;
