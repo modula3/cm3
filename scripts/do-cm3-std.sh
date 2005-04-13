@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-std.sh,v 1.7 2005-04-11 18:09:00 stsp Exp $
+# $Id: do-cm3-std.sh,v 1.8 2005-04-13 21:36:53 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -37,19 +37,8 @@ ${GEN_CMDS}"
 
 show_usage $@
 
-# This is quite nasty, but NetBSD's /bin/sh swallows
-# variables unless they are explicitely exported.
-# And the redefinition of ${P} in do-pkg.sh used to
-# break do-cm3-std.sh completely on NetBSD :(
-# (stsp)
-if ! type m3bundle >/dev/null 2>/dev/null
-then
-        P_="${P}"
-        echo "$ROOT/scripts/do-pkg.sh" buildship m3bundle
-        export CM3
-        "$ROOT/scripts/do-pkg.sh" buildship m3bundle
-        P="${P_}"
-fi
+type m3bundle >/dev/null 2>/dev/null || \
+  "$ROOT/scripts/do-pkg.sh" buildship m3bundle
 
 OPTIONS=`extract_options $@`
 ACTION=`map_action $@`
