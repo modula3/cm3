@@ -3,7 +3,7 @@
 RSYNCOPTS="${RSYNCOPTS:- -L}"
 SHIP="$0"
 if [ -z "${REMOTE}" ] ; then
-  REMOTE="root@www.elegosoft.com:/var/www/html/cm3"
+  REMOTE="root@www.elegosoft.com:/var/www/elegosoft.com/cm3"
   #REMOTE="${REMOTE} m3@www.m3.org:html/cm3"
 fi
 
