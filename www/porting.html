@@ -387,13 +387,13 @@
     </p>
 
     <ol>
-      <li><tt>m3-libs/m3core</tt></li>
-      <li><tt>m3-libs/libm3</tt></li>
       <li><tt>m3-sys/m3middle</tt></li>
       <li><tt>m3-sys/m3linker</tt></li>
       <li><tt>m3-sys/m3front</tt></li>
       <li><tt>m3-sys/m3quake</tt></li>
       <li><tt>m3-sys/cm3</tt></li>
+      <li><tt>m3-libs/m3core</tt></li>
+      <li><tt>m3-libs/libm3</tt></li>
     </ol>
 
     <p>
@@ -409,8 +409,8 @@
       m3core and libm3 with a compiler that includes exactly the same
       list of target platforms in Target.i3, InfoModule.m3 and
       Compiler.i3; otherwise version stamps will get messed up. So you
-      have to make all the changes, build and ship the compiler
-      packages m3middle, m3front, m3quake, cm3, install the compiler,
+      have to make your port-specific changes, build and ship the compiler
+      packages m3middle, m3linker, m3front, m3quake, cm3, install the compiler,
       and then build the libraries m3core and libm3 and the compiler
       packages again (do-cm3-core.sh).
     </p>
