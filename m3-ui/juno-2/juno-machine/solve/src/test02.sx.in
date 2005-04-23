@@ -1,9 +1,0 @@
-; Last modified on Mon Apr 29 15:28:29 PDT 1996 by heydon
-
-((vars
-   (a ~ 6)
-   (b ~ 2.5))
- (constraints
-   (sin 0 a)
-   (times a b b))
-)
