@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.1 2003-07-19 18:37:22 wagner Exp $
+# $Id: upgrade.sh,v 1.2 2005-04-23 18:32:53 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -36,13 +36,13 @@ OPTIONS=`extract_options $@`
 #ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship"
-. "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship"
+. "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship" || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
-"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
+"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 
 echo "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
-. "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+. "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
-"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
+"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
