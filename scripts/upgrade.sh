@@ -36,13 +36,13 @@ OPTIONS=`extract_options $@`
 #ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship"
-. "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship"
+. "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship" || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
-"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
+"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 
 echo "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
-. "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+. "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
-"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
+"$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
