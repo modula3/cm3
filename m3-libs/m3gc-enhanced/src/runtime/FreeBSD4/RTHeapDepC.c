@@ -119,9 +119,17 @@
 #undef   NULL
 #endif
 #define  NULL (void *)(0)
+
+#ifdef USE_RT0u_inCritical
 extern long ThreadF__inCritical;
 #define ENTER_CRITICAL ThreadF__inCritical++
 #define EXIT_CRITICAL  ThreadF__inCritical--
+#else
+void (*RTOS_LockHeap)();    /* Not so logical, but it's a way to have linker fix it for us */
+void (*RTOS_UnlockHeap)();
+#define ENTER_CRITICAL if (RTOS_LockHeap) RTOS_LockHeap()
+#define EXIT_CRITICAL  if (RTOS_UnlockHeap) RTOS_UnlockHeap()
+#endif
 
 void (*RTHeapRep_Fault)(char*);
 void (*RTCSRC_FinishVM)();
