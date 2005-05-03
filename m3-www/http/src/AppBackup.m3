@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Thu Mar 20 11:38:30 PST 1997 by steveg *)
+(* Created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:51:05 1997
+ *)
 
 MODULE AppBackup;
 
@@ -9,7 +16,7 @@ IMPORT
   Rd, RdUtils, RegularFile, Thread, Time, Wr;
 
 REVEAL
-  T = TPublic BRANDED OBJECT
+  T = TPublic BRANDED "AppBackup.T" OBJECT
     threadWrite: Thread.T;
     cvChanged: Thread.Condition;
     deltaWait: Time.T;
