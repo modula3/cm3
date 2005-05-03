@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Thu Oct 24 16:23:43 PDT 1996 by steveg *)
+(* created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:25 1997
+ *)
 
 MODULE HTTPControlValue EXPORTS HTTPControlValue, Main;
 
@@ -10,7 +17,8 @@ IMPORT App, FloatMode, Fmt, HTTP, HTTPControl, Lex, Rd, Text, TextRd,
 <* PRAGMA LL *>
 
 REVEAL
-  BooleanValue = BooleanValuePublic BRANDED OBJECT
+  BooleanValue = BooleanValuePublic BRANDED
+  "HTTPControlValue.BooleanValue" OBJECT
                  OVERRIDES
                    getText       := BooleanGetText;
                    get           := BooleanGetNull;
@@ -94,7 +102,8 @@ PROCEDURE BooleanWriteFormItem (self: BooleanValue;
   END BooleanWriteFormItem;
 
 REVEAL
-  ChoiceValue = ChoiceValuePublic BRANDED OBJECT
+  ChoiceValue = ChoiceValuePublic BRANDED
+  "HTTPControlValue.ChoiceValue" OBJECT
                 OVERRIDES
                   init          := ChoiceInit;
                   getText       := ChoiceGetText;
@@ -193,7 +202,7 @@ PROCEDURE ChoiceWriteFormItem (self: ChoiceValue;
 
 (* a form value is a link to another form *)
 REVEAL
-  FormValue = FormValuePublic BRANDED OBJECT
+  FormValue = FormValuePublic BRANDED "HTTPControlValue.FormValue" OBJECT
               OVERRIDES
                 init          := FormValueInit;
                 getText       := FormGetText;
@@ -261,7 +270,8 @@ PROCEDURE FormWriteFormItem (             self: FormValue;
   END FormWriteFormItem;
 
 REVEAL
-  IntegerValue = IntegerValuePublic BRANDED OBJECT
+  IntegerValue = IntegerValuePublic BRANDED
+  "HTTPControlValue.IntegerValue" OBJECT
                  OVERRIDES
                    getText       := IntegerGetText;
                    get           := IntegerGetNull;
@@ -333,7 +343,7 @@ PROCEDURE IntegerWriteFormItem (self: IntegerValue;
   END IntegerWriteFormItem;
 
 REVEAL
-  RealValue = RealValuePublic BRANDED OBJECT
+  RealValue = RealValuePublic BRANDED "HTTPControlValue.RealValue" OBJECT
               OVERRIDES
                 getText       := RealGetText;
                 get           := RealGetNull;
@@ -405,7 +415,7 @@ PROCEDURE RealWriteFormItem (self: RealValue;
   END RealWriteFormItem;
 
 REVEAL
-  TextValue = TextValuePublic BRANDED OBJECT
+  TextValue = TextValuePublic BRANDED "HTTPControlValue.TextValue" OBJECT
               OVERRIDES
                 getText       := TextGetText;
                 get           := TextGetNull;
@@ -480,7 +490,7 @@ PROCEDURE TextWriteFormItem (self: TextValue;
   END TextWriteFormItem;
 
 REVEAL
-  URLValue = URLValuePublic BRANDED OBJECT
+  URLValue = URLValuePublic BRANDED "HTTPControlValue.URLValue" OBJECT
                url: TEXT;
              OVERRIDES
                init          := URLInit;
@@ -543,7 +553,7 @@ PROCEDURE URLWriteFormItem (self: URLValue;
   END URLWriteFormItem;
 
 REVEAL
-  ImageValue = ImageValuePublic BRANDED OBJECT
+  ImageValue = ImageValuePublic BRANDED "HTTPControlValue.ImageValue" OBJECT
                OVERRIDES
                  getText       := ImageGetText;
                  get           := ImageGetNull;
@@ -598,7 +608,7 @@ PROCEDURE ImageWriteFormItem (self: ImageValue;
   END ImageWriteFormItem;
 
 REVEAL
-  TableValue = TableValuePublic BRANDED OBJECT
+  TableValue = TableValuePublic BRANDED "HTTPControlValue.TableValue" OBJECT
                OVERRIDES
                  getText       := TableGetText;
                  get           := TableGet;
@@ -684,7 +694,8 @@ PROCEDURE TableSetValues (self : TableValue;
   END TableSetValues;
 
 REVEAL
-  MessageValue = MessageValuePublic BRANDED OBJECT
+  MessageValue = MessageValuePublic BRANDED
+  "HTTPControlValue.MessageValue" OBJECT
                    msg: TEXT;
                  OVERRIDES
                    init          := MessageInit;

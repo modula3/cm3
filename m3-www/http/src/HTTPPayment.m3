@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Fri Jan 17 16:05:29 PST 1997 by steveg *)
+(* created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:11 1997
+ *)
 
 MODULE HTTPPayment;
 
@@ -37,7 +44,7 @@ PROCEDURE AppendValue(VAR (* in/out *) text: TEXT; value: TEXT) =
   END AppendValue;
 
 REVEAL
-  Reply = ReplyPublic BRANDED OBJECT
+  Reply = ReplyPublic BRANDED "HTTPPayment.Reply" OBJECT
   OVERRIDES
     init := InitReply;
     toReply := ToReply;
@@ -110,7 +117,7 @@ PROCEDURE IsPaymentReply(reply: HTTP.Reply): BOOLEAN =
   END IsPaymentReply;
 
 REVEAL
-  Request = RequestPublic BRANDED OBJECT
+  Request = RequestPublic BRANDED "HTTPPayment.Request" OBJECT
   OVERRIDES
     init := InitRequest;
     toRequest := ToRequest;

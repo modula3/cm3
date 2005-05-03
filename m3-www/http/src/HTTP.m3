@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Wed Feb 12 14:15:57 PST 1997 by steveg *)
+(* Created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:55 1997
+ *)
 
 MODULE HTTP;
 
@@ -105,7 +112,7 @@ PROCEDURE GetRestOfLine (rd: Rd.T; style: Style): TEXT
   END GetRestOfLine;
 
 REVEAL
-  Field = FieldPublic BRANDED OBJECT
+  Field = FieldPublic BRANDED "HTTP.Field" OBJECT
   OVERRIDES
     init := InitField;
   END;
@@ -124,7 +131,7 @@ TYPE
   END;
 
 REVEAL
-  Header = HeaderPublic BRANDED OBJECT
+  Header = HeaderPublic BRANDED "HTPP.Header" OBJECT
              fields: FieldList;  (* protected by fieldMu *)
            OVERRIDES
              lookupField   := LookupHeaderField;
@@ -206,7 +213,7 @@ PROCEDURE RemoveHeaderField(self: Header; field: Field): BOOLEAN =
   END RemoveHeaderField;
 
 REVEAL
-  FieldIterator = FieldIteratorPublic BRANDED OBJECT
+  FieldIterator = FieldIteratorPublic BRANDED "HTTP.FieldIterator" OBJECT
     list: FieldList;
   OVERRIDES
     next := NextFieldIterator;
@@ -245,7 +252,7 @@ PROCEDURE CopyHeaderFields (self, to: Header) =
   END CopyHeaderFields;
 
 REVEAL
-  Request = RequestPublic BRANDED OBJECT
+  Request = RequestPublic BRANDED "HTTP.Request" OBJECT
   OVERRIDES
     parse := ParseRequest;
     write := WriteRequest;
@@ -253,7 +260,7 @@ REVEAL
   END;
 
 REVEAL
-  Reply = ReplyPublic BRANDED OBJECT
+  Reply = ReplyPublic BRANDED "HTTP.Reply" OBJECT
   OVERRIDES
     parse := ParseReply;
     write := WriteReply;
@@ -570,7 +577,7 @@ PROCEDURE ReplyToText (self: Reply; style: Style; log: App.Log): TEXT
   END ReplyToText;
 
 REVEAL
-  URL = URLPublic BRANDED OBJECT
+  URL = URLPublic BRANDED "HTTP.URL" OBJECT
   OVERRIDES
     init := InitURL;
     initFromRd := InitURLFromRd;
@@ -988,7 +995,7 @@ PROCEDURE ReadItem(rd: Rd.T; stop: CHAR; wr: TextWr.T): TEXT
   END ReadItem;
 
 REVEAL
-  FormQuery = FormQueryPublic BRANDED OBJECT
+  FormQuery = FormQueryPublic BRANDED "HTTP.FormQuery" OBJECT
               OVERRIDES
                 init       := InitFormQueryFromURL;
                 initFromRd := InitFormQueryFromRd;
@@ -1324,7 +1331,7 @@ PROCEDURE BasicAuthField(account: TEXT; auth: AuthType): Field =
   END BasicAuthField;
 
 REVEAL
-  RdSrc = RdSrcPublic BRANDED OBJECT
+  RdSrc = RdSrcPublic BRANDED "HTTP.RdSrc" OBJECT
     rd: Rd.T;
   OVERRIDES
     init := InitRdSrc;
@@ -1344,7 +1351,7 @@ PROCEDURE FillRdSrc (self: RdSrc; VAR a: ARRAY OF CHAR): CARDINAL
   END FillRdSrc;
 
 REVEAL
-  WrDest = WrDestPublic BRANDED OBJECT
+  WrDest = WrDestPublic BRANDED "HTTP.WrDest" OBJECT
     wr: Wr.T;
   OVERRIDES
     init := InitWrDest;

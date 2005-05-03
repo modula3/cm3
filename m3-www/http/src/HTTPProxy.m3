@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Sat Jan 11 22:04:02 PST 1997 by steveg *)
+(* Created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:49:57 1997
+ *)
 
 MODULE HTTPProxy;
 
@@ -8,7 +15,8 @@ IMPORT App, Fmt, HTTP, HTTPApp, IO, Rd, RdCopy, TextRd, TextWr, Thread, Wr;
 
 
 REVEAL
-  RequestHandler = RequestHandlerPublic BRANDED OBJECT
+  RequestHandler = RequestHandlerPublic BRANDED
+  "HTTPProxy.RequestHandler" OBJECT
   OVERRIDES
     request := Request;
     accept := Accept;
@@ -67,7 +75,7 @@ PROCEDURE Request (self                   : RequestHandler;
   END Request;
 
 REVEAL
-  ReplyHandler = HTTPApp.ReplyHandler BRANDED OBJECT
+  ReplyHandler = HTTPApp.ReplyHandler BRANDED "HTTPProxy.ReplyHandler" OBJECT
     logReply: BOOLEAN;
   OVERRIDES
     reply := Reply;
