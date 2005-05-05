@@ -176,6 +176,7 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  VM := RTVM.VMHeap();
   IF VM THEN
     RTHeapDepC.set_RTHeapRep_Fault(LOOPHOLE(RTHeapRep.Fault, ADDRESS));
     RTHeapDepC.set_RTCSRC_FinishVM(LOOPHOLE(RTCollectorSRC.FinishVM, ADDRESS));
