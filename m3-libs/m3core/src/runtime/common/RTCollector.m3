@@ -1630,13 +1630,12 @@ PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
         IF p0 <= p AND p < p1 THEN
           <* ASSERT desc[p - p0].space = Space.Current *>
           <* ASSERT NOT desc[p - p0].continued *>
-          <* ASSERT (0 < tc AND tc <= RTType.MaxTypecode())
+          <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
                       OR tc = Fill_1_type
                       OR tc = Fill_N_type *>
         ELSE
-          (* the compiler generates Text.T that are not in the traced
-             heap *)
-          <* ASSERT tc = 1 *>
+          (* the compiler generates Text.T that are not in the traced heap *)
+          <* ASSERT tc = RT0.TextLitTypecode *>
         END;
       END;
     END;
@@ -1656,13 +1655,12 @@ PROCEDURE ProtectedOlderRefSanityCheck (<*UNUSED*> v  : RTHeapMap.Visitor;
           <* ASSERT desc[p - p0].space = Space.Current *>
           <* ASSERT desc[p - p0].generation = Generation.Older *>
           <* ASSERT NOT desc[p - p0].continued *>
-          <* ASSERT (0 < tc AND tc < RTType.MaxTypecode())
+          <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
                       OR tc = Fill_1_type
                       OR tc = Fill_N_type *>
         ELSE
-          (* the compiler generates Text.T that are not in the traced
-             heap *)
-          <* ASSERT tc = 1 *>
+          (* the compiler generates Text.T that are not in the traced heap *)
+          <* ASSERT tc = RT0.TextLitTypecode *>
         END;
       END;
     END;
