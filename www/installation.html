@@ -89,7 +89,7 @@
   gzip -c -d cm3-src-XXX-CM3VERSION.tgz | tar xf -
   cd scripts
   PATH="${PATH}:/usr/local/cm3/bin"
-  LD_LIBRARY_PATH="${LD_LIBRARY_PATH} /usr/local/cm3/lib"
+  LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/cm3/lib"
   more README
   ./do-cm3-std.sh -help
   ./do-cm3-std.sh buildship
