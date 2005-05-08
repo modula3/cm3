@@ -36,7 +36,7 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
 
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0]);
+    Expr.PrepLValue (ce.args[0], lhs := FALSE);
   END Prep;
 
 PROCEDURE Compile (ce: CallExpr.T) =

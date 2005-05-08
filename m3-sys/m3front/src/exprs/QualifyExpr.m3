@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
 IMPORT RecordType, ObjectType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
-IMPORT Method, Field, Target, M3RT;
+IMPORT Method, Field, Target, M3RT, Host, RunTyme, Procedure;
 
 TYPE
   Class = { cMODULE, cENUM, cOBJTYPE, cFIELD, cOBJFIELD, cMETHOD, cUNKNOWN };
@@ -39,7 +39,7 @@ TYPE
         need_addr    := NeedsAddress;
         prep         := Prep;
         compile      := Compile;
-        prepLV       := Prep;
+        prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
@@ -280,19 +280,60 @@ PROCEDURE NeedsAddress (p: P) =
   END NeedsAddress;
 
 PROCEDURE Prep (p: P) =
+  VAR
+    field: Field.Info;
+    info: Type.Info;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE, Class.cENUM =>
-        (* skip *)        
+    | Class.cMODULE =>
+	IF Host.doIncGC AND Value.ClassOf (p.obj) = Value.Class.Var THEN
+          EVAL Type.CheckInfo (p.type, info);
+          IF info.isTraced THEN
+            CASE info.class OF 
+            | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+              Variable.Load (p.obj);
+              RunTyme.EmitCheckLoadTracedRef ();
+              p.temp := CG.Pop ();
+            ELSE
+              (* no check *)
+            END
+          END
+        END
+    | Class.cENUM =>
+        (* skip *)
     | Class.cOBJTYPE =>
-        (* skip *)        
+        (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr);
+          THEN Expr.PrepLValue (p.expr, lhs := FALSE);
           ELSE Expr.Prep (p.expr);
         END;
+        Field.Split (p.obj, field);
+        EVAL Type.CheckInfo (field.type, info);
+        IF Host.doIncGC AND info.isTraced THEN
+          CASE info.class OF
+          | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+            Compile (p);
+            RunTyme.EmitCheckLoadTracedRef ();
+            p.temp := CG.Pop ();
+          ELSE
+            (* no check *)
+          END
+        END
     | Class.cOBJFIELD =>
         Expr.Prep (p.expr);
+        Field.Split (p.obj, field);
+        EVAL Type.CheckInfo (field.type, info);
+        IF Host.doIncGC AND info.isTraced THEN
+          CASE info.class OF
+          | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+            Compile (p);
+            RunTyme.EmitCheckLoadTracedRef ();
+            p.temp := CG.Pop ();
+          ELSE
+            (* no check *)
+          END
+        END
     | Class.cMETHOD =>
         Expr.Prep (p.expr);
         Expr.Compile (p.expr);
@@ -300,7 +341,7 @@ PROCEDURE Prep (p: P) =
     | Class.cUNKNOWN =>
         <* ASSERT FALSE *>
     END;
- END Prep;
+  END Prep;
 
 PROCEDURE Compile (p: P) =
   VAR
@@ -309,7 +350,15 @@ PROCEDURE Compile (p: P) =
     method: Method.Info;
   BEGIN
     CASE p.class OF
-    | Class.cMODULE, Class.cENUM =>
+    | Class.cMODULE =>
+      IF p.temp = NIL THEN
+        Value.Load (p.obj);
+      ELSE
+        CG.Push (p.temp);
+        CG.Free (p.temp);
+        p.temp := NIL;
+      END
+    | Class.cENUM =>
         Value.Load (p.obj);
     | Class.cOBJTYPE =>
         Type.Compile (p.holder);
@@ -327,28 +376,40 @@ PROCEDURE Compile (p: P) =
         CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
         CG.Boost_alignment (Target.Address.align);
     | Class.cFIELD =>
-        Field.Split (p.obj, field);
-        IF Expr.IsDesignator (p.expr)
-          THEN Expr.CompileLValue (p.expr);
-          ELSE Expr.Compile (p.expr);
-        END;
-        CG.Add_offset (field.offset);
-        Type.LoadScalar (field.type);
-    | Class.cOBJFIELD =>
-        Field.Split (p.obj, field);
-        Expr.Compile (p.expr);
-        CG.Boost_alignment (Target.Address.align);
-        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
-        IF (obj_offset >= 0) THEN
-          INC (field.offset, obj_offset);
+	IF p.temp = NIL THEN
+          Field.Split (p.obj, field);
+          IF Expr.IsDesignator (p.expr)
+            THEN Expr.CompileLValue (p.expr);
+            ELSE Expr.Compile (p.expr);
+          END;
+          CG.Add_offset (field.offset);
+          Type.LoadScalar (field.type);
         ELSE
-          CG.Check_nil (CG.RuntimeError.BadMemoryReference);
-          Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
-          CG.Index_bytes (Target.Byte);
+          CG.Push (p.temp);
+          CG.Free (p.temp);
+          p.temp := NIL;
         END;
-        CG.Add_offset (field.offset);
-        CG.Boost_alignment (obj_align);
-        Type.LoadScalar (field.type);
+    | Class.cOBJFIELD =>
+	IF p.temp = NIL THEN
+          Field.Split (p.obj, field);
+          Expr.Compile (p.expr);
+          CG.Boost_alignment (Target.Address.align);
+          ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
+          IF (obj_offset >= 0) THEN
+            INC (field.offset, obj_offset);
+          ELSE
+            CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+            Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
+            CG.Index_bytes (Target.Byte);
+          END;
+          CG.Add_offset (field.offset);
+          CG.Boost_alignment (obj_align);
+          Type.LoadScalar (field.type);
+        ELSE
+          CG.Push (p.temp);
+          CG.Free (p.temp);
+          p.temp := NIL;
+        END;
     | Class.cMETHOD =>
         Method.SplitX (p.obj, method);
         CG.Push (p.temp);
@@ -370,7 +431,52 @@ PROCEDURE Compile (p: P) =
     END;
  END Compile;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+  VAR info: Type.Info;
+  BEGIN
+    CASE p.class OF
+    | Class.cMODULE, Class.cENUM =>
+        (* skip *)
+    | Class.cOBJTYPE =>
+        (* skip *)
+    | Class.cFIELD =>
+        IF Expr.IsDesignator (p.expr)
+          THEN Expr.PrepLValue (p.expr, lhs);
+          ELSE Expr.Prep (p.expr);
+        END;
+    | Class.cOBJFIELD =>
+        Expr.Prep (p.expr);
+        IF lhs AND Host.doGenGC THEN
+          EVAL Type.CheckInfo (p.type, info);
+          IF info.isTraced THEN
+            CompileLV (p, lhs);
+            EmitCheck (RunTyme.Hook.CheckAssignIndirectTraced);
+            p.temp := CG.Pop ();
+          END
+        END
+    | Class.cMETHOD =>
+        Expr.Prep (p.expr);
+        Expr.Compile (p.expr);
+        p.temp := CG.Pop ();
+    | Class.cUNKNOWN =>
+        <* ASSERT FALSE *>
+    END;
+  END PrepLV;
+
+PROCEDURE EmitCheck (hook: RunTyme.Hook) =
+  VAR
+    proc := RunTyme.LookUpProc (hook);
+    addr := CG.Pop ();
+  BEGIN
+    Procedure.StartCall (proc);
+    CG.Push (addr);
+    CG.Pop_param (CG.Type.Addr);
+    Procedure.EmitCall (proc);
+    CG.Push (addr);
+    CG.Free (addr);
+  END EmitCheck;
+
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
   VAR obj_offset, obj_align: INTEGER;  field: Field.Info;
   BEGIN
     CASE p.class OF
@@ -381,18 +487,24 @@ PROCEDURE CompileLV (p: P) =
         Expr.CompileLValue (p.expr);
         CG.Add_offset (field.offset);
     | Class.cOBJFIELD =>
-        Field.Split (p.obj, field);
-        Expr.Compile (p.expr);
-        ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
-        IF (obj_offset >= 0) THEN
-          INC (field.offset, obj_offset);
+	IF p.temp = NIL THEN
+          Field.Split (p.obj, field);
+          Expr.Compile (p.expr);
+          ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
+          IF (obj_offset >= 0) THEN
+            INC (field.offset, obj_offset);
+          ELSE
+            CG.Check_nil (CG.RuntimeError.BadMemoryReference);
+            Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
+            CG.Index_bytes (Target.Byte);
+          END;
+          CG.Add_offset (field.offset);
+          CG.Boost_alignment (obj_align);
         ELSE
-          CG.Check_nil (CG.RuntimeError.BadMemoryReference);
-          Type.LoadInfo (p.holder, M3RT.OTC_dataOffset);
-          CG.Index_bytes (Target.Byte);
-        END;
-        CG.Add_offset (field.offset);
-        CG.Boost_alignment (obj_align);
+          CG.Push (p.temp);
+          CG.Free (p.temp);
+          p.temp := NIL;
+        END
     | Class.cENUM,
       Class.cOBJTYPE,
       Class.cMETHOD,

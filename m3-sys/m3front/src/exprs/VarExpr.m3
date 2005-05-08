@@ -19,7 +19,7 @@ TYPE
         need_addr    := NeedsAddress;
         prep         := ExprRep.NoPrep;
         compile      := Compile;
-        prepLV       := ExprRep.NoPrep;
+        prepLV       := ExprRep.NotLValue;
         compileLV    := CompileLV;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
@@ -80,7 +80,7 @@ PROCEDURE Compile (p: P) =
     Variable.Load (p.v);
   END Compile;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
     Variable.LoadLValue (p.v);
   END CompileLV;

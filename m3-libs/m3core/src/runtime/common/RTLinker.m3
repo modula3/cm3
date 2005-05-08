@@ -11,9 +11,9 @@
 UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
-IMPORT RT0, RTParams, RTHeapRep;
+IMPORT RT0, RTParams, RTHeapRep, RTCollectorSRC;
 IMPORT RTTypeSRC, RTSignal, RTThreadInit, RTHeapInfo, RTLinkerX, 
-       RTIO;
+       RTIO, Word;
 (* IMPORT RTHeapDebug; *) 
 
 VAR
@@ -51,6 +51,8 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     AddUnit (RTLinkerX.RTHeapInfo_I3);
     AddUnit (RTLinkerX.RTHeapDebug_I3);
     AddUnit (RTLinkerX.RTIO_I3);
+    AddUnit (RTLinkerX.RTCollectorSRC_I3);
+    AddUnit (RTLinkerX.Word_I3);
 
     (* finally, initialize the runtime. *)
     RTSignal.InstallHandlers ();
@@ -95,6 +97,14 @@ PROCEDURE AddUnitI (m: RT0.ModulePtr) =
   BEGIN
     IF (m = NIL) THEN RETURN END;
     TraceModule("AddUnitI: ", m);
+    IF generational AND (Word.And(m.gc_flags, RT0.GC_gen) = 0) THEN
+      generational := FALSE;
+      RTCollectorSRC.FinishVM ();
+    END;
+    IF incremental AND (Word.And(m.gc_flags, RT0.GC_inc) = 0) THEN
+      incremental  := FALSE;
+      RTCollectorSRC.FinishVM ();
+    END;
     IF (m.link_state = LS_Initial) THEN FindModules (m);  END;
     IF (m.link_state = LS_Linked)  THEN FixTypes ();      END;
     IF (m.link_state = LS_TypesOK) THEN RunMainBody (m);  END;

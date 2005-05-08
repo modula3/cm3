@@ -18,6 +18,11 @@ VAR (* external environment *)
   envp       : ADDRESS;
   instance   : ADDRESS;  (* Windows "instance" handle *)
 
+VAR (* READONLY *)
+  (* Does compiled code include GC checks? *)
+  generational := TRUE;
+  incremental  := TRUE;
+
 PROCEDURE InitRuntime (argc: INTEGER;  argv, envp, instance: ADDRESS);
 (* Initializes the runtime and the environment globals.  It must be
    called once before any other Modula-3 code is executed.  *)

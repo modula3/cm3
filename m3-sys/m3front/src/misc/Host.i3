@@ -60,6 +60,10 @@ VAR (* runtime checks *)
   doProcChk   : BOOLEAN := FALSE;
   doDebugs    : BOOLEAN := TRUE;
 
+VAR (* GC checks *)
+  doIncGC := FALSE;
+  doGenGC := FALSE;
+
 VAR
   new_adr      : BOOLEAN := FALSE;  (* TRUE =>  "ADR (t: T): UNTRACED REF T" *)
   report_stats : BOOLEAN := FALSE;

@@ -12,12 +12,12 @@
 (*|      modified on Wed Mar 10 11:01:47 PST 1993 by mjordan *)
 
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
-                                  RTHeapRep, RTWeakRef;
+                                  RTHeapRep, RTWeakRef, RTHooks;
 
-IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine, RTVM;
+IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
-IMPORT TextLiteral;
+IMPORT TextLiteral AS TextLit, RTLinker;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
 TYPE TK = RT0.TypeKind;
@@ -107,7 +107,7 @@ PROCEDURE StartCollection () =
            AND disableCount + disableMotionCount = 0 THEN
         partialCollectionNext := FALSE;
         REPEAT CollectSome(); UNTIL collectorState # CollectorState.Zero;
-        IF NOT (incremental AND RTHeapDep.VM AND disableVMCount = 0) THEN
+        IF NOT (incremental AND (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.incremental)) THEN
           REPEAT CollectSome(); UNTIL collectorState = CollectorState.Zero;
         END;
       END;
@@ -312,7 +312,7 @@ PROCEDURE ReferentSize (h: RefHeader): CARDINAL =
 
     IF tc = RT0.TextLitTypecode THEN
       VAR
-        txt := LOOPHOLE (h + ADRSIZE(Header), TextLiteral.T);
+        txt := LOOPHOLE (h + ADRSIZE(Header), TextLiteral);
         len : INTEGER := txt.cnt;
       BEGIN
         IF (len >= 0)
@@ -423,8 +423,8 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       (* if this is a large object, just promote the pages *)
       VAR def := RTType.Get (hdr.typecode); BEGIN
         IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj))
-          THEN PromotePage(p, PromoteReason.LargePure);
-          ELSE PromotePage(p, PromoteReason.LargeImpure);
+          THEN PromotePage(p, PromoteReason.LargePure,   pureCopy);
+          ELSE PromotePage(p, PromoteReason.LargeImpure, impureCopy);
         END;
       END;
       RETURN;
@@ -436,9 +436,9 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       dataSize := ReferentSize(hdr);
       np       : RefReferent;
     BEGIN
-      IF (def.gc_map # NIL) OR (def.kind = ORD(TK.Obj))
-        THEN np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
-        ELSE np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+      IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj))
+        THEN np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+        ELSE np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
       END;
       IF (np = NIL) THEN
         RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
@@ -493,8 +493,6 @@ VAR
   (* Must be set before calling NoteStackLocations *)
 
 PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
-  CONST Reason = ARRAY BOOLEAN OF PromoteReason {
-          PromoteReason.AmbiguousImpure, PromoteReason.AmbiguousPure };
   VAR
     fp : ADDRESS := start;
     p  : ADDRESS;
@@ -508,7 +506,10 @@ PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
         WITH pd = desc[pp - p0] DO
           IF pd.space = Space.Previous THEN
             IF pd.continued THEN pp := FirstPage(pp); END;
-            PromotePage(pp, Reason[pd.pure]);
+            IF pd.pure
+             THEN PromotePage(pp, PromoteReason.AmbiguousPure,   pureCopy);
+             ELSE PromotePage(pp, PromoteReason.AmbiguousImpure, impureCopy);
+            END;
           END;
         END;
       END;
@@ -524,10 +525,6 @@ TYPE
   };
 
 CONST
-  PromotedPageNeedsScan = ARRAY PromoteReason OF BOOLEAN {
-    FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE
-  };
-
   PromoteDesc = ARRAY PromoteReason OF Desc {
     (* OldProtected *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := FALSE,
@@ -558,12 +555,12 @@ CONST
       note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE }
   };
 
-PROCEDURE PromotePage (p: Page;  r: PromoteReason) =
+PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
   VAR
     d := PromoteDesc [r];
     n_pages := PageCount(p);
   BEGIN
-    d.generation := pureCopy.desc.generation;
+    d.generation := pool.desc.generation;
 
     WITH pd = desc[p - p0] DO
       <* ASSERT pd.space = Space.Previous *>
@@ -575,11 +572,8 @@ PROCEDURE PromotePage (p: Page;  r: PromoteReason) =
       END;
 
       pd := d;
-
-      IF PromotedPageNeedsScan[r] THEN
-        pd.link := impureCopy.stack;
-        impureCopy.stack := p;
-      END;
+      pd.link := pool.stack;
+      pool.stack := p;
     END;
 
     IF n_pages > 1 THEN
@@ -641,7 +635,7 @@ PROCEDURE CollectEnough () =
     IF collectorOn THEN RETURN; END;
     IF Behind() THEN
       CollectorOn();
-      IF incremental AND RTHeapDep.VM AND disableVMCount = 0 THEN
+      IF incremental AND (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.incremental) THEN
         REPEAT CollectSome(); UNTIL NOT Behind();
       ELSE
         WHILE collectorState = CollectorState.Zero DO CollectSome(); END;
@@ -676,9 +670,11 @@ PROCEDURE CollectorOn () =
     <* ASSERT NOT collectorOn *>
     collectorOn := TRUE;
 
-    ThreadF.SuspendOthers ();
-    (* If the collector is unprotecting pages and moving stuff around,
-       other threads cannot be running!  -- 7/16/96 WKK *)
+    IF incremental AND NOT RTLinker.incremental THEN
+      ThreadF.SuspendOthers ();
+      (* If the collector is unprotecting pages and moving stuff around,
+         other threads cannot be running!  -- 7/16/96 WKK *)
+    END;
 
     IF RTHeapDep.VM THEN timeUsedOnEntry := RTHeapDep.TimeUsed(); END;
 
@@ -713,7 +709,9 @@ PROCEDURE CollectorOff () =
       END;
     END;
 
-    ThreadF.ResumeOthers ();
+    IF incremental AND NOT RTLinker.incremental THEN
+      ThreadF.ResumeOthers ();
+    END;
 
     collectorOn := FALSE;
 
@@ -768,7 +766,9 @@ PROCEDURE CollectSomeInStateZero () =
     END;
 
     (* make generational decisions *)
-    IF generational AND RTHeapDep.VM AND disableVMCount = 0 THEN
+    IF generational AND
+      (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.generational OR RTLinker.incremental)
+     THEN
       pureCopy.desc.generation   := Generation.Older;
       impureCopy.desc.generation := Generation.Older;
       partialCollection := partialCollectionNext AND cycleL < cycleLength;
@@ -843,11 +843,12 @@ PROCEDURE CollectSomeInStateZero () =
             IF partialCollection THEN
               IF pd.protected THEN
                 <* ASSERT NOT pd.pure *>
-                PromotePage(p, PromoteReason.OldProtected);
+                (* no need to scan *)
+                PromotePage(p, PromoteReason.OldProtected, pureCopy);
               ELSIF pd.pure THEN
-                PromotePage(p, PromoteReason.OldPure);
+                PromotePage(p, PromoteReason.OldPure,      pureCopy);
               ELSE
-                PromotePage(p, PromoteReason.OldImpure);
+                PromotePage(p, PromoteReason.OldImpure,    impureCopy);
               END;
             ELSE
               IF pd.protected THEN Protect(p, Mode.ReadWrite); END;
@@ -863,13 +864,13 @@ PROCEDURE CollectSomeInStateZero () =
 
     mover := NEW (Mover);  (* get one in the new space *)
 
-    (* On some systems (ie Win32) the system call wrappers are not atomic
-       with respect to the collector, so it's possible that this collection
-       started after a thread had validated its system call parameters but
-       before the system call completed.  On those systems, we must ensure
-       that the heap pages referenced by threads remain unprotected after
-       the collection begins. *)
-    IF RTVM.VMHeap() AND NOT RTVM.AtomicWrappers() THEN
+    (* It is possible that this collection started after a thread had
+       validated references from its stack.  We must ensure that the heap
+       pages referenced by such threads remain unprotected after the
+       collection begins.  This also means that system call wrappers need not
+       be atomic with respect to the collector, since validated system call
+       parameters held on the stack will remain valid (i.e., unprotected). *)
+    IF incremental AND RTLinker.incremental OR RTHeapDep.VM AND NOT RTHeapDep.AtomicWrappers THEN
       FinishThreadPages ();
     END;
 
@@ -1619,7 +1620,7 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
   END SanityCheck;
 
 PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
-  VAR ref := LOOPHOLE(cp, REF RefReferent)^;
+  VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
   BEGIN
     IF ref # NIL THEN
       VAR
@@ -1643,7 +1644,7 @@ PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
 
 PROCEDURE ProtectedOlderRefSanityCheck (<*UNUSED*> v  : RTHeapMap.Visitor;
                                                    cp : ADDRESS) =
-  VAR ref := LOOPHOLE(cp, REF RefReferent)^;
+  VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
   BEGIN
     IF ref # NIL THEN
       VAR
@@ -1665,6 +1666,57 @@ PROCEDURE ProtectedOlderRefSanityCheck (<*UNUSED*> v  : RTHeapMap.Visitor;
       END;
     END;
   END ProtectedOlderRefSanityCheck;
+
+<*UNUSED*>
+PROCEDURE P(p: Page; b: BOOLEAN): BOOLEAN =
+  BEGIN
+    IF NOT b THEN PrintDesc(p) END;
+    RETURN b;
+  END P;
+
+PROCEDURE PrintDesc(p: Page) =
+  VAR d := desc[p - p0];
+  BEGIN
+    RTIO.PutText("p0="); RTIO.PutInt(p0);
+    RTIO.PutText(" page="); RTIO.PutInt(p);
+    RTIO.PutText(" p1="); RTIO.PutInt(p1);
+    RTIO.PutChar('\n');
+
+    RTIO.PutText("desc="); RTIO.PutAddr(ADR(desc[p - p0])); RTIO.PutChar('\n'); RTIO.PutText("space=");
+    CASE d.space OF
+    | Space.Unallocated => RTIO.PutText("Unallocated");
+    | Space.Free        => RTIO.PutText("Free");
+    | Space.Previous    => RTIO.PutText("Previous");
+    | Space.Current     => RTIO.PutText("Current");
+    END;
+    RTIO.PutChar('\n');
+
+    RTIO.PutText("generation=");
+    CASE d.generation OF
+    | Generation.Older   => RTIO.PutText("Older");
+    | Generation.Younger => RTIO.PutText("Younger");
+    END;
+    RTIO.PutChar('\n');
+
+    RTIO.PutText("pure="); RTIO.PutInt(ORD(d.pure)); RTIO.PutChar('\n');
+
+    RTIO.PutText("note=");
+    CASE d.note OF
+    | Note.OlderGeneration => RTIO.PutText("OlderGeneration");
+    | Note.AmbiguousRoot   => RTIO.PutText("AmbiguousRoot");
+    | Note.Large           => RTIO.PutText("Large");
+    | Note.Frozen          => RTIO.PutText("Frozen");
+    | Note.Allocated       => RTIO.PutText("Allocated"); 
+    | Note.Copied          => RTIO.PutText("Copied"); 
+    END;
+    RTIO.PutChar('\n');
+
+    RTIO.PutText("gray="); RTIO.PutInt(ORD(d.gray)); RTIO.PutChar('\n');
+    RTIO.PutText("protected="); RTIO.PutInt(ORD(d.protected)); RTIO.PutChar('\n');
+    RTIO.PutText("continued="); RTIO.PutInt(ORD(d.continued)); RTIO.PutChar('\n');
+    RTIO.PutChar('\n'); RTIO.Flush();
+
+  END PrintDesc;
 
 (* ----------------------------------------------------------------------- *)
 
@@ -2099,11 +2151,120 @@ PROCEDURE Protect (p: Page;  m: Mode) =
     protected := (m # Mode.ReadWrite);
   BEGIN
     <* ASSERT collectorOn OR (m = Mode.ReadWrite) *>
-    <* ASSERT RTHeapDep.VM *>
-    RTHeapDep.Protect(p, n_pages, Readable[m], Writable[m]);
+    <* ASSERT NOT desc[p - p0].pure *>
+    IF RTHeapDep.VM AND disableVMCount = 0 THEN
+      RTHeapDep.Protect(p, n_pages, Readable[m], Writable[m]);
+    END;
     FOR i := 0 TO n_pages - 1 DO desc[p + i - p0].protected := protected; END;
     IF perfOn THEN PerfChange(p, n_pages); END;
   END Protect;
+
+PROCEDURE CheckLoadTracedRef (ref: REFANY) =
+  VAR p : INTEGER := Word.RightShift (LOOPHOLE(ref, INTEGER), LogBytesPerPage); 
+  BEGIN
+    IF NOT (incremental OR generational) THEN RETURN END;
+
+    RTOS.LockHeap ();
+
+    IF (p < p0) OR (p1 <= p) THEN
+      RTOS.UnlockHeap();
+      RETURN;				 (* not in heap *)
+    END;
+      
+    WITH pd = desc[p - p0] DO
+
+      IF pd.space = Space.Unallocated THEN
+        RTOS.UnlockHeap();
+        RETURN;				 (* not in heap *)
+      END;
+
+      IF NOT pd.protected THEN
+        RTOS.UnlockHeap();
+        RETURN;				 (* was protected, but not any more *)
+      END;
+
+      <* ASSERT NOT pd.pure *>
+      <* ASSERT NOT pd.continued *>
+
+      IF pd.gray THEN
+        CollectorOn();
+        IF p # impureCopy.page THEN
+          CleanPage(p);
+        ELSIF CopySome() THEN
+          (* we cleaned the impureCopy page, but still have more to clean *)
+          <* ASSERT NOT desc[p - p0].gray *>
+        ELSIF desc[p - p0].gray THEN
+          <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
+          (* We just finished the collection!! *)
+          FillPool(impureCopy);
+          impureCopy.page  := Nil;
+          impureCopy.stack := Nil;
+          FOR i := 0 TO PageCount(p) - 1 DO
+            desc[p + i - p0].gray := FALSE;
+          END;
+          IF desc[p - p0].generation = Generation.Older THEN
+            <* ASSERT desc[p - p0].space = Space.Current *>
+            Protect(p, Mode.ReadOnly);
+          END;
+          IF perfOn THEN PerfChange(p, 1); END;
+        END;
+        CollectorOff();
+      END;
+
+      IF generational AND NOT RTLinker.generational THEN
+        (* piggy-back generational support *)
+        <* ASSERT pd.generation = Generation.Older *>
+        Protect(p, Mode.ReadWrite);
+      END;
+
+    END; (* WITH *)
+
+    RTOS.UnlockHeap();
+    RETURN;			       (* was protected, protection cleared *)
+  END CheckLoadTracedRef;
+
+PROCEDURE CheckAssignIndirectTraced (addr: ADDRESS) =
+  VAR p : INTEGER := Word.RightShift (LOOPHOLE(addr, INTEGER), LogBytesPerPage); 
+  BEGIN
+    IF NOT generational THEN RETURN END;
+
+    RTOS.LockHeap ();
+
+    IF (p < p0) OR (p1 <= p) THEN
+      RTOS.UnlockHeap();
+      RETURN;				 (* not in heap *)
+    END;
+
+    WITH pd = desc[p - p0] DO
+
+      IF pd.space = Space.Unallocated THEN
+        RTOS.UnlockHeap();
+        RETURN;				 (* not in heap *)
+      END;
+
+      IF NOT pd.protected THEN
+        RTOS.UnlockHeap();
+        RETURN;				 (* was protected, but not any more *)
+      END;
+
+      IF NOT pd.continued THEN
+        <* ASSERT NOT pd.pure *>
+        <* ASSERT NOT pd.gray *>
+        <* ASSERT pd.generation = Generation.Older *>
+        Protect(p, Mode.ReadWrite);
+      ELSE
+        p := FirstPage(p);
+        <* ASSERT NOT desc[p - p0].pure *>
+        <* ASSERT NOT desc[p - p0].gray *>
+        <* ASSERT desc[p - p0].generation = Generation.Older *>
+        Protect(p, Mode.ReadWrite);
+      END;
+
+    END; (* WITH *)
+
+    RTOS.UnlockHeap();
+    RETURN;			       (* was protected, protection cleared *)
+  END CheckAssignIndirectTraced;
 
 PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
   VAR p : INTEGER := Word.RightShift (LOOPHOLE(addr, INTEGER), LogBytesPerPage);
@@ -2591,6 +2752,8 @@ PROCEDURE Init () =
   END Init;
 
 BEGIN
+  incremental  := RTHeapDep.VM OR RTLinker.incremental;
+  generational := RTHeapDep.VM OR RTLinker.generational OR RTLinker.incremental;
   IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
   IF RTParams.IsPresent("novm") THEN disableVMCount := 1; END;
   IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;

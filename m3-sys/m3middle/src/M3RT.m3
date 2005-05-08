@@ -131,7 +131,8 @@ PROCEDURE Init () =
     MI_imports        := MI_gc_map + AP;         (* : ADDRESS *)
     MI_link_state     := MI_imports + AP;        (* : INTEGER *)
     MI_binder         := MI_link_state + IP;     (* : PROC()  *)
-    MI_SIZE           := MI_binder + AP;
+    MI_gc_flags       := MI_binder + AP;         (* : INTEGER  *)
+    MI_SIZE           := MI_gc_flags + IP;
 
     (* offsets and size of an RT0.ImportInfo record *)
     II_import := 0;               (* : ADDRESS (ModulePtr) *)

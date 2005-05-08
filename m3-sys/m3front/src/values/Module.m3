@@ -1086,6 +1086,13 @@ PROCEDURE GenLinkerInfo (t: T;  proc_info, type_map, rev_full, rev_part: INTEGER
     IF (t.body # NIL) AND (t.body.cg_proc # NIL) THEN
       CG.Init_proc (M3RT.MI_binder, t.body.cg_proc, FALSE);
     END;
+    IF (Host.doIncGC) AND (Host.doGenGC) THEN
+      CG.Init_intt (M3RT.MI_gc_flags, Target.Integer.size, 3, FALSE);
+    ELSIF (Host.doIncGC) THEN
+      CG.Init_intt (M3RT.MI_gc_flags, Target.Integer.size, 2, FALSE);
+    ELSIF (Host.doGenGC) THEN
+      CG.Init_intt (M3RT.MI_gc_flags, Target.Integer.size, 1, FALSE);
+    END;
 
     (* finish up the global data segment allocations *)
     EVAL Allocate (0, Target.Address.align, FALSE, "*TOTAL*");

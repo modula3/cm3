@@ -44,7 +44,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
     proc: Procedure.T;
     info: Type.Info;
   BEGIN
-    Expr.PrepLValue (e);
+    Expr.PrepLValue (e, lhs := TRUE);
     t := Type.CheckInfo (t, info);
     IF info.isTraced THEN
       Expr.CompileLValue (e);

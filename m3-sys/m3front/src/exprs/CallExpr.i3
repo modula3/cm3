@@ -35,7 +35,7 @@ TYPE
   Bounder     = PROCEDURE (t: T;  VAR min, max: Target.Int);
   Predicate   = PROCEDURE (t: T): BOOLEAN;
   Compiler    = PROCEDURE (t: T);
-  CompilerLV  = PROCEDURE (t: T);
+  CompilerLV  = PROCEDURE (t: T; lhs: BOOLEAN);
   CompilerBR  = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
   NoteWriter  = PROCEDURE (t: T);
 
@@ -70,7 +70,7 @@ PROCEDURE NoValue        (t: T): Expr.T;
 PROCEDURE NoBounds       (t: T;  VAR min, max: Target.Int);
 PROCEDURE NotAddressable (t: T);
 PROCEDURE PrepArgs       (t: T);
-PROCEDURE NoLValue       (t: T);
+PROCEDURE NoLValue       (t: T; lhs: BOOLEAN);
 PROCEDURE NotBoolean     (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE PrepNoBranch   (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE NoBranch       (t: T;  true, false: CG.Label;  freq: CG.Frequency);

@@ -49,6 +49,7 @@ IMPORT RT0;
 <*EXTERNAL*> PROCEDURE RTVM_I3            (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTWeakRef_I3       (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTutils_I3         (mode: INTEGER): RT0.ModulePtr;
+<*EXTERNAL*> PROCEDURE Word_I3            (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RT0_M3             (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTAllocStats_M3    (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTAllocator_M3     (mode: INTEGER): RT0.ModulePtr;

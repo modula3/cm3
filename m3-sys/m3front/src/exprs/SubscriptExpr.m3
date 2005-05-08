@@ -11,19 +11,20 @@ MODULE SubscriptExpr;
 IMPORT CG, Expr, ExprRep, ArrayType, Error, Type, Int;
 IMPORT ArrayExpr, OpenArrayType, Host, EnumExpr;
 IMPORT CheckExpr, SubtractExpr, IntegerExpr, ErrType;
-IMPORT RefType, DerefExpr, Target, TInt, M3RT;
+IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
 
 TYPE
   P = ExprRep.Tab BRANDED "SubscriptExpr.P" OBJECT
         biased_b : Expr.T;
         depth    : INTEGER;  (* open array depth before subscripting *)
+        tmp      : CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
         compile      := Compile;
-        prepLV       := Prep;
+        prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
@@ -48,6 +49,7 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
     p.b        := b;
     p.biased_b := NIL;
     p.depth    := 0;
+    p.tmp      := NIL;
     RETURN p;
   END New;
 
@@ -160,23 +162,46 @@ PROCEDURE NeedsAddress (p: P) =
   END NeedsAddress;
 
 PROCEDURE Prep (p: P) =
+  VAR info: Type.Info;
+  BEGIN
+    PrepLV (p, lhs := FALSE);
+    EVAL Type.CheckInfo (p.type, info);
+    IF Host.doIncGC AND info.isTraced THEN
+      CASE info.class OF
+      | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+        Compile (p);
+        RunTyme.EmitCheckLoadTracedRef ();
+        p.tmp := CG.Pop ();
+      ELSE
+        (* no check *)
+      END
+    END
+  END Prep;
+
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
   VAR e := Expr.ConstValue (p.biased_b);
   BEGIN
     IF (e # NIL) THEN p.biased_b := e; END;
     IF Expr.IsDesignator (p.a)
-      THEN Expr.PrepLValue (p.a);
+      THEN Expr.PrepLValue (p.a, lhs);
       ELSE Expr.Prep (p.a);
     END;
     Expr.Prep (p.biased_b);
-  END Prep;
+  END PrepLV;
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    CompileLV (p);
-    Type.LoadScalar (p.type);
+    IF p.tmp = NIL THEN
+      CompileLV (p);
+      Type.LoadScalar (p.type);
+    ELSE
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+    END
   END Compile;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
   VAR
     ti, te    : Type.T;
     subscript : INTEGER;

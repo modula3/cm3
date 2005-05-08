@@ -208,10 +208,11 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
     RETURN t;
   END NewFormal;
 
-PROCEDURE Split (t: T;  VAR type: Type.T;  VAR indirect, readonly: BOOLEAN) =
+PROCEDURE Split (t: T;  VAR type: Type.T;  VAR global, indirect, readonly: BOOLEAN) =
   BEGIN
     <* ASSERT t.checked *>
     type     := t.tipe;
+    global   := t.global;
     indirect := t.indirect;
     readonly := t.readonly;
   END Split;

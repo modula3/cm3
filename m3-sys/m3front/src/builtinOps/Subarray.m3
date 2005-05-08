@@ -62,6 +62,11 @@ PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
   END NeedsAddress;
 
 PROCEDURE Prep (ce: CallExpr.T) =
+  BEGIN
+    PrepLV (ce, lhs := FALSE);
+  END Prep;
+
+PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
   VAR
     base      := ce.args[0];
     start     := ce.args[1];
@@ -82,7 +87,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
     Type.Compile (open);
     EVAL ArrayType.Split (array, index, element);
 
-    Expr.PrepLValue (base);
+    Expr.PrepLValue (base, lhs);
 
     (* determine which case to use *)
     case := 0;
@@ -368,7 +373,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
     CG.Load_addr_of_temp (t_result, 0, Target.Address.align);
     ce.tmp := CG.Pop ();
 
-  END Prep;
+  END PrepLV;
 
 PROCEDURE GetCard (e: Expr.T;  VAR i: INTEGER;  VAR x: Target.Int): BOOLEAN =
   BEGIN
@@ -400,12 +405,17 @@ PROCEDURE ComputeOffset (array: CG.Var;  depth, elt_pack: INTEGER) =
 
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
-    (* all the real work was done by Prep *)
+    CompileLV (ce, lhs := FALSE);
+  END Compile;
+
+PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> lhs: BOOLEAN) =
+  BEGIN
+    (* all the real work was done by PrepLV *)
     CG.Push (ce.tmp);
     CG.Boost_alignment (Target.Address.align);
     CG.Free (ce.tmp);
     ce.tmp := NIL;
-  END Compile;
+  END CompileLV;
 
 PROCEDURE IsWritable (ce: CallExpr.T): BOOLEAN =
   BEGIN
@@ -430,8 +440,8 @@ PROCEDURE Initialize () =
                                  Check,
                                  Prep,
                                  Compile,
-                                 Prep,
-                                 Compile,
+                                 PrepLV,
+                                 CompileLV,
                                  CallExpr.NotBoolean,
                                  CallExpr.NotBoolean,
                                  CallExpr.NoValue, (* fold *)
