@@ -66,7 +66,7 @@ PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
 PROCEDURE Compile (p: P): Stmt.Outcomes =
   VAR tlhs := Expr.TypeOf (p.lhs);
   BEGIN
-    Expr.PrepLValue (p.lhs);
+    Expr.PrepLValue (p.lhs, lhs := TRUE);
     PrepForEmit (tlhs, p.rhs, initializing := FALSE);
     Expr.CompileLValue (p.lhs);
     DoEmit (tlhs, p.rhs);

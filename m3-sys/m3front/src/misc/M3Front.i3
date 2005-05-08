@@ -59,6 +59,8 @@ END M3Front.
      -times         print the elapsed time profile
      -load_map      generate the load map comment in the output
      -No_load_map   don't generate the load map comment in the output
+     -IncGC         generate software read barrier for incremental GC
+     -GenGC         generate software write barrier for generational GC
 *)
  
 

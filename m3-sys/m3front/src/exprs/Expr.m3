@@ -145,12 +145,12 @@ PROCEDURE Compile (t: T) =
     t.compile ();
   END Compile;
 
-PROCEDURE PrepLValue (t: T) =
+PROCEDURE PrepLValue (t: T; lhs: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     Type.Compile (t.type);
     <* ASSERT t.checked *>
-    t.prepLV ();
+    t.prepLV (lhs);
   END PrepLValue;
 
 PROCEDURE CompileLValue (t: T) =
@@ -303,7 +303,7 @@ PROCEDURE NoCompile (<*UNUSED*> t: T) =
     <*ASSERT FALSE*>
   END NoCompile;
 
-PROCEDURE NotLValue (<*UNUSED*> t: T) =
+PROCEDURE NotLValue (<*UNUSED*> t: T; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
     <* ASSERT FALSE *>
   END NotLValue;

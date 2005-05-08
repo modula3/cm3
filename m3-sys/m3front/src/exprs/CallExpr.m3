@@ -34,6 +34,7 @@ REVEAL
                  isWritable   : Predicate;
                  isDesignator : Predicate;
                  noteWriter   : NoteWriter;
+                 isIndirect   : Predicate;
                END;
 
 REVEAL
@@ -170,7 +171,7 @@ PROCEDURE PrepArgs (t: T) =
     END;
   END PrepArgs;
 
-PROCEDURE NoLValue (<*UNUSED*> t: T) =
+PROCEDURE NoLValue (<*UNUSED*> t: T; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
     <*ASSERT FALSE*>
   END NoLValue;
@@ -318,14 +319,14 @@ PROCEDURE Compile (p: T) =
     p.methods.compiler (p);
   END Compile;
 
-PROCEDURE PrepLV (p: T) =
+PROCEDURE PrepLV (p: T; lhs: BOOLEAN) =
   BEGIN
-    p.methods.prepLV (p);
+    p.methods.prepLV (p, lhs);
   END PrepLV;
 
-PROCEDURE CompileLV (p: T) =
+PROCEDURE CompileLV (p: T; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
-    p.methods.compilerLV (p);
+    p.methods.compilerLV (p, lhs := FALSE);
   END CompileLV;
 
 PROCEDURE PrepBR (p: T;  true, false: CG.Label;  freq: CG.Frequency) =

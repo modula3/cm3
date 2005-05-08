@@ -8,18 +8,19 @@
 
 MODULE DerefExpr;
 
-IMPORT Expr, ExprRep, RefType, Error, Type;
-IMPORT NilChkExpr, CG, ErrType;
+IMPORT Expr, ExprRep, RefType, Error, Type, RunTyme, Procedure;
+IMPORT NilChkExpr, CG, ErrType, Host;
 
 TYPE
   P = ExprRep.Ta BRANDED "DerefExpr.P" OBJECT
+	tmp: CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
         compile      := Compile;
-        prepLV       := Prep;
+        prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
@@ -42,6 +43,7 @@ PROCEDURE New (a: Expr.T): Expr.T =
     ExprRep.Init (p);
     p.a := NilChkExpr.New (a);
     p.origin := p.a.origin;
+    p.tmp := NIL;
     RETURN p;
   END New;
 
@@ -92,27 +94,82 @@ PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
   END NeedsAddress;
 
 PROCEDURE Prep (p: P) =
+  VAR info: Type.Info;
   BEGIN
     Expr.Prep (p.a);
+    IF Host.doIncGC THEN
+      EVAL Type.CheckInfo (p.type, info);
+      IF info.isTraced THEN
+        CASE info.class OF
+        | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+          Compile (p);
+          RunTyme.EmitCheckLoadTracedRef ();
+          p.tmp := CG.Pop ();
+        ELSE
+          (* no check *)
+        END
+      END
+    END
   END Prep;
 
 PROCEDURE Compile (p: P) =
   VAR t := p.type;  info: Type.Info;
   BEGIN
-    Expr.Compile (p.a);
-    EVAL Type.CheckInfo (t, info);
-    CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-    CG.Boost_alignment (info.alignment);
-    Type.LoadScalar (t);
+    IF p.tmp = NIL THEN
+      Expr.Compile (p.a);
+      EVAL Type.CheckInfo (t, info);
+      CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
+      CG.Boost_alignment (info.alignment);
+      Type.LoadScalar (t);
+    ELSE
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+    END
   END Compile;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
-    Expr.Compile (p.a);
-    EVAL Type.CheckInfo (p.type, info);
-    CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-    CG.Boost_alignment (info.alignment);
+    Expr.Prep (p.a);
+    IF lhs AND Host.doGenGC THEN
+      EVAL Type.CheckInfo (p.type, info);
+      IF info.isTraced THEN
+        Expr.Compile (p.a);
+        CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
+        EmitCheck (RunTyme.Hook.CheckAssignIndirectTraced);
+        CG.Boost_alignment (info.alignment);
+        p.tmp := CG.Pop ();
+      END
+    END
+  END PrepLV;
+
+PROCEDURE EmitCheck (hook: RunTyme.Hook) =
+  VAR
+    proc := RunTyme.LookUpProc (hook);
+    ref := CG.Pop ();
+  BEGIN
+    Procedure.StartCall (proc);
+    CG.Push (ref);
+    CG.Pop_param (CG.Type.Addr);
+    Procedure.EmitCall (proc);
+    CG.Push (ref);
+    CG.Free (ref);
+  END EmitCheck;
+
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+  VAR info: Type.Info;
+  BEGIN
+    IF p.tmp = NIL THEN
+      Expr.Compile (p.a);
+      EVAL Type.CheckInfo (p.type, info);
+      CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
+      CG.Boost_alignment (info.alignment);
+    ELSE
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+    END;
   END CompileLV;
 
 PROCEDURE NoteWrites (p: P) =

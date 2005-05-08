@@ -19,7 +19,8 @@ TYPE
     DisposeRef, DisposeObj,
     Abort, AssertFailed, DebugMsg,
     TextLitInfo, TextLitGetChar, TextLitGetWideChar,
-    TextLitGetChars, TextLitGetWideChars
+    TextLitGetChars, TextLitGetWideChars,
+    CheckLoadTracedRef, CheckAssignIndirectTraced
   };
 
 PROCEDURE Import ();
@@ -32,5 +33,7 @@ PROCEDURE LookUpProc (h: Hook): Procedure.T;
 (* return a handle on the procedure that implements hook 'h' *)
 
 PROCEDURE Reset ();
+
+PROCEDURE EmitCheckLoadTracedRef ();
 
 END RunTyme.

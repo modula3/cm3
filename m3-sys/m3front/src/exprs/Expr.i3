@@ -74,7 +74,7 @@ PROCEDURE Prep (t: T);
 PROCEDURE Compile (t: T);
 (* emits code to evaluate the expression onto the top of stack *)
 
-PROCEDURE PrepLValue (t: T);
+PROCEDURE PrepLValue (t: T; lhs: BOOLEAN);
 PROCEDURE CompileLValue (t: T);
 (* emits code to evaluate 't's L-value into s0.A. *)
 

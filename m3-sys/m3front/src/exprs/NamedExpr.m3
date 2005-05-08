@@ -9,8 +9,8 @@
 MODULE NamedExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
-IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
-IMPORT Scope, Error, ErrType, TInt;
+IMPORT Type, Variable, VarExpr, ProcExpr, Scanner, OpenArrayType;
+IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme, Procedure;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -21,13 +21,14 @@ TYPE
         inIsZeroes  : BOOLEAN;
         inGetBounds : BOOLEAN;
         inTypeOf    : BOOLEAN;
+        tmp         : CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
         compile      := Compile;
-        prepLV       := Prep;
+        prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
@@ -48,6 +49,7 @@ VAR cache := ARRAY [0..31] OF P { NIL, .. };
 PROCEDURE New (name: M3ID.T;  value: Value.T): Expr.T =
   VAR p: P;  cur_scope := Scope.Top ();    hash := name MOD NUMBER (cache);
   BEGIN
+(*
     (* check for a cache hit... *)
     p := cache[hash];
     IF (p # NIL) AND (p.name = name)
@@ -55,6 +57,7 @@ PROCEDURE New (name: M3ID.T;  value: Value.T): Expr.T =
       AND (p.value = value) THEN
       RETURN p;
     END;
+*)
 
     (* build a new node *)
     p := NEW (P);
@@ -66,6 +69,7 @@ PROCEDURE New (name: M3ID.T;  value: Value.T): Expr.T =
     p.inIsZeroes  := FALSE;
     p.inGetBounds := FALSE;
     p.inTypeOf    := FALSE;
+    p.tmp         := NIL;
     cache[hash] := p;
 
     RETURN p;
@@ -82,6 +86,7 @@ PROCEDURE FromValue (value: Value.T): Expr.T =
     p.inIsZeroes  := FALSE;
     p.inGetBounds := FALSE;
     p.inTypeOf    := FALSE;
+    p.tmp         := NIL;
     RETURN p;
   END FromValue;
 
@@ -167,22 +172,83 @@ PROCEDURE NeedsAddress (p: P) =
   END NeedsAddress;
 
 PROCEDURE Prep (p: P) =
+  VAR
+    t: Type.T; info: Type.Info;
+    global, indirect, readonly: BOOLEAN;
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
+    IF Host.doIncGC AND Value.ClassOf (p.value) = Value.Class.Var THEN
+      Variable.Split (p.value, t, global, indirect, readonly);
+      EVAL Type.CheckInfo (t, info);
+      IF info.isTraced AND (global OR indirect) THEN
+        CASE info.class OF 
+        | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =>
+          Variable.Load (p.value);
+          RunTyme.EmitCheckLoadTracedRef ();
+          p.tmp := CG.Pop ();
+        ELSE
+          (* no check *)
+        END
+      END
+    END
   END Prep;
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    Value.Load (p.value);
+    IF p.tmp = NIL THEN
+      Value.Load (p.value);
+    ELSE
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+    END
   END Compile;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+  VAR
+    t: Type.T; info: Type.Info;
+    global, indirect, readonly: BOOLEAN;
   BEGIN
-    CASE Value.ClassOf (p.value) OF
-    | Value.Class.Expr => Value.Load (p.value);
-    | Value.Class.Var  => Variable.LoadLValue (p.value);
-    ELSE <*ASSERT FALSE*>
-    END;
+    IF (p.value = NIL) THEN Resolve (p) END;
+    IF lhs AND Host.doGenGC AND Value.ClassOf(p.value) = Value.Class.Var THEN
+      Variable.Split (p.value, t, global, indirect, readonly);
+      EVAL Type.CheckInfo (t, info);
+      IF info.isTraced AND NOT global AND indirect THEN
+        Variable.LoadLValue (p.value);
+        VAR
+          proc := RunTyme.LookUpProc (RunTyme.Hook.CheckAssignIndirectTraced);
+          addr := CG.Pop ();
+        BEGIN
+          Procedure.StartCall (proc);
+          CG.Push (addr);
+          IF OpenArrayType.Is (t) THEN
+            WITH align = OpenArrayType.EltAlign (t) DO
+              CG.Open_elt_ptr (align);
+            END
+          END;
+          CG.Pop_param (CG.Type.Addr);
+          Procedure.EmitCall (proc);
+          CG.Push (addr);
+          CG.Free (addr);
+        END;
+        p.tmp := CG.Pop ();
+      END
+    END
+  END PrepLV;
+
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+  BEGIN
+    IF p.tmp = NIL THEN
+      CASE Value.ClassOf (p.value) OF
+      | Value.Class.Expr => Value.Load (p.value);
+      | Value.Class.Var  => Variable.LoadLValue (p.value);
+      ELSE <*ASSERT FALSE*>
+      END;
+    ELSE
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+    END
   END CompileLV;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =

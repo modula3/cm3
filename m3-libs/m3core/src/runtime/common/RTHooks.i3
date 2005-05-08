@@ -97,6 +97,10 @@ PROCEDURE DisposeUntracedRef (VAR a: ADDRESS);
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT);
 
+PROCEDURE CheckLoadTracedRef (ref: REFANY);
+
+PROCEDURE CheckAssignIndirectTraced (addr: ADDRESS);
+
 (*-------------------------------------------------------- runtime errors ---*)
 
 PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)

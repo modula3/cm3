@@ -20,7 +20,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
 
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0]);
+    Expr.PrepLValue (ce.args[0], lhs := TRUE);
     IF (NUMBER (ce.args^) > 1) THEN Expr.Prep (ce.args[1]); END;
   END Prep;
 

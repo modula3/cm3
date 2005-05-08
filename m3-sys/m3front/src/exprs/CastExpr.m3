@@ -207,7 +207,7 @@ PROCEDURE Prep (p: P) =
         Expr.Prep (e);
     | Kind.D_to_A =>
         INC (p.tmp_cnt);
-        Expr.PrepLValue (e);
+        Expr.PrepLValue (e, lhs := FALSE);
         Expr.CompileAddress (e);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =>
@@ -228,7 +228,7 @@ PROCEDURE Prep (p: P) =
         CG.Load_addr_of (t1, 0, z_align);
         p.tmp := BuildArray (p, sz);
     | Kind.D_to_S =>
-        Expr.PrepLValue (e);
+        Expr.PrepLValue (e, lhs := FALSE);
     | Kind.S_to_S =>
         Expr.Prep (e);
     | Kind.V_to_S =>
@@ -326,7 +326,7 @@ PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
     RETURN array;
   END BuildArray;
 
-PROCEDURE PrepLV (p: P) =
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -355,11 +355,11 @@ PROCEDURE PrepLV (p: P) =
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =>
-        Expr.PrepLValue (p.expr);
+        Expr.PrepLValue (p.expr, lhs);
 
     | Kind.D_to_A =>
         INC (p.tmp_cnt);
-        Expr.PrepLValue (e);
+        Expr.PrepLValue (e, lhs);
         Expr.CompileLValue (e);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =>
@@ -388,7 +388,7 @@ PROCEDURE PrepLV (p: P) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);

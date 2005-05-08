@@ -22,7 +22,8 @@ CONST
     "DisposeUntracedRef", "DisposeUntracedObj",
     "ReportFault", "AssertFailed", "DebugMsg",
     "TextLitInfo", "TextLitGetChar", "TextLitGetWideChar",
-    "TextLitGetChars", "TextLitGetWideChars"
+    "TextLitGetChars", "TextLitGetWideChars",
+    "CheckLoadTracedRef", "CheckAssignIndirectTraced"
   };
 
 VAR
@@ -106,6 +107,24 @@ PROCEDURE LookUp (name: M3ID.T): Value.T =
 
     RETURN v;
   END LookUp;
+
+PROCEDURE EmitCheckLoadTracedRef () =
+  VAR
+    proc := LookUpProc (Hook.CheckLoadTracedRef);
+    ref := CG.Pop (); 
+    skip := CG.Next_label ();
+  BEGIN
+    CG.Push (ref);
+    CG.Load_nil ();
+    CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, skip, CG.Maybe);
+    Procedure.StartCall (proc);
+    CG.Push (ref);
+    CG.Pop_param (CG.Type.Addr);
+    Procedure.EmitCall (proc);
+    CG.Set_label (skip);
+    CG.Push (ref);
+    CG.Free (ref);
+  END EmitCheckLoadTracedRef;
 
 BEGIN
 END RunTyme.

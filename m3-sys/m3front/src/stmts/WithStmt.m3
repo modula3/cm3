@@ -105,7 +105,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     (* evaluate the expr outside the new scope and capture its value *)
     CASE p.kind OF
     | Kind.designator =>
-        Expr.PrepLValue (p.expr);
+        Expr.PrepLValue (p.expr, lhs := FALSE);
         Expr.CompileAddress (p.expr);
         val := CG.Pop ();
     | Kind.structure =>

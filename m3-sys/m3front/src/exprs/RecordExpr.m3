@@ -34,8 +34,8 @@ TYPE
         typeOf       := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
-        prep         := PrepLV;
-        compile      := CompileLV;
+        prep         := Prep;
+        compile      := Compile;
         prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.NotBoolean;
@@ -222,7 +222,12 @@ PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
     (* yep, all records get memory addresses *)
   END NeedsAddress;
 
-PROCEDURE PrepLV (p: P) =
+PROCEDURE Prep (p: P) =
+  BEGIN
+    PrepLV (p, lhs := FALSE);
+  END Prep;
+
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
   VAR
     info: Type.Info;
     field: Field.Info;
@@ -238,6 +243,7 @@ PROCEDURE PrepLV (p: P) =
      * been prepped and compiled -- save it.
      *)
     IF p.do_direct THEN
+      <* ASSERT NOT lhs *>		 (* CHECK ME? *)
       p.tmp := CG.Pop ();
     ELSE
       t1 := CG.Declare_temp (info.size, info.alignment,
@@ -266,7 +272,12 @@ PROCEDURE PrepLV (p: P) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE Compile (p: P) =
+  BEGIN
+    CompileLV (p, lhs := FALSE);
+  END Compile;
+
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
   VAR info: Type.Info;  offset: INTEGER;
   BEGIN
     IF (p.is_const) THEN

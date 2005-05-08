@@ -48,12 +48,12 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.Compile (ce.args[0]);
   END Compile;
 
-PROCEDURE PrepLV (ce: CallExpr.T) =
+PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (ce.args[0]);
+    Expr.PrepLValue (ce.args[0], lhs);
   END PrepLV;
 
-PROCEDURE CompileLV (ce: CallExpr.T) =
+PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
     Expr.CompileLValue (ce.args[0]);
   END CompileLV;

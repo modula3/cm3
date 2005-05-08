@@ -163,6 +163,7 @@ VAR (* offsets and size of an RT0.ModuleInfo record *)
   MI_imports        : CARDINAL; (* : ADDRESS *)
   MI_link_state     : CARDINAL; (* : INTEGER *)
   MI_binder         : CARDINAL; (* : PROC()  *)
+  MI_gc_flags       : CARDINAL; (* : INTEGER *)
   MI_SIZE           : CARDINAL;
 
 VAR (* offsets and size of an RT0.ImportInfo record *)

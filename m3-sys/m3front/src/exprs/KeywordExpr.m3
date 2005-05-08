@@ -99,12 +99,12 @@ PROCEDURE Compile (p: P) =
     Expr.Compile (p.expr);
   END Compile;
 
-PROCEDURE PrepLV (p: P) =
+PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (p.expr);
+    Expr.PrepLValue (p.expr, lhs);
   END PrepLV;
 
-PROCEDURE CompileLV (p: P) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
     Expr.CompileLValue (p.expr);
   END CompileLV;

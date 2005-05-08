@@ -429,12 +429,12 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Prep (actual);
     | Mode.mVAR =>
-        Expr.PrepLValue (actual);
+        Expr.PrepLValue (actual, lhs := FALSE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.Prep (actual);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.PrepLValue (actual);
+          Expr.PrepLValue (actual, lhs := FALSE);
         ELSE (* non-designator, same type *)
           Expr.Prep (actual);
         END;

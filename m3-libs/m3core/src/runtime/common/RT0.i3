@@ -47,7 +47,14 @@ TYPE (* allocated at offset 0 of each compilation unit's global data *)
     imports        : ImportPtr;
     link_state     : INTEGER;  (* 0=unlinked, 1=linking, 2=linked *)
     binder         : Binder;
+    gc_flags       : INTEGER;  (* 0=none, 1=gen, 2=inc, 3=both *)
   END;
+
+CONST
+  GC_none = 0;
+  GC_gen  = 1;
+  GC_inc  = 2;
+  GC_both = 3;
 
 TYPE (* one of these is generated for each imported interface reference *)
   ImportInfo = RECORD
