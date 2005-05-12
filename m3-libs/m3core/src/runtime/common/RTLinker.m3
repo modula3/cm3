@@ -99,11 +99,11 @@ PROCEDURE AddUnitI (m: RT0.ModulePtr) =
     TraceModule("AddUnitI: ", m);
     IF generational AND (Word.And(m.gc_flags, RT0.GC_gen) = 0) THEN
       generational := FALSE;
-      RTCollectorSRC.FinishVM ();
+      IF RTCollectorSRC.generational THEN RTCollectorSRC.FinishVM () END;
     END;
     IF incremental AND (Word.And(m.gc_flags, RT0.GC_inc) = 0) THEN
       incremental  := FALSE;
-      RTCollectorSRC.FinishVM ();
+      IF RTCollectorSRC.incremental THEN RTCollectorSRC.FinishVM () END;
     END;
     IF (m.link_state = LS_Initial) THEN FindModules (m);  END;
     IF (m.link_state = LS_Linked)  THEN FixTypes ();      END;
