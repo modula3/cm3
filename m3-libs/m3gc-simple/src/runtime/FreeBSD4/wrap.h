@@ -49,9 +49,17 @@
   #define write         SOCKSwrite
 #endif /* } */
 
+#ifdef USE_RT0u__inCritical
 extern int RT0u__inCritical;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
+#else
+void (*RTOS_LockHeap)();    /* Not so logical, but it's a way to have linker fix
+ it for us */
+void (*RTOS_UnlockHeap)();
+#define ENTER_CRITICAL if (RTOS_LockHeap) RTOS_LockHeap()
+#define EXIT_CRITICAL  if (RTOS_UnlockHeap) RTOS_UnlockHeap()
+#endif
 
 static char RTHeapDepC__c;
 #define MAKE_READABLE(x) \
