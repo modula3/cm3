@@ -2257,10 +2257,10 @@ PROCEDURE CheckStoreTraced (ref: RefReferent) =
     p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
     h := HeaderOf (ref);
   BEGIN
+    h.dirty := TRUE;
     IF NOT generational THEN RETURN END;
 
     RTOS.LockHeap ();
-
     <* ASSERT (p0 <= p) AND (p < p1) *>
 
     WITH pd = desc[p - p0] DO
@@ -2300,7 +2300,6 @@ PROCEDURE CheckStoreTraced (ref: RefReferent) =
 
     <* ASSERT desc[p - p0].generation = Generation.Older *>
     Protect(p, Mode.ReadWrite);
-    h.dirty := TRUE;
 
     RTOS.UnlockHeap();
     RETURN;			       (* was protected, protection cleared *)
