@@ -180,8 +180,14 @@ VAR (* offsets and size of an RT0.ProcInfo record *)
 (*----------------------------------------------------------- ref headers ---*)
 
 CONST (* bit offsets and sizes of the fields within a REF's header word *)
-  RH_typecode_offset  = 1;
+  RH_forwarded_offset = 0;
+  RH_forwarded_size   = 1;
+  RH_typecode_offset  = RH_forwarded_offset + RH_forwarded_size;
   RH_typecode_size    = 20;
+  RH_dirty_offset     = RH_typecode_offset + RH_typecode_size;
+  RH_dirty_size       = 1;
+  RH_gray_offset      = RH_dirty_offset + RH_dirty_size;
+  RH_gray_size        = 1;
 
 CONST (* builtin, constant typecodes *)
   NULL_typecode = 0;

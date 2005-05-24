@@ -20,7 +20,7 @@ TYPE
     Abort, AssertFailed, DebugMsg,
     TextLitInfo, TextLitGetChar, TextLitGetWideChar,
     TextLitGetChars, TextLitGetWideChars,
-    CheckLoadTracedRef, CheckAssignIndirectTraced
+    CheckLoadTracedRef, CheckStoreTraced
   };
 
 PROCEDURE Import ();
@@ -35,5 +35,6 @@ PROCEDURE LookUpProc (h: Hook): Procedure.T;
 PROCEDURE Reset ();
 
 PROCEDURE EmitCheckLoadTracedRef ();
+PROCEDURE EmitCheckStoreTraced ();
 
 END RunTyme.

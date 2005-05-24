@@ -110,7 +110,7 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
     IF NOT Type.IsEqual (tlhs, Null.T, NIL) THEN
       (* check for TYPECODE(ref) = TYPECODE(type) *)
       CG.Push (ref);
-      CG.Ref_to_typecode ();
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (tlhs, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, ok, CG.Always);
 

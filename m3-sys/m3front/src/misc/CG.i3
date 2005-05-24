@@ -652,13 +652,7 @@ PROCEDURE Load_static_link (p: Proc);
 
 (*------------------------------------------------ builtin type operations --*)
 
-PROCEDURE Ref_to_typecode ();
-(* s0.I := TYPECODE (s0.A)  for non-NIL s0.A
-   == Load_indirect (Type.Int, -Target.Address.pack,
-                        Target.Address.align, Target.Address.size);
-      Load_integer (1);
-      Shift_right ();
-*)
+PROCEDURE Ref_to_info (offset, size: INTEGER);
 
 (*------------------------------------------------------------ open arrays --*)
 

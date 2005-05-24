@@ -132,11 +132,13 @@ TYPE
 
 CONST
   Fill_1_type: Typecode = LAST(Typecode); (* 1 word filler *)
-  FillHeader1: Header = Header{typecode := Fill_1_type, forwarded := FALSE};
+  FillHeader1: Header = Header{typecode := Fill_1_type, forwarded := FALSE,
+                               dirty := FALSE};
 
 CONST
   Fill_N_type: Typecode = LAST(Typecode) - 1;
-  FillHeaderN: Header = Header{typecode := Fill_N_type, forwarded := FALSE};
+  FillHeaderN: Header = Header{typecode := Fill_N_type, forwarded := FALSE,
+                               dirty := FALSE};
 (* multi-word filler, the second word is the total size of the object,
    in bytes *)
 

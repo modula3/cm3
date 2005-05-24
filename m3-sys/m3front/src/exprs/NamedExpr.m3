@@ -9,8 +9,8 @@
 MODULE NamedExpr;
 
 IMPORT M3, M3ID, Expr, ExprRep, Value, Target;
-IMPORT Type, Variable, VarExpr, ProcExpr, Scanner, OpenArrayType;
-IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme, Procedure;
+IMPORT Type, Variable, VarExpr, ProcExpr, Scanner;
+IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
 
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
@@ -204,36 +204,9 @@ PROCEDURE Compile (p: P) =
     END
   END Compile;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
-  VAR
-    t: Type.T; info: Type.Info;
-    global, indirect, readonly: BOOLEAN;
+PROCEDURE PrepLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
-    IF lhs AND Host.doGenGC AND Value.ClassOf(p.value) = Value.Class.Var THEN
-      Variable.Split (p.value, t, global, indirect, readonly);
-      EVAL Type.CheckInfo (t, info);
-      IF info.isTraced AND NOT global AND indirect THEN
-        Variable.LoadLValue (p.value);
-        VAR
-          proc := RunTyme.LookUpProc (RunTyme.Hook.CheckAssignIndirectTraced);
-          addr := CG.Pop ();
-        BEGIN
-          Procedure.StartCall (proc);
-          CG.Push (addr);
-          IF OpenArrayType.Is (t) THEN
-            WITH align = OpenArrayType.EltAlign (t) DO
-              CG.Open_elt_ptr (align);
-            END
-          END;
-          CG.Pop_param (CG.Type.Addr);
-          Procedure.EmitCall (proc);
-          CG.Push (addr);
-          CG.Free (addr);
-        END;
-        p.tmp := CG.Pop ();
-      END
-    END
   END PrepLV;
 
 PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =

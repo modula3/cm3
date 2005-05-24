@@ -5,7 +5,7 @@
 MODULE RunTyme;
 
 IMPORT M3, M3ID, Value, ValueRep, Scope, Module, Error, Procedure;
-IMPORT CG;
+IMPORT CG, M3RT;
 
 CONST
   RunTimeModuleName = "RTHooks";
@@ -23,7 +23,7 @@ CONST
     "ReportFault", "AssertFailed", "DebugMsg",
     "TextLitInfo", "TextLitGetChar", "TextLitGetWideChar",
     "TextLitGetChars", "TextLitGetWideChars",
-    "CheckLoadTracedRef", "CheckAssignIndirectTraced"
+    "CheckLoadTracedRef", "CheckStoreTraced"
   };
 
 VAR
@@ -117,6 +117,9 @@ PROCEDURE EmitCheckLoadTracedRef () =
     CG.Push (ref);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, skip, CG.Maybe);
+    CG.Push (ref);
+    CG.Ref_to_info (M3RT.RH_gray_offset, M3RT.RH_gray_size);
+    CG.If_false (skip, CG.Maybe);
     Procedure.StartCall (proc);
     CG.Push (ref);
     CG.Pop_param (CG.Type.Addr);
@@ -125,6 +128,24 @@ PROCEDURE EmitCheckLoadTracedRef () =
     CG.Push (ref);
     CG.Free (ref);
   END EmitCheckLoadTracedRef;
+
+PROCEDURE EmitCheckStoreTraced () =
+  VAR
+    proc := LookUpProc (Hook.CheckStoreTraced);
+    ref := CG.Pop ();
+    skip := CG.Next_label ();
+  BEGIN
+    CG.Push (ref);
+    CG.Ref_to_info (M3RT.RH_dirty_offset, M3RT.RH_dirty_size);
+    CG.If_true (skip, CG.Maybe);
+    Procedure.StartCall (proc);
+    CG.Push (ref);
+    CG.Pop_param (CG.Type.Addr);
+    Procedure.EmitCall (proc);
+    CG.Set_label (skip);
+    CG.Push (ref);
+    CG.Free (ref);
+  END EmitCheckStoreTraced;
 
 BEGIN
 END RunTyme.

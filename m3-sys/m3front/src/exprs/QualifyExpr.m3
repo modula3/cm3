@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
 IMPORT RecordType, ObjectType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
-IMPORT Method, Field, Target, M3RT, Host, RunTyme, Procedure;
+IMPORT Method, Field, Target, M3RT, Host, RunTyme;
 
 TYPE
   Class = { cMODULE, cENUM, cOBJTYPE, cFIELD, cOBJFIELD, cMETHOD, cUNKNOWN };
@@ -449,8 +449,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
         IF lhs AND Host.doGenGC THEN
           EVAL Type.CheckInfo (p.type, info);
           IF info.isTraced THEN
-            CompileLV (p, lhs);
-            EmitCheck (RunTyme.Hook.CheckAssignIndirectTraced);
+            CompileLV (p, lhs := TRUE);
             p.temp := CG.Pop ();
           END
         END
@@ -463,20 +462,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     END;
   END PrepLV;
 
-PROCEDURE EmitCheck (hook: RunTyme.Hook) =
-  VAR
-    proc := RunTyme.LookUpProc (hook);
-    addr := CG.Pop ();
-  BEGIN
-    Procedure.StartCall (proc);
-    CG.Push (addr);
-    CG.Pop_param (CG.Type.Addr);
-    Procedure.EmitCall (proc);
-    CG.Push (addr);
-    CG.Free (addr);
-  END EmitCheck;
-
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
   VAR obj_offset, obj_align: INTEGER;  field: Field.Info;
   BEGIN
     CASE p.class OF
@@ -490,6 +476,9 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
 	IF p.temp = NIL THEN
           Field.Split (p.obj, field);
           Expr.Compile (p.expr);
+          IF lhs THEN
+            RunTyme.EmitCheckStoreTraced ();
+          END;
           ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
           IF (obj_offset >= 0) THEN
             INC (field.offset, obj_offset);
