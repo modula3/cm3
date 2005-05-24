@@ -173,16 +173,18 @@ CONST (* Type UIDs for the builtin types *)
        [BITSIZE (INTEGER) = 64]; *)
 
 CONST
-  SB = BITSIZE (ADDRESS) - 24;  (* # spare bits in a ref header *)
+  SB = BITSIZE (ADDRESS) - 26;  (* # spare bits in a ref header *)
 
 TYPE
   RefHeader = RECORD
     forwarded : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     typecode  : BITS 20 FOR Typecode   := 0;     (* the typecode *)
+    dirty     : BITS  1 FOR BOOLEAN    := TRUE;  (* used during collection *)
+    gray      : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     weak      : BITS  1 FOR BOOLEAN    := FALSE; (* any weakrefs? *)
     marka     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     markb     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
-    spare     : BITS SB FOR [0 .. 255] := 0;     (* for future expansion *)
+    spare     : BITS SB FOR [0 .. 64] := 0;      (* for future expansion *)
   END;
 
 (*--------------------------------- compiler generated procedure closures ---*)

@@ -75,7 +75,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, true, CG.Maybe);
 
       CG.Push (ptr);
-      CG.Ref_to_typecode ();
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, true, CG.Always);
 
@@ -153,7 +153,7 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
       END;
 
       CG.Push (ptr);
-      CG.Ref_to_typecode ();
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
       CG.Set_label (skip);

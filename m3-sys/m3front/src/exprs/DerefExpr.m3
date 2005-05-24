@@ -8,7 +8,7 @@
 
 MODULE DerefExpr;
 
-IMPORT Expr, ExprRep, RefType, Error, Type, RunTyme, Procedure;
+IMPORT Expr, ExprRep, RefType, Error, Type, RunTyme;
 IMPORT NilChkExpr, CG, ErrType, Host;
 
 TYPE
@@ -135,35 +135,22 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     IF lhs AND Host.doGenGC THEN
       EVAL Type.CheckInfo (p.type, info);
       IF info.isTraced THEN
-        Expr.Compile (p.a);
-        CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-        EmitCheck (RunTyme.Hook.CheckAssignIndirectTraced);
-        CG.Boost_alignment (info.alignment);
+        CompileLV (p, lhs := TRUE);
         p.tmp := CG.Pop ();
       END
     END
   END PrepLV;
 
-PROCEDURE EmitCheck (hook: RunTyme.Hook) =
-  VAR
-    proc := RunTyme.LookUpProc (hook);
-    ref := CG.Pop ();
-  BEGIN
-    Procedure.StartCall (proc);
-    CG.Push (ref);
-    CG.Pop_param (CG.Type.Addr);
-    Procedure.EmitCall (proc);
-    CG.Push (ref);
-    CG.Free (ref);
-  END EmitCheck;
-
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     IF p.tmp = NIL THEN
       Expr.Compile (p.a);
       EVAL Type.CheckInfo (p.type, info);
       CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
+      IF lhs THEN
+        RunTyme.EmitCheckStoreTraced ();
+      END;
       CG.Boost_alignment (info.alignment);
     ELSE
       CG.Push (p.tmp);

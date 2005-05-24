@@ -429,7 +429,7 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Prep (actual);
     | Mode.mVAR =>
-        Expr.PrepLValue (actual, lhs := FALSE);
+        Expr.PrepLValue (actual, lhs := TRUE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.Prep (actual);

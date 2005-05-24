@@ -33,7 +33,7 @@ REVEAL
     prep         ()                                := NoCompile;
     compile      ()                                := NoCompile;
     prepLV       (lhs: BOOLEAN)                    := NotLValue;
-    compileLV    (<*UNUSED*> lhs := FALSE)         := NotLValue;
+    compileLV    (lhs := FALSE)                    := NotLValue;
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;

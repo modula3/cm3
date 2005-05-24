@@ -48,7 +48,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       CG.Load_nil ();
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, nil, CG.Never);
       CG.Push (ce.tmp);
-      CG.Ref_to_typecode ();
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
       CG.Store_temp (ce.tmp);
       CG.Set_label (nil);

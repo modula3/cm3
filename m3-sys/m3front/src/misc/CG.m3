@@ -2501,21 +2501,19 @@ PROCEDURE Load_static_link (p: Proc) =
 
 (*------------------------------------------------ builtin type operations --*)
 
-PROCEDURE Ref_to_typecode () =
+PROCEDURE Ref_to_info (offset, size: INTEGER) =
   VAR base: INTEGER;
   BEGIN
     Boost_alignment (Target.Address.align);
     Load_indirect (Target.Integer.cg_type, -Target.Address.pack, Target.Address.size);
     Force ();
     IF Target.Little_endian THEN
-      base := M3RT.RH_typecode_offset;
+      base := offset;
     ELSE
-      base := Target.Integer.size
-                  - M3RT.RH_typecode_offset
-                  - M3RT.RH_typecode_size;
+      base := Target.Integer.size - offset - size;
     END;
-    cg.extract_mn (Target.Integer.cg_type, FALSE, base, M3RT.RH_typecode_size);
-  END Ref_to_typecode;
+    cg.extract_mn (Target.Integer.cg_type, FALSE, base, size);
+  END Ref_to_info;
 
 (*------------------------------------------------------------ open arrays --*)
 
