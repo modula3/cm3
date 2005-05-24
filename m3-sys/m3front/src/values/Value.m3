@@ -378,8 +378,9 @@ PROCEDURE IsImported (t: T): BOOLEAN =
     RETURN (t # NIL) AND (t.imported);
   END IsImported;
 
-PROCEDURE IsWritable (t: T): BOOLEAN =
+PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
+    IF lhs THEN t.lhs := TRUE END;
     RETURN NOT t.readonly;
   END IsWritable;
 

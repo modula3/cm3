@@ -33,7 +33,7 @@ TYPE
   TypeChecker = PROCEDURE (t: T;  VAR cs: Expr.CheckState);
   Evaluator   = PROCEDURE (t: T): Expr.T;
   Bounder     = PROCEDURE (t: T;  VAR min, max: Target.Int);
-  Predicate   = PROCEDURE (t: T): BOOLEAN;
+  Predicate   = PROCEDURE (t: T; lhs := FALSE): BOOLEAN;
   Compiler    = PROCEDURE (t: T);
   CompilerLV  = PROCEDURE (t: T; lhs: BOOLEAN);
   CompilerBR  = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
@@ -64,7 +64,7 @@ PROCEDURE NewMethodList
 PROCEDURE Is (e: Expr.T): BOOLEAN;
 PROCEDURE IsUserProc (e: Expr.T): BOOLEAN;
 
-PROCEDURE IsNever        (t: T): BOOLEAN;
+PROCEDURE IsNever        (t: T;  lhs := FALSE): BOOLEAN;
 PROCEDURE IsAlways       (t: T): BOOLEAN;
 PROCEDURE NoValue        (t: T): Expr.T;
 PROCEDURE NoBounds       (t: T;  VAR min, max: Target.Int);

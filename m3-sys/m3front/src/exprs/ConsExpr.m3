@@ -155,7 +155,7 @@ PROCEDURE Fold (p: P): Expr.T =
     RETURN Expr.ConstValue (p.base);
   END Fold;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     Seal (p);
     RETURN Expr.IsZeroes (p.base);

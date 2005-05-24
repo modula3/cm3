@@ -58,12 +58,12 @@ PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> lhs: BOOLEAN) =
     Expr.CompileLValue (ce.args[0]);
   END CompileLV;
 
-PROCEDURE IsWritable (ce: CallExpr.T): BOOLEAN =
+PROCEDURE IsWritable (ce: CallExpr.T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN Expr.IsWritable (ce.args[0]);
+    RETURN Expr.IsWritable (ce.args[0], lhs);
   END IsWritable;
 
-PROCEDURE IsDesignator (ce: CallExpr.T): BOOLEAN =
+PROCEDURE IsDesignator (ce: CallExpr.T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (ce.args[0]);
   END IsDesignator;

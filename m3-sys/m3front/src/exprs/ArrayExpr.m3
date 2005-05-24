@@ -603,7 +603,7 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
   END Fold;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     FOR i := 0 TO LAST (p.args^) DO
       IF NOT Expr.IsZeroes (p.args[i]) THEN RETURN FALSE END;

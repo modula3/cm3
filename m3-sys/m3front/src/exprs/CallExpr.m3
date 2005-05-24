@@ -139,7 +139,7 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
     RETURN m;
   END NewMethodList;
 
-PROCEDURE IsNever (<*UNUSED*> t: T): BOOLEAN =
+PROCEDURE IsNever (<*UNUSED*> t: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN FALSE;
   END IsNever;
@@ -365,18 +365,18 @@ PROCEDURE GetBounds (p: T;  VAR min, max: Target.Int) =
     END;
   END GetBounds;
 
-PROCEDURE IsDesignator (p: T): BOOLEAN =
+PROCEDURE IsDesignator (p: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     Resolve (p);
     IF p.methods = NIL THEN RETURN FALSE END;
     RETURN p.methods.isDesignator (p);
   END IsDesignator;
 
-PROCEDURE IsWritable (p: T): BOOLEAN =
+PROCEDURE IsWritable (p: T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     Resolve (p);
     IF p.methods = NIL THEN RETURN FALSE END;
-    RETURN p.methods.isWritable (p);
+    RETURN p.methods.isWritable (p, lhs);
   END IsWritable;
 
 BEGIN

@@ -444,14 +444,14 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
     IF TInt.LT (max1, max) THEN max := max1 END;
   END Bounder;
 
-PROCEDURE IsDesignator (p: P): BOOLEAN =
+PROCEDURE IsDesignator (p: P; <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (p.expr);
   END IsDesignator;
 
-PROCEDURE IsWritable (p: P): BOOLEAN =
+PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN Expr.IsWritable (p.expr);
+    RETURN Expr.IsWritable (p.expr, lhs);
   END IsWritable;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =

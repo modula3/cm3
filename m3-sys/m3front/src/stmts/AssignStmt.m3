@@ -56,7 +56,7 @@ PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
     tlhs := Expr.TypeOf (p.lhs);
     IF  NOT Expr.IsDesignator (p.lhs) THEN
       Error.Msg ("left-hand side is not a designator");
-    ELSIF NOT Expr.IsWritable (p.lhs) THEN
+    ELSIF NOT Expr.IsWritable (p.lhs, lhs := TRUE) THEN
       Error.Msg ("left-hand side is read-only");
     END;
 

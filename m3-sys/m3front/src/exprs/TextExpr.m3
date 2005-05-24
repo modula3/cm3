@@ -230,7 +230,7 @@ PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     RETURN TRUE;
   END Cat;
 
-PROCEDURE IsZeroes (<*UNUSED*>p: P): BOOLEAN = 
+PROCEDURE IsZeroes (<*UNUSED*>p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN = 
   BEGIN
     RETURN FALSE;
   END IsZeroes;

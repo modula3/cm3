@@ -26,6 +26,7 @@ REVEAL
     up_level   : M3.Flag;
     error      : M3.Flag; (* reset in each compilation *)
     used       : M3.Flag; (* reset in each compilation *)
+    lhs        : M3.Flag; (* reset in each compilation *)
     declared   : M3.Flag; (* reset in each compilation *)
     inited     : M3.Flag; (* reset in each compilation *)
     compiled   : M3.Flag; (* reset in each compilation *)

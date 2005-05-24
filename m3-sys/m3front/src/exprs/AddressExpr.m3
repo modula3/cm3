@@ -144,7 +144,7 @@ PROCEDURE Bounder (p: P;   VAR min, max: Target.Int) =
     max := p.value;
   END Bounder;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN p = Null.Nil OR TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;

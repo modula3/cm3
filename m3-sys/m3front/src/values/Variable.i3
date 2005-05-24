@@ -23,7 +23,8 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T;
 PROCEDURE BindType (t: T;  type: Type.T;
                     indirect, readonly, open_array_ok, needs_init: BOOLEAN);
 
-PROCEDURE Split (t: T;  VAR type: Type.T;  VAR global, indirect, readonly: BOOLEAN);
+PROCEDURE Split (t: T;  VAR type: Type.T;
+                 VAR global, indirect, lhs: BOOLEAN);
 
 PROCEDURE IsFormal   (t: T): BOOLEAN;
 PROCEDURE HasClosure (t: T): BOOLEAN;

@@ -623,7 +623,7 @@ PROCEDURE DoQualify (VAR lhs: LHS;  name: M3ID.T) =
     END;
   END DoQualify;
 
-PROCEDURE IsDesignator (p: P): BOOLEAN =
+PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     CASE p.class OF
     | Class.cMODULE   => RETURN (Value.ClassOf (p.obj) = VC.Var);
@@ -636,20 +636,20 @@ PROCEDURE IsDesignator (p: P): BOOLEAN =
     END;
   END IsDesignator;
 
-PROCEDURE IsWritable (p: P): BOOLEAN =
+PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     CASE p.class OF
-    | Class.cMODULE   => RETURN Value.IsWritable (p.obj);
+    | Class.cMODULE   => RETURN Value.IsWritable (p.obj, lhs);
     | Class.cENUM     => RETURN FALSE;
     | Class.cOBJTYPE  => RETURN FALSE;
-    | Class.cFIELD    => RETURN Expr.IsWritable (p.expr);
+    | Class.cFIELD    => RETURN Expr.IsWritable (p.expr, lhs);
     | Class.cOBJFIELD => RETURN TRUE;
     | Class.cMETHOD   => RETURN FALSE;
     | Class.cUNKNOWN  => RETURN FALSE;
     END;
   END IsWritable;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> l: BOOLEAN): BOOLEAN =
   VAR lhs: LHS;  b: BOOLEAN;
   BEGIN
     IF (p.inIsZeroes) THEN Value.IllegalRecursion (p.obj); RETURN FALSE END;

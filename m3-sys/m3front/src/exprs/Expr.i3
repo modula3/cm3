@@ -40,7 +40,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
 PROCEDURE IsDesignator (t: T): BOOLEAN;
 (* TRUE iff t is a designator *)
 
-PROCEDURE IsWritable (t: T): BOOLEAN;
+PROCEDURE IsWritable (t: T; lhs: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 
 PROCEDURE IsZeroes (t: T): BOOLEAN;

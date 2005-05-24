@@ -350,7 +350,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             IF NOT Expr.IsDesignator (e) THEN
               Err (slots[i], "VAR actual must be a designator");
               ok := FALSE;
-            ELSIF NOT Expr.IsWritable (e) THEN
+            ELSIF NOT Expr.IsWritable (e, lhs := TRUE) THEN
               Err (slots[i], "VAR actual must be writable");
               ok := FALSE;
             ELSIF Type.IsEqual (t, te, NIL) THEN

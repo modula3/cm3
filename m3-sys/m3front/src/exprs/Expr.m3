@@ -78,11 +78,11 @@ PROCEDURE IsDesignator (t: T): BOOLEAN =
     RETURN t.isDesignator ();
   END IsDesignator;
 
-PROCEDURE IsWritable (t: T): BOOLEAN =
+PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     IF (t = NIL) THEN RETURN TRUE END;
     <* ASSERT t.checked *>
-    RETURN t.isWritable ()
+    RETURN t.isWritable (lhs)
   END IsWritable;
 
 PROCEDURE IsZeroes (t: T): BOOLEAN =
@@ -264,12 +264,12 @@ PROCEDURE NoBounds (t: T;  VAR min, max: Target.Int) =
     EVAL Type.GetBounds (t.type, min, max);
   END NoBounds;
 
-PROCEDURE IsNever (<*UNUSED*> t: T): BOOLEAN =
+PROCEDURE IsNever (<*UNUSED*> t: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN FALSE;
   END IsNever;
 
-PROCEDURE IsAlways (<*UNUSED*> t: T): BOOLEAN =
+PROCEDURE IsAlways (<*UNUSED*> t: T;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN TRUE;
   END IsAlways;

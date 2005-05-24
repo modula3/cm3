@@ -114,14 +114,14 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
     Expr.GetBounds (p.expr, min, max);
   END Bounder;
 
-PROCEDURE IsDesignator (p: P): BOOLEAN =
+PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (p.expr);
   END IsDesignator;
 
-PROCEDURE IsWritable (p: P): BOOLEAN =
+PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN Expr.IsWritable (p.expr);
+    RETURN Expr.IsWritable (p.expr, lhs);
   END IsWritable;
 
 PROCEDURE Fold (p: P): Expr.T =
@@ -136,7 +136,7 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
   END Fold;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsZeroes (p.expr);
   END IsZeroes;
