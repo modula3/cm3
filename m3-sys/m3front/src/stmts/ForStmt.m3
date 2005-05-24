@@ -174,11 +174,11 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     t_index, t_to, t_by: CG.Val;
     l_top, l_test, l_less, l_exit: CG.Label;
     type: Type.T;
-    global, indirect, readonly, index_copy: BOOLEAN;
+    global, indirect, lhs, index_copy: BOOLEAN;
     info: Type.Info;
     offset: INTEGER;
   BEGIN
-    Variable.Split (p.var, type, global, indirect, readonly);
+    Variable.Split (p.var, type, global, indirect, lhs);
 
     from := Expr.ConstValue (p.from);
     IF (from = NIL) THEN

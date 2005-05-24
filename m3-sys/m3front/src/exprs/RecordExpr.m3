@@ -313,7 +313,7 @@ PROCEDURE Fold (p: P): Expr.T =
     END;
   END Fold;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     <* ASSERT p.map # NIL *> (* must already be checked *)
     FOR i := 0 TO LAST (p.map^) DO

@@ -48,7 +48,7 @@ PROCEDURE UserInit (t: T);
 PROCEDURE ClassOf          (t: T): Class;
 PROCEDURE IsExternal       (t: T): BOOLEAN;
 PROCEDURE IsImported       (t: T): BOOLEAN;
-PROCEDURE IsWritable       (t: T): BOOLEAN;
+PROCEDURE IsWritable       (t: T;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE ToExpr           (t: T): M3.Expr;
 PROCEDURE ToType           (t: T): M3.Type;
 PROCEDURE Base             (t: T): T;

@@ -101,7 +101,7 @@ PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int): BOOLEAN =
     RETURN TRUE;
   END SplitPair;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;

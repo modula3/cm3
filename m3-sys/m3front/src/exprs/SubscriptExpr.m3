@@ -295,14 +295,14 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
     END;
   END CompileLV;
 
-PROCEDURE IsDesignator (p: P): BOOLEAN =
+PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (p.a);
   END IsDesignator;
 
-PROCEDURE IsWritable (p: P): BOOLEAN =
+PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN Expr.IsWritable (p.a);
+    RETURN Expr.IsWritable (p.a, lhs);
   END IsWritable;
 
 PROCEDURE Fold (p: P): Expr.T =

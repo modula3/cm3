@@ -177,7 +177,7 @@ PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN =
     END;
   END Split;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;

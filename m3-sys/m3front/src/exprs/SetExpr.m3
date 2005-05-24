@@ -723,7 +723,7 @@ PROCEDURE Fold (e: Expr.T): Expr.T =
     END;
   END Fold;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN (p.args = NIL) OR (NUMBER (p.args^) <= 0);
   END IsZeroes;

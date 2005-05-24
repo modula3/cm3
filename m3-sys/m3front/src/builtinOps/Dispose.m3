@@ -27,7 +27,7 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
        OR Type.IsEqual (t, ObjectRef.T, NIL)
        OR Type.IsEqual (t, ObjectAdr.T, NIL) THEN
       Error.Msg ("DISPOSE: must be applied to a fixed reference type");
-    ELSIF NOT Expr.IsWritable (ce.args[0]) THEN
+    ELSIF NOT Expr.IsWritable (ce.args[0], lhs := TRUE) THEN
       Error.Msg ("DISPOSE: must be applied to a writable designator");
     ELSIF NOT info.isTraced THEN
       Expr.NeedsAddress (ce.args[0]);

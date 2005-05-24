@@ -32,7 +32,7 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;
       END;
     ELSIF (NOT Expr.IsDesignator (e)) THEN
       Error.Txt (name, "first argument must be a variable");
-    ELSIF (NOT Expr.IsWritable (e)) THEN
+    ELSIF (NOT Expr.IsWritable (e, lhs := TRUE)) THEN
       Error.Txt (name, "first argument must be writable");
     ELSIF NamedExpr.SplitName (e, nm) THEN
       (* simple scalar => we don't need an explicit address

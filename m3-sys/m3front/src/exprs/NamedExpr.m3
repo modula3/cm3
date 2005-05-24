@@ -174,11 +174,11 @@ PROCEDURE NeedsAddress (p: P) =
 PROCEDURE Prep (p: P) =
   VAR
     t: Type.T; info: Type.Info;
-    global, indirect, readonly: BOOLEAN;
+    global, indirect, lhs: BOOLEAN;
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
     IF Host.doIncGC AND Value.ClassOf (p.value) = Value.Class.Var THEN
-      Variable.Split (p.value, t, global, indirect, readonly);
+      Variable.Split (p.value, t, global, indirect, lhs);
       EVAL Type.CheckInfo (t, info);
       IF info.isTraced AND (global OR indirect) THEN
         CASE info.class OF 
@@ -258,19 +258,19 @@ PROCEDURE Fold (p: P): Expr.T =
     RETURN e;
   END Fold;
 
-PROCEDURE IsDesignator (p: P): BOOLEAN =
+PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
     RETURN (Value.ClassOf (p.value) = Value.Class.Var);
   END IsDesignator;
 
-PROCEDURE IsWritable (p: P): BOOLEAN =
+PROCEDURE IsWritable (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
-    RETURN Value.IsWritable (p.value);
+    RETURN Value.IsWritable (p.value, lhs);
   END IsWritable;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   VAR b: BOOLEAN;
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;

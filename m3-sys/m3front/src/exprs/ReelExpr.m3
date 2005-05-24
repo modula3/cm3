@@ -245,7 +245,7 @@ PROCEDURE Split (e: Expr.T;  VAR x: Target.Float): BOOLEAN =
     END;
   END Split;
 
-PROCEDURE IsZeroes (p: P): BOOLEAN =
+PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN TFloat.EQ (TFloat.ZeroR, p.val)
         OR TFloat.EQ (TFloat.ZeroL, p.val)
