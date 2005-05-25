@@ -693,7 +693,8 @@ PROCEDURE CollectorOn () =
     <* ASSERT NOT collectorOn *>
     collectorOn := TRUE;
 
-    IF incremental AND NOT RTLinker.incremental THEN
+    IF incremental AND NOT RTLinker.incremental
+      OR generational AND NOT RTLinker.generational THEN
       ThreadF.SuspendOthers ();
       (* If the collector is unprotecting pages and moving stuff around,
          other threads cannot be running!  -- 7/16/96 WKK *)
@@ -732,7 +733,8 @@ PROCEDURE CollectorOff () =
       END;
     END;
 
-    IF incremental AND NOT RTLinker.incremental THEN
+    IF incremental AND NOT RTLinker.incremental
+      OR generational AND NOT RTLinker.generational THEN
       ThreadF.ResumeOthers ();
     END;
 
@@ -777,6 +779,8 @@ VAR
 
 PROCEDURE CollectSomeInStateZero () =
   BEGIN
+    ThreadF.SuspendOthers ();
+
     <* ASSERT disableCount + disableMotionCount = 0 *>
     (* compute some costs relative to previous collection *)
     INC(cycleNews, newPool.n_small + newPool.n_big);
@@ -906,6 +910,8 @@ PROCEDURE CollectSomeInStateZero () =
 
     collectorState := CollectorState.One;
     IF backgroundWaiting THEN signalBackground := TRUE; END;
+
+    ThreadF.ResumeOthers ();
   END CollectSomeInStateZero;
 
 PROCEDURE FinishThreadPages () =
