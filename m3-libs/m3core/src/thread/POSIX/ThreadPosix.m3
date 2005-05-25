@@ -507,7 +507,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     (* save my state *)
     EVAL RTThread.Save (self.context.buf);
 
-    INC (inCritical);
     REPEAT 
       Tos (t.context, start, stop);	 (* process the stack *)
       p (start, stop);
@@ -516,7 +515,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
       END;
       t := t.next;
     UNTIL t = self;
-    DEC (inCritical);
   END ProcessStacks;
 
 (*------------------------------------------------- I/O and Timer support ---*)
