@@ -812,8 +812,6 @@ PROCEDURE ResumeOthers () =
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
-BEGIN
-  SuspendOthers();
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   CONST UserRegs = Word.Or(ThreadContext.CONTEXT_CONTROL,
                            ThreadContext.CONTEXT_INTEGER);
@@ -832,9 +830,7 @@ BEGIN
       END;
       act := act.next;
     UNTIL (act = allThreads);
-  END
-  ResumeOthers();
-END ProcessStacks;
+  END ProcessStacks;
 
 PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
   (* Apparently, Win95 will lie about a thread's stack pointer! *)
