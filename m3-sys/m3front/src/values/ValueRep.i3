@@ -20,13 +20,13 @@ REVEAL
     class      : BITS 4 FOR Value.Class;
     checked    : M3.Flag;
     readonly   : M3.Flag;
+    lhs        : M3.Flag;
     external   : M3.Flag;
     unused     : M3.Flag;
     obsolete   : M3.Flag;
     up_level   : M3.Flag;
     error      : M3.Flag; (* reset in each compilation *)
     used       : M3.Flag; (* reset in each compilation *)
-    lhs        : M3.Flag; (* reset in each compilation *)
     declared   : M3.Flag; (* reset in each compilation *)
     inited     : M3.Flag; (* reset in each compilation *)
     compiled   : M3.Flag; (* reset in each compilation *)
