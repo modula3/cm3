@@ -1096,7 +1096,7 @@ PROCEDURE CleanPage (p: Page;  thread_page := FALSE) =
       desc[p + i - p0].gray := FALSE;
     END;
     IF NOT dirty THEN
-      <* ASSERT desc[p - p0].note # Note.AmbiguousRoot *>
+      <* ASSERT RTHeapDep.VM OR ASSERT desc[p - p0].note # Note.AmbiguousRoot *>
       <* ASSERT desc[p - p0].space = Space.Current *>
       Protect(p, Mode.ReadOnly);
     END;
