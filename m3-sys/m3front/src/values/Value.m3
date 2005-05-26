@@ -277,6 +277,7 @@ PROCEDURE Init (t: T;  name: M3ID.T;  c: Class) =
     t.class      := c;
     t.checked    := FALSE;
     t.readonly   := FALSE;
+    t.lhs        := FALSE;
     t.external   := FALSE;
     t.unused     := FALSE;
     t.obsolete   := FALSE;
