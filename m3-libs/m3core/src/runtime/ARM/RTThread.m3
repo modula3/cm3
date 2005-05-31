@@ -83,32 +83,5 @@ PROCEDURE disallow_sigvtalrm () =
     EVAL Usignal.sigsetmask (i);
   END disallow_sigvtalrm;
 
-(*--------------------------------------------- exception handling support --*)
-
-PROCEDURE GetCurrentHandlers (): ADDRESS=
-  BEGIN
-    RETURN handlerStack;
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers (h: ADDRESS)=
-  BEGIN
-    handlerStack := h;
-  END SetCurrentHandlers;
-
-(*RTHooks.PushEFrame*)
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := handlerStack;
-    handlerStack := f;
-  END PushEFrame;
-
-(*RTHooks.PopEFrame*)
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    handlerStack := frame;
-  END PopEFrame;
-
 BEGIN
 END RTThread.

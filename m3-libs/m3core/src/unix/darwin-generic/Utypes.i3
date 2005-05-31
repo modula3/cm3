@@ -1,11 +1,6 @@
 (* Copyright (C) 1994, Digital Equipment Corporation.         *)
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
-(*                                                            *)
-(* Last modified on Sat Jan  7 14:47:05 PST 1995 by kalsow    *)
-(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
-(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
-(* ow Sun Nov  6 17:12:47 MET 1994                            *)
 
 INTERFACE Utypes;
 
@@ -29,6 +24,14 @@ PROCEDURE minor (x: int): int;
 PROCEDURE makedev (x, y: int): dev_t;
 
 TYPE
+  u_char  = unsigned_char;
+  u_short = unsigned_short;
+  u_int   = unsigned_int;
+  u_long  = unsigned_long;
+  ushort  = unsigned_short;             (* Sys V compatibility *)
+  uint    = unsigned_int;               (* Sys V compatibility *)
+
+TYPE
   int8_t    = char;
   u_int8_t  = unsigned_char;
   int16_t   = short;
@@ -38,18 +41,7 @@ TYPE
   int64_t   = RECORD val := ARRAY [0..1] OF int32_t {0,0}; END;
   u_int64_t = int64_t;
 
-  register_t = int32_t;
-
-  intptr_t   = long;
-  uintptr_t  = unsigned_long;
-
-  u_char  = unsigned_char;
-  u_short = unsigned_short;
-  u_int   = unsigned_int;
-  u_long  = unsigned_long;
-  ushort  = unsigned_short;             (* Sys V compatibility *)
-  uint    = unsigned_int;               (* Sys V compatibility *)
-
+TYPE
   u_quad_t     = u_int64_t;		 (* quads *)
   quad_t       = int64_t;
   qaddr_t      = UNTRACED REF quad_t;
@@ -65,8 +57,8 @@ TYPE
   key_t        = long;			 (* IPC key (for Sys V IPC) *)
   mode_t       = u_int16_t;		 (* permissions *)
   nlink_t      = u_int16_t;		 (* link count *)
-  off_t        = int64_t;           	 (* file offset *)
-  pid_t        = int;			 (* process id *)
+  off_t        = quad_t;           	 (* file offset *)
+  pid_t        = int32_t;		 (* process id *)
   rlim_t       = quad_t;		 (* resource limit *)
   segsz_t      = int32_t;		 (* segment size *)
   swblk_t      = int32_t;		 (* swap offset *)

@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 
 int
-m3_getsockname(int s, struct sockaddr *name, int *namelen)
+m3_getsockname(int s, struct sockaddr *name, socklen_t *namelen)
 {
   return getsockname(s, name, namelen);
 }

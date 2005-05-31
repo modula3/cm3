@@ -7,6 +7,5 @@
 
 implementation ("RTArgs")
 implementation ("RTOS")
-interface      ("RTThread")
 module         ("RTPerfTool")
 

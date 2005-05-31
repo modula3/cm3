@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 
 int
-m3_accept(int s, struct sockaddr *addr, int *addrlen)
+m3_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
 {
   return accept(s, addr, addrlen);
 }

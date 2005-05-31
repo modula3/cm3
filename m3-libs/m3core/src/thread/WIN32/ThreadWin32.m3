@@ -889,7 +889,6 @@ PROCEDURE Choke() =
 
 (*-------------------------------------------------------- Initialization ---*)
 
-
 PROCEDURE Init() =
   VAR
     self: T;
@@ -1000,6 +999,45 @@ PROCEDURE BroadcastHeap () =
   BEGIN
     do_signal := TRUE;
   END BroadcastHeap;
+
+(*--------------------------------------------- exception handling support --*)
+
+VAR handlersIndex: INTEGER := -1;
+
+PROCEDURE GetCurrentHandlers(): ADDRESS=
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    RETURN LOOPHOLE (WinBase.TlsGetValue(handlersIndex), ADDRESS);
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS)=
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (h, WinDef.DWORD));
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    f.next := LOOPHOLE (WinBase.TlsGetValue(handlersIndex), ADDRESS);
+    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (f, WinDef.DWORD));
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (frame, WinDef.DWORD));
+  END PopEFrame;
+
+PROCEDURE InitHandlers () =
+  BEGIN
+    handlersIndex := WinBase.TlsAlloc();
+    IF handlersIndex < 0 THEN Choke() END;
+  END InitHandlers;
 
 BEGIN
 END ThreadWin32.

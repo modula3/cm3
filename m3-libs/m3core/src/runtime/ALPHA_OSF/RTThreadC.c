@@ -22,5 +22,5 @@ int ThreadF__myId = 1;
 long ThreadF__inCritical = 0;
 
 /* global, per-thread linked list of exception handlers */
-void* RTThread__handlerStack = 0;
+void* ThreadF__handlerStack = 0;
 

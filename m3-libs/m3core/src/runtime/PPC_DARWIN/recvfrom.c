@@ -4,7 +4,7 @@
 
 ssize_t
 m3_recvfrom(int s, void *buf, size_t len, int flags,
-  struct sockaddr *from, int *fromlen)
+  struct sockaddr *from, socklen_t *fromlen)
 {
   return recvfrom(s, buf, len, flags, from, fromlen);
 }

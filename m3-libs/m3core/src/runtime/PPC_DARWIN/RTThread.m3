@@ -5,7 +5,7 @@
 (* Last modified on Wed Nov 23 13:00:57 PST 1994 by kalsow                   *)
 (*      modified on Tue Apr 20 16:19:54 PDT 1993 by muller                   *)
 
-UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
+UNSAFE MODULE RTThread EXPORTS RTThread;
 
 IMPORT Word, Usignal, Unix, RTMisc, Umman;
 FROM Usignal
@@ -108,33 +108,6 @@ PROCEDURE disallow_sigvtalrm () =
     WITH i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal) DO <* ASSERT i = 0 *>
     END;
   END disallow_sigvtalrm;
-
-(*--------------------------------------------- exception handling support --*)
-
-PROCEDURE GetCurrentHandlers (): ADDRESS=
-  BEGIN
-    RETURN handlerStack;
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers (h: ADDRESS)=
-  BEGIN
-    handlerStack := h;
-  END SetCurrentHandlers;
-
-(*RTHooks.PushEFrame*)
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := handlerStack;
-    handlerStack := f;
-  END PushEFrame;
-
-(*RTHooks.PopEFrame*)
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    handlerStack := frame;
-  END PopEFrame;
 
 BEGIN
   WITH i = sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;

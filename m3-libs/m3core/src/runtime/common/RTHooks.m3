@@ -8,7 +8,7 @@
    by other modules of the runtime:
 
 |     CheckIsType, ScanTypecase  are in RTType
-|     PushEFrame, PopEFrame      are in RTThread
+|     PushEFrame, PopEFrame      are in ThreadPosix/ThreadWin32
 |     Allocate*, Dispose*        are in RTAllocator
 |     Concat, MultiCat           are in TextCat
 |     DebugText, DebugInt        are in RTDebug
