@@ -5,8 +5,6 @@
 #include <sys/uio.h>
 #include <signal.h>
 
-int ThreadF__inCritical = 0;
-
 void set_RTHeapRep_Fault(void *p)
 {
 /* Do nothing.
