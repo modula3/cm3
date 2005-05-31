@@ -72,6 +72,7 @@
 
 #define MFS 1
 #define NFS
+#define NFSCLIENT 1
 #include <stdarg.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -90,6 +91,7 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/msg.h>
 #include <tzfile.h>
 #include <nfs/rpcv2.h>
 #include <nfs/nfsproto.h>
@@ -132,7 +134,7 @@ static char RTHeapDepC__c;
    structure. */
 
 int
-accept(int s, struct sockaddr *addr, int *addrlen)
+accept(int s, struct sockaddr *addr, socklen_t *addrlen)
 {
   int result;
 
@@ -182,7 +184,7 @@ adjtime(const struct timeval *delta, struct timeval *olddelta)
 }
 
 int
-bind(int s, const struct sockaddr *name, int namelen)
+bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
   int result;
 
@@ -205,7 +207,7 @@ int chdir(const char *path)
 }
 
 int
-chflags(const char *path, u_long flags)
+chflags(const char *path, u_int flags)
 {
   int result;
 
@@ -253,7 +255,7 @@ chroot(const char *dirname)
 }
 
 int
-connect(int s, const struct sockaddr *name, int namelen)
+connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
   int result;
 
@@ -386,7 +388,7 @@ getfh(const char *path, fhandle_t *fhp)
 }
 
 int
-getfsstat(struct statfs *buf, long bufsize, int flags)
+getfsstat(struct statfs *buf, int bufsize, int flags)
 {
   int result;
 
@@ -422,7 +424,7 @@ getitimer(int which, struct itimerval *value)
 }
 
 int
-getpeername(int s, struct sockaddr *name, int *namelen)
+getpeername(int s, struct sockaddr *name, socklen_t *namelen)
 {
   int result;
 
@@ -459,7 +461,7 @@ getrusage(int who, struct rusage *rusage)
 }
 
 int
-getsockname(int s, struct sockaddr *name, int *namelen)
+getsockname(int s, struct sockaddr *name, socklen_t *namelen)
 {
   int result;
 
@@ -472,7 +474,7 @@ getsockname(int s, struct sockaddr *name, int *namelen)
 }
 
 int
-getsockopt(int s, int level, int optname, void *optval, int *optlen)
+getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
 {
   int result;
 
@@ -710,24 +712,24 @@ int msgctl(int msqid, int cmd, struct msqid_ds *buf)
   return result;
 }
 
-int msgrcv(int msqid, void *msgp, size_t msgsz)
+ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long aaa, int bbb)
 {
   int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(msgp);
-  result = syscall(SYS_msgrcv, msqid, msgp, msgsz);
+  result = syscall(SYS_msgrcv, msqid, msgp, msgsz, aaa, bbb);
   EXIT_CRITICAL;
   return result;
 }
 
-int msgsnd(int msqid, void *msgp, size_t msgsz)
+int msgsnd(int msqid, const void *msgp, size_t msgsz, int xxx)
 {
   int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(msgp);
-  result = syscall(SYS_msgsnd, msqid, msgp, msgsz);
+  result = syscall(SYS_msgsnd, msqid, msgp, msgsz, xxx);
   EXIT_CRITICAL;
   return result;
 }
@@ -769,7 +771,7 @@ pread(int d, void *buf, size_t nbytes, off_t offset)
 }
 
 int
-profil(char *samples, int size, int offset, int scale)
+profil(char *samples, size_t size, u_long offset, u_int scale)
 {
   int result;
 
@@ -827,8 +829,8 @@ read(int d, void *buf, size_t nbytes)
   return result;
 }
 
-int
-readlink(const char *path, char *buf, int bufsiz)
+ssize_t
+readlink(const char *path, char *buf, size_t bufsiz)
 {
   int result;
 
@@ -865,7 +867,7 @@ recv(int s, void *buf, size_t len, int flags)
 
 ssize_t
 recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr *from,
-	 int *fromlen)
+	 socklen_t *fromlen)
 {
   int result;
 
@@ -1036,7 +1038,7 @@ semctl(int semid, int semnum, int cmd, ...)
 }
 
 int
-semop(int semid, struct sembuf *sops, unsigned nsops)
+semop(int semid, struct sembuf *sops, size_t nsops)
 {
   int result;
 
@@ -1081,7 +1083,7 @@ sendmsg(int s, const struct msghdr *msg, int flags)
 
 ssize_t
 sendto(int s, const void *msg, size_t len, int flags,
-       const struct sockaddr *to, int tolen)
+       const struct sockaddr *to, socklen_t tolen)
 {
   int result;
 
@@ -1119,7 +1121,7 @@ setitimer(int which, const struct itimerval *value, struct itimerval *ovalue)
 }
 
 int
-setrlimit(int resource, struct rlimit *rlp)
+setrlimit(int resource, const struct rlimit *rlp)
 {
   int result;
 
@@ -1131,7 +1133,7 @@ setrlimit(int resource, struct rlimit *rlp)
 }
 
 int
-setsockopt(int s, int level, int optname, const void *optval, int optlen)
+setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen)
 {
   int result;
 
