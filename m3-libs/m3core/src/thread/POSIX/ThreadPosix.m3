@@ -11,7 +11,7 @@
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
 UNSAFE MODULE ThreadPosix
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTThreadInit, RTOS;
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTThreadInit, RTOS, RTHooks;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
@@ -70,52 +70,52 @@ TYPE SelectRec = RECORD
 *)
 REVEAL
   T = BRANDED "Thread.T Posix-1.6" OBJECT
-        state: State;
-	id: Id;
+    state: State;
+    id: Id;
 
-        (* our work and its result *)
-        closure : Closure;
-        result : REFANY := NIL;
+    (* our work and its result *)
+    closure : Closure;
+    result : REFANY := NIL;
 
-        (* the threads are organized in a circular list *)
-        previous, next: T;
+    (* the threads are organized in a circular list *)
+    previous, next: T;
 
-        (* next thread that waits for:
-             CASE state OF
-             | waiting  => the same condition;
-             | locking  => the same mutex;
-             | pausing  => a specified time;
-             | blocking => some IO; *)
-        nextWaiting: T;
+    (* next thread that waits for:
+       CASE state OF
+       | waiting  => the same condition;
+       | locking  => the same mutex;
+       | pausing  => a specified time;
+       | blocking => some IO; *)
+    nextWaiting: T;
 
-        (* if state = waiting, the condition on which we wait *)
-        waitingForCondition: Condition;
-        waitingForMutex:     Mutex;
+    (* if state = waiting, the condition on which we wait *)
+    waitingForCondition: Condition;
+    waitingForMutex:     Mutex;
 
-	(* if state = pausing, the time at which we can restart *)
-        waitingForTime : UTime;
+    (* if state = pausing, the time at which we can restart *)
+    waitingForTime : UTime;
 
-        (* true if we are waiting during an AlertWait or AlertJoin 
-	   or AlertPause *)
-        alertable: BOOLEAN := FALSE;
+    (* true if we are waiting during an AlertWait or AlertJoin 
+       or AlertPause *)
+    alertable: BOOLEAN := FALSE;
 
-        (* true if somebody alerted us and we did not TestAlert *)
-        alertPending : BOOLEAN := FALSE;
+    (* true if somebody alerted us and we did not TestAlert *)
+    alertPending : BOOLEAN := FALSE;
 
-        (* This condition is signaled then the thread terminates;
-           other threads that want to join can just wait for it *)
-        endCondition: Condition;
+    (* This condition is signaled then the thread terminates;
+       other threads that want to join can just wait for it *)
+    endCondition: Condition;
 
-        (* where we carry our work. The first thread runs on the
-           original C program stack and its context.stack is NIL *)
-        context : Context;
+    (* where we carry our work. The first thread runs on the
+       original C program stack and its context.stack is NIL *)
+    context : Context;
 
-	(* if state = blocking, the descriptors we are waiting on *)
-        select : SelectRec := SelectRec{};
+    (* if state = blocking, the descriptors we are waiting on *)
+    select : SelectRec := SelectRec{};
 
-        (* state that is available to the floating point routines *)
-        floatState : FloatMode.ThreadState;
-      END;
+    (* state that is available to the floating point routines *)
+    floatState : FloatMode.ThreadState;
+  END;
 
 TYPE
   IntPtr = UNTRACED REF INTEGER;
@@ -1106,7 +1106,7 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
     ELSE 
       (* we are starting the execution of a forked thread *)
-      RTThread.handlerStack := self.context.handlers;
+      handlerStack := self.context.handlers;
       Cerrno.SetErrno(self.context.errno);
       RTThread.allow_sigvtalrm ();
       DEC (inCritical);
@@ -1194,12 +1194,12 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
 
     IF (ADR (from) # ADR (to)) THEN
       RTThread.disallow_sigvtalrm ();
-      from.handlers := RTThread.handlerStack;
+      from.handlers := handlerStack;
       from.errno := Cerrno.GetErrno();
       self := new_self;
       myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
-      RTThread.handlerStack := from.handlers;
+      handlerStack := from.handlers;
       Cerrno.SetErrno(from.errno);
       RTThread.allow_sigvtalrm ();
     END;
@@ -1515,6 +1515,33 @@ PROCEDURE BroadcastHeap () =
   BEGIN
     do_signal := TRUE;
   END BroadcastHeap;
+
+(*--------------------------------------------- exception handling support --*)
+
+PROCEDURE GetCurrentHandlers (): ADDRESS=
+  BEGIN
+    RETURN handlerStack;
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+  BEGIN
+    handlerStack := h;
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    f.next := handlerStack;
+    handlerStack := f;
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    handlerStack := frame;
+  END PopEFrame;
 
 (*------------------------------------------------------------- debugging ---*)
 

@@ -9,7 +9,6 @@
 Interface      ("RTMachine")
 implementation ("RTHeapDep")
 implementation ("RTSignal")
-implementation ("RTThread")
 Module         ("RTMachInfo")
 c_source       ("RTHeapDepC")
 c_source       ("RTVM")

@@ -87,4 +87,16 @@ PROCEDURE SetSwitchingInterval (usec: CARDINAL);
    Note that most Unix systems dont guarantee much if any precision
    on timer interrupts.  The default value is 100 milliseconds. *)
 
+(*---------------------------------------------------- exception delivery ---*)
+
+<*EXTERNAL "ThreadF__handlerStack" *>
+VAR handlerStack: ADDRESS;
+(* linked list of exception frames. *)
+
+PROCEDURE GetCurrentHandlers(): ADDRESS;
+(* == RETURN RTThread.handlerStack *)
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS);
+(* == RTThread.handlerStack := h *)
+
 END ThreadF.

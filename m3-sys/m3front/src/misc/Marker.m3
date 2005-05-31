@@ -208,7 +208,7 @@ PROCEDURE PopFrame (frame: CG.Var) =
 
 PROCEDURE GetFrameStack (): CG.Var =
   BEGIN
-    frame_stack := CG.Import_global (M3ID.Add ("RTThread__handlerStack"),
+    frame_stack := CG.Import_global (M3ID.Add ("ThreadF__handlerStack"),
                                      Target.Address.size, Target.Address.align,
                                      CG.Type.Addr, 0);
     RETURN frame_stack;

@@ -45,20 +45,24 @@ TYPE
     it_interval: struct_timeval;            (* timer interval *)
     it_value:    struct_timeval;            (* current value *)  END;
 
-  struct_tm = RECORD
-    tm_sec:   int;     (* seconds (0 - 59) *)
-    tm_min:   int;     (* minutes (0 - 59) *)
-    tm_hour:  int;     (* hours (0 - 23) *)
-    tm_mday:  int;     (* day of month (1 - 31) *)
-    tm_mon:   int;     (* month of year (0 - 11) *)
-    tm_year:  int;     (* year - 1900 *)
-    tm_wday:  int;     (* day of week (Sunday = 0) *)
-    tm_yday:  int;     (* day of year (0 - 365) *)
-    tm_isdst: int;     (* flag: daylight savings time in effect *)
-    tm_gmtoff:long;    (* offset from GMT in seconds *)
-    tm_zone:  char_star; (* abbreviation of timezone name *)
+  struct_timespec = RECORD
+    tv_sec:  time_t;			 (* seconds *)
+    tv_nsec: long;			 (* and nanoseconds *)
   END;
 
+  struct_tm = RECORD
+    tm_sec:    int;			 (* seconds after the minute [0-60] *)
+    tm_min:    int;			 (* minutes after the hour [0-59] *)
+    tm_hour:   int;			 (* hours since midnight [0-23] *)
+    tm_mday:   int;			 (* day of the month [1-31] *)
+    tm_mon:    int;			 (* months since January [0-11] *)
+    tm_year:   int;			 (* years since 1900 *)
+    tm_wday:   int;			 (* days since Sunday [0-6] *)
+    tm_yday:   int;			 (* days since January 1 [0-365] *)
+    tm_isdst:  int;			 (* Daylight Savings Time flag *)
+    tm_gmtoff: long;			 (* offset from CUT in seconds *)
+    tm_zone:   char_star;		 (* timezone abbreviation *)
+  END;
   struct_tm_star = UNTRACED REF struct_tm;
 
   time_t = int; (* seconds since the Epoch *)
