@@ -28,7 +28,7 @@ PROCEDURE Fault (sig: Ctypes.int;
           IF RTHeapRep.Fault(LOOPHOLE(scp.uc_mcontext.es.dar, ADDRESS)) THEN
             RETURN;
           END;
-        END;
+        ELSIF RTHeapRep.Fault(sip.si_addr) THEN RETURN END;
       END;
     END;
 
