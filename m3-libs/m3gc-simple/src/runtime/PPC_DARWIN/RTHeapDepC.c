@@ -5,6 +5,9 @@
 #include <sys/uio.h>
 #include <signal.h>
 
+/* low-level runtime lock */
+int ThreadF__inCritical = 0;
+
 void set_RTHeapRep_Fault(void *p)
 {
 /* Do nothing.
