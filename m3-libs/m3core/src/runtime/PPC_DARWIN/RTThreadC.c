@@ -16,7 +16,7 @@ jmp_buf *from, *to;
 int ThreadF__myId = 1;
 
 /* low-level runtime lock */
-int ThreadF__inCritical = 0;
+/* int ThreadF__inCritical = 0; MOVED TO RTHeapDepC.c */
 
 /* global, per-thread linked list of exception handlers */
 void* ThreadF__handlerStack = 0;
