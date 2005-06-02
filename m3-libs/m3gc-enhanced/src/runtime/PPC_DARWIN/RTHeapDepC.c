@@ -111,6 +111,8 @@
 #undef   NULL
 #endif
 #define  NULL (void *)(0)
+
+/* low-level runtime lock */
 int ThreadF__inCritical = 0;
 #define ENTER_CRITICAL ThreadF__inCritical++
 #define EXIT_CRITICAL  ThreadF__inCritical--
