@@ -150,4 +150,7 @@ PROCEDURE setitimer (which: int; VAR value, ovalue: struct_itimerval): int;
 (*** mktime(3) - convert a struct_tm to a time_t ***)
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
 
+<*EXTERNAL*> PROCEDURE nanosleep (READONLY rqtp: struct_timespec;
+                                  VAR rmtp: struct_timespec): int;
+
 END Utime.
