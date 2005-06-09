@@ -158,20 +158,6 @@ PROCEDURE Core (sig : Ctypes.int;
 
 (* System-call faults are handled in RTHeapDepC.c *)
 
-PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
-  BEGIN
-    RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
-  END TimevalSecs;
-
-PROCEDURE TimeUsed (): REAL =
-  VAR
-    usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
-  BEGIN
-    <* ASSERT ret = 0 *>
-    RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
-  END TimeUsed;
-
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
     RETURN 0.010;                (* guess 10ms to handle a page fault *)

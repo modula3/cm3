@@ -65,16 +65,10 @@ PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN);
    protected are p*BytesPerPage through (p+n)*BytesPerPage-1.  If VM is
    TRUE, BytesPerPage must be at least the VM page size. *)
 
-PROCEDURE TimeUsed (): REAL;
-
-(* TimeUsed returns the amount of processor time used by the program
-   so far, in arbitrary units.  This information is used to tune the
-   generational collector. *)
-
 PROCEDURE VMFaultTime (): REAL;
 
 (* VMFaultTime returns the amount of processor time required to handle
-   a VM fault, in the same units as TimeUsed.  This information is used
-   to tune the generational collector. *)
+   a VM fault, in the same units as RTProcess.TimeUsed.
+   This information is used to tune the generational collector. *)
 
 END RTHeapDep.

@@ -55,29 +55,6 @@ PROCEDURE FaultHandler (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
 
 (*----------------------------------------- Timers for tuning the collector ---*)
 
-VAR
-  time_used : REAL := 0.0;  (* seconds *)
-  last_tick : WinDef.DWORD := WinBase.GetTickCount ();
-
-PROCEDURE TimeUsed (): REAL =
-  (* NOTE: we're supposed to return the process time, not the system
-     time.  But, Win95 doesn't support GetProcessTimes().... *)
-  CONST
-    H = FLOAT(LAST(INTEGER)) + 1.0;
-    H2 = H * 0.002;
-  VAR
-    tick := WinBase.GetTickCount ();  (* milliseconds *)
-    diff := Word.Minus (tick, last_tick);
-  BEGIN
-    IF (diff >= 0) THEN
-      time_used := time_used + (FLOAT (diff) * 0.001);
-    ELSE
-      time_used := time_used + H2 + (FLOAT (diff) * 0.001);
-    END;
-    last_tick := tick;
-    RETURN time_used;
-  END TimeUsed;
-
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
     RETURN 0.010;                (* guess 10ms to handle a page fault *)
