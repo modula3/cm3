@@ -9,7 +9,7 @@ INTERFACE Usignal;
 
 IMPORT Uucontext;
 FROM Ctypes IMPORT long, int, unsigned_int, void_star, char_star;
-FROM Uucontext IMPORT struct_ucontext_star;
+FROM Uucontext IMPORT ucontext_t_star;
 
 (*** <sys/signal.h> ***)
 
@@ -54,9 +54,9 @@ CONST
   SIGCHLD   =  20;     (* to parent on child stop or exit *)
       CLD_NOOP      = 0;      (* if only I knew... *)
       CLD_EXITED    = 1;      (* child has exited *)
-      CLD_KILLED    = 2;      
+      CLD_KILLED    = 2;
         (* child has terminated abnormally and did not create a core file *)
-      CLD_DUMPED    = 3;      
+      CLD_DUMPED    = 3;
         (* child has terminated abnormally and create a core file *)
       CLD_TRAPPED   = 4;      (* traced child has trapped *)
       CLD_STOPPED   = 5;      (* child has stopped *)
@@ -92,10 +92,11 @@ TYPE
   END;
   struct_siginfo_star = UNTRACED REF struct_siginfo;
   siginfo_t = struct_siginfo;
-  
+  siginfo_t_star = UNTRACED REF siginfo_t;
+
   SignalHandler = PROCEDURE (sig: int;
-  		  	     sip: struct_siginfo_star;
-                             scp: struct_ucontext_star);
+  		  	     sip: siginfo_t_star;
+                             scp: ucontext_t_star);
 
   sigset_t = Uucontext.sigset_t;
 
@@ -164,7 +165,7 @@ CONST
 
 TYPE
   (* Structure used in sigstack call. *)
-  struct_sigstack = RECORD 
+  struct_sigstack = RECORD
     ss_sp:      char_star;	(* signal stack pointer *)
     ss_onstack: int;		(* current status *)
   END;
