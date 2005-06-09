@@ -136,6 +136,7 @@ TYPE
   END;
   struct_ucontext_star = UNTRACED REF struct_ucontext;
   ucontext_t = struct_ucontext;
+  ucontext_t_star = UNTRACED REF ucontext_t;
 
 
 END Uucontext.
