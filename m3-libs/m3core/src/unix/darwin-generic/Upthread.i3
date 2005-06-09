@@ -159,6 +159,30 @@ CONST
   PTHREAD_MUTEX_DEFAULT = PTHREAD_MUTEX_NORMAL;
 
 (*
+ * Mutex variables
+ *)
+CONST
+  PTHREAD_MUTEX_INITIALIZER =
+    pthread_mutex_t { PTHREAD_MUTEX_SIG_init,
+                      ARRAY [0..PTHREAD_MUTEX_SIZE-1] OF char {0, .. } };
+
+(*
+ * Condition variables
+ *)
+CONST
+  PTHREAD_COND_INITIALIZER =
+    pthread_cond_t { PTHREAD_COND_SIG_init,
+                     ARRAY [0..PTHREAD_COND_SIZE-1] OF char {0, .. } };
+
+(*
+ * Initialization control (once) variables
+ *)
+CONST
+  PTHREAD_ONCE_INITIALIZER =
+    pthread_once_t { PTHREAD_ONCE_SIG_init,
+                     ARRAY [0..PTHREAD_ONCE_SIZE-1] OF char {0, .. } };
+
+(*
  * Prototypes for all PTHREAD interfaces
  *)
 <*EXTERNAL pthread_attr_destroy*>
@@ -408,9 +432,5 @@ PROCEDURE yield_np ();
 PROCEDURE thread_suspend (mach_thread: mach_port_t): int;
 <*EXTERNAL thread_resume*>
 PROCEDURE thread_resume (mach_thread: mach_port_t): int;
-
-(* X/Open standards *)
-PROCEDURE suspend (thread: pthread_t): int;
-PROCEDURE continue (thread: pthread_t): int;
 
 END Upthread.
