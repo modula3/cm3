@@ -700,7 +700,7 @@ PROCEDURE CollectorOn () =
          other threads cannot be running!  -- 7/16/96 WKK *)
     END;
 
-    IF RTHeapDep.VM THEN timeUsedOnEntry := RTHeapDep.TimeUsed(); END;
+    timeUsedOnEntry := RTProcess.TimeUsed();
 
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
@@ -746,9 +746,7 @@ PROCEDURE CollectorOff () =
       RTOS.BroadcastHeap();
     END;
 
-    IF RTHeapDep.VM THEN
-      cycleCost := cycleCost + (RTHeapDep.TimeUsed() - timeUsedOnEntry);
-    END;
+    cycleCost := cycleCost + (RTProcess.TimeUsed() - timeUsedOnEntry);
   END CollectorOff;
 
 PROCEDURE CollectSome () =

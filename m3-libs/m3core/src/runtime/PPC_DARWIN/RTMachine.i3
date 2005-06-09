@@ -6,6 +6,8 @@
 INTERFACE RTMachine;
 
 IMPORT Csetjmp;
+FROM Upthread IMPORT pthread_t;
+FROM Uucontext IMPORT ppc_thread_state_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -62,5 +64,14 @@ CONST
      defined in the "RTStack" interface. *)
 
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
+
+(*------------------------------------------------------ pthreads support ---*)
+
+TYPE ThreadContext = ppc_thread_state_t;
+<*EXTERNAL RTThread__Suspend*>
+PROCEDURE SuspendThread (t: pthread_t;
+                         VAR context: ppc_thread_state_t; VAR sp: ADDRESS);
+<*EXTERNAL RTThread__Resume*>
+PROCEDURE ResumeThread (t: pthread_t);
 
 END RTMachine.

@@ -146,19 +146,6 @@ PROCEDURE Core (             sig : Ctypes.int;
 
 (* System-call faults are handled in RTHeapDepC.c *)
 
-PROCEDURE TimeUsed (): REAL =
-  VAR usage: Uresource.struct_rusage;
-  BEGIN
-    VAR ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
-    BEGIN
-      <* ASSERT ret # -1 *>
-    END;
-    RETURN (FLOAT(usage.ru_utime.tv_sec)
-              + FLOAT(usage.ru_utime.tv_usec) / 1000000.0)
-             + (FLOAT(usage.ru_utime.tv_sec)
-                  + FLOAT(usage.ru_utime.tv_usec) / 1000000.0);
-  END TimeUsed;
-
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
     RETURN 0.010;                (* guess 10ms to handle a page fault *)

@@ -154,22 +154,6 @@ PROCEDURE Protect(p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
     END;
   END Protect;
 
-PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
-(* Return the number of seconds represented by "t" as a floating-
-   point number. *)
-  BEGIN
-    RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
-  END TimevalSecs;
-
-PROCEDURE TimeUsed (): REAL =
-  VAR
-    usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
-  BEGIN
-    <* ASSERT ret = 0 *>
-    RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
-  END TimeUsed;
-
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
     RETURN 0.010; (* guess 10ms to handle a page fault *)
