@@ -8,8 +8,8 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Utime, Word;
+IMPORT ThreadF, RTMachine, RTHeapRep, RTCollectorSRC;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Word;
 
 VAR
   initialized                           := FALSE;
@@ -145,7 +145,7 @@ PROCEDURE Core (             sig : Ctypes.int;
     vec := Usignal.struct_sigvec{sv_handler := Usignal.SIG_DFL,
                                  sv_mask := 0, sv_flags := 0};
   BEGIN
-    INC(RT0u.inCritical);
+    ThreadF.SuspendOthers();
     IF NOT dumped_core THEN
       dumped_core := TRUE;
       EVAL RTHeapRep.Crash();      (* clean up the heap *)
@@ -155,26 +155,10 @@ PROCEDURE Core (             sig : Ctypes.int;
       Cstdlib.abort (); (* dump core *)
       <* ASSERT FALSE *>
     END;
-    DEC(RT0u.inCritical);
+    ThreadF.ResumeOthers();
   END Core;
 
 (* System-call faults are handled in RTHeapDepC.c *)
-
-PROCEDURE TimeUsed (): REAL =
-  VAR
-    usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
-  BEGIN
-    <* ASSERT ret # -1 *>
-    RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
-  END TimeUsed;
-
-PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
-  (* Return the number of seconds represented by "t" as a floating-
-     point number. *)
-  BEGIN
-    RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
-  END TimevalSecs;
 
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
@@ -182,6 +166,8 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  VM := RTVM.VM();
+  AtomicWrappers := RTVM.AtomicWrappers();
   IF VM THEN
     RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
     RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);

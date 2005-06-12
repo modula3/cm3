@@ -37,5 +37,9 @@ PROCEDURE RegisterInterruptSetup (enable, disable: PROCEDURE ());
 (* Registers "enable" and "disable" as the machine-specific setup procedures
    to enable and disable respectively control-C handling. *)
 
+PROCEDURE TimeUsed (): REAL;
+(* TimeUsed returns the amount of processor time used by the process so far,
+   in arbitrary units. *)
+
 END RTProcess.
 

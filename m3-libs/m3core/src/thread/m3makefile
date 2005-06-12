@@ -5,4 +5,8 @@
 /* Last modified on Tue May  4 10:17:51 PDT 1993 by mjordan                  */
 
 include_dir ("Common")
-include_dir (OS_TYPE)
+if defined("PTHREAD")
+  include_dir("PTHREAD")
+else
+  include_dir (OS_TYPE)
+end

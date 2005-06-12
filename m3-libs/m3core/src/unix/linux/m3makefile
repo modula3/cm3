@@ -9,7 +9,7 @@
 %c_source ("Ustat")
 c_source  ("waitpidwrap")
 Interface ("Udir")
-Module    ("Uerror")
+Interface ("Uerror")
 Interface ("Uexec")
 Interface ("Ugrp")
 Module    ("Uin")

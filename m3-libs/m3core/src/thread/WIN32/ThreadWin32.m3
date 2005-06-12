@@ -2,7 +2,8 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT for a full description.                  *)
 (*                                                                 *)
-(* portions Copyright 1996, Critical Mass, Inc.                    *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.               *)
+(* See file COPYRIGHT-CMASS for details.                           *)
 (*                                                                 *)
 (* Last modified on Thu Jun 15 09:06:37 PDT 1995 by kalsow         *)
 (*      modified on Tue Oct  4 10:34:00 PDT 1994 by isard          *)
@@ -11,7 +12,7 @@
 (*      modified on Fri Mar 26 15:04:39 PST 1993 by birrell        *)
 
 UNSAFE MODULE ThreadWin32
-  EXPORTS Scheduler, Thread, ThreadF, RTThreadInit;
+EXPORTS Scheduler, Thread, ThreadF, RTThreadInit, RTOS;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT;
 IMPORT ThreadContext, Word, MutexRep;
@@ -876,18 +877,17 @@ PROCEDURE MyId(): Id RAISES {}=
 
 PROCEDURE Die(msg: TEXT) =
   BEGIN
-    RTError.Msg ("ThreadWin32.m3", 879, "Thread client error: ", msg);
+    RTError.Msg ("ThreadWin32.m3", 880, "Thread client error: ", msg);
   END Die;
 
 PROCEDURE Choke() =
   BEGIN
     RTError.MsgI (
-        "ThreadWin32.m3, line 885: Windows OS failure, GetLastError = ",
+        "ThreadWin32.m3, line 886: Windows OS failure, GetLastError = ",
         WinBase.GetLastError ());
   END Choke;
 
 (*-------------------------------------------------------- Initialization ---*)
-
 
 PROCEDURE Init() =
   VAR
@@ -956,6 +956,88 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
       info.BaseAddress := last_good;
     END;
   END InitialStackBase;
+
+(*------------------------------------------------------------- collector ---*)
+(* These procedures provide synchronization primitives for the allocator
+   and collector. *)
+
+VAR
+  cs        : WinBase.LPCRITICAL_SECTION := NIL;
+  csstorage : WinNT.RTL_CRITICAL_SECTION;
+  lock_cnt  := 0;      (* LL = cs *)
+  do_signal := FALSE;  (* LL = cs *)
+  mutex     := NEW(MUTEX);
+  condition := NEW(Condition);
+
+PROCEDURE LockHeap () =
+  BEGIN
+    IF (cs = NIL) THEN
+      cs := ADR(csstorage);
+      WinBase.InitializeCriticalSection(cs);
+    END;
+    WinBase.EnterCriticalSection(cs);
+    INC(lock_cnt);
+  END LockHeap;
+
+PROCEDURE UnlockHeap () =
+  VAR sig := FALSE;
+  BEGIN
+    DEC(lock_cnt);
+    IF (lock_cnt = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
+    WinBase.LeaveCriticalSection(cs);
+    IF (sig) THEN Broadcast(condition); END;
+  END UnlockHeap;
+
+PROCEDURE WaitHeap () =
+  (* LL = 0 *)
+  BEGIN
+    LOCK mutex DO Wait(mutex, condition); END;
+  END WaitHeap;
+
+PROCEDURE BroadcastHeap () =
+  (* LL = inCritical *)
+  BEGIN
+    do_signal := TRUE;
+  END BroadcastHeap;
+
+(*--------------------------------------------- exception handling support --*)
+
+VAR handlersIndex: INTEGER := -1;
+
+PROCEDURE GetCurrentHandlers(): ADDRESS=
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    RETURN LOOPHOLE (WinBase.TlsGetValue(handlersIndex), ADDRESS);
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS)=
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (h, WinDef.DWORD));
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    f.next := LOOPHOLE (WinBase.TlsGetValue(handlersIndex), ADDRESS);
+    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (f, WinDef.DWORD));
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    IF (handlersIndex < 0) THEN InitHandlers (); END;
+    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (frame, WinDef.DWORD));
+  END PopEFrame;
+
+PROCEDURE InitHandlers () =
+  BEGIN
+    handlersIndex := WinBase.TlsAlloc();
+    IF handlersIndex < 0 THEN Choke() END;
+  END InitHandlers;
 
 BEGIN
 END ThreadWin32.
