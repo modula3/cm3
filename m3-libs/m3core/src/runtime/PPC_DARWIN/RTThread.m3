@@ -5,9 +5,9 @@
 (* Last modified on Wed Nov 23 13:00:57 PST 1994 by kalsow                   *)
 (*      modified on Tue Apr 20 16:19:54 PDT 1993 by muller                   *)
 
-UNSAFE MODULE RTThread EXPORTS RTThread;
+UNSAFE MODULE RTThread EXPORTS RTThread, ThreadPThread;
 
-IMPORT Word, Usignal, Unix, RTMisc, Umman;
+IMPORT Word, Usignal, Unix, RTMisc, Umman, RTMachine;
 FROM Usignal
 IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SA_RESTART, SA_SIGINFO,
        SIG_BLOCK, SIG_UNBLOCK;
@@ -109,8 +109,21 @@ PROCEDURE disallow_sigvtalrm () =
     END;
   END disallow_sigvtalrm;
 
+(*------------------------------------------------------ pthreads support ---*)
+
+PROCEDURE SuspendThread (act: Activation) =
+  (* LL=activeMu *)
+  BEGIN
+    RTMachine.SuspendThread(act.handle, act.context, act.sp);
+  END SuspendThread;
+
+PROCEDURE ResumeThread (act: Activation) =
+  (* LL=activeMu *)
+  BEGIN
+    RTMachine.ResumeThread(act.handle);
+  END ResumeThread;
+
 BEGIN
   WITH i = sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
   WITH i = sigaddset(ThreadSwitchSignal, SIGVTALRM) DO <* ASSERT i=0 *> END;
 END RTThread.
-

@@ -27,7 +27,8 @@ void* ThreadF__handlerStack = 0;
 #include <mach/mach.h>
 #include <mach/thread_act.h>
 
-void RTThread__Suspend (pthread_t t, ppc_thread_state_t *state, void **sp)
+void
+RTMachine__SuspendThread (pthread_t t, ppc_thread_state_t *state, void **sp)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   mach_msg_type_number_t thread_state_count = MACHINE_THREAD_STATE_COUNT;
@@ -40,7 +41,8 @@ void RTThread__Suspend (pthread_t t, ppc_thread_state_t *state, void **sp)
   *sp = (void *)(state->r1 - C_RED_ZONE);
 }
 
-void RTThread__Resume (pthread_t t)
+void
+RTMachine__ResumeThread (pthread_t t)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   mach_error_t r = thread_resume(mach_thread);
