@@ -7,7 +7,7 @@
 UNSAFE MODULE RTHeapDep;
 
 IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTHeapDepC, RTVM;
-IMPORT Ctypes, Umman, Unix, Uresource, Usignal, Utime, Utypes, Word, Uucontext;
+IMPORT Ctypes, Umman, Unix, Usignal, Utypes, Word, Uucontext;
 FROM Usignal IMPORT SIGQUIT, SIGILL, SIGTRAP, SIGEMT, SIGFPE, SIGIOT;
 FROM Usignal IMPORT SIGBUS, SIGSEGV, SIGSYS, SIGVTALRM, SIG_DFL;
 

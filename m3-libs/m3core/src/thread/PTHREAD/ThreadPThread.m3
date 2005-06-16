@@ -3,13 +3,13 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 UNSAFE MODULE ThreadPThread EXPORTS
-Thread, ThreadF, Scheduler, SchedulerPosix, RTThreadInit,
-RTOS, RTHooks;
+Thread, ThreadF, ThreadPThread, Scheduler, SchedulerPosix,
+RTThreadInit, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTError, RTPerfTool,
        RTProcess, ThreadEvent, Time,
-       Unix, Utime, Word, RTMachine, Upthread, Usched,
+       Unix, Utime, Word, Upthread, Usched,
        Uerror;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
@@ -83,21 +83,6 @@ REVEAL
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;	 (* LL = threadMu *)
-  END;
-
-TYPE
-  Activation = UNTRACED REF RECORD
-    (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL;	 (* LL = activeMu *)
-    (* thread handle *)
-    handle: pthread_t;			 (* LL = activeMu *)
-    (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;
-    sp: ADDRESS := NIL;
-    context: RTMachine.ThreadContext;	 (* stopped thread context *)
-    (* index into global array of active, slotted threads *)
-    slot: INTEGER;			 (* LL = slotMu *)
-    idle: BOOLEAN := FALSE;		 (* LL = idleMu *)
   END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -887,7 +872,7 @@ PROCEDURE SuspendOthers () =
     IF (suspend_cnt = 1) THEN
       act := me.next;
       WHILE (act # me) DO
-        RTMachine.SuspendThread(act.handle, act.context, act.sp);
+        SuspendThread(act);
         act := act.next;
       END;
     END;
@@ -901,7 +886,7 @@ PROCEDURE ResumeOthers () =
     IF (suspend_cnt = 0) THEN
       act := me.next;
       WHILE (act # me) DO
-        RTMachine.ResumeThread(act.handle);
+        ResumeThread(act);
         act := act.next;
       END;
     END;
