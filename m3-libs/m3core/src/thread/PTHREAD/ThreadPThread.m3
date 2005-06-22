@@ -895,16 +895,21 @@ PROCEDURE LookupActivation (pthread: pthread_t): Activation =
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR act := allThreads;  me := GetActivation(); start, stop: ADDRESS;
-      state: RTMachine.ThreadState;
+      state: RTMachine.ThreadState;  myState: RTMachine.State;
   BEGIN
     me.sp := ADR(me);			 (* good enough for me! *)
+    EVAL RTThread.Save (myState);
     REPEAT
       IF (act.stackbase # NIL) THEN
-        (* Try for explicit state, otherwise assume registers are implicitly
-           saved in the thread's stack. *)
-        IF (act # me) AND (RTMachine.GetState # NIL) THEN
+        (* Process the registers *)
+        IF act = me THEN
+          WITH z = myState DO
+            p(ADR(z), ADR(z) + ADRSIZE(z));
+          END;
+        ELSIF RTMachine.GetState # NIL THEN
+          (* Try for explicit state, otherwise assume registers are implicitly
+             saved in the suspended thread's stack *)
           RTMachine.GetState(act.handle, act.sp, state);
-          (* Process the registers *)
           WITH z = state DO
             p(ADR(z), ADR(z) + ADRSIZE(z));
           END;
