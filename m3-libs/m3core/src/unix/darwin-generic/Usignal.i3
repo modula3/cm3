@@ -73,9 +73,12 @@ CONST
   SIGUSR1   =  30;     (* user defined signal 1 *)
   SIGUSR2   =  31;     (* user defined signal 2 *)
 
-(* Do not modifiy these variables *)
-VAR (*CONST*)
-  SIG_DFL, SIG_IGN, SIG_ERR, BADSIG : SignalHandler;
+CONST
+  SIG_DFL = 0;
+  SIG_IGN = 1;
+  SIG_HOLD = 5;
+  SIG_ERR = -1;
+  BADSIG = SIG_ERR;
 
 TYPE
   struct_siginfo = RECORD
@@ -94,14 +97,14 @@ TYPE
   siginfo_t = struct_siginfo;
   siginfo_t_star = UNTRACED REF siginfo_t;
 
-  SignalHandler = PROCEDURE (sig: int;
-  		  	     sip: siginfo_t_star;
+  SignalAction  = PROCEDURE (sig: int; sip: siginfo_t_star;
                              scp: ucontext_t_star);
+  SignalHandler = PROCEDURE (sig: int);
 
   sigset_t = Uucontext.sigset_t;
 
   struct_sigaction = RECORD
-    sa_sigaction: SignalHandler;        (* signal handler *)
+    sa_sigaction: SignalAction;         (* signal handler *)
     sa_mask     : sigset_t;             (* signals to block while in handler *)
     sa_flags    : int;                  (* signal action flags *)
   END;
@@ -173,6 +176,9 @@ TYPE
 (* Convert a signal number to a mask suitable for sigblock(). *)
 <*INLINE*> PROCEDURE sigmask (n: int): int;
 
+<*EXTERNAL*>
+PROCEDURE signal (sig: int; handler: SignalHandler): SignalHandler;
+
 (*** <signal.h> ***)
 
 (*** raise(2) - send a signal to the current process ***)
@@ -207,12 +213,12 @@ PROCEDURE sigismember(VAR set: sigset_t; signo: int) : int;
 
 (* FIXME - It is OK for vec and/or ovec to be NIL, so we shouldn't use VAR *)
 <*EXTERNAL*>
-PROCEDURE sigprocmask (how: int; READONLY new: sigset_t;
-                       old: UNTRACED REF sigset_t := NIL) : int;
+PROCEDURE sigprocmask (how: int;
+                       READONLY new: sigset_t;
+                       VAR old: sigset_t) : int;
 
 (*** sigsuspend(2) - release blocked signals and wait for interrupt ***)
-<*EXTERNAL*>
-PROCEDURE sigsuspend (VAR sigmask: sigset_t): int;
+<*EXTERNAL*> PROCEDURE sigsuspend (READONLY sigmask: sigset_t): int;
 
 (*** killpg(2) - send signal to a process or process group ***)
 <*EXTERNAL*> PROCEDURE killpg (pgrp, sig: int): int;

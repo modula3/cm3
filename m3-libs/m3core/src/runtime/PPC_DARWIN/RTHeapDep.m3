@@ -121,7 +121,7 @@ PROCEDURE Init () =
           <*ASSERT i = 0*>
         END;
         (* If the old handler was not the default, restore it. *)
-        IF orig[sig].sa_sigaction # SIG_DFL THEN
+        IF orig[sig].sa_sigaction # LOOPHOLE(SIG_DFL, Usignal.SignalAction) THEN
           WITH i = Usignal.sigaction(sig, orig[sig], new) DO
             <*ASSERT i = 0*>
           END;

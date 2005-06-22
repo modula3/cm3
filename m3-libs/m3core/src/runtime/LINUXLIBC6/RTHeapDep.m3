@@ -8,8 +8,8 @@
 UNSAFE MODULE RTHeapDep;
 
 IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTMachine, RTVM;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal;
-IMPORT Utime, Utypes, Uucontext, Word;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Usignal;
+IMPORT Utypes, Uucontext, Word;
 
 VAR
   initialized := FALSE;
@@ -49,36 +49,36 @@ PROCEDURE Init () =
 
     (* establish SIGSEGV handler; remember previous handler *)
     VAR
-      vec, ovec : Usignal.struct_sigaction;
+      act, oact : Usignal.struct_sigaction;
       ret: Ctypes.int;
     BEGIN
-      vec.sa_flags := Word.Or(Usignal.SA_NODEFER,
+      act.sa_flags := Word.Or(Usignal.SA_NODEFER,
                               Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO));
-      vec.sa_sigaction := LOOPHOLE(Fault, Usignal.SignalActionHandler);
-      EVAL Usignal.sigemptyset(ADR(vec.sa_mask));
+      act.sa_sigaction := LOOPHOLE(Fault, Usignal.SignalActionHandler);
+      EVAL Usignal.sigemptyset(act.sa_mask);
       (* block the "SIGVTALRM" signal when signal handlers are called *)
-      EVAL Usignal.sigaddset(ADR(vec.sa_mask), Usignal.SIGVTALRM);
-      ret := Usignal.sigaction(Usignal.SIGSEGV, ADR(vec), ADR(ovec));
+      EVAL Usignal.sigaddset(act.sa_mask, Usignal.SIGVTALRM);
+      ret := Usignal.sigaction(Usignal.SIGSEGV, act, oact);
       <* ASSERT ret = 0 *>
-      defaultSIGSEGV := ovec.sa_sigaction;
+      defaultSIGSEGV := oact.sa_sigaction;
     END;
 
     (* establish signal handler for all other signals that dump core, if no
        handler exists *)
     PROCEDURE OverrideDefault (sig: Ctypes.int) =
       VAR
-        vec, ovec: Usignal.struct_sigaction;
+        act, oact: Usignal.struct_sigaction;
         ret: Ctypes.int;
       BEGIN
-        vec.sa_flags := Usignal.SA_SIGINFO;
-        vec.sa_sigaction := Core;
-        EVAL Usignal.sigemptyset(ADR(vec.sa_mask));
-        EVAL Usignal.sigaddset(ADR(vec.sa_mask), Usignal.SIGVTALRM);
-        ret := Usignal.sigaction(sig, ADR(vec), ADR(ovec));
+        act.sa_flags := Usignal.SA_SIGINFO;
+        act.sa_sigaction := Core;
+        EVAL Usignal.sigemptyset(act.sa_mask);
+        EVAL Usignal.sigaddset(act.sa_mask, Usignal.SIGVTALRM);
+        ret := Usignal.sigaction(sig, act, oact);
         <* ASSERT ret = 0 *>
         (* If the old handler was not the default, restore it. *)
-        IF ovec.sa_sigaction # Usignal.SIG_DFL THEN
-          ret := Usignal.sigaction(sig, ADR(ovec), ADR(vec));
+        IF oact.sa_sigaction # Usignal.SIG_DFL THEN
+          ret := Usignal.sigaction(sig, oact, act);
           <* ASSERT ret = 0 *>
         END;
       END OverrideDefault;
@@ -134,19 +134,19 @@ PROCEDURE Core (sig : Ctypes.int;
 
       (* establish default action *)
       VAR
-        vec: Usignal.struct_sigaction;
+        act, oact: Usignal.struct_sigaction;
       BEGIN
-        vec.sa_flags := 0;
-        vec.sa_sigaction := Usignal.SIG_DFL;
-        EVAL Usignal.sigemptyset(ADR(vec.sa_mask));
-        EVAL Usignal.sigaction(sig, ADR(vec), NIL);
+        act.sa_flags := 0;
+        act.sa_sigaction := Usignal.SIG_DFL;
+        EVAL Usignal.sigemptyset(act.sa_mask);
+        EVAL Usignal.sigaction(sig, act, oact);
       END;
 
       (* unblock signals *)
-      VAR set: Uucontext.sigset_t;
+      VAR set, oset: Uucontext.sigset_t;
       BEGIN
-        EVAL Usignal.sigemptyset(ADR(set));
-        EVAL Usignal.sigprocmask(Usignal.SIG_SETMASK, ADR(set), NIL);
+        EVAL Usignal.sigemptyset(set);
+        EVAL Usignal.sigprocmask(Usignal.SIG_SETMASK, set, oset);
       END;
 
       (* now, dump core *)

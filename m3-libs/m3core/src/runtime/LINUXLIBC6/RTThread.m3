@@ -5,9 +5,11 @@
 (* Last modified on Mon Nov 21 11:28:44 PST 1994 by kalsow     *)
 (*      modified on Tue May  4 18:49:28 PDT 1993 by muller     *)
 
-UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks, ThreadPThread;
 
-IMPORT Usignal, Unix, RTMisc, Umman, Word;
+IMPORT Usignal, Unix, RTMisc, Umman, Word, Upthread;
+FROM Usignal
+IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SIG_BLOCK, SIG_UNBLOCK;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
@@ -35,7 +37,7 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
     start := RTMisc.Align (ADR (s.words[0]), page_bytes);
     i := Umman.mprotect (start, page_bytes, Umman.PROT_READ);
     <* ASSERT i = 0 *>
-    (* The protection should be 0, but making the page read-only 
+    (* The protection should be 0, but making the page read-only
        is good enough to prevent unchecked runtime errors *)
 
     (* finally, set the bounds of the usable region *)
@@ -80,6 +82,29 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
+(*------------------------------------------------------ pthreads support ---*)
+
+PROCEDURE SuspendSignal (): INTEGER =
+  BEGIN
+    RETURN Usignal.libc_current_sigrtmin()+7;
+  END SuspendSignal;
+
+PROCEDURE RestartSignal (): INTEGER =
+  BEGIN
+    RETURN Usignal.SIGXCPU;
+  END RestartSignal;
+
+PROCEDURE SuspendThread (act: Activation): BOOLEAN =
+  BEGIN
+    WITH r = Upthread.kill(act.handle, SuspendSignal()) DO <*ASSERT r=0*> END;
+    RETURN TRUE;			 (* signalling *)
+  END SuspendThread;
+
+PROCEDURE RestartThread (act: Activation) =
+  BEGIN
+    WITH r = Upthread.kill(act.handle, RestartSignal()) DO <*ASSERT r=0*> END;
+  END RestartThread;
+
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
 VAR
@@ -87,30 +112,26 @@ VAR
 
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
   BEGIN
-    EVAL Usignal.signal(Usignal.SIGVTALRM, handler);
+    EVAL Usignal.signal(SIGVTALRM, handler);
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
+  VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK,
-                                 ADR(ThreadSwitchSignal), NIL) DO
+    WITH i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, old) DO
       <* ASSERT i = 0 *>
     END;
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
+  VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK,
-                                 ADR(ThreadSwitchSignal), NIL) DO
+    WITH i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, old) DO
       <* ASSERT i = 0 *>
     END;
   END disallow_sigvtalrm;
 
 BEGIN
-  WITH i = Usignal.sigemptyset(ADR(ThreadSwitchSignal)) DO
-    <* ASSERT i = 0 *>
-  END;
-  WITH i = Usignal.sigaddset(ADR(ThreadSwitchSignal), Usignal.SIGVTALRM) DO
-    <* ASSERT i = 0 *>
-  END;
+  WITH i = sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
+  WITH i = sigaddset(ThreadSwitchSignal, SIGVTALRM) DO <* ASSERT i = 0 *> END;
 END RTThread.

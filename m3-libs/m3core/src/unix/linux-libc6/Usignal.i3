@@ -10,7 +10,7 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int, void_star, int_star;
+FROM Ctypes IMPORT int, void_star;
 FROM Utypes IMPORT pid_t;
 IMPORT Uucontext;
 
@@ -109,19 +109,19 @@ TYPE
   siginfo_t_fault_star = UNTRACED REF siginfo_t_fault;
 
 (* Clear all signals from SET.  *)
-<*EXTERNAL*> PROCEDURE sigemptyset (set: sigset_t_star): int;
+<*EXTERNAL*> PROCEDURE sigemptyset (VAR set: sigset_t): int;
 
 (* Set all signals in SET.  *)
-<*EXTERNAL*> PROCEDURE sigfillset (set: sigset_t_star): int;
+<*EXTERNAL*> PROCEDURE sigfillset (VAR set: sigset_t): int;
 
 (* Add SIGNO to SET.  *)
-<*EXTERNAL*> PROCEDURE sigaddset (set: sigset_t_star; signo: int): int;
+<*EXTERNAL*> PROCEDURE sigaddset (VAR set: sigset_t; signo: int): int;
 
 (* Remove SIGNO from SET.  *)
-<*EXTERNAL*> PROCEDURE sigdelset (set: sigset_t_star; signo: int): int;
+<*EXTERNAL*> PROCEDURE sigdelset (VAR set: sigset_t; signo: int): int;
 
 (* Return 1 if SIGNO is in SET, 0 if not.  *)
-<*EXTERNAL*> PROCEDURE sigismember (set: const_sigset_t_star; signo: int): int;
+<*EXTERNAL*> PROCEDURE sigismember (READONLY set: sigset_t; signo: int): int;
 
 (* <bits/sigaction.h> *)
 
@@ -169,24 +169,26 @@ CONST
   SIG_SETMASK = 2;			(* Set the set of blocked signals.  *)
 
 (* Get and/or change the set of blocked signals.  *)
-<*EXTERNAL*> PROCEDURE sigprocmask (how: int; set: const_sigset_t_star;
-                                    oset: sigset_t_star): int;
+<*EXTERNAL*> PROCEDURE sigprocmask (how: int;
+                                    READONLY set: sigset_t;
+                                    VAR oset: sigset_t): int;
 
 (* Change the set of blocked signals to SET,
    wait until a signal arrives, and restore the set of blocked signals. *)
-<*EXTERNAL*> PROCEDURE sigsuspend (set: sigset_t_star): int;
+<*EXTERNAL*> PROCEDURE sigsuspend (READONLY set: sigset_t): int;
 
 (* Get and/or set the action for signal SIG.  *)
-<*EXTERNAL*> PROCEDURE sigaction (sig: int; act: const_struct_sigaction_star;
-                                  oact: struct_sigaction_star): int;
+<*EXTERNAL*> PROCEDURE sigaction (sig: int;
+                                  READONLY act: struct_sigaction;
+                                  VAR oact: struct_sigaction): int;
 
 (* Put in SET all signals that are blocked and waiting to be delivered.  *)
-<*EXTERNAL*> PROCEDURE sigpending (set: sigset_t_star): int;
+<*EXTERNAL*> PROCEDURE sigpending (VAR set: sigset_t): int;
 
 (* Select any of pending signals from SET or wait for any to arrive.  *)
-<*EXTERNAL*> PROCEDURE sigwait (set: const_sigset_t_star; sig: int_star): int;
+<*EXTERNAL*> PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
 
-(* The following functions are used internally in the C library and in              
+(* The following functions are used internally in the C library and in
    other code which need deep insights.  *)
 
 (* Return number of available real-time signal with highest priority.  *)

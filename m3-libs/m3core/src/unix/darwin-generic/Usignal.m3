@@ -14,8 +14,4 @@ BEGIN
 END sigmask;
 
 BEGIN
-  SIG_DFL  := LOOPHOLE ( 0, SignalHandler);
-  SIG_IGN  := LOOPHOLE ( 1, SignalHandler);
-  SIG_ERR  := LOOPHOLE (-1, SignalHandler);
-  BADSIG   := SIG_ERR;
 END Usignal.

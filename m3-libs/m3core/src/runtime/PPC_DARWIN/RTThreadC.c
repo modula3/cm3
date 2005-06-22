@@ -42,7 +42,7 @@ RTMachine__SuspendThread (pthread_t t, ppc_thread_state_t *state, void **sp)
 }
 
 void
-RTMachine__ResumeThread (pthread_t t)
+RTMachine__RestartThread (pthread_t t)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   mach_error_t r = thread_resume(mach_thread);

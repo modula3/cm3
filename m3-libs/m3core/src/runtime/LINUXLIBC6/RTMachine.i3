@@ -70,5 +70,9 @@ CONST
 
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
-END RTMachine.
+(*------------------------------------------------------ pthreads support ---*)
 
+(* Full context is in the signal handler frame so no need for state here. *)
+TYPE ThreadContext = RECORD END;
+
+END RTMachine.

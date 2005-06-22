@@ -36,15 +36,13 @@ PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalActionHandl
   BEGIN
     new.sa_sigaction := LOOPHOLE (handler, Usignal.SignalActionHandler);
     new.sa_flags := Usignal.SA_SIGINFO;
-    WITH i = Usignal.sigemptyset(ADR(new.sa_mask)) DO
-      <*ASSERT i = 0*>
-    END;
-    WITH i = Usignal.sigaction (sig, ADR(new), ADR(initial_handlers[id])) DO
+    WITH i = Usignal.sigemptyset(new.sa_mask) DO <*ASSERT i = 0*> END;
+    WITH i = Usignal.sigaction (sig, new, initial_handlers[id]) DO
       <*ASSERT i = 0*>
     END;
     IF (initial_handlers[id].sa_sigaction # DefaultHandler) THEN
       (* don't override inherited, non-default handlers *)
-      WITH i = Usignal.sigaction (sig, ADR(initial_handlers[id]), ADR(new)) DO
+      WITH i = Usignal.sigaction (sig, initial_handlers[id], new) DO
         <*ASSERT i = 0*>
       END;
     END;
@@ -61,21 +59,22 @@ PROCEDURE RestoreHandlers () =
   END RestoreHandlers;
 
 PROCEDURE RestoreHandler (id: INTEGER;  sig: int) =
+  VAR old: Usignal.struct_sigaction;
   BEGIN
-    EVAL Usignal.sigaction (sig, ADR(initial_handlers[id]), NIL);
+    EVAL Usignal.sigaction (sig, initial_handlers[id], old);
   END RestoreHandler;
 
 PROCEDURE Shutdown (sig: int;
          <*UNUSED*> sip: Usignal.siginfo_t_star;
          <*UNUSED*> uap: Uucontext.ucontext_t_star) =
-  VAR new: Usignal.struct_sigaction;
+  VAR new, old: Usignal.struct_sigaction;
   BEGIN
     new.sa_sigaction := DefaultHandler;
     new.sa_flags := 0;
-    EVAL Usignal.sigemptyset(ADR(new.sa_mask));
+    EVAL Usignal.sigemptyset(new.sa_mask);
     RTProcess.InvokeExitors ();                   (* flush stdio... *)
     (* restore default handler *)
-    EVAL Usignal.sigaction (sig, ADR(new), NIL);
+    EVAL Usignal.sigaction (sig, new, old);
     EVAL Usignal.kill (Uprocess.getpid (), sig);  (* and resend the signal *)
   END Shutdown;
 
