@@ -9,8 +9,7 @@ UNSAFE MODULE RTThread EXPORTS RTThread, ThreadPThread;
 
 IMPORT Word, Usignal, Unix, RTMisc, Umman, RTMachine;
 FROM Usignal
-IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SA_RESTART, SA_SIGINFO,
-       SIG_BLOCK, SIG_UNBLOCK;
+IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SIG_BLOCK, SIG_UNBLOCK;
 
 CONST 
   SP_pos = 0;
@@ -84,44 +83,47 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
+(*------------------------------------------------------ pthreads support ---*)
+
+PROCEDURE SuspendSignal (): INTEGER = BEGIN RETURN 0 END SuspendSignal;
+PROCEDURE RestartSignal (): INTEGER = BEGIN RETURN 0 END RestartSignal;
+
+PROCEDURE SuspendThread (act: Activation): BOOLEAN =
+  BEGIN
+    RTMachine.SuspendThread(act.handle, act.context, act.sp);
+    RETURN FALSE;			 (* not signalling *)
+  END SuspendThread;
+
+PROCEDURE RestartThread (act: Activation) =
+  BEGIN
+    RTMachine.RestartThread(act.handle);
+  END RestartThread;
+
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
 VAR ThreadSwitchSignal: Usignal.sigset_t;
 
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR new, old: Usignal.struct_sigaction;
+  VAR old := Usignal.signal(Usignal.SIGVTALRM, handler);
   BEGIN
-    new.sa_sigaction := handler;
-    new.sa_flags := Word.Or(SA_RESTART, SA_SIGINFO);
-    WITH i = sigemptyset(new.sa_mask) DO <* ASSERT i = 0 *> END;
-    WITH i = Usignal.sigaction (SIGVTALRM, new, old) DO <* ASSERT i = 0 *> END;
+    <*ASSERT old # LOOPHOLE(Usignal.SIG_ERR,Usignal.SignalHandler) *>
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
+  VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal) DO <* ASSERT i = 0 *>
+    WITH i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, old) DO
+      <* ASSERT i = 0 *>
     END;
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
+  VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal) DO <* ASSERT i = 0 *>
+    WITH i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, old) DO
+      <* ASSERT i = 0 *>
     END;
   END disallow_sigvtalrm;
-
-(*------------------------------------------------------ pthreads support ---*)
-
-PROCEDURE SuspendThread (act: Activation) =
-  (* LL=activeMu *)
-  BEGIN
-    RTMachine.SuspendThread(act.handle, act.context, act.sp);
-  END SuspendThread;
-
-PROCEDURE ResumeThread (act: Activation) =
-  (* LL=activeMu *)
-  BEGIN
-    RTMachine.ResumeThread(act.handle);
-  END ResumeThread;
 
 BEGIN
   WITH i = sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;

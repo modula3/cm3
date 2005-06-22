@@ -9,20 +9,21 @@ UNSAFE MODULE RTSignal;
 
 IMPORT RTError, RTProcess, Usignal, Uprocess, Uucontext;
 FROM Ctypes IMPORT int;
+FROM Usignal IMPORT SignalAction;
 
 TYPE
   SigInfo = Usignal.struct_siginfo_star;
   SigContext = Uucontext.struct_ucontext_star;
 
 VAR
-  DefaultHandler   : Usignal.SignalHandler;
-  IgnoreSignal     : Usignal.SignalHandler;
+  DefaultHandler   : SignalAction;
+  IgnoreSignal     : SignalAction;
   initial_handlers : ARRAY [0..6] OF Usignal.struct_sigaction;
 
 PROCEDURE InstallHandlers () =
   BEGIN
-    DefaultHandler := LOOPHOLE (0, Usignal.SignalHandler);
-    IgnoreSignal   := LOOPHOLE (1, Usignal.SignalHandler);
+    DefaultHandler := LOOPHOLE (0, SignalAction);
+    IgnoreSignal   := LOOPHOLE (1, SignalAction);
 
     SetHandler (0, Usignal.SIGHUP,  Shutdown);
     SetHandler (1, Usignal.SIGINT,  Interrupt);
@@ -33,13 +34,13 @@ PROCEDURE InstallHandlers () =
     SetHandler (6, Usignal.SIGBUS,  SegV);
   END InstallHandlers;
 
-PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
+PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: SignalAction) =
   (* Note: we use the LOOPHOLE to prevent the runtime check for
      nested procedure.  The runtime check crashes when
      handler = IgnoreSignal = 1. *)
   VAR new: Usignal.struct_sigaction;
   BEGIN
-    new.sa_sigaction := LOOPHOLE (handler, Usignal.SignalHandler);
+    new.sa_sigaction := LOOPHOLE (handler, SignalAction);
     new.sa_flags     := Usignal.SA_SIGINFO;
     WITH i = Usignal.sigemptyset(new.sa_mask) DO
       <*ASSERT i = 0*>

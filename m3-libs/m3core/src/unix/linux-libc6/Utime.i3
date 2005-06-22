@@ -13,7 +13,7 @@
 
 INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star, int, long, long_star, 
+FROM Ctypes IMPORT char_star, int, long, long_star, long_int,
                    unsigned_short, short;
 
 (*** <sys/time.h> ***)
@@ -26,6 +26,10 @@ TYPE
   struct_timezone = RECORD
     tz_minuteswest:  int; (* minutes west of Greenwich *)
     tz_dsttime:      int; (* type of dst correction *) END;
+
+  struct_timespec = RECORD
+    tv_sec: time_t;			 (* Seconds *)
+    tv_nsec: long_int;			 (* Nanoseconds *) END;
 
 CONST
   DST_NONE = 0;  (* not on dst *)
@@ -166,12 +170,13 @@ PROCEDURE gmtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
 PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 
 <*EXTERNAL*> VAR timezone: time_t;
-(* This no longer exists in libc2 *)
-(*<*EXTERNAL*> VAR altzone: time_t;*)
 <*EXTERNAL*> VAR daylight: int;
 <*EXTERNAL*> VAR tzname: ARRAY [0..1] OF char_star;
 
 <*EXTERNAL*> PROCEDURE tzset	 ();
 <*EXTERNAL*> PROCEDURE tzsetwall ();
+
+<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec;
+                                  VAR rem: struct_timespec): int;
 
 END Utime.

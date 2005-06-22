@@ -9,12 +9,13 @@ RTThreadInit, RTOS, RTHooks;
 IMPORT Cerrno, FloatMode, MutexRep,
        RTError, RTPerfTool,
        RTProcess, ThreadEvent, Time,
-       Unix, Utime, Word, Upthread, Usched,
-       Uerror;
+       Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
+       Uucontext, Uerror;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER,
        PTHREAD_ONCE_INITIALIZER;
+IMPORT Ctypes;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -440,6 +441,7 @@ PROCEDURE CreateT (): T =
 
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
+    xx: INTEGER;
     me: Activation := LOOPHOLE (param, Activation);
     waitCond: UNTRACED REF pthread_cond_t;
   BEGIN
@@ -448,8 +450,8 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
        traced references.  Otherwise, it may trigger a heap page fault,
        which would call SuspendOthers, which requires an Activation. *)
 
-    LOOP 
-      me.stackbase := ADR(me);		(* enable GC scanning of this stack *)
+    LOOP
+      me.stackbase := ADR(xx);		(* enable GC scanning of this stack *)
       waitCond := RunThread(me);
       me.stackbase := NIL;		(* disable GC scanning of my stack *)
       IF (waitCond = NIL) THEN EXIT; END;
@@ -659,7 +661,7 @@ PROCEDURE Pause(n: LONGREAL) =
     self := Self();
   BEGIN
     IF self = NIL THEN Die("Pause called from a non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.pausing) END; 
+    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(n, amount);
     WHILE Utime.nanosleep(amount, remaining) # 0 DO
@@ -858,41 +860,37 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR
-  suspend_cnt: CARDINAL := 0;  (* LL = cm *)
+VAR suspend_cnt: CARDINAL := 0;		 (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
-  VAR act: Activation;  me := GetActivation();
+  VAR me := GetActivation();
   BEGIN
     <*ASSERT me # NIL*>
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-
     INC (suspend_cnt);
-    IF (suspend_cnt = 1) THEN
-      act := me.next;
-      WHILE (act # me) DO
-        SuspendThread(act);
-        act := act.next;
-      END;
-    END;
+    IF (suspend_cnt = 1) THEN StopWorld(me) END;
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   (* LL=activeMu.  Always preceded by SuspendOthers. *)
-  VAR act: Activation;  me := GetActivation();
+  VAR me := GetActivation();
   BEGIN
     DEC (suspend_cnt);
-    IF (suspend_cnt = 0) THEN
-      act := me.next;
-      WHILE (act # me) DO
-        ResumeThread(act);
-        act := act.next;
-      END;
-    END;
-
+    IF (suspend_cnt = 0) THEN StartWorld(me) END;
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
+
+PROCEDURE LookupActivation (pthread: pthread_t): Activation =
+  (* LL=activeMu *)
+  VAR act := allThreads;
+  BEGIN
+    REPEAT
+      IF Upthread.equal(pthread, act.handle) # 0 THEN RETURN act END;
+      act := act.next;
+    UNTIL act = allThreads;
+    RETURN NIL;
+  END LookupActivation;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
@@ -919,6 +917,127 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
       act := act.next;
     UNTIL (act = allThreads);
   END ProcessStacks;
+
+(* Signal based suspend/resume *)
+VAR
+  stopCount: CARDINAL := 0;
+  suspendAckSem: Usem.sem_t;
+  suspendMask: Usignal.sigset_t;
+  SIG_SUSPEND, SIG_RESUME: INTEGER;
+
+PROCEDURE SuspendAll (me: Activation): INTEGER =
+  (* LL=activeMu *)
+  VAR
+    nLive := 0;
+    act := me.next;
+  BEGIN
+    WHILE act # me DO
+      IF act.lastStopCount # stopCount THEN
+        IF SuspendThread(act) THEN INC(nLive) END;
+      END;
+    END;
+    RETURN nLive;
+  END SuspendAll;
+
+PROCEDURE StopWorld (me: Activation) =
+  (* LL=activeMu *)
+  VAR
+    nLive, newlySent: INTEGER;
+    wait_nsecs := 0;
+    wait, remaining: Utime.struct_timespec;
+    acks: Ctypes.int;
+  CONST
+    WAIT_UNIT = 3000000;
+    RETRY_INTERVAL = 10000000;
+  BEGIN
+    INC(stopCount);
+    nLive := SuspendAll (me);
+    LOOP
+      WITH r = Usem.getvalue(suspendAckSem, acks) DO <*ASSERT r=0*> END;
+      IF acks = nLive THEN EXIT END;
+      IF wait_nsecs > RETRY_INTERVAL THEN
+        newlySent := SuspendAll(me);
+        WITH r = Usem.getvalue(suspendAckSem, acks) DO <*ASSERT r=0*> END;
+        IF newlySent < nLive - acks THEN
+          nLive := acks + newlySent;
+        END;
+        wait_nsecs  := 0;
+      END;
+      wait.tv_sec := 0;
+      wait.tv_nsec := WAIT_UNIT;
+      WHILE Utime.nanosleep(wait, remaining) # 0 DO
+        wait := remaining;
+      END;
+      INC(wait_nsecs, WAIT_UNIT);
+    END;
+
+    FOR i := 0 TO nLive-1 DO
+      WHILE Usem.wait(suspendAckSem) # 0 DO
+        <* ASSERT Cerrno.GetErrno() = Uerror.EINTR *>
+      END;
+    END;
+  END StopWorld;
+
+PROCEDURE StartWorld (me: Activation) =
+  VAR act := me.next;
+  BEGIN
+    WHILE act # me DO
+      RestartThread(act);
+      act := act.next;
+    END;
+  END StartWorld;
+
+PROCEDURE SuspendHandler (sig: Ctypes.int;
+                          <*UNUSED*> sip: Usignal.siginfo_t_star;
+                          <*UNUSED*> uap: Uucontext.ucontext_t_star) =
+  VAR
+    errno := Cerrno.GetErrno();
+    xx: INTEGER;
+    self := Upthread.self();
+    me := LookupActivation(self);
+    myStopCount := stopCount;
+  BEGIN
+    <*ASSERT sig = SIG_SUSPEND*>
+    IF me = NIL THEN RETURN END;
+    IF me.lastStopCount = myStopCount THEN RETURN END;
+    me.sp := ADR(xx);
+    WITH r = Usem.post(suspendAckSem) DO <*ASSERT r=0*> END;
+    me.lastStopCount := myStopCount;
+    REPEAT
+      me.signal := 0;
+      EVAL Usignal.sigsuspend(suspendMask); (* wait for signal *)
+    UNTIL me.signal = SIG_RESUME;
+    Cerrno.SetErrno(errno);
+  END SuspendHandler;
+
+PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
+                          <*UNUSED*> sip: Usignal.siginfo_t_star;
+                          <*UNUSED*> uap: Uucontext.ucontext_t_star) =
+  VAR
+    self := Upthread.self();
+    me := LookupActivation(self);
+  BEGIN
+    me.signal := SIG_RESUME;
+  END RestartHandler;
+
+PROCEDURE SetupHandlers () =
+  VAR act, oact: Usignal.struct_sigaction;
+  BEGIN
+    WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
+
+    act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
+    WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
+    (* SIG_RESUME is set in the resulting mask.      *)
+    (* It is unmasked by the handler when necessary. *)
+    act.sa_sigaction := SuspendHandler;
+    WITH r = Usignal.sigaction(SIG_SUSPEND, act, oact) DO <*ASSERT r=0*> END;
+    act.sa_sigaction := RestartHandler;
+    WITH r = Usignal.sigaction(SIG_RESUME, act, oact) DO <*ASSERT r=0*> END;
+
+    (* Initialize suspendMask.  It excludes SIG_RESUME. *)
+    WITH r = Usignal.sigfillset(suspendMask) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(suspendMask, SIG_RESUME) DO <*ASSERT r=0*> END;
+  END SetupHandlers;
 
 (*------------------------------------------------------------ misc. junk ---*)
 
@@ -964,7 +1083,7 @@ PROCEDURE PerfStart () =
     END;
   END PerfStart;
 
-PROCEDURE PerfStop () = 
+PROCEDURE PerfStop () =
   BEGIN
     (* UNSAFE, but needed to prevent deadlock if we're crashing! *)
     RTPerfTool.Close (perfW);
@@ -976,7 +1095,7 @@ CONST
 TYPE
   TE = ThreadEvent.Kind;
 
-PROCEDURE PerfChanged (id: Id; s: State) = 
+PROCEDURE PerfChanged (id: Id; s: State) =
   (* LL = threadMu *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
   BEGIN
@@ -1007,10 +1126,12 @@ PROCEDURE PerfRunning (id: Id) =
 
 PROCEDURE Init ()=
   VAR
+    xx: INTEGER;
     self: T;
     act: Activation;
   BEGIN
     WITH r = Upthread.key_create(threadIndex, NIL) DO <*ASSERT r=0*> END;
+    SetupHandlers ();
 
     (* cm, activeMu, idleMu, slotMu: initialized statically *)
 
@@ -1018,7 +1139,7 @@ PROCEDURE Init ()=
     self := CreateT();
     self.id := nextId;  INC(nextId);
 
-    stack_grows_down := ADR(self) > XX();
+    stack_grows_down := ADR(xx) > XX();
 
     act := self.act;
 
@@ -1027,7 +1148,7 @@ PROCEDURE Init ()=
       act.next   := act;
       act.prev   := act;
       allThreads := act;
-      act.stackbase := ADR(self);
+      act.stackbase := ADR(xx);
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     SetActivation(act);
     PerfStart();

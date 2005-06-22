@@ -67,13 +67,14 @@ TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
 (*------------------------------------------------------ pthreads support ---*)
 
-TYPE ThreadContext = ppc_thread_state_t;
+TYPE
+  ThreadContext = ppc_thread_state_t;
 
 <*EXTERNAL RTMachine__SuspendThread*>
 PROCEDURE SuspendThread (t: pthread_t;
-                         VAR context: ppc_thread_state_t;
+                         VAR context: ThreadContext;
                          VAR sp: ADDRESS);
-<*EXTERNAL RTMachine__ResumeThread*>
-PROCEDURE ResumeThread (t: pthread_t);
+<*EXTERNAL RTMachine__RestartThread*>
+PROCEDURE RestartThread (t: pthread_t);
 
 END RTMachine.
