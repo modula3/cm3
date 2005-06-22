@@ -5,9 +5,9 @@
 (* Last modified on Mon Nov 21 11:28:44 PST 1994 by kalsow     *)
 (*      modified on Tue May  4 18:49:28 PDT 1993 by muller     *)
 
-UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks, ThreadPThread;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal, Unix, RTMisc, Umman, Word, Upthread;
+IMPORT Usignal, Unix, RTMisc, Umman, Word;
 FROM Usignal
 IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SIG_BLOCK, SIG_UNBLOCK;
 
@@ -81,29 +81,6 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
                                <*UNUSED*> offset: INTEGER) =
   BEGIN
   END UpdateFrameForNewSP;
-
-(*------------------------------------------------------ pthreads support ---*)
-
-PROCEDURE SuspendSignal (): INTEGER =
-  BEGIN
-    RETURN Usignal.libc_current_sigrtmin()+7;
-  END SuspendSignal;
-
-PROCEDURE RestartSignal (): INTEGER =
-  BEGIN
-    RETURN Usignal.SIGXCPU;
-  END RestartSignal;
-
-PROCEDURE SuspendThread (act: Activation): BOOLEAN =
-  BEGIN
-    WITH r = Upthread.kill(act.handle, SuspendSignal()) DO <*ASSERT r=0*> END;
-    RETURN TRUE;			 (* signalling *)
-  END SuspendThread;
-
-PROCEDURE RestartThread (act: Activation) =
-  BEGIN
-    WITH r = Upthread.kill(act.handle, RestartSignal()) DO <*ASSERT r=0*> END;
-  END RestartThread;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 

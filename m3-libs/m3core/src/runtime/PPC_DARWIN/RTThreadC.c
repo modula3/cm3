@@ -28,16 +28,21 @@ void* ThreadF__handlerStack = 0;
 #include <mach/thread_act.h>
 
 void
-RTMachine__SuspendThread (pthread_t t, ppc_thread_state_t *state, void **sp)
+RTMachine__SuspendThread (pthread_t t)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   mach_msg_type_number_t thread_state_count = MACHINE_THREAD_STATE_COUNT;
-  mach_error_t r;
-  r = thread_suspend(mach_thread);
-  if (r != KERN_SUCCESS) abort();
-  r = thread_get_state(mach_thread, MACHINE_THREAD_STATE,
-		       (thread_state_t)state, &thread_state_count);
-  if (r != KERN_SUCCESS) abort();
+  if (thread_suspend(mach_thread) != KERN_SUCCESS) abort();
+}
+
+void
+RTMachine__GetState (pthread_t t, void **sp, ppc_thread_state_t *state)
+{
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+  mach_msg_type_number_t thread_state_count = MACHINE_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, MACHINE_THREAD_STATE,
+		       (thread_state_t)state, &thread_state_count)
+      != KERN_SUCCESS) abort();;
   *sp = (void *)(state->r1 - C_RED_ZONE);
 }
 
@@ -45,6 +50,5 @@ void
 RTMachine__RestartThread (pthread_t t)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
-  mach_error_t r = thread_resume(mach_thread);
-  if (r != KERN_SUCCESS) abort();
+  if (thread_resume(mach_thread) != KERN_SUCCESS) abort();
 }

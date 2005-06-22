@@ -9,7 +9,8 @@
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp;
+IMPORT Csetjmp, Usignal;
+FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -73,6 +74,13 @@ TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 (*------------------------------------------------------ pthreads support ---*)
 
 (* Full context is in the signal handler frame so no need for state here. *)
-TYPE ThreadContext = RECORD END;
+TYPE ThreadState = RECORD END;
 
+CONST
+  SIG_SUSPEND = Usignal.NSIG-1;
+  SIG_RESTART = Usignal.SIGXCPU;
+  SuspendThread: PROCEDURE(t: pthread_t) = NIL;
+  RestartThread: PROCEDURE(t: pthread_t) = NIL;
+  GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
+                      VAR state: ThreadState) = NIL;
 END RTMachine.

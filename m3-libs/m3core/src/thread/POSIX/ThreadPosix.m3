@@ -16,7 +16,7 @@ EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTThreadInit, RTOS, RTHooks;
 IMPORT Cerrno, Cstring, FloatMode, MutexRep,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Utime, Word;
+       Unix, Usignal, Utime, Word;
 
 REVEAL
   (* Remember, the report (p 43-44) says that MUTEX is predeclared and <: ROOT;
@@ -734,7 +734,7 @@ PROCEDURE StartSwitching () =
   VAR it, oit: Utime.struct_itimerval;
   BEGIN
     IF preemption THEN
-      RTThread.setup_sigvtalrm (switch_thread);
+      RTThread.setup_sigvtalrm (LOOPHOLE(switch_thread,Usignal.SignalHandler));
       it.it_interval := selected_interval;
       it.it_value    := selected_interval;
       IF Utime.setitimer (Utime.ITIMER_VIRTUAL, it, oit) # 0 THEN
@@ -744,7 +744,7 @@ PROCEDURE StartSwitching () =
     END;
   END StartSwitching;
 
-PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) =
+PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
     IF inCritical = 0 THEN InternalYield () END;
