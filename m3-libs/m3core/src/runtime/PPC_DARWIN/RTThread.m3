@@ -5,9 +5,9 @@
 (* Last modified on Wed Nov 23 13:00:57 PST 1994 by kalsow                   *)
 (*      modified on Tue Apr 20 16:19:54 PDT 1993 by muller                   *)
 
-UNSAFE MODULE RTThread EXPORTS RTThread, ThreadPThread;
+UNSAFE MODULE RTThread EXPORTS RTThread;
 
-IMPORT Word, Usignal, Unix, RTMisc, Umman, RTMachine;
+IMPORT Word, Usignal, Unix, RTMisc, Umman;
 FROM Usignal
 IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SIG_BLOCK, SIG_UNBLOCK;
 
@@ -82,22 +82,6 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
                                <*UNUSED*> offset: INTEGER) =
   BEGIN
   END UpdateFrameForNewSP;
-
-(*------------------------------------------------------ pthreads support ---*)
-
-PROCEDURE SuspendSignal (): INTEGER = BEGIN RETURN 0 END SuspendSignal;
-PROCEDURE RestartSignal (): INTEGER = BEGIN RETURN 0 END RestartSignal;
-
-PROCEDURE SuspendThread (act: Activation): BOOLEAN =
-  BEGIN
-    RTMachine.SuspendThread(act.handle, act.context, act.sp);
-    RETURN FALSE;			 (* not signalling *)
-  END SuspendThread;
-
-PROCEDURE RestartThread (act: Activation) =
-  BEGIN
-    RTMachine.RestartThread(act.handle);
-  END RestartThread;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 

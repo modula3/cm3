@@ -7,7 +7,7 @@ Thread, ThreadF, ThreadPThread, Scheduler, SchedulerPosix,
 RTThreadInit, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
-       RTError, RTPerfTool,
+       RTError, RTMachine, RTPerfTool,
        RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
        Uucontext, Uerror;
@@ -895,10 +895,21 @@ PROCEDURE LookupActivation (pthread: pthread_t): Activation =
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR act := allThreads;  me := GetActivation(); start, stop: ADDRESS;
+      state: RTMachine.ThreadState;
   BEGIN
     me.sp := ADR(me);			 (* good enough for me! *)
     REPEAT
       IF (act.stackbase # NIL) THEN
+        (* Try for explicit state, otherwise assume registers are implicitly
+           saved in the thread's stack. *)
+        IF (act # me) AND (RTMachine.GetState # NIL) THEN
+          RTMachine.GetState(act.handle, act.sp, state);
+          (* Process the registers *)
+          WITH z = state DO
+            p(ADR(z), ADR(z) + ADRSIZE(z));
+          END;
+        END;
+
         (* Process the stack *)
         IF stack_grows_down THEN
           start := act.sp;
@@ -908,11 +919,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
           stop := act.sp;
         END;
         p(start, stop);
-
-        (* Process the registers *)
-        WITH z = act.context DO
-          p(ADR(z), ADR(z) + ADRSIZE(z));
-        END;
       END;
       act := act.next;
     UNTIL (act = allThreads);
@@ -923,7 +929,10 @@ VAR
   stopCount: CARDINAL := 0;
   suspendAckSem: Usem.sem_t;
   suspendMask: Usignal.sigset_t;
-  SIG_SUSPEND, SIG_RESUME: INTEGER;
+
+CONST
+  SIG_SUSPEND = RTMachine.SIG_SUSPEND;
+  SIG_RESTART = RTMachine.SIG_RESTART;
 
 PROCEDURE SuspendAll (me: Activation): INTEGER =
   (* LL=activeMu *)
@@ -931,12 +940,27 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
     nLive := 0;
     act := me.next;
   BEGIN
-    WHILE act # me DO
-      IF act.lastStopCount # stopCount THEN
-        IF SuspendThread(act) THEN INC(nLive) END;
+    IF RTMachine.SuspendThread = NIL THEN
+      (* No native suspend routine so signal thread to suspend *)
+      WHILE act # me DO
+        IF act.lastStopCount # stopCount THEN
+          WITH r = Upthread.kill(act.handle, SIG_SUSPEND) DO
+            <*ASSERT r=0*>
+          END;
+          INC(nLive);
+        END;
+        act := act.next;
+      END;
+    ELSE
+      (* Use the native suspend routine *)
+      WHILE act # me DO
+        <*ASSERT act.lastStopCount # stopCount*>
+        RTMachine.SuspendThread(act.handle);
+        act.lastStopCount := stopCount;
+        act := act.next;
       END;
     END;
-    RETURN nLive;
+    RETURN nLive;	      (* return number still live (i.e., signalled) *)
   END SuspendAll;
 
 PROCEDURE StopWorld (me: Activation) =
@@ -981,9 +1005,18 @@ PROCEDURE StopWorld (me: Activation) =
 PROCEDURE StartWorld (me: Activation) =
   VAR act := me.next;
   BEGIN
-    WHILE act # me DO
-      RestartThread(act);
-      act := act.next;
+    IF RTMachine.RestartThread = NIL THEN
+      (* No native restart routine so signal thread to restart *)
+      WHILE act # me DO
+        WITH r = Upthread.kill(act.handle, SIG_RESTART) DO <*ASSERT r=0*> END;
+        act := act.next;
+      END;
+    ELSE
+      (* Use the native restart routine *)
+      WHILE act # me DO
+        RTMachine.RestartThread(act.handle);
+        act := act.next;
+      END;
     END;
   END StartWorld;
 
@@ -1006,7 +1039,7 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
     REPEAT
       me.signal := 0;
       EVAL Usignal.sigsuspend(suspendMask); (* wait for signal *)
-    UNTIL me.signal = SIG_RESUME;
+    UNTIL me.signal = SIG_RESTART;
     Cerrno.SetErrno(errno);
   END SuspendHandler;
 
@@ -1017,31 +1050,34 @@ PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
     self := Upthread.self();
     me := LookupActivation(self);
   BEGIN
-    me.signal := SIG_RESUME;
+    me.signal := SIG_RESTART;
   END RestartHandler;
 
 PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
-    SIG_SUSPEND := SuspendSignal();
-    SIG_RESUME  := RestartSignal();
-
     WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
 
-    IF SIG_SUSPEND = 0 OR SIG_RESUME = 0 THEN RETURN END;
-
+    IF RTMachine.SuspendThread # NIL THEN
+      <*ASSERT RTMachine.RestartThread # NIL*>
+      <*ASSERT SIG_SUSPEND = 0*>
+      <*ASSERT SIG_RESTART = 0*>
+      RETURN;
+    END;
+      
     act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
     WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
-    (* SIG_RESUME is set in the resulting mask.      *)
+    (* SIG_RESTART is set in the resulting mask.      *)
     (* It is unmasked by the handler when necessary. *)
     act.sa_sigaction := SuspendHandler;
     WITH r = Usignal.sigaction(SIG_SUSPEND, act, oact) DO <*ASSERT r=0*> END;
-    act.sa_sigaction := RestartHandler;
-    WITH r = Usignal.sigaction(SIG_RESUME, act, oact) DO <*ASSERT r=0*> END;
 
-    (* Initialize suspendMask.  It excludes SIG_RESUME. *)
+    act.sa_sigaction := RestartHandler;
+    WITH r = Usignal.sigaction(SIG_RESTART, act, oact) DO <*ASSERT r=0*> END;
+
+    (* Initialize suspendMask.  It excludes SIG_RESTART. *)
     WITH r = Usignal.sigfillset(suspendMask) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigdelset(suspendMask, SIG_RESUME) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(suspendMask, SIG_RESTART) DO <*ASSERT r=0*> END;
   END SetupHandlers;
 
 (*------------------------------------------------------------ misc. junk ---*)
