@@ -83,4 +83,5 @@ CONST
   RestartThread: PROCEDURE(t: pthread_t) = NIL;
   GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
                       VAR state: ThreadState) = NIL;
+  SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 END RTMachine.

@@ -6,7 +6,7 @@ UNSAFE MODULE ThreadPThread EXPORTS
 Thread, ThreadF, ThreadPThread, Scheduler, SchedulerPosix,
 RTThreadInit, RTOS, RTHooks;
 
-IMPORT Cerrno, FloatMode, MutexRep, RTThread,
+IMPORT Cerrno, FloatMode, MutexRep,
        RTError, RTMachine, RTPerfTool,
        RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
@@ -894,39 +894,40 @@ PROCEDURE LookupActivation (pthread: pthread_t): Activation =
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
-  VAR act := allThreads;  me := GetActivation(); start, stop: ADDRESS;
-      state: RTMachine.ThreadState;  myState: RTMachine.State;
+  VAR
+    me := GetActivation();
+    state: RTMachine.ThreadState;
+    act := me;
+    xx: INTEGER;
   BEGIN
-    me.sp := ADR(me);			 (* good enough for me! *)
-    EVAL RTThread.Save (myState);
     REPEAT
       IF (act.stackbase # NIL) THEN
         (* Process the registers *)
         IF act = me THEN
-          WITH z = myState DO
-            p(ADR(z), ADR(z) + ADRSIZE(z));
+          IF RTMachine.SaveRegsInStack # NIL THEN
+            me.sp := RTMachine.SaveRegsInStack();
+          ELSE
+            me.sp := ADR(xx);
           END;
         ELSIF RTMachine.GetState # NIL THEN
-          (* Try for explicit state, otherwise assume registers are implicitly
-             saved in the suspended thread's stack *)
+          (* Process explicit state *)
           RTMachine.GetState(act.handle, act.sp, state);
           WITH z = state DO
             p(ADR(z), ADR(z) + ADRSIZE(z));
           END;
+        ELSE
+          (* assume registers are saved in suspended thread's stack *)
         END;
 
         (* Process the stack *)
         IF stack_grows_down THEN
-          start := act.sp;
-          stop := act.stackbase;
+          p(act.sp, act.stackbase);
         ELSE
-          start := act.stackbase;
-          stop := act.sp;
+          p(act.stackbase, act.sp);
         END;
-        p(start, stop);
       END;
       act := act.next;
-    UNTIL (act = allThreads);
+    UNTIL act = me;
   END ProcessStacks;
 
 (* Signal based suspend/resume *)
@@ -945,7 +946,15 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
     nLive := 0;
     act := me.next;
   BEGIN
-    IF RTMachine.SuspendThread = NIL THEN
+    IF RTMachine.SuspendThread # NIL THEN
+      (* Use the native suspend routine *)
+      WHILE act # me DO
+        <*ASSERT act.lastStopCount # stopCount*>
+        RTMachine.SuspendThread(act.handle);
+        act.lastStopCount := stopCount;
+        act := act.next;
+      END;
+    ELSE
       (* No native suspend routine so signal thread to suspend *)
       WHILE act # me DO
         IF act.lastStopCount # stopCount THEN
@@ -954,14 +963,6 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
           END;
           INC(nLive);
         END;
-        act := act.next;
-      END;
-    ELSE
-      (* Use the native suspend routine *)
-      WHILE act # me DO
-        <*ASSERT act.lastStopCount # stopCount*>
-        RTMachine.SuspendThread(act.handle);
-        act.lastStopCount := stopCount;
         act := act.next;
       END;
     END;
@@ -1010,16 +1011,16 @@ PROCEDURE StopWorld (me: Activation) =
 PROCEDURE StartWorld (me: Activation) =
   VAR act := me.next;
   BEGIN
-    IF RTMachine.RestartThread = NIL THEN
-      (* No native restart routine so signal thread to restart *)
-      WHILE act # me DO
-        WITH r = Upthread.kill(act.handle, SIG_RESTART) DO <*ASSERT r=0*> END;
-        act := act.next;
-      END;
-    ELSE
+    IF RTMachine.RestartThread # NIL THEN
       (* Use the native restart routine *)
       WHILE act # me DO
         RTMachine.RestartThread(act.handle);
+        act := act.next;
+      END;
+    ELSE
+      (* No native restart routine so signal thread to restart *)
+      WHILE act # me DO
+        WITH r = Upthread.kill(act.handle, SIG_RESTART) DO <*ASSERT r=0*> END;
         act := act.next;
       END;
     END;
@@ -1038,7 +1039,11 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
     <*ASSERT sig = SIG_SUSPEND*>
     IF me = NIL THEN RETURN END;
     IF me.lastStopCount = myStopCount THEN RETURN END;
-    me.sp := ADR(xx);
+    IF RTMachine.SaveRegsInStack # NIL THEN
+      me.sp := RTMachine.SaveRegsInStack();
+    ELSE
+      me.sp := ADR(xx);
+    END;
     WITH r = Usem.post(suspendAckSem) DO <*ASSERT r=0*> END;
     me.lastStopCount := myStopCount;
     REPEAT
