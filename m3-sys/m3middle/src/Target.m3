@@ -595,7 +595,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
+                 Global_handler_stack      := FALSE;
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
