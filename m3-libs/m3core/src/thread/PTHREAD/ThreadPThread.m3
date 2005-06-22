@@ -1023,7 +1023,12 @@ PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
 PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
+    SIG_SUSPEND := SuspendSignal();
+    SIG_RESUME  := RestartSignal();
+
     WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
+
+    IF SIG_SUSPEND = 0 OR SIG_RESUME = 0 THEN RETURN END;
 
     act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
     WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
