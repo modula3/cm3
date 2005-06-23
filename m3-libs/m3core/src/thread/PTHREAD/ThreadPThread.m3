@@ -982,6 +982,7 @@ PROCEDURE StopWorld (me: Activation) =
   BEGIN
     INC(stopCount);
     nLive := SuspendAll (me);
+    IF nLive = 0 THEN RETURN END;
     LOOP
       WITH r = Usem.getvalue(suspendAckSem, acks) DO <*ASSERT r=0*> END;
       IF acks = nLive THEN EXIT END;
@@ -1066,8 +1067,6 @@ PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
 PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
-    WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
-
     IF RTMachine.SuspendThread # NIL THEN
       <*ASSERT RTMachine.RestartThread # NIL*>
       <*ASSERT SIG_SUSPEND = 0*>
@@ -1075,6 +1074,8 @@ PROCEDURE SetupHandlers () =
       RETURN;
     END;
       
+    WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
+
     act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
     WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
     (* SIG_RESTART is set in the resulting mask.      *)
