@@ -896,6 +896,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
+    myState: RTMachine.State;
     state: RTMachine.ThreadState;
     act := me;
     xx: INTEGER;
@@ -908,6 +909,10 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
             me.sp := RTMachine.SaveRegsInStack();
           ELSE
             me.sp := ADR(xx);
+          END;
+          EVAL RTMachine.SaveState(myState);
+          WITH z = myState DO
+            p(ADR(z), ADR(z) + ADRSIZE(z));
           END;
         ELSIF RTMachine.GetState # NIL THEN
           (* Process explicit state *)
