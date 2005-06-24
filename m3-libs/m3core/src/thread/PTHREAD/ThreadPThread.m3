@@ -14,7 +14,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER,
-       PTHREAD_ONCE_INITIALIZER;
+       PTHREAD_ONCE_INITIALIZER, PTHREAD_STACK_MIN;
 IMPORT Ctypes;
 
 (*----------------------------------------------------- types and globals ---*)
@@ -22,7 +22,7 @@ IMPORT Ctypes;
 VAR
   cm := PTHREAD_MUTEX_INITIALIZER; (* global lock for fields of Mutex/Condition *)
 
-  defaultStackSize := 8192;
+  defaultStackSize := PTHREAD_STACK_MIN;
   stack_grows_down: BOOLEAN;
 
   nextId: Id := 1;
@@ -122,7 +122,7 @@ PROCEDURE InnerLockMutex (m: Mutex; self: T) =
         WHILE (next # NIL) DO prev := next; next := next.nextWaiter; END;
         prev.nextWaiter := self;
       END;
-      WHILE m.holder # NIL DO
+      WHILE m.holder # self DO
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
       END;
     END;
@@ -562,9 +562,9 @@ PROCEDURE Fork(closure: Closure): T =
   BEGIN
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
-    | SizedClosure (scl) => IF scl.stackSize # 0 THEN
-                              stack_size := scl.stackSize * BYTESIZE(Word.T);
-                            END;
+    | SizedClosure (scl) =>
+      stack_size := (scl.stackSize * BYTESIZE(Word.T) DIV PTHREAD_STACK_MIN);
+      stack_size := MAX(PTHREAD_STACK_MIN, stack_size * PTHREAD_STACK_MIN);
     ELSE (*skip*)
     END;
 
