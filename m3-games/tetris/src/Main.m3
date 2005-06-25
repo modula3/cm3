@@ -33,7 +33,7 @@
 
 UNSAFE MODULE Main;
 
-FROM M3toC IMPORT TtoS, StoT;
+FROM M3toC IMPORT FlatTtoS, StoT, SharedTtoS, FreeSharedS;
 
 IMPORT FileRd, FileWr, Fmt, Random, Rd, Scan, Stdio, Text, Wr, Word;
 IMPORT Ctypes, Cstdlib, Utime, Uutmp, RTLinker, Thread, OSError;
@@ -253,14 +253,23 @@ CONST
 
 PROCEDURE SetValueText (w: Xt.Widget; name: Xt.String; val: TEXT) =
 BEGIN
-  args[0] := Xt.Arg {name, TtoS (val)};
-  Xt.SetValues (w, args, 1)
+  WITH string = SharedTtoS(val) DO
+    args[0] := Xt.Arg {name, string};
+    Xt.SetValues (w, args, 1);
+    FreeSharedS(val, string);
+  END;
 END SetValueText;
 
 PROCEDURE CreateWidget (name: TEXT; class: Xt.WidgetClass; parent: Xt.Widget;
                       args: Xt.ArgList := NIL; narg: INTEGER := 0): Xt.Widget =
 BEGIN
-  RETURN (Xt.CreateManagedWidget (TtoS (name), class, parent, args, narg))
+  WITH string = SharedTtoS (name) DO
+    TRY
+      RETURN (Xt.CreateManagedWidget (string, class, parent, args, narg))
+    FINALLY
+      FreeSharedS(name, string);
+    END
+  END
 END CreateWidget; 
 
 PROCEDURE SetArgI (VAR args: Xt.ArgList; VAR count: INTEGER; 
@@ -280,7 +289,7 @@ END SetArgA;
 PROCEDURE SetArgT (VAR args: Xt.ArgList; VAR count: INTEGER; 
                    name: Xt.String; val: TEXT) =
 BEGIN
-  args[count] := Xt.Arg {name, TtoS (val)};
+  args[count] := Xt.Arg {name, FlatTtoS(val)};
   INC (count)
 END SetArgT;
 
@@ -288,15 +297,15 @@ PROCEDURE SetOption (VAR optlist: Xrm.OptionDescList; VAR count: INTEGER;
                      optionn, specifier: TEXT;
                      argKind: Xrm.OptionKind; val: TEXT) =
 BEGIN
-  optlist[count] := Xrm.OptionDescRec{ TtoS (optionn), TtoS (specifier),
-                                       argKind, TtoS (val)};
+  optlist[count] := Xrm.OptionDescRec{ FlatTtoS(optionn), FlatTtoS(specifier),
+                                       argKind, FlatTtoS(val) };
   INC (count)
 END SetOption;
 
 PROCEDURE SetAction (VAR optlist: Xt.ActionList; VAR count: INTEGER; 
                      name: TEXT; proc: Xt.ActionProc) =
 BEGIN
-  optlist[count] :=  Xt.ActionsRec {TtoS (name), proc};
+  optlist[count] :=  Xt.ActionsRec {FlatTtoS(name), proc};
   INC (count)
 END SetAction;
 
@@ -304,8 +313,8 @@ PROCEDURE SetResource (VAR reslist: Xt.ResourceList; VAR count: INTEGER;
                        name, class: TEXT; type: Xt.String; size, offset: Xt.Cardinal;
                        default_type: Xt.String; default_addr: TEXT) =
 BEGIN
-  reslist[count] :=  Xt.Resource {TtoS (name), TtoS (class), type,
-                                  size, offset, default_type, TtoS (default_addr)};
+  reslist[count] :=  Xt.Resource {FlatTtoS (name), FlatTtoS (class), type,
+                                  size, offset, default_type, FlatTtoS (default_addr)};
   INC (count)
 END SetResource;
 
@@ -1095,9 +1104,9 @@ VAR
   who: Ctypes.char_star;
 BEGIN
   DefineShapes ();
-  who := Cstdlib.getenv (TtoS ("TETRIS"));
-  IF who = NIL THEN who := Cstdlib.getenv (TtoS ("LOGNAME")) END;
-  IF who = NIL THEN who := Cstdlib.getenv (TtoS ("USER")) END;
+  who := Cstdlib.getenv (FlatTtoS ("TETRIS"));
+  IF who = NIL THEN who := Cstdlib.getenv (FlatTtoS ("LOGNAME")) END;
+  IF who = NIL THEN who := Cstdlib.getenv (FlatTtoS ("USER")) END;
   IF who = NIL THEN who := Uutmp.getlogin () END;
   user_name := StoT (who);
   ClearGame ();
@@ -1255,7 +1264,7 @@ BEGIN
    *)
 
   IF scorefilep THEN
-     score_frame := Xt.CreatePopupShell (TtoS ("ScoreFrame"), 
+     score_frame := Xt.CreatePopupShell (FlatTtoS ("ScoreFrame"), 
                                          Xaw.transientShellWidgetClass, top);
      score_panel := CreateWidget ("ScorePanel", Xaw.boxWidgetClass, score_frame);
      FOR j:= 0 TO MHSCORE+2 DO
@@ -1284,7 +1293,7 @@ BEGIN
   gcval.background := foreground;
   gcval.fill_style := X.FillStippled;
   gcval.stipple    := X.XCreateBitmapFromData (Xt.Display (top), Xt.XtWindow (top),
-                                     TtoS("\252\000"), 2, 2);
+                                     FlatTtoS("\252\000"), 2, 2);
   erasegc := X.XCreateGC (Xt.Display (top), Xt.XtWindow (top), 
                           X.GCForeground + X.GCBackground + 
                              X.GCStipple +  X.GCFillStyle, gcval);
@@ -1293,7 +1302,7 @@ BEGIN
   gcval.background := background;
   gcval.fill_style := X.FillStippled;
   gcval.stipple    := X.XCreateBitmapFromData (Xt.Display (top), Xt.XtWindow (top),
-                          TtoS("\223\000"), 2, 2);
+                          FlatTtoS("\223\000"), 2, 2);
 
   shadegc := X.XCreateGC (Xt.Display (top), Xt.XtWindow(top),
                           X.GCForeground + X.GCBackground +
@@ -1319,7 +1328,7 @@ END Syntax;
 
 BEGIN
   FOR i := 0 TO LAST (fallbacktext) DO
-      fallbacklist[i] := TtoS (fallbacktext[i])
+      fallbacklist[i] := FlatTtoS (fallbacktext[i])
   END;
   fallbacklist[LAST (fallbacktext)+1] := NIL;
 
@@ -1333,9 +1342,9 @@ BEGIN
 
   
   VAR
-    name := TtoS ("Tetris");
-    argc : Xt.Cardinal := RTLinker.info.argc;
-    argv : X.Argv := RTLinker.info.argv;
+    name := FlatTtoS ("Tetris");
+    argc : Xt.Cardinal := RTLinker.argc;
+    argv : X.Argv := RTLinker.argv;
   BEGIN
     toplevel := Xt.AppInitialize (context, name, options, count, argc, argv,
                                 fallbacklist);
@@ -1411,7 +1420,7 @@ BEGIN
                XtR.String, "XtDefaultBackground");
   FOR i:= 0 TO MSHAPE
       DO  Xt.GetSubresources (toplevel, LOOPHOLE (resources, Xt.Pointer),
-                              TtoS (shapenames[i+1]), TtoS (shapenames[0]),
+                              FlatTtoS (shapenames[i+1]), FlatTtoS (shapenames[0]),
                               reslist, count, NIL, 0);
           shapes[i].foreground := resources.foreground;
           shapes[i].background := resources.background;
