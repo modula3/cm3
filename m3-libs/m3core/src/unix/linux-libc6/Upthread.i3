@@ -9,6 +9,12 @@ FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
 
+(* <bits/local_lim.h> *)
+
+CONST
+  PTHREAD_STACK_MIN = 16384;
+  PTHREAD_KEYS_MAX = 1024;
+
 (* <bits/pthreadtypes.h> *)
 
 CONST
