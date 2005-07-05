@@ -1238,6 +1238,7 @@ PROCEDURE LockHeap () =
         INC(count);
       ELSE
         WITH r = Upthread.cond_wait(condition, mutex) DO <*ASSERT r=0*> END;
+        INC(count);
       END;
     WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
   END LockHeap;
