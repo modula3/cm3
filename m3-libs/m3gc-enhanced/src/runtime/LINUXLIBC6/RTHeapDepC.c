@@ -1755,3 +1755,8 @@ void set_errno(int n) {
 char *get_strerror(int n) {
   return strerror(n);
 }
+
+
+int pthread_equal (pthread_t thread1, pthread_t thread2) {
+  return thread1 == thread2;
+}
