@@ -100,7 +100,7 @@ PROCEDURE LogMsg(<* UNUSED *> self: Log;
 PROCEDURE FormatIPAddress(addr: IP.Address): TEXT =
   BEGIN
     RETURN Fmt.F("%s.%s.%s.%s", Fmt.Int(addr.a[0]), Fmt.Int(addr.a[1]),
-                Fmt.Int(addr.a[1]), Fmt.Int(addr.a[1]));
+                Fmt.Int(addr.a[2]), Fmt.Int(addr.a[3]));
   END FormatIPAddress;
 
 PROCEDURE LockedGetHostName (ipAddr: BOOLEAN := FALSE): TEXT =
