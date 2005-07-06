@@ -475,38 +475,45 @@ PROCEDURE MapValues (st: Stmt) RAISES {DB.Error} =
 
   BEGIN
     TRY
-      FOR i := FIRST(st.values^) TO LAST (st.values^) DO
+      FOR i := FIRST(st.values^) TO LAST (st.values^) DO      
         WITH info = st.col_info[i],
              val  = st.values[i] DO
-          WITH dbval = PostgreSQL.PQgetvalue (st.result, st.current_row, i),
-               valtext = StoT (dbval) DO
-            CASE info.type OF
-            | DataType.Char => 
-              val := BuildString (st.current_row, i);
-            | DataType.VarChar, DataType.VarBinary =>
-              val := BuildString (st.current_row, i);
-            | DataType.LongVarChar, DataType.LongVarBinary => 
-              val := BuildString (st.current_row, i);
-            | DataType.Decimal => 
-              val := NEW(REF INTEGER);
-              NARROW(val, REF INTEGER)^ := Scan.Int (valtext);
-            | DataType.Float, DataType.Double        => 
-              val := NEW(REF REAL);
-              NARROW(val, REF REAL)^ := Scan.Real (valtext);
-            | DataType.BigInt, DataType.Integer, DataType.SmallInt, DataType.TinyInt       => 
-              val := NEW(REF INTEGER);
-              NARROW(val, REF INTEGER)^ := Scan.Int(valtext);
-            | DataType.Real          => 
-              val := NEW(REF REAL);
-              NARROW(val, REF REAL)^ := Scan.Real (valtext);
-            | DataType.Date =>
-              val := BuildDate (valtext);
-            | DataType.Time =>
-              val :=  BuildTime(valtext);
-            | DataType.Timestamp =>
-              val := BuildTimestamp(valtext);
-            ELSE
-              Die (9, "Bad datatype in DB.MapValues: " & Fmt.Int (ORD(info.type)));
+          IF PostgreSQL.PQgetisnull(st.result, st.current_row, i) # 0 THEN 
+            val := NIL;
+          ELSE
+            WITH dbval = PostgreSQL.PQgetvalue (st.result, st.current_row, i),
+                 valtext = StoT (dbval) DO
+              CASE info.type OF
+              | DataType.Char => 
+                val := BuildString (st.current_row, i);
+              | DataType.VarChar, DataType.VarBinary =>
+                val := BuildString (st.current_row, i);
+              | DataType.LongVarChar, DataType.LongVarBinary => 
+                val := BuildString (st.current_row, i);
+              | DataType.Decimal => 
+                val := NEW(REF INTEGER);
+                NARROW(val, REF INTEGER)^ := Scan.Int (valtext);
+              | DataType.Float, DataType.Double        => 
+                val := NEW(REF REAL);
+                NARROW(val, REF REAL)^ := Scan.Real (valtext);
+              | DataType.BigInt, DataType.Integer, DataType.SmallInt, DataType.TinyInt       => 
+                val := NEW(REF INTEGER);
+                NARROW(val, REF INTEGER)^ := Scan.Int(valtext);
+              | DataType.Real          => 
+                val := NEW(REF REAL);
+                NARROW(val, REF REAL)^ := Scan.Real (valtext);
+              | DataType.Date =>
+                val := BuildDate (valtext);
+              | DataType.Time =>
+                val :=  BuildTime(valtext);
+              | DataType.Timestamp =>
+                val := BuildTimestamp(valtext);
+              | DataType.Bit =>
+                val := NEW(REF BOOLEAN); 
+                NARROW(val, REF BOOLEAN)^ := Text.GetChar(valtext, 0) = 't'; 
+              ELSE
+                Die (9, "Bad datatype in DB.MapValues: " & Fmt.Int (ORD(info.type)));
+              END
             END
           END
         END
@@ -631,7 +638,8 @@ PROCEDURE MapSqlType (sqltype: PostgreSQL.Oid): DataType RAISES {DB.Error} =
     | PostgreSQL.Date          =>  dt := DataType.Date;
     | PostgreSQL.Time          =>  dt := DataType.Time;
     | PostgreSQL.Text          =>  dt := DataType.VarChar; 
-
+    | PostgreSQL.Bool          =>  dt := DataType.Bit;
+    
     ELSE Die (7, "DB.MapDatatype: unknown SQL datatype " & Fmt.Int(ORD(sqltype)));
     END;
     RETURN dt;

@@ -209,9 +209,8 @@ PQconninfoOption
 	*)
 <*EXTERNAL*> PROCEDURE PQgetvalue (res: PGresult; tup_num: int; field_num: int): char_star;
 <*EXTERNAL*> PROCEDURE PQgetlength(res: PGresult; tup_num: int; field_num: int): int;
-	(*
-	<*EXTERNAL*> PROCEDURE PQgetisnull
-	*)
+<*EXTERNAL*> PROCEDURE PQgetisnull(res: PGresult; tup_num: int; field_num: int): int;
+
 <*EXTERNAL*> PROCEDURE PQclear(res: PGresult);
 	(*
 	<*EXTERNAL*> PROCEDURE PQmakeEmptyPGresult
