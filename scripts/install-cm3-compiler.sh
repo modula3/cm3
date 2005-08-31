@@ -18,6 +18,7 @@ fi
 
 . "$sysinfo"
 
+
 FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
 FRONTEND_SRC="${ROOT}/m3-sys/cm3/${TARGET}/cm3"
@@ -146,6 +147,8 @@ rm_curent()
 
 cp_version()
 {
+  FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
+  BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
   cp_if "${FRONTEND_CM3VERSION}" "${FRONTEND}"
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND_CM3VERSION}" "${BACKEND}"
