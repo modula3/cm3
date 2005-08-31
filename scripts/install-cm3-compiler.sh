@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: install-cm3-compiler.sh,v 1.4 2004-01-02 11:37:57 wagner Exp $
+# $Id: install-cm3-compiler.sh,v 1.5 2005-08-31 20:31:58 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -17,6 +17,7 @@ else
 fi
 
 . "$sysinfo"
+
 
 FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
@@ -146,6 +147,8 @@ rm_curent()
 
 cp_version()
 {
+  FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
+  BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
   cp_if "${FRONTEND_CM3VERSION}" "${FRONTEND}"
   if [ "${GCC_BACKEND}" = yes ] ; then
     cp_if "${BACKEND_CM3VERSION}" "${BACKEND}"
