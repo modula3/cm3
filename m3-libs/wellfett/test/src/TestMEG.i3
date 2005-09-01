@@ -1,5 +1,0 @@
-INTERFACE TestMEG;
-
-PROCEDURE Test();
-
-END TestMEG.
