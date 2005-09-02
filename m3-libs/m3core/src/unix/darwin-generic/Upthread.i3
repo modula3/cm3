@@ -9,6 +9,12 @@ FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
 
+(* <limits.h> *)
+CONST
+  PTHREAD_STACK_MIN = 8192;
+  PTHREAD_DESTRUCTOR_ITERATIONS = 4;
+  PTHREAD_KEYS_MAX = 128;
+
 (* <pthread_impl.h> *)
 
 (*
