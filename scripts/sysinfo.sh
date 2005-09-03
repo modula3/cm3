@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.43 2005-06-12 21:25:30 wagner Exp $
+# $Id: sysinfo.sh,v 1.44 2005-09-03 10:10:24 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -26,6 +26,13 @@ SYSLIBS=""
 XDEV_LIB=""
 XDEV_BIN=""
 TAR=tar
+if [ -z "${M3GC_ENHANCED}" -o "x${M3GC_ENHANCED}" = "xno" -o \
+     "x${M3GC_ENHANCED}" = "xNO" -o \
+     "x${M3GC_ENHANCED}" = "xN" -o \
+     "x${M3GC_ENHANCED}" = "x0" ]; then
+  M3GC_SIMPLE=yes
+fi
+export M3GC_SIMPLE
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
