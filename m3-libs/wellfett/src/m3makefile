@@ -1,8 +1,0 @@
-import("libm3")
-import("arithmetic")
-import("plplot")
-
-include_dir("signal")
-include_dir("wavelet")
-
-library("wellfett")
