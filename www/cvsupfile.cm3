@@ -10,7 +10,7 @@
 # Defaults that apply to all the collections
 
 # This host address will probably change soon
-*default host=ds217-115-141-112.dedicated.hosteurope.de
+*default host=birch.elegosoft.com
 
 # Please change the local destination as you like
 *default base=/usr/tmp/cvs
