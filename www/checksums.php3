@@ -32,10 +32,7 @@ Archive md5 hashes (md5):
     </pre>
 
     <hr>
-    <address><a href="mailto:wagner@elego.de">Olaf Wagner</a></address>
+    <address><a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a></address>
 <!-- Created: Sun Jun 10 13:41:06 MET DST 2001 -->
-<!-- hhmts start -->
-Last modified: Sun Jun 10 13:47:49 MET DST 2001
-<!-- hhmts end -->
   </body>
 </html>
