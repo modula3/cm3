@@ -1,0 +1,6 @@
+import("libm3")
+
+module("CommandRd")
+module("CommandWr")
+
+library("commandrw")
