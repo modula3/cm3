@@ -12,7 +12,8 @@ REVEAL
         close := Close;
       END;
 
-PROCEDURE Open (command: TEXT; READONLY args: ARRAY OF TEXT; ): T
+PROCEDURE Open
+  (command: TEXT; READONLY args: ARRAY OF TEXT; stdinUser: File.T; ): T
   RAISES {OSError.E} =
   VAR
     rd                            := NEW(T);
@@ -21,6 +22,7 @@ PROCEDURE Open (command: TEXT; READONLY args: ARRAY OF TEXT; ): T
   BEGIN
     Pipe.Open(meInPipe, cmdOutPipe);
     Process.GetStandardFileHandles(stdin, stdout, stderr);
+    IF stdinUser # NIL THEN stdin := stdinUser; END;
     rd.cmdProc := Process.Create(command, args, stdin := stdin,
                                  stdout := cmdOutPipe, stderr := stderr);
     EVAL rd.init(meInPipe);
