@@ -2,7 +2,7 @@ MODULE CommandRd;
 
 IMPORT Pipe, Process;
 IMPORT File, FileRd, Rd, RdClass; (* close method of Rd.T *)
-IMPORT OSError, Thread;
+IMPORT OSError, Pathname, Thread;
 
 
 REVEAL
@@ -13,8 +13,8 @@ REVEAL
       END;
 
 PROCEDURE Open
-  (command: TEXT; READONLY args: ARRAY OF TEXT; stdinUser: File.T; ): T
-  RAISES {OSError.E} =
+  (command: Pathname.T; READONLY args: ARRAY OF TEXT; stdinUser: File.T; ):
+  T RAISES {OSError.E} =
   VAR
     rd                            := NEW(T);
     cmdOutPipe, meInPipe : Pipe.T;
