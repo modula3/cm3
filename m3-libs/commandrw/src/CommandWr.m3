@@ -2,7 +2,7 @@ MODULE CommandWr;
 
 IMPORT Pipe, Process;
 IMPORT File, FileWr, Wr, WrClass; (* close method of Wr.T *)
-IMPORT OSError, Thread;
+IMPORT OSError, Pathname, Thread;
 
 
 REVEAL
@@ -12,8 +12,9 @@ REVEAL
         close := Close;
       END;
 
-PROCEDURE Open
-  (command: TEXT; READONLY args: ARRAY OF TEXT; stdoutUser: File.T; ): T
+PROCEDURE Open (         command   : Pathname.T;
+                READONLY args      : ARRAY OF TEXT;
+                         stdoutUser: File.T;        ): T
   RAISES {OSError.E} =
   VAR
     wr                            := NEW(T);
