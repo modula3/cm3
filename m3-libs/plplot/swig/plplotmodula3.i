@@ -65,8 +65,8 @@ typedef int PLINT;
 %pragma(modula3) library="m3plplot";
 
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
-%import_lib("plplotd","/usr/lib")
-import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)%}
+import_lib("plplotd","/usr/lib")
+%import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)%}
 
 %insert(m3rawintf) %{
 TYPE
@@ -480,20 +480,20 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %pragma(modula3) enumitem="prefix=PLESPLFLTBUFFERING_;int;srcstyle=underscore;Buffering";
 %pragma(modula3) enumitem="prefix=PLESC_;set;srcstyle=underscore;Escape";
 %pragma(modula3) enumitem="prefix=PLSWIN_;int;srcstyle=underscore;Window";
-%pragma(modula3) constint="prefix=PL_MAX;int;srcstyle=underscore,prefix=max;CARDINAL";
+%pragma(modula3) constint="prefix=PL_MAX;int;srcstyle=underscore,prefix=Max;CARDINAL";
 %ignore PL_NOTSET;
 
 %pragma(modula3) enumitem="prefix=DRAW_;set;srcstyle=underscore;DrawMode";
 %pragma(modula3) makesetofenum="DrawMode";
-%pragma(modula3) constset="prefix=DRAW_;set;srcstyle=underscore,prefix=draw;DrawModeSet,DrawMode";
+%pragma(modula3) constset="prefix=DRAW_;set;srcstyle=underscore,prefix=Draw;DrawModeSet,DrawMode";
 
 %pragma(modula3) enumitem="prefix=PL_OPT_;set;srcstyle=underscore;Option";
 %pragma(modula3) makesetofenum="Option";
-%pragma(modula3) constset="prefix=PL_OPT_;set;srcstyle=underscore,prefix=opt;OptionSet,Option";
+%pragma(modula3) constset="prefix=PL_OPT_;set;srcstyle=underscore,prefix=Opt;OptionSet,Option";
 
 %pragma(modula3) enumitem="prefix=PL_PARSE_;set;srcstyle=underscore;Parse";
 %pragma(modula3) makesetofenum="Parse";
-%pragma(modula3) constset="prefix=PL_PARSE_;set;srcstyle=underscore,prefix=parse;ParseSet,Parse";
+%pragma(modula3) constset="prefix=PL_PARSE_;set;srcstyle=underscore,prefix=Parse;ParseSet,Parse";
 
 
 %typemap("m3rawintype") PLINT  * %{C.int%}
@@ -644,45 +644,45 @@ END;%}
 %typemap(m3wrapindefault) PLINT oldwin "0"
 
 %insert(m3wrapintf) %{TYPE
-AxesScaling = {none, independent, equal, square};
-Tile = {box, ticks, axes, gridMajor, gridMinor, xTicksLog, yTicksLog};
+AxesScaling = {None, Independent, Equal, Square};
+Tile = {Box, Ticks, Axes, GridMajor, GridMinor, XTicksLog, YTicksLog};
 TileSet = SET OF Tile;
 %}
 %typemap(m3wrapintype)    PLINT just %{AxesScaling%}
-%typemap(m3wrapindefault) PLINT just %{AxesScaling.independent%}
+%typemap(m3wrapindefault) PLINT just %{AxesScaling.Independent%}
 %typemap(m3wrapargraw)    PLINT just %{ORD($1_name)-1%}
 %typemap(m3wrapintype)    PLINT axis %{TileSet%}
-%typemap(m3wrapindefault) PLINT axis %{TileSet{Tile.box,Tile.ticks}%}
+%typemap(m3wrapindefault) PLINT axis %{TileSet{Tile.Box,Tile.Ticks}%}
 %typemap(m3wrapargvar)    PLINT axis %{$1: C.int;%}
 %typemap(m3wrapargraw)    PLINT axis %{$1%}
 %typemap(m3wrapinconv) PLINT axis
 %{IF $1_name = TileSet{} THEN
 $1:=-2;
-ELSIF $1_name = TileSet{Tile.box} THEN
+ELSIF $1_name = TileSet{Tile.Box} THEN
 $1:=-1;
 ELSE
 $1:=0;
-IF Tile.xTicksLog IN $1_name THEN
+IF Tile.XTicksLog IN $1_name THEN
   INC($1,10);
 END;
-IF Tile.yTicksLog IN $1_name THEN
+IF Tile.YTicksLog IN $1_name THEN
   INC($1,20);
 END;
-$1_name := $1_name - TileSet{Tile.xTicksLog,Tile.yTicksLog};
-IF    $1_name = TileSet{Tile.box,Tile.ticks} THEN INC($1,0);
-ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes} THEN INC($1,1);
-ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMajor} THEN INC($1,2);
-ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMajor,Tile.gridMinor} THEN INC($1,3);
+$1_name := $1_name - TileSet{Tile.XTicksLog,Tile.YTicksLog};
+IF    $1_name = TileSet{Tile.Box,Tile.Ticks} THEN INC($1,0);
+ELSIF $1_name = TileSet{Tile.Box,Tile.Ticks,Tile.Axes} THEN INC($1,1);
+ELSIF $1_name = TileSet{Tile.Box,Tile.Ticks,Tile.Axes,Tile.GridMajor} THEN INC($1,2);
+ELSIF $1_name = TileSet{Tile.Box,Tile.Ticks,Tile.Axes,Tile.GridMajor,Tile.GridMinor} THEN INC($1,3);
 ELSE
 <*ASSERT FALSE*> (*combination not supported by PLPlot :-( *)
 END;
 END;%}
 
 %insert(m3wrapintf) %{TYPE
-DirTile = {axis, lowerBorder, upperBorder, fixedPointLabel,
-gridMajor, gridMinor, ticksOutward, logarithmic,
-labelMajorUnconv, labelMajorConv,
-ticksMajor, ticksMinor};
+DirTile = {Axis, LowerBorder, UpperBorder, FixedPointLabel,
+GridMajor, GridMinor, TicksOutward, Logarithmic,
+LabelMajorUnconv, LabelMajorConv,
+TicksMajor, TicksMinor};
 DirTileSet = SET OF DirTile;
 %}
 %insert(m3wrapimpl) %{CONST
@@ -692,7 +692,7 @@ tileToChar = ARRAY DirTile OF CHAR {'a','b','c','f','g','h','i','l','m','n','s',
 %typemap(m3rawinmode)   const char *xopt, const char *yopt, const char *zopt %{READONLY%}
 %typemap(m3wrapintype)  const char *xopt, const char *yopt, const char *zopt %{DirTileSet%}
 %typemap(m3wrapargvar)  const char *xopt, const char *yopt, const char *zopt
-%{$1: ARRAY [0..ORD(LAST(Tile))+1] OF CHAR;
+%{$1: ARRAY [0..NUMBER(Tile)] OF CHAR;
 $1i: CARDINAL := 0;%}
 %typemap(m3wrapargraw)  const char *xopt, const char *yopt, const char *zopt %{$1[0]%}
 %typemap(m3wrapinconv)  const char *xopt, const char *yopt, const char *zopt
@@ -710,10 +710,10 @@ $1[$1i]:='\000';
 
 %insert(m3wrapintf) %{
 TYPE
-  LineStyle = {none, continuous, shortDash, longDash, longDashShortGap,
-                  dotDash, complex0, complex1, complex2};
+  LineStyle = {None, Continuous, ShortDash, LongDash, LongDashShortGap,
+               DotDash, Complex0, Complex1, Complex2};
 %}
-%typemap(m3wrapintype)  PLINT lin     %{[LineStyle.continuous..LAST(LineStyle)]%}
+%typemap(m3wrapintype)  PLINT lin     %{[LineStyle.Continuous..LAST(LineStyle)]%}
 %typemap(m3wrapargraw)  PLINT lin     %{ORD($1_name)%}
 
 %typemap(m3wrapintype)  PLINT mode    %{BOOLEAN%}
