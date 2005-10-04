@@ -39,6 +39,11 @@ VectorTrans("RealComplex",     "Real")
 VectorTrans("LongRealComplex", "LongReal")
 VectorTrans("ExtendedComplex", "Extended")
 
+Generic_module("VectorComplex")
+VectorComplex("Real",            "Real")
+VectorComplex("LongReal",        "LongReal")
+VectorComplex("Extended",        "Extended")
+
 Generic_module("VectorFmtLex")
 VectorFmtLex("Real",               "RealBasic")
 VectorFmtLex("LongReal",           "LongRealBasic")

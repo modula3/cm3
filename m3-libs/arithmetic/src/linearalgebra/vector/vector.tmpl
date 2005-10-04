@@ -29,6 +29,15 @@ readonly proc VectorTrans (nm, field) is
   build_generic_impl (vtrans, "VectorTrans", [rfield, rtrans, ctrans])
 end
 
+readonly proc VectorComplex (nm, field) is
+  local rfield  = field & "Basic"
+  local vfield  = nm & "Vector"
+  local cvfield = nm & "ComplexVector"
+  local vcmplx  = nm & "VectorComplex"
+  build_generic_intf (vcmplx, "VectorComplex", [vfield, cvfield], VISIBLE)
+  build_generic_impl (vcmplx, "VectorComplex", [vfield, cvfield])
+end
+
 readonly proc VectorFmtLex (nm, rfield) is
   local rfmt   = nm & "FmtLex"
   local rseq   = nm & "Seq"
