@@ -89,10 +89,15 @@ char* RTStack__ProcName (Frame* f)
   return 0;
 }
 
+void (*RTHeapDep_Fault)();
+void (*RTProcedureSRC_FromPC) (void *pc, void **p, char **file, char **name);
+
 void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
   ucontext_t *link;
   struct frame *link_sp, *link_fp;
+  void *proc;
+  char *file, *name;
 
   if (callee == 0) abort();
   if (caller == 0) abort();
@@ -101,20 +106,28 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   RTStack__Flush();
 
   caller->lock = FrameLock;
-  if (caller->pc = (void *)callee->sp->fr_savpc)
-    caller->fp = (caller->sp = callee->fp)->fr_savfp;
-  else
-    caller->sp = caller->fp = 0;
-  caller->ctxt = callee->ctxt;
+
   /* We must be careful when unwinding through signal trampolines that we also
-     restore the signal mask of the previous context.  So, we always check to
-     see if the previous frame has the fp of any non-null uc_link in the
-     current ucontext.  If so, then we move to that context. */
-  if (link = caller->ctxt.uc_link) {
-    link_sp = (struct frame *)link->uc_mcontext.gregs[REG_SP];
-    link_fp = link_sp->fr_savfp;
-    if (link_fp == caller->fp)
-      caller->ctxt = *link;
+     restore the signal mask of the previous context. */
+  RTProcedureSRC_FromPC(callee->pc, &proc, &file, &name);
+  if (proc == RTHeapDep_Fault) {
+    /* SIGNAL HANDLER: previous frame information can be found in third
+       argument of RTHeapDep_Fault */
+    link = (ucontext_t *)callee->sp->fr_arg[2];
+    caller->ctxt = *link;
+    caller->pc = (void *)link->uc_mcontext.gregs[REG_PC];
+    if (caller->pc) {
+      caller->sp = (struct frame *)link->uc_mcontext.gregs[REG_SP];
+      caller->fp = caller->sp->fr_savfp;
+    } else
+      caller->sp = caller->fp = 0;
+  } else {
+    caller->pc = (void *)callee->sp->fr_savpc;
+    if (caller->pc) {
+      caller->fp = (caller->sp = callee->fp)->fr_savfp;
+    } else
+      caller->sp = caller->fp = 0;
+    caller->ctxt = callee->ctxt;
   }
   if (caller->lock != FrameLock) abort();
 }

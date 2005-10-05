@@ -75,7 +75,7 @@ TYPE
 <*EXTERNAL*> PROCEDURE setrlimit (resource: int; VAR rlp: struct_rlimit): int;
 
 (*** getrusage(2) - get information about resource utilization ***)
-<*EXTERNAL*> PROCEDURE getrusage (who: int; rus: struct_rusage_star): int;
+<*EXTERNAL*> PROCEDURE getrusage (who: int; VAR rus: struct_rusage): int;
 
 (*** nice(3) - set program priority ***)
 <*EXTERNAL*> PROCEDURE nice (incr: int): int;

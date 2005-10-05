@@ -13,9 +13,6 @@ IMPORT Ctypes, Utypes, Uresource;
 (* Some of the Unix library process control calls. This is not a complete
 interface, and should be added to as needed *)
 
-(* Remember that any of the calls which may return an error code in
-'Uerror.errno' should be serialized by use of 'UnixMutex.errno'. *)
-
 <*EXTERNAL*> 
 PROCEDURE execv(
     name: Ctypes.char_star;
@@ -48,16 +45,26 @@ TYPE
 
   (* terminated process status *)
   w_T = RECORD
-      w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
-      w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
+      w_Filler  : BITS 16 FOR [0..16_FFFF];
       w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
-      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+      w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
+      w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
+  END;
+
+  (* M3 view of return code *)
+  w_M3 = RECORD
+      w_Filler  : BITS 16 FOR [0..16_FFFF];
+      w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
+      w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
+      w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+  END;
 
   (* stopped process status *)
   w_S = RECORD
-      w_Stopval : BITS  8 FOR [0..16_FF];  (* == W_STOPPED if stopped *)
+      w_Filler  : BITS 16 FOR [0..16_FFFF];
       w_Stopsig : BITS  8 FOR [0..16_FF];  (* signal that stopped us *)
-      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+      w_Stopval : BITS  8 FOR [0..16_FF];  (* == W_STOPPED if stopped *)
+  END;
 
   (* union wait is a union of the three types above.  We will use w_A
      in the declarations and do a LOOPHOLE when necessary *)
