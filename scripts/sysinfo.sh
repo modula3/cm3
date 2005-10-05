@@ -12,7 +12,7 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
 # set some defaults
-CM3VERSION=${CM3VERSION:-"d5.3.0-2005-06-12"}
+CM3VERSION=${CM3VERSION:-"d5.3.1-2005-10-05"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 CM3_INSTALL=/usr/local/cm3
