@@ -59,7 +59,7 @@ TYPE
 TYPE
   DirTile = {Axis, LowerBorder, UpperBorder, FixedPointLabel, GridMajor,
              GridMinor, TicksOutward, Logarithmic, LabelMajorUnconv,
-             LabelMajorConv, TicksMajor, TicksMinor};
+             LabelMajorConv, TicksMajor, TicksMinor, LabelBaseParallel};
   DirTileSet = SET OF DirTile;
 
 
@@ -109,17 +109,17 @@ PROCEDURE SetContLabelParam
 
 (* c_pladv: "Advance to subpage \"page\", or to the next one if \"page\" =
    0." *)
-PROCEDURE Advance (page: INTEGER; );
+PROCEDURE AdvanceSubPage (page: CARDINAL := 0; );
 
 (* c_plaxes: "This functions similarly to plbox() except that the origin of
    the axes is placed at the user-specified point (x0, y0)." *)
 PROCEDURE DrawAxes (x0, y0: Float;
                     xopt  : DirTileSet;
                     xtick : Float;
-                    nxsub : INTEGER;
+                    nxsub : CARDINAL;
                     yopt  : DirTileSet;
                     ytick : Float;
-                    nysub : INTEGER;    );
+                    nysub : CARDINAL;   );
 
 (* c_plbin: "Plot a histogram using x to store data values and y to store
    frequencies." *)
@@ -265,11 +265,11 @@ PROCEDURE GetRunLevel (): INTEGER;
 (* c_plgpage: "Get output device parameters." *)
 
 TYPE
-  GetOutputDeviceParamResult = RECORD
-                                 xp, yp                  : Float;
-                                 xleng, yleng, xoff, yoff: INTEGER;
-                               END;
-PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult;
+  GetPageParamResult = RECORD
+                         xp, yp                  : Float;
+                         xleng, yleng, xoff, yoff: INTEGER;
+                       END;
+PROCEDURE GetPageParam (): GetPageParamResult;
 
 (* c_plgra: "Switch to graphics screen." *)
 PROCEDURE ShowGraphicScreen ();
@@ -311,7 +311,7 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult;
 (* c_plhist: "Draw histogram." *)
 PROCEDURE PlotHistogram (READONLY x             : FloatVector;
                                   datmin, datmax: Float;
-                                  nbin          : INTEGER;
+                                  nbin          : CARDINAL;
                                   oldwin        : INTEGER       := 0; );
 
 (* c_plhls: "Set current color (map 0) by hue, lightness, and
@@ -508,7 +508,7 @@ PROCEDURE SetGlobalOrientation (ori: INTEGER; );
 
 (* c_plspage: "Set output device parameters.  Usually ignored by the
    driver." *)
-PROCEDURE SetOutputDeviceParam
+PROCEDURE SetPageParam
   (xp, yp: Float; xleng, yleng, xoff, yoff: INTEGER; );
 
 (* c_plspause: "Set the pause (on end-of-page) status." *)
@@ -518,17 +518,17 @@ PROCEDURE SetPause (pause: INTEGER; );
 PROCEDURE SetStream (strm: INTEGER; );
 
 (* c_plssub: "Set the number of subwindows in x and y." *)
-PROCEDURE SetSubWindows (nx, ny: INTEGER; );
+PROCEDURE SetSubWindows (nx, ny: CARDINAL; );
 
 (* c_plssym: "Set symbol height." *)
 PROCEDURE SetSymbolHeight (def, scale: Float; );
 
 (* c_plstar: "Initialize PLplot, passing in the windows/page settings." *)
-PROCEDURE Start (nx, ny: INTEGER; );
+PROCEDURE Start (nx, ny: CARDINAL; );
 
 (* c_plstart: "Initialize PLplot, passing the device name and windows/page
    settings." *)
-PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; );
+PROCEDURE StartDev (devname: TEXT; nx, ny: CARDINAL; );
 
 (* c_plstripa: "Add a point to a stripchart.  " *)
 PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: Float; );
@@ -546,7 +546,7 @@ PROCEDURE CreateStripchart
 PROCEDURE DeleteStripchart (id: INTEGER; );
 
 (* c_plstyl: "Set up a new line style." *)
-PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; );
+PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF CARDINAL; );
 
 (* c_plsvpa: "Set the edges of the viewport to the specified absolute
    coordinates." *)

@@ -36,7 +36,7 @@ PROCEDURE PlotterCallback (            x, y  : LongRealPLPlotRaw.PLFLT;
 CONST
   tileToChar = ARRAY DirTile OF
                  CHAR{'a', 'b', 'c', 'f', 'g', 'h', 'i', 'l', 'm', 'n',
-                      's', 't'};
+                      's', 't', 'v'};
 
 PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; ) =
   BEGIN
@@ -49,18 +49,18 @@ PROCEDURE SetContLabelParam
     LongRealPLPlotRaw.SetContLabelParam(offset, size, spacing, active);
   END SetContLabelParam;
 
-PROCEDURE Advance (page: INTEGER; ) =
+PROCEDURE AdvanceSubPage (page: CARDINAL := 0; ) =
   BEGIN
-    LongRealPLPlotRaw.Advance(page);
-  END Advance;
+    LongRealPLPlotRaw.AdvanceSubPage(page);
+  END AdvanceSubPage;
 
 PROCEDURE DrawAxes (x0, y0: Float;
                     xopt  : DirTileSet;
                     xtick : Float;
-                    nxsub : INTEGER;
+                    nxsub : CARDINAL;
                     yopt  : DirTileSet;
                     ytick : Float;
-                    nysub : INTEGER;    ) =
+                    nysub : CARDINAL;   ) =
   VAR
     arg3 : ARRAY [0 .. NUMBER(Tile)] OF CHAR;
     arg3i: CARDINAL                          := 0;
@@ -434,22 +434,22 @@ PROCEDURE GetRunLevel (): INTEGER =
     RETURN level;
   END GetRunLevel;
 
-PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult =
+PROCEDURE GetPageParam (): GetPageParamResult =
   VAR
-    result: GetOutputDeviceParamResult;
+    result: GetPageParamResult;
     arg3  : C.int;
     arg4  : C.int;
     arg5  : C.int;
     arg6  : C.int;
   BEGIN
-    LongRealPLPlotRaw.GetOutputDeviceParam(
+    LongRealPLPlotRaw.GetPageParam(
       result.xp, result.yp, arg3, arg4, arg5, arg6);
     result.xleng := arg3;
     result.yleng := arg4;
     result.xoff := arg5;
     result.yoff := arg6;
     RETURN result;
-  END GetOutputDeviceParam;
+  END GetPageParam;
 
 PROCEDURE ShowGraphicScreen () =
   BEGIN
@@ -528,7 +528,7 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult =
 
 PROCEDURE PlotHistogram (READONLY x             : FloatVector;
                                   datmin, datmax: Float;
-                                  nbin          : INTEGER;
+                                  nbin          : CARDINAL;
                                   oldwin        : INTEGER       := 0; ) =
   VAR n := NUMBER(x);
   BEGIN
@@ -1029,12 +1029,11 @@ PROCEDURE SetGlobalOrientation (ori: INTEGER; ) =
     LongRealPLPlotRaw.SetGlobalOrientation(ori);
   END SetGlobalOrientation;
 
-PROCEDURE SetOutputDeviceParam
+PROCEDURE SetPageParam
   (xp, yp: Float; xleng, yleng, xoff, yoff: INTEGER; ) =
   BEGIN
-    LongRealPLPlotRaw.SetOutputDeviceParam(
-      xp, yp, xleng, yleng, xoff, yoff);
-  END SetOutputDeviceParam;
+    LongRealPLPlotRaw.SetPageParam(xp, yp, xleng, yleng, xoff, yoff);
+  END SetPageParam;
 
 PROCEDURE SetPause (pause: INTEGER; ) =
   BEGIN
@@ -1046,7 +1045,7 @@ PROCEDURE SetStream (strm: INTEGER; ) =
     LongRealPLPlotRaw.SetStream(strm);
   END SetStream;
 
-PROCEDURE SetSubWindows (nx, ny: INTEGER; ) =
+PROCEDURE SetSubWindows (nx, ny: CARDINAL; ) =
   BEGIN
     LongRealPLPlotRaw.SetSubWindows(nx, ny);
   END SetSubWindows;
@@ -1056,12 +1055,12 @@ PROCEDURE SetSymbolHeight (def, scale: Float; ) =
     LongRealPLPlotRaw.SetSymbolHeight(def, scale);
   END SetSymbolHeight;
 
-PROCEDURE Start (nx, ny: INTEGER; ) =
+PROCEDURE Start (nx, ny: CARDINAL; ) =
   BEGIN
     LongRealPLPlotRaw.Start(nx, ny);
   END Start;
 
-PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; ) =
+PROCEDURE StartDev (devname: TEXT; nx, ny: CARDINAL; ) =
   VAR arg1: C.char_star;
   BEGIN
     arg1 := M3toC.SharedTtoS(devname);
@@ -1125,7 +1124,7 @@ PROCEDURE DeleteStripchart (id: INTEGER; ) =
     LongRealPLPlotRaw.DeleteStripchart(id);
   END DeleteStripchart;
 
-PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; ) =
+PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF CARDINAL; ) =
   CONST nName = "mark";
   VAR n := NUMBER(mark);
   BEGIN

@@ -66,7 +66,8 @@ typedef int PLINT;
 
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
 import_lib("plplotd","/usr/lib")
-%import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)%}
+%import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)
+include_dir("class")%}
 
 %insert(m3rawintf) %{
 TYPE
@@ -267,7 +268,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 
 %rename("SetContLabelFormat") pl_setcontlabelformat;
 %rename("SetContLabelParam") pl_setcontlabelparam;
-%rename("Advance") pladv;
+%rename("AdvanceSubPage") pladv;
 %rename("DrawAxes") plaxes;
 %rename("PlotBins") plbin;
 %rename("StartPage") plbop;
@@ -302,7 +303,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("GetFamilyFile") plgfam;
 %rename("GetFileName") plgfnam;
 %rename("GetRunLevel") plglevel;
-%rename("GetOutputDeviceParam") plgpage;
+%rename("GetPageParam") plgpage;
 %rename("ShowGraphicScreen") plgra;
 %rename("GetBoundaries") plgspa;
 %rename("GetStream") plgstrm;
@@ -361,7 +362,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("SetMajorTickSize") plsmaj;
 %rename("SetMinorTickSize") plsmin;
 %rename("SetGlobalOrientation") plsori;
-%rename("SetOutputDeviceParam") plspage;
+%rename("SetPageParam") plspage;
 %rename("SetPause") plspause;
 %rename("SetStream") plsstrm;
 %rename("SetSubWindows") plssub;
@@ -515,10 +516,12 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %typemap("m3wrapintype")  PLFLTArray %{FloatVector%}
 %typemap("m3wrapargraw")  PLFLTArray %{$1_name[0]%}
 
-%typemap("m3wrapargvar")   PLFLTArrayFst, PLINTArrayFst,
-                           PLFLTArraySzd, PLINTArraySzd %{n:=NUMBER($1_name);%}
-%typemap("m3wrapargconst") PLFLTArrayFst, PLINTArrayFst %{nName="$1_name";%}
-%typemap("m3wrapincheck")  PLFLTArrayCk,  PLINTArrayCk
+%typemap("m3wrapargvar")   PLFLTArrayFst, PLINTArrayFst, PLCARDArrayFst,
+                           PLFLTArraySzd, PLINTArraySzd
+%{n:=NUMBER($1_name);%}
+%typemap("m3wrapargconst") PLFLTArrayFst, PLINTArrayFst, PLCARDArrayFst
+%{nName="$1_name";%}
+%typemap("m3wrapincheck")  PLFLTArrayCk,  PLINTArrayCk,  PLCARDArrayCk
 %{<* ASSERT NUMBER($1_name) = n,
 "Array sizes of $1_name (" & Fmt.Int(NUMBER($1_name)) &
 ") and " & nName & " (" & Fmt.Int(n) & ") mismatch." *> %}
@@ -526,7 +529,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %{<* ASSERT NUMBER($1_name) = n-1,
 "Array size of $1_name (" & Fmt.Int(NUMBER($1_name)) &
 " must be one more than that of " & nName & " (" & Fmt.Int(n) & ")." *> %}
-%typemap("m3wrapincheck:import")  PLFLTArrayCk,  PLINTArrayCk, PLINTArrayCkInterim  %{Fmt%}
+%typemap("m3wrapincheck:import")  PLFLTArrayCk,  PLINTArrayCk, PLINTArrayCkInterim, PLCARDArrayCk  %{Fmt%}
 
 
 %typemap("m3rawinmode")   PLINTArray %{READONLY%}
@@ -534,6 +537,8 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %typemap("m3rawintype")   PLINTArray %{C.int%}
 %typemap("m3wrapintype")  PLINTArray %{ARRAY OF INTEGER%}
 %typemap("m3wrapargraw")  PLINTArray %{$1_name[0]%}
+
+%typemap("m3wrapintype")  PLCARDArray %{ARRAY OF CARDINAL%}
 
 
 %typemap("m3rawinmode")   PLFLTMatrix %{READONLY%}
@@ -682,11 +687,12 @@ END;%}
 DirTile = {Axis, LowerBorder, UpperBorder, FixedPointLabel,
 GridMajor, GridMinor, TicksOutward, Logarithmic,
 LabelMajorUnconv, LabelMajorConv,
-TicksMajor, TicksMinor};
+TicksMajor, TicksMinor,
+LabelBaseParallel};
 DirTileSet = SET OF DirTile;
 %}
 %insert(m3wrapimpl) %{CONST
-tileToChar = ARRAY DirTile OF CHAR {'a','b','c','f','g','h','i','l','m','n','s','t'};
+tileToChar = ARRAY DirTile OF CHAR {'a','b','c','f','g','h','i','l','m','n','s','t','v'};
 %}
 %typemap(m3rawintype)   const char *xopt, const char *yopt, const char *zopt %{(*ARRAY OF*) CHAR%}
 %typemap(m3rawinmode)   const char *xopt, const char *yopt, const char *zopt %{READONLY%}
@@ -745,6 +751,7 @@ TYPE
 %typemap("m3wrapoutname") PLINTOutput %{$1_name%}
 %typemap("m3outvar:import") PLINTOutput %{Ctypes AS C%}
 
+%typemap(m3wrapindefault) PLCARD page %{0%}
 
 
 

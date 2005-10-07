@@ -31,7 +31,7 @@ PROCEDURE SetContLabelParam
   (offset, size, spacing: C.double; active: C.int; );
 
 <* EXTERNAL c_pladv *>
-PROCEDURE Advance (page: C.int; );
+PROCEDURE AdvanceSubPage (page: C.int; );
 
 <* EXTERNAL c_plaxes *>
 PROCEDURE DrawAxes (         x0, y0: C.double;
@@ -164,7 +164,7 @@ PROCEDURE GetFamilyFile (VAR fam, num, bmax: C.int; );
 PROCEDURE GetRunLevel (VAR level: C.int; );
 
 <* EXTERNAL c_plgpage *>
-PROCEDURE GetOutputDeviceParam
+PROCEDURE GetPageParam
   (VAR xp, yp: C.double; VAR xleng, yleng, xoff, yoff: C.int; );
 
 <* EXTERNAL c_plgra *>
@@ -395,7 +395,7 @@ PROCEDURE SetMinorTickSize (def, scale: C.double; );
 PROCEDURE SetGlobalOrientation (ori: C.int; );
 
 <* EXTERNAL c_plspage *>
-PROCEDURE SetOutputDeviceParam
+PROCEDURE SetPageParam
   (xp, yp: C.double; xleng, yleng, xoff, yoff: C.int; );
 
 <* EXTERNAL c_plspause *>
