@@ -68,6 +68,10 @@ typedef PLINTArray PLINTArrayFst;
 typedef PLINTArray PLINTArrayCk;
 typedef PLINTArray PLINTArrayCkInterim;
 
+typedef PLINTArray PLCARDArray;
+typedef PLCARDArray PLCARDArrayFst;
+typedef PLCARDArray PLCARDArrayCk;
+
 typedef const PLFLT const ** PLFLTMatrix;
 typedef PLFLTMatrix  PLFLTMatrixFst;
 typedef PLFLTMatrix  PLFLTMatrixCk;
@@ -195,12 +199,12 @@ pl_setcontlabelparam(PLFLT offset, PLFLT size, PLFLT spacing, PLINT active);
 
 DOC(pladv, "Advance to subpage \"page\", or to the next one if \"page\" = 0.")
 void
-pladv(PLINT page);
+pladv(PLCARD page);
 
 DOC(plaxes,"This functions similarly to plbox() except that the origin of the axes is placed at the user-specified point (x0, y0).")
 void
-plaxes(PLFLT x0, PLFLT y0, const char *xopt, PLFLT xtick, PLINT nxsub,
-	 const char *yopt, PLFLT ytick, PLINT nysub);
+plaxes(PLFLT x0, PLFLT y0, const char *xopt, PLFLT xtick, PLCARD nxsub,
+	 const char *yopt, PLFLT ytick, PLCARD nysub);
 
 DOC(plbin,"Plot a histogram using x to store data values and y to store frequencies.")
 void
@@ -389,7 +393,7 @@ plgzax(PLINTOutput digmax, PLINTOutput digits);
 DOC(plhist, "Draw histogram.")
 void
 plhist(PLArraySize n, PLFLTArraySzd x, PLFLT datmin, PLFLT datmax,
-	 PLINT nbin, PLINT oldwin);
+	 PLCARD nbin, PLINT oldwin);
 
 DOC(plhls, "Set current color (map 0) by hue, lightness, and saturation.")
 void
@@ -622,7 +626,7 @@ plsstrm(PLINT strm);
 
 DOC(plssub, "Set the number of subwindows in x and y.")
 void
-plssub(PLINT nx, PLINT ny);
+plssub(PLCARD nx, PLCARD ny);
 
 DOC(plssym, "Set symbol height.")
 void
@@ -630,11 +634,11 @@ plssym(PLFLT def, PLFLT scale);
 
 DOC(plstar, "Initialize PLplot, passing in the windows/page settings.")
 void
-plstar(PLINT nx, PLINT ny);
+plstar(PLCARD nx, PLCARD ny);
 
 DOC(plstart, "Initialize PLplot, passing the device name and windows/page settings.")
 void
-plstart(const char *devname, PLINT nx, PLINT ny);
+plstart(const char *devname, PLCARD nx, PLCARD ny);
 
 DOC(plstripa, "Add a point to a stripchart. ")
 void
@@ -656,7 +660,7 @@ plstripd(PLINT id);
 
 DOC(plstyl, "Set up a new line style.")
 void
-plstyl(PLArraySize n, PLINTArrayFst mark, PLINTArrayCk space);
+plstyl(PLArraySize n, PLCARDArrayFst mark, PLCARDArrayCk space);
 
 DOC(plsvpa, "Set the edges of the viewport to the specified absolute coordinates.")
 void
