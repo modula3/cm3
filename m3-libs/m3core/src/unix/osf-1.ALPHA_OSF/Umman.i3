@@ -52,7 +52,7 @@ CONST
   MSEM_IF_WAITERS = 3;
 
   MS_ASYNC = 1;
-  MS_SYNC = 3;
+  MS_SYNC = 2;
   MS_INVALIDATE = 4;
 
 

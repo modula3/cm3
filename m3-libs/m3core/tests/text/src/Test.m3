@@ -7,7 +7,7 @@
 
 UNSAFE MODULE Test EXPORTS Main;
 
-IMPORT M3toC, Ctypes, Text, TextF, IO, Fmt, Time;
+IMPORT M3toC, Ctypes, Text, IO, Fmt, Time;
 
 CONST N = BYTESIZE(INTEGER);
 VAR buff: ARRAY[0..99] OF CHAR; (* this buffer must be at least 8 bigger
@@ -28,7 +28,7 @@ PROCEDURE MisAlign(t: TEXT; i: CARDINAL): TEXT =
     END;
     p^ := 0;
     res := M3toC.StoT(q);
-    <* ASSERT LOOPHOLE(ADR(res[0]), INTEGER) MOD N = i MOD N *>
+    (* <* ASSERT LOOPHOLE(ADR(res[0]), INTEGER) MOD N = i MOD N *> *)
     RETURN(res)
   END MisAlign;
 

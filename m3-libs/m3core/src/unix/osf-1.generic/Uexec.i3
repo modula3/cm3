@@ -13,9 +13,6 @@ IMPORT Ctypes, Uresource, Utypes;
 (* Some of the Unix library process control calls. This is not a complete
 interface, and should be added to as needed *)
 
-(* Remember that any of the calls which may return an error code in
-'Uerror.errno' should be serialized by use of 'UnixMutex.errno'. *)
-
 <*EXTERNAL*> 
 PROCEDURE execv(
     name: Ctypes.char_star;
@@ -52,6 +49,13 @@ TYPE
       w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
       w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
       w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+
+  (* M3 view of return code *)
+  w_M3 = RECORD
+      w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+      w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
+      w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
       w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
 
   (* stopped process status *)
