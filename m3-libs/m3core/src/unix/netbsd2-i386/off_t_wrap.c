@@ -10,6 +10,19 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+long
+m3_asLong (off_t val)
+{
+  long v = (off_t)val;
+  if (v != val) return -1;
+  return v;
+}
+
+void
+m3_assignOffT (off_t* dest, long src)
+{
+  *dest = (off_t)src;
+}
 caddr_t m3_mmap(caddr_t addr, size_t len, int prot, int flags, int fd, long offset)
 {
   off_t off = (off_t) offset;
