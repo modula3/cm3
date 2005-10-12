@@ -13,6 +13,7 @@
 -rw-r--r--    1 www-data www-data  5297651 Jul 14  2003 cm3-min-POSIX-FreeBSD4-5.2.6.tgz
 -rw-r--r--    1 www-data www-data  5334200 Oct 31  2004 cm3-min-POSIX-FreeBSD4-d5.2.7-2004-10-31.tgz
 -rw-r--r--    1 www-data www-data  4862130 Sep 20 09:20 cm3-min-POSIX-FreeBSD4-d5.3.0-2005-09-20.tgz
+-rw-r--r--    1 www-data www-data  4869619 Oct  9 19:41 cm3-min-POSIX-FreeBSD4-d5.3.1-2005-10-05.tgz
 -rw-r--r--    1 www-data www-data  4950470 Sep 20 09:20 cm3-min-POSIX-FreeBSD5.4-d5.3.0-2005-09-20.tgz
 -rw-r--r--    1 www-data www-data  4922956 Nov 25  2001 cm3-min-POSIX-LINUXLIBC6-5.1.6.tgz
 -rw-r--r--    1 www-data www-data  4627539 Dec 19  2001 cm3-min-POSIX-LINUXLIBC6-5.1.8.tgz
@@ -22,6 +23,7 @@
 -rw-r--r--    1 www-data www-data  5501078 Oct 31  2004 cm3-min-POSIX-LINUXLIBC6-d5.2.7-2004-10-31.tgz
 -rw-r--r--    1 www-data www-data  5307142 Mar 31 12:04 cm3-min-POSIX-LINUXLIBC6-d5.2.7-2005-03-31.tgz
 -rw-r--r--    1 www-data www-data  5327373 Sep 20 09:20 cm3-min-POSIX-LINUXLIBC6-d5.3.0-2005-09-20.tgz
+-rw-r--r--    1 www-data www-data  5389829 Oct  9 19:42 cm3-min-POSIX-LINUXLIBC6-d5.3.1-2005-10-05.tgz
 -rw-r--r--    1 www-data www-data  4960834 Feb 10  2003 cm3-min-POSIX-PPC_DARWIN-5.2.0.tgz
 -rw-r--r--    1 www-data www-data  7065587 Mar 25  2003 cm3-min-POSIX-PPC_DARWIN-5.2.4.tgz
 -rw-r--r--    1 www-data www-data  7064081 Apr  1  2003 cm3-min-POSIX-PPC_DARWIN-5.2.4a.tgz
@@ -37,6 +39,7 @@
 -rw-r--r--    1 www-data www-data  5944304 Dec 19  2001 cm3-min-WIN32-NT386-5.1.8.tgz
 -rw-r--r--    1 www-data www-data  5928525 Jul 14  2003 cm3-min-WIN32-NT386-5.2.6.tgz
 -rw-r--r--    1 www-data www-data  4803450 Apr 12 13:43 cm3-min-POSIX-NetBSD2_i386-d5.2.7-2005-04-12.tgz
+-rw-r--r--    1 www-data www-data  4913007 Oct  5 22:22 cm3-min-POSIX-NetBSD2_i386-d5.3.1-2005-10-05.tgz
 -rw-r--r--    1 www-data www-data    14880 Aug  3  2001 cm3-scripts-2001-04-07.tgz
 -rw-r--r--    1 www-data www-data    15238 Aug  3  2001 cm3-scripts-2001-04-08.tgz
 -rw-r--r--    1 www-data www-data    16335 Sep 19  2001 cm3-scripts-2001-09-19.tgz
@@ -48,6 +51,7 @@
 -rw-r--r--    1 www-data www-data 30052447 Oct 31  2004 cm3-src-all-d5.2.7-2004-10-31.tgz
 -rw-r--r--    1 www-data www-data 33069086 Mar 31 12:06 cm3-src-all-d5.2.7-2005-03-31.tgz
 -rw-r--r--    1 www-data www-data 54046602 Sep 20 09:24 cm3-src-all-d5.3.0-2005-09-20.tgz
+-rw-r--r--    1 www-data www-data 53884614 Oct  9 19:46 cm3-src-all-d5.3.1-2005-10-05.tgz
 -rw-r--r--    1 www-data www-data 14954488 Nov 25  2001 cm3-src-gnu-5.1.6.tgz
 -rw-r--r--    1 www-data www-data 14955164 Dec 20  2001 cm3-src-gnu-5.1.8.tgz
 -rw-r--r--    1 www-data www-data  5248495 Nov 25  2001 cm3-src-std-5.1.6.tgz
@@ -58,6 +62,7 @@
 -rw-r--r--    1 www-data www-data  7117277 Oct 31  2004 cm3-src-std-d5.2.7-2004-10-31.tgz
 -rw-r--r--    1 www-data www-data  7154971 Mar 31 12:07 cm3-src-std-d5.2.7-2005-03-31.tgz
 -rw-r--r--    1 www-data www-data  7357355 Sep 20 09:25 cm3-src-std-d5.3.0-2005-09-20.tgz
+-rw-r--r--    1 www-data www-data  7357820 Oct  9 19:46 cm3-src-std-d5.3.1-2005-10-05.tgz
 -rw-r--r--    1 www-data www-data  2764936 Nov 25  2001 cm3-src-sys-5.1.6.tgz
 -rw-r--r--    1 www-data www-data  2738087 Dec 20  2001 cm3-src-sys-5.1.8.tgz
 -rw-r--r--    1 www-data www-data     7551 Aug  3  2001 m3override-update.tgz
