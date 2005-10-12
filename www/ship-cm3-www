@@ -50,11 +50,13 @@ for r in ${REMOTE}; do
   fi
   RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -ruptl \
     --exclude=cm3 \
+    --exclude=PkgTags \
     --exclude=tmp \
     --exclude=\*~ \
     --exclude=\*.flc \
     --exclude=www-install.sh \
     --exclude=ship-cm3-www \
+    --exclude=ship-cm3-testing \
     --exclude=doc/help/reactor \
     * ${r}
 done
