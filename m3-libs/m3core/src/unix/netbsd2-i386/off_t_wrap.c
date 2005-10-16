@@ -10,12 +10,18 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+/* off_t is an int32 in Modula-3 */
+typedef long m3_off_t;
+
+/* This function converts a Utypes.off_t into an INTEGER. Utypes.off_t
+ * is defined as an int32_t, and i386 is a 32-bit platform, so we can
+ * expect that INTEGER has the same size and thus is the same type as
+ * Utypes.off_t.
+ */
 long
-m3_asLong (off_t val)
+m3_asLong (m3_off_t val)
 {
-  long v = (off_t)val;
-  if (v != val) return -1;
-  return v;
+  return val;
 }
 
 void
