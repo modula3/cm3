@@ -1354,7 +1354,6 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
     quake_in     : Pipe.T;
     process_out  : Pipe.T;
     wr           : Wr.T := CurWr (t);
-    wd           : TEXT;
     inbuf        : ARRAY [0..255] OF CHAR;
   BEGIN
     info.command := "";
@@ -1396,8 +1395,6 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
       Err (t, "write failed" & OSErr (ec));
     END;
 
-    wd := ExtractInitialDir (info.command);
-
     args [0] := t.sh_option;
     args [1] := info.command;
     n_shell_args := 2;
@@ -1410,7 +1407,7 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
         (* fire up the subprocess *)
         handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
                                  stdin := stdin, stdout := process_out,
-                                 stderr := process_out, wd := wd);
+                                 stderr := process_out);
         (* close our copy of the writing end of the output pipe *)
         process_out.close ();
         LOOP (* send anything coming through the pipe to the quake output file *)
@@ -1438,38 +1435,6 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
     info.exit_code := Process.Wait (handle);
     RETURN info;
   END ExecCommand;
-
-PROCEDURE ExtractInitialDir (VAR cmd: TEXT): TEXT =
-  (* search for "cd <dir> |" or "cd <dir> ;" prefix in "cmd".
-     If it's found, return "<dir>" and remove the prefix from "cmd".
-     Otherwise, return "NIL". *)
-  VAR
-    len := Text.Length (cmd);
-    buf : ARRAY [0..99] OF CHAR;
-    start, stop: INTEGER;
-    dir: TEXT;
-  BEGIN
-    IF (len < 5) THEN RETURN NIL; END;
-    Text.SetChars (buf, cmd);
-    start := 0;
-    WHILE (start < len) AND (buf[start] = ' ') DO INC (start); END;
-    IF (start+4 >= len)     THEN RETURN NIL; END;
-    IF (buf[start]   # 'c') THEN RETURN NIL; END;
-    IF (buf[start+1] # 'd') THEN RETURN NIL; END;
-    IF (buf[start+2] # ' ') THEN RETURN NIL; END;
-    INC (start, 3);
-    WHILE (start < len) AND (buf[start] = ' ') DO INC (start); END;
-    stop := start;
-    WHILE (stop < len) AND (buf[stop] # ' ')
-      AND (buf[stop] # '|') AND (buf[stop] # ';') DO INC (stop); END;
-    IF (stop <= start) THEN RETURN NIL; END;
-    dir := Text.FromChars (SUBARRAY (buf, start, stop - start));
-    WHILE (stop < len) AND (buf[stop] = ' ') DO INC (stop); END;
-    IF (stop >= len) THEN RETURN NIL; END;
-    IF (buf[stop] # '|') AND (buf[stop] # ';') THEN RETURN NIL; END;
-    cmd := Text.Sub (cmd, stop+1);
-    RETURN dir;
-  END ExtractInitialDir;
 
 PROCEDURE KillProcess (handle: Process.T) =
   BEGIN
