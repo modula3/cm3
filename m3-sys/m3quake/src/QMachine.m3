@@ -8,7 +8,7 @@ MODULE QMachine;
 
 IMPORT Atom, AtomList, IntRefTbl, Env, Fmt, Text, FileWr;
 IMPORT Wr, Thread, Stdio, OSError, TextSeq;
-IMPORT Pathname, Pipe, Process, File, FS, RTParams;
+IMPORT Pathname, Process, File, FS, RTParams;
 IMPORT M3Buf, M3File, M3Process, CoffTime;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
