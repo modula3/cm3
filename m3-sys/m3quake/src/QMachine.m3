@@ -1351,10 +1351,7 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
     args         : ARRAY [0..1] OF TEXT;
     buf          : M3Buf.T;
     n_shell_args : INTEGER;
-    quake_in     : Pipe.T;
-    process_out  : Pipe.T;
     wr           : Wr.T := CurWr (t);
-    inbuf        : ARRAY [0..255] OF CHAR;
   BEGIN
     info.command := "";
     info.exit_code := 0;
@@ -1401,24 +1398,11 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
 
     (* finally, execute the command *)
     TRY
+      FlushIO ();
       Process.GetStandardFileHandles (stdin, stdout, stderr);
-      Pipe.Open (hr := quake_in, hw := process_out);
-      TRY
-        (* fire up the subprocess *)
-        handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
-                                 stdin := stdin, stdout := process_out,
-                                 stderr := process_out);
-        (* close our copy of the writing end of the output pipe *)
-        process_out.close ();
-        LOOP (* send anything coming through the pipe to the quake output file *)
-          n := M3File.Read (quake_in, inbuf, NUMBER (inbuf));
-          IF (n <= 0) THEN EXIT; END;
-          Wr.PutString (wr, SUBARRAY (inbuf, 0, n));
-        END;
-      FINALLY
-        quake_in.close ();
-        FlushIO ();
-      END;
+      handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
+                                stdin := stdin, stdout := stdout,
+                                stderr := stderr);
     EXCEPT
     | Thread.Alerted =>
         KillProcess (handle);
