@@ -255,8 +255,8 @@ PROCEDURE mutex_getprioceiling(READONLY mutex: pthread_mutex_t;
 PROCEDURE mutexattr_setprioceiling (VAR attr: pthread_mutexattr_t;
                                     prioceiling: int): int;
 <*EXTERNAL pthread_mutexattr_getprotocol*>
-PROCEDURE pthread_mutexattr_getprotocol (READONLY attr: pthread_mutexattr_t;
-                                         VAR protocol: int): int;
+PROCEDURE mutexattr_getprotocol (READONLY attr: pthread_mutexattr_t;
+                                 VAR protocol: int): int;
 <*EXTERNAL pthread_mutexattr_setprotocol*>
 PROCEDURE mutexattr_setprotocol (VAR attr: pthread_mutexattr_t;
                                  protocol: int): int;
