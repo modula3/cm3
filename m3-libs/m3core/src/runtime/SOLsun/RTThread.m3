@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Uframe, Usignal, Unix, Umman, Uucontext, RTMisc, Word;
+IMPORT Uframe, Usignal, Unix, Umman, Uucontext, RTMisc;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
@@ -84,8 +84,8 @@ VAR
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
   VAR sv, osv: Usignal.struct_sigaction;  i: INTEGER;
   BEGIN
-    sv.sa_handler := handler;
-    sv.sa_flags   := Word.Or (Usignal.SA_RESTART, Usignal.SA_SIGINFO);
+    sv.sa_sigaction := LOOPHOLE(handler, Usignal.SignalAction);
+    sv.sa_flags := Usignal.SA_RESTART;
     i := Usignal.sigemptyset (sv.sa_mask);
     <* ASSERT i = 0 *>
     i := Usignal.sigaction (Usignal.SIGVTALRM, sv, osv);

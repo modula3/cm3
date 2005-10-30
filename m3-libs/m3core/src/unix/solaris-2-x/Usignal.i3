@@ -8,9 +8,14 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int;
+IMPORT Uucontext;
+FROM Ctypes IMPORT int, void_star;
 FROM Utypes IMPORT caddr_t;
-FROM Uucontext IMPORT ucontext_t, sigset_t;
+FROM Uucontext IMPORT ucontext_t_star;
+
+TYPE
+  siginfo_t_star = void_star;		 (* it's a complicated union *)
+  sigset_t = Uucontext.sigset_t;
 
 (*** <sys/signal.h> ***)
 
@@ -56,9 +61,11 @@ CONST
   SIGCANCEL  = 36;  (* thread cancellation signal used by libthread *)
   (* signals 37-59 reserved *)
 
-  (* Do not modify these variables *)
-VAR (* READONLY *)
-  SIG_ERR, SIG_DFL, SIG_IGN, SIG_HOLD: SignalHandler;
+CONST
+  SIG_DFL  = 0;
+  SIG_ERR  = -1;
+  SIG_IGN  = 1;
+  SIG_HOLD = 2;
 
 CONST
   SIG_BLOCK    = 1;    (* Add these signals to block mask *)
@@ -95,15 +102,16 @@ CONST
   FPE_FLTSUB = 8;			 (* subscript out of range *)
 
 TYPE
-  SignalHandler = PROCEDURE (sig: int;
-                             sip: UNTRACED REF siginfo_t_fault;
-                             uap: UNTRACED REF ucontext_t);
+  SignalHandler = PROCEDURE (sig: int);
+  SignalAction = PROCEDURE (sig: int;
+                            sip: siginfo_t_star;
+                            uap: ucontext_t_star);
 
   struct_sigaction = RECORD
-    sa_flags   : int;            (* signal action flags *)
-    sa_handler : SignalHandler;  (* signal handler *)
-    sa_mask    : sigset_t;       (* signals to block while in handler *)
-    sa_resv    : ARRAY [0..1] OF int;
+    sa_flags     : int;            (* signal action flags *)
+    sa_sigaction : SignalAction;   (* signal handler *)
+    sa_mask      : sigset_t;       (* signals to block while in handler *)
+    sa_resv      : ARRAY [0..1] OF int;
   END;
 
  (* valid flags for sa_flag field of sigaction structure  *)
@@ -147,6 +155,9 @@ PROCEDURE sigaction (sig: int; VAR act, oact: struct_sigaction): int;
 <*EXTERNAL*>
 PROCEDURE sigprocmask (how: int; READONLY set: sigset_t;
                        oset: UNTRACED REF sigset_t := NIL): int;
+
+(*** sigsuspend(2) - install a signal mask and suspend caller until signal ***)
+<*EXTERNAL*> PROCEDURE sigsuspend (READONLY set: sigset_t): int;
 
 (*** sigsetops(3C) (sigemptyset,  sigfillset,  sigaddset,  sigdelset,
      sigismember) - manipulate sets of signals ***)
