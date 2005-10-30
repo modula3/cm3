@@ -546,7 +546,6 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
         me.next := NIL;
         me.prev := NIL;
         WITH r = Upthread.detach(me.handle) DO <*ASSERT r=0*> END;
-        me.handle := NIL;
       WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
 
       RETURN NIL; (* let the rebirth loop know we're dying. *)
@@ -601,7 +600,6 @@ PROCEDURE Fork(closure: Closure): T =
     (* last minute sanity checking *)
     CheckSlot (t);
     act := t.act;
-    <* ASSERT act.handle # NIL *>
     <* ASSERT act.next # NIL *>
     <* ASSERT act.prev # NIL *>
 
@@ -1072,12 +1070,8 @@ PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
 PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
-    IF RTMachine.SuspendThread # NIL THEN
-      <*ASSERT RTMachine.RestartThread # NIL*>
-      <*ASSERT SIG_SUSPEND = 0*>
-      <*ASSERT SIG_RESTART = 0*>
-      RETURN;
-    END;
+    <*ASSERT RTMachine.SuspendThread = NIL OR SIG_SUSPEND = 0*>
+    <*ASSERT RTMachine.RestartThread = NIL OR SIG_SUSPEND = 0*>
       
     WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
 
@@ -1225,7 +1219,7 @@ PROCEDURE XX (): ADDRESS =
 VAR
   mutex := PTHREAD_MUTEX_INITIALIZER;
   condition := PTHREAD_COND_INITIALIZER;
-  thread: pthread_t := NIL;
+  thread: pthread_t;
   count: CARDINAL := 0;
 
 PROCEDURE LockHeap () =

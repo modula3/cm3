@@ -10,7 +10,8 @@
 
 INTERFACE RTMachine;
 
-IMPORT Uucontext;
+IMPORT Uucontext, Usignal;
+FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -82,6 +83,22 @@ TYPE
     ctxt    : Uucontext.ucontext_t;
     lock    : INTEGER;       (* to ensure that ctxt isn't overrun!! *)
   END;
+
+(*------------------------------------------------------ pthreads support ---*)
+
+(* Full context is in the signal handler frame so no need for state here. *)
+TYPE ThreadState = RECORD END;
+
+CONST
+  SIG_SUSPEND = Usignal.SIGUSR1;
+  SIG_RESTART = Usignal.SIGUSR2;
+  SuspendThread: PROCEDURE(t: pthread_t) = NIL;
+  RestartThread: PROCEDURE(t: pthread_t) = NIL;
+  GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
+                      VAR state: ThreadState) = NIL;
+
+<*EXTERNAL RTMachine__SaveRegsInStack*>
+PROCEDURE SaveRegsInStack(): ADDRESS;
 
 END RTMachine.
 

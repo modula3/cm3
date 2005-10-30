@@ -8,14 +8,14 @@
 UNSAFE MODULE RTHeapDep;
 
 IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTProcedureSRC, RTMachine, RTVM;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal;
-IMPORT Utime, Utypes, Uucontext, Word;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Usignal;
+IMPORT Utypes, Uucontext, Word;
 
 VAR
   initialized := FALSE;
   (* true iff "Init" has been called *)
 
-  defaultSIGSEGV: Usignal.SignalHandler := NIL;
+  defaultSIGSEGV: Usignal.SignalAction := NIL;
   (* original handler for "SIGSEGV" signal; set by "Init" *)
 
 PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
@@ -52,13 +52,13 @@ PROCEDURE Init () =
       ret: Ctypes.int;
     BEGIN
       vec.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
-      vec.sa_handler := Fault;
+      vec.sa_sigaction := LOOPHOLE(Fault, Usignal.SignalAction);
       EVAL Usignal.sigemptyset(vec.sa_mask);
       (* block the "SIGVTALRM" signal when signal handlers are called *)
       EVAL Usignal.sigaddset(vec.sa_mask, Usignal.SIGVTALRM);
       ret := Usignal.sigaction(Usignal.SIGSEGV, vec, ovec);
       <* ASSERT ret = 0 *>
-      defaultSIGSEGV := ovec.sa_handler;
+      defaultSIGSEGV := ovec.sa_sigaction;
     END;
 
     (* establish signal handler for all other signals that dump core, if no
@@ -69,13 +69,13 @@ PROCEDURE Init () =
         ret: Ctypes.int;
       BEGIN
         vec.sa_flags := Usignal.SA_SIGINFO;
-        vec.sa_handler := Core;
+        vec.sa_sigaction := Core;
         EVAL Usignal.sigemptyset(vec.sa_mask);
         EVAL Usignal.sigaddset(vec.sa_mask, Usignal.SIGVTALRM);
         ret := Usignal.sigaction(sig, vec, ovec);
         <* ASSERT ret = 0 *>
         (* If the old handler was not the default, restore it. *)
-        IF ovec.sa_handler # Usignal.SIG_DFL THEN
+        IF ovec.sa_sigaction # LOOPHOLE(Usignal.SIG_DFL, Usignal.SignalAction) THEN
           ret := Usignal.sigaction(sig, ovec, vec);
           <* ASSERT ret = 0 *>
         END;
@@ -107,8 +107,9 @@ PROCEDURE Fault (sig : Ctypes.int;
       IF RTHeapRep.Fault(sip.si_addr) THEN RETURN; END;
     END;
     (* otherwise, use "defaultSIGSEGV" to handle the fault *)
-    IF defaultSIGSEGV = Usignal.SIG_IGN THEN RETURN;
-    ELSIF defaultSIGSEGV = Usignal.SIG_DFL THEN Core(sig, sip, uap);
+    IF defaultSIGSEGV = LOOPHOLE(Usignal.SIG_IGN, Usignal.SignalAction) THEN RETURN;
+    ELSIF defaultSIGSEGV = LOOPHOLE(Usignal.SIG_DFL, Usignal.SignalAction) THEN
+      Core(sig, sip, uap);
     ELSE defaultSIGSEGV(sig, sip, uap);
     END;
   END Fault;
@@ -121,7 +122,7 @@ PROCEDURE Fault (sig : Ctypes.int;
 VAR dumped_core := FALSE;
 
 PROCEDURE Core (sig : Ctypes.int;
-     <*UNUSED*> sip : Usignal.siginfo_t_fault_star;
+     <*UNUSED*> sip : Usignal.siginfo_t_star;
      <*UNUSED*> uap : Uucontext.ucontext_t_star) =
   BEGIN
     ThreadF.SuspendOthers();
@@ -137,7 +138,7 @@ PROCEDURE Core (sig : Ctypes.int;
         vec, ovec: Usignal.struct_sigaction;
       BEGIN
         vec.sa_flags := 0;
-        vec.sa_handler := Usignal.SIG_DFL;
+        vec.sa_sigaction := LOOPHOLE(Usignal.SIG_DFL, Usignal.SignalAction);
         EVAL Usignal.sigemptyset(vec.sa_mask);
         EVAL Usignal.sigaction(sig, vec, ovec);
       END;
