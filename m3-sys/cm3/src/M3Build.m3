@@ -983,9 +983,7 @@ PROCEDURE DoImport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error, Thread.Alerted} =
   VAR t := Self (m);
   BEGIN
-    IF M3Options.major_mode # MM.Clean THEN
-      ImportVersion (t, PopID (t), t.build_dir);
-    END;
+    ImportVersion (t, PopID (t), t.build_dir);
   END DoImport;
 
 PROCEDURE DoImportVersion (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -994,9 +992,7 @@ PROCEDURE DoImportVersion (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   BEGIN
     vers := PopID (t);
     pkg  := PopID (t);
-    IF M3Options.major_mode # MM.Clean THEN
-      ImportVersion (t, pkg, vers);
-    END;
+    ImportVersion (t, pkg, vers);
   END DoImportVersion;
 
 PROCEDURE ImportVersion (t: T;  pkg, vers: M3ID.T)
