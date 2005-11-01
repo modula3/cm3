@@ -16,7 +16,7 @@ TYPE
 
 REVEAL
   T = Quake.Machine BRANDED "M3Build.T" OBJECT
-    (* READONLY state the is fixed for the build *)
+    (* READONLY state that is fixed for the build *)
     build_pkg         : M3ID.T; (* the name of the package we're building *)
     build_pkg_dir     : M3ID.T; (* full path to the package we're building *)
     build_dir         : M3ID.T; (* name of the derived directory *)
