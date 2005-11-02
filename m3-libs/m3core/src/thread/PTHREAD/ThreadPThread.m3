@@ -1070,8 +1070,9 @@ PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
 PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
-    <*ASSERT RTMachine.SuspendThread = NIL OR SIG_SUSPEND = 0*>
-    <*ASSERT RTMachine.RestartThread = NIL OR SIG_SUSPEND = 0*>
+    IF RTMachine.SuspendThread # NIL THEN <*ASSERT SIG_SUSPEND = 0*> END;
+    IF RTMachine.RestartThread # NIL THEN <*ASSERT SIG_RESTART = 0*> END;
+    IF SIG_SUSPEND = 0 AND SIG_SUSPEND = 0 THEN RETURN END;
       
     WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
 
