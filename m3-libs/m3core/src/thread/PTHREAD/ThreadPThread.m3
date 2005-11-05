@@ -467,8 +467,6 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
-  TYPE ObjRef = UNTRACED REF MethodList;
-       MethodList = UNTRACED REF RECORD typecode: INTEGER;  method0: ADDRESS; END;
   VAR self, next_self: T;  cl: Closure; res: REFANY;
   BEGIN
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
@@ -484,8 +482,6 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
 
     IF (cl = NIL) THEN
       Die ("NIL closure passed to Thread.Fork!");
-    ELSIF (LOOPHOLE (cl, ObjRef)^^.method0 = NIL) THEN
-      Die ("NIL apply method passed to Thread.Fork!");
     END;
 
     (* Run the user-level code. *)
@@ -1117,7 +1113,7 @@ PROCEDURE EnableSwitching () =
 
 PROCEDURE Die(msg: TEXT) =
   BEGIN
-    RTError.Msg ("ThreadPThread.m3", 799, "Thread client error: ", msg);
+    RTError.Msg ("ThreadPThread.m3", 1116, "Thread client error: ", msg);
   END Die;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
