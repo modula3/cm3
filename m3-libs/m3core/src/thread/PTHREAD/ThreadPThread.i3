@@ -13,6 +13,7 @@ TYPE
     (* base of thread stack for use by GC *)
     stackbase: ADDRESS := NIL;
     sp: ADDRESS := NIL;
+    size: INTEGER;
     lastStopCount: CARDINAL := 0;
     signal := 0;
     (* index into global array of active, slotted threads *)

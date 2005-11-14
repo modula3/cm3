@@ -7,14 +7,14 @@ Thread, ThreadF, ThreadPThread, Scheduler, SchedulerPosix,
 RTThreadInit, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
-       RTError, RTMachine, RTPerfTool,
-       RTProcess, ThreadEvent, Time,
+       RTCollectorSRC, RTError, RTMachine, RTParams,
+       RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
        Uucontext, Uerror;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER,
-       PTHREAD_ONCE_INITIALIZER, PTHREAD_STACK_MIN;
+       PTHREAD_ONCE_INITIALIZER;
 IMPORT Ctypes;
 
 (*----------------------------------------------------- types and globals ---*)
@@ -22,10 +22,9 @@ IMPORT Ctypes;
 VAR
   cm := PTHREAD_MUTEX_INITIALIZER; (* global lock for fields of Mutex/Condition *)
 
-  defaultStackSize := PTHREAD_STACK_MIN;
   stack_grows_down: BOOLEAN;
 
-  nextId: Id := 1;
+  nextId: CARDINAL := 1;
 
   threadMu: Mutex;			 (* global lock for fields of T *)
 
@@ -49,9 +48,6 @@ REVEAL
   T = BRANDED "Thread.T Pthread-1.6" OBJECT
     (* live thread data *)
     act: Activation := NIL;		 (* LL = threadMu *)
-
-    (* global list of idle threads *)
-    nextIdle: T := NIL;			 (* LL = idleMu *)
 
     (* our work and its result *)
     closure: Closure := NIL;		 (* LL = threadMu *)
@@ -80,7 +76,7 @@ REVEAL
     joined: BOOLEAN := FALSE;            (* LL = threadMu *)
 
     (* unique Id of this thread *)
-    id: Id;				 (* LL = threadMu *)
+    id: Id := 0;			 (* LL = threadMu *)
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;	 (* LL = threadMu *)
@@ -413,8 +409,9 @@ VAR (* LL=activeMu *)
   allThreads: Activation := NIL;	 (* global list of active threads *)
 
 VAR (* LL=idleMu *)
-  idleThreads: T          := NIL;	 (* global list of idle threads *)
-  nIdle:       INTEGER    := 0;
+  idleThreads: ARRAY [0..MaxIdle-1] OF T; (* global pool of idle threads *)
+  nIdle:       CARDINAL := 0;
+  idleClock:   CARDINAL := 0;
 
 PROCEDURE CreateT (): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -467,121 +464,153 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
-  VAR self, next_self: T;  cl: Closure; res: REFANY;
+  VAR self, next_self, victim: T;  cl: Closure; res: REFANY;
   BEGIN
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
       self := slots [me.slot];
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
 
     LockMutex(threadMu);
-      WHILE self.closure = NIL DO Wait(threadMu, self.cond) END;
+      WHILE self.id = 0 DO Wait(threadMu, self.cond) END;
       cl := self.closure;
-      self.id := nextId;  INC (nextId);
-      IF perfOn THEN PerfRunning(self.id) END;
     UnlockMutex(threadMu);
-
-    IF (cl = NIL) THEN
-      Die ("NIL closure passed to Thread.Fork!");
-    END;
 
     (* Run the user-level code. *)
-    res := cl.apply();
+    IF cl # NIL THEN
+      next_self := NIL;
+      IF perfOn THEN PerfRunning(self.id) END;
+      res := cl.apply();
 
-    next_self := NIL;
-    IF nIdle < MaxIdle THEN
-      (* apparently the cache isn't full, although we don't hold idleMu
-         so we can't be certain, we're committed now.  Hopefully we'll
-         be reborn soon... *)
+      IF nIdle < NUMBER(idleThreads) THEN
+        (* apparently the cache isn't full, although we don't hold idleMu
+           so we can't be certain, we're committed now.  Hopefully we'll
+           be reborn soon... *)
 
-      (* transplant the active guts of "self" into "next_self" *)
-      next_self          := NEW(T);
-      next_self.act      := me;
-      next_self.waitCond := self.waitCond;
-      next_self.cond     := self.cond;
+        (* transplant the active guts of "self" into "next_self" *)
+        next_self          := NEW(T);
+        next_self.act      := me;
+        next_self.waitCond := self.waitCond;
+        next_self.cond     := self.cond;
 
-      (* hijack "self"s entry in the slot table *)
-      WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
-        slots[me.slot] := next_self;
-      WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
-    END;
+        (* hijack "self"s entry in the slot table *)
+        WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
+          slots[me.slot] := next_self;
+        WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
+      END;
 
-    LockMutex(threadMu);
-      (* mark "self" done and clean it up a bit *)
-      self.result := res;
-      self.closure := NIL;
-      self.completed := TRUE;
-      Broadcast(self.cond); (* let everybody know that "self" is done *)
-      IF perfOn THEN PerfChanged(self.id, State.dying) END;
-    UnlockMutex(threadMu);
+      LockMutex(threadMu);
+        (* mark "self" done and clean it up a bit *)
+        self.result := res;
+        self.closure := NIL;
+        self.completed := TRUE;
+        Broadcast(self.cond); (* let everybody know that "self" is done *)
+        IF perfOn THEN PerfChanged(self.id, State.dying) END;
+      UnlockMutex(threadMu);
 
-    IF perfOn THEN PerfDeleted(self.id) END;
-    IF next_self # NIL THEN
-      (* we're going to be reborn! *)
-      (* put "next_self" on the list of idle threads *)
-      WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
-        next_self.nextIdle := idleThreads;
-        idleThreads := next_self;
-        INC(nIdle);
-        me.idle := TRUE;
+      IF perfOn THEN PerfDeleted(self.id) END;
+      IF next_self # NIL THEN
+        (* we're going to be reborn! *)
+
+        (* put "next_self" on the list of idle threads *)
+        victim := NIL;
+        WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
+          IF nIdle < NUMBER(idleThreads) THEN
+            (* the pool isn't full *)
+            idleThreads[nIdle] := next_self;
+            INC(nIdle);
+          ELSE
+            (* no room in the pool => free an old thread from the pool *)
+            IF idleClock >= nIdle THEN idleClock := 0 END;
+            victim := idleThreads[idleClock];
+            idleThreads[idleClock] := next_self;
+            INC(idleClock);
+          END;
+          me.idle := TRUE;
         WITH r = Upthread.mutex_unlock(idleMu) DO <*ASSERT r=0*> END;
-      (* let the rebirth loop in ThreadBase know where to wait... *)
-      RETURN next_self.waitCond;
-    ELSE
-      (* we're dying *)
-      WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
-      DISPOSE(self.waitCond);
+        IF victim # NIL THEN
+          LockMutex(threadMu);
+            victim.closure := NIL;
+            victim.id := -1;
+            Signal(victim.cond);
+          UnlockMutex(threadMu);
+        END;
 
-      FreeSlot(self);  (* note: needs self.act ! *)
-      (* Since we're no longer slotted, we cannot touch traced refs. *)
-
-      (* remove ourself from the list of active threads *)
-      WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-        IF allThreads = me THEN allThreads := me.next; END;
-        me.next.prev := me.prev;
-        me.prev.next := me.next;
-        me.next := NIL;
-        me.prev := NIL;
-        WITH r = Upthread.detach(me.handle) DO <*ASSERT r=0*> END;
-      WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
-
-      RETURN NIL; (* let the rebirth loop know we're dying. *)
+        (* let the rebirth loop in ThreadBase know where to wait... *)
+        RETURN next_self.waitCond;
+      END;
     END;
+
+    (* we're dying *)
+    WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
+    DISPOSE(self.waitCond);
+
+    FreeSlot(self);  (* note: needs self.act ! *)
+    (* Since we're no longer slotted, we cannot touch traced refs. *)
+
+    (* remove ourself from the list of active threads *)
+    WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
+      IF allThreads = me THEN allThreads := me.next; END;
+      me.next.prev := me.prev;
+      me.prev.next := me.next;
+      me.next := NIL;
+      me.prev := NIL;
+      WITH r = Upthread.detach(me.handle) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+
+    RETURN NIL; (* let the rebirth loop know we're dying. *)
   END RunThread;
 
 PROCEDURE Fork(closure: Closure): T =
   VAR
     t: T := NIL;
-    stack_size := defaultStackSize;
     act: Activation := NIL;
     attr: pthread_attr_t;
+    size := defaultStackSize;
+    best: INTEGER := -1;
+    sz, best_sz: INTEGER;
+    bytes: INTEGER;
   BEGIN
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
-    | SizedClosure (scl) =>
-      stack_size := (scl.stackSize * BYTESIZE(Word.T) DIV PTHREAD_STACK_MIN);
-      stack_size := MAX(PTHREAD_STACK_MIN, stack_size * PTHREAD_STACK_MIN);
+    | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
 
-    WITH r = Upthread.attr_init(attr) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.attr_setstacksize(attr, stack_size) DO <*ASSERT r=0*> END;
-
     (* try the cache for a thread *)
     WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
-      IF nIdle > 0 THEN
-        <* ASSERT(idleThreads # NIL) *>
+      FOR p := nIdle-1 TO FIRST(idleThreads) BY -1 DO
+        WITH pp = idleThreads[p] DO
+          sz := pp.act.size;
+          IF sz = size THEN
+            (* exact match *)
+            DEC(nIdle);
+            t := pp;
+            pp := idleThreads[nIdle];
+          ELSIF sz >= size AND (best < 0 OR sz < best_sz) THEN
+            (* a new best match *)
+            best := p;
+            best_sz := sz;
+          END
+        END
+      END;
+      IF best >= 0 THEN
         DEC(nIdle);
-        t := idleThreads;
-        idleThreads := t.nextIdle;
-        t.nextIdle := NIL;
+        t := idleThreads[best];
+        idleThreads[best] := idleThreads[nIdle];
+      END;
+      IF t # NIL THEN
         t.act.idle := FALSE;
         WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
-      ELSE (* empty cache => we need a fresh thread *)
+      ELSE (* no match in cache => we need a fresh thread *)
         WITH r = Upthread.mutex_unlock(idleMu) DO <*ASSERT r=0*> END;
           t := CreateT();
         WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
         act := t.act;
         WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
+          WITH r = Upthread.attr_init(attr) DO <*ASSERT r=0*> END;
+          WITH r = Upthread.attr_getstacksize(attr, bytes)  DO <*ASSERT r=0*> END;
+          bytes := MAX(bytes, size * ADRSIZE(Word.T));
+          WITH r = Upthread.attr_setstacksize(attr, bytes) DO <*ASSERT r=0*> END;
           WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
             <*ASSERT r=0*>
           END;
@@ -601,6 +630,7 @@ PROCEDURE Fork(closure: Closure): T =
 
     LockMutex(threadMu);
       t.closure := closure;
+      t.id := nextId;  INC(nextId);
       Signal(t.cond);
       IF perfOn THEN PerfChanged(t.id, State.alive) END;
     UnlockMutex(threadMu);
@@ -815,19 +845,21 @@ PROCEDURE UTimeFromTime(time: Time.T): UTime =
 
 (*--------------------------------------------------- Stack size controls ---*)
 
+VAR defaultStackSize := 4096;
+
 PROCEDURE GetDefaultStackSize (): CARDINAL =
   BEGIN
-    RETURN defaultStackSize DIV BYTESIZE(Word.T);
+    RETURN defaultStackSize;
   END GetDefaultStackSize;
 
-PROCEDURE MinDefaultStackSize (new_min: CARDINAL) =
+PROCEDURE MinDefaultStackSize (size: CARDINAL) =
   BEGIN
-    defaultStackSize := MAX (defaultStackSize, new_min * BYTESIZE(Word.T));
+    defaultStackSize := MAX(defaultStackSize, size);
   END MinDefaultStackSize;
 
 PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
   BEGIN
-    INC (defaultStackSize, inc * BYTESIZE(Word.T));
+    INC(defaultStackSize, inc);
   END IncDefaultStackSize;
 
 (*--------------------------------------------- Garbage collector support ---*)
@@ -1182,7 +1214,6 @@ PROCEDURE Init ()=
     SetupHandlers ();
 
     (* cm, activeMu, idleMu, slotMu: initialized statically *)
-
     threadMu := NEW(Mutex);
     self := CreateT();
     self.id := nextId;  INC(nextId);
@@ -1201,6 +1232,9 @@ PROCEDURE Init ()=
     SetActivation(act);
     PerfStart();
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF RTParams.IsPresent("backgroundgc") THEN
+      RTCollectorSRC.StartBackgroundCollection();
+    END;
   END Init;
 
 PROCEDURE XX (): ADDRESS =
