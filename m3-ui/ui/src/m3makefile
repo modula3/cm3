@@ -13,7 +13,7 @@
 
 import ("libm3")
 
-if equal (TARGET, "NT386")
+if equal (OS_TYPE, "WIN32")
   include_dir ("winvbt")
 else
   include_dir ("xvbt")
