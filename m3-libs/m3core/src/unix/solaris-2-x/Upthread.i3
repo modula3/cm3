@@ -11,9 +11,6 @@ FROM Utypes IMPORT size_t;
 FROM Utime IMPORT struct_timespec;
 FROM Usignal IMPORT sigset_t;
 
-VAR
-  PTHREAD_STACK_MIN: CARDINAL;
-
 (* <sys/types.h> *)
 TYPE
   pthread_t = Uthread.thread_t;
