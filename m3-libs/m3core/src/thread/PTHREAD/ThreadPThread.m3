@@ -616,6 +616,7 @@ PROCEDURE Fork(closure: Closure): T =
           END;
           act.next := allThreads;
           act.prev := allThreads.prev;
+          act.size := size;
           allThreads.prev.next := act;
           allThreads.prev := act;
         WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
