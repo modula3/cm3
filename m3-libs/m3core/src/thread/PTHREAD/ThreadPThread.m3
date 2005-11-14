@@ -15,7 +15,7 @@ FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER,
        PTHREAD_ONCE_INITIALIZER;
-IMPORT Ctypes;
+IMPORT Ctypes, Utypes;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -568,7 +568,7 @@ PROCEDURE Fork(closure: Closure): T =
     size := defaultStackSize;
     best: INTEGER := -1;
     sz, best_sz: INTEGER;
-    bytes: INTEGER;
+    bytes: Utypes.size_t;
   BEGIN
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
