@@ -16,7 +16,7 @@
    the main problem was to get it right for yacc (an expression can
    start by a type). */
 
-/* Expect 2 shift/reduce conflicts */
+/* Expect 3 shift/reduce conflicts */
 
 /* The effect of yyparse is to parse a fragment of the Modula 3
    language and emit a stream of characters and formatting codes
@@ -91,11 +91,16 @@
 
 %{
 
+#define NULL (0L)
+
 #define lexbufsize 500
 char lexbuf[2 * lexbufsize];
 int lexptr = 0;
 int lexposition = 0;
   /* See BufferLexeme and AddLexLength in Parse.lex */
+
+char *infileName = NULL;
+  /* initialized by initParser, needed for error message */
 
 int comdepth = 0;
   /* depth of comments, used only by lexer. */
@@ -167,18 +172,35 @@ typedef enum {NonOptimal, OptimalBreak, OptimalNoBreak} Formatter_BreakType;
 /* basic tokens */
 %token ENDOFFILE 0
 
+/* symbols */
 %token AMPERSAND ASSIGN ASTERISK BAR COLON COMMA DOT DOTDOT
-%token EQUAL GREATER GREQUAL LESS LSEQUAL MINUS SHARP PERIOD PLUS
-%token RARROW RBRACE RBRACKET RPAREN SEMICOLON SLASH
+%token EQUAL GREATER GREQUAL LESS LSEQUAL MINUS SHARP PLUS
+%token RARROW RPRAGMA RBRACE RBRACKET RPAREN SEMICOLON SLASH
 %token SUBTYPE UPARROW 
-%token LPAREN LBRACKET LBRACE
+%token LPAREN LBRACKET LBRACE /*LPRAGMA*/
 
 %token IDENT CARD_CONST REAL_CONST CHAR_CONST STR_CONST
 
 /* Various kinds of pragmas */
 %token PR_EXTERNAL PR_INLINE PR_OBSOLETE PR_UNUSED
+%token PR_FATAL PR_NOWARN PR_ASSERT PR_TRACE
+%token PR_LINE PR_PRAGMA PR_CALLBACK
+%token PR_LL PR_LLsup PR_EXPORTED PR_SPEC PR_LOOPINV
 
-/* reserved words */ 
+/* special symbols allowed in SPEC pragmas */
+%token IDENTPRIME UPARROWPRIME
+/* reserved words for ESC specifications in SPEC pragmas */
+%token ALL AXIOM DEPEND
+%token ENSURES EXISTS FUNC IFF IMPLIES INVARIANT IS
+%token LET MAP MODIFIES ON PRED PROTECT
+%token ABSTRACT REQUIRES
+/*
+%token CONCAT DELETE INSERT MEMBER SHARED SUBSET
+%token MUT_GE MUT_GT MUT_LE MUT_LT
+*/
+
+
+/* reserved words */
 %token AND ANY ARRAY AS BGN BITS BRANDED BY CASE CONST 
 %token DIV DO ELSE ELSIF END EVAL EXCEPT EXCEPTION EXIT EXPORTS
 %token FINALLY FOR FROM GENERIC IF IMPORT IN INTERFACE LOCK LOOP
@@ -224,7 +246,7 @@ ModUnit:
       declaration_nl
     | import_nl
     | CompilationUnit NL
-    | B Inc Begin stmts VZ Dec End SP Ident E NL
+    | B Inc begin_trace stmts VZ Dec End SP Ident E NL
     ;
 
 DefUnit_list:
@@ -241,6 +263,10 @@ DefUnit:
 CompilationUnit:
       interface
     | Unsafe SP interface
+/* causes additional shift/reduce conflicts
+    | external_pragma SP interface
+    | external_pragma SP Unsafe SP interface
+*/
     | module
     | Unsafe SP module
     | generic_interface
@@ -280,7 +306,7 @@ generic_module:
 /* Good enough for both formals and actuals. */
 generic_params:
       /* empty */
-    | Z QSP Lparen AX B0 opt_id_list E Z Rparen
+    | Z QSP Lparen B0 opt_id_list E Z Rparen
     ;
 
 exports:
@@ -294,23 +320,26 @@ import_nl_list:
     ;
 
 import_nl:
-      From SP Ident SP Import SP B0 id_list            E Semi NL
-    |                  Import SP B0 import_module_list E Semi NL
+      From SP Ident SP Import SP B0 id_list E Semi NL
+    |                B Import A ALZ5 import_module_list Semi E E EA E NL
     ;
 
 import_module_list:
-      B Ident                E
-    | B Ident SP As SP Ident E
-    | import_module_list Comma A B Ident          E
-    | import_module_list Comma A B Ident As Ident E
+                                            import_module
+    | import_module_list Comma XSP E E ALNL import_module
+    ;
+
+import_module:
+      Inc G G Ident
+    | Inc G G Ident EF G SP As SP type
     ;
 
 block:
-      declaration_nl_list B Inc Begin stmts NL Dec End Z E
+      declaration_nl_list B decl_pragma Inc begin_trace stmts NL Dec End Z E
     ;
 
 named_block:
-      declaration_nl_list B Inc Begin stmts NL Dec End SP Ident E
+      declaration_nl_list B decl_pragma Inc begin_trace stmts NL Dec End SP Ident E
     ;
 
 declaration_nl_list:
@@ -318,6 +347,8 @@ declaration_nl_list:
     | declaration_nl_list declaration_nl 
     ;
 
+/* to avoid reduce/reduce conflicts we will not make use of the knowledge
+   which pragmas are allowed for each kind of declaration */
 declaration_nl:
       B decl_pragma procedure_head SP Equal BL B0 named_block Z Semi E E BL
     | B decl_pragma procedure_head Semi E BL
@@ -335,10 +366,13 @@ declaration_nl:
 
 decl_pragma:
       /* empty */
-    | decl_pragma Pr_External A
-    | decl_pragma Pr_Inline   A
-    | decl_pragma Pr_Obsolete A
-    | decl_pragma Pr_Unused   A
+    | decl_pragma external_pragma NL
+    | decl_pragma inline_pragma NL
+    | decl_pragma callback_pragma NL
+    | decl_pragma obsolete_pragma NL
+    | decl_pragma unused_pragma NL
+    | decl_pragma fatal_pragma NL
+    | decl_pragma exported_pragma NL
     ;
 
 const_decl_list:
@@ -368,15 +402,15 @@ var_decl_list:
     ;
 
 var_decl:
-      Inc G  G id_list                    EF
-             G Colon SP type Z Dec Semi1  E
-             G NPS                        E  E
-    | Inc G  G id_list                    EF
-             G Colon SP type SP           EF
-             G Assign SP expr Z Dec Semi  E  E
-    | Inc G  G id_list                    EF
-             G SP                         EF
-             G Assign SP expr Z Dec Semi  E  E
+      Inc G  G id_list                              EF
+             G Colon SP type Z var_trace Dec Semi1  E
+             G NPS                                  E  E
+    | Inc G  G id_list                              EF
+             G Colon SP type SP                     EF
+             G Assign SP expr Z var_trace Dec Semi  E  E
+    | Inc G  G id_list                              EF
+             G SP                                   EF
+             G Assign SP expr Z var_trace Dec Semi  E  E
     ;
 
 exception_decl_list:
@@ -387,12 +421,12 @@ exception_decl_list:
 
 exception_decl:
       /* Moved break inside LParen. -DN */
-      Inc id_list                         Z Dec Semi
-    | Inc id_list Lparen AX type Z Rparen Z Dec Semi
+      Inc Ident                         Z Dec Semi
+    | Inc Ident Lparen AX type Z Rparen Z Dec Semi
     ;
 
 procedure_head:
-      Procedure SP IdentP SP signature
+      Procedure SP IdentP A signature
     ;
 
 signature:
@@ -423,11 +457,16 @@ formal_semi_list:
     ;
 
 formal_semi:
-      G B decl_pragma EF B mode EF B id_list EF type_and_or_val_semi E
+      G B formal_pragma EF B mode EF B id_list EF type_and_or_val_semi var_trace E
     ;
 
 formal:
-      G B decl_pragma EF B mode EF B id_list EF type_and_or_val      E
+      G B formal_pragma EF B mode EF B id_list EF type_and_or_val      var_trace E
+    ;
+
+formal_pragma:
+      /* empty */
+    | formal_pragma unused_pragma A
     ;
 
 mode:
@@ -453,8 +492,7 @@ type_and_or_val:
 
 stmts:
       /* empty */
-    | V stmt_list        E
-    | V stmt_list Z Semi E
+    | V stmt_list E
     ;
 
 /* Statement list with G E around it only if non-empty. */
@@ -465,13 +503,27 @@ stmts_group:
 
 /* Non-empty statement list. */
 stmts1:
-      stmt_list        E
-    | stmt_list Z Semi E
+      stmt_list E
     ;
 
 stmt_list:
-      B stmt
-    | stmt_list Z Semi E V B stmt
+      stmt_inner_list B stmt_end
+    ;
+
+stmt_inner_list:
+      /* empty */
+    | stmt_inner_list B stmt_inner E V
+    ;
+
+stmt_inner:
+      stmt Z Semi
+    | stmt_pragma
+    ;
+
+stmt_end:
+      stmt
+    | stmt Z Semi
+    | stmt_pragma
     ;
 
 stmt:
@@ -493,6 +545,10 @@ stmt:
     | typecase_stmt
     | while_stmt
     | with_stmt
+    ;
+
+stmt_pragma:
+      assert_pragma
     ;
 
 assignment_stmt:
@@ -540,8 +596,8 @@ eval_stmt:
 for_stmt:      
       /* We need the B2/E here and not for similar statements because of
 	 the top-level A's. */
-      B2 For SP Ident A Assign SP expr A To SP expr by Do E
-           stmts SPNL End
+      B2 For SP Ident var_trace A Assign SP expr A To SP expr by Do E
+           loopinv stmts SPNL End
     ;
 
 by:
@@ -572,15 +628,16 @@ lock_stmt:
     ;
 
 loop_stmt: 
-      Loop stmts SPNL End
+      Loop loopinv stmts SPNL End
     ;
 
 raise_stmt:
-      Raise AO expr 
+      Raise AO qqid
+    | Raise AO qqid Lparen expr Z Rparen
     ;
 
 repeat_stmt:
-      Repeat stmts VZ B Until A expr E
+      Repeat loopinv stmts VZ B Until A expr E
     ;
 
 return_stmt:
@@ -603,8 +660,8 @@ handler_list:
     ;
 
 handler:
-      B B2 qid_list A Lparen Ident Z Rparen SP Rarrow E stmts_group E
-    | B B2 qid_list                         SP Rarrow E stmts_group E
+      B B2 qid_list A Lparen Ident var_trace Z Rparen SP Rarrow E stmts_group E
+    | B B2 qid_list                                   SP Rarrow E stmts_group E
     ;
 
 typecase_stmt:
@@ -618,12 +675,12 @@ tcase_list:
     ;
 
 tcase:
-      B type_list                        SP Rarrow stmts_group E
-    | B type_list SP Lparen Ident Rparen SP Rarrow stmts_group E
+      B type_list                                  SP Rarrow stmts_group E
+    | B type_list SP Lparen Ident var_trace Rparen SP Rarrow stmts_group E
     ;
 
 while_stmt:
-      While SP expr SP Do stmts SPNL End 
+      While SP expr SP Do loopinv stmts SPNL End 
     ;
 
 with_stmt:
@@ -636,7 +693,7 @@ binding_list:
     ;
 
 binding:
-      G G Ident SP E G Equal SP expr
+      G G Ident var_trace SP E G Equal SP expr
     ;
 
 opt_qid_list:
@@ -681,6 +738,7 @@ type_constructor:
 type_constructor1:
       Bits A expr A For V type
     | Procedure AO signature
+    | callback_pragma Procedure AO signature
     | Untraced SP simple_object_type_list
     |             simple_object_type_list
     | Untraced SP brand Ref A type
@@ -790,6 +848,331 @@ override_semi:
 override:
       G  B Ident EF B SP Assign SP qid      E  E
     ;
+
+/*--------------------- pragmas ------------------------*/
+
+external_pragma:
+      Pr_External SP Rpragma
+    | Pr_External SP Str_expr SP Rpragma
+    | Pr_External SP Colon Ident SP Rpragma
+    | Pr_External SP Str_expr Colon Ident SP Rpragma
+    ;
+
+vtrace_pragma:       Pr_Trace SP expr SP Rpragma ;
+strace_pragma:     B Pr_Trace stmts E SP Rpragma ;
+
+var_trace:
+      /*empty*/
+    | SP vtrace_pragma
+    ;
+
+begin_trace:
+      Begin
+    | Begin V strace_pragma
+    ;
+
+assert_pragma:
+      Pr_Assert     SP B expr                    E SP Rpragma
+    | Pr_Assert     SP B expr Z Comma A Str_expr E SP Rpragma
+    ;
+
+loopinv:
+      /* empty */
+    | V loopinv_pragma
+    ;
+
+loopinv_pragma:    Pr_LoopInv    SP spec_pred SP Rpragma ;
+
+
+
+fatal_pragma:      Pr_Fatal      SP B0 fatal_exc_list SP Rpragma E ;
+
+fatal_exc_list:
+      qid_list
+    | Any
+    ;
+
+inline_pragma:     Pr_Inline     SP Rpragma ;
+unused_pragma:     Pr_Unused     SP Rpragma ;
+obsolete_pragma:   Pr_Obsolete   SP Rpragma ;
+callback_pragma:   Pr_Callback   SP Rpragma ;
+exported_pragma:   Pr_Exported   SP Rpragma ;
+
+
+
+/* an anypragma can appear anywhere */
+anypragma:
+      VZ pragma_pragma
+    | A nowarn_pragma
+    | A line_pragma
+    | VZ ll_pragma
+    | VZ spec_pragma
+    ;
+
+/* these pragmas can appear anywhere,
+   thus they are handled by the NPS non-terminal,
+   thus they must not have a terminating NPS,
+   as it is contained in Rpragma */
+pragma_pragma:     Pr_Pragma     SP id_list        SP Rpragma1 ;
+nowarn_pragma:     Pr_Nowarn     SP Rpragma1 ;
+ll_pragma:
+      Pr_LL       SP relop SP ll_set SP Rpragma1
+    | Pr_LLsup    SP relop SP ll_set SP Rpragma1
+    ;
+
+ll_set:
+      expr
+    | Lbrace Rbrace
+    | Lbrace expr_list Rbrace
+    ;
+
+line_pragma:
+      Pr_Line     SP Card_const SP Rpragma1
+    | Pr_Line     SP Card_const SP Str_const SP Rpragma1
+    ;
+
+spec_pragma:       Pr_Spec SP B esc_spec E A Rpragma1 ;
+
+
+/*------ specifications for ESC (extended static checker) ------*/
+
+esc_spec:
+      spec_proc
+    | spec_var
+    | spec_abstract
+    | spec_depend
+    | spec_pred_def
+    | spec_func_def
+    | spec_axiom
+    | spec_protect
+    | spec_inv
+    | spec_let
+    ;
+
+spec_proc:
+        spec_proc_signature NL
+        spec_proc_opt_modifies
+        spec_proc_opt_requires
+        spec_proc_opt_ensures
+      ;
+
+spec_proc_opt_modifies:
+      /* empty */
+    | spec_proc_modifies NL
+    ;
+
+spec_proc_opt_requires:
+      /* empty */
+    | spec_proc_requires NL
+    ;
+
+spec_proc_opt_ensures:
+      /* empty */
+    | spec_proc_ensures NL
+    ;
+
+spec_proc_signature:
+      qqid
+    | qqid Lparen id_list Rparen
+    | qqid                       Colon spec_type
+    | qqid Lparen id_list Rparen Colon spec_type
+    ;
+
+spec_var: Var SP B spec_typed_id_list E ;
+
+spec_depend:
+      Depend SP qqid spec_opt_typed_id Colon A B spec_term_list E ;
+
+spec_abstract:
+      Abstract SP spec_abstract_lhs A Iff   SP spec_pred
+    | Abstract SP spec_abstract_lhs A Equal SP expr
+    ;
+
+spec_abstract_lhs: qqid spec_opt_typed_id Colon A qqid Lbracket qqid Rbracket ;
+
+spec_opt_typed_id:
+      /* empty */
+    | Lbracket spec_typed_id Rbracket
+    ;
+
+spec_pred_def: Pred SP Ident Lparen spec_typed_id_list Rparen A Is SP spec_pred ;
+
+spec_func_def:  /* was TypedIdlist instead of TypedIdList */
+      Func SP Ident                                  Z Colon A spec_type
+    | Func SP Ident Lparen spec_typed_id_list Rparen Z Colon A spec_type
+    ;
+
+spec_axiom: Axiom SP spec_pred ;
+
+spec_protect: Protect SP qqid_list A By SP spec_term_list ;
+
+spec_inv: Invariant SP spec_pred ;
+
+spec_let: Let SP Ident A Assign SP spec_term ;
+
+
+/*spec_term: spec_term_sum ;*/
+
+spec_term: spec_pred ;
+
+spec_pred: spec_quant ;
+
+spec_quant: B spec_zquant E ;
+spec_zquant:
+      spec_concl
+    | All    SP Lbracket spec_typed_id_list Rbracket A spec_concl
+    | Exists SP Lbracket spec_typed_id_list Rbracket A spec_concl
+    ;
+
+spec_concl: B spec_zconcl E ;
+spec_zconcl:
+      spec_disj
+    | spec_disj SP spec_weak_pred_op A spec_concl /* these operations are right-associative */
+    ;
+
+spec_weak_pred_op: Implies | Iff ;
+
+spec_disj: B spec_zdisj E ;
+spec_zdisj:
+      spec_conj
+    | spec_zdisj A Or SP spec_conj
+    ;
+
+spec_conj: B spec_zconj E ;
+spec_zconj:
+      spec_literal
+    | spec_zconj A And SP spec_literal
+    ;
+
+spec_literal: B spec_zliteral E ;
+spec_zliteral:
+      spec_atom
+    | Not SP spec_zliteral
+    ;
+
+spec_atom:
+      B spec_term_sum A spec_bin_rel SP spec_term_sum E
+    | B spec_term_sum E
+    ;
+
+spec_term_sum: B spec_zterm_sum E ;
+spec_zterm_sum:
+      spec_term_prod
+    | spec_zterm_sum A spec_addop SP spec_term_prod
+    ;
+spec_addop: Plus | Minus ;
+
+spec_term_prod: B spec_zterm_prod E ;
+spec_zterm_prod:
+      spec_term_selector
+    | spec_zterm_prod A spec_mulop SP spec_term_selector
+    ;
+spec_mulop: Asterisk | Div | Mod ;
+
+spec_term_selector:
+      spec_term_paren
+    | qqid Z Lparen Rparen
+    | qqid Z Lparen spec_term_list Rparen
+    | spec_term_selector Z Lbracket spec_term_list Rbracket
+    | spec_term_selector Z Uparrow
+    | spec_term_selector Z UparrowPrime
+    ;
+
+spec_term_paren:
+      spec_prim_term
+    | Lparen spec_term Z Rparen
+    ;
+
+spec_term_list:
+      Z spec_term
+    | spec_term_list Z Comma A spec_term
+    ;
+
+spec_prim_term:
+      Card_const
+    | qqidp
+    ;
+
+/* For my taste the list should be separated
+   with semicolons for consistency reasons -Lemming */
+spec_typed_id_list:
+      Z spec_typed_id
+    | spec_typed_id_list Z Comma A spec_typed_id
+    ;
+
+spec_typed_id: id_list Colon SP spec_type ;
+
+spec_type:
+      qqid
+    | qqid Lbracket spec_type Rbracket
+    | Map SP spec_type SP To SP spec_type
+    ;
+
+spec_bin_rel: Less | Greater | Lsequal | Grequal | Equal | Notequal ;
+
+spec_proc_modifies: Modifies SP spec_sub_id_list ;
+
+spec_sub_id_list:
+      Z spec_sub_id
+    | spec_sub_id_list Z Comma A spec_sub_id
+    ;
+
+spec_sub_id: qqid spec_term_bracket_list ;
+
+spec_term_bracket_list:
+      /* empty */
+    | spec_term_bracket_list Lbracket spec_term Rbracket;
+
+spec_proc_requires: Requires SP spec_pred ;
+
+spec_proc_ensures:
+      Ensures SP B spec_pred E
+    | Ensures SP B spec_pred SP Except SP spec_except_spec_list E
+    ;
+
+spec_except_spec:
+      qqid                     SP Rarrow SP spec_pred
+    | qqid Lparen Ident Rparen SP Rarrow SP spec_pred
+    ;
+
+spec_except_spec_list:
+      spec_except_spec
+    | spec_except_spec_list SP Bar SP spec_except_spec
+    ;
+
+qqid:
+      Ident
+    | qqid Dot Ident
+    ;
+
+qqid_list:
+      Z qqid
+    | qqid_list Z Comma A qqid
+    ;
+
+qqidp:
+      qqid
+    | qqid Dot IdentPrime mixed_qqidp
+    | IdentPrime mixed_qqidp
+    ;
+
+mixed_qqidp:
+      /* empty */
+    | mixed_qqidp Dot idp
+    ;
+
+/* this is the natural way,
+   but the parser must be able to switch to a primed qqid
+   if he encounters the first primed id,
+   this avoids conflicts between spec_term_selector and spec_prim_term
+qqidp:
+      idp
+    | qqidp Dot idp
+    ;
+*/
+
+idp: Ident | IdentPrime ;
+
 
 /*--------------------- expressions ------------------------*/
 
@@ -936,13 +1319,13 @@ elem_list:
 
 elem:
       expr
-    | expr Z Dotdot A expr
+    | expr SP Dotdot A expr
     | expr SP Assign A expr
     ;
 
 elem_tail:
       /* empty */
-    | Z Comma A Dotdot
+    | Z Comma SP Dotdot
     ;
 
 opt_id_list:
@@ -978,28 +1361,46 @@ Rarrow:        RARROW { PR ("=>");} NPS ;
 Rbrace:        RBRACE { PR ("}");} NPS ;
 Rbracket:      RBRACKET { PR ("]");} NPS ;
 Rparen:        RPAREN { PR (")");} NPS ;
+Rpragma:       RPRAGMA { PR ("*>");} NPS ;
+Rpragma1:      RPRAGMA { PR ("*>");} ;
 Semi:          SEMICOLON { PR (";");} NPS ;
 Semi1:         SEMICOLON { PR (";");} ;
 Slash:         SLASH { PR ("/");} NPS ;
 Subtype:       SUBTYPE { PR ("<:");} NPS ;
 Uparrow:       UPARROW { PR ("^");} NPS ;
+UparrowPrime:  UPARROWPRIME { PR ("^'");} NPS ;
 
 /* These used to do CommentPragmaAfterOpen or CommentPragmaAfterOpen2. */
 Lparen:        LPAREN { PR ("("); } NPS ;
 Lparen2:       LPAREN { PR ("("); } NPS ;
 Lbracket:      LBRACKET { PR ("["); } NPS ;
 Lbrace:        LBRACE { PR ("{"); } NPS ;
+/*Lpragma:       LPRAGMA { PR ("<*");} NPS ;*/
 
 /* CommentPragmaAfterOpen:  * empty * | SP InitialNPS A ; */
 /* CommentPragmaAfterOpen2: * empty * |    InitialNPS ; */
 
-Pr_External:   PR_EXTERNAL { PF (&lexbuf[$1], fonts->fixedComment);} NPS ;
-Pr_Inline:     PR_INLINE { PF (&lexbuf[$1], fonts->fixedComment);} NPS ;
-Pr_Obsolete:   PR_OBSOLETE { PF (&lexbuf[$1], fonts->fixedComment);} NPS ;
-Pr_Unused:     PR_UNUSED { PF (&lexbuf[$1], fonts->fixedComment);} NPS ;
+Pr_External:   PR_EXTERNAL { PF ("<* EXTERNAL", fonts->fixedComment);} NPS ;
+Pr_Inline:     PR_INLINE   { PF ("<* INLINE",   fonts->fixedComment);} NPS ;
+Pr_Assert:     PR_ASSERT   { PF ("<* ASSERT",   fonts->fixedComment);} NPS ;
+Pr_Trace:      PR_TRACE    { PF ("<* TRACE",    fonts->fixedComment);} NPS ;
+Pr_Fatal:      PR_FATAL    { PF ("<* FATAL",    fonts->fixedComment);} NPS ;
+Pr_Unused:     PR_UNUSED   { PF ("<* UNUSED",   fonts->fixedComment);} NPS ;
+Pr_Obsolete:   PR_OBSOLETE { PF ("<* OBSOLETE", fonts->fixedComment);} NPS ;
+Pr_Callback:   PR_CALLBACK { PF ("<* CALLBACK", fonts->fixedComment);} NPS ;
+Pr_Exported:   PR_EXPORTED { PF ("<* EXPORTED", fonts->fixedComment);} NPS ;
+
+Pr_Pragma:     PR_PRAGMA   { PF ("<* PRAGMA",   fonts->fixedComment);} NPS ;
+Pr_Nowarn:     PR_NOWARN   { PF ("<* NOWARN",   fonts->fixedComment);} NPS ;
+Pr_Line:       PR_LINE     { PF ("<* LINE",     fonts->fixedComment);} NPS ;
+Pr_LL:         PR_LL       { PF ("<* LL",       fonts->fixedComment);} NPS ;
+Pr_LLsup:      PR_LLsup    { PF ("<* LL.sup",   fonts->fixedComment);} NPS ;
+Pr_Spec:       PR_SPEC     { PF ("<* SPEC",     fonts->fixedComment);} NPS ;
+Pr_LoopInv:    PR_LOOPINV  { PF ("<* LOOPINV",  fonts->fixedComment);} NPS ;
 
 Ident:         IDENT { PRID (&lexbuf[$1]);} NPS ;
 IdentP:	       IDENT { PF (&lexbuf[$1], fonts->procName);} NPS ;
+IdentPrime:    IDENTPRIME { PRID (&lexbuf[$1]);} NPS ; /* primed identifiers are allowed in SPEC pragmas */
 Card_const:    CARD_CONST { PR (&lexbuf[$1]);} NPS ;
 Real_const:    REAL_CONST { PR (&lexbuf[$1]);} NPS ;
 Char_const:    CHAR_CONST { PF (&lexbuf[$1], fonts->fixed);} NPS ;
@@ -1069,25 +1470,87 @@ Var:           VAR { PK ("VAR");} NPS ;
 While:         WHILE { PK ("WHILE");} NPS ;
 With:          WITH { PK ("WITH");} NPS ;
 
+/* ESC keywords */
+Abstract:      ABSTRACT { PK ("ABSTRACT");} NPS ;
+All:           ALL { PK ("ALL");} NPS ;
+Axiom:         AXIOM { PK ("AXIOM");} NPS ;
+Depend:        DEPEND { PK ("DEPEND");} NPS ;
+Ensures:       ENSURES { PK ("ENSURES");} NPS ;
+Exists:        EXISTS { PK ("EXISTS");} NPS ;
+Func:          FUNC { PK ("FUNC");} NPS ;
+Iff:           IFF { PK ("IFF");} NPS ;
+Implies:       IMPLIES { PK ("IMPLIES");} NPS ;
+Invariant:     INVARIANT { PK ("INVARIANT");} NPS ;
+Is:            IS { PK ("IS");} NPS ;
+Let:           LET { PK ("LET");} NPS ;
+Map:           MAP { PK ("MAP");} NPS ;
+Modifies:      MODIFIES { PK ("MODIFIES");} NPS ;
+Pred:          PRED { PK ("PRED");} NPS ;
+Protect:       PROTECT { PK ("PROTECT");} NPS ;
+Requires:      REQUIRES { PK ("REQUIRES");} NPS ;
+/* special ESC functions -- they do not need special treatment
+Concat:        CONCAT { PK ("CONCAT");} NPS ;
+Delete:        DELETE { PK ("DELETE");} NPS ;
+Insert:        INSERT { PK ("INSERT");} NPS ;
+Member:        MEMBER { PK ("MEMBER");} NPS ;
+Shared:        SHARED { PK ("SHARED");} NPS ;
+Subset:        SUBSET { PK ("SUBSET");} NPS ;
+Mut_ge:        MUT_GE { PK ("MUT_GE");} NPS ;
+Mut_gt:        MUT_GT { PK ("MUT_GT");} NPS ;
+Mut_le:        MUT_LE { PK ("MUT_LE");} NPS ;
+Mut_lt:        MUT_LT { PK ("MUT_LT");} NPS ;
+*/
+
+
 /*--------------------- comments ------------------------*/
 
 InitialNPS:
-      WHITESPACE { blanklinep = 0; PrintNPS(1); }
+      space_list { blanklinep = 0; PrintNPS(1); }
+    | space_list { blanklinep = 0; PrintNPS(1); } anypragma_space_list
     ;
 
 NPS:
       /* empty */ { blanklinep = 0; }
-    | WHITESPACE { blanklinep = 0; PrintNPS(0); }
+    | space_anypragma_list
+    | anypragma_space_list
+    ;
+
+/* We use the unefficient right recursion to assert
+   that anypragma_space_list always start with anypragma_list
+   as required by InitialNPS. */
+space_anypragma_list:
+      space_list_emit
+    | space_list_emit anypragma_space_list
+    ;
+
+anypragma_space_list:
+      anypragma_list
+    | anypragma_list space_anypragma_list
+    ;
+
+anypragma_list:
+      anypragma
+    | anypragma_list anypragma
+    ;
+
+space_list_emit:
+      space_list { blanklinep = 0; PrintNPS(0); }
+    ;
+
+/* We consider comments and unknown pragmas as spaces as well */
+space_list:
+      WHITESPACE
+    | space_list WHITESPACE
     ;
 
 /*----------------- formatting semantic routines -----------------------*/
 
-G:     { GR (); }       /* begin group */
-B0:    { BE (0.0); }      /* begin object - no indentation */
-B:     { BE (offset); } /* begin indented group */
-B2:    { BE (offset*2); } /* begin doubly indented group */
-E:     { EN (); }       /* end group/object */
-EF:    { ENF (); }	/* end group/object forcing comment output */
+G:     { GR (); };       /* begin group */
+B0:    { BE (0.0); };      /* begin object - no indentation */
+B:     { BE (offset); }; /* begin indented group */
+B2:    { BE (offset*2); }; /* begin doubly indented group */
+E:     { EN (); };       /* end group/object */
+EF:    { ENF (); };	/* end group/object forcing comment output */
 
 A:     { DoBreak (1, 2, 0.0); };     /* optimal, ununited break point */
 AO:    { DoBreak (1, 3, 0.0); };     /* nobreak-optimal, ununited break */
@@ -1095,20 +1558,20 @@ AX:    { DoBreak (0, 3, 0.0); };     /* no space, std indent */
 
 V:     { DoBreak (1, 1, 0.0); };     /* united break point */
 VZ:    { DoBreak (1, 1, -offset); };     /* space, outdent */
-VC:    { DoBreak (1, 1, -offset + 2.0 * bodySpaceWidth); }
+VC:    { DoBreak (1, 1, -offset + 2.0 * bodySpaceWidth); };
 
 Z:     { DoBreak (0, 0, 0.0); };     /* no space, no break unless blank line */
 SP:    { DoBreak (1, 0, 0.0); };     /* space */
 XSP:   { P2 (' '); };              /* simple space */
 
-BL:    { BL (); }                  /* forced break point */
+BL:    { BL (); };                  /* forced break point */
 
 AL2:   { DoAlign (2, 0); };        /* begin aligned object */
 AL3:   { DoAlign (3, 0); };
 ALZ5:  { DoAlign (5, 1); };
-EA:    { EndAlign (); }
+EA:    { EndAlign (); };
 /* Tell comment code when Formatter.Align is going to generate a newline. */
-ALNL:	{ ALNL(); }
+ALNL:	{ ALNL(); };
 
 SPNL:  { DoSPNL (); };             /* Space/Newline depending on the style */
 QSP:   { DoQSP (); };              /* Space or not, depending on the style */
@@ -1386,6 +1849,10 @@ initParser (infile, outfile, emacs, caps, fontInfo,
 	    fprintf(stderr, "m3pp: unable to open \"%s\".\n", infile);
 	    exit(1);
 	};
+        /* make a copy of the file name for output in case of an error */
+        /* Where can I free the allocated memory ? */
+        infileName = (char *) malloc (strlen(infile)+1);
+        strcpy (infileName, infile);
     };
     Formatter__Flush = flush;
     Formatter__SetFont = setFont;
@@ -1419,13 +1886,19 @@ initParser (infile, outfile, emacs, caps, fontInfo,
 }
 
 yyerror(s) char *s; {
-  char temp; char temp2;
+  int temp, temp2; /* must be 'int' instead of 'char'
+                      otherwise the test (temp>0)
+                      will fail for characters above code 127 
+                      and we need negative numbers for detecting end of file */
   Reset();
   Flush();
   if (calledFromEmacs == 0) {
+        /* XEmacs requires that character counting starts with 1
+            - very poor programming */
         fprintf (stderr,
-            "%s while pretty-printing; original position %d\n",
-             s, lexposition);
+            "%s:%d:%d: (byte %d) %s while pretty-printing\n",
+            (infileName != NULL) ? infileName : "",
+            currentRow+1, currentCol+1, lexposition, s);
         fprintf(stderr, "Error flagged in output\n");
   }
   PR ("(* SYNTAX ERROR *) ");

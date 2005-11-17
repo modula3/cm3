@@ -13,7 +13,10 @@
 %  or src/flex-bison directory and run the standard make.
 %
 
-import ("libm3")
+import ("vbtkit")
+
+include_dir("afm")
+bundle("AFMBundle")
 
 if SYSTEM_LIBS contains "LEX-YACC"
   if equal (TARGET, "HPPA")

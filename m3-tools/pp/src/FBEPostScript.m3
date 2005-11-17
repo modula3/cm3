@@ -4,7 +4,7 @@
    David Nichols, Xerox PARC
    July, 1991
 
-   $Id: FBEPostScript.m3,v 1.1.1.1 2001-01-13 14:47:03 wagner Exp $
+   $Id: FBEPostScript.m3,v 1.2 2005-11-17 03:23:56 hosking Exp $
 *)
 (* Copyright (c) 1991 Xerox Corporation.  All rights reserved.
 
@@ -18,7 +18,7 @@
 MODULE FBEPostScript;
 
 IMPORT FBE, FileRd, Fmt, RefList, Rd, Lex, Text, Wr, Thread, Env;
-IMPORT OSError, FloatMode, TextRd;
+IMPORT OSError, FloatMode, TextRd, Rsrc, AFMBundle;
 
 <* FATAL Thread.Alerted *>
 
@@ -32,7 +32,9 @@ CONST
   DefaultPageHeight = 9.5 * PtsPerInch;
   DefaultSpacing    = 2.0;
   MaxChars          = 128;       (* chars to buffer in the FBE *)
+(*
   AFMDir            = "/usr/local/lib/ps/";
+*)
 
 (* There are three positions that are interesting: 1) the position we're at due
    to all the commands we've received, 2) the position that the text we've
@@ -123,6 +125,18 @@ PROCEDURE NextInt (t: TEXT; VAR i: INTEGER): INTEGER  RAISES {Lex.Error} =
     END;
   END NextInt;
 
+PROCEDURE GetAFMFile( family: TEXT ): Rd.T RAISES {FBE.Failed} =
+  BEGIN
+    TRY
+      RETURN Rsrc.Open(family & ".afm", Rsrc.BuildPath(AFMBundle.Get()));
+    EXCEPT
+    | Rsrc.NotFound =>
+      RAISE FBE.Failed(
+                NEW(FBE.Failure, info := "couldn't open font width file"));
+    END;
+  END GetAFMFile;
+    
+(*
 (* look for an AFM file in a path of possible directories *)
 PROCEDURE GetAFMFile( family: TEXT ) : Rd.T RAISES {FBE.Failed} =
   PROCEDURE TryOpen(dir: TEXT) : Rd.T RAISES {OSError.E} =
@@ -171,6 +185,7 @@ PROCEDURE GetAFMFile( family: TEXT ) : Rd.T RAISES {FBE.Failed} =
     RAISE FBE.Failed(
               NEW(FBE.Failure, info := "couldn't open font width file"));
   END GetAFMFile;
+*)
 
 (* Find the AFM file with the char widths and read it in. *)
 PROCEDURE GetFont (o: T; fontName: TEXT): FBE.Font RAISES {FBE.Failed} =

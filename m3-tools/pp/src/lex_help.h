@@ -17,7 +17,9 @@
 /* It also tracks the current column the input is in for comment */
 /* processing. */
 
+
 int currentCol = 0;	/* current column of input */
+int currentRow = 0;	/* current row of input */
 
 AddLexLength ()
 {
@@ -36,6 +38,7 @@ AddChar(c)
   switch(c) {
     case '\n':
       currentCol = 0;
+      currentRow++;
       break;
     case '\t':
       /* Round up to next tab stop. */
@@ -54,6 +57,7 @@ AddChar(c)
 BufferLexeme (addLength)
 int addLength;
 { 
+	StopNPS();
 	if (addLength) AddLexLength();
 	lexptr = lexbufsize - lexptr;
 	yylval = lexptr;
@@ -67,6 +71,7 @@ CapBufferLexeme (addLength)
 int addLength;
 { 
 	char *p, *q = yytext;
+	StopNPS();
 
 	if (addLength) AddLexLength();
 	lexptr = lexbufsize - lexptr;
@@ -174,6 +179,51 @@ static int IsWhite(c)
     return c == ' ' || c == '\t' || c == '\f' || c == '\n' || c == '\r';
 }
 
+typedef enum {false, true} bool;
+
+static bool inNPS = false;
+
+StartNPS ()
+{
+    if (inNPS) {
+        return;
+    }
+    inNPS = true;
+    commentLevel = 0;
+    AllocComments(2);
+    commTextPtr = commText;
+    nComments = 0;
+    comments[0].NLs = 0;
+}
+
+StopNPS ()
+{
+    inNPS = false;
+}
+
+/* Handle white spaces.
+   This was formerly part of HandleNPS. */
+int HandleSpaces ()
+{
+    StartNPS();
+    /* Now deal with the main loop. */
+    {
+	int c = yytext[0];
+	do {
+	    if (!IsWhite(c)) {
+		unput(c);
+		return WHITESPACE;
+	    }
+	    if (c == '\n') {
+		++comments[nComments].NLs;
+	    }
+	    SaveChar(c);
+            c = input();
+	} while (c > 0 /* EOF */);
+    }
+    return WHITESPACE;
+}
+
 /* Handle a "non-program-sequence."  This is a sequence of whitespace,
    comments and pragmas.  We only remember newlines, comments, and pragmas
    in the stuff we send to the parser.  The start column of the comments
@@ -181,31 +231,13 @@ static int IsWhite(c)
 
    When we arrive, the first character of whitespace or comment is in
    yytext, and we're responsible for taking care of the rest. */
-HandleNPS ()
+int HandleCommentPragma ()
 {
-    register char c, c2;
-    char target;
-    int tok;
-    char *p;
-    /* Magic variable to tell us we found a special pragma last time. */
-    static int pragmaToken = -1;
+    /* use 'int' instead of 'char' for distinguishing between end of file
+       and characters above 127 */
+    register int c, c2;
 
-    if (pragmaToken != -1) {
-	int tok = pragmaToken;
-	pragmaToken = -1;
-	input();		/* parse the '*' we pushed back. */
-	/* Copy the comment into the normal token buffer. This assumes
-	   lexbufsize > sizeof(yytext), but the code above assumes that,
-	   anyway. */
-	strcpy(yytext, comments[nComments].text);
-	BufferLexeme(0);
-	return tok;
-    }
-    commentLevel = 0;
-    AllocComments(2);
-    commTextPtr = commText;
-    nComments = 0;
-    comments[0].NLs = 0;
+    StartNPS();
     /* Now deal with the main loop. */
     c = yytext[0];
     do {
@@ -228,87 +260,28 @@ HandleNPS ()
 		SaveChar(c);
 	    }
 	}
-	/* Not in comment: check for newline or non-whitespace. */
+	/* Not in comment: this should never occur. */
 	else if (commentLevel == 0) {
-	    if (!IsWhite(c)) {
-		unput(c);
-		return WHITESPACE;
-	    }
-	    if (c == '\n')
-		++comments[nComments].NLs;
-	    SaveChar(c);
+            fprintf(stderr, "outside a comment: bug in program\n");
 	}
 	/* In comment: check for comment end. */
 	else {
 	    SaveChar(c);
 	    if (c == '*') {
+		char target = commentChar == '(' ? ')' : '>';
 		c2 = input();
-		target = commentChar == '(' ? ')' : '>';
 		if (c2 == target) {
 		    SaveChar(c2);
 		    EndComment();
-		    /* Check to see if this pragma is one of the ones we
-		       return special tokens for.  We don't return them for
-		       all pragmas since some can appear anywhere in a
-		       program.  If this pragma matches, then return it (if
-		       it's the first thing we saw) or push it back and
-		       return whitespace.  Ugh.
-		    
-		    We also make sure the pragma isn't too large to fit in
-		       our normal token buffer.  If it is, we give up and
-		       treat it as a comment. */
-		    if (commentLevel == 0 && (tok = CheckPragma()) != -1
-			&& strlen(comments[0].text) < lexbufsize - 1) {
-			/* Save it for next time. */
-			--nComments;
-			currentCol = comments[nComments].startCol;
-			pragmaToken = tok;
-			/* Now push back "<*" so the lexer will call us
-			   next time. */
-			unput('*');
-			unput('<');
+		    if (commentLevel == 0) {
 			return WHITESPACE;
 		    }
 		}
-		else
+		else {
 		    unput(c2);
+                }
 	    }
 	}
     } while ((c = input()) > 0 /* EOF */);
     return WHITESPACE;
-}
-
-struct PragmaEntry {
-    char *name;
-    int len;
-    int token;
-};
-static struct PragmaEntry pragmaTable[] = {
-    "EXTERNAL", 8, PR_EXTERNAL,
-    "INLINE", 6, PR_INLINE,
-    "OBSOLETE", 8, PR_OBSOLETE,
-    "UNUSED", 6, PR_UNUSED,
-    NULL, 0, -1
-};
-
-
-/* See if the last pragma was one of our special ones. */
-int 
-CheckPragma()
-{
-    char *p = comments[nComments - 1].text;
-    struct PragmaEntry *pe;
-    int c;
-
-    if (*p != '<')
-	return -1;
-    p += 2;
-    while (IsWhite(*p))
-	++p;
-    for (pe = pragmaTable; pe->name != NULL; ++pe) {
-	if (strncmp(p, pe->name, pe->len) == 0 &&
-	    ((c = p[pe->len]) == '*' || IsWhite(c)))
-	    return pe->token;
-    }
-    return -1;
 }

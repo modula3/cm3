@@ -141,6 +141,37 @@ static KEYWORDENTRY aok[] = {
 "VAR", VAR,
 "WHILE", WHILE,
 "WITH", WITH,
+/* keywords of the extended static checker ESC
+   which specifications are stored in SPEC pragmas */
+"ABSTRACT", ABSTRACT, /* documentation says REP instead */
+"ALL", ALL,
+"AXIOM", AXIOM,
+"DEPEND", DEPEND, /* documentation says DEPENDS instead */
+"ENSURES", ENSURES,
+"EXISTS", EXISTS,
+"FUNC", FUNC,
+"IFF", IFF,
+"IMPLIES", IMPLIES,
+"INVARIANT", INVARIANT, /* documentation says INV instead */
+"IS", IS,
+"LET", LET,
+"MAP", MAP,
+"MODIFIES", MODIFIES,
+"PRED", PRED,
+"PROTECT", PROTECT,
+"REQUIRES", REQUIRES,
+/* special ESC functions -- they not no special treatment
+"CONCAT", CONCAT,
+"DELETE", DELETE,
+"INSERT", INSERT,
+"MEMBER", MEMBER,
+"SHARED", SHARED,
+"SUBSET", SUBSET,
+"MUT_GE", MUT_GE,
+"MUT_GT", MUT_GT,
+"MUT_LE", MUT_LE,
+"MUT_LT", MUT_LT,
+*/
 };
 	
 static PTRKEYWORDENTRY hashtab[HASHSIZE] = {
