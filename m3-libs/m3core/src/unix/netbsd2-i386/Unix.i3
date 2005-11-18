@@ -141,10 +141,8 @@ CONST (* fd flags *)
 
 TYPE
   struct_flock = RECORD
-    l_start:  off_t := 0;
-    l_pad1:   long  := 0;  (* assume zero sign extension of l_start *)
-    l_len:    off_t := 0;
-    l_pad2:   long  := 0;  (* assume zero sign extension of l_len *)
+    l_start := off_t{};
+    l_len   := off_t{};
     l_pid:    pid_t := 0;
     l_type:   short; (* see below *)
     l_whence: short;
@@ -770,7 +768,7 @@ CONST (* whence *)
   L_XTND = 2;
 
 <*EXTERNAL "m3_lseek"*>
- PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
+ PROCEDURE lseek (d: int; offset: int; whence: int): int;
 (* ok *)
 
 (*** mkdir - make a directory file ***)
@@ -924,9 +922,9 @@ TYPE
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
 <*EXTERNAL "m3_truncate" *> 
-   PROCEDURE truncate (path: char_star; length: off_t): int;
+   PROCEDURE truncate (path: char_star; length: int): int;
 <*EXTERNAL "m3_ftruncate" *> 
-   PROCEDURE ftruncate (fd, length: off_t): int;
+   PROCEDURE ftruncate (fd, length: int): int;
 (* ok *)
 
 (* not implemented 

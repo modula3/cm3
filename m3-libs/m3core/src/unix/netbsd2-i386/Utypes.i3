@@ -42,7 +42,7 @@ TYPE
   u_int16_t = u_short;
   int32_t   = int;
   u_int32_t = u_int;
-  int64_t   = struct__quad;
+  int64_t   = RECORD val := ARRAY [0..1] OF int32_t {0,0}; END;
   u_int64_t = int64_t;
 
 (* #ifdef vax *)
@@ -53,18 +53,17 @@ TYPE
   label_t        = struct_label_t;
 (*#endif*)
 
-  struct__quad = RECORD val: ARRAY [0..1] OF int32_t; END;
-  quad         = struct__quad;
-  quad_t       = struct__quad;
+  quad         = int64_t;
+  quad_t       = int64_t;
   daddr_t      = int32_t; 
   caddr_t      = ADDRESS;
   ino_t        = u_int32_t;
   swblk_t      = int32_t;
-  size_t       = u_int;
+  size_t       = unsigned_int;
   ssize_t      = int;
   time_t       = long;
   dev_t        = u_int32_t;
-  off_t        = int;           (* Should be int64_t but is padded & wrapped *)
+  off_t        = int64_t;
   key_t        = long;
   clock_t      = u_long;
   mode_t       = u_int32_t;
@@ -72,7 +71,7 @@ TYPE
   uid_t        = u_int32_t;
   gid_t        = u_int32_t;
   pid_t        = int32_t;
-  blkcnt_t     = int;		(* Should be int64_t but is padded *)
+  blkcnt_t     = int64_t;
   blksize_t    = u_int32_t;
 
   tcflag_t     = u_int;

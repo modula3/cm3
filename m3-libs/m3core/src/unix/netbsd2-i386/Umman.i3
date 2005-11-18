@@ -44,7 +44,7 @@ CONST
   MS_INVALIDATE    = 16_04;
 
 <*EXTERNAL "m3_mmap" *>
-PROCEDURE mmap (addr: void_star; len: size_t; prot,flags,fd: int; off: off_t)
+PROCEDURE mmap (addr: void_star; len: size_t; prot,flags,fd: int; off: int)
   : void_star;
 
 <*EXTERNAL*>
