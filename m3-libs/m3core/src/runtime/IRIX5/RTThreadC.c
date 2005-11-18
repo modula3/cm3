@@ -20,8 +20,8 @@ jmp_buf *from, *to;
 int ThreadF__myId = 1;
 
 /* low-level runtime lock */
-int RT0u__inCritical = 0;
+int ThreadF__inCritical = 0;
 
 /* global, per-thread linked list of exception handlers */
-void* RTThread__handlerStack = 0;
+void* ThreadF__handlerStack = 0;
 

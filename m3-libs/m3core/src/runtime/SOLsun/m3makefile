@@ -13,6 +13,5 @@ implementation ("RTSignal")
 implementation ("RTThread")
 c_source       ("RTThreadC")
 c_source       ("RTStackC")
-c_source       ("RTHeapDepC")
 s_source       ("RTStackASM")
-
+s_source       ("RTMachineASM")

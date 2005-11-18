@@ -41,4 +41,12 @@ TYPE
 PROCEDURE MyId (): Id RAISES {};
 (* return Id of caller *)
 
+(*---------------------------------------------------- exception delivery ---*)
+
+PROCEDURE GetCurrentHandlers(): ADDRESS;
+(* == RETURN WinBase.TlsGetValue(handlersIndex) *)
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS);
+(* == WinBase.TlsSetValue(handlersIndex, h) *)
+
 END ThreadF.

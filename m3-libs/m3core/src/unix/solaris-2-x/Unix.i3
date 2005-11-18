@@ -10,7 +10,7 @@ INTERFACE Unix;
 FROM Word IMPORT Or, And, Shift;
 
 FROM Ctypes IMPORT short, int, long, char_star, char_star_star, int_star;
-FROM Utypes IMPORT u_short, dev_t, off_t;
+FROM Utypes IMPORT u_short, dev_t, off_t, size_t;
 FROM Utime IMPORT struct_timeval;
 
 
@@ -21,31 +21,34 @@ CONST
 (*** file flags ***)
 
 CONST
-  FREAD =      16_000001;        (* descriptor read/receive'able *)
-  FWRITE =     16_000002;        (* descriptor write/send'ale *)
-  FNDELAY =    16_000004;        (* no delay *)
-  FAPPEND =    16_000008;        (* append on each write *)
-  FSYNC   =    16_000010;
-  FREVOKED =   16_000020;	 (*C2 Security - Revoke Subsystem *)
-  FNONBLOCK =  16_000080;		
-  FNBLOCK =    FNONBLOCK;        (* POSIX no delay *)
-  FMASK     =  16_0000FF;
+  FREAD      = 16_000001;        (* descriptor read/receive'able *)
+  FWRITE     = 16_000002;        (* descriptor write/send'ale *)
+  FNDELAY    = 16_000004;        (* no delay *)
+  FAPPEND    = 16_000008;        (* append on each write *)
+  FSYNC      = 16_000010;        (* file (data+inode) integrity while writing *)
+  FREVOKED   = 16_000020;	 (* C2 Security - Revoke Subsystem *)
+  FDSYNC     = 16_000040;        (* file data only integrity while writing *)
+  FRSYNC     = 16_008000;        (* sync flag for read operations *)
+                                 (* combined with FSYNC or FDSYNC, it has *)
+                                 (* effect on read same as write         *)
+                                 (* Should be within first 8 bits but *)
+                                 (* no space, so we change FMASK also *)
+  FOFFMAX    = 16_002000;        (* Large file *)
+                                 (* Cannot be within first eight bits *)
+                                 (* So we change FMASK also *)
+  FNONBLOCK  = 16_000080;		
+  FNBLOCK    = FNONBLOCK;        (* POSIX no delay *)
+  FMASK      = 16_00a0FF;        (* should be disjoint from FASYNC *)
+                                 (* should include FRSYNC also *)
 
-  FCREAT =     16_000100;        (* create if nonexistant *)
-  FTRUNC  =    16_000200;        (* truncate to zero length *)
-  FASYNC =     16_001000;        (* signal pgrp when data ready *)
-  FEXCL =      16_000400;        (* error if already created *)
+  (* open-only modes *)
+  FCREAT     = 16_000100;        (* create if nonexistant *)
+  FTRUNC     = 16_000200;        (* truncate to zero length *)
+  FEXCL      = 16_000400;        (* error if already created *)
+  FASYNC     = 16_001000;        (* asyncio is in progress *)
 
- (* FMARK =      16_000020;*)        (* makr during gc() *)
-
-  (*FDEFER =     16_000040;*)        (* fefer for next gc pass *)
-  (*FSHLOCK =    16_000200;*)        (* shared lock present *)
-  (*FEXLOCK =    16_000400;*)        (* exclusive lock present *)
-  FBLKINUSE =  16_010000;        (* block if "in use" *)
-  FBLKANDSET = 16_030000;        (* block, test and set "in use" *)
-  FSYNCRON =   16_100000;        (* write file syncronously *)
-  (*FNBUF =      16_200000;*)        (* file used for n-buffering *)
-
+  (* fsync pseudo flag *)
+  FNODSYNC   = 16_010000;
 
 CONST
   MSETUID = 8_4000;
@@ -121,14 +124,15 @@ CONST   (* request *)
   F_SETFD =  2;   (* Set close-on-exec flag *)
   F_GETFL =  3;   (* Get fd status flags *)
   F_SETFL =  4;   (* Set fd status flags *)
-  F_GETOWN = 5;   (* Get owner *)
-  F_SETOWN = 6;   (* Set owner *)
+  F_GETOWN = 23;  (* Get owner *)
+  F_SETOWN = 24;  (* Set owner *)
 
   (* in these three cases, you need to pass LOOPHOLE (ADR (v), int) 
      for arg, where v is a variable of type struct_flock *)
-  F_GETLK  = 7;   (* Get file lock *)
-  F_SETLK  = 8;   (* Set file lock *)
-  F_SETLKW = 9;   (* Set file lock and wait *)
+  F_SETLK  =  6;  (* Set file lock *)
+  F_SETLKW =  7;  (* Set file lock and wait *)
+  F_FREESP = 11;  (* Free file space *)
+  F_GETLK  = 14;  (* Get file lock *)
 
 CONST (* fd flags *)
   FD_CLOEXEC = 1;    (* Close file descriptor on exec() *)
@@ -139,7 +143,9 @@ TYPE
     l_whence: short;
     l_start:  off_t := 0;
     l_len:    off_t := 0;
+    l_sysid:  int   := 0;
     l_pid:    int   := 0;
+    l_pad :=  ARRAY [0..3] OF long {0,0,0,0};
   END;
 
 (*
@@ -157,15 +163,19 @@ PROCEDURE fcntl (fd, request, arg: int): int;
 
 (*** flock - apply or remove an advisory lock on an open file ***)
 CONST
+  (* FIXME: These four are missing in my Solairs 8 header files. And I
+            thought this was some standard... ow 2003-07-24 *)
+            
   LOCK_SH = 1;   (* shared lock *)
   LOCK_EX = 2;   (* exclusive lock *)
   LOCK_NB = 4;   (* don't block when locking *)
   LOCK_UN = 8;   (* unlock *)
 
 CONST (* l_type values -- more conventional names... *)
-  F_RDLCK = LOCK_SH; (* Read lock *) 
-  F_WRLCK = LOCK_EX; (* Write lock *)
-  F_UNLCK = LOCK_UN; (* Remove lock(s) *)
+  F_RDLCK   = 01; (* Read lock *) 
+  F_WRLCK   = 02; (* Write lock *)
+  F_UNLCK   = 03; (* Remove lock(s) *)
+  F_UNLKSYS = 04; (* remove remote locks for a given system *)
 
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 
@@ -202,6 +212,7 @@ CONST (* l_type values -- more conventional names... *)
 
 (*** getwd - get current working directory pathname ***)
 <*EXTERNAL*> PROCEDURE getwd (pathname: char_star): char_star;
+<*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 (*** ioctl - control device ***)
 (* this is a temptative declaration of the types of the arguments. 
@@ -776,7 +787,7 @@ CONST (* mode *)
 
   (* lower bits used for the access permissions *)
 
-<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode, dev: int): int;
+<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode: int; dev: dev_t): int;
 
 
 (*** mount, umount - mount or unmount a file system ***)
@@ -794,19 +805,19 @@ CONST (* rwflag *)
 (*** open - open for reading or writing ***)
 
 CONST (* flags *)
-  O_RDONLY =    8_0;            (* open for reading *)
-  O_WRONLY =    8_1;            (* open for writing *)
-  O_RDWR   =    8_2;            (* open for read & write *)
-  O_NDELAY =    FNDELAY;        (* non-blocking open *)
-  O_NONBLOCK =  FNBLOCK;        (* POSIX non-blocking I/O *)
-  O_APPEND =    FAPPEND;        (* append on each write *)
-  O_CREAT =     FCREAT;         (* open with file create *)
-  O_TRUNC  =    FTRUNC;         (* open with truncation *)
-  O_EXCL =      FEXCL;          (* error on create if file exists *)
-  O_BLKINUSE =  FBLKINUSE;      (* block if "in use" *)
-  O_BLKANDSET = FBLKANDSET;     (* block, test and set "in use" *)
-  O_FSYNC =     FSYNCRON;       (* syncronous write *)
+  O_RDONLY   = 16_00;			 (* open for reading *)
+  O_WRONLY   = 16_01;			 (* open for writing *)
+  O_RDWR     = 16_02;			 (* open for read & write *)
+  O_NDELAY   = 16_04;			 (* non-blocking open *)
+  O_APPEND   = 16_08;			 (* append on each write *)
+  O_SYNC     = 16_10;			 (* synchronized file update *)
+  O_DSYNC    = 16_40;			 (* synchronized data update *)
+  O_NONBLOCK = 16_80;			 (* POSIX non-blocking I/O *)
 
+  O_CREAT    = 16_100;			 (* open with file create *)
+  O_TRUNC    = 16_200;			 (* open with truncation *)
+  O_EXCL     = 16_400;			 (* error on create if file exists *)
+  O_NOCTTY   = 16_800;			 (* don't allocate controlling tty (POSIX) *)
   M3_NONBLOCK = O_NONBLOCK; (* -1 => would block, 0 => EOF *)
 
 <*EXTERNAL*> PROCEDURE open (name: char_star; flags, mode: int): int;
@@ -930,8 +941,9 @@ TYPE
 
 
 (*** vfork - spawn new process in a virtual memory efficient way ***)
-
-<*EXTERNAL*> PROCEDURE vfork (): int;
+(* Avoid vfork. The way it is used in ProcessPosix breaks incremental GC:
+   RestoreHandlers in child is reflected in parent to break VM faulting *)
+<*EXTERNAL "fork1"*> PROCEDURE vfork (): int;
 
 (*** vhangup - virtually hang up the current control terminal ***)
 

@@ -7,15 +7,15 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTHeapRep, RTCollectorSRC, RTMachine;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal;
-IMPORT Utime, Utypes, Uucontext, Word;
+IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTProcedureSRC, RTMachine, RTVM;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Usignal;
+IMPORT Utypes, Uucontext, Word;
 
 VAR
   initialized := FALSE;
   (* true iff "Init" has been called *)
 
-  defaultSIGSEGV: Usignal.SignalHandler := NIL;
+  defaultSIGSEGV: Usignal.SignalAction := NIL;
   (* original handler for "SIGSEGV" signal; set by "Init" *)
 
 PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
@@ -52,13 +52,13 @@ PROCEDURE Init () =
       ret: Ctypes.int;
     BEGIN
       vec.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
-      vec.sa_handler := Fault;
+      vec.sa_sigaction := LOOPHOLE(Fault, Usignal.SignalAction);
       EVAL Usignal.sigemptyset(vec.sa_mask);
       (* block the "SIGVTALRM" signal when signal handlers are called *)
       EVAL Usignal.sigaddset(vec.sa_mask, Usignal.SIGVTALRM);
       ret := Usignal.sigaction(Usignal.SIGSEGV, vec, ovec);
       <* ASSERT ret = 0 *>
-      defaultSIGSEGV := ovec.sa_handler;
+      defaultSIGSEGV := ovec.sa_sigaction;
     END;
 
     (* establish signal handler for all other signals that dump core, if no
@@ -69,13 +69,13 @@ PROCEDURE Init () =
         ret: Ctypes.int;
       BEGIN
         vec.sa_flags := Usignal.SA_SIGINFO;
-        vec.sa_handler := Core;
+        vec.sa_sigaction := Core;
         EVAL Usignal.sigemptyset(vec.sa_mask);
         EVAL Usignal.sigaddset(vec.sa_mask, Usignal.SIGVTALRM);
         ret := Usignal.sigaction(sig, vec, ovec);
         <* ASSERT ret = 0 *>
         (* If the old handler was not the default, restore it. *)
-        IF ovec.sa_handler # Usignal.SIG_DFL THEN
+        IF ovec.sa_sigaction # LOOPHOLE(Usignal.SIG_DFL, Usignal.SignalAction) THEN
           ret := Usignal.sigaction(sig, ovec, vec);
           <* ASSERT ret = 0 *>
         END;
@@ -107,8 +107,9 @@ PROCEDURE Fault (sig : Ctypes.int;
       IF RTHeapRep.Fault(sip.si_addr) THEN RETURN; END;
     END;
     (* otherwise, use "defaultSIGSEGV" to handle the fault *)
-    IF defaultSIGSEGV = Usignal.SIG_IGN THEN RETURN;
-    ELSIF defaultSIGSEGV = Usignal.SIG_DFL THEN Core(sig, sip, uap);
+    IF defaultSIGSEGV = LOOPHOLE(Usignal.SIG_IGN, Usignal.SignalAction) THEN RETURN;
+    ELSIF defaultSIGSEGV = LOOPHOLE(Usignal.SIG_DFL, Usignal.SignalAction) THEN
+      Core(sig, sip, uap);
     ELSE defaultSIGSEGV(sig, sip, uap);
     END;
   END Fault;
@@ -121,10 +122,10 @@ PROCEDURE Fault (sig : Ctypes.int;
 VAR dumped_core := FALSE;
 
 PROCEDURE Core (sig : Ctypes.int;
-     <*UNUSED*> sip : Usignal.siginfo_t_fault_star;
+     <*UNUSED*> sip : Usignal.siginfo_t_star;
      <*UNUSED*> uap : Uucontext.ucontext_t_star) =
   BEGIN
-    INC(RT0u.inCritical);
+    ThreadF.SuspendOthers();
     IF NOT dumped_core THEN
       (* indicate that this thread will dump core *)
       dumped_core := TRUE;
@@ -137,7 +138,7 @@ PROCEDURE Core (sig : Ctypes.int;
         vec, ovec: Usignal.struct_sigaction;
       BEGIN
         vec.sa_flags := 0;
-        vec.sa_handler := Usignal.SIG_DFL;
+        vec.sa_sigaction := LOOPHOLE(Usignal.SIG_DFL, Usignal.SignalAction);
         EVAL Usignal.sigemptyset(vec.sa_mask);
         EVAL Usignal.sigaction(sig, vec, ovec);
       END;
@@ -153,24 +154,10 @@ PROCEDURE Core (sig : Ctypes.int;
       Cstdlib.abort ();
       <* ASSERT FALSE *>
     END;
-    DEC(RT0u.inCritical);
+    ThreadF.ResumeOthers();
   END Core;
 
 (* System-call faults are handled in RTHeapDepC.c *)
-
-PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
-  BEGIN
-    RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
-  END TimevalSecs;
-
-PROCEDURE TimeUsed (): REAL =
-  VAR
-    usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
-  BEGIN
-    <* ASSERT ret = 0 *>
-    RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
-  END TimeUsed;
 
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
@@ -178,6 +165,10 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  RTMachine.RTHeapDep_Fault := LOOPHOLE(Fault, ADDRESS);
+  RTMachine.RTProcedureSRC_FromPC := LOOPHOLE (RTProcedureSRC.FromPC, ADDRESS);
+  VM := RTVM.VMHeap();
+  AtomicWrappers := RTVM.AtomicWrappers();
   IF VM THEN
     RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
     RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);
