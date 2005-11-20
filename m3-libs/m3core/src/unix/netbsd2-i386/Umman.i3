@@ -7,7 +7,7 @@
 INTERFACE Umman;
 
 FROM Ctypes IMPORT int, void_star;
-FROM Utypes IMPORT size_t, off_t;
+FROM Utypes IMPORT size_t;
 
 (*** sys/mman.h ***)
 
