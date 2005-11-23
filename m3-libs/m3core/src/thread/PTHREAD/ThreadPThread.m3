@@ -7,7 +7,7 @@ Thread, ThreadF, ThreadPThread, Scheduler, SchedulerPosix,
 RTThreadInit, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
-       RTCollectorSRC, RTError, RTMachine, RTParams,
+       RTCollectorSRC, RTError, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
        Uucontext, Uerror;
@@ -15,6 +15,7 @@ FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER,
        PTHREAD_ONCE_INITIALIZER;
+FROM Compiler IMPORT ThisFile, ThisLine;
 IMPORT Ctypes, Utypes;
 
 (*----------------------------------------------------- types and globals ---*)
@@ -105,7 +106,7 @@ PROCEDURE InnerLockMutex (m: Mutex; self: T) =
     IF (m.holder = NIL) THEN
       m.holder := self;			 (* I get it! *)
     ELSIF (m.holder = self) THEN
-      Die("Attempt to lock mutex already locked by self");
+      Die(ThisLine(), "Attempt to lock mutex already locked by self");
     ELSE
       (* somebody already has the mutex locked.  We'll need to wait *)
       self.nextWaiter := NIL;
@@ -127,7 +128,7 @@ PROCEDURE InnerLockMutex (m: Mutex; self: T) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();
   BEGIN
-    IF self = NIL THEN Die("Acquire called from a non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Acquire called from a non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     InnerLockMutex(m, self);
@@ -144,9 +145,9 @@ PROCEDURE InnerUnlockMutex (m: Mutex; self: T) =
       (* ok we're releasing the mutex *)
       m.holder := NIL;
     ELSIF m.holder = NIL THEN
-      Die("attempt to release an unlocked mutex");
+      Die(ThisLine(), "attempt to release an unlocked mutex");
     ELSE
-      Die("attempt to release a mutex locked by another thread");
+      Die(ThisLine(), "attempt to release a mutex locked by another thread");
     END;
 
     (* Let the next guy go... *)
@@ -163,7 +164,7 @@ PROCEDURE InnerUnlockMutex (m: Mutex; self: T) =
 PROCEDURE UnlockMutex (m: Mutex) =
   VAR self := Self();
   BEGIN
-    IF self = NIL THEN Die("Acquire called from a non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Acquire called from a non-Modula-3 thread") END;
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     InnerUnlockMutex(m, self);
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
@@ -201,7 +202,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF self = NIL THEN Die("AlertWait called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     InnerTestAlert(self);
@@ -216,7 +217,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF self = NIL THEN Die("Wait called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     InnerWait(m, c, self);
@@ -252,7 +253,7 @@ PROCEDURE Broadcast (c: Condition) =
 PROCEDURE Alert (t: T) =
   VAR prev, next: T;
   BEGIN
-    IF t = NIL THEN Die("Alert called from non-Modula-3 thread") END;
+    IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     t.alerted := TRUE;
     IF t.alertable THEN
@@ -326,7 +327,7 @@ PROCEDURE Self (): T =
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
       t := slots[me.slot];
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
-    IF (t.act # me) THEN Die("thread with bad slot!") END;
+    IF (t.act # me) THEN Die(ThisLine(), "thread with bad slot!") END;
     RETURN t;
   END Self;
 
@@ -381,7 +382,7 @@ PROCEDURE FreeSlot (t: T) =
 
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
-        IF (z # t) THEN Die ("unslotted thread!"); END;
+        IF (z # t) THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
       t.act.slot := 0;
@@ -389,16 +390,35 @@ PROCEDURE FreeSlot (t: T) =
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
 
-PROCEDURE CheckSlot (t: T) =
+PROCEDURE CheckSlot (t: T): BOOLEAN =
   (* LL = 0 *)
-  VAR me := t.act;
+  VAR
+    me := t.act;
+    result := me # NIL AND me.slot > 0;
   BEGIN
-    <*ASSERT me # NIL *>
-    <*ASSERT me.slot > 0 *>
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
-       <*ASSERT slots[me.slot] = t *>
+      result := result AND slots[me.slot] = t;
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
+    RETURN result;
   END CheckSlot;
+
+<*UNUSED*> PROCEDURE DumpThread (t: T) =
+  BEGIN
+    RTIO.PutText("Thread: "); RTIO.PutAddr(LOOPHOLE(t, ADDRESS)); RTIO.PutChar('\n');
+    RTIO.PutText("  act:        "); RTIO.PutAddr(LOOPHOLE(t.act, ADDRESS));           RTIO.PutChar('\n');
+    RTIO.PutText("  closure:    "); RTIO.PutAddr(LOOPHOLE(t.closure, ADDRESS));       RTIO.PutChar('\n');
+    RTIO.PutText("  result:     "); RTIO.PutAddr(LOOPHOLE(t.result, ADDRESS));        RTIO.PutChar('\n');
+    RTIO.PutText("  cond:       "); RTIO.PutAddr(LOOPHOLE(t.cond, ADDRESS));          RTIO.PutChar('\n');
+    RTIO.PutText("  waitingOn:  "); RTIO.PutAddr(LOOPHOLE(t.waitingOn, ADDRESS));     RTIO.PutChar('\n');
+    RTIO.PutText("  nextWaiter: "); RTIO.PutAddr(LOOPHOLE(t.nextWaiter, ADDRESS));    RTIO.PutChar('\n');
+    RTIO.PutText("  waitCond:   "); RTIO.PutAddr(t.waitCond);      RTIO.PutChar('\n');
+    RTIO.PutText("  alertable:  "); RTIO.PutInt(ORD(t.alertable)); RTIO.PutChar('\n');
+    RTIO.PutText("  alerted:    "); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
+    RTIO.PutText("  completed:  "); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
+    RTIO.PutText("  joined:     "); RTIO.PutInt(ORD(t.joined));    RTIO.PutChar('\n');
+    RTIO.PutText("  id:         "); RTIO.PutInt(t.id);             RTIO.PutChar('\n');
+    RTIO.Flush();
+  END DumpThread;
 
 (*------------------------------------------------------------ Fork, Join ---*)
 
@@ -476,27 +496,21 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
     UnlockMutex(threadMu);
 
     (* Run the user-level code. *)
+    next_self := NIL;
     IF cl # NIL THEN
-      next_self := NIL;
       IF perfOn THEN PerfRunning(self.id) END;
       res := cl.apply();
 
-      IF nIdle < NUMBER(idleThreads) THEN
-        (* apparently the cache isn't full, although we don't hold idleMu
-           so we can't be certain, we're committed now.  Hopefully we'll
-           be reborn soon... *)
+      (* transplant the active guts of "self" into "next_self" *)
+      next_self          := NEW(T);
+      next_self.act      := me;
+      next_self.waitCond := self.waitCond;
+      next_self.cond     := self.cond;
 
-        (* transplant the active guts of "self" into "next_self" *)
-        next_self          := NEW(T);
-        next_self.act      := me;
-        next_self.waitCond := self.waitCond;
-        next_self.cond     := self.cond;
-
-        (* hijack "self"s entry in the slot table *)
-        WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
-          slots[me.slot] := next_self;
-        WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
-      END;
+      (* hijack "self"s entry in the slot table *)
+      WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
+        slots[me.slot] := next_self;
+      WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
 
       LockMutex(threadMu);
         (* mark "self" done and clean it up a bit *)
@@ -508,36 +522,36 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
       UnlockMutex(threadMu);
 
       IF perfOn THEN PerfDeleted(self.id) END;
-      IF next_self # NIL THEN
-        (* we're going to be reborn! *)
 
-        (* put "next_self" on the list of idle threads *)
-        victim := NIL;
-        WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
-          IF nIdle < NUMBER(idleThreads) THEN
-            (* the pool isn't full *)
-            idleThreads[nIdle] := next_self;
-            INC(nIdle);
-          ELSE
-            (* no room in the pool => free an old thread from the pool *)
-            IF idleClock >= nIdle THEN idleClock := 0 END;
-            victim := idleThreads[idleClock];
-            idleThreads[idleClock] := next_self;
-            INC(idleClock);
-          END;
-          me.idle := TRUE;
-        WITH r = Upthread.mutex_unlock(idleMu) DO <*ASSERT r=0*> END;
-        IF victim # NIL THEN
-          LockMutex(threadMu);
-            victim.closure := NIL;
-            victim.id := -1;
-            Signal(victim.cond);
-          UnlockMutex(threadMu);
+      (* put "next_self" on the list of idle threads *)
+      victim := NIL;
+      WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
+        IF nIdle < NUMBER(idleThreads) THEN
+          (* the pool isn't full *)
+          idleThreads[nIdle] := next_self;
+          INC(nIdle);
+        ELSE
+          (* no room in the pool => free an old thread from the pool *)
+          IF idleClock >= nIdle THEN idleClock := 0 END;
+          victim := idleThreads[idleClock];
+          idleThreads[idleClock] := next_self;
+          INC(idleClock);
+          victim.act.idle := FALSE;
+          WITH r = Upthread.cond_signal(victim.waitCond^) DO <*ASSERT r=0*> END;
         END;
+        me.idle := TRUE;
+      WITH r = Upthread.mutex_unlock(idleMu) DO <*ASSERT r=0*> END;
 
-        (* let the rebirth loop in ThreadBase know where to wait... *)
-        RETURN next_self.waitCond;
+      IF victim # NIL THEN
+        LockMutex(threadMu);
+          victim.closure := NIL;
+          victim.id := -1;
+          Signal(victim.cond);
+        UnlockMutex(threadMu);
       END;
+
+      (* let the rebirth loop in ThreadBase know where to wait... *)
+      RETURN next_self.waitCond;
     END;
 
     (* we're dying *)
@@ -562,7 +576,7 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
 
 PROCEDURE Fork(closure: Closure): T =
   VAR
-    t: T := NIL;
+    t: T;
     act: Activation := NIL;
     attr: pthread_attr_t;
     size := defaultStackSize;
@@ -579,26 +593,24 @@ PROCEDURE Fork(closure: Closure): T =
     (* try the cache for a thread *)
     WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
       FOR p := nIdle-1 TO FIRST(idleThreads) BY -1 DO
-        WITH pp = idleThreads[p] DO
-          sz := pp.act.size;
-          IF sz = size THEN
-            (* exact match *)
-            DEC(nIdle);
-            t := pp;
-            pp := idleThreads[nIdle];
-          ELSIF sz >= size AND (best < 0 OR sz < best_sz) THEN
-            (* a new best match *)
-            best := p;
-            best_sz := sz;
-          END
-        END
+        sz := idleThreads[p].act.size;
+        IF sz = size THEN
+          (* exact match *)
+          best := p;
+          best_sz := sz;
+          EXIT;
+        ELSIF sz > size AND (best < 0 OR sz < best_sz) THEN
+          (* a new best match *)
+          best := p;
+          best_sz := sz;
+        END;
       END;
       IF best >= 0 THEN
         DEC(nIdle);
-        t := idleThreads[best];
-        idleThreads[best] := idleThreads[nIdle];
-      END;
-      IF t # NIL THEN
+        WITH pp = idleThreads[best] DO
+          t := pp;
+          pp := idleThreads[nIdle];
+        END;
         t.act.idle := FALSE;
         WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
       ELSE (* no match in cache => we need a fresh thread *)
@@ -624,10 +636,9 @@ PROCEDURE Fork(closure: Closure): T =
     WITH r = Upthread.mutex_unlock(idleMu) DO <*ASSERT r=0*> END;
 
     (* last minute sanity checking *)
-    CheckSlot (t);
-    act := t.act;
-    <* ASSERT act.next # NIL *>
-    <* ASSERT act.prev # NIL *>
+    <* ASSERT CheckSlot (t) *>
+    <* ASSERT t.act.next # NIL *>
+    <* ASSERT t.act.prev # NIL *>
 
     LockMutex(threadMu);
       t.closure := closure;
@@ -643,7 +654,7 @@ PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
     LockMutex(threadMu);
-      IF t.joined THEN Die("attempt to join with thread twice"); END;
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
       res := t.result;
       t.result := NIL;
@@ -659,7 +670,7 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   BEGIN
     LockMutex(threadMu);
     TRY
-      IF t.joined THEN Die("attempt to join with thread twice"); END;
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
       res := t.result;
       t.result := NIL;
@@ -685,7 +696,7 @@ PROCEDURE Pause(n: LONGREAL) =
     amount, remaining: Utime.struct_timespec;
     self := Self();
   BEGIN
-    IF self = NIL THEN Die("Pause called from a non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(n, amount);
@@ -700,7 +711,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     until: Utime.struct_timespec;
     self := Self();
   BEGIN
-    IF self = NIL THEN Die("Pause called from a non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(Time.Now() + n, until);
@@ -766,7 +777,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult 
     res: INTEGER;
     fdindex := fd DIV FDSetSize;
     fdset := FDSet{fd MOD FDSetSize};
-    gReadFDS, gWriteFDS, gExceptFDS: FDS := NEW(FDS, 1);
+    gReadFDS, gWriteFDS, gExceptFDS: FDS := NEW(FDS, fdindex+1);
 
   PROCEDURE TestFDS(index: CARDINAL; set: FDSet; read: BOOLEAN): WaitResult =
     BEGIN
@@ -1144,9 +1155,9 @@ PROCEDURE EnableSwitching () =
 
 (*---------------------------------------------------------------- errors ---*)
 
-PROCEDURE Die(msg: TEXT) =
+PROCEDURE Die(lineno: INTEGER; msg: TEXT) =
   BEGIN
-    RTError.Msg ("ThreadPThread.m3", 1116, "Thread client error: ", msg);
+    RTError.Msg (ThisFile(), lineno, "Thread client error: ", msg);
   END Die;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
@@ -1257,15 +1268,12 @@ VAR
 PROCEDURE LockHeap () =
   BEGIN
     WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
-      IF count = 0 THEN
-        thread := Upthread.self();
-        INC(count);
-      ELSIF thread = Upthread.self() THEN
-        INC(count);
-      ELSE
+      LOOP
+        IF count = 0 THEN thread := Upthread.self(); EXIT END;
+        IF Upthread.equal (thread, Upthread.self()) # 0 THEN EXIT END;
         WITH r = Upthread.cond_wait(condition, mutex) DO <*ASSERT r=0*> END;
-        INC(count);
       END;
+      INC(count);
     WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
   END LockHeap;
 
@@ -1274,7 +1282,7 @@ PROCEDURE UnlockHeap () =
     WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
       DEC(count);
       IF count = 0 THEN
-        WITH r = Upthread.cond_signal(condition) DO <*ASSERT r=0*> END;
+        WITH r = Upthread.cond_broadcast(condition) DO <*ASSERT r=0*> END;
       END;
     WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
   END UnlockHeap;
