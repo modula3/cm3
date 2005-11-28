@@ -17,9 +17,10 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
-IMPORT TextLiteral AS TextLit, RTLinker;
+IMPORT TextLiteral AS TextLit, RTLinker, Convert;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
+FROM Text IMPORT Length, GetChar, SetChars;
 TYPE TK = RT0.TypeKind;
 
 (* The allocator/garbage collector for the traced heap is an adaptation of
@@ -649,6 +650,10 @@ VAR
 VAR collectorOn: BOOLEAN := FALSE;
 
 VAR
+  minorCollections := 0;                 (* the number of minor GCs begun *)
+  majorCollections := 0;		 (* the number of major GCs begun *)
+
+VAR
   signalBackground := FALSE;     (* should signal background collector
                                     thread *)
   signalWeak := FALSE;           (* should signal weak cleaner thread *)
@@ -678,6 +683,14 @@ PROCEDURE Behind (): BOOLEAN =
     n_new := newPool.n_small + newPool.n_big;
     n_copied := pureCopy.n_small + pureCopy.n_big
                  + impureCopy.n_small + impureCopy.n_big;
+    IF max_heap >= 0 THEN
+      WITH max_pages = ((max_heap + BytesPerPage - 1) DIV BytesPerPage) DO
+        (* conservative copy reserve of max_pages / 2 *)
+        IF FLOAT(n_new + n_copied + n_promoted) * 2.0 >= FLOAT(max_pages) THEN
+          RETURN TRUE;
+        END;
+      END;
+    END;
     IF collectorState = CollectorState.Zero THEN
       RETURN FLOAT(n_new + n_copied + n_promoted) * threshold[1] >= threshold[0];
     ELSE
@@ -685,7 +698,10 @@ PROCEDURE Behind (): BOOLEAN =
     END;
   END Behind;
 
-VAR timeUsedOnEntry: REAL;       (* time used when entered collector *)
+VAR
+  timeUsedOnEntry: REAL;	(* time used when entered collector *)
+  maxPause: REAL := 0.0;	(* maximum GC pause *)
+  minPause: REAL := 0.0;	(* minimum GC pause *)
 
 PROCEDURE CollectorOn () =
   (* LL >= RTOS.HeapLock *)
@@ -746,7 +762,16 @@ PROCEDURE CollectorOff () =
       RTOS.BroadcastHeap();
     END;
 
-    cycleCost := cycleCost + (RTProcess.TimeUsed() - timeUsedOnEntry);
+    WITH pause = RTProcess.TimeUsed() - timeUsedOnEntry DO
+      IF maxPause = 0.0 THEN
+        minPause := pause;
+        maxPause := pause;
+      ELSE
+        IF pause > maxPause THEN maxPause := pause END;
+        IF pause < minPause THEN minPause := pause END;
+      END;
+      cycleCost := cycleCost + pause;
+    END;
   END CollectorOff;
 
 PROCEDURE CollectSome () =
@@ -831,6 +856,11 @@ PROCEDURE CollectSomeInStateZero () =
     newPool.stack := Nil;
 
     INC(collections);
+    IF (partialCollection) THEN
+      INC(minorCollections);
+    ELSE
+      INC(majorCollections);
+    END;
 
     (* flip spaces; newspace becomes oldspace *)
     FOR p := p0 TO p1 - 1 DO
@@ -2642,9 +2672,11 @@ PROCEDURE FreeLength (p: Page): CARDINAL =
 VAR fragment0, fragment1: ADDRESS := NIL;
 
 CONST
-  InitialBytes = 262144;         (* initial heap size is 256K *)
-  MinNewBytes  = 262144;         (* grow the heap by at least 256K *)
-  MinNewFactor = 0.2;            (* grow the heap by at least 20% *)
+  MB = 16_100000;
+  KB = 16_000400;
+  InitialBytes = 256 * KB;		 (* initial heap size is 256K *)
+  MinNewBytes  = 256 * KB;		 (* grow the heap by at least 256K *)
+  MinNewFactor = 0.2;			 (* grow the heap by at least 20% *)
 
   InitialPages = (InitialBytes + BytesPerPage - 1) DIV BytesPerPage;
   MinNewPages  = (MinNewBytes  + BytesPerPage - 1) DIV BytesPerPage;
@@ -2685,9 +2717,9 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
         RTIO.PutText (") => ");
         RTIO.PutAddr (newChunk);
         RTIO.PutText ("   total: ");
-        RTIO.PutInt  (total_heap DIV 1000000);
+        RTIO.PutInt  (total_heap DIV MB);
         RTIO.PutText (".");
-        RTIO.PutInt  ((total_heap MOD 1000000) DIV 100000);
+        RTIO.PutInt  ((total_heap MOD MB) DIV (MB DIV 10));
         RTIO.PutText ("M");
       END;
       IF newChunk = NIL OR newChunk = LOOPHOLE(-1, ADDRESS) THEN
@@ -2753,9 +2785,9 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
         density := ROUND (FLOAT(total_heap) * 100.0 / FLOAT (span));
       BEGIN
         RTIO.PutText ("   span: ");
-        RTIO.PutInt  (span DIV 1000000);
+        RTIO.PutInt  (span DIV MB);
         RTIO.PutText (".");
-        RTIO.PutInt  ((span MOD 1000000) DIV 100000);
+        RTIO.PutInt  ((span MOD MB) DIV (MB DIV 10));
         RTIO.PutText ("M");
         RTIO.PutText ("   density: ");
         RTIO.PutInt  (density);
@@ -2795,6 +2827,82 @@ PROCEDURE Init () =
     END;
   END Init;
 
+PROCEDURE GetMaxHeap () =
+  VAR
+    txt := RTParams.Value ("maxheap");
+    n   := 0;
+    ch  : INTEGER;
+    len : INTEGER;
+  BEGIN
+    IF txt = NIL THEN RETURN END;
+    len := Length(txt);
+    IF len = 0 THEN RETURN END;
+    FOR i := 0 TO len-2 DO
+      ch := ORD (GetChar (txt, i)) - ORD ('0');
+      IF (ch < 0) OR (9 < ch) THEN RETURN END;
+      n := 10 * n + ch;
+    END;
+    WITH c = GetChar(txt, len-1) DO
+      IF c = 'M' THEN
+        n := n * MB;
+      ELSIF c = 'K' THEN
+        n := n * KB;
+      ELSE
+        ch := ORD(c) - ORD('0');
+        IF (ch < 0) OR (9 < ch) THEN RETURN END;
+        n := 10 * n + ch;
+      END;
+    END;
+    IF n >= 0 THEN max_heap := n END;
+  END GetMaxHeap;
+
+PROCEDURE GetGCRatio () =
+  <*FATAL Convert.Failed*>
+  VAR
+    txt := RTParams.Value ("gcRatio");
+    len: INTEGER;
+    buf: ARRAY [0..100] OF CHAR;  used: INTEGER;
+    value: REAL;
+  BEGIN
+    IF txt = NIL THEN RETURN END;
+    len := Length(txt);
+    IF len = 0 THEN RETURN END;
+    SetChars(buf, txt);
+    value := Convert.ToFloat(buf, used);
+    IF used # len THEN RETURN END;
+    IF value > 0.0 THEN gcRatio := value END;
+  END GetGCRatio;
+
+PROCEDURE PrintTimes () =
+  <*FATAL Convert.Failed*>
+  VAR
+    buf: ARRAY [0..100] OF CHAR;  used: INTEGER;
+    span    := (p1 - p0) * BytesPerPage;
+    density := ROUND (FLOAT(total_heap) * 100.0 / FLOAT (span));
+  BEGIN
+    RTIO.PutText("Collections: "); RTIO.PutInt(collections);
+    RTIO.PutText(" ("); RTIO.PutInt(majorCollections); RTIO.PutText(" full, ");
+    RTIO.PutInt(minorCollections); RTIO.PutText(" partial)\n");
+    used := Convert.FromFloat (buf, minPause);
+    RTIO.PutText("Min. pause: "); RTIO.PutChars(ADR(buf[0]), used); RTIO.PutText(" s\n");
+    used := Convert.FromFloat (buf, maxPause);
+    RTIO.PutText("Max. pause: "); RTIO.PutChars(ADR(buf[0]), used); RTIO.PutText(" s\n");
+    RTIO.PutText ("Total heap: ");
+    RTIO.PutInt  (total_heap DIV MB);
+    RTIO.PutText (".");
+    RTIO.PutInt  ((total_heap MOD MB) DIV (MB DIV 10));
+    RTIO.PutText ("M");
+    RTIO.PutText ("   span: ");
+    RTIO.PutInt  (span DIV MB);
+    RTIO.PutText (".");
+    RTIO.PutInt  ((span MOD MB) DIV (MB DIV 10));
+    RTIO.PutText ("M");
+    RTIO.PutText ("   density: ");
+    RTIO.PutInt  (density);
+    RTIO.PutText ("%\n");
+    RTIO.Flush ();
+  END PrintTimes;
+
 BEGIN
   incremental  := RTHeapDep.VM OR RTLinker.incremental;
   generational := RTHeapDep.VM OR RTLinker.generational;
@@ -2804,5 +2912,8 @@ BEGIN
   IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
   IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
   IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
+  IF RTParams.IsPresent("heaptimes") THEN RTProcess.RegisterExitor(PrintTimes) END;
+  GetMaxHeap();
+  GetGCRatio();
   PerfStart();
 END RTCollector.
