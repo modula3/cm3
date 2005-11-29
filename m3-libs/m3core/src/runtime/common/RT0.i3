@@ -26,7 +26,7 @@ INTERFACE RT0;
 TYPE
   Byte        = [0 .. 255];              (* fits in 8 bits *)
   Typecode    = [0 .. 16_FFFFF];         (* can fit in 20 bits *)
-  Fingerprint = ARRAY [0..1] OF [-16_7fffffff-1 .. 16_7fffffff]; (* 64 bits *)
+  Fingerprint = ARRAY [0..7] OF BITS 8 FOR [0..255]; (* 64 bits *)
   String      = UNTRACED REF CHAR;       (* a '\000' terminated string *)
   ModulePtr   = UNTRACED REF ModuleInfo;
   ImportPtr   = UNTRACED REF ImportInfo;
