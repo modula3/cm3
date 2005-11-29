@@ -496,7 +496,8 @@ VAR
   Dummy1_typecell := RT0.Typecell {
     typecode      := 0,
     selfID        := -1,
-    fp            := RT0.Fingerprint {-1, -1},
+    fp            := RT0.Fingerprint {16_ff, 16_ff, 16_ff, 16_ff,
+                                      16_ff, 16_ff, 16_ff, 16_ff},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -513,7 +514,8 @@ VAR
   Dummy3_typecell := RT0.Typecell {
     typecode      := 0,
     selfID        := -3,
-    fp            := RT0.Fingerprint {-3, -3},
+    fp            := RT0.Fingerprint {16_fd, 16_ff, 16_ff, 16_ff,
+                                      16_fd, 16_ff, 16_ff, 16_ff},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -533,7 +535,8 @@ VAR
   NULL_typecell := RT0.Typecell {
     typecode      := RT0.NilTypecode,
     selfID        := 16_48ec756e,
-    fp            := RT0.Fingerprint {16_24800000, 16_6c6c756e},
+    fp            := RT0.Fingerprint {16_6e, 16_75, 16_6c, 16_6c,
+                                      16_00, 16_00, 16_80, 16_24},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -554,7 +557,8 @@ VAR
     common := RT0.Typecell {
       typecode      := RT0.UnRootTypecode,
       selfID        := -1987139703,
-      fp            := RT0.Fingerprint {-133621304(*16_f80919c8*), 16_7187be41},
+      fp            := RT0.Fingerprint {16_41, 16_be, 16_87, 16_71,
+                                        16_c8, 16_19, 16_09, 16_f8},
       traced        := 0,
       kind          := ORD (TK.Obj),
       link_state    := 0,
@@ -582,7 +586,8 @@ VAR
     common := RT0.Typecell {
       typecode      := RT0.RootTypecode,
       selfID        := -1651526519,
-      fp            := RT0.Fingerprint {-133621304(*16_f80919c8*), 16_6586ad41},
+      fp            := RT0.Fingerprint {16_41, 16_ad, 16_86, 16_65,
+                                        16_c8, 16_19, 16_09, 16_f8},
       traced        := 1,
       kind          := ORD (TK.Obj),
       link_state    := 0,
@@ -611,7 +616,8 @@ VAR
   REFANY_typecell := RT0.Typecell {
     typecode      := RT0.RefanyTypecode,
     selfID        := REFANY_uid,
-    fp            := RT0.Fingerprint {16_65722480, 16_796e6166},
+    fp            := RT0.Fingerprint {16_66, 16_61, 16_6e, 16_79,
+                                      16_80, 16_24, 16_72, 16_65},
     traced        := 1,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -633,7 +639,8 @@ VAR
   ADDRESS_typecell := RT0.Typecell {
     typecode      := RT0.AddressTypecode,
     selfID        := ADDRESS_uid,
-    fp            := RT0.Fingerprint {16_628a2191, 16_6aca01f2},
+    fp            := RT0.Fingerprint {16_f2, 16_01, 16_ca, 16_6a,
+                                      16_91, 16_21, 16_8a, 16_62},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
