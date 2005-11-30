@@ -156,7 +156,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := TRUE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := TRUE;
-                 Global_handler_stack      := TRUE;
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
                  Aligned_procedures        := FALSE;
                  EOL                       := "\n";
 
@@ -384,7 +384,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := FALSE;
+                 Global_handler_stack      := FALSE; (* uses NT threads *)
                  Aligned_procedures        := TRUE;
                  EOL                       := "\r\n";
                  (* initial experiments indicate that the first 64K of
@@ -474,7 +474,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := TRUE;
                  Setjmp                    := "setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
@@ -595,7 +595,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := FALSE;
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
@@ -635,7 +635,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := FALSE;
                  Setjmp                    := "setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := FALSE; (* FALSE: may use pthreads *)
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
@@ -674,7 +674,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Has_stack_walker          := FALSE;
                  Setjmp                    := "setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := FALSE;
+                 Global_handler_stack      := FALSE; (* uses NT threads *)
                  Aligned_procedures        := TRUE;
                  EOL                       := "\r\n";
                  (* initial experiments indicate that the first 64K of
