@@ -33,10 +33,7 @@ PROCEDURE MaxTypecode (): Typecode =
 PROCEDURE IsSubtype (a, b: Typecode): BOOLEAN =
   VAR t: RT0.TypeDefn;
   BEGIN
-    IF (a = 0) THEN RETURN TRUE END;
-    IF (a >= types.cnt) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL);  (* force a range fault *)
-    END;
+    IF (a = RT0.NilTypecode) THEN RETURN TRUE END;
     t := Get (a);
     IF (t = NIL) THEN RETURN FALSE; END;
     IF (t.typecode = b) THEN RETURN TRUE END;
