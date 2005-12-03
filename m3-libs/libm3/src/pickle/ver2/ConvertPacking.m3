@@ -354,7 +354,6 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
                 number: INTEGER := 1): ADDRESS RAISES 
           {Error, Wr.Failure, Thread.Alerted} =
   VAR repetition: INTEGER := 1;
-      len: INTEGER;
 
   BEGIN
     IF self.writer # NIL THEN
@@ -373,7 +372,8 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
              length = elem.length * repetition DO
           CASE elem.kind OF
           | PklAction.Kind.Copy =>
-            WriteData (v, src, len);
+            WriteData (v, src, length);
+            INC(src, length);
 
           | PklAction.Kind.Skip =>
             v.skipData(length);
