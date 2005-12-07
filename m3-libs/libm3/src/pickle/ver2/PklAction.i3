@@ -1,10 +1,13 @@
 (* 
- * For more information on this program, contact Blair MacIntyre          
+ * For information about this program, contact Blair MacIntyre            
  * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
  * at the Computer Science Dept., Columbia University,                    
- * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ * 1214 Amsterdam Ave. Mailstop 0401, New York, NY, 10027.                
  *                                                                        
- * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
+ * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
+ * City of New York.  Blair MacIntyre, Computer Science Department.       
+ *
+ * This file is released under the same conditions as Pickle.m3. See COPYRIGHT.
  * 
  *)
 
