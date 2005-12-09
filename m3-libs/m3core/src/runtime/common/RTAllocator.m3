@@ -280,10 +280,10 @@ PROCEDURE GetOpenArray (defn: ADDRESS; READONLY s: Shape): REFANY =
       LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := info.tc, forwarded := FALSE};
       BumpSize (info.tc, info.nBytes);
+      InitArray (res, s, info);
     END;
     RTOS.UnlockHeap();
 
-    InitArray (res, s, info);
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
   END GetOpenArray;
