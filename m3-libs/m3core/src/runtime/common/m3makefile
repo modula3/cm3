@@ -64,6 +64,5 @@ Interface ("RTSignal")
 Interface ("RTStack")
 Interface ("RTTypeSRC")
 interface ("RTOS")
-interface ("RTThreadInit")
 Interface ("RTVM")
 

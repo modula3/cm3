@@ -49,4 +49,6 @@ PROCEDURE GetCurrentHandlers(): ADDRESS;
 PROCEDURE SetCurrentHandlers(h: ADDRESS);
 (* == WinBase.TlsSetValue(handlersIndex, h) *)
 
+PROCEDURE Init();
+
 END ThreadF.

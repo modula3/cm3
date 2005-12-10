@@ -10,7 +10,12 @@ CONST
 
 VAR
   handler: Handler := NIL;
-  mu := NEW (MUTEX);
+  mu: MUTEX;
+
+PROCEDURE Init() =
+  BEGIN
+    mu := NEW (MUTEX);
+  END Init;
 
 PROCEDURE RegisterHandler (p: Handler) =
   BEGIN

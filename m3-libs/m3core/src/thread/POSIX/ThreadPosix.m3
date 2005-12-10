@@ -11,9 +11,9 @@
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
 UNSAFE MODULE ThreadPosix
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTThreadInit, RTOS, RTHooks;
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
-IMPORT Cerrno, Cstring, FloatMode, MutexRep,
+IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
        Unix, Usignal, Utime, Word;
@@ -549,8 +549,8 @@ TYPE
   FDS = REF ARRAY OF FDSet;
 
 VAR
-  gMaxActiveFDSet, gMaxFDSet: CARDINAL := 1;
-  gReadFDS, gWriteFDS, gExceptFDS: FDS := NEW(FDS, 1);
+  gMaxActiveFDSet, gMaxFDSet: CARDINAL;
+  gReadFDS, gWriteFDS, gExceptFDS: FDS;
 
   (* gMaxFDSet is NUMBER(gReadFDS^) *)
   (* gReadFDS, gWriteFDS, and gExceptFDS all have the same length *)
@@ -1466,10 +1466,22 @@ PROCEDURE Init()=
 
       topThread.next := topThread;
       topThread.previous := topThread;
+
+      gMaxActiveFDSet := 1;
+      gMaxFDSet := 1;
+      gReadFDS := NEW(FDS, 1);
+      gWriteFDS := NEW(FDS, 1);
+      gExceptFDS := NEW(FDS, 1);
+
+      mutex := NEW(MUTEX);
+      condition := NEW(Condition);
     inCritical := 0;
 
     PerfStart ();
     preemption := NOT RTParams.IsPresent ("nopreemption");
+    IF RTParams.IsPresent("backgroundgc") THEN
+      RTCollectorSRC.StartBackgroundCollection();
+    END;
   END Init;
 
 PROCEDURE QQ(): ADDRESS =
@@ -1485,8 +1497,8 @@ PROCEDURE QQ(): ADDRESS =
 VAR
   lock_cnt  := 0;      (* LL = inCritical *)
   do_signal := FALSE;  (* LL = inCritical *)
-  mutex     := NEW(MUTEX);
-  condition := NEW(Condition);
+  mutex: MUTEX;
+  condition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN

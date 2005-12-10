@@ -59,4 +59,6 @@ PROCEDURE GetCurrentHandlers(): ADDRESS;
 PROCEDURE SetCurrentHandlers(h: ADDRESS);
 (* == Upthread.setspecific(handlersIndex, h) *)
 
+PROCEDURE Init();
+
 END ThreadF.

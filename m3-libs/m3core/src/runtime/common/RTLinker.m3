@@ -11,10 +11,9 @@
 UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
-IMPORT RT0, RTParams, RTHeapRep, RTCollectorSRC;
-IMPORT RTTypeSRC, RTSignal, RTThreadInit, RTHeapInfo, RTLinkerX, 
+IMPORT RT0, RTParams, RTDebug, RTHeapRep, RTCollectorSRC;
+IMPORT RTTypeSRC, RTSignal, ThreadF, RTHeapInfo, RTLinkerX, 
        RTIO, Word;
-(* IMPORT RTHeapDebug; *) 
 
 VAR
   traceInit   := FALSE;
@@ -47,9 +46,8 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     AddUnit (RTLinkerX.RTDebug_I3);
     AddUnit (RTLinkerX.RTError_I3);
     AddUnit (RTLinkerX.RTHeapRep_I3);
-    AddUnit (RTLinkerX.RTThreadInit_I3);
+    AddUnit (RTLinkerX.ThreadF_I3);
     AddUnit (RTLinkerX.RTHeapInfo_I3);
-    AddUnit (RTLinkerX.RTHeapDebug_I3);
     AddUnit (RTLinkerX.RTIO_I3);
     AddUnit (RTLinkerX.RTCollectorSRC_I3);
     AddUnit (RTLinkerX.Word_I3);
@@ -58,7 +56,8 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     RTSignal.InstallHandlers ();
     RTParams.Init ();
     RTHeapRep.Init ();
-    RTThreadInit.Init ();
+    ThreadF.Init ();
+    RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent("tracelinker") THEN
       traceInit := TRUE;
@@ -116,7 +115,6 @@ PROCEDURE AddUnit (b: RT0.Binder) =
     IF (b = NIL) THEN RETURN END;
     m := b(0);
     IF (m = NIL) THEN RETURN END;
-    (* RTHeapDebug.CheckHeap(); *)
     AddUnitI(m);
   END AddUnit;
 
