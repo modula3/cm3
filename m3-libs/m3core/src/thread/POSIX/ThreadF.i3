@@ -99,4 +99,6 @@ PROCEDURE GetCurrentHandlers(): ADDRESS;
 PROCEDURE SetCurrentHandlers(h: ADDRESS);
 (* == RTThread.handlerStack := h *)
 
+PROCEDURE Init();
+
 END ThreadF.

@@ -13,4 +13,6 @@ TYPE
   Handler = PROCEDURE (m: RT0.ModulePtr; line: INTEGER;
                        READONLY msg: ARRAY OF TEXT) RAISES ANY;
 
+PROCEDURE Init();
+
 END RTDebug.
