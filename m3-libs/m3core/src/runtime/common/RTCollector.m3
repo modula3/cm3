@@ -18,6 +18,7 @@ IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
 IMPORT TextLiteral AS TextLit, RTLinker, Convert;
+IMPORT Scheduler;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
 FROM Text IMPORT Length, GetChar, SetChars;
@@ -698,13 +699,19 @@ PROCEDURE Behind (): BOOLEAN =
     END;
   END Behind;
 
+CONST
+  Times = ARRAY[FIRST(CollectorState)..LAST(CollectorState)] OF REAL {0.0,..};
+
 VAR
   timeUsedOnEntry: REAL;	(* time used when entered collector *)
-  maxPause: REAL := 0.0;	(* maximum GC pause *)
-  minPause: REAL := 0.0;	(* minimum GC pause *)
+  stateOnEntry: CollectorState;
+  maxPause := Times;			 (* max. GC pause *)
+  minPause := Times;			 (* min. GC pause *)
+  maxInc   := Times;			 (* max. background pause *)
+  minInc   := Times;			 (* min. background pause *)
 
 PROCEDURE CollectorOn () =
-  (* LL >= RTOS.HeapLock *)
+  (* LL >= RTOS.LockHeap *)
   BEGIN
     <* ASSERT NOT collectorOn *>
     collectorOn := TRUE;
@@ -717,6 +724,7 @@ PROCEDURE CollectorOn () =
     END;
 
     timeUsedOnEntry := RTProcess.TimeUsed();
+    stateOnEntry := collectorState;
 
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
@@ -727,8 +735,8 @@ PROCEDURE CollectorOn () =
     END;
   END CollectorOn;
 
-PROCEDURE CollectorOff () =
-  (* LL >= RTOS.HeapLock *)
+PROCEDURE CollectorOff (background := FALSE) =
+  (* LL >= RTOS.LockHeap *)
   BEGIN
     <* ASSERT collectorOn *>
 
@@ -763,12 +771,22 @@ PROCEDURE CollectorOff () =
     END;
 
     WITH pause = RTProcess.TimeUsed() - timeUsedOnEntry DO
-      IF maxPause = 0.0 THEN
-        minPause := pause;
-        maxPause := pause;
+      IF background THEN
+        IF maxInc[stateOnEntry] = 0.0 THEN
+          minInc[stateOnEntry] := pause;
+          maxInc[stateOnEntry] := pause;
+        ELSE
+          minInc[stateOnEntry] := MIN(pause, minInc[stateOnEntry]);
+          maxInc[stateOnEntry] := MAX(pause, maxInc[stateOnEntry]);
+        END;
       ELSE
-        IF pause > maxPause THEN maxPause := pause END;
-        IF pause < minPause THEN minPause := pause END;
+        IF maxPause[stateOnEntry] = 0.0 THEN
+          minPause[stateOnEntry] := pause;
+          maxPause[stateOnEntry] := pause;
+        ELSE
+          minPause[stateOnEntry] := MIN(pause, minPause[stateOnEntry]);
+          maxPause[stateOnEntry] := MAX(pause, maxPause[stateOnEntry]);
+        END
       END;
       cycleCost := cycleCost + pause;
     END;
@@ -1558,11 +1576,11 @@ PROCEDURE BackgroundThread (<* UNUSED *> closure: Thread.Closure): REFANY =
           IF collectorState # CollectorState.Zero THEN
             CollectorOn();
             CollectSome();
-            CollectorOff();
+            CollectorOff(background := TRUE);
           END;
         END;
         RTOS.UnlockHeap();
-        Thread.Pause(1.0d0);       (* one second *)
+        Scheduler.Yield();
       END;
     END;
   END BackgroundThread;
@@ -2815,8 +2833,11 @@ TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
 VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
 (* align[i,j] == RTMisc.Align (i, j) - i *)
 
+VAR initialized := FALSE;
 PROCEDURE Init () =
   BEGIN
+    <*ASSERT LOOPHOLE(0, ADDRESS) = NIL*>
+
     weakTable := NEW(UNTRACED REF ARRAY OF WeakEntry, 0);
 
     (* initialize the alignment array *)
@@ -2825,6 +2846,20 @@ PROCEDURE Init () =
         align[i, j] := RTMisc.Upper(i, j) - i;
       END;
     END;
+    initialized := TRUE;
+
+    incremental  := RTHeapDep.VM OR RTLinker.incremental;
+    generational := RTHeapDep.VM OR RTLinker.generational;
+    IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
+    IF RTParams.IsPresent("novm") THEN disableVMCount := 1; END;
+    IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
+    IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
+    IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
+    IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
+    IF RTParams.IsPresent("heaptimes") THEN RTProcess.RegisterExitor(PrintTimes) END;
+    GetMaxHeap();
+    GetGCRatio();
+    PerfStart();
   END Init;
 
 PROCEDURE GetMaxHeap () =
@@ -2880,13 +2915,42 @@ PROCEDURE PrintTimes () =
     span    := (p1 - p0) * BytesPerPage;
     density := ROUND (FLOAT(total_heap) * 100.0 / FLOAT (span));
   BEGIN
-    RTIO.PutText("Collections: "); RTIO.PutInt(collections);
+    RTIO.PutText("\nCollections: "); RTIO.PutInt(collections);
     RTIO.PutText(" ("); RTIO.PutInt(majorCollections); RTIO.PutText(" full, ");
     RTIO.PutInt(minorCollections); RTIO.PutText(" partial)\n");
-    used := Convert.FromFloat (buf, minPause);
-    RTIO.PutText("Min. pause: "); RTIO.PutChars(ADR(buf[0]), used); RTIO.PutText(" s\n");
-    used := Convert.FromFloat (buf, maxPause);
-    RTIO.PutText("Max. pause: "); RTIO.PutChars(ADR(buf[0]), used); RTIO.PutText(" s\n");
+
+    RTIO.PutText("Mutator min. pause: ( ");
+    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
+      used := Convert.FromFloat (buf, minPause[s]);
+      RTIO.PutChars(ADR(buf[0]), used);
+      RTIO.PutChar(' ');
+    END;
+    RTIO.PutText(") s\n");
+
+    RTIO.PutText("Mutator max. pause: ( ");
+    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
+      used := Convert.FromFloat (buf, maxPause[s]);
+      RTIO.PutChars(ADR(buf[0]), used);
+      RTIO.PutChar(' ');
+    END;
+    RTIO.PutText(") s\n");
+
+    RTIO.PutText("Background min. increment: ( ");
+    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
+      used := Convert.FromFloat (buf, minInc[s]);
+      RTIO.PutChars(ADR(buf[0]), used);
+      RTIO.PutChar(' ');
+    END;
+    RTIO.PutText(") s\n");
+
+    RTIO.PutText("Background max. increment: ( ");
+    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
+      used := Convert.FromFloat (buf, maxInc[s]);
+      RTIO.PutChars(ADR(buf[0]), used);
+      RTIO.PutChar(' ');
+    END;
+    RTIO.PutText(") s\n");
+
     RTIO.PutText ("Total heap: ");
     RTIO.PutInt  (total_heap DIV MB);
     RTIO.PutText (".");
@@ -2904,16 +2968,4 @@ PROCEDURE PrintTimes () =
   END PrintTimes;
 
 BEGIN
-  incremental  := RTHeapDep.VM OR RTLinker.incremental;
-  generational := RTHeapDep.VM OR RTLinker.generational;
-  IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
-  IF RTParams.IsPresent("novm") THEN disableVMCount := 1; END;
-  IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
-  IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
-  IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
-  IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
-  IF RTParams.IsPresent("heaptimes") THEN RTProcess.RegisterExitor(PrintTimes) END;
-  GetMaxHeap();
-  GetGCRatio();
-  PerfStart();
 END RTCollector.
