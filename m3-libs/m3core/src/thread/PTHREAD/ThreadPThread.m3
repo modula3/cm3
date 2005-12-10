@@ -2,9 +2,8 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-UNSAFE MODULE ThreadPThread EXPORTS
-Thread, ThreadF, ThreadPThread, Scheduler, SchedulerPosix,
-RTThreadInit, RTOS, RTHooks;
+UNSAFE MODULE ThreadPThread
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTIO, RTMachine, RTParams,
@@ -78,6 +77,23 @@ REVEAL
 
     (* unique Id of this thread *)
     id: Id := 0;			 (* LL = threadMu *)
+  END;
+
+TYPE
+  Activation = UNTRACED REF RECORD
+    (* global doubly-linked, circular list of all active threads *)
+    next, prev: Activation := NIL;	 (* LL = activeMu *)
+    (* thread handle *)
+    handle: pthread_t;			 (* LL = activeMu *)
+    (* base of thread stack for use by GC *)
+    stackbase: ADDRESS := NIL;
+    sp: ADDRESS := NIL;
+    size: INTEGER;
+    lastStopCount: CARDINAL := 0;
+    signal := 0;
+    (* index into global array of active, slotted threads *)
+    slot: INTEGER;			 (* LL = slotMu *)
+    idle: BOOLEAN := FALSE;		 (* LL = idleMu *)
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;	 (* LL = threadMu *)
@@ -295,32 +311,49 @@ PROCEDURE TestAlert (): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR
-  threadIndex: pthread_key_t;		 (* TLS index *)
+  activationsOnce := PTHREAD_ONCE_INITIALIZER;
+  activations: pthread_key_t;		 (* TLS index *)
 
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
   slots: REF ARRAY OF T;		 (* NOTE: we don't use slots[0] *)
 
+PROCEDURE InitActivations () =
+  VAR me := NEW(Activation);
+  BEGIN
+    WITH r = Upthread.key_create(activations, NIL) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.setspecific(activations, me) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
+      <* ASSERT allThreads = NIL *>
+      me.handle := Upthread.self();
+      me.next := me;
+      me.prev := me;
+      allThreads := me;
+    WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+  END InitActivations;
+
 PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   VAR v := LOOPHOLE(act, ADDRESS);
   BEGIN
-    WITH r = Upthread.setspecific(threadIndex, v) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.once(activationsOnce, InitActivations) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.setspecific(activations, v) DO <*ASSERT r=0*> END;
   END SetActivation;
 
 PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   BEGIN
-    RETURN LOOPHOLE(Upthread.getspecific(threadIndex), Activation);
+    WITH r = Upthread.once(activationsOnce, InitActivations) DO <*ASSERT r=0*> END;
+    RETURN LOOPHOLE(Upthread.getspecific(activations), Activation);
   END GetActivation;
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   VAR
-    me := LOOPHOLE(Upthread.getspecific(threadIndex), Activation);
+    me := GetActivation();
     t: T;
   BEGIN
     IF me = NIL THEN RETURN NIL END;
@@ -433,16 +466,15 @@ VAR (* LL=idleMu *)
   nIdle:       CARDINAL := 0;
   idleClock:   CARDINAL := 0;
 
-PROCEDURE CreateT (): T =
+PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeMu". *)
-  VAR t := NEW(T);
+  VAR t := NEW(T, act := act);
   BEGIN
-    t.act      := NEW(Activation);
     t.waitCond := NEW(UNTRACED REF pthread_cond_t);
     t.cond     := NEW(Condition);
-    FloatMode.InitThread (t.floatState);
+    FloatMode.InitThread (act.floatState);
     AssignSlot (t);
     RETURN t;
   END CreateT;
@@ -506,6 +538,7 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
       next_self.act      := me;
       next_self.waitCond := self.waitCond;
       next_self.cond     := self.cond;
+      FloatMode.InitThread (me.floatState);
 
       (* hijack "self"s entry in the slot table *)
       WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
@@ -615,7 +648,7 @@ PROCEDURE Fork(closure: Closure): T =
         WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
       ELSE (* no match in cache => we need a fresh thread *)
         WITH r = Upthread.mutex_unlock(idleMu) DO <*ASSERT r=0*> END;
-          t := CreateT();
+          t := CreateT(NEW(Activation));
         WITH r = Upthread.mutex_lock(idleMu) DO <*ASSERT r=0*> END;
         act := t.act;
         WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -1133,16 +1166,16 @@ PROCEDURE SetupHandlers () =
 
 (*------------------------------------------------------------ misc. junk ---*)
 
-PROCEDURE MyId(): Id RAISES {}=
+PROCEDURE MyId(): Id RAISES {} =
   VAR self := Self();
   BEGIN
     RETURN self.id;
   END MyId;
 
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
-  VAR self := Self();
+  VAR me := GetActivation();
   BEGIN
-    RETURN ADR (self.floatState);
+    RETURN ADR (me.floatState);
   END MyFPState;
 
 PROCEDURE DisableSwitching () =
@@ -1220,28 +1253,20 @@ PROCEDURE Init ()=
   VAR
     xx: INTEGER;
     self: T;
-    act: Activation;
+    me := GetActivation();
   BEGIN
-    WITH r = Upthread.key_create(threadIndex, NIL) DO <*ASSERT r=0*> END;
     SetupHandlers ();
 
     (* cm, activeMu, idleMu, slotMu: initialized statically *)
     threadMu := NEW(Mutex);
-    self := CreateT();
+    self := CreateT(me);
     self.id := nextId;  INC(nextId);
 
     stack_grows_down := ADR(xx) > XX();
 
-    act := self.act;
-
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-      act.handle := Upthread.self();
-      act.next   := act;
-      act.prev   := act;
-      allThreads := act;
-      act.stackbase := ADR(xx);
+      me.stackbase := ADR(xx);
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
-    SetActivation(act);
     PerfStart();
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
     IF RTParams.IsPresent("backgroundgc") THEN
@@ -1264,6 +1289,7 @@ VAR
   condition := PTHREAD_COND_INITIALIZER;
   thread: pthread_t;
   count: CARDINAL := 0;
+  broadcast := FALSE;
 
 PROCEDURE LockHeap () =
   BEGIN
@@ -1281,8 +1307,11 @@ PROCEDURE UnlockHeap () =
   BEGIN
     WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
       DEC(count);
-      IF count = 0 THEN
+      IF broadcast THEN
+        broadcast := FALSE;
         WITH r = Upthread.cond_broadcast(condition) DO <*ASSERT r=0*> END;
+      ELSIF count = 0 THEN
+        WITH r = Upthread.cond_signal(condition) DO <*ASSERT r=0*> END;
       END;
     WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
   END UnlockHeap;
@@ -1296,27 +1325,27 @@ PROCEDURE WaitHeap () =
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
-  (* LL = inCritical *)
+  (* LL = LockHeap *)
   BEGIN
-    WITH r = Upthread.cond_broadcast(condition) DO <*ASSERT r=0*> END;
+    broadcast := TRUE;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
 
 VAR
-  once := PTHREAD_ONCE_INITIALIZER;
-  handlersIndex: pthread_key_t;
+  handlersOnce := PTHREAD_ONCE_INITIALIZER;
+  handlers: pthread_key_t;
 
-PROCEDURE GetCurrentHandlers (): ADDRESS=
+PROCEDURE GetCurrentHandlers (): ADDRESS =
   BEGIN
-    WITH r = Upthread.once(once, InitHandlers) DO <*ASSERT r=0*> END;
-    RETURN Upthread.getspecific(handlersIndex);
+    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    RETURN Upthread.getspecific(handlers);
   END GetCurrentHandlers;
 
-PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+PROCEDURE SetCurrentHandlers (h: ADDRESS) =
   BEGIN
-    WITH r = Upthread.once(once, InitHandlers) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.setspecific(handlersIndex, h) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.setspecific(handlers, h) DO <*ASSERT r=0*> END;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
@@ -1324,22 +1353,22 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
   TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
   VAR f := LOOPHOLE (frame, Frame);
   BEGIN
-    WITH r = Upthread.once(once, InitHandlers) DO <*ASSERT r=0*> END;
-    f.next := Upthread.getspecific(handlersIndex);
-    WITH r = Upthread.setspecific(handlersIndex, f) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    f.next := Upthread.getspecific(handlers);
+    WITH r = Upthread.setspecific(handlers, f) DO <*ASSERT r=0*> END;
   END PushEFrame;
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    WITH r = Upthread.once(once, InitHandlers) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.setspecific(handlersIndex, frame) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.setspecific(handlers, frame) DO <*ASSERT r=0*> END;
   END PopEFrame;
 
 PROCEDURE InitHandlers () =
   BEGIN
-    WITH r = Upthread.key_create(handlersIndex, NIL) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.setspecific(handlersIndex, NIL) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.key_create(handlers, NIL) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.setspecific(handlers, NIL) DO <*ASSERT r=0*> END;
   END InitHandlers;
 
 BEGIN
