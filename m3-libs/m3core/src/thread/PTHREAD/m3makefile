@@ -13,4 +13,4 @@ Interface ("SchedulerPosix")
 Interface ("ThreadF")
 Interface ("ThreadEvent")
 
-module ("ThreadPThread")
+implementation ("ThreadPThread")
