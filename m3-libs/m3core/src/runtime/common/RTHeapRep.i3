@@ -12,7 +12,7 @@
 (* "RTHeapRep" is a private, implementation-dependent extension to
    "RTAllocator", "RTCollector", and "RTHeap". *)
 
-UNSAFE INTERFACE RTHeapRep;
+INTERFACE RTHeapRep;
 
 (* This interface provides low-level access to the storage allocator and
    garbage collector.  Some items here should be made private or moved
