@@ -1307,11 +1307,13 @@ PROCEDURE UnlockHeap () =
   BEGIN
     WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
       DEC(count);
-      IF broadcast THEN
-        broadcast := FALSE;
-        WITH r = Upthread.cond_broadcast(condition) DO <*ASSERT r=0*> END;
-      ELSIF count = 0 THEN
-        WITH r = Upthread.cond_signal(condition) DO <*ASSERT r=0*> END;
+      IF count = 0 THEN
+        IF broadcast THEN
+          broadcast := FALSE;
+          WITH r = Upthread.cond_broadcast(condition) DO <*ASSERT r=0*> END;
+        ELSE
+          WITH r = Upthread.cond_signal(condition) DO <*ASSERT r=0*> END;
+        END;
       END;
     WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
   END UnlockHeap;
