@@ -93,7 +93,7 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-Bdynamic",
                      "-lm", "-lsunmath", "-lsocket", "-lnsl",
                      "-lw",     % wide-char (Unicode) support
-                     "-lpthread", % threads
+                     "-lpthread", "-lthread", % threads
                      "-lrt",   % semaphores
                      "-ldl" ],  % dynamic loader support
   "LEX-YACC"   : [ "-Bdynamic", "-L/usr/lib", "-ll" ],
