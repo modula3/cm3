@@ -5,6 +5,7 @@
 
 INTERFACE Uthread;
 
+FROM Uucontext IMPORT stack_t, gregset_t;
 FROM Ctypes IMPORT unsigned_int, long, int;
 FROM Utypes IMPORT size_t;
 
@@ -17,6 +18,7 @@ FROM Utypes IMPORT size_t;
 TYPE
   thread_t = unsigned_int;
   thread_key_t = unsigned_int;
+  lwpid_t = unsigned_int;
 
 TYPE start_func_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 <*EXTERNAL thr_create*>
@@ -90,5 +92,9 @@ CONST
   TRS_NONVOLATILE = 1;
   TRS_LWPID = 2;
   TRS_INVALID = 3;
+
+<*EXTERNAL thr_getstate*>
+PROCEDURE getstate(thread: thread_t; VAR flag: int; VAR lwp: lwpid_t;
+                   VAR ss: stack_t; VAR rs: gregset_t): int;
 
 END Uthread.
