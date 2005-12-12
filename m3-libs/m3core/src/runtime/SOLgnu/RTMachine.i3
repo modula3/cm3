@@ -87,18 +87,17 @@ TYPE
 (*------------------------------------------------------ pthreads support ---*)
 
 (* Full context is in the signal handler frame so no need for state here. *)
-TYPE ThreadState = RECORD END;
+TYPE ThreadState = Uucontext.gregset_t;
 
 CONST
-  SIG_SUSPEND = Usignal.SIGUSR1;
-  SIG_RESTART = Usignal.SIGUSR2;
-  SuspendThread: PROCEDURE(t: pthread_t) = NIL;
-  RestartThread: PROCEDURE(t: pthread_t) = NIL;
-  GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
-                      VAR state: ThreadState) = NIL;
+  SIG_SUSPEND = 0;
+  SIG_RESTART = 0;
 
 <*EXTERNAL RTMachine__SaveRegsInStack*>
 PROCEDURE SaveRegsInStack(): ADDRESS;
 
-END RTMachine.
+PROCEDURE SuspendThread(t: pthread_t);
+PROCEDURE RestartThread(t: pthread_t);
+PROCEDURE GetState(t: pthread_t; VAR sp: ADDRESS; VAR state: ThreadState);
 
+END RTMachine.
