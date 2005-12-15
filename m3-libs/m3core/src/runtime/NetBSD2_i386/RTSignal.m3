@@ -78,8 +78,8 @@ PROCEDURE Quit (<*UNUSED*> sig: int) =
 
 PROCEDURE SegV (<*UNUSED*> sig: int) =
   BEGIN
-    RTError.Msg (
-      "Segmentation violation - possible attempt to dereference NIL", 0);
+    RTError.Msg (NIL, 0,
+      "Segmentation violation - possible attempt to dereference NIL");
   END SegV;
 
 BEGIN
