@@ -476,7 +476,7 @@ PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
 	IF p.temp = NIL THEN
           Field.Split (p.obj, field);
           Expr.Compile (p.expr);
-          IF lhs THEN
+          IF lhs AND Host.doGenGC THEN
             RunTyme.EmitCheckStoreTraced ();
           END;
           ObjectType.GetFieldOffset (p.holder, obj_offset, obj_align);
