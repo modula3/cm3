@@ -148,7 +148,7 @@ PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
       Expr.Compile (p.a);
       EVAL Type.CheckInfo (p.type, info);
       CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-      IF lhs THEN
+      IF lhs AND Host.doGenGC THEN
         RunTyme.EmitCheckStoreTraced ();
       END;
       CG.Boost_alignment (info.alignment);
