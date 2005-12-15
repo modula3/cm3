@@ -73,7 +73,7 @@ PROCEDURE Interrupt (sig: int) =
 
 PROCEDURE Quit (<*UNUSED*> sig: int) =
   BEGIN
-    RTError.Msg ("aborted", 0);
+    RTError.Msg (NIL, 0, "aborted");
   END Quit;
 
 PROCEDURE SegV (<*UNUSED*> sig: int) =
