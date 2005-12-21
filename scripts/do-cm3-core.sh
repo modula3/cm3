@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.6 2003-06-25 15:03:41 wagner Exp $
+# $Id: do-cm3-core.sh,v 1.7 2005-12-21 15:23:08 micha Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -27,6 +27,7 @@ if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
 fi
 P="${P} m3core"
 P="${P} libm3"
+P="${P} patternmatching"
 P="${P} m3middle"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
 P="${P} m3linker"
