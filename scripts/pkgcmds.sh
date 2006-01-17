@@ -42,6 +42,7 @@ SRC_SHIP="${SHIP:-${M3SHIP} -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 REALCLEAN="${REALCLEAN:-rm -rf ${TARGET}}"
 
 # choose the compiler to use
+echo CM3C = ${CM3C}
 if type ${CM3C} 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${CM3_BUILDLOCAL}"
   CLEANLOCAL="${CM3_CLEANLOCAL}"
