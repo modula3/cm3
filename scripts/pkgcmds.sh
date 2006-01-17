@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.7 2003-01-05 17:08:20 wagner Exp $
+# $Id: pkgcmds.sh,v 1.8 2006-01-17 00:17:15 rodney Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -42,6 +42,7 @@ SRC_SHIP="${SHIP:-${M3SHIP} -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 REALCLEAN="${REALCLEAN:-rm -rf ${TARGET}}"
 
 # choose the compiler to use
+echo CM3C = ${CM3C}
 if type ${CM3C} 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${CM3_BUILDLOCAL}"
   CLEANLOCAL="${CM3_CLEANLOCAL}"

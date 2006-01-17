@@ -1143,7 +1143,6 @@ PROCEDURE CleanPage (p: Page;  thread_page := FALSE) =
     END;
     IF NOT dirty THEN
       <* ASSERT RTHeapDep.VM OR desc[p - p0].note # Note.AmbiguousRoot *>
-      <* ASSERT desc[p - p0].space = Space.Current *>
       Protect(p, Mode.ReadOnly);
     END;
     IF perfOn THEN PerfChange(p, PageCount(p)); END;

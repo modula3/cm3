@@ -6,6 +6,7 @@ if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
 fi
 P="${P} m3core"
 P="${P} libm3"
+P="${P} patternmatching"
 
 # system / compiler libraries and tools
 P="${P} m3middle"
@@ -38,13 +39,12 @@ P="${P} libsio"
 P="${P} libbuf"
 P="${P} debug"
 P="${P} listfuncs"
-P="${P} patternmatching"
 P="${P} embutils"
 P="${P} m3tk-misc"
 P="${P} http"
 P="${P} binIO"
-P="${P} deepcopy"
-P="${P} sgml"
+#P="${P} deepcopy"
+#P="${P} sgml"
 
 # some CM3 communication extensions
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} tapi"
