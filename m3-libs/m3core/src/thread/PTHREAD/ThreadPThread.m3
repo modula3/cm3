@@ -6,14 +6,13 @@ UNSAFE MODULE ThreadPThread
 EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
-       RTCollectorSRC, RTError, RTIO, RTMachine, RTParams,
+       RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
        Uucontext, Uerror;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t,
-       PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER,
-       PTHREAD_ONCE_INITIALIZER;
+       PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
 IMPORT Ctypes, Utypes;
 
@@ -96,7 +95,12 @@ TYPE
     idle: BOOLEAN := FALSE;		 (* LL = idleMu *)
 
     (* state that is available to the floating point routines *)
-    floatState : FloatMode.ThreadState;	 (* LL = threadMu *)
+    floatState : FloatMode.ThreadState;
+
+    (* allocation pool *)
+    newPool := RTHeapRep.NewPool;
+
+    heapLockedByMe := FALSE;
   END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -189,12 +193,21 @@ PROCEDURE UnlockMutex (m: Mutex) =
 (*---------------------------------------- Condition variables and Alerts ---*)
 
 PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
-    (* LL = cm+m *)
+  (* LL = cm+m *)
+  VAR next, prev: T;
   BEGIN
     <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
     self.waitingOn := c;
-    self.nextWaiter := c.waiters;
-    c.waiters := self;
+    self.nextWaiter := NIL;
+    next := c.waiters;
+    IF next = NIL THEN
+      c.waiters := self;
+    ELSE
+      (* put me on the list of waiters *)
+      prev := NIL;
+      WHILE next # NIL DO prev := next; next := next.nextWaiter; END;
+      prev.nextWaiter := self;
+    END;
     InnerUnlockMutex(m, self);
     WHILE self.waitingOn # NIL DO
       WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
@@ -311,7 +324,7 @@ PROCEDURE TestAlert (): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR
-  activationsOnce := PTHREAD_ONCE_INITIALIZER;
+  initActivations := TRUE;
   activations: pthread_key_t;		 (* TLS index *)
 
 VAR (* LL = slotMu *)
@@ -330,6 +343,7 @@ PROCEDURE InitActivations () =
       me.next := me;
       me.prev := me;
       allThreads := me;
+      initActivations := FALSE;
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END InitActivations;
 
@@ -337,7 +351,7 @@ PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   VAR v := LOOPHOLE(act, ADDRESS);
   BEGIN
-    WITH r = Upthread.once(activationsOnce, InitActivations) DO <*ASSERT r=0*> END;
+    IF initActivations THEN InitActivations() END;
     WITH r = Upthread.setspecific(activations, v) DO <*ASSERT r=0*> END;
   END SetActivation;
 
@@ -345,7 +359,7 @@ PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   BEGIN
-    WITH r = Upthread.once(activationsOnce, InitActivations) DO <*ASSERT r=0*> END;
+    IF initActivations THEN InitActivations() END;
     RETURN LOOPHOLE(Upthread.getspecific(activations), Activation);
   END GetActivation;
 
@@ -588,6 +602,8 @@ PROCEDURE RunThread (me: Activation): UNTRACED REF pthread_cond_t =
     END;
 
     (* we're dying *)
+    RTHeapRep.ClosePool(me.newPool);
+
     WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
     DISPOSE(self.waitCond);
 
@@ -939,15 +955,15 @@ PROCEDURE SuspendOthers () =
   BEGIN
     <*ASSERT me # NIL*>
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-    INC (suspend_cnt);
-    IF (suspend_cnt = 1) THEN StopWorld(me) END;
+    IF suspend_cnt = 0 THEN StopWorld(me) END;
+    INC(suspend_cnt);
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   (* LL=activeMu.  Always preceded by SuspendOthers. *)
   VAR me := GetActivation();
   BEGIN
-    DEC (suspend_cnt);
+    DEC(suspend_cnt);
     IF (suspend_cnt = 0) THEN StartWorld(me) END;
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
@@ -962,6 +978,16 @@ PROCEDURE LookupActivation (pthread: pthread_t): Activation =
     UNTIL act = allThreads;
     RETURN NIL;
   END LookupActivation;
+
+PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
+  (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
+  VAR act := allThreads;
+  BEGIN
+    REPEAT
+      p(act.newPool);
+      act := act.next;
+    UNTIL act = allThreads;
+  END ProcessPools;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
@@ -1021,15 +1047,34 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
   VAR
     nLive := 0;
     act := me.next;
+    wait, remaining: Utime.struct_timespec;
+  CONST
+    WAIT_UNIT = 3000000;
   BEGIN
     IF RTMachine.SuspendThread # NIL THEN
       (* Use the native suspend routine *)
-      WHILE act # me DO
-        <*ASSERT act.lastStopCount # stopCount*>
-        RTMachine.SuspendThread(act.handle);
-        act.lastStopCount := stopCount;
-        act := act.next;
-      END;
+      LOOP
+        WHILE act # me DO
+          IF act.lastStopCount # stopCount THEN
+            RTMachine.SuspendThread(act.handle);
+            IF act.newPool.busy THEN
+              RTMachine.RestartThread(act.handle);
+              INC(nLive);
+            ELSE
+              act.lastStopCount := stopCount;
+            END;
+          END;
+          act := act.next;
+        END;
+        IF nLive = 0 THEN EXIT END;
+        wait.tv_sec := 0;
+        wait.tv_nsec := WAIT_UNIT;
+        WHILE Utime.nanosleep(wait, remaining) # 0 DO
+          wait := remaining;
+        END;
+        act := me.next;
+        nLive := 0;
+      END;  
     ELSE
       (* No native suspend routine so signal thread to suspend *)
       WHILE act # me DO
@@ -1115,6 +1160,7 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me = NIL THEN RETURN END;
+    IF me.newPool.busy THEN RETURN END;
     IF me.lastStopCount = myStopCount THEN RETURN END;
     IF RTMachine.SaveRegsInStack # NIL THEN
       me.sp := RTMachine.SaveRegsInStack();
@@ -1172,11 +1218,23 @@ PROCEDURE MyId(): Id RAISES {} =
     RETURN self.id;
   END MyId;
 
-PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
+PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
   VAR me := GetActivation();
   BEGIN
-    RETURN ADR (me.floatState);
-  END MyFPState;
+    reader(me.floatState);
+  END GetMyFPState;
+
+PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
+  VAR me := GetActivation();
+  BEGIN
+    writer(me.floatState);
+  END SetMyFPState;
+
+PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool =
+  VAR me := GetActivation();
+  BEGIN
+    RETURN ADR(me.newPool);
+  END MyAllocPool;
 
 PROCEDURE DisableSwitching () =
   BEGIN
@@ -1262,6 +1320,9 @@ PROCEDURE Init ()=
     self := CreateT(me);
     self.id := nextId;  INC(nextId);
 
+    mutex := NEW(MUTEX);
+    condition := NEW(Condition);
+
     stack_grows_down := ADR(xx) > XX();
 
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -1271,6 +1332,9 @@ PROCEDURE Init ()=
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
     IF RTParams.IsPresent("backgroundgc") THEN
       RTCollectorSRC.StartBackgroundCollection();
+    END;
+    IF RTParams.IsPresent("foregroundgc") THEN
+      RTCollectorSRC.StartForegroundCollection();
     END;
   END Init;
 
@@ -1285,68 +1349,87 @@ PROCEDURE XX (): ADDRESS =
    and collector. *)
 
 VAR
-  mutex := PTHREAD_MUTEX_INITIALIZER;
-  condition := PTHREAD_COND_INITIALIZER;
-  thread: pthread_t;
-  count: CARDINAL := 0;
-  broadcast := FALSE;
+  heapMutex := PTHREAD_MUTEX_INITIALIZER;
+  heapCond := PTHREAD_COND_INITIALIZER;
+  holder: pthread_t;
+  lockers: CARDINAL := 0;
+  lock_cnt := 0;
+  do_signal := FALSE;
+  mutex: MUTEX;
+  condition: Condition;
 
 PROCEDURE LockHeap () =
+  VAR self := Upthread.self();
   BEGIN
-    WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
-      LOOP
-        IF count = 0 THEN thread := Upthread.self(); EXIT END;
-        IF Upthread.equal (thread, Upthread.self()) # 0 THEN EXIT END;
-        WITH r = Upthread.cond_wait(condition, mutex) DO <*ASSERT r=0*> END;
-      END;
-      INC(count);
-    WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
+    (* suspend_cnt # 0 => other threads are stopped and we hold the lock *)
+    IF suspend_cnt # 0 THEN
+      <*ASSERT lock_cnt # 0*>
+      <*ASSERT holder = self*>
+      RETURN;
+    END;
+    WITH r = Upthread.mutex_lock(heapMutex) DO <*ASSERT r=0*> END;
+    IF lock_cnt = 0 THEN
+      holder := self;
+    ELSIF Upthread.equal(holder, self) = 0 THEN
+      REPEAT
+        INC(lockers);
+        WITH r = Upthread.cond_wait(heapCond, heapMutex) DO <*ASSERT r=0*> END;
+        DEC(lockers);
+      UNTIL lock_cnt = 0;
+      holder := self;
+    END;
+    INC(lock_cnt);
+    WITH r = Upthread.mutex_unlock(heapMutex) DO <*ASSERT r=0*> END;
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
+  VAR sig := FALSE;
   BEGIN
-    WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
-      DEC(count);
-      IF count = 0 THEN
-        IF broadcast THEN
-          broadcast := FALSE;
-          WITH r = Upthread.cond_broadcast(condition) DO <*ASSERT r=0*> END;
-        ELSE
-          WITH r = Upthread.cond_signal(condition) DO <*ASSERT r=0*> END;
+    (* suspend_cnt # 0 => other threads are stopped and we hold the lock *)
+    IF suspend_cnt # 0 THEN
+      <*ASSERT lock_cnt # 0*>
+      <*ASSERT holder = Upthread.self()*>
+      RETURN;
+    END;
+    WITH r = Upthread.mutex_lock(heapMutex) DO <*ASSERT r=0*> END;
+      DEC(lock_cnt);
+      IF lock_cnt = 0 THEN
+        IF lockers # 0 THEN
+          WITH r = Upthread.cond_signal(heapCond) DO <*ASSERT r=0*> END;
         END;
+        IF do_signal THEN sig := TRUE; do_signal := FALSE; END;
       END;
-    WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.mutex_unlock(heapMutex) DO <*ASSERT r=0*> END;
+    IF sig THEN Broadcast(condition) END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   (* LL = 0 *)
   BEGIN
-    WITH r = Upthread.mutex_lock(mutex) DO <*ASSERT r=0*> END;
-      WITH r = Upthread.cond_wait(condition, mutex) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.mutex_unlock(mutex) DO <*ASSERT r=0*> END;
+    LOCK mutex DO Wait(mutex, condition); END;
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
   (* LL = LockHeap *)
   BEGIN
-    broadcast := TRUE;
+    do_signal := TRUE;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
 
 VAR
-  handlersOnce := PTHREAD_ONCE_INITIALIZER;
+  initHandlers := TRUE;
   handlers: pthread_key_t;
 
 PROCEDURE GetCurrentHandlers (): ADDRESS =
   BEGIN
-    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    IF initHandlers THEN InitHandlers() END;
     RETURN Upthread.getspecific(handlers);
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS) =
   BEGIN
-    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    IF initHandlers THEN InitHandlers() END;
     WITH r = Upthread.setspecific(handlers, h) DO <*ASSERT r=0*> END;
   END SetCurrentHandlers;
 
@@ -1355,7 +1438,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
   TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
   VAR f := LOOPHOLE (frame, Frame);
   BEGIN
-    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    IF initHandlers THEN InitHandlers() END;
     f.next := Upthread.getspecific(handlers);
     WITH r = Upthread.setspecific(handlers, f) DO <*ASSERT r=0*> END;
   END PushEFrame;
@@ -1363,7 +1446,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    WITH r = Upthread.once(handlersOnce, InitHandlers) DO <*ASSERT r=0*> END;
+    IF initHandlers THEN InitHandlers() END;
     WITH r = Upthread.setspecific(handlers, frame) DO <*ASSERT r=0*> END;
   END PopEFrame;
 
@@ -1371,6 +1454,7 @@ PROCEDURE InitHandlers () =
   BEGIN
     WITH r = Upthread.key_create(handlers, NIL) DO <*ASSERT r=0*> END;
     WITH r = Upthread.setspecific(handlers, NIL) DO <*ASSERT r=0*> END;
+    initHandlers := FALSE;
   END InitHandlers;
 
 BEGIN

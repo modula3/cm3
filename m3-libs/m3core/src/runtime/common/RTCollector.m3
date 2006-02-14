@@ -16,9 +16,9 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 
 IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
-IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
+IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError, RTAllocCnts;
 IMPORT TextLiteral AS TextLit, RTLinker, Convert;
-IMPORT Scheduler;
+IMPORT Scheduler, Time;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
 FROM Text IMPORT Length, GetChar, SetChars;
@@ -57,7 +57,7 @@ PROCEDURE Enable () =
     RTOS.LockHeap();
     BEGIN
       DEC(disableCount);
-      CollectEnough();
+      EVAL CollectEnough();
     END;
     RTOS.UnlockHeap();
     IF perfOn THEN PerfAllow(); END;
@@ -78,7 +78,7 @@ PROCEDURE EnableMotion () =
     RTOS.LockHeap();
     BEGIN
       DEC(disableMotionCount);
-      CollectEnough();
+      EVAL CollectEnough();
     END;
     RTOS.UnlockHeap();
     IF perfOn THEN PerfAllow(); END;
@@ -154,7 +154,7 @@ PROCEDURE EnableVM () =
     RTOS.LockHeap();
     BEGIN
       DEC(disableVMCount);
-      CollectEnough();
+      EVAL CollectEnough();
     END;
     RTOS.UnlockHeap();
   END EnableVM;
@@ -197,6 +197,27 @@ PROCEDURE StartBackgroundCollection () =
       EVAL Thread.Fork(NEW(Thread.Closure, apply := BackgroundThread));
     END;
   END StartBackgroundCollection;
+
+(* StartForegroundCollection starts the foreground thread, if not already
+   started *)
+
+VAR startedForeground := FALSE;
+
+PROCEDURE StartForegroundCollection () =
+  VAR start := FALSE;
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      IF NOT startedForeground THEN
+        start := TRUE;
+        startedForeground := TRUE;
+      END;
+    END;
+    RTOS.UnlockHeap();
+    IF start THEN
+      EVAL Thread.Fork(NEW(Thread.Closure, apply := ForegroundThread));
+    END;
+  END StartForegroundCollection;
 
 (* ------------------------------- low-level allocation and collection *)
 
@@ -299,6 +320,47 @@ PROCEDURE HeaderOf (r: RefReferent): RefHeader =
    a non-nil pointer to the Header of a heap object that is there (has not
    been moved). *)
 
+PROCEDURE TextLitSize (h: RefHeader): CARDINAL =
+  VAR
+    txt := LOOPHOLE (h + ADRSIZE(Header), TextLiteral);
+    len : INTEGER := txt.cnt;
+  BEGIN
+    IF (len >= 0)
+      THEN INC (len); (* null CHAR *)
+      ELSE len := 2 (*null WIDECHAR*) - len - len;
+    END;
+    RETURN ADR (txt.buf[len]) - LOOPHOLE (txt, ADDRESS);
+  END TextLitSize;
+    
+
+PROCEDURE OpenArraySize (h: RefHeader; def: RT0.TypeDefn): CARDINAL =
+(* The referent is an open array; it has the following layout:
+|     pointer to the elements (ADDRESS)
+|     size 1
+|     ....
+|     size n
+|     optional padding
+|     elements
+|     ....
+   where n is the number of open dimensions (given by the definition)
+   and each size is the number of elements along the dimension. *)
+
+  VAR
+    adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
+    res: INTEGER;
+    sizes: UNTRACED REF INTEGER := h + ADRSIZE(Header) + ADRSIZE(ADDRESS);
+                                                         (* ^ elt pointer*)
+  BEGIN
+    res := 1;
+    FOR i := 0 TO adef.nDimensions - 1 DO
+      res := res * sizes^;
+      INC(sizes, ADRSIZE(sizes^));
+    END;
+    res := res * adef.elementSize;
+    res := RTMisc.Upper(res + def.dataSize, BYTESIZE(Header));
+    RETURN res;
+  END OpenArraySize;
+
 PROCEDURE ReferentSize (h: RefHeader): CARDINAL =
   VAR
     res: INTEGER;
@@ -312,18 +374,7 @@ PROCEDURE ReferentSize (h: RefHeader): CARDINAL =
       RETURN res - BYTESIZE(Header);
     END;
 
-    IF tc = RT0.TextLitTypecode THEN
-      VAR
-        txt := LOOPHOLE (h + ADRSIZE(Header), TextLiteral);
-        len : INTEGER := txt.cnt;
-      BEGIN
-        IF (len >= 0)
-          THEN INC (len); (* null CHAR *)
-          ELSE len := 2 (*null WIDECHAR*) - len - len;
-        END;
-        RETURN ADR (txt.buf[len]) - LOOPHOLE (txt, ADDRESS);
-      END;
-    END;
+    IF tc = RT0.TextLitTypecode THEN RETURN TextLitSize(h) END;
 
     def := RTType.Get (tc);
 
@@ -332,31 +383,8 @@ PROCEDURE ReferentSize (h: RefHeader): CARDINAL =
       RETURN def.dataSize;
     END;
 
-(* Otherwise, the referent is an open array; it has the following layout:
-|     pointer to the elements (ADDRESS)
-|     size 1
-|     ....
-|     size n
-|     optional padding
-|     elements
-|     ....
-   where n is the number of open dimensions (given by the definition)
-   and each size is the number of elements along the dimension. *)
-
-    VAR
-      adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
-      sizes: UNTRACED REF INTEGER := h + ADRSIZE(Header) + ADRSIZE(ADDRESS);
-                                                           (* ^ elt pointer*)
-    BEGIN
-      res := 1;
-      FOR i := 0 TO adef.nDimensions - 1 DO
-        res := res * sizes^;
-        INC(sizes, ADRSIZE(sizes^));
-      END;
-      res := res * adef.elementSize;
-    END;
-    res := RTMisc.Upper(res + def.dataSize, BYTESIZE(Header));
-    RETURN res;
+    (* Otherwise, the referent is an open array *)
+    RETURN OpenArraySize(h, def);
   END ReferentSize;
 
 (* The convention about page numbering allows for a simple conversion from
@@ -440,10 +468,10 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       gray     : BOOLEAN;
     BEGIN
       IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj)) THEN
-        np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, pureCopy);
         gray := FALSE;
       ELSE
-        np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, impureCopy);
         gray := TRUE;
       END;
       IF (np = NIL) THEN
@@ -610,6 +638,25 @@ PROCEDURE GrayBetween (h, he: RefHeader) =
     END;
   END GrayBetween;
 
+PROCEDURE SuspendPool (VAR pool: AllocPool) =
+  BEGIN
+    <* ASSERT pool.desc.note = Note.Allocated *>
+    <* ASSERT NOT pool.busy *>
+    InsertFiller(pool.next, pool.limit - pool.next);
+  END SuspendPool;
+
+PROCEDURE ClosePool (VAR pool: AllocPool) =
+  BEGIN
+    <* ASSERT pool.desc.note = Note.Allocated *>
+    <* ASSERT NOT pool.busy *>
+    pool.busy := TRUE;
+    FillPool(pool);
+    IF pool.page # Nil THEN BumpCnts(pool.page) END;
+    pool.page := Nil;
+    pool.stack := Nil;
+    pool.busy := FALSE;
+  END ClosePool;
+
 PROCEDURE FillPool (VAR p: AllocPool) =
   BEGIN
     InsertFiller(p.next, p.limit - p.next);
@@ -651,46 +698,37 @@ VAR
 VAR collectorOn: BOOLEAN := FALSE;
 
 VAR
-  minorCollections := 0;                 (* the number of minor GCs begun *)
-  majorCollections := 0;		 (* the number of major GCs begun *)
-
-VAR
   signalBackground := FALSE;     (* should signal background collector
                                     thread *)
   signalWeak := FALSE;           (* should signal weak cleaner thread *)
 
-PROCEDURE CollectEnough () =
+PROCEDURE CollectEnough (): BOOLEAN =
   BEGIN
-    IF collectorOn THEN RETURN; END;
+    IF collectorOn THEN RETURN FALSE; END;
     IF Behind() THEN
       CollectorOn();
       IF incremental AND (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.incremental) THEN
-        REPEAT CollectSome(); UNTIL NOT Behind();
+        REPEAT CollectSome();
+        UNTIL NOT Behind() OR collectorState = CollectorState.Zero;
       ELSE
         WHILE collectorState = CollectorState.Zero DO CollectSome(); END;
         REPEAT CollectSome(); UNTIL collectorState = CollectorState.Zero;
       END;
       CollectorOff();
+      RETURN TRUE;
     END;
+    RETURN FALSE;
   END CollectEnough;
 
 PROCEDURE Behind (): BOOLEAN =
-  VAR n_new, n_copied: INTEGER;
   BEGIN
     IF disableCount + disableMotionCount > 0
          AND collectorState = CollectorState.Zero THEN
       RETURN FALSE;
     END;
-    n_new := newPool.n_small + newPool.n_big;
-    n_copied := pureCopy.n_small + pureCopy.n_big
-                 + impureCopy.n_small + impureCopy.n_big;
-    IF max_heap >= 0 THEN
-      WITH max_pages = ((max_heap + BytesPerPage - 1) DIV BytesPerPage) DO
-        (* conservative copy reserve of max_pages / 2 *)
-        IF FLOAT(n_new + n_copied + n_promoted) * 2.0 >= FLOAT(max_pages) THEN
-          RETURN TRUE;
-        END;
-      END;
+    IF foregroundWaiting THEN
+      RTOS.BroadcastHeap();
+      RETURN FALSE;
     END;
     IF collectorState = CollectorState.Zero THEN
       RETURN FLOAT(n_new + n_copied + n_promoted) * threshold[1] >= threshold[0];
@@ -699,16 +737,7 @@ PROCEDURE Behind (): BOOLEAN =
     END;
   END Behind;
 
-CONST
-  Times = ARRAY[FIRST(CollectorState)..LAST(CollectorState)] OF REAL {0.0,..};
-
-VAR
-  timeUsedOnEntry: REAL;	(* time used when entered collector *)
-  stateOnEntry: CollectorState;
-  maxPause := Times;			 (* max. GC pause *)
-  minPause := Times;			 (* min. GC pause *)
-  maxInc   := Times;			 (* max. background pause *)
-  minInc   := Times;			 (* min. background pause *)
+VAR timeOnEntry, timeOnExit: Time.T;	 (* time of collector entry/exit *)
 
 PROCEDURE CollectorOn () =
   (* LL >= RTOS.LockHeap *)
@@ -723,8 +752,7 @@ PROCEDURE CollectorOn () =
          other threads cannot be running!  -- 7/16/96 WKK *)
     END;
 
-    timeUsedOnEntry := RTProcess.TimeUsed();
-    stateOnEntry := collectorState;
+    timeOnEntry := Time.Now();
 
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
@@ -735,7 +763,7 @@ PROCEDURE CollectorOn () =
     END;
   END CollectorOn;
 
-PROCEDURE CollectorOff (background := FALSE) =
+PROCEDURE CollectorOff () =
   (* LL >= RTOS.LockHeap *)
   BEGIN
     <* ASSERT collectorOn *>
@@ -770,26 +798,8 @@ PROCEDURE CollectorOff (background := FALSE) =
       RTOS.BroadcastHeap();
     END;
 
-    WITH pause = RTProcess.TimeUsed() - timeUsedOnEntry DO
-      IF background THEN
-        IF maxInc[stateOnEntry] = 0.0 THEN
-          minInc[stateOnEntry] := pause;
-          maxInc[stateOnEntry] := pause;
-        ELSE
-          minInc[stateOnEntry] := MIN(pause, minInc[stateOnEntry]);
-          maxInc[stateOnEntry] := MAX(pause, maxInc[stateOnEntry]);
-        END;
-      ELSE
-        IF maxPause[stateOnEntry] = 0.0 THEN
-          minPause[stateOnEntry] := pause;
-          maxPause[stateOnEntry] := pause;
-        ELSE
-          minPause[stateOnEntry] := MIN(pause, minPause[stateOnEntry]);
-          maxPause[stateOnEntry] := MAX(pause, maxPause[stateOnEntry]);
-        END
-      END;
-      cycleCost := cycleCost + pause;
-    END;
+    timeOnExit := Time.Now();
+    cycleCost := cycleCost + (timeOnExit - timeOnEntry);
   END CollectorOff;
 
 PROCEDURE CollectSome () =
@@ -809,14 +819,16 @@ PROCEDURE CollectSome () =
 
 VAR
   mover      : Mover    := NIL;
-  cycleCost  : REAL     := 0.0;  (* running cost of current cycle *)
+  cycleCost  : Time.T   := 0.0D0;(* running cost of current cycle *)
   cycleLength: CARDINAL := 1;    (* current planned cycle length *)
   cycleL     : CARDINAL := 0;    (* length of current cycle, so far *)
   cycleNews  : CARDINAL;         (* the number of new pages this cycle *)
-  minPrefixAvgCost: REAL;        (* minimum average cost for a prefix of
+  minPrefixAvgCost: Time.T;      (* minimum average cost for a prefix of
                                     this cycle *)
   minCycleL  : CARDINAL;         (* the length of that prefix *)
   n_promoted : CARDINAL := 0;    (* # of pages promoted this cycle *)
+  n_new      : CARDINAL := 0;	 (* # of pages allocated this cycle *)
+  n_copied   : CARDINAL := 0;	 (* # of pages copied this cycle *)
 
 PROCEDURE CollectSomeInStateZero () =
   BEGIN
@@ -824,8 +836,8 @@ PROCEDURE CollectSomeInStateZero () =
 
     <* ASSERT disableCount + disableMotionCount = 0 *>
     (* compute some costs relative to previous collection *)
-    INC(cycleNews, newPool.n_small + newPool.n_big);
-    VAR prefixAvgCost := cycleCost / FLOAT(cycleNews);
+    INC(cycleNews, n_new);
+    VAR prefixAvgCost := cycleCost / FLOAT(cycleNews, Time.T);
     BEGIN
       IF prefixAvgCost < minPrefixAvgCost THEN
         minPrefixAvgCost := prefixAvgCost;
@@ -858,22 +870,18 @@ PROCEDURE CollectSomeInStateZero () =
       INC(cycleL);
     ELSE
       cycleL := 1;
-      cycleCost := 0.0;
+      cycleCost := 0.0D0;
       cycleNews := 0;
-      minPrefixAvgCost := LAST(REAL);
+      minPrefixAvgCost := LAST(Time.T);
       minCycleL := 0;
     END;
 
+    (* fill the rest of the current pages *)
+    ThreadF.ProcessPools(ClosePool);
     InvokeMonitors (before := TRUE);
 
     IF perfOn THEN PerfBegin(); END;
 
-    (* fill the rest of the current page *)
-    FillPool(newPool);
-    newPool.page  := Nil;
-    newPool.stack := Nil;
-
-    INC(collections);
     IF (partialCollection) THEN
       INC(minorCollections);
     ELSE
@@ -893,9 +901,8 @@ PROCEDURE CollectSomeInStateZero () =
     IF perfOn THEN PerfFlip(); END;
 
     (* The 'new' nextSpace is empty *)
-    newPool.n_small    := 0;   newPool.n_big    := 0;
-    pureCopy.n_small   := 0;   pureCopy.n_big   := 0;
-    impureCopy.n_small := 0;   impureCopy.n_big := 0;
+    n_new := 0;
+    n_copied := 0;
     n_promoted := 0;
 
     (* Conservatively scan the stacks for possible pointers. *)
@@ -1059,9 +1066,7 @@ PROCEDURE CollectSomeInStateFive () =
 
     InvokeMonitors(before := FALSE);
 
-    VAR n_survivors := FLOAT(pureCopy.n_small + pureCopy.n_big
-                           + impureCopy.n_small + impureCopy.n_big
-                           + n_promoted);
+    VAR n_survivors := FLOAT(n_copied + n_promoted);
     BEGIN
       IF partialCollection THEN
         partialCollectionNext := n_survivors * threshold[1] < threshold[0];
@@ -1143,6 +1148,7 @@ PROCEDURE CleanPage (p: Page;  thread_page := FALSE) =
     END;
     IF NOT dirty THEN
       <* ASSERT RTHeapDep.VM OR desc[p - p0].note # Note.AmbiguousRoot *>
+      <* ASSERT desc[p - p0].space = Space.Current *>
       Protect(p, Mode.ReadOnly);
     END;
     IF perfOn THEN PerfChange(p, PageCount(p)); END;
@@ -1459,20 +1465,55 @@ PROCEDURE AllocUntraced (size: INTEGER): ADDRESS =
 
 (* Allocate space in the traced heap for NEW or collector copies *)
 
-PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
+PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
                        VAR pool: AllocPool): RefReferent =
   (* Allocates space from "pool" in the traced heap. *)
-  (* LL >= RTOS.LockHeap *)
+  (* LL >= 0 *)
   VAR
     res       : ADDRESS := pool.next + ADRSIZE(Header);
     cur_align : INTEGER := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
     alignment : INTEGER := align[cur_align, dataAlignment];
     nextPtr   : ADDRESS := res + (alignment + dataSize);
+    oldPage   : Page;
+    n_bytes   : CARDINAL;
+    n_pages   : CARDINAL;
   BEGIN
     IF nextPtr > pool.limit THEN
       (* not enough space left in the pool, take the long route *)
-      res := NIL;  nextPtr := NIL;  (* in case of GC during LongAlloc... *)
-      RETURN LongAlloc (dataSize, dataAlignment, pool);
+      res := NIL;  nextPtr := NIL;  (* in case of GC... *)
+      pool.busy := FALSE;
+      Scheduler.Yield();                 (* we may be a while *)
+
+      RTOS.LockHeap();
+
+      (* make sure the collector gets a chance to keep up with NEW... *)
+      IF CollectEnough() AND tsIndex >= 0 THEN
+        tStamps[tsIndex] := timeOnEntry; INC(tsIndex);
+        tStamps[tsIndex] := timeOnExit;  INC(tsIndex);
+      END;
+
+      oldPage := pool.page;
+      n_bytes := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
+      n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
+      res := LongAlloc (n_pages, dataSize, dataAlignment, pool);
+      IF res = NIL THEN RTOS.UnlockHeap(); RETURN NIL; END;
+
+      INC(n_new, n_pages);
+      IF oldPage = pool.page THEN
+        (* we filed the new page *)
+        IF def.kind = ORD(TK.Array) THEN
+          RTAllocCnts.BumpSize(def.typecode, dataSize);
+        ELSE
+          RTAllocCnts.BumpCnt(def.typecode);
+        END;
+      ELSIF oldPage # Nil THEN
+        (* we filed the old page *)
+        BumpCnts(oldPage);
+      END;
+
+      pool.busy := TRUE;
+      RTOS.UnlockHeap();
+      RETURN res;
     END;
 
     (* Align the referent *)
@@ -1486,26 +1527,56 @@ PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
     RETURN res;
   END AllocTraced;
 
-PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
+PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
-  (* LL >= RTOS.HeapLock *)
+  (* Allocates space from "pool" in the traced heap. *)
+  (* LL >= 0 *)
   VAR
-    n_bytes  := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
-    n_pages  := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
+    res       : ADDRESS := pool.next + ADRSIZE(Header);
+    cur_align : INTEGER := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
+    alignment : INTEGER := align[cur_align, dataAlignment];
+    nextPtr   : ADDRESS := res + (alignment + dataSize);
+    n_bytes   : CARDINAL;
+    n_pages   : CARDINAL;
+  BEGIN
+    IF nextPtr > pool.limit THEN
+      (* not enough space left in the pool, take the long route *)
+      n_bytes := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
+      n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
+      res := LongAlloc (n_pages, dataSize, dataAlignment, pool);
+      IF res = NIL THEN RETURN NIL END;
+      INC(n_copied, n_pages);
+      RETURN res;
+    END;
+
+    (* Align the referent *)
+    IF alignment # 0 THEN
+      InsertFiller(pool.next, alignment);
+      pool.next := pool.next + alignment;
+      res := pool.next + ADRSIZE(Header);
+    END;
+
+    pool.next := nextPtr;
+    RETURN res;
+  END AllocCopy;
+
+PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
+                     VAR pool: AllocPool): RefReferent =
+  (* LL >= 0 *)
+  VAR
     res      : RefReferent;
     filePage : Page;
-    newPage  : Page;
-    newPtr   : ADDRESS;
-    newLimit : ADDRESS;
-  BEGIN
-    (* make sure the collector gets a chance to keep up with NEW... *)
-    IF pool.desc.note = Note.Allocated THEN CollectEnough (); END;
-
     (* get a block of "n_pages" contiguous, free pages; just what we need! *)
-    newPage  := FindFreePages (n_pages, pool.notAfter);
+    newPage  := FindFreePages(n_pages, pool.notAfter);
     newPtr   := LOOPHOLE (newPage * AdrPerPage, ADDRESS);
     newLimit := LOOPHOLE (newPtr  + AdrPerPage, ADDRESS);
+  BEGIN
     IF (newPage = Nil) THEN RETURN NIL; END;
+
+    <*ASSERT NOT pool.busy*>
+    <*ASSERT initialized*>
+
+    RTMisc.Zero(newPtr, n_pages * BytesPerPage);
 
     (* maybe we have to insert a filler to align this thing *)
     res := RTMisc.Align(newPtr + ADRSIZE(Header), dataAlignment);
@@ -1515,16 +1586,13 @@ PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
     newPtr := LOOPHOLE(res + dataSize, RefHeader);
 
     (* mark the new pages *)
-    desc[newPage - p0] := pool.desc;
-    IF n_pages = 1 THEN
-      INC (pool.n_small);
-    ELSE
-      INC (pool.n_big, n_pages);
-      pool.desc.continued := TRUE;
+    VAR pd := pool.desc;
+    BEGIN
+      desc[newPage - p0] := pd;
+      pd.continued := TRUE;
       FOR i := 1 TO n_pages - 1 DO
-        desc[newPage + i - p0] := pool.desc;
+        desc[newPage + i - p0] := pd;
       END;
-      pool.desc.continued := FALSE;
     END;
     IF perfOn THEN PerfChange (newPage, n_pages); END;
 
@@ -1553,6 +1621,43 @@ PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
     RETURN res;
   END LongAlloc;
 
+PROCEDURE BumpCnts (p: Page) =
+  VAR
+    h  := PageToHeader(p);
+    he := PageToHeader(p + 1);
+    tc: Typecode;
+    def: TypeDefn;
+    size: INTEGER;
+  BEGIN
+    RTOS.LockHeap();
+    WHILE h < he DO
+      (* increment the allocation counts *)
+      tc := h.typecode;
+      IF tc = Fill_1_type THEN
+        size := 0;
+      ELSIF tc = Fill_N_type THEN
+        size := LOOPHOLE(h + ADRSIZE(Header), UNTRACED REF INTEGER)^;
+        size := size - BYTESIZE(Header);
+      ELSIF tc = RT0.TextLitTypecode THEN
+        size := TextLitSize(h);
+        RTAllocCnts.BumpCnt(tc);
+      ELSE
+        def := RTType.Get (tc);
+
+        IF (def.kind # ORD (TK.Array)) THEN
+          (* the typecell datasize tells the truth *)
+          size := def.dataSize;
+          RTAllocCnts.BumpCnt(tc);
+        ELSE
+          size := OpenArraySize(h, def);
+          RTAllocCnts.BumpSize(tc, size);
+        END;
+      END;
+      INC(h, ADRSIZE(Header) + size);
+    END;
+    RTOS.UnlockHeap();
+  END BumpCnts;
+
 (*--------------------------------------------------*)
 
 VAR
@@ -1575,15 +1680,31 @@ PROCEDURE BackgroundThread (<* UNUSED *> closure: Thread.Closure): REFANY =
           IF collectorState # CollectorState.Zero THEN
             CollectorOn();
             CollectSome();
-            CollectorOff(background := TRUE);
+            CollectorOff();
           END;
         END;
         RTOS.UnlockHeap();
-        Scheduler.Yield();
+        Thread.Pause(1.0d0);
       END;
     END;
   END BackgroundThread;
 
+VAR foregroundWaiting := FALSE;
+
+(* The foreground thread may be present or not.  If it is present, it
+   collects asynchronously. *)
+
+PROCEDURE ForegroundThread (<* UNUSED *> closure: Thread.Closure): REFANY =
+  BEGIN
+    LOOP
+      foregroundWaiting := TRUE;
+      RTOS.WaitHeap();
+      foregroundWaiting := FALSE;
+      RTOS.LockHeap();
+      EVAL CollectEnough();
+      RTOS.UnlockHeap();
+    END;
+  END ForegroundThread;
 
 (* --------------------------------------------------------- collector *)
 
@@ -1632,7 +1753,7 @@ VAR
 PROCEDURE InstallSanityCheck () =
   BEGIN
     RegisterMonitor(
-      NEW(MonitorClosure, before := SanityCheck, after := SanityCheck));
+      NEW(MonitorClosure, before := Before, after := After));
     IF (refCheck = NIL) THEN
       protectedCheck := NEW (RTHeapMap.Visitor,
                              apply := ProtectedOlderRefSanityCheck);
@@ -1642,6 +1763,16 @@ PROCEDURE InstallSanityCheck () =
 
 (* SanityCheck checks the heap for correctness when no collection is in
    progress. *)
+
+CONST Before = SanityCheck; (* already suspended *)
+
+PROCEDURE After (self: MonitorClosure) =
+  BEGIN
+    ThreadF.SuspendOthers();
+    ThreadF.ProcessPools(SuspendPool);	 (* so we can scan them... *)
+    SanityCheck (self);
+    ThreadF.ResumeOthers();
+  END After;
 
 PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
   VAR p := p0;
@@ -1661,7 +1792,6 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
             h  := PageToHeader(p);
             he := PageToHeader(p + 1);
           BEGIN
-            IF p = newPool.page THEN he := newPool.next; END;
             WHILE h < he DO
               (* check the references in the object *)
               <* ASSERT NOT h.gray *>
@@ -1810,6 +1940,8 @@ PROCEDURE VisitAllRefs (v: RefVisitor) =
   BEGIN
     TRY
       Disable();
+      ThreadF.SuspendOthers();
+      ThreadF.ProcessPools(SuspendPool); (* so we can scan them... *)
       FOR p := p0 TO p1 - 1 DO
         IF desc[p - p0].space = Space.Current
              AND NOT desc[p - p0].continued THEN
@@ -1818,7 +1950,7 @@ PROCEDURE VisitAllRefs (v: RefVisitor) =
             he            := PageToHeader(p + 1);
             size: INTEGER;
           BEGIN
-            WHILE h < he AND (p # newPool.page OR h < newPool.next) DO
+            WHILE h < he DO
               size := ReferentSize(h);
               tc := h.typecode;
               IF tc # Fill_1_type AND tc # Fill_N_type THEN
@@ -1833,6 +1965,7 @@ PROCEDURE VisitAllRefs (v: RefVisitor) =
         END;
       END;
     FINALLY
+      ThreadF.ResumeOthers();
       Enable();
     END;
   END VisitAllRefs;
@@ -2251,6 +2384,8 @@ PROCEDURE CheckLoadTracedRef (ref: RefReferent) =
 
     RTOS.LockHeap ();
 
+    INC(countCheckLoadTracedRef);
+
     IF (p < p0) OR (p1 <= p) THEN
       RTOS.UnlockHeap();
       RETURN;				 (* not in heap *)
@@ -2314,6 +2449,8 @@ PROCEDURE CheckStoreTraced (ref: RefReferent) =
     RTOS.LockHeap ();
     <* ASSERT (p0 <= p) AND (p < p1) *>
 
+    INC(countCheckStoreTraced);
+
     WITH pd = desc[p - p0] DO
 
       <* ASSERT pd.space # Space.Unallocated *>
@@ -2362,8 +2499,10 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
     <* ASSERT RTHeapDep.VM *>
     RTOS.LockHeap();
 
+    INC(countFault);
+
     (* remember the time spent handling faults *)
-    cycleCost := cycleCost + RTHeapDep.VMFaultTime();
+    cycleCost := cycleCost + RTHeapDep.VMFaultTime;
 
     IF (p < p0) OR (p1 <= p) THEN
       RTOS.UnlockHeap();
@@ -2385,6 +2524,7 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
       <* ASSERT NOT pd.pure *>
 
       IF pd.gray THEN
+        INC(countFaultGray);
         CollectorOn();
         IF p # impureCopy.page THEN
           CleanPage(FirstPage(p));
@@ -2409,9 +2549,11 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
         END;
         CollectorOff();
       ELSIF NOT pd.continued THEN
+        INC(countFaultOlder);
         <* ASSERT pd.generation = Generation.Older *>
         Protect(p, Mode.ReadWrite);
       ELSE
+        INC(countFaultOlder);
         p := FirstPage(p);
         <* ASSERT desc[p - p0].generation = Generation.Older *>
         Protect(p, Mode.ReadWrite);
@@ -2855,7 +2997,6 @@ PROCEDURE Init () =
     IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
     IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
     IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
-    IF RTParams.IsPresent("heaptimes") THEN RTProcess.RegisterExitor(PrintTimes) END;
     GetMaxHeap();
     GetGCRatio();
     PerfStart();
@@ -2907,48 +3048,64 @@ PROCEDURE GetGCRatio () =
     IF value > 0.0 THEN gcRatio := value END;
   END GetGCRatio;
 
-PROCEDURE PrintTimes () =
-  <*FATAL Convert.Failed*>
+VAR
+  minorCollections := 0;                 (* the number of minor GCs begun *)
+  majorCollections := 0;		 (* the number of major GCs begun *)
+  countCheckLoadTracedRef := 0;
+  countCheckStoreTraced := 0;
+  countFault, countFaultGray, countFaultOlder := 0;
+  tStamps: ARRAY [0..1048575] OF Time.T;
+  tsIndex := -1;
+  tStart: Time.T;
+
+PROCEDURE StartBench() =
+  BEGIN
+    majorCollections := 0;
+    minorCollections := 0;
+    countCheckLoadTracedRef := 0;
+    countCheckStoreTraced := 0;
+    countFault := 0;
+    countFaultGray := 0;
+    countFaultOlder := 0;
+    tsIndex := 0;
+    tStart := Time.Now();
+  END StartBench;
+
+PROCEDURE FinishBench() =
   VAR
-    buf: ARRAY [0..100] OF CHAR;  used: INTEGER;
+    tEnd    := Time.Now();
     span    := (p1 - p0) * BytesPerPage;
     density := ROUND (FLOAT(total_heap) * 100.0 / FLOAT (span));
   BEGIN
-    RTIO.PutText("\nCollections: "); RTIO.PutInt(collections);
+    RTIO.PutText("\nBEGIN\n");
+    FOR i := 0 TO tsIndex-1 BY 2 DO
+      RTIO.PutInt(TRUNC((tStamps[i+0] - tStart) * 1.0D6));
+      RTIO.PutChar(' ');
+      RTIO.PutInt(TRUNC((tStamps[i+1] - tStart) * 1.0D6));
+      RTIO.PutChar('\n');
+    END;
+    tsIndex := -1;
+    RTIO.PutInt(TRUNC((tEnd - tStart) * 1.0D6));
+    RTIO.PutChar(' ');
+    RTIO.PutInt(TRUNC((tEnd - tStart) * 1.0D6));
+    RTIO.PutText("\nEND\n");
+
+    RTIO.PutText("\nCollections: ");
+    RTIO.PutInt(minorCollections + majorCollections);
     RTIO.PutText(" ("); RTIO.PutInt(majorCollections); RTIO.PutText(" full, ");
     RTIO.PutInt(minorCollections); RTIO.PutText(" partial)\n");
 
-    RTIO.PutText("Mutator min. pause: ( ");
-    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
-      used := Convert.FromFloat (buf, minPause[s]);
-      RTIO.PutChars(ADR(buf[0]), used);
-      RTIO.PutChar(' ');
-    END;
-    RTIO.PutText(") s\n");
-
-    RTIO.PutText("Mutator max. pause: ( ");
-    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
-      used := Convert.FromFloat (buf, maxPause[s]);
-      RTIO.PutChars(ADR(buf[0]), used);
-      RTIO.PutChar(' ');
-    END;
-    RTIO.PutText(") s\n");
-
-    RTIO.PutText("Background min. increment: ( ");
-    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
-      used := Convert.FromFloat (buf, minInc[s]);
-      RTIO.PutChars(ADR(buf[0]), used);
-      RTIO.PutChar(' ');
-    END;
-    RTIO.PutText(") s\n");
-
-    RTIO.PutText("Background max. increment: ( ");
-    FOR s := FIRST(CollectorState) TO LAST(CollectorState) DO
-      used := Convert.FromFloat (buf, maxInc[s]);
-      RTIO.PutChars(ADR(buf[0]), used);
-      RTIO.PutChar(' ');
-    END;
-    RTIO.PutText(") s\n");
+    RTIO.PutText("Slow path inc barriers: ");
+    RTIO.PutInt(countCheckLoadTracedRef);
+    RTIO.PutText("\nSlow path gen barriers: ");
+    RTIO.PutInt(countCheckStoreTraced);
+    RTIO.PutText("\nVM faults: ");
+    RTIO.PutInt(countFault);
+    RTIO.PutText(" (gray: ");
+    RTIO.PutInt(countFaultGray);
+    RTIO.PutText(", older: ");
+    RTIO.PutInt(countFaultOlder);
+    RTIO.PutText(")\n");
 
     RTIO.PutText ("Total heap: ");
     RTIO.PutInt  (total_heap DIV MB);
@@ -2964,7 +3121,7 @@ PROCEDURE PrintTimes () =
     RTIO.PutInt  (density);
     RTIO.PutText ("%\n");
     RTIO.Flush ();
-  END PrintTimes;
+  END FinishBench;
 
 BEGIN
 END RTCollector.

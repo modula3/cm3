@@ -160,11 +160,6 @@ PROCEDURE Core (             sig : Ctypes.int;
 
 (* System-call faults are handled in RTHeapDepC.c *)
 
-PROCEDURE VMFaultTime (): REAL =
-  BEGIN
-    RETURN 0.010;                (* guess 10ms to handle a page fault *)
-  END VMFaultTime;
-
 BEGIN
   VM := RTVM.VM();
   AtomicWrappers := RTVM.AtomicWrappers();

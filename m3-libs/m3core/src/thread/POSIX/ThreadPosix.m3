@@ -4,7 +4,7 @@
 (*|                                                          *)
 (*| Last modified on Fri Apr  7 09:06:48 PDT 1995 by kalsow  *)
 (*|      modified on Mon Mar 21 17:40:31 PST 1994 by wobber  *)
-(*|      modified on Sat Jun 26 17:07:03 PDT 1993 by gnelson     *)
+(*|      modified on Sat Jun 26 17:07:03 PDT 1993 by gnelson *)
 (*|      modified on Fri May 14 16:15:26 PDT 1993 by mjordan *)
 (*|      modified on Wed Apr 21 16:35:05 PDT 1993 by mcjones *)
 (*|      modified On Mon Apr  5 14:51:30 PDT 1993 by muller  *)
@@ -13,7 +13,7 @@
 UNSAFE MODULE ThreadPosix
 EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
-IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTCollectorSRC,
+IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
        Unix, Usignal, Utime, Word;
@@ -124,12 +124,11 @@ TYPE
 
 TYPE
   UTime = Utime.struct_timeval;
-  TimeZone = Utime.struct_timezone;
 
 PROCEDURE UTimeNow (): UTime =
-  VAR tv: UTime;  tz: TimeZone;
+  VAR tv: UTime;
   BEGIN
-    EVAL Utime.gettimeofday (tv, tz);
+    EVAL Utime.gettimeofday (tv);
     RETURN tv;
   END UTimeNow;
 
@@ -381,8 +380,10 @@ PROCEDURE TestAlert (): BOOLEAN =
 PROCEDURE Yield () =
   <*FATAL Alerted*>
   BEGIN
-    self.alertable := FALSE;
-    InternalYield ();
+    IF inCritical = 0 AND self # NIL THEN
+      self.alertable := FALSE;
+      InternalYield ();
+    END;
   END Yield;
 
 PROCEDURE Self (): T =
@@ -501,20 +502,32 @@ PROCEDURE ResumeOthers () =
     DEC(inCritical);
   END ResumeOthers;
 
+PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
+  BEGIN
+    p(newPool);
+  END ProcessPools;
+
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
-  VAR t:= self; start, stop: ADDRESS;
+  VAR
+    t:= self; start, stop: ADDRESS;
+    context := self.context;
   BEGIN
     (* save my state *)
-    EVAL RTThread.Save (self.context.buf);
-
-    REPEAT 
+    EVAL RTThread.Save (context.buf);
+    Tos (context, start, stop);		 (* process the stack *)
+    p (start, stop);
+    WITH z = context.buf DO		 (* process the registers *)
+      p (ADR (z), ADR (z) + ADRSIZE (z))
+    END;
+    t := self.next;
+    WHILE t # self DO
       Tos (t.context, start, stop);	 (* process the stack *)
       p (start, stop);
       WITH z = t.context.buf DO		 (* process the registers *)
         p (ADR (z), ADR (z) + ADRSIZE (z))
       END;
       t := t.next;
-    UNTIL t = self;
+    END;
   END ProcessStacks;
 
 (*------------------------------------------------- I/O and Timer support ---*)
@@ -747,7 +760,7 @@ PROCEDURE StartSwitching () =
 PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
-    IF inCritical = 0 THEN InternalYield () END;
+    IF inCritical = 0 AND NOT newPool.busy THEN InternalYield () END;
   END switch_thread;
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL) =
@@ -798,6 +811,7 @@ VAR t, from: T;
 BEGIN
   INC (inCritical);
   <*ASSERT inCritical = 1 *>
+  <*ASSERT NOT newPool.busy *>
 
   from := self.next; (* remember where we started *)
   now            := UTimeNow ();
@@ -1115,6 +1129,7 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
       INC (inCritical);
       Broadcast (self.endCondition);
+      RTHeapRep.ClosePool(newPool);
       ICannotRun (State.dying);
       INC (stats.n_dead);
       DEC (inCritical);
@@ -1225,10 +1240,21 @@ PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
     END;
   END Tos;
 
-PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
+PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
   BEGIN
-    RETURN ADR (self.floatState);
-  END MyFPState;
+    reader(self.floatState);
+  END GetMyFPState;
+
+PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
+  BEGIN
+    writer(self.floatState);
+  END SetMyFPState;
+
+VAR newPool := RTHeapRep.NewPool;
+PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool =
+  BEGIN
+    RETURN ADR(newPool);
+  END MyAllocPool;
 
 (*----------------------------------------------------- debugging support ---*)
 
@@ -1481,6 +1507,9 @@ PROCEDURE Init()=
     preemption := NOT RTParams.IsPresent ("nopreemption");
     IF RTParams.IsPresent("backgroundgc") THEN
       RTCollectorSRC.StartBackgroundCollection();
+    END;
+    IF RTParams.IsPresent("foregroundgc") THEN
+      RTCollectorSRC.StartForegroundCollection();
     END;
   END Init;
 

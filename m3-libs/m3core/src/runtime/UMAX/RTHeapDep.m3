@@ -17,9 +17,4 @@ PROCEDURE Protect (<* UNUSED *> p                 : Page;
     <* ASSERT FALSE *>
   END Protect;
 
-PROCEDURE VMFaultTime (): REAL =
-  BEGIN
-    <* ASSERT FALSE *>
-  END VMFaultTime;
-
 BEGIN END RTHeapDep.

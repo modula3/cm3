@@ -17,8 +17,7 @@ VAR (*CONST*) MicrosecondsPerTick, SecondsPerTick: LONGREAL;
 PROCEDURE Now(): T =
   VAR
     tv: Utime.struct_timeval;
-    tz: Utime.struct_timezone;
-    i := Utime.gettimeofday(tv, tz);
+    i := Utime.gettimeofday(tv);
     d: LONGREAL;
   BEGIN
     <* ASSERT i=0 *>

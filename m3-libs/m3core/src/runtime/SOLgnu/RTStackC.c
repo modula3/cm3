@@ -122,11 +122,11 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
     } else
       caller->sp = caller->fp = 0;
   } else {
-    caller->pc = (void *)callee->sp->fr_savpc;
-    if (caller->pc) {
+    if (callee->sp && callee->fp && callee->sp->fr_savpc) {
+      caller->pc = (void *)callee->sp->fr_savpc;
       caller->fp = (caller->sp = callee->fp)->fr_savfp;
     } else
-      caller->sp = caller->fp = 0;
+      caller->sp = caller->fp = caller->pc = 0;
     caller->ctxt = callee->ctxt;
   }
   if (caller->lock != FrameLock) abort();

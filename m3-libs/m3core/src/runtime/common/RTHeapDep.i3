@@ -65,10 +65,10 @@ PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN);
    protected are p*BytesPerPage through (p+n)*BytesPerPage-1.  If VM is
    TRUE, BytesPerPage must be at least the VM page size. *)
 
-PROCEDURE VMFaultTime (): REAL;
+CONST VMFaultTime = 0.01D0;		 (* guess 10ms to handle a page fault *)
 
-(* VMFaultTime returns the amount of processor time required to handle
-   a VM fault, in the same units as RTProcess.TimeUsed.
+(* VMFaultTime approximates the amount of processor time required to handle
+   a VM fault, in the same units as Time.Now.
    This information is used to tune the generational collector. *)
 
 END RTHeapDep.

@@ -22,23 +22,34 @@ PROCEDURE GetRounding(): RoundingMode =
   END GetRounding;
 
 PROCEDURE GetFlags(): SET OF Flag =
-  VAR state := ThreadF.MyFPState ();
+  VAR flags: SET OF Flag;
+  PROCEDURE Get(READONLY state: ThreadState) =
+    BEGIN
+      flags := state.sticky;
+    END Get;
   BEGIN
-    RETURN state.sticky;
+    ThreadF.GetMyFPState(Get);
+    RETURN flags;
   END GetFlags;
 
 PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
-  VAR state := ThreadF.MyFPState ();
-  VAR old := state.sticky;
+  VAR old: SET OF Flag;
+  PROCEDURE Set(VAR state: ThreadState) =
+    BEGIN
+      old := state.sticky;
+      state.sticky := s;
+    END Set;
   BEGIN
-    state.sticky := s;
     RETURN old;
   END SetFlags;
 
 PROCEDURE ClearFlag(f: Flag) =
-  VAR state := ThreadF.MyFPState ();
+  PROCEDURE Set(VAR state: ThreadState) =
+    BEGIN
+      state.sticky := state.sticky - SET OF Flag {f};
+    END Set;
   BEGIN
-    state.sticky := state.sticky - SET OF Flag {f};
+    ThreadF.SetMyFPState(Set);
   END ClearFlag;
 
 TYPE
@@ -56,16 +67,24 @@ CONST
   };
 
 PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
-  VAR state := ThreadF.MyFPState ();
+  PROCEDURE Set(VAR state: ThreadState) =
+    BEGIN
+      IF (state.behavior [f] = b) THEN RETURN END;
+      IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
+      state.behavior [f] := b;
+    END Set;
   BEGIN
-    IF (state.behavior [f] = b) THEN RETURN END;
-    IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
-    state.behavior [f] := b;
+    ThreadF.SetMyFPState(Set);
   END SetBehavior;
 
 PROCEDURE GetBehavior(f: Flag): Behavior =
+  VAR behavior: Behavior;
+  PROCEDURE Get(READONLY state: ThreadState) =
+    BEGIN
+      behavior := state.behavior [f];
+    END Get;
   BEGIN
-    RETURN ThreadF.MyFPState().behavior [f];
+    RETURN behavior;
   END GetBehavior;
 
 (*------------------------------------------------- thread initialization ---*)
