@@ -1562,12 +1562,12 @@ PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
 
 PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
-  (* LL >= 0 *)
+  (* LL >= RTOS.LockHeap *)
   VAR
     res      : RefReferent;
     filePage : Page;
     (* get a block of "n_pages" contiguous, free pages; just what we need! *)
-    newPage  := FindFreePages(n_pages, pool.notAfter);
+    newPage  := FindFreePages (n_pages, pool.notAfter);
     newPtr   := LOOPHOLE (newPage * AdrPerPage, ADDRESS);
     newLimit := LOOPHOLE (newPtr  + AdrPerPage, ADDRESS);
   BEGIN
