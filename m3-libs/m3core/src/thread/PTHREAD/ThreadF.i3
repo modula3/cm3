@@ -57,11 +57,6 @@ TYPE
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
 
-(*---------------------------------------------------------- benchmarking ---*)
-
-PROCEDURE StartBench();
-PROCEDURE FinishBench();
-
 (*---------------------------------------------------- exception delivery ---*)
 
 PROCEDURE GetCurrentHandlers(): ADDRESS;
