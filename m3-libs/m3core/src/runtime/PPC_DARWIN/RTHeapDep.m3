@@ -154,11 +154,6 @@ PROCEDURE Protect(p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
     END;
   END Protect;
 
-PROCEDURE VMFaultTime (): REAL =
-  BEGIN
-    RETURN 0.010; (* guess 10ms to handle a page fault *)
-  END VMFaultTime;
-
 BEGIN
   VM := RTVM.VMHeap();
   AtomicWrappers := RTVM.AtomicWrappers();

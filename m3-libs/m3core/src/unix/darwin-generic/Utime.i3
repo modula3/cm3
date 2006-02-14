@@ -105,10 +105,12 @@ TYPE
 (*** gettimeofday(2), settimeofday(2) - get/set date and time ***)
 
 <*EXTERNAL*>
-PROCEDURE gettimeofday (VAR t: struct_timeval; VAR z: struct_timezone): int;
+PROCEDURE gettimeofday (VAR t: struct_timeval;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 <*EXTERNAL*>
-PROCEDURE settimeofday (VAR t: struct_timeval; VAR z: struct_timezone): int;
+PROCEDURE settimeofday (VAR t: struct_timeval;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 (*** getitimer(2), setitimer(2) - get/set value of interval timer ***)
 

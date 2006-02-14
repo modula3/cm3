@@ -14,7 +14,7 @@
 UNSAFE MODULE RTAllocator
 EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTHeap, RTMisc, RTOS, RTType;
+IMPORT Cstdlib, RT0, RTHeap, RTMisc, RTOS, RTType, ThreadF;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
 
@@ -162,34 +162,20 @@ PROCEDURE GetTraced (defn: ADDRESS): REFANY =
     def : RT0.TypeDefn := defn;
     tc  : Typecode := def.typecode;
     res : ADDRESS;
-    sz  := BYTESIZE (Header) + def.dataSize;
+    pool:= ThreadF.MyAllocPool();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind = ORD (TK.Array)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
 
-    RTOS.LockHeap();
+    pool.busy := TRUE;
     BEGIN
-      res := AllocTraced(def.dataSize, def.dataAlignment, newPool);
-      IF (res = NIL) THEN  RTOS.UnlockHeap(); RETURN NIL;  END;
-
-      BumpCnt (tc);
-
-      IF (tc <= LAST (initCache)) AND (initCache[tc] # NIL) THEN
-        RTMisc.Copy(initCache[tc], res - ADRSIZE(Header), sz);
-      ELSE
-        InitRef (res, def);
-        IF (def.dataSize <= BYTESIZE(def^)) AND (tc <= LAST (initCache)) THEN
-          VAR copy := Cstdlib.malloc(sz); BEGIN
-            IF (copy # NIL) THEN
-              initCache[tc] := copy;
-              RTMisc.Copy(res - ADRSIZE(Header), copy, sz);
-            END;
-          END;
-        END;
-      END;
+      res := AllocTraced(def, def.dataSize, def.dataAlignment, pool^);
+      IF res = NIL THEN <*ASSERT NOT pool.busy*> RETURN NIL; END;
+      InitRef (res, def);
     END;
-    RTOS.UnlockHeap();
+    pool.busy := FALSE;
+
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
   END GetTraced;
@@ -243,10 +229,9 @@ PROCEDURE InitRef (res: ADDRESS;  def: RT0.TypeDefn) =
   BEGIN
     hdr^ := RT0.RefHeader {};
     hdr.typecode := def.typecode;
-    RTMisc.Zero(res, def.dataSize);
-
     IF (def.kind = ORD(TK.Obj)) THEN
-      VAR objdef := LOOPHOLE (def, RT0.ObjectTypeDefn); BEGIN
+      VAR objdef := LOOPHOLE (def, RT0.ObjectTypeDefn);
+      BEGIN
         LOOPHOLE(res, UNTRACED REF ADDRESS)^ := objdef.defaultMethods;
         WHILE objdef # NIL DO
           IF objdef.common.initProc # NIL THEN objdef.common.initProc(res); END;
@@ -268,21 +253,30 @@ TYPE
     tc         : Typecode;
   END;
 
-PROCEDURE GetOpenArray (defn: ADDRESS; READONLY s: Shape): REFANY =
-  VAR res: ADDRESS;  info: ArrayInfo;
+PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
+  VAR
+    res: ADDRESS;
+    info: ArrayInfo;
+    pool:= ThreadF.MyAllocPool();
   BEGIN
-    GetArrayInfo (defn, s, info, TRUE);
+    GetArrayInfo (def, s, info, TRUE);
 
-    RTOS.LockHeap();
+    pool.busy := TRUE;
     BEGIN
-      res := AllocTraced(info.nBytes, info.alignment, newPool);
-      IF (res = NIL) THEN  RTOS.UnlockHeap(); RETURN NIL;  END;
+      res := AllocTraced(def, info.nBytes, info.alignment, pool^);
+      IF res = NIL THEN <*ASSERT NOT pool.busy*> RETURN NIL; END;
       LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := info.tc, forwarded := FALSE};
-      BumpSize (info.tc, info.nBytes);
-      InitArray (res, s, info);
+      WITH data_start = res + info.def.common.dataSize DO
+        LOOPHOLE(res, UNTRACED REF ADDRESS)^ := data_start;
+      END;
+      FOR i := 0 TO NUMBER(s) - 1 DO
+        LOOPHOLE(res + ADRSIZE(ADDRESS) + i * ADRSIZE(INTEGER),
+                 UNTRACED REF INTEGER)^ := s[i];
+      END;
+      IF info.def.common.initProc # NIL THEN info.def.common.initProc(res) END;
     END;
-    RTOS.UnlockHeap();
+    pool.busy := FALSE;
 
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
@@ -301,7 +295,15 @@ PROCEDURE GetUntracedOpenArray (defn: ADDRESS;  READONLY s: Shape): ADDRESS =
     END;
     RTOS.UnlockHeap();
 
-    InitArray (res, s, info);
+    WITH data_start = res + info.def.common.dataSize DO
+      RTMisc.Zero(data_start, info.nDataBytes);
+      LOOPHOLE(res, UNTRACED REF ADDRESS)^ := data_start;
+    END;
+    FOR i := 0 TO NUMBER(s) - 1 DO
+      LOOPHOLE(res + ADRSIZE(ADDRESS) + i * ADRSIZE(INTEGER),
+               UNTRACED REF INTEGER)^ := s[i];
+    END;
+    IF info.def.common.initProc # NIL THEN info.def.common.initProc(res); END;
     RETURN res;
   END GetUntracedOpenArray;
 
@@ -328,19 +330,6 @@ PROCEDURE GetArrayInfo (def: RT0.TypeDefn;  READONLY s: Shape;
     ai.nDataBytes := ai.def.elementSize * n_elts;
     ai.nBytes     := RTMisc.Upper(def.dataSize + ai.nDataBytes, BYTESIZE(Header));
   END GetArrayInfo;
-
-PROCEDURE InitArray (res: ADDRESS;  READONLY s: Shape;  VAR info: ArrayInfo) =
-  VAR data_start := res + info.def.common.dataSize;
-  BEGIN
-    LOOPHOLE(res, UNTRACED REF ADDRESS)^ := data_start;
-    FOR i := 0 TO NUMBER(s) - 1 DO
-      LOOPHOLE(res + ADRSIZE(ADDRESS) + i * ADRSIZE(INTEGER),
-               UNTRACED REF INTEGER)^ := s[i];
-    END;
-    RTMisc.Zero(data_start, info.nDataBytes);
-
-    IF info.def.common.initProc # NIL THEN info.def.common.initProc(res); END;
-  END InitArray;
 
 (*---------------------------------------------------------- RTAllocCnts ---*)
 

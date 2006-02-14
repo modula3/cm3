@@ -105,4 +105,17 @@ VAR generational := FALSE;        (* generational collection *)
 PROCEDURE StartBackgroundCollection();
 (* Starts the background thread, if not already started *)
 
+(* \paragraph{Foreground Collection.}
+
+   There is an optional ``foreground'' mode, which extends incremental mode
+   with a foreground thread that collects on behalf of mutators.  Allocating
+   mutators occasionally yield to this thread to ensure that collection makes
+   progress. *)
+
+PROCEDURE StartForegroundCollection();
+(* Starts the foreground thread, if not already started *)
+
+PROCEDURE StartBench();
+PROCEDURE FinishBench();
+
 END RTCollectorSRC.

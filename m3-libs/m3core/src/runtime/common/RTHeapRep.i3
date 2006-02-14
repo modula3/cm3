@@ -19,7 +19,7 @@ INTERFACE RTHeapRep;
    elsewhere. *)
 
 IMPORT RT0, RTHeapDep;
-FROM RT0 IMPORT Typecode;
+FROM RT0 IMPORT Typecode, TypeDefn;
 
 (* The allocator and collector maintain two heaps of objects.  One heap is
    "traced" (its objects are collected); the other is "untraced".
@@ -166,11 +166,12 @@ PROCEDURE AllocUntraced (size: INTEGER): ADDRESS;
 (* Return the address of "size" bytes of untraced, un-zeroed storage,
    if possible.  Otherwise, return "NIL".  *)
 
-PROCEDURE AllocTraced (size, alignment: CARDINAL;  VAR pool: AllocPool): ADDRESS;
+PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
+                       VAR pool: AllocPool): ADDRESS;
 (* Return the address of "size" bytes of traced storage on an
    "alignment" byte boundary from the allocation pool "pool".
    The storage is not zeroed.  If the request cannot be satisfied,
-   "NIL" is returned.  LL >= RTOS.LockHeap. *)
+   "NIL" is returned.  LL >= LockHeap. *)
 
 (* Objects in the traced heap are allocated from one of three "pools".
    A pool is collection of pages with similar properties.  The "newPool"
@@ -187,25 +188,31 @@ TYPE
     stack      : Page    := Nil; (* linked list of new pages from this pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-    n_small    : INTEGER := 0;   (* # of "small" pages allocated via this pool *)
-    n_big      : INTEGER := 0;   (* # of "big" and "continued" pages allocated *)
+
+    (* BEWARE: a thread cannot be suspended while its pool is busy.  The busy
+       flag permits the thread to decline being suspended until it is done
+       allocating from its pool.  Otherwise, the GC could see incoherent
+       object state in the pool's page. *)
+    busy : BOOLEAN := FALSE;
   END;
 
-VAR (* LL >= RTOS.HeapLock *)
-  newPool := AllocPool {
+PROCEDURE ClosePool (VAR pool: AllocPool);
+
+CONST
+  NewPool = AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Allocated, gray := FALSE,
                   protected := FALSE, continued := FALSE },
     notAfter := Notes {Note.Copied} };
 
-VAR (* LL >= RTOS.HeapLock *)
+VAR (* LL >= LockHeap *)
   pureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := TRUE, note := Note.Copied, gray := FALSE,
                   protected := FALSE, continued := FALSE },
     notAfter := Notes {Note.Allocated} };
 
-VAR (* LL >= RTOS.HeapLock *)
+VAR (* LL >= LockHeap *)
   impureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Copied, gray := TRUE,
@@ -234,8 +241,6 @@ PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY));
 (****** COLLECTOR STATUS AND CONTROL ******)
 
 (* There are various status variables. *)
-
-VAR collections := 0;            (* the number of collections begun *)
 
 VAR
   disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)

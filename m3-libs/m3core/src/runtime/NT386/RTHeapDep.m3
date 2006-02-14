@@ -53,13 +53,6 @@ PROCEDURE FaultHandler (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
     END;
   END FaultHandler;
 
-(*----------------------------------------- Timers for tuning the collector ---*)
-
-PROCEDURE VMFaultTime (): REAL =
-  BEGIN
-    RETURN 0.010;                (* guess 10ms to handle a page fault *)
-  END VMFaultTime;
-
 (*---------------------------------- M3 => external DLL parameter validation ---*)
 
 (***

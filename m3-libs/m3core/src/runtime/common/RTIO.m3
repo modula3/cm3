@@ -11,7 +11,7 @@ IMPORT RT0, RTOS, Text, Word;
 
 VAR
   len : INTEGER := 0;
-  buf : ARRAY [0..1023] OF CHAR;
+  buf : ARRAY [0..4095] OF CHAR;
 
 PROCEDURE PutChar (c: CHAR) =
   BEGIN

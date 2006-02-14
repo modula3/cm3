@@ -98,11 +98,11 @@ TYPE
 
 <*EXTERNAL*>
 PROCEDURE gettimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 <*EXTERNAL*>
 PROCEDURE settimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 
 (*** adjtime(2) - correct the time to allow synchronization of the 

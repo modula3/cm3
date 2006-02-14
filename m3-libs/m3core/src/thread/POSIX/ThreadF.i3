@@ -9,7 +9,7 @@
 
 INTERFACE ThreadF;
 
-IMPORT FloatMode, Thread;
+IMPORT FloatMode, Thread, RTHeapRep;
 
 (*--------------------------------------------- garbage collector support ---*)
 
@@ -24,11 +24,17 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
 
+PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
+(* Apply p to each thread allocation pool.  All other threads must be
+   suspended.  ProcessPools exists solely for the garbage collector.  *)
+
+PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool;
+
 (*------------------------------------------------ floating point support ---*)
 
-PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState;
-(* returns the saved floating point state for the current thread.
-   WARNING: the return value is an untraced pointer to a traced Thread.T!!  *)
+(* access to the saved floating point state for the current thread. *)
+PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState));
+PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState));
 
 (*-------------------------------------------------- showthreads support ---*)
 

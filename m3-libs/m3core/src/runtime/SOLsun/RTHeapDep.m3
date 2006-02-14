@@ -159,11 +159,6 @@ PROCEDURE Core (sig : Ctypes.int;
 
 (* System-call faults are handled in RTHeapDepC.c *)
 
-PROCEDURE VMFaultTime (): REAL =
-  BEGIN
-    RETURN 0.010;                (* guess 10ms to handle a page fault *)
-  END VMFaultTime;
-
 BEGIN
   RTMachine.RTHeapDep_Fault := LOOPHOLE(Fault, ADDRESS);
   RTMachine.RTProcedureSRC_FromPC := LOOPHOLE (RTProcedureSRC.FromPC, ADDRESS);
