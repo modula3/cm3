@@ -258,6 +258,7 @@ PROCEDURE Scan_text (VAR s: State): TEXT =
     WHILE (len > NUMBER (buf)) DO
       FOR i := 0 TO LAST(buf) DO buf[i] := VAL (GetByte (s), CHAR); END;
       txt := txt & Text.FromChars (buf);
+      DEC (len, NUMBER (buf));
     END;
     IF (len > 0) THEN
       FOR i := 0 TO len-1 DO buf[i] := VAL (GetByte (s), CHAR); END;
