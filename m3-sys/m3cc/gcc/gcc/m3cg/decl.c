@@ -33,21 +33,20 @@ m3_init_decl_processing ()
   t_word_64 = name_type (make_unsigned_type (64), "word_64");
   if (BITS_PER_WORD == 32)
     {
-      t_int_32d = t_int_32;
-      t_word_32d = t_word_32;
+      t_int = t_int_32;
+      t_word = t_word_32;
     }
   else if (BITS_PER_WORD == 64)
     {
-      t_int_32d = t_int_64;
-      t_word_32d = t_word_64;
+      t_int = t_int_64;
+      t_word = t_word_64;
     }
   else
     {
-      t_int_32d = name_type (make_signed_type (BITS_PER_WORD), "int_32d");
-      t_word_32d = name_type (make_unsigned_type (BITS_PER_WORD), "word_32d");
+      t_int = name_type (make_signed_type (BITS_PER_WORD), "int");
+      t_word = name_type (make_unsigned_type (BITS_PER_WORD), "word");
     }
-  t_int = t_int_32d;
-  t_word = t_word_32d;
+
   integer_type_node = t_int;
   unsigned_type_node = t_word;
   char_type_node = t_int_8; 
@@ -105,7 +104,7 @@ m3_build_type (t, s, a)
 	switch (s)
 	  {
 	  case 0:
-	    return t_word_32d;
+	    return t_word;
 	  case 8:
 	    return t_word_8;
 	  case 16:
@@ -115,8 +114,7 @@ m3_build_type (t, s, a)
 	  case 64:
 	    return t_word_64;
 	  default:
-	    if (s == BITS_PER_WORD)
-	      return t_word_32d;
+	    if (s == BITS_PER_WORD) return t_word;
 	  }
 	break;
       }
@@ -126,7 +124,7 @@ m3_build_type (t, s, a)
 	switch (s)
 	  {
 	  case 0:
-	    return t_int_32d;
+	    return t_int;
 	  case 8:
 	    return t_int_8;
 	  case 16:
@@ -136,8 +134,7 @@ m3_build_type (t, s, a)
 	  case 64:
 	    return t_int_64;
 	  default:
-	    if (s == BITS_PER_WORD)
-	      return t_int_32d;
+	    if (s == BITS_PER_WORD) return t_int;
 	  }
 	break;
       }
@@ -156,8 +153,6 @@ m3_build_type (t, s, a)
       return t_int_16;
     case T_int_32:
       return t_int_32;
-    case T_int_32d:
-      return t_int_32d;
     case T_int_64:
       return t_int_64;
     case T_word_8:
@@ -166,8 +161,6 @@ m3_build_type (t, s, a)
       return t_word_16;
     case T_word_32:
       return t_word_32;
-    case T_word_32d:
-      return t_word_32d;
     case T_word_64:
       return t_word_64;
     case T_void:
