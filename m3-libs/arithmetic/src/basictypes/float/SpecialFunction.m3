@@ -98,19 +98,17 @@ PROCEDURE LnGamma (x: T; ): T =
   END LnGamma;
 
 
-PROCEDURE Binomial (n, k: CARDINAL; ): T RAISES {Arith.Error} =
+PROCEDURE Binomial (n: CARDINAL; k: INTEGER; ): T =
   (* returns Binomial coefficient for "n over k"*)
   <* UNUSED *>
   CONST
     ftn = Module & "Binomial";
-  VAR z: T;
   BEGIN
-    IF k > n THEN
-      (* n must be > k*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
+    IF k < 0 OR n < k THEN
+      RETURN Zero;
+    ELSE
+      RETURN Exp(LnFactorial(n) - LnFactorial(k) - LnFactorial(n - k));
     END;
-    z := Exp(LnFactorial(n) - LnFactorial(k) - LnFactorial(n - k));
-    RETURN z;
   END Binomial;
 
 
@@ -121,12 +119,8 @@ PROCEDURE GammaP (a, x: T; ): T RAISES {Arith.Error} =
     ftn = Module & "GammaP";
   VAR factor := Exp(-LnGamma(a) - x + a * Ln(x));
   BEGIN
-    (*---check conditions---*)
-    IF a < Zero OR x < Zero THEN
-      (* must have a>0 and x>0*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    END;
-    IF x < (a + One) THEN
+    <* ASSERT a >= Zero AND x >= Zero *>
+    IF x < a + One THEN
       RETURN factor * GamSer(a, x);
     ELSE
       RETURN One - factor * GamCF(a, x);
@@ -142,12 +136,8 @@ PROCEDURE GammaQ (a, x: T; ): T RAISES {Arith.Error} =
     ftn = Module & "GammaQ";
   VAR factor := Exp(-LnGamma(a) - x + a * Ln(x));
   BEGIN
-    (*---check conditions---*)
-    IF a < Zero OR x < Zero THEN
-      (* must have a>0 and x>0*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    END;
-    IF x < (a + One) THEN
+    <* ASSERT a >= Zero AND x >= Zero *>
+    IF x < a + One THEN
       RETURN One - factor * GamSer(a, x);
     ELSE
       RETURN factor * GamCF(a, x);
@@ -315,13 +305,9 @@ PROCEDURE BetaI (a, b, x: T; ): T RAISES {Arith.Error} =
     ftn = Module & "BetaI";
   VAR factor: T;
   BEGIN
-    IF a <= Zero OR b <= Zero THEN
-      (* must have a>Zero and b>Zero*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    ELSIF x < Zero OR x > One THEN
-      (* must have Zero < x < One*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    ELSIF x = Zero OR x = One THEN
+    <* ASSERT a > Zero AND b > Zero *>
+    <* ASSERT x >= Zero AND x <= One *>
+    IF x = Zero OR x = One THEN
       factor := Zero;
     ELSE
       factor := Exp(a * Ln(x) + b * Ln(One - x)
