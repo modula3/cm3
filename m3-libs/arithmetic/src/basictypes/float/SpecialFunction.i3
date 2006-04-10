@@ -38,7 +38,7 @@ PROCEDURE LnGamma (x: T; ): T;
 (* ln(Gamma(x)) *)
 
 
-PROCEDURE Binomial (n, k: CARDINAL; ): T RAISES {Error};
+PROCEDURE Binomial (n: CARDINAL; k: INTEGER; ): T;
 (* Binomial coefficient for "n over k" *)
 
 PROCEDURE GammaP (a, x: T; ): T RAISES {Error};
