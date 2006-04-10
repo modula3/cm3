@@ -1,13 +1,5 @@
 GENERIC MODULE RootBasic(R, P);
-(* Arithmetic for Modula-3, see doc for details
-
-   Abstract: Roots.
-
-   12/27/95 Harry George Initial version
-
-   2/3/96 Harry George Converted to m3na format.
-
-   2/17/96 Harry George Converted from OO to ADT format. *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Arithmetic AS Arith;
 IMPORT NumberTheory AS NT;
@@ -200,7 +192,7 @@ PROCEDURE IsZero (x: T; ): BOOLEAN =
 (* the temporary values can become very large compared with the resulting
    values *)
 PROCEDURE Mul (x, y: T; ): T =
-  <* FATAL Arith.Error *>        (*'indivisible' cannot occur *)
+  <* FATAL Arith.Error *>        (* 'indivisible' cannot occur *)
   VAR
     qx, qy: T;                   (* polynomials with scaled roots,
                                     necessary for eliminating non-one
@@ -393,6 +385,9 @@ PROCEDURE PowN (x: T; y: CARDINAL; ): T =
   The differential equation can be separated for each power of t
   which leads to a recurrence equation:
     n*s[n] + Sum((-1)^j*p[j]*s[n-j],j from 1 to n) = 0
+
+  This is known as the Newton-Girard formula.
+  http://mathworld.wolfram.com/Newton-GirardFormulas.html
 
   Note that we index the coefficients the other way round
   and that the coefficients of the polynomial
