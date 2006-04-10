@@ -132,7 +132,7 @@ PROCEDURE ComplexNewtonMaehli (x: CRt.T; ): REF CRt.RootArray
                       ", maxArgError "&RF.Fmt(maxArgError)&"\n");
               **)
               (**
-                I'm not sure if using the relative change is the right criteria
+                I'm not sure if using the relative change is the right criterion
                 but it works even if one zero is at 6e11 and another is at 0.2
                 this may occur if the coefficent of the highest power of z is close to zero
               **)
