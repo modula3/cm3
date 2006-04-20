@@ -1,5 +1,0 @@
-INTERFACE TestCWT;
-
-PROCEDURE Test();
-
-END TestCWT.
