@@ -1,5 +1,5 @@
 @REM #!cmd.exe
-@REM $Id: sysinfo.cmd,v 1.1 2004-04-27 15:05:26 sk Exp $
+@REM $Id: sysinfo.cmd,v 1.2 2006-04-20 18:46:56 micha Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -31,7 +31,7 @@ set CM3ROOT=%ROOT:\=\\%
 
 set CM3LIBSEARCHPATH=%LIB:;= %
 set CM3BINSEARCHPATH=%PATH:;= %
-call :set_if_empty CM3VERSION d5.2.7
+call :set_if_empty CM3VERSION d5.3.2
 set EXE=.exe
 set SL=\
 set SYSLIBDIR=unknown
