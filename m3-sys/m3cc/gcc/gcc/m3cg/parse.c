@@ -1150,7 +1150,7 @@ int mark_addressable (exp)
    to handle the BLOCK node inside teh BIND_EXPR.  */
 /*ARGSUSED*/
 void
-insert_block (tree block ATTRIBUTE_UNUSED);
+insert_block (tree block);
 {
   TREE_USED (block) = 1;
   BLOCK_SUBBLOCKS (current_block)
