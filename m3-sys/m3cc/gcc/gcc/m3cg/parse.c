@@ -1149,7 +1149,8 @@ int mark_addressable (exp)
    current binding level.  This is used when a BIND_EXPR is expanded,
    to handle the BLOCK node inside teh BIND_EXPR.  */
 /*ARGSUSED*/
-void insert_block (tree block)
+void
+insert_block (block tree block ATTRIBUTE_UNUSED);
 {
   TREE_USED (block) = 1;
   BLOCK_SUBBLOCKS (current_block)
