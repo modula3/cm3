@@ -12,6 +12,7 @@ typedef enum
   T_reel, T_lreel, T_xreel,
   T_addr, T_struct, T_void,
   T_word, T_int,
+  T_word_32d, T_int_32d,
   T_LAST
 }
 m3_type;
@@ -28,10 +29,12 @@ enum m3_tree_index
   M3TI_INT_8,
   M3TI_INT_16,
   M3TI_INT_32,
+  M3TI_INT_32D,
   M3TI_INT_64,
   M3TI_WORD_8,
   M3TI_WORD_16,
   M3TI_WORD_32,
+  M3TI_WORD_32D,
   M3TI_WORD_64,
   M3TI_VOID,
 
@@ -69,6 +72,7 @@ enum m3_tree_index
   M3TI_CURRENT_RECORD_TYPE,
   M3TI_CURRENT_RECORD_VALS,
   M3TI_CURRENT_SEGMENT,
+  M3TI_FAULT_ARG,
   M3TI_FAULT_INTF,
   M3TI_PENDING_BLOCKS,
 
@@ -86,10 +90,12 @@ extern tree m3_global_trees[M3TI_MAX];
 #define t_int_8		m3_global_trees[M3TI_INT_8]
 #define t_int_16	m3_global_trees[M3TI_INT_16]
 #define t_int_32	m3_global_trees[M3TI_INT_32]
+#define t_int_32d	m3_global_trees[M3TI_INT_32D]
 #define t_int_64	m3_global_trees[M3TI_INT_64]
 #define t_word_8	m3_global_trees[M3TI_WORD_8]
 #define t_word_16	m3_global_trees[M3TI_WORD_16]
 #define t_word_32	m3_global_trees[M3TI_WORD_32]
+#define t_word_32d	m3_global_trees[M3TI_WORD_32D]
 #define t_word_64	m3_global_trees[M3TI_WORD_64]
 #define t_void		m3_global_trees[M3TI_VOID]
 
@@ -124,6 +130,7 @@ extern tree m3_global_trees[M3TI_MAX];
 #define current_record_type	m3_global_trees[M3TI_CURRENT_RECORD_TYPE]
 #define current_record_vals	m3_global_trees[M3TI_CURRENT_RECORD_VALS]
 #define current_segment	m3_global_trees[M3TI_CURRENT_SEGMENT]
+#define fault_arg	m3_global_trees[M3TI_FAULT_ARG]
 #define fault_intf	m3_global_trees[M3TI_FAULT_INTF]
 #define pending_blocks	m3_global_trees[M3TI_PENDING_BLOCKS]
 
@@ -146,3 +153,4 @@ extern tree m3_do_insert PARAMS ((tree, tree, tree, tree, tree));
 extern tree m3_do_rotate PARAMS ((tree, tree, int, tree));
 extern tree m3_do_shift PARAMS ((tree, tree, int, tree));
 extern int m3_is_small_cardinal PARAMS ((tree, HOST_WIDE_INT *));
+extern tree m3_rtl PARAMS ((rtx));

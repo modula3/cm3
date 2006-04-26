@@ -822,12 +822,6 @@ static enum x86_64_reg_class merge_classes PARAMS ((enum x86_64_reg_class,
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 
-/* The svr4 ABI for the i386 says that records and unions are returned
-   in memory.  */
-#ifndef DEFAULT_PCC_STRUCT_RETURN
-#define DEFAULT_PCC_STRUCT_RETURN 1
-#endif
-
 /* Sometimes certain combinations of command options do not make
    sense on a particular target machine.  You can define a macro
    `OVERRIDE_OPTIONS' to take account of this.  This macro, if
@@ -2238,9 +2232,6 @@ function_arg (cum, mode, type, named)
 	break;
 
       case BLKmode:
-	if (bytes < 0)
-	  break;
-	/* FALLTHRU */
       case DImode:
       case SImode:
       case HImode:
@@ -9939,8 +9930,7 @@ memory_address_length (addr)
       if (disp)
 	{
 	  if (GET_CODE (disp) == CONST_INT
-	      && CONST_OK_FOR_LETTER_P (INTVAL (disp), 'K')
-	      && base)
+	      && CONST_OK_FOR_LETTER_P (INTVAL (disp), 'K'))
 	    len = 1;
 	  else
 	    len = 4;
@@ -10003,26 +9993,6 @@ ix86_attr_length_address_default (insn)
      rtx insn;
 {
   int i;
-
-  if (get_attr_type (insn) == TYPE_LEA)
-    {
-      rtx set = PATTERN (insn);
-      if (GET_CODE (set) == SET)
-	;
-      else if (GET_CODE (set) == PARALLEL
-	       && GET_CODE (XVECEXP (set, 0, 0)) == SET)
-	set = XVECEXP (set, 0, 0);
-      else
-	{
-#ifdef ENABLE_CHECKING
-	  abort ();
-#endif
-	  return 0;
-	}
-
-      return memory_address_length (SET_SRC (set));
-    }
-
   extract_insn_cached (insn);
   for (i = recog_data.n_operands - 1; i >= 0; --i)
     if (GET_CODE (recog_data.operand[i]) == MEM)

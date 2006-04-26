@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha on OSF/1.
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 2001
    Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
@@ -33,7 +33,7 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  */
 
 #define CPP_PREDEFINES "\
--Dunix -D__osf__ -D__digital__ -D__arch64__ -D_LONGLONG -DSYSTYPE_BSD \
+-Dunix -D__osf__ -D_LONGLONG -DSYSTYPE_BSD \
 -D_SYSTYPE_BSD -Asystem=unix -Asystem=xpg4"
 
 /* Tru64 UNIX V5 requires additional definitions for 16 byte long double
@@ -48,7 +48,7 @@ Boston, MA 02111-1307, USA.  */
 #undef CPP_SUBTARGET_SPEC
 #define CPP_SUBTARGET_SPEC \
 "%{pthread|threads:-D_REENTRANT} %{threads:-D_PTHREAD_USE_D4} %(cpp_xfloat) \
--D__PRAGMA_EXTERN_PREFIX"
+-D__EXTERN_PREFIX"
 
 /* Under OSF4, -p and -pg require -lprof1, and -lprof1 requires -lpdf.  */
 

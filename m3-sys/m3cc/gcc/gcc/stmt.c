@@ -4062,8 +4062,6 @@ expand_decl_init (decl)
 
   /* Compute and store the initial value now.  */
 
-  push_temp_slots ();
-
   if (DECL_INITIAL (decl) == error_mark_node)
     {
       enum tree_code code = TREE_CODE (TREE_TYPE (decl));
@@ -4087,7 +4085,6 @@ expand_decl_init (decl)
   /* Free any temporaries we made while initializing the decl.  */
   preserve_temp_slots (NULL_RTX);
   free_temp_slots ();
-  pop_temp_slots ();
 }
 
 /* CLEANUP is an expression to be executed at exit from this binding contour;
@@ -4467,7 +4464,6 @@ expand_start_case (exit_flag, expr, type, printname)
   nesting_stack = thiscase;
 
   do_pending_stack_adjust ();
-  emit_queue ();
 
   /* Make sure case_stmt.start points to something that won't
      need any transformation before expand_end_case.  */

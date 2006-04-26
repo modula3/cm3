@@ -8,7 +8,7 @@
 <h1>GCC Bugs</h1>
 
 <p>The latest version of this document is always available at
-<a href="http://gcc.gnu.org/bugs.html">http://gcc.gnu.org/bugs.html</a>.</p>
+<a href="http://www.gnu.org/software/gcc/bugs.html">http://www.gnu.org/software/gcc/bugs.html</a>.</p>
 
 <hr />
 
@@ -24,6 +24,7 @@
  <li><a href="#pch">Detailed bug reporting instructions when using a precompiled header</a></li>
  </ul>
 </li>
+<li><a href="#manage">Managing Bugs (GNATS and the test-suite)</a></li>
 <li><a href="#known">Frequently Reported Bugs in GCC</a>
  <ul>
  <li><a href="#general">General</a></li>
@@ -274,6 +275,32 @@ use it.</p>
 <p>Please <strong>don't</strong> send us the actual precompiled
 header.  It is likely to be very large and we can't use it to
 reproduce the problem.</p>
+
+<h1><a name="manage">Managing Bugs (GNATS and the test-suite)</a></h1>
+
+<p>This section contains information mostly intended for GCC
+contributors.</p>
+
+<p>If you find a bug, but you are not fixing it (yet):</p>
+<ol>
+<li>Create a (minimal) test-case.</li>
+<li>Add the test-case to our test-suite, marking it as XFAIL unless
+the bug is a regression.</li>
+<li>Add a bug report referencing the test-case to GNATS.</li>
+</ol>
+
+<p>If you fix a bug for which there is already a GNATS entry:</p>
+<ol>
+<li>Remove the XFAIL on the test-case.</li>
+<li>Close the bug report in GNATS.</li>
+</ol>
+
+<p>If you find a bug, and you are fixing it right then:</p>
+<ol>
+<li>Create a (minimal) test-case.</li>
+<li>Add the test-case to our test-suite, marking it as PASS.</li>
+<li>Check in your fixes.</li>
+</ol>
 
 <hr />
 
