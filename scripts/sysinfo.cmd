@@ -31,7 +31,7 @@ set CM3ROOT=%ROOT:\=\\%
 
 set CM3LIBSEARCHPATH=%LIB:;= %
 set CM3BINSEARCHPATH=%PATH:;= %
-call :set_if_empty CM3VERSION d5.3.2
+call :set_if_empty CM3VERSION d5.2.7
 set EXE=.exe
 set SL=\
 set SYSLIBDIR=unknown
