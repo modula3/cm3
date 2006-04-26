@@ -1078,11 +1078,9 @@ outgoing_edges_match (mode, bb1, bb2)
   /* If BB1 has only one successor, we may be looking at either an
      unconditional jump, or a fake edge to exit.  */
   if (bb1->succ && !bb1->succ->succ_next
-      && (bb1->succ->flags & (EDGE_COMPLEX | EDGE_FAKE)) == 0
-      && (GET_CODE (bb1->end) != JUMP_INSN || simplejump_p (bb1->end)))
+      && !(bb1->succ->flags & (EDGE_COMPLEX | EDGE_FAKE)))
     return (bb2->succ &&  !bb2->succ->succ_next
-	    && (bb2->succ->flags & (EDGE_COMPLEX | EDGE_FAKE)) == 0
-	    && (GET_CODE (bb2->end) != JUMP_INSN || simplejump_p (bb2->end)));
+	    && (bb2->succ->flags & (EDGE_COMPLEX | EDGE_FAKE)) == 0);
 
   /* Match conditional jumps - this may get tricky when fallthru and branch
      edges are crossed.  */
@@ -1640,9 +1638,8 @@ try_optimize_cfg (mode)
 		     /* If the jump insn has side effects,
 			we can't kill the edge.  */
 		     && (GET_CODE (b->end) != JUMP_INSN
-			 || (flow2_completed
-			     ? simplejump_p (b->end)
-			     : onlyjump_p (b->end)))
+			 || (onlyjump_p (b->end)
+			     && !tablejump_p (b->end)))
 		     && merge_blocks (s, b, c, mode))
 		changed_here = true;
 

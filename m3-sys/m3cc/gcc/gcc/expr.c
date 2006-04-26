@@ -3917,16 +3917,6 @@ store_expr (exp, target, want_value)
   int dont_return_target = 0;
   int dont_store_target = 0;
 
-  if (VOID_TYPE_P (TREE_TYPE (exp)))
-    {
-      /* C++ can generate ?: expressions with a throw expression in one
-	 branch and an rvalue in the other. Here, we resolve attempts to
-	 store the throw expression's nonexistant result. */
-      if (want_value)
-	abort ();
-      expand_expr (exp, const0_rtx, VOIDmode, 0);
-      return NULL_RTX;
-    }
   if (TREE_CODE (exp) == COMPOUND_EXPR)
     {
       /* Perform first part of compound expression, then assign from second
@@ -6632,7 +6622,7 @@ expand_expr (exp, target, tmode, modifier)
 	  RTL_EXPR_SEQUENCE (exp) = const0_rtx;
 	}
       preserve_rtl_expr_result (RTL_EXPR_RTL (exp));
-      if (cfun) free_temps_for_rtl_expr (exp);
+      free_temps_for_rtl_expr (exp);
       return RTL_EXPR_RTL (exp);
 
     case CONSTRUCTOR:

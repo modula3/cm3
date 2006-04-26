@@ -102,7 +102,6 @@ static tree unextend		PARAMS ((tree, int, int, tree));
 static tree fold_truthop	PARAMS ((enum tree_code, tree, tree, tree));
 static tree optimize_minmax_comparison PARAMS ((tree));
 static tree extract_muldiv	PARAMS ((tree, tree, enum tree_code, tree));
-static tree extract_muldiv_1	PARAMS ((tree, tree, enum tree_code, tree));
 static tree strip_compound_expr PARAMS ((tree, tree));
 static int multiple_of_p	PARAMS ((tree, tree, tree));
 static tree constant_boolean_node PARAMS ((int, tree));
@@ -4486,31 +4485,6 @@ extract_muldiv (t, c, code, wide_type)
      enum tree_code code;
      tree wide_type;
 {
-  /* To avoid exponential search depth, refuse to allow recursion past
-     three levels.  Beyond that (1) it's highly unlikely that we'll find
-     something interesting and (2) we've probably processed it before
-     when we built the inner expression.  */
-
-  static int depth;
-  tree ret;
-
-  if (depth > 3)
-    return NULL;
-
-  depth++;
-  ret = extract_muldiv_1 (t, c, code, wide_type);
-  depth--;
-
-  return ret;
-}
-
-static tree
-extract_muldiv_1 (t, c, code, wide_type)
-     tree t;
-     tree c;
-     enum tree_code code;
-     tree wide_type;
-{
   tree type = TREE_TYPE (t);
   enum tree_code tcode = TREE_CODE (t);
   tree ctype = (wide_type != 0 && (GET_MODE_SIZE (TYPE_MODE (wide_type))
@@ -4558,12 +4532,7 @@ extract_muldiv_1 (t, c, code, wide_type)
 	      /* ...and its type is larger than ctype,
 		 then we cannot pass through this truncation.  */
 	      || (GET_MODE_SIZE (TYPE_MODE (ctype))
-		  < GET_MODE_SIZE (TYPE_MODE (TREE_TYPE (op0))))
-	      /* ... or signedness changes for division or modulus,
-		 then we cannot pass through this conversion.  */
-	      || (code != MULT_EXPR
-		  && (TREE_UNSIGNED (ctype)
-		      != TREE_UNSIGNED (TREE_TYPE (op0))))))
+		  < GET_MODE_SIZE (TYPE_MODE (TREE_TYPE (op0))))))
 	break;
 
       /* Pass the constant down and see if we can make a simplification.  If

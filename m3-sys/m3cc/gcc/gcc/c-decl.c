@@ -1665,13 +1665,6 @@ duplicate_decls (newdecl, olddecl, different_binding_level)
 	    }
 	}
       error_with_decl (olddecl, "previous declaration of `%s'");
-
-      /* This is safer because the initializer might contain references
-	 to variables that were declared between olddecl and newdecl. This
-	 will make the initializer invalid for olddecl in case it gets
-	 assigned to olddecl below.  */
-      if (TREE_CODE (newdecl) == VAR_DECL)
-	DECL_INITIAL (newdecl) = 0;
     }
   else
     {

@@ -251,6 +251,7 @@ extern unsigned xtensa_current_frame_size;
 
 /* Size in bits of various types on the target machine.  */
 #define INT_TYPE_SIZE 32
+#define MAX_INT_TYPE_SIZE 32
 #define SHORT_TYPE_SIZE 16
 #define LONG_TYPE_SIZE 32
 #define MAX_LONG_TYPE_SIZE 32
@@ -359,6 +360,7 @@ extern unsigned xtensa_current_frame_size;
    0 - 15	AR[0] - AR[15]
    16		FRAME_POINTER (fake = initial sp)
    17		ARG_POINTER (fake = initial sp + framesize)
+   18           LOOP_COUNT (loop count special register)
    18		BR[0] for floating-point CC
    19 - 34	FR[0] - FR[15]
    35		MAC16 accumulator */
@@ -407,11 +409,10 @@ extern unsigned xtensa_current_frame_size;
    have been exhausted.  */
 
 #define REG_ALLOC_ORDER \
-{  8,  9, 10, 11, 12, 13, 14, 15,  7,  6,  5,  4,  3,  2, \
-  18, \
-  19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, \
+{  8,  9, 10, 11, 12, 13, 14, 15,  7,  6,  5,  4,  3,  2, 19, \
+  20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, \
    0,  1, 16, 17, \
-  35, \
+  36, \
 }
 
 #define ORDER_REGS_FOR_LOCAL_ALLOC order_regs_for_local_alloc ()
@@ -437,6 +438,11 @@ extern int leaf_function;
 #define GP_REG_FIRST 0
 #define GP_REG_LAST  17
 #define GP_REG_NUM   (GP_REG_LAST - GP_REG_FIRST + 1)
+
+/* Special registers */
+#define SPEC_REG_FIRST 18
+#define SPEC_REG_LAST  18
+#define SPEC_REG_NUM   (SPEC_REG_LAST - SPEC_REG_FIRST + 1)
 
 /* Coprocessor registers */
 #define BR_REG_FIRST 18
@@ -481,6 +487,9 @@ extern char xtensa_hard_regno_mode_ok[][FIRST_PSEUDO_REGISTER];
     GET_MODE_CLASS (MODE1) == MODE_COMPLEX_FLOAT)			\
    == (GET_MODE_CLASS (MODE2) == MODE_FLOAT ||				\
        GET_MODE_CLASS (MODE2) == MODE_COMPLEX_FLOAT))
+
+/* Register to use for LCOUNT special register.  */
+#define COUNT_REGISTER_REGNUM (SPEC_REG_FIRST + 0)
 
 /* Register to use for pushing function arguments.  */
 #define STACK_POINTER_REGNUM (GP_REG_FIRST + 1)
@@ -1262,6 +1271,12 @@ typedef struct xtensa_args {
    to contain offsets from the address of the table.
    Do not define this if the table should contain absolute addresses.  */
 /* #define CASE_VECTOR_PC_RELATIVE */
+
+/* Specify the tree operation to be used to convert reals to integers.  */
+#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
+
+/* This is the kind of divide that is easiest to do in the general case.  */
+#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if 'char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 0

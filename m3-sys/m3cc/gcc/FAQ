@@ -2,7 +2,7 @@
                         GCC Frequently Asked Questions
 
    The latest version of this document is always available at
-   [1]http://gcc.gnu.org/faq.html.
+   [1]http://www.gnu.org/software/gcc/faq.html.
 
    This FAQ tries to answer specific questions concerning GCC. For
    general information regarding C, C++, resp. Fortran please check the
@@ -126,13 +126,13 @@ What is an open development model?
      the past few months. The paper which started all of this introduced
      two terms: A cathedral development model versus a bazaar
      development model. The paper is written by Eric S. Raymond, it is
-     called ``The Cathedral and the Bazaar''. The paper is a useful
+     called ``[37]The Cathedral and the Bazaar''. The paper is a useful
      starting point for discussions.
      _________________________________________________________________
 
 How do I report a bug?
 
-   There are complete instructions [37]here.
+   There are complete instructions [38]here.
      _________________________________________________________________
 
 How do I get a bug fixed or a feature added?
@@ -147,7 +147,7 @@ How do I get a bug fixed or a feature added?
      * Hire someone to fix it for you. There are various companies and
        individuals providing support for GCC. This alternative costs
        money, but is relatively likely to get results.
-     * [38]Report the problem to the GCC GNATS bug tracking system and
+     * [39]Report the problem to the GCC GNATS bug tracking system and
        hope that someone will be kind enough to fix it for you. While
        this is certainly possible, and often happens, there is no
        guarantee that it will. You should not expect the same response
@@ -155,7 +155,7 @@ How do I get a bug fixed or a feature added?
        organization since the people who read GCC bug reports, if they
        choose to help you, will be volunteering their time. This
        alternative will work best if you follow the directions on
-       [39]submitting bugreports.
+       [40]submitting bugreports.
      * Fix it yourself. This alternative will probably bring results, if
        you work hard enough, but will probably take a lot of time, and,
        depending on the quality of your work and the perceived benefits
@@ -168,8 +168,8 @@ Does GCC work on my platform?
    The host/target specific installation notes for GCC include
    information about known problems with installing or using GCC on
    particular platforms. These are included in the sources for a release
-   in INSTALL/specific.html, and the [40]latest version is always
-   available at the GCC web site. Reports of [41]successful builds for
+   in INSTALL/specific.html, and the [41]latest version is always
+   available at the GCC web site. Reports of [42]successful builds for
    several versions of GCC are also available at the web site.
      _________________________________________________________________
 
@@ -216,7 +216,7 @@ How to install multiple versions of GCC
    wish to be sure about which version you are invoking.
 
    If you use --prefix, GCC may have difficulty locating a GNU assembler
-   or linker on your system, [42]GCC can not find GNU as/GNU ld explains
+   or linker on your system, [43]GCC can not find GNU as/GNU ld explains
    how to deal with this.
 
    Another option that may be easier is to use the --program-prefix= or
@@ -282,7 +282,7 @@ GCC can not find GNU as/GNU ld
    versions of those programs.
 
    To ensure that GCC finds the GNU assembler (the GNU loader), which are
-   required by [43]some configurations, you should configure these with
+   required by [44]some configurations, you should configure these with
    the same --prefix option as you used for GCC. Then build & install GNU
    as (GNU ld) and proceed with building GCC.
 
@@ -336,7 +336,7 @@ Unable to run the testsuite
    If you get a message about unable to find "standard.exp" when trying
    to run the GCC testsuites, then your dejagnu is too old to run the GCC
    tests. You will need to get a newer version of dejagnu from
-   [44]http://www.gnu.org/software/dejagnu/dejagnu.html.
+   [45]http://www.gnu.org/software/dejagnu/dejagnu.html.
      _________________________________________________________________
 
 How do I pass flags like -fnew-abi to the testsuite?
@@ -371,7 +371,7 @@ How can I run the test suite with multiple options?
 Is there a stringstream / sstream for GCC 2.95.2?
 
    Yes, it's at:
-   [45]http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream.
+   [46]http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream.
      _________________________________________________________________
 
                                  Miscellaneous
@@ -470,7 +470,7 @@ dynamic_cast, throw, typeid don't work with shared libraries
    [basic.def.odr].
 
    For more details about the way that GCC implements these and other C++
-   features, please read the [46]ABI specification. Note the
+   features, please read the [47]ABI specification. Note the
    std::typeinfo_t objects which must be resolved all begin with "_ZTS".
    Refer to ld's documentation for a description of the "-E" &
    "-Bsymbolic" flags.
@@ -501,10 +501,10 @@ Why do I need autoconf, bison, xgettext, automake, etc?
    rebuild GCC.
 
    In general, the current versions of these tools from
-   [47]ftp://ftp.gnu.org/gnu/ will work. At present, Autoconf 2.50 is not
+   [48]ftp://ftp.gnu.org/gnu/ will work. At present, Autoconf 2.50 is not
    supported, and you will need to use Autoconf 2.13; work is in progress
    to fix this problem. Also look at
-   [48]ftp://gcc.gnu.org/pub/gcc/infrastructure/ for any special versions
+   [49]ftp://gcc.gnu.org/pub/gcc/infrastructure/ for any special versions
    of packages.
      _________________________________________________________________
 
@@ -560,9 +560,9 @@ Will GCC someday include an incremental linker?
 
 References
 
-   1. http://gcc.gnu.org/faq.html
+   1. http://www.gnu.org/software/gcc/faq.html
    2. http://www.eskimo.com/~scs/C-faq/top.html
-   3. http://www.jamesd.demon.co.uk/csc/faq.html
+   3. http://www.research.att.com/~austern/csc/faq.html
    4. http://www.fortran.com/fortran/info.html
    5. http://gcc.gnu.org/onlinedocs/libstdc++/faq/index.html
    6. http://gcc.gnu.org/java/faq.html
@@ -596,15 +596,16 @@ References
   34. http://gcc.gnu.org/steering.html
   35. http://gcc.gnu.org/steering.html
   36. http://gcc.gnu.org/faq.html#cathedral-vs-bazaar
-  37. http://gcc.gnu.org/bugs.html
+  37. http://www.tuxedo.org/~esr/writings/cathedral-bazaar/
   38. http://gcc.gnu.org/bugs.html
   39. http://gcc.gnu.org/bugs.html
-  40. http://gcc.gnu.org/install/specific.html
-  41. http://gcc.gnu.org/buildstat.html
-  42. http://gcc.gnu.org/faq.html#gas
-  43. http://gcc.gnu.org/install/specific.html
-  44. http://www.gnu.org/software/dejagnu/dejagnu.html
-  45. http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream
-  46. http://www.codesourcery.com/cxx-abi/
-  47. ftp://ftp.gnu.org/gnu/
-  48. ftp://gcc.gnu.org/pub/gcc/infrastructure/
+  40. http://gcc.gnu.org/bugs.html
+  41. http://gcc.gnu.org/install/specific.html
+  42. http://gcc.gnu.org/buildstat.html
+  43. http://gcc.gnu.org/faq.html#gas
+  44. http://gcc.gnu.org/install/specific.html
+  45. http://www.gnu.org/software/dejagnu/dejagnu.html
+  46. http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream
+  47. http://www.codesourcery.com/cxx-abi/
+  48. ftp://ftp.gnu.org/gnu/
+  49. ftp://gcc.gnu.org/pub/gcc/infrastructure/

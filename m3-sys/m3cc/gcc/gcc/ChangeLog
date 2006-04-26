@@ -1,622 +1,3 @@
-2003-04-22  Release Manager
-
-	* GCC 3.2.3 Released.
-
-2003-04-16  John David Anglin  <dave.anglin@nrc-cnrc.gc.ca>
-
-	PR/10271
-	* pa-protos.h (function_arg): Remove last argument.
-	* pa.c (function_arg): Likewise.  Use CUMULATIVE_ARGS struct instead.
-	* pa.h (struct hppa_args): Add member incoming. 
-	(INIT_CUMULATIVE_ARGS, INIT_CUMULATIVE_INCOMING_ARGS): Initialize
-	member incoming.
-	(FUNCTION_ARG): Revise call to function_arg.
-	(FUNCTION_INCOMING_ARG): Delete.
-
-2003-04-15  Jason Merrill  <jason@redhat.com>
-
-	PR middle-end/10336, c++/10401
-	* jump.c (never_reached_warning): Also stop looking if we reach the 
-	beginning of the function.
-
-2003-04-14  Hans-Peter Nilsson  <hp@axis.com>
-
-	PR target/10377
-	* config/cris/cris.md ("*mov_sideqi", "*mov_sidehi")
-	("*mov_sidesi", "*mov_sideqi_mem", "*mov_sidehi_mem")
-	("*mov_sidesi_mem", "*clear_sidesi", "*clear_sidehi")
-	("*clear_sideqi", "*ext_sideqihi", "*ext_sideqisi")
-	("*ext_sidehisi", "*op_sideqi", "*op_sidehi", "*op_sidesi")
-	("*op_swap_sideqi", "*op_swap_sidehi", "*op_swap_sidesi")
-	("*extopqihi_side", "*extopqisi_side", "*extophisi_side")
-	("*extopqihi_swap_side", "*extopqisi_swap_side")
-	("*extophisi_swap_side", 8th, 9th, 10th, 11th, 14th peepholes):
-	When next to constraint R, replace constraint i with n.
-
-2003-04-10  Bob Wilson  <bob.wilson@asm.org>
-
-	* config/xtensa/xtensa.h (MAX_INT_TYPE_SIZE, IMPLICIT_FIX_EXPR,
-	EASY_DIV_EXPR): Delete poisoned macro definitions.
-
-2003-04-09  Richard Henderson  <rth@redhat.com>
-
-	PR opt/10352
-	Tue Jul 23 21:49:24 2002  J"orn Rennecke <joern.rennecke@superh.com>
-	* simplify-rtx.c (simplify_subreg): When converting to a non-int
-	mode, try to convert to an integer mode of matching size first.
-
-2003-04-09  Alan Modra  <amodra@bigpond.net.au>
-
-	* config/rs6000/rs6000.c (rs6000_emit_prologue): Use correct mode to
-	set frame pointer.
-
-2003-04-03  Jason Merrill  <jason@redhat.com>
-
-	PR c/10175
-	* jump.c (never_reached_warning): Look backwards for a line note.
-
-2003-04-02  Richard Henderson  <rth@redhat.com>
-
-	* dwarf2out.c (output_call_frame_info): Ignore fde->nothrow as an
-	optimization when flag_exceptions not enabled.
-
-2003-03-30  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
-
-	PR other/6955
-	* collect2.c (collect_wait): Use WCOREDUMP and fix output message.
-	* system.h (WCOREDUMP, WCOREFLG): Define if necessary.
-
-2003-03-29  Arpad Beszedes <beszedes@cc.u-szeged.hu>
-
-	PR middle-end/9967
-	* builtins.c (expand_builtin_fputs): When optimizing for size,
-	don't transform fputs into fwrite.
-
-2003-03-29  Albert Chin-A-Young  <china@thewrittenword.com>
-	DJ Delorie  <dj at redhat dot com>,
-	Bruce Korb  <bkorb at gnu dot org>
-
-	* fixinc/inclhack.def (solaris_mutex_init_1): New; Fix
-	buggy Solaris mutex/cond initializers.
-	(solaris_mutex_init): Rename to solaris_mutex_init_2.
-	* fixinc/fixincl.x: Regenerate.
-	* fixinc/tests/base/pthread.h: Update.
-
-2003-03-29  Nathanael Nerode  <neroden@gcc.gnu.org>
-
-	* fixinc/fixinc.interix: Remove completely dead code
-
-2003-03-29  Ulrich Weigand  <uweigand@de.ibm.com>
-
-	PR target/7784
-	* reload.c (maybe_memory_address_p): New function.
-	(find_reloads_address): Use it instead of memory_address_p.
-
-2003-03-29  Alan Modra  <amodra@bigpond.net.au>
-
-	* config/rs6000/rs6000.h (FUNCTION_VALUE_REGNO_P): Respect
-	TARGET_HARD_FLOAT.  Reformat.
-	(FUNCTION_ARG_REGNO_P): Likewise, and remove unneeded casts.
-
-2003-03-29  Glen Nakamura <glen@imodulo.com>
-
-	PR c/8224
-	* fold-const.c (extract_muldiv_1): Don't pass through type conversions
-	when signedness changes for division or modulus.
-
-2003-03-29  Alan Modra  <amodra@bigpond.net.au>
-
-	* reload1.c (reload_as_needed): Allow a USE in asm reloads.
-
-2003-03-28  Olivier Hainque  <hainque@act-europe.fr>
-
-	PR ada/9953
-	* ada/Makefile.in (gnatlib configuration for HPUX): Split
-	the general section for HPUX into specific sections for
-	HPUX 10 and HPUX 11.
-
-2003-03-28  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR target/10067
-	* config/sparc/sparc.md (jump pattern): Correct order
-	when issuing the annuling marker.
-
-2003-03-28  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR c/8281
-	* config/sparc/sparc.md (movdi_insn_sp32_v9): Remove 'f-f' alternative.
-	(movdi reg/reg split): Match only on sparc32, and v9 when int regs.
-
-2003-03-28  Eric Botcazou  <ebotcazou@libertysurf.fr>
-            Richard Henderson  <rth@redhat.com>
-
-	PR target/10114 and PR target/10084
-	* dwarf2out.c (mem_loc_descriptor): Handle LO_SUM.
-
-2003-03-27  Janis Johnson  <janis187@us.ibm.com>
-
-	PR sw-bug/10234
-	* system.h (GCCBUGURL): Reference GCC web site.
-
-2003-03-26  Richard Henderson  <rth@redhat.com>
-
-	* cfgrtl.c (try_redirect_by_replacing_jump): Disable removing
-	tablejumps with no optimization.
-
-2003-03-27  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
-
-	* config/mips/iris6.h (CPLUSPLUS_CPP_SPEC): Define __c99.
-
-	* fixinc/inclhack.def (irix___restrict): Don't change __restrict
-	for C++ on IRIX 6.5.1[89].
-	* fixinc/tests/base/internal/sgimacros.h: New file.
-
-	* fixinc/inclhack.def (irix_wcsftime): Use XPG5 variant for C99.
-	* fixinc/fixincl.x: Regenerate.
-	* fixinc/tests/base/internal/wchar_core.h: New file.
-
-2003-03-26  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR target/7784
-	* reload.c (find_reloads_address): Handle
-	(PLUS (PLUS (REG) (REG)) (CONST_INT)) form for
-	all base registers.
-
-2003-03-25  Jason Merrill  <jason@redhat.com>
-
-	PR optimization/10171
-	* unroll.c (unroll_loop): Don't delete the jump at the end unless
-	we also delete a jump at the beginning.
-
-2003-03-25  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-
-	* doc/passes.texi (Passes): Properly document that we do not
-	perform jump2 any longer; remove command-line option -dJ.
-
-2003-03-25  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/8746
-	* config/i386/i386.md (and promoting splitters): Disable HImode to
-	SImode promoting when the sign bit matters and is not preserved.
-	Disable promoting when optimizing for size.
-
-2003-03-23  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/9414
-	* config/sparc/sparc.md (widening peepholes): Use
-	widen_memory_access instead of change_address.
-
-2003-03-23  Daniel Jacobowitz  <drow@mvista.com>
-
-	Fix PR target/9797.
-	* stmt.c (expand_decl_init): Call push_temp_slots () and
-	pop_temp_slots ().
-
-2003-03-23  Richard Henderson  <rth@redhat.com>
-     
-        * cfgcleanup.c (try_optimize_cfg): Allow merging of tablejumps
-        before flow2.
-        * cfgrtl.c (try_redirect_by_replacing_jump): Similarly.
-
-2003-03-23  Richard Henderson  <rth@redhat.com>
-
-        PR opt/10116
-        * ifcvt.c (find_if_block): Disallow tablejump insns outgoing
-        from then_bb or else_bb after flow2.
-
-2003-03-22  John David Anglin  <dave.anglin@nrc-cnrc.gc.ca>
-
-	* pa.c (output_cbranch, output_bb, output_bvb): Output nop for
-	conditional branch to the following instruction.
-
-2003-03-21  Volker Reichelt  <reichelt@igpm.rwth-aachen.de>
-
-	PR doc-bug/9813
-	* doc/extend.texi: Move misplaced paragraph about underscores in
-	variables in macros.
-
-2003-03-21  Eric Botcazou  <ebotcazou@libertysurf.fr>
-            Richard Henderson  <rth@redhat.com>
-
-	PR optimization/8366
-	* config/sparc/sparc.h: (SYMBOLIC_CONST): New macro.
-	(GO_IF_LEGITIMATE_ADDRESS): Use it. Reject the form
-	PIC+SYMBOLIC_CONST in other modes than Pmode.
-	(GO_IF_MODE_DEPENDENT_ADDRESS): Use it. Mark
-	the form PIC+SYMBOLIC_CONST as mode dependent.
-
-2003-03-20  Richard Henderson  <rth@redhat.com>
-
-	* fold-const.c (extract_muldiv_1): Revert changing order of
-	operands in case MULT_EXPR of 2003-02-16 patch.
-
-2003-03-19  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/8746
-	Backport from mainline:
-
-	Thu Jun  6 23:14:46 CEST 2002  Jan Hubicka<jh@suse.cz>
-
-	* i386.md (and promoting splitters): Disable QI to SImode promoting
-	when doing so changes immediate to be 32bit.
-
-2003-03-19  Jakub Jelinek  <jakub@redhat.com>
-
-	* stmt.c (expand_start_case): Call emit_queue ().
-
-2003-03-19  Jakub Jelinek  <jakub@redhat.com>
-
-	* ifcvt.c (dead_or_predicable): Fail if there are any references
-	to tablejump in merge_bb other than the final JUMP_INSN.
-
-2003-03-19  Alan Modra  <amodra@bigpond.net.au>
-
-	PR target/10073
-	* combine.c (force_to_mode <NOT>): Use gen_int_mode.
-
-2003-03-17  Dave Love  <fx@gnu.org>
-	    Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
-
-	* config/alpha/osf.h (CPP_PREDEFINES): Define __digital__,
-	__arch64__ to match Compaq cc.
-	
-2003-03-17  Andreas Schwab  <schwab@suse.de>
-
-	PR target/7248
-	* config/m68k/m68k.md (iordi3): Fix setting low half to -1.  From
-	martin@blom.org.
-
-2003-03-16  Richard Henderson  <rth@redhat.com>
-
-	* config/i386/i386.md (movstrictqi, movstrictqi_1): Check
-	optimize_size as well.
-
-2003-03-16  Falk Hueffner  <falk.hueffner@student.uni-tuebingen.de>
-
-        PR target/9164
-        * tree.c (get_narrower): For extensions with unchanged bit number,
-        return the unsignedness of the outer mode.
-
-2003-03-14  Jakub Jelinek  <jakub@redhat.com>
-
-	* config/rs6000/rs6000.c (rs6000_emit_load_toc_table): Don't call
-	rs6000_maybe_dead if !fromprolog.
-
-2003-03-14  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/8396
-	* tree-inline.c (initialize_inlined_parameters): Make sure the value
-	of read-only constant arguments is passed with the right type.
-
-2003-03-14  Andreas Jaeger  <aj@suse.de>
-
-	* config/i386/linux64.h (CPP_SPEC): Define __LP64__ and _LP64 for 
-	64-bit.
-
-2003-03-12  Richard Henderson  <rth@redhat.com>
-
-        PR opt/8178
-        * config/i386/i386.md (ffssi2): Tighten op1 predicate to
-        the requirements of the output insns.
-
-2003-03-12  Andrew Lewycky  <andrew@mxc.ca>
-
-	PR c++/7050
-	* expr.c (store_expr): Don't attempt to store void-typed trees,
-	just evaluate them for side effects.
-
-2003-03-12  Bob Wilson  <bob.wilson@acm.org>
-
-	Backport from mainline:
-	2003-03-12  Bob Wilson  <bob.wilson@acm.org>
-
-	* config/xtensa/xtensa.md (adddi3): Don't clobber source operand used
-	to detect carry.
-	(subdi3): Reorder emitted instructions.
-
-2003-03-12  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR c/9928
-	* c-decl.c (duplicate_decls): Discard the initializer of the new decl
-	only if it is a VAR_DECL.
-
-2003-03-12  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/9888
-	* config/i386/i386.md (jcc_1): Fix range.
-	(jcc_2): Likewise.
-	(jump): LIkewise.
-	(doloop_end_internal): Likewise.
-
-2003-03-12  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/9888
-	Backport patch from mainline:
-
-	Tue Nov 19 23:50:56 CET 2002  Jan Hubicka  <jh@suse.cz>
-
-	* i386.md (length_immediate): Do not refer to insn address.
-	(jcc*, jmp patterns): Compute length explicitly.
-	(doloop_end_internal pattern): Unconditionally set the type to "ibr".
-
-2003-03-12  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/9888
-	* config/i386/i386.md (movsi_1): Remove special alternatives
-	for %eax register.
-	(movhi_1): Likewise.
-	* config/i386/i386.c (memory_address_length): Do not use
-	short displacement when there is no base.
-	(ix86_attr_length_address_default): Handle LEA instructions.
-
-2003-03-09  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/9888
-	Backport patch from mainline:
-
-	2002-07-03  Eric Botcazou  <ebotcazou@multimania.com>
-	            Jeff Law  <law@redhat.com>
-
-	* i386.md (length_immediate attribute): Fix typo.
-	(length_address attribute): Likewise.
-	(modrm attribute): Set it to 0 for immediate call instructions.
-	(jcc_1 pattern): Set modrm attribute to 0.
-	(jcc_2 pattern ): Likewise.
-	(jump pattern): Likewise.
-	(doloop_end_internal pattern): Explicitly set length.
-	(leave pattern): Fix typo.
-	(leave_rex64 pattern): Likewise.
-
-2003-03-08  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR middle-end/7796
-	* unroll.c (calculate_giv_inc): Handle constants being
-	loaded with LSHIFTRT.
-
-2003-03-07  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/8726
-	Backport patch from mainline:
-
-	2003-01-08  Dale Johannesen  <dalej@apple.com>
-
-	* function.c (assign_parms):  Don't set pretend_args_size if
-	REG_PARM_STACK_SPACE.
-
-2003-03-06  Reinhard Jessich <reinhard.jessich@telering.at>
-
-	PR 9954/other
-	* config/i386/linux.h (MD_FALLBACK_FRAME_STATE_FOR): Since this uses
-	<sys/ucontext.h> it should be wrapped in an inhibit_libc conditional
-	like the same code in config/i386/linux64.h.
-
-2003-03-05  Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR c/9799
-	* c-typeck.c (push_init_level): Add sanity check.
-
-2003-02-28  Bob Wilson  <bob.wilson@acm.org>
-
-	Backport following patch:
-
-	2003-02-28  Bob Wilson  <bob.wilson@acm.org>
-	* config.gcc (xtensa-*-linux*): Add t-slibgcc-elf-ver to tmake_file.
-
-2003-02-28  Joel Sherrill <joel@OARcorp.com>
-
-	PR 9638/other
-	* config/i386/i386.c (DEFAULT_PCC_STRUCT_RETURN): Ensure the 
-	this constant defaults to 1.
-
-2003-02-27  Alan Modra  <amodra@bigpond.net.au>
-
-	* config/rs6000/rs6000.md: Add TI constant splitter.
-
-2003-02-26  Jan Hubicka  <jh@suse.cz>
-
-	PR target/8343
-	* m68k.md (umulsidi, mulsidi expanders): Use register operand.
-
-2003-02-26  David Billinghurst <David.Billinghurst@riotinto.com>
-
-	* fixinc/fixincl.x: Regenerate
-
-2003-02-25  Richard Henderson  <rth@redhat.com>
-
-        * config/i386/i386.c (function_arg): Pass variable sized
-        structures correctly on the stack.
-
-2003-02-25  Franz Sirl  <Franz.Sirl-kernel@lauterbach.com>
-
-	PR target/9732
-	* config/rs6000/rs6000.c (first_reg_to_save): Handle
-	PIC_OFFSET_TABLE_REGNUM for -fPIC too.
-	(rs6000_emit_prologue): Likewise.
-	(rs6000_emit_epilogue): Likewise.
-	* config/rs6000/rs6000.h (CONDITIONAL_REGISTER_USAGE): Make
-	PIC_OFFSET_TABLE_REGNUM a fixed register for -fPIC.
-
-2003-02-25  Matthias Klose  <doko@debian.org>
-
-	2003-02-07  Richard Henderson  <rth@redhat.com>
-        PR 9226
-        * gcse.c (local_cprop_find_used_regs): New.
-        (local_cprop_pass): Use it.
-
-2003-02-25  Matthias Klose  <doko@debian.org>
-
-	* config.gcc (m68k-*-linux*): Add crtbeginT.o to extra_parts.
-
-2003-02-24  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
-
-	* config/alpha/osf.h (CPP_SUBTARGET_SPEC): Rename
-	__EXTERN_PREFIX to __PRAGMA_EXTERN_PREFIX.
-	* doc/extend.texi (Tru64 Pragmas): Reflect this.
-
-	* fixinc/inclhack.def (alpha___extern_prefix): Indicate #pragma
-	extern_prefix support for Tru64 UNIX V5 <sys/stat.h>. 
-	* fixinc/fixincl.x: Regenerate.
-	* fixinc/tests/base/sys/stat.h [ALPHA___EXTERN_PREFIX_CHECK]: New
-	testcase.
-	Fixes PR c/5059, c/6126, other/9671.
-
-2003-02-24  David Billinghurst <David.Billinghurst@riotinto.com>
-
-	Fixes PR libgcj/9652.
-	Backport patch from mainline:
-	2003-02-12  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
-
-	* fixinc/inclhack.def (irix_socklen_t): Fix broken IRIX 6.5.1[78]
-	socklen_t definition.
-	* fixinc/fixincl.x: Regenerate.
-	* fixinc/tests/base/sys/socket.h: New file.
-
-2003-02-23  Hans-Peter Nilsson  <hp@axis.com>
-
-	* regmove.c (optimize_reg_copy_1): Do not replace a hard register
-	in an asm.
-
-2003-02-22  Steven Bosscher  <s.bosscher@student.tudelft.nl>
-
-	PR other/3782
-	* toplev.c (process_options): If flag_detailed_statistics is set,
-	then set time_report as well.
-
-	PR c/8828
-	* jump.c (never_reached_warning): Don't fall through BARRRIER
-	insns.  Update comments to reflect what the function really does.
-
-2003-02-21  Richard Henderson  <rth@redhat.com>
-
-	2003-01-06  Richard Henderson  <rth@redhat.com>
-	* config/alpha/alpha.md (movdi_er_high_g): Allow all symbols.
-
-2003-02-21  Glen Nakamura  <glen@imodulo.com>
-
-	PR optimization/8613
-	* builtins.c (expand_builtin): Emit postincrements before expanding
-	builtin functions.
-
-2003-02-20  Randolph Chung  <tausq@debian.org>
-            Eric Botcazou  <ebotcazou@libertysurf.fr>
-
-	PR optimization/9768
-	Backport patch from mainline:
-
-	2002-03-21  DJ Delorie  <dj@redhat.com>
-
-	* bb-reorder.c (make_reorder_chain_1): Protect against
-	when redundant edges are omitted.
-	* predict.c (dump_prediction): Likewise.
-
-2003-02-20  BAN Nobuhiro  <ban@ipl.t.u-tokyo.ac.jp>
-
-	PR c/9678
-	* config/i386/i386.h (CPP_CPUCOMMON_SPEC): Fix typo.
-
-2003-02-18  Jakub Jelinek  <jakub@redhat.com>
-
-	* real.c (asctoeg): Handle denormals in hexadecimal notation.
-
-2003-02-16 Arend Bayer <arend.bayer@web.de>
-           Richard Henderson  <rth@redhat.com>
-
-	PR c/8068
-	* fold-const.c (extract_muldiv_1): Rename from extract_muldiv;
-	rearrange mult arguments for less recursion.
-	(extract_muldiv): New.  Prevent runaway recursion.
-
-2003-02-14  Falk Hueffner  <falk.hueffner@student.uni-tuebingen.de>
-
-	PR optimization/7702
-	* reload1.c (reload_cse_simplify_set): Honor
-	CLASS_CANNOT_CHANGE_MODE_P.
-
-2003-02-13  John David Anglin  <dave.anglin@nrc-crnc.gc.ca>
-
-	* inclhack.def (hpux_long_double): Tighten select and add bypass
-	regexp.
-	* fixincl.x: Rebuilt.
-
-2003-02-13  Josef Zlomek  <zlomekj@suse.cz>
-
-	* cfgcleanup.c (outgoing_edges_match): When there is single outgoing
-	edge and block ends with a jump insn it must be simple jump.
-
-2003-02-12  John David Anglin  <dave.anglin@nrc-cnrc.gc.ca>
-
-	PR9275 and PR8694
-	* inclhack.def (hpux_long_double, hpux10_ctype_declarations1,
-	hpux10_ctype_declarations2, hpux_ctype_macros): New hacks.
-	* fixincl.x: Rebuilt.
-	* tests/base/stdlib.h: Update.
-	* tests/base/ctype.h: New file.
-
-2003-02-12  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
-
-	* mips.h (FP_INC): Define.
-
-	Backport fix for PR6362:
-	2002-10-01  Richard Sandiford  <rsandifo@redhat.com>
-	
-	* config/mips/mips-protos.h (mips_emit_fcc_reload): Declare.
-	* config/mips/mips.h (PREDICATE_CODES): Add fcc_register_operand.
-	* config/mips/mips.c (fcc_register_operand): New function.
-	(mips_emit_fcc_reload): New function, extracted from reload_incc.
-	* cnfig/mips/mips.md (reload_incc): Change destination prediate
-	to fcc_register_operand.  Remove misleading source constraint.
-	Use mips_emit_fcc_reload.
-	(reload_outcc): Duplicate reload_incc.
-
-2003-02-11  Bob Wilson  <bob.wilson@acm.org>
-
-	Backport following patch:
-
-	2003-02-11  Bob Wilson  <bob.wilson@acm.org>
-
-	* config/xtensa/xtensa.md (set_frame_ptr): Change rtl to set reg a7.
-	* config/xtensa/xtensa.c (xtensa_reorg): Search for UNSPECV_SET_FP
-	as a SET pattern.
-	
-2003-02-10  Eric Botcazou  <ebotcazou@libertysurf.fr>
-	    Christian Ehrhardt  <ehrhardt@mathematik.uni-ulm.de>
-
-	PR c/7741
-	* c-decl.c (duplicate_decls): Discard the initializer of the
-	new decl when the types are conflicting.
-
-2003-02-01  Daniel Jacobowitz  <drow@mvista.com>
-
-	* dwarf2out.c (gen_type_die): Check for typedefs before calling
-	for TYPE_MAIN_VARIANT.
-
-2003-02-07  John David Anglin  <dave.anglin@nrc-cnrc.gc.ca>
-
-	* pa.c (output_millicode_call): Use $PIC_pcrel$0 for long PIC
-	millicode calls when !TARGET_SOM and TARGET_GAS is true.
-	* pa.md (jump): Likewise.
-
-2003-02-06  Eric Botcazou <ebotcazou@libertysurf.fr>
-	    Richard Henderson <rth@redhat.com>
-    
-	PR c/9530
-	* config/i386/i386.h (FUNCTION_OK_FOR_SIBCALL): Forbid sibcalls
-	from functions that return a float to functions that don't.
-
-2003-02-03  Bob Wilson  <bob.wilson@acm.org>
-
-	* config/xtensa/xtensa.c (order_regs_for_local_alloc): Order the
-	coprocessor registers before floating-point registers.
-	* config/xtensa/xtensa.h (REG_ALLOC_ORDER): Adjust register numbers
-	to account for a previously removed register.
-	(SPEC_REG_FIRST, SPEC_REG_LAST, SPEC_REG_NUM, COUNT_REGISTER_REGNUM):
-	Delete unused macros.
-
-2003-02-05  Gabriel Dos Reis  <gdr@integrable-solutions.net>
-
-	* doc/include/gcc-common.texi: Bump version.
-	* version.c(version_string): Update.
-
 2003-02-05  Release Manager
 
 	* GCC 3.2.2 Released.
@@ -650,43 +31,43 @@
 
 	2002-09-16  Richard Henderson  <rth@redhat.com>
 
-	* emit-rtl.c (set_mem_attributes_minus_bitpos): Adjust SIZE
-	as well as OFFSET for BITPOS.
+        * emit-rtl.c (set_mem_attributes_minus_bitpos): Adjust SIZE
+        as well as OFFSET for BITPOS.
 
 	2002-09-08  Jan Hubicka  <jh@suse.cz>
 
-	* emit-rtl.c (set_mem_attributes_minus_bitpos): Fix array_ref
-	handling.
+        * emit-rtl.c (set_mem_attributes_minus_bitpos): Fix array_ref
+        handling.
 
 	2002-07-29  Richard Henderson  <rth@redhat.com>
 
-	* emit-rtl.c (set_mem_attributes_minus_bitpos): Rename from
-	set_mem_attributes and add BITPOS argument.  Subtract it from
-	OFFSET when same is adjusted.
-	(set_mem_attributes): New wrapper function.
-	* expr.c (expand_assignment): Use set_mem_attributes_minus_bitpos;
-	remove offset adjustment hack.
-	* expr.h (set_mem_attributes_minus_bitpos): Declare.
+        * emit-rtl.c (set_mem_attributes_minus_bitpos): Rename from
+        set_mem_attributes and add BITPOS argument.  Subtract it from
+        OFFSET when same is adjusted.
+        (set_mem_attributes): New wrapper function.
+        * expr.c (expand_assignment): Use set_mem_attributes_minus_bitpos;
+        remove offset adjustment hack.
+        * expr.h (set_mem_attributes_minus_bitpos): Declare.
 
 	2002-07-25  Richard Henderson  <rth@redhat.com>
 
-	* emit-rtl.c (set_mem_attributes): Fix size and alignment thinkos
-	in ARRAY_REF of DECL_P case.
+        * emit-rtl.c (set_mem_attributes): Fix size and alignment thinkos
+        in ARRAY_REF of DECL_P case.
 
 	2002-07-21  Richard Henderson  <rth@redhat.com>
 
-	* emit-rtl.c (set_mem_attributes): Preserve indirection of PARM_DECL
-	when flag_argument_noalias == 2.
-	* alias.c (nonoverlapping_memrefs_p): Handle that.
-	* print-rtl.c (print_mem_expr): Likewise.
+        * emit-rtl.c (set_mem_attributes): Preserve indirection of PARM_DECL
+        when flag_argument_noalias == 2.
+        * alias.c (nonoverlapping_memrefs_p): Handle that.
+        * print-rtl.c (print_mem_expr): Likewise.
 
 	2002-06-03  Dan Nicolaescu  <dann@godzilla.ics.uci.edu>
 
-	* alias.c (nonoverlapping_memrefs_p): Fix off by one error.
+        * alias.c (nonoverlapping_memrefs_p): Fix off by one error.
 
 2003-02-03  Steve Ellcey  <sje@cup.hp.com>
 
-	* config/pa/pa64-hpux.h (INIT_ENVIRONMENT): New.
+        * config/pa/pa64-hpux.h (INIT_ENVIRONMENT): New.
 
 2003-02-01  Jakub Jelinek  <jakub@redhat.com>
 
@@ -708,13 +89,13 @@
 
 	* config/m68k/m68k.md (tablejump+2): Don't sign extend an address
 	register.
-	* config/m68k/apollo68.h (ASM_RETURN_CASE_JUMP): Likewise.
-	* config/m68k/coff.h (ASM_RETURN_CASE_JUMP): Likewise.
-	* config/m68k/linux.h (ASM_RETURN_CASE_JUMP): Likewise.
-	* config/m68k/m68kelf.h (ASM_RETURN_CASE_JUMP): Likewise.
-	* config/m68k/mot3300.h (ASM_RETURN_CASE_JUMP): Likewise.
-	* config/m68k/netbsd-elf.h (ASM_RETURN_CASE_JUMP): Likewise.
-	* config/m68k/pbb.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/apollo68.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/coff.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/linux.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/m68kelf.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/mot3300.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/netbsd-elf.h (ASM_RETURN_CASE_JUMP): Likewise.
+        * config/m68k/pbb.h (ASM_RETURN_CASE_JUMP): Likewise.
 
 2003-01-30  Ralf Corsepius  <corsepiu@faw.uni-ulm.de>
 
@@ -801,8 +182,8 @@
 
 2003-01-27  Richard Earnshaw <rearnsha@arm.com>
 	
-	* function.c (purge_addressof_1): After pushing anaddressed register
-	 onto the stack, simplify the result.
+        * function.c (purge_addressof_1): After pushing anaddressed register
+         onto the stack, simplify the result.
 	
 2003-01-25  Eric Botcazou  <ebotcazou@libertysurf.fr>
 
@@ -819,7 +200,7 @@
 	of *both* the file name and the fix name.
 
 2003-01-25  Eric Botcazou  <ebotcazou@libertysurf.fr>
-	    Christian Ehrhardt  <ehrhardt@mathematik.uni-ulm.de>
+            Christian Ehrhardt  <ehrhardt@mathematik.uni-ulm.de>
 
 	PR optimization/9279
 
@@ -946,7 +327,7 @@
 	binary compatibility.
 
 2003-01-07  Benjamin Kosnik  <bkoz@redhat.com>
-	    Sunil Davasam  <sunil.k.davasam@intel.com>
+            Sunil Davasam  <sunil.k.davasam@intel.com>
 
 	PR libstdc++/9076 
 	* unwind-dw2.c (execute_cfa_program): DW_CFA_undefined,
@@ -1266,12 +647,12 @@ Sat Nov 16 02:54:29 CET 2002  Jan Hubicka  <jh@suse.cz>
 
 2002-11-04  Aldy Hernandez  <aldyh@redhat.com>
 
-	Backport patch to fix PR c/8451.
+        Backport patch to fix PR c/8451.
 
-	2002-04-25  Richard Henderson  <rth@redhat.com>
+        2002-04-25  Richard Henderson  <rth@redhat.com>
 
-	* expmed.c (extract_bit_field): Fall through to generic code rather
-	than aborting on subreg special case.
+        * expmed.c (extract_bit_field): Fall through to generic code rather
+        than aborting on subreg special case.
 
 2002-11-01  Mark Mitchell  <mark@codesourcery.com>
 

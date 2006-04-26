@@ -1789,26 +1789,24 @@ output_call_frame_info (for_eh)
   dw_fde_ref fde;
   dw_cfi_ref cfi;
   char l1[20], l2[20], section_start_label[20];
-  bool any_lsda_needed = false;
+  int any_lsda_needed = 0;
   char augmentation[6];
   int augmentation_size;
   int fde_encoding = DW_EH_PE_absptr;
   int per_encoding = DW_EH_PE_absptr;
   int lsda_encoding = DW_EH_PE_absptr;
 
-  /* If we don't have any functions we'll want to unwind out of, don't
-     emit any EH unwind information.  Note that if exceptions aren't
-     enabled, we won't have collected nothrow information, and if we
-     asked for asynchronous tables, we always want this info.  */
+  /* If we don't have any functions we'll want to unwind out of, don't emit any
+     EH unwind information.  */
   if (for_eh)
     {
-      bool any_eh_needed = !flag_exceptions || flag_asynchronous_unwind_tables;
+      int any_eh_needed = flag_asynchronous_unwind_tables;
 
       for (i = 0; i < fde_table_in_use; i++)
 	if (fde_table[i].uses_eh_lsda)
-	  any_eh_needed = any_lsda_needed = true;
+	  any_eh_needed = any_lsda_needed = 1;
 	else if (! fde_table[i].nothrow)
-	  any_eh_needed = true;
+	  any_eh_needed = 1;
 
       if (! any_eh_needed)
 	return;
@@ -1946,8 +1944,8 @@ output_call_frame_info (for_eh)
       fde = &fde_table[i];
 
       /* Don't emit EH unwind info for leaf functions that don't need it.  */
-      if (for_eh && !flag_asynchronous_unwind_tables
-	  && flag_exceptions && fde->nothrow && !fde->uses_eh_lsda)
+      if (!flag_asynchronous_unwind_tables && for_eh && fde->nothrow
+	  && !  fde->uses_eh_lsda)
 	continue;
 
       ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, FDE_LABEL, for_eh + i * 2);
@@ -7798,11 +7796,6 @@ mem_loc_descriptor (rtl, mode)
 	add_loc_descr (&mem_loc_result, new_loc_descr (DW_OP_deref, 0, 0));
       break;
 
-    case LO_SUM:
-	 rtl = XEXP (rtl, 1);
-
-      /* ... fall through ...  */
-
     case LABEL_REF:
       /* Some ports can transform a symbol ref into a label ref, because
  	 the symbol ref is too far away and has to be dumped into a constant
@@ -11069,17 +11062,6 @@ gen_type_die (type, context_die)
   if (type == NULL_TREE || type == error_mark_node)
     return;
 
-  if (TYPE_NAME (type) && TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
-      && DECL_ORIGINAL_TYPE (TYPE_NAME (type)))
-    {
-      if (TREE_ASM_WRITTEN (type))
-	return;
-
-      TREE_ASM_WRITTEN (type) = 1;
-      gen_decl_die (TYPE_NAME (type), context_die);
-      return;
-    }
-
   /* We are going to output a DIE to represent the unqualified version of
      this type (i.e. without any const or volatile qualifiers) so get the
      main variant (i.e. the unqualified version) of this type now.  */
@@ -11087,6 +11069,14 @@ gen_type_die (type, context_die)
 
   if (TREE_ASM_WRITTEN (type))
     return;
+
+  if (TYPE_NAME (type) && TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
+      && DECL_ORIGINAL_TYPE (TYPE_NAME (type)))
+    {
+      TREE_ASM_WRITTEN (type) = 1;
+      gen_decl_die (TYPE_NAME (type), context_die);
+      return;
+    }
 
   switch (TREE_CODE (type))
     {

@@ -2531,9 +2531,9 @@
 
 (define_insn "*movdi_insn_sp32_v9"
   [(set (match_operand:DI 0 "nonimmediate_operand"
-					"=T,o,T,U,o,r,r,r,?T,?f,?f,?o,?e,?e,?W")
+					"=T,o,T,U,o,r,r,r,?T,?f,?f,?o,?f,?e,?e,?W")
         (match_operand:DI 1 "input_operand"
-					" J,J,U,T,r,o,i,r, f, T, o, f, e, W, e"))]
+					" J,J,U,T,r,o,i,r, f, T, o, f, f, e, W, e"))]
   "! TARGET_ARCH64 && TARGET_V9
    && (GET_CODE (operands[0]) != MEM || GET_CODE (operands[1]) != MEM)"
   "@
@@ -2549,12 +2549,13 @@
    ldd\\t%1, %0
    #
    #
+   #
    fmovd\\t%1, %0
    ldd\\t%1, %0
    std\\t%1, %0"
-  [(set_attr "type" "store,store,store,load,*,*,*,*,fpstore,fpload,*,*,fpmove,fpload,fpstore")
-   (set_attr "length" "*,2,*,*,2,2,2,2,*,*,2,2,*,*,*")
-   (set_attr "fptype" "*,*,*,*,*,*,*,*,*,*,*,*,double,*,*")])
+  [(set_attr "type" "store,store,store,load,*,*,*,*,fpstore,fpload,*,*,*,fpmove,fpload,fpstore")
+   (set_attr "length" "*,2,*,*,2,2,2,2,*,*,2,2,2,*,*,*")
+   (set_attr "fptype" "*,*,*,*,*,*,*,*,*,*,*,*,*,double,*,*")])
 
 (define_insn "*movdi_insn_sp32"
   [(set (match_operand:DI 0 "nonimmediate_operand"
@@ -2898,14 +2899,7 @@
 (define_split
   [(set (match_operand:DI 0 "register_operand" "")
         (match_operand:DI 1 "register_operand" ""))]
-  "reload_completed
-   && (! TARGET_V9
-       || (! TARGET_ARCH64
-           && ((GET_CODE (operands[0]) == REG
-                && REGNO (operands[0]) < 32)
-               || (GET_CODE (operands[0]) == SUBREG
-                   && GET_CODE (SUBREG_REG (operands[0])) == REG
-                   && REGNO (SUBREG_REG (operands[0])) < 32))))"
+  "! TARGET_ARCH64 && reload_completed"
   [(clobber (const_int 0))]
   "
 {
@@ -7957,7 +7951,7 @@
 	  == INSN_ADDRESSES (INSN_UID (insn))))
     return \"b\\t%l0%#\";
   else
-    return TARGET_V9 ? \"ba%*,pt\\t%%xcc, %l0%(\" : \"b%*\\t%l0%(\";
+    return TARGET_V9 ? \"ba,pt%*\\t%%xcc, %l0%(\" : \"b%*\\t%l0%(\";
 }"
   [(set_attr "type" "uncond_branch")])
 
@@ -8675,7 +8669,7 @@
    && mems_ok_for_ldd_peep (operands[0], operands[1], NULL_RTX)"
   [(set (match_dup 0)
        (const_int 0))]
-  "operands[0] = widen_memory_access (operands[0], DImode, 0);")
+  "operands[0] = change_address (operands[0], DImode, NULL);")
 
 (define_peephole2
   [(set (match_operand:SI 0 "memory_operand" "")
@@ -8686,7 +8680,7 @@
    && mems_ok_for_ldd_peep (operands[1], operands[0], NULL_RTX)"
   [(set (match_dup 1)
        (const_int 0))]
-  "operands[1] = widen_memory_access (operands[1], DImode, 0);")
+  "operands[1] = change_address (operands[1], DImode, NULL);")
 
 (define_peephole2
   [(set (match_operand:SI 0 "register_operand" "")
@@ -8697,7 +8691,7 @@
    && mems_ok_for_ldd_peep (operands[1], operands[3], operands[0])" 
   [(set (match_dup 0)
 	(match_dup 1))]
-  "operands[1] = widen_memory_access (operands[1], DImode, 0);
+  "operands[1] = change_address (operands[1], DImode, NULL);
    operands[0] = gen_rtx_REG (DImode, REGNO (operands[0]));")
 
 (define_peephole2
@@ -8709,7 +8703,7 @@
    && mems_ok_for_ldd_peep (operands[0], operands[2], NULL_RTX)"
   [(set (match_dup 0)
 	(match_dup 1))]
-  "operands[0] = widen_memory_access (operands[0], DImode, 0);
+  "operands[0] = change_address (operands[0], DImode, NULL);
    operands[1] = gen_rtx_REG (DImode, REGNO (operands[1]));")
 
 (define_peephole2
@@ -8721,7 +8715,7 @@
    && mems_ok_for_ldd_peep (operands[1], operands[3], operands[0])"
   [(set (match_dup 0)
 	(match_dup 1))]
-  "operands[1] = widen_memory_access (operands[1], DFmode, 0);
+  "operands[1] = change_address (operands[1], DFmode, NULL);
    operands[0] = gen_rtx_REG (DFmode, REGNO (operands[0]));")
 
 (define_peephole2
@@ -8733,7 +8727,7 @@
   && mems_ok_for_ldd_peep (operands[0], operands[2], NULL_RTX)"
   [(set (match_dup 0)
 	(match_dup 1))]
-  "operands[0] = widen_memory_access (operands[0], DFmode, 0);
+  "operands[0] = change_address (operands[0], DFmode, NULL);
    operands[1] = gen_rtx_REG (DFmode, REGNO (operands[1]));")
 
 (define_peephole2
@@ -8745,7 +8739,7 @@
   && mems_ok_for_ldd_peep (operands[3], operands[1], operands[0])"
   [(set (match_dup 2)
 	(match_dup 3))]
-   "operands[3] = widen_memory_access (operands[3], DImode, 0);
+   "operands[3] = change_address (operands[3], DImode, NULL);
     operands[2] = gen_rtx_REG (DImode, REGNO (operands[2]));")
 
 (define_peephole2
@@ -8757,7 +8751,7 @@
   && mems_ok_for_ldd_peep (operands[2], operands[0], NULL_RTX)" 
   [(set (match_dup 2)
 	(match_dup 3))]
-  "operands[2] = widen_memory_access (operands[2], DImode, 0);
+  "operands[2] = change_address (operands[2], DImode, NULL);
    operands[3] = gen_rtx_REG (DImode, REGNO (operands[3]));
    ")
  
@@ -8770,7 +8764,7 @@
   && mems_ok_for_ldd_peep (operands[3], operands[1], operands[0])"
   [(set (match_dup 2)
 	(match_dup 3))]
-  "operands[3] = widen_memory_access (operands[3], DFmode, 0);
+  "operands[3] = change_address (operands[3], DFmode, NULL);
    operands[2] = gen_rtx_REG (DFmode, REGNO (operands[2]));")
 
 (define_peephole2
@@ -8782,7 +8776,7 @@
   && mems_ok_for_ldd_peep (operands[2], operands[0], NULL_RTX)"
   [(set (match_dup 2)
 	(match_dup 3))]
-  "operands[2] = widen_memory_access (operands[2], DFmode, 0);
+  "operands[2] = change_address (operands[2], DFmode, NULL);
    operands[3] = gen_rtx_REG (DFmode, REGNO (operands[3]));")
  
 ;; Optimize the case of following a reg-reg move with a test

@@ -7409,7 +7409,7 @@ first_reg_to_save ()
     if (regs_ever_live[first_reg] 
 	&& (! call_used_regs[first_reg]
 	    || (first_reg == RS6000_PIC_OFFSET_TABLE_REGNUM
-		&& ((DEFAULT_ABI == ABI_V4 && flag_pic != 0)
+		&& ((DEFAULT_ABI == ABI_V4 && flag_pic == 1)
 		    || (DEFAULT_ABI == ABI_DARWIN && flag_pic)))))
       break;
 
@@ -8053,7 +8053,7 @@ void
 rs6000_emit_load_toc_table (fromprolog)
      int fromprolog;
 {
-  rtx dest, insn;
+  rtx dest;
   dest = gen_rtx_REG (Pmode, RS6000_PIC_OFFSET_TABLE_REGNUM);
 
   if (TARGET_ELF && DEFAULT_ABI == ABI_V4 && flag_pic == 1)
@@ -8061,12 +8061,8 @@ rs6000_emit_load_toc_table (fromprolog)
       rtx temp = (fromprolog
 		  ? gen_rtx_REG (Pmode, LINK_REGISTER_REGNUM)
 		  : gen_reg_rtx (Pmode));
-      insn = emit_insn (gen_load_toc_v4_pic_si (temp));
-      if (fromprolog)
-	rs6000_maybe_dead (insn);
-      insn = emit_move_insn (dest, temp);
-      if (fromprolog)
-	rs6000_maybe_dead (insn);
+      rs6000_maybe_dead (emit_insn (gen_load_toc_v4_pic_si (temp)));
+      rs6000_maybe_dead (emit_move_insn (dest, temp));
     }
   else if (TARGET_ELF && DEFAULT_ABI != ABI_AIX && flag_pic == 2)
     {
@@ -8113,13 +8109,14 @@ rs6000_emit_load_toc_table (fromprolog)
 	  ASM_GENERATE_INTERNAL_LABEL (buf, "LCG", reload_toc_labelno++);
 	  symF = gen_rtx_SYMBOL_REF (Pmode, ggc_strdup (buf));
 
-	  emit_insn (gen_load_toc_v4_PIC_1b (tempLR, symF, tocsym));
-	  emit_move_insn (dest, tempLR);
-	  emit_move_insn (temp0, gen_rtx_MEM (Pmode, dest));
+	  rs6000_maybe_dead (emit_insn (gen_load_toc_v4_PIC_1b (tempLR,
+								symF,
+								tocsym)));
+	  rs6000_maybe_dead (emit_move_insn (dest, tempLR));
+	  rs6000_maybe_dead (emit_move_insn (temp0,
+					     gen_rtx_MEM (Pmode, dest)));
 	}
-      insn = emit_insn (gen_addsi3 (dest, temp0, dest));
-      if (fromprolog)
-	rs6000_maybe_dead (insn);
+      rs6000_maybe_dead (emit_insn (gen_addsi3 (dest, temp0, dest)));
     }
   else if (TARGET_ELF && !TARGET_AIX && flag_pic == 0 && TARGET_MINIMAL_TOC)
     {
@@ -8129,21 +8126,15 @@ rs6000_emit_load_toc_table (fromprolog)
       ASM_GENERATE_INTERNAL_LABEL (buf, "LCTOC", 1);
       realsym = gen_rtx_SYMBOL_REF (Pmode, ggc_strdup (buf));
 
-      insn = emit_insn (gen_elf_high (dest, realsym));
-      if (fromprolog)
-	rs6000_maybe_dead (insn);
-      insn = emit_insn (gen_elf_low (dest, dest, realsym));
-      if (fromprolog)
-	rs6000_maybe_dead (insn);
+      rs6000_maybe_dead (emit_insn (gen_elf_high (dest, realsym)));
+      rs6000_maybe_dead (emit_insn (gen_elf_low (dest, dest, realsym)));
     }
   else if (DEFAULT_ABI == ABI_AIX)
     {
       if (TARGET_32BIT)
-	insn = emit_insn (gen_load_toc_aix_si (dest));
+	rs6000_maybe_dead (emit_insn (gen_load_toc_aix_si (dest)));
       else
-	insn = emit_insn (gen_load_toc_aix_di (dest));
-      if (fromprolog)
-	rs6000_maybe_dead (insn);
+	rs6000_maybe_dead (emit_insn (gen_load_toc_aix_di (dest)));
     }
   else
     abort ();
@@ -8802,7 +8793,7 @@ rs6000_emit_prologue ()
 	if ((regs_ever_live[info->first_gp_reg_save+i] 
 	     && ! call_used_regs[info->first_gp_reg_save+i])
 	    || (i+info->first_gp_reg_save == RS6000_PIC_OFFSET_TABLE_REGNUM
-		&& ((DEFAULT_ABI == ABI_V4 && flag_pic != 0)
+		&& ((DEFAULT_ABI == ABI_V4 && flag_pic == 1)
 		    || (DEFAULT_ABI == ABI_DARWIN && flag_pic))))
 	  {
 	    rtx addr, reg, mem;
@@ -8898,7 +8889,7 @@ rs6000_emit_prologue ()
   /* Set frame pointer, if needed.  */
   if (frame_pointer_needed)
     {
-      insn = emit_move_insn (gen_rtx_REG (Pmode, FRAME_POINTER_REGNUM),
+      insn = emit_move_insn (gen_rtx_REG (reg_mode, FRAME_POINTER_REGNUM), 
 			     sp_reg_rtx);
       RTX_FRAME_RELATED_P (insn) = 1;
     }
@@ -9188,7 +9179,7 @@ rs6000_emit_epilogue (sibcall)
       if ((regs_ever_live[info->first_gp_reg_save+i] 
 	   && ! call_used_regs[info->first_gp_reg_save+i])
 	  || (i+info->first_gp_reg_save == RS6000_PIC_OFFSET_TABLE_REGNUM
-	      && ((DEFAULT_ABI == ABI_V4 && flag_pic != 0)
+	      && ((DEFAULT_ABI == ABI_V4 && flag_pic == 1)
 		  || (DEFAULT_ABI == ABI_DARWIN && flag_pic))))
 	{
 	  rtx addr = gen_rtx_PLUS (Pmode, frame_reg_rtx, 

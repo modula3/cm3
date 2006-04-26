@@ -97,7 +97,6 @@
   ""
   "
 {
-  rtx srclo;
   rtx dstlo = gen_lowpart (SImode, operands[0]);
   rtx src1lo = gen_lowpart (SImode, operands[1]);
   rtx src2lo = gen_lowpart (SImode, operands[2]);
@@ -106,21 +105,9 @@
   rtx src1hi = gen_highpart (SImode, operands[1]);
   rtx src2hi = gen_highpart (SImode, operands[2]);
 
-  /* Either source can be used for overflow checking, as long as it's
-     not clobbered by the first addition.  */
-  if (!rtx_equal_p (dstlo, src1lo))
-    srclo = src1lo;
-  else if (!rtx_equal_p (dstlo, src2lo))
-    srclo = src2lo;
-  else
-    {
-      srclo = gen_reg_rtx (SImode);
-      emit_move_insn (srclo, src1lo);
-    }
-
   emit_insn (gen_addsi3 (dstlo, src1lo, src2lo));
   emit_insn (gen_addsi3 (dsthi, src1hi, src2hi));
-  emit_insn (gen_adddi_carry (dsthi, dstlo, srclo));
+  emit_insn (gen_adddi_carry (dsthi, dstlo, src2lo));
   DONE;
 }")
 
@@ -222,9 +209,9 @@
   rtx src1hi = gen_highpart (SImode, operands[1]);
   rtx src2hi = gen_highpart (SImode, operands[2]);
 
+  emit_insn (gen_subsi3 (dstlo, src1lo, src2lo));
   emit_insn (gen_subsi3 (dsthi, src1hi, src2hi));
   emit_insn (gen_subdi_carry (dsthi, src1lo, src2lo));
-  emit_insn (gen_subsi3 (dstlo, src1lo, src2lo));
   DONE;
 }")
 
@@ -2405,7 +2392,7 @@
 ;; to set up the frame pointer.
 
 (define_insn "set_frame_ptr"
-  [(set (reg:SI A7_REG) (unspec_volatile [(const_int 0)] UNSPECV_SET_FP))]
+  [(unspec_volatile [(const_int 0)] UNSPECV_SET_FP)]
   ""
   "*
 {
@@ -2419,7 +2406,7 @@
 
 ;; Post-reload splitter to remove fp assignment when it's not needed.
 (define_split
-  [(set (reg:SI A7_REG) (unspec_volatile [(const_int 0)] UNSPECV_SET_FP))]
+  [(unspec_volatile [(const_int 0)] UNSPECV_SET_FP)]
   "reload_completed && !frame_pointer_needed"
   [(unspec [(const_int 0)] UNSPEC_NOP)]
   "")
