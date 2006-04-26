@@ -70,7 +70,7 @@ m3_do_fixed_insert (x, y, i, n, t)
   if (n == 0)
     return x;
 
-  if ((n == 1) && (i < (int)(sizeof (int) * 8)))
+  if ((n == 1) && (i < sizeof (int) * 8))
     {
       if (m3_is_small_cardinal (y, &y_val))
 	{
@@ -96,7 +96,7 @@ m3_do_fixed_insert (x, y, i, n, t)
   else
     {				/* multi-bit value */
       tree saved_bits, new_bits;
-      if (i + n < (int)(sizeof (int) * 8))
+      if (i + n < sizeof (int) * 8)
 	{
 	  int mask = (1 << n) - 1;
 	  saved_bits = m3_build_int (~(mask << i));
@@ -111,7 +111,7 @@ m3_do_fixed_insert (x, y, i, n, t)
 	      new_bits = left_shift (new_bits, i);
 	    };
 	}
-      else if (n < (int)(sizeof (int) * 8))
+      else if (n < sizeof (int) * 8)
 	{
 	  int mask = (1 << n) - 1;
 	  tree a = m3_build_int (mask);
@@ -230,6 +230,13 @@ m3_cast (tipe, op0)
      tree tipe, op0;
 {
   return fold (build1 (NOP_EXPR, tipe, op0));
+}
+
+tree
+m3_rtl (x)
+     rtx x;
+{
+  return build (RTL_EXPR, t_addr, NULL_TREE, x);
 }
 
 tree
