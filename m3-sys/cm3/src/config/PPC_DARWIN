@@ -266,7 +266,7 @@ end
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
-M3_FRONT_FLAGS = [ ] % [ "-IncGC", "-GenGC" ]
+M3_FRONT_FLAGS = [ ]
 % --- internal configuration options passed directly to the Modula-3 front-end
 
 M3_OPTIONS = [ ]
