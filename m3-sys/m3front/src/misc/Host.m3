@@ -41,8 +41,8 @@ PROCEDURE Initialize (READONLY options: ARRAY OF TEXT): BOOLEAN =
     doDebugs             := TRUE;
     new_adr              := FALSE;
     report_stats         := FALSE;
-    doIncGC              := FALSE;
-    doGenGC              := FALSE;
+    doIncGC              := TRUE;
+    doGenGC              := TRUE;
 
     FOR i := 0 TO LAST (options) DO
       IF NOT ProcessArg (options[i]) THEN RETURN FALSE; END;
@@ -105,10 +105,10 @@ PROCEDURE ProcessArg (t: TEXT): BOOLEAN =
       doNilChk    := FALSE;
       doRaisesChk := FALSE;
       doDebugs    := FALSE;
-    ELSIF (Text.Equal (t, "-IncGC")) THEN
-      doIncGC := TRUE;
-    ELSIF (Text.Equal (t, "-GenGC")) THEN
-      doGenGC := TRUE;
+    ELSIF (Text.Equal (t, "-NoIncGC")) THEN
+      doIncGC := FALSE;
+    ELSIF (Text.Equal (t, "-NoGenGC")) THEN
+      doGenGC := FALSE;
     ELSIF (Text.Equal (t, "-InitFloats")) THEN
       init_floats := TRUE;
     ELSIF (Text.Equal (t, "-load_map")) THEN
