@@ -61,8 +61,8 @@ VAR (* runtime checks *)
   doDebugs    : BOOLEAN := TRUE;
 
 VAR (* GC checks *)
-  doIncGC := FALSE;
-  doGenGC := FALSE;
+  doIncGC := TRUE;
+  doGenGC := TRUE;
 
 VAR
   new_adr      : BOOLEAN := FALSE;  (* TRUE =>  "ADR (t: T): UNTRACED REF T" *)
