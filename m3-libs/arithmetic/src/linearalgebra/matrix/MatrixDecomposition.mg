@@ -514,6 +514,44 @@ PROCEDURE Cholesky (A: M.T; ): CholeskyResult =
   END Cholesky;
 
 
+PROCEDURE LeastSquares
+  (A: M.T; READONLY B: ARRAY OF V.T; flags := LSFlagSet{}; ):
+  REF ARRAY OF LS RAISES {Arith.Error} =
+  VAR
+    ATA : M.T;
+    mulV: PROCEDURE (x: M.T; y: V.T; ): V.T;
+    result            := NEW(REF ARRAY OF LS, NUMBER(B));
+    lu    : LUFactors;
+  BEGIN
+    IF LSFlag.Transposed IN flags THEN
+      ATA := M.MulMAM(A);
+      mulV := M.MulV;
+    ELSE
+      ATA := M.MulMMA(A);
+      mulV := M.MulTV;
+    END;
+    (* could be accelerated by Cholesky decomposition *)
+    (* chol := Cholesky(ATA); *)
+    lu := LUFactor(ATA);
+    FOR j := FIRST(B) TO LAST(B) DO
+      WITH b  = B[j],
+           Ab = mulV(A, b),
+           x  = LUBackSubst(lu, Ab),
+           Ax = mulV(A, x)           DO
+        (*
+           (A*x-b)^T * (A*x-b) = x^T*A^T * (A*x-b) + b^T * (b-A*x)
+                     because we solved A^T*(A*x - b) = 0
+                               = b^T * (b-A*x)
+        *)
+        result[j].res := V.Dot(b, V.Sub(b, Ax));
+        result[j].x := x;
+      END;
+    END;
+    RETURN result;
+  END LeastSquares;
+
+
+
 (* Singular Value Decomposition *)
 
 (*

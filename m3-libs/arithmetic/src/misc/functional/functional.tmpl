@@ -3,7 +3,7 @@
 %  and their derivatives.
 %
 
-readonly proc Functional (nm, field, rimpl) is
+readonly proc Functional (nm, field, rimpl, msolve) is
   local basic  = nm & "Functional"
   local rfield  = field & rimpl
   local rtrans  = field & "Trans"
@@ -12,9 +12,9 @@ readonly proc Functional (nm, field, rimpl) is
   local vtrans  = field & "VectorTrans"
   local mfield  = field & "MatrixFast"
   local funcder = field & "FunctionalDeriv2"
-  local lapack  = field & "MatrixLapack"
+  local msolve  = field & "Matrix" & msolve
   build_generic_intf (basic, "Functional", [rfield,         vfield,                 funcder], VISIBLE)
-  build_generic_impl (basic, "Functional", [rfield, rtrans, vfield, vtrans, mfield, funcder, lapack])
+  build_generic_impl (basic, "Functional", [rfield, rtrans, vfield, vtrans, mfield, funcder, msolve])
 end
 
 readonly proc FunctionalDeriv2 (nm, field, rimpl) is

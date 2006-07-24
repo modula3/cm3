@@ -1,0 +1,3 @@
+%override("lapack",WDROOT)
+%override("lapack",ROOT)
+override("lapack","/home/thielema/cm3/src/m3-libs")
