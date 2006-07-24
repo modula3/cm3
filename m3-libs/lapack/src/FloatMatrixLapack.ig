@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatMatrixLapack(R, V, CV, M);
+GENERIC INTERFACE FloatMatrixLapack(R, V, M, MD, Eig);
 (* Arithmetic for Modula-3, see doc for details
 
    Abstract: High level interfaces to LAPACK
@@ -10,15 +10,10 @@ FROM Arithmetic IMPORT Error;
 
 
 TYPE
-  EVFlag = {SchurVectors};
-  EVFlagSet = SET OF EVFlag;
+  EVFlag = Eig.EVFlag;
+  EVFlagSet = Eig.EVFlagSet;
+  EV = Eig.EV;
 
-  EV = RECORD
-         eigenvalues: CV.T;
-         upperTri   : M.T;
-         schur: M.T;             (* initalized if schurVector flag is
-                                    set *)
-       END;
 
 PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}; ): EV RAISES {Error};
 (* Compute all eigenvalues of matrix A.  This is a wrapper for SGEES and
@@ -26,13 +21,9 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}; ): EV RAISES {Error};
 
 
 TYPE
-  LSFlag = {Transposed};
-  LSFlagSet = SET OF LSFlag;
-
-  LS = RECORD
-         x  : V.T;               (* solution vector *)
-         res: R.T;               (* square of the minimal distance *)
-       END;
+  LSFlag = MD.LSFlag;
+  LSFlagSet = MD.LSFlagSet;
+  LS = MD.LS;
 
 PROCEDURE LeastSquares
   (A: M.T; READONLY B: ARRAY OF V.T; flags := LSFlagSet{}; ):

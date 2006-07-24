@@ -141,16 +141,12 @@ PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
 
 CONST tol = RT.MinPos / RT.MinPosNormal;
 
-(* Solve the real symmetric eigenvalue problem by the algorithm of Jacobi.
-   The routine has been tested against the first example given in
-   Wilkinson/Reinsch and gives the same results. *)
-
 PROCEDURE Jacobi (VAR a        : M.T;
-                      n        : INTEGER;
+                      n        : CARDINAL;
                   VAR d        : V.T;
                   VAR v        : M.T;
-                  VAR nrot     : INTEGER;
-                      eigenVect: BOOLEAN; ) =
+                  VAR nrot     : CARDINAL;
+                      eigenVect: BOOLEAN;  ) =
   VAR
     tresh, theta, tau, t, sm, s, h, g, c: R.T;
     b                                         := NEW(V.T, n);
@@ -238,7 +234,7 @@ PROCEDURE Jacobi (VAR a        : M.T;
                     v[j, q] := h + s * (g - h * tau)
                   END;           (* for *)
                 END;
-                nrot := nrot + 1
+                INC(nrot);
               END;
             END;
           END;

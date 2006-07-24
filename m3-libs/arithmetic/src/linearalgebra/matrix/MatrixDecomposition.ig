@@ -72,11 +72,14 @@ pivot:=FALSE
 (* LU Factoring *)
 
 TYPE
-  LUFactors = RECORD
-                L, U : M.T;
-                index: REF IndexArray;
-                sign : [-1 .. 1];
-              END;
+  LUFactors =
+    RECORD
+      L, U : M.T;
+      index: REF IndexArray;
+      sign: [-1 .. 1];           (* 1, if the number of inversions in index
+                                    is even, -1 if it is odd.  (should be
+                                    better (number_of_inversions MOD 2)) *)
+    END;
 
 PROCEDURE LUFactor (A: M.T; ): LUFactors RAISES {Error};
 
@@ -124,6 +127,27 @@ TYPE
                    END;
 
 PROCEDURE Cholesky (A: M.T; ): CholeskyResult;
+
+
+
+TYPE
+  LSFlag = {Transposed};
+  LSFlagSet = SET OF LSFlag;
+
+  LS = RECORD
+         x  : V.T;               (* solution vector *)
+         res: R.T;               (* square of the minimal distance *)
+       END;
+
+PROCEDURE LeastSquares
+  (A: M.T; READONLY B: ARRAY OF V.T; flags := LSFlagSet{}; ):
+  REF ARRAY OF LS RAISES {Error};
+(* For each j compute x with minimal norm ||A*x-B[j]||.  The matrix A must
+   have full rank.  The signature is compatible with the corresponding
+   LAPACK function.  However this routines is simply based on normal
+   equations and will certainly fail in various cases due to numerical
+   instabilities. *)
+
 
 
 
