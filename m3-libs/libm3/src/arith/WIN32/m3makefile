@@ -6,4 +6,4 @@
 %      modified on Fri Jun 18 18:31:31 PDT 1993 by harrison
 %      modified on Tue Feb 11 16:29:34 PST 1992 by muller
 
-Interface ("Math")
+Module ("Math")
