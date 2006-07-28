@@ -1,10 +1,8 @@
-GENERIC MODULE MatchWaveletGradient(R, V, M, S, RefnSm, FnD);
+GENERIC MODULE WaveletMatchGradientLift(R, V, M, S, RefnSm, FnD);
 
 
-PROCEDURE DeriveDist (normalMat    : M.T;
-                      targetCor    : V.T;
-                      targetNormSqr: R.T;
-                      s            : S.T; ): FnD.T =
+PROCEDURE DeriveDist
+  (normalMat: M.T; targetCor: V.T; targetNormSqr: R.T; s: S.T; ): FnD.T =
   VAR
     normals := M.MulV(normalMat, s.getData());
     dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
@@ -16,14 +14,14 @@ PROCEDURE DeriveDist (normalMat    : M.T;
                  M.Scale(normalMat, R.Two)};
   END DeriveDist;
 
-PROCEDURE DeriveSSE (hDual, gDual0, s: S.T; ): FnD.T =
+PROCEDURE DeriveSSE (lpDual, hpDual0, s: S.T; ): FnD.T =
   VAR
-    gDual   := gDual0.superpose(hDual.upConvolve(s, 2));
-    hPrimal := gDual.alternate();
-    gPrimal := hDual.alternate();
+    hpDual   := hpDual0.superpose(lpDual.upConvolve(s, 2));
+    lpPrimal := hpDual.alternate();
+    hpPrimal := lpDual.alternate();
 
-    hSums := hPrimal.wrapCyclic(3);
-    dSums := M.Cyclic(gPrimal.translate(2 * s.getFirst()).wrapCyclic(3),
+    hSums := lpPrimal.wrapCyclic(3);
+    dSums := M.Cyclic(hpPrimal.translate(2 * s.getFirst()).wrapCyclic(3),
                       s.getNumber(), -1);
   BEGIN
     (*
@@ -36,16 +34,16 @@ PROCEDURE DeriveSSE (hDual, gDual0, s: S.T; ): FnD.T =
                        M.Transpose(dSums))};
   END DeriveSSE;
 
-PROCEDURE DeriveWSSE (hDual, gDual0, s: S.T; c: R.T): FnD.T =
+PROCEDURE DeriveWSSE (lpDual, hpDual0, s: S.T; c: R.T): FnD.T =
   VAR
-    hsDual   := hDual.upConvolve(s, 2);
-    gDual    := gDual0.superpose(hsDual.scale(1.0D0 / c));
-    hPrimal  := gDual.alternate();
-    gPrimal  := hDual.alternate();
+    hsDual   := lpDual.upConvolve(s, 2);
+    hpDual   := hpDual0.superpose(hsDual.scale(1.0D0 / c));
+    lpPrimal := hpDual.alternate();
+    hpPrimal := lpDual.alternate();
     gsPrimal := hsDual.alternate();
 
-    hSums := hPrimal.wrapCyclic(3);
-    dSums := M.Cyclic(gPrimal.scale(1.0D0 / c).translate(
+    hSums := lpPrimal.wrapCyclic(3);
+    dSums := M.Cyclic(hpPrimal.scale(1.0D0 / c).translate(
                         2 * s.getFirst()).wrapCyclic(3), s.getNumber(), -1);
     cSums := V.Scale(gsPrimal.wrapCyclic(3), -1.0D0 / (c * c));
     dcSums := M.FromMatrixArray(
@@ -66,7 +64,7 @@ PROCEDURE DeriveWSSE (hDual, gDual0, s: S.T; c: R.T): FnD.T =
     RETURN polypart;
     *)
     FOR i := 0 TO s.getNumber() - 1 DO
-      dgSums[i] := V.Inner(dsse, gPrimal.translate(
+      dgSums[i] := V.Inner(dsse, hpPrimal.translate(
                                    2 * (s.getFirst() + i)).wrapCyclic(3))
                      * (R.MinusOne / (c * c));
     END;
@@ -88,4 +86,4 @@ PROCEDURE DeriveWSSE (hDual, gDual0, s: S.T; c: R.T): FnD.T =
 
 
 BEGIN
-END MatchWaveletGradient.
+END WaveletMatchGradientLift.

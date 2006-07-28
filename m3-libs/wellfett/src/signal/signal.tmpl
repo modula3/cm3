@@ -19,3 +19,11 @@ readonly proc Signal (nm, rfield) is
 
   build_generic_intf (rep,    "SignalRep",    [vfield, signal, fmtlex], VISIBLE)
 end
+
+readonly proc ScaledSignal (nm, rfield, cfield) is
+  local scaledsignal  = nm & "ScaledSignal"
+  local signal        = nm & "Signal"
+
+  build_generic_intf (scaledsignal, "ScaledSignal", [rfield, cfield, signal], VISIBLE)
+  build_generic_impl (scaledsignal, "ScaledSignal", [rfield])
+end

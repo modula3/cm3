@@ -1,17 +1,17 @@
 
 import("bilist")
 
-template("refinablefunc")
+template("refinablefunction")
 
 
-generic_module("RefinableFunc")
-RefinableFunc("Real",            "RealBasic",       "RealComplex")
-RefinableFunc("LongReal",        "LongRealBasic",   "LongRealComplex")
+generic_module("RefinableFunction")
+RefinableFunction("Real",            "RealBasic",       "RealComplex")
+RefinableFunction("LongReal",        "LongRealBasic",   "LongRealComplex")
 % requires EigenSystem
-%RefinableFunc("Extended",        "ExtendedBasic",   "ExtendedComplex")
-%RefinableFunc("RealComplex",     "RealComplex",     "RealComplex")
-%RefinableFunc("LongRealComplex", "LongRealComplex", "LongRealComplex")
-%RefinableFunc("ExtendedComplex", "ExtendedComplex", "ExtendedComplex")
+%RefinableFunction("Extended",        "ExtendedBasic",   "ExtendedComplex")
+%RefinableFunction("RealComplex",     "RealComplex",     "RealComplex")
+%RefinableFunction("LongRealComplex", "LongRealComplex", "LongRealComplex")
+%RefinableFunction("ExtendedComplex", "ExtendedComplex", "ExtendedComplex")
 
 generic_module("RefinableSmooth")
 RefinableSmooth("Real",            "RealBasic",       "RealComplex")

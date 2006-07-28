@@ -1,12 +1,15 @@
 %
-%  Quake functions to instantiate operations on BSpline wavelets for generic float types.
+%  Quake functions to instantiate operations on filter banks.
 %
 
 readonly proc FilterBank (nm, rfield) is
-  local basic  = nm & "FilterBank"
-  local signal = nm & "Signal"
-  build_generic_intf (basic, "FilterBank", [signal], VISIBLE)
-  build_generic_impl (basic, "FilterBank", [])
+  local basic    = nm & "FilterBank"
+  local signal   = nm & "Signal"
+  local vsfield  = nm & "SignalVector"
+  local msfield  = nm & "SignalMatrix"
+
+  build_generic_intf (basic, "FilterBank", [signal, vsfield, msfield], VISIBLE)
+  build_generic_impl (basic, "FilterBank", [signal,          msfield])
 end
 
 readonly proc DyadicFilterBank (nm, rfield) is

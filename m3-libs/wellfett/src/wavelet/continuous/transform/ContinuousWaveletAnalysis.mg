@@ -4,7 +4,7 @@ FROM CWT IMPORT Wavelet, Width;
 
 REVEAL
   T = BRANDED REF RECORD
-                    conv   : Conv.Handle;
+                    conv   : Conv.T;
                     first  : INTEGER;
                     wavelet: Wavelet;
                     width  : Width;
@@ -15,7 +15,7 @@ PROCEDURE Do (         x      : S.T;
                        wavelet: Wavelet;
                        width  : Width;
               READONLY scales : V.T;
-                       conv   : Conv.Handle := NIL; ): CWT.T =
+                       conv   : Conv.T    := NIL; ): CWT.T =
   VAR
     y        := NEW(CWT.T, NUMBER(scales));
     analysis := New(x, wavelet, width, conv);
@@ -27,16 +27,14 @@ PROCEDURE Do (         x      : S.T;
   END Do;
 
 
-PROCEDURE New (x      : S.T;
-               wavelet: Wavelet;
-               width  : Width;
-               conv   : Conv.Handle := NIL; ): T =
+PROCEDURE New
+  (x: S.T; wavelet: Wavelet; width: Width; conv: Conv.T := NIL; ): T =
   VAR h := NEW(T);
   BEGIN
     <* ASSERT width MOD 2 = 1,
                 "'width' must be odd in order to assure "
                   & "that the resulting signal can be represented as Signal.T" *>
-    IF conv = NIL THEN conv := NEW(Conv.HandleFourier); END;
+    IF conv = NIL THEN conv := NEW(Conv.Fourier); END;
     h.first := x.getFirst();
     h.wavelet := wavelet;
     h.width := width;
@@ -68,8 +66,8 @@ PROCEDURE DoDW (x, wavelet: S.T; READONLY scales: V.T; ): CWT.T =
     RETURN y;
   END DoDW;
 
-PROCEDURE NewDW (<* UNUSED *> x, wavelet: S.T; <* UNUSED *> maxScale: R.T; ):
-  TDW =
+PROCEDURE NewDW
+  (<* UNUSED *> x, wavelet: S.T; <* UNUSED *> maxScale: R.T; ): TDW =
   BEGIN
     <* ASSERT FALSE, "NewDW not yet implemented" *>
   END NewDW;

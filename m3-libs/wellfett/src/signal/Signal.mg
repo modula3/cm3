@@ -1,7 +1,9 @@
 GENERIC MODULE Signal(R, SignalRep, V, VS, P);
 
+IMPORT Range, Arithmetic AS Arith;
+
 REVEAL
-  T = SignalRep.TPrivate BRANDED OBJECT
+  T = SignalRep.T BRANDED OBJECT
       OVERRIDES
         init       := Init;
         initFL     := InitFL;
@@ -12,12 +14,15 @@ REVEAL
         clip         := Clip;
         clipToArray  := ClipToArray;
         clipToVector := ClipToVector;
+        slim         := Slim;
 
         getFirst  := GetFirst;
         getLast   := GetLast;
         getNumber := GetNumber;
-        getData   := GetData;
-        getValue  := GetValue;
+        getRange  := GetRange;
+
+        getData  := GetData;
+        getValue := GetValue;
 
         equal  := Equal;
         isZero := IsZero;
@@ -53,6 +58,9 @@ REVEAL
         upConvolve    := UpConvolve;
         convolveShort := ConvolveShort;
         extractPeaks  := ExtractPeaks;
+
+        deconvolveMod    := DeconvolveMod;
+        deconvolveModAll := DeconvolveModAll;
       END;
 
 
@@ -70,8 +78,8 @@ PROCEDURE InitFL (SELF: T; first, last: IndexType): T =
     RETURN Init(SELF, first, last - first + 1);
   END InitFL;
 
-PROCEDURE FromArray (SELF: T; READONLY arr: ARRAY OF R.T; first: IndexType):
-  T =
+PROCEDURE FromArray
+  (SELF: T; READONLY arr: ARRAY OF R.T; first: IndexType): T =
   BEGIN
     SELF.data := NEW(V.T, NUMBER(arr));
     SELF.data^ := arr;
@@ -87,12 +95,8 @@ PROCEDURE FromVector (SELF: T; x: V.T; first: IndexType): T =
   END FromVector;
 
 PROCEDURE Copy (SELF: T): T =
-  VAR z := NEW(T);
   BEGIN
-    z.data := NEW(V.T, NUMBER(SELF.data^));
-    z.first := SELF.first;
-    z.data^ := SELF.data^;
-    RETURN z;
+    RETURN NEW(T, first := SELF.first, data := V.Copy(SELF.data));
   END Copy;
 
 
@@ -144,6 +148,19 @@ PROCEDURE ClipToVector (x: T; first: IndexType; size: SizeType): V.T =
     RETURN z;
   END ClipToVector;
 
+PROCEDURE Slim (x: T; ): T =
+  VAR
+    begin: CARDINAL := FIRST(x.data^);
+    end  : CARDINAL := LAST(x.data^);
+  BEGIN
+    WITH data = x.data^ DO
+      WHILE end >= 0 AND R.IsZero(data[end]) DO DEC(end); END;
+      WHILE begin <= end AND R.IsZero(data[begin]) DO INC(begin); END;
+      RETURN NEW(T).fromArray(
+               SUBARRAY(data, begin, end + 1 - begin), x.first + begin);
+    END;
+  END Slim;
+
 PROCEDURE GetFirst (SELF: T): IndexType =
   BEGIN
     RETURN SELF.first;
@@ -158,6 +175,12 @@ PROCEDURE GetNumber (SELF: T): IndexType =
   BEGIN
     RETURN NUMBER(SELF.data^);
   END GetNumber;
+
+PROCEDURE GetRange (SELF: T): Range.T =
+  BEGIN
+    RETURN Range.T{SELF.first, NUMBER(SELF.data^)};
+  END GetRange;
+
 
 PROCEDURE GetData (SELF: T): P.T =
   BEGIN
@@ -446,6 +469,83 @@ PROCEDURE AlternateBool (x: T): T =
     RETURN z;
   END AlternateBool;
 
+PROCEDURE DeconvolveMod (x, y: T; n: CARDINAL; ): QuotRem
+  RAISES {Arith.Error} =
+  BEGIN
+    WITH xNumber = NUMBER(x.data^),
+         yNumber = NUMBER(y.data^),
+         yLead   = y.data[FIRST(y.data^)],
+         yTrail  = y.data[LAST(y.data^)]   DO
+      IF xNumber < yNumber THEN
+        RETURN QuotRem{Zero, x};
+      ELSE
+        VAR
+          r := V.Copy(x.data);
+          q := NEW(V.T, xNumber - yNumber + 1);
+        BEGIN
+          FOR j := LAST(q^) TO n BY -1 DO
+            WITH qj   = R.Div(r[j + yNumber - 1], yTrail),
+                 rSub = SUBARRAY(r^, j, yNumber)           DO
+              VS.Sub(rSub, rSub, V.Scale(y.data, qj)^);
+              q[j] := qj;
+            END;
+          END;
+          FOR j := 0 TO n - 1 DO
+            WITH qj   = R.Div(r[j], yLead),
+                 rSub = SUBARRAY(r^, j, yNumber) DO
+              VS.Sub(rSub, rSub, V.Scale(y.data, qj)^);
+              q[j] := qj;
+            END;
+          END;
+          RETURN QuotRem{NEW(T).fromVector(q, x.first - y.first),
+                         NEW(T).fromArray(
+                           SUBARRAY(r^, n, yNumber - 1), x.first + n)};
+        END;
+      END;
+    END;
+  END DeconvolveMod;
+
+PROCEDURE DeconvolveModAll (x, y: T; ): REF ARRAY OF QuotRem
+  RAISES {Arith.Error} =
+  BEGIN
+    WITH xNumber = NUMBER(x.data^),
+         yNumber = NUMBER(y.data^)  DO
+      IF xNumber < yNumber THEN
+        RETURN NIL;
+      ELSE
+        WITH n      = xNumber - yNumber + 1,
+             qr0    = DeconvolveMod(x, y, 0),
+             qr1    = DeconvolveMod(x, y, n),
+             q0data = qr0.quot.data^,
+             q1data = qr1.quot.data^,
+             qrs    = NEW(REF ARRAY OF QuotRem, n + 1),
+             (* it must be rNumber = yNumber-1 *)
+             rNumber = NUMBER(qr0.rem.data^),
+             res     = V.NewZero(xNumber)^    DO
+          SUBARRAY(res, 0, rNumber) := qr0.rem.data^;
+          (* interpolate between qr0 and qr1 *)
+          qrs[0] := qr0;
+          FOR j := 0 TO n - 1 DO
+            WITH qrs_j1 = qrs[j + 1] DO
+              qrs_j1.quot := Copy(qrs[j].quot);
+              qrs_j1.quot.data[j] := q1data[j];
+              (* the progressive updates will accumulate rounding errors
+                 for non-accurate number types *)
+              WITH resLoc = SUBARRAY(res, j, yNumber) DO
+                VS.Add(resLoc, resLoc,
+                       V.Scale(y.data, R.Sub(q0data[j], q1data[j]))^);
+                qrs_j1.rem :=
+                  NEW(T).fromArray(
+                    SUBARRAY(resLoc, 1, rNumber), qr0.rem.first + j + 1);
+              END;
+            END;
+          END;
+          RETURN qrs;
+        END;
+      END;
+    END;
+  END DeconvolveModAll;
+
 PROCEDURE Mul (x, y: T): T =
   BEGIN
     RETURN
@@ -468,7 +568,7 @@ PROCEDURE Add (x, y: T): T =
     RETURN z;
   END Add;
 
-(*inefficient, but I hope that no-one will need it*)
+(* inefficient, but I hope that no-one will need it *)
 PROCEDURE Sub (x, y: T): T =
   BEGIN
     RETURN Add(x, Neg(y));

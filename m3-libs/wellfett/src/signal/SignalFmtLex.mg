@@ -2,11 +2,10 @@ GENERIC MODULE SignalFmtLex(RF, SignalRep);
 
 IMPORT Fmt AS F, Wr, TextWr, Thread;
 
-(*----------------------*)
 PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR
-    SELF := NARROW(x, SignalRep.TPrivate);
+    SELF := NARROW(x, SignalRep.T);
     wr   := NEW(TextWr.T).init();
   BEGIN
     Wr.PutText(wr, "Signal[" & F.Int(SELF.getFirst()) & ".."
@@ -19,6 +18,5 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
     RETURN TextWr.ToText(wr);
   END Fmt;
 
-(*==========================*)
 BEGIN
 END SignalFmtLex.

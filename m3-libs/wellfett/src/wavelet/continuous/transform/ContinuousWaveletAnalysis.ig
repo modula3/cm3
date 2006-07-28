@@ -18,18 +18,16 @@ PROCEDURE Do (         x      : S.T;
                        wavelet: Wavelet;
                        width  : Width;
               READONLY scales : RV.T;
-                       conv   : Conv.Handle := NIL; ): CWT.T;
+                       conv   : Conv.T    := NIL; ): CWT.T;
 (* Compute the continuous wavelet transform of the signal 'x' with respect
    to the 'wavelet' for all requested 'scales'.  The wavelet function is
    discretized at 'width' nodes centered around time 0.  The wavelet
    transform is 'width-1' longer than 'x'.  It is convenient to create the
    list of scales using 'Vector.ArithSeq' or 'Vector.GeomSeq'.  'conv' must
-   be a freshly created object of a sub-class of 'Conv.Handle'. *)
+   be a freshly created object of a sub-class of 'Conv.T'. *)
 
-PROCEDURE New (x      : S.T;
-               wavelet: Wavelet;
-               width  : Width;
-               conv   : Conv.Handle := NIL; ): T;
+PROCEDURE New
+  (x: S.T; wavelet: Wavelet; width: Width; conv: Conv.T := NIL; ): T;
 (* Initialize a continuous wavelet transform for signal 'x' with respect to
    'wavelet'.  Splitting the transform into initialization and execution
    saves memory when the data of each scale is not stored somewhere. *)
