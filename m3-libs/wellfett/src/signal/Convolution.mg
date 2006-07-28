@@ -1,4 +1,4 @@
-GENERIC MODULE Convolution(R,P, VS, C, CV, FFT);
+GENERIC MODULE Convolution(R, P, VS, C, CV, FFT);
 
 
 (* One can improve performance a lot here: Eliminate the monolithic Fourier
@@ -8,18 +8,17 @@ GENERIC MODULE Convolution(R,P, VS, C, CV, FFT);
 
 
 REVEAL
-  HandleFourier = Handle BRANDED OBJECT
-                    xFT   : CV.T;
-                    number: CARDINAL;
-                    width : Width;
-                  OVERRIDES
-                    init     := HandleFourierInit;
-                    exit     := HandleFourierExit;
-                    convolve := HandleFourierConvolve;
-                  END;
+  Fourier = T BRANDED OBJECT
+              xFT   : CV.T;
+              number: CARDINAL;
+              width : Width;
+            OVERRIDES
+              init     := FourierInit;
+              exit     := FourierExit;
+              convolve := FourierConvolve;
+            END;
 
-PROCEDURE HandleFourierInit (h: HandleFourier; x: P.T; width: Width; ):
-  Handle =
+PROCEDURE FourierInit (h: Fourier; x: P.T; width: Width; ): T =
   VAR
     xNumber := NUMBER(x^);
     number  := xNumber + width - 1;
@@ -35,14 +34,14 @@ PROCEDURE HandleFourierInit (h: HandleFourier; x: P.T; width: Width; ):
     h.number := number;
     h.width := width;
     RETURN h;
-  END HandleFourierInit;
+  END FourierInit;
 
-PROCEDURE HandleFourierExit (h: HandleFourier; ) =
+PROCEDURE FourierExit (h: Fourier; ) =
   BEGIN
     h.xFT := NIL;
-  END HandleFourierExit;
+  END FourierExit;
 
-PROCEDURE HandleFourierConvolve (h: HandleFourier; y: P.T; ): P.T =
+PROCEDURE FourierConvolve (h: Fourier; y: P.T; ): P.T =
   VAR z := NEW(P.T, h.number);
   BEGIN
     <* ASSERT NUMBER(y^) <= h.width,
@@ -56,35 +55,33 @@ PROCEDURE HandleFourierConvolve (h: HandleFourier; y: P.T; ): P.T =
       END;
       RETURN FFT.DFTC2R1D(zFT, h.number MOD 2);
     END;
-  END HandleFourierConvolve;
+  END FourierConvolve;
 
 
 REVEAL
-  HandleNaive = Handle BRANDED OBJECT
-                  x: P.T;
-                OVERRIDES
-                  init     := HandleNaiveInit;
-                  exit     := HandleNaiveExit;
-                  convolve := HandleNaiveConvolve;
-                END;
+  Naive = T BRANDED OBJECT
+            x: P.T;
+          OVERRIDES
+            init     := NaiveInit;
+            exit     := NaiveExit;
+            convolve := NaiveConvolve;
+          END;
 
-PROCEDURE HandleNaiveInit (             h    : HandleNaive;
-                                        x    : P.T;
-                           <* UNUSED *> width: Width;       ): Handle =
+PROCEDURE NaiveInit (h: Naive; x: P.T; <* UNUSED *> width: Width; ): T =
   BEGIN
     h.x := x;
     RETURN h;
-  END HandleNaiveInit;
+  END NaiveInit;
 
-PROCEDURE HandleNaiveExit (h: HandleNaive; ) =
+PROCEDURE NaiveExit (h: Naive; ) =
   BEGIN
     h.x := NIL;
-  END HandleNaiveExit;
+  END NaiveExit;
 
-PROCEDURE HandleNaiveConvolve (h: HandleNaive; y: P.T; ): P.T =
+PROCEDURE NaiveConvolve (h: Naive; y: P.T; ): P.T =
   BEGIN
     RETURN P.Mul(h.x, y);
-  END HandleNaiveConvolve;
+  END NaiveConvolve;
 
 
 

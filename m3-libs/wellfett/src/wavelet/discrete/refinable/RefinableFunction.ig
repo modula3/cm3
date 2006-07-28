@@ -1,4 +1,4 @@
-GENERIC INTERFACE RefinableFunc(M, S);
+GENERIC INTERFACE RefinableFunction(M, S);
 
 PROCEDURE RadicBandMatrix (mask: S.T; r: CARDINAL := 2): M.T;
 (*Generate a r-adic band matrix, that is a square matrix where each row
@@ -13,4 +13,4 @@ PROCEDURE Refine (start, mask: S.T;
 (*Refine the mask 'start' 'numLevel' times with the mask 'mask' and
    up-sampling by factor 'r'.*)
 
-END RefinableFunc.
+END RefinableFunction.

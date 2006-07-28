@@ -5,7 +5,7 @@ FROM CWT IMPORT Wavelet, Width;
 REVEAL
   T = BRANDED REF RECORD
                     y      : S.T;
-                    conv   : Conv.Handle;
+                    conv   : Conv.T;
                     wavelet: Wavelet;
                     width  : Width;
                   END;
@@ -15,7 +15,7 @@ PROCEDURE Do (READONLY w      : CWT.TBody;
                        wavelet: Wavelet;
                        width  : Width;
               READONLY scales : V.T;
-                       conv   : Conv.Handle := NIL; ): S.T =
+                       conv   : Conv.T      := NIL; ): S.T =
   VAR synthesis := New(wavelet, width, conv);
   BEGIN
     <* ASSERT NUMBER(w) = NUMBER(scales), "Number of scales must match" *>
@@ -40,14 +40,13 @@ PROCEDURE Do (READONLY w      : CWT.TBody;
   END Do;
 
 
-PROCEDURE New (wavelet: Wavelet; width: Width; conv: Conv.Handle := NIL; ):
-  T =
+PROCEDURE New (wavelet: Wavelet; width: Width; conv: Conv.T := NIL; ): T =
   VAR h := NEW(T);
   BEGIN
     <* ASSERT width MOD 2 = 1,
                 "'width' must be odd in order to assure "
                   & "that the resulting signal can be represented as Signal.T" *>
-    IF conv = NIL THEN conv := NEW(Conv.HandleFourier); END;
+    IF conv = NIL THEN conv := NEW(Conv.Fourier); END;
     h.y := NIL;
     h.wavelet := wavelet;
     h.width := width;

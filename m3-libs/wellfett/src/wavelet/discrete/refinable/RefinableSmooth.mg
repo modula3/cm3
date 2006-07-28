@@ -1,8 +1,29 @@
-GENERIC MODULE RefinableSmooth(R, C, CT, V, VS, VT, CVT, M, Eigen, S, Refn,
-                               BSpl);
+GENERIC MODULE RefinableSmooth(R, RT, C, CT, V, VS, VT, CVT, M, Eigen, S,
+                               Refn, BSpl);
 
-IMPORT Arithmetic AS Arith;
+IMPORT Arithmetic;
 IMPORT IntBiList;
+
+
+PROCEDURE SobolevNonSmooth (x: S.T; ): R.T RAISES {Arithmetic.Error} =
+  BEGIN
+    RETURN R.Half * (-R.One - RT.Lb(SpectralRadius(x.autocorrelate())));
+  END SobolevNonSmooth;
+
+PROCEDURE Eigenvalues (mask: S.T; ): Eigen.EV RAISES {Arithmetic.Error} =
+  BEGIN
+    RETURN Eigen.EigenValues(Refn.TransitionMatrix(mask));
+  END Eigenvalues;
+
+PROCEDURE SpectralRadius (mask: S.T; ): R.T RAISES {Arithmetic.Error} =
+  BEGIN
+    (*
+    IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
+    INC(ncall);
+    *)
+    RETURN CVT.NormInf(Eigenvalues(mask).eigenvalues);
+  END SpectralRadius;
+
 
 TYPE
   MatrixElem = RECORD
@@ -10,9 +31,8 @@ TYPE
                  value   : R.T;
                END;
 
-PROCEDURE FindMinMatrix (READONLY mat               : M.TBody;
-                                  enabledX, enabledY: IntBiList.T; ):
-  MatrixElem =
+PROCEDURE FindMinMatrix
+  (READONLY mat: M.TBody; enabledX, enabledY: IntBiList.T; ): MatrixElem =
   VAR
     result  : MatrixElem;
     enX, enY: IntBiList.Node;
@@ -36,9 +56,9 @@ PROCEDURE FindMinMatrix (READONLY mat               : M.TBody;
     RETURN result;
   END FindMinMatrix;
 
-(*Compute a kind of distance of a given eigenspectrum to the one of the
-   transfer matrix of the B-Spline of corresponding order*)
-PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T): R.T =
+(* Compute a kind of distance of a given eigenspectrum to the one of the
+   transfer matrix of the B-Spline of corresponding order *)
+PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T; ): R.T =
   VAR
     enabledX, enabledY := NEW(IntBiList.T).init();
     specY              := NEW(V.T, NUMBER(specX^));
@@ -67,8 +87,7 @@ PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T): R.T =
     VAR sum := R.Zero;
     BEGIN
       FOR i := FIRST(specX^) TO LAST(specX^) DO
-        VAR min := FindMinMatrix(distMatrix^, enabledX, enabledY);
-        BEGIN
+        WITH min = FindMinMatrix(distMatrix^, enabledX, enabledY) DO
           sum := sum + min.value;
           enabledX.rem(min.enX);
           enabledY.rem(min.enY);
@@ -84,7 +103,7 @@ CONST
   Six    = FLOAT(6.0, R.T);
   Twelve = FLOAT(12.0, R.T);
 
-PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
+PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T; ): R.T =
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -94,22 +113,22 @@ PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
     RETURN dif * dif + R.Two * p12 * p12;
   END ComputeSSE;
 
-PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
+PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T; ): V.T =
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
     p12 := p1 * p1;
     p1d := Twelve * (p1 * (p12 - p2));
     p2d := Six * (Three * p2 - p12)
-             * R.Two (*because p2' contains 2a'a and so on*);
+             * R.Two (* because p2' contains 2a'a and so on *);
     z := V.New(NUMBER(y));
   BEGIN
     FOR i := 0 TO LAST(y) DO z[i] := p1d + y[i] * p2d; END;
     RETURN z;
   END ComputeDSSE;
 
-PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
-  (*derived with mathematica*)
+PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T; ): M.T =
+  (* derived with mathematica *)
   VAR
     p1 := VS.Sum(y);
     p2 := VS.Inner(y, y);
@@ -126,7 +145,7 @@ PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
     RETURN M.Scale(z, R.Two * Twelve);
   END ComputeDDSSE;
 
-PROCEDURE SquareSmoothEstimate (x: S.T): R.T =
+PROCEDURE SquareSmoothEstimate (x: S.T; ): R.T =
   VAR hsums := x.wrapCyclic(3);
 
   BEGIN
@@ -136,26 +155,12 @@ PROCEDURE SquareSmoothEstimate (x: S.T): R.T =
     RETURN ComputeSSE(hsums^);
   END SquareSmoothEstimate;
 
-PROCEDURE Eigenvalues (mask: S.T): Eigen.EV RAISES {Arith.Error} =
-  BEGIN
-    RETURN Eigen.EigenValues(Refn.TransitionMatrix(mask));
-  END Eigenvalues;
-
-PROCEDURE SpecRad (mask: S.T): R.T RAISES {Arith.Error} =
-  BEGIN
-    (*
-    IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
-    INC(ncall);
-    *)
-    RETURN CVT.NormInf(Eigenvalues(mask).eigenvalues);
-  END SpecRad;
-
-PROCEDURE BSpline (x: S.T): R.T RAISES {Arith.Error} =
+PROCEDURE BSpline (x: S.T; ): R.T RAISES {Arithmetic.Error} =
   BEGIN
     RETURN EigenDistBSpline(Eigenvalues(x).eigenvalues);
   END BSpline;
 
-PROCEDURE Binomial (x: S.T): R.T =
+PROCEDURE Binomial (x: S.T; ): R.T =
   VAR
     bsplinemask := BSpl.GeneratorMask(x.getNumber() - 1).translate(
                      x.getFirst());
@@ -171,45 +176,42 @@ PROCEDURE Binomial (x: S.T): R.T =
     RETURN -ABS(bsplinemask.inner(x));
   END Binomial;
 
-PROCEDURE Frobenius (x: S.T): R.T =
+PROCEDURE Frobenius (x: S.T; ): R.T =
   VAR
-    hh := x.autocorrelate();
-    (*frob0 := M.Trace(M.MulMMA(Refn.RadicBandMatrix(hh)));*)
-    frob1           := R.Zero;
+    hh              := x.autocorrelate();
+    frob            := R.Zero;
     alter: [0 .. 1] := 1;
     n               := hh.getLast();
   BEGIN
-    (*because of the symmetry we can content ourselves with the half
-       autocorrelated mask*)
+    (* because of the symmetry we can content ourselves with the half
+       autocorrelated mask *)
     FOR i := hh.getFirst() TO -1 DO
-      VAR val := hh.getValue(i);
-      BEGIN
-        frob1 := frob1 + FLOAT(n + alter, R.T) * val * val;
+      WITH val = hh.getValue(i) DO
+        frob := frob + FLOAT(n + alter, R.T) * val * val;
         alter := 1 - alter;
       END;
     END;
-    VAR val := hh.getValue(0);
-    BEGIN
-      frob1 := R.Two * frob1 + FLOAT(n + alter, R.T) * val * val;
+    WITH val = hh.getValue(0) DO
+      frob := R.Two * frob + FLOAT(n + alter, R.T) * val * val;
     END;
     (*
     IO.Put(Fmt.FN("Frobenius norm %s =?= %s\n",
-                  ARRAY OF TEXT{RF.Fmt(frob0), RF.Fmt(frob1)}));
+                  ARRAY OF TEXT{RF.Fmt(frob0), RF.Fmt(frob)}));
     *)
-    RETURN frob1;
+    RETURN frob;
   END Frobenius;
 
-PROCEDURE SimpFrobenius (x: S.T): R.T =
+PROCEDURE SimplifiedFrobenius (x: S.T; ): R.T =
   VAR hh := x.autocorrelate();
   BEGIN
-    (*the computation could be sped-up because 'hh' is symmetric*)
+    (* the computation could be sped-up because 'hh' is symmetric *)
     RETURN hh.inner(hh);
-  END SimpFrobenius;
+  END SimplifiedFrobenius;
 
-PROCEDURE SumNorm (x: S.T): R.T =
+PROCEDURE SumNorm (x: S.T; ): R.T =
   VAR hh := x.autocorrelate();
   BEGIN
-    (*the computation could be sped-up because 'hh' is symmetric*)
+    (* the computation could be sped-up because 'hh' is symmetric *)
     RETURN VT.Norm1(hh.getData());
   END SumNorm;
 

@@ -1,4 +1,4 @@
-GENERIC MODULE RefinableFunc(M, S);
+GENERIC MODULE RefinableFunction(M, S);
 
 PROCEDURE RadicBandMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
   VAR
@@ -31,4 +31,4 @@ PROCEDURE Refine (start, mask: S.T;
   END Refine;
 
 BEGIN
-END RefinableFunc.
+END RefinableFunction.

@@ -1,41 +1,21 @@
-GENERIC MODULE DiscreteWaveletTransform(R, S, SV, SVR, SM);
+GENERIC MODULE DiscreteWaveletTransform(S, SV, SVR, SM, FB);
 
-IMPORT Arithmetic AS Arith;
-IMPORT Integer32IntegerPower AS IIntPow;
 IMPORT Fmt;
 
-PROCEDURE FilterBankToPolyphase (READONLY x      : SV.TBody;
-                                          scaling: ScalingType; ): SM.T =
-  VAR z := NEW(SM.T, NUMBER(x), scaling);
-  BEGIN
-    FOR i := FIRST(x) TO LAST(x) DO z[i] := x[i].sliceRev(scaling)^; END;
-    RETURN z;
-  END FilterBankToPolyphase;
-
-PROCEDURE PolyphaseToFilterBank (READONLY x: SM.TBody; ): SV.T =
-  VAR z := NEW(SV.T, NUMBER(x));
-  BEGIN
-    FOR i := FIRST(x) TO LAST(x) DO
-      z[i] := NEW(S.T).interleaveRev(x[i]);
-    END;
-    RETURN z;
-  END PolyphaseToFilterBank;
-
-PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
-                                    READONLY y      : SV.TBody;
-                                             scaling: ScalingType; ):
-  SV.T =
+PROCEDURE SingleFromSignal (         x      : S.T;
+                            READONLY y      : FB.TBody;
+                                     scaling: S.ScalingType; ): SV.T =
   VAR z := NEW(SV.T, NUMBER(y));
   BEGIN
     FOR i := FIRST(y) TO LAST(y) DO
       z[i] := x.convolveDown(y[i], scaling);
     END;
     RETURN z;
-  END FilterBankAnalysisSingle;
+  END SingleFromSignal;
 
-PROCEDURE FilterBankSynthesisSingle (READONLY x, y   : SV.TBody;
-                                              scaling: ScalingType; ):
-  S.T =
+PROCEDURE SingleToSignal (READONLY x      : SV.TBody;
+                          READONLY y      : FB.TBody;
+                                   scaling: S.ScalingType; ): S.T =
   VAR z := S.Zero;
   BEGIN
     <* ASSERT NUMBER(x) = NUMBER(y),
@@ -46,92 +26,30 @@ PROCEDURE FilterBankSynthesisSingle (READONLY x, y   : SV.TBody;
       z := z.superpose(y[i].upConvolve(x[i], scaling));
     END;
     RETURN z;
-  END FilterBankSynthesisSingle;
+  END SingleToSignal;
 
 <* INLINE *>
-PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: SV.TBody; ):
+PROCEDURE SingleShiftInvariantFromSignal (         x     : S.T;
+                                          READONLY filter: FB.TBody; ):
   SV.T =
   BEGIN
-    (*exchange argument order*)
+    (* flip argument order *)
     RETURN SVR.Scale(filter, x);
-  END FilterBankAnalysisTISingle;
+  END SingleShiftInvariantFromSignal;
 
-(*
-PROCEDURE FilterBankAnalysis (         x        : S.T;
-                               READONLY y        : SV.TBody;
-                                        numLevels: CARDINAL; ):
-  WaveletCoeffs =
-  VAR
-    z := WaveletCoeffs{
-           low := NIL, high := NEW(SM.T, numLevels, NUMBER(y) - 1)};
+PROCEDURE FromSignal (x: S.T; READONLY y: FB.TBody; numLevels: CARDINAL; ):
+  T =
+  VAR z := T{low := NIL, high := NEW(SM.T, numLevels, NUMBER(y) - 1)};
   BEGIN
     FOR i := 0 TO numLevels - 1 DO
-      VAR lev := FilterBankAnalysisSingle(x, y);
-      BEGIN
-        z.high[i] := SUBARRAY(lev^, 1, NUMBER(y) - 1);
-      END;
-    END;
-  END FilterBankAnalysis;
-*)
-
-PROCEDURE DyadicFilterBankAnalysis (         x: S.T;
-                                    READONLY y: ARRAY [0 .. 1] OF S.T;
-                                    numLevels: CARDINAL; ):
-  DyadicWaveletCoeffs =
-  VAR z := NEW(SV.T, numLevels);
-  BEGIN
-    FOR i := 0 TO numLevels - 1 DO
-      VAR lev := FilterBankAnalysisSingle(x, y, 2);
-      BEGIN
-        z[i] := lev[1];
+      WITH lev = SingleFromSignal(x, y, NUMBER(y))^ DO
+        z.high[i] := SUBARRAY(lev, 1, NUMBER(y) - 1);
         x := lev[0];
       END;
     END;
-    RETURN DyadicWaveletCoeffs{low := x, high := z};
-  END DyadicFilterBankAnalysis;
-
-PROCEDURE DyadicFilterBankSynthesis (READONLY x: DyadicWaveletCoeffs;
-                                     READONLY y: ARRAY [0 .. 1] OF S.T; ):
-  S.T =
-  VAR z := x.low;
-  BEGIN
-    FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
-      z := FilterBankSynthesisSingle(ARRAY OF S.T{z, x.high[i]}, y, 2);
-    END;
     RETURN z;
-  END DyadicFilterBankSynthesis;
+  END FromSignal;
 
-PROCEDURE DyadicFilterBankAnalysisTI (         x: S.T;
-                                      READONLY y: ARRAY [0 .. 1] OF S.T;
-                                      numLevels: CARDINAL; ):
-  DyadicWaveletCoeffs =
-  VAR
-    z                    := NEW(SV.T, numLevels);
-    scaling: ScalingType := 1;
-  BEGIN
-    FOR i := 0 TO numLevels - 1 DO
-      z[i] := x.upConvolve(y[1], scaling);
-      x := x.upConvolve(y[0], scaling);
-      scaling := scaling * 2;
-    END;
-    RETURN DyadicWaveletCoeffs{low := x, high := z};
-  END DyadicFilterBankAnalysisTI;
-
-PROCEDURE DyadicFilterBankSynthesisTI (READONLY x: DyadicWaveletCoeffs;
-                                       READONLY y: ARRAY [0 .. 1] OF S.T; ):
-  S.T =
-  <* FATAL Arith.Error *>        (*Power can't fail for integers*)
-  VAR
-    z                    := x.low;
-    scaling: ScalingType := IIntPow.MulPower(1, 2, NUMBER(x.high^));
-  BEGIN
-    FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
-      scaling := scaling DIV 2;
-      z := z.upConvolve(y[0], scaling).superpose(
-             x.high[i].upConvolve(y[1], scaling)).scale(R.Half);
-    END;
-    RETURN z;
-  END DyadicFilterBankSynthesisTI;
 
 BEGIN
 END DiscreteWaveletTransform.

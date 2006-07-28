@@ -1,8 +1,13 @@
 
-template("matchwavelet")
+import("lapack")
 
-Generic_module("MatchWavelet")
-Generic_module("MatchWaveletGradient")
+template("waveletmatch")
 
-%MatchWavelet("Real",            "RealBasic")
-MatchWavelet("LongReal",        "LongRealBasic")
+Generic_module("WaveletMatch")
+Generic_module("WaveletMatchSmooth")
+Generic_module("WaveletMatchGradientLift")
+Generic_module("WaveletMatchGradient")
+Generic_module("WaveletMatchBasis")
+
+%WaveletMatch("Real",            "RealBasic")
+WaveletMatch("LongReal",        "LongRealBasic")

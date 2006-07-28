@@ -1,84 +1,43 @@
 
-GENERIC INTERFACE DiscreteWaveletTransform(S, SV, SVR, SM);
-
-IMPORT Arithmetic AS Arith;
+GENERIC INTERFACE DiscreteWaveletTransform(S, SV, SVR, SM, FB);
 
 CONST Brand = "DiscreteWaveletTransform";
 
+
 TYPE
-  IndexType = INTEGER;
-  SizeType = CARDINAL;
-  ScalingType = CARDINAL;
-  SignalPP = ARRAY OF S.T;
+  T = RECORD
+        low : S.T;
+        high: SM.T;
+      END;
 
-PROCEDURE FilterBankToPolyphase (READONLY x      : SV.TBody;
-                                          scaling: ScalingType; ): SM.T;
-(* 'scaling' is the factor of sub-sampling which may differ from the number
-   of channels, in that case the polyphase matrix is not square. *)
 
-PROCEDURE PolyphaseToFilterBank (READONLY x: SM.TBody; ): SV.T;
-(* scaling=NUMBER(x[0]) *)
+PROCEDURE SingleFromSignal (         x      : S.T;
+                            READONLY filter : FB.TBody;
+                                     scaling: S.ScalingType; ): SV.T;
+(* Transform signal x into NUMBER(filter) channels downsampled by
+   'scaling'. *)
 
-PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
-                                    READONLY filter : SV.TBody;
-                                             scaling: ScalingType; ): SV.T;
-(* Transform signal x into NUMBER(y) channels downsampled by 'scaling'. *)
-
-PROCEDURE FilterBankSynthesisSingle (READONLY x, filter: SV.TBody;
-                                              scaling  : ScalingType; ):
-  S.T;
-(* Transform NUMBER(y) downsampled channels into one signal.  Make sure
-   that there are as many filters as signal channels. *)
+PROCEDURE SingleToSignal (READONLY x      : SV.TBody;
+                          READONLY filter : FB.TBody;
+                                   scaling: S.ScalingType; ): S.T;
+(* Transform NUMBER(filter) downsampled channels into one signal.
+   Precondition: There must be as many filters as signal channels. *)
 
 <* INLINE *>
-PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: SV.TBody; ):
+PROCEDURE SingleShiftInvariantFromSignal (         x     : S.T;
+                                          READONLY filter: FB.TBody; ):
   SV.T;
 
 CONST
-  FilterBankSynthesisTISingle: PROCEDURE (READONLY x, filter: SV.TBody; ):
-                                 S.T RAISES {Arith.Error} = SVR.Dot;
+  SingleShiftInvariantToSignal: PROCEDURE (READONLY x     : SV.TBody;
+                                           READONLY filter: FB.TBody; ):
+                                  S.T = SVR.Dot;
 
-TYPE
-  WaveletCoeffs = RECORD
-                    low : S.T;
-                    high: SM.T;
-                  END;
+<* OBSOLETE *>
+PROCEDURE FromSignal (x: S.T; READONLY y: FB.TBody; numLevels: CARDINAL; ):
+  T;
+(* I'm uncertain about the most natural generalisation to more than two
+   channels. *)
 
-  DyadicWaveletCoeffs = RECORD
-                          low : S.T;
-                          high: SV.T;
-                        END;
-
-(*
-PROCEDURE FilterBankAnalysis (         x        : S.T;
-                               READONLY y        : SV.TBody;
-                                        numLevels: CARDINAL; ):
-  WaveletCoeffs;
-*)
-
-PROCEDURE DyadicFilterBankAnalysis (         x: S.T;
-                                    READONLY y: ARRAY [0 .. 1] OF S.T;
-                                    numLevels: CARDINAL; ):
-  DyadicWaveletCoeffs;
-(* Transform signal x into 'numLevels' frequency bands with octave distance
-   and one low frequency band.*)
-
-PROCEDURE DyadicFilterBankSynthesis (READONLY x: DyadicWaveletCoeffs;
-                                     READONLY y: ARRAY [0 .. 1] OF S.T; ):
-  S.T;
-(* Transform sub bands into the original signal.  The reconstructed signal
-   will be longer than the original one but the extra values should be zero
-   if the filter bank allows for perfect reconstruction.*)
-
-PROCEDURE DyadicFilterBankAnalysisTI (         x: S.T;
-                                      READONLY y: ARRAY [0 .. 1] OF S.T;
-                                      numLevels: CARDINAL; ):
-  DyadicWaveletCoeffs;
-(* Translation invariant transform, this is achieved by omitting the
-   subsampling.*)
-
-PROCEDURE DyadicFilterBankSynthesisTI (READONLY x: DyadicWaveletCoeffs;
-                                       READONLY y: ARRAY [0 .. 1] OF S.T; ):
-  S.T;
 
 END DiscreteWaveletTransform.
