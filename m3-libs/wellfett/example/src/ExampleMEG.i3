@@ -1,0 +1,5 @@
+INTERFACE ExampleMEG;
+
+PROCEDURE Run();
+
+END ExampleMEG.
