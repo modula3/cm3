@@ -52,29 +52,34 @@ PROCEDURE CheckExponential (SELF: UnitTestNumeric.T; ) =
 
         IF NOT SELF.scalarMatch(
                  expm1(x + y), expm1(x) + expm1(y) + expm1(x) * expm1(y),
-                 1.0D-16) THEN
+                 1.0D-15)   (* 1.0D-16 *)   THEN
           SELF.message("exp as homomorphism\n");
         END;
 
         IF NOT SELF.scalarMatch(
-                 log1p(x) + log1p(y), log1p(x + y + x * y), 1.0D-16) THEN
+                 log1p(x) + log1p(y), log1p(x + y + x * y), 1.0D-15)
+                     (* 1.0D-16 *) THEN
           SELF.message("log as homomorphism\n");
         END;
         CheckInverse(
-          SELF, expm1, log1p, "expm1", "log1p", x, x, 1.0D-16, 1.0D-16);
+          SELF, expm1, log1p, "expm1", "log1p", x, x, 1.0D-15, 1.0D-15
+                                                   (* 1.0D-16, 1.0D-16 *));
       END;
 
       WITH x = rnd.longreal(-0.2D0, 0.2D0) DO
         CheckInverse(
-          SELF, sinh, asinh, "sinh", "asinh", x, x, 1.0D-16, 1.0D-16);
+          SELF, sinh, asinh, "sinh", "asinh", x, x, 1.0D-15, 1.0D-15
+                                                 (* 1.0D-16, 1.0D-16 *));
         CheckInverse(
-          SELF, tanh, atanh, "tanh", "atanh", x, x, 1.0D-16, 1.0D-16);
+          SELF, tanh, atanh, "tanh", "atanh", x, x, 1.0D-16, 1.0D-16
+                                                 (* 1.0D-16, 1.0D-16 *));
       END;
 
       WITH x = rnd.longreal(0.001D0, 0.1D0),
            y = rnd.longreal(1.0D0, 2.0D0)    DO
         CheckInverse(
-          SELF, cosh, acosh, "cosh", "acosh", x, y, 1.0D-13, 1.0D-15);
+          SELF, cosh, acosh, "cosh", "acosh", x, y,  1.0D-13, 1.0D-15
+                                                  (* 1.0D-13, 1.0D-15 *));
       END;
     END;
   END CheckExponential;

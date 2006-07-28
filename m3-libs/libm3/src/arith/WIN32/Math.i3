@@ -41,7 +41,7 @@ CONST
 <*EXTERNAL*> PROCEDURE exp (x: LONGREAL): LONGREAL;
 (* returns E^x. *)
 
-<*EXTERNAL*> PROCEDURE expm1 (x: LONGREAL): LONGREAL;
+             PROCEDURE expm1 (x: LONGREAL): LONGREAL;
 (* returns (E^x)-1, even for small x. *)
 
 <*EXTERNAL*> PROCEDURE log (x: LONGREAL): LONGREAL;
@@ -50,7 +50,7 @@ CONST
 <*EXTERNAL*> PROCEDURE log10 (x: LONGREAL): LONGREAL;
 (* returns the base 10 logarithm of x. *)
 
-<*EXTERNAL*> PROCEDURE log1p (x: LONGREAL): LONGREAL;
+             PROCEDURE log1p (x: LONGREAL): LONGREAL;
 (* returns log(1+x), even for small x. *)
 
 <*EXTERNAL*> PROCEDURE pow (x, y: LONGREAL): LONGREAL;
@@ -95,13 +95,13 @@ CONST
 <*EXTERNAL*> PROCEDURE tanh (x: LONGREAL): LONGREAL;
 (* returns the hyperbolic tangent of x. *)
 
-<*EXTERNAL*> PROCEDURE asinh (x: LONGREAL): LONGREAL;
+             PROCEDURE asinh (x: LONGREAL): LONGREAL;
 (* returns the inverse hyperbolic sine of x *)
 
-<*EXTERNAL*> PROCEDURE acosh (x: LONGREAL): LONGREAL;
+             PROCEDURE acosh (x: LONGREAL): LONGREAL;
 (* returns the inverse hyperbolic cosine of x *)
 
-<*EXTERNAL*> PROCEDURE atanh (x: LONGREAL): LONGREAL;
+             PROCEDURE atanh (x: LONGREAL): LONGREAL;
 (* returns the inverse hyperbolic tangent of x *)
 
 
