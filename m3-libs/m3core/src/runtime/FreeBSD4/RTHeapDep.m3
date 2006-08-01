@@ -9,7 +9,7 @@
 UNSAFE MODULE RTHeapDep;
 
 IMPORT ThreadF, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Word;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Usignal, Utypes, Word;
 
 VAR
   initialized                           := FALSE;

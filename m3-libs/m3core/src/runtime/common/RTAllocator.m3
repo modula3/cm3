@@ -153,10 +153,6 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 (*-------------------------------------------------------------- internal ---*)
 
-VAR
-  initCache: ARRAY [0 .. 4095] OF ADDRESS; (* initialized contents for
-                                              freshly allocated objects *)
-
 PROCEDURE GetTraced (defn: ADDRESS): REFANY =
   VAR
     def : RT0.TypeDefn := defn;
