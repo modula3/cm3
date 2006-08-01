@@ -2,7 +2,8 @@
 (*| All rights reserved.                                    *)
 (*| See the file COPYRIGHT for a full description.          *)
 (*|                                                         *)
-(*| portions Copyright 1997, Critical Mass, Inc.            *)
+(*| Portions Copyright 1996-2000, Critical Mass, Inc.       *)
+(*| See file COPYRIGHT-CMASS for details.                   *)
 (*|                                                         *)
 (*| Last modified on Wed Oct 12 14:30:51 PDT 1994 by kalsow *)
 (*|      modified on Tue Jun  1 13:03:23 PDT 1993 by muller *)
@@ -11,14 +12,14 @@
 (* "RTHeapRep" is a private, implementation-dependent extension to
    "RTAllocator", "RTCollector", and "RTHeap". *)
 
-UNSAFE INTERFACE RTHeapRep;
+INTERFACE RTHeapRep;
 
 (* This interface provides low-level access to the storage allocator and
    garbage collector.  Some items here should be made private or moved
    elsewhere. *)
 
 IMPORT RT0, RTHeapDep;
-FROM RT0 IMPORT Typecode;
+FROM RT0 IMPORT Typecode, TypeDefn;
 
 (* The allocator and collector maintain two heaps of objects.  One heap is
    "traced" (its objects are collected); the other is "untraced".
@@ -57,9 +58,9 @@ VAR p0, p1: Page := Nil;
 
 VAR desc: UNTRACED REF ARRAY OF Desc;
 
-VAR max_heap_size: INTEGER := -1;
-(** If "max_heap_size" is non-negative, the traced heap will not be
-    extended beyond "max_heap_size" bytes.  If "max_heap_size" is
+VAR max_heap: INTEGER := -1;
+(** If "max_heap" is non-negative, the traced heap will not be
+    extended beyond "max_heap" bytes.  If "max_heap" is
     negative, the traced heap will be allowed to grow until the
     underlying OS refuses to provide more memory.  *)
 
@@ -131,11 +132,13 @@ TYPE
 
 CONST
   Fill_1_type: Typecode = LAST(Typecode); (* 1 word filler *)
-  FillHeader1: Header = Header{typecode := Fill_1_type, forwarded := FALSE};
+  FillHeader1: Header = Header{typecode := Fill_1_type, forwarded := FALSE,
+                               dirty := FALSE};
 
 CONST
   Fill_N_type: Typecode = LAST(Typecode) - 1;
-  FillHeaderN: Header = Header{typecode := Fill_N_type, forwarded := FALSE};
+  FillHeaderN: Header = Header{typecode := Fill_N_type, forwarded := FALSE,
+                               dirty := FALSE};
 (* multi-word filler, the second word is the total size of the object,
    in bytes *)
 
@@ -145,11 +148,11 @@ CONST
    pointer to the first data element, then N integers that hold the
    dimensions. *)
 
-TYPE ArrayShape = UNTRACED REF ARRAY [0 .. (*N-1*) 999] OF INTEGER;
+TYPE UnsafeArrayShape = UNTRACED REF ARRAY [0 .. (*N-1*) 999] OF INTEGER;
 
 PROCEDURE UnsafeGetShape (    r          : REFANY;
                           VAR nDimensions: INTEGER;
-                          VAR s          : ArrayShape);
+                          VAR s          : UnsafeArrayShape);
 (* if r is a reference to an open array, the number of open dimensions,
    nDimensions, and size of each dimension, s, is returned.  The array's
    shape vector is valid as long as r exists.  If r is not a reference to
@@ -163,11 +166,12 @@ PROCEDURE AllocUntraced (size: INTEGER): ADDRESS;
 (* Return the address of "size" bytes of untraced, un-zeroed storage,
    if possible.  Otherwise, return "NIL".  *)
 
-PROCEDURE AllocTraced (size, alignment: CARDINAL;  VAR pool: AllocPool): ADDRESS;
+PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
+                       VAR pool: AllocPool): ADDRESS;
 (* Return the address of "size" bytes of traced storage on an
    "alignment" byte boundary from the allocation pool "pool".
    The storage is not zeroed.  If the request cannot be satisfied,
-   "NIL" is returned.  LL >= RTOS.LockHeap. *)
+   "NIL" is returned.  LL >= LockHeap. *)
 
 (* Objects in the traced heap are allocated from one of three "pools".
    A pool is collection of pages with similar properties.  The "newPool"
@@ -184,25 +188,31 @@ TYPE
     stack      : Page    := Nil; (* linked list of new pages from this pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-    n_small    : INTEGER := 0;   (* # of "small" pages allocated via this pool *)
-    n_big      : INTEGER := 0;   (* # of "big" and "continued" pages allocated *)
+
+    (* BEWARE: a thread cannot be suspended while its pool is busy.  The busy
+       flag permits the thread to decline being suspended until it is done
+       allocating from its pool.  Otherwise, the GC could see incoherent
+       object state in the pool's page. *)
+    busy : BOOLEAN := FALSE;
   END;
 
-VAR (* LL >= RTOS.HeapLock *)
-  newPool := AllocPool {
+PROCEDURE ClosePool (VAR pool: AllocPool);
+
+CONST
+  NewPool = AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Allocated, gray := FALSE,
                   protected := FALSE, continued := FALSE },
     notAfter := Notes {Note.Copied} };
 
-VAR (* LL >= RTOS.HeapLock *)
+VAR (* LL >= LockHeap *)
   pureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := TRUE, note := Note.Copied, gray := FALSE,
                   protected := FALSE, continued := FALSE },
     notAfter := Notes {Note.Allocated} };
 
-VAR (* LL >= RTOS.HeapLock *)
+VAR (* LL >= LockHeap *)
   impureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Copied, gray := TRUE,
@@ -231,8 +241,6 @@ PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY));
 (****** COLLECTOR STATUS AND CONTROL ******)
 
 (* There are various status variables. *)
-
-VAR collections := 0;            (* the number of collections begun *)
 
 VAR
   disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)

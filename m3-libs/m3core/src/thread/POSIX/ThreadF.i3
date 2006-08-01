@@ -9,7 +9,7 @@
 
 INTERFACE ThreadF;
 
-IMPORT FloatMode, Thread;
+IMPORT FloatMode, Thread, RTHeapRep;
 
 (*--------------------------------------------- garbage collector support ---*)
 
@@ -24,11 +24,17 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
 
+PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
+(* Apply p to each thread allocation pool.  All other threads must be
+   suspended.  ProcessPools exists solely for the garbage collector.  *)
+
+PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool;
+
 (*------------------------------------------------ floating point support ---*)
 
-PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState;
-(* returns the saved floating point state for the current thread.
-   WARNING: the return value is an untraced pointer to a traced Thread.T!!  *)
+(* access to the saved floating point state for the current thread. *)
+PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState));
+PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState));
 
 (*-------------------------------------------------- showthreads support ---*)
 
@@ -52,8 +58,8 @@ TYPE
 
 TYPE
   Hooks = OBJECT METHODS
-    fork (t: Thread.T);  (* called with RT0u.inCritical > 0 *)
-    die  (t: Thread.T);  (* called with RT0u.inCritical > 0 *)
+    fork (t: Thread.T);  (* called with inCritical > 0 *)
+    die  (t: Thread.T);  (* called with inCritical > 0 *)
   END;
 
 PROCEDURE RegisterHooks (h: Hooks; init := TRUE): Hooks RAISES {};
@@ -61,13 +67,24 @@ PROCEDURE RegisterHooks (h: Hooks; init := TRUE): Hooks RAISES {};
    call hooks.fork (t) for every thread t in the ring in a single
    critical section. *)
 
+(*-------------------------------------------------------------- identity ---*)
+
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
 
 <*EXTERNAL "ThreadF__myId"*>
-VAR
-  myId: Id;
-  (* The id of the currently running thread *)
+VAR myId: Id;
+(* The id of the currently running thread *)
+
+(*------------------------------------------------------ mutual exclusion ---*)
+
+<*EXTERNAL ThreadF__inCritical*>
+VAR inCritical: INTEGER;
+(* inCritical provides low-level mutual exclusion between the thread
+   runtime, garbage collector and the Unix signal that triggers thread
+   preemption.  If inCritical is greater than zero, thread preemption
+   is disabled.  We *ASSUME* that "INC(inCritical)" and "DEC(inCritical)"
+   generate code that is atomic with respect to Unix signal delivery. *)
 
 (*------------------------------------------------------------ preemption ---*)
 
@@ -75,5 +92,19 @@ PROCEDURE SetSwitchingInterval (usec: CARDINAL);
 (* Sets the time between thread preemptions to 'usec' microseconds.
    Note that most Unix systems dont guarantee much if any precision
    on timer interrupts.  The default value is 100 milliseconds. *)
+
+(*---------------------------------------------------- exception delivery ---*)
+
+<*EXTERNAL "ThreadF__handlerStack" *>
+VAR handlerStack: ADDRESS;
+(* linked list of exception frames. *)
+
+PROCEDURE GetCurrentHandlers(): ADDRESS;
+(* == RETURN RTThread.handlerStack *)
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS);
+(* == RTThread.handlerStack := h *)
+
+PROCEDURE Init();
 
 END ThreadF.

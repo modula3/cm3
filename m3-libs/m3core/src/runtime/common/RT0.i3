@@ -26,7 +26,7 @@ INTERFACE RT0;
 TYPE
   Byte        = [0 .. 255];              (* fits in 8 bits *)
   Typecode    = [0 .. 16_FFFFF];         (* can fit in 20 bits *)
-  Fingerprint = ARRAY [0..1] OF [-16_7fffffff-1 .. 16_7fffffff]; (* 64 bits *)
+  Fingerprint = ARRAY [0..7] OF BITS 8 FOR [0..255]; (* 64 bits *)
   String      = UNTRACED REF CHAR;       (* a '\000' terminated string *)
   ModulePtr   = UNTRACED REF ModuleInfo;
   ImportPtr   = UNTRACED REF ImportInfo;
@@ -47,7 +47,14 @@ TYPE (* allocated at offset 0 of each compilation unit's global data *)
     imports        : ImportPtr;
     link_state     : INTEGER;  (* 0=unlinked, 1=linking, 2=linked *)
     binder         : Binder;
+    gc_flags       : INTEGER;  (* 0=none, 1=gen, 2=inc, 3=both *)
   END;
+
+CONST
+  GC_none = 0;
+  GC_gen  = 1;
+  GC_inc  = 2;
+  GC_both = 3;
 
 TYPE (* one of these is generated for each imported interface reference *)
   ImportInfo = RECORD
@@ -161,21 +168,23 @@ CONST
 
 CONST (* Type UIDs for the builtin types *)
   MutexID       = 16_1541f475;
-  TextLiteralID = ARRAY BOOLEAN OF INTEGER { 1837570855 (*16_6d871b27*),
-                                             16_72558b22 }
-                      [BITSIZE (INTEGER) = 64];
+  TextLiteralID = 1837570855 (*16_6d871b27*);
+    (* ARRAY BOOLEAN OF INTEGER { 1837570855 (*16_6d871b27*), 16_72558b22 }
+       [BITSIZE (INTEGER) = 64]; *)
 
 CONST
-  SB = BITSIZE (ADDRESS) - 24;  (* # spare bits in a ref header *)
+  SB = BITSIZE (ADDRESS) - 26;  (* # spare bits in a ref header *)
 
 TYPE
   RefHeader = RECORD
     forwarded : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     typecode  : BITS 20 FOR Typecode   := 0;     (* the typecode *)
+    dirty     : BITS  1 FOR BOOLEAN    := TRUE;  (* used during collection *)
+    gray      : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     weak      : BITS  1 FOR BOOLEAN    := FALSE; (* any weakrefs? *)
     marka     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     markb     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
-    spare     : BITS SB FOR [0 .. 255] := 0;     (* for future expansion *)
+    spare     : BITS SB FOR [0 .. 64] := 0;      (* for future expansion *)
   END;
 
 (*--------------------------------- compiler generated procedure closures ---*)

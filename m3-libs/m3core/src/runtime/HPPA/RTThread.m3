@@ -75,7 +75,7 @@ PROCEDURE DisposeStack (VAR s: Stack) =
   VAR
     i       : INTEGER;
     base    := ADR (s.words[0]) - ADRSIZE (Header);
-    n_bytes := BYTESIZE (Header) + NUMBER (s.words^) * BYTESIZE (INTEGER));
+    n_bytes := BYTESIZE (Header) + NUMBER (s.words^) * BYTESIZE (INTEGER);
   BEGIN
     (* free the storage *)
     i := munmap (base, n_bytes);
@@ -131,33 +131,6 @@ PROCEDURE disallow_sigvtalrm () =
     i := Word.Or (i, Usignal.sigmask (Usignal.SIGVTALRM));
     EVAL Usignal.sigsetmask (i); 
   END disallow_sigvtalrm;
-
-(*--------------------------------------------- exception handling support --*)
-
-PROCEDURE GetCurrentHandlers (): ADDRESS=
-  BEGIN
-    RETURN handlerStack;
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers (h: ADDRESS)=
-  BEGIN
-    handlerStack := h;
-  END SetCurrentHandlers;
-
-(*RTHooks.PushEFrame*)
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := handlerStack;
-    handlerStack := f;
-  END PushEFrame;
-
-(*RTHooks.PopEFrame*)
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    handlerStack := frame;
-  END PopEFrame;
 
 BEGIN
 END RTThread.
