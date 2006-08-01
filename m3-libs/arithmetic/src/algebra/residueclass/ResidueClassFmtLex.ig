@@ -3,9 +3,6 @@ GENERIC INTERFACE ResidueClassFmtLex(RF, ResC);
 
 (* Abstract: Formatting and parsing residue classes *)
 
-IMPORT Rd, Thread;
-IMPORT Lex AS L;
-IMPORT FloatMode;
 (*FROM Arithmetic IMPORT Error;*)
 FROM FmtLexSupport IMPORT Precedence;
 
