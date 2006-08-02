@@ -45,6 +45,7 @@ P="${P} http"
 P="${P} binIO"
 #P="${P} deepcopy"
 #P="${P} sgml"
+P="${P} commandrw"
 
 # some CM3 communication extensions
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} tapi"
@@ -63,6 +64,8 @@ P="${P} cmpfp"
 P="${P} dirfp"
 P="${P} uniq"
 #P="${P} pp" # needs lex and yacc or flex and bison
+#P="${P} kate"   # can be shipped only on systems with KDE
+#P="${P} nedit"
 
 # network objects -- distributed programming
 P="${P} netobj"
