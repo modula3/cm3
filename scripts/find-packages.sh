@@ -18,8 +18,8 @@ fi
 . "$sysinfo"
 
 (
-  cd "$ROOT" &&  find . -type f -name m3makefile -print | 
-  grep src/m3makefile | sed -e 's;/src/m3makefile$;;' | 
+  cd "$ROOT" &&  find . -follow -type f -name m3makefile -print | 
+  grep src/m3makefile | grep -v _darcs | sed -e 's;/src/m3makefile$;;' | 
   sort | uniq | sed -e "s;^./;;"
 ) > "$PKGSDB"
 
