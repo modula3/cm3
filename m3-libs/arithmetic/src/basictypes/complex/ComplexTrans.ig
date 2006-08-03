@@ -1,4 +1,4 @@
-GENERIC INTERFACE ComplexTrans(R, C);
+GENERIC INTERFACE ComplexTrans(R, RT, C);
 (* Arithmetic for Modula-3, see doc for details
 
    Abstract: Transcendental functions of complex numbers. *)
@@ -13,6 +13,10 @@ CONST
   I        = C.I;
   MinusOne = C.MinusOne;
   Half     = C.Half;
+
+  SqRtTwo = T{RT.SqRtTwo, R.Zero};
+
+
 
 PROCEDURE Arg (READONLY x: T; ): R.T; (* polar angle*)
 PROCEDURE Abs (READONLY x: T; ): R.T; (* magnitude*)

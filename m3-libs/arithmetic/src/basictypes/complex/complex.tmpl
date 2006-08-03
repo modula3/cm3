@@ -13,7 +13,7 @@ readonly proc ComplexTrans (nm, rfield) is
   local rtrans = nm & "Trans"
   local cfield = nm & "Complex"
   local basic  = nm & "ComplexTrans"
-  build_generic_intf (basic, "ComplexTrans", [rfield, cfield], VISIBLE)
+  build_generic_intf (basic, "ComplexTrans", [rfield, rtrans, cfield], VISIBLE)
   build_generic_impl (basic, "ComplexTrans", [rfield, rtrans, cfield])
 end
 
