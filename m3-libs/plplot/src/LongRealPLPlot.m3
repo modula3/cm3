@@ -1305,19 +1305,19 @@ PROCEDURE SetFile (file: Cstdio.FILE_star; ) =
     LongRealPLPlotRaw.SetFile(file);
   END SetFile;
 
-PROCEDURE HLS_RGB (h, l, s: Float; ): HLS_RGBResult =
-  VAR result: HLS_RGBResult;
+PROCEDURE HLSToRGB (h, l, s: Float; ): HLSToRGBResult =
+  VAR result: HLSToRGBResult;
   BEGIN
-    LongRealPLPlotRaw.HLS_RGB(h, l, s, result.r, result.g, result.b);
+    LongRealPLPlotRaw.HLSToRGB(h, l, s, result.r, result.g, result.b);
     RETURN result;
-  END HLS_RGB;
+  END HLSToRGB;
 
-PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult =
-  VAR result: RGB_HLSResult;
+PROCEDURE RGBToHLS (r, g, b: Float; ): RGBToHLSResult =
+  VAR result: RGBToHLSResult;
   BEGIN
-    LongRealPLPlotRaw.RGB_HLS(r, g, b, result.h, result.l, result.s);
+    LongRealPLPlotRaw.RGBToHLS(r, g, b, result.h, result.l, result.s);
     RETURN result;
-  END RGB_HLS;
+  END RGBToHLS;
 
 
 BEGIN
