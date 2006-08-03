@@ -163,6 +163,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 #define    plgzax	c_plgzax
 #define    plhist	c_plhist
 #define    plhls        c_plhls
+#define    plhlsrgb     c_plhlsrgb
 #define    plinit	c_plinit
 #define    pljoin	c_pljoin
 #define    pllab	c_pllab
@@ -187,6 +188,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 #define    plreplot	c_plreplot
 #define    plrgb	c_plrgb
 #define    plrgb1	c_plrgb1
+#define    plrgbhls     c_plrgbhls
 #define    plschr	c_plschr
 #define    plscmap0	c_plscmap0
 #define    plscmap0n	c_plscmap0n
