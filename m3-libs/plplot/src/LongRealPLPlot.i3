@@ -642,12 +642,12 @@ PROCEDURE OptUsage ();
 PROCEDURE SetFile (file: Cstdio.FILE_star; );
 
 
-TYPE HLS_RGBResult = RECORD r, g, b: Float;  END;
-PROCEDURE HLS_RGB (h, l, s: Float; ): HLS_RGBResult;
+TYPE HLSToRGBResult = RECORD r, g, b: Float;  END;
+PROCEDURE HLSToRGB (h, l, s: Float; ): HLSToRGBResult;
 
 
-TYPE RGB_HLSResult = RECORD h, l, s: Float;  END;
-PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult;
+TYPE RGBToHLSResult = RECORD h, l, s: Float;  END;
+PROCEDURE RGBToHLS (r, g, b: Float; ): RGBToHLSResult;
 
 
 END LongRealPLPlot.
