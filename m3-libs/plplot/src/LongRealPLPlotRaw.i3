@@ -526,10 +526,10 @@ PROCEDURE OptUsage ();
 <* EXTERNAL plsfile *>
 PROCEDURE SetFile (file: Cstdio.FILE_star; );
 
-<* EXTERNAL plhlsrgb *>
+<* EXTERNAL c_plhlsrgb *>
 PROCEDURE HLSToRGB (h, l, s: C.double; VAR r, g, b: C.double; );
 
-<* EXTERNAL plrgbhls *>
+<* EXTERNAL c_plrgbhls *>
 PROCEDURE RGBToHLS (r, g, b: C.double; VAR h, l, s: C.double; );
 
 END LongRealPLPlotRaw.
