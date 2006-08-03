@@ -58,14 +58,20 @@ TYPE
 
 TYPE
   DirTile = {Axis, LowerBorder, UpperBorder, FixedPointLabel, GridMajor,
-             GridMinor, TicksOutward, Logarithmic, LabelMajorUnconv,
-             LabelMajorConv, TicksMajor, TicksMinor, LabelBaseParallel};
+             GridMinor, TicksOutward, Logarithmic, TickLabelsUnconv,
+             TickLabelsConv, TicksMajor, TicksMinor, LabelBaseParallel};
   DirTileSet = SET OF DirTile;
 
 
 TYPE
   LineStyle = {None, Continuous, ShortDash, LongDash, LongDashShortGap,
                DotDash, Complex0, Complex1, Complex2};
+
+
+TYPE CharacterSet = {Standard, Extended};
+
+
+TYPE FontType = {Normal, Roman, Italic, Script};
 
 
 CONST
@@ -216,10 +222,10 @@ PROCEDURE FillPolygon3D (READONLY x, y, z: FloatVector; );
 PROCEDURE Flush ();
 
 (* c_plfont: "Set the global font flag to 'ifont'." *)
-PROCEDURE SetFont (ifont: INTEGER; );
+PROCEDURE SetFont (ifont: FontType; );
 
 (* c_plfontld: "Load specified font set." *)
-PROCEDURE LoadFont (fnt: INTEGER; );
+PROCEDURE LoadFont (fnt: CharacterSet; );
 
 (* c_plgchr: "Get character default height and current (scaled) height." *)
 
@@ -246,7 +252,7 @@ TYPE GetWindowDeviceResult = RECORD mar, aspect, jx, jy: Float;  END;
 PROCEDURE GetWindowDevice (): GetWindowDeviceResult;
 
 (* c_plgdiori: "Get plot orientation." *)
-PROCEDURE GetOrientation (): Float;
+PROCEDURE GetFractOrientation (): Float;
 
 (* c_plgdiplt: "Retrieve current window into plot space." *)
 
@@ -451,7 +457,7 @@ PROCEDURE LoadTransformation
 
 (* c_plsdiori: "Set plot orientation, specifying rotation in units of
    pi/2." *)
-PROCEDURE SetOrientation (rot: Float; );
+PROCEDURE SetFractOrientation (rot: Float; );
 
 (* c_plsdiplt: "Set window into plot space." *)
 PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: Float; );
@@ -504,7 +510,7 @@ PROCEDURE SetMajorTickSize (def, scale: Float; );
 PROCEDURE SetMinorTickSize (def, scale: Float; );
 
 (* c_plsori: "Set orientation.  Must be done before calling plinit." *)
-PROCEDURE SetGlobalOrientation (ori: INTEGER; );
+PROCEDURE SetOrientation (ori: INTEGER; );
 
 (* c_plspage: "Set output device parameters.  Usually ignored by the
    driver." *)
@@ -546,7 +552,7 @@ PROCEDURE CreateStripchart
 PROCEDURE DeleteStripchart (id: INTEGER; );
 
 (* c_plstyl: "Set up a new line style." *)
-PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF CARDINAL; );
+PROCEDURE SetCustomLineStyle (READONLY mark, space: ARRAY OF CARDINAL; );
 
 (* c_plsvpa: "Set the edges of the viewport to the specified absolute
    coordinates." *)
