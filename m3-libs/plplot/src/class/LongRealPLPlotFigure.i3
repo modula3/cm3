@@ -10,8 +10,8 @@ TYPE
   T = Public;
   Public = OBJECT
            METHODS
-             getBox (): Box;
-             draw   ();
+             getRange (): Box;
+             draw     ();
            END;
 
   PointSet <: T;

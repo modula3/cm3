@@ -14,7 +14,7 @@ PROCEDURE DefaultApply (SELF: Default; ) =
 
 PROCEDURE CustomApply (SELF: Custom; ) =
   BEGIN
-    PL.SetNewLineStyle(SELF.mark^, SELF.space^);
+    PL.SetCustomLineStyle(SELF.mark^, SELF.space^);
   END CustomApply;
 
 BEGIN
