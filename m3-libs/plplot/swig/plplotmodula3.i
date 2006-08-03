@@ -65,8 +65,8 @@ typedef int PLINT;
 %pragma(modula3) library="m3plplot";
 
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
-import_lib("plplotd","/usr/lib")
-%import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)
+%import_lib("plplotd","/usr/lib")
+import_lib("plplotd","/usr/local/lib")
 include_dir("class")%}
 
 %insert(m3rawintf) %{
