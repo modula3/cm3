@@ -149,15 +149,17 @@ if not defined ("no_config")
   % configure the sources
   if stale(donep, donep)
     if equal (M3CC_HOST, M3CC_TARGET)
-      exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
-            "--srcdir=.." & SL & "gcc",
+      exec ("cd", build_dir, "; .." & SL & "gcc-3.4.5" & SL & "configure", M3CC_CONFIG,
+            "--srcdir=.." & SL & "gcc-3.4.5",
 	    "--enable-languages=m3cg",
+	    "--disable-nls",
             "&& echo \"done\" > " & done)
     else
-      exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
-            "--srcdir=.." & SL & "gcc",
+      exec ("cd", build_dir, "; .." & SL & "gcc-3.4.5" & SL & "configure", M3CC_CONFIG,
+            "--srcdir=.." & SL & "gcc-3.4.5",
             "--target=" & GNU_platform (M3CC_TARGET),
 	    "--enable-languages=m3cg",
+	    "--disable-nls",
             "&& echo \"done\" > " & done)
     end
   end
@@ -168,10 +170,11 @@ ARG0 = get_overrides ("CC", M3CC_CC)
 ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
 % build commands
-cmds = "cd " & build_dir & "; "
-cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
-cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
-       ARG0 & " " & ARG1 & " m3cg"
+cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1
+%cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
+%cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
+%       ARG0 & " " & ARG1
+
 if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
     cmds = cmds & " mips-tfile"
 end
@@ -183,7 +186,7 @@ readonly proc postcp() is
     cp_if(pSrc, pDest)
   end
   if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
-    pSrc = build_dir & SL & "gcc" & SL & "mips-tfile"
+    pSrc = build_dir & SL & "gcc-3.4.5" & SL & "mips-tfile"
     pDest = build_dir & SL & "mips-tfile"
     if stale(pDest, pSrc)
       cp_if(pSrc, pDest)
