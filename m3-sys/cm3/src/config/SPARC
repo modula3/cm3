@@ -114,7 +114,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   return try_exec (m3back, args)
 end
 
@@ -133,7 +133,7 @@ M3_BACKEND_MODE = "3"
 proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-PIC", options ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   return try_exec ("@/bin/cc", args, "-c", source)
 end
 

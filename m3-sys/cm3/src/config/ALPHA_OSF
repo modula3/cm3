@@ -134,7 +134,7 @@ M3_USE_STACK_WALKER = TRUE
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
   if optimize  args += "-O2"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
@@ -172,7 +172,7 @@ readonly m3fixup = "@" & BIN_USE & "/mips-tfile"
 
 proc assemble (source, object) is
   local ret_code = 0
-  ret_code = try_exec ("@/bin/as", source, "-oldas", "-g", "-o", object)
+  ret_code = try_exec ("@/bin/as", source, "-oldas", "-gstabs", "-o", object)
   if not equal (ret_code, 0) return ret_code end
   ret_code = try_exec (m3fixup, "-o", object, source)
   return ret_code
