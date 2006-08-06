@@ -115,7 +115,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 proc m3_backend (source, object, optimize, debug) is
   %%PIC local args = [ "-fPIC", "-O", "-quiet", source, "-o", object ]
   local args = [ "-O", "-quiet", source, "-o", object ]
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
 
   %% if optimize  args += "-O"  end
   %% GCC 2.7.2 generates bad code on HPPA if the optimizer is not
@@ -141,7 +141,7 @@ proc compile_c (source, object, options, optimize, debug) is
   %%PIC local args = [ "+z", options ]  % +Z => -fpic for cc
   local args = [ options, "-Dalloca=malloc", "+k" ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   return try_exec ("@/bin/cc", args, "-c", source)
 end
 
@@ -149,7 +149,7 @@ end
 % proc compile_c (source, object, options, optimize, debug) is
 %   local args = [ "-fPIC", "-z", options ] % gcc
 %   if optimize  args += "-O"  end
-%   if debug     args += "-g"  end
+%   if debug     args += "-gstabs"  end
 %   return try_exec ("@gcc", args, "-c", source)
 % end
 
@@ -313,6 +313,6 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-g"
+GNU_CFLAGS = "-gstabs"
 GNU_MAKE   = "/usr/local/gnu/bin/make"
 

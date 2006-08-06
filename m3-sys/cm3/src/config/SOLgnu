@@ -132,7 +132,7 @@ M3_USE_STACK_WALKER = TRUE
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
@@ -153,7 +153,7 @@ proc compile_c (source, object, options, optimize, debug) is
   %% local args = [ "-compat-bsd", "-fPIC", "-L/usr/ucblib", options ]
   local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
   return try_exec ("@gcc", args, "-c", source)
 end
@@ -317,6 +317,6 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-g"
+GNU_CFLAGS = "-gstabs"
 GNU_MAKE   = "make"
 
