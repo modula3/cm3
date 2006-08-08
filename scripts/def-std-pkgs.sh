@@ -23,9 +23,11 @@ P="${P} m3bundle"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} libdump"
 
 # more useful quasi-standard libraries
+P="${P} arithmetic"
 P="${P} bitvector"
 P="${P} digraph"
 P="${P} parseparams"
+P="${P} plplot"
 P="${P} realgeometry"
 P="${P} set"
 P="${P} slisp"
