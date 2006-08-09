@@ -1,51 +1,23 @@
 /* Definitions of target machine for GNU compiler.  HP-UX 68000/68020 version.
-   Copyright (C) 1987, 1988, 1993, 1994, 1995, 1996, 1997, 1999, 2000
+   Copyright (C) 1987, 1988, 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2002, 2003
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-/* Define USE_GAS if GCC is supposed to work with the GNU assembler,
-   GNU linker and GNU debugger using DBX debugging information.
-   (In other words, much of HPUX has been cast aside.)
-   Undefine USE_GAS if you want GCC to feed the HP assembler.  */
-
-/* #define USE_GAS */  /* Use hp320g.h if you want this.  */
-
-/* Control assembler-syntax conditionals in m68k.md.  */
-
-#ifndef USE_GAS
-#define MOTOROLA		/* Use Motorola syntax rather than "MIT" */
-#define SGS			/* Uses SGS assembler */
-#define SGS_CMP_ORDER		/* Takes cmp operands in reverse order */
-#define HPUX_ASM
-
-#if !defined (CROSS_COMPILE) && !defined (NO_BUGS)
-/* The assembler on HP 9k3xx machines running HPUX 8.0 doesn't translate
-   floating point constants behind some operands.  The workaround is to
-   use hex constants.  Reported by Thomas Nau (nau@medizin.uni-ulm.de).  */
-#define AS_BUG_FLOATING_CONSTANT
-/* The assembler on HP 9k3xx machines running HPUX 8.0 doesn't accept
-   labels followed by a text, data, or other section directive.  Reported
-   by Thomas Nau (nau@medizin.uni-ulm.de).  */
-#define AS_BUG_TRAILING_LABEL
-#endif
-
-#endif /* not USE_GAS */
 
 /* gcc.c should find libgcc.a itself rather than expecting linker to.  */
 #define LINK_LIBGCC_SPECIAL
@@ -56,8 +28,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* Be compatible with system stddef.h.  */
 #define SIZE_TYPE "unsigned int"
-
-#include "m68k/m68k.h"
 
 #undef INT_OP_GROUP
 #define INT_OP_GROUP INT_OP_NO_DOT
@@ -112,7 +82,6 @@ Boston, MA 02111-1307, USA.  */
 
 #endif /* default is -msoft-float */
 
-
 /* -m68000 requires special flags to the assembler.  */
 #define ASM_SPEC \
  "%{m68000:-mc68000}%{mc68000:-mc68000}%{!mc68000:%{!m68000:-mc68020}}"
@@ -125,12 +94,21 @@ Boston, MA 02111-1307, USA.  */
 /* Translate -static for HPUX linker.  */
 #define LINK_SPEC "%{static:-a archive}"
 
-/* Names to predefine in the preprocessor for this target machine
-   (for non-strict-ANSI programs only).  */
-/* These are the ones defined by HPUX cc, plus mc68000 for uniformity with
-   GCC on other 68000 systems.  */
 
-#define CPP_PREDEFINES "-Dhp9000s200 -Dhp9000s300 -DPWB -Dhpux -Dunix -D__hp9000s300 -D__hp9000s200 -D__PWB -D__hpux -D__unix -D__motorola__ -Asystem=unix -Asystem=hpux -Acpu=m68k -Amachine=m68k"
+/* Target OS builtins.  These are the ones defined by HPUX cc.  */
+#define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+	builtin_define_std ("hp9000s200");	\
+	builtin_define_std ("hp9000s300");	\
+	builtin_define_std ("hpux");		\
+	builtin_define_std ("unix");		\
+	builtin_define_std ("PWB");		\
+	builtin_define ("__motorola__");	\
+	builtin_assert ("system=unix");		\
+	builtin_assert ("system=hpux");		\
+    }						\
+  while (0)
 
 /* Every structure or union's size must be a multiple of 2 bytes.  */
 
@@ -159,21 +137,18 @@ Boston, MA 02111-1307, USA.  */
 #undef REGISTER_NAMES
 #undef ASM_OUTPUT_REG_PUSH
 #undef ASM_OUTPUT_REG_POP
-#undef ASM_FILE_START
 #undef ASM_APP_ON
 #undef ASM_APP_OFF
 #undef TEXT_SECTION_ASM_OP
 #undef DATA_SECTION_ASM_OP
-#undef READONLY_DATA_SECTION
+#undef READONLY_DATA_SECTION_ASM_OP
 #undef ASM_OUTPUT_ADDR_VEC_ELT
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #undef ASM_OUTPUT_ALIGN
 #undef ASM_OUTPUT_SKIP
 #undef ASM_OUTPUT_COMMON
 #undef ASM_OUTPUT_LOCAL
-#undef ASM_FORMAT_PRIVATE_NAME
 #undef FUNCTION_PROFILER
-#undef ASM_OUTPUT_INTERNAL_LABEL
 #undef GLOBAL_ASM_OP
 #undef IMMEDIATE_PREFIX
 #undef REGISTER_PREFIX
@@ -183,7 +158,7 @@ Boston, MA 02111-1307, USA.  */
 #define REGISTER_NAMES \
 {"%d0", "%d1", "%d2", "%d3", "%d4", "%d5", "%d6", "%d7",	\
  "%a0", "%a1", "%a2", "%a3", "%a4", "%a5", "%fp", "%sp",	\
- "%fp0", "%fp1", "%fp2", "%fp3", "%fp4", "%fp5", "%fp6", "%fp7"}
+ "%fp0", "%fp1", "%fp2", "%fp3", "%fp4", "%fp5", "%fp6", "%fp7", "argptr"}
 
 #define IMMEDIATE_PREFIX        "&"
 #define REGISTER_PREFIX         "%"
@@ -204,16 +179,7 @@ Boston, MA 02111-1307, USA.  */
   fprintf (FILE, "\tmov.l (%%sp)+,%s\n", reg_names[REGNO])
 
 /* For HPUX versions before 6.5, define this macro as empty.  */
-#define ASM_FILE_START(FILE)						\
-  if (TARGET_68020)							\
-    {									\
-      if (TARGET_68881)							\
-	 fprintf (FILE, "\tversion 3\n"); /* 68020 fp regs saved */	\
-      else								\
-	 fprintf (FILE, "\tversion 2\n"); /* 68020 no fp regs saved */	\
-    }									\
-  else									\
-    fprintf (FILE, "\tversion 1\n");	/* 68010 */
+#define TARGET_ASM_FILE_START m68k_hp320_file_start
 
 #define ASM_APP_ON ""
 
@@ -239,7 +205,7 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs ("\tcomm ", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%u\n", (ROUNDED)))
+  fprintf ((FILE), ",%u\n", (int)(ROUNDED)))
 
 /* This says how to output an assembler line
    to define a local common symbol.  */
@@ -247,22 +213,9 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs ("\tlcomm ", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%u,2\n", (ROUNDED)))
+  fprintf ((FILE), ",%u,2\n", (int)(ROUNDED)))
 
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
-( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 12),	\
-  sprintf ((OUTPUT), "%s___%d", (NAME), (LABELNO)))
-
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-do{  if (PREFIX[0] == 'L' && PREFIX[1] == 'I')		\
-    fprintf(FILE, "\tset %s%d,.+2\n", PREFIX, NUM);	\
-  else							\
-    fprintf (FILE, "%s%d:\n", PREFIX, NUM);		\
-} while(0)
+#define ASM_PN_FORMAT "%s___%lu"
 
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
   fprintf (FILE, "\tlong L%d\n", VALUE)
@@ -279,10 +232,10 @@ do {					\
 } while (0)
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\tspace %u\n", (SIZE))
+  fprintf (FILE, "\tspace %u\n", (int)(SIZE))
 
 #define ASM_OUTPUT_SOURCE_FILENAME(FILE, FILENAME)
-#define ASM_OUTPUT_SOURCE_LINE(FILE, LINENO)
+#define ASM_OUTPUT_SOURCE_LINE(FILE, LINENO, COUNTER)
 
 /* Output a float value (represented as a C double) as an immediate operand.
    This macro is a 68k-specific macro.  */
@@ -300,7 +253,7 @@ do {					\
       if (CODE == 'f')						\
         {							\
           char dstr[30];					\
-          REAL_VALUE_TO_DECIMAL (VALUE, "%.9g", dstr);		\
+      	  real_to_decimal (dstr, &(VALUE), sizeof (dstr), 9, 0); \
           fprintf ((FILE), "&0f%s", dstr);			\
         }							\
       else							\
@@ -317,7 +270,7 @@ do {					\
 #undef ASM_OUTPUT_DOUBLE_OPERAND
 #define ASM_OUTPUT_DOUBLE_OPERAND(FILE,VALUE)				\
  do { char dstr[30];							\
-      REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);			\
+      real_to_decimal (dstr, &(VALUE), sizeof (dstr), 0, 1);		\
       fprintf (FILE, "&0f%s", dstr);					\
     } while (0)
 
@@ -326,7 +279,7 @@ do {					\
 #undef ASM_OUTPUT_LONG_DOUBLE_OPERAND
 #define ASM_OUTPUT_LONG_DOUBLE_OPERAND(FILE,VALUE)			\
  do { char dstr[30];							\
-      REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);			\
+      real_to_decimal (dstr, &(VALUE), sizeof (dstr), 0, 1);		\
       fprintf (FILE, "&0f%s", dstr);					\
     } while (0)
 
@@ -351,15 +304,11 @@ do {					\
     { REAL_VALUE_TYPE r;  long l;					\
       REAL_VALUE_FROM_CONST_DOUBLE (r, X);				\
       PRINT_OPERAND_FLOAT (CODE, FILE, r, l); }				\
-  else if (GET_CODE (X) == CONST_DOUBLE && GET_MODE (X) == DFmode)	\
-    { REAL_VALUE_TYPE r;  char dstr[30];				\
-      REAL_VALUE_FROM_CONST_DOUBLE (r, X);				\
-      REAL_VALUE_TO_DECIMAL (r, "%.20g", dstr);				\
-      fprintf (FILE, "&0f%s", dstr); }					\
-  else if (GET_CODE (X) == CONST_DOUBLE && GET_MODE (X) == XFmode)	\
-    { REAL_VALUE_TYPE r;  char dstr[30];				\
-      REAL_VALUE_FROM_CONST_DOUBLE (r, X);				\
-      REAL_VALUE_TO_DECIMAL (r, "%.20g", dstr);				\
+  else if (GET_CODE (X) == CONST_DOUBLE					\
+	   && (GET_MODE (X) == DFmode || GET_MODE (X) == XFmode))	\
+    { char dstr[30];							\
+      real_to_decimal (dstr, CONST_DOUBLE_REAL_VALUE (X),		\
+		       sizeof (dstr), 0, 1);				\
       fprintf (FILE, "&0f%s", dstr); }					\
   else { putc ('&', FILE); output_addr_const (FILE, X); }}
 #endif
@@ -498,7 +447,7 @@ do {					\
       if (GET_CODE (addr) == CONST_INT					\
 	  && INTVAL (addr) < 0x8000					\
 	  && INTVAL (addr) >= -0x8000)					\
-	fprintf (FILE, "%d.w", INTVAL (addr));				\
+	fprintf (FILE, "%d.w", (int) INTVAL (addr));			\
       else								\
         output_addr_const (FILE, addr);					\
     }}
@@ -575,18 +524,6 @@ do { size_t i, limit = (SIZE);		\
 	   (LABEL_NO));
 
 #endif /* not HPUX_ASM */
-
-/* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is an
-   operand of a function call.  */
-#undef LEGITIMATE_PIC_OPERAND_P
-#define LEGITIMATE_PIC_OPERAND_P(X) \
-  ((! symbolic_operand (X, VOIDmode) \
-    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X) != 0	\
-	  && GET_CODE (mem_for_const_double (X)) == MEM			\
-	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
-			       VOIDmode))) 				\
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       	\
-   || PCREL_GENERAL_OPERAND_OK)
 
 /* hpux8 and later have C++ compatible include files, so do not
    pretend they are `extern "C"'.  */

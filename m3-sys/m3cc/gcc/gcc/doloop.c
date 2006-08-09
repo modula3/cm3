@@ -1,5 +1,6 @@
 /* Perform doloop optimizations
-   Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
    Contributed by Michael P. Hayes (m.hayes@elec.canterbury.ac.nz)
 
 This file is part of GCC.
@@ -21,6 +22,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "flags.h"
 #include "expr.h"
@@ -29,6 +32,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "basic-block.h"
 #include "toplev.h"
 #include "tm_p.h"
+#include "cfgloop.h"
 
 
 /* This module is used to modify loops with a determinable number of
@@ -56,23 +60,18 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifdef HAVE_doloop_end
 
-static rtx doloop_condition_get
-  PARAMS ((rtx));
-static unsigned HOST_WIDE_INT doloop_iterations_max
-  PARAMS ((const struct loop_info *, enum machine_mode, int));
-static int doloop_valid_p
-  PARAMS ((const struct loop *, rtx));
-static int doloop_modify
-  PARAMS ((const struct loop *, rtx, rtx, rtx, rtx, rtx));
-static int doloop_modify_runtime
-  PARAMS ((const struct loop *, rtx, rtx, rtx, enum machine_mode, rtx));
+static unsigned HOST_WIDE_INT doloop_iterations_max (const struct loop_info *,
+						     enum machine_mode, int);
+static int doloop_valid_p (const struct loop *, rtx);
+static int doloop_modify (const struct loop *, rtx, rtx, rtx, rtx, rtx);
+static int doloop_modify_runtime (const struct loop *, rtx, rtx, rtx,
+				  enum machine_mode, rtx);
 
 
 /* Return the loop termination condition for PATTERN or zero
    if it is not a decrement and branch jump insn.  */
-static rtx
-doloop_condition_get (pattern)
-     rtx pattern;
+rtx
+doloop_condition_get (rtx pattern)
 {
   rtx cmp;
   rtx inc;
@@ -140,13 +139,11 @@ doloop_condition_get (pattern)
 
 /* Return an estimate of the maximum number of loop iterations for the
    loop specified by LOOP or zero if the loop is not normal.
-   MODE is the mode of the iteration count and NONNEG is non-zero if
+   MODE is the mode of the iteration count and NONNEG is nonzero if
    the iteration count has been proved to be non-negative.  */
 static unsigned HOST_WIDE_INT
-doloop_iterations_max (loop_info, mode, nonneg)
-     const struct loop_info *loop_info;
-     enum machine_mode mode;
-     int nonneg;
+doloop_iterations_max (const struct loop_info *loop_info,
+		       enum machine_mode mode, int nonneg)
 {
   unsigned HOST_WIDE_INT n_iterations_max;
   enum rtx_code code;
@@ -249,12 +246,10 @@ doloop_iterations_max (loop_info, mode, nonneg)
 }
 
 
-/* Return non-zero if the loop specified by LOOP is suitable for
+/* Return nonzero if the loop specified by LOOP is suitable for
    the use of special low-overhead looping instructions.  */
 static int
-doloop_valid_p (loop, jump_insn)
-     const struct loop *loop;
-     rtx jump_insn;
+doloop_valid_p (const struct loop *loop, rtx jump_insn)
 {
   const struct loop_info *loop_info = LOOP_INFO (loop);
 
@@ -263,7 +258,7 @@ doloop_valid_p (loop, jump_insn)
       || ! onlyjump_p (jump_insn))
     {
       if (loop_dump_stream)
-  	fprintf (loop_dump_stream,
+	fprintf (loop_dump_stream,
 		 "Doloop: Invalid jump at loop end.\n");
       return 0;
     }
@@ -339,6 +334,7 @@ doloop_valid_p (loop, jump_insn)
      condition at run-time and have an additional jump around the loop
      to ensure an infinite loop.  */
   if (loop_info->comparison_code == NE
+      && !loop_info->preconditioned
       && INTVAL (loop_info->increment) != -1
       && INTVAL (loop_info->increment) != 1)
     {
@@ -361,13 +357,13 @@ doloop_valid_p (loop, jump_insn)
     {
       /* If the comparison is LEU and the comparison value is UINT_MAX
 	 then the loop will not terminate.  Similarly, if the
-	 comparison code is GEU and the initial value is 0, the loop
-	 will not terminate.
+	 comparison code is GEU and the comparison value is 0, the
+	 loop will not terminate.
 
 	 If the absolute increment is not 1, the loop can be infinite
 	 even with LTU/GTU, e.g. for (i = 3; i > 0; i -= 2)
 
-	 Note that with LE and GE, the loop behaviour is undefined
+	 Note that with LE and GE, the loop behavior is undefined
 	 (C++ standard section 5 clause 5) if an overflow occurs, say
 	 between INT_MAX and INT_MAX + 1.  We thus don't have to worry
 	 about these two cases.
@@ -375,7 +371,7 @@ doloop_valid_p (loop, jump_insn)
 	 ??? We could compute these conditions at run-time and have a
 	 additional jump around the loop to ensure an infinite loop.
 	 However, it is very unlikely that this is the intended
-	 behaviour of the loop and checking for these rare boundary
+	 behavior of the loop and checking for these rare boundary
 	 conditions would pessimize all other code.
 
 	 If the loop is executed only a few times an extra check to
@@ -399,16 +395,10 @@ doloop_valid_p (loop, jump_insn)
    number of loop iterations, ITERATIONS_MAX is a CONST_INT specifying
    the maximum number of loop iterations, and DOLOOP_INSN is the
    low-overhead looping insn to emit at the end of the loop.  This
-   returns non-zero if it was successful.  */
+   returns nonzero if it was successful.  */
 static int
-doloop_modify (loop, iterations, iterations_max,
-	       doloop_seq, start_label, condition)
-     const struct loop *loop;
-     rtx iterations;
-     rtx iterations_max;
-     rtx doloop_seq;
-     rtx start_label;
-     rtx condition;
+doloop_modify (const struct loop *loop, rtx iterations, rtx iterations_max,
+	       rtx doloop_seq, rtx start_label, rtx condition)
 {
   rtx counter_reg;
   rtx count;
@@ -484,13 +474,13 @@ doloop_modify (loop, iterations, iterations_max,
 	count = GEN_INT (INTVAL (count) - 1);
       else
 	count = expand_simple_binop (GET_MODE (counter_reg), MINUS,
-				     count, GEN_INT (1),
+				     count, const1_rtx,
 				     0, 0, OPTAB_LIB_WIDEN);
     }
 
   /* Insert initialization of the count register into the loop header.  */
   convert_move (counter_reg, count, 1);
-  sequence = gen_sequence ();
+  sequence = get_insns ();
   end_sequence ();
   emit_insn_before (sequence, loop->start);
 
@@ -508,7 +498,7 @@ doloop_modify (loop, iterations, iterations_max,
       {
 	start_sequence ();
 	emit_insn (init);
-	sequence = gen_sequence ();
+	sequence = get_insns ();
 	end_sequence ();
 	emit_insn_after (sequence, loop->start);
       }
@@ -539,16 +529,11 @@ doloop_modify (loop, iterations, iterations_max,
    not present, we emit one.  The loop to modify is described by LOOP.
    ITERATIONS_MAX is a CONST_INT specifying the estimated maximum
    number of loop iterations.  DOLOOP_INSN is the low-overhead looping
-   insn to insert.  Returns non-zero if loop successfully modified.  */
+   insn to insert.  Returns nonzero if loop successfully modified.  */
 static int
-doloop_modify_runtime (loop, iterations_max,
-		       doloop_seq, start_label, mode, condition)
-     const struct loop *loop;
-     rtx iterations_max;
-     rtx doloop_seq;
-     rtx start_label;
-     enum machine_mode mode;
-     rtx condition;
+doloop_modify_runtime (const struct loop *loop, rtx iterations_max,
+		       rtx doloop_seq, rtx start_label,
+		       enum machine_mode mode, rtx condition)
 {
   const struct loop_info *loop_info = LOOP_INFO (loop);
   HOST_WIDE_INT abs_inc;
@@ -600,18 +585,17 @@ doloop_modify_runtime (loop, iterations_max,
 
        t1 = abs_inc * unroll_number;		        increment per loop
        n = (abs (final - initial) + abs_inc - 1) / t1;    full loops
-       n += ((abs (final - initial) + abs_inc - 1) % t1) >= abs_inc;
+       n += (abs (final - initial) + abs_inc - 1) % t1) >= abs_inc;
                                                           partial loop
      which works out to be equivalent to
 
        n = (abs (final - initial) + t1 - 1) / t1;
 
-     However, in certain cases the unrolled loop will be preconditioned
-     by emitting copies of the loop body with conditional branches,
-     so that the unrolled loop is always a full loop and thus needs
-     no exit tests.  In this case we don't want to add the partial
-     loop count.  As above, when t1 is a power of two we don't need to
-     worry about overflow.
+     In the case where the loop was preconditioned, a few iterations
+     may have been executed earlier; but 'initial' was adjusted as they
+     were executed, so we don't need anything special for that case here.
+     As above, when t1 is a power of two we don't need to worry about
+     overflow.
 
      The division and modulo operations can be avoided by requiring
      that the increment is a power of 2 (precondition_loop_p enforces
@@ -686,15 +670,13 @@ doloop_modify_runtime (loop, iterations_max,
       if (shift_count < 0)
 	abort ();
 
-      if (loop_info->preconditioned)
-	diff = expand_simple_binop (GET_MODE (diff), PLUS,
-				    diff, GEN_INT (abs_inc - 1),
-				    diff, 1, OPTAB_LIB_WIDEN);
-      else
-	diff = expand_simple_binop (GET_MODE (diff), PLUS,
-				    diff, GEN_INT (abs_loop_inc - 1),
-				    diff, 1, OPTAB_LIB_WIDEN);
+      /* (abs (final - initial) + abs_inc * unroll_number - 1) */
+      diff = expand_simple_binop (GET_MODE (diff), PLUS,
+				  diff, GEN_INT (abs_loop_inc - 1),
+				  diff, 1, OPTAB_LIB_WIDEN);
 
+      /* (abs (final - initial) + abs_inc * unroll_number - 1)
+	 / (abs_inc * unroll_number)  */
       diff = expand_simple_binop (GET_MODE (diff), LSHIFTRT,
 				  diff, GEN_INT (shift_count),
 				  diff, 1, OPTAB_LIB_WIDEN);
@@ -740,7 +722,7 @@ doloop_modify_runtime (loop, iterations_max,
 	}
     }
 
-  sequence = gen_sequence ();
+  sequence = get_insns ();
   end_sequence ();
   emit_insn_before (sequence, loop->start);
 
@@ -755,11 +737,10 @@ doloop_modify_runtime (loop, iterations_max,
    suitable.  We distinguish between loops with compile-time bounds
    and those with run-time bounds.  Information from LOOP is used to
    compute the number of iterations and to determine whether the loop
-   is a candidate for this optimization.  Returns non-zero if loop
+   is a candidate for this optimization.  Returns nonzero if loop
    successfully modified.  */
 int
-doloop_optimize (loop)
-     const struct loop *loop;
+doloop_optimize (const struct loop *loop)
 {
   struct loop_info *loop_info = LOOP_INFO (loop);
   rtx initial_value;
@@ -794,7 +775,7 @@ doloop_optimize (loop)
 			     &increment, &mode))
     {
       if (loop_dump_stream)
-      	fprintf (loop_dump_stream,
+	fprintf (loop_dump_stream,
 		 "Doloop: Cannot precondition loop.\n");
       return 0;
     }
@@ -864,18 +845,19 @@ doloop_optimize (loop)
       return 0;
     }
 
-  /* A raw define_insn may yield a plain pattern.  If a sequence
-     was involved, the last must be the jump instruction.  */
-  if (GET_CODE (doloop_seq) == SEQUENCE)
+  /* If multiple instructions were created, the last must be the
+     jump instruction.  Also, a raw define_insn may yield a plain
+     pattern.  */
+  doloop_pat = doloop_seq;
+  if (INSN_P (doloop_pat))
     {
-      doloop_pat = XVECEXP (doloop_seq, 0, XVECLEN (doloop_seq, 0) - 1);
+      while (NEXT_INSN (doloop_pat) != NULL_RTX)
+	doloop_pat = NEXT_INSN (doloop_pat);
       if (GET_CODE (doloop_pat) == JUMP_INSN)
 	doloop_pat = PATTERN (doloop_pat);
       else
 	doloop_pat = NULL_RTX;
     }
-  else
-    doloop_pat = doloop_seq;
 
   if (! doloop_pat
       || ! (condition = doloop_condition_get (doloop_pat)))

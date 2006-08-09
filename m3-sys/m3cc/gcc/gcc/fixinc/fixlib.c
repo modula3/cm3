@@ -1,24 +1,24 @@
 
 /* Install modified versions of certain ANSI-incompatible system header
    files which are fixed to work correctly with ANSI C and placed in a
-   directory that GNU C will search.
+   directory that GCC will search.
 
-   Copyright (C) 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -32,8 +32,7 @@ Boston, MA 02111-1307, USA.  */
    is presumed to be an ASCII text file containing no NULs.  */
 
 char *
-load_file_data (fp)
-     FILE* fp;
+load_file_data (FILE* fp)
 {
   char *pz_data = (char*)NULL;
   int    space_left = -1;  /* allow for terminating NUL */
@@ -49,7 +48,7 @@ load_file_data (fp)
       if (space_left < 1024)
         {
           space_left += 4096;
-	  pz_data = xrealloc ((void*)pz_data, space_left + space_used + 1 );
+	  pz_data = xrealloc (pz_data, space_left + space_used + 1 );
         }
       size_read = fread (pz_data + space_used, 1, space_left, fp);
 
@@ -73,7 +72,7 @@ load_file_data (fp)
       space_used += size_read;
     } while (! feof (fp));
 
-  pz_data = xrealloc ((void*)pz_data, space_used+1 );
+  pz_data = xrealloc (pz_data, space_used+1 );
   pz_data[ space_used ] = NUL;
 
   return pz_data;
@@ -81,9 +80,7 @@ load_file_data (fp)
 
 #ifdef IS_CXX_HEADER_NEEDED
 t_bool
-is_cxx_header (fname, text)
-     tCC *fname;
-     tCC *text;
+is_cxx_header (tCC* fname, tCC* text)
 {
   /*  First, check to see if the file is in a C++ directory */
   for (;;)
@@ -131,7 +128,7 @@ template[ \t]*<|\
       if (!compiled)
 	compile_re (cxxpat, &cxxre, 0, "contents check", "is_cxx_header");
 
-      if (regexec (&cxxre, text, 0, 0, 0) == 0)
+      if (xregexec (&cxxre, text, 0, 0, 0) == 0)
 	return BOOL_TRUE;
     }
 		   
@@ -147,9 +144,7 @@ template[ \t]*<|\
  *  We are not doing a correctness syntax check here.
  */
 tCC*
-skip_quote( q, text )
-  char  q;
-  char* text;
+skip_quote(char q, char* text )
 {
   for (;;)
     {
@@ -181,19 +176,14 @@ skip_quote( q, text )
    Compile one regular expression pattern for later use.  PAT contains
    the pattern, RE points to a regex_t structure (which should have
    been bzeroed).  MATCH is 1 if we need to know where the regex
-   matched, 0 if not. If regcomp fails, prints an error message and
+   matched, 0 if not. If xregcomp fails, prints an error message and
    aborts; E1 and E2 are strings to shove into the error message.
 
    The patterns we search for are all egrep patterns.
    REG_EXTENDED|REG_NEWLINE produces identical regex syntax/semantics
    to egrep (verified from 4.4BSD Programmer's Reference Manual).  */
 void
-compile_re( pat, re, match, e1, e2 )
-     tCC *pat;
-     regex_t *re;
-     int match;
-     tCC *e1;
-     tCC *e2;
+compile_re( tCC* pat, regex_t* re, int match, tCC* e1, tCC* e2 )
 {
   tSCC z_bad_comp[] = "fixincl ERROR:  cannot compile %s regex for %s\n\
 \texpr = `%s'\n\terror %s\n";
@@ -201,7 +191,7 @@ compile_re( pat, re, match, e1, e2 )
 
   flags = (match ? REG_EXTENDED|REG_NEWLINE
 	   : REG_EXTENDED|REG_NEWLINE|REG_NOSUB);
-  err = regcomp (re, pat, flags);
+  err = xregcomp (re, pat, flags);
 
   if (err)
     {
@@ -228,10 +218,7 @@ static regex_t mn_name_re;
 static int mn_compiled = 0;
 
 void
-mn_get_regexps( label_re, name_re, who )
-     regex_t **label_re;
-     regex_t **name_re;
-     tCC *who;
+mn_get_regexps(regex_t** label_re, regex_t** name_re, tCC* who )
 {
   if (! mn_compiled)
     {
@@ -248,10 +235,7 @@ mn_get_regexps( label_re, name_re, who )
 #ifdef SEPARATE_FIX_PROC
 
 char*
-make_raw_shell_str( pz_d, pz_s, smax )
-  char*       pz_d;
-  tCC*        pz_s;
-  size_t      smax;
+make_raw_shell_str( char* pz_d, tCC* pz_s, size_t smax )
 {
   tSCC zQ[] = "'\\''";
   size_t     dtaSize;
