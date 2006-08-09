@@ -1,2 +1,4 @@
-# Don't run fixproto
-STMP_FIXPROTO =
+host-linux.o : $(srcdir)/config/host-linux.c $(CONFIG_H) $(SYSTEM_H) \
+  coretypes.h hosthooks.h hosthooks-def.h
+	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
+		$(srcdir)/config/host-linux.c

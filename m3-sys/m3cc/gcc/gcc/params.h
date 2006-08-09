@@ -1,5 +1,5 @@
 /* params.h - Run-time parameters.
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003 Free Software Foundation, Inc.
    Written by Mark Mitchell <mark@codesourcery.com>.
 
 This file is part of GCC.
@@ -59,13 +59,11 @@ extern param_info *compiler_params;
 
 /* Add the N PARAMS to the current list of compiler parameters.  */
 
-extern void add_params 
-  PARAMS ((const param_info params[], size_t n));
+extern void add_params (const param_info params[], size_t n);
 
 /* Set the VALUE associated with the parameter given by NAME.  */
 
-extern void set_param_value
-  PARAMS ((const char *name, int value));
+extern void set_param_value (const char *name, int value);
 
 
 /* The parameters in use by language-independent code.  */
@@ -75,17 +73,27 @@ typedef enum compiler_param
 #define DEFPARAM(enumerator, option, msgid, default) \
   enumerator,
 #include "params.def"
-#undef DEFPARAM  
+#undef DEFPARAM
   LAST_PARAM
 } compiler_param;
 
 /* The value of the parameter given by ENUM.  */
 #define PARAM_VALUE(ENUM) \
   (compiler_params[(int) ENUM].value)
-  
+
 /* Macros for the various parameters.  */
+#define MAX_INLINE_INSNS_SINGLE \
+  PARAM_VALUE (PARAM_MAX_INLINE_INSNS_SINGLE)
 #define MAX_INLINE_INSNS \
   PARAM_VALUE (PARAM_MAX_INLINE_INSNS)
+#define MAX_INLINE_SLOPE \
+  PARAM_VALUE (PARAM_MAX_INLINE_SLOPE)
+#define MIN_INLINE_INSNS \
+  PARAM_VALUE (PARAM_MIN_INLINE_INSNS)
+#define MAX_INLINE_INSNS_AUTO \
+  PARAM_VALUE (PARAM_MAX_INLINE_INSNS_AUTO)
+#define MAX_INLINE_INSNS_RTL \
+  PARAM_VALUE (PARAM_MAX_INLINE_INSNS_RTL)
 #define MAX_DELAY_SLOT_INSN_SEARCH \
   PARAM_VALUE (PARAM_MAX_DELAY_SLOT_INSN_SEARCH)
 #define MAX_DELAY_SLOT_LIVE_SEARCH \
@@ -96,4 +104,8 @@ typedef enum compiler_param
   ((size_t) PARAM_VALUE (PARAM_MAX_GCSE_MEMORY))
 #define MAX_GCSE_PASSES \
   PARAM_VALUE (PARAM_MAX_GCSE_PASSES)
+#define MAX_UNROLLED_INSNS \
+  PARAM_VALUE (PARAM_MAX_UNROLLED_INSNS)
+#define MAX_LAST_VALUE_RTL \
+  PARAM_VALUE (PARAM_MAX_LAST_VALUE_RTL)
 #endif /* ! GCC_PARAMS_H */

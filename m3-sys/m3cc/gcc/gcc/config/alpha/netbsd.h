@@ -1,30 +1,36 @@
 /* Definitions of target machine for GNU compiler,
    for Alpha NetBSD systems.
-   Copyright (C) 1998, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1998, 2002, 2003 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT (MASK_FP | MASK_FPREGS | MASK_GAS)
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES							\
-  "-D__NetBSD__ -D__ELF__ -D_LP64 -Asystem=unix -Asystem=NetBSD"
+#define TARGET_OS_CPP_BUILTINS()		\
+    do {					\
+	NETBSD_OS_CPP_BUILTINS_ELF();		\
+    } while (0)
+
+
+/* NetBSD doesn't use the LANGUAGE* built-ins.  */
+#undef SUBTARGET_LANGUAGE_CPP_BUILTINS
+#define SUBTARGET_LANGUAGE_CPP_BUILTINS()	/* nothing */
 
 
 /* Show that we need a GP when profiling.  */
@@ -32,39 +38,28 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_PROFILING_NEEDS_GP 1
 
 
-/* Provide a CPP_SPEC appropriate for NetBSD/alpha.  In addition to
-   the standard NetBSD specs, we also handle Alpha FP mode indications.  */
-
-#undef CPP_SPEC
-#define CPP_SPEC							\
-  "%{mieee:-D_IEEE_FP}							\
-   %{mieee-with-inexact:-D_IEEE_FP -D_IEEE_FP_INEXACT}			\
-   %(cpp_cpu) %(cpp_subtarget)"
+/* Provide a CPP_SUBTARGET_SPEC appropriate for NetBSD/alpha.  We use
+   this to pull in CPP specs that all NetBSD configurations need.  */
 
 #undef CPP_SUBTARGET_SPEC
-#define CPP_SUBTARGET_SPEC						\
-  "%{posix:-D_POSIX_SOURCE}"
+#define CPP_SUBTARGET_SPEC NETBSD_CPP_SPEC
+
+#undef SUBTARGET_EXTRA_SPECS
+#define SUBTARGET_EXTRA_SPECS			\
+  { "netbsd_link_spec", NETBSD_LINK_SPEC_ELF },	\
+  { "netbsd_entry_point", NETBSD_ENTRY_POINT },	\
+  { "netbsd_endfile_spec", NETBSD_ENDFILE_SPEC },
 
 
-/* Provide a LINK_SPEC appropriate for a NetBSD/alpha ELF target.
-   This is a copy of LINK_SPEC from <netbsd-elf.h> tweaked for
-   the alpha target.  */
+/* Provide a LINK_SPEC appropriate for a NetBSD/alpha ELF target.  */
 
 #undef LINK_SPEC
-#define LINK_SPEC							\
-  "%{G*} %{relax:-relax}						\
-   %{O*:-O3} %{!O*:-O1}							\
-   %{assert*} %{R*}							\
-   %{shared:-shared}							\
-   %{!shared:								\
-     -dc -dp								\
-     %{!nostdlib:							\
-       %{!r*:								\
-	 %{!e*:-e __start}}}						\
-     %{!static:								\
-       %{rdynamic:-export-dynamic}					\
-       %{!dynamic-linker:-dynamic-linker /usr/libexec/ld.elf_so}}	\
-     %{static:-static}}"
+#define LINK_SPEC \
+  "%{G*} %{relax:-relax} \
+   %{O*:-O3} %{!O*:-O1} \
+   %(netbsd_link_spec)"
+
+#define NETBSD_ENTRY_POINT "__start"
 
 
 /* Provide an ENDFILE_SPEC appropriate for NetBSD/alpha ELF.  Here we
@@ -76,7 +71,12 @@ Boston, MA 02111-1307, USA.  */
 #undef ENDFILE_SPEC
 #define ENDFILE_SPEC		\
   "%{ffast-math|funsafe-math-optimizations:crtfm%O%s} \
-   %{!shared:crtend%O%s} %{shared:crtendS%O%s}"
+   %(netbsd_endfile_spec)"
+
+
+/* Attempt to enable execute permissions on the stack.  */
+
+#define ENABLE_EXECUTE_STACK NETBSD_ENABLE_EXECUTE_STACK
 
 
 #undef TARGET_VERSION

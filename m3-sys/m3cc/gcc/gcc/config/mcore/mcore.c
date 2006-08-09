@@ -1,25 +1,28 @@
 /* Output routines for Motorola MCore processor
-   Copyright (C) 1993, 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1999, 2000, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+   This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published
+   by the Free Software Foundation; either version 2, or (at your
+   option) any later version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to
+   the Free Software Foundation, 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "tree.h"
 #include "tm_p.h"
@@ -62,7 +65,7 @@ rtx arch_compare_op1;
 
 /* Provides the class number of the smallest class containing
    reg number.  */
-int regno_reg_class[FIRST_PSEUDO_REGISTER] =
+const int regno_reg_class[FIRST_PSEUDO_REGISTER] =
 {
   GENERAL_REGS,	ONLYR1_REGS,  LRW_REGS,	    LRW_REGS,
   LRW_REGS,	LRW_REGS,     LRW_REGS,	    LRW_REGS,
@@ -86,16 +89,16 @@ const enum reg_class reg_class_from_letter[] =
 
 struct mcore_frame
 {
-  int arg_size;			/* stdarg spills (bytes) */
-  int reg_size;			/* non-volatile reg saves (bytes) */
-  int reg_mask;			/* non-volatile reg saves */
-  int local_size;		/* locals */
-  int outbound_size;		/* arg overflow on calls out */
+  int arg_size;			/* Stdarg spills (bytes).  */
+  int reg_size;			/* Non-volatile reg saves (bytes).  */
+  int reg_mask;			/* Non-volatile reg saves.  */
+  int local_size;		/* Locals.  */
+  int outbound_size;		/* Arg overflow on calls out.  */
   int pad_outbound;
   int pad_local;
   int pad_reg;
   /* Describe the steps we'll use to grow it.  */
-#define	MAX_STACK_GROWS	4	/* gives us some spare space */
+#define	MAX_STACK_GROWS	4	/* Gives us some spare space.  */
   int growth[MAX_STACK_GROWS];
   int arg_offset;
   int reg_offset;
@@ -114,59 +117,77 @@ typedef enum
 }
 cond_type;
 
-static void       output_stack_adjust          PARAMS ((int, int));
-static int        calc_live_regs               PARAMS ((int *));
-static int        const_ok_for_mcore           PARAMS ((int));
-static int        try_constant_tricks          PARAMS ((long, int *, int *));
-static const char *     output_inline_const          PARAMS ((enum machine_mode, rtx *));
-static void       block_move_sequence          PARAMS ((rtx, rtx, rtx, rtx, int, int, int));
-static void       layout_mcore_frame           PARAMS ((struct mcore_frame *));
-static cond_type  is_cond_candidate            PARAMS ((rtx));
-static rtx        emit_new_cond_insn           PARAMS ((rtx, int));
-static rtx        conditionalize_block         PARAMS ((rtx));
-static void       conditionalize_optimization  PARAMS ((rtx));
-static void       mcore_add_gc_roots           PARAMS ((void));
-static rtx        handle_structs_in_regs       PARAMS ((enum machine_mode, tree, int));
-static void       mcore_mark_dllexport         PARAMS ((tree));
-static void       mcore_mark_dllimport         PARAMS ((tree));
-static int        mcore_dllexport_p            PARAMS ((tree));
-static int        mcore_dllimport_p            PARAMS ((tree));
+static void       output_stack_adjust           (int, int);
+static int        calc_live_regs                (int *);
+static int        const_ok_for_mcore            (int);
+static int        try_constant_tricks           (long, int *, int *);
+static const char *     output_inline_const     (enum machine_mode, rtx *);
+static void       block_move_sequence           (rtx, rtx, rtx, rtx, int, int, int);
+static void       layout_mcore_frame            (struct mcore_frame *);
+static cond_type  is_cond_candidate             (rtx);
+static rtx        emit_new_cond_insn            (rtx, int);
+static rtx        conditionalize_block          (rtx);
+static void       conditionalize_optimization   (void);
+static void       mcore_reorg                   (void);
+static rtx        handle_structs_in_regs        (enum machine_mode, tree, int);
+static void       mcore_mark_dllexport          (tree);
+static void       mcore_mark_dllimport          (tree);
+static int        mcore_dllexport_p             (tree);
+static int        mcore_dllimport_p             (tree);
 const struct attribute_spec mcore_attribute_table[];
-static tree       mcore_handle_naked_attribute PARAMS ((tree *, tree, tree, int, bool *));
+static tree       mcore_handle_naked_attribute  (tree *, tree, tree, int, bool *);
 #ifdef OBJECT_FORMAT_ELF
-static void	  mcore_asm_named_section      PARAMS ((const char *,
-							unsigned int));
+static void	  mcore_asm_named_section       (const char *,
+							unsigned int);
 #endif
+static void       mcore_unique_section	        (tree, int);
+static void mcore_encode_section_info		(tree, rtx, int);
+static const char *mcore_strip_name_encoding	(const char *);
+static int        mcore_const_costs            	(rtx, RTX_CODE);
+static int        mcore_and_cost               	(rtx);
+static int        mcore_ior_cost               	(rtx);
+static bool       mcore_rtx_costs		(rtx, int, int, int *);
 
 /* Initialize the GCC target structure.  */
 #ifdef TARGET_DLLIMPORT_DECL_ATTRIBUTES
-#undef TARGET_MERGE_DECL_ATTRIBUTES
-#define TARGET_MERGE_DECL_ATTRIBUTES merge_dllimport_decl_attributes
+#undef  TARGET_MERGE_DECL_ATTRIBUTES
+#define TARGET_MERGE_DECL_ATTRIBUTES	merge_dllimport_decl_attributes
 #endif
 
 #ifdef OBJECT_FORMAT_ELF
-#undef TARGET_ASM_UNALIGNED_HI_OP
+#undef  TARGET_ASM_UNALIGNED_HI_OP
 #define TARGET_ASM_UNALIGNED_HI_OP "\t.short\t"
-#undef TARGET_ASM_UNALIGNED_SI_OP
+#undef  TARGET_ASM_UNALIGNED_SI_OP
 #define TARGET_ASM_UNALIGNED_SI_OP "\t.long\t"
 #endif
 
-#undef TARGET_ATTRIBUTE_TABLE
-#define TARGET_ATTRIBUTE_TABLE mcore_attribute_table
+#undef  TARGET_ATTRIBUTE_TABLE
+#define TARGET_ATTRIBUTE_TABLE 		mcore_attribute_table
+#undef  TARGET_ASM_UNIQUE_SECTION
+#define TARGET_ASM_UNIQUE_SECTION 	mcore_unique_section
+#undef  TARGET_ENCODE_SECTION_INFO
+#define TARGET_ENCODE_SECTION_INFO 	mcore_encode_section_info
+#undef  TARGET_STRIP_NAME_ENCODING
+#define TARGET_STRIP_NAME_ENCODING	mcore_strip_name_encoding
+#undef  TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS 		mcore_rtx_costs
+#undef  TARGET_ADDRESS_COST
+#define TARGET_ADDRESS_COST 		hook_int_rtx_0
+#undef  TARGET_MACHINE_DEPENDENT_REORG
+#define TARGET_MACHINE_DEPENDENT_REORG	mcore_reorg
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 
 /* Adjust the stack and return the number of bytes taken to do it.  */
 static void
-output_stack_adjust (direction, size)
-     int direction;
-     int size;
+output_stack_adjust (int direction, int size)
 {
   /* If extending stack a lot, we do it incrementally.  */
   if (direction < 0 && size > mcore_stack_increment && mcore_stack_increment > 0)
     {
       rtx tmp = gen_rtx (REG, SImode, 1);
       rtx memref;
+
       emit_insn (gen_movsi (tmp, GEN_INT (mcore_stack_increment)));
       do
 	{
@@ -207,8 +228,7 @@ output_stack_adjust (direction, size)
    both as a mask and a count.  */
 
 static int
-calc_live_regs (count)
-     int * count;
+calc_live_regs (int * count)
 {
   int reg;
   int live_regs_mask = 0;
@@ -230,9 +250,7 @@ calc_live_regs (count)
 /* Print the operand address in x to the stream.  */
 
 void
-mcore_print_operand_address (stream, x)
-     FILE * stream;
-     rtx x;
+mcore_print_operand_address (FILE * stream, rtx x)
 {
   switch (GET_CODE (x))
     {
@@ -256,8 +274,8 @@ mcore_print_operand_address (stream, x)
 	switch (GET_CODE (index))
 	  {
 	  case CONST_INT:
-	    fprintf (stream, "(%s,%d)", reg_names[REGNO(base)],
-		     INTVAL (index));
+	    fprintf (stream, "(%s," HOST_WIDE_INT_PRINT_DEC ")",
+		     reg_names[REGNO(base)], INTVAL (index));
 	    break;
 
 	  default:
@@ -288,10 +306,7 @@ mcore_print_operand_address (stream, x)
    'X'  print byte number for xtrbN instruction.  */
 
 void
-mcore_print_operand (stream, x, code)
-     FILE * stream;
-     rtx x;
-     int code;
+mcore_print_operand (FILE * stream, rtx x, int code)
 {
   switch (code)
     {
@@ -308,10 +323,10 @@ mcore_print_operand (stream, x, code)
       fprintf (asm_out_file, "%d", exact_log2 (~INTVAL (x)));
       break;
     case 'O':
-      fprintf (asm_out_file, "%d", INTVAL (x));
+      fprintf (asm_out_file, HOST_WIDE_INT_PRINT_DEC, INTVAL (x));
       break;
     case 'M':
-      fprintf (asm_out_file, "%d", - INTVAL (x));
+      fprintf (asm_out_file, HOST_WIDE_INT_PRINT_DEC, - INTVAL (x));
       break;
     case 'R':
       /* Next location along in memory or register.  */
@@ -333,10 +348,10 @@ mcore_print_operand (stream, x, code)
 	       reg_names[REGNO (x) + 3]);
       break;
     case 'x':
-      fprintf (asm_out_file, "0x%x", INTVAL (x));
+      fprintf (asm_out_file, HOST_WIDE_INT_PRINT_HEX, INTVAL (x));
       break;
     case 'X':
-      fprintf (asm_out_file, "%d", 3 - INTVAL (x) / 8);
+      fprintf (asm_out_file, HOST_WIDE_INT_PRINT_DEC, 3 - INTVAL (x) / 8);
       break;
 
     default:
@@ -358,12 +373,9 @@ mcore_print_operand (stream, x, code)
 
 /* What does a constant cost ?  */
 
-int
-mcore_const_costs (exp, code)
-     rtx exp;
-     enum rtx_code code;
+static int
+mcore_const_costs (rtx exp, enum rtx_code code)
 {
-
   int val = INTVAL (exp);
 
   /* Easy constants.  */
@@ -389,9 +401,8 @@ mcore_const_costs (exp, code)
    have been relaxed.   We want to ensure that cse will cse relaxed immeds
    out.  Otherwise we'll get bad code (multiple reloads of the same const).  */
 
-int
-mcore_and_cost (x)
-     rtx x;
+static int
+mcore_and_cost (rtx x)
 {
   int val;
 
@@ -416,9 +427,8 @@ mcore_and_cost (x)
 
 /* What does an or cost - see and_cost().  */
 
-int
-mcore_ior_cost (x)
-     rtx x;
+static int
+mcore_ior_cost (rtx x)
 {
   int val;
 
@@ -441,15 +451,53 @@ mcore_ior_cost (x)
   return 5;
 }
 
+static bool
+mcore_rtx_costs (rtx x, int code, int outer_code, int * total)
+{
+  switch (code)
+    {
+    case CONST_INT:
+      *total = mcore_const_costs (x, outer_code);
+      return true;
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      *total = 5;
+      return true;
+    case CONST_DOUBLE:
+      *total = 10;
+      return true;
+
+    case AND:
+      *total = COSTS_N_INSNS (mcore_and_cost (x));
+      return true;
+
+    case IOR:
+      *total = COSTS_N_INSNS (mcore_ior_cost (x));
+      return true;
+
+    case DIV:
+    case UDIV:
+    case MOD:
+    case UMOD:
+    case FLOAT:
+    case FIX:
+      *total = COSTS_N_INSNS (100);
+      return true;
+  
+    default:
+      return false;
+    }
+}
+
 /* Check to see if a comparison against a constant can be made more efficient
    by incrementing/decrementing the constant to get one that is more efficient
    to load.  */
 
 int
-mcore_modify_comparison (code)
-     enum rtx_code code;
+mcore_modify_comparison (enum rtx_code code)
 {
-  rtx op1   = arch_compare_op1;
+  rtx op1 = arch_compare_op1;
   
   if (GET_CODE (op1) == CONST_INT)
     {
@@ -476,8 +524,7 @@ mcore_modify_comparison (code)
 /* Prepare the operands for a comparison.  */
 
 rtx
-mcore_gen_compare_reg (code)
-     enum rtx_code code;
+mcore_gen_compare_reg (enum rtx_code code)
 {
   rtx op0 = arch_compare_op0;
   rtx op1 = arch_compare_op1;
@@ -492,7 +539,7 @@ mcore_gen_compare_reg (code)
     {
     case EQ:	/* Use inverted condition, cmpne.  */
       code = NE;
-      /* drop through */
+      /* Drop through.  */
       
     case NE:	/* Use normal condition, cmpne.  */
       if (GET_CODE (op1) == CONST_INT && ! CONST_OK_FOR_K (INTVAL (op1)))
@@ -501,7 +548,7 @@ mcore_gen_compare_reg (code)
 
     case LE:	/* Use inverted condition, reversed cmplt.  */
       code = GT;
-      /* drop through */
+      /* Drop through.  */
       
     case GT:	/* Use normal condition, reversed cmplt.  */
       if (GET_CODE (op1) == CONST_INT)
@@ -510,11 +557,11 @@ mcore_gen_compare_reg (code)
 
     case GE:	/* Use inverted condition, cmplt.  */
       code = LT;
-      /* drop through */
+      /* Drop through.  */
       
     case LT:	/* Use normal condition, cmplt.  */
       if (GET_CODE (op1) == CONST_INT && 
-	  /* covered by btsti x,31 */
+	  /* covered by btsti x,31.  */
 	  INTVAL (op1) != 0 &&
 	  ! CONST_OK_FOR_J (INTVAL (op1)))
 	op1 = force_reg (SImode, op1);
@@ -534,16 +581,16 @@ mcore_gen_compare_reg (code)
 	  break;
 	}
       code = LEU;
-      /* drop through */
+      /* Drop through.  */
       
-    case LEU:	/* Use normal condition, reversed cmphs. */
+    case LEU:	/* Use normal condition, reversed cmphs.  */
       if (GET_CODE (op1) == CONST_INT && INTVAL (op1) != 0)
 	op1 = force_reg (SImode, op1);
       break;
 
     case LTU:	/* Use inverted condition, cmphs.  */
       code = GEU;
-      /* drop through */
+      /* Drop through.  */
       
     case GEU:	/* Use normal condition, cmphs.  */
       if (GET_CODE (op1) == CONST_INT && INTVAL (op1) != 0)
@@ -559,10 +606,8 @@ mcore_gen_compare_reg (code)
   return cc_reg;
 }
 
-
 int
-mcore_symbolic_address_p (x)
-     rtx x;
+mcore_symbolic_address_p (rtx x)
 {
   switch (GET_CODE (x))
     {
@@ -580,9 +625,7 @@ mcore_symbolic_address_p (x)
 }
 
 int
-mcore_call_address_operand (x, mode)
-     rtx x;
-     enum machine_mode mode;
+mcore_call_address_operand (rtx x, enum machine_mode mode)
 {
   return register_operand (x, mode) || CONSTANT_P (x);
 }
@@ -590,9 +633,7 @@ mcore_call_address_operand (x, mode)
 /* Functions to output assembly code for a function call.  */
 
 char *
-mcore_output_call (operands, index)
-     rtx operands[];
-     int index;
+mcore_output_call (rtx operands[], int index)
 {
   static char buffer[20];
   rtx addr = operands [index];
@@ -632,8 +673,7 @@ mcore_output_call (operands, index)
 /* Can we load a constant with a single instruction ?  */
 
 static int
-const_ok_for_mcore (value)
-     int value;
+const_ok_for_mcore (int value)
 {
   if (value >= 0 && value <= 127)
     return 1;
@@ -642,7 +682,7 @@ const_ok_for_mcore (value)
   if ((value & (value - 1)) == 0)
     return 1;
   
-  /* Try exact power of two - 1. */
+  /* Try exact power of two - 1.  */
   if ((value & (value + 1)) == 0)
     return 1;
   
@@ -652,8 +692,7 @@ const_ok_for_mcore (value)
 /* Can we load a constant inline with up to 2 instructions ?  */
 
 int
-mcore_const_ok_for_inline (value)
-     long value;
+mcore_const_ok_for_inline (long value)
 {
   int x, y;
    
@@ -663,8 +702,7 @@ mcore_const_ok_for_inline (value)
 /* Are we loading the constant using a not ?  */
 
 int
-mcore_const_trick_uses_not (value)
-     long value;
+mcore_const_trick_uses_not (long value)
 {
   int x, y;
 
@@ -688,10 +726,7 @@ mcore_const_trick_uses_not (value)
    11: single insn followed by ixw.  */
 
 static int
-try_constant_tricks (value, x, y)
-     long value;
-     int * x;
-     int * y;
+try_constant_tricks (long value, int * x, int * y)
 {
   int i;
   unsigned bit, shf, rot;
@@ -810,7 +845,6 @@ try_constant_tricks (value, x, y)
   return 0;
 }
 
-
 /* Check whether reg is dead at first.  This is done by searching ahead
    for either the next use (i.e., reg is live), a death note, or a set of
    reg.  Don't just use dead_or_set_p() since reload does not always mark 
@@ -818,9 +852,7 @@ try_constant_tricks (value, x, y)
    can ignore subregs by extracting the actual register.  BRC  */
 
 int
-mcore_is_dead (first, reg)
-     rtx first;
-     rtx reg;
+mcore_is_dead (rtx first, rtx reg)
 {
   rtx insn;
 
@@ -862,12 +894,10 @@ mcore_is_dead (first, reg)
   return 0;
 }
 
-
 /* Count the number of ones in mask.  */
 
 int
-mcore_num_ones (mask)
-     int mask;
+mcore_num_ones (int mask)
 {
   /* A trick to count set bits recently posted on comp.compilers.  */
   mask =  (mask >> 1  & 0x55555555) + (mask & 0x55555555);
@@ -881,8 +911,7 @@ mcore_num_ones (mask)
 /* Count the number of zeros in mask.  */
 
 int
-mcore_num_zeros (mask)
-     int mask;
+mcore_num_zeros (int mask)
 {
   return 32 - mcore_num_ones (mask);
 }
@@ -890,8 +919,7 @@ mcore_num_zeros (mask)
 /* Determine byte being masked.  */
 
 int
-mcore_byte_offset (mask)
-     unsigned int mask;
+mcore_byte_offset (unsigned int mask)
 {
   if (mask == 0x00ffffffL)
     return 0;
@@ -908,8 +936,7 @@ mcore_byte_offset (mask)
 /* Determine halfword being masked.  */
 
 int
-mcore_halfword_offset (mask)
-     unsigned int mask;
+mcore_halfword_offset (unsigned int mask)
 {
   if (mask == 0x0000ffffL)
     return 0;
@@ -922,9 +949,7 @@ mcore_halfword_offset (mask)
 /* Output a series of bseti's corresponding to mask.  */
 
 const char *
-mcore_output_bseti (dst, mask)
-     rtx dst;
-     int mask;
+mcore_output_bseti (rtx dst, int mask)
 {
   rtx out_operands[2];
   int bit;
@@ -948,9 +973,7 @@ mcore_output_bseti (dst, mask)
 /* Output a series of bclri's corresponding to mask.  */
 
 const char *
-mcore_output_bclri (dst, mask)
-     rtx dst;
-     int mask;
+mcore_output_bclri (rtx dst, int mask)
 {
   rtx out_operands[2];
   int bit;
@@ -977,10 +1000,7 @@ mcore_output_bclri (dst, mask)
    really worth the effort.  */
 
 const char *
-mcore_output_cmov (operands, cmp_t, test)
-     rtx operands[];
-     int cmp_t;
-     const char * test;
+mcore_output_cmov (rtx operands[], int cmp_t, const char * test)
 {
   int load_value;
   int adjust_value;
@@ -1044,9 +1064,7 @@ mcore_output_cmov (operands, cmp_t, test)
    by an and (i.e. combine the not and the and into andn). BRC  */
 
 const char *
-mcore_output_andn (insn, operands)
-     rtx insn ATTRIBUTE_UNUSED;
-     rtx operands[];
+mcore_output_andn (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
 {
   int x, y;
   rtx out_operands[3];
@@ -1083,9 +1101,7 @@ mcore_output_andn (insn, operands)
 /* Output an inline constant.  */
 
 static const char *
-output_inline_const (mode, operands)
-     enum machine_mode mode;
-     rtx operands[];
+output_inline_const (enum machine_mode mode, rtx operands[])
 {
   int x = 0, y = 0;
   int trick_no;
@@ -1183,10 +1199,8 @@ output_inline_const (mode, operands)
 /* Output a move of a word or less value.  */
 
 const char *
-mcore_output_move (insn, operands, mode)
-     rtx insn ATTRIBUTE_UNUSED;
-     rtx operands[];
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+mcore_output_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[],
+		   enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   rtx dst = operands[0];
   rtx src = operands[1];
@@ -1205,7 +1219,17 @@ mcore_output_move (insn, operands, mode)
 	  if (GET_CODE (XEXP (src, 0)) == LABEL_REF) 
             return "lrw\t%0,[%1]";              /* a-R */
 	  else
-            return "ldw\t%0,%1";                 /* r-m */
+	    switch (GET_MODE (src))		/* r-m */
+	      {
+	      case SImode:
+		return "ldw\t%0,%1";
+	      case HImode:
+		return "ld.h\t%0,%1";
+	      case QImode:
+		return "ld.b\t%0,%1";
+	      default:
+		abort ();
+	      }
 	}
       else if (GET_CODE (src) == CONST_INT)
 	{
@@ -1226,98 +1250,19 @@ mcore_output_move (insn, operands, mode)
 	return "lrw\t%0, %1";                /* Into the literal pool.  */
     }
   else if (GET_CODE (dst) == MEM)               /* m-r */
-    return "stw\t%1,%0";
+    switch (GET_MODE (dst))
+      {
+      case SImode:
+	return "stw\t%1,%0";
+      case HImode:
+	return "st.h\t%1,%0";
+      case QImode:
+	return "st.b\t%1,%0";
+      default:
+	abort ();
+      }
 
   abort ();
-}
-
-/* Outputs a constant inline -- regardless of the cost.
-   Useful for things where we've gotten into trouble and think we'd
-   be doing an lrw into r15 (forbidden). This lets us get out of
-   that pickle even after register allocation.  */
-
-const char *
-mcore_output_inline_const_forced (insn, operands, mode)
-     rtx insn ATTRIBUTE_UNUSED;
-     rtx operands[];
-     enum machine_mode mode ATTRIBUTE_UNUSED;
-{
-  unsigned long value = INTVAL (operands[1]);
-  unsigned long ovalue = value;
-  struct piece
-  {
-    int low;
-    int shift;
-  }
-  part[6];
-  int i;
-
-  if (mcore_const_ok_for_inline (value))
-    return output_inline_const (SImode, operands);
-
-  for (i = 0; (unsigned) i < ARRAY_SIZE (part); i++)
-    {
-      part[i].shift = 0;
-      part[i].low = (value & 0x1F);
-      value -= part[i].low;
-      
-      if (mcore_const_ok_for_inline (value))
-	break;
-      else
-	{
-	  value >>= 5;
-	  part[i].shift = 5;
-	  
-	  while ((value & 1) == 0)
-	    {
-	      part[i].shift++;
-	      value >>= 1;
-	    }
-	  
-	  if (mcore_const_ok_for_inline (value))
-	    break;
-	}
-    }
-  
-  /* 5 bits per iteration, a maximum of 5 times == 25 bits and leaves
-     7 bits left in the constant -- which we know we can cover with
-     a movi.  The final value can't be zero otherwise we'd have stopped
-     in the previous iteration.   */
-  if (value == 0 || ! mcore_const_ok_for_inline (value))
-    abort ();
-
-  /* Now, work our way backwards emitting the constant.  */
-
-  /* Emit the value that remains -- it will be non-zero.  */
-  operands[1] = GEN_INT (value);
-  output_asm_insn (output_inline_const (SImode, operands), operands);
- 
-  while (i >= 0)
-    {
-      /* Shift anything we've already loaded.  */
-      if (part[i].shift)
-        {
-	  operands[2] = GEN_INT (part[i].shift);
-	  output_asm_insn ("lsli       %0,%2", operands);
-	  value <<= part[i].shift;
-        }
-      
-      /* Add anything we need into the low 5 bits.  */
-      if (part[i].low != 0)
-        {
-	  operands[2] = GEN_INT (part[i].low);
-	  output_asm_insn ("addi      %0,%2", operands);
-	  value += part[i].low;
-        }
-      
-      i--;
-    }
-  
-  if (value != ovalue)          /* sanity */
-    abort ();
- 
-  /* We've output all the instructions.  */
-  return "";
 }
 
 /* Return a sequence of instructions to perform DI or DF move.
@@ -1325,9 +1270,7 @@ mcore_output_inline_const_forced (insn, operands, mode)
    to take care when we see overlapping source and dest registers.  */
 
 const char *
-mcore_output_movedouble (operands, mode)
-     rtx operands[];
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+mcore_output_movedouble (rtx operands[], enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   rtx dst = operands[0];
   rtx src = operands[1];
@@ -1429,12 +1372,10 @@ mcore_output_movedouble (operands, mode)
 
 /* Predicates used by the templates.  */
 
-/* Non zero if OP can be source of a simple move operation.  */
+/* Nonzero if OP can be source of a simple move operation.  */
 
 int
-mcore_general_movsrc_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_general_movsrc_operand (rtx op, enum machine_mode mode)
 {
   /* Any (MEM LABEL_REF) is OK.  That is a pc-relative load.  */
   if (GET_CODE (op) == MEM && GET_CODE (XEXP (op, 0)) == LABEL_REF)
@@ -1443,12 +1384,10 @@ mcore_general_movsrc_operand (op, mode)
   return general_operand (op, mode);
 }
 
-/* Non zero if OP can be destination of a simple move operation. */
+/* Nonzero if OP can be destination of a simple move operation.  */
 
 int
-mcore_general_movdst_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_general_movdst_operand (rtx op, enum machine_mode mode)
 {
   if (GET_CODE (op) == REG && REGNO (op) == CC_REG)
     return 0;
@@ -1459,9 +1398,7 @@ mcore_general_movdst_operand (op, mode)
 /* Nonzero if OP is a normal arithmetic register.  */
 
 int
-mcore_arith_reg_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_reg_operand (rtx op, enum machine_mode mode)
 {
   if (! register_operand (op, mode))
     return 0;
@@ -1475,13 +1412,11 @@ mcore_arith_reg_operand (op, mode)
   return 1;
 }
 
-/* Non zero if OP should be recognized during reload for an ixh/ixw
+/* Nonzero if OP should be recognized during reload for an ixh/ixw
    operand.  See the ixh/ixw patterns.  */
 
 int
-mcore_reload_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_reload_operand (rtx op, enum machine_mode mode)
 {
   if (mcore_arith_reg_operand (op, mode))
     return 1;
@@ -1495,9 +1430,7 @@ mcore_reload_operand (op, mode)
 /* Nonzero if OP is a valid source operand for an arithmetic insn.  */
 
 int
-mcore_arith_J_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_J_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1511,9 +1444,7 @@ mcore_arith_J_operand (op, mode)
 /* Nonzero if OP is a valid source operand for an arithmetic insn.  */
 
 int
-mcore_arith_K_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_K_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1527,9 +1458,7 @@ mcore_arith_K_operand (op, mode)
 /* Nonzero if OP is a valid source operand for a shift or rotate insn.  */
 
 int
-mcore_arith_K_operand_not_0 (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_K_operand_not_0 (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1543,9 +1472,7 @@ mcore_arith_K_operand_not_0 (op, mode)
 }
 
 int
-mcore_arith_K_S_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_K_S_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1560,8 +1487,7 @@ mcore_arith_K_S_operand (op, mode)
 }
 
 int
-mcore_arith_S_operand (op)
-     rtx op;
+mcore_arith_S_operand (rtx op)
 {
   if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_M (~INTVAL (op)))
     return 1;
@@ -1570,9 +1496,7 @@ mcore_arith_S_operand (op)
 }
 
 int
-mcore_arith_M_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_M_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1586,9 +1510,7 @@ mcore_arith_M_operand (op, mode)
 /* Nonzero if OP is a valid source operand for loading.  */
 
 int
-mcore_arith_imm_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_imm_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1600,9 +1522,7 @@ mcore_arith_imm_operand (op, mode)
 }
 
 int
-mcore_arith_any_imm_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_any_imm_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1616,9 +1536,7 @@ mcore_arith_any_imm_operand (op, mode)
 /* Nonzero if OP is a valid source operand for a cmov with two consts +/- 1.  */
 
 int
-mcore_arith_O_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_arith_O_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1632,9 +1550,7 @@ mcore_arith_O_operand (op, mode)
 /* Nonzero if OP is a valid source operand for a btsti.  */
 
 int
-mcore_literal_K_operand (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+mcore_literal_K_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_K (INTVAL (op)))
     return 1;
@@ -1645,9 +1561,7 @@ mcore_literal_K_operand (op, mode)
 /* Nonzero if OP is a valid source operand for an add/sub insn.  */
 
 int
-mcore_addsub_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_addsub_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1674,9 +1588,7 @@ mcore_addsub_operand (op, mode)
 /* Nonzero if OP is a valid source operand for a compare operation.  */
 
 int
-mcore_compare_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+mcore_compare_operand (rtx op, enum machine_mode mode)
 {
   if (register_operand (op, mode))
     return 1;
@@ -1690,8 +1602,7 @@ mcore_compare_operand (op, mode)
 /* Expand insert bit field.  BRC  */
 
 int
-mcore_expand_insv (operands)
-     rtx operands[];
+mcore_expand_insv (rtx operands[])
 {
   int width = INTVAL (operands[1]);
   int posn = INTVAL (operands[2]);
@@ -1721,7 +1632,7 @@ mcore_expand_insv (operands)
       return 1;
     }
 
-  /* Look at some bitfield placements that we aren't interested
+  /* Look at some bit-field placements that we aren't interested
      in handling ourselves, unless specifically directed to do so.  */
   if (! TARGET_W_FIELD)
     return 0;		/* Generally, give up about now.  */
@@ -1790,10 +1701,9 @@ mcore_expand_insv (operands)
 
 /* Return 1 if OP is a load multiple operation.  It is known to be a
    PARALLEL and the first section will be tested.  */
+
 int
-mcore_load_multiple_operation (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+mcore_load_multiple_operation (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   int count = XVECLEN (op, 0);
   int dest_regno;
@@ -1833,9 +1743,7 @@ mcore_load_multiple_operation (op, mode)
 /* Similar, but tests for store multiple.  */
 
 int
-mcore_store_multiple_operation (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+mcore_store_multiple_operation (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   int count = XVECLEN (op, 0);
   int src_regno;
@@ -1894,12 +1802,8 @@ static const enum machine_mode mode_from_align[] =
 };
 
 static void
-block_move_sequence (dest, dst_mem, src, src_mem, size, align, offset)
-     rtx dest, dst_mem;
-     rtx src, src_mem;
-     int size;
-     int align;
-     int offset;
+block_move_sequence (rtx dest, rtx dst_mem, rtx src, rtx src_mem,
+		     int size, int align, int offset)
 {
   rtx temp[2];
   enum machine_mode mode[2];
@@ -1985,10 +1889,7 @@ block_move_sequence (dest, dst_mem, src, src_mem, size, align, offset)
 }
 
 void
-mcore_expand_block_move (dst_mem, src_mem, operands)
-     rtx dst_mem;
-     rtx src_mem;
-     rtx * operands;
+mcore_expand_block_move (rtx dst_mem, rtx src_mem, rtx * operands)
 {
   int align = INTVAL (operands[3]);
   int bytes;
@@ -2035,8 +1936,7 @@ static int current_function_anonymous_args;
 #define	ADDI_REACH (32)		/* Maximum addi operand.  */
 
 static void
-layout_mcore_frame (infp)
-     struct mcore_frame * infp;
+layout_mcore_frame (struct mcore_frame * infp)
 {
   int n;
   unsigned int i;
@@ -2062,7 +1962,7 @@ layout_mcore_frame (infp)
   infp->reg_mask = calc_live_regs (& n);
   infp->reg_size = n * 4;
 
-  /* And the rest of it... locals and space for overflowed outbounds. */
+  /* And the rest of it... locals and space for overflowed outbounds.  */
   infp->local_size = get_frame_size ();
   infp->outbound_size = current_function_outgoing_args_size;
 
@@ -2260,9 +2160,7 @@ layout_mcore_frame (infp)
    the other its replacement, at the start of a routine.  */
 
 int
-mcore_initial_elimination_offset (from, to)
-     int from;
-     int to;
+mcore_initial_elimination_offset (int from, int to)
 {
   int above_frame;
   int below_frame;
@@ -2292,11 +2190,9 @@ mcore_initial_elimination_offset (from, to)
 /* Keep track of some information about varargs for the prolog.  */
 
 void
-mcore_setup_incoming_varargs (args_so_far, mode, type, ptr_pretend_size)
-     CUMULATIVE_ARGS args_so_far;
-     enum machine_mode mode;
-     tree type;
-     int * ptr_pretend_size ATTRIBUTE_UNUSED;
+mcore_setup_incoming_varargs (CUMULATIVE_ARGS args_so_far,
+			      enum machine_mode mode, tree type,
+			      int * ptr_pretend_size ATTRIBUTE_UNUSED)
 {
   current_function_anonymous_args = 1;
 
@@ -2305,7 +2201,7 @@ mcore_setup_incoming_varargs (args_so_far, mode, type, ptr_pretend_size)
      registers during the prologue.  */
   number_of_regs_before_varargs = args_so_far + mcore_num_arg_regs (mode, type);
   
-  /* There is a bug somwehere in the arg handling code.
+  /* There is a bug somewhere in the arg handling code.
      Until I can find it this workaround always pushes the
      last named argument onto the stack.  */
   number_of_regs_before_varargs = args_so_far;
@@ -2317,7 +2213,7 @@ mcore_setup_incoming_varargs (args_so_far, mode, type, ptr_pretend_size)
 }
 
 void
-mcore_expand_prolog ()
+mcore_expand_prolog (void)
 {
   struct mcore_frame fi;
   int space_allocated = 0;
@@ -2333,7 +2229,6 @@ mcore_expand_prolog ()
     {
       /* Emit a symbol for this routine's frame size.  */
       rtx x;
-      int len;
 
       x = DECL_RTL (current_function_decl);
       
@@ -2348,10 +2243,7 @@ mcore_expand_prolog ()
       if (mcore_current_function_name)
 	free (mcore_current_function_name);
       
-      len = strlen (XSTR (x, 0)) + 1;
-      mcore_current_function_name = (char *) xmalloc (len);
-      
-      memcpy (mcore_current_function_name, XSTR (x, 0), len);
+      mcore_current_function_name = xstrdup (XSTR (x, 0));
       
       ASM_OUTPUT_CG_NODE (asm_out_file, mcore_current_function_name, space_allocated);
 
@@ -2374,7 +2266,7 @@ mcore_expand_prolog ()
     return;
   
   /* Handle stdarg+regsaves in one shot: can't be more than 64 bytes.  */
-  output_stack_adjust (-1, fi.growth[growth++]);	/* grows it */
+  output_stack_adjust (-1, fi.growth[growth++]);	/* Grows it.  */
 
   /* If we have a parameter passed partially in regs and partially in memory,
      the registers will have been stored to memory already in function.c.  So
@@ -2396,7 +2288,7 @@ mcore_expand_prolog ()
 
   /* Do we need another stack adjustment before we do the register saves?  */
   if (growth < fi.reg_growth)
-    output_stack_adjust (-1, fi.growth[growth++]);		/* grows it */
+    output_stack_adjust (-1, fi.growth[growth++]);		/* Grows it.  */
 
   if (fi.reg_size != 0)
     {
@@ -2436,7 +2328,7 @@ mcore_expand_prolog ()
     {
       /* If we haven't already purchased to 'fp'.  */
       if (growth < fi.local_growth)
-        output_stack_adjust (-1, fi.growth[growth++]);		/* grows it */
+        output_stack_adjust (-1, fi.growth[growth++]);		/* Grows it.  */
       
       emit_insn (gen_movsi (frame_pointer_rtx, stack_pointer_rtx));
 
@@ -2447,14 +2339,14 @@ mcore_expand_prolog ()
   else
     {
       if (growth < fi.local_growth)
-        output_stack_adjust (-1, fi.growth[growth++]);		/* grows it */
+        output_stack_adjust (-1, fi.growth[growth++]);		/* Grows it.  */
       if (fi.growth[growth])
         output_stack_adjust (-1, fi.growth[growth++]);
     }
 }
 
 void
-mcore_expand_epilog ()
+mcore_expand_epilog (void)
 {
   struct mcore_frame fi;
   int i;
@@ -2525,7 +2417,7 @@ mcore_expand_epilog ()
     }
 
   /* Give back anything else.  */
-  /* XXX: Should accumuate total and then give it back.  */
+  /* XXX: Should accumulate total and then give it back.  */
   while (growth >= 0)
     output_stack_adjust ( 1, fi.growth[growth--]);
 }
@@ -2590,7 +2482,7 @@ typedef struct
 
 /* The maximum number of constants that can fit into one pool, since
    the pc relative range is 0...1020 bytes and constants are at least 4
-   bytes long.  We subtact 4 from the range to allow for the case where
+   bytes long.  We subtract 4 from the range to allow for the case where
    we need to add a branch/align before the constant pool.  */
 
 #define MAX_COUNT 1016
@@ -2602,7 +2494,7 @@ static int pool_size;
    will only be labels.  */
 
 const char *
-mcore_output_jump_label_table ()
+mcore_output_jump_label_table (void)
 {
   int i;
 
@@ -2614,7 +2506,7 @@ mcore_output_jump_label_table ()
 	{
 	  pool_node * p = pool_vector + i;
 
-	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (p->label));
+	  (*targetm.asm_out.internal_label) (asm_out_file, "L", CODE_LABEL_NUMBER (p->label));
 	  
 	  output_asm_insn (".long	%0", &p->value);
 	}
@@ -2628,8 +2520,7 @@ mcore_output_jump_label_table ()
 /* Check whether insn is a candidate for a conditional.  */
 
 static cond_type
-is_cond_candidate (insn)
-     rtx insn;
+is_cond_candidate (rtx insn)
 {
   /* The only things we conditionalize are those that can be directly
      changed into a conditional.  Only bother with SImode items.  If 
@@ -2680,7 +2571,7 @@ is_cond_candidate (insn)
                GET_MODE (XEXP (src, 0)) == SImode)
 	return COND_DEC_INSN;
 
-      /* some insns that we don't bother with:
+      /* Some insns that we don't bother with:
 	 (set (rx:DI) (ry:DI))
 	 (set (rx:DI) (const_int 0))
       */            
@@ -2698,9 +2589,7 @@ is_cond_candidate (insn)
    new one.  Return the new insn if emitted.  */
 
 static rtx
-emit_new_cond_insn (insn, cond)
-     rtx insn;
-     int cond;
+emit_new_cond_insn (rtx insn, int cond)
 {
   rtx c_insn = 0;
   rtx pat, dst, src;
@@ -2817,8 +2706,7 @@ emit_new_cond_insn (insn, cond)
    starting at the last instruction of block 2.  This may allow an entire
    if-then-else statement to be conditionalized.  BRC  */
 static rtx
-conditionalize_block (first)
-     rtx first;
+conditionalize_block (rtx first)
 {
   rtx insn;
   rtx br_pat;
@@ -2870,7 +2758,7 @@ conditionalize_block (first)
       
       code = GET_CODE (insn);
 
-      /* Look for the label at the start of block 3. */
+      /* Look for the label at the start of block 3.  */
       if (code == CODE_LABEL && CODE_LABEL_NUMBER (insn) == br_lab_num)
 	break;
 
@@ -2918,7 +2806,7 @@ conditionalize_block (first)
       if (INSN_DELETED_P (insn))
 	continue;
       
-      /* Try to form a conditional variant of the instruction and emit it. */
+      /* Try to form a conditional variant of the instruction and emit it.  */
       if ((newinsn = emit_new_cond_insn (insn, cond)))
 	{
 	  if (end_blk_2_insn == insn)
@@ -2959,23 +2847,21 @@ conditionalize_block (first)
    in before cse 2).  */
 
 static void
-conditionalize_optimization (first)
-     rtx first;
+conditionalize_optimization (void)
 {
   rtx insn;
 
-  for (insn = first; insn; insn = conditionalize_block (insn))
+  for (insn = get_insns (); insn; insn = conditionalize_block (insn))
     continue;
 }
 
 static int saved_warn_return_type = -1;
 static int saved_warn_return_type_count = 0;
 
-/* This function is called from toplev.c before reorg.  */
+/* This is to handle loads from the constant pool.  */
 
-void
-mcore_dependent_reorg (first)
-     rtx first;
+static void
+mcore_reorg (void)
 {
   /* Reset this variable.  */
   current_function_anonymous_args = 0;
@@ -2999,42 +2885,56 @@ mcore_dependent_reorg (first)
     return;
   
   /* Conditionalize blocks where we can.  */
-  conditionalize_optimization (first);
+  conditionalize_optimization ();
 
   /* Literal pool generation is now pushed off until the assembler.  */
 }
 
 
-/* Return the reg_class to use when reloading the rtx X into the class
-   CLASS.  */
+/* Return true if X is something that can be moved directly into r15.  */
 
-/* If the input is (PLUS REG CONSTANT) representing a stack slot address,
-   then we want to restrict the class to LRW_REGS since that ensures that
-   will be able to safely load the constant.
-
-   If the input is a constant that should be loaded with mvir1, then use
-   ONLYR1_REGS.
-
-   ??? We don't handle the case where we have (PLUS REG CONSTANT) and
-   the constant should be loaded with mvir1, because that can lead to cases
-   where an instruction needs two ONLYR1_REGS reloads.  */
-enum reg_class
-mcore_reload_class (x, class)
-     rtx x;
-     enum reg_class class;
+bool
+mcore_r15_operand_p (rtx x)
 {
-  enum reg_class new_class;
+  switch (GET_CODE (x))
+    {
+    case CONST_INT:
+      return mcore_const_ok_for_inline (INTVAL (x));
 
-  if (class == GENERAL_REGS && CONSTANT_P (x)
-      && (GET_CODE (x) != CONST_INT
-	  || (   ! CONST_OK_FOR_I (INTVAL (x))
-	      && ! CONST_OK_FOR_M (INTVAL (x))
-	      && ! CONST_OK_FOR_N (INTVAL (x)))))
-    new_class = LRW_REGS;
-  else
-    new_class = class;
+    case REG:
+    case SUBREG:
+    case MEM:
+      return 1;
 
-  return new_class;
+    default:
+      return 0;
+    }
+}
+
+/* Implement SECONDARY_RELOAD_CLASS.  If CLASS contains r15, and we can't
+   directly move X into it, use r1-r14 as a temporary.  */
+
+enum reg_class
+mcore_secondary_reload_class (enum reg_class class,
+			      enum machine_mode mode ATTRIBUTE_UNUSED, rtx x)
+{
+  if (TEST_HARD_REG_BIT (reg_class_contents[class], 15)
+      && !mcore_r15_operand_p (x))
+    return LRW_REGS;
+  return NO_REGS;
+}
+
+/* Return the reg_class to use when reloading the rtx X into the class
+   CLASS.  If X is too complex to move directly into r15, prefer to
+   use LRW_REGS instead.  */
+
+enum reg_class
+mcore_reload_class (rtx x, enum reg_class class)
+{
+  if (reg_class_subset_p (LRW_REGS, class) && !mcore_r15_operand_p (x))
+    return LRW_REGS;
+
+  return class;
 }
 
 /* Tell me if a pair of reg/subreg rtx's actually refer to the same
@@ -3042,12 +2942,11 @@ mcore_reload_class (x, class)
    they are the same mode or note (e.g., a QImode in r2 matches an HImode
    in r2 matches an SImode in r2. Might think in the future about whether
    we want to be able to say something about modes.  */
+
 int
-mcore_is_same_reg (x, y)
-     rtx x;
-     rtx y;
+mcore_is_same_reg (rtx x, rtx y)
 {
-  /* Strip any and all of the subreg wrappers. */
+  /* Strip any and all of the subreg wrappers.  */
   while (GET_CODE (x) == SUBREG)
     x = SUBREG_REG (x);
   
@@ -3060,17 +2959,8 @@ mcore_is_same_reg (x, y)
   return 0;
 }
 
-/* Called to register all of our global variables with the garbage
-   collector.  */
-static void
-mcore_add_gc_roots ()
-{
-  ggc_add_rtx_root (&arch_compare_op0, 1);
-  ggc_add_rtx_root (&arch_compare_op1, 1);
-}
-
 void
-mcore_override_options ()
+mcore_override_options (void)
 {
   if (mcore_stack_increment_string)
     {
@@ -3087,19 +2977,15 @@ mcore_override_options ()
   /* Only the m340 supports little endian code.  */
   if (TARGET_LITTLE_END && ! TARGET_M340)
     target_flags |= M340_BIT;
-
-  mcore_add_gc_roots ();
 }
 
 int
-mcore_must_pass_on_stack (mode, type)
-     enum machine_mode mode ATTRIBUTE_UNUSED;
-     tree type;
+mcore_must_pass_on_stack (enum machine_mode mode ATTRIBUTE_UNUSED, tree type)
 {
   if (type == NULL)
     return 0;
 
-  /* If the argugment can have its address taken, it must
+  /* If the argument can have its address taken, it must
      be placed on the stack.  */
   if (TREE_ADDRESSABLE (type))
     return 1;
@@ -3109,10 +2995,9 @@ mcore_must_pass_on_stack (mode, type)
 
 /* Compute the number of word sized registers needed to 
    hold a function argument of mode MODE and type TYPE.  */
+
 int
-mcore_num_arg_regs (mode, type)
-     enum machine_mode mode;
-     tree type;
+mcore_num_arg_regs (enum machine_mode mode, tree type)
 {
   int size;
 
@@ -3128,10 +3013,7 @@ mcore_num_arg_regs (mode, type)
 }
 
 static rtx
-handle_structs_in_regs (mode, type, reg)
-     enum machine_mode mode;
-     tree type;
-     int  reg;
+handle_structs_in_regs (enum machine_mode mode, tree type, int reg)
 {
   int size;
 
@@ -3175,9 +3057,7 @@ handle_structs_in_regs (mode, type, reg)
 }
 
 rtx
-mcore_function_value (valtype, func)
-     tree valtype;
-     tree func ATTRIBUTE_UNUSED;
+mcore_function_value (tree valtype, tree func ATTRIBUTE_UNUSED)
 {
   enum machine_mode mode;
   int unsigned_p;
@@ -3206,12 +3086,10 @@ mcore_function_value (valtype, func)
    and the rest are pushed.  Any arg that starts within the first
    NPARM_REGS words is at least partially passed in a register unless
    its data type forbids.  */
+
 rtx
-mcore_function_arg (cum, mode, type, named)
-     CUMULATIVE_ARGS   cum;
-     enum machine_mode mode;
-     tree              type;
-     int               named;
+mcore_function_arg (CUMULATIVE_ARGS cum, enum machine_mode mode,
+		    tree type, int named)
 {
   int arg_reg;
   
@@ -3232,16 +3110,14 @@ mcore_function_arg (cum, mode, type, named)
 /* Implements the FUNCTION_ARG_PARTIAL_NREGS macro.
    Returns the number of argument registers required to hold *part* of
    a parameter of machine mode MODE and type TYPE (which may be NULL if
-   the type is not known).  If the argument fits entirly in the argument
+   the type is not known).  If the argument fits entirely in the argument
    registers, or entirely on the stack, then 0 is returned.  CUM is the
    number of argument registers already used by earlier parameters to
    the function.  */
+
 int
-mcore_function_arg_partial_nregs (cum, mode, type, named)
-     CUMULATIVE_ARGS   cum;
-     enum machine_mode mode;
-     tree              type;
-     int               named;
+mcore_function_arg_partial_nregs (CUMULATIVE_ARGS cum, enum machine_mode mode,
+				  tree type, int named)
 {
   int reg = ROUND_REG (cum, mode);
 
@@ -3275,26 +3151,26 @@ mcore_function_arg_partial_nregs (cum, mode, type, named)
   return reg;
 }
 
-/* Return non-zero if SYMBOL is marked as being dllexport'd.  */
+/* Return nonzero if SYMBOL is marked as being dllexport'd.  */
+
 int
-mcore_dllexport_name_p (symbol)
-     const char * symbol;
+mcore_dllexport_name_p (const char * symbol)
 {
   return symbol[0] == '@' && symbol[1] == 'e' && symbol[2] == '.';
 }
 
-/* Return non-zero if SYMBOL is marked as being dllimport'd.  */
+/* Return nonzero if SYMBOL is marked as being dllimport'd.  */
+
 int
-mcore_dllimport_name_p (symbol)
-     const char * symbol;
+mcore_dllimport_name_p (const char * symbol)
 {
   return symbol[0] == '@' && symbol[1] == 'i' && symbol[2] == '.';
 }
 
 /* Mark a DECL as being dllexport'd.  */
+
 static void
-mcore_mark_dllexport (decl)
-     tree decl;
+mcore_mark_dllexport (tree decl)
 {
   const char * oldname;
   char * newname;
@@ -3329,9 +3205,9 @@ mcore_mark_dllexport (decl)
 }
 
 /* Mark a DECL as being dllimport'd.  */
+
 static void
-mcore_mark_dllimport (decl)
-     tree decl;
+mcore_mark_dllimport (tree decl)
 {
   const char * oldname;
   char * newname;
@@ -3362,7 +3238,7 @@ mcore_mark_dllimport (decl)
       && !DECL_VIRTUAL_P (decl)
       && DECL_INITIAL (decl))
     {
-      error_with_decl (decl, "initialized variable `%s' is marked dllimport");
+      error ("%Jinitialized variable '%D' is marked dllimport", decl, decl);
       return;
     }
   
@@ -3393,8 +3269,7 @@ mcore_mark_dllimport (decl)
 }
 
 static int
-mcore_dllexport_p (decl)
-     tree decl;
+mcore_dllexport_p (tree decl)
 {
   if (   TREE_CODE (decl) != VAR_DECL
       && TREE_CODE (decl) != FUNCTION_DECL)
@@ -3404,8 +3279,7 @@ mcore_dllexport_p (decl)
 }
 
 static int
-mcore_dllimport_p (decl)
-     tree decl;
+mcore_dllimport_p (tree decl)
 {
   if (   TREE_CODE (decl) != VAR_DECL
       && TREE_CODE (decl) != FUNCTION_DECL)
@@ -3414,21 +3288,12 @@ mcore_dllimport_p (decl)
   return lookup_attribute ("dllimport", DECL_ATTRIBUTES (decl)) != 0;
 }
 
-/* Cover function to implement ENCODE_SECTION_INFO.  */
-void
-mcore_encode_section_info (decl)
-     tree decl;
-{
-  /* This bit is copied from arm.h.  */
-  if (optimize > 0
-      && TREE_CONSTANT (decl)
-      && (!flag_writable_strings || TREE_CODE (decl) != STRING_CST))
-    {
-      rtx rtl = (TREE_CODE_CLASS (TREE_CODE (decl)) != 'd'
-                 ? TREE_CST_RTL (decl) : DECL_RTL (decl));
-      SYMBOL_REF_FLAG (XEXP (rtl, 0)) = 1;
-    }
+/* We must mark dll symbols specially.  Definitions of dllexport'd objects
+   install some info in the .drective (PE) or .exports (ELF) sections.  */
 
+static void
+mcore_encode_section_info (tree decl, rtx rtl ATTRIBUTE_UNUSED, int first ATTRIBUTE_UNUSED)
+{
   /* Mark the decl so we can tell from the rtl whether the object is
      dllexport'd or dllimport'd.  */
   if (mcore_dllexport_p (decl))
@@ -3458,6 +3323,14 @@ mcore_encode_section_info (decl)
     }
 }
 
+/* Undo the effects of the above.  */
+
+static const char *
+mcore_strip_name_encoding (const char * str)
+{
+  return str + (str[0] == '@' ? 3 : 0);
+}
+
 /* MCore specific attribute support.
    dllexport - for exporting a function/variable that will live in a dll
    dllimport - for importing a function/variable from a dll
@@ -3474,13 +3347,10 @@ const struct attribute_spec mcore_attribute_table[] =
 
 /* Handle a "naked" attribute; arguments as in
    struct attribute_spec.handler.  */
+
 static tree
-mcore_handle_naked_attribute (node, name, args, flags, no_add_attrs)
-     tree *node;
-     tree name;
-     tree args ATTRIBUTE_UNUSED;
-     int flags ATTRIBUTE_UNUSED;
-     bool *no_add_attrs;
+mcore_handle_naked_attribute (tree * node, tree name, tree args ATTRIBUTE_UNUSED,
+			      int flags ATTRIBUTE_UNUSED, bool * no_add_attrs)
 {
   if (TREE_CODE (*node) == FUNCTION_DECL)
     {
@@ -3510,22 +3380,21 @@ mcore_handle_naked_attribute (node, name, args, flags, no_add_attrs)
   return NULL_TREE;
 }
 
-/* Cover function for UNIQUE_SECTION.  */
+/* ??? It looks like this is PE specific?  Oh well, this is what the
+   old code did as well.  */
 
-void
-mcore_unique_section (decl, reloc)
-     tree decl;
-     int reloc ATTRIBUTE_UNUSED;
+static void
+mcore_unique_section (tree decl, int reloc ATTRIBUTE_UNUSED)
 {
   int len;
-  char * name;
+  const char * name;
   char * string;
   const char * prefix;
 
   name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
   
   /* Strip off any encoding in name.  */
-  STRIP_NAME_ENCODING (name, name);
+  name = (* targetm.strip_name_encoding) (name);
 
   /* The object is put in, for example, section .text$foo.
      The linker will then ultimately place them in .text
@@ -3534,7 +3403,7 @@ mcore_unique_section (decl, reloc)
     prefix = ".text$";
   /* For compatibility with EPOC, we ignore the fact that the
      section might have relocs against it.  */
-  else if (DECL_READONLY_SECTION (decl, 0))
+  else if (decl_readonly_section (decl, 0))
     prefix = ".rdata$";
   else
     prefix = ".data$";
@@ -3548,16 +3417,14 @@ mcore_unique_section (decl, reloc)
 }
 
 int
-mcore_naked_function_p ()
+mcore_naked_function_p (void)
 {
   return lookup_attribute ("naked", DECL_ATTRIBUTES (current_function_decl)) != NULL_TREE;
 }
 
 #ifdef OBJECT_FORMAT_ELF
 static void
-mcore_asm_named_section (name, flags)
-     const char *name;
-     unsigned int flags ATTRIBUTE_UNUSED;
+mcore_asm_named_section (const char *name, unsigned int flags ATTRIBUTE_UNUSED)
 {
   fprintf (asm_out_file, "\t.section %s\n", name);
 }

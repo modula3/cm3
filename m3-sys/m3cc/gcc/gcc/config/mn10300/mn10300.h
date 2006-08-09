@@ -1,29 +1,28 @@
 /* Definitions of target machine for GNU compiler.
    Matsushita MN10300 series
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
    Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
 #undef ASM_SPEC
-#undef ASM_FINAL_SPEC
 #undef LIB_SPEC
 #undef ENDFILE_SPEC
 #undef LINK_SPEC
@@ -33,13 +32,21 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-D__mn10300__ -D__MN10300__"
+#define TARGET_CPU_CPP_BUILTINS()		\
+  do						\
+    {						\
+      builtin_define ("__mn10300__");		\
+      builtin_define ("__MN10300__");		\
+    }						\
+  while (0)
 
-#define CPP_SPEC "%{mam33:-D__AM33__}"
+#define CPP_SPEC "%{mam33:-D__AM33__} %{mam33-2:-D__AM33__=2 -D__AM33_2__}"
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
 extern int target_flags;
+
+extern GTY(()) int mn10300_unspec_int_label_counter;
 
 /* Macros used in the machine description to test the flags.  */
 
@@ -55,6 +62,9 @@ extern int target_flags;
 /* Generate code for the AM33 processor.  */
 #define TARGET_AM33			(target_flags & 0x2)
 
+/* Generate code for the AM33/2.0 processor.  */
+#define TARGET_AM33_2			(target_flags & 0x4)
+
 #define TARGET_SWITCHES  \
   {{ "mult-bug",	0x1,  N_("Work around hardware multiply bug")},	\
    { "no-mult-bug", 	-0x1, N_("Do not work around hardware multiply bug")},\
@@ -62,6 +72,9 @@ extern int target_flags;
    { "am33", 		-(0x1), ""},\
    { "no-am33", 	-0x2, ""},	\
    { "no-crt0",		0,    N_("No default crt0.o") }, \
+   { "am33-2",		0x6,  N_("Target the AM33/2.0 processor")},   \
+   { "am33-2",		-(0x1), ""},\
+   { "no-am33-2",	-0x4,   ""},  \
    { "relax",		0,    N_("Enable linker relaxations") }, \
    { "", TARGET_DEFAULT, NULL}}
 
@@ -90,21 +103,8 @@ extern int target_flags;
    This is not true on the Matsushita MN10300.  */
 #define WORDS_BIG_ENDIAN 0
 
-/* Number of bits in an addressable storage unit */
-#define BITS_PER_UNIT 8
-
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 68000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD		32
-
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD		4
-
-/* Width in bits of a pointer.
-   See also the macro `Pmode' defined below.  */
-#define POINTER_SIZE 		32
 
 /* Allocation boundary (in *bits*) for storing arguments in argument list.  */
 #define PARM_BOUNDARY		32
@@ -117,7 +117,7 @@ extern int target_flags;
    would improve performance.  */
 #define FUNCTION_BOUNDARY 8
 
-/* No data type wants to be aligned rounder than this.   */
+/* No data type wants to be aligned rounder than this.  */
 #define BIGGEST_ALIGNMENT	32
 
 /* Alignment of field after `int : 0' in a structure.  */
@@ -139,7 +139,7 @@ extern int target_flags;
    All registers that the compiler knows about must be given numbers,
    even those that are not normally considered general registers.  */
 
-#define FIRST_PSEUDO_REGISTER 18
+#define FIRST_PSEUDO_REGISTER 50
 
 /* Specify machine-specific register numbers.  */
 #define FIRST_DATA_REGNUM 0
@@ -148,6 +148,8 @@ extern int target_flags;
 #define LAST_ADDRESS_REGNUM 8
 #define FIRST_EXTENDED_REGNUM 10
 #define LAST_EXTENDED_REGNUM 17
+#define FIRST_FP_REGNUM 18
+#define LAST_FP_REGNUM 49
 
 /* Specify the registers used for certain standard purposes.
    The values of these macros are register numbers.  */
@@ -170,7 +172,10 @@ extern int target_flags;
    and are not available for the register allocator.  */
 
 #define FIXED_REGISTERS \
-  { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}
+  { 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 \
+  , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
+  , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
+  }
 
 /* 1 for registers not available across function calls.
    These must include the FIXED_REGISTERS and also any
@@ -181,10 +186,16 @@ extern int target_flags;
    like.  */
 
 #define CALL_USED_REGISTERS \
-  { 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0}
+  { 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 \
+  , 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
+  , 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 \
+  }
 
 #define REG_ALLOC_ORDER \
-  { 0, 1, 4, 5, 2, 3, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 8, 9}
+  { 0, 1, 4, 5, 2, 3, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 8, 9 \
+  , 42, 43, 44, 45, 46, 47, 48, 49, 34, 35, 36, 37, 38, 39, 40, 41 \
+  , 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33 \
+  }
 
 #define CONDITIONAL_REGISTER_USAGE \
 {						\
@@ -196,6 +207,15 @@ extern int target_flags;
 	   i <= LAST_EXTENDED_REGNUM; i++) 	\
 	fixed_regs[i] = call_used_regs[i] = 1; 	\
     }						\
+  if (!TARGET_AM33_2)				\
+    {						\
+      for (i = FIRST_FP_REGNUM;			\
+	   i <= LAST_FP_REGNUM; 		\
+           i++) 				\
+	fixed_regs[i] = call_used_regs[i] = 1;	\
+    }						\
+  if (flag_pic)					\
+    fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;	\
 }
 
 /* Return number of consecutive hard regs needed starting at reg REGNO
@@ -255,12 +275,13 @@ enum reg_class {
   DATA_OR_ADDRESS_REGS, SP_OR_ADDRESS_REGS, 
   EXTENDED_REGS, DATA_OR_EXTENDED_REGS, ADDRESS_OR_EXTENDED_REGS,
   SP_OR_EXTENDED_REGS, SP_OR_ADDRESS_OR_EXTENDED_REGS, 
+  FP_REGS, FP_ACC_REGS,
   GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES
 };
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES \
 { "NO_REGS", "DATA_REGS", "ADDRESS_REGS", \
@@ -268,6 +289,7 @@ enum reg_class {
   "EXTENDED_REGS", \
   "DATA_OR_EXTENDED_REGS", "ADDRESS_OR_EXTENDED_REGS", \
   "SP_OR_EXTENDED_REGS", "SP_OR_ADDRESS_OR_EXTENDED_REGS", \
+  "FP_REGS", "FP_ACC_REGS", \
   "GENERAL_REGS", "ALL_REGS", "LIM_REGS" }
 
 /* Define which registers fit in which classes.
@@ -275,19 +297,21 @@ enum reg_class {
    of length N_REG_CLASSES.  */
 
 #define REG_CLASS_CONTENTS  			\
-{      {0},		/* No regs      */	\
-   {0x0000f},		/* DATA_REGS */		\
-   {0x001f0},		/* ADDRESS_REGS */	\
-   {0x00200},		/* SP_REGS */		\
-   {0x001ff},		/* DATA_OR_ADDRESS_REGS */\
-   {0x003f0},		/* SP_OR_ADDRESS_REGS */\
-   {0x3fc00},		/* EXTENDED_REGS */	\
-   {0x3fc0f},		/* DATA_OR_EXTENDED_REGS */	\
-   {0x3fdf0},		/* ADDRESS_OR_EXTENDED_REGS */	\
-   {0x3fe00},		/* SP_OR_EXTENDED_REGS */	\
-   {0x3fff0},		/* SP_OR_ADDRESS_OR_EXTENDED_REGS */	\
-   {0x3fdff},		/* GENERAL_REGS */    	\
-   {0x3ffff},		/* ALL_REGS 	*/	\
+{  { 0,	0 },		/* No regs      */	\
+ { 0x0000f, 0 },	/* DATA_REGS */		\
+ { 0x001f0, 0 },	/* ADDRESS_REGS */	\
+ { 0x00200, 0 },	/* SP_REGS */		\
+ { 0x001ff, 0 },	/* DATA_OR_ADDRESS_REGS */\
+ { 0x003f0, 0 },	/* SP_OR_ADDRESS_REGS */\
+ { 0x3fc00, 0 },	/* EXTENDED_REGS */	\
+ { 0x3fc0f, 0 },	/* DATA_OR_EXTENDED_REGS */	\
+ { 0x3fdf0, 0 },	/* ADDRESS_OR_EXTENDED_REGS */	\
+ { 0x3fe00, 0 },	/* SP_OR_EXTENDED_REGS */	\
+ { 0x3fff0, 0 },	/* SP_OR_ADDRESS_OR_EXTENDED_REGS */	\
+ { 0xfffc0000, 0x3ffff }, /* FP_REGS */		\
+ { 0x03fc0000, 0 },	/* FP_ACC_REGS */	\
+ { 0x3fdff, 0 }, 	/* GENERAL_REGS */	\
+ { 0xffffffff, 0x3ffff } /* ALL_REGS 	*/	\
 }
 
 /* The same information, inverted:
@@ -300,6 +324,7 @@ enum reg_class {
    (REGNO) <= LAST_ADDRESS_REGNUM ? ADDRESS_REGS : \
    (REGNO) == STACK_POINTER_REGNUM ? SP_REGS : \
    (REGNO) <= LAST_EXTENDED_REGNUM ? EXTENDED_REGS : \
+   (REGNO) <= LAST_FP_REGNUM ? FP_REGS : \
    NO_REGS)
 
 /* The class value for index registers, and the one for base regs.  */
@@ -314,6 +339,9 @@ enum reg_class {
    (C) == 'y' ? SP_REGS : \
    ! TARGET_AM33 ? NO_REGS : \
    (C) == 'x' ? EXTENDED_REGS : \
+   ! TARGET_AM33_2 ? NO_REGS : \
+   (C) == 'f' ? FP_REGS : \
+   (C) == 'A' ? FP_ACC_REGS : \
    NO_REGS)
 
 /* Macros to check register numbers against specific register classes.  */
@@ -358,6 +386,8 @@ enum reg_class {
 #define REGNO_AM33_P(regno) \
   (REGNO_DATA_P ((regno)) || REGNO_ADDRESS_P ((regno)) \
    || REGNO_EXTENDED_P ((regno)))
+#define REGNO_FP_P(regno) \
+  REGNO_IN_RANGE_P ((regno), FIRST_FP_REGNUM, LAST_FP_REGNUM)
 
 #define REGNO_OK_FOR_BASE_P(regno) \
   (REGNO_SP_P ((regno)) \
@@ -404,6 +434,11 @@ enum reg_class {
 
 #define CLASS_MAX_NREGS(CLASS, MODE)	\
   ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
+
+/* A class that contains registers which the compiler must always
+   access in a mode that is the same size as the mode in which it
+   loaded the register.  */
+#define CLASS_CANNOT_CHANGE_SIZE FP_REGS
 
 /* The letters I, J, K, L, M, N, O, P in a register constraint string
    can be used to stand for particular ranges of immediate operands.
@@ -528,7 +563,7 @@ struct cum_arg {int nbytes; };
 
    On the MN10300, the offset starts at 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)	\
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
  ((CUM).nbytes = 0)
 
 /* Update the data in CUM to advance over an argument
@@ -570,7 +605,7 @@ struct cum_arg {int nbytes; };
 /* Define how to find the value returned by a function.
    VALTYPE is the data type of the value (as a tree).
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
-   otherwise, FUNC is 0.   */
+   otherwise, FUNC is 0.  */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC) \
   gen_rtx_REG (TYPE_MODE (VALTYPE), POINTER_TYPE_P (VALTYPE) \
@@ -595,7 +630,7 @@ struct cum_arg {int nbytes; };
    is passed to a function.  On the MN10300 it's passed as
    the first parameter.  */
 
-#define STRUCT_VALUE FIRST_DATA_REGNUM
+#define STRUCT_VALUE 0
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -661,8 +696,8 @@ struct cum_arg {int nbytes; };
 #define EXPAND_BUILTIN_SAVEREGS() mn10300_builtin_saveregs ()
 
 /* Implement `va_start' for varargs and stdarg.  */
-#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
-  mn10300_va_start (stdarg, valist, nextarg)
+#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
+  mn10300_va_start (valist, nextarg)
 
 /* Implement `va_arg'.  */
 #define EXPAND_BUILTIN_VA_ARG(valist, type) \
@@ -677,6 +712,9 @@ struct cum_arg {int nbytes; };
 
 /* Extra constraints.  */
  
+#define OK_FOR_Q(OP) \
+   (GET_CODE (OP) == MEM && ! CONSTANT_ADDRESS_P (XEXP (OP, 0)))
+
 #define OK_FOR_R(OP) \
    (GET_CODE (OP) == MEM					\
     && GET_MODE (OP) == QImode					\
@@ -691,9 +729,21 @@ struct cum_arg {int nbytes; };
 	    && GET_CODE (XEXP (XEXP (OP, 0), 1)) == CONST_INT	\
 	    && INT_8_BITS (INTVAL (XEXP (XEXP (OP, 0), 1))))))
 	 
+#define OK_FOR_T(OP) \
+   (GET_CODE (OP) == MEM					\
+    && GET_MODE (OP) == QImode					\
+    && (GET_CODE (XEXP (OP, 0)) == REG				\
+	&& REG_OK_FOR_BIT_BASE_P (XEXP (OP, 0))			\
+	&& XEXP (OP, 0) != stack_pointer_rtx))
+
 #define EXTRA_CONSTRAINT(OP, C) \
  ((C) == 'R' ? OK_FOR_R (OP) \
+  : (C) == 'Q' ? OK_FOR_Q (OP) \
+  : (C) == 'S' && flag_pic \
+  ? GET_CODE (OP) == UNSPEC && (XINT (OP, 1) == UNSPEC_PLT \
+				|| XINT (OP, 1) == UNSPEC_PIC) \
   : (C) == 'S' ? GET_CODE (OP) == SYMBOL_REF \
+  : (C) == 'T' ? OK_FOR_T (OP) \
   : 0)
 
 /* Maximum number of registers that can appear in a valid memory address.  */
@@ -732,7 +782,8 @@ struct cum_arg {int nbytes; };
 
 #define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR)    	\
 {							\
-  if (CONSTANT_ADDRESS_P (X))				\
+  if (CONSTANT_ADDRESS_P (X)				\
+      && (! flag_pic || legitimate_pic_operand_p (X)))	\
     goto ADDR;						\
   if (RTX_OK_FOR_BASE_P (X))				\
     goto ADDR;						\
@@ -754,6 +805,8 @@ struct cum_arg {int nbytes; };
 	{						\
 	  if (GET_CODE (index) == CONST_INT)		\
 	    goto ADDR;					\
+	  if (GET_CODE (index) == CONST)		\
+	    goto ADDR;					\
 	}						\
     }							\
 }
@@ -770,7 +823,7 @@ struct cum_arg {int nbytes; };
    GO_IF_LEGITIMATE_ADDRESS.
 
    It is always safe for this macro to do nothing.  It exists to recognize
-   opportunities to optimize the output.   */
+   opportunities to optimize the output.  */
 
 #define LEGITIMIZE_ADDRESS(X, OLDX, MODE, WIN)  \
 { rtx orig_x = (X);				\
@@ -790,6 +843,60 @@ struct cum_arg {int nbytes; };
 
 #define LEGITIMATE_CONSTANT_P(X) 1
 
+/* Zero if this needs fixing up to become PIC.  */
+
+#define LEGITIMATE_PIC_OPERAND_P(X) (legitimate_pic_operand_p (X))
+
+/* Register to hold the addressing base for
+   position independent code access to data items.  */
+#define PIC_OFFSET_TABLE_REGNUM	PIC_REG
+
+/* The name of the pseudo-symbol representing the Global Offset Table.  */
+#define GOT_SYMBOL_NAME "*_GLOBAL_OFFSET_TABLE_"
+
+#define SYMBOLIC_CONST_P(X)	\
+((GET_CODE (X) == SYMBOL_REF || GET_CODE (X) == LABEL_REF)	\
+  && ! LEGITIMATE_PIC_OPERAND_P (X))
+
+/* Non-global SYMBOL_REFs have SYMBOL_REF_FLAG enabled.  */
+#define MN10300_GLOBAL_P(X) (! SYMBOL_REF_FLAG (X))
+
+/* Recognize machine-specific patterns that may appear within
+   constants.  Used for PIC-specific UNSPECs.  */
+#define OUTPUT_ADDR_CONST_EXTRA(STREAM, X, FAIL) \
+  do									\
+    if (GET_CODE (X) == UNSPEC && XVECLEN ((X), 0) == 1)	\
+      {									\
+	switch (XINT ((X), 1))						\
+	  {								\
+	  case UNSPEC_INT_LABEL:					\
+	    asm_fprintf ((STREAM), ".%LLIL%d",				\
+ 			 INTVAL (XVECEXP ((X), 0, 0)));			\
+	    break;							\
+	  case UNSPEC_PIC:						\
+	    /* GLOBAL_OFFSET_TABLE or local symbols, no suffix.  */	\
+	    output_addr_const ((STREAM), XVECEXP ((X), 0, 0));		\
+	    break;							\
+	  case UNSPEC_GOT:						\
+	    output_addr_const ((STREAM), XVECEXP ((X), 0, 0));		\
+	    fputs ("@GOT", (STREAM));					\
+	    break;							\
+	  case UNSPEC_GOTOFF:						\
+	    output_addr_const ((STREAM), XVECEXP ((X), 0, 0));		\
+	    fputs ("@GOTOFF", (STREAM));				\
+	    break;							\
+	  case UNSPEC_PLT:						\
+	    output_addr_const ((STREAM), XVECEXP ((X), 0, 0));		\
+	    fputs ("@PLT", (STREAM));					\
+	    break;							\
+	  default:							\
+	    goto FAIL;							\
+	  }								\
+	break;								\
+      }									\
+    else								\
+      goto FAIL;							\
+  while (0)
 
 /* Tell final.c how to eliminate redundant test instructions.  */
 
@@ -805,37 +912,6 @@ struct cum_arg {int nbytes; };
 #define CC_NO_CARRY CC_NO_OVERFLOW
 #define NOTICE_UPDATE_CC(EXP, INSN) notice_update_cc(EXP, INSN)
 
-/* Compute the cost of computing a constant rtl expression RTX
-   whose rtx-code is CODE.  The body of this macro is a portion
-   of a switch statement.  If the code is computed here,
-   return it with a return statement.  Otherwise, break from the switch.  */
-
-#define CONST_COSTS(RTX,CODE,OUTER_CODE) \
-  case CONST_INT:							\
-    /* Zeros are extremely cheap.  */					\
-    if (INTVAL (RTX) == 0 && OUTER_CODE == SET)				\
-      return 0;								\
-    /* If it fits in 8 bits, then it's still relatively cheap.  */	\
-    if (INT_8_BITS (INTVAL (RTX)))					\
-      return 1;								\
-    /* This is the "base" cost, includes constants where either the	\
-       upper or lower 16bits are all zeros.  */				\
-    if (INT_16_BITS (INTVAL (RTX))					\
-	|| (INTVAL (RTX) & 0xffff) == 0					\
-	|| (INTVAL (RTX) & 0xffff0000) == 0)				\
-      return 2;								\
-    return 4;								\
-  /* These are more costly than a CONST_INT, but we can relax them,	\
-     so they're less costly than a CONST_DOUBLE.  */			\
-  case CONST:								\
-  case LABEL_REF:							\
-  case SYMBOL_REF:							\
-    return 6;								\
-  /* We don't optimize CONST_DOUBLEs well nor do we relax them well,	\
-     so their cost is very high.  */					\
-  case CONST_DOUBLE:							\
-    return 8;
-
 #define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2) \
   ((CLASS1 == CLASS2 && (CLASS1 == ADDRESS_REGS || CLASS1 == DATA_REGS)) ? 2 :\
    ((CLASS1 == ADDRESS_REGS || CLASS1 == DATA_REGS) && \
@@ -845,23 +921,9 @@ struct cum_arg {int nbytes; };
    ! TARGET_AM33 ? 6 : \
    (CLASS1 == SP_REGS || CLASS2 == SP_REGS) ? 6 : \
    (CLASS1 == CLASS2 && CLASS1 == EXTENDED_REGS) ? 6 : \
+   (CLASS1 == FP_REGS || CLASS2 == FP_REGS) ? 6 : \
    (CLASS1 == EXTENDED_REGS || CLASS2 == EXTENDED_REGS) ? 4 : \
    4)
-
-#define ADDRESS_COST(X) mn10300_address_cost((X), 0)
-
-/* A crude cut at RTX_COSTS for the MN10300.  */
-
-/* Provide the costs of a rtl expression.  This is in the body of a
-   switch on CODE.  */
-#define RTX_COSTS(RTX,CODE,OUTER_CODE) \
-  case UMOD:		\
-  case UDIV:		\
-  case MOD:		\
-  case DIV:		\
-    return 8;		\
-  case MULT:		\
-    return 8;
 
 /* Nonzero if access to memory by bytes or half words is no faster
    than accessing full words.  */
@@ -885,10 +947,6 @@ struct cum_arg {int nbytes; };
 #define DATA_SECTION_ASM_OP "\t.section .data"
 #define BSS_SECTION_ASM_OP "\t.section .bss"
 
-/* Output at beginning/end of assembler file.  */
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE) asm_file_start(FILE)
-
 #define ASM_COMMENT_START "#"
 
 /* Output to assembler file text saying following lines
@@ -908,36 +966,17 @@ struct cum_arg {int nbytes; };
 #define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
   asm_output_aligned_bss ((FILE), (DECL), (NAME), (SIZE), (ALIGN))
 
-/* This is how to output the definition of a user-level label named NAME,
-   such as the label on a static function or variable NAME.  */
-
-#define ASM_OUTPUT_LABEL(FILE, NAME)	\
-  do { assemble_name (FILE, NAME); fputs (":\n", FILE); } while (0)
-
-/* This is how to output a command to make the user-level label named NAME
-   defined for reference from other files.  */
-
-#define ASM_GLOBALIZE_LABEL(FILE, NAME)	\
-  do { fputs ("\t.global ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
+/* Globalizing directive for a label.  */
+#define GLOBAL_ASM_OP "\t.global "
 
 /* This is how to output a reference to a user-level label named NAME.
    `assemble_name' uses this.  */
 
 #undef ASM_OUTPUT_LABELREF
-#define ASM_OUTPUT_LABELREF(FILE, NAME)	          \
-  do {                                            \
-  const char* real_name;                          \
-  STRIP_NAME_ENCODING (real_name, (NAME));        \
-  fprintf (FILE, "_%s", real_name);               \
-  } while (0)           
+#define ASM_OUTPUT_LABELREF(FILE, NAME) \
+  fprintf (FILE, "_%s", (*targetm.strip_name_encoding) (NAME))
 
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
-( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
-  sprintf ((OUTPUT), "%s___%d", (NAME), (LABELNO)))
+#define ASM_PN_FORMAT "%s___%lu"
 
 /* This is how we tell the assembler that two symbols have the same value.  */
 
@@ -954,6 +993,10 @@ struct cum_arg {int nbytes; };
 #define REGISTER_NAMES \
 { "d0", "d1", "d2", "d3", "a0", "a1", "a2", "a3", "ap", "sp", \
   "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7" \
+, "fs0", "fs1", "fs2", "fs3", "fs4", "fs5", "fs6", "fs7" \
+, "fs8", "fs9", "fs10", "fs11", "fs12", "fs13", "fs14", "fs15" \
+, "fs16", "fs17", "fs18", "fs19", "fs20", "fs21", "fs22", "fs23" \
+, "fs24", "fs25", "fs26", "fs27", "fs28", "fs29", "fs30", "fs31" \
 }
 
 #define ADDITIONAL_REGISTER_NAMES \
@@ -961,6 +1004,10 @@ struct cum_arg {int nbytes; };
   {"r12", 0}, {"r13", 1}, {"r14", 2}, {"r15", 3}, \
   {"e0", 10}, {"e1", 11}, {"e2", 12}, {"e3", 13}, \
   {"e4", 14}, {"e5", 15}, {"e6", 16}, {"e7", 17} \
+, {"fd0", 18}, {"fd2", 20}, {"fd4", 22}, {"fd6", 24} \
+, {"fd8", 26}, {"fd10", 28}, {"fd12", 30}, {"fd14", 32} \
+, {"fd16", 34}, {"fd18", 36}, {"fd20", 38}, {"fd22", 40} \
+, {"fd24", 42}, {"fd26", 44}, {"fd28", 46}, {"fd30", 48} \
 }
 
 /* Print an instruction operand X on file FILE.
@@ -979,7 +1026,7 @@ struct cum_arg {int nbytes; };
 /* This is how to output an element of a case-vector that is absolute.  */
 
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE) \
-  asm_fprintf (FILE, "\t%s .L%d\n", ".long", VALUE)
+  fprintf (FILE, "\t%s .L%d\n", ".long", VALUE)
 
 /* This is how to output an element of a case-vector that is relative.  */
 
@@ -1022,10 +1069,6 @@ struct cum_arg {int nbytes; };
     + (frame_pointer_needed \
        ? 0 : -initial_offset (ARG_POINTER_REGNUM, STACK_POINTER_REGNUM)))
 
-/* Define to use software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion. */
-#define REAL_ARITHMETIC
-
 /* Specify the machine mode that this machine uses
    for the index in the tablejump instruction.  */
 #define CASE_VECTOR_MODE Pmode
@@ -1067,3 +1110,17 @@ struct cum_arg {int nbytes; };
 
 #define FILE_ASM_OP "\t.file\n"
 
+#define PREDICATE_CODES					\
+  {"const_1f_operand", {CONST_INT, CONST_DOUBLE}},	\
+  {"const_8bit_operand", {CONST_INT}},			\
+  {"call_address_operand", {SYMBOL_REF, REG, UNSPEC}},
+
+typedef struct mn10300_cc_status_mdep
+  {
+    int fpCC;
+  }
+cc_status_mdep;
+
+#define CC_STATUS_MDEP cc_status_mdep
+
+#define CC_STATUS_MDEP_INIT (cc_status.mdep.fpCC = 0)

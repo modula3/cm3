@@ -1,24 +1,24 @@
 /* Definitions of target machine for GNU compiler, for the HP Spectrum.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-   2001, 2002 Free Software Foundation, Inc.
+   2001, 2002, 2003, 2004 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com) of Cygnus Support
    and Tim Moore (moore@defmacro.cs.utah.edu) of the Center for
    Software Science at the University of Utah.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -31,7 +31,7 @@ enum cmp_type				/* comparison type */
 };
 
 /* For long call handling.  */
-extern unsigned int total_code_bytes;
+extern unsigned long total_code_bytes;
 
 /* Which processor to schedule for.  */
 
@@ -41,6 +41,7 @@ enum processor_type
   PROCESSOR_7100,
   PROCESSOR_7100LC,
   PROCESSOR_7200,
+  PROCESSOR_7300,
   PROCESSOR_8000
 };
 
@@ -73,13 +74,9 @@ extern enum architecture_type pa_arch;
 
 extern int target_flags;
 
-/* compile code for HP-PA 1.1 ("Snake") */
+/* compile code for HP-PA 1.1 ("Snake").  */
 
 #define MASK_PA_11 1
-
-#ifndef TARGET_PA_11
-#define TARGET_PA_11 (target_flags & MASK_PA_11)
-#endif
 
 /* Disable all FP registers (they all become fixed).  This may be necessary
    for compiling kernels which perform lazy context switching of FP regs.
@@ -141,10 +138,34 @@ extern int target_flags;
 #define MASK_BIG_SWITCH 2048
 #define TARGET_BIG_SWITCH (target_flags & MASK_BIG_SWITCH)
 
-
 /* Generate code for the HPPA 2.0 architecture.  TARGET_PA_11 should also be
    true when this is true.  */
 #define MASK_PA_20 4096
+
+/* Generate cpp defines for server I/O.  */
+#define MASK_SIO 8192
+#define TARGET_SIO (target_flags & MASK_SIO)
+
+/* Assume GNU linker by default.  */
+#define MASK_GNU_LD 16384
+#ifndef TARGET_GNU_LD
+#define TARGET_GNU_LD (target_flags & MASK_GNU_LD)
+#endif
+
+/* Force generation of long calls.  */
+#define MASK_LONG_CALLS 32768
+#ifndef TARGET_LONG_CALLS
+#define TARGET_LONG_CALLS (target_flags & MASK_LONG_CALLS)
+#endif
+
+#ifndef TARGET_PA_10
+#define TARGET_PA_10 (target_flags & (MASK_PA_11 | MASK_PA_20) == 0)
+#endif
+
+#ifndef TARGET_PA_11
+#define TARGET_PA_11 (target_flags & MASK_PA_11)
+#endif
+
 #ifndef TARGET_PA_20
 #define TARGET_PA_20 (target_flags & MASK_PA_20)
 #endif
@@ -159,45 +180,113 @@ extern int target_flags;
 #define TARGET_ELF32 0
 #endif
 
-/* Generate code for SOM ABI.  */
+/* Generate code for SOM 32bit ABI.  */
 #ifndef TARGET_SOM
 #define TARGET_SOM 0
 #endif
 
-/* Macro to define tables used to set the flags.
-   This is a list in braces of pairs in braces,
-   each pair being { "NAME", VALUE }
-   where VALUE is the bits to set or minus the bits to clear.
-   An empty string NAME is used to identify the default VALUE.  */
+/* The following three defines are potential target switches.  The current
+   defines are optimal given the current capabilities of GAS and GNU ld.  */
+
+/* Define to a C expression evaluating to true to use long absolute calls.
+   Currently, only the HP assembler and SOM linker support long absolute
+   calls.  They are used only in non-pic code.  */
+#define TARGET_LONG_ABS_CALL (TARGET_SOM && !TARGET_GAS)
+
+/* Define to a C expression evaluating to true to use long pic symbol
+   difference calls.  This is a call variant similar to the long pic
+   pc-relative call.  Long pic symbol difference calls are only used with
+   the HP SOM linker.  Currently, only the HP assembler supports these
+   calls.  GAS doesn't allow an arbitrary difference of two symbols.  */
+#define TARGET_LONG_PIC_SDIFF_CALL (!TARGET_GAS)
+
+/* Define to a C expression evaluating to true to use long pic
+   pc-relative calls.  Long pic pc-relative calls are only used with
+   GAS.  Currently, they are usable for calls within a module but
+   not for external calls.  */
+#define TARGET_LONG_PIC_PCREL_CALL 0
+
+/* Define to a C expression evaluating to true to use SOM secondary
+   definition symbols for weak support.  Linker support for secondary
+   definition symbols is buggy prior to HP-UX 11.X.  */
+#define TARGET_SOM_SDEF 0
+
+/* Define to a C expression evaluating to true to save the entry value
+   of SP in the current frame marker.  This is normally unnecessary.
+   However, the HP-UX unwind library looks at the SAVE_SP callinfo flag.
+   HP compilers don't use this flag but it is supported by the assembler.
+   We set this flag to indicate that register %r3 has been saved at the
+   start of the frame.  Thus, when the HP unwind library is used, we
+   need to generate additional code to save SP into the frame marker.  */
+#define TARGET_HPUX_UNWIND_LIBRARY 0
+
+/* Macro to define tables used to set the flags.  This is a
+   list in braces of target switches with each switch being
+   { "NAME", VALUE, "HELP_STRING" }.  VALUE is the bits to set,
+   or minus the bits to clear.  An empty string NAME is used to
+   identify the default VALUE.  Do not mark empty strings for
+   translation.  */
 
 #define TARGET_SWITCHES \
-  {{"snake", MASK_PA_11, "Generate PA1.1 code"},			\
-   {"nosnake", -(MASK_PA_11 | MASK_PA_20), "Generate PA1.0 code"},		\
-   {"pa-risc-1-0", -(MASK_PA_11 | MASK_PA_20), "Generate PA1.0 code"},		\
-   {"pa-risc-1-1", MASK_PA_11, "Generate PA1.1 code"},			\
-   {"pa-risc-2-0", MASK_PA_20, "Generate PA2.0 code.  This option requires binutils 2.10 or later"},			\
-   {"disable-fpregs", MASK_DISABLE_FPREGS, "Disable FP regs"},		\
-   {"no-disable-fpregs", -MASK_DISABLE_FPREGS, "Do not disable FP regs"},\
-   {"no-space-regs", MASK_NO_SPACE_REGS, "Disable space regs"},		\
-   {"space-regs", -MASK_NO_SPACE_REGS, "Do not disable space regs"},	\
-   {"jump-in-delay", MASK_JUMP_IN_DELAY, "Put jumps in call delay slots"},\
-   {"no-jump-in-delay", -MASK_JUMP_IN_DELAY, "Do not put jumps in call delay slots"},	\
-   {"disable-indexing", MASK_DISABLE_INDEXING, "Disable indexed addressing"},\
-   {"no-disable-indexing", -MASK_DISABLE_INDEXING, "Do not disable indexed addressing"},\
-   {"portable-runtime", MASK_PORTABLE_RUNTIME, "Use portable calling conventions"},	\
-   {"no-portable-runtime", -MASK_PORTABLE_RUNTIME, "Do not use portable calling conventions"},\
-   {"gas", MASK_GAS, "Assume code will be assembled by GAS"},		\
-   {"no-gas", -MASK_GAS, "Do not assume code will be assembled by GAS"},		\
-   {"soft-float", MASK_SOFT_FLOAT, "Use software floating point"},		\
-   {"no-soft-float", -MASK_SOFT_FLOAT, "Do not use software floating point"},	\
-   {"long-load-store", MASK_LONG_LOAD_STORE, "Emit long load/store sequences"},	\
-   {"no-long-load-store", -MASK_LONG_LOAD_STORE, "Do not emit long load/store sequences"},\
-   {"fast-indirect-calls", MASK_FAST_INDIRECT_CALLS, "Generate fast indirect calls"},\
-   {"no-fast-indirect-calls", -MASK_FAST_INDIRECT_CALLS, "Do not generate fast indirect calls"},\
-   {"big-switch", MASK_BIG_SWITCH, "Generate code for huge switch statements"},	\
-   {"no-big-switch", -MASK_BIG_SWITCH, "Do not generate code for huge switch statements"},	\
-   {"linker-opt", 0, "Enable linker optimizations"},		\
-   { "", TARGET_DEFAULT | TARGET_CPU_DEFAULT, NULL}}
+  {{ "snake",			 MASK_PA_11,				\
+     N_("Generate PA1.1 code") },					\
+   { "nosnake",			-(MASK_PA_11 | MASK_PA_20),		\
+     N_("Generate PA1.0 code") },					\
+   { "pa-risc-1-0",		-(MASK_PA_11 | MASK_PA_20),		\
+     N_("Generate PA1.0 code") },					\
+   { "pa-risc-1-1",		 MASK_PA_11,				\
+     N_("Generate PA1.1 code") },					\
+   { "pa-risc-2-0",		 MASK_PA_20,				\
+     N_("Generate PA2.0 code (requires binutils 2.10 or later)") },	\
+   { "disable-fpregs",		 MASK_DISABLE_FPREGS,			\
+     N_("Disable FP regs") },						\
+   { "no-disable-fpregs",	-MASK_DISABLE_FPREGS,			\
+     N_("Do not disable FP regs") },					\
+   { "no-space-regs",		 MASK_NO_SPACE_REGS,			\
+     N_("Disable space regs") },					\
+   { "space-regs",		-MASK_NO_SPACE_REGS,			\
+     N_("Do not disable space regs") },					\
+   { "jump-in-delay",		 MASK_JUMP_IN_DELAY,			\
+     N_("Put jumps in call delay slots") },				\
+   { "no-jump-in-delay",	-MASK_JUMP_IN_DELAY,			\
+     N_("Do not put jumps in call delay slots") },			\
+   { "disable-indexing",	 MASK_DISABLE_INDEXING,			\
+     N_("Disable indexed addressing") },				\
+   { "no-disable-indexing",	-MASK_DISABLE_INDEXING,			\
+     N_("Do not disable indexed addressing") },				\
+   { "portable-runtime",	 MASK_PORTABLE_RUNTIME,			\
+     N_("Use portable calling conventions") },				\
+   { "no-portable-runtime",	-MASK_PORTABLE_RUNTIME,			\
+     N_("Do not use portable calling conventions") },			\
+   { "gas",			 MASK_GAS,				\
+     N_("Assume code will be assembled by GAS") },			\
+   { "no-gas",			-MASK_GAS,				\
+     N_("Do not assume code will be assembled by GAS") },		\
+   { "soft-float",		 MASK_SOFT_FLOAT,			\
+     N_("Use software floating point") },				\
+   { "no-soft-float",		-MASK_SOFT_FLOAT,			\
+     N_("Do not use software floating point") },			\
+   { "long-load-store",		 MASK_LONG_LOAD_STORE,			\
+     N_("Emit long load/store sequences") },				\
+   { "no-long-load-store",	-MASK_LONG_LOAD_STORE,			\
+     N_("Do not emit long load/store sequences") },			\
+   { "fast-indirect-calls",	 MASK_FAST_INDIRECT_CALLS,		\
+     N_("Generate fast indirect calls") },				\
+   { "no-fast-indirect-calls",	-MASK_FAST_INDIRECT_CALLS,		\
+     N_("Do not generate fast indirect calls") },			\
+   { "big-switch",		 MASK_BIG_SWITCH,			\
+     N_("Generate code for huge switch statements") },			\
+   { "no-big-switch",		-MASK_BIG_SWITCH,			\
+     N_("Do not generate code for huge switch statements") },		\
+   { "long-calls",		 MASK_LONG_CALLS,			\
+     N_("Always generate long calls") },				\
+   { "no-long-calls",		-MASK_LONG_CALLS,			\
+     N_("Generate long calls only when needed") },			\
+   { "linker-opt",		 0,					\
+     N_("Enable linker optimizations") },				\
+   SUBTARGET_SWITCHES							\
+   { "",			 TARGET_DEFAULT | TARGET_CPU_DEFAULT,	\
+     NULL }}
 
 #ifndef TARGET_DEFAULT
 #define TARGET_DEFAULT (MASK_GAS | MASK_JUMP_IN_DELAY)
@@ -207,11 +296,28 @@ extern int target_flags;
 #define TARGET_CPU_DEFAULT 0
 #endif
 
-#define TARGET_OPTIONS			\
-{					\
-  { "schedule=",	&pa_cpu_string, "Specify CPU for scheduling purposes" },\
-  { "arch=",		&pa_arch_string, "Specify architecture for code generation.  Values are 1.0, 1.1, and 2.0.  2.0 requires gas snapshot 19990413 or later." }\
+#ifndef SUBTARGET_SWITCHES
+#define SUBTARGET_SWITCHES
+#endif
+
+#ifndef TARGET_SCHED_DEFAULT
+#define TARGET_SCHED_DEFAULT "8000"
+#endif
+
+#define TARGET_OPTIONS							\
+{									\
+  { "schedule=",		&pa_cpu_string,				\
+    N_("Specify CPU for scheduling purposes"), 0},			\
+  { "arch=",			&pa_arch_string,			\
+    N_("Specify architecture for code generation.  Values are 1.0, 1.1, and 2.0.  2.0 requires gas snapshot 19990413 or later."), 0}\
 }
+
+/* Support for a compile-time default CPU, et cetera.  The rules are:
+   --with-schedule is ignored if -mschedule is specified.
+   --with-arch is ignored if -march is specified.  */
+#define OPTION_DEFAULT_SPECS \
+  {"arch", "%{!march=*:-march=%(VALUE)}" }, \
+  {"schedule", "%{!mschedule=*:-mschedule=%(VALUE)}" }
 
 /* Specify the dialect of assembler to use.  New mnemonics is dialect one
    and the old mnemonics are dialect zero.  */
@@ -219,9 +325,7 @@ extern int target_flags;
 
 #define OVERRIDE_OPTIONS override_options ()
 
-/* stabs-in-som is nearly identical to stabs-in-elf.  To avoid useless
-   code duplication we simply include this file and override as needed.  */
-#include "dbxelf.h"
+/* Override some settings from dbxelf.h.  */
 
 /* We do not have to be compatible with dbx, so we enable gdb extensions
    by default.  */
@@ -260,75 +364,36 @@ extern int target_flags;
   ((GET_CODE (X) == PLUS ? OFFSET : 0) \
     + (frame_pointer_needed ? 0 : compute_frame_size (get_frame_size (), 0)))
 
-#define CPP_PA10_SPEC ""
-#define CPP_PA11_SPEC "-D_PA_RISC1_1 -D__hp9000s700"
-#define CPP_PA20_SPEC "-D_PA_RISC2_0 -D__hp9000s800"
-#define CPP_64BIT_SPEC "-D__LP64__ -D__LONG_MAX__=9223372036854775807L"
+#define TARGET_CPU_CPP_BUILTINS()				\
+do {								\
+     builtin_assert("cpu=hppa");				\
+     builtin_assert("machine=hppa");				\
+     builtin_define("__hppa");					\
+     builtin_define("__hppa__");				\
+     if (TARGET_PA_20)						\
+       builtin_define("_PA_RISC2_0");				\
+     else if (TARGET_PA_11)					\
+       builtin_define("_PA_RISC1_1");				\
+     else							\
+       builtin_define("_PA_RISC1_0");				\
+} while (0)
 
-#if ((TARGET_DEFAULT | TARGET_CPU_DEFAULT) & MASK_PA_11) == 0
-#define CPP_CPU_DEFAULT_SPEC "%(cpp_pa10)"
-#endif
-
-#if ((TARGET_DEFAULT | TARGET_CPU_DEFAULT) & MASK_PA_11) != 0
-#if ((TARGET_DEFAULT | TARGET_CPU_DEFAULT) & MASK_PA_20) != 0
-#define CPP_CPU_DEFAULT_SPEC "%(cpp_pa11) %(cpp_pa20)"
-#else
-#define CPP_CPU_DEFAULT_SPEC "%(cpp_pa11)"
-#endif
-#endif
-
-#if TARGET_64BIT
-#define CPP_64BIT_DEFAULT_SPEC "%(cpp_64bit)"
-#else
-#define CPP_64BIT_DEFAULT_SPEC ""
-#endif
-
-/* This macro defines names of additional specifications to put in the
-   specs that can be used in various specifications like CC1_SPEC.  Its
-   definition is an initializer with a subgrouping for each command option.
-
-   Each subgrouping contains a string constant, that defines the
-   specification name, and a string constant that used by the GNU CC driver
-   program.
-
-   Do not define this macro if it does not need to do anything.  */
-
-#ifndef SUBTARGET_EXTRA_SPECS
-#define SUBTARGET_EXTRA_SPECS
-#endif
-
-#define EXTRA_SPECS							\
-  { "cpp_pa10", CPP_PA10_SPEC},						\
-  { "cpp_pa11", CPP_PA11_SPEC},						\
-  { "cpp_pa20", CPP_PA20_SPEC},						\
-  { "cpp_64bit", CPP_64BIT_SPEC},					\
-  { "cpp_cpu_default",	CPP_CPU_DEFAULT_SPEC },				\
-  { "cpp_64bit_default", CPP_64BIT_DEFAULT_SPEC },			\
-  SUBTARGET_EXTRA_SPECS
-
-#define CPP_SPEC "\
-%{mpa-risc-1-0:%(cpp_pa10)} \
-%{mpa-risc-1-1:%(cpp_pa11)} \
-%{msnake:%(cpp_pa11)} \
-%{mpa-risc-2-0:%(cpp_pa20)} \
-%{!mpa-risc-1-0:%{!mpa-risc-1-1:%{!mpa-risc-2-0:%{!msnake:%(cpp_cpu_default)}}}} \
-%{m64bit:%(cpp_64bit)} \
-%{!m64bit:%(cpp_64bit_default)} \
-%{!ansi: -D_HPUX_SOURCE -D_HIUX_SOURCE -D__STDC_EXT__ -D_INCLUDE_LONGLONG} \
-%{threads: -D_REENTRANT -D_DCE_THREADS}"
-
-#define CPLUSPLUS_CPP_SPEC "\
--D_HPUX_SOURCE -D_HIUX_SOURCE -D__STDC_EXT__ -D_INCLUDE_LONGLONG \
-%{mpa-risc-1-0:%(cpp_pa10)} \
-%{mpa-risc-1-1:%(cpp_pa11)} \
-%{msnake:%(cpp_pa11)} \
-%{mpa-risc-2-0:%(cpp_pa20)} \
-%{!mpa-risc-1-0:%{!mpa-risc-1-1:%{!mpa-risc-2-0:%{!msnake:%(cpp_cpu_default)}}}} \
-%{m64bit:%(cpp_64bit)} \
-%{!m64bit:%(cpp_64bit_default)} \
-%{threads: -D_REENTRANT -D_DCE_THREADS}"
-
-/* Defines for a K&R CC */
+/* An old set of OS defines for various BSD-like systems.  */
+#define TARGET_OS_CPP_BUILTINS()				\
+  do								\
+    {								\
+	builtin_define_std ("REVARGV");				\
+	builtin_define_std ("hp800");				\
+	builtin_define_std ("hp9000");				\
+	builtin_define_std ("hp9k8");				\
+	if (!c_dialect_cxx () && !flag_iso)			\
+	  builtin_define ("hppa");				\
+	builtin_define_std ("spectrum");			\
+	builtin_define_std ("unix");				\
+	builtin_assert ("system=bsd");				\
+	builtin_assert ("system=unix");				\
+    }								\
+  while (0)
 
 #define CC1_SPEC "%{pg:} %{p:}"
 
@@ -353,24 +418,18 @@ extern int target_flags;
 #define SIZE_TYPE "unsigned int"
 #define PTRDIFF_TYPE "int"
 #define WCHAR_TYPE "unsigned int"
-#define WCHAR_UNSIGNED 1
 #define WCHAR_TYPE_SIZE 32
 
 /* Show we can debug even without a frame pointer.  */
 #define CAN_DEBUG_WITHOUT_FP
-
-/* Machine dependent reorg pass.  */
-#define MACHINE_DEPENDENT_REORG(X) pa_reorg(X)
-
-/* Names to predefine in the preprocessor for this target machine.  */
-
-#define CPP_PREDEFINES "-Dhppa -Dhp9000s800 -D__hp9000s800 -Dhp9k8 -Dunix -Dhp9000 -Dhp800 -Dspectrum -DREVARGV -Asystem=unix -Asystem=bsd -Acpu=hppa -Amachine=hppa"
 
 /* target machine storage layout */
-
-/* Define for cross-compilation from a host with a different float format
-   or endianness (e.g. VAX, x86).  */
-#define REAL_ARITHMETIC
+typedef struct machine_function GTY(())
+{
+  /* Flag indicating that a .NSUBSPA directive has been output for
+     this function.  */
+  int in_nsubspa;
+} machine_function;
 
 /* Define this macro if it is advisable to hold scalars in registers
    in a wider mode than that declared by the program.  In such cases, 
@@ -395,25 +454,12 @@ extern int target_flags;
    numbered.  */
 #define WORDS_BIG_ENDIAN 1
 
-/* number of bits in an addressable storage unit */
-#define BITS_PER_UNIT 8
-
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 68000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD (TARGET_64BIT ? 64 : 32)
 #define MAX_BITS_PER_WORD 64
 #define MAX_LONG_TYPE_SIZE 32
-#define MAX_WCHAR_TYPE_SIZE 32
 
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD (TARGET_64BIT ? 8 : 4)
 #define MIN_UNITS_PER_WORD 4
-
-/* Width in bits of a pointer.
-   See also the macro `Pmode' defined below.  */
-#define POINTER_SIZE BITS_PER_WORD
 
 /* Allocation boundary (in *bits*) for storing arguments in argument list.  */
 #define PARM_BOUNDARY BITS_PER_WORD
@@ -425,11 +471,12 @@ extern int target_flags;
 /* Boundary (in *bits*) on which stack pointer is always aligned;
    certain optimizations in combine depend on this.
 
-   GCC for the PA always rounds its stacks to a 8 * STACK_BOUNDARY
-   boundary, but that happens late in the compilation process.  */
+   The HP-UX runtime documents mandate 64-byte and 16-byte alignment for
+   the stack on the 32 and 64-bit ports, respectively.  However, we
+   are only guaranteed that the stack is aligned to BIGGEST_ALIGNMENT
+   in main.  Thus, we treat the former as the preferred alignment.  */
 #define STACK_BOUNDARY BIGGEST_ALIGNMENT
-
-#define PREFERRED_STACK_BOUNDARY (8 * STACK_BOUNDARY)
+#define PREFERRED_STACK_BOUNDARY (TARGET_64BIT ? 128 : 512)
 
 /* Allocation boundary (in *bits*) for the code of a function.  */
 #define FUNCTION_BOUNDARY BITS_PER_WORD
@@ -440,7 +487,7 @@ extern int target_flags;
 /* Every structure's size must be a multiple of this.  */
 #define STRUCTURE_SIZE_BOUNDARY 8
 
-/* A bitfield declared as `int' forces `int' alignment for the struct.  */
+/* A bit-field declared as `int' forces `int' alignment for the struct.  */
 #define PCC_BITFIELD_TYPE_MATTERS 1
 
 /* No data type wants to be aligned rounder than this.  */
@@ -501,15 +548,16 @@ extern int target_flags;
 /* Register in which static-chain is passed to a function.  */
 #define STATIC_CHAIN_REGNUM 29
 
-/* Register which holds offset table for position-independent
+/* Register used to address the offset table for position-independent
    data references.  */
+#define PIC_OFFSET_TABLE_REGNUM \
+  (flag_pic ? (TARGET_64BIT ? 27 : 19) : INVALID_REGNUM)
 
-#define PIC_OFFSET_TABLE_REGNUM (TARGET_64BIT ? 27 : 19)
 #define PIC_OFFSET_TABLE_REG_CALL_CLOBBERED 1
 
 /* Function to return the rtx used to save the pic offset table register
    across function calls.  */
-extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
+extern struct rtx_def *hppa_pic_save_rtx (void);
 
 #define DEFAULT_PCC_STRUCT_RETURN 0
 
@@ -517,9 +565,13 @@ extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
    PA64 ABI says that objects larger than 128 bits are returned in memory.
    Note, int_size_in_bytes can return -1 if the size of the object is
    variable or larger than the maximum value that can be expressed as
-   a HOST_WIDE_INT.  */
+   a HOST_WIDE_INT.   It can also return zero for an empty type.  The
+   simplest way to handle variable and empty types is to pass them in
+   memory.  This avoids problems in defining the boundaries of argument
+   slots, allocating registers, etc.  */
 #define RETURN_IN_MEMORY(TYPE)	\
-  ((unsigned HOST_WIDE_INT) int_size_in_bytes (TYPE) > (TARGET_64BIT ? 16 : 8))
+  (int_size_in_bytes (TYPE) > (TARGET_64BIT ? 16 : 8)	\
+   || int_size_in_bytes (TYPE) <= 0)
 
 /* Register in which address to store a structure value
    is passed to a function.  */
@@ -527,9 +579,18 @@ extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
 
 /* Describe how we implement __builtin_eh_return.  */
 #define EH_RETURN_DATA_REGNO(N)	\
-  ((N) < 3 ? (N) + 20 : (N) == 4 ? 31 : INVALID_REGNUM)
+  ((N) < 3 ? (N) + 20 : (N) == 3 ? 31 : INVALID_REGNUM)
 #define EH_RETURN_STACKADJ_RTX	gen_rtx_REG (Pmode, 29)
-#define EH_RETURN_HANDLER_RTX	gen_rtx_REG (Pmode, 2)
+#define EH_RETURN_HANDLER_RTX \
+  gen_rtx_MEM (word_mode,						\
+	       gen_rtx_PLUS (word_mode, frame_pointer_rtx,		\
+			     TARGET_64BIT ? GEN_INT (-16) : GEN_INT (-20)))
+			  	
+
+/* Offset from the argument pointer register value to the top of
+   stack.  This is different from FIRST_PARM_OFFSET because of the
+   frame marker.  */
+#define ARG_POINTER_CFA_OFFSET(FNDECL) 0
 
 /* The letters I, J, K, L and M in a register constraint string
    can be used to stand for particular ranges of immediate operands.
@@ -587,21 +648,24 @@ extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
    in some cases it is preferable to use a more restrictive class.  */
 #define PREFERRED_RELOAD_CLASS(X,CLASS) (CLASS)
 
-/* Return the register class of a scratch register needed to copy IN into
-   or out of a register in CLASS in MODE.  If it can be done directly
-   NO_REGS is returned. 
+/* Return the register class of a scratch register needed to copy
+   IN into a register in CLASS in MODE, or a register in CLASS in MODE
+   to IN.  If it can be done directly NO_REGS is returned. 
 
   Avoid doing any work for the common case calls.  */
-
 #define SECONDARY_RELOAD_CLASS(CLASS,MODE,IN) \
   ((CLASS == BASE_REG_CLASS && GET_CODE (IN) == REG		\
     && REGNO (IN) < FIRST_PSEUDO_REGISTER)			\
    ? NO_REGS : secondary_reload_class (CLASS, MODE, IN))
 
+#define MAYBE_FP_REG_CLASS_P(CLASS) \
+  reg_classes_intersect_p ((CLASS), FP_REGS)
+
 /* On the PA it is not possible to directly move data between
    GENERAL_REGS and FP_REGS.  */
-#define SECONDARY_MEMORY_NEEDED(CLASS1, CLASS2, MODE)  \
-  (FP_REG_CLASS_P (CLASS1) != FP_REG_CLASS_P (CLASS2))
+#define SECONDARY_MEMORY_NEEDED(CLASS1, CLASS2, MODE)		\
+  (MAYBE_FP_REG_CLASS_P (CLASS1) != FP_REG_CLASS_P (CLASS2)	\
+   || MAYBE_FP_REG_CLASS_P (CLASS2) != FP_REG_CLASS_P (CLASS1))
 
 /* Return the stack location to use for secondary memory needed reloads.  */
 #define SECONDARY_MEMORY_NEEDED_RTX(MODE) \
@@ -626,8 +690,17 @@ extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
 /* Offset within stack frame to start allocating local variables at.
    If FRAME_GROWS_DOWNWARD, this is the offset to the END of the
    first local allocated.  Otherwise, it is the offset to the BEGINNING
-   of the first local allocated.  */
+   of the first local allocated.
+
+   On the 32-bit ports, we reserve one slot for the previous frame
+   pointer and one fill slot.  The fill slot is for compatibility
+   with HP compiled programs.  On the 64-bit ports, we reserve one
+   slot for the previous frame pointer.  */
 #define STARTING_FRAME_OFFSET 8
+
+/* Define STACK_ALIGNMENT_NEEDED to zero to disable final alignment
+   of the stack.  The default is to align it to STACK_BOUNDARY.  */
+#define STACK_ALIGNMENT_NEEDED 0
 
 /* If we generate an insn to push BYTES bytes,
    this says how many the stack pointer really advances by.
@@ -660,9 +733,13 @@ extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
 /* The weird HPPA calling conventions require a minimum of 48 bytes on
    the stack: 16 bytes for register saves, and 32 bytes for magic.
    This is the difference between the logical top of stack and the
-   actual sp.  */
+   actual sp.
+
+   On the 64-bit port, the HP C compiler allocates a 48-byte frame
+   marker, although the runtime documentation only describes a 16
+   byte marker.  For compatibility, we allocate 48 bytes.  */
 #define STACK_POINTER_OFFSET \
-  (TARGET_64BIT ? -(current_function_outgoing_args_size + 16): -32)
+  (TARGET_64BIT ? -(current_function_outgoing_args_size + 48): -32)
 
 #define STACK_DYNAMIC_OFFSET(FNDECL)	\
   (TARGET_64BIT				\
@@ -682,17 +759,7 @@ extern struct rtx_def *hppa_pic_save_rtx PARAMS ((void));
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
    otherwise, FUNC is 0.  */
 
-/* On the HP-PA the value is found in register(s) 28(-29), unless
-   the mode is SF or DF. Then the value is returned in fr4 (32, ) */
-
-/* This must perform the same promotions as PROMOTE_MODE, else
-   PROMOTE_FUNCTION_RETURN will not work correctly.  */
-#define FUNCTION_VALUE(VALTYPE, FUNC)				\
-  gen_rtx_REG (((INTEGRAL_TYPE_P (VALTYPE)			\
-		 && TYPE_PRECISION (VALTYPE) < BITS_PER_WORD)	\
-		|| POINTER_TYPE_P (VALTYPE))			\
-	       ? word_mode : TYPE_MODE (VALTYPE),		\
-	       TREE_CODE (VALTYPE) == REAL_TYPE && !TARGET_SOFT_FLOAT ? 32 : 28)
+#define FUNCTION_VALUE(VALTYPE, FUNC) function_value (VALTYPE, FUNC)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
@@ -737,10 +804,10 @@ struct hppa_args {int words, nargs_prototype, incoming, indirect; };
    for a call to a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT) \
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS) \
   (CUM).words = 0, 							\
   (CUM).incoming = 0,							\
-  (CUM).indirect = INDIRECT,						\
+  (CUM).indirect = (FNTYPE) && !(FNDECL),				\
   (CUM).nargs_prototype = (FNTYPE && TYPE_ARG_TYPES (FNTYPE)		\
 			   ? (list_length (TYPE_ARG_TYPES (FNTYPE)) - 1	\
 			      + (TYPE_MODE (TREE_TYPE (FNTYPE)) == BLKmode \
@@ -758,7 +825,9 @@ struct hppa_args {int words, nargs_prototype, incoming, indirect; };
   (CUM).indirect = 0,				\
   (CUM).nargs_prototype = 1000
 
-/* Figure out the size in words of the function argument.  */
+/* Figure out the size in words of the function argument.  The size
+   returned by this macro should always be greater than zero because
+   we pass variable and zero sized objects by reference.  */
 
 #define FUNCTION_ARG_SIZE(MODE, TYPE)	\
   ((((MODE) != BLKmode \
@@ -830,6 +899,12 @@ struct hppa_args {int words, nargs_prototype, incoming, indirect; };
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (&CUM, MODE, TYPE, NAMED)
 
+/* Nonzero if we do not know how to pass TYPE solely in registers.  */
+#define MUST_PASS_IN_STACK(MODE,TYPE) \
+  ((TYPE) != 0							\
+   && (TREE_CODE (TYPE_SIZE (TYPE)) != INTEGER_CST		\
+       || TREE_ADDRESSABLE (TYPE)))
+
 /* For an arg passed partly in registers and partly in memory,
    this is the number of registers used.
    For args passed entirely in registers or entirely in memory, zero.  */
@@ -843,111 +918,42 @@ struct hppa_args {int words, nargs_prototype, incoming, indirect; };
    bits, of an argument with the specified mode and type.  If it is
    not defined,  `PARM_BOUNDARY' is used for all arguments.  */
 
-#define FUNCTION_ARG_BOUNDARY(MODE, TYPE)			\
-  (((TYPE) != 0)						\
-   ? ((integer_zerop (TYPE_SIZE (TYPE))				\
-       || ! TREE_CONSTANT (TYPE_SIZE (TYPE)))			\
-      ? BITS_PER_UNIT						\
-      : (((int_size_in_bytes (TYPE)) + UNITS_PER_WORD - 1)	\
-	 / UNITS_PER_WORD) * BITS_PER_WORD)			\
-   : ((GET_MODE_ALIGNMENT(MODE) <= PARM_BOUNDARY)		\
-      ? PARM_BOUNDARY : GET_MODE_ALIGNMENT(MODE)))
+/* Arguments larger than one word are double word aligned.  */
 
-/* Arguments larger than eight bytes are passed by invisible reference */
+#define FUNCTION_ARG_BOUNDARY(MODE, TYPE)				\
+  (((TYPE)								\
+    ? (integer_zerop (TYPE_SIZE (TYPE))					\
+       || !TREE_CONSTANT (TYPE_SIZE (TYPE))				\
+       || int_size_in_bytes (TYPE) <= UNITS_PER_WORD)			\
+    : GET_MODE_SIZE(MODE) <= UNITS_PER_WORD)				\
+   ? PARM_BOUNDARY : MAX_PARM_BOUNDARY)
 
-/* PA64 does not pass anything by invisible reference.  */
+/* In the 32-bit runtime, arguments larger than eight bytes are passed
+   by invisible reference.  As a GCC extension, we also pass anything
+   with a zero or variable size by reference.
+
+   The 64-bit runtime does not describe passing any types by invisible
+   reference.  The internals of GCC can't currently handle passing
+   empty structures, and zero or variable length arrays when they are
+   not passed entirely on the stack or by reference.  Thus, as a GCC
+   extension, we pass these types by reference.  The HP compiler doesn't
+   support these types, so hopefully there shouldn't be any compatibility
+   issues.  This may have to be revisited when HP releases a C99 compiler
+   or updates the ABI.  */
 #define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED)		\
   (TARGET_64BIT								\
-   ? 0									\
-   : (((TYPE) && int_size_in_bytes (TYPE) > 8)				\
+   ? ((TYPE) && int_size_in_bytes (TYPE) <= 0)				\
+   : (((TYPE) && (int_size_in_bytes (TYPE) > 8				\
+		  || int_size_in_bytes (TYPE) <= 0))			\
       || ((MODE) && GET_MODE_SIZE (MODE) > 8)))
  
-/* PA64 does not pass anything by invisible reference.
-   This should be undef'ed for 64bit, but we'll see if this works. The
-   problem is that we can't test TARGET_64BIT from the preprocessor.  */
-#define FUNCTION_ARG_CALLEE_COPIES(CUM, MODE, TYPE, NAMED) \
-  (TARGET_64BIT							\
-   ? 0								\
-   : (((TYPE) && int_size_in_bytes (TYPE) > 8)			\
-      || ((MODE) && GET_MODE_SIZE (MODE) > 8)))
+#define FUNCTION_ARG_CALLEE_COPIES(CUM, MODE, TYPE, NAMED) 		\
+  FUNCTION_ARG_PASS_BY_REFERENCE (CUM, MODE, TYPE, NAMED)
 
 
-extern struct rtx_def *hppa_compare_op0, *hppa_compare_op1;
+extern GTY(()) rtx hppa_compare_op0;
+extern GTY(()) rtx hppa_compare_op1;
 extern enum cmp_type hppa_branch_type;
-
-#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION) \
-{ const char *target_name = XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0); \
-  static unsigned int current_thunk_number; \
-  char label[16]; \
-  char *lab; \
-  ASM_GENERATE_INTERNAL_LABEL (label, "LTHN", current_thunk_number); \
-  STRIP_NAME_ENCODING (lab, label); \
-  STRIP_NAME_ENCODING (target_name, target_name); \
-  /* FIXME: total_code_bytes is not handled correctly in files with \
-     mi thunks.  */ \
-  pa_output_function_prologue (FILE, 0); \
-  if (VAL_14_BITS_P (DELTA)) \
-    { \
-      if (! TARGET_64BIT && ! TARGET_PORTABLE_RUNTIME && flag_pic) \
-	{ \
-	  fprintf (FILE, "\taddil LT%%%s,%%r19\n", lab); \
-	  fprintf (FILE, "\tldw RT%%%s(%%r1),%%r22\n", lab); \
-	  fprintf (FILE, "\tldw 0(%%sr0,%%r22),%%r22\n"); \
-	  fprintf (FILE, "\tbb,>=,n %%r22,30,.+16\n"); \
-	  fprintf (FILE, "\tdepi 0,31,2,%%r22\n"); \
-	  fprintf (FILE, "\tldw 4(%%sr0,%%r22),%%r19\n"); \
-	  fprintf (FILE, "\tldw 0(%%sr0,%%r22),%%r22\n"); \
-	  fprintf (FILE, "\tldsid (%%sr0,%%r22),%%r1\n\tmtsp %%r1,%%sr0\n"); \
-	  fprintf (FILE, "\tbe 0(%%sr0,%%r22)\n\tldo "); \
-	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, DELTA); \
-	  fprintf (FILE, "(%%r26),%%r26\n"); \
-	} \
-      else \
-	{ \
-	  fprintf (FILE, "\tb %s\n\tldo ", target_name); \
-	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, DELTA); \
-	  fprintf (FILE, "(%%r26),%%r26\n"); \
-	} \
-    } \
-  else \
-    { \
-      if (! TARGET_64BIT && ! TARGET_PORTABLE_RUNTIME && flag_pic) \
-	{ \
-	  fprintf (FILE, "\taddil L%%"); \
-	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, DELTA); \
-	  fprintf (FILE, ",%%r26\n\tldo R%%"); \
-	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, DELTA); \
-	  fprintf (FILE, "(%%r1),%%r26\n"); \
-	  fprintf (FILE, "\taddil LT%%%s,%%r19\n", lab); \
-	  fprintf (FILE, "\tldw RT%%%s(%%r1),%%r22\n", lab); \
-	  fprintf (FILE, "\tldw 0(%%sr0,%%r22),%%r22\n"); \
-	  fprintf (FILE, "\tbb,>=,n %%r22,30,.+16\n"); \
-	  fprintf (FILE, "\tdepi 0,31,2,%%r22\n"); \
-	  fprintf (FILE, "\tldw 4(%%sr0,%%r22),%%r19\n"); \
-	  fprintf (FILE, "\tldw 0(%%sr0,%%r22),%%r22\n"); \
-	  fprintf (FILE, "\tldsid (%%sr0,%%r22),%%r1\n\tmtsp %%r1,%%sr0\n"); \
-	  fprintf (FILE, "\tbe,n 0(%%sr0,%%r22)\n"); \
-	} \
-      else \
-	{ \
-	  fprintf (FILE, "\taddil L%%"); \
-	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, DELTA); \
-	  fprintf (FILE, ",%%r26\n\tb %s\n\tldo R%%", target_name); \
-	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, DELTA); \
-	  fprintf (FILE, "(%%r1),%%r26\n"); \
-	} \
-    } \
-  fprintf (FILE, "\t.EXIT\n\t.PROCEND\n"); \
-  if (! TARGET_64BIT && ! TARGET_PORTABLE_RUNTIME && flag_pic) \
-    { \
-      data_section (); \
-      fprintf (FILE, "\t.align 4\n"); \
-      ASM_OUTPUT_INTERNAL_LABEL (FILE, "LTHN", current_thunk_number); \
-      fprintf (FILE, "\t.word P%%%s\n", target_name); \
-      function_section (THUNK_FNDECL); \
-    } \
-  current_thunk_number++; \
-}
 
 /* On HPPA, we emit profiling code as rtl via PROFILE_HOOK rather than
    as assembly via FUNCTION_PROFILER.  Just output a local label.
@@ -959,10 +965,10 @@ extern enum cmp_type hppa_branch_type;
 #endif
 
 #define FUNCTION_PROFILER(FILE, LABEL) \
-  ASM_OUTPUT_INTERNAL_LABEL (FILE, FUNC_BEGIN_PROLOG_LABEL, LABEL)
+  (*targetm.asm_out.internal_label) (FILE, FUNC_BEGIN_PROLOG_LABEL, LABEL)
 
 #define PROFILE_HOOK(label_no) hppa_profile_hook (label_no)
-void hppa_profile_hook PARAMS ((int label_no));
+void hppa_profile_hook (int label_no);
 
 /* The profile counter if emitted must come before the prologue.  */
 #define PROFILE_BEFORE_PROLOGUE 1
@@ -993,7 +999,7 @@ extern int may_call_alloca;
 
 #define TRAMPOLINE_TEMPLATE(FILE) 					\
   {									\
-    if (! TARGET_64BIT)							\
+    if (!TARGET_64BIT)							\
       {									\
 	fputs ("\tldw	36(%r22),%r21\n", FILE);			\
 	fputs ("\tbb,>=,n	%r21,30,.+16\n", FILE);			\
@@ -1003,10 +1009,20 @@ extern int may_call_alloca;
 	  fputs ("\tdepwi	0,31,2,%r21\n", FILE);			\
 	fputs ("\tldw	4(%r21),%r19\n", FILE);				\
 	fputs ("\tldw	0(%r21),%r21\n", FILE);				\
-	fputs ("\tldsid	(%r21),%r1\n", FILE);				\
-	fputs ("\tmtsp	%r1,%sr0\n", FILE);				\
-	fputs ("\tbe	0(%sr0,%r21)\n", FILE);				\
-	fputs ("\tldw	40(%r22),%r29\n", FILE);			\
+	if (TARGET_PA_20)						\
+	  {								\
+	    fputs ("\tbve	(%r21)\n", FILE);			\
+	    fputs ("\tldw	40(%r22),%r29\n", FILE);		\
+	    fputs ("\t.word	0\n", FILE);				\
+	    fputs ("\t.word	0\n", FILE);				\
+	  }								\
+	else								\
+	  {								\
+	    fputs ("\tldsid	(%r21),%r1\n", FILE);			\
+	    fputs ("\tmtsp	%r1,%sr0\n", FILE);			\
+	    fputs ("\tbe	0(%sr0,%r21)\n", FILE);			\
+	    fputs ("\tldw	40(%r22),%r29\n", FILE);		\
+	  }								\
 	fputs ("\t.word	0\n", FILE);					\
 	fputs ("\t.word	0\n", FILE);					\
 	fputs ("\t.word	0\n", FILE);					\
@@ -1029,16 +1045,21 @@ extern int may_call_alloca;
       }									\
   }
 
-/* Length in units of the trampoline for entering a nested function.
-
-   Flush the cache entries corresponding to the first and last addresses
-   of the trampoline.  This is necessary as the trampoline may cross two
-   cache lines.
-
-   If the code part of the trampoline ever grows to > 32 bytes, then it
-   will become necessary to hack on the cacheflush pattern in pa.md.  */
+/* Length in units of the trampoline for entering a nested function.  */
 
 #define TRAMPOLINE_SIZE (TARGET_64BIT ? 72 : 52)
+
+/* Length in units of the trampoline instruction code.  */
+
+#define TRAMPOLINE_CODE_SIZE (TARGET_64BIT ? 24 : (TARGET_PA_20 ? 32 : 40))
+
+/* Minimum length of a cache line.  A length of 16 will work on all
+   PA-RISC processors.  All PA 1.1 processors have a cache line of
+   32 bytes.  Most but not all PA 2.0 processors have a cache line
+   of 64 bytes.  As cache flushes are expensive and we don't support
+   PA 1.0, we use a minimum length of 32.  */
+
+#define MIN_CACHELINE_SIZE 32
 
 /* Emit RTL insns to initialize the variable parts of a trampoline.
    FNADDR is an RTX for the address of the function's pure code.
@@ -1048,55 +1069,85 @@ extern int may_call_alloca;
    Move the static chain value to trampoline template at offset 40.
    Move the trampoline address to trampoline template at offset 44.
    Move r19 to trampoline template at offset 48.  The latter two
-   words create a plabel for the indirect call to the trampoline.  */
+   words create a plabel for the indirect call to the trampoline.
+
+   A similar sequence is used for the 64-bit port but the plabel is
+   at the beginning of the trampoline.
+
+   Finally, the cache entries for the trampoline code are flushed.
+   This is necessary to ensure that the trampoline instruction sequence
+   is written to memory prior to any attempts at prefetching the code
+   sequence.  */
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT) 			\
 {									\
-  if (! TARGET_64BIT)							\
-    {									\
-      rtx start_addr, end_addr;						\
+  rtx start_addr = gen_reg_rtx (Pmode);					\
+  rtx end_addr = gen_reg_rtx (Pmode);					\
+  rtx line_length = gen_reg_rtx (Pmode);				\
+  rtx tmp;								\
 									\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 36));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), (FNADDR));	\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 40));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), (CXT));		\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 44));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), (TRAMP));	\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 48));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr),			\
+  if (!TARGET_64BIT)							\
+    {									\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 36));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp), (FNADDR));		\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 40));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp), (CXT));			\
+									\
+      /* Create a fat pointer for the trampoline.  */			\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 44));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp), (TRAMP));		\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 48));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp),				\
 		      gen_rtx_REG (Pmode, 19));				\
+									\
       /* fdc and fic only use registers for the address to flush,	\
-	 they do not accept integer displacements.  */ 			\
-      start_addr = force_reg (Pmode, (TRAMP));				\
-      end_addr = force_reg (Pmode, plus_constant ((TRAMP), 32));	\
-      emit_insn (gen_dcacheflush (start_addr, end_addr));		\
-      end_addr = force_reg (Pmode, plus_constant (start_addr, 32));	\
-      emit_insn (gen_icacheflush (start_addr, end_addr, start_addr,	\
-				  gen_reg_rtx (Pmode), gen_reg_rtx (Pmode)));\
+	 they do not accept integer displacements.  We align the	\
+	 start and end addresses to the beginning of their respective	\
+	 cache lines to minimize the number of lines flushed.  */	\
+      tmp = force_reg (Pmode, (TRAMP));					\
+      emit_insn (gen_andsi3 (start_addr, tmp,				\
+			     GEN_INT (-MIN_CACHELINE_SIZE)));		\
+      tmp = force_reg (Pmode,						\
+		       plus_constant (tmp, TRAMPOLINE_CODE_SIZE - 1));	\
+      emit_insn (gen_andsi3 (end_addr, tmp,				\
+			     GEN_INT (-MIN_CACHELINE_SIZE)));		\
+      emit_move_insn (line_length, GEN_INT (MIN_CACHELINE_SIZE));	\
+      emit_insn (gen_dcacheflush (start_addr, end_addr, line_length));	\
+      emit_insn (gen_icacheflush (start_addr, end_addr, line_length,	\
+				  gen_reg_rtx (Pmode),			\
+				  gen_reg_rtx (Pmode)));		\
     }									\
   else									\
     {									\
-      rtx start_addr, end_addr;						\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 56));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp), (FNADDR));		\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 64));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp), (CXT));			\
 									\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 56));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), (FNADDR));	\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 64));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), (CXT));		\
       /* Create a fat pointer for the trampoline.  */			\
-      end_addr = force_reg (Pmode, plus_constant ((TRAMP), 32));	\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 16));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), end_addr);	\
-      end_addr = gen_rtx_REG (Pmode, 27);				\
-      start_addr = memory_address (Pmode, plus_constant ((TRAMP), 24));	\
-      emit_move_insn (gen_rtx_MEM (Pmode, start_addr), end_addr);	\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 16));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp),				\
+		      force_reg (Pmode, plus_constant ((TRAMP), 32)));	\
+      tmp = memory_address (Pmode, plus_constant ((TRAMP), 24));	\
+      emit_move_insn (gen_rtx_MEM (Pmode, tmp),				\
+		      gen_rtx_REG (Pmode, 27));				\
+									\
       /* fdc and fic only use registers for the address to flush,	\
-	 they do not accept integer displacements.  */ 			\
-      start_addr = force_reg (Pmode, (TRAMP));				\
-      end_addr = force_reg (Pmode, plus_constant ((TRAMP), 32));	\
-      emit_insn (gen_dcacheflush (start_addr, end_addr));		\
-      end_addr = force_reg (Pmode, plus_constant (start_addr, 32));	\
-      emit_insn (gen_icacheflush (start_addr, end_addr, start_addr,	\
-				  gen_reg_rtx (Pmode), gen_reg_rtx (Pmode)));\
+	 they do not accept integer displacements.  We align the	\
+	 start and end addresses to the beginning of their respective	\
+	 cache lines to minimize the number of lines flushed.  */	\
+      tmp = force_reg (Pmode, plus_constant ((TRAMP), 32));		\
+      emit_insn (gen_anddi3 (start_addr, tmp,				\
+			     GEN_INT (-MIN_CACHELINE_SIZE)));		\
+      tmp = force_reg (Pmode,						\
+		       plus_constant (tmp, TRAMPOLINE_CODE_SIZE - 1));	\
+      emit_insn (gen_anddi3 (end_addr, tmp,				\
+			     GEN_INT (-MIN_CACHELINE_SIZE)));		\
+      emit_move_insn (line_length, GEN_INT (MIN_CACHELINE_SIZE));	\
+      emit_insn (gen_dcacheflush (start_addr, end_addr, line_length));	\
+      emit_insn (gen_icacheflush (start_addr, end_addr, line_length,	\
+				  gen_reg_rtx (Pmode),			\
+				  gen_reg_rtx (Pmode)));		\
     }									\
 }
 
@@ -1116,8 +1167,8 @@ extern int may_call_alloca;
 
 /* Implement `va_start' for varargs and stdarg.  */
 
-#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
-  hppa_va_start (stdarg, valist, nextarg)
+#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
+  hppa_va_start (valist, nextarg)
 
 /* Implement `va_arg'.  */
 
@@ -1176,16 +1227,36 @@ extern int may_call_alloca;
    || GET_CODE (X) == HIGH) 						\
    && (reload_in_progress || reload_completed || ! symbolic_expression_p (X)))
 
-/* Include all constant integers and constant doubles, but not
-   floating-point, except for floating-point zero.
+/* A C expression that is nonzero if we are using the new HP assembler.  */
 
-   Reject LABEL_REFs if we're not using gas or the new HP assembler. 
-
-   ?!? For now also reject CONST_DOUBLES in 64bit mode.  This will need
-   further work.  */
 #ifndef NEW_HP_ASSEMBLER
 #define NEW_HP_ASSEMBLER 0
 #endif
+
+/* The macros below define the immediate range for CONST_INTS on
+   the 64-bit port.  Constants in this range can be loaded in three
+   instructions using a ldil/ldo/depdi sequence.  Constants outside
+   this range are forced to the constant pool prior to reload.  */
+
+#define MAX_LEGIT_64BIT_CONST_INT ((HOST_WIDE_INT) 32 << 31)
+#define MIN_LEGIT_64BIT_CONST_INT ((HOST_WIDE_INT) -32 << 31)
+#define LEGITIMATE_64BIT_CONST_INT_P(X) \
+  ((X) >= MIN_LEGIT_64BIT_CONST_INT && (X) < MAX_LEGIT_64BIT_CONST_INT)
+
+/* A C expression that is nonzero if X is a legitimate constant for an
+   immediate operand.
+
+   We include all constant integers and constant doubles, but not
+   floating-point, except for floating-point zero.  We reject LABEL_REFs
+   if we're not using gas or the new HP assembler. 
+
+   In 64-bit mode, we reject CONST_DOUBLES.  We also reject CONST_INTS
+   that need more than three instructions to load prior to reload.  This
+   limit is somewhat arbitrary.  It takes three instructions to load a
+   CONST_INT from memory but two are memory accesses.  It may be better
+   to increase the allowed range for CONST_INTS.  We may also be able
+   to handle CONST_DOUBLES.  */
+
 #define LEGITIMATE_CONSTANT_P(X)				\
   ((GET_MODE_CLASS (GET_MODE (X)) != MODE_FLOAT			\
     || (X) == CONST0_RTX (GET_MODE (X)))			\
@@ -1193,82 +1264,95 @@ extern int may_call_alloca;
    && !(TARGET_64BIT && GET_CODE (X) == CONST_DOUBLE)		\
    && !(TARGET_64BIT && GET_CODE (X) == CONST_INT		\
 	&& !(HOST_BITS_PER_WIDE_INT <= 32			\
-	     || (INTVAL (X) >= (HOST_WIDE_INT) -32 << 31	\
-		 && INTVAL (X) < (HOST_WIDE_INT) 32 << 31)	\
+	     || (reload_in_progress || reload_completed)	\
+	     || LEGITIMATE_64BIT_CONST_INT_P (INTVAL (X))	\
 	     || cint_ok_for_move (INTVAL (X))))			\
    && !function_label_operand (X, VOIDmode))
 
-/* Subroutine for EXTRA_CONSTRAINT.
+/* Subroutines for EXTRA_CONSTRAINT.
 
    Return 1 iff OP is a pseudo which did not get a hard register and
    we are running the reload pass.  */
-
 #define IS_RELOADING_PSEUDO_P(OP) \
   ((reload_in_progress					\
     && GET_CODE (OP) == REG				\
     && REGNO (OP) >= FIRST_PSEUDO_REGISTER		\
     && reg_renumber [REGNO (OP)] < 0))
 
+/* Return 1 iff OP is a scaled or unscaled index address.  */
+#define IS_INDEX_ADDR_P(OP) \
+  (GET_CODE (OP) == PLUS				\
+   && GET_MODE (OP) == Pmode				\
+   && (GET_CODE (XEXP (OP, 0)) == MULT			\
+       || GET_CODE (XEXP (OP, 1)) == MULT		\
+       || (REG_P (XEXP (OP, 0))				\
+	   && REG_P (XEXP (OP, 1)))))
+
+/* Return 1 iff OP is a LO_SUM DLT address.  */
+#define IS_LO_SUM_DLT_ADDR_P(OP) \
+  (GET_CODE (OP) == LO_SUM				\
+   && GET_MODE (OP) == Pmode				\
+   && REG_P (XEXP (OP, 0))				\
+   && REG_OK_FOR_BASE_P (XEXP (OP, 0))			\
+   && GET_CODE (XEXP (OP, 1)) == UNSPEC)
+
 /* Optional extra constraints for this machine. Borrowed from sparc.h.
 
-   For the HPPA, `Q' means that this is a memory operand but not a
-   symbolic memory operand.  Note that an unassigned pseudo register
-   is such a memory operand.  Needed because reload will generate
-   these things in insns and then not re-recognize the insns, causing
-   constrain_operands to fail.
+   `A' is a LO_SUM DLT memory operand.
 
-   `R' is used for scaled indexed addresses.
+   `Q' is any memory operand that isn't a symbolic, indexed or lo_sum
+       memory operand.  Note that an unassigned pseudo register is such a
+       memory operand.  Needed because reload will generate these things
+       and then not re-recognize the insn, causing constrain_operands to
+       fail.
+
+   `R' is a scaled/unscaled indexed memory operand.
 
    `S' is the constant 31.
 
-   `T' is for fp loads and stores.  */
-#define EXTRA_CONSTRAINT(OP, C)				\
-  ((C) == 'Q' ?						\
-   (IS_RELOADING_PSEUDO_P (OP)				\
-    || (GET_CODE (OP) == MEM				\
-	&& (memory_address_p (GET_MODE (OP), XEXP (OP, 0))\
-	    || reload_in_progress)			\
-	&& ! symbolic_memory_operand (OP, VOIDmode)	\
-        && !(GET_CODE (XEXP (OP, 0)) == PLUS		\
-	     && (GET_CODE (XEXP (XEXP (OP, 0), 0)) == MULT\
-		 || GET_CODE (XEXP (XEXP (OP, 0), 1)) == MULT))))\
-   : ((C) == 'R' ?					\
-     (GET_CODE (OP) == MEM				\
-      && GET_CODE (XEXP (OP, 0)) == PLUS		\
-      && (GET_CODE (XEXP (XEXP (OP, 0), 0)) == MULT	\
-	  || GET_CODE (XEXP (XEXP (OP, 0), 1)) == MULT)	\
-      && (move_operand (OP, GET_MODE (OP))		\
-	  || memory_address_p (GET_MODE (OP), XEXP (OP, 0))\
-	  || reload_in_progress))			\
-   : ((C) == 'T' ? 					\
-      (GET_CODE (OP) == MEM				\
-       /* Using DFmode forces only short displacements	\
-	  to be recognized as valid in reg+d addresses. \
-	  However, this is not necessary for PA2.0 since\
-	  it has long FP loads/stores.  */		\
-       && memory_address_p ((TARGET_PA_20		\
-			     ? GET_MODE (OP)		\
-			     : DFmode),			\
-			    XEXP (OP, 0))		\
-       && !(GET_CODE (XEXP (OP, 0)) == LO_SUM		\
-	    && GET_CODE (XEXP (XEXP (OP, 0), 0)) == REG \
-	    && REG_OK_FOR_BASE_P (XEXP (XEXP (OP, 0), 0))\
-	    && GET_CODE (XEXP (XEXP (OP, 0), 1)) == UNSPEC\
-	    && GET_MODE (XEXP (OP, 0)) == Pmode)	\
-       && !(GET_CODE (XEXP (OP, 0)) == PLUS		\
-	    && (GET_CODE (XEXP (XEXP (OP, 0), 0)) == MULT\
-		|| GET_CODE (XEXP (XEXP (OP, 0), 1)) == MULT)))\
-   : ((C) == 'U' ?					\
-      (GET_CODE (OP) == CONST_INT && INTVAL (OP) == 63)	\
-   : ((C) == 'A' ?					\
-      (GET_CODE (OP) == MEM				\
-       && GET_CODE (XEXP (OP, 0)) == LO_SUM		\
-       && GET_CODE (XEXP (XEXP (OP, 0), 0)) == REG	\
-       && REG_OK_FOR_BASE_P (XEXP (XEXP (OP, 0), 0))	\
-       && GET_CODE (XEXP (XEXP (OP, 0), 1)) == UNSPEC		\
-       && GET_MODE (XEXP (OP, 0)) == Pmode)			\
-   : ((C) == 'S' ?					\
-      (GET_CODE (OP) == CONST_INT && INTVAL (OP) == 31) : 0))))))
+   `T' is for floating-point loads and stores.
+
+   `U' is the constant 63.  */
+
+#define EXTRA_CONSTRAINT(OP, C) \
+  ((C) == 'Q' ?								\
+   (IS_RELOADING_PSEUDO_P (OP)						\
+    || (GET_CODE (OP) == MEM						\
+	&& (reload_in_progress						\
+	    || memory_address_p (GET_MODE (OP), XEXP (OP, 0)))		\
+	&& !symbolic_memory_operand (OP, VOIDmode)			\
+	&& !IS_LO_SUM_DLT_ADDR_P (XEXP (OP, 0))				\
+	&& !IS_INDEX_ADDR_P (XEXP (OP, 0))))				\
+   : ((C) == 'A' ?							\
+      (GET_CODE (OP) == MEM						\
+       && IS_LO_SUM_DLT_ADDR_P (XEXP (OP, 0)))				\
+   : ((C) == 'R' ?							\
+      (GET_CODE (OP) == MEM						\
+       && IS_INDEX_ADDR_P (XEXP (OP, 0)))				\
+   : ((C) == 'T' ? 							\
+      (GET_CODE (OP) == MEM						\
+       && !IS_LO_SUM_DLT_ADDR_P (XEXP (OP, 0))				\
+       && !IS_INDEX_ADDR_P (XEXP (OP, 0))				\
+       /* Floating-point loads and stores are used to load		\
+	  integer values as well as floating-point values.		\
+	  They don't have the same set of REG+D address modes		\
+	  as integer loads and stores.  PA 1.x supports only		\
+	  short displacements.  PA 2.0 supports long displacements	\
+	  but the base register needs to be aligned.			\
+									\
+	  The checks in GO_IF_LEGITIMATE_ADDRESS for SFmode and		\
+	  DFmode test the validity of an address for use in a		\
+	  floating point load or store.  So, we use SFmode/DFmode	\
+	  to see if the address is valid for a floating-point		\
+	  load/store operation.  */					\
+       && memory_address_p ((GET_MODE_SIZE (GET_MODE (OP)) == 4		\
+			     ? SFmode					\
+			     : DFmode),					\
+			    XEXP (OP, 0)))				\
+   : ((C) == 'S' ?							\
+      (GET_CODE (OP) == CONST_INT && INTVAL (OP) == 31)			\
+   : ((C) == 'U' ?							\
+      (GET_CODE (OP) == CONST_INT && INTVAL (OP) == 63) : 0))))))
 	
 
 /* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
@@ -1304,16 +1388,53 @@ extern int may_call_alloca;
 
 #endif
 
-/* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression
-   that is a valid memory address for an instruction.
-   The MODE argument is the machine mode for the MEM expression
-   that wants to use this address.
+/* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression that is a
+   valid memory address for an instruction.  The MODE argument is the
+   machine mode for the MEM expression that wants to use this address.
 
-   On the HP-PA, the actual legitimate addresses must be
-   REG+REG, REG+(REG*SCALE) or REG+SMALLINT.
-   But we can treat a SYMBOL_REF as legitimate if it is part of this
-   function's constant-pool, because such addresses can actually
-   be output as REG+SMALLINT. 
+   On HP PA-RISC, the legitimate address forms are REG+SMALLINT,
+   REG+REG, and REG+(REG*SCALE).  The indexed address forms are only
+   available with floating point loads and stores, and integer loads.
+   We get better code by allowing indexed addresses in the initial
+   RTL generation.
+
+   The acceptance of indexed addresses as legitimate implies that we
+   must provide patterns for doing indexed integer stores, or the move
+   expanders must force the address of an indexed store to a register.
+   We have adopted the latter approach.
+   
+   Another function of GO_IF_LEGITIMATE_ADDRESS is to ensure that
+   the base register is a valid pointer for indexed instructions.
+   On targets that have non-equivalent space registers, we have to
+   know at the time of assembler output which register in a REG+REG
+   pair is the base register.  The REG_POINTER flag is sometimes lost
+   in reload and the following passes, so it can't be relied on during
+   code generation.  Thus, we either have to canonicalize the order
+   of the registers in REG+REG indexed addresses, or treat REG+REG
+   addresses separately and provide patterns for both permutations.
+
+   The latter approach requires several hundred additional lines of
+   code in pa.md.  The downside to canonicalizing is that a PLUS
+   in the wrong order can't combine to form to make a scaled indexed
+   memory operand.  As we won't need to canonicalize the operands if
+   the REG_POINTER lossage can be fixed, it seems better canonicalize.
+
+   We initially break out scaled indexed addresses in canonical order
+   in emit_move_sequence.  LEGITIMIZE_ADDRESS also canonicalizes
+   scaled indexed addresses during RTL generation.  However, fold_rtx
+   has its own opinion on how the operands of a PLUS should be ordered.
+   If one of the operands is equivalent to a constant, it will make
+   that operand the second operand.  As the base register is likely to
+   be equivalent to a SYMBOL_REF, we have made it the second operand.
+
+   GO_IF_LEGITIMATE_ADDRESS accepts REG+REG as legitimate when the
+   operands are in the order INDEX+BASE on targets with non-equivalent
+   space registers, and in any order on targets with equivalent space
+   registers.  It accepts both MULT+BASE and BASE+MULT for scaled indexing.
+
+   We treat a SYMBOL_REF as legitimate if it is part of the current
+   function's constant-pool, because such addresses can actually be
+   output as REG+SMALLINT. 
 
    Note we only allow 5 bit immediates for access to a constant address;
    doing so avoids losing for loading/storing a FP register at an address
@@ -1331,85 +1452,147 @@ extern int may_call_alloca;
 #define VAL_14_BITS_P(X) ((unsigned HOST_WIDE_INT)(X) + 0x2000 < 0x4000)
 #define INT_14_BITS(X) VAL_14_BITS_P (INTVAL (X))
 
-#define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR)  \
-{							\
-  if ((REG_P (X) && REG_OK_FOR_BASE_P (X))		\
+#if HOST_BITS_PER_WIDE_INT > 32
+#define VAL_32_BITS_P(X) \
+  ((unsigned HOST_WIDE_INT)(X) + ((unsigned HOST_WIDE_INT) 1 << 31)    \
+   < (unsigned HOST_WIDE_INT) 2 << 31)
+#else
+#define VAL_32_BITS_P(X) 1
+#endif
+#define INT_32_BITS(X) VAL_32_BITS_P (INTVAL (X))
+
+/* These are the modes that we allow for scaled indexing.  */
+#define MODE_OK_FOR_SCALED_INDEXING_P(MODE) \
+  ((TARGET_64BIT && (MODE) == DImode)					\
+   || (MODE) == SImode							\
+   || (MODE) == HImode							\
+   || (!TARGET_SOFT_FLOAT && ((MODE) == DFmode || (MODE) == SFmode)))
+
+/* These are the modes that we allow for unscaled indexing.  */
+#define MODE_OK_FOR_UNSCALED_INDEXING_P(MODE) \
+  ((TARGET_64BIT && (MODE) == DImode)					\
+   || (MODE) == SImode							\
+   || (MODE) == HImode							\
+   || (MODE) == QImode							\
+   || (!TARGET_SOFT_FLOAT && ((MODE) == DFmode || (MODE) == SFmode)))
+
+#define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR) \
+{									\
+  if ((REG_P (X) && REG_OK_FOR_BASE_P (X))				\
       || ((GET_CODE (X) == PRE_DEC || GET_CODE (X) == POST_DEC		\
 	   || GET_CODE (X) == PRE_INC || GET_CODE (X) == POST_INC)	\
-	  && REG_P (XEXP (X, 0))			\
-	  && REG_OK_FOR_BASE_P (XEXP (X, 0))))		\
-    goto ADDR;						\
-  else if (GET_CODE (X) == PLUS)			\
-    {							\
-      rtx base = 0, index = 0;				\
-      if (REG_P (XEXP (X, 0))				\
-	  && REG_OK_FOR_BASE_P (XEXP (X, 0)))		\
-	base = XEXP (X, 0), index = XEXP (X, 1);	\
-      else if (REG_P (XEXP (X, 1))			\
-	       && REG_OK_FOR_BASE_P (XEXP (X, 1)))	\
-	base = XEXP (X, 1), index = XEXP (X, 0);	\
-      if (base != 0)					\
-	if (GET_CODE (index) == CONST_INT		\
-	    && ((INT_14_BITS (index)			\
-		 && (TARGET_SOFT_FLOAT			\
-		     || (TARGET_PA_20		\
-			 && ((MODE == SFmode		\
-			      && (INTVAL (index) % 4) == 0)\
-			     || (MODE == DFmode		\
-				 && (INTVAL (index) % 8) == 0)))\
-		     || ((MODE) != SFmode && (MODE) != DFmode))) \
-		|| INT_5_BITS (index)))			\
-	  goto ADDR;					\
-      if (! TARGET_SOFT_FLOAT				\
-	  && ! TARGET_DISABLE_INDEXING			\
-	  && base					\
-	  && ((MODE) == SFmode || (MODE) == DFmode)	\
-	  && GET_CODE (index) == MULT			\
-	  && GET_CODE (XEXP (index, 0)) == REG		\
-	  && REG_OK_FOR_BASE_P (XEXP (index, 0))	\
-	  && GET_CODE (XEXP (index, 1)) == CONST_INT	\
-	  && INTVAL (XEXP (index, 1)) == ((MODE) == SFmode ? 4 : 8))\
-	goto ADDR;					\
-    }							\
-  else if (GET_CODE (X) == LO_SUM			\
-	   && GET_CODE (XEXP (X, 0)) == REG		\
-	   && REG_OK_FOR_BASE_P (XEXP (X, 0))		\
-	   && CONSTANT_P (XEXP (X, 1))			\
-	   && (TARGET_SOFT_FLOAT			\
-	       /* We can allow symbolic LO_SUM addresses\
-		  for PA2.0.  */			\
-	       || (TARGET_PA_20				\
-	           && GET_CODE (XEXP (X, 1)) != CONST_INT)\
-	       || ((MODE) != SFmode			\
-		   && (MODE) != DFmode)))		\
-    goto ADDR;						\
-  else if (GET_CODE (X) == LO_SUM			\
-	   && GET_CODE (XEXP (X, 0)) == SUBREG		\
-	   && GET_CODE (SUBREG_REG (XEXP (X, 0))) == REG\
-	   && REG_OK_FOR_BASE_P (SUBREG_REG (XEXP (X, 0)))\
-	   && CONSTANT_P (XEXP (X, 1))			\
-	   && (TARGET_SOFT_FLOAT			\
-	       /* We can allow symbolic LO_SUM addresses\
-		  for PA2.0.  */			\
-	       || (TARGET_PA_20				\
-	           && GET_CODE (XEXP (X, 1)) != CONST_INT)\
-	       || ((MODE) != SFmode			\
-		   && (MODE) != DFmode)))		\
-    goto ADDR;						\
-  else if (GET_CODE (X) == LABEL_REF			\
-	   || (GET_CODE (X) == CONST_INT		\
-	       && INT_5_BITS (X)))			\
-    goto ADDR;						\
-  /* Needed for -fPIC */				\
-  else if (GET_CODE (X) == LO_SUM			\
-	   && GET_CODE (XEXP (X, 0)) == REG             \
-	   && REG_OK_FOR_BASE_P (XEXP (X, 0))		\
-	   && GET_CODE (XEXP (X, 1)) == UNSPEC		\
-	   && (TARGET_SOFT_FLOAT			\
-	       || TARGET_PA_20				\
-	       || ((MODE) != SFmode			\
-		   && (MODE) != DFmode)))		\
-    goto ADDR;						\
+	  && REG_P (XEXP (X, 0))					\
+	  && REG_OK_FOR_BASE_P (XEXP (X, 0))))				\
+    goto ADDR;								\
+  else if (GET_CODE (X) == PLUS)					\
+    {									\
+      rtx base = 0, index = 0;						\
+      if (REG_P (XEXP (X, 1))						\
+	  && REG_OK_FOR_BASE_P (XEXP (X, 1)))				\
+	base = XEXP (X, 1), index = XEXP (X, 0);			\
+      else if (REG_P (XEXP (X, 0))					\
+	       && REG_OK_FOR_BASE_P (XEXP (X, 0)))			\
+	base = XEXP (X, 0), index = XEXP (X, 1);			\
+      if (base								\
+	  && GET_CODE (index) == CONST_INT				\
+	  && ((INT_14_BITS (index)					\
+	       && (((MODE) != DImode					\
+		    && (MODE) != SFmode					\
+		    && (MODE) != DFmode)				\
+		   /* The base register for DImode loads and stores	\
+		      with long displacements must be aligned because	\
+		      the lower three bits in the displacement are	\
+		      assumed to be zero.  */				\
+		   || ((MODE) == DImode					\
+		       && (!TARGET_64BIT				\
+			   || (INTVAL (index) % 8) == 0))		\
+		   /* Similarly, the base register for SFmode/DFmode	\
+		      loads and stores with long displacements must	\
+		      be aligned.					\
+									\
+		      FIXME: the ELF32 linker clobbers the LSB of	\
+		      the FP register number in PA 2.0 floating-point	\
+		      insns with long displacements.  This is because	\
+		      R_PARISC_DPREL14WR and other relocations like	\
+		      it are not supported.  For now, we reject long	\
+		      displacements on this target.  */			\
+		   || (((MODE) == SFmode || (MODE) == DFmode)		\
+		       && (TARGET_SOFT_FLOAT				\
+			   || (TARGET_PA_20				\
+			       && !TARGET_ELF32				\
+			       && (INTVAL (index)			\
+				   % GET_MODE_SIZE (MODE)) == 0)))))	\
+	       || INT_5_BITS (index)))					\
+	goto ADDR;							\
+      if (!TARGET_DISABLE_INDEXING					\
+	  /* Only accept the "canonical" INDEX+BASE operand order	\
+	     on targets with non-equivalent space registers.  */	\
+	  && (TARGET_NO_SPACE_REGS					\
+	      ? (base && REG_P (index))					\
+	      : (base == XEXP (X, 1) && REG_P (index)			\
+		 && (reload_completed					\
+		     || (reload_in_progress && HARD_REGISTER_P (base))	\
+		     || REG_POINTER (base))				\
+		 && (reload_completed					\
+		     || (reload_in_progress && HARD_REGISTER_P (index))	\
+		     || !REG_POINTER (index))))				\
+	  && MODE_OK_FOR_UNSCALED_INDEXING_P (MODE)			\
+	  && REG_OK_FOR_INDEX_P (index)					\
+	  && borx_reg_operand (base, Pmode)				\
+	  && borx_reg_operand (index, Pmode))				\
+	goto ADDR;							\
+      if (!TARGET_DISABLE_INDEXING					\
+	  && base							\
+	  && GET_CODE (index) == MULT					\
+	  && MODE_OK_FOR_SCALED_INDEXING_P (MODE)			\
+	  && REG_P (XEXP (index, 0))					\
+	  && GET_MODE (XEXP (index, 0)) == Pmode			\
+	  && REG_OK_FOR_INDEX_P (XEXP (index, 0))			\
+	  && GET_CODE (XEXP (index, 1)) == CONST_INT			\
+	  && INTVAL (XEXP (index, 1))					\
+	     == (HOST_WIDE_INT) GET_MODE_SIZE (MODE)			\
+	  && borx_reg_operand (base, Pmode))				\
+	goto ADDR;							\
+    }									\
+  else if (GET_CODE (X) == LO_SUM					\
+	   && GET_CODE (XEXP (X, 0)) == REG				\
+	   && REG_OK_FOR_BASE_P (XEXP (X, 0))				\
+	   && CONSTANT_P (XEXP (X, 1))					\
+	   && (TARGET_SOFT_FLOAT					\
+	       /* We can allow symbolic LO_SUM addresses for PA2.0.  */	\
+	       || (TARGET_PA_20						\
+		   && !TARGET_ELF32					\
+	           && GET_CODE (XEXP (X, 1)) != CONST_INT)		\
+	       || ((MODE) != SFmode					\
+		   && (MODE) != DFmode)))				\
+    goto ADDR;								\
+  else if (GET_CODE (X) == LO_SUM					\
+	   && GET_CODE (XEXP (X, 0)) == SUBREG				\
+	   && GET_CODE (SUBREG_REG (XEXP (X, 0))) == REG		\
+	   && REG_OK_FOR_BASE_P (SUBREG_REG (XEXP (X, 0)))		\
+	   && CONSTANT_P (XEXP (X, 1))					\
+	   && (TARGET_SOFT_FLOAT					\
+	       /* We can allow symbolic LO_SUM addresses for PA2.0.  */	\
+	       || (TARGET_PA_20						\
+		   && !TARGET_ELF32					\
+	           && GET_CODE (XEXP (X, 1)) != CONST_INT)		\
+	       || ((MODE) != SFmode					\
+		   && (MODE) != DFmode)))				\
+    goto ADDR;								\
+  else if (GET_CODE (X) == LABEL_REF					\
+	   || (GET_CODE (X) == CONST_INT				\
+	       && INT_5_BITS (X)))					\
+    goto ADDR;								\
+  /* Needed for -fPIC */						\
+  else if (GET_CODE (X) == LO_SUM					\
+	   && GET_CODE (XEXP (X, 0)) == REG             		\
+	   && REG_OK_FOR_BASE_P (XEXP (X, 0))				\
+	   && GET_CODE (XEXP (X, 1)) == UNSPEC				\
+	   && (TARGET_SOFT_FLOAT					\
+	       || (TARGET_PA_20	&& !TARGET_ELF32)			\
+	       || ((MODE) != SFmode					\
+		   && (MODE) != DFmode)))				\
+    goto ADDR;								\
 }
 
 /* Look for machine dependent ways to make the invalid address AD a
@@ -1434,14 +1617,13 @@ extern int may_call_alloca;
    There may be more opportunities to improve code with this hook.  */
 #define LEGITIMIZE_RELOAD_ADDRESS(AD, MODE, OPNUM, TYPE, IND, WIN) 	\
 do { 									\
-  int offset, newoffset, mask;						\
+  long offset, newoffset, mask;						\
   rtx new, temp = NULL_RTX;						\
 									\
   mask = (GET_MODE_CLASS (MODE) == MODE_FLOAT				\
-	  ? (TARGET_PA_20 ? 0x3fff : 0x1f) : 0x3fff);			\
+	  ? (TARGET_PA_20 && !TARGET_ELF32 ? 0x3fff : 0x1f) : 0x3fff);	\
 									\
-  if (optimize								\
-      && GET_CODE (AD) == PLUS)						\
+  if (optimize && GET_CODE (AD) == PLUS)				\
     temp = simplify_binary_operation (PLUS, Pmode,			\
 				      XEXP (AD, 0), XEXP (AD, 1));	\
 									\
@@ -1460,16 +1642,19 @@ do { 									\
       else								\
 	newoffset = offset & ~mask;					\
 									\
-      if (newoffset != 0						\
-	  && VAL_14_BITS_P (newoffset))					\
-	{								\
+      /* Ensure that long displacements are aligned.  */		\
+      if (!VAL_5_BITS_P (newoffset)					\
+	  && GET_MODE_CLASS (MODE) == MODE_FLOAT)			\
+	newoffset &= ~(GET_MODE_SIZE (MODE) -1);			\
 									\
+      if (newoffset != 0 && VAL_14_BITS_P (newoffset))			\
+	{								\
 	  temp = gen_rtx_PLUS (Pmode, XEXP (new, 0),			\
 			       GEN_INT (newoffset));			\
 	  AD = gen_rtx_PLUS (Pmode, temp, GEN_INT (offset - newoffset));\
 	  push_reload (XEXP (AD, 0), 0, &XEXP (AD, 0), 0,		\
-			     BASE_REG_CLASS, Pmode, VOIDmode, 0, 0,	\
-			     (OPNUM), (TYPE));				\
+		       BASE_REG_CLASS, Pmode, VOIDmode, 0, 0,		\
+		       (OPNUM), (TYPE));				\
 	  goto WIN;							\
 	}								\
     }									\
@@ -1507,37 +1692,79 @@ do { 									\
       || GET_CODE (ADDR) == POST_INC)	\
     goto LABEL
 
-/* Arghh.  The hpux10 linker chokes if we have a reference to symbols
-   in a readonly data section when the symbol is defined in a shared
-   library.  Since we can't know at compile time if a symbol will be
-   satisfied by a shared library or main program we put any symbolic
-   constant into the normal data section.  */
-#define SELECT_RTX_SECTION(MODE,RTX,ALIGN)	\
-  if (symbolic_operand (RTX, MODE))	\
-    data_section ();			\
-  else					\
-    readonly_data_section ();
+#define TARGET_ASM_SELECT_SECTION  pa_select_section
 
-/* On hpux10, the linker will give an error if we have a reference
-   in the read-only data section to a symbol defined in a shared
-   library.  Therefore, expressions that might require a reloc can
-   not be placed in the read-only data section.  */
-#define SELECT_SECTION(EXP,RELOC,ALIGN) \
-  if (TREE_CODE (EXP) == VAR_DECL \
-      && TREE_READONLY (EXP) \
-      && !TREE_THIS_VOLATILE (EXP) \
-      && DECL_INITIAL (EXP) \
-      && (DECL_INITIAL (EXP) == error_mark_node \
-          || TREE_CONSTANT (DECL_INITIAL (EXP))) \
-      && !RELOC) \
-    readonly_data_section (); \
-  else if (TREE_CODE_CLASS (TREE_CODE (EXP)) == 'c' \
-	   && !(TREE_CODE (EXP) == STRING_CST && flag_writable_strings) \
-	   && !RELOC) \
-    readonly_data_section (); \
-  else \
-    data_section ();
-   
+/* Return a nonzero value if DECL has a section attribute.  */
+#define IN_NAMED_SECTION_P(DECL) \
+  ((TREE_CODE (DECL) == FUNCTION_DECL || TREE_CODE (DECL) == VAR_DECL) \
+   && DECL_SECTION_NAME (DECL) != NULL_TREE)
+
+/* The following extra sections and extra section functions are only used
+   for SOM, but they must be provided unconditionally because pa.c's calls
+   to the functions might not get optimized out when other object formats
+   are in use.  */
+
+#define EXTRA_SECTIONS							\
+  in_som_readonly_data,							\
+  in_som_one_only_readonly_data,					\
+  in_som_one_only_data
+
+#define EXTRA_SECTION_FUNCTIONS						\
+  SOM_READONLY_DATA_SECTION_FUNCTION					\
+  SOM_ONE_ONLY_READONLY_DATA_SECTION_FUNCTION				\
+  SOM_ONE_ONLY_DATA_SECTION_FUNCTION					\
+  FORGET_SECTION_FUNCTION
+
+/* SOM puts readonly data in the default $LIT$ subspace when PIC code
+   is not being generated.  */
+#define SOM_READONLY_DATA_SECTION_FUNCTION				\
+void									\
+som_readonly_data_section (void)					\
+{									\
+  if (!TARGET_SOM)							\
+    return;								\
+  if (in_section != in_som_readonly_data)				\
+    {									\
+      in_section = in_som_readonly_data;				\
+      fputs ("\t.SPACE $TEXT$\n\t.SUBSPA $LIT$\n", asm_out_file);	\
+    }									\
+}
+
+/* When secondary definitions are not supported, SOM makes readonly data one
+   only by creating a new $LIT$ subspace in $TEXT$ with the comdat flag.  */
+#define SOM_ONE_ONLY_READONLY_DATA_SECTION_FUNCTION			\
+void									\
+som_one_only_readonly_data_section (void)				\
+{									\
+  if (!TARGET_SOM)							\
+    return;								\
+  in_section = in_som_one_only_readonly_data;				\
+  fputs ("\t.SPACE $TEXT$\n"						\
+	 "\t.NSUBSPA $LIT$,QUAD=0,ALIGN=8,ACCESS=0x2c,SORT=16,COMDAT\n",\
+	 asm_out_file);							\
+}
+
+/* When secondary definitions are not supported, SOM makes data one only by
+   creating a new $DATA$ subspace in $PRIVATE$ with the comdat flag.  */
+#define SOM_ONE_ONLY_DATA_SECTION_FUNCTION				\
+void									\
+som_one_only_data_section (void)					\
+{									\
+  if (!TARGET_SOM)							\
+    return;								\
+  in_section = in_som_one_only_data;					\
+  fputs ("\t.SPACE $PRIVATE$\n"						\
+	 "\t.NSUBSPA $DATA$,QUAD=1,ALIGN=8,ACCESS=31,SORT=24,COMDAT\n",	\
+	 asm_out_file);							\
+}
+
+#define FORGET_SECTION_FUNCTION						\
+void									\
+forget_section (void)							\
+{									\
+  in_section = no_section;						\
+}
+
 /* Define this macro if references to a symbol must be treated
    differently depending on something about the variable or
    function named by the symbol (such as what section it is in).
@@ -1566,34 +1793,14 @@ do { 									\
 
 #define FUNCTION_NAME_P(NAME)  (*(NAME) == '@')
 
-#define ENCODE_SECTION_INFO(DECL)\
-do							\
-  { if (TEXT_SPACE_P (DECL))				\
-      {	rtx _rtl;					\
-	if (TREE_CODE (DECL) == FUNCTION_DECL		\
-	    || TREE_CODE (DECL) == VAR_DECL)		\
-	  _rtl = DECL_RTL (DECL);			\
-	else						\
-	  _rtl = TREE_CST_RTL (DECL);			\
-	SYMBOL_REF_FLAG (XEXP (_rtl, 0)) = 1;		\
-	if (TREE_CODE (DECL) == FUNCTION_DECL)		\
-	  hppa_encode_label (XEXP (DECL_RTL (DECL), 0));\
-      }							\
-  }							\
-while (0)
+/* Specify the machine mode that this machine uses for the index in the
+   tablejump instruction.  For small tables, an element consists of a
+   ia-relative branch and its delay slot.  When -mbig-switch is specified,
+   we use a 32-bit absolute address for non-pic code, and a 32-bit offset
+   for both 32 and 64-bit pic code.  */
+#define CASE_VECTOR_MODE (TARGET_BIG_SWITCH ? SImode : DImode)
 
-/* Store the user-specified part of SYMBOL_NAME in VAR.
-   This is sort of inverse to ENCODE_SECTION_INFO.  */
-
-#define STRIP_NAME_ENCODING(VAR,SYMBOL_NAME)	\
-  (VAR) = ((SYMBOL_NAME)			\
-	   + (*(SYMBOL_NAME) == '*' || *(SYMBOL_NAME) == '@'))
-
-/* Specify the machine mode that this machine uses
-   for the index in the tablejump instruction.  */
-#define CASE_VECTOR_MODE (TARGET_BIG_SWITCH ? TImode : DImode)
-
-/* Jump tables must be 32 bit aligned, no matter the size of the element.  */
+/* Jump tables must be 32-bit aligned, no matter the size of the element.  */
 #define ADDR_VEC_ALIGN(ADDR_VEC) 2
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
@@ -1630,11 +1837,6 @@ while (0)
    is done just by pretending it is already truncated.  */
 #define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC) 1
 
-/* We assume that the store-condition-codes instructions store 0 for false
-   and some other value for true.  This is the value stored for true.  */
-
-#define STORE_FLAG_VALUE 1
-
 /* When a prototype says `char' or `short', really pass an `int'.  */
 #define PROMOTE_PROTOTYPES 1
 #define PROMOTE_FUNCTION_RETURN 1
@@ -1643,11 +1845,6 @@ while (0)
    After generation of rtl, the compiler makes no further distinction
    between pointers and any other objects of this machine mode.  */
 #define Pmode word_mode
-
-/* Add any extra modes needed to represent the condition code.
-
-   HPPA floating comparisons produce condition codes.  */
-#define EXTRA_CC_MODES CC(CCFPmode, "CCFP")
 
 /* Given a comparison code (EQ, NE, etc.) and the first operand of a COMPARE,
    return the mode to be used for the comparison.  For floating-point, CCFPmode
@@ -1672,31 +1869,6 @@ while (0)
    few bits.  */
 #define SHIFT_COUNT_TRUNCATED 1
 
-/* Compute the cost of computing a constant rtl expression RTX
-   whose rtx-code is CODE.  The body of this macro is a portion
-   of a switch statement.  If the code is computed here,
-   return it with a return statement.  Otherwise, break from the switch.  */
-
-#define CONST_COSTS(RTX,CODE,OUTER_CODE) \
-  case CONST_INT:							\
-    if (INTVAL (RTX) == 0) return 0;					\
-    if (INT_14_BITS (RTX)) return 1;					\
-  case HIGH:								\
-    return 2;								\
-  case CONST:								\
-  case LABEL_REF:							\
-  case SYMBOL_REF:							\
-    return 4;								\
-  case CONST_DOUBLE:							\
-    if ((RTX == CONST0_RTX (DFmode) || RTX == CONST0_RTX (SFmode))	\
-	&& OUTER_CODE != SET)						\
-      return 0;								\
-    else								\
-      return 8;
-
-#define ADDRESS_COST(RTX) \
-  (GET_CODE (RTX) == REG ? 1 : hppa_address_cost (RTX))
-
 /* Compute extra cost of moving data between one register class
    and another.
 
@@ -1712,34 +1884,6 @@ while (0)
   : FP_REG_CLASS_P (CLASS1) && ! FP_REG_CLASS_P (CLASS2) ? 16	\
   : FP_REG_CLASS_P (CLASS2) && ! FP_REG_CLASS_P (CLASS1) ? 16	\
   : 2)
-
-
-/* Provide the costs of a rtl expression.  This is in the body of a
-   switch on CODE.  The purpose for the cost of MULT is to encourage
-   `synth_mult' to find a synthetic multiply when reasonable.  */
-
-#define RTX_COSTS(X,CODE,OUTER_CODE)					\
-  case MULT:								\
-    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT)			\
-      return COSTS_N_INSNS (3);						\
-    return (TARGET_PA_11 && ! TARGET_DISABLE_FPREGS && ! TARGET_SOFT_FLOAT) \
-	    ? COSTS_N_INSNS (8) : COSTS_N_INSNS (20);	\
-  case DIV:								\
-    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT)			\
-      return COSTS_N_INSNS (14);					\
-  case UDIV:								\
-  case MOD:								\
-  case UMOD:								\
-    return COSTS_N_INSNS (60);						\
-  case PLUS: /* this includes shNadd insns */				\
-  case MINUS:								\
-    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT)			\
-      return COSTS_N_INSNS (3);						\
-    return COSTS_N_INSNS (1);						\
-  case ASHIFT:								\
-  case ASHIFTRT:							\
-  case LSHIFTRT:							\
-    return COSTS_N_INSNS (1);
 
 /* Adjust the cost of branches.  */
 #define BRANCH_COST (pa_cpu == PROCESSOR_8000 ? 2 : 1)
@@ -1775,6 +1919,12 @@ while (0)
 
 /* Control the assembler format that we output.  */
 
+/* A C string constant describing how to begin a comment in the target
+   assembler language.  The compiler assumes that the comment will end at
+   the end of the line.  */
+
+#define ASM_COMMENT_START ";"
+
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
 
@@ -1784,10 +1934,6 @@ while (0)
    no longer contain unusual constructs.  */
 
 #define ASM_APP_OFF ""
-
-/* Output deferred plabels at the end of the file.  */
-
-#define ASM_FILE_END(FILE) output_deferred_plabels (FILE)
 
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
@@ -1800,13 +1946,16 @@ while (0)
    `assemble_name' uses this.  */
 
 #define ASM_OUTPUT_LABELREF(FILE,NAME)	\
-  fprintf ((FILE), "%s", (NAME) + (FUNCTION_NAME_P (NAME) ? 1 : 0))
-
-/* This is how to output an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.  */
-
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  {fprintf (FILE, "%c$%s%04d\n", (PREFIX)[0], (PREFIX) + 1, NUM);}
+  do {					\
+    const char *xname = (NAME);		\
+    if (FUNCTION_NAME_P (NAME))		\
+      xname += 1;			\
+    if (xname[0] == '*')		\
+      xname += 1;			\
+    else				\
+      fputs (user_label_prefix, FILE);	\
+    fputs (xname, FILE);		\
+  } while (0)
 
 /* This is how to store into the string LABEL
    the symbol_ref name of an internal numbered label where
@@ -1816,56 +1965,53 @@ while (0)
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*%c$%s%04ld", (PREFIX)[0], (PREFIX) + 1, (long)(NUM))
 
-#define ASM_GLOBALIZE_LABEL(FILE, NAME)					\
-  do {									\
-    /* We only handle DATA objects here, functions are globalized in	\
-       ASM_DECLARE_FUNCTION_NAME.  */					\
-    if (! FUNCTION_NAME_P (NAME))					\
-      {									\
-	fputs ("\t.EXPORT ", FILE);					\
-	assemble_name (FILE, NAME);					\
-	fputs (",DATA\n", FILE);					\
-      }									\
-  } while (0)
+#define TARGET_ASM_GLOBALIZE_LABEL pa_globalize_label
 
 #define ASM_OUTPUT_ASCII(FILE, P, SIZE)  \
   output_ascii ((FILE), (P), (SIZE))
 
-/* This is how to output an element of a case-vector that is absolute.
-   Note that this method makes filling these branch delay slots
-   impossible.  */
+/* Jump tables are always placed in the text section.  Technically, it
+   is possible to put them in the readonly data section when -mbig-switch
+   is specified.  This has the benefit of getting the table out of .text
+   and reducing branch lengths as a result.  The downside is that an
+   additional insn (addil) is needed to access the table when generating
+   PIC code.  The address difference table also has to use 32-bit
+   pc-relative relocations.  Currently, GAS does not support these
+   relocations, although it is easily modified to do this operation.
+   The table entries need to look like "$L1+(.+8-$L0)-$PIC_pcrel$0"
+   when using ELF GAS.  A simple difference can be used when using
+   SOM GAS or the HP assembler.  The final downside is GDB complains
+   about the nesting of the label for the table when debugging.  */
 
-#define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
-  if (TARGET_BIG_SWITCH)					\
-    fprintf (FILE, "\tstw %%r1,-16(%%r30)\n\tldil LR'L$%04d,%%r1\n\tbe RR'L$%04d(%%sr4,%%r1)\n\tldw -16(%%r30),%%r1\n", VALUE, VALUE);		\
-  else								\
-    fprintf (FILE, "\tb L$%04d\n\tnop\n", VALUE)
-
-/* Jump tables are executable code and live in the TEXT section on the PA.  */
 #define JUMP_TABLES_IN_TEXT_SECTION 1
 
-/* This is how to output an element of a case-vector that is relative.
-   This must be defined correctly as it is used when generating PIC code.
+/* This is how to output an element of a case-vector that is absolute.  */
 
-   I believe it safe to use the same definition as ASM_OUTPUT_ADDR_VEC_ELT
-   on the PA since ASM_OUTPUT_ADDR_VEC_ELT uses pc-relative jump instructions
-   rather than a table of absolute addresses.  */
-
-#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL)  \
-  if (TARGET_BIG_SWITCH)					\
-    fprintf (FILE, "\tstw %%r1,-16(%%r30)\n\tldw T'L$%04d(%%r19),%%r1\n\tbv %%r0(%%r1)\n\tldw -16(%%r30),%%r1\n", VALUE);				\
-  else								\
+#define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
+  if (TARGET_BIG_SWITCH)						\
+    fprintf (FILE, "\t.word L$%04d\n", VALUE);				\
+  else									\
     fprintf (FILE, "\tb L$%04d\n\tnop\n", VALUE)
 
-/* This is how to output an assembler line
-   that says to advance the location counter
-   to a multiple of 2**LOG bytes.  */
+/* This is how to output an element of a case-vector that is relative. 
+   Since we always place jump tables in the text section, the difference
+   is absolute and requires no relocation.  */
+
+#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL)  \
+  if (TARGET_BIG_SWITCH)						\
+    fprintf (FILE, "\t.word L$%04d-L$%04d\n", VALUE, REL);		\
+  else									\
+    fprintf (FILE, "\tb L$%04d\n\tnop\n", VALUE)
+
+/* This is how to output an assembler line that says to advance the
+   location counter to a multiple of 2**LOG bytes.  */
 
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
     fprintf (FILE, "\t.align %d\n", (1<<(LOG)))
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t.blockz %d\n", (SIZE))
+  fprintf (FILE, "\t.blockz "HOST_WIDE_INT_PRINT_UNSIGNED"\n",		\
+	   (unsigned HOST_WIDE_INT)(SIZE))
 
 /* This says how to output an assembler line to define a global common symbol
    with size SIZE (in bytes) and alignment ALIGN (in bits).  */
@@ -1873,8 +2019,9 @@ while (0)
 #define ASM_OUTPUT_ALIGNED_COMMON(FILE, NAME, SIZE, ALIGNED)  		\
 { bss_section ();							\
   assemble_name ((FILE), (NAME));					\
-  fputs ("\t.comm ", (FILE));						\
-  fprintf ((FILE), "%d\n", MAX ((SIZE), ((ALIGNED) / BITS_PER_UNIT)));}
+  fprintf ((FILE), "\t.comm "HOST_WIDE_INT_PRINT_UNSIGNED"\n",		\
+	   MAX ((unsigned HOST_WIDE_INT)(SIZE),				\
+		((unsigned HOST_WIDE_INT)(ALIGNED) / BITS_PER_UNIT)));}
 
 /* This says how to output an assembler line to define a local common symbol
    with size SIZE (in bytes) and alignment ALIGN (in bits).  */
@@ -1882,16 +2029,11 @@ while (0)
 #define ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGNED)		\
 { bss_section ();							\
   fprintf ((FILE), "\t.align %d\n", ((ALIGNED) / BITS_PER_UNIT));	\
-  assemble_name ((FILE), (NAME));				\
-  fprintf ((FILE), "\n\t.block %d\n", (SIZE));}
+  assemble_name ((FILE), (NAME));					\
+  fprintf ((FILE), "\n\t.block "HOST_WIDE_INT_PRINT_UNSIGNED"\n",	\
+	   (unsigned HOST_WIDE_INT)(SIZE));}
   
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
-( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 12),	\
-  sprintf ((OUTPUT), "%s___%d", (NAME), (LABELNO)))
+#define ASM_PN_FORMAT "%s___%lu"
 
 /* All HP assemblers use "!" to separate logical lines.  */
 #define IS_ASM_LOGICAL_LINE_SEPARATOR(C) ((C) == '!')
@@ -1949,8 +2091,7 @@ while (0)
       fputs (")", FILE);						\
       break;								\
     case CONST_INT:							\
-      fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, INTVAL (addr));		\
-      fprintf (FILE, "(%%r0)");						\
+      fprintf (FILE, HOST_WIDE_INT_PRINT_DEC "(%%r0)", INTVAL (addr));	\
       break;								\
     default:								\
       output_addr_const (FILE, addr);					\
@@ -1972,46 +2113,18 @@ while (0)
 /* The number of Pmode words for the setjmp buffer.  */
 #define JMP_BUF_SIZE 50
 
-/* Only direct calls to static functions are allowed to be sibling (tail)
-   call optimized.
-
-   This restriction is necessary because some linker generated stubs will
-   store return pointers into rp' in some cases which might clobber a
-   live value already in rp'.
-
-   In a sibcall the current function and the target function share stack
-   space.  Thus if the path to the current function and the path to the
-   target function save a value in rp', they save the value into the
-   same stack slot, which has undesirable consequences.
-
-   Because of the deferred binding nature of shared libraries any function
-   with external scope could be in a different load module and thus require
-   rp' to be saved when calling that function.  So sibcall optimizations
-   can only be safe for static function.
-
-   Note that GCC never needs return value relocations, so we don't have to
-   worry about static calls with return value relocations (which require
-   saving rp').
-
-   It is safe to perform a sibcall optimization when the target function
-   will never return.  */
-#define FUNCTION_OK_FOR_SIBCALL(DECL) \
-  (DECL \
-   && ! TARGET_PORTABLE_RUNTIME \
-   && ! TARGET_64BIT \
-   && ! TREE_PUBLIC (DECL))
-
 #define PREDICATE_CODES							\
-  {"reg_or_0_operand", {SUBREG, REG, CONST_INT}},			\
+  {"reg_or_0_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}},		\
   {"call_operand_address", {LABEL_REF, SYMBOL_REF, CONST_INT,		\
 			    CONST_DOUBLE, CONST, HIGH, CONSTANT_P_RTX}}, \
+  {"indexed_memory_operand", {SUBREG, MEM}},				\
   {"symbolic_operand", {SYMBOL_REF, LABEL_REF, CONST}},			\
   {"symbolic_memory_operand", {SUBREG, MEM}},				\
   {"reg_before_reload_operand", {REG, MEM}},				\
-  {"reg_or_nonsymb_mem_operand", {SUBREG, REG, MEM}},			\
   {"reg_or_0_or_nonsymb_mem_operand", {SUBREG, REG, MEM, CONST_INT,	\
 				       CONST_DOUBLE}},			\
-  {"move_operand", {SUBREG, REG, CONSTANT_P_RTX, CONST_INT, MEM}},	\
+  {"move_dest_operand", {SUBREG, REG, MEM}},				\
+  {"move_src_operand", {SUBREG, REG, CONSTANT_P_RTX, CONST_INT, MEM}},	\
   {"reg_or_cint_move_operand", {SUBREG, REG, CONST_INT}},		\
   {"pic_label_operand", {LABEL_REF, CONST}},				\
   {"fp_reg_operand", {REG}},						\
@@ -2035,9 +2148,12 @@ while (0)
   {"pc_or_label_operand", {PC, LABEL_REF}},				\
   {"plus_xor_ior_operator", {PLUS, XOR, IOR}},				\
   {"shadd_operand", {CONST_INT}},					\
-  {"basereg_operand", {REG}},						\
   {"div_operand", {REG, CONST_INT}},					\
   {"ireg_operand", {REG}},						\
   {"cmpib_comparison_operator", {EQ, NE, LT, LE, LEU,			\
    GT, GTU, GE}},							\
   {"movb_comparison_operator", {EQ, NE, LT, GE}},
+
+/* We need a libcall to canonicalize function pointers on TARGET_ELF32.  */
+#define CANONICALIZE_FUNCPTR_FOR_COMPARE_LIBCALL \
+  "__canonicalize_funcptr_for_compare"

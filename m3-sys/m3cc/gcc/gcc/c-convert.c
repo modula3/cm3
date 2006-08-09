@@ -1,5 +1,6 @@
 /* Language-level data type conversion for GNU C.
-   Copyright (C) 1987, 1988, 1991, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1998, 2002, 2003
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -26,9 +27,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "tree.h"
 #include "flags.h"
 #include "convert.h"
+#include "c-common.h"
 #include "toplev.h"
 
 /* Change of width--truncation and extension of integers or reals--
@@ -42,7 +46,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    Here is a list of all the functions that assume that widening and
    narrowing is always done with a NOP_EXPR:
      In convert.c, convert_to_integer.
-     In c-typeck.c, build_binary_op (boolean ops), and truthvalue_conversion.
+     In c-typeck.c, build_binary_op (boolean ops), and
+	c_common_truthvalue_conversion.
      In expr.c: expand_expr, for operands of a MULT_EXPR.
      In fold-const.c: fold.
      In tree.c: get_narrower and get_unwidened.  */
@@ -58,8 +63,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    not permitted by the language being compiled.  */
 
 tree
-convert (type, expr)
-     tree type, expr;
+convert (tree type, tree expr)
 {
   tree e = expr;
   enum tree_code code = TREE_CODE (type);
@@ -90,9 +94,9 @@ convert (type, expr)
     return fold (convert_to_integer (type, e));
   if (code == BOOLEAN_TYPE)
     {
-      tree t = truthvalue_conversion (expr);
-      /* If truthvalue_conversion returns a NOP_EXPR, we must fold it here
-	 to avoid infinite recursion between fold () and convert ().  */
+      tree t = c_common_truthvalue_conversion (expr);
+      /* If it returns a NOP_EXPR, we must fold it here to avoid
+	 infinite recursion between fold () and convert ().  */
       if (TREE_CODE (t) == NOP_EXPR)
 	return fold (build1 (NOP_EXPR, type, TREE_OPERAND (t, 0)));
       else

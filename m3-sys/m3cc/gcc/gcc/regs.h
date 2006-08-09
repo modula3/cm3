@@ -1,6 +1,6 @@
 /* Define per-register tables for data flow info and register allocation.
    Copyright (C) 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2003 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -21,6 +21,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 
 #include "varray.h"
+#include "hard-reg-set.h"
+#include "basic-block.h"
 
 #define REG_BYTES(R) mode_size[(int) GET_MODE (R)]
 
@@ -57,8 +59,9 @@ typedef struct reg_info_def
   int deaths;			/* # of times (REG n) dies */
   int live_length;		/* # of instructions (REG n) is live */
   int calls_crossed;		/* # of calls (REG n) is live across */
+  int throw_calls_crossed;	/* # of calls that may throw (REG n) is live across */
   int basic_block;		/* # of basic blocks (REG n) is used in */
-  char changes_mode;		/* whether (SUBREG (REG n)) exists and 
+  char changes_mode;		/* whether (SUBREG (REG n)) exists and
 				   is illegal.  */
 } reg_info;
 
@@ -72,7 +75,7 @@ extern varray_type reg_n_info;
 
 #define REG_FREQ(N) (VARRAY_REG (reg_n_info, N)->freq)
 
-/* The weights for each insn varries from 0 to REG_FREQ_BASE. 
+/* The weights for each insn varries from 0 to REG_FREQ_BASE.
    This constant does not need to be high, as in infrequently executed
    regions we want to count instructions equivalently to optimize for
    size instead of speed.  */
@@ -104,13 +107,6 @@ extern varray_type reg_n_info;
 
 #define REG_N_DEATHS(N) (VARRAY_REG (reg_n_info, N)->deaths)
 
-/* Indexed by N; says whether a pseudo register N was ever used
-   within a SUBREG that changes the mode of the reg in some way
-   that is illegal for a given class (usually floating-point)
-   of registers.  */
-
-#define REG_CHANGES_MODE(N) (VARRAY_REG (reg_n_info, N)->changes_mode)
-
 /* Get the number of consecutive words required to hold pseudo-reg N.  */
 
 #define PSEUDO_REGNO_SIZE(N) \
@@ -129,6 +125,12 @@ extern varray_type reg_n_info;
 /* Indexed by N, gives number of CALL_INSNS across which (REG n) is live.  */
 
 #define REG_N_CALLS_CROSSED(N) (VARRAY_REG (reg_n_info, N)->calls_crossed)
+
+/* Indexed by N, gives number of CALL_INSNS that may throw, across which
+   (REG n) is live.  */
+
+#define REG_N_THROWING_CALLS_CROSSED(N) \
+  (VARRAY_REG (reg_n_info, N)->throw_calls_crossed)
 
 /* Total number of instructions at which (REG n) is live.
    The larger this is, the less priority (REG n) gets for
@@ -156,14 +158,13 @@ extern varray_type reg_n_info;
 
 extern short *reg_renumber;
 
-/* Vector indexed by hardware reg
-   saying whether that reg is ever used.  */
+/* Vector indexed by hardware reg saying whether that reg is ever used.  */
 
 extern char regs_ever_live[FIRST_PSEUDO_REGISTER];
 
-/* Vector indexed by hardware reg giving its name.  */
+/* Like regs_ever_live, but saying whether reg is set by asm statements.  */
 
-extern const char * reg_names[FIRST_PSEUDO_REGISTER];
+extern char regs_asm_clobbered[FIRST_PSEUDO_REGISTER];
 
 /* For each hard register, the widest mode object that it can contain.
    This will be a MODE_INT mode if the register can hold integers.  Otherwise
@@ -217,14 +218,14 @@ extern int caller_save_needed;
 /* Select a register mode required for caller save of hard regno REGNO.  */
 #ifndef HARD_REGNO_CALLER_SAVE_MODE
 #define HARD_REGNO_CALLER_SAVE_MODE(REGNO, NREGS, MODE) \
-  choose_hard_reg_mode (REGNO, NREGS)
+  choose_hard_reg_mode (REGNO, NREGS, false)
 #endif
 
-/* Registers that get partially clobbered by a call in a given mode. 
+/* Registers that get partially clobbered by a call in a given mode.
    These must not be call used registers.  */
 #ifndef HARD_REGNO_CALL_PART_CLOBBERED
 #define HARD_REGNO_CALL_PART_CLOBBERED(REGNO, MODE) 0
 #endif
 
 /* Allocate reg_n_info tables */
-extern void allocate_reg_info PARAMS ((size_t, int, int));
+extern void allocate_reg_info (size_t, int, int);

@@ -31,10 +31,10 @@
 ;; There are several instructions that are orthogonal in size, and seems
 ;; they could be matched by a single pattern without a specified size
 ;; for the operand that is orthogonal.  However, this did not work on
-;; gcc-2.7.2 (and problably not on gcc-2.8.1), relating to that when a
+;; gcc-2.7.2 (and probably not on gcc-2.8.1), relating to that when a
 ;; constant is substituted into an operand, the actual mode must be
 ;; deduced from the pattern.  There is reasonable hope that that has been
-;; fixed in egcs post 1.1.1, so FIXME: try again.
+;; fixed, so FIXME: try again.
 
 ;; You will notice that three-operand alternatives ("=r", "r", "!To")
 ;; are marked with a "!" constraint modifier to avoid being reloaded
@@ -77,7 +77,7 @@
 ;; The possible values are "yes", "no" and "has_slot".  Yes/no means if
 ;; the insn is slottable or not.  Has_slot means that the insn is a
 ;; return insn or branch insn (which are not considered slottable since
-;; that is generally true).  Having the semmingly illogical value
+;; that is generally true).  Having the seemingly illogical value
 ;; "has_slot" means we do not have to add another attribute just to say
 ;; that an insn has a delay-slot, since it also infers that it is not
 ;; slottable.  Better names for the attribute were found to be longer and
@@ -321,7 +321,7 @@
 ;; of zeros starting at bit 0).
 
 ;; SImode.  This mode is the only one needed, since gcc automatically
-;; extends subregs for lower-size modes.  FIXME: Add test-case.
+;; extends subregs for lower-size modes.  FIXME: Add testcase.
 (define_insn "*btst"
   [(set (cc0)
 	(zero_extract
@@ -587,7 +587,7 @@
 			  (match_operand:SI 1 "const_int_operand" "n,n,n"))
 		 (match_operand:SI 2 "register_operand" "r,r,r")))
 	(match_operand:QI 3 "register_operand" "r,r,r"))
-   (set (match_operand:SI 4 "register_operand" "=*2,!*3,r")
+   (set (match_operand:SI 4 "register_operand" "=*2,!3,r")
 	(plus:SI (mult:SI (match_dup 0)
 			  (match_dup 1))
 		 (match_dup 2)))]
@@ -605,7 +605,7 @@
 			  (match_operand:SI 1 "const_int_operand" "n,n,n"))
 		 (match_operand:SI 2 "register_operand" "r,r,r")))
 	(match_operand:HI 3 "register_operand" "r,r,r"))
-   (set (match_operand:SI 4 "register_operand" "=*2,!*3,r")
+   (set (match_operand:SI 4 "register_operand" "=*2,!3,r")
 	(plus:SI (mult:SI (match_dup 0)
 			  (match_dup 1))
 		 (match_dup 2)))]
@@ -623,7 +623,7 @@
 			  (match_operand:SI 1 "const_int_operand" "n,n,n"))
 		 (match_operand:SI 2 "register_operand" "r,r,r")))
 	(match_operand:SI 3 "register_operand" "r,r,r"))
-   (set (match_operand:SI 4 "register_operand" "=*2,!*3,r")
+   (set (match_operand:SI 4 "register_operand" "=*2,!3,r")
 	(plus:SI (mult:SI (match_dup 0)
 			  (match_dup 1))
 		 (match_dup 2)))]
@@ -640,10 +640,12 @@
 
 (define_split
   [(parallel
-    [(set (mem (plus:SI
-		(mult:SI (match_operand:SI 0 "register_operand" "")
-			 (match_operand:SI 1 "const_int_operand" ""))
-		(match_operand:SI 2 "register_operand" "")))
+    [(set (match_operator
+	   6 "cris_mem_op"
+	   [(plus:SI
+	     (mult:SI (match_operand:SI 0 "register_operand" "")
+		      (match_operand:SI 1 "const_int_operand" ""))
+	     (match_operand:SI 2 "register_operand" ""))])
 	  (match_operand 3 "register_operand" ""))
      (set (match_operand:SI 4 "register_operand" "")
 	  (plus:SI (mult:SI (match_dup 0)
@@ -657,11 +659,12 @@
 			  (match_dup 1))
 		 (match_dup 4)))]
   "operands[5]
-     = gen_rtx_MEM (GET_MODE (operands[3]),
-		    gen_rtx_PLUS (SImode,
-				  gen_rtx_MULT (SImode,
-						operands[0], operands[1]),
-				  operands[2]));")
+     = replace_equiv_address (operands[6],
+			      gen_rtx_PLUS (SImode,
+					    gen_rtx_MULT (SImode,
+							  operands[0],
+							  operands[1]),
+					    operands[2]));")
 
 ;; move.s rx,[ry=rz+i]
 ;; FIXME: These could have anonymous mode for operand 2.
@@ -673,7 +676,7 @@
 	 (plus:SI (match_operand:SI 0 "cris_bdap_operand" "%r,r,r,r")
 		  (match_operand:SI 1 "cris_bdap_operand" "r>Rn,r>Rn,r,>Rn")))
 	(match_operand:QI 2 "register_operand" "r,r,r,r"))
-   (set (match_operand:SI 3 "register_operand" "=*0,!*2,r,r")
+   (set (match_operand:SI 3 "register_operand" "=*0,!2,r,r")
 	(plus:SI (match_dup 0)
 		 (match_dup 1)))]
   "cris_side_effect_mode_ok (PLUS, operands, 3, 0, 1, -1, 2)"
@@ -698,7 +701,7 @@
 	 (plus:SI (match_operand:SI 0 "cris_bdap_operand" "%r,r,r,r")
 		  (match_operand:SI 1 "cris_bdap_operand" "r>Rn,r>Rn,r,>Rn")))
 	(match_operand:HI 2 "register_operand" "r,r,r,r"))
-   (set (match_operand:SI 3 "register_operand" "=*0,!*2,r,r")
+   (set (match_operand:SI 3 "register_operand" "=*0,!2,r,r")
 	(plus:SI (match_dup 0)
 		 (match_dup 1)))]
   "cris_side_effect_mode_ok (PLUS, operands, 3, 0, 1, -1, 2)"
@@ -723,7 +726,7 @@
 	 (plus:SI (match_operand:SI 0 "cris_bdap_operand" "%r,r,r,r")
 		  (match_operand:SI 1 "cris_bdap_operand" "r>Rn,r>Rn,r,>Rn")))
 	(match_operand:SI 2 "register_operand" "r,r,r,r"))
-   (set (match_operand:SI 3 "register_operand" "=*0,!*2,r,r")
+   (set (match_operand:SI 3 "register_operand" "=*0,!2,r,r")
 	(plus:SI (match_dup 0)
 		 (match_dup 1)))]
   "cris_side_effect_mode_ok (PLUS, operands, 3, 0, 1, -1, 2)"
@@ -747,9 +750,11 @@
 
 (define_split
   [(parallel
-    [(set (mem (plus:SI
-		(match_operand:SI 0 "cris_bdap_operand" "")
-		(match_operand:SI 1 "cris_bdap_operand" "")))
+    [(set (match_operator
+	   4 "cris_mem_op"
+	   [(plus:SI
+	     (match_operand:SI 0 "cris_bdap_operand" "")
+	     (match_operand:SI 1 "cris_bdap_operand" ""))])
 	  (match_operand 2 "register_operand" ""))
      (set (match_operand:SI 3 "register_operand" "")
 	  (plus:SI (match_dup 0) (match_dup 1)))])]
@@ -757,9 +762,7 @@
   [(set (match_dup 4) (match_dup 2))
    (set (match_dup 3) (match_dup 0))
    (set (match_dup 3) (plus:SI (match_dup 3) (match_dup 1)))]
-  "operands[4]
-     = gen_rtx_MEM (GET_MODE (operands[2]),
-		    gen_rtx_PLUS (SImode, operands[0], operands[1]));")
+  "")
 
 ;; Clear memory side-effect patterns.  It is hard to get to the mode if
 ;; the MEM was anonymous, so there will be one for each mode.
@@ -884,7 +887,7 @@
   return \"clear.b [%2=%0%S1]\";
 }")
 
-;; To appease test-case gcc.c-torture/execute/920501-2.c (and others) at
+;; To appease testcase gcc.c-torture/execute/920501-2.c (and others) at
 ;; -O0, we need a movdi as a temporary measure.  Here's how things fail:
 ;;  A cmpdi RTX needs reloading (global):
 ;;    (insn 185 326 186 (set (cc0)
@@ -1351,7 +1354,7 @@
   "movs.b %1,%0"
   [(set_attr "slottable" "yes,yes,no")])
 
-;; To do a byte->word exension, extend to dword, exept that the top half
+;; To do a byte->word extension, extend to dword, exept that the top half
 ;; of the register will be clobbered.  FIXME: Perhaps this is not needed.
 
 (define_insn "extendqihi2"
@@ -1886,7 +1889,7 @@
 (define_insn "*extopqihi_side_biap"
   [(set (match_operand:HI 0 "register_operand" "=r,r")
 	(match_operator:HI
-	 6 "cris_operand_extend_operator"
+	 6 "cris_additive_operand_extend_operator"
 	 [(match_operand:HI 1 "register_operand" "0,0")
 	  (match_operator:HI
 	   7 "cris_extend_operator"
@@ -1898,8 +1901,7 @@
 	(plus:SI (mult:SI (match_dup 2)
 			  (match_dup 3))
 		 (match_dup 4)))]
-  "(GET_CODE (operands[5]) != UMIN || GET_CODE (operands[7]) == ZERO_EXTEND)
-   && cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
+  "cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
   "@
    #
    %x6%e7.%m7 [%5=%4+%2%T3],%0")
@@ -1921,7 +1923,7 @@
 	(plus:SI (mult:SI (match_dup 2)
 			  (match_dup 3))
 		 (match_dup 4)))]
-  "(GET_CODE (operands[5]) != UMIN || GET_CODE (operands[7]) == ZERO_EXTEND)
+  "(GET_CODE (operands[6]) != UMIN || GET_CODE (operands[7]) == ZERO_EXTEND)
    && cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
   "@
    #
@@ -1944,7 +1946,7 @@
 	(plus:SI (mult:SI (match_dup 2)
 			  (match_dup 3))
 		 (match_dup 4)))]
-  "(GET_CODE (operands[5]) != UMIN || GET_CODE (operands[7]) == ZERO_EXTEND)
+  "(GET_CODE (operands[6]) != UMIN || GET_CODE (operands[7]) == ZERO_EXTEND)
    && cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
   "@
    #
@@ -1959,7 +1961,7 @@
 (define_insn "*extopqihi_side"
   [(set (match_operand:HI 0 "register_operand" "=r,r,r")
 	(match_operator:HI
-	 5 "cris_operand_extend_operator"
+	 5 "cris_additive_operand_extend_operator"
 	 [(match_operand:HI 1 "register_operand" "0,0,0")
 	  (match_operator:HI
 	   6 "cris_extend_operator"
@@ -1970,8 +1972,7 @@
    (set (match_operand:SI 4 "register_operand" "=*2,r,r")
 	(plus:SI (match_dup 2)
 		 (match_dup 3)))]
-  "(GET_CODE (operands[5]) != UMIN || GET_CODE (operands[6]) == ZERO_EXTEND)
-   && cris_side_effect_mode_ok (PLUS, operands, 4, 2, 3, -1, 0)"
+  "cris_side_effect_mode_ok (PLUS, operands, 4, 2, 3, -1, 0)"
   "*
 {
   if (which_alternative == 0
@@ -2053,28 +2054,25 @@
 
 ;; QImode to HImode
 ;; FIXME: GCC should widen.
-;; FIXME: These could have anonymous mode for operand 0.
 
 (define_insn "*extopqihi_swap_side_biap"
   [(set (match_operand:HI 0 "register_operand" "=r,r")
-	(match_operator:HI
-	 7 "cris_plus_or_bound_operator"
-	 [(match_operator:HI
-	   6 "cris_extend_operator"
-	   [(mem:QI (plus:SI
-		     (mult:SI (match_operand:SI 2 "register_operand" "r,r")
-			      (match_operand:SI 3 "const_int_operand" "n,n"))
-		     (match_operand:SI 4 "register_operand" "r,r")))])
-	  (match_operand:HI 1 "register_operand" "0,0")]))
+	(plus:HI
+	 (match_operator:HI
+	  6 "cris_extend_operator"
+	  [(mem:QI (plus:SI
+		    (mult:SI (match_operand:SI 2 "register_operand" "r,r")
+			     (match_operand:SI 3 "const_int_operand" "n,n"))
+		    (match_operand:SI 4 "register_operand" "r,r")))])
+	 (match_operand:HI 1 "register_operand" "0,0")))
    (set (match_operand:SI 5 "register_operand" "=*4,r")
 	(plus:SI (mult:SI (match_dup 2)
 			  (match_dup 3))
 		 (match_dup 4)))]
-  "(GET_CODE (operands[6]) != UMIN || GET_CODE (operands[6]) == ZERO_EXTEND)
-   && cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
+  "cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
   "@
    #
-   %x7%e6.%m6 [%5=%4+%2%T3],%0")
+   add%e6.b [%5=%4+%2%T3],%0")
 
 ;; QImode to SImode
 
@@ -2093,7 +2091,7 @@
 	(plus:SI (mult:SI (match_dup 2)
 			  (match_dup 3))
 		 (match_dup 4)))]
-  "(GET_CODE (operands[6]) != UMIN || GET_CODE (operands[6]) == ZERO_EXTEND)
+  "(GET_CODE (operands[7]) != UMIN || GET_CODE (operands[6]) == ZERO_EXTEND)
    && cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
   "@
    #
@@ -2115,7 +2113,7 @@
 	(plus:SI (mult:SI (match_dup 2)
 			  (match_dup 3))
 		 (match_dup 4)))]
-  "(GET_CODE (operands[6]) != UMIN || GET_CODE (operands[6]) == ZERO_EXTEND)
+  "(GET_CODE (operands[7]) != UMIN || GET_CODE (operands[6]) == ZERO_EXTEND)
    && cris_side_effect_mode_ok (MULT, operands, 5, 4, 2, 3, 0)"
   "@
    #
@@ -2129,19 +2127,17 @@
 
 (define_insn "*extopqihi_swap_side"
   [(set (match_operand:HI 0 "register_operand" "=r,r,r")
-	(match_operator:HI
-	 6 "cris_plus_or_bound_operator"
-	 [(match_operator:HI
-	   5 "cris_extend_operator"
-	   [(mem:QI (plus:SI
-		     (match_operand:SI 2 "cris_bdap_operand" "%r,r,r")
-		     (match_operand:SI 3 "cris_bdap_operand" "r>Rn,r,>Rn")))])
-	  (match_operand:HI 1 "register_operand" "0,0,0")]))
+	(plus:HI
+	 (match_operator:HI
+	  5 "cris_extend_operator"
+	  [(mem:QI (plus:SI
+		    (match_operand:SI 2 "cris_bdap_operand" "%r,r,r")
+		    (match_operand:SI 3 "cris_bdap_operand" "r>Rn,r,>Rn")))])
+	 (match_operand:HI 1 "register_operand" "0,0,0")))
    (set (match_operand:SI 4 "register_operand" "=*2,r,r")
 	(plus:SI (match_dup 2)
 		 (match_dup 3)))]
-  "(GET_CODE (operands[6]) != UMIN || GET_CODE (operands[5]) == ZERO_EXTEND)
-   && cris_side_effect_mode_ok (PLUS, operands, 4, 2, 3, -1, 0)"
+  "cris_side_effect_mode_ok (PLUS, operands, 4, 2, 3, -1, 0)"
   "*
 {
   if (which_alternative == 0
@@ -2151,7 +2147,7 @@
 	  || CONST_OK_FOR_LETTER_P (INTVAL (operands[3]), 'N')
 	  || CONST_OK_FOR_LETTER_P (INTVAL (operands[3]), 'J')))
     return \"#\";
-  return \"%x6%e5.%m5 [%4=%2%S3],%0\";
+  return \"add%e5.b [%4=%2%S3],%0\";
 }")
 
 ;; QImode to SImode
@@ -2221,13 +2217,12 @@
 (define_insn "*extopqihi"
   [(set (match_operand:HI 0 "register_operand" "=r,r,r,r")
 	(match_operator:HI
-	 3 "cris_operand_extend_operator"
+	 3 "cris_additive_operand_extend_operator"
 	 [(match_operand:HI 1 "register_operand" "0,0,0,r")
 	  (match_operator:HI
 	   4 "cris_extend_operator"
 	   [(match_operand:QI 2 "nonimmediate_operand" "r,Q>,m,!To")])]))]
-  "(GET_CODE (operands[3]) != UMIN || GET_CODE (operands[4]) == ZERO_EXTEND)
-   && GET_MODE_SIZE (GET_MODE (operands[0])) <= UNITS_PER_WORD
+  "GET_MODE_SIZE (GET_MODE (operands[0])) <= UNITS_PER_WORD
    && (operands[1] != frame_pointer_rtx || GET_CODE (operands[3]) != PLUS)"
   "@
    %x3%e4.%m4 %2,%0
@@ -2285,20 +2280,17 @@
 
 (define_insn "*extopqihi_swap"
   [(set (match_operand:HI 0 "register_operand" "=r,r,r,r")
-	(match_operator:HI
-	 4 "cris_plus_or_bound_operator"
-	 [(match_operator:HI
-	   3 "cris_extend_operator"
-	   [(match_operand:QI 2 "nonimmediate_operand" "r,Q>,m,!To")])
-	  (match_operand:HI 1 "register_operand" "0,0,0,r")]))]
-  "(GET_CODE (operands[3]) != UMIN || GET_CODE (operands[4]) == ZERO_EXTEND)
-   && GET_MODE_SIZE (GET_MODE (operands[0])) <= UNITS_PER_WORD
-   && operands[1] != frame_pointer_rtx"
+	(plus:HI
+	 (match_operator:HI
+	  3 "cris_extend_operator"
+	  [(match_operand:QI 2 "nonimmediate_operand" "r,Q>,m,!To")])
+	 (match_operand:HI 1 "register_operand" "0,0,0,r")))]
+  "operands[1] != frame_pointer_rtx"
   "@
-   %x4%e3.%m3 %2,%0
-   %x4%e3.%m3 %2,%0
-   %x4%e3.%m3 %2,%0
-   %x4%e3.%m3 %2,%1,%0"
+   add%e3.b %2,%0
+   add%e3.b %2,%0
+   add%e3.b %2,%0
+   add%e3.b %2,%1,%0"
   [(set_attr "slottable" "yes,yes,no,no")
    (set_attr "cc" "clobber")])
 
@@ -2312,8 +2304,7 @@
 	   3 "cris_extend_operator"
 	   [(match_operand:QI 2 "nonimmediate_operand" "r,Q>,m,!To")])
 	  (match_operand:SI 1 "register_operand" "0,0,0,r")]))]
-  "(GET_CODE (operands[3]) != UMIN || GET_CODE (operands[4]) == ZERO_EXTEND)
-   && GET_MODE_SIZE (GET_MODE (operands[0])) <= UNITS_PER_WORD
+  "(GET_CODE (operands[4]) != UMIN || GET_CODE (operands[3]) == ZERO_EXTEND)
    && operands[1] != frame_pointer_rtx"
   "@
    %x4%e3.%m3 %2,%0
@@ -2332,8 +2323,7 @@
 	   3 "cris_extend_operator"
 	   [(match_operand:HI 2 "nonimmediate_operand" "r,Q>,m,!To")])
 	  (match_operand:SI 1 "register_operand" "0,0,0,r")]))]
-  "(GET_CODE (operands[3]) != UMIN || GET_CODE (operands[4]) == ZERO_EXTEND)
-   && GET_MODE_SIZE (GET_MODE (operands[0])) <= UNITS_PER_WORD
+  "(GET_CODE (operands[4]) != UMIN || GET_CODE (operands[3]) == ZERO_EXTEND)
    && operands[1] != frame_pointer_rtx"
   "@
    %x4%e3.%m3 %2,%0
@@ -2478,8 +2468,11 @@
 	 (zero_extend:SI (match_operand:HI 1 "register_operand" "0"))
 	 (zero_extend:SI (match_operand:HI 2 "register_operand" "r"))))]
   "TARGET_HAS_MUL_INSNS"
-  "mulu.w %2,%0"
-  [(set_attr "slottable" "yes")
+  "%!mulu.w %2,%0"
+  [(set (attr "slottable")
+	(if_then_else (ne (symbol_ref "TARGET_MUL_BUG") (const_int 0))
+		      (const_string "no")
+		      (const_string "yes")))
    ;; Just N unusable here, but let's be safe.
    (set_attr "cc" "clobber")])
 
@@ -2489,8 +2482,11 @@
 	 (zero_extend:HI (match_operand:QI 1 "register_operand" "0"))
 	 (zero_extend:HI (match_operand:QI 2 "register_operand" "r"))))]
   "TARGET_HAS_MUL_INSNS"
-  "mulu.b %2,%0"
-  [(set_attr "slottable" "yes")
+  "%!mulu.b %2,%0"
+  [(set (attr "slottable")
+	(if_then_else (ne (symbol_ref "TARGET_MUL_BUG") (const_int 0))
+		      (const_string "no")
+		      (const_string "yes")))
    ;; Not exactly sure, but let's be safe.
    (set_attr "cc" "clobber")])
 
@@ -2505,8 +2501,11 @@
 	(mult:SI (match_operand:SI 1 "register_operand" "0")
 		 (match_operand:SI 2 "register_operand" "r")))]
   "TARGET_HAS_MUL_INSNS"
-  "muls.d %2,%0"
-  [(set_attr "slottable" "yes")
+  "%!muls.d %2,%0"
+  [(set (attr "slottable")
+	(if_then_else (ne (symbol_ref "TARGET_MUL_BUG") (const_int 0))
+		      (const_string "no")
+		      (const_string "yes")))
    ;; Just N unusable here, but let's be safe.
    (set_attr "cc" "clobber")])
 
@@ -2520,8 +2519,11 @@
 	 (sign_extend:HI (match_operand:QI 1 "register_operand" "0"))
 	 (sign_extend:HI (match_operand:QI 2 "register_operand" "r"))))]
   "TARGET_HAS_MUL_INSNS"
-  "muls.b %2,%0"
-  [(set_attr "slottable" "yes")
+  "%!muls.b %2,%0"
+  [(set (attr "slottable")
+	(if_then_else (ne (symbol_ref "TARGET_MUL_BUG") (const_int 0))
+		      (const_string "no")
+		      (const_string "yes")))
    (set_attr "cc" "clobber")])
 
 (define_insn "mulhisi3"
@@ -2530,8 +2532,11 @@
 	 (sign_extend:SI (match_operand:HI 1 "register_operand" "0"))
 	 (sign_extend:SI (match_operand:HI 2 "register_operand" "r"))))]
   "TARGET_HAS_MUL_INSNS"
-  "muls.w %2,%0"
-  [(set_attr "slottable" "yes")
+  "%!muls.w %2,%0"
+  [(set (attr "slottable")
+	(if_then_else (ne (symbol_ref "TARGET_MUL_BUG") (const_int 0))
+		      (const_string "no")
+		      (const_string "yes")))
    ;; Just N unusable here, but let's be safe.
    (set_attr "cc" "clobber")])
 
@@ -2547,7 +2552,7 @@
 	 (sign_extend:DI (match_operand:SI 1 "register_operand" "0"))
 	 (sign_extend:DI (match_operand:SI 2 "register_operand" "r"))))]
   "TARGET_HAS_MUL_INSNS"
-  "muls.d %2,%M0\;move $mof,%H0")
+  "%!muls.d %2,%M0\;move $mof,%H0")
 
 (define_insn "umulsidi3"
   [(set (match_operand:DI 0 "register_operand" "=r")
@@ -2555,7 +2560,7 @@
 	 (zero_extend:DI (match_operand:SI 1 "register_operand" "0"))
 	 (zero_extend:DI (match_operand:SI 2 "register_operand" "r"))))]
   "TARGET_HAS_MUL_INSNS"
-  "mulu.d %2,%M0\;move $mof,%H0")
+  "%!mulu.d %2,%M0\;move $mof,%H0")
 
 ;; This pattern would probably not be needed if we add "mof" in its own
 ;; register class (and open a can of worms about /not/ pairing it with a
@@ -2574,7 +2579,7 @@
 	  (const_int 32))))
    (clobber (match_scratch:SI 3 "=X,1,1"))]
   "TARGET_HAS_MUL_INSNS"
-  "muls.d %2,%1\;move $mof,%0"
+  "%!muls.d %2,%1\;move $mof,%0"
   [(set_attr "cc" "clobber")])
 
 (define_insn "umulsi3_highpart"
@@ -2587,7 +2592,7 @@
 	  (const_int 32))))
    (clobber (match_scratch:SI 3 "=X,1,1"))]
   "TARGET_HAS_MUL_INSNS"
-  "mulu.d %2,%1\;move $mof,%0"
+  "%!mulu.d %2,%1\;move $mof,%0"
   [(set_attr "cc" "clobber")])
 
 ;; Divide and modulus instructions.  CRIS only has a step instruction.
@@ -2692,17 +2697,19 @@
 
 (define_insn "*andsi_movu"
   [(set (match_operand:SI 0 "register_operand" "=r,r,r")
-	(and:SI (match_operand:SI 1 "nonimmediate_operand" "%r,Q>,m")
+	(and:SI (match_operand:SI 1 "nonimmediate_operand" "%r,Q,To")
 		(match_operand:SI 2 "const_int_operand" "n,n,n")))]
-  "INTVAL (operands[2]) == 255 || INTVAL (operands[2]) == 65535"
+  "(INTVAL (operands[2]) == 255 || INTVAL (operands[2]) == 65535)
+   && (GET_CODE (operands[1]) != MEM || ! MEM_VOLATILE_P (operands[1]))"
   "movu.%z2 %1,%0"
   [(set_attr "slottable" "yes,yes,no")])
 
 (define_insn "*andsi_clear"
-  [(set (match_operand:SI 0 "nonimmediate_operand" "=r,r,Q>,Q>,m,m")
+  [(set (match_operand:SI 0 "nonimmediate_operand" "=r,r,Q,Q,To,To")
 	(and:SI (match_operand:SI 1 "nonimmediate_operand" "%0,0,0,0,0,0")
 		(match_operand:SI 2 "const_int_operand" "P,n,P,n,P,n")))]
-  "INTVAL (operands[2]) == -65536 || INTVAL (operands[2]) == -256"
+  "(INTVAL (operands[2]) == -65536 || INTVAL (operands[2]) == -256)
+   && (GET_CODE (operands[0]) != MEM || ! MEM_VOLATILE_P (operands[0]))"
   "@
    cLear.b %0
    cLear.w %0
@@ -2780,27 +2787,17 @@
 
 (define_insn "*andhi_movu"
   [(set (match_operand:HI 0 "register_operand" "=r,r,r")
-	(and:HI (match_operand:HI 1 "nonimmediate_operand" "r,Q>,m")
+	(and:HI (match_operand:HI 1 "nonimmediate_operand" "r,Q,To")
 		(const_int 255)))]
-  ""
+  "GET_CODE (operands[1]) != MEM || ! MEM_VOLATILE_P (operands[1])"
   "mOvu.b %1,%0"
   [(set_attr "slottable" "yes,yes,no")])
 
-(define_insn "*andhi_clear_signed"
-  [(set (match_operand:HI 0 "nonimmediate_operand" "=r,Q>,m")
+(define_insn "*andhi_clear"
+  [(set (match_operand:HI 0 "nonimmediate_operand" "=r,Q,To")
 	(and:HI (match_operand:HI 1 "nonimmediate_operand" "0,0,0")
 		(const_int -256)))]
-  ""
-  "cLear.b %0"
-  [(set_attr "slottable" "yes,yes,no")
-   (set_attr "cc" "none")])
-
-;; FIXME: Either this or the pattern above should be redundant.
-(define_insn "*andhi_clear_unsigned"
-  [(set (match_operand:HI 0 "nonimmediate_operand" "=r,Q>,m")
-	(and:HI (match_operand:HI 1 "nonimmediate_operand" "0,0,0")
-		(const_int 65280)))]
-  ""
+  "GET_CODE (operands[0]) != MEM || ! MEM_VOLATILE_P (operands[0])"
   "cLear.b %0"
   [(set_attr "slottable" "yes,yes,no")
    (set_attr "cc" "none")])
@@ -3825,7 +3822,7 @@
 
       /* It might be that code can be generated that jumps to 0 (or to a
 	 specific address).  Don't abort on that.  At least there's a
-	 test-case.  */
+	 testcase.  */
       if (CONSTANT_ADDRESS_P (op0) && GET_CODE (op0) != CONST_INT)
 	{
 	  if (no_new_pseudos)
@@ -3846,7 +3843,7 @@
 	  else
 	    abort ();
 
-	  operands[0] = gen_rtx_MEM (GET_MODE (operands[0]), op0);
+	  operands[0] = replace_equiv_address (operands[0], op0);
 	}
     }
 }")
@@ -3892,7 +3889,7 @@
 
       /* It might be that code can be generated that jumps to 0 (or to a
 	 specific address).  Don't abort on that.  At least there's a
-	 test-case.  */
+	 testcase.  */
       if (CONSTANT_ADDRESS_P (op1) && GET_CODE (op1) != CONST_INT)
 	{
 	  if (no_new_pseudos)
@@ -3911,7 +3908,7 @@
 	  else
 	    abort ();
 
-	  operands[1] = gen_rtx_MEM (GET_MODE (operands[1]), op1);
+	  operands[1] = replace_equiv_address (operands[1], op1);
 	}
     }
 }")
@@ -4214,10 +4211,12 @@
 (define_split
   [(parallel
     [(set (match_operand 0 "register_operand" "")
-	   (mem (plus:SI
-		 (mult:SI (match_operand:SI 1 "register_operand" "")
-			  (match_operand:SI 2 "const_int_operand" ""))
-		 (match_operand:SI 3 "register_operand" ""))))
+	  (match_operator
+	   6 "cris_mem_op"
+	   [(plus:SI
+	     (mult:SI (match_operand:SI 1 "register_operand" "")
+		      (match_operand:SI 2 "const_int_operand" ""))
+	     (match_operand:SI 3 "register_operand" ""))]))
      (set (match_operand:SI 4 "register_operand" "")
 	   (plus:SI (mult:SI (match_dup 1)
 			     (match_dup 2))
@@ -4227,16 +4226,17 @@
   [(set (match_dup 4) (plus:SI (mult:SI (match_dup 1) (match_dup 2))
 				(match_dup 3)))
    (set (match_dup 0) (match_dup 5))]
-  "operands[5] = gen_rtx_MEM (GET_MODE (operands[0]), operands[3]);")
+  "operands[5] = replace_equiv_address (operands[6], operands[3]);")
 
 ;; move.S1 [rx=rx+i],ry
 
 (define_split
   [(parallel
     [(set (match_operand 0 "register_operand" "")
-	   (mem
-	    (plus:SI (match_operand:SI 1 "cris_bdap_operand" "")
-		     (match_operand:SI 2 "cris_bdap_operand" ""))))
+	  (match_operator
+	   5 "cris_mem_op"
+	   [(plus:SI (match_operand:SI 1 "cris_bdap_operand" "")
+		     (match_operand:SI 2 "cris_bdap_operand" ""))]))
      (set (match_operand:SI 3 "register_operand" "")
 	   (plus:SI (match_dup 1)
 		    (match_dup 2)))])]
@@ -4244,17 +4244,19 @@
     || rtx_equal_p (operands[3], operands[2]))"
   [(set (match_dup 3) (plus:SI (match_dup 1) (match_dup 2)))
    (set (match_dup 0) (match_dup 4))]
-  "operands[4] = gen_rtx_MEM (GET_MODE (operands[0]), operands[3]);")
+  "operands[4] = replace_equiv_address (operands[5], operands[3]);")
 
 ;; move.S1 ry,[rx=rx+rz.S2]
 
 (define_split
   [(parallel
-    [(set (mem (plus:SI
-		 (mult:SI (match_operand:SI 0 "register_operand" "")
-			  (match_operand:SI 1 "const_int_operand" ""))
-		 (match_operand:SI 2 "register_operand" "")))
-	   (match_operand 3 "register_operand" ""))
+    [(set (match_operator
+	   6 "cris_mem_op"
+	   [(plus:SI
+	     (mult:SI (match_operand:SI 0 "register_operand" "")
+		      (match_operand:SI 1 "const_int_operand" ""))
+	     (match_operand:SI 2 "register_operand" ""))])
+	  (match_operand 3 "register_operand" ""))
      (set (match_operand:SI 4 "register_operand" "")
 	   (plus:SI (mult:SI (match_dup 0)
 			     (match_dup 1))
@@ -4264,16 +4266,17 @@
   [(set (match_dup 4) (plus:SI (mult:SI (match_dup 0) (match_dup 1))
 				(match_dup 2)))
    (set (match_dup 5) (match_dup 3))]
-  "operands[5] = gen_rtx_MEM (GET_MODE (operands[3]), operands[4]);")
+  "operands[5] = replace_equiv_address (operands[6], operands[4]);")
 
 ;; move.S1 ry,[rx=rx+i]
 
 (define_split
   [(parallel
-    [(set (mem
-	   (plus:SI (match_operand:SI 0 "cris_bdap_operand" "")
-		    (match_operand:SI 1 "cris_bdap_operand" "")))
-	   (match_operand 2 "register_operand" ""))
+    [(set (match_operator
+	   6 "cris_mem_op"
+	   [(plus:SI (match_operand:SI 0 "cris_bdap_operand" "")
+		     (match_operand:SI 1 "cris_bdap_operand" ""))])
+	  (match_operand 2 "register_operand" ""))
      (set (match_operand:SI 3 "register_operand" "")
 	   (plus:SI (match_dup 0)
 		   (match_dup 1)))])]
@@ -4281,7 +4284,7 @@
     || rtx_equal_p (operands[3], operands[1]))"
   [(set (match_dup 3) (plus:SI (match_dup 0) (match_dup 1)))
    (set (match_dup 5) (match_dup 2))]
-  "operands[5] = gen_rtx_MEM (GET_MODE (operands[2]), operands[3]);")
+  "operands[5] = replace_equiv_address (operands[6], operands[3]);")
 
 ;; clear.d [rx=rx+rz.S2]
 
@@ -4415,8 +4418,7 @@
   [(set (match_dup 4) (plus:SI (mult:SI (match_dup 1) (match_dup 2))
 				(match_dup 3)))
    (set (match_dup 0) (match_op_dup 5 [(match_dup 6)]))]
-  "operands[6] = gen_rtx_MEM (GET_MODE (XEXP (operands[5],0)),
-			   operands[4]);")
+  "operands[6] = replace_equiv_address (XEXP (operands[5], 0), operands[4]);")
 
 ;; mov(s|u).S1 [rx=rx+i],ry
 
@@ -4435,8 +4437,7 @@
     || rtx_equal_p (operands[2], operands[3]))"
   [(set (match_dup 3) (plus:SI (match_dup 1) (match_dup 2)))
    (set (match_dup 0) (match_op_dup 4 [(match_dup 5)]))]
-  "operands[5] = gen_rtx_MEM (GET_MODE (XEXP (operands[4], 0)),
-			  operands[3]);")
+  "operands[5] = replace_equiv_address (XEXP (operands[4], 0), operands[3]);")
 
 ;; op.S1 [rx=rx+i],ry
 
@@ -4456,7 +4457,7 @@
     || rtx_equal_p (operands[4], operands[3]))"
   [(set (match_dup 4) (plus:SI (match_dup 2) (match_dup 3)))
    (set (match_dup 0) (match_op_dup 5 [(match_dup 1) (match_dup 6)]))]
-  "operands[6] = gen_rtx_MEM (GET_MODE (operands[0]), operands[4]);")
+  "operands[6] = replace_equiv_address (XEXP (operands[5], 1), operands[4]);")
 
 ;; op.S1 [rx=rx+rz.S2],ry
 
@@ -4480,7 +4481,7 @@
   [(set (match_dup 5) (plus:SI (mult:SI (match_dup 2) (match_dup 3))
 				(match_dup 4)))
    (set (match_dup 0) (match_op_dup 6 [(match_dup 1) (match_dup 7)]))]
-  "operands[7] = gen_rtx_MEM (GET_MODE (operands[0]), operands[5]);")
+  "operands[7] = replace_equiv_address (XEXP (operands[6], 1), operands[5]);")
 
 ;; op.S1 [rx=rx+rz.S2],ry (swapped)
 
@@ -4504,7 +4505,7 @@
   [(set (match_dup 5) (plus:SI (mult:SI (match_dup 2) (match_dup 3))
 			       (match_dup 4)))
    (set (match_dup 0) (match_op_dup 6 [(match_dup 7) (match_dup 1)]))]
-  "operands[7] = gen_rtx_MEM (GET_MODE (operands[0]), operands[5]);")
+  "operands[7] = replace_equiv_address (XEXP (operands[6], 0), operands[5]);")
 
 ;; op.S1 [rx=rx+i],ry (swapped)
 
@@ -4524,7 +4525,7 @@
     || rtx_equal_p (operands[4], operands[3]))"
   [(set (match_dup 4) (plus:SI (match_dup 2) (match_dup 3)))
    (set (match_dup 0) (match_op_dup 5 [(match_dup 6) (match_dup 1)]))]
-  "operands[6] = gen_rtx_MEM (GET_MODE (operands[0]), operands[4]);")
+  "operands[6] = replace_equiv_address (XEXP (operands[5], 0), operands[4]);")
 
 ;; op(s|u).S1 [rx=rx+rz.S2],ry
 
@@ -4551,8 +4552,8 @@
 			       (match_dup 4)))
    (set (match_dup 0) (match_op_dup 6 [(match_dup 1) (match_dup 8)]))]
   "operands[8] = gen_rtx (GET_CODE (operands[7]), GET_MODE (operands[7]),
-			  gen_rtx_MEM (GET_MODE (XEXP (operands[7], 0)),
-				   operands[5]));")
+			  replace_equiv_address (XEXP (operands[7], 0),
+						 operands[5]));")
 
 ;; op(s|u).S1 [rx=rx+i],ry
 
@@ -4576,8 +4577,8 @@
   [(set (match_dup 4) (plus:SI (match_dup 2) (match_dup 3)))
    (set (match_dup 0) (match_op_dup 5 [(match_dup 1) (match_dup 7)]))]
   "operands[7] = gen_rtx (GET_CODE (operands[6]), GET_MODE (operands[6]),
-			   gen_rtx_MEM (GET_MODE (XEXP (operands[6], 0)),
-				    operands[4]));")
+			  replace_equiv_address (XEXP (operands[6], 0),
+						 operands[4]));")
 
 ;; op(s|u).S1 [rx=rx+rz.S2],ry (swapped, plus or bound)
 
@@ -4603,8 +4604,8 @@
 			       (match_dup 4)))
    (set (match_dup 0) (match_op_dup 6 [(match_dup 8) (match_dup 1)]))]
   "operands[8] = gen_rtx (GET_CODE (operands[6]), GET_MODE (operands[6]),
-			  gen_rtx_MEM (GET_MODE (XEXP (operands[6], 0)),
-				   operands[5]));")
+			  replace_equiv_address (XEXP (operands[6], 0),
+						 operands[5]));")
 
 ;; op(s|u).S1 [rx=rx+i],ry (swapped, plus or bound)
 
@@ -4627,8 +4628,8 @@
   [(set (match_dup 4) (plus:SI (match_dup 2) (match_dup 3)))
    (set (match_dup 0) (match_op_dup 6 [(match_dup 7) (match_dup 1)]))]
   "operands[7] = gen_rtx (GET_CODE (operands[5]), GET_MODE (operands[5]),
-			  gen_rtx_MEM (GET_MODE (XEXP (operands[5], 0)),
-				   operands[4]));")
+			  replace_equiv_address (XEXP (operands[5], 0),
+						 operands[4]));")
 
 ;; Splits for addressing prefixes that have no side-effects, so we can
 ;; fill a delay slot.  Never split if we lose something, though.
@@ -4656,7 +4657,7 @@
   [(set (match_dup 2) (match_dup 4))
    (set (match_dup 0) (match_dup 3))]
   "operands[2] = gen_rtx_REG (Pmode, REGNO (operands[0]));
-   operands[3] = gen_rtx_MEM (GET_MODE (operands[0]), operands[2]);
+   operands[3] = replace_equiv_address (operands[1], operands[2]);
    operands[4] = XEXP (operands[1], 0);")
 
 ;; As the above, but MOVS and MOVU.
@@ -4674,7 +4675,7 @@
   [(set (match_dup 2) (match_dup 5))
    (set (match_dup 0) (match_op_dup 4 [(match_dup 3)]))]
   "operands[2] = gen_rtx_REG (Pmode, REGNO (operands[0]));
-   operands[3] = gen_rtx_MEM (GET_MODE (XEXP (operands[4], 0)), operands[2]);
+   operands[3] = replace_equiv_address (XEXP (operands[4], 0), operands[2]);
    operands[5] = XEXP (operands[1], 0);")
 
 ;; Various peephole optimizations.
@@ -4686,10 +4687,10 @@
 ;; to keep changes local to their cause.
 ;;
 ;; Do not add patterns that you do not know will be matched.
-;; Please also add a self-contained test-case.
+;; Please also add a self-contained testcase.
 
 ;; We have trouble with and:s and shifts.  Maybe something is broken in
-;; gcc?  Or it could just be that bitfield insn expansion is a bit
+;; gcc?  Or it could just be that bit-field insn expansion is a bit
 ;; suboptimal when not having extzv insns.
 
 (define_peephole

@@ -1,5 +1,5 @@
 /* Handle #pragma, system V.4 style.  Supports #pragma weak and #pragma pack.
-   Copyright (C) 1992, 1997, 1998, 1999, 2000, 2001, 2002
+   Copyright (C) 1992, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -21,6 +21,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "tree.h"
 #include "function.h"
@@ -29,7 +31,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "flags.h"
 #include "toplev.h"
 #include "ggc.h"
-#include "c-lex.h"
 #include "c-common.h"
 #include "output.h"
 #include "tm_p.h"
@@ -37,11 +38,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define GCC_BAD(msgid) do { warning (msgid); return; } while (0)
 #define GCC_BAD2(msgid, arg) do { warning (msgid, arg); return; } while (0)
 
-#ifdef HANDLE_PRAGMA_PACK
-static void handle_pragma_pack PARAMS ((cpp_reader *));
-
-#ifdef HANDLE_PRAGMA_PACK_PUSH_POP
-typedef struct align_stack
+typedef struct align_stack GTY(())
 {
   int                  alignment;
   unsigned int         num_pushes;
@@ -49,8 +46,12 @@ typedef struct align_stack
   struct align_stack * prev;
 } align_stack;
 
-static struct align_stack * alignment_stack = NULL;
+static GTY(()) struct align_stack * alignment_stack;
 
+#ifdef HANDLE_PRAGMA_PACK
+static void handle_pragma_pack (cpp_reader *);
+
+#ifdef HANDLE_PRAGMA_PACK_PUSH_POP
 /* If we have a "global" #pragma pack(<n>) in effect when the first
    #pragma pack(push,<n>) is encountered, this stores the value of 
    maximum_field_alignment in effect.  When the final pop_alignment() 
@@ -60,15 +61,12 @@ static int default_alignment;
 #define SET_GLOBAL_ALIGNMENT(ALIGN) \
   (default_alignment = maximum_field_alignment = (ALIGN))
 
-static void push_alignment PARAMS ((int, tree));
-static void pop_alignment  PARAMS ((tree));
-static void mark_align_stack PARAMS ((void *));
+static void push_alignment (int, tree);
+static void pop_alignment (tree);
 
 /* Push an alignment value onto the stack.  */
 static void
-push_alignment (alignment, id)
-     int alignment;
-     tree id;
+push_alignment (int alignment, tree id)
 {
   if (alignment_stack == NULL
       || alignment_stack->alignment != alignment
@@ -76,7 +74,7 @@ push_alignment (alignment, id)
     {
       align_stack * entry;
 
-      entry = (align_stack *) xmalloc (sizeof (* entry));
+      entry = ggc_alloc (sizeof (* entry));
 
       entry->alignment  = alignment;
       entry->num_pushes = 1;
@@ -99,8 +97,7 @@ push_alignment (alignment, id)
 
 /* Undo a push of an alignment onto the stack.  */
 static void
-pop_alignment (id)
-     tree id;
+pop_alignment (tree id)
 {
   align_stack * entry;
       
@@ -138,22 +135,7 @@ pop_alignment (id)
       else
 	maximum_field_alignment = entry->alignment;
 
-      free (alignment_stack);
-
       alignment_stack = entry;
-    }
-}
-
-static void
-mark_align_stack (p)
-    void *p;
-{
-  align_stack *a = *(align_stack **) p;
-
-  while (a)
-    {
-      ggc_mark_tree (a->id);
-      a = a->prev;
     }
 }
 #else  /* not HANDLE_PRAGMA_PACK_PUSH_POP */
@@ -172,8 +154,7 @@ mark_align_stack (p)
    #pragma pack (pop)
    #pragma pack (pop, ID) */
 static void
-handle_pragma_pack (dummy)
-     cpp_reader *dummy ATTRIBUTE_UNUSED;
+handle_pragma_pack (cpp_reader *dummy ATTRIBUTE_UNUSED)
 {
   tree x, id = 0;
   int align = -1;
@@ -273,15 +254,14 @@ handle_pragma_pack (dummy)
 }
 #endif  /* HANDLE_PRAGMA_PACK */
 
-#ifdef HANDLE_PRAGMA_WEAK
-static void apply_pragma_weak PARAMS ((tree, tree));
-static void handle_pragma_weak PARAMS ((cpp_reader *));
+static GTY(()) tree pending_weaks;
 
-static tree pending_weaks;
+#ifdef HANDLE_PRAGMA_WEAK
+static void apply_pragma_weak (tree, tree);
+static void handle_pragma_weak (cpp_reader *);
 
 static void
-apply_pragma_weak (decl, value)
-     tree decl, value;
+apply_pragma_weak (tree decl, tree value)
 {
   if (value)
     {
@@ -293,27 +273,35 @@ apply_pragma_weak (decl, value)
     }
 
   if (SUPPORTS_WEAK && DECL_EXTERNAL (decl) && TREE_USED (decl)
+      && !DECL_WEAK (decl) /* Don't complain about a redundant #pragma.  */
       && TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (decl)))
-    warning_with_decl (decl, "applying #pragma weak `%s' after first use results in unspecified behavior");
+    warning ("%Japplying #pragma weak '%D' after first use results "
+             "in unspecified behavior", decl, decl);
 
   declare_weak (decl);
 }
 
 void
-maybe_apply_pragma_weak (decl)
-     tree decl;
+maybe_apply_pragma_weak (tree decl)
 {
   tree *p, t, id;
 
-  /* Copied from the check in set_decl_assembler_name.  */
-  if (TREE_CODE (decl) == FUNCTION_DECL
-      || (TREE_CODE (decl) == VAR_DECL 
-          && (TREE_STATIC (decl) 
-              || DECL_EXTERNAL (decl) 
-              || TREE_PUBLIC (decl))))
-    id = DECL_ASSEMBLER_NAME (decl);
-  else
+  /* Avoid asking for DECL_ASSEMBLER_NAME when it's not needed.  */
+
+  /* No weak symbols pending, take the short-cut.  */
+  if (!pending_weaks)
     return;
+  /* If it's not visible outside this file, it doesn't matter whether
+     it's weak.  */
+  if (!DECL_EXTERNAL (decl) && !TREE_PUBLIC (decl))
+    return;
+  /* If it's not a function or a variable, it can't be weak.
+     FIXME: what kinds of things are visible outside this file but
+     aren't functions or variables?   Should this be an abort() instead?  */
+  if (TREE_CODE (decl) != FUNCTION_DECL && TREE_CODE (decl) != VAR_DECL)
+    return;
+
+  id = DECL_ASSEMBLER_NAME (decl);
 
   for (p = &pending_weaks; (t = *p) ; p = &TREE_CHAIN (t))
     if (id == TREE_PURPOSE (t))
@@ -326,8 +314,7 @@ maybe_apply_pragma_weak (decl)
 
 /* #pragma weak name [= value] */
 static void
-handle_pragma_weak (dummy)
-     cpp_reader *dummy ATTRIBUTE_UNUSED;
+handle_pragma_weak (cpp_reader *dummy ATTRIBUTE_UNUSED)
 {
   tree name, value, x, decl;
   enum cpp_ttype t;
@@ -358,21 +345,19 @@ handle_pragma_weak (dummy)
 }
 #else
 void
-maybe_apply_pragma_weak (decl)
-     tree decl ATTRIBUTE_UNUSED;
+maybe_apply_pragma_weak (tree decl ATTRIBUTE_UNUSED)
 {
 }
 #endif /* HANDLE_PRAGMA_WEAK */
 
-#ifdef HANDLE_PRAGMA_REDEFINE_EXTNAME
-static void handle_pragma_redefine_extname PARAMS ((cpp_reader *));
+static GTY(()) tree pending_redefine_extname;
 
-static tree pending_redefine_extname;
+#ifdef HANDLE_PRAGMA_REDEFINE_EXTNAME
+static void handle_pragma_redefine_extname (cpp_reader *);
 
 /* #pragma redefined_extname oldname newname */
 static void
-handle_pragma_redefine_extname (dummy)
-     cpp_reader *dummy ATTRIBUTE_UNUSED;
+handle_pragma_redefine_extname (cpp_reader *dummy ATTRIBUTE_UNUSED)
 {
   tree oldname, newname, decl, x;
   enum cpp_ttype t;
@@ -392,28 +377,34 @@ handle_pragma_redefine_extname (dummy)
     warning ("junk at end of #pragma redefine_extname");
 
   decl = identifier_global_value (oldname);
-  if (decl && TREE_CODE_CLASS (TREE_CODE (decl)) == 'd')
+  if (decl && (TREE_CODE (decl) == FUNCTION_DECL
+	       || TREE_CODE (decl) == VAR_DECL))
     {
       if (DECL_ASSEMBLER_NAME_SET_P (decl)
 	  && DECL_ASSEMBLER_NAME (decl) != newname)
         warning ("#pragma redefine_extname conflicts with declaration");
-      SET_DECL_ASSEMBLER_NAME (decl, newname);
+      change_decl_assembler_name (decl, newname);
     }
   else
-    pending_redefine_extname
-      = tree_cons (oldname, newname, pending_redefine_extname);
+    add_to_renaming_pragma_list(oldname, newname);
 }
 #endif
 
-#ifdef HANDLE_PRAGMA_EXTERN_PREFIX
-static void handle_pragma_extern_prefix PARAMS ((cpp_reader *));
+void
+add_to_renaming_pragma_list (tree oldname, tree newname)
+{
+  pending_redefine_extname
+    = tree_cons (oldname, newname, pending_redefine_extname);
+}
 
-static tree pragma_extern_prefix;
+static GTY(()) tree pragma_extern_prefix;
+
+#ifdef HANDLE_PRAGMA_EXTERN_PREFIX
+static void handle_pragma_extern_prefix (cpp_reader *);
 
 /* #pragma extern_prefix "prefix" */
 static void
-handle_pragma_extern_prefix (dummy)
-     cpp_reader *dummy ATTRIBUTE_UNUSED;
+handle_pragma_extern_prefix (cpp_reader *dummy ATTRIBUTE_UNUSED)
 {
   tree prefix, x;
   enum cpp_ttype t;
@@ -432,12 +423,11 @@ handle_pragma_extern_prefix (dummy)
 }
 #endif
 
-/* Hook from the front ends to apply the results of one of the preceeding
+/* Hook from the front ends to apply the results of one of the preceding
    pragmas that rename variables.  */
 
 tree
-maybe_apply_renaming_pragma (decl, asmname)
-     tree decl, asmname;
+maybe_apply_renaming_pragma (tree decl, tree asmname)
 {
   tree oldname;
 
@@ -457,11 +447,10 @@ maybe_apply_renaming_pragma (decl, asmname)
     {
       const char *oldasmname = IDENTIFIER_POINTER (oldname) + 1;
       if (asmname && strcmp (TREE_STRING_POINTER (asmname), oldasmname) != 0)
-	warning ("asm declaration conficts with previous rename");
+	warning ("asm declaration conflicts with previous rename");
       asmname = build_string (strlen (oldasmname), oldasmname);
     }
 
-#ifdef HANDLE_PRAGMA_REDEFINE_EXTNAME
   {
     tree *p, t;
 
@@ -477,7 +466,6 @@ maybe_apply_renaming_pragma (decl, asmname)
 	  return build_string (strlen (newname), newname);
 	}
   }
-#endif
 
 #ifdef HANDLE_PRAGMA_EXTERN_PREFIX
   if (pragma_extern_prefix && !asmname)
@@ -493,33 +481,35 @@ maybe_apply_renaming_pragma (decl, asmname)
   return asmname;
 }
 
+/* Front-end wrapper for pragma registration to avoid dragging
+   cpplib.h in almost everywhere.  */
 void
-init_pragma ()
+c_register_pragma (const char *space, const char *name,
+		   void (*handler) (struct cpp_reader *))
+{
+  cpp_register_pragma (parse_in, space, name, handler);
+}
+
+/* Set up front-end pragmas.  */
+void
+init_pragma (void)
 {
 #ifdef HANDLE_PRAGMA_PACK
-  cpp_register_pragma (parse_in, 0, "pack", handle_pragma_pack);
+  c_register_pragma (0, "pack", handle_pragma_pack);
 #endif
 #ifdef HANDLE_PRAGMA_WEAK
-  cpp_register_pragma (parse_in, 0, "weak", handle_pragma_weak);
-  ggc_add_tree_root (&pending_weaks, 1);
+  c_register_pragma (0, "weak", handle_pragma_weak);
 #endif
 #ifdef HANDLE_PRAGMA_REDEFINE_EXTNAME
-  cpp_register_pragma (parse_in, 0, "redefine_extname",
-		       handle_pragma_redefine_extname);
-  ggc_add_tree_root (&pending_redefine_extname, 1);
+  c_register_pragma (0, "redefine_extname", handle_pragma_redefine_extname);
 #endif
 #ifdef HANDLE_PRAGMA_EXTERN_PREFIX
-  cpp_register_pragma (parse_in, 0, "extern_prefix",
-		       handle_pragma_extern_prefix);
-  ggc_add_tree_root (&pragma_extern_prefix, 1);
+  c_register_pragma (0, "extern_prefix", handle_pragma_extern_prefix);
 #endif
 
 #ifdef REGISTER_TARGET_PRAGMAS
-  REGISTER_TARGET_PRAGMAS (parse_in);
-#endif
-
-#ifdef HANDLE_PRAGMA_PACK_PUSH_POP
-  ggc_add_root (&alignment_stack, 1, sizeof(alignment_stack),
-		mark_align_stack);
+  REGISTER_TARGET_PRAGMAS ();
 #endif
 }
+
+#include "gt-c-pragma.h"

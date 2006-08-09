@@ -1,39 +1,34 @@
 /* Configuration for an i386 running MS-DOS with DJGPP.
-   Copyright (C) 1997, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2004
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "dbxcoff.h"
-
 /* Support generation of DWARF2 debugging info.  */
-#define DWARF2_DEBUGGING_INFO
+#define DWARF2_DEBUGGING_INFO 1
 
 /* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
-#define HANDLE_SYSV_PRAGMA
+#define HANDLE_SYSV_PRAGMA 1
 
 /* Enable parsing of #pragma pack(push,<n>) and #pragma pack(pop).  */
 #define HANDLE_PRAGMA_PACK_PUSH_POP 1
-
-#define YES_UNDERSCORES
-
-#include "i386/gas.h"
 
 /* If defined, a C expression whose value is a string containing the
    assembler operation to identify the following data as
@@ -62,9 +57,9 @@ Boston, MA 02111-1307, USA.  */
 #undef TEXT_SECTION_ASM_OP
 #define TEXT_SECTION_ASM_OP "\t.section .text"
 
-/* Define standard DJGPP installation paths.                             */
+/* Define standard DJGPP installation paths.  */
 /* We override default /usr or /usr/local part with /dev/env/DJDIR which */
-/* points to actual DJGPP instalation directory.                         */
+/* points to actual DJGPP installation directory.  */
 
 /* Standard include directory */
 #undef STANDARD_INCLUDE_DIR
@@ -83,13 +78,18 @@ Boston, MA 02111-1307, USA.  */
         (((NAME)[0] == '/') || ((NAME)[0] == '\\') || \
         (((NAME)[0] >= 'A') && ((NAME)[0] <= 'z') && ((NAME)[1] == ':')))
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__MSDOS__ -D__GO32__ -Asystem=msdos"
+#define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+	builtin_define_std ("MSDOS");		\
+	builtin_define_std ("GO32");		\
+	builtin_assert ("system=msdos");	\
+    }						\
+  while (0)
 
 /* Include <sys/version.h> so __DJGPP__ and __DJGPP_MINOR__ are defined.  */
 #undef CPP_SPEC
-#define CPP_SPEC "-remap %(cpp_cpu) %{posix:-D_POSIX_SOURCE} \
-  %{!ansi:%{!std=c*:%{!std=i*:-DMSDOS}}} %{!ansi:%{!std=c*:%{!std=i*:-DGO32}}} \
+#define CPP_SPEC "-remap %{posix:-D_POSIX_SOURCE} \
   -imacros %s../include/sys/version.h"
 
 /* We need to override link_command_spec in gcc.c so support -Tdjgpp.djl.
@@ -126,15 +126,6 @@ Boston, MA 02111-1307, USA.  */
 /* Switch into a generic section.  */
 #define TARGET_ASM_NAMED_SECTION  default_coff_asm_named_section
 
-/* Output at beginning of assembler file.  */
-/* The .file command should always begin the output.  */
-
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE)						\
-  do {									\
-	output_file_directive (FILE, main_input_filename);		\
-  } while (0)
-
 /* This is how to output an assembler line
    that says to advance the location counter
    to a multiple of 2**LOG bytes.  */
@@ -160,9 +151,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* Definitions for types and sizes. Wide characters are 16-bits long so
    Win32 compiler add-ons will be wide character compatible.  */
-#undef WCHAR_UNSIGNED
-#define WCHAR_UNSIGNED 1
-
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 16
 
@@ -186,6 +174,8 @@ Boston, MA 02111-1307, USA.  */
 #undef MASK_BNU210
 #define MASK_BNU210 (0x40000000)
 
+#define TARGET_VERSION fprintf (stderr, " (80386, MS-DOS DJGPP)"); 
+
 #undef SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES \
   { "no-bnu210", -MASK_BNU210, "Ignored (obsolete)" }, \
@@ -206,37 +196,3 @@ while (0)
 /* Support for C++ templates.  */
 #undef MAKE_DECL_ONE_ONLY
 #define MAKE_DECL_ONE_ONLY(DECL) (DECL_WEAK (DECL) = 1)
-
-#undef UNIQUE_SECTION
-#define UNIQUE_SECTION(DECL,RELOC)				\
-do {								\
-  int len;							\
-  const char *name, *prefix;					\
-  char *string;							\
-								\
-  name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (DECL));	\
-  /* Strip off any encoding in fnname.  */                      \
-  STRIP_NAME_ENCODING (name, name);                             \
-								\
-  if (! DECL_ONE_ONLY (DECL))					\
-    {								\
-      if (TREE_CODE (DECL) == FUNCTION_DECL)			\
-	prefix = ".text.";					\
-      else if (DECL_READONLY_SECTION (DECL, RELOC))		\
-	prefix = ".rodata.";					\
-      else							\
-	prefix = ".data.";					\
-    }								\
-  else if (TREE_CODE (DECL) == FUNCTION_DECL)			\
-    prefix = ".gnu.linkonce.t.";				\
-  else if (DECL_READONLY_SECTION (DECL, RELOC))			\
-    prefix = ".gnu.linkonce.r.";				\
-  else								\
-    prefix = ".gnu.linkonce.d.";				\
-								\
-  len = strlen (name) + strlen (prefix);			\
-  string = alloca (len + 1);					\
-  sprintf (string, "%s%s", prefix, name);			\
-								\
-  DECL_SECTION_NAME (DECL) = build_string (len, string);	\
-} while (0)

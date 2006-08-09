@@ -1,0 +1,78 @@
+2005-11-30  Release Manager
+
+	* GCC 3.4.5 released.
+
+2005-05-19  Release Manager
+
+	* GCC 3.4.4 released.
+
+2004-11-04  Release Manager
+
+	* GCC 3.4.3 released.
+
+2004-09-06  Release Manager
+
+	* GCC 3.4.2 released.
+
+2004-07-01  Release Manager
+
+	* GCC 3.4.1 released.
+
+2004-04-18  Release Manager
+
+	* GCC 3.4.0 released.
+
+2004-04-16  Mark Mitchell  <mark@codesourcery.com>
+
+	* plural.c: Regenerated.
+
+2004-04-07  Joe Buck <jbuck@welsh-buck.org>
+
+	* plural.y: don't assume that the inline keyword can be used.
+	* gettextP.h: likewise.
+
+2003-07-07  Zack Weinberg  <zack@codesourcery.com>
+
+	* README: Update.
+	* Makefile.in (INSTALL, INSTALL_DATA, MKINSTALLDIRS,
+	mkinstalldirs, gettextsrcdir, l): Delete.
+	(COMPILE): Add $(DEFS-$@), remove $(XCFLAGS).
+	(HEADERS): libgnuintl.h not libgnuintl.h.in.  Remove os2compat.h.
+	(SOURCES): Remove os2compat.c.
+	(DEFS-dcigettext.o, DEFS-localealias.o, DEFS-localcharset.o,
+	DEFS-relocatable.o): New.
+	(all-yes): Add config.intl.
+	(libintl.h): Use cp, not cat.
+	(INCLUDES): Remove -I..
+	(TAGS, CTAGS, ID): Word wrap.
+	(mostlyclean, distclean): Remove junk.
+	(config.intl): New rule.
+	* aclocal.m4: sinclude ../config/progtest.m4 instead of
+	including it inline.
+	* config.intl.in: New file.
+	* configure.in: Take out unnecessary AC_CONFIG_AUX_DIR.
+	Take out AC_DEFINEs for LOCALEDIR, LOCALE_ALIAS_PATH,
+	LIBDIR, INSTALLDIR.  Set LIBINTL_DEP and INCINTL and AC_SUBST
+	them.  Add config.intl to AC_OUTPUT.
+	* os2compat.c, os2compat.h: Delete, unused.
+
+2003-07-04  Zack Weinberg  <zack@codesourcery.com>
+
+	* Makefile.in: Remove unnecessary capabilities for
+	installation, build of shared libraries, generation of
+	distribution tarballs, etc.  Fix all the places that rely on
+	the parent directory.  Don't generate libgnuintl.h from
+	anything; do generate $(objdir)/libintl.h from libgnuintl.h if
+	necessary.  Adjust DEFS for use of config.h.
+	* libgnuintl.h.in: Rename libgnuintl.h.
+	* README: New file.
+	* config.charset, ref-add.sin, ref-del.sin: Delete (unused).
+	* COPYING.LIB-2.0, COPYING.LIB-2.1: Delete (redundant).
+	* aclocal.m4: New; generated per instructions in gettext manual.
+	* configure.in: New; written from scratch for this configuration.
+	* configure, config.h.in: Generated.
+
+2003-05-22  GNU  <bug-gnu-gettext@gnu.org>
+
+	* Version 0.12.1 released.
+

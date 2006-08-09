@@ -1,9 +1,9 @@
 /* Subroutines for long double support.
-   Copyright (C) 2000 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
@@ -17,13 +17,13 @@ do apply in other respects; for example, they cover modification of
 the file, and distribution when not linked into a combine
 executable.)
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -42,6 +42,7 @@ long double _U_Qfneg (long double);
 int __U_Qfcnvfxt_quad_to_sgl (long double);
 #endif
 unsigned int _U_Qfcnvfxt_quad_to_usgl(long double);
+unsigned long long _U_Qfcnvfxt_quad_to_udbl(long double);
 
 int
 _U_Qfeq (long double a, long double b)
@@ -113,4 +114,20 @@ _U_Qfcnvfxt_quad_to_usgl(long double a)
 {
   extern long long _U_Qfcnvfxt_quad_to_dbl (long double a);
   return (unsigned int) _U_Qfcnvfxt_quad_to_dbl (a);
+}
+
+/* HP only has signed conversion in library, so need to synthesize an
+   unsigned version */
+typedef union {
+    long long unsigned int u[2];
+    long double d[1];
+} quad_type;
+
+unsigned long long
+_U_Qfcnvfxt_quad_to_udbl(long double a)
+{
+  extern quad_type _U_Qfcnvfxt_quad_to_quad (long double a);
+  quad_type u;
+  u = _U_Qfcnvfxt_quad_to_quad(a);
+  return u.u[1];
 }

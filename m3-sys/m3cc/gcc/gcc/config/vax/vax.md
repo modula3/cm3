@@ -2,20 +2,20 @@
 ;; Copyright (C) 1987, 1988, 1991, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
 ;; 2002 Free Software Foundation, Inc.
 
-;; This file is part of GNU CC.
+;; This file is part of GCC.
 
-;; GNU CC is free software; you can redistribute it and/or modify
+;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
-;; GNU CC is distributed in the hope that it will be useful,
+;; GCC is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU CC; see the file COPYING.  If not, write to
+;; along with GCC; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
@@ -27,6 +27,15 @@
 ;;-
 ;;- cpp macro #define NOTICE_UPDATE_CC in file tm.h handles condition code
 ;;- updates for most instructions.
+
+;; UNSPEC_VOLATILE usage:
+
+(define_constants
+  [(VUNSPEC_BLOCKAGE 0)     ; `blockage' insn to prevent scheduling across an
+			    ;   insn in the code.
+   (VUNSPEC_SYNC_ISTREAM 1) ; sequence of insns to sync the I-stream
+  ]
+)
 
 ;; We don't want to allow a constant operand for test insns because
 ;; (set (cc0) (const_int foo)) has no mode information.  Such insns will
@@ -184,9 +193,6 @@
   ""
   "*
 {
-  if (operands[1] == const1_rtx && reg_was_0_p (insn, operands[0]))
-    return \"incl %0\";
-
   if (GET_CODE (operands[1]) == SYMBOL_REF || GET_CODE (operands[1]) == CONST)
     {
       if (push_operand (operands[0], SImode))
@@ -221,9 +227,6 @@
   ""
   "*
 {
-  if (operands[1] == const1_rtx && reg_was_0_p (insn, operands[0]))
-    return \"incw %0\";
-
   if (GET_CODE (operands[1]) == CONST_INT)
     {
       int i = INTVAL (operands[1]);
@@ -266,9 +269,6 @@
   ""
   "*
 {
-  if (operands[1] == const1_rtx && reg_was_0_p (insn, operands[0]))
-    return \"incb %0\";
-
   if (GET_CODE (operands[1]) == CONST_INT)
     {
       int i = INTVAL (operands[1]);
@@ -1798,11 +1798,6 @@
   ""
   "decl %0\;jgequ %l1")
 
-;; Note that operand 1 is total size of args, in bytes,
-;; and what the call insn wants is the number of words.
-;; It is used in the call instruction as a byte, but in the addl2 as
-;; a word.  Since the only time we actually use it in the call instruction
-;; is when it is a constant, SImode (for addl2) is the proper mode.
 (define_expand "call_pop"
   [(parallel [(call (match_operand:QI 0 "memory_operand" "")
 		    (match_operand:SI 1 "const_int_operand" ""))
@@ -1810,12 +1805,15 @@
 		   (plus:SI (reg:SI 14)
 			    (match_operand:SI 3 "immediate_operand" "")))])]
   ""
-  "
 {
-  if (INTVAL (operands[1]) > 255 * 4)
+  if (INTVAL (operands[3]) > 255 * 4 || INTVAL (operands[3]) % 4)
     abort ();
-  operands[1] = GEN_INT ((INTVAL (operands[1]) + 3)/ 4);
-}")
+
+  /* Operand 1 is the number of bytes to be popped by DW_CFA_GNU_args_size
+     during EH unwinding.  We must include the argument count pushed by
+     the calls instruction.  */
+  operands[1] = GEN_INT (INTVAL (operands[3]) + 4);
+})
 
 (define_insn "*call_pop"
   [(call (match_operand:QI 0 "memory_operand" "m")
@@ -1823,7 +1821,10 @@
    (set (reg:SI 14) (plus:SI (reg:SI 14)
 			     (match_operand:SI 2 "immediate_operand" "i")))]
   ""
-  "calls %1,%0")
+{
+  operands[1] = GEN_INT ((INTVAL (operands[1]) - 4) / 4);
+  return "calls %1,%0";
+})
 
 (define_expand "call_value_pop"
   [(parallel [(set (match_operand 0 "" "")
@@ -1833,12 +1834,15 @@
 		   (plus:SI (reg:SI 14)
 			    (match_operand:SI 4 "immediate_operand" "")))])]
   ""
-  "
 {
-  if (INTVAL (operands[2]) > 255 * 4)
-    abort ();      
-  operands[2] = GEN_INT ((INTVAL (operands[2]) + 3)/ 4);
-}")
+  if (INTVAL (operands[4]) > 255 * 4 || INTVAL (operands[4]) % 4)
+    abort ();
+
+  /* Operand 2 is the number of bytes to be popped by DW_CFA_GNU_args_size
+     during EH unwinding.  We must include the argument count pushed by
+     the calls instruction.  */
+  operands[2] = GEN_INT (INTVAL (operands[4]) + 4);
+})
 
 (define_insn "*call_value_pop"
   [(set (match_operand 0 "" "")
@@ -1847,20 +1851,47 @@
    (set (reg:SI 14) (plus:SI (reg:SI 14)
 			     (match_operand:SI 3 "immediate_operand" "i")))]
   ""
-  "calls %2,%1")
+  "*
+{
+  operands[2] = GEN_INT ((INTVAL (operands[2]) - 4) / 4);
+  return \"calls %2,%1\";
+}")
 
-;; Define another set of these for the case of functions with no operands.
-;; These will allow the optimizers to do a slightly better job.
-(define_insn "call"
-  [(call (match_operand:QI 0 "memory_operand" "m")
-	 (const_int 0))]
+(define_expand "call"
+  [(call (match_operand:QI 0 "memory_operand" "")
+      (match_operand:SI 1 "const_int_operand" ""))]
+  ""
+  "
+{
+  /* Operand 1 is the number of bytes to be popped by DW_CFA_GNU_args_size
+     during EH unwinding.  We must include the argument count pushed by
+     the calls instruction.  */
+  operands[1] = GEN_INT (INTVAL (operands[1]) + 4);
+}")
+
+(define_insn "*call"
+   [(call (match_operand:QI 0 "memory_operand" "m")
+       (match_operand:SI 1 "const_int_operand" ""))]
   ""
   "calls $0,%0")
 
-(define_insn "call_value"
+(define_expand "call_value"
+  [(set (match_operand 0 "" "")
+      (call (match_operand:QI 1 "memory_operand" "")
+            (match_operand:SI 2 "const_int_operand" "")))]
+  ""
+  "
+{
+  /* Operand 2 is the number of bytes to be popped by DW_CFA_GNU_args_size
+     during EH unwinding.  We must include the argument count pushed by
+     the calls instruction.  */
+  operands[2] = GEN_INT (INTVAL (operands[2]) + 4);
+}")
+
+(define_insn "*call_value"
   [(set (match_operand 0 "" "")
 	(call (match_operand:QI 1 "memory_operand" "m")
-	      (const_int 0)))]
+	      (match_operand:SI 2 "const_int_operand" "")))]
   ""
   "calls $0,%1")
 
@@ -1897,7 +1928,7 @@
 ;; all of memory.  This blocks insns from being moved across this point.
 
 (define_insn "blockage"
-  [(unspec_volatile [(const_int 0)] 0)]
+  [(unspec_volatile [(const_int 0)] VUNSPEC_BLOCKAGE)]
   ""
   "")
 
@@ -1929,75 +1960,63 @@
   "jmp (%0)")
 
 ;; This is here to accept 5 arguments (as passed by expand_end_case)
-;; and pass the first 4 along to the casesi1 pattern that really does the work.
+;; and pass the first 4 along to the casesi1 pattern that really does
+;; the actual casesi work.  We emit a jump here to the default label
+;; _before_ the casesi so that we can be sure that the casesi never
+;; drops through.
+;; This is suboptimal perhaps, but so is much of the rest of this
+;; machine description.  For what it's worth, HPPA uses the same trick.
+;;
+;; operand 0 is index
+;; operand 1 is the minimum bound (a const_int)
+;; operand 2 is the maximum bound - minimum bound + 1 (also a const_int)
+;; operand 3 is CODE_LABEL for the table;
+;; operand 4 is the CODE_LABEL to go to if index out of range (ie. default).
+;;
+;; We emit:
+;;	i = index - minimum_bound
+;;	if (i > (maximum_bound - minimum_bound + 1) goto default;
+;;	casesi (i, 0, table);
+;;
 (define_expand "casesi"
-  [(set (pc)
-	(if_then_else
-	 (leu (minus:SI (match_operand:SI 0 "general_operand" "")
-			(match_operand:SI 1 "general_operand" ""))
-	      (match_operand:SI 2 "general_operand" ""))
-	 (plus:SI (sign_extend:SI
-		   (mem:HI (plus:SI (mult:SI (minus:SI (match_dup 0)
-						       (match_dup 1))
-					     (const_int 2))
-				    (pc))))
-		  (label_ref:SI (match_operand 3 "" "")))
-	 (pc)))
+  [(match_operand:SI 0 "general_operand" "")
+   (match_operand:SI 1 "general_operand" "")
+   (match_operand:SI 2 "general_operand" "")
+   (match_operand 3 "" "")
    (match_operand 4 "" "")]
   ""
-  "
-  emit_jump_insn (gen_casesi1 (operands[0], operands[1], operands[2], operands[3]));
-  DONE;
-")
-
-(define_insn "casesi1"
-  [(set (pc)
-	(if_then_else
-	 (leu (minus:SI (match_operand:SI 0 "general_operand" "g")
-			(match_operand:SI 1 "general_operand" "g"))
-	      (match_operand:SI 2 "general_operand" "g"))
-	 (plus:SI (sign_extend:SI
-		   (mem:HI (plus:SI (mult:SI (minus:SI (match_dup 0)
-						       (match_dup 1))
-					     (const_int 2))
-				    (pc))))
-		  (label_ref:SI (match_operand 3 "" "")))
-	 (pc)))]
-  ""
-  "casel %0,%1,%2")
-
-;; This can arise by simplification when operand 1 is a constant int.
-(define_insn ""
-  [(set (pc)
-	(if_then_else
-	 (leu (plus:SI (match_operand:SI 0 "general_operand" "g")
-		       (match_operand:SI 1 "const_int_operand" "n"))
-	      (match_operand:SI 2 "general_operand" "g"))
-	 (plus:SI (sign_extend:SI
-		   (mem:HI (plus:SI (mult:SI (plus:SI (match_dup 0)
-						      (match_dup 1))
-					     (const_int 2))
-				    (pc))))
-		  (label_ref:SI (match_operand 3 "" "")))
-	 (pc)))]
-  ""
-  "*
 {
-  operands[1] = GEN_INT (-INTVAL (operands[1]));
-  return \"casel %0,%1,%2\";
-}")
+  /* i = index - minimum_bound;
+     But only if the lower bound is not already zero.  */
+  if (operands[1] != const0_rtx)
+    {
+      rtx index = gen_reg_rtx (SImode);
+      emit_insn (gen_addsi3 (index,
+			     operands[0],
+			     GEN_INT (-INTVAL (operands[1]))));
+      operands[0] = index;
+    }
 
-;; This can arise by simplification when the base for the case insn is zero.
-(define_insn ""
-  [(set (pc)
-	(if_then_else (leu (match_operand:SI 0 "general_operand" "g")
-			   (match_operand:SI 1 "general_operand" "g"))
-		      (plus:SI (sign_extend:SI
-				(mem:HI (plus:SI (mult:SI (match_dup 0)
-							  (const_int 2))
-					(pc))))
-			       (label_ref:SI (match_operand 2 "" "")))
-		      (pc)))]
+  /* if (i > (maximum_bound - minimum_bound + 1) goto default;  */
+  emit_insn (gen_cmpsi (operands[0], operands[2]));
+  emit_jump_insn (gen_bgtu (operands[4]));
+
+  /* casesi (i, 0, table);  */
+  emit_jump_insn (gen_casesi1 (operands[0], operands[2], operands[3]));
+  DONE;
+})
+
+;; This insn is a bit of a lier.  It actually falls through if no case
+;; matches.  But, we prevent that from ever happening by emiting a jump
+;; before this, see the define_expand above.
+(define_insn "casesi1"
+  [(match_operand:SI 1 "const_int_operand" "n")
+   (set (pc)
+	(plus:SI (sign_extend:SI
+		  (mem:HI (plus:SI (mult:SI (match_operand:SI 0 "general_operand" "g")
+					    (const_int 2))
+			  (pc))))
+		 (label_ref:SI (match_operand 2 "" ""))))]
   ""
   "casel %0,$0,%1")
 
@@ -2128,3 +2147,9 @@
     = GEN_INT (INTVAL (operands[3]) & ~((1 << INTVAL (operands[2])) - 1));
   return \"rotl %2,%1,%0\;bicl2 %N3,%0\";
 }")
+
+;; Instruction sequence to sync the VAX instruction stream.
+(define_insn "sync_istream"
+  [(unspec_volatile [(const_int 0)] VUNSPEC_SYNC_ISTREAM)]
+  ""
+  "movpsl -(%|sp)\;pushal 1(%|pc)\;rei")

@@ -1,29 +1,38 @@
 /* Definitions of target machine for GNU compiler,
    for m68k (including m68010) NetBSD platforms using the
    ELF object format.
-   Copyright (C) 2002 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004 Free Software Foundation, Inc.
    Contributed by Wasabi Systems. Inc.
 
    This file is derived from <m68k/m68kv4.h>, <m68k/m68kelf.h>,
    and <m68k/linux.h>.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+      NETBSD_OS_CPP_BUILTINS_ELF();		\
+      builtin_define ("__m68k__");		\
+      builtin_define ("__SVR4_ABI__");		\
+      builtin_define ("__motorola__");		\
+    }						\
+  while (0)
 
 /* Default target comes from config.gcc */
 #undef TARGET_DEFAULT
@@ -31,14 +40,10 @@ Boston, MA 02111-1307, USA.  */
 
 
 /* Don't try using XFmode on the 68010.  */ 
-#if TARGET_DEFAULT == 0
 #undef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE 64
-
-/* Use software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion.  */
-#define REAL_ARITHMETIC
-#endif
+#define LONG_DOUBLE_TYPE_SIZE			\
+  ((TARGET_68020 || TARGET_68040 || TARGET_68040_ONLY || \
+    TARGET_68060) ? 96 : 64)
 
 #ifdef __mc68010__
 #define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 64
@@ -50,7 +55,9 @@ Boston, MA 02111-1307, USA.  */
   { "cpp_cpu_default_spec", CPP_CPU_DEFAULT_SPEC }, \
   { "cpp_cpu_spec",         CPP_CPU_SPEC }, \
   { "cpp_fpu_spec",         CPP_FPU_SPEC }, \
-  { "asm_default_spec",     ASM_DEFAULT_SPEC },
+  { "asm_default_spec",     ASM_DEFAULT_SPEC }, \
+  { "netbsd_cpp_spec",      NETBSD_CPP_SPEC }, \
+  { "netbsd_entry_point",   NETBSD_ENTRY_POINT },
 
 
 #define CPP_CPU_SPEC \
@@ -86,7 +93,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef CPP_SPEC
 #define CPP_SPEC \
-  "%{posix:-D_POSIX_SOURCE} %(cpp_cpu_spec) %(cpp_fpu_spec)"
+  "%(netbsd_cpp_spec) %(cpp_cpu_spec) %(cpp_fpu_spec)"
 
 
 /* Provide an ASM_SPEC appropriate for NetBSD m68k ELF targets.  We pass
@@ -94,38 +101,18 @@ Boston, MA 02111-1307, USA.  */
 
 #undef ASM_SPEC
 #define ASM_SPEC \
-  " %| %(asm_default_spec) \
+  "%(asm_default_spec) \
     %{m68010} %{m68020} %{m68030} %{m68040} %{m68060} \
-    %{fpic:-k} %{fPIC:-k -K}"
+    %{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
 
+#define AS_NEEDS_DASH_FOR_PIPED_INPUT
 
-/* Provide a set of CPP pre-definitions and pre-assertions appropriate
-   for NetBSD m68k ELF targets (using the SVR4 ABI).  */
-
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES \
-  "-D__NetBSD__ -D__ELF__ -D__m68k__ -D__SVR4_ABI__ -D__motorola__ \
-   -Asystem=unix -Asystem=NetBSD -Acpu=m68k -Amachine=m68k"
-
-
-/* Provide a LINK_SPEC appropriate for a NetBSD/m68k ELF target.
-   This is a copy of LINK_SPEC from <netbsd-elf.h> tweaked for
-   the m68k target.  */
+/* Provide a LINK_SPEC appropriate for a NetBSD/m68k ELF target.  */
 
 #undef LINK_SPEC
-#define LINK_SPEC							\
-  "%{assert*} %{R*}							\
-   %{shared:-shared}							\
-   %{!shared:								\
-     -dc -dp								\
-     %{!nostdlib:							\
-       %{!r*:								\
-	 %{!e*:-e _start}}}						\
-     %{!static:								\
-       %{rdynamic:-export-dynamic}					\
-       %{!dynamic-linker:-dynamic-linker /usr/libexec/ld.elf_so}}	\
-     %{static:-static}}"
+#define LINK_SPEC NETBSD_LINK_SPEC_ELF
 
+#define NETBSD_ENTRY_POINT "_start"
 
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function only.  */
@@ -155,9 +142,6 @@ while (0)
 /* XXX
    Here is a bunch of stuff lifted from m68kelf.h.  We don't use that
    file directly, because it has a lot of baggage we don't want.  */
-
-#define MOTOROLA	/* Use Motorola syntax */
-#define USE_GAS		/* But GAS wants jbsr instead of jsr */
 
 
 /* The prefix for register names.  Note that REGISTER_NAMES
@@ -198,25 +182,10 @@ while (0)
 
 #undef REGISTER_NAMES
 
-#ifndef SUPPORT_SUN_FPA
-
 #define REGISTER_NAMES							\
 {"%d0",   "%d1",   "%d2",   "%d3",   "%d4",   "%d5",   "%d6",   "%d7",	\
  "%a0",   "%a1",   "%a2",   "%a3",   "%a4",   "%a5",   "%fp",   "%sp",	\
- "%fp0",  "%fp1",  "%fp2",  "%fp3",  "%fp4",  "%fp5",  "%fp6",  "%fp7" }
-
-#else /* SUPPORT_SUN_FPA */
-
-#define REGISTER_NAMES							\
-{"%d0",   "%d1",   "%d2",   "%d3",   "%d4",   "%d5",   "%d6",   "%d7",	\
- "%a0",   "%a1",   "%a2",   "%a3",   "%a4",   "%a5",   "%fp",   "%sp",	\
- "%fp0",  "%fp1",  "%fp2",  "%fp3",  "%fp4",  "%fp5",  "%fp6",  "%fp7",	\
- "%fpa0", "%fpa1", "%fpa2", "%fpa3", "%fpa4", "%fpa5", "%fpa6","%fpa7",	\
- "%fpa8", "%fpa9", "%fpa10","%fpa11","%fpa12","%fpa13","%fpa14","%fpa15", \
- "%fpa16","%fpa17","%fpa18","%fpa19","%fpa20","%fpa21","%fpa22","%fpa23", \
- "%fpa24","%fpa25","%fpa26","%fpa27","%fpa28","%fpa29","%fpa30","%fpa31" }
-
-#endif /* ! SUPPORT_SUN_FPA */
+ "%fp0",  "%fp1",  "%fp2",  "%fp3",  "%fp4",  "%fp5",  "%fp6",  "%fp7", "argptr" }
 
 
 /* Currently, JUMP_TABLES_IN_TEXT_SECTION must be defined in order to
@@ -230,7 +199,7 @@ while (0)
 #undef ASM_OUTPUT_CASE_LABEL
 #define ASM_RETURN_CASE_JUMP				\
   do {							\
-    if (TARGET_5200)					\
+    if (TARGET_COLDFIRE)				\
       {							\
 	if (ADDRESS_REG_P (operands[0]))		\
 	  return "jmp %%pc@(2,%0:l)";			\
@@ -280,24 +249,13 @@ while (0)
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)			\
 ( fputs (".comm ", (FILE)),						\
   assemble_name ((FILE), (NAME)),					\
-  fprintf ((FILE), ",%u\n", (SIZE)))
+  fprintf ((FILE), ",%u\n", (int)(SIZE)))
 
 #undef ASM_OUTPUT_LOCAL
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)			\
 ( fputs (".lcomm ", (FILE)),						\
   assemble_name ((FILE), (NAME)),					\
-  fprintf ((FILE), ",%u\n", (SIZE)))
-
-
-/* Turn off function cse if we are doing PIC. We always want function
-   call to be done as `bsr foo@PLTPC', so it will force the assembler
-   to create the PLT entry for `foo'.  Doing function cse will cause
-   the address of `foo' to be loaded into a register, which is exactly
-   what we want to avoid when we are doing PIC on svr4 m68k.  */
-
-#undef SUBTARGET_OVERRIDE_OPTIONS
-#define SUBTARGET_OVERRIDE_OPTIONS					\
-  if (flag_pic) flag_no_function_cse = 1;
+  fprintf ((FILE), ",%u\n", (int)(SIZE)))
 
 
 /* XXX
@@ -422,20 +380,6 @@ while (0)
 #define BIGGEST_ALIGNMENT 64
 
 
-/* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is
-   an operand of a function call. */
-
-#undef LEGITIMATE_PIC_OPERAND_P
-#define LEGITIMATE_PIC_OPERAND_P(X)					\
-  ((! symbolic_operand (X, VOIDmode)					\
-    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X)	\
-	  && GET_CODE (mem_for_const_double (X)) == MEM			\
-	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
-			       VOIDmode)))				\
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))		\
-   || PCREL_GENERAL_OPERAND_OK)
-
-
 /* For m68k SVR4, structures are returned using the reentrant
    technique. */
 
@@ -447,36 +391,6 @@ while (0)
 
 #undef DEFAULT_PCC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 1
-
-
-/* Output code to add DELTA to the first argument, and then jump to FUNCTION.
-   Used for C++ multiple inheritance.  */
-
-#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION)	\
-do									\
-  {									\
-    if (DELTA > 0 && DELTA <= 8)					\
-      asm_fprintf (FILE, "\taddq.l %I%d,4(%Rsp)\n", DELTA);		\
-    else if (DELTA < 0 && DELTA >= -8)					\
-      asm_fprintf (FILE, "\tsubq.l %I%d,4(%Rsp)\n", -DELTA);		\
-    else								\
-      asm_fprintf (FILE, "\tadd.l %I%d,4(%Rsp)\n", DELTA);		\
-									\
-    if (flag_pic)							\
-      {									\
-	fprintf (FILE, "\tbra.l ");					\
-	assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));	\
-	fprintf (FILE, "@PLTPC\n");					\
-      }									\
-    else								\
-      {									\
-	fprintf (FILE, "\tjmp ");					\
-	assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));	\
-	fprintf (FILE, "\n");						\
-      }									\
-  }									\
-while (0)
-
 
 /* Output assembler code for a block containing the constant parts
    of a trampoline, leaving space for the variable parts.  */

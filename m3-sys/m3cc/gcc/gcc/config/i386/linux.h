@@ -4,42 +4,37 @@
    Contributed by Eric Youngdale.
    Modified for stabs-in-ELF by H.J. Lu.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#define LINUX_DEFAULT_ELF
-
 /* Output at beginning of assembler file.  */
 /* The .file command should always begin the output.  */
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE)						\
-  do {									\
-	output_file_directive (FILE, main_input_filename);		\
-	if (ix86_asm_dialect == ASM_INTEL)				\
-	  fputs ("\t.intel_syntax\n", FILE);				\
-  } while (0)
+#define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
 
-#undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 Linux/ELF)");
 
 /* The svr4 ABI for the i386 says that records and unions are returned
    in memory.  */
 #undef DEFAULT_PCC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 1
+
+/* We arrange for the whole %gs segment to map the tls area.  */
+#undef TARGET_TLS_DIRECT_SEG_REFS_DEFAULT
+#define TARGET_TLS_DIRECT_SEG_REFS_DEFAULT MASK_TLS_DIRECT_SEG_REFS
 
 #undef ASM_COMMENT_START
 #define ASM_COMMENT_START "#"
@@ -52,25 +47,16 @@ Boston, MA 02111-1307, USA.  */
    To the best of my knowledge, no Linux libc has required the label
    argument to mcount.  */
 
-#define NO_PROFILE_COUNTERS
+#define NO_PROFILE_COUNTERS	1
 
-#undef FUNCTION_PROFILER
-#define FUNCTION_PROFILER(FILE, LABELNO)  \
-{									\
-  if (flag_pic)								\
-    fprintf (FILE, "\tcall\t*mcount@GOT(%%ebx)\n");			\
-  else									\
-    fprintf (FILE, "\tcall\tmcount\n");					\
-}
+#undef MCOUNT_NAME
+#define MCOUNT_NAME "mcount"
 
-/* True if it is possible to profile code that does not have a frame
-   pointer.  
-
-   The GLIBC version of mcount for the x86 assumes that there is a
+/* The GLIBC version of mcount for the x86 assumes that there is a
    frame, so we cannot allow profiling without a frame pointer.  */
 
-#undef TARGET_ALLOWS_PROFILING_WITHOUT_FRAME_POINTER
-#define TARGET_ALLOWS_PROFILING_WITHOUT_FRAME_POINTER false
+#undef SUBTARGET_FRAME_POINTER_REQUIRED
+#define SUBTARGET_FRAME_POINTER_REQUIRED current_function_profile
 
 #undef SIZE_TYPE
 #define SIZE_TYPE "unsigned int"
@@ -84,14 +70,23 @@ Boston, MA 02111-1307, USA.  */
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
     
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__ELF__ -Dunix -D__gnu_linux__ -Dlinux -Asystem=posix"
+#define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+	LINUX_TARGET_OS_CPP_BUILTINS();		\
+	if (flag_pic)				\
+	  {					\
+	    builtin_define ("__PIC__");		\
+	    builtin_define ("__pic__");		\
+	  }					\
+    }						\
+  while (0)
 
 #undef CPP_SPEC
 #ifdef USE_GNULIBC_1
-#define CPP_SPEC "%(cpp_cpu) %{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{posix:-D_POSIX_SOURCE}"
+#define CPP_SPEC "%{posix:-D_POSIX_SOURCE}"
 #else
-#define CPP_SPEC "%(cpp_cpu) %{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
+#define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
 #endif
 
 #undef CC1_SPEC
@@ -115,15 +110,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef	LINK_SPEC
 #ifdef USE_GNULIBC_1
-#ifndef LINUX_DEFAULT_ELF
-#define LINK_SPEC "-m elf_i386 %{shared:-shared} \
-  %{!shared: \
-    %{!ibcs: \
-      %{!static: \
-	%{rdynamic:-export-dynamic} \
-	%{!dynamic-linker:-dynamic-linker /lib/elf/ld-linux.so.1} \
-	%{!rpath:-rpath /lib/elf/}} %{static:-static}}}"
-#else
 #define LINK_SPEC "-m elf_i386 %{shared:-shared} \
   %{!shared: \
     %{!ibcs: \
@@ -131,7 +117,6 @@ Boston, MA 02111-1307, USA.  */
 	%{rdynamic:-export-dynamic} \
 	%{!dynamic-linker:-dynamic-linker /lib/ld-linux.so.1}} \
 	%{static:-static}}}"
-#endif
 #else
 #define LINK_SPEC "-m elf_i386 %{shared:-shared} \
   %{!shared: \
@@ -217,15 +202,20 @@ Boston, MA 02111-1307, USA.  */
 	   : "=d"(BASE))
 #endif
 
-/* Do code reading to identify a signal frame, and set the frame
-   state data appropriately.  See unwind-dw2.c for the structs.  
-   Don't use this at all if inhibit_libc is used.  */
+#undef NEED_INDICATE_EXEC_STACK
+#define NEED_INDICATE_EXEC_STACK 1
 
-#ifndef inhibit_libc
+/* Do code reading to identify a signal frame, and set the frame
+   state data appropriately.  See unwind-dw2.c for the structs.  */
+
 #ifdef IN_LIBGCC2
+/* There's no sys/ucontext.h for some (all?) libc1, so no
+   signal-turned-exceptions for them.  There's also no configure-run for
+   the target, so we can't check on (e.g.) HAVE_SYS_UCONTEXT_H.  Using the
+   target libc1 macro should be enough.  */
+#if !(defined (USE_GNULIBC_1) || (__GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 #include <signal.h>
 #include <sys/ucontext.h>
-#endif
 
 #define MD_FALLBACK_FRAME_STATE_FOR(CONTEXT, FS, SUCCESS)		\
   do {									\
@@ -280,4 +270,5 @@ Boston, MA 02111-1307, USA.  */
     (FS)->retaddr_column = 8;						\
     goto SUCCESS;							\
   } while (0)
-#endif /* ifndef inhibit_libc  */
+#endif /* not USE_GNULIBC_1 */
+#endif /* IN_LIBGCC2 */

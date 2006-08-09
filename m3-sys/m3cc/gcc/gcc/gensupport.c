@@ -1,5 +1,6 @@
 /* Support routines for the various generation passes.
-   Copyright (C) 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
    This file is part of GCC.
 
@@ -18,22 +19,24 @@
    Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    02111-1307, USA.  */
 
-#include "hconfig.h"
+#include "bconfig.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "obstack.h"
 #include "errors.h"
+#include "hashtab.h"
 #include "gensupport.h"
 
 
 /* In case some macros used by files we include need it, define this here.  */
 int target_flags;
 
+int insn_elision = 1;
+
 static struct obstack obstack;
 struct obstack *rtl_obstack = &obstack;
-
-#define obstack_chunk_alloc xmalloc
-#define obstack_chunk_free free
 
 static int sequence_num;
 static int errors;
@@ -41,6 +44,8 @@ static int errors;
 static int predicable_default;
 static const char *predicable_true;
 static const char *predicable_false;
+
+static htab_t condition_table;
 
 static char *base_dir = NULL;
 
@@ -50,6 +55,7 @@ static char *base_dir = NULL;
 struct queue_elem
 {
   rtx data;
+  const char *filename;
   int lineno;
   struct queue_elem *next;
 };
@@ -63,7 +69,8 @@ static struct queue_elem **define_cond_exec_tail = &define_cond_exec_queue;
 static struct queue_elem *other_queue;
 static struct queue_elem **other_tail = &other_queue;
 
-static void queue_pattern PARAMS ((rtx, struct queue_elem ***, int));
+static void queue_pattern (rtx, struct queue_elem ***,
+			   const char *, int);
 
 /* Current maximum length of directory names in the search path
    for include files.  (Altered as we get more of them.)  */
@@ -76,52 +83,50 @@ struct file_name_list
     const char *fname;
   };
 
-struct file_name_list *include = 0;     /* First dir to search */
+struct file_name_list *first_dir_md_include = 0;  /* First dir to search */
         /* First dir to search for <file> */
 struct file_name_list *first_bracket_include = 0;
-struct file_name_list *last_include = 0;        /* Last in chain */
+struct file_name_list *last_dir_md_include = 0;        /* Last in chain */
 
-static void remove_constraints PARAMS ((rtx));
-static void process_rtx PARAMS ((rtx, int));
+static void remove_constraints (rtx);
+static void process_rtx (rtx, int);
 
-static int is_predicable PARAMS ((struct queue_elem *));
-static void identify_predicable_attribute PARAMS ((void));
-static int n_alternatives PARAMS ((const char *));
-static void collect_insn_data PARAMS ((rtx, int *, int *));
-static rtx alter_predicate_for_insn PARAMS ((rtx, int, int, int));
-static const char *alter_test_for_insn PARAMS ((struct queue_elem *,
-						struct queue_elem *));
-static char *shift_output_template PARAMS ((char *, const char *, int));
-static const char *alter_output_for_insn PARAMS ((struct queue_elem *,
-						  struct queue_elem *,
-						  int, int));
-static void process_one_cond_exec PARAMS ((struct queue_elem *));
-static void process_define_cond_exec PARAMS ((void));
-static int process_include PARAMS ((rtx, int));
-static char *save_string PARAMS ((const char *, int));
-static int init_include_reader PARAMS ((FILE  *));
+static int is_predicable (struct queue_elem *);
+static void identify_predicable_attribute (void);
+static int n_alternatives (const char *);
+static void collect_insn_data (rtx, int *, int *);
+static rtx alter_predicate_for_insn (rtx, int, int, int);
+static const char *alter_test_for_insn (struct queue_elem *,
+					struct queue_elem *);
+static char *shift_output_template (char *, const char *, int);
+static const char *alter_output_for_insn (struct queue_elem *,
+					  struct queue_elem *,
+					  int, int);
+static void process_one_cond_exec (struct queue_elem *);
+static void process_define_cond_exec (void);
+static void process_include (rtx, int);
+static char *save_string (const char *, int);
 
 void
-message_with_line VPARAMS ((int lineno, const char *msg, ...))
+message_with_line (int lineno, const char *msg, ...)
 {
-  VA_OPEN (ap, msg);
-  VA_FIXEDARG (ap, int, lineno);
-  VA_FIXEDARG (ap, const char *, msg);
+  va_list ap;
+
+  va_start (ap, msg);
 
   fprintf (stderr, "%s:%d: ", read_rtx_filename, lineno);
   vfprintf (stderr, msg, ap);
   fputc ('\n', stderr);
 
-  VA_CLOSE (ap);
+  va_end (ap);
 }
 
 /* Make a version of gen_rtx_CONST_INT so that GEN_INT can be used in
    the gensupport programs.  */
 
 rtx
-gen_rtx_CONST_INT (mode, arg)
-     enum machine_mode mode ATTRIBUTE_UNUSED;
-     HOST_WIDE_INT arg;
+gen_rtx_CONST_INT (enum machine_mode mode ATTRIBUTE_UNUSED,
+		   HOST_WIDE_INT arg)
 {
   rtx rt = rtx_alloc (CONST_INT);
 
@@ -132,13 +137,12 @@ gen_rtx_CONST_INT (mode, arg)
 /* Queue PATTERN on LIST_TAIL.  */
 
 static void
-queue_pattern (pattern, list_tail, lineno)
-     rtx pattern;
-     struct queue_elem ***list_tail;
-     int lineno;
+queue_pattern (rtx pattern, struct queue_elem ***list_tail,
+	       const char *filename, int lineno)
 {
-  struct queue_elem *e = (struct queue_elem *) xmalloc (sizeof (*e));
+  struct queue_elem *e = xmalloc (sizeof (*e));
   e->data = pattern;
+  e->filename = filename;
   e->lineno = lineno;
   e->next = NULL;
   **list_tail = e;
@@ -148,8 +152,7 @@ queue_pattern (pattern, list_tail, lineno)
 /* Recursively remove constraints from an rtx.  */
 
 static void
-remove_constraints (part)
-     rtx part;
+remove_constraints (rtx part)
 {
   int i, j;
   const char *format_ptr;
@@ -179,172 +182,104 @@ remove_constraints (part)
       }
 }
 
-/* The entry point for initializing the reader.  */
+/* Process an include file assuming that it lives in gcc/config/{target}/
+   if the include looks like (include "file").  */
 
-static int
-init_include_reader (inf)
-     FILE *inf;
+static void
+process_include (rtx desc, int lineno)
 {
-  int c;
+  const char *filename = XSTR (desc, 0);
+  const char *old_filename;
+  int old_lineno;
+  char *pathname;
+  FILE *input_file;
 
-  errors = 0;
+  /* If specified file name is absolute, skip the include stack.  */
+  if (! IS_ABSOLUTE_PATH (filename))
+    {
+      struct file_name_list *stackp;
+
+      /* Search directory path, trying to open the file.  */
+      for (stackp = first_dir_md_include; stackp; stackp = stackp->next)
+	{
+	  static const char sep[2] = { DIR_SEPARATOR, '\0' };
+
+	  pathname = concat (stackp->fname, sep, filename, NULL);
+	  input_file = fopen (pathname, "r");
+	  if (input_file != NULL)
+	    goto success;
+	  free (pathname);
+	}
+    }
+
+  if (base_dir)
+    pathname = concat (base_dir, filename, NULL);
+  else
+    pathname = xstrdup (filename);
+  input_file = fopen (pathname, "r");
+  if (input_file == NULL)
+    {
+      free (pathname);
+      message_with_line (lineno, "include file `%s' not found", filename);
+      errors = 1;
+      return;
+    }
+ success:
+
+  /* Save old cursor; setup new for the new file.  Note that "lineno" the
+     argument to this function is the beginning of the include statement,
+     while read_rtx_lineno has already been advanced.  */
+  old_filename = read_rtx_filename;
+  old_lineno = read_rtx_lineno;
+  read_rtx_filename = pathname;
+  read_rtx_lineno = 1;
 
   /* Read the entire file.  */
   while (1)
     {
       rtx desc;
-      int lineno;
+      int c;
 
-      c = read_skip_spaces (inf);
+      c = read_skip_spaces (input_file);
       if (c == EOF)
 	break;
 
-      ungetc (c, inf);
+      ungetc (c, input_file);
       lineno = read_rtx_lineno;
-      desc = read_rtx (inf);
+      desc = read_rtx (input_file);
       process_rtx (desc, lineno);
     }
-  fclose (inf);
 
-  /* Process define_cond_exec patterns.  */
-  if (define_cond_exec_queue != NULL)
-    process_define_cond_exec ();
+  /* Do not free pathname.  It is attached to the various rtx queue
+     elements.  */
 
-  return errors ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE;
+  read_rtx_filename = old_filename;
+  read_rtx_lineno = old_lineno;
+
+  fclose (input_file);
 }
 
-/* Process an include file assuming that it lives in gcc/config/{target}/ 
-   if the include looks line (include "file" )  */
-static int
-process_include (desc, lineno)
-     rtx desc;
-     int lineno;
-{
-  const char *filename = XSTR (desc, 0);
-  char *pathname = NULL;
-  FILE *input_file;
-  char *fname = NULL;
-  struct file_name_list *stackp;
-  int flen;
-
-  stackp = include;
-
-  /* If specified file name is absolute, just open it.  */
-  if (IS_ABSOLUTE_PATHNAME (filename) || !stackp)
-    {
-      if (base_dir)
-        {
-          pathname = xmalloc (strlen (base_dir) + strlen (filename) + 1);
-          pathname = strcpy (pathname, base_dir);
-          strcat (pathname, filename);
-          strcat (pathname, "\0");
-	}
-      else
-        {
-	  pathname = xstrdup (filename);
-        }
-      read_rtx_filename = pathname;
-      input_file = fopen (pathname, "r");
-
-      if (input_file == 0)
-	{
-	  perror (pathname);
-	  return FATAL_EXIT_CODE;
-	}
-    }
-  else if (stackp)
-    {
-
-      flen = strlen (filename);
-
-      fname = (char *) xmalloc (max_include_len + flen + 2);
-
-      /* + 2 above for slash and terminating null.  */
-
-      /* Search directory path, trying to open the file.
-         Copy each filename tried into FNAME.  */
-
-      for (; stackp; stackp = stackp->next)
-	{
-	  if (stackp->fname)
-	    {
-	      strcpy (fname, stackp->fname);
-	      strcat (fname, "/");
-	      fname[strlen (fname) + flen] = 0;
-	    }
-	  else
-	    {
-	      fname[0] = 0;
-	    }
-	  strncat (fname, (const char *) filename, flen);
-	  read_rtx_filename = fname;
-	  input_file = fopen (fname, "r");
-	  if (input_file != NULL) 
-	    break;
-	}
-      if (stackp == NULL)
-	{
-	  if (strchr (fname, '/') == NULL || strchr (fname, '\\' ) || base_dir)
-	    {
-	      if (base_dir)
-		{
-		  pathname =
-		    xmalloc (strlen (base_dir) + strlen (filename) + 1);
-		  pathname = strcpy (pathname, base_dir);
-		  strcat (pathname, filename);
-		  strcat (pathname, "\0");
-		}
-	      else
-		pathname = xstrdup (filename);
-	    }
-	  read_rtx_filename = pathname;
-	  input_file = fopen (pathname, "r");
-
-	  if (input_file == 0)
-	    {
-	      perror (filename);
-	      return FATAL_EXIT_CODE;
-	    }
-	}
-
-    }
-
-  if (init_include_reader (input_file) == FATAL_EXIT_CODE)
-    message_with_line (lineno, "read errors found in include file  %s\n", pathname);
-
-  if (fname)
-    free (fname);
-  return SUCCESS_EXIT_CODE;
-}
-
-/* Process a top level rtx in some way, queueing as appropriate.  */
+/* Process a top level rtx in some way, queuing as appropriate.  */
 
 static void
-process_rtx (desc, lineno)
-     rtx desc;
-     int lineno;
+process_rtx (rtx desc, int lineno)
 {
   switch (GET_CODE (desc))
     {
     case DEFINE_INSN:
-      queue_pattern (desc, &define_insn_tail, lineno);
+      queue_pattern (desc, &define_insn_tail, read_rtx_filename, lineno);
       break;
 
     case DEFINE_COND_EXEC:
-      queue_pattern (desc, &define_cond_exec_tail, lineno);
+      queue_pattern (desc, &define_cond_exec_tail, read_rtx_filename, lineno);
       break;
 
     case DEFINE_ATTR:
-      queue_pattern (desc, &define_attr_tail, lineno);
+      queue_pattern (desc, &define_attr_tail, read_rtx_filename, lineno);
       break;
 
     case INCLUDE:
-      if (process_include (desc, lineno) == FATAL_EXIT_CODE)
-	{
-	  const char *filename = XSTR (desc, 0);
-	  message_with_line (lineno, "include file at  %s not found\n",
-			     filename);
-	}
+      process_include (desc, lineno);
       break;
 
     case DEFINE_INSN_AND_SPLIT:
@@ -369,18 +304,7 @@ process_rtx (desc, lineno)
 	   insn condition to create the new split condition.  */
 	split_cond = XSTR (desc, 4);
 	if (split_cond[0] == '&' && split_cond[1] == '&')
-	  {
-	    const char *insn_cond = XSTR (desc, 2);
-	    size_t insn_cond_len = strlen (insn_cond);
-	    size_t split_cond_len = strlen (split_cond);
-	    char *combined;
-
-	    combined = (char *) xmalloc (insn_cond_len + split_cond_len + 1);
-	    memcpy (combined, insn_cond, insn_cond_len);
-	    memcpy (combined + insn_cond_len, split_cond, split_cond_len + 1);
-
-	    split_cond = combined;
-	  }
+	  split_cond = concat (XSTR (desc, 2), split_cond, NULL);
 	XSTR (split, 1) = split_cond;
 	XVEC (split, 2) = XVEC (desc, 5);
 	XSTR (split, 3) = XSTR (desc, 6);
@@ -391,13 +315,13 @@ process_rtx (desc, lineno)
 	XVEC (desc, 4) = attr;
 
 	/* Queue them.  */
-	queue_pattern (desc, &define_insn_tail, lineno);
-	queue_pattern (split, &other_tail, lineno);
+	queue_pattern (desc, &define_insn_tail, read_rtx_filename, lineno);
+	queue_pattern (split, &other_tail, read_rtx_filename, lineno);
 	break;
       }
 
     default:
-      queue_pattern (desc, &other_tail, lineno);
+      queue_pattern (desc, &other_tail, read_rtx_filename, lineno);
       break;
     }
 }
@@ -406,8 +330,7 @@ process_rtx (desc, lineno)
    a DEFINE_INSN.  */
 
 static int
-is_predicable (elem)
-     struct queue_elem *elem;
+is_predicable (struct queue_elem *elem)
 {
   rtvec vec = XVEC (elem->data, 4);
   const char *value;
@@ -495,12 +418,11 @@ is_predicable (elem)
    and its default.  */
 
 static void
-identify_predicable_attribute ()
+identify_predicable_attribute (void)
 {
   struct queue_elem *elem;
   char *p_true, *p_false;
   const char *value;
-  size_t len;
 
   /* Look for the DEFINE_ATTR for `predicable', which must exist.  */
   for (elem = define_attr_queue; elem ; elem = elem->next)
@@ -514,10 +436,7 @@ identify_predicable_attribute ()
 
  found:
   value = XSTR (elem->data, 1);
-  len = strlen (value);
-  p_false = (char *) xmalloc (len + 1);
-  memcpy (p_false, value, len + 1);
-
+  p_false = xstrdup (value);
   p_true = strchr (p_false, ',');
   if (p_true == NULL || strchr (++p_true, ',') != NULL)
     {
@@ -566,8 +485,7 @@ identify_predicable_attribute ()
 /* Return the number of alternatives in constraint S.  */
 
 static int
-n_alternatives (s)
-     const char *s;
+n_alternatives (const char *s)
 {
   int n = 1;
 
@@ -582,9 +500,7 @@ n_alternatives (s)
    operands.  */
 
 static void
-collect_insn_data (pattern, palt, pmax)
-     rtx pattern;
-     int *palt, *pmax;
+collect_insn_data (rtx pattern, int *palt, int *pmax)
 {
   const char *fmt;
   enum rtx_code code;
@@ -596,7 +512,7 @@ collect_insn_data (pattern, palt, pmax)
     case MATCH_OPERAND:
       i = n_alternatives (XSTR (pattern, 2));
       *palt = (i > *palt ? i : *palt);
-      /* FALLTHRU */
+      /* Fall through.  */
 
     case MATCH_OPERATOR:
     case MATCH_SCRATCH:
@@ -624,7 +540,7 @@ collect_insn_data (pattern, palt, pmax)
 	case 'V':
 	  if (XVEC (pattern, i) == NULL)
 	    break;
-	  /* FALLTHRU */
+	  /* Fall through.  */
 	case 'E':
 	  for (j = XVECLEN (pattern, i) - 1; j >= 0; --j)
 	    collect_insn_data (XVECEXP (pattern, i, j), palt, pmax);
@@ -640,9 +556,7 @@ collect_insn_data (pattern, palt, pmax)
 }
 
 static rtx
-alter_predicate_for_insn (pattern, alt, max_op, lineno)
-     rtx pattern;
-     int alt, max_op, lineno;
+alter_predicate_for_insn (rtx pattern, int alt, int max_op, int lineno)
 {
   const char *fmt;
   enum rtx_code code;
@@ -669,7 +583,7 @@ alter_predicate_for_insn (pattern, alt, max_op, lineno)
 	  {
 	    size_t c_len = strlen (c);
 	    size_t len = alt * (c_len + 1);
-	    char *new_c = (char *) xmalloc (len);
+	    char *new_c = xmalloc (len);
 
 	    memcpy (new_c, c, c_len);
 	    for (i = 1; i < alt; ++i)
@@ -681,7 +595,7 @@ alter_predicate_for_insn (pattern, alt, max_op, lineno)
 	    XSTR (pattern, 2) = new_c;
 	  }
       }
-      /* FALLTHRU */
+      /* Fall through.  */
 
     case MATCH_OPERATOR:
     case MATCH_SCRATCH:
@@ -731,12 +645,10 @@ alter_predicate_for_insn (pattern, alt, max_op, lineno)
 }
 
 static const char *
-alter_test_for_insn (ce_elem, insn_elem)
-     struct queue_elem *ce_elem, *insn_elem;
+alter_test_for_insn (struct queue_elem *ce_elem,
+		     struct queue_elem *insn_elem)
 {
   const char *ce_test, *insn_test;
-  char *new_test;
-  size_t len, ce_len, insn_len;
 
   ce_test = XSTR (ce_elem->data, 1);
   insn_test = XSTR (insn_elem->data, 2);
@@ -745,14 +657,7 @@ alter_test_for_insn (ce_elem, insn_elem)
   if (!insn_test || *insn_test == '\0')
     return ce_test;
 
-  ce_len = strlen (ce_test);
-  insn_len = strlen (insn_test);
-  len = 1 + ce_len + 1 + 4 + 1 + insn_len + 1 + 1;
-  new_test = (char *) xmalloc (len);
-
-  sprintf (new_test, "(%s) && (%s)", ce_test, insn_test);
-
-  return new_test;
+  return concat ("(", ce_test, ") && (", insn_test, ")", NULL);
 }
 
 /* Adjust all of the operand numbers in OLD to match the shift they'll
@@ -760,10 +665,7 @@ alter_test_for_insn (ce_elem, insn_elem)
    adjusted string.  */
 
 static char *
-shift_output_template (new, old, disp)
-     char *new;
-     const char *old;
-     int disp;
+shift_output_template (char *new, const char *old, int disp)
 {
   while (*old)
     {
@@ -787,9 +689,9 @@ shift_output_template (new, old, disp)
 }
 
 static const char *
-alter_output_for_insn (ce_elem, insn_elem, alt, max_op)
-     struct queue_elem *ce_elem, *insn_elem;
-     int alt, max_op;
+alter_output_for_insn (struct queue_elem *ce_elem,
+		       struct queue_elem *insn_elem,
+		       int alt, int max_op)
 {
   const char *ce_out, *insn_out;
   char *new, *p;
@@ -849,8 +751,7 @@ alter_output_for_insn (ce_elem, insn_elem, alt, max_op)
 /* Replicate insns as appropriate for the given DEFINE_COND_EXEC.  */
 
 static void
-process_one_cond_exec (ce_elem)
-     struct queue_elem *ce_elem;
+process_one_cond_exec (struct queue_elem *ce_elem)
 {
   struct queue_elem *insn_elem;
   for (insn_elem = define_insn_queue; insn_elem ; insn_elem = insn_elem->next)
@@ -917,7 +818,8 @@ process_one_cond_exec (ce_elem)
 	 patterns into the define_insn chain just after their generator
 	 is something we'll have to experiment with.  */
 
-      queue_pattern (insn, &other_tail, insn_elem->lineno);
+      queue_pattern (insn, &other_tail, insn_elem->filename,
+		     insn_elem->lineno);
     }
 }
 
@@ -925,7 +827,7 @@ process_one_cond_exec (ce_elem)
    patterns appropriately.  */
 
 static void
-process_define_cond_exec ()
+process_define_cond_exec (void)
 {
   struct queue_elem *elem;
 
@@ -938,11 +840,9 @@ process_define_cond_exec ()
 }
 
 static char *
-save_string (s, len)
-     const char *s;
-     int len;
+save_string (const char *s, int len)
 {
-  register char *result = xmalloc (len + 1);
+  char *result = xmalloc (len + 1);
 
   memcpy (result, s, len);
   result[len] = 0;
@@ -953,9 +853,7 @@ save_string (s, len)
 /* The entry point for initializing the reader.  */
 
 int
-init_md_reader_args (argc, argv)
-     int argc;
-     char **argv;
+init_md_reader_args (int argc, char **argv)
 {
   int i;
   const char *in_fname;
@@ -978,14 +876,13 @@ init_md_reader_args (argc, argv)
 	      {
 		struct file_name_list *dirtmp;
 
-		dirtmp = (struct file_name_list *)
-		  xmalloc (sizeof (struct file_name_list));
+		dirtmp = xmalloc (sizeof (struct file_name_list));
 		dirtmp->next = 0;	/* New one goes on the end */
-		if (include == 0)
-		  include = dirtmp;
+		if (first_dir_md_include == 0)
+		  first_dir_md_include = dirtmp;
 		else
-		  last_include->next = dirtmp;
-		last_include = dirtmp;	/* Tail follows the last one */
+		  last_dir_md_include->next = dirtmp;
+		last_dir_md_include = dirtmp;	/* Tail follows the last one */
 		if (argv[i][1] == 'I' && argv[i][2] != 0)
 		  dirtmp->fname = argv[i] + 2;
 		else if (i + 1 == argc)
@@ -1008,19 +905,16 @@ init_md_reader_args (argc, argv)
 /* The entry point for initializing the reader.  */
 
 int
-init_md_reader (filename)
-     const char *filename;
+init_md_reader (const char *filename)
 {
   FILE *input_file;
   int c;
+  size_t i;
   char *lastsl;
 
-  if (!IS_ABSOLUTE_PATHNAME (filename))
-    {
-      lastsl = strrchr (filename, '/');
-      if (lastsl != NULL) 
-	base_dir = save_string (filename, lastsl - filename + 1 );
-    }
+  lastsl = strrchr (filename, '/');
+  if (lastsl != NULL)
+    base_dir = save_string (filename, lastsl - filename + 1 );
 
   read_rtx_filename = filename;
   input_file = fopen (filename, "r");
@@ -1029,6 +923,14 @@ init_md_reader (filename)
       perror (filename);
       return FATAL_EXIT_CODE;
     }
+
+  /* Initialize the table of insn conditions.  */
+  condition_table = htab_create (n_insn_conditions,
+				 hash_c_test, cmp_c_test, NULL);
+
+  for (i = 0; i < n_insn_conditions; i++)
+    *(htab_find_slot (condition_table, &insn_conditions[i], INSERT))
+      = (void *) &insn_conditions[i];
 
   obstack_init (rtl_obstack);
   errors = 0;
@@ -1061,12 +963,12 @@ init_md_reader (filename)
 /* The entry point for reading a single rtx from an md file.  */
 
 rtx
-read_md_rtx (lineno, seqnr)
-     int *lineno;
-     int *seqnr;
+read_md_rtx (int *lineno, int *seqnr)
 {
   struct queue_elem **queue, *elem;
   rtx desc;
+
+ discard:
 
   /* Read all patterns from a given queue before moving on to the next.  */
   if (define_attr_queue != NULL)
@@ -1081,19 +983,35 @@ read_md_rtx (lineno, seqnr)
   elem = *queue;
   *queue = elem->next;
   desc = elem->data;
+  read_rtx_filename = elem->filename;
   *lineno = elem->lineno;
   *seqnr = sequence_num;
 
   free (elem);
 
+  /* Discard insn patterns which we know can never match (because
+     their C test is provably always false).  If insn_elision is
+     false, our caller needs to see all the patterns.  Note that the
+     elided patterns are never counted by the sequence numbering; it
+     it is the caller's responsibility, when insn_elision is false, not
+     to use elided pattern numbers for anything.  */
   switch (GET_CODE (desc))
     {
     case DEFINE_INSN:
     case DEFINE_EXPAND:
+      if (maybe_eval_c_test (XSTR (desc, 2)) != 0)
+	sequence_num++;
+      else if (insn_elision)
+	goto discard;
+      break;
+
     case DEFINE_SPLIT:
     case DEFINE_PEEPHOLE:
     case DEFINE_PEEPHOLE2:
-      sequence_num++;
+      if (maybe_eval_c_test (XSTR (desc, 1)) != 0)
+	sequence_num++;
+      else if (insn_elision)
+	    goto discard;
       break;
 
     default:
@@ -1101,4 +1019,113 @@ read_md_rtx (lineno, seqnr)
     }
 
   return desc;
+}
+
+/* Helper functions for insn elision.  */
+
+/* Compute a hash function of a c_test structure, which is keyed
+   by its ->expr field.  */
+hashval_t
+hash_c_test (const void *x)
+{
+  const struct c_test *a = (const struct c_test *) x;
+  const unsigned char *base, *s = (const unsigned char *) a->expr;
+  hashval_t hash;
+  unsigned char c;
+  unsigned int len;
+
+  base = s;
+  hash = 0;
+
+  while ((c = *s++) != '\0')
+    {
+      hash += c + (c << 17);
+      hash ^= hash >> 2;
+    }
+
+  len = s - base;
+  hash += len + (len << 17);
+  hash ^= hash >> 2;
+
+  return hash;
+}
+
+/* Compare two c_test expression structures.  */
+int
+cmp_c_test (const void *x, const void *y)
+{
+  const struct c_test *a = (const struct c_test *) x;
+  const struct c_test *b = (const struct c_test *) y;
+
+  return !strcmp (a->expr, b->expr);
+}
+
+/* Given a string representing a C test expression, look it up in the
+   condition_table and report whether or not its value is known
+   at compile time.  Returns a tristate: 1 for known true, 0 for
+   known false, -1 for unknown.  */
+int
+maybe_eval_c_test (const char *expr)
+{
+  const struct c_test *test;
+  struct c_test dummy;
+
+  if (expr[0] == 0)
+    return 1;
+
+  if (insn_elision_unavailable)
+    return -1;
+
+  dummy.expr = expr;
+  test = htab_find (condition_table, &dummy);
+  if (!test)
+    abort ();
+
+  return test->value;
+}
+
+/* Given a string, return the number of comma-separated elements in it.
+   Return 0 for the null string.  */
+int
+n_comma_elts (const char *s)
+{
+  int n;
+
+  if (*s == '\0')
+    return 0;
+
+  for (n = 1; *s; s++)
+    if (*s == ',')
+      n++;
+
+  return n;
+}
+
+/* Given a pointer to a (char *), return a pointer to the beginning of the
+   next comma-separated element in the string.  Advance the pointer given
+   to the end of that element.  Return NULL if at end of string.  Caller
+   is responsible for copying the string if necessary.  White space between
+   a comma and an element is ignored.  */
+
+const char *
+scan_comma_elt (const char **pstr)
+{
+  const char *start;
+  const char *p = *pstr;
+
+  if (*p == ',')
+    p++;
+  while (ISSPACE(*p))
+    p++;
+
+  if (*p == '\0')
+    return NULL;
+
+  start = p;
+
+  while (*p != ',' && *p != '\0')
+    p++;
+
+  *pstr = p;
+  return start;
 }

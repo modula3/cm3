@@ -1,43 +1,244 @@
-2003-04-22  Release Manager
+2005-11-30  Release Manager
 
-	* GCC 3.2.3 Released.
+	* GCC 3.4.5 released.
 
-2003-02-05  Release Manager
+2005-05-19  Release Manager
 
-	* GCC 3.2.2 Released.
+	* GCC 3.4.4 released.
 
-2002-11-19  Release Manager
+2004-11-04  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.3 released.
 
-2002-11-19  Release Manager
+2004-09-06  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.2 released.
 
-2002-11-18  Release Manager
+2004-07-01  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.1 released.
 
-2002-11-03  Roger Sayle  <roger@eyesopen.com>
+2004-04-18  Release Manager
+
+	* GCC 3.4.0 released.
+
+2004-01-12  Ian Lance Taylor  <ian@wasabisystems.com>
+
+	* demangle.h: Instead of checking ANSI_PROTOTYPES, just include
+	"libiberty.h".
+
+	* demangle.h: If ANSI_PROTOTYPES is defined, include <stddef.h>.
+
+	* demangle.h (enum demangle_component_type): Define.
+	(struct demangle_operator_info): Declare.
+	(struct demangle_builtin_type_info): Declare.
+	(struct demangle_component): Define.
+	(cplus_demangle_fill_component): Declare.
+	(cplus_demangle_fill_name): Declare.
+	(cplus_demangle_fill_builtin_type): Declare.
+	(cplus_demangle_fill_operator): Declare.
+	(cplus_demangle_fill_extended_operator): Declare.
+	(cplus_demangle_fill_ctor, cplus_demangle_fill_dtor): Declare.
+	(cplus_demangle_v3_components): Declare.
+	(cplus_demangle_print): Declare.
+
+2003-12-19  Andreas Tobler  <a.tobler@schweiz.ch>
+
+	* include/fibheap.h (fibnode): Use __extension__ for
+	bit-fields mark and degree if __GNUC__.
+
+2003-12-18  Kazu Hirata  <kazu@cs.umass.edu>
+
+	* include/fibheap.h (fibnode): Use unsigned long int for
+	bit-fields if __GNUC__ is defined.
+
+2003-10-22  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* obstack.h: Merge the following change from gnulib:
+	2003-10-21  Paul Eggert  <eggert@twinsun.com>
+	* obstack.h (obstack_1grow_fast): Properly parenthesize arg.
+	(obstack_ptr_grow_fast, obstack_int_grow_fast):
+	Don't use lvalue casts, as GCC plans to remove support for them
+	in GCC 3.5.  Reported by Joseph S. Myers.  This bug
+	was also present in the non-GCC version, indicating that this
+	code had always been buggy and had never been widely used.
+	(obstack_1grow, obstack_ptr_grow, obstack_int_grow, obstack_blank):
+	Use the fast variant of each macro, rather than copying the
+	definiens of the fast variant; that way, we'll be more likely to
+	catch future bugs in the fast variants.
+
+2003-09-22  Andrew Cagney  <cagney@redhat.com>
+
+	* floatformat.h (struct floatformat): Add field "is_valid".
+
+2003-09-15  Andrew Cagney  <cagney@redhat.com>
+
+	* floatformat.h (floatformat_to_double): Make input buffer constant.
+	(floatformat_from_double, floatformat_is_valid): Ditto.
+
+2003-09-15  Andrew Cagney  <cagney@redhat.com>
+
+	* floatformat.h (struct floatformat): Make "exp_bias" signed.
+
+2003-09-15  Daniel Jacobowitz  <drow@mvista.com>
+
+	* floatformat.h (floatformat_is_valid): Add prototype.
+
+2003-07-09  Bob Wilson  <bob.wilson@acm.org>
+
+	* xtensa-config.h: Undef all macros before defining them.
+
+2003-07-06  H.J. Lu <hongjiu.lu@intel.com>
+
+	* demangle.h: Support C++.
+
+2003-07-01  Zack Weinberg  <zack@codesourcery.com>
+
+	* filenames.h: New file imported from binutils.
+
+2003-06-30  Bob Wilson  <bob.wilson@acm.org>
+
+	* xtensa-config.h: New file imported from binutils.
+
+2003-06-22  Zack Weinberg  <zack@codesourcery.com>
+
+	* safe-ctype.h (HC_UNKNOWN, HC_ASCII, HC_EBCDIC): Rename to
+	HOST_CHARSET_UNKNOWN, HOST_CHARSET_ASCII, HOST_CHARSET_EBCDIC
+	respectively.
+
+2003-06-21  Zack Weinberg  <zack@codesourcery.com>
+
+	* safe-ctype.h (HC_UNKNOWN, HC_ASCII, HC_EBCDIC, HOST_CHARSET):
+	New #defines.
+
+2003-06-17  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* ansidecl.h: Delete HAVE_LONG_DOUBLE GCC bootstrap support.
+
+2003-05-15  Jim Blandy  <jimb@redhat.com>
+
+	* libiberty.h (hex_value): Make the value an unsigned int, to
+	avoid unexpected sign-extension when cast to unsigned types larger
+	than int --- like bfd_vma, on some platforms.
+	(_hex_value): Update declaration.
+
+2003-05-07  Jason Merrill  <jason@redhat.com>
+
+	* hashtab.h (iterative_hash): Prototype.
+	(iterative_hash_object): New macro.
+
+2003-03-17  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* ansidecl.h (ATTRIBUTE_NONNULL, ATTRIBUTE_NULL_PRINTF,
+	ATTRIBUTE_NULL_PRINTF_1, ATTRIBUTE_NULL_PRINTF_2,
+	ATTRIBUTE_NULL_PRINTF_3, ATTRIBUTE_NULL_PRINTF_4,
+	ATTRIBUTE_NULL_PRINTF_5): New.
+	(ATTRIBUTE_PRINTF): Add ATTRIBUTE_NONNULL.
+
+2003-03-17  Jan Hubicka  <jh@suse.cz>
+
+	* hashtab.h (htab_traverse_noresize): Declare.
+
+2003-02-27  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h: Document return value of physmem routines.
+
+2003-02-20  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
+
+	* libiberty.h (physmem_total, physmem_available): Prototype.
+
+2003-02-20  Daniel Jacobowitz  <drow@mvista.com>
+
+	* libiberty.h (lrealpath): Add declaration.
+
+2003-01-26  Daniel Jacobowitz  <drow@mvista.com>
+
+	* hashtab.h (htab_alloc_with_arg, htab_free_with_arg): Add new types.
+	(struct htab): Add alloc_arg, alloc_with_arg_f, free_with_arg_f.
+	(htab_create_alloc_ex): New prototype.
+	(htab_set_functions_ex): New prototype.
+
+2002-07-17  Geoffrey Keating  <geoffk@redhat.com>
+
+	* splay-tree.h (GTY): Define if undefined.
+	(splay_tree_allocate_fn): Return PTR for compatibility, not void *.
+	(struct splay_tree_node_s): Support gengtype.
+	(struct splay_tree_s): Likewise.  Make allocate_data a PTR,
+	not a void *.
+
+2002-11-23  Simon Burge  <simonb@wasabisystems.com>
+
+	* libiberty.h (basename): Add NetBSD to the list.
+
+2002-11-22  Daniel Jacobowitz  <drow@mvista.com>
+
+	* libiberty.h (make_relative_prefix): Add prototype.
+
+2002-10-26  Roger Sayle  <roger@eyesopen.com>
+
+	* partition.h:  Close the extern "C" scope when compiling with C++.
+
+2002-10-26  Roger Sayle  <roger@eyesopen.com>
 	    DJ Delorie <dj@redhat.com>
 
-	* getopt.h:  Avoid prototyping getopt with no arguments in C++.
+	PR bootstrap/8351
+	* getopt.h: Avoid prototyping getopt with no arguments in C++.
 
-2002-08-14  Release Manager
+2002-10-24  Nathan Tallent  <eraxxon@alumni.rice.edu>
 
-	* GCC 3.2 Released.
+	* ansidecl.h (__STDC__): Add (__alpha && __cplusplus) to the
+	list of	platform compilers that may look, smell and act
+	like __STDC__ but that may not define it.
 
-2002-07-25  Release Manager
+2002-10-11  David O'Brien  <obrien@FreeBSD.org>
 
-	* GCC 3.1.1 Released.
+	* getopt.h: getopt is in unistd.h (based on SUSv2).
 
-2002-05-14  Release Manager
+2002-09-19  Alexandre Oliva  <aoliva@redhat.com>
 
-	* GCC 3.1 Released.
+	* libiberty.h (asprintf, vasprintf): Don't declare them if the
+	corresponding HAVE_DECL_ macro is 1.
 
-2002-05-14  Release Manager
+2002-06-25  Alan Modra  <amodra@bigpond.net.au>
 
-	* GCC 3.1 Released.
+	* demangle.h: #include "ansidecl.h" rather than #include <ansidecl.h>.
+	* fibheap.h: Likewise.
+	* hashtab.h: Likewise.
+	* partition.h: Likewise.
+	* sort.h: Likewise.
+	* splay-tree.h: Likewise.
+
+2002-06-24  Alan Modra  <amodra@bigpond.net.au>
+
+	* libiberty.h (basename): Don't declare if HAVE_DECL_BASENAME.
+	* getopt.h (getopt): Don't declare if HAVE_DECL_GETOPT.
+
+2002-06-06  DJ Delorie  <dj@redhat.com>
+
+	* hashtab.h (htab): Rearrange new members for backward
+	compatibility.
+	(htab_create): Don't use a macro that requires other headers.
+
+2002-06-05  Geoffrey Keating  <geoffk@redhat.com>
+
+	* hashtab.h (htab_create): Restore prototype for backward
+	compatibility.
+	(htab_try_create): Likewise.
+
+2002-05-22  Geoffrey Keating  <geoffk@redhat.com>
+
+	* hashtab.h (struct htab): Update for change to length specifier.
+
+2002-05-10  Geoffrey Keating  <geoffk@redhat.com>
+
+	* hashtab.h (GTY): Define if undefined.
+	(htab_alloc): New typedef.
+	(htab_free): New typedef.
+	(struct htab): Support gengtype; allow user-specified memory
+	allocation.
+	(htab_create_alloc): New.
+	(htab_create): Replace with #define.
+	(htab_try_create): Delete.
 
 2002-04-16  David S. Miller  <davem@redhat.com>
 
@@ -47,6 +248,10 @@
 2002-04-01  Phil Edwards  <pme@gcc.gnu.org>
 
 	* dyn-string.h:  Also allow IN_GLIBCPP_V3 to redefine names.
+
+2002-03-06  Andrew Cagney  <ac131313@redhat.com>
+
+	* floatformat.h (floatformat_arm_ext): Delete declaration.
 
 2002-02-22  Jim Blandy  <jimb@redhat.com>
 
@@ -291,7 +496,7 @@
 
 2000-09-04  Alex Samuel  <samuel@codesourcery.com>
 
-	* dyn-string.h: Adjust formatting. 
+	* dyn-string.h: Adjust formatting.
 	(dyn_string_insert_char): New macro.  New declaration.
 
 2000-08-28  Jason Merrill  <jason@redhat.com>
@@ -316,7 +521,7 @@
 	dyn_string_insert_cstr, dyn_string_append, dyn_string_append_cstr,
 	dyn_string_append_char, dyn_string_substring): Change return type
 	to int.
-	
+
 2000-06-07  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
 
 	* demangle.h (demangling_styles): Remove trailing comma in enum.
@@ -329,12 +534,12 @@
 	* dyn-string.h: Move here from gcc/dyn-string.h.  Add new functions.
 
 	* demangle.h (DMGL_GNU_NEW_ABI): New macro.
-	(DMGL_STYLE_MASK): Or in DMGL_GNU_NEW_ABI. 
+	(DMGL_STYLE_MASK): Or in DMGL_GNU_NEW_ABI.
 	(current_demangling_style): Add gnu_new_abi_demangling.
 	(GNU_NEW_ABI_DEMANGLING_STYLE_STRING): New macro.
 	(GNU_NEW_ABI_DEMANGLING): Likewise.
 	(cplus_demangle_new_abi): New declaration.
-	
+
 Tue May 30 16:53:34 2000  Andrew Cagney  <cagney@b1.cygnus.com>
 
 	* floatformat.h (struct floatformat): Add field name.
@@ -366,9 +571,9 @@ Thu May  4 17:15:26 2000  Philippe De Muyter  <phdm@macqel.be>
 2000-04-28  Kenneth Block  <block@zk3.dec.com>
 	    Jason Merrill  <jason@casey.cygnus.com>
 
-        * demangle.h (libiberty_demanglers): new table for different styles.
-        (cplus_demangle_set_style): New function for setting style.
-        (cplus_demangle_name_to_style): New function to translate name.
+	* demangle.h (libiberty_demanglers): new table for different styles.
+	(cplus_demangle_set_style): New function for setting style.
+	(cplus_demangle_name_to_style): New function to translate name.
 
 2000-04-24  Mark Mitchell  <mark@codesourcery.com>
 

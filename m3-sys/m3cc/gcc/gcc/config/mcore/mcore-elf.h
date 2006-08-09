@@ -1,21 +1,22 @@
 /* Definitions of MCore target. 
-   Copyright (C) 1998, 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2004
+   Free Software Foundation, Inc.
    Contributed by Cygnus Solutions.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -25,30 +26,18 @@ Boston, MA 02111-1307, USA.  */
 /* Run-time Target Specification.  */
 #define TARGET_VERSION fputs (" (Motorola MCORE/elf)", stderr)
 
-#define SUBTARGET_CPP_PREDEFINES " -D__ELF__"
-
 /* Use DWARF2 debugging info.  */
-#ifndef DWARF2_DEBUGGING_INFO
 #define DWARF2_DEBUGGING_INFO 1
-#endif
 
 #undef  PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
-/* But allow DWARF 1 if the user wants it.  */
-#ifndef DWARF_DEBUGGING_INFO
-#define DWARF_DEBUGGING_INFO 1
-#endif
-
 #define EXPORTS_SECTION_ASM_OP	"\t.section .exports"
 
-#define SUBTARGET_EXTRA_SECTIONS in_const, in_exports
+#define SUBTARGET_EXTRA_SECTIONS in_exports
 
 #define SUBTARGET_EXTRA_SECTION_FUNCTIONS	\
-  CONST_SECTION_FUNCTION			\
-  EXPORT_SECTION_FUNCTION			\
-
-/* CONST_SECTION_FUNCTION is defined svr4.h.  */
+  EXPORT_SECTION_FUNCTION
 
 #define EXPORT_SECTION_FUNCTION 				\
 void								\
@@ -62,8 +51,7 @@ exports_section ()						\
 }
 
 #define SUBTARGET_SWITCH_SECTIONS		\
-  case in_exports: exports_section (); break;	\
-  case in_const: const_section (); break;
+  case in_exports: exports_section (); break;
 
 
 #define MCORE_EXPORT_NAME(STREAM, NAME)			\
@@ -71,7 +59,7 @@ exports_section ()						\
     {							\
       exports_section ();				\
       fprintf (STREAM, "\t.ascii \" -export:%s\"\n",	\
-	       MCORE_STRIP_NAME_ENCODING (NAME));	\
+	       (* targetm.strip_name_encoding) (NAME));	\
     }							\
   while (0);
 
@@ -79,50 +67,42 @@ exports_section ()						\
    Some svr4 assemblers need to also have something extra said about the
    function's return value.  We allow for that here.  */
 #undef  ASM_DECLARE_FUNCTION_NAME
-#define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)	\
-  do							\
-    {							\
-      if (mcore_dllexport_name_p (NAME))		\
-	{						\
-          MCORE_EXPORT_NAME (FILE, NAME);		\
-	  function_section (DECL);			\
-	}						\
-      fprintf (FILE, "%s", TYPE_ASM_OP);		\
-      assemble_name (FILE, NAME);			\
-      putc (',', FILE);					\
-      fprintf (FILE, TYPE_OPERAND_FMT, "function");	\
-      putc ('\n', FILE);				\
-      ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));	\
-      ASM_OUTPUT_LABEL (FILE, NAME);			\
-    }							\
+#define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)		\
+  do								\
+    {								\
+      if (mcore_dllexport_name_p (NAME))			\
+	{							\
+          MCORE_EXPORT_NAME (FILE, NAME);			\
+	  function_section (DECL);				\
+	}							\
+      ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "function");	\
+      ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));		\
+      ASM_OUTPUT_LABEL (FILE, NAME);				\
+    }								\
   while (0)
 
 /* Write the extra assembler code needed to declare an object properly.  */
 #undef  ASM_DECLARE_OBJECT_NAME
-#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)				\
-  do										\
-    {										\
-      if (mcore_dllexport_name_p (NAME))					\
-        {									\
-          enum in_section save_section = in_section;				\
-	  MCORE_EXPORT_NAME (FILE, NAME);					\
-          switch_to_section (save_section, (DECL));				\
-        }									\
-      fprintf (FILE, "%s", TYPE_ASM_OP);					\
-      assemble_name (FILE, NAME);						\
-      putc (',', FILE);								\
-      fprintf (FILE, TYPE_OPERAND_FMT, "object");				\
-      putc ('\n', FILE);							\
-      size_directive_output = 0;						\
-      if (!flag_inhibit_size_directive && DECL_SIZE (DECL))			\
-        {									\
-          size_directive_output = 1;						\
-          fprintf (FILE, "%s", SIZE_ASM_OP);					\
-          assemble_name (FILE, NAME);						\
-          fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL)));	\
-        }									\
-      ASM_OUTPUT_LABEL(FILE, NAME);						\
-    }										\
+#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)		\
+  do								\
+    {								\
+      HOST_WIDE_INT size;					\
+      if (mcore_dllexport_name_p (NAME))			\
+        {							\
+          enum in_section save_section = in_section;		\
+	  MCORE_EXPORT_NAME (FILE, NAME);			\
+          switch_to_section (save_section, (DECL));		\
+        }							\
+      ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "object");		\
+      size_directive_output = 0;				\
+      if (!flag_inhibit_size_directive && DECL_SIZE (DECL))	\
+        {							\
+          size_directive_output = 1;				\
+	  size = int_size_in_bytes (TREE_TYPE (DECL));		\
+	  ASM_OUTPUT_SIZE_DIRECTIVE (FILE, NAME, size);		\
+        }							\
+      ASM_OUTPUT_LABEL(FILE, NAME);				\
+    }								\
   while (0)
  
 /* Output the size directive for a decl in rest_of_decl_compilation
@@ -135,14 +115,15 @@ exports_section ()						\
   do                                                                     \
     {                                                                    \
       const char * name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);           \
+      HOST_WIDE_INT size;						 \
       if (!flag_inhibit_size_directive && DECL_SIZE (DECL)               \
           && ! AT_END && TOP_LEVEL                                       \
           && DECL_INITIAL (DECL) == error_mark_node                      \
           && !size_directive_output)                                     \
         {                                                                \
-          fprintf (FILE, "%s", SIZE_ASM_OP);                             \
-          assemble_name (FILE, name);                                    \
-          fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL)));\
+	  size_directive_output = 1;					 \
+	  size = int_size_in_bytes (TREE_TYPE (DECL));			 \
+	  ASM_OUTPUT_SIZE_DIRECTIVE (FILE, name, size);			 \
         }                                                                \
     }                                                                    \
   while (0)
@@ -159,7 +140,7 @@ exports_section ()						\
 #define ENDFILE_SPEC  "%{!mno-lsim:-lsim} crtend.o%s crtn.o%s"
 
 /* The subroutine calls in the .init and .fini sections create literal
-   pools which must be jumped around...  */
+   pools which must be jumped around....  */
 #define FORCE_CODE_SECTION_ALIGN	asm ("br 1f ; .literals ; 1:");
 
 #undef  CTORS_SECTION_ASM_OP

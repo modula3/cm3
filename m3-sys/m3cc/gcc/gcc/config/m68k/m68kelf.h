@@ -1,36 +1,27 @@
 /* m68kelf support, derived from m68kv4.h */
 
 /* Target definitions for GNU compiler for mc680x0 running System V.4
-   Copyright (C) 1991, 1993, 2000, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1993, 2000, 2002, 2003 Free Software Foundation, Inc.
 
    Written by Ron Guilmette (rfg@netcom.com) and Fred Fish (fnf@cygnus.com).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* #notinclude "m68k/sgs.h"	/ * The m68k/SVR4 assembler is SGS based */
-
-/* These are necessary for -fpic/-fPIC to work correctly.  */
-#ifndef MOTOROLA
-#define MOTOROLA                /* Use MOTOROLA syntax.  */
-#endif
-#ifndef  USE_GAS  /* forces jsbr instead of jsr.  */
-#define  USE_GAS
-#endif
 
 #ifndef SWBEG_ASM_OP
 #define SWBEG_ASM_OP "\t.swbeg\t"
@@ -75,7 +66,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define ASM_RETURN_CASE_JUMP				\
   do {							\
-    if (TARGET_5200)					\
+    if (TARGET_COLDFIRE)				\
       {							\
 	if (ADDRESS_REG_P (operands[0]))		\
 	  return "jmp %%pc@(2,%0:l)";			\
@@ -96,7 +87,7 @@ Boston, MA 02111-1307, USA.  */
 #define REGISTER_NAMES \
 {"%d0",   "%d1",   "%d2",   "%d3",   "%d4",   "%d5",   "%d6",   "%d7",	     \
  "%a0",   "%a1",   "%a2",   "%a3",   "%a4",   "%a5",   "%a6",   "%sp",	     \
- "%fp0",  "%fp1",  "%fp2",  "%fp3",  "%fp4",  "%fp5",  "%fp6",  "%fp7" }
+ "%fp0",  "%fp1",  "%fp2",  "%fp3",  "%fp4",  "%fp5",  "%fp6",  "%fp7", "argptr" }
 
 /* This is how to output an assembler line that says to advance the
    location counter to a multiple of 2**LOG bytes.  */
@@ -151,9 +142,6 @@ do {								\
 
 #define ASM_COMMENT_START "|"
 
-#undef TYPE_OPERAND_FMT
-#define TYPE_OPERAND_FMT      "@%s"
-
 /* Define how the m68k registers should be numbered for Dwarf output.
    The numbering provided here should be compatible with the native
    SVR4 SDB debugger in the m68k/SVR4 reference port, where d0-d7
@@ -170,7 +158,7 @@ do {								\
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "%s%u\n", SPACE_ASM_OP, (SIZE))
+  fprintf (FILE, "%s%u\n", SPACE_ASM_OP, (int)(SIZE))
 
 #if 0
 /* SVR4 m68k assembler is bitching on the `comm i,1,1' which askes for 
@@ -232,12 +220,12 @@ extern int switch_table_difference_label_flag;
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs (".comm ", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%u\n", (SIZE)))
+  fprintf ((FILE), ",%u\n", (int)(SIZE)))
 
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs (".lcomm ", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%u\n", (SIZE)))
+  fprintf ((FILE), ",%u\n", (int)(SIZE)))
 
 /* Currently, JUMP_TABLES_IN_TEXT_SECTION must be defined in order to
    keep switch tables in the text section.  */
@@ -249,33 +237,7 @@ extern int switch_table_difference_label_flag;
 #undef ASM_OUTPUT_BEFORE_CASE_LABEL
 #define ASM_OUTPUT_BEFORE_CASE_LABEL(FILE,PREFIX,NUM,TABLE)		\
   fprintf ((FILE), "%s&%d\n", SWBEG_ASM_OP, XVECLEN (PATTERN (TABLE), 1));
-
-/* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is an
-   operand of a function call.  */
-#undef LEGITIMATE_PIC_OPERAND_P
-
-#define LEGITIMATE_PIC_OPERAND_P(X)	\
-  (! symbolic_operand (X, VOIDmode)				\
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))	\
-   || PCREL_GENERAL_OPERAND_OK)
-
-/* Turn off function cse if we are doing PIC. We always want function call
-   to be done as `bsr foo@PLTPC', so it will force the assembler to create 
-   the PLT entry for `foo'. Doing function cse will cause the address of `foo'
-   to be loaded into a register, which is exactly what we want to avoid when
-   we are doing PIC on svr4 m68k.  */
-#undef OVERRIDE_OPTIONS
-#define OVERRIDE_OPTIONS		\
-{					\
-  if (flag_pic) flag_no_function_cse = 1; \
-  if (! TARGET_68020 && flag_pic == 2)	\
-    error("-fPIC is not currently supported on the 68000 or 68010\n");	\
-  if (TARGET_PCREL && flag_pic == 0)	\
-    flag_pic = 1;			\
-}
 /* end of stuff from m68kv4.h */
-
-#undef SGS_CMP_ORDER
 
 #undef ENDFILE_SPEC
 #define ENDFILE_SPEC "crtend.o%s"
