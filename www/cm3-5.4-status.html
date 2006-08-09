@@ -73,6 +73,9 @@
         <td>
           Investigating segmentation faults in RTThread.
           See <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154704349000#1154704349000">here</a> for details.
+          <br>
+          Cannot compile current backend with the toolchain on the Solaris 8 box at elego.
+          Probably need to update binutils.
         </td>
       </tr>
       <tr>
@@ -196,7 +199,7 @@
           distributions by Olaf Wagner in
           <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154868756000">this commit</a>.
           <br>
-          System call wrappers have not been removed yet.
+          System call wrappers are now unused but have not been removed from CVS yet.
         </td>
       </tr>
       <tr>
@@ -246,6 +249,31 @@
         <td>
           Not even started yet.
         </td>
+      </tr>
+      <tr>
+        <td>
+          M3IDE (Reaktor)
+        </td>
+        <td>
+          <b>??</b>
+        </td>
+        <td>
+          Status unknown - Randy Coleburn said he was going to begin working on this.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          m3gdb
+        </td>
+        <td bgcolor="#FF0000">
+          <b>:-(</b>
+        </td>
+        <td>
+          I tried using it on Fedora Core 5, but it failed, probably also because
+          of address space randomisation.
+          Sources not yet imported into CVS.
+        </td>
+      </tr>
     </table>
   </body>
 </html>
