@@ -1,23 +1,23 @@
 /* Definitions of target machine for GNU compiler.  System/370 version.
-   Copyright (C) 1989, 1993, 1995, 1996, 1997, 1999, 2000, 2001, 2002
+   Copyright (C) 1989, 1993, 1995, 1996, 1997, 2003
    Free Software Foundation, Inc.
    Contributed by Jan Stein (jan@cd.chalmers.se).
    Modified for Linux/390 by Linas Vepstas (linas@linas.org)
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -27,24 +27,9 @@ Boston, MA 02111-1307, USA.  */
 /* Specify that we're generating code for a Linux port to 370 */
 
 #define TARGET_ELF_ABI
-#define LINUX_DEFAULT_ELF
 
-
-/* hack alert define to get dbx/gdb/dwarf to compile  */
-/* problem is that host float format is not target float format.  */
-/* define REAL_ARITHMETIC for software emulation of float to
- * int conversion.  This seems to have somethings to do with 
- * cross-compiling ...  */
-#define REAL_ARITHMETIC
-
-/* Include system common definitions */
-/* TODO: convert include to ${tm_file} list in config.gcc.  */
-#include "i370/i370.h"
-
-/* Names to predefine in the preprocessor for this target machine.  */
-
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-DGCC -Dgcc -D__ELF__ -Dunix -D__gnu_linux__ -Dlinux -Asystem=posix -Acpu=i370 -Amachine=i370"
+/* Target OS preprocessor built-ins.  */
+#define TARGET_OS_CPP_BUILTINS() LINUX_TARGET_OS_CPP_BUILTINS()
 
 /* Options for this target machine.  */
 

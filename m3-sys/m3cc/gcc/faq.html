@@ -30,9 +30,7 @@ Information page</a>.</p>
   <li><a href="#general">General information</a>
   <ol>
      <li><a href="#gcc">What is the relationship between GCC and EGCS?</a></li>
-     <li><a href="#cygnus">What is the relationship between GCC and Cygnus / Red Hat?</a></li>
      <li><a href="#open-development">What is an open development model?</a></li>
-     <li><a href="#bugreport">How do I report a bug?</a></li>
      <li><a href="#support">How do I get a bug fixed or a feature added?</a></li>
      <li><a href="#platforms">Does GCC work on my platform?</a></li>
   </ol></li> 
@@ -45,11 +43,11 @@ Information page</a>.</p>
     <li><a href="#gas">GCC can not find GNU as/GNU ld</a></li>
     <li><a href="#environ">cpp: Usage:... Error</a></li>
     <li><a href="#optimizing">Optimizing the compiler itself</a></li>
+    <li><a href="#iconv">Why does <code>libiconv</code> get linked into <code>jc1</code> on Solaris?</a></li>
   </ol></li>
 
   <li><a href="#testsuite">Testsuite problems</a>
   <ol>
-    <li><a href="#dejagnu">Unable to run the testsuite</a></li>
     <li><a href="#testoptions">How do I pass flags like
         <code>-fnew-abi</code> to the testsuite?</a></li>
     <li><a href="#multipletests">How can I run the test suite with multiple options?</a></li>
@@ -81,7 +79,7 @@ Information page</a>.</p>
 <p>In 1990/1991 gcc version 1 had reached a point of stability.  For the
 targets it could support, it worked well.  It had limitations inherent in
 its design that would be difficult to resolve, so a major effort was made
-to resolve those limitiations and gcc version 2 was the result.</p>
+to resolve those limitations and gcc version 2 was the result.</p>
 
 <p>When we had gcc2 in a useful state, development efforts on gcc1 stopped
 and we all concentrated on making gcc2 better than gcc1 could ever be.  This
@@ -96,25 +94,6 @@ carries forward GCC development under the ultimate control of the
 
 
 <hr />
-<h2><a name="cygnus">What is the relationship between GCC and Cygnus / Red Hat?</a></h2>
-
-<p>It is a common mis-conception that Red Hat controls GCC either
-directly or indirectly.</p>
-
-<p>While Red Hat does donate hardware, network connections, code and
-developer time to GCC development, Red Hat does not control GCC.</p>
-
-<p>Overall control of GCC is in the hands of the
-<a href="steering.html">GCC Steering Committee</a>
-which includes people from a variety of different organizations and
-backgrounds.  The purpose of the steering committee is to make
-decisions in the best interest of GCC and to help ensure that no
-individual or company has control over the project.</p>
-
-<p>To summarize, Red Hat contributes to the GCC project, but does not exert
-a controlling influence over GCC.</p>
-
-<hr />
 <h2><a name="open-development">What is an open development model?</a></h2>
 
 <p>We are using a bazaar style
@@ -127,9 +106,8 @@ making releases with a much higher frequency than they have been made
 in the past.</p>
 
 <p>In addition to weekly snapshots of the GCC development sources, we
-have the sources readable from a CVS server by anyone.  Furthermore we
-are using remote CVS to allow remote maintainers write access to the
-sources.</p>
+have the sources readable from an SVN server by anyone.  Furthermore we
+are using SVN to allow maintainers write access to the sources.</p>
 
 <p>There have been many potential GCC developers who were not able to
 participate in GCC development in the past.  We want these people to
@@ -159,48 +137,42 @@ than we've had before.</p>
   past few months.  The paper which started all of this introduced two
   terms:  A <b>cathedral</b> development model versus a <b>bazaar</b>
   development model.  The paper is written by Eric S. Raymond, it is
-  called ``The Cathedral and the Bazaar</a>''.
+  called ``The Cathedral and the Bazaar''.
   The paper is a useful starting point for discussions.
 </blockquote>
 
-
 <hr />
-<h2><a name="bugreport">How do I report a bug?</a></h2>
-
-<p>There are complete instructions <a href="bugs.html">here</a>.</p>
-
-
-<hr />
-<h2><a name="support">How do I get a bug fixed or a feature added?</a></h2>
+<!-- The "bugreport" anchor was used in ICE messages of GCC < 2.95.3. -->
+<h2 id="bugreport"><a name="support">How do I get a bug fixed or
+    a feature added?</a></h2>
 
 <p>There are lots of ways to get something fixed.  The list below may be
 incomplete, but it covers many of the common cases.  These are listed
-roughly in order of increasing difficulty for the average GCC user,
+roughly in order of decreasing difficulty for the average GCC user,
 meaning someone who is not skilled in the internals of GCC, and where
 difficulty is measured in terms of the time required to fix the bug.
 No alternative is better than any other; each has its benefits and
 disadvantages.</p>
 
 <ul>
-<li>Hire someone to fix it for you.  There are various companies and
-    individuals providing support for GCC.  This alternative costs
-    money, but is relatively likely to get results.</li>
+<li>Fix it yourself.  This alternative will probably bring results,
+    if you work hard enough, but will probably take a lot of time,
+    and, depending on the quality of your work and the perceived
+    benefits of your changes, your code may or may not ever make it
+    into an official release of GCC.</li>
 
-<li><a href="bugs.html">Report the problem to the GCC GNATS bug tracking system</a>
+<li><a href="bugs.html">Report the problem to the GCC bug tracking system</a>
     and hope that someone will be kind
     enough to fix it for you.  While this is certainly possible, and
     often happens, there is no guarantee that it will.  You should
     not expect the same response from this method that you would see
     from a commercial support organization since the people who read
     GCC bug reports, if they choose to help you, will be volunteering their
-    time.  This alternative will work best if you follow the directions
-    on <a href="bugs.html">submitting bugreports</a>.</li>
+    time.</li>
 
-<li>Fix it yourself.  This alternative will probably bring results,
-    if you work hard enough, but will probably take a lot of time,
-    and, depending on the quality of your work and the perceived
-    benefits of your changes, your code may or may not ever make it
-    into an official release of GCC.</li>
+<li>Hire someone to fix it for you.  There are various companies and
+    individuals providing support for GCC.  This alternative costs
+    money, but is relatively likely to get results.</li>
 </ul>
 
 <hr />
@@ -384,20 +356,32 @@ test the <code>-fssa</code> option, you could bootstrap like this:</p>
 
 <pre>make BOOT_CFLAGS="-O2 -fssa" bootstrap</pre>
 
+<hr />
+<h2><a name="iconv">Why does <code>libiconv</code> get linked into <code>jc1</code> on Solaris?</a></h2>
+
+<p>The Java front end requires <code>iconv</code>.  If the compiler
+used to bootstrap GCC finds <code>libiconv</code> (because the GNU
+version of <code>libiconv</code> has been installed in the same prefix
+as the bootstrap compiler), but the newly built GCC does not find the
+library (because it will be installed with a different prefix), then a
+link-time error will occur when building <code>jc1</code>.  This
+problem does not show up so often on platforms that have
+<code>libiconv</code> in a default location (like
+<code>/usr/lib</code>) because then both compilers can find a library
+named <code>libiconv</code>, even though it is a different
+library.</p>
+
+<p>Using <code>--disable-nls</code> at configure-time does not
+prevent this problem because <code>jc1</code> uses
+<code>iconv</code> even in that case.  Solutions include temporarily
+removing the GNU <code>libiconv</code>, copying it to a default
+location such as <code>/usr/lib/</code>, and using
+<code>--enable-languages</code> at configure-time to disable Java.</p>
 
 <hr />
 <a name="testsuite"></a>
 <h1>Testsuite problems</h1>
 
-<h2><a name="dejagnu">Unable to run the testsuite</a></h2>
-
-<p>If you get a message about unable to find "standard.exp" when trying to
-run the GCC testsuites, then your dejagnu is too old to run the GCC tests.
-You will need to get a newer version of dejagnu from
-<a href="http://www.gnu.org/software/dejagnu/dejagnu.html">
-  http://www.gnu.org/software/dejagnu/dejagnu.html</a>.</p>
-
-<hr />
 <h2><a name="testoptions">How do I pass flags like
   <code>-fnew-abi</code> to the testsuite?</a></h2>
 
@@ -506,7 +490,7 @@ final version of the Standard, it is.</p>
 <p>The new C++ ABI in the GCC 3.0 series uses address comparisons,
 rather than string compares, to determine type equality.  This leads
 to better performance.  Like other objects that have to be present in the
-final executable, these <code>std::typeinfo_t</code> objects have what
+final executable, these <code>std::type_info</code> objects have what
 is called vague linkage because they are not tightly bound to any one
 particular translation unit (object file).  The compiler has to emit
 them in any translation unit that requires their presence, and then
@@ -519,7 +503,7 @@ executable and other shared libraries.</p>
 
 <ul>
 <li>For a program which is linked against a shared library, no additional
-precautions need taking.</li>
+precautions are needed.</li>
 
 <li>You cannot create a shared library with the "<code>-Bsymbolic</code>"
 option, as that prevents the resolution described above.</li>
@@ -554,7 +538,7 @@ linkage the same name is a violation of the One Definition Rule (ODR)
 <p>For more details about the way that GCC implements these and other
 C++ features, please read the <a
 href="http://www.codesourcery.com/cxx-abi/">ABI specification</a>.
-Note the <code>std::typeinfo_t</code> objects which <i>must</i> be
+Note the <code>std::type_info</code> objects which <i>must</i> be
 resolved all begin with "_ZTS". Refer to <code>ld</code>'s
 documentation for a description of the "<code>-E</code>" &amp;
 "<code>-Bsymbolic</code>" flags.</p>
@@ -563,7 +547,7 @@ documentation for a description of the "<code>-E</code>" &amp;
 <h2><a name="generated_files">Why do I need autoconf, bison, xgettext, automake, etc?</a></h2>
 
 <p>If you're using diffs up dated from one snapshot to the next, or
-if you're using the CVS repository, you may need several additional programs
+if you're using the SVN repository, you may need several additional programs
 to build GCC.</p>
 
 <p>These include, but are not necessarily limited to autoconf, automake,
@@ -575,12 +559,10 @@ those generated files are out of date and try to regenerate them.</p>
 
 <p>An easy way to work around this problem is to use the <code>gcc_update
 </code> script in the contrib subdirectory of GCC, which handles this
-transparently without requiring installation of any additional tools.
-(Note: Up to and including GCC 2.95 this script was called <code>egcs_update
-</code>.)</p>
+transparently without requiring installation of any additional tools.</p>
 
 
-<p>When building from diffs or CVS or if you modified some sources,
+<p>When building from diffs or SVN or if you modified some sources,
 you may also need to obtain development versions of some GNU tools, as
 the production versions do not necessarily handle all features needed
 to rebuild GCC.</p>

@@ -1,14 +1,12 @@
 #!/bin/sh
 #
-#  EDIT THIS FILE - it is no longer generated
-#
 # Install modified versions of certain ANSI-incompatible system header
 # files which are fixed to work correctly with ANSI C and placed in a
-# directory that GNU C will search.
+# directory that GCC will search.
 #
 # See README-fixinc for more information.
 #
-#  fixincludes copyright (c) 1998, 1999, 2000
+#  fixincludes copyright (c) 1998, 1999, 2000, 2002
 #  The Free Software Foundation, Inc.
 #
 # fixincludes is free software.
@@ -29,6 +27,8 @@
 #            Boston,  MA  02111-1307, USA.
 #
 # # # # # # # # # # # # # # # # # # # # #
+
+# Usage: fixincl.sh output-dir input-dir
 #
 # Directory in which to store the results.
 # Fail if no arg to specify a directory for the output.
@@ -84,7 +84,7 @@ export target_canonical
 #
 # Define PWDCMD as a command to use to get the working dir
 # in the form that we want.
-PWDCMD=pwd
+PWDCMD=${PWDCMD-pwd}
 
 case "`$PWDCMD`" in
 //*)

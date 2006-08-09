@@ -1,28 +1,28 @@
-# Makefile for GNU compilers.
+# Makefile for GCC fixincludes.
 #
-#   Copyright (C) 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
+#   Copyright (C) 1998, 1999, 2000, 2001, 2003 Free Software Foundation, Inc.
 
-#This file is part of GNU CC.
+#This file is part of GCC.
 
-#GNU CC is free software; you can redistribute it and/or modify
+#GCC is free software; you can redistribute it and/or modify
 #it under the terms of the GNU General Public License as published by
 #the Free Software Foundation; either version 2, or (at your option)
 #any later version.
 
-#GNU CC is distributed in the hope that it will be useful,
+#GCC is distributed in the hope that it will be useful,
 #but WITHOUT ANY WARRANTY; without even the implied warranty of
 #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #GNU General Public License for more details.
 
 #You should have received a copy of the GNU General Public License
-#along with GNU CC; see the file COPYING.  If not, write to
+#along with GCC; see the file COPYING.  If not, write to
 #the Free Software Foundation, 59 Temple Place - Suite 330,
 #Boston, MA 02111-1307, USA.
 
 # The makefile built from this file lives in the fixinc subdirectory.
 # Its purpose is to build the any-platforms fixinc.sh script.
 
-SHELL=/bin/sh
+SHELL=@SHELL@
 
 # Some versions of `touch' (such as the version on Solaris 2.8) 
 # do not correctly set the timestamp due to buggy versions of `utime'
@@ -68,12 +68,12 @@ INCLUDES = -I. -I.. -I$(srcdir) -I$(srcdir)/.. \
 LIBERTY = ../../libiberty/libiberty.a
 
 ALLOBJ = fixincl.o fixtests.o fixfixes.o server.o procopen.o \
-      gnu-regex.o fixlib.o
+      fixlib.o
 
-TESTOBJ = fixincl.o fixlib.o fixtests.o gnu-regex.o
-FIXOBJ  = fixfixes.o fixlib.o gnu-regex.o
+TESTOBJ = fixincl.o fixlib.o fixtests.o
+FIXOBJ  = fixfixes.o fixlib.o
 
-HDR = server.h gnu-regex.h fixlib.h machname.h
+HDR = server.h fixlib.h machname.h
 FI  = fixincl@build_exeext@
 AF  = applyfix@build_exeext@
 
@@ -94,13 +94,15 @@ test-stamp : $(TESTOBJ) $(LIBERTY)
 $(AF): $(FIXOBJ) $(LIBERTY)
 	$(CC) $(FIXINC_DEFS) $(LDFLAGS) -o $@ $(FIXOBJ) $(LIBERTY)
 
+# String length warnings
+fixincl.o-warn = -Wno-error
+
 $(ALLOBJ)   : $(HDR)
 fixincl.o   : fixincl.c  $(srcdir)/fixincl.x
 fixtests.o  : fixtests.c
 fixfixes.o  : fixfixes.c $(srcdir)/fixincl.x
 server.o    : server.c
 procopen.o  : procopen.c
-gnu-regex.o : gnu-regex.c
 fixlib.o    : fixlib.c
 
 #  'machname.h' is built in the build directory.

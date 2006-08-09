@@ -1,5 +1,5 @@
-/* Subroutines for insn-output.c for Intel 860
-   Copyright (C) 1989, 1991, 1997, 1998, 1999, 2000, 2001, 2002
+/* Subroutines for insn-output.c for Intel i860
+   Copyright (C) 1989, 1991, 1997, 1998, 1999, 2000, 2001, 2002, 2003
    Free Software Foundation, Inc.
    Derived from sparc.c.
 
@@ -8,26 +8,28 @@
    Hacked substantially by Ron Guilmette (rfg@netcom.com) to cater
    to the whims of the System V Release 4 assembler.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "flags.h"
 #include "rtl.h"
 #include "tree.h"
@@ -41,18 +43,14 @@ Boston, MA 02111-1307, USA.  */
 #include "insn-attr.h"
 #include "function.h"
 #include "expr.h"
+#include "optabs.h"
+#include "toplev.h"
 #include "tm_p.h"
 #include "target.h"
 #include "target-def.h"
+#include "langhooks.h"
 
-static rtx find_addr_reg PARAMS ((rtx));
-static int reg_clobbered_p PARAMS ((rtx, rtx));
-static const char *singlemove_string PARAMS ((rtx *));
-static const char *load_opcode PARAMS ((enum machine_mode, const char *, rtx));
-static const char *store_opcode PARAMS ((enum machine_mode, const char *, rtx));
-static void output_size_for_block_move PARAMS ((rtx, rtx, rtx));
-static void i860_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
-static void i860_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static rtx find_addr_reg (rtx);
 
 #ifndef I860_REG_PREFIX
 #define I860_REG_PREFIX ""
@@ -64,24 +62,14 @@ const char *i860_reg_prefix = I860_REG_PREFIX;
 
 rtx i860_compare_op0, i860_compare_op1;
 
-/* Initialize the GCC target structure.  */
-#undef TARGET_ASM_FUNCTION_PROLOGUE
-#define TARGET_ASM_FUNCTION_PROLOGUE i860_output_function_prologue
-#undef TARGET_ASM_FUNCTION_EPILOGUE
-#define TARGET_ASM_FUNCTION_EPILOGUE i860_output_function_epilogue
-
-struct gcc_target targetm = TARGET_INITIALIZER;
-
-/* Return non-zero if this pattern, can be evaluated safely, even if it
+/* Return nonzero if this pattern, can be evaluated safely, even if it
    was not asked for.  */
 int
-safe_insn_src_p (op, mode)
-     rtx op;
-     enum machine_mode mode;
+safe_insn_src_p (rtx op, enum machine_mode mode)
 {
   /* Just experimenting.  */
 
-  /* No floating point src is safe if it contains an arithmetic
+  /* No floating point source is safe if it contains an arithmetic
      operation, since that operation may trap.  */
   switch (GET_CODE (op))
     {
@@ -136,12 +124,10 @@ safe_insn_src_p (op, mode)
 /* Return 1 if REG is clobbered in IN.
    Return 2 if REG is used in IN. 
    Return 3 if REG is both used and clobbered in IN.
-   Return 0 if neither.  */
+   Return 0 if none of the above.  */
 
 static int
-reg_clobbered_p (reg, in)
-     rtx reg;
-     rtx in;
+reg_clobbered_p (rtx reg, rtx in)
 {
   register enum rtx_code code;
 
@@ -202,14 +188,12 @@ reg_clobbered_p (reg, in)
   return 0;
 }
 
-/* Return non-zero if OP can be written to without screwing up
+/* Return nonzero if OP can be written to without screwing up
    GCC's model of what's going on.  It is assumed that this operand
    appears in the dest position of a SET insn in a conditional
    branch's delay slot.  AFTER is the label to start looking from.  */
 int
-operand_clobbered_before_used_after (op, after)
-     rtx op;
-     rtx after;
+operand_clobbered_before_used_after (rtx op, rtx after)
 {
   /* Just experimenting.  */
   if (GET_CODE (op) == CC0)
@@ -264,7 +248,7 @@ operand_clobbered_before_used_after (op, after)
     }
 
   /* In both of these cases, the first insn executed
-     for this op will be a orh whatever%h,%?r0,%?r31,
+     for this op will be a orh whatever%h,%r0,%r31,
      which is tolerable.  */
   if (GET_CODE (op) == MEM)
     return (CONSTANT_ADDRESS_P (XEXP (op, 0)));
@@ -272,111 +256,11 @@ operand_clobbered_before_used_after (op, after)
   return 0;
 }
 
-/* Return non-zero if this pattern, as a source to a "SET",
-   is known to yield an instruction of unit size.  */
-int
-single_insn_src_p (op, mode)
-     rtx op;
-     enum machine_mode mode;
-{
-  switch (GET_CODE (op))
-    {
-    case CONST_INT:
-      /* This is not always a single insn src, technically,
-	 but output_delayed_branch knows how to deal with it.  */
-      return 1;
-
-    case SYMBOL_REF:
-    case CONST:
-      /* This is not a single insn src, technically,
-	 but output_delayed_branch knows how to deal with it.  */
-      return 1;
-
-    case REG:
-      return 1;
-
-    case MEM:
-      return 1;
-
-      /* We never need to negate or complement constants.  */
-    case NEG:
-      return (mode != DFmode);
-    case NOT:
-    case ZERO_EXTEND:
-      return 1;
-
-    case PLUS:
-    case MINUS:
-      /* Detect cases that require multiple instructions.  */
-      if (CONSTANT_P (XEXP (op, 1))
-	  && !(GET_CODE (XEXP (op, 1)) == CONST_INT
-	       && SMALL_INT (XEXP (op, 1))))
-	return 0;
-    case EQ:
-    case NE:
-    case LT:
-    case GT:
-    case LE:
-    case GE:
-    case LTU:
-    case GTU:
-    case LEU:
-    case GEU:
-      /* Not doing floating point, since they probably
-	 take longer than the branch slot they might fill.  */
-      return (mode != SFmode && mode != DFmode);
-
-    case AND:
-      if (GET_CODE (XEXP (op, 1)) == NOT)
-	{
-	  rtx arg = XEXP (XEXP (op, 1), 0);
-	  if (CONSTANT_P (arg)
-	      && !(GET_CODE (arg) == CONST_INT
-		   && (SMALL_INT (arg)
-		       || (INTVAL (arg) & 0xffff) == 0)))
-	    return 0;
-	}
-    case IOR:
-    case XOR:
-      /* Both small and round numbers take one instruction;
-	 others take two.  */
-      if (CONSTANT_P (XEXP (op, 1))
-	  && !(GET_CODE (XEXP (op, 1)) == CONST_INT
-	       && (SMALL_INT (XEXP (op, 1))
-		   || (INTVAL (XEXP (op, 1)) & 0xffff) == 0)))
-	return 0;
-
-    case ASHIFT:
-    case ASHIFTRT:
-    case LSHIFTRT:
-      return 1;
-
-    case SUBREG:
-      if (SUBREG_BYTE (op) != 0)
-	return 0;
-      return single_insn_src_p (SUBREG_REG (op), mode);
-
-      /* Not doing floating point, since they probably
-	 take longer than the branch slot they might fill.  */
-    case FLOAT_EXTEND:
-    case FLOAT_TRUNCATE:
-    case FLOAT:
-    case FIX:
-    case UNSIGNED_FLOAT:
-    case UNSIGNED_FIX:
-      return 0;
-
-    default:
-      return 0;
-    }
-}
 
-/* Return non-zero only if OP is a register of mode MODE,
+/* Return nonzero only if OP is a register of mode MODE,
    or const0_rtx.  */
 int
-reg_or_0_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+reg_or_0_operand (rtx op, enum machine_mode mode)
 {
   return (op == const0_rtx || register_operand (op, mode)
 	  || op == CONST0_RTX (mode));
@@ -386,9 +270,7 @@ reg_or_0_operand (op, mode)
    address add/subtract insn (such as add %o1,7,%l2) of mode MODE.  */
 
 int
-arith_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+arith_operand (rtx op, enum machine_mode mode)
 {
   return (register_operand (op, mode)
 	  || (GET_CODE (op) == CONST_INT && SMALL_INT (op)));
@@ -397,9 +279,7 @@ arith_operand (op, mode)
 /* Return 1 if OP is a valid first operand for a logical insn of mode MODE.  */
 
 int
-logic_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+logic_operand (rtx op, enum machine_mode mode)
 {
   return (register_operand (op, mode)
 	  || (GET_CODE (op) == CONST_INT && LOGIC_INT (op)));
@@ -408,9 +288,7 @@ logic_operand (op, mode)
 /* Return 1 if OP is a valid first operand for a shift insn of mode MODE.  */
 
 int
-shift_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+shift_operand (rtx op, enum machine_mode mode)
 {
   return (register_operand (op, mode)
           || (GET_CODE (op) == CONST_INT));
@@ -420,9 +298,7 @@ shift_operand (op, mode)
    or an add insn of mode MODE.  */
 
 int
-compare_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+compare_operand (rtx op, enum machine_mode mode)
 {
   return (register_operand (op, mode)
 	  || (GET_CODE (op) == CONST_INT && SMALL_INT (op) && LOGIC_INT (op)));
@@ -432,9 +308,7 @@ compare_operand (op, mode)
    operand of a bte or btne insn.  */
 
 int
-bte_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+bte_operand (rtx op, enum machine_mode mode)
 {
   return (register_operand (op, mode)
 	  || (GET_CODE (op) == CONST_INT
@@ -444,9 +318,7 @@ bte_operand (op, mode)
 /* Return 1 if OP is an indexed memory reference of mode MODE.  */
 
 int
-indexed_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+indexed_operand (rtx op, enum machine_mode mode)
 {
   return (GET_CODE (op) == MEM && GET_MODE (op) == mode
 	  && GET_CODE (XEXP (op, 0)) == PLUS
@@ -459,9 +331,7 @@ indexed_operand (op, mode)
    with mode MODE.  */
 
 int
-load_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+load_operand (rtx op, enum machine_mode mode)
 {
   return (memory_operand (op, mode) || indexed_operand (op, mode));
 }
@@ -470,9 +340,7 @@ load_operand (op, mode)
    range constraining immediate operands in add/subtract insns.  */
 
 int
-small_int (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+small_int (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   return (GET_CODE (op) == CONST_INT && SMALL_INT (op));
 }
@@ -481,9 +349,7 @@ small_int (op, mode)
    range constraining immediate operands in logic insns.  */
 
 int
-logic_int (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+logic_int (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   return (GET_CODE (op) == CONST_INT && LOGIC_INT (op));
 }
@@ -494,9 +360,7 @@ logic_int (op, mode)
    can't handle yet.  */
 
 int
-call_insn_operand (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+call_insn_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   if (GET_CODE (op) == MEM
       && (CONSTANT_ADDRESS_P (XEXP (op, 0))
@@ -512,8 +376,7 @@ call_insn_operand (op, mode)
    for moving operands[1] into operands[0] as a fullword.  */
 
 static const char *
-singlemove_string (operands)
-     rtx *operands;
+singlemove_string (rtx *operands)
 {
   if (GET_CODE (operands[0]) == MEM)
     {
@@ -587,8 +450,7 @@ singlemove_string (operands)
    with operands OPERANDS.  */
 
 const char *
-output_move_double (operands)
-     rtx *operands;
+output_move_double (rtx *operands)
 {
   enum { REGOP, OFFSOP, MEMOP, PUSHOP, POPOP, CNSTOP, RNDOP } optype0, optype1;
   rtx latehalf[2];
@@ -625,7 +487,7 @@ output_move_double (operands)
   if (optype0 == RNDOP || optype1 == RNDOP)
     abort ();
 
-  /* If an operand is an unoffsettable memory ref, find a register
+  /* If an operand is an unoffsettable memory reference, find a register
      we can increment temporarily to make it refer to the second word.  */
 
   if (optype0 == MEMOP)
@@ -661,8 +523,13 @@ output_move_double (operands)
     {
       if (GET_CODE (operands[1]) == CONST_DOUBLE)
 	split_double (operands[1], &operands[1], &latehalf[1]);
+#if 0
       else if (CONSTANT_P (operands[1]))
 	latehalf[1] = const0_rtx;
+#else
+      else if (CONSTANT_P (operands[1]))
+        split_double (operands[1], &operands[1], &latehalf[1]);
+#endif
     }
   else
     latehalf[1] = operands[1];
@@ -674,7 +541,7 @@ output_move_double (operands)
      such overlap can't happen in memory unless the user explicitly
      sets it up, and that is an undefined circumstance."
 
-     but it happens on the sparc when loading parameter registers,
+     But it happens on the sparc when loading parameter registers,
      so I am going to define that circumstance, and make it work
      as expected.  */
 
@@ -761,8 +628,7 @@ output_move_double (operands)
 }
 
 const char *
-output_fp_move_double (operands)
-     rtx *operands;
+output_fp_move_double (rtx *operands)
 {
   /* If the source operand is any sort of zero, use f0 instead.  */
 
@@ -831,8 +697,7 @@ output_fp_move_double (operands)
    ADDR can be effectively incremented by incrementing REG.  */
 
 static rtx
-find_addr_reg (addr)
-     rtx addr;
+find_addr_reg (rtx addr)
 {
   while (GET_CODE (addr) == PLUS)
     {
@@ -857,13 +722,10 @@ find_addr_reg (addr)
 /* Return a template for a load instruction with mode MODE and
    arguments from the string ARGS.
 
-   This string is in static storage.   */
+  This string is in static storage.  */
 
 static const char *
-load_opcode (mode, args, reg)
-     enum machine_mode mode;
-     const char *args;
-     rtx reg;
+load_opcode (enum machine_mode mode, const char *args, rtx reg)
 {
   static char buf[30];
   const char *opcode;
@@ -907,10 +769,7 @@ load_opcode (mode, args, reg)
    This string is in static storage.   */
 
 static const char *
-store_opcode (mode, args, reg)
-     enum machine_mode mode;
-     const char *args;
-     rtx reg;
+store_opcode (enum machine_mode mode, const char *args, rtx reg)
 {
   static char buf[30];
   const char *opcode;
@@ -958,8 +817,7 @@ store_opcode (mode, args, reg)
    It may alter the values of operands[0] and operands[1].  */
 
 const char *
-output_store (operands)
-     rtx *operands;
+output_store (rtx *operands)
 {
   enum machine_mode mode = GET_MODE (operands[0]);
   rtx address = XEXP (operands[0], 0);
@@ -999,8 +857,7 @@ output_store (operands)
    It may alter the values of operands[0] and operands[1].  */
 
 const char *
-output_load (operands)
-     rtx *operands;
+output_load (rtx *operands)
 {
   enum machine_mode mode = GET_MODE (operands[0]);
   rtx address = XEXP (operands[1], 0);
@@ -1046,8 +903,7 @@ output_load (operands)
    All cases are handled here.  */
 
 void
-output_load_address (operands)
-     rtx *operands;
+output_load_address (rtx *operands)
 {
   rtx base, offset;
 
@@ -1118,8 +974,7 @@ output_load_address (operands)
    right to subtract on this machine, so right now we don't.)  */
 
 static void
-output_size_for_block_move (size, reg, align)
-     rtx size, reg, align;
+output_size_for_block_move (rtx size, rtx reg, rtx align)
 {
   rtx xoperands[3];
 
@@ -1151,8 +1006,7 @@ output_size_for_block_move (size, reg, align)
    OPERANDS[4..6] are pseudos we can safely clobber as temps.  */
 
 const char *
-output_block_move (operands)
-     rtx *operands;
+output_block_move (rtx *operands)
 {
   /* A vector for our computed operands.  Note that load_output_address
      makes use of (and can clobber) up to the 8th element of this vector.  */
@@ -1346,220 +1200,27 @@ output_block_move (operands)
   return "";
 }
 
-#if 0
-/* Output a delayed branch insn with the delay insn in its
-   branch slot.  The delayed branch insn template is in TEMPLATE,
-   with operands OPERANDS.  The insn in its delay slot is INSN.
-
-   As a special case, since we know that all memory transfers are via
-   ld/st insns, if we see a (MEM (SYMBOL_REF ...)) we divide the memory
-   reference around the branch as
-
-	orh ha%x,%?r0,%?r31
-	b ...
-	ld/st l%x(%?r31),...
-
-   As another special case, we handle loading (SYMBOL_REF ...) and
-   other large constants around branches as well:
-
-	orh h%x,%?r0,%0
-	b ...
-	or l%x,%0,%1
-
-   */
-/* ??? Disabled because this re-recognition is incomplete and causes
-   constrain_operands to segfault.  Anyone who cares should fix up
-   the code to use the DBR pass.  */
-
-const char *
-output_delayed_branch (template, operands, insn)
-     const char *template;
-     rtx *operands;
-     rtx insn;
-{
-  rtx src = XVECEXP (PATTERN (insn), 0, 1);
-  rtx dest = XVECEXP (PATTERN (insn), 0, 0);
-
-  /* See if we are doing some branch together with setting some register
-     to some 32-bit value which does (or may) have some of the high-order
-     16 bits set.  If so, we need to set the register in two stages.  One
-     stage must be done before the branch, and the other one can be done
-     in the delay slot.  */
-
-  if ( (GET_CODE (src) == CONST_INT
-	&& ((unsigned) INTVAL (src) & (unsigned) 0xffff0000) != (unsigned) 0)
-      || (GET_CODE (src) == SYMBOL_REF)
-      || (GET_CODE (src) == LABEL_REF)
-      || (GET_CODE (src) == CONST))
-    {
-      rtx xoperands[2];
-      xoperands[0] = dest;
-      xoperands[1] = src;
-
-      CC_STATUS_PARTIAL_INIT;
-      /* Output the `orh' insn.  */
-      output_asm_insn ("orh %H1,%?r0,%0", xoperands);
-
-      /* Output the branch instruction next.  */
-      output_asm_insn (template, operands);
-
-      /* Now output the `or' insn.  */
-      output_asm_insn ("or %L1,%0,%0", xoperands);
-    }
-  else if ((GET_CODE (src) == MEM
-	    && CONSTANT_ADDRESS_P (XEXP (src, 0)))
-	   || (GET_CODE (dest) == MEM
-	       && CONSTANT_ADDRESS_P (XEXP (dest, 0))))
-    {
-      rtx xoperands[2];
-      const char *split_template;
-      xoperands[0] = dest;
-      xoperands[1] = src;
-
-      /* Output the `orh' insn.  */
-      if (GET_CODE (src) == MEM)
-	{
-	  if (! ((cc_prev_status.flags & CC_KNOW_HI_R31)
-		 && (cc_prev_status.flags & CC_HI_R31_ADJ)
-		 && cc_prev_status.mdep == XEXP (operands[1], 0)))
-	    {
-	      CC_STATUS_INIT;
-	      output_asm_insn ("orh %h1,%?r0,%?r31", xoperands);
-	    }
-	  split_template = load_opcode (GET_MODE (dest),
-					"%L1(%?r31),%0", dest);
-	}
-      else
-	{
-	  if (! ((cc_prev_status.flags & CC_KNOW_HI_R31)
-		 && (cc_prev_status.flags & CC_HI_R31_ADJ)
-		 && cc_prev_status.mdep == XEXP (operands[0], 0)))
-	    {
-	      CC_STATUS_INIT;
-	      output_asm_insn ("orh %h0,%?r0,%?r31", xoperands);
-	    }
-	  split_template = store_opcode (GET_MODE (dest),
-					 "%r1,%L0(%?r31)", src);
-	}
-
-      /* Output the branch instruction next.  */
-      output_asm_insn (template, operands);
-
-      /* Now output the load or store.
-	 No need to do a CC_STATUS_INIT, because we are branching anyway.  */
-      output_asm_insn (split_template, xoperands);
-    }
-  else
-    {
-      int insn_code_number;
-      rtx pat = gen_rtx_SET (VOIDmode, dest, src);
-      rtx delay_insn = gen_rtx_INSN (VOIDmode, 0, 0, 0, pat, -1, 0, 0);
-      int i;
-
-      /* Output the branch instruction first.  */
-      output_asm_insn (template, operands);
-
-      /* Now recognize the insn which we put in its delay slot.
-	 We must do this after outputting the branch insn,
-	 since operands may just be a pointer to `recog_data.operand'.  */
-      INSN_CODE (delay_insn) = insn_code_number
-	= recog (pat, delay_insn, NULL);
-      if (insn_code_number == -1)
-	abort ();
-
-      for (i = 0; i < insn_data[insn_code_number].n_operands; i++)
-	{
-	  if (GET_CODE (recog_data.operand[i]) == SUBREG)
-	    alter_subreg (&recog_data.operand[i]);
-	}
-
-      insn_extract (delay_insn);
-      if (! constrain_operands (1))
-	fatal_insn_not_found (delay_insn);
-
-      template = get_insn_template (insn_code_number, delay_insn);
-      output_asm_insn (template, recog_data.operand);
-    }
-  CC_STATUS_INIT;
-  return "";
-}
-
-/* Output a newly constructed insn DELAY_INSN.  */
-const char *
-output_delay_insn (delay_insn)
-     rtx delay_insn;
-{
-  const char *template;
-  int insn_code_number;
-  int i;
-
-  /* Now recognize the insn which we put in its delay slot.
-     We must do this after outputting the branch insn,
-     since operands may just be a pointer to `recog_data.operand'.  */
-  insn_code_number = recog_memoized (delay_insn);
-  if (insn_code_number == -1)
-    abort ();
-
-  /* Extract the operands of this delay insn.  */
-  INSN_CODE (delay_insn) = insn_code_number;
-  insn_extract (delay_insn);
-
-  /* It is possible that this insn has not been properly scanned by final
-     yet.  If this insn's operands don't appear in the peephole's
-     actual operands, then they won't be fixed up by final, so we
-     make sure they get fixed up here.  -- This is a kludge.  */
-  for (i = 0; i < insn_data[insn_code_number].n_operands; i++)
-    {
-      if (GET_CODE (recog_data.operand[i]) == SUBREG)
-	alter_subreg (&recog_data.operand[i]);
-    }
-
-  if (! constrain_operands (1))
-    abort ();
-
-  cc_prev_status = cc_status;
-
-  /* Update `cc_status' for this instruction.
-     The instruction's output routine may change it further.
-     If the output routine for a jump insn needs to depend
-     on the cc status, it should look at cc_prev_status.  */
-
-  NOTICE_UPDATE_CC (PATTERN (delay_insn), delay_insn);
-
-  /* Now get the template for what this insn would
-     have been, without the branch.  */
-
-  template = get_insn_template (insn_code_number, delay_insn);
-  output_asm_insn (template, recog_data.operand);
-  return "";
-}
-#endif
-
 /* Special routine to convert an SFmode value represented as a
    CONST_DOUBLE into its equivalent unsigned long bit pattern.
    We convert the value from a double precision floating-point
    value to single precision first, and thence to a bit-wise
    equivalent unsigned long value.  This routine is used when
    generating an immediate move of an SFmode value directly
-   into a general register because the svr4 assembler doesn't
+   into a general register because the SVR4 assembler doesn't
    grok floating literals in instruction operand contexts.  */
 
 unsigned long
-sfmode_constant_to_ulong (x)
-     rtx x;
+sfmode_constant_to_ulong (rtx x)
 {
   REAL_VALUE_TYPE d;
-  union { float f; unsigned long i; } u2;
+  unsigned long l;
 
   if (GET_CODE (x) != CONST_DOUBLE || GET_MODE (x) != SFmode)
     abort ();
 
-#if TARGET_FLOAT_FORMAT != HOST_FLOAT_FORMAT
- error IEEE emulation needed
-#endif
   REAL_VALUE_FROM_CONST_DOUBLE (d, x);
-  u2.f = d;
-  return u2.i;
+  REAL_VALUE_TO_TARGET_SINGLE (d, l);
+  return l;
 }
 
 /* This function generates the assembly code for function entry.
@@ -1580,18 +1241,18 @@ sfmode_constant_to_ulong (x)
    part of each frame always includes at least 2 words (8 bytes)
    to hold the saved frame pointer and the saved return address.
 
-   The svr4 ABI for the i860 now requires that the values of the
+   The SVR4 ABI for the i860 now requires that the values of the
    stack pointer and frame pointer registers be kept aligned to
    16-byte boundaries at all times.  We obey that restriction here.
 
-   The svr4 ABI for the i860 is entirely vague when it comes to specifying
+   The SVR4 ABI for the i860 is entirely vague when it comes to specifying
    exactly where the "preserved" registers should be saved.  The native
-   svr4 C compiler I now have doesn't help to clarify the requirements
+   SVR4 C compiler I now have doesn't help to clarify the requirements
    very much because it is plainly out-of-date and non-ABI-compliant
    (in at least one important way, i.e. how it generates function
    epilogues).
 
-   The native svr4 C compiler saves the "preserved" registers (i.e.
+   The native SVR4 C compiler saves the "preserved" registers (i.e.
    r4-r15 and f2-f7) in the lower part of a frame (i.e. at negative
    offsets from the frame pointer).
 
@@ -1628,7 +1289,7 @@ sfmode_constant_to_ulong (x)
    frame, so that we can decide at the very last minute how much (or how
    little) space we must allocate for this purpose.
 
-   To satisfy the needs of the svr4 ABI "tdesc" scheme, preserved
+   To satisfy the needs of the SVR4 ABI "tdesc" scheme, preserved
    registers must always be saved so that the saved values of registers
    with higher numbers are at higher addresses.  We obey that restriction
    here.
@@ -1636,13 +1297,13 @@ sfmode_constant_to_ulong (x)
    There are two somewhat different ways that you can generate prologues
    here... i.e. pedantically ABI-compliant, and the "other" way.  The
    "other" way is more consistent with what is currently generated by the
-   "native" svr4 C compiler for the i860.  That's important if you want
-   to use the current (as of 8/91) incarnation of svr4 SDB for the i860.
+   "native" SVR4 C compiler for the i860.  That's important if you want
+   to use the current (as of 8/91) incarnation of SVR4 SDB for the i860.
    The SVR4 SDB for the i860 insists on having function prologues be
    non-ABI-compliant!
 
    To get fully ABI-compliant prologues, define I860_STRICT_ABI_PROLOGUES
-   in the i860svr4.h file.  (By default this is *not* defined).
+   in the i860/sysv4.h file.  (By default this is *not* defined).
 
    The differences between the ABI-compliant and non-ABI-compliant prologues
    are that (a) the ABI version seems to require the use of *signed*
@@ -1654,8 +1315,7 @@ sfmode_constant_to_ulong (x)
    thing that is supposed to happen in the prologue is getting the frame
    pointer set to its new value (but only after everything else has
    already been properly setup).  We do that here, but only if the symbol
-   I860_STRICT_ABI_PROLOGUES is defined.
-*/
+   I860_STRICT_ABI_PROLOGUES is defined.  */
 
 #ifndef STACK_ALIGNMENT
 #define STACK_ALIGNMENT	16
@@ -1667,9 +1327,7 @@ static int must_preserve_r1;
 static unsigned must_preserve_bytes;
 
 static void
-i860_output_function_prologue (asm_file, local_bytes)
-     register FILE *asm_file;
-     register HOST_WIDE_INT local_bytes;
+i860_output_function_prologue (FILE *asm_file, HOST_WIDE_INT local_bytes)
 {
   register HOST_WIDE_INT frame_lower_bytes;
   register HOST_WIDE_INT frame_upper_bytes;
@@ -1690,17 +1348,17 @@ i860_output_function_prologue (asm_file, local_bytes)
         preserved_reg_bytes += 4;
     }
 
-  /* Round-up the frame_lower_bytes so that it's a multiple of 16. */
+  /* Round-up the frame_lower_bytes so that it's a multiple of 16.  */
 
   frame_lower_bytes = (local_bytes + STACK_ALIGNMENT - 1) & -STACK_ALIGNMENT;
 
   /* The upper part of each frame will contain the saved fp,
      the saved r1, and stack slots for all of the other "preserved"
-     registers that we find we will need to save & restore. */
+     registers that we find we will need to save & restore.  */
 
   frame_upper_bytes = must_preserve_bytes + preserved_reg_bytes;
 
-  /* Round-up the frame_upper_bytes so that it's a multiple of 16. */
+  /* Round-up the frame_upper_bytes so that it's a multiple of 16.  */
 
   frame_upper_bytes
     = (frame_upper_bytes + STACK_ALIGNMENT - 1) & -STACK_ALIGNMENT;
@@ -1717,10 +1375,10 @@ i860_output_function_prologue (asm_file, local_bytes)
 
   if (total_fsize > 0x7fff)
     {
-      /* Adjust the stack pointer.  The ABI sez to do this using `adds',
-	 but the native C compiler on svr4 uses `addu'.  */
+      /* Adjust the stack pointer.  The ABI specifies using `adds' for
+	 this, but the native C compiler on SVR4 uses `addu'.  */
 
-      fprintf (asm_file, "\taddu -%d,%ssp,%ssp\n",
+      fprintf (asm_file, "\taddu -" HOST_WIDE_INT_PRINT_DEC ",%ssp,%ssp\n",
 	frame_upper_bytes, i860_reg_prefix, i860_reg_prefix);
 
       /* Save the old frame pointer.  */
@@ -1728,29 +1386,30 @@ i860_output_function_prologue (asm_file, local_bytes)
       fprintf (asm_file, "\tst.l %sfp,0(%ssp)\n",
 	i860_reg_prefix, i860_reg_prefix);
 
-      /* Setup the new frame pointer.  The ABI sez to do this after
-	 preserving registers (using adds), but that's not what the
-	 native C compiler on svr4 does.  */
+      /* Setup the new frame pointer.  The ABI specifies that this is to
+	 be done after preserving registers (using `adds'), but that's not
+	 what the native C compiler on SVR4 does.  */
 
       fprintf (asm_file, "\taddu 0,%ssp,%sfp\n",
 	i860_reg_prefix, i860_reg_prefix);
 
       /* Get the value of frame_lower_bytes into r31.  */
 
-      fprintf (asm_file, "\torh %d,%sr0,%sr31\n",
+      fprintf (asm_file, "\torh " HOST_WIDE_INT_PRINT_DEC ",%sr0,%sr31\n",
 	frame_lower_bytes >> 16, i860_reg_prefix, i860_reg_prefix);
-      fprintf (asm_file, "\tor %d,%sr31,%sr31\n",
+      fprintf (asm_file, "\tor " HOST_WIDE_INT_PRINT_DEC ",%sr31,%sr31\n",
 	frame_lower_bytes & 0xffff, i860_reg_prefix, i860_reg_prefix);
 
       /* Now re-adjust the stack pointer using the value in r31.
-	 The ABI sez to do this with `subs' but SDB may prefer `subu'.  */
+	 The ABI specifies that this is done with `subs' but SDB may
+	 prefer `subu'.  */
 
       fprintf (asm_file, "\tsubu %ssp,%sr31,%ssp\n",
 	i860_reg_prefix, i860_reg_prefix, i860_reg_prefix);
 
-      /* Preserve registers.  The ABI sez to do this before setting
-	 up the new frame pointer, but that's not what the native
-	 C compiler on svr4 does.  */
+      /* Preserve registers.  The ABI specifies that this is to be done
+	 before setting up the new frame pointer, but that's not what the
+	 native C compiler on SVR4 does.  */
 
       for (i = 1; i < 32; i++)
         if (regs_ever_live[i] && ! call_used_regs[i])
@@ -1774,28 +1433,28 @@ i860_output_function_prologue (asm_file, local_bytes)
     }
   else
     {
-      /* Adjust the stack pointer.  The ABI sez to do this using `adds',
-	 but the native C compiler on svr4 uses `addu'.  */
+      /* Adjust the stack pointer.  The ABI specifies using `adds' for this,
+	 but the native C compiler on SVR4 uses `addu'.  */
 
-      fprintf (asm_file, "\taddu -%d,%ssp,%ssp\n",
+      fprintf (asm_file, "\taddu -" HOST_WIDE_INT_PRINT_DEC ",%ssp,%ssp\n",
 	total_fsize, i860_reg_prefix, i860_reg_prefix);
 
       /* Save the old frame pointer.  */
 
-      fprintf (asm_file, "\tst.l %sfp,%d(%ssp)\n",
+      fprintf (asm_file, "\tst.l %sfp," HOST_WIDE_INT_PRINT_DEC "(%ssp)\n",
 	i860_reg_prefix, frame_lower_bytes, i860_reg_prefix);
 
-      /* Setup the new frame pointer.  The ABI sez to do this after
-	 preserving registers and after saving the return address,
-	(and its saz to do this using adds), but that's not what the
-	 native C compiler on svr4 does.  */
+      /* Setup the new frame pointer.  The ABI specifies that this is to be
+	 done after preserving registers and after saving the return address,
+	 (and to do it using `adds'), but that's not what the native C
+	 compiler on SVR4 does.  */
 
-      fprintf (asm_file, "\taddu %d,%ssp,%sfp\n",
+      fprintf (asm_file, "\taddu " HOST_WIDE_INT_PRINT_DEC ",%ssp,%sfp\n",
 	frame_lower_bytes, i860_reg_prefix, i860_reg_prefix);
 
-      /* Preserve registers.  The ABI sez to do this before setting
-	 up the new frame pointer, but that's not what the native
-	 compiler on svr4 does.  */
+      /* Preserve registers.  The ABI specifies that this is to be done
+	 before setting up the new frame pointer, but that's not what the
+	 native compiler on SVR4 does.  */
 
       for (i = 1; i < 32; i++)
         if (regs_ever_live[i] && ! call_used_regs[i])
@@ -1811,9 +1470,9 @@ i860_output_function_prologue (asm_file, local_bytes)
 	    must_preserve_bytes + (4 * preserved_so_far++),
 	    i860_reg_prefix);
 
-      /* Save the return address.  The ABI sez to do this earlier,
-	 and also via an offset from %sp, but the native C compiler
-	 on svr4 does it later (i.e. now) and uses an offset from
+      /* Save the return address.  The ABI specifies that this is to be
+	 done earlier, and also via an offset from %sp, but the native C
+	 compiler on SVR4 does it later (i.e. now) and uses an offset from
 	 %fp.  */
 
       if (must_preserve_r1)
@@ -1963,12 +1622,11 @@ i860_output_function_prologue (asm_file, local_bytes)
    the frame pointer register is never less than the value in the stack
    pointer register.  It's not clear why this relationship needs to be
    maintained at all times, but maintaining it only costs one extra
-   instruction, so what the hell.
-*/
+   instruction, so what the hell.  */
 
 /* This corresponds to a version 4 TDESC structure. Lower numbered
    versions successively omit the last word of the structure. We
-   don't try to handle version 5 here. */
+   don't try to handle version 5 here.  */
 
 typedef struct TDESC_flags {
 	int version:4;
@@ -1988,9 +1646,7 @@ typedef struct TDESC {
 } TDESC;
 
 static void
-i860_output_function_epilogue (asm_file, local_bytes)
-     register FILE *asm_file;
-     register HOST_WIDE_INT local_bytes;
+i860_output_function_epilogue (FILE *asm_file, HOST_WIDE_INT local_bytes)
 {
   register HOST_WIDE_INT frame_upper_bytes;
   register HOST_WIDE_INT frame_lower_bytes;
@@ -2009,7 +1665,7 @@ i860_output_function_epilogue (asm_file, local_bytes)
   flags->reg_packing = 1;
   flags->iregs = 8;	/* old fp always gets saved */
 
-  /* Round-up the frame_lower_bytes so that it's a multiple of 16. */
+  /* Round-up the frame_lower_bytes so that it's a multiple of 16.  */
 
   frame_lower_bytes = (local_bytes + STACK_ALIGNMENT - 1) & -STACK_ALIGNMENT;
 
@@ -2024,11 +1680,11 @@ i860_output_function_epilogue (asm_file, local_bytes)
 
   /* The upper part of each frame will contain only saved fp,
      the saved r1, and stack slots for all of the other "preserved"
-     registers that we find we will need to save & restore. */
+     registers that we find we will need to save & restore.  */
 
   frame_upper_bytes = must_preserve_bytes + preserved_reg_bytes;
 
-  /* Round-up frame_upper_bytes so that t is a multiple of 16. */
+  /* Round-up frame_upper_bytes so that t is a multiple of 16.  */
 
   frame_upper_bytes
     = (frame_upper_bytes + STACK_ALIGNMENT - 1) & -STACK_ALIGNMENT;
@@ -2063,7 +1719,7 @@ i860_output_function_epilogue (asm_file, local_bytes)
 
   /* Get the value we plan to use to restore the stack pointer into r31.  */
 
-  fprintf (asm_file, "\tadds %d,%sfp,%sr31\n",
+  fprintf (asm_file, "\tadds " HOST_WIDE_INT_PRINT_DEC ",%sfp,%sr31\n",
     frame_upper_bytes, i860_reg_prefix, i860_reg_prefix);
 
   /* Restore the return address and the old frame pointer.  */
@@ -2082,12 +1738,12 @@ i860_output_function_epilogue (asm_file, local_bytes)
   fprintf (asm_file, "\tbri %sr1\n\tmov %sr31,%ssp\n",
     i860_reg_prefix, i860_reg_prefix, i860_reg_prefix);
 
-#ifdef	OUTPUT_TDESC	/* Output an ABI-compliant TDESC entry */
+#ifdef	OUTPUT_TDESC	/* Output an ABI-compliant TDESC entry.  */
   if (! frame_lower_bytes) {
     flags->version--;
     if (! frame_upper_bytes) {
       flags->version--;
-      if (restored_so_far == int_restored)	/* No FP saves */
+      if (restored_so_far == int_restored)	/* No FP saves.  */
 	flags->version--;
     }
   }
@@ -2118,8 +1774,9 @@ i860_output_function_epilogue (asm_file, local_bytes)
 
 
 /* Expand a library call to __builtin_saveregs.  */
+
 rtx
-i860_saveregs ()
+i860_saveregs (void)
 {
   rtx fn = gen_rtx_SYMBOL_REF (Pmode, "__builtin_saveregs");
   rtx save = gen_reg_rtx (Pmode);
@@ -2137,114 +1794,125 @@ i860_saveregs ()
   return ret;
 }
 
-tree
-i860_build_va_list ()
+/* Create the va_list data type.
+   The SVR4 ABI requires the following structure:
+        typedef struct {
+            unsigned long  ireg_used;
+            unsigned long  freg_used;
+            long          *reg_base;
+            long          *mem_ptr;
+        } va_list;
+
+   Otherwise, this structure is used:
+        typedef struct {
+            long          *reg_base;
+            long          *mem_ptr;
+            unsigned long  ireg_used;
+            unsigned long  freg_used;
+        } va_list;
+
+   The tree representing the va_list declaration is returned.  */
+
+static tree
+i860_build_builtin_va_list (void)
 {
-  tree field_ireg_used, field_freg_used, field_reg_base, field_mem_ptr;
-  tree record;
+  tree f_gpr, f_fpr, f_mem, f_sav, record, type_decl;
 
-  record = make_node (RECORD_TYPE);
+  record = (*lang_hooks.types.make_type) (RECORD_TYPE);
+  type_decl = build_decl (TYPE_DECL, get_identifier ("__va_list_tag"), record);
 
-  field_ireg_used = build_decl (FIELD_DECL, get_identifier ("__ireg_used"),
-				unsigned_type_node);
-  field_freg_used = build_decl (FIELD_DECL, get_identifier ("__freg_used"),
-				unsigned_type_node);
-  field_reg_base = build_decl (FIELD_DECL, get_identifier ("__reg_base"),
-			       ptr_type_node);
-  field_mem_ptr = build_decl (FIELD_DECL, get_identifier ("__mem_ptr"),
-			      ptr_type_node);
+  f_gpr = build_decl (FIELD_DECL, get_identifier ("__ireg_used"),
+		      unsigned_type_node);
+  f_fpr = build_decl (FIELD_DECL, get_identifier ("__freg_used"),
+		      unsigned_type_node);
+  f_sav = build_decl (FIELD_DECL, get_identifier ("__reg_base"),
+		      ptr_type_node);
+  f_mem = build_decl (FIELD_DECL, get_identifier ("__mem_ptr"),
+		      ptr_type_node);
 
-  DECL_FIELD_CONTEXT (field_ireg_used) = record;
-  DECL_FIELD_CONTEXT (field_freg_used) = record;
-  DECL_FIELD_CONTEXT (field_reg_base) = record;
-  DECL_FIELD_CONTEXT (field_mem_ptr) = record;
+  DECL_FIELD_CONTEXT (f_gpr) = record;
+  DECL_FIELD_CONTEXT (f_fpr) = record;
+  DECL_FIELD_CONTEXT (f_sav) = record;
+  DECL_FIELD_CONTEXT (f_mem) = record;
+
+  TREE_CHAIN (record) = type_decl;
+  TYPE_NAME (record) = type_decl;
 
 #ifdef I860_SVR4_VA_LIST
-  TYPE_FIELDS (record) = field_ireg_used;
-  TREE_CHAIN (field_ireg_used) = field_freg_used;
-  TREE_CHAIN (field_freg_used) = field_reg_base;
-  TREE_CHAIN (field_reg_base) = field_mem_ptr;
+  TYPE_FIELDS (record) = f_gpr;
+  TREE_CHAIN (f_gpr) = f_fpr;
+  TREE_CHAIN (f_fpr) = f_sav;
+  TREE_CHAIN (f_sav) = f_mem;
 #else
-  TYPE_FIELDS (record) = field_reg_base;
-  TREE_CHAIN (field_reg_base) = field_mem_ptr;
-  TREE_CHAIN (field_mem_ptr) = field_ireg_used;
-  TREE_CHAIN (field_ireg_used) = field_freg_used;
+  TYPE_FIELDS (record) = f_sav;
+  TREE_CHAIN (f_sav) = f_mem;
+  TREE_CHAIN (f_mem) = f_gpr;
+  TREE_CHAIN (f_gpr) = f_fpr;
 #endif
 
   layout_type (record);
   return record;
 }
 
+/* Initialize the va_list structure.  */
+
 void
-i860_va_start (stdarg_p, valist, nextarg)
-     int stdarg_p;
-     tree valist;
-     rtx nextarg;
+i860_va_start (tree valist, rtx nextarg ATTRIBUTE_UNUSED)
 {
   tree saveregs, t;
-
-  saveregs = make_tree (build_pointer_type (va_list_type_node),
-			expand_builtin_saveregs ());
-  saveregs = build1 (INDIRECT_REF, va_list_type_node, saveregs);
-
-  if (stdarg_p)
-    {
-      tree field_ireg_used, field_freg_used, field_reg_base, field_mem_ptr;
-      tree ireg_used, freg_used, reg_base, mem_ptr;
+  tree f_gpr, f_fpr, f_mem, f_sav;
+  tree gpr, fpr, mem, sav;
+  int off = 0;
+  saveregs = make_tree (ptr_type_node, expand_builtin_saveregs ());
 
 #ifdef I860_SVR4_VA_LIST
-      field_ireg_used = TYPE_FIELDS (va_list_type_node);
-      field_freg_used = TREE_CHAIN (field_ireg_used);
-      field_reg_base = TREE_CHAIN (field_freg_used);
-      field_mem_ptr = TREE_CHAIN (field_reg_base);
+  f_gpr = TYPE_FIELDS (va_list_type_node);
+  f_fpr = TREE_CHAIN (f_gpr);
+  f_sav = TREE_CHAIN (f_fpr);
+  f_mem = TREE_CHAIN (f_sav);
 #else
-      field_reg_base = TYPE_FIELDS (va_list_type_node);
-      field_mem_ptr = TREE_CHAIN (field_reg_base);
-      field_ireg_used = TREE_CHAIN (field_mem_ptr);
-      field_freg_used = TREE_CHAIN (field_ireg_used);
+  f_sav = TYPE_FIELDS (va_list_type_node);
+  f_mem = TREE_CHAIN (f_sav);
+  f_gpr = TREE_CHAIN (f_mem);
+  f_fpr = TREE_CHAIN (f_gpr);
 #endif
 
-      ireg_used = build (COMPONENT_REF, TREE_TYPE (field_ireg_used),
-			 valist, field_ireg_used);
-      freg_used = build (COMPONENT_REF, TREE_TYPE (field_freg_used),
-			 valist, field_freg_used);
-      reg_base = build (COMPONENT_REF, TREE_TYPE (field_reg_base),
-			valist, field_reg_base);
-      mem_ptr = build (COMPONENT_REF, TREE_TYPE (field_mem_ptr),
-		       valist, field_mem_ptr);
+  gpr = build (COMPONENT_REF, TREE_TYPE (f_gpr), valist, f_gpr);
+  fpr = build (COMPONENT_REF, TREE_TYPE (f_fpr), valist, f_fpr);
+  sav = build (COMPONENT_REF, TREE_TYPE (f_sav), valist, f_sav);
+  mem = build (COMPONENT_REF, TREE_TYPE (f_mem), valist, f_mem);
 
-      t = build_int_2 (current_function_args_info.ints, 0);
-      t = build (MODIFY_EXPR, TREE_TYPE (ireg_used), ireg_used, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
-      
-      t = build_int_2 (ROUNDUP (current_function_args_info.floats, 8), 0);
-      t = build (MODIFY_EXPR, TREE_TYPE (freg_used), freg_used, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
-      
-      t = build (COMPONENT_REF, TREE_TYPE (field_reg_base),
-		 saveregs, field_reg_base);
-      t = build (MODIFY_EXPR, TREE_TYPE (reg_base), reg_base, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+  /* Initialize the `mem_ptr' field to the address of the first anonymous
+     stack argument.  */
+  t = make_tree (TREE_TYPE (mem), virtual_incoming_args_rtx);
+  off = INTVAL (current_function_arg_offset_rtx);
+  off = off < 0 ? 0 : off;
+  t = build (PLUS_EXPR, TREE_TYPE (mem), t, build_int_2 (off, 0));
+  t = build (MODIFY_EXPR, TREE_TYPE (mem), mem, t);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 
-      t = make_tree (ptr_type_node, nextarg);
-      t = build (MODIFY_EXPR, TREE_TYPE (mem_ptr), mem_ptr, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
-    }
-  else
-    {
-      t = build (MODIFY_EXPR, va_list_type_node, valist, saveregs);
-      TREE_SIDE_EFFECTS (t) = 1;
-      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
-    }
+  /* Initialize the `ireg_used' field.  */
+  t = build_int_2 (current_function_args_info.ints / UNITS_PER_WORD, 0);
+  t = build (MODIFY_EXPR, TREE_TYPE (gpr), gpr, t);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+     
+  /* Initialize the `freg_used' field.  */
+  t = build_int_2 (current_function_args_info.floats / UNITS_PER_WORD, 0);
+  t = build (MODIFY_EXPR, TREE_TYPE (fpr), fpr, t);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+      
+  /* Initialize the `reg_base' field.  */
+  t = build (MODIFY_EXPR, TREE_TYPE (sav), sav, saveregs);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 }
 
 #define NUM_PARM_FREGS	8
 #define NUM_PARM_IREGS	12
-#ifdef I860_SVR4_VARARGS
+#ifdef I860_SVR4_VA_LIST
 #define FREG_OFFSET 0
 #define IREG_OFFSET (NUM_PARM_FREGS * UNITS_PER_WORD)
 #else
@@ -2252,113 +1920,204 @@ i860_va_start (stdarg_p, valist, nextarg)
 #define IREG_OFFSET 0
 #endif
 
+/* Update the VALIST structure as necessary for an
+   argument of the given TYPE, and return the argument.  */
+
 rtx
-i860_va_arg (valist, type)
-     tree valist, type;
+i860_va_arg (tree valist, tree type)
 {
-  tree field_ireg_used, field_freg_used, field_reg_base, field_mem_ptr;
-  tree type_ptr_node, t;
-  rtx lab_over = NULL_RTX;
-  rtx ret, val;
-  HOST_WIDE_INT align;
+  tree f_gpr, f_fpr, f_mem, f_sav;
+  tree gpr, fpr, mem, sav, reg, t, u;
+  int size, n_reg, sav_ofs, sav_scale, max_reg;
+  rtx lab_false, lab_over, addr_rtx, r;
 
 #ifdef I860_SVR4_VA_LIST
-  field_ireg_used = TYPE_FIELDS (va_list_type_node);
-  field_freg_used = TREE_CHAIN (field_ireg_used);
-  field_reg_base = TREE_CHAIN (field_freg_used);
-  field_mem_ptr = TREE_CHAIN (field_reg_base);
+  f_gpr = TYPE_FIELDS (va_list_type_node);
+  f_fpr = TREE_CHAIN (f_gpr);
+  f_sav = TREE_CHAIN (f_fpr);
+  f_mem = TREE_CHAIN (f_sav);
 #else
-  field_reg_base = TYPE_FIELDS (va_list_type_node);
-  field_mem_ptr = TREE_CHAIN (field_reg_base);
-  field_ireg_used = TREE_CHAIN (field_mem_ptr);
-  field_freg_used = TREE_CHAIN (field_ireg_used);
+  f_sav = TYPE_FIELDS (va_list_type_node);
+  f_mem = TREE_CHAIN (f_sav);
+  f_gpr = TREE_CHAIN (f_mem);
+  f_fpr = TREE_CHAIN (f_gpr);
 #endif
 
-  field_ireg_used = build (COMPONENT_REF, TREE_TYPE (field_ireg_used),
-			   valist, field_ireg_used);
-  field_freg_used = build (COMPONENT_REF, TREE_TYPE (field_freg_used),
-			   valist, field_freg_used);
-  field_reg_base = build (COMPONENT_REF, TREE_TYPE (field_reg_base),
-			  valist, field_reg_base);
-  field_mem_ptr = build (COMPONENT_REF, TREE_TYPE (field_mem_ptr),
-			 valist, field_mem_ptr);
+  gpr = build (COMPONENT_REF, TREE_TYPE (f_gpr), valist, f_gpr);
+  fpr = build (COMPONENT_REF, TREE_TYPE (f_fpr), valist, f_fpr);
+  mem = build (COMPONENT_REF, TREE_TYPE (f_mem), valist, f_mem);
+  sav = build (COMPONENT_REF, TREE_TYPE (f_sav), valist, f_sav);
 
-  ret = gen_reg_rtx (Pmode);
-  type_ptr_node = build_pointer_type (type);
+  size = int_size_in_bytes (type);
 
-  if (! AGGREGATE_TYPE_P (type))
+  if (AGGREGATE_TYPE_P (type))
     {
-      int nparm, incr, ofs;
-      tree field;
-      rtx lab_false;
+      /* Aggregates are passed on the stack.  */
+      HOST_WIDE_INT align;
 
-      if (FLOAT_TYPE_P (type))
-	{
-	  field = field_freg_used;
-	  nparm = NUM_PARM_FREGS;
-	  incr = 2;
-	  ofs = FREG_OFFSET;
-	}
-      else
-	{
-	  field = field_ireg_used;
-	  nparm = NUM_PARM_IREGS;
-	  incr = int_size_in_bytes (type) / UNITS_PER_WORD;
-	  ofs = IREG_OFFSET;
-	}
+      align = TYPE_ALIGN (type);
+      if (align < BITS_PER_WORD)
+        align = BITS_PER_WORD;
+      align /= BITS_PER_UNIT;
 
-      lab_false = gen_label_rtx ();
-      lab_over = gen_label_rtx ();
+      addr_rtx = gen_reg_rtx (Pmode);
+      t = build (PLUS_EXPR, ptr_type_node, mem, build_int_2 (align - 1, 0));
+      t = build (BIT_AND_EXPR, ptr_type_node, t, build_int_2 (-align, -1));
+      r = expand_expr (t, addr_rtx, VOIDmode /* Pmode */, EXPAND_NORMAL);
+      if (r != addr_rtx)
+        emit_move_insn (addr_rtx, r);
 
-      emit_cmp_and_jump_insns (expand_expr (field, NULL_RTX, 0, 0),
-			       GEN_INT (nparm - incr), GT, const0_rtx,
-			       TYPE_MODE (TREE_TYPE (field)),
-			       TREE_UNSIGNED (field), lab_false);
-
-      t = fold (build (POSTINCREMENT_EXPR, TREE_TYPE (field), field,
-		       build_int_2 (incr, 0)));
+      t = fold (build (PLUS_EXPR, ptr_type_node, 
+		make_tree (ptr_type_node, addr_rtx),
+		build_int_2 (size, 0)));
+      t = build (MODIFY_EXPR, ptr_type_node, mem, t);
       TREE_SIDE_EFFECTS (t) = 1;
+      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 
-      t = fold (build (MULT_EXPR, TREE_TYPE (field), field,
-		       build_int_2 (UNITS_PER_WORD, 0)));
-      TREE_SIDE_EFFECTS (t) = 1;
-      
-      t = fold (build (PLUS_EXPR, ptr_type_node, field_reg_base,
-		       fold (build (PLUS_EXPR, TREE_TYPE (field), t,
-				    build_int_2 (ofs, 0)))));
-      TREE_SIDE_EFFECTS (t) = 1;
-      
-      val = expand_expr (t, ret, VOIDmode, EXPAND_NORMAL);
-      if (val != ret)
-	emit_move_insn (ret, val);
-
-      emit_jump_insn (gen_jump (lab_over));
-      emit_barrier ();
-      emit_label (lab_false);
+      return addr_rtx;
+    }
+  else if (FLOAT_TYPE_P (type) || (INTEGRAL_TYPE_P (type) && size == 8))
+    {
+      /* Floats and long longs are passed in the floating-point registers.  */
+      reg = fpr;
+      n_reg = size / UNITS_PER_WORD;
+      sav_ofs = FREG_OFFSET;
+      sav_scale = UNITS_PER_WORD;
+      max_reg = NUM_PARM_FREGS;
+    }
+  else
+    {
+      /* Everything else is passed in general registers.  */
+      reg = gpr;
+      n_reg = (size + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
+      sav_ofs = IREG_OFFSET;
+      sav_scale = UNITS_PER_WORD;
+      max_reg = NUM_PARM_IREGS;
+      if (n_reg > 1)
+        abort ();
     }
 
-  align = TYPE_ALIGN (type);
-  if (align < BITS_PER_WORD)
-    align = BITS_PER_WORD;
-  align /= BITS_PER_UNIT;
+  /* The value was passed in a register, so read it from the register
+     save area initialized by __builtin_saveregs.  */
 
-  t = build (PLUS_EXPR, ptr_type_node, field_mem_ptr,
-	     build_int_2 (align - 1, 0));
-  t = build (BIT_AND_EXPR, ptr_type_node, t, build_int_2 (-align, -1));
+  lab_false = gen_label_rtx ();
+  lab_over = gen_label_rtx ();
+  addr_rtx = gen_reg_rtx (Pmode);
 
-  val = expand_expr (t, ret, VOIDmode, EXPAND_NORMAL);
-  if (val != ret)
-    emit_move_insn (ret, val);
+  emit_cmp_and_jump_insns (expand_expr (reg, NULL_RTX, Pmode, EXPAND_NORMAL),
+			   GEN_INT (max_reg - n_reg),
+			   GT, const1_rtx, Pmode, 0, lab_false);
 
-  t = fold (build (PLUS_EXPR, ptr_type_node,
-		   make_tree (ptr_type_node, ret),
-		   build_int_2 (int_size_in_bytes (type), 0)));
-  t = build (MODIFY_EXPR, ptr_type_node, field_mem_ptr, t);
+  if (sav_ofs)
+    t = build (PLUS_EXPR, ptr_type_node, sav, build_int_2 (sav_ofs, 0));
+  else
+    t = sav;
+
+  u = build (MULT_EXPR, long_integer_type_node,
+	     reg, build_int_2 (sav_scale, 0));
+  TREE_SIDE_EFFECTS (u) = 1;
+
+  t = build (PLUS_EXPR, ptr_type_node, t, u);
+  TREE_SIDE_EFFECTS (t) = 1;
+
+  r = expand_expr (t, addr_rtx, Pmode, EXPAND_NORMAL);
+  if (r != addr_rtx)
+    emit_move_insn (addr_rtx, r);
+
+  emit_jump_insn (gen_jump (lab_over));
+  emit_barrier ();
+  emit_label (lab_false);
+
+  /* The value was passed in memory, so read it from the overflow area.  */
+
+  t = save_expr (mem);
+  r = expand_expr (t, addr_rtx, Pmode, EXPAND_NORMAL);
+  if (r != addr_rtx)
+    emit_move_insn (addr_rtx, r);
+
+  t = build (PLUS_EXPR, TREE_TYPE (t), t, build_int_2 (size, 0));
+  t = build (MODIFY_EXPR, TREE_TYPE (mem), mem, t);
   TREE_SIDE_EFFECTS (t) = 1;
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 
-  if (lab_over)
-    emit_label (lab_over);
+  emit_label (lab_over);
 
-  return ret;
+  /* Increment either the ireg_used or freg_used field.  */
+
+  u = build (PREINCREMENT_EXPR, TREE_TYPE (reg), reg, build_int_2 (n_reg, 0));
+  TREE_SIDE_EFFECTS (u) = 1;
+  expand_expr (u, const0_rtx, VOIDmode, EXPAND_NORMAL);
+
+  return addr_rtx;
 }
+
+/* Compute a (partial) cost for rtx X.  Return true if the complete
+   cost has been computed, and false if subexpressions should be
+   scanned.  In either case, *TOTAL contains the cost result.  */
+
+static bool
+i860_rtx_costs (rtx x, int code, int outer_code ATTRIBUTE_UNUSED, int *total)
+{
+  switch (code)
+    {
+    case CONST_INT:
+      if (INTVAL (x) == 0)
+        *total = 0;
+      else if (INTVAL (x) < 0x2000 && INTVAL (x) >= -0x2000)
+        *total = 1;
+      return true;
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      *total = 4;
+      return true;
+    case CONST_DOUBLE:
+      *total = 6;
+      return true;
+    default:
+      return false;
+    }
+}
+
+static void
+i860_internal_label (FILE *stream, const char *prefix, unsigned long labelno)
+{
+  fprintf (stream, ".%s%ld:\n", prefix, labelno);
+}
+
+static void
+i860_file_start (void)
+{
+  output_file_directive (asm_out_file, main_input_filename);
+  fprintf (asm_out_file, "\t.version\t\"01.01\"\n");
+}
+
+static void
+i860_init_libfuncs (void)
+{
+  set_optab_libfunc (sdiv_optab, SImode, "*.div");
+  set_optab_libfunc (udiv_optab, SImode, "*.udiv");
+  set_optab_libfunc (smod_optab, SImode, "*.rem");
+  set_optab_libfunc (umod_optab, SImode, "*.urem");
+}
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS i860_rtx_costs
+
+#undef  TARGET_ASM_INTERNAL_LABEL
+#define TARGET_ASM_INTERNAL_LABEL i860_internal_label
+
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE i860_output_function_prologue
+
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE i860_output_function_epilogue
+
+#undef TARGET_INIT_LIBFUNCS
+#define TARGET_INIT_LIBFUNCS i860_init_libfuncs
+
+#undef TARGET_BUILD_BUILTIN_VA_LIST
+#define TARGET_BUILD_BUILTIN_VA_LIST i860_build_builtin_va_list
+
+struct gcc_target targetm = TARGET_INITIALIZER;
