@@ -1,5 +1,5 @@
 /* Tree-dumping functionality for intermediate representation.
-   Copyright (C) 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2003 Free Software Foundation, Inc.
    Written by Mark Mitchell <mark@codesourcery.com>
 
 This file is part of GCC.
@@ -46,7 +46,7 @@ typedef struct dump_queue
   struct dump_queue *next;
 } *dump_queue_p;
 
-/* A dump_info gives information about how we should perform the dump 
+/* A dump_info gives information about how we should perform the dump
    and about the current state of the dump.  */
 
 struct dump_info
@@ -67,7 +67,7 @@ struct dump_info
   dump_queue_p queue_end;
   /* Free queue nodes.  */
   dump_queue_p free_list;
-  /* The tree nodes which we have already written out.  The 
+  /* The tree nodes which we have already written out.  The
      keys are the addresses of the nodes; the values are the integer
      indices we assigned them.  */
   splay_tree nodes;
@@ -77,19 +77,12 @@ struct dump_info
 #define dump_child(field, child) \
   queue_and_dump_index (di, field, child, DUMP_NONE)
 
-extern void dump_pointer
-  PARAMS ((dump_info_p, const char *, void *));
-extern void dump_int 
-  PARAMS ((dump_info_p, const char *, int));
-extern void dump_string 
-  PARAMS ((dump_info_p, const char *));
-extern void dump_stmt 
-  PARAMS ((dump_info_p, tree));
-extern void dump_next_stmt 
-  PARAMS ((dump_info_p, tree));
-extern void queue_and_dump_index 
-  PARAMS ((dump_info_p, const char *, tree, int));
-extern void queue_and_dump_type 
-  PARAMS ((dump_info_p, tree));
+extern void dump_pointer (dump_info_p, const char *, void *);
+extern void dump_int (dump_info_p, const char *, int);
+extern void dump_string (dump_info_p, const char *);
+extern void dump_stmt (dump_info_p, tree);
+extern void dump_next_stmt (dump_info_p, tree);
+extern void queue_and_dump_index (dump_info_p, const char *, tree, int);
+extern void queue_and_dump_type (dump_info_p, tree);
 
 #endif /* ! GCC_TREE_DUMP_H */

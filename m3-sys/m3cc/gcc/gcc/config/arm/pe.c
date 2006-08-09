@@ -1,26 +1,28 @@
 /* Routines for GCC for ARM/pe.
-   Copyright (C) 1995, 1996, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Doug Evans (dje@cygnus.com).
 
-This file is part of GNU CC.
+   This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published
+   by the Free Software Foundation; either version 2, or (at your
+   option) any later version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to
+   the Free Software Foundation, 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "output.h"
 #include "flags.h"
@@ -32,7 +34,7 @@ Boston, MA 02111-1307, USA.  */
 extern int current_function_anonymous_args;
 
 
-/* Return non-zero if DECL is a dllexport'd object.  */
+/* Return nonzero if DECL is a dllexport'd object.  */
 
 tree current_class_type; /* FIXME */
 
@@ -52,7 +54,7 @@ arm_dllexport_p (decl)
   return 0;
 }
 
-/* Return non-zero if DECL is a dllimport'd object.  */
+/* Return nonzero if DECL is a dllimport'd object.  */
 
 int
 arm_dllimport_p (decl)
@@ -74,7 +76,7 @@ arm_dllimport_p (decl)
   return 0;
 }
 
-/* Return non-zero if SYMBOL is marked as being dllexport'd.  */
+/* Return nonzero if SYMBOL is marked as being dllexport'd.  */
 
 int
 arm_dllexport_name_p (symbol)
@@ -83,7 +85,7 @@ arm_dllexport_name_p (symbol)
   return symbol[0] == ARM_PE_FLAG_CHAR && symbol[1] == 'e' && symbol[2] == '.';
 }
 
-/* Return non-zero if SYMBOL is marked as being dllimport'd.  */
+/* Return nonzero if SYMBOL is marked as being dllimport'd.  */
 
 int
 arm_dllimport_name_p (symbol)
@@ -165,7 +167,7 @@ arm_mark_dllimport (decl)
       && !DECL_VIRTUAL_P (decl)
       && DECL_INITIAL (decl))
     {
-      error_with_decl (decl, "initialized variable `%s' is marked dllimport");
+      error ("%Jinitialized variable '%D' is marked dllimport", decl, decl);
       return;
     }
   /* Nor can they be static.  */
@@ -174,7 +176,7 @@ arm_mark_dllimport (decl)
       && !DECL_VIRTUAL_P (decl)
       && 0 /*???*/)
     {
-      error_with_decl (decl, "static variable `%s' is marked dllimport");
+      error ("%Jstatic variable '%D' is marked dllimport", decl, decl);
       return;
     }
 
@@ -204,20 +206,16 @@ arm_mark_dllimport (decl)
   XEXP (DECL_RTL (decl), 0) = newrtl;
 }
 
-/* Cover function to implement ENCODE_SECTION_INFO.  */
-
 void
-arm_pe_encode_section_info (decl)
+arm_pe_encode_section_info (decl, rtl, first)
      tree decl;
+     rtx rtl;
+     int first ATTRIBUTE_UNUSED;
 {
-  /* This bit is copied from arm.h.  */
+  /* This bit is copied from arm_encode_section_info.  */
   if (optimize > 0 && TREE_CONSTANT (decl)
       && (!flag_writable_strings || TREE_CODE (decl) != STRING_CST))
-    {
-      rtx rtl = (TREE_CODE_CLASS (TREE_CODE (decl)) != 'd'
-                 ? TREE_CST_RTL (decl) : DECL_RTL (decl));
-      SYMBOL_REF_FLAG (XEXP (rtl, 0)) = 1;
-    }
+    SYMBOL_REF_FLAG (XEXP (rtl, 0)) = 1;
 
   /* Mark the decl so we can tell from the rtl whether the object is
      dllexport'd or dllimport'd.  */
@@ -247,8 +245,6 @@ arm_pe_encode_section_info (decl)
     }
 }
 
-/* Cover function for UNIQUE_SECTION.  */
-
 void
 arm_pe_unique_section (decl, reloc)
      tree decl;
@@ -260,15 +256,14 @@ arm_pe_unique_section (decl, reloc)
   const char * prefix;
 
   name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
-  /* Strip off any encoding in fnname.  */
-  STRIP_NAME_ENCODING (name, name);
+  name = arm_strip_name_encoding (name);
 
   /* The object is put in, for example, section .text$foo.
      The linker will then ultimately place them in .text
      (everything from the $ on is stripped).  */
   if (TREE_CODE (decl) == FUNCTION_DECL)
     prefix = ".text$";
-  else if (DECL_READONLY_SECTION (decl, reloc))
+  else if (decl_readonly_section (decl, reloc))
     prefix = ".rdata$";
   else
     prefix = ".data$";

@@ -1,9 +1,9 @@
 /* Calculate (post)dominators in slightly super-linear time.
-   Copyright (C) 2000 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2003, 2004 Free Software Foundation, Inc.
    Contributed by Michael Matz (matz@ifh.de).
-  
+
    This file is part of GCC.
- 
+
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
@@ -35,17 +35,23 @@
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "hard-reg-set.h"
 #include "basic-block.h"
+#include "errors.h"
+#include "et-forest.h"
 
+/* Whether the dominators and the postdominators are available.  */
+enum dom_state dom_computed[2];
 
 /* We name our nodes with integers, beginning with 1.  Zero is reserved for
    'undefined' or 'end of list'.  The name of each node is given by the dfs
    number of the corresponding basic block.  Please note, that we include the
    artificial ENTRY_BLOCK (or EXIT_BLOCK in the post-dom case) in our lists to
    support multiple entry points.  As it has no real basic block index we use
-   'n_basic_blocks' for that.  Its dfs number is of course 1.  */
+   'last_basic_block' for that.  Its dfs number is of course 1.  */
 
 /* Type of Basic Block aka. TBB */
 typedef unsigned int TBB;
@@ -89,7 +95,7 @@ struct dom_info
      number of that node in DFS order counted from 1.  This is an index
      into most of the other arrays in this structure.  */
   TBB *dfs_order;
-  /* If x is the DFS-index of a node which corresponds with an basic block,
+  /* If x is the DFS-index of a node which corresponds with a basic block,
      dfs_to_bb[x] is that basic block.  Note, that in our structure there are
      more nodes that basic blocks, so only dfs_to_bb[dfs_order[bb->index]]==bb
      is true for every basic block bb, but not the opposite.  */
@@ -101,42 +107,39 @@ struct dom_info
   unsigned int nodes;
 };
 
-static void init_dom_info		PARAMS ((struct dom_info *));
-static void free_dom_info		PARAMS ((struct dom_info *));
-static void calc_dfs_tree_nonrec	PARAMS ((struct dom_info *,
-						 basic_block,
-						 enum cdi_direction));
-static void calc_dfs_tree		PARAMS ((struct dom_info *,
-						 enum cdi_direction));
-static void compress			PARAMS ((struct dom_info *, TBB));
-static TBB eval				PARAMS ((struct dom_info *, TBB));
-static void link_roots			PARAMS ((struct dom_info *, TBB, TBB));
-static void calc_idoms			PARAMS ((struct dom_info *,
-						 enum cdi_direction));
-static void idoms_to_doms		PARAMS ((struct dom_info *,
-						 sbitmap *));
+static void init_dom_info (struct dom_info *);
+static void free_dom_info (struct dom_info *);
+static void calc_dfs_tree_nonrec (struct dom_info *, basic_block,
+				  enum cdi_direction);
+static void calc_dfs_tree (struct dom_info *, enum cdi_direction);
+static void compress (struct dom_info *, TBB);
+static TBB eval (struct dom_info *, TBB);
+static void link_roots (struct dom_info *, TBB, TBB);
+static void calc_idoms (struct dom_info *, enum cdi_direction);
+void debug_dominance_info (enum cdi_direction);
 
 /* Helper macro for allocating and initializing an array,
    for aesthetic reasons.  */
 #define init_ar(var, type, num, content)			\
-  do {								\
-    unsigned int i = 1;    /* Catch content == i.  */		\
-    if (! (content))						\
-      (var) = (type *) xcalloc ((num), sizeof (type));		\
-    else							\
-      {								\
-        (var) = (type *) xmalloc ((num) * sizeof (type));	\
-	for (i = 0; i < num; i++)				\
-	  (var)[i] = (content);					\
-      }								\
-  } while (0)
+  do								\
+    {								\
+      unsigned int i = 1;    /* Catch content == i.  */		\
+      if (! (content))						\
+	(var) = xcalloc ((num), sizeof (type));			\
+      else							\
+	{							\
+	  (var) = xmalloc ((num) * sizeof (type));		\
+	  for (i = 0; i < num; i++)				\
+	    (var)[i] = (content);				\
+	}							\
+    }								\
+  while (0)
 
 /* Allocate all needed memory in a pessimistic fashion (so we round up).
-   This initialises the contents of DI, which already must be allocated.  */
+   This initializes the contents of DI, which already must be allocated.  */
 
 static void
-init_dom_info (di)
-     struct dom_info *di;
+init_dom_info (struct dom_info *di)
 {
   /* We need memory for n_basic_blocks nodes and the ENTRY_BLOCK or
      EXIT_BLOCK.  */
@@ -153,7 +156,7 @@ init_dom_info (di)
   init_ar (di->set_size, unsigned int, num, 1);
   init_ar (di->set_child, TBB, num, 0);
 
-  init_ar (di->dfs_order, TBB, (unsigned int) n_basic_blocks + 1, 0);
+  init_ar (di->dfs_order, TBB, (unsigned int) last_basic_block + 1, 0);
   init_ar (di->dfs_to_bb, basic_block, num, 0);
 
   di->dfsnum = 1;
@@ -165,8 +168,7 @@ init_dom_info (di)
 /* Free all allocated memory in DI, but not DI itself.  */
 
 static void
-free_dom_info (di)
-     struct dom_info *di;
+free_dom_info (struct dom_info *di)
 {
   free (di->dfs_parent);
   free (di->path_min);
@@ -188,10 +190,7 @@ free_dom_info (di)
    assigned their dfs number and are linked together to form a tree.  */
 
 static void
-calc_dfs_tree_nonrec (di, bb, reverse)
-     struct dom_info *di;
-     basic_block bb;
-     enum cdi_direction reverse;
+calc_dfs_tree_nonrec (struct dom_info *di, basic_block bb, enum cdi_direction reverse)
 {
   /* We never call this with bb==EXIT_BLOCK_PTR (ENTRY_BLOCK_PTR if REVERSE).  */
   /* We call this _only_ if bb is not already visited.  */
@@ -205,7 +204,7 @@ calc_dfs_tree_nonrec (di, bb, reverse)
   /* Ending block.  */
   basic_block ex_block;
 
-  stack = (edge *) xmalloc ((n_basic_blocks + 3) * sizeof (edge));
+  stack = xmalloc ((n_basic_blocks + 3) * sizeof (edge));
   sp = 0;
 
   /* Initialize our border blocks, and the first edge.  */
@@ -269,7 +268,7 @@ calc_dfs_tree_nonrec (di, bb, reverse)
 	  if (bb != en_block)
 	    my_i = di->dfs_order[bb->index];
 	  else
-	    my_i = di->dfs_order[n_basic_blocks];
+	    my_i = di->dfs_order[last_basic_block];
 	  child_i = di->dfs_order[bn->index] = di->dfsnum++;
 	  di->dfs_to_bb[child_i] = bn;
 	  di->dfs_parent[child_i] = my_i;
@@ -306,13 +305,11 @@ calc_dfs_tree_nonrec (di, bb, reverse)
    because there may be nodes from which the EXIT_BLOCK is unreachable.  */
 
 static void
-calc_dfs_tree (di, reverse)
-     struct dom_info *di;
-     enum cdi_direction reverse;
+calc_dfs_tree (struct dom_info *di, enum cdi_direction reverse)
 {
   /* The first block is the ENTRY_BLOCK (or EXIT_BLOCK if REVERSE).  */
   basic_block begin = reverse ? EXIT_BLOCK_PTR : ENTRY_BLOCK_PTR;
-  di->dfs_order[n_basic_blocks] = di->dfsnum;
+  di->dfs_order[last_basic_block] = di->dfsnum;
   di->dfs_to_bb[di->dfsnum] = begin;
   di->dfsnum++;
 
@@ -324,10 +321,9 @@ calc_dfs_tree (di, reverse)
          They are reverse-unreachable.  In the dom-case we disallow such
          nodes, but in post-dom we have to deal with them, so we simply
          include them in the DFS tree which actually becomes a forest.  */
-      int i;
-      for (i = n_basic_blocks - 1; i >= 0; i--)
+      basic_block b;
+      FOR_EACH_BB_REVERSE (b)
 	{
-	  basic_block b = BASIC_BLOCK (i);
 	  if (di->dfs_order[b->index])
 	    continue;
 	  di->dfs_order[b->index] = di->dfsnum;
@@ -350,9 +346,7 @@ calc_dfs_tree (di, reverse)
    from V to that root.  */
 
 static void
-compress (di, v)
-     struct dom_info *di;
-     TBB v;
+compress (struct dom_info *di, TBB v)
 {
   /* Btw. It's not worth to unrecurse compress() as the depth is usually not
      greater than 5 even for huge graphs (I've not seen call depth > 4).
@@ -372,9 +366,7 @@ compress (di, v)
    value on the path from V to the root.  */
 
 static inline TBB
-eval (di, v)
-     struct dom_info *di;
-     TBB v;
+eval (struct dom_info *di, TBB v)
 {
   /* The representant of the set V is in, also called root (as the set
      representation is a tree).  */
@@ -403,9 +395,7 @@ eval (di, v)
    of W.  */
 
 static void
-link_roots (di, v, w)
-     struct dom_info *di;
-     TBB v, w;
+link_roots (struct dom_info *di, TBB v, TBB w)
 {
   TBB s = w;
 
@@ -447,9 +437,7 @@ link_roots (di, v, w)
    On return the immediate dominator to node V is in di->dom[V].  */
 
 static void
-calc_idoms (di, reverse)
-     struct dom_info *di;
-     enum cdi_direction reverse;
+calc_idoms (struct dom_info *di, enum cdi_direction reverse)
 {
   TBB v, w, k, par;
   basic_block en_block;
@@ -492,7 +480,7 @@ calc_idoms (di, reverse)
 	      e_next = e->pred_next;
 	    }
 	  if (b == en_block)
-	    k1 = di->dfs_order[n_basic_blocks];
+	    k1 = di->dfs_order[last_basic_block];
 	  else
 	    k1 = di->dfs_order[b->index];
 
@@ -530,93 +518,358 @@ calc_idoms (di, reverse)
       di->dom[v] = di->dom[di->dom[v]];
 }
 
-/* Convert the information about immediate dominators (in DI) to sets of all
-   dominators (in DOMINATORS).  */
+/* Assign dfs numbers starting from NUM to NODE and its sons.  */
 
 static void
-idoms_to_doms (di, dominators)
-     struct dom_info *di;
-     sbitmap *dominators;
+assign_dfs_numbers (struct et_node *node, int *num)
 {
-  TBB i, e_index;
-  int bb, bb_idom;
-  sbitmap_vector_zero (dominators, n_basic_blocks);
-  /* We have to be careful, to not include the ENTRY_BLOCK or EXIT_BLOCK
-     in the list of (post)-doms, so remember that in e_index.  */
-  e_index = di->dfs_order[n_basic_blocks];
+  struct et_node *son;
 
-  for (i = 1; i <= di->nodes; i++)
+  node->dfs_num_in = (*num)++;
+
+  if (node->son)
     {
-      if (i == e_index)
-	continue;
-      bb = di->dfs_to_bb[i]->index;
+      assign_dfs_numbers (node->son, num);
+      for (son = node->son->right; son != node->son; son = son->right)
+      assign_dfs_numbers (son, num);
+    }
 
-      if (di->dom[i] && (di->dom[i] != e_index))
+  node->dfs_num_out = (*num)++;
+}
+
+/* Compute the data necessary for fast resolving of dominator queries in a
+   static dominator tree.  */
+
+static void
+compute_dom_fast_query (enum cdi_direction dir)
+{
+  int num = 0;
+  basic_block bb;
+
+  if (dom_computed[dir] < DOM_NO_FAST_QUERY)
+    abort ();
+
+  if (dom_computed[dir] == DOM_OK)
+    return;
+
+  FOR_ALL_BB (bb)
+    {
+      if (!bb->dom[dir]->father)
+      assign_dfs_numbers (bb->dom[dir], &num);
+    }
+
+  dom_computed[dir] = DOM_OK;
+}
+
+/* The main entry point into this module.  DIR is set depending on whether
+   we want to compute dominators or postdominators.  */
+
+void
+calculate_dominance_info (enum cdi_direction dir)
+{
+  struct dom_info di;
+  basic_block b;
+
+  if (dom_computed[dir] == DOM_OK)
+    return;
+
+  if (dom_computed[dir] != DOM_NO_FAST_QUERY)
+    {
+      if (dom_computed[dir] != DOM_NONE)
+      free_dominance_info (dir);
+
+      FOR_ALL_BB (b)
 	{
-	  bb_idom = di->dfs_to_bb[di->dom[i]]->index;
-	  sbitmap_copy (dominators[bb], dominators[bb_idom]);
+	  b->dom[dir] = et_new_tree (b);
 	}
-      else
+
+      init_dom_info (&di);
+      calc_dfs_tree (&di, dir);
+      calc_idoms (&di, dir);
+
+      FOR_EACH_BB (b)
 	{
-	  /* It has no immediate dom or only ENTRY_BLOCK or EXIT_BLOCK.
-	     If it is a child of ENTRY_BLOCK that's OK, and it's only
-	     dominated by itself; if it's _not_ a child of ENTRY_BLOCK, it
-	     means, it is unreachable.  That case has been disallowed in the
-	     building of the DFS tree, so we are save here.  For the reverse
-	     flow graph it means, it has no children, so, to be compatible
-	     with the old code, we set the post_dominators to all one.  */
-	  if (!di->dom[i])
+	  TBB d = di.dom[di.dfs_order[b->index]];
+
+	  if (di.dfs_to_bb[d])
+	    et_set_father (b->dom[dir], di.dfs_to_bb[d]->dom[dir]);
+	}
+
+      free_dom_info (&di);
+      dom_computed[dir] = DOM_NO_FAST_QUERY;
+    }
+
+  compute_dom_fast_query (dir);
+}
+
+/* Free dominance information for direction DIR.  */
+void
+free_dominance_info (enum cdi_direction dir)
+{
+  basic_block bb;
+
+  if (!dom_computed[dir])
+    return;
+
+  FOR_ALL_BB (bb)
+    {
+      delete_from_dominance_info (dir, bb);
+    }
+
+  dom_computed[dir] = DOM_NONE;
+}
+
+/* Return the immediate dominator of basic block BB.  */
+basic_block
+get_immediate_dominator (enum cdi_direction dir, basic_block bb)
+{
+  struct et_node *node = bb->dom[dir];
+
+  if (!dom_computed[dir])
+    abort ();
+
+  if (!node->father)
+    return NULL;
+
+  return node->father->data; 
+}
+
+/* Set the immediate dominator of the block possibly removing
+   existing edge.  NULL can be used to remove any edge.  */
+inline void
+set_immediate_dominator (enum cdi_direction dir, basic_block bb,
+			 basic_block dominated_by)
+{
+  struct et_node *node = bb->dom[dir];
+
+  if (!dom_computed[dir])
+    abort ();
+
+  if (node->father)
+    {
+      if (node->father->data == dominated_by)
+      return;
+      et_split (node);
+    }
+
+  if (dominated_by)
+    et_set_father (node, dominated_by->dom[dir]);
+
+  if (dom_computed[dir] == DOM_OK)
+    dom_computed[dir] = DOM_NO_FAST_QUERY;
+}
+
+/* Store all basic blocks immediately dominated by BB into BBS and return
+   their number.  */
+int
+get_dominated_by (enum cdi_direction dir, basic_block bb, basic_block **bbs)
+{
+  int n;
+  struct et_node *node = bb->dom[dir], *son = node->son, *ason;
+
+  if (!dom_computed[dir])
+    abort ();
+
+  if (!son)
+    {
+      *bbs = NULL;
+      return 0;
+    }
+
+  for (ason = son->right, n = 1; ason != son; ason = ason->right)
+    n++;
+
+  *bbs = xmalloc (n * sizeof (basic_block));
+  (*bbs)[0] = son->data;
+  for (ason = son->right, n = 1; ason != son; ason = ason->right)
+    (*bbs)[n++] = ason->data;
+
+  return n;
+}
+
+/* Redirect all edges pointing to BB to TO.  */
+void
+redirect_immediate_dominators (enum cdi_direction dir, basic_block bb,
+			       basic_block to)
+{
+  struct et_node *bb_node = bb->dom[dir], *to_node = to->dom[dir], *son;
+
+  if (!dom_computed[dir])
+    abort ();
+
+  if (!bb_node->son)
+    return;
+
+  while (bb_node->son)
+    {
+      son = bb_node->son;
+
+      et_split (son);
+      et_set_father (son, to_node);
+    }
+
+  if (dom_computed[dir] == DOM_OK)
+    dom_computed[dir] = DOM_NO_FAST_QUERY;
+}
+
+/* Find first basic block in the tree dominating both BB1 and BB2.  */
+basic_block
+nearest_common_dominator (enum cdi_direction dir, basic_block bb1, basic_block bb2)
+{
+  if (!dom_computed[dir])
+    abort ();
+
+  if (!bb1)
+    return bb2;
+  if (!bb2)
+    return bb1;
+
+  return et_nca (bb1->dom[dir], bb2->dom[dir])->data;
+}
+
+/* Return TRUE in case BB1 is dominated by BB2.  */
+bool
+dominated_by_p (enum cdi_direction dir, basic_block bb1, basic_block bb2)
+{
+  struct et_node *n1 = bb1->dom[dir], *n2 = bb2->dom[dir];
+
+  if (!dom_computed[dir])
+    abort ();
+
+  if (dom_computed[dir] == DOM_OK)
+    return (n1->dfs_num_in >= n2->dfs_num_in
+	    && n1->dfs_num_out <= n2->dfs_num_out);
+
+  return et_below (n1, n2);
+}
+
+/* Verify invariants of dominator structure.  */
+void
+verify_dominators (enum cdi_direction dir)
+{
+  int err = 0;
+  basic_block bb;
+
+  if (!dom_computed[dir])
+    abort ();
+
+  FOR_EACH_BB (bb)
+    {
+      basic_block dom_bb;
+
+      dom_bb = recount_dominator (dir, bb);
+      if (dom_bb != get_immediate_dominator (dir, bb))
+	{
+	  error ("dominator of %d should be %d, not %d",
+	   bb->index, dom_bb->index, get_immediate_dominator(dir, bb)->index);
+	  err = 1;
+	}
+    }
+  if (err)
+    abort ();
+}
+
+/* Recount dominator of BB.  */
+basic_block
+recount_dominator (enum cdi_direction dir, basic_block bb)
+{
+   basic_block dom_bb = NULL;
+   edge e;
+
+  if (!dom_computed[dir])
+    abort ();
+
+   for (e = bb->pred; e; e = e->pred_next)
+     {
+       if (!dominated_by_p (dir, e->src, bb))
+         dom_bb = nearest_common_dominator (dir, dom_bb, e->src);
+     }
+
+   return dom_bb;
+}
+
+/* Iteratively recount dominators of BBS. The change is supposed to be local
+   and not to grow further.  */
+void
+iterate_fix_dominators (enum cdi_direction dir, basic_block *bbs, int n)
+{
+  int i, changed = 1;
+  basic_block old_dom, new_dom;
+
+  if (!dom_computed[dir])
+    abort ();
+
+  while (changed)
+    {
+      changed = 0;
+      for (i = 0; i < n; i++)
+	{
+	  old_dom = get_immediate_dominator (dir, bbs[i]);
+	  new_dom = recount_dominator (dir, bbs[i]);
+	  if (old_dom != new_dom)
 	    {
-	      sbitmap_ones (dominators[bb]);
+	      changed = 1;
+	      set_immediate_dominator (dir, bbs[i], new_dom);
 	    }
 	}
-      SET_BIT (dominators[bb], bb);
     }
 }
 
-/* The main entry point into this module.  IDOM is an integer array with room
-   for n_basic_blocks integers, DOMS is a preallocated sbitmap array having
-   room for n_basic_blocks^2 bits, and POST is true if the caller wants to
-   know post-dominators.
+void
+add_to_dominance_info (enum cdi_direction dir, basic_block bb)
+{
+  if (!dom_computed[dir])
+    abort ();
 
-   On return IDOM[i] will be the BB->index of the immediate (post) dominator
-   of basic block i, and DOMS[i] will have set bit j if basic block j is a
-   (post)dominator for block i.
+  if (bb->dom[dir])
+    abort ();
 
-   Either IDOM or DOMS may be NULL (meaning the caller is not interested in
-   immediate resp. all dominators).  */
+  bb->dom[dir] = et_new_tree (bb);
+
+  if (dom_computed[dir] == DOM_OK)
+    dom_computed[dir] = DOM_NO_FAST_QUERY;
+}
 
 void
-calculate_dominance_info (idom, doms, reverse)
-     int *idom;
-     sbitmap *doms;
-     enum cdi_direction reverse;
+delete_from_dominance_info (enum cdi_direction dir, basic_block bb)
 {
-  struct dom_info di;
+  if (!dom_computed[dir])
+    abort ();
 
-  if (!doms && !idom)
-    return;
-  init_dom_info (&di);
-  calc_dfs_tree (&di, reverse);
-  calc_idoms (&di, reverse);
+  et_free_tree (bb->dom[dir]);
+  bb->dom[dir] = NULL;
 
-  if (idom)
-    {
-      int i;
-      for (i = 0; i < n_basic_blocks; i++)
-	{
-	  basic_block b = BASIC_BLOCK (i);
-	  TBB d = di.dom[di.dfs_order[b->index]];
+  if (dom_computed[dir] == DOM_OK)
+    dom_computed[dir] = DOM_NO_FAST_QUERY;
+}
 
-	  /* The old code didn't modify array elements of nodes having only
-	     itself as dominator (d==0) or only ENTRY_BLOCK (resp. EXIT_BLOCK)
-	     (d==1).  */
-	  if (d > 1)
-	    idom[i] = di.dfs_to_bb[d]->index;
-	}
-    }
-  if (doms)
-    idoms_to_doms (&di, doms);
+/* Returns the first son of BB in the dominator or postdominator tree
+   as determined by DIR.  */
 
-  free_dom_info (&di);
+basic_block
+first_dom_son (enum cdi_direction dir, basic_block bb)
+{
+  struct et_node *son = bb->dom[dir]->son;
+
+  return son ? son->data : NULL;
+}
+
+/* Returns the next dominance son after BB in the dominator or postdominator
+   tree as determined by DIR, or NULL if it was the last one.  */
+
+basic_block
+next_dom_son (enum cdi_direction dir, basic_block bb)
+{
+  struct et_node *next = bb->dom[dir]->right;
+
+  return next->father->son == next ? NULL : next->data;
+}
+
+void
+debug_dominance_info (enum cdi_direction dir)
+{
+  basic_block bb, bb2;
+  FOR_EACH_BB (bb)
+    if ((bb2 = get_immediate_dominator (dir, bb)))
+      fprintf (stderr, "%i %i\n", bb->index, bb2->index);
 }

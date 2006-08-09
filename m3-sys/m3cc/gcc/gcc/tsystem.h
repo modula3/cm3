@@ -19,6 +19,13 @@ along with GCC; see the file COPYING.  If not, write to the Free
 Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
+/* As a special exception, if you link this library with other files,
+   some of which are compiled with GCC, to produce an executable,
+   this library does not by itself cause the resulting executable
+   to be covered by the GNU General Public License.
+   This exception does not however invalidate any other reasons why
+   the executable file might be covered by the GNU General Public License.  */
+
 #ifndef GCC_TSYSTEM_H
 #define GCC_TSYSTEM_H
 
@@ -33,8 +40,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define HAVE_DECL_GETOPT 1
 #endif
 
-/* GCC supplies this header.  */
+/* GCC supplies these headers.  */
 #include <stddef.h>
+#include <float.h>
 
 #ifdef inhibit_libc
 
@@ -48,6 +56,14 @@ extern void free (void *);
 
 #ifndef atexit
 extern int atexit (void (*)(void));
+#endif
+
+#ifndef abort
+extern void abort (void) __attribute__ ((__noreturn__));
+#endif
+
+#ifndef strlen
+extern size_t strlen (const char *);
 #endif
 
 #else /* ! inhibit_libc */
@@ -72,20 +88,16 @@ extern int atexit (void (*)(void));
 extern int errno;
 #endif
 
-#ifdef POSIX
-#include <string.h>
-#endif
-
 /* GCC (fixproto) guarantees these system headers exist.  */
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 /* GCC supplies this header.  */
 #include <limits.h>
 
-#ifdef POSIX
+/* GCC (fixproto) guarantees this system headers exists.  */
 #include <time.h>
-#endif
 
 #endif /* inhibit_libc */
 
