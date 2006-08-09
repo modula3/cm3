@@ -1,21 +1,21 @@
 /* VMS DEC C wrapper.
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003 Free Software Foundation, Inc.
    Contributed by Douglas B. Rupp (rupp@gnat.com).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -25,6 +25,8 @@ Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 
 #undef PATH_SEPARATOR
 #undef PATH_SEPARATOR_STR
@@ -32,50 +34,47 @@ Boston, MA 02111-1307, USA.  */
 #define PATH_SEPARATOR_STR ","
 
 /* These can be set by command line arguments */
-int verbose = 0;
-int save_temps = 0;
+static int verbose = 0;
+static int save_temps = 0;
 
-int comp_arg_max = -1;
-const char **comp_args = 0;
-int comp_arg_index = -1;
-char *objfilename = 0;
+static int comp_arg_max = -1;
+static const char **comp_args = 0;
+static int comp_arg_index = -1;
+static char *objfilename = 0;
 
-char *system_search_dirs = (char *) "";
-char *search_dirs;
+static char *system_search_dirs = (char *) "";
+static char *search_dirs;
 
-char *default_defines = (char *) "";
-char *defines;
+static char *default_defines = (char *) "";
+static char *defines;
 
 /* Translate a Unix syntax directory specification into VMS syntax.
-   If indicators of VMS syntax found, return input string. */
-static char *to_host_dir_spec PARAMS ((char *));
+   If indicators of VMS syntax found, return input string.  */
+static char *to_host_dir_spec (char *);
 
 /* Translate a Unix syntax file specification into VMS syntax.
-   If indicators of VMS syntax found, return input string. */
-static char *to_host_file_spec PARAMS ((char *));
+   If indicators of VMS syntax found, return input string.  */
+static char *to_host_file_spec (char *);
 
-/* Add a translated arg to the list to be passed to DEC CC */
-static void addarg PARAMS ((const char *));
+/* Add a translated arg to the list to be passed to DEC CC.  */
+static void addarg (const char *);
 
 /* Preprocess the number of args in P_ARGC and contained in ARGV.
-   Look for special flags, etc. that must be handled first. */
-static void preprocess_args PARAMS ((int *, char **));
+   Look for special flags, etc. that must be handled first.  */
+static void preprocess_args (int *, char **);
 
 /* Process the number of args in P_ARGC and contained in ARGV. Look
-   for special flags, etc. that must be handled for the VMS compiler. */
-static void process_args PARAMS ((int *, char **));
+   for special flags, etc. that must be handled for the VMS compiler.  */
+static void process_args (int *, char **);
 
 /* Action routine called by decc$to_vms */
-static int translate_unix PARAMS ((char *, int));
-
-int main PARAMS ((int, char **));
+static int translate_unix (char *, int);
 
 /* Add the argument contained in STR to the list of arguments to pass to the
    compiler.  */
 
 static void
-addarg (str)
-     const char *str;
+addarg (const char *str)
 {
   int i;
 
@@ -98,9 +97,7 @@ addarg (str)
 }
 
 static void
-preprocess_args (p_argc, argv)
-     int *p_argc;
-     char *argv[];
+preprocess_args (int *p_argc, char *argv[])
 {
   int i;
 
@@ -109,25 +106,18 @@ preprocess_args (p_argc, argv)
       if (strcmp (argv[i], "-o") == 0)
 	{
 	  char *buff, *ptr;
-	  int out_len;
 
 	  i++;
 	  ptr = to_host_file_spec (argv[i]);
 	  objfilename = xstrdup (ptr);
-	  out_len = strlen (ptr);
-	  buff = xmalloc (out_len + 6);
-
-	  strcpy (buff, "/obj=");
-	  strcat (buff, ptr);
+	  buff = concat ("/obj=", ptr, NULL);
 	  addarg (buff);
 	}
     }
 }
 
 static void
-process_args (p_argc, argv)
-     int *p_argc;
-     char *argv[];
+process_args (int *p_argc, char *argv[])
 {
   int i;
 
@@ -188,9 +178,7 @@ process_args (p_argc, argv)
 typedef struct dsc {unsigned short len, mbz; char *adr; } Descr;
 
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   int i;
   char cwdev [128], *devptr;
@@ -202,11 +190,8 @@ main (argc, argv)
   strncpy (cwdev, cwd, devlen);
   cwdev [devlen] = '\0';
 
-  search_dirs = xmalloc (strlen (system_search_dirs) + 1);
-  strcpy (search_dirs, system_search_dirs);
-
-  defines = xmalloc (strlen (default_defines) + 1);
-  strcpy (defines, default_defines);
+  search_dirs = xstrdup (system_search_dirs);
+  defines = xstrdup (default_defines);
 
   addarg ("cc");
   preprocess_args (&argc , argv);
@@ -251,7 +236,6 @@ main (argc, argv)
 	{
 	  /* Assume filename arg */
 	  char buff [256], *ptr;
-	  int buff_len;
 
 	  ptr = to_host_file_spec (argv[i]);
 	  arg_len = strlen (ptr);
@@ -263,10 +247,7 @@ main (argc, argv)
 	  else
 	    sprintf (buff, "%s%s", cwd, ptr);
 
-	  buff_len = strlen (buff);
-	  ptr = xmalloc (buff_len + 1);
-
-	  strcpy (ptr, buff);
+	  ptr = xstrdup (buff);
 	  addarg (ptr);
 	}
     }
@@ -330,17 +311,14 @@ static char new_host_dirspec [255];
 static char filename_buff [256];
 
 static int
-translate_unix (name, type)
-     char *name;
-     int type ATTRIBUTE_UNUSED;
+translate_unix (char *name, int type ATTRIBUTE_UNUSED)
 {
   strcpy (filename_buff, name);
   return 0;
 }
 
 static char *
-to_host_dir_spec (dirspec)
-     char *dirspec;
+to_host_dir_spec (char *dirspec)
 {
   int len = strlen (dirspec);
 
@@ -363,8 +341,7 @@ to_host_dir_spec (dirspec)
 }
 
 static char *
-to_host_file_spec (filespec)
-     char *filespec;
+to_host_file_spec (char *filespec)
 {
   strcpy (new_host_filespec, "");
   if (strchr (filespec, ']') || strchr (filespec, ':'))

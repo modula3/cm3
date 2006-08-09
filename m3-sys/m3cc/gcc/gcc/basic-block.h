@@ -1,5 +1,5 @@
 /* Define control and data flow tables, and regsets.
-   Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2002, 2003
+   Copyright (C) 1987, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -26,6 +26,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "sbitmap.h"
 #include "varray.h"
 #include "partition.h"
+#include "hard-reg-set.h"
 
 /* Head of register set linked list.  */
 typedef bitmap_head regset_head;
@@ -33,7 +34,7 @@ typedef bitmap_head regset_head;
 typedef bitmap regset;
 
 /* Initialize a new regset.  */
-#define INIT_REG_SET(HEAD) bitmap_initialize (HEAD)
+#define INIT_REG_SET(HEAD) bitmap_initialize (HEAD, 1)
 
 /* Clear a register set by freeing up the linked list.  */
 #define CLEAR_REG_SET(HEAD) bitmap_clear (HEAD)
@@ -71,7 +72,7 @@ typedef bitmap regset;
 #define REGNO_REG_SET_P(TO, REG) bitmap_bit_p (TO, REG)
 
 /* Copy the hard registers in a register set to the hard register set.  */
-extern void reg_set_to_hard_reg_set PARAMS ((HARD_REG_SET *, bitmap));
+extern void reg_set_to_hard_reg_set (HARD_REG_SET *, bitmap);
 #define REG_SET_TO_HARD_REG_SET(TO, FROM)				\
 do {									\
   CLEAR_HARD_REG_SET (TO);						\
@@ -99,7 +100,7 @@ do {									\
 #define OBSTACK_ALLOC_REG_SET(OBSTACK) BITMAP_OBSTACK_ALLOC (OBSTACK)
 
 /* Initialize a register set.  Returns the new register set.  */
-#define INITIALIZE_REG_SET(HEAD) bitmap_initialize (&HEAD)
+#define INITIALIZE_REG_SET(HEAD) bitmap_initialize (&HEAD, 1)
 
 /* Do any cleanup needed on a regset when it is no longer used.  */
 #define FREE_REG_SET(REGSET) BITMAP_FREE(REGSET)
@@ -112,7 +113,11 @@ do {									\
    be done, other than zero the statistics on the first allocation.  */
 #define MAX_REGNO_REG_SET(NUM_REGS, NEW_P, RENUMBER_P)
 
-/* Type we use to hold basic block counters.  Should be at least 64bit.  */
+/* Type we use to hold basic block counters.  Should be at least
+   64bit.  Although a counter cannot be negative, we use a signed
+   type, because erroneous negative counts can be generated when the
+   flow graph is manipulated by various optimizations.  A signed type
+   makes those easy to detect.  */
 typedef HOST_WIDEST_INT gcov_type;
 
 /* Control flow edge information.  */
@@ -135,15 +140,30 @@ typedef struct edge_def {
 				   in profile.c  */
 } *edge;
 
-#define EDGE_FALLTHRU		1
-#define EDGE_ABNORMAL		2
-#define EDGE_ABNORMAL_CALL	4
-#define EDGE_EH			8
-#define EDGE_FAKE		16
-#define EDGE_DFS_BACK		32
+#define EDGE_FALLTHRU		1	/* 'Straight line' flow */
+#define EDGE_ABNORMAL		2	/* Strange flow, like computed
+					   label, or eh */
+#define EDGE_ABNORMAL_CALL	4	/* Call with abnormal exit
+					   like an exception, or sibcall */
+#define EDGE_EH			8	/* Exception throw */
+#define EDGE_FAKE		16	/* Not a real edge (profile.c) */
+#define EDGE_DFS_BACK		32	/* A backwards edge */
+#define EDGE_CAN_FALLTHRU	64	/* Candidate for straight line
+					   flow.  */
+#define EDGE_IRREDUCIBLE_LOOP	128	/* Part of irreducible loop.  */
+#define EDGE_SIBCALL		256	/* Edge from sibcall to exit.  */
+#define EDGE_LOOP_EXIT		512	/* Exit of a loop.  */
+#define EDGE_ALL_FLAGS		1023
 
 #define EDGE_COMPLEX	(EDGE_ABNORMAL | EDGE_ABNORMAL_CALL | EDGE_EH)
 
+/* Counter summary from the last set of coverage counts read by
+   profile.c.  */
+extern const struct gcov_ctr_summary *profile_info;
+
+/* Declared in cfgloop.h.  */
+struct loop;
+struct loops;
 
 /* A basic block is a sequence of instructions with only entry and
    only one exit.  If any one of the instructions are executed, they
@@ -173,7 +193,7 @@ typedef struct edge_def {
 /* Basic block information indexed by block number.  */
 typedef struct basic_block_def {
   /* The first and last insns of the block.  */
-  rtx head, end;
+  rtx head_, end_;
 
   /* The first and last trees of the block.  */
   tree head_tree;
@@ -205,8 +225,17 @@ typedef struct basic_block_def {
   /* The index of this block.  */
   int index;
 
+  /* Previous and next blocks in the chain.  */
+  struct basic_block_def *prev_bb, *next_bb;
+
   /* The loop depth of this block.  */
   int loop_depth;
+
+  /* Outermost loop containing the block.  */
+  struct loop *loop_father;
+
+  /* The dominance and postdominance information node.  */
+  struct et_node *dom[2];
 
   /* Expected number of executions: calculated in profile.c.  */
   gcov_type count;
@@ -216,16 +245,28 @@ typedef struct basic_block_def {
 
   /* Various flags.  See BB_* below.  */
   int flags;
+
+  /* Additional data maintained by cfg_layout routines.  */
+  struct reorder_block_def *rbi;
 } *basic_block;
 
 #define BB_FREQ_MAX 10000
 
 /* Masks for basic_block.flags.  */
-#define BB_REACHABLE		1
+#define BB_DIRTY		1
+#define BB_NEW			2
+#define BB_REACHABLE		4
+#define BB_VISITED		8
+#define BB_IRREDUCIBLE_LOOP	16
+#define BB_SUPERBLOCK		32
 
 /* Number of basic blocks in the current function.  */
 
 extern int n_basic_blocks;
+
+/* First free basic block number.  */
+
+extern int last_basic_block;
 
 /* Number of edges in the current function.  */
 
@@ -237,13 +278,30 @@ extern varray_type basic_block_info;
 
 #define BASIC_BLOCK(N)  (VARRAY_BB (basic_block_info, (N)))
 
+/* For iterating over basic blocks.  */
+#define FOR_BB_BETWEEN(BB, FROM, TO, DIR) \
+  for (BB = FROM; BB != TO; BB = BB->DIR)
+
+#define FOR_EACH_BB(BB) \
+  FOR_BB_BETWEEN (BB, ENTRY_BLOCK_PTR->next_bb, EXIT_BLOCK_PTR, next_bb)
+
+#define FOR_EACH_BB_REVERSE(BB) \
+  FOR_BB_BETWEEN (BB, EXIT_BLOCK_PTR->prev_bb, ENTRY_BLOCK_PTR, prev_bb)
+
+/* Cycles through _all_ basic blocks, even the fake ones (entry and
+   exit block).  */
+
+#define FOR_ALL_BB(BB) \
+  for (BB = ENTRY_BLOCK_PTR; BB; BB = BB->next_bb)
+
 /* What registers are live at the setjmp call.  */
 
 extern regset regs_live_at_setjmp;
 
 /* Special labels found during CFG build.  */
 
-extern rtx label_value_list, tail_recursion_label_list;
+extern GTY(()) rtx label_value_list;
+extern GTY(()) rtx tail_recursion_label_list;
 
 extern struct obstack flow_obstack;
 
@@ -261,11 +319,8 @@ extern struct obstack flow_obstack;
 
 /* Stuff for recording basic block info.  */
 
-#define BLOCK_HEAD(B)      (BASIC_BLOCK (B)->head)
-#define BLOCK_END(B)       (BASIC_BLOCK (B)->end)
-
-#define BLOCK_HEAD_TREE(B) (BASIC_BLOCK (B)->head_tree)
-#define BLOCK_END_TREE(B) (BASIC_BLOCK (B)->end_tree)
+#define BB_HEAD(B)      (B)->head_
+#define BB_END(B)       (B)->end_
 
 /* Special block numbers [markers] for entry and exit.  */
 #define ENTRY_BLOCK (-1)
@@ -279,218 +334,74 @@ extern struct basic_block_def entry_exit_blocks[2];
 #define ENTRY_BLOCK_PTR	(&entry_exit_blocks[0])
 #define EXIT_BLOCK_PTR	(&entry_exit_blocks[1])
 
-extern varray_type basic_block_for_insn;
-#define BLOCK_FOR_INSN(INSN)  VARRAY_BB (basic_block_for_insn, INSN_UID (INSN))
 #define BLOCK_NUM(INSN)	      (BLOCK_FOR_INSN (INSN)->index + 0)
+#define set_block_for_insn(INSN, BB)  (BLOCK_FOR_INSN (INSN) = BB)
 
-extern void compute_bb_for_insn		PARAMS ((int));
-extern void free_bb_for_insn		PARAMS ((void));
-extern void update_bb_for_insn		PARAMS ((basic_block));
-extern void set_block_for_insn		PARAMS ((rtx, basic_block));
+extern void compute_bb_for_insn (void);
+extern void free_bb_for_insn (void);
+extern void update_bb_for_insn (basic_block);
 
-extern void free_basic_block_vars	PARAMS ((int));
+extern void free_basic_block_vars (int);
 
-extern edge split_block			PARAMS ((basic_block, rtx));
-extern basic_block split_edge		PARAMS ((edge));
-extern void insert_insn_on_edge		PARAMS ((rtx, edge));
-extern void commit_edge_insertions	PARAMS ((void));
-extern void remove_fake_edges		PARAMS ((void));
-extern void add_noreturn_fake_exit_edges	PARAMS ((void));
-extern void connect_infinite_loops_to_exit	PARAMS ((void));
-extern int flow_call_edges_add		PARAMS ((sbitmap));
-extern edge cached_make_edge		PARAMS ((sbitmap *, basic_block,
-						 basic_block, int));
-extern edge make_edge			PARAMS ((basic_block,
-						 basic_block, int));
-extern edge make_single_succ_edge	PARAMS ((basic_block,
-						 basic_block, int));
-extern void remove_edge			PARAMS ((edge));
-extern void redirect_edge_succ		PARAMS ((edge, basic_block));
-extern edge redirect_edge_succ_nodup	PARAMS ((edge, basic_block));
-extern void redirect_edge_pred		PARAMS ((edge, basic_block));
-extern basic_block create_basic_block_structure PARAMS ((int, rtx, rtx, rtx));
-extern basic_block create_basic_block	PARAMS ((int, rtx, rtx));
-extern int flow_delete_block		PARAMS ((basic_block));
-extern int flow_delete_block_noexpunge	PARAMS ((basic_block));
-extern void merge_blocks_nomove		PARAMS ((basic_block, basic_block));
-extern void tidy_fallthru_edge		PARAMS ((edge, basic_block,
-						 basic_block));
-extern void tidy_fallthru_edges		PARAMS ((void));
-extern void flow_reverse_top_sort_order_compute	PARAMS ((int *));
-extern int flow_depth_first_order_compute	PARAMS ((int *, int *));
-extern void flow_preorder_transversal_compute	PARAMS ((int *));
-extern void dump_edge_info		PARAMS ((FILE *, edge, int));
-extern void clear_edges			PARAMS ((void));
-extern void mark_critical_edges		PARAMS ((void));
-extern rtx first_insn_after_basic_block_note	PARAMS ((basic_block));
+extern void insert_insn_on_edge (rtx, edge);
+bool safe_insert_insn_on_edge (rtx, edge);
 
-/* Structure to hold information for each natural loop.  */
-struct loop
+extern void commit_edge_insertions (void);
+extern void commit_edge_insertions_watch_calls (void);
+
+extern void remove_fake_edges (void);
+extern void add_noreturn_fake_exit_edges (void);
+extern void connect_infinite_loops_to_exit (void);
+extern int flow_call_edges_add (sbitmap);
+extern edge unchecked_make_edge (basic_block, basic_block, int);
+extern edge cached_make_edge (sbitmap *, basic_block, basic_block, int);
+extern edge make_edge (basic_block, basic_block, int);
+extern edge make_single_succ_edge (basic_block, basic_block, int);
+extern void remove_edge (edge);
+extern void redirect_edge_succ (edge, basic_block);
+extern edge redirect_edge_succ_nodup (edge, basic_block);
+extern void redirect_edge_pred (edge, basic_block);
+extern basic_block create_basic_block_structure (rtx, rtx, rtx, basic_block);
+extern void clear_bb_flags (void);
+extern void tidy_fallthru_edge (edge, basic_block, basic_block);
+extern void tidy_fallthru_edges (void);
+extern void flow_reverse_top_sort_order_compute (int *);
+extern int flow_depth_first_order_compute (int *, int *);
+extern void flow_preorder_transversal_compute (int *);
+extern int dfs_enumerate_from (basic_block, int,
+			       bool (*)(basic_block, void *),
+			       basic_block *, int, void *);
+extern void dump_edge_info (FILE *, edge, int);
+extern void clear_edges (void);
+extern void mark_critical_edges (void);
+extern rtx first_insn_after_basic_block_note (basic_block);
+
+/* Structure to group all of the information to process IF-THEN and
+   IF-THEN-ELSE blocks for the conditional execution support.  This
+   needs to be in a public file in case the IFCVT macros call
+   functions passing the ce_if_block data structure.  */
+
+typedef struct ce_if_block
 {
-  /* Index into loops array.  */
-  int num;
+  basic_block test_bb;			/* First test block.  */
+  basic_block then_bb;			/* THEN block.  */
+  basic_block else_bb;			/* ELSE block or NULL.  */
+  basic_block join_bb;			/* Join THEN/ELSE blocks.  */
+  basic_block last_test_bb;		/* Last bb to hold && or || tests.  */
+  int num_multiple_test_blocks;		/* # of && and || basic blocks.  */
+  int num_and_and_blocks;		/* # of && blocks.  */
+  int num_or_or_blocks;			/* # of || blocks.  */
+  int num_multiple_test_insns;		/* # of insns in && and || blocks.  */
+  int and_and_p;			/* Complex test is &&.  */
+  int num_then_insns;			/* # of insns in THEN block.  */
+  int num_else_insns;			/* # of insns in ELSE block.  */
+  int pass;				/* Pass number.  */
 
-  /* Basic block of loop header.  */
-  basic_block header;
+#ifdef IFCVT_EXTRA_FIELDS
+  IFCVT_EXTRA_FIELDS			/* Any machine dependent fields.  */
+#endif
 
-  /* Basic block of loop latch.  */
-  basic_block latch;
-
-  /* Basic block of loop pre-header or NULL if it does not exist.  */
-  basic_block pre_header;
-
-  /* Array of edges along the pre-header extended basic block trace.
-     The source of the first edge is the root node of pre-header
-     extended basic block, if it exists.  */
-  edge *pre_header_edges;
-
-  /* Number of edges along the pre_header extended basic block trace.  */
-  int num_pre_header_edges;
-
-  /* The first block in the loop.  This is not necessarily the same as
-     the loop header.  */
-  basic_block first;
-
-  /* The last block in the loop.  This is not necessarily the same as
-     the loop latch.  */
-  basic_block last;
-
-  /* Bitmap of blocks contained within the loop.  */
-  sbitmap nodes;
-
-  /* Number of blocks contained within the loop.  */
-  int num_nodes;
-
-  /* Array of edges that enter the loop.  */
-  edge *entry_edges;
-
-  /* Number of edges that enter the loop.  */
-  int num_entries;
-
-  /* Array of edges that exit the loop.  */
-  edge *exit_edges;
-
-  /* Number of edges that exit the loop.  */
-  int num_exits;
-
-  /* Bitmap of blocks that dominate all exits of the loop.  */
-  sbitmap exits_doms;
-
-  /* The loop nesting depth.  */
-  int depth;
-
-  /* The height of the loop (enclosed loop levels) within the loop
-     hierarchy tree.  */
-  int level;
-
-  /* The outer (parent) loop or NULL if outermost loop.  */
-  struct loop *outer;
-
-  /* The first inner (child) loop or NULL if innermost loop.  */
-  struct loop *inner;
-
-  /* Link to the next (sibling) loop.  */
-  struct loop *next;
-
-  /* Non-zero if the loop shares a header with another loop.  */
-  int shared;
-
-  /* Non-zero if the loop is invalid (e.g., contains setjmp.).  */
-  int invalid;
-
-  /* Auxiliary info specific to a pass.  */
-  void *aux;
-
-  /* The following are currently used by loop.c but they are likely to
-     disappear as loop.c is converted to use the CFG.  */
-
-  /* Non-zero if the loop has a NOTE_INSN_LOOP_VTOP.  */
-  rtx vtop;
-
-  /* Non-zero if the loop has a NOTE_INSN_LOOP_CONT.
-     A continue statement will generate a branch to NEXT_INSN (cont).  */
-  rtx cont;
-
-  /* The dominator of cont.  */
-  rtx cont_dominator;
-
-  /* The NOTE_INSN_LOOP_BEG.  */
-  rtx start;
-
-  /* The NOTE_INSN_LOOP_END.  */
-  rtx end;
-
-  /* For a rotated loop that is entered near the bottom,
-     this is the label at the top.  Otherwise it is zero.  */
-  rtx top;
-
-  /* Place in the loop where control enters.  */
-  rtx scan_start;
-
-  /* The position where to sink insns out of the loop.  */
-  rtx sink;
-
-  /* List of all LABEL_REFs which refer to code labels outside the
-     loop.  Used by routines that need to know all loop exits, such as
-     final_biv_value and final_giv_value.
-
-     This does not include loop exits due to return instructions.
-     This is because all bivs and givs are pseudos, and hence must be
-     dead after a return, so the presense of a return does not affect
-     any of the optimizations that use this info.  It is simpler to
-     just not include return instructions on this list.  */
-  rtx exit_labels;
-
-  /* The number of LABEL_REFs on exit_labels for this loop and all
-     loops nested inside it.  */
-  int exit_count;
-};
-
-
-/* Structure to hold CFG information about natural loops within a function.  */
-struct loops
-{
-  /* Number of natural loops in the function.  */
-  int num;
-
-  /* Maxium nested loop level in the function.  */
-  int levels;
-
-  /* Array of natural loop descriptors (scanning this array in reverse order
-     will find the inner loops before their enclosing outer loops).  */
-  struct loop *array;
-
-  /* Pointer to root of loop heirachy tree.  */
-  struct loop *tree_root;
-
-  /* Information derived from the CFG.  */
-  struct cfg
-  {
-    /* The bitmap vector of dominators or NULL if not computed.  */
-    sbitmap *dom;
-
-    /* The ordering of the basic blocks in a depth first search.  */
-    int *dfs_order;
-
-    /* The reverse completion ordering of the basic blocks found in a
-       depth first search.  */
-    int *rc_order;
-  } cfg;
-
-  /* Headers shared by multiple loops that should be merged.  */
-  sbitmap shared_headers;
-};
-
-extern int flow_loops_find PARAMS ((struct loops *, int flags));
-extern int flow_loops_update PARAMS ((struct loops *, int flags));
-extern void flow_loops_free PARAMS ((struct loops *));
-extern void flow_loops_dump PARAMS ((const struct loops *, FILE *,
-				     void (*)(const struct loop *,
-					      FILE *, int), int));
-extern void flow_loop_dump PARAMS ((const struct loop *, FILE *,
-				    void (*)(const struct loop *,
-					     FILE *, int), int));
-extern int flow_loop_scan PARAMS ((struct loops *, struct loop *, int));
+} ce_if_block_t;
 
 /* This structure maintains an edge list vector.  */
 struct edge_list
@@ -536,12 +447,11 @@ struct edge_list
 #define EDGE_CRITICAL_P(e)		((e)->src->succ->succ_next \
 					 && (e)->dest->pred->pred_next)
 
-struct edge_list * create_edge_list	PARAMS ((void));
-void free_edge_list			PARAMS ((struct edge_list *));
-void print_edge_list			PARAMS ((FILE *, struct edge_list *));
-void verify_edge_list			PARAMS ((FILE *, struct edge_list *));
-int find_edge_index			PARAMS ((struct edge_list *,
-						 basic_block, basic_block));
+struct edge_list * create_edge_list (void);
+void free_edge_list (struct edge_list *);
+void print_edge_list (FILE *, struct edge_list *);
+void verify_edge_list (FILE *, struct edge_list *);
+int find_edge_index (struct edge_list *, basic_block, basic_block);
 
 
 enum update_life_extent
@@ -562,9 +472,20 @@ enum update_life_extent
 					   by dead code removal.  */
 #define PROP_AUTOINC		64	/* Create autoinc mem references.  */
 #define PROP_EQUAL_NOTES	128	/* Take into account REG_EQUAL notes.  */
-#define PROP_FINAL		127	/* All of the above.  */
+#define PROP_SCAN_DEAD_STORES	256	/* Scan for dead code.  */
+#define PROP_ASM_SCAN		512	/* Internal flag used within flow.c
+					   to flag analysis of asms.  */
+#define PROP_FINAL		(PROP_DEATH_NOTES | PROP_LOG_LINKS  \
+				 | PROP_REG_INFO | PROP_KILL_DEAD_CODE  \
+				 | PROP_SCAN_DEAD_CODE | PROP_AUTOINC \
+				 | PROP_ALLOW_CFG_CHANGES \
+				 | PROP_SCAN_DEAD_STORES)
+#define PROP_POSTRELOAD		(PROP_DEATH_NOTES  \
+				 | PROP_KILL_DEAD_CODE  \
+				 | PROP_SCAN_DEAD_CODE | PROP_AUTOINC \
+				 | PROP_SCAN_DEAD_STORES)
 
-#define CLEANUP_EXPENSIVE	1	/* Do relativly expensive optimizations
+#define CLEANUP_EXPENSIVE	1	/* Do relatively expensive optimizations
 					   except for edge forwarding */
 #define CLEANUP_CROSSJUMP	2	/* Do crossjumping.  */
 #define CLEANUP_POST_REGSTACK	4	/* We run after reg-stack and need
@@ -575,124 +496,117 @@ enum update_life_extent
 					   notes.  */
 #define CLEANUP_UPDATE_LIFE	32	/* Keep life information up to date.  */
 #define CLEANUP_THREADING	64	/* Do jump threading.  */
-/* Flags for loop discovery.  */
-
-#define LOOP_TREE		1	/* Build loop hierarchy tree.  */
-#define LOOP_PRE_HEADER		2	/* Analyse loop pre-header.  */
-#define LOOP_ENTRY_EDGES	4	/* Find entry edges.  */
-#define LOOP_EXIT_EDGES		8	/* Find exit edges.  */
-#define LOOP_EDGES		(LOOP_ENTRY_EDGES | LOOP_EXIT_EDGES)
-#define LOOP_EXITS_DOMS	       16	/* Find nodes that dom. all exits.  */
-#define LOOP_ALL	       31	/* All of the above  */
-
-extern void life_analysis	PARAMS ((rtx, FILE *, int));
-extern void update_life_info	PARAMS ((sbitmap, enum update_life_extent,
-					 int));
-extern int count_or_remove_death_notes	PARAMS ((sbitmap, int));
-extern int propagate_block	PARAMS ((basic_block, regset, regset, regset,
-					 int));
+#define CLEANUP_NO_INSN_DEL	128	/* Do not try to delete trivially dead
+					   insns.  */
+#define CLEANUP_CFGLAYOUT	256	/* Do cleanup in cfglayout mode.  */
+#define CLEANUP_LOG_LINKS	512	/* Update log links.  */
+extern void life_analysis (rtx, FILE *, int);
+extern int update_life_info (sbitmap, enum update_life_extent, int);
+extern int update_life_info_in_dirty_blocks (enum update_life_extent, int);
+extern int count_or_remove_death_notes (sbitmap, int);
+extern int propagate_block (basic_block, regset, regset, regset, int);
 
 struct propagate_block_info;
-extern rtx propagate_one_insn	PARAMS ((struct propagate_block_info *, rtx));
+extern rtx propagate_one_insn (struct propagate_block_info *, rtx);
 extern struct propagate_block_info *init_propagate_block_info
-  PARAMS ((basic_block, regset, regset, regset, int));
-extern void free_propagate_block_info PARAMS ((struct propagate_block_info *));
+ (basic_block, regset, regset, regset, int);
+extern void free_propagate_block_info (struct propagate_block_info *);
 
 /* In lcm.c */
-extern struct edge_list *pre_edge_lcm	PARAMS ((FILE *, int, sbitmap *,
-						 sbitmap *, sbitmap *,
-						 sbitmap *, sbitmap **,
-						 sbitmap **));
-extern struct edge_list *pre_edge_rev_lcm PARAMS ((FILE *, int, sbitmap *,
-						   sbitmap *, sbitmap *,
-						   sbitmap *, sbitmap **,
-						   sbitmap **));
-extern void compute_available		PARAMS ((sbitmap *, sbitmap *,
-						 sbitmap *, sbitmap *));
-extern int optimize_mode_switching	PARAMS ((FILE *));
+extern struct edge_list *pre_edge_lcm (FILE *, int, sbitmap *, sbitmap *,
+				       sbitmap *, sbitmap *, sbitmap **,
+				       sbitmap **);
+extern struct edge_list *pre_edge_rev_lcm (FILE *, int, sbitmap *,
+					   sbitmap *, sbitmap *,
+					   sbitmap *, sbitmap **,
+					   sbitmap **);
+extern void compute_available (sbitmap *, sbitmap *, sbitmap *, sbitmap *);
+extern int optimize_mode_switching (FILE *);
 
 /* In emit-rtl.c.  */
-extern rtx emit_block_insn_after	PARAMS ((rtx, rtx, basic_block));
-extern rtx emit_block_insn_before	PARAMS ((rtx, rtx, basic_block));
+extern rtx emit_block_insn_after (rtx, rtx, basic_block);
+extern rtx emit_block_insn_before (rtx, rtx, basic_block);
 
 /* In predict.c */
-extern void estimate_probability        PARAMS ((struct loops *));
-extern void expected_value_to_br_prob	PARAMS ((void));
+extern void estimate_probability (struct loops *);
+extern void note_prediction_to_br_prob (void);
+extern void expected_value_to_br_prob (void);
+extern bool maybe_hot_bb_p (basic_block);
+extern bool probably_cold_bb_p (basic_block);
+extern bool probably_never_executed_bb_p (basic_block);
 
 /* In flow.c */
-extern void init_flow                   PARAMS ((void));
-extern void reorder_basic_blocks	PARAMS ((void));
-extern void dump_bb			PARAMS ((basic_block, FILE *));
-extern void debug_bb			PARAMS ((basic_block));
-extern void debug_bb_n			PARAMS ((int));
-extern void dump_regset			PARAMS ((regset, FILE *));
-extern void debug_regset		PARAMS ((regset));
-extern void allocate_reg_life_data      PARAMS ((void));
-extern void allocate_bb_life_data	PARAMS ((void));
-extern void expunge_block		PARAMS ((basic_block));
-extern void expunge_block_nocompact	PARAMS ((basic_block));
-extern basic_block alloc_block		PARAMS ((void));
-extern void find_unreachable_blocks	PARAMS ((void));
-extern void delete_noop_moves		PARAMS ((rtx));
-extern basic_block redirect_edge_and_branch_force PARAMS ((edge, basic_block));
-extern basic_block force_nonfallthru	PARAMS ((edge));
-extern bool redirect_edge_and_branch	PARAMS ((edge, basic_block));
-extern rtx block_label			PARAMS ((basic_block));
-extern bool forwarder_block_p		PARAMS ((basic_block));
-extern bool purge_all_dead_edges	PARAMS ((int));
-extern bool purge_dead_edges		PARAMS ((basic_block));
-extern void find_sub_basic_blocks	PARAMS ((basic_block));
-extern void find_many_sub_basic_blocks	PARAMS ((sbitmap));
-extern bool can_fallthru		PARAMS ((basic_block, basic_block));
-extern void flow_nodes_print		PARAMS ((const char *, const sbitmap,
-						 FILE *));
-extern void flow_edge_list_print	PARAMS ((const char *, const edge *,
-						 int, FILE *));
-extern void alloc_aux_for_block		PARAMS ((basic_block, int));
-extern void alloc_aux_for_blocks	PARAMS ((int));
-extern void clear_aux_for_blocks	PARAMS ((void));
-extern void free_aux_for_blocks		PARAMS ((void));
-extern void alloc_aux_for_edge		PARAMS ((edge, int));
-extern void alloc_aux_for_edges		PARAMS ((int));
-extern void clear_aux_for_edges		PARAMS ((void));
-extern void free_aux_for_edges		PARAMS ((void));
+extern void init_flow (void);
+extern void dump_bb (basic_block, FILE *);
+extern void debug_bb (basic_block);
+extern basic_block debug_bb_n (int);
+extern void dump_regset (regset, FILE *);
+extern void debug_regset (regset);
+extern void allocate_reg_life_data (void);
+extern void allocate_bb_life_data (void);
+extern void expunge_block (basic_block);
+extern void link_block (basic_block, basic_block);
+extern void unlink_block (basic_block);
+extern void compact_blocks (void);
+extern basic_block alloc_block (void);
+extern void find_unreachable_blocks (void);
+extern int delete_noop_moves (rtx);
+extern basic_block force_nonfallthru (edge);
+extern rtx block_label (basic_block);
+extern bool forwarder_block_p (basic_block);
+extern bool purge_all_dead_edges (int);
+extern bool purge_dead_edges (basic_block);
+extern void find_sub_basic_blocks (basic_block);
+extern void find_many_sub_basic_blocks (sbitmap);
+extern bool can_fallthru (basic_block, basic_block);
+extern void flow_nodes_print (const char *, const sbitmap, FILE *);
+extern void flow_edge_list_print (const char *, const edge *, int, FILE *);
+extern void alloc_aux_for_block (basic_block, int);
+extern void alloc_aux_for_blocks (int);
+extern void clear_aux_for_blocks (void);
+extern void free_aux_for_blocks (void);
+extern void alloc_aux_for_edge (edge, int);
+extern void alloc_aux_for_edges (int);
+extern void clear_aux_for_edges (void);
+extern void free_aux_for_edges (void);
 
 /* This function is always defined so it can be called from the
    debugger, and it is declared extern so we don't get warnings about
    it being unused.  */
-extern void verify_flow_info		PARAMS ((void));
-extern int flow_loop_outside_edge_p	PARAMS ((const struct loop *, edge));
+extern void verify_flow_info (void);
 
 typedef struct conflict_graph_def *conflict_graph;
 
 /* Callback function when enumerating conflicts.  The arguments are
    the smaller and larger regno in the conflict.  Returns zero if
-   enumeration is to continue, non-zero to halt enumeration.  */
-typedef int (*conflict_graph_enum_fn) PARAMS ((int, int, void *));
+   enumeration is to continue, nonzero to halt enumeration.  */
+typedef int (*conflict_graph_enum_fn) (int, int, void *);
 
 
 /* Prototypes of operations on conflict graphs.  */
 
 extern conflict_graph conflict_graph_new
-                                        PARAMS ((int));
-extern void conflict_graph_delete       PARAMS ((conflict_graph));
-extern int conflict_graph_add           PARAMS ((conflict_graph,
-						 int, int));
-extern int conflict_graph_conflict_p    PARAMS ((conflict_graph,
-						 int, int));
-extern void conflict_graph_enum         PARAMS ((conflict_graph, int,
-						 conflict_graph_enum_fn,
-						 void *));
-extern void conflict_graph_merge_regs   PARAMS ((conflict_graph, int,
-						 int));
-extern void conflict_graph_print        PARAMS ((conflict_graph, FILE*));
-extern conflict_graph conflict_graph_compute
-                                        PARAMS ((regset,
-						 partition));
-extern bool mark_dfs_back_edges		PARAMS ((void));
-extern void update_br_prob_note		PARAMS ((basic_block));
-extern void fixup_abnormal_edges	PARAMS ((void));
-extern bool control_flow_insn_p		PARAMS ((rtx));
+ (int);
+extern void conflict_graph_delete (conflict_graph);
+extern int conflict_graph_add (conflict_graph, int, int);
+extern int conflict_graph_conflict_p (conflict_graph, int, int);
+extern void conflict_graph_enum (conflict_graph, int, conflict_graph_enum_fn,
+				 void *);
+extern void conflict_graph_merge_regs (conflict_graph, int, int);
+extern void conflict_graph_print (conflict_graph, FILE*);
+extern conflict_graph conflict_graph_compute (regset, partition);
+extern bool mark_dfs_back_edges (void);
+extern void set_edge_can_fallthru_flag (void);
+extern void update_br_prob_note (basic_block);
+extern void fixup_abnormal_edges (void);
+extern bool can_hoist_insn_p (rtx, rtx, regset);
+extern rtx hoist_insn_after (rtx, rtx, rtx, rtx);
+extern rtx hoist_insn_to_edge (rtx, edge, rtx, rtx);
+extern bool inside_basic_block_p (rtx);
+extern bool control_flow_insn_p (rtx);
+
+/* In bb-reorder.c */
+extern void reorder_basic_blocks (unsigned int);
 
 /* In dominance.c */
 
@@ -702,7 +616,37 @@ enum cdi_direction
   CDI_POST_DOMINATORS
 };
 
-extern void calculate_dominance_info	PARAMS ((int *, sbitmap *,
-						 enum cdi_direction));
+enum dom_state
+{
+  DOM_NONE,		/* Not computed at all.  */
+  DOM_CONS_OK,		/* The data is conservatively OK, i.e. if it says you that A dominates B,
+			   it indeed does.  */
+  DOM_NO_FAST_QUERY,	/* The data is OK, but the fast query data are not usable.  */
+  DOM_OK		/* Everything is ok.  */
+};
+
+extern enum dom_state dom_computed[2];
+
+extern void calculate_dominance_info (enum cdi_direction);
+extern void free_dominance_info (enum cdi_direction);
+extern basic_block nearest_common_dominator (enum cdi_direction,
+					     basic_block, basic_block);
+extern void set_immediate_dominator (enum cdi_direction, basic_block,
+				     basic_block);
+extern basic_block get_immediate_dominator (enum cdi_direction, basic_block);
+extern bool dominated_by_p (enum cdi_direction, basic_block, basic_block);
+extern int get_dominated_by (enum cdi_direction, basic_block, basic_block **);
+extern void add_to_dominance_info (enum cdi_direction, basic_block);
+extern void delete_from_dominance_info (enum cdi_direction, basic_block);
+basic_block recount_dominator (enum cdi_direction, basic_block);
+extern void redirect_immediate_dominators (enum cdi_direction, basic_block,
+					   basic_block);
+extern void iterate_fix_dominators (enum cdi_direction, basic_block *, int);
+extern void verify_dominators (enum cdi_direction);
+extern basic_block first_dom_son (enum cdi_direction, basic_block);
+extern basic_block next_dom_son (enum cdi_direction, basic_block);
+extern bool try_redirect_by_replacing_jump (edge, basic_block, bool);
+
+#include "cfghooks.h"
 
 #endif /* GCC_BASIC_BLOCK_H */

@@ -1,5 +1,5 @@
 /* Sets (bit vectors) of hard registers, and operations on them.
-   Copyright (C) 1987, 1992, 1994, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1992, 1994, 2000, 2003 Free Software Foundation, Inc.
 
 This file is part of GCC
 
@@ -92,7 +92,7 @@ typedef HARD_REG_ELT_TYPE HARD_REG_SET[HARD_REG_SET_LONGS];
 #define CLEAR_HARD_REG_BIT(SET, BIT)  \
  ((SET) &= ~(HARD_CONST (1) << (BIT)))
 #define TEST_HARD_REG_BIT(SET, BIT)  \
- ((SET) & (HARD_CONST (1) << (BIT)))
+ (!!((SET) & (HARD_CONST (1) << (BIT))))
 
 #define CLEAR_HARD_REG_SET(TO) ((TO) = HARD_CONST (0))
 #define SET_HARD_REG_SET(TO) ((TO) = ~ HARD_CONST (0))
@@ -122,8 +122,8 @@ typedef HARD_REG_ELT_TYPE HARD_REG_SET[HARD_REG_SET_LONGS];
    &= ~(HARD_CONST (1) << ((BIT) % UHOST_BITS_PER_WIDE_INT)))
 
 #define TEST_HARD_REG_BIT(SET, BIT)		\
-  ((SET)[(BIT) / UHOST_BITS_PER_WIDE_INT]	\
-   & (HARD_CONST (1) << ((BIT) % UHOST_BITS_PER_WIDE_INT)))
+  (!!((SET)[(BIT) / UHOST_BITS_PER_WIDE_INT]	\
+      & (HARD_CONST (1) << ((BIT) % UHOST_BITS_PER_WIDE_INT))))
 
 #if FIRST_PSEUDO_REGISTER <= 2*HOST_BITS_PER_WIDE_INT
 #define CLEAR_HARD_REG_SET(TO)  \
@@ -405,6 +405,10 @@ extern HARD_REG_SET fixed_reg_set;
 
 extern char call_used_regs[FIRST_PSEUDO_REGISTER];
 
+#ifdef CALL_REALLY_USED_REGISTERS
+extern char call_really_used_regs[];
+#endif
+
 /* The same info as a HARD_REG_SET.  */
 
 extern HARD_REG_SET call_used_reg_set;
@@ -414,7 +418,7 @@ extern HARD_REG_SET losing_caller_save_reg_set;
 
 /* Indexed by hard register number, contains 1 for registers that are
    fixed use -- i.e. in fixed_regs -- or a function value return register
-   or STRUCT_VALUE_REGNUM or STATIC_CHAIN_REGNUM.  These are the
+   or TARGET_STRUCT_VALUE_RTX or STATIC_CHAIN_REGNUM.  These are the
    registers that cannot hold quantities across calls even if we are
    willing to save and restore them.  */
 
@@ -483,5 +487,10 @@ extern int n_non_fixed_regs;
 /* Vector indexed by hardware reg giving its name.  */
 
 extern const char * reg_names[FIRST_PSEUDO_REGISTER];
+
+/* Given a hard REGN a FROM mode and a TO mode, return nonzero if
+   REGN cannot change modes between the specified modes.  */
+#define REG_CANNOT_CHANGE_MODE_P(REGN, FROM, TO)                          \
+         CANNOT_CHANGE_MODE_CLASS (FROM, TO, REGNO_REG_CLASS (REGN))
 
 #endif /* ! GCC_HARD_REG_SET_H */

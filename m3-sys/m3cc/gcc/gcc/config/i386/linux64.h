@@ -2,40 +2,49 @@
    Copyright (C) 2001, 2002 Free Software Foundation, Inc.
    Contributed by Jan Hubicka <jh@suse.cz>, based on linux.h.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#define LINUX_DEFAULT_ELF
-
-#undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (x86-64 Linux/ELF)");
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__ELF__ -Dunix -D__gnu_linux__ -Dlinux -Asystem(posix)"
+#define TARGET_OS_CPP_BUILTINS()				\
+  do								\
+    {								\
+	LINUX_TARGET_OS_CPP_BUILTINS();				\
+	if (flag_pic)						\
+	  {							\
+	    builtin_define ("__PIC__");				\
+	    builtin_define ("__pic__");				\
+	  }							\
+    }								\
+  while (0)
 
 #undef CPP_SPEC
-#define CPP_SPEC "%(cpp_cpu) %{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT} \
-                  %{!m32:-D__LONG_MAX__=9223372036854775807L -D__LP64__ -D_LP64}"
+#define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
 
 /* The svr4 ABI for the i386 says that records and unions are returned
    in memory.  In the 64bit compilation we will turn this flag off in
    override_options, as we never do pcc_struct_return scheme on this target.  */
 #undef DEFAULT_PCC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 1
+
+/* We arrange for the whole %fs segment to map the tls area.  */
+#undef TARGET_TLS_DIRECT_SEG_REFS_DEFAULT
+#define TARGET_TLS_DIRECT_SEG_REFS_DEFAULT MASK_TLS_DIRECT_SEG_REFS
 
 /* Provide a LINK_SPEC.  Here we provide support for the special GCC
    options -static and -shared, which allow us to link things in one
@@ -46,7 +55,7 @@ Boston, MA 02111-1307, USA.  */
    done.  */
 
 #undef	LINK_SPEC
-#define LINK_SPEC "%{!m32:-m elf_x86_64 -Y P,/usr/lib64} %{m32:-m elf_i386} \
+#define LINK_SPEC "%{!m32:-m elf_x86_64} %{m32:-m elf_i386} \
   %{shared:-shared} \
   %{!shared: \
     %{!static: \
@@ -55,18 +64,10 @@ Boston, MA 02111-1307, USA.  */
       %{!m32:%{!dynamic-linker:-dynamic-linker /lib64/ld-linux-x86-64.so.2}}} \
     %{static:-static}}"
 
-#undef  STARTFILE_SPEC
-#define STARTFILE_SPEC \
-  "%{!shared: \
-     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} \
-     %{!p:%{profile:gcrt1.o%s} %{!profile:crt1.o%s}}}} \
-   crti.o%s %{static:crtbeginT.o%s} \
-   %{!static:%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}}"
-
-#undef  ENDFILE_SPEC
-#define ENDFILE_SPEC "%{!shared:crtend.o%s} %{shared:crtendS.o%s} crtn.o%s"
-
 #define MULTILIB_DEFAULTS { "m64" }
+
+#undef NEED_INDICATE_EXEC_STACK
+#define NEED_INDICATE_EXEC_STACK 1
 
 /* Do code reading to identify a signal frame, and set the frame
    state data appropriately.  See unwind-dw2.c for the structs.  
@@ -105,17 +106,17 @@ Boston, MA 02111-1307, USA.  */
     (FS)->regs.reg[0].how = REG_SAVED_OFFSET;				\
     (FS)->regs.reg[0].loc.offset = (long)&sc_->rax - new_cfa_;		\
     (FS)->regs.reg[1].how = REG_SAVED_OFFSET;				\
-    (FS)->regs.reg[1].loc.offset = (long)&sc_->rbx - new_cfa_;		\
+    (FS)->regs.reg[1].loc.offset = (long)&sc_->rdx - new_cfa_;		\
     (FS)->regs.reg[2].how = REG_SAVED_OFFSET;				\
     (FS)->regs.reg[2].loc.offset = (long)&sc_->rcx - new_cfa_;		\
     (FS)->regs.reg[3].how = REG_SAVED_OFFSET;				\
-    (FS)->regs.reg[3].loc.offset = (long)&sc_->rdx - new_cfa_;		\
+    (FS)->regs.reg[3].loc.offset = (long)&sc_->rbx - new_cfa_;		\
     (FS)->regs.reg[4].how = REG_SAVED_OFFSET;				\
-    (FS)->regs.reg[4].loc.offset = (long)&sc_->rbp - new_cfa_;		\
+    (FS)->regs.reg[4].loc.offset = (long)&sc_->rsi - new_cfa_;		\
     (FS)->regs.reg[5].how = REG_SAVED_OFFSET;				\
-    (FS)->regs.reg[5].loc.offset = (long)&sc_->rsi - new_cfa_;		\
+    (FS)->regs.reg[5].loc.offset = (long)&sc_->rdi - new_cfa_;		\
     (FS)->regs.reg[6].how = REG_SAVED_OFFSET;				\
-    (FS)->regs.reg[6].loc.offset = (long)&sc_->rdi - new_cfa_;		\
+    (FS)->regs.reg[6].loc.offset = (long)&sc_->rbp - new_cfa_;		\
     (FS)->regs.reg[8].how = REG_SAVED_OFFSET;				\
     (FS)->regs.reg[8].loc.offset = (long)&sc_->r8 - new_cfa_;		\
     (FS)->regs.reg[9].how = REG_SAVED_OFFSET;				\
@@ -132,6 +133,8 @@ Boston, MA 02111-1307, USA.  */
     (FS)->regs.reg[14].loc.offset = (long)&sc_->r14 - new_cfa_;		\
     (FS)->regs.reg[15].how = REG_SAVED_OFFSET;				\
     (FS)->regs.reg[15].loc.offset = (long)&sc_->r15 - new_cfa_;		\
+    (FS)->regs.reg[16].how = REG_SAVED_OFFSET;				\
+    (FS)->regs.reg[16].loc.offset = (long)&sc_->rip - new_cfa_;		\
     (FS)->retaddr_column = 16;						\
     goto SUCCESS;							\
   } while (0)

@@ -20,6 +20,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "gcc.h"
 
 /* The `cpp' executable installed in $(bindir) and $(cpp_install_dir)
@@ -29,31 +31,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    assume the user knows what they're doing.  If no explicit input is
    mentioned, it will read stdin.  */
 
-/* Snarfed from gcc.c: */
-
-/* This defines which switch letters take arguments.  */
-
-#define DEFAULT_SWITCH_TAKES_ARG(CHAR) \
-  ((CHAR) == 'D' || (CHAR) == 'U' || (CHAR) == 'o' \
-   || (CHAR) == 'e' || (CHAR) == 'T' || (CHAR) == 'u' \
-   || (CHAR) == 'I' || (CHAR) == 'm' || (CHAR) == 'x' \
-   || (CHAR) == 'L' || (CHAR) == 'A' || (CHAR) == 'V' \
-   || (CHAR) == 'B' || (CHAR) == 'b')
-
 #ifndef SWITCH_TAKES_ARG
 #define SWITCH_TAKES_ARG(CHAR) DEFAULT_SWITCH_TAKES_ARG(CHAR)
 #endif
-
-/* This defines which multi-letter switches take arguments.  */
-
-#define DEFAULT_WORD_SWITCH_TAKES_ARG(STR)		\
- (!strcmp (STR, "Tdata") || !strcmp (STR, "Ttext")	\
-  || !strcmp (STR, "Tbss") || !strcmp (STR, "include")	\
-  || !strcmp (STR, "imacros") || !strcmp (STR, "aux-info") \
-  || !strcmp (STR, "idirafter") || !strcmp (STR, "iprefix") \
-  || !strcmp (STR, "iwithprefix") || !strcmp (STR, "iwithprefixbefore") \
-  || !strcmp (STR, "isystem") || !strcmp (STR, "specs") \
-  || !strcmp (STR, "MF") || !strcmp (STR, "MT") || !strcmp (STR, "MQ"))
 
 #ifndef WORD_SWITCH_TAKES_ARG
 #define WORD_SWITCH_TAKES_ARG(STR) DEFAULT_WORD_SWITCH_TAKES_ARG (STR)
@@ -71,10 +51,8 @@ static const char *const known_suffixes[] =
 
 /* Filter argc and argv before processing by the gcc driver proper.  */
 void
-lang_specific_driver (in_argc, in_argv, in_added_libraries)
-     int *in_argc;
-     const char *const **in_argv;
-     int *in_added_libraries ATTRIBUTE_UNUSED;
+lang_specific_driver (int *in_argc, const char *const **in_argv,
+		      int *in_added_libraries ATTRIBUTE_UNUSED)
 {
   int argc = *in_argc;
   const char *const *argv = *in_argv;
@@ -85,12 +63,9 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
   /* Do we need to insert -E? */
   int need_E = 1;
 
-  /* Do we need to insert -no-gcc? */
-  int need_no_gcc = 1;
-
   /* Have we seen an input file? */
   int seen_input = 0;
-  
+
   /* Positions to insert -xc, -xassembler-with-cpp, and -o, if necessary.
      0 means unnecessary.  */
   int lang_c_here = 0;
@@ -99,7 +74,7 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
 
   /* Do we need to fix up an input file with an unrecognized suffix? */
   int need_fixups = 1;
-  
+
   int i, j, quote = 0;
   const char **new_argv;
   int new_argc;
@@ -117,7 +92,7 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
 	  quote = 0;
 	  continue;
 	}
-      
+
       if (argv[i][0] == '-')
 	{
 	  if (argv[i][1] == '\0')
@@ -142,8 +117,6 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
 	    }
 	  else if (argv[i][1] == 'x')
 	    need_fixups = 0;
-	  else if (argv[i][1] == 'g' && !strcmp(&argv[i][2], "cc"))
-	    need_no_gcc = 0;
 	  else if (WORD_SWITCH_TAKES_ARG (&argv[i][1]))
 	    quote = 1;
 	}
@@ -192,23 +165,20 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
 
   /* If we don't need to edit the command line, we can bail early.  */
 
-  new_argc = argc + need_E + need_no_gcc + read_stdin
+  new_argc = argc + need_E + read_stdin
     + !!o_here + !!lang_c_here + !!lang_S_here;
 
   if (new_argc == argc)
     return;
 
   /* One more slot for a terminating null.  */
-  new_argv = (const char **) xmalloc ((new_argc + 1) * sizeof(char *));
+  new_argv = xmalloc ((new_argc + 1) * sizeof(char *));
 
   new_argv[0] = argv[0];
   j = 1;
 
   if (need_E)
     new_argv[j++] = "-E";
-
-  if (need_no_gcc)
-    new_argv[j++] = "-no-gcc";
 
   for (i = 1; i < argc; i++, j++)
     {
@@ -228,13 +198,19 @@ lang_specific_driver (in_argc, in_argv, in_added_libraries)
   new_argv[j] = NULL;
   *in_argc = new_argc;
   *in_argv = new_argv;
-} 
+}
 
 /* Called before linking.  Returns 0 on success and -1 on failure.  */
-int lang_specific_pre_link ()
+int lang_specific_pre_link (void)
 {
   return 0;  /* Not used for cpp.  */
 }
 
 /* Number of extra output files that lang_specific_pre_link may generate.  */
 int lang_specific_extra_outfiles = 0;  /* Not used for cpp.  */
+
+/* Table of language-specific spec functions.  */
+const struct spec_function lang_specific_spec_functions[] =
+{
+  { 0, 0 }
+};

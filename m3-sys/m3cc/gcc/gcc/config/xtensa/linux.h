@@ -1,6 +1,6 @@
 /* Xtensa Linux configuration.
    Derived from the configuration for GCC for Intel i386 running Linux.
-   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -19,25 +19,29 @@ along with GCC; see the file COPYING.  If not, write to the Free
 Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
+#define TARGET_OS_CPP_BUILTINS() LINUX_TARGET_OS_CPP_BUILTINS()
+
+#undef SUBTARGET_CPP_SPEC
+#define SUBTARGET_CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
+
 #undef TARGET_VERSION
 #define TARGET_VERSION fputs (" (Xtensa GNU/Linux with ELF)", stderr);
 
+#undef WCHAR_TYPE
+#define WCHAR_TYPE "long int"
+
+#undef WCHAR_TYPE_SIZE
+#define WCHAR_TYPE_SIZE 32
+
 #undef ASM_SPEC
-#define ASM_SPEC "%{v} %{mno-density:--no-density} \
-                  %{mtext-section-literals:--text-section-literals} \
-                  %{mno-text-section-literals:--no-text-section-literals} \
-		  %{mtarget-align:--target-align} \
-		  %{mno-target-align:--no-target-align} \
-		  %{mlongcalls:--longcalls} \
-		  %{mno-longcalls:--no-longcalls}"
-
-#undef ASM_FINAL_SPEC
-
-#undef LIB_SPEC
-#define LIB_SPEC \
-  "%{shared: -lc} \
-   %{!shared: %{pthread:-lpthread} \
-   %{profile:-lc_p} %{!profile: -lc}}"
+#define ASM_SPEC \
+ "%{v} \
+  %{mtext-section-literals:--text-section-literals} \
+  %{mno-text-section-literals:--no-text-section-literals} \
+  %{mtarget-align:--target-align} \
+  %{mno-target-align:--no-target-align} \
+  %{mlongcalls:--longcalls} \
+  %{mno-longcalls:--no-longcalls}"
 
 #undef LINK_SPEC
 #define LINK_SPEC \
@@ -49,17 +53,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
         %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}} \
       %{static:-static}}}"
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES \
- "-D__XTENSA__ -D__ELF__ -Acpu=xtensa -Amachine=xtensa \
-  -Dunix -D__gnu_linux__ -Dlinux -Asystem=posix"
-
 #undef LOCAL_LABEL_PREFIX
 #define LOCAL_LABEL_PREFIX	"."
-
-/* Don't switch sections in the middle of a literal pool! */
-#undef SELECT_RTX_SECTION
-#define SELECT_RTX_SECTION(MODE,RTX,ALIGN)
 
 /* Always enable "-fpic" for Xtensa Linux.  */
 #define XTENSA_ALWAYS_PIC 1
@@ -72,23 +67,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
   do								\
     {								\
       if (!flag_inhibit_size_directive)				\
-	{							\
-	  char label[256];					\
-	  static int labelno;					\
-	  							\
-	  labelno++;						\
-	  							\
-	  ASM_GENERATE_INTERNAL_LABEL (label, "Lfe", labelno);	\
-	  ASM_OUTPUT_INTERNAL_LABEL (FILE, "Lfe", labelno);	\
-	  							\
-	  fprintf (FILE, "%s", SIZE_ASM_OP);			\
-	  assemble_name (FILE, (FNAME));			\
-	  fprintf (FILE, ",");					\
-	  assemble_name (FILE, label);				\
-	  fprintf (FILE, "-");					\
-	  assemble_name (FILE, (FNAME));			\
-	  putc ('\n', FILE);					\
-	}							\
+	ASM_OUTPUT_MEASURED_SIZE (FILE, FNAME);			\
       XTENSA_DECLARE_FUNCTION_SIZE(FILE, FNAME, DECL);		\
     }								\
   while (0)

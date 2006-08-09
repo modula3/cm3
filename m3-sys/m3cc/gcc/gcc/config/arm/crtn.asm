@@ -35,11 +35,11 @@
 # fact return.  Users may put any desired instructions in those sections.
 # This file is the last thing linked into any executable.
 
-	# Note - this macro is complimented by the FUNC_START macro
+	# Note - this macro is complemented by the FUNC_START macro
 	# in crti.asm.  If you change this macro you must also change
 	# that macro match.
 	#
-	# Note - we do not try any fancy optimisations of the return
+	# Note - we do not try any fancy optimizations of the return
 	# sequences here, it is just not worth it.  Instead keep things
 	# simple.  Restore all the save resgisters, including the link
 	# register and then perform the correct function return instruction.

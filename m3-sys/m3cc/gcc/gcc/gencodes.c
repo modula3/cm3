@@ -2,7 +2,7 @@
    - some macros CODE_FOR_... giving the insn_code_number value
    for each of the defined standard insn names.
    Copyright (C) 1987, 1991, 1995, 1998,
-   1999, 2000, 2001 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2003 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -22,36 +22,42 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
 
-#include "hconfig.h"
+#include "bconfig.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "errors.h"
 #include "gensupport.h"
 
-static void gen_insn PARAMS ((const char *, int));
-
 static void
-gen_insn (name, code)
-     const char *name;
-     int code;
+gen_insn (rtx insn, int code)
 {
+  const char *name = XSTR (insn, 0);
+  int truth = maybe_eval_c_test (XSTR (insn, 2));
+
   /* Don't mention instructions whose names are the null string
      or begin with '*'.  They are in the machine description just
      to be recognized.  */
   if (name[0] != 0 && name[0] != '*')
-    printf ("  CODE_FOR_%s = %d,\n", name, code);
+    {
+      if (truth == 0)
+	printf ("#define CODE_FOR_%s CODE_FOR_nothing\n", name);
+      else
+	printf ("  CODE_FOR_%s = %d,\n", name, code);
+    }
 }
 
-extern int main PARAMS ((int, char **));
-
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   rtx desc;
 
   progname = "gencodes";
+
+  /* We need to see all the possibilities.  Elided insns may have
+     direct references to CODE_FOR_xxx in C code.  */
+  insn_elision = 0;
 
   if (argc <= 1)
     fatal ("no input file name");
@@ -80,10 +86,10 @@ enum insn_code {");
 	break;
 
       if (GET_CODE (desc) == DEFINE_INSN || GET_CODE (desc) == DEFINE_EXPAND)
-	gen_insn (XSTR (desc, 0), insn_code_number);
+	gen_insn (desc, insn_code_number);
     }
 
-  puts ("CODE_FOR_nothing\n\
+  puts ("  CODE_FOR_nothing\n\
 };\n\
 \n\
 #endif /* GCC_INSN_CODES_H */");
@@ -97,8 +103,7 @@ enum insn_code {");
 /* Define this so we can link with print-rtl.o to get debug_rtx function.  */
 
 const char *
-get_insn_name (code)
-     int code ATTRIBUTE_UNUSED;
+get_insn_name (int code ATTRIBUTE_UNUSED)
 {
   return NULL;
 }

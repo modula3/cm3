@@ -1,6 +1,6 @@
 /* RTL utility routines.
-   Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
+   2003 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -21,76 +21,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "real.h"
 #include "ggc.h"
 #include "errors.h"
 
 
-/* Calculate the format for CONST_DOUBLE.  This depends on the relative
-   widths of HOST_WIDE_INT and REAL_VALUE_TYPE.
-
-   We need to go out to 0wwwww, since REAL_ARITHMETIC assumes 16-bits
-   per element in REAL_VALUE_TYPE.
-
-   This is duplicated in gengenrtl.c.
-
-   A number of places assume that there are always at least two 'w'
-   slots in a CONST_DOUBLE, so we provide them even if one would suffice.  */
-
-#ifdef REAL_ARITHMETIC
-# if MAX_LONG_DOUBLE_TYPE_SIZE == 96
-#  define REAL_WIDTH	\
-     (11*8 + HOST_BITS_PER_WIDE_INT)/HOST_BITS_PER_WIDE_INT
-# else
-#  if MAX_LONG_DOUBLE_TYPE_SIZE == 128
-#   define REAL_WIDTH	\
-      (19*8 + HOST_BITS_PER_WIDE_INT)/HOST_BITS_PER_WIDE_INT
-#  else
-#   if HOST_FLOAT_FORMAT != TARGET_FLOAT_FORMAT
-#    define REAL_WIDTH	\
-       (7*8 + HOST_BITS_PER_WIDE_INT)/HOST_BITS_PER_WIDE_INT
-#   endif
-#  endif
-# endif
-#endif /* REAL_ARITHMETIC */
-
-#ifndef REAL_WIDTH
-# if HOST_BITS_PER_WIDE_INT*2 >= MAX_LONG_DOUBLE_TYPE_SIZE
-#  define REAL_WIDTH	2
-# else
-#  if HOST_BITS_PER_WIDE_INT*3 >= MAX_LONG_DOUBLE_TYPE_SIZE
-#   define REAL_WIDTH	3
-#  else
-#   if HOST_BITS_PER_WIDE_INT*4 >= MAX_LONG_DOUBLE_TYPE_SIZE
-#    define REAL_WIDTH	4
-#   endif
-#  endif
-# endif
-#endif /* REAL_WIDTH */
-
-#if REAL_WIDTH == 1
-# define CONST_DOUBLE_FORMAT	"0ww"
-#else
-# if REAL_WIDTH == 2
-#  define CONST_DOUBLE_FORMAT	"0ww"
-# else
-#  if REAL_WIDTH == 3
-#   define CONST_DOUBLE_FORMAT	"0www"
-#  else
-#   if REAL_WIDTH == 4
-#    define CONST_DOUBLE_FORMAT	"0wwww"
-#   else
-#    if REAL_WIDTH == 5
-#     define CONST_DOUBLE_FORMAT	"0wwwww"
-#    else
-#     define CONST_DOUBLE_FORMAT	/* nothing - will cause syntax error */
-#    endif
-#   endif
-#  endif
-# endif
-#endif
-
 /* Indexed by rtx code, gives number of operands for an rtx with that code.
    Does NOT include rtx header data (code and links).  */
 
@@ -111,115 +49,6 @@ const char * const rtx_name[NUM_RTX_CODE] = {
 };
 
 #undef DEF_RTL_EXPR
-
-/* Indexed by machine mode, gives the name of that machine mode.
-   This name does not include the letters "mode".  */
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  NAME,
-
-const char * const mode_name[NUM_MACHINE_MODES] = {
-#include "machmode.def"
-};
-
-#undef DEF_MACHMODE
-
-/* Indexed by machine mode, gives the class mode for GET_MODE_CLASS.  */
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  CLASS,
-
-const enum mode_class mode_class[NUM_MACHINE_MODES] = {
-#include "machmode.def"
-};
-
-#undef DEF_MACHMODE
-
-/* Indexed by machine mode, gives the length of the mode, in bits.
-   GET_MODE_BITSIZE uses this.  */
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  BITSIZE,
-
-const unsigned short mode_bitsize[NUM_MACHINE_MODES] = {
-#include "machmode.def"
-};
-
-#undef DEF_MACHMODE
-
-/* Indexed by machine mode, gives the length of the mode, in bytes.
-   GET_MODE_SIZE uses this.  */
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  SIZE,
-
-const unsigned char mode_size[NUM_MACHINE_MODES] = {
-#include "machmode.def"
-};
-
-#undef DEF_MACHMODE
-
-/* Indexed by machine mode, gives the length of the mode's subunit.
-   GET_MODE_UNIT_SIZE uses this.  */
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  UNIT,
-
-const unsigned char mode_unit_size[NUM_MACHINE_MODES] = {
-#include "machmode.def"		/* machine modes are documented here */
-};
-
-#undef DEF_MACHMODE
-
-/* Indexed by machine mode, gives next wider natural mode
-   (QI -> HI -> SI -> DI, etc.)  Widening multiply instructions
-   use this.  */
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  \
-  (unsigned char) WIDER,
-
-const unsigned char mode_wider_mode[NUM_MACHINE_MODES] = {
-#include "machmode.def"		/* machine modes are documented here */
-};
-
-#undef DEF_MACHMODE
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER)  \
-  ((BITSIZE) >= HOST_BITS_PER_WIDE_INT) ? ~(unsigned HOST_WIDE_INT) 0 : ((unsigned HOST_WIDE_INT) 1 << (BITSIZE)) - 1,
-
-/* Indexed by machine mode, gives mask of significant bits in mode.  */
-
-const unsigned HOST_WIDE_INT mode_mask_array[NUM_MACHINE_MODES] = {
-#include "machmode.def"
-};
-
-#undef DEF_MACHMODE
-
-#define DEF_MACHMODE(SYM, NAME, CLASS, BITSIZE, SIZE, UNIT, WIDER, INNER) INNER,
-
-/* Indexed by machine mode, gives the mode of the inner elements in a
-   vector type.  */
-
-const enum machine_mode inner_mode_array[NUM_MACHINE_MODES] = {
-#include "machmode.def"
-};
-
-/* Indexed by mode class, gives the narrowest mode for each class.
-   The Q modes are always of width 1 (2 for complex) - it is impossible
-   for any mode to be narrower.
-
-   Note that we use QImode instead of BImode for MODE_INT, since
-   otherwise the middle end will try to use it for bitfields in
-   structures and the like, which we do not want.  Only the target
-   md file should generate BImode widgets.  */
-
-const enum machine_mode class_narrowest_mode[(int) MAX_MODE_CLASS] = {
-    /* MODE_RANDOM */		VOIDmode,
-    /* MODE_INT */		QImode,
-    /* MODE_FLOAT */		QFmode,
-    /* MODE_PARTIAL_INT */	PQImode,
-    /* MODE_CC */		CCmode,
-    /* MODE_COMPLEX_INT */	CQImode,
-    /* MODE_COMPLEX_FLOAT */	QCmode,
-    /* MODE_VECTOR_INT */	V2QImode,
-    /* MODE_VECTOR_FLOAT */	V2SFmode
-};
-
 
 /* Indexed by rtx code, gives a sequence of operand-types for
    rtx's of that code.  The sequence is a C string in which
@@ -250,6 +79,7 @@ const char * const rtx_format[NUM_RTX_CODE] = {
      "u" a pointer to another insn
          prints the uid of the insn.
      "b" is a pointer to a bitmap header.
+     "B" is a basic block pointer.
      "t" is a tree pointer.  */
 
 #define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)   FORMAT ,
@@ -266,6 +96,18 @@ const char rtx_class[NUM_RTX_CODE] = {
 #undef DEF_RTL_EXPR
 };
 
+/* Indexed by rtx code, gives the size of the rtx in bytes.  */
+
+const unsigned char rtx_size[NUM_RTX_CODE] = {
+#define DEF_RTL_EXPR(ENUM, NAME, FORMAT, CLASS)				\
+  ((ENUM) == CONST_INT || (ENUM) == CONST_DOUBLE			\
+   ? RTX_HDR_SIZE + (sizeof FORMAT - 1) * sizeof (HOST_WIDE_INT)	\
+   : RTX_HDR_SIZE + (sizeof FORMAT - 1) * sizeof (rtunion)),
+
+#include "rtl.def"
+#undef DEF_RTL_EXPR
+};
+
 /* Names for kinds of NOTEs and REG_NOTEs.  */
 
 const char * const note_insn_name[NOTE_INSN_MAX - NOTE_INSN_BIAS] =
@@ -278,31 +120,38 @@ const char * const note_insn_name[NOTE_INSN_MAX - NOTE_INSN_BIAS] =
   "NOTE_INSN_PROLOGUE_END", "NOTE_INSN_EPILOGUE_BEG",
   "NOTE_INSN_DELETED_LABEL", "NOTE_INSN_FUNCTION_BEG",
   "NOTE_INSN_EH_REGION_BEG", "NOTE_INSN_EH_REGION_END",
-  "NOTE_INSN_REPEATED_LINE_NUMBER", "NOTE_INSN_RANGE_BEG",
-  "NOTE_INSN_RANGE_END", "NOTE_INSN_LIVE",
-  "NOTE_INSN_BASIC_BLOCK", "NOTE_INSN_EXPECTED_VALUE"
+  "NOTE_INSN_REPEATED_LINE_NUMBER",
+  "NOTE_INSN_BASIC_BLOCK", "NOTE_INSN_EXPECTED_VALUE",
+  "NOTE_INSN_PREDICTION"
 };
 
 const char * const reg_note_name[] =
 {
   "", "REG_DEAD", "REG_INC", "REG_EQUIV", "REG_EQUAL",
-  "REG_WAS_0", "REG_RETVAL", "REG_LIBCALL", "REG_NONNEG",
+  "REG_RETVAL", "REG_LIBCALL", "REG_NONNEG",
   "REG_NO_CONFLICT", "REG_UNUSED", "REG_CC_SETTER", "REG_CC_USER",
   "REG_LABEL", "REG_DEP_ANTI", "REG_DEP_OUTPUT", "REG_BR_PROB",
-  "REG_EXEC_COUNT", "REG_NOALIAS", "REG_SAVE_AREA", "REG_BR_PRED",
+  "REG_VALUE_PROFILE", "REG_NOALIAS", "REG_SAVE_AREA", "REG_BR_PRED",
   "REG_FRAME_RELATED_EXPR", "REG_EH_CONTEXT", "REG_EH_REGION",
   "REG_SAVE_NOTE", "REG_MAYBE_DEAD", "REG_NORETURN",
   "REG_NON_LOCAL_GOTO", "REG_SETJMP", "REG_ALWAYS_RETURN",
   "REG_VTABLE_REF"
 };
 
+
+#ifdef GATHER_STATISTICS
+static int rtx_alloc_counts[(int) LAST_AND_UNUSED_RTX_CODE];
+static int rtx_alloc_sizes[(int) LAST_AND_UNUSED_RTX_CODE];
+static int rtvec_alloc_counts;
+static int rtvec_alloc_sizes;
+#endif
+
 
 /* Allocate an rtx vector of N elements.
    Store the length, and initialize all elements to zero.  */
 
 rtvec
-rtvec_alloc (n)
-     int n;
+rtvec_alloc (int n)
 {
   rtvec rt;
 
@@ -311,6 +160,12 @@ rtvec_alloc (n)
   memset (&rt->elem[0], 0, n * sizeof (rtx));
 
   PUT_NUM_ELEM (rt, n);
+
+#ifdef GATHER_STATISTICS
+  rtvec_alloc_counts++;
+  rtvec_alloc_sizes += n * sizeof (rtx);
+#endif
+
   return rt;
 }
 
@@ -318,20 +173,24 @@ rtvec_alloc (n)
    all the rest is initialized to zero.  */
 
 rtx
-rtx_alloc (code)
-  RTX_CODE code;
+rtx_alloc (RTX_CODE code)
 {
   rtx rt;
-  int n = GET_RTX_LENGTH (code);
 
-  rt = ggc_alloc_rtx (n);
+  rt = ggc_alloc_rtx (code);
 
   /* We want to clear everything up to the FLD array.  Normally, this
      is one int, but we don't want to assume that and it isn't very
      portable anyway; this is.  */
 
-  memset (rt, 0, sizeof (struct rtx_def) - sizeof (rtunion));
+  memset (rt, 0, RTX_HDR_SIZE);
   PUT_CODE (rt, code);
+
+#ifdef GATHER_STATISTICS
+  rtx_alloc_counts[code]++;
+  rtx_alloc_sizes[code] += RTX_SIZE (code);
+#endif
+
   return rt;
 }
 
@@ -341,8 +200,7 @@ rtx_alloc (code)
    except for those few rtx codes that are sharable.  */
 
 rtx
-copy_rtx (orig)
-     rtx orig;
+copy_rtx (rtx orig)
 {
   rtx copy;
   int i, j;
@@ -391,23 +249,23 @@ copy_rtx (orig)
      all fields need copying, and then clear the fields that should
      not be copied.  That is the sensible default behavior, and forces
      us to explicitly document why we are *not* copying a flag.  */
-  memcpy (copy, orig, sizeof (struct rtx_def) - sizeof (rtunion));
+  memcpy (copy, orig, RTX_HDR_SIZE);
 
   /* We do not copy the USED flag, which is used as a mark bit during
      walks over the RTL.  */
-  copy->used = 0;
+  RTX_FLAG (copy, used) = 0;
 
   /* We do not copy FRAME_RELATED for INSNs.  */
   if (GET_RTX_CLASS (code) == 'i')
-    copy->frame_related = 0;
-  copy->jump = orig->jump;
-  copy->call = orig->call;
+    RTX_FLAG (copy, frame_related) = 0;
+  RTX_FLAG (copy, jump) = RTX_FLAG (orig, jump);
+  RTX_FLAG (copy, call) = RTX_FLAG (orig, call);
 
   format_ptr = GET_RTX_FORMAT (GET_CODE (copy));
 
   for (i = 0; i < GET_RTX_LENGTH (GET_CODE (copy)); i++)
     {
-      copy->fld[i] = orig->fld[i];
+      copy->u.fld[i] = orig->u.fld[i];
       switch (*format_ptr++)
 	{
 	case 'e':
@@ -432,6 +290,7 @@ copy_rtx (orig)
 	case 'S':
 	case 'T':
 	case 'u':
+	case 'B':
 	case '0':
 	  /* These are left unchanged.  */
 	  break;
@@ -446,47 +305,13 @@ copy_rtx (orig)
 /* Create a new copy of an rtx.  Only copy just one level.  */
 
 rtx
-shallow_copy_rtx (orig)
-     rtx orig;
+shallow_copy_rtx (rtx orig)
 {
-  int i;
-  RTX_CODE code = GET_CODE (orig);
-  rtx copy = rtx_alloc (code);
+  rtx copy;
 
-  PUT_MODE (copy, GET_MODE (orig));
-  copy->in_struct = orig->in_struct;
-  copy->volatil = orig->volatil;
-  copy->unchanging = orig->unchanging;
-  copy->integrated = orig->integrated;
-  copy->frame_related = orig->frame_related;
-
-  for (i = 0; i < GET_RTX_LENGTH (code); i++)
-    copy->fld[i] = orig->fld[i];
-
+  copy = ggc_alloc_rtx (GET_CODE (orig));
+  memcpy (copy, orig, RTX_SIZE (GET_CODE (orig)));
   return copy;
-}
-
-/* Return the alignment of MODE. This will be bounded by 1 and
-   BIGGEST_ALIGNMENT.  */
-
-unsigned int
-get_mode_alignment (mode)
-     enum machine_mode mode;
-{
-  unsigned int alignment;
-
-  if (GET_MODE_CLASS (mode) == MODE_COMPLEX_FLOAT
-      || GET_MODE_CLASS (mode) == MODE_COMPLEX_INT)
-    alignment = GET_MODE_UNIT_SIZE (mode);
-  else
-    alignment = GET_MODE_SIZE (mode);
-  
-  /* Extract the LSB of the size.  */
-  alignment = alignment & -alignment;
-  alignment *= BITS_PER_UNIT;
-
-  alignment = MIN (BIGGEST_ALIGNMENT, MAX (1, alignment));
-  return alignment;
 }
 
 /* This is 1 until after the rtl generation pass.  */
@@ -499,8 +324,7 @@ int generating_concat_p;
    This is the Lisp function EQUAL for rtx arguments.  */
 
 int
-rtx_equal_p (x, y)
-     rtx x, y;
+rtx_equal_p (rtx x, rtx y)
 {
   int i;
   int j;
@@ -553,7 +377,7 @@ rtx_equal_p (x, y)
     }
 
   /* Compare the elements.  If any pair of corresponding elements
-     fail to match, return 0 for the whole things.  */
+     fail to match, return 0 for the whole thing.  */
 
   fmt = GET_RTX_FORMAT (code);
   for (i = GET_RTX_LENGTH (code) - 1; i >= 0; i--)
@@ -613,15 +437,41 @@ rtx_equal_p (x, y)
     }
   return 1;
 }
+
+void dump_rtx_statistics (void)
+{
+#ifdef GATHER_STATISTICS
+  int i;
+  int total_counts = 0;
+  int total_sizes = 0;
+  fprintf (stderr, "\nRTX Kind               Count      Bytes\n");
+  fprintf (stderr, "---------------------------------------\n");
+  for (i = 0; i < LAST_AND_UNUSED_RTX_CODE; i++)
+    if (rtx_alloc_counts[i])
+      {
+        fprintf (stderr, "%-20s %7d %10d\n", GET_RTX_NAME (i),
+                 rtx_alloc_counts[i], rtx_alloc_sizes[i]);
+        total_counts += rtx_alloc_counts[i];
+        total_sizes += rtx_alloc_sizes[i];
+      }
+  if (rtvec_alloc_counts)
+    {
+      fprintf (stderr, "%-20s %7d %10d\n", "rtvec",
+               rtvec_alloc_counts, rtvec_alloc_sizes);
+      total_counts += rtvec_alloc_counts;
+      total_sizes += rtvec_alloc_sizes;
+    }
+  fprintf (stderr, "---------------------------------------\n");
+  fprintf (stderr, "%-20s %7d %10d\n",
+           "Total", total_counts, total_sizes);
+  fprintf (stderr, "---------------------------------------\n");
+#endif  
+}
 
 #if defined ENABLE_RTL_CHECKING && (GCC_VERSION >= 2007)
 void
-rtl_check_failed_bounds (r, n, file, line, func)
-    rtx r;
-    int n;
-    const char *file;
-    int line;
-    const char *func;
+rtl_check_failed_bounds (rtx r, int n, const char *file, int line,
+			 const char *func)
 {
   internal_error
     ("RTL check: access of elt %d of `%s' with last elt %d in %s, at %s:%d",
@@ -630,13 +480,8 @@ rtl_check_failed_bounds (r, n, file, line, func)
 }
 
 void
-rtl_check_failed_type1 (r, n, c1, file, line, func)
-    rtx r;
-    int n;
-    int c1;
-    const char *file;
-    int line;
-    const char *func;
+rtl_check_failed_type1 (rtx r, int n, int c1, const char *file, int line,
+			const char *func)
 {
   internal_error
     ("RTL check: expected elt %d type '%c', have '%c' (rtx %s) in %s, at %s:%d",
@@ -645,14 +490,8 @@ rtl_check_failed_type1 (r, n, c1, file, line, func)
 }
 
 void
-rtl_check_failed_type2 (r, n, c1, c2, file, line, func)
-    rtx r;
-    int n;
-    int c1;
-    int c2;
-    const char *file;
-    int line;
-    const char *func;
+rtl_check_failed_type2 (rtx r, int n, int c1, int c2, const char *file,
+			int line, const char *func)
 {
   internal_error
     ("RTL check: expected elt %d type '%c' or '%c', have '%c' (rtx %s) in %s, at %s:%d",
@@ -661,12 +500,8 @@ rtl_check_failed_type2 (r, n, c1, c2, file, line, func)
 }
 
 void
-rtl_check_failed_code1 (r, code, file, line, func)
-    rtx r;
-    enum rtx_code code;
-    const char *file;
-    int line;
-    const char *func;
+rtl_check_failed_code1 (rtx r, enum rtx_code code, const char *file,
+			int line, const char *func)
 {
   internal_error ("RTL check: expected code `%s', have `%s' in %s, at %s:%d",
 		  GET_RTX_NAME (code), GET_RTX_NAME (GET_CODE (r)), func,
@@ -674,12 +509,8 @@ rtl_check_failed_code1 (r, code, file, line, func)
 }
 
 void
-rtl_check_failed_code2 (r, code1, code2, file, line, func)
-    rtx r;
-    enum rtx_code code1, code2;
-    const char *file;
-    int line;
-    const char *func;
+rtl_check_failed_code2 (rtx r, enum rtx_code code1, enum rtx_code code2,
+			const char *file, int line, const char *func)
 {
   internal_error
     ("RTL check: expected code `%s' or `%s', have `%s' in %s, at %s:%d",
@@ -689,15 +520,22 @@ rtl_check_failed_code2 (r, code1, code2, file, line, func)
 
 /* XXX Maybe print the vector?  */
 void
-rtvec_check_failed_bounds (r, n, file, line, func)
-    rtvec r;
-    int n;
-    const char *file;
-    int line;
-    const char *func;
+rtvec_check_failed_bounds (rtvec r, int n, const char *file, int line,
+			   const char *func)
 {
   internal_error
     ("RTL check: access of elt %d of vector with last elt %d in %s, at %s:%d",
      n, GET_NUM_ELEM (r) - 1, func, trim_filename (file), line);
 }
 #endif /* ENABLE_RTL_CHECKING */
+
+#if defined ENABLE_RTL_FLAG_CHECKING
+void
+rtl_check_failed_flag (const char *name, rtx r, const char *file,
+		       int line, const char *func)
+{
+  internal_error
+    ("RTL flag check: %s used with unexpected rtx code `%s' in %s, at %s:%d",
+     name, GET_RTX_NAME (GET_CODE (r)), func, trim_filename (file), line);
+}
+#endif /* ENABLE_RTL_FLAG_CHECKING */

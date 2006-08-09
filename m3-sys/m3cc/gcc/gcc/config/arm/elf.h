@@ -5,22 +5,22 @@
    Contributed by Philip Blundell <philb@gnu.org> and
    Catherine Moore <clm@cygnus.com>
    
-This file is part of GNU CC.
+   This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published
+   by the Free Software Foundation; either version 2, or (at your
+   option) any later version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to
+   the Free Software Foundation, 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 #ifndef OBJECT_FORMAT_ELF
  #error elf.h included before elfos.h
@@ -36,21 +36,27 @@ Boston, MA 02111-1307, USA.  */
 
 #ifndef SUBTARGET_EXTRA_SPECS
 #define SUBTARGET_EXTRA_SPECS \
-  { "subtarget_extra_asm_spec",	SUBTARGET_EXTRA_ASM_SPEC },
+  { "subtarget_extra_asm_spec",	SUBTARGET_EXTRA_ASM_SPEC }, \
+  { "subtarget_asm_float_spec", SUBTARGET_ASM_FLOAT_SPEC },
 #endif
 
 #ifndef SUBTARGET_EXTRA_ASM_SPEC
 #define SUBTARGET_EXTRA_ASM_SPEC ""
 #endif
 
+#ifndef SUBTARGET_ASM_FLOAT_SPEC
+#define SUBTARGET_ASM_FLOAT_SPEC "\
+%{mapcs-float:-mfloat} %{msoft-float:-mfpu=softfpa}"
+#endif
+
 #ifndef ASM_SPEC
 #define ASM_SPEC "\
 %{mbig-endian:-EB} \
-%{mcpu=*:-m%*} \
-%{march=*:-m%*} \
+%{mlittle-endian:-EL} \
+%{mcpu=*:-mcpu=%*} \
+%{march=*:-march=%*} \
 %{mapcs-*:-mapcs-%*} \
-%{mapcs-float:-mfloat} \
-%{msoft-float:-mno-fpu} \
+%(subtarget_asm_float_spec) \
 %{mthumb-interwork:-mthumb-interwork} \
 %(subtarget_extra_asm_spec)"
 #endif
@@ -58,22 +64,18 @@ Boston, MA 02111-1307, USA.  */
 /* The ARM uses @ are a comment character so we need to redefine
    TYPE_OPERAND_FMT.  */
 #undef  TYPE_OPERAND_FMT
-#define TYPE_OPERAND_FMT	"%s"
+#define TYPE_OPERAND_FMT	"%%%s"
 
 /* We might need a ARM specific header to function declarations.  */
 #undef  ASM_DECLARE_FUNCTION_NAME
-#define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)	\
-  do							\
-    {							\
-      ARM_DECLARE_FUNCTION_NAME (FILE, NAME, DECL);     \
-      fprintf (FILE, "%s", TYPE_ASM_OP);		\
-      assemble_name (FILE, NAME);			\
-      putc (',', FILE);					\
-      fprintf (FILE, TYPE_OPERAND_FMT, "function");	\
-      putc ('\n', FILE);				\
-      ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));	\
-      ASM_OUTPUT_LABEL(FILE, NAME);			\
-    }							\
+#define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)		\
+  do								\
+    {								\
+      ARM_DECLARE_FUNCTION_NAME (FILE, NAME, DECL);		\
+      ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "function");	\
+      ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));		\
+      ASM_OUTPUT_LABEL(FILE, NAME);				\
+    }								\
   while (0)
 
 /* We might need an ARM specific trailer for function declarations.  */
@@ -83,20 +85,7 @@ Boston, MA 02111-1307, USA.  */
     {								\
       ARM_DECLARE_FUNCTION_SIZE (FILE, FNAME, DECL);		\
       if (!flag_inhibit_size_directive)				\
-        {							\
-          char label[256];					\
-	  static int labelno;					\
-	  labelno ++;						\
-	  ASM_GENERATE_INTERNAL_LABEL (label, "Lfe", labelno);	\
-	  ASM_OUTPUT_INTERNAL_LABEL (FILE, "Lfe", labelno);	\
-	  fprintf (FILE, "%s", SIZE_ASM_OP);			\
-	  assemble_name (FILE, (FNAME));			\
-          fprintf (FILE, ",");					\
-	  assemble_name (FILE, label);				\
-          fprintf (FILE, "-");					\
-	  assemble_name (FILE, (FNAME));			\
-	  putc ('\n', FILE);					\
-        }							\
+	ASM_OUTPUT_MEASURED_SIZE (FILE, FNAME);			\
     }								\
   while (0)
 
@@ -108,7 +97,7 @@ Boston, MA 02111-1307, USA.  */
 #define JUMP_TABLES_IN_TEXT_SECTION (TARGET_ARM)
 
 #ifndef LINK_SPEC
-#define LINK_SPEC "%{mbig-endian:-EB} -X"
+#define LINK_SPEC "%{mbig-endian:-EB} %{mlittle-endian:-EL} -X"
 #endif
   
 /* Run-time Target Specification.  */
@@ -117,7 +106,7 @@ Boston, MA 02111-1307, USA.  */
 #endif
 
 #ifndef TARGET_DEFAULT
-#define TARGET_DEFAULT (ARM_FLAG_SOFT_FLOAT | ARM_FLAG_APCS_32 | ARM_FLAG_APCS_FRAME)
+#define TARGET_DEFAULT (ARM_FLAG_SOFT_FLOAT | ARM_FLAG_APCS_32 | ARM_FLAG_APCS_FRAME | ARM_FLAG_MMU_TRAPS)
 #endif
 
 #ifndef MULTILIB_DEFAULTS
@@ -125,53 +114,12 @@ Boston, MA 02111-1307, USA.  */
   { "marm", "mlittle-endian", "msoft-float", "mapcs-32", "mno-thumb-interwork", "fno-leading-underscore" }
 #endif
 
-
-/* This outputs a lot of .req's to define alias for various registers.
-   Let's try to avoid this.  */
-#ifndef ASM_FILE_START
-#define ASM_FILE_START(STREAM)					\
-  do								\
-    {								\
-      fprintf (STREAM, "%s Generated by gcc %s for ARM/elf\n",	\
-	       ASM_COMMENT_START, version_string);		\
-      output_file_directive (STREAM, main_input_filename);	\
-      fprintf (STREAM, ASM_APP_OFF);				\
-    }								\
-  while (0)
-#endif
-
-/* Output an internal label definition.  */
-#undef  ASM_OUTPUT_INTERNAL_LABEL
-#define ASM_OUTPUT_INTERNAL_LABEL(STREAM, PREFIX, NUM)  	\
-  do								\
-    {								\
-      char * s = (char *) alloca (40 + strlen (PREFIX));	\
-      extern int arm_target_label, arm_ccfsm_state;		\
-      extern rtx arm_target_insn;				\
-								\
-      if (arm_ccfsm_state == 3 && arm_target_label == (NUM)	\
-	  && !strcmp (PREFIX, "L"))				\
-	{							\
-	  arm_ccfsm_state = 0;					\
-	  arm_target_insn = NULL;				\
-	}							\
-      ASM_GENERATE_INTERNAL_LABEL (s, (PREFIX), (NUM));		\
-      ASM_OUTPUT_LABEL (STREAM, s);		                \
-    }								\
-  while (0)
+#define TARGET_ASM_FILE_START_APP_OFF true
+#define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
 
 #undef  TARGET_ASM_NAMED_SECTION
 #define TARGET_ASM_NAMED_SECTION  arm_elf_asm_named_section
 
-#undef  ASM_OUTPUT_ALIGNED_COMMON
-#define ASM_OUTPUT_ALIGNED_COMMON(STREAM, NAME, SIZE, ALIGN)	\
-  do								\
-    {								\
-      fprintf (STREAM, "\t.comm\t");				\
-      assemble_name (STREAM, NAME);				\
-      fprintf (STREAM, ", %d, %d\n", SIZE, ALIGN);		\
-    }								\
-  while (0)
 
 /* For PIC code we need to explicitly specify (PLT) and (GOT) relocs.  */
 #define NEED_PLT_RELOC	flag_pic

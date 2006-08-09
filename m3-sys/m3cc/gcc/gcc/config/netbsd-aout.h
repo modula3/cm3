@@ -2,24 +2,32 @@
    Copyright (C) 2002 Free Software Foundation, Inc.
    Contributed by Wasabi Systems, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* This defines which switch letters take arguments. */
+/* TARGET_OS_CPP_BUILTINS() common to all NetBSD a.out targets.  */
+#define NETBSD_OS_CPP_BUILTINS_AOUT()		\
+  do						\
+    {						\
+      NETBSD_OS_CPP_BUILTINS_COMMON();		\
+    }						\
+  while (0)
+
+/* This defines which switch letters take arguments.  */
 
 #undef SWITCH_TAKES_ARG
 #define SWITCH_TAKES_ARG(CHAR)		\
@@ -31,7 +39,9 @@ Boston, MA 02111-1307, USA.  */
    with the options for generating PIC code.  */
 
 #undef ASM_SPEC
-#define ASM_SPEC " %| %{fpic:-k} %{fPIC:-k -K}"
+#define ASM_SPEC "%{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
+
+#define AS_NEEDS_DASH_FOR_PIPED_INPUT
 
 
 /* Provide a STARTFILE_SPEC appropriate for NetBSD a.out.  Here we
@@ -50,8 +60,8 @@ Boston, MA 02111-1307, USA.  */
 /* Provide a LINK_SPEC appropriate for NetBSD a.out.  Here we provide
    support for the special GCC options -static, -assert, and -nostdlib.  */
 
-#undef LINK_SPEC
-#define LINK_SPEC			\
+#undef NETBSD_LINK_SPEC_AOUT
+#define NETBSD_LINK_SPEC_AOUT		\
   "%{nostdlib:-nostdlib}		\
    %{!shared:				\
      %{!nostdlib:			\
@@ -63,6 +73,9 @@ Boston, MA 02111-1307, USA.  */
    %{R*}				\
    %{assert*}"
 
+/* Default LINK_SPEC.  */
+#undef LINK_SPEC
+#define LINK_SPEC NETBSD_LINK_SPEC_AOUT
 
 /* Some imports from svr4.h in support of shared libraries.  */
 
@@ -127,11 +140,7 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)			\
   do									\
     {									\
-      fprintf (FILE, "%s", TYPE_ASM_OP);				\
-      assemble_name (FILE, NAME);					\
-      putc (',', FILE);							\
-      fprintf (FILE, TYPE_OPERAND_FMT, "function");			\
-      putc ('\n', FILE);						\
+      ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "function");		\
       ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));			\
       ASM_OUTPUT_LABEL(FILE, NAME);					\
     }									\
@@ -140,28 +149,25 @@ Boston, MA 02111-1307, USA.  */
 
 /* Write the extra assembler code needed to declare an object properly.  */
 
-#undef ASM_DECLARE_OBJECT_NAME
-#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)			\
-  do									\
-    {									\
-      fprintf (FILE, "%s", TYPE_ASM_OP);				\
-      assemble_name (FILE, NAME);					\
-      putc (',', FILE);							\
-      fprintf (FILE, TYPE_OPERAND_FMT, "object");			\
-      putc ('\n', FILE);						\
-      size_directive_output = 0;					\
-      if (!flag_inhibit_size_directive && DECL_SIZE (DECL))		\
-	{								\
-	  size_directive_output = 1;					\
-	  fprintf (FILE, "%s", SIZE_ASM_OP);				\
-	  assemble_name (FILE, NAME);					\
-	  fprintf (FILE, ",%d\n",					\
-	           int_size_in_bytes (TREE_TYPE (DECL)));		\
-	}								\
-      ASM_OUTPUT_LABEL(FILE, NAME);					\
-    }									\
+#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)		\
+  do								\
+    {								\
+      HOST_WIDE_INT size;					\
+								\
+      ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "object");		\
+								\
+      size_directive_output = 0;				\
+      if (!flag_inhibit_size_directive				\
+	  && (DECL) && DECL_SIZE (DECL))			\
+	{							\
+	  size_directive_output = 1;				\
+	  size = int_size_in_bytes (TREE_TYPE (DECL));		\
+	  ASM_OUTPUT_SIZE_DIRECTIVE (FILE, NAME, size);		\
+	}							\
+								\
+      ASM_OUTPUT_LABEL (FILE, NAME);				\
+    }								\
   while (0)
-
 
 /* Output the size directive for a decl in rest_of_decl_compilation
    in the case where we did not do so before the initializer.
@@ -174,16 +180,15 @@ Boston, MA 02111-1307, USA.  */
   do									\
     {									\
       const char *name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);		\
+      HOST_WIDE_INT size;						\
       if (!flag_inhibit_size_directive && DECL_SIZE (DECL)		\
 	  && ! AT_END && TOP_LEVEL					\
 	  && DECL_INITIAL (DECL) == error_mark_node			\
 	  && !size_directive_output)					\
 	{								\
 	  size_directive_output = 1;					\
-	  fprintf (FILE, "%s", SIZE_ASM_OP);				\
-	  assemble_name (FILE, name);					\
-	  fprintf (FILE, ",%d\n",					\
-		   int_size_in_bytes (TREE_TYPE (DECL)));		\
+	  size = int_size_in_bytes (TREE_TYPE (DECL));			\
+	  ASM_OUTPUT_SIZE_DIRECTIVE (FILE, name, size);			\
 	}								\
     }									\
   while (0)
@@ -196,19 +201,6 @@ Boston, MA 02111-1307, USA.  */
   do									\
     {									\
       if (!flag_inhibit_size_directive)					\
-	{								\
-	  char label[256];						\
-	  static int labelno;						\
-	  labelno++;							\
-	  ASM_GENERATE_INTERNAL_LABEL (label, "Lfe", labelno);		\
-	  ASM_OUTPUT_INTERNAL_LABEL (FILE, "Lfe", labelno);		\
-	  fprintf (FILE, "%s", SIZE_ASM_OP);				\
-	  assemble_name (FILE, (FNAME));				\
-	  fprintf (FILE, ",");						\
-	  assemble_name (FILE, label);					\
-	  fprintf (FILE, "-");						\
-	  assemble_name (FILE, (FNAME));				\
-	  putc ('\n', FILE);						\
-	}								\
+	ASM_OUTPUT_MEASURED_SIZE (FILE, FNAME);				\
     }									\
   while (0)

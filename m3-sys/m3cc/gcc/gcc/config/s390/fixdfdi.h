@@ -3,22 +3,22 @@
    Contributed by Hartmut Penner (hpenner@de.ibm.com) and
                   Ulrich Weigand (uweigand@de.ibm.com).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */ 
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #ifdef L_fixunsdfdi
 #define EXPD(fp)	(((fp.l.upper) >> 20) & 0x7FF)
@@ -43,6 +43,7 @@ union double_long {
     UDItype_x ll;
 };
 
+UDItype_x __fixunsdfdi (double a1);
 
 /* convert double to unsigned int */
 UDItype_x
@@ -114,6 +115,8 @@ union double_long {
     UDItype_x ll;
 };
 
+DItype_x __fixdfdi (double a1);
+
 /* convert double to int */
 DItype_x
 __fixdfdi (double a1)
@@ -184,6 +187,8 @@ union float_long
     USItype_x l;
   };
 
+UDItype_x __fixunssfdi (float a1);
+
 /* convert float to unsigned int */
 UDItype_x
 __fixunssfdi (float a1)
@@ -249,6 +254,8 @@ union float_long
     float f;
     USItype_x l;
   };
+
+DItype_x __fixsfdi (float a1);
 
 /* convert double to int */
 DItype_x

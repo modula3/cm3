@@ -20,6 +20,7 @@
 
 BEGIN {
   state = "nm";
+  sawsymbol = 0;
 }
 
 # Remove comment and blank lines.
@@ -42,6 +43,7 @@ state == "nm" && ($1 == "U" || $2 == "U") {
 
 state == "nm" && NF == 3 {
   def[$3] = 1;
+  sawsymbol = 1;
   next;
 }
 
@@ -77,6 +79,11 @@ $1 == "}" {
 }
 
 END {
+  if (!sawsymbol)
+    {
+      print "No symbols seen -- broken or mis-installed nm?" | "cat 1>&2";
+      exit 1;
+    }
   for (l in libs)
     output(l);
 }
@@ -88,17 +95,28 @@ function output(lib) {
   if (inherit[lib])
     output(inherit[lib]);
 
-  printf("%s {\n", lib);
-  printf("  global:\n");
+  empty=1
   for (sym in ver)
     if ((ver[sym] == lib) && (sym in def))
       {
+	if (empty)
+	  {
+	    printf("%s {\n", lib);
+	    printf("  global:\n");
+	    empty = 0;
+	  }
 	printf("\t%s;\n", sym);
 	if (dotsyms)
 	  printf("\t.%s;\n", sym);
       }
 
-  if (inherit[lib])
+  if (empty)
+    {
+      for (l in libs)
+	if (inherit[l] == lib)
+	  inherit[l] = inherit[lib];
+    }
+  else if (inherit[lib])
     printf("} %s;\n", inherit[lib]);
   else
     printf ("\n  local:\n\t*;\n};\n");

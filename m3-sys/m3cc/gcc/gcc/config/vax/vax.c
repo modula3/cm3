@@ -2,26 +2,29 @@
    Copyright (C) 1987, 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
+#include "tree.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
@@ -30,19 +33,24 @@ Boston, MA 02111-1307, USA.  */
 #include "function.h"
 #include "output.h"
 #include "insn-attr.h"
-#include "tree.h"
 #include "recog.h"
 #include "expr.h"
+#include "optabs.h"
+#include "flags.h"
+#include "debug.h"
+#include "toplev.h"
 #include "tm_p.h"
 #include "target.h"
 #include "target-def.h"
 
-static int follows_p PARAMS ((rtx, rtx));
-static void vax_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
-#if VMS_TARGET
-static void vms_asm_out_constructor PARAMS ((rtx, int));
-static void vms_asm_out_destructor PARAMS ((rtx, int));
-#endif
+static void vax_output_function_prologue (FILE *, HOST_WIDE_INT);
+static void vax_file_start (void);
+static void vax_init_libfuncs (void);
+static void vax_output_mi_thunk (FILE *, tree, HOST_WIDE_INT,
+				 HOST_WIDE_INT, tree);
+static int vax_address_cost_1 (rtx);
+static int vax_address_cost (rtx);
+static bool vax_rtx_costs (rtx, int, int, int *);
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ASM_ALIGNED_HI_OP
@@ -51,8 +59,36 @@ static void vms_asm_out_destructor PARAMS ((rtx, int));
 #undef TARGET_ASM_FUNCTION_PROLOGUE
 #define TARGET_ASM_FUNCTION_PROLOGUE vax_output_function_prologue
 
+#undef TARGET_ASM_FILE_START
+#define TARGET_ASM_FILE_START vax_file_start
+#undef TARGET_ASM_FILE_START_APP_OFF
+#define TARGET_ASM_FILE_START_APP_OFF true
+
+#undef TARGET_INIT_LIBFUNCS
+#define TARGET_INIT_LIBFUNCS vax_init_libfuncs
+
+#undef TARGET_ASM_OUTPUT_MI_THUNK
+#define TARGET_ASM_OUTPUT_MI_THUNK vax_output_mi_thunk
+#undef TARGET_ASM_CAN_OUTPUT_MI_THUNK
+#define TARGET_ASM_CAN_OUTPUT_MI_THUNK default_can_output_mi_thunk_no_vcall
+
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS vax_rtx_costs
+#undef TARGET_ADDRESS_COST
+#define TARGET_ADDRESS_COST vax_address_cost
+
 struct gcc_target targetm = TARGET_INITIALIZER;
 
+/* Set global variables as needed for the options enabled.  */
+
+void
+override_options (void)
+{
+  /* We're VAX floating point, not IEEE floating point.  */
+  if (TARGET_G_FLOAT)
+    REAL_MODE_FORMAT (DFmode) = &vax_g_format;
+}
+
 /* Generate the assembly code for function entry.  FILE is a stdio
    stream to output the code to.  SIZE is an int: how many units of
    temporary storage to allocate.
@@ -63,9 +99,7 @@ struct gcc_target targetm = TARGET_INITIALIZER;
    which registers should not be saved even if used.  */
 
 static void
-vax_output_function_prologue (file, size)
-     FILE * file;
-     HOST_WIDE_INT size;
+vax_output_function_prologue (FILE * file, HOST_WIDE_INT size)
 {
   register int regno;
   register int mask = 0;
@@ -76,56 +110,55 @@ vax_output_function_prologue (file, size)
 
   fprintf (file, "\t.word 0x%x\n", mask);
 
-  if (VMS_TARGET)
+  if (dwarf2out_do_frame ())
     {
-      /*
-       * This works for both gcc and g++.  It first checks to see if
-       * the current routine is "main", which will only happen for
-       * GCC, and add the jsb if it is.  If is not the case then try
-       * and see if __MAIN_NAME is part of current_function_name,
-       * which will only happen if we are running g++, and add the jsb
-       * if it is.  In gcc there should never be a paren in the
-       * function name, and in g++ there is always a "(" in the
-       * function name, thus there should never be any confusion.
-       *
-       * Adjusting the stack pointer by 4 before calling C$MAIN_ARGS
-       * is required when linking with the VMS POSIX version of the C
-       * run-time library; using `subl2 $4,r0' is adequate but we use
-       * `clrl -(sp)' instead.  The extra 4 bytes could be removed
-       * after the call because STARTING_FRAME_OFFSET's setting of -4
-       * will end up adding them right back again, but don't bother.
-       */
+      const char *label = dwarf2out_cfi_label ();
+      int offset = 0;
 
-      const char *p = current_function_name;
-      int is_main = strcmp ("main", p) == 0;
-#     define __MAIN_NAME " main("
+      for (regno = FIRST_PSEUDO_REGISTER-1; regno >= 0; --regno)
+	if (regs_ever_live[regno] && !call_used_regs[regno])
+	  dwarf2out_reg_save (label, regno, offset -= 4);
 
-      while (!is_main && *p != '\0')
-	{
-	  if (*p == *__MAIN_NAME
-	      && strncmp (p, __MAIN_NAME, sizeof __MAIN_NAME - sizeof "") == 0)
-	    is_main = 1;
-	  else
-	    p++;
-	}
-
-      if (is_main)
-	fprintf (file, "\t%s\n\t%s\n", "clrl -(sp)", "jsb _C$MAIN_ARGS");
+      dwarf2out_reg_save (label, PC_REGNUM, offset -= 4);
+      dwarf2out_reg_save (label, FRAME_POINTER_REGNUM, offset -= 4);
+      dwarf2out_reg_save (label, ARG_POINTER_REGNUM, offset -= 4);
+      dwarf2out_def_cfa (label, FRAME_POINTER_REGNUM, -(offset - 4));
     }
 
-    size -= STARTING_FRAME_OFFSET;
-    if (size >= 64)
-      fprintf (file, "\tmovab %d(sp),sp\n", -size);
-    else if (size)
-      fprintf (file, "\tsubl2 $%d,sp\n", size);
+  size -= STARTING_FRAME_OFFSET;
+  if (size >= 64)
+    asm_fprintf (file, "\tmovab %wd(%Rsp),%Rsp\n", -size);
+  else if (size)
+    asm_fprintf (file, "\tsubl2 $%wd,%Rsp\n", size);
+}
+
+/* When debugging with stabs, we want to output an extra dummy label
+   so that gas can distinguish between D_float and G_float prior to
+   processing the .stabs directive identifying type double.  */
+static void
+vax_file_start (void)
+{
+  default_file_start ();
+
+  if (write_symbols == DBX_DEBUG)
+    fprintf (asm_out_file, "___vax_%c_doubles:\n", ASM_DOUBLE_CHAR);
+}
+
+/* We can use the BSD C library routines for the libgcc calls that are
+   still generated, since that's what they boil down to anyways.  When
+   ELF, avoid the user's namespace.  */
+
+static void
+vax_init_libfuncs (void)
+{
+  set_optab_libfunc (udiv_optab, SImode, TARGET_ELF ? "*__udiv" : "*udiv");
+  set_optab_libfunc (umod_optab, SImode, TARGET_ELF ? "*__urem" : "*urem");
 }
 
 /* This is like nonimmediate_operand with a restriction on the type of MEM.  */
 
 void
-split_quadword_operands (operands, low, n)
-     rtx *operands, *low;
-     int n ATTRIBUTE_UNUSED;
+split_quadword_operands (rtx * operands, rtx * low, int n ATTRIBUTE_UNUSED)
 {
   int i;
   /* Split operands.  */
@@ -155,9 +188,7 @@ split_quadword_operands (operands, low, n)
 }
 
 void
-print_operand_address (file, addr)
-     FILE *file;
-     register rtx addr;
+print_operand_address (FILE * file, register rtx addr)
 {
   register rtx reg1, breg, ireg;
   rtx offset;
@@ -303,7 +334,7 @@ print_operand_address (file, addr)
       else
 	abort ();
 
-      /* If REG1 is non-zero, figure out if it is a base or index register.  */
+      /* If REG1 is nonzero, figure out if it is a base or index register.  */
       if (reg1)
 	{
 	  if (breg != 0 || (offset && GET_CODE (offset) == MEM))
@@ -338,8 +369,7 @@ print_operand_address (file, addr)
 }
 
 const char *
-rev_cond_name (op)
-     rtx op;
+rev_cond_name (rtx op)
 {
   switch (GET_CODE (op))
     {
@@ -370,14 +400,11 @@ rev_cond_name (op)
 }
 
 int
-vax_float_literal(c)
-    register rtx c;
+vax_float_literal(register rtx c)
 {
   register enum machine_mode mode;
-#if HOST_FLOAT_FORMAT == VAX_FLOAT_FORMAT
+  REAL_VALUE_TYPE r, s;
   int i;
-  union {double d; int i[2];} val;
-#endif
 
   if (GET_CODE (c) != CONST_DOUBLE)
     return 0;
@@ -389,15 +416,20 @@ vax_float_literal(c)
       || c == const_tiny_rtx[(int) mode][2])
     return 1;
 
-#if HOST_FLOAT_FORMAT == VAX_FLOAT_FORMAT
+  REAL_VALUE_FROM_CONST_DOUBLE (r, c);
 
-  val.i[0] = CONST_DOUBLE_LOW (c);
-  val.i[1] = CONST_DOUBLE_HIGH (c);
+  for (i = 0; i < 7; i++)
+    {
+      int x = 1 << i;
+      REAL_VALUE_FROM_INT (s, x, 0, mode);
 
-  for (i = 0; i < 7; i ++)
-    if (val.d == 1 << i || val.d == 1 / (1 << i))
-      return 1;
-#endif
+      if (REAL_VALUES_EQUAL (r, s))
+	return 1;
+      if (!exact_real_inverse (mode, &s))
+	abort ();
+      if (REAL_VALUES_EQUAL (r, s))
+	return 1;
+    }
   return 0;
 }
 
@@ -413,9 +445,8 @@ vax_float_literal(c)
    2 - indirect */
 
 
-int
-vax_address_cost (addr)
-    register rtx addr;
+static int
+vax_address_cost_1 (register rtx addr)
 {
   int reg = 0, indexed = 0, indir = 0, offset = 0, predec = 0;
   rtx plus_op0 = 0, plus_op1 = 0;
@@ -435,7 +466,7 @@ vax_address_cost (addr)
     case CONST_INT:
       /* byte offsets cost nothing (on a VAX 2, they cost 1 cycle) */
       if (offset == 0)
-	offset = (unsigned)(INTVAL(addr)+128) > 256;
+	offset = (unsigned HOST_WIDE_INT)(INTVAL(addr)+128) > 256;
       break;
     case CONST:
     case SYMBOL_REF:
@@ -482,151 +513,236 @@ vax_address_cost (addr)
   return reg + indexed + indir + offset + predec;
 }
 
+static int
+vax_address_cost (rtx x)
+{
+  return (1 + (GET_CODE (x) == REG ? 0 : vax_address_cost_1 (x)));
+}
 
 /* Cost of an expression on a VAX.  This version has costs tuned for the
    CVAX chip (found in the VAX 3 series) with comments for variations on
-   other models.  */
+   other models.
 
-int
-vax_rtx_cost (x)
-    register rtx x;
+   FIXME: The costs need review, particularly for TRUNCATE, FLOAT_EXTEND
+   and FLOAT_TRUNCATE.  We need a -mcpu option to allow provision of
+   costs on a per cpu basis.  */
+
+static bool
+vax_rtx_costs (rtx x, int code, int outer_code, int *total)
 {
-  register enum rtx_code code = GET_CODE (x);
   enum machine_mode mode = GET_MODE (x);
-  register int c;
-  int i = 0;				/* may be modified in switch */
+  int i = 0;				   /* may be modified in switch */
   const char *fmt = GET_RTX_FORMAT (code); /* may be modified in switch */
 
   switch (code)
     {
+      /* On a VAX, constants from 0..63 are cheap because they can use the
+	 1 byte literal constant format.  Compare to -1 should be made cheap
+	 so that decrement-and-branch insns can be formed more easily (if
+	 the value -1 is copied to a register some decrement-and-branch
+	 patterns will not match).  */
+    case CONST_INT:
+      if (INTVAL (x) == 0)
+	return true;
+      if (outer_code == AND)
+	{
+          *total = ((unsigned HOST_WIDE_INT) ~INTVAL (x) <= 077) ? 1 : 2;
+	  return true;
+	}
+      if ((unsigned HOST_WIDE_INT) INTVAL (x) <= 077
+	  || (outer_code == COMPARE
+	      && INTVAL (x) == -1)
+	  || ((outer_code == PLUS || outer_code == MINUS)
+	      && (unsigned HOST_WIDE_INT) -INTVAL (x) <= 077))
+	{
+	  *total = 1;
+	  return true;
+	}
+      /* FALLTHRU */
+
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      *total = 3;
+      return true;
+
+    case CONST_DOUBLE:
+      if (GET_MODE_CLASS (GET_MODE (x)) == MODE_FLOAT)
+	*total = vax_float_literal (x) ? 5 : 8;
+      else
+        *total = ((CONST_DOUBLE_HIGH (x) == 0
+		   && (unsigned HOST_WIDE_INT) CONST_DOUBLE_LOW (x) < 64)
+		  || (outer_code == PLUS
+		      && CONST_DOUBLE_HIGH (x) == -1
+		      && (unsigned HOST_WIDE_INT)-CONST_DOUBLE_LOW (x) < 64))
+		 ? 2 : 5;
+      return true;
+ 
     case POST_INC:
-      return 2;
+      *total = 2;
+      return true;		/* Implies register operand.  */
+
     case PRE_DEC:
-      return 3;
+      *total = 3;
+      return true;		/* Implies register operand.  */
+
     case MULT:
       switch (mode)
 	{
 	case DFmode:
-	  c = 16;		/* 4 on VAX 9000 */
+	  *total = 16;		/* 4 on VAX 9000 */
 	  break;
 	case SFmode:
-	  c = 9;		/* 4 on VAX 9000, 12 on VAX 2 */
+	  *total = 9;		/* 4 on VAX 9000, 12 on VAX 2 */
 	  break;
 	case DImode:
-	  c = 16;		/* 6 on VAX 9000, 28 on VAX 2 */
+	  *total = 16;		/* 6 on VAX 9000, 28 on VAX 2 */
 	  break;
 	case SImode:
 	case HImode:
 	case QImode:
-	  c = 10;		/* 3-4 on VAX 9000, 20-28 on VAX 2 */
+	  *total = 10;		/* 3-4 on VAX 9000, 20-28 on VAX 2 */
 	  break;
 	default:
-	  return MAX_COST;	/* Mode is not supported.  */
+	  *total = MAX_COST;	/* Mode is not supported.  */
+	  return true;
 	}
       break;
+
     case UDIV:
       if (mode != SImode)
-	return MAX_COST;	/* Mode is not supported.  */
-      c = 17;
+	{
+	  *total = MAX_COST;	/* Mode is not supported.  */
+	  return true;
+	}
+      *total = 17;
       break;
+
     case DIV:
       if (mode == DImode)
-	c = 30;	/* highly variable */
+	*total = 30;		/* Highly variable.  */
       else if (mode == DFmode)
 	/* divide takes 28 cycles if the result is not zero, 13 otherwise */
-	c = 24;
+	*total = 24;
       else
-	c = 11;			/* 25 on VAX 2 */
+	*total = 11;		/* 25 on VAX 2 */
       break;
+
     case MOD:
-      c = 23;
+      *total = 23;
       break;
+
     case UMOD:
       if (mode != SImode)
-	return MAX_COST;	/* Mode is not supported.  */
-      c = 29;
+	{
+	  *total = MAX_COST;	/* Mode is not supported.  */
+	  return true;
+	}
+      *total = 29;
       break;
+
     case FLOAT:
-      c = 6 + (mode == DFmode) + (GET_MODE (XEXP (x, 0)) != SImode);
-      /* 4 on VAX 9000 */
+      *total = (6		/* 4 on VAX 9000 */
+		+ (mode == DFmode) + (GET_MODE (XEXP (x, 0)) != SImode));
       break;
+
     case FIX:
-      c = 7;			/* 17 on VAX 2 */
+      *total = 7;		/* 17 on VAX 2 */
       break;
+
     case ASHIFT:
     case LSHIFTRT:
     case ASHIFTRT:
       if (mode == DImode)
-	c = 12;
+	*total = 12;
       else
-	c = 10;			/* 6 on VAX 9000 */
+	*total = 10;		/* 6 on VAX 9000 */
       break;
+
     case ROTATE:
     case ROTATERT:
-      c = 6;			/* 5 on VAX 2, 4 on VAX 9000 */
+      *total = 6;		/* 5 on VAX 2, 4 on VAX 9000 */
       if (GET_CODE (XEXP (x, 1)) == CONST_INT)
-	fmt = "e";	/* all constant rotate counts are short */
+	fmt = "e"; 		/* all constant rotate counts are short */
       break;
+
     case PLUS:
-      /* Check for small negative integer operand: subl2 can be used with
-	 a short positive constant instead.  */
-      if (GET_CODE (XEXP (x, 1)) == CONST_INT)
-	if ((unsigned)(INTVAL (XEXP (x, 1)) + 63) < 127)
-	  fmt = "e";
     case MINUS:
-      c = (mode == DFmode) ? 13 : 8;	/* 6/8 on VAX 9000, 16/15 on VAX 2 */
+      *total = (mode == DFmode) ? 13 : 8; /* 6/8 on VAX 9000, 16/15 on VAX 2 */
+      /* Small integer operands can use subl2 and addl2.  */
+      if ((GET_CODE (XEXP (x, 1)) == CONST_INT)
+	  && (unsigned HOST_WIDE_INT)(INTVAL (XEXP (x, 1)) + 63) < 127)
+	fmt = "e";
+      break;
+
     case IOR:
     case XOR:
-      c = 3;
+      *total = 3;
       break;
+
     case AND:
       /* AND is special because the first operand is complemented.  */
-      c = 3;
+      *total = 3;
       if (GET_CODE (XEXP (x, 0)) == CONST_INT)
 	{
-	  if ((unsigned)~INTVAL (XEXP (x, 0)) > 63)
-	    c = 4;
+	  if ((unsigned HOST_WIDE_INT)~INTVAL (XEXP (x, 0)) > 63)
+	    *total = 4;
 	  fmt = "e";
 	  i = 1;
 	}
       break;
+
     case NEG:
       if (mode == DFmode)
-	return 9;
+	*total = 9;
       else if (mode == SFmode)
-	return 6;
+	*total = 6;
       else if (mode == DImode)
-	return 4;
+	*total = 4;
+      else
+	*total = 2;
+      break;
+
     case NOT:
-      return 2;
+      *total = 2;
+      break;
+
     case ZERO_EXTRACT:
     case SIGN_EXTRACT:
-      c = 15;
+      *total = 15;
       break;
+
     case MEM:
       if (mode == DImode || mode == DFmode)
-	c = 5;				/* 7 on VAX 2 */
+	*total = 5;		/* 7 on VAX 2 */
       else
-	c = 3;				/* 4 on VAX 2 */
+	*total = 3;		/* 4 on VAX 2 */
       x = XEXP (x, 0);
-      if (GET_CODE (x) == REG || GET_CODE (x) == POST_INC)
-	return c;
-      return c + vax_address_cost (x);
-    default:
-      c = 3;
-      break;
-    }
+      if (GET_CODE (x) != REG && GET_CODE (x) != POST_INC)
+	*total += vax_address_cost_1 (x);
+      return true;
 
+    case FLOAT_EXTEND:
+    case FLOAT_TRUNCATE:
+    case TRUNCATE:
+      *total = 3;		/* FIXME: Costs need to be checked  */
+      break;
+
+    default:
+      return false;
+    }
 
   /* Now look inside the expression.  Operands which are not registers or
      short constants add to the cost.
 
      FMT and I may have been adjusted in the switch above for instructions
-     which require special handling */
+     which require special handling.  */
 
   while (*fmt++ == 'e')
     {
-      register rtx op = XEXP (x, i++);
+      rtx op = XEXP (x, i);
+
+      i += 1;
       code = GET_CODE (op);
 
       /* A NOT is likely to be found as the first operand of an AND
@@ -638,13 +754,14 @@ vax_rtx_cost (x)
       switch (code)
 	{
 	case CONST_INT:
-	  if ((unsigned)INTVAL (op) > 63 && GET_MODE (x) != QImode)
-	    c += 1;		/* 2 on VAX 2 */
+	  if ((unsigned HOST_WIDE_INT)INTVAL (op) > 63
+	      && GET_MODE (x) != QImode)
+	    *total += 1;	/* 2 on VAX 2 */
 	  break;
 	case CONST:
 	case LABEL_REF:
 	case SYMBOL_REF:
-	  c += 1;		/* 2 on VAX 2 */
+	  *total += 1;		/* 2 on VAX 2 */
 	  break;
 	case CONST_DOUBLE:
 	  if (GET_MODE_CLASS (GET_MODE (op)) == MODE_FLOAT)
@@ -652,339 +769,50 @@ vax_rtx_cost (x)
 	      /* Registers are faster than floating point constants -- even
 		 those constants which can be encoded in a single byte.  */
 	      if (vax_float_literal (op))
-		c++;
+		*total += 1;
 	      else
-		c += (GET_MODE (x) == DFmode) ? 3 : 2;
+		*total += (GET_MODE (x) == DFmode) ? 3 : 2;
 	    }
 	  else
 	    {
 	      if (CONST_DOUBLE_HIGH (op) != 0
 		  || (unsigned)CONST_DOUBLE_LOW (op) > 63)
-		c += 2;
+		*total += 2;
 	    }
 	  break;
 	case MEM:
-	  c += 1;		/* 2 on VAX 2 */
+	  *total += 1;		/* 2 on VAX 2 */
 	  if (GET_CODE (XEXP (op, 0)) != REG)
-	    c += vax_address_cost (XEXP (op, 0));
+	    *total += vax_address_cost_1 (XEXP (op, 0));
 	  break;
 	case REG:
 	case SUBREG:
 	  break;
 	default:
-	  c += 1;
+	  *total += 1;
 	  break;
 	}
     }
-  return c;
-}
-
-/* Check a `double' value for validity for a particular machine mode.  */
-
-static const char *const float_strings[] =
-{
-   "1.70141173319264430e+38", /* 2^127 (2^24 - 1) / 2^24 */
-  "-1.70141173319264430e+38",
-   "2.93873587705571877e-39", /* 2^-128 */
-  "-2.93873587705571877e-39"
-};
-
-static REAL_VALUE_TYPE float_values[4];
-
-static int inited_float_values = 0;
-
-
-int
-check_float_value (mode, d, overflow)
-     enum machine_mode mode;
-     REAL_VALUE_TYPE *d;
-     int overflow;
-{
-  if (inited_float_values == 0)
-    {
-      int i;
-      for (i = 0; i < 4; i++)
-	{
-	  float_values[i] = REAL_VALUE_ATOF (float_strings[i], DFmode);
-	}
-
-      inited_float_values = 1;
-    }
-
-  if (overflow)
-    {
-      memcpy (d, &float_values[0], sizeof (REAL_VALUE_TYPE));
-      return 1;
-    }
-
-  if ((mode) == SFmode)
-    {
-      REAL_VALUE_TYPE r;
-      memcpy (&r, d, sizeof (REAL_VALUE_TYPE));
-      if (REAL_VALUES_LESS (float_values[0], r))
-	{
-	  memcpy (d, &float_values[0], sizeof (REAL_VALUE_TYPE));
-	  return 1;
-	}
-      else if (REAL_VALUES_LESS (r, float_values[1]))
-	{
-	  memcpy (d, &float_values[1], sizeof (REAL_VALUE_TYPE));
-	  return 1;
-	}
-      else if (REAL_VALUES_LESS (dconst0, r)
-		&& REAL_VALUES_LESS (r, float_values[2]))
-	{
-	  memcpy (d, &dconst0, sizeof (REAL_VALUE_TYPE));
-	  return 1;
-	}
-      else if (REAL_VALUES_LESS (r, dconst0)
-		&& REAL_VALUES_LESS (float_values[3], r))
-	{
-	  memcpy (d, &dconst0, sizeof (REAL_VALUE_TYPE));
-	  return 1;
-	}
-    }
-
-  return 0;
+  return true;
 }
 
-#if VMS_TARGET
-/* Additional support code for VMS target.  */
-
-/* Linked list of all externals that are to be emitted when optimizing
-   for the global pointer if they haven't been declared by the end of
-   the program with an appropriate .comm or initialization.  */
-
-static
-struct extern_list {
-  struct extern_list *next;	/* next external */
-  const char *name;		/* name of the external */
-  int size;			/* external's actual size */
-  int in_const;			/* section type flag */
-} *extern_head = 0, *pending_head = 0;
-
-/* Check whether NAME is already on the external definition list.  If not,
-   add it to either that list or the pending definition list.  */
-
-void
-vms_check_external (decl, name, pending)
-     tree decl;
-     const char *name;
-     int pending;
-{
-  register struct extern_list *p, *p0;
-
-  for (p = extern_head; p; p = p->next)
-    if (!strcmp (p->name, name))
-      return;
-
-  for (p = pending_head, p0 = 0; p; p0 = p, p = p->next)
-    if (!strcmp (p->name, name))
-      {
-	if (pending)
-	  return;
-
-	/* Was pending, but has now been defined; move it to other list.  */
-	if (p == pending_head)
-	  pending_head = p->next;
-	else
-	  p0->next = p->next;
-	p->next = extern_head;
-	extern_head = p;
-	return;
-      }
-
-  /* Not previously seen; create a new list entry.  */
-  p = (struct extern_list *)permalloc ((long) sizeof (struct extern_list));
-  p->name = name;
-
-  if (pending)
-    {
-      /* Save the size and section type and link to `pending' list.  */
-      p->size = (DECL_SIZE (decl) == 0) ? 0 :
-	TREE_INT_CST_LOW (size_binop (CEIL_DIV_EXPR, DECL_SIZE (decl),
-				      size_int (BITS_PER_UNIT)));
-      p->in_const = (TREE_READONLY (decl) && ! TREE_THIS_VOLATILE (decl));
-
-      p->next = pending_head;
-      pending_head = p;
-    }
-  else
-    {
-      /* Size and section type don't matter; link to `declared' list.  */
-      p->size = p->in_const = 0;        /* arbitrary init */
-
-      p->next = extern_head;
-      extern_head = p;
-    }
-  return;
-}
-
-void
-vms_flush_pending_externals (file)
-     FILE *file;
-{
-  register struct extern_list *p;
-
-  while (pending_head)
-    {
-      /* Move next pending declaration to the "done" list.  */
-      p = pending_head;
-      pending_head = p->next;
-      p->next = extern_head;
-      extern_head = p;
-
-      /* Now output the actual declaration.  */
-      if (p->in_const)
-	const_section ();
-      else
-	data_section ();
-      fputs (".comm ", file);
-      assemble_name (file, p->name);
-      fprintf (file, ",%d\n", p->size);
-    }
-}
+/* Output code to add DELTA to the first argument, and then jump to FUNCTION.
+   Used for C++ multiple inheritance.
+	.mask	^m<r2,r3,r4,r5,r6,r7,r8,r9,r10,r11>  #conservative entry mask
+	addl2	$DELTA, 4(ap)	#adjust first argument
+	jmp	FUNCTION+2	#jump beyond FUNCTION's entry mask
+*/
 
 static void
-vms_asm_out_constructor (symbol, priority)
-     rtx symbol;
-     int priority ATTRIBUTE_UNUSED;
+vax_output_mi_thunk (FILE * file,
+                     tree thunk ATTRIBUTE_UNUSED, 
+                     HOST_WIDE_INT delta,
+                     HOST_WIDE_INT vcall_offset ATTRIBUTE_UNUSED,
+                     tree function)
 {
-  fprintf (asm_out_file,".globl $$PsectAttributes_NOOVR$$__gxx_init_1\n");
-  data_section();
-  fprintf (asm_out_file,"$$PsectAttributes_NOOVR$$__gxx_init_1:\n\t.long\t");
-  assemble_name (asm_out_file, XSTR (symbol, 0));
-  fputc ('\n', asm_out_file);
-}
-
-static void
-vms_asm_out_destructor (symbol, priority)
-     rtx symbol;
-     int priority ATTRIBUTE_UNUSED;
-{
-  fprintf (asm_out_file,".globl $$PsectAttributes_NOOVR$$__gxx_clean_1\n");
-  data_section();
-  fprintf (asm_out_file,"$$PsectAttributes_NOOVR$$__gxx_clean_1:\n\t.long\t");
-  assemble_name (asm_out_file, XSTR (symbol, 0));
-  fputc ('\n', asm_out_file);
-}
-#endif /* VMS_TARGET */
-
-/* Additional support code for VMS host.  */
-/* ??? This should really be in libiberty; vax.c is a target file.  */
-#ifdef QSORT_WORKAROUND
-  /*
-	Do not use VAXCRTL's qsort() due to a severe bug:  once you've
-	sorted something which has a size that's an exact multiple of 4
-	and is longword aligned, you cannot safely sort anything which
-	is either not a multiple of 4 in size or not longword aligned.
-	A static "move-by-longword" optimization flag inside qsort() is
-	never reset.  This is known to affect VMS V4.6 through VMS V5.5-1,
-	and was finally fixed in VMS V5.5-2.
-
-	In this work-around an insertion sort is used for simplicity.
-	The qsort code from glibc should probably be used instead.
-   */
-void
-not_qsort (array, count, size, compare)
-     void *array;
-     unsigned count, size;
-     int (*compare)();
-{
-
-  if (size == sizeof (short))
-    {
-      register int i;
-      register short *next, *prev;
-      short tmp, *base = array;
-
-      for (next = base, i = count - 1; i > 0; i--)
-	{
-	  prev = next++;
-	  if ((*compare)(next, prev) < 0)
-	    {
-	      tmp = *next;
-	      do  *(prev + 1) = *prev;
-		while (--prev >= base ? (*compare)(&tmp, prev) < 0 : 0);
-	      *(prev + 1) = tmp;
-	    }
-	}
-    }
-  else if (size == sizeof (long))
-    {
-      register int i;
-      register long *next, *prev;
-      long tmp, *base = array;
-
-      for (next = base, i = count - 1; i > 0; i--)
-	{
-	  prev = next++;
-	  if ((*compare)(next, prev) < 0)
-	    {
-	      tmp = *next;
-	      do  *(prev + 1) = *prev;
-		while (--prev >= base ? (*compare)(&tmp, prev) < 0 : 0);
-	      *(prev + 1) = tmp;
-	    }
-	}
-    }
-  else  /* arbitrary size */
-    {
-      register int i;
-      register char *next, *prev, *tmp = alloca (size), *base = array;
-
-      for (next = base, i = count - 1; i > 0; i--)
-	{   /* count-1 forward iterations */
-	  prev = next,  next += size;		/* increment front pointer */
-	  if ((*compare)(next, prev) < 0)
-	    {	/* found element out of order; move others up then re-insert */
-	      memcpy (tmp, next, size);		/* save smaller element */
-	      do { memcpy (prev + size, prev, size); /* move larger elem. up */
-		   prev -= size;		/* decrement back pointer */
-		 } while (prev >= base ? (*compare)(tmp, prev) < 0 : 0);
-	      memcpy (prev + size, tmp, size);	/* restore small element */
-	    }
-	}
-#ifdef USE_C_ALLOCA
-      alloca (0);
-#endif
-    }
-
-  return;
-}
-#endif /* QSORT_WORKAROUND */
-
-/* Return 1 if insn A follows B.  */
-
-static int
-follows_p (a, b)
-     rtx a, b;
-{
-  register rtx p;
-
-  for (p = a; p != b; p = NEXT_INSN (p))
-    if (! p)
-      return 1;
-
-  return 0;
-}
-
-/* Returns 1 if we know operand OP was 0 before INSN.  */
-
-int
-reg_was_0_p (insn, op)
-     rtx insn, op;
-{
-  rtx link;
-
-  return ((link = find_reg_note (insn, REG_WAS_0, 0))
-	  /* Make sure the insn that stored the 0 is still present
-	     and doesn't follow INSN in the insn sequence.  */
-	  && ! INSN_DELETED_P (XEXP (link, 0))
-	  && GET_CODE (XEXP (link, 0)) != NOTE
-	  && ! follows_p (XEXP (link, 0), insn)
-	  /* Make sure cross jumping didn't happen here.  */
-	  && no_labels_between_p (XEXP (link, 0), insn)
-	  /* Make sure the reg hasn't been clobbered.  */
-	  && ! reg_set_between_p (op, XEXP (link, 0), insn));
+  fprintf (file, "\t.word 0x0ffc\n\taddl2 $" HOST_WIDE_INT_PRINT_DEC, delta);
+  asm_fprintf (file, ",4(%Rap)\n");
+  fprintf (file, "\tjmp ");						
+  assemble_name (file,  XSTR (XEXP (DECL_RTL (function), 0), 0));	
+  fprintf (file, "+2\n");						
 }

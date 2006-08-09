@@ -1,6 +1,6 @@
 /* Libiberty basename.  Like basename, but is not overridden by the
    system C library.
-   Copyright (C) 2001 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of the libiberty library.
 Libiberty is free software; you can redistribute it and/or
@@ -40,33 +40,7 @@ and a path ending in @code{/} returns the empty string after it.
 #include "ansidecl.h"
 #include "libiberty.h"
 #include "safe-ctype.h"
-
-#ifndef DIR_SEPARATOR
-#  define DIR_SEPARATOR '/'
-#endif
-
-#if defined (_WIN32) || defined (__MSDOS__) \
-    || defined (__DJGPP__) || defined (__OS2__)
-#  define HAVE_DOS_BASED_FILE_SYSTEM
-#  ifndef DIR_SEPARATOR_2 
-#    define DIR_SEPARATOR_2 '\\'
-#  endif
-#endif
-
-/* Define IS_DIR_SEPARATOR. VMS uses '::', ':', '[...]' and '<...>' to
-   separate the different components of a file specification.  It's a
-   bit of a stretch to call ':', ']' and '>' directory separators, so
-   just define the test to find the file name component.  */
-#ifdef VMS
-#  define IS_DIR_SEPARATOR(ch) ((ch) == ':' || (ch) == ']' || (ch) == '>')
-#else
-#  ifndef DIR_SEPARATOR_2
-#    define IS_DIR_SEPARATOR(ch) ((ch) == DIR_SEPARATOR)
-#  else
-#    define IS_DIR_SEPARATOR(ch) \
-	(((ch) == DIR_SEPARATOR) || ((ch) == DIR_SEPARATOR_2))
-#  endif
-#endif
+#include "filenames.h"
 
 const char *
 lbasename (name)

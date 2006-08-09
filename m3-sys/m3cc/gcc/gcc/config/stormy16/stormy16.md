@@ -1,25 +1,49 @@
 ;; XSTORMY16 Machine description template
-;; Copyright (C) 1997, 1998, 1999, 2001, 2002 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003 Free Software Foundation, Inc.
 ;; Contributed by Red Hat, Inc.
 
-;; This file is part of GNU CC.
+;; This file is part of GCC.
 
-;; GNU CC is free software; you can redistribute it and/or modify
+;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
-;; GNU CC is distributed in the hope that it will be useful,
+;; GCC is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU CC; see the file COPYING.  If not, write to
+;; along with GCC; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
 ;;- See file "rtl.def" for documentation on define_insn, match_*, et. al.
+
+;; Constraints
+;; a  $0
+;; b  $1
+;; c  $2
+;; d  $8
+;; e  $0..$7
+;; t  $0..$1
+;; y  Carry
+;; z  $8..$9
+;; I  0..3
+;; J  2**N mask
+;; K  2**N antimask
+;; L  0..255
+;; M  -255..0
+;; N  -3..0
+;; O  1..4
+;; P  -4..-1
+;; Q  post-inc mem (push)
+;; R  pre-dec mem (pop)
+;; S  immediate mem
+;; T  Rx
+;; U  -inf..1 or 16..inf
+;; Z  0
 
 
 ;; ::::::::::::::::::::
@@ -150,13 +174,13 @@
 
 (define_expand "movhi"
   [(set (match_operand:HI 0 "nonimmediate_nonstack_operand" "")
-	(match_operand:HI 1 "general_operand" ""))]
+	(match_operand:HI 1 "xs_hi_general_operand" ""))]
   ""
   "{ xstormy16_expand_move (HImode, operands[0], operands[1]); DONE; }")
 
 (define_insn "*movhi_internal"
   [(set (match_operand:HI 0 "nonimmediate_nonstack_operand" "=r,m,e,e,T,r,S")
-	(match_operand:HI 1 "general_operand"       "r,e,m,L,L,i,i"))]
+	(match_operand:HI 1 "xs_hi_general_operand"       "r,e,m,L,L,i,i"))]
   ""
   "@
    mov %0,%1
@@ -276,21 +300,25 @@
 ; carry register as an input, and some output reloads or input
 ; reloads might need to use it.  In fact, without the '&' reload
 ; will fail in some cases.
+; Note that the 'Z' constraint matches "add $reg,0", which reload
+; will occasionally emit.  We avoid the "add $reg,imm" match because
+; it clobbers the carry.
 (define_insn "addhi3"
-  [(set (match_operand:HI 0 "register_operand" "=r,r,T,T,r,r,r")
-	(plus:HI (match_operand:HI 1 "register_operand" "%0,0,0,0,0,0,0")
-		 (match_operand:HI 2 "nonmemory_operand" "O,P,L,M,Ir,N,i")))
-   (clobber (match_scratch:BI 3 "=X,X,&y,&y,&y,&y,&y"))]
+  [(set (match_operand:HI 0 "register_operand" "=r,r,r,T,T,r,r,r")
+	(plus:HI (match_operand:HI 1 "register_operand" "%0,0,0,0,0,0,0,0")
+		 (match_operand:HI 2 "xs_hi_nonmemory_operand" "O,P,Z,L,M,Ir,N,i")))
+   (clobber (match_scratch:BI 3 "=X,X,X,&y,&y,&y,&y,&y"))]
   ""
   "@
    inc %0,%o2
    dec %0,%O2
+   ;
    add Rx,%2
    sub Rx,#%n2
    add %0,%2
    sub %0,#%n2
    add %0,%2"
-  [(set_attr "length" "2,2,2,2,2,2,4")])
+  [(set_attr "length" "2,2,0,2,2,2,2,4")])
 
 ; Reload can generate addition operations.  The SECONDARY_RELOAD_CLASS
 ; macro causes it to allocate the carry register; this pattern
@@ -311,7 +339,7 @@
 (define_insn "addchi4"
   [(set (match_operand:HI 0 "register_operand" "=T,r,r")
 	(plus:HI (match_operand:HI 1 "register_operand" "%0,0,0")
-		 (match_operand:HI 2 "nonmemory_operand" "L,Ir,i")))
+		 (match_operand:HI 2 "xs_hi_nonmemory_operand" "L,Ir,i")))
    (set (match_operand:BI 3 "register_operand" "=y,y,y")
         (truncate:BI (lshiftrt:SI (plus:SI (zero_extend:SI (match_dup 1))
 					   (zero_extend:SI (match_dup 2)))
@@ -329,7 +357,7 @@
 			  (zero_extend:HI (match_operand:BI 3 
 							    "register_operand"
 							    "y,y,y")))
-		 (match_operand:HI 2 "nonmemory_operand" "L,Ir,i")))
+		 (match_operand:HI 2 "xs_hi_nonmemory_operand" "L,Ir,i")))
    (set (match_operand:BI 4 "register_operand" "=y,y,y") 
         (truncate:BI (lshiftrt:SI (plus:SI (plus:SI 
 					    (zero_extend:SI (match_dup 1))
@@ -352,7 +380,7 @@
 (define_insn "subhi3"
   [(set (match_operand:HI 0 "register_operand" "=r,r,T,T,r,r,r")
 	(minus:HI (match_operand:HI 1 "register_operand" "0,0,0,0,0,0,0")
-		  (match_operand:HI 2 "nonmemory_operand" "O,P,L,M,rI,M,i")))
+		  (match_operand:HI 2 "xs_hi_nonmemory_operand" "O,P,L,M,rI,M,i")))
    (clobber (match_scratch:BI 3 "=X,X,&y,&y,&y,&y,&y"))]
   ""
   "@
@@ -368,7 +396,7 @@
 (define_insn "subchi4"
   [(set (match_operand:HI 0 "register_operand" "=T,r,r")
 	(minus:HI (match_operand:HI 1 "register_operand" "0,0,0")
-		  (match_operand:HI 2 "nonmemory_operand" "L,Ir,i")))
+		  (match_operand:HI 2 "xs_hi_nonmemory_operand" "L,Ir,i")))
    (set (match_operand:BI 3 "register_operand" "=y,y,y") 
         (truncate:BI (lshiftrt:SI (minus:SI (zero_extend:SI (match_dup 1))
 					    (zero_extend:SI (match_dup 2)))
@@ -386,7 +414,7 @@
 			  (zero_extend:HI (match_operand:BI 3 
 							    "register_operand"
 							    "y,y,y")))
-		 (match_operand:HI 2 "nonmemory_operand" "L,Ir,i")))
+		 (match_operand:HI 2 "xs_hi_nonmemory_operand" "L,Ir,i")))
    (set (match_operand:BI 4 "register_operand" "=y,y,y") 
         (truncate:BI (lshiftrt:SI (minus:SI (minus:SI 
 					     (zero_extend:SI (match_dup 1))
@@ -433,6 +461,42 @@
 		 (match_dup 2)))]
   ""
   "div"
+  [(set_attr "psw_operand" "nop")])
+
+;; Signed division giving both quotient and remainder
+(define_insn "divmodhi4"
+  [(set (match_operand:HI 0 "register_operand" "=a")
+	(div:HI (match_operand:HI 1 "register_operand" "a")
+		 (match_operand:HI 2 "register_operand" "c")))
+   (set (match_operand:HI 3 "register_operand" "=b")
+	(mod:HI (match_dup 1)
+		 (match_dup 2)))]
+  ""
+  "sdiv"
+  [(set_attr "psw_operand" "nop")])
+
+;; Signed 32/16 division
+(define_insn "sdivlh"
+  [(set (match_operand:HI 0 "register_operand" "=a")
+	(div:HI (match_operand:SI 2 "register_operand" "t")
+		 (match_operand:HI 3 "register_operand" "c")))
+   (set (match_operand:HI 1 "register_operand" "=b")
+	(mod:HI (match_dup 2)
+		 (match_dup 3)))]
+  ""
+  "sdivlh"
+  [(set_attr "psw_operand" "nop")])
+
+;; Unsigned 32/16 division
+(define_insn "udivlh"
+  [(set (match_operand:HI 0 "register_operand" "=a")
+	(udiv:HI (match_operand:SI 2 "register_operand" "t")
+		 (match_operand:HI 3 "register_operand" "c")))
+   (set (match_operand:HI 1 "register_operand" "=b")
+	(umod:HI (match_dup 2)
+		 (match_dup 3)))]
+  ""
+  "divlh"
   [(set_attr "psw_operand" "nop")])
 
 ;; Negation
@@ -567,11 +631,23 @@
   [(set_attr "length" "4")])
 
 (define_expand "negsi2"
-  [(set (match_operand:SI 0 "register_operand" "")
-	(neg:SI (match_operand:SI 1 "register_operand" "")))]
+  [(parallel [(set (match_operand:SI 0 "register_operand" "")
+		   (neg:SI (match_operand:SI 1 "register_operand" "")))
+	      (clobber (match_scratch:BI 2 ""))])]
   ""
-  "{ xstormy16_expand_arith (SImode, NEG, operands[0], const0_rtx,
-			    operands[1], gen_reg_rtx (BImode)); DONE; }")
+  "{ operands[2] = gen_reg_rtx (HImode);
+     operands[3] = gen_reg_rtx (BImode); }")
+
+(define_insn_and_split "*negsi2_internal"
+  [(set (match_operand:SI 0 "register_operand" "=&r")
+	(neg:SI (match_operand:SI 1 "register_operand" "r")))
+   (clobber (match_scratch:BI 2 "=y"))]
+  ""
+  "#"
+  "reload_completed"
+  [(pc)]
+  "{ xstormy16_expand_arith (SImode, NEG, operands[0], operands[0],
+			    operands[1], operands[2]); DONE; }")
 
 ;; ::::::::::::::::::::
 ;; ::
@@ -760,7 +836,7 @@
   [(set (pc)
 	(if_then_else (match_operator:SI 1 "equality_operator"
 				      [(match_operand:SI 2 "register_operand" 
-							 "+r")
+							 "r")
 				       (const_int 0)])
 		      (label_ref (match_operand 0 "" ""))
 		      (pc)))
@@ -781,7 +857,7 @@
   [(set (pc)
 	(if_then_else (match_operator:SI 1 "xstormy16_ineqsi_operator"
 				      [(match_operand:SI 2 "register_operand" 
-							 "+r")
+							 "r")
 				       (match_operand:SI 3 "nonmemory_operand" 
 							 "ri")])
 		      (label_ref (match_operand 0 "" ""))
@@ -815,7 +891,7 @@
 			(match_operand:HI 3 "nonmemory_operand" "L,Ir,i")])
 		      (label_ref (match_operand 0 "" ""))
 		      (pc)))
-   (set (match_operand:HI 2 "register_operand" "=2,2,2")
+   (set (match_operand:HI 2 "register_operand" "=1,1,1")
 	(minus:HI (minus:HI (match_dup 1) (zero_extend:HI (match_dup 4)))
 		  (match_dup 3)))
    (clobber (match_operand:BI 6 "" "=y,y,y"))]

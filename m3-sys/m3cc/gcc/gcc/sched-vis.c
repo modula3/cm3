@@ -1,6 +1,6 @@
 /* Instruction scheduling pass.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2002 Free Software Foundation, Inc.
+   1999, 2000, 2002, 2003 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com) Enhanced by,
    and currently maintained by, Jim Wilson (wilson@cygnus.com)
 
@@ -23,6 +23,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "toplev.h"
 #include "rtl.h"
 #include "tm_p.h"
@@ -30,7 +32,9 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "hard-reg-set.h"
 #include "basic-block.h"
 #include "insn-attr.h"
+#include "real.h"
 #include "sched-int.h"
+#include "target.h"
 
 #ifdef INSN_SCHEDULING
 /* target_units bitmask has 1 for each unit in the cpu.  It should be
@@ -38,22 +42,21 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    But currently it is computed by examining the insn list.  Since
    this is only needed for visualization, it seems an acceptable
    solution.  (For understanding the mapping of bits to units, see
-   definition of function_units[] in "insn-attrtab.c".)  */
+   definition of function_units[] in "insn-attrtab.c".)  The scheduler
+   using only DFA description should never use the following variable.  */
 
 static int target_units = 0;
 
-static char *safe_concat PARAMS ((char *, char *, const char *));
-static int get_visual_tbl_length PARAMS ((void));
-static void print_exp PARAMS ((char *, rtx, int));
-static void print_value PARAMS ((char *, rtx, int));
-static void print_pattern PARAMS ((char *, rtx, int));
-static void print_insn PARAMS ((char *, rtx, int));
+static char *safe_concat (char *, char *, const char *);
+static int get_visual_tbl_length (void);
+static void print_exp (char *, rtx, int);
+static void print_value (char *, rtx, int);
+static void print_pattern (char *, rtx, int);
 
 /* Print names of units on which insn can/should execute, for debugging.  */
 
 void
-insn_print_units (insn)
-     rtx insn;
+insn_print_units (rtx insn)
 {
   int i;
   int unit = insn_unit (insn);
@@ -77,7 +80,7 @@ insn_print_units (insn)
 }
 
 /* MAX_VISUAL_LINES is the maximum number of lines in visualization table
-   of a basic block.  If more lines are needed, table is splitted to two.
+   of a basic block.  If more lines are needed, table is split to two.
    n_visual_lines is the number of lines printed so far for a block.
    visual_tbl contains the block visualization info.
    vis_no_unit holds insns in a cycle that are not mapped to any unit.  */
@@ -94,7 +97,7 @@ rtx vis_no_unit[MAX_VISUAL_NO_UNIT];
    for visualization.  */
 
 void
-init_target_units ()
+init_target_units (void)
 {
   rtx insn;
   int unit;
@@ -116,14 +119,22 @@ init_target_units ()
 /* Return the length of the visualization table.  */
 
 static int
-get_visual_tbl_length ()
+get_visual_tbl_length (void)
 {
   int unit, i;
   int n, n1;
   char *s;
 
+  if (targetm.sched.use_dfa_pipeline_interface
+      && (*targetm.sched.use_dfa_pipeline_interface) ())
+    {
+      visual_tbl_line_length = 1;
+      return 1; /* Can't return 0 because that will cause problems
+                   with alloca.  */
+    }
+
   /* Compute length of one field in line.  */
-  s = (char *) alloca (INSN_LEN + 6);
+  s = alloca (INSN_LEN + 6);
   sprintf (s, "  %33s", "uname");
   n1 = strlen (s);
 
@@ -146,7 +157,7 @@ get_visual_tbl_length ()
 /* Init block visualization debugging info.  */
 
 void
-init_block_visualization ()
+init_block_visualization (void)
 {
   strcpy (visual_tbl, "");
   n_visual_lines = 0;
@@ -156,10 +167,7 @@ init_block_visualization ()
 #define BUF_LEN 2048
 
 static char *
-safe_concat (buf, cur, str)
-     char *buf;
-     char *cur;
-     const char *str;
+safe_concat (char *buf, char *cur, const char *str)
 {
   char *end = buf + BUF_LEN - 2;	/* Leave room for null.  */
   int c;
@@ -182,10 +190,7 @@ safe_concat (buf, cur, str)
    may be stored in objects representing values.  */
 
 static void
-print_exp (buf, x, verbose)
-     char *buf;
-     rtx x;
-     int verbose;
+print_exp (char *buf, rtx x, int verbose)
 {
   char tmp[BUF_LEN];
   const char *st[4];
@@ -532,14 +537,11 @@ print_exp (buf, x, verbose)
     cur = safe_concat (buf, cur, ")");
 }		/* print_exp */
 
-/* Prints rtxes, I customly classified as values.  They're constants,
+/* Prints rtxes, I customarily classified as values.  They're constants,
    registers, labels, symbols and memory accesses.  */
 
 static void
-print_value (buf, x, verbose)
-     char *buf;
-     rtx x;
-     int verbose;
+print_value (char *buf, rtx x, int verbose)
 {
   char t[BUF_LEN];
   char *cur = buf;
@@ -551,7 +553,10 @@ print_value (buf, x, verbose)
       cur = safe_concat (buf, cur, t);
       break;
     case CONST_DOUBLE:
-      sprintf (t, "<0x%lx,0x%lx>", (long) XWINT (x, 2), (long) XWINT (x, 3));
+      if (FLOAT_MODE_P (GET_MODE (x)))
+	real_to_decimal (t, CONST_DOUBLE_REAL_VALUE (x), sizeof (t), 0, 1);
+      else
+	sprintf (t, "<0x%lx,0x%lx>", (long) XWINT (x, 2), (long) XWINT (x, 3));
       cur = safe_concat (buf, cur, t);
       break;
     case CONST_STRING:
@@ -626,10 +631,7 @@ print_value (buf, x, verbose)
 /* The next step in insn detalization, its pattern recognition.  */
 
 static void
-print_pattern (buf, x, verbose)
-     char *buf;
-     rtx x;
-     int verbose;
+print_pattern (char *buf, rtx x, int verbose)
 {
   char t1[BUF_LEN], t2[BUF_LEN], t3[BUF_LEN];
 
@@ -659,13 +661,13 @@ print_pattern (buf, x, verbose)
 	  && XEXP (COND_EXEC_TEST (x), 1) == const0_rtx)
 	print_value (t1, XEXP (COND_EXEC_TEST (x), 0), verbose);
       else if (GET_CODE (COND_EXEC_TEST (x)) == EQ
-               && XEXP (COND_EXEC_TEST (x), 1) == const0_rtx)
-        {
+	       && XEXP (COND_EXEC_TEST (x), 1) == const0_rtx)
+	{
 	  t1[0] = '!';
 	  print_value (t1 + 1, XEXP (COND_EXEC_TEST (x), 0), verbose);
 	}
       else
-        print_value (t1, COND_EXEC_TEST (x), verbose);
+	print_value (t1, COND_EXEC_TEST (x), verbose);
       print_pattern (t2, COND_EXEC_CODE (x), verbose);
       sprintf (buf, "(%s) %s", t1, t2);
       break;
@@ -684,18 +686,8 @@ print_pattern (buf, x, verbose)
       }
       break;
     case SEQUENCE:
-      {
-	int i;
-
-	sprintf (t1, "%%{");
-	for (i = 0; i < XVECLEN (x, 0); i++)
-	  {
-	    print_insn (t2, XVECEXP (x, 0, i), verbose);
-	    sprintf (t3, "%s%s;", t1, t2);
-	    strcpy (t1, t3);
-	  }
-	sprintf (buf, "%s%%}", t1);
-      }
+      /* Should never see SEQUENCE codes until after reorg.  */
+      abort ();
       break;
     case ASM_INPUT:
       sprintf (buf, "asm {%s}", XSTR (x, 0));
@@ -749,11 +741,8 @@ print_pattern (buf, x, verbose)
    (Probably the last "option" should be extended somehow, since it
    depends now on sched.c inner variables ...)  */
 
-static void
-print_insn (buf, x, verbose)
-     char *buf;
-     rtx x;
-     int verbose;
+void
+print_insn (char *buf, rtx x, int verbose)
 {
   char t[BUF_LEN];
   rtx insn = x;
@@ -815,11 +804,11 @@ print_insn (buf, x, verbose)
     }
 }				/* print_insn */
 
-/* Print visualization debugging info.  */
+/* Print visualization debugging info.  The scheduler using only DFA
+   description should never use the following function.  */
 
 void
-print_block_visualization (s)
-     const char *s;
+print_block_visualization (const char *s)
 {
   int unit, i;
 
@@ -848,8 +837,7 @@ print_block_visualization (s)
 /* Print insns in the 'no_unit' column of visualization.  */
 
 void
-visualize_no_unit (insn)
-     rtx insn;
+visualize_no_unit (rtx insn)
 {
   if (n_vis_no_unit < MAX_VISUAL_NO_UNIT)
     {
@@ -861,8 +849,7 @@ visualize_no_unit (insn)
 /* Print insns scheduled in clock, for visualization.  */
 
 void
-visualize_scheduled_insns (clock)
-     int clock;
+visualize_scheduled_insns (int clock)
 {
   int i, unit;
 
@@ -908,8 +895,7 @@ visualize_scheduled_insns (clock)
 /* Print stalled cycles.  */
 
 void
-visualize_stall_cycles (stalls)
-     int stalls;
+visualize_stall_cycles (int stalls)
 {
   static const char *const prefix = ";;       ";
   const char *suffix = "\n";
@@ -944,7 +930,7 @@ visualize_stall_cycles (stalls)
 /* Allocate data used for visualization during scheduling.  */
 
 void
-visualize_alloc ()
+visualize_alloc (void)
 {
   visual_tbl = xmalloc (get_visual_tbl_length ());
 }
@@ -952,7 +938,7 @@ visualize_alloc ()
 /* Free data used for visualization.  */
 
 void
-visualize_free ()
+visualize_free (void)
 {
   free (visual_tbl);
 }
