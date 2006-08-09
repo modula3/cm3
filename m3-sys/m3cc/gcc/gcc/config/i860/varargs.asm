@@ -1,9 +1,9 @@
 /* Special varargs support for i860.
-   Copyright (C) 2001  Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003  Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
@@ -17,13 +17,13 @@ do apply in other respects; for example, they cover modification of
 the file, and distribution when not linked into a combine
 executable.)
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -38,9 +38,13 @@ __builtin_saveregs:
 ___builtin_saveregs:
 
 	andnot	0x0f,%sp,%sp	/* round down to 16-byte boundary */
+#if 0
 	adds	-96,%sp,%sp  /* allocate stack space for reg save
 			   area and also for a new va_list
 			   structure */
+#else
+	adds	-80,%sp,%sp  /* allocate stack space for reg save area */
+#endif
 	/* Save all argument registers in the arg reg save area.  The
 	   arg reg save area must have the following layout (according
 	   to the svr4 ABI):
@@ -70,10 +74,12 @@ ___builtin_saveregs:
 	st.l	%r26,72(%sp)
 	st.l	%r27,76(%sp)
 
+#if 0
 	adds	80,%sp,%r16  /* compute the address of the new
 			   va_list structure.  Put in into
 			   r16 so that it will be returned
 			   to the caller.  */
+#endif
 
 	/* Initialize all fields of the new va_list structure.  This
 	   structure looks like:
@@ -86,11 +92,16 @@ ___builtin_saveregs:
 	} va_list;
 	*/
 
+#if 0
 	st.l	%r0, 0(%r16) /* nfixed */
 	st.l	%r0, 4(%r16) /* nfloating */
 	st.l    %sp, 8(%r16) /* __va_ctl points to __va_struct.  */
 	bri	%r1	/* delayed return */
 	st.l	%r28,12(%r16) /* pointer to overflow args */
+#else
+	bri	%r1	/* delayed return */
+	or	%sp,%r0,%r16  /* Return the address of the reg save area.  */
+#endif
 
 #else /* not __svr4__ */
 #if defined(__PARAGON__)

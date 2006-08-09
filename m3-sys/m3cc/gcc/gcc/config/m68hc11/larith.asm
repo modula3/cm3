@@ -1,9 +1,9 @@
 /* libgcc routines for M68HC11 & M68HC12.
-   Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify it
+GCC is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
 Free Software Foundation; either version 2, or (at your option) any
 later version.
@@ -35,23 +35,74 @@ Boston, MA 02111-1307, USA.  */
 
 	.file "larith.asm"
 
+#ifdef __HAVE_SHORT_INT__
+	.mode mshort
+#else
+	.mode mlong
+#endif
+
+	.macro declare_near name
+	.globl \name
+	.type  \name,@function
+	.size  \name,.Lend-\name
+\name:
+	.endm
+
+#if defined(__USE_RTC__)
+# define ARG(N) N+1
+
+	.macro ret
+#if defined(mc68hc12)
+	rtc
+#else
+	jmp __return_32
+#endif
+	.endm
+
+	.macro declare name
+	.globl \name
+	.type  \name,@function
+	.size  \name,.Lend-\name
+	.far   \name
+\name:
+	.endm
+
+	.macro farsym name
+	.far NAME
+	.endm
+
+#else
+# define ARG(N) N
+
+	.macro ret
+	rts
+	.endm
+
+	.macro farsym name
+	.endm
+
+	.macro declare name
+	.globl \name
+	.type  \name,@function
+	.size  \name,.Lend-\name
+\name:
+	.endm
+
+#endif
+
 	.sect .text
 	
 
 #define REG(NAME)			\
-NAME:	.word 0;			\
+NAME:	.dc.w	1;			\
 	.type NAME,@object ;		\
 	.size NAME,2
 
 #ifdef L_regs_min
 /* Pseudo hard registers used by gcc.
-   They must be located in page0. 
-   They will normally appear at the end of .page0 section.  */
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+   They should be located in page0.  */
+
+	.sect .softregs
 	.globl _.tmp
 	.globl _.z,_.xy
 REG(_.tmp)
@@ -61,54 +112,34 @@ REG(_.xy)
 #endif
 
 #ifdef L_regs_frame
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+	.sect .softregs
 	.globl _.frame
 REG(_.frame)
 #endif
 
 #ifdef L_regs_d1_2
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+	.sect .softregs
 	.globl _.d1,_.d2
 REG(_.d1)
 REG(_.d2)
 #endif
 
 #ifdef L_regs_d3_4
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+	.sect .softregs
 	.globl _.d3,_.d4
 REG(_.d3)
 REG(_.d4)
 #endif
 
 #ifdef L_regs_d5_6
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+	.sect .softregs
 	.globl _.d5,_.d6
 REG(_.d5)
 REG(_.d6)
 #endif
 
 #ifdef L_regs_d7_8
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+	.sect .softregs
 	.globl _.d7,_.d8
 REG(_.d7)
 REG(_.d8)
@@ -116,9 +147,8 @@ REG(_.d8)
 
 #ifdef L_regs_d9_16
 /* Pseudo hard registers used by gcc.
-   They must be located in page0. 
-   They will normally appear at the end of .page0 section.  */
-	.sect .page0
+   They should be located in page0.  */
+	.sect .softregs
 	.globl _.d9,_.d10,_.d11,_.d12,_.d13,_.d14
 	.globl _.d15,_.d16
 REG(_.d9)
@@ -134,13 +164,8 @@ REG(_.d16)
 
 #ifdef L_regs_d17_32
 /* Pseudo hard registers used by gcc.
-   They must be located in page0. 
-   They will normally appear at the end of .page0 section.  */
-#ifdef mc68hc12
-	.sect .bss
-#else
-	.sect .page0
-#endif
+   They should be located in page0.  */
+	.sect .softregs
 	.globl _.d17,_.d18,_.d19,_.d20,_.d21,_.d22
 	.globl _.d23,_.d24,_.d25,_.d26,_.d27,_.d28
 	.globl _.d29,_.d30,_.d31,_.d32
@@ -167,9 +192,7 @@ REG(_.d32)
 ;; Specific initialization for 68hc11 before the main.
 ;; Nothing special for a generic routine; Just enable interrupts.
 ;;
-	.sect .text
-	.globl __premain
-__premain:
+	declare_near	__premain
 	clra
 	tap	; Clear both I and X.
 	rts
@@ -195,6 +218,8 @@ __premain:
 	.globl _exit
 	.globl exit
 	.weak  exit
+	farsym  exit
+	farsym  _exit
 exit:
 _exit:
 
@@ -209,9 +234,8 @@ fatal:
 ;;
 ;; Abort operation.  This is defined for the GCC testsuite.
 ;;
-	.sect .text
-	.globl abort
-abort:
+	declare	abort
+
 	ldd	#255		; 
 #ifdef mc68hc12
 	trap	#0x30
@@ -226,20 +250,19 @@ abort:
 ;;
 ;; Cleanup operation used by exit().
 ;;
-	.sect .text
-	.globl _cleanup
-_cleanup:
-	rts
+	declare	_cleanup
+
+	ret
 #endif
 
 ;-----------------------------------------
 ; required gcclib code
 ;-----------------------------------------
 #ifdef L_memcpy
-	.sect .text
+       declare	memcpy
+       declare	__memcpy
+
 	.weak memcpy
-	.globl memcpy
-	.globl __memcpy
 ;;;
 ;;; void* memcpy(void*, const void*, size_t)
 ;;; 
@@ -247,11 +270,9 @@ _cleanup:
 ;;; 2,sp = src	Pmode
 ;;; 4,sp = size	HImode (size_t)
 ;;; 
-__memcpy:
-memcpy:
 #ifdef mc68hc12
-	ldx	2,sp
-	ldy	4,sp
+	ldx	ARG(2),sp
+	ldy	ARG(4),sp
 	pshd
 	xgdy
 	lsrd
@@ -264,12 +285,12 @@ Loop:
 	dbne	d,Loop
 Done:
 	puld
-	rts
+	ret
 #else
 	xgdy
 	tsx
-	ldd	4,x
-	ldx	2,x		; SRC = X, DST = Y
+	ldd	ARG(4),x
+	ldx	ARG(2),x	; SRC = X, DST = Y
 	cpd	#0
 	beq	End
 	pshy
@@ -289,14 +310,13 @@ L1:
 	puly			; Restore Y to return the DST
 End:
 	xgdy
-	rts
+	ret
 #endif
 #endif
 
 #ifdef L_memset
-	.sect .text
-	.globl memset
-	.globl __memset
+       declare	memset
+       declare	__memset
 ;;;
 ;;; void* memset(void*, int value, size_t)
 ;;; 
@@ -304,17 +324,15 @@ End:
 ;;; D    = dst	Pmode
 ;;; 2,sp = src	SImode
 ;;; 6,sp = size	HImode (size_t)
-	val  = 5
-	size = 6
+	val  = ARG(5)
+	size = ARG(6)
 #else
 ;;; D    = dst	Pmode
 ;;; 2,sp = src	SImode
 ;;; 6,sp = size	HImode (size_t)
-	val  = 3
-	size = 4
+	val  = ARG(3)
+	size = ARG(4)
 #endif
-__memset:
-memset:
 #ifdef mc68hc12
 	xgdx
 	ldab	val,sp
@@ -326,7 +344,7 @@ Loop:
 	dbne	y,Loop
 End:
 	puld
-	rts
+	ret
 #else
 	xgdx
 	tsy
@@ -342,105 +360,97 @@ L0:
 	pulx			; Restore X to return the DST
 End:
 	xgdx
-	rts
+	ret
 #endif
 #endif
-		
-#ifdef L_adddi3
-	.sect .text
-	.globl ___adddi3
 
-___adddi3:
+#ifdef L_adddi3
+	declare	___adddi3
+
 	tsx
 	xgdy
-	ldd	8,x		; Add LSB
-	addd	16,x
+	ldd	ARG(8),x		; Add LSB
+	addd	ARG(16),x
 	std	6,y		; Save (carry preserved)
 
-	ldd	6,x
-	adcb	15,x
-	adca	14,x
+	ldd	ARG(6),x
+	adcb	ARG(15),x
+	adca	ARG(14),x
 	std	4,y
 
-	ldd	4,x
-	adcb	13,x
-	adca	12,x
+	ldd	ARG(4),x
+	adcb	ARG(13),x
+	adca	ARG(12),x
 	std	2,y
 	
-	ldd	2,x
-	adcb	11,x		; Add MSB
-	adca	10,x
+	ldd	ARG(2),x
+	adcb	ARG(11),x		; Add MSB
+	adca	ARG(10),x
 	std	0,y
 
 	xgdy
-	rts
+	ret
 #endif
 
 #ifdef L_subdi3
-	.sect .text
-	.globl ___subdi3
+	declare	___subdi3
 
-___subdi3:
 	tsx
 	xgdy
-	ldd	8,x		; Subtract LSB
-	subd	16,x
-	std	6,y		; Save, borrow preserved
+	ldd	ARG(8),x		; Subtract LSB
+	subd	ARG(16),x
+	std	6,y			; Save, borrow preserved
 
-	ldd	6,x
-	sbcb	15,x
-	sbca	14,x
+	ldd	ARG(6),x
+	sbcb	ARG(15),x
+	sbca	ARG(14),x
 	std	4,y
 
-	ldd	4,x
-	sbcb	13,x
-	sbca	12,x
+	ldd	ARG(4),x
+	sbcb	ARG(13),x
+	sbca	ARG(12),x
 	std	2,y
 	
-	ldd	2,x		; Subtract MSB
-	sbcb	11,x
-	sbca	10,x
+	ldd	ARG(2),x		; Subtract MSB
+	sbcb	ARG(11),x
+	sbca	ARG(10),x
 	std	0,y
 
 	xgdy			;
-	rts
+	ret
 #endif
 	
 #ifdef L_notdi2
-	.sect .text
-	.globl ___notdi2
+	declare	___notdi2
 
-___notdi2:
 	tsy
 	xgdx
-	ldd	8,y
+	ldd	ARG(8),y
 	coma
 	comb
 	std	6,x
 	
-	ldd	6,y
+	ldd	ARG(6),y
 	coma
 	comb
 	std	4,x
 
-	ldd	4,y
+	ldd	ARG(4),y
 	coma
 	comb
 	std	2,x
 
-	ldd	2,y
+	ldd	ARG(2),y
 	coma
 	comb
 	std	0,x
 	xgdx
-	rts
+	ret
 #endif
 	
 #ifdef L_negsi2
-	.sect .text
-	.globl ___negsi2
+	declare_near ___negsi2
 
-___negsi2:
 	comb
 	coma
 	xgdx
@@ -455,10 +465,8 @@ done:
 #endif
 
 #ifdef L_one_cmplsi2
-	.sect .text
-	.globl ___one_cmplsi2
+	declare_near ___one_cmplsi2
 
-___one_cmplsi2:
 	comb
 	coma
 	xgdx
@@ -469,10 +477,8 @@ ___one_cmplsi2:
 #endif
 	
 #ifdef L_ashlsi3
-	.sect .text
-	.globl ___ashlsi3
+	declare_near ___ashlsi3
 
-___ashlsi3:
 	xgdy
 	clra
 	andb	#0x1f
@@ -491,10 +497,8 @@ Return:
 #endif
 
 #ifdef L_ashrsi3
-	.sect .text
-	.globl ___ashrsi3
+	declare_near ___ashrsi3
 
-___ashrsi3:
 	xgdy
 	clra
 	andb	#0x1f
@@ -514,10 +518,8 @@ Return:
 #endif
 
 #ifdef L_lshrsi3
-	.sect .text
-	.globl ___lshrsi3
+	declare_near ___lshrsi3
 
-___lshrsi3:
 	xgdy
 	clra
 	andb	#0x1f
@@ -536,10 +538,8 @@ Return:
 #endif
 
 #ifdef L_lshrhi3
-	.sect .text
-	.globl ___lshrhi3
+	declare_near ___lshrhi3
 
-___lshrhi3:
 	cpx	#16
 	bge	Return_zero
 	cpx	#0
@@ -557,10 +557,8 @@ Return_zero:
 #endif
 	
 #ifdef L_lshlhi3
-	.sect .text
-	.globl ___lshlhi3
+	declare_near ___lshlhi3
 
-___lshlhi3:
 	cpx	#16
 	bge	Return_zero
 	cpx	#0
@@ -577,11 +575,48 @@ Return_zero:
 	rts
 #endif
 
-#ifdef L_ashrhi3
-	.sect .text
-	.globl ___ashrhi3
+#ifdef L_rotrhi3
+	declare_near ___rotrhi3
 
-___ashrhi3:
+___rotrhi3:
+	xgdx
+	clra
+	andb	#0x0f
+	xgdx
+	beq	Return
+Loop:
+	tap
+	rorb
+	rora
+	dex
+	bne	Loop
+Return:
+	rts
+#endif
+
+#ifdef L_rotlhi3
+	declare_near ___rotlhi3
+
+___rotlhi3:
+	xgdx
+	clra
+	andb	#0x0f
+	xgdx
+	beq	Return
+Loop:
+	asrb
+	rolb
+	rola
+	rolb
+	dex
+	bne	Loop
+Return:
+	rts
+#endif
+
+#ifdef L_ashrhi3
+	declare_near ___ashrhi3
+
 	cpx	#16
 	bge	Return_minus_1_or_zero
 	cpx	#0
@@ -604,10 +639,8 @@ Return_zero:
 #endif
 	
 #ifdef L_ashrqi3
-	.sect .text
-	.globl ___ashrqi3
+	declare_near ___ashrqi3
 
-___ashrqi3:
 	cmpa	#8
 	bge	Return_minus_1_or_zero
 	tsta
@@ -629,10 +662,8 @@ Return_zero:
 #endif
 
 #ifdef L_lshlqi3
-	.sect .text
-	.globl ___lshlqi3
+	declare_near ___lshlqi3
 
-___lshlqi3:
 	cmpa	#8
 	bge	Return_zero
 	tsta
@@ -652,8 +683,7 @@ Return_zero:
 #ifndef mc68hc12
 /* 68HC12 signed divisions are generated inline (idivs).  */
 
-	.sect .text
-	.globl __divmodhi4
+	declare_near __divmodhi4
 
 ;
 ;; D = numerator
@@ -662,7 +692,6 @@ Return_zero:
 ;; Result:	D = D / X
 ;;		X = D % X
 ;; 
-__divmodhi4:
 	tsta
 	bpl	Numerator_pos
 	comb			; D = -D <=> D = (~D) + 1
@@ -720,8 +749,7 @@ Numerator_neg_denominator_pos:
 #endif
 
 #ifdef L_mulqi3
-       .sect .text
-       .globl __mulqi3
+	declare_near ___mulqi3
 
 ;
 ; short __mulqi3(signed char a, signed char b);
@@ -731,7 +759,6 @@ Numerator_neg_denominator_pos:
 ;
 ; returns the signed result of A * B in register D.
 ;
-__mulqi3:
 	tsta
 	bmi	A_neg
 	tstb
@@ -758,8 +785,7 @@ AB_neg:
 #endif
 	
 #ifdef L_mulhi3
-	.sect .text
-	.globl ___mulhi3
+	declare_near ___mulhi3
 
 ;
 ;
@@ -768,7 +794,6 @@ AB_neg:
 ;	a = register D
 ;	b = register X
 ;
-___mulhi3:
 #ifdef mc68hc12
 	pshx			; Preserve X
 	exg	x,y
@@ -804,24 +829,6 @@ ___mulhi3:
 				; ---
 				; 91 cycles
 #else
-	stx	_.tmp		; (4/5)
-	pshb			; (3)
-	ldab	_.tmp+1		; (3/4)
-	mul			; (10) B.high * A.low
-	xgdx			; (3)
-	pulb			; (4)
-	stab	_.tmp		; (3/4)
-	mul			; (10) B.low * A.high
-	abx			; (3)
-	ldd	_.tmp		; (4/5)
-	mul			; (10) B.low * A.low
-	stx	_.tmp		; (4) 
-	adda	_.tmp+1		; (4/5)
-	rts			; (5) 20/26 bytes
-				; ---
-				; 70/76 cycles
-
-#ifdef OLD_MUL
 	stx	*_.tmp		; (4)
 	pshb			; (3)
 	ldab	*_.tmp+1	; (3)
@@ -842,11 +849,8 @@ ___mulhi3:
 #endif
 #endif
 #endif
-#endif
 
 #ifdef L_mulhi32
-	.sect .text
-	.globl __mulhi32
 
 ;
 ;
@@ -880,7 +884,8 @@ ___mulhi3:
 ;      <A-low>    1,x
 ;      <A-high>   0,x
 ;
-__mulhi32:
+	declare_near	__mulhi32
+
 #ifdef mc68hc12
 	ldy	2,sp
 	emul
@@ -925,8 +930,6 @@ Ret:
 #endif
 
 #ifdef L_mulsi3
-	.sect .text
-	.globl __mulsi3
 
 ;
 ;      <B-low>    8,y
@@ -945,25 +948,26 @@ Ret:
 ;
 ;
 
-__mulsi3:
+	declare	__mulsi3
+
 #ifdef mc68hc12
 	pshd				; Save A.low
-	ldy	4,sp
+	ldy	ARG(4),sp
 	emul				; A.low * B.high
-	ldy	6,sp
+	ldy	ARG(6),sp
 	exg	x,d
 	emul				; A.high * B.low
 	leax	d,x
-	ldy	6,sp
+	ldy	ARG(6),sp
 	puld
 	emul				; A.low * B.low
 	exg	d,y
 	leax	d,x
 	exg	d,y
-	rts
+	ret
 #else
-B_low	=	8
-B_high	=	6
+B_low	=	ARG(8)
+B_high	=	ARG(6)
 A_low	=	0
 A_high	=	2
 	pshx
@@ -1011,7 +1015,7 @@ Return:
 	ins
 	ins
 	ins
-	rts
+	ret
 ;
 ; 
 ; A_low_zero_non_optimized:
@@ -1186,6 +1190,156 @@ dtors_done:
 
 #endif
 
+#ifdef L_far_tramp
+#ifdef mc68hc12
+	.sect	.tramp,"ax",@progbits
+	.globl	__far_trampoline
+
+;; This is a trampoline used by the linker to invoke a function
+;; using rtc to return and being called with jsr/bsr.
+;; The trampoline generated is:
+;;
+;;	foo_tramp:
+;;		ldy	#foo
+;;		call	__far_trampoline,page(foo)
+;;
+;; The linker transforms:
+;;
+;;		jsr	foo
+;;
+;; into
+;;		jsr	foo_tramp
+;;
+;; The linker generated trampoline and _far_trampoline must be in 
+;; non-banked memory.
+;;
+__far_trampoline:
+	movb	0,sp, 2,sp	; Copy page register below the caller's return
+	leas	2,sp		; address.
+	jmp	0,y		; We have a 'call/rtc' stack layout now
+				; and can jump to the far handler
+				; (whose memory bank is mapped due to the
+				; call to the trampoline).
+#endif
+
+#ifdef mc68hc11
+	.sect	.tramp,"ax",@progbits
+	.globl __far_trampoline
+
+;; Trampoline generated by gcc for 68HC11:
+;;
+;;	pshb
+;;	ldab	#%page(func)
+;;	ldy	#%addr(func)
+;;	jmp	__far_trampoline
+;;
+__far_trampoline:
+	psha				; (2) Save function parameter (high)
+	;; <Read current page in A>
+	psha				; (2)
+	;; <Set currenge page from B>
+	pshx				; (4)
+	tsx				; (3)
+	ldab	4,x			; (4) Restore function parameter (low)
+	ldaa	2,x			; (4) Get saved page number
+	staa	4,x			; (4) Save it below return PC
+	pulx				; (5)
+	pula				; (3)
+	pula				; (3) Restore function parameter (high)
+	jmp	0,y			; (4)
+#endif
+#endif
+
+#ifdef L_call_far
+#ifdef mc68hc11
+	.sect	.tramp,"ax",@progbits
+	.globl __call_a16
+	.globl __call_a32
+;;
+;; The call methods are used for 68HC11 to support memory bank switching.
+;; Every far call is redirected to these call methods.  Its purpose is to:
+;;
+;;  1/ Save the current page on the stack (1 byte to follow 68HC12 call frame)
+;;  2/ Install the new page
+;;  3/ Jump to the real function
+;;
+;; The page switching (get/save) is board dependent.  The default provided
+;; here does nothing (just create the appropriate call frame).
+;;
+;; Call sequence (10 bytes, 13 cycles):
+;;
+;;	ldx #page			; (3)
+;;	ldy #func			; (4)
+;;	jsr __call_a16			; (6)
+;;
+;; Call trampoline (11 bytes, 19 cycles):
+;;
+__call_a16:
+	;; xgdx				; (3)
+	;; <Read current page in A>	; (3) ldaa _current_page
+	psha				; (2)
+	;; <Set current page from B>	; (4) staa _current_page
+	;; xgdx				; (3)
+	jmp 0,y				; (4)
+
+;;
+;; Call sequence (10 bytes, 14 cycles):
+;;
+;;	pshb				; (2)
+;;	ldab #page			; (2)
+;;	ldy  #func			; (4)
+;;	jsr __call_a32			; (6)
+;;
+;; Call trampoline (87 bytes, 57 cycles):
+;;
+__call_a32:
+	pshx				; (4)
+	psha				; (2)
+	;; <Read current page in A>	; (3) ldaa _current_page
+	psha				; (2)
+	;; <Set current page from B>	; (4) staa _current_page
+	tsx				; (3)
+	ldab	6,x			; (4) Restore function parameter
+	ldaa	5,x			; (4) Move PC return at good place
+	staa	6,x			; (4)
+	ldaa	4,x			; (4)
+	staa	5,x			; (4)
+	pula				; (3)
+	staa	4,x			; (4)
+	pula				; (3)
+	pulx				; (5)
+	jmp	0,y			; (4)
+#endif
+#endif
+
+#ifdef L_return_far
+#ifdef mc68hc11
+	.sect	.tramp,"ax",@progbits
+       .globl __return_void
+       .globl __return_16
+       .globl __return_32
+
+__return_void:
+	;; pulb
+	;; <Set current page from B> (Board specific)
+	;; rts
+__return_16:
+	;; xgdx
+	;; pulb
+	;; <Set current page from B> (Board specific)
+	;; xgdx
+	;; rts
+__return_32:
+	;; xgdy
+	;; pulb
+	;; <Set current page from B> (Board specific)
+	;; xgdy
+	;; rts
+	ins
+	rts
+#endif
+#endif
+.Lend:
 ;-----------------------------------------
 ; end required gcclib code
 ;-----------------------------------------

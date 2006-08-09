@@ -2,7 +2,7 @@
 
 # ltcf-gcj.sh - Create a GCJ compiler specific configuration
 #
-# Copyright (C) 1996-1999, 2000, 2001 Free Software Foundation, Inc.
+# Copyright (C) 1996-1999, 2000, 2001, 2003 Free Software Foundation, Inc.
 # Originally by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
 #
 # Original GCJ support by:
@@ -111,7 +111,7 @@ EOF
     extract_expsyms_cmds='test -f $output_objdir/impgen.c || \
       sed -e "/^# \/\* impgen\.c starts here \*\//,/^# \/\* impgen.c ends here \*\// { s/^# //; p; }" -e d < $0 > $output_objdir/impgen.c~
       test -f $output_objdir/impgen.exe || (cd $output_objdir && \
-      if test "x$HOST_CC" != "x" ; then $HOST_CC -o impgen impgen.c ; \
+      if test "x$BUILD_CC" != "x" ; then $BUILD_CC -o impgen impgen.c ; \
       else $CC -o impgen impgen.c ; fi)~
       $output_objdir/impgen $dir/$soroot > $output_objdir/$soname-def'
 
@@ -378,6 +378,49 @@ else
     fix_srcfile_path='`cygpath -w "$srcfile"`'
     ;;
 
+  darwin* | rhapsody*)
+    case "$host_os" in
+    rhapsody* | darwin1.[[012]])
+	allow_undefined_flag='-undefined suppress'
+	;;
+    *) # Darwin 1.3 on
+      if test -z ${MACOSX_DEPLOYMENT_TARGET} ; then
+	  allow_undefined_flag='-flat_namespace -undefined suppress'
+      else
+	  case ${MACOSX_DEPLOYMENT_TARGET} in
+	      10.[[012]])
+		  allow_undefined_flag='-flat_namespace -undefined suppress'
+		  ;;
+	      10.*)
+		  allow_undefined_flag='-undefined dynamic_lookup'
+		  ;;
+	  esac
+      fi
+      ;;
+    esac
+    # Disable shared library build on OS-X older than 10.3.
+    case $host_os in
+	darwin[1-6]*)
+	    can_build_shared=no
+	    ;;
+	darwin7*)
+	    can_build_shared=yes
+	    ;;
+    esac
+    output_verbose_link_cmd='echo'
+    archive_cmds='$CC -r ${wl}-bind_at_load -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring'
+    module_cmds='$CC ${wl}-bind_at_load $allow_undefined_flag -o $lib -bundle $libobjs $deplibs$compiler_flags'
+      # Don't fix this by using the ld -exported_symbols_list flag, it doesn't exist in older darwin ld's
+    archive_expsym_cmds='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC -r ${wl}-bind_at_load -keep_private_externs -nostdlib -o ${lib}-master.o $libobjs~$CC -dynamiclib $allow_undefined_flag -o $lib ${lib}-master.o $deplibs $compiler_flags -install_name $rpath/$soname $verstring~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    module_expsym_cmds='sed -e "s,#.*,," -e "s,^[    ]*,," -e "s,^\(..*\),_&," < $export_symbols > $output_objdir/${libname}-symbols.expsym~$CC $allow_undefined_flag  -o $lib -bundle $libobjs $deplibs$compiler_flags~nmedit -s $output_objdir/${libname}-symbols.expsym ${lib}'
+    hardcode_direct=no
+    hardcode_automatic=yes
+    hardcode_shlibpath_var=unsupported
+    whole_archive_flag_spec='-all_load $convenience'
+    link_all_deplibs=yes
+    ;;
+
+
   freebsd1*)
     ld_shlibs=no
     ;;
@@ -492,9 +535,9 @@ else
 
   solaris*)
     no_undefined_flag=' ${wl}-z ${wl}defs'
-    archive_cmds='$CC -shared -nostdlib $LDFLAGS $predep_objects $libobjs $deplibs $postdep_objects $linker_flags ${wl}-h $wl$soname -o $lib'
+    archive_cmds='$CC -shared -nostdlib $LDFLAGS $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-h $wl$soname -o $lib'
     archive_expsym_cmds='$echo "{ global:" > $lib.exp~cat $export_symbols | sed -e "s/\(.*\)/\1;/" >> $lib.exp~$echo "local: *; };" >> $lib.exp~
-      $CC -shared -nostdlib ${wl}-M $wl$lib.exp -o $lib $predep_objects $libobjs $deplibs $postdep_objects $linker_flags~$rm $lib.exp'
+      $CC -shared -nostdlib ${wl}-M $wl$lib.exp -o $lib $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags~$rm $lib.exp'
 
     # Commands to make compiler produce verbose output that lists
     # what "hidden" libraries, object files and flags are used when
@@ -627,6 +670,12 @@ fi
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       ac_cv_prog_cc_pic='-DDLL_EXPORT'
+      ;;
+
+    darwin* | rhapsody*)
+      # PIC is the default on this platform
+      # Common symbols not allowed in MH_DYLIB files
+      ac_cv_prog_cc_pic='-fno-common'
       ;;
     amigaos*)
       # FIXME: we need at least 68020 code to build shared libraries, but

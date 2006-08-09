@@ -28,20 +28,20 @@ Here are the rules:
 
 = = = = = = = = = = = = = = = = = = = = = = = = =
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -51,23 +51,20 @@ Boston, MA 02111-1307, USA.  */
 ENV_TABLE
 #undef _ENV_
 
-typedef apply_fix_p_t t_test_proc PARAMS(( tCC* file, tCC* text ));
+typedef apply_fix_p_t t_test_proc ( tCC* file, tCC* text );
 
 typedef struct {
     tCC*         test_name;
     t_test_proc* test_proc;
 } test_entry_t;
 
-#define FIX_TEST_TABLE \
-  _FT_( "machine_name",     machine_name_test )        \
+#define FIX_TEST_TABLE							\
+  _FT_( "machine_name",     machine_name_test )				\
   _FT_( "stdc_0_in_system_headers",    stdc_0_in_system_headers_test )
 
-#define TEST_FOR_FIX_PROC_HEAD( test )          \
-static apply_fix_p_t test PARAMS(( tCC* file, tCC* text ));  \
-static apply_fix_p_t test ( fname, text )       \
-    tCC* fname;                                 \
-    tCC* text;
-
+#define TEST_FOR_FIX_PROC_HEAD( test ) \
+static apply_fix_p_t test ( tCC* fname ATTRIBUTE_UNUSED, \
+                            tCC* text  ATTRIBUTE_UNUSED )
 
 TEST_FOR_FIX_PROC_HEAD( machine_name_test )
 {
@@ -82,7 +79,7 @@ TEST_FOR_FIX_PROC_HEAD( machine_name_test )
   mn_get_regexps(&label_re, &name_re, "machine_name_test");
 
   for (base = text;
-       regexec (label_re, base, 2, match, 0) == 0;
+       xregexec (label_re, base, 2, match, 0) == 0;
        base = limit)
     {
       base += match[0].rm_eo;
@@ -107,7 +104,7 @@ TEST_FOR_FIX_PROC_HEAD( machine_name_test )
 	 shouldn't matter since the name_re has no ^ anchor, but let's
 	 be accurate anyway.  */
 
-      if (regexec (name_re, base, 1, match, REG_NOTBOL))
+      if (xregexec (name_re, base, 1, match, REG_NOTBOL))
 	return SKIP_FIX;  /* No match in file - no fix needed */
 
       /* Match; is it on the line?  */
@@ -139,10 +136,7 @@ TEST_FOR_FIX_PROC_HEAD( stdc_0_in_system_headers_test )
 
 */
 apply_fix_p_t
-run_test( tname, fname, text )
-  tCC* tname;
-  tCC* fname;
-  tCC* text;
+run_test( tCC* tname, tCC* fname, tCC* text )
 {
 #define _FT_(n,p) { n, p },
   static test_entry_t test_table[] = { FIX_TEST_TABLE { NULL, NULL }};

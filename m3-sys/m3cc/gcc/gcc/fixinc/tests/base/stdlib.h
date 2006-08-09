@@ -9,11 +9,9 @@
 
 
 
-#if defined( ARM_WCHAR_CHECK )
-# ifndef 	 _GCC_WCHAR_T /* we don't have wchar_t yet, ... */
-#  define  _GCC_WCHAR_T  short
-# endif /* __wchar_t */
-#endif  /* ARM_WCHAR_CHECK */
+#if defined( HPUX11_ABS_CHECK )
+#if !defined(_MATH_INCLUDED) || defined(__GNUG__)
+#endif  /* HPUX11_ABS_CHECK */
 
 
 #if defined( HPUX_LONG_DOUBLE_CHECK )
@@ -27,13 +25,6 @@ extern void	abort(int);
 extern void	free(void*);
 extern void	exit(void*);
 #endif  /* INT_ABORT_FREE_AND_EXIT_CHECK */
-
-
-#if defined( NEWS_OS_RECURSION_CHECK )
-#ifdef BOGUS_RECURSION
-#include <stdlib.h>
-#endif
-#endif  /* NEWS_OS_RECURSION_CHECK */
 
 
 #if defined( SVR4_GETCWD_CHECK )
@@ -59,3 +50,17 @@ extern void *	bsearch(void*,size_t,size_t);
 int atexit( void (*__func)( void ) );
 
 #endif  /* ULTRIX_ATEXIT_PARAM_CHECK */
+
+
+#if defined( ULTRIX_STDLIB_CHECK )
+@(#)stdlib.h      6.1     (ULTRIX)
+char *		getenv( const char *__name );
+int		setenv( const char *__name, const char *__val, int __ovrwrt );
+void		unsetenv( const char *__name );
+int		putenv( char *__s );
+char	*getenv();
+int	setenv();
+void	unsetenv();
+int	putenv();
+
+#endif  /* ULTRIX_STDLIB_CHECK */

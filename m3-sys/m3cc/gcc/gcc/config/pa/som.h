@@ -1,20 +1,20 @@
 /* Definitions for SOM assembler support.
-   Copyright (C) 1999, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -30,18 +30,21 @@ Boston, MA 02111-1307, USA.  */
 /* We make the first line stab special to avoid adding several
    gross hacks to GAS.  */
 #undef  ASM_OUTPUT_SOURCE_LINE
-#define ASM_OUTPUT_SOURCE_LINE(file, line)		\
-  { static int sym_lineno = 1;				\
-    static tree last_function_decl = NULL;		\
-    if (current_function_decl == last_function_decl)	\
-      fprintf (file, "\t.stabn 68,0,%d,L$M%d-%s\nL$M%d:\n",	\
-	       line, sym_lineno,			\
-	       XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0) + 1, \
-	       sym_lineno);				\
-    else						\
-      fprintf (file, "\t.stabn 68,0,%d,0\n", line);	\
-    last_function_decl = current_function_decl;		\
-    sym_lineno += 1; }
+#define ASM_OUTPUT_SOURCE_LINE(file, line, counter)		\
+  { static tree last_function_decl = NULL;			\
+    if (current_function_decl == last_function_decl)		\
+      {								\
+	rtx func = DECL_RTL (current_function_decl);		\
+	const char *name = XSTR (XEXP (func, 0), 0);		\
+	fprintf (file, "\t.stabn 68,0,%d,L$M%d-%s\nL$M%d:\n",	\
+		 line, counter,					\
+		 (* targetm.strip_name_encoding) (name),	\
+		 counter);					\
+      }								\
+    else							\
+      fprintf (file, "\t.stabn 68,0,%d,0\n", line);		\
+    last_function_decl = current_function_decl;			\
+  }
 
 /* gdb needs a null N_SO at the end of each file for scattered loading.  */
 
@@ -126,20 +129,6 @@ do {								\
 #endif
 
 
-/* NAME refers to the function's name.  If we are placing each function into
-   its own section, we need to switch to the section for this function.  Note
-   that the section name will have a "." prefix.  */
-#define ASM_OUTPUT_FUNCTION_PREFIX(FILE, NAME) \
-  {									\
-    const char *name;							\
-    STRIP_NAME_ENCODING (name, NAME);					\
-    if (TARGET_GAS && in_section == in_text) 				\
-      fputs ("\t.NSUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n", FILE); \
-    else if (TARGET_GAS)						\
-      fprintf (FILE,							\
-	       "\t.SUBSPA .%s\n", name);				\
-  }
-    
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL) \
     do { tree fntype = TREE_TYPE (TREE_TYPE (DECL));			\
 	 tree tree_type = TREE_TYPE (DECL);				\
@@ -199,10 +188,9 @@ do {								\
 		   }							\
 	       }							\
 	     /* anonymous args */					\
-	     if ((TYPE_ARG_TYPES (tree_type) != 0			\
-		  && (TREE_VALUE (tree_last (TYPE_ARG_TYPES (tree_type)))\
-		      != void_type_node))				\
-		 || current_function_varargs)				\
+	     if (TYPE_ARG_TYPES (tree_type) != 0			\
+		 && (TREE_VALUE (tree_last (TYPE_ARG_TYPES (tree_type)))\
+		     != void_type_node))				\
 	       {							\
 		 for (; i < 4; i++)					\
 		   fprintf (FILE, ",ARGW%d=GR", i);			\
@@ -216,61 +204,16 @@ do {								\
 	     fputs ("\n", FILE);					\
 	   }} while (0)
 
-/* Output at beginning of assembler file.  */
+#define TARGET_ASM_FILE_START pa_som_file_start
 
-#define ASM_FILE_START(FILE) \
-do {  \
-     if (TARGET_PA_20) \
-       fputs("\t.LEVEL 2.0\n", FILE); \
-     else if (TARGET_PA_11) \
-       fputs("\t.LEVEL 1.1\n", FILE); \
-     else \
-       fputs("\t.LEVEL 1.0\n", FILE); \
-     fputs ("\t.SPACE $PRIVATE$\n\
-\t.SUBSPA $DATA$,QUAD=1,ALIGN=8,ACCESS=31\n\
-\t.SUBSPA $BSS$,QUAD=1,ALIGN=8,ACCESS=31,ZERO,SORT=82\n\
-\t.SPACE $TEXT$\n\
-\t.SUBSPA $LIT$,QUAD=0,ALIGN=8,ACCESS=44\n\
-\t.SUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n\
-\t.IMPORT $global$,DATA\n\
-\t.IMPORT $$dyncall,MILLICODE\n", FILE);\
-     if (profile_flag)\
-       fprintf (FILE, "\t.IMPORT _mcount, CODE\n");\
-     if (write_symbols != NO_DEBUG) \
-       output_file_directive ((FILE), main_input_filename); \
-   } while (0)
+/* String to output before text.  */
+#define TEXT_SECTION_ASM_OP som_text_section_asm_op ()
 
-/* Output before code.  */
-
-/* Supposedly the assembler rejects the command if there is no tab!  */
-#define TEXT_SECTION_ASM_OP "\t.SPACE $TEXT$\n\t.SUBSPA $CODE$\n"
-
-/* Output before read-only data.  */
-
-/* Supposedly the assembler rejects the command if there is no tab!  */
-#define READONLY_DATA_ASM_OP "\t.SPACE $TEXT$\n\t.SUBSPA $LIT$\n"
-
-#define READONLY_DATA_SECTION readonly_data
-
-/* Output before writable data.  */
-
-/* Supposedly the assembler rejects the command if there is no tab!  */
+/* String to output before writable data.  */
 #define DATA_SECTION_ASM_OP "\t.SPACE $PRIVATE$\n\t.SUBSPA $DATA$\n"
 
-/* Output before uninitialized data.  */
-
+/* String to output before uninitialized data.  */
 #define BSS_SECTION_ASM_OP "\t.SPACE $PRIVATE$\n\t.SUBSPA $BSS$\n"
-
-/* We must not have a reference to an external symbol defined in a
-   shared library in a readonly section, else the SOM linker will
-   complain.
-
-   So, we force exception information into the data section.  */
-#define TARGET_ASM_EXCEPTION_SECTION data_section
-
-/* Define the .bss section for ASM_OUTPUT_LOCAL to use.  */
-
-#define EXTRA_SECTIONS in_readonly_data
 
 /* FIXME: HPUX ld generates incorrect GOT entries for "T" fixups
    which reference data within the $TEXT$ space (for example constant
@@ -284,21 +227,15 @@ do {  \
    $TEXT$ space during PIC generation.  Instead place all constant
    data into the $PRIVATE$ subspace (this reduces sharing, but it
    works correctly).  */
+#define READONLY_DATA_SECTION \
+  (flag_pic ? data_section : som_readonly_data_section)
 
-#define EXTRA_SECTION_FUNCTIONS						\
-extern void readonly_data PARAMS ((void));				\
-void									\
-readonly_data ()							\
-{									\
-  if (in_section != in_readonly_data)					\
-    {									\
-      if (flag_pic)							\
-	fprintf (asm_out_file, "%s\n", DATA_SECTION_ASM_OP);		\
-      else								\
-	fprintf (asm_out_file, "%s\n", READONLY_DATA_ASM_OP);		\
-      in_section = in_readonly_data;					\
-    }									\
-}
+/* We must not have a reference to an external symbol defined in a
+   shared library in a readonly section, else the SOM linker will
+   complain.
+
+   So, we force exception information into the data section.  */
+#define TARGET_ASM_EXCEPTION_SECTION data_section
 
 /* This is how to output a command to make the user-level label named NAME
    defined for reference from other files.
@@ -327,7 +264,7 @@ readonly_data ()							\
    "imported", even library calls. They look a bit different, so
    here's this macro.
 
-   Also note not all libcall names are passed to ENCODE_SECTION_INFO
+   Also note not all libcall names are passed to pa_encode_section_info
    (__main for example).  To make sure all libcall names have section
    info recorded in them, we do it here.  We must also ensure that
    we don't import a libcall that has been previously exported since
@@ -340,7 +277,7 @@ readonly_data ()							\
        if (!function_label_operand (RTL, VOIDmode))			\
 	 hppa_encode_label (RTL);					\
 									\
-       STRIP_NAME_ENCODING (name, XSTR ((RTL), 0));			\
+       name = (*targetm.strip_name_encoding) (XSTR ((RTL), 0));		\
        id = maybe_get_identifier (name);				\
        if (! id || ! TREE_SYMBOL_REFERENCED (id))			\
 	 {								\
@@ -358,8 +295,8 @@ readonly_data ()							\
 
 #define DO_GLOBAL_DTORS_BODY			\
 do {						\
-  extern void __gcc_plt_call ();		\
-  void (*reference)() = &__gcc_plt_call;	\
+  extern void __gcc_plt_call (void);		\
+  void (*reference)(void) = &__gcc_plt_call;	\
   func_ptr *p;					\
   __asm__ ("" : : "r" (reference));		\
   for (p = __DTOR_LIST__ + 1; *p; )		\
@@ -369,6 +306,76 @@ do {						\
 /* The .align directive in the HP assembler allows up to a 32 alignment.  */
 #define MAX_OFILE_ALIGNMENT 32768
 
-/* SOM does not support the init_priority C++ attribute.  */
-#undef SUPPORTS_INIT_PRIORITY
-#define SUPPORTS_INIT_PRIORITY 0
+/* The SOM linker hardcodes paths into binaries.  As a result, dotdots
+   must be removed from library prefixes to prevent binaries from depending
+   on the location of the GCC tool directory.  The downside is GCC
+   cannot be moved after installation using a symlink.  */
+#define ALWAYS_STRIP_DOTDOT 1
+
+/* If GAS supports weak, we can support weak when we have working linker
+   support for secondary definitions and are generating code for GAS.  */
+#ifdef HAVE_GAS_WEAK
+#define SUPPORTS_WEAK (TARGET_SOM_SDEF && TARGET_GAS)
+#else
+#define SUPPORTS_WEAK 0
+#endif
+
+/* CVS GAS as of 4/28/04 supports a comdat parameter for the .nsubspa
+   directive.  This provides one-only linkage semantics even though we
+   don't have weak support.  */
+#ifdef HAVE_GAS_NSUBSPA_COMDAT
+#define SUPPORTS_SOM_COMDAT (TARGET_GAS)
+#else
+#define SUPPORTS_SOM_COMDAT 0
+#endif
+
+/* We can support one only if we support weak or comdat.  */
+#define SUPPORTS_ONE_ONLY (SUPPORTS_WEAK || SUPPORTS_SOM_COMDAT)
+
+/* We use DECL_COMMON for uninitialized one-only variables as we don't
+   have linkonce .bss.  We use SOM secondary definitions or comdat for
+   initialized variables and functions.  */
+#define MAKE_DECL_ONE_ONLY(DECL) \
+  do {									\
+    if (TREE_CODE (DECL) == VAR_DECL					\
+        && (DECL_INITIAL (DECL) == 0					\
+            || DECL_INITIAL (DECL) == error_mark_node))			\
+      DECL_COMMON (DECL) = 1;						\
+    else if (SUPPORTS_WEAK)						\
+      DECL_WEAK (DECL) = 1;						\
+  } while (0)
+
+/* This is how we tell the assembler that a symbol is weak.  The SOM
+   weak implementation uses the secondary definition (sdef) flag.
+
+   The behavior of sdef symbols is similar to ELF weak symbols in that
+   multiple definitions can occur without incurring a link error.
+   However, they differ in the following ways:
+     1) Undefined sdef symbols are not allowed.
+     2) The linker searches for undefined sdef symbols and will load an
+	archive library member to resolve an undefined sdef symbol.
+     3) The exported symbol from a shared library is a primary symbol
+        rather than a sdef symbol.  Thus, more care is needed in the
+	ordering of libraries.
+
+   It appears that the linker discards extra copies of "weak" functions
+   when linking shared libraries, independent of whether or not they
+   are in their own section.  In linking final executables, -Wl,-O can
+   be used to remove dead procedures.  Thus, support for named sections
+   is not needed and in previous testing caused problems with various
+   HP tools.  */
+#define ASM_WEAKEN_LABEL(FILE,NAME) \
+  do { fputs ("\t.weak\t", FILE);				\
+       assemble_name (FILE, NAME);				\
+       fputc ('\n', FILE);					\
+       if (! FUNCTION_NAME_P (NAME))				\
+	 {							\
+	   fputs ("\t.EXPORT ", FILE);				\
+	   assemble_name (FILE, NAME);				\
+	   fputs (",DATA\n", FILE);				\
+	 }							\
+  } while (0)
+
+/* We can't handle weak aliases, and therefore can't support pragma weak.
+   Suppress the use of pragma weak in gthr-dce.h and gthr-posix.h.  */
+#define GTHREAD_USE_WEAK 0
