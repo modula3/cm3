@@ -7,18 +7,18 @@
 
 set -e
 TESTDIR=tests
-TESTBASE=`cd $1;pwd`
+TESTBASE=`cd $1;${PWDCMD-pwd}`
 
 [ -d ${TESTDIR} ] || mkdir ${TESTDIR}
 cd ${TESTDIR}
-TESTDIR=`pwd`
+TESTDIR=`${PWDCMD-pwd}`
 
 TARGET_MACHINE='*'
-DESTDIR=`pwd`/res
-SRCDIR=`pwd`/inc
+DESTDIR=`${PWDCMD-pwd}`/res
+SRCDIR=`${PWDCMD-pwd}`/inc
 FIND_BASE='.'
-VERBOSE=1
-INPUT=`pwd`
+VERBOSE=[=` echo ${VERBOSE-1} `=]
+INPUT=`${PWDCMD-pwd}`
 ORIGDIR=${INPUT}
 
 export TARGET_MACHINE DESTDIR SRCDIR FIND_BASE VERBOSE INPUT ORIGDIR
@@ -135,7 +135,7 @@ do
     :
 
   else
-    diff -u $f ${TESTBASE}/$f >&2 || :
+    ${DIFF:-diff} -c $f ${TESTBASE}/$f >&2 || :
     exitok=false
   fi
 done
@@ -144,7 +144,8 @@ echo $exitok`
 cd $TESTBASE
 
 find * -type f -print | \
-fgrep -v 'CVS/' > ${TESTDIR}/LIST
+fgrep -v 'CVS/' | \
+fgrep -v '.svn/' > ${TESTDIR}/LIST
 
 exitok=`
 exec < ${TESTDIR}/LIST

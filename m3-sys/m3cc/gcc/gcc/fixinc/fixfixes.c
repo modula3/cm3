@@ -3,7 +3,8 @@
 
    Test to see if a particular fix should be applied to a header file.
 
-   Copyright (C) 1997, 1998, 1999, 2000, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2003
+   Free Software Foundation, Inc.
 
 = = = = = = = = = = = = = = = = = = = = = = = = =
 
@@ -32,20 +33,20 @@ Here are the rules:
 
 = = = = = = = = = = = = = = = = = = = = = = = = =
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -58,7 +59,7 @@ Boston, MA 02111-1307, USA.  */
 
 tSCC zNeedsArg[] = "fixincl error:  `%s' needs %s argument (c_fix_arg[%d])\n";
 
-typedef void t_fix_proc PARAMS ((const char *, const char *, tFixDesc *));
+typedef void t_fix_proc (const char *, const char *, tFixDesc *) ;
 typedef struct {
     const char*  fix_name;
     t_fix_proc*  fix_proc;
@@ -73,12 +74,10 @@ typedef struct {
   _FT_( "gnu_type",         gnu_type_fix )
 
 
-#define FIX_PROC_HEAD( fix )                    \
-static void fix PARAMS ((const char *, const char *, tFixDesc *)); /* avoid warning */      \
-static void fix ( filname, text, p_fixd )       \
-    const char* filname;                        \
-    const char* text;                           \
-    tFixDesc* p_fixd;
+#define FIX_PROC_HEAD( fix )	\
+static void fix (const char* filname ATTRIBUTE_UNUSED , \
+                 const char* text ATTRIBUTE_UNUSED , \
+                 tFixDesc* p_fixd ATTRIBUTE_UNUSED )
 
 #ifdef NEED_PRINT_QUOTE
 /*
@@ -88,9 +87,7 @@ static void fix ( filname, text, p_fixd )       \
  *  We are not doing a correctness syntax check here.
  */
 static char*
-print_quote( q, text )
-  char  q;
-  char* text;
+print_quote(char q, char* text )
 {
   fputc( q, stdout );
 
@@ -130,11 +127,8 @@ print_quote( q, text )
  *  this thing can be encountered countless times during a compile
  *  and not cause even a warning.
  */
-static const char *emit_gnu_type PARAMS ((const char *, regmatch_t *));
 static const char*
-emit_gnu_type ( text, rm )
-  const char* text;
-  regmatch_t* rm;
+emit_gnu_type (const char* text, regmatch_t* rm )
 {
   char z_TYPE[ 64 ];
   char z_type[ 64 ];
@@ -181,12 +175,8 @@ typedef __%s_TYPE__ %s_t;\n\
  *  '%' characters in other contexts and all other characters are
  *  copied out verbatim.
  */
-static void format_write PARAMS ((tCC *, tCC *, regmatch_t[]));
 static void
-format_write (format, text, av)
-     tCC* format;
-     tCC* text;
-     regmatch_t av[];
+format_write (tCC* format, tCC* text, regmatch_t av[] )
 {
   int c;
 
@@ -290,7 +280,7 @@ FIX_PROC_HEAD( format_fix )
    *  Replace every copy of the text we find
    */
   compile_re (pz_pat, &re, 1, "format search-text", "format_fix" );
-  while (regexec (&re, text, 10, rm, 0) == 0)
+  while (xregexec (&re, text, 10, rm, 0) == 0)
     {
       fwrite( text, rm[0].rm_so, 1, stdout );
       format_write( pz_fmt, text, rm );
@@ -340,7 +330,7 @@ FIX_PROC_HEAD( char_macro_use_fix )
   compile_re (pat, &re, 1, "macro pattern", "char_macro_use_fix");
 
   for (p = text;
-       regexec (&re, p, 1, rm, 0) == 0;
+       xregexec (&re, p, 1, rm, 0) == 0;
        p = limit + 1)
     {
       /* p + rm[0].rm_eo is the first character of the macro replacement.
@@ -425,7 +415,7 @@ FIX_PROC_HEAD( char_macro_def_fix )
   compile_re (pat, &re, 1, "macro pattern", "fix_char_macro_defines");
 
   for (p = text;
-       regexec (&re, p, 1, rm, 0) == 0;
+       xregexec (&re, p, 1, rm, 0) == 0;
        p = limit + 1)
     {
       /* p + rm[0].rm_eo is the first character of the macro name.
@@ -515,7 +505,7 @@ FIX_PROC_HEAD( machine_name_fix )
   scratch[1] = '_';
 
   for (base = text;
-       regexec (label_re, base, 2, match, 0) == 0;
+       xregexec (label_re, base, 2, match, 0) == 0;
        base = limit)
     {
       base += match[0].rm_eo;
@@ -546,7 +536,7 @@ FIX_PROC_HEAD( machine_name_fix )
           if (base == limit)
             break;
 
-          if (regexec (name_re, base, 1, match, REG_NOTBOL))
+          if (xregexec (name_re, base, 1, match, REG_NOTBOL))
             goto done;  /* No remaining match in this file */
 
           /* Match; is it on the line?  */
@@ -607,7 +597,7 @@ FIX_PROC_HEAD( wrap_fix )
    *  IF we do *not* match the no-wrap re, then we have a double negative.
    *  A double negative means YES.
    */
-  if (regexec( &no_wrapping_re, text, 0, NULL, 0 ) != 0)
+  if (xregexec( &no_wrapping_re, text, 0, NULL, 0 ) != 0)
     {
       /*
        *  A single file can get wrapped more than once by different fixes.
@@ -689,7 +679,7 @@ FIX_PROC_HEAD( gnu_type_fix )
 
   compile_re (pz_pat, &re, 1, "gnu type typedef", "gnu_type_fix");
 
-  while (regexec (&re, text, GTYPE_SE_CT+1, rm, 0) == 0)
+  while (xregexec (&re, text, GTYPE_SE_CT+1, rm, 0) == 0)
     {
       text = emit_gnu_type (text, rm);
     }
@@ -709,9 +699,7 @@ FIX_PROC_HEAD( gnu_type_fix )
 
 */
 void
-apply_fix( p_fixd, filname )
-  tFixDesc* p_fixd;
-  tCC* filname;
+apply_fix( tFixDesc* p_fixd, tCC* filname )
 {
 #define _FT_(n,p) { n, p },
   static fix_entry_t fix_table[] = { FIXUP_TABLE { NULL, NULL }};
@@ -747,9 +735,7 @@ tSCC z_reopen[] =
 "FS error %d (%s) reopening %s as std%s\n";
 
 int
-main( argc, argv )
-  int     argc;
-  char**  argv;
+main( int argc, char** argv )
 {
   tFixDesc* pFix;
   char* pz_tmptmp;
@@ -782,7 +768,7 @@ main( argc, argv )
       return EXIT_FAILURE;
     }
 
-  pz_tmptmp = (char*)xmalloc( strlen( argv[4] ) + 5 );
+  pz_tmptmp = xmalloc (strlen (argv[4]) + 5);
   strcpy( pz_tmptmp, argv[4] );
 
   /* Don't lose because "12345678" and "12345678X" map to the same

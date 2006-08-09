@@ -19,6 +19,26 @@ extern int getopt(int, char *const[], const char *);
 #endif  /* ALPHA_GETOPT_CHECK */
 
 
+#if defined( BSD_STDIO_ATTRS_CONFLICT_CHECK )
+#define _BSD_STRING(_BSD_X) _BSD_STRINGX(_BSD_X)
+#define _BSD_STRINGX(_BSD_X) #_BSD_X
+int vfscanf(FILE *, const char *, __builtin_va_list) __asm__ (_BSD_STRING(__USER_LABEL_PREFIX__) "__svfscanf");
+#endif  /* BSD_STDIO_ATTRS_CONFLICT_CHECK */
+
+
+#if defined( HPUX10_STDIO_DECLARATIONS_CHECK )
+#  define _iob __iob
+
+#endif  /* HPUX10_STDIO_DECLARATIONS_CHECK */
+
+
+#if defined( HPUX11_SNPRINTF_CHECK )
+extern int snprintf(char *, size_t, const char *, ...);
+extern int snprintf(char *, _hpux_size_t, const char *, ...);
+extern int snprintf(char *, _hpux_size_t, const char *, ...);
+#endif  /* HPUX11_SNPRINTF_CHECK */
+
+
 #if defined( HPUX11_VSNPRINTF_CHECK )
 extern int vsnprintf(char *, _hpux_size_t, const char *, __gnuc_va_list);
 #endif  /* HPUX11_VSNPRINTF_CHECK */
@@ -74,6 +94,12 @@ extern FILE *popen( const char *, const char *);
 extern char *tempnam( const char *, const char *);
 
 #endif  /* ULTRIX_CONST2_CHECK */
+
+
+#if defined( ULTRIX_CONST3_CHECK )
+extern FILE *	fdopen( int __filedes, const char *__type );
+
+#endif  /* ULTRIX_CONST3_CHECK */
 
 
 #if defined( UNICOSMK_RESTRICT_CHECK )
