@@ -1285,6 +1285,15 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
 	  = get_static_chain (info, target_context, &wi->tsi);
       break;
 
+    case STATIC_CHAIN_EXPR:
+      decl = TREE_OPERAND (t, 0);
+      target_context = decl_function_context (decl);
+      if (target_context && !DECL_NO_STATIC_CHAIN (decl))
+	*tp = get_static_chain (info, target_context, &wi->tsi);
+      else
+	*tp = null_pointer_node;
+      break;
+
     case RETURN_EXPR:
     case MODIFY_EXPR:
     case WITH_SIZE_EXPR:

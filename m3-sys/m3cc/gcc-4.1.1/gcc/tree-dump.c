@@ -580,6 +580,11 @@ dequeue_and_dump (dump_info_p di)
     case CALL_EXPR:
       dump_child ("fn", TREE_OPERAND (t, 0));
       dump_child ("args", TREE_OPERAND (t, 1));
+      dump_child ("schn", TREE_OPERAND (t, 2));
+      break;
+
+    case STATIC_CHAIN_EXPR:
+      dump_child ("fn", TREE_OPERAND (t, 0));
       break;
 
     case CONSTRUCTOR:
