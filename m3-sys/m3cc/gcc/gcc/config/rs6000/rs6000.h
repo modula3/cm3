@@ -1,25 +1,24 @@
 /* Definitions of target machine for GNU compiler, for IBM RS/6000.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-   2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+   2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
-This file is part of GNU CC.
+   This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published
+   by the Free Software Foundation; either version 2, or (at your
+   option) any later version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
-
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to the
+   Free Software Foundation, 59 Temple Place - Suite 330, Boston,
+   MA 02111-1307, USA.  */
 
 /* Note that some other tm.h files include this one and then override
    many of the definitions.  */
@@ -46,67 +45,35 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_CPU_DEFAULT ((char *)0)
 #endif
 
-/* Common CPP definitions used by CPP_SPEC among the various targets
-   for handling -mcpu=xxx switches.  */
-#define CPP_CPU_SPEC \
-"%{!mcpu*: \
-  %{mpower: %{!mpower2: -D_ARCH_PWR}} \
-  %{mpower2: -D_ARCH_PWR2} \
-  %{mpowerpc*: -D_ARCH_PPC} \
-  %{mno-power: %{!mpowerpc*: -D_ARCH_COM}} \
-  %{!mno-power: %{!mpower2: %(cpp_default)}}} \
-%{mcpu=common: -D_ARCH_COM} \
-%{mcpu=power: -D_ARCH_PWR} \
-%{mcpu=power2: -D_ARCH_PWR2} \
-%{mcpu=powerpc: -D_ARCH_PPC} \
-%{mcpu=rios: -D_ARCH_PWR} \
-%{mcpu=rios1: -D_ARCH_PWR} \
-%{mcpu=rios2: -D_ARCH_PWR2} \
-%{mcpu=rsc: -D_ARCH_PWR} \
-%{mcpu=rsc1: -D_ARCH_PWR} \
-%{mcpu=401: -D_ARCH_PPC} \
-%{mcpu=403: -D_ARCH_PPC} \
-%{mcpu=405: -D_ARCH_PPC} \
-%{mcpu=505: -D_ARCH_PPC} \
-%{mcpu=601: -D_ARCH_PPC -D_ARCH_PWR} \
-%{mcpu=602: -D_ARCH_PPC} \
-%{mcpu=603: -D_ARCH_PPC} \
-%{mcpu=603e: -D_ARCH_PPC} \
-%{mcpu=ec603e: -D_ARCH_PPC} \
-%{mcpu=604: -D_ARCH_PPC} \
-%{mcpu=604e: -D_ARCH_PPC} \
-%{mcpu=620: -D_ARCH_PPC} \
-%{mcpu=740: -D_ARCH_PPC} \
-%{mcpu=7400: -D_ARCH_PPC} \
-%{mcpu=7450: -D_ARCH_PPC} \
-%{mcpu=750: -D_ARCH_PPC} \
-%{mcpu=801: -D_ARCH_PPC} \
-%{mcpu=821: -D_ARCH_PPC} \
-%{mcpu=823: -D_ARCH_PPC} \
-%{mcpu=860: -D_ARCH_PPC} \
-%{maltivec: -D__ALTIVEC__}"
-
 /* Common ASM definitions used by ASM_SPEC among the various targets
    for handling -mcpu=xxx switches.  */
 #define ASM_CPU_SPEC \
 "%{!mcpu*: \
   %{mpower: %{!mpower2: -mpwr}} \
   %{mpower2: -mpwrx} \
-  %{mpowerpc*: -mppc} \
+  %{mpowerpc64*: -mppc64} \
+  %{!mpowerpc64*: %{mpowerpc*: -mppc}} \
   %{mno-power: %{!mpowerpc*: -mcom}} \
-  %{!mno-power: %{!mpower2: %(asm_default)}}} \
+  %{!mno-power: %{!mpower*: %(asm_default)}}} \
 %{mcpu=common: -mcom} \
 %{mcpu=power: -mpwr} \
 %{mcpu=power2: -mpwrx} \
+%{mcpu=power3: -mppc64} \
+%{mcpu=power4: -mpower4} \
+%{mcpu=power5: -mpower4} \
 %{mcpu=powerpc: -mppc} \
 %{mcpu=rios: -mpwr} \
 %{mcpu=rios1: -mpwr} \
 %{mcpu=rios2: -mpwrx} \
 %{mcpu=rsc: -mpwr} \
 %{mcpu=rsc1: -mpwr} \
+%{mcpu=rs64a: -mppc64} \
 %{mcpu=401: -mppc} \
 %{mcpu=403: -m403} \
 %{mcpu=405: -m405} \
+%{mcpu=405fp: -m405} \
+%{mcpu=440: -m440} \
+%{mcpu=440fp: -m440} \
 %{mcpu=505: -mppc} \
 %{mcpu=601: -m601} \
 %{mcpu=602: -mppc} \
@@ -115,16 +82,23 @@ Boston, MA 02111-1307, USA.  */
 %{mcpu=ec603e: -mppc} \
 %{mcpu=604: -mppc} \
 %{mcpu=604e: -mppc} \
-%{mcpu=620: -mppc} \
+%{mcpu=620: -mppc64} \
+%{mcpu=630: -mppc64} \
 %{mcpu=740: -mppc} \
-%{mcpu=7400: -mppc} \
-%{mcpu=7450: -mppc} \
 %{mcpu=750: -mppc} \
+%{mcpu=G3: -mppc} \
+%{mcpu=7400: -mppc -maltivec} \
+%{mcpu=7450: -mppc -maltivec} \
+%{mcpu=G4: -mppc -maltivec} \
 %{mcpu=801: -mppc} \
 %{mcpu=821: -mppc} \
 %{mcpu=823: -mppc} \
 %{mcpu=860: -mppc} \
-%{maltivec: -maltivec}"
+%{mcpu=970: -mpower4 -maltivec} \
+%{mcpu=G5: -mpower4 -maltivec} \
+%{mcpu=8540: -me500} \
+%{maltivec: -maltivec} \
+-many"
 
 #define CPP_DEFAULT_SPEC ""
 
@@ -135,7 +109,7 @@ Boston, MA 02111-1307, USA.  */
    is an initializer with a subgrouping for each command option.
 
    Each subgrouping contains a string constant, that defines the
-   specification name, and a string constant that used by the GNU CC driver
+   specification name, and a string constant that used by the GCC driver
    program.
 
    Do not define this macro if it does not need to do anything.  */
@@ -143,7 +117,6 @@ Boston, MA 02111-1307, USA.  */
 #define SUBTARGET_EXTRA_SPECS
 
 #define EXTRA_SPECS							\
-  { "cpp_cpu",			CPP_CPU_SPEC },				\
   { "cpp_default",		CPP_DEFAULT_SPEC },			\
   { "asm_cpu",			ASM_CPU_SPEC },				\
   { "asm_default",		ASM_DEFAULT_SPEC },			\
@@ -191,39 +164,42 @@ extern int target_flags;
    function, and one less allocable register.  */
 #define MASK_MINIMAL_TOC	0x00000200
 
-/* Nonzero for the 64bit model: longs and pointers are 64 bits.  */
+/* Nonzero for the 64 bit ABIs: longs and pointers are 64 bits.  The
+   chip is running in "64-bit mode", in which CR0 is set in dot
+   operations based on all 64 bits of the register, bdnz works on 64-bit
+   ctr, lr is 64 bits, and so on.  Requires MASK_POWERPC64.  */
 #define MASK_64BIT		0x00000400
 
 /* Disable use of FPRs.  */
 #define MASK_SOFT_FLOAT		0x00000800
 
-/* Enable load/store multiple, even on powerpc */
-#define	MASK_MULTIPLE		0x00001000
-#define	MASK_MULTIPLE_SET	0x00002000
+/* Enable load/store multiple, even on PowerPC */
+#define MASK_MULTIPLE		0x00001000
 
 /* Use string instructions for block moves */
-#define MASK_STRING		0x00004000
-#define MASK_STRING_SET		0x00008000
+#define MASK_STRING		0x00002000
 
 /* Disable update form of load/store */
-#define MASK_NO_UPDATE		0x00010000
+#define MASK_NO_UPDATE		0x00004000
 
 /* Disable fused multiply/add operations */
-#define MASK_NO_FUSED_MADD	0x00020000
+#define MASK_NO_FUSED_MADD	0x00008000
 
 /* Nonzero if we need to schedule the prolog and epilog.  */
-#define MASK_SCHED_PROLOG	0x00040000
+#define MASK_SCHED_PROLOG	0x00010000
 
 /* Use AltiVec instructions.  */
-#define MASK_ALTIVEC		0x00080000
+#define MASK_ALTIVEC		0x00020000
 
 /* Return small structures in memory (as the AIX ABI requires).  */
-#define MASK_AIX_STRUCT_RET	0x00100000
-#define MASK_AIX_STRUCT_RET_SET	0x00200000
+#define MASK_AIX_STRUCT_RET	0x00040000
 
-/* The only remaining free bit is 0x00400000. sysv4.h uses
-   0x00800000 -> 0x40000000, and 0x80000000 is not available
-   because target_flags is signed.  */
+/* Use single field mfcr instruction.  */
+#define MASK_MFCRF		0x00080000
+
+/* The only remaining free bits are 0x00600000.  linux64.h uses
+   0x00100000, and sysv4.h uses 0x00800000 -> 0x40000000.
+   0x80000000 is not available because target_flags is signed.  */
 
 #define TARGET_POWER		(target_flags & MASK_POWER)
 #define TARGET_POWER2		(target_flags & MASK_POWER2)
@@ -236,20 +212,40 @@ extern int target_flags;
 #define TARGET_MINIMAL_TOC	(target_flags & MASK_MINIMAL_TOC)
 #define TARGET_64BIT		(target_flags & MASK_64BIT)
 #define TARGET_SOFT_FLOAT	(target_flags & MASK_SOFT_FLOAT)
-#define	TARGET_MULTIPLE		(target_flags & MASK_MULTIPLE)
-#define	TARGET_MULTIPLE_SET	(target_flags & MASK_MULTIPLE_SET)
+#define TARGET_MULTIPLE		(target_flags & MASK_MULTIPLE)
 #define TARGET_STRING		(target_flags & MASK_STRING)
-#define TARGET_STRING_SET	(target_flags & MASK_STRING_SET)
 #define TARGET_NO_UPDATE	(target_flags & MASK_NO_UPDATE)
 #define TARGET_NO_FUSED_MADD	(target_flags & MASK_NO_FUSED_MADD)
 #define TARGET_SCHED_PROLOG	(target_flags & MASK_SCHED_PROLOG)
 #define TARGET_ALTIVEC		(target_flags & MASK_ALTIVEC)
 #define TARGET_AIX_STRUCT_RET	(target_flags & MASK_AIX_STRUCT_RET)
 
+/* Define TARGET_MFCRF if the target assembler supports the optional
+   field operand for mfcr and the target processor supports the
+   instruction.  */
+
+#ifdef HAVE_AS_MFCRF
+#define TARGET_MFCRF		(target_flags & MASK_MFCRF)
+#else
+#define TARGET_MFCRF 0
+#endif
+
+
 #define TARGET_32BIT		(! TARGET_64BIT)
 #define TARGET_HARD_FLOAT	(! TARGET_SOFT_FLOAT)
 #define TARGET_UPDATE		(! TARGET_NO_UPDATE)
 #define TARGET_FUSED_MADD	(! TARGET_NO_FUSED_MADD)
+
+/* Emit a dtp-relative reference to a TLS variable.  */
+
+#ifdef HAVE_AS_TLS
+#define ASM_OUTPUT_DWARF_DTPREL(FILE, SIZE, X) \
+  rs6000_output_dwarf_dtprel (FILE, SIZE, X)
+#endif
+
+#ifndef HAVE_AS_TLS
+#define HAVE_AS_TLS 0
+#endif
 
 #ifdef IN_LIBGCC2
 /* For libgcc2 we make sure this is a compile time constant */
@@ -262,7 +258,7 @@ extern int target_flags;
 #define TARGET_POWERPC64	(target_flags & MASK_POWERPC64)
 #endif
 
-#define TARGET_XL_CALL 0
+#define TARGET_XL_COMPAT 0
 
 /* Run-time compilation parameters selecting different hardware subsets.
 
@@ -291,19 +287,19 @@ extern int target_flags;
   {"powerpc-gpopt",	MASK_POWERPC | MASK_PPC_GPOPT,			\
 			N_("Use PowerPC General Purpose group optional instructions")},\
   {"no-powerpc-gpopt",	- MASK_PPC_GPOPT,				\
-			N_("Don't use PowerPC General Purpose group optional instructions")},\
+			N_("Do not use PowerPC General Purpose group optional instructions")},\
   {"powerpc-gfxopt",	MASK_POWERPC | MASK_PPC_GFXOPT,			\
 			N_("Use PowerPC Graphics group optional instructions")},\
   {"no-powerpc-gfxopt",	- MASK_PPC_GFXOPT,				\
-			N_("Don't use PowerPC Graphics group optional instructions")},\
+			N_("Do not use PowerPC Graphics group optional instructions")},\
   {"powerpc64",		MASK_POWERPC64,					\
 			N_("Use PowerPC-64 instruction set")},		\
   {"no-powerpc64",	- MASK_POWERPC64,				\
-			N_("Don't use PowerPC-64 instruction set")},	\
+			N_("Do not use PowerPC-64 instruction set")},	\
   {"altivec",		MASK_ALTIVEC ,					\
 			N_("Use AltiVec instructions")},		\
   {"no-altivec",	- MASK_ALTIVEC ,					\
-			N_("Don't use AltiVec instructions")},	\
+			N_("Do not use AltiVec instructions")},	\
   {"new-mnemonics",	MASK_NEW_MNEMONICS,				\
 			N_("Use new mnemonics for PowerPC architecture")},\
   {"old-mnemonics",	-MASK_NEW_MNEMONICS,				\
@@ -314,11 +310,11 @@ extern int target_flags;
   {"fp-in-toc",		- MASK_NO_FP_IN_TOC,				\
 			N_("Place floating point constants in TOC")},	\
   {"no-fp-in-toc",	MASK_NO_FP_IN_TOC,				\
-			N_("Don't place floating point constants in TOC")},\
+			N_("Do not place floating point constants in TOC")},\
   {"sum-in-toc",	- MASK_NO_SUM_IN_TOC,				\
 			N_("Place symbol+offset constants in TOC")},	\
   {"no-sum-in-toc",	MASK_NO_SUM_IN_TOC,				\
-			N_("Don't place symbol+offset constants in TOC")},\
+			N_("Do not place symbol+offset constants in TOC")},\
   {"minimal-toc",	MASK_MINIMAL_TOC,				\
 			"Use only one TOC entry per procedure"},	\
   {"minimal-toc",	- (MASK_NO_FP_IN_TOC | MASK_NO_SUM_IN_TOC),	\
@@ -326,21 +322,17 @@ extern int target_flags;
   {"no-minimal-toc",	- MASK_MINIMAL_TOC,				\
 			N_("Place variable addresses in the regular TOC")},\
   {"hard-float",	- MASK_SOFT_FLOAT,				\
-			N_("Use hardware fp")},				\
+			N_("Use hardware floating point")},		\
   {"soft-float",	MASK_SOFT_FLOAT,				\
-			N_("Do not use hardware fp")},			\
-  {"multiple",		MASK_MULTIPLE | MASK_MULTIPLE_SET,		\
+			N_("Do not use hardware floating point")},	\
+  {"multiple",		MASK_MULTIPLE,					\
 			N_("Generate load/store multiple instructions")},	\
   {"no-multiple",	- MASK_MULTIPLE,				\
 			N_("Do not generate load/store multiple instructions")},\
-  {"no-multiple",	MASK_MULTIPLE_SET,				\
-			""},						\
-  {"string",		MASK_STRING | MASK_STRING_SET,			\
+  {"string",		MASK_STRING,					\
 			N_("Generate string instructions for block moves")},\
   {"no-string",		- MASK_STRING,					\
 			N_("Do not generate string instructions for block moves")},\
-  {"no-string",		MASK_STRING_SET,				\
-			""},						\
   {"update",		- MASK_NO_UPDATE,				\
 			N_("Generate load/store with update instructions")},\
   {"no-update",		MASK_NO_UPDATE,					\
@@ -348,27 +340,27 @@ extern int target_flags;
   {"fused-madd",	- MASK_NO_FUSED_MADD,				\
 			N_("Generate fused multiply/add instructions")},\
   {"no-fused-madd",	MASK_NO_FUSED_MADD,				\
-			N_("Don't generate fused multiply/add instructions")},\
+			N_("Do not generate fused multiply/add instructions")},\
   {"sched-prolog",      MASK_SCHED_PROLOG,                              \
 			""},						\
   {"no-sched-prolog",   -MASK_SCHED_PROLOG,                             \
-			N_("Don't schedule the start and end of the procedure")},\
+			N_("Do not schedule the start and end of the procedure")},\
   {"sched-epilog",      MASK_SCHED_PROLOG,                              \
 			""},						\
   {"no-sched-epilog",   -MASK_SCHED_PROLOG,                             \
 			""},						\
-  {"aix-struct-return",	MASK_AIX_STRUCT_RET | MASK_AIX_STRUCT_RET_SET,	\
+  {"aix-struct-return",	MASK_AIX_STRUCT_RET,				\
 			N_("Return all structures in memory (AIX default)")},\
-  {"svr4-struct-return", - MASK_AIX_STRUCT_RET,\
+  {"svr4-struct-return", - MASK_AIX_STRUCT_RET,				\
 			N_("Return small structures in registers (SVR4 default)")},\
-  {"svr4-struct-return",MASK_AIX_STRUCT_RET_SET,\
-			""},\
-  {"no-aix-struct-return", - MASK_AIX_STRUCT_RET,\
-			""},\
-  {"no-aix-struct-return", MASK_AIX_STRUCT_RET_SET,\
-			""},\
-  {"no-svr4-struct-return", MASK_AIX_STRUCT_RET | MASK_AIX_STRUCT_RET_SET,\
-			""},\
+  {"no-aix-struct-return", - MASK_AIX_STRUCT_RET,			\
+			""},						\
+  {"no-svr4-struct-return", MASK_AIX_STRUCT_RET,			\
+			""},						\
+  {"mfcrf",		MASK_MFCRF,					\
+			N_("Generate single field mfcr instruction")},	\
+  {"no-mfcrf",		- MASK_MFCRF,					\
+			N_("Do not generate single field mfcr instruction")},\
   SUBTARGET_SWITCHES							\
   {"",			TARGET_DEFAULT | MASK_SCHED_PROLOG,		\
 			""}}
@@ -387,6 +379,7 @@ enum processor_type
    PROCESSOR_MPCCORE,
    PROCESSOR_PPC403,
    PROCESSOR_PPC405,
+   PROCESSOR_PPC440,
    PROCESSOR_PPC601,
    PROCESSOR_PPC603,
    PROCESSOR_PPC604,
@@ -395,7 +388,10 @@ enum processor_type
    PROCESSOR_PPC630,
    PROCESSOR_PPC750,
    PROCESSOR_PPC7400,
-   PROCESSOR_PPC7450
+   PROCESSOR_PPC7450,
+   PROCESSOR_PPC8540,
+   PROCESSOR_POWER4,
+   PROCESSOR_POWER5
 };
 
 extern enum processor_type rs6000_cpu;
@@ -417,21 +413,80 @@ extern enum processor_type rs6000_cpu;
    and the old mnemonics are dialect zero.  */
 #define ASSEMBLER_DIALECT (TARGET_NEW_MNEMONICS ? 1 : 0)
 
+/* Types of costly dependences.  */
+enum rs6000_dependence_cost
+ {
+   max_dep_latency = 1000,
+   no_dep_costly,
+   all_deps_costly,
+   true_store_to_load_dep_costly,
+   store_to_load_dep_costly
+ };
+
+/* Types of nop insertion schemes in sched target hook sched_finish.  */
+enum rs6000_nop_insertion
+  {
+    sched_finish_regroup_exact = 1000,
+    sched_finish_pad_groups,
+    sched_finish_none
+  };
+
+/* Dispatch group termination caused by an insn.  */
+enum group_termination
+  {
+    current_group,
+    previous_group
+  };
+
 /* This is meant to be overridden in target specific files.  */
 #define	SUBTARGET_OPTIONS
 
 #define TARGET_OPTIONS							\
 {									\
    {"cpu=",  &rs6000_select[1].string,					\
-    N_("Use features of and schedule code for given CPU") },		\
+    N_("Use features of and schedule code for given CPU"), 0},		\
    {"tune=", &rs6000_select[2].string,					\
-    N_("Schedule code for given CPU") },				\
-   {"debug=", &rs6000_debug_name, N_("Enable debug output") },		\
-   {"abi=", &rs6000_abi_string, N_("Specify ABI to use") },		\
+    N_("Schedule code for given CPU"), 0},				\
+   {"debug=", &rs6000_debug_name, N_("Enable debug output"), 0},	\
+   {"traceback=", &rs6000_traceback_name,				\
+    N_("Select full, part, or no traceback table"), 0},			\
+   {"abi=", &rs6000_abi_string, N_("Specify ABI to use"), 0},		\
    {"long-double-", &rs6000_long_double_size_string,			\
-    N_("Specify size of long double (64 or 128 bits)") },		\
+    N_("Specify size of long double (64 or 128 bits)"), 0},		\
+   {"isel=", &rs6000_isel_string,                                       \
+    N_("Specify yes/no if isel instructions should be generated"), 0},  \
+   {"spe=", &rs6000_spe_string,                                         \
+    N_("Specify yes/no if SPE SIMD instructions should be generated"), 0},\
+   {"float-gprs=", &rs6000_float_gprs_string,                           \
+    N_("Specify yes/no if using floating point in the GPRs"), 0},       \
+   {"vrsave=", &rs6000_altivec_vrsave_string,                           \
+    N_("Specify yes/no if VRSAVE instructions should be generated for AltiVec"), 0}, \
+   {"longcall", &rs6000_longcall_switch,				\
+    N_("Avoid all range limits on call instructions"), 0},		\
+   {"no-longcall", &rs6000_longcall_switch, "", 0},			\
+   {"warn-altivec-long", &rs6000_warn_altivec_long_switch, \
+    N_("Warn about deprecated 'vector long ...' AltiVec type usage"), 0}, \
+   {"no-warn-altivec-long", &rs6000_warn_altivec_long_switch, "", 0}, \
+   {"sched-costly-dep=", &rs6000_sched_costly_dep_str,                  \
+    N_("Determine which dependences between insns are considered costly"), 0}, \
+   {"insert-sched-nops=", &rs6000_sched_insert_nops_str,                \
+    N_("Specify which post scheduling nop insertion scheme to apply"), 0}, \
+   {"align-", &rs6000_alignment_string,					\
+    N_("Specify alignment of structure fields default/natural"), 0},	\
+   {"prioritize-restricted-insns=", &rs6000_sched_restricted_insns_priority_str, \
+    N_("Specify scheduling priority for dispatch slot restricted insns"), 0}, \
    SUBTARGET_OPTIONS							\
 }
+
+/* Support for a compile-time default CPU, et cetera.  The rules are:
+   --with-cpu is ignored if -mcpu is specified.
+   --with-tune is ignored if -mtune is specified.
+   --with-float is ignored if -mhard-float or -msoft-float are
+    specified.  */
+#define OPTION_DEFAULT_SPECS \
+  {"cpu", "%{!mcpu=*:-mcpu=%(VALUE)}" }, \
+  {"tune", "%{!mtune=*:-mtune=%(VALUE)}" }, \
+  {"float", "%{!msoft-float:%{!mhard-float:-m%(VALUE)-float}}" }
 
 /* rs6000_select[0] is reserved for the default cpu defined via --with-cpu */
 struct rs6000_cpu_select
@@ -453,14 +508,62 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 #define	TARGET_DEBUG_STACK	rs6000_debug_stack
 #define	TARGET_DEBUG_ARG	rs6000_debug_arg
 
+extern const char *rs6000_traceback_name; /* Type of traceback table.  */
+
 /* These are separate from target_flags because we've run out of bits
    there.  */
 extern const char *rs6000_long_double_size_string;
 extern int rs6000_long_double_type_size;
 extern int rs6000_altivec_abi;
+extern int rs6000_spe_abi;
+extern int rs6000_isel;
+extern int rs6000_spe;
+extern int rs6000_float_gprs;
+extern const char *rs6000_float_gprs_string;
+extern const char *rs6000_isel_string;
+extern const char *rs6000_spe_string;
+extern const char *rs6000_altivec_vrsave_string;
+extern int rs6000_altivec_vrsave;
+extern const char *rs6000_longcall_switch;
+extern int rs6000_default_long_calls;
+extern const char* rs6000_alignment_string;
+extern int rs6000_alignment_flags;
+extern const char *rs6000_sched_restricted_insns_priority_str;
+extern int rs6000_sched_restricted_insns_priority;
+extern const char *rs6000_sched_costly_dep_str;
+extern enum rs6000_dependence_cost rs6000_sched_costly_dep;
+extern const char *rs6000_sched_insert_nops_str;
+extern enum rs6000_nop_insertion rs6000_sched_insert_nops;
+
+extern int rs6000_warn_altivec_long;
+extern const char *rs6000_warn_altivec_long_switch;
+
+/* Alignment options for fields in structures for sub-targets following
+   AIX-like ABI.
+   ALIGN_POWER word-aligns FP doubles (default AIX ABI).
+   ALIGN_NATURAL doubleword-aligns FP doubles (align to object size).
+
+   Override the macro definitions when compiling libobjc to avoid undefined
+   reference to rs6000_alignment_flags due to library's use of GCC alignment
+   macros which use the macros below.  */
+   
+#ifndef IN_TARGET_LIBS
+#define MASK_ALIGN_POWER   0x00000000
+#define MASK_ALIGN_NATURAL 0x00000001
+#define TARGET_ALIGN_NATURAL (rs6000_alignment_flags & MASK_ALIGN_NATURAL)
+#else
+#define TARGET_ALIGN_NATURAL 0
+#endif
 
 #define TARGET_LONG_DOUBLE_128 (rs6000_long_double_type_size == 128)
 #define TARGET_ALTIVEC_ABI rs6000_altivec_abi
+#define TARGET_ALTIVEC_VRSAVE rs6000_altivec_vrsave
+
+#define TARGET_SPE_ABI 0
+#define TARGET_SPE 0
+#define TARGET_E500 0
+#define TARGET_ISEL 0
+#define TARGET_FPRS 1
 
 /* Sometimes certain combinations of command options do not make sense
    on a particular target machine.  You can define a macro
@@ -468,7 +571,7 @@ extern int rs6000_altivec_abi;
    defined, is executed once just after all the command options have
    been parsed.
 
-   Don't use this macro to turn on various extra optimizations for
+   Do not use this macro to turn on various extra optimizations for
    `-O'.  That is what `OPTIMIZATION_OPTIONS' is for.
 
    On the RS/6000 this is used to define the target cpu type.  */
@@ -480,11 +583,37 @@ extern int rs6000_altivec_abi;
 
 /* Show we can debug even without a frame pointer.  */
 #define CAN_DEBUG_WITHOUT_FP
-
-/* target machine storage layout */
 
-/* Define to support cross compilation to an RS6000 target.  */
-#define REAL_ARITHMETIC
+/* Target pragma.  */
+#define REGISTER_TARGET_PRAGMAS() do {				\
+  c_register_pragma (0, "longcall", rs6000_pragma_longcall);	\
+} while (0)
+
+/* Target #defines.  */
+#define TARGET_CPU_CPP_BUILTINS() \
+  rs6000_cpu_cpp_builtins (pfile)
+
+/* This is used by rs6000_cpu_cpp_builtins to indicate the byte order
+   we're compiling for.  Some configurations may need to override it.  */
+#define RS6000_CPU_CPP_ENDIAN_BUILTINS()	\
+  do						\
+    {						\
+      if (BYTES_BIG_ENDIAN)			\
+	{					\
+	  builtin_define ("__BIG_ENDIAN__");	\
+	  builtin_define ("_BIG_ENDIAN");	\
+	  builtin_assert ("machine=bigendian");	\
+	}					\
+      else					\
+	{					\
+	  builtin_define ("__LITTLE_ENDIAN__");	\
+	  builtin_define ("_LITTLE_ENDIAN");	\
+	  builtin_assert ("machine=littleendian"); \
+	}					\
+    }						\
+  while (0)
+
+/* Target machine storage layout.  */
 
 /* Define this macro if it is advisable to hold scalars in registers
    in a wider mode than that declared by the program.  In such cases,
@@ -495,16 +624,7 @@ extern int rs6000_altivec_abi;
 #define PROMOTE_MODE(MODE,UNSIGNEDP,TYPE)	\
   if (GET_MODE_CLASS (MODE) == MODE_INT		\
       && GET_MODE_SIZE (MODE) < UNITS_PER_WORD) \
-    (MODE) = word_mode;
-
-/* Define this if function arguments should also be promoted using the above
-   procedure.  */
-
-#define PROMOTE_FUNCTION_ARGS
-
-/* Likewise, if the function return value is promoted.  */
-
-#define PROMOTE_FUNCTION_RETURN
+    (MODE) = TARGET_32BIT ? SImode : DImode;
 
 /* Define this if most significant bit is lowest numbered
    in instructions that operate on numbered bit-fields.  */
@@ -522,21 +642,18 @@ extern int rs6000_altivec_abi;
    instructions for them.  Might as well be consistent with bits and bytes.  */
 #define WORDS_BIG_ENDIAN 1
 
-/* number of bits in an addressable storage unit */
-#define BITS_PER_UNIT 8
-
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 68000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD (! TARGET_POWERPC64 ? 32 : 64)
 #define MAX_BITS_PER_WORD 64
 
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD (! TARGET_POWERPC64 ? 4 : 8)
+#ifdef IN_LIBGCC2
+#define MIN_UNITS_PER_WORD UNITS_PER_WORD
+#else
 #define MIN_UNITS_PER_WORD 4
+#endif
 #define UNITS_PER_FP_WORD 8
 #define UNITS_PER_ALTIVEC_WORD 16
+#define UNITS_PER_SPE_WORD 8
 
 /* Type used for ptrdiff_t, as a string used in a declaration.  */
 #define PTRDIFF_TYPE "int"
@@ -571,12 +688,6 @@ extern int rs6000_altivec_abi;
    target machine.  If you don't define this, the default is two
    words.  */
 #define LONG_LONG_TYPE_SIZE 64
-
-/* A C expression for the size in bits of the type `char' on the
-   target machine.  If you don't define this, the default is one
-   quarter of a word.  (If this would be less than one storage unit,
-   it is rounded up to one unit.)  */
-#define CHAR_TYPE_SIZE BITS_PER_UNIT
 
 /* A C expression for the size in bits of the type `float' on the
    target machine.  If you don't define this, the default is one
@@ -615,7 +726,8 @@ extern int rs6000_altivec_abi;
 #define PARM_BOUNDARY (TARGET_32BIT ? 32 : 64)
 
 /* Boundary (in *bits*) on which stack pointer should be aligned.  */
-#define STACK_BOUNDARY ((TARGET_32BIT && !TARGET_ALTIVEC_ABI) ? 64 : 128)
+#define STACK_BOUNDARY \
+  ((TARGET_32BIT && !TARGET_ALTIVEC && !TARGET_ALTIVEC_ABI) ? 64 : 128)
 
 /* Allocation boundary (in *bits*) for the code of a function.  */
 #define FUNCTION_BOUNDARY 32
@@ -627,7 +739,8 @@ extern int rs6000_altivec_abi;
    local store.  TYPE is the data type, and ALIGN is the alignment
    that the object would ordinarily have.  */
 #define LOCAL_ALIGNMENT(TYPE, ALIGN)				\
-  ((TARGET_ALTIVEC && TREE_CODE (TYPE) == VECTOR_TYPE) ? 128 : ALIGN)
+  ((TARGET_ALTIVEC && TREE_CODE (TYPE) == VECTOR_TYPE) ? 128 :	\
+    (TARGET_SPE && TREE_CODE (TYPE) == VECTOR_TYPE) ? 64 : ALIGN)
 
 /* Alignment of field after `int : 0' in a structure.  */
 #define EMPTY_FIELD_BOUNDARY 32
@@ -635,7 +748,19 @@ extern int rs6000_altivec_abi;
 /* Every structure's size must be a multiple of this.  */
 #define STRUCTURE_SIZE_BOUNDARY 8
 
-/* A bitfield declared as `int' forces `int' alignment for the struct.  */
+/* Return 1 if a structure or array containing FIELD should be
+   accessed using `BLKMODE'.
+
+   For the SPE, simd types are V2SI, and gcc can be tempted to put the
+   entire thing in a DI and use subregs to access the internals.
+   store_bit_field() will force (subreg:DI (reg:V2SI x))'s to the
+   back-end.  Because a single GPR can hold a V2SI, but not a DI, the
+   best thing to do is set structs to BLKmode and avoid Severe Tire
+   Damage.  */
+#define MEMBER_TYPE_FORCES_BLK(FIELD, MODE) \
+  (TARGET_SPE && TREE_CODE (TREE_TYPE (FIELD)) == VECTOR_TYPE)
+
+/* A bit-field declared as `int' forces `int' alignment for the struct.  */
 #define PCC_BITFIELD_TYPE_MATTERS 1
 
 /* Make strings word-aligned so strcpy from constants will be faster.
@@ -649,12 +774,12 @@ extern int rs6000_altivec_abi;
 /* Make arrays of chars word-aligned for the same reasons.
    Align vectors to 128 bits.  */
 #define DATA_ALIGNMENT(TYPE, ALIGN)		\
-  (TREE_CODE (TYPE) == VECTOR_TYPE ? 128	\
+  (TREE_CODE (TYPE) == VECTOR_TYPE ? (TARGET_SPE_ABI ? 64 : 128)	\
    : TREE_CODE (TYPE) == ARRAY_TYPE		\
    && TYPE_MODE (TREE_TYPE (TYPE)) == QImode	\
    && (ALIGN) < BITS_PER_WORD ? BITS_PER_WORD : (ALIGN))
 
-/* Non-zero if move instructions will actually fail to work
+/* Nonzero if move instructions will actually fail to work
    when given unaligned data.  */
 #define STRICT_ALIGNMENT 0
 
@@ -663,7 +788,8 @@ extern int rs6000_altivec_abi;
    emulated in a trap handler.  */
 #define SLOW_UNALIGNED_ACCESS(MODE, ALIGN)				\
   (STRICT_ALIGNMENT							\
-   || (((MODE) == SFmode || (MODE) == DFmode || (MODE) == DImode)	\
+   || (((MODE) == SFmode || (MODE) == DFmode || (MODE) == TFmode	\
+	|| (MODE) == DImode)						\
        && (ALIGN) < 32))
 
 /* Standard register usage.  */
@@ -676,7 +802,8 @@ extern int rs6000_altivec_abi;
 
    RS/6000 has 32 fixed-point registers, 32 floating-point registers,
    an MQ register, a count register, a link register, and 8 condition
-   register fields, which we view here as separate registers.
+   register fields, which we view here as separate registers.  AltiVec
+   adds 32 vector registers and a VRsave register.
 
    In addition, the difference between the frame and argument pointers is
    a function of the number of registers saved, so we need to have a
@@ -688,10 +815,32 @@ extern int rs6000_altivec_abi;
    a register, in order to work around problems in allocating stack storage
    in inline functions.  */
 
-#define FIRST_PSEUDO_REGISTER 110
+#define FIRST_PSEUDO_REGISTER 113
 
 /* This must be included for pre gcc 3.0 glibc compatibility.  */
 #define PRE_GCC3_DWARF_FRAME_REGISTERS 77
+
+/* Add 32 dwarf columns for synthetic SPE registers.  */
+#define DWARF_FRAME_REGISTERS (FIRST_PSEUDO_REGISTER + 32)
+
+/* The SPE has an additional 32 synthetic registers, with DWARF debug
+   info numbering for these registers starting at 1200.  While eh_frame
+   register numbering need not be the same as the debug info numbering,
+   we choose to number these regs for eh_frame at 1200 too.  This allows
+   future versions of the rs6000 backend to add hard registers and
+   continue to use the gcc hard register numbering for eh_frame.  If the
+   extra SPE registers in eh_frame were numbered starting from the
+   current value of FIRST_PSEUDO_REGISTER, then if FIRST_PSEUDO_REGISTER
+   changed we'd need to introduce a mapping in DWARF_FRAME_REGNUM to
+   avoid invalidating older SPE eh_frame info.
+
+   We must map them here to avoid huge unwinder tables mostly consisting
+   of unused space.  */ 
+#define DWARF_REG_TO_UNWIND_COLUMN(r) \
+  ((r) > 1200 ? ((r) - 1200 + FIRST_PSEUDO_REGISTER) : (r))
+
+/* Use gcc hard register numbering for eh_frame.  */
+#define DWARF_FRAME_REGNUM(REGNO) (REGNO)
 
 /* 1 for registers that have pervasive standard uses
    and are not available for the register allocator.
@@ -712,7 +861,8 @@ extern int rs6000_altivec_abi;
    /* AltiVec registers.  */			   \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
-   1						   \
+   1, 1						   \
+   , 1, 1                                          \
 }
 
 /* 1 for registers not available across function calls.
@@ -731,7 +881,8 @@ extern int rs6000_altivec_abi;
    /* AltiVec registers.  */			   \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
-   1						   \
+   1, 1						   \
+   , 1, 1                                          \
 }
 
 /* Like `CALL_USED_REGISTERS' except this macro doesn't require that
@@ -749,7 +900,8 @@ extern int rs6000_altivec_abi;
    /* AltiVec registers.  */			   \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
-   0						   \
+   0, 0						   \
+   , 0, 0                                          \
 }
 
 #define MQ_REGNO     64
@@ -764,6 +916,9 @@ extern int rs6000_altivec_abi;
 #define LAST_ALTIVEC_REGNO	108
 #define TOTAL_ALTIVEC_REGS	(LAST_ALTIVEC_REGNO - FIRST_ALTIVEC_REGNO + 1)
 #define VRSAVE_REGNO		109
+#define VSCR_REGNO		110
+#define SPE_ACC_REGNO		111
+#define SPEFSCR_REGNO		112
 
 /* List the order in which to allocate registers.  Each register must be
    listed once, even those in FIXED_REGISTERS.
@@ -786,7 +941,8 @@ extern int rs6000_altivec_abi;
 	mq		(not saved; best to use it if we can)
 	ctr		(not saved; when we have the choice ctr is better)
 	lr		(saved)
-        cr5, r1, r2, ap, xer, vrsave (fixed)
+        cr5, r1, r2, ap, xer, vrsave, vscr (fixed)
+	spe_acc, spefscr (fixed)
 
 	AltiVec registers:
 	v0 - v1         (not saved or used for anything)
@@ -796,6 +952,13 @@ extern int rs6000_altivec_abi;
 	v31 - v20       (saved; order given to save least number)
 */
 						
+#if FIXED_R2 == 1
+#define MAYBE_R2_AVAILABLE
+#define MAYBE_R2_FIXED 2,
+#else
+#define MAYBE_R2_AVAILABLE 2,
+#define MAYBE_R2_FIXED
+#endif
 
 #define REG_ALLOC_ORDER					\
   {32, 							\
@@ -804,20 +967,21 @@ extern int rs6000_altivec_abi;
    63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51,	\
    50, 49, 48, 47, 46, 					\
    75, 74, 69, 68, 72, 71, 70,				\
-   0,							\
+   0, MAYBE_R2_AVAILABLE				\
    9, 11, 10, 8, 7, 6, 5, 4,				\
    3,							\
    31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19,	\
    18, 17, 16, 15, 14, 13, 12,				\
    64, 66, 65, 						\
-   73, 1, 2, 67, 76,					\
+   73, 1, MAYBE_R2_FIXED 67, 76,			\
    /* AltiVec registers.  */				\
    77, 78,						\
    90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80,		\
    79,							\
    96, 95, 94, 93, 92, 91,				\
    108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98,	\
-   97, 109						\
+   97, 109, 110						\
+   , 111, 112                                              \
 }
 
 /* True if register is floating-point.  */
@@ -832,6 +996,9 @@ extern int rs6000_altivec_abi;
 /* True if register is an integer register.  */
 #define INT_REGNO_P(N) ((N) <= 31 || (N) == ARG_POINTER_REGNUM)
 
+/* SPE SIMD registers are just the GPRs.  */
+#define SPE_SIMD_REGNO_P(N) ((N) <= 31)
+
 /* True if register is the XER register.  */
 #define XER_REGNO_P(N) ((N) == XER_REGNO)
 
@@ -843,46 +1010,67 @@ extern int rs6000_altivec_abi;
    This is ordinarily the length in words of a value of mode MODE
    but can be less for certain modes in special long registers.
 
+   For the SPE, GPRs are 64 bits but only 32 bits are visible in
+   scalar instructions.  The upper 32 bits are only available to the
+   SIMD instructions.
+
    POWER and PowerPC GPRs hold 32 bits worth;
    PowerPC64 GPRs and FPRs point register holds 64 bits worth.  */
 
 #define HARD_REGNO_NREGS(REGNO, MODE)					\
   (FP_REGNO_P (REGNO)							\
    ? ((GET_MODE_SIZE (MODE) + UNITS_PER_FP_WORD - 1) / UNITS_PER_FP_WORD) \
+   : (SPE_SIMD_REGNO_P (REGNO) && TARGET_SPE && SPE_VECTOR_MODE (MODE))   \
+   ? ((GET_MODE_SIZE (MODE) + UNITS_PER_SPE_WORD - 1) / UNITS_PER_SPE_WORD) \
    : ALTIVEC_REGNO_P (REGNO)						\
    ? ((GET_MODE_SIZE (MODE) + UNITS_PER_ALTIVEC_WORD - 1) / UNITS_PER_ALTIVEC_WORD) \
    : ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD))
 
+#define HARD_REGNO_CALL_PART_CLOBBERED(REGNO, MODE)	\
+  ((TARGET_32BIT && TARGET_POWERPC64			\
+    && (MODE == DImode || MODE == DFmode)		\
+    && INT_REGNO_P (REGNO)) ? 1 : 0)
+
 #define ALTIVEC_VECTOR_MODE(MODE)	\
-	((MODE) == V16QImode		\
-	 || (MODE) == V8HImode		\
-	 || (MODE) == V4SFmode		\
-	 || (MODE) == V4SImode)
+	 ((MODE) == V16QImode		\
+	  || (MODE) == V8HImode		\
+	  || (MODE) == V4SFmode		\
+	  || (MODE) == V4SImode)
+
+#define SPE_VECTOR_MODE(MODE)		\
+	((MODE) == V4HImode          	\
+         || (MODE) == V2SFmode          \
+         || (MODE) == V1DImode          \
+         || (MODE) == V2SImode)
 
 /* Define this macro to be nonzero if the port is prepared to handle
    insns involving vector mode MODE.  At the very least, it must have
    move patterns for this mode.  */
 
-#define VECTOR_MODE_SUPPORTED_P(MODE)	\
-	(TARGET_ALTIVEC && ALTIVEC_VECTOR_MODE (MODE))
+#define VECTOR_MODE_SUPPORTED_P(MODE)			\
+        ((TARGET_SPE && SPE_VECTOR_MODE (MODE))		\
+	 || (TARGET_ALTIVEC && ALTIVEC_VECTOR_MODE (MODE)))
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
-   For POWER and PowerPC, the GPRs can hold any mode, but the float
+   For POWER and PowerPC, the GPRs can hold any mode, but values bigger
+   than one register cannot go past R31.  The float
    registers only can hold floating modes and DImode, and CR register only
    can hold CC modes.  We cannot put TImode anywhere except general
    register and it must be able to fit within the register set.  */
 
 #define HARD_REGNO_MODE_OK(REGNO, MODE)					\
-  (FP_REGNO_P (REGNO) ?							\
-   (GET_MODE_CLASS (MODE) == MODE_FLOAT					\
-    || (GET_MODE_CLASS (MODE) == MODE_INT				\
-	&& GET_MODE_SIZE (MODE) == UNITS_PER_FP_WORD))			\
+  (INT_REGNO_P (REGNO) ?						\
+     INT_REGNO_P (REGNO + HARD_REGNO_NREGS (REGNO, MODE) - 1)	        \
+   : FP_REGNO_P (REGNO) ?						\
+     ((GET_MODE_CLASS (MODE) == MODE_FLOAT				\
+       && FP_REGNO_P (REGNO + HARD_REGNO_NREGS (REGNO, MODE) - 1))	\
+      || (GET_MODE_CLASS (MODE) == MODE_INT				\
+	  && GET_MODE_SIZE (MODE) == UNITS_PER_FP_WORD))		\
    : ALTIVEC_REGNO_P (REGNO) ? ALTIVEC_VECTOR_MODE (MODE)		\
+   : SPE_SIMD_REGNO_P (REGNO) && TARGET_SPE && SPE_VECTOR_MODE (MODE) ? 1 \
    : CR_REGNO_P (REGNO) ? GET_MODE_CLASS (MODE) == MODE_CC		\
    : XER_REGNO_P (REGNO) ? (MODE) == PSImode				\
-   : ! INT_REGNO_P (REGNO) ? (GET_MODE_CLASS (MODE) == MODE_INT		\
-			      && GET_MODE_SIZE (MODE) <= UNITS_PER_WORD) \
-   : 1)
+   : GET_MODE_SIZE (MODE) <= UNITS_PER_WORD)
 
 /* Value is 1 if it is a good idea to tie two pseudo registers
    when one has mode MODE1 and one has mode MODE2.
@@ -897,42 +1085,31 @@ extern int rs6000_altivec_abi;
    ? GET_MODE_CLASS (MODE2) == MODE_CC		\
    : GET_MODE_CLASS (MODE2) == MODE_CC		\
    ? GET_MODE_CLASS (MODE1) == MODE_CC		\
+   : SPE_VECTOR_MODE (MODE1)			\
+   ? SPE_VECTOR_MODE (MODE2)			\
+   : SPE_VECTOR_MODE (MODE2)			\
+   ? SPE_VECTOR_MODE (MODE1)			\
    : ALTIVEC_VECTOR_MODE (MODE1)		\
    ? ALTIVEC_VECTOR_MODE (MODE2)		\
    : ALTIVEC_VECTOR_MODE (MODE2)		\
    ? ALTIVEC_VECTOR_MODE (MODE1)		\
    : 1)
 
+/* Post-reload, we can't use any new AltiVec registers, as we already
+   emitted the vrsave mask.  */
+
+#define HARD_REGNO_RENAME_OK(SRC, DST) \
+  (! ALTIVEC_REGNO_P (DST) || regs_ever_live[DST])
+
 /* A C expression returning the cost of moving data from a register of class
-   CLASS1 to one of CLASS2.
+   CLASS1 to one of CLASS2.  */
 
-   On the RS/6000, copying between floating-point and fixed-point
-   registers is expensive.  */
-
-#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2)		\
-   ((CLASS1) == FLOAT_REGS && (CLASS2) == FLOAT_REGS ? 2	\
-   : (CLASS1) == FLOAT_REGS && (CLASS2) != FLOAT_REGS ? 10	\
-   : (CLASS1) != FLOAT_REGS && (CLASS2) == FLOAT_REGS ? 10	\
-   : (CLASS1) == ALTIVEC_REGS && (CLASS2) != ALTIVEC_REGS ? 20	\
-   : (CLASS1) != ALTIVEC_REGS && (CLASS2) == ALTIVEC_REGS ? 20	\
-   : (((CLASS1) == SPECIAL_REGS || (CLASS1) == MQ_REGS		\
-       || (CLASS1) == LINK_REGS || (CLASS1) == CTR_REGS		\
-       || (CLASS1) == LINK_OR_CTR_REGS)				\
-      && ((CLASS2) == SPECIAL_REGS || (CLASS2) == MQ_REGS	\
-	  || (CLASS2) == LINK_REGS || (CLASS2) == CTR_REGS	\
-	  || (CLASS2) == LINK_OR_CTR_REGS)) ? 10		\
-   : 2)
+#define REGISTER_MOVE_COST rs6000_register_move_cost
 
 /* A C expressions returning the cost of moving data of MODE from a register to
-   or from memory.
+   or from memory.  */
 
-   On the RS/6000, bump this up a bit.  */
-
-#define MEMORY_MOVE_COST(MODE, CLASS, IN)	\
-  ((GET_MODE_CLASS (MODE) == MODE_FLOAT		\
-    && (rs6000_cpu == PROCESSOR_RIOS1 || rs6000_cpu == PROCESSOR_PPC601) \
-    ? 3 : 2) \
-   + 4)
+#define MEMORY_MOVE_COST rs6000_memory_move_cost
 
 /* Specify the cost of a branch insn; roughly the number of extra insns that
    should be added to avoid a branch.
@@ -941,6 +1118,24 @@ extern int rs6000_altivec_abi;
    unscheduled conditional branch.  */
 
 #define BRANCH_COST 3
+
+/* Override BRANCH_COST heuristic which empirically produces worse
+   performance for fold_range_test().  */
+
+#define RANGE_TEST_NON_SHORT_CIRCUIT 0
+
+/* A fixed register used at prologue and epilogue generation to fix
+   addressing modes.  The SPE needs heavy addressing fixes at the last
+   minute, and it's best to save a register for it.
+
+   AltiVec also needs fixes, but we've gotten around using r11, which
+   is actually wrong because when use_backchain_to_restore_sp is true,
+   we end up clobbering r11.
+
+   The AltiVec case needs to be fixed.  Dunno if we should break ABI
+   compatibility and reserve a register for it as well..  */
+
+#define FIXED_SCRATCH (TARGET_SPE ? 14 : 11)
 
 /* Define this macro to change register usage conditional on target flags.
    Set MQ register fixed (already call_used) if not POWER architecture
@@ -956,7 +1151,7 @@ extern int rs6000_altivec_abi;
   if (TARGET_64BIT)							\
     fixed_regs[13] = call_used_regs[13]					\
       = call_really_used_regs[13] = 1; 					\
-  if (TARGET_SOFT_FLOAT)						\
+  if (TARGET_SOFT_FLOAT || !TARGET_FPRS)				\
     for (i = 32; i < 64; i++)						\
       fixed_regs[i] = call_used_regs[i]					\
         = call_really_used_regs[i] = 1;					\
@@ -976,6 +1171,18 @@ extern int rs6000_altivec_abi;
       = fixed_regs[RS6000_PIC_OFFSET_TABLE_REGNUM]			\
       = call_used_regs[RS6000_PIC_OFFSET_TABLE_REGNUM]			\
       = call_really_used_regs[RS6000_PIC_OFFSET_TABLE_REGNUM] = 1;	\
+  if (TARGET_TOC && TARGET_MINIMAL_TOC)					\
+    fixed_regs[RS6000_PIC_OFFSET_TABLE_REGNUM]				\
+      = call_used_regs[RS6000_PIC_OFFSET_TABLE_REGNUM] = 1;		\
+  if (TARGET_ALTIVEC)                                                   \
+    global_regs[VSCR_REGNO] = 1;                                        \
+  if (TARGET_SPE)							\
+    {                                                                   \
+      global_regs[SPEFSCR_REGNO] = 1;					\
+      fixed_regs[FIXED_SCRATCH]						\
+        = call_used_regs[FIXED_SCRATCH]					\
+	= call_really_used_regs[FIXED_SCRATCH] = 1; 			\
+    }                                                                   \
   if (! TARGET_ALTIVEC)							\
     {									\
       for (i = FIRST_ALTIVEC_REGNO; i <= LAST_ALTIVEC_REGNO; ++i)	\
@@ -1016,11 +1223,6 @@ extern int rs6000_altivec_abi;
 
 /* Count register number.  */
 #define COUNT_REGISTER_REGNUM 66
-
-/* Place that structure value return address is placed.
-
-   On the RS/6000, it is passed as an extra parameter.  */
-#define STRUCT_VALUE 0
 
 /* Define the classes of registers for register constraints in the
    machine description.  Also define ranges of constants.
@@ -1044,7 +1246,7 @@ extern int rs6000_altivec_abi;
 
 /* The RS/6000 has three types of registers, fixed-point, floating-point,
    and condition registers, plus three special registers, MQ, CTR, and the
-   link register.
+   link register.  AltiVec adds a vector register class.
 
    However, r0 is special in that it cannot be used as a base register.
    So make a class for registers valid as base registers.
@@ -1060,6 +1262,9 @@ enum reg_class
   FLOAT_REGS,
   ALTIVEC_REGS,
   VRSAVE_REGS,
+  VSCR_REGS,
+  SPE_ACC_REGS,
+  SPEFSCR_REGS,
   NON_SPECIAL_REGS,
   MQ_REGS,
   LINK_REGS,
@@ -1087,6 +1292,9 @@ enum reg_class
   "FLOAT_REGS",								\
   "ALTIVEC_REGS",							\
   "VRSAVE_REGS",							\
+  "VSCR_REGS",								\
+  "SPE_ACC_REGS",                                                       \
+  "SPEFSCR_REGS",                                                       \
   "NON_SPECIAL_REGS",							\
   "MQ_REGS",								\
   "LINK_REGS",								\
@@ -1113,6 +1321,9 @@ enum reg_class
   { 0x00000000, 0xffffffff, 0x00000000, 0x00000000 }, /* FLOAT_REGS */       \
   { 0x00000000, 0x00000000, 0xffffe000, 0x00001fff }, /* ALTIVEC_REGS */     \
   { 0x00000000, 0x00000000, 0x00000000, 0x00002000 }, /* VRSAVE_REGS */	     \
+  { 0x00000000, 0x00000000, 0x00000000, 0x00004000 }, /* VSCR_REGS */	     \
+  { 0x00000000, 0x00000000, 0x00000000, 0x00008000 }, /* SPE_ACC_REGS */     \
+  { 0x00000000, 0x00000000, 0x00000000, 0x00010000 }, /* SPEFSCR_REGS */     \
   { 0xffffffff, 0xffffffff, 0x00000008, 0x00000000 }, /* NON_SPECIAL_REGS */ \
   { 0x00000000, 0x00000000, 0x00000001, 0x00000000 }, /* MQ_REGS */	     \
   { 0x00000000, 0x00000000, 0x00000002, 0x00000000 }, /* LINK_REGS */	     \
@@ -1145,6 +1356,9 @@ enum reg_class
   : (REGNO) == ARG_POINTER_REGNUM ? BASE_REGS	\
   : (REGNO) == XER_REGNO ? XER_REGS		\
   : (REGNO) == VRSAVE_REGNO ? VRSAVE_REGS	\
+  : (REGNO) == VSCR_REGNO ? VRSAVE_REGS	\
+  : (REGNO) == SPE_ACC_REGNO ? SPE_ACC_REGS	\
+  : (REGNO) == SPEFSCR_REGNO ? SPEFSCR_REGS	\
   : NO_REGS)
 
 /* The class value for index registers, and the one for base regs.  */
@@ -1173,8 +1387,8 @@ enum reg_class
    Return 1 if VALUE is in the range specified by C.
 
    `I' is a signed 16-bit constant
-   `J' is a constant with only the high-order 16 bits non-zero
-   `K' is a constant with only the low-order 16 bits non-zero
+   `J' is a constant with only the high-order 16 bits nonzero
+   `K' is a constant with only the low-order 16 bits nonzero
    `L' is a signed 16-bit constant shifted left 16 bits
    `M' is a constant that is greater than 31
    `N' is a positive constant that is an exact power of two
@@ -1213,16 +1427,32 @@ enum reg_class
    'R' is for AIX TOC entries.
    'S' is a constant that can be placed into a 64-bit mask operand
    'T' is a constant that can be placed into a 32-bit mask operand
-   'U' is for V.4 small data references.  */
+   'U' is for V.4 small data references.
+   'W' is a vector constant that can be easily generated (no mem refs).
+   'Y' is a indexed or word-aligned displacement memory operand. 
+   't' is for AND masks that can be performed by two rldic{l,r} insns.  */
 
 #define EXTRA_CONSTRAINT(OP, C)						\
   ((C) == 'Q' ? GET_CODE (OP) == MEM && GET_CODE (XEXP (OP, 0)) == REG	\
-   : (C) == 'R' ? LEGITIMATE_CONSTANT_POOL_ADDRESS_P (OP)		\
+   : (C) == 'R' ? legitimate_constant_pool_address_p (OP)		\
    : (C) == 'S' ? mask64_operand (OP, DImode)				\
    : (C) == 'T' ? mask_operand (OP, SImode)				\
    : (C) == 'U' ? (DEFAULT_ABI == ABI_V4				\
 		   && small_data_operand (OP, GET_MODE (OP)))		\
+   : (C) == 't' ? (mask64_2_operand (OP, DImode)			\
+		   && (fixed_regs[CR0_REGNO]				\
+		       || !logical_operand (OP, DImode))		\
+		   && !mask64_operand (OP, DImode))			\
+   : (C) == 'W' ? (easy_vector_constant (OP, GET_MODE (OP)))		\
+   : (C) == 'Y' ? (word_offset_memref_operand (OP, GET_MODE (OP)))      \
    : 0)
+
+/* Defining, which contraints are memory contraints. Tells reload,
+   that any memory address can be reloaded by copying the 
+   memory address into a base register if required.  */
+
+#define EXTRA_MEMORY_CONSTRAINT(C, STR)				\
+  ((C) == 'Q' || (C) == 'Y')
 
 /* Given an rtx X being reloaded into a reg required to be
    in class CLASS, return the class of reg to actually use.
@@ -1251,12 +1481,22 @@ enum reg_class
     ? GENERAL_REGS					\
     : (CLASS)))
 
+#define DISPARAGE_RELOAD_CLASS(X, CLASS)			\
+  (GET_CODE (X) == REG						\
+   && REGNO (X) < FIRST_PSEUDO_REGISTER				\
+   && SECONDARY_MEMORY_NEEDED (GET_MODE_CLASS (GET_MODE (X)),	\
+			       CLASS, GET_MODE (X))		\
+   ? 6 : 0)
+
 /* Return the register class of a scratch register needed to copy IN into
    or out of a register in CLASS in MODE.  If it can be done directly,
    NO_REGS is returned.  */
 
-#define SECONDARY_RELOAD_CLASS(CLASS,MODE,IN) \
-  secondary_reload_class (CLASS, MODE, IN)
+#define SECONDARY_INPUT_RELOAD_CLASS(CLASS, MODE, IN) \
+  secondary_reload_class (CLASS, MODE, IN, 1)
+
+#define SECONDARY_OUTPUT_RELOAD_CLASS(CLASS, MODE, IN) \
+  secondary_reload_class (CLASS, MODE, IN, 0)
 
 /* If we are copying between FP or AltiVec registers and anything
    else, we need a memory location.  */
@@ -1277,72 +1517,37 @@ enum reg_class
   ? ((GET_MODE_SIZE (MODE) + UNITS_PER_FP_WORD - 1) / UNITS_PER_FP_WORD) \
   : ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD))
 
-/* If defined, gives a class of registers that cannot be used as the
-   operand of a SUBREG that changes the mode of the object illegally.  */
 
-#define CLASS_CANNOT_CHANGE_MODE        FLOAT_REGS
+/* Return a class of registers that cannot change FROM mode to TO mode.  */
 
-/* Defines illegal mode changes for CLASS_CANNOT_CHANGE_MODE.  */
+#define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS)			  \
+  (((DEFAULT_ABI == ABI_AIX || DEFAULT_ABI == ABI_DARWIN)		  \
+    && GET_MODE_SIZE (FROM) >= 8 && GET_MODE_SIZE (TO) >= 8)		  \
+   ? 0									  \
+   : GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO)				  \
+   ? reg_classes_intersect_p (FLOAT_REGS, CLASS)			  \
+   : (TARGET_SPE && (SPE_VECTOR_MODE (FROM) + SPE_VECTOR_MODE (TO)) == 1) \
+   ? reg_classes_intersect_p (GENERAL_REGS, CLASS)			  \
+   : 0)
 
-#define CLASS_CANNOT_CHANGE_MODE_P(FROM,TO) \
-  (GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO))
-
 /* Stack layout; function entry, exit and calling.  */
 
 /* Enumeration to give which calling sequence to use.  */
 enum rs6000_abi {
   ABI_NONE,
   ABI_AIX,			/* IBM's AIX */
-  ABI_AIX_NODESC,		/* AIX calling sequence minus
-				   function descriptors */
   ABI_V4,			/* System V.4/eabi */
   ABI_DARWIN			/* Apple's Darwin (OS X kernel) */
 };
 
 extern enum rs6000_abi rs6000_current_abi;	/* available for use by subtarget */
 
-/* Structure used to define the rs6000 stack */
-typedef struct rs6000_stack {
-  int first_gp_reg_save;	/* first callee saved GP register used */
-  int first_fp_reg_save;	/* first callee saved FP register used */
-  int first_altivec_reg_save;	/* first callee saved AltiVec register used */
-  int lr_save_p;		/* true if the link reg needs to be saved */
-  int cr_save_p;		/* true if the CR reg needs to be saved */
-  unsigned int vrsave_mask;	/* mask of vec registers to save */
-  int toc_save_p;		/* true if the TOC needs to be saved */
-  int push_p;			/* true if we need to allocate stack space */
-  int calls_p;			/* true if the function makes any calls */
-  enum rs6000_abi abi;		/* which ABI to use */
-  int gp_save_offset;		/* offset to save GP regs from initial SP */
-  int fp_save_offset;		/* offset to save FP regs from initial SP */
-  int altivec_save_offset;	/* offset to save AltiVec regs from inital SP */
-  int lr_save_offset;		/* offset to save LR from initial SP */
-  int cr_save_offset;		/* offset to save CR from initial SP */
-  int vrsave_save_offset;	/* offset to save VRSAVE from initial SP */
-  int toc_save_offset;		/* offset to save the TOC pointer */
-  int varargs_save_offset;	/* offset to save the varargs registers */
-  int ehrd_offset;		/* offset to EH return data */
-  int reg_size;			/* register size (4 or 8) */
-  int varargs_size;		/* size to hold V.4 args passed in regs */
-  int vars_size;		/* variable save area size */
-  int parm_size;		/* outgoing parameter size */
-  int save_size;		/* save area size */
-  int fixed_size;		/* fixed size of stack frame */
-  int gp_size;			/* size of saved GP registers */
-  int fp_size;			/* size of saved FP registers */
-  int altivec_size;		/* size of saved AltiVec registers */
-  int cr_size;			/* size to hold CR if not in save_size */
-  int lr_size;			/* size to hold LR if not in save_size */
-  int vrsave_size;		/* size to hold VRSAVE if not in save_size */
-  int altivec_padding_size;	/* size of altivec alignment padding if
-				   not in save_size */
-  int toc_size;			/* size to hold TOC if not in save_size */
-  int total_size;		/* total bytes allocated for stack */
-} rs6000_stack_t;
-
 /* Define this if pushing a word on the stack
    makes the stack pointer a smaller address.  */
 #define STACK_GROWS_DOWNWARD
+
+/* Offsets recorded in opcodes are a multiple of this alignment factor.  */
+#define DWARF_CIE_DATA_ALIGNMENT (-((int) (TARGET_32BIT ? 4 : 8)))
 
 /* Define this if the nominal address of the stack frame
    is at the high-address end of the local variables;
@@ -1355,14 +1560,13 @@ typedef struct rs6000_stack {
 
 /* Size of the outgoing register save area */
 #define RS6000_REG_SAVE ((DEFAULT_ABI == ABI_AIX			\
-			  || DEFAULT_ABI == ABI_AIX_NODESC		\
 			  || DEFAULT_ABI == ABI_DARWIN)			\
 			 ? (TARGET_64BIT ? 64 : 32)			\
 			 : 0)
 
 /* Size of the fixed area on the stack */
 #define RS6000_SAVE_AREA \
-  (((DEFAULT_ABI == ABI_AIX || DEFAULT_ABI == ABI_AIX_NODESC || DEFAULT_ABI == ABI_DARWIN) ? 24 : 8)	\
+  (((DEFAULT_ABI == ABI_AIX || DEFAULT_ABI == ABI_DARWIN) ? 24 : 8)	\
    << (TARGET_64BIT ? 1 : 0))
 
 /* MEM representing address to save the TOC register */
@@ -1452,46 +1656,14 @@ typedef struct rs6000_stack {
 /* Define how to find the value returned by a function.
    VALTYPE is the data type of the value (as a tree).
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
-   otherwise, FUNC is 0.
+   otherwise, FUNC is 0.  */
 
-   On RS/6000 an integer value is in r3 and a floating-point value is in
-   fp1, unless -msoft-float.  */
-
-#define FUNCTION_VALUE(VALTYPE, FUNC)				\
-  gen_rtx_REG ((INTEGRAL_TYPE_P (VALTYPE)			\
-		&& TYPE_PRECISION (VALTYPE) < BITS_PER_WORD)	\
-	       || POINTER_TYPE_P (VALTYPE)			\
-	       ? word_mode : TYPE_MODE (VALTYPE),		\
-	       TREE_CODE (VALTYPE) == VECTOR_TYPE ? ALTIVEC_ARG_RETURN \
-	       : TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_HARD_FLOAT \
-               ? FP_ARG_RETURN : GP_ARG_RETURN)
+#define FUNCTION_VALUE(VALTYPE, FUNC) rs6000_function_value ((VALTYPE), (FUNC))
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE)						\
-  gen_rtx_REG (MODE, ALTIVEC_VECTOR_MODE (MODE) ? ALTIVEC_ARG_RETURN	\
-		     : GET_MODE_CLASS (MODE) == MODE_FLOAT		\
-		     && TARGET_HARD_FLOAT				\
-		     ? FP_ARG_RETURN : GP_ARG_RETURN)
-
-/* The AIX ABI for the RS/6000 specifies that all structures are
-   returned in memory.  The Darwin ABI does the same.  The SVR4 ABI
-   specifies that structures <= 8 bytes are returned in r3/r4, but a
-   draft put them in memory, and GCC used to implement the draft
-   instead of the final standard.  Therefore, TARGET_AIX_STRUCT_RET
-   controls this instead of DEFAULT_ABI; V.4 targets needing backward
-   compatibility can change DRAFT_V4_STRUCT_RET to override the
-   default, and -m switches get the final word.  See
-   rs6000_override_options for more details.
-
-   int_size_in_bytes returns -1 for variable size objects, which go in
-   memory always.  The cast to unsigned makes -1 > 8.  */
-
-#define RETURN_IN_MEMORY(TYPE) \
-  (AGGREGATE_TYPE_P (TYPE) && \
-   (TARGET_AIX_STRUCT_RET || \
-    (unsigned HOST_WIDEST_INT) int_size_in_bytes (TYPE) > 8))
+#define LIBCALL_VALUE(MODE) rs6000_libcall_value ((MODE))
 
 /* DRAFT_V4_STRUCT_RET defaults off.  */
 #define DRAFT_V4_STRUCT_RET 0
@@ -1517,7 +1689,6 @@ typedef struct rs6000_stack {
 #define	FP_ARG_AIX_MAX_REG 45
 #define	FP_ARG_V4_MAX_REG  40
 #define	FP_ARG_MAX_REG ((DEFAULT_ABI == ABI_AIX				\
-			 || DEFAULT_ABI == ABI_AIX_NODESC		\
 			 || DEFAULT_ABI == ABI_DARWIN)			\
 			? FP_ARG_AIX_MAX_REG : FP_ARG_V4_MAX_REG)
 #define FP_ARG_NUM_REG (FP_ARG_MAX_REG - FP_ARG_MIN_REG + 1)
@@ -1538,6 +1709,7 @@ typedef struct rs6000_stack {
 #define CALL_V4_CLEAR_FP_ARGS	0x00000002	/* V.4, no FP args passed */
 #define CALL_V4_SET_FP_ARGS	0x00000004	/* V.4, FP args were passed */
 #define CALL_LONG		0x00000008	/* always call indirect */
+#define CALL_LIBCALL		0x00000010	/* libcall */
 
 /* 1 if N is a possible register number for a function value
    as seen by the caller.
@@ -1546,7 +1718,7 @@ typedef struct rs6000_stack {
 #define FUNCTION_VALUE_REGNO_P(N)					\
   ((N) == GP_ARG_RETURN							\
    || ((N) == FP_ARG_RETURN && TARGET_HARD_FLOAT)			\
-   || ((N) == ALTIVEC_ARG_RETURN && TARGET_ALTIVEC))
+   || ((N) == ALTIVEC_ARG_RETURN && TARGET_ALTIVEC && TARGET_ALTIVEC_ABI))
 
 /* 1 if N is a possible register number for function argument passing.
    On RS/6000, these are r3-r10 and fp1-fp13.
@@ -1554,18 +1726,24 @@ typedef struct rs6000_stack {
 #define FUNCTION_ARG_REGNO_P(N)						\
   ((unsigned) (N) - GP_ARG_MIN_REG < GP_ARG_NUM_REG			\
    || ((unsigned) (N) - ALTIVEC_ARG_MIN_REG < ALTIVEC_ARG_NUM_REG	\
-       && TARGET_ALTIVEC)						\
+       && TARGET_ALTIVEC && TARGET_ALTIVEC_ABI)				\
    || ((unsigned) (N) - FP_ARG_MIN_REG < FP_ARG_NUM_REG			\
        && TARGET_HARD_FLOAT))
 
 /* A C structure for machine-specific, per-function data.
    This is added to the cfun structure.  */
-typedef struct machine_function
+typedef struct machine_function GTY(())
 {
   /* Whether a System V.4 varargs area was created.  */
   int sysv_varargs_p;
   /* Flags if __builtin_return_address (n) with n >= 1 was used.  */
   int ra_needs_full_frame;
+  /* Some local-dynamic symbol.  */
+  const char *some_ld_name;
+  /* Whether the instruction chain has been scanned already.  */
+  int insn_chain_scanned_p;
+  /* Flags if __builtin_return_address (0) was used.  */
+  int ra_need_lr;
 } machine_function;
 
 /* Define a data type for recording info about an argument list
@@ -1580,7 +1758,7 @@ typedef struct machine_function
    have prototype types for.
 
    For ABI_V4, we treat these slightly differently -- `sysv_gregno' is
-   the next availible GP register, `fregno' is the next available FP
+   the next available GP register, `fregno' is the next available FP
    register, and `words' is the number of words used on the stack.
 
    The varargs/stdarg support requires that this structure's size
@@ -1592,32 +1770,29 @@ typedef struct rs6000_args
   int fregno;			/* next available FP register */
   int vregno;			/* next available AltiVec register */
   int nargs_prototype;		/* # args left in the current prototype */
-  int orig_nargs;		/* Original value of nargs_prototype */
   int prototype;		/* Whether a prototype was defined */
+  int stdarg;			/* Whether function is a stdarg function.  */
   int call_cookie;		/* Do special things for this call */
   int sysv_gregno;		/* next available GP register */
 } CUMULATIVE_ARGS;
-
-/* Define intermediate macro to compute the size (in registers) of an argument
-   for the RS/6000.  */
-
-#define RS6000_ARG_SIZE(MODE, TYPE)					\
-((MODE) != BLKmode							\
- ? (GET_MODE_SIZE (MODE) + (UNITS_PER_WORD - 1)) / UNITS_PER_WORD	\
- : (int_size_in_bytes (TYPE) + (UNITS_PER_WORD - 1)) / UNITS_PER_WORD)
 
 /* Initialize a variable CUM of type CUMULATIVE_ARGS
    for a call to a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT) \
-  init_cumulative_args (&CUM, FNTYPE, LIBNAME, FALSE)
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
+  init_cumulative_args (&CUM, FNTYPE, LIBNAME, FALSE, FALSE, N_NAMED_ARGS)
 
 /* Similar, but when scanning the definition of a procedure.  We always
    set NARGS_PROTOTYPE large so we never return an EXPR_LIST.  */
 
-#define INIT_CUMULATIVE_INCOMING_ARGS(CUM,FNTYPE,LIBNAME) \
-  init_cumulative_args (&CUM, FNTYPE, LIBNAME, TRUE)
+#define INIT_CUMULATIVE_INCOMING_ARGS(CUM, FNTYPE, LIBNAME) \
+  init_cumulative_args (&CUM, FNTYPE, LIBNAME, TRUE, FALSE, 1000)
+
+/* Like INIT_CUMULATIVE_ARGS' but only used for outgoing libcalls.  */
+
+#define INIT_CUMULATIVE_LIBCALL_ARGS(CUM, MODE, LIBNAME) \
+  init_cumulative_args (&CUM, NULL_TREE, LIBNAME, FALSE, TRUE, 0)
 
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
@@ -1625,18 +1800,6 @@ typedef struct rs6000_args
 
 #define FUNCTION_ARG_ADVANCE(CUM, MODE, TYPE, NAMED)	\
   function_arg_advance (&CUM, MODE, TYPE, NAMED)
-
-/* Non-zero if we can use a floating-point register to pass this arg.  */
-#define USE_FP_FOR_ARG_P(CUM,MODE,TYPE) \
-  (GET_MODE_CLASS (MODE) == MODE_FLOAT  \
-   && (CUM).fregno <= FP_ARG_MAX_REG    \
-   && TARGET_HARD_FLOAT)
-
-/* Non-zero if we can use an AltiVec register to pass this arg.  */
-#define USE_ALTIVEC_FOR_ARG_P(CUM,MODE,TYPE)	\
-  (ALTIVEC_VECTOR_MODE (MODE)			\
-   && (CUM).vregno <= ALTIVEC_ARG_MAX_REG	\
-   && TARGET_ALTIVEC_ABI)
 
 /* Determine where to put an argument to a function.
    Value is zero to push the argument on the stack,
@@ -1694,42 +1857,16 @@ typedef struct rs6000_args
 #define FUNCTION_ARG_BOUNDARY(MODE, TYPE) \
   function_arg_boundary (MODE, TYPE)
 
-/* Perform any needed actions needed for a function that is receiving a
-   variable number of arguments.
-
-   CUM is as above.
-
-   MODE and TYPE are the mode and type of the current parameter.
-
-   PRETEND_SIZE is a variable that should be set to the amount of stack
-   that must be pushed by the prolog to pretend that our caller pushed
-   it.
-
-   Normally, this macro will push all remaining incoming registers on the
-   stack and set PRETEND_SIZE to the length of the registers pushed.  */
-
-#define SETUP_INCOMING_VARARGS(CUM,MODE,TYPE,PRETEND_SIZE,NO_RTL) \
-  setup_incoming_varargs (&CUM, MODE, TYPE, &PRETEND_SIZE, NO_RTL)
-
-/* Define the `__builtin_va_list' type for the ABI.  */
-#define BUILD_VA_LIST_TYPE(VALIST) \
-  (VALIST) = rs6000_build_va_list ()
-
 /* Implement `va_start' for varargs and stdarg.  */
-#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
-  rs6000_va_start (stdarg, valist, nextarg)
+#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
+  rs6000_va_start (valist, nextarg)
 
 /* Implement `va_arg'.  */
 #define EXPAND_BUILTIN_VA_ARG(valist, type) \
   rs6000_va_arg (valist, type)
 
-/* For AIX, the rule is that structures are passed left-aligned in
-   their stack slot.  However, GCC does not presently do this:
-   structures which are the same size as integer types are passed
-   right-aligned, as if they were in fact integers.  This only
-   matters for structures of size 1 or 2, or 4 when TARGET_64BIT.
-   ABI_V4 does not use std_expand_builtin_va_arg.  */
-#define PAD_VARARGS_DOWN (TYPE_MODE (type) != BLKmode)
+#define PAD_VARARGS_DOWN \
+   (FUNCTION_ARG_PADDING (TYPE_MODE (type), type) == downward)
 
 /* Define this macro to be a nonzero value if the location where a function
    argument is passed depends on whether or not it is a named argument.  */
@@ -1745,7 +1882,7 @@ typedef struct rs6000_args
    the stack pointer does not matter. No definition is equivalent to
    always zero.
 
-   On the RS/6000, this is non-zero because we can restore the stack from
+   On the RS/6000, this is nonzero because we can restore the stack from
    its backpointer, which we maintain.  */
 #define EXIT_IGNORE_STACK	1
 
@@ -1759,7 +1896,7 @@ typedef struct rs6000_args
    || (TARGET_ALTIVEC && (REGNO) == VRSAVE_REGNO)		\
    || (current_function_calls_eh_return				\
        && TARGET_AIX						\
-       && (REGNO) == TOC_REGISTER))
+       && (REGNO) == 2))
 
 
 /* TRAMPOLINE_TEMPLATE deleted */
@@ -1790,8 +1927,7 @@ typedef struct rs6000_args
    abi's store the return address.  */
 #define RETURN_ADDRESS_OFFSET						\
  ((DEFAULT_ABI == ABI_AIX						\
-   || DEFAULT_ABI == ABI_DARWIN						\
-   || DEFAULT_ABI == ABI_AIX_NODESC)	? (TARGET_32BIT ? 8 : 16) :	\
+   || DEFAULT_ABI == ABI_DARWIN)	? (TARGET_32BIT ? 8 : 16) :	\
   (DEFAULT_ABI == ABI_V4)		? 4 :				\
   (internal_error ("RETURN_ADDRESS_OFFSET not supported"), 0))
 
@@ -1822,7 +1958,7 @@ typedef struct rs6000_args
 {{ FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM},	\
  { ARG_POINTER_REGNUM, STACK_POINTER_REGNUM},	\
  { ARG_POINTER_REGNUM, FRAME_POINTER_REGNUM},	\
- { 30, 30} }
+ { RS6000_PIC_OFFSET_TABLE_REGNUM, RS6000_PIC_OFFSET_TABLE_REGNUM } }
 
 /* Given FROM and TO register numbers, say whether this elimination is allowed.
    Frame pointer elimination is automatically handled.
@@ -1833,34 +1969,19 @@ typedef struct rs6000_args
    We need r30 if -mminimal-toc was specified, and there are constant pool
    references.  */
 
-#define CAN_ELIMINATE(FROM, TO)					\
- ((FROM) == ARG_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM	\
-  ? ! frame_pointer_needed					\
-  : (FROM) == 30 ? ! TARGET_MINIMAL_TOC || TARGET_NO_TOC || get_pool_size () == 0 \
+#define CAN_ELIMINATE(FROM, TO)						\
+ ((FROM) == ARG_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM		\
+  ? ! frame_pointer_needed						\
+  : (FROM) == RS6000_PIC_OFFSET_TABLE_REGNUM 				\
+  ? ! TARGET_MINIMAL_TOC || TARGET_NO_TOC || get_pool_size () == 0	\
   : 1)
 
 /* Define the offset between two registers, one to be eliminated, and the other
    its replacement, at the start of a routine.  */
-#define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET)			\
-{									\
-  rs6000_stack_t *info = rs6000_stack_info ();				\
-									\
- if ((FROM) == FRAME_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM)	\
-   (OFFSET) = (info->push_p) ? 0 : - info->total_size;			\
- else if ((FROM) == ARG_POINTER_REGNUM && (TO) == FRAME_POINTER_REGNUM)	\
-   (OFFSET) = info->total_size;						\
- else if ((FROM) == ARG_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM)	\
-   (OFFSET) = (info->push_p) ? info->total_size : 0;			\
-  else if ((FROM) == 30)						\
-    (OFFSET) = 0;							\
-  else									\
-    abort ();								\
-}
+#define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET) \
+  ((OFFSET) = rs6000_initial_elimination_offset(FROM, TO))
 
 /* Addressing modes, and classification of registers for them.  */
-
-/* #define HAVE_POST_INCREMENT 0 */
-/* #define HAVE_POST_DECREMENT 0 */
 
 #define HAVE_PRE_DECREMENT 1
 #define HAVE_PRE_INCREMENT 1
@@ -1904,9 +2025,13 @@ typedef struct rs6000_args
    acceptable.  */
 
 #define LEGITIMATE_CONSTANT_P(X)				\
-  (GET_CODE (X) != CONST_DOUBLE || GET_MODE (X) == VOIDmode	\
-   || (TARGET_POWERPC64 && GET_MODE (X) == DImode)		\
-   || easy_fp_constant (X, GET_MODE (X)))
+  (((GET_CODE (X) != CONST_DOUBLE				\
+     && GET_CODE (X) != CONST_VECTOR)				\
+    || GET_MODE (X) == VOIDmode					\
+    || (TARGET_POWERPC64 && GET_MODE (X) == DImode)		\
+    || easy_fp_constant (X, GET_MODE (X))			\
+    || easy_vector_constant (X, GET_MODE (X)))			\
+   && !rs6000_tls_referenced_p (X))
 
 /* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
    and check its validity for a certain class.
@@ -1953,7 +2078,7 @@ typedef struct rs6000_args
    refers to a constant pool entry of an address (or the sum of it
    plus a constant), a short (16-bit signed) constant plus a register,
    the sum of two registers, or a register indirect, possibly with an
-   auto-increment.  For DFmode and DImode with an constant plus register,
+   auto-increment.  For DFmode and DImode with a constant plus register,
    we must ensure that both words are addressable or PowerPC64 with offset
    word aligned.
 
@@ -1961,67 +2086,6 @@ typedef struct rs6000_args
    32-bit DImode, TImode), indexed addressing cannot be used because
    adjacent memory cells are accessed by adding word-sized offsets
    during assembly output.  */
-
-#define CONSTANT_POOL_EXPR_P(X) (constant_pool_expr_p (X))
-
-#define TOC_RELATIVE_EXPR_P(X) (toc_relative_expr_p (X))
-
-#define LEGITIMATE_CONSTANT_POOL_ADDRESS_P(X)				\
-  (TARGET_TOC								\
-  && GET_CODE (X) == PLUS						\
-  && GET_CODE (XEXP (X, 0)) == REG					\
-  && (TARGET_MINIMAL_TOC || REGNO (XEXP (X, 0)) == TOC_REGISTER)	\
-  && CONSTANT_POOL_EXPR_P (XEXP (X, 1)))
-
-#define LEGITIMATE_SMALL_DATA_P(MODE, X)				\
-  (DEFAULT_ABI == ABI_V4						\
-   && !flag_pic && !TARGET_TOC						\
-   && (GET_CODE (X) == SYMBOL_REF || GET_CODE (X) == CONST)		\
-   && small_data_operand (X, MODE))
-
-#define LEGITIMATE_ADDRESS_INTEGER_P(X, OFFSET)				\
- (GET_CODE (X) == CONST_INT						\
-  && (unsigned HOST_WIDE_INT) (INTVAL (X) + (OFFSET) + 0x8000) < 0x10000)
-
-#define LEGITIMATE_OFFSET_ADDRESS_P(MODE, X, STRICT)		\
- (GET_CODE (X) == PLUS						\
-  && GET_CODE (XEXP (X, 0)) == REG				\
-  && INT_REG_OK_FOR_BASE_P (XEXP (X, 0), (STRICT))		\
-  && LEGITIMATE_ADDRESS_INTEGER_P (XEXP (X, 1), 0)		\
-  && (! ALTIVEC_VECTOR_MODE (MODE)                            \
-      || (GET_CODE (XEXP (X,1)) == CONST_INT && INTVAL (XEXP (X,1)) == 0)) \
-  && (((MODE) != DFmode && (MODE) != DImode)			\
-      || (TARGET_32BIT						\
-	  ? LEGITIMATE_ADDRESS_INTEGER_P (XEXP (X, 1), 4) 	\
-	  : ! (INTVAL (XEXP (X, 1)) & 3)))			\
-  && ((MODE) != TImode						\
-      || (TARGET_32BIT						\
-	  ? LEGITIMATE_ADDRESS_INTEGER_P (XEXP (X, 1), 12) 	\
-	  : (LEGITIMATE_ADDRESS_INTEGER_P (XEXP (X, 1), 8) 	\
-	     && ! (INTVAL (XEXP (X, 1)) & 3)))))
-
-#define LEGITIMATE_INDEXED_ADDRESS_P(X, STRICT)			\
- (GET_CODE (X) == PLUS						\
-  && GET_CODE (XEXP (X, 0)) == REG				\
-  && GET_CODE (XEXP (X, 1)) == REG				\
-  && ((INT_REG_OK_FOR_BASE_P (XEXP (X, 0), (STRICT))		\
-       && INT_REG_OK_FOR_INDEX_P (XEXP (X, 1), (STRICT)))	\
-      || (INT_REG_OK_FOR_BASE_P (XEXP (X, 1), (STRICT))		\
-	  && INT_REG_OK_FOR_INDEX_P (XEXP (X, 0), (STRICT)))))
-
-#define LEGITIMATE_INDIRECT_ADDRESS_P(X, STRICT)		\
-  (GET_CODE (X) == REG && INT_REG_OK_FOR_BASE_P (X, (STRICT)))
-
-#define LEGITIMATE_LO_SUM_ADDRESS_P(MODE, X, STRICT)	\
-  (TARGET_ELF						\
-   && ! flag_pic && ! TARGET_TOC			\
-   && GET_MODE_NUNITS (MODE) == 1			\
-   && (GET_MODE_BITSIZE (MODE) <= 32 			\
-       || (TARGET_HARD_FLOAT && (MODE) == DFmode))	\
-   && GET_CODE (X) == LO_SUM				\
-   && GET_CODE (XEXP (X, 0)) == REG			\
-   && INT_REG_OK_FOR_BASE_P (XEXP (X, 0), (STRICT))	\
-   && CONSTANT_P (XEXP (X, 1)))
 
 #define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR)			\
 { if (rs6000_legitimate_address (MODE, X, REG_OK_STRICT_FLAG))	\
@@ -2077,27 +2141,13 @@ do {									     \
 } while (0)
 
 /* Go to LABEL if ADDR (a legitimate address expression)
-   has an effect that depends on the machine mode it is used for.
-
-   On the RS/6000 this is true if the address is valid with a zero offset
-   but not with an offset of four (this means it cannot be used as an
-   address for DImode or DFmode) or is a pre-increment or decrement.  Since
-   we know it is valid, we just check for an address that is not valid with
-   an offset of four.  */
+   has an effect that depends on the machine mode it is used for.  */
 
 #define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL)		\
-{ if (GET_CODE (ADDR) == PLUS					\
-      && LEGITIMATE_ADDRESS_INTEGER_P (XEXP (ADDR, 1), 0)	\
-      && ! LEGITIMATE_ADDRESS_INTEGER_P (XEXP (ADDR, 1),	\
-					 (TARGET_32BIT ? 4 : 8))) \
+do {								\
+  if (rs6000_mode_dependent_address (ADDR))			\
     goto LABEL;							\
-  if (TARGET_UPDATE && GET_CODE (ADDR) == PRE_INC)		\
-    goto LABEL;							\
-  if (TARGET_UPDATE && GET_CODE (ADDR) == PRE_DEC)		\
-    goto LABEL;							\
-  if (GET_CODE (ADDR) == LO_SUM)				\
-    goto LABEL;							\
-}
+} while (0)
 
 /* The register number of the register used to address a table of
    static data addresses in memory.  In some cases this register is
@@ -2110,7 +2160,7 @@ do {									     \
 #define RS6000_PIC_OFFSET_TABLE_REGNUM 30
 #define PIC_OFFSET_TABLE_REGNUM (flag_pic ? RS6000_PIC_OFFSET_TABLE_REGNUM : INVALID_REGNUM)
 
-#define TOC_REGISTER (TARGET_MINIMAL_TOC ? 30 : 2)
+#define TOC_REGISTER (TARGET_MINIMAL_TOC ? RS6000_PIC_OFFSET_TABLE_REGNUM : 2)
 
 /* Define this macro if the register defined by
    `PIC_OFFSET_TABLE_REGNUM' is clobbered by calls.  Do not define
@@ -2144,14 +2194,6 @@ do {									     \
    generating position independent code.  */
 
 /* #define LEGITIMATE_PIC_OPERAND_P (X) */
-
-/* In rare cases, correct code generation requires extra machine
-   dependent processing between the second jump optimization pass and
-   delayed branch scheduling.  On those machines, define this macro
-   as a C statement to act on the code starting at INSN.  */
-
-/* #define MACHINE_DEPENDENT_REORG(INSN) */
-
 
 /* Define this if some processing needs to be done immediately before
    emitting code for an insn.  */
@@ -2182,7 +2224,7 @@ do {									     \
 #define MAX_MOVE_MAX 8
 
 /* Nonzero if access to memory by bytes is no faster than for words.
-   Also non-zero if doing byte operations (specifically shifts) in registers
+   Also nonzero if doing byte operations (specifically shifts) in registers
    is undesirable.  */
 #define SLOW_BYTE_ACCESS 1
 
@@ -2203,14 +2245,24 @@ do {									     \
    is done just by pretending it is already truncated.  */
 #define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC) 1
 
+/* The cntlzw and cntlzd instructions return 32 and 64 for input of zero.  */
+#define CLZ_DEFINED_VALUE_AT_ZERO(MODE, VALUE) \
+  ((VALUE) = ((MODE) == SImode ? 32 : 64))
+
+/* The CTZ patterns return -1 for input of zero.  */
+#define CTZ_DEFINED_VALUE_AT_ZERO(MODE, VALUE) ((VALUE) = -1)
+
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
    between pointers and any other objects of this machine mode.  */
 #define Pmode (TARGET_32BIT ? SImode : DImode)
 
+/* Supply definition of STACK_SIZE_MODE for allocate_dynamic_stack_space.  */
+#define STACK_SIZE_MODE (TARGET_32BIT ? SImode : DImode)
+
 /* Mode of a function address in a call instruction (for indexing purposes).
    Doesn't matter on RS/6000.  */
-#define FUNCTION_MODE (TARGET_32BIT ? SImode : DImode)
+#define FUNCTION_MODE SImode
 
 /* Define this if addresses of constant functions
    shouldn't be put through pseudo regs where they can be cse'd.
@@ -2226,163 +2278,12 @@ do {									     \
 
 #define SHIFT_COUNT_TRUNCATED (TARGET_POWER ? 1 : 0)
 
-/* Compute the cost of computing a constant rtl expression RTX
-   whose rtx-code is CODE.  The body of this macro is a portion
-   of a switch statement.  If the code is computed here,
-   return it with a return statement.  Otherwise, break from the switch.
-
-   On the RS/6000, if it is valid in the insn, it is free.  So this
-   always returns 0.  */
-
-#define CONST_COSTS(RTX,CODE,OUTER_CODE)			\
-  case CONST_INT:						\
-  case CONST:							\
-  case LABEL_REF:						\
-  case SYMBOL_REF:						\
-  case CONST_DOUBLE:						\
-  case HIGH:							\
-    return 0;
-
-/* Provide the costs of a rtl expression.  This is in the body of a
-   switch on CODE.  */
-
-#define RTX_COSTS(X,CODE,OUTER_CODE)					\
-  case PLUS:								\
-    return ((GET_CODE (XEXP (X, 1)) == CONST_INT			\
-	     && ((unsigned HOST_WIDE_INT) (INTVAL (XEXP (X, 1))		\
-					   + 0x8000) >= 0x10000)	\
-	     && ((INTVAL (XEXP (X, 1)) & 0xffff) != 0))			\
-	    ? COSTS_N_INSNS (2)						\
-	    : COSTS_N_INSNS (1));					\
-  case AND:								\
-  case IOR:								\
-  case XOR:								\
-    return ((GET_CODE (XEXP (X, 1)) == CONST_INT			\
-	     && (INTVAL (XEXP (X, 1)) & (~ (HOST_WIDE_INT) 0xffff)) != 0 \
-	     && ((INTVAL (XEXP (X, 1)) & 0xffff) != 0))			\
-	    ? COSTS_N_INSNS (2)						\
-	    : COSTS_N_INSNS (1));					\
-  case MULT:								\
-    switch (rs6000_cpu)							\
-      {									\
-      case PROCESSOR_RIOS1:						\
-      case PROCESSOR_PPC405:						\
-        return (GET_CODE (XEXP (X, 1)) != CONST_INT			\
-		? COSTS_N_INSNS (5)					\
-		: INTVAL (XEXP (X, 1)) >= -256 && INTVAL (XEXP (X, 1)) <= 255 \
-		? COSTS_N_INSNS (3) : COSTS_N_INSNS (4));		\
-      case PROCESSOR_RS64A:						\
-        return (GET_CODE (XEXP (X, 1)) != CONST_INT			\
-		? GET_MODE (XEXP (X, 1)) != DImode			\
-		? COSTS_N_INSNS (20) : COSTS_N_INSNS (34)		\
-		: INTVAL (XEXP (X, 1)) >= -256 && INTVAL (XEXP (X, 1)) <= 255 \
-		? COSTS_N_INSNS (8) : COSTS_N_INSNS (12));		\
-      case PROCESSOR_RIOS2:						\
-      case PROCESSOR_MPCCORE:						\
-      case PROCESSOR_PPC604e:						\
-        return COSTS_N_INSNS (2);					\
-      case PROCESSOR_PPC601:						\
-        return COSTS_N_INSNS (5);					\
-      case PROCESSOR_PPC603:						\
-      case PROCESSOR_PPC7400:						\
-      case PROCESSOR_PPC750:						\
-        return (GET_CODE (XEXP (X, 1)) != CONST_INT			\
-		? COSTS_N_INSNS (5)					\
-		: INTVAL (XEXP (X, 1)) >= -256 && INTVAL (XEXP (X, 1)) <= 255 \
-		? COSTS_N_INSNS (2) : COSTS_N_INSNS (3));		\
-      case PROCESSOR_PPC7450:						\
-        return (GET_CODE (XEXP (X, 1)) != CONST_INT			\
-		? COSTS_N_INSNS (4)					\
-		: COSTS_N_INSNS (3));			    		\
-      case PROCESSOR_PPC403:						\
-      case PROCESSOR_PPC604:						\
-        return COSTS_N_INSNS (4);					\
-      case PROCESSOR_PPC620:						\
-      case PROCESSOR_PPC630:						\
-        return (GET_CODE (XEXP (X, 1)) != CONST_INT			\
-		? GET_MODE (XEXP (X, 1)) != DImode			\
-		? COSTS_N_INSNS (5) : COSTS_N_INSNS (7)			\
-		: INTVAL (XEXP (X, 1)) >= -256 && INTVAL (XEXP (X, 1)) <= 255 \
-		? COSTS_N_INSNS (3) : COSTS_N_INSNS (4));		\
-      }									\
-  case DIV:								\
-  case MOD:								\
-    if (GET_CODE (XEXP (X, 1)) == CONST_INT				\
-	&& exact_log2 (INTVAL (XEXP (X, 1))) >= 0)			\
-      return COSTS_N_INSNS (2);						\
-    /* otherwise fall through to normal divide.  */			\
-  case UDIV:								\
-  case UMOD:								\
-    switch (rs6000_cpu)							\
-      {									\
-      case PROCESSOR_RIOS1:						\
-	return COSTS_N_INSNS (19);					\
-      case PROCESSOR_RIOS2:						\
-	return COSTS_N_INSNS (13);					\
-      case PROCESSOR_RS64A:						\
-        return (GET_MODE (XEXP (X, 1)) != DImode			\
-		? COSTS_N_INSNS (65)					\
-		: COSTS_N_INSNS (67));					\
-      case PROCESSOR_MPCCORE:						\
-	return COSTS_N_INSNS (6);					\
-      case PROCESSOR_PPC403:						\
-	return COSTS_N_INSNS (33);					\
-      case PROCESSOR_PPC405:						\
-	return COSTS_N_INSNS (35);					\
-      case PROCESSOR_PPC601:						\
-	return COSTS_N_INSNS (36);					\
-      case PROCESSOR_PPC603:						\
-	return COSTS_N_INSNS (37);					\
-      case PROCESSOR_PPC604:						\
-      case PROCESSOR_PPC604e:						\
-	return COSTS_N_INSNS (20);					\
-      case PROCESSOR_PPC620:						\
-      case PROCESSOR_PPC630:						\
-        return (GET_MODE (XEXP (X, 1)) != DImode			\
-		? COSTS_N_INSNS (21)					\
-		: COSTS_N_INSNS (37));					\
-      case PROCESSOR_PPC750:						\
-      case PROCESSOR_PPC7400:						\
-        return COSTS_N_INSNS (19);					\
-      case PROCESSOR_PPC7450:						\
-        return COSTS_N_INSNS (23);					\
-      }									\
-  case FFS:								\
-    return COSTS_N_INSNS (4);						\
-  case MEM:								\
-    /* MEM should be slightly more expensive than (plus (reg) (const)) */ \
-    return 5;
-
-/* Compute the cost of an address.  This is meant to approximate the size
-   and/or execution delay of an insn using that address.  If the cost is
-   approximated by the RTL complexity, including CONST_COSTS above, as
-   is usually the case for CISC machines, this macro should not be defined.
-   For aggressively RISCy machines, only one insn format is allowed, so
-   this macro should be a constant.  The value of this macro only matters
-   for valid addresses.
-
-   For the RS/6000, everything is cost 0.  */
-
-#define ADDRESS_COST(RTX) 0
-
 /* Adjust the length of an INSN.  LENGTH is the currently-computed length and
    should be adjusted to reflect any required changes.  This macro is used when
    there is some systematic length adjustment required that would be difficult
    to express in the length attribute.  */
 
 /* #define ADJUST_INSN_LENGTH(X,LENGTH) */
-
-/* Add any extra modes needed to represent the condition code.
-
-   For the RS/6000, we need separate modes when unsigned (logical) comparisons
-   are being done and we need a separate mode for floating-point.  We also
-   use a mode for the case when we are comparing the results of two
-   comparisons, as then only the EQ bit is valid in the register.  */
-
-#define EXTRA_CC_MODES		\
-    CC(CCUNSmode,  "CCUNS")	\
-    CC(CCFPmode,   "CCFP")	\
-    CC(CCEQmode,   "CCEQ")
 
 /* Given a comparison code (EQ, NE, etc.) and the first operand of a
    COMPARE, return the mode to be used for the comparison.  For
@@ -2397,11 +2298,19 @@ do {									     \
    : (((OP) == EQ || (OP) == NE) && GET_RTX_CLASS (GET_CODE (X)) == '<'   \
       ? CCEQmode : CCmode))
 
-/* Define the information needed to generate branch and scc insns.  This is
-   stored from the compare operation.  Note that we can't use "rtx" here
-   since it hasn't been defined!  */
+/* Can the condition code MODE be safely reversed?  This is safe in
+   all cases on this port, because at present it doesn't use the
+   trapping FP comparisons (fcmpo).  */
+#define REVERSIBLE_CC_MODE(MODE) 1
 
-extern struct rtx_def *rs6000_compare_op0, *rs6000_compare_op1;
+/* Given a condition code and a mode, return the inverse condition.  */
+#define REVERSE_CONDITION(CODE, MODE) rs6000_reverse_condition (MODE, CODE)
+
+/* Define the information needed to generate branch and scc insns.  This is
+   stored from the compare operation.  */
+
+extern GTY(()) rtx rs6000_compare_op0;
+extern GTY(()) rtx rs6000_compare_op1;
 extern int rs6000_compare_fp_p;
 
 /* Control the assembler format that we output.  */
@@ -2504,6 +2413,8 @@ extern int toc_initialized;
       ASM_OUTPUT_DEF (FILE, alias, name);				\
     }									\
    while (0)
+
+#define TARGET_ASM_FILE_START rs6000_file_start
 
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
@@ -2637,30 +2548,9 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0).  */
   &rs6000_reg_names[107][0],	/* v30  */				\
   &rs6000_reg_names[108][0],	/* v31  */				\
   &rs6000_reg_names[109][0],	/* vrsave  */				\
-}
-
-/* print-rtl can't handle the above REGISTER_NAMES, so define the
-   following for it.  Switch to use the alternate names since
-   they are more mnemonic.  */
-
-#define DEBUG_REGISTER_NAMES						\
-{									\
-     "r0", "r1",   "r2",  "r3",  "r4",  "r5",  "r6",  "r7",		\
-     "r8", "r9",  "r10", "r11", "r12", "r13", "r14", "r15",		\
-    "r16", "r17", "r18", "r19", "r20", "r21", "r22", "r23",		\
-    "r24", "r25", "r26", "r27", "r28", "r29", "r30", "r31",		\
-     "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",		\
-     "f8",  "f9", "f10", "f11", "f12", "f13", "f14", "f15",		\
-    "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",		\
-    "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",		\
-     "mq",  "lr", "ctr",  "ap",						\
-    "cr0", "cr1", "cr2", "cr3", "cr4", "cr5", "cr6", "cr7",		\
-  "xer",								\
-     "v0",  "v1",  "v2",  "v3",  "v4",  "v5",  "v6",  "v7",             \
-     "v8",  "v9", "v10", "v11", "v12", "v13", "v14", "v15",             \
-    "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23",             \
-    "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31",             \
-    "vrsave"								\
+  &rs6000_reg_names[110][0],	/* vscr  */				\
+  &rs6000_reg_names[111][0],	/* spe_acc */				\
+  &rs6000_reg_names[112][0],	/* spefscr */				\
 }
 
 /* Table of additional register names to use in user input.  */
@@ -2690,7 +2580,8 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0).  */
   {"v20",  97}, {"v21",  98}, {"v22",  99}, {"v23",  100},	\
   {"v24",  101},{"v25",  102},{"v26",  103},{"v27",  104},      \
   {"v28",  105},{"v29",  106},{"v30",  107},{"v31",  108},      \
-  {"vrsave", 109},						\
+  {"vrsave", 109}, {"vscr", 110},				\
+  {"spe_acc", 111}, {"spefscr", 112},				\
   /* no additional names for: mq, lr, ctr, ap */		\
   {"cr0",  68}, {"cr1",  69}, {"cr2",  70}, {"cr3",  71},	\
   {"cr4",  72}, {"cr5",  73}, {"cr6",  74}, {"cr7",  75},	\
@@ -2721,14 +2612,6 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0).  */
   if ((LOG) != 0)			\
     fprintf (FILE, "\t.align %d\n", (LOG))
 
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
-( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
-  sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
 /* Pick up the return address upon entry to a procedure. Used for
    dwarf2 unwind information.  This also enables the table driven
    mechanism.  */
@@ -2749,7 +2632,7 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0).  */
 /* Define which CODE values are valid.  */
 
 #define PRINT_OPERAND_PUNCT_VALID_P(CODE)  \
-  ((CODE) == '.')
+  ((CODE) == '.' || (CODE) == '&')
 
 /* Print a memory address as an operand to reference that memory location.  */
 
@@ -2781,22 +2664,31 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0).  */
   {"got_operand", {SYMBOL_REF, CONST, LABEL_REF}},			   \
   {"got_no_const_operand", {SYMBOL_REF, LABEL_REF}},			   \
   {"easy_fp_constant", {CONST_DOUBLE}},					   \
+  {"easy_vector_constant", {CONST_VECTOR}},				   \
+  {"easy_vector_constant_add_self", {CONST_VECTOR}},			   \
   {"zero_fp_constant", {CONST_DOUBLE}},					   \
   {"reg_or_mem_operand", {SUBREG, MEM, REG}},				   \
   {"lwa_operand", {SUBREG, MEM, REG}},					   \
   {"volatile_mem_operand", {MEM}},					   \
   {"offsettable_mem_operand", {MEM}},					   \
+  {"invalid_gpr_mem", {MEM}},						   \
+  {"base_reg_operand", {REG}},						   \
   {"mem_or_easy_const_operand", {SUBREG, MEM, CONST_DOUBLE}},		   \
   {"add_operand", {SUBREG, REG, CONST_INT}},				   \
   {"non_add_cint_operand", {CONST_INT}},				   \
   {"and_operand", {SUBREG, REG, CONST_INT}},				   \
   {"and64_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}},		   \
+  {"and64_2_operand", {SUBREG, REG, CONST_INT}},			   \
   {"logical_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}},		   \
   {"non_logical_cint_operand", {CONST_INT, CONST_DOUBLE}},		   \
   {"mask_operand", {CONST_INT}},					   \
-  {"mask64_operand", {CONST_INT, CONST_DOUBLE}},			   \
+  {"mask_operand_wrap", {CONST_INT}},					   \
+  {"mask64_operand", {CONST_INT}},					   \
+  {"mask64_2_operand", {CONST_INT}},					   \
   {"count_register_operand", {REG}},					   \
   {"xer_operand", {REG}},						   \
+  {"symbol_ref_operand", {SYMBOL_REF}},					   \
+  {"rs6000_tls_symbol_ref", {SYMBOL_REF}},				   \
   {"call_operand", {SYMBOL_REF, REG}},					   \
   {"current_file_function_operand", {SYMBOL_REF}},			   \
   {"input_operand", {SUBREG, MEM, REG, CONST_INT,			   \
@@ -3035,5 +2927,240 @@ enum rs6000_builtins
   ALTIVEC_BUILTIN_ABS_V4SI,
   ALTIVEC_BUILTIN_ABS_V4SF,
   ALTIVEC_BUILTIN_ABS_V8HI,
-  ALTIVEC_BUILTIN_ABS_V16QI
+  ALTIVEC_BUILTIN_ABS_V16QI,
+  ALTIVEC_BUILTIN_COMPILETIME_ERROR,
+  /* SPE builtins.  */
+  SPE_BUILTIN_EVADDW,
+  SPE_BUILTIN_EVAND,
+  SPE_BUILTIN_EVANDC,
+  SPE_BUILTIN_EVDIVWS,
+  SPE_BUILTIN_EVDIVWU,
+  SPE_BUILTIN_EVEQV,
+  SPE_BUILTIN_EVFSADD,
+  SPE_BUILTIN_EVFSDIV,
+  SPE_BUILTIN_EVFSMUL,
+  SPE_BUILTIN_EVFSSUB,
+  SPE_BUILTIN_EVLDDX,
+  SPE_BUILTIN_EVLDHX,
+  SPE_BUILTIN_EVLDWX,
+  SPE_BUILTIN_EVLHHESPLATX,
+  SPE_BUILTIN_EVLHHOSSPLATX,
+  SPE_BUILTIN_EVLHHOUSPLATX,
+  SPE_BUILTIN_EVLWHEX,
+  SPE_BUILTIN_EVLWHOSX,
+  SPE_BUILTIN_EVLWHOUX,
+  SPE_BUILTIN_EVLWHSPLATX,
+  SPE_BUILTIN_EVLWWSPLATX,
+  SPE_BUILTIN_EVMERGEHI,
+  SPE_BUILTIN_EVMERGEHILO,
+  SPE_BUILTIN_EVMERGELO,
+  SPE_BUILTIN_EVMERGELOHI,
+  SPE_BUILTIN_EVMHEGSMFAA,
+  SPE_BUILTIN_EVMHEGSMFAN,
+  SPE_BUILTIN_EVMHEGSMIAA,
+  SPE_BUILTIN_EVMHEGSMIAN,
+  SPE_BUILTIN_EVMHEGUMIAA,
+  SPE_BUILTIN_EVMHEGUMIAN,
+  SPE_BUILTIN_EVMHESMF,
+  SPE_BUILTIN_EVMHESMFA,
+  SPE_BUILTIN_EVMHESMFAAW,
+  SPE_BUILTIN_EVMHESMFANW,
+  SPE_BUILTIN_EVMHESMI,
+  SPE_BUILTIN_EVMHESMIA,
+  SPE_BUILTIN_EVMHESMIAAW,
+  SPE_BUILTIN_EVMHESMIANW,
+  SPE_BUILTIN_EVMHESSF,
+  SPE_BUILTIN_EVMHESSFA,
+  SPE_BUILTIN_EVMHESSFAAW,
+  SPE_BUILTIN_EVMHESSFANW,
+  SPE_BUILTIN_EVMHESSIAAW,
+  SPE_BUILTIN_EVMHESSIANW,
+  SPE_BUILTIN_EVMHEUMI,
+  SPE_BUILTIN_EVMHEUMIA,
+  SPE_BUILTIN_EVMHEUMIAAW,
+  SPE_BUILTIN_EVMHEUMIANW,
+  SPE_BUILTIN_EVMHEUSIAAW,
+  SPE_BUILTIN_EVMHEUSIANW,
+  SPE_BUILTIN_EVMHOGSMFAA,
+  SPE_BUILTIN_EVMHOGSMFAN,
+  SPE_BUILTIN_EVMHOGSMIAA,
+  SPE_BUILTIN_EVMHOGSMIAN,
+  SPE_BUILTIN_EVMHOGUMIAA,
+  SPE_BUILTIN_EVMHOGUMIAN,
+  SPE_BUILTIN_EVMHOSMF,
+  SPE_BUILTIN_EVMHOSMFA,
+  SPE_BUILTIN_EVMHOSMFAAW,
+  SPE_BUILTIN_EVMHOSMFANW,
+  SPE_BUILTIN_EVMHOSMI,
+  SPE_BUILTIN_EVMHOSMIA,
+  SPE_BUILTIN_EVMHOSMIAAW,
+  SPE_BUILTIN_EVMHOSMIANW,
+  SPE_BUILTIN_EVMHOSSF,
+  SPE_BUILTIN_EVMHOSSFA,
+  SPE_BUILTIN_EVMHOSSFAAW,
+  SPE_BUILTIN_EVMHOSSFANW,
+  SPE_BUILTIN_EVMHOSSIAAW,
+  SPE_BUILTIN_EVMHOSSIANW,
+  SPE_BUILTIN_EVMHOUMI,
+  SPE_BUILTIN_EVMHOUMIA,
+  SPE_BUILTIN_EVMHOUMIAAW,
+  SPE_BUILTIN_EVMHOUMIANW,
+  SPE_BUILTIN_EVMHOUSIAAW,
+  SPE_BUILTIN_EVMHOUSIANW,
+  SPE_BUILTIN_EVMWHSMF,
+  SPE_BUILTIN_EVMWHSMFA,
+  SPE_BUILTIN_EVMWHSMI,
+  SPE_BUILTIN_EVMWHSMIA,
+  SPE_BUILTIN_EVMWHSSF,
+  SPE_BUILTIN_EVMWHSSFA,
+  SPE_BUILTIN_EVMWHUMI,
+  SPE_BUILTIN_EVMWHUMIA,
+  SPE_BUILTIN_EVMWLSMIAAW,
+  SPE_BUILTIN_EVMWLSMIANW,
+  SPE_BUILTIN_EVMWLSSIAAW,
+  SPE_BUILTIN_EVMWLSSIANW,
+  SPE_BUILTIN_EVMWLUMI,
+  SPE_BUILTIN_EVMWLUMIA,
+  SPE_BUILTIN_EVMWLUMIAAW,
+  SPE_BUILTIN_EVMWLUMIANW,
+  SPE_BUILTIN_EVMWLUSIAAW,
+  SPE_BUILTIN_EVMWLUSIANW,
+  SPE_BUILTIN_EVMWSMF,
+  SPE_BUILTIN_EVMWSMFA,
+  SPE_BUILTIN_EVMWSMFAA,
+  SPE_BUILTIN_EVMWSMFAN,
+  SPE_BUILTIN_EVMWSMI,
+  SPE_BUILTIN_EVMWSMIA,
+  SPE_BUILTIN_EVMWSMIAA,
+  SPE_BUILTIN_EVMWSMIAN,
+  SPE_BUILTIN_EVMWHSSFAA,
+  SPE_BUILTIN_EVMWSSF,
+  SPE_BUILTIN_EVMWSSFA,
+  SPE_BUILTIN_EVMWSSFAA,
+  SPE_BUILTIN_EVMWSSFAN,
+  SPE_BUILTIN_EVMWUMI,
+  SPE_BUILTIN_EVMWUMIA,
+  SPE_BUILTIN_EVMWUMIAA,
+  SPE_BUILTIN_EVMWUMIAN,
+  SPE_BUILTIN_EVNAND,
+  SPE_BUILTIN_EVNOR,
+  SPE_BUILTIN_EVOR,
+  SPE_BUILTIN_EVORC,
+  SPE_BUILTIN_EVRLW,
+  SPE_BUILTIN_EVSLW,
+  SPE_BUILTIN_EVSRWS,
+  SPE_BUILTIN_EVSRWU,
+  SPE_BUILTIN_EVSTDDX,
+  SPE_BUILTIN_EVSTDHX,
+  SPE_BUILTIN_EVSTDWX,
+  SPE_BUILTIN_EVSTWHEX,
+  SPE_BUILTIN_EVSTWHOX,
+  SPE_BUILTIN_EVSTWWEX,
+  SPE_BUILTIN_EVSTWWOX,
+  SPE_BUILTIN_EVSUBFW,
+  SPE_BUILTIN_EVXOR,
+  SPE_BUILTIN_EVABS,
+  SPE_BUILTIN_EVADDSMIAAW,
+  SPE_BUILTIN_EVADDSSIAAW,
+  SPE_BUILTIN_EVADDUMIAAW,
+  SPE_BUILTIN_EVADDUSIAAW,
+  SPE_BUILTIN_EVCNTLSW,
+  SPE_BUILTIN_EVCNTLZW,
+  SPE_BUILTIN_EVEXTSB,
+  SPE_BUILTIN_EVEXTSH,
+  SPE_BUILTIN_EVFSABS,
+  SPE_BUILTIN_EVFSCFSF,
+  SPE_BUILTIN_EVFSCFSI,
+  SPE_BUILTIN_EVFSCFUF,
+  SPE_BUILTIN_EVFSCFUI,
+  SPE_BUILTIN_EVFSCTSF,
+  SPE_BUILTIN_EVFSCTSI,
+  SPE_BUILTIN_EVFSCTSIZ,
+  SPE_BUILTIN_EVFSCTUF,
+  SPE_BUILTIN_EVFSCTUI,
+  SPE_BUILTIN_EVFSCTUIZ,
+  SPE_BUILTIN_EVFSNABS,
+  SPE_BUILTIN_EVFSNEG,
+  SPE_BUILTIN_EVMRA,
+  SPE_BUILTIN_EVNEG,
+  SPE_BUILTIN_EVRNDW,
+  SPE_BUILTIN_EVSUBFSMIAAW,
+  SPE_BUILTIN_EVSUBFSSIAAW,
+  SPE_BUILTIN_EVSUBFUMIAAW,
+  SPE_BUILTIN_EVSUBFUSIAAW,
+  SPE_BUILTIN_EVADDIW,
+  SPE_BUILTIN_EVLDD,
+  SPE_BUILTIN_EVLDH,
+  SPE_BUILTIN_EVLDW,
+  SPE_BUILTIN_EVLHHESPLAT,
+  SPE_BUILTIN_EVLHHOSSPLAT,
+  SPE_BUILTIN_EVLHHOUSPLAT,
+  SPE_BUILTIN_EVLWHE,
+  SPE_BUILTIN_EVLWHOS,
+  SPE_BUILTIN_EVLWHOU,
+  SPE_BUILTIN_EVLWHSPLAT,
+  SPE_BUILTIN_EVLWWSPLAT,
+  SPE_BUILTIN_EVRLWI,
+  SPE_BUILTIN_EVSLWI,
+  SPE_BUILTIN_EVSRWIS,
+  SPE_BUILTIN_EVSRWIU,
+  SPE_BUILTIN_EVSTDD,
+  SPE_BUILTIN_EVSTDH,
+  SPE_BUILTIN_EVSTDW,
+  SPE_BUILTIN_EVSTWHE,
+  SPE_BUILTIN_EVSTWHO,
+  SPE_BUILTIN_EVSTWWE,
+  SPE_BUILTIN_EVSTWWO,
+  SPE_BUILTIN_EVSUBIFW,
+
+  /* Compares.  */
+  SPE_BUILTIN_EVCMPEQ,
+  SPE_BUILTIN_EVCMPGTS,
+  SPE_BUILTIN_EVCMPGTU,
+  SPE_BUILTIN_EVCMPLTS,
+  SPE_BUILTIN_EVCMPLTU,
+  SPE_BUILTIN_EVFSCMPEQ,
+  SPE_BUILTIN_EVFSCMPGT,
+  SPE_BUILTIN_EVFSCMPLT,
+  SPE_BUILTIN_EVFSTSTEQ,
+  SPE_BUILTIN_EVFSTSTGT,
+  SPE_BUILTIN_EVFSTSTLT,
+
+  /* EVSEL compares.  */
+  SPE_BUILTIN_EVSEL_CMPEQ,
+  SPE_BUILTIN_EVSEL_CMPGTS,
+  SPE_BUILTIN_EVSEL_CMPGTU,
+  SPE_BUILTIN_EVSEL_CMPLTS,
+  SPE_BUILTIN_EVSEL_CMPLTU,
+  SPE_BUILTIN_EVSEL_FSCMPEQ,
+  SPE_BUILTIN_EVSEL_FSCMPGT,
+  SPE_BUILTIN_EVSEL_FSCMPLT,
+  SPE_BUILTIN_EVSEL_FSTSTEQ,
+  SPE_BUILTIN_EVSEL_FSTSTGT,
+  SPE_BUILTIN_EVSEL_FSTSTLT,
+
+  SPE_BUILTIN_EVSPLATFI,
+  SPE_BUILTIN_EVSPLATI,
+  SPE_BUILTIN_EVMWHSSMAA,
+  SPE_BUILTIN_EVMWHSMFAA,
+  SPE_BUILTIN_EVMWHSMIAA,
+  SPE_BUILTIN_EVMWHUSIAA,
+  SPE_BUILTIN_EVMWHUMIAA,
+  SPE_BUILTIN_EVMWHSSFAN,
+  SPE_BUILTIN_EVMWHSSIAN,
+  SPE_BUILTIN_EVMWHSMFAN,
+  SPE_BUILTIN_EVMWHSMIAN,
+  SPE_BUILTIN_EVMWHUSIAN,
+  SPE_BUILTIN_EVMWHUMIAN,
+  SPE_BUILTIN_EVMWHGSSFAA,
+  SPE_BUILTIN_EVMWHGSMFAA,
+  SPE_BUILTIN_EVMWHGSMIAA,
+  SPE_BUILTIN_EVMWHGUMIAA,
+  SPE_BUILTIN_EVMWHGSSFAN,
+  SPE_BUILTIN_EVMWHGSMFAN,
+  SPE_BUILTIN_EVMWHGSMIAN,
+  SPE_BUILTIN_EVMWHGUMIAN,
+  SPE_BUILTIN_MTSPEFSCR,
+  SPE_BUILTIN_MFSPEFSCR,
+  SPE_BUILTIN_BRINC
 };

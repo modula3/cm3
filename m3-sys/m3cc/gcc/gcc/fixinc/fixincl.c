@@ -1,23 +1,23 @@
 /* Install modified versions of certain ANSI-incompatible system header
    files which are fixed to work correctly with ANSI C and placed in a
-   directory that GNU C will search.
+   directory that GCC will search.
 
    Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -28,7 +28,6 @@ Boston, MA 02111-1307, USA.  */
 #define  BAD_ADDR ((void*)-1)
 #endif
 
-#include <signal.h>
 #if ! defined( SIGCHLD ) && defined( SIGCLD )
 #  define SIGCHLD SIGCLD
 #endif
@@ -95,11 +94,11 @@ const char incl_quote_pat[] = "^[ \t]*#[ \t]*include[ \t]*\"[^/]";
 tSCC z_fork_err[] = "Error %d (%s) starting filter process for %s\n";
 regex_t incl_quote_re;
 
-static void do_version   PARAMS((void)) ATTRIBUTE_NORETURN;
-char *load_file   PARAMS((const char *));
-void run_compiles PARAMS((void));
-void initialize   PARAMS((int argc,char** argv));
-void process      PARAMS((void));
+static void do_version (void) ATTRIBUTE_NORETURN;
+char *load_file (const char *);
+void run_compiles (void);
+void initialize (int argc, char** argv);
+void process (void);
 
 /*  External Source Code */
 
@@ -109,11 +108,9 @@ void process      PARAMS((void));
  *
  *  MAIN ROUTINE
  */
-extern int main PARAMS ((int, char **));
+extern int main (int, char **);
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char** argv)
 {
   char *file_name_buf;
 
@@ -192,7 +189,7 @@ Altering  %5d of them\n";
 
 
 static void
-do_version ()
+do_version (void)
 {
   static const char zFmt[] = "echo '%s'";
   char zBuf[ 1024 ];
@@ -215,9 +212,7 @@ do_version ()
 /* * * * * * * * * * * * */
 
 void
-initialize ( argc, argv )
-  int argc;
-  char** argv;
+initialize ( int argc, char** argv )
 {
   static const char var_not_found[] =
 #ifndef __STDC__
@@ -285,6 +280,7 @@ ENV_TABLE
     case 'A':
       verbose_level = VERB_APPLIES;    break;
 
+    default:
     case 'p':
     case 'P':
       verbose_level = VERB_PROGRESS;   break;
@@ -297,11 +293,14 @@ ENV_TABLE
     case 'E':
       verbose_level = VERB_EVERYTHING; break;
     }
-
- while ((pz_find_base[0] == '.') && (pz_find_base[1] == '/'))
-   pz_find_base += 2;
- if ((pz_find_base[0] != '.') || (pz_find_base[1] != NUL))
-   find_base_len = strlen( pz_find_base );
+  if (verbose_level >= VERB_EVERYTHING) {
+    verbose_level = VERB_EVERYTHING;
+    fputs ("fixinc verbosity:  EVERYTHING\n", stderr);
+  }
+  while ((pz_find_base[0] == '.') && (pz_find_base[1] == '/'))
+    pz_find_base += 2;
+  if ((pz_find_base[0] != '.') || (pz_find_base[1] != NUL))
+    find_base_len = strlen( pz_find_base );
 
   /*  Compile all the regular expressions now.
       That way, it is done only once for the whole run.
@@ -332,8 +331,7 @@ ENV_TABLE
    result is the NUL terminated contents of the file.  The file
    is presumed to be an ASCII text file containing no NULs.  */
 char *
-load_file ( fname )
-    const char* fname;
+load_file ( const char* fname )
 {
   struct stat stbf;
   char* res;
@@ -386,10 +384,8 @@ load_file ( fname )
   return res;
 }
 
-static int machine_matches PARAMS ((tFixDesc *));
 static int
-machine_matches( p_fixd )
-  tFixDesc *p_fixd;
+machine_matches( tFixDesc* p_fixd )
         {
 # ifndef SEPARATE_FIX_PROC
           tSCC case_fmt[] = "case %s in\n";     /*  9 bytes, plus string */
@@ -481,16 +477,15 @@ machine_matches( p_fixd )
    run_compiles   run all the regexp compiles for all the fixes once.
    */
 void
-run_compiles ()
+run_compiles (void)
 {
   tFixDesc *p_fixd = fixDescList;
   int fix_ct = FIX_COUNT;
-  regex_t *p_re = (regex_t *) xmalloc (REGEX_COUNT * sizeof (regex_t));
+  regex_t *p_re = xcalloc (REGEX_COUNT, sizeof (regex_t));
 
   /*  Make sure compile_re does not stumble across invalid data */
 
-  memset ( (void*)p_re, '\0', REGEX_COUNT * sizeof (regex_t) );
-  memset ( (void*)&incl_quote_re, '\0', sizeof (regex_t) );
+  memset (&incl_quote_re, '\0', sizeof (regex_t));
 
   compile_re (incl_quote_pat, &incl_quote_re, 1,
               "quoted include", "run_compiles");
@@ -558,9 +553,8 @@ run_compiles ()
 #endif
 
 
-static FILE *create_file PARAMS ((void));
 static FILE *
-create_file ()
+create_file (void)
 {
   int fd;
   FILE *pf;
@@ -623,11 +617,8 @@ create_file ()
   Result: APPLY_FIX or SKIP_FIX, depending on the result of the
           shell script we run.  */
 #ifndef SEPARATE_FIX_PROC
-static int test_test PARAMS ((tTestDesc *, char *));
 static int
-test_test (p_test, pz_test_file)
-     tTestDesc *p_test;
-     char*      pz_test_file;
+test_test (tTestDesc* p_test, char* pz_test_file)
 {
   tSCC cmd_fmt[] =
 "file=%s\n\
@@ -679,18 +670,15 @@ fi";
   The caller may choose to reverse meaning if the sense of the test
   is inverted.  */
 
-static int egrep_test PARAMS ((char *, tTestDesc *));
 static int
-egrep_test (pz_data, p_test)
-     char *pz_data;
-     tTestDesc *p_test;
+egrep_test (char* pz_data, tTestDesc* p_test)
 {
 #ifdef DEBUG
   if (p_test->p_test_regex == 0)
     fprintf (stderr, "fixincl ERROR RE not compiled:  `%s'\n",
              p_test->pz_test_text);
 #endif
-  if (regexec (p_test->p_test_regex, pz_data, 0, 0, 0) == 0)
+  if (xregexec (p_test->p_test_regex, pz_data, 0, 0, 0) == 0)
     return APPLY_FIX;
   return SKIP_FIX;
 }
@@ -702,12 +690,10 @@ egrep_test (pz_data, p_test)
   the file name.  If we emit the name, our invoking shell will try
   to copy a non-existing file into the destination directory.  */
 
-static int quoted_file_exists PARAMS ((const char *, const char *, const char *));
 static int
-quoted_file_exists (pz_src_path, pz_file_path, pz_file)
-     const char *pz_src_path;
-     const char *pz_file_path;
-     const char *pz_file;
+quoted_file_exists (const char* pz_src_path,
+                    const char* pz_file_path, 
+                    const char* pz_file)
 {
   char z[ MAXPATHLEN ];
   char* pz;
@@ -754,12 +740,10 @@ quoted_file_exists (pz_src_path, pz_file_path, pz_file)
            for interpretation by the invoking shell  */
 
 
-static void extract_quoted_files PARAMS ((char *, const char *, regmatch_t *));
 static void
-extract_quoted_files (pz_data, pz_fixed_file, p_re_match)
-     char *pz_data;
-     const char *pz_fixed_file;
-     regmatch_t *p_re_match;
+extract_quoted_files (char* pz_data, 
+                      const char* pz_fixed_file,
+                      regmatch_t* p_re_match)
 {
   char *pz_dir_end = strrchr (pz_fixed_file, '/');
   char *pz_incl_quot = pz_data;
@@ -805,7 +789,7 @@ extract_quoted_files (pz_data, pz_fixed_file, p_re_match)
         }
 
       /* Find the next entry */
-      if (regexec (&incl_quote_re, pz_incl_quot, 1, p_re_match, 0) != 0)
+      if (xregexec (&incl_quote_re, pz_incl_quot, 1, p_re_match, 0) != 0)
         break;
     }
 }
@@ -816,11 +800,8 @@ extract_quoted_files (pz_data, pz_fixed_file, p_re_match)
     Somebody wrote a *_fix subroutine that we must call.
     */
 #ifndef SEPARATE_FIX_PROC
-static int internal_fix PARAMS ((int, tFixDesc *));
 static int
-internal_fix (read_fd, p_fixd)
-  int read_fd;
-  tFixDesc* p_fixd;
+internal_fix (int read_fd, tFixDesc* p_fixd)
 {
   int fd[2];
 
@@ -887,11 +868,10 @@ internal_fix (read_fd, p_fixd)
 
 #ifdef SEPARATE_FIX_PROC
 static void
-fix_with_system (p_fixd, pz_fix_file, pz_file_source, pz_temp_file)
-  tFixDesc* p_fixd;
-  tCC* pz_fix_file;
-  tCC* pz_file_source;
-  tCC* pz_temp_file;
+fix_with_system (tFixDesc* p_fixd,
+                 tCC* pz_fix_file,
+                 tCC* pz_file_source,
+                 tCC* pz_temp_file)
 {
   char*  pz_cmd;
   char*  pz_scan;
@@ -908,7 +888,7 @@ fix_with_system (p_fixd, pz_fix_file, pz_file_source, pz_temp_file)
               + strlen( pz_file_source )
               + strlen( pz_temp_file );
 
-      pz_cmd = (char*)xmalloc( argsize );
+      pz_cmd = xmalloc (argsize);
 
       strcpy( pz_cmd, pz_orig_dir );
       pz_scan = pz_cmd + strlen( pz_orig_dir );
@@ -967,7 +947,7 @@ fix_with_system (p_fixd, pz_fix_file, pz_file_source, pz_temp_file)
         }
 
       /* Estimated buffer size we will need.  */
-      pz_scan = pz_cmd = (char*)xmalloc( argsize );
+      pz_scan = pz_cmd = xmalloc (argsize);
       /* How much of it do we allot to the program name and its
          arguments.  */
       parg_size = argsize - parg_size;
@@ -1007,7 +987,7 @@ fix_with_system (p_fixd, pz_fix_file, pz_file_source, pz_temp_file)
 	  while (pz_scan == (char*)NULL)
 	    {
 	      size_t already_filled = pz_scan_save - pz_cmd;
-	      pz_cmd = (char*)xrealloc( pz_cmd, argsize += 100 );
+	      pz_cmd = xrealloc (pz_cmd, argsize += 100);
 	      pz_scan_save = pz_scan = pz_cmd + already_filled;
 	      parg_size += 100;
 	      pz_scan = make_raw_shell_str( pz_scan, pArg,
@@ -1037,12 +1017,8 @@ fix_with_system (p_fixd, pz_fix_file, pz_file_source, pz_temp_file)
     for stdout.  */
 
 #else /* is *NOT* SEPARATE_FIX_PROC */
-static int start_fixer PARAMS ((int, tFixDesc *, char *));
 static int
-start_fixer (read_fd, p_fixd, pz_fix_file)
-  int read_fd;
-  tFixDesc* p_fixd;
-  char* pz_fix_file;
+start_fixer (int read_fd, tFixDesc* p_fixd, char* pz_fix_file)
 {
   tCC* pz_cmd_save;
   char* pz_cmd;
@@ -1055,9 +1031,8 @@ start_fixer (read_fd, p_fixd, pz_fix_file)
   else
     {
       tSCC z_cmd_fmt[] = "file='%s'\n%s";
-      pz_cmd = (char*) xmalloc (strlen (p_fixd->patch_args[2])
-				+ sizeof( z_cmd_fmt )
-				+ strlen( pz_fix_file ));
+      pz_cmd = xmalloc (strlen (p_fixd->patch_args[2])
+			+ sizeof (z_cmd_fmt) + strlen (pz_fix_file));
       sprintf (pz_cmd, z_cmd_fmt, pz_fix_file, p_fixd->patch_args[2]);
       pz_cmd_save = p_fixd->patch_args[2];
       p_fixd->patch_args[2] = pz_cmd;
@@ -1112,10 +1087,8 @@ start_fixer (read_fd, p_fixd, pz_fix_file)
    Input:  the original text of the file and the file's name
    Result: none.  A new file may or may not be created.  */
 
-static t_bool fix_applies PARAMS ((tFixDesc *));
 static t_bool
-fix_applies (p_fixd)
-  tFixDesc *p_fixd;
+fix_applies (tFixDesc* p_fixd)
 {
   const char *pz_fname = pz_curr_file;
   const char *pz_scan = p_fixd->file_list;
@@ -1227,10 +1200,8 @@ fix_applies (p_fixd)
 
    Write out a replacement file  */
 
-static void write_replacement PARAMS ((tFixDesc *));
 static void
-write_replacement (p_fixd)
-  tFixDesc *p_fixd;
+write_replacement (tFixDesc* p_fixd)
 {
    const char* pz_text = p_fixd->patch_args[0];
 
@@ -1254,10 +1225,8 @@ write_replacement (p_fixd)
     the matched text and then copy any remaining data from the
     output of the filter chain.
     */
-static void test_for_changes PARAMS ((int));
 static void
-test_for_changes (read_fd)
-  int read_fd;
+test_for_changes (int read_fd)
 {
   FILE *in_fp = fdopen (read_fd, "r");
   FILE *out_fp = (FILE *) NULL;
@@ -1312,7 +1281,7 @@ test_for_changes (read_fd)
       /* Close the file and see if we have to worry about
          `#include "file.h"' constructs.  */
       fclose (out_fp);
-      if (regexec (&incl_quote_re, pz_curr_data, 1, &match, 0) == 0)
+      if (xregexec (&incl_quote_re, pz_curr_data, 1, &match, 0) == 0)
         extract_quoted_files (pz_curr_data, pz_curr_file, &match);
     }
 
@@ -1328,7 +1297,7 @@ test_for_changes (read_fd)
    Result: none.  A new file may or may not be created.  */
 
 void
-process ()
+process (void)
 {
   tFixDesc *p_fixd = fixDescList;
   int todo_ct = FIX_COUNT;
@@ -1356,7 +1325,8 @@ process ()
   process_ct++;
 #endif
   if (VLEVEL( VERB_PROGRESS ) && have_tty)
-    fprintf (stderr, "%6d %-50s   \r", data_map_size, pz_curr_file );
+    fprintf (stderr, "%6lu %-50s   \r",
+	     (unsigned long) data_map_size, pz_curr_file);
 
 # ifndef SEPARATE_FIX_PROC
   process_chain_head = NOPROCESS;

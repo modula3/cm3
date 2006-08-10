@@ -1,9 +1,5 @@
-genrtl
-genrtl.h
-genrtl.c
-gcc.info*
-cpp.info*
-c-tree.info*
-cppinternals.info*
 cscope.files
 cscope.out
+cscope.in.out
+cscope.po.out
+autom4te.cache

@@ -1,25 +1,23 @@
 /* Definitions for MIPS running Linux-based GNU systems with ELF format.
-   Copyright (C) 1998, 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-#include "mips/mips.h"
-#include "mips/abi64.h"
 
 #undef WCHAR_TYPE
 #define WCHAR_TYPE "int"
@@ -36,82 +34,10 @@ Boston, MA 02111-1307, USA.  */
    used.  */
 #define BSS_SECTION_ASM_OP	"\t.section\t.bss"
 
-#define SBSS_SECTION_ASM_OP	"\t.section .sbss"
-
-/* Like `ASM_OUTPUT_BSS' except takes the required alignment as a
-   separate, explicit argument.  If you define this macro, it is used
-   in place of `ASM_OUTPUT_BSS', and gives you more flexibility in
-   handling the required alignment of the variable.  The alignment is
-   specified as the number of bits.
-
-   Try to use function `asm_output_aligned_bss' defined in file
-   `varasm.c' when defining this macro.  */
-#define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN)	\
-do {								\
-  ASM_GLOBALIZE_LABEL (FILE, NAME);				\
-  if (SIZE > 0 && SIZE <= mips_section_threshold)		\
-    sbss_section ();						\
-  else								\
-    bss_section ();						\
-  ASM_OUTPUT_ALIGN (FILE, floor_log2 (ALIGN / BITS_PER_UNIT));	\
-  last_assemble_variable_decl = DECL;				\
-  ASM_DECLARE_OBJECT_NAME (FILE, NAME, DECL);			\
-  ASM_OUTPUT_SKIP (FILE, SIZE ? SIZE : 1);			\
-} while (0)
-
-/* These macros generate the special .type and .size directives which
-   are used to set the corresponding fields of the linker symbol table
-   entries in an ELF object file under SVR4.  These macros also output
-   the starting labels for the relevant functions/objects.  */
-
-/* Write the extra assembler code needed to declare an object properly.  */
+#define ASM_OUTPUT_ALIGNED_BSS mips_output_aligned_bss
 
 #undef ASM_DECLARE_OBJECT_NAME
-#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)		\
-  do {								\
-    fprintf (FILE, "%s", TYPE_ASM_OP);				\
-    assemble_name (FILE, NAME);					\
-    putc (',', FILE);						\
-    fprintf (FILE, TYPE_OPERAND_FMT, "object");			\
-    putc ('\n', FILE);						\
-    size_directive_output = 0;					\
-    if (!flag_inhibit_size_directive && DECL_SIZE (DECL))	\
-      {								\
-	size_directive_output = 1;				\
-	fprintf (FILE, "%s", SIZE_ASM_OP);			\
-	assemble_name (FILE, NAME);				\
-	fprintf (FILE, ",");					\
-	fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,			\
-		 int_size_in_bytes (TREE_TYPE (DECL)));		\
-	fprintf (FILE, "\n");					\
-      }								\
-    mips_declare_object (FILE, NAME, "", ":\n", 0);		\
-  } while (0)
-
-#undef UNIQUE_SECTION
-#define UNIQUE_SECTION(DECL,RELOC) \
-  mips_unique_section ((DECL), (RELOC))
-
-/* A list of other sections which the compiler might be "in" at any
-   given time.  */
-#undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_sbss, in_rdata
-
-#undef EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS                                         \
-  SECTION_FUNCTION_TEMPLATE(sdata_section, in_sdata, SDATA_SECTION_ASM_OP) \
-  SECTION_FUNCTION_TEMPLATE(sbss_section, in_sbss, SBSS_SECTION_ASM_OP) \
-  SECTION_FUNCTION_TEMPLATE(rdata_section, in_rdata, RDATA_SECTION_ASM_OP)
-
-#define SECTION_FUNCTION_TEMPLATE(FN, ENUM, OP)			\
-void FN ()							\
-{								\
-  if (in_section != ENUM)					\
-    {								\
-      fprintf (asm_out_file, "%s\n", OP);			\
-      in_section = ENUM;					\
-    }								\
-}
+#define ASM_DECLARE_OBJECT_NAME mips_declare_object_name
 
 #undef TARGET_VERSION
 #if TARGET_ENDIAN_DEFAULT == 0
@@ -123,78 +49,57 @@ void FN ()							\
 #undef MD_EXEC_PREFIX
 #undef MD_STARTFILE_PREFIX
 
-/* Required to keep collect2.c happy */
-#undef OBJECT_FORMAT_COFF
-
 /* If we don't set MASK_ABICALLS, we can't default to PIC.  */
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT (MASK_ABICALLS|MASK_GAS)
 
-/* Specify predefined symbols in preprocessor.  */
-#undef CPP_PREDEFINES
-#if TARGET_ENDIAN_DEFAULT == 0
-#define CPP_PREDEFINES "-DMIPSEL -D_MIPSEL -Dunix -Dmips -D_mips \
--DR3000 -D_R3000 -D__gnu_linux__ -Dlinux -Asystem=posix -Acpu=mips \
--Amachine=mips -D__ELF__ -D__PIC__ -D__pic__"
-#else
-#define CPP_PREDEFINES "-DMIPSEB -D_MIPSEB -Dunix -Dmips -D_mips \
--DR3000 -D_R3000 -D__gnu_linux__ -Dlinux -Asystem=posix -Acpu=mips \
--Amachine=mips -D__ELF__ -D__PIC__ -D__pic__"
-#endif
+#define TARGET_OS_CPP_BUILTINS()				\
+    do {							\
+	LINUX_TARGET_OS_CPP_BUILTINS();				\
+	builtin_define ("__PIC__");				\
+	builtin_define ("__pic__");				\
+        builtin_assert ("machine=mips");			\
+	/* The GNU C++ standard library requires this.  */	\
+	if (c_dialect_cxx ())					\
+	  builtin_define ("_GNU_SOURCE");			\
+								\
+      if (mips_abi == ABI_N32)					\
+      {								\
+        builtin_define ("_ABIN32=2");				\
+        builtin_define ("_MIPS_SIM=_ABIN32");			\
+        builtin_define ("_MIPS_SZLONG=32");			\
+        builtin_define ("_MIPS_SZPTR=32");			\
+      }								\
+     else if (mips_abi == ABI_64)				\
+      {								\
+        builtin_define ("_ABI64=3");				\
+        builtin_define ("_MIPS_SIM=_ABI64");			\
+        builtin_define ("_MIPS_SZLONG=64");			\
+        builtin_define ("_MIPS_SZPTR=64");			\
+      }								\
+     else							\
+      {								\
+	builtin_define ("_ABIO32=1");			\
+	builtin_define ("_MIPS_SIM=_ABIO32");		\
+        builtin_define ("_MIPS_SZLONG=32");			\
+        builtin_define ("_MIPS_SZPTR=32");			\
+      }								\
+     if (TARGET_FLOAT64)					\
+        builtin_define ("_MIPS_FPSET=32");			\
+     else							\
+        builtin_define ("_MIPS_FPSET=16");			\
+								\
+     if (TARGET_INT64)						\
+        builtin_define ("_MIPS_SZINT=64");			\
+     else							\
+        builtin_define ("_MIPS_SZINT=32");			\
+} while (0)
 
-#undef SUBTARGET_CPP_SIZE_SPEC
-#define SUBTARGET_CPP_SIZE_SPEC "\
-%{mabi=32: -D__SIZE_TYPE__=unsigned\\ int -D__PTRDIFF_TYPE__=int} \
-%{mabi=n32: -D__SIZE_TYPE__=unsigned\\ int -D__PTRDIFF_TYPE__=int} \
-%{mabi=64: -D__SIZE_TYPE__=long\\ unsigned\\ int -D__PTRDIFF_TYPE__=long\\ int} \
-%{!mabi*: -D__SIZE_TYPE__=unsigned\\ int -D__PTRDIFF_TYPE__=int}"
-
-/* We must make -mips3 do what -mlong64 used to do.  */
-/* ??? If no mipsX option given, but a mabi=X option is, then should set
-   _MIPS_ISA based on the mabi=X option.  */
-/* ??? If no mabi=X option give, but a mipsX option is, then should set
-   _MIPS_SIM based on the mipsX option.  */
-/* ??? Same for _MIPS_SZINT.  */
-/* ??? Same for _MIPS_SZPTR.  */
-/* ??? Same for __SIZE_TYPE and __PTRDIFF_TYPE.  */
-#undef SUBTARGET_CPP_SPEC
+#undef  SUBTARGET_CPP_SPEC
 #define SUBTARGET_CPP_SPEC "\
-%{mfp32: -D_MIPS_FPSET=16} \
-%{mfp64: -D_MIPS_FPSET=32} \
-%{!mfp*: -D_MIPS_FPSET=32} \
-%{mips1: -D_MIPS_ISA=_MIPS_ISA_MIPS1} \
-%{mips2: -D_MIPS_ISA=_MIPS_ISA_MIPS2} \
-%{mips3: -D_MIPS_ISA=_MIPS_ISA_MIPS3} \
-%{mips4: -D_MIPS_ISA=_MIPS_ISA_MIPS4} \
-%{!mips*: -D_MIPS_ISA=_MIPS_ISA_MIPS1} \
-%{mabi=32: -D_MIPS_SIM=_MIPS_SIM_ABI32}	\
-%{mabi=n32: -D_ABIN32=2 -D_MIPS_SIM=_ABIN32} \
-%{mabi=64: -D_ABI64=3 -D_MIPS_SIM=_ABI64} \
-%{!mabi*: -D_MIPS_SIM=_MIPS_SIM_ABI32}	\
-%{!mint64: -D_MIPS_SZINT=32}%{mint64: -D_MIPS_SZINT=64} \
-%{mabi=32: -D_MIPS_SZLONG=32} \
-%{mabi=n32: -D_MIPS_SZLONG=32} \
-%{mabi=64: -D_MIPS_SZLONG=64} \
-%{!mabi*: -D_MIPS_SZLONG=32} \
-%{mabi=32: -D_MIPS_SZPTR=32} \
-%{mabi=n32: -D_MIPS_SZPTR=32} \
-%{mabi=64: -D_MIPS_SZPTR=64} \
-%{!mabi*: -D_MIPS_SZPTR=32} \
-%{!mips*: -U__mips -D__mips} \
-%{mabi=32: -U__mips64} \
-%{mabi=n32: -D__mips64} \
-%{mabi=64: -U__mips64} \
-%{!mabi*: -U__mips64} \
 %{fno-PIC:-U__PIC__ -U__pic__} %{fno-pic:-U__PIC__ -U__pic__} \
-%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} \
+%{fPIC|fPIE|fpic|fpie:-D__PIC__ -D__pic__} \
 %{pthread:-D_REENTRANT}"
-
-/* The GNU C++ standard library requires that these macros be defined.  */
-#undef CPLUSPLUS_CPP_SPEC
-#define CPLUSPLUS_CPP_SPEC "\
--D__LANGUAGE_C_PLUS_PLUS -D_LANGUAGE_C_PLUS_PLUS \
--D_GNU_SOURCE %(cpp) \
-"
 
 /* From iris5.h */
 /* -G is incompatible with -KPIC which is the default, so only allow objects
@@ -214,15 +119,11 @@ void FN ()							\
         %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}} \
         %{static:-static}}}"
 
-
 #undef SUBTARGET_ASM_SPEC
 #define SUBTARGET_ASM_SPEC "\
 %{mabi=64: -64} \
 %{!fno-PIC:%{!fno-pic:-KPIC}} \
 %{fno-PIC:-non_shared} %{fno-pic:-non_shared}"
-
-#undef SUBTARGET_ASM_DEBUGGING_SPEC
-#define SUBTARGET_ASM_DEBUGGING_SPEC "-g0"
 
 /* The MIPS assembler has different syntax for .set. We set it to
    .dummy to trap any errors.  */
@@ -239,17 +140,6 @@ void FN ()							\
 	fputc ( '\n', FILE);						\
  } while (0)
 
-#undef ASM_OUTPUT_DEFINE_LABEL_DIFFERENCE_SYMBOL
-#define ASM_OUTPUT_DEFINE_LABEL_DIFFERENCE_SYMBOL(FILE, SY, HI, LO)    	\
-  do {									\
-	fputc ('\t', FILE);						\
-	assemble_name (FILE, SY);					\
-	fputc ('=', FILE);						\
-	assemble_name (FILE, HI);					\
-	fputc ('-', FILE);						\
-	assemble_name (FILE, LO);					\
-  } while (0)
-
 #undef ASM_DECLARE_FUNCTION_NAME
 #define ASM_DECLARE_FUNCTION_NAME(STREAM, NAME, DECL)			\
   do {									\
@@ -259,11 +149,7 @@ void FN ()							\
 	assemble_name (STREAM, NAME);					\
 	putc ('\n', STREAM);						\
       }									\
-    fprintf (STREAM, "\t%s\t ", TYPE_ASM_OP);				\
-    assemble_name (STREAM, NAME);					\
-    putc (',', STREAM);							\
-    fprintf (STREAM, TYPE_OPERAND_FMT, "function");			\
-    putc ('\n', STREAM);						\
+    ASM_OUTPUT_TYPE_DIRECTIVE (STREAM, NAME, "function");		\
     assemble_name (STREAM, NAME);					\
     fputs (":\n", STREAM);						\
   } while (0)
@@ -281,15 +167,90 @@ void FN ()							\
 
 /* Tell function_prologue in mips.c that we have already output the .ent/.end
    pseudo-ops.  */
-#define FUNCTION_NAME_ALREADY_DECLARED
-
-#define ASM_PREFERRED_EH_DATA_FORMAT(CODE, GLOBAL)       		\
-  (flag_pic								\
-    ? ((GLOBAL) ? DW_EH_PE_indirect : 0) | DW_EH_PE_pcrel | DW_EH_PE_sdata4\
-   : DW_EH_PE_absptr)
+#undef FUNCTION_NAME_ALREADY_DECLARED
+#define FUNCTION_NAME_ALREADY_DECLARED 1
 
 /* The glibc _mcount stub will save $v0 for us.  Don't mess with saving
    it, since ASM_OUTPUT_REG_PUSH/ASM_OUTPUT_REG_POP do not work in the
    presence of $gp-relative calls.  */
 #undef ASM_OUTPUT_REG_PUSH
 #undef ASM_OUTPUT_REG_POP
+
+#undef LIB_SPEC
+#define LIB_SPEC "\
+%{shared: -lc} \
+%{!static:-rpath-link %R/lib:%R/usr/lib} \
+%{!shared: %{pthread:-lpthread} \
+  %{profile:-lc_p} %{!profile: -lc}}"
+
+#ifndef inhibit_libc
+/* Do code reading to identify a signal frame, and set the frame
+   state data appropriately.  See unwind-dw2.c for the structs.  */
+#ifdef IN_LIBGCC2
+#include <signal.h>
+
+/* The third parameter to the signal handler points to something with
+ * this structure defined in asm/ucontext.h, but the name clashes with
+ * struct ucontext from sys/ucontext.h so this private copy is used.  */
+typedef struct _sig_ucontext {
+    unsigned long         uc_flags;
+    struct _sig_ucontext  *uc_link;
+    stack_t               uc_stack;
+    struct sigcontext uc_mcontext;
+    sigset_t      uc_sigmask;
+} _sig_ucontext_t;
+
+#endif /* IN_LIBGCC2  */
+
+#define MD_FALLBACK_FRAME_STATE_FOR(CONTEXT, FS, SUCCESS)            \
+  do {                                                               \
+    u_int32_t *pc_ = (u_int32_t *) (CONTEXT)->ra;                \
+    struct sigcontext *sc_;                                          \
+    _Unwind_Ptr new_cfa_;                                            \
+    int i_;                                                          \
+                                                                     \
+    /* 24021061 li v0, 0x1061 (rt_sigreturn)*/                       \
+    /* 0000000c syscall    */                                        \
+    /*    or */                                                      \
+    /* 24021017 li v0, 0x1017 (sigreturn) */                         \
+    /* 0000000c syscall  */                                          \
+    if (*(pc_ + 1) != 0x0000000c)                                    \
+      break;                                                         \
+    if (*(pc_ + 0) == 0x24021017)                                    \
+      {                                                              \
+        struct sigframe {                                            \
+          u_int32_t  trampoline[2];                                \
+          struct sigcontext sigctx;                                  \
+        } *rt_ = (CONTEXT)->ra;                                      \
+        sc_ = &rt_->sigctx;                                          \
+      }                                                              \
+    else if (*(pc_ + 0) == 0x24021061)                               \
+      {                                                              \
+        struct rt_sigframe {                                         \
+          u_int32_t  trampoline[2];                                \
+          struct siginfo info;                                       \
+          _sig_ucontext_t uc;                                        \
+        } *rt_ = (CONTEXT)->ra;                                      \
+        sc_ = &rt_->uc.uc_mcontext;                                  \
+      }                                                              \
+    else                                                             \
+      break;                                                         \
+                                                                     \
+    new_cfa_ = (_Unwind_Ptr)sc_;                                     \
+    (FS)->cfa_how = CFA_REG_OFFSET;                                  \
+    (FS)->cfa_reg = STACK_POINTER_REGNUM;                            \
+    (FS)->cfa_offset = new_cfa_ - (_Unwind_Ptr) (CONTEXT)->cfa;      \
+                                                                     \
+    for (i_ = 0; i_ < 32; i_++) {                                    \
+      (FS)->regs.reg[i_].how = REG_SAVED_OFFSET;                     \
+      (FS)->regs.reg[i_].loc.offset                                  \
+        = (_Unwind_Ptr)&(sc_->sc_regs[i_]) - new_cfa_;               \
+    }                                                                \
+    (FS)->regs.reg[SIGNAL_UNWIND_RETURN_COLUMN].how = REG_SAVED_OFFSET; \
+    (FS)->regs.reg[SIGNAL_UNWIND_RETURN_COLUMN].loc.offset           \
+        = (_Unwind_Ptr)&(sc_->sc_pc) - new_cfa_;                     \
+    (FS)->retaddr_column = SIGNAL_UNWIND_RETURN_COLUMN;              \
+                                                                     \
+    goto SUCCESS;                                                    \
+  } while (0)
+#endif

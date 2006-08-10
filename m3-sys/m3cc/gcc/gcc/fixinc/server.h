@@ -49,13 +49,6 @@
 #ifndef GCC_SERVER_H
 #define GCC_SERVER_H
 
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#include "fixlib.h"
-
 /*
  *  Dual pipe opening of a child process
  */
@@ -72,11 +65,10 @@ typedef struct
   FILE *pf_write;		/* parent write fp */
 } t_pf_pair;
 
-char *run_shell   PARAMS (( const char *pzCmd));
-pid_t proc2_fopen PARAMS (( t_pf_pair * p_pair, tCC ** pp_args));
-pid_t proc2_open  PARAMS (( t_fd_pair * p_pair, tCC ** pp_args));
-int   chain_open  PARAMS (( int in_fd, tCC ** pp_args,
-                            pid_t * p_child));
-void close_server PARAMS (( void ));
+char* run_shell( const char* pzCmd );
+pid_t proc2_fopen( t_pf_pair* p_pair, tCC** pp_args );
+pid_t proc2_open( t_fd_pair* p_pair, tCC** pp_args );
+int   chain_open( int in_fd, tCC** pp_args, pid_t* p_child );
+void close_server( void );
 
 #endif /* ! GCC_SERVER_H */

@@ -1,27 +1,29 @@
 /* Subroutines for gcc2 for pdp11.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2001
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2004
    Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "regs.h"
 #include "hard-reg-set.h"
@@ -52,11 +54,12 @@ int current_first_parm_offset;
 /* This is where the condition code register lives.  */
 /* rtx cc0_reg_rtx; - no longer needed? */
 
-static rtx find_addr_reg PARAMS ((rtx)); 
-static const char *singlemove_string PARAMS ((rtx *));
-static bool pdp11_assemble_integer PARAMS ((rtx, unsigned int, int));
-static void pdp11_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
-static void pdp11_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static rtx find_addr_reg (rtx); 
+static const char *singlemove_string (rtx *);
+static bool pdp11_assemble_integer (rtx, unsigned int, int);
+static void pdp11_output_function_prologue (FILE *, HOST_WIDE_INT);
+static void pdp11_output_function_epilogue (FILE *, HOST_WIDE_INT);
+static bool pdp11_rtx_costs (rtx, int, int, int *);
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ASM_BYTE_OP
@@ -78,38 +81,33 @@ static void pdp11_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
 #undef TARGET_ASM_CLOSE_PAREN
 #define TARGET_ASM_CLOSE_PAREN "]"
 
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS pdp11_rtx_costs
+
 struct gcc_target targetm = TARGET_INITIALIZER;
 
 /* Nonzero if OP is a valid second operand for an arithmetic insn.  */
 
 int
-arith_operand (op, mode)
-     rtx op;
-     enum machine_mode mode;
+arith_operand (rtx op, enum machine_mode mode)
 {
   return (register_operand (op, mode) || GET_CODE (op) == CONST_INT);
 }
 
 int
-const_immediate_operand (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+const_immediate_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
   return (GET_CODE (op) == CONST_INT);
 }
 
 int 
-immediate15_operand (op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+immediate15_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
     return (GET_CODE (op) == CONST_INT && ((INTVAL (op) & 0x8000) == 0x0000));
 }
 
 int
-expand_shift_operand (op, mode)
-  rtx op;
-  enum machine_mode mode ATTRIBUTE_UNUSED;
+expand_shift_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
     return (GET_CODE (op) == CONST_INT 
 	    && abs (INTVAL(op)) > 1 
@@ -128,16 +126,14 @@ expand_shift_operand (op, mode)
 #ifdef TWO_BSD
 
 static void
-pdp11_output_function_prologue (stream, size)
-     FILE *stream;
-     HOST_WIDE_INT size;
+pdp11_output_function_prologue (FILE *stream, HOST_WIDE_INT size)
 {							       
   fprintf (stream, "\tjsr	r5, csv\n");
   if (size)
     {
       fprintf (stream, "\t/*abuse empty parameter slot for locals!*/\n");
       if (size > 2)
-	fprintf(stream, "\tsub $%d, sp\n", size - 2);
+	fprintf(stream, "\tsub $%#o, sp\n", size - 2);
 
     }
 }
@@ -145,16 +141,15 @@ pdp11_output_function_prologue (stream, size)
 #else  /* !TWO_BSD */
 
 static void
-pdp11_output_function_prologue (stream, size)
-     FILE *stream;
-     HOST_WIDE_INT size;
+pdp11_output_function_prologue (FILE *stream, HOST_WIDE_INT size)
 {							       
     HOST_WIDE_INT fsize = ((size) + 1) & ~1;
     int regno;
     int via_ac = -1;
 
     fprintf (stream,
-	     "\n\t;	/* function prologue %s*/\n", current_function_name);
+	     "\n\t;	/* function prologue %s*/\n",
+	     current_function_name ());
 
     /* if we are outputting code for main, 
        the switch FPU to right mode if TARGET_FPU */
@@ -168,8 +163,8 @@ pdp11_output_function_prologue (stream, size)
     
     if (frame_pointer_needed) 					
     {								
-	fprintf(stream, "\tmov fp, -(sp)\n");			
-	fprintf(stream, "\tmov sp, fp\n");				
+	fprintf(stream, "\tmov r5, -(sp)\n");			
+	fprintf(stream, "\tmov sp, r5\n");				
     }								
     else 								
     {								
@@ -178,7 +173,7 @@ pdp11_output_function_prologue (stream, size)
 
     /* make frame */
     if (fsize)							
-	fprintf (stream, "\tsub $%o, sp\n", fsize);			
+	fprintf (stream, "\tsub $%#o, sp\n", fsize);			
 
     /* save CPU registers  */
     for (regno = 0; regno < 8; regno++)				
@@ -198,7 +193,7 @@ pdp11_output_function_prologue (stream, size)
 	    && regs_ever_live[regno] 
 	    && ! call_used_regs[regno])
 	{
-	    fprintf (stream, "\tfstd %s, -(sp)\n", reg_names[regno]);
+	    fprintf (stream, "\tstd %s, -(sp)\n", reg_names[regno]);
 	    via_ac = regno;
 	}
 	
@@ -211,8 +206,8 @@ pdp11_output_function_prologue (stream, size)
 	    if (via_ac == -1)
 		abort();
 	    
-	    fprintf (stream, "\tfldd %s, %s\n", reg_names[regno], reg_names[via_ac]);
-	    fprintf (stream, "\tfstd %s, -(sp)\n", reg_names[via_ac]);
+	    fprintf (stream, "\tldd %s, %s\n", reg_names[regno], reg_names[via_ac]);
+	    fprintf (stream, "\tstd %s, -(sp)\n", reg_names[via_ac]);
 	}
     }
 
@@ -243,9 +238,8 @@ pdp11_output_function_prologue (stream, size)
 #ifdef TWO_BSD
 
 static void
-pdp11_output_function_epilogue (stream, size)
-     FILE *stream;
-     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
+pdp11_output_function_epilogue (FILE *stream,
+				HOST_WIDE_INT size ATTRIBUTE_UNUSED)
 {								
   fprintf (stream, "\t/* SP ignored by cret? */\n");
   fprintf (stream, "\tjmp cret\n");
@@ -254,9 +248,7 @@ pdp11_output_function_epilogue (stream, size)
 #else  /* !TWO_BSD */
 
 static void
-pdp11_output_function_epilogue (stream, size)
-     FILE *stream;
-     HOST_WIDE_INT size;
+pdp11_output_function_epilogue (FILE *stream, HOST_WIDE_INT size)
 {								
     HOST_WIDE_INT fsize = ((size) + 1) & ~1;
     int i, j, k;
@@ -277,9 +269,10 @@ pdp11_output_function_epilogue (stream, size)
 	/* remember # of pushed bytes for CPU regs */
 	k = 2*j;
 	
+	/* change fp -> r5 due to the compile error on libgcc2.c */
 	for (i =7 ; i >= 0 ; i--)					
 	    if (regs_ever_live[i] && ! call_used_regs[i])		
-		fprintf(stream, "\tmov %o(fp), %s\n",-fsize-2*j--, reg_names[i]);
+		fprintf(stream, "\tmov %#o(r5), %s\n",(-fsize-2*j--)&0xffff, reg_names[i]);
 
 	/* get ACs */						
 	via_ac = FIRST_PSEUDO_REGISTER -1;
@@ -297,7 +290,7 @@ pdp11_output_function_epilogue (stream, size)
 		&& regs_ever_live[i]
 		&& ! call_used_regs[i])
 	    {
-		fprintf(stream, "\tfldd %o(fp), %s\n", -fsize-k, reg_names[i]);
+		fprintf(stream, "\tldd %#o(r5), %s\n", (-fsize-k)&0xffff, reg_names[i]);
 		k -= 8;
 	    }
 	    
@@ -308,14 +301,14 @@ pdp11_output_function_epilogue (stream, size)
 		if (! LOAD_FPU_REG_P(via_ac))
 		    abort();
 		    
-		fprintf(stream, "\tfldd %o(fp), %s\n", -fsize-k, reg_names[via_ac]);
-		fprintf(stream, "\tfstd %s, %s\n", reg_names[via_ac], reg_names[i]);
+		fprintf(stream, "\tldd %#o(r5), %s\n", (-fsize-k)&0xffff, reg_names[via_ac]);
+		fprintf(stream, "\tstd %s, %s\n", reg_names[via_ac], reg_names[i]);
 		k -= 8;
 	    }
 	}
 	
-	fprintf(stream, "\tmov fp, sp\n");				
-	fprintf (stream, "\tmov (sp)+, fp\n");     			
+	fprintf(stream, "\tmov r5, sp\n");				
+	fprintf (stream, "\tmov (sp)+, r5\n");     			
     }								
     else								
     {		   
@@ -331,7 +324,7 @@ pdp11_output_function_epilogue (stream, size)
 	    if (LOAD_FPU_REG_P(i)
 		&& regs_ever_live[i]
 		&& ! call_used_regs[i])
-	      fprintf(stream, "\tfldd (sp)+, %s\n", reg_names[i]);
+	      fprintf(stream, "\tldd (sp)+, %s\n", reg_names[i]);
 	    
 	    if (NO_LOAD_FPU_REG_P(i)
 		&& regs_ever_live[i]
@@ -340,8 +333,8 @@ pdp11_output_function_epilogue (stream, size)
 		if (! LOAD_FPU_REG_P(via_ac))
 		    abort();
 		    
-		fprintf(stream, "\tfldd (sp)+, %s\n", reg_names[via_ac]);
-		fprintf(stream, "\tfstd %s, %s\n", reg_names[via_ac], reg_names[i]);
+		fprintf(stream, "\tldd (sp)+, %s\n", reg_names[via_ac]);
+		fprintf(stream, "\tstd %s, %s\n", reg_names[via_ac], reg_names[i]);
 	    }
 	}
 
@@ -350,7 +343,7 @@ pdp11_output_function_epilogue (stream, size)
 		fprintf(stream, "\tmov (sp)+, %s\n", reg_names[i]);	
 								
 	if (fsize)						
-	    fprintf((stream), "\tadd $%o, sp\n", fsize);      		
+	    fprintf((stream), "\tadd $%#o, sp\n", (fsize)&0xffff);      		
     }			
 					
     fprintf (stream, "\trts pc\n");					
@@ -362,8 +355,7 @@ pdp11_output_function_epilogue (stream, size)
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
 static const char *
-singlemove_string (operands)
-     rtx *operands;
+singlemove_string (rtx *operands)
 {
   if (operands[1] != const0_rtx)
     return "mov %1,%0";
@@ -376,8 +368,7 @@ singlemove_string (operands)
    with operands OPERANDS.  */
 
 const char *
-output_move_double (operands)
-     rtx *operands;
+output_move_double (rtx *operands)
 {
   enum { REGOP, OFFSOP, MEMOP, PUSHOP, POPOP, CNSTOP, RNDOP } optype0, optype1;
   rtx latehalf[2];
@@ -400,10 +391,11 @@ output_move_double (operands)
 
   if (REG_P (operands[1]))
     optype1 = REGOP;
-  else if (CONSTANT_P (operands[1]))
+  else if (CONSTANT_P (operands[1])
 #if 0
-	   || GET_CODE (operands[1]) == CONST_DOUBLE)
+	   || GET_CODE (operands[1]) == CONST_DOUBLE
 #endif
+	   )
     optype1 = CNSTOP;
   else if (offsettable_memref_p (operands[1]))
     optype1 = OFFSOP;
@@ -554,14 +546,13 @@ output_move_double (operands)
    with operands OPERANDS.  */
 
 const char *
-output_move_quad (operands)
-     rtx *operands;
+output_move_quad (rtx *operands)
 {
   enum { REGOP, OFFSOP, MEMOP, PUSHOP, POPOP, CNSTOP, RNDOP } optype0, optype1;
   rtx latehalf[2];
   rtx addreg0 = 0, addreg1 = 0;
 
-  output_asm_insn(";; movdi/df: %1 -> %0", operands);
+  output_asm_insn(";/* movdi/df: %1 -> %0 */", operands);
   
   if (REG_P (operands[0]))
     optype0 = REGOP;
@@ -620,11 +611,10 @@ output_move_quad (operands)
       {
 	  if (GET_CODE(operands[1]) == CONST_DOUBLE)
 	  {
-	      union { double d; int i[2]; } u;
-	      u.i[0] = CONST_DOUBLE_LOW (operands[1]); 
-	      u.i[1] = CONST_DOUBLE_HIGH (operands[1]); 
-	      
-	      if (u.d == 0.0)
+	      REAL_VALUE_TYPE r;
+	      REAL_VALUE_FROM_CONST_DOUBLE (r, operands[1]);
+
+	      if (REAL_VALUES_EQUAL (r, dconst0))
 		  return "{clrd|clrf} %0";
 	  }
 	      
@@ -780,8 +770,7 @@ output_move_quad (operands)
    ADDR can be effectively incremented by incrementing REG.  */
 
 static rtx
-find_addr_reg (addr)
-     rtx addr;
+find_addr_reg (rtx addr)
 {
   while (GET_CODE (addr) == PLUS)
     {
@@ -801,10 +790,7 @@ find_addr_reg (addr)
 
 /* Output an ascii string.  */
 void
-output_ascii (file, p, size)
-     FILE *file;
-     const char *p;
-     int size;
+output_ascii (FILE *file, const char *p, int size)
 {
   int i;
 
@@ -817,7 +803,7 @@ output_ascii (file, p, size)
       register int c = p[i];
       if (c < 0)
 	c += 256;
-      fprintf (file, "%o", c);
+      fprintf (file, "%#o", c);
       if (i < size - 1)
 	putc (',', file);
     }
@@ -828,9 +814,7 @@ output_ascii (file, p, size)
 /* --- stole from out-vax, needs changes */
 
 void
-print_operand_address (file, addr)
-     FILE *file;
-     register rtx addr;
+print_operand_address (FILE *file, register rtx addr)
 {
   register rtx reg1, reg2, breg, ireg;
   rtx offset;
@@ -851,10 +835,12 @@ print_operand_address (file, addr)
       fprintf (file, "(%s)", reg_names[REGNO (addr)]);
       break;
 
+    case PRE_MODIFY:
     case PRE_DEC:
       fprintf (file, "-(%s)", reg_names[REGNO (XEXP (addr, 0))]);
       break;
 
+    case POST_MODIFY:
     case POST_INC:
       fprintf (file, "(%s)+", reg_names[REGNO (XEXP (addr, 0))]);
       break;
@@ -958,10 +944,7 @@ print_operand_address (file, addr)
    pdp-specific version of output_addr_const.  */
 
 static bool
-pdp11_assemble_integer (x, size, aligned_p)
-     rtx x;
-     unsigned int size;
-     int aligned_p;
+pdp11_assemble_integer (rtx x, unsigned int size, int aligned_p)
 {
   if (aligned_p)
     switch (size)
@@ -984,7 +967,7 @@ pdp11_assemble_integer (x, size, aligned_p)
 
 /* register move costs, indexed by regs */
 
-static int move_costs[N_REG_CLASSES][N_REG_CLASSES] = 
+static const int move_costs[N_REG_CLASSES][N_REG_CLASSES] = 
 {
              /* NO  MUL  GEN  LFPU  NLFPU FPU ALL */
 
@@ -1010,10 +993,115 @@ register_move_cost(c1, c2)
     return move_costs[(int)c1][(int)c2];
 }
 
+static bool
+pdp11_rtx_costs (rtx x, int code, int outer_code ATTRIBUTE_UNUSED, int *total)
+{
+  switch (code)
+    {
+    case CONST_INT:
+      if (INTVAL (x) == 0 || INTVAL (x) == -1 || INTVAL (x) == 1)
+	{
+	  *total = 0;
+	  return true;
+	}
+      /* FALLTHRU */
+
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      /* Twice as expensive as REG.  */
+      *total = 2;
+      return true;
+
+    case CONST_DOUBLE:
+      /* Twice (or 4 times) as expensive as 16 bit.  */
+      *total = 4;
+      return true;
+
+    case MULT:
+      /* ??? There is something wrong in MULT because MULT is not 
+         as cheap as total = 2 even if we can shift!  */
+      /* If optimizing for size make mult etc cheap, but not 1, so when 
+         in doubt the faster insn is chosen.  */
+      if (optimize_size)
+        *total = COSTS_N_INSNS (2);
+      else
+        *total = COSTS_N_INSNS (11);
+      return false;
+
+    case DIV:
+      if (optimize_size)
+        *total = COSTS_N_INSNS (2);
+      else
+        *total = COSTS_N_INSNS (25);
+      return false;
+
+    case MOD:
+      if (optimize_size)
+        *total = COSTS_N_INSNS (2);
+      else
+        *total = COSTS_N_INSNS (26);
+      return false;
+
+    case ABS:
+      /* Equivalent to length, so same for optimize_size.  */
+      *total = COSTS_N_INSNS (3);
+      return false;
+
+    case ZERO_EXTEND:
+      /* Only used for qi->hi.  */
+      *total = COSTS_N_INSNS (1);
+      return false;
+
+    case SIGN_EXTEND:
+      if (GET_MODE (x) == HImode)
+      	*total = COSTS_N_INSNS (1);
+      else if (GET_MODE (x) == SImode)
+	*total = COSTS_N_INSNS (6);
+      else
+	*total = COSTS_N_INSNS (2);
+      return false;
+
+    case ASHIFT:
+    case LSHIFTRT:
+    case ASHIFTRT:
+      if (optimize_size)
+        *total = COSTS_N_INSNS (1);
+      else if (GET_MODE (x) ==  QImode)
+        {
+          if (GET_CODE (XEXP (x, 1)) != CONST_INT)
+   	    *total = COSTS_N_INSNS (8); /* worst case */
+          else
+	    *total = COSTS_N_INSNS (INTVAL (XEXP (x, 1)));
+        }
+      else if (GET_MODE (x) == HImode)
+        {
+          if (GET_CODE (XEXP (x, 1)) == CONST_INT)
+            {
+	      if (abs (INTVAL (XEXP (x, 1))) == 1)
+                *total = COSTS_N_INSNS (1);
+              else
+	        *total = COSTS_N_INSNS (2.5 + 0.5 * INTVAL (XEXP (x, 1)));
+            }
+          else
+            *total = COSTS_N_INSNS (10); /* worst case */
+        }
+      else if (GET_MODE (x) == SImode)
+        {
+          if (GET_CODE (XEXP (x, 1)) == CONST_INT)
+	    *total = COSTS_N_INSNS (2.5 + 0.5 * INTVAL (XEXP (x, 1)));
+          else /* worst case */
+            *total = COSTS_N_INSNS (18);
+        }
+      return false;
+
+    default:
+      return false;
+    }
+}
+
 const char *
-output_jump(pos, neg, length)
-  const char *pos, *neg;
-  int length;
+output_jump(const char *pos, const char *neg, int length)
 {
     static int x = 0;
     
@@ -1054,9 +1142,7 @@ output_jump(pos, neg, length)
 }
 
 void
-notice_update_cc_on_set(exp, insn)
-  rtx exp;
-  rtx insn ATTRIBUTE_UNUSED;
+notice_update_cc_on_set(rtx exp, rtx insn ATTRIBUTE_UNUSED)
 {
     if (GET_CODE (SET_DEST (exp)) == CC0)
     { 
@@ -1126,9 +1212,7 @@ notice_update_cc_on_set(exp, insn)
 
 
 int
-simple_memory_operand(op, mode)
-     rtx op;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
+simple_memory_operand(rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
     rtx addr;
 
@@ -1201,8 +1285,7 @@ simple_memory_operand(op, mode)
 
  
 const char *
-output_block_move(operands)
-  rtx *operands;
+output_block_move(rtx *operands)
 {
     static int count = 0;
     char buf[200];
@@ -1441,8 +1524,7 @@ output_block_move(operands)
 
 /* for future use */
 int
-comparison_operator_index(op)
-  rtx op;
+comparison_operator_index(rtx op)
 {
     switch (GET_CODE(op))
     {
@@ -1483,18 +1565,14 @@ comparison_operator_index(op)
 	
 /* tests whether the rtx is a comparison operator */
 int
-comp_operator (op, mode)
-  rtx op;
-  enum machine_mode mode ATTRIBUTE_UNUSED;
+comp_operator (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
     return comparison_operator_index(op) >= 0;
 }
 
     
 int
-legitimate_address_p (mode, address)
-  enum machine_mode mode;
-  rtx address;
+legitimate_address_p (enum machine_mode mode, rtx address)
 {
 /* #define REG_OK_STRICT */
     GO_IF_LEGITIMATE_ADDRESS(mode, address, win);
@@ -1513,9 +1591,7 @@ legitimate_address_p (mode, address)
    So this copy should get called whenever needed.
 */
 void
-output_addr_const_pdp11 (file, x)
-     FILE *file;
-     rtx x;
+output_addr_const_pdp11 (FILE *file, rtx x)
 {
   char buf[256];
 
@@ -1546,7 +1622,7 @@ output_addr_const_pdp11 (file, x)
     case CONST_INT:
       /* Should we check for constants which are too big?  Maybe cutting
 	 them off to 16 bits is OK?  */
-      fprintf (file, "%ho", (unsigned short) INTVAL (x));
+      fprintf (file, "%#ho", (unsigned short) INTVAL (x));
       break;
 
     case CONST:
@@ -1562,7 +1638,7 @@ output_addr_const_pdp11 (file, x)
 	  if (CONST_DOUBLE_HIGH (x))
 	    abort (); /* Should we just silently drop the high part?  */
 	  else
-	    fprintf (file, "%ho", (unsigned short) CONST_DOUBLE_LOW (x));
+	    fprintf (file, "%#ho", (unsigned short) CONST_DOUBLE_LOW (x));
 	}
       else
 	/* We can't handle floating point constants;

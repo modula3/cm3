@@ -1,45 +1,237 @@
-2003-04-22  Release Manager
+2005-11-30  Release Manager
 
-	* GCC 3.2.3 Released.
+	* GCC 3.4.5 released.
 
-2003-02-05  Release Manager
+2005-08-15  Matthias Klose  <doko@debian.org>
 
-	* GCC 3.2.2 Released.
+	* gcc-3.4.3.rw.po: Remove.
+	* rw.po: Add.
 
-2002-11-19  Release Manager
+2005-05-19  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.4 released.
 
-2002-11-19  Release Manager
+2005-05-19  Mark Mitchell  <mark@codesourcery.com>
 
-	* GCC 3.2.1 Released.
+	* rw.po: New file.
 
-2002-11-18  Release Manager
+	* ca.po: Update.
+	* de.po: Likewise.
+	* tr.po: Likewise.
 
-	* GCC 3.2.1 Released.
+	* gcc.pot: Regenerated.
 
-2002-08-14  Release Manager
+2004-11-07  Joseph S. Myers  <joseph@codesourcery.com>
 
-	* GCC 3.2 Released.
+	* be.po, ca.po, da.po, de.po, el.po, es.po, fr.po, ja.po, nl.po,
+	sv.po, tr.po: Update.
 
-2002-07-25  Release Manager
+2004-11-04  Release Manager
 
-	* GCC 3.1.1 Released.
+	* GCC 3.4.3 released.
 
-2002-05-14  Release Manager
+2004-11-04  Mark Mitchell  <mark@codesourcery.com>
 
-	* GCC 3.1 Released.
+	* gcc.pot: Regenerate.
 
-2002-05-14  Release Manager
+	* da.po: Update.
+	* de.po: Likewise.
 
-	* GCC 3.1 Released.
+2004-10-30  Joseph S. Myers  <joseph@codesourcery.com>
+
+	* de.po: Update.
+
+2004-10-27  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-10-20  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-10-07  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-10-03  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* da.po: Update.
+
+2004-09-24  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* es.po: Update.
+
+2004-09-14  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* be.po, ca.po, da.po, de.po, el.po, es.po, fr.po, ja.po, nl.po,
+	sv.po, tr.po: Update.
+	* gcc.pot: Regenerate.
+
+2004-09-06  Release Manager
+
+	* GCC 3.4.2 released.
+
+2004-09-05  Mark Mitchell  <mark@codesourcery.com>
+
+	* fr.po: Update.
+
+2004-07-01  Release Manager
+
+	* GCC 3.4.1 released.
+
+2004-07-01  Mark Mitchell  <mark@codesourcery.com>
+
+	* gcc.pot: Regenerated.
+
+2004-05-26  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po: Update.
+
+2004-05-23  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* es.po: Update.
+
+2004-05-21  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po, tr.po: Update.
+
+2004-05-15  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* be.po, ca.po, da.po, de.po, el.po, es.po, fr.po, ja.po, nl.po,
+	sv.po, tr.po: Update.
+
+2004-04-18  Release Manager
+
+	* GCC 3.4.0 released.
+
+2004-04-18  Mark Mitchell  <mark@codesourcery.com>
+
+	* gcc.pot: Regenerated.
+
+2004-03-18  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* be.po, da.po, el.po, es.po, ja.po, nl.po, sv.po, tr.po: Update.
+
+2004-02-25  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po: Update.
+
+2004-02-19  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po: Update.
+
+2004-02-18  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po: Update.
+
+2004-02-17  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po: Update.
+
+2004-02-16  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* fr.po: Update.
+
+	* de.po: Update.
+
+2004-02-12  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* ca.po: New file.
+
+2004-02-10  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-02-09  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-02-06  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* gcc.pot: Regenerate.
+
+2004-02-01  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-01-25  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* EXCLUDES: Update.
+	* gcc.pot: Regenerate.
+
+2004-01-25  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-01-25  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2004-01-17  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2003-12-31  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2003-12-19  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2003-11-26  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* de.po: Update.
+
+2003-11-20  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* exgettext: Use --copyright-holder and --msgid-bugs-address.
+	* gcc.pot: Regenerate.
+
+2003-10-26  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* nl.po: Update.
+
+2003-10-25  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* be.po, da.po, de.po, el.po, es.po, fr.po, ja.po, nl.po, sv.po,
+	tr.po: Update.
+	* gcc.pot: Regenerate.
+
+2003-09-27  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* sv.po: GNU CC -> GCC.
+
+2003-05-23  Nathanael Nerode  <neroden@gcc.gnu.org>
+
+	* exgettext: Add "This file is part of GCC".
+
+	* exgettext: Replace "GNU CC" and "this program" with "GCC" in
+	copyright boilerplate.
+
+2003-03-21  Zack Weinberg  <zack@codesourcery.com>
+
+	* gcc.pot: Regenerate.
+
+2003-02-04  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* be.po, de.po: New files.
+	* da.po, el.po, es.po, fr.po, ja.po, nl.po, sv.po, tr.po: Update.
+
+2002-12-30  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* gcc.pot: Regenerate.
+
+2002-05-16  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
+
+	* exgettext: Allow for PWDCMD to override hardcoded pwd.
 
 2002-05-10  Philipp Thomas  <pthomas@suse.de>
 
-	* es.po, tr.po, fr.po: Update to version
-	for the 20020415 snapshot.
+	* tr.po, es.po, fr.po: Update to version for 20020415
+	snapshot.
 
-2002-04-24  Philipp Thomas  <pthomas@suse.de>
+2002-04-23  Philipp Thomas  <pthomas@suse.de>
 
 	* gcc.pot: Regenerate.
 

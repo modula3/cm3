@@ -32,7 +32,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /* If this file is compiled with threads support, it must
        #define __GTHREADS 1
    to indicate that threads support is present.  Also it has define
-   function 
+   function
      int __gthread_active_p ()
    that returns 1 if thread system is active, 0 if not.
 
@@ -61,8 +61,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
      int __gthread_key_create (__gthread_key_t *keyp, void (*dtor) (void *))
      int __gthread_key_delete (__gthread_key_t key)
-
-     int __gthread_key_dtor (__gthread_key_t key, void *ptr)
 
      void *__gthread_getspecific (__gthread_key_t key)
      int __gthread_setspecific (__gthread_key_t key, const void *ptr)

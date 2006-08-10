@@ -1,7 +1,7 @@
 /* Specialized bits of code needed to support construction and
    destruction of file-scope objects in C++ code.
    Copyright (C) 1991, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
 This file is part of GCC.
@@ -60,6 +60,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "auto-host.h"
 #include "tconfig.h"
 #include "tsystem.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "unwind-dw2-fde.h"
 
 #ifndef FORCE_CODE_SECTION_ALIGN
@@ -90,6 +92,11 @@ call_ ## FUNC (void)					\
 #if defined(EH_FRAME_SECTION_NAME) && !defined(USE_PT_GNU_EH_FRAME)
 # define USE_EH_FRAME_REGISTRY
 #endif
+#if defined(EH_FRAME_SECTION_NAME) && defined(HAVE_LD_RO_RW_SECTION_MIXING)
+# define EH_FRAME_SECTION_CONST const
+#else
+# define EH_FRAME_SECTION_CONST
+#endif
 
 /* We do not want to add the weak attribute to the declarations of these
    routines in unwind-dw2-fde.h because that will cause the definition of
@@ -113,20 +120,19 @@ call_ ## FUNC (void)					\
    
 /* References to __register_frame_info and __deregister_frame_info should
    be weak in this file if at all possible.  */
-extern void __register_frame_info (void *, struct object *)
+extern void __register_frame_info (const void *, struct object *)
 				  TARGET_ATTRIBUTE_WEAK;
-extern void __register_frame_info_bases (void *, struct object *,
+extern void __register_frame_info_bases (const void *, struct object *,
 					 void *, void *)
 				  TARGET_ATTRIBUTE_WEAK;
-extern void *__deregister_frame_info (void *)
+extern void *__deregister_frame_info (const void *)
 				     TARGET_ATTRIBUTE_WEAK;
-extern void *__deregister_frame_info_bases (void *)
+extern void *__deregister_frame_info_bases (const void *)
 				     TARGET_ATTRIBUTE_WEAK;
+extern void __do_global_ctors_1 (void);
 
 /* Likewise for _Jv_RegisterClasses.  */
 extern void _Jv_RegisterClasses (void *) TARGET_ATTRIBUTE_WEAK;
-
-#ifndef OBJECT_FORMAT_MACHO
 
 #ifdef OBJECT_FORMAT_ELF
 
@@ -187,13 +193,13 @@ STATIC func_ptr __DTOR_LIST__[1]
   = { (func_ptr) (-1) };
 #endif /* __DTOR_LIST__ alternatives */
 
-#ifdef EH_FRAME_SECTION_NAME
+#ifdef USE_EH_FRAME_REGISTRY
 /* Stick a label at the beginning of the frame unwind info so we can register
    and deregister it with the exception handling library code.  */
-STATIC char __EH_FRAME_BEGIN__[]
+STATIC EH_FRAME_SECTION_CONST char __EH_FRAME_BEGIN__[]
      __attribute__((section(EH_FRAME_SECTION_NAME), aligned(4)))
      = { };
-#endif /* EH_FRAME_SECTION_NAME */
+#endif /* USE_EH_FRAME_REGISTRY */
 
 #ifdef JCR_SECTION_NAME
 /* Stick a label at the beginning of the java class registration info
@@ -213,13 +219,9 @@ STATIC void *__JCR_LIST__[]
    in one DSO or the main program is not used in another object.  The
    dynamic linker takes care of this.  */
 
-/* XXX Ideally the following should be implemented using
-       __attribute__ ((__visibility__ ("hidden")))
-   but the __attribute__ support is not yet there.  */
 #ifdef HAVE_GAS_HIDDEN
-asm (".hidden\t__dso_handle");
+extern void *__dso_handle __attribute__ ((__visibility__ ("hidden")));
 #endif
-
 #ifdef CRTSTUFFS_O
 void *__dso_handle = &__dso_handle;
 #else
@@ -271,7 +273,7 @@ __do_global_dtors_aux (void)
     }
 
 #ifdef USE_EH_FRAME_REGISTRY
-#if defined(CRT_GET_RFIB_TEXT) || defined(CRT_GET_RFIB_DATA)
+#ifdef CRT_GET_RFIB_DATA
   /* If we used the new __register_frame_info_bases interface,
      make sure that we deregister from the same place.  */
   if (__deregister_frame_info_bases)
@@ -298,24 +300,16 @@ frame_dummy (void)
 {
 #ifdef USE_EH_FRAME_REGISTRY
   static struct object object;
-#if defined(CRT_GET_RFIB_TEXT) || defined(CRT_GET_RFIB_DATA)
-  void *tbase, *dbase;
-#ifdef CRT_GET_RFIB_TEXT
-  CRT_GET_RFIB_TEXT (tbase);
-#else
-  tbase = 0;
-#endif
 #ifdef CRT_GET_RFIB_DATA
+  void *tbase, *dbase;
+  tbase = 0;
   CRT_GET_RFIB_DATA (dbase);
-#else
-  dbase = 0;
-#endif
   if (__register_frame_info_bases)
     __register_frame_info_bases (__EH_FRAME_BEGIN__, &object, tbase, dbase);
 #else
   if (__register_frame_info)
     __register_frame_info (__EH_FRAME_BEGIN__, &object);
-#endif
+#endif /* CRT_GET_RFIB_DATA */
 #endif /* USE_EH_FRAME_REGISTRY */
 #ifdef JCR_SECTION_NAME
   if (__JCR_LIST__[0] && _Jv_RegisterClasses)
@@ -350,16 +344,6 @@ __do_global_ctors (void)
 
 asm (INIT_SECTION_ASM_OP);	/* cc1 doesn't know that we are switching! */
 
-/* On some svr4 systems, the initial .init section preamble code provided in
-   crti.o may do something, such as bump the stack, which we have to 
-   undo before we reach the function prologue code for __do_global_ctors 
-   (directly below).  For such systems, define the macro INIT_SECTION_PREAMBLE
-   to expand into the code needed to undo the actions of the crti.o file.  */
-
-#ifdef INIT_SECTION_PREAMBLE
-  INIT_SECTION_PREAMBLE;
-#endif
-
 /* A routine to invoke all of the global constructors upon entry to the
    program.  We put this into the .init section (for systems that have
    such a thing) so that we can properly perform the construction of
@@ -377,6 +361,8 @@ __do_global_ctors_aux (void)	/* prologue goes in .init section */
 #endif /* OBJECT_FORMAT_ELF */
 
 #elif defined(HAS_INIT_SECTION) /* ! INIT_SECTION_ASM_OP */
+
+extern void __do_global_dtors (void);
 
 /* This case is used by the Irix 6 port, which supports named sections but
    not an SVR4-style .fini section.  __do_global_dtors can be non-static
@@ -459,9 +445,18 @@ STATIC func_ptr __DTOR_END__[1]
 #ifdef EH_FRAME_SECTION_NAME
 /* Terminate the frame unwind info section with a 4byte 0 as a sentinel;
    this would be the 'length' field in a real FDE.  */
-STATIC int __FRAME_END__[]
-     __attribute__ ((unused, mode(SI), section(EH_FRAME_SECTION_NAME),
-		     aligned(4)))
+# if __INT_MAX__ == 2147483647
+typedef int int32;
+# elif __LONG_MAX__ == 2147483647
+typedef long int32;
+# elif __SHRT_MAX__ == 2147483647
+typedef short int32;
+# else
+#  error "Missing a 4 byte integer"
+# endif
+STATIC EH_FRAME_SECTION_CONST int32 __FRAME_END__[]
+     __attribute__ ((unused, section(EH_FRAME_SECTION_NAME),
+		     aligned(sizeof(int32))))
      = { 0 };
 #endif /* EH_FRAME_SECTION_NAME */
 
@@ -524,10 +519,11 @@ asm (TEXT_SECTION_ASM_OP);
 
 #elif defined(HAS_INIT_SECTION) /* ! INIT_SECTION_ASM_OP */
 
+extern void __do_global_ctors (void);
+
 /* This case is used by the Irix 6 port, which supports named sections but
    not an SVR4-style .init section.  __do_global_ctors can be non-static
    in this case because we protect it with -hidden_symbol.  */
-extern void __do_global_ctors_1(void);
 void
 __do_global_ctors (void)
 {
@@ -546,67 +542,3 @@ __do_global_ctors (void)
 #else /* ! CRT_BEGIN && ! CRT_END */
 #error "One of CRT_BEGIN or CRT_END must be defined."
 #endif
-
-#else  /* OBJECT_FORMAT_MACHO */
-
-/* For Mach-O format executables, we assume that the system's runtime is
-   smart enough to handle constructors and destructors, but doesn't have
-   an init section (if it can't even handle constructors/destructors
-   you should be using INVOKE__main, not crtstuff). All we need to do
-   is install/deinstall the frame information for exceptions. We do this
-   by putting a constructor in crtbegin.o and a destructor in crtend.o.
-
-   crtend.o also puts in the terminating zero in the frame information
-   segment.  */
-
-/* The crtstuff for other object formats use the symbol __EH_FRAME_BEGIN__
-   to figure out the start of the exception frame, but here we use
-   getsectbynamefromheader to find this value. Either method would work,
-   but this method avoids creating any global symbols, which seems
-   cleaner.  */
-
-#include <mach-o/ldsyms.h>
-extern const struct section *
-  getsectbynamefromheader (const struct mach_header *,
-			   const char *, const char *);
-
-#ifdef CRT_BEGIN
-
-static void __reg_frame_ctor (void) __attribute__ ((constructor));
-
-static void
-__reg_frame_ctor (void)
-{
-  static struct object object;
-  const struct section *eh_frame;
-
-  eh_frame = getsectbynamefromheader (&_mh_execute_header,
-				      "__TEXT", "__eh_frame");
-  __register_frame_info ((void *) eh_frame->addr, &object);
-}
-
-#elif defined(CRT_END)
-
-static void __dereg_frame_dtor (void) __attribute__ ((destructor));
-
-static void
-__dereg_frame_dtor (void)
-{
-  const struct section *eh_frame;
-
-  eh_frame = getsectbynamefromheader (&_mh_execute_header,
-				      "__TEXT", "__eh_frame");
-  __deregister_frame_info ((void *) eh_frame->addr);
-}
-
-/* Terminate the frame section with a final zero.  */
-STATIC int __FRAME_END__[]
-     __attribute__ ((unused, mode(SI), section(EH_FRAME_SECTION_NAME),
-		     aligned(4)))
-     = { 0 };
-
-#else /* ! CRT_BEGIN && ! CRT_END */
-#error "One of CRT_BEGIN or CRT_END must be defined."
-#endif
-
-#endif /* OBJECT_FORMAT_MACHO */
