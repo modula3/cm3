@@ -1,6 +1,6 @@
 /* Allocate registers within a basic block, for GNU compiler.
    Copyright (C) 1987, 1988, 1991, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -61,10 +61,12 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
+#include "hard-reg-set.h"
 #include "rtl.h"
 #include "tm_p.h"
 #include "flags.h"
-#include "hard-reg-set.h"
 #include "basic-block.h"
 #include "regs.h"
 #include "function.h"
@@ -106,7 +108,7 @@ struct qty
 
   /* Number of words needed to hold the data in given quantity.
      This depends on its machine mode.  It is used for these purposes:
-     1. It is used in computing the relative importances of qtys,
+     1. It is used in computing the relative importance of qtys,
 	which determines the order in which we look for regs for them.
      2. It is used in rules that prevent tying several registers of
 	different sizes in a way that is geometrically impossible
@@ -117,6 +119,11 @@ struct qty
   /* Number of times a reg tied to given qty lives across a CALL_INSN.  */
 
   int n_calls_crossed;
+
+  /* Number of times a reg tied to given qty lives across a CALL_INSN
+     that might throw.  */
+
+  int n_throwing_calls_crossed;
 
   /* The register number of one pseudo register whose reg_qty value is Q.
      This register should be the head of the chain
@@ -144,12 +151,6 @@ struct qty
      or -1 if none was found.  */
 
   short phys_reg;
-
-  /* Nonzero if this quantity has been used in a SUBREG in some
-     way that is illegal.  */
-
-  char changes_mode;
-
 };
 
 static struct qty *qty;
@@ -275,43 +276,40 @@ static struct equivalence *reg_equiv;
 /* Nonzero if we recorded an equivalence for a LABEL_REF.  */
 static int recorded_label_ref;
 
-static void alloc_qty		PARAMS ((int, enum machine_mode, int, int));
-static void validate_equiv_mem_from_store PARAMS ((rtx, rtx, void *));
-static int validate_equiv_mem	PARAMS ((rtx, rtx, rtx));
-static int equiv_init_varies_p  PARAMS ((rtx));
-static int equiv_init_movable_p PARAMS ((rtx, int));
-static int contains_replace_regs PARAMS ((rtx));
-static int memref_referenced_p	PARAMS ((rtx, rtx));
-static int memref_used_between_p PARAMS ((rtx, rtx, rtx));
-static void update_equiv_regs	PARAMS ((void));
-static void no_equiv		PARAMS ((rtx, rtx, void *));
-static void block_alloc		PARAMS ((int));
-static int qty_sugg_compare    	PARAMS ((int, int));
-static int qty_sugg_compare_1	PARAMS ((const PTR, const PTR));
-static int qty_compare    	PARAMS ((int, int));
-static int qty_compare_1	PARAMS ((const PTR, const PTR));
-static int combine_regs		PARAMS ((rtx, rtx, int, int, rtx, int));
-static int reg_meets_class_p	PARAMS ((int, enum reg_class));
-static void update_qty_class	PARAMS ((int, int));
-static void reg_is_set		PARAMS ((rtx, rtx, void *));
-static void reg_is_born		PARAMS ((rtx, int));
-static void wipe_dead_reg	PARAMS ((rtx, int));
-static int find_free_reg	PARAMS ((enum reg_class, enum machine_mode,
-				       int, int, int, int, int));
-static void mark_life		PARAMS ((int, enum machine_mode, int));
-static void post_mark_life	PARAMS ((int, enum machine_mode, int, int, int));
-static int no_conflict_p	PARAMS ((rtx, rtx, rtx));
-static int requires_inout	PARAMS ((const char *));
+static void alloc_qty (int, enum machine_mode, int, int);
+static void validate_equiv_mem_from_store (rtx, rtx, void *);
+static int validate_equiv_mem (rtx, rtx, rtx);
+static int equiv_init_varies_p (rtx);
+static int equiv_init_movable_p (rtx, int);
+static int contains_replace_regs (rtx);
+static int memref_referenced_p (rtx, rtx);
+static int memref_used_between_p (rtx, rtx, rtx);
+static void update_equiv_regs (void);
+static void no_equiv (rtx, rtx, void *);
+static void block_alloc (int);
+static int qty_sugg_compare (int, int);
+static int qty_sugg_compare_1 (const void *, const void *);
+static int qty_compare (int, int);
+static int qty_compare_1 (const void *, const void *);
+static int combine_regs (rtx, rtx, int, int, rtx, int);
+static int reg_meets_class_p (int, enum reg_class);
+static void update_qty_class (int, int);
+static void reg_is_set (rtx, rtx, void *);
+static void reg_is_born (rtx, int);
+static void wipe_dead_reg (rtx, int);
+static int find_free_reg (enum reg_class, enum machine_mode, int, int, int,
+			  int, int);
+static void mark_life (int, enum machine_mode, int);
+static void post_mark_life (int, enum machine_mode, int, int, int);
+static int no_conflict_p (rtx, rtx, rtx);
+static int requires_inout (const char *);
 
 /* Allocate a new quantity (new within current basic block)
    for register number REGNO which is born at index BIRTH
    within the block.  MODE and SIZE are info on reg REGNO.  */
 
 static void
-alloc_qty (regno, mode, size, birth)
-     int regno;
-     enum machine_mode mode;
-     int size, birth;
+alloc_qty (int regno, enum machine_mode mode, int size, int birth)
 {
   int qtyno = next_qty++;
 
@@ -324,20 +322,21 @@ alloc_qty (regno, mode, size, birth)
   qty[qtyno].mode = mode;
   qty[qtyno].birth = birth;
   qty[qtyno].n_calls_crossed = REG_N_CALLS_CROSSED (regno);
+  qty[qtyno].n_throwing_calls_crossed = REG_N_THROWING_CALLS_CROSSED (regno);
   qty[qtyno].min_class = reg_preferred_class (regno);
   qty[qtyno].alternate_class = reg_alternate_class (regno);
   qty[qtyno].n_refs = REG_N_REFS (regno);
   qty[qtyno].freq = REG_FREQ (regno);
-  qty[qtyno].changes_mode = REG_CHANGES_MODE (regno);
 }
 
 /* Main entry point of this file.  */
 
 int
-local_alloc ()
+local_alloc (void)
 {
-  int b, i;
+  int i;
   int max_qty;
+  basic_block b;
 
   /* We need to keep track of whether or not we recorded a LABEL_REF so
      that we know if the jump optimizer needs to be rerun.  */
@@ -352,7 +351,8 @@ local_alloc ()
 
   /* Promote REG_EQUAL notes to REG_EQUIV notes and adjust status of affected
      registers.  */
-  update_equiv_regs ();
+  if (optimize)
+    update_equiv_regs ();
 
   /* This sets the maximum number of quantities we can have.  Quantity
      numbers start at zero and we can have one for each pseudo.  */
@@ -362,16 +362,15 @@ local_alloc ()
      See the declarations of these variables, above,
      for what they mean.  */
 
-  qty = (struct qty *) xmalloc (max_qty * sizeof (struct qty));
-  qty_phys_copy_sugg
-    = (HARD_REG_SET *) xmalloc (max_qty * sizeof (HARD_REG_SET));
-  qty_phys_num_copy_sugg = (short *) xmalloc (max_qty * sizeof (short));
-  qty_phys_sugg = (HARD_REG_SET *) xmalloc (max_qty * sizeof (HARD_REG_SET));
-  qty_phys_num_sugg = (short *) xmalloc (max_qty * sizeof (short));
+  qty = xmalloc (max_qty * sizeof (struct qty));
+  qty_phys_copy_sugg = xmalloc (max_qty * sizeof (HARD_REG_SET));
+  qty_phys_num_copy_sugg = xmalloc (max_qty * sizeof (short));
+  qty_phys_sugg = xmalloc (max_qty * sizeof (HARD_REG_SET));
+  qty_phys_num_sugg = xmalloc (max_qty * sizeof (short));
 
-  reg_qty = (int *) xmalloc (max_regno * sizeof (int));
-  reg_offset = (char *) xmalloc (max_regno * sizeof (char));
-  reg_next_in_qty = (int *) xmalloc (max_regno * sizeof (int));
+  reg_qty = xmalloc (max_regno * sizeof (int));
+  reg_offset = xmalloc (max_regno * sizeof (char));
+  reg_next_in_qty = xmalloc (max_regno * sizeof (int));
 
   /* Determine which pseudo-registers can be allocated by local-alloc.
      In general, these are the registers used only in a single block and
@@ -393,7 +392,7 @@ local_alloc ()
 
   /* Allocate each block's local registers, block by block.  */
 
-  for (b = 0; b < n_basic_blocks; b++)
+  FOR_EACH_BB (b)
     {
       /* NEXT_QTY indicates which elements of the `qty_...'
 	 vectors might need to be initialized because they were used
@@ -415,7 +414,7 @@ local_alloc ()
       else
 	{
 #define CLEAR(vector)  \
-	  memset ((char *) (vector), 0, (sizeof (*(vector))) * next_qty);
+	  memset ((vector), 0, (sizeof (*(vector))) * next_qty);
 
 	  CLEAR (qty_phys_copy_sugg);
 	  CLEAR (qty_phys_num_copy_sugg);
@@ -425,7 +424,7 @@ local_alloc ()
 
       next_qty = 0;
 
-      block_alloc (b);
+      block_alloc (b->index);
     }
 
   free (qty);
@@ -452,10 +451,8 @@ static int equiv_mem_modified;
    Called via note_stores.  */
 
 static void
-validate_equiv_mem_from_store (dest, set, data)
-     rtx dest;
-     rtx set ATTRIBUTE_UNUSED;
-     void *data ATTRIBUTE_UNUSED;
+validate_equiv_mem_from_store (rtx dest, rtx set ATTRIBUTE_UNUSED,
+			       void *data ATTRIBUTE_UNUSED)
 {
   if ((GET_CODE (dest) == REG
        && reg_overlap_mentioned_p (dest, equiv_mem))
@@ -472,10 +469,7 @@ validate_equiv_mem_from_store (dest, set, data)
    Return 1 if MEMREF remains valid.  */
 
 static int
-validate_equiv_mem (start, reg, memref)
-     rtx start;
-     rtx reg;
-     rtx memref;
+validate_equiv_mem (rtx start, rtx reg, rtx memref)
 {
   rtx insn;
   rtx note;
@@ -521,8 +515,7 @@ validate_equiv_mem (start, reg, memref)
 /* Returns zero if X is known to be invariant.  */
 
 static int
-equiv_init_varies_p (x)
-     rtx x;
+equiv_init_varies_p (rtx x)
 {
   RTX_CODE code = GET_CODE (x);
   int i;
@@ -551,7 +544,7 @@ equiv_init_varies_p (x)
       if (MEM_VOLATILE_P (x))
 	return 1;
 
-      /* FALLTHROUGH */
+      /* Fall through.  */
 
     default:
       break;
@@ -575,15 +568,13 @@ equiv_init_varies_p (x)
   return 0;
 }
 
-/* Returns non-zero if X (used to initialize register REGNO) is movable.
+/* Returns nonzero if X (used to initialize register REGNO) is movable.
    X is only movable if the registers it uses have equivalent initializations
    which appear to be within the same loop (or in an inner loop) and movable
    or if they are not candidates for local_alloc and don't vary.  */
 
 static int
-equiv_init_movable_p (x, regno)
-     rtx x;
-     int regno;
+equiv_init_movable_p (rtx x, int regno)
 {
   int i, j;
   const char *fmt;
@@ -618,7 +609,7 @@ equiv_init_movable_p (x, regno)
       if (MEM_VOLATILE_P (x))
 	return 0;
 
-      /* FALLTHROUGH */
+      /* Fall through.  */
 
     default:
       break;
@@ -645,8 +636,7 @@ equiv_init_movable_p (x, regno)
 /* TRUE if X uses any registers for which reg_equiv[REGNO].replace is true.  */
 
 static int
-contains_replace_regs (x)
-     rtx x;
+contains_replace_regs (rtx x)
 {
   int i, j;
   const char *fmt;
@@ -694,9 +684,7 @@ contains_replace_regs (x)
    to MEMREF.  */
 
 static int
-memref_referenced_p (memref, x)
-     rtx x;
-     rtx memref;
+memref_referenced_p (rtx memref, rtx x)
 {
   int i, j;
   const char *fmt;
@@ -765,10 +753,7 @@ memref_referenced_p (memref, x)
    that would be affected by a store to MEMREF.  */
 
 static int
-memref_used_between_p (memref, start, end)
-     rtx memref;
-     rtx start;
-     rtx end;
+memref_used_between_p (rtx memref, rtx start, rtx end)
 {
   rtx insn;
 
@@ -788,8 +773,7 @@ memref_used_between_p (memref, start, end)
    go to spill these things to memory.  */
 
 int
-function_invariant_p (x)
-     rtx x;
+function_invariant_p (rtx x)
 {
   if (CONSTANT_P (x))
     return 1;
@@ -811,15 +795,15 @@ function_invariant_p (x)
    completely.  */
 
 static void
-update_equiv_regs ()
+update_equiv_regs (void)
 {
   rtx insn;
-  int block;
+  basic_block bb;
   int loop_depth;
   regset_head cleared_regs;
   int clear_regnos = 0;
 
-  reg_equiv = (struct equivalence *) xcalloc (max_regno, sizeof *reg_equiv);
+  reg_equiv = xcalloc (max_regno, sizeof *reg_equiv);
   INIT_REG_SET (&cleared_regs);
 
   init_alias_analysis ();
@@ -827,12 +811,13 @@ update_equiv_regs ()
   /* Scan the insns and find which registers have equivalences.  Do this
      in a separate scan of the insns because (due to -fcse-follow-jumps)
      a register can be set below its use.  */
-  for (block = 0; block < n_basic_blocks; block++)
+  FOR_EACH_BB (bb)
     {
-      basic_block bb = BASIC_BLOCK (block);
       loop_depth = bb->loop_depth;
 
-      for (insn = bb->head; insn != NEXT_INSN (bb->end); insn = NEXT_INSN (insn))
+      for (insn = BB_HEAD (bb);
+	   insn != NEXT_INSN (BB_END (bb));
+	   insn = NEXT_INSN (insn))
 	{
 	  rtx note;
 	  rtx set;
@@ -926,7 +911,7 @@ update_equiv_regs ()
 	      || (CLASS_LIKELY_SPILLED_P (reg_preferred_class (regno))
 		  && GET_CODE (src) == MEM))
 	    {
-	      /* This might be seting a SUBREG of a pseudo, a pseudo that is
+	      /* This might be setting a SUBREG of a pseudo, a pseudo that is
 		 also set somewhere else to a constant.  */
 	      note_stores (set, no_equiv, NULL);
 	      continue;
@@ -1039,16 +1024,16 @@ update_equiv_regs ()
      registers only used that once.  If so, see if we can replace the
      reference with the equivalent from.  If we can, delete the
      initializing reference and this register will go away.  If we
-     can't replace the reference, and the initialzing reference is
+     can't replace the reference, and the initializing reference is
      within the same loop (or in an inner loop), then move the register
      initialization just before the use, so that they are in the same
      basic block.  */
-  for (block = n_basic_blocks - 1; block >= 0; block--)
+  FOR_EACH_BB_REVERSE (bb)
     {
-      basic_block bb = BASIC_BLOCK (block);
-
       loop_depth = bb->loop_depth;
-      for (insn = bb->end; insn != PREV_INSN (bb->head); insn = PREV_INSN (insn))
+      for (insn = BB_END (bb);
+	   insn != PREV_INSN (BB_HEAD (bb));
+	   insn = PREV_INSN (insn))
 	{
 	  rtx link;
 
@@ -1116,7 +1101,7 @@ update_equiv_regs ()
 		      REG_N_REFS (regno) = 0;
 		      REG_FREQ (regno) = 0;
 		      delete_insn (equiv_insn);
-		      
+
 		      reg_equiv[regno].init_insns
 			= XEXP (reg_equiv[regno].init_insns, 1);
 		    }
@@ -1138,12 +1123,13 @@ update_equiv_regs ()
 
 		      XEXP (reg_equiv[regno].init_insns, 0) = new_insn;
 
-		      REG_BASIC_BLOCK (regno) = block >= 0 ? block : 0;
+		      REG_BASIC_BLOCK (regno) = bb->index;
 		      REG_N_CALLS_CROSSED (regno) = 0;
+		      REG_N_THROWING_CALLS_CROSSED (regno) = 0;
 		      REG_LIVE_LENGTH (regno) = 2;
 
-		      if (block >= 0 && insn == BLOCK_HEAD (block))
-			BLOCK_HEAD (block) = PREV_INSN (insn);
+		      if (insn == BB_HEAD (bb))
+			BB_HEAD (bb) = PREV_INSN (insn);
 
 		      /* Remember to clear REGNO from all basic block's live
 			 info.  */
@@ -1158,24 +1144,22 @@ update_equiv_regs ()
   /* Clear all dead REGNOs from all basic block's live info.  */
   if (clear_regnos)
     {
-      int j, l;
+      int j;
       if (clear_regnos > 8)
-        {
-	  for (l = 0; l < n_basic_blocks; l++)
+	{
+	  FOR_EACH_BB (bb)
 	    {
-	      AND_COMPL_REG_SET (BASIC_BLOCK (l)->global_live_at_start,
-	                         &cleared_regs);
-	      AND_COMPL_REG_SET (BASIC_BLOCK (l)->global_live_at_end,
-	                         &cleared_regs);
+	      AND_COMPL_REG_SET (bb->global_live_at_start, &cleared_regs);
+	      AND_COMPL_REG_SET (bb->global_live_at_end, &cleared_regs);
 	    }
 	}
       else
-        EXECUTE_IF_SET_IN_REG_SET (&cleared_regs, 0, j,
-          {
-	    for (l = 0; l < n_basic_blocks; l++)
+	EXECUTE_IF_SET_IN_REG_SET (&cleared_regs, 0, j,
+	  {
+	    FOR_EACH_BB (bb)
 	      {
-	        CLEAR_REGNO_REG_SET (BASIC_BLOCK (l)->global_live_at_start, j);
-	        CLEAR_REGNO_REG_SET (BASIC_BLOCK (l)->global_live_at_end, j);
+	        CLEAR_REGNO_REG_SET (bb->global_live_at_start, j);
+	        CLEAR_REGNO_REG_SET (bb->global_live_at_end, j);
 	      }
 	  });
     }
@@ -1187,16 +1171,14 @@ update_equiv_regs ()
 }
 
 /* Mark REG as having no known equivalence.
-   Some instructions might have been proceessed before and furnished
+   Some instructions might have been processed before and furnished
    with REG_EQUIV notes for this register; these notes will have to be
    removed.
    STORE is the piece of RTL that does the non-constant / conflicting
    assignment - a SET, CLOBBER or REG_INC note.  It is currently not used,
    but needs to be there because this function is called from note_stores.  */
 static void
-no_equiv (reg, store, data)
-     rtx reg, store ATTRIBUTE_UNUSED;
-     void *data ATTRIBUTE_UNUSED;
+no_equiv (rtx reg, rtx store ATTRIBUTE_UNUSED, void *data ATTRIBUTE_UNUSED)
 {
   int regno;
   rtx list;
@@ -1220,8 +1202,7 @@ no_equiv (reg, store, data)
    Only the pseudos that die but once can be handled.  */
 
 static void
-block_alloc (b)
-     int b;
+block_alloc (int b)
 {
   int i, q;
   rtx insn;
@@ -1234,21 +1215,20 @@ block_alloc (b)
 
   /* Count the instructions in the basic block.  */
 
-  insn = BLOCK_END (b);
+  insn = BB_END (BASIC_BLOCK (b));
   while (1)
     {
       if (GET_CODE (insn) != NOTE)
 	if (++insn_count > max_uid)
 	  abort ();
-      if (insn == BLOCK_HEAD (b))
+      if (insn == BB_HEAD (BASIC_BLOCK (b)))
 	break;
       insn = PREV_INSN (insn);
     }
 
   /* +2 to leave room for a post_mark_life at the last insn and for
      the birth of a CLOBBER in the first insn.  */
-  regs_live_at = (HARD_REG_SET *) xcalloc ((2 * insn_count + 2),
-					   sizeof (HARD_REG_SET));
+  regs_live_at = xcalloc ((2 * insn_count + 2), sizeof (HARD_REG_SET));
 
   /* Initialize table of hardware registers currently live.  */
 
@@ -1258,7 +1238,7 @@ block_alloc (b)
      and assigns quantities to registers.
      It computes which registers to tie.  */
 
-  insn = BLOCK_HEAD (b);
+  insn = BB_HEAD (BASIC_BLOCK (b));
   while (1)
     {
       if (GET_CODE (insn) != NOTE)
@@ -1335,7 +1315,7 @@ block_alloc (b)
 		     must match operand zero.  In that case, skip any
 		     operand that doesn't list operand 0 since we know that
 		     the operand always conflicts with operand 0.  We
-		     ignore commutatity in this case to keep things simple.  */
+		     ignore commutativity in this case to keep things simple.  */
 		  if (n_matching_alts == recog_data.n_alternatives
 		      && 0 == requires_inout (recog_data.constraints[i]))
 		    continue;
@@ -1345,7 +1325,9 @@ block_alloc (b)
 		  /* If the operand is an address, find a register in it.
 		     There may be more than one register, but we only try one
 		     of them.  */
-		  if (recog_data.constraints[i][0] == 'p')
+		  if (recog_data.constraints[i][0] == 'p'
+		      || EXTRA_ADDRESS_CONSTRAINT (recog_data.constraints[i][0],
+						   recog_data.constraints[i]))
 		    while (GET_CODE (r1) == PLUS || GET_CODE (r1) == MULT)
 		      r1 = XEXP (r1, 0);
 
@@ -1488,7 +1470,7 @@ block_alloc (b)
       IOR_HARD_REG_SET (regs_live_at[2 * insn_number], regs_live);
       IOR_HARD_REG_SET (regs_live_at[2 * insn_number + 1], regs_live);
 
-      if (insn == BLOCK_END (b))
+      if (insn == BB_END (BASIC_BLOCK (b)))
 	break;
 
       insn = NEXT_INSN (insn);
@@ -1502,7 +1484,7 @@ block_alloc (b)
      number of suggested registers they need so we allocate those with
      the most restrictive needs first.  */
 
-  qty_order = (int *) xmalloc (next_qty * sizeof (int));
+  qty_order = xmalloc (next_qty * sizeof (int));
   for (i = 0; i < next_qty; i++)
     qty_order[i] = i;
 
@@ -1699,16 +1681,13 @@ block_alloc (b)
 	  / (qty[q].death - qty[q].birth)) * (10000 / REG_FREQ_MAX)))
 
 static int
-qty_compare (q1, q2)
-     int q1, q2;
+qty_compare (int q1, int q2)
 {
   return QTY_CMP_PRI (q2) - QTY_CMP_PRI (q1);
 }
 
 static int
-qty_compare_1 (q1p, q2p)
-     const PTR q1p;
-     const PTR q2p;
+qty_compare_1 (const void *q1p, const void *q2p)
 {
   int q1 = *(const int *) q1p, q2 = *(const int *) q2p;
   int tem = QTY_CMP_PRI (q2) - QTY_CMP_PRI (q1);
@@ -1734,8 +1713,7 @@ qty_compare_1 (q1p, q2p)
     : qty_phys_num_sugg[q] * FIRST_PSEUDO_REGISTER)
 
 static int
-qty_sugg_compare (q1, q2)
-     int q1, q2;
+qty_sugg_compare (int q1, int q2)
 {
   int tem = QTY_CMP_SUGG (q1) - QTY_CMP_SUGG (q2);
 
@@ -1746,9 +1724,7 @@ qty_sugg_compare (q1, q2)
 }
 
 static int
-qty_sugg_compare_1 (q1p, q2p)
-     const PTR q1p;
-     const PTR q2p;
+qty_sugg_compare_1 (const void *q1p, const void *q2p)
 {
   int q1 = *(const int *) q1p, q2 = *(const int *) q2p;
   int tem = QTY_CMP_SUGG (q1) - QTY_CMP_SUGG (q2);
@@ -1773,30 +1749,26 @@ qty_sugg_compare_1 (q1p, q2p)
 
    Combining registers means marking them as having the same quantity
    and adjusting the offsets within the quantity if either of
-   them is a SUBREG).
+   them is a SUBREG.
 
    We don't actually combine a hard reg with a pseudo; instead
    we just record the hard reg as the suggestion for the pseudo's quantity.
    If we really combined them, we could lose if the pseudo lives
    across an insn that clobbers the hard reg (eg, movstr).
 
-   ALREADY_DEAD is non-zero if USEDREG is known to be dead even though
+   ALREADY_DEAD is nonzero if USEDREG is known to be dead even though
    there is no REG_DEAD note on INSN.  This occurs during the processing
    of REG_NO_CONFLICT blocks.
 
-   MAY_SAVE_COPYCOPY is non-zero if this insn is simply copying USEDREG to
+   MAY_SAVE_COPY is nonzero if this insn is simply copying USEDREG to
    SETREG or if the input and output must share a register.
    In that case, we record a hard reg suggestion in QTY_PHYS_COPY_SUGG.
 
    There are elaborate checks for the validity of combining.  */
 
 static int
-combine_regs (usedreg, setreg, may_save_copy, insn_number, insn, already_dead)
-     rtx usedreg, setreg;
-     int may_save_copy;
-     int insn_number;
-     rtx insn;
-     int already_dead;
+combine_regs (rtx usedreg, rtx setreg, int may_save_copy, int insn_number,
+	      rtx insn, int already_dead)
 {
   int ureg, sreg;
   int offset = 0;
@@ -1981,6 +1953,8 @@ combine_regs (usedreg, setreg, may_save_copy, insn_number, insn, already_dead)
 
       /* Update info about quantity SQTY.  */
       qty[sqty].n_calls_crossed += REG_N_CALLS_CROSSED (sreg);
+      qty[sqty].n_throwing_calls_crossed
+	+= REG_N_THROWING_CALLS_CROSSED (sreg);
       qty[sqty].n_refs += REG_N_REFS (sreg);
       qty[sqty].freq += REG_FREQ (sreg);
       if (usize < ssize)
@@ -2005,9 +1979,7 @@ combine_regs (usedreg, setreg, may_save_copy, insn_number, insn, already_dead)
    True if REG's reg class either contains or is contained in CLASS.  */
 
 static int
-reg_meets_class_p (reg, class)
-     int reg;
-     enum reg_class class;
+reg_meets_class_p (int reg, enum reg_class class)
 {
   enum reg_class rclass = reg_preferred_class (reg);
   return (reg_class_subset_p (rclass, class)
@@ -2017,9 +1989,7 @@ reg_meets_class_p (reg, class)
 /* Update the class of QTYNO assuming that REG is being tied to it.  */
 
 static void
-update_qty_class (qtyno, reg)
-     int qtyno;
-     int reg;
+update_qty_class (int qtyno, int reg)
 {
   enum reg_class rclass = reg_preferred_class (reg);
   if (reg_class_subset_p (rclass, qty[qtyno].min_class))
@@ -2028,9 +1998,6 @@ update_qty_class (qtyno, reg)
   rclass = reg_alternate_class (reg);
   if (reg_class_subset_p (rclass, qty[qtyno].alternate_class))
     qty[qtyno].alternate_class = rclass;
-
-  if (REG_CHANGES_MODE (reg))
-    qty[qtyno].changes_mode = 1;
 }
 
 /* Handle something which alters the value of an rtx REG.
@@ -2043,10 +2010,7 @@ update_qty_class (qtyno, reg)
    carry info from `block_alloc'.  */
 
 static void
-reg_is_set (reg, setter, data)
-     rtx reg;
-     rtx setter;
-     void *data ATTRIBUTE_UNUSED;
+reg_is_set (rtx reg, rtx setter, void *data ATTRIBUTE_UNUSED)
 {
   /* Note that note_stores will only pass us a SUBREG if it is a SUBREG of
      a hard register.  These may actually not exist any more.  */
@@ -2066,9 +2030,7 @@ reg_is_set (reg, setter, data)
    BIRTH is the index at which this is happening.  */
 
 static void
-reg_is_born (reg, birth)
-     rtx reg;
-     int birth;
+reg_is_born (rtx reg, int birth)
 {
   int regno;
 
@@ -2101,15 +2063,13 @@ reg_is_born (reg, birth)
     }
 }
 
-/* Record the death of REG in the current insn.  If OUTPUT_P is non-zero,
+/* Record the death of REG in the current insn.  If OUTPUT_P is nonzero,
    REG is an output that is dying (i.e., it is never used), otherwise it
    is an input (the normal case).
    If OUTPUT_P is 1, then we extend the life past the end of this insn.  */
 
 static void
-wipe_dead_reg (reg, output_p)
-     rtx reg;
-     int output_p;
+wipe_dead_reg (rtx reg, int output_p)
 {
   int regno = REGNO (reg);
 
@@ -2170,25 +2130,16 @@ wipe_dead_reg (reg, output_p)
    If QTYNO crosses calls, insist on a register preserved by calls,
    unless ACCEPT_CALL_CLOBBERED is nonzero.
 
-   If JUST_TRY_SUGGESTED is non-zero, only try to see if the suggested
+   If JUST_TRY_SUGGESTED is nonzero, only try to see if the suggested
    register is available.  If not, return -1.  */
 
 static int
-find_free_reg (class, mode, qtyno, accept_call_clobbered, just_try_suggested,
-	       born_index, dead_index)
-     enum reg_class class;
-     enum machine_mode mode;
-     int qtyno;
-     int accept_call_clobbered;
-     int just_try_suggested;
-     int born_index, dead_index;
+find_free_reg (enum reg_class class, enum machine_mode mode, int qtyno,
+	       int accept_call_clobbered, int just_try_suggested,
+	       int born_index, int dead_index)
 {
   int i, ins;
-#ifdef HARD_REG_SET
-  /* Declare it register if it's a scalar.  */
-  register
-#endif
-    HARD_REG_SET used, first_used;
+  HARD_REG_SET first_used, used;
 #ifdef ELIMINABLE_REGS
   static const struct {const int from, to; } eliminables[] = ELIMINABLE_REGS;
 #endif
@@ -2236,10 +2187,8 @@ find_free_reg (class, mode, qtyno, accept_call_clobbered, just_try_suggested,
   SET_HARD_REG_BIT (used, FRAME_POINTER_REGNUM);
 #endif
 
-#ifdef CLASS_CANNOT_CHANGE_MODE
-  if (qty[qtyno].changes_mode)
-    IOR_HARD_REG_SET (used,
-		      reg_class_contents[(int) CLASS_CANNOT_CHANGE_MODE]);
+#ifdef CANNOT_CHANGE_MODE_CLASS
+  cannot_change_mode_set_regs (&used, mode, qty[qtyno].first_reg);
 #endif
 
   /* Normally, the registers that can be used for the first register in
@@ -2311,12 +2260,14 @@ find_free_reg (class, mode, qtyno, accept_call_clobbered, just_try_suggested,
 
   /* We need not check to see if the current function has nonlocal
      labels because we don't put any pseudos that are live over calls in
-     registers in that case.  */
+     registers in that case.  Avoid putting pseudos crossing calls that
+     might throw into call used registers.  */
 
   if (! accept_call_clobbered
       && flag_caller_saves
       && ! just_try_suggested
       && qty[qtyno].n_calls_crossed != 0
+      && qty[qtyno].n_throwing_calls_crossed == 0
       && CALLER_SAVE_PROFITABLE (qty[qtyno].n_refs,
 				 qty[qtyno].n_calls_crossed))
     {
@@ -2329,14 +2280,11 @@ find_free_reg (class, mode, qtyno, accept_call_clobbered, just_try_suggested,
 }
 
 /* Mark that REGNO with machine-mode MODE is live starting from the current
-   insn (if LIFE is non-zero) or dead starting at the current insn (if LIFE
+   insn (if LIFE is nonzero) or dead starting at the current insn (if LIFE
    is zero).  */
 
 static void
-mark_life (regno, mode, life)
-     int regno;
-     enum machine_mode mode;
-     int life;
+mark_life (int regno, enum machine_mode mode, int life)
 {
   int j = HARD_REGNO_NREGS (regno, mode);
   if (life)
@@ -2348,21 +2296,15 @@ mark_life (regno, mode, life)
 }
 
 /* Mark register number REGNO (with machine-mode MODE) as live (if LIFE
-   is non-zero) or dead (if LIFE is zero) from insn number BIRTH (inclusive)
+   is nonzero) or dead (if LIFE is zero) from insn number BIRTH (inclusive)
    to insn number DEATH (exclusive).  */
 
 static void
-post_mark_life (regno, mode, life, birth, death)
-     int regno;
-     enum machine_mode mode;
-     int life, birth, death;
+post_mark_life (int regno, enum machine_mode mode, int life, int birth,
+		int death)
 {
   int j = HARD_REGNO_NREGS (regno, mode);
-#ifdef HARD_REG_SET
-  /* Declare it register if it's a scalar.  */
-  register
-#endif
-    HARD_REG_SET this_reg;
+  HARD_REG_SET this_reg;
 
   CLEAR_HARD_REG_SET (this_reg);
   while (--j >= 0)
@@ -2392,8 +2334,7 @@ post_mark_life (regno, mode, life, birth, death)
    Otherwise, return 0.  */
 
 static int
-no_conflict_p (insn, r0, r1)
-     rtx insn, r0 ATTRIBUTE_UNUSED, r1;
+no_conflict_p (rtx insn, rtx r0 ATTRIBUTE_UNUSED, rtx r1)
 {
   int ok = 0;
   rtx note = find_reg_note (insn, REG_LIBCALL, NULL_RTX);
@@ -2433,56 +2374,62 @@ no_conflict_p (insn, r0, r1)
    is acceptable.  */
 
 static int
-requires_inout (p)
-     const char *p;
+requires_inout (const char *p)
 {
   char c;
   int found_zero = 0;
   int reg_allowed = 0;
   int num_matching_alts = 0;
+  int len;
 
-  while ((c = *p++))
-    switch (c)
-      {
-      case '=':  case '+':  case '?':
-      case '#':  case '&':  case '!':
-      case '*':  case '%':
-      case 'm':  case '<':  case '>':  case 'V':  case 'o':
-      case 'E':  case 'F':  case 'G':  case 'H':
-      case 's':  case 'i':  case 'n':
-      case 'I':  case 'J':  case 'K':  case 'L':
-      case 'M':  case 'N':  case 'O':  case 'P':
-      case 'X':
-	/* These don't say anything we care about.  */
-	break;
-
-      case ',':
-	if (found_zero && ! reg_allowed)
-	  num_matching_alts++;
-
-	found_zero = reg_allowed = 0;
-	break;
-
-      case '0':
-	found_zero = 1;
-	break;
-
-      case '1':  case '2':  case '3':  case '4': case '5':
-      case '6':  case '7':  case '8':  case '9':
-	/* Skip the balance of the matching constraint.  */
-	while (ISDIGIT (*p))
-	  p++;
-	break;
-
-      default:
-	if (REG_CLASS_FROM_LETTER (c) == NO_REGS)
+  for ( ; (c = *p); p += len)
+    {
+      len = CONSTRAINT_LEN (c, p);
+      switch (c)
+	{
+	case '=':  case '+':  case '?':
+	case '#':  case '&':  case '!':
+	case '*':  case '%':
+	case 'm':  case '<':  case '>':  case 'V':  case 'o':
+	case 'E':  case 'F':  case 'G':  case 'H':
+	case 's':  case 'i':  case 'n':
+	case 'I':  case 'J':  case 'K':  case 'L':
+	case 'M':  case 'N':  case 'O':  case 'P':
+	case 'X':
+	  /* These don't say anything we care about.  */
 	  break;
-	/* FALLTHRU */
-      case 'p':
-      case 'g': case 'r':
-	reg_allowed = 1;
-	break;
-      }
+
+	case ',':
+	  if (found_zero && ! reg_allowed)
+	    num_matching_alts++;
+
+	  found_zero = reg_allowed = 0;
+	  break;
+
+	case '0':
+	  found_zero = 1;
+	  break;
+
+	case '1':  case '2':  case '3':  case '4': case '5':
+	case '6':  case '7':  case '8':  case '9':
+	  /* Skip the balance of the matching constraint.  */
+	  do
+	    p++;
+	  while (ISDIGIT (*p));
+	  len = 0;
+	  break;
+
+	default:
+	  if (REG_CLASS_FROM_CONSTRAINT (c, p) == NO_REGS
+	      && !EXTRA_ADDRESS_CONSTRAINT (c, p))
+	    break;
+	  /* Fall through.  */
+	case 'p':
+	case 'g': case 'r':
+	  reg_allowed = 1;
+	  break;
+	}
+    }
 
   if (found_zero && ! reg_allowed)
     num_matching_alts++;
@@ -2491,8 +2438,7 @@ requires_inout (p)
 }
 
 void
-dump_local_alloc (file)
-     FILE *file;
+dump_local_alloc (FILE *file)
 {
   int i;
   for (i = FIRST_PSEUDO_REGISTER; i < max_regno; i++)

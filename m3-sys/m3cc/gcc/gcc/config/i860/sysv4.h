@@ -1,26 +1,29 @@
 /* Target definitions for GNU compiler for Intel 80860 running System V.4
-   Copyright (C) 1991, 1996, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1996, 2000, 2002, 2003 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i860 System V Release 4)");
+
+#undef USER_LABEL_PREFIX
+#define USER_LABEL_PREFIX ""
 
 /* Provide a set of pre-definitions and pre-assertions appropriate for
    the i860 running svr4.  Note that the symbol `__svr4__' MUST BE
@@ -31,8 +34,16 @@ Boston, MA 02111-1307, USA.  */
    will be selected when we are building gnulib2.c.
    __svr4__ is our extension.  */
 
-#define CPP_PREDEFINES \
-  "-Di860 -Dunix -DSVR4 -D__svr4__ -Asystem=unix -Asystem=svr4 -Acpu=i860 -Amachine=i860"
+#define TARGET_OS_CPP_BUILTINS()                \
+  do                                            \
+    {                                           \
+        builtin_define_std ("unix");            \
+        builtin_define ("SVR4");                \
+        builtin_define ("__svr4__");            \
+        builtin_assert ("system=unix");         \
+        builtin_assert ("system=svr4");         \
+    }                                           \
+  while (0)
 
 /* For the benefit of i860_va_arg, flag it this way too.  */
 
@@ -48,6 +59,8 @@ Boston, MA 02111-1307, USA.  */
 #undef TYPE_OPERAND_FMT
 #define TYPE_OPERAND_FMT      "\"%s\""
 
+#define GLOBAL_ASM_OP ".globl "
+
 /* The following macro definition overrides the one in i860.h
    because the svr4 i860 assembler requires a different syntax
    for getting parts of constant/relocatable values.  */
@@ -59,11 +72,10 @@ Boston, MA 02111-1307, USA.  */
 	fprintf (FILE, "]@%s", PART_CODE);				\
   } while (0)
 
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE)						\
-  do {	output_file_directive (FILE, main_input_filename);		\
-	fprintf (FILE, "\t.version\t\"01.01\"\n");			\
-  } while (0)
+#undef TARGET_ASM_FILE_START_FILE_DIRECTIVE
+#define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
+#undef TARGET_ASM_FILE_START
+#define TARGET_ASM_FILE_START i860_file_start
 
 /* Output the special word the svr4 SDB wants to see just before
    the first word of each function's prologue code.  */
@@ -124,11 +136,10 @@ extern const char *current_function_original_name;
 #define TDESC_SECTION_ASM_OP    "\t.section\t.tdesc"
 
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_const, in_tdesc
+#define EXTRA_SECTIONS in_tdesc
 
 #undef EXTRA_SECTION_FUNCTIONS
 #define EXTRA_SECTION_FUNCTIONS						\
-  CONST_SECTION_FUNCTION						\
   TDESC_SECTION_FUNCTION
 
 #define TDESC_SECTION_FUNCTION						\

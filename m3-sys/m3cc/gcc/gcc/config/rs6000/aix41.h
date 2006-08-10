@@ -1,26 +1,25 @@
 /* Definitions of target machine for GNU compiler,
    for IBM RS/6000 POWER running AIX version 4.1.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2003
    Free Software Foundation, Inc.
    Contributed by David Edelsohn (edelsohn@gnu.org).
 
-This file is part of GNU CC.
+   This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published
+   by the Free Software Foundation; either version 2, or (at your
+   option) any later version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
-
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to the
+   Free Software Foundation, 59 Temple Place - Suite 330, Boston,
+   MA 02111-1307, USA.  */
 
 #undef  SUBSUBTARGET_SWITCHES
 #define SUBSUBTARGET_SWITCHES		\
@@ -33,19 +32,26 @@ Boston, MA 02111-1307, USA.  */
 #undef	ASM_DEFAULT_SPEC
 #define ASM_DEFAULT_SPEC "-mcom"
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D_IBMR2 -D_POWER -D_AIX -D_AIX32 -D_AIX41 \
--D_LONG_LONG -Asystem=unix -Asystem=aix"
+#undef TARGET_OS_CPP_BUILTINS
+#define TARGET_OS_CPP_BUILTINS()      \
+  do                                  \
+    {                                 \
+      builtin_define ("_IBMR2");      \
+      builtin_define ("_POWER");      \
+      builtin_define ("_AIX");        \
+      builtin_define ("_AIX32");      \
+      builtin_define ("_AIX41");      \
+      builtin_define ("_LONG_LONG");  \
+      builtin_assert ("system=unix"); \
+      builtin_assert ("system=aix");  \
+    }                                 \
+  while (0)
 
 #undef CPP_SPEC
 #define CPP_SPEC "%{posix: -D_POSIX_SOURCE}\
    %{ansi: -D_ANSI_C_SOURCE}\
    %{mpe: -I/usr/lpp/ppe.poe/include}\
-   %{pthread: -D_THREAD_SAFE}\
-   %(cpp_cpu)"
-
-#undef	CPP_DEFAULT_SPEC
-#define CPP_DEFAULT_SPEC "-D_ARCH_COM"
+   %{pthread: -D_THREAD_SAFE}"
 
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT MASK_NEW_MNEMONICS
@@ -92,3 +98,7 @@ Boston, MA 02111-1307, USA.  */
 #undef RS6000_CALL_GLUE
 #define RS6000_CALL_GLUE "{cror 31,31,31|nop}"
 
+/* The IBM AIX 4.x assembler doesn't support forward references in
+   .set directives.  We handle this by deferring the output of .set
+   directives to the end of the compilation unit.  */
+#define TARGET_DEFERRED_OUTPUT_DEFS(DECL,TARGET) true

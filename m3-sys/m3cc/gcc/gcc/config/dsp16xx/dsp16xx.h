@@ -1,22 +1,22 @@
 /* Definitions of target machine for GNU compiler.  AT&T DSP1600.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003
    Free Software Foundation, Inc.
    Contributed by Michael Collison (collison@isisinc.net).
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -31,29 +31,29 @@ extern const char *const_seg_name;
 extern const char *rsect_const;
 extern const char *chip_name;
 extern const char *save_chip_name;
-extern struct rtx_def *dsp16xx_compare_op0, *dsp16xx_compare_op1;
-extern struct rtx_def *dsp16xx_addhf3_libcall;
-extern struct rtx_def *dsp16xx_subhf3_libcall;
-extern struct rtx_def *dsp16xx_mulhf3_libcall;
-extern struct rtx_def *dsp16xx_divhf3_libcall;
-extern struct rtx_def *dsp16xx_cmphf3_libcall;
-extern struct rtx_def *dsp16xx_fixhfhi2_libcall;
-extern struct rtx_def *dsp16xx_floathihf2_libcall;
-extern struct rtx_def *dsp16xx_neghf2_libcall;
-extern struct rtx_def *dsp16xx_umulhi3_libcall;
-extern struct rtx_def *dsp16xx_mulhi3_libcall;
-extern struct rtx_def *dsp16xx_udivqi3_libcall;
-extern struct rtx_def *dsp16xx_udivhi3_libcall;
-extern struct rtx_def *dsp16xx_divqi3_libcall;
-extern struct rtx_def *dsp16xx_divhi3_libcall;
-extern struct rtx_def *dsp16xx_modqi3_libcall;
-extern struct rtx_def *dsp16xx_modhi3_libcall;
-extern struct rtx_def *dsp16xx_umodqi3_libcall;
-extern struct rtx_def *dsp16xx_umodhi3_libcall;
+extern GTY(()) rtx dsp16xx_compare_op0;
+extern GTY(()) rtx dsp16xx_compare_op1;
+extern GTY(()) rtx dsp16xx_addhf3_libcall;
+extern GTY(()) rtx dsp16xx_subhf3_libcall;
+extern GTY(()) rtx dsp16xx_mulhf3_libcall;
+extern GTY(()) rtx dsp16xx_divhf3_libcall;
+extern GTY(()) rtx dsp16xx_cmphf3_libcall;
+extern GTY(()) rtx dsp16xx_fixhfhi2_libcall;
+extern GTY(()) rtx dsp16xx_floathihf2_libcall;
+extern GTY(()) rtx dsp16xx_neghf2_libcall;
+extern GTY(()) rtx dsp16xx_mulhi3_libcall;
+extern GTY(()) rtx dsp16xx_udivqi3_libcall;
+extern GTY(()) rtx dsp16xx_udivhi3_libcall;
+extern GTY(()) rtx dsp16xx_divqi3_libcall;
+extern GTY(()) rtx dsp16xx_divhi3_libcall;
+extern GTY(()) rtx dsp16xx_modqi3_libcall;
+extern GTY(()) rtx dsp16xx_modhi3_libcall;
+extern GTY(()) rtx dsp16xx_umodqi3_libcall;
+extern GTY(()) rtx dsp16xx_umodhi3_libcall;
 
-extern struct rtx_def *dsp16xx_ashrhi3_libcall;
-extern struct rtx_def *dsp16xx_ashlhi3_libcall;
-extern struct rtx_def *dsp16xx_lshrhi3_libcall;
+extern GTY(()) rtx dsp16xx_ashrhi3_libcall;
+extern GTY(()) rtx dsp16xx_ashlhi3_libcall;
+extern GTY(()) rtx dsp16xx_lshrhi3_libcall;
 
 /* RUN-TIME TARGET SPECIFICATION */
 #define DSP16XX   1
@@ -71,12 +71,8 @@ extern struct rtx_def *dsp16xx_lshrhi3_libcall;
   (!strcmp (STR, "ifile") ? 1 :                 \
    0)
 
-#ifdef  CC1_SPEC
 #undef  CC1_SPEC
-#endif
 #define CC1_SPEC       "%{!O*:-O}"
-
-#define CPP_SPEC       "%{!O*:-D__OPTIMIZE__}"
 
 /* Define this as a spec to call the AT&T assembler */
 
@@ -134,14 +130,33 @@ extern struct rtx_def *dsp16xx_lshrhi3_libcall;
 /* Include path is determined from the environment variable */
 #define INCLUDE_DEFAULTS     \
 {                            \
-  { 0, 0, 0 }                \
+  { 0, 0, 0, 0, 0 }          \
 }
 
 /* Names to predefine in the preprocessor for this target machine.  */
+#define TARGET_CPU_CPP_BUILTINS()		\
+  do						\
+    {						\
+      builtin_define_std ("dsp1600");		\
+      builtin_define_std ("DSP1600");		\
+    }						\
+  while (0)
+
 #ifdef __MSDOS__
-#define CPP_PREDEFINES "-Ddsp1600 -DDSP1600 -DMSDOS"
+# define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+      builtin_define_std ("MSDOS");		\
+    }						\
+  while (0)
 #else
-#define CPP_PREDEFINES "-Ddsp1600 -DDSP1600 -Ddsp1610 -DDSP1610"
+# define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+      builtin_define_std ("dsp1610");		\
+      builtin_define_std ("DSP1610");		\
+    }						\
+  while (0)
 #endif
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
@@ -254,15 +269,15 @@ extern int target_flags;
 #define TARGET_OPTIONS						\
 {								\
   { "text=",	&text_seg_name,				        \
-    N_("Specify alternate name for text section") },            \
+    N_("Specify alternate name for text section"), 0},          \
   { "data=",	&data_seg_name,				        \
-    N_("Specify alternate name for data section") },            \
+    N_("Specify alternate name for data section"), 0},          \
   { "bss=",	&bss_seg_name,				        \
-    N_("Specify alternate name for bss section") },             \
+    N_("Specify alternate name for bss section"), 0},           \
   { "const=",   &const_seg_name,                                \
-    N_("Specify alternate name for constant section") },        \
+    N_("Specify alternate name for constant section"), 0},      \
   { "chip=",    &chip_name,                                     \
-    N_("Specify alternate name for dsp16xx chip") },            \
+    N_("Specify alternate name for dsp16xx chip"), 0},          \
 }
 
 /* Sometimes certain combinations of command options do not make sense
@@ -278,8 +293,6 @@ extern int target_flags;
 
 #define OPTIMIZATION_OPTIONS(LEVEL,SIZE)              \
 {                                                     \
-    flag_gnu_linker             = FALSE;              \
-                                                      \
     if (LEVEL >= 2)                                   \
     {                                                 \
         /* The dsp16xx family has so few registers    \
@@ -293,11 +306,6 @@ extern int target_flags;
 }
 
 /* STORAGE LAYOUT */
-
-/* Define if you don't want extended real, but do want to use the
-   software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion.  */
-#define REAL_ARITHMETIC
 
 /* Define this if most significant bit is lowest numbered
    in instructions that operate on numbered bit-fields.
@@ -316,21 +324,11 @@ extern int target_flags;
 /* number of bits in an addressable storage unit */
 #define BITS_PER_UNIT 16
 
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 68000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD 16
-
 /* Maximum number of bits in a word.  */
 #define MAX_BITS_PER_WORD 16
 
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD 1
-
-/* Width in bits of a pointer.
-   See also the macro `Pmode' defined below.  */
-#define POINTER_SIZE 16
 
 /* Allocation boundary (in *bits*) for storing pointers in memory.  */
 #define POINTER_BOUNDARY 16
@@ -368,7 +366,6 @@ extern int target_flags;
 
 /* LAYOUT OF SOURCE LANGUAGE DATA TYPES */
 
-#define CHAR_TYPE_SIZE         16
 #define SHORT_TYPE_SIZE        16
 #define INT_TYPE_SIZE          16
 #define LONG_TYPE_SIZE         32
@@ -1199,7 +1196,8 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Initialize a variable CUM of type CUMULATIVE_ARGS
    for a call to a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0.  */
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)  ((CUM) = 0)
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
+  ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
@@ -1288,9 +1286,6 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* The 1610 has post-increment and decrement, but no pre-modify */
 #define HAVE_POST_INCREMENT 1
 #define HAVE_POST_DECREMENT 1
-
-/* #define HAVE_PRE_DECREMENT 0 */
-/* #define HAVE_PRE_INCREMENT 0 */
 
 /* Recognize any constant value that is a valid address.  */
 #define CONSTANT_ADDRESS_P(X)  CONSTANT_P (X)
@@ -1435,80 +1430,6 @@ extern struct dsp16xx_frame_info current_frame_info;
 
 /* DESCRIBING RELATIVE COSTS OF OPERATIONS */
 
-/* Compute the cost of computing a constant rtl expression RTX
-   whose rtx-code is CODE.  The body of this macro is a portion
-   of a switch statement.  If the code is computed here,
-   return it with a return statement.  */
-#define CONST_COSTS(RTX,CODE,OUTER_CODE)                                \
-  case CONST_INT:						        \
-    return (unsigned) INTVAL (RTX) < 65536 ? 0 : 2;                     \
-  case LABEL_REF:						        \
-  case SYMBOL_REF:						        \
-  case CONST:								\
-    return COSTS_N_INSNS (1);						\
-                                                                        \
-  case CONST_DOUBLE:						        \
-    return COSTS_N_INSNS (2);
-
-/* Like CONST_COSTS but applies to nonconstant RTL expressions.
-   This can be used, for example to indicate how costly a multiply
-   instruction is.  */
-#define RTX_COSTS(X,CODE,OUTER_CODE)                            \
-  case MEM:                                                     \
-    return GET_MODE (X) == QImode ? COSTS_N_INSNS (2) :         \
-                                    COSTS_N_INSNS (4);          \
-  case DIV:                                                     \
-  case MOD:                                                     \
-    return COSTS_N_INSNS (38);                                  \
-  case MULT:                                                    \
-    if (GET_MODE (X) == QImode)                                 \
-        return COSTS_N_INSNS (2);                               \
-    else                                                        \
-        return COSTS_N_INSNS (38);                              \
-  case PLUS:                                                    \
-  case MINUS:                                                   \
-    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_INT)              \
-        {                                                       \
-          return (1 +                                           \
-                  rtx_cost (XEXP (X, 0), CODE) +                \
-                  rtx_cost (XEXP (X, 1), CODE));                \
-        }                                                       \
-    else                                                        \
-        return COSTS_N_INSNS (38);                              \
-                                                                \
-  case AND: case IOR: case XOR:                                 \
-        return (1 +                                             \
-                rtx_cost (XEXP (X, 0), CODE) +                  \
-                rtx_cost (XEXP (X, 1), CODE));                  \
-                                                                \
-  case NEG: case NOT:                                           \
-    return COSTS_N_INSNS (1);                                   \
-  case ASHIFT:                                                  \
-  case ASHIFTRT:                                                \
-  case LSHIFTRT:                                                \
-    if (GET_CODE (XEXP (X,1)) == CONST_INT)                     \
-      {                                                         \
-        int number = INTVAL(XEXP (X,1));                        \
-        if (number == 1 || number == 4 || number == 8 ||        \
-            number == 16)                                       \
-            return COSTS_N_INSNS (1);                           \
-        else                                                    \
-	{                                                       \
-          if (TARGET_BMU)                                       \
-            return COSTS_N_INSNS (2);                           \
-          else                                                  \
-            return COSTS_N_INSNS (num_1600_core_shifts(number)); \
-	}                                                       \
-      }                                                         \
-    if (TARGET_BMU)                                             \
-      return COSTS_N_INSNS (1);                                 \
-    else                                                        \
-      return COSTS_N_INSNS (15);
-
-/* An expression giving the cost of an addressing mode that contains
-   address.  */
-#define ADDRESS_COST(ADDR)  dsp16xx_address_cost (ADDR)
-
 /* A c expression for the cost of moving data from a register in
    class FROM to one in class TO. The classes are expressed using
    the enumeration values such as GENERAL_REGS. A value of 2 is
@@ -1533,16 +1454,13 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Define this macro as a C expression which is nonzero if accessing less
    than a word of memory (i.e a char or short) is no faster than accessing
    a word of memory, i.e if such access require more than one instruction
-   or if ther is no difference in cost between byte and (aligned) word
+   or if there is no difference in cost between byte and (aligned) word
    loads.  */
 #define SLOW_BYTE_ACCESS 1
 
 /* Define this macro if unaligned accesses have a cost many times greater than
    aligned accesses, for example if they are emulated in a trap handler */
 /* define SLOW_UNALIGNED_ACCESS(MODE, ALIGN) */
-
-/* Define this macro to inhibit strength reduction of memory addresses */
-/* #define DONT_REDUCE_ADDR */
 
 
 /* DIVIDING THE OUTPUT IN SECTIONS */
@@ -1553,8 +1471,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 
 /* Output before constants and strings */
 #define DEFAULT_CONST_SEG_NAME  ".const"
-#define READONLY_SECTION_ASM_OP rsect_const
-#define READONLY_DATA_SECTION   const_section
+#define READONLY_DATA_SECTION_ASM_OP rsect_const
 
 /* Output before writable data.  */
 #define DEFAULT_DATA_SEG_NAME ".data"
@@ -1566,27 +1483,8 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* We will default to using 1610 if the user doesn't
    specify it.  */
 #define DEFAULT_CHIP_NAME "1610"
-
-/* A list of names for sections other than the standard ones, which are
-   'in_text' and 'in_data' (and .bss if BSS_SECTION_ASM_OP is defined).  */
-#define EXTRA_SECTIONS in_const
-
-#define EXTRA_SECTION_FUNCTIONS  \
-extern void const_section PARAMS ((void));                         \
-void                                                               \
-const_section ()                                                   \
-{                                                                  \
-    if (in_section != in_const)                                    \
-    {                                                              \
-        fprintf (asm_out_file, "%s\n", READONLY_SECTION_ASM_OP);   \
-	in_section = in_const;                                     \
-    }                                                              \
-}
 
 /* THE OVERALL FRAMEWORK OF AN ASSEMBLER FILE */
-
-/* Output at beginning of assembler file.  */
-#define ASM_FILE_START(FILE) coff_dsp16xx_file_start (FILE) 
 
 /* A C string constant describing how to begin a comment in the target
    assembler language.  */
@@ -1637,7 +1535,7 @@ const_section ()                                                   \
 	      fprintf (asm_out_file, "%d", c);			              \
 	      /* After an octal-escape, if a digit follows,		      \
 		 terminate one string constant and start another.	      \
-		 The Vax assembler fails to stop reading the escape	      \
+		 The VAX assembler fails to stop reading the escape	      \
 		 after three digits, so this is the only way we		      \
 		 can get it to parse the data properly.  		      \
 	      if (i < thissize - 1 && ISDIGIT (p[i + 1]))		      \
@@ -1660,22 +1558,7 @@ const_section ()                                                   \
   }									      \
   while (0)
 
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable or function
-   named NAME. LABELNO is an integer which is different for
-   each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)			\
-  do {									\
-    int len = strlen (NAME);						\
-    char *temp = (char *) alloca (len + 3);				\
-    temp[0] = 'L';							\
-    strcpy (&temp[1], (NAME));						\
-    temp[len + 1] = '_';						\
-    temp[len + 2] = 0;							\
-    (OUTPUT) = (char *) alloca (strlen (NAME) + 11);			\
-    ASM_GENERATE_INTERNAL_LABEL (OUTPUT, temp, LABELNO);		\
-  } while (0)
+#define ASM_PN_FORMAT "*L%s_%lu"
 
 /* OUTPUT OF UNINITIALIZED VARIABLES */
 
@@ -1693,16 +1576,8 @@ const_section ()                                                   \
 
 /* OUTPUT AND GENERATION OF LABELS */
 
-/* This is how to output the definition of a user-level label named NAME,
-   such as the label on a static function or variable NAME.  */
-#define ASM_OUTPUT_LABEL(FILE,NAME)	\
-  do { assemble_name (FILE, NAME); fputs (":\n", FILE); } while (0)
-
-/* This is how to output a command to make the user-level label named NAME
-   defined for reference from other files.  */
-
-#define ASM_GLOBALIZE_LABEL(FILE,NAME)	\
-  do { fputs (".global ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
+/* Globalizing directive for a label.  */
+#define GLOBAL_ASM_OP ".global "
 
 /* A C statement to output to the stdio stream any text necessary
    for declaring the name of an external symbol named name which
@@ -1728,17 +1603,12 @@ const_section ()                                                   \
 
 #define USER_LABEL_PREFIX "_"
 
-/* This is how to output an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.  */
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  fprintf (FILE, "%s%d:\n", PREFIX, NUM)
-
 /* This is how to store into the string LABEL
    the symbol_ref name of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.
    This is suitable for output with `assemble_name'.  */
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
-  sprintf (LABEL, "*%s%d", PREFIX, NUM)
+  sprintf (LABEL, "*%s%lu", PREFIX, (unsigned long)(NUM))
 
 
 /* OUTPUT OF ASSEMBLER INSTRUCTIONS */
@@ -1826,7 +1696,7 @@ const_section ()                                                   \
 #define ASM_NO_SKIP_IN_TEXT 1
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t%d * int 0\n", (SIZE))
+  fprintf (FILE, "\t%d * int 0\n", (int)(SIZE))
 
 /* CONTROLLING DEBUGGING INFORMATION FORMAT */
 

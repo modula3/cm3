@@ -1,29 +1,41 @@
 /* Definitions of target machine for GNU compiler.  System/370 version.
-   Copyright (C) 1989, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002
-   Free Software Foundation, Inc.
+   Copyright (C) 1989, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+   2003 Free Software Foundation, Inc.
    Contributed by Jan Stein (jan@cd.chalmers.se).
    Modified for OS/390 LanguageEnvironment C by Dave Pitts (dpitts@cozx.com)
    Hacked for Linux-ELF/390 by Linas Vepstas (linas@linas.org)
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #ifndef GCC_I370_H
 #define GCC_I370_H
+
+/* Target CPU builtins.  */
+#define TARGET_CPU_CPP_BUILTINS()		\
+  do						\
+    {						\
+      builtin_define_std ("GCC");		\
+      builtin_define_std ("gcc");		\
+      builtin_assert ("machine=i370");		\
+      builtin_assert ("cpu=i370");		\
+    }						\
+  while (0)
+
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
 extern int target_flags;
@@ -42,7 +54,7 @@ extern char *mvs_function_name;
 
 /* The length of the function name malloc'd area.  */
 
-extern int mvs_function_name_length;
+extern size_t mvs_function_name_length;
 
 /* Compile using char instructions (mvc, nc, oc, xc).  On 4341 use this since
    these are more than twice as fast as load-op-store.
@@ -63,6 +75,8 @@ extern int mvs_function_name_length;
 { { "char-instructions", 1, N_("Generate char instructions")},            \
   { "no-char-instructions", -1, N_("Do not generate char instructions")}, \
   { "", TARGET_DEFAULT, 0} }
+
+#define OVERRIDE_OPTIONS  override_options ()
 
 /* To use IBM supplied macro function prologue and epilogue, define the
    following to 1.  Should only be needed if IBM changes the definition
@@ -86,21 +100,9 @@ extern int mvs_function_name_length;
 
 #define WORDS_BIG_ENDIAN 1
 
-/* Number of bits in an addressable storage unit.  */
-
-#define BITS_PER_UNIT 8
-
-/* Width in bits of a "word", which is the contents of a machine register.  */
-
-#define BITS_PER_WORD 32
-
 /* Width of a word, in units (bytes).  */
 
 #define UNITS_PER_WORD 4
-
-/* Width in bits of a pointer.  See also the macro `Pmode' defined below.  */
-
-#define POINTER_SIZE 32
 
 /* Allocation boundary (in *bits*) for storing pointers in memory.  */
 
@@ -135,21 +137,9 @@ extern int mvs_function_name_length;
 
 #define TARGET_FLOAT_FORMAT IBM_FLOAT_FORMAT
 
-/* Define character mapping for cross-compiling.  */
-/* but only define it if really needed, since otherwise it will break builds */
-
-#ifdef TARGET_EBCDIC
-#ifdef HOST_EBCDIC
-#define MAP_CHARACTER(c) ((char)(c))
-#else
-#define MAP_CHARACTER(c) ((char)mvs_map_char (c))
-#endif
-#endif
-
 #ifdef TARGET_HLASM
 /* HLASM requires #pragma map.  */
-#define REGISTER_TARGET_PRAGMAS(PFILE) \
-  cpp_register_pragma (PFILE, 0, "map", i370_pr_map)
+#define REGISTER_TARGET_PRAGMAS() c_register_pragma (0, "map", i370_pr_map)
 #endif /* TARGET_HLASM */
 
 /* Define maximum length of page minus page escape overhead.  */
@@ -292,12 +282,6 @@ extern int mvs_function_name_length;
 #define MODES_TIEABLE_P(MODE1, MODE2)					\
   (((MODE1) == SFmode || (MODE1) == DFmode)				\
    == ((MODE2) == SFmode || (MODE2) == DFmode))
-
-/* Mark external references.  */
-
-#define ENCODE_SECTION_INFO(decl)  					\
-  if (DECL_EXTERNAL (decl) && TREE_PUBLIC (decl)) 			\
-    SYMBOL_REF_FLAG (XEXP (DECL_RTL (decl), 0)) = 1;
 
 /* Specify the registers used for certain standard purposes.
    The values of these macros are register numbers.  */
@@ -543,7 +527,8 @@ enum reg_class
    a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT)  ((CUM) = 0)
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
+  ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument of mode MODE and
    data type TYPE.  (TYPE is null for libcalls where that information
@@ -586,7 +571,8 @@ enum reg_class
  */
 
 #define RET_REG(MODE)	\
-    (((MODE) == DCmode || (MODE) == SCmode || (MODE) == TFmode || (MODE) == DFmode || (MODE) == SFmode) ? 16 : 15)
+    (((MODE) == DCmode || (MODE) == SCmode \
+      || (MODE) == DFmode || (MODE) == SFmode) ? 16 : 15)
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  					\
   gen_rtx_REG (TYPE_MODE (VALTYPE), RET_REG (TYPE_MODE (VALTYPE)))
@@ -660,12 +646,6 @@ enum reg_class
 
 /* Addressing modes, and classification of registers for them.  */
 
-/* #define HAVE_POST_INCREMENT */
-/* #define HAVE_POST_DECREMENT */
-
-/* #define HAVE_PRE_DECREMENT */
-/* #define HAVE_PRE_INCREMENT */
-
 /* These assume that REGNO is a hard or pseudo reg number.  They give
    nonzero only if REGNO is a hard reg of the suitable class or a pseudo
    reg currently allocated to a suitable hard reg.
@@ -711,7 +691,7 @@ enum reg_class
 	  && GET_CODE (XEXP (XEXP (X, 0), 0)) == LABEL_REF)		\
   || (GET_CODE (X) == CONST						\
 	  && GET_CODE (XEXP (XEXP (X, 0), 0)) == SYMBOL_REF		\
-	  && !SYMBOL_REF_FLAG (XEXP (XEXP (X, 0), 0))))
+	  && !SYMBOL_REF_EXTERNAL_P (XEXP (XEXP (X, 0), 0))))
 
 /* Nonzero if the constant value X is a legitimate general operand.
    It is given that X satisfies CONSTANT_P or is a CONST_DOUBLE.  */
@@ -888,10 +868,7 @@ enum reg_class
 
 #define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC)	(OUTPREC != 16)
 
-/* We assume that the store-condition-codes instructions store 0 for false
-   and some other value for true.  This is the value stored for true.  */
-
-/* #define STORE_FLAG_VALUE (-1) */
+/* ??? Investigate defining STORE_FLAG_VALUE to (-1).  */
 
 /* When a prototype says `char' or `short', really pass an `int'.  */
 
@@ -911,21 +888,6 @@ enum reg_class
    indexing purposes) so give the MEM rtx a byte's mode.  */
 
 #define FUNCTION_MODE QImode
-
-/* Compute the cost of computing a constant rtl expression RTX whose
-   rtx-code is CODE.  The body of this macro is a portion of a switch
-   statement.  If the code is computed here, return it with a return
-   statement.  Otherwise, break from the switch.  */
-
-#define CONST_COSTS(RTX, CODE, OUTERCODE)				\
-  case CONST_INT:							\
-    if ((unsigned) INTVAL (RTX) < 0xfff) return 1;			\
-  case CONST:								\
-  case LABEL_REF:							\
-  case SYMBOL_REF:							\
-    return 2;								\
-  case CONST_DOUBLE:							\
-    return 4;
 
 /*   A C statement (sans semicolon) to update the integer variable COST
      based on the relationship between INSN that is dependent on
@@ -1058,11 +1020,6 @@ enum reg_class
   "0",  "2",  "4",  "6"							\
 }
 
-#define ASM_FILE_START(FILE)						\
-{ fputs ("\tRMODE\tANY\n", FILE);					\
-  fputs ("\tCSECT\n", FILE); }
-
-#define ASM_FILE_END(FILE) fputs ("\tEND\n", FILE);
 #define ASM_COMMENT_START "*"
 #define ASM_APP_OFF ""
 #define ASM_APP_ON ""
@@ -1077,18 +1034,6 @@ enum reg_class
     {									\
       fprintf (FILE, "%s\tALIAS\tC'%s'\n", temp, NAME);			\
     }									\
-}
-
-#define ASM_GLOBALIZE_LABEL(FILE, NAME)					\
-{ 									\
-  char temp[MAX_MVS_LABEL_SIZE + 1];					\
-  if (mvs_check_alias (NAME, temp) == 2)				\
-    {									\
-      fprintf (FILE, "%s\tALIAS\tC'%s'\n", temp, NAME);			\
-    }									\
-  fputs ("\tENTRY\t", FILE);						\
-  assemble_name (FILE, NAME);						\
-  fputs ("\n", FILE);							\
 }
 
 /* MVS externals are limited to 8 characters, upper case only.
@@ -1112,19 +1057,7 @@ enum reg_class
 }
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL, PREFIX, NUM)			\
-  sprintf (LABEL, "*%s%d", PREFIX, NUM)
-
-/* Generate internal label.  Since we can branch here from off page, we
-   must reload the base register.  */
-
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE, PREFIX, NUM) 			\
-{									\
-  if (!strcmp (PREFIX,"L"))						\
-    {									\
-      mvs_add_label(NUM);						\
-    }									\
-  fprintf (FILE, "%s%d\tEQU\t*\n", PREFIX, NUM);			\
-}
+  sprintf (LABEL, "*%s%lu", PREFIX, (unsigned long)(NUM))
 
 /* Generate case label.  For HLASM we can change to the data CSECT
    and put the vectors out of the code body. The assembler just
@@ -1189,7 +1122,6 @@ enum reg_class
 	  if (j % MVS_ASCII_TEXT_LENGTH != 0 )				\
 	    fprintf (FILE, "'\n");					\
 	  j = -1;							\
-	  if (c == '&') c = MAP_CHARACTER (c);				\
 	  fprintf (FILE, "\tDC\tX'%X'\n", c );				\
 	}								\
       else								\
@@ -1231,7 +1163,8 @@ enum reg_class
 
 #define ASM_OUTPUT_SKIP(FILE, SIZE)  					\
 {									\
-  int s, k;								\
+  unsigned HOST_WIDE_INT s;						\
+  int  k;								\
   for (s = (SIZE); s > 0; s -= MAX_CHUNK)				\
     {									\
       if (s > MAX_CHUNK)						\
@@ -1274,15 +1207,7 @@ enum reg_class
   ASM_OUTPUT_SKIP (FILE,SIZE);						\
 }
 
-/* Store in OUTPUT a string (made with alloca) containing an
-   assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)  		\
-{									\
-  (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10);			\
-  sprintf ((OUTPUT), "%s%d", (NAME), (LABELNO));			\
-}
+#define ASM_PN_FORMAT "%s%lu"
 
 /* Print operand XV (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -1306,7 +1231,7 @@ enum reg_class
 	  if (CODE == 'O')						\
 	    {								\
 	      if (GET_CODE (addr) == PLUS)				\
-		fprintf (FILE, "%d", INTVAL (XEXP (addr, 1)));		\
+		fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, INTVAL (XEXP (addr, 1))); \
 	      else							\
 		fprintf (FILE, "0");					\
 	    }								\
@@ -1324,28 +1249,28 @@ enum reg_class
       case SYMBOL_REF:							\
       case LABEL_REF:							\
 	mvs_page_lit += 4;						\
-	if (SYMBOL_REF_FLAG (XV)) fprintf (FILE, "=V(");		\
+	if (SYMBOL_REF_EXTERNAL_P (XV)) fprintf (FILE, "=V(");		\
 	else                      fprintf (FILE, "=A(");		\
 	output_addr_const (FILE, XV);					\
 	fprintf (FILE, ")");						\
 	break;								\
       case CONST_INT:					        	\
 	if (CODE == 'B')						\
-	  fprintf (FILE, "%d", INTVAL (XV) & 0xff);			\
+	  fprintf (FILE, "%d", (int) (INTVAL (XV) & 0xff));		\
 	else if (CODE == 'X')						\
-	  fprintf (FILE, "%02X", INTVAL (XV) & 0xff);			\
+	  fprintf (FILE, "%02X", (int) (INTVAL (XV) & 0xff));		\
 	else if (CODE == 'h')						\
-	  fprintf (FILE, "%d", (INTVAL (XV) << 16) >> 16);		\
+	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, (INTVAL (XV) << 16) >> 16); \
 	else if (CODE == 'H')						\
 	  {								\
 	    mvs_page_lit += 2;						\
-	    fprintf (FILE, "=H'%d'", (INTVAL (XV) << 16) >> 16);	\
+	    fprintf (FILE, "=H'" HOST_WIDE_INT_PRINT_DEC "'", (INTVAL (XV) << 16) >> 16); \
 	  }								\
 	else if (CODE == 'K')						\
 	  {								\
             /* auto sign-extension of signed 16-bit to signed 32-bit */	\
 	    mvs_page_lit += 4;						\
-	    fprintf (FILE, "=F'%d'", (INTVAL (XV) << 16) >> 16);	\
+	    fprintf (FILE, "=F'" HOST_WIDE_INT_PRINT_DEC "'", (INTVAL (XV) << 16) >> 16); \
 	  }								\
 	else if (CODE == 'W')						\
 	  {								\
@@ -1361,7 +1286,7 @@ enum reg_class
 	else								\
 	  {								\
 	    mvs_page_lit += 4;						\
-	    fprintf (FILE, "=F'%d'", INTVAL (XV));			\
+	    fprintf (FILE, "=F'" HOST_WIDE_INT_PRINT_DEC "'", INTVAL (XV)); \
 	  }								\
 	break;								\
       case CONST_DOUBLE:						\
@@ -1386,21 +1311,26 @@ enum reg_class
 	  }								\
 	else								\
 	  { 								\
-            /* hack alert -- this prints wildly incorrect values */	\
-            /* when run in cross-compiler mode. See ELF section  */	\
-            /* for suggested fix */					\
-	    union { double d; int i[2]; } u;				\
-	    u.i[0] = CONST_DOUBLE_LOW (XV);				\
-	    u.i[1] = CONST_DOUBLE_HIGH (XV);				\
+            char buf[50];						\
 	    if (GET_MODE (XV) == SFmode)				\
 	      {								\
 		mvs_page_lit += 4;					\
-		fprintf (FILE, "=E'%.9G'", u.d);			\
+		real_to_decimal (buf, CONST_DOUBLE_REAL_VALUE (XV),	\
+				 sizeof (buf), 0, 1);			\
+		fprintf (FILE, "=E'%s'", buf);				\
 	      }								\
-	    else							\
+	    else if (GET_MODE (XV) == DFmode)				\
 	      {								\
 		mvs_page_lit += 8;					\
-		fprintf (FILE, "=D'%.18G'", u.d);			\
+		real_to_decimal (buf, CONST_DOUBLE_REAL_VALUE (XV),	\
+				 sizeof (buf), 0, 1);			\
+		fprintf (FILE, "=D'%s'", buf);				\
+	      }								\
+	    else /* VOIDmode */						\
+	      {								\
+		mvs_page_lit += 8;					\
+		fprintf (FILE, "=XL8'%08X%08X'", 			\
+			CONST_DOUBLE_HIGH (XV), CONST_DOUBLE_LOW (XV));	\
 	      }								\
 	  }								\
 	break;								\
@@ -1409,13 +1339,13 @@ enum reg_class
 	   && GET_CODE (XEXP (XEXP (XV, 0), 0)) == SYMBOL_REF)		\
 	  {								\
 	    mvs_page_lit += 4;						\
-	    if (SYMBOL_REF_FLAG (XEXP (XEXP (XV, 0), 0)))		\
+	    if (SYMBOL_REF_EXTERNAL_P (XEXP (XEXP (XV, 0), 0)))		\
 	      {								\
 		fprintf (FILE, "=V(");					\
 		ASM_OUTPUT_LABELREF (FILE,				\
 				  XSTR (XEXP (XEXP (XV, 0), 0), 0));	\
-		fprintf (FILE, ")\n\tA\t%s,=F'%d'", curreg,		\
-				  INTVAL (XEXP (XEXP (XV, 0), 1)));	\
+		fprintf (FILE, ")\n\tA\t%s,=F'" HOST_WIDE_INT_PRINT_DEC "'", \
+			 curreg, INTVAL (XEXP (XEXP (XV, 0), 1)));	\
 	      }								\
 	    else							\
 	      {								\
@@ -1520,7 +1450,7 @@ enum reg_class
 	break;								\
       default:								\
 	mvs_page_lit += 4;						\
-	if (SYMBOL_REF_FLAG (ADDR)) fprintf (FILE, "=V(");		\
+	if (SYMBOL_REF_EXTERNAL_P (ADDR)) fprintf (FILE, "=V(");	\
 	else                        fprintf (FILE, "=A(");		\
 	output_addr_const (FILE, ADDR);					\
 	fprintf (FILE, ")");						\
@@ -1595,7 +1525,7 @@ enum reg_class
 	  if (CODE == 'O')						\
 	    {								\
 	      if (GET_CODE (addr) == PLUS)				\
-		fprintf (FILE, "%d", INTVAL (XEXP (addr, 1)));		\
+		fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, INTVAL (XEXP (addr, 1))); \
 	      else							\
 		fprintf (FILE, "0");					\
 	    }								\
@@ -1613,28 +1543,30 @@ enum reg_class
       case SYMBOL_REF:							\
       case LABEL_REF:							\
 	mvs_page_lit += 4;						\
-        if (SYMBOL_REF_FLAG (XV)) fprintf (FILE, "=V(");                \
+        if (SYMBOL_REF_EXTERNAL_P (XV)) fprintf (FILE, "=V(");		\
         else                      fprintf (FILE, "=A(");                \
         output_addr_const (FILE, XV);                                   \
         fprintf (FILE, ")");                                            \
 	break;								\
       case CONST_INT:					        	\
 	if (CODE == 'B')						\
-	  fprintf (FILE, "%d", INTVAL (XV) & 0xff);			\
+	  fprintf (FILE, "%d", (int) (INTVAL (XV) & 0xff));		\
 	else if (CODE == 'X')						\
-	  fprintf (FILE, "%02X", INTVAL (XV) & 0xff);			\
+	  fprintf (FILE, "%02X", (int) (INTVAL (XV) & 0xff));		\
 	else if (CODE == 'h')						\
-	  fprintf (FILE, "%d", (INTVAL (XV) << 16) >> 16);		\
+	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC, (INTVAL (XV) << 16) >> 16); \
 	else if (CODE == 'H')						\
 	  {								\
 	    mvs_page_lit += 2;						\
-	    fprintf (FILE, "=H'%d'", (INTVAL (XV) << 16) >> 16);	\
+	    fprintf (FILE, "=H'" HOST_WIDE_INT_PRINT_DEC "'",		\
+		     (INTVAL (XV) << 16) >> 16);			\
 	  }								\
 	else if (CODE == 'K')						\
 	  {								\
             /* auto sign-extension of signed 16-bit to signed 32-bit */	\
 	    mvs_page_lit += 4;						\
-	    fprintf (FILE, "=F'%d'", (INTVAL (XV) << 16) >> 16);	\
+	    fprintf (FILE, "=F'" HOST_WIDE_INT_PRINT_DEC "'",		\
+		     (INTVAL (XV) << 16) >> 16);			\
 	  }								\
 	else if (CODE == 'W')						\
 	  {								\
@@ -1650,7 +1582,7 @@ enum reg_class
 	else								\
 	  {								\
 	    mvs_page_lit += 4;						\
-	    fprintf (FILE, "=F'%d'", INTVAL (XV));			\
+	    fprintf (FILE, "=F'" HOST_WIDE_INT_PRINT_DEC "'", INTVAL (XV)); \
 	  }								\
 	break;								\
       case CONST_DOUBLE:						\
@@ -1676,21 +1608,21 @@ enum reg_class
 	else								\
 	  { 								\
             char buf[50];						\
-            REAL_VALUE_TYPE rval;					\
-            REAL_VALUE_FROM_CONST_DOUBLE(rval, XV);			\
-            REAL_VALUE_TO_DECIMAL (rval, HOST_WIDE_INT_PRINT_DEC, buf);	\
 	    if (GET_MODE (XV) == SFmode)				\
 	      {								\
 		mvs_page_lit += 4;					\
+		real_to_decimal (buf, CONST_DOUBLE_REAL_VALUE (XV),	\
+				 sizeof (buf), 0, 1);			\
 		fprintf (FILE, "=E'%s'", buf);				\
 	      }								\
-	    else							\
-	    if (GET_MODE (XV) == DFmode)				\
+	    else if (GET_MODE (XV) == DFmode)				\
 	      {								\
 		mvs_page_lit += 8;					\
+		real_to_decimal (buf, CONST_DOUBLE_REAL_VALUE (XV),	\
+				 sizeof (buf), 0, 1);			\
 		fprintf (FILE, "=D'%s'", buf);				\
 	      }								\
-	    else /* VOIDmode !?!? strange but true ...  */		\
+	    else /* VOIDmode */						\
 	      {								\
 		mvs_page_lit += 8;					\
 		fprintf (FILE, "=XL8'%08X%08X'", 			\
@@ -1703,13 +1635,13 @@ enum reg_class
 	   && GET_CODE (XEXP (XEXP (XV, 0), 0)) == SYMBOL_REF)		\
 	  {								\
 	    mvs_page_lit += 4;						\
-	    if (SYMBOL_REF_FLAG (XEXP (XEXP (XV, 0), 0)))		\
+	    if (SYMBOL_REF_EXTERNAL_P (XEXP (XEXP (XV, 0), 0)))		\
 	      {								\
 		fprintf (FILE, "=V(");					\
 		ASM_OUTPUT_LABELREF (FILE,				\
 				  XSTR (XEXP (XEXP (XV, 0), 0), 0));	\
-		fprintf (FILE, ")\n\tA\t%s,=F'%d'", curreg,		\
-				  INTVAL (XEXP (XEXP (XV, 0), 1)));	\
+		fprintf (FILE, ")\n\tA\t%s,=F'" HOST_WIDE_INT_PRINT_DEC "'", \
+			 curreg, INTVAL (XEXP (XEXP (XV, 0), 1)));	\
 	      }								\
 	    else							\
 	      {								\
@@ -1818,7 +1750,7 @@ abort(); \
 	break;								\
       default:								\
 	mvs_page_lit += 4;						\
-	if (SYMBOL_REF_FLAG (ADDR)) fprintf (FILE, "=V(");		\
+	if (SYMBOL_REF_EXTERNAL_P (ADDR)) fprintf (FILE, "=V(");	\
 	else                        fprintf (FILE, "=A(");		\
 	output_addr_const (FILE, ADDR);					\
 	fprintf (FILE, ")");						\
@@ -1846,25 +1778,7 @@ abort(); \
 
 #define ASM_DOUBLE "\t.double"     
 
-/* This is how to output the definition of a user-level label named NAME,
-   such as the label on a static function or variable NAME.  */
-#define ASM_OUTPUT_LABEL(FILE,NAME)     \
-   (assemble_name (FILE, NAME), fputs (":\n", FILE))
- 
 /* #define ASM_OUTPUT_LABELREF(FILE, NAME) */	/* use gas -- defaults.h */
-
-/* Generate internal label.  Since we can branch here from off page, we
-   must reload the base register.  Note that internal labels are generated
-   for loops, goto's and case labels.  */
-#undef ASM_OUTPUT_INTERNAL_LABEL
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE, PREFIX, NUM) 			\
-{									\
-  if (!strcmp (PREFIX,"L"))						\
-    {									\
-      mvs_add_label(NUM);						\
-    }									\
-  fprintf (FILE, ".%s%d:\n", PREFIX, NUM); 				\
-}
 
 /* let config/svr4.h define this ...
  *  #define ASM_OUTPUT_CASE_LABEL(FILE, PREFIX, NUM, TABLE)
@@ -1902,14 +1816,7 @@ abort(); \
 #undef SHIFT_DOUBLE_OMITS_COUNT
 #define SHIFT_DOUBLE_OMITS_COUNT 0
 
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)  \
-( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),    \
-  sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
- 
-/* Allow #sccs in preprocessor.  */
-#define SCCS_DIRECTIVE
-
- /* Implicit library calls should use memcpy, not bcopy, etc.  */
+/* Implicit library calls should use memcpy, not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS
  
 /* Output before read-only data.  */
@@ -1933,11 +1840,8 @@ abort(); \
 #define ASM_OUTPUT_ALIGN(FILE,LOG) \
   if ((LOG)!=0) fprintf ((FILE), "\t.balign %d\n", 1<<(LOG))
  
-/* This is how to output a command to make the user-level label named NAME
-   defined for reference from other files.  */
-
-#define ASM_GLOBALIZE_LABEL(FILE,NAME)  \
-  (fputs (".globl ", FILE), assemble_name (FILE, NAME), fputs ("\n", FILE))
+/* Globalizing directive for a label.  */
+#define GLOBAL_ASM_OP ".globl "
 
 /* This says how to output an assembler line
    to define a global common symbol.  */
@@ -1945,7 +1849,7 @@ abort(); \
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs (".comm ", (FILE)),                     \
   assemble_name ((FILE), (NAME)),               \
-  fprintf ((FILE), ",%u\n", (ROUNDED)))
+  fprintf ((FILE), ","HOST_WIDE_INT_PRINT_UNSIGNED"\n", (ROUNDED)))
 
 /* This says how to output an assembler line
    to define a local common symbol.  */
@@ -1953,7 +1857,7 @@ abort(); \
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs (".lcomm ", (FILE)),                    \
   assemble_name ((FILE), (NAME)),               \
-  fprintf ((FILE), ",%u\n", (ROUNDED)))
+  fprintf ((FILE), ","HOST_WIDE_INT_PRINT_UNSIGNED"\n", (ROUNDED)))
 
 #endif /* TARGET_ELF_ABI */
 #endif /* ! GCC_I370_H */

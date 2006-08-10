@@ -5,25 +5,27 @@
    Modified for OS/390 LanguageEnvironment C by Dave Pitts (dpitts@cozx.com)
    Hacked for Linux-ELF/390 by Linas Vepstas (linas@linas.org) 
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "tree.h"
 #include "regs.h"
@@ -83,7 +85,7 @@ int mvs_page_lit;
 char *mvs_function_name = 0;
 
 /* Current function name length.  */
-int mvs_function_name_length = 0;
+size_t mvs_function_name_length = 0;
 
 /* Page number for multi-page functions.  */
 int mvs_page_num = 0;
@@ -97,23 +99,29 @@ static label_node_t *free_anchor = 0;
 /* Assembler source file descriptor.  */
 static FILE *assembler_source = 0;
 
-static label_node_t * mvs_get_label PARAMS ((int));
-static void i370_label_scan PARAMS ((void));
+static label_node_t * mvs_get_label (int);
+static void i370_label_scan (void);
 #ifdef TARGET_HLASM
-static bool i370_hlasm_assemble_integer PARAMS ((rtx, unsigned int, int));
+static bool i370_hlasm_assemble_integer (rtx, unsigned int, int);
+static void i370_globalize_label (FILE *, const char *);
 #endif
-static void i370_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
-static void i370_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static void i370_output_function_prologue (FILE *, HOST_WIDE_INT);
+static void i370_output_function_epilogue (FILE *, HOST_WIDE_INT);
+static void i370_file_start (void);
+static void i370_file_end (void);
+
 #ifdef LONGEXTERNAL
-static int mvs_hash_alias PARAMS ((const char *));
+static int mvs_hash_alias (const char *);
 #endif
+static void i370_internal_label (FILE *, const char *, unsigned long);
+static bool i370_rtx_costs (rtx, int, int, int *);
 
 /* ===================================================== */
 /* defines and functions specific to the HLASM assembler */
 #ifdef TARGET_HLASM
 
 #define MVS_HASH_PRIME 999983
-#if defined(HOST_EBCDIC)
+#if HOST_CHARSET == HOST_CHARSET_EBCDIC
 #define MVS_SET_SIZE 256
 #else
 #define MVS_SET_SIZE 128
@@ -148,7 +156,7 @@ static alias_node_t *alias_anchor = 0;
    and must handled in a special manner.  */
 static const char *const mvs_function_table[MVS_FUNCTION_TABLE_LENGTH] =
 {
-#if defined(HOST_EBCDIC) /* Changed for EBCDIC collating sequence */
+#if HOST_CHARSET == HOST_CHARSET_EBCDIC /* Changed for EBCDIC collating sequence */
    "ceil",     "edc_acos", "edc_asin", "edc_atan", "edc_ata2", "edc_cos",
    "edc_cosh", "edc_erf",  "edc_erfc", "edc_exp",  "edc_gamm", "edc_lg10",
    "edc_log",  "edc_sin",  "edc_sinh", "edc_sqrt", "edc_tan",  "edc_tanh",
@@ -168,127 +176,6 @@ static const char *const mvs_function_table[MVS_FUNCTION_TABLE_LENGTH] =
 #endif /* TARGET_HLASM */
 /* ===================================================== */
 
-/* ASCII to EBCDIC conversion table.  */
-static const unsigned char ascebc[256] =
-{
- /*00  NL    SH    SX    EX    ET    NQ    AK    BL */
-     0x00, 0x01, 0x02, 0x03, 0x37, 0x2D, 0x2E, 0x2F,
- /*08  BS    HT    LF    VT    FF    CR    SO    SI */
-     0x16, 0x05, 0x15, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
- /*10  DL    D1    D2    D3    D4    NK    SN    EB */
-     0x10, 0x11, 0x12, 0x13, 0x3C, 0x3D, 0x32, 0x26,
- /*18  CN    EM    SB    EC    FS    GS    RS    US */
-     0x18, 0x19, 0x3F, 0x27, 0x1C, 0x1D, 0x1E, 0x1F,
- /*20  SP     !     "     #     $     %     &     ' */
-     0x40, 0x5A, 0x7F, 0x7B, 0x5B, 0x6C, 0x50, 0x7D,
- /*28   (     )     *     +     ,     -    .      / */
-     0x4D, 0x5D, 0x5C, 0x4E, 0x6B, 0x60, 0x4B, 0x61,
- /*30   0     1     2     3     4     5     6     7 */
-     0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
- /*38   8     9     :     ;     <     =     >     ? */
-     0xF8, 0xF9, 0x7A, 0x5E, 0x4C, 0x7E, 0x6E, 0x6F,
- /*40   @     A     B     C     D     E     F     G */
-     0x7C, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
- /*48   H     I     J     K     L     M     N     O */
-     0xC8, 0xC9, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6,
- /*50   P     Q     R     S     T     U     V     W */
-     0xD7, 0xD8, 0xD9, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6,
- /*58   X     Y     Z     [     \     ]     ^     _ */
-     0xE7, 0xE8, 0xE9, 0xAD, 0xE0, 0xBD, 0x5F, 0x6D,
- /*60   `     a     b     c     d     e     f     g */
-     0x79, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
- /*68   h     i     j     k     l     m     n     o */
-     0x88, 0x89, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96,
- /*70   p     q     r     s     t     u     v     w */
-     0x97, 0x98, 0x99, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6,
- /*78   x     y     z     {     |     }     ~    DL */
-     0xA7, 0xA8, 0xA9, 0xC0, 0x4F, 0xD0, 0xA1, 0x07,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
-     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0xFF
-};
-
-/* EBCDIC to ASCII conversion table.  */
-static const unsigned char ebcasc[256] =
-{
- /*00  NU    SH    SX    EX    PF    HT    LC    DL */
-     0x00, 0x01, 0x02, 0x03, 0x00, 0x09, 0x00, 0x7F,
- /*08              SM    VT    FF    CR    SO    SI */
-     0x00, 0x00, 0x00, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
- /*10  DE    D1    D2    TM    RS    NL    BS    IL */
-     0x10, 0x11, 0x12, 0x13, 0x14, 0x0A, 0x08, 0x00,
- /*18  CN    EM    CC    C1    FS    GS    RS    US */
-     0x18, 0x19, 0x00, 0x00, 0x1C, 0x1D, 0x1E, 0x1F,
- /*20  DS    SS    FS          BP    LF    EB    EC */
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x17, 0x1B,
- /*28              SM    C2    EQ    AK    BL       */
-     0x00, 0x00, 0x00, 0x00, 0x05, 0x06, 0x07, 0x00,
- /*30              SY          PN    RS    UC    ET */
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04,
- /*38                    C3    D4    NK          SU */
-     0x00, 0x00, 0x00, 0x00, 0x14, 0x15, 0x00, 0x1A,
- /*40  SP                                           */
-     0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*48                     .     <     (     +     | */
-     0x00, 0x00, 0x00, 0x2E, 0x3C, 0x28, 0x2B, 0x7C,
- /*50   &                                           */
-     0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*58               !     $     *     )     ;     ^ */
-     0x00, 0x00, 0x21, 0x24, 0x2A, 0x29, 0x3B, 0x5E,
- /*60   -     /                                     */
-     0x2D, 0x2F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*68                     ,     %     _     >     ? */
-     0x00, 0x00, 0x00, 0x2C, 0x25, 0x5F, 0x3E, 0x3F,
- /*70                                               */
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*78         `     :     #     @     '     =     " */
-     0x00, 0x60, 0x3A, 0x23, 0x40, 0x27, 0x3D, 0x22,
- /*80         a     b     c     d     e     f     g */
-     0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
- /*88   h     i           {                         */
-     0x68, 0x69, 0x00, 0x7B, 0x00, 0x00, 0x00, 0x00,
- /*90         j     k     l     m     n     o     p */
-     0x00, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70,
- /*98   q     r           }                         */
-     0x71, 0x72, 0x00, 0x7D, 0x00, 0x00, 0x00, 0x00,
- /*A0         ~     s     t     u     v     w     x */
-     0x00, 0x7E, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78,
- /*A8   y     z                       [             */
-     0x79, 0x7A, 0x00, 0x00, 0x00, 0x5B, 0x00, 0x00,
- /*B0                                               */
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*B8                                 ]             */
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x5D, 0x00, 0x00,
- /*C0   {     A     B     C     D     E     F     G */
-     0x7B, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
- /*C8   H     I                                     */
-     0x48, 0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*D0   }     J     K     L     M     N     O     P */
-     0x7D, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50,
- /*D8   Q     R                                     */
-     0x51, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*E0   \           S     T     U     V     W     X */
-     0x5C, 0x00, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
- /*E8   Y     Z                                     */
-     0x59, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- /*F0   0     1     2     3     4     5     6     7 */
-     0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
- /*F8   8     9                                     */
-     0x38, 0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
-};
 
 /* Initialize the GCC target structure.  */
 #ifdef TARGET_HLASM
@@ -300,34 +187,34 @@ static const unsigned char ebcasc[256] =
 #define TARGET_ASM_ALIGNED_SI_OP NULL
 #undef TARGET_ASM_INTEGER
 #define TARGET_ASM_INTEGER i370_hlasm_assemble_integer
+#undef TARGET_ASM_GLOBALIZE_LABEL
+#define TARGET_ASM_GLOBALIZE_LABEL i370_globalize_label
 #endif
 
 #undef TARGET_ASM_FUNCTION_PROLOGUE
 #define TARGET_ASM_FUNCTION_PROLOGUE i370_output_function_prologue
 #undef TARGET_ASM_FUNCTION_EPILOGUE
 #define TARGET_ASM_FUNCTION_EPILOGUE i370_output_function_epilogue
+#undef TARGET_ASM_FILE_START
+#define TARGET_ASM_FILE_START i370_file_start
+#undef TARGET_ASM_FILE_END
+#define TARGET_ASM_FILE_END i370_file_end
+#undef TARGET_ASM_INTERNAL_LABEL
+#define  TARGET_ASM_INTERNAL_LABEL i370_internal_label
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS i370_rtx_costs
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 
-/* Map characters from one character set to another.
-   C is the character to be translated.  */
+/* Set global variables as needed for the options enabled.  */
 
-char
-mvs_map_char (c)
-     int c;
+void
+override_options ()
 {
-#if defined(TARGET_EBCDIC) && !defined(HOST_EBCDIC)
-  fprintf (stderr, "mvs_map_char: TE & !HE: c = %02x\n", c);
-  return ascebc[c];
-#else
-#if defined(HOST_EBCDIC) && !defined(TARGET_EBCDIC)
-  fprintf (stderr, "mvs_map_char: !TE & HE: c = %02x\n", c);
-  return ebcasc[c];
-#else
-  fprintf (stderr, "mvs_map_char: !TE & !HE: c = %02x\n", c);
-  return c;
-#endif
-#endif
+  /* We're 370 floating point, not IEEE floating point.  */
+  memset (real_format_for_mode, 0, sizeof real_format_for_mode);
+  REAL_MODE_FORMAT (SFmode) = &i370_single_format;
+  REAL_MODE_FORMAT (DFmode) = &i370_double_format;
 }
 
 /* ===================================================== */
@@ -1279,8 +1166,9 @@ i370_output_function_prologue (f, l)
   fprintf (f, "* Function %s prologue\n", mvs_function_name);
   fprintf (f, "FDSE%03d\tDSECT\n", function_label_index);
   fprintf (f, "\tDS\tD\n");
-  fprintf (f, "\tDS\tCL(%d)\n", STACK_POINTER_OFFSET + l
-			+ current_function_outgoing_args_size);
+  fprintf (f, "\tDS\tCL(" HOST_WIDE_INT_PRINT_DEC ")\n",
+	   STACK_POINTER_OFFSET + l
+	   + current_function_outgoing_args_size);
   fprintf (f, "\tORG\tFDSE%03d\n", function_label_index);
   fprintf (f, "\tDS\tCL(120+8)\n");
   fprintf (f, "\tORG\n");
@@ -1413,6 +1301,19 @@ i370_output_function_prologue (f, l)
   /* find all labels in this routine */
   i370_label_scan ();
 }
+
+static void
+i370_globalize_label (stream, name)
+     FILE *stream;
+     const char *name;
+{
+  char temp[MAX_MVS_LABEL_SIZE + 1];
+  if (mvs_check_alias (name, temp) == 2)
+    fprintf (stream, "%s\tALIAS\tC'%s'\n", temp, name);
+  fputs ("\tENTRY\t", stream);
+  assemble_name (stream, name);
+  putc ('\n', stream);
+}
 #endif /* TARGET_HLASM */
 
 
@@ -1425,7 +1326,7 @@ i370_output_function_prologue (f, l)
    -- subtracts stackframe size from the stack pointer.
    -- stores backpointer to old caller stack.
   
-   XXX hack alert -- if the global var int leaf_function is non-zero, 
+   XXX hack alert -- if the global var int leaf_function is nonzero, 
    then this is a leaf, and it might be possible to optimize the prologue
    into doing even less, e.g. not grabbing a new stackframe or maybe just a
    partial stack frame.
@@ -1455,7 +1356,8 @@ i370_output_function_prologue (f, frame_size)
   aligned_size = (stackframe_size + 7) >> 3;
   aligned_size <<= 3;
   
-  fprintf (f, "# arg_size=0x%x frame_size=0x%x aligned size=0x%x\n", 
+  fprintf (f, "# arg_size=0x%x frame_size=" HOST_WIDE_INT_PRINT_HEX
+	   " aligned size=0x%x\n", 
      current_function_outgoing_args_size, frame_size, aligned_size);
 
   fprintf (f, "\t.using\t.,r15\n");
@@ -1553,4 +1455,60 @@ i370_output_function_epilogue (file, l)
   mvs_free_label_list();
   for (i = function_base_page; i < mvs_page_num; i++)
     fprintf (file, "\tDC\tA(PG%d)\n", i);
+}
+
+static void
+i370_file_start ()
+{
+  fputs ("\tRMODE\tANY\n\tCSECT\n", asm_out_file);
+}
+
+static void
+i370_file_end ()
+{
+  fputs ("\tEND\n", asm_out_file);
+}
+
+static void
+i370_internal_label (stream, prefix, labelno)
+     FILE *stream;
+     const char *prefix;
+     unsigned long labelno;
+{
+  if (!strcmp (prefix, "L"))
+    mvs_add_label(labelno);
+
+  default_internal_label (stream, prefix, labelno);
+}
+
+static bool
+i370_rtx_costs (x, code, outer_code, total)
+     rtx x;
+     int code;
+     int outer_code ATTRIBUTE_UNUSED;
+     int *total;
+{
+  switch (code)
+    {
+    case CONST_INT:
+      if ((unsigned HOST_WIDE_INT) INTVAL (x) < 0xfff)
+	{
+	  *total = 1;
+	  return true;
+	}
+      /* FALLTHRU */
+
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      *total = 2;
+      return true;
+
+    case CONST_DOUBLE:
+      *total = 4;
+      return true;
+
+    default:
+      return false;
+    }
 }

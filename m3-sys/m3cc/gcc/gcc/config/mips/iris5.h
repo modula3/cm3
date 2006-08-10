@@ -1,43 +1,43 @@
-/* Definitions of target machine for GNU compiler.  Iris version 5.
+/* Definitions of target machine for GNU compiler.  IRIX version 5.
    Copyright (C) 1993, 1995, 1996, 1998, 2000,
-   2001, 2002 Free Software Foundation, Inc.
+   2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+/* We are compiling for IRIX now.  */
+#undef TARGET_IRIX
+#define TARGET_IRIX 1
+
+/* Allow some special handling for IRIX 5.  */
+#undef TARGET_IRIX5
 #define TARGET_IRIX5 1
 
-#ifndef TARGET_DEFAULT
-#define	TARGET_DEFAULT	MASK_ABICALLS
-#endif
 #define ABICALLS_ASM_OP "\t.option pic2"
 
-#include "mips/iris3.h"
-#include "mips/mips.h"
-#include "mips/iris4.h"
-
-/* Irix 5 doesn't use COFF, so disable special COFF handling in collect2.c.  */
-#undef OBJECT_FORMAT_COFF
+/* Dummy definition which allows EXTRA_SECTION_FUNCTIONS to be the same
+   for IRIX 5 and 6.  */
+#define BSS_SECTION_ASM_OP "\t.data"
 
 /* ??? This is correct, but not very useful, because there is no file that
    uses this macro.  */
 /* ??? The best way to handle global constructors under ELF is to use .init
    and .fini sections.  Unfortunately, there is apparently no way to get
-   the Irix 5.x (x <= 2) assembler to create these sections.  So we instead
+   the IRIX 5.x (x <= 2) assembler to create these sections.  So we instead
    use collect.  The linker can create these sections via -init and -fini
    options, but using this would require modifying how crtstuff works, and
    I will leave that for another time (or someone else).  */
@@ -58,33 +58,72 @@ Boston, MA 02111-1307, USA.  */
 #define WCHAR_TYPE_SIZE        INT_TYPE_SIZE
 #define MAX_WCHAR_TYPE_SIZE    64
 
+/* Plain char is unsigned in the SGI compiler.  */
+#undef DEFAULT_SIGNED_CHAR
+#define DEFAULT_SIGNED_CHAR 0
+
 #define WORD_SWITCH_TAKES_ARG(STR)			\
  (DEFAULT_WORD_SWITCH_TAKES_ARG (STR)			\
   || !strcmp (STR, "rpath"))
 
+/* We must pass -D_LONGLONG always, even when -ansi is used, because IRIX 5
+   system header files require it.  This is OK, because gcc never warns
+   when long long is used in system header files.  Alternatively, we can
+   add support for the SGI builtin type __long_long.  */
+
+#define TARGET_OS_CPP_BUILTINS()			\
+    do {						\
+	builtin_define_std ("host_mips");		\
+	builtin_define_std ("sgi");			\
+	builtin_define_std ("unix");			\
+	builtin_define_std ("SYSTYPE_SVR4");		\
+	builtin_define ("_LONGLONG");			\
+	builtin_define ("_MODERN_C");			\
+	builtin_define ("_SVR4_SOURCE");		\
+	builtin_define ("__DSO__");			\
+	builtin_define ("_ABIO32=1");			\
+	builtin_define ("_MIPS_SIM=_ABIO32");		\
+	builtin_define ("_MIPS_SZPTR=32");		\
+	builtin_assert ("system=unix");			\
+	builtin_assert ("system=svr4");			\
+	builtin_assert ("machine=sgi");			\
+							\
+     if (!TARGET_FLOAT64)                               \
+        builtin_define ("_MIPS_FPSET=16");              \
+     else                                               \
+        builtin_define ("_MIPS_FPSET=32");              \
+							\
+     if (!TARGET_INT64)                                 \
+        builtin_define ("_MIPS_SZINT=32");              \
+     else                                               \
+        builtin_define ("_MIPS_SZINT=64");              \
+							\
+     if (!TARGET_LONG64)				\
+	builtin_define ("_MIPS_SZLONG=32");		\
+     else						\
+	builtin_define ("_MIPS_SZLONG=64");		\
+							\
+     if (!flag_iso)					\
+       {						\
+	 builtin_define ("__EXTENSIONS__");		\
+	 builtin_define ("_SGI_SOURCE");		\
+       }						\
+} while (0);
+
 #undef SUBTARGET_CC1_SPEC
 #define SUBTARGET_CC1_SPEC "%{static: -mno-abicalls}"
 
-/* ??? _MIPS_SIM and _MIPS_SZPTR should eventually depend on options when
-   options for them exist.  */
+/* Override mips.h default: the IRIX 5 assembler warns about -O3:
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES \
- "-Dunix -Dmips -Dsgi -Dhost_mips -DMIPSEB -D_MIPSEB -DSYSTYPE_SVR4 \
-  -D_SVR4_SOURCE -D_MODERN_C -D__DSO__ \
-  -D_MIPS_SIM=_MIPS_SIM_ABI32 -D_MIPS_SZPTR=32 \
-  -Asystem=unix -Asystem=svr4 -Acpu=mips -Amachine=sgi"
-
-#undef SUBTARGET_CPP_SPEC
-#define SUBTARGET_CPP_SPEC "\
-%{!ansi:-D__EXTENSIONS__ -D_SGI_SOURCE -D_LONGLONG} \
-%{!mfp64: -D_MIPS_FPSET=16}%{mfp64: -D_MIPS_FPSET=32} \
-%{mips1: -D_MIPS_ISA=_MIPS_ISA_MIPS1} \
-%{mips2: -D_MIPS_ISA=_MIPS_ISA_MIPS2} \
-%{mips3: -D_MIPS_ISA=_MIPS_ISA_MIPS3} \
-%{!mips1: %{!mips2: %{!mips3: -D_MIPS_ISA=_MIPS_ISA_MIPS1}}} \
-%{!mint64: -D_MIPS_SZINT=32}%{mint64: -D_MIPS_SZINT=64} \
-%{!mlong64: -D_MIPS_SZLONG=32}%{mlong64: -D_MIPS_SZLONG=64}"
+   as1: Warning: <file>.s, line 1: Binasm file dictates -pic: 2
+   uld:
+   No ucode object file linked -- please use -O2 or lower.
+   
+   So avoid passing it in the first place.  */
+#undef SUBTARGET_ASM_OPTIMIZING_SPEC
+#define SUBTARGET_ASM_OPTIMIZING_SPEC "\
+%{noasmopt:-O0} \
+%{!noasmopt:%{O|O1|O2|O3:-O2}}"
 
 #undef LINK_SPEC
 #define LINK_SPEC "\
@@ -98,8 +137,7 @@ Boston, MA 02111-1307, USA.  */
 -_SYSTYPE_SVR4"
 
 /* We now support shared libraries.  */
-#undef STARTFILE_SPEC
-#define STARTFILE_SPEC "\
+#define IRIX_STARTFILE_SPEC "\
 %{!static: \
   %{!shared:%{pg:gcrt1.o%s}%{!pg:%{p:mcrt1.o%s libprof1.a%s}%{!p:crt1.o%s}}}} \
 %{static: \
@@ -107,11 +145,16 @@ Boston, MA 02111-1307, USA.  */
   %{!pg:%{p:/usr/lib/nonshared/mcrt1.o%s libprof1.a%s} \
   %{!p:/usr/lib/nonshared/crt1.o%s}}}"
 
+#undef STARTFILE_SPEC
+#define STARTFILE_SPEC "%(irix_startfile_spec)"
+
 #undef LIB_SPEC
 #define LIB_SPEC "%{!shared:%{p:-lprof1} %{pg:-lprof1} -lc}"
 
+#define IRIX_ENDFILE_SPEC "%{!shared:crtn.o%s}"
+
 #undef ENDFILE_SPEC
-#define ENDFILE_SPEC "%{!shared:crtn.o%s}"
+#define ENDFILE_SPEC "%(irix_endfile_spec)"
 
 /* We do not want to run mips-tfile!  */
 #undef ASM_FINAL_SPEC
@@ -127,7 +170,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* We don't support debugging info for now.  */
 #undef DBX_DEBUGGING_INFO
-#undef SDB_DEBUGGING_INFO
 #undef MIPS_DEBUGGING_INFO
 #undef PREFERRED_DEBUGGING_TYPE
 
@@ -137,7 +179,19 @@ Boston, MA 02111-1307, USA.  */
 #undef MACHINE_TYPE
 #define MACHINE_TYPE "SGI running IRIX 5.x"
 
- /* Dollar signs are OK in Irix5 but not in Irix3.  */
+/* Always use 1 for .file number.  I [meissner@osf.org] wonder why
+   IRIX needs this.  */
+
+#undef SET_FILE_NUMBER
+#define SET_FILE_NUMBER() num_source_filenames = 1
+
+/* Put out a label after a .loc.  I [meissner@osf.org] wonder why
+   IRIX needs this.  */
+
+#undef LABEL_AFTER_LOC
+#define LABEL_AFTER_LOC(STREAM) fprintf (STREAM, "LM%d:\n", ++sym_lineno)
+
+ /* Dollar signs are OK in IRIX 5 but not in IRIX 3.  */
 #undef DOLLARS_IN_IDENTIFIERS
 #undef NO_DOLLAR_IN_LABEL
 
@@ -146,20 +200,73 @@ Boston, MA 02111-1307, USA.  */
 #undef MIPS_DEFAULT_GVALUE
 #define MIPS_DEFAULT_GVALUE 0
 
-/* In Irix 5, we must output a `.global name .text' directive for every used
-   but undefined function.  If we don't, the linker may perform an optimization
-   (skipping over the insns that set $gp) when it is unsafe.  This is used
-   indirectly by ASM_OUTPUT_EXTERNAL.  */
-#define ASM_OUTPUT_UNDEF_FUNCTION(FILE, NAME)	\
-do {						\
-  fputs ("\t.globl ", FILE);			\
-  assemble_name (FILE, NAME);			\
-  fputs (" .text\n", FILE);			\
+/* Switch into a generic section.  */
+#undef TARGET_ASM_NAMED_SECTION
+#define TARGET_ASM_NAMED_SECTION  irix_asm_named_section
+
+/* Define functions to read the name and flags of the current section.
+   They are used by irix_asm_output_align.  */
+
+#undef EXTRA_SECTION_FUNCTIONS
+#define EXTRA_SECTION_FUNCTIONS						\
+const char *								\
+current_section_name (void)						\
+{									\
+  switch (in_section)							\
+    {									\
+    case no_section:	return NULL;					\
+    case in_text:	return ".text";					\
+    case in_data:	return ".data";					\
+    case in_bss:	return ".bss";					\
+    case in_readonly_data:						\
+      if (mips_abi != ABI_32 && mips_abi != ABI_O64)			\
+	return ".rodata";						\
+      else								\
+	return ".rdata";						\
+    case in_named:							\
+      return in_named_name;						\
+    }									\
+  abort ();								\
+}									\
+									\
+unsigned int								\
+current_section_flags (void)						\
+{									\
+  switch (in_section)							\
+    {									\
+    case no_section:	return 0;					\
+    case in_text:	return SECTION_CODE;				\
+    case in_data:	return SECTION_WRITE;				\
+    case in_bss:	return SECTION_WRITE | SECTION_BSS;		\
+    case in_readonly_data: return 0;					\
+    case in_named:	return get_named_section_flags (in_named_name);	\
+    }									\
+  abort ();								\
+}
+
+/* Some assemblers have a bug that causes backslash escaped chars in .ascii
+   to be misassembled, so avoid it by using .byte instead.  Write the original
+   string in a comment, partly to improve readability and partly for the sake
+   of scan-assembler-type tests.  */
+#undef ASM_OUTPUT_ASCII
+#define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
+do {								\
+  const unsigned char *s_ = (const unsigned char *)(PTR);	\
+  unsigned len_ = (LEN);					\
+  unsigned i_;							\
+  mips_output_ascii (FILE, (const char *) s_, len_, "\t# ");	\
+  for (i_ = 0; i_ < len_; s_++, i_++)				\
+    {								\
+      if ((i_ % 8) == 0)					\
+	fputs ("\n\t.byte\t", (FILE));				\
+      fprintf ((FILE), "%s0x%x", (i_%8?",":""), *s_);		\
+    }								\
+  fputs ("\n", (FILE));						\
 } while (0)
 
 /* Also do this for libcalls.  */
-#define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, FUN)	\
-  mips_output_external_libcall (FILE, XSTR (FUN, 0))
+#undef TARGET_ASM_EXTERNAL_LIBCALL
+#define TARGET_ASM_EXTERNAL_LIBCALL irix_output_external_libcall
 
 /* This does for functions what ASM_DECLARE_OBJECT_NAME does for variables.
    This is used indirectly by ASM_OUTPUT_EXTERNAL.  */
@@ -174,7 +281,7 @@ do {							\
 #define ASM_OUTPUT_WEAK_ALIAS(FILE, NAME, VALUE)	\
   do							\
     {							\
-      ASM_GLOBALIZE_LABEL (FILE, NAME);			\
+      (*targetm.asm_out.globalize_label) (FILE, NAME);  \
       fputs ("\t.weakext\t", FILE);			\
       assemble_name (FILE, NAME);			\
       if (VALUE)					\
@@ -189,5 +296,9 @@ do {							\
 #define ASM_WEAKEN_LABEL(FILE, NAME) ASM_OUTPUT_WEAK_ALIAS(FILE, NAME, 0)
 
 /* Handle #pragma weak and #pragma pack.  */
-#undef HANDLE_SYSV_PRAGMA
 #define HANDLE_SYSV_PRAGMA 1
+
+#undef SUBTARGET_EXTRA_SPECS
+#define SUBTARGET_EXTRA_SPECS \
+  { "irix_startfile_spec", IRIX_STARTFILE_SPEC }, \
+  { "irix_endfile_spec", IRIX_ENDFILE_SPEC },

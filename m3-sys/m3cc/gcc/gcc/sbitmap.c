@@ -1,5 +1,5 @@
 /* Simple bitmaps.
-   Copyright (C) 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -20,6 +20,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "flags.h"
 #include "hard-reg-set.h"
@@ -30,8 +32,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 /* Allocate a simple bitmap of N_ELMS bits.  */
 
 sbitmap
-sbitmap_alloc (n_elms)
-     unsigned int n_elms;
+sbitmap_alloc (unsigned int n_elms)
 {
   unsigned int bytes, size, amt;
   sbitmap bmap;
@@ -40,7 +41,62 @@ sbitmap_alloc (n_elms)
   bytes = size * sizeof (SBITMAP_ELT_TYPE);
   amt = (sizeof (struct simple_bitmap_def)
 	 + bytes - sizeof (SBITMAP_ELT_TYPE));
-  bmap = (sbitmap) xmalloc (amt);
+  bmap = xmalloc (amt);
+  bmap->n_bits = n_elms;
+  bmap->size = size;
+  bmap->bytes = bytes;
+  return bmap;
+}
+
+/* Resize a simple bitmap BMAP to N_ELMS bits.  If increasing the
+   size of BMAP, clear the new bits to zero if the DEF argument
+   is zero, and set them to one otherwise.  */
+
+sbitmap
+sbitmap_resize (sbitmap bmap, unsigned int n_elms, int def)
+{
+  unsigned int bytes, size, amt;
+  unsigned int last_bit;
+
+  size = SBITMAP_SET_SIZE (n_elms);
+  bytes = size * sizeof (SBITMAP_ELT_TYPE);
+  if (bytes > bmap->bytes)
+    {
+      amt = (sizeof (struct simple_bitmap_def)
+	    + bytes - sizeof (SBITMAP_ELT_TYPE));
+      bmap = xrealloc (bmap, amt);
+    }
+
+  if (n_elms > bmap->n_bits)
+    {
+      if (def)
+	{
+	  memset (bmap->elms + bmap->size, -1, bytes - bmap->bytes);
+
+	  /* Set the new bits if the original last element.  */
+	  last_bit = bmap->n_bits % SBITMAP_ELT_BITS;
+	  if (last_bit)
+	    bmap->elms[bmap->size - 1]
+	      |= ~((SBITMAP_ELT_TYPE)-1 >> (SBITMAP_ELT_BITS - last_bit));
+
+	  /* Clear the unused bit in the new last element.  */
+	  last_bit = n_elms % SBITMAP_ELT_BITS;
+	  if (last_bit)
+	    bmap->elms[size - 1]
+	      &= (SBITMAP_ELT_TYPE)-1 >> (SBITMAP_ELT_BITS - last_bit);
+	}
+      else
+	memset (bmap->elms + bmap->size, 0, bytes - bmap->bytes);
+    }
+  else if (n_elms < bmap->n_bits)
+    {
+      /* Clear the surplus bits in the last word.  */
+      last_bit = n_elms % SBITMAP_ELT_BITS;
+      if (last_bit)
+	bmap->elms[size - 1]
+	  &= (SBITMAP_ELT_TYPE)-1 >> (SBITMAP_ELT_BITS - last_bit);
+    }
+
   bmap->n_bits = n_elms;
   bmap->size = size;
   bmap->bytes = bytes;
@@ -50,8 +106,7 @@ sbitmap_alloc (n_elms)
 /* Allocate a vector of N_VECS bitmaps of N_ELMS bits.  */
 
 sbitmap *
-sbitmap_vector_alloc (n_vecs, n_elms)
-     unsigned int n_vecs, n_elms;
+sbitmap_vector_alloc (unsigned int n_vecs, unsigned int n_elms)
 {
   unsigned int i, bytes, offset, elm_bytes, size, amt, vector_bytes;
   sbitmap *bitmap_vector;
@@ -75,7 +130,7 @@ sbitmap_vector_alloc (n_vecs, n_elms)
   }
 
   amt = vector_bytes + (n_vecs * elm_bytes);
-  bitmap_vector = (sbitmap *) xmalloc (amt);
+  bitmap_vector = xmalloc (amt);
 
   for (i = 0, offset = vector_bytes; i < n_vecs; i++, offset += elm_bytes)
     {
@@ -93,37 +148,34 @@ sbitmap_vector_alloc (n_vecs, n_elms)
 /* Copy sbitmap SRC to DST.  */
 
 void
-sbitmap_copy (dst, src)
-     sbitmap dst, src;
+sbitmap_copy (sbitmap dst, sbitmap src)
 {
   memcpy (dst->elms, src->elms, sizeof (SBITMAP_ELT_TYPE) * dst->size);
 }
 
 /* Determine if a == b.  */
 int
-sbitmap_equal (a, b)
-     sbitmap a, b;
+sbitmap_equal (sbitmap a, sbitmap b)
 {
   return !memcmp (a->elms, b->elms, sizeof (SBITMAP_ELT_TYPE) * a->size);
 }
+
 /* Zero all elements in a bitmap.  */
 
 void
-sbitmap_zero (bmap)
-     sbitmap bmap;
+sbitmap_zero (sbitmap bmap)
 {
-  memset ((PTR) bmap->elms, 0, bmap->bytes);
+  memset (bmap->elms, 0, bmap->bytes);
 }
 
 /* Set all elements in a bitmap to ones.  */
 
 void
-sbitmap_ones (bmap)
-     sbitmap bmap;
+sbitmap_ones (sbitmap bmap)
 {
   unsigned int last_bit;
 
-  memset ((PTR) bmap->elms, -1, bmap->bytes);
+  memset (bmap->elms, -1, bmap->bytes);
 
   last_bit = bmap->n_bits % SBITMAP_ELT_BITS;
   if (last_bit)
@@ -134,9 +186,7 @@ sbitmap_ones (bmap)
 /* Zero a vector of N_VECS bitmaps.  */
 
 void
-sbitmap_vector_zero (bmap, n_vecs)
-     sbitmap *bmap;
-     unsigned int n_vecs;
+sbitmap_vector_zero (sbitmap *bmap, unsigned int n_vecs)
 {
   unsigned int i;
 
@@ -147,9 +197,7 @@ sbitmap_vector_zero (bmap, n_vecs)
 /* Set a vector of N_VECS bitmaps to ones.  */
 
 void
-sbitmap_vector_ones (bmap, n_vecs)
-     sbitmap *bmap;
-     unsigned int n_vecs;
+sbitmap_vector_ones (sbitmap *bmap, unsigned int n_vecs)
 {
   unsigned int i;
 
@@ -159,201 +207,276 @@ sbitmap_vector_ones (bmap, n_vecs)
 
 /* Set DST to be A union (B - C).
    DST = A | (B & ~C).
-   Return non-zero if any change is made.  */
+   Returns true if any change is made.  */
 
-int
-sbitmap_union_of_diff (dst, a, b, c)
-     sbitmap dst, a, b, c;
+bool
+sbitmap_union_of_diff_cg (sbitmap dst, sbitmap a, sbitmap b, sbitmap c)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp, cp;
-  int changed = 0;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  sbitmap_ptr cp = c->elms;
+  SBITMAP_ELT_TYPE changed = 0;
 
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, cp = c->elms, i = 0;
-       i < dst->size; i++, dstp++)
+  for (i = 0; i < n; i++)
     {
       SBITMAP_ELT_TYPE tmp = *ap++ | (*bp++ & ~*cp++);
-
-      if (*dstp != tmp)
-	{
-	  changed = 1;
-	  *dstp = tmp;
-	}
+      changed |= *dstp ^ tmp;
+      *dstp++ = tmp;
     }
 
-  return changed;
+  return changed != 0;
+}
+
+void
+sbitmap_union_of_diff (sbitmap dst, sbitmap a, sbitmap b, sbitmap c)
+{
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  sbitmap_ptr cp = c->elms;
+
+  for (i = 0; i < n; i++)
+    *dstp++ = *ap++ | (*bp++ & ~*cp++);
 }
 
 /* Set bitmap DST to the bitwise negation of the bitmap SRC.  */
 
 void
-sbitmap_not (dst, src)
-     sbitmap dst, src;
+sbitmap_not (sbitmap dst, sbitmap src)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, srcp;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr srcp = src->elms;
+  unsigned int last_bit;
 
-  for (dstp = dst->elms, srcp = src->elms, i = 0; i < dst->size; i++)
-    *dstp++ = ~(*srcp++);
+  for (i = 0; i < n; i++)
+    *dstp++ = ~*srcp++;
+
+  /* Zero all bits past n_bits, by ANDing dst with sbitmap_ones.  */
+  last_bit = src->n_bits % SBITMAP_ELT_BITS;
+  if (last_bit)
+    dst->elms[n-1] = dst->elms[n-1]
+      & ((SBITMAP_ELT_TYPE)-1 >> (SBITMAP_ELT_BITS - last_bit));
 }
 
 /* Set the bits in DST to be the difference between the bits
    in A and the bits in B. i.e. dst = a & (~b).  */
 
 void
-sbitmap_difference (dst, a, b)
-     sbitmap dst, a, b;
+sbitmap_difference (sbitmap dst, sbitmap a, sbitmap b)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp;
-  
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, i = 0; i < dst->size; i++)
+  unsigned int i, dst_size = dst->size;
+  unsigned int min_size = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+
+  /* A should be at least as large as DEST, to have a defined source.  */
+  if (a->size < dst_size)
+    abort ();
+  /* If minuend is smaller, we simply pretend it to be zero bits, i.e.
+     only copy the subtrahend into dest.  */
+  if (b->size < min_size)
+    min_size = b->size;
+  for (i = 0; i < min_size; i++)
     *dstp++ = *ap++ & (~*bp++);
+  /* Now fill the rest of dest from A, if B was too short.
+     This makes sense only when destination and A differ.  */
+  if (dst != a && i != dst_size)
+    for (; i < dst_size; i++)
+      *dstp++ = *ap++;
 }
 
 /* Set DST to be (A and B).
-   Return non-zero if any change is made.  */
+   Return nonzero if any change is made.  */
 
-int
-sbitmap_a_and_b (dst, a, b)
-     sbitmap dst, a, b;
+bool
+sbitmap_a_and_b_cg (sbitmap dst, sbitmap a, sbitmap b)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp;
-  int changed = 0;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  SBITMAP_ELT_TYPE changed = 0;
 
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, i = 0; i < dst->size;
-       i++, dstp++)
+  for (i = 0; i < n; i++)
     {
       SBITMAP_ELT_TYPE tmp = *ap++ & *bp++;
-
-      if (*dstp != tmp)
-	{
-	  changed = 1;
-	  *dstp = tmp;
-	}
+      changed |= *dstp ^ tmp;
+      *dstp++ = tmp;
     }
 
-  return changed;
+  return changed != 0;
+}
+
+void
+sbitmap_a_and_b (sbitmap dst, sbitmap a, sbitmap b)
+{
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+
+  for (i = 0; i < n; i++)
+    *dstp++ = *ap++ & *bp++;
 }
 
 /* Set DST to be (A xor B)).
-   Return non-zero if any change is made.  */
+   Return nonzero if any change is made.  */
 
-int
-sbitmap_a_xor_b (dst, a, b)
-     sbitmap dst, a, b;
+bool
+sbitmap_a_xor_b_cg (sbitmap dst, sbitmap a, sbitmap b)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp;
-  int changed = 0;
-  
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, i = 0; i < dst->size;
-       i++, dstp++)
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  SBITMAP_ELT_TYPE changed = 0;
+
+  for (i = 0; i < n; i++)
     {
       SBITMAP_ELT_TYPE tmp = *ap++ ^ *bp++;
-      
-      if (*dstp != tmp)
-	{
-	  changed = 1;
-	  *dstp = tmp;
-	}
+      changed |= *dstp ^ tmp;
+      *dstp++ = tmp;
     }
-  return changed;
+
+  return changed != 0;
+}
+
+void
+sbitmap_a_xor_b (sbitmap dst, sbitmap a, sbitmap b)
+{
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+
+  for (i = 0; i < n; i++)
+    *dstp++ = *ap++ ^ *bp++;
 }
 
 /* Set DST to be (A or B)).
-   Return non-zero if any change is made.  */
+   Return nonzero if any change is made.  */
 
-int
-sbitmap_a_or_b (dst, a, b)
-     sbitmap dst, a, b;
+bool
+sbitmap_a_or_b_cg (sbitmap dst, sbitmap a, sbitmap b)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp;
-  int changed = 0;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  SBITMAP_ELT_TYPE changed = 0;
 
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, i = 0; i < dst->size;
-       i++, dstp++)
+  for (i = 0; i < n; i++)
     {
       SBITMAP_ELT_TYPE tmp = *ap++ | *bp++;
-
-      if (*dstp != tmp)
-	{
-	  changed = 1;
-	  *dstp = tmp;
-	}
+      changed |= *dstp ^ tmp;
+      *dstp++ = tmp;
     }
 
-  return changed;
+  return changed != 0;
 }
 
-/* Return non-zero if A is a subset of B.  */
-
-int
-sbitmap_a_subset_b_p (a, b)
-     sbitmap a, b;
+void
+sbitmap_a_or_b (sbitmap dst, sbitmap a, sbitmap b)
 {
-  unsigned int i;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+
+  for (i = 0; i < n; i++)
+    *dstp++ = *ap++ | *bp++;
+}
+
+/* Return nonzero if A is a subset of B.  */
+
+bool
+sbitmap_a_subset_b_p (sbitmap a, sbitmap b)
+{
+  unsigned int i, n = a->size;
   sbitmap_ptr ap, bp;
 
-  for (ap = a->elms, bp = b->elms, i = 0; i < a->size; i++, ap++, bp++)
+  for (ap = a->elms, bp = b->elms, i = 0; i < n; i++, ap++, bp++)
     if ((*ap | *bp) != *bp)
-      return 0;
+      return false;
 
-  return 1;
+  return true;
 }
 
 /* Set DST to be (A or (B and C)).
-   Return non-zero if any change is made.  */
+   Return nonzero if any change is made.  */
 
-int
-sbitmap_a_or_b_and_c (dst, a, b, c)
-     sbitmap dst, a, b, c;
+bool
+sbitmap_a_or_b_and_c_cg (sbitmap dst, sbitmap a, sbitmap b, sbitmap c)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp, cp;
-  int changed = 0;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  sbitmap_ptr cp = c->elms;
+  SBITMAP_ELT_TYPE changed = 0;
 
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, cp = c->elms, i = 0;
-       i < dst->size; i++, dstp++)
+  for (i = 0; i < n; i++)
     {
       SBITMAP_ELT_TYPE tmp = *ap++ | (*bp++ & *cp++);
-
-      if (*dstp != tmp)
-	{
-	  changed = 1;
-	  *dstp = tmp;
-	}
+      changed |= *dstp ^ tmp;
+      *dstp++ = tmp;
     }
 
-  return changed;
+  return changed != 0;
+}
+
+void
+sbitmap_a_or_b_and_c (sbitmap dst, sbitmap a, sbitmap b, sbitmap c)
+{
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  sbitmap_ptr cp = c->elms;
+
+  for (i = 0; i < n; i++)
+    *dstp++ = *ap++ | (*bp++ & *cp++);
 }
 
 /* Set DST to be (A and (B or C)).
-   Return non-zero if any change is made.  */
+   Return nonzero if any change is made.  */
 
-int
-sbitmap_a_and_b_or_c (dst, a, b, c)
-     sbitmap dst, a, b, c;
+bool
+sbitmap_a_and_b_or_c_cg (sbitmap dst, sbitmap a, sbitmap b, sbitmap c)
 {
-  unsigned int i;
-  sbitmap_ptr dstp, ap, bp, cp;
-  int changed = 0;
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  sbitmap_ptr cp = c->elms;
+  SBITMAP_ELT_TYPE changed = 0;
 
-  for (dstp = dst->elms, ap = a->elms, bp = b->elms, cp = c->elms, i = 0;
-       i < dst->size; i++, dstp++)
+  for (i = 0; i < n; i++)
     {
       SBITMAP_ELT_TYPE tmp = *ap++ & (*bp++ | *cp++);
-
-      if (*dstp != tmp)
-	{
-	  changed = 1;
-	  *dstp = tmp;
-	}
+      changed |= *dstp ^ tmp;
+      *dstp++ = tmp;
     }
 
-  return changed;
+  return changed != 0;
+}
+
+void
+sbitmap_a_and_b_or_c (sbitmap dst, sbitmap a, sbitmap b, sbitmap c)
+{
+  unsigned int i, n = dst->size;
+  sbitmap_ptr dstp = dst->elms;
+  sbitmap_ptr ap = a->elms;
+  sbitmap_ptr bp = b->elms;
+  sbitmap_ptr cp = c->elms;
+
+  for (i = 0; i < n; i++)
+    *dstp++ = *ap++ & (*bp++ | *cp++);
 }
 
 #ifdef IN_GCC
@@ -361,10 +484,7 @@ sbitmap_a_and_b_or_c (dst, a, b, c)
    block number BB, using the new flow graph structures.  */
 
 void
-sbitmap_intersection_of_succs (dst, src, bb)
-     sbitmap dst;
-     sbitmap *src;
-     int bb;
+sbitmap_intersection_of_succs (sbitmap dst, sbitmap *src, int bb)
 {
   basic_block b = BASIC_BLOCK (bb);
   unsigned int set_size = dst->size;
@@ -373,7 +493,7 @@ sbitmap_intersection_of_succs (dst, src, bb)
   for (e = b->succ; e != 0; e = e->succ_next)
     {
       if (e->dest == EXIT_BLOCK_PTR)
-        continue;
+	continue;
 
       sbitmap_copy (dst, src[e->dest->index]);
       break;
@@ -401,10 +521,7 @@ sbitmap_intersection_of_succs (dst, src, bb)
    block number BB, using the new flow graph structures.  */
 
 void
-sbitmap_intersection_of_preds (dst, src, bb)
-     sbitmap dst;
-     sbitmap *src;
-     int bb;
+sbitmap_intersection_of_preds (sbitmap dst, sbitmap *src, int bb)
 {
   basic_block b = BASIC_BLOCK (bb);
   unsigned int set_size = dst->size;
@@ -413,7 +530,7 @@ sbitmap_intersection_of_preds (dst, src, bb)
   for (e = b->pred; e != 0; e = e->pred_next)
     {
       if (e->src == ENTRY_BLOCK_PTR)
-        continue;
+	continue;
 
       sbitmap_copy (dst, src[e->src->index]);
       break;
@@ -441,10 +558,7 @@ sbitmap_intersection_of_preds (dst, src, bb)
    block number BB, using the new flow graph structures.  */
 
 void
-sbitmap_union_of_succs (dst, src, bb)
-     sbitmap dst;
-     sbitmap *src;
-     int bb;
+sbitmap_union_of_succs (sbitmap dst, sbitmap *src, int bb)
 {
   basic_block b = BASIC_BLOCK (bb);
   unsigned int set_size = dst->size;
@@ -453,7 +567,7 @@ sbitmap_union_of_succs (dst, src, bb)
   for (e = b->succ; e != 0; e = e->succ_next)
     {
       if (e->dest == EXIT_BLOCK_PTR)
-        continue;
+	continue;
 
       sbitmap_copy (dst, src[e->dest->index]);
       break;
@@ -481,10 +595,7 @@ sbitmap_union_of_succs (dst, src, bb)
    block number BB, using the new flow graph structures.  */
 
 void
-sbitmap_union_of_preds (dst, src, bb)
-     sbitmap dst;
-     sbitmap *src;
-     int bb;
+sbitmap_union_of_preds (sbitmap dst, sbitmap *src, int bb)
 {
   basic_block b = BASIC_BLOCK (bb);
   unsigned int set_size = dst->size;
@@ -493,7 +604,7 @@ sbitmap_union_of_preds (dst, src, bb)
   for (e = b->pred; e != 0; e = e->pred_next)
     {
       if (e->src== ENTRY_BLOCK_PTR)
-        continue;
+	continue;
 
       sbitmap_copy (dst, src[e->src->index]);
       break;
@@ -509,7 +620,7 @@ sbitmap_union_of_preds (dst, src, bb)
 
 	if (e->src == ENTRY_BLOCK_PTR)
 	  continue;
-	
+
 	p = src[e->src->index]->elms;
 	r = dst->elms;
 	for (i = 0; i < set_size; i++)
@@ -521,8 +632,7 @@ sbitmap_union_of_preds (dst, src, bb)
 /* Return number of first bit set in the bitmap, -1 if none.  */
 
 int
-sbitmap_first_set_bit (bmap)
-     sbitmap bmap;
+sbitmap_first_set_bit (sbitmap bmap)
 {
   unsigned int n;
 
@@ -533,8 +643,7 @@ sbitmap_first_set_bit (bmap)
 /* Return number of last bit set in the bitmap, -1 if none.  */
 
 int
-sbitmap_last_set_bit (bmap)
-     sbitmap bmap;
+sbitmap_last_set_bit (sbitmap bmap)
 {
   int i;
   SBITMAP_ELT_TYPE *ptr = bmap->elms;
@@ -564,9 +673,7 @@ sbitmap_last_set_bit (bmap)
 }
 
 void
-dump_sbitmap (file, bmap)
-     FILE *file;
-     sbitmap bmap;
+dump_sbitmap (FILE *file, sbitmap bmap)
 {
   unsigned int i, n, j;
   unsigned int set_size = bmap->size;
@@ -587,35 +694,37 @@ dump_sbitmap (file, bmap)
 }
 
 void
-debug_sbitmap (bmap)
-     sbitmap bmap;
+dump_sbitmap_file (FILE *file, sbitmap bmap)
 {
   unsigned int i, pos;
 
-  fprintf (stderr, "n_bits = %d, set = {", bmap->n_bits);
+  fprintf (file, "n_bits = %d, set = {", bmap->n_bits);
 
   for (pos = 30, i = 0; i < bmap->n_bits; i++)
     if (TEST_BIT (bmap, i))
       {
 	if (pos > 70)
 	  {
-	    fprintf (stderr, "\n");
+	    fprintf (file, "\n  ");
 	    pos = 0;
 	  }
 
-	fprintf (stderr, "%d ", i);
-	pos += 1 + (i >= 10) + (i >= 100);
+	fprintf (file, "%d ", i);
+	pos += 2 + (i >= 10) + (i >= 100) + (i >= 1000);
       }
 
-  fprintf (stderr, "}\n");
+  fprintf (file, "}\n");
 }
 
 void
-dump_sbitmap_vector (file, title, subtitle, bmaps, n_maps)
-     FILE *file;
-     const char *title, *subtitle;
-     sbitmap *bmaps;
-     int n_maps;
+debug_sbitmap (sbitmap bmap)
+{
+  dump_sbitmap_file (stderr, bmap);
+}
+
+void
+dump_sbitmap_vector (FILE *file, const char *title, const char *subtitle,
+		     sbitmap *bmaps, int n_maps)
 {
   int bb;
 

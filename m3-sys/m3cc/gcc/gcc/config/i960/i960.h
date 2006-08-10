@@ -5,30 +5,40 @@
    Additional Work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
    Converted to GCC 2.0 by Jim Wilson and Michael Tiemann, Cygnus Support.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 /* Note that some other tm.h files may include this one and then override
    many of the definitions that relate to assembler syntax.  */
 
-#define MULTILIB_DEFAULTS { "mnumerics" }
+/* Target CPU builtins.  */
+#define TARGET_CPU_CPP_BUILTINS()		\
+  do						\
+    {						\
+	builtin_define_std ("i960");		\
+	builtin_define_std ("I960");		\
+	builtin_define_std ("i80960");		\
+	builtin_define_std ("I80960");		\
+	builtin_assert ("cpu=i960");		\
+	builtin_assert ("machine=i960");	\
+    }						\
+  while (0)
 
-/* Names to predefine in the preprocessor for this target machine.  */
-#define CPP_PREDEFINES "-Di960 -Di80960 -DI960 -DI80960 -Acpu=i960 -Amachine=i960"
+#define MULTILIB_DEFAULTS { "mnumerics" }
 
 /* Name to predefine in the preprocessor for processor variations.
    -mic* options make characters signed by default.  */
@@ -111,10 +121,10 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_VERSION fprintf (stderr," (intel 80960)");
 
 /* Generate DBX debugging information.  */
-#define DBX_DEBUGGING_INFO
+#define DBX_DEBUGGING_INFO 1
 
 /* Generate SDB style debugging information.  */
-#define SDB_DEBUGGING_INFO
+#define SDB_DEBUGGING_INFO 1
 #define EXTENDED_SDB_BASIC_TYPES
 
 /* Generate DBX_DEBUGGING_INFO by default.  */
@@ -130,9 +140,9 @@ Boston, MA 02111-1307, USA.  */
 extern int i960_maxbitalignment;
 extern int i960_last_maxbitalignment;
 
-#define REGISTER_TARGET_PRAGMAS(PFILE) do {			\
-  cpp_register_pragma (PFILE, 0, "align", i960_pr_align);	\
-  cpp_register_pragma (PFILE, 0, "noalign", i960_pr_noalign);	\
+#define REGISTER_TARGET_PRAGMAS() do {			\
+  c_register_pragma (0, "align", i960_pr_align);	\
+  c_register_pragma (0, "noalign", i960_pr_noalign);	\
 } while (0)
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
@@ -335,54 +345,13 @@ extern int target_flags;
 /* Override conflicting target switch options.
    Doesn't actually detect if more than one -mARCH option is given, but
    does handle the case of two blatantly conflicting -mARCH options.  */
-#define OVERRIDE_OPTIONS					\
-{								\
-  if (TARGET_K_SERIES && TARGET_C_SERIES)			\
-    {								\
-      warning ("conflicting architectures defined - using C series"); \
-      target_flags &= ~TARGET_FLAG_K_SERIES;			\
-    }								\
-  if (TARGET_K_SERIES && TARGET_MC)				\
-    {								\
-      warning ("conflicting architectures defined - using K series"); \
-      target_flags &= ~TARGET_FLAG_MC;				\
-    }								\
-  if (TARGET_C_SERIES && TARGET_MC)				\
-    {								\
-      warning ("conflicting architectures defined - using C series");\
-      target_flags &= ~TARGET_FLAG_MC;				\
-    }								\
-  if (TARGET_IC_COMPAT3_0)					\
-    {								\
-      flag_short_enums = 1;					\
-      flag_signed_char = 1;					\
-      target_flags |= TARGET_FLAG_CLEAN_LINKAGE;		\
-      if (TARGET_IC_COMPAT2_0)					\
-	{							\
-	  warning ("iC2.0 and iC3.0 are incompatible - using iC3.0"); \
-	  target_flags &= ~TARGET_FLAG_IC_COMPAT2_0;		\
-	}							\
-    }								\
-  if (TARGET_IC_COMPAT2_0)					\
-    {								\
-      flag_signed_char = 1;					\
-      target_flags |= TARGET_FLAG_CLEAN_LINKAGE;		\
-    }								\
-  /* ??? See the LONG_DOUBLE_TYPE_SIZE definition below.  */	\
-  if (TARGET_LONG_DOUBLE_64)					\
-    warning ("the -mlong-double-64 option does not work yet");\
-  i960_initialize ();						\
-}
+#define OVERRIDE_OPTIONS  i960_initialize ()
 
 /* Don't enable anything by default.  The user is expected to supply a -mARCH
    option.  If none is given, then -mka is added by CC1_SPEC.  */
 #define TARGET_DEFAULT 0
 
 /* Target machine storage layout.  */
-
-/* Define for cross-compilation from a host with a different float format
-   or endianness, as well as to support 80 bit long doubles on the i960.  */
-#define REAL_ARITHMETIC
 
 /* Define this if most significant bit is lowest numbered
    in instructions that operate on numbered bit-fields.  */
@@ -397,38 +366,22 @@ extern int target_flags;
    numbered.  */
 #define WORDS_BIG_ENDIAN 0
 
-/* Number of bits in an addressable storage unit.  */
-#define BITS_PER_UNIT 8
-
 /* Bitfields cannot cross word boundaries.  */
 #define BITFIELD_NBYTES_LIMITED 1
-
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 68000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD 32
 
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD 4
 
-/* Width in bits of a pointer.  See also the macro `Pmode' defined below.  */
-#define POINTER_SIZE 32
-
-/* Width in bits of a long double.  Define to 96, and let
-   ROUND_TYPE_ALIGN adjust the alignment for speed.  */
-#define	LONG_DOUBLE_TYPE_SIZE (TARGET_LONG_DOUBLE_64 ? 64 : 96)
-
-/* ??? This must be a constant, because real.c and real.h test it with #if.  */
-#undef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE 96
+/* Width in bits of a long double.  */
+#define	LONG_DOUBLE_TYPE_SIZE (TARGET_LONG_DOUBLE_64 ? 64 : 128)
+#define MAX_LONG_DOUBLE_TYPE_SIZE 128
 
 /* Define this to set long double type size to use in libgcc2.c, which can
    not depend on target_flags.  */
 #if defined(__LONG_DOUBLE_64__)
 #define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 64
 #else
-#define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 96
+#define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 128
 #endif
 
 /* Allocation boundary (in *bits*) for storing pointers in memory.  */
@@ -469,15 +422,9 @@ extern int target_flags;
    library functions.  */
 #define CONSTANT_ALIGNMENT(EXP, ALIGN) \
   (TREE_CODE (EXP) == STRING_CST	\
-   && i960_object_bytes_bitalign (int_size_in_bytes (TREE_TYPE (EXP))) > (ALIGN) \
+   && i960_object_bytes_bitalign (int_size_in_bytes (TREE_TYPE (EXP))) > (int)(ALIGN) \
    ? i960_object_bytes_bitalign (int_size_in_bytes (TREE_TYPE (EXP)))	    \
-   : (ALIGN))
-
-/* Make XFmode floating point quantities be 128 bit aligned.  */
-#define DATA_ALIGNMENT(TYPE, ALIGN)					\
-  (TREE_CODE (TYPE) == ARRAY_TYPE					\
-   && TYPE_MODE (TREE_TYPE (TYPE)) == XFmode				\
-   && (ALIGN) < 128 ? 128 : (ALIGN))
+   : (int)(ALIGN))
 
 /* Macros to determine size of aggregates (structures and unions
    in C).  Normally, these may be defined to simply return the maximum
@@ -485,21 +432,8 @@ extern int target_flags;
    the i960), the total size of a structure is based on a non-trivial
    rounding method.  */
 
-#define ROUND_TYPE_ALIGN(TYPE, COMPUTED, SPECIFIED)		\
-  ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	   \
-   ? 128  /* Put 80 bit floating point elements on 128 bit boundaries.  */ \
-   : ((!TARGET_OLD_ALIGN && !TYPE_PACKED (TYPE)				   \
-       && TREE_CODE (TYPE) == RECORD_TYPE)				   \
-      ? i960_round_align (MAX ((COMPUTED), (SPECIFIED)), TYPE_SIZE (TYPE)) \
-      : MAX ((COMPUTED), (SPECIFIED))))
-
-#define ROUND_TYPE_SIZE(TYPE, COMPUTED, SPECIFIED)		\
-  ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	\
-   ? bitsize_int (128) : round_up (COMPUTED, SPECIFIED))
-#define ROUND_TYPE_SIZE_UNIT(TYPE, COMPUTED, SPECIFIED)		\
-  ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	\
-   ? size_int (16) : round_up (COMPUTED, SPECIFIED))
-
+#define ROUND_TYPE_ALIGN(TYPE, COMPUTED, SPECIFIED) \
+  i960_round_align (MAX ((COMPUTED), (SPECIFIED)), TYPE)
 
 /* Standard register usage.  */
 
@@ -582,7 +516,7 @@ extern int target_flags;
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
    On 80960, the cpu registers can hold any mode but the float registers
-   can only hold SFmode, DFmode, or XFmode.  */
+   can only hold SFmode, DFmode, or TFmode.  */
 #define HARD_REGNO_MODE_OK(REGNO, MODE) hard_regno_mode_ok ((REGNO), (MODE))
 
 /* Value is 1 if it is a good idea to tie two pseudo registers
@@ -883,13 +817,9 @@ enum reg_class { NO_REGS, GLOBAL_REGS, LOCAL_REGS, LOCAL_OR_GLOBAL_REGS,
 #define SETUP_INCOMING_VARARGS(CUM,MODE,TYPE,PRETEND_SIZE,NO_RTL) \
   i960_setup_incoming_varargs(&CUM,MODE,TYPE,&PRETEND_SIZE,NO_RTL)
 
-/* Define the `__builtin_va_list' type for the ABI.  */
-#define BUILD_VA_LIST_TYPE(VALIST) \
-  (VALIST) = i960_build_va_list ()
-
 /* Implement `va_start' for varargs and stdarg.  */
-#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
-  i960_va_start (stdarg, valist, nextarg)
+#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
+  i960_va_start (valist, nextarg)
 
 /* Implement `va_arg'.  */
 #define EXPAND_BUILTIN_VA_ARG(valist, type) \
@@ -923,7 +853,7 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 
    On 80960, the offset always starts at 0; the first parm reg is g0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)	\
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
   ((CUM).ca_nregparms = 0, (CUM).ca_nstackparms = 0)
 
 /* Update the data in CUM to advance over an argument
@@ -1006,12 +936,6 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 #define	EXIT_IGNORE_STACK 1
 
 /* Addressing modes, and classification of registers for them.  */
-
-/* #define HAVE_POST_INCREMENT 0 */
-/* #define HAVE_POST_DECREMENT 0 */
-
-/* #define HAVE_PRE_DECREMENT 0 */
-/* #define HAVE_PRE_INCREMENT 0 */
 
 /* Macros to check register numbers against specific register classes.  */
 
@@ -1167,9 +1091,6 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 0
 
-/* Allow and ignore #sccs directives.  */
-#define	SCCS_DIRECTIVE
-
 /* Max number of bytes we can move from memory to memory
    in one reasonably fast instruction.  */
 #define MOVE_MAX 16
@@ -1185,15 +1106,10 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 #define LOAD_EXTEND_OP(MODE) ZERO_EXTEND
 
 /* Nonzero if access to memory by bytes is no faster than for words.
-   Value changed to 1 after reports of poor bitfield code with g++.
+   Value changed to 1 after reports of poor bit-field code with g++.
    Indications are that code is usually as good, sometimes better.  */   
 
 #define SLOW_BYTE_ACCESS 1
-
-/* We assume that the store-condition-codes instructions store 0 for false
-   and some other value for true.  This is the value stored for true.  */
-
-#define STORE_FLAG_VALUE 1
 
 /* Define this to be nonzero if shift instructions ignore all but the low-order
    few bits.  */
@@ -1215,14 +1131,6 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
    cc setter and cc user at insn emit time.  */
 
 extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
-
-/* Add any extra modes needed to represent the condition code.
-
-   Also, signed and unsigned comparisons are distinguished, as
-   are operations which are compatible with chkbit insns.  */
-#define EXTRA_CC_MODES		\
-    CC(CC_UNSmode, "CC_UNS")	\
-    CC(CC_CHKmode, "CC_CHK")
 
 /* Given a comparison code (EQ, NE, etc.) and the first operand of a COMPARE,
    return the mode to be used for the comparison.  For floating-point, CCFPmode
@@ -1246,48 +1154,8 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 #ifndef WIND_RIVER
 #define	TARGET_MEM_FUNCTIONS	1
 #endif
-
-/* Compute the cost of computing a constant rtl expression RTX
-   whose rtx-code is CODE.  The body of this macro is a portion
-   of a switch statement.  If the code is computed here,
-   return it with a return statement.  Otherwise, break from the switch.  */
-
-/* Constants that can be (non-ldconst) insn operands are cost 0.  Constants
-   that can be non-ldconst operands in rare cases are cost 1.  Other constants
-   have higher costs.  */
-
-/* Must check for OUTER_CODE of SET for power2_operand, because
-   reload_cse_move2add calls us with OUTER_CODE of PLUS to decide when
-   to replace set with add.  */
-
-#define CONST_COSTS(RTX, CODE, OUTER_CODE)				\
-  case CONST_INT:							\
-    if ((INTVAL (RTX) >= 0 && INTVAL (RTX) < 32)			\
-	|| (OUTER_CODE == SET && power2_operand (RTX, VOIDmode)))	\
-      return 0; 							\
-    else if (INTVAL (RTX) >= -31 && INTVAL (RTX) < 0)			\
-      return 1;								\
-  case CONST:								\
-  case LABEL_REF:							\
-  case SYMBOL_REF:							\
-    return (TARGET_C_SERIES ? 6 : 8);					\
-  case CONST_DOUBLE:							\
-    if ((RTX) == CONST0_RTX (DFmode) || (RTX) == CONST0_RTX (SFmode)	\
-	|| (RTX) == CONST1_RTX (DFmode) || (RTX) == CONST1_RTX (SFmode))\
-      return 1;								\
-    return 12;
-
-/* The i960 offers addressing modes which are "as cheap as a register".
-   See i960.c (or gcc.texinfo) for details.  */
-
-#define ADDRESS_COST(RTX) \
-  (GET_CODE (RTX) == REG ? 1 : i960_address_cost (RTX))
 
 /* Control the assembler format that we output.  */
-
-/* Output at beginning of assembler file.  */
-
-#define ASM_FILE_START(file)
 
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
@@ -1330,7 +1198,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 /* This is how to output a note to DBX telling it the line number
    to which the following sequence of instructions corresponds.  */
 
-#define ASM_OUTPUT_SOURCE_LINE(FILE, LINE)			\
+#define ASM_OUTPUT_SOURCE_LINE(FILE, LINE, COUNTER)		\
 { if (write_symbols == SDB_DEBUG) {				\
     fprintf ((FILE), "\t.ln	%d\n",				\
 	     (sdb_begin_function_line				\
@@ -1339,29 +1207,12 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 	fprintf((FILE),"\t.stabd	68,0,%d\n",(LINE));	\
   } }
 
-/* This is how to output the definition of a user-level label named NAME,
-   such as the label on a static function or variable NAME.  */
-
-#define ASM_OUTPUT_LABEL(FILE,NAME)	\
-  do { assemble_name (FILE, NAME); fputs (":\n", FILE); } while (0)
-
-/* This is how to output a command to make the user-level label named NAME
-   defined for reference from other files.  */
-
-#define ASM_GLOBALIZE_LABEL(FILE,NAME)		\
-{ fputs ("\t.globl ", FILE);			\
-  assemble_name (FILE, NAME);			\
-  fputs ("\n", FILE); }
+/* Globalizing directive for a label.  */
+#define GLOBAL_ASM_OP "\t.globl "
 
 /* The prefix to add to user-visible assembler symbols.  */
 
 #define USER_LABEL_PREFIX "_"
-
-/* This is how to output an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.  */
-
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  fprintf (FILE, "%s%d:\n", PREFIX, NUM)
 
 /* This is how to store into the string LABEL
    the symbol_ref name of an internal numbered label where
@@ -1369,7 +1220,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
    This is suitable for output with `assemble_name'.  */
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
-  sprintf (LABEL, "*%s%d", PREFIX, NUM)
+  sprintf (LABEL, "*%s%lu", PREFIX, (unsigned long)(NUM))
 
 #define ASM_OUTPUT_REG_PUSH(FILE,REGNO)  \
   fprintf (FILE, "\tst\t%s,(sp)\n\taddo\t4,sp,sp\n", reg_names[REGNO])
@@ -1397,7 +1248,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
   fprintf (FILE, "\t.align %d\n", (LOG))
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t.space %d\n", (SIZE))
+  fprintf (FILE, "\t.space %d\n", (int)(SIZE))
 
 /* This says how to output an assembler line
    to define a global common symbol.  */
@@ -1414,7 +1265,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
       assemble_name ((FILE), (NAME)),			\
       fputs ("\n.comm ", (FILE)),			\
       assemble_name ((FILE), (NAME)),			\
-      fprintf ((FILE), ",%d\n", (SIZE));		\
+      fprintf ((FILE), ",%d\n", (int)(SIZE));		\
     }							\
 }
 
@@ -1425,7 +1276,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 #define ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGN)  \
 ( fputs (".bss\t", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%d,%d\n", (SIZE),		\
+  fprintf ((FILE), ",%d,%d\n", (int)(SIZE),	\
 	   (floor_log2 ((ALIGN) / BITS_PER_UNIT))))
 
 /* A C statement (sans semicolon) to output to the stdio stream
@@ -1435,9 +1286,6 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 
 #define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN)	\
   do {								\
-    fputs (".globl ", (FILE));					\
-    assemble_name ((FILE), (NAME));				\
-    fputs ("\n", (FILE));					\
     ASM_OUTPUT_ALIGNED_LOCAL (FILE, NAME, SIZE, ALIGN);		\
   } while (0)
 
@@ -1448,13 +1296,6 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 
 #define	LABEL_ALIGN_AFTER_BARRIER(LABEL) (TARGET_CODE_ALIGN ? 3 : 0)
 
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
-	( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
-	  sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -1561,22 +1402,3 @@ extern enum insn_types i960_last_insn_type;
 /* Defined in reload.c, and used in insn-recog.c.  */
 
 extern int rtx_equal_function_value_matters;
-
-/* Output code to add DELTA to the first argument, and then jump to FUNCTION.
-   Used for C++ multiple inheritance.  */
-#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION)	\
-do {									\
-  int d = (DELTA);							\
-  if (d < 0 && d > -32)							\
-    fprintf (FILE, "\tsubo %d,g0,g0\n", -d);				\
-  else if (d > 0 && d < 32)						\
-    fprintf (FILE, "\taddo %d,g0,g0\n", d);				\
-  else									\
-    {									\
-      fprintf (FILE, "\tldconst %d,r5\n", d);				\
-      fprintf (FILE, "\taddo r5,g0,g0\n");				\
-    }									\
-  fprintf (FILE, "\tbx ");						\
-  assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));	\
-  fprintf (FILE, "\n");							\
-} while (0);

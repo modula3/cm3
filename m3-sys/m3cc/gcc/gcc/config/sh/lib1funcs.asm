@@ -1,4 +1,4 @@
-/* Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001
+/* Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003
    Free Software Foundation, Inc.
 
 This file is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@ along with this program; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-!! libgcc routines for the Hitachi / SuperH SH CPUs.
+!! libgcc routines for the Renesas / SuperH SH CPUs.
 !! Contributed by Steve Chamberlain.
 !! sac@cygnus.com
 
@@ -38,20 +38,21 @@ Boston, MA 02111-1307, USA.  */
    amylaar@cygnus.com  */
 
 #ifdef __ELF__
-#define LOCAL(X) .L_##X
+#define LOCAL(X)	.L_##X
+#define FUNC(X)		.type X,@function
+#define ENDFUNC0(X)	.Lfe_##X: .size X,.Lfe_##X-X
+#define ENDFUNC(X)	ENDFUNC0(X)
 #else
-#define LOCAL(X) L_##X
+#define LOCAL(X)	L_##X
+#define FUNC(X)
+#define ENDFUNC(X)
 #endif
 
-#ifdef __linux__
-#define GLOBAL(X) __##X
-#endif
+#define	CONCAT(A,B)	A##B
+#define	GLOBAL0(U,X)	CONCAT(U,__##X)
+#define	GLOBAL(X)	GLOBAL0(__USER_LABEL_PREFIX__,X)
 
-#ifndef GLOBAL
-#define GLOBAL(X) ___##X
-#endif
-
-#if defined __SH5__ && ! defined __SH4_NOFPU__
+#if defined __SH5__ && ! defined __SH4_NOFPU__ && ! defined (__LITTLE_ENDIAN__)
 #define FMOVD_WORKS
 #endif
 
@@ -90,6 +91,40 @@ Boston, MA 02111-1307, USA.  */
 	.global	GLOBAL(ashiftrt_r4_30)
 	.global	GLOBAL(ashiftrt_r4_31)
 	.global	GLOBAL(ashiftrt_r4_32)
+
+	FUNC(GLOBAL(ashiftrt_r4_0))
+	FUNC(GLOBAL(ashiftrt_r4_1))
+	FUNC(GLOBAL(ashiftrt_r4_2))
+	FUNC(GLOBAL(ashiftrt_r4_3))
+	FUNC(GLOBAL(ashiftrt_r4_4))
+	FUNC(GLOBAL(ashiftrt_r4_5))
+	FUNC(GLOBAL(ashiftrt_r4_6))
+	FUNC(GLOBAL(ashiftrt_r4_7))
+	FUNC(GLOBAL(ashiftrt_r4_8))
+	FUNC(GLOBAL(ashiftrt_r4_9))
+	FUNC(GLOBAL(ashiftrt_r4_10))
+	FUNC(GLOBAL(ashiftrt_r4_11))
+	FUNC(GLOBAL(ashiftrt_r4_12))
+	FUNC(GLOBAL(ashiftrt_r4_13))
+	FUNC(GLOBAL(ashiftrt_r4_14))
+	FUNC(GLOBAL(ashiftrt_r4_15))
+	FUNC(GLOBAL(ashiftrt_r4_16))
+	FUNC(GLOBAL(ashiftrt_r4_17))
+	FUNC(GLOBAL(ashiftrt_r4_18))
+	FUNC(GLOBAL(ashiftrt_r4_19))
+	FUNC(GLOBAL(ashiftrt_r4_20))
+	FUNC(GLOBAL(ashiftrt_r4_21))
+	FUNC(GLOBAL(ashiftrt_r4_22))
+	FUNC(GLOBAL(ashiftrt_r4_23))
+	FUNC(GLOBAL(ashiftrt_r4_24))
+	FUNC(GLOBAL(ashiftrt_r4_25))
+	FUNC(GLOBAL(ashiftrt_r4_26))
+	FUNC(GLOBAL(ashiftrt_r4_27))
+	FUNC(GLOBAL(ashiftrt_r4_28))
+	FUNC(GLOBAL(ashiftrt_r4_29))
+	FUNC(GLOBAL(ashiftrt_r4_30))
+	FUNC(GLOBAL(ashiftrt_r4_31))
+	FUNC(GLOBAL(ashiftrt_r4_32))
 
 	.align	1
 GLOBAL(ashiftrt_r4_32):
@@ -170,6 +205,40 @@ GLOBAL(ashiftrt_r4_1):
 GLOBAL(ashiftrt_r4_0):
 	rts
 	nop
+
+	ENDFUNC(GLOBAL(ashiftrt_r4_0))
+	ENDFUNC(GLOBAL(ashiftrt_r4_1))
+	ENDFUNC(GLOBAL(ashiftrt_r4_2))
+	ENDFUNC(GLOBAL(ashiftrt_r4_3))
+	ENDFUNC(GLOBAL(ashiftrt_r4_4))
+	ENDFUNC(GLOBAL(ashiftrt_r4_5))
+	ENDFUNC(GLOBAL(ashiftrt_r4_6))
+	ENDFUNC(GLOBAL(ashiftrt_r4_7))
+	ENDFUNC(GLOBAL(ashiftrt_r4_8))
+	ENDFUNC(GLOBAL(ashiftrt_r4_9))
+	ENDFUNC(GLOBAL(ashiftrt_r4_10))
+	ENDFUNC(GLOBAL(ashiftrt_r4_11))
+	ENDFUNC(GLOBAL(ashiftrt_r4_12))
+	ENDFUNC(GLOBAL(ashiftrt_r4_13))
+	ENDFUNC(GLOBAL(ashiftrt_r4_14))
+	ENDFUNC(GLOBAL(ashiftrt_r4_15))
+	ENDFUNC(GLOBAL(ashiftrt_r4_16))
+	ENDFUNC(GLOBAL(ashiftrt_r4_17))
+	ENDFUNC(GLOBAL(ashiftrt_r4_18))
+	ENDFUNC(GLOBAL(ashiftrt_r4_19))
+	ENDFUNC(GLOBAL(ashiftrt_r4_20))
+	ENDFUNC(GLOBAL(ashiftrt_r4_21))
+	ENDFUNC(GLOBAL(ashiftrt_r4_22))
+	ENDFUNC(GLOBAL(ashiftrt_r4_23))
+	ENDFUNC(GLOBAL(ashiftrt_r4_24))
+	ENDFUNC(GLOBAL(ashiftrt_r4_25))
+	ENDFUNC(GLOBAL(ashiftrt_r4_26))
+	ENDFUNC(GLOBAL(ashiftrt_r4_27))
+	ENDFUNC(GLOBAL(ashiftrt_r4_28))
+	ENDFUNC(GLOBAL(ashiftrt_r4_29))
+	ENDFUNC(GLOBAL(ashiftrt_r4_30))
+	ENDFUNC(GLOBAL(ashiftrt_r4_31))
+	ENDFUNC(GLOBAL(ashiftrt_r4_32))
 #endif
 
 #ifdef L_ashiftrt_n
@@ -192,6 +261,7 @@ GLOBAL(ashiftrt_r4_0):
 !
 
 	.global	GLOBAL(ashrsi3)
+	FUNC(GLOBAL(ashrsi3))
 	.align	2
 GLOBAL(ashrsi3):
 	mov	#31,r0
@@ -319,6 +389,7 @@ LOCAL(ashrsi3_0):
 	rts
 	nop
 
+	ENDFUNC(GLOBAL(ashrsi3))
 #endif
 
 #ifdef L_ashiftlt
@@ -340,6 +411,7 @@ LOCAL(ashrsi3_0):
 ! (none)
 !
 	.global	GLOBAL(ashlsi3)
+	FUNC(GLOBAL(ashlsi3))
 	.align	2
 GLOBAL(ashlsi3):
 	mov	#31,r0
@@ -476,6 +548,7 @@ LOCAL(ashlsi3_0):
 	rts
 	nop
 
+	ENDFUNC(GLOBAL(ashlsi3))
 #endif
 
 #ifdef L_lshiftrt
@@ -497,6 +570,7 @@ LOCAL(ashlsi3_0):
 ! (none)
 !
 	.global	GLOBAL(lshrsi3)
+	FUNC(GLOBAL(lshrsi3))
 	.align	2
 GLOBAL(lshrsi3):
 	mov	#31,r0
@@ -633,6 +707,7 @@ LOCAL(lshrsi3_0):
 	rts
 	nop
 
+	ENDFUNC(GLOBAL(lshrsi3))
 #endif
 
 #ifdef L_movstr
@@ -649,76 +724,113 @@ done:
 	add	#64,r4
 	.align	4
 	.global	GLOBAL(movstrSI64)
+	FUNC(GLOBAL(movstrSI64))
 GLOBAL(movstrSI64):
 	mov.l	@(60,r5),r0
 	mov.l	r0,@(60,r4)
 	.global	GLOBAL(movstrSI60)
+	FUNC(GLOBAL(movstrSI60))
 GLOBAL(movstrSI60):
 	mov.l	@(56,r5),r0
 	mov.l	r0,@(56,r4)
 	.global	GLOBAL(movstrSI56)
+	FUNC(GLOBAL(movstrSI56))
 GLOBAL(movstrSI56):
 	mov.l	@(52,r5),r0
 	mov.l	r0,@(52,r4)
 	.global	GLOBAL(movstrSI52)
+	FUNC(GLOBAL(movstrSI52))
 GLOBAL(movstrSI52):
 	mov.l	@(48,r5),r0
 	mov.l	r0,@(48,r4)
 	.global	GLOBAL(movstrSI48)
+	FUNC(GLOBAL(movstrSI48))
 GLOBAL(movstrSI48):
 	mov.l	@(44,r5),r0
 	mov.l	r0,@(44,r4)
 	.global	GLOBAL(movstrSI44)
+	FUNC(GLOBAL(movstrSI44))
 GLOBAL(movstrSI44):
 	mov.l	@(40,r5),r0
 	mov.l	r0,@(40,r4)
 	.global	GLOBAL(movstrSI40)
+	FUNC(GLOBAL(movstrSI40))
 GLOBAL(movstrSI40):
 	mov.l	@(36,r5),r0
 	mov.l	r0,@(36,r4)
 	.global	GLOBAL(movstrSI36)
+	FUNC(GLOBAL(movstrSI36))
 GLOBAL(movstrSI36):
 	mov.l	@(32,r5),r0
 	mov.l	r0,@(32,r4)
 	.global	GLOBAL(movstrSI32)
+	FUNC(GLOBAL(movstrSI32))
 GLOBAL(movstrSI32):
 	mov.l	@(28,r5),r0
 	mov.l	r0,@(28,r4)
 	.global	GLOBAL(movstrSI28)
+	FUNC(GLOBAL(movstrSI28))
 GLOBAL(movstrSI28):
 	mov.l	@(24,r5),r0
 	mov.l	r0,@(24,r4)
 	.global	GLOBAL(movstrSI24)
+	FUNC(GLOBAL(movstrSI24))
 GLOBAL(movstrSI24):
 	mov.l	@(20,r5),r0
 	mov.l	r0,@(20,r4)
 	.global	GLOBAL(movstrSI20)
+	FUNC(GLOBAL(movstrSI20))
 GLOBAL(movstrSI20):
 	mov.l	@(16,r5),r0
 	mov.l	r0,@(16,r4)
 	.global	GLOBAL(movstrSI16)
+	FUNC(GLOBAL(movstrSI16))
 GLOBAL(movstrSI16):
 	mov.l	@(12,r5),r0
 	mov.l	r0,@(12,r4)
 	.global	GLOBAL(movstrSI12)
+	FUNC(GLOBAL(movstrSI12))
 GLOBAL(movstrSI12):
 	mov.l	@(8,r5),r0
 	mov.l	r0,@(8,r4)
 	.global	GLOBAL(movstrSI8)
+	FUNC(GLOBAL(movstrSI8))
 GLOBAL(movstrSI8):
 	mov.l	@(4,r5),r0
 	mov.l	r0,@(4,r4)
 	.global	GLOBAL(movstrSI4)
+	FUNC(GLOBAL(movstrSI4))
 GLOBAL(movstrSI4):
 	mov.l	@(0,r5),r0
 	mov.l	r0,@(0,r4)
+	.global	GLOBAL(movstrSI0)
+	FUNC(GLOBAL(movstrSI0))
 GLOBAL(movstrSI0):
 	rts
 	nop
 
+	ENDFUNC(GLOBAL(movstrSI64))
+	ENDFUNC(GLOBAL(movstrSI60))
+	ENDFUNC(GLOBAL(movstrSI56))
+	ENDFUNC(GLOBAL(movstrSI52))
+	ENDFUNC(GLOBAL(movstrSI48))
+	ENDFUNC(GLOBAL(movstrSI44))
+	ENDFUNC(GLOBAL(movstrSI40))
+	ENDFUNC(GLOBAL(movstrSI36))
+	ENDFUNC(GLOBAL(movstrSI32))
+	ENDFUNC(GLOBAL(movstrSI28))
+	ENDFUNC(GLOBAL(movstrSI24))
+	ENDFUNC(GLOBAL(movstrSI20))
+	ENDFUNC(GLOBAL(movstrSI16))
+	ENDFUNC(GLOBAL(movstrSI12))
+	ENDFUNC(GLOBAL(movstrSI8))
+	ENDFUNC(GLOBAL(movstrSI4))
+	ENDFUNC(GLOBAL(movstrSI0))
+
 	.align	4
 
 	.global	GLOBAL(movstr)
+	FUNC(GLOBAL(movstr))
 GLOBAL(movstr):
 	mov.l	@(60,r5),r0
 	mov.l	r0,@(60,r4)
@@ -775,6 +887,8 @@ GLOBAL(movstr):
 	add	#64,r5
 	bra	GLOBAL(movstr)
 	add	#64,r4
+
+	FUNC(GLOBAL(movstr))
 #endif
 
 #ifdef L_movstr_i4
@@ -783,6 +897,10 @@ GLOBAL(movstr):
 	.global	GLOBAL(movstr_i4_odd)
 	.global	GLOBAL(movstrSI12_i4)
 
+	FUNC(GLOBAL(movstr_i4_even))
+	FUNC(GLOBAL(movstr_i4_odd))
+	FUNC(GLOBAL(movstrSI12_i4))
+
 	.p2align	5
 L_movstr_2mod4_end:
 	mov.l	r0,@(16,r4)
@@ -790,6 +908,11 @@ L_movstr_2mod4_end:
 	mov.l	r1,@(20,r4)
 
 	.p2align	2
+
+GLOBAL(movstr_i4_even):
+	mov.l	@r5+,r0
+	bra	L_movstr_start_even
+	mov.l	@r5+,r1
 
 GLOBAL(movstr_i4_odd):
 	mov.l	@r5+,r1
@@ -817,10 +940,8 @@ L_movstr_start_even:
 	rts
 	mov.l	r3,@(12,r4)
 
-GLOBAL(movstr_i4_even):
-	mov.l	@r5+,r0
-	bra	L_movstr_start_even
-	mov.l	@r5+,r1
+	ENDFUNC(GLOBAL(movstr_i4_even))
+	ENDFUNC(GLOBAL(movstr_i4_odd))
 
 	.p2align	4
 GLOBAL(movstrSI12_i4):
@@ -831,12 +952,15 @@ GLOBAL(movstrSI12_i4):
 	mov.l	r1,@(4,r4)
 	rts
 	mov.l	r2,@(8,r4)
+
+	ENDFUNC(GLOBAL(movstrSI12_i4))
 #endif
 
 #ifdef L_mulsi3
 
 
 	.global	GLOBAL(mulsi3)
+	FUNC(GLOBAL(mulsi3))
 
 ! r4 =       aabb
 ! r5 =       ccdd
@@ -869,16 +993,17 @@ hiset:	sts	macl,r0		! r0 = bb*dd
 	rts
 	add	r2,r0
 
-
+	FUNC(GLOBAL(mulsi3))
 #endif
 #endif /* ! __SH5__ */
 #ifdef L_sdivsi3_i4
 	.title "SH DIVIDE"
-!! 4 byte integer Divide code for the Hitachi SH
+!! 4 byte integer Divide code for the Renesas SH
 #ifdef __SH4__
 !! args in r4 and r5, result in fpul, clobber dr0, dr2
 
 	.global	GLOBAL(sdivsi3_i4)
+	FUNC(GLOBAL(sdivsi3_i4))
 GLOBAL(sdivsi3_i4):
 	lds r4,fpul
 	float fpul,dr0
@@ -888,6 +1013,7 @@ GLOBAL(sdivsi3_i4):
 	rts
 	ftrc dr0,fpul
 
+	ENDFUNC(GLOBAL(sdivsi3_i4))
 #elif defined(__SH4_SINGLE__) || defined(__SH4_SINGLE_ONLY__) || (defined (__SH5__) && ! defined __SH4_NOFPU__)
 !! args in r4 and r5, result in fpul, clobber r2, dr0, dr2
 
@@ -896,6 +1022,7 @@ GLOBAL(sdivsi3_i4):
 	.mode	SHcompact
 #endif
 	.global	GLOBAL(sdivsi3_i4)
+	FUNC(GLOBAL(sdivsi3_i4))
 GLOBAL(sdivsi3_i4):
 	sts.l fpscr,@-r15
 	mov #8,r2
@@ -910,13 +1037,14 @@ GLOBAL(sdivsi3_i4):
 	rts
 	lds.l @r15+,fpscr
 
+	ENDFUNC(GLOBAL(sdivsi3_i4))
 #endif /* ! __SH5__ || __SH5__ == 32 */
 #endif /* ! __SH4__ */
 #endif
 
 #ifdef L_sdivsi3
 /* __SH4_SINGLE_ONLY__ keeps this part for link compatibility with
-   sh3e code.  */
+   sh2e/sh3e code.  */
 #if (! defined(__SH4__) && ! defined (__SH4_SINGLE__)) || defined (__linux__)
 !!
 !! Steve Chamberlain
@@ -924,9 +1052,10 @@ GLOBAL(sdivsi3_i4):
 !!
 !!
 
-!! args in r4 and r5, result in r0 clobber r1,r2,r3
+!! args in r4 and r5, result in r0 clobber r1, r2, r3, and t bit
 
 	.global	GLOBAL(sdivsi3)
+	FUNC(GLOBAL(sdivsi3))
 #if __SHMEDIA__
 #if __SH5__ == 32
 	.section	.text..SHmedia32,"ax"
@@ -934,6 +1063,7 @@ GLOBAL(sdivsi3_i4):
 	.text
 #endif
 	.align	2
+#if 0
 /* The assembly code that follows is a hand-optimized version of the C
    code that follows.  Note that the registers that are modified are
    exactly those listed as clobbered in the patterns divsi3_i1 and
@@ -991,7 +1121,100 @@ LOCAL(sdivsi3_dontadd):
 	muls.l	r0, r2, r0
 	add.l	r0, r63, r0
 	blink	tr0, r63
-#else
+#else /* ! 0 */
+ // inputs: r4,r5
+ // clobbered: r1,r2,r3,r18,r19,r20,r21,r25,tr0
+ // result in r0
+GLOBAL(sdivsi3):
+ // can create absolute value without extra latency,
+ // but dependent on proper sign extension of inputs:
+ // shari.l r5,31,r2
+ // xor r5,r2,r20
+ // sub r20,r2,r20 // r20 is now absolute value of r5, zero-extended.
+ shari.l r5,31,r2
+ ori r2,1,r2
+ muls.l r5,r2,r20 // r20 is now absolute value of r5, zero-extended.
+ movi 0xffffffffffffbb0c,r19 // shift count eqiv 76
+ shari.l r4,31,r3
+ nsb r20,r0
+ shlld r20,r0,r25
+ shlri r25,48,r25
+ sub r19,r25,r1
+ mmulfx.w r1,r1,r2
+ mshflo.w r1,r63,r1
+ // If r4 was to be used in-place instead of r21, could use this sequence
+ // to compute absolute:
+ // sub r63,r4,r19 // compute absolute value of r4
+ // shlri r4,32,r3 // into lower 32 bit of r4, keeping
+ // mcmv r19,r3,r4 // the sign in the upper 32 bits intact.
+ ori r3,1,r3
+ mmulfx.w r25,r2,r2
+ sub r19,r0,r0
+ muls.l r4,r3,r21
+ msub.w r1,r2,r2
+ addi r2,-2,r1
+ mulu.l r21,r1,r19
+ mmulfx.w r2,r2,r2
+ shlli r1,15,r1
+ shlrd r19,r0,r19
+ mulu.l r19,r20,r3
+ mmacnfx.wl r25,r2,r1
+ ptabs r18,tr0
+ sub r21,r3,r25
+
+ mulu.l r25,r1,r2
+ addi r0,14,r0
+ xor r4,r5,r18
+ shlrd r2,r0,r2
+ mulu.l r2,r20,r3
+ add r19,r2,r19
+ shari.l r18,31,r18
+ sub r25,r3,r25
+
+ mulu.l r25,r1,r2
+ sub r25,r20,r25
+ add r19,r18,r19
+ shlrd r2,r0,r2
+ mulu.l r2,r20,r3
+ addi r25,1,r25
+ add r19,r2,r19
+
+ cmpgt r25,r3,r25
+ add.l r19,r25,r0
+ xor r0,r18,r0
+ blink tr0,r63
+#endif
+#elif defined __SHMEDIA__
+/* m5compact-nofpu */
+ // clobbered: r18,r19,r20,r21,r25,tr0,tr1,tr2
+	.mode	SHmedia
+	.section	.text..SHmedia32,"ax"
+	.align	2
+GLOBAL(sdivsi3):
+	pt/l LOCAL(sdivsi3_dontsub), tr0
+	pt/l LOCAL(sdivsi3_loop), tr1
+	ptabs/l r18,tr2
+	shari.l r4,31,r18
+	shari.l r5,31,r19
+	xor r4,r18,r20
+	xor r5,r19,r21
+	sub.l r20,r18,r20
+	sub.l r21,r19,r21
+	xor r18,r19,r19
+	shlli r21,32,r25
+	addi r25,-1,r21
+	addz.l r20,r63,r20
+LOCAL(sdivsi3_loop):
+	shlli r20,1,r20
+	bgeu/u r21,r20,tr0
+	sub r20,r21,r20
+LOCAL(sdivsi3_dontsub):
+	addi.l r25,-1,r25
+	bnei r25,-32,tr1
+	xor r20,r19,r20
+	sub.l r20,r19,r0
+	blink tr2,r63
+#else /* ! __SHMEDIA__ */
 GLOBAL(sdivsi3):
 	mov	r4,r1
 	mov	r5,r0
@@ -1076,17 +1299,20 @@ GLOBAL(sdivsi3):
 div0:	rts
 	mov	#0,r0
 
+	ENDFUNC(GLOBAL(sdivsi3))
 #endif /* ! __SHMEDIA__ */
 #endif /* ! __SH4__ */
 #endif
 #ifdef L_udivsi3_i4
 
 	.title "SH DIVIDE"
-!! 4 byte integer Divide code for the Hitachi SH
+!! 4 byte integer Divide code for the Renesas SH
 #ifdef __SH4__
-!! args in r4 and r5, result in fpul, clobber r0, r1, r4, r5, dr0, dr2, dr4
+!! args in r4 and r5, result in fpul, clobber r0, r1, r4, r5, dr0, dr2, dr4,
+!! and t bit
 
 	.global	GLOBAL(udivsi3_i4)
+	FUNC(GLOBAL(udivsi3_i4))
 GLOBAL(udivsi3_i4):
 	mov #1,r1
 	cmp/hi r1,r5
@@ -1127,13 +1353,31 @@ trivial:
 L1:
 	.double 2147483648
 
-#elif defined(__SH4_SINGLE__) || defined(__SH4_SINGLE_ONLY__) || (defined (__SH5__) && ! defined __SH4_NOFPU__)
+	ENDFUNC(GLOBAL(udivsi3_i4))
+#elif defined (__SH5__) && ! defined (__SH4_NOFPU__)
+#if ! __SH5__ || __SH5__ == 32
+!! args in r4 and r5, result in fpul, clobber r20, r21, dr0, fr33
+	.mode	SHmedia
+	.global	GLOBAL(udivsi3_i4)
+	FUNC(GLOBAL(udivsi3_i4))
+GLOBAL(udivsi3_i4):
+	addz.l	r4,r63,r20
+	addz.l	r5,r63,r21
+	fmov.qd	r20,dr0
+	fmov.qd	r21,dr32
+	ptabs	r18,tr0
+	float.qd dr0,dr0
+	float.qd dr32,dr32
+	fdiv.d	dr0,dr32,dr0
+	ftrc.dq dr0,dr32
+	fmov.s fr33,fr32
+	blink tr0,r63
+
+	ENDFUNC(GLOBAL(udivsi3_i4))
+#endif /* ! __SH5__ || __SH5__ == 32 */
+#elif defined(__SH4_SINGLE__) || defined(__SH4_SINGLE_ONLY__)
 !! args in r4 and r5, result in fpul, clobber r0, r1, r4, r5, dr0, dr2, dr4
 
-#if ! __SH5__ || __SH5__ == 32
-#if __SH5__
-	.mode	SHcompact
-#endif
 	.global	GLOBAL(udivsi3_i4)
 GLOBAL(udivsi3_i4):
 	mov #1,r1
@@ -1183,22 +1427,18 @@ L1:
 #endif
 	.double 2147483648
 
-#endif /* ! __SH5__ || __SH5__ == 32 */
+	ENDFUNC(GLOBAL(udivsi3_i4))
 #endif /* ! __SH4__ */
 #endif
 
 #ifdef L_udivsi3
 /* __SH4_SINGLE_ONLY__ keeps this part for link compatibility with
-   sh3e code.  */
+   sh2e/sh3e code.  */
 #if (! defined(__SH4__) && ! defined (__SH4_SINGLE__)) || defined (__linux__)
-!!
-!! Steve Chamberlain
-!! sac@cygnus.com
-!!
-!!
 
 !! args in r4 and r5, result in r0, clobbers r4, pr, and t bit
 	.global	GLOBAL(udivsi3)
+	FUNC(GLOBAL(udivsi3))
 
 #if __SHMEDIA__
 #if __SH5__ == 32
@@ -1207,6 +1447,7 @@ L1:
 	.text
 #endif
 	.align	2
+#if 0
 /* The assembly code that follows is a hand-optimized version of the C
    code that follows.  Note that the registers that are modified are
    exactly those listed as clobbered in the patterns udivsi3_i1 and
@@ -1252,65 +1493,468 @@ LOCAL(udivsi3_dontadd):
 	blink	tr0, r63
 #else
 GLOBAL(udivsi3):
-longway:
-	mov	#0,r0
-	div0u
-	! get one bit from the msb of the numerator into the T
-	! bit and divide it by whats in r5.  Put the answer bit
-	! into the T bit so it can come out again at the bottom
+ // inputs: r4,r5
+ // clobbered: r18,r19,r20,r21,r22,r25,tr0
+ // result in r0.
+ addz.l r5,r63,r22
+ nsb r22,r0
+ shlld r22,r0,r25
+ shlri r25,48,r25
+ movi 0xffffffffffffbb0c,r20 // shift count eqiv 76
+ sub r20,r25,r21
+ mmulfx.w r21,r21,r19
+ mshflo.w r21,r63,r21
+ ptabs r18,tr0
+ mmulfx.w r25,r19,r19
+ sub r20,r0,r0
+ /* bubble */
+ msub.w r21,r19,r19
+ addi r19,-2,r21 /* It would be nice for scheduling to do this add to r21
+		    before the msub.w, but we need a different value for
+		    r19 to keep errors under control.  */
+ mulu.l r4,r21,r18
+ mmulfx.w r19,r19,r19
+ shlli r21,15,r21
+ shlrd r18,r0,r18
+ mulu.l r18,r22,r20
+ mmacnfx.wl r25,r19,r21
+ /* bubble */
+ sub r4,r20,r25
 
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
+ mulu.l r25,r21,r19
+ addi r0,14,r0
+ /* bubble */
+ shlrd r19,r0,r19
+ mulu.l r19,r22,r20
+ add r18,r19,r18
+ /* bubble */
+ sub.l r25,r20,r25
 
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-shortway:
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
+ mulu.l r25,r21,r19
+ addz.l r25,r63,r25
+ sub r25,r22,r25
+ shlrd r19,r0,r19
+ mulu.l r19,r22,r20
+ addi r25,1,r25
+ add r18,r19,r18
 
-vshortway:
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4 ; div1 r5,r0
-	rotcl	r4
-ret:	rts
-	mov	r4,r0
+ cmpgt r25,r20,r25
+ add.l r18,r25,r0
+ blink tr0,r63
+#endif
+#elif defined (__SHMEDIA__)
+/* m5compact-nofpu - more emphasis on code size than on speed, but don't
+   ignore speed altogether - div1 needs 9 cycles, subc 7 and rotcl 4.
+   So use a short shmedia loop.  */
+ // clobbered: r20,r21,r25,tr0,tr1,tr2
+	.mode	SHmedia
+	.section	.text..SHmedia32,"ax"
+	.align	2
+GLOBAL(udivsi3):
+ pt/l LOCAL(udivsi3_dontsub), tr0
+ pt/l LOCAL(udivsi3_loop), tr1
+ ptabs/l r18,tr2
+ shlli r5,32,r25
+ addi r25,-1,r21
+ addz.l r4,r63,r20
+LOCAL(udivsi3_loop):
+ shlli r20,1,r20
+ bgeu/u r21,r20,tr0
+ sub r20,r21,r20
+LOCAL(udivsi3_dontsub):
+ addi.l r25,-1,r25
+ bnei r25,-32,tr1
+ add.l r20,r63,r0
+ blink tr2,r63
+#else /* ! defined (__SHMEDIA__) */
+LOCAL(div8):
+ div1 r5,r4
+LOCAL(div7):
+ div1 r5,r4; div1 r5,r4; div1 r5,r4
+ div1 r5,r4; div1 r5,r4; div1 r5,r4; rts; div1 r5,r4
 
+LOCAL(divx4):
+ div1 r5,r4; rotcl r0
+ div1 r5,r4; rotcl r0
+ div1 r5,r4; rotcl r0
+ rts; div1 r5,r4
+
+GLOBAL(udivsi3):
+ sts.l pr,@-r15
+ extu.w r5,r0
+ cmp/eq r5,r0
+#ifdef __sh1__
+ bf LOCAL(large_divisor)
+#else
+ bf/s LOCAL(large_divisor)
+#endif
+ div0u
+ swap.w r4,r0
+ shlr16 r4
+ bsr LOCAL(div8)
+ shll16 r5
+ bsr LOCAL(div7)
+ div1 r5,r4
+ xtrct r4,r0
+ xtrct r0,r4
+ bsr LOCAL(div8)
+ swap.w r4,r4
+ bsr LOCAL(div7)
+ div1 r5,r4
+ lds.l @r15+,pr
+ xtrct r4,r0
+ swap.w r0,r0
+ rotcl r0
+ rts
+ shlr16 r5
+
+LOCAL(large_divisor):
+#ifdef __sh1__
+ div0u
+#endif
+ mov #0,r0
+ xtrct r4,r0
+ xtrct r0,r4
+ bsr LOCAL(divx4)
+ rotcl r0
+ bsr LOCAL(divx4)
+ rotcl r0
+ bsr LOCAL(divx4)
+ rotcl r0
+ bsr LOCAL(divx4)
+ rotcl r0
+ lds.l @r15+,pr
+ rts
+ rotcl r0
+
+	ENDFUNC(GLOBAL(udivsi3))
 #endif /* ! __SHMEDIA__ */
 #endif /* __SH4__ */
-#endif
+#endif /* L_udivsi3 */
+
+#ifdef L_udivdi3
+#ifdef __SHMEDIA__
+	.mode	SHmedia
+	.section	.text..SHmedia32,"ax"
+	.align	2
+	.global	GLOBAL(udivdi3)
+	FUNC(GLOBAL(udivdi3))
+GLOBAL(udivdi3):
+	shlri r3,1,r4
+	nsb r4,r22
+	shlld r3,r22,r6
+	shlri r6,49,r5
+	movi 0xffffffffffffbaf1,r21 /* .l shift count 17.  */
+	sub r21,r5,r1
+	mmulfx.w r1,r1,r4
+	mshflo.w r1,r63,r1
+	sub r63,r22,r20 // r63 == 64 % 64
+	mmulfx.w r5,r4,r4
+	pta LOCAL(large_divisor),tr0
+	addi r20,32,r9
+	msub.w r1,r4,r1
+	madd.w r1,r1,r1
+	mmulfx.w r1,r1,r4
+	shlri r6,32,r7
+	bgt/u r9,r63,tr0 // large_divisor
+	mmulfx.w r5,r4,r4
+	shlri r2,32+14,r19
+	addi r22,-31,r0
+	msub.w r1,r4,r1
+
+	mulu.l r1,r7,r4
+	addi r1,-3,r5
+	mulu.l r5,r19,r5
+	sub r63,r4,r4 // Negate to make sure r1 ends up <= 1/r2
+	shlri r4,2,r4 /* chop off leading %0000000000000000 001.00000000000 - or, as
+	                 the case may be, %0000000000000000 000.11111111111, still */
+	muls.l r1,r4,r4 /* leaving at least one sign bit.  */
+	mulu.l r5,r3,r8
+	mshalds.l r1,r21,r1
+	shari r4,26,r4
+	shlld r8,r0,r8
+	add r1,r4,r1 // 31 bit unsigned reciprocal now in r1 (msb equiv. 0.5)
+	sub r2,r8,r2
+	/* Can do second step of 64 : 32 div now, using r1 and the rest in r2.  */
+
+	shlri r2,22,r21
+	mulu.l r21,r1,r21
+	shlld r5,r0,r8
+	addi r20,30-22,r0
+	shlrd r21,r0,r21
+	mulu.l r21,r3,r5
+	add r8,r21,r8
+	mcmpgt.l r21,r63,r21 // See Note 1
+	addi r20,30,r0
+	mshfhi.l r63,r21,r21
+	sub r2,r5,r2
+	andc r2,r21,r2
+
+	/* small divisor: need a third divide step */
+	mulu.l r2,r1,r7
+	ptabs r18,tr0
+	addi r2,1,r2
+	shlrd r7,r0,r7
+	mulu.l r7,r3,r5
+	add r8,r7,r8
+	sub r2,r3,r2
+	cmpgt r2,r5,r5
+	add r8,r5,r2
+	/* could test r3 here to check for divide by zero.  */
+	blink tr0,r63
+
+LOCAL(large_divisor):
+	mmulfx.w r5,r4,r4
+	shlrd r2,r9,r25
+	shlri r25,32,r8
+	msub.w r1,r4,r1
+
+	mulu.l r1,r7,r4
+	addi r1,-3,r5
+	mulu.l r5,r8,r5
+	sub r63,r4,r4 // Negate to make sure r1 ends up <= 1/r2
+	shlri r4,2,r4 /* chop off leading %0000000000000000 001.00000000000 - or, as
+	                 the case may be, %0000000000000000 000.11111111111, still */
+	muls.l r1,r4,r4 /* leaving at least one sign bit.  */
+	shlri r5,14-1,r8
+	mulu.l r8,r7,r5
+	mshalds.l r1,r21,r1
+	shari r4,26,r4
+	add r1,r4,r1 // 31 bit unsigned reciprocal now in r1 (msb equiv. 0.5)
+	sub r25,r5,r25
+	/* Can do second step of 64 : 32 div now, using r1 and the rest in r25.  */
+
+	shlri r25,22,r21
+	mulu.l r21,r1,r21
+	pta LOCAL(no_lo_adj),tr0
+	addi r22,32,r0
+	shlri r21,40,r21
+	mulu.l r21,r7,r5
+	add r8,r21,r8
+	shlld r2,r0,r2
+	sub r25,r5,r25
+	bgtu/u r7,r25,tr0 // no_lo_adj
+	addi r8,1,r8
+	sub r25,r7,r25
+LOCAL(no_lo_adj):
+	mextr4 r2,r25,r2
+
+	/* large_divisor: only needs a few adjustments.  */
+	mulu.l r8,r6,r5
+	ptabs r18,tr0
+	/* bubble */
+	cmpgtu r5,r2,r5
+	sub r8,r5,r2
+	blink tr0,r63
+	ENDFUNC(GLOBAL(udivdi3))
+/* Note 1: To shift the result of the second divide stage so that the result
+   always fits into 32 bits, yet we still reduce the rest sufficiently
+   would require a lot of instructions to do the shifts just right.  Using
+   the full 64 bit shift result to multiply with the divisor would require
+   four extra instructions for the upper 32 bits (shift / mulu / shift / sub).
+   Fortunately, if the upper 32 bits of the shift result are nonzero, we
+   know that the rest after taking this partial result into account will
+   fit into 32 bits.  So we just clear the upper 32 bits of the rest if the
+   upper 32 bits of the partial result are nonzero.  */
+#endif /* __SHMEDIA__ */
+#endif /* L_udivdi3 */
+
+#ifdef L_divdi3
+#ifdef __SHMEDIA__
+	.mode	SHmedia
+	.section	.text..SHmedia32,"ax"
+	.align	2
+	.global	GLOBAL(divdi3)
+	FUNC(GLOBAL(divdi3))
+GLOBAL(divdi3):
+	pta GLOBAL(udivdi3),tr0
+	shari r2,63,r22
+	shari r3,63,r23
+	xor r2,r22,r2
+	xor r3,r23,r3
+	sub r2,r22,r2
+	sub r3,r23,r3
+	beq/u r22,r23,tr0
+	ptabs r18,tr1
+	blink tr0,r18
+	sub r63,r2,r2
+	blink tr1,r63
+	ENDFUNC(GLOBAL(divdi3))
+#endif /* __SHMEDIA__ */
+#endif /* L_divdi3 */
+
+#ifdef L_umoddi3
+#ifdef __SHMEDIA__
+	.mode	SHmedia
+	.section	.text..SHmedia32,"ax"
+	.align	2
+	.global	GLOBAL(umoddi3)
+	FUNC(GLOBAL(umoddi3))
+GLOBAL(umoddi3):
+	shlri r3,1,r4
+	nsb r4,r22
+	shlld r3,r22,r6
+	shlri r6,49,r5
+	movi 0xffffffffffffbaf1,r21 /* .l shift count 17.  */
+	sub r21,r5,r1
+	mmulfx.w r1,r1,r4
+	mshflo.w r1,r63,r1
+	sub r63,r22,r20 // r63 == 64 % 64
+	mmulfx.w r5,r4,r4
+	pta LOCAL(large_divisor),tr0
+	addi r20,32,r9
+	msub.w r1,r4,r1
+	madd.w r1,r1,r1
+	mmulfx.w r1,r1,r4
+	shlri r6,32,r7
+	bgt/u r9,r63,tr0 // large_divisor
+	mmulfx.w r5,r4,r4
+	shlri r2,32+14,r19
+	addi r22,-31,r0
+	msub.w r1,r4,r1
+
+	mulu.l r1,r7,r4
+	addi r1,-3,r5
+	mulu.l r5,r19,r5
+	sub r63,r4,r4 // Negate to make sure r1 ends up <= 1/r2
+	shlri r4,2,r4 /* chop off leading %0000000000000000 001.00000000000 - or, as
+	                 the case may be, %0000000000000000 000.11111111111, still */
+	muls.l r1,r4,r4 /* leaving at least one sign bit.  */
+	mulu.l r5,r3,r5
+	mshalds.l r1,r21,r1
+	shari r4,26,r4
+	shlld r5,r0,r5
+	add r1,r4,r1 // 31 bit unsigned reciprocal now in r1 (msb equiv. 0.5)
+	sub r2,r5,r2
+	/* Can do second step of 64 : 32 div now, using r1 and the rest in r2.  */
+
+	shlri r2,22,r21
+	mulu.l r21,r1,r21
+	addi r20,30-22,r0
+	/* bubble */ /* could test r3 here to check for divide by zero.  */
+	shlrd r21,r0,r21
+	mulu.l r21,r3,r5
+	mcmpgt.l r21,r63,r21 // See Note 1
+	addi r20,30,r0
+	mshfhi.l r63,r21,r21
+	sub r2,r5,r2
+	andc r2,r21,r2
+
+	/* small divisor: need a third divide step */
+	mulu.l r2,r1,r7
+	ptabs r18,tr0
+	sub r2,r3,r8 /* re-use r8 here for rest - r3 */
+	shlrd r7,r0,r7
+	mulu.l r7,r3,r5
+	/* bubble */
+	addi r8,1,r7
+	cmpgt r7,r5,r7
+	cmvne r7,r8,r2
+	sub r2,r5,r2
+	blink tr0,r63
+
+LOCAL(large_divisor):
+	mmulfx.w r5,r4,r4
+	shlrd r2,r9,r25
+	shlri r25,32,r8
+	msub.w r1,r4,r1
+
+	mulu.l r1,r7,r4
+	addi r1,-3,r5
+	mulu.l r5,r8,r5
+	sub r63,r4,r4 // Negate to make sure r1 ends up <= 1/r2
+	shlri r4,2,r4 /* chop off leading %0000000000000000 001.00000000000 - or, as
+	                 the case may be, %0000000000000000 000.11111111111, still */
+	muls.l r1,r4,r4 /* leaving at least one sign bit.  */
+	shlri r5,14-1,r8
+	mulu.l r8,r7,r5
+	mshalds.l r1,r21,r1
+	shari r4,26,r4
+	add r1,r4,r1 // 31 bit unsigned reciprocal now in r1 (msb equiv. 0.5)
+	sub r25,r5,r25
+	/* Can do second step of 64 : 32 div now, using r1 and the rest in r25.  */
+
+	shlri r25,22,r21
+	mulu.l r21,r1,r21
+	pta LOCAL(no_lo_adj),tr0
+	addi r22,32,r0
+	shlri r21,40,r21
+	mulu.l r21,r7,r5
+	add r8,r21,r8
+	shlld r2,r0,r2
+	sub r25,r5,r25
+	bgtu/u r7,r25,tr0 // no_lo_adj
+	addi r8,1,r8
+	sub r25,r7,r25
+LOCAL(no_lo_adj):
+	mextr4 r2,r25,r2
+
+	/* large_divisor: only needs a few adjustments.  */
+	mulu.l r8,r6,r5
+	ptabs r18,tr0
+	add r2,r6,r7
+	cmpgtu r5,r2,r8
+	cmvne r8,r7,r2
+	sub r2,r5,r2
+	shlrd r2,r22,r2
+	blink tr0,r63
+	ENDFUNC(GLOBAL(umoddi3))
+/* Note 1: To shift the result of the second divide stage so that the result
+   always fits into 32 bits, yet we still reduce the rest sufficiently
+   would require a lot of instructions to do the shifts just right.  Using
+   the full 64 bit shift result to multiply with the divisor would require
+   four extra instructions for the upper 32 bits (shift / mulu / shift / sub).
+   Fortunately, if the upper 32 bits of the shift result are nonzero, we
+   know that the rest after taking this partial result into account will
+   fit into 32 bits.  So we just clear the upper 32 bits of the rest if the
+   upper 32 bits of the partial result are nonzero.  */
+#endif /* __SHMEDIA__ */
+#endif /* L_umoddi3 */
+
+#ifdef L_moddi3
+#ifdef __SHMEDIA__
+	.mode	SHmedia
+	.section	.text..SHmedia32,"ax"
+	.align	2
+	.global	GLOBAL(moddi3)
+	FUNC(GLOBAL(moddi3))
+GLOBAL(moddi3):
+	pta GLOBAL(umoddi3),tr0
+	shari r2,63,r22
+	shari r3,63,r23
+	xor r2,r22,r2
+	xor r3,r23,r3
+	sub r2,r22,r2
+	sub r3,r23,r3
+	beq/u r22,r63,tr0
+	ptabs r18,tr1
+	blink tr0,r18
+	sub r63,r2,r2
+	blink tr1,r63
+	ENDFUNC(GLOBAL(moddi3))
+#endif /* __SHMEDIA__ */
+#endif /* L_moddi3 */
+
 #ifdef L_set_fpscr
-#if defined (__SH3E__) || defined(__SH4_SINGLE__) || defined(__SH4__) || defined(__SH4_SINGLE_ONLY__) || __SH5__ == 32
+#if defined (__SH2E__) || defined (__SH3E__) || defined(__SH4_SINGLE__) || defined(__SH4__) || defined(__SH4_SINGLE_ONLY__) || __SH5__ == 32
 #ifdef __SH5__
 	.mode	SHcompact
 #endif
 	.global GLOBAL(set_fpscr)
+	FUNC(GLOBAL(set_fpscr))
 GLOBAL(set_fpscr):
 	lds r4,fpscr
+#ifdef __PIC__
+	mov.l	r12,@-r15
+	mova	LOCAL(set_fpscr_L0),r0
+	mov.l	LOCAL(set_fpscr_L0),r12
+	add	r0,r12
+	mov.l	LOCAL(set_fpscr_L1),r0
+	mov.l	@(r0,r12),r1
+	mov.l	@r15+,r12
+#else
 	mov.l LOCAL(set_fpscr_L1),r1
+#endif
 	swap.w r4,r0
 	or #24,r0
 #ifndef FMOVD_WORKS
@@ -1319,7 +1963,7 @@ GLOBAL(set_fpscr):
 #if defined(__SH4__)
 	swap.w r0,r3
 	mov.l r3,@(4,r1)
-#else /* defined(__SH3E__) || defined(__SH4_SINGLE*__) */
+#else /* defined (__SH2E__) || defined(__SH3E__) || defined(__SH4_SINGLE*__) */
 	swap.w r0,r2
 	mov.l r2,@r1
 #endif
@@ -1332,34 +1976,69 @@ GLOBAL(set_fpscr):
 	swap.w r0,r2
 	rts
 	mov.l r2,@r1
-#else /* defined(__SH3E__) || defined(__SH4_SINGLE*__) */
+#else /* defined(__SH2E__) || defined(__SH3E__) || defined(__SH4_SINGLE*__) */
 	swap.w r0,r3
 	rts
 	mov.l r3,@(4,r1)
 #endif
 	.align 2
+#ifdef __PIC__
+LOCAL(set_fpscr_L0):
+	.long _GLOBAL_OFFSET_TABLE_
+LOCAL(set_fpscr_L1):
+	.long GLOBAL(fpscr_values@GOT)
+#else
 LOCAL(set_fpscr_L1):
 	.long GLOBAL(fpscr_values)
+#endif
+
+	ENDFUNC(GLOBAL(set_fpscr))
+#ifndef NO_FPSCR_VALUES
 #ifdef __ELF__
         .comm   GLOBAL(fpscr_values),8,4
 #else
         .comm   GLOBAL(fpscr_values),8
 #endif /* ELF */
-#endif /* SH3E / SH4 */
+#endif /* NO_FPSCR_VALUES */
+#endif /* SH2E / SH3E / SH4 */
 #endif /* L_set_fpscr */
 #ifdef L_ic_invalidate
 #if __SH5__ == 32
 	.mode	SHmedia
 	.section	.text..SHmedia32,"ax"
 	.align	2
+	.global	GLOBAL(init_trampoline)
+	FUNC(GLOBAL(init_trampoline))
+GLOBAL(init_trampoline):
+	st.l	r0,8,r2
+#ifdef __LITTLE_ENDIAN__
+	movi	9,r20
+	shori	0x402b,r20
+	shori	0xd101,r20
+	shori	0xd002,r20
+#else
+	movi	0xffffffffffffd002,r20
+	shori	0xd101,r20
+	shori	0x402b,r20
+	shori	9,r20
+#endif
+	st.q	r0,0,r20
+	st.l	r0,12,r3
 	.global	GLOBAL(ic_invalidate)
+	FUNC(GLOBAL(ic_invalidate))
 GLOBAL(ic_invalidate):
+	ocbwb	r0,0
+	synco
 	icbi	r0, 0
 	ptabs	r18, tr0
 	synci
 	blink	tr0, r63
+
+	ENDFUNC(GLOBAL(ic_invalidate))
+	ENDFUNC(GLOBAL(init_trampoline))
 #elif defined(__SH4_SINGLE__) || defined(__SH4__) || defined(__SH4_SINGLE_ONLY__)
 	.global GLOBAL(ic_invalidate)
+	FUNC(GLOBAL(ic_invalidate))
 GLOBAL(ic_invalidate):
 	ocbwb	@r4
 	mova	0f,r0
@@ -1382,6 +2061,8 @@ GLOBAL(ic_invalidate):
 	nop
 	.endr
 	.endr
+
+	ENDFUNC(GLOBAL(ic_invalidate))
 #endif /* SH4 */
 #endif /* L_ic_invalidate */
 
@@ -1440,6 +2121,7 @@ LOCAL(ct_main_table):
 	will be expanded into r2/r3 upon return.  */
 	
 	.global	GLOBAL(GCC_shcompact_call_trampoline)
+	FUNC(GLOBAL(GCC_shcompact_call_trampoline))
 GLOBAL(GCC_shcompact_call_trampoline):
 	ptabs/l	r0, tr0	/* Prepare to call the actual function.  */
 	movi	((datalabel LOCAL(ct_main_table) - 31 * 2) >> 16) & 65535, r0
@@ -1790,6 +2472,8 @@ LOCAL(ct_ret_wide):	/* Call the function, so that we can unpack its
 	shari	r2, 32, r2
 #endif
 	blink	tr0, r63
+
+	ENDFUNC(GLOBAL(GCC_shcompact_call_trampoline))
 #endif /* L_shcompact_call_trampoline */
 
 #ifdef L_shcompact_return_trampoline
@@ -1802,6 +2486,7 @@ LOCAL(ct_ret_wide):	/* Call the function, so that we can unpack its
 	.section	.text..SHmedia32, "ax"
 	.align	2
 	.global	GLOBAL(GCC_shcompact_return_trampoline)
+	FUNC(GLOBAL(GCC_shcompact_return_trampoline))
 GLOBAL(GCC_shcompact_return_trampoline):
 	ptabs/l	r18, tr0
 #if __LITTLE_ENDIAN__
@@ -1813,6 +2498,8 @@ GLOBAL(GCC_shcompact_return_trampoline):
 #endif
 	or	r3, r2, r2
 	blink	tr0, r63
+
+	ENDFUNC(GLOBAL(GCC_shcompact_return_trampoline))
 #endif /* L_shcompact_return_trampoline */
 
 #ifdef L_shcompact_incoming_args
@@ -1857,148 +2544,150 @@ LOCAL(ia_main_table):
 	.align	2
 	
      /* This function stores 64-bit general-purpose registers back in
-	the stack, starting at @(r1), where the cookie is supposed to
-	have been stored, and loads the address in which each register
-	was stored into itself.  Its execution time is linear on the
+	the stack, and loads the address in which each register
+	was stored into itself.  The lower 32 bits of r17 hold the address
+	to begin storing, and the upper 32 bits of r17 hold the cookie.
+	Its execution time is linear on the
 	number of registers that actually have to be copied, and it is
 	optimized for structures larger than 64 bits, as opposed to
-	invidivual `long long' arguments.  See sh.h for details on the
+	individual `long long' arguments.  See sh.h for details on the
 	actual bit pattern.  */
 	
 	.global	GLOBAL(GCC_shcompact_incoming_args)
+	FUNC(GLOBAL(GCC_shcompact_incoming_args))
 GLOBAL(GCC_shcompact_incoming_args):
 	ptabs/l	r18, tr0	/* Prepare to return.  */
 	shlri	r17, 32, r0	/* Load the cookie.  */
-	movi	((datalabel LOCAL(ia_main_table) - 31 * 2) >> 16) & 65535, r35
+	movi	((datalabel LOCAL(ia_main_table) - 31 * 2) >> 16) & 65535, r43
 	pt/l	LOCAL(ia_loop), tr1
 	add.l	r17, r63, r17
-	shori	((datalabel LOCAL(ia_main_table) - 31 * 2)) & 65535, r35
+	shori	((datalabel LOCAL(ia_main_table) - 31 * 2)) & 65535, r43
 LOCAL(ia_loop):
-	nsb	r0, r28
-	shlli	r28, 1, r29
-	ldx.w	r35, r29, r30
+	nsb	r0, r36
+	shlli	r36, 1, r37
+	ldx.w	r43, r37, r38
 LOCAL(ia_main_label):
-	ptrel/l	r30, tr2
+	ptrel/l	r38, tr2
 	blink	tr2, r63
 LOCAL(ia_r2_ld):	/* Store r2 and load its address.  */
-	movi	3, r30
-	shlli	r30, 29, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3, r38
+	shlli	r38, 29, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r2
 	add.l	r17, r63, r2
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r3_ld):	/* Store r3 and load its address.  */
-	movi	3, r30
-	shlli	r30, 26, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3, r38
+	shlli	r38, 26, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r3
 	add.l	r17, r63, r3
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r4_ld):	/* Store r4 and load its address.  */
-	movi	3, r30
-	shlli	r30, 23, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3, r38
+	shlli	r38, 23, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r4
 	add.l	r17, r63, r4
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r5_ld):	/* Store r5 and load its address.  */
-	movi	3, r30
-	shlli	r30, 20, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3, r38
+	shlli	r38, 20, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r5
 	add.l	r17, r63, r5
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r6_ld):	/* Store r6 and load its address.  */
-	movi	3, r30
-	shlli	r30, 16, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3, r38
+	shlli	r38, 16, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r6
 	add.l	r17, r63, r6
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r7_ld):	/* Store r7 and load its address.  */
-	movi	3 << 12, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3 << 12, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r7
 	add.l	r17, r63, r7
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r8_ld):	/* Store r8 and load its address.  */
-	movi	3 << 8, r31
-	and	r0, r31, r32
-	andc	r0, r31, r0
+	movi	3 << 8, r39
+	and	r0, r39, r40
+	andc	r0, r39, r0
 	stx.q	r17, r63, r8
 	add.l	r17, r63, r8
 	addi.l	r17, 8, r17
-	beq/u	r31, r32, tr1
+	beq/u	r39, r40, tr1
 LOCAL(ia_r9_ld):	/* Store r9 and load its address.  */
 	stx.q	r17, r63, r9
 	add.l	r17, r63, r9
 	blink	tr0, r63
 LOCAL(ia_r2_push):	/* Push r2 onto the stack.  */
-	movi	1, r30
-	shlli	r30, 29, r31
-	andc	r0, r31, r0
+	movi	1, r38
+	shlli	r38, 29, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r2
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_r3_push):	/* Push r3 onto the stack.  */
-	movi	1, r30
-	shlli	r30, 26, r31
-	andc	r0, r31, r0
+	movi	1, r38
+	shlli	r38, 26, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r3
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_r4_push):	/* Push r4 onto the stack.  */
-	movi	1, r30
-	shlli	r30, 23, r31
-	andc	r0, r31, r0
+	movi	1, r38
+	shlli	r38, 23, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r4
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_r5_push):	/* Push r5 onto the stack.  */
-	movi	1, r30
-	shlli	r30, 20, r31
-	andc	r0, r31, r0
+	movi	1, r38
+	shlli	r38, 20, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r5
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_r6_push):	/* Push r6 onto the stack.  */
-	movi	1, r30
-	shlli	r30, 16, r31
-	andc	r0, r31, r0
+	movi	1, r38
+	shlli	r38, 16, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r6
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_r7_push):	/* Push r7 onto the stack.  */
-	movi	1 << 12, r31
-	andc	r0, r31, r0
+	movi	1 << 12, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r7
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_r8_push):	/* Push r8 onto the stack.  */
-	movi	1 << 8, r31
-	andc	r0, r31, r0
+	movi	1 << 8, r39
+	andc	r0, r39, r0
 	stx.q	r17, r63, r8
 	addi.l	r17, 8, r17
 	blink	tr1, r63
 LOCAL(ia_push_seq):	/* Push a sequence of registers onto the stack.  */
-	andi	r0, 7 << 1, r30
-	movi	(LOCAL(ia_end_of_push_seq) >> 16) & 65535, r32
-	shlli	r30, 2, r31
-	shori	LOCAL(ia_end_of_push_seq) & 65535, r32
-	sub.l	r32, r31, r33
-	ptabs/l	r33, tr2
+	andi	r0, 7 << 1, r38
+	movi	(LOCAL(ia_end_of_push_seq) >> 16) & 65535, r40
+	shlli	r38, 2, r39
+	shori	LOCAL(ia_end_of_push_seq) & 65535, r40
+	sub.l	r40, r39, r41
+	ptabs/l	r41, tr2
 	blink	tr2, r63
 LOCAL(ia_stack_of_push_seq):	 /* Beginning of push sequence.  */
 	stx.q	r17, r63, r3
@@ -2018,6 +2707,7 @@ LOCAL(ia_r9_push):	/* Push r9 onto the stack.  */
 LOCAL(ia_return):	/* Return.  */
 	blink	tr0, r63
 LOCAL(ia_end_of_push_seq): /* Label used to compute the first push instruction.  */
+	ENDFUNC(GLOBAL(GCC_shcompact_incoming_args))
 #endif /* L_shcompact_incoming_args */
 #endif
 #if __SH5__
@@ -2029,6 +2719,7 @@ LOCAL(ia_end_of_push_seq): /* Label used to compute the first push instruction. 
 #endif
 	.align	3 /* It is copied in units of 8 bytes in SHmedia mode.  */
 	.global	GLOBAL(GCC_nested_trampoline)
+	FUNC(GLOBAL(GCC_nested_trampoline))
 GLOBAL(GCC_nested_trampoline):
 	.mode	SHmedia
 	ptrel/u	r63, tr0
@@ -2045,6 +2736,8 @@ GLOBAL(GCC_nested_trampoline):
 	ld.l	r0, 28, r1
 #endif
 	blink	tr1, r63
+
+	ENDFUNC(GLOBAL(GCC_nested_trampoline))
 #endif /* L_nested_trampoline */
 #endif /* __SH5__ */
 #if __SH5__ == 32
@@ -2054,6 +2747,7 @@ GLOBAL(GCC_nested_trampoline):
 	.align	2
 #ifndef __SH4_NOFPU__	
 	.global	GLOBAL(GCC_push_shmedia_regs)
+	FUNC(GLOBAL(GCC_push_shmedia_regs))
 GLOBAL(GCC_push_shmedia_regs):
 	addi.l	r15, -14*8, r15
 	fst.d	r15, 13*8, dr62
@@ -2072,6 +2766,7 @@ GLOBAL(GCC_push_shmedia_regs):
 	fst.d	r15,  0*8, dr36
 #endif
 	.global	GLOBAL(GCC_push_shmedia_regs_nofpu)
+	FUNC(GLOBAL(GCC_push_shmedia_regs_nofpu))
 GLOBAL(GCC_push_shmedia_regs_nofpu):
 	ptabs/l	r18, tr0
 	addi.l	r15, -27*8, r15
@@ -2107,8 +2802,13 @@ GLOBAL(GCC_push_shmedia_regs_nofpu):
 	st.q	r15,  0*8, r28
 	blink	tr0, r63
 
+#ifndef __SH4_NOFPU__	
+	ENDFUNC(GLOBAL(GCC_push_shmedia_regs))
+#endif
+	ENDFUNC(GLOBAL(GCC_push_shmedia_regs_nofpu))
 #ifndef __SH4_NOFPU__
 	.global	GLOBAL(GCC_pop_shmedia_regs)
+	FUNC(GLOBAL(GCC_pop_shmedia_regs))
 GLOBAL(GCC_pop_shmedia_regs):
 	pt	.L0, tr1
 	movi	41*8, r0
@@ -2129,6 +2829,7 @@ GLOBAL(GCC_pop_shmedia_regs):
 	blink	tr1, r63
 #endif
 	.global	GLOBAL(GCC_pop_shmedia_regs_nofpu)
+	FUNC(GLOBAL(GCC_pop_shmedia_regs_nofpu))
 GLOBAL(GCC_pop_shmedia_regs_nofpu):
 	movi	27*8, r0
 .L0:
@@ -2165,5 +2866,10 @@ GLOBAL(GCC_pop_shmedia_regs_nofpu):
 	ld.q	r15,  0*8, r28
 	add.l	r15, r0, r15
 	blink	tr0, r63
+
+#ifndef __SH4_NOFPU__
+	ENDFUNC(GLOBAL(GCC_pop_shmedia_regs))
+#endif
+	ENDFUNC(GLOBAL(GCC_pop_shmedia_regs_nofpu))
 #endif /* __SH5__ == 32 */
 #endif /* L_push_pop_shmedia_regs */

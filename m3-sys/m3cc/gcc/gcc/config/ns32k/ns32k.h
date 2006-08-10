@@ -3,30 +3,51 @@
    2001, 2002 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com)
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
-/* Note that some other tm.h files include this one and then override
-   many of the definitions that relate to assembler syntax.  */
-
-/* Names to predefine in the preprocessor for this target machine.  */
-
-#define CPP_PREDEFINES "-Dns32000 -Dunix -Asystem=unix -Acpu=ns32k -Amachine=ns32k"
+#define TARGET_CPU_CPP_BUILTINS()			\
+  do							\
+    {							\
+      builtin_define ("__ns32000__");			\
+							\
+      /* CPU type */					\
+      if (TARGET_32532)					\
+	builtin_define ("__ns32532__");			\
+      else if (TARGET_32332)				\
+	builtin_define ("__ns32332__");			\
+      else						\
+	builtin_define ("__ns32032__");			\
+							\
+      /* FPU type */					\
+      if (TARGET_32381)					\
+	builtin_define ("__ns32381__");			\
+      else if (TARGET_32081)				\
+	builtin_define ("__ns32081__");			\
+							\
+      /* Misc. */					\
+      if (TARGET_RTD)					\
+	builtin_define ("__RTD__");			\
+							\
+      builtin_assert ("cpu=ns32k");			\
+      builtin_assert ("machine=ns32k");			\
+    }							\
+  while (0)
 
 /* Print subsidiary information on the compiler version in use.  */
 #define TARGET_VERSION fprintf (stderr, " (32000, GAS syntax)");
@@ -61,68 +82,91 @@ Boston, MA 02111-1307, USA.  */
 
 extern int target_flags;
 
+/* Masks for target_flags */
+#define MASK_32081		1
+#define MASK_RTD		2
+#define MASK_REGPARM		4
+#define MASK_32532		8
+#define MASK_32332		16
+#define MASK_NO_SB		32
+#define MASK_NO_BITFIELD	64
+#define MASK_HIMEM		128
+#define MASK_32381		256
+#define MASK_MULT_ADD		512
+#define MASK_SRC		1024
+#define MASK_IEEE_COMPARE 2048
+
 /* Macros used in the machine description to test the flags.  */
 
 /* Compile 32081 insns for floating point (not library calls). */
-#define TARGET_32081 (target_flags & 1)
-#define TARGET_32381 (target_flags & 256)
+#define TARGET_32081 (target_flags & MASK_32081)
+#define TARGET_32381 (target_flags & MASK_32381)
 
 /* The use of multiply-add instructions is optional because there may
  * be cases where it produces worse code.
  */
 
-#define TARGET_MULT_ADD (target_flags & 512)
+#define TARGET_MULT_ADD (target_flags & MASK_MULT_ADD)
 
 /* Compile using rtd insn calling sequence.
    This will not work unless you use prototypes at least
    for all functions that can take varying numbers of args.  */
-#define TARGET_RTD (target_flags & 2)
+#define TARGET_RTD (target_flags & MASK_RTD)
 
 /* Compile passing first two args in regs 0 and 1.  */
-#define TARGET_REGPARM (target_flags & 4)
+#define TARGET_REGPARM (target_flags & MASK_REGPARM)
 
 /* Options to select type of CPU, for better optimization.
    The output is correct for any kind of 32000 regardless of these options.  */
-#define TARGET_32532 (target_flags & 8)
-#define TARGET_32332 (target_flags & 16)
+#define TARGET_32532 (target_flags & MASK_32532)
+#define TARGET_32332 (target_flags & MASK_32332)
 
 /* Ok to use the static base register (and presume it's 0) */
-#define TARGET_SB    ((target_flags & 32) == 0)
-#define TARGET_HIMEM (target_flags & 128)
+#define TARGET_SB    ((target_flags & MASK_NO_SB) == 0)
 
-/* Compile using bitfield insns.  */
-#define TARGET_BITFIELD ((target_flags & 64) == 0)
+#define TARGET_HIMEM (target_flags & MASK_HIMEM)
+
+/* Compile using bit-field insns.  */
+#define TARGET_BITFIELD ((target_flags & MASK_NO_BITFIELD) == 0)
+
+#define TARGET_IEEE_COMPARE (target_flags & MASK_IEEE_COMPARE)
 
 /* Macro to define tables used to set the flags.
    This is a list in braces of pairs in braces,
    each pair being { "NAME", VALUE }
    where VALUE is the bits to set or minus the bits to clear.
    An empty string NAME is used to identify the default VALUE.  */
-
 #define TARGET_SWITCHES							\
-  { { "32081", 1, N_("Use hardware fp")},				\
-    { "soft-float", -257, N_("Don't use hardware fp")},			\
-    { "rtd", 2, N_("Alternative calling convention")},			\
-    { "nortd", -2, N_("Use normal calling convention")},		\
-    { "regparm", 4, N_("Pass some arguments in registers")},		\
-    { "noregparm", -4, N_("Pass all arguments on stack")},		\
-    { "32532", 24, N_("Optimize for 32532 cpu")},			\
-    { "32332", 16, N_("Optimize for 32332 cpu")},			\
-    { "32332", -8, 0},							\
-    { "32032", -24, N_("Optimize for 32032")},				\
-    { "sb", -32,							\
+  { { "32081", MASK_32081, N_("Use hardware fp")},			\
+    { "soft-float", -(MASK_32081|MASK_32381),				\
+      N_("Don't use hardware fp")},					\
+    { "rtd", MASK_RTD, N_("Alternative calling convention")},		\
+    { "nortd", -MASK_RTD, N_("Use normal calling convention")},		\
+    { "regparm", MASK_REGPARM, N_("Pass some arguments in registers")},	\
+    { "noregparm", -MASK_REGPARM, N_("Pass all arguments on stack")},	\
+    { "32532", MASK_32532|MASK_32332, N_("Optimize for 32532 cpu")},	\
+    { "32332", MASK_32332, N_("Optimize for 32332 cpu")},		\
+    { "32332", -MASK_32532, 0},						\
+    { "32032", -(MASK_32532|MASK_32332), N_("Optimize for 32032")},	\
+    { "sb", -MASK_NO_SB,						\
       N_("Register sb is zero. Use for absolute addressing")},		\
-    { "nosb", 32, N_("Do not use register sb")},			\
-    { "bitfield", -64, N_("Do not use bit-field instructions")},	\
-    { "nobitfield", 64, N_("Use bit-field instructions")},		\
-    { "himem", 128, N_("Generate code for high memory")},		\
-    { "nohimem", -128, N_("Generate code for low memory")},		\
-    { "32381", 256, N_("32381 fpu")},					\
-    { "mult-add", 512, N_("Use multiply-accumulate fp instructions")},	\
-    { "nomult-add", -512,						\
-      N_("Do not use multiply-accumulate fp instructions") }, 		\
-    { "src", 1024, N_("\"Small register classes\" kludge")},		\
-    { "nosrc", -1024, N_("No \"Small register classes\" kludge")},	\
+    { "nosb", MASK_NO_SB, N_("Do not use register sb")},		\
+    { "bitfield", -MASK_NO_BITFIELD,					\
+      N_("Use bit-field instructions")},				\
+    { "nobitfield", MASK_NO_BITFIELD,					\
+      N_("Do not use bit-field instructions")},				\
+    { "himem", MASK_HIMEM, N_("Generate code for high memory")},	\
+    { "nohimem", -MASK_HIMEM, N_("Generate code for low memory")},	\
+    { "32381", MASK_32381, N_("32381 fpu")},				\
+    { "mult-add", MASK_MULT_ADD,					\
+      N_("Use multiply-accumulate fp instructions")},			\
+    { "nomult-add", -MASK_MULT_ADD,					\
+      N_("Do not use multiply-accumulate fp instructions") },		\
+    { "src", MASK_SRC, N_("\"Small register classes\" kludge")},	\
+    { "nosrc", -MASK_SRC, N_("No \"Small register classes\" kludge")},	\
+    { "ieee-compare", MASK_IEEE_COMPARE, N_("Use IEEE math for fp comparisons")},	\
+    { "noieee-compare", -MASK_IEEE_COMPARE,					\
+      N_("Do not use IEEE math for fp comparisons")},			\
     { "", TARGET_DEFAULT, 0}}
 
 /* TARGET_DEFAULT is defined in encore.h, pc532.h, etc.  */
@@ -130,11 +174,18 @@ extern int target_flags;
 /* When we are generating PIC, the sb is used as a pointer
    to the GOT. 32381 is a superset of 32081  */
 
-#define OVERRIDE_OPTIONS				\
-{							\
-  if (flag_pic || TARGET_HIMEM) target_flags |= 32;	\
-  if (TARGET_32381) target_flags |= 1;			\
-  else target_flags &= ~512;				\
+#define OVERRIDE_OPTIONS			\
+{						\
+  if (target_flags & MASK_32532)		\
+    target_flags |= MASK_32332; 		\
+  if (flag_pic || TARGET_HIMEM)			\
+    target_flags |= MASK_NO_SB;			\
+  if (TARGET_32381)				\
+    target_flags |= MASK_32081;			\
+  else						\
+    target_flags &= ~MASK_MULT_ADD;		\
+  if (flag_unsafe_math_optimizations)		\
+     target_flags &= ~MASK_IEEE_COMPARE;		\
 }
 
 /* Zero or more C statements that may conditionally modify two
@@ -196,21 +247,8 @@ while (0)
    numbered. This is not true on the ns32k.  */
 #define WORDS_BIG_ENDIAN 0
 
-/* Number of bits in an addressable storage unit */
-#define BITS_PER_UNIT 8
-
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 32000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD 32
-
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD 4
-
-/* Width in bits of a pointer.
-   See also the macro `Pmode' defined below.  */
-#define POINTER_SIZE 32
 
 /* Allocation boundary (in *bits*) for storing arguments in argument list.  */
 #define PARM_BOUNDARY 32
@@ -238,7 +276,7 @@ while (0)
 
 /* If bit field type is int, don't let it cross an int,
    and give entire struct the alignment of an int.  */
-/* Required on the 386 since it doesn't have a full set of bitfield insns.
+/* Required on the 386 since it doesn't have a full set of bit-field insns.
    (There is no signed extv insn.)  */
 #define PCC_BITFIELD_TYPE_MATTERS 1
 
@@ -345,14 +383,7 @@ while (0)
 /* Value is 1 if it is a good idea to tie two pseudo registers
    when one has mode MODE1 and one has mode MODE2.
    If HARD_REGNO_MODE_OK could produce different values for MODE1 and MODE2,
-   for any hard reg, then this must be 0 for correct output.
-
-   Early documentation says SI and DI are not tieable if some reg can
-   be OK for SI but not for DI. However other ports (mips, i860, mvs
-   and tahoe) don't meet the above criterion. Evidently the real
-   requirement is somewhat laxer. Documentation was changed for gcc
-   2.8 but was not picked up by egcs (at least egcs 1.0). Having all
-   integer modes tieable definitely generates faster code. */
+   for any hard reg, then this must be 0 for correct output. */
 
 #define MODES_TIEABLE_P(MODE1, MODE2)					\
   ((FLOAT_MODE_P(MODE1) && FLOAT_MODE_P(MODE2)				\
@@ -397,17 +428,17 @@ while (0)
 
 enum reg_class
 { NO_REGS, GENERAL_REGS, FLOAT_REG0, LONG_FLOAT_REG0, FLOAT_REGS,
-  FP_REGS, GEN_AND_FP_REGS, FRAME_POINTER_REG, STACK_POINTER_REG,
-  GEN_AND_MEM_REGS, ALL_REGS, LIM_REG_CLASSES };
+  LONG_REGS, FP_REGS, GEN_AND_FP_REGS, FRAME_POINTER_REG,
+  STACK_POINTER_REG, GEN_AND_MEM_REGS, ALL_REGS, LIM_REG_CLASSES };
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
 /* Give names of register classes as strings for dump file.   */
 
-#define REG_CLASS_NAMES \
+#define REG_CLASS_NAMES							    \
  {"NO_REGS", "GENERAL_REGS", "FLOAT_REG0", "LONG_FLOAT_REG0", "FLOAT_REGS", \
-  "FP_REGS", "GEN_AND_FP_REGS", "FRAME_POINTER_REG", "STACK_POINTER_REG", \
-  "GEN_AND_MEM_REGS", "ALL_REGS" }
+  "LONG_REGS", "FP_REGS", "GEN_AND_FP_REGS", "FRAME_POINTER_REG", 	    \
+  "STACK_POINTER_REG", "GEN_AND_MEM_REGS", "ALL_REGS" }
 
 /* Define which registers fit in which classes.
    This is an initializer for a vector of HARD_REG_SET
@@ -419,6 +450,7 @@ enum reg_class
 	 {0x100},		/* FLOAT_REG0 */	\
 	 {0x300},		/* LONG_FLOAT_REG0 */	\
 	 {0xff00},		/* FLOAT_REGS */	\
+         {0xff0000},            /* LONG_REGS */         \
          {0xffff00},		/* FP_REGS */		\
          {0xffffff},		/* GEN_AND_FP_REGS */	\
          {0x1000000},		/* FRAME_POINTER_REG */	\
@@ -430,6 +462,14 @@ enum reg_class
 #define SUBSET_P(CLASS1, CLASS2)			\
    ((ns32k_reg_class_contents[CLASS1][0]		\
      & ~ns32k_reg_class_contents[CLASS2][0]) == 0)
+
+
+/* LONG_REGS are registers which can only hold double precision floats
+ * and can only be accessible by long float instructions.
+ */
+#define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS)	\
+  (GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO)		\
+   ? reg_classes_intersect_p (LONG_REGS, CLASS) : 0)
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -540,7 +580,8 @@ enum reg_class
    After the prologue, RA is at 4(fp) in the current frame.  */
 
 #define RETURN_ADDR_RTX(COUNT, FRAME)					\
-  (gen_rtx (MEM, Pmode, gen_rtx (PLUS, Pmode, (FRAME), GEN_INT(4))))
+  ((COUNT> 0 && flag_omit_frame_pointer)? NULL_RTX			\
+   : gen_rtx (MEM, Pmode, gen_rtx (PLUS, Pmode, (FRAME), GEN_INT(4))))
 
 /* A C expression whose value is an integer giving the offset, in
    bytes, from the value of the stack pointer register to the top of
@@ -634,7 +675,7 @@ enum reg_class
 
    On the ns32k, the offset starts at 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)	\
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
  ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument
@@ -705,12 +746,9 @@ enum reg_class
 {								\
   int regno;							\
   int offset = -4;						\
-  for (regno = 0; regno < L1_REGNUM; regno++)			\
+  for (regno = 0; regno < FRAME_POINTER_REGNUM; regno++)	\
     if (regs_ever_live[regno] && ! call_used_regs[regno])	\
       offset += 4;						\
-  for (; regno < FRAME_POINTER_REGNUM; regno++)			\
-    if (regs_ever_live[regno] && ! call_used_regs[regno])	\
-      offset += 8;						\
   if (flag_pic && current_function_uses_pic_offset_table)	\
     offset += 4;						\
   (DEPTH) = (offset + get_frame_size ()				\
@@ -722,20 +760,25 @@ enum reg_class
    of a trampoline, leaving space for the variable parts.  */
 
 /* On the 32k, the trampoline looks like this:
-     addr  0(pc),r2
-     jump  @__trampoline
-     .int STATIC
-     .int FUNCTION
-Doing trampolines with a library assist function is easier than figuring
-out how to do stores to memory in reverse byte order (the way immediate
-operands on the 32k are stored).  */
+
+	addr    0(pc),r2
+        movd    16(r2),tos
+        movd    12(r2),r1
+        ret     0
+	.align 4
+	.int STATIC
+	.int FUNCTION
+  
+   Putting the data in following data is easier than figuring out how to
+   do stores to memory in reverse byte order (the way immediate operands
+   on the 32k are stored).  */
 
 #define TRAMPOLINE_TEMPLATE(FILE)					\
 {									\
-  fprintf (FILE, "\taddr 0(pc),r2\n" );					\
-  fprintf (FILE, "\tjump " );						\
-  PUT_ABSOLUTE_PREFIX (FILE);						\
-  fprintf (FILE, "__trampoline\n" );					\
+  fprintf (FILE, "\taddr 0(pc),r2\n");					\
+  fprintf (FILE, "\tmovd 16(r2),tos\n");				\
+  fprintf (FILE, "\tmovd 12(r2),r1\n");					\
+  fprintf (FILE, "\tret 0\n");						\
   assemble_aligned_integer (UNITS_PER_WORD, const0_rtx);		\
   assemble_aligned_integer (UNITS_PER_WORD, const0_rtx);		\
 }
@@ -753,32 +796,8 @@ operands on the 32k are stored).  */
   emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 12)), CXT);    \
   emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 16)), FNADDR); \
 }
-
-/* This is the library routine that is used
-   to transfer control from the trampoline
-   to the actual nested function.  */
-
-/* The function name __transfer_from_trampoline is not actually used.
-   The function definition just permits use of "asm with operands"
-   (though the operand list is empty).  */
-#define TRANSFER_FROM_TRAMPOLINE	\
-void					\
-__transfer_from_trampoline ()		\
-{					\
-  asm (".globl __trampoline");		\
-  asm ("__trampoline:");		\
-  asm ("movd 16(r2),tos");		\
-  asm ("movd 12(r2),r1");		\
-  asm ("ret 0");			\
-}
 
 /* Addressing modes, and classification of registers for them.  */
-
-/* #define HAVE_POST_INCREMENT 0 */
-/* #define HAVE_POST_DECREMENT 0 */
-
-/* #define HAVE_PRE_DECREMENT 0 */
-/* #define HAVE_PRE_INCREMENT 0 */
 
 /* Macros to check register numbers against specific register classes.  */
 
@@ -827,7 +846,7 @@ __transfer_from_trampoline ()		\
 
 /*  Certain machines have the property that some registers cannot be
     copied to some other registers without using memory.  Define this
-    macro on those machines to be a C expression that is non-zero if
+    macro on those machines to be a C expression that is nonzero if
     objects of mode M in registers of CLASS1 can only be copied to
     registers of class CLASS2 by storing a register of CLASS1 into
     memory and loading that memory location into a register of CLASS2.
@@ -846,9 +865,9 @@ __transfer_from_trampoline ()		\
 #endif
 
 /* SMALL_REGISTER_CLASSES is a run time option. This should no longer
-   be necessay and should go when we have confidence that we won't run
+   be necessary and should go when we have confidence that we won't run
    out of spill registers */
-#define SMALL_REGISTER_CLASSES (target_flags & 1024)
+#define SMALL_REGISTER_CLASSES (target_flags & MASK_SRC)
 
 /* A C expression whose value is nonzero if pseudos that have been
    assigned to registers of class CLASS would likely be spilled
@@ -1022,7 +1041,6 @@ __transfer_from_trampoline ()		\
   else if (GET_CODE (xfooy) == PRE_DEC)					\
     {									\
       if (REGNO (XEXP (xfooy, 0)) == STACK_POINTER_REGNUM) goto ADDR;	\
-      else abort ();							\
     }									\
 }
 
@@ -1059,29 +1077,6 @@ __transfer_from_trampoline ()		\
  || GET_CODE (X) == LABEL_REF						\
  || (GET_CODE (X) == CONST && symbolic_reference_mentioned_p (X)))
 
-/* Define this macro if references to a symbol must be treated
-   differently depending on something about the variable or
-   function named by the symbol (such as what section it is in).
-
-   On the ns32k, if using PIC, mark a SYMBOL_REF for a non-global
-   symbol or a code symbol. These symbols are referenced via pc
-   and not via sb. */
-
-#define ENCODE_SECTION_INFO(DECL) \
-do									\
-  {									\
-    extern int flag_pic;						\
-    if (flag_pic)							\
-      {									\
-	rtx rtl = (TREE_CODE_CLASS (TREE_CODE (DECL)) != 'd'		\
-		   ? TREE_CST_RTL (DECL) : DECL_RTL (DECL));		\
-	SYMBOL_REF_FLAG (XEXP (rtl, 0))					\
-	  = (TREE_CODE_CLASS (TREE_CODE (DECL)) != 'd'			\
-	     || ! TREE_PUBLIC (DECL));					\
-      }									\
-  }									\
-while (0)
-
 /* Go to LABEL if ADDR (a legitimate address expression)
    has an effect that depends on the machine mode it is used for.
    On the ns32k, only predecrement and postincrement address depend thus
@@ -1116,6 +1111,11 @@ while (0)
    We have a smart movstrsi insn */
 #define MOVE_RATIO 0
 
+#define STORE_RATIO (optimize_size ? 3 : 15)
+#define STORE_BY_PIECES_P(SIZE, ALIGN) \
+  (move_by_pieces_ninsns (SIZE, ALIGN) < (unsigned int) STORE_RATIO)
+
+
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 #define SLOW_BYTE_ACCESS 0
 
@@ -1128,11 +1128,6 @@ while (0)
    is done just by pretending it is already truncated.  */
 #define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC) 1
 
-/* We assume that the store-condition-codes instructions store 0 for false
-   and some other value for true.  This is the value stored for true.  */
-
-#define STORE_FLAG_VALUE 1
-
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
    between pointers and any other objects of this machine mode.  */
@@ -1142,27 +1137,6 @@ while (0)
    is a byte address (for indexing purposes)
    so give the MEM rtx a byte's mode.  */
 #define FUNCTION_MODE QImode
-
-/* Compute the cost of address ADDRESS. */
-
-#define ADDRESS_COST(RTX) calc_address_cost (RTX)
-
-/* Compute the cost of computing a constant rtl expression RTX
-   whose rtx-code is CODE.  The body of this macro is a portion
-   of a switch statement.  If the code is computed here,
-   return it with a return statement.  Otherwise, break from the switch.  */
-
-#define CONST_COSTS(RTX,CODE,OUTER_CODE) \
-  case CONST_INT:						\
-    if (INTVAL (RTX) <= 7 && INTVAL (RTX) >= -8) return 0;	\
-    if (INTVAL (RTX) < 0x2000 && INTVAL (RTX) >= -0x2000)	\
-      return 1;							\
-  case CONST:							\
-  case LABEL_REF:						\
-  case SYMBOL_REF:						\
-    return 3;							\
-  case CONST_DOUBLE:						\
-    return 5;
 
 /* Tell final.c how to eliminate redundant test instructions.  */
 
@@ -1176,6 +1150,10 @@ while (0)
 /* This bit means that what ought to be in the Z bit
    is complemented in the F bit.  */
 #define CC_Z_IN_NOT_F 010000
+
+/* This bit means that the L bit indicates unordered (IEEE) comparison.
+ */
+#define CC_UNORD 020000
 
 /* Store in cc_status the expressions
    that the condition codes will describe
@@ -1258,10 +1236,6 @@ while (0)
 
 /* Define the output Assembly Language */
 
-/* Output at beginning of assembler file.  */
-
-#define ASM_FILE_START(FILE) fprintf (FILE, "#NO_APP\n");
-
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
 
@@ -1292,37 +1266,11 @@ while (0)
 #define ASM_OUTPUT_REG_POP(FILE,REGNO)  \
   fprintf (FILE, "\tmovd tos,%s\n", reg_names[REGNO])
 
-/* This is how to output the definition of a user-level label named NAME,
-   such as the label on a static function or variable NAME.  */
-
-#ifndef COLLECT
-#define ASM_OUTPUT_LABEL(FILE,NAME)	\
-  do { assemble_name (FILE, NAME); fputs (":\n", FILE); } while (0)
-#else
-#define ASM_OUTPUT_LABEL(STREAM,NAME)					\
-do {									\
-  fprintf (STREAM, "%s:\n", NAME);					\
-} while (0)
-#endif
-
 /* This is how to output a command to make the user-level label named NAME
    defined for reference from other files.  */
 
-#ifndef COLLECT
-#define ASM_GLOBALIZE_LABEL(FILE,NAME)	\
-  do { fputs (".globl ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
-#else
-#define ASM_GLOBALIZE_LABEL(STREAM,NAME)				\
-do {									\
-  fprintf (STREAM, "\t.globl\t%s\n", NAME);				\
-} while (0)
-#endif
-
-/* This is how to output an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.  */
-
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  fprintf (FILE, "%s%d:\n", PREFIX, NUM)
+/* Globalizing directive for a label.  */
+#define GLOBAL_ASM_OP ".globl "
 
 /* This is how to store into the string LABEL
    the symbol_ref name of an internal numbered label where
@@ -1356,7 +1304,7 @@ do {									\
   fprintf (FILE, "\t.align %d\n", (LOG))
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t.space %u\n", (SIZE))
+  fprintf (FILE, "\t.space %u\n", (int)(SIZE))
 
 /* This says how to output an assembler line
    to define a global common symbol.  */
@@ -1364,7 +1312,7 @@ do {									\
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs (".comm ", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%u\n", (ROUNDED)))
+  fprintf ((FILE), ",%u\n", (int)(ROUNDED)))
 
 /* This says how to output an assembler line
    to define a local common symbol.  */
@@ -1372,15 +1320,7 @@ do {									\
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)  \
 ( fputs (".lcomm ", (FILE)),			\
   assemble_name ((FILE), (NAME)),		\
-  fprintf ((FILE), ",%u\n", (ROUNDED)))
-
-/* Store in OUTPUT a string (made with alloca) containing
-   an assembler-name for a local static variable named NAME.
-   LABELNO is an integer which is different for each call.  */
-
-#define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
-( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
-  sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
+  fprintf ((FILE), ",%u\n", (int)(ROUNDED)))
 
 /* Print an instruction operand X on file FILE.
    CODE is the code from the %-spec that requested printing this operand;
@@ -1397,8 +1337,8 @@ do {									\
 
 #define PRINT_OPERAND_ADDRESS(FILE, ADDR) print_operand_address(FILE, ADDR)
 
-extern unsigned int ns32k_reg_class_contents[N_REG_CLASSES][1];
-extern enum reg_class regclass_map[FIRST_PSEUDO_REGISTER]; /* smallest class containing REGNO */
+extern const unsigned int ns32k_reg_class_contents[N_REG_CLASSES][1];
+extern const enum reg_class regclass_map[FIRST_PSEUDO_REGISTER]; /* smallest class containing REGNO */
 
 /*
 Local variables:
