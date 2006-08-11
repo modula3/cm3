@@ -1,3 +1,0 @@
-import("parserlib")
-implementation("Main")
-program("test")
