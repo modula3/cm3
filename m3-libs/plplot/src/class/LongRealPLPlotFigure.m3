@@ -9,7 +9,7 @@ REVEAL
                x, y : REF PL.FloatVector;
                color: CARDINAL;
              OVERRIDES
-               getBox := PointSetGetBox;
+               getRange := PointSetGetRange;
              END;
 
   Lines = LinesPublic BRANDED OBJECT
@@ -45,11 +45,11 @@ PROCEDURE Min (READONLY x: PL.FloatVector; ): LONGREAL =
   END Min;
 
 
-PROCEDURE PointSetGetBox (SELF: PointSet; ): Box =
+PROCEDURE PointSetGetRange (SELF: PointSet; ): Box =
   BEGIN
     RETURN Box{Range{Min(SELF.x^), Max(SELF.x^)},
                Range{Min(SELF.y^), Max(SELF.y^)}};
-  END PointSetGetBox;
+  END PointSetGetRange;
 
 PROCEDURE LinesInit (SELF : Lines;
                      x, y : REF PL.FloatVector;

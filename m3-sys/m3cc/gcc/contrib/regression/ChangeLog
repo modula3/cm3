@@ -1,38 +1,56 @@
-2003-04-22  Release Manager
+2005-11-30  Release Manager
 
-	* GCC 3.2.3 Released.
+	* GCC 3.4.5 released.
 
-2003-02-05  Release Manager
+2005-05-19  Release Manager
 
-	* GCC 3.2.2 Released.
+	* GCC 3.4.4 released.
 
-2002-11-19  Release Manager
+2004-11-04  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.3 released.
 
-2002-11-19  Release Manager
+2004-09-06  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.2 released.
 
-2002-11-18  Release Manager
+2004-07-01  Release Manager
 
-	* GCC 3.2.1 Released.
+	* GCC 3.4.1 released.
 
-2002-08-14  Release Manager
+2004-04-18  Release Manager
 
-	* GCC 3.2 Released.
+	* GCC 3.4.0 released.
 
-2002-07-25  Release Manager
+2003-09-18  Andreas Tobler  <a.tobler@schweiz.ch>
 
-	* GCC 3.1.1 Released.
+	* btest-gcc.sh: Add make check-target-libffi.
 
-2002-05-14  Release Manager
+2003-07-31  Andreas Tobler  <a.tobler@schweiz.ch>
 
-	* GCC 3.1 Released.
+	* btest-gcc.sh: Add make check-target-libjava.
 
-2002-05-14  Release Manager
+2002-10-22  Geoffrey Keating  <geoffk@apple.com>
 
-	* GCC 3.1 Released.
+	* btest-gcc.sh: Add gdb.sum to TESTLOGS only when GDB testsuite is run.
+
+2002-10-11  Geoffrey Keating  <geoffk@apple.com>
+
+	* objs-gcc.sh: Don't install GDB testsuite if GDB was not built.
+	* btest-gcc.sh: Don't run GDB testsuite if it doesn't exist.
+
+2002-10-09  Phil Edwards  <pme@gcc.gnu.org>
+
+	* btest-gcc.sh, objs-gcc.sh:  Update TARGET comments.
+
+2002-10-09  Geoffrey Keating  <geoffk@apple.com>
+
+	* objs-gcc.sh: On (non-linux) native hosts, use 'make bootstrap'.
+
+2002-03-09  Geoffrey Keating  <geoffk@redhat.com>
+
+	* btest-gcc.sh: For crosses, assume newlib and GNU binutils.
+	* site.exp: Correct mips-elf triplet.
 
 2002-01-31  Geoffrey Keating  <geoffk@redhat.com>
 
@@ -41,5 +59,3 @@
 	* site.exp: New file.
 	* ChangeLog: New file.
 	* README: New file.
-
-

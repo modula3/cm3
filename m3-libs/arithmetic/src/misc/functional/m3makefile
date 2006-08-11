@@ -4,9 +4,9 @@ template("functional")
 
 
 Generic_module("Functional")
-Functional("Real",     "Real",     "Basic")
-Functional("LongReal", "LongReal", "Basic")
-%Functional("Extended", "Extended", "Basic")
+Functional("Real",     "Real",     "Basic", "Decomposition")
+Functional("LongReal", "LongReal", "Basic", "Decomposition")
+%Functional("Extended", "Extended", "Basic", "Decomposition")
 
 Generic_module("FunctionalDeriv2")
 FunctionalDeriv2("Real",     "Real",     "Basic")

@@ -1,4 +1,4 @@
-@c Copyright (C) 1988, 1989, 1992, 1994, 1997, 1998, 1999, 2000, 2001, 2002
+@c Copyright (C) 1988, 1989, 1992, 1994, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
 @c Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
@@ -23,6 +23,7 @@ form uses nested parentheses to indicate the pointers in the internal form.
 * RTL Objects::       Expressions vs vectors vs strings vs integers.
 * RTL Classes::       Categories of RTL expression objects, and their structure.
 * Accessors::         Macros to access expression operands or vector elts.
+* Special Accessors:: Macros to access specific annotations on RTL.
 * Flags::             Other flags in an RTL expression.
 * Machine Modes::     Describing the size and format of a datum.
 * Constants::         Expressions with constant values.
@@ -98,7 +99,7 @@ null pointers are used instead.
 @findex PUT_CODE
 Expressions are classified by @dfn{expression codes} (also called RTX
 codes).  The expression code is a name defined in @file{rtl.def}, which is
-also (in upper case) a C enumeration constant.  The possible expression
+also (in uppercase) a C enumeration constant.  The possible expression
 codes and their meanings are machine-independent.  The code of an RTX can
 be extracted with the macro @code{GET_CODE (@var{x})} and altered with
 @code{PUT_CODE (@var{x}, @var{newcode})}.
@@ -117,8 +118,8 @@ Expressions are written as parentheses containing the name of the
 expression type, its flags and machine mode if any, and then the operands
 of the expression (separated by spaces).
 
-Expression code names in the @samp{md} file are written in lower case,
-but when they appear in C code they are written in upper case.  In this
+Expression code names in the @samp{md} file are written in lowercase,
+but when they appear in C code they are written in uppercase.  In this
 manual, they are shown as follows: @code{const_int}.
 
 @cindex (nil)
@@ -243,6 +244,9 @@ core, @samp{V} is equivalent to @samp{E}, but when the object is read
 from an @samp{md} file, the vector value of this operand may be omitted.
 An omitted vector is effectively the same as a vector of no elements.
 
+@item B
+@samp{B} indicates a pointer to basic block structure.
+
 @item 0
 @samp{0} means a slot whose contents do not fit any normal category.
 @samp{0} slots are not printed at all in dumps, and are often used in
@@ -304,16 +308,16 @@ Operands of expressions are accessed using the macros @code{XEXP},
 two arguments: an expression-pointer (RTX) and an operand number
 (counting from zero).  Thus,
 
-@example
+@smallexample
 XEXP (@var{x}, 2)
-@end example
+@end smallexample
 
 @noindent
 accesses operand 2 of expression @var{x}, as an expression.
 
-@example
+@smallexample
 XINT (@var{x}, 2)
-@end example
+@end smallexample
 
 @noindent
 accesses the same operand as an integer.  @code{XSTR}, used in the same
@@ -365,13 +369,132 @@ All the macros defined in this section expand into lvalues and therefore
 can be used to assign the operands, lengths and vector elements as well as
 to access them.
 
+@node Special Accessors
+@section Access to Special Operands
+@cindex access to special operands
+
+Some RTL nodes have special annotations associated with them.
+
+@table @code
+@item MEM
+@table @code
+@findex MEM_ALIAS_SET
+@item MEM_ALIAS_SET (@var{x})
+If 0, @var{x} is not in any alias set, and may alias anything.  Otherwise,
+@var{x} can only alias @code{MEM}s in a conflicting alias set.  This value
+is set in a language-dependent manner in the front-end, and should not be
+altered in the back-end.  In some front-ends, these numbers may correspond
+in some way to types, or other language-level entities, but they need not,
+and the back-end makes no such assumptions.
+These set numbers are tested with @code{alias_sets_conflict_p}.
+
+@findex MEM_EXPR
+@item MEM_EXPR (@var{x})
+If this register is known to hold the value of some user-level
+declaration, this is that tree node.  It may also be a
+@code{COMPONENT_REF}, in which case this is some field reference,
+and @code{TREE_OPERAND (@var{x}, 0)} contains the declaration,
+or another @code{COMPONENT_REF}, or null if there is no compile-time
+object associated with the reference.
+
+@findex MEM_OFFSET
+@item MEM_OFFSET (@var{x})
+The offset from the start of @code{MEM_EXPR} as a @code{CONST_INT} rtx.
+
+@findex MEM_SIZE
+@item MEM_SIZE (@var{x})
+The size in bytes of the memory reference as a @code{CONST_INT} rtx.
+This is mostly relevant for @code{BLKmode} references as otherwise
+the size is implied by the mode.
+
+@findex MEM_ALIGN
+@item MEM_ALIGN (@var{x})
+The known alignment in bits of the memory reference.
+@end table
+
+@item REG
+@table @code
+@findex ORIGINAL_REGNO
+@item ORIGINAL_REGNO (@var{x})
+This field holds the number the register ``originally'' had; for a
+pseudo register turned into a hard reg this will hold the old pseudo
+register number.
+
+@findex REG_EXPR
+@item REG_EXPR (@var{x})
+If this register is known to hold the value of some user-level
+declaration, this is that tree node.
+
+@findex REG_OFFSET
+@item REG_OFFSET (@var{x})
+If this register is known to hold the value of some user-level
+declaration, this is the offset into that logical storage.
+@end table
+
+@item SYMBOL_REF
+@table @code
+@findex SYMBOL_REF_DECL
+@item SYMBOL_REF_DECL (@var{x})
+If the @code{symbol_ref} @var{x} was created for a @code{VAR_DECL} or
+a @code{FUNCTION_DECL}, that tree is recorded here.  If this value is
+null, then @var{x} was created by back end code generation routines,
+and there is no associated front end symbol table entry.
+
+@code{SYMBOL_REF_DECL} may also point to a tree of class @code{'c'},
+that is, some sort of constant.  In this case, the @code{symbol_ref}
+is an entry in the per-file constant pool; again, there is no associated
+front end symbol table entry.
+
+@findex SYMBOL_REF_FLAGS
+@item SYMBOL_REF_FLAGS (@var{x})
+In a @code{symbol_ref}, this is used to communicate various predicates
+about the symbol.  Some of these are common enough to be computed by
+common code, some are specific to the target.  The common bits are:
+
+@table @code
+@findex SYMBOL_REF_FUNCTION_P
+@findex SYMBOL_FLAG_FUNCTION
+@item SYMBOL_FLAG_FUNCTION
+Set if the symbol refers to a function.
+
+@findex SYMBOL_REF_LOCAL_P
+@findex SYMBOL_FLAG_LOCAL
+@item SYMBOL_FLAG_LOCAL
+Set if the symbol is local to this ``module''.
+See @code{TARGET_BINDS_LOCAL_P}.
+
+@findex SYMBOL_REF_EXTERNAL_P
+@findex SYMBOL_FLAG_EXTERNAL
+@item SYMBOL_FLAG_EXTERNAL
+Set if this symbol is not defined in this translation unit.
+Note that this is not the inverse of @code{SYMBOL_FLAG_LOCAL}.
+
+@findex SYMBOL_REF_SMALL_P
+@findex SYMBOL_FLAG_SMALL
+@item SYMBOL_FLAG_SMALL
+Set if the symbol is located in the small data section.
+See @code{TARGET_IN_SMALL_DATA_P}.
+
+@findex SYMBOL_FLAG_TLS_SHIFT
+@findex SYMBOL_REF_TLS_MODEL
+@item SYMBOL_REF_TLS_MODEL (@var{x})
+This is a multi-bit field accessor that returns the @code{tls_model}
+to be used for a thread-local storage symbol.  It returns zero for
+non-thread-local symbols.
+@end table
+
+Bits beginning with @code{SYMBOL_FLAG_MACH_DEP} are available for
+the target's use.
+@end table
+@end table
+
 @node Flags
 @section Flags in an RTL Expression
 @cindex flags in RTL expression
 
 RTL expressions contain several flags (one-bit bit-fields)
 that are used in certain types of expression.  Most often they
-are accessed with the following macros, which expand into lvalues:
+are accessed with the following macros, which expand into lvalues.
 
 @table @code
 @findex CONSTANT_POOL_ADDRESS_P
@@ -395,13 +518,15 @@ indicates that the insn represents a call to a const or pure function.
 Stored in the @code{unchanging} field and printed as @samp{/u}.
 
 @findex INSN_ANNULLED_BRANCH_P
+@cindex @code{jump_insn} and @samp{/u}
+@cindex @code{call_insn} and @samp{/u}
 @cindex @code{insn} and @samp{/u}
-@cindex @code{unchanging}, in @code{insn}
+@cindex @code{unchanging}, in @code{jump_insn}, @code{call_insn} and @code{insn}
 @item INSN_ANNULLED_BRANCH_P (@var{x})
-In an @code{insn} in the delay slot of a branch insn, indicates that an
-annulling branch should be used.  See the discussion under
-@code{sequence} below.  Stored in the @code{unchanging} field and printed
-as @samp{/u}.
+In a @code{jump_insn}, @code{call_insn}, or @code{insn} indicates
+that the branch is an annulling one.  See the discussion under
+@code{sequence} below. Stored in the @code{unchanging} field and
+printed as @samp{/u}.
 
 @findex INSN_DEAD_CODE_P
 @cindex @code{insn} and @samp{/s}
@@ -413,16 +538,26 @@ Stored in the @code{in_struct} field and printed as @samp{/s}.
 
 @findex INSN_DELETED_P
 @cindex @code{insn} and @samp{/v}
-@cindex @code{volatil}, in @code{insn}
+@cindex @code{call_insn} and @samp{/v}
+@cindex @code{jump_insn} and @samp{/v}
+@cindex @code{code_label} and @samp{/v}
+@cindex @code{barrier} and @samp{/v}
+@cindex @code{note} and @samp{/v}
+@cindex @code{volatil}, in @code{insn}, @code{call_insn}, @code{jump_insn}, @code{code_label}, @code{barrier}, and @code{note}
 @item INSN_DELETED_P (@var{x})
-In an @code{insn}, nonzero if the insn has been deleted.  Stored in the
+In an @code{insn}, @code{call_insn}, @code{jump_insn}, @code{code_label},
+@code{barrier}, or @code{note},
+nonzero if the insn has been deleted.  Stored in the
 @code{volatil} field and printed as @samp{/v}.
 
 @findex INSN_FROM_TARGET_P
 @cindex @code{insn} and @samp{/s}
-@cindex @code{in_struct}, in @code{insn}
+@cindex @code{jump_insn} and @samp{/s}
+@cindex @code{call_insn} and @samp{/s}
+@cindex @code{in_struct}, in @code{insn} and @code{jump_insn} and @code{call_insn}
 @item INSN_FROM_TARGET_P (@var{x})
-In an @code{insn} in a delay slot of a branch, indicates that the insn
+In an @code{insn} or @code{jump_insn} or @code{call_insn} in a delay
+slot of a branch, indicates that the insn
 is from the target of the branch.  If the branch insn has
 @code{INSN_ANNULLED_BRANCH_P} set, this insn will only be executed if
 the branch is taken.  For annulled branches with
@@ -441,38 +576,22 @@ label.  Stored in the @code{in_struct} field and printed as @samp{/s}.
 
 @findex LABEL_PRESERVE_P
 @cindex @code{code_label} and @samp{/i}
-@cindex @code{in_struct}, in @code{code_label}
+@cindex @code{note} and @samp{/i}
+@cindex @code{in_struct}, in @code{code_label} and @code{note}
 @item LABEL_PRESERVE_P (@var{x})
-In a @code{code_label}, indicates that the label is referenced by
+In a @code{code_label} or @code{note}, indicates that the label is referenced by
 code or data not visible to the RTL of a given function.
 Labels referenced by a non-local goto will have this bit set.  Stored
 in the @code{in_struct} field and printed as @samp{/s}.
 
 @findex LABEL_REF_NONLOCAL_P
 @cindex @code{label_ref} and @samp{/v}
-@cindex @code{volatil}, in @code{label_ref}
+@cindex @code{reg_label} and @samp{/v}
+@cindex @code{volatil}, in @code{label_ref} and @code{reg_label}
 @item LABEL_REF_NONLOCAL_P (@var{x})
 In @code{label_ref} and @code{reg_label} expressions, nonzero if this is
 a reference to a non-local label.
 Stored in the @code{volatil} field and printed as @samp{/v}.
-
-@findex LINK_COST_FREE
-@cindex @code{insn_list} and @samp{/c}
-@cindex @code{call}, in @code{insn_list}
-@item LINK_COST_FREE (@var{x})
-In the @code{LOG_LINKS} @code{insn_list} during scheduling, nonzero when
-the cost of executing an instruction through the link is zero, i.e., the
-link makes the cost free.  Stored in the @code{call} field and printed
-as @samp{/c}.
-
-@findex LINK_COST_ZERO
-@cindex @code{insn_list} and @samp{/j}
-@cindex @code{jump}, in @code{insn_list}
-@item LINK_COST_ZERO (@var{x})
-In the @code{LOG_LINKS} @code{insn_list} during scheduling, nonzero when
-the cost of executing an instruction through the link varies and is
-unchanged, i.e., the link has zero additional cost.
-Stored in the @code{jump} field and printed as @samp{/j}.
 
 @findex MEM_IN_STRUCT_P
 @cindex @code{mem} and @samp{/s}
@@ -508,11 +627,20 @@ Stored in the @code{frame_related} field and printed as @samp{/f}.
 
 @findex MEM_VOLATILE_P
 @cindex @code{mem} and @samp{/v}
-@cindex @code{volatil}, in @code{mem}
+@cindex @code{asm_input} and @samp{/v}
+@cindex @code{asm_operands} and @samp{/v}
+@cindex @code{volatil}, in @code{mem}, @code{asm_operands}, and @code{asm_input}
 @item MEM_VOLATILE_P (@var{x})
-In @code{mem} and @code{asm_operands} expressions, nonzero for volatile
-memory references.
+In @code{mem}, @code{asm_operands}, and @code{asm_input} expressions,
+nonzero for volatile memory references.
 Stored in the @code{volatil} field and printed as @samp{/v}.
+
+@findex MEM_NOTRAP_P
+@cindex @code{mem} and @samp{/c}
+@cindex @code{call}, in @code{mem}
+@item MEM_NOTRAP_P (@var{x})
+In @code{mem}, nonzero for memory references that will not trap.
+Stored in the @code{call} field and printed as @samp{/c}.
 
 @findex REG_FUNCTION_VALUE_P
 @cindex @code{reg} and @samp{/i}
@@ -553,9 +681,14 @@ in this kind of use.
 
 @findex RTX_FRAME_RELATED_P
 @cindex @code{insn} and @samp{/f}
-@cindex @code{frame_related}, in @code{insn}
+@cindex @code{call_insn} and @samp{/f}
+@cindex @code{jump_insn} and @samp{/f}
+@cindex @code{barrier} and @samp{/f}
+@cindex @code{set} and @samp{/f}
+@cindex @code{frame_related}, in @code{insn}, @code{call_insn}, @code{jump_insn}, @code{barrier}, and @code{set}
 @item RTX_FRAME_RELATED_P (@var{x})
-Nonzero in an @code{insn} or @code{set} which is part of a function prologue
+Nonzero in an @code{insn}, @code{call_insn}, @code{jump_insn},
+@code{barrier}, or @code{set} which is part of a function prologue
 and sets the stack pointer, sets the frame pointer, or saves a register.
 This flag should also be set on an instruction that sets up a temporary
 register to use in place of the frame pointer.
@@ -582,26 +715,52 @@ prologues.
 
 @findex RTX_INTEGRATED_P
 @cindex @code{insn} and @samp{/i}
-@cindex @code{integrated}, in @code{insn}
+@cindex @code{call_insn} and @samp{/i}
+@cindex @code{jump_insn} and @samp{/i}
+@cindex @code{barrier} and @samp{/i}
+@cindex @code{code_label} and @samp{/i}
+@cindex @code{insn_list} and @samp{/i}
+@cindex @code{const} and @samp{/i}
+@cindex @code{note} and @samp{/i}
+@cindex @code{integrated}, in @code{insn}, @code{call_insn}, @code{jump_insn}, @code{barrier}, @code{code_label}, @code{insn_list}, @code{const}, and @code{note}
 @item RTX_INTEGRATED_P (@var{x})
-Nonzero in an @code{insn}, @code{insn_list}, or @code{const} if it
+Nonzero in an @code{insn}, @code{call_insn}, @code{jump_insn}, @code{barrier},
+@code{code_label}, @code{insn_list}, @code{const}, or @code{note} if it
 resulted from an in-line function call.
 Stored in the @code{integrated} field and printed as @samp{/i}.
 
 @findex RTX_UNCHANGING_P
 @cindex @code{reg} and @samp{/u}
 @cindex @code{mem} and @samp{/u}
+@cindex @code{concat} and @samp{/u}
 @cindex @code{unchanging}, in @code{reg} and @code{mem}
 @item RTX_UNCHANGING_P (@var{x})
-Nonzero in a @code{reg} or @code{mem} if the memory is set at most once,
-anywhere.  This does not mean that it is function invariant.
+Nonzero in a @code{reg}, @code{mem}, or @code{concat} if the register or
+memory is set at most once, anywhere.  This does not mean that it is
+function invariant.
+
+GCC uses this flag to determine whether two references conflict.  As
+implemented by @code{true_dependence} in @file{alias.c} for memory
+references, unchanging memory can't conflict with non-unchanging memory;
+a non-unchanging read can conflict with a non-unchanging write; an
+unchanging read can conflict with an unchanging write (since there may
+be a single store to this address to initialize it); and an unchanging
+store can conflict with a non-unchanging read.  This means we must make
+conservative assumptions when choosing the value of this flag for a
+memory reference to an object containing both unchanging and
+non-unchanging fields: we must set the flag when writing to the object
+and clear it when reading from the object.
+
 Stored in the @code{unchanging} field and printed as @samp{/u}.
 
 @findex SCHED_GROUP_P
-@cindex @code{insn} and @samp{/i}
-@cindex @code{in_struct}, in @code{insn}
+@cindex @code{insn} and @samp{/s}
+@cindex @code{call_insn} and @samp{/s}
+@cindex @code{jump_insn} and @samp{/s}
+@cindex @code{in_struct}, in @code{insn}, @code{jump_insn} and @code{call_insn}
 @item SCHED_GROUP_P (@var{x})
-During instruction scheduling, in an @code{insn}, indicates that the
+During instruction scheduling, in an @code{insn}, @code{call_insn} or
+@code{jump_insn}, indicates that the
 previous insn must be scheduled together with this insn.  This is used to
 ensure that certain groups of instructions will not be split up by the
 instruction scheduling pass, for example, @code{use} insns before
@@ -631,13 +790,29 @@ string constant pool.
 Stored in the @code{frame_related} field and printed as @samp{/f}.
 
 @findex SUBREG_PROMOTED_UNSIGNED_P
+@cindex @code{subreg} and @samp{/u} and @samp{/v}
+@cindex @code{unchanging}, in @code{subreg}
+@cindex @code{volatil}, in @code{subreg}
+@item SUBREG_PROMOTED_UNSIGNED_P (@var{x})
+Returns a value greater then zero for a @code{subreg} that has
+@code{SUBREG_PROMOTED_VAR_P} nonzero if the object being referenced is kept
+zero-extended, zero if it is kept sign-extended, and less then zero if it is
+extended some other way via the @code{ptr_extend} instruction.
+Stored in the @code{unchanging}
+field and @code{volatil} field, printed as @samp{/u} and @samp{/v}.
+This macro may only be used to get the value it may not be used to change
+the value.  Use @code{SUBREG_PROMOTED_UNSIGNED_SET} to change the value.
+
+@findex SUBREG_PROMOTED_UNSIGNED_SET
 @cindex @code{subreg} and @samp{/u}
 @cindex @code{unchanging}, in @code{subreg}
-@item SUBREG_PROMOTED_UNSIGNED_P (@var{x})
-Nonzero in a @code{subreg} that has @code{SUBREG_PROMOTED_VAR_P} nonzero
-if the object being referenced is kept zero-extended and zero if it
-is kept sign-extended.  Stored in the @code{unchanging} field and
-printed as @samp{/u}.
+@cindex @code{volatil}, in @code{subreg}
+@item SUBREG_PROMOTED_UNSIGNED_SET (@var{x})
+Set the @code{unchanging} and @code{volatil} fields in a @code{subreg}
+to reflect zero, sign, or other extension.  If @code{volatil} is
+zero, then @code{unchanging} as nonzero means zero extension and as
+zero means sign extension. If @code{volatil} is nonzero then some
+other type of extension was done via the @code{ptr_extend} instruction.
 
 @findex SUBREG_PROMOTED_VAR_P
 @cindex @code{subreg} and @samp{/s}
@@ -652,13 +827,6 @@ Promoted variables are always either sign- or zero-extended to the wider
 mode on every assignment.  Stored in the @code{in_struct} field and
 printed as @samp{/s}.
 
-@findex SYMBOL_REF_FLAG
-@cindex @code{symbol_ref} and @samp{/v}
-@cindex @code{volatil}, in @code{symbol_ref}
-@item SYMBOL_REF_FLAG (@var{x})
-In a @code{symbol_ref}, this is used as a flag for machine-specific purposes.
-Stored in the @code{volatil} field and printed as @samp{/v}.
-
 @findex SYMBOL_REF_USED
 @cindex @code{used}, in @code{symbol_ref}
 @item SYMBOL_REF_USED (@var{x})
@@ -672,6 +840,17 @@ once.  Stored in the @code{used} field.
 @item SYMBOL_REF_WEAK (@var{x})
 In a @code{symbol_ref}, indicates that @var{x} has been declared weak.
 Stored in the @code{integrated} field and printed as @samp{/i}.
+
+@findex SYMBOL_REF_FLAG
+@cindex @code{symbol_ref} and @samp{/v}
+@cindex @code{volatil}, in @code{symbol_ref}
+@item SYMBOL_REF_FLAG (@var{x})
+In a @code{symbol_ref}, this is used as a flag for machine-specific purposes.
+Stored in the @code{volatil} field and printed as @samp{/v}.
+
+Most uses of @code{SYMBOL_REF_FLAG} are historic and may be subsumed
+by @code{SYMBOL_REF_FLAGS}.  Certainly use of @code{SYMBOL_REF_FLAGS}
+is mandatory if the target requires more than one bit of storage.
 @end table
 
 These are the fields to which the above macros refer:
@@ -680,8 +859,7 @@ These are the fields to which the above macros refer:
 @findex call
 @cindex @samp{/c} in RTL dump
 @item call
-In the @code{LOG_LINKS} of an @code{insn_list} during scheduling, 1 means that
-the cost of executing an instruction through the link is zero.
+In a @code{mem}, 1 means that the memory reference will not trap.
 
 In an RTL dump, this flag is represented as @samp{/c}.
 
@@ -729,7 +907,8 @@ label that would have been deleted is replaced with a @code{note} of type
 In an @code{insn} during dead-code elimination, 1 means that the insn is
 dead code.
 
-In an @code{insn} during reorg for an insn in the delay slot of a branch,
+In an @code{insn} or @code{jump_insn} during reorg for an insn in the
+delay slot of a branch,
 1 means that this insn is from the target of the branch.
 
 In an @code{insn} during instruction scheduling, 1 means that this insn
@@ -763,9 +942,6 @@ In a @code{set}, 1 means it is for a return.
 
 In a @code{call_insn}, 1 means it is a sibling call.
 
-In the @code{LOG_LINKS} of an @code{insn_list} during scheduling, 1 means the
-cost of executing an instruction through the link varies and is unchanging.
-
 In an RTL dump, this flag is represented as @samp{/j}.
 
 @findex unchanging
@@ -777,7 +953,8 @@ that the value of the expression never changes.
 In @code{subreg} expressions, it is 1 if the @code{subreg} references an
 unsigned object whose mode has been promoted to a wider mode.
 
-In an @code{insn}, 1 means that this is an annulling branch.
+In an @code{insn} or @code{jump_insn} in the delay slot of a branch
+instruction, 1 means an annulling branch should be used.
 
 In a @code{symbol_ref} expression, 1 means that this symbol addresses
 something in the per-function constant pool.
@@ -805,7 +982,8 @@ the symbol has already been written.
 @cindex @samp{/v} in RTL dump
 @item volatil
 @cindex volatile memory references
-In a @code{mem} or @code{asm_operands} expression, it is 1 if the memory
+In a @code{mem}, @code{asm_operands}, or @code{asm_input}
+expression, it is 1 if the memory
 reference is volatile.  Volatile memory references may not be deleted,
 reordered or combined.
 
@@ -1188,7 +1366,7 @@ If @var{m} is @code{VOIDmode}, the bits of the value are stored in
 
 If the constant is floating point (regardless of its precision), then
 the number of integers used to store the value depends on the size of
-@code{REAL_VALUE_TYPE} (@pxref{Cross-compilation}).  The integers
+@code{REAL_VALUE_TYPE} (@pxref{Floating Point}).  The integers
 represent a floating point number, but not precisely in the target
 machine's or host machine's floating point format.  To convert them to
 the precise bit pattern used by the target machine, use the macro
@@ -1511,7 +1689,7 @@ preferable approach if only a small subset of instructions modify the
 condition code.  Other machines store condition codes in general
 registers; in such cases a pseudo register should be used.
 
-Some machines, such as the Sparc and RS/6000, have two sets of
+Some machines, such as the SPARC and RS/6000, have two sets of
 arithmetic instructions, one that sets and one that does not set the
 condition code.  This is best handled by normally generating the
 instruction that does not set the condition code, and making a pattern
@@ -1541,6 +1719,10 @@ represented by the expression @var{addr}.  @var{m} specifies how large
 a unit of memory is accessed.  @var{alias} specifies an alias set for the
 reference.  In general two items are in different alias sets if they cannot
 reference the same memory address.
+
+The construct @code{(mem:BLK (scratch))} is considered to alias all
+other memories.  Thus it may be used as a memory barrier in epilogue
+stack deallocation patterns.
 
 @findex addressof
 @item (addressof:@var{m} @var{reg})
@@ -1668,9 +1850,9 @@ Represents the signed product of the values represented by @var{x} and
 Some machines support a multiplication that generates a product wider
 than the operands.  Write the pattern for this as
 
-@example
+@smallexample
 (mult:@var{m} (sign_extend:@var{m} @var{x}) (sign_extend:@var{m} @var{y}))
-@end example
+@end smallexample
 
 where @var{m} is wider than the modes of @var{x} and @var{y}, which need
 not be the same.
@@ -1692,9 +1874,9 @@ Some machines have division instructions in which the operands and
 quotient widths are not all the same; you should represent
 such instructions using @code{truncate} and @code{sign_extend} as in,
 
-@example
+@smallexample
 (truncate:@var{m1} (div:@var{m2} @var{x} (sign_extend:@var{m2} @var{y})))
-@end example
+@end smallexample
 
 @findex udiv
 @cindex unsigned division
@@ -1807,6 +1989,35 @@ Represents one plus the index of the least significant 1-bit in
 zero if @var{x} is zero.)  The mode of @var{x} need not be @var{m};
 depending on the target machine, various mode combinations may be
 valid.
+
+@findex clz
+@item (clz:@var{m} @var{x})
+Represents the number of leading 0-bits in @var{x}, represented as an
+integer of mode @var{m}, starting at the most significant bit position.
+If @var{x} is zero, the value is determined by
+@code{CLZ_DEFINED_VALUE_AT_ZERO}.  Note that this is one of
+the few expressions that is not invariant under widening.  The mode of
+@var{x} will usually be an integer mode.
+
+@findex ctz
+@item (ctz:@var{m} @var{x})
+Represents the number of trailing 0-bits in @var{x}, represented as an
+integer of mode @var{m}, starting at the least significant bit position.
+If @var{x} is zero, the value is determined by
+@code{CTZ_DEFINED_VALUE_AT_ZERO}.  Except for this case,
+@code{ctz(x)} is equivalent to @code{ffs(@var{x}) - 1}.  The mode of
+@var{x} will usually be an integer mode.
+
+@findex popcount
+@item (popcount:@var{m} @var{x})
+Represents the number of 1-bits in @var{x}, represented as an integer of
+mode @var{m}.  The mode of @var{x} will usually be an integer mode.
+
+@findex parity
+@item (parity:@var{m} @var{x})
+Represents the number of 1-bits modulo 2 in @var{x}, represented as an
+integer of mode @var{m}.  The mode of @var{x} will usually be an integer
+mode.
 @end table
 
 @node Comparisons
@@ -1816,14 +2027,14 @@ valid.
 Comparison operators test a relation on two operands and are considered
 to represent a machine-dependent nonzero value described by, but not
 necessarily equal to, @code{STORE_FLAG_VALUE} (@pxref{Misc})
-if the relation holds, or zero if it does not.  The mode of the
-comparison operation is independent of the mode of the data being
-compared.  If the comparison operation is being tested (e.g., the first
-operand of an @code{if_then_else}), the mode must be @code{VOIDmode}.
-If the comparison operation is producing data to be stored in some
-variable, the mode must be in class @code{MODE_INT}.  All comparison
-operations producing data must use the same mode, which is
-machine-specific.
+if the relation holds, or zero if it does not, for comparison operators
+whose results have a `MODE_INT' mode, and
+@code{FLOAT_STORE_FLAG_VALUE} (@pxref{Misc}) if the relation holds, or
+zero if it does not, for comparison operators that return floating-point
+values.  The mode of the comparison operation is independent of the mode
+of the data being compared.  If the comparison operation is being tested
+(e.g., the first operand of an @code{if_then_else}), the mode must be
+@code{VOIDmode}.
 
 @cindex condition codes
 There are two ways that comparison operations may be used.  The
@@ -1999,11 +2210,6 @@ Describes a vector concat operation.  The result is a concatenation of the
 vectors @var{vec1} and @var{vec2}; its length is the sum of the lengths of
 the two inputs.
 
-@findex vec_const
-@item (vec_const:@var{m} @var{subparts})
-This describes a constant vector.  @var{subparts} is a @code{parallel} that
-contains a constant for each of the subparts of the vector.
-
 @findex vec_duplicate
 @item (vec_duplicate:@var{m} @var{vec})
 This operation converts a small vector into a larger one by duplicating the
@@ -2026,9 +2232,9 @@ operation requires two operands of the same machine mode.
 Therefore, the byte-sized operand is enclosed in a conversion
 operation, as in
 
-@example
+@smallexample
 (plus:SI (sign_extend:SI (reg:QI 34)) (reg:SI 80))
-@end example
+@end smallexample
 
 The conversion operation is not a mere placeholder, because there
 may be more than one way of converting from a given starting mode
@@ -2157,9 +2363,9 @@ the operands of these.
 @item (set @var{lval} @var{x})
 Represents the action of storing the value of @var{x} into the place
 represented by @var{lval}.  @var{lval} must be an expression
-representing a place that can be stored in: @code{reg} (or @code{subreg}
-or @code{strict_low_part}), @code{mem}, @code{pc}, @code{parallel}, or
-@code{cc0}.
+representing a place that can be stored in: @code{reg} (or @code{subreg},
+@code{strict_low_part} or @code{zero_extract}), @code{mem}, @code{pc},
+@code{parallel}, or @code{cc0}.
 
 If @var{lval} is a @code{reg}, @code{subreg} or @code{mem}, it has a
 machine mode; then @var{x} must be valid for that mode.
@@ -2172,10 +2378,10 @@ rest of the register receives an undefined value.  Likewise, if
 the mode of the register, the rest of the register can be changed in
 an undefined way.
 
-If @var{lval} is a @code{strict_low_part} of a @code{subreg}, then the
-part of the register specified by the machine mode of the
-@code{subreg} is given the value @var{x} and the rest of the register
-is not changed.
+If @var{lval} is a @code{strict_low_part} or @code{zero_extract}
+of a @code{subreg}, then the part of the register specified by the
+machine mode of the @code{subreg} is given the value @var{x} and
+the rest of the register is not changed.
 
 If @var{lval} is @code{(cc0)}, it has no machine mode, and @var{x} may
 be either a @code{compare} expression or a value that may have any mode.
@@ -2256,7 +2462,8 @@ trouble to describe the values that are stored, but it is essential to
 inform the compiler that the registers will be altered, lest it
 attempt to keep data in them across the string instruction.
 
-If @var{x} is @code{(mem:BLK (const_int 0))}, it means that all memory
+If @var{x} is @code{(mem:BLK (const_int 0))} or
+@code{(mem:BLK (scratch))}, it means that all memory
 locations must be presumed clobbered.  If @var{x} is a @code{parallel},
 it has the same meaning as a @code{parallel} in a @code{set} expression.
 
@@ -2360,10 +2567,10 @@ side effect expressions---expressions of code @code{set}, @code{call},
 side-effects are computed, and second all the actual side-effects are
 performed.  For example,
 
-@example
+@smallexample
 (parallel [(set (reg:SI 1) (mem:SI (reg:SI 1)))
            (set (mem:SI (reg:SI 1)) (reg:SI 1))])
-@end example
+@end smallexample
 
 @noindent
 says unambiguously that the values of hard register 1 and the memory
@@ -2376,13 +2583,13 @@ expect the result of one @code{set} to be available for the next one.
 For example, people sometimes attempt to represent a jump-if-zero
 instruction this way:
 
-@example
+@smallexample
 (parallel [(set (cc0) (reg:SI 34))
            (set (pc) (if_then_else
                         (eq (cc0) (const_int 0))
                         (label_ref @dots{})
                         (pc)))])
-@end example
+@end smallexample
 
 @noindent
 But this is incorrect, because it says that the jump condition depends
@@ -2509,9 +2716,9 @@ by is the length in bytes of the machine mode of the containing memory
 reference of which this expression serves as the address.  Here is an
 example of its use:
 
-@example
+@smallexample
 (mem:DF (pre_dec:SI (reg:SI 39)))
-@end example
+@end smallexample
 
 @noindent
 This says to decrement pseudo register 39 by the length of a @code{DFmode}
@@ -2538,9 +2745,6 @@ Represents the side effect of setting @var{x} to @var{y} and
 represents @var{x} before @var{x} is modified.  @var{x} must be a
 @code{reg} or @code{mem}, but most machines allow only a @code{reg}.
 @var{m} must be the machine mode for pointers on the machine in use.
-The amount @var{x} is decremented by is the length in bytes of the
-machine mode of the containing memory reference of which this expression
-serves as the address.  Note that this is not currently implemented.
 
 The expression @var{y} must be one of three forms:
 @table @code
@@ -2560,7 +2764,7 @@ Here is an example of its use:
 This says to modify pseudo register 42 by adding the contents of pseudo
 register 48 to it, after the use of what ever 42 points to.
 
-@findex post_modify
+@findex pre_modify
 @item (pre_modify:@var{m} @var{x} @var{expr})
 Similar except side effects happen before the use.
 @end table
@@ -2674,16 +2878,16 @@ chain delimited by these insns, the @code{NEXT_INSN} and
 @code{PREV_INSN} pointers must always correspond: if @var{insn} is not
 the first insn,
 
-@example
+@smallexample
 NEXT_INSN (PREV_INSN (@var{insn})) == @var{insn}
-@end example
+@end smallexample
 
 @noindent
 is always true and if @var{insn} is not the last insn,
 
-@example
+@smallexample
 PREV_INSN (NEXT_INSN (@var{insn})) == @var{insn}
-@end example
+@end smallexample
 
 @noindent
 is always true.
@@ -2792,13 +2996,32 @@ Besides as a @code{code_label}, a label can also be represented as a
 
 @findex LABEL_NUSES
 The field @code{LABEL_NUSES} is only defined once the jump optimization
-phase is completed and contains the number of times this label is
+phase is completed.  It contains the number of times this label is
 referenced in the current function.
 
-@findex LABEL_ALTERNATE_NAME
-The field @code{LABEL_ALTERNATE_NAME} is used to associate a name with
-a @code{code_label}.  If this field is defined, the alternate name will
-be emitted instead of an internally generated label name.
+@findex LABEL_KIND
+@findex SET_LABEL_KIND
+@findex LABEL_ALT_ENTRY_P
+@cindex alternate entry points
+The field @code{LABEL_KIND} differentiates four different types of
+labels: @code{LABEL_NORMAL}, @code{LABEL_STATIC_ENTRY},
+@code{LABEL_GLOBAL_ENTRY}, and @code{LABEL_WEAK_ENTRY}.  The only labels
+that do not have type @code{LABEL_NORMAL} are @dfn{alternate entry
+points} to the current function.  These may be static (visible only in
+the containing translation unit), global (exposed to all translation
+units), or weak (global, but can be overridden by another symbol with the
+same name).
+
+Much of the compiler treats all four kinds of label identically.  Some
+of it needs to know whether or not a label is an alternate entry point;
+for this purpose, the macro @code{LABEL_ALT_ENTRY_P} is provided.  It is
+equivalent to testing whether @samp{LABEL_KIND (label) == LABEL_NORMAL}.
+The only place that cares about the distinction between static, global,
+and weak alternate entry points, besides the front-end code that creates
+them, is the function @code{output_alternate_entry_point}, in
+@file{final.c}.
+
+To set the kind of a label, use the @code{SET_LABEL_KIND} macro.
 
 @findex barrier
 @item barrier
@@ -3126,13 +3349,6 @@ destination register.
 Thus, compiler passes prior to register allocation need only check for
 @code{REG_EQUAL} notes and passes subsequent to register allocation
 need only check for @code{REG_EQUIV} notes.
-
-@findex REG_WAS_0
-@item REG_WAS_0
-The single output of this insn contained zero before this insn.
-@var{op} is the insn that set it to zero.  You can rely on this note if
-it is present and @var{op} has not been deleted or turned into a @code{note};
-its absence implies nothing.
 @end table
 
 These notes describe linkages between insns.  They occur in pairs: one
@@ -3199,12 +3415,6 @@ are stored in the @code{REG_NOTES} field of an insn as an
 @code{expr_list}.
 
 @table @code
-@findex REG_EXEC_COUNT
-@item REG_EXEC_COUNT
-This is used to indicate the number of times a basic block was executed
-according to the profile data.  The note is attached to the first insn in
-the basic block.
-
 @findex REG_BR_PROB
 @item REG_BR_PROB
 This is used to specify the ratio of branches to non-branches of a
@@ -3249,9 +3459,9 @@ RTL expression code, @code{call}.
 @cindex @code{call} usage
 A @code{call} expression has two operands, as follows:
 
-@example
+@smallexample
 (call (mem:@var{fm} @var{addr}) @var{nbytes})
-@end example
+@end smallexample
 
 @noindent
 Here @var{nbytes} is an operand that represents the number of bytes of
@@ -3269,10 +3479,10 @@ For a subroutine that returns a value whose mode is not @code{BLKmode},
 the value is returned in a hard register.  If this register's number is
 @var{r}, then the body of the call insn looks like this:
 
-@example
+@smallexample
 (set (reg:@var{m} @var{r})
      (call (mem:@var{fm} @var{addr}) @var{nbytes}))
-@end example
+@end smallexample
 
 @noindent
 This RTL expression makes it clear (to the optimizer passes) that the

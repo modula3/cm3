@@ -1,4 +1,4 @@
-GENERIC INTERFACE EigenSystem(RT, V, M, LA);
+GENERIC INTERFACE EigenSystem(RT, V, CV, M);
 (* Arithmetic for Modula-3, see doc for details
 
    Abstract: Routines to solve eigenvalue problems. *)
@@ -21,14 +21,17 @@ PROCEDURE SquareMethod
   EigenPair RAISES {Error};
 (* May raise Arith.ErrorNoConvergence *)
 
+
 TYPE
-  EVFlag = LA.EVFlag;
-  EVFlagSet = LA.EVFlagSet;
+  EVFlag = {SchurVectors};
+  EVFlagSet = SET OF EVFlag;
 
-  EV = LA.EV;
-
-CONST EigenValues = LA.EigenValues;
-
+  EV = RECORD
+         eigenvalues: CV.T;
+         upperTri   : M.T;
+         schur: M.T;             (* initalized if schurVector flag is
+                                    set *)
+       END;
 
 (* Unoptimised translations from
 
@@ -39,18 +42,25 @@ CONST EigenValues = LA.EigenValues;
 
 
 PROCEDURE Jacobi (VAR a        : M.T;
-                      dim      : INTEGER;
+                      dim      : CARDINAL;
                   VAR d        : V.T;
                   VAR vects    : M.T;
-                  VAR nrot     : INTEGER;
-                      eigenvals            := FALSE; );
+                  VAR nrot     : CARDINAL;
+                      eigenvals             := FALSE; );
 (*
+   Solve the real symmetric eigenvalue problem by the algorithm of Jacobi.
+   The routine has been tested against the first example given in
+   Wilkinson/Reinsch and gives the same results.
+
   It must hold
 
   NUMBER(a^) >= n AND NUMBER(a[0]) >= n
   NUMBER(d^) >= n
   NUMBER(v^) >= n AND NUMBER(v[0]) >= n
 *)
+
+
+
 
 PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T; );
 

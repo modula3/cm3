@@ -1,5 +1,5 @@
-/* Print RTL for GNU C Compiler.
-   Copyright (C) 1987, 1988, 1992, 1997, 1998, 1999, 2000
+/* Print RTL for GCC.
+   Copyright (C) 1987, 1988, 1992, 1997, 1998, 1999, 2000, 2002, 2003
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -22,6 +22,8 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 
 /* We don't want the tree code checking code for the access to the
@@ -32,23 +34,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "flags.h"
 #include "hard-reg-set.h"
 #include "basic-block.h"
-
-/* How to print out a register name.
-   We don't use PRINT_REG because some definitions of PRINT_REG
-   don't work here.  */
-#ifndef DEBUG_PRINT_REG
-#define DEBUG_PRINT_REG(RTX, CODE, FILE) \
-  fprintf ((FILE), "%d %s", REGNO (RTX), reg_names[REGNO (RTX)])
-#endif
-
-/* Array containing all of the register names */
-
-#ifdef DEBUG_REGISTER_NAMES
-static const char * const debug_reg_names[] = DEBUG_REGISTER_NAMES;
-#define reg_names debug_reg_names
-#else
-const char * reg_names[] = REGISTER_NAMES;
-#endif
+#include "tm_p.h"
 
 static FILE *outfile;
 
@@ -56,7 +42,7 @@ static int sawclose = 0;
 
 static int indent;
 
-static void print_rtx		PARAMS ((rtx));
+static void print_rtx (rtx);
 
 /* String printed at beginning of each RTL when it is dumped.
    This string is set to ASM_COMMENT_START when the RTL is dumped in
@@ -78,14 +64,12 @@ int dump_for_graph;
 static int debug_call_placeholder_verbose;
 
 void
-print_mem_expr (outfile, expr)
-     FILE *outfile;
-     tree expr;
+print_mem_expr (FILE *outfile, tree expr)
 {
   if (TREE_CODE (expr) == COMPONENT_REF)
     {
       if (TREE_OPERAND (expr, 0))
-        print_mem_expr (outfile, TREE_OPERAND (expr, 0));
+	print_mem_expr (outfile, TREE_OPERAND (expr, 0));
       else
 	fputs (" <variable>", outfile);
       if (DECL_NAME (TREE_OPERAND (expr, 1)))
@@ -109,8 +93,7 @@ print_mem_expr (outfile, expr)
 /* Print IN_RTX onto OUTFILE.  This is the recursive part of printing.  */
 
 static void
-print_rtx (in_rtx)
-     rtx in_rtx;
+print_rtx (rtx in_rtx)
 {
   int i = 0;
   int j;
@@ -158,34 +141,34 @@ print_rtx (in_rtx)
 	fputc ('(', outfile);
       else
 	fprintf (outfile, "(%s", GET_RTX_NAME (GET_CODE (in_rtx)));
-      
+
       if (! flag_simple)
 	{
-	  if (in_rtx->in_struct)
+	  if (RTX_FLAG (in_rtx, in_struct))
 	    fputs ("/s", outfile);
 
-	  if (in_rtx->volatil)
+	  if (RTX_FLAG (in_rtx, volatil))
 	    fputs ("/v", outfile);
-	  
-	  if (in_rtx->unchanging)
+
+	  if (RTX_FLAG (in_rtx, unchanging))
 	    fputs ("/u", outfile);
-	  
-	  if (in_rtx->integrated)
+
+	  if (RTX_FLAG (in_rtx, integrated))
 	    fputs ("/i", outfile);
-	  
-	  if (in_rtx->frame_related)
+
+	  if (RTX_FLAG (in_rtx, frame_related))
 	    fputs ("/f", outfile);
-	  
-	  if (in_rtx->jump)
+
+	  if (RTX_FLAG (in_rtx, jump))
 	    fputs ("/j", outfile);
-	  
-	  if (in_rtx->call)
+
+	  if (RTX_FLAG (in_rtx, call))
 	    fputs ("/c", outfile);
 
 	  if (GET_MODE (in_rtx) != VOIDmode)
 	    {
 	      /* Print REG_NOTE names for EXPR_LIST and INSN_LIST.  */
-	      if (GET_CODE (in_rtx) == EXPR_LIST 
+	      if (GET_CODE (in_rtx) == EXPR_LIST
 		  || GET_CODE (in_rtx) == INSN_LIST)
 		fprintf (outfile, ":%s",
 			 GET_REG_NOTE_NAME (GET_MODE (in_rtx)));
@@ -194,6 +177,11 @@ print_rtx (in_rtx)
 	    }
 	}
     }
+
+#ifndef GENERATOR_FILE
+  if (GET_CODE (in_rtx) == CONST_DOUBLE && FLOAT_MODE_P (GET_MODE (in_rtx)))
+    i = 5;
+#endif
 
   /* Get the format string and skip the first elements if we have handled
      them already.  */
@@ -232,9 +220,22 @@ print_rtx (in_rtx)
 	  {
 	    if (REGNO (in_rtx) != ORIGINAL_REGNO (in_rtx))
 	      fprintf (outfile, " [%d]", ORIGINAL_REGNO (in_rtx));
-	    break;
 	  }
-	if (i == 3 && GET_CODE (in_rtx) == NOTE)
+#ifndef GENERATOR_FILE
+	else if (i == 1 && GET_CODE (in_rtx) == SYMBOL_REF)
+	  {
+	    int flags = SYMBOL_REF_FLAGS (in_rtx);
+	    if (flags)
+	      fprintf (outfile, " [flags 0x%x]", flags);
+	  }
+	else if (i == 2 && GET_CODE (in_rtx) == SYMBOL_REF)
+	  {
+	    tree decl = SYMBOL_REF_DECL (in_rtx);
+	    if (decl)
+	      print_node_brief (outfile, "", decl, 0);
+	  }
+#endif
+	else if (i == 4 && GET_CODE (in_rtx) == NOTE)
 	  {
 	    switch (NOTE_LINE_NUMBER (in_rtx))
 	      {
@@ -253,19 +254,9 @@ print_rtx (in_rtx)
 		if (flag_dump_unnumbered)
 		  fprintf (outfile, "#");
 		else
-		  fprintf (outfile, HOST_PTR_PRINTF, 
+		  fprintf (outfile, HOST_PTR_PRINTF,
 			   (char *) NOTE_BLOCK (in_rtx));
 		sawclose = 1;
-		break;
-
-	      case NOTE_INSN_RANGE_BEG:
-	      case NOTE_INSN_RANGE_END:
-	      case NOTE_INSN_LIVE:
-		indent += 2;
-		if (!sawclose)
-		  fprintf (outfile, " ");
-		print_rtx (NOTE_RANGE_INFO (in_rtx));
-		indent -= 2;
 		break;
 
 	      case NOTE_INSN_BASIC_BLOCK:
@@ -289,6 +280,15 @@ print_rtx (in_rtx)
 		  fprintf (outfile, " (\"%s\")", NOTE_SOURCE_FILE (in_rtx));
 		else
 		  fprintf (outfile, " \"\"");
+		break;
+
+	      case NOTE_INSN_PREDICTION:
+		if (NOTE_PREDICTION (in_rtx))
+		  fprintf (outfile, " [ %d %d ] ",
+			   (int)NOTE_PREDICTION_ALG (in_rtx),
+			   (int) NOTE_PREDICTION_FLAGS (in_rtx));
+		else
+		  fprintf (outfile, " [ ERROR ]");
 		break;
 
 	      default:
@@ -327,10 +327,10 @@ print_rtx (in_rtx)
 	if (sawclose)
 	  {
 	    fprintf (outfile, "\n%s%*s",
-                     print_rtx_head, indent * 2, "");
+		     print_rtx_head, indent * 2, "");
 	    sawclose = 0;
 	  }
-	fputs ("[ ", outfile);
+	fputs (" [", outfile);
 	if (NULL != XVEC (in_rtx, i))
 	  {
 	    indent += 2;
@@ -345,7 +345,7 @@ print_rtx (in_rtx)
 	if (sawclose)
 	  fprintf (outfile, "\n%s%*s", print_rtx_head, indent * 2, "");
 
-	fputs ("] ", outfile);
+	fputs ("]", outfile);
 	sawclose = 1;
 	indent -= 2;
 	break;
@@ -355,15 +355,22 @@ print_rtx (in_rtx)
 	  fprintf (outfile, " ");
 	fprintf (outfile, HOST_WIDE_INT_PRINT_DEC, XWINT (in_rtx, i));
 	if (! flag_simple)
-	  {
-	    fprintf (outfile, " [");
-	    fprintf (outfile, HOST_WIDE_INT_PRINT_HEX, XWINT (in_rtx, i));
-	    fprintf (outfile, "]");
-	  }
+	  fprintf (outfile, " [" HOST_WIDE_INT_PRINT_HEX "]",
+		   XWINT (in_rtx, i));
 	break;
 
       case 'i':
-	if (i == 5 && GET_CODE (in_rtx) == NOTE)
+	if (i == 4 && INSN_P (in_rtx))
+	  {
+#ifndef GENERATOR_FILE
+	    /*  Pretty-print insn locators.  Ignore scoping as it is mostly
+		redundant with line number information and do not print anything
+		when there is no location information available.  */
+	    if (INSN_LOCATOR (in_rtx) && insn_file (in_rtx))
+	      fprintf(outfile, " %s:%i", insn_file (in_rtx), insn_line (in_rtx));
+#endif
+	  }
+	else if (i == 6 && GET_CODE (in_rtx) == NOTE)
 	  {
 	    /* This field is only used for NOTE_INSN_DELETED_LABEL, and
 	       other times often contains garbage from INSN->NOTE death.  */
@@ -375,11 +382,10 @@ print_rtx (in_rtx)
 	    int value = XINT (in_rtx, i);
 	    const char *name;
 
+#ifndef GENERATOR_FILE
 	    if (GET_CODE (in_rtx) == REG && value < FIRST_PSEUDO_REGISTER)
-	      {
-		fputc (' ', outfile);
-		DEBUG_PRINT_REG (in_rtx, 0, outfile);
-	      }
+	      fprintf (outfile, " %d %s", REGNO (in_rtx),
+		       reg_names[REGNO (in_rtx)]);
 	    else if (GET_CODE (in_rtx) == REG
 		     && value <= LAST_VIRTUAL_REGISTER)
 	      {
@@ -397,11 +403,27 @@ print_rtx (in_rtx)
 		  fprintf (outfile, " %d virtual-reg-%d", value,
 			   value-FIRST_VIRTUAL_REGISTER);
 	      }
-	    else if (flag_dump_unnumbered
+	    else
+#endif
+	      if (flag_dump_unnumbered
 		     && (is_insn || GET_CODE (in_rtx) == NOTE))
 	      fputc ('#', outfile);
 	    else
 	      fprintf (outfile, " %d", value);
+
+	    if (GET_CODE (in_rtx) == REG && REG_ATTRS (in_rtx))
+	      {
+		fputs (" [", outfile);
+		if (ORIGINAL_REGNO (in_rtx) != REGNO (in_rtx))
+		  fprintf (outfile, "orig:%i", ORIGINAL_REGNO (in_rtx));
+		if (REG_EXPR (in_rtx))
+		  print_mem_expr (outfile, REG_EXPR (in_rtx));
+
+		if (REG_OFFSET (in_rtx))
+		  fprintf (outfile, "+" HOST_WIDE_INT_PRINT_DEC,
+			   REG_OFFSET (in_rtx));
+		fputs (" ]", outfile);
+	      }
 
 	    if (is_insn && &INSN_CODE (in_rtx) == &XINT (in_rtx, i)
 		&& XINT (in_rtx, i) >= 0
@@ -464,13 +486,17 @@ print_rtx (in_rtx)
 	break;
 
       case 't':
-	putc (' ', outfile);
-	fprintf (outfile, HOST_PTR_PRINTF, (char *) XTREE (in_rtx, i));
+	fprintf (outfile, " " HOST_PTR_PRINTF, (void *) XTREE (in_rtx, i));
 	break;
 
       case '*':
 	fputs (" Unknown", outfile);
 	sawclose = 0;
+	break;
+
+      case 'B':
+	if (XBBDEF (in_rtx, i))
+	  fprintf (outfile, " %i", XBBDEF (in_rtx, i)->index);
 	break;
 
       default:
@@ -482,26 +508,20 @@ print_rtx (in_rtx)
 
   switch (GET_CODE (in_rtx))
     {
+#ifndef GENERATOR_FILE
     case MEM:
-      fputs (" [", outfile);
-      fprintf (outfile, HOST_WIDE_INT_PRINT_DEC, MEM_ALIAS_SET (in_rtx));
+      fprintf (outfile, " [" HOST_WIDE_INT_PRINT_DEC, MEM_ALIAS_SET (in_rtx));
 
       if (MEM_EXPR (in_rtx))
 	print_mem_expr (outfile, MEM_EXPR (in_rtx));
 
       if (MEM_OFFSET (in_rtx))
-	{
-	  fputc ('+', outfile);
-	  fprintf (outfile, HOST_WIDE_INT_PRINT_DEC,
-		   INTVAL (MEM_OFFSET (in_rtx)));
-	}
+	fprintf (outfile, "+" HOST_WIDE_INT_PRINT_DEC,
+		 INTVAL (MEM_OFFSET (in_rtx)));
 
       if (MEM_SIZE (in_rtx))
-	{
-	  fputs (" S", outfile);
-	  fprintf (outfile, HOST_WIDE_INT_PRINT_DEC,
-		   INTVAL (MEM_SIZE (in_rtx)));
-	}
+	fprintf (outfile, " S" HOST_WIDE_INT_PRINT_DEC,
+		 INTVAL (MEM_SIZE (in_rtx)));
 
       if (MEM_ALIGN (in_rtx) != 1)
 	fprintf (outfile, " A%u", MEM_ALIGN (in_rtx));
@@ -509,22 +529,32 @@ print_rtx (in_rtx)
       fputc (']', outfile);
       break;
 
-#if HOST_FLOAT_FORMAT == TARGET_FLOAT_FORMAT && MAX_LONG_DOUBLE_TYPE_SIZE == 64
     case CONST_DOUBLE:
       if (FLOAT_MODE_P (GET_MODE (in_rtx)))
 	{
-	  double val;
-	  REAL_VALUE_FROM_CONST_DOUBLE (val, in_rtx);
-	  fprintf (outfile, " [%.16g]", val);
+	  char s[60];
+
+	  real_to_decimal (s, CONST_DOUBLE_REAL_VALUE (in_rtx),
+			   sizeof (s), 0, 1);
+	  fprintf (outfile, " %s", s);
+
+	  real_to_hexadecimal (s, CONST_DOUBLE_REAL_VALUE (in_rtx),
+			       sizeof (s), 0, 1);
+	  fprintf (outfile, " [%s]", s);
 	}
       break;
 #endif
 
     case CODE_LABEL:
       fprintf (outfile, " [%d uses]", LABEL_NUSES (in_rtx));
-      if (LABEL_ALTERNATE_NAME (in_rtx))
-        fprintf (outfile, " [alternate name: %s]",
-		 LABEL_ALTERNATE_NAME (in_rtx));
+      switch (LABEL_KIND (in_rtx))
+	{
+	  case LABEL_NORMAL: break;
+	  case LABEL_STATIC_ENTRY: fputs (" [entry]", outfile); break;
+	  case LABEL_GLOBAL_ENTRY: fputs (" [global entry]", outfile); break;
+	  case LABEL_WEAK_ENTRY: fputs (" [weak entry]", outfile); break;
+	  default: abort();
+	}
       break;
 
     case CALL_PLACEHOLDER:
@@ -589,10 +619,7 @@ print_rtx (in_rtx)
    characters.  */
 
 void
-print_inline_rtx (outf, x, ind)
-     FILE *outf;
-     rtx x;
-     int ind;
+print_inline_rtx (FILE *outf, rtx x, int ind)
 {
   int oldsaw = sawclose;
   int oldindent = indent;
@@ -608,10 +635,10 @@ print_inline_rtx (outf, x, ind)
 /* Call this function from the debugger to see what X looks like.  */
 
 void
-debug_rtx (x)
-     rtx x;
+debug_rtx (rtx x)
 {
   outfile = stderr;
+  sawclose = 0;
   print_rtx (x);
   fprintf (stderr, "\n");
 }
@@ -628,9 +655,7 @@ int debug_rtx_count = 0;	/* 0 is treated as equivalent to 1 */
    EG: -5 prints 2 rtx's on either side (in addition to the specified rtx).  */
 
 void
-debug_rtx_list (x, n)
-     rtx x;
-     int n;
+debug_rtx_list (rtx x, int n)
 {
   int i,count;
   rtx insn;
@@ -648,18 +673,21 @@ debug_rtx_list (x, n)
       }
 
   for (i = count, insn = x; i > 0 && insn != 0; i--, insn = NEXT_INSN (insn))
-    debug_rtx (insn);
+    {
+      debug_rtx (insn);
+      fprintf (stderr, "\n");
+    }
 }
 
 /* Call this function to print an rtx list from START to END inclusive.  */
 
 void
-debug_rtx_range (start, end)
-     rtx start, end;
+debug_rtx_range (rtx start, rtx end)
 {
   while (1)
     {
       debug_rtx (start);
+      fprintf (stderr, "\n");
       if (!start || start == end)
 	break;
       start = NEXT_INSN (start);
@@ -671,9 +699,7 @@ debug_rtx_range (start, end)
    The found insn is returned to enable further debugging analysis.  */
 
 rtx
-debug_rtx_find (x, uid)
-     rtx x;
-     int uid;
+debug_rtx_find (rtx x, int uid)
 {
   while (x != 0 && INSN_UID (x) != uid)
     x = NEXT_INSN (x);
@@ -696,9 +722,7 @@ debug_rtx_find (x, uid)
    If RTX_FIRST is not an insn, then it alone is printed, with no newline.  */
 
 void
-print_rtl (outf, rtx_first)
-     FILE *outf;
-     rtx rtx_first;
+print_rtl (FILE *outf, rtx rtx_first)
 {
   rtx tmp_rtx;
 
@@ -723,14 +747,14 @@ print_rtl (outf, rtx_first)
 	  if (! flag_dump_unnumbered
 	      || GET_CODE (tmp_rtx) != NOTE || NOTE_LINE_NUMBER (tmp_rtx) < 0)
 	    {
-              fputs (print_rtx_head, outfile);
+	      fputs (print_rtx_head, outfile);
 	      print_rtx (tmp_rtx);
 	      fprintf (outfile, "\n");
 	    }
 	break;
 
       default:
-        fputs (print_rtx_head, outfile);
+	fputs (print_rtx_head, outfile);
 	print_rtx (rtx_first);
       }
 }
@@ -739,9 +763,7 @@ print_rtl (outf, rtx_first)
 /* Return nonzero if we actually printed anything.  */
 
 int
-print_rtl_single (outf, x)
-     FILE *outf;
-     rtx x;
+print_rtl_single (FILE *outf, rtx x)
 {
   outfile = outf;
   sawclose = 0;
@@ -761,9 +783,7 @@ print_rtl_single (outf, x)
    if RTX is a CONST_INT then print in decimal format.  */
 
 void
-print_simple_rtl (outf, x)
-     FILE *outf;
-     rtx x;
+print_simple_rtl (FILE *outf, rtx x)
 {
   flag_simple = 1;
   print_rtl (outf, x);

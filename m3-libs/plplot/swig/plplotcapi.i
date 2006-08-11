@@ -1006,10 +1006,10 @@ plMinMax2dGrid(PLFLT **f, PLArraySize nx, PLArraySize ny, PLFLT *fmax, PLFLT *fm
 /* Functions for converting between HLS and RGB color space */
 
 void
-plHLS_RGB(PLFLT h, PLFLT l, PLFLT s, PLFLTOutput r, PLFLTOutput g, PLFLTOutput b);
+plhlsrgb(PLFLT h, PLFLT l, PLFLT s, PLFLTOutput r, PLFLTOutput g, PLFLTOutput b);
 
 void
-plRGB_HLS(PLFLT r, PLFLT g, PLFLT b, PLFLTOutput h, PLFLTOutput l, PLFLTOutput s);
+plrgbhls(PLFLT r, PLFLT g, PLFLT b, PLFLTOutput h, PLFLTOutput l, PLFLTOutput s);
 
 /* Wait for graphics input event and translate to world coordinates */
 

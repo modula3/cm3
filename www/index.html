@@ -18,7 +18,7 @@
     <center>
     <p>
       Welcome to the official release of Critical Mass Modula-3
-      version 5.1/5.2!
+      version 5.1/5.2/5.3!
     </p>
     </center>
 
@@ -183,7 +183,7 @@
 
     <p>
       Several people have contributed to the open source
-      releases of CM3 5.1 and 5.2 since the announcement of its
+      releases of CM3 5.1, 5.2 and 5.3 since the announcement of its
       availability for test. The latest release notes contain some
       names, but I still haven't got around to provide a complete
       list. Please don't be annoyed if you don't find your name
@@ -209,6 +209,97 @@
     <hr>
     <a name="news"><h3>News</h3></a>
     <dl>
+      <dt class="datebg">2006-08-08</dt>
+      <dd>
+       <p>
+         There is now a web page about the
+	 <a href="cm3-5.4-status.html">status of the upcoming cm3 5.4 release</a>.
+	 </p>
+      </dd>
+      <dt class="datebg">2006-06-27</dt>
+      <dd>
+        <p>
+          Recently, a lot of work has been done on CM3, its compiler,
+          runtime, and further library support, which hasn't been
+          communicated very well to interested parties. For some time,
+          only development snapshots have been available as
+          releases. The next complete release will be 5.4 and will very
+          likely contain the following features:
+        </p>
+        <ul>
+          <li>
+            Support for incremental and generational garbage
+            collection without virtual memory support of the
+            underlying OS platform. This will make porting much
+            easier. A detailed description of the work done in this
+            area can be found in the article
+            <a href="http://doi.acm.org/10.1145/1133956.1133963">
+               Portable, mostly-concurrent, mostly-copying garbage
+               collection for multi-processors</a>. The new garbage
+            collector also supports fast-path allocation
+            for concurrent system-level threads.
+          </li>
+          <li>
+            The traditional user-level threading system of M3 on
+            POSIX platforms has been complemented by an operating
+            system-level threading system on several platforms
+            (currently SunOS, Linux, DarwinPPC). More
+            implementations of system-level threads are expected.
+            This allows the scheduling of CM3 threads on concurrent
+            processors and will be appreciated by those implementing
+            scalable and highly-responsive server processes in M3.
+          </li>
+          <li>
+            The gcc-backend of the CM3 compiler has been upgraded to
+            gcc releases 3.4 (already available) and 4.1.0
+            (announced to work tomorrow :). This will bring new and
+            improved support for current operating system / hardware
+            platforms as well as improved code generation and
+            optimization for existing targets.
+          </li>
+          <li>
+            Current GDB support will improve debugging. A snapshot
+            of the work is already available.
+          </li>
+          <li>
+            Improved support for arithmetic calculations 
+            (m3-libs/arithmetic)
+          </li>
+          <li>
+            Support for plotting (m3-libs/plplot)
+          </li>
+        </ul>
+        <p>
+          I'm pretty sure this list is still incomplete and should be
+          extended by the contributor's.
+        </p>
+      </dd>
+      <dt class="datebg">2006-06-22</dt>
+      <dd>
+        <p>
+	   Rodney M. Bates provides a new version of the m3gdb
+	   debugger. This version of m3gdb is based on gdb version
+	   6.4. It is available for download from this site.
+        </p>
+      </dd>
+      <dt class="datebg">2006-06-22</dt>
+      <dd>
+        <p>
+           A new version d5.3.2 for CM3 is available for download from
+           this website for the following OSs 
+        </p>
+        <ul>
+          <li>	   
+	   Linux
+          </li>
+          <li>	   
+	   FreeBSD 4.x
+          </li>
+          <li>	   
+	   FreeBSD 6.x
+          </li>
+        </ul>
+      </dd>
       <dt class="datebg">2005-05-12</dt>
       <dd>
         <p>

@@ -1,5 +1,5 @@
-/* Loop optimization definitions for GNU C-Compiler
-   Copyright (C) 1991, 1995, 1998, 1999, 2000, 2001, 2002
+/* Loop optimization definitions for GCC
+   Copyright (C) 1991, 1995, 1998, 1999, 2000, 2001, 2002, 2003, 2004
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -28,7 +28,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #define LOOP_UNROLL 1
 #define LOOP_BCT 2
 #define LOOP_PREFETCH 4
-#define LOOP_FIRST_PASS 8
+#define LOOP_AUTO_UNROLL 8
 
 /* Get the loop info pointer of a loop.  */
 #define LOOP_INFO(LOOP) ((struct loop_info *) (LOOP)->aux)
@@ -49,9 +49,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
   (INSN_UID (INSN) < max_uid_for_loop ? uid_luid[INSN_UID (INSN)] \
    : (abort (), -1))
 
-#define REGNO_FIRST_LUID(REGNO) uid_luid[REGNO_FIRST_UID (REGNO)]
-#define REGNO_LAST_LUID(REGNO) uid_luid[REGNO_LAST_UID (REGNO)]
-
+#define REGNO_FIRST_LUID(REGNO)			\
+  (REGNO_FIRST_UID (REGNO) < max_uid_for_loop	\
+	? uid_luid[REGNO_FIRST_UID (REGNO)]	\
+	: 0)
+#define REGNO_LAST_LUID(REGNO)			\
+  (REGNO_LAST_UID (REGNO) < max_uid_for_loop	\
+	? uid_luid[REGNO_LAST_UID (REGNO)]	\
+	: INT_MAX)
 
 /* A "basic induction variable" or biv is a pseudo reg that is set
    (within this loop) only by incrementing or decrementing it.  */
@@ -143,9 +148,12 @@ struct induction
 				   based on the same biv.  For bivs, links
 				   together all biv entries that refer to the
 				   same biv register.  */
-  struct induction *same;	/* If this giv has been combined with another
-				   giv, this points to the base giv.  The base
-				   giv will have COMBINED_WITH non-zero.  */
+  struct induction *same;	/* For givs, if the giv has been combined with
+				   another giv, this points to the base giv.
+				   The base giv will have COMBINED_WITH nonzero.
+				   For bivs, if the biv has the same LOCATION
+				   than another biv, this points to the base
+				   biv.  */
   HOST_WIDE_INT const_adjust;	/* Used by loop unrolling, when an address giv
 				   is split, and a constant is eliminated from
 				   the address, the -constant is stored here
@@ -205,7 +213,7 @@ enum iv_mode
 struct iv
 {
   enum iv_mode type;
-  union 
+  union
   {
     struct iv_class *class;
     struct induction *info;
@@ -248,7 +256,7 @@ struct loop_reg
      During code motion, a negative value indicates a reg that has
      been made a candidate; in particular -2 means that it is an
      candidate that we know is equal to a constant and -1 means that
-     it is an candidate not known equal to a constant.  After code
+     it is a candidate not known equal to a constant.  After code
      motion, regs moved have 0 (which is accurate now) while the
      failed candidates have the original number of times set.
 
@@ -304,6 +312,8 @@ struct loop_info
   int has_libcall;
   /* Nonzero if there is a non constant call in the current loop.  */
   int has_nonconst_call;
+  /* Nonzero if there is a prefetch instruction in the current loop.  */
+  int has_prefetch;
   /* Nonzero if there is a volatile memory reference in the current
      loop.  */
   int has_volatile;
@@ -375,7 +385,7 @@ struct loop_info
   struct loop_regs regs;
   /* The induction variable information in loop.  */
   struct loop_ivs ivs;
-  /* Non-zero if call is in pre_header extended basic block.  */
+  /* Nonzero if call is in pre_header extended basic block.  */
   int pre_header_has_call;
 };
 
@@ -391,34 +401,32 @@ extern FILE *loop_dump_stream;
 
 /* Forward declarations for non-static functions declared in loop.c and
    unroll.c.  */
-int loop_invariant_p PARAMS ((const struct loop *, rtx));
-rtx get_condition_for_loop PARAMS ((const struct loop *, rtx));
-void loop_iv_add_mult_hoist PARAMS ((const struct loop *, rtx, rtx, rtx, rtx));
-void loop_iv_add_mult_sink PARAMS ((const struct loop *, rtx, rtx, rtx, rtx));
-void loop_iv_add_mult_emit_before PARAMS ((const struct loop *, rtx, 
-					   rtx, rtx, rtx,
-					   basic_block, rtx));
-rtx express_from PARAMS ((struct induction *, struct induction *));
-rtx extend_value_for_giv PARAMS ((struct induction *, rtx));
+extern int loop_invariant_p (const struct loop *, rtx);
+extern rtx get_condition_for_loop (const struct loop *, rtx);
+extern void loop_iv_add_mult_hoist (const struct loop *, rtx, rtx, rtx, rtx);
+extern void loop_iv_add_mult_sink (const struct loop *, rtx, rtx, rtx, rtx);
+extern void loop_iv_add_mult_emit_before (const struct loop *, rtx, rtx,
+					  rtx, rtx, basic_block, rtx);
+extern rtx express_from (struct induction *, struct induction *);
+extern rtx extend_value_for_giv (struct induction *, rtx);
 
-void unroll_loop PARAMS ((struct loop *, int, int));
-rtx biv_total_increment PARAMS ((const struct iv_class *));
-unsigned HOST_WIDE_INT loop_iterations PARAMS ((struct loop *));
-int precondition_loop_p PARAMS ((const struct loop *,
-				 rtx *, rtx *, rtx *,
-				 enum machine_mode *mode));
-rtx final_biv_value PARAMS ((const struct loop *, struct iv_class *));
-rtx final_giv_value PARAMS ((const struct loop *, struct induction *));
-void emit_unrolled_add PARAMS ((rtx, rtx, rtx));
-int back_branch_in_range_p PARAMS ((const struct loop *, rtx));
+extern void unroll_loop (struct loop *, int, int);
+extern rtx biv_total_increment (const struct iv_class *);
+extern unsigned HOST_WIDE_INT loop_iterations (struct loop *);
+extern int precondition_loop_p (const struct loop *, rtx *, rtx *, rtx *,
+				enum machine_mode *mode);
+extern rtx final_biv_value (const struct loop *, struct iv_class *);
+extern rtx final_giv_value (const struct loop *, struct induction *);
+extern void emit_unrolled_add (rtx, rtx, rtx);
+extern int back_branch_in_range_p (const struct loop *, rtx);
 
-int loop_insn_first_p PARAMS ((rtx, rtx));
-typedef rtx (*loop_insn_callback) PARAMS ((struct loop *, rtx, int, int));
-void for_each_insn_in_loop PARAMS ((struct loop *, loop_insn_callback));
-rtx loop_insn_emit_before PARAMS((const struct loop *, basic_block, 
-				  rtx, rtx));
-rtx loop_insn_sink PARAMS((const struct loop *, rtx));
-rtx loop_insn_hoist PARAMS((const struct loop *, rtx));
+extern int loop_insn_first_p (rtx, rtx);
+typedef rtx (*loop_insn_callback) (struct loop *, rtx, int, int);
+extern void for_each_insn_in_loop (struct loop *, loop_insn_callback);
+extern rtx loop_insn_emit_before (const struct loop *, basic_block, rtx, rtx);
+extern rtx loop_insn_sink (const struct loop *, rtx);
+extern rtx loop_insn_hoist (const struct loop *, rtx);
 
 /* Forward declarations for non-static functions declared in doloop.c.  */
-int doloop_optimize PARAMS ((const struct loop *));
+extern rtx doloop_condition_get (rtx);
+extern int doloop_optimize (const struct loop *);

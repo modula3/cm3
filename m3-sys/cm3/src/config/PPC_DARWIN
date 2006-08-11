@@ -124,7 +124,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", source, "-o", object, "-fPIC", "-gstabs" ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
@@ -144,7 +144,7 @@ M3_BACKEND_MODE = "3"
 proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
   return try_exec ("@gcc", args, "-c", source)
 end
@@ -266,7 +266,7 @@ end
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
-M3_FRONT_FLAGS = [ ] % [ "-IncGC", "-GenGC" ]
+M3_FRONT_FLAGS = [ ]
 % --- internal configuration options passed directly to the Modula-3 front-end
 
 M3_OPTIONS = [ ]

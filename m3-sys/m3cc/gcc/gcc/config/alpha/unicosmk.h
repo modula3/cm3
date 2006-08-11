@@ -1,23 +1,23 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha on Cray
    T3E running Unicos/Mk.
-   Copyright (C) 2001
+   Copyright (C) 2001, 2002
    Free Software Foundation, Inc.
    Contributed by Roman Lechtchinsky (rl@cs.tu-berlin.de)
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -32,15 +32,18 @@ Boston, MA 02111-1307, USA.  */
 /* The following defines are necessary for the standard headers to work
    correctly.  */
 
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__unix=1 -D_UNICOS=205 -D_CRAY=1 -D_CRAYT3E=1 -D_CRAYMPP=1 -D_CRAYIEEE=1 -D_ADDR64=1 -D_LD64=1 -D__UNICOSMK__ -D__INT_MAX__=9223372036854775807 -D__SHRT_MAX__=2147483647"
-
-/* Disable software floating point emulation because it requires a 16-bit
-   type which we do not have.  */
-
-#ifndef __GNUC__
-#undef REAL_ARITHMETIC
-#endif
+#define TARGET_OS_CPP_BUILTINS()				\
+    do {							\
+	builtin_define ("__unix");				\
+	builtin_define ("_UNICOS=205");				\
+	builtin_define ("_CRAY");				\
+	builtin_define ("_CRAYT3E");				\
+	builtin_define ("_CRAYMPP");				\
+	builtin_define ("_CRAYIEEE");				\
+	builtin_define ("_ADDR64");				\
+	builtin_define ("_LD64");				\
+	builtin_define ("__UNICOSMK__");			\
+    } while (0)
 
 #define SHORT_TYPE_SIZE 32
 
@@ -98,8 +101,6 @@ Boston, MA 02111-1307, USA.  */
 /* Define the offset between two registers, one to be eliminated, and the
    other its replacement, at the start of a routine. This is somewhat
    complicated on the T3E which is why we use a function.  */
-
-extern int unicosmk_initial_elimination_offset PARAMS ((int, int));
 
 #undef INITIAL_ELIMINATION_OFFSET
 #define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET)			\
@@ -175,7 +176,7 @@ typedef struct {
    function whose data type is FNTYPE.  For a library call, FNTYPE is 0.  */
 
 #undef INIT_CUMULATIVE_ARGS
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)	\
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
   do { (CUM).num_args = 0;					\
        (CUM).num_arg_words = 0;					\
        (CUM).num_reg_words = 0;					\
@@ -217,89 +218,16 @@ do {								\
   ++(CUM).num_args;						\
 } while(0)
 
-/* We want the default definition for this.
-   ??? In fact, we should delete the definition from alpha.h as it
-   corresponds to the default definition for little-endian machines.  */
-
-#undef FUNCTION_ARG_PADDING
-
 /* An argument is passed either entirely in registers or entirely on stack.  */
  
 #undef FUNCTION_ARG_PARTIAL_NREGS
 /* #define FUNCTION_ARG_PARTIAL_NREGS(CUM,MODE,TYPE,NAMED) 0 */
-
-/* Perform any needed actions needed for a function that is receiving a
-   variable number of arguments.
-
-   On Unicos/Mk, the standard subroutine __T3E_MISMATCH stores all register
-   arguments on the stack. Unfortunately, it doesn't always store the first
-   one (i.e. the one that arrives in $16 or $f16). This is not a problem
-   with stdargs as we always have at least one named argument there. This is
-   not always the case when varargs.h is used, however. In such cases, we
-   have to store the first argument ourselves. We use the information from
-   the CIW to determine whether the first argument arrives in $16 or $f16.  */
-
-#undef SETUP_INCOMING_VARARGS
-#define SETUP_INCOMING_VARARGS(CUM,MODE,TYPE,PRETEND_SIZE,NO_RTL)	\
-{ if ((CUM).num_reg_words < 6)						\
-    {									\
-      if (! (NO_RTL))							\
-        {								\
-	  int start;							\
-									\
-	  start = (CUM).num_reg_words;					\
-	  if (!current_function_varargs || start == 0)			\
-	    ++start;							\
-									\
-          emit_insn (gen_umk_mismatch_args (GEN_INT (start)));		\
-	  if (current_function_varargs && (CUM).num_reg_words == 0)	\
-	    {								\
-	      rtx tmp;							\
-	      rtx int_label, end_label;					\
-									\
-	      tmp = gen_reg_rtx (DImode);				\
-	      emit_move_insn (tmp,					\
-			      gen_rtx_ZERO_EXTRACT (DImode,		\
-						    gen_rtx_REG (DImode, 2),\
-						    (GEN_INT (1)),	\
-						    (GEN_INT (7))));	\
-	      int_label = gen_label_rtx ();				\
-	      end_label = gen_label_rtx ();				\
-	      emit_insn (gen_cmpdi (tmp, GEN_INT (0)));			\
-	      emit_jump_insn (gen_beq (int_label));			\
-	      emit_move_insn (gen_rtx_MEM (DFmode, virtual_incoming_args_rtx),\
-			      gen_rtx_REG (DFmode, 48));		\
-	      emit_jump (end_label);					\
-	      emit_label (int_label);					\
-	      emit_move_insn (gen_rtx_MEM (DImode, virtual_incoming_args_rtx),\
-			      gen_rtx_REG (DImode, 16));		\
-	      emit_label (end_label);					\
-	    }								\
-	  emit_insn (gen_arg_home_umk ());				\
-        }								\
-									\
-      PRETEND_SIZE = 0;							\
-    }									\
-}
 
 /* This ensures that $15 increments/decrements in leaf functions won't get
    eliminated.  */
 
 #undef EPILOGUE_USES
 #define EPILOGUE_USES(REGNO)  ((REGNO) == 26 || (REGNO) == 15)
-
-/* Machine-specific function data.  */
-
-struct machine_function
-{
-  /* List of call information words for calls from this function.  */
-  struct rtx_def *first_ciw;
-  struct rtx_def *last_ciw;
-  int ciw_count;
-
-  /* List of deferred case vectors.  */
-  struct rtx_def *addr_list;
-};
 
 /* Would have worked, only the stack doesn't seem to be executable
 #undef TRAMPOLINE_TEMPLATE
@@ -342,9 +270,9 @@ do { fprintf (FILE, "\tbr $1,0\n");			\
 #undef DATA_SECTION_ASM_OP
 #define DATA_SECTION_ASM_OP unicosmk_data_section ()
 
-/* There are ni read-only sections on Unicos/Mk.  */
+/* There are no read-only sections on Unicos/Mk.  */
 
-#undef READONLY_DATA_SECTION
+#undef READONLY_DATA_SECTION_ASM_OP
 #define READONLY_DATA_SECTION data_section
 
 /* Define extra sections for common data and SSIBs (static subroutine
@@ -359,59 +287,33 @@ do { fprintf (FILE, "\tbr $1,0\n");			\
 COMMON_SECTION			\
 SSIB_SECTION	
 
-extern void common_section PARAMS ((void));
+extern void common_section (void);
 #define COMMON_SECTION		\
 void				\
-common_section ()		\
+common_section (void)		\
 {				\
   in_section = in_common;	\
 }
 
-extern void ssib_section PARAMS ((void));
+extern void ssib_section (void);
 #define SSIB_SECTION		\
 void				\
-ssib_section ()			\
+ssib_section (void)		\
 {				\
   in_section = in_ssib;		\
 }
 
-/* A C expression which evaluates to true if declshould be placed into a
-   unique section for some target-specific reason. On Unicos/Mk, functions
-   and public variables are always placed in unique sections.  */ 
-
-/*
-#define UNIQUE_SECTION_P(DECL) (TREE_PUBLIC (DECL)		\
-				|| TREE_CODE (DECL) == FUNCTION_DECL)
-*/
-#define UNIQUE_SECTION(DECL, RELOC) unicosmk_unique_section (DECL, RELOC)
-
-/* This outputs text to go at the start of an assembler file.  */
-
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE)	unicosmk_asm_file_start (FILE)
-
-/* This outputs text to go at the end of an assembler file.  */
-
-#undef ASM_FILE_END
-#define ASM_FILE_END(FILE)	unicosmk_asm_file_end (FILE)
-
-/* We take care of that in ASM_FILE_START.  */
+/* We take care of this in unicosmk_file_start.  */
 
 #undef ASM_OUTPUT_SOURCE_FILENAME
 
-/* There is no directive for declaring a label as global. Instead, an 
-   additional colon must be appended when the label is defined.  */
-
-#undef ASM_GLOBALIZE_LABEL
-#define ASM_GLOBALIZE_LABEL(FILE,NAME)
-
 /* This is how to output a label for a jump table.  Arguments are the same as
-   for ASM_OUTPUT_INTERNAL_LABEL, except the insn for the jump table is
+   for (*targetm.asm_out.internal_label), except the insn for the jump table is
    passed.  */
 
 #undef ASM_OUTPUT_CASE_LABEL
 #define ASM_OUTPUT_CASE_LABEL(FILE,PREFIX,NUM,TABLEINSN)	\
-  ASM_OUTPUT_INTERNAL_LABEL (FILE, PREFIX, NUM)
+  (*targetm.asm_out.internal_label) (FILE, PREFIX, NUM)
 
 /* CAM has some restrictions with respect to string literals. It won't
    accept lines with more that 256 characters which means that we have
@@ -509,7 +411,8 @@ ssib_section ()			\
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(STREAM,SIZE)			\
-  fprintf ((STREAM), "\t.byte\t0:%d\n", (SIZE));
+  fprintf ((STREAM), "\t.byte\t0:"HOST_WIDE_INT_PRINT_UNSIGNED"\n",\
+	   (SIZE));
 
 /* This says how to output an assembler line to define a global common
    symbol. We need the alignment information because it has to be supplied
@@ -526,7 +429,7 @@ ssib_section ()			\
   do { data_section ();					\
        fprintf (FILE, "\t.align\t%d\n", floor_log2 ((ALIGN) / BITS_PER_UNIT));\
        ASM_OUTPUT_LABEL ((FILE), (NAME));		\
-       fprintf (FILE, "\t.byte 0:%d\n", SIZE);		\
+       fprintf (FILE, "\t.byte 0:"HOST_WIDE_INT_PRINT_UNSIGNED"\n",(SIZE));\
   } while (0)
 
 /* CAM does not allow us to declare a symbol as external first and then
@@ -568,38 +471,6 @@ ssib_section ()			\
 #undef ASM_OUTPUT_MAX_SKIP_ALIGN
 #define ASM_OUTPUT_MAX_SKIP_ALIGN(STREAM,POWER,MAXSKIP)
 
-/* We have to define these because we do not use the floating-point
-   emulation. Unfortunately, atof does not accept hex literals.  */ 
-
-#ifndef REAL_ARITHMETIC
-#define REAL_VALUE_ATOF(x,s) atof(x)
-#define REAL_VALUE_HTOF(x,s) atof(x)
-
-#define REAL_VALUE_TO_TARGET_SINGLE(IN, OUT)			\
-do {								\
-  union {							\
-    float f;							\
-    HOST_WIDE_INT l;						\
-  } u;								\
-								\
-  u.f = (IN);							\
-  (OUT) = (u.l >> 32) & 0xFFFFFFFF;				\
-} while (0) 
-
-#define REAL_VALUE_TO_TARGET_DOUBLE(IN, OUT)			\
-do {								\
-  union {							\
-    REAL_VALUE_TYPE f;						\
-    HOST_WIDE_INT l;						\
-  } u;								\
-								\
-  u.f = (IN);							\
-  (OUT)[0] = (u.l >> 32) & 0xFFFFFFFF;				\
-  (OUT)[1] = (u.l & 0xFFFFFFFF);				\
-} while (0)
-
-#endif
-
 #undef NM_FLAGS
 
 #undef OBJECT_FORMAT_COFF
@@ -609,28 +480,9 @@ do {								\
 #undef SDB_DEBUGGING_INFO
 #undef MIPS_DEBUGGING_INFO
 #undef DBX_DEBUGGING_INFO
-#undef DWARF_DEBUGGING_INFO
 #undef DWARF2_DEBUGGING_INFO
 #undef DWARF2_UNWIND_INFO
 #undef INCOMING_RETURN_ADDR_RTX
-
-
-/* We use the functions provided by the system library for integer
-   division.  */
-
-#undef UDIVDI3_LIBCALL
-#undef DIVDI3_LIBCALL
-#define UDIVDI3_LIBCALL	"$uldiv"
-#define DIVDI3_LIBCALL "$sldiv"
-
-/* This is necessary to prevent gcc from generating calls to __divsi3.  */
-
-#define INIT_TARGET_OPTABS					\
-  do {								\
-    sdiv_optab->handlers[(int) SImode].libfunc = NULL_RTX;	\
-    udiv_optab->handlers[(int) SImode].libfunc = NULL_RTX;	\
-  } while (0)
-
 #undef ASM_OUTPUT_SOURCE_LINE
 
 /* We don't need a start file.  */
@@ -643,7 +495,6 @@ do {								\
 #undef LIB_SPEC
 #define LIB_SPEC "-L/opt/ctl/craylibs/craylibs -lu -lm -lc -lsma"
 
-#undef BUILD_VA_LIST_TYPE
 #undef EXPAND_BUILTIN_VA_START
 #undef EXPAND_BUILTIN_VA_ARG
 

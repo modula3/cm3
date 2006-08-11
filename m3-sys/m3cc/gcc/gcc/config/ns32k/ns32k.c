@@ -2,25 +2,27 @@
    Copyright (C) 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "regs.h"
 #include "hard-reg-set.h"
@@ -47,28 +49,30 @@ int ns32k_num_files = 0;
    initialized in time. Also this is more convenient as an array of ints.
    We know that HARD_REG_SET fits in an unsigned int */
 
-unsigned int ns32k_reg_class_contents[N_REG_CLASSES][1] = REG_CLASS_CONTENTS;
+const unsigned int ns32k_reg_class_contents[N_REG_CLASSES][1] = REG_CLASS_CONTENTS;
 
-enum reg_class regclass_map[FIRST_PSEUDO_REGISTER] =
+const enum reg_class regclass_map[FIRST_PSEUDO_REGISTER] =
 {
   GENERAL_REGS, GENERAL_REGS, GENERAL_REGS, GENERAL_REGS,
   GENERAL_REGS, GENERAL_REGS, GENERAL_REGS, GENERAL_REGS,
   FLOAT_REG0, LONG_FLOAT_REG0, FLOAT_REGS, FLOAT_REGS,
   FLOAT_REGS, FLOAT_REGS, FLOAT_REGS, FLOAT_REGS,
-  FP_REGS, FP_REGS, FP_REGS, FP_REGS,
-  FP_REGS, FP_REGS, FP_REGS, FP_REGS,
+  LONG_REGS, LONG_REGS, LONG_REGS, LONG_REGS,
+  LONG_REGS, LONG_REGS, LONG_REGS, LONG_REGS,
   FRAME_POINTER_REG, STACK_POINTER_REG
 };
 
 static const char *const ns32k_out_reg_names[] = OUTPUT_REGISTER_NAMES;
 
-static rtx gen_indexed_expr PARAMS ((rtx, rtx, rtx));
-static const char *singlemove_string PARAMS ((rtx *));
-static void move_tail PARAMS ((rtx[], int, int));
-static tree ns32k_handle_fntype_attribute PARAMS ((tree *, tree, tree, int, bool *));
+static rtx gen_indexed_expr (rtx, rtx, rtx);
+static const char *singlemove_string (rtx *);
+static void move_tail (rtx[], int, int);
+static tree ns32k_handle_fntype_attribute (tree *, tree, tree, int, bool *);
 const struct attribute_spec ns32k_attribute_table[];
-static void ns32k_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
-static void ns32k_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static void ns32k_output_function_prologue (FILE *, HOST_WIDE_INT);
+static void ns32k_output_function_epilogue (FILE *, HOST_WIDE_INT);
+static bool ns32k_rtx_costs (rtx, int, int, int *);
+static int ns32k_address_cost (rtx);
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ATTRIBUTE_TABLE
@@ -86,6 +90,14 @@ static void ns32k_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
 #define TARGET_ASM_FUNCTION_PROLOGUE ns32k_output_function_prologue
 #undef TARGET_ASM_FUNCTION_EPILOGUE
 #define TARGET_ASM_FUNCTION_EPILOGUE ns32k_output_function_epilogue
+
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS ns32k_rtx_costs
+#undef TARGET_ADDRESS_COST
+#define TARGET_ADDRESS_COST ns32k_address_cost
+
+#undef TARGET_ASM_FILE_START_APP_OFF
+#define TARGET_ASM_FILE_START_APP_OFF true
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 
@@ -131,16 +143,14 @@ struct gcc_target targetm = TARGET_INITIALIZER;
 
 #if defined(IMMEDIATE_PREFIX) && IMMEDIATE_PREFIX
 #define ADJSP(FILE, N) \
-        fprintf (FILE, "\tadjspd %c%d\n", IMMEDIATE_PREFIX, (N))
+        fprintf (FILE, "\tadjspd %c" HOST_WIDE_INT_PRINT_DEC "\n", IMMEDIATE_PREFIX, (N))
 #else
 #define ADJSP(FILE, N) \
-        fprintf (FILE, "\tadjspd %d\n", (N))
+        fprintf (FILE, "\tadjspd " HOST_WIDE_INT_PRINT_DEC "\n", (N))
 #endif
 
 static void
-ns32k_output_function_prologue (file, size)
-     FILE *file;
-     HOST_WIDE_INT size;
+ns32k_output_function_prologue (FILE *file, HOST_WIDE_INT size)
 {
   register int regno, g_regs_used = 0;
   int used_regs_buf[8], *bufp = used_regs_buf;
@@ -186,7 +196,7 @@ ns32k_output_function_prologue (file, size)
     }
 
   if (frame_pointer_needed)
-    fprintf (file, "],%d\n", size);
+    fprintf (file, "]," HOST_WIDE_INT_PRINT_DEC "\n", size);
   else if (g_regs_used)
     fprintf (file, "]\n");
 
@@ -318,9 +328,7 @@ ns32k_output_function_prologue (file, size)
 #if !defined (MERLIN_TARGET) && !defined (UTEK_ASM)
 
 static void
-ns32k_output_function_epilogue (file, size)
-     FILE *file;
-     HOST_WIDE_INT size;
+ns32k_output_function_epilogue (FILE *file, HOST_WIDE_INT size)
 {
   register int regno, g_regs_used = 0, f_regs_used = 0;
   int used_regs_buf[8], *bufp = used_regs_buf;
@@ -460,9 +468,7 @@ ns32k_output_function_epilogue (file, size)
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE. */ 
 int
-hard_regno_mode_ok (regno, mode)
-     int regno;
-     enum machine_mode mode;
+hard_regno_mode_ok (int regno, enum machine_mode mode)
 {
   int size = GET_MODE_UNIT_SIZE (mode);
 
@@ -485,9 +491,37 @@ hard_regno_mode_ok (regno, mode)
   return 0;
 }
 
-int register_move_cost (CLASS1, CLASS2)
-     enum reg_class CLASS1;
-     enum reg_class CLASS2;
+static bool
+ns32k_rtx_costs (rtx x, int code, int outer_code ATTRIBUTE_UNUSED, int *total)
+{
+  switch (code)
+    {
+    case CONST_INT:
+      if (INTVAL (x) <= 7 && INTVAL (x) >= -8)
+	*total = 0;
+      else if (INTVAL (x) < 0x2000 && INTVAL (x) >= -0x2000)
+        *total = 1;
+      else
+	*total = 3;
+      return true;
+
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      *total = 3;
+      return true;
+
+    case CONST_DOUBLE:
+      *total = 5;
+      return true;
+
+    default:
+      return false;
+    }
+}
+
+int
+register_move_cost (enum reg_class CLASS1, enum reg_class CLASS2)
 {
   if (CLASS1 == NO_REGS || CLASS2 == NO_REGS)
     return 2;
@@ -506,10 +540,10 @@ int register_move_cost (CLASS1, CLASS2)
 #if 0
 /* We made the insn definitions copy from floating point to general
   registers via the stack. */
-int secondary_memory_needed (CLASS1, CLASS2, M)
-     enum reg_class CLASS1;
-     enum reg_class CLASS2;
-     enum machine_mode M;
+int
+secondary_memory_needed (enum reg_class CLASS1,
+			 enum reg_class CLASS2,
+			 enum machine_mode M)
 {
   int ret = ((SUBSET_P (CLASS1, FP_REGS) && !SUBSET_P (CLASS2, FP_REGS))
    || (!SUBSET_P (CLASS1, FP_REGS) && SUBSET_P (CLASS2, FP_REGS)));
@@ -518,28 +552,25 @@ int secondary_memory_needed (CLASS1, CLASS2, M)
 #endif
     
 
-/* ADDRESS_COST calls this.  This function is not optimal
+/* TARGET_ADDRESS_COST calls this.  This function is not optimal
    for the 32032 & 32332, but it probably is better than
    the default. */
 
-int
-calc_address_cost (operand)
-     rtx operand;
+static int
+ns32k_address_cost (rtx operand)
 {
-  int i;
   int cost = 0;
-  if (GET_CODE (operand) == MEM)
-    cost += 3;
-  if (GET_CODE (operand) == MULT)
-    cost += 2;
+
   switch (GET_CODE (operand))
     {
     case REG:
       cost += 1;
       break;
+
     case POST_DEC:
     case PRE_DEC:
       break;
+
     case CONST_INT:
       if (INTVAL (operand) <= 7 && INTVAL (operand) >= -8)
 	break;
@@ -556,18 +587,23 @@ calc_address_cost (operand)
     case CONST_DOUBLE:
       cost += 5;
       break;
+
     case MEM:
-      cost += calc_address_cost (XEXP (operand, 0));
+      cost += ns32k_address_cost (XEXP (operand, 0)) + 3;
       break;
+
     case MULT:
+      cost += 2;
+      /* FALLTHRU */
     case PLUS:
-      for (i = 0; i < GET_RTX_LENGTH (GET_CODE (operand)); i++)
-	{
-	  cost += calc_address_cost (XEXP (operand, i));
-	}
+      cost += ns32k_address_cost (XEXP (operand, 0));
+      cost += ns32k_address_cost (XEXP (operand, 1));
+      break;
+
     default:
       break;
     }
+
   return cost;
 }
 
@@ -576,10 +612,9 @@ calc_address_cost (operand)
    NO_REGS is returned.  */
 
 enum reg_class
-secondary_reload_class (class, mode, in)
-     enum reg_class class;
-     enum machine_mode mode ATTRIBUTE_UNUSED;
-     rtx in;
+secondary_reload_class (enum reg_class class,
+			enum machine_mode mode ATTRIBUTE_UNUSED,
+			rtx in)
 {
   int regno = true_regnum (in);
 
@@ -599,8 +634,7 @@ secondary_reload_class (class, mode, in)
    multiplier (for MULT). */
 
 static rtx
-gen_indexed_expr (base, index, scale)
-     rtx base, index, scale;
+gen_indexed_expr (rtx base, rtx index, rtx scale)
 {
   rtx addr;
 
@@ -622,10 +656,7 @@ gen_indexed_expr (base, index, scale)
    that parallel "operands". */
 
 void
-split_di (operands, num, lo_half, hi_half)
-     rtx operands[];
-     int num;
-     rtx lo_half[], hi_half[];
+split_di (rtx operands[], int num, rtx lo_half[], rtx hi_half[])
 {
   while (num--)
     {
@@ -652,8 +683,7 @@ split_di (operands, num, lo_half, hi_half)
    for moving operands[1] into operands[0] as a fullword.  */
 
 static const char *
-singlemove_string (operands)
-     rtx *operands;
+singlemove_string (rtx *operands)
 {
   if (GET_CODE (operands[1]) == CONST_INT
       && INTVAL (operands[1]) <= 7
@@ -663,8 +693,7 @@ singlemove_string (operands)
 }
 
 const char *
-output_move_double (operands)
-     rtx *operands;
+output_move_double (rtx *operands)
 {
   enum anon1 { REGOP, OFFSOP, PUSHOP, CNSTOP, RNDOP } optype0, optype1;
   rtx latehalf[2];
@@ -802,10 +831,7 @@ output_move_double (operands)
    operands[3] is the alignment.  */
 
 static void
-move_tail (operands, bytes, offset)
-     rtx operands[];
-     int bytes;
-     int offset;
+move_tail (rtx operands[], int bytes, int offset)
 {
   if (bytes & 2)
     {
@@ -819,8 +845,7 @@ move_tail (operands, bytes, offset)
 }
 
 void
-expand_block_move (operands)
-     rtx operands[];
+expand_block_move (rtx operands[])
 {
   rtx bytes_rtx	= operands[2];
   rtx align_rtx = operands[3];
@@ -840,7 +865,7 @@ expand_block_move (operands)
 
       if (words)
 	{
-	  if (words < 3 || flag_unroll_loops)
+	  if (words < 3)
 	    {
 	      int offset = 0;
 
@@ -947,16 +972,14 @@ expand_block_move (operands)
 /* Returns 1 if OP contains a global symbol reference */
 
 int
-global_symbolic_reference_mentioned_p (op, f)
-     rtx op;
-     int f;
+global_symbolic_reference_mentioned_p (rtx op, int f)
 {
   register const char *fmt;
   register int i;
 
   if (GET_CODE (op) == SYMBOL_REF)
     {
-      if (! SYMBOL_REF_FLAG (op))
+      if (! SYMBOL_REF_LOCAL_P (op))
 	return 1;
       else
         return 0;
@@ -987,8 +1010,7 @@ global_symbolic_reference_mentioned_p (op, f)
 /* Returns 1 if OP contains a symbol reference */
 
 int
-symbolic_reference_mentioned_p (op)
-     rtx op;
+symbolic_reference_mentioned_p (rtx op)
 {
   register const char *fmt;
   register int i;
@@ -1030,12 +1052,10 @@ const struct attribute_spec ns32k_attribute_table[] =
 /* Handle an attribute requiring a FUNCTION_TYPE, FIELD_DECL or TYPE_DECL;
    arguments as in struct attribute_spec.handler.  */
 static tree
-ns32k_handle_fntype_attribute (node, name, args, flags, no_add_attrs)
-     tree *node;
-     tree name;
-     tree args ATTRIBUTE_UNUSED;
-     int flags ATTRIBUTE_UNUSED;
-     bool *no_add_attrs;
+ns32k_handle_fntype_attribute (tree *node, tree name,
+			       tree args ATTRIBUTE_UNUSED,
+			       int flags ATTRIBUTE_UNUSED,
+			       bool *no_add_attrs)
 {
   if (TREE_CODE (*node) != FUNCTION_TYPE
       && TREE_CODE (*node) != FIELD_DECL
@@ -1068,10 +1088,7 @@ ns32k_handle_fntype_attribute (node, name, args, flags, no_add_attrs)
    The attribute stdcall is equivalent to RET on a per module basis.  */
 
 int
-ns32k_return_pops_args (fundecl, funtype, size)
-     tree fundecl ATTRIBUTE_UNUSED;
-     tree funtype;
-     int size;
+ns32k_return_pops_args (tree fundecl ATTRIBUTE_UNUSED, tree funtype, int size)
 {
   int rtd = TARGET_RTD;
 
@@ -1102,10 +1119,7 @@ ns32k_return_pops_args (fundecl, funtype, size)
 
 /* XXX time 12% of cpu time is in fprintf for non optimizing */
 void
-print_operand (file, x, code)
-     FILE *file;
-     rtx x;
-     int code;
+print_operand (FILE *file, rtx x, int code)
 {
   if (code == '$')
     PUT_IMMEDIATE_PREFIX (file);
@@ -1119,40 +1133,38 @@ print_operand (file, x, code)
     }
   else if (GET_CODE (x) == CONST_DOUBLE && GET_MODE (x) != VOIDmode)
     {
+      REAL_VALUE_TYPE r;
+
+      REAL_VALUE_FROM_CONST_DOUBLE (r, x);
+      PUT_IMMEDIATE_PREFIX (file);
       if (GET_MODE (x) == DFmode)
 	{ 
-	  union { double d; int i[2]; } u;
-	  u.i[0] = CONST_DOUBLE_LOW (x); u.i[1] = CONST_DOUBLE_HIGH (x);
-	  PUT_IMMEDIATE_PREFIX (file);
 #ifdef SEQUENT_ASM
 	  /* Sequent likes its floating point constants as integers */
-	  fprintf (file, "0Dx%08x%08x", u.i[1], u.i[0]);
+	  long l[2];
+	  REAL_VALUE_TO_TARGET_DOUBLE (r, l);
+	  fprintf (file, "0Dx%08x%08x",
+		   l[!WORDS_BIG_ENDIAN], l[WORDS_BIG_ENDIAN]);
 #else
+	  char s[30];
+	  real_to_decimal (s, &r, sizeof (s), 0, 1);
 #ifdef ENCORE_ASM
-	  fprintf (file, "0f%.20e", u.d); 
+	  fprintf (file, "0f%s", s);
 #else
-	  fprintf (file, "0d%.20e", u.d); 
+	  fprintf (file, "0d%s", s);
 #endif
 #endif
 	}
       else
-	{ 
-	  union { double d; int i[2]; } u;
-	  u.i[0] = CONST_DOUBLE_LOW (x); u.i[1] = CONST_DOUBLE_HIGH (x);
-	  PUT_IMMEDIATE_PREFIX (file);
+	{
 #ifdef SEQUENT_ASM
-	  /* We have no way of winning if we can't get the bits
-	     for a sequent floating point number.  */
-#if HOST_FLOAT_FORMAT != TARGET_FLOAT_FORMAT
-	  abort ();
-#endif
-	  {
-	    union { float f; long l; } uu;
-	    uu.f = u.d;
-	    fprintf (file, "0Fx%08lx", uu.l);
-	  }
+	  long l;
+	  REAL_VALUE_TO_TARGET_SINGLE (r, l);
+	  fprintf (file, "0Fx%08lx", l);
 #else
-	  fprintf (file, "0f%.20e", u.d); 
+	  char s[30];
+	  real_to_decimal (s, &r, sizeof (s), 0, 1);
+	  fprintf (file, "0f%s", s);
 #endif
 	}
     }
@@ -1195,9 +1207,7 @@ print_operand (file, x, code)
    90-11-25 Tatu Yl|nen <ylo@cs.hut.fi> */
 
 void
-print_operand_address (file, addr)
-     register FILE *file;
-     register rtx addr;
+print_operand_address (register FILE *file, register rtx addr)
 {
   static const char scales[] = { 'b', 'w', 'd', 0, 'q', };
   rtx offset, base, indexexp, tmp;
@@ -1267,8 +1277,7 @@ print_operand_address (file, addr)
 	  indexexp = tmp;
 	  break;
 	case SYMBOL_REF:
-	  if (flag_pic && ! CONSTANT_POOL_ADDRESS_P (tmp)
-	      && ! SYMBOL_REF_FLAG (tmp))
+	  if (flag_pic && ! SYMBOL_REF_LOCAL_P (tmp))
 	    {
 	      if (base)
 		{
@@ -1300,12 +1309,7 @@ print_operand_address (file, addr)
 		  if (GET_CODE (off) != CONST_INT)
 		    abort ();
 
-		  if (CONSTANT_POOL_ADDRESS_P (sym)
-		      || SYMBOL_REF_FLAG (sym))
-		    {
-		      SYMBOL_REF_FLAG (tmp) = 1;
-		    }
-		  else
+		  if (! SYMBOL_REF_LOCAL_P (sym))
 		    {
 		      if (base)
 			{
@@ -1485,8 +1489,7 @@ print_operand_address (file, addr)
    better performance in many common cases by using other
    techniques.  */
 const char *
-output_shift_insn (operands)
-     rtx *operands;
+output_shift_insn (rtx *operands)
 {
   if (GET_CODE (operands[2]) == CONST_INT
       && INTVAL (operands[2]) > 0
@@ -1535,9 +1538,7 @@ output_shift_insn (operands)
 }
 
 const char *
-output_move_dconst (n, s)
-	int n;
-	const char *s;
+output_move_dconst (int n, const char *s)
 {
   static char r[32];
 

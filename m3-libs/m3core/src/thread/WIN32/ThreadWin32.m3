@@ -11,7 +11,8 @@
 (*      modified on Wed Apr 21 16:31:21 PDT 1993 by mcjones        *)
 (*      modified on Fri Mar 26 15:04:39 PST 1993 by birrell        *)
 
-UNSAFE MODULE ThreadWin32 EXPORTS Scheduler, Thread, ThreadF, RTOS;
+UNSAFE MODULE ThreadWin32
+EXPORTS Scheduler, Thread, ThreadF, RTOS, RTHooks;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;

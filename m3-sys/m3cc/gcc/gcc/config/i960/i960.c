@@ -1,29 +1,31 @@
 /* Subroutines used for code generation on intel 80960.
-   Copyright (C) 1992, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+   Copyright (C) 1992, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
    Free Software Foundation, Inc.
    Contributed by Steven McGeady, Intel Corp.
    Additional Work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
    Converted to GCC 2.0 by Jim Wilson and Michael Tiemann, Cygnus Support.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include <math.h>
 #include "rtl.h"
 #include "regs.h"
@@ -40,15 +42,17 @@ Boston, MA 02111-1307, USA.  */
 #include "function.h"
 #include "recog.h"
 #include "toplev.h"
-#include "cpplib.h"
-#include "c-pragma.h"
-#include "c-lex.h"
 #include "tm_p.h"
 #include "target.h"
 #include "target-def.h"
 
-static void i960_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
-static void i960_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static void i960_output_function_prologue (FILE *, HOST_WIDE_INT);
+static void i960_output_function_epilogue (FILE *, HOST_WIDE_INT);
+static void i960_output_mi_thunk (FILE *, tree, HOST_WIDE_INT,
+				  HOST_WIDE_INT, tree);
+static bool i960_rtx_costs (rtx, int, int, int *);
+static int i960_address_cost (rtx);
+static tree i960_build_builtin_va_list (void);
 
 /* Save the operands last given to a compare for use when we
    generate a scc or bcc insn.  */
@@ -88,9 +92,9 @@ static int ret_label = 0;
    This is used to help identify functions that use an argument block.  */
 
 #define VARARGS_STDARG_FUNCTION(FNDECL)	\
-((TYPE_ARG_TYPES (TREE_TYPE (FNDECL)) != 0						      \
-  && (TREE_VALUE (tree_last (TYPE_ARG_TYPES (TREE_TYPE (FNDECL)))) != void_type_node))    \
- || current_function_varargs)
+(TYPE_ARG_TYPES (TREE_TYPE (FNDECL)) != 0				\
+  && (TREE_VALUE (tree_last (TYPE_ARG_TYPES (TREE_TYPE (FNDECL)))))	\
+      != void_type_node)
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ASM_ALIGNED_SI_OP
@@ -101,13 +105,62 @@ static int ret_label = 0;
 #undef TARGET_ASM_FUNCTION_EPILOGUE
 #define TARGET_ASM_FUNCTION_EPILOGUE i960_output_function_epilogue
 
+#undef TARGET_ASM_OUTPUT_MI_THUNK
+#define TARGET_ASM_OUTPUT_MI_THUNK i960_output_mi_thunk
+#undef TARGET_CAN_ASM_OUTPUT_MI_THUNK
+#define TARGET_CAN_ASM_OUTPUT_MI_THUNK default_can_output_mi_thunk_no_vcall
+
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS i960_rtx_costs
+#undef TARGET_ADDRESS_COST
+#define TARGET_ADDRESS_COST i960_address_cost
+
+#undef TARGET_BUILD_BUILTIN_VA_LIST
+#define TARGET_BUILD_BUILTIN_VA_LIST i960_build_builtin_va_list
+
 struct gcc_target targetm = TARGET_INITIALIZER;
 
-/* Initialize variables before compiling any files.  */
+/* Override conflicting target switch options.
+   Doesn't actually detect if more than one -mARCH option is given, but
+   does handle the case of two blatantly conflicting -mARCH options.
+
+   Also initialize variables before compiling any files.  */
 
 void
 i960_initialize ()
 {
+  if (TARGET_K_SERIES && TARGET_C_SERIES)
+    {
+      warning ("conflicting architectures defined - using C series");
+      target_flags &= ~TARGET_FLAG_K_SERIES;
+    }
+  if (TARGET_K_SERIES && TARGET_MC)
+    {
+      warning ("conflicting architectures defined - using K series");
+      target_flags &= ~TARGET_FLAG_MC;
+    }
+  if (TARGET_C_SERIES && TARGET_MC)
+    {
+      warning ("conflicting architectures defined - using C series");
+      target_flags &= ~TARGET_FLAG_MC;
+    }
+  if (TARGET_IC_COMPAT3_0)
+    {
+      flag_short_enums = 1;
+      flag_signed_char = 1;
+      target_flags |= TARGET_FLAG_CLEAN_LINKAGE;
+      if (TARGET_IC_COMPAT2_0)
+	{
+	  warning ("iC2.0 and iC3.0 are incompatible - using iC3.0");
+	  target_flags &= ~TARGET_FLAG_IC_COMPAT2_0;
+	}
+    }
+  if (TARGET_IC_COMPAT2_0)
+    {
+      flag_signed_char = 1;
+      target_flags |= TARGET_FLAG_CLEAN_LINKAGE;
+    }
+
   if (TARGET_IC_COMPAT2_0)
     {
       i960_maxbitalignment = 8;
@@ -324,8 +377,8 @@ bitpos (val)
   return -1;
 }
 
-/* Return non-zero if OP is a mask, i.e. all one bits are consecutive.
-   The return value indicates how many consecutive non-zero bits exist
+/* Return nonzero if OP is a mask, i.e. all one bits are consecutive.
+   The return value indicates how many consecutive nonzero bits exist
    if this is a mask.  This is the same as the next function, except that
    it does not indicate what the start and stop bit positions are.  */
 
@@ -454,15 +507,13 @@ gen_compare_reg (code, x, y)
 
 /* ??? Try using just RTX_COST, i.e. not defining ADDRESS_COST.  */
 
-int
+static int
 i960_address_cost (x)
      rtx x;
 {
-#if 0
-  /* Handled before calling here.  */
   if (GET_CODE (x) == REG)
     return 1;
-#endif
+
   /* This is a MEMA operand -- it's free.  */
   if (GET_CODE (x) == CONST_INT
       && INTVAL (x) >= 0
@@ -521,7 +572,7 @@ emit_move_sequence (operands, mode)
   
   if (GET_CODE (operands[0]) == MEM && GET_CODE (operands[1]) != REG
       && (operands[1] != const0_rtx || current_function_args_size
-	  || current_function_varargs || current_function_stdarg
+	  || current_function_stdarg
 	  || rtx_equal_function_value_matters))
     /* Here we use the same test as movsi+1 pattern -- see i960.md.  */
     operands[1] = force_reg (mode, operands[1]);
@@ -767,13 +818,13 @@ i960_output_ldconst (dst, src)
       output_asm_insn ("ldconst	%1,%0", operands);
       return "";
     }
-  else if (mode == XFmode)
+  else if (mode == TFmode)
     {
       REAL_VALUE_TYPE d;
       long value_long[3];
       int i;
 
-      if (fp_literal_zero (src, XFmode))
+      if (fp_literal_zero (src, TFmode))
 	return "movt	0,%0";
 
       REAL_VALUE_FROM_CONST_DOUBLE (d, src);
@@ -1036,7 +1087,7 @@ i960_function_name_declare (file, name, fndecl)
       
   /* See if caller passes in an address to return value.  */
 
-  if (aggregate_value_p (DECL_RESULT (fndecl)))
+  if (aggregate_value_p (DECL_RESULT (fndecl), fndecl))
     {
       tail_call_ok = 0;
       leaf_proc_ok = 0;
@@ -1184,10 +1235,10 @@ struct reg_group
   char length;
 };
 
-static int i960_form_reg_groups PARAMS ((int, int, int *, int, struct reg_group *));
-static int i960_reg_group_compare PARAMS ((const void *, const void *));
-static int i960_split_reg_group PARAMS ((struct reg_group *, int, int));
-static void i960_arg_size_and_align PARAMS ((enum machine_mode, tree, int *, int *));
+static int i960_form_reg_groups (int, int, int *, int, struct reg_group *);
+static int i960_reg_group_compare (const void *, const void *);
+static int i960_split_reg_group (struct reg_group *, int, int);
+static void i960_arg_size_and_align (enum machine_mode, tree, int *, int *);
 
 /* The following functions forms the biggest as possible register
    groups with registers in STATE.  REGS contain states of the
@@ -1409,9 +1460,11 @@ i960_output_function_prologue (file, size)
   if (actual_fsize > 0)
     {
       if (actual_fsize < 32)
-	fprintf (file, "\taddo	%d,sp,sp\n", actual_fsize);
+	fprintf (file, "\taddo	" HOST_WIDE_INT_PRINT_DEC ",sp,sp\n",
+		 actual_fsize);
       else
-	fprintf (file, "\tlda\t%d(sp),sp\n", actual_fsize);
+	fprintf (file, "\tlda\t" HOST_WIDE_INT_PRINT_DEC "(sp),sp\n",
+		 actual_fsize);
     }
 
   /* Take hardware register save area created by the call instruction
@@ -1438,12 +1491,12 @@ i960_output_function_prologue (file, size)
       if (nr == 3 && regs[i+3] == -1)
 	nr = 4;
 
-      fprintf (file,"\tst%s	%s,%d(fp)\n",
+      fprintf (file,"\tst%s	%s," HOST_WIDE_INT_PRINT_DEC "(fp)\n",
 	       ((nr == 4) ? "q" :
 		(nr == 3) ? "t" :
 		(nr == 2) ? "l" : ""),
 	       reg_names[i], offset);
-      sprintf (tmpstr,"\tld%s	%d(fp),%s\n",
+      sprintf (tmpstr,"\tld%s	" HOST_WIDE_INT_PRINT_DEC "(fp),%s\n",
 	       ((nr == 4) ? "q" :
 		(nr == 3) ? "t" :
 		(nr == 2) ? "l" : ""),
@@ -1458,10 +1511,12 @@ i960_output_function_prologue (file, size)
     return;
 
   fprintf (file, "\t#Prologue stats:\n");
-  fprintf (file, "\t#  Total Frame Size: %d bytes\n", actual_fsize);
+  fprintf (file, "\t#  Total Frame Size: " HOST_WIDE_INT_PRINT_DEC " bytes\n",
+	   actual_fsize);
 
   if (lvar_size)
-    fprintf (file, "\t#  Local Variable Size: %d bytes\n", lvar_size);
+    fprintf (file, "\t#  Local Variable Size: " HOST_WIDE_INT_PRINT_DEC
+	     " bytes\n", lvar_size);
   if (n_saved_regs)
     fprintf (file, "\t#  Register Save Size: %d regs, %d bytes\n",
 	     n_saved_regs, n_saved_regs * 4);
@@ -1742,14 +1797,13 @@ i960_print_operand (file, x, code)
       if (code == 'C')
 	val = ~val;
       if (val > 9999 || val < -999)
-	fprintf (file, "0x%x", val);
+	fprintf (file, HOST_WIDE_INT_PRINT_HEX, val);
       else
-	fprintf (file, "%d", val);
+	fprintf (file, HOST_WIDE_INT_PRINT_DEC, val);
       return;
     }
   else if (rtxcode == CONST_DOUBLE)
     {
-      REAL_VALUE_TYPE d;
       char dstr[30];
 
       if (x == CONST0_RTX (GET_MODE (x)))
@@ -1763,8 +1817,7 @@ i960_print_operand (file, x, code)
 	  return;
 	}
 
-      REAL_VALUE_FROM_CONST_DOUBLE (d, x);
-      REAL_VALUE_TO_DECIMAL (d, "%#g", dstr);
+      real_to_decimal (dstr, CONST_DOUBLE_REAL_VALUE (x), sizeof (dstr), 0, 1);
       fprintf (file, "0f%s", dstr);
       return;
     }
@@ -1940,7 +1993,8 @@ i960_print_operand_addr (file, addr)
   if (breg)
     fprintf (file, "(%s)", reg_names[REGNO (breg)]);
   if (ireg)
-    fprintf (file, "[%s*%d]", reg_names[REGNO (ireg)], INTVAL (scale));
+    fprintf (file, "[%s*" HOST_WIDE_INT_PRINT_DEC "]",
+	     reg_names[REGNO (ireg)], INTVAL (scale));
 }
 
 /* GO_IF_LEGITIMATE_ADDRESS recognizes an RTL expression
@@ -2172,7 +2226,7 @@ hard_regno_mode_ok (regno, mode)
 	case DImode: case DFmode:
 	  return (regno & 1) == 0;
 
-	case TImode: case XFmode:
+	case TImode: case TFmode:
 	  return (regno & 3) == 0;
 
 	default:
@@ -2183,7 +2237,7 @@ hard_regno_mode_ok (regno, mode)
     {
       switch (mode)
 	{
-	case SFmode: case DFmode: case XFmode:
+	case SFmode: case DFmode: case TFmode:
 	case SCmode: case DCmode:
 	  return 1;
 
@@ -2361,14 +2415,7 @@ i960_arg_size_and_align (mode, type, size_out, align_out)
     size = (GET_MODE_SIZE (mode) + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
 
   if (type == 0)
-    {
-      /* ??? This is a hack to properly correct the alignment of XFmode
-	 values without affecting anything else.  */
-      if (size == 3)
-	align = 4;
-      else
-	align = size;
-    }
+    align = size;
   else if (TYPE_ALIGN (type) >= BITS_PER_WORD)
     align = TYPE_ALIGN (type) / BITS_PER_WORD;
   else
@@ -2467,11 +2514,18 @@ i960_object_bytes_bitalign (n)
                      MIN (pragma align, structure size alignment)).  */
 
 int
-i960_round_align (align, tsize)
+i960_round_align (align, type)
      int align;
-     tree tsize;
+     tree type;
 {
   int new_align;
+  tree tsize;
+
+  if (TARGET_OLD_ALIGN || TYPE_PACKED (type))
+    return align;
+  if (TREE_CODE (type) != RECORD_TYPE)
+    return align;
+  tsize = TYPE_SIZE (type);
 
   if (! tsize || TREE_CODE (tsize) != INTEGER_CST)
     return align;
@@ -2516,16 +2570,20 @@ i960_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
   if (cum->ca_nstackparms == 0 && first_reg < NPARM_REGS && !no_rtl)
     {
       rtx label = gen_label_rtx ();
-      rtx regblock;
+      rtx regblock, fake_arg_pointer_rtx;
 
-      /* If arg_pointer_rtx == 0, no arguments were passed on the stack
+      /* Use a different rtx than arg_pointer_rtx so that cse and friends
+	 can go on believing that the argument pointer can never be zero.  */
+      fake_arg_pointer_rtx = gen_raw_REG (Pmode, ARG_POINTER_REGNUM);
+
+      /* If the argument pointer is 0, no arguments were passed on the stack
 	 and we need to allocate a chunk to save the registers (if any
 	 arguments were passed on the stack the caller would allocate the
 	 48 bytes as well).  We must allocate all 48 bytes (12*4) because
 	 va_start assumes it.  */
-      emit_insn (gen_cmpsi (arg_pointer_rtx, const0_rtx));
+      emit_insn (gen_cmpsi (fake_arg_pointer_rtx, const0_rtx));
       emit_jump_insn (gen_bne (label));
-      emit_insn (gen_rtx_SET (VOIDmode, arg_pointer_rtx,
+      emit_insn (gen_rtx_SET (VOIDmode, fake_arg_pointer_rtx,
 			      stack_pointer_rtx));
       emit_insn (gen_rtx_SET (VOIDmode, stack_pointer_rtx,
 			      memory_address (SImode,
@@ -2540,15 +2598,14 @@ i960_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
       set_mem_alias_set (regblock, get_varargs_alias_set ());
       set_mem_align (regblock, BITS_PER_WORD);
       move_block_from_reg (first_reg, regblock,
-			   NPARM_REGS - first_reg,
-			   (NPARM_REGS - first_reg) * UNITS_PER_WORD);
+			   NPARM_REGS - first_reg);
     }
 }
 
 /* Define the `__builtin_va_list' type for the ABI.  */
 
-tree
-i960_build_va_list ()
+static tree
+i960_build_builtin_va_list ()
 {
   return build_array_type (unsigned_type_node,
 			   build_index_type (size_one_node));
@@ -2557,12 +2614,12 @@ i960_build_va_list ()
 /* Implement `va_start' for varargs and stdarg.  */
 
 void
-i960_va_start (stdarg_p, valist, nextarg)
-     int stdarg_p ATTRIBUTE_UNUSED;
+i960_va_start (valist, nextarg)
      tree valist;
      rtx nextarg ATTRIBUTE_UNUSED;
 {
   tree s, t, base, num;
+  rtx fake_arg_pointer_rtx;
 
   /* The array type always decays to a pointer before we get here, so we
      can't use ARRAY_REF.  */
@@ -2571,7 +2628,10 @@ i960_va_start (stdarg_p, valist, nextarg)
 		build (PLUS_EXPR, unsigned_type_node, valist,
 		       TYPE_SIZE_UNIT (TREE_TYPE (valist))));
 
-  s = make_tree (unsigned_type_node, arg_pointer_rtx);
+  /* Use a different rtx than arg_pointer_rtx so that cse and friends
+     can go on believing that the argument pointer can never be zero.  */
+  fake_arg_pointer_rtx = gen_raw_REG (Pmode, ARG_POINTER_REGNUM);
+  s = make_tree (unsigned_type_node, fake_arg_pointer_rtx);
   t = build (MODIFY_EXPR, unsigned_type_node, base, s);
   TREE_SIDE_EFFECTS (t) = 1;
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
@@ -2781,5 +2841,77 @@ i960_scan_opcode (p)
       else
         i960_last_insn_type = I_TYPE_REG;
       break;
+    }
+}
+
+static void
+i960_output_mi_thunk (file, thunk, delta, vcall_offset, function)
+     FILE *file;
+     tree thunk ATTRIBUTE_UNUSED;
+     HOST_WIDE_INT delta;
+     HOST_WIDE_INT vcall_offset ATTRIBUTE_UNUSED;
+     tree function;
+{
+  int d = delta;
+  if (d < 0 && d > -32)							
+    fprintf (file, "\tsubo %d,g0,g0\n", -d);				
+  else if (d > 0 && d < 32)						
+    fprintf (file, "\taddo %d,g0,g0\n", d);				
+  else									
+    {									
+      fprintf (file, "\tldconst %d,r5\n", d);				
+      fprintf (file, "\taddo r5,g0,g0\n");				
+    }									
+  fprintf (file, "\tbx ");						
+  assemble_name (file, XSTR (XEXP (DECL_RTL (function), 0), 0));	
+  fprintf (file, "\n");							
+}
+
+static bool
+i960_rtx_costs (x, code, outer_code, total)
+     rtx x;
+     int code, outer_code;
+     int *total;
+{
+  switch (code)
+    {
+      /* Constants that can be (non-ldconst) insn operands are cost 0.
+	 Constants that can be non-ldconst operands in rare cases are cost 1.
+         Other constants have higher costs.
+
+         Must check for OUTER_CODE of SET for power2_operand, because
+         reload_cse_move2add calls us with OUTER_CODE of PLUS to decide
+	 when to replace set with add.  */
+
+    case CONST_INT:
+      if ((INTVAL (x) >= 0 && INTVAL (x) < 32)
+	  || (outer_code == SET && power2_operand (x, VOIDmode)))
+	{
+	  *total = 0;
+	  return true;
+	}
+      else if (INTVAL (x) >= -31 && INTVAL (x) < 0)
+	{
+	  *total = 1;
+	  return true;
+	}
+      /* FALLTHRU */
+
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      *total = (TARGET_C_SERIES ? 6 : 8);
+      return true;
+
+    case CONST_DOUBLE:
+      if (x == CONST0_RTX (DFmode) || x == CONST0_RTX (SFmode)
+	  || x == CONST1_RTX (DFmode) || x == CONST1_RTX (SFmode))
+	*total = 1;
+      else
+	*total = 12;
+      return true;
+
+    default:
+      return false;
     }
 }

@@ -2,7 +2,7 @@
    - some flags HAVE_... saying which simple standard instructions are
    available for this machine.
    Copyright (C) 1987, 1991, 1995, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -22,16 +22,14 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
 
-#include "hconfig.h"
+#include "bconfig.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "rtl.h"
 #include "obstack.h"
 #include "errors.h"
 #include "gensupport.h"
-
-
-#define obstack_chunk_alloc xmalloc
-#define obstack_chunk_free free
 
 /* Obstack to remember insns with.  */
 static struct obstack obstack;
@@ -42,17 +40,16 @@ static int max_id_len;
 /* Max operand encountered in a scan over some insn.  */
 static int max_opno;
 
-static void max_operand_1	PARAMS ((rtx));
-static int num_operands		PARAMS ((rtx));
-static void gen_proto		PARAMS ((rtx));
-static void gen_macro		PARAMS ((const char *, int, int));
-static void gen_insn		PARAMS ((rtx));
+static void max_operand_1 (rtx);
+static int num_operands (rtx);
+static void gen_proto (rtx);
+static void gen_macro (const char *, int, int);
+static void gen_insn (rtx);
 
 /* Count the number of match_operand's found.  */
 
 static void
-max_operand_1 (x)
-     rtx x;
+max_operand_1 (rtx x)
 {
   RTX_CODE code;
   int i;
@@ -84,8 +81,7 @@ max_operand_1 (x)
 }
 
 static int
-num_operands (insn)
-     rtx insn;
+num_operands (rtx insn)
 {
   int len = XVECLEN (insn, 1);
   int i;
@@ -102,9 +98,7 @@ num_operands (insn)
    of arguments it takes.  Any missing arguments are assumed to be at
    the end.  */
 static void
-gen_macro (name, real, expect)
-     const char *name;
-     int real, expect;
+gen_macro (const char *name, int real, int expect)
 {
   int i;
 
@@ -128,14 +122,17 @@ gen_macro (name, real, expect)
   printf ("(%c))\n", i + 'A');
 }
 
-/* Print out prototype information for a function.  */
+/* Print out prototype information for a generator function.  If the
+   insn pattern has been elided, print out a dummy generator that
+   does nothing.  */
 
 static void
-gen_proto (insn)
-     rtx insn;
+gen_proto (rtx insn)
 {
   int num = num_operands (insn);
+  int i;
   const char *name = XSTR (insn, 0);
+  int truth = maybe_eval_c_test (XSTR (insn, 2));
 
   /* Many md files don't refer to the last two operands passed to the
      call patterns.  This means their generator functions will be two
@@ -156,29 +153,49 @@ gen_proto (insn)
 	gen_macro (name, num, 5);
     }
 
-  printf ("extern struct rtx_def *gen_%-*s PARAMS ((", max_id_len, name);
+  if (truth != 0)
+    printf ("extern rtx        gen_%-*s (", max_id_len, name);
+  else
+    printf ("static inline rtx gen_%-*s (", max_id_len, name);
 
   if (num == 0)
-    printf ("void");
+    fputs ("void", stdout);
   else
     {
-      while (num-- > 1)
-	printf ("struct rtx_def *, ");
+      for (i = 1; i < num; i++)
+	fputs ("rtx, ", stdout);
 
-      printf ("struct rtx_def *");
+      fputs ("rtx", stdout);
     }
 
-  printf ("));\n");
+  puts (");");
+
+  /* Some back ends want to take the address of generator functions,
+     so we cannot simply use #define for these dummy definitions.  */
+  if (truth == 0)
+    {
+      printf ("static inline rtx\ngen_%s", name);
+      if (num > 0)
+	{
+	  putchar ('(');
+	  for (i = 0; i < num-1; i++)
+	    printf ("rtx %c ATTRIBUTE_UNUSED, ", 'a' + i);
+	  printf ("rtx %c ATTRIBUTE_UNUSED)\n", 'a' + i);
+	}
+      else
+	puts ("(void)");
+      puts ("{\n  return 0;\n}");
+    }
 
 }
 
 static void
-gen_insn (insn)
-     rtx insn;
+gen_insn (rtx insn)
 {
   const char *name = XSTR (insn, 0);
   const char *p;
   int len;
+  int truth = maybe_eval_c_test (XSTR (insn, 2));
 
   /* Don't mention instructions whose names are the null string
      or begin with '*'.  They are in the machine description just
@@ -191,33 +208,30 @@ gen_insn (insn)
   if (len > max_id_len)
     max_id_len = len;
 
-  printf ("#define HAVE_%s ", name);
-  if (strlen (XSTR (insn, 2)) == 0)
-    printf ("1\n");
+  if (truth == 0)
+    /* Emit nothing.  */;
+  else if (truth == 1)
+    printf ("#define HAVE_%s 1\n", name);
   else
     {
       /* Write the macro definition, putting \'s at the end of each line,
 	 if more than one.  */
-      printf ("(");
+      printf ("#define HAVE_%s (", name);
       for (p = XSTR (insn, 2); *p; p++)
 	{
 	  if (IS_VSPACE (*p))
-	    printf (" \\\n");
+	    fputs (" \\\n", stdout);
 	  else
-	    printf ("%c", *p);
+	    putchar (*p);
 	}
-      printf (")\n");
+      fputs (")\n", stdout);
     }
 
   obstack_grow (&obstack, &insn, sizeof (rtx));
 }
 
-extern int main PARAMS ((int, char **));
-
 int
-main (argc, argv)
-     int argc;
-     char **argv;
+main (int argc, char **argv)
 {
   rtx desc;
   rtx dummy;
@@ -227,12 +241,16 @@ main (argc, argv)
   progname = "genflags";
   obstack_init (&obstack);
 
+  /* We need to see all the possibilities.  Elided insns may have
+     direct calls to their generators in C code.  */
+  insn_elision = 0;
+
   if (argc <= 1)
     fatal ("no input file name");
 
   if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
-  
+
   puts ("/* Generated automatically by the program `genflags'");
   puts ("   from the machine description file `md'.  */\n");
   puts ("#ifndef GCC_INSN_FLAGS_H");
@@ -256,7 +274,6 @@ main (argc, argv)
   obstack_grow (&obstack, &dummy, sizeof (rtx));
   insns = (rtx *) obstack_finish (&obstack);
 
-  printf ("struct rtx_def;\n");
   for (insn_ptr = insns; *insn_ptr; insn_ptr++)
     gen_proto (*insn_ptr);
 
@@ -270,8 +287,7 @@ main (argc, argv)
 
 /* Define this so we can link with print-rtl.o to get debug_rtx function.  */
 const char *
-get_insn_name (code)
-     int code ATTRIBUTE_UNUSED;
+get_insn_name (int code ATTRIBUTE_UNUSED)
 {
   return NULL;
 }

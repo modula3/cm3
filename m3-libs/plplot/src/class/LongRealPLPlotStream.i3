@@ -11,22 +11,25 @@ TYPE
              put                   (frame: Frame.T; );
              setPenWidth           (width: CARDINAL; );
              setCharacterRelHeight (relHeight: LONGREAL; );
-             setOrientation        (orient: LONGREAL; );
+             setOrientation        (orient: [0 .. 3]; );
 
              exit ();
            END;
 
   Generic <: GenericPublic;
-  GenericPublic = T OBJECT METHODS init (): T; END;
+  GenericPublic = T OBJECT METHODS init (): Generic; END;
 
   XWindow <: XWindowPublic;
-  XWindowPublic = T OBJECT METHODS init (): T; END;
+  XWindowPublic = T OBJECT METHODS init (): XWindow; END;
 
   PostScript <: PostScriptPublic;
-  PostScriptPublic = T OBJECT
-                     METHODS
-                       init (filename: Pathname.T; colored := FALSE; ): T;
-                     END;
+  PostScriptPublic =
+    T OBJECT
+    METHODS
+      init (filename: Pathname.T; colored := FALSE; portrait := FALSE; ):
+            PostScript;
+      (* 'portrait' let further calls to setOrientation to be ignored *)
+    END;
 
 
 END LongRealPLPlotStream.

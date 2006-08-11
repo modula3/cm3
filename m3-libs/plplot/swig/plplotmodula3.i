@@ -65,8 +65,8 @@ typedef int PLINT;
 %pragma(modula3) library="m3plplot";
 
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
-import_lib("plplotd","/usr/lib")
-%import_lib("plplotd","/home/zetem/daten/pakete/lib" & SL & $SYS)
+%import_lib("plplotd","/usr/lib")
+import_lib("plplotd","/usr/local/lib")
 include_dir("class")%}
 
 %insert(m3rawintf) %{
@@ -163,6 +163,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 #define    plgzax	c_plgzax
 #define    plhist	c_plhist
 #define    plhls        c_plhls
+#define    plhlsrgb     c_plhlsrgb
 #define    plinit	c_plinit
 #define    pljoin	c_pljoin
 #define    pllab	c_pllab
@@ -187,6 +188,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 #define    plreplot	c_plreplot
 #define    plrgb	c_plrgb
 #define    plrgb1	c_plrgb1
+#define    plrgbhls     c_plrgbhls
 #define    plschr	c_plschr
 #define    plscmap0	c_plscmap0
 #define    plscmap0n	c_plscmap0n
@@ -298,7 +300,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("GetCompression") plgcompression;
 %rename("GetDevice") plgdev;
 %rename("GetWindowDevice") plgdidev;
-%rename("GetOrientation") plgdiori;
+%rename("GetFractOrientation") plgdiori;
 %rename("GetWindowPlot") plgdiplt;
 %rename("GetFamilyFile") plgfam;
 %rename("GetFileName") plgfnam;
@@ -350,7 +352,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("SetDevice") plsdev;
 %rename("SetWindowDevice") plsdidev;
 %rename("LoadTransformation") plsdimap;
-%rename("SetOrientation") plsdiori;
+%rename("SetFractOrientation") plsdiori;
 %rename("SetWindowPlot") plsdiplt;
 %rename("ZoomWindow") plsdiplz;
 %rename("SetEscapeChar") plsesc;
@@ -361,7 +363,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("PlotShade") plshade;
 %rename("SetMajorTickSize") plsmaj;
 %rename("SetMinorTickSize") plsmin;
-%rename("SetGlobalOrientation") plsori;
+%rename("SetOrientation") plsori;
 %rename("SetPageParam") plspage;
 %rename("SetPause") plspause;
 %rename("SetStream") plsstrm;
@@ -372,7 +374,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("AddStripchartPoint") plstripa;
 %rename("CreateStripchart") plstripc;
 %rename("DeleteStripchart") plstripd;
-%rename("SetNewLineStyle") plstyl;
+%rename("SetCustomLineStyle") plstyl;
 %rename("SetVPAbsolute") plsvpa;
 %rename("SetXLabelParam") plsxax;
 %rename("SetYLabelParam") plsyax;
@@ -433,8 +435,8 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("Alloc2DGrid") plAlloc2dGrid;
 %rename("Free2DGrid") plFree2dGrid;
 %rename("MinMax2DGrid") plMinMax2dGrid;
-%rename("HLS_RGB") plHLS_RGB;
-%rename("RGB_HLS") plRGB_HLS;
+%rename("HLSToRGB") plhlsrgb;
+%rename("RGBToHLS") plrgbhls;
 %rename("GetCursor") plGetCursor;
 %rename("TranslateCursor") plTranslateCursor;
 
@@ -686,7 +688,7 @@ END;%}
 %insert(m3wrapintf) %{TYPE
 DirTile = {Axis, LowerBorder, UpperBorder, FixedPointLabel,
 GridMajor, GridMinor, TicksOutward, Logarithmic,
-LabelMajorUnconv, LabelMajorConv,
+TickLabelsUnconv, TickLabelsConv,
 TicksMajor, TicksMinor,
 LabelBaseParallel};
 DirTileSet = SET OF DirTile;
@@ -727,6 +729,24 @@ TYPE
 
 %typemap(m3wrapoutconv) PLINTOutput status %{$1#0%}
 %typemap(m3wrapouttype) PLINTOutput status %{BOOLEAN%}
+
+
+%insert(m3wrapintf) %{
+TYPE
+  CharacterSet = {Standard, Extended};
+%}
+%typemap(m3wrapintype)  PLINT fnt     %{CharacterSet%}
+%typemap(m3wrapargraw)  PLINT fnt     %{ORD($1_name)%}
+
+%insert(m3wrapintf) %{
+TYPE
+  FontType = {Normal, Roman, Italic, Script};
+%}
+%typemap(m3wrapintype)  PLINT ifont   %{FontType%}
+%typemap(m3wrapargraw)  PLINT ifont   %{ORD($1_name)+1%}
+
+
+
 
 %typemap(m3wrapinmode)  PLINT *p_argc %{VAR%}
 %typemap(m3wrapintype)  PLINT *p_argc %{CARDINAL%}
@@ -769,8 +789,8 @@ TYPE
 %m3multiretval plgxax;
 %m3multiretval plgyax;
 %m3multiretval plgzax;
-%m3multiretval plHLS_RGB;
-%m3multiretval plRGB_HLS;
+%m3multiretval plhlsrgb;
+%m3multiretval plrgbhls;
 %m3multiretval pltr0;
 %m3multiretval pltr1;
 %m3multiretval pltr2;

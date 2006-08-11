@@ -4,6 +4,9 @@
 
 (* Last modified on Fri Mar  8 03:37:09 1991 by muller        *)
 
+(* A hack by thielema: replaced UNTRACED REF iobuf by FILE_star
+   to be compliant with LINUXLIBC6 *)
+
 INTERFACE Cstdio;
 
 CONST 
@@ -20,11 +23,13 @@ TYPE
             flag: [0..16_FFFF];
             file: [0..16_FF]; END;
 
+  FILE_star = UNTRACED REF iobuf;
+
 <*EXTERNAL "_iob"*> VAR iob: ARRAY [0..N_STATIC_IOBS - 1] OF iobuf;
-<*EXTERNAL "_flsbuf"*> PROCEDURE flsbuf (c: CHAR; f: UNTRACED REF iobuf);
-<*EXTERNAL "_filbuf"*> PROCEDURE filbuf (f: UNTRACED REF iobuf): CHAR;
-<*EXTERNAL "ungetc"*>  PROCEDURE ungetc (c: CHAR; f: UNTRACED REF iobuf);
-<*EXTERNAL "fflush"*> PROCEDURE flush (f: UNTRACED REF iobuf);
+<*EXTERNAL "_flsbuf"*> PROCEDURE flsbuf (c: CHAR; f: FILE_star);
+<*EXTERNAL "_filbuf"*> PROCEDURE filbuf (f: FILE_star): CHAR;
+<*EXTERNAL "ungetc"*>  PROCEDURE ungetc (c: CHAR; f: FILE_star);
+<*EXTERNAL "fflush"*> PROCEDURE flush (f: FILE_star);
 
 END Cstdio.
 

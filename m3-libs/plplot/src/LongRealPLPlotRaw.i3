@@ -152,7 +152,7 @@ PROCEDURE GetCompression (VAR compression: C.int; );
 PROCEDURE GetWindowDevice (VAR mar, aspect, jx, jy: C.double; );
 
 <* EXTERNAL c_plgdiori *>
-PROCEDURE GetOrientation (VAR rot: C.double; );
+PROCEDURE GetFractOrientation (VAR rot: C.double; );
 
 <* EXTERNAL c_plgdiplt *>
 PROCEDURE GetWindowPlot (VAR xmin, ymin, xmax, ymax: C.double; );
@@ -338,7 +338,7 @@ PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: C.int;
                               dimxpmm, dimypmm: C.double; );
 
 <* EXTERNAL c_plsdiori *>
-PROCEDURE SetOrientation (rot: C.double; );
+PROCEDURE SetFractOrientation (rot: C.double; );
 
 <* EXTERNAL c_plsdiplt *>
 PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: C.double; );
@@ -392,7 +392,7 @@ PROCEDURE SetMajorTickSize (def, scale: C.double; );
 PROCEDURE SetMinorTickSize (def, scale: C.double; );
 
 <* EXTERNAL c_plsori *>
-PROCEDURE SetGlobalOrientation (ori: C.int; );
+PROCEDURE SetOrientation (ori: C.int; );
 
 <* EXTERNAL c_plspage *>
 PROCEDURE SetPageParam
@@ -433,7 +433,7 @@ PROCEDURE CreateStripchart
 PROCEDURE DeleteStripchart (id: C.int; );
 
 <* EXTERNAL c_plstyl *>
-PROCEDURE SetNewLineStyle (n: C.int; READONLY mark, space: C.int; );
+PROCEDURE SetCustomLineStyle (n: C.int; READONLY mark, space: C.int; );
 
 <* EXTERNAL c_plsvpa *>
 PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: C.double; );
@@ -526,10 +526,10 @@ PROCEDURE OptUsage ();
 <* EXTERNAL plsfile *>
 PROCEDURE SetFile (file: Cstdio.FILE_star; );
 
-<* EXTERNAL plHLS_RGB *>
-PROCEDURE HLS_RGB (h, l, s: C.double; VAR r, g, b: C.double; );
+<* EXTERNAL c_plhlsrgb *>
+PROCEDURE HLSToRGB (h, l, s: C.double; VAR r, g, b: C.double; );
 
-<* EXTERNAL plRGB_HLS *>
-PROCEDURE RGB_HLS (r, g, b: C.double; VAR h, l, s: C.double; );
+<* EXTERNAL c_plrgbhls *>
+PROCEDURE RGBToHLS (r, g, b: C.double; VAR h, l, s: C.double; );
 
 END LongRealPLPlotRaw.

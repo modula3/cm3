@@ -1,31 +1,1063 @@
-/* Copyright (C) 1993, Digital Equipment Corporation                         */
-/* All rights reserved.                                                      */
-/* See the file COPYRIGHT for a full description.                            */
+/*
+
+    Modula-3 Compiler back end parser.  
+
+    ---------------------------------------------------------------------
+
+    Copyright (C) 1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2, or (at your option) any later
+    version.
+
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, 59
+    Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    In other words, you are welcome to use, share and improve this program.
+    You are forbidden to forbid anyone else to use, share and improve what you
+    give them.  Help stamp out software-hoarding!
+
+*/
 
 #include <stdio.h>
 #include <errno.h>
 #include <setjmp.h>
+
 #include "config.h"
 #include "system.h"
-#include "flags.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "tree.h"
+#include "flags.h"
+#include "output.h"
 #include "rtl.h"
-#include "input.h"
+#include "ggc.h"
+#include "toplev.h"
+#include "varray.h"
 #include "function.h"
 #include "expr.h"
-#include "m3-parse.h"
-#include "m3-tree.h"
-#include "toplev.h"
-#include "output.h"
-#include "varray.h"
-#include "ggc.h"
+#include "input.h"
+#include "real.h"
+#include "diagnostic.h"
+#include "langhooks.h"
+#include "langhooks-def.h"
+#include "target.h"
+#include "opts.h"
+#include "options.h"
 
 #include "m3cg.h"
 
-#ifdef MULTIBYTE_CHARS
-#include <stdlib.h>
-#include <locale.h>
+/*================================================================= TREES ===*/
+
+typedef enum
+{
+  T_word_8,  T_int_8,
+  T_word_16, T_int_16,
+  T_word_32, T_int_32,
+  T_word_64, T_int_64,
+  T_reel, T_lreel, T_xreel,
+  T_addr, T_struct, T_void,
+  T_word, T_int,
+  T_LAST
+}
+m3_type;
+
+enum m3_tree_index
+{
+  /* Types. */
+  M3TI_ADDR,
+  M3TI_WORD,
+  M3TI_INT,
+  M3TI_REEL,
+  M3TI_LREEL,
+  M3TI_XREEL,
+  M3TI_INT_8,
+  M3TI_INT_16,
+  M3TI_INT_32,
+  M3TI_INT_64,
+  M3TI_WORD_8,
+  M3TI_WORD_16,
+  M3TI_WORD_32,
+  M3TI_WORD_64,
+  M3TI_VOID,
+
+  /* Values. */
+  M3TI_ZERO,
+  M3TI_ONE,
+  M3TI_NULL,
+
+  /* Procedures. */
+  M3TI_MEMCPY,
+  M3TI_MEMMOVE,
+  M3TI_MEMSET,
+  M3TI_DIV,
+  M3TI_MOD,
+  M3TI_SET_UNION,
+  M3TI_SET_DIFF,
+  M3TI_SET_INTER,
+  M3TI_SET_SDIFF,
+  M3TI_SET_EQ,
+  M3TI_SET_NE,
+  M3TI_SET_GT,
+  M3TI_SET_GE,
+  M3TI_SET_LT,
+  M3TI_SET_LE,
+  M3TI_SET_MEMBER,
+  M3TI_SET_RANGE,
+  M3TI_SET_SING,
+  M3TI_FAULT_PROC,
+  M3TI_FAULT_HANDLER,
+
+  /* Miscellaneous. */
+  M3TI_GLOBAL_VARS,
+  M3TI_DEBUG_FIELDS,
+  M3TI_CURRENT_BLOCK,
+  M3TI_CURRENT_RECORD_TYPE,
+  M3TI_CURRENT_RECORD_VALS,
+  M3TI_CURRENT_SEGMENT,
+  M3TI_FAULT_INTF,
+  M3TI_PENDING_BLOCKS,
+
+  M3TI_MAX
+};
+
+static GTY (()) tree m3_global_trees[M3TI_MAX];
+
+#define t_addr		m3_global_trees[M3TI_ADDR]
+#define t_word		m3_global_trees[M3TI_WORD]
+#define t_int		m3_global_trees[M3TI_INT]
+#define t_reel		m3_global_trees[M3TI_REEL]
+#define t_lreel		m3_global_trees[M3TI_LREEL]
+#define t_xreel		m3_global_trees[M3TI_XREEL]
+#define t_int_8		m3_global_trees[M3TI_INT_8]
+#define t_int_16	m3_global_trees[M3TI_INT_16]
+#define t_int_32	m3_global_trees[M3TI_INT_32]
+#define t_int_64	m3_global_trees[M3TI_INT_64]
+#define t_word_8	m3_global_trees[M3TI_WORD_8]
+#define t_word_16	m3_global_trees[M3TI_WORD_16]
+#define t_word_32	m3_global_trees[M3TI_WORD_32]
+#define t_word_64	m3_global_trees[M3TI_WORD_64]
+#define t_void		m3_global_trees[M3TI_VOID]
+
+#define v_zero		m3_global_trees[M3TI_ZERO]
+#define v_one		m3_global_trees[M3TI_ONE]
+#define v_null		m3_global_trees[M3TI_NULL]
+
+#define memcpy_proc	m3_global_trees[M3TI_MEMCPY]
+#define memmove_proc	m3_global_trees[M3TI_MEMMOVE]
+#define memset_proc	m3_global_trees[M3TI_MEMSET]
+#define div_proc	m3_global_trees[M3TI_DIV]
+#define mod_proc	m3_global_trees[M3TI_MOD]
+#define set_union_proc	m3_global_trees[M3TI_SET_UNION]
+#define set_diff_proc	m3_global_trees[M3TI_SET_DIFF]
+#define set_inter_proc	m3_global_trees[M3TI_SET_INTER]
+#define set_sdiff_proc	m3_global_trees[M3TI_SET_SDIFF]
+#define set_eq_proc	m3_global_trees[M3TI_SET_EQ]
+#define set_ne_proc	m3_global_trees[M3TI_SET_NE]
+#define set_gt_proc	m3_global_trees[M3TI_SET_GT]
+#define set_ge_proc	m3_global_trees[M3TI_SET_GE]
+#define set_lt_proc	m3_global_trees[M3TI_SET_LT]
+#define set_le_proc	m3_global_trees[M3TI_SET_LE]
+#define set_member_proc	m3_global_trees[M3TI_SET_MEMBER]
+#define set_range_proc	m3_global_trees[M3TI_SET_RANGE]
+#define set_sing_proc	m3_global_trees[M3TI_SET_SING]
+#define fault_proc	m3_global_trees[M3TI_FAULT_PROC]
+#define fault_handler	m3_global_trees[M3TI_FAULT_HANDLER]
+
+#define global_vars	m3_global_trees[M3TI_GLOBAL_VARS]
+#define debug_fields	m3_global_trees[M3TI_DEBUG_FIELDS]
+#define current_block	m3_global_trees[M3TI_CURRENT_BLOCK]
+#define current_record_type	m3_global_trees[M3TI_CURRENT_RECORD_TYPE]
+#define current_record_vals	m3_global_trees[M3TI_CURRENT_RECORD_VALS]
+#define current_segment	m3_global_trees[M3TI_CURRENT_SEGMENT]
+#define fault_intf	m3_global_trees[M3TI_FAULT_INTF]
+#define pending_blocks	m3_global_trees[M3TI_PENDING_BLOCKS]
+
+/* Types expected by gcc's garbage collector.
+   These types exist to allow language front-ends to
+   add extra information in gcc's parse tree data structure.
+   But the treelang front end doesn't use them -- it has
+   its own parse tree data structure.
+   We define them here only to satisfy gcc's garbage collector.  */
+
+/* Language-specific identifier information.  */
+
+struct lang_identifier GTY(())
+{
+  struct tree_identifier common;
+};
+
+/* Language-specific tree node information.  */
+
+union lang_tree_node 
+  GTY((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE")))
+{
+  union tree_node GTY ((tag ("0"), 
+			desc ("tree_node_structure (&%h)"))) 
+    generic;
+  struct lang_identifier GTY ((tag ("1"))) identifier;
+};
+
+/* Language-specific type information.  */
+
+struct lang_type GTY(())
+{
+  char junk; /* dummy field to ensure struct is not empty */
+};
+
+/* Language-specific declaration information.  */
+
+struct lang_decl GTY(())
+{
+  char junk; /* dummy field to ensure struct is not empty */
+};
+
+struct language_function GTY(())
+{
+  char junk; /* dummy field to ensure struct is not empty */
+};
+
+static tree m3_truthvalue_conversion (tree expr);
+static bool m3_mark_addressable (tree exp);
+static tree m3_type_for_size (unsigned precision, int unsignedp);
+static tree m3_type_for_mode (enum machine_mode, int unsignedp);
+static tree m3_unsigned_type (tree type_node);
+static tree m3_signed_type (tree type_node);
+static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
+static HOST_WIDE_INT m3_get_alias_set (tree);
+static unsigned int m3_init_options (unsigned int argc, const char **argv);
+static int m3_handle_option (size_t scode, const char *arg, int value);
+static bool m3_init (void);
+static void m3_parse_file (int);
+static void m3_finish (void);
+
+/* XXX these should be static */
+void pushlevel (int ignore);
+tree poplevel (int keep, int reverse, int functionbody);
+int global_bindings_p (void);
+void insert_block (tree block);
+void set_block (tree block);
+tree pushdecl (tree decl);
+tree getdecls (void);
+
+/* The front end language hooks (addresses of code for this front
+   end).  These are not really very language-dependent, i.e.
+   treelang, C, Mercury, etc. can all use almost the same definitions.  */
+
+#undef LANG_HOOKS_TRUTHVALUE_CONVERSION
+#define LANG_HOOKS_TRUTHVALUE_CONVERSION m3_truthvalue_conversion
+#undef LANG_HOOKS_MARK_ADDRESSABLE
+#define LANG_HOOKS_MARK_ADDRESSABLE m3_mark_addressable
+#undef LANG_HOOKS_SIGNED_TYPE
+#define LANG_HOOKS_SIGNED_TYPE m3_signed_type
+#undef LANG_HOOKS_UNSIGNED_TYPE
+#define LANG_HOOKS_UNSIGNED_TYPE m3_unsigned_type
+#undef LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE
+#define LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE m3_signed_or_unsigned_type
+#undef LANG_HOOKS_TYPE_FOR_MODE
+#define LANG_HOOKS_TYPE_FOR_MODE m3_type_for_mode
+#undef LANG_HOOKS_TYPE_FOR_SIZE
+#define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
+#undef LANG_HOOKS_PARSE_FILE
+#define LANG_HOOKS_PARSE_FILE m3_parse_file
+#undef LANG_HOOKS_GET_ALIAS_SET
+#define LANG_HOOKS_GET_ALIAS_SET m3_get_alias_set
+
+/* Hook routines and data unique to Modula-3 back-end.  */
+
+#undef LANG_HOOKS_INIT
+#define LANG_HOOKS_INIT m3_init
+#undef LANG_HOOKS_NAME
+#define LANG_HOOKS_NAME "Modula-3 backend"
+#undef LANG_HOOKS_FINISH
+#define LANG_HOOKS_FINISH m3_finish
+#undef LANG_HOOKS_INIT_OPTIONS
+#define LANG_HOOKS_INIT_OPTIONS  m3_init_options
+#undef LANG_HOOKS_HANDLE_OPTION
+#define LANG_HOOKS_HANDLE_OPTION m3_handle_option
+const struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
+
+/* Tree code type/name/code tables.  */
+
+#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) TYPE,
+
+const char tree_code_type[] = {
+#include "tree.def"
+  'x'
+};
+#undef DEFTREECODE
+
+#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) LENGTH,
+
+const unsigned char tree_code_length[] = {
+#include "tree.def"
+  0
+};
+#undef DEFTREECODE
+
+#define DEFTREECODE(SYM, NAME, TYPE, LEN) NAME,
+
+const char *const tree_code_name[] = {
+#include "tree.def"
+  "@@dummy"
+};
+#undef DEFTREECODE
+
+static HOST_WIDE_INT
+m3_get_alias_set (tree t ATTRIBUTE_UNUSED)
+{
+  return 0;
+}
+
+static tree
+m3_cast (tree tipe, tree op0)
+{
+  return fold (build1 (NOP_EXPR, tipe, op0));
+}
+
+static tree
+m3_build1 (enum tree_code code, tree tipe, tree op0)
+{
+  return fold (build1 (code, tipe, op0));
+}
+
+static tree
+m3_build2 (enum tree_code code, tree tipe, tree op0, tree op1)
+{
+  return fold (build (code, tipe, op0, op1));
+}
+
+static tree
+m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
+{
+  return fold (build (code, tipe, op0, op1, op2));
+}
+
+static tree
+m3_build_int (int n)
+{
+  if (n == 0)
+    return v_zero;
+
+  if (n == 1)
+    return v_one;
+
+  if ((BITS_PER_WORD > sizeof (int) * 8) && (n < 0))
+    {
+      return build_int_2 (n, ~0);
+    }
+  else
+    {
+      return build_int_2 (n, 0);
+    }
+}
+
+static bool
+m3_is_small_cardinal (tree t, HOST_WIDE_INT *n)
+{
+  if (TREE_CODE (t) != INTEGER_CST || TREE_INT_CST_HIGH (t) != 0)
+    return false;
+  *n = TREE_INT_CST_LOW (t);
+  return true;
+}
+
+static tree
+m3_build_type (m3_type t, int s, int a)
+{
+  switch (t)
+    {
+    case T_word:
+      switch (s)
+	{
+	case 0:
+	  return t_word;
+	case 8:
+	  return t_word_8;
+	case 16:
+	  return t_word_16;
+	case 32:
+	  return t_word_32;
+	case 64:
+	  return t_word_64;
+	default:
+	  if (s == BITS_PER_WORD) return t_word;
+	}
+      break;
+
+    case T_int:
+      switch (s)
+	{
+	case 0:
+	  return t_int;
+	case 8:
+	  return t_int_8;
+	case 16:
+	  return t_int_16;
+	case 32:
+	  return t_int_32;
+	case 64:
+	  return t_int_64;
+	default:
+	  if (s == BITS_PER_WORD) return t_int;
+	}
+      break;
+
+    case T_addr:
+      return t_addr;
+    case T_reel:
+      return t_reel;
+    case T_lreel:
+      return t_lreel;
+    case T_xreel:
+      return t_xreel;
+    case T_int_8:
+      return t_int_8;
+    case T_int_16:
+      return t_int_16;
+    case T_int_32:
+      return t_int_32;
+    case T_int_64:
+      return t_int_64;
+    case T_word_8:
+      return t_word_8;
+    case T_word_16:
+      return t_word_16;
+    case T_word_32:
+      return t_word_32;
+    case T_word_64:
+      return t_word_64;
+    case T_void:
+      return t_void;
+
+    case T_struct:
+      {
+	tree ts = make_node (RECORD_TYPE);
+	TYPE_NAME (ts) = NULL_TREE;
+	TYPE_FIELDS (ts) = NULL_TREE;
+	TYPE_SIZE (ts) = bitsize_int (s);
+	TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
+
+	TYPE_ALIGN (ts) = a;
+	TYPE_MODE (ts) = mode_for_size (s, MODE_INT, 1);
+	/* If structure's known alignment is less than
+	   what the scalar mode would need, and it matters,
+	   then stick with BLKmode.  */
+	if (STRICT_ALIGNMENT && !(a >= BIGGEST_ALIGNMENT || (a >= s)))
+	  {
+	    if (TYPE_MODE (ts) != BLKmode)
+	      /* If this is the only reason this type is BLKmode,
+		 then don't force containing types to be BLKmode.  */
+	      TYPE_NO_FORCE_BLK (ts) = 1;
+	    TYPE_MODE (ts) = BLKmode;
+	  }
+	return ts;
+      }
+
+    default:
+      break;
+    } /*switch*/
+
+  abort ();
+}
+
+/*========================================== insert, shift, rotate and co ===*/
+
+static tree
+m3_do_insert (tree x, tree y, tree i, tree n, tree t)
+{
+  tree a, b, c, d, e, f, g, h, j, k, l;
+
+  t = m3_unsigned_type (t);
+  a = m3_build1 (BIT_NOT_EXPR, t, v_zero);
+  b = m3_build2 (LSHIFT_EXPR, t, a, n);
+  c = m3_build1 (BIT_NOT_EXPR, t, b);
+  d = m3_build2 (BIT_AND_EXPR, t, y, c);
+  e = m3_build2 (LSHIFT_EXPR, t, d, i);
+  f = m3_build2 (LSHIFT_EXPR, t, c, i);
+  g = m3_build1 (BIT_NOT_EXPR, t, f);
+  h = m3_build2 (BIT_AND_EXPR, t, x, g);
+  j = m3_build2 (BIT_IOR_EXPR, t, h, e);
+  k = m3_build3 (COND_EXPR, t,
+                 m3_build2 (EQ_EXPR, t_int, n, m3_build_int (BITS_PER_WORD)),
+                 y, j);
+  l = m3_build3 (COND_EXPR, t,
+                 m3_build2 (EQ_EXPR, t_int, n, v_zero),
+                 x, k);
+  return l;
+}
+
+static tree
+left_shift (tree t, int i)
+{
+  if (i)
+    t = m3_build2 (LSHIFT_EXPR, t_word, t, m3_build_int (i));
+  return t;
+}
+
+static tree
+m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
+{
+  /* ??? Use BIT_FIELD_REF ??? */
+  HOST_WIDE_INT y_val;
+
+  if ((i < 0) || (BITS_PER_WORD <= i) || (n < 0) || (BITS_PER_WORD <= n))
+    {
+      return m3_do_insert (x, y, m3_build_int (i), m3_build_int (n), t);
+    }
+
+  if (n == 0)
+    return x;
+
+  if ((n == 1) && (i < (int)(sizeof (int) * 8)))
+    {
+      if (m3_is_small_cardinal (y, &y_val))
+	{
+	  if (y_val & 1)
+	    {
+	      return m3_build2 (BIT_IOR_EXPR, t, x,
+				m3_build_int (1 << i));
+	    }
+	  else
+	    {
+	      return m3_build2 (BIT_AND_EXPR, t, x,
+				m3_build_int (~(1 << i)));
+	    }
+	}
+      else
+	{			/* non-constant, 1-bit value */
+	  tree a, b;
+	  a = m3_build2 (BIT_AND_EXPR, t, y, v_one);
+	  b = m3_build2 (BIT_AND_EXPR, t, x, m3_build_int (~(1 << i)));
+	  return m3_build2 (BIT_IOR_EXPR, t, b, left_shift (a, i));
+	}
+    }
+  else
+    {				/* multi-bit value */
+      tree saved_bits, new_bits;
+      if (i + n < (int)(sizeof (int) * 8))
+	{
+	  int mask = (1 << n) - 1;
+	  saved_bits = m3_build_int (~(mask << i));
+	  if (m3_is_small_cardinal (y, &y_val))
+	    {
+	      new_bits = m3_build_int ((y_val & mask) << i);
+	    }
+	  else
+	    {
+	      new_bits = m3_build2 (BIT_AND_EXPR, t, y,
+				    m3_build_int (mask));
+	      new_bits = left_shift (new_bits, i);
+	    };
+	}
+      else if (n < (int)(sizeof (int) * 8))
+	{
+	  int mask = (1 << n) - 1;
+	  tree a = m3_build_int (mask);
+	  if (m3_is_small_cardinal (y, &y_val))
+	    {
+	      new_bits = m3_build_int (y_val & mask);
+	    }
+	  else
+	    {
+	      new_bits = m3_build2 (BIT_AND_EXPR, t, y,
+				    m3_build_int (mask));
+	    };
+	  new_bits = left_shift (new_bits, i);
+	  saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (a, i));
+	}
+      else
+	{			/* n >= sizeof(int)*8 */
+	  tree mask;
+	  mask = m3_build2 (LSHIFT_EXPR, t, m3_build_int (~0L),
+			    m3_build_int (n));
+	  mask = m3_build1 (BIT_NOT_EXPR, t, mask);
+	  new_bits = left_shift (m3_build2 (BIT_AND_EXPR, t, y, mask), i);
+	  saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (mask, i));
+	};
+      x = m3_build2 (BIT_AND_EXPR, t, x, saved_bits);
+      return m3_build2 (BIT_IOR_EXPR, t, x, new_bits);
+    }
+}
+
+static tree
+m3_do_extract (tree x, tree i, tree n, tree t, int sign_extend)
+{
+  tree a, b, c, d, e, f;
+
+  a = m3_build2 (MINUS_EXPR, t, m3_build_int (BITS_PER_WORD), n);
+  b = m3_build2 (MINUS_EXPR, t, a, i);
+  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
+  d = m3_build2 (LSHIFT_EXPR, m3_unsigned_type (t), c, b);
+  e = m3_build2 (RSHIFT_EXPR, 
+                 sign_extend ? m3_signed_type (t) : m3_unsigned_type (t),
+		 d, a);
+  f = m3_build3 (COND_EXPR, t,
+		 m3_build2 (EQ_EXPR, t, n, v_zero),
+		 v_zero, e);
+  return f;
+}
+
+static tree
+m3_do_fixed_extract (tree x, int i, int n, tree t, int sign_extend)
+{
+  /* ??? Use BIT_FIELD_REF ???  */
+  int a = BITS_PER_WORD - n;
+  int b = BITS_PER_WORD - n - i;
+  tree c, d, e;
+
+  if ((a < 0) || (BITS_PER_WORD <= a) || (b < 0) || (BITS_PER_WORD <= b))
+    {
+      return m3_do_extract (x, m3_build_int (i),
+			    m3_build_int (n), t, sign_extend);
+    }
+
+  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
+  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, m3_unsigned_type (t), c, 
+                                m3_build_int (b));
+  e = (a == 0) ? d : 
+    m3_build2 (RSHIFT_EXPR,
+	       sign_extend ? m3_signed_type (t) : m3_unsigned_type (t),
+               d, m3_build_int (a));
+  return e;
+}
+
+static tree
+m3_do_rotate (tree val, tree cnt, int right, tree t)
+{
+  /* ??? Use LROTATE_EXPR/RROTATE_EXPR.  */
+  tree a, b, c, d, e, f, g;
+
+  t = m3_unsigned_type (t);
+  a = m3_build_int (BITS_PER_WORD - 1);
+  b = m3_build2 (BIT_AND_EXPR, t, cnt, a);
+  c = m3_build2 (MINUS_EXPR, t, m3_build_int (BITS_PER_WORD), b);
+  d = m3_build1 (CONVERT_EXPR, t, val);
+  e = m3_build2 (LSHIFT_EXPR, t, d, (right) ? c : b);
+  f = m3_build2 (RSHIFT_EXPR, t, d, (right) ? b : c);
+  g = m3_build2 (BIT_IOR_EXPR, t, e, f);
+  return g;
+}
+
+static tree
+m3_do_shift (tree val, tree cnt, int right, tree t)
+{
+  tree a, b, c, d;
+  HOST_WIDE_INT cnt_val;
+
+  t = m3_unsigned_type (t);
+  a = m3_build1 (CONVERT_EXPR, t, val);
+  b = m3_build2 ((right) ? RSHIFT_EXPR : LSHIFT_EXPR, t, a, cnt);
+  if (m3_is_small_cardinal (cnt, &cnt_val)
+      && (0 <= cnt_val) && (cnt_val < BITS_PER_WORD))
+    {
+      return b;
+    };
+  c = m3_build2 (GE_EXPR, t, cnt, m3_build_int (BITS_PER_WORD));
+  d = m3_build3 (COND_EXPR, t, c, v_zero, b);
+  return d;
+}
+
+static tree
+m3_build_real (const char *value, tree tipe)
+{
+  tree x;
+
+  if (tipe == t_reel)
+    x = build_real (tipe, REAL_VALUE_ATOF (value, SFmode));
+  else if (tipe == t_lreel)
+    x = build_real (tipe, REAL_VALUE_ATOF (value, DFmode));
+# if 0
+  else if (tipe == t_xreel)
+    x = build_real (tipe, REAL_VALUE_ATOF (value, XFmode));
+# endif
+  else
+    abort ();
+  return x;
+}
+
+/* Prepare expr to be an argument of a TRUTH_NOT_EXPR,
+   or validate its data type for an `if' or `while' statement or ?..: exp.
+
+   This preparation consists of taking the ordinary
+   representation of an expression expr and producing a valid tree
+   boolean expression describing whether expr is nonzero.  We could
+   simply always do build_binary_op (NE_EXPR, expr, truthvalue_false_node, 1),
+   but we optimize comparisons, &&, ||, and !.
+
+   The resulting type should always be `truthvalue_type_node'.  */
+
+tree
+m3_truthvalue_conversion (tree expr)
+{
+  if (TREE_CODE (expr) == ERROR_MARK)
+    return expr;
+
+  return m3_build2 (NE_EXPR, t_int, expr, integer_zero_node);
+}
+
+/* Mark EXP saying that we need to be able to take the
+   address of it; it should not be allocated in a register.
+   Value is 1 if successful.  
+   
+   This implementation was copied from c-decl.c. */
+
+static bool
+m3_mark_addressable (tree exp)
+{
+  register tree x = exp;
+  while (1)
+    switch (TREE_CODE (x))
+      {
+      case COMPONENT_REF:
+      case ADDR_EXPR:
+      case ARRAY_REF:
+	x = TREE_OPERAND (x, 0);
+	break;
+
+      case CONSTRUCTOR:
+	TREE_ADDRESSABLE (x) = 1;
+	return true;
+
+      case VAR_DECL:
+      case CONST_DECL:
+      case PARM_DECL:
+      case RESULT_DECL:
+	put_var_into_stack (x, /*rescan=*/true);
+
+	/* drops in */
+      case FUNCTION_DECL:
+	TREE_ADDRESSABLE (x) = 1;
+	/* drops out */
+      default:
+	return true;
+      }
+}
+
+/* Return an integer type with the number of bits of precision given by  
+   PRECISION.  UNSIGNEDP is nonzero if the type is unsigned; otherwise
+   it is a signed type.  */
+  
+static tree
+m3_type_for_size (unsigned bits, int unsignedp)
+{
+  if (bits <= TYPE_PRECISION (t_int_8))
+    return unsignedp ? t_word_8  : t_int_8;
+
+  if (bits <= TYPE_PRECISION (t_int_16))
+    return unsignedp ? t_word_16 : t_int_16;
+
+  if (bits <= TYPE_PRECISION (t_int_32))
+    return unsignedp ? t_word_32  : t_int_32;
+
+  if (bits <= TYPE_PRECISION (t_int_64))
+    return unsignedp ? t_word_64  : t_int_64;
+
+  if (bits <= TYPE_PRECISION (t_int))
+    return unsignedp ? t_word : t_int;
+
+  return 0;
+}
+
+/* Return a data type that has machine mode MODE.  UNSIGNEDP selects
+   an unsigned type; otherwise a signed type is returned.  */
+
+static tree
+m3_type_for_mode (enum machine_mode mode, int unsignedp)
+{
+  if (mode == TYPE_MODE (t_int_8))   return unsignedp ? t_word_8   : t_int_8;
+  if (mode == TYPE_MODE (t_int_16))  return unsignedp ? t_word_16  : t_int_16;
+  if (mode == TYPE_MODE (t_int_32))  return unsignedp ? t_word_32  : t_int_32;
+  if (mode == TYPE_MODE (t_int_64))  return unsignedp ? t_word_64  : t_int_64;
+  if (mode == TYPE_MODE (t_int))     return unsignedp ? t_word     : t_int;
+  if (mode == TYPE_MODE (t_reel))    return t_reel;
+  if (mode == TYPE_MODE (t_lreel))   return t_lreel;
+  if (mode == TYPE_MODE (t_xreel))   return t_xreel;
+  return 0;
+}
+
+/* Return the unsigned version of a TYPE_NODE, a scalar type.  */
+
+static tree
+m3_unsigned_type (tree type_node)
+{
+  return m3_signed_or_unsigned_type (1, type_node);
+}
+
+/* Return the signed version of a TYPE_NODE, a scalar type.  */
+
+static tree
+m3_signed_type (tree type_node)
+{
+  return m3_signed_or_unsigned_type (0, type_node);
+}
+
+/* Return a type the same as TYPE except unsigned or signed according to
+   UNSIGNEDP.  */
+
+static tree
+m3_signed_or_unsigned_type (int unsignedp, tree type)
+{
+  if (! INTEGRAL_TYPE_P (type) || TREE_UNSIGNED (type) == unsignedp)
+    return type;
+  else
+    return m3_type_for_size (TYPE_PRECISION (type), unsignedp);
+}
+
+/* Return non-zero if we are currently in the global binding level.  */
+
+int
+global_bindings_p (void)
+{
+  return current_block == 0;
+}
+
+/* Return the list of declarations in the current level. Note that this list
+   is in reverse order (it has to be so for back-end compatibility).  */
+
+tree
+getdecls (void)
+{
+  return current_block ? BLOCK_VARS (current_block) : global_vars;
+}
+
+/* Enter a new binding level. The input parameter is ignored, but has to be
+   specified for back-end compatibility.  */
+
+void
+pushlevel (int ignore ATTRIBUTE_UNUSED)
+{
+  abort ();
+}
+
+/* Exit a binding level.
+   Pop the level off, and restore the state of the identifier-decl mappings
+   that were in effect when this level was entered.
+
+   If KEEP is nonzero, this level had explicit declarations, so
+   and create a "block" (a BLOCK node) for the level
+   to record its declarations and subblocks for symbol table output.
+
+   If FUNCTIONBODY is nonzero, this level is the body of a function,
+   so create a block as if KEEP were set and also clear out all
+   label names.
+
+   If REVERSE is nonzero, reverse the order of decls before putting
+   them into the BLOCK.  */
+
+tree
+poplevel (int keep ATTRIBUTE_UNUSED,
+	  int reverse ATTRIBUTE_UNUSED,
+	  int functionbody ATTRIBUTE_UNUSED)
+{
+  abort ();
+}
+
+/* Insert BLOCK at the end of the list of subblocks of the
+   current binding level.  This is used when a BIND_EXPR is expanded,
+   to handle the BLOCK node inside the BIND_EXPR.  */
+
+void
+insert_block (tree block)
+{
+  TREE_USED (block) = 1;
+  BLOCK_SUBBLOCKS (current_block)
+    = chainon (BLOCK_SUBBLOCKS (current_block), block);
+}
+
+/* Set the BLOCK node for the innermost scope
+   (the one we are currently in).  */
+
+void
+set_block (tree block ATTRIBUTE_UNUSED)
+{
+  abort ();
+}
+
+/* Records a ..._DECL node DECL as belonging to the current lexical scope.
+   Returns the ..._DECL node. */
+
+tree
+pushdecl (tree decl ATTRIBUTE_UNUSED)
+{
+  abort ();
+}
+
+
+static void
+m3_push_type_decl(tree id, tree type_node)
+{
+  tree decl = build_decl (TYPE_DECL, id, type_node);
+  TYPE_NAME (type_node) = decl;
+  TYPE_STUB_DECL (type_node) = decl;
+}
+
+/* push_atomic_type_decl() ensures that the type's type is itself. 
+   Needed for DBX.  Must only be used for atomic types,
+   not for e.g. pointer or array types.  */
+
+static void
+m3_push_atomic_type_decl(tree id, tree type_node)
+{
+  TREE_TYPE (type_node) = type_node;
+  m3_push_type_decl (id, type_node);
+}
+
+/* Return a definition for a builtin function named NAME and whose data type
+   is TYPE.  TYPE should be a function type with argument types.
+   FUNCTION_CODE tells later passes how to compile calls to this function.
+   See tree.h for its possible values.
+
+   If LIBRARY_NAME is nonzero, use that for DECL_ASSEMBLER_NAME,
+   the name to be called if we can't opencode the function.  If
+   ATTRS is nonzero, use that for the function's attribute list.
+
+   copied from gcc/c-decl.c
+*/
+
+tree
+builtin_function (const char *name, tree type, int function_code,
+		  enum built_in_class class, const char *library_name,
+		  tree attrs ATTRIBUTE_UNUSED)
+{
+  tree decl = build_decl (FUNCTION_DECL, get_identifier (name), type);
+  DECL_EXTERNAL (decl) = 1;
+  TREE_PUBLIC (decl) = 1;
+  if (library_name)
+    SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
+  DECL_BUILT_IN_CLASS (decl) = class;
+  DECL_FUNCTION_CODE (decl) = function_code;
+  return decl;
+}
+
+/* Create the predefined scalar types of M3CG,
+   and some nodes representing standard constants (0, 1, (void *) 0).
+   Initialize the global binding level.
+   Make definitions for built-in primitive functions.  */
+
+static void
+m3_init_decl_processing (void)
+{
+  tree t;
+
+  current_function_decl = NULL;
+
+  build_common_tree_nodes (0);
+
+  t_int_8 = make_signed_type (8);
+  m3_push_atomic_type_decl (get_identifier ("int_8"), t_int_8);
+  t_word_8 = make_unsigned_type (8);
+  m3_push_atomic_type_decl (get_identifier ("word_8"), t_word_8);
+  t_int_16 = make_signed_type (16);
+  m3_push_atomic_type_decl (get_identifier ("int_16"), t_int_16);
+  t_word_16 = make_unsigned_type (16);
+  m3_push_atomic_type_decl (get_identifier ("word_16"), t_word_16);
+  t_int_32 = make_signed_type (32);
+  m3_push_atomic_type_decl (get_identifier ("int_32"), t_int_32);
+  t_word_32 = make_unsigned_type (32);
+  m3_push_atomic_type_decl (get_identifier ("word_32"), t_word_32);
+  t_int_64 = make_signed_type (64);
+  m3_push_atomic_type_decl (get_identifier ("int_64"), t_int_64);
+  t_word_64 = make_unsigned_type (64);
+  m3_push_atomic_type_decl (get_identifier ("word_64"), t_word_64);
+
+  if (BITS_PER_WORD == 32)
+    {
+      t_int = t_int_32;
+      t_word = t_word_32;
+    }
+  else if (BITS_PER_WORD == 64)
+    {
+      t_int = t_int_64;
+      t_word = t_word_64;
+    }
+  else
+    {
+      t_int = make_signed_type (BITS_PER_WORD);
+      m3_push_atomic_type_decl (get_identifier ("int"), t_int);
+      t_word = make_unsigned_type (BITS_PER_WORD);
+      m3_push_atomic_type_decl (get_identifier ("word"), t_word);
+    }
+
+  /* Set the type used for sizes and build the remaining common nodes. */
+  set_sizetype (t_int);
+  build_common_tree_nodes_2 (0);
+
+  /* Build the remaining M3-specific type and value nodes. */
+  t_addr = ptr_type_node;
+  m3_push_atomic_type_decl (get_identifier ("addr"), t_addr);
+  t_reel = float_type_node;
+  m3_push_atomic_type_decl (get_identifier ("reel"), t_reel);
+  t_lreel = double_type_node;
+  m3_push_atomic_type_decl (get_identifier ("lreel"), t_lreel);
+#if 0
+  /* XXX The M3 front end (m3middle/src/Target.m3) seems to treat extended
+     reals the same as LONGREAL.  That may be due to limitations in other
+     parts of the front end.  I don't know yet.  For now we likewise treat
+     the xreel type as if it were lreel. */
+  t_xreel = long_double_type_node;
+#else
+  t_xreel = double_type_node;
 #endif
+  m3_push_atomic_type_decl (get_identifier ("xreel"), t_xreel);
+
+  t_void = void_type_node;
+  v_zero = integer_zero_node;
+  v_one = integer_one_node;
+  v_null = null_pointer_node;
+
+  t = build_function_type_list (t_addr, t_addr, t_addr, t_int, NULL_TREE);
+  memcpy_proc = builtin_function ("memcpy", t, BUILT_IN_MEMCPY,
+				  BUILT_IN_NORMAL, NULL, NULL_TREE);
+  memmove_proc = builtin_function ("memmove", t, BUILT_IN_MEMMOVE,
+				   BUILT_IN_NORMAL, NULL, NULL_TREE);
+
+  t = build_function_type_list (t_addr, t_addr, t_int, t_int, NULL_TREE);
+  memset_proc = builtin_function ("memset", t, BUILT_IN_MEMSET,
+				  BUILT_IN_NORMAL, NULL, NULL_TREE);
+
+  t = build_function_type_list (t_int, t_int, t_int, NULL_TREE);
+  div_proc = builtin_function ("m3_div", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  mod_proc = builtin_function ("m3_mod", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+
+  t = build_function_type (t_void, NULL_TREE);
+  set_union_proc  = builtin_function ("set_union",
+				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_diff_proc   = builtin_function ("set_difference",
+				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_inter_proc  = builtin_function ("set_intersection",
+				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_sdiff_proc  = builtin_function ("set_sym_difference",
+				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_sing_proc   = builtin_function ("set_singleton",
+				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_range_proc  = builtin_function ("set_range",
+				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  
+  t = build_function_type (t_int, NULL_TREE);
+  set_member_proc = builtin_function
+    ("set_member", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_eq_proc = builtin_function ("set_eq",
+				  t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_ne_proc = builtin_function ("set_ne",
+				  t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_gt_proc = builtin_function ("set_gt",
+				  t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_ge_proc = builtin_function ("set_ge",
+				  t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_lt_proc = builtin_function ("set_lt",
+				  t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  set_le_proc = builtin_function ("set_le",
+				  t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+}
+
+/*========================================================== DECLARATIONS ===*/
 
 #ifndef FLOAT_TYPE_SIZE
 #define FLOAT_TYPE_SIZE 32
@@ -45,10 +1077,6 @@
 #define LONG_DOUBLE_TYPE_SIZE 64
 #endif
 
-#ifndef errno
-extern int errno;
-#endif
-
 #ifndef MAX
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 #endif
@@ -66,7 +1094,7 @@ enum
   M3VA_MAX
 };
 
-static varray_type m3_global_varrays[M3VA_MAX];
+static GTY (()) varray_type m3_global_varrays[M3VA_MAX];
 
 #define all_vars	m3_global_varrays[M3VA_VARS]
 #define all_procs	m3_global_varrays[M3VA_PROCS]
@@ -75,7 +1103,7 @@ static varray_type m3_global_varrays[M3VA_MAX];
 #define call_stack	m3_global_varrays[M3VA_CALL_STACK]
 
 #define STACK_PUSH(stk, x)	VARRAY_PUSH_TREE (stk, x)
-#define STACK_POP(stk)		((void)VARRAY_POP (stk))
+#define STACK_POP(stk)		VARRAY_POP (stk)
 #define STACK_REF(stk, n)	((&VARRAY_TOP_TREE (stk) + 1)[n])
 
 #define EXPR_PUSH(x)	STACK_PUSH (expr_stack, x)
@@ -106,49 +1134,6 @@ static varray_type m3_global_varrays[M3VA_MAX];
 #define CALL_TOP_TYPE()		STACK_REF (call_stack, -2)
 #define CALL_TOP_STATIC_CHAIN()	STACK_REF (call_stack, -1)
 
-
-/* Function declarations. */
-
-static void condop (enum tree_code, tree, tree);
-static void debug_field (const char *);
-static void debug_field_id (long);
-static void debug_field_fmt (long, ...);
-static tree debug_struct (void);
-static void debug_tag (char, long, ...);
-static void declare_fault_proc (void);
-static tree declare_temp (tree);
-static void emit_fault_proc (void);
-static tree fix_name (const char *, long);
-static void fmt_uid (long, char*);
-static void generate_fault (int);
-static void init_lex (void);
-static void m3_call_direct (tree, tree);
-static void m3_call_indirect (tree);
-static void m3_load (tree, int, tree, m3_type, tree, m3_type);
-static void m3_pop_param (tree);
-static void m3_start_call (void);
-static void m3_store (tree, int, tree, tree);
-static void m3_swap (void);
-static void one_field (int, tree, tree *, tree *);
-static tree proc_addr (tree, int);
-static void reload_buffer (void);
-static long get_byte (void);
-static long get_int (void);
-static int scan_boolean (void);
-static tree scan_float (int*);
-static tree scan_label (void);
-static tree scan_mtype (m3_type *);
-static tree scan_proc (void);
-static char *scan_quoted_string (long *);
-static char scan_sign (void);
-static char *scan_string (void);
-static tree scan_target_int (void);
-static m3_type scan_type (void);
-static tree scan_var (int);
-static void setop (tree, int, int);
-static void setop2 (tree, int);
-static varray_type varray_extend (varray_type, size_t);
-
 /*======================================================= OPTION HANDLING ===*/
 
 static int option_opcodes_trace     = 0;
@@ -159,38 +1144,6 @@ static int option_exprs_trace       = 0;
 static int option_misc_trace        = 0;
 static int option_types_trace       = 0;
 
-/* Decode the string P as a language-specific option.
-   Return the number of strings consumed for a valid option.
-   Otherwise return 0.  Should not complain if it does not
-   recognise the option.  */
-
-int
-m3_decode_option (argc, argv)
-     int argc;
-     char **argv;
-{
-  const char *p = argv[0];
-  int recognized = 0;
-
-  if (argc < 1) return 0;
-  if (strcmp(p, "--m3cg-trace-source-line") == 0) {
-    option_source_line_trace = 1; recognized++;
-  } else if (strcmp(p, "--m3cg-trace-opcodes") == 0) {
-    option_opcodes_trace = 1; recognized++;
-  } else if (strcmp(p, "--m3cg-trace-vars") == 0) {
-    option_vars_trace = 1; recognized++;
-  } else if (strcmp(p, "--m3cg-trace-procs") == 0) {
-    option_procs_trace = 1; recognized++;
-  } else if (strcmp(p, "--m3cg-trace-exprs") == 0) {
-    option_exprs_trace = 1; recognized++;
-  } else if (strcmp(p, "--m3cg-trace-misc") == 0) {
-    option_misc_trace = 1; recognized++;
-  } else if (strcmp(p, "--m3cg-trace-types") == 0) {
-    option_types_trace = 1; recognized++;
-  }
-  return recognized;
-}
-
 /*=============================================================== PARSING ===*/
 
 #define BUFFER_SIZE 0x10000
@@ -199,43 +1152,21 @@ static char input_buffer[BUFFER_SIZE];
 static int  input_len    = 0;
 static int  input_cursor = 0;
 static int  input_eof    = 0;
-int  m3cg_lineno  = 0;
+static int  m3cg_lineno  = 0;
 
 /* Stream for reading from the input file.  */
 FILE *finput;
 
 /*-------------------------------------------------------- buffer loading ---*/
 
-void
-m3_init_parse (const char *filename)
+static void
+m3_init_parse (void)
 {
-  /* Open input file.  */
-  if (filename == 0 || !strcmp (filename, "-"))
-    {
-      finput = stdin;
-      filename = "stdin";
-    }
-  else
-    finput = fopen (filename, "r");
-  if (finput == 0)
-    fatal_io_error ("can't open %s", filename);
-  init_lex ();
-
   VARRAY_TREE_INIT (all_vars, 100, "all_vars");
   VARRAY_TREE_INIT (all_procs, 100, "all_procs");
   VARRAY_TREE_INIT (all_labels, 100, "all_labels");
   VARRAY_TREE_INIT (expr_stack, 100, "expr_stack");
   VARRAY_TREE_INIT (call_stack, 100 * 2, "call_stack");
-  ggc_add_tree_varray_root (m3_global_varrays, M3VA_MAX);
-}
-
-void m3_finish_parse ()
-{
-  if (finput != NULL)
-    {
-      fclose (finput);
-      finput = NULL;
-    }
 }
 
 static void
@@ -246,8 +1177,8 @@ reload_buffer (void)
   input_eof = (input_len <= 0);
 }
 
-void
-init_lex (void)
+static void
+m3_init_lex (void)
 {
   reload_buffer ();
   m3cg_lineno = 1;
@@ -492,9 +1423,9 @@ scan_float (int *fkind)
 
   /* finally, assemble a floating point value */
   if (tipe == t_reel) {
-    val = REAL_VALUE_FROM_TARGET_SINGLE (*(int*)(&data.z[0]));
+    real_from_target_fmt (&val, (long *)(&data.z[0]), &ieee_single_format);
   } else {
-    val = REAL_VALUE_FROM_TARGET_DOUBLE ((HOST_WIDE_INT*)&data.z[0]);
+    real_from_target_fmt (&val, (long *)(&data.z[0]), &ieee_double_format);
   }
   return build_real (tipe, val);
 }
@@ -748,7 +1679,7 @@ one_gap (int offset)
 /*========================================= SUPPORT FUNCTIONS FOR YYPARSE ===*/
 
 static tree
-fix_name (const char *name, long id) /* GCC32OK */
+fix_name (const char *name, long id)
 {
   char buf[100];
 
@@ -769,7 +1700,7 @@ fix_name (const char *name, long id) /* GCC32OK */
 }
 
 static tree
-declare_temp (tree t) /* GCC32OK */
+declare_temp (tree t)
 {      
   tree v = build_decl (VAR_DECL, 0, t);
 
@@ -802,13 +1733,13 @@ proc_addr (tree proc, int no_tramp)
 }
 
 static void
-m3_start_call (void) /* GCC32OK */
+m3_start_call (void)
 {
   CALL_PUSH (NULL_TREE, NULL_TREE, NULL_TREE);
 }
 
 static void
-m3_pop_param (tree t) /* GCC32OK */
+m3_pop_param (tree t)
 {
   CALL_TOP_ARG ()
     = chainon (CALL_TOP_ARG (),
@@ -820,7 +1751,7 @@ m3_pop_param (tree t) /* GCC32OK */
 }
 
 static void
-m3_call_direct (tree p, tree return_type) /* GCC32OK */
+m3_call_direct (tree p, tree return_type)
 {
   tree call;
 
@@ -842,7 +1773,7 @@ m3_call_direct (tree p, tree return_type) /* GCC32OK */
 }
 
 static void
-m3_call_indirect (tree t) /* GCC32OK */
+m3_call_indirect (tree t)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
 			   tree_cons (NULL_TREE, t_void, NULL_TREE));
@@ -865,7 +1796,7 @@ m3_call_indirect (tree t) /* GCC32OK */
 }
 
 static void
-m3_swap (void) /* GCC32OK */
+m3_swap (void)
 {
   tree tmp = EXPR_REF (-1);
   EXPR_REF (-1) = EXPR_REF (-2);
@@ -875,7 +1806,7 @@ m3_swap (void) /* GCC32OK */
 static void
 m3_load (tree v, int o,
 	 tree src_t, m3_type src_T,
-	 tree dst_t, m3_type dst_T) /* GCC32OK */
+	 tree dst_t, m3_type dst_T)
 {
   if (o == 0 && TREE_TYPE (v) == src_t) {
     EXPR_PUSH (v);
@@ -897,7 +1828,7 @@ m3_load (tree v, int o,
 }
 
 static void
-m3_store (tree v, int o, tree src_t, tree dst_t)  /* GCC32OK */
+m3_store (tree v, int o, tree src_t, tree dst_t) 
 {
   tree lhs, rhs;
 
@@ -915,7 +1846,7 @@ m3_store (tree v, int o, tree src_t, tree dst_t)  /* GCC32OK */
   if (src_t != dst_t) {
     rhs = m3_build1 (CONVERT_EXPR, dst_t, rhs);
   }
-  expand_assignment (lhs, rhs, 0, 0);
+  expand_assignment (lhs, rhs, 0);
   EXPR_POP ();
 }
 
@@ -930,7 +1861,7 @@ m3_store (tree v, int o, tree src_t, tree dst_t)  /* GCC32OK */
     } while (0)
 
 static void
-condop (enum tree_code o, tree l, tree t) /* GCC32OK */
+condop (enum tree_code o, tree l, tree t)
 {
   tree t1 = m3_cast (t, EXPR_REF (-1));
   tree t2 = m3_cast (t, EXPR_REF (-2));
@@ -944,7 +1875,7 @@ condop (enum tree_code o, tree l, tree t) /* GCC32OK */
 }
 
 static void
-setop (tree p, int n, int q) /* GCC32OK */
+setop (tree p, int n, int q)
 {
   m3_start_call ();
   EXPR_PUSH (size_int (n));
@@ -956,7 +1887,7 @@ setop (tree p, int n, int q) /* GCC32OK */
 }
 
 static void
-setop2 (tree p, int q) /* GCC32OK */
+setop2 (tree p, int q)
 {
   m3_start_call ();
   while (q--) {
@@ -977,9 +1908,7 @@ declare_fault_proc (void)
   tree top_block  = make_node (BLOCK);
 
   proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
-		     build_function_type (t_void,
-					  tree_cons (0, t_word,
-						     tree_cons (0, t_void, 0))));
+		     build_function_type_list (t_void, t_word, NULL_TREE));
   DECL_RESULT (proc) = build_decl (RESULT_DECL, NULL_TREE, t_void);
   DECL_CONTEXT (DECL_RESULT (proc)) = proc;
   TREE_STATIC (proc) = 1;
@@ -1008,8 +1937,11 @@ declare_fault_proc (void)
 static void
 emit_fault_proc (void)
 {
-  DECL_SOURCE_FILE (fault_proc) = "<internal>";
-  DECL_SOURCE_LINE (fault_proc) = 0;
+  location_t save_loc = input_location;
+
+  input_location.file = "<internal>";
+  input_location.line = 0;
+  DECL_SOURCE_LOCATION (fault_proc) = input_location;
 
   if (current_block) push_function_context ();
 
@@ -1017,7 +1949,7 @@ emit_fault_proc (void)
 
   make_decl_rtl (fault_proc, NULL);
 
-  init_function_start (fault_proc, "<internal>", 0);
+  init_function_start (fault_proc);
   expand_function_start (fault_proc, 0);
 
   clear_last_expr ();
@@ -1053,13 +1985,15 @@ emit_fault_proc (void)
 
   if (current_block != BLOCK_SUBBLOCKS (DECL_INITIAL (fault_proc))) abort ();
   expand_end_bindings (BLOCK_VARS (current_block), 1, 0);
-  expand_function_end ("<internal>", 0, 0);
+  expand_function_end ();
   rest_of_compilation (fault_proc);
 
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
 
   if (current_block) pop_function_context ();
+
+  input_location = save_loc;
 }
 
 // FIXME: jdp says 0x0f and 4; cm3 may need more
@@ -1071,458 +2005,23 @@ generate_fault (int code)
 {
   if (fault_proc == 0) declare_fault_proc ();
   m3_start_call ();
-  EXPR_PUSH (m3_build_int ((lineno << LINE_SHIFT) + (code & FAULT_MASK)));
+  EXPR_PUSH (m3_build_int ((input_location.line << LINE_SHIFT) + (code & FAULT_MASK)));
   m3_pop_param (t_word);
   m3_call_direct (fault_proc, t_void);
   emit_barrier ();
 }
 
-/*================================================== ENTRY POINTS FOR GCC ===*/
-
-/* One would expect that flag_traditional is only for the benefit of
-   the C front-end, but dwarfout.c references it. */
-
-int flag_traditional;
-
-/* If DECL has a cleanup, build and return that cleanup here.
-   This is a callback called by expand_expr.  */
-
-/*ARGSUSED*/
-tree
-maybe_build_cleanup (decl)
-     tree decl ATTRIBUTE_UNUSED;
-{
-  /* There are no cleanups in Modula-3.  */
-  return NULL_TREE;
-}
-
-/*ARGSUSED*/
-void incomplete_type_error (value, typ)
-     tree value;
-     tree typ;
-{
-  if (TREE_CODE (typ) == ERROR_MARK)
-    return;
-  fputs("type:\n", stderr);
-  debug_tree(typ);
-  fputs("value:\n", stderr);
-  debug_tree(value);
-  fatal_error 
-    (" *** language-dependent function called: incomplete_type_error");
-}
-
-/* Mark EXP saying that we need to be able to take the
-   address of it; it should not be allocated in a register.
-   Value is 1 if successful.  */
-
-int mark_addressable (exp)
-     tree exp;
-{
-  tree x = exp;
-  while (1) {
-    switch (TREE_CODE (x))
-      {
-      case ADDR_EXPR:
-      case COMPONENT_REF:
-      case ARRAY_REF:
-	x = TREE_OPERAND (x, 0);
-	break;
-
-      case CONSTRUCTOR:
-	TREE_ADDRESSABLE (x) = 1;
-	return 1;
-
-      case VAR_DECL:
-      case CONST_DECL:
-      case PARM_DECL:
-      case RESULT_DECL:
-	put_var_into_stack (x);
-
-      case FUNCTION_DECL:
-	TREE_ADDRESSABLE (x) = 1;
-
-      default:
-	return 1; }}
-}
-
-/* Insert BLOCK at the end of the list of subblocks of the
-   current binding level.  This is used when a BIND_EXPR is expanded,
-   to handle the BLOCK node inside teh BIND_EXPR.  */
-/*ARGSUSED*/
-void insert_block (tree block)
-{
-  TREE_USED (block) = 1;
-  BLOCK_SUBBLOCKS (current_block)
-    = chainon (BLOCK_SUBBLOCKS (current_block), block);
-}
-
-
-/* Nonzero if we are currently in the global binding level.  */
-int global_bindings_p ()
-{
-  return current_block == 0;
-}
-
-/*ARGSUSED*/
-void copy_lang_decl (x)
-     tree x ATTRIBUTE_UNUSED;
-{
-}
-
-/* Return an integer type with BITS bits of precision,
-   that is unsigned if UNSIGNEDP is nonzero, otherwise signed.  */
-tree type_for_size (bits, unsignedp)
-     unsigned bits;
-     int unsignedp;
-{
-  if (unsignedp) {
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_word_8))) {
-      return t_word_8; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_word_16))) {
-      return t_word_16; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_word_32))) {
-      return t_word_32; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_word_64))) {
-      return t_word_64; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_word))) {
-      return t_word; }
-  } else {				      
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_int_8))) {
-      return t_int_8; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_int_16))) {
-      return t_int_16; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_int_32))) {
-      return t_int_32; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_int_64))) {
-      return t_int_64; }
-    if (bits <= TREE_INT_CST_LOW (TYPE_SIZE (t_int))) {
-      return t_int; }
-  }
-
-  fatal_error (" *** type_for_size, called for %d bits, unsignedp = %d", 
-	 bits, unsignedp);
-  return NULL_TREE;
-}
-
-/* Return a type the same as TYPE except unsigned or
-   signed according to UNSIGNEDP.  */
-
-tree signed_or_unsigned_type (unsignedp, typ)
-     int unsignedp;
-     tree typ;
-{
-  if (! INTEGRAL_TYPE_P (typ))
-    return typ;
-  if (TYPE_PRECISION (typ) == TYPE_PRECISION (t_int_8))
-    return unsignedp ? t_word_8 : t_int_8;
-  if (TYPE_PRECISION (typ) == TYPE_PRECISION (t_int_16))
-    return unsignedp ? t_word_16 : t_int_16;
-  if (TYPE_PRECISION (typ) == TYPE_PRECISION (t_int_32))
-    return unsignedp ? t_word_32 : t_int_32;
-  if (TYPE_PRECISION (typ) == TYPE_PRECISION (t_int_64))
-    return unsignedp ? t_word_64 : t_int_64;
-  if (TYPE_PRECISION (typ) == TYPE_PRECISION (t_int))
-    return unsignedp ? t_word : t_int;
-  return typ;
-}
-
-/* Return a data type that has machine mode MODE.
-   If the mode is an integer,
-   then UNSIGNEDP selects between signed and unsigned types.  */
-tree type_for_mode (mode, unsignedp)
-     enum machine_mode mode;
-     int unsignedp;
-{
-  if (mode == TYPE_MODE (t_int_64)) return unsignedp ? t_word_64 : t_int_64;
-  if (mode == TYPE_MODE (t_int_8))  return unsignedp ? t_word_8  : t_int_8;
-  if (mode == TYPE_MODE (t_int_16)) return unsignedp ? t_word_16 : t_int_16;
-  if (mode == TYPE_MODE (t_int_32)) return unsignedp ? t_word_32 : t_int_32;
-  if (mode == TYPE_MODE (t_int))    return unsignedp ? t_word    : t_int;
-  if (mode == TYPE_MODE (t_reel))   return t_reel;
-  if (mode == TYPE_MODE (t_lreel))  return t_lreel;
-  if (mode == TYPE_MODE (t_xreel))  return t_xreel;
-  return 0;
-}
-
-/* Return an unsigned type the same as TYPE in other respects.  */
-tree unsigned_type (typ)
-     tree typ;
-{
-  if (TREE_UNSIGNED (typ)) { return typ; }
-  if (typ == t_int)    return t_word;
-  if (typ == t_int_64) return t_word_64;
-  if (typ == t_int_32) return t_word_32;
-  if (typ == t_int_16) return t_word_16;
-  if (typ == t_int_8)  return t_word_8;
-  fatal_error (" *** language-dependent function called: unsigned_type");
-  /*NOTREACHED*/
-}
-
-/* Return a signed type the same as TYPE in other respects.  */
-tree signed_type (typ)
-     tree typ;
-{
-  if (!TREE_UNSIGNED (typ)) { return typ; }
-  if (typ == t_word)    return t_int;
-  if (typ == t_word_64) return t_int_64;
-  if (typ == t_word_32) return t_int_32;
-  if (typ == t_word_16) return t_int_16;
-  if (typ == t_word_8)  return t_int_8;
-  fatal_error (" *** language-dependent function called: signed_type");
-  /*NOTREACHED*/
-}
-
-/* Set the BLOCK node for the innermost scope
-   (the one we are currently in).  */
-/*ARGSUSED*/
-void set_block (block)
-     tree block ATTRIBUTE_UNUSED;
-{
-  fatal_error (" *** language-dependent function called: set_block");
-}
-
-/* Enter a new binding level.
-   If TAG_TRANSPARENT is nonzero, do so only for the name space of variables,
-   not for that of tags.  */
-/*ARGSUSED*/
-void pushlevel (tag_transparent)
-     int tag_transparent ATTRIBUTE_UNUSED;
-{
-  fatal_error (" *** language-dependent function called: pushlevel");
-}
-
-/* Exit a binding level.
-   Pop the level off, and restore the state of the identifier-decl mappings
-   that were in effect when this level was entered.
-
-   If KEEP is nonzero, this level had explicit declarations, so
-   and create a "block" (a BLOCK node) for the level
-   to record its declarations and subblocks for symbol table output.
-
-   If FUNCTIONBODY is nonzero, this level is the body of a function,
-   so create a block as if KEEP were set and also clear out all
-   label names.
-
-   If REVERSE is nonzero, reverse the order of decls before putting
-   them into the BLOCK.  */
-
-/*ARGSUSED*/
-tree poplevel (keep, reverse, functionbody)
-     int keep ATTRIBUTE_UNUSED;
-     int reverse ATTRIBUTE_UNUSED;
-     int functionbody ATTRIBUTE_UNUSED;
-{
-  fatal_error (" *** language-dependent function called: poplevel");
-  /*NOTREACHED*/
-}
-
-/* Record a decl-node X as belonging to the current lexical scope.
-   Check for errors (such as an incompatible declaration for the same
-   name already seen in the same scope).
-
-   Returns either X or an old decl for the same name.
-   If an old decl is returned, it may have been smashed
-   to agree with what X says.  */
-/*ARGSUSED*/
-tree pushdecl (x)
-     tree x ATTRIBUTE_UNUSED;
-{
-  fatal_error (" *** language-dependent function called: pushdecl");
-  /*NOTREACHED*/
-}
-
-tree getdecls ()
-{
-  return current_block ? BLOCK_VARS (current_block) : global_vars;
-}
-
-/*------------------------------------- stolen and hacked from c-common.c ---*/
-
-/* Prepare expr to be an argument of a TRUTH_NOT_EXPR,
-   or validate its data type for an `if' or `while' statement or ?..: exp.
-
-   This preparation consists of taking the ordinary
-   representation of an expression expr and producing a valid tree
-   boolean expression describing whether expr is nonzero.  We could
-   simply always do build_binary_op (NE_EXPR, expr, integer_zero_node, 1),
-   but we optimize comparisons, &&, ||, and !.
-
-   The resulting type should always be `integer_type_node'.  */
-
-tree
-truthvalue_conversion (tree expr)
-{
-  return (TREE_CODE (expr) == ERROR_MARK) ? expr
-    : m3_build2 (NE_EXPR, t_int, expr, integer_zero_node);
-}
-
 /*-------------------------------------------------- M3CG opcode handlers ---*/
 
-static void m3cg_abort (void);
-static void m3cg_abs (void);
-static void m3cg_add (void);
-static void m3cg_add_offset (void);
-static void m3cg_and (void);
-static void m3cg_begin_block (void);
-static void m3cg_begin_init (void);
-static void m3cg_begin_procedure (void);
-static void m3cg_begin_unit (void);
-static void m3cg_bind_segment (void);
-static void m3cg_call_direct (void);
-static void m3cg_call_indirect (void);
-static void m3cg_case_jump (void);
-static void m3cg_ceiling (void);
-static void m3cg_check_eq (void);
-static void m3cg_check_hi (void);
-static void m3cg_check_index (void);
-static void m3cg_check_lo (void);
-static void m3cg_check_nil (void);
-static void m3cg_check_range (void);
-static void m3cg_chop (void);
-static void m3cg_comment (void);
-static void m3cg_compare (enum tree_code);
-static void m3cg_copy (void);
-static void m3cg_copy_n (void);
-static void m3cg_cvt_float (void);
-static void m3cg_declare_array (void);
-static void m3cg_declare_constant (void);
-static void m3cg_declare_enum (void);
-static void m3cg_declare_enum_elt (void);
-static void m3cg_declare_exception (void);
-static void m3cg_declare_field (void);
-static void m3cg_declare_formal (void);
-static void m3cg_declare_global (void);
-static void m3cg_declare_indirect (void);
-static void m3cg_declare_local (void);
-static void m3cg_declare_method (void);
-static void m3cg_declare_object (void);
-static void m3cg_declare_opaque (void);
-static void m3cg_declare_open_array (void);
-static void m3cg_declare_packed (void);
-static void m3cg_declare_param (void);
-static void m3cg_declare_pointer (void);
-static void m3cg_declare_procedure (void);
-static void m3cg_declare_proctype (void);
-static void m3cg_declare_raises (void);
-static void m3cg_declare_record (void);
-static void m3cg_declare_segment (void);
-static void m3cg_declare_set (void);
-static void m3cg_declare_subrange (void);
-static void m3cg_declare_temp (void);
-static void m3cg_declare_typename (void);
-static void m3cg_div (void);
-static void m3cg_divide (void);
-static void m3cg_end_block (void);
-static void m3cg_end_init (void);
-static void m3cg_end_procedure (void);
-static void m3cg_end_unit (void);
-static void m3cg_eq (void);
-static void m3cg_exit_proc (void);
-static void m3cg_export_unit (void);
-static void m3cg_extract_mn (void);
-static void m3cg_extract_n (void);
-static void m3cg_floor (void);
-static void m3cg_free_temp (void);
-static void m3cg_ge (void);
-static void m3cg_gt (void);
-static void m3cg_if_compare (enum tree_code);
-static void m3cg_if_eq (void);
-static void m3cg_if_false (void);
-static void m3cg_if_ge (void);
-static void m3cg_if_gt (void);
-static void m3cg_if_le (void);
-static void m3cg_if_lt (void);
-static void m3cg_if_ne (void);
-static void m3cg_if_true (void);
-static void m3cg_import_global (void);
-static void m3cg_import_procedure (void);
-static void m3cg_import_unit (void);
-static void m3cg_index_address (void);
-static void m3cg_init_chars (void);
-static void m3cg_init_float (void);
-static void m3cg_init_int (void);
-static void m3cg_init_label (void);
-static void m3cg_init_offset (void);
-static void m3cg_init_proc (void);
-static void m3cg_init_var (void);
-static void m3cg_insert_mn (void);
-static void m3cg_insert_n (void);
-static void m3cg_le (void);
-static void m3cg_load (void);
-static void m3cg_load_address (void);
-static void m3cg_load_float (void);
-static void m3cg_load_indirect (void);
-static void m3cg_load_integer (void);
-static void m3cg_load_nil (void);
-static void m3cg_load_procedure (void);
-static void m3cg_load_static_link (void);
-static void m3cg_loophole (void);
-static void m3cg_lt (void);
-static void m3cg_m3_extract (void);
-static void m3cg_m3_insert (void);
-static void m3cg_m3_jump (void);
-static void m3cg_m3_rotate (void);
-static void m3cg_m3_shift (void);
-static void m3cg_max (void);
-static void m3cg_min (void);
-static void m3cg_mod (void);
-static void m3cg_multiply (void);
-static void m3cg_ne (void);
-static void m3cg_negate (void);
-static void m3cg_not (void);
-static void m3cg_note_procedure_origin (void);
-static void m3cg_or (void);
-static void m3cg_pop (void);
-static void m3cg_pop_param (void);
-static void m3cg_pop_static_link (void);
-static void m3cg_pop_struct (void);
-static void m3cg_reveal_opaque (void);
-static void m3cg_rotate_left (void);
-static void m3cg_rotate_right (void);
-static void m3cg_round (void);
-static void m3cg_set_compare (tree);
-static void m3cg_set_difference (void);
-static void m3cg_set_eq (void);
-static void m3cg_set_ge (void);
-static void m3cg_set_gt (void);
-static void m3cg_set_intersection (void);
-static void m3cg_set_label (void);
-static void m3cg_set_le (void);
-static void m3cg_set_lt (void);
-static void m3cg_set_member (void);
-static void m3cg_set_ne (void);
-static void m3cg_set_range (void);
-static void m3cg_set_runtime_hook (void);
-static void m3cg_set_runtime_proc (void);
-static void m3cg_set_singleton (void);
-static void m3cg_set_source_file (void);
-static void m3cg_set_source_line (void);
-static void m3cg_set_sym_difference (void);
-static void m3cg_set_union (void);
-static void m3cg_shift_left (void);
-static void m3cg_shift_right (void);
-static void m3cg_start_call_direct (void);
-static void m3cg_start_call_indirect (void);
-static void m3cg_store (void);
-static void m3cg_store_indirect (void);
-static void m3cg_subtract (void);
-static void m3cg_swap (void);
-static void m3cg_trunc (void);
-static void m3cg_widen (void);
-static void m3cg_xor (void);
-static void m3cg_zero (void);
-static void m3cg_zero_n (void);
-
 static void
-m3cg_begin_unit (void) /* GCC32OK */
+m3cg_begin_unit (void)
 {
   UNUSED_INTEGER (n);
   exported_interfaces = 0;
-  m3_declare_runtime_functions ();
 }
 
 static void
-m3cg_end_unit (void) /* GCC32OK */
+m3cg_end_unit (void)
 {
   int j;
   tree decl;
@@ -1545,14 +2044,14 @@ m3cg_end_unit (void) /* GCC32OK */
 }
 
 static void
-m3cg_import_unit (void) /* GCC32OK */
+m3cg_import_unit (void)
 {
   UNUSED_NAME (n);
   /* ignore */
 }
 
 static void
-m3cg_export_unit (void) /* GCC32OK */
+m3cg_export_unit (void)
 {
   NAME (n);
   /* remember the set of exported interfaces */
@@ -1560,26 +2059,26 @@ m3cg_export_unit (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_source_file (void) /* GCC32OK */
+m3cg_set_source_file (void)
 {
   NAME (s);
 
-  input_filename = s;
-  if (cfun != NULL) emit_line_note (input_filename, lineno);
+  input_location.file = s;
+  if (cfun != NULL) emit_line_note (input_location);
 }
 
 static void
-m3cg_set_source_line (void) /* GCC32OK */
+m3cg_set_source_line (void)
 {
   INTEGER (i);
 
   if (option_source_line_trace) fprintf(stderr, "  source line %4ld\n", i);
-  lineno = i;
-  if (cfun != NULL) emit_line_note (input_filename, lineno);
+  input_location.line = i;
+  if (cfun != NULL) emit_line_note (input_location);
 }
 
 static void
-m3cg_declare_typename (void) /* GCC32OK */
+m3cg_declare_typename (void)
 {
   TYPEID (my_id);
   NAME   (name);
@@ -1600,7 +2099,7 @@ m3cg_declare_typename (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_array (void) /* GCC32OK */
+m3cg_declare_array (void)
 {
   TYPEID  (my_id);
   TYPEID  (index_id);
@@ -1619,7 +2118,7 @@ m3cg_declare_array (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_open_array (void) /* GCC32OK */
+m3cg_declare_open_array (void)
 {
   TYPEID  (my_id);
   TYPEID  (elts_id);
@@ -1636,7 +2135,7 @@ m3cg_declare_open_array (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_enum (void) /* GCC32OK */
+m3cg_declare_enum (void)
 {
   TYPEID  (my_id);
   INTEGER (n_elts);
@@ -1652,7 +2151,7 @@ m3cg_declare_enum (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_enum_elt (void) /* GCC32OK */
+m3cg_declare_enum_elt (void)
 {
   NAME (n);
 
@@ -1664,7 +2163,7 @@ m3cg_declare_enum_elt (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_packed (void) /* GCC32OK */
+m3cg_declare_packed (void)
 {
   TYPEID  (my_id);
   BITSIZE (size);
@@ -1680,7 +2179,7 @@ m3cg_declare_packed (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_record (void) /* GCC32OK */
+m3cg_declare_record (void)
 {
   TYPEID  (my_id);
   BITSIZE (size);
@@ -1697,7 +2196,7 @@ m3cg_declare_record (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_field (void) /* GCC32OK */
+m3cg_declare_field (void)
 {
   NAME      (name);
   BITOFFSET (offset);
@@ -1716,7 +2215,7 @@ m3cg_declare_field (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_set (void) /* GCC32OK */
+m3cg_declare_set (void)
 {
   TYPEID  (my_id);
   TYPEID  (domain_id);
@@ -1728,7 +2227,7 @@ m3cg_declare_set (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_subrange (void) /* GCC32OK */
+m3cg_declare_subrange (void)
 {
 
   TYPEID         (my_id);
@@ -1743,8 +2242,8 @@ m3cg_declare_subrange (void) /* GCC32OK */
 
   if (option_types_trace)
     fprintf(stderr, 
-            "  subrange id %ld, a0 %d, a1 %d, b0 %d, b1 %d, size %ld\n",
-            my_id, a0, a1, b0, b1, size);
+	    "  subrange id %ld, a0 %lld, a1 %lld, b0 %lld, b1 %lld, size %ld\n",
+	    my_id, a0, a1, b0, b1, size);
 
   if ((a1 != 0) && (a1 != -1 || a0 >= 0)) {
     fatal_error ("cannot print minimum subrange value");
@@ -1759,7 +2258,7 @@ m3cg_declare_subrange (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_pointer (void) /* GCC32OK */
+m3cg_declare_pointer (void)
 {
   TYPEID        (my_id);
   TYPEID        (target_id);
@@ -1781,7 +2280,7 @@ m3cg_declare_pointer (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_indirect (void) /* GCC32OK */
+m3cg_declare_indirect (void)
 {
   TYPEID (my_id);
   TYPEID (target_id);
@@ -1794,7 +2293,7 @@ m3cg_declare_indirect (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_proctype (void) /* GCC32OK */
+m3cg_declare_proctype (void)
 {
   TYPEID  (my_id);
   INTEGER (n_formals);
@@ -1817,7 +2316,7 @@ m3cg_declare_proctype (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_formal (void) /* GCC32OK */
+m3cg_declare_formal (void)
 {
   NAME   (n);
   TYPEID (my_id);
@@ -1832,7 +2331,7 @@ m3cg_declare_formal (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_raises (void) /* GCC32OK */
+m3cg_declare_raises (void)
 {
   NAME (n);
 
@@ -1846,7 +2345,7 @@ m3cg_declare_raises (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_object (void) /* GCC32OK */
+m3cg_declare_object (void)
 {
   TYPEID        (my_id);
   TYPEID        (super_id);
@@ -1876,7 +2375,7 @@ m3cg_declare_object (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_method (void) /* GCC32OK */
+m3cg_declare_method (void)
 {
   NAME   (name);
   TYPEID (my_id);
@@ -1894,7 +2393,7 @@ m3cg_declare_method (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_opaque (void) /* GCC32OK */
+m3cg_declare_opaque (void)
 {
   UNUSED_TYPEID (my_id);
   UNUSED_TYPEID (super_id);
@@ -1902,7 +2401,7 @@ m3cg_declare_opaque (void) /* GCC32OK */
 }
 
 static void
-m3cg_reveal_opaque (void) /* GCC32OK */
+m3cg_reveal_opaque (void)
 {
   TYPEID (lhs);
   TYPEID (rhs);
@@ -1916,7 +2415,7 @@ m3cg_reveal_opaque (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_exception (void) /* GCC32OK */
+m3cg_declare_exception (void)
 {
   UNUSED_NAME    (n);
   UNUSED_TYPEID  (t);
@@ -1928,7 +2427,7 @@ m3cg_declare_exception (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_runtime_proc (void) /* GCC32OK */
+m3cg_set_runtime_proc (void)
 {
   NAME (s);
   PROC (p);
@@ -1937,7 +2436,7 @@ m3cg_set_runtime_proc (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_runtime_hook (void) /* GCC32OK */
+m3cg_set_runtime_hook (void)
 {
   NAME       (s);
   VAR        (v);
@@ -1947,7 +2446,7 @@ m3cg_set_runtime_hook (void) /* GCC32OK */
 }
 
 static void
-m3cg_import_global (void) /* GCC32OK */
+m3cg_import_global (void)
 {
   NAME       (n);
   BYTESIZE   (s);
@@ -1975,7 +2474,7 @@ m3cg_import_global (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_segment (void) /* GCC32OK */
+m3cg_declare_segment (void)
 {
   NAME       (n);
   TYPEID     (id);
@@ -2008,7 +2507,7 @@ m3cg_declare_segment (void) /* GCC32OK */
 }
 
 static void
-m3cg_bind_segment (void) /* GCC32OK */
+m3cg_bind_segment (void)
 {
   VAR       (v);
   BYTESIZE  (s);
@@ -2035,7 +2534,7 @@ m3cg_bind_segment (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_global (void) /* GCC32OK */
+m3cg_declare_global (void)
 {
   NAME       (n);
   BYTESIZE   (s);
@@ -2062,7 +2561,7 @@ m3cg_declare_global (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_constant (void) /* GCC32OK */
+m3cg_declare_constant (void)
 {
   NAME       (n);
   BYTESIZE   (s);
@@ -2087,7 +2586,7 @@ m3cg_declare_constant (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_local (void) /* GCC32OK */
+m3cg_declare_local (void)
 {
   NAME       (n);
   BYTESIZE   (s);
@@ -2127,7 +2626,7 @@ m3cg_declare_local (void) /* GCC32OK */
 static int current_param_count;
 
 static void
-m3cg_declare_param (void) /* GCC32OK */
+m3cg_declare_param (void)
 {
   NAME       (n);
   BYTESIZE   (s);
@@ -2162,7 +2661,7 @@ m3cg_declare_param (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_temp (void) /* GCC32OK */
+m3cg_declare_temp (void)
 {
   BYTESIZE   (s);
   ALIGNMENT  (a);
@@ -2188,14 +2687,14 @@ m3cg_declare_temp (void) /* GCC32OK */
 }
 
 static void
-m3cg_free_temp (void) /* GCC32OK */
+m3cg_free_temp (void)
 {
   UNUSED_VAR (v);
   /* nothing to do */
 }
 
 static void
-m3cg_begin_init (void) /* GCC32OK */
+m3cg_begin_init (void)
 {
   UNUSED_VAR (v);
 
@@ -2206,7 +2705,7 @@ m3cg_begin_init (void) /* GCC32OK */
 }
 
 static void
-m3cg_end_init (void) /* GCC32OK */
+m3cg_end_init (void)
 {
   VAR (v);
 
@@ -2224,7 +2723,7 @@ m3cg_end_init (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_int (void) /* GCC32OK */
+m3cg_init_int (void)
 {
   BYTEOFFSET     (o);
   TARGET_INTEGER (v);
@@ -2243,7 +2742,7 @@ m3cg_init_int (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_proc (void) /* GCC32OK */
+m3cg_init_proc (void)
 {
   BYTEOFFSET (o);
   PROC       (p);
@@ -2255,7 +2754,7 @@ m3cg_init_proc (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_label (void) /* GCC32OK */
+m3cg_init_label (void)
 {
   BYTEOFFSET (o);
   LABEL      (l);
@@ -2267,7 +2766,7 @@ m3cg_init_label (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_var (void) /* GCC32OK */
+m3cg_init_var (void)
 {
   BYTEOFFSET (o);
   VAR        (v);
@@ -2282,7 +2781,7 @@ m3cg_init_var (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_offset (void) /* GCC32OK */
+m3cg_init_offset (void)
 {
   BYTEOFFSET (o);
   VAR        (v);
@@ -2314,7 +2813,7 @@ m3cg_init_offset (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_chars (void) /* GCC32OK */
+m3cg_init_chars (void)
 {
   BYTEOFFSET    (o);
   QUOTED_STRING (s, l);
@@ -2329,7 +2828,7 @@ m3cg_init_chars (void) /* GCC32OK */
 }
 
 static void
-m3cg_init_float (void) /* GCC32OK */
+m3cg_init_float (void)
 {
   BYTEOFFSET (o);
   FLOAT      (f, fkind);
@@ -2357,7 +2856,7 @@ m3cg_init_float (void) /* GCC32OK */
 #define M3CG_ADAPT_RETURN_TYPE2 0
 
 static void
-m3cg_import_procedure (void) /* GCC32OK */
+m3cg_import_procedure (void)
 {
   NAME    (n);
   INTEGER (n_params);
@@ -2405,7 +2904,7 @@ m3cg_import_procedure (void) /* GCC32OK */
 }
 
 static void
-m3cg_declare_procedure (void) /* GCC32OK */
+m3cg_declare_procedure (void)
 {
   NAME    (n);
   INTEGER (n_params);
@@ -2461,7 +2960,7 @@ m3cg_declare_procedure (void) /* GCC32OK */
 }
 
 static void
-m3cg_begin_procedure (void) /* GCC32OK */
+m3cg_begin_procedure (void)
 {
   PROC (p);
   tree parm, local, args_types;
@@ -2469,7 +2968,7 @@ m3cg_begin_procedure (void) /* GCC32OK */
   if (option_procs_trace)
     fprintf(stderr, "  procedure %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
 
-  DECL_SOURCE_LINE (p) = lineno;
+  DECL_SOURCE_LOCATION (p) = input_location;
 
   args_types = tree_cons (NULL_TREE, t_void, NULL_TREE);
   for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
@@ -2484,7 +2983,7 @@ m3cg_begin_procedure (void) /* GCC32OK */
 
   current_function_decl = p;
 
-  init_function_start (p, input_filename, lineno);
+  init_function_start (p);
   expand_function_start (p, 0);
 
   clear_last_expr ();
@@ -2504,7 +3003,7 @@ m3cg_begin_procedure (void) /* GCC32OK */
 }
 
 static void
-m3cg_end_procedure (void) /* GCC32OK */
+m3cg_end_procedure (void)
 {
   PROC (p);
 
@@ -2513,7 +3012,7 @@ m3cg_end_procedure (void) /* GCC32OK */
 
   if (current_block != BLOCK_SUBBLOCKS (DECL_INITIAL (p))) abort ();
   expand_end_bindings (BLOCK_VARS (current_block), 1, 0);
-  expand_function_end (input_filename, lineno, 0);
+  expand_function_end ();
   rest_of_compilation (current_function_decl);
 
   current_block = TREE_VALUE (pending_blocks);
@@ -2523,7 +3022,7 @@ m3cg_end_procedure (void) /* GCC32OK */
 }
 
 static void
-m3cg_begin_block (void) /* GCC32OK */
+m3cg_begin_block (void)
 {
   tree b = build_block (NULL_TREE, 0, NULL_TREE, current_block, NULL_TREE);
   BLOCK_SUBBLOCKS (current_block)
@@ -2536,7 +3035,7 @@ m3cg_begin_block (void) /* GCC32OK */
 }
 
 static void
-m3cg_end_block (void) /* GCC32OK */
+m3cg_end_block (void)
 {
   expand_end_bindings (BLOCK_VARS (current_block), 1, 0);
   current_block = TREE_VALUE (pending_blocks);
@@ -2544,7 +3043,7 @@ m3cg_end_block (void) /* GCC32OK */
 }
 
 static void
-m3cg_note_procedure_origin (void) /* GCC32OK */
+m3cg_note_procedure_origin (void)
 {
   UNUSED_PROC (p);
 
@@ -2552,7 +3051,7 @@ m3cg_note_procedure_origin (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_label (void) /* GCC32OK */
+m3cg_set_label (void)
 {
   LABEL   (l);
   BOOLEAN (barrier);
@@ -2575,7 +3074,7 @@ m3cg_set_label (void) /* GCC32OK */
 }
 
 static void
-m3cg_m3_jump (void) /* GCC32OK */
+m3cg_m3_jump (void)
 {
   LABEL (l);
 
@@ -2583,7 +3082,7 @@ m3cg_m3_jump (void) /* GCC32OK */
 }
 
 static void
-m3cg_if_true (void) /* GCC32OK */
+m3cg_if_true (void)
 {
   UNUSED_TYPE      (t);
   LABEL     (l);
@@ -2595,7 +3094,7 @@ m3cg_if_true (void) /* GCC32OK */
 }
 
 static void
-m3cg_if_false (void) /* GCC32OK */
+m3cg_if_false (void)
 {
   UNUSED_TYPE      (t);
   LABEL     (l);
@@ -2607,7 +3106,7 @@ m3cg_if_false (void) /* GCC32OK */
 }
 
 static void
-m3cg_if_compare (enum tree_code condition)  /* GCC32OK */
+m3cg_if_compare (enum tree_code condition) 
 {
   MTYPE     (t);
   LABEL     (l);
@@ -2616,15 +3115,15 @@ m3cg_if_compare (enum tree_code condition)  /* GCC32OK */
   condop (condition, l, t);
 }
 
-static void m3cg_if_eq (void) { m3cg_if_compare (EQ_EXPR); } /*GCC32OK*/
-static void m3cg_if_ne (void) { m3cg_if_compare (NE_EXPR); } /*GCC32OK*/
-static void m3cg_if_gt (void) { m3cg_if_compare (GT_EXPR); } /*GCC32OK*/
-static void m3cg_if_ge (void) { m3cg_if_compare (GE_EXPR); } /*GCC32OK*/
-static void m3cg_if_lt (void) { m3cg_if_compare (LT_EXPR); } /*GCC32OK*/
-static void m3cg_if_le (void) { m3cg_if_compare (LE_EXPR); } /*GCC32OK*/
+static void m3cg_if_eq (void) { m3cg_if_compare (EQ_EXPR); }
+static void m3cg_if_ne (void) { m3cg_if_compare (NE_EXPR); }
+static void m3cg_if_gt (void) { m3cg_if_compare (GT_EXPR); }
+static void m3cg_if_ge (void) { m3cg_if_compare (GE_EXPR); }
+static void m3cg_if_lt (void) { m3cg_if_compare (LT_EXPR); }
+static void m3cg_if_le (void) { m3cg_if_compare (LE_EXPR); }
 
 static void
-m3cg_case_jump (void) /* GCC32OK */
+m3cg_case_jump (void)
 {
   MTYPE   (t);
   INTEGER (n);
@@ -2648,7 +3147,7 @@ m3cg_case_jump (void) /* GCC32OK */
 }
 
 static void
-m3cg_exit_proc (void) /* GCC32OK */
+m3cg_exit_proc (void)
 {
   MTYPE2 (t, m3t);
 
@@ -2674,7 +3173,7 @@ m3cg_exit_proc (void) /* GCC32OK */
 }
 
 static void
-m3cg_load (void) /* GCC32OK */
+m3cg_load (void)
 {
   VAR        (v);
   BYTEOFFSET (o);
@@ -2685,7 +3184,7 @@ m3cg_load (void) /* GCC32OK */
 }
 
 static void
-m3cg_load_address (void) /* GCC32OK */
+m3cg_load_address (void)
 {
   VAR        (v);
   BYTEOFFSET (o);
@@ -2706,7 +3205,7 @@ m3cg_load_address (void) /* GCC32OK */
 }
 
 static void
-m3cg_load_indirect (void) /* GCC32OK */
+m3cg_load_indirect (void)
 {
   BYTEOFFSET (o);
   MTYPE2     (src_t, src_T);
@@ -2732,7 +3231,7 @@ m3cg_load_indirect (void) /* GCC32OK */
 }
 
 static void
-m3cg_store (void) /* GCC32OK */
+m3cg_store (void)
 {
   VAR        (v);
   BYTEOFFSET (o);
@@ -2751,7 +3250,7 @@ m3cg_store (void) /* GCC32OK */
 }
 
 static void
-m3cg_store_indirect (void) /* GCC32OK */
+m3cg_store_indirect (void)
 {
   BYTEOFFSET (o);
   UNUSED_MTYPE2 (src_t, src_T);
@@ -2769,19 +3268,19 @@ m3cg_store_indirect (void) /* GCC32OK */
   }
   ptr = m3_cast (build_pointer_type (dst_t), ptr);
   ptr = m3_build1 (INDIRECT_REF, dst_t, ptr);
-  expand_assignment (ptr, m3_build1 (CONVERT_EXPR, dst_t, val), 0, 0);
+  expand_assignment (ptr, m3_build1 (CONVERT_EXPR, dst_t, val), 0);
   EXPR_POP ();
   EXPR_POP ();
 }
 
 static void
-m3cg_load_nil (void) /* GCC32OK */
+m3cg_load_nil (void)
 {
   EXPR_PUSH (v_null);
 }
 
 static void
-m3cg_load_integer (void) /* GCC32OK */
+m3cg_load_integer (void)
 {
   MTYPE          (t);
   TARGET_INTEGER (n);
@@ -2791,7 +3290,7 @@ m3cg_load_integer (void) /* GCC32OK */
 }
 
 static void
-m3cg_load_float (void) /* GCC32OK */
+m3cg_load_float (void)
 {
   UNUSED_MTYPE (t);
   FLOAT (f, fkind);
@@ -2800,7 +3299,7 @@ m3cg_load_float (void) /* GCC32OK */
 }
 
 static void
-m3cg_compare (enum tree_code op) /* GCC32OK */
+m3cg_compare (enum tree_code op)
 {
   MTYPE (src_t);
   MTYPE (dst_t);
@@ -2814,15 +3313,15 @@ m3cg_compare (enum tree_code op) /* GCC32OK */
   EXPR_POP ();
 }
 
-static void m3cg_eq (void) { m3cg_compare (EQ_EXPR); } /* GCC32OK */
-static void m3cg_ne (void) { m3cg_compare (NE_EXPR); } /* GCC32OK */
-static void m3cg_gt (void) { m3cg_compare (GT_EXPR); } /* GCC32OK */
-static void m3cg_ge (void) { m3cg_compare (GE_EXPR); } /* GCC32OK */
-static void m3cg_lt (void) { m3cg_compare (LT_EXPR); } /* GCC32OK */
-static void m3cg_le (void) { m3cg_compare (LE_EXPR); } /* GCC32OK */
+static void m3cg_eq (void) { m3cg_compare (EQ_EXPR); }
+static void m3cg_ne (void) { m3cg_compare (NE_EXPR); }
+static void m3cg_gt (void) { m3cg_compare (GT_EXPR); }
+static void m3cg_ge (void) { m3cg_compare (GE_EXPR); }
+static void m3cg_lt (void) { m3cg_compare (LT_EXPR); }
+static void m3cg_le (void) { m3cg_compare (LE_EXPR); }
 
 static void
-m3cg_add (void) /* GCC32OK */
+m3cg_add (void)
 {
   MTYPE (t);
 
@@ -2830,7 +3329,7 @@ m3cg_add (void) /* GCC32OK */
 }
 
 static void
-m3cg_subtract (void) /* GCC32OK */
+m3cg_subtract (void)
 {
   MTYPE (t);
 
@@ -2838,7 +3337,7 @@ m3cg_subtract (void) /* GCC32OK */
 }
 
 static void
-m3cg_multiply (void) /* GCC32OK */
+m3cg_multiply (void)
 {
   MTYPE (t);
 
@@ -2846,7 +3345,7 @@ m3cg_multiply (void) /* GCC32OK */
 }
 
 static void
-m3cg_divide (void) /* GCC32OK */
+m3cg_divide (void)
 {
   MTYPE (t);
 
@@ -2854,7 +3353,7 @@ m3cg_divide (void) /* GCC32OK */
 }
 
 static void
-m3cg_negate (void) /* GCC32OK */
+m3cg_negate (void)
 {
   MTYPE (t);
 
@@ -2862,7 +3361,7 @@ m3cg_negate (void) /* GCC32OK */
 }
 
 static void
-m3cg_abs (void) /* GCC32OK */
+m3cg_abs (void)
 {
   MTYPE (t);
 
@@ -2870,7 +3369,7 @@ m3cg_abs (void) /* GCC32OK */
 }
 
 static void
-m3cg_max (void) /* GCC32OK */
+m3cg_max (void)
 {
   MTYPE (t);
 
@@ -2889,7 +3388,7 @@ m3cg_max (void) /* GCC32OK */
 }
 
 static void
-m3cg_min (void) /* GCC32OK */
+m3cg_min (void)
 {
   MTYPE (t);
 
@@ -2909,7 +3408,7 @@ m3cg_min (void) /* GCC32OK */
 }
 
 static void
-m3cg_round (void) /* GCC32OK */
+m3cg_round (void)
 {
   MTYPE (src_t);
   MTYPE (dst_t);
@@ -2933,7 +3432,7 @@ m3cg_round (void) /* GCC32OK */
 }
 
 static void
-m3cg_trunc (void) /* GCC32OK */
+m3cg_trunc (void)
 {
   UNUSED_MTYPE (src_t);
   MTYPE (dst_t);
@@ -2942,7 +3441,7 @@ m3cg_trunc (void) /* GCC32OK */
 }
 
 static void
-m3cg_floor (void) /* GCC32OK */
+m3cg_floor (void)
 {
   MTYPE (src_t);
   MTYPE (dst_t);
@@ -2972,7 +3471,7 @@ m3cg_floor (void) /* GCC32OK */
 }
 
 static void
-m3cg_ceiling (void) /* GCC32OK */
+m3cg_ceiling (void)
 {
   MTYPE (src_t);
   MTYPE (dst_t);
@@ -3000,7 +3499,7 @@ m3cg_ceiling (void) /* GCC32OK */
 }
 
 static void
-m3cg_cvt_float (void) /* GCC32OK */
+m3cg_cvt_float (void)
 {
   UNUSED_MTYPE2 (src_t, src_T);
   MTYPE  (dst_t);
@@ -3013,7 +3512,7 @@ m3cg_cvt_float (void) /* GCC32OK */
 }
 
 static void
-m3cg_div (void) /* GCC32OK */
+m3cg_div (void)
 {
   MTYPE2 (t, T);
   SIGN   (a);
@@ -3032,7 +3531,7 @@ m3cg_div (void) /* GCC32OK */
 }
 
 static void
-m3cg_mod (void) /* GCC32OK */
+m3cg_mod (void)
 {
   MTYPE2 (t, T);
   SIGN   (a);
@@ -3051,7 +3550,7 @@ m3cg_mod (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_union (void) /* GCC32OK */
+m3cg_set_union (void)
 {
   BYTESIZE (n);
 
@@ -3059,7 +3558,7 @@ m3cg_set_union (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_difference (void) /* GCC32OK */
+m3cg_set_difference (void)
 {
   BYTESIZE (n);
 
@@ -3067,7 +3566,7 @@ m3cg_set_difference (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_intersection (void) /* GCC32OK */
+m3cg_set_intersection (void)
 {
   BYTESIZE (n);
 
@@ -3075,7 +3574,7 @@ m3cg_set_intersection (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_sym_difference (void) /* GCC32OK */
+m3cg_set_sym_difference (void)
 {
   BYTESIZE (n);
 
@@ -3083,7 +3582,7 @@ m3cg_set_sym_difference (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_member (void) /* GCC32OK */
+m3cg_set_member (void)
 {
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
@@ -3093,7 +3592,7 @@ m3cg_set_member (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_compare (tree proc) /* GCC32OK */
+m3cg_set_compare (tree proc)
 {
   BYTESIZE (n);
   MTYPE    (t);
@@ -3102,15 +3601,15 @@ m3cg_set_compare (tree proc) /* GCC32OK */
   setop (proc, n, 2);
 }
 
-static void m3cg_set_eq (void) { m3cg_set_compare (set_eq_proc); } /* GCC32OK */
-static void m3cg_set_ne (void) { m3cg_set_compare (set_ne_proc); } /* GCC32OK */
-static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); } /* GCC32OK */
-static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); } /* GCC32OK */
-static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); } /* GCC32OK */
-static void m3cg_set_le (void) { m3cg_set_compare (set_le_proc); } /* GCC32OK */
+static void m3cg_set_eq (void) { m3cg_set_compare (set_eq_proc); }
+static void m3cg_set_ne (void) { m3cg_set_compare (set_ne_proc); }
+static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
+static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); }
+static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); }
+static void m3cg_set_le (void) { m3cg_set_compare (set_le_proc); }
 
 static void
-m3cg_set_range (void) /* GCC32OK */
+m3cg_set_range (void)
 {
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
@@ -3120,7 +3619,7 @@ m3cg_set_range (void) /* GCC32OK */
 }
 
 static void
-m3cg_set_singleton (void) /* GCC32OK */
+m3cg_set_singleton (void)
 {
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
@@ -3130,39 +3629,39 @@ m3cg_set_singleton (void) /* GCC32OK */
 }
 
 static void
-m3cg_not (void) /* GCC32OK */
+m3cg_not (void)
 {
   MTYPE (t);
 
-  unaryop (BIT_NOT_EXPR, unsigned_type (t));
+  unaryop (BIT_NOT_EXPR, m3_unsigned_type (t));
 }
 
 static void
-m3cg_and (void) /* GCC32OK */
+m3cg_and (void)
 {
   MTYPE (t);
 
-  binaryop (BIT_AND_EXPR, unsigned_type(t));
+  binaryop (BIT_AND_EXPR, m3_unsigned_type (t));
 }
 
 static void
-m3cg_or (void) /* GCC32OK */
+m3cg_or (void)
 {
   MTYPE (t);
 
-  binaryop (BIT_IOR_EXPR, unsigned_type(t));
+  binaryop (BIT_IOR_EXPR, m3_unsigned_type (t));
 }
 
 static void
-m3cg_xor (void) /* GCC32OK */
+m3cg_xor (void)
 {
   MTYPE (t);
 
-  binaryop (BIT_XOR_EXPR, unsigned_type(t));
+  binaryop (BIT_XOR_EXPR, m3_unsigned_type (t));
 }
 
 static void
-m3cg_m3_shift (void) /* GCC32OK */
+m3cg_m3_shift (void)
 {
   MTYPE (t);
 
@@ -3175,18 +3674,19 @@ m3cg_m3_shift (void) /* GCC32OK */
 
   TREE_SIDE_EFFECTS (t1) = 1;
   TREE_SIDE_EFFECTS (t2) = 1;
-  res  = m3_build3 (COND_EXPR, unsigned_type(t),
+  res  = m3_build3 (COND_EXPR, m3_unsigned_type (t),
 		    m3_build2 (GE_EXPR, t, temp1, v_zero),
 		    m3_do_shift (temp2, temp1, 0, t),
 		    m3_do_shift (temp2, m3_build1 (NEGATE_EXPR, t, temp1),
                                  1, t));
-  EXPR_REF(-2) = m3_build2 (COMPOUND_EXPR, unsigned_type(t),
-			     m3_build2 (COMPOUND_EXPR, t, t1, t2), res);
+  EXPR_REF(-2) = m3_build2 (COMPOUND_EXPR,
+			    m3_unsigned_type (t),
+			    m3_build2 (COMPOUND_EXPR, t, t1, t2), res);
   EXPR_POP();
 }
 
 static void
-m3cg_shift_left (void) /* GCC32OK */
+m3cg_shift_left (void)
 {
   MTYPE (t);
 
@@ -3195,7 +3695,7 @@ m3cg_shift_left (void) /* GCC32OK */
 }
 
 static void
-m3cg_shift_right (void) /* GCC32OK */
+m3cg_shift_right (void)
 {
   MTYPE (t);
 
@@ -3204,7 +3704,7 @@ m3cg_shift_right (void) /* GCC32OK */
 }
 
 static void
-m3cg_m3_rotate (void) /* GCC32OK */
+m3cg_m3_rotate (void)
 {
   MTYPE (t);
 
@@ -3227,7 +3727,7 @@ m3cg_m3_rotate (void) /* GCC32OK */
 }
 
 static void
-m3cg_rotate_left (void) /* GCC32OK */
+m3cg_rotate_left (void)
 {
   MTYPE (t);
 
@@ -3236,7 +3736,7 @@ m3cg_rotate_left (void) /* GCC32OK */
 }
 
 static void
-m3cg_rotate_right (void) /* GCC32OK */
+m3cg_rotate_right (void)
 {
   MTYPE (t);
 
@@ -3245,7 +3745,7 @@ m3cg_rotate_right (void) /* GCC32OK */
 }
 
 static void
-m3cg_widen (void) /* GCC32OK */
+m3cg_widen (void)
 {
   BOOLEAN (sign);
 
@@ -3257,7 +3757,7 @@ m3cg_widen (void) /* GCC32OK */
 }
 
 static void
-m3cg_chop (void) /* GCC32OK */
+m3cg_chop (void)
 {
   EXPR_REF(-1) = m3_build1 (CONVERT_EXPR, t_int_32,
 			    m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF(-1),
@@ -3265,7 +3765,7 @@ m3cg_chop (void) /* GCC32OK */
 }
 
 static void
-m3cg_m3_extract (void) /* GCC32OK */
+m3cg_m3_extract (void)
 {
   MTYPE   (t);
   BOOLEAN (sign_extend);
@@ -3277,7 +3777,7 @@ m3cg_m3_extract (void) /* GCC32OK */
 }
 
 static void
-m3cg_extract_n (void) /* GCC32OK */
+m3cg_extract_n (void)
 {
   MTYPE   (t);
   BOOLEAN (sign_extend);
@@ -3289,7 +3789,7 @@ m3cg_extract_n (void) /* GCC32OK */
 }
 
 static void
-m3cg_extract_mn (void) /* GCC32OK */
+m3cg_extract_mn (void)
 {
   MTYPE   (t);
   BOOLEAN (sign_extend);
@@ -3300,7 +3800,7 @@ m3cg_extract_mn (void) /* GCC32OK */
 }
 
 static void
-m3cg_m3_insert (void) /* GCC32OK */
+m3cg_m3_insert (void)
 {
   MTYPE (t);
 
@@ -3312,7 +3812,7 @@ m3cg_m3_insert (void) /* GCC32OK */
 }
 
 static void
-m3cg_insert_n (void) /* GCC32OK */
+m3cg_insert_n (void)
 {
   MTYPE   (t);
   INTEGER (n);
@@ -3324,7 +3824,7 @@ m3cg_insert_n (void) /* GCC32OK */
 }
 
 static void
-m3cg_insert_mn (void) /* GCC32OK */
+m3cg_insert_mn (void)
 {
   MTYPE   (t);
   INTEGER (m);
@@ -3335,7 +3835,7 @@ m3cg_insert_mn (void) /* GCC32OK */
 }
 
 static void
-m3cg_swap (void) /* GCC32OK */
+m3cg_swap (void)
 {
   UNUSED_MTYPE (t);
   UNUSED_MTYPE (u);
@@ -3344,7 +3844,7 @@ m3cg_swap (void) /* GCC32OK */
 }
 
 static void
-m3cg_pop (void) /* GCC32OK */
+m3cg_pop (void)
 {
   UNUSED_MTYPE (t);
 
@@ -3355,7 +3855,7 @@ m3cg_pop (void) /* GCC32OK */
 }
 
 static void
-m3cg_copy_n (void) /* GCC32OK */
+m3cg_copy_n (void)
 {
   MTYPE (cnt_t);
   MTYPE (mem_t);
@@ -3389,7 +3889,7 @@ m3cg_copy_n (void) /* GCC32OK */
 }
 
 static void
-m3cg_copy (void) /* GCC32OK */
+m3cg_copy (void)
 {
   INTEGER (n);
   MTYPE2  (t, T);
@@ -3416,13 +3916,13 @@ m3cg_copy (void) /* GCC32OK */
                                 m3_cast (pts, EXPR_REF (-2))),
                      m3_build1 (INDIRECT_REF, ts,
                                 m3_cast (pts, EXPR_REF (-1))),
-                     0, 0);
+                     0);
   EXPR_POP ();
   EXPR_POP ();
 }
 
 static void
-m3cg_zero_n (void) /* GCC32OK */
+m3cg_zero_n (void)
 {
   MTYPE (cnt_t);
   MTYPE (mem_t);
@@ -3446,7 +3946,7 @@ m3cg_zero_n (void) /* GCC32OK */
 }
 
 static void
-m3cg_zero (void) /* GCC32OK */
+m3cg_zero (void)
 {
   INTEGER (n);
   MTYPE   (mem_t);
@@ -3463,7 +3963,7 @@ m3cg_zero (void) /* GCC32OK */
 }
 
 static void
-m3cg_loophole (void) /* GCC32OK */
+m3cg_loophole (void)
 {
   MTYPE2 (t, T);
   MTYPE2 (u, U);
@@ -3478,7 +3978,7 @@ m3cg_loophole (void) /* GCC32OK */
 }
 
 static void
-m3cg_abort (void) /* GCC32OK */
+m3cg_abort (void)
 {
   INTEGER (code);
 
@@ -3486,7 +3986,7 @@ m3cg_abort (void) /* GCC32OK */
 }
 
 static void
-m3cg_check_nil (void) /* GCC32OK */
+m3cg_check_nil (void)
 {
   INTEGER (code);
 
@@ -3500,7 +4000,7 @@ m3cg_check_nil (void) /* GCC32OK */
 }
 
 static void
-m3cg_check_lo (void) /* GCC32OK */
+m3cg_check_lo (void)
 {
   MTYPE2         (t, m3t);
   TARGET_INTEGER (a);
@@ -3522,7 +4022,7 @@ m3cg_check_lo (void) /* GCC32OK */
 }
 
 static void
-m3cg_check_hi (void) /* GCC32OK */
+m3cg_check_hi (void)
 {
   MTYPE2         (t, m3t);
   TARGET_INTEGER (a);
@@ -3544,7 +4044,7 @@ m3cg_check_hi (void) /* GCC32OK */
 }
 
 static void
-m3cg_check_range (void) /* GCC32OK */
+m3cg_check_range (void)
 {
   MTYPE2         (t, m3t);
   TARGET_INTEGER (a);
@@ -3570,12 +4070,12 @@ m3cg_check_range (void) /* GCC32OK */
 }
 
 static void
-m3cg_check_index (void) /* GCC32OK */
+m3cg_check_index (void)
 {
   MTYPE   (t);
   INTEGER (code);
 
-  t = unsigned_type (t);
+  t = m3_unsigned_type (t);
   expand_start_cond (m3_build2 (GE_EXPR, t,
 				m3_build1 (CONVERT_EXPR, t, EXPR_REF(-2)),
 				m3_build1 (CONVERT_EXPR, t, EXPR_REF(-1))),
@@ -3586,7 +4086,7 @@ m3cg_check_index (void) /* GCC32OK */
 }
 
 static void
-m3cg_check_eq (void) /* GCC32OK */
+m3cg_check_eq (void)
 {
   MTYPE   (t);
   INTEGER (code);
@@ -3606,7 +4106,7 @@ m3cg_check_eq (void) /* GCC32OK */
 }
 
 static void
-m3cg_add_offset (void) /* GCC32OK */
+m3cg_add_offset (void)
 {
   BYTESIZE (n);
 
@@ -3618,7 +4118,7 @@ m3cg_add_offset (void) /* GCC32OK */
 }
 
 static void
-m3cg_index_address (void) /* GCC32OK */
+m3cg_index_address (void)
 {
   MTYPE2   (t, m3t);
   BYTESIZE (n);
@@ -3648,7 +4148,7 @@ m3cg_index_address (void) /* GCC32OK */
 }
 
 static void
-m3cg_start_call_direct (void) /* GCC32OK */
+m3cg_start_call_direct (void)
 {
   UNUSED_PROC    (p);
   INTEGER (level);
@@ -3671,7 +4171,7 @@ m3cg_start_call_direct (void) /* GCC32OK */
 }
 
 static void
-m3cg_call_direct (void) /* GCC32OK */
+m3cg_call_direct (void)
 {
   PROC  (p);
   MTYPE2  (t, m3t);
@@ -3693,7 +4193,7 @@ m3cg_call_direct (void) /* GCC32OK */
 }
 
 static void
-m3cg_start_call_indirect (void) /* GCC32OK */
+m3cg_start_call_indirect (void)
 {
   UNUSED_MTYPE2 (t, m3t);
   UNUSED_INTEGER (call_conv);
@@ -3704,7 +4204,7 @@ m3cg_start_call_indirect (void) /* GCC32OK */
 }
 
 static void
-m3cg_call_indirect (void) /* GCC32OK */
+m3cg_call_indirect (void)
 {
   MTYPE2 (t, m3t);
   UNUSED_INTEGER (call_conv);
@@ -3725,7 +4225,7 @@ m3cg_call_indirect (void) /* GCC32OK */
 }
 
 static void
-m3cg_pop_param (void) /* GCC32OK */
+m3cg_pop_param (void)
 {
   MTYPE2 (t, m3t);
 
@@ -3735,7 +4235,7 @@ m3cg_pop_param (void) /* GCC32OK */
 }
 
 static void
-m3cg_pop_struct (void) /* GCC32OK */
+m3cg_pop_struct (void)
 {
   BYTESIZE  (s);
   ALIGNMENT (a);
@@ -3749,7 +4249,7 @@ m3cg_pop_struct (void) /* GCC32OK */
 }
 
 static void
-m3cg_pop_static_link (void) /* GCC32OK */
+m3cg_pop_static_link (void)
 {
   tree v = declare_temp (t_addr);
   m3_store (v, 0, TREE_TYPE (v), t_addr);
@@ -3757,7 +4257,7 @@ m3cg_pop_static_link (void) /* GCC32OK */
 }
 
 static void
-m3cg_load_procedure (void) /* GCC32OK */
+m3cg_load_procedure (void)
 {
   PROC (p);
 
@@ -3767,7 +4267,7 @@ m3cg_load_procedure (void) /* GCC32OK */
 }
 
 static void
-m3cg_load_static_link (void) /* GCC32OK */
+m3cg_load_static_link (void)
 {
   /* This is ignored now that we use gcc's built-in nested function
      support. */
@@ -3775,11 +4275,11 @@ m3cg_load_static_link (void) /* GCC32OK */
   if (option_procs_trace)
     fprintf(stderr, "  load link %s\n",
             IDENTIFIER_POINTER(DECL_NAME(p)));
-  EXPR_PUSH (build (RTL_EXPR, t_addr, NULL_TREE, lookup_static_chain (p)));;
+  EXPR_PUSH (build (RTL_EXPR, t_addr, NULL_TREE, lookup_static_chain (p)));
 }
 
 static void
-m3cg_comment (void) /* GCC32OK */
+m3cg_comment (void)
 {
   UNUSED_QUOTED_STRING (comment, len);
   if (option_misc_trace)
@@ -3946,7 +4446,8 @@ OpProc ops[] = {
   { LAST_OPCODE,                 0                              }
   };
 
-int yyparse ()
+static void
+m3_parse_file (int xx ATTRIBUTE_UNUSED)
 {
   int op, i;
 
@@ -3960,7 +4461,7 @@ int yyparse ()
   /* check the version stamp */
   i = get_int ();
   if (i != M3CG_Version) {
-    fatal_error (" *** bad M3CG version stamp (%lx), expected %lx",
+    fatal_error (" *** bad M3CG version stamp (%d), expected %x",
                  i, M3CG_Version);
   }
 
@@ -3968,7 +4469,7 @@ int yyparse ()
   while (op != (int)M3CG_END_UNIT) {
     op = get_int ();
     if (op < 0 || (int)LAST_OPCODE <= op) {
-      fatal_error (" *** bad opcode: %ld, at m3cg_lineno %d", op, m3cg_lineno);
+      fatal_error (" *** bad opcode: %d, at m3cg_lineno %d", op, m3cg_lineno);
     }
     if (option_opcodes_trace) { 
       fprintf (stderr, "(%d) %s\n", m3cg_lineno, M3CG_opnames[op]);
@@ -3976,6 +4477,123 @@ int yyparse ()
     m3cg_lineno ++;
     ops[op].proc ();
   }
-
-  return 0;
 }
+
+/*===================================================== RUNTIME FUNCTIONS ===*/
+
+/* Prepare to handle switches.  */
+static unsigned int
+m3_init_options (unsigned int argc ATTRIBUTE_UNUSED,
+		 const char **argv ATTRIBUTE_UNUSED)
+{
+  return CL_m3cg;
+}
+
+static int version_done = 0;
+const char *const language_string = "M3CG - Modula-3 Compiler back end";
+
+/* Process a switch - called by opts.c.  */
+static int
+m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
+{
+  enum opt_code code = (enum opt_code) scode;
+
+  switch (code)
+    {
+    default:
+      abort();
+
+    case OPT_v:
+      if (!version_done)
+	{
+	  fputs (language_string, stdout);
+	  fputs (version_string, stdout);
+	  fputs ("\n", stdout);
+	  version_done = 1;
+	}
+      break;
+
+    case OPT_y:
+      option_opcodes_trace     = 1;
+      option_source_line_trace = 1;
+      option_vars_trace        = 1;
+      option_procs_trace       = 1;
+      option_exprs_trace       = 1;
+      option_misc_trace        = 1;
+      option_types_trace       = 1;
+      break;
+
+    case OPT_fopcodes_trace:
+      option_opcodes_trace = value;
+      break;
+
+    case OPT_fsource_line_trace:
+      option_source_line_trace = value;
+      break;
+
+    case OPT_fvars_trace:
+      option_vars_trace = value;
+      break;
+
+    case OPT_fprocs_trace:
+      option_procs_trace = value;
+      break;
+
+    case OPT_fexprs_trace:
+      option_exprs_trace = value;
+      break;
+
+    case OPT_fmisc_trace:
+      option_misc_trace = value;
+      break;
+
+    case OPT_ftypes_trace:
+      option_types_trace = value;
+      break;
+    }
+
+  return 1;
+}
+
+/* Language dependent parser setup.  */
+
+static bool
+m3_init (void)
+{
+  const char *filename = main_input_filename;
+
+  /* Open input file.  */
+  if (filename == 0 || !strcmp (filename, "-"))
+    {
+      finput = stdin;
+      filename = "stdin";
+    }
+  else
+    finput = fopen (filename, "r");
+  if (finput == 0)
+    {
+      fprintf (stderr, "Unable to open input file %s\n", filename);
+      exit(1);
+    }
+  m3_init_lex ();
+  m3_init_parse ();
+  m3_init_decl_processing ();
+  return true;
+}
+
+/* Language dependent wrapup.  */
+
+static void
+m3_finish (void)
+{
+  if (finput != NULL)
+    {
+      fclose (finput);
+      finput = NULL;
+    }
+}
+
+/* New garbage collection regime see gty.texi.  */
+#include "debug.h"
+#include "gtype-m3cg.h"
+#include "gt-m3cg-parse.h"

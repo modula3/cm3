@@ -1,38 +1,23 @@
 /* Definitions for Motorola 68k running Linux-based GNU systems with
    ELF format.
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-#define LINUX_DEFAULT_ELF
-#define MOTOROLA		/* Use Motorola syntax */
-#define USE_GAS			/* But GAS wants jbsr instead of jsr */
-
-/* TODO: convert includes to ${tm_file} list in config.gcc.  */
-#include <m68k/m68k.h>
-
-/* Make sure CC1 is undefined.  */
-#undef CC1_SPEC
-
-#include "dbxelf.h"
-#include "elfos.h"
-#include "svr4.h"
-#include <linux.h>		/* some common stuff */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (68k GNU/Linux with ELF)");
@@ -80,25 +65,10 @@ Boston, MA 02111-1307, USA.  */
 
 #undef REGISTER_NAMES
 
-#ifndef SUPPORT_SUN_FPA
-
 #define REGISTER_NAMES \
 {"%d0", "%d1", "%d2", "%d3", "%d4", "%d5", "%d6", "%d7", \
  "%a0", "%a1", "%a2", "%a3", "%a4", "%a5", "%a6", "%sp", \
- "%fp0", "%fp1", "%fp2", "%fp3", "%fp4", "%fp5", "%fp6", "%fp7" }
-
-#else /* SUPPORTED_SUN_FPA */
-
-#define REGISTER_NAMES \
-{"%d0", "%d1", "%d2", "%d3", "%d4", "%d5", "%d6", "%d7", \
- "%a0", "%a1", "%a2", "%a3", "%a4", "%a5", "%a6", "%sp", \
- "%fp0", "%fp1", "%fp2", "%fp3", "%fp4", "%fp5", "%fp6", "%fp7", \
- "%fpa0", "%fpa1", "%fpa2", "%fpa3", "%fpa4", "%fpa5", "%fpa6", "%fpa7", \
- "%fpa8", "%fpa9", "%fpa10","%fpa11","%fpa12","%fpa13","%fpa14","%fpa15", \
- "%fpa16","%fpa17","%fpa18","%fpa19","%fpa20","%fpa21","%fpa22","%fpa23", \
- "%fpa24","%fpa25","%fpa26","%fpa27","%fpa28","%fpa29","%fpa30","%fpa31" }
-
-#endif /* defined SUPPORT_SUN_FPA */
+ "%fp0", "%fp1", "%fp2", "%fp3", "%fp4", "%fp5", "%fp6", "%fp7", "argptr" }
 
 #undef SIZE_TYPE
 #define SIZE_TYPE "unsigned int"
@@ -112,26 +82,30 @@ Boston, MA 02111-1307, USA.  */
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
 
-#define CPP_PREDEFINES \
-  "-D__ELF__ -Dunix -Dmc68000 -Dmc68020 -D__gnu_linux__ -Dlinux -Asystem=unix -Asystem=posix -Acpu=m68k -Amachine=m68k"
+/* Target OS builtins.  */
+#define TARGET_OS_CPP_BUILTINS()		\
+  do						\
+    {						\
+	LINUX_TARGET_OS_CPP_BUILTINS();		\
+	builtin_define_std ("mc68000");		\
+	builtin_define_std ("mc68020");		\
+   }						\
+  while (0)
+
+#define TARGET_OBJFMT_CPP_BUILTINS()		\
+  do						\
+    {						\
+	builtin_define ("__ELF__");		\
+    }						\
+  while (0)
 
 #undef CPP_SPEC
-#ifdef USE_GNULIBC_1
 #if TARGET_DEFAULT & MASK_68881
 #define CPP_SPEC \
-  "%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{!msoft-float:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE}"
+  "%{fPIC|fpic|fPIE|fpie:-D__PIC__ -D__pic__} %{!msoft-float:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
 #else
 #define CPP_SPEC \
-  "%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{m68881:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE}"
-#endif
-#else
-#if TARGET_DEFAULT & MASK_68881
-#define CPP_SPEC \
-  "%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{!msoft-float:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
-#else
-#define CPP_SPEC \
-  "%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{m68881:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
-#endif
+  "%{fPIC|fpic|fPIE|fpie:-D__PIC__ -D__pic__} %{m68881:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
 #endif
 
 /* We override the ASM_SPEC from svr4.h because we must pass -m68040 down
@@ -158,30 +132,12 @@ Boston, MA 02111-1307, USA.  */
 /* If ELF is the default format, we should not use /lib/elf.  */
 
 #undef	LINK_SPEC
-#ifdef USE_GNULIBC_1
-#ifndef LINUX_DEFAULT_ELF
-#define LINK_SPEC "-m m68kelf %{shared} %{symbolic:-shared -Bsymbolic} \
-  %{!shared:%{!symbolic: \
-    %{!static: \
-      %{rdynamic:-export-dynamic} \
-      %{!dynamic-linker*:-dynamic-linker /lib/elf/ld-linux.so.1} \
-      %{!rpath*:-rpath /lib/elf/}} %{static}}}"
-#else
-#define LINK_SPEC "-m m68kelf %{shared} %{symbolic:-shared -Bsymbolic} \
-  %{!shared:%{!symbolic: \
-    %{!static: \
-      %{rdynamic:-export-dynamic} \
-      %{!dynamic-linker*:-dynamic-linker /lib/ld-linux.so.1}} \
-    %{static}}}"
-#endif
-#else
 #define LINK_SPEC "-m m68kelf %{shared} \
   %{!shared: \
     %{!static: \
       %{rdynamic:-export-dynamic} \
       %{!dynamic-linker*:-dynamic-linker /lib/ld.so.1}} \
     %{static}}"
-#endif
 
 /* For compatibility with linux/a.out */
 
@@ -196,7 +152,7 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_CASE_LABEL
 #define ASM_RETURN_CASE_JUMP				\
   do {							\
-    if (TARGET_5200)					\
+    if (TARGET_COLDFIRE)				\
       {							\
 	if (ADDRESS_REG_P (operands[0]))		\
 	  return "jmp %%pc@(2,%0:l)";			\
@@ -251,9 +207,6 @@ Boston, MA 02111-1307, USA.  */
 /* Do not break .stabs pseudos into continuations.  */
 
 #define DBX_CONTIN_LENGTH 0
-
-/* Allow folding division by zero.  */
-#define REAL_INFINITY
 
 /* 1 if N is a possible register number for a function value.  For
    m68k/SVR4 allow d0, a0, or fp0 as return registers, for integral,
@@ -311,27 +264,6 @@ do {									\
    ? gen_rtx_REG ((MODE), 16)						\
    : gen_rtx_REG ((MODE), 0))
 
-/* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is
-   an operand of a function call.  */
-#undef LEGITIMATE_PIC_OPERAND_P
-#define LEGITIMATE_PIC_OPERAND_P(X) \
-  ((! symbolic_operand (X, VOIDmode) \
-    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X) != 0	\
-	  && GET_CODE (mem_for_const_double (X)) == MEM			\
-	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
-			       VOIDmode))) 				\
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       	\
-   || PCREL_GENERAL_OPERAND_OK)
-
-/* Turn off function cse if we are doing PIC. We always want function
-   call to be done as `bsr foo@PLTPC', so it will force the assembler
-   to create the PLT entry for `foo'.  Doing function cse will cause
-   the address of `foo' to be loaded into a register, which is exactly
-   what we want to avoid when we are doing PIC on svr4 m68k.  */
-#undef SUBTARGET_OVERRIDE_OPTIONS
-#define SUBTARGET_OVERRIDE_OPTIONS \
-  if (flag_pic) flag_no_function_cse = 1;
-
 /* For m68k SVR4, structures are returned using the reentrant
    technique.  */
 #undef PCC_STATIC_STRUCT_RETURN
@@ -371,28 +303,5 @@ do {									\
      : "d" (_beg), "d" (_len)						\
      : "%d0", "%d2", "%d3");						\
 }
-
-/* Output code to add DELTA to the first argument, and then jump to FUNCTION.
-   Used for C++ multiple inheritance.  */
-#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION)	\
-do {									\
-  if (DELTA > 0 && DELTA <= 8)						\
-    asm_fprintf (FILE, "\taddq.l %I%d,4(%Rsp)\n", DELTA);		\
-  else if (DELTA < 0 && DELTA >= -8)					\
-    asm_fprintf (FILE, "\tsubq.l %I%d,4(%Rsp)\n", -DELTA);		\
-  else									\
-    asm_fprintf (FILE, "\tadd.l %I%d,4(%Rsp)\n", DELTA);		\
-									\
-  if (flag_pic)								\
-    {									\
-      fprintf (FILE, "\tbra.l ");					\
-      assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));	\
-      fprintf (FILE, "@PLTPC\n");					\
-    }									\
-  else									\
-    {									\
-      fprintf (FILE, "\tjmp ");						\
-      assemble_name (FILE, XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0));	\
-      fprintf (FILE, "\n");						\
-    }									\
-} while (0)
+
+#define TARGET_ASM_FILE_END file_end_indicate_exec_stack

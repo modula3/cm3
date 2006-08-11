@@ -1,20 +1,20 @@
-/* Configuration for GNU C-compiler for PA-RISC.
-   Copyright (C) 1999, 2000 Free Software Foundation, Inc.
+/* Configuration for GCC-compiler for PA-RISC.
+   Copyright (C) 1999, 2000, 2003 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
@@ -106,7 +106,7 @@ Boston, MA 02111-1307, USA.  */
   int i;					\
   if (TARGET_DISABLE_FPREGS || TARGET_SOFT_FLOAT)\
     {						\
-      for (i = FP_REG_FIRST; i < FP_REG_LAST; i++)\
+      for (i = FP_REG_FIRST; i <= FP_REG_LAST; i++)\
 	fixed_regs[i] = call_used_regs[i] = 1; 	\
     }						\
   if (flag_pic)					\
@@ -149,11 +149,19 @@ Boston, MA 02111-1307, USA.  */
    This is ordinarily the length in words of a value of mode MODE
    but can be less for certain modes in special long registers.
 
-   For PA64, GPRs and FPRs hold 64 bits worth (we ignore the 32bit
-   addressability of the FPRs).  ie, we pretend each register holds
-   precisely WORD_SIZE bits.  */
+   For PA64, GPRs and FPRs hold 64 bits worth.  We ignore the 32-bit
+   addressability of the FPRs and pretend each register holds precisely
+   WORD_SIZE bits.  Note that SCmode values are placed in a single FPR.
+   Thus, any patterns defined to operate on these values would have to
+   use the 32-bit addressability of the FPR registers.  */
 #define HARD_REGNO_NREGS(REGNO, MODE)					\
-   ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
+  ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
+
+/* These are the valid FP modes.  */
+#define VALID_FP_MODE_P(MODE)						\
+  ((MODE) == SFmode || (MODE) == DFmode					\
+   || (MODE) == SCmode || (MODE) == DCmode				\
+   || (MODE) == SImode || (MODE) == DImode)
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
    On the HP-PA, the cpu registers can hold any mode.  We
@@ -162,20 +170,26 @@ Boston, MA 02111-1307, USA.  */
   ((REGNO) == 0								\
    ? (MODE) == CCmode || (MODE) == CCFPmode				\
    /* Make wide modes be in aligned registers.  */			\
+   : FP_REGNO_P (REGNO)							\
+     ? (VALID_FP_MODE_P (MODE)						\
+	&& (GET_MODE_SIZE (MODE) <= 8					\
+	    || (GET_MODE_SIZE (MODE) == 16 && ((REGNO) & 1) == 0)	\
+	    || (GET_MODE_SIZE (MODE) == 32 && ((REGNO) & 3) == 0)))	\
    : (GET_MODE_SIZE (MODE) <= UNITS_PER_WORD				\
-      || (GET_MODE_SIZE (MODE) <= 2 * UNITS_PER_WORD && ((REGNO) & 1) == 0)))
+      || (GET_MODE_SIZE (MODE) == 2 * UNITS_PER_WORD			\
+	  && ((((REGNO) & 1) == 1 && (REGNO) <= 25) || (REGNO) == 28))	\
+      || (GET_MODE_SIZE (MODE) == 4 * UNITS_PER_WORD			\
+	  && ((REGNO) & 3) == 3 && (REGNO) <= 23)))
 
 /* How to renumber registers for dbx and gdb.
 
    Registers 0  - 31 remain unchanged.
 
-   Registers 32 - 60 are mapped to 72, 74, 76 ...
+   Registers 32 - 59 are mapped to 72, 74, 76 ...
 
-   Register 88 is mapped to 32.  */
-
+   Register 60 is mapped to 32.  */
 #define DBX_REGISTER_NUMBER(REGNO) \
-  ((REGNO) <= 31 ? (REGNO) :						\
-   ((REGNO) > 31 && (REGNO) <= 60 ? (REGNO - 32) * 2 + 72 : 32))
+  ((REGNO) <= 31 ? (REGNO) : ((REGNO) < 60 ? (REGNO - 32) * 2 + 72 : 32))
 
 /* We must not use the DBX register numbers for the DWARF 2 CFA column
    numbers because that maps to numbers beyond FIRST_PSEUDO_REGISTER.
@@ -232,18 +246,19 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FPUPPER_REGS, FP_REGS,
   {0x00000000, 0x10000000},	/* SHIFT_REGS */		\
   {0xfffffffe, 0x1fffffff}}	/* ALL_REGS */
 
-/* If defined, gives a class of registers that cannot be used as the
-   operand of a SUBREG that changes the mode of the object illegally.  */
-/* ??? This may not actually be necessary anymore.  But until I can prove
-   otherwise it will stay.  */
-#define CLASS_CANNOT_CHANGE_MODE	(FP_REGS)
+/* Defines invalid mode changes.
 
-/* Defines illegal mode changes for CLASS_CANNOT_CHANGE_MODE.  */
-#define CLASS_CANNOT_CHANGE_MODE_P(FROM,TO) \
-  (GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO))
+   SImode loads to floating-point registers are not zero-extended.
+   The definition for LOAD_EXTEND_OP specifies that integer loads
+   narrower than BITS_PER_WORD will be zero-extended.  As a result,
+   we inhibit changes from SImode unless they are to a mode that is
+   identical in size.  */
 
-/* The same information, inverted:
-   Return the class number of the smallest class containing
+#define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS)		\
+  ((FROM) == SImode && GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO)       \
+   ? reg_classes_intersect_p (CLASS, FP_REGS) : 0)
+
+/* Return the class number of the smallest class containing
    reg number REGNO.  This could be a conditional expression
    or could index an array.  */
 
@@ -291,7 +306,7 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FPUPPER_REGS, FP_REGS,
  "%fr28", "%fr29",  "%fr30", "%fr31", "SAR"}
 
 #define ADDITIONAL_REGISTER_NAMES \
- {{"%cr11",88}}
+ {{"%cr11",60}}
 
 #define FP_SAVED_REG_LAST 49
 #define FP_SAVED_REG_FIRST 40

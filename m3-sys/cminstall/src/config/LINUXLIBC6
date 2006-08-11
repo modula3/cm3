@@ -178,10 +178,12 @@ SYSTEM_LIBS = {
                      "Where are the Motif libraries?"
                        11 "libXm.a"
                        12 "/usr/X11/lib"
+                       12 "/usr/X11R6/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
                        13 "/usr/X11/lib"
+                       13 "/usr/X11R6/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lXm" ],
   "X11"        : [ BEGIN_CONFIG
@@ -194,10 +196,12 @@ SYSTEM_LIBS = {
                        11 "libICE.a"
                        11 "libX11.a"
                        12 "/usr/X11/lib"
+                       12 "/usr/X11R6/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
                        13 "/usr/X11/lib"
+                       13 "/usr/X11R6/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
@@ -255,7 +259,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", source, "-o", object ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
@@ -275,7 +279,7 @@ M3_BACKEND_MODE = "3"
 proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
@@ -363,6 +367,7 @@ end
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
+  args += "-gstabs"
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, options, objects, imported_libs ]
   if shared

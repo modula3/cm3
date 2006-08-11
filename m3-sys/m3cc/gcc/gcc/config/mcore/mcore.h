@@ -1,23 +1,24 @@
 /* Definitions of target machine for GNU compiler,
    for Motorola M*CORE Processor.
-   Copyright (C) 1993, 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1999, 2000, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+   This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+   GCC is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published
+   by the Free Software Foundation; either version 2, or (at your
+   option) any later version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
-You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to the
+   Free Software Foundation, 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 #ifndef GCC_MCORE_H
 #define GCC_MCORE_H
@@ -26,12 +27,6 @@ Boston, MA 02111-1307, USA.  */
 #undef	LIKE_PPC_ABI 
 #define	MCORE_STRUCT_ARGS
 /* RBE: end of "move elsewhere".  */
-
-#include "hwint.h"
-
-#ifndef HAVE_MACHINE_MODES
-#include "machmode.h"
-#endif
 
 /* Run-time Target Specification.  */
 #define TARGET_MCORE
@@ -46,28 +41,28 @@ Boston, MA 02111-1307, USA.  */
    predefined attributes later on.  This can be solved by using one attribute,
    say __declspec__, and passing args to it.  The problem with that approach
    is that args are not accumulated: each new appearance would clobber any
-   existing args.  XXX- FIXME the definition below relies upon string
-   concatenation, which is non-portable.  */
-#define CPP_PREDEFINES \
-  "-D__mcore__ -D__MCORE__=1 -D__declspec(x)=__attribute__((x))" SUBTARGET_CPP_PREDEFINES
+   existing args.  */
+#define TARGET_CPU_CPP_BUILTINS()					  \
+  do									  \
+    {									  \
+      builtin_define ("__mcore__");					  \
+      builtin_define ("__MCORE__");					  \
+      builtin_define ("__declspec(x)=__attribute__((x))");		  \
+      if (TARGET_LITTLE_END)						  \
+        builtin_define ("__MCORELE__");					  \
+      else								  \
+        builtin_define ("__MCOREBE__");					  \
+      if (TARGET_M340)							  \
+        builtin_define ("__M340__");					  \
+      else								  \
+        builtin_define ("__M210__");					  \
+    }									  \
+  while (0)
 
-/* If -m4align is ever re-enabled then uncomment this line as well:
-   #define CPP_SPEC "%{!m4align:-D__MCORE_ALIGN_8__} %{m4align:-D__MCORE__ALIGN_4__}" */
-
-#undef  CPP_SPEC
-#define CPP_SPEC "							\
-%{mbig-endian:								\
-  %{mlittle-endian:%echoose either big or little endian, not both}	\
-  -D__MCOREBE__}							\
-%{m210:									\
-  %{m340:%echoose either m340 or m210 not both}				\
-  %{mlittle-endian:%ethe m210 does not have little endian support}	\
-  -D__M210__}								\
-%{!mbig-endian: -D__MCORELE__}						\
-%{!m210: -D__M340__}							\
-"
 /* If -m4align is ever re-enabled then add this line to the definition of CPP_SPEC
-   %{!m4align:-D__MCORE_ALIGN_8__} %{m4align:-D__MCORE__ALIGN_4__} */
+   %{!m4align:-D__MCORE_ALIGN_8__} %{m4align:-D__MCORE__ALIGN_4__}.  */
+#undef  CPP_SPEC
+#define CPP_SPEC "%{m210:%{mlittle-endian:%ethe m210 does not have little endian support}}"
 
 /* We don't have a -lg library, so don't put it in the list.  */
 #undef	LIB_SPEC
@@ -83,16 +78,16 @@ Boston, MA 02111-1307, USA.  */
    many architecture specific files (other architectures...).  */
 extern int target_flags;
 
-#define HARDLIT_BIT	   (1 << 0) /* Build in-line literals using 2 insns */
-#define ALIGN8_BIT	   (1 << 1) /* Max alignment goes to 8 instead of 4 */
-#define DIV_BIT		   (1 << 2) /* Generate divide instructions */
-#define RELAX_IMM_BIT	   (1 << 3) /* Arbitrary immediates in and, or, tst */
-#define W_FIELD_BIT	   (1 << 4) /* Generate bit insv/extv using SImode */
-#define	OVERALIGN_FUNC_BIT (1 << 5) /* Align functions to 4 byte boundary */
-#define CGDATA_BIT	   (1 << 6) /* Generate callgraph data */
-#define SLOW_BYTES_BIT     (1 << 7) /* Slow byte access */
-#define LITTLE_END_BIT     (1 << 8) /* Generate little endian code */
-#define M340_BIT           (1 << 9) /* Generate code for the m340 */
+#define HARDLIT_BIT	   (1 << 0) /* Build in-line literals using 2 insns.  */
+#define ALIGN8_BIT	   (1 << 1) /* Max alignment goes to 8 instead of 4.  */
+#define DIV_BIT		   (1 << 2) /* Generate divide instructions.  */
+#define RELAX_IMM_BIT	   (1 << 3) /* Arbitrary immediates in and, or, tst.  */
+#define W_FIELD_BIT	   (1 << 4) /* Generate bit insv/extv using SImode.  */
+#define	OVERALIGN_FUNC_BIT (1 << 5) /* Align functions to 4 byte boundary.  */
+#define CGDATA_BIT	   (1 << 6) /* Generate callgraph data.  */
+#define SLOW_BYTES_BIT     (1 << 7) /* Slow byte access.  */
+#define LITTLE_END_BIT     (1 << 8) /* Generate little endian code.  */
+#define M340_BIT           (1 << 9) /* Generate code for the m340.  */
 
 #define TARGET_DEFAULT     \
  (HARDLIT_BIT | ALIGN8_BIT | DIV_BIT | RELAX_IMM_BIT | M340_BIT | LITTLE_END_BIT)
@@ -137,7 +132,7 @@ extern int target_flags;
   {"relax-immediates",      RELAX_IMM_BIT,				\
      "" },								\
   {"no-relax-immediates", - RELAX_IMM_BIT,				\
-     N_("Do not arbitary sized immediates in bit operations") },	\
+     N_("Do not arbitrary sized immediates in bit operations") },	\
   {"wide-bitfields",        W_FIELD_BIT,				\
      N_("Always treat bit-field as int-sized") },			\
   {"no-wide-bitfields",   - W_FIELD_BIT,				\
@@ -175,13 +170,11 @@ extern const char * mcore_stack_increment_string;
 #define	TARGET_OPTIONS							\
 {									\
   {"stack-increment=", & mcore_stack_increment_string,			\
-     N_("Maximum amount for a single stack increment operation")}	\
+     N_("Maximum amount for a single stack increment operation"), 0}	\
 }
 
-#ifndef CC1_SPEC
-/* The MCore ABI says that bitfields are unsigned by default. */
+/* The MCore ABI says that bitfields are unsigned by default.  */
 #define CC1_SPEC "-funsigned-bitfields"
-#endif
 
 /* What options are we going to default to specific settings when
    -O* happens; the user can subsequently override these settings.
@@ -210,14 +203,10 @@ extern const char * mcore_stack_increment_string;
 
 /* What options are we going to force to specific settings,
    regardless of what the user thought he wanted.
-   We also use this for some post-processing of options. */
+   We also use this for some post-processing of options.  */
 #define OVERRIDE_OPTIONS  mcore_override_options ()
 
 /* Target machine storage Layout.  */
-
-/* Define to use software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion.  */
-#define REAL_ARITHMETIC
 
 #define PROMOTE_MODE(MODE,UNSIGNEDP,TYPE)  	\
   if (GET_MODE_CLASS (MODE) == MODE_INT         \
@@ -248,22 +237,10 @@ extern const char * mcore_stack_increment_string;
 #define LIBGCC2_WORDS_BIG_ENDIAN 0
 #endif
 
-/* Number of bits in an addressable storage unit.  */
-#define BITS_PER_UNIT  8
-
-/* Width in bits of a "word", which is the contents of a machine register.
-   Note that this is not necessarily the width of data type `int';
-   if using 16-bit ints on a 68000, this would still be 32.
-   But on a machine with 16-bit registers, this would be 16.  */
-#define BITS_PER_WORD  32
 #define MAX_BITS_PER_WORD 32
 
 /* Width of a word, in units (bytes).  */
 #define UNITS_PER_WORD	4
-
-/* Width in bits of a pointer.
-   See also the macro `Pmode' defined below.  */
-#define POINTER_SIZE  32
 
 /* A C expression for the size in bits of the type `long long' on the
    target machine.  If you don't define this, the default is two
@@ -273,7 +250,7 @@ extern const char * mcore_stack_increment_string;
 /* Allocation boundary (in *bits*) for storing arguments in argument list.  */
 #define PARM_BOUNDARY  	32
 
-/* Doubles must be alogned to an 8 byte boundary.  */
+/* Doubles must be aligned to an 8 byte boundary.  */
 #define FUNCTION_ARG_BOUNDARY(MODE, TYPE) \
   ((MODE != BLKmode && (GET_MODE_SIZE (MODE) == 8)) \
    ? BIGGEST_ALIGNMENT : PARM_BOUNDARY)
@@ -300,7 +277,7 @@ extern int mcore_stack_increment;
 /* Every structures size must be a multiple of 8 bits.  */
 #define STRUCTURE_SIZE_BOUNDARY 8
 
-/* Look at the fundamental type that is used for a bitfield and use 
+/* Look at the fundamental type that is used for a bit-field and use 
    that to impose alignment on the enclosing structure.
    struct s {int a:8}; should have same alignment as "int", not "char".  */
 #define	PCC_BITFIELD_TYPE_MATTERS	1
@@ -337,7 +314,7 @@ extern int mcore_stack_increment;
 	ap		arg pointer (doesn't really exist, always eliminated)
 	c               c bit
 	fp		frame pointer (doesn't really exist, always eliminated)
-	x19		two control registers  */
+	x19		two control registers.  */
 
 /* Number of actual hardware registers.
    The hardware registers are assigned numbers for the compiler
@@ -350,12 +327,12 @@ extern int mcore_stack_increment;
 
 #define FIRST_PSEUDO_REGISTER 20
 
-#define R1_REG  1	/* where literals are forced */
-#define LK_REG	15	/* overloaded on general register */
-#define AP_REG  16	/* fake arg pointer register */
-/* RBE: mcore.md depends on CC_REG being set to 17 */
-#define CC_REG	17	/* can't name it C_REG */
-#define FP_REG  18	/* fake frame pointer register */
+#define R1_REG  1	/* Where literals are forced.  */
+#define LK_REG	15	/* Overloaded on general register.  */
+#define AP_REG  16	/* Fake arg pointer register.  */
+/* RBE: mcore.md depends on CC_REG being set to 17.  */
+#define CC_REG	17	/* Can't name it C_REG.  */
+#define FP_REG  18	/* Fake frame pointer register.  */
 
 /* Specify the registers used for certain standard purposes.
    The values of these macros are register numbers.  */
@@ -390,7 +367,7 @@ extern int mcore_stack_increment;
    Aside from that, you can include as many other registers as you like.  */
 
 /* RBE: r15 {link register} not available across calls,
- *  But we don't mark it that way here... */
+   But we don't mark it that way here....  */
 #define CALL_USED_REGISTERS \
  /*  r0  r1  r2  r3  r4  r5  r6  r7  r8  r9  r10 r11 r12 r13 r14 r15 ap  c   fp x19 */ \
    { 1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1, 1}
@@ -483,7 +460,7 @@ extern int mcore_stack_increment;
 
 /* The MCore has only general registers. There are
    also some special purpose registers: the T bit register, the
-   procedure Link and the Count Registers */
+   procedure Link and the Count Registers.  */
 enum reg_class
 {
   NO_REGS,
@@ -497,7 +474,7 @@ enum reg_class
 
 #define N_REG_CLASSES  (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 #define REG_CLASS_NAMES  \
 {			\
   "NO_REGS",		\
@@ -528,7 +505,7 @@ enum reg_class
    reg number REGNO.  This could be a conditional expression
    or could index an array.  */
 
-extern int regno_reg_class[FIRST_PSEUDO_REGISTER];
+extern const int regno_reg_class[FIRST_PSEUDO_REGISTER];
 #define REGNO_REG_CLASS(REGNO) regno_reg_class[REGNO]
 
 /* When defined, the compiler allows registers explicitly used in the
@@ -545,7 +522,7 @@ extern int regno_reg_class[FIRST_PSEUDO_REGISTER];
 extern const enum reg_class reg_class_from_letter[];
 
 #define REG_CLASS_FROM_LETTER(C) \
-   ( ISLOWER (C) ? reg_class_from_letter[(C) - 'a'] : NO_REGS )
+   (ISLOWER (C) ? reg_class_from_letter[(C) - 'a'] : NO_REGS)
 
 /* The letters I, J, K, L, M, N, O, and P in a register constraint string
    can be used to stand for particular ranges of immediate operands.
@@ -626,7 +603,8 @@ extern const enum reg_class reg_class_from_letter[];
 /* Return the register class of a scratch register needed to copy IN into
    or out of a register in CLASS in MODE.  If it can be done directly,
    NO_REGS is returned.  */
-#define SECONDARY_RELOAD_CLASS(CLASS, MODE, X) NO_REGS
+#define SECONDARY_RELOAD_CLASS(CLASS, MODE, X) \
+  mcore_secondary_reload_class (CLASS, MODE, X)
 
 /* Return the maximum number of consecutive registers
    needed to represent mode MODE in a register of class CLASS. 
@@ -646,14 +624,6 @@ extern const enum reg_class reg_class_from_letter[];
 /* Define this if pushing a word on the stack
    makes the stack pointer a smaller address.  */
 #define STACK_GROWS_DOWNWARD  
-
-/* Define this if the nominal address of the stack frame
-   is at the high-address end of the local variables;
-   that is, each additional local variable allocated
-   goes at a more negative offset in the frame.  */
-/* We don't define this, because the MCore does not support
-   addresses with negative offsets.  */
-/* #define FRAME_GROWS_DOWNWARD */
 
 /* Offset within stack frame to start allocating local variables at.
    If FRAME_GROWS_DOWNWARD, this is the offset to the END of the
@@ -690,18 +660,6 @@ extern const enum reg_class reg_class_from_letter[];
 /* Don't default to pcc-struct-return, because gcc is the only compiler, and
    we want to retain compatibility with older gcc versions.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
-
-/* how we are going to return big values */
-/*
- * #define RETURN_IN_MEMORY(TYPE) \
- *   (TYPE_MODE (TYPE) == BLKmode \
- *    || ((TREE_CODE (TYPE) == RECORD_TYPE || TREE_CODE(TYPE) == UNION_TYPE) \
- *        && !(TYPE_MODE (TYPE) == SImode \
- * 	    || (TYPE_MODE (TYPE) == BLKmode \
- * 		&& TYPE_ALIGN (TYPE) == BITS_PER_WORD \
- * 		&& int_size_in_bytes (TYPE) == UNITS_PER_WORD))))
- */ 
-
 
 /* How many registers to use for struct return.  */
 #define	RETURN_IN_MEMORY(TYPE) (int_size_in_bytes (TYPE) > 2 * UNITS_PER_WORD)
@@ -752,7 +710,7 @@ extern const enum reg_class reg_class_from_letter[];
 
    On MCore, the offset always starts at 0: the first parm reg is always
    the same reg.  */
-#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT)  \
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
   ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument
@@ -805,7 +763,7 @@ extern const enum reg_class reg_class_from_letter[];
 /* Output assembler code for a block containing the constant parts
    of a trampoline, leaving space for the variable parts.
 
-   On the MCore, the trapoline looks like:
+   On the MCore, the trampoline looks like:
    	lrw	r1,  function
      	lrw	r13, area
    	jmp	r13
@@ -961,11 +919,6 @@ extern const enum reg_class reg_class_from_letter[];
    for the index in the tablejump instruction.  */
 #define CASE_VECTOR_MODE SImode
 
-/* Define this if the tablejump instruction expects the table
-   to contain offsets from the address of the table.
-   Do not define this if the table should contain absolute addresses.  */
-/* #define CASE_VECTOR_PC_RELATIVE */
-
 /* 'char' is signed by default.  */
 #define DEFAULT_SIGNED_CHAR  0
 
@@ -992,10 +945,6 @@ extern const enum reg_class reg_class_from_letter[];
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 #define SLOW_BYTE_ACCESS TARGET_SLOW_BYTES
 
-/* We assume that the store-condition-codes instructions store 0 for false
-   and some other value for true.  This is the value stored for true.  */
-#define STORE_FLAG_VALUE 1
-
 /* Immediate shift counts are truncated by the output routines (or was it
    the assembler?).  Shift counts in a register are truncated by ARM.  Note
    that the native compiler puts too large (> 32) immediate shift counts
@@ -1010,7 +959,7 @@ extern const enum reg_class reg_class_from_letter[];
    shouldn't be put through pseudo regs where they can be cse'd.
    Desirable on machines where ordinary constants are expensive
    but a CALL with constant address is cheap.  */
-/* why is this defined??? -- dac */
+/* Why is this defined??? -- dac */
 #define NO_FUNCTION_CSE 1
 
 /* Chars and shorts should be passed as ints.  */
@@ -1019,37 +968,6 @@ extern const enum reg_class reg_class_from_letter[];
 /* The machine modes of pointers and functions.  */
 #define Pmode          SImode
 #define FUNCTION_MODE  Pmode
-
-/* The relative costs of various types of constants.  Note that cse.c defines
-   REG = 1, SUBREG = 2, any node = (2 + sum of subnodes).  */
-#define CONST_COSTS(RTX, CODE, OUTER_CODE)      \
-  case CONST_INT:				\
-    return mcore_const_costs (RTX, OUTER_CODE); \
-  case CONST: 					\
-  case LABEL_REF:				\
-  case SYMBOL_REF:				\
-    return 5;					\
-  case CONST_DOUBLE:				\
-      return 10;
-
-/* provide the cost for an address calculation.
-   All addressing modes cost the same on the MCore.  */
-#define	ADDRESS_COST(RTX)	1
-
-/* Provide the cost of an rtl expression. */
-#define RTX_COSTS(X, CODE, OUTER_CODE)			\
-  case AND:                                             \
-    return COSTS_N_INSNS (mcore_and_cost (X));          \
-  case IOR:                                             \
-    return COSTS_N_INSNS (mcore_ior_cost (X));          \
-  case DIV:						\
-  case UDIV:						\
-  case MOD:						\
-  case UMOD:						\
-    return COSTS_N_INSNS (100);				\
-  case FLOAT:						\
-  case FIX:						\
-    return 100;
 
 /* Compute extra cost of moving data between one register class
    and another.  All register moves are cheap.  */
@@ -1087,11 +1005,9 @@ extern const enum reg_class reg_class_from_letter[];
    ASM_DECLARE_OBJECT_NAME and then switch back to the original section
    afterwards.  */
 #define SWITCH_SECTION_FUNCTION					\
-static void switch_to_section PARAMS ((enum in_section, tree));	\
+static void switch_to_section (enum in_section, tree);		\
 static void							\
-switch_to_section (section, decl)				\
-     enum in_section section;					\
-     tree decl;							\
+switch_to_section (enum in_section section, tree decl)		\
 {								\
   switch (section)						\
     {								\
@@ -1128,15 +1044,11 @@ switch_to_section (section, decl)				\
 	   (STACK_BOUNDARY / BITS_PER_UNIT))
 
   
-/* Output a label definition.  */
-#define ASM_OUTPUT_LABEL(FILE,NAME)  \
-  do { assemble_name (FILE, NAME); fputs (":\n", FILE); } while (0)
-
 /* Output a reference to a label.  */
 #undef  ASM_OUTPUT_LABELREF
 #define ASM_OUTPUT_LABELREF(STREAM, NAME)  \
-  fprintf (STREAM, "%s%s", USER_LABEL_PREFIX, MCORE_STRIP_NAME_ENCODING (NAME))
-
+  fprintf (STREAM, "%s%s", USER_LABEL_PREFIX, \
+	   (* targetm.strip_name_encoding) (NAME))
 
 /* This is how to output an assembler line
    that says to advance the location counter
@@ -1148,21 +1060,6 @@ switch_to_section (section, decl)				\
 #ifndef ASM_DECLARE_RESULT
 #define ASM_DECLARE_RESULT(FILE, RESULT)
 #endif
-
-/* Strip export encoding from a function name.  */
-#define MCORE_STRIP_NAME_ENCODING(SYM_NAME) \
-  ((SYM_NAME) + ((SYM_NAME)[0] == '@' ? 3 : 0))
-
-/* Strip any text from SYM_NAME added by ENCODE_SECTION_INFO and store
-   the result in VAR.  */
-#undef  STRIP_NAME_ENCODING
-#define STRIP_NAME_ENCODING(VAR, SYM_NAME) \
-  (VAR) = MCORE_STRIP_NAME_ENCODING (SYM_NAME)
-
-#undef  UNIQUE_SECTION
-#define UNIQUE_SECTION(DECL, RELOC) mcore_unique_section (DECL, RELOC)
-
-#define REDO_SECTION_INFO_P(DECL) 1
 
 #define MULTIPLE_SYMBOL_SPACES 1
 
@@ -1196,13 +1093,10 @@ extern long mcore_current_compilation_timestamp;
     }								\
   while (0)
 
-/* Output a globalising directive for a label.  */
-#define ASM_GLOBALIZE_LABEL(STREAM,NAME)  \
-  (fprintf (STREAM, "\t.export\t"),	  \
-   assemble_name (STREAM, NAME),	  \
-   fputc ('\n',STREAM))                   \
+/* Globalizing directive for a label.  */
+#define GLOBAL_ASM_OP "\t.export\t"
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 #undef  USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""
 
@@ -1211,17 +1105,7 @@ extern long mcore_current_compilation_timestamp;
 #define ASM_GENERATE_INTERNAL_LABEL(STRING, PREFIX, NUM)  \
   sprintf (STRING, "*.%s%ld", PREFIX, (long) NUM)
 
-/* Output an internal label definition.  */
-#undef  ASM_OUTPUT_INTERNAL_LABEL
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  fprintf (FILE, ".%s%d:\n", PREFIX, NUM)
-
-/* Construct a private name.  */
-#define ASM_FORMAT_PRIVATE_NAME(OUTVAR,NAME,NUMBER)  \
-  ((OUTVAR) = (char *) alloca (strlen (NAME) + 10),  \
-   sprintf ((OUTVAR), "%s.%d", (NAME), (NUMBER)))
-
-/* Jump tables must be 32 bit aligned. */
+/* Jump tables must be 32 bit aligned.  */
 #undef  ASM_OUTPUT_CASE_LABEL
 #define ASM_OUTPUT_CASE_LABEL(STREAM,PREFIX,NUM,TABLE) \
   fprintf (STREAM, "\t.align 2\n.%s%d:\n", PREFIX, NUM);
@@ -1241,7 +1125,7 @@ extern long mcore_current_compilation_timestamp;
    that says to advance the location counter by SIZE bytes.  */
 #undef  ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t.fill %d, 1\n", (SIZE))
+  fprintf (FILE, "\t.fill %d, 1\n", (int)(SIZE))
 
 /* This says how to output an assembler line
    to define a global common symbol, with alignment information.  */
@@ -1256,7 +1140,7 @@ extern long mcore_current_compilation_timestamp;
         {							\
           fputs ("\t.comm\t", FILE);				\
           assemble_name (FILE, NAME);				\
-          fprintf (FILE, ",%d\n", SIZE);			\
+          fprintf (FILE, ",%lu\n", (unsigned long)(SIZE));	\
         }							\
     }								\
   while (0)
@@ -1277,7 +1161,7 @@ extern long mcore_current_compilation_timestamp;
    games. This is because when we use this, we get a marked 
    reference through the call to assemble_name and this forces C++
    inlined member functions (or any inlined function) to be instantiated
-   regardless of whether any callsites remain.
+   regardless of whether any call sites remain.
    This makes this aspect of the compiler non-ABI compliant.  */
 
 /* Similar, but for libcall. FUN is an rtx.  */
@@ -1293,12 +1177,12 @@ extern long mcore_current_compilation_timestamp;
 
 
 /* This says how to output an assembler line
-   to define a local common symbol...  */
+   to define a local common symbol....  */
 #undef  ASM_OUTPUT_LOCAL
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)	\
   (fputs ("\t.lcomm\t", FILE),				\
   assemble_name (FILE, NAME),				\
-  fprintf (FILE, ",%d\n", SIZE))
+  fprintf (FILE, ",%d\n", (int)SIZE))
 
 /* ... and how to define a local common symbol whose alignment
    we wish to specify.  ALIGN comes in as bits, we have to turn
@@ -1309,14 +1193,9 @@ extern long mcore_current_compilation_timestamp;
     {									\
       fputs ("\t.bss\t", (FILE));					\
       assemble_name ((FILE), (NAME));					\
-      fprintf ((FILE), ",%d,%d\n", (SIZE), (ALIGN) / BITS_PER_UNIT);	\
+      fprintf ((FILE), ",%d,%d\n", (int)(SIZE), (ALIGN) / BITS_PER_UNIT);\
     }									\
   while (0)
-
-/* We must mark dll symbols specially.  Definitions of dllexport'd objects
-   install some info in the .drective (PE) or .exports (ELF) sections.   */
-#undef  ENCODE_SECTION_INFO
-#define ENCODE_SECTION_INFO(DECL) mcore_encode_section_info (DECL)
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -1328,9 +1207,6 @@ extern long mcore_current_compilation_timestamp;
 
 #define PRINT_OPERAND_PUNCT_VALID_P(CHAR) \
   ((CHAR)=='.' || (CHAR) == '#' || (CHAR) == '*' || (CHAR) == '^' || (CHAR) == '!')
-
-/* This is to handle loads from the constant pool.  */
-#define MACHINE_DEPENDENT_REORG(X) mcore_dependent_reorg (X)
 
 #define PREDICATE_CODES							\
   { "mcore_arith_reg_operand",		{ REG, SUBREG }},		\

@@ -16,34 +16,32 @@
 
     1. [7]General information
          1. [8]What is the relationship between GCC and EGCS?
-         2. [9]What is the relationship between GCC and Cygnus / Red Hat?
-         3. [10]What is an open development model?
-         4. [11]How do I report a bug?
-         5. [12]How do I get a bug fixed or a feature added?
-         6. [13]Does GCC work on my platform?
-    2. [14]Installation
-         1. [15]How to install multiple versions of GCC
-         2. [16]Dynamic linker is unable to find GCC libraries
-         3. [17]libstdc++/libio tests fail badly with --enable-shared
-         4. [18]GCC can not find GNU as/GNU ld
-         5. [19]cpp: Usage:... Error
-         6. [20]Optimizing the compiler itself
-    3. [21]Testsuite problems
-         1. [22]Unable to run the testsuite
-         2. [23]How do I pass flags like -fnew-abi to the testsuite?
-         3. [24]How can I run the test suite with multiple options?
-    4. [25]Older versions of GCC
-         1. [26]Is there a stringstream / sstream for GCC 2.95.2?
-    5. [27]Miscellaneous
-         1. [28]Friend Templates
-         2. [29]dynamic_cast, throw, typeid don't work with shared
+         2. [9]What is an open development model?
+         3. [10]How do I get a bug fixed or a feature added?
+         4. [11]Does GCC work on my platform?
+    2. [12]Installation
+         1. [13]How to install multiple versions of GCC
+         2. [14]Dynamic linker is unable to find GCC libraries
+         3. [15]libstdc++/libio tests fail badly with --enable-shared
+         4. [16]GCC can not find GNU as/GNU ld
+         5. [17]cpp: Usage:... Error
+         6. [18]Optimizing the compiler itself
+         7. [19]Why does libiconv get linked into jc1 on Solaris?
+    3. [20]Testsuite problems
+         1. [21]How do I pass flags like -fnew-abi to the testsuite?
+         2. [22]How can I run the test suite with multiple options?
+    4. [23]Older versions of GCC
+         1. [24]Is there a stringstream / sstream for GCC 2.95.2?
+    5. [25]Miscellaneous
+         1. [26]Friend Templates
+         2. [27]dynamic_cast, throw, typeid don't work with shared
             libraries
-         3. [30]Why do I need autoconf, bison, xgettext, automake, etc?
-         4. [31]Why can't I build a shared library?
-         5. [32]When building C++, the linker says my constructors,
+         3. [28]Why do I need autoconf, bison, xgettext, automake, etc?
+         4. [29]Why can't I build a shared library?
+         5. [30]When building C++, the linker says my constructors,
             destructors or virtual tables are undefined, but I defined
             them
-         6. [33]Will GCC someday include an incremental linker?
+         6. [31]Will GCC someday include an incremental linker?
      _________________________________________________________________
 
                               General information
@@ -53,7 +51,7 @@ What is the relationship between GCC and EGCS?
    In 1990/1991 gcc version 1 had reached a point of stability. For the
    targets it could support, it worked well. It had limitations inherent
    in its design that would be difficult to resolve, so a major effort
-   was made to resolve those limitiations and gcc version 2 was the
+   was made to resolve those limitations and gcc version 2 was the
    result.
 
    When we had gcc2 in a useful state, development efforts on gcc1
@@ -65,30 +63,12 @@ What is the relationship between GCC and EGCS?
    development on the gcc2 compiler and appointed the EGCS project as the
    official GCC maintainers. The net result was a single project which
    carries forward GCC development under the ultimate control of the
-   [34]GCC Steering Committee.
-     _________________________________________________________________
-
-What is the relationship between GCC and Cygnus / Red Hat?
-
-   It is a common mis-conception that Red Hat controls GCC either
-   directly or indirectly.
-
-   While Red Hat does donate hardware, network connections, code and
-   developer time to GCC development, Red Hat does not control GCC.
-
-   Overall control of GCC is in the hands of the [35]GCC Steering
-   Committee which includes people from a variety of different
-   organizations and backgrounds. The purpose of the steering committee
-   is to make decisions in the best interest of GCC and to help ensure
-   that no individual or company has control over the project.
-
-   To summarize, Red Hat contributes to the GCC project, but does not
-   exert a controlling influence over GCC.
+   [32]GCC Steering Committee.
      _________________________________________________________________
 
 What is an open development model?
 
-   We are using a bazaar style [36][1] approach to GCC development: we
+   We are using a bazaar style [33][1] approach to GCC development: we
    make snapshots publicly available to anyone who wants to try them; we
    welcome anyone to join the development mailing list. All of the
    discussions on the development mailing list are available via the web.
@@ -96,9 +76,8 @@ What is an open development model?
    they have been made in the past.
 
    In addition to weekly snapshots of the GCC development sources, we
-   have the sources readable from a CVS server by anyone. Furthermore we
-   are using remote CVS to allow remote maintainers write access to the
-   sources.
+   have the sources readable from an SVN server by anyone. Furthermore we
+   are using SVN to allow maintainers write access to the sources.
 
    There have been many potential GCC developers who were not able to
    participate in GCC development in the past. We want these people to
@@ -130,37 +109,30 @@ What is an open development model?
      starting point for discussions.
      _________________________________________________________________
 
-How do I report a bug?
-
-   There are complete instructions [37]here.
-     _________________________________________________________________
-
 How do I get a bug fixed or a feature added?
 
    There are lots of ways to get something fixed. The list below may be
    incomplete, but it covers many of the common cases. These are listed
-   roughly in order of increasing difficulty for the average GCC user,
+   roughly in order of decreasing difficulty for the average GCC user,
    meaning someone who is not skilled in the internals of GCC, and where
    difficulty is measured in terms of the time required to fix the bug.
    No alternative is better than any other; each has its benefits and
    disadvantages.
-     * Hire someone to fix it for you. There are various companies and
-       individuals providing support for GCC. This alternative costs
-       money, but is relatively likely to get results.
-     * [38]Report the problem to the GCC GNATS bug tracking system and
-       hope that someone will be kind enough to fix it for you. While
-       this is certainly possible, and often happens, there is no
-       guarantee that it will. You should not expect the same response
-       from this method that you would see from a commercial support
-       organization since the people who read GCC bug reports, if they
-       choose to help you, will be volunteering their time. This
-       alternative will work best if you follow the directions on
-       [39]submitting bugreports.
      * Fix it yourself. This alternative will probably bring results, if
        you work hard enough, but will probably take a lot of time, and,
        depending on the quality of your work and the perceived benefits
        of your changes, your code may or may not ever make it into an
        official release of GCC.
+     * [34]Report the problem to the GCC bug tracking system and hope
+       that someone will be kind enough to fix it for you. While this is
+       certainly possible, and often happens, there is no guarantee that
+       it will. You should not expect the same response from this method
+       that you would see from a commercial support organization since
+       the people who read GCC bug reports, if they choose to help you,
+       will be volunteering their time.
+     * Hire someone to fix it for you. There are various companies and
+       individuals providing support for GCC. This alternative costs
+       money, but is relatively likely to get results.
      _________________________________________________________________
 
 Does GCC work on my platform?
@@ -168,8 +140,8 @@ Does GCC work on my platform?
    The host/target specific installation notes for GCC include
    information about known problems with installing or using GCC on
    particular platforms. These are included in the sources for a release
-   in INSTALL/specific.html, and the [40]latest version is always
-   available at the GCC web site. Reports of [41]successful builds for
+   in INSTALL/specific.html, and the [35]latest version is always
+   available at the GCC web site. Reports of [36]successful builds for
    several versions of GCC are also available at the web site.
      _________________________________________________________________
 
@@ -216,7 +188,7 @@ How to install multiple versions of GCC
    wish to be sure about which version you are invoking.
 
    If you use --prefix, GCC may have difficulty locating a GNU assembler
-   or linker on your system, [42]GCC can not find GNU as/GNU ld explains
+   or linker on your system, [37]GCC can not find GNU as/GNU ld explains
    how to deal with this.
 
    Another option that may be easier is to use the --program-prefix= or
@@ -282,7 +254,7 @@ GCC can not find GNU as/GNU ld
    versions of those programs.
 
    To ensure that GCC finds the GNU assembler (the GNU loader), which are
-   required by [43]some configurations, you should configure these with
+   required by [38]some configurations, you should configure these with
    the same --prefix option as you used for GCC. Then build & install GNU
    as (GNU ld) and proceed with building GCC.
 
@@ -329,15 +301,26 @@ Optimizing the compiler itself
 make BOOT_CFLAGS="-O2 -fssa" bootstrap
      _________________________________________________________________
 
-                              Testsuite problems
+Why does libiconv get linked into jc1 on Solaris?
 
-Unable to run the testsuite
+   The Java front end requires iconv. If the compiler used to bootstrap
+   GCC finds libiconv (because the GNU version of libiconv has been
+   installed in the same prefix as the bootstrap compiler), but the newly
+   built GCC does not find the library (because it will be installed with
+   a different prefix), then a link-time error will occur when building
+   jc1. This problem does not show up so often on platforms that have
+   libiconv in a default location (like /usr/lib) because then both
+   compilers can find a library named libiconv, even though it is a
+   different library.
 
-   If you get a message about unable to find "standard.exp" when trying
-   to run the GCC testsuites, then your dejagnu is too old to run the GCC
-   tests. You will need to get a newer version of dejagnu from
-   [44]http://www.gnu.org/software/dejagnu/dejagnu.html.
+   Using --disable-nls at configure-time does not prevent this problem
+   because jc1 uses iconv even in that case. Solutions include
+   temporarily removing the GNU libiconv, copying it to a default
+   location such as /usr/lib/, and using --enable-languages at
+   configure-time to disable Java.
      _________________________________________________________________
+
+                              Testsuite problems
 
 How do I pass flags like -fnew-abi to the testsuite?
 
@@ -371,7 +354,7 @@ How can I run the test suite with multiple options?
 Is there a stringstream / sstream for GCC 2.95.2?
 
    Yes, it's at:
-   [45]http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream.
+   [39]http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream.
      _________________________________________________________________
 
                                  Miscellaneous
@@ -431,7 +414,7 @@ dynamic_cast, throw, typeid don't work with shared libraries
    The new C++ ABI in the GCC 3.0 series uses address comparisons, rather
    than string compares, to determine type equality. This leads to better
    performance. Like other objects that have to be present in the final
-   executable, these std::typeinfo_t objects have what is called vague
+   executable, these std::type_info objects have what is called vague
    linkage because they are not tightly bound to any one particular
    translation unit (object file). The compiler has to emit them in any
    translation unit that requires their presence, and then rely on the
@@ -442,7 +425,7 @@ dynamic_cast, throw, typeid don't work with shared libraries
    a shared library are resolved against objects in the executable and
    other shared libraries.
      * For a program which is linked against a shared library, no
-       additional precautions need taking.
+       additional precautions are needed.
      * You cannot create a shared library with the "-Bsymbolic" option,
        as that prevents the resolution described above.
      * If you use dlopen to explicitly load code from a shared library,
@@ -470,8 +453,8 @@ dynamic_cast, throw, typeid don't work with shared libraries
    [basic.def.odr].
 
    For more details about the way that GCC implements these and other C++
-   features, please read the [46]ABI specification. Note the
-   std::typeinfo_t objects which must be resolved all begin with "_ZTS".
+   features, please read the [40]ABI specification. Note the
+   std::type_info objects which must be resolved all begin with "_ZTS".
    Refer to ld's documentation for a description of the "-E" &
    "-Bsymbolic" flags.
      _________________________________________________________________
@@ -479,7 +462,7 @@ dynamic_cast, throw, typeid don't work with shared libraries
 Why do I need autoconf, bison, xgettext, automake, etc?
 
    If you're using diffs up dated from one snapshot to the next, or if
-   you're using the CVS repository, you may need several additional
+   you're using the SVN repository, you may need several additional
    programs to build GCC.
 
    These include, but are not necessarily limited to autoconf, automake,
@@ -492,19 +475,17 @@ Why do I need autoconf, bison, xgettext, automake, etc?
    An easy way to work around this problem is to use the gcc_update
    script in the contrib subdirectory of GCC, which handles this
    transparently without requiring installation of any additional tools.
-   (Note: Up to and including GCC 2.95 this script was called egcs_update
-   .)
 
-   When building from diffs or CVS or if you modified some sources, you
+   When building from diffs or SVN or if you modified some sources, you
    may also need to obtain development versions of some GNU tools, as the
    production versions do not necessarily handle all features needed to
    rebuild GCC.
 
    In general, the current versions of these tools from
-   [47]ftp://ftp.gnu.org/gnu/ will work. At present, Autoconf 2.50 is not
+   [41]ftp://ftp.gnu.org/gnu/ will work. At present, Autoconf 2.50 is not
    supported, and you will need to use Autoconf 2.13; work is in progress
    to fix this problem. Also look at
-   [48]ftp://gcc.gnu.org/pub/gcc/infrastructure/ for any special versions
+   [42]ftp://gcc.gnu.org/pub/gcc/infrastructure/ for any special versions
    of packages.
      _________________________________________________________________
 
@@ -568,43 +549,37 @@ References
    6. http://gcc.gnu.org/java/faq.html
    7. http://gcc.gnu.org/faq.html#general
    8. http://gcc.gnu.org/faq.html#gcc
-   9. http://gcc.gnu.org/faq.html#cygnus
-  10. http://gcc.gnu.org/faq.html#open-development
-  11. http://gcc.gnu.org/faq.html#bugreport
-  12. http://gcc.gnu.org/faq.html#support
-  13. http://gcc.gnu.org/faq.html#platforms
-  14. http://gcc.gnu.org/faq.html#installation
-  15. http://gcc.gnu.org/faq.html#multiple
-  16. http://gcc.gnu.org/faq.html#rpath
-  17. http://gcc.gnu.org/faq.html#rpath
-  18. http://gcc.gnu.org/faq.html#gas
-  19. http://gcc.gnu.org/faq.html#environ
-  20. http://gcc.gnu.org/faq.html#optimizing
-  21. http://gcc.gnu.org/faq.html#testsuite
-  22. http://gcc.gnu.org/faq.html#dejagnu
-  23. http://gcc.gnu.org/faq.html#testoptions
-  24. http://gcc.gnu.org/faq.html#multipletests
-  25. http://gcc.gnu.org/faq.html#old
-  26. http://gcc.gnu.org/faq.html#2.95sstream
-  27. http://gcc.gnu.org/faq.html#misc
-  28. http://gcc.gnu.org/faq.html#friend
-  29. http://gcc.gnu.org/faq.html#dso
-  30. http://gcc.gnu.org/faq.html#generated_files
-  31. http://gcc.gnu.org/faq.html#picflag-needed
-  32. http://gcc.gnu.org/faq.html#vtables
-  33. http://gcc.gnu.org/faq.html#incremental
-  34. http://gcc.gnu.org/steering.html
-  35. http://gcc.gnu.org/steering.html
-  36. http://gcc.gnu.org/faq.html#cathedral-vs-bazaar
-  37. http://gcc.gnu.org/bugs.html
-  38. http://gcc.gnu.org/bugs.html
-  39. http://gcc.gnu.org/bugs.html
-  40. http://gcc.gnu.org/install/specific.html
-  41. http://gcc.gnu.org/buildstat.html
-  42. http://gcc.gnu.org/faq.html#gas
-  43. http://gcc.gnu.org/install/specific.html
-  44. http://www.gnu.org/software/dejagnu/dejagnu.html
-  45. http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream
-  46. http://www.codesourcery.com/cxx-abi/
-  47. ftp://ftp.gnu.org/gnu/
-  48. ftp://gcc.gnu.org/pub/gcc/infrastructure/
+   9. http://gcc.gnu.org/faq.html#open-development
+  10. http://gcc.gnu.org/faq.html#support
+  11. http://gcc.gnu.org/faq.html#platforms
+  12. http://gcc.gnu.org/faq.html#installation
+  13. http://gcc.gnu.org/faq.html#multiple
+  14. http://gcc.gnu.org/faq.html#rpath
+  15. http://gcc.gnu.org/faq.html#rpath
+  16. http://gcc.gnu.org/faq.html#gas
+  17. http://gcc.gnu.org/faq.html#environ
+  18. http://gcc.gnu.org/faq.html#optimizing
+  19. http://gcc.gnu.org/faq.html#iconv
+  20. http://gcc.gnu.org/faq.html#testsuite
+  21. http://gcc.gnu.org/faq.html#testoptions
+  22. http://gcc.gnu.org/faq.html#multipletests
+  23. http://gcc.gnu.org/faq.html#old
+  24. http://gcc.gnu.org/faq.html#2.95sstream
+  25. http://gcc.gnu.org/faq.html#misc
+  26. http://gcc.gnu.org/faq.html#friend
+  27. http://gcc.gnu.org/faq.html#dso
+  28. http://gcc.gnu.org/faq.html#generated_files
+  29. http://gcc.gnu.org/faq.html#picflag-needed
+  30. http://gcc.gnu.org/faq.html#vtables
+  31. http://gcc.gnu.org/faq.html#incremental
+  32. http://gcc.gnu.org/steering.html
+  33. http://gcc.gnu.org/faq.html#cathedral-vs-bazaar
+  34. http://gcc.gnu.org/bugs.html
+  35. http://gcc.gnu.org/install/specific.html
+  36. http://gcc.gnu.org/buildstat.html
+  37. http://gcc.gnu.org/faq.html#gas
+  38. http://gcc.gnu.org/install/specific.html
+  39. http://gcc.gnu.org/ml/libstdc++/2000-q2/msg00700/sstream
+  40. http://www.codesourcery.com/cxx-abi/
+  41. ftp://ftp.gnu.org/gnu/
+  42. ftp://gcc.gnu.org/pub/gcc/infrastructure/

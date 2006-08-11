@@ -1,32 +1,25 @@
 /* Definitions for Intel 386 using GAS.
-   Copyright (C) 1988, 1993, 1994, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1993, 1994, 1996, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
+GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
-GNU CC is distributed in the hope that it will be useful,
+GCC is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
+along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 /* Note that i386/seq-gas.h is a GAS configuration that does not use this
    file.  */
-
-#include "i386/i386.h"
-
-#ifndef YES_UNDERSCORES
-/* Define this now, because i386/bsd.h tests it.  */
-#define NO_UNDERSCORES
-#endif
 
 /* Use the bsd assembler syntax.  */
 /* we need to do this because gas is really a bsd style assembler,
@@ -44,24 +37,13 @@ Boston, MA 02111-1307, USA.  */
  * people who want both form will have to compile twice.
  */
 
-#include "i386/bsd.h"
-
 /* these come from i386/bsd.h, but are specific to sequent */
 #undef DBX_NO_XREFS
 #undef DBX_CONTIN_LENGTH
 
 /* Ask for COFF symbols.  */
 
-#define SDB_DEBUGGING_INFO
-
-/* Specify predefined symbols in preprocessor.  */
-
-#define CPP_PREDEFINES "-Dunix"
-#define CPP_SPEC "%(cpp_cpu) %{posix:-D_POSIX_SOURCE}"
-
-/* Allow #sccs in preprocessor.  */
-
-#define SCCS_DIRECTIVE
+#define SDB_DEBUGGING_INFO 1
 
 /* Output #ident as a .ident.  */
 
@@ -139,34 +121,4 @@ Boston, MA 02111-1307, USA.  */
 /* Print opcodes the way that GAS expects them.  */
 #define GAS_MNEMONICS 1
 
-#ifdef NO_UNDERSCORES /* If user-symbols don't have underscores,
-			 then it must take more than `L' to identify
-			 a label that should be ignored.  */
-
-/* This is how to store into the string BUF
-   the symbol_ref name of an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.
-   This is suitable for output with `assemble_name'.  */
-
-#undef ASM_GENERATE_INTERNAL_LABEL
-#define ASM_GENERATE_INTERNAL_LABEL(BUF,PREFIX,NUMBER)	\
-    sprintf ((BUF), ".%s%ld", (PREFIX), (long)(NUMBER))
-
-/* This is how to output an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.  */
-
-#undef ASM_OUTPUT_INTERNAL_LABEL
-#define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  fprintf (FILE, ".%s%d:\n", PREFIX, NUM)
-
-#endif /* NO_UNDERSCORES */
-
-/* Output at beginning of assembler file.  */
-/* The .file command should always begin the output.  */
-#undef ASM_FILE_START
-#define ASM_FILE_START(FILE)						\
-  do {									\
-	if (ix86_asm_dialect == ASM_INTEL)				\
-	  fputs ("\t.intel_syntax\n", FILE);				\
-        output_file_directive (FILE, main_input_filename);		\
-  } while (0)
+#define TARGET_ASM_FILE_START_FILE_DIRECTIVE true

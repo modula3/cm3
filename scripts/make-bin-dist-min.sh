@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.20 2004-10-31 14:25:10 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.21 2006-08-06 13:13:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -33,9 +33,9 @@ header "building CM3 installation in ${INSTALLROOT}"
 header "stage 1: building cm3 compiler"
 P=""
 [ ${TARGET} != NT386 ] && P="${P} m3gc-simple"
-if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
-  [ ${TARGET} != NT386 ] && P="${P} m3gc-enhanced"
-fi
+#if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
+#  [ ${TARGET} != NT386 ] && P="${P} m3gc-enhanced"
+#fi
 P="${P} m3core"
 P="${P} libm3"
 P="${P} patternmatching"

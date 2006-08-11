@@ -1,0 +1,14 @@
+import("libm3")
+import("unittest")
+import("unittest-numeric")
+import("arithmetic")
+import("wellfett")
+
+module("UnitTestSignal")
+module("TestSignal")
+module("TestPerfectReconstruction")
+module("TestWaveletMatch")
+module("TestRefinableFunction")
+implementation("Main")
+
+program("test")

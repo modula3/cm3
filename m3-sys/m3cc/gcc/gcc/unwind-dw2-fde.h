@@ -1,5 +1,5 @@
 /* Subroutines needed for unwinding stack frames for exception handling.  */
-/* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002
+/* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2004
    Free Software Foundation, Inc.
    Contributed by Jason Merrill <jason@cygnus.com>.
 
@@ -29,12 +29,14 @@ along with GCC; see the file COPYING.  If not, write to the Free
 Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
+#ifndef GCC_UNWIND_DW2_FDE_H
+#define GCC_UNWIND_DW2_FDE_H
 
 struct fde_vector
 {
-  void *orig_data;
+  const void *orig_data;
   size_t count;
-  struct dwarf_fde *array[];
+  const struct dwarf_fde *array[];
 };
 
 struct object
@@ -43,7 +45,7 @@ struct object
   void *tbase;
   void *dbase;
   union {
-    struct dwarf_fde *single;
+    const struct dwarf_fde *single;
     struct dwarf_fde **array;
     struct fde_vector *sort;
   } u;
@@ -60,6 +62,10 @@ struct object
     } b;
     size_t i;
   } s;
+
+#ifdef DWARF2_OBJECT_END_PTR_EXTENSION
+  char *fde_end;
+#endif
 
   struct object *next;
 };
@@ -86,16 +92,16 @@ struct dwarf_eh_bases
 };
 
 
-extern void __register_frame_info_bases (void *, struct object *,
+extern void __register_frame_info_bases (const void *, struct object *,
 					 void *, void *);
-extern void __register_frame_info (void *, struct object *);
+extern void __register_frame_info (const void *, struct object *);
 extern void __register_frame (void *);
 extern void __register_frame_info_table_bases (void *, struct object *,
 					       void *, void *);
 extern void __register_frame_info_table (void *, struct object *);
 extern void __register_frame_table (void *);
-extern void *__deregister_frame_info (void *);
-extern void *__deregister_frame_info_bases (void *);
+extern void *__deregister_frame_info (const void *);
+extern void *__deregister_frame_info_bases (const void *);
 extern void __deregister_frame (void *);
 
 
@@ -122,7 +128,7 @@ typedef unsigned char ubyte;
    a) in a linear search, find the shared image (i.e. DLL) containing
       the PC
    b) using the FDE table for that shared object, locate the FDE using
-      binary search (which requires the sorting).  */   
+      binary search (which requires the sorting).  */
 
 /* The first few fields of a CIE.  The CIE_id field is 0 for a CIE,
    to distinguish it from a valid FDE.  FDEs are aligned to an addressing
@@ -147,16 +153,28 @@ typedef struct dwarf_fde fde;
 
 /* Locate the CIE for a given FDE.  */
 
-static inline struct dwarf_cie *
-get_cie (struct dwarf_fde *f)
+static inline const struct dwarf_cie *
+get_cie (const struct dwarf_fde *f)
 {
   return (void *)&f->CIE_delta - f->CIE_delta;
 }
 
-static inline fde *
-next_fde (fde *f)
+static inline const fde *
+next_fde (const fde *f)
 {
-  return (fde *) ((char *) f + f->length + sizeof (f->length));
+  return (const fde *) ((char *) f + f->length + sizeof (f->length));
 }
 
-extern fde * _Unwind_Find_FDE (void *, struct dwarf_eh_bases *);
+extern const fde * _Unwind_Find_FDE (void *, struct dwarf_eh_bases *);
+
+static inline int
+last_fde (struct object *obj __attribute__ ((__unused__)), const fde *f)
+{
+#ifdef DWARF2_OBJECT_END_PTR_EXTENSION
+  return (char *)f == obj->fde_end || f->length == 0;
+#else
+  return f->length == 0;
+#endif
+}
+
+#endif /* unwind-dw2-fde.h */

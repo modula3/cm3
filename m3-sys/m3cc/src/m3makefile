@@ -102,30 +102,6 @@ if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
-% HACK: avoid the use of DW_FORM_strp debugging information for the time being
-M3CC_CFLAGS = M3CC_CFLAGS & " -DAVOID_DW_FORM_STRP"
-
-if equal(TARGET, "PPC_DARWIN")
-  write(EOL)
-  write("  Please note that on older Darwin systems this package has only" &
-        EOL)
-  write("  been verified to compile with a bootstrapped gcc 3.2.1 (or newer)."
-        & EOL)
-  write("  The patch below which turns off cpp precompilation has been sent" &
-        EOL)
-  write("  in by Jay Krell, but we lack the access to older systems to" & 
-        " verify it." & EOL)
-  write("  So it the compilation if this package does not work for you, " & 
-        "either use the" & EOL)
-  write("  provided binary backend or get a newer gcc compiler." & EOL)
-  write(EOL)
-  if equal(0, try_exec("@" & M3CC_CC & " -v 2>&1 | grep 'Apple Computer, Inc. GCC version 1175, based on gcc version 3.1 20020420 (prerelease)' >/dev/null"))
-    write("passing -no-cpp-precomp flag to gcc" & EOL)
-    M3CC_CFLAGS = M3CC_CFLAGS & " -no-cpp-precomp"
-  end
-end
-
-
 % figure out where we're going to build the beast
 local build_dir = "."  % let m3build set the build directory
 if not equal (M3CC_HOST, M3CC_TARGET)
@@ -151,13 +127,15 @@ if not defined ("no_config")
     if equal (M3CC_HOST, M3CC_TARGET)
       exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
             "--srcdir=.." & SL & "gcc",
-	    "--enable-languages=m3cg",
+            "--enable-languages=m3cg",
+            "--disable-nls",
             "&& echo \"done\" > " & done)
     else
       exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
             "--srcdir=.." & SL & "gcc",
             "--target=" & GNU_platform (M3CC_TARGET),
-	    "--enable-languages=m3cg",
+            "--enable-languages=m3cg",
+            "--disable-nls",
             "&& echo \"done\" > " & done)
     end
   end
@@ -168,13 +146,7 @@ ARG0 = get_overrides ("CC", M3CC_CC)
 ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
 % build commands
-cmds = "cd " & build_dir & "; "
-cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
-cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
-       ARG0 & " " & ARG1 & " m3cg"
-if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
-    cmds = cmds & " mips-tfile"
-end
+cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1
 
 readonly proc postcp() is
   pSrc  = build_dir & SL & "gcc" & SL & "m3cgc1"

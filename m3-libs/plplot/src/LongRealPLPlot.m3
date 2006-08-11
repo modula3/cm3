@@ -332,14 +332,14 @@ PROCEDURE Flush () =
     LongRealPLPlotRaw.Flush();
   END Flush;
 
-PROCEDURE SetFont (ifont: INTEGER; ) =
+PROCEDURE SetFont (ifont: FontType; ) =
   BEGIN
-    LongRealPLPlotRaw.SetFont(ifont);
+    LongRealPLPlotRaw.SetFont(ORD(ifont) + 1);
   END SetFont;
 
-PROCEDURE LoadFont (fnt: INTEGER; ) =
+PROCEDURE LoadFont (fnt: CharacterSet; ) =
   BEGIN
-    LongRealPLPlotRaw.LoadFont(fnt);
+    LongRealPLPlotRaw.LoadFont(ORD(fnt));
   END LoadFont;
 
 PROCEDURE GetCharacterHeight (): GetCharacterHeightResult =
@@ -395,12 +395,12 @@ PROCEDURE GetWindowDevice (): GetWindowDeviceResult =
     RETURN result;
   END GetWindowDevice;
 
-PROCEDURE GetOrientation (): Float =
+PROCEDURE GetFractOrientation (): Float =
   VAR rot: Float;
   BEGIN
-    LongRealPLPlotRaw.GetOrientation(rot);
+    LongRealPLPlotRaw.GetFractOrientation(rot);
     RETURN rot;
-  END GetOrientation;
+  END GetFractOrientation;
 
 PROCEDURE GetWindowPlot (): GetWindowPlotResult =
   VAR result: GetWindowPlotResult;
@@ -917,10 +917,10 @@ PROCEDURE LoadTransformation
       dimxmin, dimxmax, dimymin, dimymax, dimxpmm, dimypmm);
   END LoadTransformation;
 
-PROCEDURE SetOrientation (rot: Float; ) =
+PROCEDURE SetFractOrientation (rot: Float; ) =
   BEGIN
-    LongRealPLPlotRaw.SetOrientation(rot);
-  END SetOrientation;
+    LongRealPLPlotRaw.SetFractOrientation(rot);
+  END SetFractOrientation;
 
 PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: Float; ) =
   BEGIN
@@ -1024,10 +1024,10 @@ PROCEDURE SetMinorTickSize (def, scale: Float; ) =
     LongRealPLPlotRaw.SetMinorTickSize(def, scale);
   END SetMinorTickSize;
 
-PROCEDURE SetGlobalOrientation (ori: INTEGER; ) =
+PROCEDURE SetOrientation (ori: INTEGER; ) =
   BEGIN
-    LongRealPLPlotRaw.SetGlobalOrientation(ori);
-  END SetGlobalOrientation;
+    LongRealPLPlotRaw.SetOrientation(ori);
+  END SetOrientation;
 
 PROCEDURE SetPageParam
   (xp, yp: Float; xleng, yleng, xoff, yoff: INTEGER; ) =
@@ -1124,15 +1124,15 @@ PROCEDURE DeleteStripchart (id: INTEGER; ) =
     LongRealPLPlotRaw.DeleteStripchart(id);
   END DeleteStripchart;
 
-PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF CARDINAL; ) =
+PROCEDURE SetCustomLineStyle (READONLY mark, space: ARRAY OF CARDINAL; ) =
   CONST nName = "mark";
   VAR n := NUMBER(mark);
   BEGIN
     <* ASSERT NUMBER(space) = n,
                 "Array sizes of space (" & Fmt.Int(NUMBER(space))
                   & ") and " & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    LongRealPLPlotRaw.SetNewLineStyle(n, mark[0], space[0]);
-  END SetNewLineStyle;
+    LongRealPLPlotRaw.SetCustomLineStyle(n, mark[0], space[0]);
+  END SetCustomLineStyle;
 
 PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
@@ -1305,19 +1305,19 @@ PROCEDURE SetFile (file: Cstdio.FILE_star; ) =
     LongRealPLPlotRaw.SetFile(file);
   END SetFile;
 
-PROCEDURE HLS_RGB (h, l, s: Float; ): HLS_RGBResult =
-  VAR result: HLS_RGBResult;
+PROCEDURE HLSToRGB (h, l, s: Float; ): HLSToRGBResult =
+  VAR result: HLSToRGBResult;
   BEGIN
-    LongRealPLPlotRaw.HLS_RGB(h, l, s, result.r, result.g, result.b);
+    LongRealPLPlotRaw.HLSToRGB(h, l, s, result.r, result.g, result.b);
     RETURN result;
-  END HLS_RGB;
+  END HLSToRGB;
 
-PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult =
-  VAR result: RGB_HLSResult;
+PROCEDURE RGBToHLS (r, g, b: Float; ): RGBToHLSResult =
+  VAR result: RGBToHLSResult;
   BEGIN
-    LongRealPLPlotRaw.RGB_HLS(r, g, b, result.h, result.l, result.s);
+    LongRealPLPlotRaw.RGBToHLS(r, g, b, result.h, result.l, result.s);
     RETURN result;
-  END RGB_HLS;
+  END RGBToHLS;
 
 
 BEGIN

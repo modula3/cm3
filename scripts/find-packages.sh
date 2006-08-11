@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: find-packages.sh,v 1.3 2001-02-12 22:39:00 wagner Exp $
+# $Id: find-packages.sh,v 1.4 2006-08-02 12:02:40 thielema Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -18,8 +18,8 @@ fi
 . "$sysinfo"
 
 (
-  cd "$ROOT" &&  find . -type f -name m3makefile -print | 
-  grep src/m3makefile | sed -e 's;/src/m3makefile$;;' | 
+  cd "$ROOT" &&  find . -follow -type f -name m3makefile -print | 
+  grep src/m3makefile | grep -v _darcs | sed -e 's;/src/m3makefile$;;' | 
   sort | uniq | sed -e "s;^./;;"
 ) > "$PKGSDB"
 

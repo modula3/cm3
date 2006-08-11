@@ -1,6 +1,6 @@
 /* scan-decls.c - Extracts declarations from cpp output.
    Copyright (C) 1993, 1995, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2003 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -18,13 +18,15 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
    Written by Per Bothner <bothner@cygnus.com>, July 1993.  */
 
-#include "hconfig.h"
+#include "bconfig.h"
 #include "system.h"
+#include "coretypes.h"
+#include "tm.h"
 #include "cpplib.h"
 #include "scan.h"
 
-static void skip_to_closing_brace PARAMS ((cpp_reader *));
-static const cpp_token *get_a_token PARAMS ((cpp_reader *));
+static void skip_to_closing_brace (cpp_reader *);
+static const cpp_token *get_a_token (cpp_reader *);
 
 int brace_nesting = 0;
 
@@ -32,7 +34,9 @@ int brace_nesting = 0;
    indicate the (brace nesting levels of) left braces that were
    prefixed by extern "C".  */
 int extern_C_braces_length = 0;
-char extern_C_braces[20];
+/* 20 is not enough anymore on Solaris 9.  */
+#define MAX_EXTERN_C_BRACES  200
+char extern_C_braces[MAX_EXTERN_C_BRACES];
 #define in_extern_C_brace (extern_C_braces_length>0)
 
 /* True if the function declaration currently being scanned is
@@ -41,8 +45,7 @@ int current_extern_C = 0;
 
 /* Get a token but skip padding.  */
 static const cpp_token *
-get_a_token (pfile)
-     cpp_reader *pfile;
+get_a_token (cpp_reader *pfile)
 {
   for (;;)
     {
@@ -53,8 +56,7 @@ get_a_token (pfile)
 }
 
 static void
-skip_to_closing_brace (pfile)
-     cpp_reader *pfile;
+skip_to_closing_brace (cpp_reader *pfile)
 {
   int nesting = 1;
   for (;;)
@@ -72,7 +74,7 @@ skip_to_closing_brace (pfile)
 
 /* This function scans a C source file (actually, the output of cpp),
    reading from FP.  It looks for function declarations, and
-   external variable declarations.  
+   external variable declarations.
 
    The following grammar (as well as some extra stuff) is recognized:
 
@@ -93,10 +95,8 @@ Here dname is the actual name being declared.
 */
 
 int
-scan_decls (pfile, argc, argv)
-     cpp_reader *pfile;
-     int argc ATTRIBUTE_UNUSED;
-     char **argv ATTRIBUTE_UNUSED;
+scan_decls (cpp_reader *pfile, int argc ATTRIBUTE_UNUSED,
+	    char **argv ATTRIBUTE_UNUSED)
 {
   int saw_extern, saw_inline;
   cpp_token prev_id;
@@ -155,7 +155,7 @@ scan_decls (pfile, argc, argv)
 	  /* ... fall through ...  */
 	case CPP_OPEN_BRACE:  case CPP_CLOSE_BRACE:
 	  goto new_statement;
-	  
+
 	case CPP_EOF:
 	  return 0;
 
@@ -222,6 +222,12 @@ scan_decls (pfile, argc, argv)
 		      brace_nesting++;
 		      extern_C_braces[extern_C_braces_length++]
 			= brace_nesting;
+		      if (extern_C_braces_length >= MAX_EXTERN_C_BRACES)
+			{
+			  fprintf (stderr,
+			  	   "Internal error: out-of-bounds index\n");
+			  exit (FATAL_EXIT_CODE);
+			}
 		      goto new_statement;
 		    }
 		}

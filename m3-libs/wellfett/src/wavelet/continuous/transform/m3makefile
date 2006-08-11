@@ -1,0 +1,12 @@
+
+import("fftw")
+
+template("continuouswavelettransform")
+
+generic_module("ContinuousWaveletTransform")
+generic_module("ContinuousWaveletAnalysis")
+generic_module("ContinuousWaveletSynthesis")
+
+ContinuousWaveletTransform("Real",     "Real",     "Basic")
+ContinuousWaveletTransform("LongReal", "LongReal", "Basic")
+%ContinuousWaveletTransform("Extended", "Extended", "Basic")
