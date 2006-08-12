@@ -2719,7 +2719,7 @@ m3cg_init_offset (void)
       j = 0;
     } else {
       r = XEXP (r, 1);	/* (const_int ...) */
-      j = XINT (r, 0);  /* offset */
+      j = XWINT (r, 0);  /* offset */
     }
   }
 
