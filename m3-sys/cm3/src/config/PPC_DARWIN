@@ -100,7 +100,7 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-lm" ],
   "LEX-YACC"   : [ "-L/usr/lib", "-ll" ],
   "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
-  "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+%  "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
   "OPENGL"     : [ "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
 % "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm" ],
   "X11"        : [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
@@ -122,8 +122,8 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC", "-gstabs" ]
-  if optimize  args += "-O"  end
+  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
@@ -285,7 +285,7 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
 M3_SPLIT_LIBNAMES = TRUE
-% --- split library names and pass -L/-l arguments to the linker
+% --- split shared library names and pass -L/-l arguments to the linker
 
 % M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
