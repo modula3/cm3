@@ -14,7 +14,7 @@
 UNSAFE MODULE ThreadWin32
 EXPORTS Scheduler, Thread, ThreadF, RTOS, RTHooks;
 
-IMPORT RTError, WinBase, WinDef, WinGDI, WinNT;
+IMPORT RTError, WinBase, WinDef, WinGDI, WinNT, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
@@ -363,7 +363,7 @@ PROCEDURE InitActivations () =
       threadhandle := WinBase.GetCurrentThread();
       processhandle := WinBase.GetCurrentProcess();
       IF WinBase.DuplicateHandle(processhandle, threadhandle, processhandle,
-                                 LOOPHOLE(ADR(act.handle), WinNT.PHANDLE), 0,
+                                 LOOPHOLE(ADR(me.handle), WinNT.PHANDLE), 0,
                                  0, WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
         Choke();
       END;
@@ -822,7 +822,7 @@ PROCEDURE SuspendOthers () =
     IF (suspend_cnt = 1) THEN StopWorld(me) END;
   END SuspendOthers;
 
-PROCEDURE StopWorld (me: Activation): INTEGER =
+PROCEDURE StopWorld (me: Activation) =
   (* LL=activeMu *)
   VAR
     nLive := 0;
@@ -1027,7 +1027,7 @@ VAR
   mutex: MUTEX;
   condition: Condition;
 
-PROCEDURE LockHeap (<*UNUSED*> mutator: BOOLEAN) =
+PROCEDURE LockHeap () =
   BEGIN
     IF (cs = NIL) THEN
       cs := ADR(csstorage);
