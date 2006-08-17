@@ -1,3 +1,0 @@
-#!/bin/sh -x
-../../ktok/FreeBSD3/tok test.t
-../FreeBSD3/lex test.l
