@@ -131,7 +131,7 @@ readonly INSTALL_IMPLS = TRUE
 SYSTEM_LIBS = {
   "LIBC"       : [ "-lm" ],
 %-- not on most Linux platforms
-% "LEX-YACC"   : [ BEGIN_CONFIG
+% "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
 %                      11 "libl.a"
 %                      12 "/usr/lib"
@@ -139,7 +139,7 @@ SYSTEM_LIBS = {
 %                      12 "/usr/local/gnu/lib"
 %                      13 "/usr/lib"
 %                  END_CONFIG, "-ll" ],
-  "FLEX-BISON" : [ BEGIN_CONFIG
+  "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
                        11 "libfl.a"
                        12 "/usr/lib"
@@ -147,7 +147,7 @@ SYSTEM_LIBS = {
                        12 "/usr/local/gnu/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lfl" ],
-  "POSTGRES95" : [ BEGIN_CONFIG
+  "POSTGRES95" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
                        11 "libpq.a"
                        12 "/usr/local/postgres95/lib"
@@ -155,7 +155,7 @@ SYSTEM_LIBS = {
                        12 "/usr/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lpq" ],
-  "OPENGL"     : [ BEGIN_CONFIG
+  "OPENGL"     : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
                        11 "libGLU.a"
                        11 "libGL.a"
@@ -164,7 +164,7 @@ SYSTEM_LIBS = {
                        12 "/usr/local/gnu/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ BEGIN_CONFIG
+  "ODBC"       : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the ODBC libraries?"
                        11 "libodbc.a"
                        12 "/usr/local/lib"
@@ -174,7 +174,7 @@ SYSTEM_LIBS = {
                        13 "/usr/local/lib"
                    END_CONFIG, "-lodbc" ],
 % FIXME: What is this?  PKG_USE & "/pgodbc/LINUXELF/libpgodbc.a" ],
-  "MOTIF"      : [ BEGIN_CONFIG
+  "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.a"
                        12 "/usr/X11/lib"
@@ -186,7 +186,7 @@ SYSTEM_LIBS = {
                        13 "/usr/X11R6/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lXm" ],
-  "X11"        : [ BEGIN_CONFIG
+  "X11"        : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the X11 libraries?"
                        11 "libXaw.a"
                        11 "libXmu.a"
