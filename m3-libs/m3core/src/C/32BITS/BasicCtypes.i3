@@ -15,14 +15,14 @@ TYPE
   short_int          = [-16_8000 .. 16_7fff];
   int                = [-16_7fffffff-1 .. 16_7fffffff];
   long_int           = int;
-  long_long          = RECORD val := ARRAY [0..1] OF int; END;
+  long_long          = RECORD val : ARRAY [0..1] OF int; END;
 
   (* the four unsigned integer types *)
   unsigned_char      = [16_0 .. 16_ff];
   unsigned_short_int = [16_0 .. 16_ffff];
   unsigned_int       = Word.T;
   unsigned_long_int  = unsigned_int;
-  unsigned_long_long = RECORD val := ARRAY [0..1] OF unsigned_int; END;
+  unsigned_long_long = RECORD val : ARRAY [0..1] OF unsigned_int; END;
 
   (* the three floating types *)
   float              = REAL;
