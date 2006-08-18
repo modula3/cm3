@@ -64,6 +64,10 @@ PROCEDURE PushNew (open: BOOLEAN;  name: M3ID.T;  module := FALSE;
     t.proc_frame := (open) AND (NOT module) AND (NOT nested);
     t.home       := Module.Current ();
     top := t;
+    EVAL ScopeName(t); (* Force every anonymous block to have a number, even
+                          if not used in a prefix of a procedure name.
+                          without this, m3gdb can't figure out what block
+                          a nested procedure is inside of. *)
     RETURN t;
   END PushNew;
 
