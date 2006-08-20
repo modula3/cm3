@@ -11,16 +11,15 @@
 INTERFACE RTMachine;
 
 IMPORT Uucontext;
+FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
 TYPE
-  (* State = Csetjmp.jmp_buf; *)
   State = Uucontext.ucontext_t;
   (* The machine state is saved in a "State".  This type is really
      opaque to the client, i.e. it does not need to be an array. *)
 
-(* <*EXTERNAL "_setjmp" *> *)
 <*EXTERNAL "getcontext" *>
 PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
@@ -43,27 +42,14 @@ CONST
   AdrPerHeapPage      = 8192;        (* addresses per page *)
   LogAdrPerHeapPage   = 13;
 
-(* The collector supports the use of VM protection to achieve incremental,
-   generational collection.  This is not possible on all architectures, and
-   it may not be implemented in all cases where it is possible.  The
-   boolean constant "VMHeap" is "TRUE" iff all necessary support is
-   present for this architecture.  "VMHeap" is "TRUE" for the DS3100,
-   whose implementation you might use as a reference. *)
-
-CONST
-  VMHeap = TRUE;
-
-(* If "VMHeap" is true, "AtomicWrappers" indicates whether the wrappers
-   that validate parameters passed to system calls are atomic with
-   respect to the collector.  *)
-
-CONST
-  AtomicWrappers = TRUE;
-
 (*** hooks for the C wrapper functions ***)
 
 <*EXTERNAL*> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
 <*EXTERNAL*> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
+
+(*** hooks for the stack walker ***)
+<*EXTERNAL*> VAR RTProcedureSRC_FromPC: ADDRESS; (* => RTProcedureSRC.FromPC *)
+<*EXTERNAL*> VAR RTHeapDep_Fault: ADDRESS;  (* => RTHeapDep.Fault *)
 
 (*--------------------------------------------------------- thread stacks ---*)
 
@@ -98,5 +84,20 @@ TYPE
     lock    : INTEGER;       (* to ensure that ctxt isn't overrun!! *)
   END;
 
-END RTMachine.
+(*------------------------------------------------------ pthreads support ---*)
 
+(* Full context is in the signal handler frame so no need for state here. *)
+TYPE ThreadState = Uucontext.gregset_t;
+
+CONST
+  SIG_SUSPEND = 0;
+  SIG_RESTART = 0;
+
+<*EXTERNAL RTMachine__SaveRegsInStack*>
+PROCEDURE SaveRegsInStack(): ADDRESS;
+
+PROCEDURE SuspendThread(t: pthread_t);
+PROCEDURE RestartThread(t: pthread_t);
+PROCEDURE GetState(t: pthread_t; VAR sp: ADDRESS; VAR state: ThreadState);
+
+END RTMachine.

@@ -47,15 +47,20 @@ PROCEDURE GetRounding(): RoundingMode =
   END GetRounding;
 
 PROCEDURE GetFlags(): SET OF Flag =
-  VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadF.MyFPState ();
+  VAR flags := NoFlags;
+  PROCEDURE Get(READONLY state: ThreadState) =
+    VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
+    BEGIN
+      ExtractFlags (status, state, flags);
+    END Get;
   BEGIN
-    RETURN ExtractFlags (status, state^);
+    ThreadF.GetMyFPState(Get);
+    RETURN flags;
   END GetFlags;
 
 PROCEDURE ExtractFlags (READONLY status: FPU.ControlStatus;
-                        READONLY state: ThreadState): SET OF Flag =
-  VAR flags  := NoFlags;
+                        READONLY state: ThreadState;
+                        VAR flags: SET OF Flag) =
   BEGIN
     IF (state.behavior[Flag.Inexact] = Behavior.Ignore) THEN
       IF (state.sticky[Flag.Inexact]) THEN
@@ -112,49 +117,54 @@ PROCEDURE ExtractFlags (READONLY status: FPU.ControlStatus;
     IF (state.sticky[Flag.IntDivByZero]) THEN
       flags := flags + SET OF Flag{Flag.IntDivByZero};
     END;
-
-    RETURN flags;
   END ExtractFlags;
 
 PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
-  VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadF.MyFPState ();
-  VAR flags  := ExtractFlags (status, state^);
-  VAR new: FPU.ControlStatus;
+  VAR flags := NoFlags;
+  PROCEDURE Set(VAR state: ThreadState) =
+    VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
+    VAR new: FPU.ControlStatus;
+    BEGIN
+      ExtractFlags (status, state, flags);
+
+      (* set the FPU control register *)
+      new := status;
+      new.se_inexact   := (Flag.Inexact   IN s);
+      new.se_underflow := (Flag.Underflow IN s);
+      new.se_overflow  := (Flag.Overflow  IN s);
+      new.se_divide0   := (Flag.DivByZero IN s);
+      new.se_invalid   := (Flag.Invalid   IN s);
+      EVAL FPU.SetStatus (LOOPHOLE (new, INTEGER));
+
+      (* set the saved thread state *)
+      FOR f := FIRST (Flag) TO LAST (Flag) DO
+        state.sticky [f] := (f IN s);
+      END;
+    END Set;
   BEGIN
-    (* set the FPU control register *)
-    new := status;
-    new.se_inexact   := (Flag.Inexact   IN s);
-    new.se_underflow := (Flag.Underflow IN s);
-    new.se_overflow  := (Flag.Overflow  IN s);
-    new.se_divide0   := (Flag.DivByZero IN s);
-    new.se_invalid   := (Flag.Invalid   IN s);
-    EVAL FPU.SetStatus (LOOPHOLE (new, INTEGER));
-
-    (* set the saved thread state *)
-    FOR f := FIRST (Flag) TO LAST (Flag) DO
-      state.sticky [f] := (f IN s);
-    END;
-
+    ThreadF.SetMyFPState(Set);
     RETURN flags;
   END SetFlags;
 
 PROCEDURE ClearFlag(f: Flag) =
-  VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadF.MyFPState ();
+  PROCEDURE Set(VAR state: ThreadState) =
+    VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
+    BEGIN
+      CASE f OF
+      | Flag.Inexact      => status.se_inexact   := FALSE;
+      | Flag.Underflow    => status.se_underflow := FALSE;
+      | Flag.Overflow     => status.se_overflow  := FALSE;
+      | Flag.DivByZero    => status.se_divide0   := FALSE;
+      | Flag.Invalid      => status.se_invalid   := FALSE;
+      | Flag.IntOverflow  => (* nop *)
+      | Flag.IntDivByZero => (* nop *)
+      ELSE
+      END;
+      EVAL FPU.SetStatus (LOOPHOLE (status, INTEGER));
+      state.sticky [f] := FALSE;
+    END Set;
   BEGIN
-    CASE f OF
-    | Flag.Inexact      => status.se_inexact   := FALSE;
-    | Flag.Underflow    => status.se_underflow := FALSE;
-    | Flag.Overflow     => status.se_overflow  := FALSE;
-    | Flag.DivByZero    => status.se_divide0   := FALSE;
-    | Flag.Invalid      => status.se_invalid   := FALSE;
-    | Flag.IntOverflow  => (* nop *)
-    | Flag.IntDivByZero => (* nop *)
-    ELSE
-    END;
-    EVAL FPU.SetStatus (LOOPHOLE (status, INTEGER));
-    state.sticky [f] := FALSE;
+    ThreadF.SetMyFPState(Set);
   END ClearFlag;
 
 TYPE
@@ -173,15 +183,15 @@ CONST
 
 PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
   TYPE BH = Behavior;
-  VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadF.MyFPState ();
-  VAR old    := state.behavior [f];
-  BEGIN
-    IF (old = b) THEN RETURN END;
-    IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
-    state.behavior [f] := b;
-    CASE f OF
-    | Flag.Inexact =>
+  PROCEDURE Set(VAR state: ThreadState) =
+    VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
+    VAR old    := state.behavior [f];
+    BEGIN
+      IF (old = b) THEN RETURN END;
+      IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
+      state.behavior [f] := b;
+      CASE f OF
+      | Flag.Inexact =>
         IF (old = BH.Ignore) THEN
           status.se_inexact := state.sticky[Flag.Inexact];
         END;
@@ -190,7 +200,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
         | BH.SetFlag => status.en_inexact := FALSE;
         | BH.Trap    => status.en_inexact := TRUE;
         END;
-    | Flag.Underflow =>
+      | Flag.Underflow =>
         IF (old = BH.Ignore) THEN
           status.se_underflow := state.sticky[Flag.Underflow];
         END;
@@ -199,7 +209,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
         | BH.SetFlag => status.en_underflow := FALSE;
         | BH.Trap    => status.en_underflow := TRUE;
         END;
-    | Flag.Overflow =>
+      | Flag.Overflow =>
         IF (old = BH.Ignore) THEN
           status.se_overflow := state.sticky[Flag.Overflow];
         END;
@@ -208,7 +218,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
         | BH.SetFlag => status.en_overflow := FALSE;
         | BH.Trap    => status.en_overflow := TRUE;
         END;
-    | Flag.DivByZero =>
+      | Flag.DivByZero =>
         IF (old = BH.Ignore) THEN
           status.se_divide0 := state.sticky[Flag.DivByZero];
         END;
@@ -217,7 +227,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
         | BH.SetFlag => status.en_divide0 := FALSE;
         | BH.Trap    => status.en_divide0 := TRUE;
         END;
-    | Flag.Invalid =>
+      | Flag.Invalid =>
         IF (old = BH.Ignore) THEN
           status.se_invalid := state.sticky[Flag.Invalid];
         END;
@@ -226,16 +236,25 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
         | BH.SetFlag => status.en_invalid := FALSE;
         | BH.Trap    => status.en_invalid := TRUE;
         END;
-    | Flag.IntOverflow  => (* only Ignore is allowed => ok *)
-    | Flag.IntDivByZero => (* only Trap is allowed => ok *)
-    ELSE RAISE Failure;
-    END;
-    EVAL FPU.SetStatus (LOOPHOLE (status, INTEGER));
+      | Flag.IntOverflow  => (* only Ignore is allowed => ok *)
+      | Flag.IntDivByZero => (* only Trap is allowed => ok *)
+      ELSE RAISE Failure;
+      END;
+      EVAL FPU.SetStatus (LOOPHOLE (status, INTEGER));
+    END Set;
+  BEGIN
+    ThreadF.SetMyFPState(Set);
   END SetBehavior;
 
 PROCEDURE GetBehavior(f: Flag): Behavior =
+  VAR behavior: Behavior;
+  PROCEDURE Get(READONLY state: ThreadState) =
+    BEGIN
+      behavior := state.behavior [f];
+    END Get;
   BEGIN
-    RETURN ThreadF.MyFPState().behavior [f];
+    ThreadF.GetMyFPState(Get);
+    RETURN behavior;
   END GetBehavior;
 
 (*------------------------------------------------- thread initialization ---*)

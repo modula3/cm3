@@ -7,12 +7,11 @@
 %      modified on Mon Dec 14 19:59:03 PST 1992 by jdd
 %      modified on Wed May 20 17:21:29 PDT 1992 by muller
 
-Interface      ("RTMachine")
+Module         ("RTMachine")
 implementation ("RTHeapDep")
 implementation ("RTSignal")
 implementation ("RTThread")
 c_source       ("RTThreadC")
 c_source       ("RTStackC")
-c_source       ("RTHeapDepC")
 s_source       ("RTStackASM")
-
+s_source       ("RTMachineASM")

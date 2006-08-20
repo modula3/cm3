@@ -22,6 +22,12 @@ TYPE
     tz_minuteswest:  int; (* minutes west of Greenwich *)
     tz_dsttime:      int; (* type of dst correction *) END;
 
+  struct_timespec = RECORD
+    tv_sec: time_t;			 (* seconds *)
+    tv_nsec: long;			 (* and nanoseconds *)
+  END;
+  timespec_t = struct_timespec;
+
 CONST
   DST_NONE = 0;  (* not on dst *)
 
@@ -85,10 +91,12 @@ TYPE
 (*** gettimeofday(2), settimeofday(2) - get/set date and time ***)
 
 <*EXTERNAL*>
-PROCEDURE gettimeofday (VAR t: struct_timeval;  VAR z: struct_timezone): int;
+PROCEDURE gettimeofday (VAR t: struct_timeval;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 <*EXTERNAL*>
-PROCEDURE settimeofday (VAR t: struct_timeval;  VAR z: struct_timezone): int;
+PROCEDURE settimeofday (VAR t: struct_timeval;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 
 (*** adjtime(2) - correct the time to allow synchronization of the 
@@ -160,5 +168,8 @@ PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 
 <*EXTERNAL*> PROCEDURE tzset	 ();
 <*EXTERNAL*> PROCEDURE tzsetwall ();
+
+<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec;
+                                  VAR rem: struct_timespec): int;
 
 END Utime.

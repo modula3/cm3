@@ -7,6 +7,8 @@
 
 INTERFACE ThreadF;
 
+IMPORT RTHeapRep;
+
 (*--------------------------------------------- garbage collector support ---*)
 
 PROCEDURE SuspendOthers ();
@@ -24,6 +26,12 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
 
+PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
+(* Apply p to each thread allocation pool.  All other threads must be
+   suspended.  ProcessPools exists solely for the garbage collector.  *)
+
+PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool;
+
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
 
@@ -40,5 +48,15 @@ TYPE
 
 PROCEDURE MyId (): Id RAISES {};
 (* return Id of caller *)
+
+(*---------------------------------------------------- exception delivery ---*)
+
+PROCEDURE GetCurrentHandlers(): ADDRESS;
+(* == RETURN WinBase.TlsGetValue(handlersIndex) *)
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS);
+(* == WinBase.TlsSetValue(handlersIndex, h) *)
+
+PROCEDURE Init();
 
 END ThreadF.

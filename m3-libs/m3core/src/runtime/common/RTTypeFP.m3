@@ -5,7 +5,7 @@
 (* Last modified on Thu Jul 14 15:35:04 PDT 1994 by kalsow     *)
 (*      modified on Wed Jun  2 15:35:18 PDT 1993 by muller     *)
 
-UNSAFE MODULE RTTypeFP;
+MODULE RTTypeFP;
 
 IMPORT Word, Fingerprint;
 IMPORT RT0, RTType;
@@ -16,14 +16,14 @@ VAR map : UNTRACED REF ARRAY OF INTEGER := NIL;
 PROCEDURE ToFingerprint (tc: Typecode): Fingerprint.T =
   VAR t := RTType.Get (tc);  fp: Fingerprint.T;
   BEGIN
-    LOOPHOLE (fp, RT0.Fingerprint) := t.fp;
+    fp.byte := t.fp;
     RETURN fp;
   END ToFingerprint;
 
 PROCEDURE FromFingerprint (READONLY fp_in: Fingerprint.T): Typecode =
   VAR n, x, y : INTEGER;  t: RT0.TypeDefn;  fp: RT0.Fingerprint;
   BEGIN
-    fp := LOOPHOLE (fp_in, RT0.Fingerprint);
+    fp := fp_in.byte;
     IF (map = NIL) THEN BuildFPMap () END;
     n := NUMBER (map^);
     x := FPHash (fp, n);

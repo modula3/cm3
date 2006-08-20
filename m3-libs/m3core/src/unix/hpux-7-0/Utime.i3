@@ -96,11 +96,11 @@ TYPE
 
 <*EXTERNAL*>
 PROCEDURE gettimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 <*EXTERNAL*>
 PROCEDURE settimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+                        UNTRACED REF z: struct_timezone := NIL): int;
 
 
 (*** adjtime(2) - correct the time to allow synchronization of the 
@@ -152,11 +152,12 @@ PROCEDURE setitimer (which: int;
 <*EXTERNAL*> PROCEDURE asctime   (tm: struct_tm_star): char_star;
 
 (* Reentrant equivalents *)
-
+(*
 PROCEDURE ctime_r (clock: long_star; buf: char_star; buflen: int): char_star;
 PROCEDURE localtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
 PROCEDURE gmtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
 PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
+*)
 
 (*** mktime(3) - convert a struct_tm to a time_t ***)
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;

@@ -7,7 +7,7 @@
 %      modified on Mon Apr 12 23:16:20 PDT 1993 by muller
 
 Interface ("Udir")
-Module    ("Uerror")
+Interface ("Uerror")
 Interface ("Uexec")
 Interface ("Ugrp")
 Interface ("Uipc")
