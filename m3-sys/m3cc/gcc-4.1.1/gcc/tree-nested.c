@@ -1206,6 +1206,8 @@ convert_tramp_reference (tree *tp, int *walk_subtrees, void *data)
 	   T.2 = __builtin_adjust_trampoline (T.1);
 	   T.3 = (func_type)T.2;
       */
+      if (TREE_STATIC (t))
+	break;
 
       decl = TREE_OPERAND (t, 0);
       if (TREE_CODE (decl) != FUNCTION_DECL)
