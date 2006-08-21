@@ -600,22 +600,21 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  EOL                       := "\n";
 
     |  Systems.I386_DARWIN =>
-      (* FIXME: please carefully check all the values; not active yet *)
-                 max_align                 := 32;
+                 max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
                  Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
-                 Jumpbuf_size              := 11 * Address.size;
+                 Jumpbuf_size              := 18 * Address.size;
                  Jumpbuf_align             := Address.align;
-                 Fixed_frame_size          := 4 * Address.size;
+                 Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0 * Char.size;
                  All_floats_legal          := TRUE;
                  Has_stack_walker          := FALSE;
-                 Setjmp                    := "_setjmp";
+                 Setjmp                    := "setjmp";
                  Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
