@@ -663,24 +663,6 @@ m3_do_shift (tree val, tree cnt, int right, tree t)
   return d;
 }
 
-static tree
-m3_build_real (const char *value, tree tipe)
-{
-  tree x;
-
-  if (tipe == t_reel)
-    x = build_real (tipe, REAL_VALUE_ATOF (value, SFmode));
-  else if (tipe == t_lreel)
-    x = build_real (tipe, REAL_VALUE_ATOF (value, DFmode));
-# if 0
-  else if (tipe == t_xreel)
-    x = build_real (tipe, REAL_VALUE_ATOF (value, XFmode));
-# endif
-  else
-    gcc_unreachable ();
-  return x;
-}
-
 /* Mark EXP saying that we need to be able to take the
    address of it; it should not be allocated in a register.
    Value is 1 if successful.  
@@ -1679,6 +1661,16 @@ declare_temp (tree t)
   return v;
 }
 
+/* Return a tree representing the static address of the given procedure --
+   not the trampoline for a nested procedure. */
+static tree
+proc_addr (tree p)
+{
+  tree expr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p);
+  TREE_STATIC (expr) = 1;
+  return expr;
+}
+
 static void
 m3_start_call (void)
 {
@@ -1703,10 +1695,8 @@ m3_call_direct (tree p, tree t)
   tree call;
 
   TREE_USED (p) = 1;
-  call = build3 (CALL_EXPR, t,
-		 build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p),
-		 CALL_TOP_ARG (),
-		 CALL_TOP_STATIC_CHAIN ());
+  call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
+		      CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
     add_stmt (call);
   } else {
@@ -1725,9 +1715,7 @@ m3_call_indirect (tree t)
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
 
-  call = build3 (CALL_EXPR, t,
-		 m3_cast (fntype, fnaddr),
-		 CALL_TOP_ARG (),
+  call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
 		 CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
     add_stmt (call);
@@ -1936,12 +1924,8 @@ generate_fault (int code)
 {
   if (fault_proc == 0) declare_fault_proc ();
   tree arg = m3_build_int ((LOCATION_LINE(input_location) << LINE_SHIFT) + (code & FAULT_MASK));
-  return build3 (CALL_EXPR, t_void,
-		 build1 (ADDR_EXPR,
-			 build_pointer_type (TREE_TYPE (fault_proc)),
-			 fault_proc),
-		 build_tree_list (NULL_TREE, arg),
-		 NULL_TREE);
+  return build_function_call_expr (fault_proc,
+				   build_tree_list (NULL_TREE, arg));
 }
 
 /*-------------------------------------------------- M3CG opcode handlers ---*/
@@ -2658,7 +2642,7 @@ m3cg_init_proc (void)
   PROC       (p);
 
   tree f, v;
-  tree expr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p);
+  tree expr = proc_addr (p);
   one_field (o, TREE_TYPE (expr), &f, &v);
   TREE_VALUE (v) = expr;
 }
@@ -3229,6 +3213,7 @@ m3cg_load_float (void)
   UNUSED_MTYPE (t);
   FLOAT (f, fkind);
 
+  if (TREE_TYPE (f) != t) { f = m3_build1 (CONVERT_EXPR, t, f); }
   EXPR_PUSH (f);
 }
 
@@ -3291,7 +3276,7 @@ m3cg_divide (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (RDIV_EXPR, t,
-			     m3_cast (t, EXPR_REF (-2)), 
+			     m3_cast (t, EXPR_REF (-2)),
 			     m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
@@ -3359,26 +3344,30 @@ m3cg_round (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  tree temp1 = declare_temp (t_lreel);
-  tree t1, zero, half, res;
+  tree arg;
+  tree tmp;
+  tree cond;
+  tree neg;
+  tree pos;
+  REAL_VALUE_TYPE r;
 
-  t1 = EXPR_REF (-1);
-  if (src_t == t_reel) {
-    src_t = t_lreel;
-    t1 = m3_build1 (CONVERT_EXPR, src_t, t1);
-  }
-  t1 = m3_build2 (MODIFY_EXPR, src_t, temp1, t1);
-  zero = m3_build_real ("0.0", src_t);
-  half = m3_build_real ("0.5", src_t);
+  arg = m3_cast (src_t, EXPR_REF(-1));
+  tmp = declare_temp (src_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, src_t, tmp, arg));
 
-  TREE_SIDE_EFFECTS (t1) = 1;
-  res = m3_build1 (FIX_TRUNC_EXPR, dst_t,
-		   m3_build3 (COND_EXPR, src_t,
-			      m3_build2 (GE_EXPR,
-					 boolean_type_node, temp1, zero),
-			      m3_build2 (PLUS_EXPR, src_t, temp1, half),
-			      m3_build2 (MINUS_EXPR, src_t, temp1, half)));
-  EXPR_REF(-1) = m3_build2 (COMPOUND_EXPR, dst_t, t1, res);
+  real_from_string (&r, "0.5");
+  pos = build_real (src_t, r);
+
+  real_from_string (&r, "-0.5");
+  neg = build_real (src_t, r);
+
+  cond = fold_build2 (GT_EXPR, boolean_type_node, tmp,
+		      build_real_from_int_cst (src_t, v_zero));
+
+  EXPR_REF(-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t,
+			    m3_build2 (PLUS_EXPR, src_t, tmp,
+				       m3_build3 (COND_EXPR, src_t,
+						  cond, pos, neg)));
 }
 
 static void
@@ -3387,7 +3376,8 @@ m3cg_trunc (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  EXPR_REF (-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t, m3_cast (src_t, EXPR_REF (-1)));
+  EXPR_REF (-1) =
+    m3_build1 (FIX_TRUNC_EXPR, dst_t, m3_cast (src_t, EXPR_REF (-1)));
 }
 
 static void
@@ -3396,28 +3386,24 @@ m3cg_floor (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  tree temp1 = declare_temp (src_t);
-  tree temp2 = declare_temp (dst_t);
-  tree t1    = m3_build2 (MODIFY_EXPR, src_t, temp1, EXPR_REF(-1));
-  tree t2    = m3_build2 (MODIFY_EXPR, dst_t, 
-			  temp2, m3_build1 (FIX_TRUNC_EXPR, dst_t, temp1));
-  tree zero = m3_build_real ("0.0", src_t);
-  tree res;
+  tree arg;
+  tree cond;
+  tree intval;
 
-  TREE_SIDE_EFFECTS (t1) = 1;
-  TREE_SIDE_EFFECTS (t2) = 1;
-  res = m3_build3 (COND_EXPR, dst_t,
-		   m3_build2 (GE_EXPR, boolean_type_node, temp1, zero),
-		   temp2,
-		   m3_build3 (COND_EXPR, dst_t,
-			      m3_build2 (EQ_EXPR, boolean_type_node, 
-					 temp1, build1 (FLOAT_EXPR, 
-                                                        src_t, temp2)),
-			      temp2,
-			      m3_build2 (MINUS_EXPR, dst_t,
-					 temp2, v_one)));
-  EXPR_REF(-1) = m3_build2 (COMPOUND_EXPR, dst_t,
-                            m3_build2 (COMPOUND_EXPR, dst_t, t1, t2), res);
+  arg = declare_temp (src_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
+		       m3_cast (src_t, EXPR_REF(-1))));
+
+  intval = declare_temp (dst_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, dst_t, intval,
+		       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
+
+  cond = m3_build2 (LE_EXPR, boolean_type_node,
+		    m3_build1 (FLOAT_EXPR, src_t, intval), arg);
+
+  EXPR_REF(-1) = m3_build3 (COND_EXPR, dst_t, cond, intval,
+			    m3_build2 (MINUS_EXPR, dst_t, intval,
+				       build_int_cst (dst_t, 1)));
 }
 
 static void
@@ -3426,26 +3412,24 @@ m3cg_ceiling (void)
   MTYPE (src_t);
   MTYPE (dst_t);
 
-  tree temp1 = declare_temp (src_t);
-  tree temp2 = declare_temp (dst_t);
-  tree t1    = m3_build2 (MODIFY_EXPR, src_t, temp1, EXPR_REF(-1));
-  tree t2    = m3_build2 (MODIFY_EXPR, dst_t,
-			  temp2, m3_build1 (FIX_TRUNC_EXPR, dst_t, temp1));
-  tree zero = m3_build_real ("0.0", src_t);
-  tree res;
+  tree arg;
+  tree cond;
+  tree intval;
 
-  TREE_SIDE_EFFECTS (t1) = 1;
-  TREE_SIDE_EFFECTS (t2) = 1;
-  res = m3_build3 (COND_EXPR, dst_t,
-		   m3_build2 (LE_EXPR, boolean_type_node, temp1, zero),
-		   temp2,
-		   m3_build3 (COND_EXPR, dst_t,
-			      m3_build2 (EQ_EXPR, boolean_type_node, temp1,
-					 m3_build1 (FLOAT_EXPR, src_t, temp2)),
-			      temp2,
-			      m3_build2 (PLUS_EXPR, dst_t, temp2, v_one)));
-  EXPR_REF(-1) = m3_build2 (COMPOUND_EXPR, dst_t,
-                            m3_build2 (COMPOUND_EXPR, dst_t, t1, t2), res);
+  arg = declare_temp (src_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
+		       m3_cast (src_t, EXPR_REF(-1))));
+
+  intval = declare_temp (dst_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, dst_t, intval,
+		       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
+
+  cond = m3_build2 (GE_EXPR, boolean_type_node,
+		    m3_build1 (FLOAT_EXPR, src_t, intval), arg);
+
+  EXPR_REF(-1) = m3_build3 (COND_EXPR, dst_t, cond, intval,
+			    m3_build2 (PLUS_EXPR, dst_t, intval,
+				       build_int_cst (dst_t, 1)));
 }
 
 static void
@@ -4192,7 +4176,7 @@ m3cg_load_procedure (void)
 
   if (option_procs_trace)
     fprintf(stderr, "  load procedure %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
-  EXPR_PUSH (build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p));
+  EXPR_PUSH (proc_addr (p));
 }
 
 static void
