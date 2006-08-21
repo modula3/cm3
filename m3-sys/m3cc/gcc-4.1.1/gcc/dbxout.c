@@ -3344,6 +3344,12 @@ dbxout_block (tree block, int depth, tree args)
 	  did_output = 0;
 	  if (debug_info_level != DINFO_LEVEL_TERSE || depth == 0)
 	    did_output = dbxout_syms (BLOCK_VARS (block));
+          did_output = 1; /* Omitting the LBRAC/RBRAC for blocks with no
+                             locals makes the stabs block structure
+                             inconsistent with Modula-3 linker names for
+                             nested procedures, and leaves m3gdb unable to
+                             figure out what blocks they are nested in.
+                             rodney.bates@wichita.edu */
 	  if (args)
 	    dbxout_reg_parms (args);
 
