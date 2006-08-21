@@ -6,8 +6,6 @@
 
 INTERFACE Uerror;
 
-FROM Ctypes IMPORT char_star, int;
-
 (*** <errno.h> ***)
 
 CONST
@@ -124,22 +122,8 @@ CONST
   ENOTRUST	= 114;		(* no a trusted program *)
 
 
-<*EXTERNAL*>
-VAR
-  errno: int;
-
 (* Extention by mjordan *)
 CONST
   Max = ENOTRUST; (* should be exported from Uerror *)
-
-<*EXTERNAL*> VAR
-  sys_nerr: int;
-  sys_errlist: ARRAY [0..Max] OF char_star;
-
-PROCEDURE GetFrom_sys_errlist(n: INTEGER): char_star RAISES {};
-(* returns entry 'n' of the 'sys_errlist' array; a checked runtime error
-   unless 0 <= n <= sys_nerr. Its safer and more portable to use this
-   procedure than to access the array directly.
-*)
 
 END Uerror.

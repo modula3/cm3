@@ -133,11 +133,11 @@ TYPE
 
 <*EXTERNAL BSDgettimeofday *>
 PROCEDURE gettimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 <*EXTERNAL BSDsettimeofday *>
 PROCEDURE settimeofday (VAR t: struct_timeval;
-                        VAR z: struct_timezone): int;
+                        z: UNTRACED REF struct_timezone := NIL): int;
 
 
 (*** adjtime(2) - correct the time to allow synchronization of the 

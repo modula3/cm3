@@ -12,14 +12,14 @@ IMPORT RTError, RTProcess, Usignal, Uprocess, Uucontext;
 FROM Ctypes IMPORT int;
 
 VAR
-  DefaultHandler   : Usignal.SignalHandler;
-  IgnoreSignal     : Usignal.SignalHandler;
+  DefaultHandler   : Usignal.SignalAction;
+  IgnoreSignal     : Usignal.SignalAction;
   initial_handlers : ARRAY [0..5] OF Usignal.struct_sigaction;
 
 PROCEDURE InstallHandlers () =
   BEGIN
-    DefaultHandler := LOOPHOLE (0, Usignal.SignalHandler);
-    IgnoreSignal   := LOOPHOLE (1, Usignal.SignalHandler);
+    DefaultHandler := LOOPHOLE (0, Usignal.SignalAction);
+    IgnoreSignal   := LOOPHOLE (1, Usignal.SignalAction);
     (* Note: we cannot use Usignal.SIG_DFL and Usignal.SIG_IGN because
        they may not be initialized when this module is kicked into action
        by the low-level runtime startup code... *)
@@ -32,13 +32,13 @@ PROCEDURE InstallHandlers () =
     SetHandler (5, Usignal.SIGTERM, Shutdown);
   END InstallHandlers;
 
-PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
+PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalAction) =
   (* Note: we use the LOOPHOLE to prevent the runtime check for
      nested procedure.  The runtime check crashes when
      handler = IgnoreSignal = 1. *)
   VAR new: Usignal.struct_sigaction;
   BEGIN
-    new.sa_handler := LOOPHOLE (handler, Usignal.SignalHandler);
+    new.sa_sigaction := LOOPHOLE (handler, Usignal.SignalAction);
     new.sa_flags   := Usignal.SA_SIGINFO;
     WITH i = Usignal.sigemptyset(new.sa_mask) DO
       <*ASSERT i = 0*>
@@ -46,7 +46,7 @@ PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
     WITH i = Usignal.sigaction (sig, new, initial_handlers[id]) DO
       <*ASSERT i = 0*>
     END;
-    IF (initial_handlers[id].sa_handler # DefaultHandler) THEN
+    IF (initial_handlers[id].sa_sigaction # DefaultHandler) THEN
       (* don't override inherited, non-default handlers *)
       WITH i = Usignal.sigaction (sig, initial_handlers[id], new) DO
         <*ASSERT i = 0*>
@@ -71,11 +71,11 @@ PROCEDURE RestoreHandler (id: INTEGER;  sig: int) =
   END RestoreHandler;
 
 PROCEDURE Shutdown (sig: int;
-         <*UNUSED*> sip: Usignal.siginfo_t_fault_star;
+         <*UNUSED*> sip: Usignal.siginfo_t_star;
          <*UNUSED*> uap: Uucontext.ucontext_t_star) =
   VAR new, old: Usignal.struct_sigaction;
   BEGIN
-    new.sa_handler := DefaultHandler;
+    new.sa_sigaction := DefaultHandler;
     new.sa_flags   := 0;
     EVAL Usignal.sigemptyset(new.sa_mask);
     RTProcess.InvokeExitors ();                   (* flush stdio... *)
@@ -84,7 +84,7 @@ PROCEDURE Shutdown (sig: int;
   END Shutdown;
 
 PROCEDURE Interrupt (sig: int;
-                     sip: Usignal.siginfo_t_fault_star;
+                     sip: Usignal.siginfo_t_star;
                      uap: Uucontext.ucontext_t_star) =
   VAR h := RTProcess.OnInterrupt (NIL);
   BEGIN
@@ -97,7 +97,7 @@ PROCEDURE Interrupt (sig: int;
   END Interrupt;
 
 PROCEDURE Quit (<*UNUSED*> sig: int;
-                <*UNUSED*> sip: Usignal.siginfo_t_fault_star;
+                <*UNUSED*> sip: Usignal.siginfo_t_star;
                            uap: Uucontext.ucontext_t_star) =
   VAR pc := 0;
   BEGIN
@@ -106,7 +106,7 @@ PROCEDURE Quit (<*UNUSED*> sig: int;
   END Quit;
 
 PROCEDURE SegV (<*UNUSED*> sig: int;
-                <*UNUSED*> sip: Usignal.siginfo_t_fault_star;
+                <*UNUSED*> sip: Usignal.siginfo_t_star;
                            uap: Uucontext.ucontext_t_star) =
   VAR pc := 0;
   BEGIN

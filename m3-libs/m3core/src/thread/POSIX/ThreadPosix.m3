@@ -4,17 +4,17 @@
 (*|                                                          *)
 (*| Last modified on Fri Apr  7 09:06:48 PDT 1995 by kalsow  *)
 (*|      modified on Mon Mar 21 17:40:31 PST 1994 by wobber  *)
-(*|      modified on Sat Jun 26 17:07:03 1993 by gnelson     *)
+(*|      modified on Sat Jun 26 17:07:03 PDT 1993 by gnelson *)
 (*|      modified on Fri May 14 16:15:26 PDT 1993 by mjordan *)
 (*|      modified on Wed Apr 21 16:35:05 PDT 1993 by mcjones *)
 (*|      modified On Mon Apr  5 14:51:30 PDT 1993 by muller  *)
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
-UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix,
-    RTThreadInit;
+UNSAFE MODULE ThreadPosix
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
-IMPORT Cerrno, Cstring, FloatMode, MutexRep,
-       RT0u, RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
+IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
+       RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
        Unix, Usignal, Utime, Word;
 
@@ -70,52 +70,52 @@ TYPE SelectRec = RECORD
 *)
 REVEAL
   T = BRANDED "Thread.T Posix-1.6" OBJECT
-        state: State;
-	id: Id;
+    state: State;
+    id: Id;
 
-        (* our work and its result *)
-        closure : Closure;
-        result : REFANY := NIL;
+    (* our work and its result *)
+    closure : Closure;
+    result : REFANY := NIL;
 
-        (* the threads are organized in a circular list *)
-        previous, next: T;
+    (* the threads are organized in a circular list *)
+    previous, next: T;
 
-        (* next thread that waits for:
-             CASE state OF
-             | waiting  => the same condition;
-             | locking  => the same mutex;
-             | pausing  => a specified time;
-             | blocking => some IO; *)
-        nextWaiting: T;
+    (* next thread that waits for:
+       CASE state OF
+       | waiting  => the same condition;
+       | locking  => the same mutex;
+       | pausing  => a specified time;
+       | blocking => some IO; *)
+    nextWaiting: T;
 
-        (* if state = waiting, the condition on which we wait *)
-        waitingForCondition: Condition;
-        waitingForMutex:     Mutex;
+    (* if state = waiting, the condition on which we wait *)
+    waitingForCondition: Condition;
+    waitingForMutex:     Mutex;
 
-	(* if state = pausing, the time at which we can restart *)
-        waitingForTime : UTime;
+    (* if state = pausing, the time at which we can restart *)
+    waitingForTime : UTime;
 
-        (* true if we are waiting during an AlertWait or AlertJoin 
-	   or AlertPause *)
-        alertable: BOOLEAN := FALSE;
+    (* true if we are waiting during an AlertWait or AlertJoin 
+       or AlertPause *)
+    alertable: BOOLEAN := FALSE;
 
-        (* true if somebody alerted us and we did not TestAlert *)
-        alertPending : BOOLEAN := FALSE;
+    (* true if somebody alerted us and we did not TestAlert *)
+    alertPending : BOOLEAN := FALSE;
 
-        (* This condition is signaled then the thread terminates;
-           other threads that want to join can just wait for it *)
-        endCondition: Condition;
+    (* This condition is signaled then the thread terminates;
+       other threads that want to join can just wait for it *)
+    endCondition: Condition;
 
-        (* where we carry our work. The first thread runs on the
-           original C program stack and its context.stack is NIL *)
-        context : Context;
+    (* where we carry our work. The first thread runs on the
+       original C program stack and its context.stack is NIL *)
+    context : Context;
 
-	(* if state = blocking, the descriptors we are waiting on *)
-        select : SelectRec := SelectRec{};
+    (* if state = blocking, the descriptors we are waiting on *)
+    select : SelectRec := SelectRec{};
 
-        (* state that is available to the floating point routines *)
-        floatState : FloatMode.ThreadState;
-      END;
+    (* state that is available to the floating point routines *)
+    floatState : FloatMode.ThreadState;
+  END;
 
 TYPE
   IntPtr = UNTRACED REF INTEGER;
@@ -124,12 +124,11 @@ TYPE
 
 TYPE
   UTime = Utime.struct_timeval;
-  TimeZone = Utime.struct_timezone;
 
 PROCEDURE UTimeNow (): UTime =
-  VAR tv: UTime;  tz: TimeZone;
+  VAR tv: UTime;
   BEGIN
-    EVAL Utime.gettimeofday (tv, tz);
+    EVAL Utime.gettimeofday (tv);
     RETURN tv;
   END UTimeNow;
 
@@ -215,16 +214,16 @@ PROCEDURE GetDefaultStackSize (): CARDINAL =
 
 PROCEDURE MinDefaultStackSize (new_min: CARDINAL) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       defaultStackSize := MAX (defaultStackSize, new_min);      
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END MinDefaultStackSize;
 
 PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       INC (defaultStackSize, inc);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END IncDefaultStackSize;
 
 PROCEDURE Fork (cl: Closure): T =
@@ -234,7 +233,7 @@ PROCEDURE Fork (cl: Closure): T =
     INC (stats.n_forks);
     IF (stats.n_forks MOD ForkYieldRatio) = 0 THEN Yield () END;
 
-    INC (RT0u.inCritical);
+    INC (inCritical);
 
       IF NOT multipleThreads THEN
         (* this is the first time we have more than one thread; we can start to
@@ -268,7 +267,7 @@ PROCEDURE Fork (cl: Closure): T =
       CanRun (t);
 
       IF hooks # NIL THEN hooks.fork (t) END;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN t;
   END Fork;
 
@@ -288,22 +287,22 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
 PROCEDURE XJoin (t: T): REFANY RAISES {Alerted} =
   VAR c: Condition;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       WHILE (t.state # State.dying) AND (t.state # State.dead) DO
-        (*** INLINE Wait (RT0u.inCritical, t.endCondition) ***)
+        (*** INLINE Wait (inCritical, t.endCondition) ***)
         c := t.endCondition;
         ICannotRun (State.waiting);
         self.waitingForCondition := c;
         self.nextWaiting := c.waitingForMe;
         c.waitingForMe := self;
-        DEC (RT0u.inCritical);
+        DEC (inCritical);
           InternalYield ();
-        INC (RT0u.inCritical);
+        INC (inCritical);
       END;
       t.state := State.dead;
       IF perfOn THEN PerfChanged (t.id, State.dead); END;
       INC (stats.n_joins);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN t.result;
   END XJoin;
 
@@ -323,13 +322,13 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
 PROCEDURE XWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     TRY
-      INC (RT0u.inCritical);
+      INC (inCritical);
         EVAL XRelease (m);
         ICannotRun (State.waiting);
         self.waitingForCondition := c;
         self.nextWaiting := c.waitingForMe;
         c.waitingForMe := self;
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       InternalYield ();
     FINALLY
       LockMutex (m);
@@ -349,7 +348,7 @@ PROCEDURE Broadcast (c: Condition) =
 PROCEDURE XSignal (c: Condition; limit: INTEGER) =
   VAR t: T;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       LOOP
         t := c.waitingForMe;
         IF (t = NIL) THEN EXIT END;
@@ -358,31 +357,33 @@ PROCEDURE XSignal (c: Condition; limit: INTEGER) =
         DEC (limit);
         IF limit = 0 THEN EXIT END;
       END;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END XSignal;
 
 PROCEDURE Alert (t: T) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       t.alertPending := TRUE;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END Alert;
 
 PROCEDURE TestAlert (): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       result := self.alertPending;
       self.alertPending := FALSE;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN result; 
   END TestAlert;
 
 PROCEDURE Yield () =
   <*FATAL Alerted*>
   BEGIN
-    self.alertable := FALSE;
-    InternalYield ();
+    IF inCritical = 0 AND self # NIL THEN
+      self.alertable := FALSE;
+      InternalYield ();
+    END;
   END Yield;
 
 PROCEDURE Self (): T =
@@ -409,11 +410,11 @@ PROCEDURE LockMutex (m: Mutex) =
   <*FATAL Alerted*>
   BEGIN
     LOOP
-      INC (RT0u.inCritical);
+      INC (inCritical);
         IF m.holder = NIL THEN
           <* ASSERT self # NIL *>
           m.holder := self;
-          DEC (RT0u.inCritical);
+          DEC (inCritical);
           RETURN;
         END;
         ICannotRun (State.locking);
@@ -422,7 +423,7 @@ PROCEDURE LockMutex (m: Mutex) =
         self.alertable := FALSE;
         m.waitingForMe := self;
         IF (m.holder = self) THEN ImpossibleAcquire (m); END;
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       InternalYield ();
     END;
   END LockMutex;
@@ -442,9 +443,9 @@ PROCEDURE UnlockMutex (m: Mutex) =
   <*FATAL Alerted*>
   VAR waiters: BOOLEAN;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       waiters := XRelease (m);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     IF waiters THEN
       self.alertable := FALSE;
       InternalYield ();
@@ -493,28 +494,40 @@ PROCEDURE SleazyRelease (m: Mutex) =
 
 PROCEDURE SuspendOthers () =
   BEGIN
-    INC(RT0u.inCritical);
+    INC(inCritical);
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   BEGIN
-    DEC(RT0u.inCritical);
+    DEC(inCritical);
   END ResumeOthers;
 
+PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
+  BEGIN
+    p(newPool);
+  END ProcessPools;
+
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
-  VAR t:= self; start, stop: ADDRESS;
+  VAR
+    t:= self; start, stop: ADDRESS;
+    context := self.context;
   BEGIN
     (* save my state *)
-    EVAL RTThread.Save (self.context.buf);
-
-    REPEAT 
+    EVAL RTThread.Save (context.buf);
+    Tos (context, start, stop);		 (* process the stack *)
+    p (start, stop);
+    WITH z = context.buf DO		 (* process the registers *)
+      p (ADR (z), ADR (z) + ADRSIZE (z))
+    END;
+    t := self.next;
+    WHILE t # self DO
       Tos (t.context, start, stop);	 (* process the stack *)
       p (start, stop);
       WITH z = t.context.buf DO		 (* process the registers *)
         p (ADR (z), ADR (z) + ADRSIZE (z))
       END;
       t := t.next;
-    UNTIL t = self;
+    END;
   END ProcessStacks;
 
 (*------------------------------------------------- I/O and Timer support ---*)
@@ -534,11 +547,11 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted}=
 
 PROCEDURE XPause (READONLY until: UTime; alertable := FALSE) RAISES {Alerted} =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       self.waitingForTime := until;
       self.alertable := alertable;
       ICannotRun (State.pausing);
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     InternalYield ();
   END XPause;
 
@@ -549,8 +562,8 @@ TYPE
   FDS = REF ARRAY OF FDSet;
 
 VAR
-  gMaxActiveFDSet, gMaxFDSet: CARDINAL := 1;
-  gReadFDS, gWriteFDS, gExceptFDS: FDS := NEW(FDS, 1);
+  gMaxActiveFDSet, gMaxFDSet: CARDINAL;
+  gReadFDS, gWriteFDS, gExceptFDS: FDS;
 
   (* gMaxFDSet is NUMBER(gReadFDS^) *)
   (* gReadFDS, gWriteFDS, and gExceptFDS all have the same length *)
@@ -621,7 +634,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
           newWrite := NEW(FDS, fdindex+1);
           newExcept := NEW(FDS, fdindex+1);
         END;
-        INC (RT0u.inCritical);
+        INC (inCritical);
           IF fdindex >= gMaxActiveFDSet THEN
             gMaxActiveFDSet := fdindex + 1;
             IF gMaxFDSet < gMaxActiveFDSet THEN
@@ -641,10 +654,10 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
                 Time_Add(UTimeNow(), UTimeFromTime(interval));
           END;
           ICannotRun (State.blocking);
-        DEC (RT0u.inCritical);
+        DEC (inCritical);
       END;
       InternalYield ();
-      Cerrno.errno := self.select.errno;
+      Cerrno.SetErrno(self.select.errno);
       RETURN self.select.waitResult;
     END;
   END XIOWait;
@@ -720,12 +733,12 @@ PROCEDURE UTimeFromTime(time: Time.T): UTime =
 
 PROCEDURE DisableSwitching () =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
   END DisableSwitching;
 
 PROCEDURE EnableSwitching () =
   BEGIN
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END EnableSwitching;
 
 PROCEDURE StartSwitching () =
@@ -744,19 +757,18 @@ PROCEDURE StartSwitching () =
     END;
   END StartSwitching;
 
-PROCEDURE switch_thread (<*UNUSED*> sig, code: INTEGER; 
-                         <*UNUSED*> scp: ADDRESS) RAISES {Alerted} =
+PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
-    IF RT0u.inCritical = 0 THEN InternalYield () END;
+    IF inCritical = 0 AND NOT newPool.busy THEN InternalYield () END;
   END switch_thread;
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL) =
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       selected_interval.tv_sec  := usec DIV 1000000;
       selected_interval.tv_usec := usec MOD 1000000;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     IF multipleThreads THEN StartSwitching () END;
   END SetSwitchingInterval;
 
@@ -797,8 +809,9 @@ VAR t, from: T;
     did_delete   : BOOLEAN;
 
 BEGIN
-  INC (RT0u.inCritical);
-  <*ASSERT RT0u.inCritical = 1 *>
+  INC (inCritical);
+  <*ASSERT inCritical = 1 *>
+  <*ASSERT NOT newPool.busy *>
 
   from := self.next; (* remember where we started *)
   now            := UTimeNow ();
@@ -874,7 +887,7 @@ BEGIN
                     CanRun(t);
                     EXIT;
                   ELSIF n < 0 THEN
-                    t.select.errno  := Cerrno.errno;
+                    t.select.errno  := Cerrno.GetErrno();
                     t.select.waitResult := WaitResult.Error;
                     CanRun(t);
                     EXIT;
@@ -946,7 +959,7 @@ BEGIN
       do_alert := self.alertable AND self.alertPending;
       self.alertable := FALSE;
       IF do_alert THEN self.alertPending := FALSE END;
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       IF do_alert THEN RAISE Alerted END;
       RETURN;
 
@@ -1064,7 +1077,6 @@ PROCEDURE InitTopContext (VAR c: Context;  stackbase: ADDRESS) =
 
   END InitTopContext;
 
-
 PROCEDURE DetermineContext (oldSP: ADDRESS) =
   (* This routine looks at the stack frame for this call and takes
      it as a model for the frame to put in the stacks of forked
@@ -1074,6 +1086,9 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
   <*FATAL Alerted*>
   BEGIN
     
+    IF debug THEN
+      OutAddr("DetermineContext: oldSP = ", oldSP);
+    END;
     IF (RTThread.Save (modelBuf) = 0) THEN
       (* first time through; this part is executed only once to determine
          the model *)
@@ -1085,6 +1100,11 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
       RTThread.FlushStackCache ();
 
+      IF debug THEN
+        OutAddr("modelSP:    ", modelSP);
+        OutAddr("oldSP:      ", oldSP);
+        OutInt("frame size: ", ABS (modelSP - oldSP));
+      END;
       modelFrame := NEW (UNTRACED REF ARRAY OF Word.T,
                          ABS (modelSP - oldSP) DIV ADRSIZE (Word.T)
                          + 1 + RTThread.FramePadBottom + RTThread.FramePadTop);
@@ -1102,19 +1122,28 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
     ELSE 
       (* we are starting the execution of a forked thread *)
-      RTThread.handlerStack := self.context.handlers;
-      Cerrno.errno := self.context.errno;
+      handlerStack := self.context.handlers;
+      Cerrno.SetErrno(self.context.errno);
       RTThread.allow_sigvtalrm ();
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
       
+      IF debug THEN
+        OutAddr("> DetermineContext: start thread, handlerStack = ", handlerStack);
+        DumpThread(self);
+      END;
       FloatMode.InitThread (self.floatState);
       self.result := self.closure.apply ();
       
-      INC (RT0u.inCritical);
+      INC (inCritical);
       Broadcast (self.endCondition);
+      RTHeapRep.ClosePool(newPool);
       ICannotRun (State.dying);
       INC (stats.n_dead);
-      DEC (RT0u.inCritical);
+      DEC (inCritical);
+      IF debug THEN
+        OutT("> DetermineContext: thread finished\n");
+        DumpThread(self);
+      END;
       InternalYield ();
       <* ASSERT FALSE *> END;
   END DetermineContext;
@@ -1137,7 +1166,7 @@ PROCEDURE InitContext (VAR c: Context;  size: INTEGER) =
       c.stackBottom := c.stack.first;
     END;
     c.handlers    := NIL;
-    c.errno       := Cerrno.errno;
+    c.errno       := Cerrno.GetErrno();
     
     (* mark the ends of the stack for a sanity check *)
     LOOPHOLE (c.stackTop, IntPtr)^ := seal;
@@ -1190,13 +1219,13 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
 
     IF (ADR (from) # ADR (to)) THEN
       RTThread.disallow_sigvtalrm ();
-      from.handlers := RTThread.handlerStack;
-      from.errno := Cerrno.errno;
+      from.handlers := handlerStack;
+      from.errno := Cerrno.GetErrno();
       self := new_self;
       myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
-      RTThread.handlerStack := from.handlers;
-      Cerrno.errno := from.errno;
+      handlerStack := from.handlers;
+      Cerrno.SetErrno(from.errno);
       RTThread.allow_sigvtalrm ();
     END;
   END Transfer;
@@ -1208,7 +1237,7 @@ PROCEDURE SmashedStack (t: T) =
     OutI (t.id, 0);
     OutT ("'s stack overflowed its limits.\n");
     OutT ("*** Use Thread.IncDefaultStackSize to get bigger stacks.\n");
-    RTError.Msg ("ThreadPosix.m3", 1212, "corrupt thread stack");
+    RTError.Msg ("ThreadPosix.m3", 1215, "corrupt thread stack");
   END SmashedStack;
 
 PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
@@ -1222,10 +1251,21 @@ PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
     END;
   END Tos;
 
-PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
+PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
   BEGIN
-    RETURN ADR (self.floatState);
-  END MyFPState;
+    reader(self.floatState);
+  END GetMyFPState;
+
+PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
+  BEGIN
+    writer(self.floatState);
+  END SetMyFPState;
+
+VAR newPool := RTHeapRep.NewPool;
+PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool =
+  BEGIN
+    RETURN ADR(newPool);
+  END MyAllocPool;
 
 (*----------------------------------------------------- debugging support ---*)
 
@@ -1243,7 +1283,7 @@ CONST
 PROCEDURE DumpEverybody () =
   VAR t: T;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       OutT ("\n\n*****************************");
       OutT ("**********************************\n");
       OutT ("  id    Thread.T     closure root");
@@ -1260,7 +1300,7 @@ PROCEDURE DumpEverybody () =
       OutT ("*****************************");
       OutT ("**********************************\n");
       RTIO.Flush ();
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
   END DumpEverybody;
 
 PROCEDURE DumpThread (t: T) =
@@ -1424,17 +1464,17 @@ PROCEDURE RegisterHooks(h: Hooks; init := TRUE): Hooks RAISES {}=
     oldHooks: Hooks; 
     t: T;
   BEGIN
-    INC (RT0u.inCritical);
+    INC (inCritical);
       oldHooks := hooks;
       hooks := h;
       IF init AND hooks # NIL THEN
       	t := self;
       	REPEAT 
       	  hooks.fork (t);
-      	  t := t.next;
+          t := t.next;
       	UNTIL (t = self);
       END;
-    DEC (RT0u.inCritical);
+    DEC (inCritical);
     RETURN oldHooks;
   END RegisterHooks;
 
@@ -1448,7 +1488,7 @@ PROCEDURE MyId(): Id RAISES {}=
 PROCEDURE Init()=
   VAR xx: INTEGER;
   BEGIN
-    RT0u.inCritical := 1;
+    inCritical := 1;
       topThread := NEW (T, state := State.alive, id := nextId);
       FloatMode.InitThread (topThread.floatState);
 
@@ -1463,10 +1503,25 @@ PROCEDURE Init()=
 
       topThread.next := topThread;
       topThread.previous := topThread;
-    RT0u.inCritical := 0;
+
+      gMaxActiveFDSet := 1;
+      gMaxFDSet := 1;
+      gReadFDS := NEW(FDS, 1);
+      gWriteFDS := NEW(FDS, 1);
+      gExceptFDS := NEW(FDS, 1);
+
+      mutex := NEW(MUTEX);
+      condition := NEW(Condition);
+    inCritical := 0;
 
     PerfStart ();
     preemption := NOT RTParams.IsPresent ("nopreemption");
+    IF RTParams.IsPresent("backgroundgc") THEN
+      RTCollectorSRC.StartBackgroundCollection();
+    END;
+    IF RTParams.IsPresent("foregroundgc") THEN
+      RTCollectorSRC.StartForegroundCollection();
+    END;
   END Init;
 
 PROCEDURE QQ(): ADDRESS =
@@ -1474,6 +1529,92 @@ PROCEDURE QQ(): ADDRESS =
   BEGIN
     RETURN ADR (xx);
   END QQ;
+
+(*------------------------------------------------------------- collector ---*)
+(* These procedures provide synchronization primitives for the allocator
+   and collector. *)
+
+VAR
+  lock_cnt  := 0;      (* LL = inCritical *)
+  do_signal := FALSE;  (* LL = inCritical *)
+  mutex: MUTEX;
+  condition: Condition;
+
+PROCEDURE LockHeap () =
+  BEGIN
+    INC(inCritical);
+    INC(lock_cnt);
+  END LockHeap;
+
+PROCEDURE UnlockHeap () =
+  VAR sig := FALSE;
+  BEGIN
+    DEC(lock_cnt);
+    IF (lock_cnt = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
+    DEC(inCritical);
+    IF (sig) THEN Broadcast(condition); END;
+  END UnlockHeap;
+
+PROCEDURE WaitHeap () =
+  (* LL = 0 *)
+  BEGIN
+    LOCK mutex DO Wait(mutex, condition); END;
+  END WaitHeap;
+
+PROCEDURE BroadcastHeap () =
+  (* LL = inCritical *)
+  BEGIN
+    do_signal := TRUE;
+  END BroadcastHeap;
+
+(*--------------------------------------------- exception handling support --*)
+
+PROCEDURE GetCurrentHandlers (): ADDRESS=
+  BEGIN
+    RETURN handlerStack;
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+  BEGIN
+    handlerStack := h;
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    f.next := handlerStack;
+    handlerStack := f;
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    handlerStack := frame;
+  END PopEFrame;
+
+(*------------------------------------------------------------- debugging ---*)
+
+PROCEDURE OutAddr(s: TEXT; a: ADDRESS) =
+  BEGIN
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutAddr(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutAddr;
+
+PROCEDURE OutInt(s: TEXT; a: INTEGER) =
+  BEGIN 
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutInt(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutInt;
+
+VAR debug := RTParams.IsPresent ("debugthreads");
 
 BEGIN
 END ThreadPosix.

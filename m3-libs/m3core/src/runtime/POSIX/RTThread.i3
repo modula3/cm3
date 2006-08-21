@@ -98,16 +98,4 @@ PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler);
 PROCEDURE allow_sigvtalrm ();
 PROCEDURE disallow_sigvtalrm ();
 
-(*---------------------------------------------------- exception delivery ---*)
-
-<*EXTERNAL "RTThread__handlerStack" *>
-VAR handlerStack: ADDRESS;
-(* linked list of exception frames. *)
-
-PROCEDURE GetCurrentHandlers(): ADDRESS;
-(* == RETURN RTThread.handlerStack *)
-
-PROCEDURE SetCurrentHandlers(h: ADDRESS);
-(* == RTThread.handlerStack := h *)
-
 END RTThread.

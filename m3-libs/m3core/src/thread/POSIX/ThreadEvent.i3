@@ -4,7 +4,7 @@
 
 (* Last modified on Tue Feb 11 15:07:33 PST 1992 by muller                   *)
 
-INTERFACE ThreadEvent;
+UNSAFE INTERFACE ThreadEvent;
 
 IMPORT ThreadF;
 

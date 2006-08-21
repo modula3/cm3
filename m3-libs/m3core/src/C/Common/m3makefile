@@ -13,3 +13,5 @@ Interface ("Ctypes")
 
 Module ("M3toC")
 Module ("Cstdarg")
+
+c_source ("CerrnoC")

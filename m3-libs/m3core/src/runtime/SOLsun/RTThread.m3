@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Uframe, Usignal, Unix, Umman, Uucontext, RTMisc, Word;
+IMPORT Uframe, Usignal, Unix, Umman, Uucontext, RTMisc;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
@@ -69,7 +69,7 @@ PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
     INC (s.uc_mcontext.gregs.sp, offset);
   END UpdateStateForNewSP;
 
-PROCEDURE UpdateFrameForNewSP (a: ADDRESS; offset: INTEGER) =
+PROCEDURE UpdateFrameForNewSP (a: ADDRESS; <*UNUSED*> offset: INTEGER) =
   VAR f := LOOPHOLE(a, Uframe.struct_frame_star);
   BEGIN
     INC (f.fr_savfp, offset);
@@ -84,8 +84,8 @@ VAR
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
   VAR sv, osv: Usignal.struct_sigaction;  i: INTEGER;
   BEGIN
-    sv.sa_handler := handler;
-    sv.sa_flags   := Word.Or (Usignal.SA_RESTART, Usignal.SA_SIGINFO);
+    sv.sa_sigaction := LOOPHOLE(handler, Usignal.SignalAction);
+    sv.sa_flags := Usignal.SA_RESTART;
     i := Usignal.sigemptyset (sv.sa_mask);
     <* ASSERT i = 0 *>
     i := Usignal.sigaction (Usignal.SIGVTALRM, sv, osv);
@@ -105,33 +105,6 @@ PROCEDURE disallow_sigvtalrm () =
       <* ASSERT i = 0 *>
     END;
   END disallow_sigvtalrm;
-
-(*--------------------------------------------- exception handling support --*)
-
-PROCEDURE GetCurrentHandlers (): ADDRESS=
-  BEGIN
-    RETURN handlerStack;
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers (h: ADDRESS)=
-  BEGIN
-    handlerStack := h;
-  END SetCurrentHandlers;
-
-(*RTHooks.PushEFrame*)
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := handlerStack;
-    handlerStack := f;
-  END PushEFrame;
-
-(*RTHooks.PopEFrame*)
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    handlerStack := frame;
-  END PopEFrame;
 
 BEGIN
   WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO

@@ -97,6 +97,10 @@ PROCEDURE DisposeUntracedRef (VAR a: ADDRESS);
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT);
 
+PROCEDURE CheckLoadTracedRef (ref: ADDRESS);
+
+PROCEDURE CheckStoreTraced (ref: ADDRESS);
+
 (*-------------------------------------------------------- runtime errors ---*)
 
 PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)

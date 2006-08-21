@@ -62,7 +62,7 @@ VAR gcRatio := 1.0;              (* collector work / mutator work *)
    will copy "gcRatio" pages.  Increase the ratio to keep the heap smaller;
    decrease it to spend less time in the collector. *)
 
-VAR incremental := TRUE;         (* incremental collection *)
+VAR incremental := FALSE;         (* incremental collection *)
 (* The collector can be incremental or stop-and-copy.  Incremental
    collection has much smaller interruptions of service, but takes more
    total time and more space.
@@ -73,21 +73,23 @@ VAR incremental := TRUE;         (* incremental collection *)
    pages.  In other words, to keep the same space bounds, "gcRatio" must be
    twice as large in the incremental case.
 
-   If VM protection is disabled or not available on the current
-   architecture, the collector will behave as if "incremental" = FALSE.
+   If compiler support is enabled or VM protection is enabled and available
+   on the current architecture, the collector will behave as if
+   "incremental" = TRUE.
 
    Use incremental collection when the program is interactive.
    Stop-and-copy collection gives better performance. *)
 
-VAR generational := TRUE;        (* generational collection *)
+VAR generational := FALSE;        (* generational collection *)
 (* Generational collection causes most collections to take much less time
    than specified above, while using only a little more memory.
    Generational collection has the greatest benefit when the program has a
    large number of accessible objects, but most new objects are discarded
    shortly after they are allocated.
 
-   If VM protection is disabled or not available on the current
-   architecture, the collector will behave as if "generational" = FALSE.
+   If compiler support is enabled or VM protection is enabled and available
+   on the current architecture, the collector will behave as if
+   "generational" = TRUE.
 
    Generational collection almost always leads to performance
    improvement. *)
@@ -102,5 +104,18 @@ VAR generational := TRUE;        (* generational collection *)
 
 PROCEDURE StartBackgroundCollection();
 (* Starts the background thread, if not already started *)
+
+(* \paragraph{Foreground Collection.}
+
+   There is an optional ``foreground'' mode, which extends incremental mode
+   with a foreground thread that collects on behalf of mutators.  Allocating
+   mutators occasionally yield to this thread to ensure that collection makes
+   progress. *)
+
+PROCEDURE StartForegroundCollection();
+(* Starts the foreground thread, if not already started *)
+
+PROCEDURE StartBench();
+PROCEDURE FinishBench();
 
 END RTCollectorSRC.
