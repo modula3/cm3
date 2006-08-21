@@ -164,7 +164,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@/usr/ccs/bin/as", "-s", "-K", "PIC", source, "-o", object)
+  return try_exec ("@/usr/local/bin/as", "-s", "-K", "PIC", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
