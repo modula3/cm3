@@ -2920,7 +2920,7 @@ m3cg_end_procedure (void)
   pending_stmts = TREE_CHAIN (pending_stmts);
 
  /* good line numbers for epilog */
-  DECL_STRUCT_FUNCTION (current_function_decl)->function_end_locus = input_location;
+  DECL_STRUCT_FUNCTION (p)->function_end_locus = input_location;
 
   current_function_decl = DECL_CONTEXT (p);
 
