@@ -377,7 +377,7 @@ PROCEDURE InitActivations () =
 PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   BEGIN
-    If initActivations THEN InitActivations() END;
+    IF initActivations THEN InitActivations() END;
     IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (act, WinDef.DWORD)) = 0 THEN
       Choke();
     END;
@@ -813,7 +813,7 @@ VAR
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu". *)
-  VAR act: Activation;  me := GetActivation();
+  VAR me := GetActivation();
   BEGIN
     <*ASSERT me # NIL*>
     WinBase.EnterCriticalSection(activeMu);
