@@ -1822,8 +1822,13 @@ declare_fault_proc (void)
 
   proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
 		     build_function_type_list (t_void, t_word, NULL_TREE));
-  DECL_RESULT (proc) = build_decl (RESULT_DECL, NULL_TREE, t_void);
-  DECL_CONTEXT (DECL_RESULT (proc)) = proc;
+
+  tree resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
+  DECL_CONTEXT (resultdecl) = proc;
+  DECL_ARTIFICIAL (resultdecl) = 1;
+  DECL_IGNORED_P (resultdecl) = 1;
+  DECL_RESULT (proc) = resultdecl;
+
   TREE_STATIC (proc) = 1;
   TREE_PUBLIC (proc) = 0;
   DECL_CONTEXT (proc) = 0;
@@ -1872,7 +1877,7 @@ emit_fault_proc (void)
   gcc_assert (current_function_decl == NULL_TREE);
   gcc_assert (current_block == NULL_TREE);
   current_function_decl = fault_proc;
-  allocate_struct_function (fault_proc); /* sets cfun */
+  allocate_struct_function (fault_proc);
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (fault_proc); /* parm_block */
@@ -1894,6 +1899,7 @@ emit_fault_proc (void)
     m3_load (fault_intf, fault_offs, t_addr, T_addr, t_addr, T_addr);
     m3_call_indirect (t_void);
   }
+  add_stmt (build1 (RETURN_EXPR, t_void, NULL_TREE));
 
   /* Attach block to the function */
   gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (fault_proc)));
@@ -1905,7 +1911,8 @@ emit_fault_proc (void)
   current_stmts = TREE_VALUE (pending_stmts);
   pending_stmts = TREE_CHAIN (pending_stmts);
 
-  cfun->function_end_locus = input_location; /* good line numbers for epilog */
+ /* good line numbers for epilog */
+  DECL_STRUCT_FUNCTION (fault_proc)->function_end_locus = input_location;
 
   input_location = save_loc;
 
@@ -2874,7 +2881,7 @@ m3cg_begin_procedure (void)
   announce_function (p);
 
   current_function_decl = p;
-  allocate_struct_function (p); /* sets cfun */
+  allocate_struct_function (p);
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
@@ -2912,7 +2919,8 @@ m3cg_end_procedure (void)
   current_stmts = TREE_VALUE (pending_stmts);
   pending_stmts = TREE_CHAIN (pending_stmts);
 
-  cfun->function_end_locus = input_location; /* good line numbers for epilog */
+ /* good line numbers for epilog */
+  DECL_STRUCT_FUNCTION (current_function_decl)->function_end_locus = input_location;
 
   current_function_decl = DECL_CONTEXT (p);
 
@@ -2977,7 +2985,7 @@ m3cg_set_label (void)
 
       /* M3 hack for ex_stack implementations: see expand_label */
       TREE_THIS_VOLATILE (l) = 1;
-      current_function_has_nonlocal_label = 1;
+      DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
     }
   add_stmt (build1 (LABEL_EXPR, t_void, l));
 }
