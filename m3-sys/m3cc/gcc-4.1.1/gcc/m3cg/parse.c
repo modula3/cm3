@@ -1869,18 +1869,19 @@ static void
 emit_fault_proc (void)
 {
   location_t save_loc = input_location;
+  tree p = fault_proc;
 
   LOCATION_FILE (input_location) = "<internal>";
   LOCATION_LINE (input_location) = 0;
-  DECL_SOURCE_LOCATION (fault_proc) = input_location;
+  DECL_SOURCE_LOCATION (p) = input_location;
 
   gcc_assert (current_function_decl == NULL_TREE);
   gcc_assert (current_block == NULL_TREE);
-  current_function_decl = fault_proc;
-  allocate_struct_function (fault_proc);
+  current_function_decl = p;
+  allocate_struct_function (p);
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
-  current_block = DECL_INITIAL (fault_proc); /* parm_block */
+  current_block = DECL_INITIAL (p); /* parm_block */
   TREE_USED (current_block) = 1;
   current_block = BLOCK_SUBBLOCKS (current_block); /* top_block */
   TREE_USED (current_block) = 1;
@@ -1891,7 +1892,7 @@ emit_fault_proc (void)
   m3_start_call ();
   EXPR_PUSH (m3_build1 (ADDR_EXPR, t_addr, current_segment));
   m3_pop_param (t_addr);
-  EXPR_PUSH (DECL_ARGUMENTS (fault_proc));
+  EXPR_PUSH (DECL_ARGUMENTS (p));
   m3_pop_param (t_word);
   if (fault_handler != NULL_TREE) {
     m3_call_direct (fault_handler, t_void);
@@ -1902,22 +1903,22 @@ emit_fault_proc (void)
   add_stmt (build1 (RETURN_EXPR, t_void, NULL_TREE));
 
   /* Attach block to the function */
-  gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (fault_proc)));
-  DECL_SAVED_TREE (fault_proc) = build3 (BIND_EXPR, t_void,
-					 BLOCK_VARS (current_block),
-					 current_stmts, current_block);
+  gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (p)));
+  DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
+				BLOCK_VARS (current_block),
+				current_stmts, current_block);
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
   pending_stmts = TREE_CHAIN (pending_stmts);
 
  /* good line numbers for epilog */
-  DECL_STRUCT_FUNCTION (fault_proc)->function_end_locus = input_location;
+  DECL_STRUCT_FUNCTION (p)->function_end_locus = input_location;
 
   input_location = save_loc;
 
-  m3_gimplify_function (fault_proc);
-  cgraph_finalize_function (fault_proc, false);
+  m3_gimplify_function (p);
+  cgraph_finalize_function (p, false);
 
   current_function_decl = NULL_TREE;
 }
