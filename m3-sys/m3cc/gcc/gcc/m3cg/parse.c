@@ -1753,7 +1753,18 @@ m3_pop_param (tree t)
 static void
 m3_call_direct (tree p, tree return_type)
 {
-  tree call;
+  tree call, formal, actual;
+
+  /* need to cast actuals to formals to preserve types when inlining */
+  for (formal = DECL_ARGUMENTS (p), actual = CALL_TOP_ARG ();
+       formal && actual;	/* why actual? because fall through finally
+				   handlers can be invoked without an
+				   actual -- this seems broken in
+				   TryFinStmt.m3  FIXME */
+       formal = TREE_CHAIN (formal), actual = TREE_CHAIN (actual))
+    {
+      TREE_VALUE (actual) = m3_cast (TREE_TYPE (formal), TREE_VALUE (actual));
+    }
 
   if (return_type == NULL_TREE) {
     return_type = TREE_TYPE (TREE_TYPE (p));
