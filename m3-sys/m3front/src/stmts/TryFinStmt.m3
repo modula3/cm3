@@ -213,6 +213,8 @@ PROCEDURE Compile2 (p: P): Stmt.Outcomes =
     IF (Outcome.FallThrough IN oc) THEN
       Marker.PopFrame (frame);
       CG.Start_call_direct (p.handler.cg_proc, p.handler.level, CG.Type.Void);
+      (* Shouldn't we pass the activation parameter here?
+         What value do we pass? *)
       CG.Call_direct (p.handler.cg_proc, CG.Type.Void);
     END;
     CG.Set_label (l+1, barrier := TRUE);
