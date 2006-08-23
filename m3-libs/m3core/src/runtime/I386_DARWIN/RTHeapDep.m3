@@ -1,151 +1,160 @@
-(* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
+(* Copyright (C) 1992, 1996 Digital Equipment Corporation    *)
+(* All rights reserved.                                      *)
+(* See the file COPYRIGHT for a full description.            *)
+(*                                                           *)
+(* Last modified on Thu Nov 14 14:25:40 PST 1996 by heydon   *)
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT ThreadF, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Word;
+IMPORT ThreadF, RTHeapRep;
+IMPORT Ctypes, Umman, Unix, Usignal, Utypes, Word, Uucontext;
+FROM Usignal IMPORT SIGQUIT, SIGILL, SIGTRAP, SIGEMT, SIGFPE, SIGIOT;
+FROM Usignal IMPORT SIGBUS, SIGSEGV, SIGSYS, SIGVTALRM, SIG_DFL;
 
 VAR
-  initialized                           := FALSE;
-  defaultSIGSEGV: Usignal.SignalHandler := NIL; (* previous handler *)
-  defaultSIGBUS:  Usignal.SignalHandler := NIL; (* previous handler *)
+  initialized := FALSE;
+  orig: ARRAY [0..Usignal.NSIG] OF Usignal.struct_sigaction;
 
-PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
+PROCEDURE Fault (sig: Ctypes.int;
+                 sip: Usignal.struct_siginfo_star;
+                 scp: Uucontext.struct_ucontext_star) =
+(* Fault is called upon a SIGSEGV signal caused by a VM fault.  If
+   RTHeapRep.Fault is not able to handle the fault, it invokes the
+   previous action installed in "orig[SIGSEGV]". *)
   BEGIN
-    IF NOT initialized THEN Init(); initialized := TRUE; END;
-    IF NOT readable THEN writable := FALSE; END; (* processor limitation *)
-    VAR prot: Ctypes.int := 0;
-    BEGIN
-      IF readable THEN prot := Word.Or(prot, Umman.PROT_READ); END;
-      IF writable THEN prot := Word.Or(prot, Umman.PROT_WRITE); END;
-      VAR
-        ret := Umman.mprotect(LOOPHOLE(p * BytesPerPage, Utypes.caddr_t),
-                              n * BytesPerPage, prot);
-      BEGIN
-        (*
-        <* ASSERT ret = n * BytesPerPage *>
-        *)
-        <* ASSERT ret = 0 *>
+    IF (sig = SIGSEGV OR sig = SIGBUS) AND sip # NIL THEN
+      IF sig = sip.si_signo THEN
+        IF sip.si_addr = LOOPHOLE(scp.uc_mcontext.ss.eip, ADDRESS) THEN
+          IF RTHeapRep.Fault(LOOPHOLE(scp.uc_mcontext.es.faultvaddr, ADDRESS)) THEN
+            RETURN;
+          END;
+        ELSIF RTHeapRep.Fault(sip.si_addr) THEN RETURN END;
       END;
     END;
-  END Protect;
 
-(* Init establishes a handler for SIGSEGV, caused by VM faults, and for all
-   other signals that cause core dumps. *)
+    VAR old: Usignal.struct_sigaction;
+    BEGIN
+      (* otherwise, restore original handler and retry *)
+      EVAL Usignal.sigaction(sig, orig[sig], old);
+      RETURN;
+    END;
+  END Fault;
+
+(* record if core is already being dumped *)
+VAR dumped_core := FALSE;
+
+PROCEDURE Core (             sig : Ctypes.int;
+                <* UNUSED *> sip : Usignal.struct_siginfo_star;
+                <* UNUSED *> scp : Uucontext.struct_ucontext_star) =
+(* Core is a signal handler for signals that dump core; it completes the
+   current collection before dumping core.  This makes core files easier to
+   debug, and avoids an Ultrix bug that creates incomplete core files if
+   heap pages are read-protected. *)
+  BEGIN
+    ThreadF.SuspendOthers();
+    IF NOT dumped_core THEN
+      (* indicate that this thread will dump core *)
+      dumped_core := TRUE;
+
+      (* clean up the heap and install default handler *)
+      EVAL RTHeapRep.Crash();
+
+      (* establish default handler *)
+      VAR old: Usignal.struct_sigaction;
+      BEGIN
+        EVAL Usignal.sigaction(sig, orig[sig], old);
+      END;
+      RETURN;
+    END;
+    ThreadF.ResumeOthers();
+  END Core;
 
 PROCEDURE Init () =
+(* Init establishes a handler for SIGSEGV, caused by VM faults,
+   and for all other signals that cause core dumps. System-call
+   faults are handled in "RTHeapDepC.c". *)
   BEGIN
-    (* sanity check *)
-    VAR vmPageBytes := Unix.getpagesize();
-    BEGIN
+    (* check that "BytesPerPage" is an acceptable value *)
+    VAR vmPageBytes := Unix.getpagesize(); BEGIN
       <* ASSERT BytesPerPage >= vmPageBytes *>
       <* ASSERT BytesPerPage MOD vmPageBytes = 0 *>
     END;
 
     (* establish SIGSEGV handler; remember previous handler *)
-    VAR
-      vec := Usignal.struct_sigvec{
-               sv_handler := Fault, sv_mask :=
-               Word.LeftShift(1, Usignal.SIGVTALRM - 1), sv_flags := 0};
-      ovec: Usignal.struct_sigvec;
-      ret := Usignal.sigvec(Usignal.SIGSEGV, vec, ovec);
-      vecb := Usignal.struct_sigvec{
-               sv_handler := Fault, sv_mask :=
-               Word.LeftShift(1, Usignal.SIGVTALRM - 1), sv_flags := 0};
-      ovecb: Usignal.struct_sigvec;
-      retb := Usignal.sigvec(Usignal.SIGBUS, vecb, ovecb);
+    VAR new: Usignal.struct_sigaction;
     BEGIN
-      <* ASSERT ret = 0 *>
-      <* ASSERT retb = 0 *>
-      defaultSIGSEGV := ovec.sv_handler;
-      defaultSIGBUS := ovecb.sv_handler;
+      WITH flags = Usignal.SA_SIGINFO,
+           flags = Word.Or(flags, Usignal.SA_NODEFER),
+           flags = Word.Or(flags, Usignal.SA_RESTART) DO
+        new.sa_flags := flags;
+      END;
+      new.sa_sigaction := Fault;
+      WITH i = Usignal.sigemptyset(new.sa_mask) DO
+        <*ASSERT i = 0*>
+      END;
+      (* block the "SIGVTALRM" signal when signal handlers are called *)
+      WITH i = Usignal.sigaddset(new.sa_mask, SIGVTALRM) DO
+        <*ASSERT i = 0*>
+      END;
+      WITH i = Usignal.sigaction(SIGSEGV, new, orig[SIGSEGV]) DO
+        <*ASSERT i = 0*>
+      END;
+      WITH i = Usignal.sigaction(SIGBUS, new, orig[SIGBUS]) DO
+        <*ASSERT i = 0*>
+      END;
     END;
 
-    (* establish signal handler for all other signals that dump core, if no
-       handler exists *)
-    PROCEDURE OverrideDefault (sig: Ctypes.int) =
-      VAR
-        vec := Usignal.struct_sigvec{
-                 sv_handler := Core, sv_mask :=
-                 Word.LeftShift(1, Usignal.SIGVTALRM - 1), sv_flags := 0};
-        ovec: Usignal.struct_sigvec;
-        ret                         := Usignal.sigvec(sig, vec, ovec);
+    PROCEDURE OverrideDefaultWithCore(sig: Ctypes.int) =
+    (* If no handler currently exists for signal "sig",
+       install a handler for "sig" that dumps core. *)
+      VAR new: Usignal.struct_sigaction;
       BEGIN
-        <* ASSERT ret = 0 *>
-        IF ovec.sv_handler # Usignal.SIG_DFL THEN
-          ret := Usignal.sigvec(sig, ovec, vec);
-          <* ASSERT ret = 0 *>
+        new.sa_flags := Usignal.SA_SIGINFO;
+        new.sa_sigaction := Core;
+        WITH i = Usignal.sigemptyset(new.sa_mask) DO
+          <*ASSERT i = 0*>
         END;
-      END OverrideDefault;
+        WITH i = Usignal.sigaddset(new.sa_mask, SIGVTALRM) DO
+          <*ASSERT i = 0*>
+        END;
+        WITH i = Usignal.sigaction(sig, new, orig[sig]) DO
+          <*ASSERT i = 0*>
+        END;
+        (* If the old handler was not the default, restore it. *)
+        IF orig[sig].sa_sigaction # LOOPHOLE(SIG_DFL, Usignal.SignalAction) THEN
+          WITH i = Usignal.sigaction(sig, orig[sig], new) DO
+            <*ASSERT i = 0*>
+          END;
+        END;
+      END OverrideDefaultWithCore;
     BEGIN
-      OverrideDefault(Usignal.SIGQUIT);
-      OverrideDefault(Usignal.SIGILL);
-      OverrideDefault(Usignal.SIGTRAP);
-      OverrideDefault(Usignal.SIGIOT);
-      OverrideDefault(Usignal.SIGEMT);
-      OverrideDefault(Usignal.SIGFPE);
-      OverrideDefault(Usignal.SIGSYS);
+      (* override signal handling for all signals that normally dump core *)
+      OverrideDefaultWithCore(SIGQUIT);
+      OverrideDefaultWithCore(SIGILL);
+      OverrideDefaultWithCore(SIGTRAP);
+      OverrideDefaultWithCore(SIGIOT);
+      OverrideDefaultWithCore(SIGEMT);
+      OverrideDefaultWithCore(SIGFPE);
+      OverrideDefaultWithCore(SIGSYS);
     END;
   END Init;
 
-(* Fault is called upon a SIGSEGV signal, caused by a VM fault.  If
-   RTHeapRep.Fault is not able to handle the fault, it invokes the previous
-   action. *)
-
-PROCEDURE Fault (sig : Ctypes.int;
-                 code: Ctypes.int;
-                 scp : UNTRACED REF Usignal.struct_sigcontext) =
-  VAR
-    sf_addr := LOOPHOLE(scp.sc_err, ADDRESS);
-
+PROCEDURE Protect(p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
   BEGIN
-    IF RTHeapRep.Fault(sf_addr) THEN
-      RETURN;
+    IF NOT initialized THEN Init(); initialized := TRUE; END;
+    VAR prot: Ctypes.int := 0; BEGIN
+      IF readable THEN prot := Word.Or(prot, Umman.PROT_READ); END;
+      IF writable THEN prot := Word.Or(prot, Umman.PROT_WRITE); END;
+      VAR
+        addr := LOOPHOLE(p * BytesPerPage, Utypes.caddr_t);
+        ret := Umman.mprotect(addr, n * BytesPerPage, prot);
+      BEGIN
+        <* ASSERT ret = 0 *>
+      END;
     END;
-    IF defaultSIGSEGV = Usignal.SIG_IGN THEN RETURN; END;
-    IF defaultSIGSEGV = Usignal.SIG_DFL THEN
-      Core(sig, code, scp);
-    ELSE
-      defaultSIGSEGV(sig, code, scp);
-    END;
-  END Fault;
-
-(* Core is a signal handler for signals that dump core, to complete the
-   current collection before dumping core.  This makes core files easier to
-   debug, and avoids an Ultrix bug that creates incomplete core files if
-   heap pages are read-protected. *)
-
-VAR dumped_core := FALSE;
-
-PROCEDURE Core (             sig : Ctypes.int;
-                <* UNUSED *> code: Ctypes.int;
-                <* UNUSED *> scp : UNTRACED REF Usignal.struct_sigcontext) =
-  VAR
-    ovec: Usignal.struct_sigvec;
-    vec := Usignal.struct_sigvec{sv_handler := Usignal.SIG_DFL,
-                                 sv_mask := 0, sv_flags := 0};
-  BEGIN
-    ThreadF.SuspendOthers();
-    IF NOT dumped_core THEN
-      dumped_core := TRUE;
-      EVAL RTHeapRep.Crash();      (* clean up the heap *)
-      EVAL Usignal.sigvec(sig, vec, ovec); (* establish default action *)
-      EVAL Usignal.sigsetmask(0);
-      (** EVAL Usignal.kill(Uprocess.getpid(), sig); (* dump core *) **)
-      Cstdlib.abort (); (* dump core *)
-      <* ASSERT FALSE *>
-    END;
-    ThreadF.ResumeOthers();
-  END Core;
-
-(* System-call faults are handled in RTHeapDepC.c *)
+  END Protect;
 
 BEGIN
-  VM := RTVM.VMHeap();
-  AtomicWrappers := RTVM.AtomicWrappers();
-  IF VM THEN
-    RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
-    RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);
-  END;
+  VM := FALSE;
+  AtomicWrappers := FALSE;
 END RTHeapDep.

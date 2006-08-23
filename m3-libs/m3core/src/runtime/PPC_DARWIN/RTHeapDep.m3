@@ -6,7 +6,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTHeapDepC, RTVM;
+IMPORT ThreadF, RTHeapRep;
 IMPORT Ctypes, Umman, Unix, Usignal, Utypes, Word, Uucontext;
 FROM Usignal IMPORT SIGQUIT, SIGILL, SIGTRAP, SIGEMT, SIGFPE, SIGIOT;
 FROM Usignal IMPORT SIGBUS, SIGSEGV, SIGSYS, SIGVTALRM, SIG_DFL;
@@ -155,10 +155,6 @@ PROCEDURE Protect(p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
   END Protect;
 
 BEGIN
-  VM := RTVM.VMHeap();
-  AtomicWrappers := RTVM.AtomicWrappers();
-  IF VM THEN
-    RTHeapDepC.set_RTHeapRep_Fault(LOOPHOLE(RTHeapRep.Fault, ADDRESS));
-    RTHeapDepC.set_RTCSRC_FinishVM(LOOPHOLE(RTCollectorSRC.FinishVM, ADDRESS));
-  END;
+  VM := FALSE;
+  AtomicWrappers := FALSE;
 END RTHeapDep.

@@ -1,5 +1,4 @@
 (* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
 
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
@@ -7,6 +6,8 @@
 INTERFACE RTMachine;
 
 IMPORT Csetjmp;
+FROM Upthread IMPORT pthread_t;
+FROM Uucontext IMPORT i386_thread_state_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -32,15 +33,10 @@ CONST
    reasonable page size.  The page size must be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 4096;        (* bytes per page *)
-  LogBytesPerHeapPage = 12;
-  AdrPerHeapPage      = 4096;        (* addresses per page *)
-  LogAdrPerHeapPage   = 12;
-
-(*** hooks for the C wrapper functions ***)
-
-<*EXTERNAL *> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
-<*EXTERNAL *> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
+  BytesPerHeapPage    = 8192;        (* bytes per page *)
+  LogBytesPerHeapPage = 13;
+  AdrPerHeapPage      = 8192;        (* addresses per page *)
+  LogAdrPerHeapPage   = 13;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
@@ -69,5 +65,20 @@ CONST
 
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
-END RTMachine.
+(*------------------------------------------------------ pthreads support ---*)
 
+TYPE ThreadState = i386_thread_state_t;
+
+CONST
+  SIG_SUSPEND = 0;
+  SIG_RESTART = 0;
+  SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
+
+<*EXTERNAL RTMachine__SuspendThread*>
+PROCEDURE SuspendThread (t: pthread_t);
+<*EXTERNAL RTMachine__RestartThread*>
+PROCEDURE RestartThread (t: pthread_t);
+<*EXTERNAL RTMachine__GetState*>
+PROCEDURE GetState (t: pthread_t; VAR sp: ADDRESS; VAR context: ThreadState);
+
+END RTMachine.
