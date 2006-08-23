@@ -125,11 +125,22 @@ if not defined ("no_config")
   % configure the sources
   if stale(donep, donep)
     if equal (M3CC_HOST, M3CC_TARGET)
-      exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
-            "--srcdir=.." & SL & "gcc",
-            "--enable-languages=m3cg",
-            "--disable-nls",
-            "&& echo \"done\" > " & done)
+      if equal (M3CC_TARGET, "SOLgnu")
+        exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+              M3CC_CONFIG,
+              "--srcdir=.." & SL & "gcc",
+              "--enable-languages=m3cg",
+              "--disable-nls",
+              "--with-gnu-ld=yes",
+              "&& echo \"done\" > " & done)
+      else
+        exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+              M3CC_CONFIG,
+              "--srcdir=.." & SL & "gcc",
+              "--enable-languages=m3cg",
+              "--disable-nls",
+              "&& echo \"done\" > " & done)
+      end
     else
       exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
             "--srcdir=.." & SL & "gcc",
