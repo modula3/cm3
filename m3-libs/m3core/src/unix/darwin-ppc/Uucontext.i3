@@ -6,8 +6,7 @@
 
 INTERFACE Uucontext;
 
-FROM Ctypes IMPORT int, char_star, unsigned_int, double;
-FROM Ctypes IMPORT unsigned_long;
+FROM Ctypes IMPORT int, void_star, unsigned_int, unsigned_long, double;
 FROM Utypes IMPORT size_t;
 
 (*** <mach/ppc/thread_status.h> ***)
@@ -110,13 +109,81 @@ TYPE
   END;
   mcontext_t = UNTRACED REF struct_mcontext;
 
+(*** <ppc/signal.h> ***)
+
+(*
+ * Machine-dependant flags used in sigvec call.
+ *)
+CONST
+  SV_SAVE_REGS = 16_1000;		 (* Save all regs in sigcontext *)
+
+(*
+ * regs_saved_t -- Describes which registers beyond what the kernel cares
+ *		   about are saved to and restored from this sigcontext.
+ *
+ * The default is REGS_SAVED_CALLER, only the caller saved registers
+ * are saved.  If the SV_SAVE_REGS flag was set when the signal
+ * handler was registered with sigvec() then all the registers will be
+ * saved in the sigcontext, and REGS_SAVED_ALL will be set.  The C
+ * library uses REGS_SAVED_NONE in order to quickly restore kernel
+ * state during a longjmp().
+ *)
+CONST
+  REGS_SAVED_NONE = 0;		       (* Only kernel managed regs restored *)
+  REGS_SAVED_CALLER = 1;	       (* "Caller saved" regs: rpc, a0-a7, *)
+				       (* t0-t4, at, lk0-lk1, xt1-xt20, *)
+				       (* xr0-xr1 *)
+  REGS_SAVED_ALL = 2;		       (* All registers *)
+
+(*
+ * Information pushed on stack when a signal is delivered.
+ * This is used by the kernel to restore state following
+ * execution of the signal handler.  It is also made available
+ * to the handler to allow it to properly restore state if
+ * a non-standard exit is performed.
+ *)
+(*
+TYPE
+  sigcontext32 = RECORD
+    sc_onstack: int;			 (* sigstack state to restore *)
+    sc_mask: int;			 (* signal mask to restore *)
+    sc_ir: int;				 (* pc *)
+    sc_psw: int;			 (* processor status word *)
+    sc_sp: int;				 (* stack pointer if sc_regs == NULL *)
+    sc_regs: void_star;			 (* (kernel private) saved state *)
+  END;
+
+  sigcontext64 = RECORD
+    sc_onstack: int;			 (* sigstack state to restore *)
+    sc_mask: int;			 (* signal mask to restore *)
+    sc_ir: long_long;			 (* pc *)
+    sc_psw: long_long;			 (* processor status word *)
+    sc_sp: long_long;                    (* stack pointer if sc_regs == NULL *)
+    sc_regs: void_star;			 (* (kernel private) saved state *)
+  END;
+*)
+
+(*
+ * LP64todo - Have to decide how to handle this.
+ * FOR now, just duplicate the 32-bit context as the generic one.
+*)
+TYPE
+  sigcontext = RECORD
+    sc_onstack: int;			 (* sigstack state to restore *)
+    sc_mask: int;			 (* signal mask to restore *)
+    sc_ir: int;				 (* pc *)
+    sc_psw: int;			 (* processor status word *)
+    sc_sp: int;				 (* stack pointer if sc_regs == NULL *)
+    sc_regs: void_star;			 (* (kernel private) saved state *)
+  END;
+
 (*** <sys/signal.h> ***)
 
 TYPE
   (* Structure used in sigaltstack call. *)
   struct_sigaltstack = RECORD
-    ss_sp:    char_star;   (* signal stack base *)
-    ss_size:  int;	   (* signal stack length *)
+    ss_sp:    void_star;   (* signal stack base *)
+    ss_size:  size_t;	   (* signal stack length *)
     ss_flags: int;	   (* SA_DISABLE and/or SA_ONSTACK *)
   END;
   stack_t = struct_sigaltstack;
@@ -132,7 +199,7 @@ TYPE
     uc_stack:    stack_t;		 (* stack used by this context *)
     uc_link:     struct_ucontext_star;	 (* pointer to resuming context *)
     uc_mcsize:   size_t;		 (* size of the machine context passed in *)
-    uc_mcontext: mcontext_t;		 (* machine specific context *)
+    uc_mcontext: mcontext_t;		 (* pointer to machine specific context *)
   END;
   struct_ucontext_star = UNTRACED REF struct_ucontext;
   ucontext_t = struct_ucontext;

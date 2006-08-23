@@ -30,27 +30,27 @@ PROCEDURE howmany (x, y: int): int =
     RETURN (x + (y - 1)) DIV y;
   END howmany;
 
-PROCEDURE FD_SET (n: int; p: UNTRACED REF fd_set): int =
+PROCEDURE FD_SET (n: int; VAR p: fd_set): int =
   BEGIN 
     WITH l = p.fds_bits [n DIV NFDBITS] DO
       l := Word.Or (l, Word.Shift (1, n MOD NFDBITS)); 
       RETURN l; END;
   END FD_SET;
 
-PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int =
+PROCEDURE FD_CLR (n: int; VAR p: fd_set): int =
   BEGIN 
     WITH l = p.fds_bits [n DIV NFDBITS] DO
       l := Word.And (l, Word.Not (Word.Shift (1, n MOD NFDBITS)));
       RETURN l; END;
-  END FD_CLEAR;
+  END FD_CLR;
 
-PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int =
+PROCEDURE FD_ISSET (n: int; READONLY p: fd_set): int =
   BEGIN 
     WITH l = p.fds_bits [n DIV NFDBITS] DO
       RETURN Word.And (l, Word.Shift (1, n MOD NFDBITS)); END;
   END FD_ISSET;
 
-PROCEDURE FD_ZERO (p: UNTRACED REF fd_set) =
+PROCEDURE FD_ZERO (VAR p: fd_set) =
   BEGIN 
     WITH a = p.fds_bits DO
       FOR i := FIRST (a) TO LAST (a) DO
