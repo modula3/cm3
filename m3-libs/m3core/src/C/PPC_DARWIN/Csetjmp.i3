@@ -1,7 +1,7 @@
 (* Copyright according to COPYRIGHT-CMASS. *)
 (* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
 
-INTERFACE Csetjmp;		(* for I386_DARWIN *)
+INTERFACE Csetjmp;		(* for PPC_DARWIN *)
 
 FROM Ctypes IMPORT int;
 

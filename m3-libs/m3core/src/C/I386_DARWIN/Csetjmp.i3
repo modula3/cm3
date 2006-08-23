@@ -1,13 +1,21 @@
-(* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
+(* Copyright (C) 1990, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
+(*                                                             *)
+(* Last modified on Tue Oct 18 08:40:23 PDT 1994 by kalsow     *)
+(*      modified on Fri Apr 30 16:25:40 PDT 1993 by muller     *)
+(*      Olaf Wagner 12.09.1994                                 *)
 
 INTERFACE Csetjmp;		(* for I386_DARWIN *)
 
 FROM Ctypes IMPORT int;
 
+CONST
+  JBLEN = 18;
+
 TYPE 
-  jmp_buf = ARRAY [0..10] OF int; (* actually, this is a sigjmp_buf,
-                                     just in case *)
+  sigjmp_buf = ARRAY [0..JBLEN] OF int;
+  jmp_buf = sigjmp_buf;			 (* just in case *)
 
   fpjmp_buf = ARRAY [0..36] OF int; (* this is needed to hold the
                                        fpu state, which the ordinary
