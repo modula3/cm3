@@ -1706,9 +1706,9 @@ declare_temp (tree t)
 }
 
 
- /* Return a tree representing the address of the given procedure.  The static
-    address is used rather than the trampoline address for a nested
-    procedure.  */
+/* Return a tree representing the address of the given procedure.  The static
+   address is used rather than the trampoline address for a nested
+   procedure.  */
  
 static tree
 proc_addr (tree proc)
@@ -2638,9 +2638,9 @@ m3cg_declare_param (void)
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, PARM_DECL);
 
-  tree p = current_function_decl;
-
   if (current_param_count == 0) return;	/* ignore */
+
+  tree p = current_function_decl;
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
@@ -2660,7 +2660,7 @@ m3cg_declare_param (void)
   rest_of_decl_compilation (v, 0, 0, 1);
 
   if (--current_param_count == 0) {
-    /* arguments were accumulated in reverse, build type, then reverse */
+    /* arguments were accumulated in reverse, build type, then unreverse */
     tree parm;
     tree atypes = tree_cons (NULL_TREE, t_void, NULL_TREE);
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
