@@ -54,7 +54,7 @@ TYPE
      - convert date and time (in seconds)  to string ***)
 
 <*EXTERNAL*> PROCEDURE asctime   (tm: struct_tm_star): char_star;
-<*EXTERNAL*> PROCEDURE ctime     (clock: time_t_star): char_star;
+<*EXTERNAL*> PROCEDURE ctime     (READONLY clock: time_t): char_star;
 <*EXTERNAL*> PROCEDURE gmtime    (clock: time_t_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE localtime (clock: time_t_star): struct_tm_star;
 

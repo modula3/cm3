@@ -150,7 +150,7 @@ PROCEDURE setitimer (which: int;
 (*** ctime(3), localtime(3), gmtime(3), asctime(3)
      - convert date and time (in seconds)  to string ***)
 
-<*EXTERNAL*> PROCEDURE ctime     (clock: long_star): char_star;
+<*EXTERNAL*> PROCEDURE ctime     (READONLY clock: long): char_star;
 <*EXTERNAL*> PROCEDURE localtime (clock: long_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime    (clock: long_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE asctime   (tm: struct_tm_star): char_star;
