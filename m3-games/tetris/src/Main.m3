@@ -424,7 +424,7 @@ PROCEDURE UpdateHighScores () =
 VAR
   pos: INTEGER;
   strdate: Ctypes.char_star;
-  tloc := NEW (UNTRACED REF Ctypes.long);
+  tloc: Ctypes.long;
 BEGIN
   IF NOT scorefilep THEN  RETURN END;
   (* re-read high-score table in case someone else on the network is
@@ -445,8 +445,8 @@ BEGIN
      high_scores[pos].score := score;
      high_scores[pos].rows  := rows;
      high_scores[pos].level := level;
-     EVAL Utime.time (ADR (tloc^));
-     strdate := Utime.ctime (ADR (tloc^));
+     EVAL Utime.time (ADR (tloc));
+     strdate := Utime.ctime (tloc);
      high_scores[pos].date  := Text.Sub (StoT (strdate), 0, 24);
      (* and write back the new score *)
      WriteHighScores()
