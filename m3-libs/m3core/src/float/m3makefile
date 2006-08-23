@@ -40,7 +40,7 @@ readonly _FloatPieces = {
   "SUN386"     : [ "IEEE", "IEEE-le", "SUN386" ],
   "UMAX"       : _float_le,
   "VAX"        : [ "VAX" ],
-  "I386_DARWIN": _float_le, % FIXME: is this correct?
+  "I386_DARWIN": _float_le,
   "PPC_DARWIN" : _float_be,
   "PPC_LINUX"  : _float_be,
   "NetBSD2_i386"   : _float_le
