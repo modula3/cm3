@@ -443,20 +443,9 @@ m3_build_type (m3_type t, int s, int a)
 	TYPE_FIELDS (ts) = NULL_TREE;
 	TYPE_SIZE (ts) = bitsize_int (s);
 	TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
-
 	TYPE_ALIGN (ts) = a;
-	TYPE_MODE (ts) = mode_for_size (s, MODE_INT, 1);
-	/* If structure's known alignment is less than
-	   what the scalar mode would need, and it matters,
-	   then stick with BLKmode.  */
-	if (STRICT_ALIGNMENT && !(a >= BIGGEST_ALIGNMENT || (a >= s)))
-	  {
-	    if (TYPE_MODE (ts) != BLKmode)
-	      /* If this is the only reason this type is BLKmode,
-		 then don't force containing types to be BLKmode.  */
-	      TYPE_NO_FORCE_BLK (ts) = 1;
-	    TYPE_MODE (ts) = BLKmode;
-	  }
+
+	compute_record_mode (ts);
 	return ts;
       }
 
@@ -1717,18 +1706,17 @@ declare_temp (tree t)
 }
 
 
- /* Return a tree representing the address of the given procedure.  If
-    NO_TRAMP is true, the static address is used rather than the trampoline
-    address for a nested procedure.  */
+/* Return a tree representing the address of the given procedure.  The static
+   address is used rather than the trampoline address for a nested
+   procedure.  */
  
 static tree
-proc_addr (tree proc, int no_tramp)
+proc_addr (tree proc)
 {
   tree expr = m3_build1 (ADDR_EXPR,
                          build_pointer_type (TREE_TYPE (proc)),
                          proc);
-  if (no_tramp)
-    TREE_STATIC (expr) = 1;
+  TREE_STATIC (expr) = 1;
   return expr;
 }
 
@@ -1751,20 +1739,35 @@ m3_pop_param (tree t)
 }
 
 static void
-m3_call_direct (tree p, tree return_type)
+m3_call_direct (tree p, tree t)
 {
-  tree call;
+  tree formal, actual;
 
-  if (return_type == NULL_TREE) {
-    return_type = TREE_TYPE (TREE_TYPE (p));
-  }
+  /* need to force type of actual struct to type of formal to preserve types
+     when inlining */
+  for (formal = DECL_ARGUMENTS (p), actual = CALL_TOP_ARG ();
+       formal && actual;	/* why actual? because fall through finally
+				   handlers can be invoked without an
+				   actual -- this seems broken in
+				   TryFinStmt.m3  FIXME */
+       formal = TREE_CHAIN (formal), actual = TREE_CHAIN (actual))
+    {
+      tree ft = TREE_TYPE (formal);
+      tree at = TREE_TYPE (TREE_VALUE (actual));
 
-  call = build (CALL_EXPR, return_type,
-		proc_addr (p, 1),
-		CALL_TOP_ARG (),
-		CALL_TOP_STATIC_CHAIN ());
-  TREE_SIDE_EFFECTS (call) = 1;
-  if (return_type == t_void) {
+      if (TREE_CODE (ft) == RECORD_TYPE) {
+	if (TYPE_SIZE (ft) != TYPE_SIZE (at)) abort ();
+	if (TYPE_SIZE_UNIT (ft) != TYPE_SIZE_UNIT (at)) abort ();
+	if (TYPE_ALIGN (ft) != TYPE_ALIGN (at)) abort ();
+	TREE_TYPE (TREE_VALUE (actual)) = TREE_TYPE (formal);
+      }
+    }
+
+  tree fnaddr = proc_addr (p);
+  tree call = build (CALL_EXPR, t,
+		     fnaddr, CALL_TOP_ARG (), CALL_TOP_STATIC_CHAIN ());
+  if (t == t_void) {
+    TREE_SIDE_EFFECTS (call) = 1;
     expand_expr_stmt (call);
   } else {
     EXPR_PUSH (call);
@@ -1778,14 +1781,11 @@ m3_call_indirect (tree t)
   tree argtypes = chainon (CALL_TOP_TYPE (),
 			   tree_cons (NULL_TREE, t_void, NULL_TREE));
   tree fntype = build_pointer_type (build_function_type (t, argtypes));
-  tree call;
-  tree fnaddr = EXPR_REF (-1);
+  tree fnaddr = m3_cast (fntype, EXPR_REF (-1));
   EXPR_POP ();
 
-  call = build (CALL_EXPR, t,
-                m3_cast (fntype, fnaddr),
-		CALL_TOP_ARG (),
-		CALL_TOP_STATIC_CHAIN ());
+  tree call = build (CALL_EXPR, t,
+		     fnaddr, CALL_TOP_ARG (), CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
     TREE_SIDE_EFFECTS (call) = 1;
     expand_expr_stmt (call);
@@ -1883,7 +1883,7 @@ setop (tree p, int n, int q)
   while (q--) {
     m3_pop_param (t_addr);
   }
-  m3_call_direct (p, NULL_TREE);
+  m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
 }
 
 static void
@@ -1893,7 +1893,7 @@ setop2 (tree p, int q)
   while (q--) {
     m3_pop_param (t_addr);
   }
-  m3_call_direct (p, NULL_TREE);
+  m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
 }
 
 /*---------------------------------------------------------------- faults ---*/
@@ -2640,6 +2640,8 @@ m3cg_declare_param (void)
 
   if (current_param_count == 0) return;	/* ignore */
 
+  tree p = current_function_decl;
+
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
     fprintf(stderr, "  param %s type %d typeid %ld\n",
@@ -2648,16 +2650,25 @@ m3cg_declare_param (void)
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
-  DECL_CONTEXT (v) = current_function_decl;
+  DECL_CONTEXT (v) = p;
   layout_decl (v, a);
   if (DECL_MODE (v) == VOIDmode) DECL_MODE (v) = Pmode;
 
-  TREE_CHAIN (v) = DECL_ARGUMENTS (current_function_decl);
-  DECL_ARGUMENTS (current_function_decl) = v;
+  TREE_CHAIN (v) = DECL_ARGUMENTS (p);
+  DECL_ARGUMENTS (p) = v;
 
   rest_of_decl_compilation (v, 0, 0, 1);
 
-  --current_param_count;
+  if (--current_param_count == 0) {
+    /* arguments were accumulated in reverse, build type, then unreverse */
+    tree parm;
+    tree atypes = tree_cons (NULL_TREE, t_void, NULL_TREE);
+    for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
+      atypes = tree_cons (NULL_TREE, TREE_TYPE (parm), atypes);
+    }
+    TREE_TYPE (p) = build_function_type (TREE_TYPE (DECL_RESULT (p)), atypes);
+    DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
+  }
 }
 
 static void
@@ -2748,7 +2759,7 @@ m3cg_init_proc (void)
   PROC       (p);
 
   tree f, v;
-  tree expr = proc_addr (p, 1);
+  tree expr = proc_addr (p);
   one_field (o, TREE_TYPE (expr), &f, &v);
   TREE_VALUE (v) = expr;
 }
@@ -2804,7 +2815,7 @@ m3cg_init_offset (void)
       j = 0;
     } else {
       r = XEXP (r, 1);	/* (const_int ...) */
-      j = XINT (r, 0);  /* offset */
+      j = XWINT (r, 0);  /* offset */
     }
   }
 
@@ -2963,19 +2974,13 @@ static void
 m3cg_begin_procedure (void)
 {
   PROC (p);
-  tree parm, local, args_types;
+  tree local;
 
   if (option_procs_trace)
     fprintf(stderr, "  procedure %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
 
   DECL_SOURCE_LOCATION (p) = input_location;
 
-  args_types = tree_cons (NULL_TREE, t_void, NULL_TREE);
-  for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
-    args_types = tree_cons (NULL_TREE, TREE_TYPE (parm), args_types);
-  }
-  TREE_TYPE (p) = build_function_type (TREE_TYPE (DECL_RESULT (p)), args_types);
-  DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
   announce_function (p);
   make_decl_rtl (p, NULL);
 
@@ -3526,7 +3531,7 @@ m3cg_div (void)
     m3_start_call ();
     m3_pop_param (t_int);
     m3_pop_param (t_int);
-    m3_call_direct (div_proc, NULL_TREE);
+    m3_call_direct (div_proc, TREE_TYPE (TREE_TYPE (div_proc)));
   }
 }
 
@@ -3545,7 +3550,7 @@ m3cg_mod (void)
     m3_start_call ();
     m3_pop_param (t_int);
     m3_pop_param (t_int);
-    m3_call_direct (mod_proc, NULL_TREE);
+    m3_call_direct (mod_proc, TREE_TYPE (TREE_TYPE (mod_proc)));
   }
 }
 
@@ -4263,7 +4268,7 @@ m3cg_load_procedure (void)
 
   if (option_procs_trace)
     fprintf(stderr, "  load procedure %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
-  EXPR_PUSH (proc_addr (p, 1));
+  EXPR_PUSH (proc_addr (p));
 }
 
 static void
