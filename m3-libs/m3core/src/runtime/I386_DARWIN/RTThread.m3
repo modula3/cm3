@@ -1,11 +1,17 @@
-(* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Wed Nov 23 13:00:57 PST 1994 by kalsow                   *)
+(*      modified on Tue Apr 20 16:19:54 PDT 1993 by muller                   *)
 
-UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
+UNSAFE MODULE RTThread EXPORTS RTThread;
 
-IMPORT Usignal, Unix, Umman, RTMisc;
+IMPORT Word, Usignal, Unix, RTMisc, Umman;
+FROM Usignal
+IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SIG_BLOCK, SIG_UNBLOCK;
 
-CONST 
+CONST
   SP_pos = 2;
   FP_pos = 3;
 
@@ -20,7 +26,7 @@ VAR page_bytes : CARDINAL := 0;
 VAR stack_slop : CARDINAL;
 
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
-  VAR i: INTEGER;  start: ADDRESS;
+  VAR start: ADDRESS;
   BEGIN
     IF (page_bytes = 0) THEN
       page_bytes := Unix.getpagesize ();
@@ -33,8 +39,9 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
 
     (* find the aligned page and unmap it *)
     start := RTMisc.Align (ADR (s.words[0]), page_bytes);
-    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ);
-    <* ASSERT i = 0 *>
+    WITH i = Umman.mprotect (start, page_bytes, Umman.PROT_NONE) DO
+      <* ASSERT i = 0 *>
+    END;
 
     (* finally, set the bounds of the usable region *)
     s.first := start + page_bytes;
@@ -42,11 +49,13 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
   END NewStack;
 
 PROCEDURE DisposeStack (VAR s: Stack) =
-  VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
+  VAR start := RTMisc.Align (ADR (s.words[0]), page_bytes);
   BEGIN
     (* find the aligned page and re-map it *)
-    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ+Umman.PROT_WRITE);
-    <* ASSERT i = 0 *>
+    WITH i = Umman.mprotect (start, page_bytes,
+                             Word.Or(Umman.PROT_READ, Umman.PROT_WRITE)) DO
+      <* ASSERT i = 0 *>
+    END;
 
     (* and finally, free the storage *)
     DISPOSE (s.words);
@@ -76,36 +85,31 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
+VAR ThreadSwitchSignal: Usignal.sigset_t;
+
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR sv, osv: Usignal.struct_sigvec;  i: INTEGER;
+  VAR old := Usignal.signal(Usignal.SIGVTALRM, handler);
   BEGIN
-    sv.sv_handler := handler;
-    sv.sv_mask    := Usignal.empty_sv_mask;
-    sv.sv_flags   := 0;
-    i := Usignal.sigvec (Usignal.SIGVTALRM, sv, osv);
-    <*ASSERT i = 0*>
+    <*ASSERT old # LOOPHOLE(Usignal.SIG_ERR,Usignal.SignalHandler) *>
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
-  VAR svt, old : Usignal.sigset_t;
-      i        : INTEGER;
+  VAR old: Usignal.sigset_t;
   BEGIN
-    EVAL Usignal.sigemptyset(svt);
-    EVAL Usignal.sigaddset(svt, Usignal.SIGVTALRM);
-    i := Usignal.sigprocmask(Usignal.SIG_UNBLOCK, svt, old);
-    <*ASSERT i = 0 *>
+    WITH i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, old) DO
+      <* ASSERT i = 0 *>
+    END;
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
-  VAR svt, old : Usignal.sigset_t;
-      i        : INTEGER;
+  VAR old: Usignal.sigset_t;
   BEGIN
-    EVAL Usignal.sigemptyset(svt);
-    EVAL Usignal.sigaddset(svt, Usignal.SIGVTALRM);
-    i := Usignal.sigprocmask(Usignal.SIG_BLOCK, svt, old);
-    <*ASSERT i = 0 *>
+    WITH i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, old) DO
+      <* ASSERT i = 0 *>
+    END;
   END disallow_sigvtalrm;
 
 BEGIN
+  WITH i = sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
+  WITH i = sigaddset(ThreadSwitchSignal, SIGVTALRM) DO <* ASSERT i=0 *> END;
 END RTThread.
-
