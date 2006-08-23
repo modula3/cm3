@@ -1086,6 +1086,9 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
   <*FATAL Alerted*>
   BEGIN
     
+    IF debug THEN
+      OutAddr("DetermineContext: oldSP = ", oldSP);
+    END;
     IF (RTThread.Save (modelBuf) = 0) THEN
       (* first time through; this part is executed only once to determine
          the model *)
@@ -1124,6 +1127,10 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       RTThread.allow_sigvtalrm ();
       DEC (inCritical);
       
+      IF debug THEN
+        OutAddr("> DetermineContext: start thread, handlerStack = ", handlerStack);
+        DumpThread(self);
+      END;
       FloatMode.InitThread (self.floatState);
       self.result := self.closure.apply ();
       
@@ -1133,6 +1140,10 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       ICannotRun (State.dying);
       INC (stats.n_dead);
       DEC (inCritical);
+      IF debug THEN
+        OutT("> DetermineContext: thread finished\n");
+        DumpThread(self);
+      END;
       InternalYield ();
       <* ASSERT FALSE *> END;
   END DetermineContext;
@@ -1603,7 +1614,7 @@ PROCEDURE OutInt(s: TEXT; a: INTEGER) =
     RTIO.Flush();
   END OutInt;
 
-VAR debug := FALSE;
+VAR debug := RTParams.IsPresent ("debugthreads");
 
 BEGIN
 END ThreadPosix.
