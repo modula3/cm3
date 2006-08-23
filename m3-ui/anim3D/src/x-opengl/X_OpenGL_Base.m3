@@ -774,7 +774,7 @@ PROCEDURE FromMatrix4 (READONLY M: Matrix4.T): GLmatrixf =
   END FromMatrix4;
 
 
-PROCEDURE ToMatrix4 (M: GLmatrixf): Matrix4.T =
+PROCEDURE ToMatrix4 (READONLY M: GLmatrixf): Matrix4.T =
   BEGIN
     RETURN Matrix4.T {Matrix4.Row {M[0], M[4], M[ 8], M[12]}, 
                       Matrix4.Row {M[1], M[5], M[ 9], M[13]}, 
@@ -973,7 +973,8 @@ PROCEDURE SetRasterMode (self : T; val : RasterModeProp.Kind) =
   END SetRasterMode;
 
 
-PROCEDURE SetDistinguishFacetsFlag (self : T; val : BOOLEAN) =
+PROCEDURE SetDistinguishFacetsFlag (<*UNUSED*> self : T;
+                                    <*UNUSED*> val : BOOLEAN) =
   BEGIN
     IO.Put ("### SetDistinguishFacetsFlag not implemented \n");
   END SetDistinguishFacetsFlag;
@@ -2211,11 +2212,9 @@ PROCEDURE ProcessEvents (self : T) =
     IF CheckTypedWindowEvent (self, X.ClientMessage, ev) = X.True THEN
       WITH e = ClientMessageEvent(ev) DO
         IF e.message_type = conn.wm_protocols AND e.format = 32 THEN
-          WITH data = LOOPHOLE (e.data, ARRAY [0 .. 4] OF Ctypes.long) DO
-            IF data[0] = conn.wm_delete_window THEN
-              self.destroy ();
-              RETURN;
-            END;
+          IF e.data[0] = conn.wm_delete_window THEN
+            self.destroy ();
+            RETURN;
           END;
         END;
       END;
@@ -2349,23 +2348,23 @@ PROCEDURE GetKeySym (VAR ev : X.XEvent) : VBT.KeySym =
 
 
 <* INLINE *>
-PROCEDURE MotionEvent(VAR ev : X.XEvent) : X.XMotionEvent =
+PROCEDURE MotionEvent(VAR ev : X.XEvent) : X.XMotionEventStar =
   BEGIN
-    RETURN LOOPHOLE (ADR (ev), X.XMotionEventStar)^;
+    RETURN LOOPHOLE (ADR (ev), X.XMotionEventStar);
   END MotionEvent;
 
 
 <* INLINE *>
-PROCEDURE ButtonEvent(VAR ev : X.XEvent) : X.XButtonEvent =
+PROCEDURE ButtonEvent(VAR ev : X.XEvent) : X.XButtonEventStar =
   BEGIN
-    RETURN LOOPHOLE (ADR (ev), X.XButtonEventStar)^;
+    RETURN LOOPHOLE (ADR (ev), X.XButtonEventStar);
   END ButtonEvent;
 
 
 <* INLINE *>
-PROCEDURE ClientMessageEvent(VAR ev : X.XEvent) : X.XClientMessageEvent =
+PROCEDURE ClientMessageEvent(VAR ev : X.XEvent) : X.XClientMessageEvent_l_star =
   BEGIN
-    RETURN LOOPHOLE (ADR (ev), X.XClientMessageEventStar)^;
+    RETURN LOOPHOLE (ADR (ev), X.XClientMessageEvent_l_star);
   END ClientMessageEvent;
 
 
