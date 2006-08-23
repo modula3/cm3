@@ -15,10 +15,12 @@ TYPE
   short_int                  = BasicCtypes.short_int;
   int                        = BasicCtypes.int;
   long_int                   = BasicCtypes.long_int;
+  long_long                  = BasicCtypes.long_long;
   unsigned_char              = BasicCtypes.unsigned_char;
   unsigned_short_int         = BasicCtypes.unsigned_short_int;
   unsigned_int               = BasicCtypes.unsigned_int;
   unsigned_long_int          = BasicCtypes.unsigned_long_int;
+  unsigned_long_long         = BasicCtypes.unsigned_long_long;
   float                      = BasicCtypes.float;
   double                     = BasicCtypes.double;
   long_double                = BasicCtypes.long_double;
