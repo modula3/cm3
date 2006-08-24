@@ -17,7 +17,7 @@
 #include <sys/wait.h>
 
 #if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
-#include <asm/ipc.h>
+#include <sys/ipc.h>
 #endif
 
 void (*RTHeapRep_Fault)(char*);
