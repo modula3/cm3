@@ -17,7 +17,7 @@ else
 end
 readonly OS_TYPE      = "POSIX"          % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"         % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486-apple-darwin6.3"
+readonly GNU_PLATFORM = "i486-apple-darwin8.7.0"
                                          % "cpu-vendor-os" string for GNU
 readonly INSTALL_KEY  = "9R52-K7A2-2K32"
 
