@@ -152,12 +152,11 @@
         <td>
           PPC_LINUX
         </td>
-        <td bgcolor="#FF0000">
-          <b>:-(</b>
+        <td bgcolor="#FFFFFF">
+          <b>??</b>
         </td>
         <td>
-          In progress. There are errors during the build.
-          Looks like missing #includes.
+          In progress. Initial problems have been dealt with.
         </td>
         <td>
         </td>
@@ -170,6 +169,7 @@
           <b>:-)</b>
         </td>
         <td>
+	  Tested on NetBSD 3.0.1.
           You may have to add the line <pre>/usr/X11R6/lib</pre>
           to the file /etc/ld.so.conf for the compile to succeed.
         </td>
@@ -231,13 +231,14 @@
         <td>
           Current plotting package.
         </td>
-        <td bgcolor="#FFFF00">
-          <b>:-/</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          Added to standard packages in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155033527000">this commit</a>, but may need to be removed
-          again (currently being discussed on the m3devel mailing list).
+          Removed from standard packages again in
+	  <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156859504000">this commit</a>
+	  since it requires plplot to be installed.
+	  Source code will still be shipped with release for people who want to use plplot.
         </td>
       </tr>
       <tr>
@@ -294,8 +295,8 @@
           <b>??</b>
         </td>
         <td>
-          Got new m3gdb version from Rodney M. Bates.
-          Not tested yet. Sources not yet imported into CVS.
+          In progress. Got new m3gdb version from Rodney M. Bates.
+          Compiles and works fine on FreeBSD 6.1. About to be imported into CVS.
         </td>
       </tr>
     </table>
