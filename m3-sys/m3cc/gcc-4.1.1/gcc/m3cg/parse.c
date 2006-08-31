@@ -862,21 +862,21 @@ m3_init_decl_processing (void)
 
   build_common_tree_nodes (0, false);
 
-  t_int_8 = make_signed_type (8);
+  t_int_8 = intQI_type_node;
   m3_push_type_decl (get_identifier ("int_8"), t_int_8);
-  t_word_8 = make_unsigned_type (8);
+  t_word_8 = unsigned_intQI_type_node;
   m3_push_type_decl (get_identifier ("word_8"), t_word_8);
-  t_int_16 = make_signed_type (16);
+  t_int_16 = intHI_type_node;
   m3_push_type_decl (get_identifier ("int_16"), t_int_16);
-  t_word_16 = make_unsigned_type (16);
+  t_word_16 = unsigned_intHI_type_node;
   m3_push_type_decl (get_identifier ("word_16"), t_word_16);
-  t_int_32 = make_signed_type (32);
+  t_int_32 = intSI_type_node;
   m3_push_type_decl (get_identifier ("int_32"), t_int_32);
-  t_word_32 = make_unsigned_type (32);
+  t_word_32 = unsigned_intSI_type_node;
   m3_push_type_decl (get_identifier ("word_32"), t_word_32);
-  t_int_64 = make_signed_type (64);
+  t_int_64 = intDI_type_node;
   m3_push_type_decl (get_identifier ("int_64"), t_int_64);
-  t_word_64 = make_unsigned_type (64);
+  t_word_64 = unsigned_intDI_type_node;
   m3_push_type_decl (get_identifier ("word_64"), t_word_64);
 
   if (BITS_PER_WORD == 32)
@@ -1642,11 +1642,9 @@ declare_temp (tree t)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (t);
   DECL_CONTEXT (v) = current_function_decl;
 
-  TREE_CHAIN (v) = BLOCK_VARS (BLOCK_SUBBLOCKS
-                               (DECL_INITIAL (current_function_decl)));
-  BLOCK_VARS (BLOCK_SUBBLOCKS (DECL_INITIAL (current_function_decl))) = v;
-
   add_stmt (build1 (DECL_EXPR, t_void, v));
+  TREE_CHAIN (v) = BLOCK_VARS (current_block);
+  BLOCK_VARS (current_block) = v;
   return v;
 }
 
@@ -1690,6 +1688,7 @@ m3_call_direct (tree p, tree t)
   if (t == t_void) {
     add_stmt (call);
   } else {
+    TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -1710,6 +1709,7 @@ m3_call_indirect (tree t)
   if (t == t_void) {
     add_stmt (call);
   } else {
+    TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
   }
   CALL_POP ();
@@ -1726,9 +1726,7 @@ m3_swap (void)
 static void
 m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-  TREE_USED (v) = 1;
-#if 0
-  /* This worked in gcc 3.4.5.  Now works with -O0 but not -O3; why not? */
+#if 1
   if (o != 0 || TREE_TYPE (v) != src_t) {
     v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
 		   bitsize_int (o));
@@ -1742,6 +1740,7 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 		   m3_cast (build_pointer_type (src_t), v));
   }
 #endif
+  TREE_THIS_VOLATILE (v) = 1;
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
@@ -1751,9 +1750,7 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 static void
 m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-  TREE_USED (v) = 1;
-#if 0
-  /* This worked in gcc 3.4.5.  Now works with -O0 but not -O3; why not? */
+#if 1
   if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
 		   bitsize_int (o));
@@ -1767,6 +1764,7 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 		   m3_cast (build_pointer_type (dst_t), v));
   }
 #endif
+  TREE_THIS_VOLATILE (v) = 1;
   tree val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T) {
     val = m3_build1 (CONVERT_EXPR, dst_t, val);
@@ -3306,18 +3304,15 @@ m3cg_max (void)
 {
   MTYPE (t);
 
-  tree temp1 = declare_temp (t);
-  tree temp2 = declare_temp (t);
-  tree t1 = m3_build2 (MODIFY_EXPR, t, temp1, EXPR_REF (-1));
-  tree t2 = m3_build2 (MODIFY_EXPR, t, temp2, EXPR_REF (-2));
-  tree res;
-  TREE_SIDE_EFFECTS (t1) = 1;
-  TREE_SIDE_EFFECTS (t2) = 1;
-  res = m3_build3 (COND_EXPR, t,
-                   m3_build2 (LE_EXPR, boolean_type_node, temp2, temp1),
-		   temp1, temp2);
-  EXPR_REF (-2) = m3_build2 (COMPOUND_EXPR, t,
-                             m3_build2 (COMPOUND_EXPR, t, t1, t2), res);
+  tree t1 = declare_temp (t);
+  tree t2 = declare_temp (t);
+
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t1, EXPR_REF (-1)));
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF (-2)));
+
+  EXPR_REF (-2) = m3_build3 (COND_EXPR, t,
+			     m3_build2 (LE_EXPR, boolean_type_node, t2, t1),
+			     t1, t2);
   EXPR_POP ();
 }
 
@@ -3326,19 +3321,15 @@ m3cg_min (void)
 {
   MTYPE (t);
 
-  tree temp1 = declare_temp (t);
-  tree temp2 = declare_temp (t);
+  tree t1 = declare_temp (t);
+  tree t2 = declare_temp (t);
   
-  tree t1 = m3_build2 (MODIFY_EXPR, t, temp1, EXPR_REF (-1));
-  tree t2 = m3_build2 (MODIFY_EXPR, t, temp2, EXPR_REF (-2));
-  tree res;
-  TREE_SIDE_EFFECTS (t1) = 1;
-  TREE_SIDE_EFFECTS (t2) = 1;
-  res = m3_build3 (COND_EXPR, t,
-                   m3_build2 (LE_EXPR, boolean_type_node, temp1, temp2),
-		   temp1, temp2);
-  EXPR_REF (-2) = m3_build2 (COMPOUND_EXPR, t,
-                             m3_build2 (COMPOUND_EXPR, t, t1, t2), res);
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t1, EXPR_REF (-1)));
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF (-2)));
+
+  EXPR_REF (-2) = m3_build3 (COND_EXPR, t,
+			     m3_build2 (LE_EXPR, boolean_type_node, t1, t2),
+			     t1, t2);
   EXPR_POP ();
 }
 
@@ -3349,15 +3340,14 @@ m3cg_round (void)
   MTYPE (dst_t);
 
   tree arg;
-  tree tmp;
   tree cond;
   tree neg;
   tree pos;
   REAL_VALUE_TYPE r;
 
-  arg = m3_cast (src_t, EXPR_REF(-1));
-  tmp = declare_temp (src_t);
-  add_stmt (m3_build2 (MODIFY_EXPR, src_t, tmp, arg));
+  arg = declare_temp (src_t);
+  add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
+		       m3_cast (src_t, EXPR_REF(-1))));
 
   real_from_string (&r, "0.5");
   pos = build_real (src_t, r);
@@ -3365,11 +3355,11 @@ m3cg_round (void)
   real_from_string (&r, "-0.5");
   neg = build_real (src_t, r);
 
-  cond = fold_build2 (GT_EXPR, boolean_type_node, tmp,
+  cond = fold_build2 (GT_EXPR, boolean_type_node, arg,
 		      build_real_from_int_cst (src_t, v_zero));
 
   EXPR_REF(-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t,
-			    m3_build2 (PLUS_EXPR, src_t, tmp,
+			    m3_build2 (PLUS_EXPR, src_t, arg,
 				       m3_build3 (COND_EXPR, src_t,
 						  cond, pos, neg)));
 }
@@ -3612,22 +3602,17 @@ m3cg_m3_shift (void)
 {
   MTYPE (t);
 
-  tree temp1 = declare_temp (t);
-  tree temp2 = declare_temp (t);
-  tree t1    = m3_build2 (MODIFY_EXPR, t, temp1, EXPR_REF(-1));
-  tree t2    = m3_build2 (MODIFY_EXPR, t, temp2, EXPR_REF(-2));
-  tree res;
+  tree t1 = declare_temp (t);
+  tree t2 = declare_temp (t);
 
-  TREE_SIDE_EFFECTS (t1) = 1;
-  TREE_SIDE_EFFECTS (t2) = 1;
-  res  = m3_build3 (COND_EXPR, m3_unsigned_type (t),
-		    m3_build2 (GE_EXPR, boolean_type_node, temp1, v_zero),
-		    m3_do_shift (temp2, temp1, 0, t),
-		    m3_do_shift (temp2, m3_build1 (NEGATE_EXPR, t, temp1),
-                                 1, t));
-  EXPR_REF(-2) = m3_build2 (COMPOUND_EXPR,
-			    m3_unsigned_type (t),
-			    m3_build2 (COMPOUND_EXPR, t, t1, t2), res);
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t1, EXPR_REF(-1)));
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF(-2)));
+
+  EXPR_REF(-2) = m3_build3 (COND_EXPR, m3_unsigned_type (t),
+			    m3_build2 (GE_EXPR, boolean_type_node, t1, v_zero),
+			    m3_do_shift (t2, t1, 0, t),
+			    m3_do_shift (t2, m3_build1 (NEGATE_EXPR, t, t1),
+					 1, t));
   EXPR_POP();
 }
 
@@ -3654,21 +3639,18 @@ m3cg_m3_rotate (void)
 {
   MTYPE (t);
 
-  tree temp1 = declare_temp (t);
-  tree temp2 = declare_temp (t);
-  tree t1    = m3_build2 (MODIFY_EXPR, t, temp1, EXPR_REF(-1));
-  tree t2    = m3_build2 (MODIFY_EXPR, t, temp2, EXPR_REF(-2));
-  tree res;
+  tree t1 = declare_temp (t);
+  tree t2 = declare_temp (t);
 
-  TREE_SIDE_EFFECTS (t1) = 1;
-  TREE_SIDE_EFFECTS (t2) = 1;
-  res = m3_build3 (COND_EXPR, t,
-		   m3_build2 (GE_EXPR, boolean_type_node, temp1, v_zero),
-		   m3_do_rotate (temp2, temp1, 0, t),
-		   m3_do_rotate (temp2, m3_build1 (NEGATE_EXPR, t_int, temp1),
-                                 1, t));
-  EXPR_REF(-2) = m3_build2 (COMPOUND_EXPR, t,
-                            m3_build2 (COMPOUND_EXPR, t, t1, t2), res);
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t1, EXPR_REF(-1)));
+  add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF(-2)));
+
+  EXPR_REF(-2) = m3_build3 (COND_EXPR, t,
+			    m3_build2 (GE_EXPR, boolean_type_node, t1, v_zero),
+			    m3_do_rotate (t2, t1, 0, t),
+			    m3_do_rotate (t2,
+					  m3_build1 (NEGATE_EXPR, t_int, t1),
+					  1, t));
   EXPR_POP();
 }
 
@@ -4042,14 +4024,10 @@ m3cg_check_eq (void)
 
   m3_store (temp1, 0, t, T, t, T);
   m3_store (temp2, 0, t, T, t, T);
-  EXPR_PUSH (temp2);
-  EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
 		    m3_build2 (NE_EXPR, boolean_type_node, temp1, temp2),
 		    generate_fault (code),
 		    NULL_TREE));
-  EXPR_POP ();
-  EXPR_POP ();
 }
 
 static void
