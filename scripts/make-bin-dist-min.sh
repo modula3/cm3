@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.21 2006-08-06 13:13:48 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.22 2006-08-31 22:33:06 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -114,6 +114,7 @@ CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
 SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
+[ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship m3gc-simple
 "${ROOT}/scripts/do-cm3-min.sh" buildlocal || exit 1
 
 header "stage 4: installing libraries using new cm3 compiler"
