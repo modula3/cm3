@@ -1,6 +1,6 @@
-/* Definitions of RTEMS executing on an TMS320C[34]x using coff
-   Copyright (C) 1996, 1997, 1999, 2002 Free Software Foundation, Inc.
-   Contributed by Joel Sherrill (joel@OARcorp.com).
+/* Operating system specific defines to be used when targeting GCC for any
+   Solaris 2 system up to Solaris 2.6.
+   Copyright 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -19,11 +19,9 @@ along with GCC; see the file COPYING.  If not, write to
 the Free Software Foundation, 51 Franklin Street, Fifth Floor,
 Boston, MA 02110-1301, USA.  */
 
-/* Specify predefined symbols in preprocessor.  */
-
-#define TARGET_OS_CPP_BUILTINS()		\
-    do {					\
-	builtin_define ("__rtems__");		\
-	builtin_define ("__USE_INIT_FINI__");	\
-	builtin_assert ("system=rtems");	\
-    } while (0)
+#undef CPP_SUBTARGET_SPEC
+#define CPP_SUBTARGET_SPEC "\
+%{pthreads|pthread:-D_REENTRANT -D_PTHREADS95} \
+%{!pthreads:%{!pthread:%{threads:-D_REENTRANT -D_SOLARIS_THREADS}}} \
+%{compat-bsd:-iwithprefixbefore ucbinclude -I/usr/ucbinclude} \
+"

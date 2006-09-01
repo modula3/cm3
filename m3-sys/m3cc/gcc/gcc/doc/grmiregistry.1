@@ -128,58 +128,27 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "JV-SCAN 1"
-.TH JV-SCAN 1 "2006-05-24" "gcc-4.1.1" "GNU"
+.IX Title "GRMIREGISTRY 1"
+.TH GRMIREGISTRY 1 "2006-05-24" "gcc-4.1.1" "GNU"
 .SH "NAME"
-jv\-scan \- print information about Java source file
+grmiregistry \- Remote object registry
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-jv-scan [\fB\-\-no\-assert\fR] [\fB\-\-complexity\fR] 
-    [\fB\-\-encoding\fR=\fIname\fR] [\fB\-\-print\-main\fR] 
-    [\fB\-\-list\-class\fR] [\fB\-\-list\-filename\fR]
-    [\fB\-\-version\fR] [\fB\-\-help\fR]
-    [\fB\-o\fR \fIfile\fR] \fIinputfile\fR...
+\&\fBgrmic\fR [\fB\s-1OPTION\s0\fR] ... [\fIport\fR]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-The \f(CW\*(C`jv\-scan\*(C'\fR program can be used to print information about a Java
-source file (\fI.java\fR file).
+\&\fBgrmiregistry\fR starts a remote object registry on the current
+host.  If no port number is specified, then port 1099 is used.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.IP "\fB\-\-no\-assert\fR" 4
-.IX Item "--no-assert"
-Don't recognize the \f(CW\*(C`assert\*(C'\fR keyword, for backwards compatibility
-with older versions of the language specification.
-.IP "\fB\-\-complexity\fR" 4
-.IX Item "--complexity"
-This prints a complexity measure, related to cyclomatic complexity, for
-each input file.
-.IP "\fB\-\-encoding=\fR\fIname\fR" 4
-.IX Item "--encoding=name"
-This works like the corresponding \fBgcj\fR option.
-.IP "\fB\-\-print\-main\fR" 4
-.IX Item "--print-main"
-This prints the name of the class in this file containing a \f(CW\*(C`main\*(C'\fR
-method.
-.IP "\fB\-\-list\-class\fR" 4
-.IX Item "--list-class"
-This lists the names of all classes defined in the input files.
-.IP "\fB\-\-list\-filename\fR" 4
-.IX Item "--list-filename"
-If \f(CW\*(C`\-\-list\-class\*(C'\fR is given, this option causes \f(CW\*(C`jv\-scan\*(C'\fR to
-also print the name of the file in which each class was found.
-.IP "\fB\-o\fR \fIfile\fR" 4
-.IX Item "-o file"
-Print output to the named file.
 .IP "\fB\-\-help\fR" 4
 .IX Item "--help"
-Print help, then exit.
+Print a help message, then exit.
 .IP "\fB\-\-version\fR" 4
 .IX Item "--version"
-Print version number, then exit.
+Print version information, then exit.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
-\&\fIgcc\fR\|(1), \fIgcj\fR\|(1), \fIgcjh\fR\|(1), \fIgij\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
-and the Info entries for \fIgcj\fR and \fIgcc\fR.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
 Copyright (c) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.

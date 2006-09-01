@@ -1,5 +1,5 @@
 /* External definitions of source files of genattrtab.
-   Copyright (C)  2001, 2003 Free Software Foundation, Inc.
+   Copyright (C)  2001, 2003, 2005 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -15,8 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* Name of function (attribute) to translate insn into number of insn
    alternatives reservation.  */
@@ -51,8 +51,4 @@ extern void write_automata (void);
 /* Flags for make_internal_attr's `special' parameter.  */
 #define ATTR_NONE		0
 #define ATTR_SPECIAL		(1 << 0)
-#define ATTR_NEGATIVE_OK	(1 << 1)
-#define ATTR_UNSIGNED		(1 << 2)
-#define ATTR_FUNC_UNITS		(1 << 3)
-#define ATTR_BLOCKAGE		(1 << 4)
-#define ATTR_STATIC		(1 << 5)
+#define ATTR_STATIC		(1 << 1)

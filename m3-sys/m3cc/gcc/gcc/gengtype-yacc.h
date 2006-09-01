@@ -1,7 +1,7 @@
-/* A Bison parser, made by GNU Bison 1.875.  */
+/* A Bison parser, made by GNU Bison 2.0.  */
 
 /* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -38,15 +38,16 @@
      STRUCT = 264,
      ENUM = 265,
      ALIAS = 266,
-     PARAM_IS = 267,
-     NUM = 268,
-     PERCENTPERCENT = 269,
-     SCALAR = 270,
-     ID = 271,
-     STRING = 272,
-     ARRAY = 273,
-     PERCENT_ID = 274,
-     CHAR = 275
+     NESTED_PTR = 267,
+     PARAM_IS = 268,
+     NUM = 269,
+     PERCENTPERCENT = 270,
+     SCALAR = 271,
+     ID = 272,
+     STRING = 273,
+     ARRAY = 274,
+     PERCENT_ID = 275,
+     CHAR = 276
    };
 #endif
 #define ENT_TYPEDEF_STRUCT 258
@@ -58,29 +59,30 @@
 #define STRUCT 264
 #define ENUM 265
 #define ALIAS 266
-#define PARAM_IS 267
-#define NUM 268
-#define PERCENTPERCENT 269
-#define SCALAR 270
-#define ID 271
-#define STRING 272
-#define ARRAY 273
-#define PERCENT_ID 274
-#define CHAR 275
+#define NESTED_PTR 267
+#define PARAM_IS 268
+#define NUM 269
+#define PERCENTPERCENT 270
+#define SCALAR 271
+#define ID 272
+#define STRING 273
+#define ARRAY 274
+#define PERCENT_ID 275
+#define CHAR 276
 
 
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 31 "/home/gdr/build/gcc-3.4.5/gcc-3.4.5/gcc/gengtype-yacc.y"
+#line 31 "/scratch/mitchell/gcc-releases/gcc-4.1.1/gcc-4.1.1/gcc/gengtype-yacc.y"
 typedef union YYSTYPE {
   type_p t;
   pair_p p;
   options_p o;
   const char *s;
 } YYSTYPE;
-/* Line 1249 of yacc.c.  */
-#line 83 "gengtype-yacc.h"
+/* Line 1318 of yacc.c.  */
+#line 86 "gengtype-yacc.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
