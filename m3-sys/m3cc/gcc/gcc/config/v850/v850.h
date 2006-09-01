@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler. NEC V850 series
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
    Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
@@ -17,8 +17,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
 #ifndef GCC_V850_H
 #define GCC_V850_H
@@ -81,139 +81,15 @@
   builtin_define( "__v850" );			\
   builtin_assert( "machine=v850" );		\
   builtin_assert( "cpu=v850" );			\
+  if (TARGET_EP)				\
+    builtin_define ("__EP__");			\
 } while(0)
 
-/* Run-time compilation parameters selecting different hardware subsets.  */
-
-extern int target_flags;
-
-/* Target flags bits, see below for an explanation of the bits.  */
-#define MASK_GHS		0x00000001
-#define MASK_LONG_CALLS		0x00000002
-#define MASK_EP			0x00000004
-#define MASK_PROLOG_FUNCTION	0x00000008
-#define MASK_DEBUG		0x40000000
-
-#define MASK_CPU                0x00000030
-#define MASK_V850               0x00000010
-#define MASK_V850E              0x00000020
-#define MASK_SMALL_SLD          0x00000040
-
-#define MASK_BIG_SWITCH		0x00000100
-#define MASK_NO_APP_REGS        0x00000200
-#define MASK_DISABLE_CALLT      0x00000400
-#define MASK_STRICT_ALIGN       0x00000800
-
-#define MASK_US_BIT_SET         0x00001000
-#define MASK_US_MASK_SET        0x00002000
-
-/* Macros used in the machine description to test the flags.  */
-
-/* The GHS calling convention support doesn't really work,
-   mostly due to a lack of documentation.  Outstanding issues:
-
-     * How do varargs & stdarg really work.  How to they handle
-     passing structures (if at all).
-
-     * Doubles are normally 4 byte aligned, except in argument
-     lists where they are 8 byte aligned.  Is the alignment
-     in the argument list based on the first parameter,
-     first stack parameter, etc etc.
-
-     * Passing/returning of large structures probably isn't the same
-     as GHS.  We don't have enough documentation on their conventions
-     to be compatible.
-
-     * Tests of SETUP_INCOMING_VARARGS need to be made runtime checks
-     since it depends on TARGET_GHS.  */
-#define TARGET_GHS (target_flags & MASK_GHS)
- 
-/* Don't do PC-relative calls, instead load the address of the target
-   function into a register and perform a register indirect call.  */
-#define TARGET_LONG_CALLS (target_flags & MASK_LONG_CALLS)
-
-/* Whether to optimize space by using ep (r30) for pointers with small offsets
-   in basic blocks.  */
-#define TARGET_EP (target_flags & MASK_EP)
-
-/* Whether to call out-of-line functions to save registers or not.  */
-#define TARGET_PROLOG_FUNCTION (target_flags & MASK_PROLOG_FUNCTION)
-
-#define TARGET_V850    		((target_flags & MASK_CPU) == MASK_V850)
-
-/* Whether to emit 2 byte per entry or 4 byte per entry switch tables.  */
-#define TARGET_BIG_SWITCH (target_flags & MASK_BIG_SWITCH)
-
-/* General debug flag.  */
-#define TARGET_DEBUG 		(target_flags & MASK_DEBUG)
-#define TARGET_V850E   		((target_flags & MASK_V850E) == MASK_V850E)
-
-#define TARGET_US_BIT_SET	(target_flags & MASK_US_BIT_SET)
-
-/* Whether to assume that the SLD.B and SLD.H instructions only have small
-   displacement fields, thus allowing the generated code to run on any of
-   the V850 range of processors.  */
-#define TARGET_SMALL_SLD 	(target_flags & MASK_SMALL_SLD)
-
-/* True if callt will not be used for function prolog & epilog.  */
-#define TARGET_DISABLE_CALLT 	(target_flags & MASK_DISABLE_CALLT)
-
-/* False if r2 and r5 can be used by the compiler.  True if r2
-   and r5 are to be fixed registers (for compatibility with GHS).  */
-#define TARGET_NO_APP_REGS  	(target_flags & MASK_NO_APP_REGS)
-
-#define TARGET_STRICT_ALIGN 	(target_flags & MASK_STRICT_ALIGN)
-
-/* Macro to define tables used to set the flags.
-   This is a list in braces of pairs in braces,
-   each pair being { "NAME", VALUE }
-   where VALUE is the bits to set or minus the bits to clear.
-   An empty string NAME is used to identify the default VALUE.  */
-
-#define TARGET_SWITCHES							\
-  {{ "ghs",			 MASK_GHS, N_("Support Green Hills ABI") }, \
-   { "no-ghs",			-MASK_GHS, "" },			\
-   { "long-calls",		 MASK_LONG_CALLS, 			\
-       				N_("Prohibit PC relative function calls") },\
-   { "no-long-calls",		-MASK_LONG_CALLS, "" },			\
-   { "ep",			 MASK_EP,				\
-                                N_("Reuse r30 on a per function basis") }, \
-   { "no-ep",			-MASK_EP, "" },				\
-   { "prolog-function",		 MASK_PROLOG_FUNCTION, 			\
-       				N_("Use stubs for function prologues") }, \
-   { "no-prolog-function",	-MASK_PROLOG_FUNCTION, "" },		\
-   { "space",			 MASK_EP | MASK_PROLOG_FUNCTION, 	\
-       				N_("Same as: -mep -mprolog-function") }, \
-   { "debug",			 MASK_DEBUG, N_("Enable backend debugging") }, \
-   { "v850",		 	 MASK_V850,				\
-                                N_("Compile for the v850 processor") },	\
-   { "v850",		 	 -(MASK_V850 ^ MASK_CPU), "" },		\
-   { "v850e1",			 MASK_V850E, N_("Compile for v850e1 processor") }, \
-   { "v850e1",		        -(MASK_V850E ^ MASK_CPU), "" }, /* Make sure that the other bits are cleared.  */ \
-   { "v850e",			 MASK_V850E, N_("Compile for v850e processor") }, \
-   { "v850e",		        -(MASK_V850E ^ MASK_CPU), "" }, /* Make sure that the other bits are cleared.  */ \
-   { "small-sld",		 MASK_SMALL_SLD, N_("Enable the use of the short load instructions") },	\
-   { "no-small-sld",		-MASK_SMALL_SLD, "" },			\
-   { "disable-callt",            MASK_DISABLE_CALLT, 			\
-       				N_("Do not use the callt instruction") },   \
-   { "no-disable-callt",        -MASK_DISABLE_CALLT, "" },             	\
-   { "US-bit-set",		 (MASK_US_BIT_SET | MASK_US_MASK_SET), "" },	\
-   { "no-US-bit-set",		-MASK_US_BIT_SET, "" },			\
-   { "no-US-bit-set",		 MASK_US_MASK_SET, "" },		\
-   { "app-regs",                -MASK_NO_APP_REGS, ""  },               \
-   { "no-app-regs",              MASK_NO_APP_REGS, 			\
-       				N_("Do not use registers r2 and r5") }, \
-   { "strict-align",             MASK_STRICT_ALIGN,			\
-				N_("Enforce strict alignment") },       \
-   { "no-strict-align",         -MASK_STRICT_ALIGN, "" },		\
-   { "big-switch",		 MASK_BIG_SWITCH, 			\
-       				N_("Use 4 byte entries in switch tables") },\
-   { "",			 MASK_DEFAULT, ""}}
+#define MASK_CPU (MASK_V850 | MASK_V850E)
 
 /* Information about the various small memory areas.  */
 struct small_memory_info {
   const char *name;
-  const char *value;
   long max;
   long physical_max;
 };
@@ -229,30 +105,6 @@ enum small_memory_type {
 };
 
 extern struct small_memory_info small_memory[(int)SMALL_MEMORY_max];
-
-#define TARGET_OPTIONS							\
-{									\
-  { "tda=",	&small_memory[ (int)SMALL_MEMORY_TDA ].value,		\
-      N_("Set the max size of data eligible for the TDA area"), 0},	\
-  { "tda-",	&small_memory[ (int)SMALL_MEMORY_TDA ].value, "", 0},	\
-  { "sda=",	&small_memory[ (int)SMALL_MEMORY_SDA ].value, 		\
-      N_("Set the max size of data eligible for the SDA area"), 0},	\
-  { "sda-",	&small_memory[ (int)SMALL_MEMORY_SDA ].value, "", 0},	\
-  { "zda=",	&small_memory[ (int)SMALL_MEMORY_ZDA ].value, 		\
-      N_("Set the max size of data eligible for the ZDA area"), 0},	\
-  { "zda-",	&small_memory[ (int)SMALL_MEMORY_ZDA ].value, "", 0},	\
-}
-
-/* Sometimes certain combinations of command options do not make
-   sense on a particular target machine.  You can define a macro
-   `OVERRIDE_OPTIONS' to take account of this.  This macro, if
-   defined, is executed once just after all the command options have
-   been parsed.
-
-   Don't use this macro to turn on various extra optimizations for
-   `-O'.  That is what `OPTIMIZATION_OPTIONS' is for.  */
-#define OVERRIDE_OPTIONS override_options ()
-
 
 /* Show we can debug even without a frame pointer.  */
 #define CAN_DEBUG_WITHOUT_FP
@@ -281,7 +133,13 @@ extern struct small_memory_info small_memory[(int)SMALL_MEMORY_max];
 {									\
   target_flags |= MASK_STRICT_ALIGN;					\
   if (LEVEL)								\
-    target_flags |= (MASK_EP | MASK_PROLOG_FUNCTION);			\
+    /* Note - we no longer enable MASK_EP when optimizing.  This is	\
+       because of a hardware bug which stops the SLD and SST instructions\
+       from correctly detecting some hazards.  If the user is sure that \
+       their hardware is fixed or that their program will not encounter \
+       the conditions that trigger the bug then they can enable -mep by \
+       hand.  */							\
+    target_flags |= MASK_PROLOG_FUNCTION;				\
 }
 
 
@@ -400,14 +258,14 @@ extern struct small_memory_info small_memory[(int)SMALL_MEMORY_max];
    0,  1,  3,  4,  5, 30, 32, 33	/* fixed registers */		\
 }
 
-/* If TARGET_NO_APP_REGS is not defined then add r2 and r5 to
+/* If TARGET_APP_REGS is not defined then add r2 and r5 to
    the pool of fixed registers. See PR 14505.  */
 #define CONDITIONAL_REGISTER_USAGE  \
 {                                                       \
-  if (TARGET_NO_APP_REGS)                               \
+  if (!TARGET_APP_REGS)                                 \
     {                                                   \
-     fixed_regs[2] = 1;  call_used_regs[2] = 1;         \
-     fixed_regs[5] = 1;  call_used_regs[5] = 1;         \
+      fixed_regs[2] = 1;  call_used_regs[2] = 1;        \
+      fixed_regs[5] = 1;  call_used_regs[5] = 1;        \
     }                                                   \
 }
 
@@ -584,12 +442,12 @@ enum reg_class
 
 #define STACK_GROWS_DOWNWARD
 
-/* Define this if the nominal address of the stack frame
+/* Define this to nonzero if the nominal address of the stack frame
    is at the high-address end of the local variables;
    that is, each additional local variable allocated
    goes at a more negative offset in the frame.  */
 
-#define FRAME_GROWS_DOWNWARD
+#define FRAME_GROWS_DOWNWARD 1
 
 /* Offset within stack frame to start allocating local variables at.
    If FRAME_GROWS_DOWNWARD, this is the offset to the END of the
@@ -704,11 +562,8 @@ enum reg_class
   else if ((FROM) == ARG_POINTER_REGNUM)				\
    (OFFSET) = compute_frame_size (get_frame_size (), (long *)0);	\
   else									\
-    abort ();								\
+    gcc_unreachable ();							\
 }
-
-/* A guess for the V850.  */
-#define PROMOTE_PROTOTYPES 1
 
 /* Keep the stack pointer constant throughout the function.  */
 #define ACCUMULATE_OUTGOING_ARGS 1
@@ -749,9 +604,6 @@ struct cum_arg { int nbytes; int anonymous_args; };
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (&CUM, MODE, TYPE, NAMED)
 
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
-  function_arg_partial_nregs (&CUM, MODE, TYPE, NAMED)
-
 /* Initialize a variable CUM of type CUMULATIVE_ARGS
    for a call to a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0.  */
@@ -776,20 +628,6 @@ struct cum_arg { int nbytes; int anonymous_args; };
    space allocated by the caller.  */
 #define OUTGOING_REG_PARM_STACK_SPACE
 
-/* Do any setup necessary for varargs/stdargs functions.  */
-#define SETUP_INCOMING_VARARGS(CUM, MODE, TYPE, PAS, SECOND) \
-  (CUM).anonymous_args = (!TARGET_GHS ? 1 : 0);
-
-/* Implement `va_arg'.  */
-#define EXPAND_BUILTIN_VA_ARG(valist, type) \
-  v850_va_arg (valist, type)
-
-#define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED)		\
-  ((TYPE) && int_size_in_bytes (TYPE) > 8)
- 
-#define FUNCTION_ARG_CALLEE_COPIES(CUM, MODE, TYPE, NAMED) \
-  ((TYPE) && int_size_in_bytes (TYPE) > 8)
-
 /* 1 if N is a possible register number for function argument passing.  */
 
 #define FUNCTION_ARG_REGNO_P(N) (N >= 6 && N <= 9)
@@ -812,16 +650,7 @@ struct cum_arg { int nbytes; int anonymous_args; };
 
 #define FUNCTION_VALUE_REGNO_P(N) ((N) == 10)
 
-/* Return values > 8 bytes in length in memory.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
-#define RETURN_IN_MEMORY(TYPE)  \
-  (int_size_in_bytes (TYPE) > 8 || TYPE_MODE (TYPE) == BLKmode)
-
-/* Register in which address to store a structure value
-   is passed to a function.  On the V850 it's passed as
-   the first parameter.  */
-
-#define STRUCT_VALUE 0
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -937,11 +766,11 @@ struct cum_arg { int nbytes; int anonymous_args; };
    register class that does not include r0 on the output.  */
 
 #define EXTRA_CONSTRAINT(OP, C)						\
- ((C) == 'Q'   ? ep_memory_operand (OP, GET_MODE (OP), 0)		\
+ ((C) == 'Q'   ? ep_memory_operand (OP, GET_MODE (OP), FALSE)		\
   : (C) == 'R' ? special_symbolref_operand (OP, VOIDmode)		\
   : (C) == 'S' ? (GET_CODE (OP) == SYMBOL_REF				\
 		  && !SYMBOL_REF_ZDA_P (OP))				\
-  : (C) == 'T' ? ep_memory_operand(OP,GET_MODE(OP),TRUE)		\
+  : (C) == 'T' ? ep_memory_operand (OP, GET_MODE (OP), TRUE)		\
   : (C) == 'U' ? ((GET_CODE (OP) == SYMBOL_REF				\
 		   && SYMBOL_REF_ZDA_P (OP))				\
 		  || (GET_CODE (OP) == CONST				\
@@ -968,13 +797,14 @@ struct cum_arg { int nbytes; int anonymous_args; };
 
 #define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR)				\
 do {									\
-  if (RTX_OK_FOR_BASE_P (X)) goto ADDR;					\
+  if (RTX_OK_FOR_BASE_P (X)) 						\
+    goto ADDR;								\
   if (CONSTANT_ADDRESS_P (X)						\
       && (MODE == QImode || INTVAL (X) % 2 == 0)			\
       && (GET_MODE_SIZE (MODE) <= 4 || INTVAL (X) % 4 == 0))		\
     goto ADDR;								\
   if (GET_CODE (X) == LO_SUM						\
-      && GET_CODE (XEXP (X, 0)) == REG					\
+      && REG_P (XEXP (X, 0))						\
       && REG_OK_FOR_BASE_P (XEXP (X, 0))				\
       && CONSTANT_P (XEXP (X, 1))					\
       && (GET_CODE (XEXP (X, 1)) != CONST_INT				\
@@ -986,27 +816,15 @@ do {									\
       && (GET_MODE_SIZE (MODE) <= GET_MODE_SIZE (word_mode)))		\
      goto ADDR;								\
   if (GET_CODE (X) == PLUS						\
+      && RTX_OK_FOR_BASE_P (XEXP (X, 0)) 				\
       && CONSTANT_ADDRESS_P (XEXP (X, 1))				\
-      && (MODE == QImode || INTVAL (XEXP (X, 1)) % 2 == 0)		\
-      && RTX_OK_FOR_BASE_P (XEXP (X, 0))) goto ADDR;			\
+      && ((MODE == QImode || INTVAL (XEXP (X, 1)) % 2 == 0)		\
+	   && CONST_OK_FOR_K (INTVAL (XEXP (X, 1)) 			\
+                              + (GET_MODE_NUNITS (MODE) * UNITS_PER_WORD)))) \
+    goto ADDR;			\
 } while (0)
 
 
-/* Try machine-dependent ways of modifying an illegitimate address
-   to be legitimate.  If we find one, return the new, valid address.
-   This macro is used in only one place: `memory_address' in explow.c.
-
-   OLDX is the address as it was before break_out_memory_refs was called.
-   In some cases it is useful to look at this to decide what needs to be done.
-
-   MODE and WIN are passed so that this macro can use
-   GO_IF_LEGITIMATE_ADDRESS.
-
-   It is always safe for this macro to do nothing.  It exists to recognize
-   opportunities to optimize the output.  */
-
-#define LEGITIMIZE_ADDRESS(X,OLDX,MODE,WIN)  {}
-
 /* Go to LABEL if ADDR (a legitimate address expression)
    has an effect that depends on the machine mode it is used for.  */
 
@@ -1281,11 +1099,6 @@ zbss_section ()								\
    for the index in the tablejump instruction.  */
 #define CASE_VECTOR_MODE (TARGET_BIG_SWITCH ? SImode : HImode)
 
-/* Define this if the case instruction drops through after the table
-   when the index is out of range.  Don't define it if the case insn
-   jumps to the default label instead.  */
-/* #define CASE_DROPS_THROUGH */
-
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
@@ -1417,30 +1230,4 @@ extern union tree_node * GHS_current_section_names [(int) COUNT_OF_GHS_SECTION_K
 #define SYMBOL_REF_TDA_P(X)	((SYMBOL_REF_FLAGS (X) & SYMBOL_FLAG_TDA) != 0)
 #define SYMBOL_REF_SDA_P(X)	((SYMBOL_REF_FLAGS (X) & SYMBOL_FLAG_SDA) != 0)
 
-/* Define this if you have defined special-purpose predicates in the
-   file `MACHINE.c'.  This macro is called within an initializer of an
-   array of structures.  The first field in the structure is the name
-   of a predicate and the second field is an array of rtl codes.  For
-   each predicate, list all rtl codes that can be in expressions
-   matched by the predicate.  The list should have a trailing comma.  */
-
-#define PREDICATE_CODES							\
-{ "reg_or_0_operand",		{ REG, SUBREG, CONST_INT, CONST_DOUBLE }}, \
-{ "reg_or_int5_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "reg_or_int9_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "reg_or_const_operand",       { REG, CONST_INT }},			\
-{ "call_address_operand",	{ REG, SYMBOL_REF }},			\
-{ "movsi_source_operand",	{ LABEL_REF, SYMBOL_REF, CONST_INT,	\
-				  CONST_DOUBLE, CONST, HIGH, MEM,	\
-				  REG, SUBREG }},			\
-{ "special_symbolref_operand",	{ SYMBOL_REF }},			\
-{ "power_of_two_operand",	{ CONST_INT }},				\
-{ "pattern_is_ok_for_prologue",	{ PARALLEL }},				\
-{ "pattern_is_ok_for_epilogue",	{ PARALLEL }},				\
-{ "register_is_ok_for_epilogue",{ REG }},				\
-{ "pattern_is_ok_for_dispose",	{ PARALLEL }},				\
-{ "pattern_is_ok_for_prepare",	{ PARALLEL }},				\
-{ "register_is_ok_for_dispose",	{ REG }},				\
-{ "not_power_of_two_operand",	{ CONST_INT }},
-  
 #endif /* ! GCC_V850_H */

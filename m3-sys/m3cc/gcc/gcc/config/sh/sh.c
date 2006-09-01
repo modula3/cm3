@@ -1,8 +1,8 @@
 /* Output routines for GCC for Renesas / SuperH SH.
-   Copyright (C) 1993, 1994, 1995, 1997, 1997, 1998, 1999, 2000, 2001, 2002,
-   2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
+   2003, 2004, 2005, 2006 Free Software Foundation, Inc.
    Contributed by Steve Chamberlain (sac@cygnus.com).
-   Improved by Jim Wilson (wilson@cygnus.com). 
+   Improved by Jim Wilson (wilson@cygnus.com).
 
 This file is part of GCC.
 
@@ -18,8 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -40,16 +40,20 @@ Boston, MA 02111-1307, USA.  */
 #include "recog.h"
 #include "c-pragma.h"
 #include "integrate.h"
+#include "dwarf2.h"
 #include "tm_p.h"
 #include "target.h"
 #include "target-def.h"
 #include "real.h"
 #include "langhooks.h"
 #include "basic-block.h"
-#include "ra.h"
 #include "cfglayout.h"
 #include "intl.h"
+#include "sched-int.h"
 #include "ggc.h"
+#include "tree-gimple.h"
+#include "cfgloop.h"
+
 
 int code_for_indirect_jump_scratch = CODE_FOR_indirect_jump_scratch;
 
@@ -66,40 +70,28 @@ int code_for_indirect_jump_scratch = CODE_FOR_indirect_jump_scratch;
 /* Set to 1 by expand_prologue() when the function is an interrupt handler.  */
 int current_function_interrupt;
 
-/* ??? The pragma interrupt support will not work for SH3.  */
-/* This is set by #pragma interrupt and #pragma trapa, and causes gcc to
-   output code for the next function appropriate for an interrupt handler.  */
-int pragma_interrupt;
-
-/* This is set by the trap_exit attribute for functions.   It specifies
-   a trap number to be used in a trapa instruction at function exit
-   (instead of an rte instruction).  */
-int trap_exit;
-
-/* This is used by the sp_switch attribute for functions.  It specifies
-   a variable holding the address of the stack the interrupt function
-   should switch to/from at entry/exit.  */
-rtx sp_switch;
-
-/* This is set by #pragma trapa, and is similar to the above, except that
-   the compiler doesn't emit code to preserve all registers.  */
-static int pragma_trapa;
-
-/* This is set by #pragma nosave_low_regs.  This is useful on the SH3,
-   which has a separate set of low regs for User and Supervisor modes.
-   This should only be used for the lowest level of interrupts.  Higher levels
-   of interrupts must save the registers in case they themselves are
-   interrupted.  */
-int pragma_nosave_low_regs;
-
-/* This is used for communication between SETUP_INCOMING_VARARGS and
-   sh_expand_prologue.  */
-int current_function_anonymous_args;
+tree sh_deferred_function_attributes;
+tree *sh_deferred_function_attributes_tail = &sh_deferred_function_attributes;
 
 /* Global variables for machine-dependent things.  */
 
 /* Which cpu are we scheduling for.  */
 enum processor_type sh_cpu;
+
+/* Definitions used in ready queue reordering for first scheduling pass.  */
+
+/* Reg weights arrays for modes SFmode and SImode, indexed by insn LUID.  */
+static short *regmode_weight[2];
+
+/* Total SFmode and SImode weights of scheduled insns.  */
+static int curr_regmode_pressure[2];
+
+/* If true, skip cycles for Q -> R movement.  */
+static int skip_cycles = 0;
+
+/* Cached value of can_issue_more. This is cached in sh_variable_issue hook
+   and returned from sh_reorder2.  */
+static short cached_can_issue_more;
 
 /* Saved operands from the last compare to use when we generate an scc
    or bcc insn.  */
@@ -150,7 +142,7 @@ enum reg_class regno_reg_class[FIRST_PSEUDO_REGISTER] =
   DF_REGS, DF_REGS, DF_REGS, DF_REGS,
   NO_REGS, GENERAL_REGS, PR_REGS, T_REGS,
   MAC_REGS, MAC_REGS, FPUL_REGS, FPSCR_REGS,
-  GENERAL_REGS,
+  GENERAL_REGS, GENERAL_REGS,
 };
 
 char sh_register_names[FIRST_PSEUDO_REGISTER] \
@@ -179,6 +171,7 @@ int assembler_dialect;
 
 static bool shmedia_space_reserved_for_target_registers;
 
+static bool sh_handle_option (size_t, const char *, int);
 static void split_branches (rtx);
 static int branch_dest (rtx);
 static void force_into (rtx, rtx);
@@ -208,9 +201,24 @@ static tree sh_handle_trap_exit_attribute (tree *, tree, tree, int, bool *);
 static tree sh_handle_renesas_attribute (tree *, tree, tree, int, bool *);
 static void sh_output_function_epilogue (FILE *, HOST_WIDE_INT);
 static void sh_insert_attributes (tree, tree *);
+static const char *sh_check_pch_target_flags (int);
 static int sh_adjust_cost (rtx, rtx, rtx, int);
-static int sh_use_dfa_interface (void);
 static int sh_issue_rate (void);
+static int sh_dfa_new_cycle (FILE *, int, rtx, int, int, int *sort_p);
+static short find_set_regmode_weight (rtx, enum machine_mode);
+static short find_insn_regmode_weight (rtx, enum machine_mode);
+static void find_regmode_weight (int, enum machine_mode);
+static void  sh_md_init_global (FILE *, int, int);
+static void  sh_md_finish_global (FILE *, int);
+static int rank_for_reorder (const void *, const void *);
+static void swap_reorder (rtx *, int);
+static void ready_reorder (rtx *, int);
+static short high_pressure (enum machine_mode);
+static int sh_reorder (FILE *, int, rtx *, int *, int);
+static int sh_reorder2 (FILE *, int, rtx *, int *, int);
+static void sh_md_init (FILE *, int, int);
+static int sh_variable_issue (FILE *, int, rtx, int);
+
 static bool sh_function_ok_for_sibcall (tree, tree);
 
 static bool sh_cannot_modify_jumps_p (void);
@@ -233,6 +241,11 @@ static bool unspec_caller_rtx_p (rtx);
 static bool sh_cannot_copy_insn_p (rtx);
 static bool sh_rtx_costs (rtx, int, int, int *);
 static int sh_address_cost (rtx);
+#ifdef TARGET_ADJUST_UNROLL_MAX
+static int sh_adjust_unroll_max (struct loop *, int, int, int, int);
+#endif
+static int sh_pr_n_sets (void);
+static rtx sh_allocate_initial_value (rtx);
 static int shmedia_target_regs_stack_space (HARD_REG_SET *);
 static int shmedia_reserve_space_for_target_registers_p (int, HARD_REG_SET *);
 static int shmedia_target_regs_stack_adjust (HARD_REG_SET *);
@@ -248,6 +261,15 @@ static void sh_setup_incoming_varargs (CUMULATIVE_ARGS *, enum machine_mode, tre
 static bool sh_strict_argument_naming (CUMULATIVE_ARGS *);
 static bool sh_pretend_outgoing_varargs_named (CUMULATIVE_ARGS *);
 static tree sh_build_builtin_va_list (void);
+static tree sh_gimplify_va_arg_expr (tree, tree, tree *, tree *);
+static bool sh_pass_by_reference (CUMULATIVE_ARGS *, enum machine_mode,
+				  tree, bool);
+static bool sh_callee_copies (CUMULATIVE_ARGS *, enum machine_mode,
+			      tree, bool);
+static int sh_arg_partial_bytes (CUMULATIVE_ARGS *, enum machine_mode,
+			         tree, bool);
+static int sh_dwarf_calling_convention (tree);
+static int hard_regs_intersect_p (HARD_REG_SET *, HARD_REG_SET *);
 
 
 /* Initialize the GCC target structure.  */
@@ -280,17 +302,75 @@ static tree sh_build_builtin_va_list (void);
 #undef TARGET_ASM_FILE_START_FILE_DIRECTIVE
 #define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
 
+#undef TARGET_DEFAULT_TARGET_FLAGS
+#define TARGET_DEFAULT_TARGET_FLAGS TARGET_DEFAULT
+#undef TARGET_HANDLE_OPTION
+#define TARGET_HANDLE_OPTION sh_handle_option
+
 #undef TARGET_INSERT_ATTRIBUTES
 #define TARGET_INSERT_ATTRIBUTES sh_insert_attributes
 
 #undef TARGET_SCHED_ADJUST_COST
 #define TARGET_SCHED_ADJUST_COST sh_adjust_cost
 
-#undef TARGET_SCHED_USE_DFA_PIPELINE_INTERFACE 
-#define TARGET_SCHED_USE_DFA_PIPELINE_INTERFACE \
-				sh_use_dfa_interface
 #undef TARGET_SCHED_ISSUE_RATE
 #define TARGET_SCHED_ISSUE_RATE sh_issue_rate
+
+/* The next 5 hooks have been implemented for reenabling sched1.  With the
+   help of these macros we are limiting the movement of insns in sched1 to
+   reduce the register pressure.  The overall idea is to keep count of SImode
+   and SFmode regs required by already scheduled insns. When these counts
+   cross some threshold values; give priority to insns that free registers.
+   The insn that frees registers is most likely to be the insn with lowest
+   LUID (original insn order); but such an insn might be there in the stalled
+   queue (Q) instead of the ready queue (R).  To solve this, we skip cycles
+   upto a max of 8 cycles so that such insns may move from Q -> R.
+
+   The description of the hooks are as below:
+
+   TARGET_SCHED_INIT_GLOBAL: Added a new target hook in the generic
+   scheduler; it is called inside the sched_init function just after
+   find_insn_reg_weights function call. It is used to calculate the SImode
+   and SFmode weights of insns of basic blocks; much similar to what
+   find_insn_reg_weights does.
+   TARGET_SCHED_FINISH_GLOBAL: Corresponding cleanup hook.
+
+   TARGET_SCHED_DFA_NEW_CYCLE: Skip cycles if high register pressure is
+   indicated by TARGET_SCHED_REORDER2; doing this may move insns from
+   (Q)->(R).
+
+   TARGET_SCHED_REORDER: If the register pressure for SImode or SFmode is
+   high; reorder the ready queue so that the insn with lowest LUID will be
+   issued next.
+
+   TARGET_SCHED_REORDER2: If the register pressure is high, indicate to
+   TARGET_SCHED_DFA_NEW_CYCLE to skip cycles.
+
+   TARGET_SCHED_VARIABLE_ISSUE: Cache the value of can_issue_more so that it
+   can be returned from TARGET_SCHED_REORDER2.
+
+   TARGET_SCHED_INIT: Reset the register pressure counting variables.  */
+
+#undef TARGET_SCHED_DFA_NEW_CYCLE
+#define TARGET_SCHED_DFA_NEW_CYCLE sh_dfa_new_cycle
+
+#undef TARGET_SCHED_INIT_GLOBAL
+#define TARGET_SCHED_INIT_GLOBAL sh_md_init_global
+
+#undef TARGET_SCHED_FINISH_GLOBAL
+#define TARGET_SCHED_FINISH_GLOBAL sh_md_finish_global
+
+#undef TARGET_SCHED_VARIABLE_ISSUE
+#define TARGET_SCHED_VARIABLE_ISSUE sh_variable_issue
+
+#undef TARGET_SCHED_REORDER
+#define TARGET_SCHED_REORDER sh_reorder
+
+#undef TARGET_SCHED_REORDER2
+#define TARGET_SCHED_REORDER2 sh_reorder2
+
+#undef TARGET_SCHED_INIT
+#define TARGET_SCHED_INIT sh_md_init
 
 #undef TARGET_CANNOT_MODIFY_JUMPS_P
 #define TARGET_CANNOT_MODIFY_JUMPS_P sh_cannot_modify_jumps_p
@@ -317,6 +397,8 @@ static tree sh_build_builtin_va_list (void);
 #define TARGET_RTX_COSTS sh_rtx_costs
 #undef TARGET_ADDRESS_COST
 #define TARGET_ADDRESS_COST sh_address_cost
+#undef TARGET_ALLOCATE_INITIAL_VALUE
+#define TARGET_ALLOCATE_INITIAL_VALUE sh_allocate_initial_value
 
 #undef TARGET_MACHINE_DEPENDENT_REORG
 #define TARGET_MACHINE_DEPENDENT_REORG sh_reorg
@@ -346,14 +428,158 @@ static tree sh_build_builtin_va_list (void);
 #define TARGET_STRICT_ARGUMENT_NAMING sh_strict_argument_naming
 #undef TARGET_PRETEND_OUTGOING_VARARGS_NAMED
 #define TARGET_PRETEND_OUTGOING_VARARGS_NAMED sh_pretend_outgoing_varargs_named
+#undef TARGET_MUST_PASS_IN_STACK
+#define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
+#undef TARGET_PASS_BY_REFERENCE
+#define TARGET_PASS_BY_REFERENCE sh_pass_by_reference
+#undef TARGET_CALLEE_COPIES
+#define TARGET_CALLEE_COPIES sh_callee_copies
+#undef TARGET_ARG_PARTIAL_BYTES
+#define TARGET_ARG_PARTIAL_BYTES sh_arg_partial_bytes
 
 #undef TARGET_BUILD_BUILTIN_VA_LIST
 #define TARGET_BUILD_BUILTIN_VA_LIST sh_build_builtin_va_list
+#undef TARGET_GIMPLIFY_VA_ARG_EXPR
+#define TARGET_GIMPLIFY_VA_ARG_EXPR sh_gimplify_va_arg_expr
 
-#undef TARGET_PCH_VALID_P
-#define TARGET_PCH_VALID_P sh_pch_valid_p
+#undef TARGET_VECTOR_MODE_SUPPORTED_P
+#define TARGET_VECTOR_MODE_SUPPORTED_P sh_vector_mode_supported_p
+
+#undef TARGET_CHECK_PCH_TARGET_FLAGS
+#define TARGET_CHECK_PCH_TARGET_FLAGS sh_check_pch_target_flags
+
+#undef TARGET_DWARF_CALLING_CONVENTION
+#define TARGET_DWARF_CALLING_CONVENTION sh_dwarf_calling_convention
+
+/* Return regmode weight for insn.  */
+#define INSN_REGMODE_WEIGHT(INSN, MODE)  regmode_weight[((MODE) == SImode) ? 0 : 1][INSN_UID (INSN)]
+
+/* Return current register pressure for regmode.  */
+#define CURR_REGMODE_PRESSURE(MODE) 	curr_regmode_pressure[((MODE) == SImode) ? 0 : 1]
+
+#ifdef SYMBIAN
+
+#undef  TARGET_ENCODE_SECTION_INFO
+#define TARGET_ENCODE_SECTION_INFO	sh_symbian_encode_section_info
+#undef  TARGET_STRIP_NAME_ENCODING
+#define TARGET_STRIP_NAME_ENCODING	sh_symbian_strip_name_encoding
+#undef  TARGET_CXX_IMPORT_EXPORT_CLASS
+#define TARGET_CXX_IMPORT_EXPORT_CLASS  symbian_import_export_class
+
+#endif /* SYMBIAN */
+
+#ifdef TARGET_ADJUST_UNROLL_MAX
+#undef TARGET_ADJUST_UNROLL_MAX
+#define TARGET_ADJUST_UNROLL_MAX sh_adjust_unroll_max
+#endif
 
 struct gcc_target targetm = TARGET_INITIALIZER;
+
+/* Implement TARGET_HANDLE_OPTION.  */
+
+static bool
+sh_handle_option (size_t code, const char *arg ATTRIBUTE_UNUSED,
+		  int value ATTRIBUTE_UNUSED)
+{
+  switch (code)
+    {
+    case OPT_m1:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH1;
+      return true;
+
+    case OPT_m2:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH2;
+      return true;
+
+    case OPT_m2a:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH2A;
+      return true;
+
+    case OPT_m2a_nofpu:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH2A_NOFPU;
+      return true;
+
+    case OPT_m2a_single:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH2A_SINGLE;
+      return true;
+
+    case OPT_m2a_single_only:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH2A_SINGLE_ONLY;
+      return true;
+
+    case OPT_m2e:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH2E;
+      return true;
+
+    case OPT_m3:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH3;
+      return true;
+
+    case OPT_m3e:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH3E;
+      return true;
+
+    case OPT_m4:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4;
+      return true;
+
+    case OPT_m4_nofpu:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4_NOFPU;
+      return true;
+
+    case OPT_m4_single:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4_SINGLE;
+      return true;
+
+    case OPT_m4_single_only:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4_SINGLE_ONLY;
+      return true;
+
+    case OPT_m4a:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4A;
+      return true;
+
+    case OPT_m4a_nofpu:
+    case OPT_m4al:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4A_NOFPU;
+      return true;
+
+    case OPT_m4a_single:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4A_SINGLE;
+      return true;
+
+    case OPT_m4a_single_only:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH4A_SINGLE_ONLY;
+      return true;
+
+    case OPT_m5_32media:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH5_32MEDIA;
+      return true;
+
+    case OPT_m5_32media_nofpu:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH5_32MEDIA_NOFPU;
+      return true;
+
+    case OPT_m5_64media:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH5_64MEDIA;
+      return true;
+
+    case OPT_m5_64media_nofpu:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH5_64MEDIA_NOFPU;
+      return true;
+
+    case OPT_m5_compact:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH5_COMPACT;
+      return true;
+
+    case OPT_m5_compact_nofpu:
+      target_flags = (target_flags & ~MASK_ARCH) | SELECT_SH5_COMPACT_NOFPU;
+      return true;
+
+    default:
+      return true;
+    }
+}
 
 /* Print the operand address in x to the stream.  */
 
@@ -391,8 +617,7 @@ print_operand_address (FILE *stream, rtx x)
 	    }
 
 	  default:
-	    debug_rtx (x);
-	    abort ();
+	    gcc_unreachable ();
 	  }
       }
       break;
@@ -420,21 +645,29 @@ print_operand_address (FILE *stream, rtx x)
    '@'  print trap, rte or rts depending upon pragma interruptness
    '#'  output a nop if there is nothing to put in the delay slot
    '''  print likelihood suffix (/u for unlikely).
+   '>'  print branch target if -fverbose-asm
    'O'  print a constant without the #
    'R'  print the LSW of a dp value - changes if in little endian
    'S'  print the MSW of a dp value - changes if in little endian
    'T'  print the next word of a dp value - same as 'R' in big endian mode.
    'M'  print an `x' if `m' will print `base,index'.
    'N'  print 'r63' if the operand is (const_int 0).
+   'd'  print a V2SF reg as dN instead of fpN.
    'm'  print a pair `base,offset' or `base,index', for LD and ST.
+   'U'  Likewise for {LD,ST}{HI,LO}.
    'u'  prints the lowest 16 bits of CONST_INT, as an unsigned value.
    'o'  output an operator.  */
 
 void
 print_operand (FILE *stream, rtx x, int code)
 {
+  int regno;
+  enum machine_mode mode;
+
   switch (code)
     {
+      tree trapa_attr;
+
     case '.':
       if (final_sequence
 	  && ! INSN_ANNULLED_BRANCH_P (XVECEXP (final_sequence, 0, 0))
@@ -445,8 +678,11 @@ print_operand (FILE *stream, rtx x, int code)
       fprintf (stream, "%s", LOCAL_LABEL_PREFIX);
       break;
     case '@':
-      if (trap_exit)
-	fprintf (stream, "trapa #%d", trap_exit);
+      trapa_attr = lookup_attribute ("trap_exit",
+				      DECL_ATTRIBUTES (current_function_decl));
+      if (trapa_attr)
+	fprintf (stream, "trapa #%ld",
+		 (long) TREE_INT_CST_LOW (TREE_VALUE (TREE_VALUE (trapa_attr))));
       else if (sh_cfun_interrupt_handler_p ())
 	fprintf (stream, "rte");
       else
@@ -465,15 +701,77 @@ print_operand (FILE *stream, rtx x, int code)
 	  fputs ("/u", stream);
 	break;
       }
+    case '>':
+      if (flag_verbose_asm && JUMP_LABEL (current_output_insn))
+	{
+	  fputs ("\t! target: ", stream);
+	  output_addr_const (stream, JUMP_LABEL (current_output_insn));
+	}
+      break;
     case 'O':
       x = mark_constant_pool_use (x);
       output_addr_const (stream, x);
       break;
+    /* N.B.: %R / %S / %T adjust memory addresses by four.
+       For SHMEDIA, that means they can be used to access the first and
+       second 32 bit part of a 64 bit (or larger) value that
+       might be held in floating point registers or memory.
+       While they can be used to access 64 bit parts of a larger value
+       held in general purpose registers, that won't work with memory -
+       neither for fp registers, since the frxx names are used.  */
     case 'R':
-      fputs (reg_names[REGNO (x) + LSW], (stream));
+      if (REG_P (x) || GET_CODE (x) == SUBREG)
+	{
+	  regno = true_regnum (x);
+	  regno += FP_REGISTER_P (regno) ? 1 : LSW;
+	  fputs (reg_names[regno], (stream));
+	}
+      else if (MEM_P (x))
+	{
+	  x = adjust_address (x, SImode, 4 * LSW);
+	  print_operand_address (stream, XEXP (x, 0));
+	}
+      else
+	{
+	  rtx sub = NULL_RTX;
+
+	  mode = GET_MODE (x);
+	  if (mode == VOIDmode)
+	    mode = DImode;
+	  if (GET_MODE_SIZE (mode) >= 8)
+	    sub = simplify_subreg (SImode, x, mode, 4 * LSW);
+	  if (sub)
+	    print_operand (stream, sub, 0);
+	  else
+	    output_operand_lossage ("invalid operand to %%R");
+	}
       break;
     case 'S':
-      fputs (reg_names[REGNO (x) + MSW], (stream));
+      if (REG_P (x) || GET_CODE (x) == SUBREG)
+	{
+	  regno = true_regnum (x);
+	  regno += FP_REGISTER_P (regno) ? 0 : MSW;
+	  fputs (reg_names[regno], (stream));
+	}
+      else if (MEM_P (x))
+	{
+	  x = adjust_address (x, SImode, 4 * MSW);
+	  print_operand_address (stream, XEXP (x, 0));
+	}
+      else
+	{
+	  rtx sub = NULL_RTX;
+
+	  mode = GET_MODE (x);
+	  if (mode == VOIDmode)
+	    mode = DImode;
+	  if (GET_MODE_SIZE (mode) >= 8)
+	    sub = simplify_subreg (SImode, x, mode, 4 * MSW);
+	  if (sub)
+	    print_operand (stream, sub, 0);
+	  else
+	    output_operand_lossage ("invalid operand to %%S");
+	}
       break;
     case 'T':
       /* Next word of a double.  */
@@ -518,9 +816,10 @@ print_operand (FILE *stream, rtx x, int code)
       break;
 
     case 'm':
-      if (GET_CODE (x) != MEM)
-	abort ();
+      gcc_assert (GET_CODE (x) == MEM);
       x = XEXP (x, 0);
+      /* Fall through.  */
+    case 'U':
       switch (GET_CODE (x))
 	{
 	case REG:
@@ -536,8 +835,14 @@ print_operand (FILE *stream, rtx x, int code)
 	  break;
 
 	default:
-	  abort ();
+	  gcc_unreachable ();
 	}
+      break;
+
+    case 'd':
+      gcc_assert (GET_CODE (x) == REG && GET_MODE (x) == V2SFmode);
+
+      fprintf ((stream), "d%s", reg_names[REGNO (x)] + 1);
       break;
 
     case 'N':
@@ -557,46 +862,98 @@ print_operand (FILE *stream, rtx x, int code)
 
     default_output:
     default:
+      regno = 0;
+      mode = GET_MODE (x);
+
       switch (GET_CODE (x))
 	{
+	case TRUNCATE:
+	  {
+	    rtx inner = XEXP (x, 0);
+	    int offset = 0;
+	    enum machine_mode inner_mode;
+
+	    /* We might see SUBREGs with vector mode registers inside.  */
+	    if (GET_CODE (inner) == SUBREG
+		&& (GET_MODE_SIZE (GET_MODE (inner))
+		    == GET_MODE_SIZE (GET_MODE (SUBREG_REG (inner))))
+		&& subreg_lowpart_p (inner))
+	      inner = SUBREG_REG (inner);
+	    if (GET_CODE (inner) == CONST_INT)
+	      {
+		x = GEN_INT (trunc_int_for_mode (INTVAL (inner), GET_MODE (x)));
+		goto default_output;
+	      }
+	    inner_mode = GET_MODE (inner);
+	    if (GET_CODE (inner) == SUBREG
+		&& (GET_MODE_SIZE (GET_MODE (inner))
+		    < GET_MODE_SIZE (GET_MODE (SUBREG_REG (inner))))
+		&& GET_CODE (SUBREG_REG (inner)) == REG)
+	      {
+		offset = subreg_regno_offset (REGNO (SUBREG_REG (inner)),
+					      GET_MODE (SUBREG_REG (inner)),
+					      SUBREG_BYTE (inner),
+					      GET_MODE (inner));
+		inner = SUBREG_REG (inner);
+	      }
+	    if (GET_CODE (inner) != REG || GET_MODE_SIZE (inner_mode) > 8)
+	      abort ();
+	    /* Floating point register pairs are always big endian;
+	       general purpose registers are 64 bit wide.  */
+	    regno = REGNO (inner);
+	    regno = (HARD_REGNO_NREGS (regno, inner_mode)
+		     - HARD_REGNO_NREGS (regno, mode))
+		     + offset;
+	    x = inner;
+	    goto reg;
+	  }
+	case SIGN_EXTEND:
+	  x = XEXP (x, 0);
+	  goto reg;
 	  /* FIXME: We need this on SHmedia32 because reload generates
 	     some sign-extended HI or QI loads into DImode registers
 	     but, because Pmode is SImode, the address ends up with a
 	     subreg:SI of the DImode register.  Maybe reload should be
 	     fixed so as to apply alter_subreg to such loads?  */
+	case IF_THEN_ELSE:
+	  gcc_assert (trapping_target_operand (x, VOIDmode));
+	  x = XEXP (XEXP (x, 2), 0);
+	  goto default_output;
 	case SUBREG:
-	  if (SUBREG_BYTE (x) != 0
-	      || GET_CODE (SUBREG_REG (x)) != REG)
-	    abort ();
+	  gcc_assert (SUBREG_BYTE (x) == 0
+		      && GET_CODE (SUBREG_REG (x)) == REG);
 
 	  x = SUBREG_REG (x);
 	  /* Fall through.  */
 
+	reg:
 	case REG:
-	  if (FP_REGISTER_P (REGNO (x))
-	      && GET_MODE (x) == V16SFmode)
-	    fprintf ((stream), "mtrx%s", reg_names[REGNO (x)] + 2);
+	  regno += REGNO (x);
+	  if (FP_REGISTER_P (regno)
+	      && mode == V16SFmode)
+	    fprintf ((stream), "mtrx%s", reg_names[regno] + 2);
 	  else if (FP_REGISTER_P (REGNO (x))
-		   && GET_MODE (x) == V4SFmode)
-	    fprintf ((stream), "fv%s", reg_names[REGNO (x)] + 2);
+		   && mode == V4SFmode)
+	    fprintf ((stream), "fv%s", reg_names[regno] + 2);
 	  else if (GET_CODE (x) == REG
-		   && GET_MODE (x) == V2SFmode)
-	    fprintf ((stream), "fp%s", reg_names[REGNO (x)] + 2);
+		   && mode == V2SFmode)
+	    fprintf ((stream), "fp%s", reg_names[regno] + 2);
 	  else if (FP_REGISTER_P (REGNO (x))
-		   && GET_MODE_SIZE (GET_MODE (x)) > 4)
-	    fprintf ((stream), "d%s", reg_names[REGNO (x)] + 1);
+		   && GET_MODE_SIZE (mode) > 4)
+	    fprintf ((stream), "d%s", reg_names[regno] + 1);
 	  else
-	    fputs (reg_names[REGNO (x)], (stream));
+	    fputs (reg_names[regno], (stream));
 	  break;
 
 	case MEM:
 	  output_address (XEXP (x, 0));
 	  break;
-	  
+
 	case CONST:
 	  if (TARGET_SHMEDIA
 	      && GET_CODE (XEXP (x, 0)) == SIGN_EXTEND
-	      && GET_MODE (XEXP (x, 0)) == DImode
+	      && (GET_MODE (XEXP (x, 0)) == DImode
+		  || GET_MODE (XEXP (x, 0)) == SImode)
 	      && GET_CODE (XEXP (XEXP (x, 0), 0)) == TRUNCATE
 	      && GET_MODE (XEXP (XEXP (x, 0), 0)) == HImode)
 	    {
@@ -661,9 +1018,48 @@ expand_block_move (rtx *operands)
   int constp = (GET_CODE (operands[2]) == CONST_INT);
   int bytes = (constp ? INTVAL (operands[2]) : 0);
 
+  if (! constp)
+    return 0;
+
+  /* If we could use mov.l to move words and dest is word-aligned, we
+     can use movua.l for loads and still generate a relatively short
+     and efficient sequence.  */
+  if (TARGET_SH4A_ARCH && align < 4
+      && MEM_ALIGN (operands[0]) >= 32
+      && can_move_by_pieces (bytes, 32))
+    {
+      rtx dest = copy_rtx (operands[0]);
+      rtx src = copy_rtx (operands[1]);
+      /* We could use different pseudos for each copied word, but
+	 since movua can only load into r0, it's kind of
+	 pointless.  */
+      rtx temp = gen_reg_rtx (SImode);
+      rtx src_addr = copy_addr_to_reg (XEXP (src, 0));
+      int copied = 0;
+
+      while (copied + 4 <= bytes)
+	{
+	  rtx to = adjust_address (dest, SImode, copied);
+	  rtx from = adjust_automodify_address (src, SImode, src_addr, copied);
+
+	  emit_insn (gen_movua (temp, from));
+	  emit_move_insn (src_addr, plus_constant (src_addr, 4));
+	  emit_move_insn (to, temp);
+	  copied += 4;
+	}
+
+      if (copied < bytes)
+	move_by_pieces (adjust_address (dest, BLKmode, copied),
+			adjust_automodify_address (src, BLKmode,
+						   src_addr, copied),
+			bytes - copied, align, 0);
+
+      return 1;
+    }
+
   /* If it isn't a constant number of bytes, or if it doesn't have 4 byte
      alignment, or if it isn't a multiple of 4 bytes, then fail.  */
-  if (! constp || align < 4 || (bytes % 4 != 0))
+  if (align < 4 || (bytes % 4 != 0))
     return 0;
 
   if (TARGET_HARD_SH4)
@@ -672,16 +1068,11 @@ expand_block_move (rtx *operands)
 	return 0;
       else if (bytes == 12)
 	{
-	  tree entry_name;
-	  rtx sym;
-	  rtx func_addr_rtx;
-	  rtx r4 = gen_rtx (REG, SImode, 4);
-	  rtx r5 = gen_rtx (REG, SImode, 5);
+	  rtx func_addr_rtx = gen_reg_rtx (Pmode);
+	  rtx r4 = gen_rtx_REG (SImode, 4);
+	  rtx r5 = gen_rtx_REG (SImode, 5);
 
-	  entry_name = get_identifier ("__movstrSI12_i4");
-
-	  sym = function_symbol (IDENTIFIER_POINTER (entry_name));
-	  func_addr_rtx = copy_to_mode_reg (Pmode, sym);
+	  function_symbol (func_addr_rtx, "__movmemSI12_i4", SFUNC_STATIC);
 	  force_into (XEXP (operands[0], 0), r4);
 	  force_into (XEXP (operands[1], 0), r5);
 	  emit_insn (gen_block_move_real_i4 (func_addr_rtx));
@@ -689,19 +1080,15 @@ expand_block_move (rtx *operands)
 	}
       else if (! TARGET_SMALLCODE)
 	{
-	  tree entry_name;
-	  rtx sym;
-	  rtx func_addr_rtx;
+	  const char *entry_name;
+	  rtx func_addr_rtx = gen_reg_rtx (Pmode);
 	  int dwords;
-	  rtx r4 = gen_rtx (REG, SImode, 4);
-	  rtx r5 = gen_rtx (REG, SImode, 5);
-	  rtx r6 = gen_rtx (REG, SImode, 6);
+	  rtx r4 = gen_rtx_REG (SImode, 4);
+	  rtx r5 = gen_rtx_REG (SImode, 5);
+	  rtx r6 = gen_rtx_REG (SImode, 6);
 
-	  entry_name = get_identifier (bytes & 4
-				       ? "__movstr_i4_odd"
-				       : "__movstr_i4_even");
-	  sym = function_symbol (IDENTIFIER_POINTER (entry_name));
-	  func_addr_rtx = copy_to_mode_reg (Pmode, sym);
+	  entry_name = (bytes & 4 ? "__movmem_i4_odd" : "__movmem_i4_even");
+	  function_symbol (func_addr_rtx, entry_name, SFUNC_STATIC);
 	  force_into (XEXP (operands[0], 0), r4);
 	  force_into (XEXP (operands[1], 0), r5);
 
@@ -716,16 +1103,12 @@ expand_block_move (rtx *operands)
   if (bytes < 64)
     {
       char entry[30];
-      tree entry_name;
-      rtx sym;
-      rtx func_addr_rtx;
+      rtx func_addr_rtx = gen_reg_rtx (Pmode);
       rtx r4 = gen_rtx_REG (SImode, 4);
       rtx r5 = gen_rtx_REG (SImode, 5);
 
-      sprintf (entry, "__movstrSI%d", bytes);
-      entry_name = get_identifier (entry);
-      sym = function_symbol (IDENTIFIER_POINTER (entry_name));
-      func_addr_rtx = copy_to_mode_reg (Pmode, sym);
+      sprintf (entry, "__movmemSI%d", bytes);
+      function_symbol (func_addr_rtx, entry, SFUNC_STATIC);
       force_into (XEXP (operands[0], 0), r4);
       force_into (XEXP (operands[1], 0), r5);
       emit_insn (gen_block_move_real (func_addr_rtx));
@@ -736,17 +1119,13 @@ expand_block_move (rtx *operands)
      less common function name, so this will occasionally use more space.  */
   if (! TARGET_SMALLCODE)
     {
-      tree entry_name;
-      rtx sym;
-      rtx func_addr_rtx;
+      rtx func_addr_rtx = gen_reg_rtx (Pmode);
       int final_switch, while_loop;
       rtx r4 = gen_rtx_REG (SImode, 4);
       rtx r5 = gen_rtx_REG (SImode, 5);
       rtx r6 = gen_rtx_REG (SImode, 6);
 
-      entry_name = get_identifier ("__movstr");
-      sym = function_symbol (IDENTIFIER_POINTER (entry_name));
-      func_addr_rtx = copy_to_mode_reg (Pmode, sym);
+      function_symbol (func_addr_rtx, "__movmem", SFUNC_STATIC);
       force_into (XEXP (operands[0], 0), r4);
       force_into (XEXP (operands[1], 0), r5);
 
@@ -827,7 +1206,8 @@ prepare_move_operands (rtx operands[], enum machine_mode mode)
 	 of a library call to the target.  Reject `st r0,@(rX,rY)' because
 	 reload will fail to find a spill register for rX, since r0 is already
 	 being used for the source.  */
-      else if (refers_to_regno_p (R0_REG, R0_REG + 1, operands[1], (rtx *)0)
+      else if (TARGET_SH1
+	       && refers_to_regno_p (R0_REG, R0_REG + 1, operands[1], (rtx *)0)
 	       && GET_CODE (operands[0]) == MEM
 	       && GET_CODE (XEXP (operands[0], 0)) == PLUS
 	       && GET_CODE (XEXP (XEXP (operands[0], 0), 1)) == REG)
@@ -836,16 +1216,25 @@ prepare_move_operands (rtx operands[], enum machine_mode mode)
 
   if (mode == Pmode || mode == ptr_mode)
     {
-      rtx op0, op1;
+      rtx op0, op1, opc;
       enum tls_model tls_kind;
 
       op0 = operands[0];
       op1 = operands[1];
+      if (GET_CODE (op1) == CONST
+	  && GET_CODE (XEXP (op1, 0)) == PLUS
+	  && tls_symbolic_operand (XEXP (XEXP (op1, 0), 0), Pmode))
+	{
+	  opc = XEXP (XEXP (op1, 0), 1);
+	  op1 = XEXP (XEXP (op1, 0), 0);
+	}
+      else
+	opc = NULL_RTX;
+
       if ((tls_kind = tls_symbolic_operand (op1, Pmode)))
 	{
 	  rtx tga_op1, tga_ret, tmp, tmp2;
 
-	  
 	  switch (tls_kind)
 	    {
 	    case TLS_MODEL_GLOBAL_DYNAMIC:
@@ -872,8 +1261,19 @@ prepare_move_operands (rtx operands[], enum machine_mode mode)
 
 	    case TLS_MODEL_INITIAL_EXEC:
 	      if (! flag_pic)
-		emit_insn (gen_GOTaddr2picreg ());
-	      tga_op1 = gen_reg_rtx (Pmode);
+		{
+		  /* Don't schedule insns for getting GOT address when
+		     the first scheduling is enabled, to avoid spill
+		     failures for R0.  */
+		  if (flag_schedule_insns)
+		    emit_insn (gen_blockage ());
+		  emit_insn (gen_GOTaddr2picreg ());
+		  emit_insn (gen_rtx_USE (VOIDmode, gen_rtx_REG (SImode,
+								 PIC_REG)));
+		  if (flag_schedule_insns)
+		    emit_insn (gen_blockage ());
+		}
+	      tga_op1 = no_new_pseudos ? op0 : gen_reg_rtx (Pmode);
 	      tmp = gen_sym2GOTTPOFF (op1);
 	      emit_insn (gen_tls_initial_exec (tga_op1, tmp));
 	      op1 = tga_op1;
@@ -884,7 +1284,6 @@ prepare_move_operands (rtx operands[], enum machine_mode mode)
 	      emit_insn (gen_load_gbr (tmp2));
 	      tmp = gen_reg_rtx (Pmode);
 	      emit_insn (gen_symTPOFF2reg (tmp, op1));
-	      RTX_UNCHANGING_P (tmp) = 1;
 
 	      if (register_operand (op0, Pmode))
 		op1 = op0;
@@ -895,8 +1294,10 @@ prepare_move_operands (rtx operands[], enum machine_mode mode)
 	      break;
 
 	    default:
-	      abort ();
+	      gcc_unreachable ();
 	    }
+	  if (opc)
+	    emit_insn (gen_addsi3 (op1, op1, force_reg (SImode, opc)));
 	  operands[1] = op1;
 	}
     }
@@ -918,7 +1319,7 @@ prepare_scc_operands (enum rtx_code code)
     {
     case NE:
       /* It isn't possible to handle this case.  */
-      abort ();
+      gcc_unreachable ();
     case LT:
       code = GT;
       break;
@@ -953,17 +1354,17 @@ prepare_scc_operands (enum rtx_code code)
       || (TARGET_SH2E && GET_MODE_CLASS (mode) == MODE_FLOAT))
     sh_compare_op1 = force_reg (mode, sh_compare_op1);
 
-  if (TARGET_SH4 && GET_MODE_CLASS (mode) == MODE_FLOAT)
+  if ((TARGET_SH4 || TARGET_SH2A) && GET_MODE_CLASS (mode) == MODE_FLOAT)
     (mode == SFmode ? emit_sf_insn : emit_df_insn)
-     (gen_rtx (PARALLEL, VOIDmode, gen_rtvec (2,
-		gen_rtx (SET, VOIDmode, t_reg,
-			 gen_rtx (code, SImode,
-				  sh_compare_op0, sh_compare_op1)),
-		gen_rtx (USE, VOIDmode, get_fpscr_rtx ()))));
+     (gen_rtx_PARALLEL (VOIDmode, gen_rtvec (2,
+		gen_rtx_SET (VOIDmode, t_reg,
+			     gen_rtx_fmt_ee (code, SImode,
+					     sh_compare_op0, sh_compare_op1)),
+		gen_rtx_USE (VOIDmode, get_fpscr_rtx ()))));
   else
-    emit_insn (gen_rtx (SET, VOIDmode, t_reg,
-			gen_rtx (code, SImode, sh_compare_op0,
-				 sh_compare_op1)));
+    emit_insn (gen_rtx_SET (VOIDmode, t_reg,
+			    gen_rtx_fmt_ee (code, SImode,
+					    sh_compare_op0, sh_compare_op1)));
 
   return t_reg;
 }
@@ -996,13 +1397,13 @@ from_compare (rtx *operands, int code)
   else
     insn = gen_rtx_SET (VOIDmode,
 			gen_rtx_REG (SImode, T_REG),
-			gen_rtx (code, SImode, sh_compare_op0,
-				 sh_compare_op1));
-  if (TARGET_SH4 && GET_MODE_CLASS (mode) == MODE_FLOAT)
+			gen_rtx_fmt_ee (code, SImode,
+					sh_compare_op0, sh_compare_op1));
+  if ((TARGET_SH4 || TARGET_SH2A) && GET_MODE_CLASS (mode) == MODE_FLOAT)
     {
-      insn = gen_rtx (PARALLEL, VOIDmode,
+      insn = gen_rtx_PARALLEL (VOIDmode,
 		      gen_rtvec (2, insn,
-				 gen_rtx (USE, VOIDmode, get_fpscr_rtx ())));
+				 gen_rtx_USE (VOIDmode, get_fpscr_rtx ())));
       (mode == SFmode ? emit_sf_insn : emit_df_insn) (insn);
     }
   else
@@ -1056,12 +1457,17 @@ output_movedouble (rtx insn ATTRIBUTE_UNUSED, rtx operands[],
       int dreg = REGNO (dst);
       rtx inside = XEXP (src, 0);
 
-      if (GET_CODE (inside) == REG)
-	ptrreg = REGNO (inside);
-      else if (GET_CODE (inside) == SUBREG)
-	ptrreg = subreg_regno (inside);
-      else if (GET_CODE (inside) == PLUS)
+      switch (GET_CODE (inside))
 	{
+	case REG:
+	  ptrreg = REGNO (inside);
+	  break;
+
+	case SUBREG:
+	  ptrreg = subreg_regno (inside);
+	  break;
+
+	case PLUS:
 	  ptrreg = REGNO (XEXP (inside, 0));
 	  /* ??? A r0+REG address shouldn't be possible here, because it isn't
 	     an offsettable address.  Unfortunately, offsettable addresses use
@@ -1070,15 +1476,16 @@ output_movedouble (rtx insn ATTRIBUTE_UNUSED, rtx operands[],
 	     supported, so we can't use the 'o' constraint.
 	     Thus we must check for and handle r0+REG addresses here.
 	     We punt for now, since this is likely very rare.  */
-	  if (GET_CODE (XEXP (inside, 1)) == REG)
-	    abort ();
+	  gcc_assert (GET_CODE (XEXP (inside, 1)) != REG);
+	  break;
+	  
+	case LABEL_REF:
+	  return "mov.l	%1,%0\n\tmov.l	%1+4,%T0";
+	case POST_INC:
+	  return "mov.l	%1,%0\n\tmov.l	%1,%T0";
+	default:
+	  gcc_unreachable ();
 	}
-      else if (GET_CODE (inside) == LABEL_REF)
-	return "mov.l	%1,%0\n\tmov.l	%1+4,%T0";
-      else if (GET_CODE (inside) == POST_INC)
-	return "mov.l	%1,%0\n\tmov.l	%1,%T0";
-      else
-	abort ();
 
       /* Work out the safe way to copy.  Copy into the second half first.  */
       if (dreg == ptrreg)
@@ -1095,7 +1502,7 @@ output_movedouble (rtx insn ATTRIBUTE_UNUSED, rtx operands[],
 static void
 print_slot (rtx insn)
 {
-  final_scan_insn (XVECEXP (insn, 0, 1), asm_out_file, optimize, 0, 1, NULL);
+  final_scan_insn (XVECEXP (insn, 0, 1), asm_out_file, optimize, 1, NULL);
 
   INSN_DELETED_P (XVECEXP (insn, 0, 1)) = 1;
 }
@@ -1213,11 +1620,11 @@ output_branch (int logic, rtx insn, rtx *operands)
 	  int label = lf++;
 	  /* The call to print_slot will clobber the operands.  */
 	  rtx op0 = operands[0];
-    
+
 	  /* If the instruction in the delay slot is annulled (true), then
 	     there is no delay slot where we can put it now.  The only safe
 	     place for it is after the label.  final will do that by default.  */
-    
+
 	  if (final_sequence
 	      && ! INSN_ANNULLED_BRANCH_P (XVECEXP (final_sequence, 0, 0))
 	      && get_attr_length (XVECEXP (final_sequence, 0, 1)))
@@ -1228,11 +1635,11 @@ output_branch (int logic, rtx insn, rtx *operands)
 	    }
 	  else
 	    asm_fprintf (asm_out_file, "\tb%s\t%LLF%d\n", logic ? "f" : "t", label);
-    
+
 	  output_asm_insn ("bra\t%l0", &op0);
 	  fprintf (asm_out_file, "\tnop\n");
-	  (*targetm.asm_out.internal_label)(asm_out_file, "LF", label);
-    
+	  (*targetm.asm_out.internal_label) (asm_out_file, "LF", label);
+
 	  return "";
 	}
       /* When relaxing, handle this like a short branch.  The linker
@@ -1247,9 +1654,9 @@ output_branch (int logic, rtx insn, rtx *operands)
 	{
 	  int label = lf++;
 
-	  if (final_sequence
-	      && INSN_ANNULLED_BRANCH_P (XVECEXP (final_sequence, 0, 0)))
-	    abort ();
+	  gcc_assert (!final_sequence
+		      || !(INSN_ANNULLED_BRANCH_P
+			   (XVECEXP (final_sequence, 0, 0))));
 	  asm_fprintf (asm_out_file, "b%s%ss\t%LLF%d\n",
 		       logic ? "f" : "t",
 		       ASSEMBLER_DIALECT ? "/" : ".", label);
@@ -1264,7 +1671,7 @@ output_branch (int logic, rtx insn, rtx *operands)
     case 4:
       {
 	char buffer[10];
-	
+
 	sprintf (buffer, "b%s%ss\t%%l0",
 		 logic ? "t" : "f",
 		 ASSEMBLER_DIALECT ? "/" : ".");
@@ -1276,7 +1683,7 @@ output_branch (int logic, rtx insn, rtx *operands)
       /* There should be no longer branches now - that would
 	 indicate that something has destroyed the branches set
 	 up in machine_dependent_reorg.  */
-      abort ();
+      gcc_unreachable ();
     }
 }
 
@@ -1324,7 +1731,8 @@ output_branchy_insn (enum rtx_code code, const char *template,
 const char *
 output_ieee_ccmpeq (rtx insn, rtx *operands)
 {
-  return output_branchy_insn (NE, "bt\t%l9\\;fcmp/eq\t%1,%0", insn, operands);
+  return output_branchy_insn (NE, "bt\t%l9\n\tfcmp/eq\t%1,%0",
+			      insn, operands);
 }
 
 /* Output the start of the assembler file.  */
@@ -1333,6 +1741,12 @@ static void
 sh_file_start (void)
 {
   default_file_start ();
+
+#ifdef SYMBIAN
+  /* Declare the .directive section before it is used.  */
+  fputs ("\t.section .directive, \"SM\", @progbits, 1\n", asm_out_file);
+  fputs ("\t.asciz \"#<SYMEDIT>#\\n\"\n", asm_out_file);
+#endif
 
   if (TARGET_ELF)
     /* We need to show the text section with the proper
@@ -1386,7 +1800,7 @@ unspec_caller_rtx_p (rtx pat)
 }
 
 /* Indicate that INSN cannot be duplicated.  This is true for insn
-   that generates an unique label.  */
+   that generates a unique label.  */
 
 static bool
 sh_cannot_copy_insn_p (rtx insn)
@@ -1437,7 +1851,7 @@ static const short shift_amounts[32][5] = {
 /* Likewise, but for shift amounts < 16, up to three highmost bits
    might be clobbered.  This is typically used when combined with some
    kind of sign or zero extension.  */
-   
+
 static const char ext_shift_insns[]    =
   { 0,1,1,2,2,3,2,2,1,2,2,3,3,3,2,2,1,2,2,3,3,4,3,3,2,3,3,4,4,4,3,3};
 
@@ -1474,7 +1888,7 @@ shift_insns_rtx (rtx insn)
     case ASHIFT:
       return shift_insns[shift_count];
     default:
-      abort();
+      gcc_unreachable ();
     }
 }
 
@@ -1589,7 +2003,7 @@ addsubcosts (rtx x)
 
 	/* Fall through.  */
       default:
-	  return 5;
+	return 5;
       }
 
   /* Any other constant requires a 2 cycle pc-relative load plus an
@@ -1601,8 +2015,17 @@ addsubcosts (rtx x)
 static inline int
 multcosts (rtx x ATTRIBUTE_UNUSED)
 {
+  if (sh_multcost >= 0)
+    return sh_multcost;
   if (TARGET_SHMEDIA)
-    return 3;
+    /* ??? We have a mul insn, but it has a latency of three, and doesn't
+       accept constants.  Ideally, we would use a cost of one or two and
+       add the cost of the operand, but disregard the latter when inside loops
+       and loop invariant code motion is still to follow.
+       Using a multiply first and splitting it later if it's a loss
+       doesn't work because of different sign / zero extension semantics
+       of multiplies vs. shifts.  */
+    return TARGET_SMALLCODE ? 2 : 3;
 
   if (TARGET_SH2)
     {
@@ -1646,7 +2069,7 @@ sh_rtx_costs (rtx x, int code, int outer_code, int *total)
 	  else if (CONST_OK_FOR_I16 (INTVAL (x)))
             *total = COSTS_N_INSNS (outer_code != SET);
 	  else if (CONST_OK_FOR_I16 (INTVAL (x) >> 16))
-	    *total = COSTS_N_INSNS (2);
+	    *total = COSTS_N_INSNS ((outer_code != SET) + 1);
 	  else if (CONST_OK_FOR_I16 ((INTVAL (x) >> 16) >> 16))
 	    *total = COSTS_N_INSNS (3);
           else
@@ -1679,8 +2102,19 @@ sh_rtx_costs (rtx x, int code, int outer_code, int *total)
       else
         *total = 10;
       return true;
+    case CONST_VECTOR:
+      if (x == CONST0_RTX (GET_MODE (x)))
+	*total = 0;
+      else if (sh_1el_vec (x, VOIDmode))
+	*total = outer_code != SET;
+      if (sh_rep_vec (x, VOIDmode))
+	*total = ((GET_MODE_UNIT_SIZE (GET_MODE (x)) + 3) / 4
+		  + (outer_code != SET));
+      *total = COSTS_N_INSNS (3) + (outer_code != SET);
+      return true;
 
     case PLUS:
+    case MINUS:
       *total = COSTS_N_INSNS (addsubcosts (x));
       return true;
 
@@ -1703,6 +2137,15 @@ sh_rtx_costs (rtx x, int code, int outer_code, int *total)
     case MOD:
     case UMOD:
       *total = COSTS_N_INSNS (20);
+      return true;
+
+    case PARALLEL:
+      if (sh_1el_vec (x, VOIDmode))
+	*total = outer_code != SET;
+      if (sh_rep_vec (x, VOIDmode))
+	*total = ((GET_MODE_UNIT_SIZE (GET_MODE (x)) + 3) / 4
+		  + (outer_code != SET));
+      *total = COSTS_N_INSNS (3) + (outer_code != SET);
       return true;
 
     case FLOAT:
@@ -1801,7 +2244,7 @@ gen_ashift_hi (int type, int n, rtx reg)
 
 /* Output RTL to split a constant shift into its component SH constant
    shift instructions.  */
-   
+
 void
 gen_shifty_op (int code, rtx *operands)
 {
@@ -1810,7 +2253,7 @@ gen_shifty_op (int code, rtx *operands)
 
   /* Truncate the shift count in case it is out of bounds.  */
   value = value & 0x1f;
- 
+
   if (value == 31)
     {
       if (code == LSHIFTRT)
@@ -1833,10 +2276,10 @@ gen_shifty_op (int code, rtx *operands)
     }
   else if (value == 0)
     {
-      /* This can happen when not optimizing.  We must output something here
-	 to prevent the compiler from aborting in final.c after the try_split
-	 call.  */
-      emit_insn (gen_nop ());
+      /* This can happen even when optimizing, if there were subregs before
+	 reload.  Don't output a nop here, as this is never optimized away;
+	 use a no-op move instead.  */
+      emit_insn (gen_rtx_SET (VOIDmode, operands[0], operands[0]));
       return;
     }
 
@@ -1844,7 +2287,7 @@ gen_shifty_op (int code, rtx *operands)
   for (i = 0; i < max; i++)
     gen_ashift (code, shift_amounts[value][i], operands[0]);
 }
-   
+
 /* Same as above, but optimized for values where the topmost bits don't
    matter.  */
 
@@ -1885,10 +2328,8 @@ gen_shifty_hi_op (int code, rtx *operands)
 int
 expand_ashiftrt (rtx *operands)
 {
-  rtx sym;
   rtx wrk;
   char func[18];
-  tree func_name;
   int value;
 
   if (TARGET_SH3)
@@ -1916,6 +2357,16 @@ expand_ashiftrt (rtx *operands)
 
   if (value == 31)
     {
+      /* If we are called from abs expansion, arrange things so that we
+	 we can use a single MT instruction that doesn't clobber the source,
+	 if LICM can hoist out the load of the constant zero.  */
+      if (currently_expanding_to_rtl)
+	{
+	  emit_insn (gen_cmpgtsi_t (force_reg (SImode, CONST0_RTX (SImode)),
+				    operands[1]));
+	  emit_insn (gen_mov_neg_si_t (operands[0]));
+	  return 1;
+	}
       emit_insn (gen_ashrsi2_31 (operands[0], operands[1]));
       return 1;
     }
@@ -1945,9 +2396,7 @@ expand_ashiftrt (rtx *operands)
   /* Load the value into an arg reg and call a helper.  */
   emit_move_insn (gen_rtx_REG (SImode, 4), operands[1]);
   sprintf (func, "__ashiftrt_r4_%d", value);
-  func_name = get_identifier (func);
-  sym = function_symbol (IDENTIFIER_POINTER (func_name));
-  emit_move_insn (wrk, sym);
+  function_symbol (wrk, func, SFUNC_STATIC);
   emit_insn (gen_ashrsi3_n (GEN_INT (value), wrk));
   emit_move_insn (operands[0], gen_rtx_REG (SImode, 4));
   return 1;
@@ -1996,7 +2445,7 @@ shl_and_kind (rtx left_rtx, rtx mask_rtx, int *attrp)
     mask = (unsigned HOST_WIDE_INT) INTVAL (mask_rtx) >> left;
   else
     mask = (unsigned HOST_WIDE_INT) GET_MODE_MASK (SImode) >> left;
-  /* Can this be expressed as a right shift / left shift pair ? */
+  /* Can this be expressed as a right shift / left shift pair?  */
   lsb = ((mask ^ (mask - 1)) >> 1) + 1;
   right = exact_log2 (lsb);
   mask2 = ~(mask + lsb - 1);
@@ -2010,15 +2459,15 @@ shl_and_kind (rtx left_rtx, rtx mask_rtx, int *attrp)
       int late_right = exact_log2 (lsb2);
       best_cost = shift_insns[left + late_right] + shift_insns[late_right];
     }
-  /* Try to use zero extend */
+  /* Try to use zero extend.  */
   if (mask2 == ~(lsb2 - 1))
     {
       int width, first;
 
       for (width = 8; width <= 16; width += 8)
 	{
-	  /* Can we zero-extend right away? */
-	  if (lsb2 == (unsigned HOST_WIDE_INT)1 << width)
+	  /* Can we zero-extend right away?  */
+	  if (lsb2 == (unsigned HOST_WIDE_INT) 1 << width)
 	    {
 	      cost
 		= 1 + ext_shift_insns[right] + ext_shift_insns[left + right];
@@ -2050,7 +2499,7 @@ shl_and_kind (rtx left_rtx, rtx mask_rtx, int *attrp)
 		  best_len = cost;
 		  if (attrp)
 		    attrp[2] = first;
-		  }
+		}
 	    }
 	}
     }
@@ -2071,7 +2520,7 @@ shl_and_kind (rtx left_rtx, rtx mask_rtx, int *attrp)
 	}
     }
   /* Try to use a scratch register to hold the AND operand.  */
-  can_ext = ((mask << left) & ((unsigned HOST_WIDE_INT)3 << 30)) == 0;
+  can_ext = ((mask << left) & ((unsigned HOST_WIDE_INT) 3 << 30)) == 0;
   for (i = 0; i <= 2; i++)
     {
       if (i > right)
@@ -2123,9 +2572,6 @@ shl_and_scr_length (rtx insn)
   return len + shift_insns[INTVAL (XEXP (op, 1))];
 }
 
-/* Generating rtl? */
-extern int rtx_equal_function_value_matters;
-
 /* Generate rtl for instructions for which shl_and_kind advised a particular
    method of generating them, i.e. returned zero.  */
 
@@ -2136,7 +2582,7 @@ gen_shl_and (rtx dest, rtx left_rtx, rtx mask_rtx, rtx source)
   unsigned HOST_WIDE_INT mask;
   int kind = shl_and_kind (left_rtx, mask_rtx, attributes);
   int right, total_shift;
-  void (*shift_gen_fun) (int, rtx*) = gen_shifty_hi_op;
+  void (*shift_gen_fun) (int, rtx *) = gen_shifty_hi_op;
 
   right = attributes[0];
   total_shift = INTVAL (left_rtx) + right;
@@ -2153,10 +2599,10 @@ gen_shl_and (rtx dest, rtx left_rtx, rtx mask_rtx, rtx source)
 	if (first < 0)
 	  {
 	    emit_insn ((mask << right) <= 0xff
-		       ? gen_zero_extendqisi2(dest,
-					      gen_lowpart (QImode, source))
-		       : gen_zero_extendhisi2(dest,
-					      gen_lowpart (HImode, source)));
+		       ? gen_zero_extendqisi2 (dest,
+					       gen_lowpart (QImode, source))
+		       : gen_zero_extendhisi2 (dest,
+					       gen_lowpart (HImode, source)));
 	    source = dest;
 	  }
 	if (source != dest)
@@ -2176,8 +2622,8 @@ gen_shl_and (rtx dest, rtx left_rtx, rtx mask_rtx, rtx source)
 	  }
 	if (first >= 0)
 	  emit_insn (mask <= 0xff
-		     ? gen_zero_extendqisi2(dest, gen_lowpart (QImode, dest))
-		     : gen_zero_extendhisi2(dest, gen_lowpart (HImode, dest)));
+		     ? gen_zero_extendqisi2 (dest, gen_lowpart (QImode, dest))
+		     : gen_zero_extendhisi2 (dest, gen_lowpart (HImode, dest)));
 	if (total_shift > 0)
 	  {
 	    operands[2] = GEN_INT (total_shift);
@@ -2191,20 +2637,19 @@ gen_shl_and (rtx dest, rtx left_rtx, rtx mask_rtx, rtx source)
       /* If the topmost bit that matters is set, set the topmost bits
 	 that don't matter.  This way, we might be able to get a shorter
 	 signed constant.  */
-      if (mask & ((HOST_WIDE_INT)1 << (31 - total_shift)))
-	mask |= (HOST_WIDE_INT)~0 << (31 - total_shift);
+      if (mask & ((HOST_WIDE_INT) 1 << (31 - total_shift)))
+	mask |= (HOST_WIDE_INT) ~0 << (31 - total_shift);
     case 2:
       /* Don't expand fine-grained when combining, because that will
          make the pattern fail.  */
-      if (rtx_equal_function_value_matters
+      if (currently_expanding_to_rtl
 	  || reload_in_progress || reload_completed)
 	{
 	  rtx operands[3];
-  
+
 	  /* Cases 3 and 4 should be handled by this split
 	     only while combining  */
-	  if (kind > 2)
-	    abort ();
+	  gcc_assert (kind <= 2);
 	  if (right)
 	    {
 	      emit_insn (gen_lshrsi3 (dest, source, GEN_INT (right)));
@@ -2271,8 +2716,7 @@ shl_sext_kind (rtx left_rtx, rtx size_rtx, int *costp)
   left = INTVAL (left_rtx);
   size = INTVAL (size_rtx);
   insize = size - left;
-  if (insize <= 0)
-    abort ();
+  gcc_assert (insize > 0);
   /* Default to left / right shift.  */
   kind = 0;
   best_cost = shift_insns[32 - insize] + ashiftrt_insns[32 - size];
@@ -2393,7 +2837,7 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
 
 	/* Don't expand fine-grained when combining, because that will
 	   make the pattern fail.  */
-	if (! rtx_equal_function_value_matters
+	if (! currently_expanding_to_rtl
 	    && ! reload_in_progress && ! reload_completed)
 	  {
 	    emit_insn (gen_shl_sext_ext (dest, source, left_rtx, size_rtx));
@@ -2409,8 +2853,8 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
 	    gen_shifty_hi_op (ASHIFT, operands);
 	  }
 	emit_insn (kind & 1
-		   ? gen_extendqisi2(dest, gen_lowpart (QImode, dest))
-		   : gen_extendhisi2(dest, gen_lowpart (HImode, dest)));
+		   ? gen_extendqisi2 (dest, gen_lowpart (QImode, dest))
+		   : gen_extendhisi2 (dest, gen_lowpart (HImode, dest)));
 	if (kind <= 2)
 	  {
 	    if (shift2)
@@ -2427,7 +2871,7 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
 		  {
 		    operands[2] = GEN_INT (shift2 + 1);
 		    gen_shifty_op (ASHIFT, operands);
-		    operands[2] = GEN_INT (1);
+		    operands[2] = const1_rtx;
 		    gen_shifty_op (ASHIFTRT, operands);
 		    break;
 		  }
@@ -2448,7 +2892,7 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
     case 5:
       {
 	int i = 16 - size;
-	if (! rtx_equal_function_value_matters
+	if (! currently_expanding_to_rtl
 	    && ! reload_in_progress && ! reload_completed)
 	  emit_insn (gen_shl_sext_ext (dest, source, left_rtx, size_rtx));
 	else
@@ -2467,7 +2911,7 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
     case 7:
       /* Don't expand fine-grained when combining, because that will
 	 make the pattern fail.  */
-      if (! rtx_equal_function_value_matters
+      if (! currently_expanding_to_rtl
 	  && ! reload_in_progress && ! reload_completed)
 	{
 	  emit_insn (gen_shl_sext_ext (dest, source, left_rtx, size_rtx));
@@ -2481,7 +2925,7 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
       operands[2] = kind == 7 ? GEN_INT (left + 1) : left_rtx;
       gen_shifty_op (ASHIFT, operands);
       if (kind == 7)
-	emit_insn (gen_ashrsi3_k (dest, dest, GEN_INT (1)));
+	emit_insn (gen_ashrsi3_k (dest, dest, const1_rtx));
       break;
     default:
       return -1;
@@ -2494,14 +2938,21 @@ gen_shl_sext (rtx dest, rtx left_rtx, rtx size_rtx, rtx source)
 rtx
 gen_datalabel_ref (rtx sym)
 {
+  const char *str;
+
   if (GET_CODE (sym) == LABEL_REF)
     return gen_rtx_CONST (GET_MODE (sym),
 			  gen_rtx_UNSPEC (GET_MODE (sym),
 					  gen_rtvec (1, sym),
 					  UNSPEC_DATALABEL));
-    
-  if (GET_CODE (sym) != SYMBOL_REF)
-    abort ();
+
+  gcc_assert (GET_CODE (sym) == SYMBOL_REF);
+
+  str = XSTR (sym, 0);
+  /* Share all SYMBOL_REF strings with the same value - that is important
+     for cse.  */
+  str = IDENTIFIER_POINTER (get_identifier (str));
+  XSTR (sym, 0) = str;
 
   return sym;
 }
@@ -2509,7 +2960,7 @@ gen_datalabel_ref (rtx sym)
 
 /* The SH cannot load a large constant into a register, constants have to
    come from a pc relative load.  The reference of a pc relative load
-   instruction must be less than 1k infront of the instruction.  This
+   instruction must be less than 1k in front of the instruction.  This
    means that we often have to dump a constant inside a function, and
    generate code to branch around it.
 
@@ -2573,10 +3024,10 @@ typedef struct
 } pool_node;
 
 /* The maximum number of constants that can fit into one pool, since
-   the pc relative range is 0...1020 bytes and constants are at least 4
-   bytes long.  */
+   constants in the range 0..510 are at least 2 bytes long, and in the
+   range from there to 1018 at least 4 bytes.  */
 
-#define MAX_POOL_SIZE (1020/4)
+#define MAX_POOL_SIZE 372
 static pool_node pool_vector[MAX_POOL_SIZE];
 static int pool_size;
 static rtx pool_window_label;
@@ -2750,7 +3201,7 @@ dump_table (rtx start, rtx barrier)
 		    {
 		      lab = XEXP (ref, 0);
 		      emit_insn_before (gen_consttable_window_end (lab),
-				       align_insn);
+					align_insn);
 		    }
 		  delete_insn (align_insn);
 		  align_insn = NULL_RTX;
@@ -2779,8 +3230,7 @@ dump_table (rtx start, rtx barrier)
 				      scan);
 	      break;
 	    default:
-	      abort ();
-	      break;
+	      gcc_unreachable ();
 	    }
 
 	  if (p->mode != HImode)
@@ -2796,7 +3246,7 @@ dump_table (rtx start, rtx barrier)
 
       pool_size = 0;
     }
-  
+
   for (i = 0; i < pool_size; i++)
     {
       pool_node *p = &pool_vector[i];
@@ -2832,8 +3282,7 @@ dump_table (rtx start, rtx barrier)
 				  scan);
 	  break;
 	default:
-	  abort ();
-	  break;
+	  gcc_unreachable ();
 	}
 
       if (p->mode != HImode)
@@ -2903,6 +3352,10 @@ broken_move (rtx insn)
 			== SCRATCH))
 		&& GET_CODE (SET_DEST (pat)) == REG
 		&& FP_REGISTER_P (REGNO (SET_DEST (pat))))
+	  && ! (TARGET_SH2A
+		&& GET_MODE (SET_DEST (pat)) == SImode
+		&& GET_CODE (SET_SRC (pat)) == CONST_INT
+		&& CONST_OK_FOR_I20 (INTVAL (SET_SRC (pat))))
 	  && (GET_CODE (SET_SRC (pat)) != CONST_INT
 	      || ! CONST_OK_FOR_I08 (INTVAL (SET_SRC (pat)))))
 	return 1;
@@ -2940,11 +3393,11 @@ fixup_mova (rtx mova)
       do
 	{
 	  worker = NEXT_INSN (worker);
-	  if (! worker
-	      || GET_CODE (worker) == CODE_LABEL
-	      || GET_CODE (worker) == JUMP_INSN)
-	    abort ();
-	} while (recog_memoized (worker) != CODE_FOR_casesi_worker_1);
+	  gcc_assert (worker
+		      && GET_CODE (worker) != CODE_LABEL
+		      && GET_CODE (worker) != JUMP_INSN);
+	} while (GET_CODE (worker) == NOTE
+		 || recog_memoized (worker) != CODE_FOR_casesi_worker_1);
       wpat = PATTERN (worker);
       wpat0 = XVECEXP (wpat, 0, 0);
       wpat1 = XVECEXP (wpat, 0, 1);
@@ -3075,11 +3528,6 @@ find_barrier (int num_mova, rtx mova, rtx from)
 	      if (num_mova)
 		si_limit -= GET_MODE_SIZE (mode);
 	    }
-
-	  /* See the code in machine_dependent_reorg, which has a similar if
-	     statement that generates a new mova insn in many cases.  */
-	  if (GET_CODE (dst) == REG && FP_ANY_REGISTER_P (REGNO (dst)))
-	    inc += 2;
 	}
 
       if (mova_p (from))
@@ -3350,7 +3798,7 @@ regs_used (rtx x, int is_dest)
     case SUBREG:
       {
 	rtx y = SUBREG_REG (x);
-     
+
 	if (GET_CODE (y) != REG)
 	  break;
 	if (REGNO (y) < 16)
@@ -3405,7 +3853,7 @@ regs_used (rtx x, int is_dest)
    pass 1.  Pass 2 if a definite blocking insn is needed.
    -1 is used internally to avoid deep recursion.
    If a blocking instruction is made or recognized, return it.  */
-   
+
 static rtx
 gen_block_redirect (rtx jump, int addr, int need_block)
 {
@@ -3433,7 +3881,7 @@ gen_block_redirect (rtx jump, int addr, int need_block)
 	return prev;
       /* Reorg even does nasty things with return insns that cause branches
 	 to go out of range - see find_end_label and callers.  */
-      return emit_insn_before (gen_block_branch_redirect (GEN_INT (0)) , jump);
+      return emit_insn_before (gen_block_branch_redirect (const0_rtx) , jump);
     }
   /* We can't use JUMP_LABEL here because it might be undefined
      when not optimizing.  */
@@ -3448,11 +3896,11 @@ gen_block_redirect (rtx jump, int addr, int need_block)
 	 it would cause trouble if an interrupt occurred.  */
       unsigned try = 0x7fff, used;
       int jump_left = flag_expensive_optimizations + 1;
-    
+
       /* It is likely that the most recent eligible instruction is wanted for
 	 the delay slot.  Therefore, find out which registers it uses, and
 	 try to avoid using them.  */
-	 
+
       for (scan = jump; (scan = PREV_INSN (scan)); )
 	{
 	  enum rtx_code code;
@@ -3479,7 +3927,7 @@ gen_block_redirect (rtx jump, int addr, int need_block)
 	  if (INSN_DELETED_P (scan))
 	    continue;
 	  code = GET_CODE (scan);
-	  if (GET_RTX_CLASS (code) == 'i')
+	  if (INSN_P (scan))
 	    {
 	      used |= regs_used (PATTERN (scan), 0);
 	      if (code == CALL_INSN)
@@ -3507,7 +3955,7 @@ gen_block_redirect (rtx jump, int addr, int need_block)
      threading with a jump beyond the delay slot insn.
      Don't check if we are called recursively; the jump has been or will be
      checked in a different invocation then.  */
-	
+
   else if (optimize && need_block >= 0)
     {
       rtx next = next_active_insn (next_active_insn (dest));
@@ -3542,7 +3990,7 @@ gen_block_redirect (rtx jump, int addr, int need_block)
 	 Hence, after delay slot scheduling, we'll have to expect
 	 NOTE_INSN_BLOCK_END notes between the indirect_jump_scratch and
 	 the jump.  */
-	 
+
       INSN_LOCATOR (insn) = INSN_LOCATOR (jump);
       INSN_CODE (insn) = CODE_FOR_indirect_jump_scratch;
       return insn;
@@ -3582,6 +4030,7 @@ gen_far_branch (struct far_branch *bp)
   rtx insn = bp->insert_place;
   rtx jump;
   rtx label = gen_label_rtx ();
+  int ok;
 
   emit_label_after (label, insn);
   if (bp->far_label)
@@ -3600,8 +4049,9 @@ gen_far_branch (struct far_branch *bp)
     emit_barrier_after (jump);
   emit_label_after (bp->near_label, insn);
   JUMP_LABEL (jump) = bp->far_label;
-  if (! invert_jump (insn, label, 1))
-    abort ();
+  ok = invert_jump (insn, label, 1);
+  gcc_assert (ok);
+  
   /* If we are branching around a jump (rather than a return), prevent
      reorg from using an insn from the jump target as the delay slot insn -
      when reorg did this, it pessimized code (we rather hide the delay slot)
@@ -3647,6 +4097,10 @@ fixup_addr_diff_vecs (rtx first)
 	  if (GET_CODE (x) == LABEL_REF && XEXP (x, 0) == vec_lab)
 	    break;
 	}
+      /* FIXME: This is a bug in the optimizer, but it seems harmless
+	 to just avoid panicing.  */
+      if (!prev)
+	continue;
 
       /* Emit the reference label of the braf where it belongs, right after
 	 the casesi_jump_2 (i.e. braf).  */
@@ -3666,7 +4120,7 @@ barrier_align (rtx barrier_or_label)
 {
   rtx next = next_real_insn (barrier_or_label), pat, prev;
   int slot, credit, jump_to_next = 0;
- 
+
   if (! next)
     return 0;
 
@@ -3687,7 +4141,7 @@ barrier_align (rtx barrier_or_label)
 	 the table to the minimum for proper code alignment.  */
       return ((TARGET_SMALLCODE
 	       || ((unsigned) XVECLEN (pat, 1) * GET_MODE_SIZE (GET_MODE (pat))
-		   <= (unsigned)1 << (CACHE_LOG - 2)))
+		   <= (unsigned) 1 << (CACHE_LOG - 2)))
 	      ? 1 << TARGET_SHMEDIA : align_jumps_log);
     }
 
@@ -3708,11 +4162,11 @@ barrier_align (rtx barrier_or_label)
 	 an alignment, against that of fetching unneeded insn in front of the
 	 branch target when there is no alignment.  */
 
-      /* There are two delay_slot cases to consider.  One is the simple case 
-	 where the preceding branch is to the insn beyond the barrier (simple 
-	 delay slot filling), and the other is where the preceding branch has 
-	 a delay slot that is a duplicate of the insn after the barrier 
-	 (fill_eager_delay_slots) and the branch is to the insn after the insn 
+      /* There are two delay_slot cases to consider.  One is the simple case
+	 where the preceding branch is to the insn beyond the barrier (simple
+	 delay slot filling), and the other is where the preceding branch has
+	 a delay slot that is a duplicate of the insn after the barrier
+	 (fill_eager_delay_slots) and the branch is to the insn after the insn
 	 after the barrier.  */
 
       /* PREV is presumed to be the JUMP_INSN for the barrier under
@@ -3730,7 +4184,7 @@ barrier_align (rtx barrier_or_label)
 	  if (GET_CODE (PATTERN (prev)) == SEQUENCE)
 	    {
 	      prev = XVECEXP (PATTERN (prev), 0, 1);
-	      if (INSN_UID (prev) == INSN_UID (next)) 
+	      if (INSN_UID (prev) == INSN_UID (next))
 		{
 	  	  /* Delay slot was filled with insn at jump target.  */
 		  jump_to_next = 1;
@@ -3757,8 +4211,8 @@ barrier_align (rtx barrier_or_label)
 	      /* There is no upper bound on redundant instructions
 		 that might have been skipped, but we must not put an
 		 alignment where none had been before.  */
-	      || (x = (NEXT_INSN (NEXT_INSN (PREV_INSN (prev)))),	    
-		  (INSN_P (x) 
+	      || (x = (NEXT_INSN (NEXT_INSN (PREV_INSN (prev)))),
+		  (INSN_P (x)
 		   && (INSN_CODE (x) == CODE_FOR_block_branch_redirect
 		       || INSN_CODE (x) == CODE_FOR_indirect_jump_scratch
 		       || INSN_CODE (x) == CODE_FOR_stuff_delay_slot))))
@@ -3771,7 +4225,7 @@ barrier_align (rtx barrier_or_label)
 	    }
 	}
     }
-  
+
   return align_jumps_log;
 }
 
@@ -4166,12 +4620,13 @@ sh_reorg (void)
 		  if (GET_CODE (dst) == REG && FP_ANY_REGISTER_P (REGNO (dst)))
 		    {
 		      /* This must be an insn that clobbers r0.  */
-		      rtx clobber = XVECEXP (PATTERN (scan), 0,
-					     XVECLEN (PATTERN (scan), 0) - 1);
+		      rtx *clobberp = &XVECEXP (PATTERN (scan), 0,
+						XVECLEN (PATTERN (scan), 0)
+						- 1);
+		      rtx clobber = *clobberp;
 
-		      if (GET_CODE (clobber) != CLOBBER
-			  || ! rtx_equal_p (XEXP (clobber, 0), r0_rtx))
-			abort ();
+		      gcc_assert (GET_CODE (clobber) == CLOBBER
+				  && rtx_equal_p (XEXP (clobber, 0), r0_rtx));
 
 		      if (last_float
 			  && reg_set_between_p (r0_rtx, last_float_move, scan))
@@ -4203,7 +4658,7 @@ sh_reorg (void)
 			}
 		      last_float_move = scan;
 		      last_float = src;
-		      newsrc = gen_rtx (MEM, mode,
+		      newsrc = gen_const_mem (mode,
 					(((TARGET_SH4 && ! TARGET_FMOVD)
 					  || REGNO (dst) == FPUL_REG)
 					 ? r0_inc_rtx
@@ -4211,8 +4666,8 @@ sh_reorg (void)
 		      last_float_addr = &XEXP (newsrc, 0);
 
 		      /* Remove the clobber of r0.  */
-		      XEXP (clobber, 0) = gen_rtx_SCRATCH (Pmode);
-		      RTX_UNCHANGING_P (newsrc) = 1;
+		      *clobberp = gen_rtx_CLOBBER (GET_MODE (clobber),
+						   gen_rtx_SCRATCH (Pmode));
 		    }
 		  /* This is a mova needing a label.  Create it.  */
 		  else if (GET_CODE (src) == UNSPEC
@@ -4228,9 +4683,8 @@ sh_reorg (void)
 		  else
 		    {
 		      lab = add_constant (src, mode, 0);
-		      newsrc = gen_rtx_MEM (mode,
-					    gen_rtx_LABEL_REF (VOIDmode, lab));
-		      RTX_UNCHANGING_P (newsrc) = 1;
+		      newsrc = gen_rtx_LABEL_REF (VOIDmode, lab);
+		      newsrc = gen_const_mem (mode, newsrc);
 		    }
 		  *patp = gen_rtx_SET (VOIDmode, dst, newsrc);
 		  INSN_CODE (scan) = -1;
@@ -4306,6 +4760,7 @@ split_branches (rtx first)
   rtx insn;
   struct far_branch **uid_branch, *far_branch_list = 0;
   int max_uid = get_max_uid ();
+  int ok;
 
   /* Find out which branches are out of range.  */
   shorten_branches (first);
@@ -4333,7 +4788,7 @@ split_branches (rtx first)
 	if (type == TYPE_CBRANCH)
 	  {
 	    rtx next, beyond;
-    
+
 	    if (get_attr_length (insn) > 4)
 	      {
 		rtx src = SET_SRC (PATTERN (insn));
@@ -4342,7 +4797,7 @@ split_branches (rtx first)
 		rtx label = 0;
 		int dest_uid = get_dest_uid (olabel, max_uid);
 		struct far_branch *bp = uid_branch[dest_uid];
-    
+
 		/* redirect_jump needs a valid JUMP_LABEL, and it might delete
 		   the label if the LABEL_NUSES count drops to zero.  There is
 		   always a jump_optimize pass that sets these values, but it
@@ -4395,8 +4850,8 @@ split_branches (rtx first)
 		    bp->insert_place = insn;
 		    bp->address = addr;
 		  }
-		if (! redirect_jump (insn, label, 1))
-		  abort ();
+		ok = redirect_jump (insn, label, 1);
+		gcc_assert (ok);
 	      }
 	    else
 	      {
@@ -4410,7 +4865,7 @@ split_branches (rtx first)
 		beyond
 		  = next_active_insn (XEXP (XEXP (SET_SRC (PATTERN (insn)), 1),
 					    0));
-	
+
 		if (beyond
 		    && (GET_CODE (beyond) == JUMP_INSN
 			|| ((beyond = next_active_insn (beyond))
@@ -4424,11 +4879,12 @@ split_branches (rtx first)
 		  gen_block_redirect (beyond,
 				      INSN_ADDRESSES (INSN_UID (beyond)), 1);
 	      }
-    
+
 	    next = next_active_insn (insn);
 
 	    if ((GET_CODE (next) == JUMP_INSN
-		 || GET_CODE (next = next_active_insn (next)) == JUMP_INSN)
+		 || ((next = next_active_insn (next))
+		     && GET_CODE (next) == JUMP_INSN))
 		&& GET_CODE (PATTERN (next)) == SET
 		&& recog_memoized (next) == CODE_FOR_jump_compact
 		&& ((INSN_ADDRESSES
@@ -4543,17 +4999,25 @@ final_prescan_insn (rtx insn, rtx *opvec ATTRIBUTE_UNUSED,
 	  pattern = PATTERN (insn);
 	  if (GET_CODE (pattern) == PARALLEL)
 	    pattern = XVECEXP (pattern, 0, 0);
-	  if (GET_CODE (pattern) == CALL
-	      || (GET_CODE (pattern) == SET
-		  && (GET_CODE (SET_SRC (pattern)) == CALL
-		      || get_attr_type (insn) == TYPE_SFUNC)))
-	    asm_fprintf (asm_out_file, "\t.uses %LL%d\n",
-			 CODE_LABEL_NUMBER (XEXP (note, 0)));
-	  else if (GET_CODE (pattern) == SET)
-	    (*targetm.asm_out.internal_label) (asm_out_file, "L",
-				       CODE_LABEL_NUMBER (XEXP (note, 0)));
-	  else
-	    abort ();
+	  switch (GET_CODE (pattern))
+	    {
+	    case SET:
+	      if (GET_CODE (SET_SRC (pattern)) != CALL
+		  && get_attr_type (insn) != TYPE_SFUNC)
+		{
+		  targetm.asm_out.internal_label
+		    (asm_out_file, "L", CODE_LABEL_NUMBER (XEXP (note, 0)));
+		  break;
+		}
+	      /* else FALLTHROUGH */
+	    case CALL:
+	      asm_fprintf (asm_out_file, "\t.uses %LL%d\n",
+			   CODE_LABEL_NUMBER (XEXP (note, 0)));
+	      break;
+
+	    default:
+	      gcc_unreachable ();
+	    }
 	}
     }
 }
@@ -4605,8 +5069,6 @@ output_jump_label_table (void)
 /* Number of bytes pushed for anonymous args, used to pass information
    between expand_prologue and expand_epilogue.  */
 
-static int extra_push;
-
 /* Adjust the stack by SIZE bytes.  REG holds the rtl of the register to be
    adjusted.  If epilogue_p is zero, this is for a prologue; otherwise, it's
    for an epilogue and a negative value means that it's for a sibcall
@@ -4622,8 +5084,11 @@ output_stack_adjust (int size, rtx reg, int epilogue_p,
     {
       HOST_WIDE_INT align = STACK_BOUNDARY / BITS_PER_UNIT;
 
-      if (size % align)
-	abort ();
+/* This test is bogus, as output_stack_adjust is used to re-align the
+   stack.  */
+#if 0
+      gcc_assert (!(size % align));
+#endif
 
       if (CONST_OK_FOR_ADD (size))
 	emit_fn (GEN_ADD3 (reg, reg, GEN_INT (size)));
@@ -4645,10 +5110,10 @@ output_stack_adjust (int size, rtx reg, int epilogue_p,
 
 	  /* If TEMP is invalid, we could temporarily save a general
 	     register to MACL.  However, there is currently no need
-	     to handle this case, so just abort when we see it.  */
+	     to handle this case, so just die when we see it.  */
 	  if (epilogue_p < 0
 	      || current_function_interrupt
-	      || ! call_used_regs[temp] || fixed_regs[temp])
+	      || ! call_really_used_regs[temp] || fixed_regs[temp])
 	    temp = -1;
 	  if (temp < 0 && ! current_function_interrupt
 	      && (TARGET_SHMEDIA || epilogue_p >= 0))
@@ -4683,7 +5148,7 @@ output_stack_adjust (int size, rtx reg, int epilogue_p,
 		  for (i = FIRST_PARM_REG;
 		       i < FIRST_PARM_REG + NPARM_REGS (SImode); i++)
 		    CLEAR_HARD_REG_BIT (temps, i);
-		  if (current_function_needs_context)
+		  if (cfun->static_chain_decl != NULL)
 		    CLEAR_HARD_REG_BIT (temps, STATIC_CHAIN_REGNUM);
 		}
 	      temp = scavenge_reg (&temps);
@@ -4692,53 +5157,53 @@ output_stack_adjust (int size, rtx reg, int epilogue_p,
 	    temp = scavenge_reg (live_regs_mask);
 	  if (temp < 0)
 	    {
+	      rtx adj_reg, tmp_reg, mem;
+	      
 	      /* If we reached here, the most likely case is the (sibcall)
 		 epilogue for non SHmedia.  Put a special push/pop sequence
 		 for such case as the last resort.  This looks lengthy but
-		 would not be problem because it seems to be very rare.  */
-	      if (! TARGET_SHMEDIA && epilogue_p)
-		{
-		  rtx adj_reg, tmp_reg, mem;
+		 would not be problem because it seems to be very
+		 rare.  */
+	      
+	      gcc_assert (!TARGET_SHMEDIA && epilogue_p);
+	      
 
-		  /* ??? There is still the slight possibility that r4 or r5
-		     have been reserved as fixed registers or assigned as
-		     global registers, and they change during an interrupt.
-		     There are possible ways to handle this:
-		     - If we are adjusting the frame pointer (r14), we can do
-		       with a single temp register and an ordinary push / pop
-		       on the stack.
-		     - Grab any call-used or call-saved registers (i.e. not
-		       fixed or globals) for the temps we need.  We might
-		       also grab r14 if we are adjusting the stack pointer.
-		       If we can't find enough available registers, issue
-		       a diagnostic and abort - the user must have reserved
-		       way too many registers.
-		     But since all this is rather unlikely to happen and
-		     would require extra testing, we just abort if r4 / r5
-		     are not available.  */
-		  if (fixed_regs[4] || fixed_regs[5]
-		      || global_regs[4] || global_regs[5])
-		    abort ();
+	       /* ??? There is still the slight possibility that r4 or
+		  r5 have been reserved as fixed registers or assigned
+		  as global registers, and they change during an
+		  interrupt.  There are possible ways to handle this:
+		     
+		  - If we are adjusting the frame pointer (r14), we can do
+		    with a single temp register and an ordinary push / pop
+		    on the stack.
+		  - Grab any call-used or call-saved registers (i.e. not
+		    fixed or globals) for the temps we need.  We might
+		    also grab r14 if we are adjusting the stack pointer.
+		    If we can't find enough available registers, issue
+		    a diagnostic and die - the user must have reserved
+		    way too many registers.
+		 But since all this is rather unlikely to happen and
+		 would require extra testing, we just die if r4 / r5
+		 are not available.  */
+	      gcc_assert (!fixed_regs[4] && !fixed_regs[5]
+			  && !global_regs[4] && !global_regs[5]);
 
-		  adj_reg = gen_rtx_REG (GET_MODE (reg), 4);
-		  tmp_reg = gen_rtx_REG (GET_MODE (reg), 5);
-		  emit_move_insn (gen_rtx_MEM (Pmode, reg), adj_reg);
-		  emit_insn (GEN_MOV (adj_reg, GEN_INT (size)));
-		  emit_insn (GEN_ADD3 (adj_reg, adj_reg, reg));
-		  mem = gen_rtx_MEM (Pmode, gen_rtx_PRE_DEC (Pmode, adj_reg));
-		  emit_move_insn (mem, tmp_reg);
-		  emit_move_insn (tmp_reg, gen_rtx_MEM (Pmode, reg));
-		  mem = gen_rtx_MEM (Pmode, gen_rtx_PRE_DEC (Pmode, adj_reg));
-		  emit_move_insn (mem, tmp_reg);
-		  emit_move_insn (reg, adj_reg);
-		  mem = gen_rtx_MEM (Pmode, gen_rtx_POST_INC (Pmode, reg));
-		  emit_move_insn (adj_reg, mem);
-		  mem = gen_rtx_MEM (Pmode, gen_rtx_POST_INC (Pmode, reg));
-		  emit_move_insn (tmp_reg, mem);
-		  return;
-		}
-	      else
-		abort ();
+	      adj_reg = gen_rtx_REG (GET_MODE (reg), 4);
+	      tmp_reg = gen_rtx_REG (GET_MODE (reg), 5);
+	      emit_move_insn (gen_tmp_stack_mem (Pmode, reg), adj_reg);
+	      emit_insn (GEN_MOV (adj_reg, GEN_INT (size)));
+	      emit_insn (GEN_ADD3 (adj_reg, adj_reg, reg));
+	      mem = gen_tmp_stack_mem (Pmode, gen_rtx_PRE_DEC (Pmode, adj_reg));
+	      emit_move_insn (mem, tmp_reg);
+	      emit_move_insn (tmp_reg, gen_tmp_stack_mem (Pmode, reg));
+	      mem = gen_tmp_stack_mem (Pmode, gen_rtx_PRE_DEC (Pmode, adj_reg));
+	      emit_move_insn (mem, tmp_reg);
+	      emit_move_insn (reg, adj_reg);
+	      mem = gen_tmp_stack_mem (Pmode, gen_rtx_POST_INC (Pmode, reg));
+	      emit_move_insn (adj_reg, mem);
+	      mem = gen_tmp_stack_mem (Pmode, gen_rtx_POST_INC (Pmode, reg));
+	      emit_move_insn (tmp_reg, mem);
+	      return;
 	    }
 	  const_reg = gen_rtx_REG (GET_MODE (reg), temp);
 
@@ -4784,7 +5249,7 @@ push (int rn)
     x = gen_push_fpul ();
   else if (rn == FPSCR_REG)
     x = gen_push_fpscr ();
-  else if (TARGET_SH4 && TARGET_FMOVD && ! TARGET_FPU_SINGLE
+  else if ((TARGET_SH4 || TARGET_SH2A_DOUBLE) && TARGET_FMOVD && ! TARGET_FPU_SINGLE
 	   && FP_OR_XD_REGISTER_P (rn))
     {
       if (FP_REGISTER_P (rn) && (rn - FIRST_FP_REG) & 1)
@@ -4813,7 +5278,7 @@ pop (int rn)
     x = gen_pop_fpul ();
   else if (rn == FPSCR_REG)
     x = gen_pop_fpscr ();
-  else if (TARGET_SH4 && TARGET_FMOVD && ! TARGET_FPU_SINGLE
+  else if ((TARGET_SH4 || TARGET_SH2A_DOUBLE) && TARGET_FMOVD && ! TARGET_FPU_SINGLE
 	   && FP_OR_XD_REGISTER_P (rn))
     {
       if (FP_REGISTER_P (rn) && (rn - FIRST_FP_REG) & 1)
@@ -4824,7 +5289,7 @@ pop (int rn)
     x = gen_pop_e (gen_rtx_REG (SFmode, rn));
   else
     x = gen_pop (gen_rtx_REG (SImode, rn));
-    
+
   x = emit_insn (x);
   REG_NOTES (x)
     = gen_rtx_EXPR_LIST (REG_INC,
@@ -4853,7 +5318,7 @@ push_regs (HARD_REG_SET *mask, int interrupt_handler)
 	  HARD_REG_SET unsaved;
 
 	  push (FPSCR_REG);
-	  COMPL_HARD_REG_SET(unsaved, *mask);
+	  COMPL_HARD_REG_SET (unsaved, *mask);
 	  fpscr_set_from_mem (NORMAL_MODE (FP_MODE), unsaved);
 	  skip_fpscr = 1;
 	}
@@ -4878,14 +5343,14 @@ shmedia_target_regs_stack_space (HARD_REG_SET *live_regs_mask)
   int interrupt_handler = sh_cfun_interrupt_handler_p ();
 
   for (reg = LAST_TARGET_REG; reg >= FIRST_TARGET_REG; reg--)
-    if ((! call_used_regs[reg] || interrupt_handler)
+    if ((! call_really_used_regs[reg] || interrupt_handler)
         && ! TEST_HARD_REG_BIT (*live_regs_mask, reg))
       /* Leave space to save this target register on the stack,
 	 in case target register allocation wants to use it.  */
       stack_space += GET_MODE_SIZE (REGISTER_NATURAL_MODE (reg));
   return stack_space;
 }
-   
+
 /* Decide whether we should reserve space for callee-save target registers,
    in case target register allocation wants to use them.  REGS_SAVED is
    the space, in bytes, that is already required for register saves.
@@ -4923,25 +5388,32 @@ shmedia_target_regs_stack_adjust (HARD_REG_SET *live_regs_mask)
 static int
 calc_live_regs (HARD_REG_SET *live_regs_mask)
 {
-  int reg;
+  unsigned int reg;
   int count;
-  int interrupt_handler;
+  tree attrs;
+  bool interrupt_or_trapa_handler, trapa_handler, interrupt_handler;
+  bool nosave_low_regs;
   int pr_live, has_call;
 
-  interrupt_handler = sh_cfun_interrupt_handler_p ();
+  attrs = DECL_ATTRIBUTES (current_function_decl);
+  interrupt_or_trapa_handler = sh_cfun_interrupt_handler_p ();
+  trapa_handler = lookup_attribute ("trapa_handler", attrs) != NULL_TREE;
+  interrupt_handler = interrupt_or_trapa_handler && ! trapa_handler;
+  nosave_low_regs = lookup_attribute ("nosave_low_regs", attrs) != NULL_TREE;
 
   CLEAR_HARD_REG_SET (*live_regs_mask);
-  if (TARGET_SH4 && TARGET_FMOVD && interrupt_handler
+  if ((TARGET_SH4 || TARGET_SH2A_DOUBLE) && TARGET_FMOVD && interrupt_handler
       && regs_ever_live[FPSCR_REG])
-    target_flags &= ~FPU_SINGLE_BIT;
+    target_flags &= ~MASK_FPU_SINGLE;
   /* If we can save a lot of saves by switching to double mode, do that.  */
-  else if (TARGET_SH4 && TARGET_FMOVD && TARGET_FPU_SINGLE)
+  else if ((TARGET_SH4 || TARGET_SH2A_DOUBLE) && TARGET_FMOVD && TARGET_FPU_SINGLE)
     for (count = 0, reg = FIRST_FP_REG; reg <= LAST_FP_REG; reg += 2)
       if (regs_ever_live[reg] && regs_ever_live[reg+1]
-	  && (! call_used_regs[reg] || (interrupt_handler && ! pragma_trapa))
+	  && (! call_really_used_regs[reg]
+	      || interrupt_handler)
 	  && ++count > 2)
 	{
-	  target_flags &= ~FPU_SINGLE_BIT;
+	  target_flags &= ~MASK_FPU_SINGLE;
 	  break;
 	}
   /* PR_MEDIA_REG is a general purpose register, thus global_alloc already
@@ -4972,17 +5444,19 @@ calc_live_regs (HARD_REG_SET *live_regs_mask)
 	  || current_function_has_nonlocal_label))
     pr_live = 1;
   has_call = TARGET_SHMEDIA ? ! leaf_function_p () : pr_live;
-  for (count = 0, reg = FIRST_PSEUDO_REGISTER - 1; reg >= 0; reg--)
+  for (count = 0, reg = FIRST_PSEUDO_REGISTER; reg-- != 0; )
     {
       if (reg == (TARGET_SHMEDIA ? PR_MEDIA_REG : PR_REG)
 	  ? pr_live
-	  : (interrupt_handler && ! pragma_trapa)
+	  : interrupt_handler
 	  ? (/* Need to save all the regs ever live.  */
 	     (regs_ever_live[reg]
-	      || (call_used_regs[reg]
-		  && (! fixed_regs[reg] || reg == MACH_REG || reg == MACL_REG)
+	      || (call_really_used_regs[reg]
+		  && (! fixed_regs[reg] || reg == MACH_REG || reg == MACL_REG
+		      || reg == PIC_OFFSET_TABLE_REGNUM)
 		  && has_call)
-	      || (has_call && REGISTER_NATURAL_MODE (reg) == SImode
+	      || (TARGET_SHMEDIA && has_call
+		  && REGISTER_NATURAL_MODE (reg) == SImode
 		  && (GENERAL_REGISTER_P (reg) || TARGET_REGISTER_P (reg))))
 	     && reg != STACK_POINTER_REGNUM && reg != ARG_POINTER_REGNUM
 	     && reg != RETURN_ADDRESS_POINTER_REGNUM
@@ -4993,13 +5467,15 @@ calc_live_regs (HARD_REG_SET *live_regs_mask)
 	     (TARGET_SHCOMPACT
 	      && flag_pic
 	      && current_function_args_info.call_cookie
-	      && reg == (int) PIC_OFFSET_TABLE_REGNUM)
-	     || (regs_ever_live[reg] && ! call_used_regs[reg])
+	      && reg == PIC_OFFSET_TABLE_REGNUM)
+	     || (regs_ever_live[reg]
+		 && (!call_really_used_regs[reg]
+		     || (trapa_handler && reg == FPSCR_REG && TARGET_FPU_ANY)))
 	     || (current_function_calls_eh_return
-		 && (reg == (int) EH_RETURN_DATA_REGNO (0)
-		     || reg == (int) EH_RETURN_DATA_REGNO (1)
-		     || reg == (int) EH_RETURN_DATA_REGNO (2)
-		     || reg == (int) EH_RETURN_DATA_REGNO (3)))
+		 && (reg == EH_RETURN_DATA_REGNO (0)
+		     || reg == EH_RETURN_DATA_REGNO (1)
+		     || reg == EH_RETURN_DATA_REGNO (2)
+		     || reg == EH_RETURN_DATA_REGNO (3)))
 	     || ((reg == MACL_REG || reg == MACH_REG)
 		 && regs_ever_live[reg]
 		 && sh_cfun_attr_renesas_p ())
@@ -5008,7 +5484,7 @@ calc_live_regs (HARD_REG_SET *live_regs_mask)
 	  SET_HARD_REG_BIT (*live_regs_mask, reg);
 	  count += GET_MODE_SIZE (REGISTER_NATURAL_MODE (reg));
 
-	  if ((TARGET_SH4 || TARGET_SH5) && TARGET_FMOVD
+	  if ((TARGET_SH4 || TARGET_SH2A_DOUBLE || TARGET_SH5) && TARGET_FMOVD
 	      && GET_MODE_CLASS (REGISTER_NATURAL_MODE (reg)) == MODE_FLOAT)
 	    {
 	      if (FP_REGISTER_P (reg))
@@ -5022,10 +5498,12 @@ calc_live_regs (HARD_REG_SET *live_regs_mask)
 	      else if (XD_REGISTER_P (reg))
 		{
 		  /* Must switch to double mode to access these registers.  */
-		  target_flags &= ~FPU_SINGLE_BIT;
+		  target_flags &= ~MASK_FPU_SINGLE;
 		}
 	    }
 	}
+      if (nosave_low_regs && reg == R8_REG)
+	break;
     }
   /* If we have a target register optimization pass after prologue / epilogue
      threading, we need to assume all target registers will be live even if
@@ -5034,7 +5512,7 @@ calc_live_regs (HARD_REG_SET *live_regs_mask)
       && TARGET_SAVE_ALL_TARGET_REGS
       && shmedia_space_reserved_for_target_registers)
     for (reg = LAST_TARGET_REG; reg >= FIRST_TARGET_REG; reg--)
-      if ((! call_used_regs[reg] || interrupt_handler)
+      if ((! call_really_used_regs[reg] || interrupt_handler)
 	  && ! TEST_HARD_REG_BIT (*live_regs_mask, reg))
 	{
 	  SET_HARD_REG_BIT (*live_regs_mask, reg);
@@ -5085,11 +5563,13 @@ sh_media_register_for_return (void)
   if (lookup_attribute ("interrupt_handler",
 			DECL_ATTRIBUTES (current_function_decl)))
     return -1;
+  if (sh_cfun_interrupt_handler_p ())
+    return -1;
 
   tr0_used = flag_pic && regs_ever_live[PIC_OFFSET_TABLE_REGNUM];
 
   for (regno = FIRST_TARGET_REG + tr0_used; regno <= LAST_TARGET_REG; regno++)
-    if (call_used_regs[regno] && ! regs_ever_live[regno])
+    if (call_really_used_regs[regno] && ! regs_ever_live[regno])
       return regno;
 
   return -1;
@@ -5125,7 +5605,7 @@ typedef struct save_schedule_s
    use reverse order.  Returns the last entry written to (not counting
    the delimiter).  OFFSET_BASE is a number to be added to all offset
    entries.  */
-   
+
 static save_entry *
 sh5_schedule_saves (HARD_REG_SET *live_regs_mask, save_schedule *schedule,
 		    int offset_base)
@@ -5137,14 +5617,14 @@ sh5_schedule_saves (HARD_REG_SET *live_regs_mask, save_schedule *schedule,
 
   if (! current_function_interrupt)
     for (i = FIRST_GENERAL_REG; tmpx < MAX_TEMPS && i <= LAST_GENERAL_REG; i++)
-      if (call_used_regs[i] && ! fixed_regs[i] && i != PR_MEDIA_REG
+      if (call_really_used_regs[i] && ! fixed_regs[i] && i != PR_MEDIA_REG
 	  && ! FUNCTION_ARG_REGNO_P (i)
 	  && i != FIRST_RET_REG
-	  && ! (current_function_needs_context && i == STATIC_CHAIN_REGNUM)
+	  && ! (cfun->static_chain_decl != NULL && i == STATIC_CHAIN_REGNUM)
 	  && ! (current_function_calls_eh_return
 		&& (i == EH_RETURN_STACKADJ_REGNO
-		    || ((unsigned)i <= EH_RETURN_DATA_REGNO (0)
-			&& (unsigned)i >= EH_RETURN_DATA_REGNO (3)))))
+		    || ((unsigned) i >= EH_RETURN_DATA_REGNO (0)
+			&& (unsigned) i <= EH_RETURN_DATA_REGNO (3)))))
 	schedule->temps[tmpx++] = i;
   entry->reg = -1;
   entry->mode = VOIDmode;
@@ -5226,16 +5706,22 @@ sh_expand_prologue (void)
   int d, i;
   int d_rounding = 0;
   int save_flags = target_flags;
+  int pretend_args;
+  tree sp_switch_attr
+    = lookup_attribute ("sp_switch", DECL_ATTRIBUTES (current_function_decl));
 
   current_function_interrupt = sh_cfun_interrupt_handler_p ();
 
   /* We have pretend args if we had an object sent partially in registers
      and partially on the stack, e.g. a large structure.  */
-  output_stack_adjust (-current_function_pretend_args_size
+  pretend_args = current_function_pretend_args_size;
+  if (TARGET_VARARGS_PRETEND_ARGS (current_function_decl)
+      && (NPARM_REGS(SImode)
+	  > current_function_args_info.arg_count[(int) SH_ARG_INT]))
+    pretend_args = 0;
+  output_stack_adjust (-pretend_args
 		       - current_function_args_info.stack_regs * 8,
 		       stack_pointer_rtx, 0, NULL);
-
-  extra_push = 0;
 
   if (TARGET_SHCOMPACT && flag_pic && current_function_args_info.call_cookie)
     /* We're going to use the PIC register to load the address of the
@@ -5293,9 +5779,7 @@ sh_expand_prologue (void)
   /* Emit the code for SETUP_VARARGS.  */
   if (current_function_stdarg)
     {
-      /* This is not used by the SH2E calling convention  */
-      if (TARGET_SH1 && ! TARGET_SH2E && ! TARGET_SH5
-	  && ! (TARGET_HITACHI || sh_cfun_attr_renesas_p ()))
+      if (TARGET_VARARGS_PRETEND_ARGS (current_function_decl))
 	{
 	  /* Push arg regs as if they'd been provided by caller in stack.  */
 	  for (i = 0; i < NPARM_REGS(SImode); i++)
@@ -5303,27 +5787,34 @@ sh_expand_prologue (void)
 	      int rn = NPARM_REGS(SImode) + FIRST_PARM_REG - i - 1;
 	      rtx insn;
 
-	      if (i >= (NPARM_REGS(SImode) 
+	      if (i >= (NPARM_REGS(SImode)
 			- current_function_args_info.arg_count[(int) SH_ARG_INT]
 			))
 		break;
 	      insn = push (rn);
 	      RTX_FRAME_RELATED_P (insn) = 0;
-	      extra_push += 4;
 	    }
 	}
     }
 
   /* If we're supposed to switch stacks at function entry, do so now.  */
-  if (sp_switch)
-    emit_insn (gen_sp_switch_1 ());
+  if (sp_switch_attr)
+    {
+      /* The argument specifies a variable holding the address of the
+	 stack the interrupt function should switch to/from at entry/exit.  */
+      const char *s
+	= ggc_strdup (TREE_STRING_POINTER (TREE_VALUE (sp_switch_attr)));
+      rtx sp_switch = gen_rtx_SYMBOL_REF (Pmode, s);
+
+      emit_insn (gen_sp_switch_1 (sp_switch));
+    }
 
   d = calc_live_regs (&live_regs_mask);
   /* ??? Maybe we could save some switching if we can move a mode switch
      that already happens to be at the function start into the prologue.  */
   if (target_flags != save_flags && ! current_function_interrupt)
     emit_insn (gen_toggle_sz ());
-    
+
   if (TARGET_SH5)
     {
       int offset_base, offset;
@@ -5336,7 +5827,7 @@ sh_expand_prologue (void)
       save_entry *entry;
       int *tmp_pnt;
 
-      if (call_used_regs[R0_REG] && ! fixed_regs[R0_REG]
+      if (call_really_used_regs[R0_REG] && ! fixed_regs[R0_REG]
 	  && ! current_function_interrupt)
 	r0 = gen_rtx_REG (Pmode, R0_REG);
 
@@ -5374,22 +5865,22 @@ sh_expand_prologue (void)
       for (entry = &schedule.entries[1]; entry->mode != VOIDmode; entry++)
         {
 	  enum machine_mode mode = entry->mode;
-	  int reg = entry->reg;
+	  unsigned int reg = entry->reg;
 	  rtx reg_rtx, mem_rtx, pre_dec = NULL_RTX;
+	  rtx orig_reg_rtx;
 
 	  offset = entry->offset;
 
 	  reg_rtx = gen_rtx_REG (mode, reg);
 
-	  mem_rtx = gen_rtx_MEM (mode,
-				 gen_rtx_PLUS (Pmode,
-					       stack_pointer_rtx,
-					       GEN_INT (offset)));
+	  mem_rtx = gen_frame_mem (mode,
+				   gen_rtx_PLUS (Pmode,
+						 stack_pointer_rtx,
+						 GEN_INT (offset)));
 
 	  GO_IF_LEGITIMATE_ADDRESS (mode, XEXP (mem_rtx, 0), try_pre_dec);
 
-	  if (! r0)
-	    abort ();
+	  gcc_assert (r0);
 	  mem_rtx = NULL_RTX;
 
 	try_pre_dec:
@@ -5399,8 +5890,7 @@ sh_expand_prologue (void)
 		    || mem_rtx == NULL_RTX
 		    || reg == PR_REG || SPECIAL_REGISTER_P (reg)))
 	      {
-		pre_dec = gen_rtx_MEM (mode,
-				       gen_rtx_PRE_DEC (Pmode, r0));
+		pre_dec = gen_frame_mem (mode, gen_rtx_PRE_DEC (Pmode, r0));
 
 		GO_IF_LEGITIMATE_ADDRESS (mode, XEXP (pre_dec, 0),
 					  pre_dec_ok);
@@ -5431,7 +5921,7 @@ sh_expand_prologue (void)
 			       GEN_INT (offset - offset_in_r0)));
 	      offset_in_r0 += offset - offset_in_r0;
 	    }
-					      
+
 	  if (pre_dec != NULL_RTX)
 	    {
 	      if (! sp_in_r0)
@@ -5448,23 +5938,23 @@ sh_expand_prologue (void)
 	      mem_rtx = pre_dec;
 	    }
 	  else if (sp_in_r0)
-	    mem_rtx = gen_rtx_MEM (mode, r0);
+	    mem_rtx = gen_frame_mem (mode, r0);
 	  else
-	    mem_rtx = gen_rtx_MEM (mode,
-				   gen_rtx_PLUS (Pmode,
-						 stack_pointer_rtx,
-						 r0));
+	    mem_rtx = gen_frame_mem (mode,
+				     gen_rtx_PLUS (Pmode,
+						   stack_pointer_rtx,
+						   r0));
 
 	  /* We must not use an r0-based address for target-branch
 	     registers or for special registers without pre-dec
 	     memory addresses, since we store their values in r0
 	     first.  */
-	  if (TARGET_REGISTER_P (reg)
-	      || ((reg == PR_REG || SPECIAL_REGISTER_P (reg))
-		  && mem_rtx != pre_dec))
-	    abort ();
-
+	  gcc_assert (!TARGET_REGISTER_P (reg)
+		      && ((reg != PR_REG && !SPECIAL_REGISTER_P (reg))
+			  || mem_rtx == pre_dec));
+	  
 	addr_ok:
+	  orig_reg_rtx = reg_rtx;
 	  if (TARGET_REGISTER_P (reg)
 	      || ((reg == PR_REG || SPECIAL_REGISTER_P (reg))
 		  && mem_rtx != pre_dec))
@@ -5477,8 +5967,8 @@ sh_expand_prologue (void)
 		{
 		  offset_in_r0 = -1;
 		  sp_in_r0 = 0;
-		  if (refers_to_regno_p (R0_REG, R0_REG+1, mem_rtx, (rtx *) 0))
-		    abort ();
+		  gcc_assert (!refers_to_regno_p
+			      (R0_REG, R0_REG+1, mem_rtx, (rtx *) 0));
 		}
 
 	      if (*++tmp_pnt <= 0)
@@ -5492,15 +5982,31 @@ sh_expand_prologue (void)
 	    /* Mark as interesting for dwarf cfi generator */
 	    insn = emit_move_insn (mem_rtx, reg_rtx);
 	    RTX_FRAME_RELATED_P (insn) = 1;
+	    /* If we use an intermediate register for the save, we can't
+	       describe this exactly in cfi as a copy of the to-be-saved
+	       register into the temporary register and then the temporary
+	       register on the stack, because the temporary register can
+	       have a different natural size than the to-be-saved register.
+	       Thus, we gloss over the intermediate copy and pretend we do
+	       a direct save from the to-be-saved register.  */
+	    if (REGNO (reg_rtx) != reg)
+	      {
+		rtx set, note_rtx;
 
-	    if (TARGET_SHCOMPACT && (offset_in_r0 != -1)) 
+		set = gen_rtx_SET (VOIDmode, mem_rtx, orig_reg_rtx);
+		note_rtx = gen_rtx_EXPR_LIST (REG_FRAME_RELATED_EXPR, set,
+					      REG_NOTES (insn));
+		REG_NOTES (insn) = note_rtx;
+	      }
+
+	    if (TARGET_SHCOMPACT && (offset_in_r0 != -1))
 	      {
 		rtx reg_rtx = gen_rtx_REG (mode, reg);
 		rtx set, note_rtx;
-		rtx mem_rtx = gen_rtx_MEM (mode,
-					   gen_rtx_PLUS (Pmode,
-							 stack_pointer_rtx,
-							 GEN_INT (offset)));
+		rtx mem_rtx = gen_frame_mem (mode,
+					     gen_rtx_PLUS (Pmode,
+							   stack_pointer_rtx,
+							   GEN_INT (offset)));
 
 		set = gen_rtx_SET (VOIDmode, mem_rtx, reg_rtx);
 		note_rtx = gen_rtx_EXPR_LIST (REG_FRAME_RELATED_EXPR, set,
@@ -5510,8 +6016,7 @@ sh_expand_prologue (void)
 	  }
 	}
 
-      if (entry->offset != d_rounding)
-	abort ();
+      gcc_assert (entry->offset == d_rounding);
     }
   else
     push_regs (&live_regs_mask, current_function_interrupt);
@@ -5537,12 +6042,12 @@ sh_expand_prologue (void)
 
   if (SHMEDIA_REGS_STACK_ADJUST ())
     {
-      emit_move_insn (gen_rtx_REG (Pmode, R0_REG),
-		      function_symbol (TARGET_FPU_ANY
-				       ? "__GCC_push_shmedia_regs"
-				       : "__GCC_push_shmedia_regs_nofpu"));
       /* This must NOT go through the PLT, otherwise mach and macl
 	 may be clobbered.  */
+      function_symbol (gen_rtx_REG (Pmode, R0_REG),
+		       (TARGET_FPU_ANY
+			? "__GCC_push_shmedia_regs"
+			: "__GCC_push_shmedia_regs_nofpu"), SFUNC_GOT);
       emit_insn (gen_shmedia_save_restore_regs_compact
 		 (GEN_INT (-SHMEDIA_REGS_STACK_ADJUST ())));
     }
@@ -5565,15 +6070,15 @@ sh_expand_prologue (void)
 		       stack_pointer_rtx, 0, NULL);
 
   if (frame_pointer_needed)
-    frame_insn (GEN_MOV (frame_pointer_rtx, stack_pointer_rtx));
+    frame_insn (GEN_MOV (hard_frame_pointer_rtx, stack_pointer_rtx));
 
   if (TARGET_SHCOMPACT
       && (current_function_args_info.call_cookie & ~ CALL_COOKIE_RET_TRAMP(1)))
     {
       /* This must NOT go through the PLT, otherwise mach and macl
 	 may be clobbered.  */
-      emit_move_insn (gen_rtx_REG (Pmode, R0_REG),
-		      function_symbol ("__GCC_shcompact_incoming_args"));
+      function_symbol (gen_rtx_REG (Pmode, R0_REG),
+		      "__GCC_shcompact_incoming_args", SFUNC_GOT);
       emit_insn (gen_shcompact_incoming_args ());
     }
 }
@@ -5623,14 +6128,19 @@ sh_expand_epilogue (bool sibcall_p)
 
   if (frame_pointer_needed)
     {
-      output_stack_adjust (frame_size, frame_pointer_rtx, e, &live_regs_mask);
+      /* We must avoid scheduling the epilogue with previous basic blocks
+	 when exception handling is enabled.  See PR/18032.  */
+      if (flag_exceptions)
+	emit_insn (gen_blockage ());
+      output_stack_adjust (frame_size, hard_frame_pointer_rtx, e,
+			   &live_regs_mask);
 
       /* We must avoid moving the stack pointer adjustment past code
 	 which reads from the local frame, else an interrupt could
 	 occur after the SP adjustment and clobber data in the local
 	 frame.  */
       emit_insn (gen_blockage ());
-      emit_insn (GEN_MOV (stack_pointer_rtx, frame_pointer_rtx));
+      emit_insn (GEN_MOV (stack_pointer_rtx, hard_frame_pointer_rtx));
     }
   else if (frame_size)
     {
@@ -5644,10 +6154,10 @@ sh_expand_epilogue (bool sibcall_p)
 
   if (SHMEDIA_REGS_STACK_ADJUST ())
     {
-      emit_move_insn (gen_rtx_REG (Pmode, R0_REG),
-		      function_symbol (TARGET_FPU_ANY
-				       ? "__GCC_pop_shmedia_regs"
-				       : "__GCC_pop_shmedia_regs_nofpu"));
+      function_symbol (gen_rtx_REG (Pmode, R0_REG),
+		       (TARGET_FPU_ANY
+			? "__GCC_pop_shmedia_regs"
+			: "__GCC_pop_shmedia_regs_nofpu"), SFUNC_GOT);
       /* This must NOT go through the PLT, otherwise mach and macl
 	 may be clobbered.  */
       emit_insn (gen_shmedia_save_restore_regs_compact
@@ -5680,10 +6190,10 @@ sh_expand_epilogue (bool sibcall_p)
 	  offset = offset_base + entry->offset;
 	  reg_rtx = gen_rtx_REG (mode, reg);
 
-	  mem_rtx = gen_rtx_MEM (mode,
-				 gen_rtx_PLUS (Pmode,
-					       stack_pointer_rtx,
-					       GEN_INT (offset)));
+	  mem_rtx = gen_frame_mem (mode,
+				   gen_rtx_PLUS (Pmode,
+						 stack_pointer_rtx,
+						 GEN_INT (offset)));
 
 	  GO_IF_LEGITIMATE_ADDRESS (mode, XEXP (mem_rtx, 0), try_post_inc);
 
@@ -5697,8 +6207,7 @@ sh_expand_epilogue (bool sibcall_p)
 			&& mem_rtx == NULL_RTX)
 		    || reg == PR_REG || SPECIAL_REGISTER_P (reg)))
 	      {
-		post_inc = gen_rtx_MEM (mode,
-					gen_rtx_POST_INC (Pmode, r0));
+		post_inc = gen_frame_mem (mode, gen_rtx_POST_INC (Pmode, r0));
 
 		GO_IF_LEGITIMATE_ADDRESS (mode, XEXP (post_inc, 0),
 					  post_inc_ok);
@@ -5706,12 +6215,12 @@ sh_expand_epilogue (bool sibcall_p)
 		post_inc = NULL_RTX;
 
 		break;
-		
+
 	      post_inc_ok:
 		mem_rtx = NULL_RTX;
 	      }
 	  while (0);
-	  
+
 	  if (mem_rtx != NULL_RTX)
 	    goto addr_ok;
 
@@ -5728,7 +6237,7 @@ sh_expand_epilogue (bool sibcall_p)
 			       GEN_INT (offset - offset_in_r0)));
 	      offset_in_r0 += offset - offset_in_r0;
 	    }
-	      
+
 	  if (post_inc != NULL_RTX)
 	    {
 	      if (! sp_in_r0)
@@ -5738,22 +6247,21 @@ sh_expand_epilogue (bool sibcall_p)
 				  (Pmode, r0, stack_pointer_rtx));
 		  sp_in_r0 = 1;
 		}
-	      
+
 	      mem_rtx = post_inc;
 
 	      offset_in_r0 += GET_MODE_SIZE (mode);
 	    }
 	  else if (sp_in_r0)
-	    mem_rtx = gen_rtx_MEM (mode, r0);
+	    mem_rtx = gen_frame_mem (mode, r0);
 	  else
-	    mem_rtx = gen_rtx_MEM (mode,
-				   gen_rtx_PLUS (Pmode,
-						 stack_pointer_rtx,
-						 r0));
+	    mem_rtx = gen_frame_mem (mode,
+				     gen_rtx_PLUS (Pmode,
+						   stack_pointer_rtx,
+						   r0));
 
-	  if ((reg == PR_REG || SPECIAL_REGISTER_P (reg))
-	      && mem_rtx != post_inc)
-	    abort ();
+	  gcc_assert ((reg != PR_REG && !SPECIAL_REGISTER_P (reg))
+		      || mem_rtx == post_inc);
 
 	addr_ok:
 	  if ((reg == PR_REG || SPECIAL_REGISTER_P (reg))
@@ -5782,8 +6290,7 @@ sh_expand_epilogue (bool sibcall_p)
 						  REG_NOTES (insn));
 	}
 
-      if (entry->offset + offset_base != d + d_rounding)
-	abort ();
+      gcc_assert (entry->offset + offset_base == d + d_rounding);
     }
   else /* ! TARGET_SH5 */
     {
@@ -5793,7 +6300,7 @@ sh_expand_epilogue (bool sibcall_p)
       for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
 	{
 	  int j = (FIRST_PSEUDO_REGISTER - 1) - i;
-  
+
 	  if (j == FPSCR_REG && current_function_interrupt && TARGET_FMOVD
 	      && hard_regs_intersect_p (&live_regs_mask,
 					&reg_class_contents[DF_REGS]))
@@ -5809,7 +6316,7 @@ sh_expand_epilogue (bool sibcall_p)
     emit_insn (gen_toggle_sz ());
   target_flags = save_flags;
 
-  output_stack_adjust (extra_push + current_function_pretend_args_size
+  output_stack_adjust (current_function_pretend_args_size
 		       + save_size + d_rounding
 		       + current_function_args_info.stack_regs * 8,
 		       stack_pointer_rtx, e, NULL);
@@ -5819,7 +6326,7 @@ sh_expand_epilogue (bool sibcall_p)
 			 EH_RETURN_STACKADJ_RTX));
 
   /* Switch back to the normal stack if necessary.  */
-  if (sp_switch)
+  if (lookup_attribute ("sp_switch", DECL_ATTRIBUTES (current_function_decl)))
     emit_insn (gen_sp_switch_2 ());
 
   /* Tell flow the insn that pops PR isn't dead.  */
@@ -5890,7 +6397,7 @@ sh_set_return_address (rtx ra, rtx tmp)
       int offset;
       save_schedule schedule;
       save_entry *entry;
-      
+
       entry = sh5_schedule_saves (&live_regs_mask, &schedule, 0);
       offset = entry[1].offset;
       for (; entry->mode != VOIDmode; entry--)
@@ -5898,7 +6405,7 @@ sh_set_return_address (rtx ra, rtx tmp)
 	  goto found;
 
       /* We can't find pr register.  */
-      abort ();
+      gcc_unreachable ();
 
     found:
       offset = entry->offset - offset;
@@ -5909,9 +6416,9 @@ sh_set_return_address (rtx ra, rtx tmp)
     pr_offset = rounded_frame_size (d);
 
   emit_insn (GEN_MOV (tmp, GEN_INT (pr_offset)));
-  emit_insn (GEN_ADD3 (tmp, tmp, frame_pointer_rtx));
+  emit_insn (GEN_ADD3 (tmp, tmp, hard_frame_pointer_rtx));
 
-  tmp = gen_rtx_MEM (Pmode, tmp);
+  tmp = gen_frame_mem (Pmode, tmp);
   emit_insn (GEN_MOV (tmp, ra));
 }
 
@@ -5921,9 +6428,7 @@ static void
 sh_output_function_epilogue (FILE *file ATTRIBUTE_UNUSED,
 			     HOST_WIDE_INT size ATTRIBUTE_UNUSED)
 {
-  trap_exit = pragma_interrupt = pragma_trapa = pragma_nosave_low_regs = 0;
   sh_need_epilogue_known = 0;
-  sp_switch = NULL_RTX;
 }
 
 static rtx
@@ -5972,7 +6477,7 @@ sh_builtin_saveregs (void)
       if (TARGET_SHCOMPACT)
 	return const0_rtx;
     }
-  
+
   if (! TARGET_SH2E && ! TARGET_SH4 && ! TARGET_SH5)
     {
       error ("__builtin_saveregs not supported by this subtarget");
@@ -5988,8 +6493,7 @@ sh_builtin_saveregs (void)
   bufsize = (n_intregs * UNITS_PER_WORD) + (n_floatregs * UNITS_PER_WORD);
 
   if (TARGET_SHMEDIA)
-    regbuf = gen_rtx_MEM (BLKmode,
-			  gen_rtx_REG (Pmode, ARG_POINTER_REGNUM));
+    regbuf = gen_frame_mem (BLKmode, gen_rtx_REG (Pmode, ARG_POINTER_REGNUM));
   else if (n_floatregs & 1)
     {
       rtx addr;
@@ -5999,8 +6503,18 @@ sh_builtin_saveregs (void)
       emit_insn (gen_iorsi3 (addr, addr, GEN_INT (UNITS_PER_WORD)));
       regbuf = change_address (regbuf, BLKmode, addr);
     }
+  else if (STACK_BOUNDARY < 64 && TARGET_FPU_DOUBLE && n_floatregs)
+    {
+      rtx addr, mask;
+
+      regbuf = assign_stack_local (BLKmode, bufsize + UNITS_PER_WORD, 0);
+      addr = copy_to_mode_reg (Pmode, plus_constant (XEXP (regbuf, 0), 4));
+      mask = copy_to_mode_reg (Pmode, GEN_INT (-8));
+      emit_insn (gen_andsi3 (addr, addr, mask));
+      regbuf = change_address (regbuf, BLKmode, addr);
+    }
   else
-    regbuf = assign_stack_local (BLKmode, bufsize, 0);
+    regbuf = assign_stack_local (BLKmode, bufsize, TARGET_FPU_DOUBLE ? 64 : 0);
   alias_set = get_varargs_alias_set ();
   set_mem_alias_set (regbuf, alias_set);
 
@@ -6025,30 +6539,27 @@ sh_builtin_saveregs (void)
      saved).
      We emit the moves in reverse order so that we can use predecrement.  */
 
-  fpregs = gen_reg_rtx (Pmode);
-  emit_move_insn (fpregs, XEXP (regbuf, 0));
-  emit_insn (gen_addsi3 (fpregs, fpregs,
-			 GEN_INT (n_floatregs * UNITS_PER_WORD)));
-  if (TARGET_SH4)
+  fpregs = copy_to_mode_reg (Pmode,
+			     plus_constant (XEXP (regbuf, 0),
+                                            n_floatregs * UNITS_PER_WORD));
+  if (TARGET_SH4 || TARGET_SH2A_DOUBLE)
     {
       rtx mem;
       for (regno = NPARM_REGS (DFmode) - 2; regno >= first_floatreg; regno -= 2)
 	{
 	  emit_insn (gen_addsi3 (fpregs, fpregs,
 				 GEN_INT (-2 * UNITS_PER_WORD)));
-	  mem = gen_rtx_MEM (DFmode, fpregs);
-	  set_mem_alias_set (mem, alias_set);
-	  emit_move_insn (mem, 
-			  gen_rtx (REG, DFmode, BASE_ARG_REG (DFmode) + regno));
+	  mem = change_address (regbuf, DFmode, fpregs);
+	  emit_move_insn (mem,
+			  gen_rtx_REG (DFmode, BASE_ARG_REG (DFmode) + regno));
 	}
       regno = first_floatreg;
       if (regno & 1)
 	{
-	  emit_insn (gen_addsi3 (fpregs, fpregs, GEN_INT (- UNITS_PER_WORD)));
-	  mem = gen_rtx_MEM (SFmode, fpregs);
-	  set_mem_alias_set (mem, alias_set);
+	  emit_insn (gen_addsi3 (fpregs, fpregs, GEN_INT (-UNITS_PER_WORD)));
+	  mem = change_address (regbuf, SFmode, fpregs);
 	  emit_move_insn (mem,
-			  gen_rtx (REG, SFmode, BASE_ARG_REG (SFmode) + regno
+			  gen_rtx_REG (SFmode, BASE_ARG_REG (SFmode) + regno
 						- (TARGET_LITTLE_ENDIAN != 0)));
 	}
     }
@@ -6057,9 +6568,8 @@ sh_builtin_saveregs (void)
       {
         rtx mem;
 
-	emit_insn (gen_addsi3 (fpregs, fpregs, GEN_INT (- UNITS_PER_WORD)));
-	mem = gen_rtx_MEM (SFmode, fpregs);
-	set_mem_alias_set (mem, alias_set);
+	emit_insn (gen_addsi3 (fpregs, fpregs, GEN_INT (-UNITS_PER_WORD)));
+	mem = change_address (regbuf, SFmode, fpregs);
 	emit_move_insn (mem,
 			gen_rtx_REG (SFmode, BASE_ARG_REG (SFmode) + regno));
       }
@@ -6142,14 +6652,16 @@ sh_va_start (tree valist, rtx nextarg)
   f_next_fp_limit = TREE_CHAIN (f_next_fp);
   f_next_stack = TREE_CHAIN (f_next_fp_limit);
 
-  next_o = build (COMPONENT_REF, TREE_TYPE (f_next_o), valist, f_next_o);
+  next_o = build (COMPONENT_REF, TREE_TYPE (f_next_o), valist, f_next_o,
+		  NULL_TREE);
   next_o_limit = build (COMPONENT_REF, TREE_TYPE (f_next_o_limit),
-			valist, f_next_o_limit);
-  next_fp = build (COMPONENT_REF, TREE_TYPE (f_next_fp), valist, f_next_fp);
+			valist, f_next_o_limit, NULL_TREE);
+  next_fp = build (COMPONENT_REF, TREE_TYPE (f_next_fp), valist, f_next_fp,
+		   NULL_TREE);
   next_fp_limit = build (COMPONENT_REF, TREE_TYPE (f_next_fp_limit),
-			 valist, f_next_fp_limit);
+			 valist, f_next_fp_limit, NULL_TREE);
   next_stack = build (COMPONENT_REF, TREE_TYPE (f_next_stack),
-		      valist, f_next_stack);
+		      valist, f_next_stack, NULL_TREE);
 
   /* Call __builtin_saveregs.  */
   u = make_tree (ptr_type_node, expand_builtin_saveregs ());
@@ -6163,7 +6675,7 @@ sh_va_start (tree valist, rtx nextarg)
   else
     nfp = 0;
   u = fold (build (PLUS_EXPR, ptr_type_node, u,
-		   build_int_2 (UNITS_PER_WORD * nfp, 0)));
+		   build_int_cst (NULL_TREE, UNITS_PER_WORD * nfp)));
   t = build (MODIFY_EXPR, ptr_type_node, next_fp_limit, u);
   TREE_SIDE_EFFECTS (t) = 1;
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
@@ -6178,7 +6690,7 @@ sh_va_start (tree valist, rtx nextarg)
   else
     nint = 0;
   u = fold (build (PLUS_EXPR, ptr_type_node, u,
-		   build_int_2 (UNITS_PER_WORD * nint, 0)));
+		   build_int_cst (NULL_TREE, UNITS_PER_WORD * nint)));
   t = build (MODIFY_EXPR, ptr_type_node, next_o_limit, u);
   TREE_SIDE_EFFECTS (t) = 1;
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
@@ -6189,24 +6701,45 @@ sh_va_start (tree valist, rtx nextarg)
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 }
 
+/* TYPE is a RECORD_TYPE.  If there is only a single non-zero-sized
+   member, return it.  */
+static tree
+find_sole_member (tree type)
+{
+  tree field, member = NULL_TREE;
+
+  for (field = TYPE_FIELDS (type); field; field = TREE_CHAIN (field))
+    {
+      if (TREE_CODE (field) != FIELD_DECL)
+	continue;
+      if (!DECL_SIZE (field))
+	return NULL_TREE;
+      if (integer_zerop (DECL_SIZE (field)))
+	continue;
+      if (member)
+	return NULL_TREE;
+      member = field;
+    }
+  return member;
+}
 /* Implement `va_arg'.  */
 
-rtx
-sh_va_arg (tree valist, tree type)
+static tree
+sh_gimplify_va_arg_expr (tree valist, tree type, tree *pre_p,
+			 tree *post_p ATTRIBUTE_UNUSED)
 {
   HOST_WIDE_INT size, rsize;
   tree tmp, pptr_type_node;
-  rtx addr_rtx, r;
-  rtx result_ptr, result = NULL_RTX;
-  int pass_by_ref = MUST_PASS_IN_STACK (TYPE_MODE (type), type);
-  rtx lab_over;
+  tree addr, lab_over = NULL, result = NULL;
+  int pass_by_ref = targetm.calls.must_pass_in_stack (TYPE_MODE (type), type);
+  tree eff_type;
+
+  if (pass_by_ref)
+    type = build_pointer_type (type);
 
   size = int_size_in_bytes (type);
   rsize = (size + UNITS_PER_WORD - 1) & -UNITS_PER_WORD;
   pptr_type_node = build_pointer_type (ptr_type_node);
-
-  if (pass_by_ref)
-    type = build_pointer_type (type);
 
   if (! TARGET_SH5 && (TARGET_SH2E || TARGET_SH4)
       && ! (TARGET_HITACHI || sh_cfun_attr_renesas_p ()))
@@ -6214,7 +6747,8 @@ sh_va_arg (tree valist, tree type)
       tree f_next_o, f_next_o_limit, f_next_fp, f_next_fp_limit, f_next_stack;
       tree next_o, next_o_limit, next_fp, next_fp_limit, next_stack;
       int pass_as_float;
-      rtx lab_false;
+      tree lab_false;
+      tree member;
 
       f_next_o = TYPE_FIELDS (va_list_type_node);
       f_next_o_limit = TREE_CHAIN (f_next_o);
@@ -6222,174 +6756,186 @@ sh_va_arg (tree valist, tree type)
       f_next_fp_limit = TREE_CHAIN (f_next_fp);
       f_next_stack = TREE_CHAIN (f_next_fp_limit);
 
-      next_o = build (COMPONENT_REF, TREE_TYPE (f_next_o), valist, f_next_o);
+      next_o = build (COMPONENT_REF, TREE_TYPE (f_next_o), valist, f_next_o,
+		      NULL_TREE);
       next_o_limit = build (COMPONENT_REF, TREE_TYPE (f_next_o_limit),
-			    valist, f_next_o_limit);
+			    valist, f_next_o_limit, NULL_TREE);
       next_fp = build (COMPONENT_REF, TREE_TYPE (f_next_fp),
-		       valist, f_next_fp);
+		       valist, f_next_fp, NULL_TREE);
       next_fp_limit = build (COMPONENT_REF, TREE_TYPE (f_next_fp_limit),
-			     valist, f_next_fp_limit);
+			     valist, f_next_fp_limit, NULL_TREE);
       next_stack = build (COMPONENT_REF, TREE_TYPE (f_next_stack),
-			  valist, f_next_stack);
+			  valist, f_next_stack, NULL_TREE);
 
       /* Structures with a single member with a distinct mode are passed
 	 like their member.  This is relevant if the latter has a REAL_TYPE
 	 or COMPLEX_TYPE type.  */
-      if (TREE_CODE (type) == RECORD_TYPE
-	  && TYPE_FIELDS (type)
-	  && TREE_CODE (TYPE_FIELDS (type)) == FIELD_DECL
-	  && (TREE_CODE (TREE_TYPE (TYPE_FIELDS (type))) == REAL_TYPE
-	      || TREE_CODE (TREE_TYPE (TYPE_FIELDS (type))) == COMPLEX_TYPE)
-          && TREE_CHAIN (TYPE_FIELDS (type)) == NULL_TREE)
-	type = TREE_TYPE (TYPE_FIELDS (type));
+      eff_type = type;
+      while (TREE_CODE (eff_type) == RECORD_TYPE
+	     && (member = find_sole_member (eff_type))
+	     && (TREE_CODE (TREE_TYPE (member)) == REAL_TYPE
+		 || TREE_CODE (TREE_TYPE (member)) == COMPLEX_TYPE
+		 || TREE_CODE (TREE_TYPE (member)) == RECORD_TYPE))
+	{
+	  tree field_type = TREE_TYPE (member);
+
+	  if (TYPE_MODE (eff_type) == TYPE_MODE (field_type))
+	    eff_type = field_type;
+	  else
+	    {
+	      gcc_assert ((TYPE_ALIGN (eff_type)
+			   < GET_MODE_ALIGNMENT (TYPE_MODE (field_type)))
+			  || (TYPE_ALIGN (eff_type)
+			      > GET_MODE_BITSIZE (TYPE_MODE (field_type))));
+	      break;
+	    }
+	}
+
       if (TARGET_SH4)
 	{
-	  pass_as_float = ((TREE_CODE (type) == REAL_TYPE && size <= 8)
-			   || (TREE_CODE (type) == COMPLEX_TYPE
-			       && TREE_CODE (TREE_TYPE (type)) == REAL_TYPE
+	  pass_as_float = ((TREE_CODE (eff_type) == REAL_TYPE && size <= 8)
+			   || (TREE_CODE (eff_type) == COMPLEX_TYPE
+			       && TREE_CODE (TREE_TYPE (eff_type)) == REAL_TYPE
 			       && size <= 16));
 	}
       else
 	{
-	  pass_as_float = (TREE_CODE (type) == REAL_TYPE && size == 4);
+	  pass_as_float = (TREE_CODE (eff_type) == REAL_TYPE && size == 4);
 	}
 
-      addr_rtx = gen_reg_rtx (Pmode);
-      lab_false = gen_label_rtx ();
-      lab_over = gen_label_rtx ();
+      addr = create_tmp_var (pptr_type_node, NULL);
+      lab_false = create_artificial_label ();
+      lab_over = create_artificial_label ();
 
-      tmp = make_tree (pptr_type_node, addr_rtx);
-      valist = build1 (INDIRECT_REF, ptr_type_node, tmp);
+      valist = build1 (INDIRECT_REF, ptr_type_node, addr);
 
       if (pass_as_float)
 	{
-	  int first_floatreg
-	    = current_function_args_info.arg_count[(int) SH_ARG_FLOAT];
-	  int n_floatregs = MAX (0, NPARM_REGS (SFmode) - first_floatreg);
-
-	  emit_cmp_and_jump_insns (expand_expr (next_fp, NULL_RTX, Pmode,
-						EXPAND_NORMAL),
-				   expand_expr (next_fp_limit, NULL_RTX,
-						Pmode, EXPAND_NORMAL),
-				   GE, const1_rtx, Pmode, 1, lab_false);
-
-	  if (TYPE_ALIGN (type) > BITS_PER_WORD
-	      || (((TREE_CODE (type) == REAL_TYPE && size == 8) || size == 16)
-		  && (n_floatregs & 1)))
-	    {
-	      tmp = build (BIT_AND_EXPR, ptr_type_node, next_fp,
-			   build_int_2 (UNITS_PER_WORD, 0));
-	      tmp = build (PLUS_EXPR, ptr_type_node, next_fp, tmp);
-	      tmp = build (MODIFY_EXPR, ptr_type_node, next_fp, tmp);
-	      TREE_SIDE_EFFECTS (tmp) = 1;
-	      expand_expr (tmp, const0_rtx, VOIDmode, EXPAND_NORMAL);
-	    }
+	  tree next_fp_tmp = create_tmp_var (TREE_TYPE (f_next_fp), NULL);
+	  tree cmp;
+	  bool is_double = size == 8 && TREE_CODE (eff_type) == REAL_TYPE;
 
 	  tmp = build1 (ADDR_EXPR, pptr_type_node, next_fp);
-	  r = expand_expr (tmp, addr_rtx, Pmode, EXPAND_NORMAL);
-	  if (r != addr_rtx)
-	    emit_move_insn (addr_rtx, r);
+	  tmp = build2 (MODIFY_EXPR, void_type_node, addr, tmp);
+	  gimplify_and_add (tmp, pre_p);
+
+	  tmp = build2 (MODIFY_EXPR, ptr_type_node, next_fp_tmp, valist);
+	  gimplify_and_add (tmp, pre_p);
+	  tmp = next_fp_limit;
+	  if (size > 4 && !is_double)
+	    tmp = build2 (PLUS_EXPR, TREE_TYPE (tmp), tmp,
+			  fold_convert (TREE_TYPE (tmp), size_int (4 - size)));
+	  tmp = build (GE_EXPR, boolean_type_node, next_fp_tmp, tmp);
+	  cmp = build (COND_EXPR, void_type_node, tmp,
+		       build (GOTO_EXPR, void_type_node, lab_false),
+		       NULL);
+	  if (!is_double)
+	    gimplify_and_add (cmp, pre_p);
+
+	  if (TYPE_ALIGN (eff_type) > BITS_PER_WORD
+	      || (is_double || size == 16))
+	    {
+	      tmp = fold_convert (ptr_type_node, size_int (UNITS_PER_WORD));
+	      tmp = build (BIT_AND_EXPR, ptr_type_node, next_fp_tmp, tmp);
+	      tmp = build (PLUS_EXPR, ptr_type_node, next_fp_tmp, tmp);
+	      tmp = build (MODIFY_EXPR, ptr_type_node, next_fp_tmp, tmp);
+	      gimplify_and_add (tmp, pre_p);
+	    }
+	  if (is_double)
+	    gimplify_and_add (cmp, pre_p);
 
 #ifdef FUNCTION_ARG_SCmode_WART
-	  if (TYPE_MODE (type) == SCmode && TARGET_SH4 && TARGET_LITTLE_ENDIAN)
+	  if (TYPE_MODE (eff_type) == SCmode
+	      && TARGET_SH4 && TARGET_LITTLE_ENDIAN)
 	    {
-	      rtx addr, real, imag, result_value, slot;
-	      tree subtype = TREE_TYPE (type);
+	      tree subtype = TREE_TYPE (eff_type);
+	      tree real, imag;
 
-	      addr = std_expand_builtin_va_arg (valist, subtype);
-#ifdef POINTERS_EXTEND_UNSIGNED
-	      if (GET_MODE (addr) != Pmode)
-		addr = convert_memory_address (Pmode, addr);
-#endif
-	      imag = gen_rtx_MEM (TYPE_MODE (type), addr);
-	      set_mem_alias_set (imag, get_varargs_alias_set ());
+	      imag
+		= std_gimplify_va_arg_expr (next_fp_tmp, subtype, pre_p, NULL);
+	      imag = get_initialized_tmp_var (imag, pre_p, NULL);
 
-	      addr = std_expand_builtin_va_arg (valist, subtype);
-#ifdef POINTERS_EXTEND_UNSIGNED
-	      if (GET_MODE (addr) != Pmode)
-		addr = convert_memory_address (Pmode, addr);
-#endif
-	      real = gen_rtx_MEM (TYPE_MODE (type), addr);
-	      set_mem_alias_set (real, get_varargs_alias_set ());
+	      real
+		= std_gimplify_va_arg_expr (next_fp_tmp, subtype, pre_p, NULL);
+	      real = get_initialized_tmp_var (real, pre_p, NULL);
 
-	      result_value = gen_rtx_CONCAT (SCmode, real, imag);
-	      /* ??? this interface is stupid - why require a pointer?  */
-	      result = gen_reg_rtx (Pmode);
-	      slot = assign_stack_temp (SCmode, 8, 0);
-	      emit_move_insn (slot, result_value);
-	      emit_move_insn (result, XEXP (slot, 0));
+	      result = build (COMPLEX_EXPR, type, real, imag);
+	      result = get_initialized_tmp_var (result, pre_p, NULL);
 	    }
 #endif /* FUNCTION_ARG_SCmode_WART */
 
-	  emit_jump_insn (gen_jump (lab_over));
-	  emit_barrier ();
-	  emit_label (lab_false);
+	  tmp = build (GOTO_EXPR, void_type_node, lab_over);
+	  gimplify_and_add (tmp, pre_p);
+
+	  tmp = build (LABEL_EXPR, void_type_node, lab_false);
+	  gimplify_and_add (tmp, pre_p);
 
 	  tmp = build1 (ADDR_EXPR, pptr_type_node, next_stack);
-	  r = expand_expr (tmp, addr_rtx, Pmode, EXPAND_NORMAL);
-	  if (r != addr_rtx)
-	    emit_move_insn (addr_rtx, r);
+	  tmp = build (MODIFY_EXPR, void_type_node, addr, tmp);
+	  gimplify_and_add (tmp, pre_p);
+	  tmp = build2 (MODIFY_EXPR, ptr_type_node, next_fp_tmp, valist);
+	  gimplify_and_add (tmp, pre_p);
+
+	  tmp = build2 (MODIFY_EXPR, ptr_type_node, valist, next_fp_tmp);
+	  gimplify_and_add (tmp, post_p);
+	  valist = next_fp_tmp;
 	}
       else
 	{
-	  tmp = build (PLUS_EXPR, ptr_type_node, next_o,
-		       build_int_2 (rsize, 0));
-	  
-	  emit_cmp_and_jump_insns (expand_expr (tmp, NULL_RTX, Pmode,
-						EXPAND_NORMAL),
-				   expand_expr (next_o_limit, NULL_RTX,
-						Pmode, EXPAND_NORMAL),
-				   GT, const1_rtx, Pmode, 1, lab_false);
+	  tmp = fold_convert (ptr_type_node, size_int (rsize));
+	  tmp = build (PLUS_EXPR, ptr_type_node, next_o, tmp);
+	  tmp = build (GT_EXPR, boolean_type_node, tmp, next_o_limit);
+	  tmp = build (COND_EXPR, void_type_node, tmp,
+		       build (GOTO_EXPR, void_type_node, lab_false),
+		       NULL);
+	  gimplify_and_add (tmp, pre_p);
 
 	  tmp = build1 (ADDR_EXPR, pptr_type_node, next_o);
-	  r = expand_expr (tmp, addr_rtx, Pmode, EXPAND_NORMAL);
-	  if (r != addr_rtx)
-	    emit_move_insn (addr_rtx, r);
+	  tmp = build (MODIFY_EXPR, void_type_node, addr, tmp);
+	  gimplify_and_add (tmp, pre_p);
 
-	  emit_jump_insn (gen_jump (lab_over));
-	  emit_barrier ();
-	  emit_label (lab_false);
+	  tmp = build (GOTO_EXPR, void_type_node, lab_over);
+	  gimplify_and_add (tmp, pre_p);
+
+	  tmp = build (LABEL_EXPR, void_type_node, lab_false);
+	  gimplify_and_add (tmp, pre_p);
 
 	  if (size > 4 && ! TARGET_SH4)
 	    {
 	      tmp = build (MODIFY_EXPR, ptr_type_node, next_o, next_o_limit);
-	      TREE_SIDE_EFFECTS (tmp) = 1;
-	      expand_expr (tmp, const0_rtx, VOIDmode, EXPAND_NORMAL);
+	      gimplify_and_add (tmp, pre_p);
 	    }
 
 	  tmp = build1 (ADDR_EXPR, pptr_type_node, next_stack);
-	  r = expand_expr (tmp, addr_rtx, Pmode, EXPAND_NORMAL);
-	  if (r != addr_rtx)
-	    emit_move_insn (addr_rtx, r);
+	  tmp = build (MODIFY_EXPR, void_type_node, addr, tmp);
+	  gimplify_and_add (tmp, pre_p);
 	}
 
-      if (! result)
-        emit_label (lab_over);
+      if (!result)
+	{
+	  tmp = build (LABEL_EXPR, void_type_node, lab_over);
+	  gimplify_and_add (tmp, pre_p);
+	}
     }
 
   /* ??? In va-sh.h, there had been code to make values larger than
      size 8 indirect.  This does not match the FUNCTION_ARG macros.  */
 
-  result_ptr = std_expand_builtin_va_arg (valist, type);
+  tmp = std_gimplify_va_arg_expr (valist, type, pre_p, NULL);
   if (result)
     {
-      emit_move_insn (result, result_ptr);
-      emit_label (lab_over);
+      tmp = build (MODIFY_EXPR, void_type_node, result, tmp);
+      gimplify_and_add (tmp, pre_p);
+
+      tmp = build (LABEL_EXPR, void_type_node, lab_over);
+      gimplify_and_add (tmp, pre_p);
     }
   else
-    result = result_ptr;
+    result = tmp;
 
   if (pass_by_ref)
-    {
-#ifdef POINTERS_EXTEND_UNSIGNED
-      if (GET_MODE (addr) != Pmode)
-	addr = convert_memory_address (Pmode, result);
-#endif
-      result = gen_rtx_MEM (ptr_mode, force_reg (Pmode, result));
-      set_mem_alias_set (result, get_varargs_alias_set ());
-    }
-  /* ??? expand_builtin_va_arg will also set the alias set of the dereferenced
-     argument to the varargs alias set.  */
+    result = build_va_arg_indirect_ref (result);
+
   return result;
 }
 
@@ -6402,6 +6948,93 @@ sh_promote_prototypes (tree type)
     return 1;
   return ! sh_attr_renesas_p (type);
 }
+
+/* Whether an argument must be passed by reference.  On SHcompact, we
+   pretend arguments wider than 32-bits that would have been passed in
+   registers are passed by reference, so that an SHmedia trampoline
+   loads them into the full 64-bits registers.  */
+
+static int
+shcompact_byref (CUMULATIVE_ARGS *cum, enum machine_mode mode,
+		 tree type, bool named)
+{
+  unsigned HOST_WIDE_INT size;
+
+  if (type)
+    size = int_size_in_bytes (type);
+  else
+    size = GET_MODE_SIZE (mode);
+
+  if (cum->arg_count[SH_ARG_INT] < NPARM_REGS (SImode)
+      && (!named
+	  || GET_SH_ARG_CLASS (mode) == SH_ARG_INT
+	  || (GET_SH_ARG_CLASS (mode) == SH_ARG_FLOAT
+	      && cum->arg_count[SH_ARG_FLOAT] >= NPARM_REGS (SFmode)))
+      && size > 4
+      && !SHCOMPACT_FORCE_ON_STACK (mode, type)
+      && !SH5_WOULD_BE_PARTIAL_NREGS (*cum, mode, type, named))
+    return size;
+  else
+    return 0;
+}
+
+static bool
+sh_pass_by_reference (CUMULATIVE_ARGS *cum, enum machine_mode mode,
+		      tree type, bool named)
+{
+  if (targetm.calls.must_pass_in_stack (mode, type))
+    return true;
+
+  /* ??? std_gimplify_va_arg_expr passes NULL for cum.  That function
+     wants to know about pass-by-reference semantics for incoming
+     arguments.  */
+  if (! cum)
+    return false;
+
+  if (TARGET_SHCOMPACT)
+    {
+      cum->byref = shcompact_byref (cum, mode, type, named);
+      return cum->byref != 0;
+    }
+
+  return false;
+}
+
+static bool
+sh_callee_copies (CUMULATIVE_ARGS *cum, enum machine_mode mode,
+		  tree type, bool named ATTRIBUTE_UNUSED)
+{
+  /* ??? How can it possibly be correct to return true only on the
+     caller side of the equation?  Is there someplace else in the
+     sh backend that's magically producing the copies?  */
+  return (cum->outgoing
+	  && ((mode == BLKmode ? TYPE_ALIGN (type) : GET_MODE_ALIGNMENT (mode))
+	      % SH_MIN_ALIGN_FOR_CALLEE_COPY == 0));
+}
+
+static int
+sh_arg_partial_bytes (CUMULATIVE_ARGS *cum, enum machine_mode mode,
+		      tree type, bool named ATTRIBUTE_UNUSED)
+{
+  int words = 0;
+
+  if (!TARGET_SH5
+      && PASS_IN_REG_P (*cum, mode, type)
+      && !(TARGET_SH4 || TARGET_SH2A_DOUBLE)
+      && (ROUND_REG (*cum, mode)
+	  + (mode != BLKmode
+	     ? ROUND_ADVANCE (GET_MODE_SIZE (mode))
+	     : ROUND_ADVANCE (int_size_in_bytes (type)))
+	  > NPARM_REGS (mode)))
+    words = NPARM_REGS (mode) - ROUND_REG (*cum, mode);
+
+  else if (!TARGET_SHCOMPACT
+	   && SH5_WOULD_BE_PARTIAL_NREGS (*cum, mode, type, named))
+    words = NPARM_REGS (SImode) - cum->arg_count[SH_ARG_INT];
+
+  return words * UNITS_PER_WORD;
+}
+
 
 /* Define where to put the arguments to a function.
    Value is zero to push the argument on the stack,
@@ -6443,11 +7076,11 @@ sh_function_arg (CUMULATIVE_ARGS *ca, enum machine_mode mode,
 						   BASE_ARG_REG (mode)
 						   + (ROUND_REG (*ca, mode) ^ 1)),
 				      const0_rtx);
-	  rtx r2 = gen_rtx_EXPR_LIST(VOIDmode,
-				     gen_rtx_REG (SFmode,
-						  BASE_ARG_REG (mode)
-						  + ((ROUND_REG (*ca, mode) + 1) ^ 1)),
-				     GEN_INT (4));
+	  rtx r2 = gen_rtx_EXPR_LIST (VOIDmode,
+				      gen_rtx_REG (SFmode,
+						   BASE_ARG_REG (mode)
+						   + ((ROUND_REG (*ca, mode) + 1) ^ 1)),
+				      GEN_INT (4));
 	  return gen_rtx_PARALLEL(SCmode, gen_rtvec(2, r1, r2));
 	}
 
@@ -6466,7 +7099,7 @@ sh_function_arg (CUMULATIVE_ARGS *ca, enum machine_mode mode,
       return gen_rtx_REG (mode, regno);
 
     }
-  
+
   if (TARGET_SH5)
     {
       if (mode == VOIDmode && TARGET_SHCOMPACT)
@@ -6504,7 +7137,7 @@ sh_function_arg (CUMULATIVE_ARGS *ca, enum machine_mode mode,
 
   return 0;
 }
- 
+
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
    (TYPE is null for libcalls where that information may not be
@@ -6514,150 +7147,146 @@ void
 sh_function_arg_advance (CUMULATIVE_ARGS *ca, enum machine_mode mode,
 			 tree type, int named)
 {
- if (ca->force_mem)
-   ca->force_mem = 0;
- else if (TARGET_SH5)
-   {
-     tree type2 = (ca->byref && type
-		   ? TREE_TYPE (type)
- 		   : type);
-     enum machine_mode mode2 = (ca->byref && type
-				? TYPE_MODE (type2)
-				: mode);
-     int dwords = ((ca->byref
-		    ? ca->byref
-		    : mode2 == BLKmode
-		    ? int_size_in_bytes (type2)
-		    : GET_MODE_SIZE (mode2)) + 7) / 8;
-     int numregs = MIN (dwords, NPARM_REGS (SImode)
-			- ca->arg_count[(int) SH_ARG_INT]);
+  if (ca->force_mem)
+    ca->force_mem = 0;
+  else if (TARGET_SH5)
+    {
+      tree type2 = (ca->byref && type
+		    ? TREE_TYPE (type)
+		    : type);
+      enum machine_mode mode2 = (ca->byref && type
+				 ? TYPE_MODE (type2)
+				 : mode);
+      int dwords = ((ca->byref
+		     ? ca->byref
+		     : mode2 == BLKmode
+		     ? int_size_in_bytes (type2)
+		     : GET_MODE_SIZE (mode2)) + 7) / 8;
+      int numregs = MIN (dwords, NPARM_REGS (SImode)
+			 - ca->arg_count[(int) SH_ARG_INT]);
 
-     if (numregs)
-       {
-	 ca->arg_count[(int) SH_ARG_INT] += numregs;
-	 if (TARGET_SHCOMPACT
-	     && SHCOMPACT_FORCE_ON_STACK (mode2, type2))
-	   {
-	     ca->call_cookie
-	       |= CALL_COOKIE_INT_REG (ca->arg_count[(int) SH_ARG_INT]
-				       - numregs, 1);
-	     /* N.B. We want this also for outgoing.  */
-	     ca->stack_regs += numregs;
-	   }
-	 else if (ca->byref)
-	   {
-	     if (! ca->outgoing)
-	       ca->stack_regs += numregs;
-	     ca->byref_regs += numregs;
-	     ca->byref = 0;
-	     do
-	       ca->call_cookie
-		 |= CALL_COOKIE_INT_REG (ca->arg_count[(int) SH_ARG_INT]
-					 - numregs, 2);
-	     while (--numregs);
-	     ca->call_cookie
-	       |= CALL_COOKIE_INT_REG (ca->arg_count[(int) SH_ARG_INT]
-				       - 1, 1);
-	   }
-	 else if (dwords > numregs)
-	   {
-	     int pushregs = numregs;
+      if (numregs)
+	{
+	  ca->arg_count[(int) SH_ARG_INT] += numregs;
+	  if (TARGET_SHCOMPACT
+	      && SHCOMPACT_FORCE_ON_STACK (mode2, type2))
+	    {
+	      ca->call_cookie
+		|= CALL_COOKIE_INT_REG (ca->arg_count[(int) SH_ARG_INT]
+					- numregs, 1);
+	      /* N.B. We want this also for outgoing.  */
+	      ca->stack_regs += numregs;
+	    }
+	  else if (ca->byref)
+	    {
+	      if (! ca->outgoing)
+		ca->stack_regs += numregs;
+	      ca->byref_regs += numregs;
+	      ca->byref = 0;
+	      do
+		ca->call_cookie
+		  |= CALL_COOKIE_INT_REG (ca->arg_count[(int) SH_ARG_INT]
+					  - numregs, 2);
+	      while (--numregs);
+	      ca->call_cookie
+		|= CALL_COOKIE_INT_REG (ca->arg_count[(int) SH_ARG_INT]
+					- 1, 1);
+	    }
+	  else if (dwords > numregs)
+	    {
+	      int pushregs = numregs;
 
-	     if (TARGET_SHCOMPACT)
-	       ca->stack_regs += numregs;
-	     while (pushregs < NPARM_REGS (SImode) - 1
-		    && (CALL_COOKIE_INT_REG_GET
-			(ca->call_cookie,
-			NPARM_REGS (SImode) - pushregs)
-			== 1))
-	       {
-		 ca->call_cookie
-		   &= ~ CALL_COOKIE_INT_REG (NPARM_REGS (SImode)
-					     - pushregs, 1);
-		 pushregs++;
-	       }
-	     if (numregs == NPARM_REGS (SImode))
-	       ca->call_cookie
-		 |= CALL_COOKIE_INT_REG (0, 1)
-		    | CALL_COOKIE_STACKSEQ (numregs - 1);
-	     else
-	       ca->call_cookie
-		 |= CALL_COOKIE_STACKSEQ (numregs);
-	   }
-       }
-     if (GET_SH_ARG_CLASS (mode2) == SH_ARG_FLOAT
-	 && (named || ! ca->prototype_p))
-       {
-	 if (mode2 == SFmode && ca->free_single_fp_reg)
-	   ca->free_single_fp_reg = 0;
-	 else if (ca->arg_count[(int) SH_ARG_FLOAT]
- 		  < NPARM_REGS (SFmode))
-	   {
-	     int numfpregs
-	       = MIN ((GET_MODE_SIZE (mode2) + 7) / 8 * 2,
-		      NPARM_REGS (SFmode)
-		      - ca->arg_count[(int) SH_ARG_FLOAT]);
+	      if (TARGET_SHCOMPACT)
+		ca->stack_regs += numregs;
+	      while (pushregs < NPARM_REGS (SImode) - 1
+		     && (CALL_COOKIE_INT_REG_GET
+			 (ca->call_cookie,
+			  NPARM_REGS (SImode) - pushregs)
+			 == 1))
+		{
+		  ca->call_cookie
+		    &= ~ CALL_COOKIE_INT_REG (NPARM_REGS (SImode)
+					      - pushregs, 1);
+		  pushregs++;
+		}
+	      if (numregs == NPARM_REGS (SImode))
+		ca->call_cookie
+		  |= CALL_COOKIE_INT_REG (0, 1)
+		  | CALL_COOKIE_STACKSEQ (numregs - 1);
+	      else
+		ca->call_cookie
+		  |= CALL_COOKIE_STACKSEQ (numregs);
+	    }
+	}
+      if (GET_SH_ARG_CLASS (mode2) == SH_ARG_FLOAT
+	  && (named || ! ca->prototype_p))
+	{
+	  if (mode2 == SFmode && ca->free_single_fp_reg)
+	    ca->free_single_fp_reg = 0;
+	  else if (ca->arg_count[(int) SH_ARG_FLOAT]
+		   < NPARM_REGS (SFmode))
+	    {
+	      int numfpregs
+		= MIN ((GET_MODE_SIZE (mode2) + 7) / 8 * 2,
+		       NPARM_REGS (SFmode)
+		       - ca->arg_count[(int) SH_ARG_FLOAT]);
 
-	     ca->arg_count[(int) SH_ARG_FLOAT] += numfpregs;
+	      ca->arg_count[(int) SH_ARG_FLOAT] += numfpregs;
 
-	     if (TARGET_SHCOMPACT && ! ca->prototype_p)
-	       {
-		 if (ca->outgoing && numregs > 0)
-		   do
-		     {
-		       ca->call_cookie
-			 |= (CALL_COOKIE_INT_REG
-			     (ca->arg_count[(int) SH_ARG_INT]
-			      - numregs + ((numfpregs - 2) / 2),
-			      4 + (ca->arg_count[(int) SH_ARG_FLOAT]
-				   - numfpregs) / 2));
-		     }
-		   while (numfpregs -= 2);
-	       }
-	     else if (mode2 == SFmode && (named)
-		      && (ca->arg_count[(int) SH_ARG_FLOAT]
-			  < NPARM_REGS (SFmode)))
-	       ca->free_single_fp_reg
-		 = FIRST_FP_PARM_REG - numfpregs
-		 + ca->arg_count[(int) SH_ARG_FLOAT] + 1;
-	   }
-       }
-     return;
-   }
+	      if (TARGET_SHCOMPACT && ! ca->prototype_p)
+		{
+		  if (ca->outgoing && numregs > 0)
+		    do
+		      {
+			ca->call_cookie
+			  |= (CALL_COOKIE_INT_REG
+			      (ca->arg_count[(int) SH_ARG_INT]
+			       - numregs + ((numfpregs - 2) / 2),
+			       4 + (ca->arg_count[(int) SH_ARG_FLOAT]
+				    - numfpregs) / 2));
+		      }
+		    while (numfpregs -= 2);
+		}
+	      else if (mode2 == SFmode && (named)
+		       && (ca->arg_count[(int) SH_ARG_FLOAT]
+			   < NPARM_REGS (SFmode)))
+		ca->free_single_fp_reg
+		  = FIRST_FP_PARM_REG - numfpregs
+		  + ca->arg_count[(int) SH_ARG_FLOAT] + 1;
+	    }
+	}
+      return;
+    }
 
- if ((TARGET_HITACHI || ca->renesas_abi) && TARGET_FPU_DOUBLE)
-   {
-     /* Note that we've used the skipped register.  */
-     if (mode == SFmode && ca->free_single_fp_reg)
-       {
-	 ca->free_single_fp_reg = 0;
-	 return;
-       }
-     /* When we have a DF after an SF, there's an SF register that get
-	skipped in order to align the DF value.  We note this skipped
-	register, because the next SF value will use it, and not the
-	SF that follows the DF.  */
-     if (mode == DFmode
-	 && ROUND_REG (*ca, DFmode) != ROUND_REG (*ca, SFmode))
-       {
-	 ca->free_single_fp_reg = (ROUND_REG (*ca, SFmode)
-				     + BASE_ARG_REG (mode));
-       }
-   }
+  if ((TARGET_HITACHI || ca->renesas_abi) && TARGET_FPU_DOUBLE)
+    {
+      /* Note that we've used the skipped register.  */
+      if (mode == SFmode && ca->free_single_fp_reg)
+	{
+	  ca->free_single_fp_reg = 0;
+	  return;
+	}
+      /* When we have a DF after an SF, there's an SF register that get
+	 skipped in order to align the DF value.  We note this skipped
+	 register, because the next SF value will use it, and not the
+	 SF that follows the DF.  */
+      if (mode == DFmode
+	  && ROUND_REG (*ca, DFmode) != ROUND_REG (*ca, SFmode))
+	{
+	  ca->free_single_fp_reg = (ROUND_REG (*ca, SFmode)
+				    + BASE_ARG_REG (mode));
+	}
+    }
 
- if (! (TARGET_SH4 || ca->renesas_abi)
-     || PASS_IN_REG_P (*ca, mode, type))
-   (ca->arg_count[(int) GET_SH_ARG_CLASS (mode)]
-    = (ROUND_REG (*ca, mode)
-       + (mode == BLKmode
-	  ? ROUND_ADVANCE (int_size_in_bytes (type))
-	  : ROUND_ADVANCE (GET_MODE_SIZE (mode)))));
+  if (! ((TARGET_SH4 || TARGET_SH2A) || ca->renesas_abi)
+      || PASS_IN_REG_P (*ca, mode, type))
+    (ca->arg_count[(int) GET_SH_ARG_CLASS (mode)]
+     = (ROUND_REG (*ca, mode)
+	+ (mode == BLKmode
+	   ? ROUND_ADVANCE (int_size_in_bytes (type))
+	   : ROUND_ADVANCE (GET_MODE_SIZE (mode)))));
 }
 
-/* If the structure value address is not passed in a register, define
-   `STRUCT_VALUE' as an expression returning an RTX for the place
-   where the address is passed.  If it returns 0, the address is
-   passed as an "invisible" first argument.  */
 /* The Renesas calling convention doesn't quite fit into this scheme since
    the address is passed like an invisible argument, but one that is always
    passed in memory.  */
@@ -6668,6 +7297,8 @@ sh_struct_value_rtx (tree fndecl, int incoming ATTRIBUTE_UNUSED)
     return 0;
   return gen_rtx_REG (Pmode, 2);
 }
+
+/* Worker function for TARGET_RETURN_IN_MEMORY.  */
 
 static bool
 sh_return_in_memory (tree type, tree fndecl)
@@ -6693,14 +7324,25 @@ sh_return_in_memory (tree type, tree fndecl)
    later.  Fortunately, we already have two flags that are part of struct
    function that tell if a function uses varargs or stdarg.  */
 static void
-sh_setup_incoming_varargs (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-			   enum machine_mode mode ATTRIBUTE_UNUSED,
-			   tree type ATTRIBUTE_UNUSED,
-			   int *pretend_arg_size ATTRIBUTE_UNUSED,
+sh_setup_incoming_varargs (CUMULATIVE_ARGS *ca,
+			   enum machine_mode mode,
+			   tree type,
+			   int *pretend_arg_size,
 			   int second_time ATTRIBUTE_UNUSED)
 {
-  if (! current_function_stdarg)
-    abort ();
+  gcc_assert (current_function_stdarg);
+  if (TARGET_VARARGS_PRETEND_ARGS (current_function_decl))
+    {
+      int named_parm_regs, anon_parm_regs;
+
+      named_parm_regs = (ROUND_REG (*ca, mode)
+			 + (mode == BLKmode
+			    ? ROUND_ADVANCE (int_size_in_bytes (type))
+			    : ROUND_ADVANCE (GET_MODE_SIZE (mode))));
+      anon_parm_regs = NPARM_REGS (SImode) - named_parm_regs;
+      if (anon_parm_regs > 0)
+	*pretend_arg_size = anon_parm_regs * 4;
+    }
 }
 
 static bool
@@ -6750,7 +7392,7 @@ initial_elimination_offset (int from, int to)
 
   total_saved_regs_space = regs_saved + regs_saved_rounding;
 
-  if (from == ARG_POINTER_REGNUM && to == FRAME_POINTER_REGNUM)
+  if (from == ARG_POINTER_REGNUM && to == HARD_FRAME_POINTER_REGNUM)
     return total_saved_regs_space + total_auto_space
       + current_function_args_info.byref_regs * 8;
 
@@ -6759,79 +7401,109 @@ initial_elimination_offset (int from, int to)
       + current_function_args_info.byref_regs * 8;
 
   /* Initial gap between fp and sp is 0.  */
-  if (from == FRAME_POINTER_REGNUM && to == STACK_POINTER_REGNUM)
+  if (from == HARD_FRAME_POINTER_REGNUM && to == STACK_POINTER_REGNUM)
     return 0;
 
-  if (from == RETURN_ADDRESS_POINTER_REGNUM
-      && (to == FRAME_POINTER_REGNUM || to == STACK_POINTER_REGNUM))
+  if (from == FRAME_POINTER_REGNUM && to == STACK_POINTER_REGNUM)
+    return rounded_frame_size (0);
+
+  if (from == FRAME_POINTER_REGNUM && to == HARD_FRAME_POINTER_REGNUM)
+    return rounded_frame_size (0);
+
+  gcc_assert (from == RETURN_ADDRESS_POINTER_REGNUM
+	      && (to == HARD_FRAME_POINTER_REGNUM
+		  || to == STACK_POINTER_REGNUM));
+  if (TARGET_SH5)
     {
-      if (TARGET_SH5)
-	{
-	  int n = total_saved_regs_space;
-	  int pr_reg = TARGET_SHMEDIA ? PR_MEDIA_REG : PR_REG;
-	  save_schedule schedule;
-	  save_entry *entry;
-	  
-	  n += total_auto_space;
-
-	  /* If it wasn't saved, there's not much we can do.  */
-	  if (! TEST_HARD_REG_BIT (live_regs_mask, pr_reg))
-	    return n;
-
-	  target_flags = copy_flags;
-
-	  sh5_schedule_saves (&live_regs_mask, &schedule, n);
-	  for (entry = &schedule.entries[1]; entry->mode != VOIDmode; entry++)
-	    if (entry->reg == pr_reg)
-	      {
-		target_flags = save_flags;
-		return entry->offset;
-	      }
-	  abort ();
-	}
-      else
-	return total_auto_space;
+      int n = total_saved_regs_space;
+      int pr_reg = TARGET_SHMEDIA ? PR_MEDIA_REG : PR_REG;
+      save_schedule schedule;
+      save_entry *entry;
+      
+      n += total_auto_space;
+      
+      /* If it wasn't saved, there's not much we can do.  */
+      if (! TEST_HARD_REG_BIT (live_regs_mask, pr_reg))
+	return n;
+      
+      target_flags = copy_flags;
+      
+      sh5_schedule_saves (&live_regs_mask, &schedule, n);
+      for (entry = &schedule.entries[1]; entry->mode != VOIDmode; entry++)
+	if (entry->reg == pr_reg)
+	  {
+	    target_flags = save_flags;
+	    return entry->offset;
+	  }
+      gcc_unreachable ();
     }
-
-  abort ();
+  else
+    return total_auto_space;
 }
 
-/* Handle machine specific pragmas to be semi-compatible with Renesas
-   compiler.  */
-
-void
-sh_pr_interrupt (struct cpp_reader *pfile ATTRIBUTE_UNUSED)
-{
-  pragma_interrupt = 1;
-}
-
-void
-sh_pr_trapa (struct cpp_reader *pfile ATTRIBUTE_UNUSED)
-{
-  pragma_interrupt = pragma_trapa = 1;
-}
-
-void
-sh_pr_nosave_low_regs (struct cpp_reader *pfile ATTRIBUTE_UNUSED)
-{
-  pragma_nosave_low_regs = 1;
-}
-
-/* Generate 'handle_interrupt' attribute for decls */
-
+/* Insert any deferred function attributes from earlier pragmas.  */
 static void
 sh_insert_attributes (tree node, tree *attributes)
 {
-  if (! pragma_interrupt
-      || TREE_CODE (node) != FUNCTION_DECL)
+  tree attrs;
+
+  if (TREE_CODE (node) != FUNCTION_DECL)
     return;
 
   /* We are only interested in fields.  */
-  if (TREE_CODE_CLASS (TREE_CODE (node)) != 'd')
+  if (!DECL_P (node))
     return;
 
-  /* Add a 'handle_interrupt' attribute.  */
-  * attributes = tree_cons (get_identifier ("interrupt_handler"), NULL, * attributes);
+  /* Append the attributes to the deferred attributes.  */
+  *sh_deferred_function_attributes_tail = *attributes;
+  attrs = sh_deferred_function_attributes;
+  if (!attrs)
+    return;
+
+  /* Some attributes imply or require the interrupt attribute.  */
+  if (!lookup_attribute ("interrupt_handler", attrs)
+      && !lookup_attribute ("interrupt_handler", DECL_ATTRIBUTES (node)))
+    {
+      /* If we have a trapa_handler, but no interrupt_handler attribute,
+	 insert an interrupt_handler attribute.  */
+      if (lookup_attribute ("trapa_handler", attrs) != NULL_TREE)
+	/* We can't use sh_pr_interrupt here because that's not in the
+	   java frontend.  */
+	attrs
+	  = tree_cons (get_identifier("interrupt_handler"), NULL_TREE, attrs);
+      /* However, for sp_switch, trap_exit and nosave_low_regs, if the
+	 interrupt attribute is missing, we ignore the attribute and warn.  */
+      else if (lookup_attribute ("sp_switch", attrs)
+	       || lookup_attribute ("trap_exit", attrs)
+	       || lookup_attribute ("nosave_low_regs", attrs))
+	{
+	  tree *tail;
+
+	  for (tail = attributes; attrs; attrs = TREE_CHAIN (attrs))
+	    {
+	      if (is_attribute_p ("sp_switch", TREE_PURPOSE (attrs))
+		  || is_attribute_p ("trap_exit", TREE_PURPOSE (attrs))
+		  || is_attribute_p ("nosave_low_regs", TREE_PURPOSE (attrs)))
+		warning (OPT_Wattributes,
+			 "%qs attribute only applies to interrupt functions",
+			 IDENTIFIER_POINTER (TREE_PURPOSE (attrs)));
+	      else
+		{
+		  *tail = tree_cons (TREE_PURPOSE (attrs), NULL_TREE,
+				     NULL_TREE);
+		  tail = &TREE_CHAIN (*tail);
+		}
+	    }
+	  attrs = *attributes;
+	}
+    }
+
+  /* Install the processed list.  */
+  *attributes = attrs;
+
+  /* Clear deferred attributes.  */
+  sh_deferred_function_attributes = NULL_TREE;
+  sh_deferred_function_attributes_tail = &sh_deferred_function_attributes;
 
   return;
 }
@@ -6840,11 +7512,20 @@ sh_insert_attributes (tree node, tree *attributes)
 
    interrupt_handler -- specifies this function is an interrupt handler.
 
+   trapa_handler - like above, but don't save all registers.
+
    sp_switch -- specifies an alternate stack for an interrupt handler
    to run on.
 
    trap_exit -- use a trapa to exit an interrupt function instead of
    an rte instruction.
+
+   nosave_low_regs - don't save r0..r7 in an interrupt handler.
+     This is useful on the SH3 and upwards,
+     which has a separate set of low regs for User and Supervisor modes.
+     This should only be used for the lowest level of interrupts.  Higher levels
+     of interrupts must save the registers in case they themselves are
+     interrupted.
 
    renesas -- use Renesas calling/layout conventions (functions and
    structures).
@@ -6858,6 +7539,19 @@ const struct attribute_spec sh_attribute_table[] =
   { "sp_switch",         1, 1, true,  false, false, sh_handle_sp_switch_attribute },
   { "trap_exit",         1, 1, true,  false, false, sh_handle_trap_exit_attribute },
   { "renesas",           0, 0, false, true, false, sh_handle_renesas_attribute },
+  { "trapa_handler",     0, 0, true,  false, false, sh_handle_interrupt_handler_attribute },
+  { "nosave_low_regs",   0, 0, true,  false, false, sh_handle_interrupt_handler_attribute },
+#ifdef SYMBIAN
+  /* Symbian support adds three new attributes:
+     dllexport - for exporting a function/variable that will live in a dll
+     dllimport - for importing a function/variable from a dll
+
+     Microsoft allows multiple declspecs in one __declspec, separating
+     them with spaces.  We do NOT support this.  Instead, use __declspec
+     multiple times.  */
+  { "dllimport",         0, 0, true,  false, false, sh_symbian_handle_dll_attribute },
+  { "dllexport",         0, 0, true,  false, false, sh_symbian_handle_dll_attribute },
+#endif
   { NULL,                0, 0, false, false, false, NULL }
 };
 
@@ -6871,7 +7565,7 @@ sh_handle_interrupt_handler_attribute (tree *node, tree name,
 {
   if (TREE_CODE (*node) != FUNCTION_DECL)
     {
-      warning ("`%s' attribute only applies to functions",
+      warning (OPT_Wattributes, "%qs attribute only applies to functions",
 	       IDENTIFIER_POINTER (name));
       *no_add_attrs = true;
     }
@@ -6892,28 +7586,16 @@ sh_handle_sp_switch_attribute (tree *node, tree name, tree args,
 {
   if (TREE_CODE (*node) != FUNCTION_DECL)
     {
-      warning ("`%s' attribute only applies to functions",
-	       IDENTIFIER_POINTER (name));
-      *no_add_attrs = true;
-    }
-  else if (!pragma_interrupt)
-    {
-      /* The sp_switch attribute only has meaning for interrupt functions.  */
-      warning ("`%s' attribute only applies to interrupt functions",
+      warning (OPT_Wattributes, "%qs attribute only applies to functions",
 	       IDENTIFIER_POINTER (name));
       *no_add_attrs = true;
     }
   else if (TREE_CODE (TREE_VALUE (args)) != STRING_CST)
     {
       /* The argument must be a constant string.  */
-      warning ("`%s' attribute argument not a string constant",
+      warning (OPT_Wattributes, "%qs attribute argument not a string constant",
 	       IDENTIFIER_POINTER (name));
       *no_add_attrs = true;
-    }
-  else
-    {
-      sp_switch = gen_rtx_SYMBOL_REF (VOIDmode,
-				      TREE_STRING_POINTER (TREE_VALUE (args)));
     }
 
   return NULL_TREE;
@@ -6927,27 +7609,18 @@ sh_handle_trap_exit_attribute (tree *node, tree name, tree args,
 {
   if (TREE_CODE (*node) != FUNCTION_DECL)
     {
-      warning ("`%s' attribute only applies to functions",
+      warning (OPT_Wattributes, "%qs attribute only applies to functions",
 	       IDENTIFIER_POINTER (name));
       *no_add_attrs = true;
     }
-  else if (!pragma_interrupt)
-    {
-      /* The trap_exit attribute only has meaning for interrupt functions.  */
-      warning ("`%s' attribute only applies to interrupt functions",
-	       IDENTIFIER_POINTER (name));
-      *no_add_attrs = true;
-    }
+  /* The argument specifies a trap number to be used in a trapa instruction
+     at function exit (instead of an rte instruction).  */
   else if (TREE_CODE (TREE_VALUE (args)) != INTEGER_CST)
     {
       /* The argument must be a constant integer.  */
-      warning ("`%s' attribute argument not an integer constant",
-	       IDENTIFIER_POINTER (name));
+      warning (OPT_Wattributes, "%qs attribute argument not an "
+	       "integer constant", IDENTIFIER_POINTER (name));
       *no_add_attrs = true;
-    }
-  else
-    {
-      trap_exit = TREE_INT_CST_LOW (TREE_VALUE (args));
     }
 
   return NULL_TREE;
@@ -6973,6 +7646,8 @@ sh_attr_renesas_p (tree td)
     return 0;
   if (DECL_P (td))
     td = TREE_TYPE (td);
+  if (td == error_mark_node)
+    return 0;
   return (lookup_attribute ("renesas", TYPE_ATTRIBUTES (td))
 	  != NULL_TREE);
 }
@@ -6993,88 +7668,20 @@ sh_cfun_interrupt_handler_p (void)
 	  != NULL_TREE);
 }
 
-/* ??? target_switches in toplev.c is static, hence we have to duplicate it.  */
-static const struct
+/* Implement TARGET_CHECK_PCH_TARGET_FLAGS.  */
+
+static const char *
+sh_check_pch_target_flags (int old_flags)
 {
-  const char *const name;
-  const int value;
-  const char *const description;
-}
-sh_target_switches[] = TARGET_SWITCHES;
-#define target_switches sh_target_switches
-
-/* Like default_pch_valid_p, but take flag_mask into account.  */
-const char *
-sh_pch_valid_p (const void *data_p, size_t len)
-{
-  const char *data = (const char *)data_p;
-  const char *flag_that_differs = NULL;
-  size_t i;
-  int old_flags;
-  int flag_mask
-    = (SH1_BIT | SH2_BIT | SH3_BIT | SH_E_BIT | HARD_SH4_BIT | FPU_SINGLE_BIT
-       | SH4_BIT | HITACHI_BIT | LITTLE_ENDIAN_BIT);
-  
-  /* -fpic and -fpie also usually make a PCH invalid.  */
-  if (data[0] != flag_pic)
-    return _("created and used with different settings of -fpic");
-  if (data[1] != flag_pie)
-    return _("created and used with different settings of -fpie");
-  data += 2;
-
-  /* Check target_flags.  */
-  memcpy (&old_flags, data, sizeof (target_flags));
-  if (((old_flags ^ target_flags) & flag_mask) != 0)
-    {
-      for (i = 0; i < ARRAY_SIZE (target_switches); i++)
-	{
-	  int bits;
-
-	  bits = target_switches[i].value;
-	  if (bits < 0)
-	    bits = -bits;
-	  bits &= flag_mask;
-	  if ((target_flags & bits) != (old_flags & bits))
-	    {
-	      flag_that_differs = target_switches[i].name;
-	      goto make_message;
-	    }
-	}
-      abort ();
-    }
-  data += sizeof (target_flags);
-  len -= sizeof (target_flags);
-  
-  /* Check string options.  */
-#ifdef TARGET_OPTIONS
-  for (i = 0; i < ARRAY_SIZE (target_options); i++)
-    {
-      const char *str = *target_options[i].variable;
-      size_t l;
-      if (! str)
-	str = "";
-      l = strlen (str) + 1;
-      if (len < l || memcmp (data, str, l) != 0)
-	{
-	  flag_that_differs = target_options[i].prefix;
-	  goto make_message;
-	}
-      data += l;
-      len -= l;
-    }
-#endif
-
+  if ((old_flags ^ target_flags) & (MASK_SH1 | MASK_SH2 | MASK_SH3
+				    | MASK_SH_E | MASK_HARD_SH4
+				    | MASK_FPU_SINGLE | MASK_SH4))
+    return _("created and used with different architectures / ABIs");
+  if ((old_flags ^ target_flags) & MASK_HITACHI)
+    return _("created and used with different ABIs");
+  if ((old_flags ^ target_flags) & MASK_LITTLE_ENDIAN)
+    return _("created and used with different endianness");
   return NULL;
-  
- make_message:
-  {
-    char *r;
-    asprintf (&r, _("created and used with differing settings of `-m%s'"),
-		  flag_that_differs);
-    if (r == NULL)
-      return _("out of memory");
-    return r;
-  }
 }
 
 /* Predicates used by the templates.  */
@@ -7092,211 +7699,6 @@ system_reg_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
     case MACH_REG:
       return 1;
     }
-  return 0;
-}
-
-/* Returns 1 if OP can be source of a simple move operation.
-   Same as general_operand, but a LABEL_REF is valid, PRE_DEC is
-   invalid as are subregs of system registers.  */
-
-int
-general_movsrc_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == MEM)
-    {
-      rtx inside = XEXP (op, 0);
-      if (GET_CODE (inside) == CONST)
-	inside = XEXP (inside, 0);
-
-      if (GET_CODE (inside) == LABEL_REF)
-	return 1;
-
-      if (GET_CODE (inside) == PLUS
-	  && GET_CODE (XEXP (inside, 0)) == LABEL_REF
-	  && GET_CODE (XEXP (inside, 1)) == CONST_INT)
-	return 1;
-
-      /* Only post inc allowed.  */
-      if (GET_CODE (inside) == PRE_DEC)
-	return 0;
-    }
-
-  if ((mode == QImode || mode == HImode)
-      && (GET_CODE (op) == SUBREG
-	  && GET_CODE (XEXP (op, 0)) == REG
-	  && system_reg_operand (XEXP (op, 0), mode)))
-    return 0;
-
-  return general_operand (op, mode);
-}
-
-/* Returns 1 if OP can be a destination of a move.
-   Same as general_operand, but no preinc allowed.  */
-
-int
-general_movdst_operand (rtx op, enum machine_mode mode)
-{
-  /* Only pre dec allowed.  */
-  if (GET_CODE (op) == MEM && GET_CODE (XEXP (op, 0)) == POST_INC)
-    return 0;
-
-  return general_operand (op, mode);
-}
-
-/* Returns 1 if OP is a normal arithmetic register.  */
-
-int
-arith_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (register_operand (op, mode))
-    {
-      int regno;
-
-      if (GET_CODE (op) == REG)
-	regno = REGNO (op);
-      else if (GET_CODE (op) == SUBREG && GET_CODE (SUBREG_REG (op)) == REG)
-	regno = REGNO (SUBREG_REG (op));
-      else
-	return 1;
-
-      return (regno != T_REG && regno != PR_REG
-	      && ! TARGET_REGISTER_P (regno)
-	      && (regno != FPUL_REG || TARGET_SH4)
-	      && regno != MACH_REG && regno != MACL_REG);
-    }
-  return 0;
-}
-
-/* Like above, but for DImode destinations: forbid paradoxical DImode subregs,
-   because this would lead to missing sign extensions when truncating from
-   DImode to SImode.  */
-int
-arith_reg_dest (rtx op, enum machine_mode mode)
-{
-  if (mode == DImode && GET_CODE (op) == SUBREG
-      && GET_MODE_SIZE (GET_MODE (SUBREG_REG (op))) < 8)
-    return 0;
-  return arith_reg_operand (op, mode);
-}
-
-int
-int_gpr_dest (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  enum machine_mode op_mode = GET_MODE (op);
-
-  if (GET_MODE_CLASS (op_mode) != MODE_INT
-      || GET_MODE_SIZE (op_mode) >= UNITS_PER_WORD)
-    return 0;
-  if (! reload_completed)
-    return 0;
-  return true_regnum (op) <= LAST_GENERAL_REG;
-}
-
-int
-fp_arith_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (register_operand (op, mode))
-    {
-      int regno;
-
-      if (GET_CODE (op) == REG)
-	regno = REGNO (op);
-      else if (GET_CODE (op) == SUBREG && GET_CODE (SUBREG_REG (op)) == REG)
-	regno = REGNO (SUBREG_REG (op));
-      else
-	return 1;
-
-      return (regno >= FIRST_PSEUDO_REGISTER
-	      || FP_REGISTER_P (regno));
-    }
-  return 0;
-}
-
-/* Returns 1 if OP is a valid source operand for an arithmetic insn.  */
-
-int
-arith_operand (rtx op, enum machine_mode mode)
-{
-  if (arith_reg_operand (op, mode))
-    return 1;
-
-  if (TARGET_SHMEDIA)
-    {
-      /* FIXME: We should be checking whether the CONST_INT fits in a
-	 CONST_OK_FOR_I16 here, but this causes reload_cse to crash when
-	 attempting to transform a sequence of two 64-bit sets of the
-	 same register from literal constants into a set and an add,
-	 when the difference is too wide for an add.  */
-      if (GET_CODE (op) == CONST_INT
-	  || EXTRA_CONSTRAINT_C16 (op))
-	return 1;
-      else
-	return 0;
-    }
-  else if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_I08 (INTVAL (op)))
-    return 1;
-
-  return 0;
-}
-
-/* Returns 1 if OP is a valid source operand for a compare insn.  */
-
-int
-arith_reg_or_0_operand (rtx op, enum machine_mode mode)
-{
-  if (arith_reg_operand (op, mode))
-    return 1;
-
-  if (EXTRA_CONSTRAINT_Z (op))
-    return 1;
-
-  return 0;
-}
-
-/* Return 1 if OP is a valid source operand for an SHmedia operation
-   that takes either a register or a 6-bit immediate.  */
-
-int
-shmedia_6bit_operand (rtx op, enum machine_mode mode)
-{
-  return (arith_reg_operand (op, mode)
-	  || (GET_CODE (op) == CONST_INT && CONST_OK_FOR_I06 (INTVAL (op))));
-}
-
-/* Returns 1 if OP is a valid source operand for a logical operation.  */
-
-int
-logical_operand (rtx op, enum machine_mode mode)
-{
-  if (arith_reg_operand (op, mode))
-    return 1;
-
-  if (TARGET_SHMEDIA)
-    {
-      if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_I10 (INTVAL (op)))
-	return 1;
-      else
-	return 0;
-    }
-  else if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_K08 (INTVAL (op)))
-    return 1;
-
-  return 0;
-}
-
-int
-and_operand (rtx op, enum machine_mode mode)
-{
-  if (logical_operand (op, mode))
-    return 1;
-
-  /* Check mshflo.l / mshflhi.l opportunities.  */
-  if (TARGET_SHMEDIA
-      && mode == DImode
-      && GET_CODE (op) == CONST_INT
-      && CONST_OK_FOR_J16 (INTVAL (op)))
-	return 1;
-
   return 0;
 }
 
@@ -7348,30 +7750,6 @@ tertiary_reload_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
   return code == MEM || (TARGET_SH4 && code == CONST_DOUBLE);
 }
 
-int
-fpscr_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return (GET_CODE (op) == REG && REGNO (op) == FPSCR_REG
-	  && GET_MODE (op) == PSImode);
-}
-
-int
-fpul_operand (rtx op, enum machine_mode mode)
-{
-  if (TARGET_SHMEDIA)
-    return fp_arith_reg_operand (op, mode);
-
-  return (GET_CODE (op) == REG
-	  && (REGNO (op) == FPUL_REG || REGNO (op) >= FIRST_PSEUDO_REGISTER)
-	  && GET_MODE (op) == mode);
-}
-
-int
-symbol_ref_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return (GET_CODE (op) == SYMBOL_REF);
-}
-
 /* Return the TLS type for TLS symbols, 0 for otherwise.  */
 int
 tls_symbolic_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
@@ -7380,302 +7758,9 @@ tls_symbolic_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
     return 0;
   return SYMBOL_REF_TLS_MODEL (op);
 }
-
-int
-commutative_float_operator (rtx op, enum machine_mode mode)
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case PLUS:
-    case MULT:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-}
-
-int
-noncommutative_float_operator (rtx op, enum machine_mode mode)
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case MINUS:
-    case DIV:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-}
-
-int
-unary_float_operator (rtx op, enum machine_mode mode)
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case ABS:
-    case NEG:
-    case SQRT:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-}
-
-int
-binary_float_operator (rtx op, enum machine_mode mode)
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case PLUS:
-    case MINUS:
-    case MULT:
-    case DIV:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-}
-
-int
-binary_logical_operator (rtx op, enum machine_mode mode)
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case IOR:
-    case AND:
-    case XOR:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-}
-
-int
-equality_comparison_operator (rtx op, enum machine_mode mode)
-{
-  return ((mode == VOIDmode || GET_MODE (op) == mode)
-	  && (GET_CODE (op) == EQ || GET_CODE (op) == NE));
-}
-
-int greater_comparison_operator (rtx op, enum machine_mode mode)
-{
-  if (mode != VOIDmode && GET_MODE (op) == mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case GT:
-    case GE:
-    case GTU:
-    case GEU:
-      return 1;
-    default:
-      return 0;
-    }
-}
-
-int less_comparison_operator (rtx op, enum machine_mode mode)
-{
-  if (mode != VOIDmode && GET_MODE (op) == mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case LT:
-    case LE:
-    case LTU:
-    case LEU:
-      return 1;
-    default:
-      return 0;
-    }
-}
-
-/* Accept pseudos and branch target registers.  */
-int
-target_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (mode != DImode
-      || GET_MODE (op) != DImode)
-    return 0;
-
-  if (GET_CODE (op) == SUBREG)
-    op = XEXP (op, 0);
-
-  if (GET_CODE (op) != REG)
-    return 0;
-
-  /* We must protect ourselves from matching pseudos that are virtual
-     register, because they will eventually be replaced with hardware
-     registers that aren't branch-target registers.  */
-  if (REGNO (op) > LAST_VIRTUAL_REGISTER
-      || TARGET_REGISTER_P (REGNO (op)))
-    return 1;
-
-  return 0;
-}
-
-/* Same as target_reg_operand, except that label_refs and symbol_refs
-   are accepted before reload.  */
-int
-target_operand (rtx op, enum machine_mode mode)
-{
-  if (mode != DImode)
-    return 0;
-
-  if ((GET_MODE (op) == DImode || GET_MODE (op) == VOIDmode)
-      && EXTRA_CONSTRAINT_Csy (op))
-    return ! reload_completed;
-
-  return target_reg_operand (op, mode);
-}
-
-int
-mextr_bit_offset (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  HOST_WIDE_INT i;
-
-  if (GET_CODE (op) != CONST_INT)
-    return 0;
-  i = INTVAL (op);
-  return i >= 1*8 && i <= 7*8 && (i & 7) == 0;
-}
-
-int
-extend_reg_operand (rtx op, enum machine_mode mode)
-{
-  return (GET_CODE (op) == TRUNCATE
-	  ? arith_operand
-	  : arith_reg_operand) (op, mode);
-}
-
-int
-trunc_hi_operand (rtx op, enum machine_mode mode)
-{
-  enum machine_mode op_mode = GET_MODE (op);
-
-  if (op_mode != SImode && op_mode != DImode
-      && op_mode != V4HImode && op_mode != V2SImode)
-    return 0;
-  return extend_reg_operand (op, mode);
-}
-
-int
-extend_reg_or_0_operand (rtx op, enum machine_mode mode)
-{
-  return (GET_CODE (op) == TRUNCATE
-	  ? arith_operand
-	  : arith_reg_or_0_operand) (op, mode);
-}
-
-int
-general_extend_operand (rtx op, enum machine_mode mode)
-{
-  return (GET_CODE (op) == TRUNCATE
-	  ? arith_operand
-	  : nonimmediate_operand) (op, mode);
-}
-
-int
-inqhi_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) != TRUNCATE || mode != GET_MODE (op))
-    return 0;
-  op = XEXP (op, 0);
-  /* Can't use true_regnum here because copy_cost wants to know about
-     SECONDARY_INPUT_RELOAD_CLASS.  */
-  return GET_CODE (op) == REG && FP_REGISTER_P (REGNO (op));
-}
-
-int
-sh_rep_vec (rtx v, enum machine_mode mode)
-{
-  int i;
-  rtx x, y;
-
-  if ((GET_CODE (v) != CONST_VECTOR && GET_CODE (v) != PARALLEL)
-      || (GET_MODE (v) != mode && mode != VOIDmode))
-    return 0;
-  i = XVECLEN (v, 0) - 2;
-  x = XVECEXP (v, 0, i + 1);
-  if (GET_MODE_UNIT_SIZE (mode) == 1)
-    {
-      y = XVECEXP (v, 0, i);
-      for (i -= 2 ; i >= 0; i -= 2)
-	if (! rtx_equal_p (XVECEXP (v, 0, i + 1), x)
-	    || ! rtx_equal_p (XVECEXP (v, 0, i), y))
-	  return 0;
-    }
-  else
-    for (; i >= 0; i--)
-      if (XVECEXP (v, 0, i) != x)
-	return 0;
-  return 1;
-}
-
-/* Determine if V is a constant vector matching MODE with only one element
-   that is not a sign extension.  Two byte-sized elements count as one.  */
-int
-sh_1el_vec (rtx v, enum machine_mode mode)
-{
-  int unit_size;
-  int i, last, least, sign_ix;
-  rtx sign;
-
-  if (GET_CODE (v) != CONST_VECTOR
-      || (GET_MODE (v) != mode && mode != VOIDmode))
-    return 0;
-  /* Determine numbers of last and of least significant elements.  */
-  last = XVECLEN (v, 0) - 1;
-  least = TARGET_LITTLE_ENDIAN ? 0 : last;
-  if (GET_CODE (XVECEXP (v, 0, least)) != CONST_INT)
-    return 0;
-  sign_ix = least;
-  if (GET_MODE_UNIT_SIZE (mode) == 1)
-    sign_ix = TARGET_LITTLE_ENDIAN ? 1 : last - 1;
-  if (GET_CODE (XVECEXP (v, 0, sign_ix)) != CONST_INT)
-    return 0;
-  unit_size = GET_MODE_UNIT_SIZE (GET_MODE (v));
-  sign = (INTVAL (XVECEXP (v, 0, sign_ix)) >> (unit_size * BITS_PER_UNIT - 1)
-	  ? constm1_rtx : const0_rtx);
-  i = XVECLEN (v, 0) - 1;
-  do
-    if (i != least && i != sign_ix && XVECEXP (v, 0, i) != sign)
-      return 0;
-  while (--i);
-  return 1;
-}
-
-int
-sh_const_vec (rtx v, enum machine_mode mode)
-{
-  int i;
-
-  if (GET_CODE (v) != CONST_VECTOR
-      || (GET_MODE (v) != mode && mode != VOIDmode))
-    return 0;
-  i = XVECLEN (v, 0) - 1;
-  for (; i >= 0; i--)
-    if (GET_CODE (XVECEXP (v, 0, i)) != CONST_INT)
-      return 0;
-  return 1;
-}
 
 /* Return the destination address of a branch.  */
-   
+
 static int
 branch_dest (rtx branch)
 {
@@ -7708,6 +7793,10 @@ reg_unused_after (rtx reg, rtx insn)
 
   while ((insn = NEXT_INSN (insn)))
     {
+      rtx set;
+      if (!INSN_P (insn))
+	continue;
+
       code = GET_CODE (insn);
 
 #if 0
@@ -7764,19 +7853,16 @@ reg_unused_after (rtx reg, rtx insn)
 	  else if (code == JUMP_INSN)
 	    return 0;
 	}
-      else if (GET_RTX_CLASS (code) == 'i')
-	{
-	  rtx set = single_set (insn);
 
-	  if (set && reg_overlap_mentioned_p (reg, SET_SRC (set)))
-	    return 0;
-	  if (set && reg_overlap_mentioned_p (reg, SET_DEST (set)))
-	    return GET_CODE (SET_DEST (set)) != MEM;
-	  if (set == 0 && reg_overlap_mentioned_p (reg, PATTERN (insn)))
-	    return 0;
-	}
+      set = single_set (insn);
+      if (set && reg_overlap_mentioned_p (reg, SET_SRC (set)))
+	return 0;
+      if (set && reg_overlap_mentioned_p (reg, SET_DEST (set)))
+	return GET_CODE (SET_DEST (set)) != MEM;
+      if (set == 0 && reg_overlap_mentioned_p (reg, PATTERN (insn)))
+	return 0;
 
-      if (code == CALL_INSN && call_used_regs[REGNO (reg)])
+      if (code == CALL_INSN && call_really_used_regs[REGNO (reg)])
 	return 1;
     }
   return 1;
@@ -7790,13 +7876,52 @@ get_fpscr_rtx (void)
 {
   if (! fpscr_rtx)
     {
-      fpscr_rtx = gen_rtx (REG, PSImode, FPSCR_REG);
+      fpscr_rtx = gen_rtx_REG (PSImode, FPSCR_REG);
       REG_USERVAR_P (fpscr_rtx) = 1;
       mark_user_reg (fpscr_rtx);
     }
   if (! reload_completed || mdep_reorg_phase != SH_AFTER_MDEP_REORG)
     mark_user_reg (fpscr_rtx);
   return fpscr_rtx;
+}
+
+static GTY(()) tree fpscr_values;
+
+static void
+emit_fpu_switch (rtx scratch, int index)
+{
+  rtx dst, src;
+
+  if (fpscr_values == NULL)
+    {
+      tree t;
+
+      t = build_index_type (integer_one_node);
+      t = build_array_type (integer_type_node, t);
+      t = build_decl (VAR_DECL, get_identifier ("__fpscr_values"), t);
+      DECL_ARTIFICIAL (t) = 1;
+      DECL_IGNORED_P (t) = 1;
+      DECL_EXTERNAL (t) = 1;
+      TREE_STATIC (t) = 1;
+      TREE_PUBLIC (t) = 1;
+      TREE_USED (t) = 1;
+
+      fpscr_values = t;
+    }
+
+  src = DECL_RTL (fpscr_values);
+  if (no_new_pseudos)
+    {
+      emit_move_insn (scratch, XEXP (src, 0));
+      if (index != 0)
+	emit_insn (gen_addsi3 (scratch, scratch, GEN_INT (index * 4)));
+      src = adjust_automodify_address (src, PSImode, scratch, index * 4);
+    }
+  else
+    src = adjust_address (src, PSImode, index * 4);
+
+  dst = get_fpscr_rtx ();
+  emit_move_insn (dst, src);
 }
 
 void
@@ -7834,7 +7959,7 @@ void
 expand_df_binop (rtx (*fun) (rtx, rtx, rtx, rtx), rtx *operands)
 {
   emit_df_insn ((*fun) (operands[0], operands[1], operands[2],
-			 get_fpscr_rtx ()));
+			get_fpscr_rtx ()));
 }
 
 /* ??? gcc does flow analysis strictly after common subexpression
@@ -7864,7 +7989,7 @@ f(double a)
    remove assignments that are dead due to a following assignment in the
    same basic block.  */
 
-static void 
+static void
 mark_use (rtx x, rtx *reg_set_block)
 {
   enum rtx_code code;
@@ -7941,24 +8066,20 @@ get_free_reg (HARD_REG_SET regs_live)
 
   /* Hard reg 1 is live; since this is a SMALL_REGISTER_CLASSES target,
      there shouldn't be anything but a jump before the function end.  */
-  if (! TEST_HARD_REG_BIT (regs_live, 7))
-    return gen_rtx_REG (Pmode, 7);
-
-  abort ();
+  gcc_assert (!TEST_HARD_REG_BIT (regs_live, 7));
+  return gen_rtx_REG (Pmode, 7);
 }
 
-/* This function will set the fpscr from memory. 
+/* This function will set the fpscr from memory.
    MODE is the mode we are setting it to.  */
 void
 fpscr_set_from_mem (int mode, HARD_REG_SET regs_live)
 {
   enum attr_fp_mode fp_mode = mode;
+  enum attr_fp_mode norm_mode = ACTUAL_NORMAL_MODE (FP_MODE);
   rtx addr_reg = get_free_reg (regs_live);
 
-  if (fp_mode == (enum attr_fp_mode) ACTUAL_NORMAL_MODE (FP_MODE))
-    emit_insn (gen_fpu_switch1 (addr_reg));
-  else
-    emit_insn (gen_fpu_switch0 (addr_reg));
+  emit_fpu_switch (addr_reg, fp_mode == norm_mode);
 }
 
 /* Is the given character a logical line separator for the assembler?  */
@@ -7993,7 +8114,7 @@ sh_insn_length_adjustment (rtx insn)
     return 2;
 
   /* sh-dsp parallel processing insn take four bytes instead of two.  */
-     
+
   if (GET_CODE (insn) == INSN)
     {
       int sum = 0;
@@ -8072,7 +8193,7 @@ nonpic_symbol_mentioned_p (rtx x)
 	  || XINT (x, 1) == UNSPEC_GOTTPOFF
 	  || XINT (x, 1) == UNSPEC_DTPOFF
 	  || XINT (x, 1) == UNSPEC_PLT))
-      return 0;
+    return 0;
 
   fmt = GET_RTX_FORMAT (GET_CODE (x));
   for (i = GET_RTX_LENGTH (GET_CODE (x)) - 1; i >= 0; i--)
@@ -8189,7 +8310,7 @@ mark_constant_pool_use (rtx x)
 /* Return true if it's possible to redirect BRANCH1 to the destination
    of an unconditional jump BRANCH2.  We only want to do this if the
    resulting branch will have a short displacement.  */
-int 
+int
 sh_can_redirect_branch (rtx branch1, rtx branch2)
 {
   if (flag_expensive_optimizations && simplejump_p (branch2))
@@ -8197,21 +8318,21 @@ sh_can_redirect_branch (rtx branch1, rtx branch2)
       rtx dest = XEXP (SET_SRC (single_set (branch2)), 0);
       rtx insn;
       int distance;
-      
-      for (distance = 0, insn = NEXT_INSN (branch1); 
-	   insn && distance < 256; 
+
+      for (distance = 0, insn = NEXT_INSN (branch1);
+	   insn && distance < 256;
 	   insn = PREV_INSN (insn))
 	{
-	  if (insn == dest)    
+	  if (insn == dest)
 	    return 1;
 	  else
 	    distance += get_attr_length (insn);
 	}
-      for (distance = 0, insn = NEXT_INSN (branch1); 
-	   insn && distance < 256; 
+      for (distance = 0, insn = NEXT_INSN (branch1);
+	   insn && distance < 256;
 	   insn = NEXT_INSN (insn))
 	{
-	  if (insn == dest)    
+	  if (insn == dest)
 	    return 1;
 	  else
 	    distance += get_attr_length (insn);
@@ -8225,15 +8346,14 @@ int
 sh_hard_regno_rename_ok (unsigned int old_reg ATTRIBUTE_UNUSED,
 			 unsigned int new_reg)
 {
-
-/* Interrupt functions can only use registers that have already been
-   saved by the prologue, even if they would normally be
-   call-clobbered.  */
+  /* Interrupt functions can only use registers that have already been
+     saved by the prologue, even if they would normally be
+     call-clobbered.  */
 
   if (sh_cfun_interrupt_handler_p () && !regs_ever_live[new_reg])
-     return 0;
+    return 0;
 
-   return 1;
+  return 1;
 }
 
 /* Function to update the integer COST
@@ -8253,11 +8373,58 @@ sh_adjust_cost (rtx insn, rtx link ATTRIBUTE_UNUSED, rtx dep_insn, int cost)
       /* On SHmedia, if the dependence is an anti-dependence or
          output-dependence, there is no cost.  */
       if (REG_NOTE_KIND (link) != 0)
-        cost = 0;
+	{
+	  /* However, dependencies between target register loads and
+	     uses of the register in a subsequent block that are separated
+	     by a conditional branch are not modelled - we have to do with
+	     the anti-dependency between the target register load and the
+	     conditional branch that ends the current block.  */
+	  if (REG_NOTE_KIND (link) == REG_DEP_ANTI
+	      && GET_CODE (PATTERN (dep_insn)) == SET
+	      && (get_attr_type (dep_insn) == TYPE_PT_MEDIA
+		  || get_attr_type (dep_insn) == TYPE_PTABS_MEDIA)
+	      && get_attr_type (insn) == TYPE_CBRANCH_MEDIA)
+	    {
+	      int orig_cost = cost;
+	      rtx note = find_reg_note (insn, REG_BR_PROB, 0);
+	      rtx target = ((! note
+			     || INTVAL (XEXP (note, 0)) * 2 < REG_BR_PROB_BASE)
+			    ? insn : JUMP_LABEL (insn));
+	      /* On the likely path, the branch costs 1, on the unlikely path,
+		 it costs 3.  */
+	      cost--;
+	      do
+		target = next_active_insn (target);
+	      while (target && ! flow_dependent_p (target, dep_insn)
+		     && --cost > 0);
+	      /* If two branches are executed in immediate succession, with the
+		 first branch properly predicted, this causes a stall at the
+		 second branch, hence we won't need the target for the
+		 second branch for two cycles after the launch of the first
+		 branch.  */
+	      if (cost > orig_cost - 2)
+		cost = orig_cost - 2;
+	    }
+	  else
+	    cost = 0;
+	}
 
-      if (get_attr_is_mac_media (insn)
-          && get_attr_is_mac_media (dep_insn))
-        cost = 1;
+      else if (get_attr_is_mac_media (insn)
+	       && get_attr_is_mac_media (dep_insn))
+	cost = 1;
+
+      else if (! reload_completed
+	       && GET_CODE (PATTERN (insn)) == SET
+	       && GET_CODE (SET_SRC (PATTERN (insn))) == FLOAT
+	       && GET_CODE (PATTERN (dep_insn)) == SET
+	       && fp_arith_reg_operand (SET_SRC (PATTERN (dep_insn)), VOIDmode)
+	       && cost < 4)
+	cost = 4;
+      /* Schedule the ptabs for a casesi_jump_media in preference to stuff
+	 that is needed at the target.  */
+      else if (get_attr_type (insn) == TYPE_JUMP_MEDIA
+	       && ! flow_dependent_p (insn, dep_insn))
+	cost--;
     }
   else if (REG_NOTE_KIND (link) == 0)
     {
@@ -8286,7 +8453,9 @@ sh_adjust_cost (rtx insn, rtx link ATTRIBUTE_UNUSED, rtx dep_insn, int cost)
 	  if (GET_CODE (call) == SET)
 	    call = SET_SRC (call);
 	  if (GET_CODE (call) == CALL && GET_CODE (XEXP (call, 0)) == MEM
-	      && ! reg_set_p (XEXP (XEXP (call, 0), 0), dep_insn))
+		  /* sibcalli_thunk uses a symbol_ref in an unspec.  */
+	      && (GET_CODE (XEXP (XEXP (call, 0), 0)) == UNSPEC
+		  || ! reg_set_p (XEXP (XEXP (call, 0), 0), dep_insn)))
 	    cost = 0;
 	}
       /* Likewise, the most timing critical input for an sfuncs call
@@ -8309,7 +8478,7 @@ sh_adjust_cost (rtx insn, rtx link ATTRIBUTE_UNUSED, rtx dep_insn, int cost)
 	       && get_attr_type (insn) == TYPE_DYN_SHIFT
 	       && get_attr_any_int_load (dep_insn) == ANY_INT_LOAD_YES
 	       && reg_overlap_mentioned_p (SET_DEST (PATTERN (dep_insn)),
-					   XEXP (SET_SRC (single_set(insn)),
+					   XEXP (SET_SRC (single_set (insn)),
 						 1)))
 	cost++;
       /* When an LS group instruction with a latency of less than
@@ -8368,36 +8537,349 @@ flow_dependent_p_1 (rtx x, rtx pat ATTRIBUTE_UNUSED, void *data)
     *pinsn = NULL_RTX;
 }
 
-/* For use by ALLOCATE_INITIAL_VALUE.  Note that sh.md contains some
+/* For use by sh_allocate_initial_value.  Note that sh.md contains some
    'special function' patterns (type sfunc) that clobber pr, but that
    do not look like function calls to leaf_function_p.  Hence we must
    do this extra check.  */
-int
+static int
 sh_pr_n_sets (void)
 {
   return REG_N_SETS (TARGET_SHMEDIA ? PR_MEDIA_REG : PR_REG);
 }
 
-/* This Function returns nonzero if the DFA based scheduler interface
-   is to be used.  At present this is supported for the SH4 only.  */
-static int
-sh_use_dfa_interface(void)
+/* Return where to allocate pseudo for a given hard register initial
+   value.  */
+static rtx
+sh_allocate_initial_value (rtx hard_reg)
 {
-  if (TARGET_HARD_SH4)
-    return 1;
+  rtx x;
+
+  if (REGNO (hard_reg) == (TARGET_SHMEDIA ? PR_MEDIA_REG : PR_REG))
+    {
+      if (current_function_is_leaf
+	  && ! sh_pr_n_sets ()
+	  && ! (TARGET_SHCOMPACT
+		&& ((current_function_args_info.call_cookie
+		     & ~ CALL_COOKIE_RET_TRAMP (1))
+		    || current_function_has_nonlocal_label)))
+	x = hard_reg;
+      else
+	x = gen_frame_mem (Pmode, return_address_pointer_rtx);
+    }
   else
-    return 0;
+    x = NULL_RTX;
+
+  return x;
 }
 
 /* This function returns "2" to indicate dual issue for the SH4
    processor.  To be used by the DFA pipeline description.  */
 static int
-sh_issue_rate(void)
+sh_issue_rate (void)
 {
   if (TARGET_SUPERSCALAR)
     return 2;
   else
     return 1;
+}
+
+/* Functions for ready queue reordering for sched1.  */
+
+/* Get weight for mode for a set x.  */
+static short
+find_set_regmode_weight (rtx x, enum machine_mode mode)
+{
+  if (GET_CODE (x) == CLOBBER && register_operand (SET_DEST (x), mode))
+    return 1;
+  if (GET_CODE (x) == SET && register_operand (SET_DEST (x), mode))
+    {
+      if (GET_CODE (SET_DEST (x)) == REG)
+	{
+	  if (!reg_mentioned_p (SET_DEST (x), SET_SRC (x)))
+	    return 1;
+	  else
+	    return 0;
+	}
+      return 1;
+    }
+  return 0;
+}
+
+/* Get regmode weight for insn.  */
+static short
+find_insn_regmode_weight (rtx insn, enum machine_mode mode)
+{
+  short reg_weight = 0;
+  rtx x;
+
+  /* Increment weight for each register born here.  */
+  x = PATTERN (insn);
+  reg_weight += find_set_regmode_weight (x, mode);
+  if (GET_CODE (x) == PARALLEL)
+    {
+      int j;
+      for (j = XVECLEN (x, 0) - 1; j >= 0; j--)
+	{
+	  x = XVECEXP (PATTERN (insn), 0, j);
+	  reg_weight += find_set_regmode_weight (x, mode);
+	}
+    }
+  /* Decrement weight for each register that dies here.  */
+  for (x = REG_NOTES (insn); x; x = XEXP (x, 1))
+    {
+      if (REG_NOTE_KIND (x) == REG_DEAD || REG_NOTE_KIND (x) == REG_UNUSED)
+	{
+	  rtx note = XEXP (x, 0);
+	  if (GET_CODE (note) == REG && GET_MODE (note) == mode)
+	    reg_weight--;
+	}
+    }
+  return reg_weight;
+}
+
+/* Calculate regmode weights for all insns of a basic block.  */
+static void
+find_regmode_weight (int b, enum machine_mode mode)
+{
+  rtx insn, next_tail, head, tail;
+
+  get_block_head_tail (b, &head, &tail);
+  next_tail = NEXT_INSN (tail);
+
+  for (insn = head; insn != next_tail; insn = NEXT_INSN (insn))
+    {
+      /* Handle register life information.  */
+      if (!INSN_P (insn))
+	continue;
+
+      if (mode == SFmode)
+	INSN_REGMODE_WEIGHT (insn, mode) =
+	  find_insn_regmode_weight (insn, mode) + 2 * find_insn_regmode_weight (insn, DFmode);
+      else if (mode == SImode)
+	INSN_REGMODE_WEIGHT (insn, mode) =
+	  find_insn_regmode_weight (insn, mode) + 2 * find_insn_regmode_weight (insn, DImode);
+    }
+}
+
+/* Comparison function for ready queue sorting.  */
+static int
+rank_for_reorder (const void *x, const void *y)
+{
+  rtx tmp = *(const rtx *) y;
+  rtx tmp2 = *(const rtx *) x;
+
+  /* The insn in a schedule group should be issued the first.  */
+  if (SCHED_GROUP_P (tmp) != SCHED_GROUP_P (tmp2))
+    return SCHED_GROUP_P (tmp2) ? 1 : -1;
+
+  /* If insns are equally good, sort by INSN_LUID (original insn order), This
+     minimizes instruction movement, thus minimizing sched's effect on
+     register pressure.  */
+  return INSN_LUID (tmp) - INSN_LUID (tmp2);
+}
+
+/* Resort the array A in which only element at index N may be out of order.  */
+static void
+swap_reorder (rtx *a, int n)
+{
+  rtx insn = a[n - 1];
+  int i = n - 2;
+
+  while (i >= 0 && rank_for_reorder (a + i, &insn) >= 0)
+    {
+      a[i + 1] = a[i];
+      i -= 1;
+    }
+  a[i + 1] = insn;
+}
+
+#define SCHED_REORDER(READY, N_READY)                                	\
+  do									\
+    {									\
+      if ((N_READY) == 2)						\
+	swap_reorder (READY, N_READY);					\
+      else if ((N_READY) > 2)						\
+	qsort (READY, N_READY, sizeof (rtx), rank_for_reorder);		\
+    }									\
+  while (0)
+
+/* Sort the ready list READY by ascending priority, using the SCHED_REORDER
+   macro.  */
+static void
+ready_reorder (rtx *ready, int nready)
+{
+  SCHED_REORDER (ready, nready);
+}
+
+/* Calculate regmode weights for all insns of all basic block.  */
+static void
+sh_md_init_global (FILE *dump ATTRIBUTE_UNUSED,
+		   int verbose ATTRIBUTE_UNUSED,
+		   int old_max_uid)
+{
+  basic_block b;
+
+  regmode_weight[0] = (short *) xcalloc (old_max_uid, sizeof (short));
+  regmode_weight[1] = (short *) xcalloc (old_max_uid, sizeof (short));
+
+  FOR_EACH_BB_REVERSE (b)
+  {
+    find_regmode_weight (b->index, SImode);
+    find_regmode_weight (b->index, SFmode);
+  }
+
+  CURR_REGMODE_PRESSURE (SImode) = 0;
+  CURR_REGMODE_PRESSURE (SFmode) = 0;
+
+}
+
+/* Cleanup.  */
+static void
+sh_md_finish_global (FILE *dump ATTRIBUTE_UNUSED,
+		     int verbose ATTRIBUTE_UNUSED)
+{
+  if (regmode_weight[0])
+    {
+      free (regmode_weight[0]);
+      regmode_weight[0] = NULL;
+    }
+  if (regmode_weight[1])
+    {
+      free (regmode_weight[1]);
+      regmode_weight[1] = NULL;
+    }
+}
+
+/* Cache the can_issue_more so that we can return it from reorder2. Also,
+   keep count of register pressures on SImode and SFmode. */
+static int
+sh_variable_issue (FILE *dump ATTRIBUTE_UNUSED,
+		   int sched_verbose ATTRIBUTE_UNUSED,
+		   rtx insn,
+		   int can_issue_more)
+{
+  if (GET_CODE (PATTERN (insn)) != USE
+      && GET_CODE (PATTERN (insn)) != CLOBBER)
+    cached_can_issue_more = can_issue_more - 1;
+  else
+    cached_can_issue_more = can_issue_more;
+
+  if (reload_completed)
+    return cached_can_issue_more;
+
+  CURR_REGMODE_PRESSURE (SImode) += INSN_REGMODE_WEIGHT (insn, SImode);
+  CURR_REGMODE_PRESSURE (SFmode) += INSN_REGMODE_WEIGHT (insn, SFmode);
+
+  return cached_can_issue_more;
+}
+
+static void
+sh_md_init (FILE *dump ATTRIBUTE_UNUSED,
+	    int verbose ATTRIBUTE_UNUSED,
+	    int veclen ATTRIBUTE_UNUSED)
+{
+  CURR_REGMODE_PRESSURE (SImode) = 0;
+  CURR_REGMODE_PRESSURE (SFmode) = 0;
+}
+
+/* Some magic numbers.  */
+/* Pressure on register r0 can lead to spill failures. so avoid sched1 for
+   functions that already have high pressure on r0. */
+#define R0_MAX_LIFE_REGIONS 2
+#define R0_MAX_LIVE_LENGTH 12
+/* Register Pressure thresholds for SImode and SFmode registers.  */
+#define SIMODE_MAX_WEIGHT 5
+#define SFMODE_MAX_WEIGHT 10
+
+/* Return true if the pressure is high for MODE.  */
+static short
+high_pressure (enum machine_mode mode)
+{
+  /* Pressure on register r0 can lead to spill failures. so avoid sched1 for
+     functions that already have high pressure on r0. */
+  if ((REG_N_SETS (0) - REG_N_DEATHS (0)) >= R0_MAX_LIFE_REGIONS
+      && REG_LIVE_LENGTH (0) >= R0_MAX_LIVE_LENGTH)
+    return 1;
+
+  if (mode == SFmode)
+    return (CURR_REGMODE_PRESSURE (SFmode) > SFMODE_MAX_WEIGHT);
+  else
+    return (CURR_REGMODE_PRESSURE (SImode) > SIMODE_MAX_WEIGHT);
+}
+
+/* Reorder ready queue if register pressure is high.  */
+static int
+sh_reorder (FILE *dump ATTRIBUTE_UNUSED,
+	    int sched_verbose ATTRIBUTE_UNUSED,
+	    rtx *ready,
+	    int *n_readyp,
+	    int clock_var ATTRIBUTE_UNUSED)
+{
+  if (reload_completed)
+    return sh_issue_rate ();
+
+  if (high_pressure (SFmode) || high_pressure (SImode))
+    {
+      ready_reorder (ready, *n_readyp);
+    }
+
+  return sh_issue_rate ();
+}
+
+/* Skip cycles if the current register pressure is high.  */
+static int
+sh_reorder2 (FILE *dump ATTRIBUTE_UNUSED,
+	     int sched_verbose ATTRIBUTE_UNUSED,
+	     rtx *ready ATTRIBUTE_UNUSED,
+	     int *n_readyp ATTRIBUTE_UNUSED,
+	     int clock_var ATTRIBUTE_UNUSED)
+{
+  if (reload_completed)
+    return cached_can_issue_more;
+
+  if (high_pressure(SFmode) || high_pressure (SImode))
+    skip_cycles = 1;
+
+  return cached_can_issue_more;
+}
+
+/* Skip cycles without sorting the ready queue. This will move insn from
+   Q->R. If this is the last cycle we are skipping; allow sorting of ready
+   queue by sh_reorder.  */
+
+/* Generally, skipping these many cycles are sufficient for all insns to move
+   from Q -> R.  */
+#define MAX_SKIPS 8
+
+static int
+sh_dfa_new_cycle (FILE *sched_dump ATTRIBUTE_UNUSED,
+		  int sched_verbose ATTRIBUTE_UNUSED,
+		  rtx insn ATTRIBUTE_UNUSED,
+		  int last_clock_var,
+		  int clock_var,
+		  int *sort_p)
+{
+  if (reload_completed)
+    return 0;
+
+  if (skip_cycles)
+    {
+      if ((clock_var - last_clock_var) < MAX_SKIPS)
+	{
+	  *sort_p = 0;
+	  return 1;
+	}
+      /* If this is the last cycle we are skipping, allow reordering of R.  */
+      if ((clock_var - last_clock_var) == MAX_SKIPS)
+	{
+	  *sort_p = 1;
+	  return 1;
+	}
+    }
+
+  skip_cycles = 0;
+
+  return 0;
 }
 
 /* SHmedia requires registers for branches, so we can't generate new
@@ -8417,18 +8899,47 @@ sh_target_reg_class (void)
 static bool
 sh_optimize_target_register_callee_saved (bool after_prologue_epilogue_gen)
 {
-  return (shmedia_space_reserved_for_target_registers
-	  && (! after_prologue_epilogue_gen || TARGET_SAVE_ALL_TARGET_REGS));
+  HARD_REG_SET dummy;
+  rtx insn;
+
+  if (! shmedia_space_reserved_for_target_registers)
+    return 0;
+  if (after_prologue_epilogue_gen && ! TARGET_SAVE_ALL_TARGET_REGS)
+    return 0;
+  if (calc_live_regs (&dummy) >= 6 * 8)
+    return 1;
+  /* This is a borderline case.  See if we got a nested loop, or a loop
+     with a call, or with more than 4 labels inside.  */
+  for (insn = get_insns(); insn; insn = NEXT_INSN (insn))
+    {
+      if (GET_CODE (insn) == NOTE
+	  && NOTE_LINE_NUMBER (insn) == NOTE_INSN_LOOP_BEG)
+	{
+	  int labels = 0;
+
+	  do
+	    {
+	      insn = NEXT_INSN (insn);
+	      if ((GET_CODE (insn) == NOTE
+		   && NOTE_LINE_NUMBER (insn) == NOTE_INSN_LOOP_BEG)
+		  || GET_CODE (insn) == CALL_INSN
+		  || (GET_CODE (insn) == CODE_LABEL && ++labels > 4))
+		return 1;
+	    }
+	  while (GET_CODE (insn) != NOTE
+		 || NOTE_LINE_NUMBER (insn) != NOTE_INSN_LOOP_END);
+	}
+    }
+  return 0;
 }
 
 static bool
-sh_ms_bitfield_layout_p (record_type)
-     tree record_type ATTRIBUTE_UNUSED;
+sh_ms_bitfield_layout_p (tree record_type ATTRIBUTE_UNUSED)
 {
   return (TARGET_SH5 || TARGET_HITACHI || sh_attr_renesas_p (record_type));
 }
 
-/* 
+/*
    On the SH1..SH4, the trampoline looks like
    2 0002 D202     	   	mov.l	l2,r2
    1 0000 D301     		mov.l	l1,r3
@@ -8447,6 +8958,8 @@ sh_ms_bitfield_layout_p (record_type)
 void
 sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
 {
+  rtx tramp_mem = gen_frame_mem (BLKmode, tramp);
+
   if (TARGET_SHMEDIA64)
     {
       rtx tramp_templ;
@@ -8475,34 +8988,32 @@ sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
 	  insn = gen_rtx_IOR (DImode, insn, gen_int_mode (0xec000010, SImode));
 	  insn = force_operand (insn, NULL_RTX);
 	  insn = gen_lowpart (SImode, insn);
-	  emit_move_insn (gen_rtx_MEM (SImode, tramp), insn);
+	  emit_move_insn (change_address (tramp_mem, SImode, NULL_RTX), insn);
 	  insn = gen_rtx_LSHIFTRT (DImode, fnaddr, GEN_INT (38));
 	  insn = gen_rtx_AND (DImode, insn, mask);
 	  insn = force_operand (gen_rtx_IOR (DImode, movi1, insn), NULL_RTX);
 	  insn = gen_lowpart (SImode, insn);
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 4)), insn);
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 4), insn);
 	  insn = gen_rtx_LSHIFTRT (DImode, fnaddr, GEN_INT (22));
 	  insn = gen_rtx_AND (DImode, insn, mask);
 	  insn = force_operand (gen_rtx_IOR (DImode, shori1, insn), NULL_RTX);
 	  insn = gen_lowpart (SImode, insn);
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 8)), insn);
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 8), insn);
 	  insn = gen_rtx_LSHIFTRT (DImode, fnaddr, GEN_INT (6));
 	  insn = gen_rtx_AND (DImode, insn, mask);
 	  insn = force_operand (gen_rtx_IOR (DImode, shori1, insn), NULL_RTX);
 	  insn = gen_lowpart (SImode, insn);
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 12)),
-			  insn);
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 12), insn);
 	  insn = gen_rtx_ASHIFT (DImode, fnaddr, GEN_INT (10));
 	  insn = gen_rtx_AND (DImode, insn, mask);
 	  insn = force_operand (gen_rtx_IOR (DImode, shori1, insn), NULL_RTX);
 	  insn = gen_lowpart (SImode, insn);
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 16)),
-			  insn);
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 20)),
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 16), insn);
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 20),
 			  GEN_INT (0x6bf10600));
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 24)),
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 24),
 			  GEN_INT (0x4415fc10));
-	  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 28)),
+	  emit_move_insn (adjust_address (tramp_mem, SImode, 28),
 			  GEN_INT (0x4401fff0));
 	  emit_insn (gen_ic_invalidate_line (tramp));
 	  return;
@@ -8511,18 +9022,15 @@ sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
       fixed_len = TRAMPOLINE_SIZE - 2 * GET_MODE_SIZE (Pmode);
 
       tramp_templ = gen_datalabel_ref (tramp_templ);
-      dst = gen_rtx_MEM (BLKmode, tramp);
-      src = gen_rtx_MEM (BLKmode, tramp_templ);
+      dst = tramp_mem;
+      src = gen_const_mem (BLKmode, tramp_templ);
       set_mem_align (dst, 256);
       set_mem_align (src, 64);
       emit_block_move (dst, src, GEN_INT (fixed_len), BLOCK_OP_NORMAL);
 
-      emit_move_insn (gen_rtx_MEM (Pmode, plus_constant (tramp,	fixed_len)),
-		      fnaddr);
-      emit_move_insn (gen_rtx_MEM (Pmode,
-				   plus_constant (tramp,
-						  fixed_len
-						  + GET_MODE_SIZE (Pmode))), 
+      emit_move_insn (adjust_address (tramp_mem, Pmode, fixed_len), fnaddr);
+      emit_move_insn (adjust_address (tramp_mem, Pmode,
+				      fixed_len + GET_MODE_SIZE (Pmode)),
 		      cxt);
       emit_insn (gen_ic_invalidate_line (tramp));
       return;
@@ -8549,14 +9057,14 @@ sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
 				 movishori));
       emit_insn (gen_rotrdi3_mextr (quad0, quad0,
 				    GEN_INT (TARGET_LITTLE_ENDIAN ? 24 : 56)));
-      emit_insn (gen_ashldi3_media (quad0, quad0, GEN_INT (2)));
-      emit_move_insn (gen_rtx_MEM (DImode, tramp), quad0);
+      emit_insn (gen_ashldi3_media (quad0, quad0, const2_rtx));
+      emit_move_insn (change_address (tramp_mem, DImode, NULL_RTX), quad0);
       emit_insn (gen_mshflo_w_x (gen_rtx_SUBREG (V4HImode, cxtload, 0),
 				 gen_rtx_SUBREG (V2HImode, cxt, 0),
 				 movishori));
       emit_insn (gen_rotrdi3_mextr (cxtload, cxtload,
 				    GEN_INT (TARGET_LITTLE_ENDIAN ? 24 : 56)));
-      emit_insn (gen_ashldi3_media (cxtload, cxtload, GEN_INT (2)));
+      emit_insn (gen_ashldi3_media (cxtload, cxtload, const2_rtx));
       if (TARGET_LITTLE_ENDIAN)
 	{
 	  emit_insn (gen_mshflo_l_di (quad1, ptabs, cxtload));
@@ -8567,8 +9075,8 @@ sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
 	  emit_insn (gen_mextr4 (quad1, cxtload, ptabs));
 	  emit_insn (gen_mshflo_l_di (quad2, blink, cxtload));
 	}
-      emit_move_insn (gen_rtx_MEM (DImode, plus_constant (tramp, 8)), quad1);
-      emit_move_insn (gen_rtx_MEM (DImode, plus_constant (tramp, 16)), quad2);
+      emit_move_insn (adjust_address (tramp_mem, DImode, 8), quad1);
+      emit_move_insn (adjust_address (tramp_mem, DImode, 16), quad2);
       emit_insn (gen_ic_invalidate_line (tramp));
       return;
     }
@@ -8577,20 +9085,19 @@ sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
       emit_insn (gen_initialize_trampoline (tramp, cxt, fnaddr));
       return;
     }
-  emit_move_insn (gen_rtx_MEM (SImode, tramp),
+  emit_move_insn (change_address (tramp_mem, SImode, NULL_RTX),
 		  gen_int_mode (TARGET_LITTLE_ENDIAN ? 0xd301d202 : 0xd202d301,
 				SImode));
-  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 4)),
+  emit_move_insn (adjust_address (tramp_mem, SImode, 4),
 		  gen_int_mode (TARGET_LITTLE_ENDIAN ? 0x0009422b : 0x422b0009,
 				SImode));
-  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 8)),
-		  cxt);
-  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (tramp, 12)),
-		  fnaddr);
+  emit_move_insn (adjust_address (tramp_mem, SImode, 8), cxt);
+  emit_move_insn (adjust_address (tramp_mem, SImode, 12), fnaddr);
   if (TARGET_HARVARD)
     {
       if (TARGET_USERMODE)
-	emit_library_call (function_symbol ("__ic_invalidate"),
+	emit_library_call (function_symbol (NULL, "__ic_invalidate",
+					    FUNCTION_ORDINARY),
 			   0, VOIDmode, 1, tramp, SImode);
       else
 	emit_insn (gen_ic_invalidate_line (tramp));
@@ -8601,13 +9108,18 @@ sh_initialize_trampoline (rtx tramp, rtx fnaddr, rtx cxt)
    receives arguments ``by reference'' will have them stored in its
    own stack frame, so it must not pass pointers or references to
    these arguments to other functions by means of sibling calls.  */
+/* If PIC, we cannot make sibling calls to global functions
+   because the PLT requires r12 to be live.  */
 static bool
 sh_function_ok_for_sibcall (tree decl, tree exp ATTRIBUTE_UNUSED)
 {
-  return (decl 
+  return (1
 	  && (! TARGET_SHCOMPACT
 	      || current_function_args_info.stack_regs == 0)
-	  && ! sh_cfun_interrupt_handler_p ());
+	  && ! sh_cfun_interrupt_handler_p ()
+	  && (! flag_pic
+	      || (decl && ! TREE_PUBLIC (decl))
+	      || (decl && DECL_VISIBILITY (decl) != VISIBILITY_DEFAULT)));
 }
 
 /* Machine specific built-in functions.  */
@@ -8621,6 +9133,7 @@ struct builtin_description
 
 /* describe number and signedness of arguments; arg[0] == result
    (1: unsigned, 2: signed, 4: don't care, 8: pointer 0: no argument */
+/* 9: 64 bit pointer, 10: 32 bit pointer */
 static const char signature_args[][4] =
 {
 #define SH_BLTIN_V2SI2 0
@@ -8646,28 +9159,34 @@ static const char signature_args[][4] =
 #define SH_BLTIN_SISF 10
   { 4, 2 },
 #define SH_BLTIN_LDUA_L 11
-  { 2, 8 },
+  { 2, 10 },
 #define SH_BLTIN_LDUA_Q 12
-  { 1, 8 },
+  { 1, 10 },
 #define SH_BLTIN_STUA_L 13
-  { 0, 8, 2 },
+  { 0, 10, 2 },
 #define SH_BLTIN_STUA_Q 14
-  { 0, 8, 1 },
-#define SH_BLTIN_UDI 15
-  { 0, 8, 1 },
-#define SH_BLTIN_NUM_SHARED_SIGNATURES 16
-#define SH_BLTIN_2 16
-#define SH_BLTIN_SU 16
+  { 0, 10, 1 },
+#define SH_BLTIN_LDUA_L64 15
+  { 2, 9 },
+#define SH_BLTIN_LDUA_Q64 16
+  { 1, 9 },
+#define SH_BLTIN_STUA_L64 17
+  { 0, 9, 2 },
+#define SH_BLTIN_STUA_Q64 18
+  { 0, 9, 1 },
+#define SH_BLTIN_NUM_SHARED_SIGNATURES 19
+#define SH_BLTIN_2 19
+#define SH_BLTIN_SU 19
   { 1, 2 },
-#define SH_BLTIN_3 17
-#define SH_BLTIN_SUS 17
+#define SH_BLTIN_3 20
+#define SH_BLTIN_SUS 20
   { 2, 2, 1 },
-#define SH_BLTIN_PSSV 18
+#define SH_BLTIN_PSSV 21
   { 0, 8, 2, 2 },
-#define SH_BLTIN_XXUU 19
-#define SH_BLTIN_UUUU 19
+#define SH_BLTIN_XXUU 22
+#define SH_BLTIN_UUUU 22
   { 1, 1, 1, 1 },
-#define SH_BLTIN_PV 20
+#define SH_BLTIN_PV 23
   { 0, 8 },
 };
 /* mcmv: operands considered unsigned.  */
@@ -8685,10 +9204,7 @@ static const struct builtin_description bdesc[] =
   { CODE_FOR_ssaddv2si3,"__builtin_ssaddv2si3", SH_BLTIN_V2SI3 },
   { CODE_FOR_usaddv8qi3,"__builtin_usaddv8qi3", SH_BLTIN_V8QI3 },
   { CODE_FOR_ssaddv4hi3,"__builtin_ssaddv4hi3", SH_BLTIN_V4HI3 },
-#if 0
-  { CODE_FOR_alloco32,	"__builtin_sh_media_ALLOCO", SH_BLTIN_PV },
-  { CODE_FOR_alloco64,	"__builtin_sh_media_ALLOCO", SH_BLTIN_PV },
-#endif
+  { CODE_FOR_alloco_i,	"__builtin_sh_media_ALLOCO", SH_BLTIN_PV },
   { CODE_FOR_negcmpeqv8qi,"__builtin_sh_media_MCMPEQ_B", SH_BLTIN_V8QI3 },
   { CODE_FOR_negcmpeqv2si,"__builtin_sh_media_MCMPEQ_L", SH_BLTIN_V2SI3 },
   { CODE_FOR_negcmpeqv4hi,"__builtin_sh_media_MCMPEQ_W", SH_BLTIN_V4HI3 },
@@ -8699,13 +9215,13 @@ static const struct builtin_description bdesc[] =
   { CODE_FOR_mcnvs_lw,	"__builtin_sh_media_MCNVS_LW", SH_BLTIN_3 },
   { CODE_FOR_mcnvs_wb,	"__builtin_sh_media_MCNVS_WB", SH_BLTIN_V4HI2V8QI },
   { CODE_FOR_mcnvs_wub,	"__builtin_sh_media_MCNVS_WUB", SH_BLTIN_V4HI2V8QI },
-  { CODE_FOR_mextr1,	"__builtin_sh_media_MEXTR1", SH_BLTIN_UDI },
-  { CODE_FOR_mextr2,	"__builtin_sh_media_MEXTR2", SH_BLTIN_UDI },
-  { CODE_FOR_mextr3,	"__builtin_sh_media_MEXTR3", SH_BLTIN_UDI },
-  { CODE_FOR_mextr4,	"__builtin_sh_media_MEXTR4", SH_BLTIN_UDI },
-  { CODE_FOR_mextr5,	"__builtin_sh_media_MEXTR5", SH_BLTIN_UDI },
-  { CODE_FOR_mextr6,	"__builtin_sh_media_MEXTR6", SH_BLTIN_UDI },
-  { CODE_FOR_mextr7,	"__builtin_sh_media_MEXTR7", SH_BLTIN_UDI },
+  { CODE_FOR_mextr1,	"__builtin_sh_media_MEXTR1", SH_BLTIN_V8QI3 },
+  { CODE_FOR_mextr2,	"__builtin_sh_media_MEXTR2", SH_BLTIN_V8QI3 },
+  { CODE_FOR_mextr3,	"__builtin_sh_media_MEXTR3", SH_BLTIN_V8QI3 },
+  { CODE_FOR_mextr4,	"__builtin_sh_media_MEXTR4", SH_BLTIN_V8QI3 },
+  { CODE_FOR_mextr5,	"__builtin_sh_media_MEXTR5", SH_BLTIN_V8QI3 },
+  { CODE_FOR_mextr6,	"__builtin_sh_media_MEXTR6", SH_BLTIN_V8QI3 },
+  { CODE_FOR_mextr7,	"__builtin_sh_media_MEXTR7", SH_BLTIN_V8QI3 },
   { CODE_FOR_mmacfx_wl,	"__builtin_sh_media_MMACFX_WL", SH_BLTIN_MAC_HISI },
   { CODE_FOR_mmacnfx_wl,"__builtin_sh_media_MMACNFX_WL", SH_BLTIN_MAC_HISI },
   { CODE_FOR_mulv2si3,	"__builtin_mulv2si3", SH_BLTIN_V2SI3, },
@@ -8742,8 +9258,10 @@ static const struct builtin_description bdesc[] =
   { CODE_FOR_fsina_s,	"__builtin_sh_media_FSINA_S", SH_BLTIN_SISF },
   { CODE_FOR_fipr,	"__builtin_sh_media_FIPR_S", SH_BLTIN_3 },
   { CODE_FOR_ftrv,	"__builtin_sh_media_FTRV_S", SH_BLTIN_3 },
+  { CODE_FOR_mac_media,	"__builtin_sh_media_FMAC_S", SH_BLTIN_3 },
+  { CODE_FOR_sqrtdf2,	"__builtin_sh_media_FSQRT_D", SH_BLTIN_2 },
+  { CODE_FOR_sqrtsf2,	"__builtin_sh_media_FSQRT_S", SH_BLTIN_2 },
   { CODE_FOR_fsrra_s,	"__builtin_sh_media_FSRRA_S", SH_BLTIN_2 },
-#if 0
   { CODE_FOR_ldhi_l,	"__builtin_sh_media_LDHI_L", SH_BLTIN_LDUA_L },
   { CODE_FOR_ldhi_q,	"__builtin_sh_media_LDHI_Q", SH_BLTIN_LDUA_Q },
   { CODE_FOR_ldlo_l,	"__builtin_sh_media_LDLO_L", SH_BLTIN_LDUA_L },
@@ -8752,21 +9270,17 @@ static const struct builtin_description bdesc[] =
   { CODE_FOR_sthi_q,	"__builtin_sh_media_STHI_Q", SH_BLTIN_STUA_Q },
   { CODE_FOR_stlo_l,	"__builtin_sh_media_STLO_L", SH_BLTIN_STUA_L },
   { CODE_FOR_stlo_q,	"__builtin_sh_media_STLO_Q", SH_BLTIN_STUA_Q },
-  { CODE_FOR_ldhi_l64,	"__builtin_sh_media_LDHI_L", SH_BLTIN_LDUA_L },
-  { CODE_FOR_ldhi_q64,	"__builtin_sh_media_LDHI_Q", SH_BLTIN_LDUA_Q },
-  { CODE_FOR_ldlo_l64,	"__builtin_sh_media_LDLO_L", SH_BLTIN_LDUA_L },
-  { CODE_FOR_ldlo_q64,	"__builtin_sh_media_LDLO_Q", SH_BLTIN_LDUA_Q },
-  { CODE_FOR_sthi_l64,	"__builtin_sh_media_STHI_L", SH_BLTIN_STUA_L },
-  { CODE_FOR_sthi_q64,	"__builtin_sh_media_STHI_Q", SH_BLTIN_STUA_Q },
-  { CODE_FOR_stlo_l64,	"__builtin_sh_media_STLO_L", SH_BLTIN_STUA_L },
-  { CODE_FOR_stlo_q64,	"__builtin_sh_media_STLO_Q", SH_BLTIN_STUA_Q },
-#endif
+  { CODE_FOR_ldhi_l64,	"__builtin_sh_media_LDHI_L", SH_BLTIN_LDUA_L64 },
+  { CODE_FOR_ldhi_q64,	"__builtin_sh_media_LDHI_Q", SH_BLTIN_LDUA_Q64 },
+  { CODE_FOR_ldlo_l64,	"__builtin_sh_media_LDLO_L", SH_BLTIN_LDUA_L64 },
+  { CODE_FOR_ldlo_q64,	"__builtin_sh_media_LDLO_Q", SH_BLTIN_LDUA_Q64 },
+  { CODE_FOR_sthi_l64,	"__builtin_sh_media_STHI_L", SH_BLTIN_STUA_L64 },
+  { CODE_FOR_sthi_q64,	"__builtin_sh_media_STHI_Q", SH_BLTIN_STUA_Q64 },
+  { CODE_FOR_stlo_l64,	"__builtin_sh_media_STLO_L", SH_BLTIN_STUA_L64 },
+  { CODE_FOR_stlo_q64,	"__builtin_sh_media_STLO_Q", SH_BLTIN_STUA_Q64 },
   { CODE_FOR_nsb,	"__builtin_sh_media_NSB", SH_BLTIN_SU },
   { CODE_FOR_byterev,	"__builtin_sh_media_BYTEREV", SH_BLTIN_2 },
-#if 0
-  { CODE_FOR_prefetch32,"__builtin_sh_media_PREFO", SH_BLTIN_PSSV },
-  { CODE_FOR_prefetch64,"__builtin_sh_media_PREFO", SH_BLTIN_PSSV }
-#endif
+  { CODE_FOR_prefetch,	"__builtin_sh_media_PREFO", SH_BLTIN_PSSV },
 };
 
 static void
@@ -8778,7 +9292,7 @@ sh_media_init_builtins (void)
   memset (shared, 0, sizeof shared);
   for (d = bdesc; d - bdesc < (int) ARRAY_SIZE (bdesc); d++)
     {
-      tree type, arg_type;
+      tree type, arg_type = 0;
       int signature = d->signature;
       int i;
 
@@ -8788,8 +9302,9 @@ sh_media_init_builtins (void)
 	{
 	  int has_result = signature_args[signature][0] != 0;
 
-	  if (signature_args[signature][1] == 8
-	      && (insn_data[d->icode].operand[has_result].mode != Pmode))
+	  if ((signature_args[signature][1] & 8)
+	      && (((signature_args[signature][1] & 1) && TARGET_SHMEDIA32)
+		  || ((signature_args[signature][1] & 2) && TARGET_SHMEDIA64)))
 	    continue;
 	  if (! TARGET_FPU_ANY
 	      && FLOAT_MODE_P (insn_data[d->icode].operand[0].mode))
@@ -8800,12 +9315,12 @@ sh_media_init_builtins (void)
 	      int arg = signature_args[signature][i];
 	      int opno = i - 1 + has_result;
 
-	      if (arg == 8)
+	      if (arg & 8)
 		arg_type = ptr_type_node;
 	      else if (arg)
-		arg_type = ((*lang_hooks.types.type_for_mode)
-			    (insn_data[d->icode].operand[opno].mode,
-			     (arg & 1)));
+		arg_type = (*lang_hooks.types.type_for_mode)
+		  (insn_data[d->icode].operand[opno].mode,
+		   (arg & 1));
 	      else if (i)
 		continue;
 	      else
@@ -8818,9 +9333,40 @@ sh_media_init_builtins (void)
 	  if (signature < SH_BLTIN_NUM_SHARED_SIGNATURES)
 	    shared[signature] = type;
 	}
-      builtin_function (d->name, type, d - bdesc, BUILT_IN_MD,
-			NULL, NULL_TREE);
+      lang_hooks.builtin_function (d->name, type, d - bdesc, BUILT_IN_MD,
+				   NULL, NULL_TREE);
     }
+}
+
+/* Implements target hook vector_mode_supported_p.  */
+bool
+sh_vector_mode_supported_p (enum machine_mode mode)
+{
+  if (TARGET_FPU_ANY
+      && ((mode == V2SFmode)
+	  || (mode == V4SFmode)
+	  || (mode == V16SFmode)))
+    return true;
+
+  else if (TARGET_SHMEDIA
+	   && ((mode == V8QImode)
+	       || (mode == V2HImode)
+	       || (mode == V4HImode)
+	       || (mode == V2SImode)))
+    return true;
+
+  return false;
+}
+
+/* Implements target hook dwarf_calling_convention.  Return an enum
+   of dwarf_calling_convention.  */
+int
+sh_dwarf_calling_convention (tree func)
+{
+  if (sh_attr_renesas_p (func))
+    return DW_CC_GNU_renesas_sh;
+
+  return DW_CC_normal;
 }
 
 static void
@@ -8849,7 +9395,7 @@ sh_expand_builtin (tree exp, rtx target, rtx subtarget ATTRIBUTE_UNUSED,
   enum machine_mode tmode = VOIDmode;
   int nop = 0, i;
   rtx op[4];
-  rtx pat;
+  rtx pat = 0;
 
   if (signature_args[signature][0])
     {
@@ -8870,6 +9416,7 @@ sh_expand_builtin (tree exp, rtx target, rtx subtarget ATTRIBUTE_UNUSED,
     {
       tree arg;
       enum machine_mode opmode, argmode;
+      tree optype;
 
       if (! signature_args[signature][i])
 	break;
@@ -8877,11 +9424,19 @@ sh_expand_builtin (tree exp, rtx target, rtx subtarget ATTRIBUTE_UNUSED,
       if (arg == error_mark_node)
 	return const0_rtx;
       arglist = TREE_CHAIN (arglist);
-      opmode = insn_data[icode].operand[nop].mode;
+      if (signature_args[signature][i] & 8)
+	{
+	  opmode = ptr_mode;
+	  optype = ptr_type_node;
+	}
+      else
+	{
+	  opmode = insn_data[icode].operand[nop].mode;
+	  optype = (*lang_hooks.types.type_for_mode) (opmode, 0);
+	}
       argmode = TYPE_MODE (TREE_TYPE (arg));
       if (argmode != opmode)
-	arg = build1 (NOP_EXPR,
-		      (*lang_hooks.types.type_for_mode) (opmode, 0), arg);
+	arg = build1 (NOP_EXPR, optype, arg);
       op[nop] = expand_expr (arg, NULL_RTX, opmode, 0);
       if (! (*insn_data[icode].operand[nop].predicate) (op[nop], opmode))
 	op[nop] = copy_to_mode_reg (opmode, op[nop]);
@@ -8902,7 +9457,7 @@ sh_expand_builtin (tree exp, rtx target, rtx subtarget ATTRIBUTE_UNUSED,
       pat = (*insn_data[d->icode].genfun) (op[0], op[1], op[2], op[3]);
       break;
     default:
-      abort ();
+      gcc_unreachable ();
     }
   if (! pat)
     return 0;
@@ -8941,18 +9496,23 @@ bool
 sh_cannot_change_mode_class (enum machine_mode from, enum machine_mode to,
 			     enum reg_class class)
 {
+  /* We want to enable the use of SUBREGs as a means to
+     VEC_SELECT a single element of a vector.  */
+  if (to == SFmode && VECTOR_MODE_P (from) && GET_MODE_INNER (from) == SFmode)
+    return (reg_classes_intersect_p (GENERAL_REGS, class));
+
   if (GET_MODE_SIZE (from) != GET_MODE_SIZE (to))
     {
-       if (TARGET_LITTLE_ENDIAN)
-         {
-	   if (GET_MODE_SIZE (to) < 8 || GET_MODE_SIZE (from) < 8)
-	     return reg_classes_intersect_p (DF_REGS, class);
-	 }
-       else
-	 {
-	   if (GET_MODE_SIZE (from) < 8)
-	     return reg_classes_intersect_p (DF_HI_REGS, class);
-	 }
+      if (TARGET_LITTLE_ENDIAN)
+	{
+	  if (GET_MODE_SIZE (to) < 8 || GET_MODE_SIZE (from) < 8)
+	    return reg_classes_intersect_p (DF_REGS, class);
+	}
+      else
+	{
+	  if (GET_MODE_SIZE (from) < 8)
+	    return reg_classes_intersect_p (DF_HI_REGS, class);
+	}
     }
   return 0;
 }
@@ -8999,16 +9559,19 @@ sh_register_move_cost (enum machine_mode mode,
       && REGCLASS_HAS_FP_REG (dstclass))
     return 4;
 
+  if (REGCLASS_HAS_FP_REG (dstclass) && srcclass == T_REGS)
+    return ((TARGET_HARD_SH4 && !optimize_size) ? 10 : 7);
+
   if ((REGCLASS_HAS_FP_REG (dstclass) && srcclass == MAC_REGS)
-      || (dstclass== MAC_REGS && REGCLASS_HAS_FP_REG (srcclass)))
+      || (dstclass == MAC_REGS && REGCLASS_HAS_FP_REG (srcclass)))
     return 9;
 
   if ((REGCLASS_HAS_FP_REG (dstclass)
        && REGCLASS_HAS_GENERAL_REG (srcclass))
       || (REGCLASS_HAS_GENERAL_REG (dstclass)
 	  && REGCLASS_HAS_FP_REG (srcclass)))
-   return ((TARGET_SHMEDIA ? 4 : TARGET_FMOVD ? 8 : 12)
-	   * ((GET_MODE_SIZE (mode) + 7) / 8U));
+    return ((TARGET_SHMEDIA ? 4 : TARGET_FMOVD ? 8 : 12)
+	    * ((GET_MODE_SIZE (mode) + 7) / 8U));
 
   if ((dstclass == FPUL_REGS
        && REGCLASS_HAS_GENERAL_REG (srcclass))
@@ -9018,13 +9581,23 @@ sh_register_move_cost (enum machine_mode mode,
 
   if ((dstclass == FPUL_REGS
        && (srcclass == PR_REGS || srcclass == MAC_REGS || srcclass == T_REGS))
-      || (srcclass == FPUL_REGS		
+      || (srcclass == FPUL_REGS
 	  && (dstclass == PR_REGS || dstclass == MAC_REGS)))
     return 7;
 
   if ((srcclass == TARGET_REGS && ! REGCLASS_HAS_GENERAL_REG (dstclass))
       || ((dstclass) == TARGET_REGS && ! REGCLASS_HAS_GENERAL_REG (srcclass)))
     return 20;
+
+  /* ??? ptabs faults on (value & 0x3) == 0x3  */
+  if (TARGET_SHMEDIA
+      && ((srcclass) == TARGET_REGS || (srcclass) == SIBCALL_REGS))
+    {
+      if (sh_gettrcost >= 0)
+	return sh_gettrcost;
+      else if (!TARGET_PT_FIXED)
+	return 100;
+    }
 
   if ((srcclass == FPSCR_REGS && ! REGCLASS_HAS_GENERAL_REG (dstclass))
       || (dstclass == FPSCR_REGS && ! REGCLASS_HAS_GENERAL_REG (srcclass)))
@@ -9039,38 +9612,19 @@ sh_register_move_cost (enum machine_mode mode,
   return 2 * ((GET_MODE_SIZE (mode) + 3) / 4U);
 }
 
-/* Like register_operand, but take into account that SHMEDIA can use
-   the constant zero like a general register.  */
-int
-sh_register_operand (rtx op, enum machine_mode mode)
-{
-  if (op == CONST0_RTX (mode) && TARGET_SHMEDIA)
-    return 1;
-  return register_operand (op, mode);
-}
-
-int
-cmpsi_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == REG && REGNO (op) == T_REG
-      && GET_MODE (op) == SImode)
-    return 1;
-  return arith_operand (op, mode);
-}
-
 static rtx emit_load_ptr (rtx, rtx);
 
 static rtx
 emit_load_ptr (rtx reg, rtx addr)
 {
-  rtx mem = gen_rtx_MEM (ptr_mode, addr);
+  rtx mem = gen_const_mem (ptr_mode, addr);
 
   if (Pmode != ptr_mode)
     mem = gen_rtx_SIGN_EXTEND (Pmode, mem);
   return emit_move_insn (reg, mem);
 }
 
-void
+static void
 sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
 		    HOST_WIDE_INT delta, HOST_WIDE_INT vcall_offset,
 		    tree function)
@@ -9082,17 +9636,19 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
   int simple_add = CONST_OK_FOR_ADD (delta);
   int did_load = 0;
   rtx scratch0, scratch1, scratch2;
+  unsigned i;
 
   reload_completed = 1;
   epilogue_completed = 1;
   no_new_pseudos = 1;
   current_function_uses_only_leaf_regs = 1;
+  reset_block_changes ();
 
   emit_note (NOTE_INSN_PROLOGUE_END);
 
   /* Find the "this" pointer.  We have such a wide range of ABIs for the
      SH that it's best to do this completely machine independently.
-     "this" is passed as first argument, unless a structure return pointer 
+     "this" is passed as first argument, unless a structure return pointer
      comes first, in which case "this" comes second.  */
   INIT_CUMULATIVE_ARGS (cum, funtype, NULL_RTX, 0, 1);
 #ifndef PCC_STATIC_STRUCT_RETURN
@@ -9100,7 +9656,7 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
     structure_value_byref = 1;
 #endif /* not PCC_STATIC_STRUCT_RETURN */
   if (structure_value_byref && sh_struct_value_rtx (function, 0) == 0)
-    { 
+    {
       tree ptype = build_pointer_type (TREE_TYPE (funtype));
 
       FUNCTION_ARG_ADVANCE (cum, Pmode, ptype, 1);
@@ -9111,18 +9667,39 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
      static chain pointer (even if you can't have nested virtual functions
      right now, someone might implement them sometime), and the rest of the
      registers are used for argument passing, are callee-saved, or reserved.  */
+  /* We need to check call_used_regs / fixed_regs in case -fcall_saved-reg /
+     -ffixed-reg has been used.  */
+  if (! call_used_regs[0] || fixed_regs[0])
+    error ("r0 needs to be available as a call-clobbered register");
   scratch0 = scratch1 = scratch2 = gen_rtx_REG (Pmode, 0);
   if (! TARGET_SH5)
     {
-      scratch1 = gen_rtx_REG (ptr_mode, 1);
+      if (call_used_regs[1] && ! fixed_regs[1])
+	scratch1 = gen_rtx_REG (ptr_mode, 1);
       /* N.B., if not TARGET_HITACHI, register 2 is used to pass the pointer
 	 pointing where to return struct values.  */
-      scratch2 = gen_rtx_REG (Pmode, 3);
+      if (call_used_regs[3] && ! fixed_regs[3])
+	scratch2 = gen_rtx_REG (Pmode, 3);
     }
   else if (TARGET_SHMEDIA)
     {
-      scratch1 = gen_rtx_REG (ptr_mode, 21);
-      scratch2 = gen_rtx_REG (Pmode, TR0_REG);
+      for (i = FIRST_GENERAL_REG; i <= LAST_GENERAL_REG; i++)
+	if (i != REGNO (scratch0) &&
+	    call_used_regs[i] && ! fixed_regs[i] && ! FUNCTION_ARG_REGNO_P (i))
+	  {
+	    scratch1 = gen_rtx_REG (ptr_mode, i);
+	    break;
+	  }
+      if (scratch1 == scratch0)
+	error ("Need a second call-clobbered general purpose register");
+      for (i = FIRST_TARGET_REG; i <= LAST_TARGET_REG; i++)
+	if (call_used_regs[i] && ! fixed_regs[i])
+	  {
+	    scratch2 = gen_rtx_REG (Pmode, i);
+	    break;
+	  }
+      if (scratch2 == scratch0)
+	error ("Need a call-clobbered target register");
     }
 
   this_value = plus_constant (this, delta);
@@ -9154,7 +9731,7 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
       offset_addr = plus_constant (scratch0, vcall_offset);
       if (strict_memory_address_p (ptr_mode, offset_addr))
 	; /* Do nothing.  */
-      else if (! TARGET_SH5)
+      else if (! TARGET_SH5 && scratch0 != scratch1)
 	{
 	  /* scratch0 != scratch1, and we have indexed loads.  Get better
 	     schedule by loading the offset into r1 and using an indexed
@@ -9175,10 +9752,10 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
 	  offset_addr = scratch0;
 	}
       else
-	abort (); /* FIXME */
+	gcc_unreachable (); /* FIXME */
       emit_load_ptr (scratch0, offset_addr);
 
-     if (Pmode != ptr_mode)
+      if (Pmode != ptr_mode)
 	scratch0 = gen_rtx_TRUNCATE (ptr_mode, scratch0);
       emit_insn (gen_add2_insn (this, scratch0));
     }
@@ -9190,9 +9767,30 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
       TREE_USED (function) = 1;
     }
   funexp = XEXP (DECL_RTL (function), 0);
-  emit_move_insn (scratch2, funexp);
-  funexp = gen_rtx_MEM (FUNCTION_MODE, scratch2);
-  sibcall = emit_call_insn (gen_sibcall (funexp, const0_rtx, NULL_RTX));
+  /* If the function is overridden, so is the thunk, hence we don't
+     need GOT addressing even if this is a public symbol.  */
+#if 0
+  if (TARGET_SH1 && ! flag_weak)
+    sibcall = gen_sibcalli_thunk (funexp, const0_rtx);
+  else
+#endif
+  if (TARGET_SH2 && flag_pic)
+    {
+      sibcall = gen_sibcall_pcrel (funexp, const0_rtx);
+      XEXP (XVECEXP (sibcall, 0, 2), 0) = scratch2;
+    }
+  else
+    {
+      if (TARGET_SHMEDIA && flag_pic)
+	{
+	  funexp = gen_sym2PIC (funexp);
+	  PUT_MODE (funexp, Pmode);
+	}
+      emit_move_insn (scratch2, funexp);
+      funexp = gen_rtx_MEM (FUNCTION_MODE, scratch2);
+      sibcall = gen_sibcall (funexp, const0_rtx, NULL_RTX);
+    }
+  sibcall = emit_call_insn (sibcall);
   SIBLING_CALL_P (sibcall) = 1;
   use_reg (&CALL_INSN_FUNCTION_USAGE (sibcall), this);
   emit_barrier ();
@@ -9204,33 +9802,51 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
   insn_locators_initialize ();
   insns = get_insns ();
 
-  if (optimize > 0 && flag_schedule_insns_after_reload)
+  if (optimize > 0)
     {
+      /* Initialize the bitmap obstacks.  */
+      bitmap_obstack_initialize (NULL);
+      bitmap_obstack_initialize (&reg_obstack);
+      if (! cfun->cfg)
+	init_flow ();
+      rtl_register_cfg_hooks ();
+      init_rtl_bb_info (ENTRY_BLOCK_PTR);
+      init_rtl_bb_info (EXIT_BLOCK_PTR);
+      ENTRY_BLOCK_PTR->flags |= BB_RTL;
+      EXIT_BLOCK_PTR->flags |= BB_RTL;
+      find_basic_blocks (insns);
 
-      find_basic_blocks (insns, max_reg_num (), rtl_dump_file);
-      life_analysis (insns, rtl_dump_file, PROP_FINAL);
+      if (flag_schedule_insns_after_reload)
+	{
+	  life_analysis (dump_file, PROP_FINAL);
 
-      split_all_insns (1);
+	  split_all_insns (1);
 
-      schedule_insns (rtl_dump_file);
+	  schedule_insns (dump_file);
+	}
+      /* We must split jmp insn in PIC case.  */
+      else if (flag_pic)
+	split_all_insns_noflow ();
     }
 
   sh_reorg ();
 
   if (optimize > 0 && flag_delayed_branch)
-      dbr_schedule (insns, rtl_dump_file);
+    dbr_schedule (insns, dump_file);
+
   shorten_branches (insns);
   final_start_function (insns, file, 1);
-  final (insns, file, 1, 0);
+  final (insns, file, 1);
   final_end_function ();
 
-  if (optimize > 0 && flag_schedule_insns_after_reload)
+  if (optimize > 0)
     {
       /* Release all memory allocated by flow.  */
-      free_basic_block_vars (0);
+      free_basic_block_vars ();
 
-      /* Release all memory held by regsets now.  */
-      regset_release_memory ();
+      /* Release the bitmap obstacks.  */
+      bitmap_obstack_release (&reg_obstack);
+      bitmap_obstack_release (NULL);
     }
 
   reload_completed = 0;
@@ -9239,10 +9855,49 @@ sh_output_mi_thunk (FILE *file, tree thunk_fndecl ATTRIBUTE_UNUSED,
 }
 
 rtx
-function_symbol (const char *name)
+function_symbol (rtx target, const char *name, enum sh_function_kind kind)
 {
-  rtx sym = gen_rtx_SYMBOL_REF (Pmode, name);
+  rtx sym;
+
+  /* If this is not an ordinary function, the name usually comes from a
+     string literal or an sprintf buffer.  Make sure we use the same
+     string consistently, so that cse will be able to unify address loads.  */
+  if (kind != FUNCTION_ORDINARY)
+    name = IDENTIFIER_POINTER (get_identifier (name));
+  sym = gen_rtx_SYMBOL_REF (Pmode, name);
   SYMBOL_REF_FLAGS (sym) = SYMBOL_FLAG_FUNCTION;
+  if (flag_pic)
+    switch (kind)
+      {
+      case FUNCTION_ORDINARY:
+	break;
+      case SFUNC_GOT:
+	{
+	  rtx reg = target ? target : gen_reg_rtx (Pmode);
+
+	  emit_insn (gen_symGOT2reg (reg, sym));
+	  sym = reg;
+	  break;
+	}
+      case SFUNC_STATIC:
+	{
+	  /* ??? To allow cse to work, we use GOTOFF relocations.
+	     we could add combiner patterns to transform this into
+	     straight pc-relative calls with sym2PIC / bsrf when
+	     label load and function call are still 1:1 and in the
+	     same basic block during combine.  */
+	  rtx reg = target ? target : gen_reg_rtx (Pmode);
+
+	  emit_insn (gen_symGOTOFF2reg (reg, sym));
+	  sym = reg;
+	  break;
+	}
+      }
+  if (target && sym != target)
+    {
+      emit_move_insn (target, sym);
+      return target;
+    }
   return sym;
 }
 
@@ -9269,7 +9924,7 @@ sh_get_pr_initial_val (void)
       && ((current_function_args_info.call_cookie
 	   & ~ CALL_COOKIE_RET_TRAMP (1))
 	  || current_function_has_nonlocal_label))
-    return gen_rtx_MEM (SImode, return_address_pointer_rtx);
+    return gen_frame_mem (SImode, return_address_pointer_rtx);
 
   /* If we haven't finished rtl generation, there might be a nonlocal label
      that we haven't seen yet.
@@ -9307,7 +9962,7 @@ sh_expand_t_scc (enum rtx_code code, rtx target)
     {
       emit_insn (gen_rtx_CLOBBER (VOIDmode, result));
       emit_insn (gen_subc (result, result, result));
-      emit_insn (gen_addsi3 (result, result, GEN_INT (1)));
+      emit_insn (gen_addsi3 (result, result, const1_rtx));
     }
   else if (code == EQ || code == NE)
     emit_insn (gen_move_insn (result, GEN_INT (code == NE)));
@@ -9334,9 +9989,8 @@ extract_sfunc_addr (rtx insn)
 	  && GENERAL_REGISTER_P (true_regnum (XEXP (part, 0))))
 	return XEXP (part, 0);
     }
-  if (GET_CODE (XVECEXP (pattern, 0, 0)) == UNSPEC_VOLATILE)
-    return XVECEXP (XVECEXP (pattern, 0, 0), 0, 1);
-  abort ();
+  gcc_assert (GET_CODE (XVECEXP (pattern, 0, 0)) == UNSPEC_VOLATILE);
+  return XVECEXP (XVECEXP (pattern, 0, 0), 0, 1);
 }
 
 /* Verify that the register in use_sfunc_addr still agrees with the address
@@ -9354,7 +10008,7 @@ check_use_sfunc_addr (rtx insn, rtx reg)
 	break;
       if (! INSN_P (insn))
 	continue;
-	
+
       if (GET_CODE (PATTERN (insn)) == SEQUENCE)
 	insn = XVECEXP (PATTERN (insn), 0, 0);
       if (GET_CODE (PATTERN (insn)) != PARALLEL
@@ -9362,7 +10016,697 @@ check_use_sfunc_addr (rtx insn, rtx reg)
 	continue;
       return rtx_equal_p (extract_sfunc_addr (insn), reg);
     }
-  abort ();
+  gcc_unreachable ();
 }
+
+/* This function returns a constant rtx that represents pi / 2**15 in
+   SFmode.  it's used to scale SFmode angles, in radians, to a
+   fixed-point signed 16.16-bit fraction of a full circle, i.e., 2*pi
+   maps to 0x10000).  */
+
+static GTY(()) rtx sh_fsca_sf2int_rtx;
+
+rtx
+sh_fsca_sf2int (void)
+{
+  if (! sh_fsca_sf2int_rtx)
+    {
+      REAL_VALUE_TYPE rv;
+
+      real_from_string (&rv, "10430.378350470453");
+      sh_fsca_sf2int_rtx = const_double_from_real_value (rv, SFmode);
+    }
+
+  return sh_fsca_sf2int_rtx;
+}
+
+/* This function returns a constant rtx that represents pi / 2**15 in
+   DFmode.  it's used to scale DFmode angles, in radians, to a
+   fixed-point signed 16.16-bit fraction of a full circle, i.e., 2*pi
+   maps to 0x10000).  */
+
+static GTY(()) rtx sh_fsca_df2int_rtx;
+
+rtx
+sh_fsca_df2int (void)
+{
+  if (! sh_fsca_df2int_rtx)
+    {
+      REAL_VALUE_TYPE rv;
+
+      real_from_string (&rv, "10430.378350470453");
+      sh_fsca_df2int_rtx = const_double_from_real_value (rv, DFmode);
+    }
+
+  return sh_fsca_df2int_rtx;
+}
+
+/* This function returns a constant rtx that represents 2**15 / pi in
+   SFmode.  it's used to scale a fixed-point signed 16.16-bit fraction
+   of a full circle back to a SFmode value, i.e., 0x10000 maps to
+   2*pi).  */
+
+static GTY(()) rtx sh_fsca_int2sf_rtx;
+
+rtx
+sh_fsca_int2sf (void)
+{
+  if (! sh_fsca_int2sf_rtx)
+    {
+      REAL_VALUE_TYPE rv;
+
+      real_from_string (&rv, "9.587379924285257e-5");
+      sh_fsca_int2sf_rtx = const_double_from_real_value (rv, SFmode);
+    }
+
+  return sh_fsca_int2sf_rtx;
+}
+
+/* Initialize the CUMULATIVE_ARGS structure.  */
+
+void
+sh_init_cumulative_args (CUMULATIVE_ARGS *  pcum,
+			 tree               fntype,
+			 rtx		    libname ATTRIBUTE_UNUSED,
+			 tree               fndecl,
+			 signed int         n_named_args,
+			 enum machine_mode  mode)
+{
+  pcum->arg_count [(int) SH_ARG_FLOAT] = 0;
+  pcum->free_single_fp_reg = 0;
+  pcum->stack_regs = 0;
+  pcum->byref_regs = 0;
+  pcum->byref = 0;
+  pcum->outgoing = (n_named_args == -1) ? 0 : 1;
+
+  /* XXX - Should we check TARGET_HITACHI here ???  */
+  pcum->renesas_abi = sh_attr_renesas_p (fntype) ? 1 : 0;
+
+  if (fntype)
+    {
+      pcum->force_mem = ((TARGET_HITACHI || pcum->renesas_abi)
+			 && aggregate_value_p (TREE_TYPE (fntype), fndecl));
+      pcum->prototype_p = TYPE_ARG_TYPES (fntype) ? TRUE : FALSE;
+      pcum->arg_count [(int) SH_ARG_INT]
+	= TARGET_SH5 && aggregate_value_p (TREE_TYPE (fntype), fndecl);
+
+      pcum->call_cookie
+	= CALL_COOKIE_RET_TRAMP (TARGET_SHCOMPACT
+				 && pcum->arg_count [(int) SH_ARG_INT] == 0
+				 && (TYPE_MODE (TREE_TYPE (fntype)) == BLKmode
+				     ? int_size_in_bytes (TREE_TYPE (fntype))
+				     : GET_MODE_SIZE (TYPE_MODE (TREE_TYPE (fntype)))) > 4
+				 && (BASE_RETURN_VALUE_REG (TYPE_MODE (TREE_TYPE (fntype)))
+				     == FIRST_RET_REG));
+    }
+  else
+    {
+      pcum->arg_count [(int) SH_ARG_INT] = 0;
+      pcum->prototype_p = FALSE;
+      if (mode != VOIDmode)
+	{
+	  pcum->call_cookie =
+	    CALL_COOKIE_RET_TRAMP (TARGET_SHCOMPACT
+				   && GET_MODE_SIZE (mode) > 4
+				   && BASE_RETURN_VALUE_REG (mode) == FIRST_RET_REG);
+
+	  /* If the default ABI is the Renesas ABI then all library
+	     calls must assume that the library will be using the
+	     Renesas ABI.  So if the function would return its result
+	     in memory then we must force the address of this memory
+	     block onto the stack.  Ideally we would like to call
+	     targetm.calls.return_in_memory() here but we do not have
+	     the TYPE or the FNDECL available so we synthesize the
+	     contents of that function as best we can.  */
+	  pcum->force_mem =
+	    (TARGET_DEFAULT & MASK_HITACHI)
+	    && (mode == BLKmode
+		|| (GET_MODE_SIZE (mode) > 4
+		    && !(mode == DFmode
+			 && TARGET_FPU_DOUBLE)));
+	}
+      else
+	{
+	  pcum->call_cookie = 0;
+	  pcum->force_mem = FALSE;
+	}
+    }
+}
+
+/* Determine if two hard register sets intersect.
+   Return 1 if they do.  */
+
+static int
+hard_regs_intersect_p (HARD_REG_SET *a, HARD_REG_SET *b)
+{
+  HARD_REG_SET c;
+  COPY_HARD_REG_SET (c, *a);
+  AND_HARD_REG_SET (c, *b);
+  GO_IF_HARD_REG_SUBSET (c, reg_class_contents[(int) NO_REGS], lose);
+  return 1;
+lose:
+  return 0;
+}
+
+#ifdef TARGET_ADJUST_UNROLL_MAX
+static int
+sh_adjust_unroll_max (struct loop * loop, int insn_count,
+		      int max_unrolled_insns, int strength_reduce_p,
+		      int unroll_type)
+{
+/* This doesn't work in 4.0 because the old unroller & loop.h  is gone.  */
+  if (TARGET_ADJUST_UNROLL && TARGET_SHMEDIA)
+    {
+      /* Throttle back loop unrolling so that the costs of using more
+	 targets than the eight target register we have don't outweigh
+	 the benefits of unrolling.  */
+      rtx insn;
+      int n_labels = 0, n_calls = 0, n_exit_dest = 0, n_inner_loops = -1;
+      int n_barriers = 0;
+      rtx dest;
+      int i;
+      rtx exit_dest[8];
+      int threshold;
+      int unroll_benefit = 0, mem_latency = 0;
+      int base_cost, best_cost, cost;
+      int factor, best_factor;
+      int n_dest;
+      unsigned max_iterations = 32767;
+      int n_iterations;
+      int need_precond = 0, precond = 0;
+      basic_block * bbs = get_loop_body (loop);
+      struct niter_desc *desc;
+
+      /* Assume that all labels inside the loop are used from inside the
+	 loop.  If the loop has multiple entry points, it is unlikely to
+	 be unrolled anyways.
+	 Also assume that all calls are to different functions.  That is
+	 somewhat pessimistic, but if you have lots of calls, unrolling the
+	 loop is not likely to gain you much in the first place.  */
+      i = loop->num_nodes - 1;
+      for (insn = BB_HEAD (bbs[i]); ; )
+	{
+	  if (GET_CODE (insn) == CODE_LABEL)
+	    n_labels++;
+	  else if (GET_CODE (insn) == CALL_INSN)
+	    n_calls++;
+	  else if (GET_CODE (insn) == NOTE
+		   && NOTE_LINE_NUMBER (insn) == NOTE_INSN_LOOP_BEG)
+	    n_inner_loops++;
+	  else if (GET_CODE (insn) == BARRIER)
+	    n_barriers++;
+	  if (insn != BB_END (bbs[i]))
+	    insn = NEXT_INSN (insn);
+	  else if (--i >= 0)
+	    insn = BB_HEAD (bbs[i]);
+	   else
+	    break;
+	}
+      free (bbs);
+      /* One label for the loop top is normal, and it won't be duplicated by
+	 unrolling.  */
+      if (n_labels <= 1)
+	return max_unrolled_insns;
+      if (n_inner_loops > 0)
+	return 0;
+      for (dest = loop->exit_labels; dest && n_exit_dest < 8;
+	   dest = LABEL_NEXTREF (dest))
+	{
+	  for (i = n_exit_dest - 1;
+	       i >= 0 && XEXP (dest, 0) != XEXP (exit_dest[i], 0); i--);
+	  if (i < 0)
+	    exit_dest[n_exit_dest++] = dest;
+	}
+      /* If the loop top and call and exit destinations are enough to fill up
+	 the target registers, we're unlikely to do any more damage by
+	 unrolling.  */
+      if (n_calls + n_exit_dest >= 7)
+	return max_unrolled_insns;
+
+      /* ??? In the new loop unroller, there is no longer any strength
+         reduction information available.  Thus, when it comes to unrolling,
+         we know the cost of everything, but we know the value of nothing.  */
+#if 0
+      if (strength_reduce_p
+	  && (unroll_type == LPT_UNROLL_RUNTIME
+	      || unroll_type == LPT_UNROLL_CONSTANT
+	      || unroll_type == LPT_PEEL_COMPLETELY))
+	{
+	  struct loop_ivs *ivs = LOOP_IVS (loop);
+	  struct iv_class *bl;
+
+	  /* We'll save one compare-and-branch in each loop body copy
+	     but the last one.  */
+	  unroll_benefit = 1;
+	  /* Assess the benefit of removing biv & giv updates.  */
+	  for (bl = ivs->list; bl; bl = bl->next)
+	    {
+	      rtx increment = biv_total_increment (bl);
+	      struct induction *v;
+
+	      if (increment && GET_CODE (increment) == CONST_INT)
+		{
+		  unroll_benefit++;
+		  for (v = bl->giv; v; v = v->next_iv)
+		    {
+		      if (! v->ignore && v->same == 0
+			  && GET_CODE (v->mult_val) == CONST_INT)
+			unroll_benefit++;
+		      /* If this giv uses an array, try to determine
+			 a maximum iteration count from the size of the
+			 array.  This need not be correct all the time,
+			 but should not be too far off the mark too often.  */
+		      while (v->giv_type == DEST_ADDR)
+			{
+			  rtx mem = PATTERN (v->insn);
+			  tree mem_expr, type, size_tree;
+
+			  if (GET_CODE (SET_SRC (mem)) == MEM)
+			    mem = SET_SRC (mem);
+			  else if (GET_CODE (SET_DEST (mem)) == MEM)
+			    mem = SET_DEST (mem);
+			  else
+			    break;
+			  mem_expr = MEM_EXPR (mem);
+			  if (! mem_expr)
+			    break;
+			  type = TREE_TYPE (mem_expr);
+			  if (TREE_CODE (type) != ARRAY_TYPE
+			      || ! TYPE_SIZE (type) || ! TYPE_SIZE_UNIT (type))
+			    break;
+			  size_tree = fold (build (TRUNC_DIV_EXPR,
+						   bitsizetype,
+						   TYPE_SIZE (type),
+						   TYPE_SIZE_UNIT (type)));
+			  if (TREE_CODE (size_tree) == INTEGER_CST
+			      && ! TREE_INT_CST_HIGH (size_tree)
+			      && TREE_INT_CST_LOW  (size_tree) < max_iterations)
+			    max_iterations = TREE_INT_CST_LOW  (size_tree);
+			  break;
+			}
+		    }
+		}
+	    }
+	}
+#else /* 0 */
+      /* Assume there is at least some benefit.  */
+      unroll_benefit = 1;
+#endif /* 0 */
+
+      desc = get_simple_loop_desc (loop);
+      n_iterations = desc->const_iter ? desc->niter : 0;
+      max_iterations
+	= max_iterations < desc->niter_max ? max_iterations : desc->niter_max;
+
+      if (! strength_reduce_p || ! n_iterations)
+	need_precond = 1;
+      if (! n_iterations)
+	{
+	  n_iterations
+	    = max_iterations < 3 ? max_iterations : max_iterations * 3 / 4;
+	  if (! n_iterations)
+	    return 0;
+	}
+#if 0 /* ??? See above - missing induction variable information.  */
+      while (unroll_benefit > 1) /* no loop */
+	{
+	  /* We include the benefit of biv/ giv updates.  Check if some or
+	     all of these updates are likely to fit into a scheduling
+	     bubble of a load.
+	     We check for the following case:
+	     - All the insns leading to the first JUMP_INSN are in a strict
+	       dependency chain.
+	     - there is at least one memory reference in them.
+
+	     When we find such a pattern, we assume that we can hide as many
+	     updates as the total of the load latency is, if we have an
+	     unroll factor of at least two.  We might or might not also do
+	     this without unrolling, so rather than considering this as an
+	     extra unroll benefit, discount it in the unroll benefits of unroll
+	     factors higher than two.  */
+		
+	  rtx set, last_set;
+
+	  insn = next_active_insn (loop->start);
+	  last_set = single_set (insn);
+	  if (! last_set)
+	    break;
+	  if (GET_CODE (SET_SRC (last_set)) == MEM)
+	    mem_latency += 2;
+	  for (insn = NEXT_INSN (insn); insn != end; insn = NEXT_INSN (insn))
+	    {
+	      if (! INSN_P (insn))
+		continue;
+	      if (GET_CODE (insn) == JUMP_INSN)
+		break;
+	      if (! reg_referenced_p (SET_DEST (last_set), PATTERN (insn)))
+		{
+		  /* Check if this is a to-be-reduced giv insn.  */
+		  struct loop_ivs *ivs = LOOP_IVS (loop);
+		  struct iv_class *bl;
+		  struct induction *v;
+		  for (bl = ivs->list; bl; bl = bl->next)
+		    {
+		      if (bl->biv->insn == insn)
+			goto is_biv;
+		      for (v = bl->giv; v; v = v->next_iv)
+			if (v->insn == insn)
+			  goto is_giv;
+		    }
+		  mem_latency--;
+		is_biv:
+		is_giv:
+		  continue;
+		}
+	      set = single_set (insn);
+	      if (! set)
+		continue;
+	      if (GET_CODE (SET_SRC (set)) == MEM)
+		mem_latency += 2;
+	      last_set = set;
+	    }
+	  if (mem_latency < 0)
+	    mem_latency = 0;
+	  else if (mem_latency > unroll_benefit - 1)
+	    mem_latency = unroll_benefit - 1;
+	  break;
+	}
+#endif /* 0 */
+      if (n_labels + (unroll_benefit + n_labels * 8) / n_iterations
+	  <= unroll_benefit)
+	return max_unrolled_insns;
+
+      n_dest = n_labels + n_calls + n_exit_dest;
+      base_cost = n_dest <= 8 ? 0 : n_dest - 7;
+      best_cost = 0;
+      best_factor = 1;
+      if (n_barriers * 2 > n_labels - 1)
+	n_barriers = (n_labels - 1) / 2;
+      for (factor = 2; factor <= 8; factor++)
+	{
+	  /* Bump up preconditioning cost for each power of two.  */
+	  if (! (factor & (factor-1)))
+	    precond += 4;
+	  /* When preconditioning, only powers of two will be considered.  */
+	  else if (need_precond)
+	    continue;
+	  n_dest = ((unroll_type != LPT_PEEL_COMPLETELY)
+		    + (n_labels - 1) * factor + n_calls + n_exit_dest
+		    - (n_barriers * factor >> 1)
+		    + need_precond);
+	  cost
+	    = ((n_dest <= 8 ? 0 : n_dest - 7)
+	       - base_cost * factor
+	       - ((factor > 2 ? unroll_benefit - mem_latency : unroll_benefit)
+		  * (factor - (unroll_type != LPT_PEEL_COMPLETELY)))
+	       + ((unroll_benefit + 1 + (n_labels - 1) * factor)
+		  / n_iterations));
+	  if (need_precond)
+	    cost += (precond + unroll_benefit * factor / 2) / n_iterations;
+	  if (cost < best_cost)
+	    {
+	      best_cost = cost;
+	      best_factor = factor;
+	    }
+	}
+      threshold = best_factor * insn_count;
+      if (max_unrolled_insns > threshold)
+	max_unrolled_insns = threshold;
+    }
+  return max_unrolled_insns;
+}
+#endif /* TARGET_ADJUST_UNROLL_MAX */
+
+/* Replace any occurrence of FROM(n) in X with TO(n).  The function does
+   not enter into CONST_DOUBLE for the replace.
+
+   Note that copying is not done so X must not be shared unless all copies
+   are to be modified.
+
+   This is like replace_rtx, except that we operate on N_REPLACEMENTS
+   replacements simultaneously - FROM(n) is replacements[n*2] and to(n) is
+   replacements[n*2+1] - and that we take mode changes into account.
+
+   If a replacement is ambiguous, return NULL_RTX.
+
+   If MODIFY is zero, don't modify any rtl in place,
+   just return zero or nonzero for failure / success.  */
+
+rtx
+replace_n_hard_rtx (rtx x, rtx *replacements, int n_replacements, int modify)
+{
+  int i, j;
+  const char *fmt;
+
+  /* The following prevents loops occurrence when we change MEM in
+     CONST_DOUBLE onto the same CONST_DOUBLE.  */
+  if (x != 0 && GET_CODE (x) == CONST_DOUBLE)
+    return x;
+
+  for (i = n_replacements - 1; i >= 0 ; i--)
+  if (x == replacements[i*2] && GET_MODE (x) == GET_MODE (replacements[i*2+1]))
+    return replacements[i*2+1];
+
+  /* Allow this function to make replacements in EXPR_LISTs.  */
+  if (x == 0)
+    return 0;
+
+  if (GET_CODE (x) == SUBREG)
+    {
+      rtx new = replace_n_hard_rtx (SUBREG_REG (x), replacements,
+				    n_replacements, modify);
+
+      if (GET_CODE (new) == CONST_INT)
+	{
+	  x = simplify_subreg (GET_MODE (x), new,
+			       GET_MODE (SUBREG_REG (x)),
+			       SUBREG_BYTE (x));
+	  if (! x)
+	    abort ();
+	}
+      else if (modify)
+	SUBREG_REG (x) = new;
+
+      return x;
+    }
+  else if (GET_CODE (x) == REG)
+    {
+      unsigned regno = REGNO (x);
+      unsigned nregs = (regno < FIRST_PSEUDO_REGISTER
+			? HARD_REGNO_NREGS (regno, GET_MODE (x)) : 1);
+      rtx result = NULL_RTX;
+
+      for (i = n_replacements - 1; i >= 0; i--)
+	{
+	  rtx from = replacements[i*2];
+	  rtx to = replacements[i*2+1];
+	  unsigned from_regno, from_nregs, to_regno, new_regno;
+
+	  if (GET_CODE (from) != REG)
+	    continue;
+	  from_regno = REGNO (from);
+	  from_nregs = (from_regno < FIRST_PSEUDO_REGISTER
+			? HARD_REGNO_NREGS (from_regno, GET_MODE (from)) : 1);
+	  if (regno < from_regno + from_nregs && regno + nregs > from_regno)
+	    {
+	      if (regno < from_regno
+		  || regno + nregs > from_regno + nregs
+		  || GET_CODE (to) != REG
+		  || result)
+		return NULL_RTX;
+	      to_regno = REGNO (to);
+	      if (to_regno < FIRST_PSEUDO_REGISTER)
+		{
+		  new_regno = regno + to_regno - from_regno;
+		  if ((unsigned) HARD_REGNO_NREGS (new_regno, GET_MODE (x))
+		      != nregs)
+		    return NULL_RTX;
+		  result = gen_rtx_REG (GET_MODE (x), new_regno);
+		}
+	      else if (GET_MODE (x) <= GET_MODE (to))
+		result = gen_lowpart_common (GET_MODE (x), to);
+	      else
+		result = gen_lowpart_SUBREG (GET_MODE (x), to);
+	    }
+	}
+      return result ? result : x;
+    }
+  else if (GET_CODE (x) == ZERO_EXTEND)
+    {
+      rtx new = replace_n_hard_rtx (XEXP (x, 0), replacements,
+				    n_replacements, modify);
+
+      if (GET_CODE (new) == CONST_INT)
+	{
+	  x = simplify_unary_operation (ZERO_EXTEND, GET_MODE (x),
+					new, GET_MODE (XEXP (x, 0)));
+	  if (! x)
+	    abort ();
+	}
+      else if (modify)
+	XEXP (x, 0) = new;
+
+      return x;
+    }
+
+  fmt = GET_RTX_FORMAT (GET_CODE (x));
+  for (i = GET_RTX_LENGTH (GET_CODE (x)) - 1; i >= 0; i--)
+    {
+      rtx new;
+
+      if (fmt[i] == 'e')
+	{
+	  new = replace_n_hard_rtx (XEXP (x, i), replacements,
+				    n_replacements, modify);
+	  if (!new)
+	    return NULL_RTX;
+	  if (modify)
+	    XEXP (x, i) = new;
+	}
+      else if (fmt[i] == 'E')
+	for (j = XVECLEN (x, i) - 1; j >= 0; j--)
+	  {
+	    new = replace_n_hard_rtx (XVECEXP (x, i, j), replacements,
+				      n_replacements, modify);
+	  if (!new)
+	    return NULL_RTX;
+	    if (modify)
+	      XVECEXP (x, i, j) = new;
+	  }
+    }
+
+  return x;
+}
+
+rtx
+sh_gen_truncate (enum machine_mode mode, rtx x, int need_sign_ext)
+{
+  enum rtx_code code = TRUNCATE;
+
+  if (GET_CODE (x) == ZERO_EXTEND || GET_CODE (x) == SIGN_EXTEND)
+    {
+      rtx inner = XEXP (x, 0);
+      enum machine_mode inner_mode = GET_MODE (inner);
+
+      if (inner_mode == mode)
+	return inner;
+      else if (GET_MODE_SIZE (inner_mode) >= GET_MODE_SIZE (mode))
+	x = inner;
+      else if (GET_MODE_SIZE (inner_mode) < GET_MODE_SIZE (mode)
+	       && (! need_sign_ext || GET_CODE (x) == SIGN_EXTEND))
+	{
+	  code = GET_CODE (x);
+	  x = inner;
+	}
+    }
+  return gen_rtx_fmt_e (code, mode, x);
+}
+
+/* called via for_each_rtx after reload, to clean up truncates of
+   registers that span multiple actual hard registers.  */
+int
+shmedia_cleanup_truncate (rtx *p, void *n_changes)
+{
+  rtx x = *p, reg;
+
+  if (GET_CODE (x) != TRUNCATE)
+    return 0;
+  reg = XEXP (x, 0);
+  if (GET_MODE_SIZE (GET_MODE (reg)) > 8 && GET_CODE (reg) == REG)
+    {
+      enum machine_mode reg_mode = GET_MODE (reg);
+      XEXP (x, 0) = simplify_subreg (DImode, reg, reg_mode,
+				     subreg_lowpart_offset (DImode, reg_mode));
+      *(int*) n_changes += 1;
+      return -1;
+    }
+  return 0;
+}
+
+/* Load and store depend on the highpart of the address.  However,
+   set_attr_alternative does not give well-defined results before reload,
+   so we must look at the rtl ourselves to see if any of the feeding
+   registers is used in a memref.  */
+
+/* Called by sh_contains_memref_p via for_each_rtx.  */
+static int
+sh_contains_memref_p_1 (rtx *loc, void *data ATTRIBUTE_UNUSED)
+{
+  return (GET_CODE (*loc) == MEM);
+}
+
+/* Return nonzero iff INSN contains a MEM.  */
+int
+sh_contains_memref_p (rtx insn)
+{
+  return for_each_rtx (&PATTERN (insn), &sh_contains_memref_p_1, NULL);
+}
+
+/* FNADDR is the MEM expression from a call expander.  Return an address
+   to use in an SHmedia insn pattern.  */
+rtx
+shmedia_prepare_call_address (rtx fnaddr, int is_sibcall)
+{
+  int is_sym;
+
+  fnaddr = XEXP (fnaddr, 0);
+  is_sym = GET_CODE (fnaddr) == SYMBOL_REF;
+  if (flag_pic && is_sym)
+    {
+      if (! SYMBOL_REF_LOCAL_P (fnaddr))
+	{
+	  rtx reg = gen_reg_rtx (Pmode);
+
+	  /* We must not use GOTPLT for sibcalls, because PIC_REG
+	     must be restored before the PLT code gets to run.  */
+	  if (is_sibcall)
+	    emit_insn (gen_symGOT2reg (reg, fnaddr));
+	  else
+	    emit_insn (gen_symGOTPLT2reg (reg, fnaddr));
+	  fnaddr = reg;
+	}
+      else
+	{
+	  fnaddr = gen_sym2PIC (fnaddr);
+	  PUT_MODE (fnaddr, Pmode);
+	}
+    }
+  /* If ptabs might trap, make this visible to the rest of the compiler.
+     We generally assume that symbols pertain to valid locations, but
+     it is possible to generate invalid symbols with asm or linker tricks.
+     In a list of functions where each returns its successor, an invalid
+     symbol might denote an empty list.  */
+  if (!TARGET_PT_FIXED
+      && (!is_sym || TARGET_INVALID_SYMBOLS)
+      && (!REG_P (fnaddr) || ! TARGET_REGISTER_P (REGNO (fnaddr))))
+    {
+      rtx tr = gen_reg_rtx (PDImode);
+
+      emit_insn (gen_ptabs (tr, fnaddr));
+      fnaddr = tr;
+    }
+  else if (! target_reg_operand (fnaddr, Pmode))
+    fnaddr = copy_to_mode_reg (Pmode, fnaddr);
+  return fnaddr;
+}
+
+/* ??? insn-conditions.c contains the insn conditions from sh.md,
+   but does not include tree.h.  This is fixed in 4.2 20060127. */
+bool
+sh_cfun_trap_exit_p (void)
+{
+  return (lookup_attribute ("trap_exit",
+			    DECL_ATTRIBUTES (current_function_decl))
+	  == NULL_TREE);
+}
+
+enum sh_divide_strategy_e sh_div_strategy = SH_DIV_STRATEGY_DEFAULT;
+
+/* This defines the storage for the variable part of a -mboard= option.
+   It is only required when using the sh-superh-elf target */
+#ifdef _SUPERH_H
+const char * boardtype = "7750p2";
+const char * osruntime = "bare";
+#endif
 
 #include "gt-sh.h"

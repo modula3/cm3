@@ -17,7 +17,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # As a special exception to the GNU General Public License, if you
 # distribute this file as part of a program that contains a
@@ -829,6 +829,7 @@ EOF
     linker_flags=
     dllsearchpath=
     lib_search_path=`pwd`
+    inst_prefix_dir=
 
     avoid_version=no
     dlfiles=
@@ -961,6 +962,11 @@ EOF
 	  prev=
 	  continue
 	  ;;
+	inst_prefix)
+	  inst_prefix_dir="$arg"
+	  prev=
+	  continue
+	  ;;
 	release)
 	  release="-$arg"
 	  prev=
@@ -1041,6 +1047,11 @@ EOF
                   if test -z "$pic_object" || test "$pic_object" = none ; then
                     arg="$non_pic_object"
                   fi
+		else
+		  # If the PIC object exists, use it instead.
+		  # $xdir was prepended to $pic_object above.
+		  non_pic_object="$pic_object"
+		  non_pic_objects="$non_pic_objects $non_pic_object"
                 fi
               else
                 # Only an error if not doing a dry-run.
@@ -1179,6 +1190,11 @@ EOF
 	else
 	  prev=expsyms_regex
 	fi
+	continue
+	;;
+
+      -inst-prefix-dir)
+	prev=inst_prefix
 	continue
 	;;
 
@@ -1466,6 +1482,11 @@ EOF
             if test -z "$pic_object" || test "$pic_object" = none ; then
               arg="$non_pic_object"
             fi
+	  else
+	    # If the PIC object exists, use it instead.
+	    # $xdir was prepended to $pic_object above.
+	    non_pic_object="$pic_object"
+	    non_pic_objects="$non_pic_objects $non_pic_object"
           fi
         else
           # Only an error if not doing a dry-run.
@@ -2161,6 +2182,14 @@ EOF
 		add="$dir/$linklib"
 	      elif test "$hardcode_minus_L" = yes; then
 		add_dir="-L$dir"
+		# Try looking first in the location we're being installed to.
+		if test -n "$inst_prefix_dir"; then
+		  case "$libdir" in
+		    [\\/]*)
+		      add_dir="$add_dir -L$inst_prefix_dir$libdir"
+		      ;;
+		  esac
+		fi
 		add="-l$name"
 	      elif test "$hardcode_shlibpath_var" = yes; then
 		add_shlibpath="$dir"
@@ -2219,6 +2248,14 @@ EOF
 	    else
 	      # We cannot seem to hardcode it, guess we'll fake it.
 	      add_dir="-L$libdir"
+	      # Try looking first in the location we're being installed to.
+	      if test -n "$inst_prefix_dir"; then
+		case "$libdir" in
+		  [\\/]*)
+		    add_dir="$add_dir -L$inst_prefix_dir$libdir"
+		    ;;
+		esac
+	      fi
 	      add="-l$name"
 	    fi
 
@@ -3262,7 +3299,6 @@ EOF
           :
         else
 	  # The command line is too long to link in one step, link piecewise.
-          $echo "creating reloadable object files..."
 
 	  # Save the value of $output and $libobjs because we want to
 	  # use them later.  If we have whole_archive_flag_spec, we
@@ -3276,6 +3312,7 @@ EOF
 	    save_libobjs=$libobjs
 	  fi
           save_output=$output
+	  output_la=`$echo "X$output" | $Xsed -e "s,^.*/,,"`
 
 	  # Clear the reloadable object creation command queue and
 	  # initialize k to one.
@@ -3285,63 +3322,87 @@ EOF
           delfiles=
           last_robj=
           k=1
-          output=$output_objdir/$save_output-${k}.$objext
-	  # Loop over the list of objects to be linked.
-          for obj in $save_libobjs
-          do
-            eval test_cmds=\"$reload_cmds $objlist $last_robj\"
-            if test "X$objlist" = X ||
-	       { len=`expr "X$test_cmds" : ".*"` &&
-                 test $len -le $max_cmd_len; }; then
-              objlist="$objlist $obj"
-            else
-	      # The command $test_cmds is almost too long, add a
-	      # command to the queue.
-              if test $k -eq 1 ; then
-	        # The first file doesn't have a previous command to add.
-                eval concat_cmds=\"$reload_cmds $objlist $last_robj\"
-              else
-	        # All subsequent reloadable object files will link in
-	        # the last one created.
-                eval concat_cmds=\"\$concat_cmds~$reload_cmds $objlist $last_robj\"
-              fi
-              last_robj=$output_objdir/$save_output-${k}.$objext
-              k=`expr $k + 1`
-              output=$output_objdir/$save_output-${k}.$objext
-              objlist=$obj
-              len=1
-            fi
-          done
-	  # Handle the remaining objects by creating one last
-	  # reloadable object file.  All subsequent reloadable object
-	  # files will link in the last one created.
-	  test -z "$concat_cmds" || concat_cmds=$concat_cmds~
-          eval concat_cmds=\"\${concat_cmds}$reload_cmds $objlist $last_robj\"
 
-	  # Set up a command to remove the reloadale object files
-	  # after they are used.
-          i=0
-          while test $i -lt $k
-          do
-            i=`expr $i + 1`
-            delfiles="$delfiles $output_objdir/$save_output-${i}.$objext"
-          done
+	  if test "$with_gnu_ld" = yes; then
+	    output=${output_objdir}/${output_la}.lnkscript
+	    $echo "creating GNU ld script: $output"
+	    $echo 'INPUT (' > $output
+	    for obj in $save_libobjs
+	    do
+	      $echo \""$obj"\" >> $output
+	    done
+	    $echo ')' >> $output
+	    delfiles="$delfiles $output"
+	  elif test "X$file_list_spec" != X; then
+	    output=${output_objdir}/${output_la}.lnk
+	    $echo "creating linker input file list: $output"
+	    : > $output
+	    for obj in $save_libobjs
+	    do
+	      $echo "$obj" >> $output
+	    done
+	    delfiles="$delfiles $output"
+	    output=\"$file_list_spec$output\"
+	  else
+	    $echo "creating reloadable object files..."
+	    output=$output_objdir/$save_output-${k}.$objext
+	    # Loop over the list of objects to be linked.
+	    for obj in $save_libobjs
+	    do
+	      eval test_cmds=\"$reload_cmds $objlist $last_robj\"
+	      if test "X$objlist" = X ||
+		 { len=`expr "X$test_cmds" : ".*"` &&
+		   test $len -le $max_cmd_len; }; then
+		objlist="$objlist $obj"
+	      else
+		# The command $test_cmds is almost too long, add a
+		# command to the queue.
+		if test $k -eq 1 ; then
+		  # The first file doesn't have a previous command to add.
+		  eval concat_cmds=\"$reload_cmds $objlist $last_robj\"
+		else
+		  # All subsequent reloadable object files will link in
+		  # the last one created.
+		  eval concat_cmds=\"\$concat_cmds~$reload_cmds $objlist $last_robj\"
+		fi
+		last_robj=$output_objdir/$save_output-${k}.$objext
+		k=`expr $k + 1`
+		output=$output_objdir/$save_output-${k}.$objext
+		objlist=$obj
+		len=1
+	      fi
+	    done
+	    # Handle the remaining objects by creating one last
+	    # reloadable object file.  All subsequent reloadable object
+	    # files will link in the last one created.
+	    test -z "$concat_cmds" || concat_cmds=$concat_cmds~
+	    eval concat_cmds=\"\${concat_cmds}$reload_cmds $objlist $last_robj\"
 
-          $echo "creating a temporary reloadable object file: $output"
+	    # Set up a command to remove the reloadale object files
+	    # after they are used.
+	    i=0
+	    while test $i -lt $k
+	    do
+	      i=`expr $i + 1`
+	      delfiles="$delfiles $output_objdir/$save_output-${i}.$objext"
+	    done
 
-	  # Loop through the commands generated above and execute them.
-          IFS="${IFS= 	}"; save_ifs="$IFS"; IFS='~'
-          for cmd in $concat_cmds; do
-            IFS="$save_ifs"
-	    eval cmd=\"$cmd\"
-            $show "$cmd"
-            $run eval "$cmd" || exit $?
-          done
-          IFS="$save_ifs"
+	    $echo "creating a temporary reloadable object file: $output"
 
-          libobjs=$output
+	    # Loop through the commands generated above and execute them.
+	    IFS="${IFS= 	}"; save_ifs="$IFS"; IFS='~'
+	    for cmd in $concat_cmds; do
+	      IFS="$save_ifs"
+	      eval cmd=\"$cmd\"
+	      $show "$cmd"
+	      $run eval "$cmd" || exit $?
+	    done
+	    IFS="$save_ifs"
+	  fi
+
+	  libobjs=$output
 	  # Restore the value of output.
-          output=$save_output
+	  output=$save_output
 
 	  if test -n "$convenience" && test -n "$whole_archive_flag_spec"; then
 	    eval libobjs=\"\$libobjs $whole_archive_flag_spec\"
@@ -3354,20 +3415,20 @@ EOF
 	    cmds=$archive_expsym_cmds
 	  else
 	    cmds=$archive_cmds
-          fi
+	  fi
 
 	  # Append the command to remove the reloadable object files
 	  # to the just-reset $cmds.
-          eval cmds=\"\$cmds~$rm $delfiles\"
-        fi
-        IFS="${IFS= 	}"; save_ifs="$IFS"; IFS='~'
-        for cmd in $cmds; do
-          IFS="$save_ifs"
+	  eval cmds=\"\$cmds~$rm $delfiles\"
+	fi
+	IFS="${IFS= 	}"; save_ifs="$IFS"; IFS='~'
+	for cmd in $cmds; do
+	  IFS="$save_ifs"
 	  eval cmd=\"$cmd\"
-          $show "$cmd"
-          $run eval "$cmd" || exit $?
-        done
-        IFS="$save_ifs"
+	  $show "$cmd"
+	  $run eval "$cmd" || exit $?
+	done
+	IFS="$save_ifs"
 
 	# Restore the uninstalled library and exit
 	if test "$mode" = relink; then
@@ -4297,6 +4358,63 @@ fi\
 #	  fi
 #	done
 
+	# POSIX demands no paths to be encoded in archives.  We have
+	# to avoid creating archives with duplicate basenames if we
+	# might have to extract them afterwards, e.g., when creating a
+	# static archive out of a convenience library, or when linking
+	# the entirety of a libtool archive into another (currently
+	# not supported by libtool).
+        if (for obj in $oldobjs
+	    do
+	      $echo "X$obj" | $Xsed -e 's%^.*/%%'
+	    done | sort | sort -uc >/dev/null 2>&1); then
+	  :
+	else
+	  $echo "copying selected object files to avoid basename conflicts..."
+
+	  if test -z "$gentop"; then
+	    gentop="$output_objdir/${outputname}x"
+
+	    $show "${rm}r $gentop"
+	    $run ${rm}r "$gentop"
+	    $show "$mkdir $gentop"
+	    $run $mkdir "$gentop"
+	    status=$?
+	    if test $status -ne 0 && test ! -d "$gentop"; then
+	      exit $status
+	    fi
+	    generated="$generated $gentop"
+	  fi
+
+	  save_oldobjs=$oldobjs
+	  oldobjs=
+	  counter=1
+	  for obj in $save_oldobjs
+	  do
+	    objbase=`$echo "X$obj" | $Xsed -e 's%^.*/%%'`
+	    case " $oldobjs " in
+	    " ") oldobjs=$obj ;;
+	    *[\ /]"$objbase "*)
+	      while :; do
+		# Make sure we don't pick an alternate name that also
+		# overlaps.
+	        newobj=lt$counter-$objbase
+	        counter=`expr $counter + 1`
+		case " $oldobjs " in
+		*[\ /]"$newobj "*) ;;
+		*) if test ! -f "$gentop/$newobj"; then break; fi ;;
+		esac
+	      done
+	      $show "ln $obj $gentop/$newobj || cp $obj $gentop/$newobj"
+	      $run ln "$obj" "$gentop/$newobj" ||
+	      $run cp "$obj" "$gentop/$newobj"
+	      oldobjs="$oldobjs $gentop/$newobj"
+	      ;;
+	    *) oldobjs="$oldobjs $obj" ;;
+	    esac
+	  done
+	fi
+
         eval cmds=\"$old_archive_cmds\"
 
         if len=`expr "X$cmds" : ".*"` &&
@@ -4310,20 +4428,7 @@ fi\
           objlist=
           concat_cmds=
           save_oldobjs=$oldobjs
-	  # GNU ar 2.10+ was changed to match POSIX; thus no paths are
-	  # encoded into archives.  This makes 'ar r' malfunction in
-	  # this piecewise linking case whenever conflicting object
-	  # names appear in distinct ar calls; check, warn and compensate.
-          if (for obj in $save_oldobjs
-	    do
-	      $echo "X$obj" | $Xsed -e 's%^.*/%%'
-	    done | sort | sort -uc >/dev/null 2>&1); then
-	    :
-	  else
-	    $echo "$modename: warning: object name conflicts; overriding AR_FLAGS to 'cq'" 1>&2
-	    $echo "$modename: warning: to ensure that POSIX-compatible ar will work" 1>&2
-	    AR_FLAGS=cq
-	  fi
+
           for obj in $save_oldobjs
           do
             oldobjs="$objlist $obj"
@@ -4382,7 +4487,7 @@ fi\
       for tag in $taglist; do
         tagopts="$tagopts --tag $tag"
       done
-      relink_command="(cd `pwd`; $SHELL $0$tagopts --mode=relink $libtool_args)"
+      relink_command="(cd `pwd`; $SHELL $0$tagopts --mode=relink $libtool_args @inst_prefix_dir@)"
       relink_command=`$echo "X$relink_command" | $Xsed -e "$sed_quote_subst"`
 
       # Only create the output if not a dry run.
@@ -4683,6 +4788,27 @@ relink_command=\"$relink_command\""
 	dir="$dir$objdir"
 
 	if test -n "$relink_command"; then
+	  # Determine the prefix the user has applied to our future dir.
+	  inst_prefix_dir=`$echo "$destdir" | sed "s%$libdir\$%%"`
+
+	  # Don't allow the user to place us outside of our expected
+	  # location b/c this prevents finding dependent libraries that
+	  # are installed to the same prefix.
+	  # At present, this check doesn't affect windows .dll's that
+	  # are installed into $libdir/../bin (currently, that works fine)
+	  # but it's something to keep an eye on.
+	  if test "$inst_prefix_dir" = "$destdir"; then
+	    $echo "$modename: error: cannot install \`$file' to a directory not ending in $libdir" 1>&2
+	    exit 1
+	  fi
+
+	  if test -n "$inst_prefix_dir"; then
+	    # Stick the inst_prefix_dir data into the link command.
+	    relink_command=`$echo "$relink_command" | sed "s%@inst_prefix_dir@%-inst-prefix-dir $inst_prefix_dir%"`
+	  else
+	    relink_command=`$echo "$relink_command" | sed "s%@inst_prefix_dir@%%"`
+	  fi
+
 	  $echo "$modename: warning: relinking \`$file'" 1>&2
 	  $show "$relink_command"
 	  if $run eval "$relink_command"; then :

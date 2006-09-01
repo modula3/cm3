@@ -16,8 +16,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 #ifndef HAVE_MACHINE_MODES
 #define HAVE_MACHINE_MODES
@@ -114,6 +114,9 @@ extern const unsigned char mode_nunits[NUM_MACHINE_MODES];
 
 extern const unsigned char mode_wider[NUM_MACHINE_MODES];
 #define GET_MODE_WIDER_MODE(MODE) mode_wider[MODE]
+
+extern const unsigned char mode_2xwider[NUM_MACHINE_MODES];
+#define GET_MODE_2XWIDER_MODE(MODE) mode_2xwider[MODE]
 
 /* Return the mode for data of a given size SIZE and mode class CLASS.
    If LIMIT is nonzero, then don't use modes bigger than MAX_FIXED_MODE_SIZE.

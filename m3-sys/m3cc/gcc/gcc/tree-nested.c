@@ -1206,6 +1206,8 @@ convert_tramp_reference (tree *tp, int *walk_subtrees, void *data)
 	   T.2 = __builtin_adjust_trampoline (T.1);
 	   T.3 = (func_type)T.2;
       */
+      if (TREE_STATIC (t))
+	break;
 
       decl = TREE_OPERAND (t, 0);
       if (TREE_CODE (decl) != FUNCTION_DECL)
@@ -1283,6 +1285,15 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
       if (target_context && !DECL_NO_STATIC_CHAIN (decl))
 	TREE_OPERAND (t, 2)
 	  = get_static_chain (info, target_context, &wi->tsi);
+      break;
+
+    case STATIC_CHAIN_EXPR:
+      decl = TREE_OPERAND (t, 0);
+      target_context = decl_function_context (decl);
+      if (target_context && !DECL_NO_STATIC_CHAIN (decl))
+	*tp = get_static_chain (info, target_context, &wi->tsi);
+      else
+	*tp = null_pointer_node;
       break;
 
     case RETURN_EXPR:
