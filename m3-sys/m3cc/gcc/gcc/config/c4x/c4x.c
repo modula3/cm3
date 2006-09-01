@@ -1,5 +1,6 @@
 /* Subroutines for assembler code output on the TMS320C[34]x
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2003,
+   2004, 2005
    Free Software Foundation, Inc.
 
    Contributed by Michael Hayes (m.hayes@elec.canterbury.ac.nz)
@@ -19,8 +20,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* Some output-actions in c4x.md need these.  */
 #include "config.h"
@@ -42,7 +43,6 @@ Boston, MA 02111-1307, USA.  */
 #include "optabs.h"
 #include "libfuncs.h"
 #include "flags.h"
-#include "loop.h"
 #include "recog.h"
 #include "ggc.h"
 #include "cpplib.h"
@@ -50,6 +50,7 @@ Boston, MA 02111-1307, USA.  */
 #include "tm_p.h"
 #include "target.h"
 #include "target-def.h"
+#include "langhooks.h"
 
 rtx smulhi3_libfunc;
 rtx umulhi3_libfunc;
@@ -152,9 +153,6 @@ enum machine_mode c4x_caller_save_map[FIRST_PSEUDO_REGISTER] =
 rtx c4x_compare_op0;
 rtx c4x_compare_op1;
 
-const char *c4x_rpts_cycles_string;
-int c4x_rpts_cycles = 0;	/* Max. cycles for RPTS.  */
-const char *c4x_cpu_version_string;
 int c4x_cpu_version = 40;	/* CPU version C30/31/32/33/40/44.  */
 
 /* Pragma definitions.  */
@@ -167,19 +165,13 @@ tree interrupt_tree = NULL_TREE;
 tree naked_tree = NULL_TREE;
 
 /* Forward declarations */
+static bool c4x_handle_option (size_t, const char *, int);
 static int c4x_isr_reg_used_p (unsigned int);
 static int c4x_leaf_function_p (void);
 static int c4x_naked_function_p (void);
-static int c4x_immed_float_p (rtx);
-static int c4x_a_register (rtx);
-static int c4x_x_register (rtx);
 static int c4x_immed_int_constant (rtx);
 static int c4x_immed_float_constant (rtx);
-static int c4x_K_constant (rtx);
-static int c4x_N_constant (rtx);
-static int c4x_O_constant (rtx);
 static int c4x_R_indirect (rtx);
-static int c4x_S_indirect (rtx);
 static void c4x_S_address_parse (rtx , int *, int *, int *, int *);
 static int c4x_valid_operands (enum rtx_code, rtx *, enum machine_mode, int);
 static int c4x_arn_reg_operand (rtx, enum machine_mode, unsigned int);
@@ -194,12 +186,15 @@ static int c4x_label_ref_used_p (rtx, rtx);
 static tree c4x_handle_fntype_attribute (tree *, tree, tree, int, bool *);
 const struct attribute_spec c4x_attribute_table[];
 static void c4x_insert_attributes (tree, tree *);
-static void c4x_asm_named_section (const char *, unsigned int);
+static void c4x_asm_named_section (const char *, unsigned int, tree);
 static int c4x_adjust_cost (rtx, rtx, rtx, int);
 static void c4x_globalize_label (FILE *, const char *);
 static bool c4x_rtx_costs (rtx, int, int, int *);
 static int c4x_address_cost (rtx);
 static void c4x_init_libfuncs (void);
+static void c4x_external_libcall (rtx);
+static rtx c4x_struct_value_rtx (tree, int);
+static tree c4x_gimplify_va_arg_expr (tree, tree, tree *, tree *);
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ASM_BYTE_OP
@@ -214,6 +209,16 @@ static void c4x_init_libfuncs (void);
 #define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
 #undef TARGET_ASM_FILE_END
 #define TARGET_ASM_FILE_END c4x_file_end
+
+#undef TARGET_ASM_EXTERNAL_LIBCALL
+#define TARGET_ASM_EXTERNAL_LIBCALL c4x_external_libcall
+
+/* Play safe, not the fastest code.  */
+#undef TARGET_DEFAULT_TARGET_FLAGS
+#define TARGET_DEFAULT_TARGET_FLAGS (MASK_ALIASES | MASK_PARALLEL \
+				     | MASK_PARALLEL_MPY | MASK_RPTB)
+#undef TARGET_HANDLE_OPTION
+#define TARGET_HANDLE_OPTION c4x_handle_option
 
 #undef TARGET_ATTRIBUTE_TABLE
 #define TARGET_ATTRIBUTE_TABLE c4x_attribute_table
@@ -244,8 +249,45 @@ static void c4x_init_libfuncs (void);
 #undef TARGET_INIT_LIBFUNCS
 #define TARGET_INIT_LIBFUNCS c4x_init_libfuncs
 
+#undef TARGET_STRUCT_VALUE_RTX
+#define TARGET_STRUCT_VALUE_RTX c4x_struct_value_rtx
+
+#undef TARGET_GIMPLIFY_VA_ARG_EXPR
+#define TARGET_GIMPLIFY_VA_ARG_EXPR c4x_gimplify_va_arg_expr
+
 struct gcc_target targetm = TARGET_INITIALIZER;
 
+/* Implement TARGET_HANDLE_OPTION.  */
+
+static bool
+c4x_handle_option (size_t code, const char *arg, int value)
+{
+  switch (code)
+    {
+    case OPT_m30: c4x_cpu_version = 30; return true;
+    case OPT_m31: c4x_cpu_version = 31; return true;
+    case OPT_m32: c4x_cpu_version = 32; return true;
+    case OPT_m33: c4x_cpu_version = 33; return true;
+    case OPT_m40: c4x_cpu_version = 40; return true;
+    case OPT_m44: c4x_cpu_version = 44; return true;
+
+    case OPT_mcpu_:
+      if (arg[0] == 'c' || arg[0] == 'C')
+	arg++;
+      value = atoi (arg);
+      switch (value)
+	{
+	case 30: case 31: case 32: case 33: case 40: case 44:
+	  c4x_cpu_version = value;
+	  return true;
+	}
+      return false;
+
+    default:
+      return true;
+    }
+}
+
 /* Override command line options.
    Called once after all options have been parsed.
    Mostly we process the processor
@@ -254,59 +296,6 @@ struct gcc_target targetm = TARGET_INITIALIZER;
 void
 c4x_override_options (void)
 {
-  if (c4x_rpts_cycles_string)
-    c4x_rpts_cycles = atoi (c4x_rpts_cycles_string);
-  else
-    c4x_rpts_cycles = 0;
-
-  if (TARGET_C30)
-    c4x_cpu_version = 30;
-  else if (TARGET_C31)
-    c4x_cpu_version = 31;
-  else if (TARGET_C32)
-    c4x_cpu_version = 32;
-  else if (TARGET_C33)
-    c4x_cpu_version = 33;
-  else if (TARGET_C40)
-    c4x_cpu_version = 40;
-  else if (TARGET_C44)
-    c4x_cpu_version = 44;
-  else
-    c4x_cpu_version = 40;	       
-
-  /* -mcpu=xx overrides -m40 etc.  */
-  if (c4x_cpu_version_string)
-    {
-      const char *p = c4x_cpu_version_string;
-      
-      /* Also allow -mcpu=c30 etc.  */
-      if (*p == 'c' || *p == 'C')
-	p++;
-      c4x_cpu_version = atoi (p);
-    }
-
-  target_flags &= ~(C30_FLAG | C31_FLAG | C32_FLAG | C33_FLAG |
-		    C40_FLAG | C44_FLAG);
-
-  switch (c4x_cpu_version)
-    {
-    case 30: target_flags |= C30_FLAG; break;
-    case 31: target_flags |= C31_FLAG; break;
-    case 32: target_flags |= C32_FLAG; break;
-    case 33: target_flags |= C33_FLAG; break;
-    case 40: target_flags |= C40_FLAG; break;
-    case 44: target_flags |= C44_FLAG; break;
-    default:
-      warning ("unknown CPU version %d, using 40.\n", c4x_cpu_version);
-      c4x_cpu_version = 40;
-      target_flags |= C40_FLAG;
-    }
-
-  if (TARGET_C30 || TARGET_C31 || TARGET_C32 || TARGET_C33)
-    target_flags |= C3X_FLAG;
-  else
-    target_flags &= ~C3X_FLAG;
-
   /* Convert foo / 8.0 into foo * 0.125, etc.  */
   set_fast_math_flags (1);
 
@@ -314,6 +303,15 @@ c4x_override_options (void)
      This provides compatibility with the old -mno-aliases option.  */
   if (! TARGET_ALIASES && ! flag_argument_noalias)
     flag_argument_noalias = 1;
+
+  if (!TARGET_C3X)
+    target_flags |= MASK_MPYI | MASK_DB;
+
+  if (optimize < 2)
+    target_flags &= ~(MASK_RPTB | MASK_PARALLEL);
+
+  if (!TARGET_PARALLEL)
+    target_flags &= ~MASK_PARALLEL_MPY;
 }
 
 
@@ -454,7 +452,7 @@ c4x_hard_regno_mode_ok (unsigned int regno, enum machine_mode mode)
 int
 c4x_hard_regno_rename_ok (unsigned int regno1, unsigned int regno2)
 {
-  /* We can not copy call saved registers from mode QI into QF or from
+  /* We cannot copy call saved registers from mode QI into QF or from
      mode QF into QI.  */
   if (IS_FLOAT_CALL_SAVED_REGNO (regno1) && IS_INT_CALL_SAVED_REGNO (regno2))
     return 0;
@@ -560,7 +558,7 @@ c4x_init_cumulative_args (CUMULATIVE_ARGS *cum, tree fntype, rtx libname)
 
 	  if ((mode = TYPE_MODE (type)))
 	    {
-	      if (! MUST_PASS_IN_STACK (mode, type))
+	      if (! targetm.calls.must_pass_in_stack (mode, type))
 		{
 		  /* Look for float, double, or long double argument.  */
 		  if (mode == QFmode || mode == HFmode)
@@ -597,7 +595,7 @@ c4x_function_arg_advance (CUMULATIVE_ARGS *cum, enum machine_mode mode,
   if (! TARGET_MEMPARM 
       && named
       && type
-      && ! MUST_PASS_IN_STACK (mode, type))
+      && ! targetm.calls.must_pass_in_stack (mode, type))
     {
       /* Look for float, double, or long double argument.  */
       if (mode == QFmode || mode == HFmode)
@@ -663,7 +661,7 @@ c4x_function_arg (CUMULATIVE_ARGS *cum, enum machine_mode mode,
   if (! TARGET_MEMPARM 
       && named 
       && type
-      && ! MUST_PASS_IN_STACK (mode, type))
+      && ! targetm.calls.must_pass_in_stack (mode, type))
     {
       /* Look for float, double, or long double argument.  */
       if (mode == QFmode || mode == HFmode)
@@ -711,16 +709,28 @@ c4x_function_arg (CUMULATIVE_ARGS *cum, enum machine_mode mode,
 
 /* C[34]x arguments grow in weird ways (downwards) that the standard
    varargs stuff can't handle..  */
-rtx
-c4x_va_arg (tree valist, tree type)
+
+static tree
+c4x_gimplify_va_arg_expr (tree valist, tree type,
+			  tree *pre_p ATTRIBUTE_UNUSED,
+			  tree *post_p ATTRIBUTE_UNUSED)
 {
   tree t;
+  bool indirect;
+
+  indirect = pass_by_reference (NULL, TYPE_MODE (type), type, false);
+  if (indirect)
+    type = build_pointer_type (type);
 
   t = build (PREDECREMENT_EXPR, TREE_TYPE (valist), valist,
-	     build_int_2 (int_size_in_bytes (type), 0));
-  TREE_SIDE_EFFECTS (t) = 1;
+	     build_int_cst (NULL_TREE, int_size_in_bytes (type)));
+  t = fold_convert (build_pointer_type (type), t);
+  t = build_va_arg_indirect_ref (t);
 
-  return expand_expr (t, NULL_RTX, Pmode, EXPAND_NORMAL);
+  if (indirect)
+    t = build_va_arg_indirect_ref (t);
+
+  return t;
 }
 
 
@@ -758,7 +768,7 @@ c4x_leaf_function_p (void)
      to save/restore the registers we actually use.
      For the global variable leaf_function to be set, we need
      to define LEAF_REGISTERS and all that it entails.
-     Let's check ourselves...   */
+     Let's check ourselves....  */
 
   if (lookup_attribute ("leaf_pretend",
 			TYPE_ATTRIBUTES (TREE_TYPE (current_function_decl))))
@@ -921,7 +931,7 @@ c4x_expand_prologue (void)
 	}
       else
 	{
-	  /* If we use ar3, we need to push it.   */
+	  /* If we use ar3, we need to push it.  */
 	  dont_push_ar3 = 0;
 	  if ((size != 0) || (current_function_args_size != 0))
 	    {
@@ -1069,7 +1079,7 @@ c4x_expand_epilogue(void)
 					 gen_rtx_PLUS 
 					 (QImode, gen_rtx_REG (QImode,
 							       AR3_REGNO),
-					  GEN_INT(-1)))));
+					  constm1_rtx))));
 	      RTX_FRAME_RELATED_P (insn) = 1;
 	      
 	      /* We already have the return value and the fp,
@@ -1236,10 +1246,11 @@ c4x_emit_move_sequence (rtx *operands, enum machine_mode mode)
       && dp_reg_operand (XEXP (op1, 0), mode))
     {
       /* expand_increment will sometimes create a LO_SUM immediate
-	 address.  */
+	 address.  Undo this silliness.  */
       op1 = XEXP (op1, 1);
     }
-  else if (symbolic_address_operand (op1, mode))
+  
+  if (symbolic_address_operand (op1, mode))
     {
       if (TARGET_LOAD_ADDRESS)
 	{
@@ -1381,13 +1392,13 @@ c4x_emit_libcall (rtx libcall, enum rtx_code code,
     case 2:
       ret = emit_library_call_value (libcall, NULL_RTX, 1, dmode, 1,
 				     operands[1], smode);
-      equiv = gen_rtx (code, dmode, operands[1]);
+      equiv = gen_rtx_fmt_e (code, dmode, operands[1]);
       break;
 
     case 3:
       ret = emit_library_call_value (libcall, NULL_RTX, 1, dmode, 2,
 				     operands[1], smode, operands[2], smode);
-      equiv = gen_rtx (code, dmode, operands[1], operands[2]);
+      equiv = gen_rtx_fmt_ee (code, dmode, operands[1], operands[2]);
       break;
 
     default:
@@ -1422,8 +1433,8 @@ c4x_emit_libcall_mulhi (rtx libcall, enum rtx_code code,
   equiv = gen_rtx_TRUNCATE (mode,
                    gen_rtx_LSHIFTRT (HImode,
                             gen_rtx_MULT (HImode,
-                                     gen_rtx (code, HImode, operands[1]),
-                                     gen_rtx (code, HImode, operands[2])),
+                                     gen_rtx_fmt_e (code, HImode, operands[1]),
+                                     gen_rtx_fmt_e (code, HImode, operands[2])),
                                      GEN_INT (32)));
   insns = get_insns ();
   end_sequence ();
@@ -1432,7 +1443,7 @@ c4x_emit_libcall_mulhi (rtx libcall, enum rtx_code code,
 
 
 int
-c4x_check_legit_addr (enum machine_mode mode, rtx addr, int strict)
+c4x_legitimate_address_p (enum machine_mode mode, rtx addr, int strict)
 {
   rtx base = NULL_RTX;		/* Base register (AR0-AR7).  */
   rtx indx = NULL_RTX;		/* Index register (IR0,IR1).  */
@@ -1471,7 +1482,9 @@ c4x_check_legit_addr (enum machine_mode mode, rtx addr, int strict)
 	    || (GET_CODE (op1) != PLUS && GET_CODE (op1) != MINUS))
 	  return 0;
 	base = XEXP (op1, 0);
-	if (base != op0)
+	if (! REG_P (base))
+	    return 0;
+	if (REGNO (base) != REGNO (op0))
 	  return 0;
 	if (REG_P (XEXP (op1, 1)))
 	  indx = XEXP (op1, 1);
@@ -2130,7 +2143,7 @@ c4x_print_operand_address (FILE *file, rtx addr)
 /* Return nonzero if the floating point operand will fit
    in the immediate field.  */
 
-static int
+int
 c4x_immed_float_p (rtx op)
 {
   long convval[2];
@@ -2232,7 +2245,7 @@ c4x_rptb_nop_p (rtx insn)
   Before we can create a repeat block looping instruction we have to
   verify that there are no jumps outside the loop and no jumps outside
   the loop go into this loop. This can happen in the basic blocks reorder
-  pass. The C4x cpu can not handle this.  */
+  pass. The C4x cpu cannot handle this.  */
 
 static int
 c4x_label_ref_used_p (rtx x, rtx code_label)
@@ -2277,7 +2290,7 @@ c4x_rptb_valid_p (rtx insn, rtx start_label)
     if (insn == start_label)
       break;
 
-  /* Note found then we can not use a rptb or rpts.  The label was
+  /* Note found then we cannot use a rptb or rpts.  The label was
      probably moved by the basic block reorder pass.  */
   if (! insn)
     return 0;
@@ -2334,7 +2347,7 @@ c4x_rptb_insert (rtx insn)
   rtx count_reg;
 
   /* If the count register has not been allocated to RC, say if
-     there is a movstr pattern in the loop, then do not insert a
+     there is a movmem pattern in the loop, then do not insert a
      RPTB instruction.  Instead we emit a decrement and branch
      at the end of the loop.  */
   count_reg = XEXP (XEXP (SET_SRC (XVECEXP (PATTERN (insn), 0, 0)), 0), 0);
@@ -2346,10 +2359,10 @@ c4x_rptb_insert (rtx insn)
   
   if (! c4x_rptb_valid_p (insn, start_label))
     {
-      /* We can not use the rptb insn.  Replace it so reorg can use
+      /* We cannot use the rptb insn.  Replace it so reorg can use
          the delay slots of the jump insn.  */
-      emit_insn_before (gen_addqi3 (count_reg, count_reg, GEN_INT (-1)), insn);
-      emit_insn_before (gen_cmpqi (count_reg, GEN_INT (0)), insn);
+      emit_insn_before (gen_addqi3 (count_reg, count_reg, constm1_rtx), insn);
+      emit_insn_before (gen_cmpqi (count_reg, const0_rtx), insn);
       emit_insn_before (gen_bge (start_label), insn);
       LABEL_NUSES (start_label)++;
       delete_insn (insn);
@@ -2440,14 +2453,14 @@ c4x_reorg (void)
 }
 
 
-static int
+int
 c4x_a_register (rtx op)
 {
   return REG_P (op) && IS_ADDR_OR_PSEUDO_REG (op);
 }
 
 
-static int
+int
 c4x_x_register (rtx op)
 {
   return REG_P (op) && IS_INDEX_OR_PSEUDO_REG (op);
@@ -2523,7 +2536,7 @@ c4x_J_constant (rtx op)
 }
 
 
-static int
+int
 c4x_K_constant (rtx op)
 {
   if (TARGET_C3X || ! c4x_immed_int_constant (op))
@@ -2539,14 +2552,14 @@ c4x_L_constant (rtx op)
 }
 
 
-static int
+int
 c4x_N_constant (rtx op)
 {
   return c4x_immed_int_constant (op) && IS_NOT_UINT16_CONST (INTVAL (op));
 }
 
 
-static int
+int
 c4x_O_constant (rtx op)
 {
   return c4x_immed_int_constant (op) && IS_HIGH_CONST (INTVAL (op));
@@ -2751,7 +2764,7 @@ c4x_S_constraint (rtx op)
 }
 
 
-static int
+int
 c4x_S_indirect (rtx op)
 {
   enum machine_mode mode = GET_MODE (op);
@@ -2887,91 +2900,6 @@ c4x_autoinc_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 }
 
 
-/* Match any operand.  */
-
-int
-any_operand (register rtx op ATTRIBUTE_UNUSED,
-	     enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return 1;
-}
-
-
-/* Nonzero if OP is a floating point value with value 0.0.  */
-
-int
-fp_zero_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  REAL_VALUE_TYPE r;
-
-  if (GET_CODE (op) != CONST_DOUBLE)
-    return 0;
-  REAL_VALUE_FROM_CONST_DOUBLE (r, op);
-  return REAL_VALUES_EQUAL (r, dconst0);
-}
-
-
-int
-const_operand (register rtx op, register enum machine_mode mode)
-{
-  switch (mode)
-    {
-    case QFmode:
-    case HFmode:
-      if (GET_CODE (op) != CONST_DOUBLE
-	  || GET_MODE (op) != mode
-	  || GET_MODE_CLASS (mode) != MODE_FLOAT)
-	return 0;
-
-      return c4x_immed_float_p (op);
-
-#if Pmode != QImode
-    case Pmode:
-#endif
-    case QImode:
-      if (GET_CODE (op) == CONSTANT_P_RTX)
-	return 1;
-
-      if (GET_CODE (op) != CONST_INT
-	  || (GET_MODE (op) != VOIDmode && GET_MODE (op) != mode)
-	  || GET_MODE_CLASS (mode) != MODE_INT)
-	return 0;
-
-      return IS_HIGH_CONST (INTVAL (op)) || IS_INT16_CONST (INTVAL (op));
-
-    case HImode:
-      return 0;
-
-    default:
-      return 0;
-    }
-}
-
-
-int
-stik_const_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return c4x_K_constant (op);
-}
-
-
-int
-not_const_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return c4x_N_constant (op);
-}
-
-
-int
-reg_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == SUBREG
-      && GET_MODE (op) == QFmode)
-    return 0;
-  return register_operand (op, mode);
-}
-
-
 int
 mixed_subreg_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 {
@@ -3047,324 +2975,6 @@ not_rc_reg (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
   if (REG_P (op) && REGNO (op) == RC_REGNO)
     return 0;
   return 1;
-}
-
-
-/* Extended precision register R0-R1.  */
-
-int
-r0r1_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  if (GET_CODE (op) == SUBREG)
-    op = SUBREG_REG (op);
-  return REG_P (op) && IS_R0R1_OR_PSEUDO_REG (op);
-}
-
-
-/* Extended precision register R2-R3.  */
-
-int
-r2r3_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  if (GET_CODE (op) == SUBREG)
-    op = SUBREG_REG (op);
-  return REG_P (op) && IS_R2R3_OR_PSEUDO_REG (op);
-}
-
-
-/* Low extended precision register R0-R7.  */
-
-int
-ext_low_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  if (GET_CODE (op) == SUBREG)
-    op = SUBREG_REG (op);
-  return REG_P (op) && IS_EXT_LOW_OR_PSEUDO_REG (op);
-}
-
-
-/* Extended precision register.  */
-
-int
-ext_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  if (GET_CODE (op) == SUBREG)
-    op = SUBREG_REG (op);
-  if (! REG_P (op))
-    return 0;
-  return IS_EXT_OR_PSEUDO_REG (op);
-}
-
-
-/* Standard precision register.  */
-
-int
-std_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  if (GET_CODE (op) == SUBREG)
-    op = SUBREG_REG (op);
-  return REG_P (op) && IS_STD_OR_PSEUDO_REG (op);
-}
-
-/* Standard precision or normal register.  */
-
-int
-std_or_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (reload_in_progress)
-    return std_reg_operand (op, mode);
-  return reg_operand (op, mode);
-}
-
-/* Address register.  */
-
-int
-addr_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  return c4x_a_register (op);
-}
-
-
-/* Index register.  */
-
-int
-index_reg_operand (rtx op, enum machine_mode mode)
-{
-  if (! reg_operand (op, mode))
-    return 0;
-  if (GET_CODE (op) == SUBREG)
-    op = SUBREG_REG (op);
-  return c4x_x_register (op);
-}
-
-
-/* DP register.  */
-
-int
-dp_reg_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return REG_P (op) && IS_DP_OR_PSEUDO_REG (op);
-}
-
-
-/* SP register.  */
-
-int
-sp_reg_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return REG_P (op) && IS_SP_OR_PSEUDO_REG (op);
-}
-
-
-/* ST register.  */
-
-int
-st_reg_operand (register rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return REG_P (op) && IS_ST_OR_PSEUDO_REG (op);
-}
-
-
-/* RC register.  */
-
-int
-rc_reg_operand (register rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return REG_P (op) && IS_RC_OR_PSEUDO_REG (op);
-}
-
-
-int
-call_address_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return (REG_P (op) || symbolic_address_operand (op, mode));
-}
-
-
-/* Symbolic address operand.  */
-
-int
-symbolic_address_operand (register rtx op,
-			  enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  switch (GET_CODE (op))
-    {
-    case CONST:
-    case SYMBOL_REF:
-    case LABEL_REF:
-      return 1;
-    default:
-      return 0;
-    }
-}
-
-
-/* Check dst operand of a move instruction.  */
-
-int
-dst_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == SUBREG
-      && mixed_subreg_operand (op, mode))
-    return 0;
-
-  if (REG_P (op))
-    return reg_operand (op, mode);
-
-  return nonimmediate_operand (op, mode);
-}
-
-
-/* Check src operand of two operand arithmetic instructions.  */
-
-int
-src_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == SUBREG
-      && mixed_subreg_operand (op, mode))
-    return 0;
-
-  if (REG_P (op))
-    return reg_operand (op, mode);
-
-  if (mode == VOIDmode)
-    mode = GET_MODE (op);
-
-  if (GET_CODE (op) == CONST_INT)
-    return (mode == QImode || mode == Pmode || mode == HImode)
-      && c4x_I_constant (op);
-
-  /* We don't like CONST_DOUBLE integers.  */
-  if (GET_CODE (op) == CONST_DOUBLE)
-    return c4x_H_constant (op);
-
-  /* Disallow symbolic addresses.  Only the predicate
-     symbolic_address_operand will match these.  */
-  if (GET_CODE (op) == SYMBOL_REF
-      || GET_CODE (op) == LABEL_REF
-      || GET_CODE (op) == CONST)
-    return 0;
-
-  /* If TARGET_LOAD_DIRECT_MEMS is nonzero, disallow direct memory
-     access to symbolic addresses.  These operands will get forced
-     into a register and the movqi expander will generate a
-     HIGH/LO_SUM pair if TARGET_EXPOSE_LDP is nonzero.  */
-  if (GET_CODE (op) == MEM
-      && ((GET_CODE (XEXP (op, 0)) == SYMBOL_REF
-	   || GET_CODE (XEXP (op, 0)) == LABEL_REF
-	   || GET_CODE (XEXP (op, 0)) == CONST)))
-    return ! TARGET_LOAD_DIRECT_MEMS && GET_MODE (op) == mode;
-
-  return general_operand (op, mode);
-}
-
-
-int
-src_hi_operand (rtx op, enum machine_mode mode)
-{
-  if (c4x_O_constant (op))
-    return 1;
-  return src_operand (op, mode);
-}
-
-
-/* Check src operand of two operand logical instructions.  */
-
-int
-lsrc_operand (rtx op, enum machine_mode mode)
-{
-  if (mode == VOIDmode)
-    mode = GET_MODE (op);
-
-  if (mode != QImode && mode != Pmode)
-    fatal_insn ("mode not QImode", op);
-
-  if (GET_CODE (op) == CONST_INT)
-    return c4x_L_constant (op) || c4x_J_constant (op);
-
-  return src_operand (op, mode);
-}
-
-
-/* Check src operand of two operand tricky instructions.  */
-
-int
-tsrc_operand (rtx op, enum machine_mode mode)
-{
-  if (mode == VOIDmode)
-    mode = GET_MODE (op);
-
-  if (mode != QImode && mode != Pmode)
-    fatal_insn ("mode not QImode", op);
-
-  if (GET_CODE (op) == CONST_INT)
-    return c4x_L_constant (op) || c4x_N_constant (op) || c4x_J_constant (op);
-
-  return src_operand (op, mode);
-}
-
-
-/* Check src operand of two operand non immedidate instructions.  */
-
-int
-nonimmediate_src_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == CONST_INT || GET_CODE (op) == CONST_DOUBLE)
-    return 0;
-
-  return src_operand (op, mode);
-}
-
-
-/* Check logical src operand of two operand non immedidate instructions.  */
-
-int
-nonimmediate_lsrc_operand (rtx op, enum machine_mode mode)
-{
-  if (GET_CODE (op) == CONST_INT || GET_CODE (op) == CONST_DOUBLE)
-    return 0;
-
-  return lsrc_operand (op, mode);
-}
-
-
-int
-reg_or_const_operand (rtx op, enum machine_mode mode)
-{
-  return reg_operand (op, mode) || const_operand (op, mode);
-}
-
-
-/* Check for indirect operands allowable in parallel instruction.  */
-
-int
-par_ind_operand (rtx op, enum machine_mode mode)
-{
-  if (mode != VOIDmode && mode != GET_MODE (op))
-    return 0;
-
-  return c4x_S_indirect (op);
-}
-
-
-/* Check for operands allowable in parallel instruction.  */
-
-int
-parallel_operand (rtx op, enum machine_mode mode)
-{
-  return ext_low_reg_operand (op, mode) || par_ind_operand (op, mode);
 }
 
 
@@ -3463,7 +3073,7 @@ c4x_S_address_parse (rtx op, int *base, int *incdec, int *index, int *disp)
 	    return;
 	  }
       }
-      /* Fallthrough.  */
+      /* Fall through.  */
 
     default:
       fatal_insn ("invalid indirect (S) memory address", op);
@@ -3522,7 +3132,7 @@ c4x_address_conflict (rtx op0, rtx op1, int store0, int store1)
   if (! TARGET_DEVEL && base0 == base1 && (incdec0 || incdec1))
     return 1;
 
-  /* We can not optimize the case where op1 and op2 refer to the same
+  /* We cannot optimize the case where op1 and op2 refer to the same
      address.  */
   if (base0 == base1 && disp0 == disp1 && index0 == index1)
     return 1;
@@ -3733,10 +3343,16 @@ c4x_valid_operands (enum rtx_code code, rtx *operands,
 		    enum machine_mode mode ATTRIBUTE_UNUSED,
 		    int force)
 {
+  rtx op0;
   rtx op1;
   rtx op2;
   enum rtx_code code1;
   enum rtx_code code2;
+
+
+  /* FIXME, why can't we tighten the operands for IF_THEN_ELSE?  */
+  if (code == IF_THEN_ELSE)
+      return 1 || (operands[0] == operands[2] || operands[0] == operands[3]);
 
   if (code == COMPARE)
     {
@@ -3749,6 +3365,10 @@ c4x_valid_operands (enum rtx_code code, rtx *operands,
       op2 = operands[2];
     }
 
+  op0 = operands[0];
+
+  if (GET_CODE (op0) == SUBREG)
+    op0 = SUBREG_REG (op0);
   if (GET_CODE (op1) == SUBREG)
     op1 = SUBREG_REG (op1);
   if (GET_CODE (op2) == SUBREG)
@@ -3757,6 +3377,7 @@ c4x_valid_operands (enum rtx_code code, rtx *operands,
   code1 = GET_CODE (op1);
   code2 = GET_CODE (op2);
 
+  
   if (code1 == REG && code2 == REG)
     return 1;
 
@@ -3767,6 +3388,7 @@ c4x_valid_operands (enum rtx_code code, rtx *operands,
       return c4x_R_indirect (op1) && c4x_R_indirect (op2);
     }
 
+  /* We cannot handle two MEMs or two CONSTS, etc.  */
   if (code1 == code2)
     return 0;
 
@@ -3786,11 +3408,6 @@ c4x_valid_operands (enum rtx_code code, rtx *operands,
 
 	  /* Any valid memory operand screened by src_operand is OK.  */
   	case MEM:
-	  
-	  /* After CSE, any remaining (ADDRESSOF:P reg) gets converted
-	     into a stack slot memory address comprising a PLUS and a
-	     constant.  */
-	case ADDRESSOF:
 	  break;
 	  
 	default:
@@ -3798,54 +3415,65 @@ c4x_valid_operands (enum rtx_code code, rtx *operands,
 	  break;
 	}
       
+      if (GET_CODE (op0) == SCRATCH)
+	  return 1;
+
+      if (!REG_P (op0))
+	  return 0;
+
       /* Check that we have a valid destination register for a two operand
 	 instruction.  */
-      return ! force || code == COMPARE || REGNO (op1) == REGNO (operands[0]);
+      return ! force || code == COMPARE || REGNO (op1) == REGNO (op0);
     }
 
-  /* We assume MINUS is commutative since the subtract patterns
-     also support the reverse subtract instructions.  Since op1
-     is not a register, and op2 is a register, op1 can only
-     be a restricted memory operand for a shift instruction.  */
+
+  /* Check non-commutative operators.  */
   if (code == ASHIFTRT || code == LSHIFTRT
       || code == ASHIFT || code == COMPARE)
     return code2 == REG
       && (c4x_S_indirect (op1) || c4x_R_indirect (op1));
-  
-  switch (code1)
+
+
+  /* Assume MINUS is commutative since the subtract patterns
+     also support the reverse subtract instructions.  Since op1
+     is not a register, and op2 is a register, op1 can only
+     be a restricted memory operand for a shift instruction.  */
+  if (code2 == REG)
     {
-    case CONST_INT:
-      if (c4x_J_constant (op1) && c4x_R_indirect (op2))
-	return 1;
-      break;
+      switch (code1)
+	{
+	case CONST_INT:
+	  break;
       
-    case CONST_DOUBLE:
-      if (! c4x_H_constant (op1))
-	return 0;
-      break;
+	case CONST_DOUBLE:
+	  if (! c4x_H_constant (op1))
+	    return 0;
+	  break;
 
-      /* Any valid memory operand screened by src_operand is OK.  */      
-    case MEM:
-#if 0
-      if (code2 != REG)
-	return 0;
-#endif
-      break;
+	  /* Any valid memory operand screened by src_operand is OK.  */      
+	case MEM:
+	  break;
+	  
+	default:
+	  abort ();
+	  break;
+	}
 
-      /* After CSE, any remaining (ADDRESSOF:P reg) gets converted
-	 into a stack slot memory address comprising a PLUS and a
-	 constant.  */
-    case ADDRESSOF:
-      break;
-      
-    default:
-      abort ();
-      break;
+      if (GET_CODE (op0) == SCRATCH)
+	  return 1;
+
+      if (!REG_P (op0))
+	  return 0;
+
+      /* Check that we have a valid destination register for a two operand
+	 instruction.  */
+      return ! force || REGNO (op1) == REGNO (op0);
     }
       
-  /* Check that we have a valid destination register for a two operand
-     instruction.  */
-  return ! force || REGNO (op1) == REGNO (operands[0]);
+  if (c4x_J_constant (op1) && c4x_R_indirect (op2))
+    return 1;
+
+  return 0;
 }
 
 
@@ -3888,7 +3516,6 @@ legitimize_operands (enum rtx_code code, rtx *operands, enum machine_mode mode)
 	  && TARGET_HOIST
 	  && optimize > 0
 	  && GET_CODE (operands[1]) == CONST_INT 
-	  && preserve_subexpressions_p ()
 	  && rtx_cost (operands[1], code) > 1)
 	operands[1] = force_reg (mode, operands[1]);
       
@@ -3906,13 +3533,12 @@ legitimize_operands (enum rtx_code code, rtx *operands, enum machine_mode mode)
       && TARGET_HOIST
       && optimize > 1
       && GET_CODE (operands[2]) == CONST_INT
-      && preserve_subexpressions_p ()
       && rtx_cost (operands[2], code) > 1)
     operands[2] = force_reg (mode, operands[2]);
 
   /* We can get better code on a C30 if we force constant shift counts
      into a register.  This way they can get hoisted out of loops,
-     tying up a register, but saving an instruction.  The downside is
+     tying up a register but saving an instruction.  The downside is
      that they may get allocated to an address or index register, and
      thus we will get a pipeline conflict if there is a nearby
      indirect address using an address register. 
@@ -3946,6 +3572,17 @@ legitimize_operands (enum rtx_code code, rtx *operands, enum machine_mode mode)
       && (GET_CODE (operands[2]) != CONST_INT))
     operands[2] = gen_rtx_NEG (mode, negate_rtx (mode, operands[2]));
   
+
+  /* When the shift count is greater than 32 then the result 
+     can be implementation dependent.  We truncate the result to
+     fit in 5 bits so that we do not emit invalid code when
+     optimizing---such as trying to generate lhu2 with 20021124-1.c.  */
+  if (((code == ASHIFTRT || code == LSHIFTRT || code == ASHIFT)
+      && (GET_CODE (operands[2]) == CONST_INT))
+      && INTVAL (operands[2]) > (GET_MODE_BITSIZE (mode) - 1))
+      operands[2]
+	  = GEN_INT (INTVAL (operands[2]) & (GET_MODE_BITSIZE (mode) - 1));
+
   return 1;
 }
 
@@ -4357,16 +3994,8 @@ c4x_external_ref (const char *name)
 static void
 c4x_file_start (void)
 {
-  int dspversion = 0;
-  if (TARGET_C30) dspversion = 30;
-  if (TARGET_C31) dspversion = 31;
-  if (TARGET_C32) dspversion = 32;
-  if (TARGET_C33) dspversion = 33;
-  if (TARGET_C40) dspversion = 40;
-  if (TARGET_C44) dspversion = 44;
-
   default_file_start ();
-  fprintf (asm_out_file, "\t.version\t%d\n", dspversion);
+  fprintf (asm_out_file, "\t.version\t%d\n", c4x_cpu_version);
   fputs ("\n\t.data\ndata_sec:\n", asm_out_file);
 }
 
@@ -4444,7 +4073,7 @@ c4x_handle_fntype_attribute (tree *node, tree name,
 {
   if (TREE_CODE (*node) != FUNCTION_TYPE)
     {
-      warning ("`%s' attribute only applies to functions",
+      warning (OPT_Wattributes, "%qs attribute only applies to functions",
 	       IDENTIFIER_POINTER (name));
       *no_add_attrs = true;
     }
@@ -4469,8 +4098,8 @@ c4x_rptb_rpts_p (rtx insn, rtx op)
          where they are and print a warning.  We should
          probably move these insns before the repeat block insn.  */
       if (TARGET_DEBUG)
-	fatal_insn("c4x_rptb_rpts_p: Repeat block top label moved\n",
-		   insn);
+	fatal_insn ("c4x_rptb_rpts_p: Repeat block top label moved",
+		    insn);
       return 0;
     }
 
@@ -4710,41 +4339,52 @@ c4x_init_builtins (void)
 {
   tree endlink = void_list_node;
 
-  builtin_function ("fast_ftoi",
-		    build_function_type 
-		    (integer_type_node,
-		     tree_cons (NULL_TREE, double_type_node, endlink)),
-		    C4X_BUILTIN_FIX, BUILT_IN_MD, NULL, NULL_TREE);
-  builtin_function ("ansi_ftoi",
-		    build_function_type 
-		    (integer_type_node, 
-		     tree_cons (NULL_TREE, double_type_node, endlink)),
-		    C4X_BUILTIN_FIX_ANSI, BUILT_IN_MD, NULL, NULL_TREE);
+  lang_hooks.builtin_function ("fast_ftoi",
+			       build_function_type 
+			       (integer_type_node,
+				tree_cons (NULL_TREE, double_type_node,
+					   endlink)),
+			       C4X_BUILTIN_FIX, BUILT_IN_MD, NULL, NULL_TREE);
+  lang_hooks.builtin_function ("ansi_ftoi",
+			       build_function_type 
+			       (integer_type_node, 
+				tree_cons (NULL_TREE, double_type_node,
+					   endlink)),
+			       C4X_BUILTIN_FIX_ANSI, BUILT_IN_MD, NULL,
+			       NULL_TREE);
   if (TARGET_C3X)
-    builtin_function ("fast_imult",
-		      build_function_type
-		      (integer_type_node, 
-		       tree_cons (NULL_TREE, integer_type_node,
-				  tree_cons (NULL_TREE,
-					     integer_type_node, endlink))),
-		      C4X_BUILTIN_MPYI, BUILT_IN_MD, NULL, NULL_TREE);
+    lang_hooks.builtin_function ("fast_imult",
+				 build_function_type
+				 (integer_type_node, 
+				  tree_cons (NULL_TREE, integer_type_node,
+					     tree_cons (NULL_TREE,
+							integer_type_node,
+							endlink))),
+				 C4X_BUILTIN_MPYI, BUILT_IN_MD, NULL,
+				 NULL_TREE);
   else
     {
-      builtin_function ("toieee",
-		        build_function_type 
-			(double_type_node,
-			 tree_cons (NULL_TREE, double_type_node, endlink)),
-		        C4X_BUILTIN_TOIEEE, BUILT_IN_MD, NULL, NULL_TREE);
-      builtin_function ("frieee",
-		        build_function_type
-			(double_type_node, 
-			 tree_cons (NULL_TREE, double_type_node, endlink)),
-		        C4X_BUILTIN_FRIEEE, BUILT_IN_MD, NULL, NULL_TREE);
-      builtin_function ("fast_invf",
-		        build_function_type 
-			(double_type_node, 
-			 tree_cons (NULL_TREE, double_type_node, endlink)),
-		        C4X_BUILTIN_RCPF, BUILT_IN_MD, NULL, NULL_TREE);
+      lang_hooks.builtin_function ("toieee",
+				   build_function_type 
+				   (double_type_node,
+				    tree_cons (NULL_TREE, double_type_node,
+					       endlink)),
+				   C4X_BUILTIN_TOIEEE, BUILT_IN_MD, NULL,
+				   NULL_TREE);
+      lang_hooks.builtin_function ("frieee",
+				   build_function_type
+				   (double_type_node, 
+				    tree_cons (NULL_TREE, double_type_node,
+					       endlink)),
+				   C4X_BUILTIN_FRIEEE, BUILT_IN_MD, NULL,
+				   NULL_TREE);
+      lang_hooks.builtin_function ("fast_invf",
+				   build_function_type 
+				   (double_type_node, 
+				    tree_cons (NULL_TREE, double_type_node,
+					       endlink)),
+				   C4X_BUILTIN_RCPF, BUILT_IN_MD, NULL,
+				   NULL_TREE);
     }
 }
 
@@ -4766,7 +4406,6 @@ c4x_expand_builtin (tree exp, rtx target,
     case C4X_BUILTIN_FIX:
       arg0 = TREE_VALUE (arglist);
       r0 = expand_expr (arg0, NULL_RTX, QFmode, 0);
-      r0 = protect_from_queue (r0, 0);
       if (! target || ! register_operand (target, QImode))
 	target = gen_reg_rtx (QImode);
       emit_insn (gen_fixqfqi_clobber (target, r0));
@@ -4775,7 +4414,6 @@ c4x_expand_builtin (tree exp, rtx target,
     case C4X_BUILTIN_FIX_ANSI:
       arg0 = TREE_VALUE (arglist);
       r0 = expand_expr (arg0, NULL_RTX, QFmode, 0);
-      r0 = protect_from_queue (r0, 0);
       if (! target || ! register_operand (target, QImode))
 	target = gen_reg_rtx (QImode);
       emit_insn (gen_fix_truncqfqi2 (target, r0));
@@ -4788,8 +4426,6 @@ c4x_expand_builtin (tree exp, rtx target,
       arg1 = TREE_VALUE (TREE_CHAIN (arglist));
       r0 = expand_expr (arg0, NULL_RTX, QImode, 0);
       r1 = expand_expr (arg1, NULL_RTX, QImode, 0);
-      r0 = protect_from_queue (r0, 0);
-      r1 = protect_from_queue (r1, 0);
       if (! target || ! register_operand (target, QImode))
 	target = gen_reg_rtx (QImode);
       emit_insn (gen_mulqi3_24_clobber (target, r0, r1));
@@ -4800,7 +4436,6 @@ c4x_expand_builtin (tree exp, rtx target,
 	break;
       arg0 = TREE_VALUE (arglist);
       r0 = expand_expr (arg0, NULL_RTX, QFmode, 0);
-      r0 = protect_from_queue (r0, 0);
       if (! target || ! register_operand (target, QFmode))
 	target = gen_reg_rtx (QFmode);
       emit_insn (gen_toieee (target, r0));
@@ -4810,10 +4445,7 @@ c4x_expand_builtin (tree exp, rtx target,
       if (TARGET_C3X)
 	break;
       arg0 = TREE_VALUE (arglist);
-      if (TREE_CODE (arg0) == VAR_DECL || TREE_CODE (arg0) == PARM_DECL)
-	put_var_into_stack (arg0, /*rescan=*/true);
       r0 = expand_expr (arg0, NULL_RTX, QFmode, 0);
-      r0 = protect_from_queue (r0, 0);
       if (register_operand (r0, QFmode))
 	{
 	  r1 = assign_stack_local (QFmode, GET_MODE_SIZE (QFmode), 0);
@@ -4830,7 +4462,6 @@ c4x_expand_builtin (tree exp, rtx target,
 	break;
       arg0 = TREE_VALUE (arglist);
       r0 = expand_expr (arg0, NULL_RTX, QFmode, 0);
-      r0 = protect_from_queue (r0, 0);
       if (! target || ! register_operand (target, QFmode))
 	target = gen_reg_rtx (QFmode);
       emit_insn (gen_rcpfqf_clobber (target, r0));
@@ -4869,7 +4500,8 @@ c4x_init_libfuncs (void)
 }
 
 static void
-c4x_asm_named_section (const char *name, unsigned int flags ATTRIBUTE_UNUSED)
+c4x_asm_named_section (const char *name, unsigned int flags ATTRIBUTE_UNUSED,
+		       tree decl ATTRIBUTE_UNUSED)
 {
   fprintf (asm_out_file, "\t.sect\t\"%s\"\n", name);
 }
@@ -4971,4 +4603,22 @@ c4x_rtx_costs (rtx x, int code, int outer_code, int *total)
     default:
       return false;
     }
+}
+
+/* Worker function for TARGET_ASM_EXTERNAL_LIBCALL.  */
+
+static void
+c4x_external_libcall (rtx fun)
+{
+  /* This is only needed to keep asm30 happy for ___divqf3 etc.  */
+  c4x_external_ref (XSTR (fun, 0));
+}
+
+/* Worker function for TARGET_STRUCT_VALUE_RTX.  */
+
+static rtx
+c4x_struct_value_rtx (tree fntype ATTRIBUTE_UNUSED,
+		      int incoming ATTRIBUTE_UNUSED)
+{
+  return gen_rtx_REG (Pmode, AR0_REGNO);
 }
