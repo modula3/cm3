@@ -114,6 +114,7 @@ CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
 SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
+[ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship m3gc-simple
 "${ROOT}/scripts/do-cm3-min.sh" buildlocal || exit 1
 
 header "stage 4: installing libraries using new cm3 compiler"
