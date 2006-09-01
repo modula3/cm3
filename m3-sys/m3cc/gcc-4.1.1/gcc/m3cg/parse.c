@@ -1740,7 +1740,7 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 		   m3_cast (build_pointer_type (src_t), v));
   }
 #endif
-  TREE_THIS_VOLATILE (v) = 1;
+  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
@@ -1764,7 +1764,7 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 		   m3_cast (build_pointer_type (dst_t), v));
   }
 #endif
-  TREE_THIS_VOLATILE (v) = 1;
+  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
   tree val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T) {
     val = m3_build1 (CONVERT_EXPR, dst_t, val);
