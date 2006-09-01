@@ -1,5 +1,5 @@
 /* SJLJ exception handling and frame unwind runtime interface routines.
-   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
    Free Software Foundation, Inc.
 
    This file is part of GCC.
@@ -25,8 +25,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-   02111-1307, USA.  */
+   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301, USA.  */
 
 #include "tconfig.h"
 #include "tsystem.h"
@@ -185,6 +185,18 @@ _Unwind_Word
 _Unwind_GetCFA (struct _Unwind_Context *context __attribute__((unused)))
 {
   /* ??? Ideally __builtin_setjmp places the CFA in the jmpbuf.  */
+
+#ifndef DONT_USE_BUILTIN_SETJMP
+  /* This is a crude imitation of the CFA: the saved stack pointer.
+     This is roughly the CFA of the frame before CONTEXT.  When using the
+     DWARF-2 unwinder _Unwind_GetCFA returns the CFA of the frame described
+     by CONTEXT instead; but for DWARF-2 the cleanups associated with
+     CONTEXT have already been run, and for SJLJ they have not yet been.  */
+  if (context->fc != NULL)
+    return (_Unwind_Word) context->fc->jbuf[2];
+#endif
+
+  /* Otherwise we're out of luck for now.  */
   return (_Unwind_Word) 0;
 }
 
@@ -264,22 +276,26 @@ uw_update_context (struct _Unwind_Context *context,
   context->fc = context->fc->prev;
 }
 
+static void
+uw_advance_context (struct _Unwind_Context *context, _Unwind_FrameState *fs)
+{
+  _Unwind_SjLj_Unregister (context->fc);
+  uw_update_context (context, fs);
+}
+
 static inline void
 uw_init_context (struct _Unwind_Context *context)
 {
   context->fc = _Unwind_SjLj_GetContext ();
 }
 
-/* ??? There appear to be bugs in integrate.c wrt __builtin_longjmp and
-   virtual-stack-vars.  An inline version of this segfaults on SPARC.  */
-#define uw_install_context(CURRENT, TARGET)		\
-  do							\
-    {							\
-      _Unwind_SjLj_SetContext ((TARGET)->fc);		\
-      longjmp ((TARGET)->fc->jbuf, 1);			\
-    }							\
-  while (0)
-
+static void __attribute__((noreturn))
+uw_install_context (struct _Unwind_Context *current __attribute__((unused)),
+                    struct _Unwind_Context *target)
+{
+  _Unwind_SjLj_SetContext (target->fc);
+  longjmp (target->fc->jbuf, 1);
+}
 
 static inline _Unwind_Ptr
 uw_identify_context (struct _Unwind_Context *context)

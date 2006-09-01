@@ -17,8 +17,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 
 /* Driver configuration */
@@ -58,14 +58,8 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_CPU_CPP_BUILTINS() do {	\
   builtin_define_std ("xstormy16");	\
   builtin_assert ("machine=xstormy16");	\
+  builtin_assert ("cpu=xstormy16");     \
 } while (0)
-
-/* This declaration should be present.  */
-extern int target_flags;
-
-#define TARGET_SWITCHES					\
-  {{ "sim", 0, "Provide libraries for the simulator" },	\
-   { "", 0, "" }}
 
 #define TARGET_VERSION fprintf (stderr, " (xstormy16 cpu core)");
 
@@ -88,10 +82,6 @@ do {									\
       && GET_MODE_SIZE (MODE) < 2)					\
     (MODE) = HImode;							\
 } while (0)
-
-#define PROMOTE_FUNCTION_ARGS 1
-
-#define PROMOTE_FUNCTION_RETURN 1
 
 #define PARM_BOUNDARY 16
 
@@ -347,7 +337,7 @@ enum reg_class
    because we don't have any pre-increment ones.  */
 #define STACK_PUSH_CODE POST_INC
 
-/* #define FRAME_GROWS_DOWNWARD */
+#define FRAME_GROWS_DOWNWARD 0
 
 #define ARGS_GROW_DOWNWARD 1
 
@@ -402,8 +392,6 @@ enum reg_class
 
 /* Passing Function Arguments on the Stack */
 
-#define PROMOTE_PROTOTYPES 1
-
 #define PUSH_ROUNDING(BYTES) (((BYTES) + 1) & ~1)
 
 #define RETURN_POPS_ARGS(FUNDECL, FUNTYPE, STACK_SIZE) 0
@@ -421,15 +409,6 @@ enum reg_class
 
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
 	xstormy16_function_arg (CUM, MODE, TYPE, NAMED)
-
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) 0
-
-#define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED) 0
-
-/* If defined, a C expression that indicates when it is more
-   desirable to keep an argument passed by invisible reference as a
-   reference, rather than copying it to a pseudo register.  */
-/* #define FUNCTION_ARG_KEEP_AS_REFERENCE(CUM, MODE, TYPE, NAMED) */
 
 /* For this platform, the value of CUMULATIVE_ARGS is the number of words
    of arguments that have been passed in registers so far.  */
@@ -460,14 +439,6 @@ enum reg_class
 #define FUNCTION_VALUE_REGNO_P(REGNO) ((REGNO) == RETURN_VALUE_REGNUM)
 
 
-/* How Large Values are Returned */
-
-#define RETURN_IN_MEMORY(TYPE) \
-  (int_size_in_bytes (TYPE) > UNITS_PER_WORD * NUM_ARGUMENT_REGISTERS)
-
-#define STRUCT_VALUE 0
-
-
 /* Function Entry and Exit */
 
 #define EPILOGUE_USES(REGNO) \
@@ -493,10 +464,6 @@ enum reg_class
 
 /* Implementing the Varargs Macros.  */
 
-#define SETUP_INCOMING_VARARGS(ARGS_SO_FAR, MODE, TYPE, PRETEND_ARGS_SIZE, SECOND_TIME) \
-  if (! SECOND_TIME) \
-    xstormy16_setup_incoming_varargs (ARGS_SO_FAR, MODE, TYPE, & PRETEND_ARGS_SIZE)
-
 /* Implement the stdarg/varargs va_start macro.  STDARG_P is nonzero if this
    is stdarg.h instead of varargs.h.  VALIST is the tree of the va_list
    variable to initialize.  NEXTARG is the machine independent notion of the
@@ -504,11 +471,6 @@ enum reg_class
    implementation will be defined that works for arguments passed on the stack.  */
 #define EXPAND_BUILTIN_VA_START(VALIST, NEXTARG) \
   xstormy16_expand_builtin_va_start (VALIST, NEXTARG)
-
-/* Implement the stdarg/varargs va_arg macro.  VALIST is the variable of type
-   va_list as a tree, TYPE is the type passed to va_arg.  */
-#define EXPAND_BUILTIN_VA_ARG(VALIST, TYPE) \
-  xstormy16_expand_builtin_va_arg (VALIST, TYPE)
 
 /* Trampolines for Nested Functions.  */
 
@@ -520,10 +482,6 @@ enum reg_class
   xstormy16_initialize_trampoline (ADDR, FNADDR, STATIC_CHAIN)
 
 
-/* Implicit Calls to Library Routines */
-
-#define TARGET_MEM_FUNCTIONS
-
 /* Define this macro to override the type used by the library routines to pick
    up arguments of type `float'.  (By default, they use a union of `float' and
    `int'.)
@@ -617,8 +575,6 @@ do {							\
 
 #define REG_OK_FOR_INDEX_P(X) REG_OK_FOR_BASE_P (X)
 
-#define LEGITIMIZE_ADDRESS(X, OLDX, MODE, WIN)
-
 /* On this chip, this is true if the address is valid with an offset
    of 0 but not of 6, because in that case it cannot be used as an
    address for DImode or DFmode, or if the address is a post-increment
@@ -643,8 +599,6 @@ do {							\
 
 #define NO_FUNCTION_CSE
 
-#define NO_RECURSIVE_FUNCTION_CSE
-
 
 /* Dividing the output into sections.  */
 
@@ -664,6 +618,26 @@ do {							\
 #undef DTORS_SECTION_ASM_OP
 #define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"a\""
 #define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"a\""
+#define EXTRA_SECTIONS in_bss100
+
+/* We define the function body in a separate macro so that if we ever
+   add another section, we can just add an entry to
+   EXTRA_SECTION_FUNCTIONS without making it difficult to read.  It is
+   not used anywhere else.  */
+#define XSTORMY16_SECTION_FUNCTION(name, in, string, bits) 			  \
+  void										  \
+  name ()									  \
+  { 										  \
+    if (in_section != in)							  \
+      { 									  \
+	fprintf (asm_out_file, "\t.section %s,\"aw\",@%sbits\n", string, bits);   \
+	in_section = in;							  \
+      }										  \
+  }
+
+#undef  EXTRA_SECTION_FUNCTIONS
+#define EXTRA_SECTION_FUNCTIONS		\
+  XSTORMY16_SECTION_FUNCTION (bss100_section, in_bss100, ".bss_below100", "no")
 
 #define JUMP_TABLES_IN_TEXT_SECTION 1
 
@@ -675,32 +649,27 @@ do {							\
 #define ASM_APP_ON "#APP\n"
 
 #define ASM_APP_OFF "#NO_APP\n"
-
-/* A C statement to output something to the assembler file to switch to section
-   NAME for object DECL which is either a `FUNCTION_DECL', a `VAR_DECL' or
-   `NULL_TREE'.  Some target formats do not support arbitrary sections.  Do not
-   define this macro in such cases.
-
-   At present this macro is only used to support section attributes.  When this
-   macro is undefined, section attributes are disabled.
-
-   Defined in svr4.h.  */
-/* #define ASM_OUTPUT_SECTION_NAME(STREAM, DECL, NAME) */
-
 
 /* Output of Data.  */
 
 #define IS_ASM_LOGICAL_LINE_SEPARATOR(C) ((C) == '|')
 
+#define ASM_OUTPUT_ALIGNED_DECL_COMMON(STREAM, DECL, NAME, SIZE, ALIGNMENT) \
+  xstormy16_asm_output_aligned_common (STREAM, DECL, NAME, SIZE, ALIGNMENT, 1)
+#define ASM_OUTPUT_ALIGNED_DECL_LOCAL(STREAM, DECL, NAME, SIZE, ALIGNMENT) \
+  xstormy16_asm_output_aligned_common (STREAM, DECL, NAME, SIZE, ALIGNMENT, 0)
+
 
 /* Output and Generation of Labels.  */
+#define SYMBOL_FLAG_XSTORMY16_BELOW100	(SYMBOL_FLAG_MACH_DEP << 0)
 
 #define ASM_OUTPUT_SYMBOL_REF(STREAM, SYMBOL)				\
   do {									\
+    const char *rn = XSTR (SYMBOL, 0);					\
     if (SYMBOL_REF_FUNCTION_P (SYMBOL))					\
-      ASM_OUTPUT_LABEL_REF ((STREAM), XSTR (SYMBOL, 0));		\
+      ASM_OUTPUT_LABEL_REF ((STREAM), rn);				\
     else								\
-      assemble_name (STREAM, XSTR (SYMBOL, 0));				\
+      assemble_name (STREAM, rn);					\
   } while (0)
 
 #define ASM_OUTPUT_LABEL_REF(STREAM, NAME)	\
@@ -829,13 +798,6 @@ do  {						\
 
 
 /* Miscellaneous Parameters.  */
-
-#define PREDICATE_CODES					\
-  {"shift_operator", {ASHIFT, ASHIFTRT, LSHIFTRT }},	\
-  {"equality_operator", {EQ, NE }},			\
-  {"inequality_operator", {GE, GT, LE, LT, GEU, GTU, LEU, LTU }}, \
-  {"xstormy16_ineqsi_operator", {LT, GE, LTU, GEU }}, \
-  {"nonimmediate_nonstack_operand", {REG, MEM}},
 
 #define CASE_VECTOR_MODE SImode
 

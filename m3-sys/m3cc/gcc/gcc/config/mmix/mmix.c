@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for MMIX.
-   Copyright (C) 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005
+   Free Software Foundation, Inc.
    Contributed by Hans-Peter Nilsson (hp@bitrange.com)
 
 This file is part of GCC.
@@ -16,8 +17,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -106,11 +107,6 @@ Boston, MA 02111-1307, USA.  */
 rtx mmix_compare_op0;
 rtx mmix_compare_op1;
 
-/* We ignore some options with arguments.  They are passed to the linker,
-   but also ends up here because they start with "-m".  We tell the driver
-   to store them in a variable we don't inspect.  */
-const char *mmix_cc1_ignored_option;
-
 /* Declarations of locals.  */
 
 /* Intermediate for insn output.  */
@@ -133,10 +129,14 @@ static void mmix_target_asm_function_epilogue (FILE *, HOST_WIDE_INT);
 static void mmix_reorg (void);
 static void mmix_asm_output_mi_thunk
   (FILE *, tree, HOST_WIDE_INT, HOST_WIDE_INT, tree);
+static void mmix_setup_incoming_varargs
+  (CUMULATIVE_ARGS *, enum machine_mode, tree, int *, int);
 static void mmix_file_start (void);
 static void mmix_file_end (void);
 static bool mmix_rtx_costs (rtx, int, int, int *);
-
+static rtx mmix_struct_value_rtx (tree, int);
+static bool mmix_pass_by_reference (const CUMULATIVE_ARGS *,
+				    enum machine_mode, tree, bool);
 
 /* Target structure macros.  Listed by node.  See `Using and Porting GCC'
    for a general description.  */
@@ -187,6 +187,26 @@ static bool mmix_rtx_costs (rtx, int, int, int *);
 #undef TARGET_MACHINE_DEPENDENT_REORG
 #define TARGET_MACHINE_DEPENDENT_REORG mmix_reorg
 
+#undef TARGET_PROMOTE_FUNCTION_ARGS
+#define TARGET_PROMOTE_FUNCTION_ARGS hook_bool_tree_true
+#if 0
+/* Apparently not doing TRT if int < register-size.  FIXME: Perhaps
+   FUNCTION_VALUE and LIBCALL_VALUE needs tweaking as some ports say.  */
+#undef TARGET_PROMOTE_FUNCTION_RETURN
+#define TARGET_PROMOTE_FUNCTION_RETURN hook_bool_tree_true
+#endif
+
+#undef TARGET_STRUCT_VALUE_RTX
+#define TARGET_STRUCT_VALUE_RTX mmix_struct_value_rtx
+#undef TARGET_SETUP_INCOMING_VARARGS
+#define TARGET_SETUP_INCOMING_VARARGS mmix_setup_incoming_varargs
+#undef TARGET_PASS_BY_REFERENCE
+#define TARGET_PASS_BY_REFERENCE mmix_pass_by_reference
+#undef TARGET_CALLEE_COPIES
+#define TARGET_CALLEE_COPIES hook_bool_CUMULATIVE_ARGS_mode_tree_bool_true
+#undef TARGET_DEFAULT_TARGET_FLAGS
+#define TARGET_DEFAULT_TARGET_FLAGS TARGET_DEFAULT
+
 struct gcc_target targetm = TARGET_INITIALIZER;
 
 /* Functions that are expansions for target macros.
@@ -204,7 +224,7 @@ mmix_override_options (void)
      labels.  */
   if (flag_pic)
     {
-      warning ("-f%s not supported: ignored", (flag_pic > 1) ? "PIC" : "pic");
+      warning (0, "-f%s not supported: ignored", (flag_pic > 1) ? "PIC" : "pic");
       flag_pic = 0;
     }
 }
@@ -228,7 +248,7 @@ mmix_init_machine_status (void)
 /* DATA_ALIGNMENT.
    We have trouble getting the address of stuff that is located at other
    than 32-bit alignments (GETA requirements), so try to give everything
-   at least 32-bit alignment. */
+   at least 32-bit alignment.  */
 
 int
 mmix_data_alignment (tree type ATTRIBUTE_UNUSED, int basic_align)
@@ -557,7 +577,7 @@ mmix_function_arg (const CUMULATIVE_ARGS *argsp,
       : NULL_RTX;
 
   return (argsp->regs < MMIX_MAX_ARGS_IN_REGS
-	  && !MUST_PASS_IN_STACK (mode, type)
+	  && !targetm.calls.must_pass_in_stack (mode, type)
 	  && (GET_MODE_BITSIZE (mode) <= 64
 	      || argsp->lib
 	      || TARGET_LIBFUNC))
@@ -572,19 +592,21 @@ mmix_function_arg (const CUMULATIVE_ARGS *argsp,
 /* Returns nonzero for everything that goes by reference, 0 for
    everything that goes by value.  */
 
-int
-mmix_function_arg_pass_by_reference (const CUMULATIVE_ARGS *argsp,
-				     enum machine_mode mode,
-				     tree type,
-				     int named ATTRIBUTE_UNUSED)
+static bool
+mmix_pass_by_reference (const CUMULATIVE_ARGS *argsp, enum machine_mode mode,
+			tree type, bool named ATTRIBUTE_UNUSED)
 {
-  /* FIXME: Check: I'm not sure the MUST_PASS_IN_STACK check is
+  /* FIXME: Check: I'm not sure the must_pass_in_stack check is
      necessary.  */
-  return
-    MUST_PASS_IN_STACK (mode, type)
-    || (MMIX_FUNCTION_ARG_SIZE (mode, type) > 8
-	&& !TARGET_LIBFUNC
-	&& !argsp->lib);
+  if (targetm.calls.must_pass_in_stack (mode, type))
+    return true;
+
+  if (MMIX_FUNCTION_ARG_SIZE (mode, type) > 8
+      && !TARGET_LIBFUNC
+      && (!argsp || !argsp->lib))
+    return true;
+
+  return false;
 }
 
 /* Return nonzero if regno is a register number where a parameter is
@@ -630,7 +652,7 @@ mmix_function_outgoing_value (tree valtype, tree func ATTRIBUTE_UNUSED)
 	 been rudimentally tested.)  Make sure we're alerted for
 	 unexpected cases.  */
       if (mode != TImode)
-	sorry ("support for mode `%s'", GET_MODE_NAME (mode));
+	sorry ("support for mode %qs", GET_MODE_NAME (mode));
 
       /* In any case, we will fill registers to the natural size.  */
       cmode = DImode;
@@ -658,7 +680,7 @@ mmix_function_outgoing_value (tree valtype, tree func ATTRIBUTE_UNUSED)
   vec[nregs - 1]
     = gen_rtx_EXPR_LIST (VOIDmode,
 			 gen_rtx_REG (cmode, first_val_regnum + nregs - 1),
-			 GEN_INT (0));
+			 const0_rtx);
 
   return gen_rtx_PARALLEL (VOIDmode, gen_rtvec_v (nregs, vec));
 }
@@ -788,9 +810,9 @@ mmix_asm_output_mi_thunk (FILE *stream,
 			  HOST_WIDE_INT vcall_offset ATTRIBUTE_UNUSED,
 			  tree func)
 {
-  /* If you define STRUCT_VALUE to 0, rather than use STRUCT_VALUE_REGNUM,
-     (i.e. pass location of structure to return as invisible first
-     argument) you need to tweak this code too.  */
+  /* If you define TARGET_STRUCT_VALUE_RTX that returns 0 (i.e. pass
+     location of structure to return as invisible first argument), you
+     need to tweak this code too.  */
   const char *regname = reg_names[MMIX_FIRST_INCOMING_ARG_REGNUM];
 
   if (delta >= 0 && delta < 65536)
@@ -817,9 +839,11 @@ mmix_function_profiler (FILE *stream ATTRIBUTE_UNUSED,
   sorry ("function_profiler support for MMIX");
 }
 
-/* SETUP_INCOMING_VARARGS.  */
+/* Worker function for TARGET_SETUP_INCOMING_VARARGS.  For the moment,
+   let's stick to pushing argument registers on the stack.  Later, we
+   can parse all arguments in registers, to improve performance.  */
 
-void
+static void
 mmix_setup_incoming_varargs (CUMULATIVE_ARGS *args_so_farp,
 			     enum machine_mode mode,
 			     tree vartype,
@@ -832,114 +856,9 @@ mmix_setup_incoming_varargs (CUMULATIVE_ARGS *args_so_farp,
     *pretend_sizep = (MMIX_MAX_ARGS_IN_REGS - (args_so_farp->regs + 1)) * 8;
 
   /* We assume that one argument takes up one register here.  That should
-     be true until we start messing with multi-reg parameters.   */
+     be true until we start messing with multi-reg parameters.  */
   if ((7 + (MMIX_FUNCTION_ARG_SIZE (mode, vartype))) / 8 != 1)
     internal_error ("MMIX Internal: Last named vararg would not fit in a register");
-}
-
-/* EXPAND_BUILTIN_VA_ARG.  */
-
-/* This is modified from the "standard" implementation of va_arg: read the
-   value from the current (padded) address and increment by the (padded)
-   size.  The difference for MMIX is that if the type is
-   pass-by-reference, then perform an indirection.  */
-
-rtx
-mmix_expand_builtin_va_arg (tree valist, tree type)
-{
-  tree ptr_size = size_int (BITS_PER_WORD / BITS_PER_UNIT);
-  tree addr_tree, type_size = NULL;
-  tree align, alignm1;
-  tree rounded_size;
-  rtx addr;
-
-  /* Compute the rounded size of the type.  */
-
-  /* Get AP.  */
-  addr_tree = valist;
-  align = size_int (PARM_BOUNDARY / BITS_PER_UNIT);
-  alignm1 = size_int (PARM_BOUNDARY / BITS_PER_UNIT - 1);
-  if (type == error_mark_node
-      || (type_size = TYPE_SIZE_UNIT (TYPE_MAIN_VARIANT (type))) == NULL
-      || TREE_OVERFLOW (type_size))
-    /* Presumably an error; the size isn't computable.  A message has
-       supposedly been emitted elsewhere.  */
-    rounded_size = size_zero_node;
-  else
-    rounded_size = fold (build (MULT_EXPR, sizetype,
-				fold (build (TRUNC_DIV_EXPR, sizetype,
-					     fold (build (PLUS_EXPR, sizetype,
-							  type_size, alignm1)),
-					     align)),
-				align));
-
- if (AGGREGATE_TYPE_P (type)
-     && GET_MODE_UNIT_SIZE (TYPE_MODE (type)) < 8
-     && GET_MODE_UNIT_SIZE (TYPE_MODE (type)) != 0)
-   {
-     /* Adjust for big-endian the location of aggregates passed in a
-	register, but where the aggregate is accessed in a shorter mode
-	than the natural register mode (i.e. it is accessed as SFmode(?),
-	SImode, HImode or QImode rather than DImode or DFmode(?)).  FIXME:
-	Or should we adjust the mode in which the aggregate is read, to be
-	a register size mode?  (Hum, nah, a small offset is generally
-	cheaper than a wider memory access on MMIX.)  */
-     addr_tree
-       = build (PLUS_EXPR, TREE_TYPE (addr_tree), addr_tree,
-		size_int ((BITS_PER_WORD / BITS_PER_UNIT)
-			  - GET_MODE_UNIT_SIZE (TYPE_MODE (type))));
-   }
- else if (!integer_zerop (rounded_size))
-   {
-     if (!really_constant_p (type_size))
-       /* Varying-size types come in by reference.  */
-       addr_tree
-	 = build1 (INDIRECT_REF, build_pointer_type (type), addr_tree);
-     else
-       {
-	 /* If the size is less than a register, then we need to pad the
-	    address by adding the difference.  */
-	 tree addend
-	   = fold (build (COND_EXPR, sizetype,
-			  fold (build (GT_EXPR, sizetype,
-				       rounded_size,
-				       align)),
-			  size_zero_node,
-			  fold (build (MINUS_EXPR, sizetype,
-				       rounded_size,
-				       type_size))));
-	 tree addr_tree1
-	   = fold (build (PLUS_EXPR, TREE_TYPE (addr_tree), addr_tree,
-			  addend));
-
-	 /* If this type is larger than what fits in a register, then it
-	    is passed by reference.  */
-	 addr_tree
-	   = fold (build (COND_EXPR, TREE_TYPE (addr_tree1),
-			  fold (build (GT_EXPR, sizetype,
-				       rounded_size,
-				       ptr_size)),
-			  build1 (INDIRECT_REF, build_pointer_type (type),
-				  addr_tree1),
-			  addr_tree1));
-       }
-   }
-
-  addr = expand_expr (addr_tree, NULL_RTX, Pmode, EXPAND_NORMAL);
-  addr = copy_to_reg (addr);
-
-  if (!integer_zerop (rounded_size))
-    {
-      /* Compute new value for AP.  For MMIX, it is always advanced by the
-	 size of a register.  */
-      tree t = build (MODIFY_EXPR, TREE_TYPE (valist), valist,
-		      build (PLUS_EXPR, TREE_TYPE (valist), valist,
-			     ptr_size));
-      TREE_SIDE_EFFECTS (t) = 1;
-      expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
-    }
-
-  return addr;
 }
 
 /* TRAMPOLINE_SIZE.  */
@@ -1002,7 +921,6 @@ mmix_constant_address_p (rtx x)
     case SYMBOL_REF:
       return 1;
 
-    case CONSTANT_P_RTX:
     case HIGH:
       /* FIXME: Don't know how to dissect these.  Avoid them for now,
 	 except we know they're constants.  */
@@ -1263,7 +1181,7 @@ mmix_file_start (void)
 
   fputs ("! mmixal:= 8H LOC Data_Section\n", asm_out_file);
 
-  /* Make sure each file starts with the text section. */
+  /* Make sure each file starts with the text section.  */
   text_section ();
 }
 
@@ -1272,7 +1190,7 @@ mmix_file_start (void)
 static void
 mmix_file_end (void)
 {
-  /* Make sure each file ends with the data section. */
+  /* Make sure each file ends with the data section.  */
   data_section ();
 }
 
@@ -1330,16 +1248,6 @@ mmix_output_quoted_string (FILE *stream, const char *string, int length)
     }
 }
 
-/* ASM_OUTPUT_SOURCE_LINE.  */
-
-void
-mmix_asm_output_source_line  (FILE *stream, int lineno)
-{
-  fprintf (stream, "# %d ", lineno);
-  OUTPUT_QUOTED_STRING (stream, main_input_filename);
-  fprintf (stream, "\n");
-}
-
 /* Target hook for assembling integer objects.  Use mmix_print_operand
    for WYDE and TETRA.  Use mmix_output_octa to output 8-byte
    CONST_DOUBLEs.  */
@@ -1392,11 +1300,10 @@ mmix_assemble_integer (rtx x, unsigned int size, int aligned_p)
 	return true;
 
       case 8:
-	if (GET_CODE (x) == CONST_DOUBLE)
-	  /* We don't get here anymore for CONST_DOUBLE, because DImode
-	     isn't expressed as CONST_DOUBLE, and DFmode is handled
-	     elsewhere.  */
-	  abort ();
+	/* We don't get here anymore for CONST_DOUBLE, because DImode
+	   isn't expressed as CONST_DOUBLE, and DFmode is handled
+	   elsewhere.  */
+	gcc_assert (GET_CODE (x) != CONST_DOUBLE);
 	assemble_integer_with_op ("\tOCTA\t", x);
 	return true;
       }
@@ -1456,6 +1363,15 @@ void
 mmix_asm_output_label (FILE *stream, const char *name)
 {
   assemble_name (stream, name);
+  fprintf (stream, "\tIS @\n");
+}
+
+/* ASM_OUTPUT_INTERNAL_LABEL.  */
+
+void
+mmix_asm_output_internal_label (FILE *stream, const char *name)
+{
+  assemble_name_raw (stream, name);
   fprintf (stream, "\tIS @\n");
 }
 
@@ -1689,7 +1605,7 @@ mmix_print_operand (FILE *stream, rtx x, int code)
 
     default:
       /* Presumably there's a missing case above if we get here.  */
-      internal_error ("MMIX Internal: Missing `%c' case in mmix_print_operand", code);
+      internal_error ("MMIX Internal: Missing %qc case in mmix_print_operand", code);
     }
 
   switch (GET_CODE (modified_x))
@@ -1975,7 +1891,7 @@ mmix_expand_prologue (void)
 
   /* Make sure we don't get an unaligned stack.  */
   if ((stack_space_to_allocate % 8) != 0)
-    internal_error ("stack frame not a multiple of 8 bytes: %d",
+    internal_error ("stack frame not a multiple of 8 bytes: %wd",
 		    stack_space_to_allocate);
 
   if (current_function_pretend_args_size)
@@ -2183,11 +2099,8 @@ mmix_expand_epilogue (void)
        + current_function_pretend_args_size
        + locals_size + 7) & ~7;
 
-  /* The assumption that locals_size fits in an int is asserted in
-     mmix_expand_prologue.  */
-
   /* The first address to access is beyond the outgoing_args area.  */
-  int offset = current_function_outgoing_args_size;
+  HOST_WIDE_INT offset = current_function_outgoing_args_size;
 
   /* Add the space for global non-register-stack registers.
      It is assumed that the frame-pointer register can be one of these
@@ -2214,7 +2127,7 @@ mmix_expand_epilogue (void)
 
   /* Make sure we don't get an unaligned stack.  */
   if ((stack_space_to_deallocate % 8) != 0)
-    internal_error ("stack frame not a multiple of octabyte: %d",
+    internal_error ("stack frame not a multiple of octabyte: %wd",
 		    stack_space_to_deallocate);
 
   /* We will add back small offsets to the stack pointer as we go.
@@ -2245,7 +2158,6 @@ mmix_expand_epilogue (void)
   /* Here is where the local variables were.  As in the prologue, they
      might be of an unaligned size.  */
   offset += (locals_size + 7) & ~7;
-
 
   /* The saved register stack pointer is just below the frame-pointer
      register.  We don't need to restore it "manually"; the POP
@@ -2429,139 +2341,6 @@ mmix_shiftable_wyde_value (unsigned HOST_WIDEST_INT value)
     }
 
   return 1;
-}
-
-/* True if this is an address_operand or a symbolic operand.  */
-
-int
-mmix_symbolic_or_address_operand (rtx op, enum machine_mode mode)
-{
-  switch (GET_CODE (op))
-    {
-    case SYMBOL_REF:
-    case LABEL_REF:
-      return 1;
-    case CONST:
-      op = XEXP (op, 0);
-      if ((GET_CODE (XEXP (op, 0)) == SYMBOL_REF
-	   || GET_CODE (XEXP (op, 0)) == LABEL_REF)
-	  && (GET_CODE (XEXP (op, 1)) == CONST_INT
-	      || (GET_CODE (XEXP (op, 1)) == CONST_DOUBLE
-		  && GET_MODE (XEXP (op, 1)) == VOIDmode)))
-	return 1;
-      /* FALLTHROUGH */
-    default:
-      return address_operand (op, mode);
-    }
-}
-
-/* True if this is a register or CONST_INT (or CONST_DOUBLE for DImode).
-   We could narrow the value down with a couple of predicated, but that
-   doesn't seem to be worth it at the moment.  */
-
-int
-mmix_reg_or_constant_operand (rtx op, enum machine_mode mode)
-{
-  return register_operand (op, mode)
-    || (GET_CODE (op) == CONST_DOUBLE && GET_MODE (op) == VOIDmode)
-    || GET_CODE (op) == CONST_INT;
-}
-
-/* True if this is a register with a condition-code mode.  */
-
-int
-mmix_reg_cc_operand (rtx op, enum machine_mode mode)
-{
-  if (mode == VOIDmode)
-    mode = GET_MODE (op);
-
-  return register_operand (op, mode)
-    && (mode == CCmode || mode == CC_UNSmode || mode == CC_FPmode
-	|| mode == CC_FPEQmode || mode == CC_FUNmode);
-}
-
-/* True if this is a foldable comparison operator
-   - one where a the result of (compare:CC (reg) (const_int 0)) can be
-   replaced by (reg).  */
-
-int
-mmix_foldable_comparison_operator (rtx op, enum machine_mode mode)
-{
-  RTX_CODE code = GET_CODE (op);
-
-  if (mode == VOIDmode)
-    mode = GET_MODE (op);
-
-  if (mode == VOIDmode && GET_RTX_CLASS (GET_CODE (op)) == '<')
-    mode = GET_MODE (XEXP (op, 0));
-
-  return ((mode == CCmode || mode == DImode)
-	  && (code == NE || code == EQ || code == GE || code == GT
-	      || code == LE))
-    /* FIXME: This may be a stupid trick.  What happens when GCC wants to
-       reverse the condition?  Can it do that by itself?  Maybe it can
-       even reverse the condition to fit a foldable one in the first
-       place?  */
-    || (mode == CC_UNSmode && (code == GTU || code == LEU));
-}
-
-/* Like comparison_operator, but only true if this comparison operator is
-   applied to a valid mode.  Needed to avoid jump.c generating invalid
-   code with -ffast-math (gcc.dg/20001228-1.c).  */
-
-int
-mmix_comparison_operator (rtx op, enum machine_mode mode)
-{
-  RTX_CODE code = GET_CODE (op);
-
-  /* Comparison operators usually don't have a mode, but let's try and get
-     one anyway for the day that changes.  */
-  if (mode == VOIDmode)
-    mode = GET_MODE (op);
-
-  /* Get the mode from the first operand if we don't have one.  */
-  if (mode == VOIDmode && GET_RTX_CLASS (GET_CODE (op)) == '<')
-    mode = GET_MODE (XEXP (op, 0));
-
-  /* FIXME: This needs to be kept in sync with the tables in
-     mmix_output_condition.  */
-  return
-    (mode == VOIDmode && GET_RTX_CLASS (GET_CODE (op)) == '<')
-    || (mode == CC_FUNmode
-	&& (code == ORDERED || code == UNORDERED))
-    || (mode == CC_FPmode
-	&& (code == GT || code == LT))
-    || (mode == CC_FPEQmode
-	&& (code == NE || code == EQ))
-    || (mode == CC_UNSmode
-	&& (code == GEU || code == GTU || code == LEU || code == LTU))
-    || (mode == CCmode
-	&& (code == NE || code == EQ || code == GE || code == GT
-	    || code == LE || code == LT))
-    || (mode == DImode
-	&& (code == NE || code == EQ || code == GE || code == GT
-	    || code == LE || code == LT || code == LEU || code == GTU));
-}
-
-/* True if this is a register or 0 (int or float).  */
-
-int
-mmix_reg_or_0_operand (rtx op, enum machine_mode mode)
-{
-  /* FIXME: Is mode calculation necessary and correct?  */
-  return
-    op == CONST0_RTX (mode == VOIDmode ? GET_MODE (op) : mode)
-    || register_operand (op, mode);
-}
-
-/* True if this is a register or an int 0..255.  */
-
-int
-mmix_reg_or_8bit_operand (rtx op, enum machine_mode mode)
-{
-  return register_operand (op, mode)
-    || (GET_CODE (op) == CONST_INT
-	&& CONST_OK_FOR_LETTER_P (INTVAL (op), 'I'));
 }
 
 /* Returns zero if code and mode is not a valid condition from a
@@ -2797,12 +2576,12 @@ mmix_output_condition (FILE *stream, rtx x, int reversed)
   {
     enum machine_mode cc_mode;
 
-    /* Terminated with {NIL, NULL, NULL} */
+    /* Terminated with {UNKNOWN, NULL, NULL} */
     const struct cc_conv *const convs;
   };
 
 #undef CCEND
-#define CCEND {NIL, NULL, NULL}
+#define CCEND {UNKNOWN, NULL, NULL}
 
   static const struct cc_conv cc_fun_convs[]
     = {{ORDERED, "Z", "P"},
@@ -2860,7 +2639,7 @@ mmix_output_condition (FILE *stream, rtx x, int reversed)
     {
       if (mode == cc_convs[i].cc_mode)
 	{
-	  for (j = 0; cc_convs[i].convs[j].cc != NIL; j++)
+	  for (j = 0; cc_convs[i].convs[j].cc != UNKNOWN; j++)
 	    if (cc == cc_convs[i].convs[j].cc)
 	      {
 		const char *mmix_cc
@@ -2926,19 +2705,13 @@ mmix_intval (rtx x)
 
 	  REAL_VALUE_TO_TARGET_DOUBLE (value, bits);
 
-	  if (sizeof (long) < sizeof (HOST_WIDEST_INT))
-	    {
-	      retval = (unsigned long) bits[1] / 2;
-	      retval *= 2;
-	      retval |= (unsigned long) bits[1] & 1;
-	      retval
-		|= (unsigned HOST_WIDEST_INT) bits[0]
-		  << (sizeof (bits[0]) * 8);
-	    }
-	  else
-	    retval = (unsigned long) bits[1];
-
-	  return retval;
+	  /* The double cast is necessary to avoid getting the long
+	     sign-extended to unsigned long long(!) when they're of
+	     different size (usually 32-bit hosts).  */
+	  return
+	    ((unsigned HOST_WIDEST_INT) (unsigned long) bits[0]
+	     << (unsigned HOST_WIDEST_INT) 32U)
+	    | (unsigned HOST_WIDEST_INT) (unsigned long) bits[1];
 	}
       else if (GET_MODE (x) == SFmode)
 	{
@@ -2950,6 +2723,15 @@ mmix_intval (rtx x)
     }
 
   fatal_insn ("MMIX Internal: This is not a constant:", x);
+}
+
+/* Worker function for TARGET_STRUCT_VALUE_RTX.  */
+
+static rtx
+mmix_struct_value_rtx (tree fntype ATTRIBUTE_UNUSED,
+		       int incoming ATTRIBUTE_UNUSED)
+{
+  return gen_rtx_REG (Pmode, MMIX_STRUCT_VALUE_REGNUM);
 }
 
 /*

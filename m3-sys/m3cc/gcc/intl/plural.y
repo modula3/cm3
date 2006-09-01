@@ -15,7 +15,7 @@
 
    You should have received a copy of the GNU Library General Public
    License along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301,
    USA.  */
 
 /* The bison generated parser uses alloca.  AIX 3 forces us to put this
@@ -54,11 +54,6 @@
 
 %{
 /* Prototypes for local functions.  */
-
-#ifndef __GNUC__
-#define inline /* nothing: don't inline if the compiler is not GCC */
-#endif
-
 static struct expression *new_exp PARAMS ((int nargs, enum operator op,
 					   struct expression * const *args));
 static inline struct expression *new_exp_0 PARAMS ((enum operator op));

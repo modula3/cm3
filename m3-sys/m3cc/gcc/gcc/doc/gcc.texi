@@ -41,7 +41,7 @@
 
 @copying
 Copyright @copyright{} 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -78,11 +78,6 @@ This file documents the use of the GNU compilers.
 @center @titlefont{Using the GNU Compiler Collection}
 @sp 2
 @center by Richard M. Stallman and the GCC Developer Community
-@sp 3
-@center Last updated 23 May 2004
-@sp 1
-
-@center for GCC @value{version-GCC}
 @page
 @vskip 0pt plus 1filll
 For GCC Version @value{version-GCC}@*
@@ -95,9 +90,9 @@ Published by:
 @tab General: @tex press@@gnu.org @end tex
 @item Free Software Foundation
 @tab Orders:  @tex sales@@gnu.org @end tex
-@item 59 Temple Place Suite 330
+@item 51 Franklin Street, Fifth Floor
 @tab Tel 617-542-5942
-@item Boston, MA 02111-1307 USA
+@item Boston, MA 02110-1301 USA
 @tab Fax 617-542-2652
 @end multitable
 @sp 2
@@ -160,6 +155,7 @@ Introduction, gccint, GNU Compiler Collection (GCC) Internals}.
 @include frontends.texi
 @include standards.texi
 @include invoke.texi
+@include implement-c.texi
 @include extend.texi
 @include objc.texi
 @include compat.texi

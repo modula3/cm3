@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Library General Public
    License along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301,
    USA.  */
 
 #ifndef _GETTEXTP_H
@@ -67,11 +67,6 @@
 # include <byteswap.h>
 # define SWAP(i) bswap_32 (i)
 #else
-
-#ifndef __GNUC__
-#define inline /* nothing: don't inline if the compiler is not GCC */
-#endif
-
 static inline nls_uint32
 SWAP (i)
      nls_uint32 i;

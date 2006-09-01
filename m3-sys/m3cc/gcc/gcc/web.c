@@ -1,6 +1,6 @@
 /* Web construction code for GNU compiler.
    Contributed by Jan Hubicka.
-   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -16,8 +16,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 /* Simple optimization pass that splits independent uses of each pseudo,
    increasing effectiveness of other optimizations.  The optimization can
@@ -51,10 +51,13 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "rtl.h"
 #include "hard-reg-set.h"
 #include "flags.h"
+#include "obstack.h"
 #include "basic-block.h"
 #include "output.h"
 #include "df.h"
 #include "function.h"
+#include "timevar.h"
+#include "tree-pass.h"
 
 
 /* This entry is allocated for each reference in the insn stream.  */
@@ -70,9 +73,8 @@ static struct web_entry *unionfind_root (struct web_entry *);
 static void unionfind_union (struct web_entry *, struct web_entry *);
 static void union_defs (struct df *, struct ref *, struct web_entry *, 
                         struct web_entry *);
-static rtx entry_register (struct web_entry *, struct ref *, char *, char *);
+static rtx entry_register (struct web_entry *, struct ref *, char *);
 static void replace_ref (struct ref *, rtx);
-static int mark_addressof (rtx *, void *);
 
 /* Find the root of unionfind tree (the representative of set).  */
 
@@ -160,19 +162,20 @@ union_defs (struct df *df, struct ref *use, struct web_entry *def_entry,
     {
       struct df_link *link = DF_INSN_DEFS (df, DF_REF_INSN (use));
 
-      while (DF_REF_REAL_REG (link->ref) != DF_REF_REAL_REG (use))
-	link = link->next;
-
-      unionfind_union (use_entry + DF_REF_ID (use),
-		       def_entry + DF_REF_ID (link->ref));
+      while (link)
+	{
+	  if (DF_REF_REAL_REG (link->ref) == DF_REF_REAL_REG (use))
+	    unionfind_union (use_entry + DF_REF_ID (use),
+			     def_entry + DF_REF_ID (link->ref));
+	  link = link->next;
+	}
     }
 }
 
 /* Find the corresponding register for the given entry.  */
 
 static rtx
-entry_register (struct web_entry *entry, struct ref *ref, char *used, 
-                char *use_addressof)
+entry_register (struct web_entry *entry, struct ref *ref, char *used)
 {
   struct web_entry *root;
   rtx reg, newreg;
@@ -191,17 +194,9 @@ entry_register (struct web_entry *entry, struct ref *ref, char *used,
   else if (REG_USERVAR_P (reg) && 0/*&& !flag_messy_debugging*/)
     {
       newreg = reg;
-      if (rtl_dump_file)
-	fprintf (rtl_dump_file,
+      if (dump_file)
+	fprintf (dump_file,
 		 "New web forced to keep reg=%i (user variable)\n",
-		 REGNO (reg));
-    }
-  else if (use_addressof [REGNO (reg)])
-    {
-      newreg = reg;
-      if (rtl_dump_file)
-	fprintf (rtl_dump_file,
-		 "New web forced to keep reg=%i (address taken)\n",
 		 REGNO (reg));
     }
   else
@@ -209,11 +204,9 @@ entry_register (struct web_entry *entry, struct ref *ref, char *used,
       newreg = gen_reg_rtx (GET_MODE (reg));
       REG_USERVAR_P (newreg) = REG_USERVAR_P (reg);
       REG_POINTER (newreg) = REG_POINTER (reg);
-      REG_LOOP_TEST_P (newreg) = REG_LOOP_TEST_P (reg);
-      RTX_UNCHANGING_P (newreg) = RTX_UNCHANGING_P (reg);
       REG_ATTRS (newreg) = REG_ATTRS (reg);
-      if (rtl_dump_file)
-	fprintf (rtl_dump_file, "Web oldreg=%i newreg=%i\n", REGNO (reg),
+      if (dump_file)
+	fprintf (dump_file, "Web oldreg=%i newreg=%i\n", REGNO (reg),
 		 REGNO (newreg));
     }
 
@@ -231,23 +224,10 @@ replace_ref (struct ref *ref, rtx reg)
 
   if (oldreg == reg)
     return;
-  if (rtl_dump_file)
-    fprintf (rtl_dump_file, "Updating insn %i (%i->%i)\n",
+  if (dump_file)
+    fprintf (dump_file, "Updating insn %i (%i->%i)\n",
 	     INSN_UID (DF_REF_INSN (ref)), REGNO (oldreg), REGNO (reg)); 
   *loc = reg;
-}
-
-/* Mark each pseudo whose address is taken.  */
-
-static int
-mark_addressof (rtx *rtl, void *data)
-{
-  if (!*rtl)
-    return 0;
-  if (GET_CODE (*rtl) == ADDRESSOF
-      && REG_P (XEXP (*rtl, 0)))
-    ((char *)data)[REGNO (XEXP (*rtl, 0))] = 1;
-  return 0;
 }
 
 /* Main entry point.  */
@@ -261,39 +241,29 @@ web_main (void)
   unsigned int i;
   int max = max_reg_num ();
   char *used;
-  char *use_addressof;
-  rtx insn;
 
   df = df_init ();
-  df_analyse (df, 0, DF_UD_CHAIN | DF_EQUIV_NOTES);
+  df_analyze (df, 0, DF_UD_CHAIN | DF_EQUIV_NOTES);
 
-  def_entry =
-    (struct web_entry *) xcalloc (df->n_defs, sizeof (struct web_entry));
-  use_entry =
-    (struct web_entry *) xcalloc (df->n_uses, sizeof (struct web_entry));
-  used = (char *) xcalloc (max, sizeof (char));
-  use_addressof = (char *) xcalloc (max, sizeof (char));
+  def_entry = xcalloc (df->n_defs, sizeof (struct web_entry));
+  use_entry = xcalloc (df->n_uses, sizeof (struct web_entry));
+  used = xcalloc (max, sizeof (char));
 
-  if (rtl_dump_file)
-    df_dump (df, DF_UD_CHAIN | DF_DU_CHAIN, rtl_dump_file);
+  if (dump_file)
+    df_dump (df, DF_UD_CHAIN | DF_DU_CHAIN, dump_file);
 
   /* Produce the web.  */
   for (i = 0; i < df->n_uses; i++)
     union_defs (df, df->uses[i], def_entry, use_entry);
 
-  /* We can not safely rename registers whose address is taken.  */
-  for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
-    if (INSN_P (insn))
-      for_each_rtx (&PATTERN (insn), mark_addressof, use_addressof);
-
   /* Update the instruction stream, allocating new registers for split pseudos
      in progress.  */
   for (i = 0; i < df->n_uses; i++)
     replace_ref (df->uses[i], entry_register (use_entry + i, df->uses[i],
-					      used, use_addressof));
+					      used));
   for (i = 0; i < df->n_defs; i++)
     replace_ref (df->defs[i], entry_register (def_entry + i, df->defs[i],
-					      used, use_addressof));
+					      used));
 
   /* Dataflow information is corrupt here, but it can be easily updated
      by creating new entries for new registers and updates or calling
@@ -301,6 +271,38 @@ web_main (void)
   free (def_entry);
   free (use_entry);
   free (used);
-  free (use_addressof);
   df_finish (df);
 }
+
+static bool
+gate_handle_web (void)
+{
+  return (optimize > 0 && flag_web);
+}
+
+static void
+rest_of_handle_web (void)
+{
+  web_main ();
+  delete_trivially_dead_insns (get_insns (), max_reg_num ());
+  cleanup_cfg (CLEANUP_EXPENSIVE);
+  reg_scan (get_insns (), max_reg_num ());
+}
+
+struct tree_opt_pass pass_web =
+{
+  "web",                                /* name */
+  gate_handle_web,                      /* gate */
+  rest_of_handle_web,                   /* execute */
+  NULL,                                 /* sub */
+  NULL,                                 /* next */
+  0,                                    /* static_pass_number */
+  TV_WEB,                               /* tv_id */
+  0,                                    /* properties_required */
+  0,                                    /* properties_provided */
+  0,                                    /* properties_destroyed */
+  0,                                    /* todo_flags_start */
+  TODO_dump_func,                       /* todo_flags_finish */
+  'Z'                                   /* letter */
+};
+

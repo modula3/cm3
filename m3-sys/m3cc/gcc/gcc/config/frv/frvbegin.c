@@ -16,8 +16,8 @@
   
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.
 
    This file was originally taken from the file crtstuff.c in the
    main compiler directory, and simplified.  */
@@ -71,10 +71,13 @@ INIT_SECTION_NEG_ONE (".dtors", "\"aw\"", "__DTOR_LIST__");
 
 INIT_SECTION (".eh_frame", "\"aw\"", "__EH_FRAME_BEGIN__");
 
+#if ! __FRV_FDPIC__
+/* In FDPIC, the linker itself generates this.  */
 /* Beginning of .rofixup section that provides a list of pointers that we
    need to adjust.  */
 
 INIT_SECTION (".rofixup", "\"a\"", "__ROFIXUP_LIST__");
+#endif /* __FRV_FDPIC__ */
 
 extern void __frv_register_eh(void) __attribute__((__constructor__));
 extern void __frv_deregister_eh(void) __attribute__((__destructor__));

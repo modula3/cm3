@@ -1,26 +1,49 @@
-2005-11-30  Release Manager
+2006-05-24  Release Manager
 
-	* GCC 3.4.5 released.
+	* GCC 4.1.1 released.
 
-2005-05-19  Release Manager
+2006-03-31  H.J. Lu  <hongjiu.lu@intel.com>
 
-	* GCC 3.4.4 released.
+	Backport from mainline
+	2006-01-18  Andrew Pinski  <pinskia@physics.uc.edu>
 
-2004-11-04  Release Manager
+	* btest-gcc.sh: gcc.sum has moved to gcc/testsuite/gcc/gcc.sum.
+	g++.sum has moved to gcc/testsuite/g++/g++.sum.
+	objc.sum has moved to gcc/testsuite/objc/objc.sum.
 
-	* GCC 3.4.3 released.
+2006-02-28  Release Manager
 
-2004-09-06  Release Manager
+	* GCC 4.1.0 released.
 
-	* GCC 3.4.2 released.
+2005-06-07  Hans-Peter Nilsson  <hp@bitrange.com>
 
-2004-07-01  Release Manager
+	* btest-gcc.sh: Add support for option
+	--add-passes-despite-regression.
 
-	* GCC 3.4.1 released.
+2005-06-06  Hans-Peter Nilsson  <hp@axis.com>
 
-2004-04-18  Release Manager
+	* btest-gcc.sh <Build>: Don't pass --with-newlib when target is
+	"*-linux*".
 
-	* GCC 3.4.0 released.
+	* btest-gcc.sh (TESTLOGS): Make libstdc++.sum optional.
+
+2004-11-07  James A. Morrison  <phython@gcc.gnu.org>
+
+	* README: Update website URL.
+
+2004-10-27  Geoffrey Keating  <geoffk@apple.com>
+
+	* btest-gcc.sh (TESTLOGS): The libstdc++-v3 test log is called
+	libstd++.sum not libstdc++-v3.sum.
+
+2004-10-26  Geoffrey Keating  <geoffk@apple.com>
+
+	* btest-gcc.sh (TESTLOGS): Examine regressions in libstdc++,
+	libffi, and libjava.
+
+2004-05-13  Andrew Pinski  <pinskia@physics.uc.edu>
+
+	* btest-gcc.sh: Remove g77.sum from TESTLOGS.
 
 2003-09-18  Andreas Tobler  <a.tobler@schweiz.ch>
 

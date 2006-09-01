@@ -1,5 +1,5 @@
 This is doc/cppinternals.info, produced by makeinfo version 4.8 from
-/home/gdr/build/gcc-3.4.5/gcc-3.4.5/gcc/doc/cppinternals.texi.
+/scratch/mitchell/gcc-releases/gcc-4.1.1/gcc-4.1.1/gcc/doc/cppinternals.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
@@ -8,7 +8,7 @@ END-INFO-DIR-ENTRY
 
    This file documents the internals of the GNU C Preprocessor.
 
-   Copyright 2000, 2001, 2002, 2004 Free Software Foundation, Inc.
+   Copyright 2000, 2001, 2002, 2004, 2005 Free Software Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -32,12 +32,12 @@ The GNU C Preprocessor Internals
 1 Cpplib--the GNU C Preprocessor
 ********************************
 
-The GNU C preprocessor in GCC 3.x has been completely rewritten.  It is
-now implemented as a library, "cpplib", so it can be easily shared
-between a stand-alone preprocessor, and a preprocessor integrated with
-the C, C++ and Objective-C front ends.  It is also available for use by
-other programs, though this is not recommended as its exposed interface
-has not yet reached a point of reasonable stability.
+The GNU C preprocessor is implemented as a library, "cpplib", so it can
+be easily shared between a stand-alone preprocessor, and a preprocessor
+integrated with the C, C++ and Objective-C front ends.  It is also
+available for use by other programs, though this is not recommended as
+its exposed interface has not yet reached a point of reasonable
+stability.
 
    The library has been written to be re-entrant, so that it can be used
 to preprocess many files simultaneously if necessary.  It has also been
@@ -61,7 +61,7 @@ implemented the way they have.
 * Line Numbering::      Tracking location within files.
 * Guard Macros::        Optimizing header files with guard macros.
 * Files::               File handling.
-* Index::               Index.
+* Concept Index::       Index.
 
 
 File: cppinternals.info,  Node: Conventions,  Next: Lexer,  Prev: Top,  Up: Top
@@ -74,7 +74,7 @@ other is for both internal and external use.
 
    The convention is that functions and types that are exposed to
 multiple files internally are prefixed with `_cpp_', and are to be
-found in the file `cpphash.h'.  Functions and types exposed to external
+found in the file `internal.h'.  Functions and types exposed to external
 clients are in `cpplib.h', and prefixed with `cpp_'.  For historical
 reasons this is no longer quite true, but we should strive to stick to
 it.
@@ -95,9 +95,9 @@ The Lexer
 Overview
 ========
 
-The lexer is contained in the file `cpplex.c'.  It is a hand-coded
-lexer, and not implemented as a state machine.  It can understand C, C++
-and Objective-C source code, and has been extended to allow reasonably
+The lexer is contained in the file `lex.c'.  It is a hand-coded lexer,
+and not implemented as a state machine.  It can understand C, C++ and
+Objective-C source code, and has been extended to allow reasonably
 successful preprocessing of assembly language.  The lexer does not make
 an initial pass to strip out trigraphs and escaped newlines, but handles
 them as they are encountered in a single pass of the input file.  It
@@ -918,13 +918,13 @@ top-of-file test in `push_conditional' fails and the optimization is
 turned off.
 
 
-File: cppinternals.info,  Node: Files,  Next: Index,  Prev: Guard Macros,  Up: Top
+File: cppinternals.info,  Node: Files,  Next: Concept Index,  Prev: Guard Macros,  Up: Top
 
 File Handling
 *************
 
 Fairly obviously, the file handling code of cpplib resides in the file
-`cppfiles.c'.  It takes care of the details of file searching, opening,
+`files.c'.  It takes care of the details of file searching, opening,
 reading and caching, for both the main source file and all the headers
 it recursively includes.
 
@@ -986,10 +986,10 @@ applies.  This may be higher up the directory tree than the full path to
 the file minus the base name.
 
 
-File: cppinternals.info,  Node: Index,  Prev: Files,  Up: Top
+File: cppinternals.info,  Node: Concept Index,  Prev: Files,  Up: Top
 
-Index
-*****
+Concept Index
+*************
 
  [index ]
 * Menu:
@@ -1019,17 +1019,17 @@ Index
 
 
 Tag Table:
-Node: Top956
-Node: Conventions2691
-Node: Lexer3632
-Ref: Invalid identifiers11548
-Ref: Lexing a line13497
-Node: Hash Nodes18270
-Node: Macro Expansion21149
-Node: Token Spacing30096
-Node: Line Numbering35956
-Node: Guard Macros40041
-Node: Files44836
-Node: Index48297
+Node: Top977
+Node: Conventions2662
+Node: Lexer3604
+Ref: Invalid identifiers11517
+Ref: Lexing a line13466
+Node: Hash Nodes18239
+Node: Macro Expansion21118
+Node: Token Spacing30065
+Node: Line Numbering35925
+Node: Guard Macros40010
+Node: Files44805
+Node: Concept Index48271
 
 End Tag Table

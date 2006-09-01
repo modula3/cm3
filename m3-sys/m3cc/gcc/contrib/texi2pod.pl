@@ -16,8 +16,8 @@
 
 # You should have received a copy of the GNU General Public License
 # along with GCC; see the file COPYING.  If not, write to
-# the Free Software Foundation, 59 Temple Place - Suite 330,
-# Boston MA 02111-1307, USA.
+# the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+# Boston MA 02110-1301, USA.
 
 # This does trivial (and I mean _trivial_) conversion of Texinfo
 # markup to Perl POD format.  It's intended to be used to extract
@@ -227,11 +227,12 @@ while(<$inf>) {
     /^\@include\s+(.+)$/ and do {
 	push @instack, $inf;
 	$inf = gensym();
+	$file = postprocess($1);
 
 	# Try cwd and $ibase.
-	open($inf, "<" . $1) 
-	    or open($inf, "<" . $ibase . "/" . $1)
-		or die "cannot open $1 or $ibase/$1: $!\n";
+	open($inf, "<" . $file) 
+	    or open($inf, "<" . $ibase . "/" . $file)
+		or die "cannot open $file or $ibase/$file: $!\n";
 	next;
     };
 
@@ -351,6 +352,10 @@ sub postprocess
 
     # keep references of the form @ref{...}, print them bold
     s/\@(?:ref)\{([^\}]*)\}/B<$1>/g;
+
+    # Change double single quotes to double quotes.
+    s/''/"/g;
+    s/``/"/g;
 
     # Cross references are thrown away, as are @noindent and @refill.
     # (@noindent is impossible in .pod, and @refill is unnecessary.)
