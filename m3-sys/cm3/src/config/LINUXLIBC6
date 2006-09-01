@@ -98,14 +98,14 @@ readonly INSTALL_IMPLS = TRUE
 
 SYSTEM_LIBS = {
   "LIBC"       : [ "-lm" ],
-% "LEX-YACC"   : [ "-L/usr/lib", "-ll" ], %-- not on most Linux platforms
-  "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
-  "POSTGRES95" : [ "-L/usr/local/postgres95/lib", "-lpq" ],
-  "OPENGL"     : [ "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
-  "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm" ],
-  "X11"        : [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
+% "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-ll" ], %-- not on most Linux platforms
+  "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lfl" ],
+  "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/postgres95/lib", "-lpq" ],
+  "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
+  "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/X11R6/lib", "-lXm" ],
+  "X11"        : [ "-Xlinker", "-Bdynamic", "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
-  "PTHREAD"    : [ "-L/usr/lib", "-lpthread" ],
+  "PTHREAD"    : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lpthread" ],
   "TCP"        : [ ]
 }
 
