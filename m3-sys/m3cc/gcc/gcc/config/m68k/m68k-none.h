@@ -15,8 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* Default to m68k (m68020).  */
 #ifndef TARGET_CPU_DEFAULT
@@ -86,8 +86,8 @@ Unrecognized value in TARGET_CPU_DEFAULT.
 "
 
 /* cc1/cc1plus always receives all the -m flags. If the specs strings above 
-   are consistent with the TARGET_OPTIONS flags in m68k.h, there should be no
-   need for any further cc1/cc1plus specs.  */
+   are consistent with the flags in m68k.opt, there should be no need for
+   any further cc1/cc1plus specs.  */
 
 #undef CC1_SPEC
 #define CC1_SPEC ""

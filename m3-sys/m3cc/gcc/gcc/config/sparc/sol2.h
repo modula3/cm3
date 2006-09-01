@@ -1,5 +1,5 @@
 /* Definitions of target machine for GCC, for SPARC running Solaris 2
-   Copyright 1992, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2004
+   Copyright 1992, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2004, 2005
    Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@netcom.com).
    Additional changes by David V. Henkel-Wallace (gumby@cygnus.com).
@@ -18,8 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* Supposedly the same as vanilla sparc svr4, except for the stuff below: */
 
@@ -57,11 +57,6 @@ Boston, MA 02111-1307, USA.  */
 /* However it appears that Solaris 2.0 uses the same reg numbering as
    the old BSD-style system did.  */
 
-/* Same as sparc.h */
-#undef DBX_REGISTER_NUMBER
-#define DBX_REGISTER_NUMBER(REGNO) \
-  (TARGET_FLAT && (REGNO) == HARD_FRAME_POINTER_REGNUM ? 31 : REGNO)
-
 /* The Solaris 2 assembler uses .skip, not .zero, so put this back.  */
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
@@ -69,13 +64,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef  LOCAL_LABEL_PREFIX
 #define LOCAL_LABEL_PREFIX  "."
-
-/* This is how to output a reference to an internal numbered label where
-   PREFIX is the class of label and NUM is the number within the class.  */
-
-#undef  ASM_OUTPUT_INTERNAL_LABELREF
-#define ASM_OUTPUT_INTERNAL_LABELREF(FILE,PREFIX,NUM)	\
-  fprintf (FILE, ".L%s%d", PREFIX, NUM)
 
 /* This is how to store into the string LABEL
    the symbol_ref name of an internal numbered label where
@@ -95,7 +83,7 @@ Boston, MA 02111-1307, USA.  */
     {								\
       HOST_WIDE_INT size;					\
 								\
-      if (DECL_THREAD_LOCAL (DECL))				\
+      if (DECL_THREAD_LOCAL_P (DECL))				\
 	ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "tls_object");	\
       else							\
 	ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "object");	\
@@ -113,12 +101,9 @@ Boston, MA 02111-1307, USA.  */
     }								\
   while (0)
 
-/* The Solaris assembler cannot grok r_tls_dtpoff.  This is
-   a kludge as ASM_OUTPUT_DWARF_DTPREL is defined in sparc.h,
-   undefined here and defined again in sol2-gas-bi.h.  */
-#ifdef HAVE_AS_TLS
-#undef ASM_OUTPUT_DWARF_DTPREL
-#endif
+/* The Solaris assembler cannot grok .stabd directives.  */
+#undef NO_DBX_BNSYM_ENSYM
+#define NO_DBX_BNSYM_ENSYM 1
 
 
 #undef  ENDFILE_SPEC
@@ -137,12 +122,7 @@ Boston, MA 02111-1307, USA.  */
   ((flag_pic || GLOBAL) ? DW_EH_PE_aligned : DW_EH_PE_absptr)
 #endif
 
-/* The Solaris linker doesn't understand constructor priorities.  */
-#undef SUPPORTS_INIT_PRIORITY
-#define SUPPORTS_INIT_PRIORITY 0
 
-/* ??? This does not work in SunOS 4.x, so it is not enabled in sparc.h.
-   Instead, it is enabled here, because it does work under Solaris.  */
 /* Define for support of TFmode long double.
    SPARC ABI says that long double is 4 words.  */
 #define LONG_DOUBLE_TYPE_SIZE 128
@@ -168,4 +148,20 @@ Boston, MA 02111-1307, USA.  */
 /* Solaris allows 64 bit out and global registers in 32 bit mode.
    sparc_override_options will disable V8+ if not generating V9 code.  */
 #undef TARGET_DEFAULT
-#define TARGET_DEFAULT (MASK_V8PLUS + MASK_FPU + MASK_LONG_DOUBLE_128)
+#define TARGET_DEFAULT (MASK_V8PLUS + MASK_APP_REGS + MASK_FPU \
+			+ MASK_LONG_DOUBLE_128)
+
+/* Solaris-specific #pragmas are implemented on top of attributes.  Hook in
+   the bits from config/sol2.c.  */
+#define SUBTARGET_INSERT_ATTRIBUTES solaris_insert_attributes
+#define SUBTARGET_ATTRIBUTE_TABLE SOLARIS_ATTRIBUTE_TABLE
+
+/* Output a simple call for .init/.fini.  */
+#define ASM_OUTPUT_CALL(FILE, FN)			        \
+  do								\
+    {								\
+      fprintf (FILE, "\tcall\t");				\
+      print_operand (FILE, XEXP (DECL_RTL (FN), 0), 0);	\
+      fprintf (FILE, "\n\tnop\n");				\
+    }								\
+  while (0)

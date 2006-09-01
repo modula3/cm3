@@ -1,5 +1,5 @@
 /* Output variables, constants and external declarations, for GNU compiler.
-   Copyright (C) 1996, 1997, 1998, 2000, 2001, 2002, 2004
+   Copyright (C) 1996, 1997, 1998, 2000, 2001, 2002, 2004, 2005
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -16,8 +16,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #define TARGET_OBJECT_SUFFIX ".obj"
 #define TARGET_EXECUTABLE_SUFFIX ".exe"
@@ -42,7 +42,7 @@ Boston, MA 02111-1307, USA.  */
     } while (0)
 
 #undef TARGET_DEFAULT
-#define TARGET_DEFAULT (MASK_FP|MASK_FPREGS|MASK_GAS)
+#define TARGET_DEFAULT (MASK_FPREGS|MASK_GAS)
 #undef TARGET_ABI_OPEN_VMS
 #define TARGET_ABI_OPEN_VMS 1
 
@@ -136,15 +136,20 @@ Boston, MA 02111-1307, USA.  */
 
 #undef INITIAL_ELIMINATION_OFFSET
 #define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET)			\
-{ if ((FROM) == FRAME_POINTER_REGNUM)					\
-    (OFFSET) = alpha_sa_size () + alpha_pv_save_size ();		\
-  else if ((FROM) == ARG_POINTER_REGNUM)				\
-    (OFFSET) = (ALPHA_ROUND (alpha_sa_size () + alpha_pv_save_size ()	\
-			     + get_frame_size ()			\
-			     + current_function_pretend_args_size)	\
-		- current_function_pretend_args_size);			\
-  else									\
-    abort();								\
+{ switch (FROM)								\
+    {									\
+    case FRAME_POINTER_REGNUM:						\
+      (OFFSET) = alpha_sa_size () + alpha_pv_save_size ();		\
+      break;								\
+    case ARG_POINTER_REGNUM:						\
+      (OFFSET) = (ALPHA_ROUND (alpha_sa_size () + alpha_pv_save_size ()	\
+			       + get_frame_size ()			\
+			       + current_function_pretend_args_size)	\
+		  - current_function_pretend_args_size);		\
+      break;								\
+    default:								\
+      gcc_unreachable ();						\
+    }									\
   if ((TO) == STACK_POINTER_REGNUM)					\
     (OFFSET) += ALPHA_ROUND (current_function_outgoing_args_size);	\
 }
@@ -179,7 +184,7 @@ typedef struct {int num_args; enum avms_arg_type atypes[6];} avms_arg_info;
 
 #undef FUNCTION_ARG_ADVANCE
 #define FUNCTION_ARG_ADVANCE(CUM, MODE, TYPE, NAMED)			\
-  if (MUST_PASS_IN_STACK (MODE, TYPE))					\
+  if (targetm.calls.must_pass_in_stack (MODE, TYPE))			\
     (CUM).num_args += 6;						\
   else									\
     {									\
@@ -188,16 +193,6 @@ typedef struct {int num_args; enum avms_arg_type atypes[6];} avms_arg_info;
 									\
      (CUM).num_args += ALPHA_ARG_SIZE (MODE, TYPE, NAMED);		\
     }
-
-/* For an arg passed partly in registers and partly in memory,
-   this is the number of registers used.
-   For args passed entirely in registers or entirely in memory, zero.  */
-
-#undef FUNCTION_ARG_PARTIAL_NREGS
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED)		\
-((CUM).num_args < 6 && 6 < (CUM).num_args				\
-   + ALPHA_ARG_SIZE (MODE, TYPE, NAMED)					\
- ? 6 - (CUM).num_args : 0)
 
 /* ABI has stack checking, but it's broken.  */
 #undef STACK_CHECK_BUILTIN
@@ -237,7 +232,7 @@ extern void link_section (void);
 extern void literals_section (void);
 
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
-#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) abort ()
+#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) gcc_unreachable ()
 
 #undef ASM_OUTPUT_ADDR_VEC_ELT
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE) \
@@ -318,55 +313,7 @@ do {									\
 
 #define LINK_EH_SPEC "vms-dwarf2eh.o%s "
 
-#ifdef IN_LIBGCC2
-#include <pdscdef.h>
-
-#define MD_FALLBACK_FRAME_STATE_FOR(CONTEXT, FS, SUCCESS)		\
- do {									\
-  PDSCDEF *pv = *((PDSCDEF **) (CONTEXT)->reg [29]);                    \
-									\
-  if (pv && ((long) pv & 0x7) == 0) /* low bits 0 means address */      \
-    pv = *(PDSCDEF **) pv;                                              \
-									\
-  if (pv && ((pv->pdsc$w_flags & 0xf) == PDSC$K_KIND_FP_STACK))		\
-    {									\
-      int i, j;								\
-									\
-      (FS)->cfa_offset = pv->pdsc$l_size;				\
-      (FS)->cfa_reg = pv->pdsc$w_flags & PDSC$M_BASE_REG_IS_FP ? 29 : 30; \
-      (FS)->retaddr_column = 26;					\
-      (FS)->cfa_how = CFA_REG_OFFSET;					\
-      (FS)->regs.reg[27].loc.offset = -pv->pdsc$l_size;			\
-      (FS)->regs.reg[27].how = REG_SAVED_OFFSET;			\
-      (FS)->regs.reg[26].loc.offset					\
-	 = -(pv->pdsc$l_size - pv->pdsc$w_rsa_offset);			\
-      (FS)->regs.reg[26].how = REG_SAVED_OFFSET;			\
-									\
-      for (i = 0, j = 0; i < 32; i++)					\
-	if (1<<i & pv->pdsc$l_ireg_mask)				\
-	  {								\
-	    (FS)->regs.reg[i].loc.offset				\
-	      = -(pv->pdsc$l_size - pv->pdsc$w_rsa_offset - 8 * ++j);	\
-	    (FS)->regs.reg[i].how = REG_SAVED_OFFSET;			\
-	  }								\
-									\
-      goto SUCCESS;							\
-    }									\
-  else if (pv && ((pv->pdsc$w_flags & 0xf) == PDSC$K_KIND_FP_REGISTER))	\
-    {									\
-      (FS)->cfa_offset = pv->pdsc$l_size;				\
-      (FS)->cfa_reg = pv->pdsc$w_flags & PDSC$M_BASE_REG_IS_FP ? 29 : 30; \
-      (FS)->retaddr_column = 26;					\
-      (FS)->cfa_how = CFA_REG_OFFSET;					\
-      (FS)->regs.reg[26].loc.reg = pv->pdsc$b_save_ra;			\
-      (FS)->regs.reg[26].how = REG_SAVED_REG;			        \
-      (FS)->regs.reg[29].loc.reg = pv->pdsc$b_save_fp;			\
-      (FS)->regs.reg[29].how = REG_SAVED_REG;			        \
-									\
-      goto SUCCESS;							\
-    }									\
-} while (0)
-#endif
+#define MD_UNWIND_SUPPORT "config/alpha/vms-unwind.h"
 
 /* This is how to output an assembler line
    that says to advance the location counter

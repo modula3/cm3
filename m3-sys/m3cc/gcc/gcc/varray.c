@@ -17,14 +17,25 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to the Free
-   the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
-   MA 02111-1307, USA.  */
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA.  */
 
+/* This file is compiled twice: once for the generator programs
+   once for the compiler.  */
+#ifdef GENERATOR_FILE
+#include "bconfig.h"
+#else
 #include "config.h"
-#include "errors.h"
+#endif
+
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"
+#ifdef GENERATOR_FILE
+# include "errors.h"
+#else
+# include "toplev.h"
+#endif
 #include "varray.h"
 #include "ggc.h"
 #include "hashtab.h"
@@ -33,7 +44,7 @@
 
 #ifdef GATHER_STATISTICS
 
-/* Store infromation about each particular varray.  */
+/* Store information about each particular varray.  */
 struct varray_descriptor
 {
   const char *name;
@@ -99,15 +110,17 @@ static const struct {
   { sizeof (HOST_WIDE_INT), 1 },
   { sizeof (unsigned HOST_WIDE_INT), 1 },
   { sizeof (void *), 1 },
+  { sizeof (void *), 0 },
   { sizeof (char *), 1 },
   { sizeof (struct rtx_def *), 1 },
   { sizeof (struct rtvec_def *), 1 },
   { sizeof (union tree_node *), 1 },
   { sizeof (struct bitmap_head_def *), 1 },
   { sizeof (struct reg_info_def *), 0 },
-  { sizeof (struct const_equiv_data), 0 },
-  { sizeof (struct basic_block_def *), 0 },
+  { sizeof (struct basic_block_def *), 1 },
   { sizeof (struct elt_list *), 1 },
+  { sizeof (struct edge_def *), 1 },
+  { sizeof (tree *), 1 },
 };
 
 /* Allocate a virtual array with NUM_ELEMENT elements, each of which is
@@ -207,13 +220,19 @@ varray_underflow (varray_type va, const char *file, int line,
 
 #endif
 
+
 /* Output per-varray statistics.  */
 #ifdef GATHER_STATISTICS
+
+/* Used to accumulate statistics about varray sizes.  */
 struct output_info
 {
   int count;
   int size;
 };
+
+/* Called via htab_traverse.  Output varray descriptor pointed out by SLOT
+   and update statistics.  */
 static int
 print_statistics (void **slot, void *b)
 {
@@ -230,6 +249,8 @@ print_statistics (void **slot, void *b)
   return 1;
 }
 #endif
+
+/* Output per-varray memory usage statistics.  */
 void dump_varray_statistics (void)
 {
 #ifdef GATHER_STATISTICS

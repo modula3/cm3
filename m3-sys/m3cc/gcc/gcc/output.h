@@ -1,7 +1,7 @@
 /* Declarations for insn-output.c.  These functions are defined in recog.c,
    final.c, and varasm.c.
    Copyright (C) 1987, 1991, 1994, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -17,8 +17,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 #ifndef GCC_OUTPUT_H
 #define GCC_OUTPUT_H
@@ -49,6 +49,10 @@ extern void init_insn_lengths (void);
    get its actual length.  Otherwise, get its maximum length.  */
 extern int get_attr_length (rtx);
 
+/* Obtain the current length of an insn.  If branch shortening has been done,
+   get its actual length.  Otherwise, get its minimum length.  */
+extern int get_attr_min_length (rtx);
+
 /* Make a pass over all insns and compute their actual lengths by shortening
    any branches of variable length if possible.  */
 extern void shorten_branches (rtx);
@@ -66,12 +70,12 @@ extern void final_start_function (rtx, FILE *, int);
 extern void final_end_function (void);
 
 /* Output assembler code for some insns: all or part of a function.  */
-extern void final (rtx, FILE *, int, int);
+extern void final (rtx, FILE *, int);
 
 /* The final scan for one insn, INSN.  Args are same as in `final', except
    that INSN is the insn being scanned.  Value returned is the next insn to
    be scanned.  */
-extern rtx final_scan_insn (rtx, FILE *, int, int, int, int *);
+extern rtx final_scan_insn (rtx, FILE *, int, int, int *);
 
 /* Replace a SUBREG with a REG or a MEM, based on the thing it is a
    subreg of.  */
@@ -144,23 +148,16 @@ extern void leaf_renumber_regs_insn (rtx);
 /* Locate the proper template for the given insn-code.  */
 extern const char *get_insn_template (int, rtx);
 
-/* Add function NAME to the weak symbols list.  VALUE is a weak alias
-   associated with NAME.  */
-extern int add_weak (tree, const char *, const char *);
-
 /* Functions in flow.c */
-extern void allocate_for_life_analysis (void);
-extern int regno_uninitialized (unsigned int);
 extern int regno_clobbered_at_setjmp (int);
-extern void find_basic_blocks (rtx, int, FILE *);
-extern bool cleanup_cfg (int);
-extern bool delete_unreachable_blocks (void);
-extern void check_function_return_warnings (void);
 
 /* Functions in varasm.c.  */
 
 /* Tell assembler to switch to text section.  */
 extern void text_section (void);
+
+/* Tell assembler to switch to unlikely-to-be-executed text section.  */
+extern void unlikely_text_section (void);
 
 /* Tell assembler to switch to data section.  */
 extern void data_section (void);
@@ -171,6 +168,9 @@ extern void readonly_data_section (void);
 
 /* Determine if we're in the text section.  */
 extern int in_text_section (void);
+
+/* Determine if we're in the unlikely-to-be-executed text section.  */
+extern int in_unlikely_text_section (void);
 
 #ifdef CTORS_SECTION_ASM_OP
 extern void ctors_section (void);
@@ -212,6 +212,9 @@ extern void named_section (tree, const char *, int);
 
 /* Tell assembler to switch to the section for function DECL.  */
 extern void function_section (tree);
+
+/* Tell assembler to switch to the most recently used text section.  */
+extern void current_function_section (tree);
 
 /* Tell assembler to switch to the section for string merging.  */
 extern void mergeable_string_section (tree, unsigned HOST_WIDE_INT,
@@ -281,7 +284,6 @@ extern void assemble_zeros (unsigned HOST_WIDE_INT);
 
 /* Assemble an alignment pseudo op for an ALIGN-bit boundary.  */
 extern void assemble_align (int);
-extern void assemble_eh_align (int);
 
 /* Assemble a string constant with the specified C string as contents.  */
 extern void assemble_string (const char *, int);
@@ -291,13 +293,17 @@ extern void assemble_external_libcall (rtx);
 
 /* Assemble a label named NAME.  */
 extern void assemble_label (const char *);
-extern void assemble_eh_label (const char *);
 
-/* Output to FILE a reference to the assembler name of a C-level name NAME.
-   If NAME starts with a *, the rest of NAME is output verbatim.
-   Otherwise NAME is transformed in an implementation-defined way
-   (usually by the addition of an underscore).
-   Many macros in the tm file are defined to call this function.  */
+/* Output to FILE (an assembly file) a reference to NAME.  If NAME
+   starts with a *, the rest of NAME is output verbatim.  Otherwise
+   NAME is transformed in a target-specific way (usually by the
+   addition of an underscore).  */
+extern void assemble_name_raw (FILE *, const char *);
+
+/* Like assemble_name_raw, but should be used when NAME might refer to
+   an entity that is also represented as a tree (like a function or
+   variable).  If NAME does refer to such an entity, that entity will
+   be marked as referenced.  */
 extern void assemble_name (FILE *, const char *);
 
 /* Return the assembler directive for creating a given kind of integer
@@ -318,8 +324,8 @@ extern bool default_assemble_integer (rtx, unsigned int, int);
 
 /* Assemble the integer constant X into an object of SIZE bytes.  ALIGN is
    the alignment of the integer in bits.  Return 1 if we were able to output
-   the constant, otherwise 0.  If FORCE is nonzero, abort if we can't output
-   the constant.  */
+   the constant, otherwise 0.  If FORCE is nonzero the constant must
+   be outputable. */
 extern bool assemble_integer (rtx, unsigned, unsigned, int);
 
 /* An interface to assemble_integer for the common case in which a value is
@@ -398,11 +404,6 @@ extern const char *weak_global_object_name;
 
 extern int current_function_is_leaf;
 
-/* Nonzero if function being compiled doesn't contain any instructions
-   that can throw an exception.  This is set prior to final.  */
-
-extern int current_function_nothrow;
-
 /* Nonzero if function being compiled doesn't modify the stack pointer
    (ignoring the prologue and epilogue).  This is only valid after
    life_analysis has run.  */
@@ -418,7 +419,7 @@ extern int current_function_uses_only_leaf_regs;
 /* Default file in which to dump debug output.  */
 
 #ifdef BUFSIZ
-extern FILE *rtl_dump_file;
+extern FILE *dump_file;
 #endif
 
 /* Nonnull if the insn currently being emitted was a COND_EXEC pattern.  */
@@ -428,9 +429,37 @@ extern rtx current_insn_predicate;
 extern rtx current_output_insn;
 
 /* Nonzero while outputting an `asm' with operands.
-   This means that inconsistencies are the user's fault, so don't abort.
+   This means that inconsistencies are the user's fault, so don't die.
    The precise value is the insn being output, to pass to error_for_asm.  */
 extern rtx this_is_asm_operands;
+
+/* Carry information from ASM_DECLARE_OBJECT_NAME
+   to ASM_FINISH_DECLARE_OBJECT.  */
+extern int size_directive_output;
+extern tree last_assemble_variable_decl;
+
+enum in_section { no_section, in_text, in_unlikely_executed_text, in_data,
+                 in_named
+#ifdef BSS_SECTION_ASM_OP
+  , in_bss
+#endif
+#ifdef CTORS_SECTION_ASM_OP
+  , in_ctors
+#endif
+#ifdef DTORS_SECTION_ASM_OP
+  , in_dtors
+#endif
+#ifdef READONLY_DATA_SECTION_ASM_OP
+  , in_readonly_data
+#endif
+#ifdef EXTRA_SECTIONS
+  , EXTRA_SECTIONS
+#endif
+};
+
+extern const char *last_text_section_name;
+extern enum in_section last_text_section;
+extern bool first_function_block_is_cold;
 
 /* Decide whether DECL needs to be in a writable section.
    RELOC is the same as for SELECT_SECTION.  */
@@ -475,17 +504,57 @@ extern void no_asm_to_stream (FILE *);
 #define SECTION_NOTYPE	 0x80000	/* don't output @progbits */
 #define SECTION_MACH_DEP 0x100000	/* subsequent bits reserved for target */
 
-extern unsigned int get_named_section_flags (const char *);
+/* A helper function for default_elf_select_section and
+   default_elf_unique_section.  Categorizes the DECL.  */
+
+enum section_category
+{
+  SECCAT_TEXT,
+
+  SECCAT_RODATA,
+  SECCAT_RODATA_MERGE_STR,
+  SECCAT_RODATA_MERGE_STR_INIT,
+  SECCAT_RODATA_MERGE_CONST,
+  SECCAT_SRODATA,
+
+  SECCAT_DATA,
+
+  /* To optimize loading of shared programs, define following subsections
+     of data section:
+	_REL	Contains data that has relocations, so they get grouped
+		together and dynamic linker will visit fewer pages in memory.
+	_RO	Contains data that is otherwise read-only.  This is useful
+		with prelinking as most relocations won't be dynamically
+		linked and thus stay read only.
+	_LOCAL	Marks data containing relocations only to local objects.
+		These relocations will get fully resolved by prelinking.  */
+  SECCAT_DATA_REL,
+  SECCAT_DATA_REL_LOCAL,
+  SECCAT_DATA_REL_RO,
+  SECCAT_DATA_REL_RO_LOCAL,
+
+  SECCAT_SDATA,
+  SECCAT_TDATA,
+
+  SECCAT_BSS,
+  SECCAT_SBSS,
+  SECCAT_TBSS
+};
+
+
 extern bool set_named_section_flags (const char *, unsigned int);
-extern void named_section_flags (const char *, unsigned int);
+#define named_section_flags(NAME, FLAGS) \
+  named_section_real((NAME), (FLAGS), /*decl=*/NULL_TREE)
+extern void named_section_real (const char *, unsigned int, tree);
 extern bool named_section_first_declaration (const char *);
 extern unsigned int default_section_type_flags (tree, const char *, int);
 extern unsigned int default_section_type_flags_1 (tree, const char *, int, int);
 
-extern void default_no_named_section (const char *, unsigned int);
-extern void default_elf_asm_named_section (const char *, unsigned int);
-extern void default_coff_asm_named_section (const char *, unsigned int);
-extern void default_pe_asm_named_section (const char *, unsigned int);
+extern void default_no_named_section (const char *, unsigned int, tree);
+extern void default_elf_asm_named_section (const char *, unsigned int, tree);
+extern enum section_category categorize_decl_for_section (tree, int, int);
+extern void default_coff_asm_named_section (const char *, unsigned int, tree);
+extern void default_pe_asm_named_section (const char *, unsigned int, tree);
 
 extern void default_stabs_asm_out_destructor (rtx, int);
 extern void default_named_section_asm_out_destructor (rtx, int);
@@ -500,6 +569,8 @@ extern void default_elf_select_section_1 (tree, int,
 					  unsigned HOST_WIDE_INT, int);
 extern void default_unique_section (tree, int);
 extern void default_unique_section_1 (tree, int, int);
+extern void default_function_rodata_section (tree);
+extern void default_no_function_rodata_section (tree);
 extern void default_select_rtx_section (enum machine_mode, rtx,
 					unsigned HOST_WIDE_INT);
 extern void default_elf_select_rtx_section (enum machine_mode, rtx,
@@ -509,11 +580,32 @@ extern const char *default_strip_name_encoding (const char *);
 extern bool default_binds_local_p (tree);
 extern bool default_binds_local_p_1 (tree, int);
 extern void default_globalize_label (FILE *, const char *);
+extern void default_emit_unwind_label (FILE *, tree, int, int);
 extern void default_internal_label (FILE *, const char *, unsigned long);
 extern void default_file_start (void);
 extern void file_end_indicate_exec_stack (void);
 extern bool default_valid_pointer_mode (enum machine_mode);
 
 extern int default_address_cost (rtx);
+
+/* dbxout helper functions */
+#if defined DBX_DEBUGGING_INFO || defined XCOFF_DEBUGGING_INFO
+
+extern void dbxout_int (int);
+extern void dbxout_stabd (int, int);
+extern void dbxout_begin_stabn (int);
+extern void dbxout_begin_stabn_sline (int);
+extern void dbxout_begin_empty_stabs (int);
+extern void dbxout_begin_simple_stabs (const char *, int);
+extern void dbxout_begin_simple_stabs_desc (const char *, int, int);
+
+extern void dbxout_stab_value_zero (void);
+extern void dbxout_stab_value_label (const char *);
+extern void dbxout_stab_value_label_diff (const char *, const char *);
+extern void dbxout_stab_value_internal_label (const char *, int *);
+extern void dbxout_stab_value_internal_label_diff (const char *, int *,
+						   const char *);
+
+#endif
 
 #endif /* ! GCC_OUTPUT_H */

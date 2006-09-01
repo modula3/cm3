@@ -16,8 +16,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 
 /* Define default target values.  */
@@ -35,7 +35,6 @@ Boston, MA 02111-1307, USA.  */
       NETBSD_OS_CPP_BUILTINS_ELF();			\
       builtin_define ("__NO_LEADING_UNDERSCORES__");	\
       builtin_define ("__GP_SUPPORT__");		\
-      builtin_assert ("machine=mips");			\
       if (TARGET_LONG64)				\
 	builtin_define ("__LONG64");			\
 							\
