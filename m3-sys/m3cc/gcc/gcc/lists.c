@@ -1,6 +1,6 @@
 /* List management for the GCC expander.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2003 Free Software Foundation, Inc.
+   1999, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -16,8 +16,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -32,10 +32,10 @@ static void free_list (rtx *, rtx *);
 /* Functions for maintaining cache-able lists of EXPR_LIST and INSN_LISTs.  */
 
 /* An INSN_LIST containing all INSN_LISTs allocated but currently unused.  */
-static GTY ((deletable (""))) rtx unused_insn_list;
+static GTY ((deletable)) rtx unused_insn_list;
 
 /* An EXPR_LIST containing all EXPR_LISTs allocated but currently unused.  */
-static GTY ((deletable (""))) rtx unused_expr_list;
+static GTY ((deletable)) rtx unused_expr_list;
 
 
 /* This function will free an entire list of either EXPR_LIST or INSN_LIST

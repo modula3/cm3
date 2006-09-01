@@ -18,8 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #ifndef GCC_H8300_ELF_H
 #define GCC_H8300_ELF_H
@@ -40,6 +40,6 @@ Boston, MA 02111-1307, USA.  */
 #define JUMP_TABLES_IN_TEXT_SECTION (flag_pic)
 
 #undef LINK_SPEC
-#define LINK_SPEC "%{mh:%{mn:-m h8300hnelf}} %{mh:%{!mn:-m h8300helf}} %{ms:%{mn:-m h8300snelf}} %{ms:%{!mn:-m h8300self}}"
+#define LINK_SPEC "%{mh:%{mn:-m h8300hnelf}} %{mh:%{!mn:-m h8300helf}} %{ms:%{mn:-m h8300snelf}} %{ms:%{!mn:-m h8300self}} %{msx:%{mn:-m h8300sxnelf;:-m h8300sxelf}}"
 
 #endif /* h8300/elf.h */

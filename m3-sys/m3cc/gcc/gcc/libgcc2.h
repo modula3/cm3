@@ -1,5 +1,5 @@
 /* Header file for libgcc2.c.  */
-/* Copyright (C) 2000, 2001
+/* Copyright (C) 2000, 2001, 2004, 2005
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -16,8 +16,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 /* As a special exception, if you link this library with other files,
    some of which are compiled with GCC, to produce an executable,
@@ -29,6 +29,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifndef GCC_LIBGCC2_H
 #define GCC_LIBGCC2_H
+
+#ifndef HIDE_EXPORTS
+#pragma GCC visibility push(default)
+#endif
 
 extern int __gcc_bcmp (const unsigned char *, const unsigned char *, size_t);
 extern void __clear_cache (char *, char *);
@@ -47,8 +51,32 @@ extern short int __get_eh_table_version (struct exception_descriptor *);
 #define LIBGCC2_WORDS_BIG_ENDIAN WORDS_BIG_ENDIAN
 #endif
 
+#ifndef LIBGCC2_DOUBLE_TYPE_SIZE
+#define LIBGCC2_DOUBLE_TYPE_SIZE DOUBLE_TYPE_SIZE
+#endif
 #ifndef LIBGCC2_LONG_DOUBLE_TYPE_SIZE
 #define LIBGCC2_LONG_DOUBLE_TYPE_SIZE LONG_DOUBLE_TYPE_SIZE
+#endif
+
+#ifndef LIBGCC2_HAS_SF_MODE
+#define LIBGCC2_HAS_SF_MODE (BITS_PER_UNIT == 8)
+#endif
+
+#ifndef LIBGCC2_HAS_DF_MODE
+#define LIBGCC2_HAS_DF_MODE \
+  (BITS_PER_UNIT == 8 \
+   && (LIBGCC2_DOUBLE_TYPE_SIZE == 64 \
+       || LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 64))
+#endif
+
+#ifndef LIBGCC2_HAS_XF_MODE
+#define LIBGCC2_HAS_XF_MODE \
+  (BITS_PER_UNIT == 8 && LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 80)
+#endif
+
+#ifndef LIBGCC2_HAS_TF_MODE
+#define LIBGCC2_HAS_TF_MODE \
+  (BITS_PER_UNIT == 8 && LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 128)
 #endif
 
 #ifndef MIN_UNITS_PER_WORD
@@ -84,40 +112,22 @@ typedef unsigned int UTItype	__attribute__ ((mode (TI)));
 #endif
 #endif
 
-#if BITS_PER_UNIT == 8
-
+#if LIBGCC2_HAS_SF_MODE
 typedef 	float SFtype	__attribute__ ((mode (SF)));
+typedef _Complex float SCtype	__attribute__ ((mode (SC)));
+#endif
+#if LIBGCC2_HAS_DF_MODE
 typedef		float DFtype	__attribute__ ((mode (DF)));
-
-#if LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 96
+typedef _Complex float DCtype	__attribute__ ((mode (DC)));
+#endif
+#if LIBGCC2_HAS_XF_MODE
 typedef		float XFtype	__attribute__ ((mode (XF)));
+typedef _Complex float XCtype	__attribute__ ((mode (XC)));
 #endif
-#if LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 128
+#if LIBGCC2_HAS_TF_MODE
 typedef		float TFtype	__attribute__ ((mode (TF)));
+typedef _Complex float TCtype	__attribute__ ((mode (TC)));
 #endif
-
-#else /* BITS_PER_UNIT != 8 */
-
-/* On dsp's there are usually qf/hf/tqf modes used instead of the above.
-   For now we don't support them in libgcc2.c.  */
-
-#undef L_fixdfdi
-#undef L_fixsfdi
-#undef L_fixtfdi
-#undef L_fixunsdfdi
-#undef L_fixunsdfsi
-#undef L_fixunssfdi
-#undef L_fixunssfsi
-#undef L_fixunstfdi
-#undef L_fixunsxfdi
-#undef L_fixunsxfsi
-#undef L_fixxfdi
-#undef L_floatdidf
-#undef L_floatdisf
-#undef L_floatditf
-#undef L_floatdixf
-
-#endif /* BITS_PER_UNIT != 8 */
 
 typedef int word_type __attribute__ ((mode (__word__)));
 
@@ -191,6 +201,18 @@ typedef int word_type __attribute__ ((mode (__word__)));
 
 #define Wtype_MAX ((Wtype)(((UWtype)1 << (W_TYPE_SIZE - 1)) - 1))
 #define Wtype_MIN (- Wtype_MAX - 1)
+
+#if W_TYPE_SIZE == 8
+# define Wtype_MAXp1_F	0x1p8f
+#elif W_TYPE_SIZE == 16
+# define Wtype_MAXp1_F	0x1p16f
+#elif W_TYPE_SIZE == 32
+# define Wtype_MAXp1_F	0x1p32f
+#elif W_TYPE_SIZE == 64
+# define Wtype_MAXp1_F	0x1p64f
+#else
+# error "expand the table"
+#endif
 
 #define __muldi3	__NDW(mul,3)
 #define __divdi3	__NDW(div,3)
@@ -292,29 +314,45 @@ extern SItype __mulvsi3 (SItype, SItype);
 extern SItype __negvsi2 (SItype);
 #endif /* COMPAT_SIMODE_TRAPPING_ARITHMETIC */
 
-#if BITS_PER_UNIT == 8
-extern DWtype __fixdfdi (DFtype);
+#undef int
+#if LIBGCC2_HAS_SF_MODE
 extern DWtype __fixsfdi (SFtype);
-extern DFtype __floatdidf (DWtype);
 extern SFtype __floatdisf (DWtype);
-extern UWtype __fixunsdfSI (DFtype);
 extern UWtype __fixunssfSI (SFtype);
-extern DWtype __fixunsdfDI (DFtype);
 extern DWtype __fixunssfDI (SFtype);
+extern SFtype __powisf2 (SFtype, int);
+extern SCtype __divsc3 (SFtype, SFtype, SFtype, SFtype);
+extern SCtype __mulsc3 (SFtype, SFtype, SFtype, SFtype);
+#endif
+#if LIBGCC2_HAS_DF_MODE
+extern DWtype __fixdfdi (DFtype);
+extern DFtype __floatdidf (DWtype);
+extern UWtype __fixunsdfSI (DFtype);
+extern DWtype __fixunsdfDI (DFtype);
+extern DFtype __powidf2 (DFtype, int);
+extern DCtype __divdc3 (DFtype, DFtype, DFtype, DFtype);
+extern DCtype __muldc3 (DFtype, DFtype, DFtype, DFtype);
+#endif
 
-#if LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 96
+#if LIBGCC2_HAS_XF_MODE
 extern DWtype __fixxfdi (XFtype);
 extern DWtype __fixunsxfDI (XFtype);
 extern XFtype __floatdixf (DWtype);
 extern UWtype __fixunsxfSI (XFtype);
+extern XFtype __powixf2 (XFtype, int);
+extern XCtype __divxc3 (XFtype, XFtype, XFtype, XFtype);
+extern XCtype __mulxc3 (XFtype, XFtype, XFtype, XFtype);
 #endif
 
-#if LIBGCC2_LONG_DOUBLE_TYPE_SIZE == 128
+#if LIBGCC2_HAS_TF_MODE
 extern DWtype __fixunstfDI (TFtype);
 extern DWtype __fixtfdi (TFtype);
 extern TFtype __floatditf (DWtype);
+extern TFtype __powitf2 (TFtype, int);
+extern TCtype __divtc3 (TFtype, TFtype, TFtype, TFtype);
+extern TCtype __multc3 (TFtype, TFtype, TFtype, TFtype);
 #endif
-#endif /* BITS_PER_UNIT == 8 */
+#define int bogus_type
 
 /* DWstructs are pairs of Wtype values in the order determined by
    LIBGCC2_WORDS_BIG_ENDIAN.  */
@@ -335,6 +373,35 @@ typedef union
   DWtype ll;
 } DWunion;
 
+/* Defined for L_popcount_tab.  Exported here because some targets may
+   want to use it for their own versions of the __popcount builtins.  */
+extern const UQItype __popcount_tab[256];
+
+/* Defined for L_clz.  Exported here because some targets may want to use
+   it for their own versions of the __clz builtins.  It contains the bit
+   position of the first set bit for the numbers 0 - 255.  This avoids the
+   need for a seperate table for the __ctz builtins.  */
+extern const UQItype __clz_tab[256];
+
 #include "longlong.h"
+
+#undef int
+extern int __clzDI2 (UDWtype);
+extern int __clzSI2 (UWtype);
+extern int __ctzSI2 (UWtype);
+extern int __ffsSI2 (UWtype);
+extern int __ffsDI2 (DWtype);
+extern int __ctzDI2 (UDWtype);
+extern int __popcountSI2 (UWtype);
+extern int __popcountDI2 (UDWtype);
+extern int __paritySI2 (UWtype);
+extern int __parityDI2 (UDWtype);
+#define int bogus_type
+
+extern void __enable_execute_stack (void *);
+
+#ifndef HIDE_EXPORTS
+#pragma GCC visibility pop
+#endif
 
 #endif /* ! GCC_LIBGCC2_H */

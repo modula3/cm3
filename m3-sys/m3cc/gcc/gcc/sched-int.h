@@ -1,7 +1,7 @@
 /* Instruction scheduling pass.  This file contains definitions used
    internally in the scheduler.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2003 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -17,8 +17,18 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
+
+#ifndef GCC_SCHED_INT_H
+#define GCC_SCHED_INT_H
+
+/* For state_t.  */
+#include "insn-attr.h"
+/* For regset_head.  */
+#include "basic-block.h"
+/* For reg_note.  */
+#include "rtl.h"
 
 /* Pointer to data describing the current DFA state.  */
 extern state_t curr_state;
@@ -84,7 +94,7 @@ struct deps
 
   /* Used to keep post-call pseudo/hard reg movements together with
      the call.  */
-  bool in_post_call_group_p;
+  enum { not_post_call, post_call, post_call_initial } in_post_call_group_p;
 
   /* Set to the tail insn of the outermost libcall block.
 
@@ -198,10 +208,6 @@ struct haifa_insn_data
      the ready queue when its counter reaches zero.  */
   int dep_count;
 
-  /* An encoding of the blockage range function.  Both unit and range
-     are coded.  This member is used only for old pipeline interface.  */
-  unsigned int blockage;
-
   /* Number of instructions referring to this insn.  */
   int ref_count;
 
@@ -210,10 +216,6 @@ struct haifa_insn_data
   int tick;
 
   short cost;
-
-  /* An encoding of the function units used.  This member is used only
-     for old pipeline interface.  */
-  short units;
 
   /* This weight is an estimation of the insn's contribution to
      register pressure.  */
@@ -242,24 +244,7 @@ extern struct haifa_insn_data *h_i_d;
 #define INSN_PRIORITY(INSN)	(h_i_d[INSN_UID (INSN)].priority)
 #define INSN_PRIORITY_KNOWN(INSN) (h_i_d[INSN_UID (INSN)].priority_known)
 #define INSN_COST(INSN)		(h_i_d[INSN_UID (INSN)].cost)
-#define INSN_UNIT(INSN)		(h_i_d[INSN_UID (INSN)].units)
 #define INSN_REG_WEIGHT(INSN)	(h_i_d[INSN_UID (INSN)].reg_weight)
-
-#define INSN_BLOCKAGE(INSN)	(h_i_d[INSN_UID (INSN)].blockage)
-#define UNIT_BITS		5
-#define BLOCKAGE_MASK		((1 << BLOCKAGE_BITS) - 1)
-#define ENCODE_BLOCKAGE(U, R)			\
-  (((U) << BLOCKAGE_BITS			\
-    | MIN_BLOCKAGE_COST (R)) << BLOCKAGE_BITS	\
-   | MAX_BLOCKAGE_COST (R))
-#define UNIT_BLOCKED(B)		((B) >> (2 * BLOCKAGE_BITS))
-#define BLOCKAGE_RANGE(B)                                                \
-  (((((B) >> BLOCKAGE_BITS) & BLOCKAGE_MASK) << (HOST_BITS_PER_INT / 2)) \
-   | ((B) & BLOCKAGE_MASK))
-
-/* Encodings of the `<name>_unit_blockage_range' function.  */
-#define MIN_BLOCKAGE_COST(R) ((R) >> (HOST_BITS_PER_INT / 2))
-#define MAX_BLOCKAGE_COST(R) ((R) & ((1 << (HOST_BITS_PER_INT / 2)) - 1))
 
 extern FILE *sched_dump;
 extern int sched_verbose;
@@ -343,19 +328,11 @@ enum INSN_TRAP_CLASS
 #endif
 
 /* Functions in sched-vis.c.  */
-extern void init_target_units (void);
-extern void insn_print_units (rtx);
-extern void init_block_visualization (void);
-extern void print_block_visualization (const char *);
-extern void visualize_scheduled_insns (int);
-extern void visualize_no_unit (rtx);
-extern void visualize_stall_cycles (int);
-extern void visualize_alloc (void);
-extern void visualize_free (void);
+extern void print_insn (char *, rtx, int);
 
 /* Functions in sched-deps.c.  */
+extern bool sched_insns_conditions_mutex_p (rtx, rtx);
 extern int add_dependence (rtx, rtx, enum reg_note);
-extern void add_insn_mem_dependence (struct deps *, rtx *, rtx *, rtx, rtx);
 extern void sched_analyze (struct deps *, rtx, rtx);
 extern void init_deps (struct deps *);
 extern void free_deps (struct deps *);
@@ -378,20 +355,13 @@ extern void restore_line_notes (rtx, rtx);
 extern void rm_redundant_line_notes (void);
 extern void rm_other_notes (rtx, rtx);
 
-extern int insn_issue_delay (rtx);
+extern int insn_cost (rtx, rtx, rtx);
 extern int set_priorities (rtx, rtx);
 
-extern rtx sched_emit_insn (rtx);
 extern void schedule_block (int, int);
 extern void sched_init (FILE *);
 extern void sched_finish (void);
 
 extern void ready_add (struct ready_list *, rtx);
 
-/* The following are exported for the benefit of debugging functions.  It
-   would be nicer to keep them private to haifa-sched.c.  */
-extern int insn_unit (rtx);
-extern int insn_cost (rtx, rtx, rtx);
-extern rtx get_unit_last_insn (int);
-extern int actual_hazard_this_instance (int, int, rtx, int, int);
-extern void print_insn (char *, rtx, int);
+#endif /* GCC_SCHED_INT_H */

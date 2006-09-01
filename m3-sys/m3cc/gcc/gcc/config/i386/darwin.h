@@ -1,5 +1,5 @@
 /* Target definitions for x86 running Darwin.
-   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2004, 2005 Free Software Foundation, Inc.
    Contributed by Apple Computer Inc.
 
 This file is part of GCC.
@@ -16,22 +16,24 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* Enable Mach-O bits in generic x86 code.  */
 #undef TARGET_MACHO
 #define TARGET_MACHO 1
 
-#define TARGET_VERSION fprintf (stderr, " (i386 Darwin)");
+#define TARGET_VERSION fprintf (stderr, " (i686 Darwin)");
+
+#undef TARGET_FPMATH_DEFAULT
+#define TARGET_FPMATH_DEFAULT (TARGET_SSE ? FPMATH_SSE : FPMATH_387)
 
 #define TARGET_OS_CPP_BUILTINS()                \
   do                                            \
     {                                           \
       builtin_define ("__i386__");              \
       builtin_define ("__LITTLE_ENDIAN__");     \
-      builtin_define ("__MACH__");              \
-      builtin_define ("__APPLE__");             \
+      darwin_cpp_builtins (pfile);		\
     }                                           \
   while (0)
 
@@ -39,21 +41,22 @@ Boston, MA 02111-1307, USA.  */
    the kernel or some such.  */
 
 #undef CC1_SPEC
-#define CC1_SPEC "%{!static:-fPIC}"
+#define CC1_SPEC "%{!static:-fPIC}\
+  %{g: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols }}"
+
+#undef ASM_SPEC
+#define ASM_SPEC "-arch i386 -force_cpusubtype_ALL"
+
+#undef SUBTARGET_EXTRA_SPECS
+#define SUBTARGET_EXTRA_SPECS					\
+  { "darwin_arch", "i386" },					\
+  { "darwin_crt2", "" },					\
+  { "darwin_subarch", "i386" },
 
 /* Use the following macro for any Darwin/x86-specific command-line option
    translation.  */
-#define SUBTARGET_OPTION_TRANSLATE_TABLE
-
-#define ASM_SPEC "-arch i386 \
-  %{Zforce_cpusubtype_ALL:-force_cpusubtype_ALL} \
-  %{!Zforce_cpusubtype_ALL:%{mmmx:-force_cpusubtype_ALL}\
-			   %{msse:-force_cpusubtype_ALL}\
-			   %{msse2:-force_cpusubtype_ALL}}"
-
-#undef SUBTARGET_EXTRA_SPECS
-#define SUBTARGET_EXTRA_SPECS			\
-  { "darwin_arch", "i386" },
+#define SUBTARGET_OPTION_TRANSLATE_TABLE \
+  { "", "" }
 
 /* The Darwin assembler mostly follows AT&T syntax.  */
 #undef ASSEMBLER_DIALECT
@@ -75,7 +78,7 @@ Boston, MA 02111-1307, USA.  */
 /* By default, target has a 80387, uses IEEE compatible arithmetic,
    and returns float values in the 387.  */
 
-#define TARGET_SUBTARGET_DEFAULT (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS)
+#define TARGET_SUBTARGET_DEFAULT (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS | MASK_128BIT_LONG_DOUBLE | MASK_ALIGN_DOUBLE)
 
 /* TARGET_DEEP_BRANCH_PREDICTION is incompatible with Mach-O PIC.  */
 
@@ -90,6 +93,11 @@ Boston, MA 02111-1307, USA.  */
 /* Define the syntax of pseudo-ops, labels and comments.  */
 
 #define LPREFIX "L"
+
+/* These are used by -fbranch-probabilities */
+#define HOT_TEXT_SECTION_NAME "__TEXT,__text,regular,pure_instructions"
+#define UNLIKELY_EXECUTED_TEXT_SECTION_NAME \
+                              "__TEXT,__unlikely,regular,pure_instructions"
 
 /* Assembler pseudos to introduce constants of various size.  */
 
@@ -131,9 +139,9 @@ Boston, MA 02111-1307, USA.  */
     do {								\
       if (MACHOPIC_INDIRECT)						\
 	{								\
-	  const char *name = machopic_stub_name ("*mcount");		\
+	  const char *name = machopic_mcount_stub_name ();		\
 	  fprintf (FILE, "\tcall %s\n", name+1);  /*  skip '&'  */	\
-	  machopic_validate_stub_or_non_lazy_ptr (name, /*stub:*/1);	\
+	  machopic_validate_stub_or_non_lazy_ptr (name);		\
 	}								\
       else fprintf (FILE, "\tcall mcount\n");				\
     } while (0)

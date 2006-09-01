@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for HPs using the
    64bit runtime model.
-   Copyright (C) 1999, 2000, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -16,8 +16,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* The default sizes for basic datatypes provided by GCC are not
    correct for the PA64 runtime architecture.
@@ -55,8 +55,6 @@ Boston, MA 02111-1307, USA.  */
 #define SHORT_TYPE_SIZE 16
 #undef INT_TYPE_SIZE
 #define INT_TYPE_SIZE 32
-#undef MAX_LONG_TYPE_SIZE
-#define MAX_LONG_TYPE_SIZE 64
 #undef LONG_TYPE_SIZE
 #define LONG_TYPE_SIZE 64
 #undef LONG_LONG_TYPE_SIZE
@@ -72,21 +70,12 @@ Boston, MA 02111-1307, USA.  */
    relocs which appear in stabs.  */
 #undef DBX_DEBUGGING_INFO
 
-/* We want the compiler to select a suitable secondary memory location.
-   ?!? This may not work reliably.  Keep an eye out for problems.  */
-#undef SECONDARY_MEMORY_NEEDED_RTX
-
-
 /* ?!? This needs to be made compile-time selectable.
 
    The PA64 runtime model has arguments that grow to higher addresses
    (like most other targets).  The older runtime model has arguments
    that grow to lower addresses.  What fun.  */
 #undef ARGS_GROW_DOWNWARD
-#undef ARG_POINTER_REGNUM
-#define ARG_POINTER_REGNUM 29
-#undef STATIC_CHAIN_REGNUM
-#define STATIC_CHAIN_REGNUM 31
 
 /* If defined, a C expression which determines whether the default
    implementation of va_arg will attempt to pad down before reading the

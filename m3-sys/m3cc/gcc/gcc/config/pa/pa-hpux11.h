@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for HP PA-RISC
-   Copyright (C) 1998, 1999, 2000, 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2002, 2003, 2004, 2005
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -15,8 +16,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* GCC always defines __STDC__.  HP C++ compilers don't define it.  This
    causes trouble when sys/stdsyms.h is included.  As a work around,
@@ -26,54 +27,73 @@ Boston, MA 02111-1307, USA.  */
    support).  We define __STDCPP__ to get certain system headers
    (notably assert.h) to assume standard preprocessor behavior in C++.  */
 #undef TARGET_OS_CPP_BUILTINS
-#define TARGET_OS_CPP_BUILTINS()				\
-  do								\
-    {								\
-	builtin_assert ("system=hpux");				\
-	builtin_assert ("system=unix");				\
-	builtin_define ("__hp9000s800");			\
-	builtin_define ("__hp9000s800__");			\
-	builtin_define ("__hpux");				\
-	builtin_define ("__hpux__");				\
-	builtin_define ("__unix");				\
-	builtin_define ("__unix__");				\
-	if (c_dialect_cxx ())					\
-	  {							\
-	    builtin_define ("_HPUX_SOURCE");			\
-	    builtin_define ("_INCLUDE_LONGLONG");		\
-	    builtin_define ("__STDC_EXT__");			\
-	    builtin_define ("__STDCPP__");			\
-	  }							\
-	else							\
-	  {							\
-	    if (!flag_iso)					\
-	      {							\
-		builtin_define ("_HPUX_SOURCE");		\
-		if (preprocessing_trad_p ())			\
-		  {						\
-		    builtin_define ("hp9000s800");		\
-		    builtin_define ("hppa");			\
-		    builtin_define ("hpux");			\
-		    builtin_define ("unix");			\
-		    builtin_define ("__CLASSIC_C__");		\
-		    builtin_define ("_PWB");			\
-		    builtin_define ("PWB");			\
-		  }						\
-		else						\
-		  builtin_define ("__STDC_EXT__");		\
-	      }							\
-	    if (!TARGET_64BIT)					\
-	      builtin_define ("_ILP32");			\
-	  }							\
-	if (TARGET_SIO)						\
-	  builtin_define ("_SIO");				\
-	else							\
-	  {							\
-	    builtin_define ("__hp9000s700");			\
-	    builtin_define ("__hp9000s700__");			\
-	    builtin_define ("_WSIO");				\
-	  }							\
-    }								\
+#define TARGET_OS_CPP_BUILTINS()					\
+  do									\
+    {									\
+	builtin_assert ("system=hpux");					\
+	builtin_assert ("system=unix");					\
+	builtin_define ("__hp9000s800");				\
+	builtin_define ("__hp9000s800__");				\
+	builtin_define ("__hpux");					\
+	builtin_define ("__hpux__");					\
+	builtin_define ("__unix");					\
+	builtin_define ("__unix__");					\
+	if (c_dialect_cxx ())						\
+	  {								\
+	    builtin_define ("_HPUX_SOURCE");				\
+	    builtin_define ("_INCLUDE_LONGLONG");			\
+	    builtin_define ("__STDC_EXT__");				\
+	    builtin_define ("__STDCPP__");				\
+	  }								\
+	else								\
+	  {								\
+	    if (!flag_iso)						\
+	      {								\
+		builtin_define ("_HPUX_SOURCE");			\
+		if (preprocessing_trad_p ())				\
+		  {							\
+		    builtin_define ("hp9000s800");			\
+		    builtin_define ("hppa");				\
+		    builtin_define ("hpux");				\
+		    builtin_define ("unix");				\
+		    builtin_define ("__CLASSIC_C__");			\
+		    builtin_define ("_PWB");				\
+		    builtin_define ("PWB");				\
+		  }							\
+		else							\
+		  builtin_define ("__STDC_EXT__");			\
+	      }								\
+	  }								\
+	if (!TARGET_64BIT)						\
+	  builtin_define ("_ILP32");					\
+	if (flag_pa_unix >= 1995 && !flag_iso)				\
+	  {								\
+	    builtin_define ("_XOPEN_UNIX");				\
+	    builtin_define ("_XOPEN_SOURCE_EXTENDED");			\
+	  }								\
+	if (TARGET_HPUX_11_11)						\
+	  {								\
+	    if (flag_pa_unix >= 1998)					\
+	      {								\
+		if (flag_isoc94 || flag_isoc99 || c_dialect_cxx()	\
+		    || !flag_iso)					\
+		  builtin_define ("_INCLUDE__STDC_A1_SOURCE");		\
+		if (!flag_iso)						\
+		  builtin_define ("_INCLUDE_XOPEN_SOURCE_500");		\
+	      }								\
+	    else if (flag_isoc94 || flag_isoc99 || c_dialect_cxx ())	\
+	      warning (0, "-munix=98 option required for C89 "		\
+		       "Amendment 1 features.\n");			\
+	  }								\
+	if (TARGET_SIO)							\
+	  builtin_define ("_SIO");					\
+	else								\
+	  {								\
+	    builtin_define ("__hp9000s700");				\
+	    builtin_define ("__hp9000s700__");				\
+	    builtin_define ("_WSIO");					\
+	  }								\
+    }									\
   while (0)
 
 #undef CPP_SPEC
@@ -88,7 +108,7 @@ Boston, MA 02111-1307, USA.  */
 #undef LINK_SPEC
 #if ((TARGET_DEFAULT | TARGET_CPU_DEFAULT) & MASK_PA_11)
 #define LINK_SPEC \
-  "%{!mpa-risc-1-0:%{!shared:-L/lib/pa1.1 -L/usr/lib/pa1.1 }}\
+  "%{!mpa-risc-1-0:%{!march=1.0:%{!shared:-L/lib/pa1.1 -L/usr/lib/pa1.1 }}}\
    %{!shared:%{p:-L/lib/libp -L/usr/lib/libp %{!static:\
      %nWarning: consider linking with `-static' as system libraries with\n\
      %n  profiling support are only provided in archive format}}}\
@@ -114,7 +134,12 @@ Boston, MA 02111-1307, USA.  */
 #define LIB_SPEC \
   "%{!shared:\
      %{mt|pthread:-lpthread} -lc \
-     %{static:%{!nolibdld:-a shared -ldld -a archive -lc}}}"
+     %{static:%{!nolibdld:-a shared -ldld -a archive -lpthread -lc}}}"
+
+#undef STARTFILE_SPEC
+#define STARTFILE_SPEC \
+  "%{!shared:%{pg:gcrt0%O%s}%{!pg:%{p:mcrt0%O%s}%{!p:crt0%O%s}} \
+     %{!munix=93:unix95%O%s}}"
 
 /* Under hpux11, the normal location of the `ld' and `as' programs is the
    /usr/ccs/bin directory.  */

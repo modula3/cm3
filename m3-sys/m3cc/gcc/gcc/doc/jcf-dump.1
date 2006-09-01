@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "JCF-DUMP 1"
-.TH JCF-DUMP 1 "2005-12-01" "gcc-3.4.5" "GNU"
+.TH JCF-DUMP 1 "2006-05-24" "gcc-4.1.1" "GNU"
 .SH "NAME"
 jcf\-dump \- print information about Java class files
 .SH "SYNOPSIS"
@@ -149,6 +149,10 @@ or file name.
 .IP "\fB\-c\fR" 4
 .IX Item "-c"
 Disassemble method bodies.  By default method bodies are not printed.
+.IP "\fB\-\-print\-constants\fR" 4
+.IX Item "--print-constants"
+Print the constant pool.  When printing a reference to a constant
+also print its index in the constant pool.
 .IP "\fB\-\-javap\fR" 4
 .IX Item "--javap"
 Generate output in \f(CW\*(C`javap\*(C'\fR format.  The implementation of this
@@ -173,18 +177,19 @@ Print version number, then exit.
 .IP "\fB\-v, \-\-verbose\fR" 4
 .IX Item "-v, --verbose"
 Print extra information while running.
+Implies \f(CW\*(C`\-\-print\-constants\*(C'\fR.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIgcc\fR\|(1), \fIgcj\fR\|(1), \fIgcjh\fR\|(1), \fIgij\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
 and the Info entries for \fIgcj\fR and \fIgcc\fR.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
-Copyright (c) 2001, 2002 Free Software Foundation, Inc.
+Copyright (c) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 .PP
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the \s-1GNU\s0 Free Documentation License, Version 1.2 or
 any later version published by the Free Software Foundation; with the
-Invariant Sections being ``\s-1GNU\s0 General Public License'', the Front-Cover
+Invariant Sections being \*(L"\s-1GNU\s0 General Public License\*(R", the Front-Cover
 texts being (a) (see below), and with the Back-Cover Texts being (b)
 (see below).  A copy of the license is included in the
 man page \fIgfdl\fR\|(7).

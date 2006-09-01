@@ -1,5 +1,5 @@
 /* Tree inlining hooks and declarations.
-   Copyright 2001, 2003 Free Software Foundation, Inc.
+   Copyright 2001, 2003, 2004, 2005 Free Software Foundation, Inc.
    Contributed by Alexandre Oliva  <aoliva@redhat.com>
 
 This file is part of GCC.
@@ -16,21 +16,30 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #ifndef GCC_TREE_INLINE_H
 #define GCC_TREE_INLINE_H
 
+#include "varray.h"
 /* Function prototypes.  */
 
 void optimize_inline_calls (tree);
 bool tree_inlinable_function_p (tree);
-tree walk_tree (tree*, walk_tree_fn, void*, void*);
-tree walk_tree_without_duplicates (tree*, walk_tree_fn, void*);
-tree copy_tree_r (tree*, int*, void*);
-void clone_body (tree, tree, void*);
-void remap_save_expr (tree*, void*, tree, int*);
+tree copy_tree_r (tree *, int *, void *);
+void clone_body (tree, tree, void *);
+void save_body (tree, tree *, tree *);
+int estimate_move_cost (tree type);
+void push_cfun (struct function *new_cfun);
+void pop_cfun (void);
+int estimate_num_insns (tree expr);
+bool tree_versionable_function_p (tree);
+void tree_function_versioning (tree, tree, varray_type);
+
+/* Copy a declaration when one function is substituted inline into
+   another.  It is used also for versioning.  */
+extern tree copy_decl_for_dup (tree, tree, tree, bool);
 
 /* 0 if we should not perform inlining.
    1 if we should expand functions calls inline at the tree level.

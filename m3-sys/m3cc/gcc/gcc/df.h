@@ -1,6 +1,7 @@
 /* Form lists of pseudo register references for autoinc optimization
    for GNU compiler.  This is part of flow optimization.
-   Copyright (C) 1999, 2000, 2001, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2003, 2004, 2005
+   Free Software Foundation, Inc.
    Contributed by Michael P. Hayes (m.hayes@elec.canterbury.ac.nz)
 
 This file is part of GCC.
@@ -17,21 +18,27 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
-#define DF_RD		 1	/* Reaching definitions.  */
-#define DF_RU		 2	/* Reaching uses.  */
-#define DF_LR		 4	/* Live registers.  */
-#define DF_DU_CHAIN	 8	/* Def-use chain.  */
-#define DF_UD_CHAIN     16	/* Use-def chain.  */
+#ifndef GCC_DF_H
+#define GCC_DF_H
+
+#include "bitmap.h"
+#include "basic-block.h"
+
+#define DF_RD		1	/* Reaching definitions.  */
+#define DF_RU		2	/* Reaching uses.  */
+#define DF_LR		4	/* Live registers.  */
+#define DF_DU_CHAIN	8	/* Def-use chain.  */
+#define DF_UD_CHAIN	16	/* Use-def chain.  */
 #define DF_REG_INFO	32	/* Register info.  */
 #define DF_RD_CHAIN	64	/* Reg-def chain.  */
-#define DF_RU_CHAIN    128	/* Reg-use chain.  */
-#define DF_ALL	       255
-#define DF_HARD_REGS  1024	/* Mark hard registers.  */
-#define DF_EQUIV_NOTES 2048	/* Mark uses present in EQUIV/EQUAL notes.  */
-#define DF_FOR_REGALLOC 4096    /* If called for the register allocator.  */
+#define DF_RU_CHAIN	128	/* Reg-use chain.  */
+#define DF_ALL		255
+#define DF_HARD_REGS	1024	/* Mark hard registers.  */
+#define DF_EQUIV_NOTES	2048	/* Mark uses present in EQUIV/EQUAL notes.  */
+#define DF_SUBREGS	4096	/* Return subregs rather than the inner reg.  */
 
 enum df_ref_type {DF_REF_REG_DEF, DF_REF_REG_USE, DF_REF_REG_MEM_LOAD,
 		  DF_REF_REG_MEM_STORE};
@@ -52,23 +59,10 @@ enum df_ref_flags
        independent.  */
     DF_REF_READ_WRITE = 1,
 
-    /* This flag is set on register references inside a subreg on
-       machines which have CANNOT_CHANGE_MODE_CLASS.
-       Note, that this flag can also be set on df_refs representing
-       the REG itself (i.e., one might not see the subreg anyore).
-       Also note, that this flag is set also for hardreg refs, i.e.,
-       you must check yourself if it's a pseudo.  */
-    DF_REF_MODE_CHANGE = 2,
-
     /* This flag is set, if we stripped the subreg from the reference.
        In this case we must make conservative guesses, at what the
        outer mode was.  */
-    DF_REF_STRIPPED = 4,
-
-    /* This flag is set during register allocation if it's okay for
-    the reference's INSN to have one of its operands replaced with a
-    memory reference.  */
-    DF_REF_MEM_OK = 8
+    DF_REF_STRIPPED = 2
   };
 
 
@@ -84,6 +78,7 @@ struct ref
   unsigned int id;		/* Ref index.  */
   enum df_ref_type type;	/* Type of ref.  */
   enum df_ref_flags flags;	/* Various flags.  */
+  void *data;			/* The data assigned to it by user.  */
 };
 
 
@@ -157,9 +152,6 @@ struct df
   bitmap insns_modified;	/* Insns that (may) have changed.  */
   bitmap bbs_modified;		/* Blocks that (may) have changed.  */
   bitmap all_blocks;		/* All blocks in CFG.  */
-  /* The sbitmap vector of dominators or NULL if not computed.
-     Ideally, this should be a pointer to a CFG object.  */
-  sbitmap *dom;
   int *dfs_order;		/* DFS order -> block number.  */
   int *rc_order;		/* Reverse completion order -> block number.  */
   int *rts_order;		/* Reverse top sort order -> block number.  */
@@ -196,6 +188,7 @@ struct df_map
 #define DF_REF_CHAIN(REF) ((REF)->chain)
 #define DF_REF_ID(REF) ((REF)->id)
 #define DF_REF_FLAGS(REF) ((REF)->flags)
+#define DF_REF_DATA(REF) ((REF)->data)
 
 /* Macros to determine the reference type.  */
 
@@ -215,11 +208,9 @@ struct df_map
 ((DF)->regs[REGNUM].uses ? (DF)->regs[REGNUM].uses->ref : 0)
 
 #define DF_REGNO_FIRST_BB(DF, REGNUM) \
-(DF_REGNO_FIRST_DEF (DF, REGNUM) \
-? DF_REF_BB (DF_REGNO_FIRST_DEF (DF, REGNUM)) : 0)
+((DF)->regs[REGNUM].defs ? DF_REF_BB ((DF)->regs[REGNUM].defs->ref) : 0)
 #define DF_REGNO_LAST_BB(DF, REGNUM) \
-(DF_REGNO_LAST_USE (DF, REGNUM) \
-? DF_REF_BB (DF_REGNO_LAST_USE (DF, REGNUM)) : 0)
+((DF)->regs[REGNUM].uses ? DF_REF_BB ((DF)->regs[REGNUM].uses->ref) : 0)
 
 
 /* Macros to access the elements within the insn_info structure table.  */
@@ -229,11 +220,12 @@ struct df_map
 #define DF_INSN_USES(DF, INSN) ((DF)->insns[INSN_UID (INSN)].uses)
 
 
-/* Functions to build and analyse dataflow information.  */
+/* Functions to build and analyze dataflow information.  */
 
 extern struct df *df_init (void);
 
-extern int df_analyse (struct df *, bitmap, int);
+extern int df_analyze (struct df *, bitmap, int);
+extern void df_analyze_subcfg (struct df *, bitmap, int);
 
 extern void df_finish (struct df *);
 
@@ -241,6 +233,8 @@ extern void df_dump (struct df *, int, FILE *);
 
 
 /* Functions to modify insns.  */
+
+extern bool df_insn_modified_p (struct df *, rtx);
 
 extern void df_insn_modify (struct df *, basic_block, rtx);
 
@@ -260,8 +254,6 @@ extern int df_reg_replace (struct df *, bitmap, rtx, rtx);
 extern int df_ref_reg_replace (struct df *, struct ref *, rtx, rtx);
 
 extern int df_ref_remove (struct df *, struct ref *);
-
-extern int df_insn_reg_replace (struct df *, basic_block, rtx, rtx, rtx);
 
 extern int df_insn_mem_replace (struct df *, basic_block, rtx, rtx, rtx);
 
@@ -289,9 +281,19 @@ extern int df_bb_reg_live_end_p (struct df *, basic_block, rtx);
 
 extern int df_bb_regs_lives_compare (struct df *, basic_block, rtx, rtx);
 
+extern bool df_local_def_available_p (struct df *, struct ref *, struct ref *);
+
 extern rtx df_bb_single_def_use_insn_find (struct df *, basic_block, rtx,
 					   rtx);
+extern struct ref *df_bb_regno_last_use_find (struct df *, basic_block, unsigned int);
 
+extern struct ref *df_bb_regno_first_def_find (struct df *, basic_block, unsigned int);
+
+extern struct ref *df_bb_regno_last_def_find (struct df *, basic_block, unsigned int);
+
+extern struct ref *df_find_def (struct df *, rtx, rtx);
+
+extern int df_reg_used (struct df *, rtx, rtx);
 
 /* Functions for debugging from GDB.  */
 
@@ -330,22 +332,39 @@ enum df_flow_dir
   };
 
 
-typedef void (*transfer_function_sbitmap) (int, int *, sbitmap, sbitmap,
-					   sbitmap, sbitmap, void *);
+typedef void (*transfer_function) (int, int *, void *, void *,
+				   void *, void *, void *);
 
-typedef void (*transfer_function_bitmap) (int, int *, bitmap, bitmap,
-					  bitmap, bitmap, void *);
+/* The description of a dataflow problem to solve.  */
 
-extern void iterative_dataflow_sbitmap (sbitmap *, sbitmap *, sbitmap *,
-					sbitmap *, bitmap, enum df_flow_dir,
-					enum df_confluence_op,
-					transfer_function_sbitmap,
-					int *, void *);
+enum set_representation
+{
+  SR_SBITMAP,		/* Represent sets by bitmaps.  */
+  SR_BITMAP		/* Represent sets by sbitmaps.  */
+};
 
-extern void iterative_dataflow_bitmap (bitmap *, bitmap *, bitmap *,
-				       bitmap *, bitmap,
-				       enum df_flow_dir,
-				       enum df_confluence_op,
-				       transfer_function_bitmap,
-				       int *, void *);
+struct dataflow
+{
+  enum set_representation repr;		/* The way the sets are represented.  */
+
+  /* The following arrays are indexed by block indices, so they must always
+     be large enough even if we restrict ourselves just to a subset of cfg.  */
+  void **gen, **kill;			/* Gen and kill sets.  */
+  void **in, **out;			/* Results.  */
+
+  enum df_flow_dir dir;			/* Dataflow direction.  */
+  enum df_confluence_op conf_op;	/* Confluence operator.  */ 
+  unsigned n_blocks;			/* Number of basic blocks in the
+					   order.  */
+  int *order;				/* The list of basic blocks to work
+					   with, in the order they should
+					   be processed in.  */
+  transfer_function transfun;		/* The transfer function.  */
+  void *data;				/* Data used by the transfer
+					   function.  */
+};
+
+extern void iterative_dataflow (struct dataflow *);
 extern bool read_modify_subreg_p (rtx);
+
+#endif /* GCC_DF_H */

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  
    Vitesse IQ2000 processors
-   Copyright (C) 2003 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
@@ -16,8 +16,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-   02111-1307, USA.  */
+   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301, USA.  */
 
 /* Driver configuration.  */
 
@@ -44,72 +44,19 @@
     }                                           \
   while (0)
 
-extern int	target_flags;
-
-#define MASK_GPOPT         0x00000008   /* Optimize for global pointer.  */
-#define MASK_EMBEDDED_DATA 0x00008000   /* Reduce RAM usage, not fast code.  */
-#define MASK_UNINIT_CONST_IN_RODATA \
-                           0x00800000   /* Store uninitialized
-                                           consts in rodata.  */
-
 /* Macros used in the machine description to test the flags.  */
 
 #define TARGET_STATS		0
 
-/* For embedded systems, optimize for reduced RAM space instead of for
-   fastest code.  */
-#define TARGET_EMBEDDED_DATA	(target_flags & MASK_EMBEDDED_DATA)
-
-#define TARGET_DEBUG_MODE	(target_flags & 0)
-#define TARGET_DEBUG_A_MODE	(target_flags & 0)
-#define TARGET_DEBUG_B_MODE	(target_flags & 0)
-#define TARGET_DEBUG_C_MODE	(target_flags & 0)
-#define TARGET_DEBUG_D_MODE	(target_flags & 0)
-
-#define TARGET_SWITCHES							\
-{									\
-  {"no-crt0",          0,                                               \
-     N_("No default crt0.o") },					 	\
-  {"gpopt",		  MASK_GPOPT,					\
-     N_("Use GP relative sdata/sbss sections")},			\
-  {"no-gpopt",		 -MASK_GPOPT,					\
-     N_("Don't use GP relative sdata/sbss sections")},			\
-  {"embedded-data",	  MASK_EMBEDDED_DATA,				\
-     N_("Use ROM instead of RAM")},					\
-  {"no-embedded-data",	 -MASK_EMBEDDED_DATA,				\
-     N_("Don't use ROM instead of RAM")},				\
-  {"uninit-const-in-rodata", MASK_UNINIT_CONST_IN_RODATA,		\
-     N_("Put uninitialized constants in ROM (needs -membedded-data)")},	\
-  {"no-uninit-const-in-rodata", -MASK_UNINIT_CONST_IN_RODATA,		\
-     N_("Don't put uninitialized constants in ROM")},			\
-  {"",			  (TARGET_DEFAULT				\
-			   | TARGET_CPU_DEFAULT),			\
-     NULL},								\
-}
-
-/* Default target_flags if no switches are specified.  */
-
-#define TARGET_DEFAULT 0
-
-#ifndef TARGET_CPU_DEFAULT
-#define TARGET_CPU_DEFAULT 0
-#endif
+#define TARGET_DEBUG_MODE	0
+#define TARGET_DEBUG_A_MODE	0
+#define TARGET_DEBUG_B_MODE	0
+#define TARGET_DEBUG_C_MODE	0
+#define TARGET_DEBUG_D_MODE	0
 
 #ifndef IQ2000_ISA_DEFAULT
 #define IQ2000_ISA_DEFAULT 1
 #endif
-
-#define TARGET_OPTIONS							\
-{									\
-  SUBTARGET_TARGET_OPTIONS						\
-  { "cpu=",	& iq2000_cpu_string,					\
-      N_("Specify CPU for scheduling purposes")},			\
-  { "arch=",    & iq2000_arch_string,                                   \
-      N_("Specify CPU for code generation purposes")},                  \
-}
-
-/* This is meant to be redefined in the host dependent files.  */
-#define SUBTARGET_TARGET_OPTIONS
 
 #define IQ2000_VERSION "[1.0]"
 
@@ -155,10 +102,6 @@ extern int	target_flags;
       && GET_MODE_SIZE (MODE) < 4)		\
     (MODE) = SImode;
 
-#define PROMOTE_FUNCTION_ARGS
-
-#define PROMOTE_FUNCTION_RETURN
-
 #define PARM_BOUNDARY 32
 
 #define STACK_BOUNDARY 64
@@ -200,7 +143,6 @@ extern int	target_flags;
 #define DOUBLE_TYPE_SIZE 	64
 #define LONG_DOUBLE_TYPE_SIZE	64
 #define DEFAULT_SIGNED_CHAR	1
-#define MAX_WCHAR_TYPE_SIZE	32
 
 
 /* Register Basics.  */
@@ -312,16 +254,16 @@ enum reg_class
    `I'	is used for the range of constants an arithmetic insn can
 	actually contain (16 bits signed integers).
 
-   `J'	is used for the range which is just zero (ie, $r0).
+   `J'	is used for the range which is just zero (i.e., $r0).
 
    `K'	is used for the range of constants a logical insn can actually
 	contain (16 bit zero-extended integers).
 
    `L'	is used for the range of constants that be loaded with lui
-	(ie, the bottom 16 bits are zero).
+	(i.e., the bottom 16 bits are zero).
 
    `M'	is used for the range of constants that take two words to load
-	(ie, not matched by `I', `K', and `L').
+	(i.e., not matched by `I', `K', and `L').
 
    `N'	is used for constants 0xffffnnnn or 0xnnnnffff
 
@@ -359,7 +301,7 @@ enum reg_class
 
 #define STACK_GROWS_DOWNWARD
 
-/* #define FRAME_GROWS_DOWNWARD */
+#define FRAME_GROWS_DOWNWARD 0
 
 #define STARTING_FRAME_OFFSET						\
   (current_function_outgoing_args_size)
@@ -427,8 +369,6 @@ enum reg_class
 
 /* Passing Function Arguments on the Stack.  */
 
-#define PROMOTE_PROTOTYPES 1
-
 /* #define PUSH_ROUNDING(BYTES) 0 */
 
 #define ACCUMULATE_OUTGOING_ARGS 1
@@ -444,15 +384,6 @@ enum reg_class
 
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (& CUM, MODE, TYPE, NAMED)
-
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
-  function_arg_partial_nregs (& CUM, MODE, TYPE, NAMED)
-
-#define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED)		\
-  function_arg_pass_by_reference (& CUM, MODE, TYPE, NAMED)
-
-#define FUNCTION_ARG_CALLEE_COPIES(CUM, MODE, TYPE, NAMED)		\
-  ((NAMED) && FUNCTION_ARG_PASS_BY_REFERENCE (CUM, MODE, TYPE, NAMED))
 
 #define MAX_ARGS_IN_REGISTERS 8
 
@@ -505,13 +436,12 @@ typedef struct iq2000_args
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)	iq2000_function_value (VALTYPE, FUNC)
 
-#define LIBCALL_VALUE(MODE)						\
-  gen_rtx (REG,								\
-	   ((GET_MODE_CLASS (MODE) != MODE_INT				\
-	     || GET_MODE_SIZE (MODE) >= 4)				\
-	    ? (MODE)							\
-	    : SImode),							\
-	   GP_RETURN)
+#define LIBCALL_VALUE(MODE)				\
+  gen_rtx_REG (((GET_MODE_CLASS (MODE) != MODE_INT	\
+		 || GET_MODE_SIZE (MODE) >= 4)		\
+		? (MODE)				\
+		: SImode),				\
+	       GP_RETURN)
 
 /* On the IQ2000, R2 and R3 are the only register thus used.  */
 
@@ -520,15 +450,7 @@ typedef struct iq2000_args
 
 /* How Large Values are Returned.  */
 
-#define RETURN_IN_MEMORY(TYPE)						 \
-  (((int_size_in_bytes (TYPE)						 \
-       > (2 * UNITS_PER_WORD)) 						 \
-      || (int_size_in_bytes (TYPE) == -1)))
-
 #define DEFAULT_PCC_STRUCT_RETURN 0
-
-#define STRUCT_VALUE 0
-
 
 /* Function Entry and Exit.  */
 
@@ -557,17 +479,8 @@ typedef struct iq2000_args
 
 /* Implementing the Varargs Macros.  */
 
-#define SETUP_INCOMING_VARARGS(CUM,MODE,TYPE,PRETEND_SIZE,NO_RTL)	\
-  iq2000_setup_incoming_varargs (CUM,MODE,TYPE,&PRETEND_SIZE,NO_RTL);
-
-#define STRICT_ARGUMENT_NAMING  1
-
 #define EXPAND_BUILTIN_VA_START(valist, nextarg) \
   iq2000_va_start (valist, nextarg)
-
-/* Implement `va_arg'.  */
-#define EXPAND_BUILTIN_VA_ARG(valist, type) \
-  iq2000_va_arg (valist, type)
 
 
 /* Trampolines for Nested Functions.  */
@@ -660,7 +573,7 @@ typedef struct iq2000_args
     {									\
       X = gen_rtx_LO_SUM (Pmode,					\
 			  copy_to_mode_reg (Pmode,			\
-					    gen_rtx (HIGH, Pmode, X)),	\
+					    gen_rtx_HIGH (Pmode, X)),	\
 			  X);						\
       goto WIN;								\
     }									\
@@ -719,8 +632,6 @@ typedef struct iq2000_args
 #define SLOW_BYTE_ACCESS 1
 
 #define NO_FUNCTION_CSE 1
-
-#define NO_RECURSIVE_FUNCTION_CSE 1
 
 #define ADJUST_COST(INSN,LINK,DEP_INSN,COST)				\
   if (REG_NOTE_KIND (LINK) != 0)					\
@@ -868,26 +779,7 @@ while (0)
 
 /* Miscellaneous Parameters.  */
 
-#define PREDICATE_CODES							\
-  {"uns_arith_operand",		{ REG, CONST_INT, SUBREG }},		\
-  {"arith_operand",		{ REG, CONST_INT, SUBREG }},		\
-  {"small_int",			{ CONST_INT }},				\
-  {"large_int",			{ CONST_INT }},				\
-  {"reg_or_0_operand",		{ REG, CONST_INT, CONST_DOUBLE, SUBREG }}, \
-  {"simple_memory_operand",	{ MEM, SUBREG }},			\
-  {"equality_op",		{ EQ, NE }},				\
-  {"cmp_op",			{ EQ, NE, GT, GE, GTU, GEU, LT, LE,	\
-				  LTU, LEU }},				\
-  {"pc_or_label_operand",	{ PC, LABEL_REF }},			\
-  {"call_insn_operand",		{ CONST_INT, CONST, SYMBOL_REF, REG}},	\
-  {"move_operand", 		{ CONST_INT, CONST_DOUBLE, CONST,	\
-				  SYMBOL_REF, LABEL_REF, SUBREG,	\
-				  REG, MEM}},				\
-  {"power_of_2_operand",	{ CONST_INT }},
-
 #define CASE_VECTOR_MODE SImode
-
-#define CASE_VECTOR_PC_RELATIVE 0
 
 #define WORD_REGISTER_OPERATIONS
 
@@ -964,17 +856,13 @@ extern void		sbss_section  (void);
 
 
 #undef ASM_SPEC
-#define ASM_SPEC "%{march=iq2000: -m2000} %{march=iq10: -m10} %{!march=*: -m2000}"
 
 
-/* The mapping from gcc register number to DWARF 2 CFA column number.
-   This mapping does not allow for tracking register 0, since
-   register 0 is fixed.  */
-#define DWARF_FRAME_REGNUM(REG)				\
-  (REG == GP_REG_FIRST + 31 ? DWARF_FRAME_RETURN_COLUMN : REG)
+/* The mapping from gcc register number to DWARF 2 CFA column number.  */
+#define DWARF_FRAME_REGNUM(REG)        (REG)
 
 /* The DWARF 2 CFA column which tracks the return address.  */
-#define DWARF_FRAME_RETURN_COLUMN ( GP_REG_FIRST + 26)
+#define DWARF_FRAME_RETURN_COLUMN (GP_REG_FIRST + 31)
 
 /* Describe how we implement __builtin_eh_return.  */
 #define EH_RETURN_DATA_REGNO(N) ((N) < 4 ? (N) + GP_ARG_FIRST : INVALID_REGNUM)
@@ -1157,13 +1045,6 @@ extern void		sbss_section  (void);
   ((LENGTH) = iq2000_adjust_insn_length ((INSN), (LENGTH)))
 
 
-/* A list of predicates that do special things with modes, and so
-   should not elicit warnings for VOIDmode match_operand.  */
-
-#define SPECIAL_MODE_PREDICATES \
-  "pc_or_label_operand",
-
-
 
 
 /* How to tell the debugger about changes of source files.  */
@@ -1188,11 +1069,6 @@ extern void		sbss_section  (void);
 #define SDATA_SECTION_ASM_OP	"\t.sdata"	/* Small data.  */
 
 
-/* See iq2000_expand_prologue's use of loadgp for when this should be
-   true.  */
-
-#define DONT_ACCESS_GBLS_AFTER_EPILOGUE 0
-
 /* List of all IQ2000 punctuation characters used by print_operand.  */
 extern char iq2000_print_operand_punct[256];
 
@@ -1208,12 +1084,6 @@ extern rtx branch_cmp[2];
 
 /* What type of branch to use.  */
 extern enum cmp_type branch_type;
-
-/* Strings to hold which cpu and instruction set architecture to use.  */
-extern const char * iq2000_cpu_string;	  /* For -mcpu=<xxx>.  */
-extern const char * iq2000_arch_string;   /* For -march=<xxx>.  */
-
-
 
 enum iq2000_builtins
 {

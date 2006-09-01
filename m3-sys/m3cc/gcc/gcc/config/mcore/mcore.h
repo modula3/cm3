@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler,
    for Motorola M*CORE Processor.
-   Copyright (C) 1993, 1999, 2000, 2001, 2002, 2003, 2004
+   Copyright (C) 1993, 1999, 2000, 2001, 2002, 2003, 2004, 2005
    Free Software Foundation, Inc.
 
    This file is part of GCC.
@@ -17,8 +17,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to the
-   Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
 #ifndef GCC_MCORE_H
 #define GCC_MCORE_H
@@ -33,21 +33,13 @@
 
 /* Get tree.c to declare a target-specific specialization of
    merge_decl_attributes.  */
-#define TARGET_DLLIMPORT_DECL_ATTRIBUTES
+#define TARGET_DLLIMPORT_DECL_ATTRIBUTES 1
 
-/* Support the __declspec keyword by turning them into attributes.
-   We currently only support: dllexport and dllimport.
-   Note that the current way we do this may result in a collision with
-   predefined attributes later on.  This can be solved by using one attribute,
-   say __declspec__, and passing args to it.  The problem with that approach
-   is that args are not accumulated: each new appearance would clobber any
-   existing args.  */
 #define TARGET_CPU_CPP_BUILTINS()					  \
   do									  \
     {									  \
       builtin_define ("__mcore__");					  \
       builtin_define ("__MCORE__");					  \
-      builtin_define ("__declspec(x)=__attribute__((x))");		  \
       if (TARGET_LITTLE_END)						  \
         builtin_define ("__MCORELE__");					  \
       else								  \
@@ -74,105 +66,26 @@
 #undef  LINK_SPEC
 #define LINK_SPEC "%{mbig-endian:-EB} %{m210:-EB} -X"
 
-/* Can only count on 16 bits of availability; change to long would affect
-   many architecture specific files (other architectures...).  */
-extern int target_flags;
-
-#define HARDLIT_BIT	   (1 << 0) /* Build in-line literals using 2 insns.  */
-#define ALIGN8_BIT	   (1 << 1) /* Max alignment goes to 8 instead of 4.  */
-#define DIV_BIT		   (1 << 2) /* Generate divide instructions.  */
-#define RELAX_IMM_BIT	   (1 << 3) /* Arbitrary immediates in and, or, tst.  */
-#define W_FIELD_BIT	   (1 << 4) /* Generate bit insv/extv using SImode.  */
-#define	OVERALIGN_FUNC_BIT (1 << 5) /* Align functions to 4 byte boundary.  */
-#define CGDATA_BIT	   (1 << 6) /* Generate callgraph data.  */
-#define SLOW_BYTES_BIT     (1 << 7) /* Slow byte access.  */
-#define LITTLE_END_BIT     (1 << 8) /* Generate little endian code.  */
-#define M340_BIT           (1 << 9) /* Generate code for the m340.  */
-
-#define TARGET_DEFAULT     \
- (HARDLIT_BIT | ALIGN8_BIT | DIV_BIT | RELAX_IMM_BIT | M340_BIT | LITTLE_END_BIT)
+#define TARGET_DEFAULT	\
+  (MASK_HARDLIT		\
+   | MASK_8ALIGN	\
+   | MASK_DIV		\
+   | MASK_RELAX_IMM	\
+   | MASK_M340		\
+   | MASK_LITTLE_END)
 
 #ifndef MULTILIB_DEFAULTS
 #define MULTILIB_DEFAULTS { "mlittle-endian", "m340" }
 #endif
 
-#define TARGET_HARDLIT		(target_flags & HARDLIT_BIT)
 /* The ability to have 4 byte alignment is being suppressed for now.
-   If this ability is reenabled, you must enable the definition below
+   If this ability is reenabled, you must disable the definition below
    *and* edit t-mcore to enable multilibs for 4 byte alignment code.  */
-#if 0 
-#define TARGET_8ALIGN		(target_flags & ALIGN8_BIT)
-#else
-#define TARGET_8ALIGN		1
-#endif
-#define TARGET_DIV		(target_flags & DIV_BIT)
-#define TARGET_RELAX_IMM        (target_flags & RELAX_IMM_BIT)
-#define TARGET_W_FIELD          (target_flags & W_FIELD_BIT)
-#define TARGET_OVERALIGN_FUNC   (target_flags & OVERALIGN_FUNC_BIT)
-#define TARGET_CG_DATA 		(target_flags & CGDATA_BIT)
-#define TARGET_CG_DATA 		(target_flags & CGDATA_BIT)
-#define TARGET_SLOW_BYTES 	(target_flags & SLOW_BYTES_BIT)
-#define TARGET_LITTLE_END	(target_flags & LITTLE_END_BIT)
-#define TARGET_M340 		(target_flags & M340_BIT)
-
-
-#define TARGET_SWITCHES							\
-{ {"hardlit", 	            HARDLIT_BIT,				\
-     N_("Inline constants if it can be done in 2 insns or less") },	\
-  {"no-hardlit",          - HARDLIT_BIT,				\
-     N_("Inline constants if it only takes 1 instruction") },		\
-  {"4align",              - ALIGN8_BIT,					\
-     N_("Set maximum alignment to 4") },				\
-  {"8align",	            ALIGN8_BIT,					\
-     N_("Set maximum alignment to 8") },				\
-  {"div",                   DIV_BIT,					\
-     "" },								\
-  {"no-div",	          - DIV_BIT,					\
-     N_("Do not use the divide instruction") },				\
-  {"relax-immediates",      RELAX_IMM_BIT,				\
-     "" },								\
-  {"no-relax-immediates", - RELAX_IMM_BIT,				\
-     N_("Do not arbitrary sized immediates in bit operations") },	\
-  {"wide-bitfields",        W_FIELD_BIT,				\
-     N_("Always treat bit-field as int-sized") },			\
-  {"no-wide-bitfields",   - W_FIELD_BIT,				\
-     "" },								\
-  {"4byte-functions",       OVERALIGN_FUNC_BIT,				\
-     N_("Force functions to be aligned to a 4 byte boundary") },	\
-  {"no-4byte-functions",  - OVERALIGN_FUNC_BIT,				\
-     N_("Force functions to be aligned to a 2 byte boundary") },	\
-  {"callgraph-data",        CGDATA_BIT,					\
-     N_("Emit call graph information") },				\
-  {"no-callgraph-data",   - CGDATA_BIT,					\
-     "" },								\
-  {"slow-bytes",            SLOW_BYTES_BIT,				\
-     N_("Prefer word accesses over byte accesses") },			\
-  {"no-slow-bytes",       - SLOW_BYTES_BIT,				\
-     "" },								\
-  { "no-lsim",              0, "" },			 		\
-  {"little-endian",         LITTLE_END_BIT,				\
-     N_("Generate little endian code") },				\
-  {"big-endian",          - LITTLE_END_BIT,				\
-     "" },								\
-  {"210",                 - M340_BIT,					\
-     "" },								\
-  {"340",                   M340_BIT,					\
-     N_("Generate code for the M*Core M340") },				\
-  {"",   	            TARGET_DEFAULT,				\
-     "" }								\
-}
+#undef TARGET_8ALIGN
+#define TARGET_8ALIGN 1
 
 extern char * mcore_current_function_name;
  
-/* Target specific options (as opposed to the switches above).  */
-extern const char * mcore_stack_increment_string;
-
-#define	TARGET_OPTIONS							\
-{									\
-  {"stack-increment=", & mcore_stack_increment_string,			\
-     N_("Maximum amount for a single stack increment operation"), 0}	\
-}
-
 /* The MCore ABI says that bitfields are unsigned by default.  */
 #define CC1_SPEC "-funsigned-bitfields"
 
@@ -197,7 +110,7 @@ extern const char * mcore_stack_increment_string;
     }						\
   if (SIZE)					\
     {						\
-      target_flags &= ~ HARDLIT_BIT;		\
+      target_flags &= ~MASK_HARDLIT;		\
     }						\
 }
 
@@ -215,10 +128,6 @@ extern const char * mcore_stack_increment_string;
       (MODE) = SImode;				\
       (UNSIGNEDP) = 1;				\
     }
-
-#define PROMOTE_FUNCTION_ARGS
-
-#define PROMOTE_FUNCTION_RETURN
 
 /* Define this if most significant bit is lowest numbered
    in instructions that operate on numbered bit-fields.  */
@@ -434,9 +343,6 @@ extern int mcore_stack_increment;
    its replacement, at the start of a routine.  */
 #define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET) \
   OFFSET = mcore_initial_elimination_offset (FROM, TO)
-
-/* Place that structure value return address is placed.  */
-#define STRUCT_VALUE 0
 
 /* Define the classes of registers for register constraints in the
    machine description.  Also define ranges of constants.
@@ -661,19 +567,13 @@ extern const enum reg_class reg_class_from_letter[];
    we want to retain compatibility with older gcc versions.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
 
-/* How many registers to use for struct return.  */
-#define	RETURN_IN_MEMORY(TYPE) (int_size_in_bytes (TYPE) > 2 * UNITS_PER_WORD)
-
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, FIRST_RET_REG)
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, FIRST_RET_REG)
 
 /* 1 if N is a possible register number for a function value.
    On the MCore, only r4 can return results.  */
 #define FUNCTION_VALUE_REGNO_P(REGNO)  ((REGNO) == FIRST_RET_REG)
-
-#define	MUST_PASS_IN_STACK(MODE,TYPE)  \
-  mcore_must_pass_on_stack (MODE, TYPE)
 
 /* 1 if N is a possible register number for function argument passing.  */
 #define FUNCTION_ARG_REGNO_P(REGNO)  \
@@ -725,27 +625,6 @@ extern const enum reg_class reg_class_from_letter[];
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   mcore_function_arg (CUM, MODE, TYPE, NAMED)
 
-/* A C expression that indicates when an argument must be passed by
-   reference.  If nonzero for an argument, a copy of that argument is
-   made in memory and a pointer to the argument is passed instead of
-   the argument itself.  The pointer is passed in whatever way is
-   appropriate for passing a pointer to that type.  */
-#define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED) \
-  MUST_PASS_IN_STACK (MODE, TYPE)
-
-/* For an arg passed partly in registers and partly in memory,
-   this is the number of registers used.
-   For args passed entirely in registers or entirely in memory, zero.
-   Any arg that starts in the first NPARM_REGS regs but won't entirely
-   fit in them needs partial registers on the MCore.  */
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
-  mcore_function_arg_partial_nregs (CUM, MODE, TYPE, NAMED)
-
-/* Perform any needed actions needed for a function that is receiving a
-   variable number of arguments.  */
-#define SETUP_INCOMING_VARARGS(ASF, MODE, TYPE, PAS, ST) \
-  mcore_setup_incoming_varargs (ASF, MODE, TYPE, & PAS)
-
 /* Call the function profiler with a given profile label.  */
 #define FUNCTION_PROFILER(STREAM,LABELNO)		\
 {							\
@@ -790,9 +669,9 @@ extern const enum reg_class reg_class_from_letter[];
    CXT is an RTX for the static chain value for the function.  */
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)  \
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant ((TRAMP), 8)),	\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant ((TRAMP), 8)),	\
 		  (CXT));						\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant ((TRAMP), 12)),	\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant ((TRAMP), 12)),	\
 		  (FNADDR));						\
 }
 
@@ -821,7 +700,6 @@ extern const enum reg_class reg_class_from_letter[];
    On the MCore, allow anything but a double.  */
 #define LEGITIMATE_CONSTANT_P(X) (GET_CODE(X) != CONST_DOUBLE)
 
-#define LEGITIMIZE_ADDRESS(X, OLDX, MODE, WIN)
 /* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
    and check its validity for a certain class.
    We have two alternate definitions for each of them.
@@ -925,9 +803,6 @@ extern const enum reg_class reg_class_from_letter[];
 /* The type of size_t unsigned int.  */
 #define SIZE_TYPE "unsigned int"
 
-/* Don't cse the address of the function being compiled.  */
-#define NO_RECURSIVE_FUNCTION_CSE 1
-
 /* Max number of bytes we can move from memory to memory
    in one reasonably fast instruction.  */
 #define MOVE_MAX 4
@@ -939,18 +814,16 @@ extern const enum reg_class reg_class_from_letter[];
 /* Define if loading in MODE, an integral mode narrower than BITS_PER_WORD
    will either zero-extend or sign-extend.  The value of this macro should
    be the code that says which one of the two operations is implicitly
-   done, NIL if none.  */
+   done, UNKNOWN if none.  */
 #define LOAD_EXTEND_OP(MODE) ZERO_EXTEND
 
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 #define SLOW_BYTE_ACCESS TARGET_SLOW_BYTES
 
-/* Immediate shift counts are truncated by the output routines (or was it
-   the assembler?).  Shift counts in a register are truncated by ARM.  Note
-   that the native compiler puts too large (> 32) immediate shift counts
-   into a register and shifts by the register, letting the ARM decide what
-   to do instead of doing that itself.  */
-#define SHIFT_COUNT_TRUNCATED 1
+/* Shift counts are truncated to 6-bits (0 to 63) instead of the expected
+   5-bits, so we can not define SHIFT_COUNT_TRUNCATED to true for this
+   target.  */
+#define SHIFT_COUNT_TRUNCATED 0
 
 /* All integers have the same format so truncation is easy.  */
 #define TRULY_NOOP_TRUNCATION(OUTPREC,INPREC)  1
@@ -962,9 +835,6 @@ extern const enum reg_class reg_class_from_letter[];
 /* Why is this defined??? -- dac */
 #define NO_FUNCTION_CSE 1
 
-/* Chars and shorts should be passed as ints.  */
-#define PROMOTE_PROTOTYPES 1
-
 /* The machine modes of pointers and functions.  */
 #define Pmode          SImode
 #define FUNCTION_MODE  Pmode
@@ -974,9 +844,6 @@ extern const enum reg_class reg_class_from_letter[];
 #define REGISTER_MOVE_COST(MODE, SRCCLASS, DSTCLASS) 2
 
 #define WORD_REGISTER_OPERATIONS
-
-/* Implicit library calls should use memcpy, not bcopy, etc.  */
-#define TARGET_MEM_FUNCTIONS
 
 /* Assembler output control.  */
 #define ASM_COMMENT_START "\t//"
@@ -1012,10 +879,11 @@ switch_to_section (enum in_section section, tree decl)		\
   switch (section)						\
     {								\
       case in_text: text_section (); break;			\
+      case in_unlikely_executed_text: unlikely_text_section (); break;   \
       case in_data: data_section (); break;			\
       case in_named: named_section (decl, NULL, 0); break;	\
       SUBTARGET_SWITCH_SECTIONS      				\
-      default: abort (); break;					\
+      default: gcc_unreachable (); 				\
     }								\
 }
 
@@ -1146,37 +1014,6 @@ extern long mcore_current_compilation_timestamp;
   while (0)
 
 /* This says how to output an assembler line
-   to define an external symbol.  */
-#define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)   \
-  do						\
-    {						\
-      fputs ("\t.import\t", (FILE));		\
-      assemble_name ((FILE), (NAME));		\
-      fputs ("\n", (FILE));			\
-    }						\
-  while (0)
-     
-#undef	ASM_OUTPUT_EXTERNAL
-/* RBE: we undefined this and let gas do it's "undefined is imported"
-   games. This is because when we use this, we get a marked 
-   reference through the call to assemble_name and this forces C++
-   inlined member functions (or any inlined function) to be instantiated
-   regardless of whether any call sites remain.
-   This makes this aspect of the compiler non-ABI compliant.  */
-
-/* Similar, but for libcall. FUN is an rtx.  */
-#undef  ASM_OUTPUT_EXTERNAL_LIBCALL
-#define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, FUN)	\
-  do						\
-    {						\
-      fprintf (FILE, "\t.import\t");		\
-      assemble_name (FILE, XSTR (FUN, 0));	\
-      fprintf (FILE, "\n");			\
-    }						\
-  while (0)
-
-
-/* This says how to output an assembler line
    to define a local common symbol....  */
 #undef  ASM_OUTPUT_LOCAL
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)	\
@@ -1207,25 +1044,5 @@ extern long mcore_current_compilation_timestamp;
 
 #define PRINT_OPERAND_PUNCT_VALID_P(CHAR) \
   ((CHAR)=='.' || (CHAR) == '#' || (CHAR) == '*' || (CHAR) == '^' || (CHAR) == '!')
-
-#define PREDICATE_CODES							\
-  { "mcore_arith_reg_operand",		{ REG, SUBREG }},		\
-  { "mcore_general_movsrc_operand",	{ MEM, CONST_INT, REG, SUBREG }},\
-  { "mcore_general_movdst_operand",	{ MEM, CONST_INT, REG, SUBREG }},\
-  { "mcore_reload_operand",	        { MEM, REG, SUBREG }},		\
-  { "mcore_arith_J_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_K_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_K_operand_not_0",	{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_M_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_K_S_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_O_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_imm_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_arith_any_imm_operand",	{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_literal_K_operand",		{ CONST_INT }},			\
-  { "mcore_addsub_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_compare_operand",		{ CONST_INT, REG, SUBREG }},	\
-  { "mcore_load_multiple_operation",	{ PARALLEL }},			\
-  { "mcore_store_multiple_operation",	{ PARALLEL }},			\
-  { "mcore_call_address_operand",	{ REG, SUBREG, CONST_INT }},	\
 
 #endif /* ! GCC_MCORE_H */

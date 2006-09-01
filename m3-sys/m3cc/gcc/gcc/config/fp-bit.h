@@ -1,6 +1,5 @@
 /* Header file for fp-bit.c.  */
-/* Copyright (C) 2000, 2002, 2003
-   Free Software Foundation, Inc.
+/* Copyright (C) 2000, 2002, 2003 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -16,8 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* As a special exception, if you link this library with other files,
    some of which are compiled with GCC, to produce an executable,
@@ -88,7 +87,9 @@ Boston, MA 02111-1307, USA.  */
 #endif /* ! FINE_GRAINED_LIBRARIES */
 
 #if __LDBL_MANT_DIG__ == 113 || __LDBL_MANT_DIG__ == 106
-# define TMODES
+# if defined(TFLOAT) || defined(L_sf_to_tf) || defined(L_df_to_tf)
+#  define TMODES
+# endif
 #endif
 
 typedef float SFtype __attribute__ ((mode (SF)));

@@ -1,35 +1,66 @@
-2005-11-30  Release Manager
+2006-05-24  Release Manager
 
-	* GCC 3.4.5 released.
+	* GCC 4.1.1 released.
 
-2005-05-19  Release Manager
+2006-02-28  Release Manager
 
-	* GCC 3.4.4 released.
+	* GCC 4.1.0 released.
 
-2004-11-04  Release Manager
+2005-05-13  Nick Clifton  <nickc@redhat.com>
 
-	* GCC 3.4.3 released.
+	* Update the address and phone number of the FSF organization in
+	the GPL notices in the following files:
+	Makefile.in, bindtextdom.c, dcgettext.c, dcigettext.c,
+	dcngettext.c, dgettext.c, dngettext.c, eval-plural.h,
+	explodename.c, finddomain.c, gettext.c, gettextP.h, gmo.h,
+	hash-string.h, intl-compat.c, l10nflist.c, libgnuintl.h,
+	loadinfo.h, loadmsgcat.c, localcharset.c, localcharset.h,
+	locale.alias, localealias.c, localename.c, log.c, ngettext.c,
+	osdep.c, plural-exp.c, plural-exp.h, plural.c, plural.y,
+	relocatable.c, relocatable.h, textdomain.c
 
-2004-09-06  Release Manager
+2004-11-24  Kelley Cook  <kcook@gcc.gnu.org>
 
-	* GCC 3.4.2 released.
+	* aclocal.m4: Regenerate.
 
-2004-07-01  Release Manager
+2004-09-23  Kelley Cook  <kcook@gcc.gnu.org>
 
-	* GCC 3.4.1 released.
+	* Makefile.in (config.h.in): Correct dependencies.
+	(stamp-h1): Likewise.
+	(config.intl): Likewise.
 
-2004-04-18  Release Manager
+2004-09-22  Kelley Cook  <kcook@gcc.gnu.org>
 
-	* GCC 3.4.0 released.
+	* configure.ac (AC_CONFIG_MACRO_DIR): New.
+	(ACLOCAL, AUTOCONF, AUTOHEADER, MAINT): Substitute.
+	* Makefile.in: Update with maintainer mode rules.
+	* README: Update aclocal regeneration instructions.
+	* aclocal.m4, configure: Regenerate.
 
-2004-04-16  Mark Mitchell  <mark@codesourcery.com>
+2004-09-22  Kelley Cook  <kcook@gcc.gnu.org>
 
-	* plural.c: Regenerated.
+	* .cvsignore: Ignore autom4te.cache
 
-2004-04-07  Joe Buck <jbuck@welsh-buck.org>
+2004-04-25  Paolo Bonzini  <bonzini@gnu.org>
 
-	* plural.y: don't assume that the inline keyword can be used.
-	* gettextP.h: likewise.
+        * configure.ac: Point config.intl to the parent directory of
+        ${top_builddir}.
+	* configure: Regenerate.
+
+2004-03-10  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* configure.ac: Bump AC_PREREQ to 2.59.
+	* configure: Regenerate.
+	* config.h.in: Regenerate.
+
+2004-02-29  Nathanael Nerode  <neroden@gcc.gnu.org>
+
+	* configure.in: Convert to autoconf 2.57, gratuitous stylistic
+	cleanup, rename to configure.ac.
+	* configure.ac: Renamed from configure.in.
+	* config.h.in: Rebuilt with autoheader 2.57.
+	* configure: Rebuilt with autoconf 2.57
+	* README: Update to reflect rename of configure.in to configure.ac.
 
 2003-07-07  Zack Weinberg  <zack@codesourcery.com>
 
