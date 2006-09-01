@@ -128,57 +128,115 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "JV-SCAN 1"
-.TH JV-SCAN 1 "2006-05-24" "gcc-4.1.1" "GNU"
+.IX Title "GJNIH 1"
+.TH GJNIH 1 "2006-05-24" "gcc-4.1.1" "GNU"
 .SH "NAME"
-jv\-scan \- print information about Java source file
+gjnih \- generate JNI header files from Java class files
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-jv-scan [\fB\-\-no\-assert\fR] [\fB\-\-complexity\fR] 
-    [\fB\-\-encoding\fR=\fIname\fR] [\fB\-\-print\-main\fR] 
-    [\fB\-\-list\-class\fR] [\fB\-\-list\-filename\fR]
-    [\fB\-\-version\fR] [\fB\-\-help\fR]
-    [\fB\-o\fR \fIfile\fR] \fIinputfile\fR...
+gjnih [\fB\-stubs\fR] [\fB\-jni\fR]
+    [\fB\-force\fR] [\fB\-old\fR] [\fB\-trace\fR] [\fB\-J\fR \fIoption\fR]
+    [\fB\-add\fR \fItext\fR] [\fB\-append\fR \fItext\fR] [\fB\-friend\fR \fItext\fR]
+    [\fB\-preprend\fR \fItext\fR]
+    [\fB\-\-classpath\fR=\fIpath\fR] [\fB\-\-CLASSPATH\fR=\fIpath\fR]
+    [\fB\-\-bootclasspath\fR=\fIpath\fR]
+    [\fB\-I\fR\fIdir\fR...] [\fB\-d\fR \fIdir\fR...]
+    [\fB\-o\fR \fIfile\fR] [\fB\-td\fR \fIdir\fR]
+    [\fB\-M\fR] [\fB\-MM\fR] [\fB\-MD\fR] [\fB\-MMD\fR]
+    [\fB\-\-version\fR] [\fB\-\-help\fR] [\fB\-v\fR] [\fB\-\-verbose\fR]
+    \fIclassname\fR...
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-The \f(CW\*(C`jv\-scan\*(C'\fR program can be used to print information about a Java
-source file (\fI.java\fR file).
+The \f(CW\*(C`gjnih\*(C'\fR program is used to generate \s-1JNI\s0 header files from class
+files.  Running it is equivalent to running \f(CW\*(C`gcjh \-jni\*(C'\fR.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.IP "\fB\-\-no\-assert\fR" 4
-.IX Item "--no-assert"
-Don't recognize the \f(CW\*(C`assert\*(C'\fR keyword, for backwards compatibility
-with older versions of the language specification.
-.IP "\fB\-\-complexity\fR" 4
-.IX Item "--complexity"
-This prints a complexity measure, related to cyclomatic complexity, for
-each input file.
-.IP "\fB\-\-encoding=\fR\fIname\fR" 4
-.IX Item "--encoding=name"
-This works like the corresponding \fBgcj\fR option.
-.IP "\fB\-\-print\-main\fR" 4
-.IX Item "--print-main"
-This prints the name of the class in this file containing a \f(CW\*(C`main\*(C'\fR
-method.
-.IP "\fB\-\-list\-class\fR" 4
-.IX Item "--list-class"
-This lists the names of all classes defined in the input files.
-.IP "\fB\-\-list\-filename\fR" 4
-.IX Item "--list-filename"
-If \f(CW\*(C`\-\-list\-class\*(C'\fR is given, this option causes \f(CW\*(C`jv\-scan\*(C'\fR to
-also print the name of the file in which each class was found.
+.IP "\fB\-stubs\fR" 4
+.IX Item "-stubs"
+This causes \f(CW\*(C`gjnih\*(C'\fR to generate stub files instead of header files.
+By default the stub file will be named after the class, with a suffix of
+\&\fB.c\fR.
+.IP "\fB\-jni\fR" 4
+.IX Item "-jni"
+This option specifies the default behavior which is to generate a \s-1JNI\s0
+header or stub.
+.IP "\fB\-force\fR" 4
+.IX Item "-force"
+This option forces \f(CW\*(C`gjnih\*(C'\fR to write the output file.
+.IP "\fB\-old\fR" 4
+.IX Item "-old"
+This option is accepted but ignored for compatibility.
+.IP "\fB\-trace\fR" 4
+.IX Item "-trace"
+This option is accepted but ignored for compatibility.
+.IP "\fB\-J\fR \fIoption\fR" 4
+.IX Item "-J option"
+This option is accepted but ignored for compatibility.
+.IP "\fB\-add\fR \fItext\fR" 4
+.IX Item "-add text"
+Inserts \fItext\fR into the class body.  This is ignored in by
+\&\f(CW\*(C`gjnih\*(C'\fR.
+.IP "\fB\-append\fR \fItext\fR" 4
+.IX Item "-append text"
+Inserts \fItext\fR into the header file after the class declaration.
+This is ignored in by \f(CW\*(C`gjnih\*(C'\fR.
+.IP "\fB\-friend\fR \fItext\fR" 4
+.IX Item "-friend text"
+Inserts \fItext\fR into the class as a \f(CW\*(C`friend\*(C'\fR declaration.
+This is ignored by \f(CW\*(C`gjnih\*(C'\fR.
+.IP "\fB\-prepend\fR \fItext\fR" 4
+.IX Item "-prepend text"
+Inserts \fItext\fR into the header file before the class declaration.
+This is ignored in by \f(CW\*(C`gjnih\*(C'\fR.
+.IP "\fB\-\-classpath=\fR\fIpath\fR" 4
+.IX Item "--classpath=path"
+.PD 0
+.IP "\fB\-\-CLASSPATH=\fR\fIpath\fR" 4
+.IX Item "--CLASSPATH=path"
+.IP "\fB\-\-bootclasspath=\fR\fIpath\fR" 4
+.IX Item "--bootclasspath=path"
+.IP "\fB\-I\fR\fIdirectory\fR" 4
+.IX Item "-Idirectory"
+.IP "\fB\-d\fR \fIdirectory\fR" 4
+.IX Item "-d directory"
 .IP "\fB\-o\fR \fIfile\fR" 4
 .IX Item "-o file"
-Print output to the named file.
+.PD
+These options are all identical to the corresponding \fBgcj\fR options.
+.IP "\fB\-o\fR \fIfile\fR" 4
+.IX Item "-o file"
+Sets the output file name.  This cannot be used if there is more than
+one class on the command line.
+.IP "\fB\-td\fR \fIdirectory\fR" 4
+.IX Item "-td directory"
+Sets the name of the directory to use for temporary files.
+.IP "\fB\-M\fR" 4
+.IX Item "-M"
+Print all dependencies to stdout; suppress ordinary output.
+.IP "\fB\-MM\fR" 4
+.IX Item "-MM"
+Print non-system dependencies to stdout; suppress ordinary output.
+.IP "\fB\-MD\fR" 4
+.IX Item "-MD"
+Print all dependencies to stdout.
+.IP "\fB\-MMD\fR" 4
+.IX Item "-MMD"
+Print non-system dependencies to stdout.
 .IP "\fB\-\-help\fR" 4
 .IX Item "--help"
-Print help, then exit.
+Print help about \f(CW\*(C`gjnih\*(C'\fR and exit.  No further processing is done.
 .IP "\fB\-\-version\fR" 4
 .IX Item "--version"
-Print version number, then exit.
+Print version information for \f(CW\*(C`gjnih\*(C'\fR and exit.  No further
+processing is done.
+.IP "\fB\-v, \-\-verbose\fR" 4
+.IX Item "-v, --verbose"
+Print extra information while running.
+.PP
+All remaining options are considered to be names of classes.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
-\&\fIgcc\fR\|(1), \fIgcj\fR\|(1), \fIgcjh\fR\|(1), \fIgij\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
+\&\fIgcc\fR\|(1), \fIgcj\fR\|(1), \fIgcjh\fR\|(1), \fIgij\fR\|(1), \fIjv\-scan\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
 and the Info entries for \fIgcj\fR and \fIgcc\fR.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
