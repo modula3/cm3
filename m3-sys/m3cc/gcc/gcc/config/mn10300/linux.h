@@ -1,6 +1,6 @@
 /* Definitions of taret machine for GNU compiler.
    Matsushita AM33/2.0
-   Copyright 2001, 2002 Free Software Foundation, Inc.
+   Copyright 2001, 2002, 2005 Free Software Foundation, Inc.
    Contributed by Alexandre Oliva <aoliva@redhat.com>
 
    This file is part of GCC.
@@ -17,8 +17,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
    
 #undef  PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
@@ -40,30 +40,8 @@
      %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}} \
    %{static:-static}"
 
-#undef  LIB_SPEC
-#define LIB_SPEC \
-  "%{shared: -lc} \
-   %{!static:-rpath-link %R/lib:%R/usr/lib} \
-   %{!shared: %{pthread:-lpthread} \
-     %{profile:-lc_p} %{!profile: -lc}}"
-
-#undef  STARTFILE_SPEC
-#define STARTFILE_SPEC \
-  "%{!shared: \
-     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} \
-		       %{!p:%{profile:gcrt1.o%s} \
-			 %{!profile:crt1.o%s}}}} \
-   crti.o%s %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
-
-#undef  TARGET_SWITCHES
-#define TARGET_SWITCHES	\
-  {{ "am33",		-0x4,	N_("Target the AM33 processor") }, \
-   { "am33-2",		6,	N_("Target the AM33/2.0 processor") }, \
-   { "relax",		0,	N_("Enable linker relaxations") }, \
-   { "", TARGET_DEFAULT, NULL }}
-
-#undef  TARGET_DEFAULT
-#define TARGET_DEFAULT 6
+#undef  PROCESSOR_DEFAULT
+#define PROCESSOR_DEFAULT PROCESSOR_AM33_2
 
 #undef  TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (AM33/2.0 GNU/Linux)");

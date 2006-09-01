@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, Renesas M32R cpu.
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
-   Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+   2005 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
@@ -16,8 +16,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
 /* Things to do:
 - longlong.h?
@@ -30,14 +30,12 @@
 #undef PTRDIFF_TYPE
 #undef WCHAR_TYPE
 #undef WCHAR_TYPE_SIZE
-#undef ASM_OUTPUT_EXTERNAL_LIBCALL
 #undef TARGET_VERSION
 #undef CPP_SPEC
 #undef ASM_SPEC
 #undef LINK_SPEC
 #undef STARTFILE_SPEC
 #undef ENDFILE_SPEC
-#undef SUBTARGET_SWITCHES
 
 #undef ASM_APP_ON
 #undef ASM_APP_OFF
@@ -60,12 +58,6 @@
 /* Use m32rx specific crt0/crtinit/crtfini files.  */
 #define STARTFILE_CPU_SPEC "%{!shared:crt0.o%s} %{m32rx:m32rx/crtinit.o%s} %{!m32rx:crtinit.o%s}"
 #define ENDFILE_CPU_SPEC "-lgloss %{m32rx:m32rx/crtfini.o%s} %{!m32rx:crtfini.o%s}"
-
-/* Extra machine dependent switches.  */
-#define SUBTARGET_SWITCHES							\
-    { "32rx",			TARGET_M32RX_MASK, "Compile for the m32rx" },	\
-    { "32r2",			TARGET_M32R2_MASK, "Compile for the m32r2" },	\
-    { "32r",			-(TARGET_M32RX_MASK+TARGET_M32R2_MASK), "" },
 
 /* Define this macro as a C expression for the initializer of an array of
    strings to tell the driver program which options are defaults for this
@@ -191,7 +183,7 @@
 
 /* Options to pass on to the assembler.  */
 #undef  ASM_SPEC
-#define ASM_SPEC "%{v} %(asm_cpu) %(relax) %{fpic:-K PIC} %{fPIC:-K PIC}"
+#define ASM_SPEC "%{v} %(asm_cpu) %(relax) %{fpic|fpie:-K PIC} %{fPIC|fPIE:-K PIC}"
 
 #define LINK_SPEC "%{v} %(link_cpu) %(relax)"
 
@@ -205,124 +197,17 @@
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
-extern int target_flags;
-
-/* If nonzero, tell the linker to do relaxing.
-   We don't do anything with the option, other than recognize it.
-   LINK_SPEC handles passing -relax to the linker.
-   This can cause incorrect debugging information as line numbers may
-   turn out wrong.  This shouldn't be specified unless accompanied with -O2
-   [where the user expects debugging information to be less accurate].  */
-#define TARGET_RELAX_MASK 	(1 << 0)
-
-/* For miscellaneous debugging purposes.  */
-#define TARGET_DEBUG_MASK 	(1 << 1)
-#define TARGET_DEBUG 		(target_flags & TARGET_DEBUG_MASK)
-
-/* Align loops to 32 byte boundaries (cache line size).  */
-/* ??? This option is experimental and is not documented.  */
-#define TARGET_ALIGN_LOOPS_MASK (1 << 2)
-#define TARGET_ALIGN_LOOPS 	(target_flags & TARGET_ALIGN_LOOPS_MASK)
-
-/* Change issue rate.  */
-#define TARGET_LOW_ISSUE_RATE_MASK	(1 << 3)
-#define TARGET_LOW_ISSUE_RATE	(target_flags & TARGET_LOW_ISSUE_RATE_MASK)
-
-/* Change branch cost */
-#define TARGET_BRANCH_COST_MASK	(1 << 4)
-#define TARGET_BRANCH_COST	(target_flags & TARGET_BRANCH_COST_MASK)
-
-/* Target machine to compile for.  */
-#define TARGET_M32R 		1
-
-/* Support extended instruction set.  */
-#define TARGET_M32RX_MASK       (1 << 5)
-#define TARGET_M32RX            (target_flags & TARGET_M32RX_MASK)
-#undef  TARGET_M32R
-#define TARGET_M32R             (! TARGET_M32RX)
-
-/* Support extended instruction set of m32r2.  */
-#define TARGET_M32R2_MASK       (1 << 6)
-#define TARGET_M32R2            (target_flags & TARGET_M32R2_MASK)
-#undef  TARGET_M32R
 #define TARGET_M32R             (! TARGET_M32RX && ! TARGET_M32R2)
 
-/* Little Endian Flag.  */
-#define LITTLE_ENDIAN_BIT 	(1 << 7)
-#define TARGET_LITTLE_ENDIAN	(target_flags & LITTLE_ENDIAN_BIT)
-#define TARGET_BIG_ENDIAN       (! TARGET_LITTLE_ENDIAN)
-
-/* This defaults us to big-endian.  */
-#ifndef TARGET_ENDIAN_DEFAULT
-#define TARGET_ENDIAN_DEFAULT 0
+#ifndef TARGET_LITTLE_ENDIAN
+#define TARGET_LITTLE_ENDIAN	0
 #endif
+#define TARGET_BIG_ENDIAN       (! TARGET_LITTLE_ENDIAN)
 
 /* This defaults us to m32r.  */
 #ifndef TARGET_CPU_DEFAULT
 #define TARGET_CPU_DEFAULT 0
 #endif
-
-/* Macro to define tables used to set the flags.
-   This is a list in braces of pairs in braces,
-   each pair being { "NAME", VALUE }
-   where VALUE is the bits to set or minus the bits to clear.
-   An empty string NAME is used to identify the default VALUE.  */
-
-#ifndef SUBTARGET_SWITCHES
-#define SUBTARGET_SWITCHES
-#endif
-
-#ifndef TARGET_DEFAULT
-#define TARGET_DEFAULT (TARGET_CPU_DEFAULT | TARGET_ENDIAN_DEFAULT)
-#endif
-
-#define TARGET_SWITCHES							\
-{									\
-/*  { "relax",			TARGET_RELAX_MASK, "" },		\
-    { "no-relax",		-TARGET_RELAX_MASK, "" },*/		\
-    { "debug",			TARGET_DEBUG_MASK, 			\
-	N_("Display compile time statistics") },			\
-    { "align-loops",		TARGET_ALIGN_LOOPS_MASK, 		\
-	N_("Align all loops to 32 byte boundary") },			\
-    { "no-align-loops",		-TARGET_ALIGN_LOOPS_MASK, "" },		\
-    { "issue-rate=1",		TARGET_LOW_ISSUE_RATE_MASK, 		\
-	N_("Only issue one instruction per cycle") },			\
-    { "issue-rate=2",		-TARGET_LOW_ISSUE_RATE_MASK, "" },	\
-    { "branch-cost=1",		TARGET_BRANCH_COST_MASK, 		\
-	N_("Prefer branches over conditional execution") },		\
-    { "branch-cost=2",		-TARGET_BRANCH_COST_MASK, "" },		\
-    SUBTARGET_SWITCHES							\
-    { "", TARGET_DEFAULT, "" }						\
-}
-
-extern const char * m32r_model_string;
-extern const char * m32r_sdata_string;
-
-/* Cache-flush support.  */
-extern const char * m32r_cache_flush_func;
-extern const char * m32r_cache_flush_trap_string;
-extern int m32r_cache_flush_trap;
-
-#ifndef SUBTARGET_OPTIONS
-#define SUBTARGET_OPTIONS
-#endif
-
-#define TARGET_OPTIONS							\
-{									\
-  { "model=", & m32r_model_string,					\
-    N_("Code size: small, medium or large"), 0},			\
-  { "sdata=", & m32r_sdata_string,					\
-    N_("Small data area: none, sdata, use"), 0},			\
-  { "no-flush-func", & m32r_cache_flush_func,				\
-    N_("Don't call any cache flush functions") },			\
-  { "flush-func=", & m32r_cache_flush_func,				\
-    N_("Specify cache flush function") },				\
-  { "no-flush-trap", & m32r_cache_flush_trap_string,			\
-    N_("Don't call any cache flush trap") },				\
-  { "flush-trap=", & m32r_cache_flush_trap_string,			\
-    N_("Specify cache flush trap number") }				\
-  SUBTARGET_OPTIONS							\
-}
 
 /* Code Models
 
@@ -358,7 +243,7 @@ extern enum m32r_model m32r_model;
 
 /* The default is the small model.  */
 #ifndef M32R_MODEL_DEFAULT
-#define M32R_MODEL_DEFAULT "small"
+#define M32R_MODEL_DEFAULT M32R_MODEL_SMALL
 #endif
 
 /* Small Data Area
@@ -408,7 +293,7 @@ extern enum m32r_sdata m32r_sdata;
 /* Default is to disable the SDA
    [for upward compatibility with previous toolchains].  */
 #ifndef M32R_SDATA_DEFAULT
-#define M32R_SDATA_DEFAULT "none"
+#define M32R_SDATA_DEFAULT M32R_SDATA_NONE
 #endif
 
 /* Define this macro as a C expression for the initializer of an array of
@@ -634,6 +519,8 @@ extern enum m32r_sdata m32r_sdata;
   SUBTARGET_CALL_USED_REGISTERS	\
 }
 
+#define CALL_REALLY_USED_REGISTERS CALL_USED_REGISTERS
+
 /* Zero or more C statements that may conditionally modify two variables
    `fixed_regs' and `call_used_regs' (both of type `char []') after they
    have been initialized from the two preceding macros.
@@ -650,7 +537,10 @@ extern enum m32r_sdata m32r_sdata;
   do							 \
     {							 \
       if (flag_pic)					 \
-          fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;	 \
+       {						 \
+         fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;	 \
+         call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;	 \
+       }						 \
     }							 \
   while (0)
 #endif
@@ -1013,14 +903,11 @@ extern enum reg_class m32r_regno_reg_class[FIRST_PSEUDO_REGISTER];
       else if ((FROM) == ARG_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM)	\
 	(OFFSET) = size - current_function_pretend_args_size;			\
       else									\
-	abort ();								\
+	gcc_unreachable ();								\
     }										\
   while (0)
 
 /* Function argument passing.  */
-
-/* When a prototype says `char' or `short', really pass an `int'.  */
-#define PROMOTE_PROTOTYPES 1
 
 /* If defined, the maximum amount of space required for outgoing
    arguments will be computed and placed into the variable
@@ -1036,12 +923,6 @@ extern enum reg_class m32r_regno_reg_class[FIRST_PSEUDO_REGISTER];
    or for a library call it is an identifier node for the subroutine name.
    SIZE is the number of bytes of arguments passed on the stack.  */
 #define RETURN_POPS_ARGS(DECL, FUNTYPE, SIZE) 0
-
-/* Nonzero if we do not know how to pass TYPE solely in registers.  */
-#define MUST_PASS_IN_STACK(MODE, TYPE)			\
-  ((TYPE) != 0						\
-   && (TREE_CODE (TYPE_SIZE (TYPE)) != INTEGER_CST	\
-       || TREE_ADDRESSABLE (TYPE)))
 
 /* Define a data type for recording info about an argument list
    during the scan of that argument list.  This data type should
@@ -1104,31 +985,6 @@ extern enum reg_class m32r_regno_reg_class[FIRST_PSEUDO_REGISTER];
    ? gen_rtx_REG ((MODE), ROUND_ADVANCE_CUM ((CUM), (MODE), (TYPE)))	\
    : 0)
 
-/* A C expression for the number of words, at the beginning of an
-   argument, must be put in registers.  The value must be zero for
-   arguments that are passed entirely in registers or that are entirely
-   pushed on the stack.
-
-   On some machines, certain arguments must be passed partially in
-   registers and partially in memory.  On these machines, typically the
-   first @var{n} words of arguments are passed in registers, and the rest
-   on the stack.  If a multi-word argument (a @code{double} or a
-   structure) crosses that boundary, its first few words must be passed
-   in registers and the rest must be pushed.  This macro tells the
-   compiler when this occurs, and how many of the words should go in
-   registers.  */
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
-  function_arg_partial_nregs (&CUM, (int)MODE, TYPE, NAMED)
-
-/* A C expression that indicates when an argument must be passed by
-   reference.  If nonzero for an argument, a copy of that argument is
-   made in memory and a pointer to the argument is passed instead of
-   the argument itself.  The pointer is passed in whatever way is
-   appropriate for passing a pointer to that type.  */
-/* All arguments greater than 8 bytes are passed this way.  */
-#define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED) \
-  ((TYPE) && m32r_pass_by_reference (TYPE))
-
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
    (TYPE is null for libcalls where that information may not be available.)  */
@@ -1145,40 +1001,6 @@ extern enum reg_class m32r_regno_reg_class[FIRST_PSEUDO_REGISTER];
   (((TYPE) ? TYPE_ALIGN (TYPE) : GET_MODE_BITSIZE (MODE)) <= PARM_BOUNDARY \
    ? PARM_BOUNDARY : 2 * PARM_BOUNDARY)
 #endif
-
-/* This macro offers an alternative
-   to using `__builtin_saveregs' and defining the macro
-   `EXPAND_BUILTIN_SAVEREGS'.  Use it to store the anonymous register
-   arguments into the stack so that all the arguments appear to have
-   been passed consecutively on the stack.  Once this is done, you
-   can use the standard implementation of varargs that works for
-   machines that pass all their arguments on the stack.
-
-   The argument ARGS_SO_FAR is the `CUMULATIVE_ARGS' data structure,
-   containing the values that obtain after processing of the named
-   arguments.  The arguments MODE and TYPE describe the last named
-   argument--its machine mode and its data type as a tree node.
-
-   The macro implementation should do two things: first, push onto the
-   stack all the argument registers *not* used for the named
-   arguments, and second, store the size of the data thus pushed into
-   the `int'-valued variable whose name is supplied as the argument
-   PRETEND_SIZE.  The value that you store here will serve as
-   additional offset for setting up the stack frame.
-
-   If the argument NO_RTL is nonzero, it means that the
-   arguments of the function are being analyzed for the second time.
-   This happens for an inline function, which is not actually
-   compiled until the end of the source file.  The macro
-   `SETUP_INCOMING_VARARGS' should not generate any instructions in
-   this case.  */
-
-#define SETUP_INCOMING_VARARGS(ARGS_SO_FAR, MODE, TYPE, PRETEND_SIZE, NO_RTL) \
-  m32r_setup_incoming_varargs (& ARGS_SO_FAR, MODE, TYPE, & PRETEND_SIZE, NO_RTL)
-
-/* Implement `va_arg'.  */
-#define EXPAND_BUILTIN_VA_ARG(valist, type) \
-  m32r_va_arg (valist, type)
 
 /* Function results.  */
 
@@ -1197,19 +1019,8 @@ extern enum reg_class m32r_regno_reg_class[FIRST_PSEUDO_REGISTER];
 /* ??? What about r1 in DI/DF values.  */
 #define FUNCTION_VALUE_REGNO_P(N) ((N) == 0)
 
-/* A C expression which can inhibit the returning of certain function
-   values in registers, based on the type of value.  A nonzero value says
-   to return the function value in memory, just as large structures are
-   always returned.  Here TYPE will be a C expression of type `tree',
-   representing the data type of the value.  */
-#define RETURN_IN_MEMORY(TYPE) m32r_pass_by_reference (TYPE)
-
-/* Tell GCC to use RETURN_IN_MEMORY.  */
+/* Tell GCC to use TARGET_RETURN_IN_MEMORY.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
-
-/* Register in which address to store a structure value
-   is passed to a function, or 0 to use `invisible' first argument.  */
-#define STRUCT_VALUE 0
 
 /* Function entry and exit.  */
 
@@ -1266,7 +1077,7 @@ L2:     .word STATIC
 #define CACHE_FLUSH_FUNC "_flush_cache"
 #endif
 #ifndef CACHE_FLUSH_TRAP
-#define CACHE_FLUSH_TRAP "12"
+#define CACHE_FLUSH_TRAP 12
 #endif
 
 /* Length in bytes of the trampoline for entering a nested function.  */
@@ -1294,7 +1105,7 @@ L2:     .word STATIC
 		      (CXT));							\
       emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 20)),		\
 		      (FNADDR));						\
-      if (m32r_cache_flush_trap_string && m32r_cache_flush_trap_string[0])	\
+      if (m32r_cache_flush_trap >= 0)						\
 	emit_insn (gen_flush_icache (validize_mem (gen_rtx_MEM (SImode, TRAMP)),\
 				     GEN_INT (m32r_cache_flush_trap) ));	\
       else if (m32r_cache_flush_func && m32r_cache_flush_func[0])		\
@@ -1304,11 +1115,6 @@ L2:     .word STATIC
 			   GEN_INT (3), SImode);				\
     }										\
   while (0)
-
-/* Library calls.  */
-
-/* Generate calls to memcpy, memcmp and memset.  */
-#define TARGET_MEM_FUNCTIONS
 
 #define RETURN_ADDR_RTX(COUNT, FRAME) m32r_return_addr (COUNT)
 
@@ -1508,11 +1314,6 @@ L2:     .word STATIC
 /* Define this macro if it is as good or better to call a constant
    function address than to call an address kept in a register.  */
 #define NO_FUNCTION_CSE
-
-/* Define this macro if it is as good or better for a function to call
-   itself with an explicit address than to call an address kept in a
-   register.  */
-#define NO_RECURSIVE_FUNCTION_CSE
 
 /* Section selection.  */
 
@@ -1543,22 +1344,6 @@ L2:     .word STATIC
 /* This register is call-saved on the M32R.  */
 /*#define PIC_OFFSET_TABLE_REG_CALL_CLOBBERED*/
 
-/* By generating position-independent code, when two different programs (A
-   and B) share a common library (libC.a), the text of the library can be
-   shared whether or not the library is linked at the same address for both
-   programs.  In some of these environments, position-independent code
-   requires not only the use of different addressing modes, but also
-   special code to enable the use of these addressing modes.
-
-   The FINALIZE_PIC macro serves as a hook to emit these special
-   codes once the function is being compiled into assembly code, but not
-   before.  (It is not done before, because in the case of compiling an
-   inline function, it would lead to multiple PIC prologues being
-   included in functions which used inline functions and were compiled to
-   assembly language.)  */
-
-#define FINALIZE_PIC m32r_finalize_pic ()
-
 /* A C expression that is nonzero if X is a legitimate immediate
    operand on the target machine when generating position independent code.
    You can assume that X satisfies CONSTANT_P, so you need not
@@ -1586,27 +1371,26 @@ L2:     .word STATIC
 /* Globalizing directive for a label.  */
 #define GLOBAL_ASM_OP "\t.global\t"
 
-/* If -Os, don't force line number labels to begin at the beginning of
-   the word; we still want the assembler to try to put things in parallel,
-   should that be possible.
-   For m32r/d, instructions are never in parallel (other than with a nop)
-   and the simulator and stub both handle a breakpoint in the middle of
-   a word so don't ever force line number labels to begin at the beginning
-   of a word.  */
+/* We do not use DBX_LINES_FUNCTION_RELATIVE or
+   dbxout_stab_value_internal_label_diff here because
+   we need to use .debugsym for the line label.  */
 
-#undef	ASM_OUTPUT_SOURCE_LINE
-#define ASM_OUTPUT_SOURCE_LINE(file, line, counter)			\
+#define DBX_OUTPUT_SOURCE_LINE(file, line, counter)			\
   do									\
     {									\
-      fprintf (file, ".stabn 68,0,%d,.LM%d-",				\
-	       line, counter);						\
-      assemble_name							\
-	(file, XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0));	\
-      fprintf (file, (optimize_size || TARGET_M32R)			\
-	       ? "\n\t.debugsym .LM%d\n"				\
-	       : "\n.LM%d:\n",						\
-	       counter);						\
-    }									\
+      rtx begin_label = XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0);\
+      char label[64];							\
+      ASM_GENERATE_INTERNAL_LABEL (label, "LM", counter);		\
+									\
+      dbxout_begin_stabn_sline (line);					\
+      assemble_name (file, label);					\
+      putc ('-', file);							\
+      assemble_name (file, begin_label);				\
+      fputs ("\n\t.debugsym ", file);					\
+      assemble_name (file, label);					\
+      putc ('\n', file);						\
+      counter += 1;							\
+     }									\
   while (0)
 
 /* How to refer to registers in assembler output.
@@ -1766,9 +1550,9 @@ extern char m32r_punct_chars[256];
 #define DBX_DEBUGGING_INFO    1
 #define DWARF2_DEBUGGING_INFO 1
 
-/* Prefer STABS (for now).  */
+/* Use DWARF2 debugging info by default.  */
 #undef  PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
+#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
 /* Turn off splitting of long stabs.  */
 #define DBX_CONTIN_LENGTH 0
@@ -1786,7 +1570,7 @@ extern char m32r_punct_chars[256];
 /* Define if loading in MODE, an integral mode narrower than BITS_PER_WORD
    will either zero-extend or sign-extend.  The value of this macro should
    be the code that says which one of the two operations is implicitly
-   done, NIL if none.  */
+   done, UNKNOWN if none.  */
 #define LOAD_EXTEND_OP(MODE) ZERO_EXTEND
 
 /* Max number of bytes we can move from memory
@@ -1805,7 +1589,7 @@ extern char m32r_punct_chars[256];
    After generation of rtl, the compiler makes no further distinction
    between pointers and any other objects of this machine mode.  */
 /* ??? The M32R doesn't have full 32 bit pointers, but making this PSImode has
-   it's own problems (you have to add extendpsisi2 and truncsipsi2).
+   its own problems (you have to add extendpsisi2 and truncsipsi2).
    Try to avoid it.  */
 #define Pmode SImode
 
@@ -1826,39 +1610,9 @@ enum m32r_function_type
 
 #define M32R_INTERRUPT_P(TYPE) ((TYPE) == M32R_FUNCTION_INTERRUPT)
 
-/* Define this if you have defined special-purpose predicates in the
-   file `MACHINE.c'.  This macro is called within an initializer of an
-   array of structures.  The first field in the structure is the name
-   of a predicate and the second field is an array of rtl codes.  For
-   each predicate, list all rtl codes that can be in expressions
-   matched by the predicate.  The list should have a trailing comma.  */
-
-#define PREDICATE_CODES							\
-{ "reg_or_zero_operand",        { REG, SUBREG, CONST_INT }},            \
-{ "conditional_move_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "carry_compare_operand",	{ EQ, NE }},				\
-{ "eqne_comparison_operator",	{ EQ, NE }},				\
-{ "signed_comparison_operator", { EQ, NE, LT, LE, GT, GE }},		\
-{ "move_dest_operand",		{ REG, SUBREG, MEM }},			\
-{ "move_src_operand",		{ REG, SUBREG, MEM, CONST_INT,		\
-				  CONST_DOUBLE, LABEL_REF, CONST,	\
-				  SYMBOL_REF }},			\
-{ "move_double_src_operand",	{ REG, SUBREG, MEM, CONST_INT,		\
-				  CONST_DOUBLE }},			\
-{ "two_insn_const_operand",	{ CONST_INT }},				\
-{ "symbolic_operand",		{ SYMBOL_REF, LABEL_REF, CONST }},	\
-{ "seth_add3_operand",		{ SYMBOL_REF, LABEL_REF, CONST }},	\
-{ "int8_operand",		{ CONST_INT }},				\
-{ "uint16_operand",		{ CONST_INT }},				\
-{ "reg_or_int16_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "reg_or_uint16_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "reg_or_cmp_int16_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "reg_or_eq_int16_operand",	{ REG, SUBREG, CONST_INT }},		\
-{ "cmp_int16_operand",		{ CONST_INT }},				\
-{ "call_address_operand",	{ SYMBOL_REF, LABEL_REF, CONST }},	\
-{ "extend_operand",		{ REG, SUBREG, MEM }},			\
-{ "small_insn_p",		{ INSN, CALL_INSN, JUMP_INSN }},	\
-{ "m32r_block_immediate_operand",{ CONST_INT }},			\
-{ "large_insn_p",		{ INSN, CALL_INSN, JUMP_INSN }},	\
-{ "seth_add3_operand",		{ SYMBOL_REF, LABEL_REF, CONST }},
-
+/* The maximum number of bytes to copy using pairs of load/store instructions.
+   If a block is larger than this then a loop will be generated to copy
+   MAX_MOVE_BYTES chunks at a time.  The value of 32 is a semi-arbitrary choice.
+   A customer uses Dhrystome as their benchmark, and Dhrystone has a 31 byte
+   string copy in it.  */
+#define MAX_MOVE_BYTES 32

@@ -1,5 +1,5 @@
 ;; GCC machine description for Tensilica's Xtensa architecture.
-;; Copyright (C) 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 ;; Contributed by Bob Wilson (bwilson@tensilica.com) at Tensilica.
 
 ;; This file is part of GCC.
@@ -16,8 +16,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GCC; see the file COPYING.  If not, write to the Free
-;; Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-;; 02111-1307, USA.
+;; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+;; 02110-1301, USA.
 
 
 (define_constants [
@@ -52,19 +52,45 @@
   [(set_attr "type" "multi")])
 
 
-;; Functional units.
+;; Pipeline model.
 
-(define_function_unit "memory" 1 0 (eq_attr "type" "load,fload") 2 0)
+;; The Xtensa basically has simple 5-stage RISC pipeline.
+;; Most instructions complete in 1 cycle, and it is OK to assume that
+;; everything is fully pipelined.  The exceptions have special insn
+;; reservations in the pipeline description below.  The Xtensa can
+;; issue one instruction per cycle, so defining CPU units is unnecessary.
 
-(define_function_unit "sreg" 1 1 (eq_attr "type" "rsr") 2 0)
+(define_insn_reservation "xtensa_any_insn" 1
+			 (eq_attr "type" "!load,fload,rsr,mul16,mul32,fmadd,fconv")
+			 "nothing")
 
-(define_function_unit "mul16" 1 0 (eq_attr "type" "mul16") 2 0)
+(define_insn_reservation "xtensa_memory" 2
+			 (eq_attr "type" "load,fload")
+			 "nothing")
 
-(define_function_unit "mul32" 1 0 (eq_attr "type" "mul32") 2 0)
+(define_insn_reservation "xtensa_sreg" 2
+			 (eq_attr "type" "rsr")
+			 "nothing")
 
-(define_function_unit "fpmadd" 1 0 (eq_attr "type" "fmadd") 4 0)
+(define_insn_reservation "xtensa_mul16" 2
+			 (eq_attr "type" "mul16")
+			 "nothing")
 
-(define_function_unit "fpconv" 1 0 (eq_attr "type" "fconv") 2 0)
+(define_insn_reservation "xtensa_mul32" 2
+			 (eq_attr "type" "mul32")
+			 "nothing")
+
+(define_insn_reservation "xtensa_fmadd" 4
+			 (eq_attr "type" "fmadd")
+			 "nothing")
+
+(define_insn_reservation "xtensa_fconv" 2
+			 (eq_attr "type" "fconv")
+			 "nothing")
+
+;; Include predicate definitions
+
+(include "predicates.md")
 
 
 ;; Addition.
@@ -345,7 +371,7 @@
 	(plus:SF (mult:SF (match_operand:SF 1 "register_operand" "%f")
 			  (match_operand:SF 2 "register_operand" "f"))
 		 (match_operand:SF 3 "register_operand" "0")))]
-  "TARGET_HARD_FLOAT && !TARGET_NO_FUSED_MADD"
+  "TARGET_HARD_FLOAT && TARGET_FUSED_MADD"
   "madd.s\t%0, %1, %2"
   [(set_attr "type"	"fmadd")
    (set_attr "mode"	"SF")
@@ -356,7 +382,7 @@
 	(minus:SF (match_operand:SF 1 "register_operand" "0")
 		  (mult:SF (match_operand:SF 2 "register_operand" "%f")
 			   (match_operand:SF 3 "register_operand" "f"))))]
-  "TARGET_HARD_FLOAT && !TARGET_NO_FUSED_MADD"
+  "TARGET_HARD_FLOAT && TARGET_FUSED_MADD"
   "msub.s\t%0, %2, %3"
   [(set_attr "type"	"fmadd")
    (set_attr "mode"	"SF")
@@ -858,8 +884,8 @@
    %v1l32r\t%0, %1
    %v1l32i\t%0, %1
    %v0s32i\t%1, %0
-   rsr\t%0, 16 # ACCLO
-   wsr\t%1, 16 # ACCLO"
+   rsr\t%0, ACCLO
+   wsr\t%1, ACCLO"
   [(set_attr "type" "move,move,move,load,store,store,move,move,move,move,load,load,store,rsr,wsr")
    (set_attr "mode"	"SI")
    (set_attr "length"	"2,2,2,2,2,2,3,3,3,6,3,3,3,3,3")])
@@ -886,8 +912,8 @@
    movi\t%0, %x1
    %v1l16ui\t%0, %1
    %v0s16i\t%1, %0
-   rsr\t%0, 16 # ACCLO
-   wsr\t%1, 16 # ACCLO"
+   rsr\t%0, ACCLO
+   wsr\t%1, ACCLO"
   [(set_attr "type"	"move,move,move,move,load,store,rsr,wsr")
    (set_attr "mode"	"HI")
    (set_attr "length"	"2,2,3,3,3,3,3,3")])
@@ -914,8 +940,8 @@
    movi\t%0, %x1
    %v1l8ui\t%0, %1
    %v0s8i\t%1, %0
-   rsr\t%0, 16 # ACCLO
-   wsr\t%1, 16 # ACCLO"
+   rsr\t%0, ACCLO
+   wsr\t%1, ACCLO"
   [(set_attr "type"	"move,move,move,move,load,store,rsr,wsr")
    (set_attr "mode"	"QI")
    (set_attr "length"	"2,2,3,3,3,3,3,3")])
@@ -1036,7 +1062,7 @@
 
 ;; Block moves
 
-(define_expand "movstrsi"
+(define_expand "movmemsi"
   [(parallel [(set (match_operand:BLK 0 "" "")
 		   (match_operand:BLK 1 "" ""))
 	      (use (match_operand:SI 2 "arith_operand" ""))
@@ -1047,25 +1073,6 @@
     FAIL;
   DONE;
 })
-
-(define_insn "movstrsi_internal"
-  [(set (match_operand:BLK 0 "memory_operand" "=U")
-	(match_operand:BLK 1 "memory_operand" "U"))
-   (use (match_operand:SI 2 "arith_operand" ""))
-   (use (match_operand:SI 3 "const_int_operand" ""))
-   (clobber (match_scratch:SI 4 "=&r"))
-   (clobber (match_scratch:SI 5 "=&r"))]
-  ""
-{
-  rtx tmpregs[2];
-  tmpregs[0] = operands[4];
-  tmpregs[1] = operands[5];
-  xtensa_emit_block_move (operands, tmpregs, 1);
-  return "";
-}
-  [(set_attr "type"	"multi")
-   (set_attr "mode"	"none")
-   (set_attr "length"	"300")])
 
 
 ;; Shift instructions.
@@ -1319,7 +1326,7 @@
 	case NE:	return "bne\t%0, %1, %2";
 	case LT:	return "blt\t%0, %1, %2";
 	case GE:	return "bge\t%0, %1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else if (INTVAL (operands[1]) == 0)
@@ -1334,7 +1341,7 @@
 				: "bnez\t%0, %2");
 	case LT:	return "bltz\t%0, %2";
 	case GE:	return "bgez\t%0, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1345,11 +1352,10 @@
 	case NE:	return "bnei\t%0, %d1, %2";
 	case LT:	return "blti\t%0, %d1, %2";
 	case GE:	return "bgei\t%0, %d1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1372,7 +1378,7 @@
 	case NE:	return "beq\t%0, %1, %2";
 	case LT:	return "bge\t%0, %1, %2";
 	case GE:	return "blt\t%0, %1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else if (INTVAL (operands[1]) == 0)
@@ -1387,7 +1393,7 @@
 				: "beqz\t%0, %2");
 	case LT:	return "bgez\t%0, %2";
 	case GE:	return "bltz\t%0, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1398,11 +1404,10 @@
 	case NE:	return "beqi\t%0, %d1, %2";
 	case LT:	return "bgei\t%0, %d1, %2";
 	case GE:	return "blti\t%0, %d1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1423,7 +1428,7 @@
 	{
 	case LTU:	return "bltu\t%0, %1, %2";
 	case GEU:	return "bgeu\t%0, %1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1432,11 +1437,10 @@
 	{
 	case LTU:	return "bltui\t%0, %d1, %2";
 	case GEU:	return "bgeui\t%0, %d1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1457,7 +1461,7 @@
 	{
 	case LTU:	return "bgeu\t%0, %1, %2";
 	case GEU:	return "bltu\t%0, %1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1466,11 +1470,10 @@
 	{
 	case LTU:	return "bgeui\t%0, %d1, %2";
 	case GEU:	return "bltui\t%0, %d1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1498,7 +1501,7 @@
 	{
 	case EQ:	return "bbci\t%0, %d1, %2";
 	case NE:	return "bbsi\t%0, %d1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1507,11 +1510,10 @@
 	{
 	case EQ:	return "bbc\t%0, %1, %2";
 	case NE:	return "bbs\t%0, %1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
@@ -1537,7 +1539,7 @@
 	{
 	case EQ:	return "bbsi\t%0, %d1, %2";
 	case NE:	return "bbci\t%0, %d1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1546,11 +1548,10 @@
 	{
 	case EQ:	return "bbs\t%0, %1, %2";
 	case NE:	return "bbc\t%0, %1, %2";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
@@ -1570,10 +1571,8 @@
     {
     case EQ:		return "bnone\t%0, %1, %2";
     case NE:		return "bany\t%0, %1, %2";
-    default:		break;
+    default:		gcc_unreachable ();
     }
-  abort ();
-  return "";
 }
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
@@ -1593,10 +1592,8 @@
     {
     case EQ:		return "bany\t%0, %1, %2";
     case NE:		return "bnone\t%0, %1, %2";
-    default:		break;
+    default:		gcc_unreachable ();
     }
-  abort ();
-  return "";
 }
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
@@ -1646,7 +1643,7 @@
 	(match_dup 1))]
   ""
 {
-  operands[1] = gen_rtx (EQ, SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_EQ (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1657,7 +1654,7 @@
 	(match_dup 1))]
   ""
 {
-  operands[1] = gen_rtx (NE, SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_NE (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1668,7 +1665,7 @@
 	(match_dup 1))]
   ""
 {
-  operands[1] = gen_rtx (GT, SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_GT (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1679,7 +1676,7 @@
 	(match_dup 1))]
   ""
 {
-  operands[1] = gen_rtx (GE, SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_GE (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1690,7 +1687,7 @@
 	(match_dup 1))]
   ""
 {
-  operands[1] = gen_rtx (LT, SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_LT (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1701,7 +1698,7 @@
 	(match_dup 1))]
   ""
 {
-  operands[1] = gen_rtx (LE, SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_LE (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1751,7 +1748,7 @@
 	case NE:	return "movnez\t%0, %2, %1";
 	case LT:	return "movltz\t%0, %2, %1";
 	case GE:	return "movgez\t%0, %2, %1";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
   else
@@ -1762,11 +1759,10 @@
 	case NE:	return "moveqz\t%0, %3, %1";
 	case LT:	return "movgez\t%0, %3, %1";
 	case GE:	return "movltz\t%0, %3, %1";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"move,move")
    (set_attr "mode"	"SI")
@@ -1790,9 +1786,9 @@
     case 1:
       if (isEq) return "movt\t%0, %3, %1";
       return "movf\t%0, %3, %1";
+    default:
+      gcc_unreachable ();
     }
-  abort ();
-  return "";
 }
   [(set_attr "type"	"move,move")
    (set_attr "mode"	"SI")
@@ -1807,52 +1803,52 @@
 			 (match_operand:SF 3 "register_operand" "0,r,0,f")))]
   ""
 {
-  if (which_alternative == 0)
+  switch (which_alternative)
     {
+    case 0:
       switch (GET_CODE (operands[4]))
 	{
 	case EQ:	return "moveqz\t%0, %2, %1";
 	case NE:	return "movnez\t%0, %2, %1";
 	case LT:	return "movltz\t%0, %2, %1";
 	case GE:	return "movgez\t%0, %2, %1";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
-    }
-  else if (which_alternative == 1)
-    {
+      break;
+    case 1:
       switch (GET_CODE (operands[4]))
 	{
 	case EQ:	return "movnez\t%0, %3, %1";
 	case NE:	return "moveqz\t%0, %3, %1";
 	case LT:	return "movgez\t%0, %3, %1";
 	case GE:	return "movltz\t%0, %3, %1";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
-    }
-  else if (which_alternative == 2)
-    {
+      break;
+    case 2:
       switch (GET_CODE (operands[4]))
 	{
 	case EQ:	return "moveqz.s %0, %2, %1";
 	case NE:	return "movnez.s %0, %2, %1";
 	case LT:	return "movltz.s %0, %2, %1";
 	case GE:	return "movgez.s %0, %2, %1";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
-    }
-  else if (which_alternative == 3)
-    {
+      break;
+    case 3:
       switch (GET_CODE (operands[4]))
 	{
 	case EQ:	return "movnez.s %0, %3, %1";
 	case NE:	return "moveqz.s %0, %3, %1";
 	case LT:	return "movgez.s %0, %3, %1";
 	case GE:	return "movltz.s %0, %3, %1";
-	default:	break;
+	default:	gcc_unreachable ();
 	}
+      break;
+    default:
+      gcc_unreachable ();
     }
-  abort ();
-  return "";
+  gcc_unreachable ();
 }
   [(set_attr "type"	"move,move,move,move")
    (set_attr "mode"	"SF")
@@ -1882,9 +1878,9 @@
     case 3:
       if (isEq) return "movt.s\t%0, %3, %1";
       return "movf.s\t%0, %3, %1";
+    default:
+      gcc_unreachable ();
     }
-  abort ();
-  return "";
 }
   [(set_attr "type"	"move,move,move,move")
    (set_attr "mode"	"SF")

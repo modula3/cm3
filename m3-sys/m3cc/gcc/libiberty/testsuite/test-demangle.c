@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA. 
 */
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +26,12 @@
 #include <stdio.h>
 #include "libiberty.h"
 #include "demangle.h"
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
 
 struct line
 {
@@ -119,7 +125,7 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-  enum demangling_styles style;
+  enum demangling_styles style = auto_demangling;
   int no_params;
   int is_v3_ctor;
   int is_v3_dtor;

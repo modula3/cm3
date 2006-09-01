@@ -1,26 +1,18 @@
-2005-11-30  Release Manager
+2006-05-24  Release Manager
 
-	* GCC 3.4.5 released.
+	* GCC 4.1.1 released.
 
-2005-05-19  Release Manager
+2006-02-28  Release Manager
 
-	* GCC 3.4.4 released.
+	* GCC 4.1.0 released.
 
-2004-11-04  Release Manager
+2005-07-14  Ben Elliston  <bje@au.ibm.com>
 
-	* GCC 3.4.3 released.
+	* reg_test_template: Typo fix.
 
-2004-09-06  Release Manager
+2005-01-17  Kazu Hirata  <kazu@cs.umass.edu>
 
-	* GCC 3.4.2 released.
-
-2004-07-01  Release Manager
-
-	* GCC 3.4.1 released.
-
-2004-04-18  Release Manager
-
-	* GCC 3.4.0 released.
+	* reg_periodic, reg_search: Fix the uses of date command.
 
 2003-06-24  Janis Johnson  <janis187@us.ibm.com>
 

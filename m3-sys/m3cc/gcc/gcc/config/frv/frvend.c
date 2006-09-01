@@ -16,8 +16,8 @@
   
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
 /* As a special exception, if you link this library with other files,
    some of which are compiled with GCC, to produce an executable,
@@ -64,7 +64,10 @@ FINI_SECTION_ZERO (".dtors", "\"aw\"", "__DTOR_END__");
 
 FINI_SECTION_ZERO (".eh_frame", "\"aw\"", "__FRAME_END__");
 
+#if ! __FRV_FDPIC__
+/* In FDPIC, the linker itself generates this.  */
 /* End of .rofixup section that provides a list of pointers that we
    need to adjust.  */
 
 FINI_SECTION (".rofixup", "\"a\"", "__ROFIXUP_END__");
+#endif /* __FRV_FDPIC__ */

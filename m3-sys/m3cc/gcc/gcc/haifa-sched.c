@@ -1,6 +1,6 @@
 /* Instruction scheduling pass.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com) Enhanced by,
    and currently maintained by, Jim Wilson (wilson@cygnus.com)
 
@@ -18,8 +18,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 /* Instruction scheduling pass.  This file, along with sched-deps.c,
    contains the generic parts.  The actual entry point is found for
@@ -53,13 +53,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    been scheduled, the critical path of the basic block has been made
    as short as possible.  The remaining insns are then scheduled in
    remaining slots.
-
-   Function unit conflicts are resolved during forward list scheduling
-   by tracking the time when each insn is committed to the schedule
-   and from that, the time the function units it uses must be free.
-   As insns on the ready list are considered for scheduling, those
-   that would result in a blockage of the already committed insns are
-   queued until no blockage will result.
 
    The following list shows the order in which we want to break ties
    among insns in the ready list:
@@ -139,7 +132,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "rtl.h"
 #include "tm_p.h"
 #include "hard-reg-set.h"
-#include "basic-block.h"
 #include "regs.h"
 #include "function.h"
 #include "flags.h"
@@ -158,12 +150,6 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    otherwise we set it to 1.  */
 
 static int issue_rate;
-
-/* If the following variable value is nonzero, the scheduler inserts
-   bubbles (nop insns).  The value of variable affects on scheduler
-   behavior only if automaton pipeline interface with multipass
-   scheduling is used and hook dfa_bubble is defined.  */
-int insert_schedule_bubbles_p = 0;
 
 /* sched-verbose controls the amount of debugging output the
    scheduler prints.  It is controlled by -fsched-verbose=N:
@@ -193,7 +179,7 @@ fix_sched_param (const char *param, const char *val)
   if (!strcmp (param, "verbose"))
     sched_verbose_param = atoi (val);
   else
-    warning ("fix_sched_param: unknown param: %s", param);
+    warning (0, "fix_sched_param: unknown param: %s", param);
 }
 
 struct haifa_insn_data *h_i_d;
@@ -231,9 +217,7 @@ static rtx note_list;
    "Pending" list have their dependencies satisfied and move to either
    the "Ready" list or the "Queued" set depending on whether
    sufficient time has passed to make them ready.  As time passes,
-   insns move from the "Queued" set to the "Ready" list.  Insns may
-   move from the "Ready" list to the "Queued" set if they are blocked
-   due to a function unit conflict.
+   insns move from the "Queued" set to the "Ready" list.
 
    The "Pending" list (P) are the insns in the INSN_DEPEND of the unscheduled
    insns, i.e., those that are ready, queued, and pending.
@@ -244,43 +228,30 @@ static rtx note_list;
 
    The transition (R->S) is implemented in the scheduling loop in
    `schedule_block' when the best insn to schedule is chosen.
-   The transition (R->Q) is implemented in `queue_insn' when an
-   insn is found to have a function unit conflict with the already
-   committed insns.
    The transitions (P->R and P->Q) are implemented in `schedule_insn' as
    insns move from the ready list to the scheduled list.
    The transition (Q->R) is implemented in 'queue_to_insn' as time
    passes or stalls are introduced.  */
 
 /* Implement a circular buffer to delay instructions until sufficient
-   time has passed.  For the old pipeline description interface,
-   INSN_QUEUE_SIZE is a power of two larger than MAX_BLOCKAGE and
-   MAX_READY_COST computed by genattr.c.  For the new pipeline
-   description interface, MAX_INSN_QUEUE_INDEX is a power of two minus
-   one which is larger than maximal time of instruction execution
-   computed by genattr.c on the base maximal time of functional unit
-   reservations and geting a result.  This is the longest time an
-   insn may be queued.  */
-
-#define MAX_INSN_QUEUE_INDEX max_insn_queue_index_macro_value
+   time has passed.  For the new pipeline description interface,
+   MAX_INSN_QUEUE_INDEX is a power of two minus one which is larger
+   than maximal time of instruction execution computed by genattr.c on
+   the base maximal time of functional unit reservations and getting a
+   result.  This is the longest time an insn may be queued.  */
 
 static rtx *insn_queue;
 static int q_ptr = 0;
 static int q_size = 0;
-#define NEXT_Q(X) (((X)+1) & MAX_INSN_QUEUE_INDEX)
-#define NEXT_Q_AFTER(X, C) (((X)+C) & MAX_INSN_QUEUE_INDEX)
-
-/* The following variable defines value for macro
-   MAX_INSN_QUEUE_INDEX.  */
-static int max_insn_queue_index_macro_value;
+#define NEXT_Q(X) (((X)+1) & max_insn_queue_index)
+#define NEXT_Q_AFTER(X, C) (((X)+C) & max_insn_queue_index)
 
 /* The following variable value refers for all current and future
    reservations of the processor units.  */
 state_t curr_state;
 
 /* The following variable value is size of memory representing all
-   current and future reservations of the processor units.  It is used
-   only by DFA based scheduler.  */
+   current and future reservations of the processor units.  */
 static size_t dfa_state_size;
 
 /* The following array is used to find the best insn from ready when
@@ -307,7 +278,7 @@ static int may_trap_exp (rtx, int);
 
 /* Nonzero iff the address is comprised from at most 1 register.  */
 #define CONST_BASED_ADDRESS_P(x)			\
-  (GET_CODE (x) == REG					\
+  (REG_P (x)					\
    || ((GET_CODE (x) == PLUS || GET_CODE (x) == MINUS	\
 	|| (GET_CODE (x) == LO_SUM))			\
        && (CONSTANT_P (XEXP (x, 0))			\
@@ -466,14 +437,6 @@ haifa_classify_insn (rtx insn)
 
 /* Forward declarations.  */
 
-/* The scheduler using only DFA description should never use the
-   following five functions:  */
-static unsigned int blockage_range (int, rtx);
-static void clear_units (void);
-static void schedule_unit (int, rtx, int);
-static int actual_hazard (int, rtx, int, int);
-static int potential_hazard (int, rtx, int);
-
 static int priority (rtx);
 static int rank_for_schedule (const void *, const void *);
 static void swap_sort (rtx *, int);
@@ -524,7 +487,7 @@ static rtx move_insn1 (rtx, rtx);
 static rtx move_insn (rtx, rtx);
 
 /* The following functions are used to implement multi-pass scheduling
-   on the first cycle.  It is used only for DFA based scheduler.  */
+   on the first cycle.  */
 static rtx ready_element (struct ready_list *, int);
 static rtx ready_remove (struct ready_list *, int);
 static int max_issue (struct ready_list *, int *);
@@ -549,309 +512,6 @@ schedule_insns (FILE *dump_file ATTRIBUTE_UNUSED)
 
 static rtx last_scheduled_insn;
 
-/* Compute the function units used by INSN.  This caches the value
-   returned by function_units_used.  A function unit is encoded as the
-   unit number if the value is non-negative and the complement of a
-   mask if the value is negative.  A function unit index is the
-   non-negative encoding.  The scheduler using only DFA description
-   should never use the following function.  */
-
-HAIFA_INLINE int
-insn_unit (rtx insn)
-{
-  int unit = INSN_UNIT (insn);
-
-  if (unit == 0)
-    {
-      recog_memoized (insn);
-
-      /* A USE insn, or something else we don't need to understand.
-         We can't pass these directly to function_units_used because it will
-         trigger a fatal error for unrecognizable insns.  */
-      if (INSN_CODE (insn) < 0)
-	unit = -1;
-      else
-	{
-	  unit = function_units_used (insn);
-	  /* Increment non-negative values so we can cache zero.  */
-	  if (unit >= 0)
-	    unit++;
-	}
-      /* We only cache 16 bits of the result, so if the value is out of
-         range, don't cache it.  */
-      if (FUNCTION_UNITS_SIZE < HOST_BITS_PER_SHORT
-	  || unit >= 0
-	  || (unit & ~((1 << (HOST_BITS_PER_SHORT - 1)) - 1)) == 0)
-	INSN_UNIT (insn) = unit;
-    }
-  return (unit > 0 ? unit - 1 : unit);
-}
-
-/* Compute the blockage range for executing INSN on UNIT.  This caches
-   the value returned by the blockage_range_function for the unit.
-   These values are encoded in an int where the upper half gives the
-   minimum value and the lower half gives the maximum value.  The
-   scheduler using only DFA description should never use the following
-   function.  */
-
-HAIFA_INLINE static unsigned int
-blockage_range (int unit, rtx insn)
-{
-  unsigned int blockage = INSN_BLOCKAGE (insn);
-  unsigned int range;
-
-  if ((int) UNIT_BLOCKED (blockage) != unit + 1)
-    {
-      range = function_units[unit].blockage_range_function (insn);
-      /* We only cache the blockage range for one unit and then only if
-         the values fit.  */
-      if (HOST_BITS_PER_INT >= UNIT_BITS + 2 * BLOCKAGE_BITS)
-	INSN_BLOCKAGE (insn) = ENCODE_BLOCKAGE (unit + 1, range);
-    }
-  else
-    range = BLOCKAGE_RANGE (blockage);
-
-  return range;
-}
-
-/* A vector indexed by function unit instance giving the last insn to
-   use the unit.  The value of the function unit instance index for
-   unit U instance I is (U + I * FUNCTION_UNITS_SIZE).  The scheduler
-   using only DFA description should never use the following variable.  */
-#if FUNCTION_UNITS_SIZE
-static rtx unit_last_insn[FUNCTION_UNITS_SIZE * MAX_MULTIPLICITY];
-#else
-static rtx unit_last_insn[1];
-#endif
-
-/* A vector indexed by function unit instance giving the minimum time
-   when the unit will unblock based on the maximum blockage cost.  The
-   scheduler using only DFA description should never use the following
-   variable.  */
-#if FUNCTION_UNITS_SIZE
-static int unit_tick[FUNCTION_UNITS_SIZE * MAX_MULTIPLICITY];
-#else
-static int unit_tick[1];
-#endif
-
-/* A vector indexed by function unit number giving the number of insns
-   that remain to use the unit.  The scheduler using only DFA
-   description should never use the following variable.  */
-#if FUNCTION_UNITS_SIZE
-static int unit_n_insns[FUNCTION_UNITS_SIZE];
-#else
-static int unit_n_insns[1];
-#endif
-
-/* Access the unit_last_insn array.  Used by the visualization code.
-   The scheduler using only DFA description should never use the
-   following function.  */
-
-rtx
-get_unit_last_insn (int instance)
-{
-  return unit_last_insn[instance];
-}
-
-/* Reset the function unit state to the null state.  */
-
-static void
-clear_units (void)
-{
-  memset (unit_last_insn, 0, sizeof (unit_last_insn));
-  memset (unit_tick, 0, sizeof (unit_tick));
-  memset (unit_n_insns, 0, sizeof (unit_n_insns));
-}
-
-/* Return the issue-delay of an insn.  The scheduler using only DFA
-   description should never use the following function.  */
-
-HAIFA_INLINE int
-insn_issue_delay (rtx insn)
-{
-  int i, delay = 0;
-  int unit = insn_unit (insn);
-
-  /* Efficiency note: in fact, we are working 'hard' to compute a
-     value that was available in md file, and is not available in
-     function_units[] structure.  It would be nice to have this
-     value there, too.  */
-  if (unit >= 0)
-    {
-      if (function_units[unit].blockage_range_function &&
-	  function_units[unit].blockage_function)
-	delay = function_units[unit].blockage_function (insn, insn);
-    }
-  else
-    for (i = 0, unit = ~unit; unit; i++, unit >>= 1)
-      if ((unit & 1) != 0 && function_units[i].blockage_range_function
-	  && function_units[i].blockage_function)
-	delay = MAX (delay, function_units[i].blockage_function (insn, insn));
-
-  return delay;
-}
-
-/* Return the actual hazard cost of executing INSN on the unit UNIT,
-   instance INSTANCE at time CLOCK if the previous actual hazard cost
-   was COST.  The scheduler using only DFA description should never
-   use the following function.  */
-
-HAIFA_INLINE int
-actual_hazard_this_instance (int unit, int instance, rtx insn, int clock, int cost)
-{
-  int tick = unit_tick[instance]; /* Issue time of the last issued insn.  */
-
-  if (tick - clock > cost)
-    {
-      /* The scheduler is operating forward, so unit's last insn is the
-         executing insn and INSN is the candidate insn.  We want a
-         more exact measure of the blockage if we execute INSN at CLOCK
-         given when we committed the execution of the unit's last insn.
-
-         The blockage value is given by either the unit's max blockage
-         constant, blockage range function, or blockage function.  Use
-         the most exact form for the given unit.  */
-
-      if (function_units[unit].blockage_range_function)
-	{
-	  if (function_units[unit].blockage_function)
-	    tick += (function_units[unit].blockage_function
-		     (unit_last_insn[instance], insn)
-		     - function_units[unit].max_blockage);
-	  else
-	    tick += ((int) MAX_BLOCKAGE_COST (blockage_range (unit, insn))
-		     - function_units[unit].max_blockage);
-	}
-      if (tick - clock > cost)
-	cost = tick - clock;
-    }
-  return cost;
-}
-
-/* Record INSN as having begun execution on the units encoded by UNIT
-   at time CLOCK.  The scheduler using only DFA description should
-   never use the following function.  */
-
-static void
-schedule_unit (int unit, rtx insn, int clock)
-{
-  int i;
-
-  if (unit >= 0)
-    {
-      int instance = unit;
-#if MAX_MULTIPLICITY > 1
-      /* Find the first free instance of the function unit and use that
-         one.  We assume that one is free.  */
-      for (i = function_units[unit].multiplicity - 1; i > 0; i--)
-	{
-	  if (!actual_hazard_this_instance (unit, instance, insn, clock, 0))
-	    break;
-	  instance += FUNCTION_UNITS_SIZE;
-	}
-#endif
-      unit_last_insn[instance] = insn;
-      unit_tick[instance] = (clock + function_units[unit].max_blockage);
-    }
-  else
-    for (i = 0, unit = ~unit; unit; i++, unit >>= 1)
-      if ((unit & 1) != 0)
-	schedule_unit (i, insn, clock);
-}
-
-/* Return the actual hazard cost of executing INSN on the units
-   encoded by UNIT at time CLOCK if the previous actual hazard cost
-   was COST.  The scheduler using only DFA description should never
-   use the following function.  */
-
-static int
-actual_hazard (int unit, rtx insn, int clock, int cost)
-{
-  int i;
-
-  if (unit >= 0)
-    {
-      /* Find the instance of the function unit with the minimum hazard.  */
-      int instance = unit;
-      int best_cost = actual_hazard_this_instance (unit, instance, insn,
-						   clock, cost);
-#if MAX_MULTIPLICITY > 1
-      int this_cost;
-
-      if (best_cost > cost)
-	{
-	  for (i = function_units[unit].multiplicity - 1; i > 0; i--)
-	    {
-	      instance += FUNCTION_UNITS_SIZE;
-	      this_cost = actual_hazard_this_instance (unit, instance, insn,
-						       clock, cost);
-	      if (this_cost < best_cost)
-		{
-		  best_cost = this_cost;
-		  if (this_cost <= cost)
-		    break;
-		}
-	    }
-	}
-#endif
-      cost = MAX (cost, best_cost);
-    }
-  else
-    for (i = 0, unit = ~unit; unit; i++, unit >>= 1)
-      if ((unit & 1) != 0)
-	cost = actual_hazard (i, insn, clock, cost);
-
-  return cost;
-}
-
-/* Return the potential hazard cost of executing an instruction on the
-   units encoded by UNIT if the previous potential hazard cost was
-   COST.  An insn with a large blockage time is chosen in preference
-   to one with a smaller time; an insn that uses a unit that is more
-   likely to be used is chosen in preference to one with a unit that
-   is less used.  We are trying to minimize a subsequent actual
-   hazard.  The scheduler using only DFA description should never use
-   the following function.  */
-
-HAIFA_INLINE static int
-potential_hazard (int unit, rtx insn, int cost)
-{
-  int i, ncost;
-  unsigned int minb, maxb;
-
-  if (unit >= 0)
-    {
-      minb = maxb = function_units[unit].max_blockage;
-      if (maxb > 1)
-	{
-	  if (function_units[unit].blockage_range_function)
-	    {
-	      maxb = minb = blockage_range (unit, insn);
-	      maxb = MAX_BLOCKAGE_COST (maxb);
-	      minb = MIN_BLOCKAGE_COST (minb);
-	    }
-
-	  if (maxb > 1)
-	    {
-	      /* Make the number of instructions left dominate.  Make the
-	         minimum delay dominate the maximum delay.  If all these
-	         are the same, use the unit number to add an arbitrary
-	         ordering.  Other terms can be added.  */
-	      ncost = minb * 0x40 + maxb;
-	      ncost *= (unit_n_insns[unit] - 1) * 0x1000 + unit;
-	      if (ncost > cost)
-		cost = ncost;
-	    }
-	}
-    }
-  else
-    for (i = 0, unit = ~unit; unit; i++, unit >>= 1)
-      if ((unit & 1) != 0)
-	cost = potential_hazard (i, insn, cost);
-
-  return cost;
-}
-
 /* Compute cost of executing INSN given the dependence LINK on the insn USED.
    This is the number of cycles between instruction issue and
    instruction results.  */
@@ -874,12 +534,7 @@ insn_cost (rtx insn, rtx link, rtx used)
 	}
       else
 	{
-	  if (targetm.sched.use_dfa_pipeline_interface
-	      && (*targetm.sched.use_dfa_pipeline_interface) ())
-	    cost = insn_default_latency (insn);
-	  else
-	    cost = result_ready_cost (insn);
-
+	  cost = insn_default_latency (insn);
 	  if (cost < 0)
 	    cost = 0;
 
@@ -898,27 +553,23 @@ insn_cost (rtx insn, rtx link, rtx used)
     cost = 0;
   else
     {
-      if (targetm.sched.use_dfa_pipeline_interface
-	  && (*targetm.sched.use_dfa_pipeline_interface) ())
+      if (INSN_CODE (insn) >= 0)
 	{
-	  if (INSN_CODE (insn) >= 0)
+	  if (REG_NOTE_KIND (link) == REG_DEP_ANTI)
+	    cost = 0;
+	  else if (REG_NOTE_KIND (link) == REG_DEP_OUTPUT)
 	    {
-	      if (REG_NOTE_KIND (link) == REG_DEP_ANTI)
-		cost = 0;
-	      else if (REG_NOTE_KIND (link) == REG_DEP_OUTPUT)
-		{
-		  cost = (insn_default_latency (insn)
-			  - insn_default_latency (used));
-		  if (cost <= 0)
-		    cost = 1;
-		}
-	      else if (bypass_p (insn))
-		cost = insn_latency (insn, used);
+	      cost = (insn_default_latency (insn)
+		      - insn_default_latency (used));
+	      if (cost <= 0)
+		cost = 1;
 	    }
+	  else if (bypass_p (insn))
+	    cost = insn_latency (insn, used);
 	}
 
       if (targetm.sched.adjust_cost)
-	cost = (*targetm.sched.adjust_cost) (used, link, insn, cost);
+	cost = targetm.sched.adjust_cost (used, link, insn, cost);
 
       if (cost < 0)
 	cost = 0;
@@ -949,9 +600,6 @@ priority (rtx insn)
 	    {
 	      rtx next;
 	      int next_priority;
-
-	      if (RTX_INTEGRATED_P (link))
-		continue;
 
 	      next = XEXP (link, 0);
 
@@ -1105,8 +753,7 @@ queue_insn (rtx insn, int n_cycles)
 HAIFA_INLINE static rtx *
 ready_lastpos (struct ready_list *ready)
 {
-  if (ready->n_ready == 0)
-    abort ();
+  gcc_assert (ready->n_ready);
   return ready->vec + ready->first - ready->n_ready + 1;
 }
 
@@ -1134,8 +781,8 @@ HAIFA_INLINE static rtx
 ready_remove_first (struct ready_list *ready)
 {
   rtx t;
-  if (ready->n_ready == 0)
-    abort ();
+  
+  gcc_assert (ready->n_ready);
   t = ready->vec[ready->first--];
   ready->n_ready--;
   /* If the queue becomes empty, reset it.  */
@@ -1155,10 +802,8 @@ ready_remove_first (struct ready_list *ready)
 HAIFA_INLINE static rtx
 ready_element (struct ready_list *ready, int index)
 {
-#ifdef ENABLE_CHECKING
-  if (ready->n_ready == 0 || index >= ready->n_ready)
-    abort ();
-#endif
+  gcc_assert (ready->n_ready && index < ready->n_ready);
+  
   return ready->vec[ready->first - index];
 }
 
@@ -1174,8 +819,7 @@ ready_remove (struct ready_list *ready, int index)
 
   if (index == 0)
     return ready_remove_first (ready);
-  if (ready->n_ready == 0 || index >= ready->n_ready)
-    abort ();
+  gcc_assert (ready->n_ready && index < ready->n_ready);
   t = ready->vec[ready->first - index];
   ready->n_ready--;
   for (i = index; i < ready->n_ready; i++)
@@ -1210,26 +854,22 @@ adjust_priority (rtx prev)
 
   if (targetm.sched.adjust_priority)
     INSN_PRIORITY (prev) =
-      (*targetm.sched.adjust_priority) (prev, INSN_PRIORITY (prev));
+      targetm.sched.adjust_priority (prev, INSN_PRIORITY (prev));
 }
 
 /* Advance time on one cycle.  */
 HAIFA_INLINE static void
 advance_one_cycle (void)
 {
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ())
-    {
-      if (targetm.sched.dfa_pre_cycle_insn)
-	state_transition (curr_state,
-			  (*targetm.sched.dfa_pre_cycle_insn) ());
+  if (targetm.sched.dfa_pre_cycle_insn)
+    state_transition (curr_state,
+		      targetm.sched.dfa_pre_cycle_insn ());
 
-      state_transition (curr_state, NULL);
-
-      if (targetm.sched.dfa_post_cycle_insn)
-	state_transition (curr_state,
-			  (*targetm.sched.dfa_post_cycle_insn) ());
-    }
+  state_transition (curr_state, NULL);
+  
+  if (targetm.sched.dfa_post_cycle_insn)
+    state_transition (curr_state,
+		      targetm.sched.dfa_post_cycle_insn ());
 }
 
 /* Clock at which the previous instruction was issued.  */
@@ -1246,16 +886,9 @@ schedule_insn (rtx insn, struct ready_list *ready, int clock)
 {
   rtx link;
   int advance = 0;
-  int unit = 0;
   int premature_issue = 0;
 
-  if (!targetm.sched.use_dfa_pipeline_interface
-      || !(*targetm.sched.use_dfa_pipeline_interface) ())
-    unit = insn_unit (insn);
-
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ()
-      && sched_verbose >= 1)
+  if (sched_verbose >= 1)
     {
       char buf[2048];
 
@@ -1268,27 +901,6 @@ schedule_insn (rtx insn, struct ready_list *ready, int clock)
       else
 	print_reservation (sched_dump, insn);
       fputc ('\n', sched_dump);
-    }
-  else if (sched_verbose >= 2)
-    {
-      fprintf (sched_dump, ";;\t\t--> scheduling insn <<<%d>>> on unit ",
-	       INSN_UID (insn));
-      insn_print_units (insn);
-      fputc ('\n', sched_dump);
-    }
-
-  if (!targetm.sched.use_dfa_pipeline_interface
-      || !(*targetm.sched.use_dfa_pipeline_interface) ())
-    {
-      if (sched_verbose && unit == -1)
-	visualize_no_unit (insn);
-
-
-      if (MAX_BLOCKAGE > 1 || issue_rate > 1 || sched_verbose)
-	schedule_unit (unit, insn, clock);
-
-      if (INSN_DEPEND (insn) == 0)
-	return 0;
     }
 
   if (INSN_TICK (insn) > clock)
@@ -1366,7 +978,7 @@ unlink_other_notes (rtx insn, rtx tail)
 {
   rtx prev = PREV_INSN (insn);
 
-  while (insn != tail && GET_CODE (insn) == NOTE)
+  while (insn != tail && NOTE_P (insn))
     {
       rtx next = NEXT_INSN (insn);
       /* Delete the note from its current position.  */
@@ -1402,7 +1014,7 @@ unlink_line_notes (rtx insn, rtx tail)
 {
   rtx prev = PREV_INSN (insn);
 
-  while (insn != tail && GET_CODE (insn) == NOTE)
+  while (insn != tail && NOTE_P (insn))
     {
       rtx next = NEXT_INSN (insn);
 
@@ -1438,11 +1050,11 @@ get_block_head_tail (int b, rtx *headp, rtx *tailp)
      basic block, or notes at the ends of basic blocks.  */
   while (head != tail)
     {
-      if (GET_CODE (head) == NOTE)
+      if (NOTE_P (head))
 	head = NEXT_INSN (head);
-      else if (GET_CODE (tail) == NOTE)
+      else if (NOTE_P (tail))
 	tail = PREV_INSN (tail);
-      else if (GET_CODE (head) == CODE_LABEL)
+      else if (LABEL_P (head))
 	head = NEXT_INSN (head);
       else
 	break;
@@ -1459,7 +1071,7 @@ no_real_insns_p (rtx head, rtx tail)
 {
   while (head != NEXT_INSN (tail))
     {
-      if (GET_CODE (head) != NOTE && GET_CODE (head) != CODE_LABEL)
+      if (!NOTE_P (head) && !LABEL_P (head))
 	return 0;
       head = NEXT_INSN (head);
     }
@@ -1484,17 +1096,12 @@ rm_line_notes (rtx head, rtx tail)
       /* Farm out notes, and maybe save them in NOTE_LIST.
          This is needed to keep the debugger from
          getting completely deranged.  */
-      if (GET_CODE (insn) == NOTE)
+      if (NOTE_P (insn))
 	{
 	  prev = insn;
 	  insn = unlink_line_notes (insn, next_tail);
 
-	  if (prev == tail)
-	    abort ();
-	  if (prev == head)
-	    abort ();
-	  if (insn == next_tail)
-	    abort ();
+	  gcc_assert (prev != tail && prev != head && insn != next_tail);
 	}
     }
 }
@@ -1518,7 +1125,7 @@ save_line_notes (int b, rtx head, rtx tail)
   next_tail = NEXT_INSN (tail);
 
   for (insn = head; insn != next_tail; insn = NEXT_INSN (insn))
-    if (GET_CODE (insn) == NOTE && NOTE_LINE_NUMBER (insn) > 0)
+    if (NOTE_P (insn) && NOTE_LINE_NUMBER (insn) > 0)
       line = insn;
     else
       LINE_NOTE (insn) = line;
@@ -1545,25 +1152,30 @@ restore_line_notes (rtx head, rtx tail)
      of this block.  If it happens to be the same, then we don't want to
      emit another line number note here.  */
   for (line = head; line; line = PREV_INSN (line))
-    if (GET_CODE (line) == NOTE && NOTE_LINE_NUMBER (line) > 0)
+    if (NOTE_P (line) && NOTE_LINE_NUMBER (line) > 0)
       break;
 
   /* Walk the insns keeping track of the current line-number and inserting
      the line-number notes as needed.  */
   for (insn = head; insn != next_tail; insn = NEXT_INSN (insn))
-    if (GET_CODE (insn) == NOTE && NOTE_LINE_NUMBER (insn) > 0)
+    if (NOTE_P (insn) && NOTE_LINE_NUMBER (insn) > 0)
       line = insn;
   /* This used to emit line number notes before every non-deleted note.
      However, this confuses a debugger, because line notes not separated
      by real instructions all end up at the same address.  I can find no
      use for line number notes before other notes, so none are emitted.  */
-    else if (GET_CODE (insn) != NOTE
+    else if (!NOTE_P (insn)
 	     && INSN_UID (insn) < old_max_uid
 	     && (note = LINE_NOTE (insn)) != 0
 	     && note != line
 	     && (line == 0
+#ifdef USE_MAPPED_LOCATION
+		 || NOTE_SOURCE_LOCATION (note) != NOTE_SOURCE_LOCATION (line)
+#else
 		 || NOTE_LINE_NUMBER (note) != NOTE_LINE_NUMBER (line)
-		 || NOTE_SOURCE_FILE (note) != NOTE_SOURCE_FILE (line)))
+		 || NOTE_SOURCE_FILE (note) != NOTE_SOURCE_FILE (line)
+#endif
+		 ))
       {
 	line = note;
 	prev = PREV_INSN (insn);
@@ -1580,8 +1192,9 @@ restore_line_notes (rtx head, rtx tail)
 	  {
 	    added_notes++;
 	    new = emit_note_after (NOTE_LINE_NUMBER (note), prev);
+#ifndef USE_MAPPED_LOCATION
 	    NOTE_SOURCE_FILE (new) = NOTE_SOURCE_FILE (note);
-	    RTX_INTEGRATED_P (new) = RTX_INTEGRATED_P (note);
+#endif
 	  }
       }
   if (sched_verbose && added_notes)
@@ -1603,32 +1216,35 @@ rm_redundant_line_notes (void)
      are already present.  The remainder tend to occur at basic
      block boundaries.  */
   for (insn = get_last_insn (); insn; insn = PREV_INSN (insn))
-    if (GET_CODE (insn) == NOTE && NOTE_LINE_NUMBER (insn) > 0)
+    if (NOTE_P (insn) && NOTE_LINE_NUMBER (insn) > 0)
       {
 	/* If there are no active insns following, INSN is redundant.  */
 	if (active_insn == 0)
 	  {
 	    notes++;
-	    NOTE_SOURCE_FILE (insn) = 0;
-	    NOTE_LINE_NUMBER (insn) = NOTE_INSN_DELETED;
+	    SET_INSN_DELETED (insn);
 	  }
 	/* If the line number is unchanged, LINE is redundant.  */
 	else if (line
+#ifdef USE_MAPPED_LOCATION
+		 && NOTE_SOURCE_LOCATION (line) == NOTE_SOURCE_LOCATION (insn)
+#else
 		 && NOTE_LINE_NUMBER (line) == NOTE_LINE_NUMBER (insn)
-		 && NOTE_SOURCE_FILE (line) == NOTE_SOURCE_FILE (insn))
+		 && NOTE_SOURCE_FILE (line) == NOTE_SOURCE_FILE (insn)
+#endif
+)
 	  {
 	    notes++;
-	    NOTE_SOURCE_FILE (line) = 0;
-	    NOTE_LINE_NUMBER (line) = NOTE_INSN_DELETED;
+	    SET_INSN_DELETED (line);
 	    line = insn;
 	  }
 	else
 	  line = insn;
 	active_insn = 0;
       }
-    else if (!((GET_CODE (insn) == NOTE
+    else if (!((NOTE_P (insn)
 		&& NOTE_LINE_NUMBER (insn) == NOTE_INSN_DELETED)
-	       || (GET_CODE (insn) == INSN
+	       || (NONJUMP_INSN_P (insn)
 		   && (GET_CODE (PATTERN (insn)) == USE
 		       || GET_CODE (PATTERN (insn)) == CLOBBER))))
       active_insn++;
@@ -1658,18 +1274,13 @@ rm_other_notes (rtx head, rtx tail)
       /* Farm out notes, and maybe save them in NOTE_LIST.
          This is needed to keep the debugger from
          getting completely deranged.  */
-      if (GET_CODE (insn) == NOTE)
+      if (NOTE_P (insn))
 	{
 	  prev = insn;
 
 	  insn = unlink_other_notes (insn, next_tail);
 
-	  if (prev == tail)
-	    abort ();
-	  if (prev == head)
-	    abort ();
-	  if (insn == next_tail)
-	    abort ();
+	  gcc_assert (prev != tail && prev != head && insn != next_tail);
 	}
     }
 }
@@ -1689,7 +1300,7 @@ find_set_reg_weight (rtx x)
   if (GET_CODE (x) == SET
       && register_operand (SET_DEST (x), VOIDmode))
     {
-      if (GET_CODE (SET_DEST (x)) == REG)
+      if (REG_P (SET_DEST (x)))
 	{
 	  if (!reg_mentioned_p (SET_DEST (x), SET_SRC (x)))
 	    return 1;
@@ -1780,7 +1391,7 @@ queue_to_ready (struct ready_list *ready)
     {
       int stalls;
 
-      for (stalls = 1; stalls <= MAX_INSN_QUEUE_INDEX; stalls++)
+      for (stalls = 1; stalls <= max_insn_queue_index; stalls++)
 	{
 	  if ((link = insn_queue[NEXT_Q_AFTER (q_ptr, stalls)]))
 	    {
@@ -1806,11 +1417,6 @@ queue_to_ready (struct ready_list *ready)
 
 	  advance_one_cycle ();
 	}
-
-      if ((!targetm.sched.use_dfa_pipeline_interface
-	   || !(*targetm.sched.use_dfa_pipeline_interface) ())
-	  && sched_verbose && stalls)
-	visualize_stall_cycles (stalls);
 
       q_ptr = NEXT_Q_AFTER (q_ptr, stalls);
       clock_var += stalls;
@@ -1843,7 +1449,7 @@ ok_for_early_queue_removal (rtx insn)
 	      rtx dep_link = 0;
 	      int dep_cost;
 
-	      if (GET_CODE (prev_insn) != NOTE)
+	      if (!NOTE_P (prev_insn))
 		{
 		  dep_link = find_insn_list (insn, INSN_DEPEND (prev_insn));
 		  if (dep_link)
@@ -1903,7 +1509,7 @@ early_queue_to_ready (state_t state, struct ready_list *ready)
   if (! flag_sched_stalled_insns)   
     return 0;
 
-  for (stalls = 0; stalls <= MAX_INSN_QUEUE_INDEX; stalls++)
+  for (stalls = 0; stalls <= max_insn_queue_index; stalls++)
     {
       if ((link = insn_queue[NEXT_Q_AFTER (q_ptr, stalls)]))
 	{
@@ -1952,7 +1558,7 @@ early_queue_to_ready (state_t state, struct ready_list *ready)
 
 		      insns_removed++;
 		      if (insns_removed == flag_sched_stalled_insns)
-			/* remove only one insn from Q at a time */
+			/* Remove only one insn from Q at a time.  */
 			return insns_removed;
 		    }
 		}
@@ -2027,11 +1633,6 @@ reemit_notes (rtx insn, rtx last)
 	  enum insn_note note_type = INTVAL (XEXP (note, 0));
 
 	  last = emit_note_before (note_type, last);
-	  remove_note (insn, note);
-	  note = XEXP (note, 1);
-	  if (note_type == NOTE_INSN_EH_REGION_BEG
-	      || note_type == NOTE_INSN_EH_REGION_END)
-	    NOTE_EH_HANDLER (last) = INTVAL (XEXP (note, 0));
 	  remove_note (insn, note);
 	}
     }
@@ -2194,7 +1795,7 @@ choose_ready (struct ready_list *ready)
   int lookahead = 0;
 
   if (targetm.sched.first_cycle_multipass_dfa_lookahead)
-    lookahead = (*targetm.sched.first_cycle_multipass_dfa_lookahead) ();
+    lookahead = targetm.sched.first_cycle_multipass_dfa_lookahead ();
   if (lookahead <= 0 || SCHED_GROUP_P (ready_element (ready, 0)))
     return ready_remove_first (ready);
   else
@@ -2219,24 +1820,13 @@ choose_ready (struct ready_list *ready)
 	  ready_try [i]
 	    = (INSN_CODE (insn) < 0
 	       || (targetm.sched.first_cycle_multipass_dfa_lookahead_guard
-		   && !(*targetm.sched.first_cycle_multipass_dfa_lookahead_guard) (insn)));
+		   && !targetm.sched.first_cycle_multipass_dfa_lookahead_guard (insn)));
 	}
       if (max_issue (ready, &index) == 0)
 	return ready_remove_first (ready);
       else
 	return ready_remove (ready, index);
     }
-}
-
-/* Called from backends from targetm.sched.reorder to emit stuff into
-   the instruction stream.  */
-
-rtx
-sched_emit_insn (rtx pat)
-{
-  rtx insn = emit_insn_after (pat, last_scheduled_insn);
-  last_scheduled_insn = insn;
-  return insn;
 }
 
 /* Use forward list scheduling to rearrange insns of block B in region RGN,
@@ -2264,29 +1854,23 @@ schedule_block (int b, int rgn_n_insns)
      and caused problems because schedule_block and compute_forward_dependences
      had different notions of what the "head" insn was.  */
 
-  if (head == tail && (! INSN_P (head)))
-    abort ();
+  gcc_assert (head != tail || INSN_P (head));
 
   /* Debug info.  */
   if (sched_verbose)
     {
-      fprintf (sched_dump, ";;   ======================================================\n");
+      fprintf (sched_dump,
+	       ";;   ======================================================\n");
       fprintf (sched_dump,
 	       ";;   -- basic block %d from %d to %d -- %s reload\n",
 	       b, INSN_UID (head), INSN_UID (tail),
 	       (reload_completed ? "after" : "before"));
-      fprintf (sched_dump, ";;   ======================================================\n");
+      fprintf (sched_dump,
+	       ";;   ======================================================\n");
       fprintf (sched_dump, "\n");
-
-      visualize_alloc ();
-      init_block_visualization ();
     }
 
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ())
-    state_reset (curr_state);
-  else
-    clear_units ();
+  state_reset (curr_state);
 
   /* Allocate the ready list.  */
   ready.veclen = rgn_n_insns + 1 + issue_rate;
@@ -2294,22 +1878,18 @@ schedule_block (int b, int rgn_n_insns)
   ready.vec = xmalloc (ready.veclen * sizeof (rtx));
   ready.n_ready = 0;
 
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ())
-    {
-      /* It is used for first cycle multipass scheduling.  */
-      temp_state = alloca (dfa_state_size);
-      ready_try = xcalloc ((rgn_n_insns + 1), sizeof (char));
-      choice_stack = xmalloc ((rgn_n_insns + 1)
-			      * sizeof (struct choice_entry));
-      for (i = 0; i <= rgn_n_insns; i++)
-	choice_stack[i].state = xmalloc (dfa_state_size);
-    }
+  /* It is used for first cycle multipass scheduling.  */
+  temp_state = alloca (dfa_state_size);
+  ready_try = xcalloc ((rgn_n_insns + 1), sizeof (char));
+  choice_stack = xmalloc ((rgn_n_insns + 1)
+			  * sizeof (struct choice_entry));
+  for (i = 0; i <= rgn_n_insns; i++)
+    choice_stack[i].state = xmalloc (dfa_state_size);
 
   (*current_sched_info->init_ready_list) (&ready);
 
   if (targetm.sched.md_init)
-    (*targetm.sched.md_init) (sched_dump, sched_verbose, ready.veclen);
+    targetm.sched.md_init (sched_dump, sched_verbose, ready.veclen);
 
   /* We start inserting insns after PREV_HEAD.  */
   last_scheduled_insn = prev_head;
@@ -2319,14 +1899,8 @@ schedule_block (int b, int rgn_n_insns)
   q_ptr = 0;
   q_size = 0;
 
-  if (!targetm.sched.use_dfa_pipeline_interface
-      || !(*targetm.sched.use_dfa_pipeline_interface) ())
-    max_insn_queue_index_macro_value = INSN_QUEUE_SIZE - 1;
-  else
-    max_insn_queue_index_macro_value = max_insn_queue_index;
-
-  insn_queue = alloca ((MAX_INSN_QUEUE_INDEX + 1) * sizeof (rtx));
-  memset (insn_queue, 0, (MAX_INSN_QUEUE_INDEX + 1) * sizeof (rtx));
+  insn_queue = alloca ((max_insn_queue_index + 1) * sizeof (rtx));
+  memset (insn_queue, 0, (max_insn_queue_index + 1) * sizeof (rtx));
   last_clock_var = -1;
 
   /* Start just before the beginning of time.  */
@@ -2351,8 +1925,7 @@ schedule_block (int b, int rgn_n_insns)
 	     list.  */
 	  queue_to_ready (&ready);
 
-	  if (ready.n_ready == 0)
-	    abort ();
+	  gcc_assert (ready.n_ready);
 
 	  if (sched_verbose >= 2)
 	    {
@@ -2381,9 +1954,9 @@ schedule_block (int b, int rgn_n_insns)
 	  && (ready.n_ready == 0
 	      || !SCHED_GROUP_P (ready_element (&ready, 0))))
 	can_issue_more =
-	  (*targetm.sched.reorder) (sched_dump, sched_verbose,
-				    ready_lastpos (&ready),
-				    &ready.n_ready, clock_var);
+	  targetm.sched.reorder (sched_dump, sched_verbose,
+				 ready_lastpos (&ready),
+				 &ready.n_ready, clock_var);
       else
 	can_issue_more = issue_rate;
 
@@ -2402,145 +1975,75 @@ schedule_block (int b, int rgn_n_insns)
 	      debug_ready_list (&ready);
 	    }
 
-	  if (!targetm.sched.use_dfa_pipeline_interface
-	      || !(*targetm.sched.use_dfa_pipeline_interface) ())
+	  if (ready.n_ready == 0 
+	      && can_issue_more 
+	      && reload_completed) 
 	    {
-	      if (ready.n_ready == 0 || !can_issue_more
-		  || !(*current_sched_info->schedule_more_p) ())
-		break;
-	      insn = ready_remove_first (&ready);
-	      cost = actual_hazard (insn_unit (insn), insn, clock_var, 0);
+	      /* Allow scheduling insns directly from the queue in case
+		 there's nothing better to do (ready list is empty) but
+		 there are still vacant dispatch slots in the current cycle.  */
+	      if (sched_verbose >= 6)
+		fprintf(sched_dump,";;\t\tSecond chance\n");
+	      memcpy (temp_state, curr_state, dfa_state_size);
+	      if (early_queue_to_ready (temp_state, &ready))
+		ready_sort (&ready);
+	    }
+
+	  if (ready.n_ready == 0 || !can_issue_more
+	      || state_dead_lock_p (curr_state)
+	      || !(*current_sched_info->schedule_more_p) ())
+	    break;
+
+	  /* Select and remove the insn from the ready list.  */
+	  if (sort_p)
+	    insn = choose_ready (&ready);
+	  else
+	    insn = ready_remove_first (&ready);
+
+	  if (targetm.sched.dfa_new_cycle
+	      && targetm.sched.dfa_new_cycle (sched_dump, sched_verbose,
+					      insn, last_clock_var,
+					      clock_var, &sort_p))
+	    {
+	      ready_add (&ready, insn);
+	      break;
+	    }
+
+	  sort_p = TRUE;
+	  memcpy (temp_state, curr_state, dfa_state_size);
+	  if (recog_memoized (insn) < 0)
+	    {
+	      asm_p = (GET_CODE (PATTERN (insn)) == ASM_INPUT
+		       || asm_noperands (PATTERN (insn)) >= 0);
+	      if (!first_cycle_insn_p && asm_p)
+		/* This is asm insn which is tryed to be issued on the
+		   cycle not first.  Issue it on the next cycle.  */
+		cost = 1;
+	      else
+		/* A USE insn, or something else we don't need to
+		   understand.  We can't pass these directly to
+		   state_transition because it will trigger a
+		   fatal error for unrecognizable insns.  */
+		cost = 0;
 	    }
 	  else
 	    {
-	      if (ready.n_ready == 0 
-		  && can_issue_more 
-		  && reload_completed) 
-		{
-		  /* Allow scheduling insns directly from the queue in case
-		     there's nothing better to do (ready list is empty) but
-		     there are still vacant dispatch slots in the current cycle.  */
-		  if (sched_verbose >= 6)
-		    fprintf(sched_dump,";;\t\tSecond chance\n");
-		  memcpy (temp_state, curr_state, dfa_state_size);
-		  if (early_queue_to_ready (temp_state, &ready))
-		    ready_sort (&ready);
-		}
-
-	      if (ready.n_ready == 0 || !can_issue_more
-		  || state_dead_lock_p (curr_state)
-		  || !(*current_sched_info->schedule_more_p) ())
-		break;
-
-	      /* Select and remove the insn from the ready list.  */
-	      if (sort_p)
-		insn = choose_ready (&ready);
-	      else
-		insn = ready_remove_first (&ready);
-
-	      if (targetm.sched.dfa_new_cycle
-		  && (*targetm.sched.dfa_new_cycle) (sched_dump, sched_verbose,
-						     insn, last_clock_var,
-						     clock_var, &sort_p))
-		{
-		  ready_add (&ready, insn);
-		  break;
-		}
-
-	      sort_p = TRUE;
-	      memcpy (temp_state, curr_state, dfa_state_size);
-	      if (recog_memoized (insn) < 0)
-		{
-		  asm_p = (GET_CODE (PATTERN (insn)) == ASM_INPUT
-			   || asm_noperands (PATTERN (insn)) >= 0);
-		  if (!first_cycle_insn_p && asm_p)
-		    /* This is asm insn which is tryed to be issued on the
-		       cycle not first.  Issue it on the next cycle.  */
-		    cost = 1;
-		  else
-		    /* A USE insn, or something else we don't need to
-		       understand.  We can't pass these directly to
-		       state_transition because it will trigger a
-		       fatal error for unrecognizable insns.  */
-		    cost = 0;
-		}
-	      else
-		{
-		  cost = state_transition (temp_state, insn);
-
-		  if (targetm.sched.first_cycle_multipass_dfa_lookahead
-		      && targetm.sched.dfa_bubble)
-		    {
-		      if (cost == 0)
-			{
-			  int j;
-			  rtx bubble;
-
-			  for (j = 0;
-			       (bubble = (*targetm.sched.dfa_bubble) (j))
-				 != NULL_RTX;
-			       j++)
-			    {
-			      memcpy (temp_state, curr_state, dfa_state_size);
-
-			      if (state_transition (temp_state, bubble) < 0
-				  && state_transition (temp_state, insn) < 0)
-				break;
-			    }
-
-			  if (bubble != NULL_RTX)
-			    {
-			      if (insert_schedule_bubbles_p)
-				{
-				  rtx copy;
-
-				  copy = copy_rtx (PATTERN (bubble));
-				  emit_insn_after (copy, last_scheduled_insn);
-				  last_scheduled_insn
-				    = NEXT_INSN (last_scheduled_insn);
-				  INSN_CODE (last_scheduled_insn)
-				    = INSN_CODE (bubble);
-
-				  /* Annotate the same for the first insns
-				     scheduling by using mode.  */
-				  PUT_MODE (last_scheduled_insn,
-					    (clock_var > last_clock_var
-					     ? clock_var - last_clock_var
-					     : VOIDmode));
-				  last_clock_var = clock_var;
-
-				  if (sched_verbose >= 2)
-				    {
-				      fprintf (sched_dump,
-					       ";;\t\t--> scheduling bubble insn <<<%d>>>:reservation ",
-					       INSN_UID (last_scheduled_insn));
-
-				      if (recog_memoized (last_scheduled_insn)
-					  < 0)
-					fprintf (sched_dump, "nothing");
-				      else
-					print_reservation
-					  (sched_dump, last_scheduled_insn);
-
-				      fprintf (sched_dump, "\n");
-				    }
-				}
-			      cost = -1;
-			    }
-			}
-		    }
-
-		  if (cost < 0)
-		    cost = 0;
-		  else if (cost == 0)
-		    cost = 1;
-		}
+	      cost = state_transition (temp_state, insn);
+	      if (cost < 0)
+		cost = 0;
+	      else if (cost == 0)
+		cost = 1;
 	    }
-
 
 	  if (cost >= 1)
 	    {
 	      queue_insn (insn, cost);
+ 	      if (SCHED_GROUP_P (insn))
+ 		{
+ 		  advance = cost;
+ 		  break;
+ 		}
+ 
 	      continue;
 	    }
 
@@ -2549,17 +2052,13 @@ schedule_block (int b, int rgn_n_insns)
 
 	  last_scheduled_insn = move_insn (insn, last_scheduled_insn);
 
-	  if (targetm.sched.use_dfa_pipeline_interface
-	      && (*targetm.sched.use_dfa_pipeline_interface) ())
-	    {
-	      if (memcmp (curr_state, temp_state, dfa_state_size) != 0)
-		cycle_issued_insns++;
-	      memcpy (curr_state, temp_state, dfa_state_size);
-	    }
+	  if (memcmp (curr_state, temp_state, dfa_state_size) != 0)
+	    cycle_issued_insns++;
+	  memcpy (curr_state, temp_state, dfa_state_size);
 
 	  if (targetm.sched.variable_issue)
 	    can_issue_more =
-	      (*targetm.sched.variable_issue) (sched_dump, sched_verbose,
+	      targetm.sched.variable_issue (sched_dump, sched_verbose,
 					       insn, can_issue_more);
 	  /* A naked CLOBBER or USE generates no instruction, so do
 	     not count them against the issue rate.  */
@@ -2589,37 +2088,27 @@ schedule_block (int b, int rgn_n_insns)
 		  || !SCHED_GROUP_P (ready_element (&ready, 0))))
 	    {
 	      can_issue_more =
-		(*targetm.sched.reorder2) (sched_dump, sched_verbose,
-					   ready.n_ready
-					   ? ready_lastpos (&ready) : NULL,
-					   &ready.n_ready, clock_var);
+		targetm.sched.reorder2 (sched_dump, sched_verbose,
+					ready.n_ready
+					? ready_lastpos (&ready) : NULL,
+					&ready.n_ready, clock_var);
 	    }
 	}
-
-      if ((!targetm.sched.use_dfa_pipeline_interface
-	   || !(*targetm.sched.use_dfa_pipeline_interface) ())
-	  && sched_verbose)
-	/* Debug info.  */
-	visualize_scheduled_insns (clock_var);
     }
 
   if (targetm.sched.md_finish)
-    (*targetm.sched.md_finish) (sched_dump, sched_verbose);
+    targetm.sched.md_finish (sched_dump, sched_verbose);
 
   /* Debug info.  */
   if (sched_verbose)
     {
       fprintf (sched_dump, ";;\tReady list (final):  ");
       debug_ready_list (&ready);
-      if (!targetm.sched.use_dfa_pipeline_interface
-	  || !(*targetm.sched.use_dfa_pipeline_interface) ())
-	print_block_visualization ("");
     }
 
   /* Sanity check -- queue must be empty now.  Meaningless if region has
      multiple bbs.  */
-  if (current_sched_info->queue_must_finish_empty && q_size != 0)
-      abort ();
+  gcc_assert (!current_sched_info->queue_must_finish_empty || !q_size);
 
   /* Update head/tail boundaries.  */
   head = NEXT_INSN (prev_head);
@@ -2672,7 +2161,6 @@ schedule_block (int b, int rgn_n_insns)
 	       clock_var, INSN_UID (head));
       fprintf (sched_dump, ";;   new tail = %d\n\n",
 	       INSN_UID (tail));
-      visualize_free ();
     }
 
   current_sched_info->head = head;
@@ -2680,14 +2168,10 @@ schedule_block (int b, int rgn_n_insns)
 
   free (ready.vec);
 
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ())
-    {
-      free (ready_try);
-      for (i = 0; i <= rgn_n_insns; i++)
-	free (choice_stack [i].state);
-      free (choice_stack);
-    }
+  free (ready_try);
+  for (i = 0; i <= rgn_n_insns; i++)
+    free (choice_stack [i].state);
+  free (choice_stack);
 }
 
 /* Set_priorities: compute priority of each insn in the block.  */
@@ -2710,7 +2194,7 @@ set_priorities (rtx head, rtx tail)
   sched_max_insns_priority = 0;
   for (insn = tail; insn != prev_head; insn = PREV_INSN (insn))
     {
-      if (GET_CODE (insn) == NOTE)
+      if (NOTE_P (insn))
 	continue;
 
       n_insn++;
@@ -2754,7 +2238,7 @@ sched_init (FILE *dump_file)
 
   /* Initialize issue_rate.  */
   if (targetm.sched.issue_rate)
-    issue_rate = (*targetm.sched.issue_rate) ();
+    issue_rate = targetm.sched.issue_rate ();
   else
     issue_rate = 1;
 
@@ -2774,23 +2258,15 @@ sched_init (FILE *dump_file)
   for (i = 0; i < old_max_uid; i++)
     h_i_d [i].cost = -1;
 
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ())
-    {
-      if (targetm.sched.init_dfa_pre_cycle_insn)
-	(*targetm.sched.init_dfa_pre_cycle_insn) ();
+  if (targetm.sched.init_dfa_pre_cycle_insn)
+    targetm.sched.init_dfa_pre_cycle_insn ();
 
-      if (targetm.sched.init_dfa_post_cycle_insn)
-	(*targetm.sched.init_dfa_post_cycle_insn) ();
+  if (targetm.sched.init_dfa_post_cycle_insn)
+    targetm.sched.init_dfa_post_cycle_insn ();
 
-      if (targetm.sched.first_cycle_multipass_dfa_lookahead
-	  && targetm.sched.init_dfa_bubbles)
-	(*targetm.sched.init_dfa_bubbles) ();
-
-      dfa_start ();
-      dfa_state_size = state_size ();
-      curr_state = xmalloc (dfa_state_size);
-    }
+  dfa_start ();
+  dfa_state_size = state_size ();
+  curr_state = xmalloc (dfa_state_size);
 
   h_i_d[0].luid = 0;
   luid = 1;
@@ -2804,7 +2280,7 @@ sched_init (FILE *dump_file)
 	   schedule differently depending on whether or not there are
 	   line-number notes, i.e., depending on whether or not we're
 	   generating debugging information.  */
-	if (GET_CODE (insn) != NOTE)
+	if (!NOTE_P (insn))
 	  ++luid;
 
 	if (insn == BB_END (b))
@@ -2830,7 +2306,7 @@ sched_init (FILE *dump_file)
       FOR_EACH_BB (b)
 	{
 	  for (line = BB_HEAD (b); line; line = PREV_INSN (line))
-	    if (GET_CODE (line) == NOTE && NOTE_LINE_NUMBER (line) > 0)
+	    if (NOTE_P (line) && NOTE_LINE_NUMBER (line) > 0)
 	      {
 		line_note_head[b->index] = line;
 		break;
@@ -2841,27 +2317,21 @@ sched_init (FILE *dump_file)
 	    {
 	      if (INSN_P (line))
 		break;
-	      if (GET_CODE (line) == NOTE && NOTE_LINE_NUMBER (line) > 0)
+	      if (NOTE_P (line) && NOTE_LINE_NUMBER (line) > 0)
 		line_note_head[b->index] = line;
 	    }
 	}
     }
-
-  if ((!targetm.sched.use_dfa_pipeline_interface
-       || !(*targetm.sched.use_dfa_pipeline_interface) ())
-      && sched_verbose)
-    /* Find units used in this function, for visualization.  */
-    init_target_units ();
 
   /* ??? Add a NOTE after the last insn of the last basic block.  It is not
      known why this is done.  */
 
   insn = BB_END (EXIT_BLOCK_PTR->prev_bb);
   if (NEXT_INSN (insn) == 0
-      || (GET_CODE (insn) != NOTE
-	  && GET_CODE (insn) != CODE_LABEL
+      || (!NOTE_P (insn)
+	  && !LABEL_P (insn)
 	  /* Don't emit a NOTE if it would end up before a BARRIER.  */
-	  && GET_CODE (NEXT_INSN (insn)) != BARRIER))
+	  && !BARRIER_P (NEXT_INSN (insn))))
     {
       emit_note_after (NOTE_INSN_DELETED, BB_END (EXIT_BLOCK_PTR->prev_bb));
       /* Make insn to appear outside BB.  */
@@ -2872,6 +2342,9 @@ sched_init (FILE *dump_file)
      removing death notes.  */
   FOR_EACH_BB_REVERSE (b)
     find_insn_reg_weight (b->index);
+
+  if (targetm.sched.md_init_global)
+      targetm.sched.md_init_global (sched_dump, sched_verbose, old_max_uid);
 }
 
 /* Free global data used during insn scheduling.  */
@@ -2880,16 +2353,14 @@ void
 sched_finish (void)
 {
   free (h_i_d);
-
-  if (targetm.sched.use_dfa_pipeline_interface
-      && (*targetm.sched.use_dfa_pipeline_interface) ())
-    {
-      free (curr_state);
-      dfa_finish ();
-    }
+  free (curr_state);
+  dfa_finish ();
   free_dependency_caches ();
   end_alias_analysis ();
   if (write_symbols != NO_DEBUG)
     free (line_note_head);
+
+  if (targetm.sched.md_finish_global)
+      targetm.sched.md_finish_global (sched_dump, sched_verbose);
 }
 #endif /* INSN_SCHEDULING */

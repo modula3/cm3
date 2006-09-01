@@ -1,5 +1,5 @@
 /* Definitions for ELF assembler support.
-   Copyright (C) 1999, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2003, 2005 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -15,8 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* So we can conditionalize small amounts of code in pa.c or pa.md.  */
 #define OBJ_ELF
@@ -45,27 +45,28 @@ do {  \
     } \
    } while (0)
 
-/* This is how to output a command to make the user-level label named NAME
-   defined for reference from other files.
+/* This is how to output a command to make the user-level label
+   named NAME defined for reference from other files.  We use
+   assemble_name_raw instead of assemble_name since a symbol in
+   a .IMPORT directive that isn't otherwise referenced is not
+   placed in the symbol table of the assembled object.
 
-   We call assemble_name, which in turn sets TREE_SYMBOL_REFERENCED.  This
-   macro will restore the original value of TREE_SYMBOL_REFERENCED to avoid
-   placing useless function definitions in the output file.
+   Failure to import a function reference can cause the HP linker
+   to segmentation fault!
 
-   Also note that the SOM based tools need the symbol imported as a CODE
-   symbol, while the ELF based tools require the symbol to be imported as
-   an ENTRY symbol.  What a crock.  */
+   Note that the SOM based tools need the symbol imported as a
+   CODE symbol, while the ELF based tools require the symbol to
+   be imported as an ENTRY symbol.  */
 
-#define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)	\
-  do { int save_referenced;					\
-       save_referenced = TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (DECL)); \
-       fputs ("\t.IMPORT ", FILE);					\
-	 assemble_name (FILE, NAME);				\
-       if (FUNCTION_NAME_P (NAME))     				\
-	 fputs (",ENTRY\n", FILE);				\
-       else							\
-	 fputs (",DATA\n", FILE);				\
-       TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (DECL)) = save_referenced; \
+#define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME) \
+  pa_hpux_asm_output_external ((FILE), (DECL), (NAME))
+#define ASM_OUTPUT_EXTERNAL_REAL(FILE, DECL, NAME) \
+  do { fputs ("\t.IMPORT ", FILE);					\
+       assemble_name_raw (FILE, NAME);					\
+       if (FUNCTION_NAME_P (NAME))     					\
+	 fputs (",ENTRY\n", FILE);					\
+       else								\
+	 fputs (",DATA\n", FILE);					\
      } while (0)
 
 /* The bogus HP assembler requires ALL external references to be

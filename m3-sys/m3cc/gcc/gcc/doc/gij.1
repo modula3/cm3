@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "GIJ 1"
-.TH GIJ 1 "2005-12-01" "gcc-3.4.5" "GNU"
+.TH GIJ 1 "2006-05-24" "gcc-4.1.1" "GNU"
 .SH "NAME"
 gij \- GNU interpreter for Java bytecode
 .SH "SYNOPSIS"
@@ -140,8 +140,8 @@ gij [\fB\-jar\fR] [\fB\s-1OPTION\s0\fR] ... \fI\s-1CLASS\s0\fR [\fI\s-1ARGS\s0\f
   [\fB\-cp\fR \fIpath\fR] [\fB\-classpath\fR \fIpath\fR]
   [\fB\-D\fR\fIname\fR[=\fIvalue\fR]...]
   [\fB\-ms=\fR\fInumber\fR] [\fB\-mx=\fR\fInumber\fR]
-  [\fB\-X\fR\fIargument\fR\fB]
-  [@option{\-\-showversion\fR] [\fB\-\-version\fR] [\fB\-\-help\fR][\fB\-?\fR]
+  [\fB\-X\fR\fIargument\fR] [\fB\-verbose\fR] [\fB\-verbose:class\fR]
+  [\fB\-\-showversion\fR] [\fB\-\-version\fR] [\fB\-\-help\fR][\fB\-?\fR]
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 \&\f(CW\*(C`gij\*(C'\fR is a Java bytecode interpreter included with \f(CW\*(C`libgcj\*(C'\fR.
@@ -189,10 +189,15 @@ be retrieved at runtime using the \f(CW\*(C`java.lang.System.getProperty\*(C'\fR
 method.
 .IP "\fB\-ms=\fR\fInumber\fR" 4
 .IX Item "-ms=number"
-This sets the initial heap size.
+Equivalent to \f(CW\*(C`\-Xms\*(C'\fR.
 .IP "\fB\-mx=\fR\fInumber\fR" 4
 .IX Item "-mx=number"
-This sets the maximum heap size.
+Equivalent to \f(CW\*(C`\-Xmx\*(C'\fR.
+.IP "\fB\-noverify\fR" 4
+.IX Item "-noverify"
+Do not verify compliance of bytecode with the \s-1VM\s0 specification. In addition,
+this option disables type verification which is otherwise performed on BC-ABI
+compiled code.
 .IP "\fB\-X\fR" 4
 .IX Item "-X"
 .PD 0
@@ -200,8 +205,23 @@ This sets the maximum heap size.
 .IX Item "-Xargument"
 .PD
 Supplying \f(CW\*(C`\-X\*(C'\fR by itself will cause \f(CW\*(C`gij\*(C'\fR to list all the
-supported \f(CW\*(C`\-X\*(C'\fR options.  Currently there are none.  Unrecognized
-\&\f(CW\*(C`\-X\*(C'\fR options are ignored, for compatibility with other runtimes.
+supported \f(CW\*(C`\-X\*(C'\fR options.  Currently these options are supported:
+.RS 4
+.IP "\fB\-Xms\fR\fIsize\fR" 4
+.IX Item "-Xmssize"
+Set the initial heap size.
+.IP "\fB\-Xmx\fR\fIsize\fR" 4
+.IX Item "-Xmxsize"
+Set the maximum heap size.
+.IP "\fB\-Xss\fR\fIsize\fR" 4
+.IX Item "-Xsssize"
+Set the thread stack size.
+.RE
+.RS 4
+.Sp
+Unrecognized \f(CW\*(C`\-X\*(C'\fR options are ignored, for compatibility with
+other runtimes.
+.RE
 .IP "\fB\-jar\fR" 4
 .IX Item "-jar"
 This indicates that the name passed to \f(CW\*(C`gij\*(C'\fR should be interpreted
@@ -216,21 +236,40 @@ Print help, then exit.
 .IP "\fB\-\-showversion\fR" 4
 .IX Item "--showversion"
 Print version number and continue.
+.IP "\fB\-\-fullversion\fR" 4
+.IX Item "--fullversion"
+Print detailed version information, then exit.
 .IP "\fB\-\-version\fR" 4
 .IX Item "--version"
 Print version number, then exit.
+.IP "\fB\-verbose\fR" 4
+.IX Item "-verbose"
+.PD 0
+.IP "\fB\-verbose:class\fR" 4
+.IX Item "-verbose:class"
+.PD
+Each time a class is initialized, print a short message on standard error.
+.PP
+\&\f(CW\*(C`gij\*(C'\fR also recognizes and ignores the following options, for
+compatibility with existing application launch scripts:
+\&\f(CW\*(C`\-client\*(C'\fR, \f(CW\*(C`\-server\*(C'\fR, \f(CW\*(C`\-hotspot\*(C'\fR, \f(CW\*(C`\-jrockit\*(C'\fR,
+\&\f(CW\*(C`\-agentlib\*(C'\fR, \f(CW\*(C`\-agentpath\*(C'\fR, \f(CW\*(C`\-debug\*(C'\fR, \f(CW\*(C`\-d32\*(C'\fR,
+\&\f(CW\*(C`\-d64\*(C'\fR, \f(CW\*(C`\-javaagent\*(C'\fR, \f(CW\*(C`\-noclassgc\*(C'\fR, \f(CW\*(C`\-verify\*(C'\fR,
+and \f(CW\*(C`\-verifyremote\*(C'\fR.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIgcc\fR\|(1), \fIgcj\fR\|(1), \fIgcjh\fR\|(1), \fIjv\-scan\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
 and the Info entries for \fIgcj\fR and \fIgcc\fR.
+\&\fIgcc\fR\|(1), \fIgcj\fR\|(1), \fIgcjh\fR\|(1), \fIjv\-scan\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
+and the Info entries for \fIgcj\fR and \fIgcc\fR.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
-Copyright (c) 2001, 2002 Free Software Foundation, Inc.
+Copyright (c) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 .PP
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the \s-1GNU\s0 Free Documentation License, Version 1.2 or
 any later version published by the Free Software Foundation; with the
-Invariant Sections being ``\s-1GNU\s0 General Public License'', the Front-Cover
+Invariant Sections being \*(L"\s-1GNU\s0 General Public License\*(R", the Front-Cover
 texts being (a) (see below), and with the Back-Cover Texts being (b)
 (see below).  A copy of the license is included in the
 man page \fIgfdl\fR\|(7).

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    Matsushita MN10300 series
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
    Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
@@ -18,8 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 
 #undef ASM_SPEC
@@ -42,45 +42,24 @@ Boston, MA 02111-1307, USA.  */
 
 #define CPP_SPEC "%{mam33:-D__AM33__} %{mam33-2:-D__AM33__=2 -D__AM33_2__}"
 
-/* Run-time compilation parameters selecting different hardware subsets.  */
-
-extern int target_flags;
-
 extern GTY(()) int mn10300_unspec_int_label_counter;
 
-/* Macros used in the machine description to test the flags.  */
+enum processor_type {
+  PROCESSOR_MN10300,
+  PROCESSOR_AM33,
+  PROCESSOR_AM33_2
+};
 
-/* Macro to define tables used to set the flags.
-   This is a list in braces of pairs in braces,
-   each pair being { "NAME", VALUE }
-   where VALUE is the bits to set or minus the bits to clear.
-   An empty string NAME is used to identify the default VALUE.  */
+extern enum processor_type mn10300_processor;
 
-/* Generate code to work around mul/mulq bugs on the mn10300.  */
-#define TARGET_MULT_BUG			(target_flags & 0x1)
+#define TARGET_AM33	(mn10300_processor >= PROCESSOR_AM33)
+#define TARGET_AM33_2	(mn10300_processor == PROCESSOR_AM33_2)
 
-/* Generate code for the AM33 processor.  */
-#define TARGET_AM33			(target_flags & 0x2)
-
-/* Generate code for the AM33/2.0 processor.  */
-#define TARGET_AM33_2			(target_flags & 0x4)
-
-#define TARGET_SWITCHES  \
-  {{ "mult-bug",	0x1,  N_("Work around hardware multiply bug")},	\
-   { "no-mult-bug", 	-0x1, N_("Do not work around hardware multiply bug")},\
-   { "am33", 		0x2,  N_("Target the AM33 processor")},	\
-   { "am33", 		-(0x1), ""},\
-   { "no-am33", 	-0x2, ""},	\
-   { "no-crt0",		0,    N_("No default crt0.o") }, \
-   { "am33-2",		0x6,  N_("Target the AM33/2.0 processor")},   \
-   { "am33-2",		-(0x1), ""},\
-   { "no-am33-2",	-0x4,   ""},  \
-   { "relax",		0,    N_("Enable linker relaxations") }, \
-   { "", TARGET_DEFAULT, NULL}}
-
-#ifndef TARGET_DEFAULT
-#define TARGET_DEFAULT 0x1
+#ifndef PROCESSOR_DEFAULT
+#define PROCESSOR_DEFAULT PROCESSOR_MN10300
 #endif
+
+#define OVERRIDE_OPTIONS mn10300_override_options ()
 
 /* Print subsidiary information on the compiler version in use.  */
 
@@ -215,7 +194,8 @@ extern GTY(()) int mn10300_unspec_int_label_counter;
 	fixed_regs[i] = call_used_regs[i] = 1;	\
     }						\
   if (flag_pic)					\
-    fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;	\
+    fixed_regs[PIC_OFFSET_TABLE_REGNUM] =       \
+    call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;\
 }
 
 /* Return number of consecutive hard regs needed starting at reg REGNO
@@ -366,41 +346,59 @@ enum reg_class {
    has been allocated, which happens in local-alloc.c.  */
 
 #ifndef REG_OK_STRICT
-# define REGNO_IN_RANGE_P(regno,min,max) \
-  (IN_RANGE ((regno), (min), (max)) || (regno) >= FIRST_PSEUDO_REGISTER)
+# define REG_STRICT 0
 #else
-# define REGNO_IN_RANGE_P(regno,min,max) \
-  (IN_RANGE ((regno), (min), (max)) \
-   || (reg_renumber \
-       && reg_renumber[(regno)] >= (min) && reg_renumber[(regno)] <= (max)))
+# define REG_STRICT 1
 #endif
 
-#define REGNO_DATA_P(regno) \
-  REGNO_IN_RANGE_P ((regno), FIRST_DATA_REGNUM, LAST_DATA_REGNUM)
-#define REGNO_ADDRESS_P(regno) \
-  REGNO_IN_RANGE_P ((regno), FIRST_ADDRESS_REGNUM, LAST_ADDRESS_REGNUM)
-#define REGNO_SP_P(regno) \
-  REGNO_IN_RANGE_P ((regno), STACK_POINTER_REGNUM, STACK_POINTER_REGNUM)
-#define REGNO_EXTENDED_P(regno) \
-  REGNO_IN_RANGE_P ((regno), FIRST_EXTENDED_REGNUM, LAST_EXTENDED_REGNUM)
-#define REGNO_AM33_P(regno) \
-  (REGNO_DATA_P ((regno)) || REGNO_ADDRESS_P ((regno)) \
-   || REGNO_EXTENDED_P ((regno)))
-#define REGNO_FP_P(regno) \
-  REGNO_IN_RANGE_P ((regno), FIRST_FP_REGNUM, LAST_FP_REGNUM)
+# define REGNO_IN_RANGE_P(regno,min,max,strict) \
+  (IN_RANGE ((regno), (min), (max)) 		\
+   || ((strict)					\
+       ? (reg_renumber				\
+	  && reg_renumber[(regno)] >= (min)	\
+	  && reg_renumber[(regno)] <= (max))	\
+       : (regno) >= FIRST_PSEUDO_REGISTER))
 
+#define REGNO_DATA_P(regno, strict) \
+  (REGNO_IN_RANGE_P ((regno), FIRST_DATA_REGNUM, LAST_DATA_REGNUM, \
+		     (strict)))
+#define REGNO_ADDRESS_P(regno, strict) \
+  (REGNO_IN_RANGE_P ((regno), FIRST_ADDRESS_REGNUM, LAST_ADDRESS_REGNUM, \
+		     (strict)))
+#define REGNO_SP_P(regno, strict) \
+  (REGNO_IN_RANGE_P ((regno), STACK_POINTER_REGNUM, STACK_POINTER_REGNUM, \
+		     (strict)))
+#define REGNO_EXTENDED_P(regno, strict) \
+  (REGNO_IN_RANGE_P ((regno), FIRST_EXTENDED_REGNUM, LAST_EXTENDED_REGNUM, \
+		     (strict)))
+#define REGNO_AM33_P(regno, strict) \
+  (REGNO_DATA_P ((regno), (strict)) || REGNO_ADDRESS_P ((regno), (strict)) \
+   || REGNO_EXTENDED_P ((regno), (strict)))
+#define REGNO_FP_P(regno, strict) \
+  (REGNO_IN_RANGE_P ((regno), FIRST_FP_REGNUM, LAST_FP_REGNUM, (strict)))
+
+#define REGNO_STRICT_OK_FOR_BASE_P(regno, strict) \
+  (REGNO_SP_P ((regno), (strict)) \
+   || REGNO_ADDRESS_P ((regno), (strict)) \
+   || REGNO_EXTENDED_P ((regno), (strict)))
 #define REGNO_OK_FOR_BASE_P(regno) \
-  (REGNO_SP_P ((regno)) \
-   || REGNO_ADDRESS_P ((regno)) || REGNO_EXTENDED_P ((regno)))
-#define REG_OK_FOR_BASE_P(X) REGNO_OK_FOR_BASE_P (REGNO (X))
+  (REGNO_STRICT_OK_FOR_BASE_P ((regno), REG_STRICT))
+#define REG_OK_FOR_BASE_P(X) \
+  (REGNO_OK_FOR_BASE_P (REGNO (X)))
 
+#define REGNO_STRICT_OK_FOR_BIT_BASE_P(regno, strict) \
+  (REGNO_SP_P ((regno), (strict)) || REGNO_ADDRESS_P ((regno), (strict)))
 #define REGNO_OK_FOR_BIT_BASE_P(regno) \
-  (REGNO_SP_P ((regno)) || REGNO_ADDRESS_P ((regno)))
-#define REG_OK_FOR_BIT_BASE_P(X) REGNO_OK_FOR_BIT_BASE_P (REGNO (X))
+  (REGNO_STRICT_OK_FOR_BIT_BASE_P ((regno), REG_STRICT))
+#define REG_OK_FOR_BIT_BASE_P(X) \
+  (REGNO_OK_FOR_BIT_BASE_P (REGNO (X)))
 
+#define REGNO_STRICT_OK_FOR_INDEX_P(regno, strict) \
+  (REGNO_DATA_P ((regno), (strict)) || REGNO_EXTENDED_P ((regno), (strict)))
 #define REGNO_OK_FOR_INDEX_P(regno) \
-  (REGNO_DATA_P ((regno)) || REGNO_EXTENDED_P ((regno)))
-#define REG_OK_FOR_INDEX_P(X) REGNO_OK_FOR_INDEX_P (REGNO (X))
+  (REGNO_STRICT_OK_FOR_INDEX_P ((regno), REG_STRICT))
+#define REG_OK_FOR_INDEX_P(X) \
+  (REGNO_OK_FOR_INDEX_P (REGNO (X)))
 
 /* Given an rtx X being reloaded into a reg required to be
    in class CLASS, return the class of reg to actually use.
@@ -482,12 +480,12 @@ enum reg_class {
 
 #define STACK_GROWS_DOWNWARD
 
-/* Define this if the nominal address of the stack frame
+/* Define this to nonzero if the nominal address of the stack frame
    is at the high-address end of the local variables;
    that is, each additional local variable allocated
    goes at a more negative offset in the frame.  */
 
-#define FRAME_GROWS_DOWNWARD
+#define FRAME_GROWS_DOWNWARD 1
 
 /* Offset within stack frame to start allocating local variables at.
    If FRAME_GROWS_DOWNWARD, this is the offset to the END of the
@@ -516,9 +514,6 @@ enum reg_class {
    them whenever possible.  */
 #define FRAME_POINTER_REQUIRED 0
 #define CAN_DEBUG_WITHOUT_FP
-
-/* A guess for the MN10300.  */
-#define PROMOTE_PROTOTYPES 1
 
 /* Value is the number of bytes of arguments automatically
    popped when returning from a subroutine call.
@@ -593,23 +588,15 @@ struct cum_arg {int nbytes; };
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (&CUM, MODE, TYPE, NAMED)
 
-#define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
-  function_arg_partial_nregs (&CUM, MODE, TYPE, NAMED)
-
-#define FUNCTION_ARG_PASS_BY_REFERENCE(CUM, MODE, TYPE, NAMED)		\
-  ((TYPE) && int_size_in_bytes (TYPE) > 8)
- 
-#define FUNCTION_ARG_CALLEE_COPIES(CUM, MODE, TYPE, NAMED) \
-  ((TYPE) && int_size_in_bytes (TYPE) > 8)
-
 /* Define how to find the value returned by a function.
    VALTYPE is the data type of the value (as a tree).
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
    otherwise, FUNC is 0.  */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC) \
-  gen_rtx_REG (TYPE_MODE (VALTYPE), POINTER_TYPE_P (VALTYPE) \
-	       ? FIRST_ADDRESS_REGNUM : FIRST_DATA_REGNUM)
+  mn10300_function_value (VALTYPE, FUNC, 0)
+#define FUNCTION_OUTGOING_VALUE(VALTYPE, FUNC) \
+  mn10300_function_value (VALTYPE, FUNC, 1)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
@@ -621,16 +608,7 @@ struct cum_arg {int nbytes; };
 #define FUNCTION_VALUE_REGNO_P(N) \
   ((N) == FIRST_DATA_REGNUM || (N) == FIRST_ADDRESS_REGNUM)
 
-/* Return values > 8 bytes in length in memory.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
-#define RETURN_IN_MEMORY(TYPE)  \
-  (int_size_in_bytes (TYPE) > 8 || TYPE_MODE (TYPE) == BLKmode)
-
-/* Register in which address to store a structure value
-   is passed to a function.  On the MN10300 it's passed as
-   the first parameter.  */
-
-#define STRUCT_VALUE 0
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -688,23 +666,9 @@ struct cum_arg {int nbytes; };
    ? gen_rtx_MEM (Pmode, arg_pointer_rtx) \
    : (rtx) 0)
 
-/* Emit code for a call to builtin_saveregs.  We must emit USE insns which
-   reference the 2 integer arg registers.
-   Ordinarily they are not call used registers, but they are for
-   _builtin_saveregs, so we must make this explicit.  */
-
-#define EXPAND_BUILTIN_SAVEREGS() mn10300_builtin_saveregs ()
-
 /* Implement `va_start' for varargs and stdarg.  */
 #define EXPAND_BUILTIN_VA_START(valist, nextarg) \
   mn10300_va_start (valist, nextarg)
-
-/* Implement `va_arg'.  */
-#define EXPAND_BUILTIN_VA_ARG(valist, type) \
-  mn10300_va_arg (valist, type)
-
-/* Addressing modes, and classification of registers for them.  */
-
 
 /* 1 if X is an rtx for a constant that is a valid address.  */
 
@@ -775,41 +739,20 @@ struct cum_arg {int nbytes; };
 
 /* Accept either REG or SUBREG where a register is valid.  */
   
-#define RTX_OK_FOR_BASE_P(X)					\
-  ((REG_P (X) && REG_OK_FOR_BASE_P (X))				\
+#define RTX_OK_FOR_BASE_P(X, strict)				\
+  ((REG_P (X) && REGNO_STRICT_OK_FOR_BASE_P (REGNO (X),		\
+ 					     (strict))) 	\
    || (GET_CODE (X) == SUBREG && REG_P (SUBREG_REG (X))		\
-       && REG_OK_FOR_BASE_P (SUBREG_REG (X))))
+       && REGNO_STRICT_OK_FOR_BASE_P (REGNO (SUBREG_REG (X)),	\
+ 				      (strict))))
 
 #define GO_IF_LEGITIMATE_ADDRESS(MODE, X, ADDR)    	\
-{							\
-  if (CONSTANT_ADDRESS_P (X)				\
-      && (! flag_pic || legitimate_pic_operand_p (X)))	\
-    goto ADDR;						\
-  if (RTX_OK_FOR_BASE_P (X))				\
-    goto ADDR;						\
-  if (TARGET_AM33					\
-      && GET_CODE (X) == POST_INC			\
-      && RTX_OK_FOR_BASE_P (XEXP (X, 0))		\
-      && (MODE == SImode || MODE == SFmode || MODE == HImode))\
-    goto ADDR;						\
-  if (GET_CODE (X) == PLUS)				\
-    {							\
-      rtx base = 0, index = 0;				\
-      if (REG_P (XEXP (X, 0))				\
-	  && REG_OK_FOR_BASE_P (XEXP (X, 0)))		\
-	base = XEXP (X, 0), index = XEXP (X, 1);	\
-      if (REG_P (XEXP (X, 1))				\
-	  && REG_OK_FOR_BASE_P (XEXP (X, 1)))		\
-	base = XEXP (X, 1), index = XEXP (X, 0);	\
-      if (base != 0 && index != 0)			\
-	{						\
-	  if (GET_CODE (index) == CONST_INT)		\
-	    goto ADDR;					\
-	  if (GET_CODE (index) == CONST)		\
-	    goto ADDR;					\
-	}						\
-    }							\
-}
+do							\
+  {							\
+    if (legitimate_address_p ((MODE), (X), REG_STRICT))	\
+      goto ADDR;					\
+  }							\
+while (0) 
 
 
 /* Try machine-dependent ways of modifying an illegitimate address
@@ -1109,11 +1052,6 @@ struct cum_arg {int nbytes; };
 /* The assembler op to get a word.  */
 
 #define FILE_ASM_OP "\t.file\n"
-
-#define PREDICATE_CODES					\
-  {"const_1f_operand", {CONST_INT, CONST_DOUBLE}},	\
-  {"const_8bit_operand", {CONST_INT}},			\
-  {"call_address_operand", {SYMBOL_REF, REG, UNSPEC}},
 
 typedef struct mn10300_cc_status_mdep
   {
