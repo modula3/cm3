@@ -1,3 +1,0 @@
-# For those that don't need any compiler but C (for the moment).
-
-LANGUAGES = c
