@@ -137,7 +137,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-lm", "-lSystemStubs" ],
+  "LIBC"       : [ "-lm" ],
 % "LEX-YACC"   : [ BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
 %                      11 "libl.a"
@@ -272,8 +272,8 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC", "-gstabs" ]
-  if optimize  args += "-O"  end
+  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
@@ -329,11 +329,10 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % build the shared library
-    ret_code = try_exec ("@libtool -dynamic", "-multiply_defined suppress",
+    ret_code = try_exec ("@" & SYSTEM_CC, "-dynamiclib", "-multiply_defined suppress",
                          "-twolevel_namespace", "-compatibility_version", vmaj,
                          "-current_version", version, "-install_name", lib_pn,
-                         "-lgcc", "-arch_only ppc",
-			 "-o", lib_soxx, objects, imported_libs)
+                         "-lgcc", "-o", lib_soxx, objects, imported_libs)
     if not equal (ret_code, 0) 
       delete_file (lib_a)
       return ret_code
@@ -436,7 +435,7 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
 M3_SPLIT_LIBNAMES = TRUE
-% --- split library names and pass -L/-l arguments to the linker
+% --- split shared library names and pass -L/-l arguments to the linker
 
 % M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
