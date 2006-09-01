@@ -1,5 +1,5 @@
 /* Generate SDB debugging info.
-   Copyright (C) 2003 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -15,8 +15,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 /* Note that no configuration uses sdb as its preferred format.  */
 
@@ -34,20 +34,6 @@ extern int sdb_label_count;
 /* Starting line of current function.  */
 extern int sdb_begin_function_line;
 
-#define PUT_SDB_DEF(a)					\
-do {							\
-  fprintf (asm_out_file, "\t%s.def\t",			\
-	   (TARGET_GAS) ? "" : "#");			\
-  ASM_OUTPUT_LABELREF (asm_out_file, a); 		\
-  fputc (';', asm_out_file);				\
-} while (0)
-
-#define PUT_SDB_PLAIN_DEF(a)				\
-do {							\
-  fprintf (asm_out_file, "\t%s.def\t.%s;",		\
-	   (TARGET_GAS) ? "" : "#", (a));		\
-} while (0)
-
 /* For block start and end, we create labels, so that
    later we can figure out where the correct offset is.
    The normal .ent/.end serve well enough for functions,
@@ -56,10 +42,9 @@ do {							\
 #define PUT_SDB_BLOCK_START(LINE)			\
 do {							\
   fprintf (asm_out_file,				\
-	   "%sLb%d:\n\t%s.begin\t%sLb%d\t%d\n",		\
+	   "%sLb%d:\n\t.begin\t%sLb%d\t%d\n",		\
 	   LOCAL_LABEL_PREFIX,				\
 	   sdb_label_count,				\
-	   (TARGET_GAS) ? "" : "#",			\
 	   LOCAL_LABEL_PREFIX,				\
 	   sdb_label_count,				\
 	   (LINE));					\
@@ -69,10 +54,9 @@ do {							\
 #define PUT_SDB_BLOCK_END(LINE)				\
 do {							\
   fprintf (asm_out_file,				\
-	   "%sLe%d:\n\t%s.bend\t%sLe%d\t%d\n",		\
+	   "%sLe%d:\n\t.bend\t%sLe%d\t%d\n",		\
 	   LOCAL_LABEL_PREFIX,				\
 	   sdb_label_count,				\
-	   (TARGET_GAS) ? "" : "#",			\
 	   LOCAL_LABEL_PREFIX,				\
 	   sdb_label_count,				\
 	   (LINE));					\
@@ -83,7 +67,22 @@ do {							\
 
 #define PUT_SDB_FUNCTION_END(LINE)			\
 do {							\
-  ASM_OUTPUT_SOURCE_LINE (asm_out_file, LINE + sdb_begin_function_line, 0); \
+  SDB_OUTPUT_SOURCE_LINE (asm_out_file, LINE + sdb_begin_function_line); \
 } while (0)
 
 #define PUT_SDB_EPILOGUE_END(NAME)
+
+/* We need to use .esize and .etype instead of .size and .type to
+   avoid conflicting with ELF directives.  */
+#undef PUT_SDB_SIZE
+#define PUT_SDB_SIZE(a)					\
+do {							\
+  fprintf (asm_out_file, "\t.esize\t" HOST_WIDE_INT_PRINT_DEC ";", \
+ 	   (HOST_WIDE_INT) (a));			\
+} while (0)
+
+#undef PUT_SDB_TYPE
+#define PUT_SDB_TYPE(a)					\
+do {							\
+  fprintf (asm_out_file, "\t.etype\t0x%x;", (a));	\
+} while (0)

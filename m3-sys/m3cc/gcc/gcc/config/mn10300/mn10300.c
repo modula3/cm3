@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for Matsushita MN10300 series
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
    Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
@@ -17,8 +17,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -54,6 +54,9 @@ int mn10300_unspec_int_label_counter;
    symbol names from register names.  */
 int mn10300_protect_label;
 
+/* The selected processor.  */
+enum processor_type mn10300_processor = PROCESSOR_DEFAULT;
+
 /* The size of the callee register save area.  Right now we save everything
    on entry since it costs us nothing in code size.  It does cost us from a
    speed standpoint, so we want to optimize this sooner or later.  */
@@ -65,11 +68,17 @@ int mn10300_protect_label;
 				|| regs_ever_live[16] || regs_ever_live[17]))
 
 
+static bool mn10300_handle_option (size_t, const char *, int);
 static int mn10300_address_cost_1 (rtx, int *);
 static int mn10300_address_cost (rtx);
 static bool mn10300_rtx_costs (rtx, int, int, int *);
 static void mn10300_file_start (void);
-
+static bool mn10300_return_in_memory (tree, tree);
+static rtx mn10300_builtin_saveregs (void);
+static bool mn10300_pass_by_reference (CUMULATIVE_ARGS *, enum machine_mode,
+				       tree, bool);
+static int mn10300_arg_partial_bytes (CUMULATIVE_ARGS *, enum machine_mode,
+				      tree, bool);
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ASM_ALIGNED_HI_OP
@@ -85,12 +94,62 @@ static void mn10300_file_start (void);
 #undef TARGET_ASM_FILE_START_FILE_DIRECTIVE
 #define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
 
+#undef TARGET_DEFAULT_TARGET_FLAGS
+#define TARGET_DEFAULT_TARGET_FLAGS MASK_MULT_BUG | MASK_PTR_A0D0
+#undef TARGET_HANDLE_OPTION
+#define TARGET_HANDLE_OPTION mn10300_handle_option
+
 #undef  TARGET_ENCODE_SECTION_INFO
 #define TARGET_ENCODE_SECTION_INFO mn10300_encode_section_info
+
+#undef TARGET_PROMOTE_PROTOTYPES
+#define TARGET_PROMOTE_PROTOTYPES hook_bool_tree_true
+#undef TARGET_RETURN_IN_MEMORY
+#define TARGET_RETURN_IN_MEMORY mn10300_return_in_memory
+#undef TARGET_PASS_BY_REFERENCE
+#define TARGET_PASS_BY_REFERENCE mn10300_pass_by_reference
+#undef TARGET_CALLEE_COPIES
+#define TARGET_CALLEE_COPIES hook_bool_CUMULATIVE_ARGS_mode_tree_bool_true
+#undef TARGET_ARG_PARTIAL_BYTES
+#define TARGET_ARG_PARTIAL_BYTES mn10300_arg_partial_bytes
+
+#undef TARGET_EXPAND_BUILTIN_SAVEREGS
+#define TARGET_EXPAND_BUILTIN_SAVEREGS mn10300_builtin_saveregs
 
 static void mn10300_encode_section_info (tree, rtx, int);
 struct gcc_target targetm = TARGET_INITIALIZER;
 
+/* Implement TARGET_HANDLE_OPTION.  */
+
+static bool
+mn10300_handle_option (size_t code,
+		       const char *arg ATTRIBUTE_UNUSED,
+		       int value)
+{
+  switch (code)
+    {
+    case OPT_mam33:
+      mn10300_processor = value ? PROCESSOR_AM33 : PROCESSOR_MN10300;
+      return true;
+    case OPT_mam33_2:
+      mn10300_processor = (value
+			   ? PROCESSOR_AM33_2
+			   : MIN (PROCESSOR_AM33, PROCESSOR_DEFAULT));
+      return true;
+    default:
+      return true;
+    }
+}
+
+/* Implement OVERRIDE_OPTIONS.  */
+
+void
+mn10300_override_options (void)
+{
+  if (TARGET_AM33)
+    target_flags &= ~MASK_MULT_BUG;
+}
+
 static void
 mn10300_file_start (void)
 {
@@ -161,7 +220,7 @@ print_operand (FILE *file, rtx x, int code)
 		fprintf (file, "ul");
 		break;
 	      default:
-		abort ();
+		gcc_unreachable ();
 	      }
 	    break;
 	  }
@@ -199,7 +258,7 @@ print_operand (FILE *file, rtx x, int code)
 	    fprintf (file, "cs");
 	    break;
 	  default:
-	    abort ();
+	    gcc_unreachable ();
 	  }
 	break;
       case 'C':
@@ -230,7 +289,7 @@ print_operand (FILE *file, rtx x, int code)
 	    break;
 
 	  default:
-	    abort ();
+	    gcc_unreachable ();
 	  }
 	break;
 
@@ -289,7 +348,7 @@ print_operand (FILE *file, rtx x, int code)
 	    }
 
 	  default:
-	    abort ();
+	    gcc_unreachable ();
 	  }
 	break;
 
@@ -325,7 +384,7 @@ print_operand (FILE *file, rtx x, int code)
 		      fprintf (file, "0x%lx", val[1]);
 		      break;;
 		    case SFmode:
-		      abort ();
+		      gcc_unreachable ();
 		    case VOIDmode:
 		    case DImode:
 		      print_operand_address (file, 
@@ -346,28 +405,26 @@ print_operand (FILE *file, rtx x, int code)
 	    }
 
 	  default:
-	    abort ();
+	    gcc_unreachable ();
 	  }
 	break;
 
       case 'A':
 	fputc ('(', file);
 	if (GET_CODE (XEXP (x, 0)) == REG)
-	  output_address (gen_rtx_PLUS (SImode, XEXP (x, 0), GEN_INT (0)));
+	  output_address (gen_rtx_PLUS (SImode, XEXP (x, 0), const0_rtx));
 	else
 	  output_address (XEXP (x, 0));
 	fputc (')', file);
 	break;
 
       case 'N':
-	if (INTVAL (x) < -128 || INTVAL (x) > 255)
-	  abort ();
+	gcc_assert (INTVAL (x) >= -128 && INTVAL (x) <= 255);
 	fprintf (file, "%d", (int)((~INTVAL (x)) & 0xff));
 	break;
 
       case 'U':
-	if (INTVAL (x) < -128 || INTVAL (x) > 255)
-	  abort ();
+	gcc_assert (INTVAL (x) >= -128 && INTVAL (x) <= 255);
 	fprintf (file, "%d", (int)(INTVAL (x) & 0xff));
 	break;
 
@@ -425,7 +482,7 @@ print_operand (FILE *file, rtx x, int code)
 	    print_operand_address (file, x);
 	    break;
 	  default:
-	    abort ();
+	    gcc_unreachable ();
 	  }
 	break;
    }
@@ -455,7 +512,7 @@ print_operand_address (FILE *file, rtx addr)
 	    && REG_OK_FOR_BASE_P (XEXP (addr, 1)))
 	  base = XEXP (addr, 1), index = XEXP (addr, 0);
       	else
-	  abort ();
+	  gcc_unreachable ();
 	print_operand (file, index, 0);
 	fputc (',', file);
 	print_operand (file, base, 0);;
@@ -512,8 +569,7 @@ mn10300_print_reg_list (FILE *file, int mask)
 
   if ((mask & 0x3c000) != 0)
     {
-      if ((mask & 0x3c000) != 0x3c000)
-	abort();
+      gcc_assert ((mask & 0x3c000) == 0x3c000);
       if (need_comma)
 	fputc (',', file);
       fputs ("exreg1", file);
@@ -824,7 +880,7 @@ expand_prologue (void)
 	  break;
 
 	default:
-	  abort ();
+	  gcc_unreachable ();
 	}
 	  
       /* Now prepare register a0, if we have decided to use it.  */
@@ -846,7 +902,7 @@ expand_prologue (void)
 	  break;
 	  
 	default:
-	  abort ();
+	  gcc_unreachable ();
 	}
       
       /* Now actually save the FP registers.  */
@@ -1062,7 +1118,7 @@ expand_epilogue (void)
 	      break;
 
 	    default:
-	      abort ();
+	      gcc_unreachable ();
 	    }
 	}
 
@@ -1187,20 +1243,13 @@ notice_update_cc (rtx body, rtx insn)
 	cc_status.mdep.fpCC = 1;
       break;
 
-    case CC_INVERT:
-      /* The insn is a compare instruction.  */
-      CC_STATUS_INIT;
-      cc_status.value1 = SET_SRC (body);
-      cc_status.flags |= CC_INVERTED;
-      break;
-
     case CC_CLOBBER:
       /* Insn doesn't leave CC in a usable state.  */
       CC_STATUS_INIT;
       break;
 
     default:
-      abort ();
+      gcc_unreachable ();
     }
 }
 
@@ -1281,17 +1330,6 @@ store_multiple_operation (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
     return 0;
 
   return mask;
-}
-
-/* Return true if OP is a valid call operand.  */
-
-int
-call_address_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  if (flag_pic)
-    return (EXTRA_CONSTRAINT (op, 'S') || GET_CODE (op) == REG);
-
-  return (GET_CODE (op) == SYMBOL_REF || GET_CODE (op) == REG);
 }
 
 /* What (if any) secondary registers are needed to move IN with mode
@@ -1402,12 +1440,23 @@ initial_offset (int from, int to)
 	    + (current_function_outgoing_args_size
 	       ? current_function_outgoing_args_size + 4 : 0)); 
 
-  abort ();
+  gcc_unreachable ();
+}
+
+/* Worker function for TARGET_RETURN_IN_MEMORY.  */
+
+static bool
+mn10300_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
+{
+  /* Return values > 8 bytes in length in memory.  */
+  return (int_size_in_bytes (type) > 8
+	  || int_size_in_bytes (type) == 0
+	  || TYPE_MODE (type) == BLKmode);
 }
 
 /* Flush the argument registers to the stack for a stdarg function;
    return the new argument pointer.  */
-rtx
+static rtx
 mn10300_builtin_saveregs (void)
 {
   rtx offset, mem;
@@ -1444,40 +1493,21 @@ mn10300_va_start (tree valist, rtx nextarg)
   std_expand_builtin_va_start (valist, nextarg);
 }
 
-rtx
-mn10300_va_arg (tree valist, tree type)
+/* Return true when a parameter should be passed by reference.  */
+
+static bool
+mn10300_pass_by_reference (CUMULATIVE_ARGS *cum ATTRIBUTE_UNUSED,
+			   enum machine_mode mode, tree type,
+			   bool named ATTRIBUTE_UNUSED)
 {
-  HOST_WIDE_INT align, rsize;
-  tree t, ptr, pptr;
+  unsigned HOST_WIDE_INT size;
 
-  /* Compute the rounded size of the type.  */
-  align = PARM_BOUNDARY / BITS_PER_UNIT;
-  rsize = (((int_size_in_bytes (type) + align - 1) / align) * align);
-
-  t = build (POSTINCREMENT_EXPR, TREE_TYPE (valist), valist, 
-	     build_int_2 ((rsize > 8 ? 4 : rsize), 0));
-  TREE_SIDE_EFFECTS (t) = 1;
-
-  ptr = build_pointer_type (type);
-
-  /* "Large" types are passed by reference.  */
-  if (rsize > 8)
-    {
-      pptr = build_pointer_type (ptr);
-      t = build1 (NOP_EXPR, pptr, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-
-      t = build1 (INDIRECT_REF, ptr, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-    }
+  if (type)
+    size = int_size_in_bytes (type);
   else
-    {
-      t = build1 (NOP_EXPR, ptr, t);
-      TREE_SIDE_EFFECTS (t) = 1;
-    }
+    size = GET_MODE_SIZE (mode);
 
-  /* Calculate!  */
-  return expand_expr (t, NULL_RTX, Pmode, EXPAND_NORMAL);
+  return (size > 8 || size == 0);
 }
 
 /* Return an RTX to represent where a value with mode MODE will be returned
@@ -1530,12 +1560,12 @@ function_arg (CUMULATIVE_ARGS *cum, enum machine_mode mode,
   return result;
 }
 
-/* Return the number of registers to use for an argument passed partially
-   in registers and partially in memory.  */
+/* Return the number of bytes of registers to use for an argument passed
+   partially in registers and partially in memory.  */
 
-int
-function_arg_partial_nregs (CUMULATIVE_ARGS *cum, enum machine_mode mode,
-			    tree type, int named ATTRIBUTE_UNUSED)
+static int
+mn10300_arg_partial_bytes (CUMULATIVE_ARGS *cum, enum machine_mode mode,
+			   tree type, bool named ATTRIBUTE_UNUSED)
 {
   int size, align;
 
@@ -1567,7 +1597,38 @@ function_arg_partial_nregs (CUMULATIVE_ARGS *cum, enum machine_mode mode,
       && cum->nbytes + size > nregs * UNITS_PER_WORD)
     return 0;
 
-  return (nregs * UNITS_PER_WORD - cum->nbytes) / UNITS_PER_WORD;
+  return nregs * UNITS_PER_WORD - cum->nbytes;
+}
+
+/* Return the location of the function's value.  This will be either
+   $d0 for integer functions, $a0 for pointers, or a PARALLEL of both
+   $d0 and $a0 if the -mreturn-pointer-on-do flag is set.  Note that
+   we only return the PARALLEL for outgoing values; we do not want
+   callers relying on this extra copy.  */
+
+rtx
+mn10300_function_value (tree valtype, tree func, int outgoing)
+{
+  rtx rv;
+  enum machine_mode mode = TYPE_MODE (valtype);
+
+  if (! POINTER_TYPE_P (valtype))
+    return gen_rtx_REG (mode, FIRST_DATA_REGNUM);
+  else if (! TARGET_PTR_A0D0 || ! outgoing
+	   || current_function_returns_struct)
+    return gen_rtx_REG (mode, FIRST_ADDRESS_REGNUM);
+
+  rv = gen_rtx_PARALLEL (mode, rtvec_alloc (2));
+  XVECEXP (rv, 0, 0)
+    = gen_rtx_EXPR_LIST (VOIDmode,
+			 gen_rtx_REG (mode, FIRST_ADDRESS_REGNUM),
+			 GEN_INT (0));
+  
+  XVECEXP (rv, 0, 1)
+    = gen_rtx_EXPR_LIST (VOIDmode,
+			 gen_rtx_REG (mode, FIRST_DATA_REGNUM),
+			 GEN_INT (0));
+  return rv;
 }
 
 /* Output a tst insn.  */
@@ -1673,24 +1734,6 @@ impossible_plus_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
   return 0;
 }
 
-/* Return 1 if X is a CONST_INT that is only 8 bits wide.  This is used
-   for the btst insn which may examine memory or a register (the memory
-   variant only allows an unsigned 8 bit integer).  */
-int
-const_8bit_operand (register rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return (GET_CODE (op) == CONST_INT
-	  && INTVAL (op) >= 0
-	  && INTVAL (op) < 256);
-}
-
-/* Return true if the operand is the 1.0f constant.  */
-int
-const_1f_operand (register rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return (op == CONST1_RTX (SFmode));
-}
-
 /* Similarly, but when using a zero_extract pattern for a btst where
    the source operand might end up in memory.  */
 int
@@ -1778,7 +1821,7 @@ legitimize_address (rtx x, rtx oldx ATTRIBUTE_UNUSED,
 	  regy1 = force_reg (Pmode, force_operand (XEXP (y, 0), 0));
 	  regy2 = force_reg (Pmode, force_operand (XEXP (y, 1), 0));
 	  regx1 = force_reg (Pmode,
-			     gen_rtx (GET_CODE (y), Pmode, regx1, regy2));
+			     gen_rtx_fmt_ee (GET_CODE (y), Pmode, regx1, regy2));
 	  return force_reg (Pmode, gen_rtx_PLUS (Pmode, regx1, regy1));
 	}
     }
@@ -1830,9 +1873,6 @@ legitimate_pic_operand_p (rtx x)
 	  || XINT (x, 1) == UNSPEC_PLT))
       return 1;
 
-  if (GET_CODE (x) == QUEUED)
-    return legitimate_pic_operand_p (QUEUED_VAR (x));
-
   fmt = GET_RTX_FORMAT (GET_CODE (x));
   for (i = GET_RTX_LENGTH (GET_CODE (x)) - 1; i >= 0; i--)
     {
@@ -1849,6 +1889,57 @@ legitimate_pic_operand_p (rtx x)
     }
 
   return 1;
+}
+
+/* Return TRUE if the address X, taken from a (MEM:MODE X) rtx, is
+   legitimate, and FALSE otherwise.  */
+bool
+legitimate_address_p (enum machine_mode mode, rtx x, int strict)
+{
+  if (CONSTANT_ADDRESS_P (x)
+      && (! flag_pic || legitimate_pic_operand_p (x)))
+    return TRUE;
+
+  if (RTX_OK_FOR_BASE_P (x, strict))
+    return TRUE;
+
+  if (TARGET_AM33
+      && GET_CODE (x) == POST_INC
+      && RTX_OK_FOR_BASE_P (XEXP (x, 0), strict)
+      && (mode == SImode || mode == SFmode || mode == HImode))
+    return TRUE;
+
+  if (GET_CODE (x) == PLUS)
+    {
+      rtx base = 0, index = 0;
+
+      if (REG_P (XEXP (x, 0))
+	  && REGNO_STRICT_OK_FOR_BASE_P (REGNO (XEXP (x, 0)), strict))
+	{
+	  base = XEXP (x, 0);
+	  index = XEXP (x, 1);
+	}
+
+      if (REG_P (XEXP (x, 1))
+	  && REGNO_STRICT_OK_FOR_BASE_P (REGNO (XEXP (x, 1)), strict))
+	{
+	  base = XEXP (x, 1);
+	  index = XEXP (x, 0);
+	}
+
+      if (base != 0 && index != 0)
+	{
+	  if (GET_CODE (index) == CONST_INT)
+	    return TRUE;
+	  if (GET_CODE (index) == CONST
+	      && GET_CODE (XEXP (index, 0)) != PLUS
+	      && (! flag_pic
+ 		  || legitimate_pic_operand_p (index)))
+	    return TRUE;
+	}
+    }
+
+  return FALSE;
 }
 
 static int
@@ -1875,7 +1966,7 @@ mn10300_address_cost_1 (rtx x, int *unsig)
 	  return 5;
 
 	default:
-	  abort ();
+	  gcc_unreachable ();
 	}
 
     case PLUS:
@@ -1911,21 +2002,8 @@ mn10300_address_cost_1 (rtx x, int *unsig)
     case LABEL_REF:
       return 8;
 
-    case ADDRESSOF:
-      switch (GET_CODE (XEXP (x, 0)))
-	{
-	case MEM:
-	  return mn10300_address_cost (XEXP (x, 0));
-
-	case REG:
-	  return 1;
-
-	default:
-	  abort ();
-	}
-
     default:
-      abort ();
+      gcc_unreachable ();
 
     }
 }

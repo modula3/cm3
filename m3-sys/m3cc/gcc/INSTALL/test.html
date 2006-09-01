@@ -8,7 +8,7 @@
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -59,8 +59,8 @@ These are part of the full distribution, but if you downloaded the
 separately.
 
    <p>Second, you must have the testing tools installed.  This includes
-<a href="http://www.gnu.org/software/dejagnu/">DejaGnu</a> 1.4.1 or 1.4.3
-and later, Tcl, and Expect; the DejaGnu site has links to these.
+<a href="http://www.gnu.org/software/dejagnu/">DejaGnu</a>, Tcl, and Expect;
+the DejaGnu site has links to these.
 
    <p>If the directories where <samp><span class="command">runtest</span></samp> and <samp><span class="command">expect</span></samp> were
 installed are not in the <samp><span class="env">PATH</span></samp>, you may need to set the following
@@ -124,7 +124,7 @@ slashes separate options.
    <p>You can run the testsuites multiple times using combinations of options
 with a syntax similar to the brace expansion of popular shells:
 
-<pre class="smallexample">         ..."--target_board=arm-sim{-mhard-float,-msoft-float}{-O1,-O2,-O3,}"
+<pre class="smallexample">         ..."--target_board=arm-sim/{-mhard-float,-msoft-float}{-O1,-O2,-O3,}"
 </pre>
    <p>(Note the empty option caused by the trailing comma in the final group.) 
 The following will run each testsuite eight times using the `<samp><span class="samp">arm-sim</span></samp>'
@@ -177,7 +177,7 @@ testsuite at <samp><span class="file">libjava/testsuite/libjava.mauve/mauve</spa
 specifying the location of that tree when invoking `<samp><span class="samp">make</span></samp>', as in
 `<samp><span class="samp">make MAUVEDIR=~/mauve check</span></samp>'.
 
-   <p><a href="http://www-124.ibm.com/developerworks/oss/cvs/jikes/~checkout~/jacks/jacks.html">Jacks</a>
+   <p><a href="http://sources.redhat.com/mauve/jacks.html">Jacks</a>
 is a free testsuite that tests Java compiler front ends.  This suite
 can be run as part of libgcj testing by placing the Jacks tree within
 the libjava testsuite at <samp><span class="file">libjava/testsuite/libjava.jacks/jacks</span></samp>.

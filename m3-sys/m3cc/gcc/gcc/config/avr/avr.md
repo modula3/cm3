@@ -19,8 +19,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;; Special characters after '%':
 ;;  A  No effect (add 0).
@@ -348,7 +348,7 @@
 ;; move string (like memcpy)
 ;; implement as RTL loop
 
-(define_expand "movstrhi"
+(define_expand "movmemhi"
   [(parallel [(set (match_operand:BLK 0 "memory_operand" "")
           (match_operand:BLK 1 "memory_operand" ""))
           (use (match_operand:HI 2 "const_int_operand" ""))
@@ -410,35 +410,39 @@
   DONE;
 }")
 
-;; =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0 =0
-;; memset (%0, 0, %1)
+;; =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2 =%2
+;; memset (%0, %2, %1)
 
-(define_expand "clrstrhi"
+(define_expand "setmemhi"
   [(parallel [(set (match_operand:BLK 0 "memory_operand" "")
-		   (const_int 0))
+ 		   (match_operand 2 "const_int_operand" ""))
 	      (use (match_operand:HI 1 "const_int_operand" ""))
-	      (use (match_operand:HI 2 "const_int_operand" "n"))
-	      (clobber (match_scratch:HI 3 ""))
-	      (clobber (match_dup 4))])]
+	      (use (match_operand:HI 3 "const_int_operand" "n"))
+	      (clobber (match_scratch:HI 4 ""))
+	      (clobber (match_dup 5))])]
   ""
   "{
   rtx addr0;
   int cnt8;
   enum machine_mode mode;
 
+  /* If value to set is not zero, use the library routine.  */
+  if (operands[2] != const0_rtx)
+    FAIL;
+
   if (GET_CODE (operands[1]) != CONST_INT)
     FAIL;
 
   cnt8 = byte_immediate_operand (operands[1], GET_MODE (operands[1]));
   mode = cnt8 ? QImode : HImode;
-  operands[4] = gen_rtx_SCRATCH (mode);
+  operands[5] = gen_rtx_SCRATCH (mode);
   operands[1] = copy_to_mode_reg (mode,
                                   gen_int_mode (INTVAL (operands[1]), mode));
   addr0 = copy_to_mode_reg (Pmode, XEXP (operands[0], 0));
-  operands[0] = gen_rtx (MEM, BLKmode, addr0);
+  operands[0] = gen_rtx_MEM (BLKmode, addr0);
 }")
 
-(define_insn "*clrstrqi"
+(define_insn "*clrmemqi"
   [(set (mem:BLK (match_operand:HI 0 "register_operand" "e"))
 	(const_int 0))
    (use (match_operand:QI 1 "register_operand" "r"))
@@ -452,7 +456,7 @@
   [(set_attr "length" "3")
    (set_attr "cc" "clobber")])
 
-(define_insn "*clrstrhi"
+(define_insn "*clrmemhi"
   [(set (mem:BLK (match_operand:HI 0 "register_operand" "e,e"))
 	(const_int 0))
    (use (match_operand:HI 1 "register_operand" "!w,d"))
@@ -490,7 +494,7 @@
   if (! (GET_CODE (operands[2]) == CONST_INT && INTVAL (operands[2]) == 0))
     FAIL;
   addr = copy_to_mode_reg (Pmode, XEXP (operands[1],0));
-  operands[1] = gen_rtx (MEM, BLKmode, addr); 
+  operands[1] = gen_rtx_MEM (BLKmode, addr); 
   operands[5] = addr;
   operands[4] = gen_reg_rtx (HImode);
 }")
@@ -2076,8 +2080,8 @@
   "")
 
 (define_insn "call_insn"
-  [(call (mem:HI (match_operand:HI 0 "nonmemory_operand" "!z,*r,i"))
-         (match_operand:HI 1 "general_operand" "X,X,X"))]
+  [(call (mem:HI (match_operand:HI 0 "nonmemory_operand" "!z,*r,s,n"))
+         (match_operand:HI 1 "general_operand" "X,X,X,X"))]
 ;; We don't need in saving Z register because r30,r31 is a call used registers
   ;; Operand 1 not used on the AVR.
   "(register_operand (operands[0], HImode) || CONSTANT_P (operands[0]))"
@@ -2094,9 +2098,13 @@
 		AS2 (mov, r31, %B0) CR_TAB
 		\"icall\");
     }
-  return AS1(%~call,%c0);
+  else if (which_alternative==2)
+    return AS1(%~call,%c0);
+  return (AS2 (ldi,r30,lo8(%0)) CR_TAB
+          AS2 (ldi,r31,hi8(%0)) CR_TAB
+          \"icall\");
 }"
-  [(set_attr "cc" "clobber,clobber,clobber")
+  [(set_attr "cc" "clobber,clobber,clobber,clobber")
    (set_attr_alternative "length"
 			 [(const_int 1)
 			  (if_then_else (eq_attr "mcu_enhanced" "yes")
@@ -2104,17 +2112,17 @@
 					(const_int 3))
 			  (if_then_else (eq_attr "mcu_mega" "yes")
 					(const_int 2)
-					(const_int 1))])])
+					(const_int 1))
+			  (const_int 3)])])
 
 (define_insn "call_value_insn"
-  [(set (match_operand 0 "register_operand" "=r,r,r")
-        (call (mem:HI (match_operand:HI 1 "nonmemory_operand" "!z,*r,i"))
+  [(set (match_operand 0 "register_operand" "=r,r,r,r")
+        (call (mem:HI (match_operand:HI 1 "nonmemory_operand" "!z,*r,s,n"))
 ;; We don't need in saving Z register because r30,r31 is a call used registers
-              (match_operand:HI 2 "general_operand" "X,X,X")))]
+              (match_operand:HI 2 "general_operand" "X,X,X,X")))]
   ;; Operand 2 not used on the AVR.
   "(register_operand (operands[0], VOIDmode) || CONSTANT_P (operands[0]))"
-  "*
-{
+  "*{
   if (which_alternative==0)
      return \"icall\";
   else if (which_alternative==1)
@@ -2127,9 +2135,13 @@
 		AS2 (mov, r31, %B1) CR_TAB
 		\"icall\");
     }
-  return AS1(%~call,%c1);
+  else if (which_alternative==2)
+    return AS1(%~call,%c1);
+  return (AS2 (ldi, r30, lo8(%1)) CR_TAB
+          AS2 (ldi, r31, hi8(%1)) CR_TAB
+          \"icall\");
 }"
-  [(set_attr "cc" "clobber,clobber,clobber")
+  [(set_attr "cc" "clobber,clobber,clobber,clobber")
    (set_attr_alternative "length"
 			 [(const_int 1)
 			  (if_then_else (eq_attr "mcu_enhanced" "yes")
@@ -2137,7 +2149,8 @@
 					(const_int 3))
 			  (if_then_else (eq_attr "mcu_mega" "yes")
 					(const_int 2)
-					(const_int 1))])])
+					(const_int 1))
+			  (const_int 3)])])
 
 (define_insn "return"
   [(return)]

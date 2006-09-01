@@ -1,6 +1,6 @@
 /* Set up combined include path chain for the preprocessor.
    Copyright (C) 1986, 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
    Broken out of cppinit.c and cppfiles.c and rewritten Mar 2003.
 
@@ -16,11 +16,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
+#include "machmode.h"
+#include "target.h"
 #include "tm.h"
 #include "cpplib.h"
 #include "prefix.h"
@@ -35,7 +37,7 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 # define INO_T_EQ(A, B) (!memcmp (&(A), &(B), sizeof (A)))
 # define INO_T_COPY(DEST, SRC) memcpy(&(DEST), &(SRC), sizeof (SRC))
 #else
-# if (defined _WIN32 && ! defined (_UWIN)) || defined __MSDOS__
+# if (defined _WIN32 && !defined (_UWIN)) || defined __MSDOS__
 #  define INO_T_EQ(A, B) 0
 # else
 #  define INO_T_EQ(A, B) ((A) == (B))
@@ -112,7 +114,7 @@ add_env_var_paths (const char *env_var, int chain)
 	  path[q - p] = '\0';
 	}
 
-      add_path (path, chain, chain == SYSTEM);
+      add_path (path, chain, chain == SYSTEM, false);
     }
 }
 
@@ -126,7 +128,7 @@ add_standard_paths (const char *sysroot, const char *iprefix, int cxx_stdinc)
   if (iprefix && (len = cpp_GCC_INCLUDE_DIR_len) != 0)
     {
       /* Look for directories that start with the standard prefix.
-	 "Translate" them, ie. replace /usr/local/lib/gcc... with
+	 "Translate" them, i.e. replace /usr/local/lib/gcc... with
 	 IPREFIX and search them first.  */
       for (p = cpp_include_defaults; p->fname; p++)
 	{
@@ -140,7 +142,7 @@ add_standard_paths (const char *sysroot, const char *iprefix, int cxx_stdinc)
 	      if (!strncmp (p->fname, cpp_GCC_INCLUDE_DIR, len))
 		{
 		  char *str = concat (iprefix, p->fname + len, NULL);
-		  add_path (str, SYSTEM, p->cxx_aware);
+		  add_path (str, SYSTEM, p->cxx_aware, false);
 		}
 	    }
 	}
@@ -158,7 +160,7 @@ add_standard_paths (const char *sysroot, const char *iprefix, int cxx_stdinc)
 	  else
 	    str = update_path (p->fname, p->component);
 
-	  add_path (str, SYSTEM, p->cxx_aware);
+	  add_path (str, SYSTEM, p->cxx_aware, false);
 	}
     }
 }
@@ -169,6 +171,7 @@ add_standard_paths (const char *sysroot, const char *iprefix, int cxx_stdinc)
    JOIN, unless it duplicates JOIN in which case the last path is
    removed.  Return the head of the resulting chain.  Any of HEAD,
    JOIN and SYSTEM can be NULL.  */
+
 static struct cpp_dir *
 remove_duplicates (cpp_reader *pfile, struct cpp_dir *head,
 		   struct cpp_dir *system, struct cpp_dir *join,
@@ -189,7 +192,13 @@ remove_duplicates (cpp_reader *pfile, struct cpp_dir *head,
 	  if (errno != ENOENT)
 	    cpp_errno (pfile, CPP_DL_ERROR, cur->name);
 	  else
-	    reason = REASON_NOENT;
+	    {
+	      /* If -Wmissing-include-dirs is given, warn.  */
+	      cpp_options *opts = cpp_get_options (pfile);
+	      if (opts->warn_missing_include_dirs && cur->user_supplied_p)
+		cpp_errno (pfile, CPP_DL_WARNING, cur->name);
+	      reason = REASON_NOENT;
+	    }
 	}
       else if (!S_ISDIR (st.st_mode))
 	cpp_error_with_line (pfile, CPP_DL_ERROR, 0, 0,
@@ -202,7 +211,8 @@ remove_duplicates (cpp_reader *pfile, struct cpp_dir *head,
 	  /* Remove this one if it is in the system chain.  */
 	  reason = REASON_DUP_SYS;
 	  for (tmp = system; tmp; tmp = tmp->next)
-	    if (INO_T_EQ (tmp->ino, cur->ino) && tmp->dev == cur->dev)
+           if (INO_T_EQ (tmp->ino, cur->ino) && tmp->dev == cur->dev
+               && cur->construct == tmp->construct)
 	      break;
 
 	  if (!tmp)
@@ -210,14 +220,16 @@ remove_duplicates (cpp_reader *pfile, struct cpp_dir *head,
 	      /* Duplicate of something earlier in the same chain?  */
 	      reason = REASON_DUP;
 	      for (tmp = head; tmp != cur; tmp = tmp->next)
-		if (INO_T_EQ (cur->ino, tmp->ino) && cur->dev == tmp->dev)
+               if (INO_T_EQ (cur->ino, tmp->ino) && cur->dev == tmp->dev
+                   && cur->construct == tmp->construct)
 		  break;
 
 	      if (tmp == cur
 		  /* Last in the chain and duplicate of JOIN?  */
 		  && !(cur->next == NULL && join
 		       && INO_T_EQ (cur->ino, join->ino)
-		       && cur->dev == join->dev))
+                      && cur->dev == join->dev
+                      && cur->construct == join->construct))
 		{
 		  /* Unique, so keep this directory.  */
 		  pcur = &cur->next;
@@ -241,9 +253,10 @@ remove_duplicates (cpp_reader *pfile, struct cpp_dir *head,
 
    We can't just merge the lists and then uniquify them because then
    we may lose directories from the <> search path that should be
-   there; consider -Ifoo -Ibar -I- -Ifoo -Iquux.  It is however safe
-   to treat -Ibar -Ifoo -I- -Ifoo -Iquux as if written -Ibar -I- -Ifoo
-   -Iquux.  */
+   there; consider -iquote foo -iquote bar -Ifoo -Iquux.  It is
+   however safe to treat -iquote bar -iquote foo -Ifoo -Iquux as if
+   written -iquote bar -Ifoo -Iquux.  */
+
 static void
 merge_include_chains (cpp_reader *pfile, int verbose)
 {
@@ -298,16 +311,28 @@ split_quote_chain (void)
   quote_ignores_source_dir = true;
 }
 
+/* Add P to the chain specified by CHAIN.  */
+
+void
+add_cpp_dir_path (cpp_dir *p, int chain)
+{
+  if (tails[chain])
+    tails[chain]->next = p;
+  else
+    heads[chain] = p;
+  tails[chain] = p;
+}
+
 /* Add PATH to the include chain CHAIN. PATH must be malloc-ed and
    NUL-terminated.  */
 void
-add_path (char *path, int chain, int cxx_aware)
+add_path (char *path, int chain, int cxx_aware, bool user_supplied_p)
 {
-  struct cpp_dir *p;
+  cpp_dir *p;
 
 #if defined (HAVE_DOS_BASED_FILE_SYSTEM)
   /* Convert all backslashes to slashes.  The native CRT stat()
-     function does not recognise a directory that ends in a backslash
+     function does not recognize a directory that ends in a backslash
      (unless it is a drive root dir, such "c:\").  Forward slashes,
      trailing or otherwise, cause no problems for stat().  */
   char* c;
@@ -315,19 +340,17 @@ add_path (char *path, int chain, int cxx_aware)
     if (*c == '\\') *c = '/';
 #endif
 
-  p = xmalloc (sizeof (struct cpp_dir));
+  p = xmalloc (sizeof (cpp_dir));
   p->next = NULL;
   p->name = path;
   if (chain == SYSTEM || chain == AFTER)
     p->sysp = 1 + !cxx_aware;
   else
     p->sysp = 0;
+  p->construct = 0;
+  p->user_supplied_p = user_supplied_p;
 
-  if (tails[chain])
-    tails[chain]->next = p;
-  else
-    heads[chain] = p;
-  tails[chain] = p;
+  add_cpp_dir_path (p, chain);
 }
 
 /* Exported function to handle include chain merging, duplicate
@@ -352,13 +375,34 @@ register_include_chains (cpp_reader *pfile, const char *sysroot,
      include chain.  */
   add_env_var_paths ("CPATH", BRACKET);
   add_env_var_paths (lang_env_vars[idx], SYSTEM);
+  
+  target_c_incpath.extra_pre_includes (sysroot, iprefix, stdinc);
 
   /* Finally chain on the standard directories.  */
   if (stdinc)
     add_standard_paths (sysroot, iprefix, cxx_stdinc);
+
+  target_c_incpath.extra_includes (sysroot, iprefix, stdinc);
 
   merge_include_chains (pfile, verbose);
 
   cpp_set_include_chains (pfile, heads[QUOTE], heads[BRACKET],
 			  quote_ignores_source_dir);
 }
+#if !(defined TARGET_EXTRA_INCLUDES) || !(defined TARGET_EXTRA_PRE_INCLUDES)
+static void hook_void_charptr_charptr_int (const char *sysroot ATTRIBUTE_UNUSED,
+					   const char *iprefix ATTRIBUTE_UNUSED,
+					   int stdinc ATTRIBUTE_UNUSED)
+{
+}
+#endif
+
+#ifndef TARGET_EXTRA_INCLUDES
+#define TARGET_EXTRA_INCLUDES hook_void_charptr_charptr_int
+#endif
+#ifndef TARGET_EXTRA_PRE_INCLUDES
+#define TARGET_EXTRA_PRE_INCLUDES hook_void_charptr_charptr_int
+#endif
+
+struct target_c_incpath_s target_c_incpath = { TARGET_EXTRA_PRE_INCLUDES, TARGET_EXTRA_INCLUDES };
+

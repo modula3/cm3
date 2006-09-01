@@ -1,7 +1,8 @@
 This is doc/gcj.info, produced by makeinfo version 4.8 from
-/home/gdr/build/gcc-3.4.5/gcc-3.4.5/gcc/java/gcj.texi.
+/scratch/mitchell/gcc-releases/gcc-4.1.1/gcc-4.1.1/gcc/java/gcj.texi.
 
-   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005 Free Software Foundation,
+Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -30,20 +31,25 @@ INFO-DIR-SECTION Individual utilities
 START-INFO-DIR-ENTRY
 * gcjh: (gcj)Invoking gcjh.
                             Generate header files from Java class files
+* gjnih: (gcj)Invoking gjnih.
+                            Generate JNI header files from Java class files
 * jv-scan: (gcj)Invoking jv-scan.
                             Print information about Java source files
 * jcf-dump: (gcj)Invoking jcf-dump.
                             Print information about Java class files
 * gij: (gcj)Invoking gij.   GNU interpreter for Java bytecode
+* gcj-dbtool: (gcj)Invoking gcj-dbtool.
+                            Tool for manipulating class file databases.
 * jv-convert: (gcj)Invoking jv-convert.
                             Convert file from one encoding to another
-* rmic: (gcj)Invoking rmic.
+* grmic: (gcj)Invoking grmic.
                             Generate stubs for Remote Method Invocation.
-* rmiregistry: (gcj)Invoking rmiregistry.
+* grmiregistry: (gcj)Invoking grmiregistry.
                             The remote object registry.
 END-INFO-DIR-ENTRY
 
-   Copyright (C) 2001, 2002 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005 Free Software Foundation,
+Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -81,15 +87,18 @@ object files, and it can read both Java source code and `.class' files.
 * Invoking gcj::	Compiler options supported by `gcj'
 * Compatibility::	Compatibility between gcj and other tools for Java
 * Invoking gcjh::       Generate header files from class files
+* Invoking gjnih::      Generate JNI header files from class files
 * Invoking jv-scan::    Print information about source files
 * Invoking jcf-dump::   Print information about class files
 * Invoking gij::	Interpreting Java bytecodes
+* Invoking gcj-dbtool:: Tool for manipulating class file databases.
 * Invoking jv-convert:: Converting from one encoding to another
-* Invoking rmic::        Generate stubs for Remote Method Invocation.
-* Invoking rmiregistry:: The remote object registry.
+* Invoking grmic::      Generate stubs for Remote Method Invocation.
+* Invoking grmiregistry:: The remote object registry.
 * About CNI::           Description of the Compiled Native Interface
 * System properties::   Modifying runtime behavior of the libgcj library
 * Resources::		Where to look for more information
+* Index::               Index.
 
 
 File: gcj.info,  Node: Copying,  Next: GNU Free Documentation License,  Prev: Top,  Up: Top
@@ -100,7 +109,7 @@ GNU GENERAL PUBLIC LICENSE
                          Version 2, June 1991
 
      Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-     59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -386,8 +395,8 @@ modification follow.
      ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
                       END OF TERMS AND CONDITIONS
-How to Apply These Terms to Your New Programs
-=============================================
+Appendix: How to Apply These Terms to Your New Programs
+=======================================================
 
 If you develop a new program, and you want it to be of the greatest
 possible use to the public, the best way to achieve this is to make it
@@ -413,8 +422,8 @@ the "copyright" line and a pointer to where the full notice is found.
      GNU General Public License for more details.
 
      You should have received a copy of the GNU General Public License
-     along with this program; if not, write to the Free Software Foundation,
-     Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+     along with this program; if not, write to the Free Software
+     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
    Also add information on how to contact you by electronic and paper
 mail.
@@ -459,7 +468,7 @@ GNU Free Documentation License
                       Version 1.2, November 2002
 
      Copyright (C) 2000,2001,2002 Free Software Foundation, Inc.
-     59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -790,7 +799,7 @@ GNU Free Documentation License
      a storage or distribution medium, is called an "aggregate" if the
      copyright resulting from the compilation is not used to limit the
      legal rights of the compilation's users beyond what the individual
-     works permit.  When the Document is included an aggregate, this
+     works permit.  When the Document is included in an aggregate, this
      License does not apply to the other works in the aggregate which
      are not themselves derivative works of the Document.
 
@@ -811,7 +820,7 @@ GNU Free Documentation License
      translations of some or all Invariant Sections in addition to the
      original versions of these Invariant Sections.  You may include a
      translation of this License, and all the license notices in the
-     Document, and any Warrany Disclaimers, provided that you also
+     Document, and any Warranty Disclaimers, provided that you also
      include the original English version of this License and the
      original versions of those notices and disclaimers.  In case of a
      disagreement between the translation and the original version of
@@ -862,8 +871,8 @@ notices just after the title page:
        Permission is granted to copy, distribute and/or modify this document
        under the terms of the GNU Free Documentation License, Version 1.2
        or any later version published by the Free Software Foundation;
-       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-       A copy of the license is included in the section entitled ``GNU
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
        Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
@@ -898,6 +907,7 @@ manual only documents the options specific to `gcj'.
 * Input Options::		How gcj finds files
 * Encodings::                   Options controlling source file encoding
 * Warnings::			Options controlling warnings specific to gcj
+* Linking::			Options for making an executable
 * Code Generation::		Options controlling the output of gcj
 * Configure-time Options::	Options you won't use
 
@@ -922,7 +932,7 @@ names are supported:
      An archive containing one or more `.class' files, all of which are
      compiled.  The archive may be compressed.  Files in an archive
      which don't end with `.class' are treated as resource files; they
-     are copmiled into the resulting object file as `core:' URLs.
+     are compiled into the resulting object file as `core:' URLs.
 
 `@FILE'
      A file containing a whitespace-separated list of input file names.
@@ -1048,7 +1058,7 @@ use this for your source files you can be assured that it will work on
 every host.
 
 
-File: gcj.info,  Node: Warnings,  Next: Code Generation,  Prev: Encodings,  Up: Invoking gcj
+File: gcj.info,  Node: Warnings,  Next: Linking,  Prev: Encodings,  Up: Invoking gcj
 
 1.4 Warnings
 ============
@@ -1083,18 +1093,41 @@ of what is listed.
      -Wunused'.
 
 
-File: gcj.info,  Node: Code Generation,  Next: Configure-time Options,  Prev: Warnings,  Up: Invoking gcj
+File: gcj.info,  Node: Linking,  Next: Code Generation,  Prev: Warnings,  Up: Invoking gcj
 
-1.5 Code Generation
-===================
+1.5 Linking
+===========
 
-In addition to the many `gcc' options controlling code generation,
-`gcj' has several options specific to itself.
+To turn a Java application into an executable program, you need to link
+it with the needed libraries, just as for C or C++.  The linker by
+default looks for a global function named `main'.  Since Java does not
+have global functions, and a collection of Java classes may have more
+than one class with a `main' method, you need to let the linker know
+which of those `main' methods it should invoke when starting the
+application.  You can do that in any of these ways:
+
+   * Specify the class containing the desired `main' method when you
+     link the application, using the `--main' flag, described below.
+
+   * Link the Java package(s) into a shared library (dll) rather than an
+     executable.  Then invoke the application using the `gij' program,
+     making sure that `gij' can find the libraries it needs.
+
+   * Link the Java packages(s) with the flag `-lgij', which links in
+     the `main' routine from the `gij' command.  This allows you to
+     select the class whose `main' method you want to run when you run
+     the application.  You can also use other `gij' flags, such as `-D'
+     flags to set properties.  Using the `-lgij' library (rather than
+     the `gij' program of the previous mechanism) has some advantages:
+     it is compatible with static linking, and does not require
+     configuring or installing libraries.
+
+   These `gij' options relate to linking an executable:
 
 `--main=CLASSNAME'
      This option is used when linking to specify the name of the class
      whose `main' method should be invoked when the resulting
-     executable is run.  (1)
+     executable is run.
 
 `-DNAME[=VALUE]'
      This option can only be used with `--main'.  It defines a system
@@ -1102,6 +1135,22 @@ In addition to the many `gcc' options controlling code generation,
      then it defaults to the empty string.  These system properties are
      initialized at the program's startup and can be retrieved at
      runtime using the `java.lang.System.getProperty' method.
+
+`-lgij'
+     Create an application whose command-line processing is that of the
+     `gij' command.
+
+     This option is an alternative to using `--main'; you cannot use
+     both.
+
+
+File: gcj.info,  Node: Code Generation,  Next: Configure-time Options,  Prev: Linking,  Up: Invoking gcj
+
+1.6 Code Generation
+===================
+
+In addition to the many `gcc' options controlling code generation,
+`gcj' has several options specific to itself.
 
 `-C'
      This option is used to tell `gcj' to generate bytecode (`.class'
@@ -1161,18 +1210,58 @@ In addition to the many `gcc' options controlling code generation,
      code, `-fno-optimize-static-class-initialization' will turn this
      optimization off, regardless of the optimization level in use.
 
-   ---------- Footnotes ----------
+`--disable-assertions[=CLASS-OR-PACKAGE]'
+     Don't include code for checking assertions in the compiled code.
+     If `=CLASS-OR-PACKAGE' is missing disables assertion code
+     generation for all classes, unless overridden by a more specific
+     `--enable-assertions' flag.  If CLASS-OR-PACKAGE is a class name,
+     only disables generating assertion checks within the named class
+     or its inner classes.  If CLASS-OR-PACKAGE is a package name,
+     disables generating assertion checks within the named package or a
+     subpackage.
 
-   (1) The linker by default looks for a global function named `main'.
-Since Java does not have global functions, and a collection of Java
-classes may have more than one class with a `main' method, you need to
-let the linker know which of those `main' methods it should invoke when
-starting the application.
+     By default, assertions are enabled when generating class files or
+     when not optimizing, and disabled when generating optimized
+     binaries.
+
+`--enable-assertions[=CLASS-OR-PACKAGE]'
+     Generates code to check assertions.  The option is perhaps
+     misnamed, as you still need to turn on assertion checking at
+     run-time, and we don't support any easy way to do that.  So this
+     flag isn't very useful yet, except to partially override
+     `--disable-assertions'.
+
+`-findirect-dispatch'
+     `gcj' has a special binary compatibility ABI, which is enabled by
+     the `-findirect-dispatch' option.  In this mode, the code
+     generated by `gcj' honors the binary compatibility guarantees in
+     the Java Language Specification, and the resulting object files do
+     not need to be directly linked against their dependencies.
+     Instead, all dependencies are looked up at runtime.  This allows
+     free mixing of interpreted and compiled code.
+
+     Note that, at present, `-findirect-dispatch' can only be used when
+     compiling `.class' files.  It will not work when compiling from
+     source.  CNI also does not yet work with the binary compatibility
+     ABI.  These restrictions will be lifted in some future release.
+
+     However, if you compile CNI code with the standard ABI, you can
+     call it from code built with the binary compatibility ABI.
+
+`-fbootstrap-classes'
+     This option can be use to tell `libgcj' that the compiled classes
+     should be loaded by the bootstrap loader, not the system class
+     loader.  By default, if you compile a class and link it into an
+     executable, it will be treated as if it was loaded using the
+     system class loader.  This is convenient, as it means that things
+     like `Class.forName()' will search `CLASSPATH' to find the desired
+     class.
+
 
 
 File: gcj.info,  Node: Configure-time Options,  Prev: Code Generation,  Up: Invoking gcj
 
-1.6 Configure-time Options
+1.7 Configure-time Options
 ==========================
 
 Some `gcj' code generations options affect the resulting ABI, and so
@@ -1306,7 +1395,7 @@ have been added are to facilitate this functionality.
 
 
 
-File: gcj.info,  Node: Invoking gcjh,  Next: Invoking jv-scan,  Prev: Compatibility,  Up: Top
+File: gcj.info,  Node: Invoking gcjh,  Next: Invoking gjnih,  Prev: Compatibility,  Up: Top
 
 3 Invoking gcjh
 ***************
@@ -1326,6 +1415,18 @@ required native methods.
      This tells `gcjh' to generate a JNI header or stub.  By default,
      CNI headers are generated.
 
+`-force'
+     This option forces `gcjh' to write the output file.
+
+`-old'
+     This option is accepted but ignored for compatibility.
+
+`-trace'
+     This option is accepted but ignored for compatibility.
+
+`-J OPTION'
+     This option is accepted but ignored for compatibility.
+
 `-add TEXT'
      Inserts TEXT into the class body.  This is ignored in JNI mode.
 
@@ -1343,6 +1444,7 @@ required native methods.
 
 `--classpath=PATH'
 `--CLASSPATH=PATH'
+`--bootclasspath=PATH'
 `-IDIRECTORY'
 `-d DIRECTORY'
 `-o FILE'
@@ -1380,9 +1482,93 @@ required native methods.
    All remaining options are considered to be names of classes.
 
 
-File: gcj.info,  Node: Invoking jv-scan,  Next: Invoking jcf-dump,  Prev: Invoking gcjh,  Up: Top
+File: gcj.info,  Node: Invoking gjnih,  Next: Invoking jv-scan,  Prev: Invoking gcjh,  Up: Top
 
-4 Invoking jv-scan
+4 Invoking gjnih
+****************
+
+The `gjnih' program is used to generate JNI header files from class
+files.  Running it is equivalent to running `gcjh -jni'.
+
+`-stubs'
+     This causes `gjnih' to generate stub files instead of header files.
+     By default the stub file will be named after the class, with a
+     suffix of `.c'.
+
+`-jni'
+     This option specifies the default behavior which is to generate a
+     JNI header or stub.
+
+`-force'
+     This option forces `gjnih' to write the output file.
+
+`-old'
+     This option is accepted but ignored for compatibility.
+
+`-trace'
+     This option is accepted but ignored for compatibility.
+
+`-J OPTION'
+     This option is accepted but ignored for compatibility.
+
+`-add TEXT'
+     Inserts TEXT into the class body.  This is ignored in by `gjnih'.
+
+`-append TEXT'
+     Inserts TEXT into the header file after the class declaration.
+     This is ignored in by `gjnih'.
+
+`-friend TEXT'
+     Inserts TEXT into the class as a `friend' declaration.  This is
+     ignored by `gjnih'.
+
+`-prepend TEXT'
+     Inserts TEXT into the header file before the class declaration.
+     This is ignored in by `gjnih'.
+
+`--classpath=PATH'
+`--CLASSPATH=PATH'
+`--bootclasspath=PATH'
+`-IDIRECTORY'
+`-d DIRECTORY'
+`-o FILE'
+     These options are all identical to the corresponding `gcj' options.
+
+`-o FILE'
+     Sets the output file name.  This cannot be used if there is more
+     than one class on the command line.
+
+`-td DIRECTORY'
+     Sets the name of the directory to use for temporary files.
+
+`-M'
+     Print all dependencies to stdout; suppress ordinary output.
+
+`-MM'
+     Print non-system dependencies to stdout; suppress ordinary output.
+
+`-MD'
+     Print all dependencies to stdout.
+
+`-MMD'
+     Print non-system dependencies to stdout.
+
+`--help'
+     Print help about `gjnih' and exit.  No further processing is done.
+
+`--version'
+     Print version information for `gjnih' and exit.  No further
+     processing is done.
+
+`-v, --verbose'
+     Print extra information while running.
+
+   All remaining options are considered to be names of classes.
+
+
+File: gcj.info,  Node: Invoking jv-scan,  Next: Invoking jcf-dump,  Prev: Invoking gjnih,  Up: Top
+
+5 Invoking jv-scan
 ******************
 
 The `jv-scan' program can be used to print information about a Java
@@ -1422,7 +1608,7 @@ source file (`.java' file).
 
 File: gcj.info,  Node: Invoking jcf-dump,  Next: Invoking gij,  Prev: Invoking jv-scan,  Up: Top
 
-5 Invoking jcf-dump
+6 Invoking jcf-dump
 *******************
 
 This is a class file examiner, similar to `javap'.  It will print
@@ -1432,6 +1618,10 @@ or file name.
 `-c'
      Disassemble method bodies.  By default method bodies are not
      printed.
+
+`--print-constants'
+     Print the constant pool.  When printing a reference to a constant
+     also print its index in the constant pool.
 
 `--javap'
      Generate output in `javap' format.  The implementation of this
@@ -1450,12 +1640,13 @@ or file name.
      Print version number, then exit.
 
 `-v, --verbose'
-     Print extra information while running.
+     Print extra information while running.  Implies
+     `--print-constants'.
 
 
-File: gcj.info,  Node: Invoking gij,  Next: Invoking jv-convert,  Prev: Invoking jcf-dump,  Up: Top
+File: gcj.info,  Node: Invoking gij,  Next: Invoking gcj-dbtool,  Prev: Invoking jcf-dump,  Up: Top
 
-6 Invoking gij
+7 Invoking gij
 **************
 
 `gij' is a Java bytecode interpreter included with `libgcj'.  `gij' is
@@ -1498,16 +1689,32 @@ been compiled and put into a shared library on the class path.
      `java.lang.System.getProperty' method.
 
 `-ms=NUMBER'
-     This sets the initial heap size.
+     Equivalent to `-Xms'.
 
 `-mx=NUMBER'
-     This sets the maximum heap size.
+     Equivalent to `-Xmx'.
+
+`-noverify'
+     Do not verify compliance of bytecode with the VM specification. In
+     addition, this option disables type verification which is
+     otherwise performed on BC-ABI compiled code.
 
 `-X'
 `-XARGUMENT'
      Supplying `-X' by itself will cause `gij' to list all the
-     supported `-X' options.  Currently there are none.  Unrecognized
-     `-X' options are ignored, for compatibility with other runtimes.
+     supported `-X' options.  Currently these options are supported:
+
+    `-XmsSIZE'
+          Set the initial heap size.
+
+    `-XmxSIZE'
+          Set the maximum heap size.
+
+    `-XssSIZE'
+          Set the thread stack size.
+
+     Unrecognized `-X' options are ignored, for compatibility with
+     other runtimes.
 
 `-jar'
      This indicates that the name passed to `gij' should be interpreted
@@ -1520,13 +1727,93 @@ been compiled and put into a shared library on the class path.
 `--showversion'
      Print version number and continue.
 
+`--fullversion'
+     Print detailed version information, then exit.
+
 `--version'
      Print version number, then exit.
 
-
-File: gcj.info,  Node: Invoking jv-convert,  Next: Invoking rmic,  Prev: Invoking gij,  Up: Top
+`-verbose'
+`-verbose:class'
+     Each time a class is initialized, print a short message on
+     standard error.
 
-7 Invoking jv-convert
+   `gij' also recognizes and ignores the following options, for
+compatibility with existing application launch scripts: `-client',
+`-server', `-hotspot', `-jrockit', `-agentlib', `-agentpath', `-debug',
+`-d32', `-d64', `-javaagent', `-noclassgc', `-verify', and
+`-verifyremote'.
+
+
+File: gcj.info,  Node: Invoking gcj-dbtool,  Next: Invoking jv-convert,  Prev: Invoking gij,  Up: Top
+
+8 Invoking gcj-dbtool.
+**********************
+
+`gcj-dbtool' is a tool for creating and manipulating class file mapping
+databases.  `libgcj' can use these databases to find a shared library
+corresponding to the bytecode representation of a class.  This
+functionality is useful for ahead-of-time compilation of a program that
+has no knowledge of `gcj'.
+
+   `gcj-dbtool' works best if all the jar files added to it are
+compiled using `-findirect-dispatch'.
+
+   Note that `gcj-dbtool' is currently available as "preview
+technology".  We believe it is a reasonable way to allow
+application-transparent ahead-of-time compilation, but this is an
+unexplored area.  We welcome your comments.
+
+`-n DBFILE [SIZE]'
+     This creates a new database.  Currently, databases cannot be
+     resized; you can choose a larger initial size if desired.  The
+     default size is 32,749.
+
+`-a DBFILE JARFILE LIB'
+`-f DBFILE JARFILE LIB'
+     This adds a jar file to the database.  For each class file in the
+     jar, a cryptographic signature of the bytecode representation of
+     the class is recorded in the database.  At runtime, a class is
+     looked up by its signature and the compiled form of the class is
+     looked for in the corresponding shared library.  The `-a' option
+     will verify that LIB exists before adding it to the database; `-f'
+     skips this check.
+
+`[`-'][`-0'] -m DBFILE DBFILE,[DBFILE]'
+     Merge a number of databases.  The output database overwrites any
+     existing database.  To add databases into an existing database,
+     include the destination in the list of sources.
+
+     If `-' or `-0' are used, the list of files to read is taken from
+     standard input instead of the command line.  For `-0', Input
+     filenames are terminated by a null character instead of by
+     whitespace.  Useful when arguments might contain white space.  The
+     GNU find -print0 option produces input suitable for this mode.
+
+`-t DBFILE'
+     Test a database.
+
+`-l DBFILE'
+     List the contents of a database.
+
+`-p'
+     Print the name of the default database.  If there is no default
+     database, this prints a blank line.  If LIBDIR is specified, use
+     it instead of the default library directory component of the
+     database name.
+
+`--help'
+     Print a help message, then exit.
+
+`--version'
+`-v'
+     Print version information, then exit.
+
+
+
+File: gcj.info,  Node: Invoking jv-convert,  Next: Invoking grmic,  Prev: Invoking gcj-dbtool,  Up: Top
+
+9 Invoking jv-convert
 *********************
 
 `jv-convert' [`OPTION'] ... [INPUTFILE [OUTPUTFILE]]
@@ -1563,18 +1850,18 @@ Currently there is no way to get a list of all supported encodings.
      Print version information, then exit.
 
 
-File: gcj.info,  Node: Invoking rmic,  Next: Invoking rmiregistry,  Prev: Invoking jv-convert,  Up: Top
+File: gcj.info,  Node: Invoking grmic,  Next: Invoking grmiregistry,  Prev: Invoking jv-convert,  Up: Top
 
-8 Invoking rmic
-***************
+10 Invoking grmic
+*****************
 
-`rmic' [`OPTION'] ... CLASS ...
+`grmic' [`OPTION'] ... CLASS ...
 
-   `rmic' is a utility included with `libgcj' which generates stubs for
-remote objects.
+   `grmic' is a utility included with `libgcj' which generates stubs
+for remote objects.
 
    Note that this program isn't yet fully compatible with the JDK
-`rmic'.  Some options, such as `-classpath', are recognized but
+`grmic'.  Some options, such as `-classpath', are recognized but
 currently ignored.  We have left these options undocumented for now.
 
    Long options can also be given with a GNU-style leading `--'.  For
@@ -1582,26 +1869,26 @@ instance, `--help' is accepted.
 
 `-keep'
 `-keepgenerated'
-     By default, `rmic' deletes intermediate files.  Either of these
+     By default, `grmic' deletes intermediate files.  Either of these
      options causes it not to delete such files.
 
 `-v1.1'
-     Cause `rmic' to create stubs and skeletons for the 1.1 protocol
+     Cause `grmic' to create stubs and skeletons for the 1.1 protocol
      version.
 
 `-vcompat'
-     Cause `rmic' to create stubs and skeletons compatible with both
+     Cause `grmic' to create stubs and skeletons compatible with both
      the 1.1 and 1.2 protocol versions.  This is the default.
 
 `-v1.2'
-     Cause `rmic' to create stubs and skeletons for the 1.2 protocol
+     Cause `grmic' to create stubs and skeletons for the 1.2 protocol
      version.
 
 `-nocompile'
      Don't compile the generated files.
 
 `-verbose'
-     Print information about what `rmic' is doing.
+     Print information about what `grmic' is doing.
 
 `-d DIRECTORY'
      Put output files in DIRECTORY.  By default the files are put in
@@ -1614,14 +1901,14 @@ instance, `--help' is accepted.
      Print version information, then exit.
 
 
-File: gcj.info,  Node: Invoking rmiregistry,  Next: About CNI,  Prev: Invoking rmic,  Up: Top
+File: gcj.info,  Node: Invoking grmiregistry,  Next: About CNI,  Prev: Invoking grmic,  Up: Top
 
-9 Invoking rmiregistry
-**********************
+11 Invoking grmiregistry
+************************
 
-`rmic' [`OPTION'] ... [PORT]
+`grmic' [`OPTION'] ... [PORT]
 
-   `rmiregistry' starts a remote object registry on the current host.
+   `grmiregistry' starts a remote object registry on the current host.
 If no port number is specified, then port 1099 is used.
 
 `--help'
@@ -1631,9 +1918,9 @@ If no port number is specified, then port 1099 is used.
      Print version information, then exit.
 
 
-File: gcj.info,  Node: About CNI,  Next: System properties,  Prev: Invoking rmiregistry,  Up: Top
+File: gcj.info,  Node: About CNI,  Next: System properties,  Prev: Invoking grmiregistry,  Up: Top
 
-10 About CNI
+12 About CNI
 ************
 
 This documents CNI, the Compiled Native Interface, which is is a
@@ -1645,11 +1932,13 @@ standard JNI (Java Native Interface).
 
 * Basic concepts::              Introduction to using CNI.
 * Packages::                    How packages are mapped to C++.
-* Primitive types::             Handling Java types in C++.
+* Primitive types::             Handling primitive Java types in C++.
+* Reference types::             Handling Java reference types in C++.
 * Interfaces::                  How Java interfaces map to C++.
 * Objects and Classes::         C++ and Java classes.
 * Class Initialization::        How objects are initialized.
 * Object allocation::           How to create Java objects in C++.
+* Memory allocation::           How to allocate and free memory.
 * Arrays::                      Dealing with Java arrays in C++.
 * Methods::                     Java methods in C++.
 * Strings::                     Information about Java Strings.
@@ -1662,7 +1951,7 @@ standard JNI (Java Native Interface).
 
 File: gcj.info,  Node: Basic concepts,  Next: Packages,  Up: About CNI
 
-10.1 Basic concepts
+12.1 Basic concepts
 ===================
 
 In terms of languages features, Java is mostly a subset of C++.  Java
@@ -1709,11 +1998,9 @@ macros start with the `Jv' prefix, for example the function
 `JvNewObjectArray'.  This convention is used to avoid conflicts with
 other libraries.  Internal functions in CNI start with the prefix
 `_Jv_'.  You should not call these; if you find a need to, let us know
-and we will try to come up with an alternate solution.  (This manual
-lists `_Jv_AllocBytes' as an example; CNI should instead provide a
-`JvAllocBytes' function.)
+and we will try to come up with an alternate solution.
 
-10.1.1 Limitations
+12.1.1 Limitations
 ------------------
 
 Whilst a Java class is just a C++ class that doesn't mean that you are
@@ -1727,7 +2014,7 @@ member variable of some non-Java datatype.
 
 File: gcj.info,  Node: Packages,  Next: Primitive types,  Prev: Basic concepts,  Up: About CNI
 
-10.2 Packages
+12.2 Packages
 =============
 
 The only global names in Java are class names, and packages.  A
@@ -1760,7 +2047,7 @@ Here is how you could express this:
 The `gcjh' tool automatically generates the necessary namespace
 declarations.
 
-10.2.1 Leaving out package names
+12.2.1 Leaving out package names
 --------------------------------
 
 Always using the fully-qualified name of a java class can be tiresomely
@@ -1797,9 +2084,9 @@ The same effect can be achieved in C++ like this:
      using namespace PACKAGE-NAME;
 
 
-File: gcj.info,  Node: Primitive types,  Next: Interfaces,  Prev: Packages,  Up: About CNI
+File: gcj.info,  Node: Primitive types,  Next: Reference types,  Prev: Packages,  Up: About CNI
 
-10.3 Primitive types
+12.3 Primitive types
 ====================
 
 Java provides 8 "primitives" types which represent integers, floats,
@@ -1823,12 +2110,12 @@ type:
    When referring to a Java type You should always use these C++
 typenames (e.g.: `jint') to avoid disappointment.
 
-10.3.1 Reference types associated with primitive types
+12.3.1 Reference types associated with primitive types
 ------------------------------------------------------
 
 In Java each primitive type has an associated reference type, e.g.:
-`boolean' has an associated `java.lang.Boolean' class.  In order to
-make working with such classes easier GCJ provides the macro
+`boolean' has an associated `java.lang.Boolean.TYPE' class.  In order
+to make working with such classes easier GCJ provides the macro
 `JvPrimClass':
 
  -- macro: JvPrimClass type
@@ -1839,9 +2126,37 @@ make working with such classes easier GCJ provides the macro
 
 
 
-File: gcj.info,  Node: Interfaces,  Next: Objects and Classes,  Prev: Primitive types,  Up: About CNI
+File: gcj.info,  Node: Reference types,  Next: Interfaces,  Prev: Primitive types,  Up: About CNI
 
-10.4 Interfaces
+12.4 Reference types
+====================
+
+A Java reference type is treated as a class in C++.  Classes and
+interfaces are handled this way.  A Java reference is translated to a
+C++ pointer, so for instance a Java `java.lang.String' becomes, in C++,
+`java::lang::String *'.
+
+   CNI provides a few built-in typedefs for the most common classes:
+*Java type*            *C++ typename*     *Description*
+`java.lang.Object'     `jobject'          Object type
+`java.lang.String'     `jstring'          String type
+`java.lang.Class'      `jclass'           Class type
+   
+   Every Java class or interface has a corresponding `Class' instance.
+These can be accessed in CNI via the static `class$' field of a class.
+The `class$' field is of type `Class' (and not `Class *'), so you will
+typically take the address of it.  
+
+   Here is how you can refer to the class of `String', which in Java
+would be written `String.class':
+
+     using namespace java::lang;
+     doSomething (&String::class$);
+
+
+File: gcj.info,  Node: Interfaces,  Next: Objects and Classes,  Prev: Reference types,  Up: About CNI
+
+12.5 Interfaces
 ===============
 
 A Java class can "implement" zero or more "interfaces", in addition to
@@ -1874,10 +2189,10 @@ unless you cast it to an `A' first.
 
 File: gcj.info,  Node: Objects and Classes,  Next: Class Initialization,  Prev: Interfaces,  Up: About CNI
 
-10.5 Objects and Classes
+12.6 Objects and Classes
 ========================
 
-10.5.1 Classes
+12.6.1 Classes
 --------------
 
 All Java classes are derived from `java.lang.Object'.  C++ does not
@@ -1889,7 +2204,7 @@ Java classes are mapped into corresponding C++ classes derived from
    Interface inheritance (the `implements' keyword) is currently not
 reflected in the C++ mapping.
 
-10.5.2 Object fields
+12.6.2 Object fields
 --------------------
 
 Each object contains an object header, followed by the instance fields
@@ -1900,7 +2215,7 @@ is invisible to the application, and the reference to the object points
 to the dispatch table pointer.)
 
    The fields are laid out in the same order, alignment, and size as in
-C++.  Specifically, 8-bite and 16-bit native types (`byte', `short',
+C++.  Specifically, 8-bit and 16-bit native types (`byte', `short',
 `char', and `boolean') are _not_ widened to 32 bits.  Note that the
 Java VM does extend 8-bit and 16-bit types to 32 bits when on the VM
 stack or temporary registers.
@@ -1912,8 +2227,8 @@ the following Java class:
      public class Int
      {
        public int i;
-       public Integer (int i) { this.i = i; }
-       public static zero = new Integer(0);
+       public Int (int i) { this.i = i; }
+       public static Int zero = new Int(0);
      }
 
    you can write:
@@ -1929,7 +2244,7 @@ the following Java class:
        return new Int(p->i * k);
      }
 
-10.5.3 Access specifiers
+12.6.3 Access specifiers
 ------------------------
 
 CNI does not strictly enforce the Java access specifiers, because Java
@@ -1940,7 +2255,7 @@ but other fields and methods are mapped to public fields and methods.
 
 File: gcj.info,  Node: Class Initialization,  Next: Object allocation,  Prev: Objects and Classes,  Up: About CNI
 
-10.6 Class Initialization
+12.7 Class Initialization
 =========================
 
 Java requires that each class be automatically initialized at the time
@@ -1978,15 +2293,15 @@ the method (unless you are sure it is safe to leave it out).
 
    Accessing a static field also requires the class of the field to be
 initialized.  The Java compiler will generate code to call
-`Jv_InitClass' before getting or setting the field.  However, the C++
+`JvInitClass' before getting or setting the field.  However, the C++
 compiler will not generate this extra code, so it is your
 responsibility to make sure the class is initialized before you access
 a static field from C++.
 
 
-File: gcj.info,  Node: Object allocation,  Next: Arrays,  Prev: Class Initialization,  Up: About CNI
+File: gcj.info,  Node: Object allocation,  Next: Memory allocation,  Prev: Class Initialization,  Up: About CNI
 
-10.7 Object allocation
+12.8 Object allocation
 ======================
 
 New Java objects are allocated using a "class instance creation
@@ -2006,16 +2321,32 @@ For example:
 
      java::util::Hashtable *ht = new java::util::Hashtable(120);
 
- -- Function: void* _Jv_AllocBytes (jsize SIZE)
-     Allocates SIZE bytes from the heap.  The memory is not scanned by
-     the garbage collector but it freed if no references to it are
-     discovered.
+
+File: gcj.info,  Node: Memory allocation,  Next: Arrays,  Prev: Object allocation,  Up: About CNI
+
+12.9 Memory allocation
+======================
+
+When allocating memory in CNI methods it is best to handle
+out-of-memory conditions by throwing a Java exception.  These functions
+are provided for that purpose:
+
+ -- Function: void* JvMalloc (jsize SIZE)
+     Calls malloc.  Throws `java.lang.OutOfMemoryError' if allocation
+     fails.
+
+ -- Function: void* JvRealloc (void* PTR, jsize SIZE)
+     Calls realloc.  Throws `java.lang.OutOfMemoryError' if
+     reallocation fails.
+
+ -- Function: void JvFree (void* PTR)
+     Calls free.
 
 
-File: gcj.info,  Node: Arrays,  Next: Methods,  Prev: Object allocation,  Up: About CNI
+File: gcj.info,  Node: Arrays,  Next: Methods,  Prev: Memory allocation,  Up: About CNI
 
-10.8 Arrays
-===========
+12.10 Arrays
+============
 
 While in many ways Java is similar to C and C++, it is quite different
 in its treatment of arrays.  C arrays are based on the idea of pointer
@@ -2068,11 +2399,16 @@ type:
 
  -- Function: jobjectArray JvNewObjectArray (jsize LENGTH, jclass
           KLASS, jobject INIT)
-     Here `klass' is the type of elements of the array and `init' is
-     the initial value put into every slot in the array.
+     This creates a new array whose elements have reference type.
+     `klass' is the type of elements of the array and `init' is the
+     initial value put into every slot in the array.
 
-10.8.1 Creating arrays
-----------------------
+     using namespace java::lang;
+     JArray<String *> *array
+       = (JArray<String *> *) JvNewObjectArray(length, &String::class$, NULL);
+
+12.10.1 Creating arrays
+-----------------------
 
 For each primitive type there is a function which can be used to create
 a new array of that type.  The name of the function is of the form:
@@ -2097,8 +2433,8 @@ functions:
 
 File: gcj.info,  Node: Methods,  Next: Strings,  Prev: Arrays,  Up: About CNI
 
-10.9 Methods
-============
+12.11 Methods
+=============
 
 Java methods are mapped directly into C++ methods.  The header files
 generated by `gcjh' include the appropriate method definitions.
@@ -2106,8 +2442,8 @@ Basically, the generated methods have the same names and
 _corresponding_ types as the Java methods, and are called in the
 natural manner.
 
-10.9.1 Overloading
-------------------
+12.11.1 Overloading
+-------------------
 
 Both Java and C++ provide method overloading, where multiple methods in
 a class have the same name, and the correct one is chosen (at compile
@@ -2124,8 +2460,8 @@ mechanism is used to implement Java overloading.  For C++/Java
 interoperability, it is important that both the Java and C++ compilers
 use the _same_ encoding scheme.
 
-10.9.2 Static methods
----------------------
+12.11.2 Static methods
+----------------------
 
 Static Java methods are invoked in CNI using the standard C++ syntax,
 using the `::' operator rather than the `.' operator.
@@ -2144,8 +2480,8 @@ For example:
        ...
      }
 
-10.9.3 Object Constructors
---------------------------
+12.11.3 Object Constructors
+---------------------------
 
 Constructors are called implicitly as part of object allocation using
 the `new' operator.
@@ -2158,8 +2494,8 @@ For example:
 limitation can be coded round however because a constructor can _call_
 a native method.
 
-10.9.4 Instance methods
------------------------
+12.11.4 Instance methods
+------------------------
 
 Calling a Java instance method from a C++ CNI method is done using the
 standard C++ syntax, e.g.:
@@ -2181,8 +2517,8 @@ Defining a Java native instance method is also done the natural way:
        return (jdouble) value;
      }
 
-10.9.5 Interface methods
-------------------------
+12.11.5 Interface methods
+-------------------------
 
 In Java you can call a method using an interface reference.  This is
 supported, but not completely.  *Note Interfaces::.
@@ -2190,7 +2526,7 @@ supported, but not completely.  *Note Interfaces::.
 
 File: gcj.info,  Node: Strings,  Next: Mixing with C++,  Prev: Methods,  Up: About CNI
 
-10.10 Strings
+12.12 Strings
 =============
 
 CNI provides a number of utility functions for working with Java Java
@@ -2230,7 +2566,7 @@ JNI.
 
 File: gcj.info,  Node: Mixing with C++,  Next: Exception Handling,  Prev: Strings,  Up: About CNI
 
-10.11 Interoperating with C/C++
+12.13 Interoperating with C/C++
 ===============================
 
 Because CNI is designed to represent Java classes and methods it cannot
@@ -2268,10 +2604,14 @@ Of course, it is ok to use C/C++ types within the scope of a method:
         .
      }
 
-   But this restriction can cause a problem so CNI includes the
+12.13.1 RawData
+---------------
+
+The above restriction can be problematic, so CNI includes the
 `gnu.gcj.RawData' class.  The `RawData' class is a "non-scanned
 reference" type.  In other words variables declared of type `RawData'
-can contain any data and are not checked by the compiler in any way.
+can contain any data and are not checked by the compiler or memory
+manager in any way.
 
    This means that you can put C/C++ data structures (including classes)
 in your CNI classes, as long as you use the appropriate cast.
@@ -2306,10 +2646,48 @@ Here are some examples:
        printf("%s\n", (char*) string);
      }
 
+12.13.2 RawDataManaged
+----------------------
+
+`gnu.gcj.RawDataManaged' is another type used to indicate special data
+used by native code. Unlike the `RawData' type, fields declared as
+`RawDataManaged' will be "marked" by the memory manager and considered
+for garbage collection.
+
+   Native data which is allocated using CNI's `JvAllocBytes()' function
+and stored in a `RawDataManaged' will be automatically freed when the
+Java object it is associated with becomes unreachable.
+
+12.13.3 Native memory allocation
+--------------------------------
+
+ -- Function: void* JvAllocBytes (jsize SIZE)
+     Allocates SIZE bytes from the heap.  The memory returned is zeroed.
+     This memory is not scanned for pointers by the garbage collector,
+     but will be freed if no references to it are discovered.
+
+     This function can be useful if you need to associate some native
+     data with a Java object. Using a CNI's special `RawDataManaged'
+     type, native data allocated with `JvAllocBytes' will be
+     automatically freed when the Java object itself becomes
+     unreachable.
+
+12.13.4 Posix signals
+---------------------
+
+On Posix based systems the `libgcj' library uses several signals
+internally.  CNI code should not attempt to use the same signals as
+doing so may cause `libgcj' and/or the CNI code to fail.
+
+   SIGSEGV is used on many systems to generate `NullPointerExceptions'.
+SIGCHLD is used internally by `Runtime.exec()'.  Several other signals
+(that vary from platform to platform) can be used by the memory manager
+and by `Thread.interrupt()'.
+
 
 File: gcj.info,  Node: Exception Handling,  Next: Synchronization,  Prev: Mixing with C++,  Up: About CNI
 
-10.12 Exception Handling
+12.14 Exception Handling
 ========================
 
 While C++ and Java share a common exception handling framework, things
@@ -2354,7 +2732,7 @@ destructors when exceptions are thrown through them.
 
 File: gcj.info,  Node: Synchronization,  Next: Invocation,  Prev: Exception Handling,  Up: About CNI
 
-10.13 Synchronization
+12.15 Synchronization
 =====================
 
 Each Java object has an implicit monitor.  The Java VM uses the
@@ -2410,14 +2788,14 @@ manually add `JvSynchronize' in a `native synchronized' method.
 
 File: gcj.info,  Node: Invocation,  Next: Reflection,  Prev: Synchronization,  Up: About CNI
 
-10.14 Invocation
+12.16 Invocation
 ================
 
 CNI permits C++ applications to make calls into Java classes, in
 addition to allowing Java code to call into C++. Several functions,
 known as the "invocation API", are provided to support this.
 
- -- Function: jint JvCreateJavaVM (void* VM_ARGS)
+ -- Function: jint JvCreateJavaVM (JvVMInitArgs* VM_ARGS)
      Initializes the Java runtime. This function performs essential
      initialization of the threads interface, garbage collector,
      exception handling and other key aspects of the runtime. It must
@@ -2426,11 +2804,39 @@ known as the "invocation API", are provided to support this.
      safe, but not recommended, to call `JvCreateJavaVM()' more than
      once provided it is only called from a single thread.  The VMARGS
      parameter can be used to specify initialization parameters for the
-     Java runtime. It may be `NULL'.  This function returns `0' upon
-     success, or `-1' if the runtime is already initialized.
+     Java runtime. It may be `NULL'.
 
-     _Note:_ In GCJ 3.1, the `vm_args' parameter is ignored. It may be
-     used in a future release.
+     JvVMInitArgs represents a list of virtual machine initialization
+     arguments. `JvCreateJavaVM()' ignores the version field.
+
+          typedef struct JvVMOption
+          {
+            // a VM initialization option
+            char* optionString;
+            // extra information associated with this option
+            void* extraInfo;
+          } JvVMOption;
+
+          typedef struct JvVMInitArgs
+          {
+            // for compatibility with JavaVMInitArgs
+            jint version;
+
+            // number of VM initialization options
+            jint nOptions;
+
+            // an array of VM initialization options
+            JvVMOption* options;
+
+            // true if the option parser should ignore unrecognized options
+            jboolean ignoreUnrecognized;
+          } JvVMInitArgs;
+
+     `JvCreateJavaVM()' returns `0' upon success, or `-1' if the
+     runtime is already initialized.
+
+     _Note:_ In GCJ 3.1, the `vm_args' parameter is ignored. It is
+     recognized and used as of release 4.0.
 
  -- Function: java::lang::Thread* JvAttachCurrentThread (jstring NAME,
           java::lang::ThreadGroup* GROUP)
@@ -2454,7 +2860,7 @@ known as the "invocation API", are provided to support this.
      garbage collection.  This function returns `0' upon success, or
      `-1' if the current thread is not attached.
 
-10.14.1 Handling uncaught exceptions
+12.16.1 Handling uncaught exceptions
 ------------------------------------
 
 If an exception is thrown from Java code called using the invocation
@@ -2463,7 +2869,7 @@ abort the application. In order to make the application more robust, it
 is recommended that code which uses the invocation API be wrapped by a
 top-level try/catch block that catches all Java exceptions.
 
-10.14.2 Example
+12.16.2 Example
 ---------------
 
 The following code demonstrates the use of the invocation API. In this
@@ -2507,7 +2913,7 @@ handler for any uncaught exceptions.
 
 File: gcj.info,  Node: Reflection,  Prev: Invocation,  Up: About CNI
 
-10.15 Reflection
+12.17 Reflection
 ================
 
 Reflection is possible with CNI code, it functions similarly to how it
@@ -2530,7 +2936,7 @@ will be added shortly, as will other functions corresponding to JNI.
 
 File: gcj.info,  Node: System properties,  Next: Resources,  Prev: About CNI,  Up: Top
 
-11 System properties
+13 System properties
 ********************
 
 The runtime behavior of the `libgcj' library can be modified by setting
@@ -2551,7 +2957,7 @@ calling the `java.lang.System.getProperty()' method.
 
 File: gcj.info,  Node: Standard Properties,  Next: GNU Classpath Properties,  Up: System properties
 
-11.1 Standard Properties
+13.1 Standard Properties
 ========================
 
 The following properties are normally found in all implementations of
@@ -2621,7 +3027,7 @@ the core libraries for the Java language.
 
 `java.ext.dirs'
      Directories containing jar files with extra libraries.  Will be
-     used when resolving classes.  Currently not used in `libgcj'.
+     used when resolving classes.
 
 `java.protocol.handler.pkgs'
      A `|' separated list of package names that is used to find classes
@@ -2706,7 +3112,7 @@ the core libraries for the Java language.
 
 File: gcj.info,  Node: GNU Classpath Properties,  Next: libgcj Runtime Properties,  Prev: Standard Properties,  Up: System properties
 
-11.2 GNU Classpath Properties
+13.2 GNU Classpath Properties
 =============================
 
 `libgcj' is based on the GNU Classpath (Essential Libraries for Java) a
@@ -2721,8 +3127,8 @@ are common to libraries based on GNU Classpath.
      debug build of the library.
 
 `gnu.classpath.vm.shortname'
-     This is a succint name of the virtual machine.  For `libgcj', this
-     will always be `libgcj'.
+     This is a succinct name of the virtual machine.  For `libgcj',
+     this will always be `libgcj'.
 
 `gnu.classpath.home.url'
      A base URL used for finding system property files (e.g.,
@@ -2733,7 +3139,7 @@ are common to libraries based on GNU Classpath.
 
 File: gcj.info,  Node: libgcj Runtime Properties,  Prev: GNU Classpath Properties,  Up: System properties
 
-11.3 libgcj Runtime Properties
+13.3 libgcj Runtime Properties
 ==============================
 
 The following properties are specific to the `libgcj' runtime and will
@@ -2753,47 +3159,64 @@ normally not be found in other core libraries for the java language.
      `java.net.PlainDatagramSocketImpl'.
 
 `gnu.gcj.progname'
-     The name that was used to invoked the program.
-
-`gnu.gcj.runtime.NameFinder.demangle'
-     Whether names in a stack trace should be demangled.  Defaults to
-     `true'.
-
-`gnu.gcj.runtime.NameFinder.sanitize'
-     Whether calls to initialize exceptions and starting the runtime
-     system should be removed from the stack trace.  Only done when
-     names are demangled.  Defaults to `true'.
-
-`gnu.gcj.runtime.NameFinder.remove_unknown'
-     Whether calls to unknown functions (class and method names are
-     unknown) should be removed from the stack trace.  Only done when
-     the stack is sanitized.  Ignored if this means no stack trace
-     information would be available anymore.  Defaults to `true'.
-
-`gnu.gcj.runtime.NameFinder.remove_interpreter'
-     Whether runtime interpreter calls (methods in the
-     `_Jv_InterpMethod' class and functions starting with `ffi_')
-     should be removed from the stack trace.  Only done when the stack
-     is sanitized.  Defaults to `true'.
+     The class or binary name that was used to invoke the program. This
+     will be the name of the "main" class in the case where the `gij'
+     front end is used, or the program binary name in the case where an
+     application is compiled to a native binary.
 
 `gnu.gcj.runtime.NameFinder.use_addr2line'
-     Whether an external process (`addr2line' or `addr2name.awk')
-     should be used as fallback to convert the addresses to function
-     names when the runtime is unable to do it through `dladdr'.
+     Whether an external process, `addr2line', should be used to
+     determine line number information when tracing the stack. Setting
+     this to `false' may suppress line numbers when printing stack
+     traces and when using the java.util.logging infrastructure.
+     However, performance may improve significantly for applications
+     that print stack traces or make logging calls frequently.
 
 `gnu.gcj.runtime.VMClassLoader.library_control'
      This controls how shared libraries are automatically loaded by the
-     built-in class loader.  By default, or if this property is set to
-     `full', a full search is done for each requested class.  If this
-     property is set to `cache', then any failed lookups are cached and
+     built-in class loader.  If this property is set to `full', a full
+     search is done for each requested class.  If this property is set
+     to `cache' (the default), then any failed lookups are cached and
      not tried again.  If this property is set to `never', then lookups
      are never done.  For more information, *Note Extensions::.
 
+`gnu.gcj.runtime.endorsed.dirs'
+     This is like the standard `java.endorsed.dirs', property, but
+     specifies some extra directories which are searched after the
+     standard endorsed directories.  This is primarily useful for
+     telling `libgcj' about additional libraries which are ordinarily
+     incorporated into the JDK, and which should be loaded by the
+     bootstrap class loader, but which are not yet part of `libgcj'
+     itself for some reason.
+
+`gnu.gcj.jit.compiler'
+     This is the full path to `gcj' executable which should be used to
+     compile classes just-in-time when `ClassLoader.defineClass' is
+     called.  If not set, `gcj' will not be invoked by the runtime;
+     this can also be controlled via `Compiler.disable'.
+
+`gnu.gcj.jit.options'
+     This is a space-separated string of options which should be passed
+     to `gcj' when in JIT mode.  If not set, a sensible default is
+     chosen.
+
+`gnu.gcj.jit.cachedir'
+     This is the directory where cached shared library files are
+     stored.  If not set, JIT compilation is disabled.  This should
+     never be set to a directory that is writable by any other user.
+
+`gnu.gcj.precompiled.db.path'
+     This is a sequence of file names, each referring to a file created
+     by `gcj-dbtool'.  These files will be used by `libgcj' to find
+     shared libraries corresponding to classes that are loaded from
+     bytecode.  `libgcj' often has a built-in default database; it can
+     be queried using `gcj-dbtool -p'.
+
 
 
-File: gcj.info,  Node: Resources,  Prev: System properties,  Up: Top
+File: gcj.info,  Node: Resources,  Next: Index,  Prev: System properties,  Up: Top
 
-12 Resources
+14 Resources
 ************
 
 While writing `gcj' and `libgcj' we have, of course, relied heavily on
@@ -2812,50 +3235,91 @@ free software Java class library test suite which is being written
 because the JCK is not free.  See `http://sources.redhat.com/mauve/'
 for more information.
 
+
+File: gcj.info,  Node: Index,  Prev: Resources,  Up: Top
+
+Index
+*****
+
+ [index ]
+* Menu:
+
+* class path:                            Input Options.        (line  6)
+* class$:                                Reference types.      (line 20)
+* elements on template<class T>:         Arrays.               (line 46)
+* FDL, GNU Free Documentation License:   GNU Free Documentation License.
+                                                               (line  6)
+* GCJ_PROPERTIES:                        Extensions.           (line 48)
+* jclass:                                Reference types.      (line 16)
+* jobject:                               Reference types.      (line 16)
+* jstring:                               Reference types.      (line 16)
+* JvAllocBytes:                          Mixing with C++.      (line 99)
+* JvAttachCurrentThread:                 Invocation.           (line 55)
+* JvCreateJavaVM:                        Invocation.           (line 11)
+* JvDetachCurrentThread:                 Invocation.           (line 68)
+* JvFree:                                Memory allocation.    (line 19)
+* JvGetArrayLength:                      Arrays.               (line 86)
+* JvGetStringChars:                      Strings.              (line 25)
+* JvGetStringUTFLength:                  Strings.              (line 29)
+* JvGetStringUTFRegion:                  Strings.              (line 34)
+* JvMalloc:                              Memory allocation.    (line 11)
+* JvNewBooleanArray:                     Arrays.               (line 83)
+* JvNewObjectArray:                      Arrays.               (line 57)
+* JvNewString:                           Strings.              (line 11)
+* JvNewStringLatin1:                     Strings.              (line 15)
+* JvNewStringUTF:                        Strings.              (line 21)
+* JvPrimClass:                           Primitive types.      (line 36)
+* JvRealloc:                             Memory allocation.    (line 15)
+
 
 
 Tag Table:
-Node: Top2564
-Node: Copying3720
-Node: GNU Free Documentation License22888
-Node: Invoking gcj45290
-Node: Input and output files45942
-Node: Input Options47468
-Node: Encodings50616
-Node: Warnings51822
-Node: Code Generation52943
-Ref: Code Generation-Footnote-156608
-Node: Configure-time Options56917
-Node: Compatibility58340
-Node: Limitations58820
-Node: Extensions60402
-Node: Invoking gcjh63000
-Node: Invoking jv-scan65056
-Node: Invoking jcf-dump66097
-Node: Invoking gij66870
-Node: Invoking jv-convert69305
-Node: Invoking rmic70376
-Node: Invoking rmiregistry71752
-Node: About CNI72157
-Node: Basic concepts73453
-Node: Packages76456
-Node: Primitive types78784
-Node: Interfaces80452
-Node: Objects and Classes81363
-Node: Class Initialization83563
-Node: Object allocation85906
-Node: Arrays86889
-Node: Methods89493
-Node: Strings92302
-Node: Mixing with C++93786
-Node: Exception Handling95648
-Node: Synchronization97282
-Node: Invocation99272
-Node: Reflection103360
-Node: System properties103821
-Node: Standard Properties104698
-Node: GNU Classpath Properties109163
-Node: libgcj Runtime Properties110209
-Node: Resources112688
+Node: Top2837
+Node: Copying4159
+Node: GNU Free Documentation License23354
+Node: Invoking gcj45766
+Node: Input and output files46465
+Node: Input Options47991
+Node: Encodings51139
+Node: Warnings52345
+Node: Linking53458
+Node: Code Generation55691
+Node: Configure-time Options61160
+Node: Compatibility62583
+Node: Limitations63063
+Node: Extensions64645
+Node: Invoking gcjh67243
+Node: Invoking gjnih69598
+Node: Invoking jv-scan71786
+Node: Invoking jcf-dump72828
+Node: Invoking gij73776
+Node: Invoking gcj-dbtool77027
+Node: Invoking jv-convert79493
+Node: Invoking grmic80572
+Node: Invoking grmiregistry81962
+Node: About CNI82375
+Node: Basic concepts83817
+Node: Packages86713
+Node: Primitive types89041
+Node: Reference types90719
+Node: Interfaces91808
+Node: Objects and Classes92719
+Node: Class Initialization94914
+Node: Object allocation97256
+Node: Memory allocation98046
+Node: Arrays98678
+Node: Methods101489
+Node: Strings104310
+Node: Mixing with C++105794
+Node: Exception Handling109265
+Node: Synchronization110899
+Node: Invocation112889
+Node: Reflection117814
+Node: System properties118275
+Node: Standard Properties119152
+Node: GNU Classpath Properties123584
+Node: libgcj Runtime Properties124631
+Node: Resources128082
+Node: Index128920
 
 End Tag Table

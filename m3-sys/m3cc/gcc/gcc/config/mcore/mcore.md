@@ -1,5 +1,6 @@
 ;;  Machine description the Motorola MCore
-;;  Copyright (C) 1993, 1999, 2000, 2004 Free Software Foundation, Inc.
+;;  Copyright (C) 1993, 1999, 2000, 2004, 2005
+;;  Free Software Foundation, Inc.
 ;;  Contributed by Motorola.
 
 ;; This file is part of GCC.
@@ -16,8 +17,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;- See file "rtl.def" for documentation on define_insn, match_*, et. al.
 
@@ -41,15 +42,19 @@
 ;; calculations and the literal table placement into the assembler,
 ;; where their interactions can be managed in a single place.
 
-; All MCORE instructions are two bytes long.
+;; All MCORE instructions are two bytes long.
 
 (define_attr "length" "" (const_int 2))
 
-;; (define_function_unit {name} {num-units} {n-users} {test}
-;;                       {ready-delay} {issue-delay} [{conflict-list}])
-				      
+;; Scheduling.  We only model a simple load latency.
+(define_insn_reservation "any_insn" 1
+			 (eq_attr "type" "!load")
+			 "nothing")
+(define_insn_reservation "memory" 2
+			 (eq_attr "type" "load")
+			 "nothing")
 
-(define_function_unit "memory" 1 1 (eq_attr "type" "load") 2 0)
+(include "predicates.md")
 
 ;; -------------------------------------------------------------------------
 ;; Test and bit test
@@ -379,7 +384,7 @@
      case 2: return \"and	%0,%1\";
      /* case -1: return \"bclri	%0,%Q2\";	 will not happen */
      case 3: return mcore_output_bclri (operands[0], INTVAL (operands[2]));
-     default: abort ();
+     default: gcc_unreachable ();
      }
 }")
 
@@ -399,7 +404,7 @@
      case 1: return \"andi	%0,%2\";
      case 2: return \"and	%0,%1\";
      case 3: return mcore_output_bclri (operands[0], INTVAL (operands[2]));
-     default: abort ();
+     default: gcc_unreachable ();
      }
 }")
 
@@ -434,7 +439,7 @@
      case 0: return \"or	%0,%2\";
      case 1: return \"bseti	%0,%P2\";
      case 2: return mcore_output_bseti (operands[0], INTVAL (operands[2]));
-     default: abort ();
+     default: gcc_unreachable ();
      }
 }")
 
@@ -450,7 +455,7 @@
      case 0: return \"or	%0,%2\";
      case 1: return \"bseti	%0,%P2\";
      case 2: return mcore_output_bseti (operands[0], INTVAL (operands[2]));
-     default: abort ();
+     default: gcc_unreachable ();
      }
 }")
 
@@ -923,8 +928,7 @@
    && INTVAL (operands[2]) > 0 && ! (INTVAL (operands[2]) & 0x80000000)"
   "*
 {
-  if (GET_MODE (operands[2]) != SImode)
-     abort ();
+  gcc_assert (GET_MODE (operands[2]) == SImode);
   if (TARGET_LITTLE_END)
     return \"addu	%0,%2\;cmphs	%0,%2\;incf	%R0\";
   return \"addu	%R0,%2\;cmphs	%R0,%2\;incf	%0\";
@@ -1413,13 +1417,13 @@
   count = INTVAL (operands[2]);
   regno = REGNO (operands[0]);
 
-  operands[3] = gen_rtx (PARALLEL, VOIDmode, rtvec_alloc (count));
+  operands[3] = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (count));
 
   for (i = 0; i < count; i++)
     XVECEXP (operands[3], 0, i)
-      = gen_rtx (SET, VOIDmode,
-		 gen_rtx (REG, SImode, regno + i),
-		 gen_rtx (MEM, SImode, plus_constant (stack_pointer_rtx,
+      = gen_rtx_SET (VOIDmode,
+		 gen_rtx_REG (SImode, regno + i),
+		 gen_rtx_MEM (SImode, plus_constant (stack_pointer_rtx,
 						      i * 4)));
 }")
 
@@ -1452,14 +1456,14 @@
   count = INTVAL (operands[2]);
   regno = REGNO (operands[1]);
 
-  operands[3] = gen_rtx (PARALLEL, VOIDmode, rtvec_alloc (count));
+  operands[3] = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (count));
 
   for (i = 0; i < count; i++)
     XVECEXP (operands[3], 0, i)
-      = gen_rtx (SET, VOIDmode,
-		 gen_rtx (MEM, SImode, plus_constant (stack_pointer_rtx,
+      = gen_rtx_SET (VOIDmode,
+		 gen_rtx_MEM (SImode, plus_constant (stack_pointer_rtx,
 						      i * 4)),
-		 gen_rtx (REG, SImode, regno + i));
+		 gen_rtx_REG (SImode, regno + i));
 }")
 
 (define_insn ""
@@ -1729,7 +1733,7 @@
   if (GET_CODE (operands[0]) == MEM
       && ! register_operand (XEXP (operands[0], 0), SImode)
       && ! mcore_symbolic_address_p (XEXP (operands[0], 0)))
-    operands[0] = gen_rtx (MEM, GET_MODE (operands[0]),
+    operands[0] = gen_rtx_MEM (GET_MODE (operands[0]),
 			   force_reg (Pmode, XEXP (operands[0], 0)));
 }")
 
@@ -1751,7 +1755,7 @@
   if (GET_CODE (operands[0]) == MEM
       && ! register_operand (XEXP (operands[0], 0), SImode)
       && ! mcore_symbolic_address_p (XEXP (operands[0], 0)))
-    operands[1] = gen_rtx (MEM, GET_MODE (operands[1]),
+    operands[1] = gen_rtx_MEM (GET_MODE (operands[1]),
 			   force_reg (Pmode, XEXP (operands[1], 0)));
 }")
 
@@ -2627,11 +2631,11 @@
 ;        rtx lshft = GEN_INT (32 - (INTVAL (operands[2]) + INTVAL (operands[3])));
 ;        rtx rshft = GEN_INT (32 - INTVAL (operands[2]));
 ;
-;        emit_insn (gen_rtx (SET, SImode, operands[0], operands[1]));
-;        emit_insn (gen_rtx (SET, SImode, operands[0],
-;                            gen_rtx (ASHIFT, SImode, operands[0], lshft)));
-;        emit_insn (gen_rtx (SET, SImode, operands[0],
-;                            gen_rtx (ASHIFTRT, SImode, operands[0], rshft)));
+;        emit_insn (gen_rtx_SET (SImode, operands[0], operands[1]));
+;        emit_insn (gen_rtx_SET (SImode, operands[0],
+;                            gen_rtx_ASHIFT (SImode, operands[0], lshft)));
+;        emit_insn (gen_rtx_SET (SImode, operands[0],
+;                            gen_rtx_ASHIFTRT (SImode, operands[0], rshft)));
 ;        DONE;
 ;     }
 ;     else
@@ -2662,11 +2666,11 @@
       rtx tmp1 = gen_reg_rtx (SImode);
       rtx tmp2 = gen_reg_rtx (SImode);
 
-      emit_insn (gen_rtx (SET, SImode, tmp1, operands[1]));
-      emit_insn (gen_rtx (SET, SImode, tmp2,
-                         gen_rtx (ASHIFT, SImode, tmp1, lshft)));
-      emit_insn (gen_rtx (SET, SImode, operands[0],
-                         gen_rtx (ASHIFTRT, SImode, tmp2, rshft)));
+      emit_insn (gen_rtx_SET (SImode, tmp1, operands[1]));
+      emit_insn (gen_rtx_SET (SImode, tmp2,
+                         gen_rtx_ASHIFT (SImode, tmp1, lshft)));
+      emit_insn (gen_rtx_SET (SImode, operands[0],
+                         gen_rtx_ASHIFTRT (SImode, tmp2, rshft)));
       DONE;
     }
   else
@@ -2707,11 +2711,11 @@
         {
           rtx rshft = GEN_INT (INTVAL (operands[3]));
           shifted = gen_reg_rtx (SImode);
-          emit_insn (gen_rtx (SET, SImode, shifted,
-                         gen_rtx (LSHIFTRT, SImode, operands[1], rshft)));
+          emit_insn (gen_rtx_SET (SImode, shifted,
+                         gen_rtx_LSHIFTRT (SImode, operands[1], rshft)));
         }
-     emit_insn (gen_rtx (SET, SImode, operands[0],
-                       gen_rtx (AND, SImode, shifted, mask)));
+     emit_insn (gen_rtx_SET (SImode, operands[0],
+                       gen_rtx_AND (SImode, shifted, mask)));
      DONE;
    }
  else if (TARGET_W_FIELD)
@@ -2723,11 +2727,11 @@
      rtx tmp1 = gen_reg_rtx (SImode);
      rtx tmp2 = gen_reg_rtx (SImode);
 
-     emit_insn (gen_rtx (SET, SImode, tmp1, operands[1]));
-     emit_insn (gen_rtx (SET, SImode, tmp2,
-                         gen_rtx (ASHIFT, SImode, tmp1, lshft)));
-     emit_insn (gen_rtx (SET, SImode, operands[0],
-                       gen_rtx (LSHIFTRT, SImode, tmp2, rshft)));
+     emit_insn (gen_rtx_SET (SImode, tmp1, operands[1]));
+     emit_insn (gen_rtx_SET (SImode, tmp2,
+                         gen_rtx_ASHIFT (SImode, tmp1, lshft)));
+     emit_insn (gen_rtx_SET (SImode, operands[0],
+                       gen_rtx_LSHIFTRT (SImode, tmp2, rshft)));
      DONE;
    }
  else
@@ -2844,7 +2848,7 @@
 ;; Block move - adapted from m88k.md
 ;; ------------------------------------------------------------------------
 
-(define_expand "movstrsi"
+(define_expand "movmemsi"
   [(parallel [(set (mem:BLK (match_operand:BLK 0 "" ""))
 		   (mem:BLK (match_operand:BLK 1 "" "")))
 	      (use (match_operand:SI 2 "general_operand" ""))
@@ -2852,12 +2856,10 @@
   ""
   "
 {
-  rtx dest_mem = operands[0];
-  rtx src_mem = operands[1];
-  operands[0] = copy_to_mode_reg (SImode, XEXP (operands[0], 0));
-  operands[1] = copy_to_mode_reg (SImode, XEXP (operands[1], 0));
-  mcore_expand_block_move (dest_mem, src_mem, operands);
-  DONE;
+  if (mcore_expand_block_move (operands))
+    DONE;
+  else
+    FAIL;
 }")
 
 ;; ;;; ??? These patterns are meant to be generated from expand_block_move,
@@ -3069,13 +3071,13 @@
    else if ((ofs = mcore_halfword_offset (INTVAL (operands[3]))) > -1)
       mode = HImode;
    else
-      abort ();
+      gcc_unreachable ();
 
    if (ofs > 0) 
-      operands[4] = gen_rtx (MEM, mode, 
-                              gen_rtx (PLUS, SImode, base_reg, GEN_INT(ofs)));
+      operands[4] = gen_rtx_MEM (mode, 
+                              gen_rtx_PLUS (SImode, base_reg, GEN_INT(ofs)));
    else
-      operands[4] = gen_rtx (MEM, mode, base_reg);
+      operands[4] = gen_rtx_MEM (mode, base_reg);
 
    if (mode == QImode)
       return \"movi	%0,0\\n\\tst.b	%0,%4\";
@@ -3145,19 +3147,18 @@
  	   return \"btsti	%1,%2\\n\\tmovt	%0,%4\";
        }
 
-     abort ();
+     gcc_unreachable ();
     }
   else if (GET_CODE (operands[3]) == CONST_INT
            && INTVAL (operands[3]) == 0
 	   && GET_CODE (operands[4]) == REG)
      return \"btsti	%1,%2\\n\\tclrt	%0\";
 
-  abort ();
-  return \"\"; 
+  gcc_unreachable ();
 }")
 
 ; experimental - do the constant folding ourselves.  note that this isn't
-;   re-applied like we'd really want.  ie., four ands collapse into two
+;   re-applied like we'd really want.  i.e., four ands collapse into two
 ;   instead of one.  this is because peepholes are applied as a sliding
 ;   window.  the peephole does not generate new rtl's, but instead slides
 ;   across the rtl's generating machine instructions.  it would be nice
@@ -3284,7 +3285,7 @@
 	  emit_insn (gen_movsi (tmp, GEN_INT (STACK_UNITS_MAXSTEP)));
 	  do
 	    {
-	      rtx memref = gen_rtx (MEM, SImode, stack_pointer_rtx);
+	      rtx memref = gen_rtx_MEM (SImode, stack_pointer_rtx);
 
               MEM_VOLATILE_P (memref) = 1;
 	      emit_insn (gen_subsi3 (stack_pointer_rtx, stack_pointer_rtx, tmp));
@@ -3322,7 +3323,7 @@
 
       /* Extend a step, probe, and adjust remaining count.  */
       emit_insn(gen_subsi3(stack_pointer_rtx, stack_pointer_rtx, step));
-      memref = gen_rtx (MEM, SImode, stack_pointer_rtx);
+      memref = gen_rtx_MEM (SImode, stack_pointer_rtx);
       MEM_VOLATILE_P (memref) = 1;
       emit_insn(gen_movsi(memref, stack_pointer_rtx));
       emit_insn(gen_subsi3(tmp, tmp, step));

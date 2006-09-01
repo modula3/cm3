@@ -8,7 +8,7 @@
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -55,25 +55,25 @@ GNU Compiler Collection on your machine.
 <a href="#arm-x-aout">arm-*-aout</a>
 <li><a href="#xscale-x-x">xscale-*-*</a>
 <li><a href="#avr">avr</a>
+<li><a href="#bfin">Blackfin</a>
 <li><a href="#c4x">c4x</a>
 <li><a href="#dos">DOS</a>
-<li><a href="#dsp16xx">dsp16xx</a>
 <li><a href="#x-x-freebsd">*-*-freebsd*</a>
 <li><a href="#h8300-hms">h8300-hms</a>
 <li><a href="#hppa-hp-hpux">hppa*-hp-hpux*</a>
 <li><a href="#hppa-hp-hpux10">hppa*-hp-hpux10</a>
 <li><a href="#hppa-hp-hpux11">hppa*-hp-hpux11</a>
-<li><a href="#i370-x-x">i370-*-*</a>
 <li><a href="#x-x-linux-gnu">*-*-linux-gnu</a>
 <li><a href="#ix86-x-linuxaout">i?86-*-linux*aout</a>
 <li><a href="#ix86-x-linux">i?86-*-linux*</a>
 <li><a href="#ix86-x-sco32v5">i?86-*-sco3.2v5*</a>
+<li><a href="#ix86-x-solaris210">i?86-*-solaris2.10</a>
 <li><a href="#ix86-x-udk">i?86-*-udk</a>
 <li><a href="#ia64-x-linux">ia64-*-linux</a>
 <li><a href="#ia64-x-hpux">ia64-*-hpux*</a>
 <li><a href="#x-ibm-aix">*-ibm-aix*</a>
-<li><a href="#ip2k-x-elf">ip2k-*-elf</a>
 <li><a href="#iq2000-x-elf">iq2000-*-elf</a>
+<li><a href="#m32c-x-elf">m32c-*-elf</a>
 <li><a href="#m32r-x-elf">m32r-*-elf</a>
 <li><a href="#m6811-elf">m6811-elf</a>
 <li><a href="#m6812-elf">m6812-elf</a>
@@ -294,7 +294,17 @@ can also be obtained from:
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC9"></a><a name="c4x"></a>c4x</h3>
+<h3 class="heading"><a name="TOC9"></a><a name="bfin"></a>Blackfin</h3>
+
+<p>The Blackfin processor, an Analog Devices DSP. 
+See &ldquo;Blackfin Options&rdquo; in the main manual
+
+   <p>More information, and a version of binutils with support for this processor,
+is available at <a href="http://blackfin.uclinux.org">http://blackfin.uclinux.org</a>
+
+   <p><hr />
+
+<h3 class="heading"><a name="TOC10"></a><a name="c4x"></a>c4x</h3>
 
 <p>Texas Instruments TMS320C3x and TMS320C4x Floating Point Digital Signal
 Processors.  These are used in embedded applications.  There are no
@@ -315,7 +325,7 @@ can also be obtained from:
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC10"></a><a name="cris"></a>CRIS</h3>
+<h3 class="heading"><a name="TOC11"></a><a name="cris"></a>CRIS</h3>
 
 <p>CRIS is the CPU architecture in Axis Communications ETRAX system-on-a-chip
 series.  These are used in embedded applications.
@@ -343,7 +353,25 @@ information about this platform is available at
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC11"></a><a name="dos"></a>DOS</h3>
+<h3 class="heading"><a name="TOC12"></a><a name="crx"></a>CRX</h3>
+
+<p>The CRX CompactRISC architecture is a low-power 32-bit architecture with
+fast context switching and architectural extensibility features.
+
+   <p>See &ldquo;CRX Options&rdquo; in the main manual for a list of CRX-specific options.
+
+   <p>Use `<samp><span class="samp">configure --target=crx-elf --enable-languages=c,c++</span></samp>' to configure
+GCC for building a CRX cross-compiler. The option `<samp><span class="samp">--target=crx-elf</span></samp>'
+is also used to build the `<samp><span class="samp">newlib</span></samp>' C library for CRX.
+
+   <p>It is also possible to build libstdc++-v3 for the CRX architecture. This
+needs to be done in a separate step with the following configure settings:
+`<samp><span class="samp">gcc/libstdc++-v3/configure --host=crx-elf --with-newlib
+--enable-sjlj-exceptions --enable-cxx-flags='-fexceptions -frtti'</span></samp>'
+
+   <p><hr />
+
+<h3 class="heading"><a name="TOC13"></a><a name="dos"></a>DOS</h3>
 
 <p>Please have a look at the <a href="binaries.html">binaries page</a>.
 
@@ -354,13 +382,7 @@ and includes all the necessary compilation tools and libraries.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC12"></a><a name="dsp16xx"></a>dsp16xx</h3>
-
-<p>A port to the AT&amp;T DSP1610 family of processors.
-
-   <p><hr />
-
-<h3 class="heading"><a name="TOC13"></a><a name="x_002dx_002dfreebsd"></a>*-*-freebsd*</h3>
+<h3 class="heading"><a name="TOC14"></a><a name="x_002dx_002dfreebsd"></a>*-*-freebsd*</h3>
 
 <p>The version of binutils installed in <samp><span class="file">/usr/bin</span></samp> probably works with
 this release of GCC.  However, on FreeBSD 4, bootstrapping against the
@@ -407,7 +429,7 @@ the very least, both boehm-gc and libffi.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC14"></a><a name="h8300_002dhms"></a>h8300-hms</h3>
+<h3 class="heading"><a name="TOC15"></a><a name="h8300_002dhms"></a>h8300-hms</h3>
 
 <p>Renesas H8/300 series of processors.
 
@@ -420,23 +442,21 @@ longer a multiple of 2 bytes.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC15"></a><a name="hppa_002dhp_002dhpux"></a>hppa*-hp-hpux*</h3>
+<h3 class="heading"><a name="TOC16"></a><a name="hppa_002dhp_002dhpux"></a>hppa*-hp-hpux*</h3>
 
 <p>Support for HP-UX version 9 and older was discontinued in GCC 3.4.
 
-   <p>We <em>highly</em> recommend using gas/binutils 2.8 or newer on all hppa
-platforms; you may encounter a variety of problems when using the HP
-assembler.
+   <p>We require using gas/binutils on all hppa platforms;
+you may encounter a variety of problems if you try to use the HP assembler.
 
    <p>Specifically, <samp><span class="option">-g</span></samp> does not work on HP-UX (since that system
-uses a peculiar debugging format which GCC does not know about), unless you
-use GAS and GDB and configure GCC with the
+uses a peculiar debugging format which GCC does not know about), unless
+you use GAS and GDB.  It may be helpful to configure GCC with the
 <a href="./configure.html#with-gnu-as"><samp><span class="option">--with-gnu-as</span></samp></a> and
-<samp><span class="option">--with-as=...</span></samp> options.
+<samp><span class="option">--with-as=...</span></samp> options to ensure that GCC can find GAS.
 
    <p>If you wish to use the pa-risc 2.0 architecture support with a 32-bit
-runtime, you must use either the HP assembler, or gas/binutils 2.11
-or newer.
+runtime, you must use gas/binutils 2.11 or newer.
 
    <p>There are two default scheduling models for instructions.  These are
 PROCESSOR_7100LC and PROCESSOR_8000.  They are selected from the pa-risc
@@ -450,11 +470,32 @@ configuring if you want a model other than PROCESSOR_8000.  The macro
 TARGET_SCHED_DEFAULT can be defined in BOOT_CFLAGS if a different
 default scheduling model is desired.
 
+   <p>As of GCC 4.0, GCC uses the UNIX 95 namespace for HP-UX 10.10
+through 11.00, and the UNIX 98 namespace for HP-UX 11.11 and later. 
+This namespace change might cause problems when bootstrapping with
+an earlier version of GCC or the HP compiler as essentially the same
+namespace is required for an entire build.  This problem can be avoided
+in a number of ways.  With HP cc, <samp><span class="env">UNIX_STD</span></samp> can be set to `<samp><span class="samp">95</span></samp>'
+or `<samp><span class="samp">98</span></samp>'.  Another way is to add an appropriate set of predefines
+to <samp><span class="env">CC</span></samp>.  The description for the <samp><span class="option">munix=</span></samp> option contains
+a list of the predefines used with each standard.
+
+   <p>As of GCC 4.1, <samp><span class="env">DWARF2</span></samp> exception handling is available on HP-UX. 
+It is now the default.  This exposed a bug in the handling of data
+relocations in the GAS assembler.  The handling of 64-bit data relocations
+was seriously broken, affecting debugging and exception support on all
+`<samp><span class="samp">hppa64-*-*</span></samp>' targets.  Under some circumstances, 32-bit data relocations
+could also be handled incorrectly.  This problem is fixed in GAS version
+2.16.91 20051125.
+
+   <p>GCC versions prior to 4.1 incorrectly passed and returned complex
+values.  They are now passed in the same manner as aggregates.
+
    <p>More specific information to `<samp><span class="samp">hppa*-hp-hpux*</span></samp>' targets follows.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC16"></a><a name="hppa_002dhp_002dhpux10"></a>hppa*-hp-hpux10</h3>
+<h3 class="heading"><a name="TOC17"></a><a name="hppa_002dhp_002dhpux10"></a>hppa*-hp-hpux10</h3>
 
 <p>For hpux10.20, we <em>highly</em> recommend you pick up the latest sed patch
 <code>PHCO_19798</code> from HP.  HP has two sites which provide patches free of
@@ -471,9 +512,17 @@ the 3-stage comparison test to fail during a `<samp><span class="samp">make boot
 You should be able to continue by saying `<samp><span class="samp">make all</span></samp>' after getting
 the failure from `<samp><span class="samp">make bootstrap</span></samp>'.
 
+   <p>GCC 4.0 requires CVS binutils as of April 28, 2004 or later.  Earlier
+versions require binutils 2.8 or later.
+
+   <p>The C++ ABI has changed incompatibly in GCC 4.0.  COMDAT subspaces are
+used for one-only code and data.  This resolves many of the previous
+problems in using C++ on this target.  However, the ABI is not compatible
+with the one implemented under HP-UX 11 using secondary definitions.
+
    <p><hr />
 
-<h3 class="heading"><a name="TOC17"></a><a name="hppa_002dhp_002dhpux11"></a>hppa*-hp-hpux11</h3>
+<h3 class="heading"><a name="TOC18"></a><a name="hppa_002dhp_002dhpux11"></a>hppa*-hp-hpux11</h3>
 
 <p>GCC 3.0 and up support HP-UX 11.  GCC 2.95.x is not supported and cannot
 be used to compile GCC 3.0 and up.
@@ -537,8 +586,8 @@ result, it's not possible to switch linkers in the middle of a GCC build.
 This has been been reported to sometimes occur in unified builds of
 binutils and GCC.
 
-   <p>With GCC 3.0 through 3.2, you must use binutils 2.11 or above.  As of
-GCC 3.3, binutils 2.14 or later is required.
+   <p>GCC 3.0 through 3.2 require binutils 2.11 or above.  GCC 3.3 through
+GCC 4.0 require binutils 2.14 or later.
 
    <p>Although the HP assembler can be used for an initial build, it shouldn't
 be used with any languages other than C and perhaps Fortran due to its
@@ -604,13 +653,6 @@ library is not supported.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC18"></a><a name="i370_002dx_002dx"></a>i370-*-*</h3>
-
-<p>This port is very preliminary and has many known bugs.  We hope to
-have a higher-quality port for this machine soon.
-
-   <p><hr />
-
 <h3 class="heading"><a name="TOC19"></a><a name="x_002dx_002dlinux_002dgnu"></a>*-*-linux-gnu</h3>
 
 <p>Versions of libstdc++-v3 starting with 3.2.1 require bugfixes present
@@ -635,17 +677,6 @@ See <a href="http://gcc.gnu.org/PR10877">bug 10877</a> for more information.
 possible you have a hardware problem.  Further information on this can be
 found on <a href="http://www.bitwizard.nl/sig11/">www.bitwizard.nl</a>.
 
-   <p>Some recent versions of GNU/Linux, such as Fedora Core 1, support
-exec-shield-randomize.  Turning this on interferes with precompiled
-headers.  If you need to use precompiled headers,
-exec-shield-randomize can be turned off for the entire system by
-editing <samp><span class="file">/etc/sysctl.conf</span></samp> and adding a line:
-<pre class="smallexample">     kernel.exec-shield-randomize = 0
-</pre>
-   <p>You may then need to run `<samp><span class="samp">sysctl -p</span></samp>'.
-
-   <p>This will be fixed in future releases of GCC.
-
    <p><hr />
 
 <h3 class="heading"><a name="TOC22"></a><a name="ix86_002dx_002dsco32v5"></a>i?86-*-sco3.2v5*</h3>
@@ -666,7 +697,7 @@ you install Support Level Supplement OSS646B or later, and Support Level
 Supplement OSS631C or later.  If you are using release 5.0.7 of
 OpenServer, you must have at least the first maintenance pack installed
 (this includes the relevant portions of OSS646).  OSS646, also known as
-the "Execution Environment Update", provides updated link editors and
+the &ldquo;Execution Environment Update&rdquo;, provides updated link editors and
 assemblers, as well as updated standard C and math libraries.  The C
 startup modules are also updated to support the System V gABI draft, and
 GCC relies on that behavior.  OSS631 provides a collection of commonly
@@ -686,13 +717,25 @@ use a modern version of GNU binutils.  Version 2.13.2.1 was used for all
 testing.  In general, only the <samp><span class="option">--with-gnu-as</span></samp> option is tested. 
 A modern bintuils (as well as a plethora of other development related
 GNU utilities) can be found in Support Level Supplement OSS658A, the
-"GNU Development Tools" package.  See the SCO web and ftp sites for details. 
-That package also contains the currently "officially supported" version of
+&ldquo;GNU Development Tools&rdquo; package.  See the SCO web and ftp sites for details. 
+That package also contains the currently &ldquo;officially supported&rdquo; version of
 GCC, version 2.95.3.  It is useful for bootstrapping this version.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC23"></a><a name="ix86_002dx_002dudk"></a>i?86-*-udk</h3>
+<h3 class="heading"><a name="TOC23"></a><a name="ix86_002dx_002dsolaris210"></a>i?86-*-solaris2.10</h3>
+
+<p>Use this for Solaris 10 or later on x86 and x86-64 systems.  This
+configuration is supported by GCC 4.0 and later versions only.
+
+   <p>It is recommended that you configure GCC to use the GNU assembler in
+<samp><span class="file">/usr/sfw/bin/gas</span></samp> but the Sun linker, using the options
+<samp><span class="option">--with-gnu-as --with-as=/usr/sfw/bin/gas --without-gnu-ld
+--with-ld=/usr/ccs/bin/ld</span></samp>.
+
+   <p><hr />
+
+<h3 class="heading"><a name="TOC24"></a><a name="ix86_002dx_002dudk"></a>i?86-*-udk</h3>
 
 <p>This target emulates the SCO Universal Development Kit and requires that
 package be installed.  (If it is installed, you will have a
@@ -724,7 +767,7 @@ have installed.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC24"></a><a name="ia64_002dx_002dlinux"></a>ia64-*-linux</h3>
+<h3 class="heading"><a name="TOC25"></a><a name="ia64_002dx_002dlinux"></a>ia64-*-linux</h3>
 
 <p>IA-64 processor (also known as IPF, or Itanium Processor Family)
 running GNU/Linux.
@@ -744,27 +787,31 @@ more major ABI changes are expected.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC25"></a><a name="ia64_002dx_002dhpux"></a>ia64-*-hpux*</h3>
+<h3 class="heading"><a name="TOC26"></a><a name="ia64_002dx_002dhpux"></a>ia64-*-hpux*</h3>
 
-<p>Building GCC on this target requires the GNU Assembler. The bundled HP
-assembler will not work. To prevent GCC from using the wrong assembler,
+<p>Building GCC on this target requires the GNU Assembler.  The bundled HP
+assembler will not work.  To prevent GCC from using the wrong assembler,
 the option <samp><span class="option">--with-gnu-as</span></samp> may be necessary.
 
-   <p>The GCC libunwind library has not been ported to HPUX. This means that for
+   <p>The GCC libunwind library has not been ported to HPUX.  This means that for
 GCC versions 3.2.3 and earlier, <samp><span class="option">--enable-libunwind-exceptions</span></samp>
-is required to build GCC. For GCC 3.3 and later, this is the default. 
+is required to build GCC.  For GCC 3.3 and later, this is the default. 
 For gcc 3.4.3 and later, <samp><span class="option">--enable-libunwind-exceptions</span></samp> is
 removed and the system libunwind library will always be used.
 
    <p><hr />
 <!-- rs6000-ibm-aix*, powerpc-ibm-aix* -->
 
-<h3 class="heading"><a name="TOC26"></a><a name="x_002dibm_002daix"></a>*-ibm-aix*</h3>
+<h3 class="heading"><a name="TOC27"></a><a name="x_002dibm_002daix"></a>*-ibm-aix*</h3>
 
 <p>Support for AIX version 3 and older was discontinued in GCC 3.4.
 
    <p>AIX Make frequently has problems with GCC makefiles.  GNU Make 3.79.1 or
 newer is recommended to build on this platform.
+
+   <p>&ldquo;out of memory&rdquo; bootstrap failures may indicate a problem with
+process resource limits (ulimit).  Hard limits are configured in the
+<samp><span class="file">/etc/security/limits</span></samp> system configuration file.
 
    <p>To speed up the configuration phases of bootstrapping and installing GCC,
 one may use GNU Bash instead of AIX <samp><span class="command">/bin/sh</span></samp>, e.g.,
@@ -876,16 +923,6 @@ switch and using the configure option <samp><span class="option">--with-cpu-</sp
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC27"></a><a name="ip2k_002dx_002delf"></a>ip2k-*-elf</h3>
-
-<p>Ubicom IP2022 micro controller. 
-This configuration is intended for embedded systems. 
-There are no standard Unix configurations.
-
-   <p>Use `<samp><span class="samp">configure --target=ip2k-elf --enable-languages=c</span></samp>' to configure GCC.
-
-   <p><hr />
-
 <h3 class="heading"><a name="TOC28"></a><a name="iq2000_002dx_002delf"></a>iq2000-*-elf</h3>
 
 <p>Vitesse IQ2000 processors.  These are used in embedded
@@ -893,28 +930,35 @@ applications.  There are no standard Unix configurations.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC29"></a><a name="m32r_002dx_002delf"></a>m32r-*-elf</h3>
+<h3 class="heading"><a name="TOC29"></a><a name="m32c_002dx_002delf"></a>m32c-*-elf</h3>
+
+<p>Renesas M32C processor. 
+This configuration is intended for embedded systems.
+
+   <p><hr />
+
+<h3 class="heading"><a name="TOC30"></a><a name="m32r_002dx_002delf"></a>m32r-*-elf</h3>
 
 <p>Renesas M32R processor. 
 This configuration is intended for embedded systems.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC30"></a><a name="m6811_002delf"></a>m6811-elf</h3>
+<h3 class="heading"><a name="TOC31"></a><a name="m6811_002delf"></a>m6811-elf</h3>
 
 <p>Motorola 68HC11 family micro controllers.  These are used in embedded
 applications.  There are no standard Unix configurations.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC31"></a><a name="m6812_002delf"></a>m6812-elf</h3>
+<h3 class="heading"><a name="TOC32"></a><a name="m6812_002delf"></a>m6812-elf</h3>
 
 <p>Motorola 68HC12 family micro controllers.  These are used in embedded
 applications.  There are no standard Unix configurations.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC32"></a><a name="m68k_002dhp_002dhpux"></a>m68k-hp-hpux</h3>
+<h3 class="heading"><a name="TOC33"></a><a name="m68k_002dhp_002dhpux"></a>m68k-hp-hpux</h3>
 
 <p>HP 9000 series 300 or 400 running HP-UX.  HP-UX version 8.0 has a bug in
 the assembler that prevents compilation of GCC.  This
@@ -961,7 +1005,7 @@ to look like:
 </pre>
    <p><hr />
 
-<h3 class="heading"><a name="TOC33"></a><a name="mips_002dx_002dx"></a>mips-*-*</h3>
+<h3 class="heading"><a name="TOC34"></a><a name="mips_002dx_002dx"></a>mips-*-*</h3>
 
 <p>If on a MIPS system you get an error message saying &ldquo;does not have gp
 sections for all it's [sic] sectons [sic]&rdquo;, don't worry about it.  This
@@ -979,15 +1023,25 @@ configure for `<samp><span class="samp">mipsel-elf</span></samp>' as a workaroun
 `<samp><span class="samp">mips*-*-linux*</span></samp>' target continues to use the MIPS II routines.  More
 work on this is expected in future releases.
 
-   <p>Cross-compilers for the Mips as target using the Mips assembler
+   <p>MIPS systems check for division by zero (unless
+<samp><span class="option">-mno-check-zero-division</span></samp> is passed to the compiler) by
+generating either a conditional trap or a break instruction.  Using
+trap results in smaller code, but is only supported on MIPS II and
+later.  Also, some versions of the Linux kernel have a bug that
+prevents trap from generating the proper signal (<code>SIGFPE</code>).  To enable
+the use of break, use the <samp><span class="option">--with-divide=breaks</span></samp>
+<samp><span class="command">configure</span></samp> option when configuring GCC.  The default is to
+use traps on systems that support them.
+
+   <p>Cross-compilers for the MIPS as target using the MIPS assembler
 currently do not work, because the auxiliary programs
 <samp><span class="file">mips-tdump.c</span></samp> and <samp><span class="file">mips-tfile.c</span></samp> can't be compiled on
-anything but a Mips.  It does work to cross compile for a Mips
+anything but a MIPS.  It does work to cross compile for a MIPS
 if you use the GNU assembler and linker.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC34"></a><a name="mips_002dsgi_002dirix5"></a>mips-sgi-irix5</h3>
+<h3 class="heading"><a name="TOC35"></a><a name="mips_002dsgi_002dirix5"></a>mips-sgi-irix5</h3>
 
 <p>In order to compile GCC on an SGI running IRIX 5, the `<samp><span class="samp">compiler_dev.hdr</span></samp>'
 subsystem must be installed from the IDO CD-ROM supplied by SGI. 
@@ -1000,9 +1054,9 @@ to increase its table size for switch statements with the
 optimization option, you also need to use <samp><span class="option">-Olimit 3000</span></samp>.
 
    <p>To enable debugging under IRIX 5, you must use GNU binutils 2.15 or
-later, and use the <samp><span class="option">--with-gnu-as</span></samp> and <samp><span class="option">--with-gnu-ld</span></samp>
-<samp><span class="command">configure</span></samp> options when configuring GCC.  You need to use GNU
-<samp><span class="command">ar</span></samp> and <samp><span class="command">nm</span></samp>, also distributed with GNU binutils.
+later, and use the <samp><span class="option">--with-gnu-ld</span></samp> <samp><span class="command">configure</span></samp> option
+when configuring GCC.  You need to use GNU <samp><span class="command">ar</span></samp> and <samp><span class="command">nm</span></samp>,
+also distributed with GNU binutils.
 
    <p>Some users have reported that <samp><span class="command">/bin/sh</span></samp> will hang during bootstrap. 
 This problem can be avoided by running the commands:
@@ -1014,7 +1068,7 @@ This problem can be avoided by running the commands:
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC35"></a><a name="mips_002dsgi_002dirix6"></a>mips-sgi-irix6</h3>
+<h3 class="heading"><a name="TOC36"></a><a name="mips_002dsgi_002dirix6"></a>mips-sgi-irix6</h3>
 
 <p>If you are using SGI's MIPSpro <samp><span class="command">cc</span></samp> as your bootstrap compiler, you must
 ensure that the N32 ABI is in use.  To test this, compile a simple C
@@ -1033,12 +1087,7 @@ resulting object file.  The output should look like:
 </pre>
    <p>then your version of <samp><span class="command">cc</span></samp> uses the O32 or N64 ABI by default.  You
 should set the environment variable <samp><span class="env">CC</span></samp> to `<samp><span class="samp">cc -n32</span></samp>'
-before configuring GCC.  SGI's MIPSpro 7.2 assembler may misassemble
-parts of the compiler, causing bootstrap failures.  MIPSpro 7.3 is
-known to work.  MIPSpro C 7.4 may cause bootstrap failures, too, due
-to a bug when inlining <code>memcmp</code>.  Either add <code>-U__INLINE_INTRINSICS</code>
-to the <samp><span class="env">CC</span></samp> environment variable as a workaround or upgrade to
-MIPSpro C 7.4.1m.
+before configuring GCC.
 
    <p>If you want the resulting <samp><span class="command">gcc</span></samp> to run on old 32-bit systems
 with the MIPS R4400 CPU, you need to ensure that only code for the `<samp><span class="samp">mips3</span></samp>'
@@ -1056,6 +1105,10 @@ all on `<samp><span class="samp">mips3</span></samp>'-only systems.  For the tes
 </pre>
    <p>instead, you should set the environment variable <samp><span class="env">CC</span></samp> to `<samp><span class="samp">cc
 -n32 -mips3</span></samp>' or `<samp><span class="samp">gcc -mips3</span></samp>' respectively before configuring GCC.
+
+   <p>MIPSpro C 7.4 may cause bootstrap failures, due to a bug when inlining
+<code>memcmp</code>.  Either add <code>-U__INLINE_INTRINSICS</code> to the <samp><span class="env">CC</span></samp>
+environment variable as a workaround or upgrade to MIPSpro C 7.4.1m.
 
    <p>GCC on IRIX 6 is usually built to support the N32, O32 and N64 ABIs.  If
 you build GCC on a system that doesn't have the N64 libraries installed
@@ -1084,14 +1137,14 @@ information about using GCC on IRIX platforms.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC36"></a><a name="powerpc_002dx_002dx"></a>powerpc-*-*</h3>
+<h3 class="heading"><a name="TOC37"></a><a name="powerpc_002dx_002dx"></a>powerpc-*-*</h3>
 
 <p>You can specify a default version for the <samp><span class="option">-mcpu=</span><var>cpu_type</var></samp>
 switch by using the configure option <samp><span class="option">--with-cpu-</span><var>cpu_type</var></samp>.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC37"></a><a name="powerpc_002dx_002ddarwin"></a>powerpc-*-darwin*</h3>
+<h3 class="heading"><a name="TOC38"></a><a name="powerpc_002dx_002ddarwin"></a>powerpc-*-darwin*</h3>
 
 <p>PowerPC running Darwin (Mac OS X kernel).
 
@@ -1101,27 +1154,21 @@ binaries are available at
 <a href="http://developer.apple.com/darwin/projects/compiler/">http://developer.apple.com/darwin/projects/compiler/</a> (free
 registration required).
 
-   <p>The default stack limit of 512K is too small, which may cause compiles
-to fail with 'Bus error'.  Set the stack larger, for instance
-by doing `<samp><span class="samp">limit stack 800</span></samp>'.  It's a good idea to use the GNU
-preprocessor instead of Apple's <samp><span class="file">cpp-precomp</span></samp> during the first stage of
-bootstrapping; this is automatic when doing `<samp><span class="samp">make bootstrap</span></samp>', but
-to do it from the toplevel objdir you will need to say `<samp><span class="samp">make
-CC='cc -no-cpp-precomp' bootstrap</span></samp>'.
+   <p>This version of GCC requires at least cctools-590.7.
 
    <p>The version of GCC shipped by Apple typically includes a number of
 extensions not available in a standard GCC release.  These extensions
-are generally specific to Mac programming.
+are generally for backwards compatibility and best avoided.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC38"></a><a name="powerpc_002dx_002delf"></a>powerpc-*-elf, powerpc-*-sysv4</h3>
+<h3 class="heading"><a name="TOC39"></a><a name="powerpc_002dx_002delf"></a>powerpc-*-elf, powerpc-*-sysv4</h3>
 
 <p>PowerPC system in big endian mode, running System V.4.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC39"></a><a name="powerpc_002dx_002dlinux_002dgnu"></a>powerpc*-*-linux-gnu*</h3>
+<h3 class="heading"><a name="TOC40"></a><a name="powerpc_002dx_002dlinux_002dgnu"></a>powerpc*-*-linux-gnu*</h3>
 
 <p>You will need
 <a href="ftp://ftp.kernel.org/pub/linux/devel/binutils">binutils 2.15</a>
@@ -1129,7 +1176,7 @@ or newer for a working GCC.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC40"></a><a name="powerpc_002dx_002dnetbsd"></a>powerpc-*-netbsd*</h3>
+<h3 class="heading"><a name="TOC41"></a><a name="powerpc_002dx_002dnetbsd"></a>powerpc-*-netbsd*</h3>
 
 <p>PowerPC system in big endian mode running NetBSD.  To build the
 documentation you will need Texinfo version 4.2 (NetBSD 1.5.1 included
@@ -1137,51 +1184,51 @@ Texinfo version 3.12).
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC41"></a><a name="powerpc_002dx_002deabisim"></a>powerpc-*-eabisim</h3>
+<h3 class="heading"><a name="TOC42"></a><a name="powerpc_002dx_002deabisim"></a>powerpc-*-eabisim</h3>
 
 <p>Embedded PowerPC system in big endian mode for use in running under the
 PSIM simulator.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC42"></a><a name="powerpc_002dx_002deabi"></a>powerpc-*-eabi</h3>
+<h3 class="heading"><a name="TOC43"></a><a name="powerpc_002dx_002deabi"></a>powerpc-*-eabi</h3>
 
 <p>Embedded PowerPC system in big endian mode.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC43"></a><a name="powerpcle_002dx_002delf"></a>powerpcle-*-elf, powerpcle-*-sysv4</h3>
+<h3 class="heading"><a name="TOC44"></a><a name="powerpcle_002dx_002delf"></a>powerpcle-*-elf, powerpcle-*-sysv4</h3>
 
 <p>PowerPC system in little endian mode, running System V.4.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC44"></a><a name="powerpcle_002dx_002deabisim"></a>powerpcle-*-eabisim</h3>
+<h3 class="heading"><a name="TOC45"></a><a name="powerpcle_002dx_002deabisim"></a>powerpcle-*-eabisim</h3>
 
 <p>Embedded PowerPC system in little endian mode for use in running under
 the PSIM simulator.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC45"></a><a name="powerpcle_002dx_002deabi"></a>powerpcle-*-eabi</h3>
+<h3 class="heading"><a name="TOC46"></a><a name="powerpcle_002dx_002deabi"></a>powerpcle-*-eabi</h3>
 
 <p>Embedded PowerPC system in little endian mode.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC46"></a><a name="s390_002dx_002dlinux"></a>s390-*-linux*</h3>
+<h3 class="heading"><a name="TOC47"></a><a name="s390_002dx_002dlinux"></a>s390-*-linux*</h3>
 
 <p>S/390 system running GNU/Linux for S/390.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC47"></a><a name="s390x_002dx_002dlinux"></a>s390x-*-linux*</h3>
+<h3 class="heading"><a name="TOC48"></a><a name="s390x_002dx_002dlinux"></a>s390x-*-linux*</h3>
 
 <p>zSeries system (64-bit) running GNU/Linux for zSeries.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC48"></a><a name="s390x_002dibm_002dtpf"></a>s390x-ibm-tpf*</h3>
+<h3 class="heading"><a name="TOC49"></a><a name="s390x_002dibm_002dtpf"></a>s390x-ibm-tpf*</h3>
 
 <p>zSeries system (64-bit) running TPF.  This platform is
 supported as cross-compilation target only.
@@ -1191,7 +1238,7 @@ supported as cross-compilation target only.
 <!-- SunOS 4 releases which we don't use to avoid confusion.  Solaris -->
 <!-- alone is too unspecific and must be avoided. -->
 
-<h3 class="heading"><a name="TOC49"></a><a name="x_002dx_002dsolaris2"></a>*-*-solaris2*</h3>
+<h3 class="heading"><a name="TOC50"></a><a name="x_002dx_002dsolaris2"></a>*-*-solaris2*</h3>
 
 <p>Sun does not ship a C compiler with Solaris 2.  To bootstrap and install
 GCC you first have to install a pre-built compiler, see the
@@ -1199,13 +1246,12 @@ GCC you first have to install a pre-built compiler, see the
 
    <p>The Solaris 2 <samp><span class="command">/bin/sh</span></samp> will often fail to configure
 <samp><span class="file">libstdc++-v3</span></samp>, <samp><span class="file">boehm-gc</span></samp> or <samp><span class="file">libjava</span></samp>.  We therefore
-recommend to use the following sequence of commands to bootstrap and
-install GCC:
+recommend using the following initial sequence of commands
 
 <pre class="smallexample">        % CONFIG_SHELL=/bin/ksh
         % export CONFIG_SHELL
 </pre>
-   <p>and then proceed as described in <a href="build.html">the build instructions</a>. 
+   <p>and proceed as described in <a href="configure.html">the configure instructions</a>. 
 In addition we strongly recommend specifying an absolute path to invoke
 <var>srcdir</var>/configure.
 
@@ -1245,6 +1291,15 @@ from the CVS repository or applying the patch
 <a href="http://sources.redhat.com/ml/binutils-cvs/2004-09/msg00036.html">http://sources.redhat.com/ml/binutils-cvs/2004-09/msg00036.html</a> to the
 release.
 
+   <p>We recommend using GNU binutils 2.16 or later in conjunction with GCC 4.x,
+or the vendor tools (Sun <samp><span class="command">as</span></samp>, Sun <samp><span class="command">ld</span></samp>).  However, for
+Solaris 10 and above, an additional patch is required in order for the GNU
+linker to be able to cope with a new flavor of shared libraries.  You
+can obtain a working version by checking out the binutils-2_16-branch from
+the CVS repository or applying the patch
+<a href="http://sourceware.org/ml/binutils-cvs/2005-07/msg00122.html">http://sourceware.org/ml/binutils-cvs/2005-07/msg00122.html</a> to the
+release.
+
    <p>Sun bug 4296832 turns up when compiling X11 headers with GCC 2.95 or
 newer: <samp><span class="command">g++</span></samp> will complain that types are missing.  These headers assume
 that omitting the type means <code>int</code>; this assumption worked for C89 but
@@ -1272,7 +1327,7 @@ SPARC, 117172-11 or newer for Intel) that address this problem.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC50"></a><a name="sparc_002dsun_002dsolaris2"></a>sparc-sun-solaris2*</h3>
+<h3 class="heading"><a name="TOC51"></a><a name="sparc_002dsun_002dsolaris2"></a>sparc-sun-solaris2*</h3>
 
 <p>When GCC is configured to use binutils 2.11.2 or later the binaries
 produced are smaller than the ones produced using Sun's native tools;
@@ -1328,9 +1383,15 @@ A symptom of the problem is that you cannot compile C++ programs like
    <p>To work around this problem, compile with <samp><span class="option">-gstabs+</span></samp> instead of
 plain <samp><span class="option">-g</span></samp>.
 
+   <p>When configuring the GNU Multiple Precision Library (GMP) on a Solaris 7
+or later system, the canonical target triplet must be specified as the
+<samp><span class="command">build</span></samp> parameter on the configure line:
+
+<pre class="smallexample">     ./configure --build=sparc-sun-solaris2.7 --prefix=xxx --enable-mpfr
+</pre>
    <p><hr />
 
-<h3 class="heading"><a name="TOC51"></a><a name="sparc_002dsun_002dsolaris27"></a>sparc-sun-solaris2.7</h3>
+<h3 class="heading"><a name="TOC52"></a><a name="sparc_002dsun_002dsolaris27"></a>sparc-sun-solaris2.7</h3>
 
 <p>Sun patch 107058-01 (1999-01-13) for Solaris 7/SPARC triggers a bug in
 the dynamic linker.  This problem (Sun bug 4210064) affects GCC 2.8
@@ -1366,16 +1427,25 @@ the Solaris 7 Recommended Patch Cluster.
 
    <p>GCC 3.3 triggers a bug in version 5.0 Alpha 03/27/98 of the Sun assembler,
 which causes a bootstrap failure when linking the 64-bit shared version of
-libgcc. A typical error message is:
+libgcc.  A typical error message is:
 
 <pre class="smallexample">     ld: fatal: relocation error: R_SPARC_32: file libgcc/sparcv9/_muldi3.o:
        symbol &lt;unknown&gt;:  offset 0xffffffff7ec133e7 is non-aligned.
 </pre>
    <p>This bug has been fixed in the final 5.0 version of the assembler.
 
+   <p>A similar problem was reported for version Sun WorkShop 6 99/08/18 of the
+Sun assembler, which causes a bootstrap failure with GCC 4.0.0:
+
+<pre class="smallexample">     ld: fatal: relocation error: R_SPARC_DISP32:
+       file .libs/libstdc++.lax/libsupc++convenience.a/vterminate.o:
+         symbol &lt;unknown&gt;: offset 0xfccd33ad is non-aligned
+</pre>
+   <p>This bug has been fixed in more recent revisions of the assembler.
+
    <p><hr />
 
-<h3 class="heading"><a name="TOC52"></a><a name="sparc_002dx_002dlinux"></a>sparc-*-linux*</h3>
+<h3 class="heading"><a name="TOC53"></a><a name="sparc_002dx_002dlinux"></a>sparc-*-linux*</h3>
 
 <p>GCC versions 3.0 and higher require binutils 2.11.2 and glibc 2.2.4
 or newer on this platform.  All earlier binutils and glibc
@@ -1383,7 +1453,7 @@ releases mishandled unaligned relocations on <code>sparc-*-*</code> targets.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC53"></a><a name="sparc64_002dx_002dsolaris2"></a>sparc64-*-solaris2*</h3>
+<h3 class="heading"><a name="TOC54"></a><a name="sparc64_002dx_002dsolaris2"></a>sparc64-*-solaris2*</h3>
 
 <p>The following compiler flags must be specified in the configure
 step in order to bootstrap this target with the Sun compiler:
@@ -1395,13 +1465,13 @@ specifies the SPARC-V9 architecture to the Sun linker and assembler.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC54"></a><a name="sparcv9_002dx_002dsolaris2"></a>sparcv9-*-solaris2*</h3>
+<h3 class="heading"><a name="TOC55"></a><a name="sparcv9_002dx_002dsolaris2"></a>sparcv9-*-solaris2*</h3>
 
 <p>This is a synonym for sparc64-*-solaris2*.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC55"></a><a name="x_002dx_002dsysv"></a>*-*-sysv*</h3>
+<h3 class="heading"><a name="TOC56"></a><a name="x_002dx_002dsysv"></a>*-*-sysv*</h3>
 
 <p>On System V release 3, you may get this error message
 while linking:
@@ -1430,14 +1500,14 @@ is said to work.  Smaller values may also work.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC56"></a><a name="vax_002ddec_002dultrix"></a>vax-dec-ultrix</h3>
+<h3 class="heading"><a name="TOC57"></a><a name="vax_002ddec_002dultrix"></a>vax-dec-ultrix</h3>
 
 <p>Don't try compiling with VAX C (<samp><span class="command">vcc</span></samp>).  It produces incorrect code
 in some cases (for example, when <code>alloca</code> is used).
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC57"></a><a name="x_002dx_002dvxworks"></a>*-*-vxworks*</h3>
+<h3 class="heading"><a name="TOC58"></a><a name="x_002dx_002dvxworks"></a>*-*-vxworks*</h3>
 
 <p>Support for VxWorks is in flux.  At present GCC supports <em>only</em> the
 very recent VxWorks 5.5 (aka Tornado 2.2) release, and only on PowerPC. 
@@ -1472,7 +1542,7 @@ VxWorks will incorporate this module.)
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC58"></a><a name="x86_002d64_002dx_002dx"></a>x86_64-*-*, amd64-*-*</h3>
+<h3 class="heading"><a name="TOC59"></a><a name="x86_002d64_002dx_002dx"></a>x86_64-*-*, amd64-*-*</h3>
 
 <p>GCC supports the x86-64 architecture implemented by the AMD64 processor
 (amd64-*-* is an alias for x86_64-*-*) on GNU/Linux, FreeBSD and NetBSD. 
@@ -1481,7 +1551,7 @@ both 64-bit x86-64 and 32-bit x86 code (via the <samp><span class="option">-m32<
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC59"></a><a name="xtensa_002dx_002delf"></a>xtensa-*-elf</h3>
+<h3 class="heading"><a name="TOC60"></a><a name="xtensa_002dx_002delf"></a>xtensa-*-elf</h3>
 
 <p>This target is intended for embedded Xtensa systems using the
 `<samp><span class="samp">newlib</span></samp>' C library.  It uses ELF but does not support shared
@@ -1498,7 +1568,7 @@ which you can use to replace the default header file.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC60"></a><a name="xtensa_002dx_002dlinux"></a>xtensa-*-linux*</h3>
+<h3 class="heading"><a name="TOC61"></a><a name="xtensa_002dx_002dlinux"></a>xtensa-*-linux*</h3>
 
 <p>This target is for Xtensa systems running GNU/Linux.  It supports ELF
 shared objects and the GNU C library (glibc).  It also generates
@@ -1509,20 +1579,17 @@ respects, this target is the same as the
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC61"></a><a name="windows"></a>Microsoft Windows (32-bit)</h3>
+<h3 class="heading"><a name="TOC62"></a><a name="windows"></a>Microsoft Windows (32-bit)</h3>
 
-<p>A port of GCC 2.95.2 and 3.x is included with the
+<p>Ports of GCC are included with the
 <a href="http://www.cygwin.com/">Cygwin environment</a>.
 
-   <p>Current (as of early 2001) snapshots of GCC will build under Cygwin
-without modification.
-
-   <p>GCC does not currently build with Microsoft's C++ compiler and there
-are no plans to make it do so.
+   <p>GCC will build under Cygwin without modification; it does not build
+with Microsoft's C++ compiler and there are no plans to make it do so.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC62"></a><a name="os2"></a>OS/2</h3>
+<h3 class="heading"><a name="TOC63"></a><a name="os2"></a>OS/2</h3>
 
 <p>GCC does not currently support OS/2.  However, Andrew Zabolotny has been
 working on a generic OS/2 port with pgcc.  The current code can be found
@@ -1530,7 +1597,7 @@ at <a href="http://www.goof.com/pcg/os2/">http://www.goof.com/pcg/os2/</a>.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC63"></a><a name="older"></a>Older systems</h3>
+<h3 class="heading"><a name="TOC64"></a><a name="older"></a>Older systems</h3>
 
 <p>GCC contains support files for many older (1980s and early
 1990s) Unix variants.  For the most part, support for these systems
@@ -1557,7 +1624,7 @@ operating system may still cause problems.
    <p>Support for older systems as targets for cross-compilation is less
 problematic than support for them as hosts for GCC; if an enthusiast
 wishes to make such a target work again (including resurrecting any of
-the targets that never worked with GCC 2, starting from the last CVS
+the targets that never worked with GCC 2, starting from the last
 version before they were removed), patches
 <a href="../contribute.html">following the usual requirements</a> would be
 likely to be accepted, since they should not affect the support for more
@@ -1574,7 +1641,7 @@ current GCC) is to be found in the GCC texinfo manual.
 
    <p><hr />
 
-<h3 class="heading"><a name="TOC64"></a><a name="elf"></a>all ELF targets (SVR4, Solaris 2, etc.)</h3>
+<h3 class="heading"><a name="TOC65"></a><a name="elf"></a>all ELF targets (SVR4, Solaris 2, etc.)</h3>
 
 <p>C++ support is significantly better on ELF targets if you use the
 <a href="./configure.html#with-gnu-ld">GNU linker</a>; duplicate copies of

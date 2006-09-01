@@ -1,6 +1,6 @@
 /* Communication between reload.c and reload1.c.
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1997, 1998,
-   1999, 2000, 2001, 2003 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2003, 2004 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -16,8 +16,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 
 /* If secondary reloads are the same for inputs and outputs, define those
@@ -164,10 +164,19 @@ extern struct reload rld[MAX_RELOADS];
 extern int n_reloads;
 #endif
 
+extern GTY (()) struct varray_head_tag *reg_equiv_memory_loc_varray;
 extern rtx *reg_equiv_constant;
+extern rtx *reg_equiv_invariant;
 extern rtx *reg_equiv_memory_loc;
 extern rtx *reg_equiv_address;
 extern rtx *reg_equiv_mem;
+
+/* Element N is the list of insns that initialized reg N from its equivalent
+   constant or memory slot.  */
+extern GTY((length("reg_equiv_init_size"))) rtx *reg_equiv_init;
+
+/* The size of the previous array, for GC purposes.  */
+extern GTY(()) int reg_equiv_init_size;
 
 /* All the "earlyclobber" operands of the current insn
    are recorded here.  */
@@ -191,13 +200,6 @@ extern char indirect_symref_ok;
 extern char double_reg_address_ok;
 
 extern int num_not_at_initial_offset;
-
-struct needs
-{
-  /* [0] is normal, [1] is nongroup.  */
-  short regs[2][N_REG_CLASSES];
-  short groups[N_REG_CLASSES];
-};
 
 #if defined SET_HARD_REG_BIT && defined CLEAR_REG_SET
 /* This structure describes instructions which are relevant for reload.
@@ -227,9 +229,6 @@ struct insn_chain
 
   /* Indicates which registers have already been used for spills.  */
   HARD_REG_SET used_spill_regs;
-
-  /* Describe the needs for reload registers of this insn.  */
-  struct needs need;
 
   /* Nonzero if find_reloads said the insn requires reloading.  */
   unsigned int need_reload:1;
@@ -307,18 +306,8 @@ extern void move_replacements (rtx *x, rtx *y);
    Otherwise, return *LOC.  */
 extern rtx find_replacement (rtx *);
 
-/* Return nonzero if register in range [REGNO, ENDREGNO)
-   appears either explicitly or implicitly in X
-   other than being stored into.  */
-extern int refers_to_regno_for_reload_p (unsigned int, unsigned int,
-					 rtx, rtx *);
-
 /* Nonzero if modifying X will affect IN.  */
 extern int reg_overlap_mentioned_for_reload_p (rtx, rtx);
-
-/* Return nonzero if anything in X contains a MEM.  Look also for pseudo
-   registers.  */
-extern int refers_to_mem_for_reload_p (rtx);
 
 /* Check the insns before INSN to see if there is a suitable register
    containing the same value as GOAL.  */
@@ -340,7 +329,6 @@ extern int push_reload (rtx, rtx, rtx *, rtx *, enum reg_class,
 extern void reload_cse_regs (rtx);
 
 /* Functions in reload1.c:  */
-extern int reloads_conflict (int, int);
 
 /* Initialize the reload pass once per compilation.  */
 extern void init_reload (void);
@@ -355,11 +343,6 @@ extern void mark_home_live (int);
 /* Scan X and replace any eliminable registers (such as fp) with a
    replacement (such as sp), plus an offset.  */
 extern rtx eliminate_regs (rtx, enum machine_mode, rtx);
-
-/* Emit code to perform a reload from IN (which may be a reload register) to
-   OUT (which may also be a reload register).  IN or OUT is from operand
-   OPNUM with reload type TYPE.  */
-extern rtx gen_reload (rtx, rtx, int, enum reload_type);
 
 /* Deallocate the reload register used by reload number R.  */
 extern void deallocate_reload_reg (int r);

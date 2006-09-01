@@ -2,7 +2,7 @@
    on information stored in GCC's tree structure.  This code implements the
    -aux-info option.
    Copyright (C) 1989, 1991, 1994, 1995, 1997, 1998,
-   1999, 2000, 2003 Free Software Foundation, Inc.
+   1999, 2000, 2003, 2004 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@segfault.us.com).
 
 This file is part of GCC.
@@ -19,8 +19,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -430,7 +430,7 @@ gen_type (const char *ret_val, tree t, formals_style style)
           data_type = IDENTIFIER_POINTER (DECL_NAME (TYPE_NAME (t)));
           /* Normally, `unsigned' is part of the deal.  Not so if it comes
 	     with a type qualifier.  */
-          if (TREE_UNSIGNED (t) && TYPE_QUALS (t))
+          if (TYPE_UNSIGNED (t) && TYPE_QUALS (t))
 	    data_type = concat ("unsigned ", data_type, NULL);
 	  break;
 
@@ -447,7 +447,7 @@ gen_type (const char *ret_val, tree t, formals_style style)
 	  break;
 
         default:
-          abort ();
+          gcc_unreachable ();
         }
     }
   if (TYPE_READONLY (t))
@@ -531,7 +531,7 @@ gen_decl (tree decl, int is_func_definition, formals_style style)
 
   ret_val = affix_data_type (ret_val);
 
-  if (TREE_CODE (decl) != FUNCTION_DECL && DECL_REGISTER (decl))
+  if (TREE_CODE (decl) != FUNCTION_DECL && C_DECL_REGISTER (decl))
     ret_val = concat ("register ", ret_val, NULL);
   if (TREE_PUBLIC (decl))
     ret_val = concat ("extern ", ret_val, NULL);
@@ -554,11 +554,12 @@ gen_aux_info_record (tree fndecl, int is_definition, int is_implicit,
   if (flag_gen_aux_info)
     {
       static int compiled_from_record = 0;
+      expanded_location xloc = expand_location (DECL_SOURCE_LOCATION (fndecl));
 
       /* Each output .X file must have a header line.  Write one now if we
 	 have not yet done so.  */
 
-      if (! compiled_from_record++)
+      if (!compiled_from_record++)
 	{
 	  /* The first line tells which directory file names are relative to.
 	     Currently, -aux-info works only for files in the working
@@ -569,8 +570,7 @@ gen_aux_info_record (tree fndecl, int is_definition, int is_implicit,
       /* Write the actual line of auxiliary info.  */
 
       fprintf (aux_info_file, "/* %s:%d:%c%c */ %s;",
-	       DECL_SOURCE_FILE (fndecl),
-	       DECL_SOURCE_LINE (fndecl),
+	       xloc.file, xloc.line,
 	       (is_implicit) ? 'I' : (is_prototyped) ? 'N' : 'O',
 	       (is_definition) ? 'F' : 'C',
 	       gen_decl (fndecl, is_definition, ansi));

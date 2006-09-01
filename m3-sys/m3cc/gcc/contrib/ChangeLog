@@ -1,56 +1,116 @@
-2005-11-30  Release Manager
+2006-05-24  Release Manager
 
-	* GCC 3.4.5 released.
+	* GCC 4.1.1 released.
 
-2005-11-17  Eric Botcazou  <ebotcazou@libertysurf.fr>
+2006-02-28  Release Manager
 
-	Backport from mainline:
-	* gcc_update: When svn update is called and --silent is used, pass -q.
+	* GCC 4.1.0 released.
+
+2006-02-28  Mark Mitchell  <mark@codesourcery.com>
+
+	* gennews (files): Update for GCC 4.1.
+
+2005-11-03  Steven Bosscher  <stevenb@suse.de>
+
+	* gcc_build: Fix my previous checking.
 
 2005-11-01  Joseph S. Myers  <joseph@codesourcery.com>
 
 	* gcc_update: Include revision number in LAST_UPDATED.
 
+2005-10-30  Steven Bosscher  <stevenb@suse.de>
+
+	* gcc_build: Use gcc.gnu.org as the default server.  Set up
+	SVN_REPOSITORY correctly.  Add support for checking out branches.
+
+2005-10-28  Andrew Pinski  <pinskia@gcc.gnu.org>
+
+	* gcc_update: When svn update is called and
+	--silent is used, pass -q.
+
+2005-10-28  Andrew Pinski  <pinskia@gcc.gnu.org>
+
+	* gcc_update: Remove the -q from svn invocation.
+
+2005-10-28  Andrew Pinski  <pinskia@gcc.gnu.org>
+
+	* gcc_build: Remove -d from the call to gcc_update.
+
 2005-10-28  Daniel Berlin  <dberlin@dberlin.org>
 	    Ben Elliston <bje@au1.ibm.com>
 	
 	* gcc_update: Update for svn.
+	* newcvsroot: Ditto.
+	* gcc_build: Ditto.
+
+2005-10-21  Mark Mitchell  <mark@codesourcery.com>
+
+	* texi2pod.pl: Substitue for @value even when part of @include. 
+
+2005-10-21  Bob Wilson  <bob.wilson@acm.org>
+
+	* texi2pod.pl: Convert two single quotes or two backquotes to
+	double quotes.
+
+2005-08-23  Ben Elliston  <bje@au.ibm.com>
+
+	* gcc_update: Update dependencies for libjava/aclocal.m4.
+
+2005-08-14  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* All files: Update with new FSF address.
+
+2005-07-14  Ben Elliston  <bje@au.ibm.com>
+
+	* filter_params.pl: Typo fix.
+	* filter_knr2ansi.pl: Likewise.
 
 2005-06-05  Gerald Pfeifer  <gerald@pfeifer.com>
 
 	* gennews (files): Update for egcs-1.0 release pages consolidation.
 
-2005-05-19  Release Manager
+2005-04-17  Joseph S. Myers  <joseph@codesourcery.com>
 
-	* GCC 3.4.4 released.
+	* gennews (files): Update for GCC 4.0.
 
-2005-03-21  Zack Weinberg  <zack@codesourcery.com>
-
-	Merge from mainline:
-
-    2005-03-18  Alexandre Oliva  <aoliva@redhat.com>
+2005-03-18  Alexandre Oliva  <aoliva@redhat.com>
 
 	* gcc_update (silent): Unset instead of initializing to null.
 
-    2005-03-18  Andreas Schwab  <schwab@suse.de>
+2005-03-18  Andreas Schwab  <schwab@suse.de>
 
 	* gcc_update (apply_patch): Properly quote $1.
 
-    2005-03-18  Zack Weinberg  <zack@codesourcery.com>
+2005-03-18  Zack Weinberg  <zack@codesourcery.com>
 
 	* gcc_update: Add --silent option.
 
-2005-01-17  David O'Brien  <obrien@FreeBSD.org>
+2005-03-08  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
 
-	* contrib/gcc_update: Explicitly update the branch.
+	* warn_summary (keywordFilter): Update sed pattern for new quoting
+	style in warnings.
 
-2004-11-04  Release Manager
+2005-03-07  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
 
-	* GCC 3.4.3 released.
+	* warn_summary: Add -fortran subdir flag.
+	(subdirectoryFilter): Fix missing ada subdir.
 
-2004-09-06  Release Manager
+2004-11-20  Hans-Peter Nilsson  <hp@bitrange.com>
 
-	* GCC 3.4.2 released.
+	* gcc_update (touch_files): Don't rely on "make" being GNU make;
+	grep for "Touching" to determine that the rule executes.
+
+2004-11-14  Hans-Peter Nilsson  <hp@bitrange.com>
+
+	* gcc_update (touch_files): Explicitly pass --no-print-directory.
+
+2004-11-04  Andrew Pinski  <pinskia@physics.uc.edu>
+
+	* gcc_update (boehm-gc/aclocal.m4): Remove boehm-gc/acinclude.m4.
+
+2004-08-04  Paolo Bonzini  <bonzini@gnu.org>
+
+	* gcc_update: Add fixincludes.
 
 2004-08-26  Matthias Klose  <doko@debian.org>
 
@@ -61,22 +121,110 @@
 	* test_summary: Include baseline used for libstdc++-v3 abi check
 	in test summary.
 
-2004-07-01  Release Manager
+2004-08-25  Ben Elliston  <bje@au.ibm.com>
 
-	* GCC 3.4.1 released.
+	* gcc_update (libcpp/Makefile.in): Remove libcpp/Makefile.am.
 
-2004-06-09  Arnaud Charlet  <charlet@act-europe.fr>
+2004-08-20  Andreas Tobler  <a.tobler@schweiz.ch>
 
-	PR ada/14150
-	* gcc_update (files_and_dependencies): Remove gcc/ada/*.texi.
+	* gcc_update (self): libjava/configure.in -> configure.ac. Automake
+	update done.
+
+2004-08-04  Paolo Bonzini  <bonzini@gnu.org>
+
+	* gcc_update: libjava/configure.ac -> configure.in.  Automake
+	1.4 does not handle configure.ac properly.
+
+2004-08-04  Andreas Schwab  <schwab@suse.de>
+
+	* gcc_update: libjava/configure.in -> configure.ac.
+
+2004-08-03  Richard Earnshaw <rearnsha@arm.com>
+
+	* gcc_update: gcc/config/arm/arm-tune.md -> arm-cores.def gentune.sh.
+
+2004-07-16  Jeff Law  <law@redhat.com>
+
+	* analyze_brprob: Fix comments.  More consistent output format.
+
+2004-06-17  Diego Novillo  <dnovillo@redhat.com>
+
+	* tree-ssa.doxy: Update for doxygen 1.3.5.
+
+2004-06-14  Andreas Jaeger  <aj@suse.de>
+
+	* gcc_update: boehm-gc/configure.in -> configure.ac.
+
+2004-06-16  Paolo Bonzini  <bonzini@gnu.org>
+
+	* gcc_update (boehm-gc/configure): Depend on
+	boehm-gc/configure.ac instead of boehm-gc/configure.in
+
+2004-06-14  Paolo Bonzini  <bonzini@gnu.org>
+
+	* gcc_update (libmudflap/configure): Depend on
+	libmudflap/configure.ac instead of libmudflap/configure.in
+
+2004-06-14  Andreas Jaeger  <aj@suse.de>
+
+	* gcc_update: Add libcpp.
+
+2004-06-10  Andreas Jaeger  <aj@suse.de>
+
+	* gcc_update: Add libgfortran.
+
+2004-05-29  Andrew Pinski  <pinskia@physics.uc.edu>
+
+	* gcc_update (libbanshee/configure): Depend on
+	libbanshee/configure.ac instead of libbanshee/configure.in
+
+2004-05-17  Zack Weinberg  <zack@codesourcery.com>
+
+	* gcc_update: Remove gcc/f/intdoc.texi and all libf2c files
+	from list of files to be touched.
+	* convert_to_f2c, convert_to_g2c, download_f2c: Delete.
 
 2004-05-15  Joseph S. Myers  <jsm@polyomino.org.uk>
 
 	* gennews: Update for GCC 3.4.
 
-2004-04-18  Release Manager
+2004-05-13  Diego Novillo  <dnovillo@redhat.com>
 
-	* GCC 3.4.0 released.
+	Merge from tree-ssa-20020619-branch.
+
+	* filter_gcc_for_doxygen: New file.
+	* filter_knr2ansi.pl: New file.
+	* filter_params.pl: New file.
+	* tree-ssa.doxy: New file.
+	* contrib/gcc_update (files_and_dependencies): Handle
+	libbanshee and libmudflap.
+
+2004-04-12  Kelley Cook  <kcook@gcc.gnu.org>
+	    Andreas Jaeger  <aj@suse.de>
+
+	* gcc_update (files_and_dependencies): Insert zlib dependencies.
+
+2004-04-09  Nathanael Nerode  <neroden@gcc.gnu.org>
+
+	* gcc_update (files_and_dependencies): libobjc/configure now
+	depends on configure.ac, not configure.in.
+
+2004-04-01  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* gcc_update (files_and_dependencies): Remove gcc/ada/*.texi.
+
+2004-03-16  Andreas Tobler  <a.tobler@schweiz.ch>
+
+	* gcc_update (files_and_dependencies): Insert libffi dependencies.
+
+2004-03-10  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* gcc_update (files_and_dependencies): Insert libada/configure.
+
+2004-02-29  Andrew Pinski  <pinskia@physics.uc.edu>
+
+	* gcc_update (files_and_dependencies): Update intl/configure.in
+	to intl/configure.ac.
 
 2004-01-09  Kelley Cook  <kcook@gcc.gnu.org>
 

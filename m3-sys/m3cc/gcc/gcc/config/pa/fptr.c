@@ -1,5 +1,5 @@
 /* Subroutine for function pointer canonicalization on PA-RISC with ELF32.
-   Copyright 2002, 2003 Free Software Foundation, Inc.
+   Copyright 2002, 2003, 2004 Free Software Foundation, Inc.
    Contributed by John David Anglin (dave.anglin@nrc.ca).
 
 This file is part of GCC.
@@ -16,8 +16,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* WARNING: The code is this function depends on internal and undocumented
    details of the GNU linker and dynamic loader as implemented for parisc
@@ -57,8 +57,7 @@ unsigned int __canonicalize_funcptr_for_compare (fptr_t)
       __attribute__ ((visibility ("hidden")));
 
 unsigned int
-__canonicalize_funcptr_for_compare (fptr)
-     fptr_t fptr;
+__canonicalize_funcptr_for_compare (fptr_t fptr)
 {
   static unsigned int fixup_plabel[2];
   static fixup_t fixup;

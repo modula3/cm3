@@ -1,36 +1,129 @@
-2005-11-30  Release Manager
+2006-05-24  Release Manager
 
-	* GCC 3.4.5 released.
+	* GCC 4.1.1 released.
 
-2005-11-28  Gabriel Dos Reis  <gdr@integrable-solutions.net>
+2006-02-28  Release Manager
 
-	* gcc_release (ADA_DIRS): libada and gnattools are not part of
-	this release.
+	* GCC 4.1.0 released.
 
-2005-11-23  Gabriel Dos Reis  <gdr@integrable-solutions.net>
+2005-11-06  Joseph S. Myers  <joseph@codesourcery.com>
 
-	* gcc_release: Copy from mainline after SVN move.  Remove
-	references to Fortran 95 builds.
+	* gcc_release: Further update for SVN.  Don't set EXPORTTAG or
+	EXPORTDATE; always determine SVNREV the same way.  Correct message
+	about what sources are being retrived.  Include branch information
+	in LAST_UPDATED.
+	* crontab: Don't include initial / in branch name.
 
-2005-05-19  Release Manager
+2005-11-05  Daniel Berlin  <dberlin@dberlin.org>
 
-	* GCC 3.4.4 released.
+	* gcc_release:  Always determine revision number from date or tag,
+	and use that, instead of fragile date based export.
+	Put back setting of non-local CVSROOT.
 
-2004-11-10  Mark Mitchell  <mark@codesourcery.com>
+2005-11-05  Daniel Berlin  <dberlin@dberlin.org>
 
-	* gcc_release: Check "-p" argument more carefully.
+	* gcc_release: Make tags go in /tags.
+	Don't tag for snapshots.
+	Determine revision number of export and put into snapshot
+	announcement.
 
-2004-11-04  Release Manager
+2005-11-03  Daniel Berlin  <dberlin@dberlin.org>
 
-	* GCC 3.4.3 released.
+	* gcc_release: Update for SVN
+	* crontab: Update for new gcc_release
 
-2004-09-06  Release Manager
+2005-10-26  Daniel Berlin  <dberlin@dberlin.org>
 
-	* GCC 3.4.2 released.
+	* update_web_docs_svn: Use -q to quiet svn.
 
-2004-07-01  Release Manager
+2005-10-26  Daniel Berlin  <dberlin@dberlin.org>
 
-	* GCC 3.4.1 released.
+	* crontab: Update to reflect reality
+
+2005-10-01  Mark Mitchell  <mark@codesourcery.com>
+
+	* gcc_release (build_sources): If trying to apply a tag that
+	already exists, issue an error message and exit.
+
+2005-09-30  Joseph S. Myers  <joseph@codesourcery.com>
+
+	PR other/23693
+	* update_web_docs: Add PDF support.  Correct check of DEV-PHASE.
+
+2005-09-30  Joseph S. Myers  <joseph@codesourcery.com>
+
+	* update_web_docs_old: Remove.
+
+2005-08-14  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* gcc_release: Update with FSF address.
+
+2005-07-26  Janis Johnson  <janis187@us.ibm.com>
+
+	* update_version (ADD_BRANCHES): Add dfp-branch.
+
+2005-05-21  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: Spread snapshot building more evenly throughout the
+	week.
+
+2005-05-19  Joseph S. Myers  <joseph@codesourcery.com>
+
+	* crontab: Don't build 3.3 branch snapshots.
+	* update_version (IGNORE_BRANCHES): Add gcc-3_3-branch.
+
+2005-03-15  Zack Weinberg  <zack@codesourcery.com>
+
+	* README: Update.
+	* gcc_release: Update gcc/DEV-PHASE if that file exists, instead
+	of gcc/version.c.
+	* update_version: Handle updating gcc/DATESTAMP.
+	* update_web_docs: Generate gcc-vers.texi first.
+
+2005-03-10  Ranjit Mathew  <rmathew@hotmail.com>
+
+	* gcc_release (ADA_DIRS): Add "gnattools".
+
+2005-02-25  Mark Mitchell  <mark@codesourcery.com>
+
+	* crontab: Adjust for 4.0 branch.
+
+2004-12-30  Sebastian Pop  <pop@cri.ensmp.fr>
+
+	* update_version (ADD_BRANCHES): Replace lno-branch with
+	autovect-branch.
+
+2004-09-11  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: Rename GCC 3.5 snapshots to GCC 4.0 snapshots.
+
+2004-08-14  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* gcc_release (build_sources): Add comment header to generated
+	MD5SUMS.
+
+2004-08-06  Kelley Cook  <kcook@gcc.gnu.org>
+
+	* gcc_release (snapshot_print): Accept arguments.  Don't use echo -e.
+	(announce_snapshot):  Update for above.  Don't use echo -e.
+
+2004-08-03 Kelley Cook  <kcook@gcc.gnu.org>
+
+	* maintainer-scripts (snapshot_print): New function.
+	(announce_snapshot): Generate announcment on the fly.
+	Use a directory link for LATEST.
+	* snapshot-README: Delete.
+	* snapshot-index.html: Delete.
+
+2004-06-09  Paolo Bonzini  <bonzini@gnu.org>
+
+	* gcc_release (build_sources): Move the libcpp gmo files
+	to the source directory.
+
+2004-06-03  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* gcc_release (maybe_build_tarfile): New function.
+	(build_tarfiles): Use maybe_build_tarfile.
 
 2004-05-21  Paolo Carlini  <pcarlini@suse.de>
 
@@ -40,23 +133,92 @@
 
 	* gcc_release (build_sources): Change CRCs from brik to md5sum.
 
-2004-04-18  Release Manager
+2004-05-16  Gerald Pfeifer  <gerald@pfeifer.com>
 
-	* GCC 3.4.0 released.
+	* crontab: Add GCC 3.5 snapshots, currenty run on Sundays.
+
+2004-05-13  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* update_web_docs: Also remove old .gz files from subdirectories
+	on the 15th of the month.
+
+2004-05-13  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* update_web_docs (MANUALS): Add gfortran.
+
+2004-05-13  Arnaud Charlet  <charlet@act-europe.fr>
+
+	* update_web_docs: Fix generation of Ada docs.
+
+2004-05-13  Joseph S. Myers  <jsm@polyomino.org.uk>
+
+	* update_version (ADD_BRANCHES): Remove tree-ssa-20020619-branch.
+
+	* gcc_release (DIFF): Remove -3 option.
+
+2003-07-26  Paul Brook  <paul@nowt.org>
+
+	* gcc_release: Add gcc-fortran.
+	* snapshot-README: Ditto.
+	* snapshot-index.html: Ditto.
+
+2004-05-02  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: Move GCC 3.4 snapshots from Wednesday afternoon to
+	Friday night, where gcc.gnu.org has less load.
+
+2004-05-02  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: Adjust temporary directory used for snapshot generation.
+	Move GCC 3.3 snapshots to Wednesday 22:32, where gcc.gnu.org has
+	less load.
+
+2004-04-19  Mark Mitchell  <mark@codesourcery.com>
+
+	* gcc_release (build_sources): Do not use "-F" to tag sources.
 
 2004-04-07  Mark Mitchell  <mark@codesourcery.com>
 
 	* gcc_release (build_sources): Do not use "-r" and "-D" at the
 	same time with "cvs export".
 
+2004-03-27  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* gcc_release: Fix sanity check for argument of -p command-line
+	options.  In snapshot mode, only generate diffs against the previous
+	snapshot if the user did not specify any old tarball explictly.
+
+2004-03-25  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* gcc_release (FTP_PATH): Use /var/ftp instead of ~ftp, and
+	only set at a single place.
+
+2004-03-14  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* gcc_release (SNAPSHOTS_DIR): New variable.  Use it.
+	(announce_snapshot): Use it.
+
 2004-03-14  Gerald Pfeifer  <gerald@pfeifer.com>
 
 	* gcc_release (announce_snapshot): Use changedir instead of
 	plain cd.
-	
+
+2004-02-10  Arnaud Charlet  <charlet@act-europe.fr>
+
+	* gcc_release: Add libada as part of ADA_DIRS.
+
+2004-01-21  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: Make 3.4 snapshots from the new 3.4 release branch.
+
 2004-01-20  Kelley Cook  <kcook@gcc.gnu.org>
 
 	* gcc_release (build_sources): Delete call to make f77.rebuilt.
+
+2004-01-17  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* snapshot-README: Mention how the snapshot was generated.
+	* snapshot-index.html: Ditto.  Further sync with snapshot-README.
 
 2004-01-03  Joseph S. Myers  <jsm@polyomino.org.uk>
 
@@ -66,7 +228,7 @@
 2004-01-02  Gerald Pfeifer  <gp@suse.de>
 
 	* update_version: Add some documentation.
-	
+
 2004-01-02  Pop Sébastian  <pop@gauvain.u-strasbg.fr>
 
 	* update_version (ADD_BRANCHES): Add lno-branch.
@@ -89,7 +251,7 @@
 
 	* gcc_release (build_sources): Create/update the LAST_UPDATED file
 	in the source directory with information how sources were obtained.
-	
+
 2003-08-16  Gerald Pfeifer  <gerald@pfeifer.com>
 
 	* gcc_release (build_sources): Use two new variables EXPORTTAG and
@@ -114,7 +276,7 @@
 	(BRANCH): Remove default initialization for snapshots.
 	(CVSBRANCH): Ditto.
 	Do not lay down a CVS tag if generating a snapshot from mainline.
-	
+
 2003-07-19  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
 	* gcc_release (announce_snapshot): Use ${RELEASE} instead
@@ -134,7 +296,7 @@
 	* snapshot-index.html: Ditto.
 
 2003-07-09  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-	
+
 	* gcc_release (announce_snapshot): Add substitution of @BRANCH@
 	for README and index.html.  Remove substitution of @LONG_DATE@.
 	Put index.html into the respective snapshot directory.
@@ -154,7 +316,7 @@
 	general link to the diff/ subdirectory.
 	Mention the concrete snapshot in <title> and <h1>.
 	Adjust links to the new location of index.html.
-	
+
 2003-07-08  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
 	* gcc_release: Move handling of complex modes directly after
@@ -186,7 +348,7 @@
 
 	* gcc_release (build_sources): Do not include gnats.html any longer.
 	Make an error message more descriptive.
-	
+
 2003-06-25  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
 	* gcc_release: Factor the updating of links and READMEs on the
@@ -222,7 +384,7 @@
 
 2003-06-14  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
-	* snapshot-README: Use GCC instead of gcc, C++ front end instead of 
+	* snapshot-README: Use GCC instead of gcc, C++ front end instead of
 	g++ language, and note that Java includes a run time.
 	* snapshot.index.html: Ditto.
 
@@ -233,11 +395,11 @@
 
 2003-05-28  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
 
-	* snapshot-index.html: Refer to .bz2 files instead of .gz files. 
+	* snapshot-index.html: Refer to .bz2 files instead of .gz files.
 	Simplify the note on not using unannounced snapshots.
-	
+
 2003-05-28  Gerald Pfeifer  <pfeifer@dbai.tuwien.ac.at>
-	
+
 	* snapshot-README: Refer to .bz2 files instead of .gz files.
 	Add a note on where to find the diff files.
 	Simplify the note on not using unannounced snapshots.

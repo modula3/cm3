@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for MCore using COFF/PE.
-   Copyright (C) 1994, 1999, 2000, 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1999, 2000, 2002, 2003, 2004
+   Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com).
 
 This file is part of GCC.
@@ -16,8 +17,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 /* Run-time Target Specification.  */
 #define TARGET_VERSION fputs (" (MCORE/pe)", stderr)
@@ -104,23 +105,7 @@ drectve_section ()						\
 
 #define TARGET_ASM_FILE_START_FILE_DIRECTIVE true
 
-#undef  ASM_OUTPUT_SOURCE_LINE
-#define ASM_OUTPUT_SOURCE_LINE(FILE, LINE, COUNTER)			  \
-  {									  \
-    if (write_symbols == DBX_DEBUG)					  \
-      {									  \
-        char buffer[256];						  \
-									  \
-        ASM_GENERATE_INTERNAL_LABEL (buffer, "LM", COUNTER);		  \
-        fprintf (FILE, ".stabn 68,0,%d,", LINE);			  \
-        assemble_name (FILE, buffer);					  \
-        putc ('-', FILE);						  \
-        assemble_name (FILE,						  \
-		   XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0)); \
-        putc ('\n', FILE);						  \
-        (*targetm.asm_out.internal_label) (FILE, "LM", COUNTER);	  \
-      }									  \
-  }
+#define DBX_LINES_FUNCTION_RELATIVE 1
 
 #define STARTFILE_SPEC "crt0.o%s"
 #define ENDFILE_SPEC  "%{!mno-lsim:-lsim}"

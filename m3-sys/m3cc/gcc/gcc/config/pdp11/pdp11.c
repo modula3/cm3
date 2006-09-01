@@ -1,5 +1,5 @@
 /* Subroutines for gcc2 for pdp11.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2004
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2004, 2005
    Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
@@ -17,8 +17,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -51,15 +51,101 @@ Boston, MA 02111-1307, USA.  */
    defined in tm.h */
 int current_first_parm_offset;
 
+/* Routines to encode/decode pdp11 floats */
+static void encode_pdp11_f (const struct real_format *fmt,
+			    long *, const REAL_VALUE_TYPE *);
+static void decode_pdp11_f (const struct real_format *,
+			    REAL_VALUE_TYPE *, const long *);
+static void encode_pdp11_d (const struct real_format *fmt,
+			    long *, const REAL_VALUE_TYPE *);
+static void decode_pdp11_d (const struct real_format *,
+			    REAL_VALUE_TYPE *, const long *);
+
+/* These two are taken from the corresponding vax descriptors
+   in real.c, changing only the encode/decode routine pointers.  */
+const struct real_format pdp11_f_format =
+  {
+    encode_pdp11_f,
+    decode_pdp11_f,
+    2,
+    1,
+    24,
+    24,
+    -127,
+    127,
+    15,
+    false,
+    false,
+    false,
+    false,
+    false
+  };
+
+const struct real_format pdp11_d_format =
+  {
+    encode_pdp11_d,
+    decode_pdp11_d,
+    2,
+    1,
+    56,
+    56,
+    -127,
+    127,
+    15,
+    false,
+    false,
+    false,
+    false,
+    false
+  };
+
+static void
+encode_pdp11_f (const struct real_format *fmt ATTRIBUTE_UNUSED, long *buf,
+		const REAL_VALUE_TYPE *r)
+{
+  (*vax_f_format.encode) (fmt, buf, r);
+  buf[0] = ((buf[0] >> 16) & 0xffff) | ((buf[0] & 0xffff) << 16);
+}
+
+static void
+decode_pdp11_f (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		REAL_VALUE_TYPE *r, const long *buf)
+{
+  long tbuf;
+  tbuf = ((buf[0] >> 16) & 0xffff) | ((buf[0] & 0xffff) << 16);
+  (*vax_f_format.decode) (fmt, r, &tbuf);
+}
+
+static void
+encode_pdp11_d (const struct real_format *fmt ATTRIBUTE_UNUSED, long *buf,
+		const REAL_VALUE_TYPE *r)
+{
+  (*vax_d_format.encode) (fmt, buf, r);
+  buf[0] = ((buf[0] >> 16) & 0xffff) | ((buf[0] & 0xffff) << 16);
+  buf[1] = ((buf[1] >> 16) & 0xffff) | ((buf[1] & 0xffff) << 16);
+}
+
+static void
+decode_pdp11_d (const struct real_format *fmt ATTRIBUTE_UNUSED,
+		REAL_VALUE_TYPE *r, const long *buf)
+{
+  long tbuf[2];
+  tbuf[0] = ((buf[0] >> 16) & 0xffff) | ((buf[0] & 0xffff) << 16);
+  tbuf[1] = ((buf[1] >> 16) & 0xffff) | ((buf[1] & 0xffff) << 16);
+  (*vax_d_format.decode) (fmt, r, tbuf);
+}
+
 /* This is where the condition code register lives.  */
 /* rtx cc0_reg_rtx; - no longer needed? */
 
+static bool pdp11_handle_option (size_t, const char *, int);
 static rtx find_addr_reg (rtx); 
 static const char *singlemove_string (rtx *);
 static bool pdp11_assemble_integer (rtx, unsigned int, int);
 static void pdp11_output_function_prologue (FILE *, HOST_WIDE_INT);
 static void pdp11_output_function_epilogue (FILE *, HOST_WIDE_INT);
 static bool pdp11_rtx_costs (rtx, int, int, int *);
+static bool pdp11_return_in_memory (tree, tree);
 
 /* Initialize the GCC target structure.  */
 #undef TARGET_ASM_BYTE_OP
@@ -81,11 +167,37 @@ static bool pdp11_rtx_costs (rtx, int, int, int *);
 #undef TARGET_ASM_CLOSE_PAREN
 #define TARGET_ASM_CLOSE_PAREN "]"
 
+#undef TARGET_DEFAULT_TARGET_FLAGS
+#define TARGET_DEFAULT_TARGET_FLAGS \
+  (MASK_FPU | MASK_45 | MASK_ABSHI_BUILTIN | TARGET_UNIX_ASM_DEFAULT)
+#undef TARGET_HANDLE_OPTION
+#define TARGET_HANDLE_OPTION pdp11_handle_option
+
 #undef TARGET_RTX_COSTS
 #define TARGET_RTX_COSTS pdp11_rtx_costs
 
+#undef TARGET_RETURN_IN_MEMORY
+#define TARGET_RETURN_IN_MEMORY pdp11_return_in_memory
+
 struct gcc_target targetm = TARGET_INITIALIZER;
 
+/* Implement TARGET_HANDLE_OPTION.  */
+
+static bool
+pdp11_handle_option (size_t code, const char *arg ATTRIBUTE_UNUSED,
+		     int value ATTRIBUTE_UNUSED)
+{
+  switch (code)
+    {
+    case OPT_m10:
+      target_flags &= ~(MASK_40 | MASK_45);
+      return true;
+
+    default:
+      return true;
+    }
+}
+
 /* Nonzero if OP is a valid second operand for an arithmetic insn.  */
 
 int
@@ -133,7 +245,7 @@ pdp11_output_function_prologue (FILE *stream, HOST_WIDE_INT size)
     {
       fprintf (stream, "\t/*abuse empty parameter slot for locals!*/\n");
       if (size > 2)
-	fprintf(stream, "\tsub $%#o, sp\n", size - 2);
+	asm_fprintf (stream, "\tsub $%#wo, sp\n", size - 2);
 
     }
 }
@@ -173,7 +285,7 @@ pdp11_output_function_prologue (FILE *stream, HOST_WIDE_INT size)
 
     /* make frame */
     if (fsize)							
-	fprintf (stream, "\tsub $%#o, sp\n", fsize);			
+	asm_fprintf (stream, "\tsub $%#wo, sp\n", fsize);
 
     /* save CPU registers  */
     for (regno = 0; regno < 8; regno++)				
@@ -203,11 +315,10 @@ pdp11_output_function_prologue (FILE *stream, HOST_WIDE_INT size)
 	    && regs_ever_live[regno]
 	    && ! call_used_regs[regno])
 	{
-	    if (via_ac == -1)
-		abort();
-	    
-	    fprintf (stream, "\tldd %s, %s\n", reg_names[regno], reg_names[via_ac]);
-	    fprintf (stream, "\tstd %s, -(sp)\n", reg_names[via_ac]);
+	  gcc_assert (via_ac != -1);
+	  fprintf (stream, "\tldd %s, %s\n",
+		   reg_names[regno], reg_names[via_ac]);
+	  fprintf (stream, "\tstd %s, -(sp)\n", reg_names[via_ac]);
 	}
     }
 
@@ -298,8 +409,7 @@ pdp11_output_function_epilogue (FILE *stream, HOST_WIDE_INT size)
 		&& regs_ever_live[i]
 		&& ! call_used_regs[i])
 	    {
-		if (! LOAD_FPU_REG_P(via_ac))
-		    abort();
+	        gcc_assert (LOAD_FPU_REG_P(via_ac));
 		    
 		fprintf(stream, "\tldd %#o(r5), %s\n", (-fsize-k)&0xffff, reg_names[via_ac]);
 		fprintf(stream, "\tstd %s, %s\n", reg_names[via_ac], reg_names[i]);
@@ -330,8 +440,7 @@ pdp11_output_function_epilogue (FILE *stream, HOST_WIDE_INT size)
 		&& regs_ever_live[i]
 		&& ! call_used_regs[i])
 	    {
-		if (! LOAD_FPU_REG_P(via_ac))
-		    abort();
+	        gcc_assert (LOAD_FPU_REG_P(via_ac));
 		    
 		fprintf(stream, "\tldd (sp)+, %s\n", reg_names[via_ac]);
 		fprintf(stream, "\tstd %s, %s\n", reg_names[via_ac], reg_names[i]);
@@ -412,8 +521,7 @@ output_move_double (rtx *operands)
      supposed to allow to happen.  Abort if we get one,
      because generating code for these cases is painful.  */
 
-  if (optype0 == RNDOP || optype1 == RNDOP)
-    abort ();
+  gcc_assert (optype0 != RNDOP && optype1 != RNDOP);
 
   /* If one operand is decrementing and one is incrementing
      decrement the former register explicitly
@@ -473,11 +581,9 @@ output_move_double (rtx *operands)
 	    latehalf[1] = GEN_INT (INTVAL(operands[1]) >> 16);
 	    operands[1] = GEN_INT (INTVAL(operands[1]) & 0xff);
 	}
-      else if (GET_CODE (operands[1]) == CONST_DOUBLE)
-	{
-	    /* immediate 32 bit values not allowed */
-	    abort();
-	}
+	else
+	  /* immediate 32 bit values not allowed */
+	  gcc_assert (GET_CODE (operands[1]) != CONST_DOUBLE);
     }
   else
     latehalf[1] = operands[1];
@@ -587,15 +693,13 @@ output_move_quad (rtx *operands)
      supposed to allow to happen.  Abort if we get one,
      because generating code for these cases is painful.  */
 
-  if (optype0 == RNDOP || optype1 == RNDOP)
-    abort ();
+  gcc_assert (optype0 != RNDOP && optype1 != RNDOP);
   
   /* check if we move a CPU reg to an FPU reg, or vice versa! */
   if (optype0 == REGOP && optype1 == REGOP)
       /* bogus - 64 bit cannot reside in CPU! */
-      if (CPU_REG_P(REGNO(operands[0]))
-	  || CPU_REG_P (REGNO(operands[1])))
-	  abort();
+      gcc_assert (!CPU_REG_P(REGNO(operands[0]))
+		  && !CPU_REG_P (REGNO(operands[1])));
   
   if (optype0 == REGOP || optype1 == REGOP)
   {
@@ -677,29 +781,19 @@ output_move_quad (rtx *operands)
     {
       if (GET_CODE (operands[1]) == CONST_DOUBLE)
 	{
-	    /* floats only. not yet supported!
-
-	     -- compute it into PDP float format, - internally,
-	     just use IEEE and ignore possible problems ;-)
-
-	     we might get away with it !!!! */
-
-	    abort();
-	    
-#ifndef HOST_WORDS_BIG_ENDIAN
-	  latehalf[1] = GEN_INT (CONST_DOUBLE_LOW (operands[1]));
-	  operands[1] = GEN_INT	(CONST_DOUBLE_HIGH (operands[1]));
-#else /* HOST_WORDS_BIG_ENDIAN */
-	  latehalf[1] = GEN_INT (CONST_DOUBLE_HIGH (operands[1]));
-	  operands[1] = GEN_INT (CONST_DOUBLE_LOW (operands[1]));
-#endif /* HOST_WORDS_BIG_ENDIAN */
+	  REAL_VALUE_TYPE r;
+	  long dval[2];
+	  REAL_VALUE_FROM_CONST_DOUBLE (r, operands[1]);
+	  REAL_VALUE_TO_TARGET_DOUBLE (r, dval);
+	  latehalf[1] = GEN_INT (dval[1]);
+	  operands[1] = GEN_INT	(dval[0]);
 	}
       else if (GET_CODE(operands[1]) == CONST_INT)
 	{
-	  latehalf[1] = GEN_INT (0);
+	  latehalf[1] = const0_rtx;
 	}
       else
-	abort();
+	gcc_unreachable ();
     }
   else
     latehalf[1] = operands[1];
@@ -893,7 +987,7 @@ print_operand_address (FILE *file, register rtx addr)
 	}
       if (offset != 0)
 	{
-	  if (addr != 0) abort ();
+	  gcc_assert (addr == 0);
 	  addr = offset;
 	}
       if (reg1 != 0 && GET_CODE (reg1) == MULT)
@@ -920,17 +1014,15 @@ print_operand_address (FILE *file, register rtx addr)
 	output_address (addr);
       if (breg != 0)
 	{
-	  if (GET_CODE (breg) != REG)
-	    abort ();
+	  gcc_assert (GET_CODE (breg) == REG);
 	  fprintf (file, "(%s)", reg_names[REGNO (breg)]);
 	}
       if (ireg != 0)
 	{
 	  if (GET_CODE (ireg) == MULT)
 	    ireg = XEXP (ireg, 0);
-	  if (GET_CODE (ireg) != REG)
-	    abort ();
-	  abort();
+	  gcc_assert (GET_CODE (ireg) == REG);
+	  gcc_unreachable(); /* ??? */
 	  fprintf (file, "[%s]", reg_names[REGNO (ireg)]);
 	}
       break;
@@ -1101,7 +1193,7 @@ pdp11_rtx_costs (rtx x, int code, int outer_code ATTRIBUTE_UNUSED, int *total)
 }
 
 const char *
-output_jump(const char *pos, const char *neg, int length)
+output_jump (const char *pos, const char *neg, int length)
 {
     static int x = 0;
     
@@ -1136,7 +1228,7 @@ output_jump(const char *pos, const char *neg, int length)
 	
       default:
 	
-	abort();
+	gcc_unreachable ();
     }
     
 }
@@ -1522,55 +1614,6 @@ output_block_move(rtx *operands)
     return "";
 }
 
-/* for future use */
-int
-comparison_operator_index(rtx op)
-{
-    switch (GET_CODE(op))
-    {
-      case NE:
-	return 0;
-	
-      case EQ:
-	return 1;
-	
-      case GE:
-	return 2;
-	
-      case GT:
-	return 3;
-	
-      case LE:
-	return 4;
-	
-      case LT:
-	return 5;
-	
-      case GEU:
-	return 6;
-	
-      case GTU:
-	return 7;
-
-      case LEU:
-	return 8;
-	
-      case LTU:
-	return 9;
-	
-      default:
-	return -1;
-    }
-}    
-	
-/* tests whether the rtx is a comparison operator */
-int
-comp_operator (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-    return comparison_operator_index(op) >= 0;
-}
-
-    
 int
 legitimate_address_p (enum machine_mode mode, rtx address)
 {
@@ -1583,6 +1626,21 @@ legitimate_address_p (enum machine_mode mode, rtx address)
     return 1;
 
 /* #undef REG_OK_STRICT */
+}
+
+/* This function checks whether a real value can be encoded as
+   a literal, i.e., addressing mode 27.  In that mode, real values
+   are one word values, so the remaining 48 bits have to be zero.  */
+int
+legitimate_const_double_p (rtx address)
+{
+  REAL_VALUE_TYPE r;
+  long sval[2];
+  REAL_VALUE_FROM_CONST_DOUBLE (r, address);
+  REAL_VALUE_TO_TARGET_DOUBLE (r, sval);
+  if ((sval[0] & 0xffff) == 0 && sval[1] == 0)
+    return 1;
+  return 0;
 }
 
 /* A copy of output_addr_const modified for pdp11 expression syntax.
@@ -1599,10 +1657,8 @@ output_addr_const_pdp11 (FILE *file, rtx x)
   switch (GET_CODE (x))
     {
     case PC:
-      if (flag_pic)
-	putc ('.', file);
-      else
-	abort ();
+      gcc_assert (flag_pic);
+      putc ('.', file);
       break;
 
     case SYMBOL_REF:
@@ -1635,10 +1691,8 @@ output_addr_const_pdp11 (FILE *file, rtx x)
       if (GET_MODE (x) == VOIDmode)
 	{
 	  /* We can use %o if the number is one word and positive.  */
-	  if (CONST_DOUBLE_HIGH (x))
-	    abort (); /* Should we just silently drop the high part?  */
-	  else
-	    fprintf (file, "%#ho", (unsigned short) CONST_DOUBLE_LOW (x));
+	  gcc_assert (!CONST_DOUBLE_HIGH (x));
+	  fprintf (file, "%#ho", (unsigned short) CONST_DOUBLE_LOW (x));
 	}
       else
 	/* We can't handle floating point constants;
@@ -1647,7 +1701,7 @@ output_addr_const_pdp11 (FILE *file, rtx x)
       break;
 
     case PLUS:
-      /* Some assemblers need integer constants to appear last (eg masm).  */
+      /* Some assemblers need integer constants to appear last (e.g. masm).  */
       if (GET_CODE (XEXP (x, 0)) == CONST_INT)
 	{
 	  output_addr_const_pdp11 (file, XEXP (x, 1));
@@ -1692,4 +1746,19 @@ output_addr_const_pdp11 (FILE *file, rtx x)
     default:
       output_operand_lossage ("invalid expression as operand");
     }
+}
+
+/* Worker function for TARGET_RETURN_IN_MEMORY.  */
+
+static bool
+pdp11_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
+{
+  /* Should probably return DImode and DFmode in memory, lest
+     we fill up all regs!
+
+     have to, else we crash - exception: maybe return result in 
+     ac0 if DFmode and FPU present - compatibility problem with
+     libraries for non-floating point....  */
+  return (TYPE_MODE (type) == DImode
+	  || (TYPE_MODE (type) == DFmode && ! TARGET_AC0));
 }

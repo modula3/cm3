@@ -1,7 +1,7 @@
 /* Definitions of MIPS sub target machine for GNU compiler.
    Toshiba r3900.  You should include mips.h after this.
 
-   Copyright (C) 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997
+   Copyright (C) 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 2004
    Free Software Foundation, Inc.
    Contributed by Gavin Koch (gavin@cygnus.com).
 
@@ -19,8 +19,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #define MIPS_CPU_STRING_DEFAULT "r3900"
 #define MIPS_ISA_DEFAULT 1
@@ -34,4 +34,4 @@ Boston, MA 02111-1307, USA.  */
 #define SUBTARGET_CC1_SPEC "\
 %{mhard-float:%e-mhard-float not supported} \
 %{msingle-float:%{msoft-float: \
-  %e-msingle-float and -msoft-float can not both be specified}}"
+  %e-msingle-float and -msoft-float cannot both be specified}}"

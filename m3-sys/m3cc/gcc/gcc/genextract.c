@@ -1,5 +1,6 @@
 /* Generate code from machine description to extract operands from insn as rtl.
-   Copyright (C) 1987, 1991, 1992, 1993, 1997, 1998, 1999, 2000, 2003
+   Copyright (C) 1987, 1991, 1992, 1993, 1997, 1998, 1999, 2000, 2003,
+   2004, 2005
    Free Software Foundation, Inc.
 
 This file is part of GCC.
@@ -16,8 +17,8 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-02111-1307, USA.  */
+Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.  */
 
 
 #include "bconfig.h"
@@ -326,7 +327,7 @@ print_path (const char *path)
       else if (ISDIGIT(path[i]))
 	printf ("XEXP (");
       else
-	abort ();
+	gcc_unreachable ();
     }
 
   printf ("pat");
@@ -338,7 +339,7 @@ print_path (const char *path)
       else if (ISDIGIT(path[i]))
 	printf (", %d)", path[i] - '0');
       else
-	abort ();
+	gcc_unreachable ();
     }
 }
 
@@ -353,9 +354,6 @@ main (int argc, char **argv)
   const char *name;
 
   progname = "genextract";
-
-  if (argc <= 1)
-    fatal ("no input file name");
 
   if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
@@ -478,10 +476,10 @@ from the machine description file `md'.  */\n\n");
       printf ("      break;\n\n");
     }
 
-  /* This should never be reached.  Note that we would also reach this abort
-   if we tried to extract something whose INSN_CODE was a DEFINE_EXPAND or
-   DEFINE_SPLIT, but that is correct.  */
-  printf ("    default:\n      abort ();\n");
+  /* This should never be reached.  Note that we would also reach here
+     if we tried to extract something whose INSN_CODE was a
+     DEFINE_EXPAND or DEFINE_SPLIT, but that is correct.  */
+  printf ("    default:\n      gcc_unreachable ();\n");
 
   printf ("    }\n}\n");
 

@@ -1,5 +1,5 @@
 /* Process machine description and calculate constant conditions.
-   Copyright (C) 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
@@ -15,8 +15,8 @@
 
    You should have received a copy of the GNU General Public License
    along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
 /* In a machine description, all of the insn patterns - define_insn,
    define_expand, define_split, define_peephole, define_peephole2 -
@@ -57,7 +57,7 @@ add_condition (const char *expr)
   if (expr[0] == 0)
     return;
 
-  test = xmalloc (sizeof (struct c_test));
+  test = XNEW (struct c_test);
   test->expr = expr;
 
   *(htab_find_slot (condition_table, test, INSERT)) = test;
@@ -86,6 +86,13 @@ write_header (void)
 
   puts ("\
 #include \"system.h\"\n\
+/* If we don't have __builtin_constant_p, or it's not acceptable in array\n\
+   initializers, fall back to assuming that all conditions potentially\n\
+   vary at run time.  It works in 3.0.1 and later; 3.0 only when not\n\
+   optimizing.  */\n\
+#if GCC_VERSION < 3001\n\
+#include \"dummy-conditions.c\"\n\
+#else\n\
 #include \"coretypes.h\"\n\
 #include \"tm.h\"\n\
 #include \"rtl.h\"\n\
@@ -119,30 +126,23 @@ write_header (void)
 extern rtx insn;\n\
 extern rtx ins1;\n\
 extern rtx operands[];\n");
-
-  puts ("\
-/* If we don't have __builtin_constant_p, or it's not acceptable in\n\
-   array initializers, fall back to assuming that all conditions\n\
-   potentially vary at run time.  It works in 3.0.1 and later; 3.0\n\
-   only when not optimizing.  */\n\
-#if (GCC_VERSION >= 3001) || ((GCC_VERSION == 3000) && !__OPTIMIZE__)\n\
-# define MAYBE_EVAL(expr) (__builtin_constant_p(expr) ? (int) (expr) : -1)\n\
-#else\n\
-# define MAYBE_EVAL(expr) -1\n\
-#endif\n");
 }
 
 /* Write out one entry in the conditions table, using the data pointed
    to by SLOT.  Each entry looks like this:
-  { "! optimize_size && ! TARGET_READ_MODIFY_WRITE",
-    MAYBE_EVAL (! optimize_size && ! TARGET_READ_MODIFY_WRITE) },  */
+
+   { "! optimize_size && ! TARGET_READ_MODIFY_WRITE",
+     __builtin_constant_p (! optimize_size && ! TARGET_READ_MODIFY_WRITE)
+     ? (int) (! optimize_size && ! TARGET_READ_MODIFY_WRITE)
+     : -1) },  */
 
 static int
-write_one_condition (void **slot, void *dummy ATTRIBUTE_UNUSED)
+write_one_condition (void **slot, void * ARG_UNUSED (dummy))
 {
   const struct c_test *test = * (const struct c_test **) slot;
   const char *p;
 
+  print_rtx_ptr_loc (test->expr);
   fputs ("  { \"", stdout);
   for (p = test->expr; *p; p++)
     {
@@ -154,7 +154,11 @@ write_one_condition (void **slot, void *dummy ATTRIBUTE_UNUSED)
 	putchar (*p);
     }
 
-  printf ("\",\n    MAYBE_EVAL (%s) },\n", test->expr);
+  printf ("\",\n    __builtin_constant_p ");
+  print_c_condition (test->expr);
+  printf ("\n    ? (int) ");
+  print_c_condition (test->expr);
+  printf ("\n    : -1 },\n");
   return 1;
 }
 
@@ -176,7 +180,7 @@ const struct c_test insn_conditions[] = {");
 
   printf ("const size_t n_insn_conditions = %lu;\n",
 	  (unsigned long) htab_elements (condition_table));
-  puts ("const int insn_elision_unavailable = 0;");
+  puts ("const int insn_elision_unavailable = 0;\n#endif");
 }
 
 int
@@ -188,10 +192,7 @@ main (int argc, char **argv)
 
   progname = "genconditions";
 
-  if (argc <= 1)
-    fatal ("No input file name.");
-
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
   condition_table = htab_create (1000, hash_c_test, cmp_c_test, NULL);

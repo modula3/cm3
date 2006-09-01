@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "GCJ 1"
-.TH GCJ 1 "2005-12-01" "gcc-3.4.5" "GNU"
+.TH GCJ 1 "2006-05-24" "gcc-4.1.1" "GNU"
 .SH "NAME"
 gcj \- Ahead\-of\-time compiler for the Java language
 .SH "SYNOPSIS"
@@ -168,7 +168,7 @@ Java bytecode files.
 An archive containing one or more \f(CW\*(C`.class\*(C'\fR files, all of
 which are compiled.  The archive may be compressed.  Files in
 an archive which don't end with \fB.class\fR are treated as
-resource files; they are copmiled into the resulting object file
+resource files; they are compiled into the resulting object file
 as \fBcore:\fR URLs.
 .IP "\fB@\fR\fIfile\fR" 4
 .IX Item "@file"
@@ -223,7 +223,7 @@ class path.
 .IX Item "--classpath=path"
 This sets the class path to \fIpath\fR, a colon-separated list of paths
 (on Windows-based systems, a semicolon-separate list of paths).
-This does not override the builtin (``boot'') search path.
+This does not override the builtin (\*(L"boot\*(R") search path.
 .IP "\fB\-\-CLASSPATH=\fR\fIpath\fR" 4
 .IX Item "--CLASSPATH=path"
 Deprecated synonym for \f(CW\*(C`\-\-classpath\*(C'\fR.
@@ -319,15 +319,40 @@ This is the same as \fBgcc\fR's \f(CW\*(C`\-Wunused\*(C'\fR.
 .IX Item "-Wall"
 This is the same as \f(CW\*(C`\-Wredundant\-modifiers \-Wextraneous\-semicolon
 \&\-Wunused\*(C'\fR.
-.Sh "Code Generation"
-.IX Subsection "Code Generation"
-In addition to the many \fBgcc\fR options controlling code generation,
-\&\fBgcj\fR has several options specific to itself.
+.Sh "Linking"
+.IX Subsection "Linking"
+To turn a Java application into an executable program,
+you need to link it with the needed libraries, just as for C or \*(C+.
+The linker by default looks for a global function named \f(CW\*(C`main\*(C'\fR.
+Since Java does not have global functions, and a
+collection of Java classes may have more than one class with a
+\&\f(CW\*(C`main\*(C'\fR method, you need to let the linker know which of those
+\&\f(CW\*(C`main\*(C'\fR methods it should invoke when starting the application.
+You can do that in any of these ways:
+.IP "\(bu" 4
+Specify the class containing the desired \f(CW\*(C`main\*(C'\fR method
+when you link the application, using the \f(CW\*(C`\-\-main\*(C'\fR flag,
+described below.
+.IP "\(bu" 4
+Link the Java package(s) into a shared library (dll) rather than an
+executable.  Then invoke the application using the \f(CW\*(C`gij\*(C'\fR program,
+making sure that \f(CW\*(C`gij\*(C'\fR can find the libraries it needs.
+.IP "\(bu" 4
+Link the Java packages(s) with the flag \f(CW\*(C`\-lgij\*(C'\fR, which links
+in the \f(CW\*(C`main\*(C'\fR routine from the \f(CW\*(C`gij\*(C'\fR command.
+This allows you to select the class whose \f(CW\*(C`main\*(C'\fR method you
+want to run when you run the application.  You can also use
+other \f(CW\*(C`gij\*(C'\fR flags, such as \f(CW\*(C`\-D\*(C'\fR flags to set properties.
+Using the \f(CW\*(C`\-lgij\*(C'\fR library (rather than the \f(CW\*(C`gij\*(C'\fR program
+of the previous mechanism) has some advantages: it is compatible with
+static linking, and does not require configuring or installing libraries.
+.PP
+These \f(CW\*(C`gij\*(C'\fR options relate to linking an executable:
 .IP "\fB\-\-main=\fR\fI\s-1CLASSNAME\s0\fR" 4
 .IX Item "--main=CLASSNAME"
 This option is used when linking to specify the name of the class whose
 \&\f(CW\*(C`main\*(C'\fR method should be invoked when the resulting executable is
-run.  [1]
+run.
 .IP "\fB\-D\fR\fIname\fR\fB[=\fR\fIvalue\fR\fB]\fR" 4
 .IX Item "-Dname[=value]"
 This option can only be used with \f(CW\*(C`\-\-main\*(C'\fR.  It defines a system
@@ -335,6 +360,16 @@ property named \fIname\fR with value \fIvalue\fR.  If \fIvalue\fR is not
 specified then it defaults to the empty string.  These system properties
 are initialized at the program's startup and can be retrieved at runtime
 using the \f(CW\*(C`java.lang.System.getProperty\*(C'\fR method.
+.IP "\fB\-lgij\fR" 4
+.IX Item "-lgij"
+Create an application whose command-line processing is that
+of the \f(CW\*(C`gij\*(C'\fR command.
+.Sp
+This option is an alternative to using \f(CW\*(C`\-\-main\*(C'\fR; you cannot use both.
+.Sh "Code Generation"
+.IX Subsection "Code Generation"
+In addition to the many \fBgcc\fR options controlling code generation,
+\&\fBgcj\fR has several options specific to itself.
 .IP "\fB\-C\fR" 4
 .IX Item "-C"
 This option is used to tell \fBgcj\fR to generate bytecode
@@ -391,6 +426,52 @@ to initialize static classes upon their first use (this optimization
 isn't carried out if \f(CW\*(C`\-C\*(C'\fR was specified.) When compiling to native
 code, \f(CW\*(C`\-fno\-optimize\-static\-class\-initialization\*(C'\fR will turn this
 optimization off, regardless of the optimization level in use.
+.IP "\fB\-\-disable\-assertions[=\fR\fIclass-or-package\fR\fB]\fR" 4
+.IX Item "--disable-assertions[=class-or-package]"
+Don't include code for checking assertions in the compiled code.
+If \f(CW\*(C`=\f(CIclass-or-package\f(CW\*(C'\fR is missing disables assertion code
+generation for all classes, unless overridden by a more
+specific \f(CW\*(C`\-\-enable\-assertions\*(C'\fR flag.
+If \fIclass-or-package\fR is a class name, only disables generating
+assertion checks within the named class or its inner classes.
+If \fIclass-or-package\fR is a package name, disables generating
+assertion checks within the named package or a subpackage.
+.Sp
+By default, assertions are enabled when generating class files
+or when not optimizing, and disabled when generating optimized binaries.
+.IP "\fB\-\-enable\-assertions[=\fR\fIclass-or-package\fR\fB]\fR" 4
+.IX Item "--enable-assertions[=class-or-package]"
+Generates code to check assertions.  The option is perhaps misnamed,
+as you still need to turn on assertion checking at run\-time,
+and we don't support any easy way to do that.
+So this flag isn't very useful yet, except to partially override
+\&\f(CW\*(C`\-\-disable\-assertions\*(C'\fR.
+.IP "\fB\-findirect\-dispatch\fR" 4
+.IX Item "-findirect-dispatch"
+\&\fBgcj\fR has a special binary compatibility \s-1ABI\s0, which is enabled
+by the \f(CW\*(C`\-findirect\-dispatch\*(C'\fR option.  In this mode, the code
+generated by \fBgcj\fR honors the binary compatibility guarantees
+in the Java Language Specification, and the resulting object files do
+not need to be directly linked against their dependencies.  Instead,
+all dependencies are looked up at runtime.  This allows free mixing of
+interpreted and compiled code.
+.Sp
+Note that, at present, \f(CW\*(C`\-findirect\-dispatch\*(C'\fR can only be used
+when compiling \fI.class\fR files.  It will not work when compiling
+from source.  \s-1CNI\s0 also does not yet work with the binary compatibility
+\&\s-1ABI\s0.  These restrictions will be lifted in some future release.
+.Sp
+However, if you compile \s-1CNI\s0 code with the standard \s-1ABI\s0, you can call
+it from code built with the binary compatibility \s-1ABI\s0.
+.IP "\fB\-fbootstrap\-classes\fR" 4
+.IX Item "-fbootstrap-classes"
+This option can be use to tell \f(CW\*(C`libgcj\*(C'\fR that the compiled classes
+should be loaded by the bootstrap loader, not the system class loader.
+By default, if you compile a class and link it into an executable, it
+will be treated as if it was loaded using the system class loader.
+This is convenient, as it means that things like
+\&\f(CW\*(C`Class.forName()\*(C'\fR will search \fB\s-1CLASSPATH\s0\fR to find the
+desired class.
 .Sh "Configure-time Options"
 .IX Subsection "Configure-time Options"
 Some \fBgcj\fR code generations options affect the resulting \s-1ABI\s0, and
@@ -421,26 +502,18 @@ On some systems it's necessary to insert inline checks whenever
 accessing an object via a reference.  On other systems you won't need
 this because null pointer accesses are caught automatically by the
 processor.
-.SH "FOOTNOTES"
-.IX Header "FOOTNOTES"
-.IP "1." 4
-The linker by default looks for a global function named
-\&\f(CW\*(C`main\*(C'\fR.  Since Java does not have global functions, and a
-collection of Java classes may have more than one class with a
-\&\f(CW\*(C`main\*(C'\fR method, you need to let the linker know which of those
-\&\f(CW\*(C`main\*(C'\fR methods it should invoke when starting the application.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
-\&\fIgcc\fR\|(1), \fIgcjh\fR\|(1), \fIgij\fR\|(1), \fIjv\-scan\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
+\&\fIgcc\fR\|(1), \fIgcjh\fR\|(1), \fIgjnih\fR\|(1), \fIgij\fR\|(1), \fIjv\-scan\fR\|(1), \fIjcf\-dump\fR\|(1), \fIgfdl\fR\|(7),
 and the Info entries for \fIgcj\fR and \fIgcc\fR.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
-Copyright (c) 2001, 2002 Free Software Foundation, Inc.
+Copyright (c) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 .PP
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the \s-1GNU\s0 Free Documentation License, Version 1.2 or
 any later version published by the Free Software Foundation; with the
-Invariant Sections being ``\s-1GNU\s0 General Public License'', the Front-Cover
+Invariant Sections being \*(L"\s-1GNU\s0 General Public License\*(R", the Front-Cover
 texts being (a) (see below), and with the Back-Cover Texts being (b)
 (see below).  A copy of the license is included in the
 man page \fIgfdl\fR\|(7).

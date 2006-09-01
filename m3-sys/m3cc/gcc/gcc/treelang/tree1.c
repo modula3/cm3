@@ -1,35 +1,32 @@
-  /* 
+/* TREELANG Compiler almost main (tree1)
+   Called by GCC's toplev.c
 
-    TREELANG Compiler almost main (tree1)
-    Called by GCC's toplev.c
+   Copyright (C) 1986, 87, 89, 92-96, 1997, 1999, 2000, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
-    Copyright (C) 1986, 87, 89, 92-96, 1997, 1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version.
 
-    This program is free software; you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by the
-    Free Software Foundation; either version 2, or (at your option) any
-    later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+   In other words, you are welcome to use, share and improve this program.
+   You are forbidden to forbid anyone else to use, share and improve
+   what you give them.   Help stamp out software-hoarding!  
 
-    In other words, you are welcome to use, share and improve this program.
-    You are forbidden to forbid anyone else to use, share and improve
-    what you give them.   Help stamp out software-hoarding!  
+   ---------------------------------------------------------------------------
 
-    ---------------------------------------------------------------------------
-
-    Written by Tim Josling 1999, 2000, 2001, based in part on other
-    parts of the GCC compiler.
-
-*/
+   Written by Tim Josling 1999, 2000, 2001, based in part on other
+   parts of the GCC compiler.  */
 
 #include "config.h"
 #include "system.h"
@@ -37,9 +34,11 @@
 #include "tm.h"
 #include "flags.h"
 #include "toplev.h"
+#include "version.h"
 
 #include "ggc.h"
 #include "tree.h"
+#include "cgraph.h"
 #include "diagnostic.h"
 
 #include "treelang.h"
@@ -105,9 +104,6 @@ treelang_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED,
 
   switch (code)
     {
-    default:
-      abort();
-
     case OPT_v:
       if (!version_done)
 	{
@@ -130,6 +126,9 @@ treelang_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED,
     case OPT_flexer_trace:
       option_lexer_trace = value;
       break;
+
+    default:
+      gcc_unreachable ();
     }
 
   return 1;
@@ -140,12 +139,11 @@ treelang_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED,
 bool
 treelang_init (void)
 {
+#ifndef USE_MAPPED_LOCATION
   input_filename = main_input_filename;
-  input_line = 0;
-
-  /* Init decls etc.  */
-
-  treelang_init_decl_processing ();
+#else
+  linemap_add (&line_table, LC_ENTER, false, main_input_filename, 1);
+#endif
 
   /* This error will not happen from GCC as it will always create a
      fake input file.  */
@@ -167,6 +165,14 @@ treelang_init (void)
       exit (1);
     }
 
+#ifdef USE_MAPPED_LOCATION
+  linemap_add (&line_table, LC_RENAME, false, "<built-in>", 1);
+  linemap_line_start (&line_table, 0, 1);
+#endif
+
+  /* Init decls, etc.  */
+  treelang_init_decl_processing ();
+
   return true;
 }
 
@@ -183,8 +189,22 @@ treelang_finish (void)
 void
 treelang_parse_file (int debug_flag ATTRIBUTE_UNUSED)
 {
+#ifdef USE_MAPPED_LOCATION
+  source_location s;
+  linemap_add (&line_table, LC_RENAME, false, main_input_filename, 1);
+  s = linemap_line_start (&line_table, 1, 80);
+  input_location = s;
+#else
+  input_line = 1;
+#endif
+
   treelang_debug ();
   yyparse ();
+  cgraph_finalize_compilation_unit ();
+#ifdef USE_MAPPED_LOCATION
+  linemap_add (&line_table, LC_LEAVE, false, NULL, 0);
+#endif
+  cgraph_optimize ();
 }
 
 /* Allocate SIZE bytes and clear them.  Not to be used for strings
@@ -227,19 +247,21 @@ lookup_tree_name (struct prod_token_parm_item *prod)
       sanity_check (this_tok);
       if (tok->tp.tok.length != this_tok->tp.tok.length) 
         continue;
-      if (memcmp (tok->tp.tok.chars, this_tok->tp.tok.chars, this_tok->tp.tok.length))
+      if (memcmp (tok->tp.tok.chars, this_tok->tp.tok.chars,
+		  this_tok->tp.tok.length))
         continue;
+
       if (option_parser_trace)
         fprintf (stderr, "Found symbol %s (%i:%i) as %i \n",
-		 tok->tp.tok.chars, 
-		 tok->tp.tok.location.line, tok->tp.tok.charno,
-		 NUMERIC_TYPE (this));
+		 tok->tp.tok.chars, LOCATION_LINE (tok->tp.tok.location),
+		 tok->tp.tok.charno, NUMERIC_TYPE (this));
       return this;
     }
+
   if (option_parser_trace)
     fprintf (stderr, "Not found symbol %s (%i:%i) as %i \n",
-	     tok->tp.tok.chars, 
-	     tok->tp.tok.location.line, tok->tp.tok.charno, tok->type);
+	     tok->tp.tok.chars, LOCATION_LINE (tok->tp.tok.location),
+	     tok->tp.tok.charno, tok->type);
   return NULL;
 }
 
@@ -253,10 +275,8 @@ insert_tree_name (struct prod_token_parm_item *prod)
   sanity_check (prod);
   if (lookup_tree_name (prod))
     {
-      fprintf (stderr, "%s:%i:%i duplicate name %s\n",
-	       tok->tp.tok.location.file, tok->tp.tok.location.line, 
-               tok->tp.tok.charno, tok->tp.tok.chars);
-      errorcount++;
+      error ("%HDuplicate name %q.*s.", &tok->tp.tok.location,
+	     tok->tp.tok.length, tok->tp.tok.chars);
       return 1;
     }
   prod->tp.pro.next = symbol_table;
@@ -285,13 +305,13 @@ sanity_check (struct prod_token_parm_item *item)
 {
   switch (item->category)
     {
-    case   token_category:
+    case token_category:
     case production_category:
     case parameter_category:
       break;
       
     default:
-      abort ();
+      gcc_unreachable ();
     }
 }  
 

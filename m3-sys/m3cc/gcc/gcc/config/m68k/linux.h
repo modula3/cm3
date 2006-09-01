@@ -1,6 +1,7 @@
 /* Definitions for Motorola 68k running Linux-based GNU systems with
    ELF format.
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -16,23 +17,25 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (68k GNU/Linux with ELF)");
 
-/* 68020 with 68881 */
+/* Default target comes from config.gcc.  */
+
+#undef TARGET_DEFAULT
+#ifdef TARGET_CPU_DEFAULT
+#define TARGET_DEFAULT TARGET_CPU_DEFAULT
+#else
 #define TARGET_DEFAULT (MASK_BITFIELD|MASK_68881|MASK_68020)
+#endif
 
 /* for 68k machines this only needs to be TRUE for the 68000 */
 
-#undef STRICT_ALIGNMENT     
+#undef STRICT_ALIGNMENT
 #define STRICT_ALIGNMENT 0
-
-#undef SUBTARGET_SWITCHES
-#define SUBTARGET_SWITCHES	{"ieee-fp", 0, \
-  N_("Use IEEE math for fp comparisons")},
 
 /* Here are four prefixes that are used by asm_fprintf to
    facilitate customization for alternate assembler syntaxes.
@@ -59,26 +62,15 @@ Boston, MA 02111-1307, USA.  */
 
 #define ASM_COMMENT_START "|"
 
-/* How to refer to registers in assembler output.
-   This sequence is indexed by compiler's hard-register-number.
-   Motorola format uses different register names than defined in m68k.h.  */
-
-#undef REGISTER_NAMES
-
-#define REGISTER_NAMES \
-{"%d0", "%d1", "%d2", "%d3", "%d4", "%d5", "%d6", "%d7", \
- "%a0", "%a1", "%a2", "%a3", "%a4", "%a5", "%a6", "%sp", \
- "%fp0", "%fp1", "%fp2", "%fp3", "%fp4", "%fp5", "%fp6", "%fp7", "argptr" }
-
 #undef SIZE_TYPE
 #define SIZE_TYPE "unsigned int"
- 
+
 #undef PTRDIFF_TYPE
 #define PTRDIFF_TYPE "int"
-  
+
 #undef WCHAR_TYPE
 #define WCHAR_TYPE "long int"
-   
+
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
 
@@ -229,7 +221,7 @@ Boston, MA 02111-1307, USA.  */
    the precise function being called is known, FUNC is its
    FUNCTION_DECL; otherwise, FUNC is 0.  For m68k/SVR4 generate the
    result in d0, a0, or fp0 as appropriate.  */
-   
+
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)					\
   (TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_68881			\
@@ -287,7 +279,7 @@ do {									\
    scope  - the scope of the flush (see the cpush insn)
    cache  - which cache to flush (see the cpush insn)
    len    - a factor relating to the number of flushes to perform:
-   	    len/16 lines, or len/4096 pages.  */
+	    len/16 lines, or len/4096 pages.  */
 
 #define CLEAR_INSN_CACHE(BEG, END)					\
 {									\
@@ -295,10 +287,10 @@ do {									\
   unsigned long _end = (unsigned long) (END);				\
   register unsigned long _len __asm ("%d4") = (_end - _beg + 32);	\
   __asm __volatile							\
-    ("move%.l %#123, %/d0\n\t"	/* system call nr */			\
-     "move%.l %#1, %/d2\n\t"	/* clear lines */			\
-     "move%.l %#3, %/d3\n\t"	/* insn+data caches */			\
-     "trap %#0"								\
+    ("move%.l #123, %/d0\n\t"	/* system call nr */			\
+     "move%.l #1, %/d2\n\t"	/* clear lines */			\
+     "move%.l #3, %/d3\n\t"	/* insn+data caches */			\
+     "trap #0"								\
      : /* no outputs */							\
      : "d" (_beg), "d" (_len)						\
      : "%d0", "%d2", "%d3");						\
