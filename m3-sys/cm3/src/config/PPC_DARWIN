@@ -97,7 +97,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-lm" ],
+  "LIBC"       : [ "-lm", "-lSystemStubs" ],
   "LEX-YACC"   : [ "-L/usr/lib", "-ll" ],
   "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
@@ -182,7 +182,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     ret_code = try_exec ("@libtool", "-dynamic", "-multiply_defined suppress",
                          "-twolevel_namespace", "-compatibility_version", vmaj,
                          "-current_version", version, "-install_name", lib_pn,
-                         "-lgcc", "-lSystemStubs", "-arch_only ppc",
+                         "-lgcc", "-arch_only ppc",
 			 "-o", lib_soxx, objects, imported_libs)
     if not equal (ret_code, 0) 
       delete_file (lib_a)
