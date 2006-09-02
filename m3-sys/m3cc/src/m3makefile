@@ -38,7 +38,7 @@ readonly Platform_info = {
   "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
-  "I386_DARWIN" : "i486-unknown-bsd",
+  "I386_DARWIN" : "i386-apple-darwin8.7.1",
   "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
@@ -63,6 +63,9 @@ readonly proc GNU_platform (x) is
 end
 
 readonly m3cc_config = {
+
+  "PPC_DARWIN" : "--disable-multilib",
+  "I386_DARWIN" : "--disable-multilib",
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
