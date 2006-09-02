@@ -1,24 +1,24 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 % 
-% Standard configuration file for FreeBSD 3.x with ELF object files
+% Standard configuration file for FreeBSD with ELF object files
 %
 
 %-------------------------------------------------- compilation environment ---
 
-%M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (-profile option)
+%M3_PROFILING = TRUE  % set by cm3 since 5.1.2
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "I386_DARWIN"     % code generation target
+readonly TARGET       = "I386_DARWIN"    % code generation target
 if M3_PROFILING 
-  readonly BUILD_DIR  = TARGET & "p"      % code generation target
+  readonly BUILD_DIR  = TARGET & "p"     % code generation target
 else
-  readonly BUILD_DIR  = TARGET            % directory for results
+  readonly BUILD_DIR  = TARGET           % directory for results
 end
-readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486-unknown-freebsdelf" 
-                                          % "cpu-vendor-os" string for GNU
+readonly OS_TYPE      = "POSIX"          % { "WIN32" or "POSIX" }
+readonly WORD_SIZE    = "32BITS"         % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "i486-apple-darwin8.7.0"
+                                         % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
 %    14 %-- user specified key
@@ -89,7 +89,7 @@ END_CONFIG
 % at <line>.
 
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exist
 % will be created. You need the necessary permissions to do so; otherwise,
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
@@ -148,7 +148,7 @@ SYSTEM_LIBS = {
 %                  END_CONFIG, "-ll" ],
   "FLEX-BISON" : [ BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
-                       11 "libflx.a"
+                       11 "libfl.a"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
@@ -272,8 +272,8 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object ]
-  if optimize  args += "-O"  end
+  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
@@ -292,7 +292,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fpic", options ]
+  local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -313,41 +313,57 @@ end
 % a library.
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
+  local vmaj     = "5"
+  local vmin     = "2"
+  local version  = vmaj & "." & vmin
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
-  local lib_so   = format ("lib%s.so", lib)
-  local lib_sox  = format ("lib%s.so.5", lib)
-  local lib_soxx = format ("lib%s.so.5.1", lib)
+  local lib_so   = format ("lib%s.dylib", lib)
+  local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
+  local lib_soxx = format ("lib%s.%s.dylib", lib, version)
+  local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
   % first, build the non-shared library
-  ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
-  if not equal (ret_code, 0) return ret_code end
-  ret_code = try_exec ("@" & SYSTEM_RANLIB, lib_a)
+  ret_code = try_exec ("@libtool", "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
     % build the shared library
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared -Wl,-soname,"  & 
-                           lib_sox, "-o", lib_sox, objects)
+      ret_code = try_exec ("@" & SYSTEM_CC, "-pg", "-dynamiclib",
+                           "-multiply_defined suppress",
+                           "-twolevel_namespace",
+                           "-compatibility_version", vmaj,
+                           "-current_version", version, "-install_name", lib_pn,
+                           "-lgcc", "-o", lib_soxx, objects, imported_libs)
     else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared -Wl,-soname,"  & 
-                           lib_sox, "-o", lib_sox, objects)
+      ret_code = try_exec ("@" & SYSTEM_CC, "-dynamiclib",
+                           "-multiply_defined suppress",
+                           "-twolevel_namespace",
+                           "-compatibility_version", vmaj,
+                           "-current_version", version, "-install_name", lib_pn,
+                           "-lgcc", "-o", lib_soxx, objects, imported_libs)
     end
-    if not equal (ret_code, 0) return ret_code end
+    if not equal (ret_code, 0) 
+      delete_file (lib_a)
+      return ret_code
+    end
 
     % create the version aliases
-    %link_file(lib_soxx, lib_sox)
+    link_file(lib_soxx, lib_sox)
     link_file(lib_sox, lib_so)
 
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_sox)
+    install_derived (lib_soxx)
+    install_derived_link (lib_soxx, lib_sox)
     install_derived_link (lib_sox, lib_so)
+    install_link_to_derived (lib_soxx, LIB_INSTALL)
     install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
     delete_file (lib_sox)
+    delete_file (lib_soxx)
   end
 
   return 0
@@ -359,18 +375,27 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
-  local lib_so   = format ("lib%s.so", lib)
-  local lib_sox  = format ("lib%s.so.5", lib)
+  local vmaj     = "5"
+  local vmin     = "2"
+  local version  = vmaj & "." & vmin
+  local ret_code = 0
+  local lib_a    = format ("lib%s.a", lib)
+  local lib_so   = format ("lib%s.dylib", lib)
+  local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
+  local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
   if shared
     % make sure the shared library stuff gets installed properly
+    install_derived (lib_soxx)
     install_derived (lib_sox)
     install_derived (lib_so)
+    install_link_to_derived (lib_soxx, LIB_INSTALL)
     install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
     delete_file (lib_sox)
+    delete_file (lib_soxx)
   end
 
   return 0
@@ -383,14 +408,9 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, options, objects, imported_libs ]
-  if shared
-    return try_exec ("@" & SYSTEM_CC, args)
-  else
-    return try_exec ("@" & SYSTEM_CC, "-static", args)
-    %%% -- see M3_NEED_STANDALONE_LINKS  below
-    %%%return try_exec ("@" & SYSTEM_CC, args)
-  end
+  args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
+  args += [ "-multiply_defined suppress", "-bind_at_load", "-shared-libgcc" ]
+  return try_exec ("@cc", args)
 end
 
 %-------------------------------------------------------------------
@@ -426,9 +446,9 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
 M3_SPLIT_LIBNAMES = TRUE
-% --- split library names and pass -L/-l arguments to the linker
+% --- split shared library names and pass -L/-l arguments to the linker
 
-M3_SHARED_LIB_ARG = "-Wl,-R"
+% M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
@@ -473,5 +493,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-O"
-GNU_MAKE   = "gmake"
+GNU_CFLAGS = "-O2 -g"
+GNU_MAKE   = "make"
