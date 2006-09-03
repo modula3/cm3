@@ -17,6 +17,25 @@
     See the <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-07/1154373463000#1154373463000">release plan</a> for details.
     </p>
 
+    <h3>Getting the source code for this release</h3>
+
+    <p>
+    You can check out the source code for this release from the release branch via anonymous CVS.
+    </p>
+    <pre>
+    cvs -d :pserver:anonymous@birch.elegosoft.com:/usr/cvs login
+    [The password is empty, just hit return.]
+    cvs -z3 -d :pserver:anonymous@birch.elegosoft.com:/usr/cvs checkout -r release_branch_cm3_5_4 -P cm3
+    </pre>
+    <p>
+    You will need this source tree if you want to install a full cm3 distribution from
+    test installation archives linked below. See the (somewhat outdated)
+    <a href="installation.html">installation notes</a> for details.
+    </p>
+    <p>
+    There will be no tarball download of the source code for this release until the release is made.
+    </p>
+
     <h3>Mandatory Targets</h3>
 
     <table border="1" cellpadding="5">
@@ -61,7 +80,7 @@
           See <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154435809000#1154435809000">here</a> for details.
           Test archive built on Debian Sarge.
         </td>
-	<td>
+        <td>
           <a href="cm3-min-POSIX-LINUXLIBC6-d5.4-0.tgz">download</a>
         </td>
       </tr>
@@ -69,15 +88,18 @@
         <td>
           SOLgnu
         </td>
-        <td bgcolor="#FF0000">
-          <b>:-(</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          Investigating segmentation faults in RTThread.
-          See <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154704349000#1154704349000">here</a> for details.
+          Segmentation faults in RTThread described
+          <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154704349000#1154704349000">here</a>
+          may have been fixed in
+          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156343464000">this commit</a>.
           <br>
-          Cannot compile current backend with the toolchain on the Solaris 8 box at elego.
-          Probably need to update binutils.
+        </td>
+        <td>
+          <a href="cm3-min-POSIX-SOLgnu-d5.4-0.tgz">download</a>
         </td>
       </tr>
       <tr>
@@ -92,7 +114,6 @@
           Creating minimal binary installation archive does not work.
           See <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154975768000#1154975768000">here</a> for details.
         </td>
-
       </tr>
     </table>
 
@@ -135,10 +156,7 @@
           <b>??</b>
         </td>
         <td>
-          Qemu PPC emulation does not work.
-          No hardware available at the moment.
-          A friend of mine has an old G3 I could use, I just have to get
-          it home somehow.
+          In progress. Initial problems have been dealt with.
         </td>
         <td>
         </td>
@@ -147,11 +165,16 @@
         <td>
           NetBSD2_i386
         </td>
-        <td bgcolor="#FFFFFF">
-          <b>??</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          Not investigated.
+	  Tested on NetBSD 3.0.1.
+          You may have to add the line <pre>/usr/X11R6/lib</pre>
+          to the file /etc/ld.so.conf for the compile to succeed.
+        </td>
+        <td>
+          <a href="cm3-min-POSIX-NetBSD2_i386-d5.4-0.tgz">download</a>
         </td>
       </tr>
     </table>
@@ -208,15 +231,17 @@
         <td>
           Current plotting package.
         </td>
-        <td bgcolor="#FFFF00">
-          <b>:-/</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          Added to standard packages in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155033527000">this commit</a>, but may need to be removed
-          again (currently being discussed on the m3devel mailing list).
+          Removed from standard packages again in
+	  <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156859504000">this commit</a>
+	  since it requires plplot to be installed.
+	  Source code will still be shipped with release for people who want to use plplot.
         </td>
       </tr>
+      <tr>
         <td>
           Current math package.
         </td>
@@ -230,14 +255,13 @@
       </tr>
       <tr>
         <td>
-          Dynamic linking by default on platforms that
-	  rarely ship with static libs these days (e.g. Linux).
+          Dynamic linking by default on Linux which rarely ship with static libs these days.
         </td>
-        <td bgcolor="#FFFF00">
-          <b>:-/</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          Working locally, not committed yet.
+                Done in <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155834541000">this commit</a>.
         </td>
       </tr>
       <tr>
@@ -267,13 +291,72 @@
         <td>
           m3gdb
         </td>
+        <td bgcolor="#FFFFFF">
+          <b>??</b>
+        </td>
+        <td>
+          In progress. Got new m3gdb version from Rodney M. Bates.
+          Compiles and works fine on FreeBSD 6.1. About to be imported into CVS.
+        </td>
+      </tr>
+    </table>
+
+
+    <h3>TODO</h3>
+
+    <table border="1" cellpadding="5">
+      <tr>
+        <td>
+          <b>Item</b>
+        </td>
+        <td>
+          <b>Status</b>
+        </td>
+        <td>
+          <b>Comment</b>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Update installation notes.
+        </td>
+        <td bgcolor="#FFFF00">
+          <b>:-/</b>
+        </td>
+        <td>
+          In progress.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Check documentation for more things that need to be updated.
+        </td>
         <td bgcolor="#FF0000">
           <b>:-(</b>
         </td>
         <td>
-          I tried using it on Fedora Core 5, but it failed, probably also because
-          of address space randomisation.
-          Sources not yet imported into CVS.
+          Not done yet.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Test installation on all platforms.
+        </td>
+        <td bgcolor="#FF0000">
+          <b>:-(</b>
+        </td>
+        <td>
+          Not done yet.
+        </td>
+      </tr> <tr>
+        <td>
+          Write release announcement.
+        </td>
+        <td bgcolor="#FF0000">
+          <b>:-(</b>
+        </td>
+        <td>
+          Not done yet.
         </td>
       </tr>
     </table>
