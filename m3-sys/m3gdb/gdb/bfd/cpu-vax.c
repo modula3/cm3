@@ -1,5 +1,5 @@
 /* bfd back-end for vax support
-   Copyright (C) 1990, 91, 92, 93, 94 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1994, 2000, 2002 Free Software Foundation, Inc.
    Written by Steve Chamberlain of Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "bfd.h"
 #include "sysdep.h"
@@ -32,8 +32,8 @@ const bfd_arch_info_type bfd_vax_arch =
     "vax",
     "vax",
     3,
-    true, /* the one and only */
-    bfd_default_compatible, 
-    bfd_default_scan ,
+    TRUE, /* the one and only */
+    bfd_default_compatible,
+    bfd_default_scan,
     0,
   };

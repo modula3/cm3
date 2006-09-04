@@ -13,18 +13,18 @@
  
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA. */
 
-int MYread_char(int sock, unsigned char *c);
-void MYwrite_char(int sock, unsigned char c);
-int MYread_word(int sock, ARMword *here);
-void MYwrite_word(int sock, ARMword i);
-void MYwrite_string(int sock, char *s);
-int MYread_FPword(int sock, char *putinhere);
-void MYwrite_FPword(int sock, char *fromhere);
-int passon(int source, int dest, int n);
+int MYread_char (int sock, unsigned char *c);
+void MYwrite_char (int sock, unsigned char c);
+int MYread_word (int sock, ARMword * here);
+void MYwrite_word (int sock, ARMword i);
+void MYwrite_string (int sock, char *s);
+int MYread_FPword (int sock, char *putinhere);
+void MYwrite_FPword (int sock, char *fromhere);
+int passon (int source, int dest, int n);
 
-int wait_for_osreply(ARMword *reply);  /* from kid.c */
+int wait_for_osreply (ARMword * reply);	/* from kid.c */
 
 #define OS_SendNothing 0x0
 #define OS_SendChar 0x1
@@ -34,4 +34,3 @@ int wait_for_osreply(ARMword *reply);  /* from kid.c */
 /* The pipes between the two processes */
 extern int mumkid[2];
 extern int kidmum[2];
-

@@ -10,7 +10,7 @@
 
    The Library is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 1, or (at your option)
+   the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
    The Library is distributed in the hope that it will be useful, but
@@ -21,172 +21,69 @@
    The GNU General Public License is often shipped with GNU software, and
    is generally kept in a file called COPYING or LICENSE.  If you do not
    have a copy of the license, write to the Free Software Foundation,
-   675 Mass Ave, Cambridge, MA 02139, USA. */
+   59 Temple Place, Suite 330, Boston, MA 02111 USA. */
 
-#if !defined (_RLDEFS_H)
-#define _RLDEFS_H
+#if !defined (_RLDEFS_H_)
+#define _RLDEFS_H_
 
-#if defined (__GNUC__)
-#  undef alloca
-#  define alloca __builtin_alloca
+#if defined (HAVE_CONFIG_H)
+#  include "config.h"
+#endif
+
+#include "rlstdc.h"
+
+#if defined (__MINGW32__)
+#  define NO_TTY_DRIVER
+#elif defined (_POSIX_VERSION) && !defined (TERMIOS_MISSING)
+#  define TERMIOS_TTY_DRIVER
 #else
-#  if defined (sparc) || defined (HAVE_ALLOCA_H)
-#    include <alloca.h>
+#  if defined (HAVE_TERMIO_H)
+#    define TERMIO_TTY_DRIVER
+#  else
+#    define NEW_TTY_DRIVER
 #  endif
 #endif
-
-
-#define NEW_TTY_DRIVER
-#define HAVE_BSD_SIGNALS
-/* #define USE_XON_XOFF */
-
-#if defined(__MSDOS__) || defined(_MSC_VER)
-#define NO_SYS_FILE
-#define SIGALRM 1234
-#undef NEW_TTY_DRIVER
-#undef HAVE_BSD_SIGNALS
-#define MINIMAL
-#endif
-
-#if defined (__linux__)
-#  include <termcap.h>
-#endif /* __linux__ */
-
-/* Some USG machines have BSD signal handling (sigblock, sigsetmask, etc.) */
-/* CYGNUS LOCAL accept __hpux as well as hpux for HP compiler in ANSI mode.  */
-#if defined (USG) && !(defined (hpux) || defined (__hpux))
-#  undef HAVE_BSD_SIGNALS
-#endif
-
-#if defined (__WIN32__) && !defined(_MSC_VER)
-#undef NEW_TTY_DRIVER
-#define MINIMAL
-#undef HAVE_BSD_SIGNALS
-#define TERMIOS_TTY_DRIVER
-#undef HANDLE_SIGNALS
-#include <termios.h>
-/*#define HAVE_POSIX_SIGNALS*/
-#endif
-
-/* System V machines use termio. */
-#if !defined (_POSIX_VERSION)
-/* CYGNUS LOCAL accept __hpux as well as hpux for HP compiler in ANSI mode.  */
-#  if defined (USG) || defined (hpux) || defined (__hpux) || defined (Xenix) || defined (sgi) || defined (DGUX)
-#    undef NEW_TTY_DRIVER
-#    define TERMIO_TTY_DRIVER
-#    include <termio.h>
-#    if !defined (TCOON)
-#      define TCOON 1
-#    endif
-#  endif /* USG || hpux || Xenix || sgi || DUGX */
-#endif /* !_POSIX_VERSION */
-
-/* Posix systems use termios and the Posix signal functions. */
-#if defined (_POSIX_VERSION)
-#  if !defined (TERMIOS_MISSING)
-#    undef NEW_TTY_DRIVER
-#    define TERMIOS_TTY_DRIVER
-#    include <termios.h>
-#  endif /* !TERMIOS_MISSING */
-#  define HAVE_POSIX_SIGNALS
-#  if !defined (O_NDELAY)
-#    define O_NDELAY O_NONBLOCK	/* Posix-style non-blocking i/o */
-#  endif /* O_NDELAY */
-#endif /* _POSIX_VERSION */
-
-/* System V.3 machines have the old 4.1 BSD `reliable' signal interface. */
-#if !defined (HAVE_BSD_SIGNALS) && !defined (HAVE_POSIX_SIGNALS)
-#  if defined (USGr3)
-#    if !defined (HAVE_USG_SIGHOLD)
-#      define HAVE_USG_SIGHOLD
-#    endif /* !HAVE_USG_SIGHOLD */
-#  endif /* USGr3 */
-#endif /* !HAVE_BSD_SIGNALS && !HAVE_POSIX_SIGNALS */
-
-/* Other (BSD) machines use sgtty. */
-#if defined (NEW_TTY_DRIVER)
-#  include <sgtty.h>
-#endif
-
-/* Define _POSIX_VDISABLE if we are not using the `new' tty driver and
-   it is not already defined.  It is used both to determine if a
-   special character is disabled and to disable certain special
-   characters.  Posix systems should set to 0, USG systems to -1. */
-#if !defined (NEW_TTY_DRIVER) && !defined (_POSIX_VDISABLE)
-#  if defined (_POSIX_VERSION)
-#    define _POSIX_VDISABLE 0
-#  else /* !_POSIX_VERSION */
-#    define _POSIX_VDISABLE -1
-#  endif /* !_POSIX_VERSION */
-#endif /* !NEW_TTY_DRIVER && !_POSIX_VDISABLE */
-
-#if 1
-#  define D_NAMLEN(d) strlen ((d)->d_name)
-#else /* !1 */
-
-#if !defined (SHELL) && (defined (_POSIX_VERSION) || defined (USGr3))
-#  if !defined (HAVE_DIRENT_H)
-#    define HAVE_DIRENT_H
-#  endif /* !HAVE_DIRENT_H */
-#endif /* !SHELL && (_POSIX_VERSION || USGr3) */
-
-#if defined (HAVE_DIRENT_H)
-#  include <dirent.h>
-#  if !defined (direct)
-#    define direct dirent
-#  endif /* !direct */
-#  define D_NAMLEN(d) strlen ((d)->d_name)
-#else /* !HAVE_DIRENT_H */
-#  define D_NAMLEN(d) ((d)->d_namlen)
-#  if defined (USG)
-#    if defined (Xenix)
-#      include <sys/ndir.h>
-#    else /* !Xenix (but USG...) */
-#      include "ndir.h"
-#    endif /* !Xenix */
-#  else /* !USG */
-#    include <sys/dir.h>
-#  endif /* !USG */
-#endif /* !HAVE_DIRENT_H */
-#endif /* !1 */
-
-#if defined (USG) && defined (TIOCGWINSZ) && !defined (Linux)
-#  include <sys/stream.h>
-#  if defined (HAVE_SYS_PTEM_H)
-#    include <sys/ptem.h>
-#  endif /* HAVE_SYS_PTEM_H */
-#  if defined (HAVE_SYS_PTE_H)
-#    include <sys/pte.h>
-#  endif /* HAVE_SYS_PTE_H */
-#endif /* USG && TIOCGWINSZ && !Linux */
 
 /* Posix macro to check file in statbuf for directory-ness.
    This requires that <sys/stat.h> be included before this test. */
 #if defined (S_IFDIR) && !defined (S_ISDIR)
-#define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
+#  define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #endif
-/* Posix macro to check file in statbuf for file-ness.
-   This requires that <sys/stat.h> be included before this test. */
-#if defined (S_IFREG) && !defined (S_ISREG)
-#define S_ISREG(m) (((m)&S_IFMT) == S_IFREG)
-#endif
+
+/* Decide which flavor of the header file describing the C library
+   string functions to include and include it. */
+
+#if defined (HAVE_STRING_H)
+#  include <string.h>
+#else /* !HAVE_STRING_H */
+#  include <strings.h>
+#endif /* !HAVE_STRING_H */
 
 #if !defined (strchr) && !defined (__STDC__)
 extern char *strchr (), *strrchr ();
 #endif /* !strchr && !__STDC__ */
 
-#if defined (HAVE_VARARGS_H)
-#  include <varargs.h>
-#endif /* HAVE_VARARGS_H */
-
-/* This definition is needed by readline.c, rltty.c, and signals.c. */
-/* If on, then readline handles signals in a way that doesn't screw. */
-#define HANDLE_SIGNALS
-
-#if defined(__WIN32__) || defined(__MSDOS__)
-#undef HANDLE_SIGNALS
+#if defined (PREFER_STDARG)
+#  include <stdarg.h>
+#else
+#  if defined (PREFER_VARARGS)
+#    include <varargs.h>
+#  endif
 #endif
 
+#if defined (HAVE_STRCASECMP)
+#define _rl_stricmp strcasecmp
+#define _rl_strnicmp strncasecmp
+#else
+extern int _rl_stricmp PARAMS((char *, char *));
+extern int _rl_strnicmp PARAMS((char *, char *, int));
+#endif
+
+#if defined (HAVE_STRPBRK)
+#  define _rl_strpbrk(a,b)	strpbrk((a),(b))
+#else
+extern char *_rl_strpbrk PARAMS((const char *, const char *));
+#endif
 
 #if !defined (emacs_mode)
 #  define no_mode -1
@@ -194,79 +91,68 @@ extern char *strchr (), *strrchr ();
 #  define emacs_mode 1
 #endif
 
-/* Define some macros for dealing with assorted signalling disciplines.
-
-   These macros provide a way to use signal blocking and disabling
-   without smothering your code in a pile of #ifdef's.
-
-   SIGNALS_UNBLOCK;			Stop blocking all signals.
-
-   {
-     SIGNALS_DECLARE_SAVED (name);	Declare a variable to save the 
-					signal blocking state.
-	...
-     SIGNALS_BLOCK (SIGSTOP, name);	Block a signal, and save the previous
-					state for restoration later.
-	...
-     SIGNALS_RESTORE (name);		Restore previous signals.
-   }
-
-*/
-
-#ifdef HAVE_POSIX_SIGNALS
-							/* POSIX signals */
-
-#define	SIGNALS_UNBLOCK \
-      do { sigset_t set;	\
-	sigemptyset (&set);	\
-	sigprocmask (SIG_SETMASK, &set, (sigset_t *)NULL);	\
-      } while (0)
-
-#define	SIGNALS_DECLARE_SAVED(name)	sigset_t name
-
-#define	SIGNALS_BLOCK(SIG, saved)	\
-	do { sigset_t set;		\
-	  sigemptyset (&set);		\
-	  sigaddset (&set, SIG);	\
-	  sigprocmask (SIG_BLOCK, &set, &saved);	\
-	} while (0)
-
-#define	SIGNALS_RESTORE(saved)		\
-  sigprocmask (SIG_SETMASK, &saved, (sigset_t *)NULL)
-
-
-#else	/* HAVE_POSIX_SIGNALS */
-#ifdef HAVE_BSD_SIGNALS
-							/* BSD signals */
-
-#define	SIGNALS_UNBLOCK			sigsetmask (0)
-#define	SIGNALS_DECLARE_SAVED(name)	int name
-#define	SIGNALS_BLOCK(SIG, saved)	saved = sigblock (sigmask (SIG))
-#define	SIGNALS_RESTORE(saved)		sigsetmask (saved)
-
-
-#else  /* HAVE_BSD_SIGNALS */
-							/* None of the Above */
-
-#define	SIGNALS_UNBLOCK			/* nothing */
-#define	SIGNALS_DECLARE_SAVED(name)	/* nothing */
-#define	SIGNALS_BLOCK(SIG, saved)	/* nothing */
-#define	SIGNALS_RESTORE(saved)		/* nothing */
-
-
-#endif /* HAVE_BSD_SIGNALS */
-#endif /* HAVE_POSIX_SIGNALS */
-
-#if !defined (strchr)
-extern char *strchr ();
+#if !defined (RL_IM_INSERT)
+#  define RL_IM_INSERT		1
+#  define RL_IM_OVERWRITE	0
+#
+#  define RL_IM_DEFAULT		RL_IM_INSERT
 #endif
-#if !defined (strrchr)
-extern char *strrchr ();
-#endif
-#ifdef __STDC__
-#include <stddef.h>
-extern size_t strlen (const char *s);
-#endif  /* __STDC__ */
 
-/*  End of signal handling definitions.  */
-#endif /* !_RLDEFS_H */
+/* If you cast map[key].function to type (Keymap) on a Cray,
+   the compiler takes the value of map[key].function and
+   divides it by 4 to convert between pointer types (pointers
+   to functions and pointers to structs are different sizes).
+   This is not what is wanted. */
+#if defined (CRAY)
+#  define FUNCTION_TO_KEYMAP(map, key)	(Keymap)((int)map[key].function)
+#  define KEYMAP_TO_FUNCTION(data)	(rl_command_func_t *)((int)(data))
+#else
+#  define FUNCTION_TO_KEYMAP(map, key)	(Keymap)(map[key].function)
+#  define KEYMAP_TO_FUNCTION(data)	(rl_command_func_t *)(data)
+#endif
+
+#ifndef savestring
+#define savestring(x) strcpy ((char *)xmalloc (1 + strlen (x)), (x))
+#endif
+
+/* Possible values for _rl_bell_preference. */
+#define NO_BELL 0
+#define AUDIBLE_BELL 1
+#define VISIBLE_BELL 2
+
+/* Definitions used when searching the line for characters. */
+/* NOTE: it is necessary that opposite directions are inverses */
+#define	FTO	 1		/* forward to */
+#define BTO	-1		/* backward to */
+#define FFIND	 2		/* forward find */
+#define BFIND	-2		/* backward find */
+
+/* Possible values for the found_quote flags word used by the completion
+   functions.  It says what kind of (shell-like) quoting we found anywhere
+   in the line. */
+#define RL_QF_SINGLE_QUOTE	0x01
+#define RL_QF_DOUBLE_QUOTE	0x02
+#define RL_QF_BACKSLASH		0x04
+#define RL_QF_OTHER_QUOTE	0x08
+
+/* Default readline line buffer length. */
+#define DEFAULT_BUFFER_SIZE 256
+
+#if !defined (STREQ)
+#define STREQ(a, b)	(((a)[0] == (b)[0]) && (strcmp ((a), (b)) == 0))
+#define STREQN(a, b, n)	(((n) == 0) ? (1) \
+				    : ((a)[0] == (b)[0]) && (strncmp ((a), (b), (n)) == 0))
+#endif
+
+#if !defined (FREE)
+#  define FREE(x)	if (x) free (x)
+#endif
+
+#if !defined (SWAP)
+#  define SWAP(s, e)  do { int t; t = s; s = e; e = t; } while (0)
+#endif
+
+/* CONFIGURATION SECTION */
+#include "rlconf.h"
+
+#endif /* !_RLDEFS_H_ */

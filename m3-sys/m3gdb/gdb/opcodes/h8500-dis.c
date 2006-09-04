@@ -1,27 +1,31 @@
 /* Disassemble h8500 instructions.
-   Copyright (C) 1993 Free Software Foundation, Inc.
+   Copyright 1993, 1998, 2000, 2001, 2002, 2004, 2005
+   Free Software Foundation, Inc.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
+   MA 02110-1301, USA.  */
 
 #include <stdio.h>
 
 #define DISASSEMBLER_TABLE
 #define DEFINE_TABLE
 
+#include "sysdep.h"
 #include "h8500-opc.h"
 #include "dis-asm.h"
+#include "opintl.h"
 
 /* Maximum length of an instruction.  */
 #define MAXLEN 8
@@ -45,9 +49,7 @@ struct private
    ? 1 : fetch_data ((info), (addr)))
 
 static int
-fetch_data (info, addr)
-     struct disassemble_info *info;
-     bfd_byte *addr;
+fetch_data (struct disassemble_info *info, bfd_byte *addr)
 {
   int status;
   struct private *priv = (struct private *) info->private_data;
@@ -67,18 +69,14 @@ fetch_data (info, addr)
   return 1;
 }
 
-static char *crname[] =
-{"sr", "ccr", "*", "br", "ep", "dp", "*", "tp"};
+static char *crname[] = { "sr", "ccr", "*", "br", "ep", "dp", "*", "tp" };
 
 int
-print_insn_h8500 (addr, info)
-     bfd_vma addr;
-     disassemble_info *info;
+print_insn_h8500 (bfd_vma addr, disassemble_info *info)
 {
-  h8500_opcode_info *opcode;
+  const h8500_opcode_info *opcode;
   void *stream = info->stream;
   fprintf_ftype func = info->fprintf_func;
-
   struct private priv;
   bfd_byte *buffer = priv.the_buffer;
 
@@ -89,52 +87,39 @@ print_insn_h8500 (addr, info)
     /* Error return.  */
     return -1;
 
-if (0)  {
-    static    int one;
-    if (!one ) 
-      {
-	one = 1;
-	for (opcode = h8500_table; opcode->name; opcode++)
-	  {
-	    if ((opcode->bytes[0].contents & 0x8) == 0)
-	      printf("%s\n", opcode->name);
-	  }
-      }
-  }
-
-
-  /* Run down the table to find the one which matches */
+  /* Run down the table to find the one which matches.  */
   for (opcode = h8500_table; opcode->name; opcode++)
     {
       int byte;
-      int rn;
-      int rd;
-      int rs;
-      int disp;
-      int abs;
-      int imm;
-      int pcrel;
-      int qim;
+      int rn = 0;
+      int rd = 0;
+      int rs = 0;
+      int disp = 0;
+      int abs = 0;
+      int imm = 0;
+      int pcrel = 0;
+      int qim = 0;
       int i;
-      int cr;
+      int cr = 0;
+
       for (byte = 0; byte < opcode->length; byte++)
 	{
 	  FETCH_DATA (info, buffer + byte + 1);
 	  if ((buffer[byte] & opcode->bytes[byte].mask)
 	      != (opcode->bytes[byte].contents))
-	    {
-	      goto next;
-	    }
+	    goto next;
+
 	  else
 	    {
-	      /* extract any info parts */
+	      /* Extract any info parts.  */
 	      switch (opcode->bytes[byte].insert)
 		{
 		case 0:
 		case FP:
 		  break;
 		default:
-		  func (stream, "can't cope with insert %d\n",
+		  /* xgettext:c-format */
+		  func (stream, _("can't cope with insert %d\n"),
 			opcode->bytes[byte].insert);
 		  break;
 		case RN:
@@ -218,17 +203,9 @@ if (0)  {
 		}
 	    }
 	}
-      /* We get here when all the masks have passed so we can output the
-	 operands*/
+      /* We get here when all the masks have passed so we can output
+	 the operands.  */
       FETCH_DATA (info, buffer + opcode->length);
-      for (i = 0; i < opcode->length; i++)
-	{
-	  (func) (stream, "%02x ", buffer[i]);
-	}
-      for (; i < 6; i++)
-	{
-	  (func) (stream, "   ");
-	}
       (func) (stream, "%s\t", opcode->name);
       for (i = 0; i < opcode->nargs; i++)
 	{
@@ -252,7 +229,7 @@ if (0)  {
 	      func (stream, "@(0x%x:8 (%d), r%d)", disp & 0xff, disp, rd);
 	      break;
 	    case FPIND_D8:
-	      func (stream, "@(0x%x:8 (%d), fp)", disp & 0xff, disp, rn);
+	      func (stream, "@(0x%x:8 (%d), fp)", disp & 0xff, disp);
 	      break;
 	    case CRB:
 	    case CRW:
@@ -301,6 +278,7 @@ if (0)  {
 	      {
 		int i;
 		int nc = 0;
+
 		func (stream, "(");
 		for (i = 0; i < 8; i++)
 		  {
@@ -319,11 +297,12 @@ if (0)  {
 	      func (stream, "#0x%0x:8", imm & 0xff);
 	      break;
 	    case PCREL16:
-	      func (stream, "0x%0x:16", (pcrel + addr + opcode->length) & 0xffff);
+	      func (stream, "0x%0x:16",
+		    (int)(pcrel + addr + opcode->length) & 0xffff);
 	      break;
 	    case PCREL8:
 	      func (stream, "#0x%0x:8",
-		    ((char) pcrel + addr + opcode->length) & 0xffff);
+		    (int)((char) pcrel + addr + opcode->length) & 0xffff);
 	      break;
 	    case QIM:
 	      func (stream, "#%d:q", qim);
@@ -334,11 +313,12 @@ if (0)  {
 	    }
 	}
       return opcode->length;
-    next:;
+    next:
+      ;
     }
 
-  /* Couldn't understand anything */
-  func (stream, "%02x\t\t*unknown*", buffer[0]);
+  /* Couldn't understand anything.  */
+  /* xgettext:c-format */
+  func (stream, _("%02x\t\t*unknown*"), buffer[0]);
   return 1;
-
 }

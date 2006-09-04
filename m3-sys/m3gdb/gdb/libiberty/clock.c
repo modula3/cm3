@@ -1,5 +1,5 @@
 /* ANSI-compatible clock function.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1999 Free Software Foundation, Inc.
 
 This file is part of the libiberty library.  This library is free
 software; you can redistribute it and/or modify it under the
@@ -14,7 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+the Free Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.
 
 As a special exception, if you link this library with files
 compiled with a GNU compiler to produce an executable, this does not cause
@@ -22,22 +22,52 @@ the resulting executable to be covered by the GNU General Public License.
 This exception does not however invalidate any other reasons why
 the executable file might be covered by the GNU General Public License. */
 
+/*
+
+@deftypefn Supplemental long clock (void)
+
+Returns an approximation of the CPU time used by the process as a
+@code{clock_t}; divide this number by @samp{CLOCKS_PER_SEC} to get the
+number of seconds used.
+
+@end deftypefn
+
+*/
+
+#include "config.h"
+
 #ifdef HAVE_GETRUSAGE
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
 
 #ifdef HAVE_TIMES
-#ifndef NO_SYS_PARAM_H
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
 #include <sys/times.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef _SC_CLK_TCK
+#define GNU_HZ  sysconf(_SC_CLK_TCK)
+#else
+#ifdef HZ
+#define GNU_HZ  HZ
+#else
+#ifdef CLOCKS_PER_SEC
+#define GNU_HZ  CLOCKS_PER_SEC
+#endif
+#endif
+#endif
+
 /* FIXME: should be able to declare as clock_t. */
 
 long
-clock ()
+clock (void)
 {
 #ifdef HAVE_GETRUSAGE
   struct rusage rusage;
@@ -50,7 +80,7 @@ clock ()
   struct tms tms;
 
   times (&tms);
-  return (tms.tms_utime + tms.tms_stime) * (1000000 / HZ);
+  return (tms.tms_utime + tms.tms_stime) * (1000000 / GNU_HZ);
 #else
 #ifdef VMS
   struct

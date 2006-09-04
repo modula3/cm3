@@ -1,22 +1,23 @@
 /* COFF specific linker code.
-   Copyright 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+   2004, 2005 Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support.
 
-This file is part of BFD, the Binary File Descriptor library.
+   This file is part of BFD, the Binary File Descriptor library.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /* This file contains the COFF backend linker code.  */
 
@@ -26,22 +27,37 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "libbfd.h"
 #include "coff/internal.h"
 #include "libcoff.h"
+#include "safe-ctype.h"
 
-static boolean coff_link_add_object_symbols
-  PARAMS ((bfd *, struct bfd_link_info *));
-static boolean coff_link_check_archive_element
-  PARAMS ((bfd *, struct bfd_link_info *, boolean *));
-static boolean coff_link_check_ar_symbols
-  PARAMS ((bfd *, struct bfd_link_info *, boolean *));
-static boolean coff_link_add_symbols PARAMS ((bfd *, struct bfd_link_info *));
+static bfd_boolean coff_link_add_object_symbols (bfd *abfd, struct bfd_link_info *info);
+static bfd_boolean coff_link_check_archive_element (bfd *abfd, struct bfd_link_info *info, bfd_boolean *pneeded);
+static bfd_boolean coff_link_add_symbols (bfd *abfd, struct bfd_link_info *info);
+
+/* Return TRUE if SYM is a weak, external symbol.  */
+#define IS_WEAK_EXTERNAL(abfd, sym)			\
+  ((sym).n_sclass == C_WEAKEXT				\
+   || (obj_pe (abfd) && (sym).n_sclass == C_NT_WEAK))
+
+/* Return TRUE if SYM is an external symbol.  */
+#define IS_EXTERNAL(abfd, sym)				\
+  ((sym).n_sclass == C_EXT || IS_WEAK_EXTERNAL (abfd, sym))
+
+/* Define macros so that the ISFCN, et. al., macros work correctly.
+   These macros are defined in include/coff/internal.h in terms of
+   N_TMASK, etc.  These definitions require a user to define local
+   variables with the appropriate names, and with values from the
+   coff_data (abfd) structure.  */
+
+#define N_TMASK n_tmask
+#define N_BTSHFT n_btshft
+#define N_BTMASK n_btmask
 
 /* Create an entry in a COFF linker hash table.  */
 
 struct bfd_hash_entry *
-_bfd_coff_link_hash_newfunc (entry, table, string)
-     struct bfd_hash_entry *entry;
-     struct bfd_hash_table *table;
-     const char *string;
+_bfd_coff_link_hash_newfunc (struct bfd_hash_entry *entry,
+			     struct bfd_hash_table *table,
+			     const char *string)
 {
   struct coff_link_hash_entry *ret = (struct coff_link_hash_entry *) entry;
 
@@ -73,33 +89,33 @@ _bfd_coff_link_hash_newfunc (entry, table, string)
 
 /* Initialize a COFF linker hash table.  */
 
-boolean
-_bfd_coff_link_hash_table_init (table, abfd, newfunc)
-     struct coff_link_hash_table *table;
-     bfd *abfd;
-     struct bfd_hash_entry *(*newfunc) PARAMS ((struct bfd_hash_entry *,
-						struct bfd_hash_table *,
-						const char *));
+bfd_boolean
+_bfd_coff_link_hash_table_init (struct coff_link_hash_table *table,
+				bfd *abfd,
+				struct bfd_hash_entry *(*newfunc) (struct bfd_hash_entry *,
+								   struct bfd_hash_table *,
+								   const char *))
 {
+  memset (&table->stab_info, 0, sizeof (table->stab_info));
   return _bfd_link_hash_table_init (&table->root, abfd, newfunc);
 }
 
 /* Create a COFF linker hash table.  */
 
 struct bfd_link_hash_table *
-_bfd_coff_link_hash_table_create (abfd)
-     bfd *abfd;
+_bfd_coff_link_hash_table_create (bfd *abfd)
 {
   struct coff_link_hash_table *ret;
+  bfd_size_type amt = sizeof (struct coff_link_hash_table);
 
-  ret = ((struct coff_link_hash_table *)
-	 bfd_alloc (abfd, sizeof (struct coff_link_hash_table)));
+  ret = bfd_malloc (amt);
   if (ret == NULL)
     return NULL;
+
   if (! _bfd_coff_link_hash_table_init (ret, abfd,
 					_bfd_coff_link_hash_newfunc))
     {
-      bfd_release (abfd, ret);
+      free (ret);
       return (struct bfd_link_hash_table *) NULL;
     }
   return &ret->root;
@@ -108,10 +124,9 @@ _bfd_coff_link_hash_table_create (abfd)
 /* Create an entry in a COFF debug merge hash table.  */
 
 struct bfd_hash_entry *
-_bfd_coff_debug_merge_hash_newfunc (entry, table, string)
-     struct bfd_hash_entry *entry;
-     struct bfd_hash_table *table;
-     const char *string;
+_bfd_coff_debug_merge_hash_newfunc (struct bfd_hash_entry *entry,
+				    struct bfd_hash_table *table,
+				    const char *string)
 {
   struct coff_debug_merge_hash_entry *ret =
     (struct coff_debug_merge_hash_entry *) entry;
@@ -140,93 +155,52 @@ _bfd_coff_debug_merge_hash_newfunc (entry, table, string)
 /* Given a COFF BFD, add symbols to the global hash table as
    appropriate.  */
 
-boolean
-_bfd_coff_link_add_symbols (abfd, info)
-     bfd *abfd;
-     struct bfd_link_info *info;
+bfd_boolean
+_bfd_coff_link_add_symbols (bfd *abfd, struct bfd_link_info *info)
 {
   switch (bfd_get_format (abfd))
     {
     case bfd_object:
       return coff_link_add_object_symbols (abfd, info);
     case bfd_archive:
-      return (_bfd_generic_link_add_archive_symbols
-	      (abfd, info, coff_link_check_archive_element));
+      return _bfd_generic_link_add_archive_symbols
+	(abfd, info, coff_link_check_archive_element);
     default:
       bfd_set_error (bfd_error_wrong_format);
-      return false;
+      return FALSE;
     }
 }
 
 /* Add symbols from a COFF object file.  */
 
-static boolean
-coff_link_add_object_symbols (abfd, info)
-     bfd *abfd;
-     struct bfd_link_info *info;
+static bfd_boolean
+coff_link_add_object_symbols (bfd *abfd, struct bfd_link_info *info)
 {
   if (! _bfd_coff_get_external_symbols (abfd))
-    return false;
+    return FALSE;
   if (! coff_link_add_symbols (abfd, info))
-    return false;
+    return FALSE;
 
-  if (! info->keep_memory)
-    {
-      if (! _bfd_coff_free_symbols (abfd))
-	return false;
-    }
-  return true;
-}
+  if (! info->keep_memory
+      && ! _bfd_coff_free_symbols (abfd))
+    return FALSE;
 
-/* Check a single archive element to see if we need to include it in
-   the link.  *PNEEDED is set according to whether this element is
-   needed in the link or not.  This is called via
-   _bfd_generic_link_add_archive_symbols.  */
-
-static boolean
-coff_link_check_archive_element (abfd, info, pneeded)
-     bfd *abfd;
-     struct bfd_link_info *info;
-     boolean *pneeded;
-{
-  if (! _bfd_coff_get_external_symbols (abfd))
-    return false;
-
-  if (! coff_link_check_ar_symbols (abfd, info, pneeded))
-    return false;
-
-  if (*pneeded)
-    {
-      if (! coff_link_add_symbols (abfd, info))
-	return false;
-    }
-
-  if (! info->keep_memory || ! *pneeded)
-    {
-      if (! _bfd_coff_free_symbols (abfd))
-	return false;
-    }
-
-  return true;
+  return TRUE;
 }
 
 /* Look through the symbols to see if this object file should be
    included in the link.  */
 
-static boolean
-coff_link_check_ar_symbols (abfd, info, pneeded)
-     bfd *abfd;
-     struct bfd_link_info *info;
-     boolean *pneeded;
+static bfd_boolean
+coff_link_check_ar_symbols (bfd *abfd,
+			    struct bfd_link_info *info,
+			    bfd_boolean *pneeded)
 {
-  boolean (*sym_is_global) PARAMS ((bfd *, struct internal_syment *));
   bfd_size_type symesz;
   bfd_byte *esym;
   bfd_byte *esym_end;
 
-  *pneeded = false;
-
-  sym_is_global = coff_backend_info (abfd)->_bfd_coff_sym_is_global;
+  *pneeded = FALSE;
 
   symesz = bfd_coff_symesz (abfd);
   esym = (bfd_byte *) obj_coff_external_syms (abfd);
@@ -234,12 +208,13 @@ coff_link_check_ar_symbols (abfd, info, pneeded)
   while (esym < esym_end)
     {
       struct internal_syment sym;
+      enum coff_symbol_classification classification;
 
-      bfd_coff_swap_sym_in (abfd, (PTR) esym, (PTR) &sym);
+      bfd_coff_swap_sym_in (abfd, esym, &sym);
 
-      if ((sym.n_sclass == C_EXT
-	   || (sym_is_global && (*sym_is_global) (abfd, &sym)))
-	  && (sym.n_scnum != 0 || sym.n_value != 0))
+      classification = bfd_coff_classify_symbol (abfd, &sym);
+      if (classification == COFF_SYMBOL_GLOBAL
+	  || classification == COFF_SYMBOL_COMMON)
 	{
 	  const char *name;
 	  char buf[SYMNMLEN + 1];
@@ -247,11 +222,16 @@ coff_link_check_ar_symbols (abfd, info, pneeded)
 
 	  /* This symbol is externally visible, and is defined by this
              object file.  */
-
 	  name = _bfd_coff_internal_syment_name (abfd, &sym, buf);
 	  if (name == NULL)
-	    return false;
-	  h = bfd_link_hash_lookup (info->hash, name, false, false, true);
+	    return FALSE;
+	  h = bfd_link_hash_lookup (info->hash, name, FALSE, FALSE, TRUE);
+
+	  /* Auto import.  */
+	  if (!h
+	      && info->pei386_auto_import
+	      && !strncmp (name,"__imp_", 6))
+	    h = bfd_link_hash_lookup (info->hash, name + 6, FALSE, FALSE, TRUE);
 
 	  /* We are only interested in symbols that are currently
 	     undefined.  If a symbol is currently known to be common,
@@ -261,9 +241,9 @@ coff_link_check_ar_symbols (abfd, info, pneeded)
 	      && h->type == bfd_link_hash_undefined)
 	    {
 	      if (! (*info->callbacks->add_archive_element) (info, abfd, name))
-		return false;
-	      *pneeded = true;
-	      return true;
+		return FALSE;
+	      *pneeded = TRUE;
+	      return TRUE;
 	    }
 	}
 
@@ -271,44 +251,73 @@ coff_link_check_ar_symbols (abfd, info, pneeded)
     }
 
   /* We do not need this object file.  */
-  return true;
+  return TRUE;
+}
+
+/* Check a single archive element to see if we need to include it in
+   the link.  *PNEEDED is set according to whether this element is
+   needed in the link or not.  This is called via
+   _bfd_generic_link_add_archive_symbols.  */
+
+static bfd_boolean
+coff_link_check_archive_element (bfd *abfd,
+				 struct bfd_link_info *info,
+				 bfd_boolean *pneeded)
+{
+  if (! _bfd_coff_get_external_symbols (abfd))
+    return FALSE;
+
+  if (! coff_link_check_ar_symbols (abfd, info, pneeded))
+    return FALSE;
+
+  if (*pneeded
+      && ! coff_link_add_symbols (abfd, info))
+    return FALSE;
+
+  if ((! info->keep_memory || ! *pneeded)
+      && ! _bfd_coff_free_symbols (abfd))
+    return FALSE;
+
+  return TRUE;
 }
 
 /* Add all the symbols from an object file to the hash table.  */
 
-static boolean
-coff_link_add_symbols (abfd, info)
-     bfd *abfd;
-     struct bfd_link_info *info;
+static bfd_boolean
+coff_link_add_symbols (bfd *abfd,
+		       struct bfd_link_info *info)
 {
-  boolean (*sym_is_global) PARAMS ((bfd *, struct internal_syment *));
-  boolean default_copy;
+  unsigned int n_tmask = coff_data (abfd)->local_n_tmask;
+  unsigned int n_btshft = coff_data (abfd)->local_n_btshft;
+  unsigned int n_btmask = coff_data (abfd)->local_n_btmask;
+  bfd_boolean keep_syms;
+  bfd_boolean default_copy;
   bfd_size_type symcount;
   struct coff_link_hash_entry **sym_hash;
   bfd_size_type symesz;
   bfd_byte *esym;
   bfd_byte *esym_end;
+  bfd_size_type amt;
 
-  sym_is_global = coff_backend_info (abfd)->_bfd_coff_sym_is_global;
+  /* Keep the symbols during this function, in case the linker needs
+     to read the generic symbols in order to report an error message.  */
+  keep_syms = obj_coff_keep_syms (abfd);
+  obj_coff_keep_syms (abfd) = TRUE;
 
   if (info->keep_memory)
-    default_copy = false;
+    default_copy = FALSE;
   else
-    default_copy = true;
+    default_copy = TRUE;
 
   symcount = obj_raw_syment_count (abfd);
 
   /* We keep a list of the linker hash table entries that correspond
      to particular symbols.  */
-  sym_hash = ((struct coff_link_hash_entry **)
-	      bfd_alloc (abfd,
-			 ((size_t) symcount
-			  * sizeof (struct coff_link_hash_entry *))));
+  amt = symcount * sizeof (struct coff_link_hash_entry *);
+  sym_hash = bfd_zalloc (abfd, amt);
   if (sym_hash == NULL && symcount != 0)
-    return false;
+    goto error_return;
   obj_coff_sym_hashes (abfd) = sym_hash;
-  memset (sym_hash, 0,
-	  (size_t) symcount * sizeof (struct coff_link_hash_entry *));
 
   symesz = bfd_coff_symesz (abfd);
   BFD_ASSERT (symesz == bfd_coff_auxesz (abfd));
@@ -317,72 +326,195 @@ coff_link_add_symbols (abfd, info)
   while (esym < esym_end)
     {
       struct internal_syment sym;
-      boolean copy;
+      enum coff_symbol_classification classification;
+      bfd_boolean copy;
 
-      bfd_coff_swap_sym_in (abfd, (PTR) esym, (PTR) &sym);
+      bfd_coff_swap_sym_in (abfd, esym, &sym);
 
-      if (sym.n_sclass == C_EXT
-	  || (sym_is_global && (*sym_is_global) (abfd, &sym)))
+      classification = bfd_coff_classify_symbol (abfd, &sym);
+      if (classification != COFF_SYMBOL_LOCAL)
 	{
 	  const char *name;
 	  char buf[SYMNMLEN + 1];
 	  flagword flags;
 	  asection *section;
 	  bfd_vma value;
+	  bfd_boolean addit;
 
 	  /* This symbol is externally visible.  */
 
 	  name = _bfd_coff_internal_syment_name (abfd, &sym, buf);
 	  if (name == NULL)
-	    return false;
+	    goto error_return;
 
 	  /* We must copy the name into memory if we got it from the
              syment itself, rather than the string table.  */
 	  copy = default_copy;
 	  if (sym._n._n_n._n_zeroes != 0
 	      || sym._n._n_n._n_offset == 0)
-	    copy = true;
+	    copy = TRUE;
 
 	  value = sym.n_value;
 
-	  if (sym.n_scnum == 0)
+	  switch (classification)
 	    {
-	      if (value == 0)
-		{
-		  flags = 0;
-		  section = bfd_und_section_ptr;
-		}
-	      else
-		{
-		  flags = BSF_GLOBAL;
-		  section = bfd_com_section_ptr;
-		}
-	    }
-	  else
-	    {
+	    default:
+	      abort ();
+
+	    case COFF_SYMBOL_GLOBAL:
 	      flags = BSF_EXPORT | BSF_GLOBAL;
 	      section = coff_section_from_bfd_index (abfd, sym.n_scnum);
-	      value -= section->vma;
+	      if (! obj_pe (abfd))
+		value -= section->vma;
+	      break;
+
+	    case COFF_SYMBOL_UNDEFINED:
+	      flags = 0;
+	      section = bfd_und_section_ptr;
+	      break;
+
+	    case COFF_SYMBOL_COMMON:
+	      flags = BSF_GLOBAL;
+	      section = bfd_com_section_ptr;
+	      break;
+
+	    case COFF_SYMBOL_PE_SECTION:
+	      flags = BSF_SECTION_SYM | BSF_GLOBAL;
+	      section = coff_section_from_bfd_index (abfd, sym.n_scnum);
+	      break;
 	    }
 
-	  if (! (bfd_coff_link_add_one_symbol
-		 (info, abfd, name, flags, section, value,
-		  (const char *) NULL, copy, false,
-		  (struct bfd_link_hash_entry **) sym_hash)))
-	    return false;
+	  if (IS_WEAK_EXTERNAL (abfd, sym))
+	    flags = BSF_WEAK;
+
+	  addit = TRUE;
+
+	  /* In the PE format, section symbols actually refer to the
+             start of the output section.  We handle them specially
+             here.  */
+	  if (obj_pe (abfd) && (flags & BSF_SECTION_SYM) != 0)
+	    {
+	      *sym_hash = coff_link_hash_lookup (coff_hash_table (info),
+						 name, FALSE, copy, FALSE);
+	      if (*sym_hash != NULL)
+		{
+		  if (((*sym_hash)->coff_link_hash_flags
+		       & COFF_LINK_HASH_PE_SECTION_SYMBOL) == 0
+		      && (*sym_hash)->root.type != bfd_link_hash_undefined
+		      && (*sym_hash)->root.type != bfd_link_hash_undefweak)
+		    (*_bfd_error_handler)
+		      ("Warning: symbol `%s' is both section and non-section",
+		       name);
+
+		  addit = FALSE;
+		}
+	    }
+
+	  /* The Microsoft Visual C compiler does string pooling by
+	     hashing the constants to an internal symbol name, and
+	     relying on the linker comdat support to discard
+	     duplicate names.  However, if one string is a literal and
+	     one is a data initializer, one will end up in the .data
+	     section and one will end up in the .rdata section.  The
+	     Microsoft linker will combine them into the .data
+	     section, which seems to be wrong since it might cause the
+	     literal to change.
+
+	     As long as there are no external references to the
+	     symbols, which there shouldn't be, we can treat the .data
+	     and .rdata instances as separate symbols.  The comdat
+	     code in the linker will do the appropriate merging.  Here
+	     we avoid getting a multiple definition error for one of
+	     these special symbols.
+
+	     FIXME: I don't think this will work in the case where
+	     there are two object files which use the constants as a
+	     literal and two object files which use it as a data
+	     initializer.  One or the other of the second object files
+	     is going to wind up with an inappropriate reference.  */
+	  if (obj_pe (abfd)
+	      && (classification == COFF_SYMBOL_GLOBAL
+		  || classification == COFF_SYMBOL_PE_SECTION)
+	      && coff_section_data (abfd, section) != NULL
+	      && coff_section_data (abfd, section)->comdat != NULL
+	      && strncmp (name, "??_", 3) == 0
+	      && strcmp (name, coff_section_data (abfd, section)->comdat->name) == 0)
+	    {
+	      if (*sym_hash == NULL)
+		*sym_hash = coff_link_hash_lookup (coff_hash_table (info),
+						   name, FALSE, copy, FALSE);
+	      if (*sym_hash != NULL
+		  && (*sym_hash)->root.type == bfd_link_hash_defined
+		  && coff_section_data (abfd, (*sym_hash)->root.u.def.section)->comdat != NULL
+		  && strcmp (coff_section_data (abfd, (*sym_hash)->root.u.def.section)->comdat->name,
+			     coff_section_data (abfd, section)->comdat->name) == 0)
+		addit = FALSE;
+	    }
+
+	  if (addit)
+	    {
+	      if (! (bfd_coff_link_add_one_symbol
+		     (info, abfd, name, flags, section, value,
+		      (const char *) NULL, copy, FALSE,
+		      (struct bfd_link_hash_entry **) sym_hash)))
+		goto error_return;
+	    }
+
+	  if (obj_pe (abfd) && (flags & BSF_SECTION_SYM) != 0)
+	    (*sym_hash)->coff_link_hash_flags |=
+	      COFF_LINK_HASH_PE_SECTION_SYMBOL;
+
+	  /* Limit the alignment of a common symbol to the possible
+             alignment of a section.  There is no point to permitting
+             a higher alignment for a common symbol: we can not
+             guarantee it, and it may cause us to allocate extra space
+             in the common section.  */
+	  if (section == bfd_com_section_ptr
+	      && (*sym_hash)->root.type == bfd_link_hash_common
+	      && ((*sym_hash)->root.u.c.p->alignment_power
+		  > bfd_coff_default_section_alignment_power (abfd)))
+	    (*sym_hash)->root.u.c.p->alignment_power
+	      = bfd_coff_default_section_alignment_power (abfd);
 
 	  if (info->hash->creator->flavour == bfd_get_flavour (abfd))
 	    {
-	      if (((*sym_hash)->class == C_NULL
-		   && (*sym_hash)->type == T_NULL)
-		  || sym.n_scnum != 0
-		  || (sym.n_value != 0
-		      && (*sym_hash)->root.type != bfd_link_hash_defined))
-		{
-		  (*sym_hash)->class = sym.n_sclass;
-		  (*sym_hash)->type = sym.n_type;
-		  (*sym_hash)->numaux = sym.n_numaux;
-		  (*sym_hash)->auxbfd = abfd;
+	      /* If we don't have any symbol information currently in
+                 the hash table, or if we are looking at a symbol
+                 definition, then update the symbol class and type in
+                 the hash table.  */
+  	      if (((*sym_hash)->class == C_NULL
+  		   && (*sym_hash)->type == T_NULL)
+  		  || sym.n_scnum != 0
+  		  || (sym.n_value != 0
+  		      && (*sym_hash)->root.type != bfd_link_hash_defined
+  		      && (*sym_hash)->root.type != bfd_link_hash_defweak))
+  		{
+  		  (*sym_hash)->class = sym.n_sclass;
+  		  if (sym.n_type != T_NULL)
+  		    {
+  		      /* We want to warn if the type changed, but not
+  			 if it changed from an unspecified type.
+  			 Testing the whole type byte may work, but the
+  			 change from (e.g.) a function of unspecified
+  			 type to function of known type also wants to
+  			 skip the warning.  */
+  		      if ((*sym_hash)->type != T_NULL
+  			  && (*sym_hash)->type != sym.n_type
+  		          && !(DTYPE ((*sym_hash)->type) == DTYPE (sym.n_type)
+  		               && (BTYPE ((*sym_hash)->type) == T_NULL
+  		                   || BTYPE (sym.n_type) == T_NULL)))
+  			(*_bfd_error_handler)
+  			  (_("Warning: type of symbol `%s' changed from %d to %d in %B"),
+  			   abfd, name, (*sym_hash)->type, sym.n_type);
+
+  		      /* We don't want to change from a meaningful
+  			 base type to a null one, but if we know
+  			 nothing, take what little we might now know.  */
+  		      if (BTYPE (sym.n_type) != T_NULL
+  			  || (*sym_hash)->type == T_NULL)
+			(*sym_hash)->type = sym.n_type;
+  		    }
+  		  (*sym_hash)->auxbfd = abfd;
 		  if (sym.n_numaux != 0)
 		    {
 		      union internal_auxent *alloc;
@@ -390,21 +522,41 @@ coff_link_add_symbols (abfd, info)
 		      bfd_byte *eaux;
 		      union internal_auxent *iaux;
 
+		      (*sym_hash)->numaux = sym.n_numaux;
 		      alloc = ((union internal_auxent *)
 			       bfd_hash_allocate (&info->hash->table,
 						  (sym.n_numaux
 						   * sizeof (*alloc))));
 		      if (alloc == NULL)
-			return false;
+			goto error_return;
 		      for (i = 0, eaux = esym + symesz, iaux = alloc;
 			   i < sym.n_numaux;
 			   i++, eaux += symesz, iaux++)
-			bfd_coff_swap_aux_in (abfd, (PTR) eaux, sym.n_type,
-					      sym.n_sclass, i, sym.n_numaux,
-					      (PTR) iaux);
+			bfd_coff_swap_aux_in (abfd, eaux, sym.n_type,
+					      sym.n_sclass, (int) i,
+					      sym.n_numaux, iaux);
 		      (*sym_hash)->aux = alloc;
 		    }
 		}
+	    }
+
+	  if (classification == COFF_SYMBOL_PE_SECTION
+	      && (*sym_hash)->numaux != 0)
+	    {
+	      /* Some PE sections (such as .bss) have a zero size in
+                 the section header, but a non-zero size in the AUX
+                 record.  Correct that here.
+
+		 FIXME: This is not at all the right place to do this.
+		 For example, it won't help objdump.  This needs to be
+		 done when we swap in the section header.  */
+	      BFD_ASSERT ((*sym_hash)->numaux == 1);
+	      if (section->size == 0)
+		section->size = (*sym_hash)->aux[0].x_scn.x_scnlen;
+
+	      /* FIXME: We could test whether the section sizes
+                 matches the size in the aux entry, but apparently
+                 that sometimes fails unexpectedly.  */
 	    }
 	}
 
@@ -412,26 +564,77 @@ coff_link_add_symbols (abfd, info)
       sym_hash += sym.n_numaux + 1;
     }
 
-  return true;
+  /* If this is a non-traditional, non-relocatable link, try to
+     optimize the handling of any .stab/.stabstr sections.  */
+  if (! info->relocatable
+      && ! info->traditional_format
+      && info->hash->creator->flavour == bfd_get_flavour (abfd)
+      && (info->strip != strip_all && info->strip != strip_debugger))
+    {
+      asection *stabstr;
+
+      stabstr = bfd_get_section_by_name (abfd, ".stabstr");
+
+      if (stabstr != NULL)
+	{
+	  bfd_size_type string_offset = 0;
+	  asection *stab;
+	  
+	  for (stab = abfd->sections; stab; stab = stab->next)
+	    if (strncmp (".stab", stab->name, 5) == 0
+		&& (!stab->name[5]
+		    || (stab->name[5] == '.' && ISDIGIT (stab->name[6]))))
+	    {
+	      struct coff_link_hash_table *table;
+	      struct coff_section_tdata *secdata
+		= coff_section_data (abfd, stab);
+	      
+	      if (secdata == NULL)
+		{
+		  amt = sizeof (struct coff_section_tdata);
+		  stab->used_by_bfd = bfd_zalloc (abfd, amt);
+		  if (stab->used_by_bfd == NULL)
+		    goto error_return;
+		  secdata = coff_section_data (abfd, stab);
+		}
+
+	      table = coff_hash_table (info);
+
+	      if (! _bfd_link_section_stabs (abfd, &table->stab_info,
+					     stab, stabstr,
+					     &secdata->stab_info,
+					     &string_offset))
+		goto error_return;
+	    }
+	}
+    }
+
+  obj_coff_keep_syms (abfd) = keep_syms;
+
+  return TRUE;
+
+ error_return:
+  obj_coff_keep_syms (abfd) = keep_syms;
+  return FALSE;
 }
 
 /* Do the final link step.  */
 
-boolean
-_bfd_coff_final_link (abfd, info)
-     bfd *abfd;
-     struct bfd_link_info *info;
+bfd_boolean
+_bfd_coff_final_link (bfd *abfd,
+		      struct bfd_link_info *info)
 {
   bfd_size_type symesz;
   struct coff_final_link_info finfo;
-  boolean debug_merge_allocated;
+  bfd_boolean debug_merge_allocated;
+  bfd_boolean long_section_names;
   asection *o;
   struct bfd_link_order *p;
-  size_t max_sym_count;
-  size_t max_lineno_count;
-  size_t max_reloc_count;
-  size_t max_output_reloc_count;
-  size_t max_contents_size;
+  bfd_size_type max_sym_count;
+  bfd_size_type max_lineno_count;
+  bfd_size_type max_reloc_count;
+  bfd_size_type max_output_reloc_count;
+  bfd_size_type max_contents_size;
   file_ptr rel_filepos;
   unsigned int relsz;
   file_ptr line_filepos;
@@ -439,6 +642,7 @@ _bfd_coff_final_link (abfd, info)
   bfd *sub;
   bfd_byte *external_relocs = NULL;
   char strbuf[STRING_SIZE_SIZE];
+  bfd_size_type amt;
 
   symesz = bfd_coff_symesz (abfd);
 
@@ -447,6 +651,7 @@ _bfd_coff_final_link (abfd, info)
   finfo.strtab = NULL;
   finfo.section_info = NULL;
   finfo.last_file_index = -1;
+  finfo.last_bf_index = -1;
   finfo.internal_syms = NULL;
   finfo.sec_ptrs = NULL;
   finfo.sym_indices = NULL;
@@ -455,7 +660,8 @@ _bfd_coff_final_link (abfd, info)
   finfo.contents = NULL;
   finfo.external_relocs = NULL;
   finfo.internal_relocs = NULL;
-  debug_merge_allocated = false;
+  finfo.global_to_static = FALSE;
+  debug_merge_allocated = FALSE;
 
   coff_data (abfd)->link_info = info;
 
@@ -465,11 +671,14 @@ _bfd_coff_final_link (abfd, info)
 
   if (! coff_debug_merge_hash_table_init (&finfo.debug_merge))
     goto error_return;
-  debug_merge_allocated = true;
+  debug_merge_allocated = TRUE;
 
   /* Compute the file positions for all the sections.  */
   if (! abfd->output_has_begun)
-    bfd_coff_compute_section_file_positions (abfd);
+    {
+      if (! bfd_coff_compute_section_file_positions (abfd))
+	goto error_return;
+    }
 
   /* Count the line numbers and relocation entries required for the
      output file.  Set the file positions for the relocs.  */
@@ -479,34 +688,42 @@ _bfd_coff_final_link (abfd, info)
   max_lineno_count = 0;
   max_reloc_count = 0;
 
+  long_section_names = FALSE;
   for (o = abfd->sections; o != NULL; o = o->next)
     {
       o->reloc_count = 0;
       o->lineno_count = 0;
-      for (p = o->link_order_head; p != NULL; p = p->next)
+      for (p = o->map_head.link_order; p != NULL; p = p->next)
 	{
-
 	  if (p->type == bfd_indirect_link_order)
 	    {
 	      asection *sec;
 
 	      sec = p->u.indirect.section;
 
+	      /* Mark all sections which are to be included in the
+		 link.  This will normally be every section.  We need
+		 to do this so that we can identify any sections which
+		 the linker has decided to not include.  */
+	      sec->linker_mark = TRUE;
+
 	      if (info->strip == strip_none
 		  || info->strip == strip_some)
 		o->lineno_count += sec->lineno_count;
 
-	      if (info->relocateable)
+	      if (info->relocatable)
 		o->reloc_count += sec->reloc_count;
 
-	      if (sec->_raw_size > max_contents_size)
-		max_contents_size = sec->_raw_size;
+	      if (sec->rawsize > max_contents_size)
+		max_contents_size = sec->rawsize;
+	      if (sec->size > max_contents_size)
+		max_contents_size = sec->size;
 	      if (sec->lineno_count > max_lineno_count)
 		max_lineno_count = sec->lineno_count;
 	      if (sec->reloc_count > max_reloc_count)
 		max_reloc_count = sec->reloc_count;
 	    }
-	  else if (info->relocateable
+	  else if (info->relocatable
 		   && (p->type == bfd_section_reloc_link_order
 		       || p->type == bfd_symbol_reloc_link_order))
 	    ++o->reloc_count;
@@ -518,21 +735,38 @@ _bfd_coff_final_link (abfd, info)
 	  o->flags |= SEC_RELOC;
 	  o->rel_filepos = rel_filepos;
 	  rel_filepos += o->reloc_count * relsz;
+	  /* In PE COFF, if there are at least 0xffff relocations an
+	     extra relocation will be written out to encode the count.  */
+	  if (obj_pe (abfd) && o->reloc_count >= 0xffff)
+	    rel_filepos += relsz;
+	}
+
+      if (bfd_coff_long_section_names (abfd)
+	  && strlen (o->name) > SCNNMLEN)
+	{
+	  /* This section has a long name which must go in the string
+             table.  This must correspond to the code in
+             coff_write_object_contents which puts the string index
+             into the s_name field of the section header.  That is why
+             we pass hash as FALSE.  */
+	  if (_bfd_stringtab_add (finfo.strtab, o->name, FALSE, FALSE)
+	      == (bfd_size_type) -1)
+	    goto error_return;
+	  long_section_names = TRUE;
 	}
     }
 
-  /* If doing a relocateable link, allocate space for the pointers we
+  /* If doing a relocatable link, allocate space for the pointers we
      need to keep.  */
-  if (info->relocateable)
+  if (info->relocatable)
     {
       unsigned int i;
 
       /* We use section_count + 1, rather than section_count, because
          the target_index fields are 1 based.  */
-      finfo.section_info =
-	((struct coff_link_section_info *)
-	 bfd_malloc ((abfd->section_count + 1)
-		     * sizeof (struct coff_link_section_info)));
+      amt = abfd->section_count + 1;
+      amt *= sizeof (struct coff_link_section_info);
+      finfo.section_info = bfd_malloc (amt);
       if (finfo.section_info == NULL)
 	goto error_return;
       for (i = 0; i <= abfd->section_count; i++)
@@ -570,16 +804,15 @@ _bfd_coff_final_link (abfd, info)
 
 	     Because of this problem, we also keep the relocs in
 	     memory until the end of the link.  This wastes memory,
-	     but only when doing a relocateable link, which is not the
+	     but only when doing a relocatable link, which is not the
 	     common case.  */
-	  BFD_ASSERT (info->relocateable);
-	  finfo.section_info[o->target_index].relocs =
-	    ((struct internal_reloc *)
-	     bfd_malloc (o->reloc_count * sizeof (struct internal_reloc)));
-	  finfo.section_info[o->target_index].rel_hashes =
-	    ((struct coff_link_hash_entry **)
-	     bfd_malloc (o->reloc_count
-		     * sizeof (struct coff_link_hash_entry *)));
+	  BFD_ASSERT (info->relocatable);
+	  amt = o->reloc_count;
+	  amt *= sizeof (struct internal_reloc);
+	  finfo.section_info[o->target_index].relocs = bfd_malloc (amt);
+	  amt = o->reloc_count;
+	  amt *= sizeof (struct coff_link_hash_entry *);
+	  finfo.section_info[o->target_index].rel_hashes = bfd_malloc (amt);
 	  if (finfo.section_info[o->target_index].relocs == NULL
 	      || finfo.section_info[o->target_index].rel_hashes == NULL)
 	    goto error_return;
@@ -604,29 +837,30 @@ _bfd_coff_final_link (abfd, info)
     {
       size_t sz;
 
-      sub->output_has_begun = false;
+      sub->output_has_begun = FALSE;
       sz = obj_raw_syment_count (sub);
       if (sz > max_sym_count)
 	max_sym_count = sz;
     }
 
   /* Allocate some buffers used while linking.  */
-  finfo.internal_syms = ((struct internal_syment *)
-			 bfd_malloc (max_sym_count
-				     * sizeof (struct internal_syment)));
-  finfo.sec_ptrs = (asection **) bfd_malloc (max_sym_count
-					     * sizeof (asection *));
-  finfo.sym_indices = (long *) bfd_malloc (max_sym_count * sizeof (long));
-  finfo.outsyms = ((bfd_byte *)
-		   bfd_malloc ((size_t) ((max_sym_count + 1) * symesz)));
-  finfo.linenos = (bfd_byte *) bfd_malloc (max_lineno_count
-				       * bfd_coff_linesz (abfd));
-  finfo.contents = (bfd_byte *) bfd_malloc (max_contents_size);
-  finfo.external_relocs = (bfd_byte *) bfd_malloc (max_reloc_count * relsz);
-  if (! info->relocateable)
-    finfo.internal_relocs = ((struct internal_reloc *)
-			     bfd_malloc (max_reloc_count
-					 * sizeof (struct internal_reloc)));
+  amt = max_sym_count * sizeof (struct internal_syment);
+  finfo.internal_syms = bfd_malloc (amt);
+  amt = max_sym_count * sizeof (asection *);
+  finfo.sec_ptrs = bfd_malloc (amt);
+  amt = max_sym_count * sizeof (long);
+  finfo.sym_indices = bfd_malloc (amt);
+  finfo.outsyms = bfd_malloc ((max_sym_count + 1) * symesz);
+  amt = max_lineno_count * bfd_coff_linesz (abfd);
+  finfo.linenos = bfd_malloc (amt);
+  finfo.contents = bfd_malloc (max_contents_size);
+  amt = max_reloc_count * relsz;
+  finfo.external_relocs = bfd_malloc (amt);
+  if (! info->relocatable)
+    {
+      amt = max_reloc_count * sizeof (struct internal_reloc);
+      finfo.internal_relocs = bfd_malloc (amt);
+    }
   if ((finfo.internal_syms == NULL && max_sym_count > 0)
       || (finfo.sec_ptrs == NULL && max_sym_count > 0)
       || (finfo.sym_indices == NULL && max_sym_count > 0)
@@ -634,7 +868,7 @@ _bfd_coff_final_link (abfd, info)
       || (finfo.linenos == NULL && max_lineno_count > 0)
       || (finfo.contents == NULL && max_contents_size > 0)
       || (finfo.external_relocs == NULL && max_reloc_count > 0)
-      || (! info->relocateable
+      || (! info->relocatable
 	  && finfo.internal_relocs == NULL
 	  && max_reloc_count > 0))
     goto error_return;
@@ -654,18 +888,17 @@ _bfd_coff_final_link (abfd, info)
 
   for (o = abfd->sections; o != NULL; o = o->next)
     {
-      for (p = o->link_order_head; p != NULL; p = p->next)
+      for (p = o->map_head.link_order; p != NULL; p = p->next)
 	{
 	  if (p->type == bfd_indirect_link_order
-	      && (bfd_get_flavour (p->u.indirect.section->owner)
-		  == bfd_target_coff_flavour))
+	      && bfd_family_coff (p->u.indirect.section->owner))
 	    {
 	      sub = p->u.indirect.section->owner;
-	      if (! sub->output_has_begun)
+	      if (! bfd_coff_link_output_has_begun (sub, & finfo))
 		{
 		  if (! _bfd_coff_link_input_bfd (&finfo, sub))
 		    goto error_return;
-		  sub->output_has_begun = true;
+		  sub->output_has_begun = TRUE;
 		}
 	    }
 	  else if (p->type == bfd_section_reloc_link_order
@@ -682,10 +915,13 @@ _bfd_coff_final_link (abfd, info)
 	}
     }
 
+  if (! bfd_coff_final_link_postscript (abfd, & finfo))
+    goto error_return;
+
   /* Free up the buffers used by _bfd_coff_link_input_bfd.  */
 
   coff_debug_merge_hash_table_free (&finfo.debug_merge);
-  debug_merge_allocated = false;
+  debug_merge_allocated = FALSE;
 
   if (finfo.internal_syms != NULL)
     {
@@ -729,21 +965,34 @@ _bfd_coff_final_link (abfd, info)
   if (finfo.last_file_index != -1
       && (unsigned int) finfo.last_file.n_value != obj_raw_syment_count (abfd))
     {
+      file_ptr pos;
+
       finfo.last_file.n_value = obj_raw_syment_count (abfd);
-      bfd_coff_swap_sym_out (abfd, (PTR) &finfo.last_file,
-			     (PTR) finfo.outsyms);
-      if (bfd_seek (abfd,
-		    (obj_sym_filepos (abfd)
-		     + finfo.last_file_index * symesz),
-		    SEEK_SET) != 0
-	  || bfd_write (finfo.outsyms, symesz, 1, abfd) != symesz)
-	return false;
+      bfd_coff_swap_sym_out (abfd, &finfo.last_file,
+			     finfo.outsyms);
+
+      pos = obj_sym_filepos (abfd) + finfo.last_file_index * symesz;
+      if (bfd_seek (abfd, pos, SEEK_SET) != 0
+	  || bfd_bwrite (finfo.outsyms, symesz, abfd) != symesz)
+	return FALSE;
+    }
+
+  /* If doing task linking (ld --task-link) then make a pass through the
+     global symbols, writing out any that are defined, and making them
+     static.  */
+  if (info->task_link)
+    {
+      finfo.failed = FALSE;
+      coff_link_hash_traverse (coff_hash_table (info),
+			       _bfd_coff_write_task_globals, &finfo);
+      if (finfo.failed)
+	goto error_return;
     }
 
   /* Write out the global symbols.  */
-  finfo.failed = false;
-  coff_link_hash_traverse (coff_hash_table (info), _bfd_coff_write_global_sym,
-			   (PTR) &finfo);
+  finfo.failed = FALSE;
+  coff_link_hash_traverse (coff_hash_table (info),
+			   _bfd_coff_write_global_sym, &finfo);
   if (finfo.failed)
     goto error_return;
 
@@ -754,13 +1003,13 @@ _bfd_coff_final_link (abfd, info)
       finfo.outsyms = NULL;
     }
 
-  if (info->relocateable)
+  if (info->relocatable && max_output_reloc_count > 0)
     {
       /* Now that we have written out all the global symbols, we know
 	 the symbol indices to use for relocs against them, and we can
 	 finally write out the relocs.  */
-      external_relocs = ((bfd_byte *)
-			 bfd_malloc (max_output_reloc_count * relsz));
+      amt = max_output_reloc_count * relsz;
+      external_relocs = bfd_malloc (amt);
       if (external_relocs == NULL)
 	goto error_return;
 
@@ -785,12 +1034,30 @@ _bfd_coff_final_link (abfd, info)
 		  BFD_ASSERT ((*rel_hash)->indx >= 0);
 		  irel->r_symndx = (*rel_hash)->indx;
 		}
-	      bfd_coff_swap_reloc_out (abfd, (PTR) irel, (PTR) erel);
+	      bfd_coff_swap_reloc_out (abfd, irel, erel);
 	    }
 
-	  if (bfd_seek (abfd, o->rel_filepos, SEEK_SET) != 0
-	      || bfd_write ((PTR) external_relocs, relsz, o->reloc_count,
-			    abfd) != relsz * o->reloc_count)
+	  if (bfd_seek (abfd, o->rel_filepos, SEEK_SET) != 0)
+	    goto error_return;
+	  if (obj_pe (abfd) && o->reloc_count >= 0xffff)
+	    {
+	      /* In PE COFF, write the count of relocs as the first
+		 reloc.  The header overflow bit will be set
+		 elsewhere. */
+	      struct internal_reloc incount;
+	      bfd_byte *excount = (bfd_byte *)bfd_malloc (relsz);
+	      
+	      memset (&incount, 0, sizeof (incount));
+	      incount.r_vaddr = o->reloc_count + 1;
+	      bfd_coff_swap_reloc_out (abfd, (PTR) &incount, (PTR) excount);
+	      if (bfd_bwrite (excount, relsz, abfd) != relsz)
+		/* We'll leak, but it's an error anyway. */
+		goto error_return;
+	      free (excount);
+	    }
+	  if (bfd_bwrite (external_relocs,
+			  (bfd_size_type) relsz * o->reloc_count, abfd)
+	      != (bfd_size_type) relsz * o->reloc_count)
 	    goto error_return;
 	}
 
@@ -814,28 +1081,38 @@ _bfd_coff_final_link (abfd, info)
       finfo.section_info = NULL;
     }
 
-  /* Write out the string table.  */
-  if (obj_raw_syment_count (abfd) != 0)
+  /* If we have optimized stabs strings, output them.  */
+  if (coff_hash_table (info)->stab_info.stabstr != NULL)
     {
-      if (bfd_seek (abfd,
-		    (obj_sym_filepos (abfd)
-		     + obj_raw_syment_count (abfd) * symesz),
-		    SEEK_SET) != 0)
-	return false;
+      if (! _bfd_write_stab_strings (abfd, &coff_hash_table (info)->stab_info))
+	return FALSE;
+    }
+
+  /* Write out the string table.  */
+  if (obj_raw_syment_count (abfd) != 0 || long_section_names)
+    {
+      file_ptr pos;
+
+      pos = obj_sym_filepos (abfd) + obj_raw_syment_count (abfd) * symesz;
+      if (bfd_seek (abfd, pos, SEEK_SET) != 0)
+	return FALSE;
 
 #if STRING_SIZE_SIZE == 4
-      bfd_h_put_32 (abfd,
-		    _bfd_stringtab_size (finfo.strtab) + STRING_SIZE_SIZE,
-		    (bfd_byte *) strbuf);
+      H_PUT_32 (abfd,
+		_bfd_stringtab_size (finfo.strtab) + STRING_SIZE_SIZE,
+		strbuf);
 #else
- #error Change bfd_h_put_32
+ #error Change H_PUT_32 above
 #endif
 
-      if (bfd_write (strbuf, 1, STRING_SIZE_SIZE, abfd) != STRING_SIZE_SIZE)
-	return false;
+      if (bfd_bwrite (strbuf, (bfd_size_type) STRING_SIZE_SIZE, abfd)
+	  != STRING_SIZE_SIZE)
+	return FALSE;
 
       if (! _bfd_stringtab_emit (abfd, finfo.strtab))
-	return false;
+	return FALSE;
+
+      obj_coff_strings_written (abfd) = TRUE;
     }
 
   _bfd_stringtab_free (finfo.strtab);
@@ -844,7 +1121,7 @@ _bfd_coff_final_link (abfd, info)
      not try to write out the symbols.  */
   bfd_get_symcount (abfd) = 0;
 
-  return true;
+  return TRUE;
 
  error_return:
   if (debug_merge_allocated)
@@ -882,40 +1159,37 @@ _bfd_coff_final_link (abfd, info)
     free (finfo.internal_relocs);
   if (external_relocs != NULL)
     free (external_relocs);
-  return false;
+  return FALSE;
 }
 
-/* parse out a -heap <reserved>,<commit> line */
+/* Parse out a -heap <reserved>,<commit> line.  */
 
 static char *
-dores_com (ptr, output_bfd, heap)
-     char *ptr;
-     bfd *output_bfd;
-     int heap;
+dores_com (char *ptr, bfd *output_bfd, int heap)
 {
-  if (coff_data(output_bfd)->pe) 
+  if (coff_data(output_bfd)->pe)
     {
       int val = strtoul (ptr, &ptr, 0);
-      if (heap)
-	pe_data(output_bfd)->pe_opthdr.SizeOfHeapReserve =val;
-      else
-	pe_data(output_bfd)->pe_opthdr.SizeOfStackReserve =val;
 
-      if (ptr[0] == ',') 
+      if (heap)
+	pe_data(output_bfd)->pe_opthdr.SizeOfHeapReserve = val;
+      else
+	pe_data(output_bfd)->pe_opthdr.SizeOfStackReserve = val;
+
+      if (ptr[0] == ',')
 	{
-	  int val = strtoul (ptr+1, &ptr, 0);
+	  val = strtoul (ptr+1, &ptr, 0);
 	  if (heap)
-	    pe_data(output_bfd)->pe_opthdr.SizeOfHeapCommit =val;
+	    pe_data(output_bfd)->pe_opthdr.SizeOfHeapCommit = val;
 	  else
-	    pe_data(output_bfd)->pe_opthdr.SizeOfStackCommit =val;
+	    pe_data(output_bfd)->pe_opthdr.SizeOfStackCommit = val;
 	}
     }
   return ptr;
 }
 
-static char *get_name(ptr, dst)
-char *ptr;
-char **dst;
+static char *
+get_name (char *ptr, char **dst)
 {
   while (*ptr == ' ')
     ptr++;
@@ -926,110 +1200,158 @@ char **dst;
   return ptr+1;
 }
 
-/* Process any magic embedded commands in a section called .drectve */
-			
+/* Process any magic embedded commands in a section called .drectve.  */
+
 static int
-process_embedded_commands (output_bfd, info,  abfd)
-     bfd *output_bfd;
-     struct bfd_link_info *info;
-     bfd *abfd;
+process_embedded_commands (bfd *output_bfd,
+			   struct bfd_link_info *info ATTRIBUTE_UNUSED,
+			   bfd *abfd)
 {
   asection *sec = bfd_get_section_by_name (abfd, ".drectve");
   char *s;
   char *e;
-  char *copy;
-  if (!sec) 
+  bfd_byte *copy;
+
+  if (!sec)
     return 1;
-  
-  copy = bfd_malloc ((size_t) sec->_raw_size);
-  if (!copy) 
-    return 0;
-  if (! bfd_get_section_contents(abfd, sec, copy, 0, sec->_raw_size)) 
+
+  if (!bfd_malloc_and_get_section (abfd, sec, &copy))
     {
-      free (copy);
+      if (copy != NULL)
+	free (copy);
       return 0;
     }
-  e = copy + sec->_raw_size;
-  for (s = copy;  s < e ; ) 
+  e = (char *) copy + sec->size;
+
+  for (s = (char *) copy; s < e ; )
     {
-      if (s[0]!= '-') {
-	s++;
-	continue;
-      }
-      if (strncmp (s,"-attr", 5) == 0)
+      if (s[0] != '-')
+	{
+	  s++;
+	  continue;
+	}
+      if (strncmp (s, "-attr", 5) == 0)
 	{
 	  char *name;
 	  char *attribs;
 	  asection *asec;
-
 	  int loop = 1;
 	  int had_write = 0;
 	  int had_read = 0;
 	  int had_exec= 0;
 	  int had_shared= 0;
+
 	  s += 5;
-	  s = get_name(s, &name);
-	  s = get_name(s, &attribs);
-	  while (loop) {
-	    switch (*attribs++) 
-	      {
-	      case 'W':
-		had_write = 1;
-		break;
-	      case 'R':
-		had_read = 1;
-		break;
-	      case 'S':
-		had_shared = 1;
-		break;
-	      case 'X':
-		had_exec = 1;
-		break;
-	      default:
-		loop = 0;
-	      }
-	  }
+	  s = get_name (s, &name);
+	  s = get_name (s, &attribs);
+
+	  while (loop)
+	    {
+	      switch (*attribs++)
+		{
+		case 'W':
+		  had_write = 1;
+		  break;
+		case 'R':
+		  had_read = 1;
+		  break;
+		case 'S':
+		  had_shared = 1;
+		  break;
+		case 'X':
+		  had_exec = 1;
+		  break;
+		default:
+		  loop = 0;
+		}
+	    }
 	  asec = bfd_get_section_by_name (abfd, name);
-	  if (asec) {
-	    if (had_exec)
-	      asec->flags |= SEC_CODE;
-	    if (!had_write)
-	      asec->flags |= SEC_READONLY;
-	  }
+	  if (asec)
+	    {
+	      if (had_exec)
+		asec->flags |= SEC_CODE;
+	      if (!had_write)
+		asec->flags |= SEC_READONLY;
+	    }
 	}
       else if (strncmp (s,"-heap", 5) == 0)
-	{
-	  s = dores_com (s+5, output_bfd, 1);
-	}
+	s = dores_com (s+5, output_bfd, 1);
+
       else if (strncmp (s,"-stack", 6) == 0)
-	{
-	  s = dores_com (s+6, output_bfd, 0);
-	}
-      else 
+	s = dores_com (s+6, output_bfd, 0);
+
+      else
 	s++;
     }
   free (copy);
   return 1;
 }
 
+/* Place a marker against all symbols which are used by relocations.
+   This marker can be picked up by the 'do we skip this symbol ?'
+   loop in _bfd_coff_link_input_bfd() and used to prevent skipping
+   that symbol.  */
+
+static void
+mark_relocs (struct coff_final_link_info *finfo, bfd *input_bfd)
+{
+  asection * a;
+
+  if ((bfd_get_file_flags (input_bfd) & HAS_SYMS) == 0)
+    return;
+
+  for (a = input_bfd->sections; a != (asection *) NULL; a = a->next)
+    {
+      struct internal_reloc *	internal_relocs;
+      struct internal_reloc *	irel;
+      struct internal_reloc *	irelend;
+
+      if ((a->flags & SEC_RELOC) == 0 || a->reloc_count  < 1)
+	continue;
+      /* Don't mark relocs in excluded sections.  */
+      if (a->output_section == bfd_abs_section_ptr)
+	continue;
+
+      /* Read in the relocs.  */
+      internal_relocs = _bfd_coff_read_internal_relocs
+	(input_bfd, a, FALSE,
+	 finfo->external_relocs,
+	 finfo->info->relocatable,
+	 (finfo->info->relocatable
+	  ? (finfo->section_info[ a->output_section->target_index ].relocs + a->output_section->reloc_count)
+	  : finfo->internal_relocs)
+	);
+
+      if (internal_relocs == NULL)
+	continue;
+
+      irel     = internal_relocs;
+      irelend  = irel + a->reloc_count;
+
+      /* Place a mark in the sym_indices array (whose entries have
+	 been initialised to 0) for all of the symbols that are used
+	 in the relocation table.  This will then be picked up in the
+	 skip/don't-skip pass.  */
+      for (; irel < irelend; irel++)
+	finfo->sym_indices[ irel->r_symndx ] = -1;
+    }
+}
+
 /* Link an input file into the linker output file.  This function
    handles all the sections and relocations of the input file at once.  */
 
-boolean
-_bfd_coff_link_input_bfd (finfo, input_bfd)
-     struct coff_final_link_info *finfo;
-     bfd *input_bfd;
+bfd_boolean
+_bfd_coff_link_input_bfd (struct coff_final_link_info *finfo, bfd *input_bfd)
 {
-  boolean (*sym_is_global) PARAMS ((bfd *, struct internal_syment *));
-  boolean (*adjust_symndx) PARAMS ((bfd *, struct bfd_link_info *, bfd *,
-				    asection *, struct internal_reloc *,
-				    boolean *));
+  unsigned int n_tmask = coff_data (input_bfd)->local_n_tmask;
+  unsigned int n_btshft = coff_data (input_bfd)->local_n_btshft;
+  bfd_boolean (*adjust_symndx)
+    (bfd *, struct bfd_link_info *, bfd *, asection *,
+     struct internal_reloc *, bfd_boolean *);
   bfd *output_bfd;
   const char *strings;
   bfd_size_type syment_base;
-  unsigned int n_tmask;
-  unsigned int n_btshft;
-  boolean copy, hash;
+  bfd_boolean copy, hash;
   bfd_size_type isymesz;
   bfd_size_type osymesz;
   bfd_size_type linesz;
@@ -1046,7 +1368,6 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
   /* Move all the symbols to the output file.  */
 
   output_bfd = finfo->output_bfd;
-  sym_is_global = coff_backend_info (input_bfd)->_bfd_coff_sym_is_global;
   strings = NULL;
   syment_base = obj_raw_syment_count (output_bfd);
   isymesz = bfd_coff_symesz (input_bfd);
@@ -1054,22 +1375,15 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
   linesz = bfd_coff_linesz (input_bfd);
   BFD_ASSERT (linesz == bfd_coff_linesz (output_bfd));
 
-  n_tmask = coff_data (input_bfd)->local_n_tmask;
-  n_btshft = coff_data (input_bfd)->local_n_btshft;
-
-  /* Define macros so that ISFCN, et. al., macros work correctly.  */
-#define N_TMASK n_tmask
-#define N_BTSHFT n_btshft
-
-  copy = false;
+  copy = FALSE;
   if (! finfo->info->keep_memory)
-    copy = true;
-  hash = true;
+    copy = TRUE;
+  hash = TRUE;
   if ((output_bfd->flags & BFD_TRADITIONAL_FORMAT) != 0)
-    hash = false;
+    hash = FALSE;
 
   if (! _bfd_coff_get_external_symbols (input_bfd))
-    return false;
+    return FALSE;
 
   esym = (bfd_byte *) obj_coff_external_syms (input_bfd);
   esym_end = esym + obj_raw_syment_count (input_bfd) * isymesz;
@@ -1079,20 +1393,33 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
   output_index = syment_base;
   outsym = finfo->outsyms;
 
-  if (coff_data(output_bfd)->pe)
-      {
-	if (!process_embedded_commands (output_bfd, finfo->info, input_bfd))
-	  return false;
-      }
+  if (coff_data (output_bfd)->pe
+      && ! process_embedded_commands (output_bfd, finfo->info, input_bfd))
+    return FALSE;
+
+  /* If we are going to perform relocations and also strip/discard some
+     symbols then we must make sure that we do not strip/discard those
+     symbols that are going to be involved in the relocations.  */
+  if ((   finfo->info->strip   != strip_none
+       || finfo->info->discard != discard_none)
+      && finfo->info->relocatable)
+    {
+      /* Mark the symbol array as 'not-used'.  */
+      memset (indexp, 0, obj_raw_syment_count (input_bfd) * sizeof * indexp);
+
+      mark_relocs (finfo, input_bfd);
+    }
 
   while (esym < esym_end)
     {
       struct internal_syment isym;
-      boolean skip;
-      boolean global;
+      enum coff_symbol_classification classification;
+      bfd_boolean skip;
+      bfd_boolean global;
+      bfd_boolean dont_skip_symbol;
       int add;
 
-      bfd_coff_swap_sym_in (input_bfd, (PTR) esym, (PTR) isymp);
+      bfd_coff_swap_sym_in (input_bfd, esym, isymp);
 
       /* Make a copy of *isymp so that the relocate_section function
 	 always sees the original values.  This is more reliable than
@@ -1100,54 +1427,107 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	 the symbol.  */
       isym = *isymp;
 
-      if (isym.n_scnum != 0)
-	*secpp = coff_section_from_bfd_index (input_bfd, isym.n_scnum);
-      else
+      classification = bfd_coff_classify_symbol (input_bfd, &isym);
+      switch (classification)
 	{
-	  if (isym.n_value == 0)
-	    *secpp = bfd_und_section_ptr;
-	  else
-	    *secpp = bfd_com_section_ptr;
+	default:
+	  abort ();
+	case COFF_SYMBOL_GLOBAL:
+	case COFF_SYMBOL_PE_SECTION:
+	case COFF_SYMBOL_LOCAL:
+	  *secpp = coff_section_from_bfd_index (input_bfd, isym.n_scnum);
+	  break;
+	case COFF_SYMBOL_COMMON:
+	  *secpp = bfd_com_section_ptr;
+	  break;
+	case COFF_SYMBOL_UNDEFINED:
+	  *secpp = bfd_und_section_ptr;
+	  break;
 	}
+
+      /* Extract the flag indicating if this symbol is used by a
+         relocation.  */
+      if ((finfo->info->strip != strip_none
+	   || finfo->info->discard != discard_none)
+	  && finfo->info->relocatable)
+	dont_skip_symbol = *indexp;
+      else
+	dont_skip_symbol = FALSE;
 
       *indexp = -1;
 
-      skip = false;
-      global = false;
+      skip = FALSE;
+      global = FALSE;
       add = 1 + isym.n_numaux;
 
       /* If we are stripping all symbols, we want to skip this one.  */
-      if (finfo->info->strip == strip_all)
-	skip = true;
+      if (finfo->info->strip == strip_all && ! dont_skip_symbol)
+	skip = TRUE;
 
       if (! skip)
 	{
-	  if (isym.n_sclass == C_EXT
-	      || (sym_is_global && (*sym_is_global) (input_bfd, &isym)))
+	  switch (classification)
 	    {
+	    default:
+	      abort ();
+	    case COFF_SYMBOL_GLOBAL:
+	    case COFF_SYMBOL_COMMON:
+	    case COFF_SYMBOL_PE_SECTION:
 	      /* This is a global symbol.  Global symbols come at the
 		 end of the symbol table, so skip them for now.
-		 Function symbols, however, are an exception, and are
-		 not moved to the end.  */
-	      global = true;
+		 Locally defined function symbols, however, are an
+		 exception, and are not moved to the end.  */
+	      global = TRUE;
 	      if (! ISFCN (isym.n_type))
-		skip = true;
-	    }
-	  else
-	    {
+		skip = TRUE;
+	      break;
+
+	    case COFF_SYMBOL_UNDEFINED:
+	      /* Undefined symbols are left for the end.  */
+	      global = TRUE;
+	      skip = TRUE;
+	      break;
+
+	    case COFF_SYMBOL_LOCAL:
 	      /* This is a local symbol.  Skip it if we are discarding
                  local symbols.  */
-	      if (finfo->info->discard == discard_all)
-		skip = true;
+	      if (finfo->info->discard == discard_all && ! dont_skip_symbol)
+		skip = TRUE;
+	      break;
 	    }
 	}
 
+#ifndef COFF_WITH_PE
+      /* Skip section symbols for sections which are not going to be
+	 emitted.  */
+      if (!skip
+	  && dont_skip_symbol == 0
+	  && isym.n_sclass == C_STAT
+	  && isym.n_type == T_NULL
+          && isym.n_numaux > 0
+	  && (*secpp)->output_section == bfd_abs_section_ptr)
+	skip = TRUE;
+#endif
+
       /* If we stripping debugging symbols, and this is a debugging
-         symbol, then skip it.  */
+         symbol, then skip it.  FIXME: gas sets the section to N_ABS
+         for some types of debugging symbols; I don't know if this is
+         a bug or not.  In any case, we handle it here.  */
       if (! skip
 	  && finfo->info->strip == strip_debugger
-	  && isym.n_scnum == N_DEBUG)
-	skip = true;
+	  && ! dont_skip_symbol
+	  && (isym.n_scnum == N_DEBUG
+	      || (isym.n_scnum == N_ABS
+		  && (isym.n_sclass == C_AUTO
+		      || isym.n_sclass == C_REG
+		      || isym.n_sclass == C_MOS
+		      || isym.n_sclass == C_MOE
+		      || isym.n_sclass == C_MOU
+		      || isym.n_sclass == C_ARG
+		      || isym.n_sclass == C_REGPARM
+		      || isym.n_sclass == C_FIELD
+		      || isym.n_sclass == C_EOS))))
+	skip = TRUE;
 
       /* If some symbols are stripped based on the name, work out the
 	 name and decide whether to skip this symbol.  */
@@ -1160,16 +1540,16 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 
 	  name = _bfd_coff_internal_syment_name (input_bfd, &isym, buf);
 	  if (name == NULL)
-	    return false;
+	    return FALSE;
 
-	  if ((finfo->info->strip == strip_some
-	       && (bfd_hash_lookup (finfo->info->keep_hash, name, false,
-				    false) == NULL))
-	      || (! global
-		  && finfo->info->discard == discard_l
-		  && strncmp (name, finfo->info->lprefix,
-			      finfo->info->lprefix_len) == 0))
-	    skip = true;
+	  if (! dont_skip_symbol
+	      && ((finfo->info->strip == strip_some
+		   && (bfd_hash_lookup (finfo->info->keep_hash, name, FALSE,
+				    FALSE) == NULL))
+		   || (! global
+		       && finfo->info->discard == discard_l
+		       && bfd_is_local_label_name (input_bfd, name))))
+	    skip = TRUE;
 	}
 
       /* If this is an enum, struct, or union tag, see if we have
@@ -1189,10 +1569,11 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	  struct coff_debug_merge_element **epp;
 	  bfd_byte *esl, *eslend;
 	  struct internal_syment *islp;
+	  bfd_size_type amt;
 
 	  name = _bfd_coff_internal_syment_name (input_bfd, &isym, buf);
 	  if (name == NULL)
-	    return false;
+	    return FALSE;
 
 	  /* Ignore fake names invented by compiler; treat them all as
              the same name.  */
@@ -1202,25 +1583,24 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	    name = "";
 
 	  mh = coff_debug_merge_hash_lookup (&finfo->debug_merge, name,
-					     true, true);
+					     TRUE, TRUE);
 	  if (mh == NULL)
-	    return false;
+	    return FALSE;
 
 	  /* Allocate memory to hold type information.  If this turns
              out to be a duplicate, we pass this address to
              bfd_release.  */
-	  mt = ((struct coff_debug_merge_type *)
-		bfd_alloc (input_bfd,
-			   sizeof (struct coff_debug_merge_type)));
+	  amt = sizeof (struct coff_debug_merge_type);
+	  mt = bfd_alloc (input_bfd, amt);
 	  if (mt == NULL)
-	    return false;
+	    return FALSE;
 	  mt->class = isym.n_sclass;
 
 	  /* Pick up the aux entry, which points to the end of the tag
              entries.  */
-	  bfd_coff_swap_aux_in (input_bfd, (PTR) (esym + isymesz),
+	  bfd_coff_swap_aux_in (input_bfd, (esym + isymesz),
 				isym.n_type, isym.n_sclass, 0, isym.n_numaux,
-				(PTR) &aux);
+				&aux);
 
 	  /* Gather the elements.  */
 	  epp = &mt->elements;
@@ -1233,27 +1613,27 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	    {
 	      const char *elename;
 	      char elebuf[SYMNMLEN + 1];
-	      char *copy;
+	      char *name_copy;
 
-	      bfd_coff_swap_sym_in (input_bfd, (PTR) esl, (PTR) islp);
+	      bfd_coff_swap_sym_in (input_bfd, esl, islp);
 
-	      *epp = ((struct coff_debug_merge_element *)
-		      bfd_alloc (input_bfd,
-				 sizeof (struct coff_debug_merge_element)));
+	      amt = sizeof (struct coff_debug_merge_element);
+	      *epp = bfd_alloc (input_bfd, amt);
 	      if (*epp == NULL)
-		return false;
+		return FALSE;
 
 	      elename = _bfd_coff_internal_syment_name (input_bfd, islp,
 							elebuf);
 	      if (elename == NULL)
-		return false;
+		return FALSE;
 
-	      copy = (char *) bfd_alloc (input_bfd, strlen (elename) + 1);
-	      if (copy == NULL)
-		return false;
-	      strcpy (copy, elename);
+	      amt = strlen (elename) + 1;
+	      name_copy = bfd_alloc (input_bfd, amt);
+	      if (name_copy == NULL)
+		return FALSE;
+	      strcpy (name_copy, elename);
 
-	      (*epp)->name = copy;
+	      (*epp)->name = name_copy;
 	      (*epp)->type = islp->n_type;
 	      (*epp)->tagndx = 0;
 	      if (islp->n_numaux >= 1
@@ -1263,16 +1643,15 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 		  union internal_auxent eleaux;
 		  long indx;
 
-		  bfd_coff_swap_aux_in (input_bfd, (PTR) (esl + isymesz),
+		  bfd_coff_swap_aux_in (input_bfd, (esl + isymesz),
 					islp->n_type, islp->n_sclass, 0,
-					islp->n_numaux, (PTR) &eleaux);
+					islp->n_numaux, &eleaux);
 		  indx = eleaux.x_sym.x_tagndx.l;
 
 		  /* FIXME: If this tagndx entry refers to a symbol
 		     defined later in this file, we just ignore it.
 		     Handling this correctly would be tedious, and may
 		     not be required.  */
-
 		  if (indx > 0
 		      && (indx
 			  < ((esym -
@@ -1295,7 +1674,7 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
              type.  We always output the type if it has no elements,
              for simplicity.  */
 	  if (mt->elements == NULL)
-	    bfd_release (input_bfd, (PTR) mt);
+	    bfd_release (input_bfd, mt);
 	  else
 	    {
 	      struct coff_debug_merge_type *mtl;
@@ -1331,10 +1710,10 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	      else
 		{
 		  /* This is a redefinition which can be merged.  */
-		  bfd_release (input_bfd, (PTR) mt);
+		  bfd_release (input_bfd, mt);
 		  *indexp = mtl->indx;
 		  add = (eslend - esym) / isymesz;
-		  skip = true;
+		  skip = TRUE;
 		}
 	    }
 	}
@@ -1355,75 +1734,124 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 		 bfd_coff_symname_in_debug.  That is only true for
 		 XCOFF, and XCOFF requires different linking code
 		 anyhow.  */
-	      name = _bfd_coff_internal_syment_name (input_bfd, &isym,
-						     (char *) NULL);
+	      name = _bfd_coff_internal_syment_name (input_bfd, &isym, NULL);
 	      if (name == NULL)
-		return false;
+		return FALSE;
 	      indx = _bfd_stringtab_add (finfo->strtab, name, hash, copy);
 	      if (indx == (bfd_size_type) -1)
-		return false;
+		return FALSE;
 	      isym._n._n_n._n_offset = STRING_SIZE_SIZE + indx;
 	    }
 
-	  if (isym.n_scnum > 0)
+	  switch (isym.n_sclass)
 	    {
-	      isym.n_scnum = (*secpp)->output_section->target_index;
-	      isym.n_value += ((*secpp)->output_section->vma
-			       + (*secpp)->output_offset
-			       - (*secpp)->vma);
-	    }
+	    case C_AUTO:
+	    case C_MOS:
+	    case C_EOS:
+	    case C_MOE:
+	    case C_MOU:
+	    case C_UNTAG:
+	    case C_STRTAG:
+	    case C_ENTAG:
+	    case C_TPDEF:
+	    case C_ARG:
+	    case C_USTATIC:
+	    case C_REG:
+	    case C_REGPARM:
+	    case C_FIELD:
+	      /* The symbol value should not be modified.  */
+	      break;
 
-	  /* The value of a C_FILE symbol is the symbol index of the
-	     next C_FILE symbol.  The value of the last C_FILE symbol
-	     is the symbol index to the first external symbol
-	     (actually, coff_renumber_symbols does not get this
-	     right--it just sets the value of the last C_FILE symbol
-	     to zero--and nobody has ever complained about it).  We
-	     try to get this right, below, just before we write the
-	     symbols out, but in the general case we may have to write
-	     the symbol out twice.  */
-	  if (isym.n_sclass == C_FILE)
-	    {
-	      if (finfo->last_file_index != -1
-		  && finfo->last_file.n_value != (long) output_index)
+	    case C_FCN:
+	      if (obj_pe (input_bfd)
+		  && strcmp (isym.n_name, ".bf") != 0
+		  && isym.n_scnum > 0)
 		{
-		  /* We must correct the value of the last C_FILE entry.  */
+		  /* For PE, .lf and .ef get their value left alone,
+		     while .bf gets relocated.  However, they all have
+		     "real" section numbers, and need to be moved into
+		     the new section.  */
+		  isym.n_scnum = (*secpp)->output_section->target_index;
+		  break;
+		}
+	      /* Fall through.  */
+	    default:
+	    case C_LABEL:  /* Not completely sure about these 2 */
+	    case C_EXTDEF:
+	    case C_BLOCK:
+	    case C_EFCN:
+	    case C_NULL:
+	    case C_EXT:
+	    case C_STAT:
+	    case C_SECTION:
+	    case C_NT_WEAK:
+	      /* Compute new symbol location.  */
+	    if (isym.n_scnum > 0)
+	      {
+		isym.n_scnum = (*secpp)->output_section->target_index;
+		isym.n_value += (*secpp)->output_offset;
+		if (! obj_pe (input_bfd))
+		  isym.n_value -= (*secpp)->vma;
+		if (! obj_pe (finfo->output_bfd))
+		  isym.n_value += (*secpp)->output_section->vma;
+	      }
+	    break;
+
+	    case C_FILE:
+	      /* The value of a C_FILE symbol is the symbol index of
+		 the next C_FILE symbol.  The value of the last C_FILE
+		 symbol is the symbol index to the first external
+		 symbol (actually, coff_renumber_symbols does not get
+		 this right--it just sets the value of the last C_FILE
+		 symbol to zero--and nobody has ever complained about
+		 it).  We try to get this right, below, just before we
+		 write the symbols out, but in the general case we may
+		 have to write the symbol out twice.  */
+	      if (finfo->last_file_index != -1
+		  && finfo->last_file.n_value != (bfd_vma) output_index)
+		{
+		  /* We must correct the value of the last C_FILE
+                     entry.  */
 		  finfo->last_file.n_value = output_index;
 		  if ((bfd_size_type) finfo->last_file_index >= syment_base)
 		    {
 		      /* The last C_FILE symbol is in this input file.  */
 		      bfd_coff_swap_sym_out (output_bfd,
-					     (PTR) &finfo->last_file,
-					     (PTR) (finfo->outsyms
-						    + ((finfo->last_file_index
-							- syment_base)
-						       * osymesz)));
+					     &finfo->last_file,
+					     (finfo->outsyms
+					      + ((finfo->last_file_index
+						  - syment_base)
+						 * osymesz)));
 		    }
 		  else
 		    {
+		      file_ptr pos;
+
 		      /* We have already written out the last C_FILE
 			 symbol.  We need to write it out again.  We
 			 borrow *outsym temporarily.  */
 		      bfd_coff_swap_sym_out (output_bfd,
-					     (PTR) &finfo->last_file,
-					     (PTR) outsym);
-		      if (bfd_seek (output_bfd,
-				    (obj_sym_filepos (output_bfd)
-				     + finfo->last_file_index * osymesz),
-				    SEEK_SET) != 0
-			  || (bfd_write (outsym, osymesz, 1, output_bfd)
-			      != osymesz))
-			return false;
+					     &finfo->last_file, outsym);
+		      pos = obj_sym_filepos (output_bfd);
+		      pos += finfo->last_file_index * osymesz;
+		      if (bfd_seek (output_bfd, pos, SEEK_SET) != 0
+			  || bfd_bwrite (outsym, osymesz, output_bfd) != osymesz)
+			return FALSE;
 		    }
 		}
 
 	      finfo->last_file_index = output_index;
 	      finfo->last_file = isym;
+	      break;
 	    }
 
-	  /* Output the symbol.  */
+	  /* If doing task linking, convert normal global function symbols to
+	     static functions.  */
+	  if (finfo->info->task_link && IS_EXTERNAL (input_bfd, isym))
+	    isym.n_sclass = C_STAT;
 
-	  bfd_coff_swap_sym_out (output_bfd, (PTR) &isym, (PTR) outsym);
+	  /* Output the symbol.  */
+	  bfd_coff_swap_sym_out (output_bfd, &isym, outsym);
 
 	  *indexp = output_index;
 
@@ -1435,7 +1863,13 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	      indx = ((esym - (bfd_byte *) obj_coff_external_syms (input_bfd))
 		      / isymesz);
 	      h = obj_coff_sym_hashes (input_bfd)[indx];
-	      BFD_ASSERT (h != NULL);
+	      if (h == NULL)
+		{
+		  /* This can happen if there were errors earlier in
+                     the link.  */
+		  bfd_set_error (bfd_error_bad_value);
+		  return FALSE;
+		}
 	      h->indx = output_index;
 	    }
 
@@ -1457,13 +1891,13 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
   /* Fix up the aux entries.  This must be done in a separate pass,
      because we don't know the correct symbol indices until we have
      already decided which symbols we are going to keep.  */
-
   esym = (bfd_byte *) obj_coff_external_syms (input_bfd);
   esym_end = esym + obj_raw_syment_count (input_bfd) * isymesz;
   isymp = finfo->internal_syms;
   indexp = finfo->sym_indices;
   sym_hash = obj_coff_sym_hashes (input_bfd);
   outsym = finfo->outsyms;
+
   while (esym < esym_end)
     {
       int add;
@@ -1484,7 +1918,12 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	  if (*indexp < 0)
 	    {
 	      h = *sym_hash;
-	      BFD_ASSERT (h->numaux == isymp->n_numaux);
+
+	      /* The m68k-motorola-sysv assembler will sometimes
+                 generate two symbols with the same name, but only one
+                 will have aux entries.  */
+	      BFD_ASSERT (isymp->n_numaux == 0
+			  || h->numaux == isymp->n_numaux);
 	    }
 
 	  esym += isymesz;
@@ -1503,9 +1942,8 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 		auxp = h->aux + i;
 	      else
 		{
-		  bfd_coff_swap_aux_in (input_bfd, (PTR) esym, isymp->n_type,
-					isymp->n_sclass, i, isymp->n_numaux,
-					(PTR) &aux);
+		  bfd_coff_swap_aux_in (input_bfd, esym, isymp->n_type,
+					isymp->n_sclass, i, isymp->n_numaux, &aux);
 		  auxp = &aux;
 		}
 
@@ -1525,23 +1963,25 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 			{
 			  strings = _bfd_coff_read_string_table (input_bfd);
 			  if (strings == NULL)
-			    return false;
+			    return FALSE;
 			}
 		      filename = strings + auxp->x_file.x_n.x_offset;
 		      indx = _bfd_stringtab_add (finfo->strtab, filename,
 						 hash, copy);
 		      if (indx == (bfd_size_type) -1)
-			return false;
+			return FALSE;
 		      auxp->x_file.x_n.x_offset = STRING_SIZE_SIZE + indx;
 		    }
 		}
-	      else if (isymp->n_sclass != C_STAT || isymp->n_type != T_NULL)
+	      else if ((isymp->n_sclass != C_STAT || isymp->n_type != T_NULL)
+		       && isymp->n_sclass != C_NT_WEAK)
 		{
 		  unsigned long indx;
 
 		  if (ISFCN (isymp->n_type)
 		      || ISTAG (isymp->n_sclass)
-		      || isymp->n_sclass == C_BLOCK)
+		      || isymp->n_sclass == C_BLOCK
+		      || isymp->n_sclass == C_FCN)
 		    {
 		      indx = auxp->x_sym.x_fcnary.x_fcn.x_endndx.l;
 		      if (indx > 0
@@ -1575,13 +2015,90 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 		      else
 			auxp->x_sym.x_tagndx.l = symindx;
 		    }
+
+		  /* The .bf symbols are supposed to be linked through
+		     the endndx field.  We need to carry this list
+		     across object files.  */
+		  if (i == 0
+		      && h == NULL
+		      && isymp->n_sclass == C_FCN
+		      && (isymp->_n._n_n._n_zeroes != 0
+			  || isymp->_n._n_n._n_offset == 0)
+		      && isymp->_n._n_name[0] == '.'
+		      && isymp->_n._n_name[1] == 'b'
+		      && isymp->_n._n_name[2] == 'f'
+		      && isymp->_n._n_name[3] == '\0')
+		    {
+		      if (finfo->last_bf_index != -1)
+			{
+			  finfo->last_bf.x_sym.x_fcnary.x_fcn.x_endndx.l =
+			    *indexp;
+
+			  if ((bfd_size_type) finfo->last_bf_index
+			      >= syment_base)
+			    {
+			      void *auxout;
+
+			      /* The last .bf symbol is in this input
+				 file.  This will only happen if the
+				 assembler did not set up the .bf
+				 endndx symbols correctly.  */
+			      auxout = (finfo->outsyms
+					+ ((finfo->last_bf_index
+					    - syment_base)
+					   * osymesz));
+
+			      bfd_coff_swap_aux_out (output_bfd,
+						     &finfo->last_bf,
+						     isymp->n_type,
+						     isymp->n_sclass,
+						     0, isymp->n_numaux,
+						     auxout);
+			    }
+			  else
+			    {
+			      file_ptr pos;
+
+			      /* We have already written out the last
+                                 .bf aux entry.  We need to write it
+                                 out again.  We borrow *outsym
+                                 temporarily.  FIXME: This case should
+                                 be made faster.  */
+			      bfd_coff_swap_aux_out (output_bfd,
+						     &finfo->last_bf,
+						     isymp->n_type,
+						     isymp->n_sclass,
+						     0, isymp->n_numaux,
+						     outsym);
+			      pos = obj_sym_filepos (output_bfd);
+			      pos += finfo->last_bf_index * osymesz;
+			      if (bfd_seek (output_bfd, pos, SEEK_SET) != 0
+				  || (bfd_bwrite (outsym, osymesz, output_bfd)
+				      != osymesz))
+				return FALSE;
+			    }
+			}
+
+		      if (auxp->x_sym.x_fcnary.x_fcn.x_endndx.l != 0)
+			finfo->last_bf_index = -1;
+		      else
+			{
+			  /* The endndx field of this aux entry must
+                             be updated with the symbol number of the
+                             next .bf symbol.  */
+			  finfo->last_bf = *auxp;
+			  finfo->last_bf_index = (((outsym - finfo->outsyms)
+						   / osymesz)
+						  + syment_base);
+			}
+		    }
 		}
 
 	      if (h == NULL)
 		{
-		  bfd_coff_swap_aux_out (output_bfd, (PTR) auxp, isymp->n_type,
+		  bfd_coff_swap_aux_out (output_bfd, auxp, isymp->n_type,
 					 isymp->n_sclass, i, isymp->n_numaux,
-					 (PTR) outsym);
+					 outsym);
 		  outsym += osymesz;
 		}
 
@@ -1603,6 +2120,10 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	  bfd_vma offset;
 	  bfd_byte *eline;
 	  bfd_byte *elineend;
+	  bfd_byte *oeline;
+	  bfd_boolean skipping;
+	  file_ptr pos;
+	  bfd_size_type amt;
 
 	  /* FIXME: If SEC_HAS_CONTENTS is not for the section, then
 	     build_link_order in ldwrite.c will not have created a
@@ -1618,18 +2139,20 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	    continue;
 
 	  if (bfd_seek (input_bfd, o->line_filepos, SEEK_SET) != 0
-	      || bfd_read (finfo->linenos, linesz, o->lineno_count,
+	      || bfd_bread (finfo->linenos, linesz * o->lineno_count,
 			   input_bfd) != linesz * o->lineno_count)
-	    return false;
+	    return FALSE;
 
 	  offset = o->output_section->vma + o->output_offset - o->vma;
 	  eline = finfo->linenos;
+	  oeline = finfo->linenos;
 	  elineend = eline + linesz * o->lineno_count;
+	  skipping = FALSE;
 	  for (; eline < elineend; eline += linesz)
 	    {
 	      struct internal_lineno iline;
 
-	      bfd_coff_swap_lineno_in (input_bfd, (PTR) eline, (PTR) &iline);
+	      bfd_coff_swap_lineno_in (input_bfd, eline, &iline);
 
 	      if (iline.l_lnno != 0)
 		iline.l_addr.l_paddr += offset;
@@ -1644,11 +2167,13 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 		  if (indx < 0)
 		    {
 		      /* These line numbers are attached to a symbol
-			 which we are stripping.  We should really
-			 just discard the line numbers, but that would
-			 be a pain because we have already counted
-			 them.  */
-		      indx = 0;
+			 which we are stripping.  We must discard the
+			 line numbers because reading them back with
+			 no associated symbol (or associating them all
+			 with symbol #0) will fail.  We can't regain
+			 the space in the output file, but at least
+			 they're dense.  */
+		      skipping = TRUE;
 		    }
 		  else
 		    {
@@ -1663,47 +2188,51 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 			 of the line numbers rather than an absolute
 			 file index.  */
 		      bfd_coff_swap_sym_in (output_bfd,
-					    (PTR) (finfo->outsyms
-						   + ((indx - syment_base)
-						      * osymesz)),
-					    (PTR) &is);
+					    (finfo->outsyms
+					     + ((indx - syment_base)
+						* osymesz)), &is);
 		      if ((ISFCN (is.n_type)
 			   || is.n_sclass == C_BLOCK)
 			  && is.n_numaux >= 1)
 			{
-			  PTR auxptr;
+			  void *auxptr;
 
-			  auxptr = (PTR) (finfo->outsyms
-					  + ((indx - syment_base + 1)
-					     * osymesz));
+			  auxptr = (finfo->outsyms
+				    + ((indx - syment_base + 1)
+				       * osymesz));
 			  bfd_coff_swap_aux_in (output_bfd, auxptr,
 						is.n_type, is.n_sclass,
-						0, is.n_numaux, (PTR) &ia);
+						0, is.n_numaux, &ia);
 			  ia.x_sym.x_fcnary.x_fcn.x_lnnoptr =
 			    (o->output_section->line_filepos
 			     + o->output_section->lineno_count * linesz
 			     + eline - finfo->linenos);
-			  bfd_coff_swap_aux_out (output_bfd, (PTR) &ia,
+			  bfd_coff_swap_aux_out (output_bfd, &ia,
 						 is.n_type, is.n_sclass, 0,
 						 is.n_numaux, auxptr);
 			}
+
+		      skipping = FALSE;
 		    }
 
 		  iline.l_addr.l_symndx = indx;
 		}
 
-	      bfd_coff_swap_lineno_out (output_bfd, (PTR) &iline, (PTR) eline);
+	      if (!skipping)
+	        {
+		  bfd_coff_swap_lineno_out (output_bfd, &iline, oeline);
+		  oeline += linesz;
+		}
 	    }
 
-	  if (bfd_seek (output_bfd,
-			(o->output_section->line_filepos
-			 + o->output_section->lineno_count * linesz),
-			SEEK_SET) != 0
-	      || bfd_write (finfo->linenos, linesz, o->lineno_count,
-			    output_bfd) != linesz * o->lineno_count)
-	    return false;
+	  pos = o->output_section->line_filepos;
+	  pos += o->output_section->lineno_count * linesz;
+	  amt = oeline - finfo->linenos;
+	  if (bfd_seek (output_bfd, pos, SEEK_SET) != 0
+	      || bfd_bwrite (finfo->linenos, amt, output_bfd) != amt)
+	    return FALSE;
 
-	  o->output_section->lineno_count += o->lineno_count;
+	  o->output_section->lineno_count += amt / linesz;
 	}
     }
 
@@ -1715,22 +2244,23 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
       && (bfd_size_type) finfo->last_file_index >= syment_base)
     {
       finfo->last_file.n_value = output_index;
-      bfd_coff_swap_sym_out (output_bfd, (PTR) &finfo->last_file,
-			     (PTR) (finfo->outsyms
- 				    + ((finfo->last_file_index - syment_base)
- 				       * osymesz)));
+      bfd_coff_swap_sym_out (output_bfd, &finfo->last_file,
+			     (finfo->outsyms
+			      + ((finfo->last_file_index - syment_base)
+				 * osymesz)));
     }
 
   /* Write the modified symbols to the output file.  */
   if (outsym > finfo->outsyms)
     {
-      if (bfd_seek (output_bfd,
-		    obj_sym_filepos (output_bfd) + syment_base * osymesz,
-		    SEEK_SET) != 0
-	  || (bfd_write (finfo->outsyms, outsym - finfo->outsyms, 1,
-			output_bfd)
-	      != (bfd_size_type) (outsym - finfo->outsyms)))
-	return false;
+      file_ptr pos;
+      bfd_size_type amt;
+
+      pos = obj_sym_filepos (output_bfd) + syment_base * osymesz;
+      amt = outsym - finfo->outsyms;
+      if (bfd_seek (output_bfd, pos, SEEK_SET) != 0
+	  || bfd_bwrite (finfo->outsyms, amt, output_bfd) != amt)
+	return FALSE;
 
       BFD_ASSERT ((obj_raw_syment_count (output_bfd)
 		   + (outsym - finfo->outsyms) / osymesz)
@@ -1744,31 +2274,39 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
   for (o = input_bfd->sections; o != NULL; o = o->next)
     {
       bfd_byte *contents;
+      struct coff_section_tdata *secdata;
 
-      if ((o->flags & SEC_HAS_CONTENTS) == 0)
+      if (! o->linker_mark)
+	/* This section was omitted from the link.  */
+	continue;
+
+      if ((o->flags & SEC_LINKER_CREATED) != 0)
+	continue;
+
+      if ((o->flags & SEC_HAS_CONTENTS) == 0
+	  || (o->size == 0 && (o->flags & SEC_RELOC) == 0))
 	{
 	  if ((o->flags & SEC_RELOC) != 0
 	      && o->reloc_count != 0)
 	    {
-	      ((*_bfd_error_handler)
-	       ("%s: relocs in section `%s', but it has no contents",
-		bfd_get_filename (input_bfd),
-		bfd_get_section_name (input_bfd, o)));
+	      (*_bfd_error_handler)
+		(_("%B: relocs in section `%A', but it has no contents"),
+		 input_bfd, o);
 	      bfd_set_error (bfd_error_no_contents);
-	      return false;
+	      return FALSE;
 	    }
 
 	  continue;
 	}
 
-      if (coff_section_data (input_bfd, o) != NULL
-	  && coff_section_data (input_bfd, o)->contents != NULL)
-	contents = coff_section_data (input_bfd, o)->contents;
+      secdata = coff_section_data (input_bfd, o);
+      if (secdata != NULL && secdata->contents != NULL)
+	contents = secdata->contents;
       else
 	{
-	  if (! bfd_get_section_contents (input_bfd, o, finfo->contents,
-					  (file_ptr) 0, o->_raw_size))
-	    return false;
+	  bfd_size_type x = o->rawsize ? o->rawsize : o->size;
+	  if (! bfd_get_section_contents (input_bfd, o, finfo->contents, 0, x))
+	    return FALSE;
 	  contents = finfo->contents;
 	}
 
@@ -1781,14 +2319,14 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	  /* Read in the relocs.  */
 	  target_index = o->output_section->target_index;
 	  internal_relocs = (_bfd_coff_read_internal_relocs
-			     (input_bfd, o, false, finfo->external_relocs,
-			      finfo->info->relocateable,
-			      (finfo->info->relocateable
+			     (input_bfd, o, FALSE, finfo->external_relocs,
+			      finfo->info->relocatable,
+			      (finfo->info->relocatable
 			       ? (finfo->section_info[target_index].relocs
 				  + o->output_section->reloc_count)
 			       : finfo->internal_relocs)));
 	  if (internal_relocs == NULL)
-	    return false;
+	    return FALSE;
 
 	  /* Call processor specific code to relocate the section
              contents.  */
@@ -1798,9 +2336,9 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 					   internal_relocs,
 					   finfo->internal_syms,
 					   finfo->sec_ptrs))
-	    return false;
+	    return FALSE;
 
-	  if (finfo->info->relocateable)
+	  if (finfo->info->relocatable)
 	    {
 	      bfd_vma offset;
 	      struct internal_reloc *irelend;
@@ -1814,12 +2352,11 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	      for (; irel < irelend; irel++, rel_hash++)
 		{
 		  struct coff_link_hash_entry *h;
-		  boolean adjusted;
+		  bfd_boolean adjusted;
 
 		  *rel_hash = NULL;
 
 		  /* Adjust the reloc address and symbol index.  */
-
 		  irel->r_vaddr += offset;
 
 		  if (irel->r_symndx == -1)
@@ -1830,7 +2367,7 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 		      if (! (*adjust_symndx) (output_bfd, finfo->info,
 					      input_bfd, o, irel,
 					      &adjusted))
-			return false;
+			return FALSE;
 		      if (adjusted)
 			continue;
 		    }
@@ -1867,20 +2404,20 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 			  char buf[SYMNMLEN + 1];
 
 			  /* This reloc is against a symbol we are
-                             stripping.  It would be possible to
-                             handle this case, but I don't think it's
-                             worth it.  */
+                             stripping.  This should have been handled
+			     by the 'dont_skip_symbol' code in the while
+			     loop at the top of this function.  */
 			  is = finfo->internal_syms + irel->r_symndx;
 
 			  name = (_bfd_coff_internal_syment_name
 				  (input_bfd, is, buf));
 			  if (name == NULL)
-			    return false;
+			    return FALSE;
 
 			  if (! ((*finfo->info->callbacks->unattached_reloc)
 				 (finfo->info, name, input_bfd, o,
 				  irel->r_vaddr)))
-			    return false;
+			    return FALSE;
 			}
 		    }
 		}
@@ -1890,55 +2427,68 @@ _bfd_coff_link_input_bfd (finfo, input_bfd)
 	}
 
       /* Write out the modified section contents.  */
-      if (! bfd_set_section_contents (output_bfd, o->output_section,
-				      contents, o->output_offset,
-				      (o->_cooked_size != 0
-				       ? o->_cooked_size
-				       : o->_raw_size)))
-	return false;
+      if (secdata == NULL || secdata->stab_info == NULL)
+	{
+	  file_ptr loc = o->output_offset * bfd_octets_per_byte (output_bfd);
+	  if (! bfd_set_section_contents (output_bfd, o->output_section,
+					  contents, loc, o->size))
+	    return FALSE;
+	}
+      else
+	{
+	  if (! (_bfd_write_section_stabs
+		 (output_bfd, &coff_hash_table (finfo->info)->stab_info,
+		  o, &secdata->stab_info, contents)))
+	    return FALSE;
+	}
     }
 
-  if (! finfo->info->keep_memory)
-    {
-      if (! _bfd_coff_free_symbols (input_bfd))
-	return false;
-    }
+  if (! finfo->info->keep_memory
+      && ! _bfd_coff_free_symbols (input_bfd))
+    return FALSE;
 
-  return true;
+  return TRUE;
 }
 
 /* Write out a global symbol.  Called via coff_link_hash_traverse.  */
 
-boolean
-_bfd_coff_write_global_sym (h, data)
-     struct coff_link_hash_entry *h;
-     PTR data;
+bfd_boolean
+_bfd_coff_write_global_sym (struct coff_link_hash_entry *h, void *data)
 {
   struct coff_final_link_info *finfo = (struct coff_final_link_info *) data;
   bfd *output_bfd;
   struct internal_syment isym;
   bfd_size_type symesz;
   unsigned int i;
+  file_ptr pos;
 
   output_bfd = finfo->output_bfd;
 
+  if (h->root.type == bfd_link_hash_warning)
+    {
+      h = (struct coff_link_hash_entry *) h->root.u.i.link;
+      if (h->root.type == bfd_link_hash_new)
+	return TRUE;
+    }
+
   if (h->indx >= 0)
-    return true;
+    return TRUE;
 
   if (h->indx != -2
       && (finfo->info->strip == strip_all
 	  || (finfo->info->strip == strip_some
 	      && (bfd_hash_lookup (finfo->info->keep_hash,
-				   h->root.root.string, false, false)
+				   h->root.root.string, FALSE, FALSE)
 		  == NULL))))
-    return true;
+    return TRUE;
 
   switch (h->root.type)
     {
     default:
     case bfd_link_hash_new:
+    case bfd_link_hash_warning:
       abort ();
-      return false;
+      return FALSE;
 
     case bfd_link_hash_undefined:
     case bfd_link_hash_undefweak:
@@ -1957,8 +2507,9 @@ _bfd_coff_write_global_sym (h, data)
 	else
 	  isym.n_scnum = sec->target_index;
 	isym.n_value = (h->root.u.def.value
-			+ sec->vma
 			+ h->root.u.def.section->output_offset);
+	if (! obj_pe (finfo->output_bfd))
+	  isym.n_value += sec->vma;
       }
       break;
 
@@ -1968,27 +2519,26 @@ _bfd_coff_write_global_sym (h, data)
       break;
 
     case bfd_link_hash_indirect:
-    case bfd_link_hash_warning:
       /* Just ignore these.  They can't be handled anyhow.  */
-      return true;
+      return TRUE;
     }
 
   if (strlen (h->root.root.string) <= SYMNMLEN)
     strncpy (isym._n._n_name, h->root.root.string, SYMNMLEN);
   else
     {
-      boolean hash;
+      bfd_boolean hash;
       bfd_size_type indx;
 
-      hash = true;
+      hash = TRUE;
       if ((output_bfd->flags & BFD_TRADITIONAL_FORMAT) != 0)
-	hash = false;
+	hash = FALSE;
       indx = _bfd_stringtab_add (finfo->strtab, h->root.root.string, hash,
-				 false);
+				 FALSE);
       if (indx == (bfd_size_type) -1)
 	{
-	  finfo->failed = true;
-	  return false;
+	  finfo->failed = TRUE;
+	  return FALSE;
 	}
       isym._n._n_n._n_zeroes = 0;
       isym._n._n_n._n_offset = STRING_SIZE_SIZE + indx;
@@ -2000,52 +2550,152 @@ _bfd_coff_write_global_sym (h, data)
   if (isym.n_sclass == C_NULL)
     isym.n_sclass = C_EXT;
 
+  /* If doing task linking and this is the pass where we convert
+     defined globals to statics, then do that conversion now.  If the
+     symbol is not being converted, just ignore it and it will be
+     output during a later pass.  */
+  if (finfo->global_to_static)
+    {
+      if (! IS_EXTERNAL (output_bfd, isym))
+	return TRUE;
+
+      isym.n_sclass = C_STAT;
+    }
+
+  /* When a weak symbol is not overridden by a strong one,
+     turn it into an external symbol when not building a
+     shared or relocatable object.  */
+  if (! finfo->info->shared
+      && ! finfo->info->relocatable
+      && IS_WEAK_EXTERNAL (finfo->output_bfd, isym))
+    isym.n_sclass = C_EXT;
+
   isym.n_numaux = h->numaux;
-  
-  bfd_coff_swap_sym_out (output_bfd, (PTR) &isym, (PTR) finfo->outsyms);
+
+  bfd_coff_swap_sym_out (output_bfd, &isym, finfo->outsyms);
 
   symesz = bfd_coff_symesz (output_bfd);
 
-  if (bfd_seek (output_bfd,
-		(obj_sym_filepos (output_bfd)
-		 + obj_raw_syment_count (output_bfd) * symesz),
-		SEEK_SET) != 0
-      || bfd_write (finfo->outsyms, symesz, 1, output_bfd) != symesz)
+  pos = obj_sym_filepos (output_bfd);
+  pos += obj_raw_syment_count (output_bfd) * symesz;
+  if (bfd_seek (output_bfd, pos, SEEK_SET) != 0
+      || bfd_bwrite (finfo->outsyms, symesz, output_bfd) != symesz)
     {
-      finfo->failed = true;
-      return false;
+      finfo->failed = TRUE;
+      return FALSE;
     }
 
   h->indx = obj_raw_syment_count (output_bfd);
 
   ++obj_raw_syment_count (output_bfd);
 
-  /* Write out any associated aux entries.  There normally will be
-     none.  If there are any, I have no idea how to modify them.  */
+  /* Write out any associated aux entries.  Most of the aux entries
+     will have been modified in _bfd_coff_link_input_bfd.  We have to
+     handle section aux entries here, now that we have the final
+     relocation and line number counts.  */
   for (i = 0; i < isym.n_numaux; i++)
     {
-      bfd_coff_swap_aux_out (output_bfd, (PTR) (h->aux + i), isym.n_type,
-			     isym.n_sclass, i, isym.n_numaux,
-			     (PTR) finfo->outsyms);
-      if (bfd_write (finfo->outsyms, symesz, 1, output_bfd) != symesz)
+      union internal_auxent *auxp;
+
+      auxp = h->aux + i;
+
+      /* Look for a section aux entry here using the same tests that
+         coff_swap_aux_out uses.  */
+      if (i == 0
+	  && (isym.n_sclass == C_STAT
+	      || isym.n_sclass == C_HIDDEN)
+	  && isym.n_type == T_NULL
+	  && (h->root.type == bfd_link_hash_defined
+	      || h->root.type == bfd_link_hash_defweak))
 	{
-	  finfo->failed = true;
-	  return false;
+	  asection *sec;
+
+	  sec = h->root.u.def.section->output_section;
+	  if (sec != NULL)
+	    {
+	      auxp->x_scn.x_scnlen = sec->size;
+
+	      /* For PE, an overflow on the final link reportedly does
+                 not matter.  FIXME: Why not?  */
+	      if (sec->reloc_count > 0xffff
+		  && (! obj_pe (output_bfd)
+		      || finfo->info->relocatable))
+		(*_bfd_error_handler)
+		  (_("%s: %s: reloc overflow: 0x%lx > 0xffff"),
+		   bfd_get_filename (output_bfd),
+		   bfd_get_section_name (output_bfd, sec),
+		   sec->reloc_count);
+
+	      if (sec->lineno_count > 0xffff
+		  && (! obj_pe (output_bfd)
+		      || finfo->info->relocatable))
+		(*_bfd_error_handler)
+		  (_("%s: warning: %s: line number overflow: 0x%lx > 0xffff"),
+		   bfd_get_filename (output_bfd),
+		   bfd_get_section_name (output_bfd, sec),
+		   sec->lineno_count);
+
+	      auxp->x_scn.x_nreloc = sec->reloc_count;
+	      auxp->x_scn.x_nlinno = sec->lineno_count;
+	      auxp->x_scn.x_checksum = 0;
+	      auxp->x_scn.x_associated = 0;
+	      auxp->x_scn.x_comdat = 0;
+	    }
+	}
+
+      bfd_coff_swap_aux_out (output_bfd, auxp, isym.n_type,
+			     isym.n_sclass, (int) i, isym.n_numaux,
+			     finfo->outsyms);
+      if (bfd_bwrite (finfo->outsyms, symesz, output_bfd) != symesz)
+	{
+	  finfo->failed = TRUE;
+	  return FALSE;
 	}
       ++obj_raw_syment_count (output_bfd);
     }
 
-  return true;
+  return TRUE;
+}
+
+/* Write out task global symbols, converting them to statics.  Called
+   via coff_link_hash_traverse.  Calls bfd_coff_write_global_sym to do
+   the dirty work, if the symbol we are processing needs conversion.  */
+
+bfd_boolean
+_bfd_coff_write_task_globals (struct coff_link_hash_entry *h, void *data)
+{
+  struct coff_final_link_info *finfo = (struct coff_final_link_info *) data;
+  bfd_boolean rtnval = TRUE;
+  bfd_boolean save_global_to_static;
+
+  if (h->root.type == bfd_link_hash_warning)
+    h = (struct coff_link_hash_entry *) h->root.u.i.link;
+
+  if (h->indx < 0)
+    {
+      switch (h->root.type)
+	{
+	case bfd_link_hash_defined:
+	case bfd_link_hash_defweak:
+	  save_global_to_static = finfo->global_to_static;
+	  finfo->global_to_static = TRUE;
+	  rtnval = _bfd_coff_write_global_sym (h, data);
+	  finfo->global_to_static = save_global_to_static;
+	  break;
+	default:
+	  break;
+	}
+    }
+  return (rtnval);
 }
 
 /* Handle a link order which is supposed to generate a reloc.  */
 
-boolean
-_bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
-     bfd *output_bfd;
-     struct coff_final_link_info *finfo;
-     asection *output_section;
-     struct bfd_link_order *link_order;
+bfd_boolean
+_bfd_coff_reloc_link_order (bfd *output_bfd,
+			    struct coff_final_link_info *finfo,
+			    asection *output_section,
+			    struct bfd_link_order *link_order)
 {
   reloc_howto_type *howto;
   struct internal_reloc *irel;
@@ -2055,7 +2705,7 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
   if (howto == NULL)
     {
       bfd_set_error (bfd_error_bad_value);
-      return false;
+      return FALSE;
     }
 
   if (link_order->u.reloc.p->addend != 0)
@@ -2063,15 +2713,17 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
       bfd_size_type size;
       bfd_byte *buf;
       bfd_reloc_status_type rstat;
-      boolean ok;
+      bfd_boolean ok;
+      file_ptr loc;
 
       size = bfd_get_reloc_size (howto);
-      buf = (bfd_byte *) bfd_zmalloc (size);
+      buf = bfd_zmalloc (size);
       if (buf == NULL)
-	return false;
+	return FALSE;
 
       rstat = _bfd_relocate_contents (howto, output_bfd,
-				      link_order->u.reloc.p->addend, buf);
+				      (bfd_vma) link_order->u.reloc.p->addend,\
+				      buf);
       switch (rstat)
 	{
 	case bfd_reloc_ok:
@@ -2081,7 +2733,7 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
 	  abort ();
 	case bfd_reloc_overflow:
 	  if (! ((*finfo->info->callbacks->reloc_overflow)
-		 (finfo->info,
+		 (finfo->info, NULL,
 		  (link_order->type == bfd_section_reloc_link_order
 		   ? bfd_section_name (output_bfd,
 				       link_order->u.reloc.p->u.section)
@@ -2090,20 +2742,20 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
 		  (bfd *) NULL, (asection *) NULL, (bfd_vma) 0)))
 	    {
 	      free (buf);
-	      return false;
+	      return FALSE;
 	    }
 	  break;
 	}
-      ok = bfd_set_section_contents (output_bfd, output_section, (PTR) buf,
-				     (file_ptr) link_order->offset, size);
+      loc = link_order->offset * bfd_octets_per_byte (output_bfd);
+      ok = bfd_set_section_contents (output_bfd, output_section, buf,
+                                     loc, size);
       free (buf);
       if (! ok)
-	return false;
+	return FALSE;
     }
 
   /* Store the reloc information in the right place.  It will get
      swapped and written out at the end of the final_link routine.  */
-
   irel = (finfo->section_info[output_section->target_index].relocs
 	  + output_section->reloc_count);
   rel_hash_ptr = (finfo->section_info[output_section->target_index].rel_hashes
@@ -2131,7 +2783,7 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
       h = ((struct coff_link_hash_entry *)
 	   bfd_wrapped_link_hash_lookup (output_bfd, finfo->info,
 					 link_order->u.reloc.p->u.name,
-					 false, false, true));
+					 FALSE, FALSE, TRUE));
       if (h != NULL)
 	{
 	  if (h->indx >= 0)
@@ -2150,7 +2802,7 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
 	  if (! ((*finfo->info->callbacks->unattached_reloc)
 		 (finfo->info, link_order->u.reloc.p->u.name, (bfd *) NULL,
 		  (asection *) NULL, (bfd_vma) 0)))
-	    return false;
+	    return FALSE;
 	  irel->r_symndx = 0;
 	}
     }
@@ -2162,27 +2814,23 @@ _bfd_coff_reloc_link_order (output_bfd, finfo, output_section, link_order)
      routines anyhow.  r_extern is only used for ECOFF.  */
 
   /* FIXME: What is the right value for r_offset?  Is zero OK?  */
-
   ++output_section->reloc_count;
 
-  return true;
+  return TRUE;
 }
 
 /* A basic reloc handling routine which may be used by processors with
    simple relocs.  */
 
-boolean
-_bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
-				    input_section, contents, relocs, syms,
-				    sections)
-     bfd *output_bfd;
-     struct bfd_link_info *info;
-     bfd *input_bfd;
-     asection *input_section;
-     bfd_byte *contents;
-     struct internal_reloc *relocs;
-     struct internal_syment *syms;
-     asection **sections;
+bfd_boolean
+_bfd_coff_generic_relocate_section (bfd *output_bfd,
+				    struct bfd_link_info *info,
+				    bfd *input_bfd,
+				    asection *input_section,
+				    bfd_byte *contents,
+				    struct internal_reloc *relocs,
+				    struct internal_syment *syms,
+				    asection **sections)
 {
   struct internal_reloc *rel;
   struct internal_reloc *relend;
@@ -2206,8 +2854,15 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
 	  h = NULL;
 	  sym = NULL;
 	}
+      else if (symndx < 0
+	       || (unsigned long) symndx >= obj_raw_syment_count (input_bfd))
+	{
+	  (*_bfd_error_handler)
+	    ("%B: illegal symbol index %ld in relocs", input_bfd, symndx);
+	  return FALSE;
+	}
       else
-	{    
+	{
 	  h = obj_coff_sym_hashes (input_bfd)[symndx];
 	  sym = syms + symndx;
 	}
@@ -2216,17 +2871,27 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
          size of the symbol is included in the section contents, or it
          is not.  We assume that the size is not included, and force
          the rtype_to_howto function to adjust the addend as needed.  */
-
       if (sym != NULL && sym->n_scnum != 0)
 	addend = - sym->n_value;
       else
 	addend = 0;
 
-
       howto = bfd_coff_rtype_to_howto (input_bfd, input_section, rel, h,
 				       sym, &addend);
       if (howto == NULL)
-	return false;
+	return FALSE;
+
+      /* If we are doing a relocatable link, then we can just ignore
+         a PC relative reloc that is pcrel_offset.  It will already
+         have the correct value.  If this is not a relocatable link,
+         then we should ignore the symbol value.  */
+      if (howto->pc_relative && howto->pcrel_offset)
+	{
+	  if (info->relocatable)
+	    continue;
+	  if (sym != NULL && sym->n_scnum != 0)
+	    addend += sym->n_value;
+	}
 
       val = 0;
 
@@ -2244,8 +2909,9 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
 	      sec = sections[symndx];
               val = (sec->output_section->vma
 		     + sec->output_offset
-		     + sym->n_value
-		     - sec->vma);
+		     + sym->n_value);
+	      if (! obj_pe (input_bfd))
+		val -= sec->vma;
 	    }
 	}
       else
@@ -2253,41 +2919,86 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
 	  if (h->root.type == bfd_link_hash_defined
 	      || h->root.type == bfd_link_hash_defweak)
 	    {
+	      /* Defined weak symbols are a GNU extension. */
 	      asection *sec;
 
 	      sec = h->root.u.def.section;
 	      val = (h->root.u.def.value
 		     + sec->output_section->vma
 		     + sec->output_offset);
-	      }
+	    }
 
-	  else if (! info->relocateable)
+	  else if (h->root.type == bfd_link_hash_undefweak)
+	    {
+              if (h->class == C_NT_WEAK && h->numaux == 1)
+		{
+		  /* See _Microsoft Portable Executable and Common Object
+                     File Format Specification_, section 5.5.3.
+		     Note that weak symbols without aux records are a GNU
+		     extension.
+		     FIXME: All weak externals are treated as having
+		     characteristic IMAGE_WEAK_EXTERN_SEARCH_NOLIBRARY (1).
+		     These behave as per SVR4 ABI:  A library member
+		     will resolve a weak external only if a normal
+		     external causes the library member to be linked.
+		     See also linker.c: generic_link_check_archive_element. */
+		  asection *sec;
+		  struct coff_link_hash_entry *h2 =
+		    input_bfd->tdata.coff_obj_data->sym_hashes[
+		    h->aux->x_sym.x_tagndx.l];
+
+		  if (!h2 || h2->root.type == bfd_link_hash_undefined)
+		    {
+		      sec = bfd_abs_section_ptr;
+		      val = 0;
+		    }
+		  else
+		    {
+		      sec = h2->root.u.def.section;
+		      val = h2->root.u.def.value
+			+ sec->output_section->vma + sec->output_offset;
+		    }
+		}
+	      else
+                /* This is a GNU extension.  */
+		val = 0;
+	    }
+
+	  else if (! info->relocatable)
 	    {
 	      if (! ((*info->callbacks->undefined_symbol)
 		     (info, h->root.root.string, input_bfd, input_section,
-		      rel->r_vaddr - input_section->vma)))
-		return false;
+		      rel->r_vaddr - input_section->vma, TRUE)))
+		return FALSE;
 	    }
 	}
 
       if (info->base_file)
 	{
-	  /* Emit a reloc if the backend thinks it needs it. */
-	  if (sym && pe_data(output_bfd)->in_reloc_p(output_bfd, howto))
+	  /* Emit a reloc if the backend thinks it needs it.  */
+	  if (sym && pe_data (output_bfd)->in_reloc_p (output_bfd, howto))
 	    {
-	      /* relocation to a symbol in a section which
-		 isn't absolute - we output the address here 
-		 to a file */
-	      bfd_vma addr = rel->r_vaddr 
-		- input_section->vma 
-		+ input_section->output_offset 
-		  + input_section->output_section->vma;
-	      if (coff_data(output_bfd)->pe)
+	      /* Relocation to a symbol in a section which isn't
+		 absolute.  We output the address here to a file.
+		 This file is then read by dlltool when generating the
+		 reloc section.  Note that the base file is not
+		 portable between systems.  We write out a long here,
+		 and dlltool reads in a long.  */
+	      long addr = (rel->r_vaddr
+			   - input_section->vma
+			   + input_section->output_offset
+			   + input_section->output_section->vma);
+	      if (coff_data (output_bfd)->pe)
 		addr -= pe_data(output_bfd)->pe_opthdr.ImageBase;
-	      fwrite (&addr, 1,4, (FILE *) info->base_file);
+	      if (fwrite (&addr, 1, sizeof (long), (FILE *) info->base_file)
+		  != sizeof (long))
+		{
+		  bfd_set_error (bfd_error_system_call);
+		  return FALSE;
+		}
 	    }
 	}
-  
+
       rstat = _bfd_final_link_relocate (howto, input_bfd, input_section,
 					contents,
 					rel->r_vaddr - input_section->vma,
@@ -2299,6 +3010,11 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
 	  abort ();
 	case bfd_reloc_ok:
 	  break;
+	case bfd_reloc_outofrange:
+	  (*_bfd_error_handler)
+	    (_("%B: bad reloc address 0x%lx in section `%A'"),
+	     input_bfd, input_section, (unsigned long) rel->r_vaddr);
+	  return FALSE;
 	case bfd_reloc_overflow:
 	  {
 	    const char *name;
@@ -2307,21 +3023,21 @@ _bfd_coff_generic_relocate_section (output_bfd, info, input_bfd,
 	    if (symndx == -1)
 	      name = "*ABS*";
 	    else if (h != NULL)
-	      name = h->root.root.string;
+	      name = NULL;
 	    else
 	      {
 		name = _bfd_coff_internal_syment_name (input_bfd, sym, buf);
 		if (name == NULL)
-		  return false;
+		  return FALSE;
 	      }
 
 	    if (! ((*info->callbacks->reloc_overflow)
-		   (info, name, howto->name, (bfd_vma) 0, input_bfd,
-		    input_section, rel->r_vaddr - input_section->vma)))
-	      return false;
+		   (info, (h ? &h->root : NULL), name, howto->name,
+		    (bfd_vma) 0, input_bfd, input_section,
+		    rel->r_vaddr - input_section->vma)))
+	      return FALSE;
 	  }
 	}
     }
-  return true;
+  return TRUE;
 }
-

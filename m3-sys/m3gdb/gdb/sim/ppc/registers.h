@@ -1,6 +1,6 @@
 /*  This file is part of the program psim.
 
-    Copyright (C) 1994-1995, Andrew Cagney <cagney@highland.com.au>
+    Copyright 1994, 1997, 2003 Andrew Cagney
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,19 @@
  *
  */
 
+/* FIXME:
+
+   For the moment use macro's to determine if the E500 or Altivec
+   registers should be included.  IGEN should instead of a :register:
+   field to facilitate the specification and generation of per ISA
+   registers.  */
+
+#ifdef WITH_E500
+#include "e500_registers.h"
+#endif
+#if WITH_ALTIVEC
+#include "altivec_registers.h"
+#endif
 
 /**
  ** General Purpose Registers
@@ -147,6 +160,9 @@ enum {
   fpscr_rn_round_towards_zero = MASK32(31,31),
   fpscr_rn_round_towards_pos_infinity = MASK32(30,30),
   fpscr_rn_round_towards_neg_infinity = MASK32(30,31),
+  fpscr_vx_bits = (fpscr_vxsnan | fpscr_vxisi | fpscr_vxidi
+		   | fpscr_vxzdz | fpscr_vximz | fpscr_vxvc
+		   | fpscr_vxsoft | fpscr_vxsqrt | fpscr_vxcvi),
 };
 
 
@@ -225,7 +241,6 @@ enum {
   srr1_subsequent_instruction = BIT(47)
 };
 
-
 /**
  ** storage interrupt registers
  **/
@@ -261,8 +276,14 @@ typedef struct _registers {
   /* Segment Registers */
   sreg sr[nr_of_srs];
 
-} registers;
+#if WITH_ALTIVEC
+  struct altivec_regs altivec;
+#endif
+#if WITH_E500
+  struct e500_regs e500;
+#endif
 
+} registers;
 
 /* dump out all the registers */
 
@@ -277,6 +298,13 @@ typedef enum {
   reg_invalid,
   reg_gpr, reg_fpr, reg_spr, reg_msr,
   reg_cr, reg_fpscr, reg_pc, reg_sr,
+  reg_insns, reg_stalls, reg_cycles,
+#ifdef WITH_ALTIVEC
+  reg_vr, reg_vscr,
+#endif
+#ifdef WITH_E500
+  reg_acc, reg_gprh, reg_evr,
+#endif
   nr_register_types
 } register_types;
 
@@ -302,6 +330,8 @@ INLINE_REGISTERS\
 #define DAR		SPREG(spr_dar)
 #define DSISR		SPREG(spr_dsisr)
 
+/* general purpose registers - indexed access */
+#define GPR(N)          cpu_registers(processor)->gpr[N]
 
 /* segment registers */
 #define SEGREG(N)       cpu_registers(processor)->sr[N]

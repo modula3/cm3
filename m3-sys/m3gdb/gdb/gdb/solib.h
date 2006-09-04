@@ -1,60 +1,60 @@
 /* Shared library declarations for GDB, the GNU Debugger.
-   Copyright (C) 1992 Free Software Foundation, Inc.
+   
+   Copyright 1992, 1993, 1995, 1998, 1999, 2000, 2001, 2003, 2005 
+   Free Software Foundation, Inc.
 
-This file is part of GDB.
+   This file is part of GDB.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
-#ifdef __STDC__		/* Forward decl's for prototypes */
+#ifndef SOLIB_H
+#define SOLIB_H
+
+/* Forward decl's for prototypes */
+struct so_list;
 struct target_ops;
-#endif
 
 /* Called when we free all symtabs, to free the shared library information
    as well. */
 
-#define CLEAR_SOLIB			clear_solib
-
-extern void
-clear_solib PARAMS ((void));
+extern void clear_solib (void);
 
 /* Called to add symbols from a shared library to gdb's symbol table. */
 
-#define SOLIB_ADD(filename, from_tty, targ) \
-    solib_add (filename, from_tty, targ)
+extern void solib_add (char *, int, struct target_ops *, int);
+extern int solib_read_symbols (struct so_list *, int);
 
-extern void
-solib_add PARAMS ((char *, int, struct target_ops *));
+/* Function to be called when the inferior starts up, to discover the
+   names of shared libraries that are dynamically linked, the base
+   addresses to which they are linked, and sufficient information to
+   read in their symbols at a later time.  */
 
-/* Function to be called when the inferior starts up, to discover the names
-   of shared libraries that are dynamically linked, the base addresses to
-   which they are linked, and sufficient information to read in their symbols
-   at a later time. */
-
-#define SOLIB_CREATE_INFERIOR_HOOK(PID)	solib_create_inferior_hook()
-
-extern void
-solib_create_inferior_hook PARAMS((void));	/* solib.c */
-
-/* If we can't set a breakpoint, and it's in a shared library, just
-   disable it.  */
-
-#define DISABLE_UNSETTABLE_BREAK(addr)	(solib_address(addr) != NULL)
-
-extern char *
-solib_address PARAMS ((CORE_ADDR));		/* solib.c */
+extern void solib_create_inferior_hook (void);
 
 /* If ADDR lies in a shared library, return its name.  */
 
-#define PC_SOLIB(addr)	solib_address (addr)
+extern char *solib_address (CORE_ADDR);
+
+/* Return 1 if PC lies in the dynamic symbol resolution code of the
+   run time loader.  */
+
+extern int in_solib_dynsym_resolve_code (CORE_ADDR);
+
+/* Discard symbols that were auto-loaded from shared libraries. */
+
+extern void no_shared_libraries (char *ignored, int from_tty);
+
+#endif /* SOLIB_H */

@@ -2,28 +2,33 @@
    This function is in the public domain. */
 
 /*
-NAME
-	getcwd -- get absolute pathname for current working directory
 
-SYNOPSIS
-	char *getcwd (char pathname[len], len)
+@deftypefn Supplemental char* getcwd (char *@var{pathname}, int @var{len})
 
-DESCRIPTION
-	Copy the absolute pathname for the current working directory into
-	the supplied buffer and return a pointer to the buffer.  If the 
-	current directory's path doesn't fit in LEN characters, the result
-	is NULL and errno is set.
+Copy the absolute pathname for the current working directory into
+@var{pathname}, which is assumed to point to a buffer of at least
+@var{len} bytes, and return a pointer to the buffer.  If the current
+directory's path doesn't fit in @var{len} characters, the result is
+@code{NULL} and @code{errno} is set.  If @var{pathname} is a null pointer,
+@code{getcwd} will obtain @var{len} bytes of space using
+@code{malloc}.
 
-BUGS
-	Emulated via the getwd() call, which is reasonable for most
-	systems that do not have getcwd().
+@end deftypefn
 
 */
 
-#ifndef NO_SYS_PARAM_H
+#include "config.h"
+
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
 #include <errno.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
 extern char *getwd ();
 extern int errno;
@@ -33,9 +38,7 @@ extern int errno;
 #endif
 
 char *
-getcwd (buf, len)
-  char *buf;
-  int len;
+getcwd (char *buf, size_t len)
 {
   char ourbuf[MAXPATHLEN];
   char *result;
@@ -45,6 +48,13 @@ getcwd (buf, len)
     if (strlen (ourbuf) >= len) {
       errno = ERANGE;
       return 0;
+    }
+    if (!buf) {
+       buf = (char*)malloc(len);
+       if (!buf) {
+           errno = ENOMEM;
+	   return 0;
+       }
     }
     strcpy (buf, ourbuf);
   }

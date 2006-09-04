@@ -1,5 +1,5 @@
-/* BFD back-end for Intel 386 PE IMAGE COFF files.
-   Copyright 1995 Free Software Foundation, Inc.
+/* BFD back-end for PowerPC PE IMAGE COFF files.
+   Copyright 1995, 1996, 1999 Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -15,7 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+Foundation, 51 Franklin Street - Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 #include "bfd.h"
 #include "sysdep.h"
@@ -23,7 +24,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 /* setting up for a PE environment stolen directly from the i386 structure */
 #define E_FILNMLEN	18	/* # characters in a file name		*/
 
-#define PPC
+#define PPC_PE
 
 #define TARGET_LITTLE_SYM   bfd_powerpcle_pei_vec
 #define TARGET_LITTLE_NAME "pei-powerpcle"
@@ -31,14 +32,14 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define TARGET_BIG_SYM      bfd_powerpc_pei_vec
 #define TARGET_BIG_NAME    "pei-powerpc"
 
-#define IMAGE_BASE          NT_IMAGE_BASE
-
 #define COFF_IMAGE_WITH_PE
 #define COFF_WITH_PE
 
+#define COFF_LONG_SECTION_NAMES
+
 /* FIXME: Verify PCRELOFFSET is always false */
 
+/* FIXME: This target no longer works.  Search for POWERPC_LE_PE in
+   coff-ppc.c and peigen.c.  */
+
 #include "coff-ppc.c"
-
-
-

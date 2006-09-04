@@ -1,5 +1,6 @@
 /* BFD back-end for OSF/1 core files.
-   Copyright 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1993, 1994, 1995, 1998, 1999, 2001, 2002, 2003, 2004
+   Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /* This file can only be compiled on systems which use OSF/1 style
    core files.  */
@@ -24,32 +25,29 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "sysdep.h"
 #include "libbfd.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <sys/user.h>
+#ifdef OSF_CORE
 #include <sys/core.h>
+#endif
 
 /* forward declarations */
 
-static asection *
-make_bfd_asection PARAMS ((bfd *, CONST char *, flagword, bfd_size_type,
-			   bfd_vma, file_ptr));
-static asymbol *
-osf_core_make_empty_symbol PARAMS ((bfd *));
-static const bfd_target *
-osf_core_core_file_p PARAMS ((bfd *));
-static char *
-osf_core_core_file_failing_command PARAMS ((bfd *));
-static int
-osf_core_core_file_failing_signal PARAMS ((bfd *));
-static boolean
-osf_core_core_file_matches_executable_p PARAMS ((bfd *, bfd *));
-static void
-swap_abort PARAMS ((void));
+static asection *make_bfd_asection
+  PARAMS ((bfd *, const char *, flagword, bfd_size_type, bfd_vma, file_ptr));
+static const bfd_target *osf_core_core_file_p
+  PARAMS ((bfd *));
+static char *osf_core_core_file_failing_command
+  PARAMS ((bfd *));
+static int osf_core_core_file_failing_signal
+  PARAMS ((bfd *));
+static bfd_boolean osf_core_core_file_matches_executable_p
+  PARAMS ((bfd *, bfd *));
+static void swap_abort
+  PARAMS ((void));
 
 /* These are stored in the bfd's tdata */
 
-struct osf_core_struct 
+struct osf_core_struct
 {
   int sig;
   char cmd[MAXCOMLEN + 1];
@@ -60,11 +58,11 @@ struct osf_core_struct
 #define core_command(bfd) (core_hdr(bfd)->cmd)
 
 static asection *
-make_bfd_asection (abfd, name, flags, _raw_size, vma, filepos)
+make_bfd_asection (abfd, name, flags, size, vma, filepos)
      bfd *abfd;
-     CONST char *name;
+     const char *name;
      flagword flags;
-     bfd_size_type _raw_size;
+     bfd_size_type size;
      bfd_vma vma;
      file_ptr filepos;
 {
@@ -75,22 +73,12 @@ make_bfd_asection (abfd, name, flags, _raw_size, vma, filepos)
     return NULL;
 
   asect->flags = flags;
-  asect->_raw_size = _raw_size;
+  asect->size = size;
   asect->vma = vma;
   asect->filepos = filepos;
   asect->alignment_power = 8;
 
   return asect;
-}
-
-static asymbol *
-osf_core_make_empty_symbol (abfd)
-     bfd *abfd;
-{
-  asymbol *new = (asymbol *) bfd_zalloc (abfd, sizeof (asymbol));
-  if (new)
-    new->the_bfd = abfd;
-  return new;
 }
 
 static const bfd_target *
@@ -101,8 +89,10 @@ osf_core_core_file_p (abfd)
   int i;
   char *secname;
   struct core_filehdr core_header;
+  bfd_size_type amt;
 
-  val = bfd_read ((PTR)&core_header, 1, sizeof core_header, abfd);
+  amt = sizeof core_header;
+  val = bfd_bread ((PTR) &core_header, amt, abfd);
   if (val != sizeof core_header)
     return NULL;
 
@@ -110,7 +100,7 @@ osf_core_core_file_p (abfd)
     return NULL;
 
   core_hdr (abfd) = (struct osf_core_struct *)
-    bfd_zalloc (abfd, sizeof (struct osf_core_struct));
+    bfd_zalloc (abfd, (bfd_size_type) sizeof (struct osf_core_struct));
   if (!core_hdr (abfd))
     return NULL;
 
@@ -122,7 +112,8 @@ osf_core_core_file_p (abfd)
       struct core_scnhdr core_scnhdr;
       flagword flags;
 
-      val = bfd_read ((PTR)&core_scnhdr, 1, sizeof core_scnhdr, abfd);
+      amt = sizeof core_scnhdr;
+      val = bfd_bread ((PTR) &core_scnhdr, amt, abfd);
       if (val != sizeof core_scnhdr)
 	break;
 
@@ -145,7 +136,7 @@ osf_core_core_file_p (abfd)
 	  flags = SEC_HAS_CONTENTS;
 	  break;
 	default:
-	  (*_bfd_error_handler) ("Unhandled OSF/1 core file section type %d\n",
+	  (*_bfd_error_handler) (_("Unhandled OSF/1 core file section type %d\n"),
 				 core_scnhdr.scntype);
 	  continue;
 	}
@@ -154,12 +145,18 @@ osf_core_core_file_p (abfd)
 			      (bfd_size_type) core_scnhdr.size,
 			      (bfd_vma) core_scnhdr.vaddr,
 			      (file_ptr) core_scnhdr.scnptr))
-	return NULL;
+	goto fail;
     }
 
   /* OK, we believe you.  You're a core file (sure, sure).  */
 
   return abfd->xvec;
+
+ fail:
+  bfd_release (abfd, core_hdr (abfd));
+  core_hdr (abfd) = NULL;
+  bfd_section_list_clear (abfd);
+  return NULL;
 }
 
 static char *
@@ -169,7 +166,6 @@ osf_core_core_file_failing_command (abfd)
   return core_command (abfd);
 }
 
-/* ARGSUSED */
 static int
 osf_core_core_file_failing_signal (abfd)
      bfd *abfd;
@@ -177,42 +173,34 @@ osf_core_core_file_failing_signal (abfd)
   return core_signal (abfd);
 }
 
-/* ARGSUSED */
-static boolean
+static bfd_boolean
 osf_core_core_file_matches_executable_p (core_bfd, exec_bfd)
-     bfd *core_bfd, *exec_bfd;
+     bfd *core_bfd ATTRIBUTE_UNUSED;
+     bfd *exec_bfd ATTRIBUTE_UNUSED;
 {
-  return true;		/* FIXME, We have no way of telling at this point */
+  return TRUE;		/* FIXME, We have no way of telling at this point */
 }
 
-#define osf_core_get_symtab_upper_bound _bfd_nosymbols_get_symtab_upper_bound
-#define osf_core_get_symtab _bfd_nosymbols_get_symtab
-#define osf_core_print_symbol _bfd_nosymbols_print_symbol
-#define osf_core_get_symbol_info _bfd_nosymbols_get_symbol_info
-#define osf_core_bfd_is_local_label _bfd_nosymbols_bfd_is_local_label
-#define osf_core_get_lineno _bfd_nosymbols_get_lineno
-#define osf_core_find_nearest_line _bfd_nosymbols_find_nearest_line
-#define osf_core_bfd_make_debug_symbol _bfd_nosymbols_bfd_make_debug_symbol
-#define osf_core_read_minisymbols _bfd_nosymbols_read_minisymbols
-#define osf_core_minisymbol_to_symbol _bfd_nosymbols_minisymbol_to_symbol
-
 /* If somebody calls any byte-swapping routines, shoot them.  */
 static void
 swap_abort()
 {
   abort(); /* This way doesn't require any declaration for ANSI to fuck up */
 }
-#define	NO_GET	((bfd_vma (*) PARAMS ((   const bfd_byte *))) swap_abort )
-#define	NO_PUT	((void    (*) PARAMS ((bfd_vma, bfd_byte *))) swap_abort )
-#define	NO_SIGNED_GET \
-  ((bfd_signed_vma (*) PARAMS ((const bfd_byte *))) swap_abort )
+
+#define	NO_GET ((bfd_vma (*) (const void *)) swap_abort)
+#define	NO_PUT ((void (*) (bfd_vma, void *)) swap_abort)
+#define	NO_GETS ((bfd_signed_vma (*) (const void *)) swap_abort)
+#define	NO_GET64 ((bfd_uint64_t (*) (const void *)) swap_abort)
+#define	NO_PUT64 ((void (*) (bfd_uint64_t, void *)) swap_abort)
+#define	NO_GETS64 ((bfd_int64_t (*) (const void *)) swap_abort)
 
 const bfd_target osf_core_vec =
   {
     "osf-core",
     bfd_target_unknown_flavour,
-    BFD_ENDIAN_BIG,		/* target byte order */
-    BFD_ENDIAN_BIG,		/* target headers byte order */
+    BFD_ENDIAN_LITTLE,		/* target byte order */
+    BFD_ENDIAN_LITTLE,		/* target headers byte order */
     (HAS_RELOC | EXEC_P |	/* object flags */
      HAS_LINENO | HAS_DEBUG |
      HAS_SYMS | HAS_LOCALS | WP_TEXT | D_PAGED),
@@ -220,37 +208,39 @@ const bfd_target osf_core_vec =
     0,			                                   /* symbol prefix */
     ' ',						   /* ar_pad_char */
     16,							   /* ar_max_namelen */
-    NO_GET, NO_SIGNED_GET, NO_PUT,	/* 64 bit data */
-    NO_GET, NO_SIGNED_GET, NO_PUT,	/* 32 bit data */
-    NO_GET, NO_SIGNED_GET, NO_PUT,	/* 16 bit data */
-    NO_GET, NO_SIGNED_GET, NO_PUT,	/* 64 bit hdrs */
-    NO_GET, NO_SIGNED_GET, NO_PUT,	/* 32 bit hdrs */
-    NO_GET, NO_SIGNED_GET, NO_PUT,	/* 16 bit hdrs */
+    NO_GET64, NO_GETS64, NO_PUT64,	/* 64 bit data */
+    NO_GET, NO_GETS, NO_PUT,		/* 32 bit data */
+    NO_GET, NO_GETS, NO_PUT,		/* 16 bit data */
+    NO_GET64, NO_GETS64, NO_PUT64,	/* 64 bit hdrs */
+    NO_GET, NO_GETS, NO_PUT,		/* 32 bit hdrs */
+    NO_GET, NO_GETS, NO_PUT,		/* 16 bit hdrs */
 
     {				/* bfd_check_format */
-     _bfd_dummy_target,		/* unknown format */
-     _bfd_dummy_target,		/* object file */
-     _bfd_dummy_target,		/* archive */
-     osf_core_core_file_p	/* a core file */
+      _bfd_dummy_target,		/* unknown format */
+      _bfd_dummy_target,		/* object file */
+      _bfd_dummy_target,		/* archive */
+      osf_core_core_file_p		/* a core file */
     },
     {				/* bfd_set_format */
-     bfd_false, bfd_false,
-     bfd_false, bfd_false
+      bfd_false, bfd_false,
+      bfd_false, bfd_false
     },
     {				/* bfd_write_contents */
-     bfd_false, bfd_false,
-     bfd_false, bfd_false
+      bfd_false, bfd_false,
+      bfd_false, bfd_false
     },
-    
-       BFD_JUMP_TABLE_GENERIC (_bfd_generic),
-       BFD_JUMP_TABLE_COPY (_bfd_generic),
-       BFD_JUMP_TABLE_CORE (osf_core),
-       BFD_JUMP_TABLE_ARCHIVE (_bfd_noarchive),
-       BFD_JUMP_TABLE_SYMBOLS (osf_core),
-       BFD_JUMP_TABLE_RELOCS (_bfd_norelocs),
-       BFD_JUMP_TABLE_WRITE (_bfd_generic),
-       BFD_JUMP_TABLE_LINK (_bfd_nolink),
-       BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
+
+    BFD_JUMP_TABLE_GENERIC (_bfd_generic),
+    BFD_JUMP_TABLE_COPY (_bfd_generic),
+    BFD_JUMP_TABLE_CORE (osf_core),
+    BFD_JUMP_TABLE_ARCHIVE (_bfd_noarchive),
+    BFD_JUMP_TABLE_SYMBOLS (_bfd_nosymbols),
+    BFD_JUMP_TABLE_RELOCS (_bfd_norelocs),
+    BFD_JUMP_TABLE_WRITE (_bfd_generic),
+    BFD_JUMP_TABLE_LINK (_bfd_nolink),
+    BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
+
+    NULL,
 
     (PTR) 0			/* backend_data */
-};
+  };

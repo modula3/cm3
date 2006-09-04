@@ -14,31 +14,25 @@ Library General Public License for more details.
 
 You should have received a copy of the GNU Library General Public
 License along with libiberty; see the file COPYING.LIB.  If
-not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+not, write to the Free Software Foundation, Inc., 51 Franklin Street - Fifth Floor,
+Boston, MA 02110-1301, USA.  */
 
 
 /*
 
-NAME
+@deftypefn Extension int fdmatch (int @var{fd1}, int @var{fd2})
 
-	fdmatch -- see if two file descriptors refer to same file
+Check to see if two open file descriptors refer to the same file.
+This is useful, for example, when we have an open file descriptor for
+an unnamed file, and the name of a file that we believe to correspond
+to that fd.  This can happen when we are exec'd with an already open
+file (@code{stdout} for example) or from the SVR4 @file{/proc} calls
+that return open file descriptors for mapped address spaces.  All we
+have to do is open the file by name and check the two file descriptors
+for a match, which is done by comparing major and minor device numbers
+and inode numbers.
 
-SYNOPSIS
-
-	int fdmatch (int fd1, int fd2)
-
-DESCRIPTION
-
-	Check to see if two open file descriptors refer to the same file.
-	This is useful, for example, when we have an open file descriptor
-	for an unnamed file, and the name of a file that we believe to 
-	correspond to that fd.  This can happen when we are exec'd with
-	an already open file (stdout for example) or from the SVR4 /proc
-	calls that return open file descriptors for mapped address spaces.
-	All we have to do is open the file by name and check the two file
-	descriptors for a match, which is done by comparing major&minor
-	device numbers and inode numbers.
+@end deftypefn
 
 BUGS
 
@@ -47,14 +41,15 @@ BUGS
 
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "ansidecl.h"
 #include "libiberty.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 
-int fdmatch (fd1, fd2)
-	int fd1;
-	int fd2;
+int fdmatch (int fd1, int fd2)
 {
   struct stat sbuf1;
   struct stat sbuf2;

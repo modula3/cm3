@@ -1,4 +1,5 @@
-#Copyright 1989, 1990, 1991, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+#Copyright 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1999
+#Free Software Foundation, Inc.
 
 # This file is part of GDB.
 
@@ -25,12 +26,12 @@ exec_prefix = @exec_prefix@
 host_alias = @host_alias@
 target_alias = @target_alias@
 program_transform_name = @program_transform_name@
-bindir = $(exec_prefix)/bin
-libdir = $(exec_prefix)/lib
+bindir = @bindir@
+libdir = @libdir@
 tooldir = $(libdir)/$(target_alias)
 
-datadir = $(prefix)/lib
-mandir = $(prefix)/man
+datadir = @datadir@
+mandir = @mandir@
 man1dir = $(mandir)/man1
 man2dir = $(mandir)/man2
 man3dir = $(mandir)/man3
@@ -40,11 +41,11 @@ man6dir = $(mandir)/man6
 man7dir = $(mandir)/man7
 man8dir = $(mandir)/man8
 man9dir = $(mandir)/man9
-infodir = $(prefix)/info
-includedir = $(prefix)/include
-docdir = $(datadir)/doc
+infodir = @infodir@
+htmldir = $(prefix)/html
+includedir = @includedir@
 
-SHELL = /bin/sh
+SHELL = @SHELL@
 
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -116,6 +117,8 @@ check:
 info dvi:
 install-info:
 clean-info:
+html:
+install-html:
 
 gdbserve.nlm:	gdbserve.O $(srcdir)/gdbserve.def
 	${NLMCONV_FOR_TARGET} -T $(srcdir)/gdbserve.def
@@ -127,7 +130,7 @@ gdbserve.O: prelude.o gdbserve.o $(TDEPFILES)
 # specific routine gets the one for the correct machine.
 # The xyzzy stuff below deals with empty DEPFILES
 TAGS:	${TAGFILES}
-	etags `find ${srcdir}/../config -name $(TM_FILE) -print` \
+	etags `find ${srcdir}/../config -name $(DEPRECATED_TM_FILE) -print` \
 	  `find ${srcdir}/../config -name ${XM_FILE} -print` \
 	  `find ${srcdir}/../config -name ${NAT_FILE} -print` \
 	  `for i in yzzy ${DEPFILES}; do \

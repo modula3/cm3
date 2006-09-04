@@ -1,6 +1,7 @@
 /* YACC parser for Fortran expressions, for GDB.
-   Copyright 1986, 1989, 1990, 1991, 1993, 1994
-             Free Software Foundation, Inc.
+   Copyright 1986, 1989, 1990, 1991, 1993, 1994, 1995, 1996, 2000, 2001,
+   2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+
    Contributed by Motorola.  Adapted from the C parser by Farooq Butt
    (fmbutt@engage.sps.mot.com).
 
@@ -52,6 +53,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "bfd.h" /* Required by objfiles.h.  */
 #include "symfile.h" /* Required by objfiles.h.  */
 #include "objfiles.h" /* For have_full_symbols and have_partial_symbols */
+#include "block.h"
+#include <ctype.h>
 
 /* Remap normal yacc parser interface names (yyparse, yylex, yyerror, etc),
    as well as gratuitiously global symbol names, so we can have multiple
@@ -89,6 +92,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define	yylloc	f_lloc
 #define yyreds	f_reds		/* With YYDEBUG defined */
 #define yytoks	f_toks		/* With YYDEBUG defined */
+#define yyname	f_name		/* With YYDEBUG defined */
+#define yyrule	f_rule		/* With YYDEBUG defined */
 #define yylhs	f_yylhs
 #define yylen	f_yylen
 #define yydefred f_yydefred
@@ -100,14 +105,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define yycheck	 f_yycheck
 
 #ifndef YYDEBUG
-#define	YYDEBUG	1		/* Default to no yydebug support */
+#define	YYDEBUG	1		/* Default to yydebug support */
 #endif
 
-int yyparse PARAMS ((void));
+#define YYFPRINTF parser_fprintf
 
-static int yylex PARAMS ((void));
+int yyparse (void);
 
-void yyerror PARAMS ((char *));
+static int yylex (void);
+
+void yyerror (char *);
+
+static void growbuf_by_size (int);
+
+static int match_string_literal (void);
 
 %}
 
@@ -139,7 +150,7 @@ void yyerror PARAMS ((char *));
 
 %{
 /* YYSTYPE gets defined by %union */
-static int parse_number PARAMS ((char *, int, int, YYSTYPE *));
+static int parse_number (char *, int, int, YYSTYPE *);
 %}
 
 %type <voidval> exp  type_exp start variable 
@@ -166,9 +177,7 @@ static int parse_number PARAMS ((char *, int, int, YYSTYPE *));
 %token <lval> BOOLEAN_LITERAL
 %token <ssym> NAME 
 %token <tsym> TYPENAME
-%type <sval> name
 %type <ssym> name_not_typename
-%type <tsym> typename
 
 /* A NAME_OR_INT is a symbol which is not known in the symbol table,
    but which would parse as a valid number in the current input radix.
@@ -208,6 +217,7 @@ static int parse_number PARAMS ((char *, int, int, YYSTYPE *));
 %left '@'
 %left '+' '-'
 %left '*' '/' '%'
+%right STARSTAR
 %right UNARY 
 %right '('
 
@@ -231,9 +241,11 @@ exp     :       '(' exp ')'
 /* Expressions, not including the comma operator.  */
 exp	:	'*' exp    %prec UNARY
 			{ write_exp_elt_opcode (UNOP_IND); }
+	;
 
 exp	:	'&' exp    %prec UNARY
 			{ write_exp_elt_opcode (UNOP_ADDR); }
+	;
 
 exp	:	'-' exp    %prec UNARY
 			{ write_exp_elt_opcode (UNOP_NEG); }
@@ -271,17 +283,39 @@ arglist	:	exp
 			{ arglist_len = 1; }
 	;
 
-arglist :      substring
-                        { arglist_len = 2;}
+arglist :	subrange
+			{ arglist_len = 1; }
+	;
    
 arglist	:	arglist ',' exp   %prec ABOVE_COMMA
 			{ arglist_len++; }
 	;
 
-substring:	exp ':' exp   %prec ABOVE_COMMA
-			{ } 
+/* There are four sorts of subrange types in F90.  */
+
+subrange:	exp ':' exp	%prec ABOVE_COMMA
+			{ write_exp_elt_opcode (OP_F90_RANGE); 
+			  write_exp_elt_longcst (NONE_BOUND_DEFAULT);
+			  write_exp_elt_opcode (OP_F90_RANGE); }
 	;
 
+subrange:	exp ':'	%prec ABOVE_COMMA
+			{ write_exp_elt_opcode (OP_F90_RANGE);
+			  write_exp_elt_longcst (HIGH_BOUND_DEFAULT);
+			  write_exp_elt_opcode (OP_F90_RANGE); }
+	;
+
+subrange:	':' exp	%prec ABOVE_COMMA
+			{ write_exp_elt_opcode (OP_F90_RANGE);
+			  write_exp_elt_longcst (LOW_BOUND_DEFAULT);
+			  write_exp_elt_opcode (OP_F90_RANGE); }
+	;
+
+subrange:	':'	%prec ABOVE_COMMA
+			{ write_exp_elt_opcode (OP_F90_RANGE);
+			  write_exp_elt_longcst (BOTH_BOUND_DEFAULT);
+			  write_exp_elt_opcode (OP_F90_RANGE); }
+	;
 
 complexnum:     exp ',' exp 
                 	{ }                          
@@ -301,6 +335,10 @@ exp	:	'(' type ')' exp  %prec UNARY
 
 exp	:	exp '@' exp
 			{ write_exp_elt_opcode (BINOP_REPEAT); }
+	;
+
+exp	:	exp STARSTAR exp
+			{ write_exp_elt_opcode (BINOP_EXP); }
 	;
 
 exp	:	exp '*' exp
@@ -462,7 +500,7 @@ variable:	name_not_typename
 			  else
 			    {
 			      struct minimal_symbol *msymbol;
-			      register char *arg = copy_name ($1.stoken);
+			      char *arg = copy_name ($1.stoken);
 
 			      msymbol =
 				lookup_minimal_symbol (arg, NULL, NULL);
@@ -551,7 +589,7 @@ direct_abs_decl: '(' abs_decl ')'
 func_mod:	'(' ')'
 			{ $$ = 0; }
 	|	'(' nonempty_typelist ')'
-			{ free ((PTR)$2); $$ = 0; }
+			{ free ($2); $$ = 0; }
 	;
 
 typebase  /* Implements (approximately): (type-qualifier)* type-specifier */
@@ -583,9 +621,6 @@ typebase  /* Implements (approximately): (type-qualifier)* type-specifier */
 			{ $$ = builtin_type_f_complex_s32;}
 	;
 
-typename:	TYPENAME
-	;
-
 nonempty_typelist
 	:	type
 		{ $$ = (struct type **) malloc (sizeof (struct type *) * 2);
@@ -597,14 +632,6 @@ nonempty_typelist
 		  $$ = (struct type **) realloc ((char *) $1, len);
 		  $$[$<ivec>$[0]] = $3;
 		}
-	;
-
-name	:	NAME
-			{ $$ = $1.stoken; }
-	|	TYPENAME
-			{ $$ = $1.stoken; }
-	|	NAME_OR_INT
-			{ $$ = $1.stoken; }
 	;
 
 name_not_typename :	NAME
@@ -627,19 +654,18 @@ name_not_typename :	NAME
 
 static int
 parse_number (p, len, parsed_float, putithere)
-     register char *p;
-     register int len;
+     char *p;
+     int len;
      int parsed_float;
      YYSTYPE *putithere;
 {
-  register LONGEST n = 0;
-  register LONGEST prevn = 0;
-  register int i;
-  register int c;
-  register int base = input_radix;
+  LONGEST n = 0;
+  LONGEST prevn = 0;
+  int c;
+  int base = input_radix;
   int unsigned_p = 0;
   int long_p = 0;
-  unsigned LONGEST high_bit;
+  ULONGEST high_bit;
   struct type *signed_type;
   struct type *unsigned_type;
 
@@ -649,7 +675,7 @@ parse_number (p, len, parsed_float, putithere)
       /* [dD] is not understood as an exponent by atof, change it to 'e'.  */
       char *tmp, *tmp2;
 
-      tmp = strsave (p);
+      tmp = xstrdup (p);
       for (tmp2 = tmp; *tmp2; ++tmp2)
 	if (*tmp2 == 'd' || *tmp2 == 'D')
 	  *tmp2 = 'e';
@@ -692,26 +718,26 @@ parse_number (p, len, parsed_float, putithere)
   while (len-- > 0)
     {
       c = *p++;
-      if (c >= 'A' && c <= 'Z')
-	c += 'a' - 'A';
-      if (c != 'l' && c != 'u')
-	n *= base;
-      if (c >= '0' && c <= '9')
-	n += i = c - '0';
+      if (isupper (c))
+	c = tolower (c);
+      if (len == 0 && c == 'l')
+	long_p = 1;
+      else if (len == 0 && c == 'u')
+	unsigned_p = 1;
       else
 	{
-	  if (base > 10 && c >= 'a' && c <= 'f')
-	    n += i = c - 'a' + 10;
-	  else if (len == 0 && c == 'l') 
-            long_p = 1;
-	  else if (len == 0 && c == 'u')
-	    unsigned_p = 1;
+	  int i;
+	  if (c >= '0' && c <= '9')
+	    i = c - '0';
+	  else if (c >= 'a' && c <= 'f')
+	    i = c - 'a' + 10;
 	  else
 	    return ERROR;	/* Char not a digit */
+	  if (i >= base)
+	    return ERROR;		/* Invalid digit in this base */
+	  n *= base;
+	  n += i;
 	}
-      if (i >= base)
-	return ERROR;		/* Invalid digit in this base */
-      
       /* Portably test for overflow (only works for nonzero values, so make
 	 a second check for zero).  */
       if ((prevn >= n) && n != 0)
@@ -741,13 +767,13 @@ parse_number (p, len, parsed_float, putithere)
        && ((n >> 2) >> (TARGET_INT_BIT-2)))   /* Avoid shift warning */
       || long_p)
     {
-      high_bit = ((unsigned LONGEST)1) << (TARGET_LONG_BIT-1);
+      high_bit = ((ULONGEST)1) << (TARGET_LONG_BIT-1);
       unsigned_type = builtin_type_unsigned_long;
       signed_type = builtin_type_long;
     }
   else 
     {
-      high_bit = ((unsigned LONGEST)1) << (TARGET_INT_BIT-1);
+      high_bit = ((ULONGEST)1) << (TARGET_INT_BIT-1);
       unsigned_type = builtin_type_unsigned_int;
       signed_type = builtin_type_int;
     }    
@@ -919,7 +945,9 @@ yylex ()
   char *tokstart;
   
  retry:
-  
+ 
+  prev_lexptr = lexptr;
+ 
   tokstart = lexptr;
   
   /* First of all, let us make sure we are not dealing with the 
@@ -929,8 +957,8 @@ yylex ()
     { 
       for (i = 0; boolean_values[i].name != NULL; i++)
 	{
-	  if STREQN (tokstart, boolean_values[i].name,
-		    strlen (boolean_values[i].name))
+	  if (strncmp (tokstart, boolean_values[i].name,
+		       strlen (boolean_values[i].name)) == 0)
 	    {
 	      lexptr += strlen (boolean_values[i].name); 
 	      yylval.lval = boolean_values[i].value; 
@@ -939,16 +967,25 @@ yylex ()
 	}
     }
   
-  /* See if it is a special .foo. operator */
+  /* See if it is a special .foo. operator.  */
   
   for (i = 0; dot_ops[i].operator != NULL; i++)
-    if (STREQN (tokstart, dot_ops[i].operator, strlen (dot_ops[i].operator)))
+    if (strncmp (tokstart, dot_ops[i].operator, strlen (dot_ops[i].operator)) == 0)
       {
 	lexptr += strlen (dot_ops[i].operator);
 	yylval.opcode = dot_ops[i].opcode;
 	return dot_ops[i].token;
       }
   
+  /* See if it is an exponentiation operator.  */
+
+  if (strncmp (tokstart, "**", 2) == 0)
+    {
+      lexptr += 2;
+      yylval.opcode = BINOP_EXP;
+      return STARSTAR;
+    }
+
   switch (c = *tokstart)
     {
     case 0:
@@ -1003,7 +1040,7 @@ yylex ()
       {
         /* It's a number.  */
 	int got_dot = 0, got_e = 0, got_d = 0, toktype;
-	register char *p = tokstart;
+	char *p = tokstart;
 	int hex = input_radix > 10;
 	
 	if (c == '0' && (p[1] == 'x' || p[1] == 'X'))
@@ -1099,8 +1136,8 @@ yylex ()
   /* Catch specific keywords.  */
   
   for (i = 0; f77_keywords[i].operator != NULL; i++)
-    if (STREQN(tokstart, f77_keywords[i].operator,
-               strlen(f77_keywords[i].operator)))
+    if (strncmp (tokstart, f77_keywords[i].operator,
+		 strlen(f77_keywords[i].operator)) == 0)
       {
 	/* 	lexptr += strlen(f77_keywords[i].operator); */ 
 	yylval.opcode = f77_keywords[i].opcode;
@@ -1126,7 +1163,7 @@ yylex ()
     int hextype;
     
     sym = lookup_symbol (tmp, expression_context_block,
-			 VAR_NAMESPACE,
+			 VAR_DOMAIN,
 			 current_language->la_language == language_cplus
 			 ? &is_a_field_of_this : NULL,
 			 NULL);
@@ -1135,7 +1172,10 @@ yylex ()
 	yylval.tsym.type = SYMBOL_TYPE (sym);
 	return TYPENAME;
       }
-    if ((yylval.tsym.type = lookup_primitive_typename (tmp)) != 0)
+    yylval.tsym.type
+      = language_lookup_primitive_type_by_name (current_language,
+						current_gdbarch, tmp);
+    if (yylval.tsym.type != NULL)
       return TYPENAME;
     
     /* Input names that aren't symbols but ARE valid hex numbers,
@@ -1166,5 +1206,8 @@ void
 yyerror (msg)
      char *msg;
 {
+  if (prev_lexptr)
+    lexptr = prev_lexptr;
+
   error ("A %s in expression, near `%s'.", (msg ? msg : "error"), lexptr);
 }

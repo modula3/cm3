@@ -1,5 +1,5 @@
 /* Yet Another Try at encapsulating bsd object files in coff.
-   Copyright (C) 1988, 1989, 1991 Free Software Foundation, Inc.
+   Copyright 1988, 1989, 1991 Free Software Foundation, Inc.
    Written by Pace Willisson 12/9/88
 
    This file is obsolete.  It needs to be converted to just define a bunch
@@ -17,7 +17,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /*
  * We only use the coff headers to tell the kernel
@@ -85,7 +85,6 @@ struct coffheader
    
 #define COFF_MAGIC_I386 0514 /* I386MAGIC */
 #define COFF_MAGIC_M68K 0520 /* MC68MAGIC */
-#define	COFF_MAGIC_A29K 0x17A	/* Used by asm29k cross-tools */
 
 #ifdef COFF_MAGIC
 short __header_offset_temp;

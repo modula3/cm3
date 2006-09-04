@@ -1,35 +1,31 @@
 /* bcopy -- copy memory regions of arbitary length
 
-NAME
-	bcopy -- copy memory regions of arbitrary length
+@deftypefn Supplemental void bcopy (char *@var{in}, char *@var{out}, int @var{length})
 
-SYNOPSIS
-	void bcopy (char *in, char *out, int length)
+Copies @var{length} bytes from memory region @var{in} to region
+@var{out}.  The use of @code{bcopy} is deprecated in new programs.
 
-DESCRIPTION
-	Copy LENGTH bytes from memory region pointed to by IN to memory
-	region pointed to by OUT.
-
-BUGS
-	Significant speed improvements can be made in some cases by
-	implementing copies of multiple bytes simultaneously, or unrolling
-	the copy loop.
+@end deftypefn
 
 */
 
+#include <stddef.h>
+
 void
-bcopy (src, dest, len)
-  register char *src, *dest;
-  int len;
+bcopy (const void *src, void *dest, size_t len)
 {
   if (dest < src)
-    while (len--)
-      *dest++ = *src++;
+    {
+      const char *firsts = src;
+      char *firstd = dest;
+      while (len--)
+	*firstd++ = *firsts++;
+    }
   else
     {
-      char *lasts = src + (len-1);
-      char *lastd = dest + (len-1);
+      const char *lasts = (const char *)src + (len-1);
+      char *lastd = (char *)dest + (len-1);
       while (len--)
-        *(char *)lastd-- = *(char *)lasts--;
+        *lastd-- = *lasts--;
     }
 }

@@ -1,22 +1,23 @@
 /* Support for 32-bit Alpha NLM (NetWare Loadable Module)
-   Copyright (C) 1993 Free Software Foundation, Inc.
+   Copyright 1993, 1994, 2000, 2001, 2002, 2003, 2004, 2005
+   Free Software Foundation, Inc.
    Written by Ian Lance Taylor, Cygnus Support.
 
-This file is part of BFD, the Binary File Descriptor library.
+   This file is part of BFD, the Binary File Descriptor library.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /* This file describes the 32 bit Alpha NLM format.  You might think
    that an Alpha chip would use a 64 bit format, but, for some reason,
@@ -32,70 +33,51 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define Nlm_External_Fixed_Header	Nlm32_alpha_External_Fixed_Header
 
 #include "libnlm.h"
-
-static boolean nlm_alpha_backend_object_p
-  PARAMS ((bfd *));
-static boolean nlm_alpha_write_prefix
-  PARAMS ((bfd *));
-static boolean nlm_alpha_read_reloc
-  PARAMS ((bfd *, nlmNAME(symbol_type) *, asection **, arelent *));
-static boolean nlm_alpha_mangle_relocs
-  PARAMS ((bfd *, asection *, PTR, bfd_vma, bfd_size_type));
-static boolean nlm_alpha_read_import
-  PARAMS ((bfd *, nlmNAME(symbol_type) *));
-static boolean nlm_alpha_write_import
-  PARAMS ((bfd *, asection *, arelent *));
-static boolean nlm_alpha_set_public_section
-  PARAMS ((bfd *, nlmNAME(symbol_type) *));
-static bfd_vma nlm_alpha_get_public_offset
-  PARAMS ((bfd *, asymbol *));
-static boolean nlm_alpha_write_external
-  PARAMS ((bfd *, bfd_size_type, asymbol *, struct reloc_and_sec *));
 
 /* Alpha NLM's have a prefix header before the standard NLM.  This
    function reads it in, verifies the version, and seeks the bfd to
    the location before the regular NLM header.  */
 
-static boolean
-nlm_alpha_backend_object_p (abfd)
-     bfd *abfd;
+static bfd_boolean
+nlm_alpha_backend_object_p (bfd *abfd)
 {
   struct nlm32_alpha_external_prefix_header s;
-  bfd_size_type size;
+  file_ptr size;
 
-  if (bfd_read ((PTR) &s, sizeof s, 1, abfd) != sizeof s)
-    return false;
+  if (bfd_bread (&s, (bfd_size_type) sizeof s, abfd) != sizeof s)
+    return FALSE;
 
-  if (bfd_h_get_32 (abfd, s.magic) != NLM32_ALPHA_MAGIC)
-    return false;
+  if (H_GET_32 (abfd, s.magic) != NLM32_ALPHA_MAGIC)
+    return FALSE;
 
   /* FIXME: Should we check the format number?  */
 
   /* Skip to the end of the header.  */
-  size = bfd_h_get_32 (abfd, s.size);
+  size = H_GET_32 (abfd, s.size);
   if (bfd_seek (abfd, size, SEEK_SET) != 0)
-    return false;
+    return FALSE;
 
-  return true;
+  return TRUE;
 }
 
 /* Write out the prefix.  */
 
-static boolean
-nlm_alpha_write_prefix (abfd)
-     bfd *abfd;
+static bfd_boolean
+nlm_alpha_write_prefix (bfd *abfd)
 {
   struct nlm32_alpha_external_prefix_header s;
 
   memset (&s, 0, sizeof s);
-  bfd_h_put_32 (abfd, (bfd_vma) NLM32_ALPHA_MAGIC, s.magic);
-  bfd_h_put_32 (abfd, (bfd_vma) 2, s.format);
-  bfd_h_put_32 (abfd, (bfd_vma) sizeof s, s.size);
-  if (bfd_write ((PTR) &s, sizeof s, 1, abfd) != sizeof s)
-    return false;
-  return true;
+  H_PUT_32 (abfd, NLM32_ALPHA_MAGIC, s.magic);
+  H_PUT_32 (abfd, 2, s.format);
+  H_PUT_32 (abfd, sizeof s, s.size);
+  if (bfd_bwrite (&s, (bfd_size_type) sizeof s, abfd) != sizeof s)
+    return FALSE;
+  return TRUE;
 }
 
+#define ONES(n) (((bfd_vma) 1 << ((n) - 1) << 1) - 1)
+
 /* How to process the various reloc types.  */
 
 static reloc_howto_type nlm32_alpha_howto_table[] =
@@ -103,83 +85,83 @@ static reloc_howto_type nlm32_alpha_howto_table[] =
   /* Reloc type 0 is ignored by itself.  However, it appears after a
      GPDISP reloc to identify the location where the low order 16 bits
      of the gp register are loaded.  */
-  HOWTO (ALPHA_R_IGNORE,	/* type */
-	 0,			/* rightshift */
-	 0,			/* size (0 = byte, 1 = short, 2 = long) */
-	 8,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "IGNORE",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_IGNORE,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 0,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 8,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "IGNORE",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* A 32 bit reference to a symbol.  */
-  HOWTO (ALPHA_R_REFLONG,	/* type */
-	 0,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 32,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_bitfield, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "REFLONG",		/* name */
-	 true,			/* partial_inplace */
-	 0xffffffff,		/* src_mask */
-	 0xffffffff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_REFLONG,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 32,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_bitfield, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "REFLONG",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0xffffffff,		/* Source mask.  */
+	 0xffffffff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* A 64 bit reference to a symbol.  */
-  HOWTO (ALPHA_R_REFQUAD,	/* type */
-	 0,			/* rightshift */
-	 4,			/* size (0 = byte, 1 = short, 2 = long) */
-	 64,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_bitfield, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "REFQUAD",		/* name */
-	 true,			/* partial_inplace */
-	 0xffffffffffffffff,	/* src_mask */
-	 0xffffffffffffffff,	/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_REFQUAD,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 4,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 64,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_bitfield, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "REFQUAD",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 ONES (64),		/* Source mask.  */
+	 ONES (64),		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* A 32 bit GP relative offset.  This is just like REFLONG except
      that when the value is used the value of the gp register will be
      added in.  */
-  HOWTO (ALPHA_R_GPREL32,	/* type */
-	 0,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 32,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_bitfield, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "GPREL32",		/* name */
-	 true,			/* partial_inplace */
-	 0xffffffff,		/* src_mask */
-	 0xffffffff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_GPREL32,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 32,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_bitfield, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "GPREL32",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0xffffffff,		/* Source mask.  */
+	 0xffffffff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Used for an instruction that refers to memory off the GP
      register.  The offset is 16 bits of the 32 bit instruction.  This
      reloc always seems to be against the .lita section.  */
-  HOWTO (ALPHA_R_LITERAL,	/* type */
-	 0,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 16,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_signed, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "LITERAL",		/* name */
-	 true,			/* partial_inplace */
-	 0xffff,		/* src_mask */
-	 0xffff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_LITERAL,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 16,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_signed, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "LITERAL",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0xffff,		/* Source mask.  */
+	 0xffff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* This reloc only appears immediately following a LITERAL reloc.
      It identifies a use of the literal.  It seems that the linker can
@@ -190,19 +172,19 @@ static reloc_howto_type nlm32_alpha_howto_table[] =
      instruction; 3 means the literal address is in the target
      register of a jsr instruction.  This does not actually do any
      relocation.  */
-  HOWTO (ALPHA_R_LITUSE,	/* type */
-	 0,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 32,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "LITUSE",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_LITUSE,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 32,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "LITUSE",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Load the gp register.  This is always used for a ldah instruction
      which loads the upper 16 bits of the gp register.  The next reloc
@@ -215,202 +197,201 @@ static reloc_howto_type nlm32_alpha_howto_table[] =
      difference between the GP value and the current location; the
      load will always be done against a register holding the current
      address.  */
-  HOWTO (ALPHA_R_GPDISP,	/* type */
-	 16,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 16,			/* bitsize */
-	 true,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "GPDISP",		/* name */
-	 true,			/* partial_inplace */
-	 0xffff,		/* src_mask */
-	 0xffff,		/* dst_mask */
-	 true),			/* pcrel_offset */
+  HOWTO (ALPHA_R_GPDISP,	/* Type.  */
+	 16,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 16,			/* Bitsize.  */
+	 TRUE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "GPDISP",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0xffff,		/* Source mask.  */
+	 0xffff,		/* Dest mask.  */
+	 TRUE),			/* PCrel_offset.  */
 
   /* A 21 bit branch.  The native assembler generates these for
      branches within the text segment, and also fills in the PC
      relative offset in the instruction.  It seems to me that this
      reloc, unlike the others, is not partial_inplace.  */
-  HOWTO (ALPHA_R_BRADDR,	/* type */
-	 2,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 21,			/* bitsize */
-	 true,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_signed, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "BRADDR",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0x1fffff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_BRADDR,	/* Type.  */
+	 2,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 21,			/* Bitsize.  */
+	 TRUE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_signed, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "BRADDR",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0x1fffff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* A hint for a jump to a register.  */
-  HOWTO (ALPHA_R_HINT,		/* type */
-	 2,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 14,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "HINT",		/* name */
-	 true,			/* partial_inplace */
-	 0x3fff,		/* src_mask */
-	 0x3fff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_HINT,		/* Type.  */
+	 2,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 14,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "HINT",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0x3fff,		/* Source mask.  */
+	 0x3fff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* 16 bit PC relative offset.  */
-  HOWTO (ALPHA_R_SREL16,	/* type */
-	 0,			/* rightshift */
-	 1,			/* size (0 = byte, 1 = short, 2 = long) */
-	 16,			/* bitsize */
-	 true,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_signed, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "SREL16",		/* name */
-	 true,			/* partial_inplace */
-	 0xffff,		/* src_mask */
-	 0xffff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_SREL16,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 1,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 16,			/* Bitsize.  */
+	 TRUE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_signed, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "SREL16",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0xffff,		/* Source mask.  */
+	 0xffff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* 32 bit PC relative offset.  */
-  HOWTO (ALPHA_R_SREL32,	/* type */
-	 0,			/* rightshift */
-	 2,			/* size (0 = byte, 1 = short, 2 = long) */
-	 32,			/* bitsize */
-	 true,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_signed, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "SREL32",		/* name */
-	 true,			/* partial_inplace */
-	 0xffffffff,		/* src_mask */
-	 0xffffffff,		/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_SREL32,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 2,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 32,			/* Bitsize.  */
+	 TRUE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_signed, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "SREL32",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 0xffffffff,		/* Source mask.  */
+	 0xffffffff,		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* A 64 bit PC relative offset.  */
-  HOWTO (ALPHA_R_SREL64,	/* type */
-	 0,			/* rightshift */
-	 4,			/* size (0 = byte, 1 = short, 2 = long) */
-	 64,			/* bitsize */
-	 true,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_signed, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "SREL64",		/* name */
-	 true,			/* partial_inplace */
-	 0xffffffffffffffff,	/* src_mask */
-	 0xffffffffffffffff,	/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_SREL64,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 4,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 64,			/* Bitsize.  */
+	 TRUE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_signed, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "SREL64",		/* Name.  */
+	 TRUE,			/* Partial_inplace.  */
+	 ONES (64),		/* Source mask.  */
+	 ONES (64),		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Push a value on the reloc evaluation stack.  */
-  HOWTO (ALPHA_R_OP_PUSH,	/* type */
-	 0,			/* rightshift */
-	 0,			/* size (0 = byte, 1 = short, 2 = long) */
-	 0,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "OP_PUSH",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_OP_PUSH,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 0,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 0,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "OP_PUSH",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Store the value from the stack at the given address.  Store it in
      a bitfield of size r_size starting at bit position r_offset.  */
-  HOWTO (ALPHA_R_OP_STORE,	/* type */
-	 0,			/* rightshift */
-	 4,			/* size (0 = byte, 1 = short, 2 = long) */
-	 64,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "OP_STORE",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0xffffffffffffffff,	/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_OP_STORE,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 4,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 64,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "OP_STORE",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 ONES (64),		/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Subtract the reloc address from the value on the top of the
      relocation stack.  */
-  HOWTO (ALPHA_R_OP_PSUB,	/* type */
-	 0,			/* rightshift */
-	 0,			/* size (0 = byte, 1 = short, 2 = long) */
-	 0,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "OP_PSUB",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_OP_PSUB,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 0,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 0,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "OP_PSUB",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Shift the value on the top of the relocation stack right by the
      given value.  */
-  HOWTO (ALPHA_R_OP_PRSHIFT,	/* type */
-	 0,			/* rightshift */
-	 0,			/* size (0 = byte, 1 = short, 2 = long) */
-	 0,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			 /* special_function */
-	 "OP_PRSHIFT",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false),		/* pcrel_offset */
+  HOWTO (ALPHA_R_OP_PRSHIFT,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 0,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 0,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			 /* Special_function.  */
+	 "OP_PRSHIFT",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE),		/* PCrel_offset.  */
 
   /* Adjust the GP value for a new range in the object file.  */
-  HOWTO (ALPHA_R_GPVALUE,	/* type */
-	 0,			/* rightshift */
-	 0,			/* size (0 = byte, 1 = short, 2 = long) */
-	 0,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "GPVALUE",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false)			/* pcrel_offset */
+  HOWTO (ALPHA_R_GPVALUE,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 0,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 0,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "GPVALUE",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE)			/* PCrel_offset.  */
 };
 
 static reloc_howto_type nlm32_alpha_nw_howto =
-  HOWTO (ALPHA_R_NW_RELOC,	/* type */
-	 0,			/* rightshift */
-	 0,			/* size (0 = byte, 1 = short, 2 = long) */
-	 0,			/* bitsize */
-	 false,			/* pc_relative */
-	 0,			/* bitpos */
-	 complain_overflow_dont, /* complain_on_overflow */
-	 0,			/* special_function */
-	 "NW_RELOC",		/* name */
-	 false,			/* partial_inplace */
-	 0,			/* src_mask */
-	 0,			/* dst_mask */
-	 false);		/* pcrel_offset */
+  HOWTO (ALPHA_R_NW_RELOC,	/* Type.  */
+	 0,			/* Rightshift.  */
+	 0,			/* Size (0 = byte, 1 = short, 2 = long).  */
+	 0,			/* Bitsize.  */
+	 FALSE,			/* PC_relative.  */
+	 0,			/* Bitpos.  */
+	 complain_overflow_dont, /* Complain_on_overflow.  */
+	 0,			/* Special_function.  */
+	 "NW_RELOC",		/* Name.  */
+	 FALSE,			/* Partial_inplace.  */
+	 0,			/* Source mask.  */
+	 0,			/* Dest mask.  */
+	 FALSE);		/* PCrel_offset.  */
 
 /* Read an Alpha NLM reloc.  This routine keeps some static data which
    it uses when handling local relocs.  This only works correctly
    because all the local relocs are read at once.  */
 
-static boolean
-nlm_alpha_read_reloc (abfd, sym, secp, rel)
-     bfd *abfd;
-     nlmNAME(symbol_type) *sym;
-     asection **secp;
-     arelent *rel;
+static bfd_boolean
+nlm_alpha_read_reloc (bfd *abfd,
+		      nlmNAME (symbol_type) *sym,
+		      asection **secp,
+		      arelent *rel)
 {
   static bfd_vma gp_value;
   static bfd_vma lita_address;
@@ -421,12 +402,12 @@ nlm_alpha_read_reloc (abfd, sym, secp, rel)
   asection *code_sec, *data_sec;
 
   /* Read the reloc from the file.  */
-  if (bfd_read (&ext, sizeof ext, 1, abfd) != sizeof ext)
-    return false;
+  if (bfd_bread (&ext, (bfd_size_type) sizeof ext, abfd) != sizeof ext)
+    return FALSE;
 
   /* Swap in the reloc information.  */
-  r_vaddr = bfd_h_get_64 (abfd, (bfd_byte *) ext.r_vaddr);
-  r_symndx = bfd_h_get_32 (abfd, (bfd_byte *) ext.r_symndx);
+  r_vaddr = H_GET_64 (abfd, ext.r_vaddr);
+  r_symndx = H_GET_32 (abfd, ext.r_symndx);
 
   BFD_ASSERT (bfd_little_endian (abfd));
 
@@ -487,7 +468,7 @@ nlm_alpha_read_reloc (abfd, sym, secp, rel)
      or .data section.  R_NW_RELOC relocs don't really have a section,
      so we put them in .text.  */
   if (r_type == ALPHA_R_NW_RELOC
-      || r_vaddr < bfd_section_size (abfd, code_sec))
+      || r_vaddr < code_sec->size)
     {
       *secp = code_sec;
       rel->address = r_vaddr;
@@ -495,7 +476,7 @@ nlm_alpha_read_reloc (abfd, sym, secp, rel)
   else
     {
       *secp = data_sec;
-      rel->address = r_vaddr - bfd_section_size (abfd, code_sec);
+      rel->address = r_vaddr - code_sec->size;
     }
 
   /* We must adjust the addend based on the type.  */
@@ -596,81 +577,75 @@ nlm_alpha_read_reloc (abfd, sym, secp, rel)
   else
     rel->howto = &nlm32_alpha_howto_table[r_type];
 
-  return true;
+  return TRUE;
 }
 
 /* Mangle Alpha NLM relocs for output.  */
 
-static boolean
-nlm_alpha_mangle_relocs (abfd, sec, data, offset, count)
-     bfd *abfd;
-     asection *sec;
-     PTR data;
-     bfd_vma offset;
-     bfd_size_type count;
+static bfd_boolean
+nlm_alpha_mangle_relocs (bfd *abfd ATTRIBUTE_UNUSED,
+			 asection *sec ATTRIBUTE_UNUSED,
+			 const void * data ATTRIBUTE_UNUSED,
+			 bfd_vma offset ATTRIBUTE_UNUSED,
+			 bfd_size_type count ATTRIBUTE_UNUSED)
 {
-  return true;
+  return TRUE;
 }
 
-/* Read an ALPHA NLM import record */
+/* Read an ALPHA NLM import record.  */
 
-static boolean
-nlm_alpha_read_import (abfd, sym)
-     bfd *abfd;
-     nlmNAME(symbol_type) *sym;
+static bfd_boolean
+nlm_alpha_read_import (bfd *abfd, nlmNAME (symbol_type) * sym)
 {
-  struct nlm_relent *nlm_relocs;	/* relocation records for symbol */
-  bfd_size_type rcount;			/* number of relocs */
-  bfd_byte temp[NLM_TARGET_LONG_SIZE];	/* temporary 32-bit value */
-  unsigned char symlength;		/* length of symbol name */
+  struct nlm_relent *nlm_relocs;	/* Relocation records for symbol.  */
+  bfd_size_type rcount;			/* Number of relocs.  */
+  bfd_byte temp[NLM_TARGET_LONG_SIZE];	/* Temporary 32-bit value.  */
+  unsigned char symlength;		/* Length of symbol name.  */
   char *name;
+  bfd_size_type amt;
 
-  if (bfd_read ((PTR) &symlength, sizeof (symlength), 1, abfd)
+  if (bfd_bread (& symlength, (bfd_size_type) sizeof (symlength), abfd)
       != sizeof (symlength))
-    return false;
+    return FALSE;
   sym -> symbol.the_bfd = abfd;
-  name = bfd_alloc (abfd, symlength + 1);
+  name = bfd_alloc (abfd, (bfd_size_type) symlength + 1);
   if (name == NULL)
-    return false;
-  if (bfd_read (name, symlength, 1, abfd) != symlength)
-    return false;
+    return FALSE;
+  if (bfd_bread (name, (bfd_size_type) symlength, abfd) != symlength)
+    return FALSE;
   name[symlength] = '\0';
   sym -> symbol.name = name;
   sym -> symbol.flags = 0;
   sym -> symbol.value = 0;
   sym -> symbol.section = bfd_und_section_ptr;
-  if (bfd_read ((PTR) temp, sizeof (temp), 1, abfd) != sizeof (temp))
-    return false;
-  rcount = bfd_h_get_32 (abfd, temp);
-  nlm_relocs = ((struct nlm_relent *)
-		bfd_alloc (abfd, rcount * sizeof (struct nlm_relent)));
+  if (bfd_bread (temp, (bfd_size_type) sizeof (temp), abfd)
+      != sizeof (temp))
+    return FALSE;
+  rcount = H_GET_32 (abfd, temp);
+  amt = rcount * sizeof (struct nlm_relent);
+  nlm_relocs = bfd_alloc (abfd, amt);
   if (!nlm_relocs)
-    return false;
+    return FALSE;
   sym -> relocs = nlm_relocs;
   sym -> rcnt = 0;
   while (sym -> rcnt < rcount)
     {
       asection *section;
-      
-      if (nlm_alpha_read_reloc (abfd, sym, &section,
-				&nlm_relocs -> reloc)
-	  == false)
-	return false;
+
+      if (! nlm_alpha_read_reloc (abfd, sym, &section, &nlm_relocs -> reloc))
+	return FALSE;
       nlm_relocs -> section = section;
       nlm_relocs++;
       sym -> rcnt++;
     }
 
-  return true;
+  return TRUE;
 }
 
 /* Write an Alpha NLM reloc.  */
 
-static boolean
-nlm_alpha_write_import (abfd, sec, rel)
-     bfd *abfd;
-     asection *sec;
-     arelent *rel;
+static bfd_boolean
+nlm_alpha_write_import (bfd * abfd, asection * sec, arelent * rel)
 {
   asymbol *sym;
   bfd_vma r_vaddr;
@@ -686,9 +661,7 @@ nlm_alpha_write_import (abfd, sec, rel)
     {
       r_vaddr = bfd_get_section_vma (abfd, sec) + rel->address;
       if ((sec->flags & SEC_CODE) == 0)
-	r_vaddr += bfd_section_size (abfd,
-				     bfd_get_section_by_name (abfd,
-							      NLM_CODE_NAME));
+	r_vaddr += bfd_get_section_by_name (abfd, NLM_CODE_NAME) -> size;
       if (bfd_is_und_section (bfd_get_section (sym)))
 	{
 	  r_extern = 1;
@@ -733,7 +706,7 @@ nlm_alpha_write_import (abfd, sec, rel)
     }
   else
     {
-      /* r_type == ALPHA_R_NW_RELOC */
+      /* r_type == ALPHA_R_NW_RELOC.  */
       r_vaddr = rel->address;
       if (rel->addend == 0)
 	{
@@ -750,8 +723,8 @@ nlm_alpha_write_import (abfd, sec, rel)
     }
 
   /* Swap out the relocation fields.  */
-  bfd_h_put_64 (abfd, r_vaddr, (bfd_byte *) ext.r_vaddr);
-  bfd_h_put_32 (abfd, r_symndx, (bfd_byte *) ext.r_symndx);
+  H_PUT_64 (abfd, r_vaddr, ext.r_vaddr);
+  H_PUT_32 (abfd, r_symndx, ext.r_symndx);
 
   BFD_ASSERT (bfd_little_endian (abfd));
 
@@ -765,10 +738,10 @@ nlm_alpha_write_import (abfd, sec, rel)
 		   & RELOC_BITS3_SIZE_LITTLE);
 
   /* Write out the relocation.  */
-  if (bfd_write (&ext, sizeof ext, 1, abfd) != sizeof ext)
-    return false;
+  if (bfd_bwrite (&ext, (bfd_size_type) sizeof ext, abfd) != sizeof ext)
+    return FALSE;
 
-  return true;
+  return TRUE;
 }
 
 /* Alpha NetWare does not use the high bit to determine whether a
@@ -779,16 +752,14 @@ nlm_alpha_write_import (abfd, sec, rel)
 
 /* Set the section for a public symbol.  */
 
-static boolean
-nlm_alpha_set_public_section (abfd, sym)
-     bfd *abfd;
-     nlmNAME(symbol_type) *sym;
+static bfd_boolean
+nlm_alpha_set_public_section (bfd * abfd, nlmNAME (symbol_type) * sym)
 {
   asection *code_sec, *data_sec;
 
   code_sec = bfd_get_section_by_name (abfd, NLM_CODE_NAME);
   data_sec = bfd_get_section_by_name (abfd, NLM_INITIALIZED_DATA_NAME);
-  if (sym->symbol.value < bfd_section_size (abfd, code_sec))
+  if (sym->symbol.value < code_sec->size)
     {
       sym->symbol.section = code_sec;
       sym->symbol.flags |= BSF_FUNCTION;
@@ -796,45 +767,43 @@ nlm_alpha_set_public_section (abfd, sym)
   else
     {
       sym->symbol.section = data_sec;
-      sym->symbol.value -= bfd_section_size (abfd, code_sec);
+      sym->symbol.value -= code_sec->size;
       /* The data segment had better be aligned.  */
-      BFD_ASSERT ((bfd_section_size (abfd, code_sec) & 0xf) == 0);
+      BFD_ASSERT ((code_sec->size & 0xf) == 0);
     }
-  return true;
+  return TRUE;
 }
 
 /* Get the offset to write out for a public symbol.  */
 
 static bfd_vma
-nlm_alpha_get_public_offset (abfd, sym)
-     bfd *abfd;
-     asymbol *sym;
+nlm_alpha_get_public_offset (bfd * abfd ATTRIBUTE_UNUSED, asymbol * sym)
 {
   return bfd_asymbol_value (sym);
 }
 
 /* Write an Alpha NLM external symbol.  */
 
-static boolean
-nlm_alpha_write_external (abfd, count, sym, relocs)
-     bfd *abfd;
-     bfd_size_type count;
-     asymbol *sym;
-     struct reloc_and_sec *relocs;
+static bfd_boolean
+nlm_alpha_write_external (bfd *abfd,
+			  bfd_size_type count,
+			  asymbol *sym,
+			  struct reloc_and_sec *relocs)
 {
-  int i;
+  bfd_size_type i;
   bfd_byte len;
   unsigned char temp[NLM_TARGET_LONG_SIZE];
   arelent r;
 
   len = strlen (sym->name);
-  if ((bfd_write (&len, sizeof (bfd_byte), 1, abfd) != sizeof(bfd_byte))
-      || bfd_write (sym->name, len, 1, abfd) != len)
-    return false;
+  if ((bfd_bwrite (&len, (bfd_size_type) sizeof (bfd_byte), abfd)
+       != sizeof (bfd_byte))
+      || bfd_bwrite (sym->name, (bfd_size_type) len, abfd) != len)
+    return FALSE;
 
   bfd_put_32 (abfd, count + 2, temp);
-  if (bfd_write (temp, sizeof (temp), 1, abfd) != sizeof (temp))
-    return false;
+  if (bfd_bwrite (temp, (bfd_size_type) sizeof (temp), abfd) != sizeof (temp))
+    return FALSE;
 
   /* The first two relocs for each external symbol are the .lita
      address and the GP value.  */
@@ -843,22 +812,19 @@ nlm_alpha_write_external (abfd, count, sym, relocs)
 
   r.address = nlm_alpha_backend_data (abfd)->lita_address;
   r.addend = nlm_alpha_backend_data (abfd)->lita_size + 1;
-  if (nlm_alpha_write_import (abfd, (asection *) NULL, &r) == false)
-    return false;
+  if (! nlm_alpha_write_import (abfd, NULL, &r))
+    return FALSE;
 
   r.address = nlm_alpha_backend_data (abfd)->gp;
   r.addend = 0;
-  if (nlm_alpha_write_import (abfd, (asection *) NULL, &r) == false)
-    return false;
+  if (! nlm_alpha_write_import (abfd, NULL, &r))
+    return FALSE;
 
   for (i = 0; i < count; i++)
-    {
-      if (nlm_alpha_write_import (abfd, relocs[i].sec,
-				  relocs[i].rel) == false)
-	return false;
-    }
+    if (! nlm_alpha_write_import (abfd, relocs[i].sec, relocs[i].rel))
+      return FALSE;
 
-  return true;
+  return TRUE;
 }
 
 #include "nlmswap.h"
@@ -870,7 +836,7 @@ static const struct nlm_backend_data nlm32_alpha_backend =
   sizeof (struct nlm32_alpha_external_prefix_header),
   bfd_arch_alpha,
   0,
-  true, /* no uninitialized data permitted by Alpha NetWare.  */
+  TRUE, /* No uninitialized data permitted by Alpha NetWare.  */
   nlm_alpha_backend_object_p,
   nlm_alpha_write_prefix,
   nlm_alpha_read_reloc,
@@ -882,11 +848,11 @@ static const struct nlm_backend_data nlm32_alpha_backend =
   nlm_swap_fixed_header_in,
   nlm_swap_fixed_header_out,
   nlm_alpha_write_external,
-  0,	/* write_export */
+  0,	/* Write_export.  */
 };
 
 #define TARGET_LITTLE_NAME		"nlm32-alpha"
-#define TARGET_LITTLE_SYM		nlmNAME(alpha_vec)
-#define TARGET_BACKEND_DATA		&nlm32_alpha_backend
+#define TARGET_LITTLE_SYM		nlmNAME (alpha_vec)
+#define TARGET_BACKEND_DATA		& nlm32_alpha_backend
 
 #include "nlm-target.h"

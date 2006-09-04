@@ -8,121 +8,67 @@
 
 # This sets the following shell variables:
 #  HDEFINES		host specific compiler options
-#  host64		set to true if this is a 64 bit host
+#  host64		set to true if 64 bit types are as fast as 32 bit
 #  HOST_64BIT_TYPE	host 64 bit type
-#  SHLIB_CC		compiler to use when building shared library
-#  SHLIB_CFLAGS		flags to use when building shared library
-#  PICFLAG		may be set to flag to use to compile PIC
-#  SHLINK		may be set to the name to link the shared library to
-#  ALLLIBS		may be set to libraries to build
-#  HLDFLAGS		LDFLAGS specific to the host
-#  RPATH_ENVVAR		environment variable used to find shared libraries
+#  HOST_U_64BIT_TYPE	unsigned 64 bit type (not needed if 64BIT_TYPE is long)
 
 HDEFINES=
 host64=false
 HOST_64BIT_TYPE=
+HOST_U_64BIT_TYPE=
 
 case "${host}" in
 
-alpha-*-*)		host64=true; HOST_64BIT_TYPE=long ;;
-
-hppa*-*-hpux*)		HDEFINES=-DHOST_HPPAHPUX ;;
+hppa*-*-hpux*)		# HP/UX's ftello64 et.al. declarations are only
+			# visible when _LARGEFILE64_SOURCE is defined.
+			# Without those declarations, real_ftell et.al.
+			# get mis-compiled.
+			HDEFINES="-DHOST_HPPAHPUX -D_LARGEFILE64_SOURCE" ;;
 hppa*-*-hiux*)		HDEFINES=-DHOST_HPPAHPUX ;;
+hppa*-*-mpeix*)		HDEFINES=-DHOST_HPPAMPEIX ;;
 hppa*-*-bsd*)		HDEFINES=-DHOST_HPPABSD ;;
 hppa*-*-osf*)		HDEFINES=-DHOST_HPPAOSF ;;
 
-i[345]86-sequent-bsd*)	HDEFINES=-Dshared=genshared ;;
-i[345]86-sequent-sysv4*) ;;
-i[345]86-sequent-sysv*)	HDEFINES=-Dshared=genshared ;;
+ia64-*-*)		host64=true;;
 
-mips-dec-netbsd*)	;;
-mips-dec-*)		HDEFINES="-G 4"	;;
-mips-sgi-irix3*)	HDEFINES="-G 4" ;;
-mips-sgi-irix4*)	HDEFINES="-G 4" ;;
-mips-*-sysv4*)		;;
-mips-*-sysv*)		HDEFINES="-G 4" ;;
-mips-*-riscos*)		HDEFINES="-G 4" ;;
+# Workaround for limitations on win9x where file contents are
+# not zero'd out if you seek past the end and then write.
+i[3-7]86-*-mingw32*)	HDEFINES=-D__USE_MINGW_FSEEK;;
+
+i[3-7]86-sequent-bsd*)	HDEFINES=-Dshared=genshared ;;
+i[3-7]86-sequent-sysv4*) ;;
+i[3-7]86-sequent-sysv*)	HDEFINES=-Dshared=genshared ;;
+
+mips*-*-netbsd*)	;;
+mips*-*-openbsd*)	;;
+mips*-dec-*)		HDEFINES="-G 4"	;;
+mips*-sgi-irix3*)	HDEFINES="-G 4" ;;
+mips*-sgi-irix4*)	HDEFINES="-G 4" ;;
+mips*-sgi-irix6*)	host64=true;;
+mips64*-*-linux*)	host64=true;;
+mips*-*-sysv4*)		;;
+mips*-*-sysv*)		HDEFINES="-G 4" ;;
+mips*-*-riscos*)	HDEFINES="-G 4" ;;
 
 m68*-hp-hpux*)		HDEFINES=-DHOST_HP300HPUX ;;
 
-esac
-
-# If we are configuring with --enable-shared, adjust the shared
-# library support based on the host.  This support must work for both
-# the BFD and the opcodes libraries.
-HLDFLAGS=
-RPATH_ENVVAR=LD_LIBRARY_PATH
-SHLIB_CC='$(CC)'
-SHLIB_CFLAGS='-shared'
-if [ "${shared}" = "true" ]; then
-  case "${host}" in
-  hppa*-*-*)		picfrag=../config/mh-papic ;;
-  i[3456]86-*-*)	picfrag=../config/mh-x86pic ;;
-  *-*-*)		picfrag=../config/mh-${host_cpu}pic ;;
-  esac
-  if [ -f "${picfrag}" ]; then
-    pic=`sed -n -e 's/^PICFLAG[ 	]*=[ 	]*\(.*\)$/\1/p' ${picfrag}`
-    if [ -n "${pic}" ]; then
-      PICFLAG=${pic}
-    fi
-  fi
-
-  case "${host}" in
-  *-dec-osf*)
-    # -fpic is not needed on the Alpha.
-    PICFLAG=
-    ;;
-  *-*-hpux*)
-    # HP/UX uses .sl for shared libraries.
-    SHLINK=`echo ${SHLINK} | sed -e 's/so$/sl/'`
-    SHLIB_CFLAGS='-shared $(PICFLAG)'
-    HLDFLAGS='-Wl,+s,+b,$(libdir)'
-    RPATH_ENVVAR=SHLIB_PATH
-    ;;
-  *-*-irix5*)
-    # -fpic is not needed on Irix 5.
-    PICFLAG=
-    SHLIB_CFLAGS='-shared -Wl,-soname,$(SONAME)'
-    HLDFLAGS='-Wl,-rpath,$(libdir)'
-    ;;
-  *-*-linux*aout*)
-    ;;
-  *-*-linux*)
-    SHLIB_CFLAGS='-shared -Wl,-soname,$(SONAME)'
-    case "$(libdir)" in
-      /lib | /usr/lib) ;;
-      *) HLDFLAGS='-Wl,-rpath,$(libdir)' ;;
-    esac
-    ;;
-  *-*-sysv4* | *-*-solaris*)
-    SHLIB_CFLAGS='-shared -h $(SONAME)'
-    HLDFLAGS='-R $(libdir)'
-    ;;
-  *-*-sunos*)
-    # Build a libTARGET-bfd.so.VERSION symlink in the object directory.
-    ALLLIBS=`echo ${ALLLIBS} | sed -e 's/\$(SHLINK)/stamp-tshlink/'`
-    ;;
-  esac
-fi
-
-# On SunOS, if the linker supports the -rpath option, use it to
-# prevent ../bfd and ../opcodes from being included in the run time
-# search path.
-case "${host}" in
-  *-*-sunos*)
-    echo 'main () { }' > conftest.c
-    ${CC} -o conftest -Wl,-rpath= conftest.c >/dev/null 2>conftest.t
-    if grep 'unrecognized' conftest.t >/dev/null 2>&1; then
-      :
-    elif grep 'No such file' conftest.t >/dev/null 2>&1; then
-      :
-    elif grep 'do not mix' conftest.t >/dev/null 2>&1; then
-      :
-    elif [ "${shared}" = "true" ]; then
-      HLDFLAGS='-Wl,-rpath=$(libdir)'
-    else
-      HLDFLAGS='-Wl,-rpath='
-    fi
-    rm -f conftest.t conftest.c conftest
-    ;;
+*-*-windows*)
+			HOST_64BIT_TYPE=__int64
+			HOST_U_64BIT_TYPE="unsigned __int64"
+# The following krock is necessary because we can't run the build compiler
+# (MSVC) on the configure host, so we have to explicitly set the values here.
+# Note that this file is never run through autoconf, so we can't use any
+# autoconf macros here.  Because of this, we have to muck with autoconf
+# variables explicitly.
+			ac_cv_func_mmap_fixed_mapped=no
+			ac_cv_header_time=no
+			ac_cv_func_getpagesize=no
+			ac_cv_func_madvise=no
+			ac_cv_func_mprotect=no
+			ac_cv_func_getuid=no
+			ac_cv_func_getgid=no
+			ac_cv_header_sys_file_h=no
+			ac_cv_header_sys_time_h=no
+			ac_cv_header_unistd_h=no
+			;;
 esac

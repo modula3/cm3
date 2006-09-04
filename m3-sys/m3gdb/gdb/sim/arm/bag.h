@@ -13,7 +13,7 @@
  
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA. */
 
 /********************************************************************/
 /* bag.h:                                                           */
@@ -25,18 +25,19 @@
 /* is deleted.                                                      */
 /********************************************************************/
 
-typedef enum {
+typedef enum
+{
   NO_ERROR,
   DELETED_OLD_PAIR,
   NO_SUCH_PAIR,
-} Bag_error;
+}
+Bag_error;
 
-void BAG_putpair(long first, long second);
+void BAG_putpair (long first, long second);
 
-void BAG_newbag(void);
-Bag_error BAG_killpair_byfirst(long first);
-Bag_error BAG_killpair_bysecond(long second);
+void BAG_newbag (void);
+Bag_error BAG_killpair_byfirst (long first);
+Bag_error BAG_killpair_bysecond (long second);
 
-Bag_error BAG_getfirst(long *first, long second);
-Bag_error BAG_getsecond(long first, long *second);
-
+Bag_error BAG_getfirst (long *first, long second);
+Bag_error BAG_getsecond (long first, long *second);

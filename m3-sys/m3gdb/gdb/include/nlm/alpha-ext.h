@@ -1,5 +1,5 @@
 /* Alpha NLM (NetWare Loadable Module) support for BFD.
-   Copyright (C) 1993 Free Software Foundation, Inc.
+   Copyright 1993 Free Software Foundation, Inc.
    By Ian Lance Taylor, Cygnus Support
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /* An Alpha NLM starts with an instance of this structure.  */
 
