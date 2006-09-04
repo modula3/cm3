@@ -96,13 +96,13 @@ else
   % Here, current directory is LINUXLIBC6 
   CONFIG_PLATFORM = GNU_platform (M3GDB_HOST)
   %PM3: r = exec(["echo", "###################### CONFIGURE: ##################"])
-  %PM3: returnCode = exec (["../m3gdb-6.4/configure", M3GDB_CONFIG,
-  %PM3:                     "--srcdir=../m3gdb-6.4", CONFIG_PLATFORM])
-  %PM3: returnCode = exec (["../m3gdb-6.4/configure", "--srcdir=../m3gdb-6.4"])
+  %PM3: returnCode = exec (["../gdb/configure", M3GDB_CONFIG,
+  %PM3:                     "--srcdir=../gdb", CONFIG_PLATFORM])
+  %PM3: returnCode = exec (["../gdb/configure", "--srcdir=../gdb"])
   %PM3: r = exec(["echo", "###################### MAKE: ##################"])
   %PM3: returnCode = exec ([M3GDB_MAKE, ARG0, ARG1])
   exec("echo", "###################### CONFIGURE: ##################")
-  exec ("../m3gdb-6.4/configure", M3GDB_CONFIG, "--srcdir=../m3gdb-6.4", 
+  exec ("../gdb/configure", M3GDB_CONFIG, "--srcdir=../gdb", 
         CONFIG_PLATFORM )
   exec("echo", "###################### MAKE: ##################")
   exec(M3GDB_MAKE, ARG0, ARG1)
