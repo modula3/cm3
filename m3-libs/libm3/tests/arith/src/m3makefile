@@ -1,6 +1,0 @@
-import("libm3")
-import("unittest")
-import("unittest-numeric")
-
-implementation("Main")
-program("test")
