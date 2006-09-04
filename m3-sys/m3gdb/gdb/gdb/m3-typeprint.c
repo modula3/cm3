@@ -17,99 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
+
 #include "defs.h"
 #include "obstack.h"
-#include "bfd.h"		/* Binary File Description */
-#include "symtab.h"
-#include "gdbtypes.h"
-#include "expression.h"
-#include "value.h"
-#include "gdbcore.h"
-#include "target.h"
-#include "command.h"
-#include "gdbcmd.h"
-#include "language.h"
-#include "demangle.h"
 #include "c-lang.h"
-#include "typeprint.h"
-#include "symfile.h"
-#include "objfiles.h"
 
-#include <string.h>
-#include <errno.h>
 
-#include "m3-lang.h"
-
-void
-m3_type_print_base PARAMS ((struct type *, FILE *, int, int));
+#include "m3-typeprint.h" 
+#include "m3-util.h"
 
 
-/* Print a description of a type in the format of a 
-   typedef for the current language.
-   NEW is the new name for a type TYPE. */
-
-void
-m3_typedef_print (type, new, stream)
-   struct type *type;
-   struct symbol *new;
-   FILE *stream;
-{
-   switch (current_language->la_language)
-   {
-#ifdef _LANG_c
-   case language_c:
-   case language_cplus:
-      fprintf_filtered(stream, "typedef ");
-      type_print(type,"",stream,0);
-      if(TYPE_NAME ((SYMBOL_TYPE (new))) == 0
-	 || !STREQ (TYPE_NAME ((SYMBOL_TYPE (new))), SYMBOL_NAME (new)))
-	fprintf_filtered(stream,  " %s", SYMBOL_SOURCE_NAME(new));
-      break;
-#endif
-#ifdef _LANG_m2
-   case language_m2:
-      fprintf_filtered(stream, "TYPE ");
-      if(!TYPE_NAME(SYMBOL_TYPE(new)) ||
-	 !STREQ (TYPE_NAME(SYMBOL_TYPE(new)), SYMBOL_NAME(new)))
-	fprintf_filtered(stream, "%s = ", SYMBOL_SOURCE_NAME(new));
-      else
-	 fprintf_filtered(stream, "<builtin> = ");
-      type_print(type,"",stream,0);
-      break;
-#endif
-#ifdef _LANG_m3
-   case language_m3:
-      fprintf_filtered(stream, "TYPE %s = ", SYMBOL_SOURCE_NAME(new));
-      type_print(type,"",stream,0);
-      break;
-#endif
-#ifdef _LANG_chill
-   case language_chill:
-      error ("Missing Chill support in function m3_typedef_print."); /*FIXME*/
-#endif
-   default:
-      error("Language not supported.  4");
-   }
-   fprintf_filtered(stream, ";\n");
-}
-
-
-/* LEVEL is the depth to indent lines by.  */
-
-void
-m3_print_type (type, varstring, stream, show, level)
-     struct type *type;
-     char *varstring;
-     FILE *stream;
-     int show;
-     int level;
-{
-  m3_type_print_base (type, stream, show, level);
-  if (varstring != NULL && *varstring != '\0') {
-    fputs_filtered (" ", stream); }
-  fputs_filtered (varstring, stream);
-}
-
 /* Print the name of the type (or the ultimate pointer target,
    function value or array element), or the description of a
    structure or union.
@@ -126,7 +43,7 @@ m3_print_type (type, varstring, stream, show, level)
 void
 m3_type_print_base (type, stream, show, level)
      struct type *type;
-     FILE *stream;
+     struct ui_file *stream;
      int show;
      int level;
 {
@@ -174,8 +91,8 @@ m3_type_print_base (type, stream, show, level)
       break;
 
     case TYPE_CODE_M3_PACKED:
-      fprintf_filtered (stream, "BITS %d FOR ", TYPE_M3_SIZE (type));
-      m3_type_print_base (TYPE_M3_TARGET (type), stream, show-1, level);
+      fprintf_filtered (stream, "BITS %d FOR ", (int)TYPE_M3_SIZE (type));
+      m3_type_print_base (TYPE_M3_PACKED_TARGET (type), stream, show-1, level);
       break;
 
     case TYPE_CODE_M3_ENUM:
@@ -196,6 +113,8 @@ m3_type_print_base (type, stream, show, level)
 
        if (sc == TYPE_CODE_M3_ROOT) {
 	 /* nothing */ }
+       else if (sc == TYPE_CODE_M3_TRANSIENT_ROOT) {
+	 fprintf_filtered (stream, "TRANSIENT "); }
        else if (sc == TYPE_CODE_M3_UN_ROOT) {
 	 fprintf_filtered (stream, "UNTRACED "); }
        else {
@@ -225,6 +144,7 @@ m3_type_print_base (type, stream, show, level)
       break; }
 
     case TYPE_CODE_M3_PROC:
+    case TYPE_CODE_M3_METHOD: /* REVIEWME: What do we want to do here? */ 
       if (show < 0) {
 	fprintf_filtered (stream, "PROCEDURE ..."); 
 	break; }
@@ -238,10 +158,10 @@ m3_type_print_base (type, stream, show, level)
 	m3_type_print_base (TYPE_M3_PROC_ARG_TYPE (type, i), 
 			    stream, 0, level); }
       fprintf_filtered (stream, ")");
-      if (M3_TYPEP (TYPE_CODE (TYPE_M3_PROC_RESTYPE (type)))
-	  && TYPE_CODE (TYPE_M3_PROC_RESTYPE (type)) != TYPE_CODE_M3_VOID) {
+      if (M3_TYPEP (TYPE_CODE (TYPE_TARGET_TYPE (type)))
+	  && TYPE_CODE (TYPE_TARGET_TYPE (type)) != TYPE_CODE_M3_VOID) {
 	fprintf_filtered (stream, ": ");
-	m3_type_print_base (TYPE_M3_PROC_RESTYPE (type),
+	m3_type_print_base (TYPE_TARGET_TYPE (type),
 			    stream, 0, level); }
       switch (TYPE_M3_PROC_NRAISES (type))
 	{
@@ -274,6 +194,9 @@ m3_type_print_base (type, stream, show, level)
       break; 
 
     case TYPE_CODE_M3_POINTER: {
+      /* FIXME: This isn't right.  There can be real REF ARRAY OF CHAR that
+         are not TEXT.  Arrange so the statment below is no longer true,
+         then delete this case. rodney.bates@wichita.edu */ 
       /* Texts are passed as TYPE_CODE_M3_POINTER, not as TYPE_CODE_M3_TEXT ... */
       struct type *target = TYPE_M3_POINTER_TARGET (type);
       if (TYPE_CODE (target) == TYPE_CODE_M3_OPEN_ARRAY
@@ -305,12 +228,12 @@ m3_type_print_base (type, stream, show, level)
       if (en) {
 	fputs_filtered (TYPE_M3_ENUM_VALNAME (target, lower), stream); }
       else {
-	fprintf_filtered (stream, "%ld", lower); }
+	print_longest (stream, 'd', 1, lower); }
       fprintf_filtered (stream, " .. ");
       if (en) {
 	fputs_filtered (TYPE_M3_ENUM_VALNAME (target, upper), stream); }
       else {
-	fprintf_filtered (stream, "%ld", upper); }
+	print_longest (stream, 'd', 1, upper); }
       fprintf_filtered (stream, "]");
       break; }
 
@@ -326,10 +249,6 @@ m3_type_print_base (type, stream, show, level)
       fprintf_filtered (stream, "CHAR");
       break; 
 
-    case TYPE_CODE_M3_WIDECHAR:
-      fprintf_filtered (stream, "WIDECHAR");
-      break; 
-
     case TYPE_CODE_M3_INTEGER:
       fprintf_filtered (stream, "INTEGER");
       break; 
@@ -342,6 +261,10 @@ m3_type_print_base (type, stream, show, level)
       fprintf_filtered (stream, "REFANY");
       break; 
 
+    case TYPE_CODE_M3_TRANSIENT_REFANY:
+      fprintf_filtered (stream, "TRANSIENT REFANY");
+      break; 
+
     case TYPE_CODE_M3_MUTEX:
       fprintf_filtered (stream, "MUTEX");
       break; 
@@ -352,6 +275,10 @@ m3_type_print_base (type, stream, show, level)
 
     case TYPE_CODE_M3_ROOT:
       fprintf_filtered (stream, "ROOT");
+      break; 
+
+    case TYPE_CODE_M3_TRANSIENT_ROOT:
+      fprintf_filtered (stream, "TRANSIENT ROOT");
       break; 
 
     case TYPE_CODE_M3_TEXT:
@@ -381,5 +308,6 @@ m3_type_print_base (type, stream, show, level)
 	}
       break;
     }
-}
+} /* m3_type_print_base */ 
 
+/* End of file m3-typeprint.c */ 

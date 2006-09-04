@@ -24,40 +24,39 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
    surprises, these  strings are also legal C identifiers.
 */
 
-#include <string.h>
 #include "defs.h"
+#include "gdb_string.h"
+
 #include "m3-uid.h"
 
 char *
-m3uid_from_int (x)
-  int x;
+m3uid_from_int (const int x)
 {
   char *res;
   unsigned digit;
   int i;
+  int lx = x;
 
-  if (x == -1) return "zzzzzz";
+  if (lx == -1) return "zzzzzz";
 
   res = (char *) malloc (M3UID_LEN + 1);
   res[M3UID_LEN] = 0;
   for (i = M3UID_LEN-1; i >= 0; i--) {
-    digit = ((unsigned)x) % 62;
-    x = ((unsigned)x) / 62;
+    digit = ((unsigned)lx) % 62;
+    lx = ((unsigned)lx) / 62;
     if      (digit < 26) { res[i] = 'A' + digit; }
     else if (digit < 52) { res[i] = 'a' + (digit - 26); }
     else                 { res[i] = '0' + (digit - 52); }
   }
 
-  if ((x != 0) || (res[0] < 'A') || ('Z' < res[0])) {
+  if ((lx != 0) || (res[0] < 'A') || ('Z' < res[0])) {
     error ("bad uid -> identifier conversion!!"); }
 
   return res;
 }
 
 int
-m3uid_to_int (uid, val)
-     char *uid;
-     int  *val;
+m3uid_to_int (const char *uid, int *val)
 {
   int value, digit, i;
   char c;
@@ -67,7 +66,7 @@ m3uid_to_int (uid, val)
 
   if (strlen (uid) < M3UID_LEN) return 0;
 
-  if (STREQ (uid, "zzzzzz")) { *val = -1;  return 1; };
+  if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0) { *val = -1;  return 1; };
 
   value = 0;
   for (i = 0; i < M3UID_LEN; i++) {
@@ -81,3 +80,5 @@ m3uid_to_int (uid, val)
   *val = value;
   return 1;
 }
+
+/* End of file m3-uid.c */ 

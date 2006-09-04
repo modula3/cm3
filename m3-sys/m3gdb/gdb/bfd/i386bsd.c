@@ -1,5 +1,6 @@
 /* BFD back-end for i386 a.out binaries under BSD.
-   Copyright (C) 1990, 1991, 1992 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1993, 1994, 2001
+   Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /* This data should be correct for the format used under all the various
    BSD ports for 386 machines.  */
@@ -35,7 +36,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define	DEFAULT_ARCH	bfd_arch_i386
 #define MACHTYPE_OK(mtype) ((mtype) == M_386 || (mtype) == M_UNKNOWN)
 
-#define MY(OP) CAT(i386bsd_,OP)
+/* Do not "beautify" the CONCAT* macro args.  Traditional C will not
+   remove whitespace added here, and thus will fail to concatenate
+   the tokens.  */
+#define MY(OP) CONCAT2 (i386bsd_,OP)
 #define TARGETNAME "a.out-i386-bsd"
 
 #include "bfd.h"

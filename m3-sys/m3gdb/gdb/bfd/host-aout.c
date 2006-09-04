@@ -1,5 +1,6 @@
 /* BFD backend for local host's a.out binaries
-   Copyright (C) 1990, 91, 92, 93, 94 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1994, 1995, 2001
+   Free Software Foundation, Inc.
    Written by Cygnus Support.  Probably John Gilmore's fault.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -16,7 +17,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "bfd.h"
 #include "sysdep.h"
@@ -77,7 +78,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #endif
 #endif /* HOST_MACHINE_ARCH */
 
-#define MY(OP) CAT(host_aout_,OP)
+/* Do not "beautify" the CONCAT* macro args.  Traditional C will not
+   remove whitespace added here, and thus will fail to concatenate
+   the tokens.  */
+#define MY(OP) CONCAT2 (host_aout_,OP)
 #define TARGETNAME "a.out"
 
 #include "aout-target.h"

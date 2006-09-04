@@ -12,8 +12,8 @@
  */
 
 /*
- * RCS $Revision: 1.2 $
- * Checkin $Date: 2006-09-04 13:24:57 $
+ * RCS $Revision: 1.2.2.1 $
+ * Checkin $Date: 2006-09-04 19:08:22 $
  */
 
 #include "angel_bytesex.h"

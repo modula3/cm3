@@ -9,8 +9,8 @@
 /*
  * Host C Library support functions.
  *
- * $Revision: 1.2 $
- *     $Date: 2006-09-04 13:24:57 $
+ * $Revision: 1.2.2.1 $
+ *     $Date: 2006-09-04 19:08:26 $
  */
 
 #ifdef DEBUG

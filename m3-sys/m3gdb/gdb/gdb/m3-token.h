@@ -1,6 +1,28 @@
+/* M3 language support routines for GDB, the GNU debugger.
+   Copyright 2006 Free Software Foundation, Inc.
 
+This file is part of GDB.
 
-typedef enum {
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+
+#if !defined (M3_TOKEN_H)
+#define M3_TOKEN_H 1
+
+#include "defs.h"
+ 
+enum m3_token_kind {
 
   TK_EOF,              /* end-of-file */
 
@@ -53,23 +75,22 @@ typedef enum {
   TK_GDB_VAR,           /*  $id  - GDB variable       => string, len */
   TK_ERROR              /*  lexical error... */
 
-} m3_token_kind;
+};
 
-
-
-typedef struct {
-  m3_token_kind  kind;
-  char *         string;
-  int            length;
-  LONGEST        intval;
-  double         floatval;
-} m3_token;
-
-
+struct m3_token {
+  enum m3_token_kind  kind;
+  char * string;
+  int length;
+  LONGEST intval;
+  double floatval;
+};
 
 extern char *
-scan_m3_token PARAMS ((char *, m3_token *));
+scan_m3_token PARAMS ((char *, struct m3_token *));
 
 extern char *
-m3_token_name PARAMS ((m3_token *));
+m3_token_name PARAMS ((struct m3_token *));
 
+#endif /* !defined (M3_TOKEN_H) */
+
+/* End of file "m3-token.h" */ 

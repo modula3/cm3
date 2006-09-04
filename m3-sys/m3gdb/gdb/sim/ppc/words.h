@@ -38,25 +38,40 @@
      *_NN       Size according to the number of bytes
      *_word     Size based on the target architecture's word
      		word size (32/64 bits)
+     *_cell     Size based on the target architecture's
+     		IEEE 1275 cell size (almost always 32 bits)
 
 */
 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 /* bit based */
 typedef char natural8;
 typedef short natural16;
 typedef long natural32;
-typedef long long natural64;
 
 typedef signed char signed8;
 typedef signed short signed16;
 typedef signed long signed32;
-typedef signed long long signed64;
 
 typedef unsigned char unsigned8;
 typedef unsigned short unsigned16;
 typedef unsigned long unsigned32;
+
+#ifdef __GNUC__
+typedef long long natural64;
+typedef signed long long signed64;
 typedef unsigned long long unsigned64;
+#endif
+
+#ifdef _MSC_VER
+typedef __int64 natural64;
+typedef signed __int64 signed64;
+typedef unsigned __int64 unsigned64;
+#endif 
 
 
 /* byte based */
@@ -96,5 +111,10 @@ typedef signed32 signed_word;
 
 /* Other instructions */
 typedef unsigned32 instruction_word;
+
+/* IEEE 1275 cell size - only support 32bit mode at present */
+typedef natural32 natural_cell;
+typedef unsigned32 unsigned_cell;
+typedef signed32 signed_cell;
 
 #endif /* _WORDS_H_ */

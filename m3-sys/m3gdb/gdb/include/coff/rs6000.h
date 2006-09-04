@@ -1,5 +1,5 @@
 /* IBM RS/6000 "XCOFF" file definitions for BFD.
-   Copyright (C) 1990, 1991 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 2001 Free Software Foundation, Inc.
    FIXME: Can someone provide a transliteration of this name into ASCII?
    Using the following chars caused a compiler warning on HIUX (so I replaced
    them with octal escapes), and isn't useful without an understanding of what
@@ -29,7 +29,7 @@ struct external_filehdr {
 	 (x).f_magic != U802TOCMAGIC)
 
 #define	FILHDR	struct external_filehdr
-#define	FILHSZ	sizeof(FILHDR)
+#define	FILHSZ	20
 
 
 /********************** AOUT "OPTIONAL HEADER" **********************/
@@ -62,13 +62,9 @@ typedef struct
 }
 AOUTHDR;
 
-#define AOUTSZ (sizeof(AOUTHDR))
+#define AOUTSZ 72
 #define SMALL_AOUTSZ (28)
-
-#define	RS6K_AOUTHDR_OMAGIC	0x0107	/* old: text & data writeable */
-#define	RS6K_AOUTHDR_NMAGIC	0x0108	/* new: text r/o, data r/w */
-#define	RS6K_AOUTHDR_ZMAGIC	0x010B	/* paged: text r/o, both page-aligned */
-
+#define AOUTHDRSZ 72
 
 /********************** SECTION HEADER **********************/
 
@@ -86,27 +82,8 @@ struct external_scnhdr {
 	char		s_flags[4];	/* flags			*/
 };
 
-/*
- * names of "special" sections
- */
-#define _TEXT	".text"
-#define _DATA	".data"
-#define _BSS	".bss"
-#define _PAD	".pad"
-#define _LOADER	".loader"
-
 #define	SCNHDR	struct external_scnhdr
-#define	SCNHSZ	sizeof(SCNHDR)
-
-/* XCOFF uses a special .loader section with type STYP_LOADER.  */
-#define STYP_LOADER 0x1000
-
-/* XCOFF uses a special .debug section with type STYP_DEBUG.  */
-#define STYP_DEBUG 0x2000
-
-/* XCOFF handles line number or relocation overflow by creating
-   another section header with STYP_OVRFLO set.  */
-#define STYP_OVRFLO 0x8000
+#define	SCNHSZ	40
 
 /********************** LINE NUMBERS **********************/
 
@@ -125,7 +102,7 @@ struct external_lineno {
 
 
 #define	LINENO	struct external_lineno
-#define	LINESZ	sizeof(LINENO) 
+#define	LINESZ	6
 
 
 /********************** SYMBOLS **********************/
@@ -240,3 +217,51 @@ struct external_reloc {
 #define DEFAULT_TEXT_SECTION_ALIGNMENT 4
 /* For new sections we havn't heard of before */
 #define DEFAULT_SECTION_ALIGNMENT 4
+
+/* The ldhdr structure.  This appears at the start of the .loader
+   section.  */
+
+struct external_ldhdr
+{
+  bfd_byte l_version[4];
+  bfd_byte l_nsyms[4];
+  bfd_byte l_nreloc[4];
+  bfd_byte l_istlen[4];
+  bfd_byte l_nimpid[4];
+  bfd_byte l_impoff[4];
+  bfd_byte l_stlen[4];
+  bfd_byte l_stoff[4];
+};
+
+#define LDHDRSZ (8 * 4)
+
+struct external_ldsym
+{
+  union
+    {
+      bfd_byte _l_name[SYMNMLEN];
+      struct
+	{
+	  bfd_byte _l_zeroes[4];
+	  bfd_byte _l_offset[4];
+	} _l_l;
+    } _l;
+  bfd_byte l_value[4];
+  bfd_byte l_scnum[2];
+  bfd_byte l_smtype[1];
+  bfd_byte l_smclas[1];
+  bfd_byte l_ifile[4];
+  bfd_byte l_parm[4];
+};
+
+#define LDSYMSZ (8 + 3 * 4 + 2 + 2)
+
+struct external_ldrel
+{
+  bfd_byte l_vaddr[4];
+  bfd_byte l_symndx[4];
+  bfd_byte l_rtype[2];
+  bfd_byte l_rsecnm[2];
+};
+
+#define LDRELSZ (2 * 4 + 2 * 2)

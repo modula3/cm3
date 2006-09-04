@@ -1,5 +1,22 @@
 /* Internal format of COFF object file data structures, for GNU BFD.
-   This file is part of BFD, the Binary File Descriptor library.  */
+   This file is part of BFD, the Binary File Descriptor library.
+   
+   Copyright 1999, 2000, 2001, 2002, 2003, 2004. 2005
+   Free Software Foundation, Inc.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #ifndef GNU_COFF_INTERNAL_H
 #define GNU_COFF_INTERNAL_H 1
@@ -45,7 +62,7 @@ struct internal_filehdr
 {
   struct internal_extra_pe_filehdr pe;
 
-  /* standard coff  internal info */
+  /* Standard coff internal info.  */
   unsigned short f_magic;	/* magic number			*/
   unsigned short f_nscns;	/* number of sections		*/
   long f_timdat;		/* time & date stamp		*/
@@ -53,21 +70,21 @@ struct internal_filehdr
   long f_nsyms;			/* number of symtab entries	*/
   unsigned short f_opthdr;	/* sizeof(optional hdr)		*/
   unsigned short f_flags;	/* flags			*/
+  unsigned short f_target_id;	/* (TI COFF specific)		*/
 };
 
 
 /* Bits for f_flags:
- *	F_RELFLG	relocation info stripped from file
- *	F_EXEC		file is executable (no unresolved external references)
- *	F_LNNO		line numbers stripped from file
- *	F_LSYMS		local symbols stripped from file
- *	F_AR16WR	file is 16-bit little-endian
- *	F_AR32WR	file is 32-bit little-endian
- *	F_AR32W		file is 32-bit big-endian
- *	F_DYNLOAD	rs/6000 aix: dynamically loadable w/imports & exports
- *	F_SHROBJ	rs/6000 aix: file is a shared object
- *      F_DLL           PE format DLL
- */
+ 	F_RELFLG	relocation info stripped from file
+ 	F_EXEC		file is executable (no unresolved external references)
+ 	F_LNNO		line numbers stripped from file
+ 	F_LSYMS		local symbols stripped from file
+ 	F_AR16WR	file is 16-bit little-endian
+ 	F_AR32WR	file is 32-bit little-endian
+ 	F_AR32W		file is 32-bit big-endian
+ 	F_DYNLOAD	rs/6000 aix: dynamically loadable w/imports & exports
+ 	F_SHROBJ	rs/6000 aix: file is a shared object
+        F_DLL           PE format DLL.  */
 
 #define	F_RELFLG	(0x0001)
 #define	F_EXEC		(0x0002)
@@ -80,7 +97,7 @@ struct internal_filehdr
 #define	F_SHROBJ	(0x2000)
 #define F_DLL           (0x2000)
 
-/* extra structure which is used in the optional header */
+/* Extra structure which is used in the optional header.  */
 typedef struct _IMAGE_DATA_DIRECTORY 
 {
   bfd_vma VirtualAddress;
@@ -88,14 +105,20 @@ typedef struct _IMAGE_DATA_DIRECTORY
 }  IMAGE_DATA_DIRECTORY;
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES  16
 
-/* default image base for NT */
+/* Default image base for NT.  */
 #define NT_EXE_IMAGE_BASE 0x400000
 #define NT_DLL_IMAGE_BASE 0x10000000
+
+/* Default image base for BeOS. */
+#define BEOS_EXE_IMAGE_BASE 0x80000000
+#define BEOS_DLL_IMAGE_BASE 0x10000000
 
 /* Extra stuff in a PE aouthdr */
 
 #define PE_DEF_SECTION_ALIGNMENT 0x1000
-#define PE_DEF_FILE_ALIGNMENT 0x200
+#ifndef PE_DEF_FILE_ALIGNMENT
+# define PE_DEF_FILE_ALIGNMENT 0x200
+#endif
 
 struct internal_extra_pe_aouthdr 
 {
@@ -151,7 +174,7 @@ struct internal_aouthdr
   unsigned long tagentries;	/* number of tag entries to follow */
 
   /* RS/6000 stuff */
-  unsigned long o_toc;		/* address of TOC			*/
+  bfd_vma o_toc;		/* address of TOC			*/
   short o_snentry;		/* section number for entry point */
   short o_sntext;		/* section number for text	*/
   short o_sndata;		/* section number for data	*/
@@ -162,8 +185,8 @@ struct internal_aouthdr
   short o_algndata;		/* max alignment for data	*/
   short o_modtype;		/* Module type field, 1R,RE,RO	*/
   short o_cputype;		/* Encoded CPU type		*/
-  unsigned long o_maxstack;	/* max stack size allowed.	*/
-  unsigned long o_maxdata;	/* max data size allowed.	*/
+  bfd_vma o_maxstack;	/* max stack size allowed.	*/
+  bfd_vma o_maxdata;	/* max data size allowed.	*/
 
   /* ECOFF stuff */
   bfd_vma bss_start;		/* Base of bss section.		*/
@@ -177,9 +200,7 @@ struct internal_aouthdr
   long o_sri;			/* Static Resource Information */
   long vid[2];			/* Version id */
 
-
   struct internal_extra_pe_aouthdr pe;
-
 };
 
 /********************** STORAGE CLASSES **********************/
@@ -214,6 +235,18 @@ struct internal_aouthdr
 #define C_LINE		104	/* line # reformatted as symbol table entry */
 #define C_ALIAS	 	105	/* duplicate tag		*/
 #define C_HIDDEN	106	/* ext symbol in dmert public lib */
+
+#if defined _AIX52 || defined AIX_WEAK_SUPPORT
+#define C_WEAKEXT	111	/* weak symbol -- AIX standard.  */
+#else
+#define C_WEAKEXT	127	/* weak symbol -- GNU extension.  */
+#endif
+
+/* New storage classes for TI COFF */
+#define C_UEXT		19	/* Tentative external definition */
+#define C_STATLAB	20	/* Static load time label */
+#define C_EXTLAB	21	/* External load time label */
+#define C_SYSTEM	23	/* System Wide variable */
 
 /* New storage classes for WINDOWS_NT   */
 #define C_SECTION       104     /* section name */
@@ -258,11 +291,27 @@ struct internal_aouthdr
 #define C_BSTAT         (0x8f)
 #define C_ESTAT         (0x90)
 
+/* Storage classes for Thumb symbols */
+#define C_THUMBEXT      (128 + C_EXT)		/* 130 */
+#define C_THUMBSTAT     (128 + C_STAT)		/* 131 */
+#define C_THUMBLABEL    (128 + C_LABEL)		/* 134 */
+#define C_THUMBEXTFUNC  (C_THUMBEXT  + 20)	/* 150 */
+#define C_THUMBSTATFUNC (C_THUMBSTAT + 20)	/* 151 */
+
 /********************** SECTION HEADER **********************/
+
+#define SCNNMLEN (8)
+
 struct internal_scnhdr
 {
-  char s_name[8];		/* section name			*/
-  bfd_vma s_paddr;		/* physical address, aliased s_nlib */
+  char s_name[SCNNMLEN];	/* section name			*/
+
+  /* Physical address, aliased s_nlib.
+     In the pei format, this field is the virtual section size
+     (the size of the section after being loaded int memory),
+     NOT the physical address.  */
+  bfd_vma s_paddr;
+
   bfd_vma s_vaddr;		/* virtual address		*/
   bfd_vma s_size;		/* section size			*/
   bfd_vma s_scnptr;		/* file ptr to raw data for section */
@@ -272,11 +321,10 @@ struct internal_scnhdr
   unsigned long s_nlnno;	/* number of line number entries*/
   long s_flags;			/* flags			*/
   long s_align;			/* used on I960			*/
+  unsigned char s_page;         /* TI COFF load page            */
 };
 
-/*
- * s_flags "type"
- */
+/* s_flags "type".  */
 #define STYP_REG	 (0x0000)	/* "regular": allocated, relocated, loaded */
 #define STYP_DSECT	 (0x0001)	/* "dummy":  relocated only*/
 #define STYP_NOLOAD	 (0x0002)	/* "noload": allocated, relocated, not loaded */
@@ -295,29 +343,27 @@ struct internal_scnhdr
 #define STYP_OVER	 (0x0400)	/* overlay: relocated not allocated or loaded */
 #define STYP_LIB	 (0x0800)	/* for .lib: same as INFO */
 #define STYP_MERGE	 (0x2000)	/* merge section -- combines with text, data or bss sections only */
-#define STYP_REVERSE_PAD (0x4000)	/* section will be padded with no-op instructions wherever padding is necessary and there is a
-					
-									     word of contiguous bytes
-									     beginning on a word boundary. */
+#define STYP_REVERSE_PAD (0x4000)	/* section will be padded with no-op instructions
+					   wherever padding is necessary and there is a
+					   word of contiguous bytes beginning on a word
+					   boundary. */
 
 #define STYP_LIT	0x8020	/* Literal data (like STYP_TEXT) */
-
 
 
 /********************** LINE NUMBERS **********************/
 
 /* 1 line number entry for every "breakpointable" source line in a section.
- * Line numbers are grouped on a per function basis; first entry in a function
- * grouping will have l_lnno = 0 and in place of physical address will be the
- * symbol table index of the function name.
- */
+   Line numbers are grouped on a per function basis; first entry in a function
+   grouping will have l_lnno = 0 and in place of physical address will be the
+   symbol table index of the function name.  */
 
 struct internal_lineno
 {
   union
   {
-    long l_symndx;		/* function name symbol index, iff l_lnno == 0*/
-    long l_paddr;		/* (physical) address of line number	*/
+    bfd_signed_vma l_symndx;		/* function name symbol index, iff l_lnno == 0*/
+    bfd_signed_vma l_paddr;		/* (physical) address of line number	*/
   }     l_addr;
   unsigned long l_lnno;		/* line number		*/
 };
@@ -340,7 +386,7 @@ struct internal_syment
     }      _n_n;
     char *_n_nptr[2];		/* allows for overlaying	*/
   }     _n;
-  long n_value;			/* value of symbol		*/
+  bfd_vma n_value;			/* value of symbol		*/
   short n_scnum;		/* section number		*/
   unsigned short n_flags;	/* copy of flags from filhdr	*/
   unsigned short n_type;	/* type and derived type	*/
@@ -352,9 +398,8 @@ struct internal_syment
 #define n_zeroes	_n._n_n._n_zeroes
 #define n_offset	_n._n_n._n_offset
 
-
 /* Relocatable symbols have number of the section in which they are defined,
-   or one of the following: */
+   or one of the following:  */
 
 #define N_UNDEF	((short)0)	/* undefined symbol */
 #define N_ABS	((short)-1)	/* value of symbol is absolute */
@@ -362,9 +407,8 @@ struct internal_syment
 #define N_TV	((short)-3)	/* indicates symbol needs preload transfer vector */
 #define P_TV	((short)-4)	/* indicates symbol needs postload transfer vector*/
 
-/*
- * Type of a symbol, in low N bits of the word
- */
+/* Type of a symbol, in low N bits of the word.  */
+
 #define T_NULL		0
 #define T_VOID		1	/* function argument (only used by compiler) */
 #define T_CHAR		2	/* character		*/
@@ -383,22 +427,26 @@ struct internal_syment
 #define T_ULONG		15	/* unsigned long	*/
 #define T_LNGDBL	16	/* long double		*/
 
-/*
- * derived types, in n_type
-*/
+/* Derived types, in n_type.  */
+
 #define DT_NON		(0)	/* no derived type */
 #define DT_PTR		(1)	/* pointer */
 #define DT_FCN		(2)	/* function */
 #define DT_ARY		(3)	/* array */
 
 #define BTYPE(x)	((x) & N_BTMASK)
+#define DTYPE(x)	(((x) & N_TMASK) >> N_BTSHFT)
 
-#define ISPTR(x)	(((x) & N_TMASK) == (DT_PTR << N_BTSHFT))
-#define ISFCN(x)	(((x) & N_TMASK) == (DT_FCN << N_BTSHFT))
-#define ISARY(x)	(((x) & N_TMASK) == (DT_ARY << N_BTSHFT))
-#define ISTAG(x)	((x)==C_STRTAG||(x)==C_UNTAG||(x)==C_ENTAG)
-#define DECREF(x) ((((x)>>N_TSHIFT)&~N_BTMASK)|((x)&N_BTMASK))
-
+#define ISPTR(x) \
+  (((unsigned long) (x) & N_TMASK) == ((unsigned long) DT_PTR << N_BTSHFT))
+#define ISFCN(x) \
+  (((unsigned long) (x) & N_TMASK) == ((unsigned long) DT_FCN << N_BTSHFT))
+#define ISARY(x) \
+  (((unsigned long) (x) & N_TMASK) == ((unsigned long) DT_ARY << N_BTSHFT))
+#define ISTAG(x) \
+  ((x) == C_STRTAG || (x) == C_UNTAG || (x) == C_ENTAG)
+#define DECREF(x) \
+  ((((x) >> N_TSHIFT) & ~ N_BTMASK) | ((x) & N_BTMASK))
 
 union internal_auxent
 {
@@ -425,7 +473,7 @@ union internal_auxent
     {
       struct
       {				/* if ISFCN, tag, or .bb */
-	long x_lnnoptr;		/* ptr to fcn line # */
+	bfd_signed_vma x_lnnoptr;		/* ptr to fcn line # */
 	union
 	{			/* entry ndx past block end */
 	  long l;
@@ -457,6 +505,9 @@ union internal_auxent
     long x_scnlen;		/* section length */
     unsigned short x_nreloc;	/* # relocation entries */
     unsigned short x_nlinno;	/* # line numbers */
+    unsigned long x_checksum;	/* section COMDAT checksum for PE */
+    unsigned short x_associated; /* COMDAT associated section index for PE */
+    unsigned char x_comdat;	/* COMDAT selection number for PE */
   }      x_scn;
 
   struct
@@ -473,7 +524,7 @@ union internal_auxent
   {
     union
       {				/* csect length or enclosing csect */
-	long l;
+	bfd_signed_vma l;
 	struct coff_ptr_struct *p;
       } x_scnlen;
     long x_parmhash;		/* parm type hash index */
@@ -553,54 +604,102 @@ struct internal_reloc
   unsigned long r_offset;	/* Used by Alpha ECOFF, SPARC, others */
 };
 
-#define R_RELBYTE	017
-#define R_RELWORD	020
-#define R_PCRBYTE	022
-#define R_PCRWORD	023
-#define R_PCRLONG	024
+#define R_DIR16 	 1
+#define R_REL24          5
+#define R_DIR32 	 6
+#define R_IMAGEBASE	 7
+#define R_SECREL32	11
+#define R_RELBYTE	15
+#define R_RELWORD	16
+#define R_RELLONG	17
+#define R_PCRBYTE	18
+#define R_PCRWORD	19
+#define R_PCRLONG	20
+#define R_PCR24         21
+#define R_IPRSHORT	24
+#define R_IPRLONG	26
+#define R_GETSEG	29
+#define R_GETPA 	30
+#define R_TAGWORD	31
+#define R_JUMPTARG	32	/* strange 29k 00xx00xx reloc */
+#define R_PARTLS16      32
+#define R_PARTMS8       33
 
-#define	R_DIR16		01
-#define R_DIR32		06
-#define	R_PCLONG	020
-#define R_RELBYTE	017
-#define R_RELWORD	020
-#define R_IMAGEBASE     07
-
-
-#define R_PCR16L 128
-#define R_PCR26L 129
-#define R_VRT16  130
-#define R_HVRT16 131
-#define R_LVRT16 132
-#define R_VRT32  133
-#define R_RELLONG	(0x11)	/* Direct 32-bit relocation */
-#define R_IPRSHORT	(0x18)
-#define R_IPRMED 	(0x19)	/* 24-bit ip-relative relocation */
-#define R_IPRLONG	(0x1a)
-#define R_OPTCALL	(0x1b)	/* 32-bit optimizable call (leafproc/sysproc) */
-#define R_OPTCALLX	(0x1c)	/* 64-bit optimizable call (leafproc/sysproc) */
-#define R_GETSEG	(0x1d)
-#define R_GETPA		(0x1e)
-#define R_TAGWORD	(0x1f)
-#define R_JUMPTARG	0x20	/* strange 29k 00xx00xx reloc */
+#define R_PCR16L       128
+#define R_PCR26L       129
+#define R_VRT16        130
+#define R_HVRT16       131
+#define R_LVRT16       132
+#define R_VRT32        133
 
 
-#define R_MOVB1    	0x41	/* Special h8 16bit or 8 bit reloc for mov.b 	*/
-#define R_MOVB2 	0x42	/* Special h8 opcode for 8bit which could be 16 */
-#define R_JMP1     	0x43	/* Special h8 16bit jmp which could be pcrel 	*/
-#define R_JMP2 		0x44	/* a branch which used to be a jmp 		*/
+/* This reloc identifies mov.b instructions with a 16bit absolute
+   address.  The linker tries to turn insns with this reloc into
+   an absolute 8-bit address.  */
+#define R_MOV16B1    	0x41
+
+/* This reloc identifies mov.b instructions which had a 16bit
+   absolute address which have been shortened into a 8-bit
+   absolute address.  */
+#define R_MOV16B2 	0x42
+
+/* This reloc identifies jmp insns with a 16bit target address;
+   the linker tries to turn these insns into bra insns with
+   an 8bit pc-relative target.  */
+#define R_JMP1     	0x43
+
+/* This reloc identifies a bra with an 8-bit pc-relative
+   target that was formerly a jmp insn with a 16bit target.  */
+#define R_JMP2 		0x44
+
+/* ??? */
 #define R_RELLONG_NEG  	0x45
 
-#define R_JMPL1     	0x46	/* Special h8 24bit jmp which could be pcrel 	*/
-#define R_JMPL_B8	0x47	/* a 8 bit pcrel which used to be a jmp  */
+/* This reloc identifies jmp insns with a 24bit target address;
+   the linker tries to turn these insns into bra insns with
+   an 8bit pc-relative target.  */
+#define R_JMPL1     	0x46
 
-#define R_MOVLB1    	0x48	/* Special h8 24bit or 8 bit reloc for mov.b 	*/
-#define R_MOVLB2 	0x49	/* Special h8 opcode for 8bit which could be 24 */
+/* This reloc identifies a bra with an 8-bit pc-relative
+   target that was formerly a jmp insn with a 24bit target.  */
+#define R_JMPL2		0x47
+
+/* This reloc identifies mov.b instructions with a 24bit absolute
+   address.  The linker tries to turn insns with this reloc into
+   an absolute 8-bit address.  */
+
+#define R_MOV24B1    	0x48
+
+/* This reloc identifies mov.b instructions which had a 24bit
+   absolute address which have been shortened into a 8-bit
+   absolute address.  */
+#define R_MOV24B2 	0x49
 
 /* An h8300 memory indirect jump/call.  Forces the address of the jump/call
    target into the function vector (in page zero), and the address of the
    vector entry to be placed in the jump/call instruction.  */
 #define R_MEM_INDIRECT	0x4a
+
+/* This reloc identifies a 16bit pc-relative branch target which was
+   shortened into an 8bit pc-relative branch target.  */
+#define R_PCRWORD_B	0x4b
+
+/* This reloc identifies mov.[wl] instructions with a 32/24 bit
+   absolute address; the linker may turn this into a mov.[wl]
+   insn with a 16bit absolute address.  */
+#define R_MOVL1    	0x4c
+
+/* This reloc identifies mov.[wl] insns which formerly had
+   a 32/24bit absolute address and now have a 16bit absolute address.  */
+#define R_MOVL2 	0x4d
+
+/* This reloc identifies a bCC:8 which will have it's condition
+   inverted and its target redirected to the target of the branch
+   in the following insn.  */
+#define R_BCC_INV	0x4e
+
+/* This reloc identifies a jmp instruction that has been deleted.  */
+#define R_JMP_DEL	0x4f
 
 /* Z8k modes */
 #define R_IMM16   0x01		/* 16 bit abs */
@@ -615,6 +714,10 @@ struct internal_reloc
 #define R_SEG     0x10		/* set if in segmented mode */
 #define R_IMM4H   0x24		/* high nibble */
 #define R_DISP7   0x25          /* djnz displacement */
+
+/* Z80 modes */
+#define R_OFF8    0x32		/* 8 bit signed abs, for (i[xy]+d) */
+/* R_JR, R_IMM8, R_IMM16, R_IMM32 - as for Z8k */
 
 /* H8500 modes */
 

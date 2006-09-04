@@ -1,17 +1,25 @@
 /* ECOFF support on MIPS machines.
-   coff/ecoff.h must be included before this file.  */
+   coff/ecoff.h must be included before this file.
+   
+   Copyright 1999, 2004 Free Software Foundation, Inc.
 
-/********************** FILE HEADER **********************/
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
-struct external_filehdr {
-  unsigned char f_magic[2];	/* magic number			*/
-  unsigned char f_nscns[2];	/* number of sections		*/
-  unsigned char f_timdat[4];	/* time & date stamp		*/
-  unsigned char f_symptr[4];	/* file pointer to symtab	*/
-  unsigned char f_nsyms[4];	/* number of symtab entries	*/
-  unsigned char f_opthdr[2];	/* sizeof(optional hdr)		*/
-  unsigned char f_flags[2];	/* flags			*/
-};
+#define DO_NOT_DEFINE_AOUTHDR
+#define L_LNNO_SIZE 4
+#include "coff/external.h"
 
 /* Magic numbers are defined in coff/ecoff.h.  */
 #define MIPS_ECOFF_BADMAG(x) (((x).f_magic!=MIPS_MAGIC_1) && \
@@ -22,11 +30,8 @@ struct external_filehdr {
 			      ((x).f_magic!=MIPS_MAGIC_LITTLE3) && \
 			      ((x).f_magic!=MIPS_MAGIC_BIG3))
 
-#define	FILHDR	struct external_filehdr
-#define	FILHSZ	20
 
 /********************** AOUT "OPTIONAL HEADER" **********************/
-
 
 typedef struct external_aouthdr
 {
@@ -46,32 +51,16 @@ typedef struct external_aouthdr
 
 /* compute size of a header */
 
-#define AOUTSZ (sizeof(AOUTHDR))
-
-/********************** SECTION HEADER **********************/
-
-struct external_scnhdr {
-  unsigned char	s_name[8];	/* section name			*/
-  unsigned char	s_paddr[4];	/* physical address, aliased s_nlib */
-  unsigned char	s_vaddr[4];	/* virtual address		*/
-  unsigned char	s_size[4];	/* section size			*/
-  unsigned char	s_scnptr[4];	/* file ptr to raw data for section */
-  unsigned char	s_relptr[4];	/* file ptr to relocation	*/
-  unsigned char	s_lnnoptr[4];	/* file ptr to line numbers	*/
-  unsigned char	s_nreloc[2];	/* number of relocation entries	*/
-  unsigned char	s_nlnno[2];	/* number of line number entries*/
-  unsigned char	s_flags[4];	/* flags			*/
-};
-
-#define	SCNHDR	struct external_scnhdr
-#define	SCNHSZ	sizeof(SCNHDR)
+#define AOUTSZ 56
+#define AOUTHDRSZ 56
 
 /********************** RELOCATION DIRECTIVES **********************/
 
-struct external_reloc {
-  unsigned char r_vaddr[4];
-  unsigned char r_bits[4];
-};
+struct external_reloc
+  {
+    unsigned char r_vaddr[4];
+    unsigned char r_bits[4];
+  };
 
 #define RELOC struct external_reloc
 #define RELSZ 8
@@ -116,34 +105,10 @@ struct external_reloc {
 #define MIPS_R_GPREL	6
 #define MIPS_R_LITERAL	7
 
-/* These reloc types are a Cygnus extension used when generating
-   position independent code for embedded systems.  The numbers are
-   taken from Irix 4, but at least for internal relocs Irix 5 does not
-   give them the same meaning.  For an internal reloc the symbol index
-   of RELHI and RELLO is modified as described below for
-   MIPS_R_SWITCH.  */
+/* FIXME: This relocation is used (internally only) to represent branches
+   when assembling.  It should never appear in output files, and  
+   be removed.  (It used to be used for embedded-PIC support.)  */
 #define MIPS_R_PCREL16	12
-#define MIPS_R_RELHI	13
-#define MIPS_R_RELLO	14
-
-/* This reloc type is a Cygnus extension used when generating position
-   independent code for embedded systems.  It is used for an entry in
-   a switch table, which looks like this:
-     .word $L3-$LS12
-   The object file will contain the correct difference, and does not
-   require adjustment.  However, when the linker is relaxing PC
-   relative calls, it is possible for $L3 to move farther away.  This
-   reloc always appears in the .text section, and is always against
-   the .text section.  However, the symbol index is not
-   RELOC_SECTION_TEXT.  It is, instead, the distance between this
-   switch table entry and $LS12.  Thus, the original value of $L12 is
-     vaddr - symndx
-   and the original value of $L3 is
-     vaddr - symndx + addend
-   where addend is the value in the object file.  Knowing this, the
-   linker can know whether the addend in the object file must be
-   adjusted.  */
-#define MIPS_R_SWITCH	22
 
 /********************** STABS **********************/
 
@@ -161,7 +126,8 @@ struct external_reloc {
 
 /* File header as a set of bytes */
 
-struct hdr_ext {
+struct hdr_ext
+{
 	unsigned char 	h_magic[2];
 	unsigned char	h_vstamp[2];
 	unsigned char	h_ilineMax[4];
@@ -191,7 +157,8 @@ struct hdr_ext {
 
 /* File descriptor external record */
 
-struct fdr_ext {
+struct fdr_ext
+{
 	unsigned char	f_adr[4];
 	unsigned char	f_rss[4];
 	unsigned char	f_issBase[4];
@@ -237,7 +204,8 @@ struct fdr_ext {
 
 /* Procedure descriptor external record */
 
-struct pdr_ext {
+struct pdr_ext
+{
 	unsigned char	p_adr[4];
 	unsigned char	p_isym[4];
 	unsigned char	p_iline[4];
@@ -256,7 +224,8 @@ struct pdr_ext {
 
 /* Runtime procedure table */
 
-struct rpdr_ext {
+struct rpdr_ext
+{
 	unsigned char	p_adr[4];
 	unsigned char	p_regmask[4];
 	unsigned char	p_regoffset[4];
@@ -272,13 +241,15 @@ struct rpdr_ext {
 
 /* Line numbers */
 
-struct line_ext {
+struct line_ext
+{
 	unsigned char	l_line[4];
 };
 
 /* Symbol external record */
 
-struct sym_ext {
+struct sym_ext
+{
 	unsigned char	s_iss[4];
 	unsigned char	s_value[4];
 	unsigned char	s_bits1[1];
@@ -318,7 +289,8 @@ struct sym_ext {
 
 /* External symbol external record */
 
-struct ext_ext {
+struct ext_ext
+{
 	unsigned char	es_bits1[1];
 	unsigned char	es_bits2[1];
 	unsigned char	es_ifd[2];
@@ -336,20 +308,23 @@ struct ext_ext {
 
 /* Dense numbers external record */
 
-struct dnr_ext {
+struct dnr_ext
+{
 	unsigned char	d_rfd[4];
 	unsigned char	d_index[4];
 };
 
 /* Relative file descriptor */
 
-struct rfd_ext {
+struct rfd_ext
+{
   unsigned char	rfd[4];
 };
 
 /* Optimizer symbol external record */
 
-struct opt_ext {
+struct opt_ext
+{
   unsigned char o_bits1[1];
   unsigned char o_bits2[1];
   unsigned char o_bits3[1];

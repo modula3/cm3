@@ -25,14 +25,20 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
    surprises, these  strings are also legal C identifiers.
 */
 
+#if !defined (M3_UID_H)
+#define M3_UID_H 1
+ 
 #define M3UID_LEN 6
 
 extern char *
-m3uid_from_int PARAMS ((int x));
+m3uid_from_int (const int x);
 /* converts the 32-bit integer uid 'x' to its string representation */
 
 extern int
-m3uid_to_int PARAMS ((char *uid, int *val));
+m3uid_to_int (const char *uid, int *val);
 /* converts the string 'uid' to a 32-bit integer 'val',
    returns a boolean indicating success or failure */
 
+#endif /* !defined (M3_UID_H) */
+
+/* End of file "m3-uid.h" */ 

@@ -1,21 +1,24 @@
 /* Scheme/Guile language support routines for GDB, the GNU debugger.
-   Copyright 1995 Free Software Foundation, Inc.
 
-This file is part of GDB.
+   Copyright 1995, 1996, 1998, 1999, 2000, 2001, 2005 Free Software
+   Foundation, Inc.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This file is part of GDB.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 #include "defs.h"
 #include "symtab.h"
@@ -26,19 +29,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "value.h"
 #include "scm-lang.h"
 #include "valprint.h"
+#include "gdbcore.h"
+#include "c-lang.h"
+
+static void scm_ipruk (char *, LONGEST, struct ui_file *);
+static void scm_scmlist_print (LONGEST, struct ui_file *, int, int,
+			       int, enum val_prettyprint);
+static int scm_inferior_print (LONGEST, struct ui_file *, int, int,
+			       int, enum val_prettyprint);
 
 /* Prints the SCM value VALUE by invoking the inferior, if appropraite.
    Returns >= 0 on succes;  retunr -1 if the inferior cannot/should not
    print VALUE. */
 
-int
-scm_inferior_print (value, stream, format, deref_ref, recurse, pretty)
-     LONGEST value;
-     GDB_FILE *stream;
-     int format;
-     int deref_ref;
-     int recurse;
-     enum val_prettyprint pretty;
+static int
+scm_inferior_print (LONGEST value, struct ui_file *stream, int format,
+		    int deref_ref, int recurse, enum val_prettyprint pretty)
 {
   return -1;
 }
@@ -82,20 +88,15 @@ static char *scm_isymnames[] =
   "#<unspecified>"
 };
 
-static int
-scm_scmlist_print (svalue, stream, format, deref_ref, recurse, pretty)
-     LONGEST svalue;
-     GDB_FILE *stream;
-     int format;
-     int deref_ref;
-     int recurse;
-     enum val_prettyprint pretty;
+static void
+scm_scmlist_print (LONGEST svalue, struct ui_file *stream, int format,
+		   int deref_ref, int recurse, enum val_prettyprint pretty)
 {
   unsigned int more = print_max;
   if (recurse > 6)
     {
       fputs_filtered ("...", stream);
-      return 0;
+      return;
     }
   scm_scmval_print (SCM_CAR (svalue), stream, format,
 		    deref_ref, recurse + 1, pretty);
@@ -122,30 +123,22 @@ scm_scmlist_print (svalue, stream, format, deref_ref, recurse, pretty)
 }
 
 static void
-scm_ipruk (hdr, ptr, stream)
-     char *hdr;
-     LONGEST ptr;
-     GDB_FILE *stream;
+scm_ipruk (char *hdr, LONGEST ptr, struct ui_file *stream)
 {
   fprintf_filtered (stream, "#<unknown-%s", hdr);
 #define SCM_SIZE TYPE_LENGTH (builtin_type_scm)
   if (SCM_CELLP (ptr))
     fprintf_filtered (stream, " (0x%lx . 0x%lx) @",
 		      (long) SCM_CAR (ptr), (long) SCM_CDR (ptr));
-  fprintf_filtered (stream, " 0x%x>", ptr);
+  fprintf_filtered (stream, " 0x%s>", paddr_nz (ptr));
 }
 
-int
-scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
-     LONGEST svalue;
-     GDB_FILE *stream;
-     int format;
-     int deref_ref;
-     int recurse;
-     enum val_prettyprint pretty;
+void
+scm_scmval_print (LONGEST svalue, struct ui_file *stream, int format,
+		  int deref_ref, int recurse, enum val_prettyprint pretty)
 {
- taloop:
-  switch (7 & svalue)
+taloop:
+  switch (7 & (int) svalue)
     {
     case 2:
     case 6:
@@ -191,18 +184,20 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	case scm_tcs_cons_gloc:
 	  if (SCM_CDR (SCM_CAR (svalue) - 1L) == 0)
 	    {
+#if 0
 	      SCM name;
+#endif
 	      fputs_filtered ("#<latte ", stream);
 #if 1
 	      fputs_filtered ("???", stream);
 #else
-	      name = ((SCM n*)(STRUCT_TYPE( exp)))[struct_i_name];
+	      name = ((SCM n *) (STRUCT_TYPE (exp)))[struct_i_name];
 	      scm_lfwrite (CHARS (name),
 			   (sizet) sizeof (char),
-			   (sizet) LENGTH (name),
+			     (sizet) LENGTH (name),
 			   port);
 #endif
-	      fprintf_filtered (stream, " #X%lX>", svalue);
+	      fprintf_filtered (stream, " #X%s>", paddr_nz (svalue));
 	      break;
 	    }
 	case scm_tcs_cons_imcar:
@@ -225,7 +220,7 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	    int i;
 	    int done = 0;
 	    int buf_size;
-	    char buffer[64];
+	    gdb_byte buffer[64];
 	    int truncate = print_max && len > (int) print_max;
 	    if (truncate)
 	      len = print_max;
@@ -234,7 +229,7 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	      {
 		buf_size = min (len - done, 64);
 		read_memory (addr + done, buffer, buf_size);
-		
+
 		for (i = 0; i < buf_size; ++i)
 		  switch (buffer[i])
 		    {
@@ -253,8 +248,8 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	  {
 	    int len = SCM_LENGTH (svalue);
 
-	    char * str = (char*) alloca (len);
-	    read_memory (SCM_CDR (svalue), str, len + 1);
+	    char *str = alloca (len);
+	    read_memory (SCM_CDR (svalue), (gdb_byte *) str, len + 1);
 	    /* Should handle weird characters FIXME */
 	    str[len] = '\0';
 	    fputs_filtered (str, stream);
@@ -264,7 +259,7 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	  {
 	    int len = SCM_LENGTH (svalue);
 	    int i;
-	    LONGEST elements = SCM_CDR(svalue);
+	    LONGEST elements = SCM_CDR (svalue);
 	    fputs_filtered ("#(", stream);
 	    for (i = 0; i < len; ++i)
 	      {
@@ -285,14 +280,15 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	    if (hook == BOOL_F)
 	      {
 		scm_puts ("#<locked-vector ", port);
-		scm_intprint(CDR(exp), 16, port);
+		scm_intprint (CDR (exp), 16, port);
 		scm_puts (">", port);
 	      }
 	    else
 	      {
 		result
 		  = scm_apply (hook,
-			       scm_listify (exp, port, (writing ? BOOL_T : BOOL_F),
+			       scm_listify (exp, port, 
+					    (writing ? BOOL_T : BOOL_F),
 					    SCM_UNDEFINED),
 			       EOL);
 		if (result == BOOL_F)
@@ -317,7 +313,7 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	    char str[20];
 	    sprintf (str, "#%d", index);
 #else
-	    char *str = index ? SCM_CHARS (scm_heap_org+index) : "";
+	    char *str = index ? SCM_CHARS (scm_heap_org + index) : "";
 #define SCM_CHARS(x) ((char *)(SCM_CDR(x)))
 	    char *str = CHARS (SNAME (exp));
 #endif
@@ -340,7 +336,9 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	  break;
 	case tc7_port:
 	  i = PTOBNUM (exp);
-	  if (i < scm_numptob && scm_ptobs[i].print && (scm_ptobs[i].print) (exp, port, writing))
+	  if (i < scm_numptob 
+	      && scm_ptobs[i].print 
+	      && (scm_ptobs[i].print) (exp, port, writing))
 	    break;
 	  goto punk;
 	case tc7_smob:
@@ -351,23 +349,20 @@ scm_scmval_print (svalue, stream, format, deref_ref, recurse, pretty)
 	  goto punk;
 #endif
 	default:
-	punk:scm_ipruk ("type", svalue, stream);
+#if 0
+	punk:
+#endif
+	  scm_ipruk ("type", svalue, stream);
 	}
       break;
     }
 }
 
 int
-scm_val_print (type, valaddr, address, stream, format, deref_ref, recurse,
-	     pretty)
-     struct type *type;
-     char *valaddr;
-     CORE_ADDR address;
-     GDB_FILE *stream;
-     int format;
-     int deref_ref;
-     int recurse;
-     enum val_prettyprint pretty;
+scm_val_print (struct type *type, const gdb_byte *valaddr,
+	       int embedded_offset, CORE_ADDR address,
+	       struct ui_file *stream, int format, int deref_ref,
+	       int recurse, enum val_prettyprint pretty)
 {
   if (is_scmvalue_type (type))
     {
@@ -379,7 +374,7 @@ scm_val_print (type, valaddr, address, stream, format, deref_ref, recurse,
       else
 	{
 	  scm_scmval_print (svalue, stream, format,
-			      deref_ref, recurse, pretty);
+			    deref_ref, recurse, pretty);
 	}
 
       gdb_flush (stream);
@@ -387,18 +382,14 @@ scm_val_print (type, valaddr, address, stream, format, deref_ref, recurse,
     }
   else
     {
-      return c_val_print (type, valaddr, address, stream, format,
+      return c_val_print (type, valaddr, 0, address, stream, format,
 			  deref_ref, recurse, pretty);
     }
 }
 
 int
-scm_value_print (val, stream, format, pretty)
-     value_ptr val;
-     GDB_FILE *stream;
-     int format;
-     enum val_prettyprint pretty;
+scm_value_print (struct value *val, struct ui_file *stream, int format,
+		 enum val_prettyprint pretty)
 {
-  return (val_print (VALUE_TYPE (val), VALUE_CONTENTS (val),
-		     VALUE_ADDRESS (val), stream, format, 1, 0, pretty));
+  return (common_val_print (val, stream, format, 1, 0, pretty));
 }

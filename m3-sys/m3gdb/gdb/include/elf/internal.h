@@ -1,5 +1,6 @@
 /* ELF support for BFD.
-   Copyright (C) 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1991, 1992, 1993, 1994, 1995, 1997, 1998, 2000, 2001, 2002,
+   2003 Free Software Foundation, Inc.
 
    Written by Fred Fish @ Cygnus Support, from information published
    in "UNIX System V Release 4, Programmers Guide: ANSI C and
@@ -19,7 +20,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 
 /* This file is part of ELF support for BFD, and contains the portions
@@ -27,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
    I.E. it describes the in-memory representation of ELF.  It requires
    the elf-common.h file which contains the portions that are common to
    both the internal and external representations. */
-   
+
 
 /* NOTE that these structures are not kept in the same order as they appear
    in the object file.  In some cases they've been reordered for more optimal
@@ -41,26 +42,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define EI_NIDENT	16		/* Size of e_ident[] */
 
 typedef struct elf_internal_ehdr {
-  unsigned char		e_ident[EI_NIDENT];	/* ELF "magic number" */
-  bfd_vma		e_entry;		/* Entry point virtual address */
-  bfd_signed_vma	e_phoff;		/* Program header table file offset */
-  bfd_signed_vma	e_shoff;		/* Section header table file offset */
-  unsigned long		e_version;		/* Identifies object file version */
-  unsigned long		e_flags;		/* Processor-specific flags */
-  unsigned short	e_type;			/* Identifies object file type */
-  unsigned short	e_machine;		/* Specifies required architecture */
-  unsigned short	e_ehsize;		/* ELF header size in bytes */
-  unsigned short	e_phentsize;		/* Program header table entry size */
-  unsigned short	e_phnum;		/* Program header table entry count */
-  unsigned short	e_shentsize;		/* Section header table entry size */
-  unsigned short	e_shnum;		/* Section header table entry count */
-  unsigned short	e_shstrndx;		/* Section header string table index */
+  unsigned char		e_ident[EI_NIDENT]; /* ELF "magic number" */
+  bfd_vma		e_entry;	/* Entry point virtual address */
+  bfd_size_type		e_phoff;	/* Program header table file offset */
+  bfd_size_type		e_shoff;	/* Section header table file offset */
+  unsigned long		e_version;	/* Identifies object file version */
+  unsigned long		e_flags;	/* Processor-specific flags */
+  unsigned short	e_type;		/* Identifies object file type */
+  unsigned short	e_machine;	/* Specifies required architecture */
+  unsigned int		e_ehsize;	/* ELF header size in bytes */
+  unsigned int		e_phentsize;	/* Program header table entry size */
+  unsigned int		e_phnum;	/* Program header table entry count */
+  unsigned int		e_shentsize;	/* Section header table entry size */
+  unsigned int		e_shnum;	/* Section header table entry count */
+  unsigned int		e_shstrndx;	/* Section header string table index */
 } Elf_Internal_Ehdr;
-
-#define elf32_internal_ehdr elf_internal_ehdr
-#define Elf32_Internal_Ehdr Elf_Internal_Ehdr
-#define elf64_internal_ehdr elf_internal_ehdr
-#define Elf64_Internal_Ehdr Elf_Internal_Ehdr
 
 /* Program header */
 
@@ -76,10 +72,6 @@ struct elf_internal_phdr {
 };
 
 typedef struct elf_internal_phdr Elf_Internal_Phdr;
-#define elf32_internal_phdr elf_internal_phdr
-#define Elf32_Internal_Phdr Elf_Internal_Phdr
-#define elf64_internal_phdr elf_internal_phdr
-#define Elf64_Internal_Phdr Elf_Internal_Phdr
 
 /* Section header */
 
@@ -97,13 +89,8 @@ typedef struct elf_internal_shdr {
 
   /* The internal rep also has some cached info associated with it. */
   asection *	bfd_section;		/* Associated BFD section.  */
-  PTR		contents;		/* Section contents.  */
+  unsigned char *contents;		/* Section contents.  */
 } Elf_Internal_Shdr;
-
-#define elf32_internal_shdr elf_internal_shdr
-#define Elf32_Internal_Shdr Elf_Internal_Shdr
-#define elf64_internal_shdr elf_internal_shdr
-#define Elf64_Internal_Shdr Elf_Internal_Shdr
 
 /* Symbol table entry */
 
@@ -112,16 +99,11 @@ struct elf_internal_sym {
   bfd_vma	st_size;		/* Associated symbol size */
   unsigned long	st_name;		/* Symbol name, index in string tbl */
   unsigned char	st_info;		/* Type and binding attributes */
-  unsigned char	st_other;		/* No defined meaning, 0 */
-  unsigned short st_shndx;		/* Associated section index */
+  unsigned char	st_other;		/* Visibilty, and target specific */
+  unsigned int  st_shndx;		/* Associated section index */
 };
 
 typedef struct elf_internal_sym Elf_Internal_Sym;
-
-#define elf32_internal_sym elf_internal_sym
-#define elf64_internal_sym elf_internal_sym
-#define Elf32_Internal_Sym Elf_Internal_Sym
-#define Elf64_Internal_Sym Elf_Internal_Sym
 
 /* Note segments */
 
@@ -129,34 +111,18 @@ typedef struct elf_internal_note {
   unsigned long	namesz;			/* Size of entry's owner string */
   unsigned long	descsz;			/* Size of the note descriptor */
   unsigned long	type;			/* Interpretation of the descriptor */
-  char		name[1];		/* Start of the name+desc data */
+  char *	namedata;		/* Start of the name+desc data */
+  char *	descdata;		/* Start of the desc data */
+  bfd_vma	descpos;		/* File offset of the descdata */
 } Elf_Internal_Note;
-#define Elf32_Internal_Note	Elf_Internal_Note
-#define elf32_internal_note	elf_internal_note
 
 /* Relocation Entries */
-
-typedef struct elf_internal_rel {
-  bfd_vma	r_offset;	/* Location at which to apply the action */
-  /* This needs to support 64-bit values in elf64.  */
-  bfd_vma	r_info;		/* index and type of relocation */
-} Elf_Internal_Rel;
-
-#define elf32_internal_rel elf_internal_rel
-#define Elf32_Internal_Rel Elf_Internal_Rel
-#define elf64_internal_rel elf_internal_rel
-#define Elf64_Internal_Rel Elf_Internal_Rel
 
 typedef struct elf_internal_rela {
   bfd_vma	r_offset;	/* Location at which to apply the action */
   bfd_vma	r_info;		/* Index and Type of relocation */
-  bfd_signed_vma r_addend;	/* Constant addend used to compute value */
+  bfd_vma	r_addend;	/* Constant addend used to compute value */
 } Elf_Internal_Rela;
-
-#define elf32_internal_rela elf_internal_rela
-#define elf64_internal_rela elf_internal_rela
-#define Elf32_Internal_Rela Elf_Internal_Rela
-#define Elf64_Internal_Rela Elf_Internal_Rela
 
 /* dynamic section structure */
 
@@ -170,10 +136,91 @@ typedef struct elf_internal_dyn {
   } d_un;
 } Elf_Internal_Dyn;
 
-#define elf32_internal_dyn elf_internal_dyn
-#define elf64_internal_dyn elf_internal_dyn
-#define Elf32_Internal_Dyn Elf_Internal_Dyn
-#define Elf64_Internal_Dyn Elf_Internal_Dyn
+/* This structure appears in a SHT_GNU_verdef section.  */
+
+typedef struct elf_internal_verdef {
+  unsigned short vd_version;	/* Version number of structure.  */
+  unsigned short vd_flags;	/* Flags (VER_FLG_*).  */
+  unsigned short vd_ndx;	/* Version index.  */
+  unsigned short vd_cnt;	/* Number of verdaux entries.  */
+  unsigned long	 vd_hash;	/* Hash of name.  */
+  unsigned long	 vd_aux;	/* Offset to verdaux entries.  */
+  unsigned long	 vd_next;	/* Offset to next verdef.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  bfd			      *vd_bfd;		/* BFD.  */
+  const char		      *vd_nodename;	/* Version name.  */
+  struct elf_internal_verdef  *vd_nextdef;	/* vd_next as pointer.  */
+  struct elf_internal_verdaux *vd_auxptr;	/* vd_aux as pointer.  */
+  unsigned int		       vd_exp_refno;	/* Used by the linker.  */
+} Elf_Internal_Verdef;
+
+/* This structure appears in a SHT_GNU_verdef section.  */
+
+typedef struct elf_internal_verdaux {
+  unsigned long vda_name;	/* String table offset of name.  */
+  unsigned long vda_next;	/* Offset to next verdaux.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  const char *vda_nodename;			/* vda_name as pointer.  */
+  struct elf_internal_verdaux *vda_nextptr;	/* vda_next as pointer.  */
+} Elf_Internal_Verdaux;
+
+/* This structure appears in a SHT_GNU_verneed section.  */
+
+typedef struct elf_internal_verneed {
+  unsigned short vn_version;	/* Version number of structure.  */
+  unsigned short vn_cnt;	/* Number of vernaux entries.  */
+  unsigned long	 vn_file;	/* String table offset of library name.  */
+  unsigned long	 vn_aux;	/* Offset to vernaux entries.  */
+  unsigned long	 vn_next;	/* Offset to next verneed.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  bfd			      *vn_bfd;		/* BFD.  */
+  const char                  *vn_filename;	/* vn_file as pointer.  */
+  struct elf_internal_vernaux *vn_auxptr;	/* vn_aux as pointer.  */
+  struct elf_internal_verneed *vn_nextref;	/* vn_nextref as pointer.  */
+} Elf_Internal_Verneed;
+
+/* This structure appears in a SHT_GNU_verneed section.  */
+
+typedef struct elf_internal_vernaux {
+  unsigned long	 vna_hash;	/* Hash of dependency name.  */
+  unsigned short vna_flags;	/* Flags (VER_FLG_*).  */
+  unsigned short vna_other;	/* Unused.  */
+  unsigned long	 vna_name;	/* String table offset to version name.  */
+  unsigned long	 vna_next;	/* Offset to next vernaux.  */
+
+  /* These fields are set up when BFD reads in the structure.  FIXME:
+     It would be cleaner to store these in a different structure.  */
+  const char                  *vna_nodename;	/* vna_name as pointer.  */
+  struct elf_internal_vernaux *vna_nextptr;	/* vna_next as pointer.  */
+} Elf_Internal_Vernaux;
+
+/* This structure appears in a SHT_GNU_versym section.  This is not a
+   standard ELF structure; ELF just uses Elf32_Half.  */
+
+typedef struct elf_internal_versym {
+  unsigned short vs_vers;
+} Elf_Internal_Versym;
+
+/* Structure for syminfo section.  */
+typedef struct
+{
+  unsigned short int 	si_boundto;
+  unsigned short int	si_flags;
+} Elf_Internal_Syminfo;
+
+/* This structure appears on the stack and in NT_AUXV core file notes.  */
+typedef struct
+{
+  bfd_vma a_type;
+  bfd_vma a_val;
+} Elf_Internal_Auxv;
+
 
 /* This structure is used to describe how sections should be assigned
    to program segments.  */

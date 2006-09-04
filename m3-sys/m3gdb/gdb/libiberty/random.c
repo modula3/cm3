@@ -2,17 +2,30 @@
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms are permitted
- * provided that the above copyright notice and this paragraph are
- * duplicated in all such forms and that any documentation,
- * advertising materials, and other materials related to such
- * distribution and use acknowledge that the software was developed
- * by the University of California, Berkeley.  The name of the
- * University may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
- * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. [rescinded 22 July 1999]
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 
 /*
@@ -20,6 +33,24 @@
  *	@(#)random.c	5.5 (Berkeley) 7/6/88
  * It was reworked for the GNU C Library by Roland McGrath.
  */
+
+/*
+
+@deftypefn Supplement {long int} random (void)
+@deftypefnx Supplement void srandom (unsigned int @var{seed})
+@deftypefnx Supplement void* initstate (unsigned int @var{seed}, void *@var{arg_state}, unsigned long @var{n})
+@deftypefnx Supplement void* setstate (void *@var{arg_state})
+
+Random number functions.  @code{random} returns a random number in the
+range 0 to @code{LONG_MAX}.  @code{srandom} initializes the random
+number generator to some starting point determined by @var{seed}
+(else, the values returned by @code{random} are always the same for each
+run of the program).  @code{initstate} and @code{setstate} allow fine-grained
+control over the state of the random number generator.
+
+@end deftypefn
+
+*/
 
 #include <errno.h>
 
@@ -37,15 +68,19 @@
 
 #ifdef __STDC__
 #  define PTR void *
-#  define NULL (void *) 0
+#  ifndef NULL
+#    define NULL (void *) 0
+#  endif
 #else
 #  define PTR char *
-#  define NULL 0
+#  ifndef NULL
+#    define NULL (void *) 0
+#  endif
 #endif
 
 #endif
 
-long int random ();
+long int random (void);
 
 /* An improved random number generation package.  In addition to the standard
    rand()/srand() like interface, this package also has a special state info
@@ -192,8 +227,7 @@ static long int *end_ptr = &randtbl[sizeof(randtbl) / sizeof(randtbl[0])];
    introduced by the L.C.R.N.G.  Note that the initialization of randtbl[]
    for default usage relies on values produced by this routine.  */
 void
-srandom (x)
-  unsigned int x;
+srandom (unsigned int x)
 {
   state[0] = x;
   if (rand_type != TYPE_0)
@@ -220,10 +254,7 @@ srandom (x)
    setstate so that it doesn't matter when initstate is called.
    Returns a pointer to the old state.  */
 PTR
-initstate (seed, arg_state, n)
-  unsigned int seed;
-  PTR arg_state;
-  unsigned long n;
+initstate (unsigned int seed, PTR arg_state, unsigned long n)
 {
   PTR ostate = (PTR) &state[-1];
 
@@ -289,8 +320,7 @@ initstate (seed, arg_state, n)
    Returns a pointer to the old state information.  */
 
 PTR
-setstate (arg_state)
-  PTR arg_state;
+setstate (PTR arg_state)
 {
   register long int *new_state = (long int *) arg_state;
   register int type = new_state[0] % MAX_TYPES;
@@ -343,7 +373,7 @@ setstate (arg_state)
    pointer if the front one has wrapped.  Returns a 31-bit random number.  */
 
 long int
-random ()
+random (void)
 {
   if (rand_type == TYPE_0)
     {

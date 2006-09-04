@@ -1,5 +1,6 @@
 /* BFD back-end for Mach3/532 a.out-ish binaries.
-   Copyright (C) 1990, 1991, 1992, 1994 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1994, 1995, 2000, 2001, 2002
+   Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 /* Written by Ian Dall
  *            19-Apr-94
@@ -33,7 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define N_HEADER_IN_TEXT(x) 1
 #define N_TXTSIZE(x) ((x).a_text)
 
-
 #define TEXT_START_ADDR 0x10000       /* from old ld */
 #define TARGET_PAGE_SIZE 0x1000       /* from old ld,  032 & 532 are really 512/4k */
 
@@ -49,11 +49,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #define N_SHARED_LIB(x) 0
 #define SEGMENT_SIZE TARGET_PAGE_SIZE
 #define DEFAULT_ARCH bfd_arch_ns32k
-  
-#define MY(OP) CAT(pc532machaout_,OP)
+
+/* Do not "beautify" the CONCAT* macro args.  Traditional C will not
+   remove whitespace added here, and thus will fail to concatenate
+   the tokens.  */
+#define MY(OP) CONCAT2 (pc532machaout_,OP)
 
 /* Must be the same as aout-ns32k.c */
-#define NAME(x,y) CAT3(ns32kaout,_32_,y)
+#define NAME(x,y) CONCAT3 (ns32kaout,_32_,y)
 
 #define TARGETNAME "a.out-pc532-mach"
 
@@ -63,41 +66,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "libbfd.h"
 #include "aout/aout64.h"
 
-/* We can`t use the MYNS macro here for cpp reasons too subtle for me -- IWD */
-
 #define MY_bfd_reloc_type_lookup ns32kaout_bfd_reloc_type_lookup
 
-/* libaout doesn't use NAME for these ... */
+/* libaout doesn't use NAME for these ...  */
 
 #define MY_get_section_contents aout_32_get_section_contents
 
 #define MY_text_includes_header 1
 
 #define MY_exec_header_not_counted 1
-     
-#define MYNSX(OP) CAT(ns32kaout_,OP)
-reloc_howto_type *
-MYNSX(bfd_reloc_type_lookup)
-  PARAMS((bfd *abfd AND
-	  bfd_reloc_code_real_type code));
 
-boolean
-MYNSX(write_object_contents)
-  PARAMS((bfd *abfd));
+reloc_howto_type *ns32kaout_bfd_reloc_type_lookup
+  PARAMS ((bfd *abfd, bfd_reloc_code_real_type code));
 
-static boolean
+static bfd_boolean MY(write_object_contents)
+  PARAMS ((bfd *abfd));
+
+static bfd_boolean
 MY(write_object_contents) (abfd)
-bfd *abfd;
+     bfd *abfd;
 {
   struct external_exec exec_bytes;
   struct internal_exec *execp = exec_hdr (abfd);
-  
-#if CHOOSE_RELOC_SIZE
-  CHOOSE_RELOC_SIZE(abfd);
-#else
+
   obj_reloc_entry_size (abfd) = RELOC_STD_SIZE;
-#endif
-  
+
   BFD_ASSERT (bfd_get_arch (abfd) == bfd_arch_ns32k);
   switch (bfd_get_mach (abfd))
     {
@@ -110,10 +103,10 @@ bfd *abfd;
       break;
     }
   N_SET_FLAGS (*execp, aout_backend_info (abfd)->exec_hdr_flags);
-  
+
   WRITE_HEADERS(abfd, execp);
-  
-  return true;
+
+  return TRUE;
 }
 
 #define MY_write_object_contents MY(write_object_contents)

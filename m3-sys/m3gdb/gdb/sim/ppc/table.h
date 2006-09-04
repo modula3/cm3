@@ -42,19 +42,36 @@ struct _table_entry {
   char *fields[0];	 /* User defined */
 };
 
+/* List of directories to search when opening a pushed file.  Current
+   directory is always searched first */
+typedef struct _table_include table_include;
+struct _table_include {
+  char *dir;
+  table_include *next;
+};
 
 extern table *table_open
-(char *file_name,
+(const char *file_name,
  int max_nr_fields,
  int max_nr_model_fields);
 
 extern table_entry *table_entry_read
 (table *file);
 
+/* Push the the state of the current file and open FILE_NAME.  When
+   the end of FILE_NAME is reached, return to the pushed file */
+
+extern void table_push
+(table *file,
+ table_include *search,
+ const char *file_name,
+ int nr_fields,
+ int nr_model_fields);
+
 extern void dump_table_entry
 (table_entry *entry,
  int indent);
 
-extern void table_entry_lf_c_line_nr
+extern void table_entry_print_cpp_line_nr
 (lf *file,
  table_entry *entry);

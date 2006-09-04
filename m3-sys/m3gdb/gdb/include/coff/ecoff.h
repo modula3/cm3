@@ -1,9 +1,25 @@
-#ifndef ECOFF_H
-#define ECOFF_H
-
 /* Generic ECOFF support.
    This does not include symbol information, found in sym.h and
-   symconst.h.  */
+   symconst.h.
+
+   Copyright 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
+
+#ifndef ECOFF_H
+#define ECOFF_H
 
 /* Mips magic numbers used in filehdr.  MIPS_MAGIC_LITTLE is used on
    little endian machines.  MIPS_MAGIC_BIG is used on big endian
@@ -24,6 +40,9 @@
 
 /* Alpha magic numbers used in filehdr.  */
 #define ALPHA_MAGIC 0x183
+#define ALPHA_MAGIC_BSD 0x185
+/* A compressed version of an ALPHA_MAGIC file created by DEC's tools.  */
+#define ALPHA_MAGIC_COMPRESSED 0x188
 
 /* Magic numbers used in a.out header.  */
 #define ECOFF_AOUT_OMAGIC 0407	/* not demand paged (ld -N).  */
@@ -279,21 +298,21 @@ struct ecoff_debug_info
      fields are also used by the assembler to output ECOFF debugging
      information.  */
   unsigned char *line;
-  PTR external_dnr;	/* struct dnr_ext */
-  PTR external_pdr;	/* struct pdr_ext */
-  PTR external_sym;	/* struct sym_ext */
-  PTR external_opt;	/* struct opt_ext */
+  void *external_dnr;	/* struct dnr_ext */
+  void *external_pdr;	/* struct pdr_ext */
+  void *external_sym;	/* struct sym_ext */
+  void *external_opt;	/* struct opt_ext */
   union aux_ext *external_aux;
   char *ss;
   char *ssext;
-  PTR external_fdr;	/* struct fdr_ext */
-  PTR external_rfd;	/* struct rfd_ext */
-  PTR external_ext;	/* struct ext_ext */
+  void *external_fdr;	/* struct fdr_ext */
+  void *external_rfd;	/* struct rfd_ext */
+  void *external_ext;	/* struct ext_ext */
 
   /* These fields are used when linking.  They may disappear at some
      point.  */
   char *ssext_end;
-  PTR external_ext_end;
+  void *external_ext_end;
 
   /* When linking, this field holds a mapping from the input FDR
      numbers to the output numbers, and is used when writing out the
@@ -305,34 +324,6 @@ struct ecoff_debug_info
      this changes in the future.  This is a pointer to an array, not a
      single structure.  */
   FDR *fdr;
-
-  /* When relaxing MIPS embedded PIC code, we may need to adjust
-     symbol values when they are output.  This is a linked list of
-     structures indicating how values should be adjusted.  There is no
-     requirement that the entries be in any order, or that they not
-     overlap.  This field is normally NULL, in which case no
-     adjustments need to be made.  */
-  struct ecoff_value_adjust *adjust;
-};
-
-/* This structure describes how to adjust symbol values when
-   outputting MIPS embedded PIC code.  These adjustments only apply to
-   the internal symbols, as the external symbol values will come from
-   the hash table and have already been adjusted.  */
-
-struct ecoff_value_adjust
-{
-  /* Next entry on adjustment list.  */
-  struct ecoff_value_adjust *next;
-  /* Starting VMA of adjustment.  This is the VMA in the ECOFF file,
-     not the offset from the start of the section.  Thus it should
-     indicate a particular section.  */
-  bfd_vma start;
-  /* Ending VMA of adjustment.  */
-  bfd_vma end;
-  /* Adjustment.  This should be added to the value of the symbol, or
-     FDR.  This is zero for the last entry in the array.  */
-  long adjust;
 };
 
 /* These structures are used by the ECOFF find_nearest_line function.  */
@@ -352,6 +343,18 @@ struct ecoff_find_line
   /* FDR table, sorted by address: */
   long fdrtab_len;
   struct ecoff_fdrtab_entry *fdrtab;
+
+  /* Cache entry for most recently found line information.  The sect
+     field is NULL if this cache does not contain valid information.  */
+  struct
+    {
+      asection *sect;
+      bfd_vma start;
+      bfd_vma stop;
+      const char *filename;
+      const char *functionname;
+      unsigned int line_num;
+    } cache;
 };
 
 /********************** SWAPPING **********************/
@@ -377,32 +380,31 @@ struct ecoff_debug_swap
   bfd_size_type external_rfd_size;
   bfd_size_type external_ext_size;
   /* Functions to swap in external symbolic data.  */
-  void (*swap_hdr_in) PARAMS ((bfd *, PTR, HDRR *));
-  void (*swap_dnr_in) PARAMS ((bfd *, PTR, DNR *));
-  void (*swap_pdr_in) PARAMS ((bfd *, PTR, PDR *));
-  void (*swap_sym_in) PARAMS ((bfd *, PTR, SYMR *));
-  void (*swap_opt_in) PARAMS ((bfd *, PTR, OPTR *));
-  void (*swap_fdr_in) PARAMS ((bfd *, PTR, FDR *));
-  void (*swap_rfd_in) PARAMS ((bfd *, PTR, RFDT *));
-  void (*swap_ext_in) PARAMS ((bfd *, PTR, EXTR *));
-  void (*swap_tir_in) PARAMS ((int, const struct tir_ext *, TIR *));
-  void (*swap_rndx_in) PARAMS ((int, const struct rndx_ext *, RNDXR *));
+  void (*swap_hdr_in) (bfd *, void *, HDRR *);
+  void (*swap_dnr_in) (bfd *, void *, DNR *);
+  void (*swap_pdr_in) (bfd *, void *, PDR *);
+  void (*swap_sym_in) (bfd *, void *, SYMR *);
+  void (*swap_opt_in) (bfd *, void *, OPTR *);
+  void (*swap_fdr_in) (bfd *, void *, FDR *);
+  void (*swap_rfd_in) (bfd *, void *, RFDT *);
+  void (*swap_ext_in) (bfd *, void *, EXTR *);
+  void (*swap_tir_in) (int, const struct tir_ext *, TIR *);
+  void (*swap_rndx_in) (int, const struct rndx_ext *, RNDXR *);
   /* Functions to swap out external symbolic data.  */
-  void (*swap_hdr_out) PARAMS ((bfd *, const HDRR *, PTR));
-  void (*swap_dnr_out) PARAMS ((bfd *, const DNR *, PTR));
-  void (*swap_pdr_out) PARAMS ((bfd *, const PDR *, PTR));
-  void (*swap_sym_out) PARAMS ((bfd *, const SYMR *, PTR));
-  void (*swap_opt_out) PARAMS ((bfd *, const OPTR *, PTR));
-  void (*swap_fdr_out) PARAMS ((bfd *, const FDR *, PTR));
-  void (*swap_rfd_out) PARAMS ((bfd *, const RFDT *, PTR));
-  void (*swap_ext_out) PARAMS ((bfd *, const EXTR *, PTR));
-  void (*swap_tir_out) PARAMS ((int, const TIR *, struct tir_ext *));
-  void (*swap_rndx_out) PARAMS ((int, const RNDXR *, struct rndx_ext *));
+  void (*swap_hdr_out) (bfd *, const HDRR *, void *);
+  void (*swap_dnr_out) (bfd *, const DNR *, void *);
+  void (*swap_pdr_out) (bfd *, const PDR *, void *);
+  void (*swap_sym_out) (bfd *, const SYMR *, void *);
+  void (*swap_opt_out) (bfd *, const OPTR *, void *);
+  void (*swap_fdr_out) (bfd *, const FDR *, void *);
+  void (*swap_rfd_out) (bfd *, const RFDT *, void *);
+  void (*swap_ext_out) (bfd *, const EXTR *, void *);
+  void (*swap_tir_out) (int, const TIR *, struct tir_ext *);
+  void (*swap_rndx_out) (int, const RNDXR *, struct rndx_ext *);
   /* Function to read symbol data and set up pointers in
      ecoff_debug_info structure.  The section argument is used for
      ELF, not straight ECOFF.  */
-  boolean (*read_debug_info) PARAMS ((bfd *, asection *,
-				      struct ecoff_debug_info *));
+  bfd_boolean (*read_debug_info) (bfd *, asection *, struct ecoff_debug_info *);
 };
 
 #endif /* ! defined (ECOFF_H) */

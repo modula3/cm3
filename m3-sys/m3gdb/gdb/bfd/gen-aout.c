@@ -1,5 +1,6 @@
 /* Generate parameters for an a.out system.
-   Copyright (C) 1990, 91, 92, 93, 94 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1993, 1994, 1995, 2001, 2002
+   Free Software Foundation, Inc.
 
 This file is part of BFD, the Binary File Descriptor library.
 
@@ -15,10 +16,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "/usr/include/a.out.h"
 #include <stdio.h>
+
+#ifndef _
+#define _(X) X
+#endif
 
 int
 main (argc, argv)
@@ -82,13 +87,16 @@ main (argc, argv)
 #endif
   if (arch[0] == '1')
     {
-      fprintf (stderr, "warning: preprocessor substituted architecture name inside string;");
-      fprintf (stderr, "         fix DEFAULT_ARCH in the output file yourself\n");
+      fprintf (stderr, _("warning: preprocessor substituted architecture name inside string;"));
+      fprintf (stderr, _("         fix DEFAULT_ARCH in the output file yourself\n"));
       arch = "unknown";
     }
-  printf("#define DEFAULT_ARCH bfd_arch_%s\n", arch);
+  printf("#define DEFAULT_ARCH bfd_arch_%s\n\n", arch);
 
-  printf("\n#define MY(OP) CAT(%s_,OP)\n", target);
+  printf("/* Do not \"beautify\" the CONCAT* macro args.  Traditional C will not");
+  printf("   remove whitespace added here, and thus will fail to concatenate");
+  printf("   the tokens.  */");
+  printf("\n#define MY(OP) CONCAT2 (%s_,OP)\n\n", target);
   printf("#define TARGETNAME \"a.out-%s\"\n\n", target);
 
   printf("#include \"bfd.h\"\n");
