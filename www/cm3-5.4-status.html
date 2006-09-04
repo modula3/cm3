@@ -14,7 +14,7 @@
 
     <p>
     This page summarises the current status of the cm3 5.4 release.
-    See the <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-07/1154373463000#1154373463000">release plan</a> for details.
+    See the <a href="http://mailarchive.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-07/1154373463000#1154373463000">release plan</a> for details.
     </p>
 
     <h3>Getting the source code for this release</h3>
@@ -77,7 +77,7 @@
         <td>
           Segfaults during build of Juno on Fedora Core 5 due to address
           space randomisation and probably other issues.
-          See <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154435809000#1154435809000">here</a> for details.
+          See <a href="http://mailarchive.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154435809000#1154435809000">here</a> for details.
           Test archive built on Debian Sarge.
         </td>
         <td>
@@ -93,9 +93,9 @@
         </td>
         <td>
           Segmentation faults in RTThread described
-          <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154704349000#1154704349000">here</a>
-          may have been fixed in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156343464000">this commit</a>.
+          <a href="http://mailarchive.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154704349000#1154704349000">here</a>
+          have been fixed in
+          <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156343464000">this commit</a>.
           <br>
         </td>
         <td>
@@ -106,13 +106,14 @@
         <td>
           PPC_DARWIN
         </td>
-        <td bgcolor="#FFFF00">
-          <b>:-/</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          Builds fine.
-          Creating minimal binary installation archive does not work.
-          See <a href="http://www.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-08/1154975768000#1154975768000">here</a> for details.
+          Now fine.
+        </td>
+        <td>
+          <a href="cm3-min-POSIX-PPC_DARWIN-d5.4-0.tgz">download</a>
         </td>
       </tr>
     </table>
@@ -142,8 +143,7 @@
           <b>??</b>
         </td>
         <td>
-          Not investigated.
-          Randy Coleburn wants to help.
+          Investigating.
         </td>
         <td>
         </td>
@@ -152,11 +152,11 @@
         <td>
           PPC_LINUX
         </td>
-        <td bgcolor="#FFFFFF">
-          <b>??</b>
+        <td bgcolor="#FF0000">
+          <b>--</b>
         </td>
         <td>
-          In progress. Initial problems have been dealt with.
+         Dropped from 5.4 release because it does not currently compile. 
         </td>
         <td>
         </td>
@@ -202,10 +202,10 @@
         </td>
         <td>
           Initial segmentation violation problems fixed by Olaf Wagner
-          in <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154867402000">this commit</a>.
+          in <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154867402000">this commit</a>.
           <br>
           Backend based on gcc-3.4.5 was made default by Olaf Wagner in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154868756000">this commit</a>.
+          <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154868756000">this commit</a>.
         </td>
       </tr>
       <tr>
@@ -218,11 +218,11 @@
         <td>
           New "generational/incremental" garbage collection made default
           by Anthony Hosking in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-06/1151001441000#1151336865000">this commit</a>.
+          <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-06/1151001441000#1151336865000">this commit</a>.
           <br>
           Obsolete "enhanced" garbage collection removed from binary
           distributions by Olaf Wagner in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154868756000">this commit</a>.
+          <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1154868756000">this commit</a>.
           <br>
           System call wrappers are now unused but have not been removed from CVS yet.
         </td>
@@ -236,7 +236,7 @@
         </td>
         <td>
           Removed from standard packages again in
-	  <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156859504000">this commit</a>
+	  <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156859504000">this commit</a>
 	  since it requires plplot to be installed.
 	  Source code will still be shipped with release for people who want to use plplot.
         </td>
@@ -250,7 +250,7 @@
         </td>
         <td>
           Added to standard packages in
-          <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155033527000">this commit</a>.
+          <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155033527000">this commit</a>.
         </td>
       </tr>
       <tr>
@@ -261,7 +261,7 @@
           <b>:-)</b>
         </td>
         <td>
-                Done in <a href="http://www.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155834541000">this commit</a>.
+                Done in <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000#1155834541000">this commit</a>.
         </td>
       </tr>
       <tr>
@@ -291,12 +291,13 @@
         <td>
           m3gdb
         </td>
-        <td bgcolor="#FFFFFF">
-          <b>??</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          In progress. Got new m3gdb version from Rodney M. Bates.
-          Compiles and works fine on FreeBSD 6.1. About to be imported into CVS.
+          New m3gdb version from Rodney M. Bates imported into CVS.
+          Compiles and works fine on FreeBSD 6.1. Other systems not tested yet,
+          but expected to work OK thanks to GNU autoconf magic.
         </td>
       </tr>
     </table>
