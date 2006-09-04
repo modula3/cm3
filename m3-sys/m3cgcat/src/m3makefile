@@ -1,7 +1,0 @@
-
-import ("m3middle")
-import ("m3quake")
-
-implementation ("Main")
-build_standalone ()
-program ("m3cgcat")
