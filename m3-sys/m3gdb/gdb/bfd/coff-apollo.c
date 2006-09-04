@@ -1,5 +1,6 @@
 /* BFD back-end for Apollo 68000 COFF binaries.
-   Copyright 1990, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1993, 1994, 1999, 2000, 2001, 2002, 2003
+   Free Software Foundation, Inc.
    By Troy Rollo (troy@cbme.unsw.edu.au)
    Based on m68k standard COFF version Written by Cygnus Support.
 
@@ -17,12 +18,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 #include "coff/apollo.h"
 #include "coff/internal.h"
 #include "libcoff.h"
@@ -32,16 +32,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #ifdef ONLY_DECLARE_RELOCS
 extern reloc_howto_type apollocoff_howto_table[];
 #else
-reloc_howto_type apollocoff_howto_table[] = 
-{
-  HOWTO(R_RELBYTE,	       0,  0,  	8,  false, 0, complain_overflow_bitfield, 0, "8",	true, 0x000000ff,0x000000ff, false),
-  HOWTO(R_RELWORD,	       0,  1, 	16, false, 0, complain_overflow_bitfield, 0, "16",	true, 0x0000ffff,0x0000ffff, false),
-  HOWTO(R_RELLONG,	       0,  2, 	32, false, 0, complain_overflow_bitfield, 0, "32",	true, 0xffffffff,0xffffffff, false),
-  HOWTO(R_PCRBYTE,	       0,  0, 	8,  true,  0, complain_overflow_signed, 0, "DISP8",    true, 0x000000ff,0x000000ff, false),
-  HOWTO(R_PCRWORD,	       0,  1, 	16, true,  0, complain_overflow_signed, 0, "DISP16",   true, 0x0000ffff,0x0000ffff, false),
-  HOWTO(R_PCRLONG,	       0,  2, 	32, true,  0, complain_overflow_signed, 0, "DISP32",   true, 0xffffffff,0xffffffff, false),
-  HOWTO(R_RELLONG_NEG,	       0,  -2, 	32, false, 0, complain_overflow_bitfield, 0, "-32",	true, 0xffffffff,0xffffffff, false),
-};
+reloc_howto_type apollocoff_howto_table[] =
+  {
+    HOWTO (R_RELBYTE,	       0,  0,  	8,  FALSE, 0, complain_overflow_bitfield, 0, "8",	TRUE, 0x000000ff,0x000000ff, FALSE),
+    HOWTO (R_RELWORD,	       0,  1, 	16, FALSE, 0, complain_overflow_bitfield, 0, "16",	TRUE, 0x0000ffff,0x0000ffff, FALSE),
+    HOWTO (R_RELLONG,	       0,  2, 	32, FALSE, 0, complain_overflow_bitfield, 0, "32",	TRUE, 0xffffffff,0xffffffff, FALSE),
+    HOWTO (R_PCRBYTE,	       0,  0, 	8,  TRUE,  0, complain_overflow_signed,   0, "DISP8",   TRUE, 0x000000ff,0x000000ff, FALSE),
+    HOWTO (R_PCRWORD,	       0,  1, 	16, TRUE,  0, complain_overflow_signed,   0, "DISP16",  TRUE, 0x0000ffff,0x0000ffff, FALSE),
+    HOWTO (R_PCRLONG,	       0,  2, 	32, TRUE,  0, complain_overflow_signed,   0, "DISP32",  TRUE, 0xffffffff,0xffffffff, FALSE),
+    HOWTO (R_RELLONG_NEG,      0,  -2, 	32, FALSE, 0, complain_overflow_bitfield, 0, "-32",	TRUE, 0xffffffff,0xffffffff, FALSE),
+  };
 #endif /* not ONLY_DECLARE_RELOCS */
 
 #ifndef BADMAG
@@ -49,114 +49,73 @@ reloc_howto_type apollocoff_howto_table[] =
 #endif
 #define APOLLO_M68 1		/* Customize coffcode.h */
 
-/* Turn a howto into a reloc number */
+/* Turn a howto into a reloc number.  */
 
-#ifdef ONLY_DECLARE_RELOCS
-extern void apollo_rtype2howto PARAMS ((arelent *internal, int relocentry));
-extern int apollo_howto2rtype PARAMS ((reloc_howto_type *));
-#else
+extern void apollo_rtype2howto PARAMS ((arelent *, int));
+extern int  apollo_howto2rtype PARAMS ((reloc_howto_type *));
+#ifndef ONLY_DECLARE_RELOCS
+
 void
-apollo_rtype2howto(internal, relocentry)
+apollo_rtype2howto (internal, relocentry)
      arelent *internal;
      int relocentry;
 {
-  switch (relocentry) 
-  {
-   case R_RELBYTE:	internal->howto = apollocoff_howto_table + 0; break;
-   case R_RELWORD:	internal->howto = apollocoff_howto_table + 1; break;
-   case R_RELLONG:	internal->howto = apollocoff_howto_table + 2; break;
-   case R_PCRBYTE:	internal->howto = apollocoff_howto_table + 3; break;
-   case R_PCRWORD:	internal->howto = apollocoff_howto_table + 4; break;
-   case R_PCRLONG:	internal->howto = apollocoff_howto_table + 5; break;
-   case R_RELLONG_NEG:	internal->howto = apollocoff_howto_table + 6; break;
-  }
+  switch (relocentry)
+    {
+    case R_RELBYTE:	internal->howto = apollocoff_howto_table + 0; break;
+    case R_RELWORD:	internal->howto = apollocoff_howto_table + 1; break;
+    case R_RELLONG:	internal->howto = apollocoff_howto_table + 2; break;
+    case R_PCRBYTE:	internal->howto = apollocoff_howto_table + 3; break;
+    case R_PCRWORD:	internal->howto = apollocoff_howto_table + 4; break;
+    case R_PCRLONG:	internal->howto = apollocoff_howto_table + 5; break;
+    case R_RELLONG_NEG:	internal->howto = apollocoff_howto_table + 6; break;
+    }
 }
 
-int 
+int
 apollo_howto2rtype (internal)
      reloc_howto_type *internal;
 {
-  if (internal->pc_relative) 
-  {
-    switch (internal->bitsize) 
+  if (internal->pc_relative)
     {
-     case 32: return R_PCRLONG;
-     case 16: return R_PCRWORD;
-     case 8: return R_PCRBYTE;
+      switch (internal->bitsize)
+	{
+	case 32: return R_PCRLONG;
+	case 16: return R_PCRWORD;
+	case 8: return R_PCRBYTE;
+	}
     }
-  }
   else
-  {
-    switch (internal->bitsize)
-     {
-      case 32: return R_RELLONG;
-      case 16: return R_RELWORD;
-      case 8: return R_RELBYTE;
-     }
-  }
-  return R_RELLONG;    
+    {
+      switch (internal->bitsize)
+	{
+	case 32: return R_RELLONG;
+	case 16: return R_RELWORD;
+	case 8: return R_RELBYTE;
+	}
+    }
+  return R_RELLONG;
 }
 #endif /* not ONLY_DECLARE_RELOCS */
 
 #define RTYPE2HOWTO(internal, relocentry) \
-  apollo_rtype2howto(internal, (relocentry)->r_type)
+  apollo_rtype2howto (internal, (relocentry)->r_type)
 
 #define SELECT_RELOC(external, internal) \
-  external.r_type = apollo_howto2rtype(internal);
+  external.r_type = apollo_howto2rtype (internal);
 
 #include "coffcode.h"
 
-const bfd_target 
-#ifdef TARGET_SYM
-  TARGET_SYM =
-#else
-  apollocoff_vec =
+#ifndef TARGET_SYM
+#define TARGET_SYM apollocoff_vec
 #endif
-{
-#ifdef TARGET_NAME
-  TARGET_NAME,
-#else
-  "apollo-m68k",			/* name */
+
+#ifndef TARGET_NAME
+#define TARGET_NAME "apollo-m68k"
 #endif
-  bfd_target_coff_flavour,
-  BFD_ENDIAN_BIG,		/* data byte order is big */
-  BFD_ENDIAN_BIG,		/* header byte order is big */
 
-  (HAS_RELOC | EXEC_P |		/* object flags */
-   HAS_LINENO | HAS_DEBUG |
-   HAS_SYMS | HAS_LOCALS | WP_TEXT),
-
-  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC), /* section flags */
 #ifdef NAMES_HAVE_UNDERSCORE
-  '_',
+CREATE_BIG_COFF_TARGET_VEC (TARGET_SYM, TARGET_NAME, 0, 0, '_', NULL, COFF_SWAP_TABLE)
 #else
-  0,				/* leading underscore */
+CREATE_BIG_COFF_TARGET_VEC (TARGET_SYM, TARGET_NAME, 0, 0, 0, NULL, COFF_SWAP_TABLE)
 #endif
-  '/',				/* ar_pad_char */
-  15,				/* ar_max_namelen */
-  bfd_getb64, bfd_getb_signed_64, bfd_putb64,
-     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
-     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* data */
-  bfd_getb64, bfd_getb_signed_64, bfd_putb64,
-     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
-     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* hdrs */
-
- {_bfd_dummy_target, coff_object_p, /* bfd_check_format */
-   bfd_generic_archive_p, _bfd_dummy_target},
- {bfd_false, coff_mkobject, _bfd_generic_mkarchive, /* bfd_set_format */
-   bfd_false},
- {bfd_false, coff_write_object_contents, /* bfd_write_contents */
-   _bfd_write_archive_contents, bfd_false},
-
-     BFD_JUMP_TABLE_GENERIC (coff),
-     BFD_JUMP_TABLE_COPY (coff),
-     BFD_JUMP_TABLE_CORE (_bfd_nocore),
-     BFD_JUMP_TABLE_ARCHIVE (_bfd_archive_coff),
-     BFD_JUMP_TABLE_SYMBOLS (coff),
-     BFD_JUMP_TABLE_RELOCS (coff),
-     BFD_JUMP_TABLE_WRITE (coff),
-     BFD_JUMP_TABLE_LINK (coff),
-     BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
-
-  COFF_SWAP_TABLE
- };

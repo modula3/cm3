@@ -129,8 +129,10 @@ typedef union
 } __ieee_float_shape_type;
 #endif
 
+#if defined(__IEEE_BIG_ENDIAN) || defined(__IEEE_LITTLE_ENDIAN)
 
-double DEFUN(copysign, (x, y), double x AND double y)
+double
+copysign (double x, double y)
 {
   __ieee_double_shape_type a,b;
   b.value = y;  
@@ -138,3 +140,15 @@ double DEFUN(copysign, (x, y), double x AND double y)
   a.number.sign =b.number.sign;
   return a.value;
 }
+
+#else
+
+double
+copysign (double x, double y)
+{
+  if ((x < 0 && y > 0) || (x > 0 && y < 0))
+    return -x;
+  return x;
+}
+
+#endif

@@ -1,5 +1,7 @@
-/* BFD back-end for Motorola 88000 COFF "Binary Compatability Standard" files.
-   Copyright 1990, 1991, 1992, 1993, 1994 Free Software Foundation, Inc.
+/* BFD back-end for Motorola 88000 COFF "Binary Compatibility Standard" files.
+   Copyright 1990, 1991, 1992, 1993, 1994, 1995, 1997, 1998, 1999, 2000,
+   2001, 2002, 2003
+   Free Software Foundation, Inc.
    Written by Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -16,17 +18,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #define M88 1		/* Customize various include files */
 #include "bfd.h"
 #include "sysdep.h"
 #include "libbfd.h"
-#include "obstack.h"
 #include "coff/m88k.h"
 #include "coff/internal.h"
 #include "libcoff.h"
 
+static bfd_boolean m88k_is_local_label_name PARAMS ((bfd *, const char *));
 static bfd_reloc_status_type m88k_special_reloc
   PARAMS ((bfd *, arelent *, asymbol *, PTR, asection *, bfd *, char **));
 static void rtype2howto PARAMS ((arelent *, struct internal_reloc *));
@@ -35,7 +37,22 @@ static void reloc_processing
 
 #define COFF_DEFAULT_SECTION_ALIGNMENT_POWER (3)
 
-static bfd_reloc_status_type 
+#define GET_SCNHDR_NRELOC H_GET_32
+#define GET_SCNHDR_NLNNO  H_GET_32
+
+/* On coff-m88k, local labels start with '@'.  */
+
+#define coff_bfd_is_local_label_name m88k_is_local_label_name
+
+static bfd_boolean
+m88k_is_local_label_name (abfd, name)
+     bfd *abfd ATTRIBUTE_UNUSED;
+     const char *name;
+{
+  return name[0] == '@';
+}
+
+static bfd_reloc_status_type
 m88k_special_reloc (abfd, reloc_entry, symbol, data,
 		    input_section, output_bfd, error_message)
      bfd *abfd;
@@ -44,7 +61,7 @@ m88k_special_reloc (abfd, reloc_entry, symbol, data,
      PTR data;
      asection *input_section;
      bfd *output_bfd;
-     char **error_message;
+     char **error_message ATTRIBUTE_UNUSED;
 {
   reloc_howto_type *howto = reloc_entry->howto;
 
@@ -68,7 +85,7 @@ m88k_special_reloc (abfd, reloc_entry, symbol, data,
 	  asection *reloc_target_output_section;
 	  long relocation = 0;
 
-	  /* Work out which section the relocation is targetted at and the
+	  /* Work out which section the relocation is targeted at and the
 	     initial relocation command value.  */
 
 	  /* Get symbol value.  (Common symbols are special.)  */
@@ -99,11 +116,16 @@ m88k_special_reloc (abfd, reloc_entry, symbol, data,
 	  relocation <<= (bfd_vma) howto->bitpos;
 
 	  if (relocation)
-	      bfd_put_16 (abfd, relocation, (unsigned char *) data + addr);
+	    bfd_put_16 (abfd, (bfd_vma) relocation,
+			(unsigned char *) data + addr);
 	}
 
+      /* If we are not producing relocatable output, return an error if
+	 the symbol is not defined.  */
+      if (bfd_is_und_section (symbol->section) && output_bfd == (bfd *) NULL)
+	return bfd_reloc_undefined;
+
       return bfd_reloc_ok;
-      break;
 
     default:
       if (output_bfd != (bfd *) NULL)
@@ -124,91 +146,91 @@ m88k_special_reloc (abfd, reloc_entry, symbol, data,
   return bfd_reloc_ok;
 }
 
-static reloc_howto_type howto_table[] = 
+static reloc_howto_type howto_table[] =
 {
   HOWTO (R_PCR16L,			/* type */
 	 02,				/* rightshift */
 	 1,				/* size (0 = byte, 1 = short, 2 = long) */
 	 16,				/* bitsize */
-	 true,				/* pc_relative */
+	 TRUE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_signed,	/* complain_on_overflow */
 	 m88k_special_reloc,		/* special_function */
 	 "PCR16L",			/* name */
-	 false,				/* partial_inplace */
+	 FALSE,				/* partial_inplace */
 	 0x0000ffff,			/* src_mask */
 	 0x0000ffff,			/* dst_mask */
-	 true),				/* pcrel_offset */
+	 TRUE),				/* pcrel_offset */
 
   HOWTO (R_PCR26L,			/* type */
 	 02,				/* rightshift */
 	 2,				/* size (0 = byte, 1 = short, 2 = long) */
 	 26,				/* bitsize */
-	 true,				/* pc_relative */
+	 TRUE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_signed,	/* complain_on_overflow */
 	 m88k_special_reloc,		/* special_function */
 	 "PCR26L",			/* name */
-	 false,				/* partial_inplace */
+	 FALSE,				/* partial_inplace */
 	 0x03ffffff,			/* src_mask */
 	 0x03ffffff,			/* dst_mask */
-	 true),				/* pcrel_offset */
+	 TRUE),				/* pcrel_offset */
 
   HOWTO (R_VRT16,			/* type */
 	 00,				/* rightshift */
 	 1,				/* size (0 = byte, 1 = short, 2 = long) */
 	 16,				/* bitsize */
-	 false,				/* pc_relative */
+	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_bitfield,	/* complain_on_overflow */
 	 m88k_special_reloc,		/* special_function */
 	 "VRT16",			/* name */
-	 false,				/* partial_inplace */
+	 FALSE,				/* partial_inplace */
 	 0x0000ffff,			/* src_mask */
 	 0x0000ffff,			/* dst_mask */
-	 true),				/* pcrel_offset */
+	 TRUE),				/* pcrel_offset */
 
   HOWTO (R_HVRT16,			/* type */
 	 16,				/* rightshift */
 	 1,				/* size (0 = byte, 1 = short, 2 = long) */
 	 16,				/* bitsize */
-	 false,				/* pc_relative */
+	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
 	 m88k_special_reloc,		/* special_function */
 	 "HVRT16",			/* name */
-	 false,				/* partial_inplace */
+	 FALSE,				/* partial_inplace */
 	 0x0000ffff,			/* src_mask */
 	 0x0000ffff,			/* dst_mask */
-	 true),				/* pcrel_offset */
+	 TRUE),				/* pcrel_offset */
 
   HOWTO (R_LVRT16,			/* type */
 	 00,				/* rightshift */
 	 1,				/* size (0 = byte, 1 = short, 2 = long) */
 	 16,				/* bitsize */
-	 false,				/* pc_relative */
+	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_dont,	/* complain_on_overflow */
 	 m88k_special_reloc,		/* special_function */
 	 "LVRT16",			/* name */
-	 false,				/* partial_inplace */
+	 FALSE,				/* partial_inplace */
 	 0x0000ffff,			/* src_mask */
 	 0x0000ffff,			/* dst_mask */
-	 true),				/* pcrel_offset */
+	 TRUE),				/* pcrel_offset */
 
   HOWTO (R_VRT32,			/* type */
 	 00,				/* rightshift */
 	 2,				/* size (0 = byte, 1 = short, 2 = long) */
 	 32,				/* bitsize */
-	 false,				/* pc_relative */
+	 FALSE,				/* pc_relative */
 	 0,				/* bitpos */
 	 complain_overflow_bitfield,	/* complain_on_overflow */
 	 m88k_special_reloc,		/* special_function */
 	 "VRT32",			/* name */
-	 false,				/* partial_inplace */
+	 FALSE,				/* partial_inplace */
 	 0xffffffff,			/* src_mask */
 	 0xffffffff,			/* dst_mask */
-	 true),				/* pcrel_offset */
+	 TRUE),				/* pcrel_offset */
 };
 
 /* Code to turn an external r_type into a pointer to an entry in the
@@ -230,11 +252,9 @@ rtype2howto (cache_ptr, dst)
 
 #define RTYPE2HOWTO(cache_ptr, dst) rtype2howto (cache_ptr, dst)
 
-
 /* Code to swap in the reloc offset */
-#define SWAP_IN_RELOC_OFFSET  bfd_h_get_16
-#define SWAP_OUT_RELOC_OFFSET bfd_h_put_16
-
+#define SWAP_IN_RELOC_OFFSET  H_GET_16
+#define SWAP_OUT_RELOC_OFFSET H_PUT_16
 
 #define RELOC_PROCESSING(relent,reloc,symbols,abfd,section)	\
   reloc_processing(relent, reloc, symbols, abfd, section)
@@ -268,44 +288,4 @@ reloc_processing (relent, reloc, symbols, abfd, section)
 
 #undef coff_write_armap
 
-const bfd_target m88kbcs_vec =
-{
-  "coff-m88kbcs",		/* name */
-  bfd_target_coff_flavour,
-  BFD_ENDIAN_BIG,		/* data byte order is big */
-  BFD_ENDIAN_BIG,		/* header byte order is big */
-
-  (HAS_RELOC | EXEC_P |		/* object flags */
-   HAS_LINENO | HAS_DEBUG |
-   HAS_SYMS | HAS_LOCALS | WP_TEXT),
-
-  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC), /* section flags */
-  '_',				/* leading underscore */
-  '/',				/* ar_pad_char */
-  15,				/* ar_max_namelen */
-  bfd_getb64, bfd_getb_signed_64, bfd_putb64,
-     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
-     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* data */
-  bfd_getb64, bfd_getb_signed_64, bfd_putb64,
-     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
-     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* hdrs */
-
-    {_bfd_dummy_target, coff_object_p, /* bfd_check_format */
-       bfd_generic_archive_p, _bfd_dummy_target},
-    {bfd_false, coff_mkobject, _bfd_generic_mkarchive, /* bfd_set_format */
-       bfd_false},
-    {bfd_false, coff_write_object_contents, /* bfd_write_contents */
-       _bfd_write_archive_contents, bfd_false},
-
-     BFD_JUMP_TABLE_GENERIC (coff),
-     BFD_JUMP_TABLE_COPY (coff),
-     BFD_JUMP_TABLE_CORE (_bfd_nocore),
-     BFD_JUMP_TABLE_ARCHIVE (_bfd_archive_coff),
-     BFD_JUMP_TABLE_SYMBOLS (coff),
-     BFD_JUMP_TABLE_RELOCS (coff),
-     BFD_JUMP_TABLE_WRITE (coff),
-     BFD_JUMP_TABLE_LINK (coff),
-     BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
-
-  COFF_SWAP_TABLE,
-};
+CREATE_BIG_COFF_TARGET_VEC (m88kbcs_vec, "coff-m88kbcs", 0, 0, '_', NULL, COFF_SWAP_TABLE)

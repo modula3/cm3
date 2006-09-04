@@ -1,12 +1,38 @@
+/* M3 language support routines for GDB, the GNU debugger.
+   Copyright 2006 Free Software Foundation, Inc.
+
+This file is part of GDB.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+
+/* This file contains code to lexically scan Modula-3 code. */ 
+
+#include <stdbool.h> 
+
 #include "defs.h"
 #include "expression.h"
 #include "value.h"
 #include "parser-defs.h"
+#include "gdb_string.h"
+
 #include "m3-token.h"
 
 /*-------------------------------------------------------- reserved words ---*/
 
 struct reserved {char *name; int kind; };
+
 static struct reserved reserved [] = {
   { "ABS",       TK_ABS       },
   { "ADDRESS",   TK_ADDRESS   },
@@ -115,7 +141,7 @@ static struct reserved reserved [] = {
 
 static void
 recognize_reserved_word (tok)
-   m3_token *tok;
+   struct m3_token *tok;
 {
   int low, high, mid, cmp;
 
@@ -144,32 +170,51 @@ recognize_reserved_word (tok)
 /*--------------------------------------------------------------- numbers ---*/
 
 static char *
-scan_number (input, tok)
-     char *input;
-     m3_token *tok;
+m3_scan_number (char *input, struct m3_token *tok)
 {
   char *c;
   int i;
+  int digit;
+  LONGEST val;
+  LONGEST base;
+  bool is_based; 
 
-  /* scan the leading decimal digits */
-  c = input;
-  while ('0' <= *c && *c <= '9') { c++; }
+  c = input; 
+  val = 0;
+  if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) ) 
+    { /* Go ahead and accept the C lexical syntax for hex numbers. */ 
+      is_based = true;
+      base = 16; 
+      c = c + 2;
+    } 
+  else 
+    { /* scan the leading decimal digits */
+      while ('0' <= *c && *c <= '9') 
+        { digit = *c - '0';
+          val = val * 10 + digit;
+          c++; 
+        }
+      if (*c == '_') 
+        { /* It's a based value in Modula-3 syntax. */ 
+          is_based = true; 
+          base = val;
+          c++; 
+          if ((base < 2) || (16 < base)) 
+            { error 
+                ("%d is an illegal base for a Modula-3 literal, using 10 instead." 
+                , (int) base 
+                );
+              base = 10;
+            }
+        } 
+      else is_based = false; 
+    } 
 
-  if (*c == '_') {
-    /* scan a based integer */
-    LONGEST base, val;
-    int digit;
-
-    /* get the base */
-    i = sscanf (input, "%ld", &base);
-    if ((i <= 0) || (base < 2) || (16 < base)) {
-      error ("illegal base for based literal, 10 used");
-      base = 10;
-    }
-
+  if ( is_based ) 
+  { /* scan a based integer */
     /* scan the value */
     val = 0;
-    c++;  input = c;
+    input = c;
     while (1) {
       if      ('0' <= *c && *c <= '9') { digit = *c - '0'; }
       else if ('A' <= *c && *c <= 'F') { digit = *c - 'A' + 10; }
@@ -229,18 +274,17 @@ scan_number (input, tok)
   } else {
     /* already scanned a decimal integer */
     tok->kind   = TK_CARD_LIT;
-    sscanf (input, "%ld", &tok->intval);
-
+    tok->intval = val;
   }
   return c;
-} /* scan_number */
+} /* m3_scan_number */
 
 /*------------------------------------------------------------- GDB tokens --*/
 
 static char *
 scan_gdb_token (input, tok)
   char *input;
-  m3_token *tok;
+  struct m3_token *tok;
 {
   char *tokstart;
   int sign = 1;
@@ -285,8 +329,8 @@ scan_gdb_token (input, tok)
 
   /* check for a register name */
   for (c = 0; c < NUM_REGS; c++) {
-    if (len == strlen (reg_names [c])
-        && STREQN (tokstart, reg_names[c], len)) {
+   if (len == strlen (REGISTER_NAME(c))
+        && strncmp (tokstart, REGISTER_NAME(c), len) == 0) {
       tok->kind = TK_REGISTER;
       tok->intval = c;
       return input;
@@ -294,14 +338,16 @@ scan_gdb_token (input, tok)
   }
 
   /* check for a pseudo-register name */
+#if 0 
   for (c = 0; c < num_std_regs; c++) {
     if (len == strlen (std_regs [c].name)
-        && STREQN (tokstart, std_regs[c].name, len)) {
+        && strncmp (tokstart, std_regs[c].name, len) == 0) {
       tok->kind = TK_REGISTER;
       tok->intval = std_regs[c].regnum; 
       return input;
     }
   }
+#endif 
 
   /* ? must be a GDB variable */
   tok->kind = TK_GDB_VAR;
@@ -318,16 +364,19 @@ static void
 bad_octal (wide)
      int wide;
 {
-  error ("octal character constant must have %d digits", (wide ? 6 : 3));
+  error ( "octal %scharacter escape sequence must have exactly %d digits", 
+          ( wide ? "wide " : "" ), 
+          ( wide ? 6 : 3)
+        );
 } /* bad_octal */
 
-static int
-octal_digit (ch, digit)
-  char ch;
-  int *digit;
+static bool
+octal_digit ( char ch, int *digit ) 
+
 {
-  if (('0' <= ch) || (ch <= '7')) { *digit = ch - '0';  return 1; }
-  return 0;
+  if ( '0' <= ch && ch <= '7' ) 
+    { *digit = ch - '0';  return true; }
+  return false;
 } /* octal_digit */
 
 static char *
@@ -363,19 +412,23 @@ static void
 bad_hex (wide)
      int wide;
 {
-  error ("hex character constant must have %d digits", (wide ? 4 : 2));
+  error ( "hex character %sescape sequence must exactly have %d digits", 
+          ( wide ? "wide " : "" ), 
+          ( wide ? 4 : 2 )
+        );
 } /* bad_hex */
 
 
-static int
-hex_digit (ch, digit)
-  char ch;
-  int *digit;
-{
-  if (('0' <= ch) || (ch <= '7')) { *digit = ch - '0';       return 1; }
-  if (('A' <= ch) || (ch <= 'F')) { *digit = ch - 'A' + 10;  return 1; }
-  if (('a' <= ch) || (ch <= 'f')) { *digit = ch - 'a' + 10;  return 1; }
-  return 0;
+static bool
+hex_digit ( char ch, int *digit )
+
+{ if ( '0' <= ch && ch <= '9' ) 
+    { *digit = ch - '0';       return true; }
+  if ( 'A' <= ch && ch <= 'F' ) 
+    { *digit = ch - 'A' + 10;  return true; }
+  if ( 'a' <= ch && ch <= 'f' ) 
+    { *digit = ch - 'a' + 10;  return true; }
+  return false;
 } /* hex_digit */
 
 static char *
@@ -403,12 +456,10 @@ scan_hex (input, val, wide)
   return input;
 } /* scan_hex */
 
-
+/* PRE: input points to the opening single quote. */ 
 static char *
-scan_char (input, tok, wide)
-  char *input;
-  m3_token *tok;
-  int wide;
+scan_char ( char *input, struct m3_token *tok, int wide ) 
+
 {
   int val = 0;
 
@@ -434,7 +485,7 @@ scan_char (input, tok, wide)
     else if (*input == '\\') { tok->intval = '\\';  input++; }
     else if (*input == '\'') { tok->intval = '\'';  input++; }
     else if (*input == '"')  { tok->intval = '"';   input++; }
-    else if (*input == 'x')  {
+    else if (*input == 'x' || *input == 'X')  {
       input = scan_hex (++input, &tok->intval, wide);
     } else if (('0' <= *input) && (*input <= '7')) {
       input = scan_octal (input, &tok->intval, wide);
@@ -464,7 +515,7 @@ scan_char (input, tok, wide)
 static char *
 scan_text (input, tok)
   char *input;
-  m3_token *tok;
+  struct m3_token *tok;
 {
   char *start, *next;
 
@@ -494,13 +545,13 @@ scan_text (input, tok)
       else if (*input == '\\') { *next++ = '\\';  input++; }
       else if (*input == '\'') { *next++ = '\'';  input++; }
       else if (*input == '"')  { *next++ = '"';   input++; }
-      else if (*input == 'x') {
+      else if (*input == 'x' || *input == 'X') {
 	LONGEST hexval;
-        input = scan_hex (++input, hexval, 0);
+        input = scan_hex (++input, &hexval, 0);
 	*next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
 	LONGEST octval;
-        input = scan_octal (input, octval, 0);
+        input = scan_octal (input, &octval, 0);
 	*next++ = octval;
       } else {
         error ("unknown escape sequence in text literal");
@@ -522,10 +573,11 @@ scan_text (input, tok)
   return input;
 } /* scan_text */
 
+/* PRE: input points to the opening double quote. */ 
 static char *
 scan_widetext (input, tok, wide)
   char *input;
-  m3_token *tok;
+  struct m3_token *tok;
   int wide;
 {
   char *start, *out;
@@ -554,7 +606,7 @@ scan_widetext (input, tok, wide)
       else if (*input == '\\') { len++;  input++; }
       else if (*input == '\'') { len++;  input++; }
       else if (*input == '"')  { len++;  input++; }
-      else if (*input == 'x')  {
+      else if (*input == 'x' || *input == 'X')  {
 	len++;  input++;  /* assume the hex digits each count as characters */
       } else if (('0' <= *input) && (*input <= '7')) {
 	len++;  input++;  /* assume the octal digits each count as characters */
@@ -596,14 +648,14 @@ scan_widetext (input, tok, wide)
       else if (*input == '\\') { *out++ = 0;  *out++ = '\\';  input++; }
       else if (*input == '\'') { *out++ = 0;  *out++ = '\'';  input++; }
       else if (*input == '"')  { *out++ = 0;  *out++ = '"';   input++; }
-      else if (*input == 'x') {
+      else if (*input == 'x' || *input == 'X') {
 	LONGEST hexval;
-        input = scan_hex (++input, hexval, wide);
+        input = scan_hex (++input, &hexval, wide);
 	*out++ = (hexval & 0xffff) >> 8;
 	*out++ = (hexval & 0xff);
       } else if (('0' <= *input) && (*input <= '7')) {
 	LONGEST octval;
-        input = scan_octal (input, octval, wide);
+        input = scan_octal (input, &octval, wide);
 	*out++ = (octval & 0xffff) >> 8;
 	*out++ = (octval & 0xff);
       } else {
@@ -656,7 +708,7 @@ skip_comment (input)
 char*
 scan_m3_token (input, tok)
      char *input;
-     m3_token *tok;
+     struct m3_token *tok;
 {
   char *tokstart;
   int   len;
@@ -687,16 +739,17 @@ scan_m3_token (input, tok)
       /* scan an identifier */
       input = tokstart + 1;
 
-      if (*input == '\'') {
-	/* oops, it's a wide char */
-        input = scan_char (tokstart, tok, 1);
-        break;
-      }
-      if (*input == '"') {
-	/* oops, it's a wide text literal */
-        input = scan_widetext (tokstart, tok);
-        break;
-      }
+      if (*input == '\'' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
+        { /* oops, it's a wide char */
+          input = scan_char ( input, tok, 1);
+           break;
+        }
+
+      if (*input == '"' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
+        { /* oops, it's a wide text literal */
+          input = scan_widetext ( input, tok);
+          break;
+        }
 
       while (   ('a' <= *input && *input <= 'z')
              || ('A' <= *input && *input <= 'Z')
@@ -715,7 +768,7 @@ scan_m3_token (input, tok)
 
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-      input = scan_number (tokstart, tok);
+      input = m3_scan_number (tokstart, tok);
       break;
 
     case '\'':
@@ -793,6 +846,8 @@ scan_m3_token (input, tok)
 
 static char* toknames[] = {
 
+  /* KEEP-ME-UP-TO-DATE: This must match enum m3_token_kind, in m3-token.h */ 
+
   "<EOF>", 
 
   /* literals */
@@ -848,8 +903,10 @@ static char* toknames[] = {
 
 char *
 m3_token_name (tok)
-  m3_token *tok;
+  struct m3_token *tok;
 {
   return toknames [(int)tok->kind];
     /* good enough for now... */
 }
+
+/* End of file m3-token.c */ 

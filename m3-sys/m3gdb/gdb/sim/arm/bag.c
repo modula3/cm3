@@ -13,7 +13,7 @@
  
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA. */
 
 /********************************************************************/
 /* bag.c:                                                           */
@@ -25,117 +25,142 @@
 /********************************************************************/
 
 #include "bag.h"
+#include <stdlib.h>
 
 #define HASH_TABLE_SIZE 256
 #define hash(x) (((x)&0xff)^(((x)>>8)&0xff)^(((x)>>16)&0xff)^(((x)>>24)&0xff))
 
-typedef struct hashentry {
+typedef struct hashentry
+{
   struct hashentry *next;
   int first;
   int second;
-} Hashentry;
+}
+Hashentry;
 
 Hashentry *lookupbyfirst[HASH_TABLE_SIZE];
 Hashentry *lookupbysecond[HASH_TABLE_SIZE];
 
-void addtolist(Hashentry **add, long first, long second) {
-  while (*add) add = &((*add)->next);
+void
+addtolist (Hashentry ** add, long first, long second)
+{
+  while (*add)
+    add = &((*add)->next);
   /* Malloc will never fail? :o( */
-  (*add) = (Hashentry *) malloc(sizeof(Hashentry));
+  (*add) = (Hashentry *) malloc (sizeof (Hashentry));
   (*add)->next = (Hashentry *) 0;
   (*add)->first = first;
   (*add)->second = second;
 }
 
-void killwholelist(Hashentry *p) {
+void
+killwholelist (Hashentry * p)
+{
   Hashentry *q;
 
-  while (p) {
-    q = p;
-    p = p->next;
-    free(q);
-  }
-}
-
-void removefromlist(Hashentry **p, long first, long second) {
-  Hashentry *q;
-
-  while (*p) {
-    if ((*p)->first == first) {
-      q = (*p)->next;
-      free(*p);
-      *p = q;
-      return;
+  while (p)
+    {
+      q = p;
+      p = p->next;
+      free (q);
     }
-    p = &((*p)->next);
-  }
 }
 
-void BAG_putpair(long first, long second) {
+static void
+removefromlist (Hashentry ** p, long first)
+{
+  Hashentry *q;
+
+  while (*p)
+    {
+      if ((*p)->first == first)
+	{
+	  q = (*p)->next;
+	  free (*p);
+	  *p = q;
+	  return;
+	}
+      p = &((*p)->next);
+    }
+}
+
+void
+BAG_putpair (long first, long second)
+{
   long junk;
 
-  if (BAG_getfirst(&junk, second) != NO_SUCH_PAIR)
-    BAG_killpair_bysecond(second);
-  addtolist(&lookupbyfirst[hash(first)], first, second);
-  addtolist(&lookupbysecond[hash(second)], first, second);
+  if (BAG_getfirst (&junk, second) != NO_SUCH_PAIR)
+    BAG_killpair_bysecond (second);
+  addtolist (&lookupbyfirst[hash (first)], first, second);
+  addtolist (&lookupbysecond[hash (second)], first, second);
 }
 
-Bag_error BAG_getfirst(long *first, long second) {
+Bag_error
+BAG_getfirst (long *first, long second)
+{
   Hashentry *look;
 
-  look = lookupbysecond[hash(second)];
-  while(look) if (look->second == second) {
-    *first = look->first;
-    return NO_ERROR;
-  }
+  look = lookupbysecond[hash (second)];
+  while (look)
+    if (look->second == second)
+      {
+	*first = look->first;
+	return NO_ERROR;
+      }
   return NO_SUCH_PAIR;
 }
 
-Bag_error BAG_getsecond(long first, long *second) {
+Bag_error
+BAG_getsecond (long first, long *second)
+{
   Hashentry *look;
 
-  look = lookupbyfirst[hash(first)];
-  while(look) {
-    if (look->first == first) {
-      *second = look->second;
-      return NO_ERROR;
+  look = lookupbyfirst[hash (first)];
+  while (look)
+    {
+      if (look->first == first)
+	{
+	  *second = look->second;
+	  return NO_ERROR;
+	}
+      look = look->next;
     }
-    look = look->next;
-  }
   return NO_SUCH_PAIR;
 }
 
-Bag_error BAG_killpair_byfirst(long first) {
+Bag_error
+BAG_killpair_byfirst (long first)
+{
   long second;
 
-  if (BAG_getsecond(first, &second) == NO_SUCH_PAIR)
+  if (BAG_getsecond (first, &second) == NO_SUCH_PAIR)
     return NO_SUCH_PAIR;
-  removefromlist(&lookupbyfirst[hash(first)], first, second);
-  removefromlist(&lookupbysecond[hash(second)], first, second);
+  removefromlist (&lookupbyfirst[hash (first)], first);
+  removefromlist (&lookupbysecond[hash (second)], first);
   return NO_ERROR;
 }
 
-Bag_error BAG_killpair_bysecond(long second) {
+Bag_error
+BAG_killpair_bysecond (long second)
+{
   long first;
-  
-  if (BAG_getfirst(&first, second) == NO_SUCH_PAIR)
+
+  if (BAG_getfirst (&first, second) == NO_SUCH_PAIR)
     return NO_SUCH_PAIR;
-  removefromlist(&lookupbyfirst[hash(first)], first, second);
-  removefromlist(&lookupbysecond[hash(second)], first, second);
+  removefromlist (&lookupbyfirst[hash (first)], first);
+  removefromlist (&lookupbysecond[hash (second)], first);
   return NO_ERROR;
 }
 
-void BAG_newbag() {
+void
+BAG_newbag ()
+{
   int i;
 
-  for (i = 0; i < 256; i++) {
-    killwholelist(lookupbyfirst[i]);
-    killwholelist(lookupbysecond[i]);
-    lookupbyfirst[i] = lookupbysecond[i] = (Hashentry *) 0;
-  }
+  for (i = 0; i < 256; i++)
+    {
+      killwholelist (lookupbyfirst[i]);
+      killwholelist (lookupbysecond[i]);
+      lookupbyfirst[i] = lookupbysecond[i] = (Hashentry *) 0;
+    }
 }
-  
-
-
-
-

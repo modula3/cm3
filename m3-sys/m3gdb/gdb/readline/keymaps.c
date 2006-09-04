@@ -1,41 +1,47 @@
 /* keymaps.c -- Functions and keymaps for the GNU Readline library. */
 
-/* Copyright (C) 1988, 1989, 1991 Free Software Foundation, Inc.
+/* Copyright (C) 1988,1989 Free Software Foundation, Inc.
 
    This file is part of GNU Readline, a library for reading lines
    of text with interactive input and history editing.
 
-   Readline is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
+   Readline is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; either version 2, or (at your option) any
+   later version.
 
-   Readline is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   Readline is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   along with Readline; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place, Suite 330, Boston, MA 02111 USA. */
+#define READLINE_LIBRARY
 
-#include "sysdep.h"
-#include <stdio.h>
+#if defined (HAVE_CONFIG_H)
+#  include <config.h>
+#endif
+
+#if defined (HAVE_STDLIB_H)
+#  include <stdlib.h>
+#else
+#  include "ansi_stdlib.h"
+#endif /* HAVE_STDLIB_H */
+
+#include <stdio.h>	/* for FILE * definition for readline.h */
+
 #include "readline.h"
-#include "keymaps.h"
+#include "rlconf.h"
+
 #include "emacs_keymap.c"
 
-#ifdef VI_MODE
+#if defined (VI_MODE)
 #include "vi_keymap.c"
 #endif
 
-/* Remove these declarations when we have a complete libgnu.a. */
-/* #define STATIC_MALLOC */
-#if !defined (STATIC_MALLOC)
-extern char *xmalloc (), *xrealloc ();
-#else
-static char *xmalloc (), *xrealloc ();
-#endif /* STATIC_MALLOC */
+#include "xmalloc.h"
 
 /* **************************************************************** */
 /*								    */
@@ -55,7 +61,7 @@ rl_make_bare_keymap ()
   for (i = 0; i < KEYMAP_SIZE; i++)
     {
       keymap[i].type = ISFUNC;
-      keymap[i].function = (Function *)NULL;
+      keymap[i].function = (rl_command_func_t *)NULL;
     }
 
   for (i = 'A'; i < ('Z' + 1); i++)
@@ -89,18 +95,17 @@ rl_copy_keymap (map)
 Keymap
 rl_make_keymap ()
 {
-  extern int rl_insert (), rl_rubout ();
   register int i;
   Keymap newmap;
 
   newmap = rl_make_bare_keymap ();
 
   /* All ASCII printing characters are self-inserting. */
-  for (i = ' '; i < 126; i++)
+  for (i = ' '; i < 127; i++)
     newmap[i].function = rl_insert;
 
   newmap[TAB].function = rl_insert;
-  newmap[RUBOUT].function = rl_rubout;
+  newmap[RUBOUT].function = rl_rubout;	/* RUBOUT == 127 */
   newmap[CTRL('H')].function = rl_rubout;
 
 #if KEYMAP_SIZE > 128
@@ -117,8 +122,9 @@ rl_make_keymap ()
 }
 
 /* Free the storage associated with MAP. */
+void
 rl_discard_keymap (map)
-     Keymap (map);
+     Keymap map;
 {
   int i;
 
@@ -142,49 +148,3 @@ rl_discard_keymap (map)
 	}
     }
 }
-
-#if defined (STATIC_MALLOC)
-
-/* **************************************************************** */
-/*								    */
-/*			xmalloc and xrealloc ()		     	    */
-/*								    */
-/* **************************************************************** */
-
-static void memory_error_and_abort ();
-
-static char *
-xmalloc (bytes)
-     int bytes;
-{
-  char *temp = (char *)malloc (bytes);
-
-  if (!temp)
-    memory_error_and_abort ();
-  return (temp);
-}
-
-static char *
-xrealloc (pointer, bytes)
-     char *pointer;
-     int bytes;
-{
-  char *temp;
-
-  if (!pointer)
-    temp = (char *)malloc (bytes);
-  else
-    temp = (char *)realloc (pointer, bytes);
-
-  if (!temp)
-    memory_error_and_abort ();
-  return (temp);
-}
-
-static void
-memory_error_and_abort ()
-{
-  fprintf (stderr, "readline: Out of virtual memory!\n");
-  abort ();
-}
-#endif /* STATIC_MALLOC */

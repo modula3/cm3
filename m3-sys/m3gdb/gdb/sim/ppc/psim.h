@@ -42,7 +42,7 @@ typedef struct _psim_status {
 
 
 /* create an initial device tree and then populate it using
-   information obtained from the command line */
+   information obtained from either the command line or a file */
 
 extern device *psim_tree
 (void);
@@ -51,11 +51,20 @@ extern char **psim_options
 (device *root,
  char **argv);
 
+extern void psim_command
+(device *root,
+ char **argv);
+
+
+extern void psim_merge_device_file
+(device *root,
+ const char *file_name);
+
 extern void psim_usage
 (int verbose);
 
 
-/* create a new simulator */
+/* create a new simulator from the device tree */
 
 extern psim *psim_create
 (const char *file_name,
@@ -81,27 +90,40 @@ extern void psim_step
 extern void psim_run
 (psim *system);
 
-extern void psim_run_until_stop
-(psim *system,
- volatile int *stop);
-
 extern void psim_restart
 (psim *system,
  int cpu_nr);
 
+extern void psim_set_halt_and_restart
+(psim *system,
+ void *halt_jmp_buf,
+ void *restart_jmp_buf);
+
+extern void psim_clear_halt_and_restart
+(psim *system);
+
+extern void psim_stop
+(psim *system);
+
 extern void psim_halt
 (psim *system,
  int cpu_nr,
- unsigned_word cia,
  stop_reason reason,
  int signal);
+
+extern int psim_last_cpu
+(psim *system);
+
+extern int psim_nr_cpus
+(psim *system);
+
 
 extern psim_status psim_get_status
 (psim *system);
 
 
-/* reveal the internals of the simulation, giving access to cpu's and
-   devices */
+/* reveal the internals of the simulation.  Grant access to the
+   processor (cpu) device tree (device) and events (event_queue). */
 
 extern cpu *psim_cpu
 (psim *system,
@@ -111,22 +133,29 @@ extern device *psim_device
 (psim *system,
  const char *path);
 
+extern event_queue *psim_event_queue
+(psim *system);
+ 
 
-/* manipulate the state (registers or memory) of a processor within
+
+/* Manipulate the state (registers or memory) of a processor within
    the system.  In the case of memory, the read/write is performed
    using the specified processors address translation tables.
 
    Where applicable, WHICH_CPU == -1 indicates all processors and
-   WHICH_CPU == <nr_cpus> indicates the `current' processor. */
+   WHICH_CPU == <nr_cpus> indicates the `current' processor.
 
-extern void psim_read_register
+   The register functions return the size of the register, or 0 if the
+   register's name is not recognized.  */
+
+extern int psim_read_register
 (psim *system,
  int which_cpu,
  void *host_ordered_buf,
  const char reg[],
  transfer_mode mode);
 
-extern void psim_write_register
+extern int psim_write_register
 (psim *system,
  int which_cpu,
  const void *buf,
@@ -151,10 +180,5 @@ extern unsigned psim_write_memory
 extern void psim_print_info
 (psim *system,
  int verbose);
-
-/* FIXME: I do not want this here */
-extern void psim_merge_device_file
-(device *root,
- const char *file_name);
 
 #endif /* _PSIM_H_ */

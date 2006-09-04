@@ -1,5 +1,6 @@
 /* bfd initialization stuff
-   Copyright (C) 1990, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1993, 1994, 1995, 2003
+   Free Software Foundation, Inc.
    Written by Steve Chamberlain of Cygnus Support.
 
 This file is part of BFD, the Binary File Descriptor library.
@@ -16,7 +17,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "bfd.h"
 #include "sysdep.h"
@@ -26,6 +27,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 SECTION
 	Initialization
 
+SUBSECTION
+	Initialization functions
+
 	These are the functions that handle initializing a BFD.
 */
 
@@ -34,7 +38,7 @@ FUNCTION
 	bfd_init
 
 SYNOPSIS
-	void bfd_init(void);
+	void bfd_init (void);
 
 DESCRIPTION
 	This routine must be called before any other BFD function to
@@ -45,6 +49,6 @@ DESCRIPTION
    However, someday it may be needed, so keep it around.  */
 
 void
-bfd_init ()
+bfd_init (void)
 {
 }

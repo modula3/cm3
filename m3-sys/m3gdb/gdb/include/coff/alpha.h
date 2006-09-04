@@ -1,9 +1,26 @@
 /* ECOFF support on Alpha machines.
-   coff/ecoff.h must be included before this file.  */
+   coff/ecoff.h must be included before this file.
 
+   Copyright 2001, 2005 Free Software Foundation, Inc.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
+   
 /********************** FILE HEADER **********************/
 
-struct external_filehdr {
+struct external_filehdr
+{
   unsigned char f_magic[2];	/* magic number			*/
   unsigned char f_nscns[2];	/* number of sections		*/
   unsigned char f_timdat[4];	/* time & date stamp		*/
@@ -14,7 +31,11 @@ struct external_filehdr {
 };
 
 /* Magic numbers are defined in coff/ecoff.h.  */
-#define ALPHA_ECOFF_BADMAG(x) ((x).f_magic!=ALPHA_MAGIC)
+#define ALPHA_ECOFF_BADMAG(x) \
+  ((x).f_magic != ALPHA_MAGIC && (x).f_magic != ALPHA_MAGIC_BSD)
+
+#define ALPHA_ECOFF_COMPRESSEDMAG(x) \
+  ((x).f_magic == ALPHA_MAGIC_COMPRESSED)
 
 /* The object type is encoded in the f_flags.  */
 #define F_ALPHA_OBJECT_TYPE_MASK	0x3000
@@ -23,10 +44,9 @@ struct external_filehdr {
 #define F_ALPHA_CALL_SHARED		0x3000
 
 #define	FILHDR	struct external_filehdr
-#define	FILHSZ	sizeof(FILHDR)
+#define	FILHSZ	24
 
 /********************** AOUT "OPTIONAL HEADER" **********************/
-
 
 typedef struct external_aouthdr
 {
@@ -48,11 +68,13 @@ typedef struct external_aouthdr
 
 /* compute size of a header */
 
-#define AOUTSZ (sizeof(AOUTHDR))
+#define AOUTSZ 80
+#define AOUTHDRSZ 80
 
 /********************** SECTION HEADER **********************/
 
-struct external_scnhdr {
+struct external_scnhdr
+{
   unsigned char	s_name[8];	/* section name			*/
   unsigned char	s_paddr[8];	/* physical address, aliased s_nlib */
   unsigned char	s_vaddr[8];	/* virtual address		*/
@@ -66,11 +88,12 @@ struct external_scnhdr {
 };
 
 #define	SCNHDR	struct external_scnhdr
-#define	SCNHSZ	sizeof(SCNHDR)
+#define	SCNHSZ	64
 
 /********************** RELOCATION DIRECTIVES **********************/
 
-struct external_reloc {
+struct external_reloc 
+{
   unsigned char r_vaddr[8];
   unsigned char r_symndx[4];
   unsigned char r_bits[4];
@@ -119,6 +142,24 @@ struct external_reloc {
 #define ALPHA_R_OP_PSUB	       14
 #define ALPHA_R_OP_PRSHIFT     15
 #define ALPHA_R_GPVALUE	       16
+#define ALPHA_R_GPRELHIGH      17
+#define ALPHA_R_GPRELLOW       18
+#define ALPHA_R_IMMED          19
+
+/* Overloaded reloc value used by Net- and OpenBSD.  */
+#define ALPHA_R_LITERALSLEAZY  17
+
+/* With ALPHA_R_LITUSE, the r_size field is one of the following values.  */
+#define ALPHA_R_LU_BASE         1
+#define ALPHA_R_LU_BYTOFF       2
+#define ALPHA_R_LU_JSR          3
+
+/* With ALPHA_R_IMMED, the r_size field is one of the following values.  */
+#define ALPHA_R_IMMED_GP_16     1
+#define ALPHA_R_IMMED_GP_HI32   2
+#define ALPHA_R_IMMED_SCN_HI32  3
+#define ALPHA_R_IMMED_BR_HI32   4
+#define ALPHA_R_IMMED_LO32      5
 
 /********************** SYMBOLIC INFORMATION **********************/
 
@@ -130,7 +171,8 @@ struct external_reloc {
 
 /* File header as a set of bytes */
 
-struct hdr_ext {
+struct hdr_ext
+{
 	unsigned char 	h_magic[2];
 	unsigned char	h_vstamp[2];
 	unsigned char	h_ilineMax[4];
@@ -160,7 +202,8 @@ struct hdr_ext {
 
 /* File descriptor external record */
 
-struct fdr_ext {
+struct fdr_ext
+{
 	unsigned char	f_adr[8];
 	unsigned char	f_cbLineOffset[8];
 	unsigned char	f_cbLine[8];

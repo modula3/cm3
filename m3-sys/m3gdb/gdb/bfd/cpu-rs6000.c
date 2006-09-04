@@ -1,5 +1,6 @@
 /* BFD back-end for rs6000 support
-   Copyright (C) 1990, 1991 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1993, 1995, 2000, 2002, 2003
+   Free Software Foundation, Inc.
    FIXME: Can someone provide a transliteration of this name into ASCII?
    Using the following chars caused a compiler warning on HIUX (so I replaced
    them with octal escapes), and isn't useful without an understanding of what
@@ -21,7 +22,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
 #include "bfd.h"
 #include "sysdep.h"
@@ -46,12 +47,58 @@ rs6000_compatible (a,b)
     case bfd_arch_rs6000:
       return bfd_default_compatible (a, b);
     case bfd_arch_powerpc:
-      if (b->mach == 0)
+      if (a->mach == bfd_mach_rs6k)
 	return b;
       return NULL;
     }
   /*NOTREACHED*/
 }
+
+static const bfd_arch_info_type arch_info_struct[] =
+{
+  {
+    32,	/* 32 bits in a word */
+    32,	/* 32 bits in an address */
+    8,	/* 8 bits in a byte */
+    bfd_arch_rs6000,
+    bfd_mach_rs6k_rs1,
+    "rs6000",
+    "rs6000:rs1",
+    3,
+    FALSE, /* not the default */
+    rs6000_compatible,
+    bfd_default_scan,
+    &arch_info_struct[1]
+  },
+  {
+    32,	/* 32 bits in a word */
+    32,	/* 32 bits in an address */
+    8,	/* 8 bits in a byte */
+    bfd_arch_rs6000,
+    bfd_mach_rs6k_rsc,
+    "rs6000",
+    "rs6000:rsc",
+    3,
+    FALSE, /* not the default */
+    rs6000_compatible,
+    bfd_default_scan,
+    &arch_info_struct[2]
+  },
+  {
+    32,	/* 32 bits in a word */
+    32,	/* 32 bits in an address */
+    8,	/* 8 bits in a byte */
+    bfd_arch_rs6000,
+    bfd_mach_rs6k_rs2,
+    "rs6000",
+    "rs6000:rs2",
+    3,
+    FALSE, /* not the default */
+    rs6000_compatible,
+    bfd_default_scan,
+    0
+  }
+};
 
 const bfd_arch_info_type bfd_rs6000_arch =
   {
@@ -59,12 +106,12 @@ const bfd_arch_info_type bfd_rs6000_arch =
     32,	/* 32 bits in an address */
     8,	/* 8 bits in a byte */
     bfd_arch_rs6000,
-    6000,	/* only 1 machine */
+    bfd_mach_rs6k,	/* POWER common architecture */
     "rs6000",
     "rs6000:6000",
     3,
-    true, /* the one and only */
+    TRUE, /* the default */
     rs6000_compatible,
     bfd_default_scan,
-    0,
+    &arch_info_struct[0]
   };

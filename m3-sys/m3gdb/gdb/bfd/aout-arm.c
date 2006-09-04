@@ -1,110 +1,102 @@
 /* BFD back-end for raw ARM a.out binaries.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+   Copyright 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2005
+   Free Software Foundation, Inc.
    Contributed by Richard Earnshaw (rwe@pegasus.esprit.ec.org)
-   
-This file is part of BFD, the Binary File Descriptor library.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This file is part of BFD, the Binary File Descriptor library.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
-#define N_TXTADDR(x) \
-  ((N_MAGIC(x) == NMAGIC) ? 0x8000 : \
-   (N_MAGIC(x) != ZMAGIC) ? 0 : \
-   (N_SHARED_LIB(x)) ? ((x).a_entry & ~(TARGET_PAGE_SIZE - 1)) : \
-   TEXT_START_ADDR)
+#include "bfd.h"
+#include "sysdep.h"
+
+/* Avoid multiple definitions from aoutx if supporting standard a.out
+   as well as our own.  */
+/* Do not "beautify" the CONCAT* macro args.  Traditional C will not
+   remove whitespace added here, and thus will fail to concatenate
+   the tokens.  */
+#define NAME(x,y) CONCAT3 (aoutarm,_32_,y)
+
+#define N_TXTADDR(x)						\
+  ((N_MAGIC (x) == NMAGIC)					\
+   ? (bfd_vma) 0x8000						\
+   : ((N_MAGIC (x) != ZMAGIC)					\
+      ? (bfd_vma) 0						\
+      : ((N_SHARED_LIB (x))					\
+	 ? ((x).a_entry & ~(bfd_vma) (TARGET_PAGE_SIZE - 1))	\
+	 : (bfd_vma) TEXT_START_ADDR)))
 
 #define TEXT_START_ADDR 0x8000
 #define TARGET_PAGE_SIZE 0x8000
 #define SEGMENT_SIZE TARGET_PAGE_SIZE
 #define DEFAULT_ARCH bfd_arch_arm
 
-#define MY(OP) CAT(aoutarm_,OP)
+#define MY(OP) CONCAT2 (aoutarm_,OP)
 #define N_BADMAG(x) ((((x).a_info & ~007200) != ZMAGIC) && \
                      (((x).a_info & ~006000) != OMAGIC) && \
                      ((x).a_info != NMAGIC))
 #define N_MAGIC(x) ((x).a_info & ~07200)
-
-#include "bfd.h"
-#include "sysdep.h"
-#include "assert.h"
-
-#define MYARM(OP) CAT(aoutarm_,OP)
-reloc_howto_type 	*MYARM(bfd_reloc_type_lookup)
-				PARAMS((bfd *, bfd_reloc_code_real_type));
-static boolean 		MYARM(write_object_contents)	PARAMS((bfd *));
-
-/* Avoid multiple defininitions from aoutx if supporting standarad a.out 
-   as well as our own.  */
-#define NAME(x,y) CAT3(aoutarm,_32_,y)
 
 #define MY_bfd_reloc_type_lookup aoutarm_bfd_reloc_type_lookup
 
 #include "libaout.h"
 #include "aout/aout64.h"
 
+
 static bfd_reloc_status_type
-MY(fix_pcrel_26_done)	PARAMS ((bfd *, arelent *, asymbol *, PTR,
-				 asection *, bfd *, char **));
-
+  MY (fix_pcrel_26) (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
 static bfd_reloc_status_type
-MY(fix_pcrel_26)	 PARAMS ((bfd *, arelent *, asymbol *, PTR,
-				  asection *, bfd *, char **));
-static void MY(swap_std_reloc_in) PARAMS ((bfd *, struct reloc_std_external *,
-					   arelent *, asymbol **,
-					   bfd_size_type));
-void MY(swap_std_reloc_out) PARAMS ((bfd *, arelent *, 
-				     struct reloc_std_external *));
+  MY (fix_pcrel_26_done) (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
 
-reloc_howto_type MY(howto_table)[] =
+reloc_howto_type MY (howto_table)[] =
 {
-  /* type rs size bsz pcrel bitpos ovrf sf name part_inpl readmask setmask
-     pcdone */
-  HOWTO (0, 0, 0, 8, false, 0, complain_overflow_bitfield, 0, "8", true,
-	 0x000000ff, 0x000000ff, false),
-  HOWTO (1, 0, 1, 16, false, 0, complain_overflow_bitfield, 0, "16", true,
-	 0x0000ffff, 0x0000ffff, false),
-  HOWTO (2, 0, 2, 32, false, 0, complain_overflow_bitfield, 0, "32", true,
-	 0xffffffff, 0xffffffff, false),
-  HOWTO (3, 2, 2, 26, true, 0, complain_overflow_signed, MY(fix_pcrel_26),
-	 "ARM26", true, 0x00ffffff, 0x00ffffff, true),
-  HOWTO (4, 0, 0, 8, true, 0, complain_overflow_signed, 0, "DISP8", true,
-	 0x000000ff, 0x000000ff, true),
-  HOWTO (5, 0, 1, 16, true, 0, complain_overflow_signed, 0, "DISP16", true,
-	 0x0000ffff, 0x0000ffff, true),
-  HOWTO (6, 0, 2, 32, true, 0, complain_overflow_signed, 0, "DISP32", true,
-	 0xffffffff, 0xffffffff, true),
-  HOWTO (7, 2, 2, 26, false, 0, complain_overflow_signed,
-	 MY(fix_pcrel_26_done), "ARM26D", true, 0x0, 0x0,
-	 false),
-  {-1},
-  HOWTO (9, 0, -1, 16, false, 0, complain_overflow_bitfield, 0, "NEG16", true,
-	 0x0000ffff, 0x0000ffff, false),
-  HOWTO (10, 0, -2, 32, false, 0, complain_overflow_bitfield, 0, "NEG32", true,
-	 0xffffffff, 0xffffffff, false)
+  /* Type rs size bsz pcrel bitpos ovrf sf name part_inpl
+     readmask setmask pcdone.  */
+  HOWTO (0, 0, 0, 8, FALSE, 0, complain_overflow_bitfield, 0, "8", TRUE,
+	 0x000000ff, 0x000000ff, FALSE),
+  HOWTO (1, 0, 1, 16, FALSE, 0, complain_overflow_bitfield, 0, "16", TRUE,
+	 0x0000ffff, 0x0000ffff, FALSE),
+  HOWTO (2, 0, 2, 32, FALSE, 0, complain_overflow_bitfield, 0, "32", TRUE,
+	 0xffffffff, 0xffffffff, FALSE),
+  HOWTO (3, 2, 2, 26, TRUE, 0, complain_overflow_signed, MY (fix_pcrel_26),
+	 "ARM26", TRUE, 0x00ffffff, 0x00ffffff, TRUE),
+  HOWTO (4, 0, 0, 8, TRUE, 0, complain_overflow_signed, 0, "DISP8", TRUE,
+	 0x000000ff, 0x000000ff, TRUE),
+  HOWTO (5, 0, 1, 16, TRUE, 0, complain_overflow_signed, 0, "DISP16", TRUE,
+	 0x0000ffff, 0x0000ffff, TRUE),
+  HOWTO (6, 0, 2, 32, TRUE, 0, complain_overflow_signed, 0, "DISP32", TRUE,
+	 0xffffffff, 0xffffffff, TRUE),
+  HOWTO (7, 2, 2, 26, FALSE, 0, complain_overflow_signed,
+	 MY (fix_pcrel_26_done), "ARM26D", TRUE, 0x0, 0x0,
+	 FALSE),
+  EMPTY_HOWTO (-1),
+  HOWTO (9, 0, -1, 16, FALSE, 0, complain_overflow_bitfield, 0, "NEG16", TRUE,
+	 0x0000ffff, 0x0000ffff, FALSE),
+  HOWTO (10, 0, -2, 32, FALSE, 0, complain_overflow_bitfield, 0, "NEG32", TRUE,
+	 0xffffffff, 0xffffffff, FALSE)
 };
 
 #define RELOC_ARM_BITS_NEG_BIG      ((unsigned int) 0x08)
 #define RELOC_ARM_BITS_NEG_LITTLE   ((unsigned int) 0x10)
 
-reloc_howto_type *
-MY(reloc_howto)(abfd, rel, r_index, r_extern, r_pcrel)
-     bfd *abfd;
-     struct reloc_std_external *rel;
-     int *r_index;
-     int *r_extern;
-     int *r_pcrel;
+static reloc_howto_type *
+MY (reloc_howto) (bfd *abfd,
+		  struct reloc_std_external *rel,
+		  int *r_index,
+		  int *r_extern,
+		  int *r_pcrel)
 {
   unsigned int r_length;
   unsigned int r_pcrel_done;
@@ -138,34 +130,35 @@ MY(reloc_howto)(abfd, rel, r_index, r_extern, r_pcrel)
   if (index == 3)
     *r_pcrel = 1;
 
-  return MY(howto_table) + index;
+  return MY (howto_table) + index;
 }
- 
-#define MY_reloc_howto(BFD, REL, IN, EX, PC) \
-	MY(reloc_howto) (BFD, REL, &IN, &EX, &PC)
 
-void
-MY(put_reloc)(abfd, r_extern, r_index, value, howto, reloc)
-     bfd *abfd;
-     int r_extern;
-     int r_index;
-     long value;
-     reloc_howto_type *howto;
-     struct reloc_std_external *reloc;
+#define MY_reloc_howto(BFD, REL, IN, EX, PC) \
+	MY (reloc_howto) (BFD, REL, &IN, &EX, &PC)
+
+static void
+MY (put_reloc) (bfd *abfd,
+		int r_extern,
+		int r_index,
+		bfd_vma value,
+		reloc_howto_type *howto,
+		struct reloc_std_external *reloc)
 {
   unsigned int r_length;
   int r_pcrel;
   int r_neg;
 
   PUT_WORD (abfd, value, reloc->r_address);
-  r_length = howto->size ;	/* Size as a power of two */
+  /* Size as a power of two.  */
+  r_length = howto->size;
 
-  /* Special case for branch relocations. */
+  /* Special case for branch relocations.  */
   if (howto->type == 3 || howto->type == 7)
     r_length = 3;
 
-  r_pcrel  = howto->type & 4; 	/* PC Relative done? */
-  r_neg = howto->type & 8;	/* Negative relocation */
+  r_pcrel  = howto->type & 4; 	/* PC Relative done?  */
+  r_neg = howto->type & 8;	/* Negative relocation.  */
+
   if (bfd_header_big_endian (abfd))
     {
       reloc->r_index[0] = r_index >> 16;
@@ -189,27 +182,24 @@ MY(put_reloc)(abfd, r_extern, r_index, value, howto, reloc)
 	 | (r_length <<  RELOC_STD_BITS_LENGTH_SH_LITTLE));
     }
 }
- 
-#define MY_put_reloc(BFD, EXT, IDX, VAL, HOWTO, RELOC) \
-  MY(put_reloc)(BFD, EXT, IDX, VAL, HOWTO, RELOC)
 
-void
-MY(relocatable_reloc)(howto, abfd, reloc, amount, r_addr)
-     reloc_howto_type *howto;
-     bfd *abfd;
-     struct reloc_std_external *reloc;
-     bfd_vma *amount;
-     bfd_vma r_addr;
+#define MY_put_reloc(BFD, EXT, IDX, VAL, HOWTO, RELOC) \
+  MY (put_reloc) (BFD, EXT, IDX, VAL, HOWTO, RELOC)
+
+static void
+MY (relocatable_reloc) (reloc_howto_type *howto,
+			bfd *abfd,
+			struct reloc_std_external *reloc,
+			bfd_vma *amount,
+			bfd_vma r_addr)
 {
   if (howto->type == 3)
     {
-      if (reloc->r_type[0] 
+      if (reloc->r_type[0]
 	  & (bfd_header_big_endian (abfd)
 	     ? RELOC_STD_BITS_EXTERN_BIG : RELOC_STD_BITS_EXTERN_LITTLE))
-	{
-	  /* The reloc is still external, so don't modify anything. */
-	  *amount = 0;
-	}
+	/* The reloc is still external, so don't modify anything.  */
+	*amount = 0;
       else
 	{
 	  *amount -= r_addr;
@@ -226,40 +216,36 @@ MY(relocatable_reloc)(howto, abfd, reloc, amount, r_addr)
 }
 
 #define MY_relocatable_reloc(HOW, BFD, REL, AMOUNT, ADDR) \
-  MY(relocatable_reloc)(HOW, BFD, REL, &(AMOUNT), ADDR)
+  MY (relocatable_reloc) (HOW, BFD, REL, &(AMOUNT), ADDR)
 
 static bfd_reloc_status_type
-MY(fix_pcrel_26_done) (abfd, reloc_entry, symbol, data, input_section,
-		       output_bfd, error_message)
-     bfd *abfd;
-     arelent *reloc_entry;
-     asymbol *symbol;
-     PTR data;
-     asection *input_section;
-     bfd *output_bfd;
-     char **error_message;
+MY (fix_pcrel_26_done) (bfd *abfd ATTRIBUTE_UNUSED,
+			arelent *reloc_entry ATTRIBUTE_UNUSED,
+			asymbol *symbol ATTRIBUTE_UNUSED,
+			void * data ATTRIBUTE_UNUSED,
+			asection *input_section ATTRIBUTE_UNUSED,
+			bfd *output_bfd ATTRIBUTE_UNUSED,
+			char **error_message ATTRIBUTE_UNUSED)
 {
   /* This is dead simple at present.  */
   return bfd_reloc_ok;
 }
 
 static bfd_reloc_status_type
-MY(fix_pcrel_26) (abfd, reloc_entry, symbol, data, input_section,
-		  output_bfd, error_message)
-     bfd *abfd;
-     arelent *reloc_entry;
-     asymbol *symbol;
-     PTR data;
-     asection *input_section;
-     bfd *output_bfd;
-     char **error_message;
+MY (fix_pcrel_26) (bfd *abfd,
+		   arelent *reloc_entry,
+		   asymbol *symbol,
+		   void * data,
+		   asection *input_section,
+		   bfd *output_bfd,
+		   char **error_message ATTRIBUTE_UNUSED)
 {
   bfd_vma relocation;
   bfd_size_type addr = reloc_entry->address;
-  long target = bfd_get_32 (abfd, (bfd_byte *) data + addr);
+  bfd_vma target = bfd_get_32 (abfd, (bfd_byte *) data + addr);
   bfd_reloc_status_type flag = bfd_reloc_ok;
-  
-  /* If this is an undefined symbol, return error */
+
+  /* If this is an undefined symbol, return error.  */
   if (symbol->section == &bfd_und_section
       && (symbol->flags & BSF_WEAK) == 0)
     return output_bfd ? bfd_reloc_ok : bfd_reloc_undefined;
@@ -267,11 +253,11 @@ MY(fix_pcrel_26) (abfd, reloc_entry, symbol, data, input_section,
   /* If the sections are different, and we are doing a partial relocation,
      just ignore it for now.  */
   if (symbol->section->name != input_section->name
-      && output_bfd != (bfd *)NULL)
+      && output_bfd != NULL)
     return bfd_reloc_ok;
 
   relocation = (target & 0x00ffffff) << 2;
-  relocation = (relocation ^ 0x02000000) - 0x02000000; /* Sign extend */
+  relocation = (relocation ^ 0x02000000) - 0x02000000; /* Sign extend.  */
   relocation += symbol->value;
   relocation += symbol->section->output_section->vma;
   relocation += symbol->section->output_offset;
@@ -282,39 +268,40 @@ MY(fix_pcrel_26) (abfd, reloc_entry, symbol, data, input_section,
   if (relocation & 3)
     return bfd_reloc_overflow;
 
-  /* Check for overflow */
+  /* Check for overflow.  */
   if (relocation & 0x02000000)
     {
-      if ((relocation & ~0x03ffffff) != ~0x03ffffff)
+      if ((relocation & ~ (bfd_vma) 0x03ffffff) != ~ (bfd_vma) 0x03ffffff)
 	flag = bfd_reloc_overflow;
     }
-  else if (relocation & ~0x03ffffff)
+  else if (relocation & ~ (bfd_vma) 0x03ffffff)
     flag = bfd_reloc_overflow;
 
-  target &= ~0x00ffffff;
+  target &= ~ (bfd_vma) 0x00ffffff;
   target |= (relocation >> 2) & 0x00ffffff;
   bfd_put_32 (abfd, target, (bfd_byte *) data + addr);
 
   /* Now the ARM magic... Change the reloc type so that it is marked as done.
      Strictly this is only necessary if we are doing a partial relocation.  */
-  reloc_entry->howto = &MY(howto_table)[7];
-  
+  reloc_entry->howto = &MY (howto_table)[7];
+
   return flag;
 }
 
-reloc_howto_type *
-MY(bfd_reloc_type_lookup)(abfd,code)
-     bfd *abfd;
-     bfd_reloc_code_real_type code;
+static reloc_howto_type *
+MY (bfd_reloc_type_lookup) (bfd *abfd,
+			    bfd_reloc_code_real_type code)
 {
-#define ASTD(i,j)       case i: return &MY(howto_table)[j]
+#define ASTD(i,j)       case i: return & MY (howto_table)[j]
+
   if (code == BFD_RELOC_CTOR)
     switch (bfd_get_arch_info (abfd)->bits_per_address)
       {
       case 32:
         code = BFD_RELOC_32;
         break;
-      default: return (CONST struct reloc_howto_struct *) 0;
+      default:
+	return NULL;
       }
 
   switch (code)
@@ -325,34 +312,33 @@ MY(bfd_reloc_type_lookup)(abfd,code)
       ASTD (BFD_RELOC_8_PCREL, 4);
       ASTD (BFD_RELOC_16_PCREL, 5);
       ASTD (BFD_RELOC_32_PCREL, 6);
-    default: return (CONST struct reloc_howto_struct *) 0;
+    default:
+      return NULL;
     }
 }
 
-#define MY_swap_std_reloc_in MY(swap_std_reloc_in)
-#define MY_swap_std_reloc_out MY(swap_std_reloc_out)
-#define MY_get_section_contents _bfd_generic_get_section_contents
-/* #define MY_bfd_link_hash_table_create _bfd_generic_link_hash_table_create */
-/* #define MY_bfd_link_add_symbols _bfd_generic_link_add_symbols */
-/* #define MY_bfd_final_link _bfd_generic_final_link */
+#define MY_swap_std_reloc_in     MY (swap_std_reloc_in)
+#define MY_swap_std_reloc_out    MY (swap_std_reloc_out)
+#define MY_get_section_contents  _bfd_generic_get_section_contents
+
+void MY_swap_std_reloc_in (bfd *, struct reloc_std_external *, arelent *, asymbol **, bfd_size_type);
+void MY_swap_std_reloc_out (bfd *, arelent *, struct reloc_std_external *);
 
 #include "aoutx.h"
 
-static void
-MY_swap_std_reloc_in (abfd, bytes, cache_ptr, symbols, symcount)
-     bfd *abfd;
-     struct reloc_std_external *bytes;
-     arelent *cache_ptr;
-     asymbol **symbols;
-     bfd_size_type symcount;
+void
+MY_swap_std_reloc_in (bfd *abfd,
+		      struct reloc_std_external *bytes,
+		      arelent *cache_ptr,
+		      asymbol **symbols,
+		      bfd_size_type symcount ATTRIBUTE_UNUSED)
 {
   int r_index;
   int r_extern;
-  unsigned int r_length;
   int r_pcrel;
   struct aoutdata *su = &(abfd->tdata.aout_data->a);
 
-  cache_ptr->address = bfd_h_get_32 (abfd, bytes->r_address);
+  cache_ptr->address = H_GET_32 (abfd, bytes->r_address);
 
   cache_ptr->howto = MY_reloc_howto (abfd, bytes, r_index, r_extern, r_pcrel);
 
@@ -360,10 +346,9 @@ MY_swap_std_reloc_in (abfd, bytes, cache_ptr, symbols, symcount)
 }
 
 void
-MY_swap_std_reloc_out (abfd, g, natptr)
-     bfd *abfd;
-     arelent *g;
-     struct reloc_std_external *natptr;
+MY_swap_std_reloc_out (bfd *abfd,
+		       arelent *g,
+		       struct reloc_std_external *natptr)
 {
   int r_index;
   asymbol *sym = *(g->sym_ptr_ptr);
@@ -373,47 +358,38 @@ MY_swap_std_reloc_out (abfd, g, natptr)
   int r_neg = 0;	/* Negative relocs use the BASEREL bit.  */
   asection *output_section = sym->section->output_section;
 
-  PUT_WORD(abfd, g->address, natptr->r_address);
+  PUT_WORD (abfd, g->address, natptr->r_address);
 
-  r_length = g->howto->size ;   /* Size as a power of two */
+  r_length = g->howto->size ;   /* Size as a power of two.  */
   if (r_length < 0)
     {
       r_length = -r_length;
       r_neg = 1;
     }
 
-  r_pcrel  = (int) g->howto->pc_relative; /* Relative to PC? */
+  r_pcrel  = (int) g->howto->pc_relative; /* Relative to PC?  */
 
   /* For RISC iX, in pc-relative relocs the r_pcrel bit means that the
-     relocation has been done already (Only for the 26-bit one I think)???!!!
-     */
-
+     relocation has been done already (Only for the 26-bit one I think).  */
   if (g->howto->type == 3)
     {
       r_length = 3;
       r_pcrel = 0;
     }
   else if (g->howto->type == 7)
-    { 
+    {
       r_length = 3;
       r_pcrel = 1;
     }
-  
 
-#if 0
-  /* For a standard reloc, the addend is in the object file.  */
-  r_addend = g->addend + (*(g->sym_ptr_ptr))->section->output_section->vma;
-#endif
-
-  /* name was clobbered by aout_write_syms to be symbol index */
+  /* Name was clobbered by aout_write_syms to be symbol index.  */
 
   /* If this relocation is relative to a symbol then set the
      r_index to the symbols index, and the r_extern bit.
 
      Absolute symbols can come in in two ways, either as an offset
      from the abs section, or as a symbol which has an abs value.
-     check for that here
-     */
+     check for that here.  */
 
   if (bfd_is_com_section (output_section)
       || output_section == &bfd_abs_section
@@ -422,25 +398,25 @@ MY_swap_std_reloc_out (abfd, g, natptr)
       if (bfd_abs_section.symbol == sym)
 	{
 	  /* Whoops, looked like an abs symbol, but is really an offset
-	     from the abs section */
+	     from the abs section.  */
 	  r_index = 0;
 	  r_extern = 0;
 	}
       else
 	{
-	  /* Fill in symbol */
+	  /* Fill in symbol.  */
 	  r_extern = 1;
 	  r_index = (*(g->sym_ptr_ptr))->KEEPIT;
 	}
     }
   else
     {
-      /* Just an ordinary section */
+      /* Just an ordinary section.  */
       r_extern = 0;
       r_index  = output_section->target_index;
     }
 
-  /* now the fun stuff */
+  /* Now the fun stuff.  */
   if (bfd_header_big_endian (abfd))
     {
       natptr->r_index[0] = r_index >> 16;
@@ -469,80 +445,86 @@ MY_swap_std_reloc_out (abfd, g, natptr)
 
 #include "aout-target.h"
 
+extern const bfd_target aout_arm_big_vec;
+
 const bfd_target aout_arm_little_vec =
 {
-  "a.out-arm-little",           /* name */
+  "a.out-arm-little",           /* Name.  */
   bfd_target_aout_flavour,
-  BFD_ENDIAN_LITTLE,            /* target byte order (little) */
-  BFD_ENDIAN_LITTLE,            /* target headers byte order (little) */
-  (HAS_RELOC | EXEC_P |         /* object flags */
+  BFD_ENDIAN_LITTLE,            /* Target byte order (little).  */
+  BFD_ENDIAN_LITTLE,            /* Target headers byte order (little).  */
+  (HAS_RELOC | EXEC_P |         /* Object flags.  */
    HAS_LINENO | HAS_DEBUG |
    HAS_SYMS | HAS_LOCALS | DYNAMIC | WP_TEXT | D_PAGED),
-  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC), /* section flags */
+  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC | SEC_CODE | SEC_DATA),
   MY_symbol_leading_char,
-  AR_PAD_CHAR,                  /* ar_pad_char */
-  15,                           /* ar_max_namelen */
+  AR_PAD_CHAR,                  /* AR_pad_char.  */
+  15,                           /* AR_max_namelen.  */
   bfd_getl64, bfd_getl_signed_64, bfd_putl64,
-     bfd_getl32, bfd_getl_signed_32, bfd_putl32,
-     bfd_getl16, bfd_getl_signed_16, bfd_putl16, /* data */
+  bfd_getl32, bfd_getl_signed_32, bfd_putl32,
+  bfd_getl16, bfd_getl_signed_16, bfd_putl16,	/* Data.  */
   bfd_getl64, bfd_getl_signed_64, bfd_putl64,
-     bfd_getl32, bfd_getl_signed_32, bfd_putl32,
-     bfd_getl16, bfd_getl_signed_16, bfd_putl16, /* hdrs */
-    {_bfd_dummy_target, MY_object_p, /* bfd_check_format */
-       bfd_generic_archive_p, MY_core_file_p},
-    {bfd_false, MY_mkobject,    /* bfd_set_format */
-       _bfd_generic_mkarchive, bfd_false},
-    {bfd_false, MY_write_object_contents, /* bfd_write_contents */
-       _bfd_write_archive_contents, bfd_false},
+  bfd_getl32, bfd_getl_signed_32, bfd_putl32,
+  bfd_getl16, bfd_getl_signed_16, bfd_putl16,	/* Headers.  */
+  {_bfd_dummy_target, MY_object_p,		/* bfd_check_format.  */
+   bfd_generic_archive_p, MY_core_file_p},
+  {bfd_false, MY_mkobject,			/* bfd_set_format.  */
+   _bfd_generic_mkarchive, bfd_false},
+  {bfd_false, MY_write_object_contents,		/* bfd_write_contents.  */
+   _bfd_write_archive_contents, bfd_false},
 
-     BFD_JUMP_TABLE_GENERIC (MY),
-     BFD_JUMP_TABLE_COPY (MY),
-     BFD_JUMP_TABLE_CORE (MY),
-     BFD_JUMP_TABLE_ARCHIVE (MY),
-     BFD_JUMP_TABLE_SYMBOLS (MY),
-     BFD_JUMP_TABLE_RELOCS (MY),
-     BFD_JUMP_TABLE_WRITE (MY),
-     BFD_JUMP_TABLE_LINK (MY),
-     BFD_JUMP_TABLE_DYNAMIC (MY),
+  BFD_JUMP_TABLE_GENERIC (MY),
+  BFD_JUMP_TABLE_COPY (MY),
+  BFD_JUMP_TABLE_CORE (MY),
+  BFD_JUMP_TABLE_ARCHIVE (MY),
+  BFD_JUMP_TABLE_SYMBOLS (MY),
+  BFD_JUMP_TABLE_RELOCS (MY),
+  BFD_JUMP_TABLE_WRITE (MY),
+  BFD_JUMP_TABLE_LINK (MY),
+  BFD_JUMP_TABLE_DYNAMIC (MY),
 
-  (PTR) MY_backend_data,
+  & aout_arm_big_vec,
+
+  (void *) MY_backend_data,
 };
 
 const bfd_target aout_arm_big_vec =
 {
-  "a.out-arm-big",           /* name */
+  "a.out-arm-big",              /* Name.  */
   bfd_target_aout_flavour,
-  BFD_ENDIAN_BIG,               /* target byte order (big) */
-  BFD_ENDIAN_BIG,               /* target headers byte order (big) */
-  (HAS_RELOC | EXEC_P |         /* object flags */
+  BFD_ENDIAN_BIG,               /* Target byte order (big).  */
+  BFD_ENDIAN_BIG,               /* Target headers byte order (big).  */
+  (HAS_RELOC | EXEC_P |         /* Object flags.  */
    HAS_LINENO | HAS_DEBUG |
    HAS_SYMS | HAS_LOCALS | DYNAMIC | WP_TEXT | D_PAGED),
-  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC), /* section flags */
+  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC | SEC_CODE | SEC_DATA),
   MY_symbol_leading_char,
-  AR_PAD_CHAR,                  /* ar_pad_char */
-  15,                           /* ar_max_namelen */
+  AR_PAD_CHAR,                  		/* AR_pad_char.  */
+  15,                           		/* AR_max_namelen.  */
   bfd_getb64, bfd_getb_signed_64, bfd_putb64,
-     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
-     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* data */
+  bfd_getb32, bfd_getb_signed_32, bfd_putb32,
+  bfd_getb16, bfd_getb_signed_16, bfd_putb16,	/* Data.  */
   bfd_getb64, bfd_getb_signed_64, bfd_putb64,
-     bfd_getb32, bfd_getb_signed_32, bfd_putb32,
-     bfd_getb16, bfd_getb_signed_16, bfd_putb16, /* hdrs */
-    {_bfd_dummy_target, MY_object_p, /* bfd_check_format */
-       bfd_generic_archive_p, MY_core_file_p},
-    {bfd_false, MY_mkobject,    /* bfd_set_format */
-       _bfd_generic_mkarchive, bfd_false},
-    {bfd_false, MY_write_object_contents, /* bfd_write_contents */
-       _bfd_write_archive_contents, bfd_false},
+  bfd_getb32, bfd_getb_signed_32, bfd_putb32,
+  bfd_getb16, bfd_getb_signed_16, bfd_putb16,	/* Headers.  */
+  {_bfd_dummy_target, MY_object_p,		/* bfd_check_format.  */
+   bfd_generic_archive_p, MY_core_file_p},
+  {bfd_false, MY_mkobject,			/* bfd_set_format.  */
+   _bfd_generic_mkarchive, bfd_false},
+  {bfd_false, MY_write_object_contents,		/* bfd_write_contents.  */
+   _bfd_write_archive_contents, bfd_false},
 
-     BFD_JUMP_TABLE_GENERIC (MY),
-     BFD_JUMP_TABLE_COPY (MY),
-     BFD_JUMP_TABLE_CORE (MY),
-     BFD_JUMP_TABLE_ARCHIVE (MY),
-     BFD_JUMP_TABLE_SYMBOLS (MY),
-     BFD_JUMP_TABLE_RELOCS (MY),
-     BFD_JUMP_TABLE_WRITE (MY),
-     BFD_JUMP_TABLE_LINK (MY),
-     BFD_JUMP_TABLE_DYNAMIC (MY),
+  BFD_JUMP_TABLE_GENERIC (MY),
+  BFD_JUMP_TABLE_COPY (MY),
+  BFD_JUMP_TABLE_CORE (MY),
+  BFD_JUMP_TABLE_ARCHIVE (MY),
+  BFD_JUMP_TABLE_SYMBOLS (MY),
+  BFD_JUMP_TABLE_RELOCS (MY),
+  BFD_JUMP_TABLE_WRITE (MY),
+  BFD_JUMP_TABLE_LINK (MY),
+  BFD_JUMP_TABLE_DYNAMIC (MY),
 
-  (PTR) MY_backend_data,
+  & aout_arm_little_vec,
+
+  (void *) MY_backend_data,
 };

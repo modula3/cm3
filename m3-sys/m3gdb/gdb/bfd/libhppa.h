@@ -1,5 +1,6 @@
 /* HP PA-RISC SOM object file format:  definitions internal to BFD.
-   Copyright (C) 1990, 91, 92, 93, 94 Free Software Foundation, Inc.
+   Copyright 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000,
+   2003 Free Software Foundation, Inc.
 
    Contributed by the Center for Software Science at the
    University of Utah (pa-gdb-bugs@cs.utah.edu).
@@ -18,24 +19,16 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1301, USA.  */
 
-#ifndef _HPPA_H
-#define _HPPA_H
+#ifndef _LIBHPPA_H
+#define _LIBHPPA_H
 
 #define BYTES_IN_WORD 4
 #define PA_PAGESIZE 0x1000
 
-#ifndef INLINE
-#ifdef __GNUC__
-#define INLINE inline
-#else
-#define INLINE
-#endif /* GNU C? */
-#endif /* INLINE */
-
 /* The PA instruction set variants.  */
-enum pa_arch {pa10 = 10, pa11 = 11, pa20 = 20};
+enum pa_arch {pa10 = 10, pa11 = 11, pa20 = 20, pa20w = 25};
 
 /* HP PA-RISC relocation types */
 
@@ -58,7 +51,9 @@ enum hppa_reloc_field_selector_type
     R_HPPA_RPSEL = 0xe,
     R_HPPA_TSEL = 0xf,
     R_HPPA_LTSEL = 0x10,
-    R_HPPA_RTSEL = 0x11
+    R_HPPA_RTSEL = 0x11,
+    R_HPPA_LTPSEL = 0x12,
+    R_HPPA_RTPSEL = 0x13
   };
 
 /* /usr/include/reloc.h defines these to constants.  We want to use
@@ -111,7 +106,9 @@ enum hppa_reloc_field_selector_type_alt
     e_rpsel = R_HPPA_RPSEL,
     e_tsel = R_HPPA_TSEL,
     e_ltsel = R_HPPA_LTSEL,
-    e_rtsel = R_HPPA_RTSEL
+    e_rtsel = R_HPPA_RTSEL,
+    e_ltpsel = R_HPPA_LTPSEL,
+    e_rtpsel = R_HPPA_RTPSEL
   };
 
 enum hppa_reloc_expr_type
@@ -147,397 +144,445 @@ enum hppa_reloc_expr_type_alt
 
    The high order 10 bits contain parameter relocation information,
    the low order 22 bits contain the constant offset.  */
-   
-#define HPPA_R_ARG_RELOC(a)	(((a) >> 22) & 0x3FF)
-#define HPPA_R_CONSTANT(a)	((((int)(a)) << 10) >> 10)
-#define HPPA_R_ADDEND(r,c)	(((r) << 22) + ((c) & 0x3FFFFF))
+
+#define HPPA_R_ARG_RELOC(a)	\
+  (((a) >> 22) & 0x3ff)
+#define HPPA_R_CONSTANT(a)	\
+  ((((bfd_signed_vma)(a)) << (BFD_ARCH_SIZE-22)) >> (BFD_ARCH_SIZE-22))
+#define HPPA_R_ADDEND(r, c)	\
+  (((r) << 22) + ((c) & 0x3fffff))
+
 
 /* Some functions to manipulate PA instructions.  */
-static INLINE unsigned int
-assemble_3 (x)
-     unsigned int x;
+
+/* Declare the functions with the unused attribute to avoid warnings.  */
+static inline int sign_extend (int, int) ATTRIBUTE_UNUSED;
+static inline int low_sign_extend (int, int) ATTRIBUTE_UNUSED;
+static inline int sign_unext (int, int) ATTRIBUTE_UNUSED;
+static inline int low_sign_unext (int, int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_3 (int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_12 (int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_14 (int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_16 (int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_17 (int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_21 (int) ATTRIBUTE_UNUSED;
+static inline int re_assemble_22 (int) ATTRIBUTE_UNUSED;
+static inline bfd_signed_vma hppa_field_adjust
+  (bfd_vma, bfd_signed_vma, enum hppa_reloc_field_selector_type_alt)
+  ATTRIBUTE_UNUSED;
+static inline int bfd_hppa_insn2fmt (bfd *, int) ATTRIBUTE_UNUSED;
+static inline int hppa_rebuild_insn (int, int, int) ATTRIBUTE_UNUSED;
+
+
+/* The *sign_extend functions are used to assemble various bitfields
+   taken from an instruction and return the resulting immediate
+   value.  */
+
+static inline int
+sign_extend (int x, int len)
 {
-  return (((x & 1) << 2) | ((x & 6) >> 1)) & 7;
+  int signbit = (1 << (len - 1));
+  int mask = (signbit << 1) - 1;
+  return ((x & mask) ^ signbit) - signbit;
 }
 
-static INLINE void
-dis_assemble_3 (x, r)
-     unsigned int x;
-     unsigned int *r;
+static inline int
+low_sign_extend (int x, int len)
 {
-  *r = (((x & 4) >> 2) | ((x & 3) << 1)) & 7;
+  return (x >> 1) - ((x & 1) << (len - 1));
 }
 
-static INLINE unsigned int
-assemble_12 (x, y)
-     unsigned int x, y;
+
+/* The re_assemble_* functions prepare an immediate value for
+   insertion into an opcode. pa-risc uses all sorts of weird bitfields
+   in the instruction to hold the value.  */
+
+static inline int
+sign_unext (int x, int len)
 {
-  return (((y & 1) << 11) | ((x & 1) << 10) | ((x & 0x7fe) >> 1)) & 0xfff;
+  int len_ones;
+
+  len_ones = (1 << len) - 1;
+
+  return x & len_ones;
 }
 
-static INLINE void
-dis_assemble_12 (as12, x, y)
-     unsigned int as12;
-     unsigned int *x, *y;
+static inline int
+low_sign_unext (int x, int len)
 {
-  *y = (as12 & 0x800) >> 11;
-  *x = ((as12 & 0x3ff) << 1) | ((as12 & 0x400) >> 10);
+  int temp;
+  int sign;
+
+  sign = (x >> (len-1)) & 1;
+
+  temp = sign_unext (x, len-1);
+
+  return (temp << 1) | sign;
 }
 
-static INLINE unsigned long
-assemble_17 (x, y, z)
-     unsigned int x, y, z;
+static inline int
+re_assemble_3 (int as3)
 {
-  unsigned long temp;
-
-  temp = ((z & 1) << 16) |
-    ((x & 0x1f) << 11) |
-    ((y & 1) << 10) |
-    ((y & 0x7fe) >> 1);
-  return temp & 0x1ffff;
+  return ((  (as3 & 4) << (13-2))
+	  | ((as3 & 3) << (13+1)));
 }
 
-static INLINE void
-dis_assemble_17 (as17, x, y, z)
-     unsigned int as17;
-     unsigned int *x, *y, *z;
+static inline int
+re_assemble_12 (int as12)
 {
-
-  *z = (as17 & 0x10000) >> 16;
-  *x = (as17 & 0x0f800) >> 11;
-  *y = (((as17 & 0x00400) >> 10) | ((as17 & 0x3ff) << 1)) & 0x7ff;
+  return ((  (as12 & 0x800) >> 11)
+	  | ((as12 & 0x400) >> (10 - 2))
+	  | ((as12 & 0x3ff) << (1 + 2)));
 }
 
-static INLINE unsigned long
-assemble_21 (x)
-     unsigned int x;
+static inline int
+re_assemble_14 (int as14)
 {
-  unsigned long temp;
-
-  temp = ((x & 1) << 20) |
-    ((x & 0xffe) << 8) |
-    ((x & 0xc000) >> 7) |
-    ((x & 0x1f0000) >> 14) |
-    ((x & 0x003000) >> 12);
-  return temp & 0x1fffff;
+  return ((  (as14 & 0x1fff) << 1)
+	  | ((as14 & 0x2000) >> 13));
 }
 
-static INLINE void
-dis_assemble_21 (as21, x)
-     unsigned int as21, *x;
+static inline int
+re_assemble_16 (int as16)
 {
-  unsigned long temp;
+  int s, t;
 
-
-  temp = (as21 & 0x100000) >> 20;
-  temp |= (as21 & 0x0ffe00) >> 8;
-  temp |= (as21 & 0x000180) << 7;
-  temp |= (as21 & 0x00007c) << 14;
-  temp |= (as21 & 0x000003) << 12;
-  *x = temp;
+  /* Unusual 16-bit encoding, for wide mode only.  */
+  t = (as16 << 1) & 0xffff;
+  s = (as16 & 0x8000);
+  return (t ^ s ^ (s >> 1)) | (s >> 15);
 }
 
-static INLINE unsigned long
-sign_extend (x, len)
-     unsigned int x, len;
+static inline int
+re_assemble_17 (int as17)
 {
-  return (int)(x >> (len - 1) ? (-1 << len) | x : x);
+  return ((  (as17 & 0x10000) >> 16)
+	  | ((as17 & 0x0f800) << (16 - 11))
+	  | ((as17 & 0x00400) >> (10 - 2))
+	  | ((as17 & 0x003ff) << (1 + 2)));
 }
 
-static INLINE unsigned int
-ones (n)
-     int n;
+static inline int
+re_assemble_21 (int as21)
 {
-  unsigned int len_ones;
-  int i;
-
-  i = 0;
-  len_ones = 0;
-  while (i < n)
-    {
-      len_ones = (len_ones << 1) | 1;
-      i++;
-    }
-
-  return len_ones;
+  return ((  (as21 & 0x100000) >> 20)
+	  | ((as21 & 0x0ffe00) >> 8)
+	  | ((as21 & 0x000180) << 7)
+	  | ((as21 & 0x00007c) << 14)
+	  | ((as21 & 0x000003) << 12));
 }
 
-static INLINE void
-sign_unext (x, len, result)
-     unsigned int x, len;
-     unsigned int *result;
+static inline int
+re_assemble_22 (int as22)
 {
-  unsigned int len_ones;
-
-  len_ones = ones (len);
-
-  *result = x & len_ones;
+  return ((  (as22 & 0x200000) >> 21)
+	  | ((as22 & 0x1f0000) << (21 - 16))
+	  | ((as22 & 0x00f800) << (16 - 11))
+	  | ((as22 & 0x000400) >> (10 - 2))
+	  | ((as22 & 0x0003ff) << (1 + 2)));
 }
 
-static INLINE unsigned long
-low_sign_extend (x, len)
-     unsigned int x, len;
+
+/* Handle field selectors for PA instructions.
+   The L and R (and LS, RS etc.) selectors are used in pairs to form a
+   full 32 bit address.  eg.
+
+   LDIL	L'start,%r1		; put left part into r1
+   LDW	R'start(%r1),%r2	; add r1 and right part to form address
+
+   This function returns sign extended values in all cases.
+*/
+
+static inline bfd_signed_vma
+hppa_field_adjust (bfd_vma sym_val,
+		   bfd_signed_vma addend,
+		   enum hppa_reloc_field_selector_type_alt r_field)
 {
-  return (int)((x & 0x1 ? (-1 << (len - 1)) : 0) | x >> 1);
-}
+  bfd_signed_vma value;
 
-static INLINE void
-low_sign_unext (x, len, result)
-     unsigned int x, len;
-     unsigned int *result;
-{
-  unsigned int temp;
-  unsigned int sign;
-  unsigned int rest;
-  unsigned int one_bit_at_len;
-  unsigned int len_ones;
-
-  len_ones = ones (len);
-  one_bit_at_len = 1 << (len - 1);
-
-  sign_unext (x, len, &temp);
-  sign = temp & one_bit_at_len;
-  sign >>= (len - 1);
-
-  rest = temp & (len_ones ^ one_bit_at_len);
-  rest <<= 1;
-
-  *result = rest | sign;
-}
-
-/* Handle field selectors for PA instructions.  */
-
-static INLINE unsigned long
-hppa_field_adjust (value, constant_value, r_field)
-     unsigned long value;
-     unsigned long constant_value;
-     unsigned short r_field;
-{
+  value = sym_val + addend;
   switch (r_field)
     {
-    case e_fsel:		/* F  : no change                      */
-    case e_nsel:		/* N  : no change		       */
-      value += constant_value;
+    case e_fsel:
+      /* F: No change.  */
       break;
 
-    case e_lssel:		/* LS : if (bit 21) then add 0x800
-				   arithmetic shift right 11 bits */
-      value += constant_value;
-      if (value & 0x00000400)
-	value += 0x800;
-      value = (value & 0xfffff800) >> 11;
+    case e_nsel:
+      /* N: null selector.  I don't really understand what this is all
+	 about, but HP's documentation says "this indicates that zero
+	 bits are to be used for the displacement on the instruction.
+	 This fixup is used to identify three-instruction sequences to
+	 access data (for importing shared library data)."  */
+      value = 0;
       break;
 
-    case e_rssel:		/* RS : Sign extend from bit 21        */
-      value += constant_value;
-      if (value & 0x00000400)
-	value |= 0xfffff800;
-      else
-	value &= 0x7ff;
+    case e_lsel:
+    case e_nlsel:
+      /* L:  Select top 21 bits.  */
+      value = value >> 11;
       break;
 
-    case e_lsel:		/* L  : Arithmetic shift right 11 bits */
-    case e_nlsel:		/* NL  : Arithmetic shift right 11 bits */
-      value += constant_value;
-      value = (value & 0xfffff800) >> 11;
-      break;
-
-    case e_rsel:		/* R  : Set bits 0-20 to zero          */
-      value += constant_value;
+    case e_rsel:
+      /* R:  Select bottom 11 bits.  */
       value = value & 0x7ff;
       break;
 
-    case e_ldsel:		/* LD : Add 0x800, arithmetic shift
-				   right 11 bits                  */
-      value += constant_value;
-      value += 0x800;
-      value = (value & 0xfffff800) >> 11;
+    case e_lssel:
+      /* LS:  Round to nearest multiple of 2048 then select top 21 bits.  */
+      value = value + 0x400;
+      value = value >> 11;
       break;
 
-    case e_rdsel:		/* RD : Set bits 0-20 to one           */
-      value += constant_value;
-      value |= 0xfffff800;
+    case e_rssel:
+      /* RS:  Select bottom 11 bits for LS.
+	 We need to return a value such that 2048 * LS'x + RS'x == x.
+	 ie. RS'x = x - ((x + 0x400) & -0x800)
+	 this is just a sign extension from bit 21.  */
+      value = ((value & 0x7ff) ^ 0x400) - 0x400;
       break;
 
-    case e_lrsel:		/* LR : L with "rounded" constant      */
-    case e_nlrsel:		/* NLR : NL with "rounded" constant      */
-      value = value + ((constant_value + 0x1000) & 0xffffe000);
-      value = (value & 0xfffff800) >> 11;
+    case e_ldsel:
+      /* LD:  Round to next multiple of 2048 then select top 21 bits.
+	 Yes, if we are already on a multiple of 2048, we go up to the
+	 next one.  RD in this case will be -2048.  */
+      value = value + 0x800;
+      value = value >> 11;
       break;
 
-    case e_rrsel:		/* RR : R with "rounded" constant      */
-      value = value + ((constant_value + 0x1000) & 0xffffe000);
-      value = (value & 0x7ff) + constant_value - ((constant_value + 0x1000) & 0xffffe000);
+    case e_rdsel:
+      /* RD:  Set bits 0-20 to one.  */
+      value = value | -0x800;
+      break;
+
+    case e_lrsel:
+    case e_nlrsel:
+      /* LR:  L with rounding of the addend to nearest 8k.  */
+      value = sym_val + ((addend + 0x1000) & -0x2000);
+      value = value >> 11;
+      break;
+
+    case e_rrsel:
+      /* RR:  R with rounding of the addend to nearest 8k.
+	 We need to return a value such that 2048 * LR'x + RR'x == x
+	 ie. RR'x = s+a - (s + (((a + 0x1000) & -0x2000) & -0x800))
+	 .	  = s+a - ((s & -0x800) + ((a + 0x1000) & -0x2000))
+	 .	  = (s & 0x7ff) + a - ((a + 0x1000) & -0x2000)  */
+      value = (sym_val & 0x7ff) + (((addend & 0x1fff) ^ 0x1000) - 0x1000);
       break;
 
     default:
       abort ();
     }
   return value;
-
 }
 
 /* PA-RISC OPCODES */
-#define get_opcode(insn)	((insn) & 0xfc000000) >> 26
+#define get_opcode(insn)	(((insn) >> 26) & 0x3f)
 
-/* FIXME: this list is incomplete.  It should also be an enumerated
-   type rather than #defines.  */
-
-#define LDO	0x0d
-#define LDB	0x10
-#define LDH	0x11
-#define LDW	0x12
-#define LDWM	0x13
-#define STB	0x18
-#define STH	0x19
-#define STW	0x1a
-#define STWM	0x1b
-#define COMICLR	0x24
-#define SUBI	0x25
-#define SUBIO	0x25
-#define ADDIT	0x2c
-#define ADDITO	0x2c
-#define ADDI	0x2d
-#define ADDIO	0x2d
-#define LDIL	0x08
-#define ADDIL	0x0a
-
-#define MOVB	0x32
-#define MOVIB	0x33
-#define COMBT	0x20
-#define COMBF	0x22
-#define COMIBT	0x21
-#define COMIBF	0x23
-#define ADDBT	0x28
-#define ADDBF	0x2a
-#define ADDIBT	0x29
-#define ADDIBF	0x2b
-#define BVB	0x30
-#define BB	0x31
-
-#define BL	0x3a
-#define BLE	0x39
-#define BE	0x38
-
-  
-/* Given a machine instruction, return its format.
-
-   FIXME:  opcodes which do not map to a known format
-   should return an error of some sort.  */
-
-static INLINE char
-bfd_hppa_insn2fmt (insn)
-     unsigned long insn;
+enum hppa_opcode_type
 {
-  char fmt = -1;
-  unsigned char op = get_opcode (insn);
-  
+  /* None of the opcodes in the first group generate relocs, so we
+     aren't too concerned about them.  */
+  OP_SYSOP   = 0x00,
+  OP_MEMMNG  = 0x01,
+  OP_ALU     = 0x02,
+  OP_NDXMEM  = 0x03,
+  OP_SPOP    = 0x04,
+  OP_DIAG    = 0x05,
+  OP_FMPYADD = 0x06,
+  OP_UNDEF07 = 0x07,
+  OP_COPRW   = 0x09,
+  OP_COPRDW  = 0x0b,
+  OP_COPR    = 0x0c,
+  OP_FLOAT   = 0x0e,
+  OP_PRDSPEC = 0x0f,
+  OP_UNDEF15 = 0x15,
+  OP_UNDEF1d = 0x1d,
+  OP_FMPYSUB = 0x26,
+  OP_FPFUSED = 0x2e,
+  OP_SHEXDP0 = 0x34,
+  OP_SHEXDP1 = 0x35,
+  OP_SHEXDP2 = 0x36,
+  OP_UNDEF37 = 0x37,
+  OP_SHEXDP3 = 0x3c,
+  OP_SHEXDP4 = 0x3d,
+  OP_MULTMED = 0x3e,
+  OP_UNDEF3f = 0x3f,
+
+  OP_LDIL    = 0x08,
+  OP_ADDIL   = 0x0a,
+
+  OP_LDO     = 0x0d,
+  OP_LDB     = 0x10,
+  OP_LDH     = 0x11,
+  OP_LDW     = 0x12,
+  OP_LDWM    = 0x13,
+  OP_STB     = 0x18,
+  OP_STH     = 0x19,
+  OP_STW     = 0x1a,
+  OP_STWM    = 0x1b,
+
+  OP_LDD     = 0x14,
+  OP_STD     = 0x1c,
+
+  OP_FLDW    = 0x16,
+  OP_LDWL    = 0x17,
+  OP_FSTW    = 0x1e,
+  OP_STWL    = 0x1f,
+
+  OP_COMBT   = 0x20,
+  OP_COMIBT  = 0x21,
+  OP_COMBF   = 0x22,
+  OP_COMIBF  = 0x23,
+  OP_CMPBDT  = 0x27,
+  OP_ADDBT   = 0x28,
+  OP_ADDIBT  = 0x29,
+  OP_ADDBF   = 0x2a,
+  OP_ADDIBF  = 0x2b,
+  OP_CMPBDF  = 0x2f,
+  OP_BVB     = 0x30,
+  OP_BB      = 0x31,
+  OP_MOVB    = 0x32,
+  OP_MOVIB   = 0x33,
+  OP_CMPIBD  = 0x3b,
+
+  OP_COMICLR = 0x24,
+  OP_SUBI    = 0x25,
+  OP_ADDIT   = 0x2c,
+  OP_ADDI    = 0x2d,
+
+  OP_BE      = 0x38,
+  OP_BLE     = 0x39,
+  OP_BL      = 0x3a
+};
+
+
+/* Given a machine instruction, return its format.  */
+
+static inline int
+bfd_hppa_insn2fmt (bfd *abfd, int insn)
+{
+  enum hppa_opcode_type op = get_opcode (insn);
+
   switch (op)
     {
-    case ADDI:
-    case ADDIT:
-    case SUBI:
-      fmt = 11;
-      break;
-    case MOVB:
-    case MOVIB:
-    case COMBT:
-    case COMBF:
-    case COMIBT:
-    case COMIBF:
-    case ADDBT:
-    case ADDBF:
-    case ADDIBT:
-    case ADDIBF:
-    case BVB:
-    case BB:
-      fmt = 12;
-      break;
-    case LDO:
-    case LDB:
-    case LDH:
-    case LDW:
-    case LDWM:
-    case STB:
-    case STH:
-    case STW:
-    case STWM:
-      fmt = 14;
-      break;
-    case BL:
-    case BE:
-    case BLE:
-      fmt = 17;
-      break;
-    case LDIL:
-    case ADDIL:
-      fmt = 21;
-      break;
+    case OP_COMICLR:
+    case OP_SUBI:
+    case OP_ADDIT:
+    case OP_ADDI:
+      return 11;
+
+    case OP_COMBT:
+    case OP_COMIBT:
+    case OP_COMBF:
+    case OP_COMIBF:
+    case OP_CMPBDT:
+    case OP_ADDBT:
+    case OP_ADDIBT:
+    case OP_ADDBF:
+    case OP_ADDIBF:
+    case OP_CMPBDF:
+    case OP_BVB:
+    case OP_BB:
+    case OP_MOVB:
+    case OP_MOVIB:
+    case OP_CMPIBD:
+      return 12;
+
+    case OP_LDO:
+    case OP_LDB:
+    case OP_LDH:
+    case OP_LDW:
+    case OP_LDWM:
+    case OP_STB:
+    case OP_STH:
+    case OP_STW:
+    case OP_STWM:
+      if (abfd->arch_info->mach >= 25)
+	return 16;	/* Wide mode, format 16.  */
+      return 14;
+
+    case OP_FLDW:
+    case OP_LDWL:
+    case OP_FSTW:
+    case OP_STWL:
+      /* This is a hack.  Unfortunately, format 11 is already taken
+	 and we're using integers rather than an enum, so it's hard
+	 to describe the 11a format.  */
+      if (abfd->arch_info->mach >= 25)
+	return -16;	/* Wide mode, format 16a.  */
+      return -11;
+
+    case OP_LDD:
+    case OP_STD:
+      if (abfd->arch_info->mach >= 25)
+	return -10;	/* Wide mode, format 10a.  */
+      return 10;
+
+    case OP_BL:
+      if ((insn & 0x8000) != 0)
+	return 22;
+      /* fall thru */
+    case OP_BE:
+    case OP_BLE:
+      return 17;
+
+    case OP_LDIL:
+    case OP_ADDIL:
+      return 21;
+
     default:
-      fmt = 32;
       break;
     }
-  return fmt;
+  return 32;
 }
 
 
 /* Insert VALUE into INSN using R_FORMAT to determine exactly what
    bits to change.  */
-   
-static INLINE unsigned long
-hppa_rebuild_insn (abfd, insn, value, r_format)
-     bfd *abfd;
-     unsigned long insn;
-     unsigned long value;
-     unsigned long r_format;
-{
-  unsigned long const_part;
-  unsigned long rebuilt_part;
 
+static inline int
+hppa_rebuild_insn (int insn, int value, int r_format)
+{
   switch (r_format)
     {
     case 11:
-      {
-	unsigned w1, w;
-
-	const_part = insn & 0xffffe002;
-	dis_assemble_12 (value, &w1, &w);
-	rebuilt_part = (w1 << 2) | w;
-	return const_part | rebuilt_part;
-      }
+      return (insn & ~ 0x7ff) | low_sign_unext (value, 11);
 
     case 12:
-      {
-	unsigned w1, w;
+      return (insn & ~ 0x1ffd) | re_assemble_12 (value);
 
-	const_part = insn & 0xffffe002;
-	dis_assemble_12 (value, &w1, &w);
-	rebuilt_part = (w1 << 2) | w;
-	return const_part | rebuilt_part;
-      }
+
+    case 10:
+      return (insn & ~ 0x3ff1) | re_assemble_14 (value & -8);
+
+    case -11:
+      return (insn & ~ 0x3ff9) | re_assemble_14 (value & -4);
 
     case 14:
-      const_part = insn & 0xffffc000;
-      low_sign_unext (value, 14, &rebuilt_part);
-      return const_part | rebuilt_part;
+      return (insn & ~ 0x3fff) | re_assemble_14 (value);
+
+
+    case -10:
+      return (insn & ~ 0xfff1) | re_assemble_16 (value & -8);
+
+    case -16:
+      return (insn & ~ 0xfff9) | re_assemble_16 (value & -4);
+
+    case 16:
+      return (insn & ~ 0xffff) | re_assemble_16 (value);
+
 
     case 17:
-      {
-	unsigned w1, w2, w;
-
-	const_part = insn & 0xffe0e002;
-	dis_assemble_17 (value, &w1, &w2, &w);
-	rebuilt_part = (w2 << 2) | (w1 << 16) | w;
-	return const_part | rebuilt_part;
-      }
+      return (insn & ~ 0x1f1ffd) | re_assemble_17 (value);
 
     case 21:
-      const_part = insn & 0xffe00000;
-      dis_assemble_21 (value, &rebuilt_part);
-      return const_part | rebuilt_part;
+      return (insn & ~ 0x1fffff) | re_assemble_21 (value);
+
+    case 22:
+      return (insn & ~ 0x3ff1ffd) | re_assemble_22 (value);
 
     case 32:
-      const_part = 0;
       return value;
 
     default:
@@ -546,4 +591,4 @@ hppa_rebuild_insn (abfd, insn, value, r_format)
   return insn;
 }
 
-#endif /* _HPPA_H */
+#endif /* _LIBHPPA_H */

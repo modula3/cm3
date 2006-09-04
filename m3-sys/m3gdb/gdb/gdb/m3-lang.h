@@ -1,5 +1,5 @@
-/* C language support definitions for GDB, the GNU debugger.
-   Copyright 1992 Free Software Foundation, Inc.
+/* Modula-3 language support definitions for GDB, the GNU debugger.
+   Copyright 1992, 2001, 2006 Free Software Foundation, Inc.
 
 This file is part of GDB.
 
@@ -17,25 +17,35 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-extern int
-m3_parse PARAMS ((void));	/* Defined in c-exp.y */
+#if !defined (M3_LANG_H)
+#define M3_LANG_H 1
+ 
+#include <stdbool.h> 
 
-extern void			/* Defined in c-typeprint.c */
-m3_print_type PARAMS ((struct type *, char *, FILE *, int, int));
+#include "defs.h"
+#include "gdbtypes.h"
+#include "symtab.h"
+#include "value.h"
 
+/* Nonzero if a Modula-3 compiler that does not use a gcc code generator.  
+   NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
+   do not cause this to be nonzero, but they do cause 
+   processing_gcc_compilation to be nonzero. */ 
+extern int processing_m3_compilation; 
+
+/* Use the string from the N_OPT stabs entry to maybe set 
+   processing_m3_compilation*/
 extern void
-m3_emit_char PARAMS ((int c, FILE *stream, int quoter));
+m3_check_compiler ( char * name ); 
 
-extern void
-m3_emit_widechar PARAMS ((int c, FILE *stream, int quoter));
+extern struct type * m3_resolve_type PARAMS ((char *));
 
-extern int
-m3_val_print PARAMS ((struct type *, char *, CORE_ADDR, FILE *, int, int,
-		     int, enum val_prettyprint));
+/* FIXME: This is a mess.  Prototypes are here for functions that are
+     defined all over the place. 
+*/
 
-extern struct type *
-m3_find_export_type PARAMS ((struct type *));
-
+extern char * m3_demangle (const char *mangled, int options /*UNUSED*/);
+  
 extern struct type *builtin_type_m3_address;
 extern struct type *builtin_type_m3_boolean;
 extern struct type *builtin_type_m3_cardinal;
@@ -47,87 +57,95 @@ extern struct type *builtin_type_m3_mutex;
 extern struct type *builtin_type_m3_null;
 extern struct type *builtin_type_m3_real;
 extern struct type *builtin_type_m3_refany;
+extern struct type *builtin_type_m3_transient_refany;
 extern struct type *builtin_type_m3_root;
+extern struct type *builtin_type_m3_transient_root;
 extern struct type *builtin_type_m3_text;
 extern struct type *builtin_type_m3_untraced_root;
 extern struct type *builtin_type_m3_void;
 extern struct type *builtin_type_m3_widechar;
-
-extern LONGEST
-m3_unpack_ord PARAMS ((char *valaddr, int bitpos, int bitsize, int sign_extend));
-
-extern CORE_ADDR
-m3_unpack_pointer PARAMS ((char *valaddr, int bitpos));
-
-extern LONGEST
-m3_unpack_int2 PARAMS ((value_ptr val));
-
-extern double
-m3_unpack_float2 PARAMS ((value_ptr val));
-
-extern CORE_ADDR
-m3_unpack_pointer2 PARAMS ((value_ptr val));
-
-extern struct type *
-find_m3_type_with_uid PARAMS ((int uid));
-
-extern struct type *
-find_m3_type_named PARAMS ((char *name));
-
-extern struct type *
-find_m3_exported_interfaces PARAMS ((char *name));
-
-extern struct symbol *
-find_m3_ir PARAMS ((int kind, char* name));
-
-extern char *
-find_m3_type_name PARAMS ((struct type *type));
-
-
-/* given a heap reference,
-   find the address of the typecell for the actual type */
-extern CORE_ADDR
-find_m3_heap_tc_addr PARAMS ((CORE_ADDR addr));
-
-/* given the address of a typecell, find the gdb type for it */
-extern struct type *
-find_m3_type_from_tc PARAMS ((CORE_ADDR tc_addr));
-
-/* given a gdb type, find the address of the corresponding typecell */
-extern CORE_ADDR
-find_tc_from_m3_type PARAMS ((struct type *t));
-
-/* given a heap reference, find it's actual type */
-extern struct type *
-find_m3_heap_type PARAMS ((CORE_ADDR addr));
-
-extern int
-tc_address_to_dataOffset PARAMS ((CORE_ADDR tc_addr));
-
-extern int
-tc_address_to_methodOffset PARAMS ((CORE_ADDR tc_addr));
-
-extern int
-tc_address_to_dataSize PARAMS ((CORE_ADDR tc_addr));
-
-extern CORE_ADDR
-tc_address_to_parent_tc_address PARAMS ((CORE_ADDR tc_addr));
-
-extern CORE_ADDR
-tc_address_to_defaultMethods PARAMS ((CORE_ADDR tc_addr));
-
-extern value_ptr
-m3_value_from_longest PARAMS ((struct type *type, LONGEST num));
-
-extern int
-is_m3_ordinal_type PARAMS ((struct type *type));
+extern struct type *builtin_type_m3_proc_closure;
 
 extern void
-m3_ordinal_bounds PARAMS ((struct type *type, LONGEST *lower, LONGEST *upper));
+m3_patch_nested_procs ( struct blockvector *bv );  
 
-extern int
-m3_value_print PARAMS ((struct value *, GDB_FILE *, int, enum val_prettyprint));
+extern int is_m3_type ( struct type * m3_type );  
 
-extern char*
-m3_read_object_fields_bits PARAMS ((CORE_ADDR ref));
+extern int m3_value_print (struct value *, struct ui_file *, int,
+			   enum val_prettyprint);
 
+extern void  m3_fix_param (
+    struct type * func_type, int fieldno, struct symbol * param_sym ); 
+
+extern void m3_decode_struct (struct type *);
+
+extern void m3_fix_symtab (struct symtab *st);
+
+/* A NOTE on global variables.  The debug information produced by the
+   Modula-3 compilers describes the set of local variables of an interface 
+   or a module only as a record, with a field for each global variable in the 
+   unit.  Unfortunately, this means there is no gdb symbol built for a
+   global variable.  The lookup_symbol and la_lookup_symbol_nonlocal
+   callback mechanism have their interfaces set up on the reasonable assumption
+   that whatever a lookup finds, it is representable by a symbol.  
+
+   We kludge our way around this as follows:  When m3_lookup_symbol_nonlocal
+   finds a global variable, it returns the symbol for the record of 
+   globals the variable was found in.  This will, in turn, also be returned
+   by lookup_symbol.  A caller of either function must, after it returns
+   sym, check for this case, by calling m3_is_globals_record_symbol ( sym ). 
+   It then has to handle it as it likes, using the globals record and the name 
+   that it originally passed, as a field name in this record. */  
+
+/* A Modula-3-specific callback. */ 
+extern struct symbol *
+m3_lookup_symbol_nonlocal (
+    const char *name,
+    const char *linkage_name,
+    const struct block *block,
+    const domain_enum domain,
+    struct symtab * * symtab
+  );
+
+/* Return the result type of the procedure value proc_value. */ 
+extern struct type *  
+m3_proc_value_result_type ( struct value * proc_value ); 
+
+/* If closure is a Modula-3 procedure closure value, return its code address.  
+   Otherwise, return zero. */ 
+CORE_ADDR 
+m3_proc_value_code_addr ( struct value * closure_value ); 
+ 
+/* If closure is a Modula-3 procedure closure, return its environment pointer. 
+   Otherwise return zero. */ 
+extern CORE_ADDR 
+m3_proc_value_env_ptr ( struct value * closure ); 
+
+/* Take care of pushing any required auxiliary data on the stack, prior to
+   pushing the real parameters.  This is data that was constructed and
+   exists only in gdb process space.  It includes closures for procedure
+   values and dope for open arrays. */ 
+void 
+m3_push_aux_param_data ( int nargs, struct value **args, CORE_ADDR * sp ); 
+
+extern void  
+m3_typedef_print ( 
+    struct type *type,
+    struct symbol *new,
+    struct ui_file *stream
+  ); 
+
+extern void
+m3_print_type (
+     struct type *type,
+     char *varstring,
+     struct ui_file *stream,
+     int show,
+     int indent
+   ); 
+ 
+extern CORE_ADDR m3_value_as_address (struct value *);
+
+#endif /* !defined (M3_LANG_H) */
+ 
+/* End of file m3-lang.h */ 

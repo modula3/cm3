@@ -1,6 +1,9 @@
 \input texinfo.tex
 @setfilename bfd.info
-@c $Id$
+@c Copyright 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1997, 2000,
+@c 2001, 2002, 2003
+@c Free Software Foundation, Inc.
+@c 
 @tex
 % NOTE LOCAL KLUGE TO AVOID TOO MUCH WHITESPACE
 \global\long\def\example{%
@@ -28,11 +31,14 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents the BFD library.
 
-Copyright (C) 1991 Free Software Foundation, Inc.
+Copyright (C) 1991, 2000, 2001, 2003 Free Software Foundation, Inc.
 
-Permission is granted to make and distribute verbatim copies of
-this manual provided the copyright notice and this permission notice
-are preserved on all copies.
+      Permission is granted to copy, distribute and/or modify this document
+      under the terms of the GNU Free Documentation License, Version 1.1
+      or any later version published by the Free Software Foundation;
+      with no Invariant Sections, with no Front-Cover Texts, and with no
+      Back-Cover Texts.  A copy of the license is included in the
+      section entitled ``GNU Free Documentation License''.
 
 @ignore
 Permission is granted to process this file through Tex and print the
@@ -41,14 +47,6 @@ notice identical to this one except for the removal of this paragraph
 (this paragraph not being relevant to the printed manual).
 
 @end ignore
-Permission is granted to copy and distribute modified versions of this
-manual under the conditions for verbatim copying, subject to the terms
-of the GNU General Public License, which includes the provision that the
-entire resulting derived work is distributed under the terms of a
-permission notice identical to this one.
-
-Permission is granted to copy and distribute translations of this manual
-into another language, under the above conditions for modified versions.
 @end ifinfo
 @iftex
 @c@finalout
@@ -59,18 +57,18 @@ into another language, under the above conditions for modified versions.
 @title{libbfd}
 @subtitle{The Binary File Descriptor Library}
 @sp 1
-@subtitle First Edition---BFD version < 3.0
-@subtitle April 1991
+@subtitle First Edition---BFD version < 3.0  % Since no product is stable berfore version 3.0 :-)
+@subtitle Original Document Created: April 1991
 @author {Steve Chamberlain}
 @author {Cygnus Support}
 @page
 
 @tex
 \def\$#1${{#1}}  % Kluge: collect RCS revision info without $...$
-\xdef\manvers{\$Revision$}  % For use in headers, footers too
+\xdef\manvers{1.5}  % For use in headers, footers too
 {\parskip=0pt
-\hfill Cygnus Support\par
-\hfill sac\@cygnus.com\par
+\hfill Free Software Foundation\par
+\hfill sac\@www.gnu.org\par
 \hfill {\it BFD}, \manvers\par
 \hfill \TeX{}info \texinfoversion\par
 }
@@ -78,20 +76,15 @@ into another language, under the above conditions for modified versions.
 @end tex
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1991 Free Software Foundation, Inc.
+Copyright @copyright{} 1991, 2001, 2003 Free Software Foundation, Inc.
 
-Permission is granted to make and distribute verbatim copies of
-this manual provided the copyright notice and this permission notice
-are preserved on all copies.
+      Permission is granted to copy, distribute and/or modify this document
+      under the terms of the GNU Free Documentation License, Version 1.1
+      or any later version published by the Free Software Foundation;
+      with no Invariant Sections, with no Front-Cover Texts, and with no
+      Back-Cover Texts.  A copy of the license is included in the
+      section entitled ``GNU Free Documentation License''.
 
-Permission is granted to copy and distribute modified versions of this
-manual under the conditions for verbatim copying, subject to the terms
-of the GNU General Public License, which includes the provision that the
-entire resulting derived work is distributed under the terms of a
-permission notice identical to this one.
-
-Permission is granted to copy and distribute translations of this manual
-into another language, under the above conditions for modified versions.
 @end titlepage
 @end iftex
 
@@ -104,6 +97,7 @@ This file documents the binary file descriptor library libbfd.
 * Overview::			Overview of BFD
 * BFD front end::		BFD front end
 * BFD back ends::		BFD back ends
+* GNU Free Documentation License::  GNU Free Documentation License
 * Index::			Index
 @end menu
 
@@ -177,17 +171,17 @@ For example, this sequence does what you would probably expect:
 return the number of sections in an object file attached to a BFD
 @code{abfd}. 
 
-@lisp
+@example
 @c @cartouche
 #include "bfd.h"
 
-unsigned int number_of_sections(abfd)
+unsigned int number_of_sections (abfd)
 bfd *abfd;
 @{
-  return bfd_count_sections(abfd);
+  return bfd_count_sections (abfd);
 @}
 @c @end cartouche
-@end lisp
+@end example
 
 The abstraction used within BFD is that an object file has:
 
@@ -212,8 +206,9 @@ IEEE-695.
 @include bfdsumm.texi
 
 @node BFD front end, BFD back ends, Overview, Top
-@chapter BFD front end
-@include bfd.texi
+@chapter BFD Front End
+@include bfdt.texi
+@include bfdio.texi
 
 @menu
 * Memory Usage::
@@ -234,7 +229,7 @@ IEEE-695.
 @end menu
 
 @node Memory Usage, Initialization, BFD front end, BFD front end
-@section Memory usage
+@section Memory Usage
 BFD keeps all of its internal structures in obstacks. There is one obstack
 per open BFD file, into which the current state is stored. When a BFD is
 closed, the obstack is deleted, and so everything which has been
@@ -298,13 +293,14 @@ structures.
 @node Hash Tables, , Linker Functions, BFD front end
 @include  hash.texi
 
-@node BFD back ends, Index, BFD front end, Top
+@node BFD back ends, GNU Free Documentation License, BFD front end, Top
 @chapter BFD back ends
 @menu
 * What to Put Where::
 * aout ::	a.out backends
 * coff ::	coff backends
 * elf  ::	elf backends
+* mmo  ::	mmo backend
 @ignore
 * oasys ::	oasys backends
 * ieee ::	ieee backend
@@ -320,12 +316,18 @@ All of BFD lives in one directory.
 @node coff, elf, aout, BFD back ends
 @include  coffcode.texi
 
-@node elf,  , coff, BFD back ends
+@node elf, mmo, coff, BFD back ends
 @include  elf.texi
 @c Leave this out until the file has some actual contents...
 @c @include  elfcode.texi
 
-@node Index,  , BFD back ends , Top
+@node mmo,  , elf, BFD back ends
+@include  mmo.texi
+
+@node GNU Free Documentation License, Index, BFD back ends, Top
+@include fdl.texi
+
+@node Index,  , GNU Free Documentation License, Top
 @unnumbered Index
 @printindex cp
 

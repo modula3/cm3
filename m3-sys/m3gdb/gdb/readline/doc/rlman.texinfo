@@ -6,12 +6,19 @@
 @synindex vr fn
 @setchapternewpage odd
 
+@include manvers.texinfo
+
 @ifinfo
+@dircategory Libraries
+@direntry
+* Readline: (readline).       The GNU readline library API
+@end direntry
+
 This document describes the GNU Readline Library, a utility which aids
 in the consistency of user interface across discrete programs that need
 to provide a command line interface.
 
-Copyright (C) 1988, 1991 Free Software Foundation, Inc.
+Copyright (C) 1988-2002 Free Software Foundation, Inc.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -32,16 +39,15 @@ notice identical to this one.
 Permission is granted to copy and distribute translations of this manual
 into another language, under the above conditions for modified versions,
 except that this permission notice may be stated in a translation approved
-by the Foundation.
+by the Free Software Foundation.
 @end ifinfo
 
-@titlepage
-@sp 10
-@center @titlefont{GNU Readline Library}
-@center Brian Fox
-@center Free Software Foundation
-@center Version 1.1
-@center April 1991
+@titlepage  
+@title GNU Readline Library
+@subtitle Edition @value{EDITION}, for @code{Readline Library} Version @value{VERSION}.
+@subtitle @value{UPDATE-MONTH}
+@author Brian Fox, Free Software Foundation
+@author Chet Ramey, Case Western Reserve University
 
 @page
 This document describes the GNU Readline Library, a utility which aids
@@ -49,8 +55,8 @@ in the consistency of user interface across discrete programs that need
 to provide a command line interface.
 
 Published by the Free Software Foundation @*
-675 Massachusetts Avenue, @*
-Cambridge, MA 02139 USA
+59 Temple Place, Suite 330, @*
+Boston, MA 02111 USA
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -64,10 +70,10 @@ notice identical to this one.
 Permission is granted to copy and distribute translations of this manual
 into another language, under the above conditions for modified versions,
 except that this permission notice may be stated in a translation approved
-by the Foundation.
+by the Free Software Foundation.
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1989, 1991 Free Software Foundation, Inc.
+Copyright @copyright{} 1988-2002 Free Software Foundation, Inc.
 @end titlepage
 
 @ifinfo
@@ -100,4 +106,3 @@ to provide a command line interface.
 
 @contents
 @bye
-

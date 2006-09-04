@@ -24,7 +24,27 @@
 
 #include "basics.h"
 
+INLINE_BITS\
+(unsigned64)
+LSMASKED64 (unsigned64 word,
+	    int start,
+	    int stop)
+{
+  word &= LSMASK64 (start, stop);
+  return word;
+}
 
+INLINE_BITS\
+(unsigned64)
+LSEXTRACTED64 (unsigned64 val,
+	       int start,
+	       int stop)
+{
+  val <<= (64 - 1 - start); /* drop high bits */
+  val >>= (64 - 1 - start) + (stop); /* drop low bits */
+  return val;
+}
+ 
 INLINE_BITS\
 (unsigned32)
 MASKED32(unsigned32 word,
@@ -61,7 +81,7 @@ EXTRACTED(unsigned_word word,
 	  unsigned stop)
 {
   ASSERT(start <= stop);
-#if (WITH_64BITS_TARGET)
+#if (WITH_TARGET_WORD_BITSIZE == 64)
   return _EXTRACTEDn(64, word, start, stop);
 #else
   if (stop < 32)
@@ -69,6 +89,25 @@ EXTRACTED(unsigned_word word,
   else
     return ((word >> (63 - stop))
 	    & MASK(start+(63-stop), 63));
+#endif
+}
+
+
+INLINE_BITS\
+(unsigned_word)
+INSERTED(unsigned_word word,
+	 unsigned start,
+	 unsigned stop)
+{
+  ASSERT(start <= stop);
+#if (WITH_TARGET_WORD_BITSIZE == 64)
+  return _INSERTEDn(64, word, start, stop);
+#else
+  if (stop < 32)
+    return 0;
+  else
+    return ((word & MASK(start+(63-stop), 63))
+	    << (63 - stop));
 #endif
 }
 
