@@ -18,6 +18,9 @@ If the current language is
 (in the gdb sense), then all expressions
 are interpreted using the Modula-3 syntax.  All values which have a
 Modula-3 type are printed according to that type.
+gdb does not have a concept of statement, only expressions.
+Accordingly, m3gdb treats assignment statements and calls on proper 
+procedures as "expressions".
 In addition, 
 .B m3gdb
 supports two new commands.  The command
@@ -51,19 +54,6 @@ and
 .B switch
 commands to work.
 
-When
-.B m3gdb
-is started, the language is 
-.BR C.  
-This means that you cannot insert a
-breakpoint using the Modula-3 syntax.  You probably want to type
-.B set la m3
-to set the language to 
-.BR m3.
-
-gdb does not have a concept of statement, only expressions.
-Accordingly, m3gdb treats := as an expression constructor.
-
 .SH "See Also"
 .BR gdb (1),
 the gdb documentation under info.
@@ -71,10 +61,9 @@ the gdb documentation under info.
 .SH Bugs
 
 Many.  Please send bug reports to 
-.BR m3-request@src.dec.com .
+.BR rodney.bates@wichita.edu .
 
-This release of m3gdb is based on gdb 4.9.  We should move to gdb
-4.10.
+This release of m3gdb is based on gdb 6.4.  
 
 Real numbers are not parsed properly.
 
@@ -82,8 +71,9 @@ The comparison operators (other than =), VAL, &, IN do not work.
 
 The = operator does not work on open arrays.
 
-.SH Author Of Object
-Eric Muller, for the Modula-3 extensions.
-
-.SH Author Of Documentation
+.SH Known contributing authors: 
 Eric Muller
+Antony Hosking
+Rodney Bates
+
+
