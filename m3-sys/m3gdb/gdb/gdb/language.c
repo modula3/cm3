@@ -44,6 +44,7 @@
 #include "target.h"
 #include "parser-defs.h"
 #include "jv-lang.h"
+#include "m3-lang.h"
 #include "demangle.h"
 
 extern void _initialize_language (void);
@@ -529,8 +530,8 @@ struct type *
 binop_result_type (struct value *v1, struct value *v2)
 {
   int size, uns;
-  struct type *t1 = check_typedef (VALUE_TYPE (v1));
-  struct type *t2 = check_typedef (VALUE_TYPE (v2));
+  struct type *t1 = check_typedef (value_type (v1));
+  struct type *t2 = check_typedef (value_type (v2));
 
   int l1 = TYPE_LENGTH (t1);
   int l2 = TYPE_LENGTH (t2);
@@ -542,22 +543,25 @@ binop_result_type (struct value *v1, struct value *v2)
     case language_objc:
       if (TYPE_CODE (t1) == TYPE_CODE_FLT)
 	return TYPE_CODE (t2) == TYPE_CODE_FLT && l2 > l1 ?
-	  VALUE_TYPE (v2) : VALUE_TYPE (v1);
+	  value_type (v2) : value_type (v1);
       else if (TYPE_CODE (t2) == TYPE_CODE_FLT)
 	return TYPE_CODE (t1) == TYPE_CODE_FLT && l1 > l2 ?
-	  VALUE_TYPE (v1) : VALUE_TYPE (v2);
+	  value_type (v1) : value_type (v2);
       else if (TYPE_UNSIGNED (t1) && l1 > l2)
-	return VALUE_TYPE (v1);
+	return value_type (v1);
       else if (TYPE_UNSIGNED (t2) && l2 > l1)
-	return VALUE_TYPE (v2);
+	return value_type (v2);
       else			/* Both are signed.  Result is the longer type */
-	return l1 > l2 ? VALUE_TYPE (v1) : VALUE_TYPE (v2);
+	return l1 > l2 ? value_type (v1) : value_type (v2);
       break;
     case language_m2:
       /* If we are doing type-checking, l1 should equal l2, so this is
          not needed. */
-      return l1 > l2 ? VALUE_TYPE (v1) : VALUE_TYPE (v2);
+      return l1 > l2 ? value_type (v1) : value_type (v2);
       break;
+    case language_m3:
+/*FIXME: But binop_result_type is uncalled in 6.4, rodney.bates@wichita.edu */
+       error ("Missing Modula-3 support in function binop_result_check.");
     }
   internal_error (__FILE__, __LINE__, _("failed internal consistency check"));
   return (struct type *) 0;	/* For lint */
@@ -626,15 +630,25 @@ ordered_type (struct type *type)
 /* Returns non-zero if the two types are the same */
 int
 same_type (struct type *arg1, struct type *arg2)
-{
+{ enum type_code code1;
+  enum type_code code2; 
+
   CHECK_TYPEDEF (type);
+  code1 = TYPE_CODE ( arg1 ); 
+  code2 = TYPE_CODE ( arg2 ); 
+
+#ifdef _LANG_m3 
+  if ( TYPE_CODE_M3_first <= code1 && code1 <= TYPE_CODE_M3_last ) 
+    { return m3_types_equal ( arg1, arg2 ); } 
+#endif 
+
   if (structured_type (arg1) ? !structured_type (arg2) : structured_type (arg2))
     /* One is structured and one isn't */
     return 0;
   else if (structured_type (arg1) && structured_type (arg2))
     return arg1 == arg2;
   else if (numeric_type (arg1) && numeric_type (arg2))
-    return (TYPE_CODE (arg2) == TYPE_CODE (arg1)) &&
+    return ( code2 == code1 ) &&
       (TYPE_UNSIGNED (arg1) == TYPE_UNSIGNED (arg2))
       ? 1 : 0;
   else
@@ -656,6 +670,24 @@ integral_type (struct type *type)
     case language_m2:
     case language_pascal:
       return TYPE_CODE (type) != TYPE_CODE_INT ? 0 : 1;
+    case language_m3:
+      switch (TYPE_CODE (type)) 
+        { TYPE_CODE_INT:       /* Non-M3 codes probably can't happen, but */
+          TYPE_CODE_RANGE:     /* paranoia can't hurt. */ 
+          TYPE_CODE_BOOL:
+          TYPE_CODE_ENUM:
+          TYPE_CODE_CHAR:
+          TYPE_CODE_M3_ENUM:
+          TYPE_CODE_M3_SUBRANGE:
+          TYPE_CODE_M3_ADDRESS:
+          TYPE_CODE_M3_BOOLEAN:
+          TYPE_CODE_M3_CHAR:
+          TYPE_CODE_M3_WIDECHAR:
+          TYPE_CODE_M3_INTEGER:
+          TYPE_CODE_M3_CARDINAL:
+/* FIXME: TYPE_CODE_M3_PACKED needs to look at its underlying type.  But this
+   function looks uncalled, to me, as of 6.4.  rodney.bates@wichita.edu */ 
+            return 1;
     default:
       error (_("Language not supported."));
     }
@@ -694,6 +726,9 @@ character_type (struct type *type)
       return (TYPE_CODE (type) == TYPE_CODE_INT) &&
 	TYPE_LENGTH (type) == sizeof (char)
       ? 1 : 0;
+    case language_m3:
+      return (TYPE_CODE (type) == TYPE_CODE_M3_CHAR) 
+        || (TYPE_CODE (type) == TYPE_CODE_M3_WIDECHAR) 
     default:
       return (0);
     }
@@ -709,7 +744,10 @@ string_type (struct type *type)
     case language_m2:
     case language_pascal:
       return TYPE_CODE (type) != TYPE_CODE_STRING ? 0 : 1;
-
+    case language_m3:
+      return ( TYPE_CODE (type) != TYPE_CODE_STRING) && 
+             ( TYPE_CODE (type) != TYPE_CODE_M3_TEXT) &&
+        ? 0 : 1; /* Why is this coded negatively and then inverted? */
     case language_c:
     case language_cplus:
     case language_objc:
@@ -737,6 +775,8 @@ boolean_type (struct type *type)
          languages, or a TYPE_CODE_INT_OR_BOOL for C.  */
       if (TYPE_CODE (type) == TYPE_CODE_INT)
 	return 1;
+    case language_m3:
+      return (TYPE_CODE (type) == TYPE_CODE_M3_BOOLEAN) 
     default:
       break;
     }
@@ -772,7 +812,7 @@ structured_type (struct type *type)
       return (TYPE_CODE (type) == TYPE_CODE_STRUCT) ||
 	(TYPE_CODE (type) == TYPE_CODE_UNION) ||
 	(TYPE_CODE (type) == TYPE_CODE_ARRAY);
-   case language_pascal:
+    case language_pascal:
       return (TYPE_CODE(type) == TYPE_CODE_STRUCT) ||
 	 (TYPE_CODE(type) == TYPE_CODE_UNION) ||
 	 (TYPE_CODE(type) == TYPE_CODE_SET) ||
@@ -781,6 +821,20 @@ structured_type (struct type *type)
       return (TYPE_CODE (type) == TYPE_CODE_STRUCT) ||
 	(TYPE_CODE (type) == TYPE_CODE_SET) ||
 	(TYPE_CODE (type) == TYPE_CODE_ARRAY);
+
+#ifdef _LANG_m3
+    case language_m3:
+      return (TYPE_CODE (type) == TYPE_CODE_M3_RECORD) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_OBJECT) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_SET) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_ARRAY) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_OPEN_ARRAY) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_MUTEX) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_TEXT) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_PROC) ||
+	(TYPE_CODE (type) == TYPE_CODE_M3_METHOD);
+#endif
+
     default:
       return (0);
     }
@@ -825,6 +879,10 @@ lang_bool_type (void)
 	    return type;
 	}
       return java_boolean_type;
+#ifdef _LANG_m3
+    case language_m3:
+      return builtin_type_m3_boolean;
+#endif 
     default:
       return builtin_type_int;
     }

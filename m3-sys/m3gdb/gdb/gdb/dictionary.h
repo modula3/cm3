@@ -43,6 +43,9 @@ struct pending;
 /* Create a dictionary implemented via a fixed-size hashtable.  All
    memory it uses is allocated on OBSTACK; the environment is
    initialized from SYMBOL_LIST.  */
+/* Warning: Hashed dictionaries use symbol field hash_next, thus will
+   break if you try to put a symbol into more than one hashed 
+   dictionary.  */ 
 
 extern struct dictionary *dict_create_hashed (struct obstack *obstack,
 					      const struct pending
@@ -118,7 +121,7 @@ extern struct symbol *dict_iterator_first (const struct dictionary *dict,
 extern struct symbol *dict_iterator_next (struct dict_iterator *iterator);
 
 /* Initialize ITERATOR to point at the first symbol in DICT whose
-   SYMBOL_BEST_NAME is NAME (as tested using strcmp_iw), and return
+   SYMBOL_SEARCH_NAME is NAME (as tested using strcmp_iw), and return
    that first symbol, or NULL if there are no such symbols.  */
 
 extern struct symbol *dict_iter_name_first (const struct dictionary *dict,
@@ -126,7 +129,7 @@ extern struct symbol *dict_iter_name_first (const struct dictionary *dict,
 					    struct dict_iterator *iterator);
 
 /* Advance ITERATOR to point at the next symbol in DICT whose
-   SYMBOL_BEST_NAME is NAME (as tested using strcmp_iw), or NULL if
+   SYMBOL_SEARCH_NAME is NAME (as tested using strcmp_iw), or NULL if
    there are no more such symbols.  Don't call this if you've
    previously received NULL from dict_iterator_first or
    dict_iterator_next on this iteration.  And don't call it unless

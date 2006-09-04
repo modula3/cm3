@@ -750,6 +750,8 @@ scan_procs (int *curr_pd_p, quick_procedure_entry *qPD, int max_procs,
 	  rtn_name = &vt_bits[(long) qPD[curr_pd].sbAlias];
 	  rtn_dem_name = cplus_demangle (rtn_name, DMGL_ANSI | DMGL_PARAMS);
 	}
+      /* FIXME-Modula-3: Can we ever be in hpread for Modula-3 code? probably
+         not, but if so, need to do m3_demangle everywhere cplus_demangle is done. */ 
       else
 	{
 	  rtn_name = &vt_bits[(long) qPD[curr_pd].sbProc];
@@ -2751,7 +2753,7 @@ hpread_psymtab_to_symtab (struct partial_symtab *pst)
          to avoid disconcerting pauses.  */
       if (info_verbose)
 	{
-	  printf_filtered ("Reading in symbols for %s...", pst->filename);
+	  printf_filtered ("Reading in hp symbols for %s...", pst->filename);
 	  gdb_flush (gdb_stdout);
 	}
 

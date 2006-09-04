@@ -67,7 +67,7 @@
 /* Default command line prompt.  This is overriden in some configs. */
 
 #ifndef DEFAULT_PROMPT
-#define DEFAULT_PROMPT	"(gdb) "
+#define DEFAULT_PROMPT	"(m3gdb) "
 #endif
 
 /* Initialization file name for gdb.  This is overridden in some configs.  */
@@ -1060,7 +1060,7 @@ print_gdb_version (struct ui_file *stream)
      program to parse, and is just canonical program name and version
      number, which starts after last space. */
 
-  fprintf_filtered (stream, "GNU gdb %s\n", version);
+  fprintf_filtered (stream, "GNU gdb plus Modula-3 %s\n", version);
 
   /* Second line is a copyright notice. */
 

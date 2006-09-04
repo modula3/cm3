@@ -254,7 +254,7 @@ block_static_block (const struct block *block)
   return block;
 }
 
-/* Return the static block associated to BLOCK.  Return NULL if block
+/* Return the global block associated to BLOCK.  Return NULL if block
    is NULL.  */
 
 const struct block *

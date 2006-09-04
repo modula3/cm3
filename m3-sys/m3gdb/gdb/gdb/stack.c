@@ -247,7 +247,9 @@ print_frame_args (struct symbol *func, struct frame_info *frame,
 	      struct symbol *nsym;
 	      nsym = lookup_symbol (DEPRECATED_SYMBOL_NAME (sym),
 				    b, VAR_DOMAIN, NULL, NULL);
-	      if (SYMBOL_CLASS (nsym) == LOC_REGISTER)
+	      if (nsym == NULL /* This can happen after Modula-3-compiled  code with 
+                                  incorrect dwarf2 symbols has been read in. */ 
+                  || SYMBOL_CLASS (nsym) == LOC_REGISTER)
 		{
 		  /* There is a LOC_ARG/LOC_REGISTER pair.  This means
 		     that it was passed on the stack and loaded into a
@@ -558,30 +560,37 @@ print_frame (struct frame_info *frame, int print_level,
 	}
       else
 	{
-	  funname = DEPRECATED_SYMBOL_NAME (func);
 	  funlang = SYMBOL_LANGUAGE (func);
-	  if (funlang == language_cplus)
-	    {
-	      /* It seems appropriate to use SYMBOL_PRINT_NAME() here,
-		 to display the demangled name that we already have
-		 stored in the symbol table, but we stored a version
-		 with DMGL_PARAMS turned on, and here we don't want to
-		 display parameters. So call the demangler again, with
-		 DMGL_ANSI only.
+#ifdef _LANG_m3
+          if (funlang == language_m3)
+            funname = SYMBOL_PRINT_NAME (func);
+          else 
+#endif 
+            { 
+              funname = DEPRECATED_SYMBOL_NAME (func);
+              if (funlang == language_cplus)
+                {
+                  /* It seems appropriate to use SYMBOL_PRINT_NAME() here,
+                     to display the demangled name that we already have
+                     stored in the symbol table, but we stored a version
+                     with DMGL_PARAMS turned on, and here we don't want to
+                     display parameters. So call the demangler again, with
+                     DMGL_ANSI only.
 
-		 Yes, printf_symbol_filtered() will again try to
-		 demangle the name on the fly, but the issue is that
-		 if cplus_demangle() fails here, it will fail there
-		 too. So we want to catch the failure (where DEMANGLED
-		 is NULL below) here, while we still have our hands on
-		 the function symbol.)  */
-	      char *demangled = cplus_demangle (funname, DMGL_ANSI);
-	      if (demangled == NULL)
-		/* If the demangler fails, try the demangled name from
-		   the symbol table. That'll have parameters, but
-		   that's preferable to displaying a mangled name.  */
-		funname = SYMBOL_PRINT_NAME (func);
-	    }
+                     Yes, printf_symbol_filtered() will again try to
+                     demangle the name on the fly, but the issue is that
+                     if cplus_demangle() fails here, it will fail there
+                     too. So we want to catch the failure (where DEMANGLED
+                     is NULL below) here, while we still have our hands on
+                     the function symbol.)  */
+                  char *demangled = cplus_demangle (funname, DMGL_ANSI);
+                  if (demangled == NULL)
+                    /* If the demangler fails, try the demangled name from
+                       the symbol table. That'll have parameters, but
+                       that's preferable to displaying a mangled name.  */
+                    funname = SYMBOL_PRINT_NAME (func);
+                }
+            } 
 	}
     }
   else
@@ -859,28 +868,32 @@ frame_info (char *addr_exp, int from_tty)
   s = find_pc_symtab (get_frame_pc (fi));
   if (func)
     {
-      /* It seems appropriate to use SYMBOL_PRINT_NAME() here, to
-	 display the demangled name that we already have stored in the
-	 symbol table, but we stored a version with DMGL_PARAMS turned
-	 on, and here we don't want to display parameters. So call the
-	 demangler again, with DMGL_ANSI only.
-
-	 Yes, printf_symbol_filtered() will again try to demangle the
-	 name on the fly, but the issue is that if cplus_demangle()
-	 fails here, it will fail there too. So we want to catch the
-	 failure (where DEMANGLED is NULL below) here, while we still
-	 have our hands on the function symbol.)  */
-      funname = DEPRECATED_SYMBOL_NAME (func);
       funlang = SYMBOL_LANGUAGE (func);
-      if (funlang == language_cplus)
-	{
-	  char *demangled = cplus_demangle (funname, DMGL_ANSI);
-	  /* If the demangler fails, try the demangled name from the
-	     symbol table. That'll have parameters, but that's
-	     preferable to displaying a mangled name.  */
-	  if (demangled == NULL)
-	    funname = SYMBOL_PRINT_NAME (func);
-	}
+      if (funlang == language_m3) 
+        funname = SYMBOL_PRINT_NAME (func); 
+      else 
+        { /* It seems appropriate to use SYMBOL_PRINT_NAME() here, to
+             display the demangled name that we already have stored in the
+             symbol table, but we stored a version with DMGL_PARAMS turned
+             on, and here we don't want to display parameters. So call the
+             demangler again, with DMGL_ANSI only.
+
+             Yes, printf_symbol_filtered() will again try to demangle the
+             name on the fly, but the issue is that if cplus_demangle()
+             fails here, it will fail there too. So we want to catch the
+             failure (where DEMANGLED is NULL below) here, while we still
+             have our hands on the function symbol.)  */
+          funname = DEPRECATED_SYMBOL_NAME (func);
+          if (funlang == language_cplus)
+            {
+              char *demangled = cplus_demangle (funname, DMGL_ANSI);
+              /* If the demangler fails, try the demangled name from the
+                 symbol table. That'll have parameters, but that's
+                 preferable to displaying a mangled name.  */
+              if (demangled == NULL)
+                funname = SYMBOL_PRINT_NAME (func);
+            } 
+        } 
     }
   else
     {

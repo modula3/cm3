@@ -1799,7 +1799,7 @@ xcoff_psymtab_to_symtab (struct partial_symtab *pst)
          to avoid disconcerting pauses.  */
       if (info_verbose)
 	{
-	  printf_filtered ("Reading in symbols for %s...", pst->filename);
+	  printf_filtered ("Reading in xcoff symbols for %s...", pst->filename);
 	  gdb_flush (gdb_stdout);
 	}
 

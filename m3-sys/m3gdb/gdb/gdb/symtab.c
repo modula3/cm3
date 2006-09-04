@@ -42,6 +42,7 @@
 #include "filenames.h"		/* for FILENAME_CMP */
 #include "objc-lang.h"
 #include "ada-lang.h"
+#include "m3-lang.h"
 
 #include "hashtab.h"
 
@@ -92,20 +93,6 @@ struct symbol *lookup_symbol_aux_local (const char *name,
 					const struct block *block,
 					const domain_enum domain,
 					struct symtab **symtab);
-
-static
-struct symbol *lookup_symbol_aux_symtabs (int block_index,
-					  const char *name,
-					  const char *linkage_name,
-					  const domain_enum domain,
-					  struct symtab **symtab);
-
-static
-struct symbol *lookup_symbol_aux_psymtabs (int block_index,
-					   const char *name,
-					   const char *linkage_name,
-					   const domain_enum domain,
-					   struct symtab **symtab);
 
 #if 0
 static
@@ -406,7 +393,8 @@ symbol_init_language_specific (struct general_symbol_info *gsymbol,
   gsymbol->language = language;
   if (gsymbol->language == language_cplus
       || gsymbol->language == language_java
-      || gsymbol->language == language_objc)
+      || gsymbol->language == language_objc
+      || gsymbol->language == language_m3)
     {
       gsymbol->language_specific.cplus_specific.demangled_name = NULL;
     }
@@ -451,6 +439,19 @@ symbol_find_demangled_name (struct general_symbol_info *gsymbol,
   if (gsymbol->language == language_unknown)
     gsymbol->language = language_auto;
 
+  /* Since this is m3gdb, it is a good bet that the language is
+     Modula-3, so try it first. */
+  if (gsymbol->language == language_m3
+      || gsymbol->language == language_auto)
+    {
+      demangled = m3_demangle (mangled, 0);
+      if (demangled != NULL)
+        {
+          gsymbol->language = language_m3;
+          return demangled;
+        }
+    }
+
   if (gsymbol->language == language_objc
       || gsymbol->language == language_auto)
     {
@@ -462,6 +463,7 @@ symbol_find_demangled_name (struct general_symbol_info *gsymbol,
 	  return demangled;
 	}
     }
+
   if (gsymbol->language == language_cplus
       || gsymbol->language == language_auto)
     {
@@ -473,7 +475,9 @@ symbol_find_demangled_name (struct general_symbol_info *gsymbol,
 	  return demangled;
 	}
     }
-  if (gsymbol->language == language_java)
+
+  if (gsymbol->language == language_java
+      || gsymbol->language == language_auto)
     {
       demangled =
         cplus_demangle (mangled,
@@ -611,7 +615,8 @@ symbol_init_demangled_name (struct general_symbol_info *gsymbol,
   demangled = symbol_find_demangled_name (gsymbol, mangled);
   if (gsymbol->language == language_cplus
       || gsymbol->language == language_java
-      || gsymbol->language == language_objc)
+      || gsymbol->language == language_objc
+      || gsymbol->language == language_m3)
     {
       if (demangled)
 	{
@@ -641,6 +646,7 @@ symbol_natural_name (const struct general_symbol_info *gsymbol)
     case language_cplus:
     case language_java:
     case language_objc:
+    case language_m3:
       if (gsymbol->language_specific.cplus_specific.demangled_name != NULL)
 	return gsymbol->language_specific.cplus_specific.demangled_name;
       break;
@@ -666,6 +672,7 @@ symbol_demangled_name (struct general_symbol_info *gsymbol)
     case language_cplus:
     case language_java:
     case language_objc:
+    case language_m3:
       if (gsymbol->language_specific.cplus_specific.demangled_name != NULL)
 	return gsymbol->language_specific.cplus_specific.demangled_name;
       break;
@@ -1023,8 +1030,21 @@ lookup_symbol (const char *name, const struct block *block,
 
   modified_name = name;
 
-  /* If we are using C++ or Java, demangle the name before doing a lookup, so
-     we can always binary search. */
+  /* If we are using Modula-3, C++, or java, demangle the name before doing a 
+     lookup, so we can always binary search. */
+#ifdef _LANG_m3
+  if (current_language->la_language == language_m3)
+    {
+      demangled_name = m3_demangle (name, 0);
+      if (demangled_name)
+	{
+	  mangled_name = name;
+	  modified_name = demangled_name;
+	  needtofreename = 1;
+	}
+    }
+  else 
+#endif 
   if (current_language->la_language == language_cplus)
     {
       demangled_name = cplus_demangle (name, DMGL_ANSI | DMGL_PARAMS);
@@ -1220,7 +1240,7 @@ lookup_symbol_aux_block (const char *name, const char *linkage_name,
    depending on whether or not we want to search global symbols or
    static symbols.  */
 
-static struct symbol *
+struct symbol *
 lookup_symbol_aux_symtabs (int block_index,
 			   const char *name, const char *linkage_name,
 			   const domain_enum domain,
@@ -1254,7 +1274,7 @@ lookup_symbol_aux_symtabs (int block_index,
    STATIC_BLOCK, depending on whether or not we want to search global
    symbols or static symbols.  */
 
-static struct symbol *
+struct symbol *
 lookup_symbol_aux_psymtabs (int block_index, const char *name,
 			    const char *linkage_name,
 			    const domain_enum domain,
@@ -1565,7 +1585,8 @@ lookup_partial_symbol (struct partial_symtab *pst, const char *name,
 	  if (!(center < top))
 	    internal_error (__FILE__, __LINE__, _("failed internal consistency check"));
 	  if (!do_linear_search
-	      && (SYMBOL_LANGUAGE (*center) == language_java))
+	      && ((SYMBOL_LANGUAGE (*center) == language_java)
+                  || (SYMBOL_LANGUAGE (*center) == language_m3)))
 	    {
 	      do_linear_search = 1;
 	    }
@@ -2461,7 +2482,7 @@ find_function_start_sal (struct symbol *sym, int funfirstline)
 
   /* Check if SKIP_PROLOGUE left us in mid-line, and the next
      line is still part of the same function.  */
-  if (sal.pc != pc
+  if (sal.pc != pc && sym != NULL
       && BLOCK_START (SYMBOL_BLOCK_VALUE (sym)) <= sal.end
       && sal.end < BLOCK_END (SYMBOL_BLOCK_VALUE (sym)))
     {

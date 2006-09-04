@@ -3764,7 +3764,7 @@ add_defn_to_vec (struct obstack *obstackp,
   struct ada_symbol_info *prevDefns = defns_collected (obstackp, 0);
 
   if (SYMBOL_TYPE (sym) != NULL)
-    SYMBOL_TYPE (sym) = ada_check_typedef (SYMBOL_TYPE (sym));
+    LHS_SYMBOL_TYPE (sym) = ada_check_typedef (SYMBOL_TYPE (sym));
   for (i = num_defns_collected (obstackp) - 1; i >= 0; i -= 1)
     {
       if (lesseq_defined_than (sym, prevDefns[i].sym))

@@ -149,7 +149,7 @@ add_class_symbol (struct type *type, CORE_ADDR addr)
   DEPRECATED_SYMBOL_NAME (sym) = TYPE_TAG_NAME (type);
   SYMBOL_CLASS (sym) = LOC_TYPEDEF;
   /*  SYMBOL_VALUE (sym) = valu; */
-  SYMBOL_TYPE (sym) = type;
+  LHS_SYMBOL_TYPE (sym) = type;
   SYMBOL_DOMAIN (sym) = STRUCT_DOMAIN;
   SYMBOL_VALUE_ADDRESS (sym) = addr;
   return sym;

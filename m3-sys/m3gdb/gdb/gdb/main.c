@@ -850,7 +850,7 @@ static void
 print_gdb_help (struct ui_file *stream)
 {
   fputs_unfiltered (_("\
-This is the GNU debugger.  Usage:\n\n\
+This is the GNU debugger plus Modula-3.  Usage:\n\n\
     gdb [options] [executable-file [core-file or process-id]]\n\
     gdb [options] --args executable-file [inferior-arguments ...]\n\n\
 Options:\n\n\

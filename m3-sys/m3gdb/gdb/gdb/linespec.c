@@ -32,11 +32,13 @@
 #include "value.h"
 #include "completer.h"
 #include "cp-abi.h"
+#include "m3-lang.h"
 #include "parser-defs.h"
 #include "block.h"
 #include "objc-lang.h"
 #include "linespec.h"
 #include "exceptions.h"
+#include "language.h"
 
 /* We share this one with symtab.c, but it is not exported widely. */
 
@@ -103,7 +105,8 @@ static struct symtabs_and_lines decode_line_2 (struct symbol *[],
 
 static struct symtab *symtab_from_filename (char **argptr,
 					    char *p, int is_quote_enclosed,
-					    int *not_found_ptr);
+					    int *not_found_ptr,
+                                            char **sans_file_name);
 
 static struct
 symtabs_and_lines decode_all_digits (char **argptr,
@@ -653,6 +656,27 @@ decode_line_2 (struct symbol *sym_arr[], int nelts, int funfirstline,
    lack of single quotes.  FIXME: write a linespec_completer which we
    can use as appropriate instead of make_symbol_completion_list.  */
 
+#ifdef _LANG_m3 
+static struct symtab_and_line
+find_m3_function_start_sal (
+     int funfirstline,
+     CORE_ADDR pc
+  ) 
+{
+  struct symtab_and_line sal;
+
+  if (funfirstline)
+    {
+      pc += DEPRECATED_FUNCTION_START_OFFSET;
+      SKIP_PROLOGUE (pc);
+    }
+  sal = find_pc_line (pc, 0);
+  sal.pc = pc;
+
+  return sal;
+}
+#endif /* _LANG_m3 */
+
 struct symtabs_and_lines
 decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 	       int default_line, char ***canonical, int *not_found_ptr)
@@ -673,6 +697,7 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
   int is_quote_enclosed;
   int is_objc_method = 0;
   char *saved_arg = *argptr;
+  char *sans_file_name = *argptr;
 
   if (not_found_ptr)
     *not_found_ptr = 0;
@@ -729,7 +754,7 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
       if (is_quoted)
 	*argptr = *argptr + 1;
       
-      /* Is it a C++ or Java compound data structure?
+      /* Is it a C++, Modula-3, or Java compound data structure?
 	 The check on p[1] == ':' is capturing the case of "::",
 	 since p[0]==':' was checked above.  
 	 Note that the call to decode_compound does everything
@@ -744,7 +769,7 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 	 symtab.  Also, move argptr past the filename.  */
 
       file_symtab = symtab_from_filename (argptr, p, is_quote_enclosed, 
-		      			  not_found_ptr);
+		      			  not_found_ptr, &sans_file_name);
     }
 #if 0
   /* No one really seems to know why this was added. It certainly
@@ -845,6 +870,87 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
   if (*copy == '$')
     return decode_dollar (copy, funfirstline, default_symtab,
 			  canonical, file_symtab);
+#ifdef _LANG_m3
+
+  /* Try to interpret the arg, minus any file name, as an expression */
+  { struct expression *expr;
+    struct symbol *exports;
+    struct value * val;
+    struct type *implementers;
+    struct symtabs_and_lines values;
+    CORE_ADDR pc; 
+
+    sans_file_name = saved_arg; 
+    if ((expr = (struct expression *) catch_errors 
+           ((int (*)()) parse_expression, sans_file_name, (char *) 0, RETURN_MASK_ALL)
+        ) != 0
+	&& (val = (struct value *) catch_errors 
+                  ((int (*)()) evaluate_expression, expr, (char *) 0, RETURN_MASK_ALL)
+           ) != 0) {
+      pc = 0;
+      if (TYPE_CODE (value_type (val)) == TYPE_CODE_FUNC) {
+	/* Found a minimal symbol of the form Unit__Entry
+	   (this happens when direct calls are used, -all_direct). */
+        pc = value_as_address (val); 
+        /*
+          val = value_coerce_function (val); 
+          pc = unpack_long (value_type (val), value_contents (val)); */
+
+      } else if (TYPE_CODE (value_type (val)) == TYPE_CODE_M3_PROC) {
+	pc = m3_value_as_address (val);
+
+	if (pc == 0 && expr->elts[1].opcode == STRUCTOP_M3_INTERFACE) {
+	  /* maybe we found a procedure exported by an interface but
+	     implemented by a module with a different name, and the
+	     init code did not run yet, so the interface 
+	     record isn't set yet.  It could also be a global var so
+	     we have to be careful. sans_file_name is of the form a.b, we
+	     want to isolate a. */
+	  int interface_name_length = *argptr - sans_file_name;
+	  char *interface_name = alloca (interface_name_length + 1);
+          /* FIXME:  Uses of foo are classic C buffer overrun bugs. */ 
+	  char foo [1000];
+	  int i;
+	  strncpy (interface_name, sans_file_name, interface_name_length);
+	  interface_name [interface_name_length] = 0;
+
+	  exports = lookup_symbol ("_m3_exporters", 0, 
+				     VAR_DOMAIN, 0, NULL);
+	  if (exports != 0
+	      && (implementers 
+		  = lookup_struct_elt_type (SYMBOL_TYPE (exports), 
+					    interface_name, 1))
+	      != 0) {
+	    for (i = 0; i < TYPE_NFIELDS (implementers); i++) {
+	      sprintf (foo, "%s%s", TYPE_FIELD_NAME (implementers, i),
+		       *argptr);
+	      if ((expr = (struct expression *) catch_errors
+                     ( (int (*)()) parse_expression, 
+                       foo, 
+                       (char *) 0, RETURN_MASK_ALL
+                     )
+                 )) {
+  		if ((val = (struct value *) catch_errors ((int (*)()) evaluate_expression,
+						 expr, (char *) 0,
+						 RETURN_MASK_ALL)) != 0) {
+		  if (TYPE_CODE (value_type (val)) == TYPE_CODE_M3_PROC) {
+		    pc = m3_value_as_address (val);
+		    break; }}}}}}}
+      if (pc != 0) {
+	while (**argptr != '\000') {
+	  (*argptr)++;
+	}
+	/* Arg is the name of a function */
+	values.sals = (struct symtab_and_line *)
+	xmalloc (sizeof (struct symtab_and_line));
+	values.sals[0] = find_m3_function_start_sal (funfirstline, pc);
+	values.nelts = 1;
+
+	return values;
+      }
+    }
+  }
+#endif /* _LANG_m3 */ 
 
   /* Look up that token as a variable.
      If file specified, use that file's per-file block to start with.  */
@@ -1502,7 +1608,7 @@ collect_methods (char *copy, struct type *t,
 
 static struct symtab *
 symtab_from_filename (char **argptr, char *p, int is_quote_enclosed, 
-		      int *not_found_ptr)
+		      int *not_found_ptr, char **sans_file_name)
 {
   char *p1;
   char *copy;
@@ -1514,6 +1620,7 @@ symtab_from_filename (char **argptr, char *p, int is_quote_enclosed,
   if ((*p == '"') && is_quote_enclosed)
     --p;
   copy = (char *) alloca (p - *argptr + 1);
+  *sans_file_name = *argptr;
   memcpy (copy, *argptr, p - *argptr);
   /* It may have the ending quote right after the file name.  */
   if (is_quote_enclosed && copy[p - *argptr - 1] == '"')
@@ -1536,6 +1643,7 @@ symtab_from_filename (char **argptr, char *p, int is_quote_enclosed,
   p = p1 + 1;
   while (*p == ' ' || *p == '\t')
     p++;
+  *sans_file_name = p;  
   *argptr = p;
 
   return file_symtab;
@@ -1774,7 +1882,16 @@ symbol_found (int funfirstline, char ***canonical, char *copy,
 
       /* We might need a canonical line spec if it is a static
 	 function.  */
-      if (file_symtab == 0)
+
+      if ((file_symtab == 0)
+          && (sym->ginfo.language != language_m3)
+          /* Modula-3 parsing above fails to parse FILENAME:MOD.DECL
+             and finds the wrong thing for MOD.DECL, if we strip off
+             the FILENAME before parsing.  This prevents building a
+             canonical name at all for MOD.DECL, so that we will
+             find it as before (in the C++/Java qualified name section)
+             when resetting the breakpoint. */
+         )
 	{
 	  struct blockvector *bv = BLOCKVECTOR (sym_symtab);
 	  struct block *b = BLOCKVECTOR_BLOCK (bv, STATIC_BLOCK);

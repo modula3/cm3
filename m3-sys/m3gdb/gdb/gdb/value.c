@@ -83,6 +83,9 @@ struct value
   struct frame_id frame_id;
 
   /* Type of the value.  */
+#ifdef _LANG_m3
+  char m3_uid [9]; 
+#endif 
   struct type *type;
 
   /* If a value represents a C++ object, then the `type' field gives
@@ -909,10 +912,10 @@ value_as_address (struct value *val)
      cannot be modified.
 
      Upon entry to this function, if VAL is a value of type `function'
-     (that is, TYPE_CODE (VALUE_TYPE (val)) == TYPE_CODE_FUNC), then
+     (that is, TYPE_CODE (value_type (val)) == TYPE_CODE_FUNC), then
      VALUE_ADDRESS (val) is the address of the function.  This is what
      you'll get if you evaluate an expression like `main'.  The call
-     to COERCE_ARRAY below actually does all the usual unary
+     to coerce_array below actually does all the usual unary
      conversions, which includes converting values of type `function'
      to `pointer to function'.  This is the challenging conversion
      discussed above.  Then, `unpack_long' will convert that pointer
@@ -1005,6 +1008,11 @@ unpack_long (struct type *type, const gdb_byte *valaddr)
   if (current_language->la_language == language_scm
       && is_scmvalue_type (type))
     return scm_unpack (type, valaddr, TYPE_CODE_INT);
+
+  /* REVIEWME: What is this for? If len > sizeof(LONGEST), it will cause 
+             extract(un)signed_integer to fail. Should this ever happen? 
+             rodney.bates@wichita.edu */ 
+  if ( M3_TYPEP ( code) ) { code = TYPE_CODE_INT; } 
 
   switch (code)
     {
@@ -1461,11 +1469,30 @@ retry:
     case TYPE_CODE_ENUM:
     case TYPE_CODE_BOOL:
     case TYPE_CODE_RANGE:
+#ifdef _LANG_m3
+    case TYPE_CODE_M3_INTEGER:
+    case TYPE_CODE_M3_CARDINAL:
+    case TYPE_CODE_M3_CHAR:
+    case TYPE_CODE_M3_WIDECHAR:
+    case TYPE_CODE_M3_ENUM:
+    case TYPE_CODE_M3_SUBRANGE:
+    case TYPE_CODE_M3_BOOLEAN:
+    case TYPE_CODE_M3_PACKED:
+#endif 
+
       store_signed_integer (value_contents_raw (val), len, num);
       break;
 
     case TYPE_CODE_REF:
     case TYPE_CODE_PTR:
+#ifdef _LANG_m3
+    case TYPE_CODE_M3_REFANY:
+    case TYPE_CODE_M3_POINTER:
+    case TYPE_CODE_M3_ADDRESS:
+    case TYPE_CODE_M3_ROOT:
+    case TYPE_CODE_M3_UN_ROOT:
+    case TYPE_CODE_M3_NULL:
+#endif 
       store_typed_address (value_contents_raw (val), type, (CORE_ADDR) num);
       break;
 
