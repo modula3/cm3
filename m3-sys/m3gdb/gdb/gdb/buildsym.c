@@ -45,6 +45,8 @@
 #include "block.h"
 #include "cp-support.h"
 #include "dictionary.h"
+#include "language.h" 
+#include "m3-lang.h" 
 
 /* Ask buildsym.h to define the vars it normally declares `extern'.  */
 #define	EXTERN
@@ -56,6 +58,8 @@
    questionable--see comment where we call them).  */
 
 #include "stabsread.h"
+
+#include <stdbool.h>
 
 /* List of free `struct pending' structures for reuse.  */
 
@@ -320,6 +324,9 @@ finish_block (struct symbol *symbol, struct pending **listhead,
 		    case LOC_COMPUTED_ARG:
 		      TYPE_FIELD_TYPE (ftype, iparams) = SYMBOL_TYPE (sym);
 		      TYPE_FIELD_ARTIFICIAL (ftype, iparams) = 0;
+#ifdef _LANG_m3
+                      m3_fix_param ( ftype, iparams, sym); 
+#endif 
 		      iparams++;
 		      break;
 		    case LOC_UNDEF:
@@ -819,6 +826,9 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
   struct subfile *subfile;
   struct context_stack *cstk;
   struct subfile *nextsub;
+#ifdef _LANG_m3
+  bool m3_patch_done = false;
+#endif 
 
   /* Finish the lexical context of the last function in the file; pop
      the context stack.  */
@@ -928,7 +938,15 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
          ignore this file and any line number info in it.  */
       if (blockvector)
 	{
-	  if (subfile->line_vector)
+#ifdef _LANG_m3
+          /* Presumably, there should only be one subfile for a Modula-3
+             compilation, but I'm paranoid. rodney.bates@wichita.edu */
+          if (subfile->language == language_m3 && !m3_patch_done)
+            { m3_patch_nested_procs ( blockvector ); 
+              m3_patch_done = true;
+            } 
+#endif
+   	  if (subfile->line_vector)
 	    {
 	      linetablesize = sizeof (struct linetable) +
 	        subfile->line_vector->nitems * sizeof (struct linetable_entry);

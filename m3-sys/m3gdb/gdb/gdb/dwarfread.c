@@ -1146,7 +1146,7 @@ read_structure_scope (struct dieinfo *dip, char *thisdie, char *enddie,
       sym = new_symbol (dip, objfile);
       if (sym != NULL)
 	{
-	  SYMBOL_TYPE (sym) = type;
+	  LHS_SYMBOL_TYPE (sym) = type;
 	  if (cu_language == language_cplus)
 	    {
 	      synthesize_typedef (dip, objfile, type);
@@ -1607,7 +1607,7 @@ read_enumeration (struct dieinfo *dip, char *thisdie, char *enddie,
   sym = new_symbol (dip, objfile);
   if (sym != NULL)
     {
-      SYMBOL_TYPE (sym) = type;
+      LHS_SYMBOL_TYPE (sym) = type;
       if (cu_language == language_cplus)
 	{
 	  synthesize_typedef (dip, objfile, type);
@@ -1726,7 +1726,7 @@ enum_type (struct dieinfo *dip, struct objfile *objfile)
 	  SYMBOL_INIT_LANGUAGE_SPECIFIC (sym, cu_language);
 	  SYMBOL_DOMAIN (sym) = VAR_DOMAIN;
 	  SYMBOL_CLASS (sym) = LOC_CONST;
-	  SYMBOL_TYPE (sym) = type;
+	  LHS_SYMBOL_TYPE (sym) = type;
 	  SYMBOL_VALUE (sym) = FIELD_BITPOS (list->field);
 	  if (SYMBOL_VALUE (sym) < 0)
 	    unsigned_enum = 0;
@@ -2417,7 +2417,7 @@ dwarf_psymtab_to_symtab (struct partial_symtab *pst)
 	         disconcerting pauses.  */
 	      if (info_verbose)
 		{
-		  printf_filtered (_("Reading in symbols for %s..."),
+		  printf_filtered (_("Reading in dwarf symbols for %s..."),
 				   pst->filename);
 		  gdb_flush (gdb_stdout);
 		}
@@ -2858,7 +2858,7 @@ new_symbol (struct dieinfo *dip, struct objfile *objfile)
       /* default assumptions */
       SYMBOL_DOMAIN (sym) = VAR_DOMAIN;
       SYMBOL_CLASS (sym) = LOC_STATIC;
-      SYMBOL_TYPE (sym) = decode_die_type (dip);
+      LHS_SYMBOL_TYPE (sym) = decode_die_type (dip);
 
       /* If this symbol is from a C++ compilation, then attempt to cache the
          demangled form for future reference.  This is a typical time versus
@@ -2876,7 +2876,7 @@ new_symbol (struct dieinfo *dip, struct objfile *objfile)
 	case TAG_global_subroutine:
 	case TAG_subroutine:
 	  SYMBOL_VALUE_ADDRESS (sym) = dip->at_low_pc;
-	  SYMBOL_TYPE (sym) = lookup_function_type (SYMBOL_TYPE (sym));
+	  LHS_SYMBOL_TYPE (sym) = lookup_function_type (SYMBOL_TYPE (sym));
 	  if (dip->at_prototyped)
 	    TYPE_FLAGS (SYMBOL_TYPE (sym)) |= TYPE_FLAG_PROTOTYPED;
 	  SYMBOL_CLASS (sym) = LOC_BLOCK;
@@ -3017,7 +3017,7 @@ synthesize_typedef (struct dieinfo *dip, struct objfile *objfile,
       DEPRECATED_SYMBOL_NAME (sym) = create_name (dip->at_name,
 				       &objfile->objfile_obstack);
       SYMBOL_INIT_LANGUAGE_SPECIFIC (sym, cu_language);
-      SYMBOL_TYPE (sym) = type;
+      LHS_SYMBOL_TYPE (sym) = type;
       SYMBOL_CLASS (sym) = LOC_TYPEDEF;
       SYMBOL_DOMAIN (sym) = VAR_DOMAIN;
       add_symbol_to_list (sym, list_in_scope);

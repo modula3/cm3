@@ -1015,7 +1015,17 @@ reinit_frame_cache (void)
   /* FIXME: The inferior_ptid test is wrong if there is a corefile.  */
   if (PIDGET (inferior_ptid) != 0)
     {
+       /* I can't imagine why this is here.  It happens unconditionally
+          after flush_cached_frames, just above. That means get_current_frame 
+          creates a sentinal frame and one frame that is zero in almost
+          every field.  Then select frame uses a bad PC from that, finds
+          a garbage source file, and sets the language wrong from that.
+          -- BUT -- removing it makes nonlocal variable lookup fail!
+          rodney.bates@wichita.edu, 2005-01-29. 
+       */
+#if 1 
       select_frame (get_current_frame ());
+#endif 
     }
 }
 

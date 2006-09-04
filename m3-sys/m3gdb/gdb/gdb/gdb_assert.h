@@ -43,7 +43,7 @@
 #endif
 #endif
 
-/* This prints an "Assertion failed" message, aksing the user if they
+/* This prints an "Assertion failed" message, asking the user if they
    want to continue, dump core, or just exit.  */
 #if defined (ASSERT_FUNCTION)
 #define gdb_assert_fail(assertion, file, line, function)                      \

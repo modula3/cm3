@@ -876,7 +876,10 @@ operator_length_standard (struct expression *expr, int endpos,
     case OP_FUNCALL:
     case OP_F77_UNDETERMINED_ARGLIST:
       oplen = 3;
-      args = 1 + longest_to_int (expr->elts[endpos - 2].longconst);
+      args = 1 /* Count the expression describing the function called, in addition
+                  to the arguments.  This makes prefixify move the call operator
+                  to the left of the function.  */  
+             + longest_to_int (expr->elts[endpos - 2].longconst);
       break;
 
     case OP_OBJC_MSGCALL:	/* Objective C message (method) call */

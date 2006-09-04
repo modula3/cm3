@@ -53,6 +53,7 @@
 #include "stabsread.h"
 #include "complaints.h"
 #include "demangle.h"
+#include "m3-lang.h"
 #include "gdb_assert.h"
 #include "block.h"
 #include "dictionary.h"
@@ -311,7 +312,7 @@ mdebug_psymtab_to_symtab (struct partial_symtab *pst)
 
   if (info_verbose)
     {
-      printf_filtered (_("Reading in symbols for %s..."), pst->filename);
+      printf_filtered (_("Reading in mdebug symbols for %s..."), pst->filename);
       gdb_flush (gdb_stdout);
     }
 
@@ -660,9 +661,9 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
       /* Type could be missing if file is compiled without debugging info.  */
       if (SC_IS_UNDEF (sh->sc)
 	  || sh->sc == scNil || sh->index == indexNil)
-	SYMBOL_TYPE (s) = nodebug_var_symbol_type;
+	LHS_SYMBOL_TYPE (s) = nodebug_var_symbol_type;
       else
-	SYMBOL_TYPE (s) = parse_type (cur_fd, ax, sh->index, 0, bigend, name);
+	LHS_SYMBOL_TYPE (s) = parse_type (cur_fd, ax, sh->index, 0, bigend, name);
       /* Value of a data symbol is its memory address */
       break;
 
@@ -699,7 +700,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
 	  break;
 	}
       SYMBOL_VALUE (s) = svalue;
-      SYMBOL_TYPE (s) = parse_type (cur_fd, ax, sh->index, 0, bigend, name);
+      LHS_SYMBOL_TYPE (s) = parse_type (cur_fd, ax, sh->index, 0, bigend, name);
       add_symbol (s, top_stack->cur_block);
       break;
 
@@ -708,7 +709,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
       SYMBOL_DOMAIN (s) = VAR_DOMAIN;	/* so that it can be used */
       SYMBOL_CLASS (s) = LOC_LABEL;	/* but not misused */
       SYMBOL_VALUE_ADDRESS (s) = (CORE_ADDR) sh->value;
-      SYMBOL_TYPE (s) = mdebug_type_int;
+      LHS_SYMBOL_TYPE (s) = mdebug_type_int;
       add_symbol (s, top_stack->cur_block);
       break;
 
@@ -789,7 +790,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
       add_symbol (s, b);
 
       /* Make a type for the procedure itself */
-      SYMBOL_TYPE (s) = lookup_function_type (t);
+      LHS_SYMBOL_TYPE (s) = lookup_function_type (t);
 
       /* All functions in C++ have prototypes.  For C we don't have enough
          information in the debug info.  */
@@ -1073,7 +1074,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
 		  obsavestring (f->name, strlen (f->name),
 				&current_objfile->objfile_obstack);
 		SYMBOL_CLASS (enum_sym) = LOC_CONST;
-		SYMBOL_TYPE (enum_sym) = t;
+		LHS_SYMBOL_TYPE (enum_sym) = t;
 		SYMBOL_DOMAIN (enum_sym) = VAR_DOMAIN;
 		SYMBOL_VALUE (enum_sym) = tsym.value;
 		if (SYMBOL_VALUE (enum_sym) < 0)
@@ -1097,7 +1098,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
 
 	/* gcc puts out an empty struct for an opaque struct definitions,
 	   do not create a symbol for it either.  */
-	if (TYPE_NFIELDS (t) == 0)
+	if (TYPE_NFIELDS (t) == 0 && psymtab_language != language_m3)
 	  {
 	    TYPE_FLAGS (t) |= TYPE_FLAG_STUB;
 	    break;
@@ -1107,7 +1108,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
 	SYMBOL_DOMAIN (s) = STRUCT_DOMAIN;
 	SYMBOL_CLASS (s) = LOC_TYPEDEF;
 	SYMBOL_VALUE (s) = 0;
-	SYMBOL_TYPE (s) = t;
+	LHS_SYMBOL_TYPE (s) = t;
 	add_symbol (s, top_stack->cur_block);
 	break;
 
@@ -1142,6 +1143,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
     case stEnd:		/* end (of anything) */
       if (sh->sc == scInfo || SC_IS_COMMON (sh->sc))
 	{
+	  m3_decode_struct (top_stack->cur_type);
 	  /* Finished with type */
 	  top_stack->cur_type = 0;
 	}
@@ -1162,7 +1164,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
 	  s = new_symbol (MDEBUG_EFI_SYMBOL_NAME);
 	  SYMBOL_DOMAIN (s) = LABEL_DOMAIN;
 	  SYMBOL_CLASS (s) = LOC_CONST;
-	  SYMBOL_TYPE (s) = mdebug_type_void;
+	  LHS_SYMBOL_TYPE (s) = mdebug_type_void;
 	  e = ((struct mdebug_extra_func_info *)
 	       obstack_alloc (&current_objfile->objfile_obstack,
 			      sizeof (struct mdebug_extra_func_info)));
@@ -1308,7 +1310,7 @@ parse_symbol (SYMR *sh, union aux_ext *ax, char *ext_sh, int bigend,
       SYMBOL_DOMAIN (s) = VAR_DOMAIN;
       SYMBOL_CLASS (s) = LOC_TYPEDEF;
       SYMBOL_BLOCK_VALUE (s) = top_stack->cur_block;
-      SYMBOL_TYPE (s) = t;
+      LHS_SYMBOL_TYPE (s) = t;
       add_symbol (s, top_stack->cur_block);
 
       /* Incomplete definitions of structs should not get a name.  */
@@ -1577,10 +1579,11 @@ parse_type (int fd, union aux_ext *ax, unsigned int aux_index, int *bs,
 	     exception is if we guessed wrong re struct/union/enum.
 	     But for struct vs. union a wrong guess is harmless, so
 	     don't complain().  */
-	  if ((TYPE_CODE (tp) == TYPE_CODE_ENUM
+	  if (((TYPE_CODE (tp) == TYPE_CODE_ENUM
 	       && type_code != TYPE_CODE_ENUM)
 	      || (TYPE_CODE (tp) != TYPE_CODE_ENUM
 		  && type_code == TYPE_CODE_ENUM))
+	      && !M3_TYPEP (TYPE_CODE (tp)))
 	    {
 	      bad_tag_guess_complaint (sym_name);
 	    }
@@ -1983,7 +1986,7 @@ parse_procedure (PDR *pr, struct symtab *search_symtab,
   if (processing_gcc_compilation == 0
       && found_ecoff_debugging_info == 0
       && TYPE_CODE (TYPE_TARGET_TYPE (SYMBOL_TYPE (s))) == TYPE_CODE_VOID)
-    SYMBOL_TYPE (s) = nodebug_func_symbol_type;
+    LHS_SYMBOL_TYPE (s) = nodebug_func_symbol_type;
 }
 
 /* Parse the external symbol ES. Just call parse_symbol() after
@@ -3487,10 +3490,14 @@ parse_partial_symbols (struct objfile *objfile)
 		case stBlock:	/* { }, str, un, enum */
 		  /* Do not create a partial symbol for cc unnamed aggregates
 		     and gcc empty aggregates. */
+		  /* Unless language is Modula-3 (fake C structures
+		   * are used to pass type and symbol information!)
+		   */
 		  if ((sh.sc == scInfo
 		       || SC_IS_COMMON (sh.sc))
-		      && sh.iss != 0
-		      && sh.index != cur_sdx + 2)
+		      && (psymtab_language == language_m3
+			|| (sh.iss != 0 && sh.index != cur_sdx + 2)))
+
 		    {
 		      add_psymbol_to_list (name, strlen (name),
 					   STRUCT_DOMAIN, LOC_TYPEDEF,
@@ -3968,7 +3975,7 @@ psymtab_to_symtab_1 (struct partial_symtab *pst, char *filename)
 		  memset (e, 0, sizeof (struct mdebug_extra_func_info));
 		  SYMBOL_DOMAIN (s) = LABEL_DOMAIN;
 		  SYMBOL_CLASS (s) = LOC_CONST;
-		  SYMBOL_TYPE (s) = mdebug_type_void;
+		  LHS_SYMBOL_TYPE (s) = mdebug_type_void;
 		  SYMBOL_VALUE (s) = (long) e;
 		  e->pdr.framereg = -1;
 		  add_symbol_to_list (s, &local_symbols);

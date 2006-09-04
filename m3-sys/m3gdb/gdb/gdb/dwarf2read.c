@@ -2316,7 +2316,7 @@ dwarf2_psymtab_to_symtab (struct partial_symtab *pst)
 	{
 	  if (info_verbose)
 	    {
-	      printf_filtered (_("Reading in symbols for %s..."), pst->filename);
+	      printf_filtered (_("Reading in dwarf2 symbols for %s..."), pst->filename);
 	      gdb_flush (gdb_stdout);
 	    }
 
@@ -6800,9 +6800,9 @@ new_symbol (struct die_info *die, struct type *type, struct dwarf2_cu *cu)
       SYMBOL_DOMAIN (sym) = VAR_DOMAIN;
       SYMBOL_CLASS (sym) = LOC_STATIC;
       if (type != NULL)
-	SYMBOL_TYPE (sym) = type;
+	LHS_SYMBOL_TYPE (sym) = type;
       else
-	SYMBOL_TYPE (sym) = die_type (die, cu);
+	LHS_SYMBOL_TYPE (sym) = die_type (die, cu);
       attr = dwarf2_attr (die, DW_AT_decl_line, cu);
       if (attr)
 	{
@@ -6836,8 +6836,8 @@ new_symbol (struct die_info *die, struct type *type, struct dwarf2_cu *cu)
 	  /* Compilation with minimal debug info may result in variables
 	     with missing type entries. Change the misleading `void' type
 	     to something sensible.  */
-	  if (TYPE_CODE (SYMBOL_TYPE (sym)) == TYPE_CODE_VOID)
-	    SYMBOL_TYPE (sym) = init_type (TYPE_CODE_INT,
+          if (TYPE_CODE (SYMBOL_TYPE (sym)) == TYPE_CODE_VOID)
+	    LHS_SYMBOL_TYPE (sym) = init_type (TYPE_CODE_INT,
 					   TARGET_INT_BIT / HOST_CHAR_BIT, 0,
 					   "<variable, no debug info>",
 					   objfile);

@@ -870,7 +870,7 @@ extern void set_gdbarch_skip_prologue (struct gdbarch *gdbarch, gdbarch_skip_pro
 #error "Non multi-arch definition of SKIP_PROLOGUE"
 #endif
 #if !defined (SKIP_PROLOGUE)
-#define SKIP_PROLOGUE(ip) (gdbarch_skip_prologue (current_gdbarch, ip))
+#define SKIP_PROLOGUE(ip) ((ip)=gdbarch_skip_prologue (current_gdbarch, (ip)))
 #endif
 
 typedef int (gdbarch_inner_than_ftype) (CORE_ADDR lhs, CORE_ADDR rhs);

@@ -31,6 +31,7 @@ struct value;
 struct objfile;
 struct expression;
 struct ui_file;
+struct language_defn;
 
 /* enum exp_opcode;     ANSI's `wisdom' didn't include forward enum decls. */
 
@@ -39,6 +40,7 @@ struct ui_file;
 /* #include "lang_def.h" */
 #define	_LANG_c
 #define	_LANG_m2
+#define	_LANG_m3
 #define  _LANG_fortran
 #define  _LANG_pascal
 

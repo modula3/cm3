@@ -59,6 +59,8 @@
 
 #include "gdb_assert.h"
 #include "gdb_string.h"
+#include "language.h" 
+#include "m3-lang.h" 
 
 #include "aout/aout64.h"
 #include "aout/stab_gnu.h"	/* We always use GNU stabs, not native, now */
@@ -2410,7 +2412,7 @@ dbx_psymtab_to_symtab (struct partial_symtab *pst)
          to avoid disconcerting pauses.  */
       if (info_verbose)
 	{
-	  printf_filtered ("Reading in symbols for %s...", pst->filename);
+	  printf_filtered ("Reading in dbx symbols for %s...", pst->filename);
 	  gdb_flush (gdb_stdout);
 	}
 
@@ -3172,6 +3174,10 @@ no enclosing block"));
 		}
 #endif
 	    }
+#ifdef _LANG_m3
+          m3_check_compiler ( name ); 
+          if ( processing_m3_compilation ) { } 
+#endif
 	  else
 	    n_opt_found = 1;
 	}

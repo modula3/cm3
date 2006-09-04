@@ -44,6 +44,7 @@
 #include "gdb_assert.h"
 #include "cp-support.h"
 #include "observer.h"
+#include "m3-lang.h" 
 
 extern int overload_debug;
 /* Local functions.  */
@@ -218,6 +219,9 @@ value_cast (struct type *type, struct value *arg2)
 
   if (value_type (arg2) == type)
     return arg2;
+#ifdef _LANG_m3
+  if ( is_m3_type ( value_type ( arg2 ) ) ) { return arg2; } 
+#endif 
 
   CHECK_TYPEDEF (type);
   code1 = TYPE_CODE (type);

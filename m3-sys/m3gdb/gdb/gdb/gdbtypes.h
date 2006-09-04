@@ -149,6 +149,42 @@ enum type_code
        (e.g. FORTRAN "logical" used as unsigned int).  */
     TYPE_CODE_BOOL,
 
+    /* Modula-3 */
+    TYPE_CODE_M3_first,
+    TYPE_CODE_M3_ARRAY,
+    TYPE_CODE_M3_OPEN_ARRAY,
+    TYPE_CODE_M3_ENUM,
+    TYPE_CODE_M3_PACKED,
+    TYPE_CODE_M3_RECORD,
+    TYPE_CODE_M3_OBJECT,
+    TYPE_CODE_M3_SET,
+    TYPE_CODE_M3_SUBRANGE,
+    TYPE_CODE_M3_POINTER,
+    TYPE_CODE_M3_INDIRECT,
+    TYPE_CODE_M3_PROC,
+    TYPE_CODE_M3_PROC_CLOSURE,
+    TYPE_CODE_M3_METHOD,
+    TYPE_CODE_M3_OPAQUE,
+    TYPE_CODE_M3_ADDRESS,
+    TYPE_CODE_M3_BOOLEAN,
+    TYPE_CODE_M3_CHAR,
+    TYPE_CODE_M3_WIDECHAR,
+    TYPE_CODE_M3_INTEGER,
+    TYPE_CODE_M3_CARDINAL,
+    TYPE_CODE_M3_REFANY,
+    TYPE_CODE_M3_TRANSIENT_REFANY,
+    TYPE_CODE_M3_ROOT,
+    TYPE_CODE_M3_TRANSIENT_ROOT,
+    TYPE_CODE_M3_UN_ROOT,
+    TYPE_CODE_M3_MUTEX,
+    TYPE_CODE_M3_TEXT,
+    TYPE_CODE_M3_NULL,
+    TYPE_CODE_M3_TYPE,
+    TYPE_CODE_M3_TYPE_NAME,
+    TYPE_CODE_M3_VOID,
+
+    TYPE_CODE_M3_last,
+
     /* Fortran */
     TYPE_CODE_COMPLEX,		/* Complex float */
 
@@ -158,6 +194,9 @@ enum type_code
 
     TYPE_CODE_NAMESPACE		/* C++ namespace.  */
   };
+
+#define M3_TYPEP(x) (((int)TYPE_CODE_M3_first < (int) (x)) \
+		     && ((int) (x) < (int) (TYPE_CODE_M3_last)))
 
 /* For now allow source to use TYPE_CODE_CLASS for C++ classes, as an
    alias for TYPE_CODE_STRUCT.  This is for DWARF, which has a distinct
@@ -318,6 +357,15 @@ enum array_bound_type
 /* This structure is space-critical.
    Its layout has been tweaked to reduce the space used.  */
 
+/* Modula 3 */
+
+struct m3_type 
+  { LONGEST a, b, c, d, e;
+    char *s;
+    LONGEST m3_size; 
+    char *unit, *name;
+  };
+
 struct main_type
 {
   /* Code for kind of type */
@@ -448,6 +496,7 @@ struct main_type
        In a function or member type, type of this argument.
        In an array type, the domain-type of the array.  */
 
+    char m3_uid [9];
     struct type *type;
 
     /* Name of field, value or argument.
@@ -486,6 +535,16 @@ struct main_type
        that resides within the type.  */
 
     const struct floatformat *floatformat;
+
+    struct m3_type m3_stuff; 
+    /* Rodney M. Bates: It would be nice to put m3_stuff out of line,
+       like cplus_stuff is, but that would require studying gobs of
+       code to get the allocation  and deallocation right.  Since 
+       users of m3gdb are going to be mostly debugging Modula-3
+       anyway, the inline m3_stuff will seldom be a waste. In fact,
+       the savings of a pointer and allocated object overhead might
+       predominate. */ 
+
   } type_specific;
 };
 
@@ -938,6 +997,88 @@ extern void allocate_cplus_struct_type (struct type *);
 #define TYPE_FN_FIELD_VOFFSET(thisfn, n) ((thisfn)[n].voffset-2)
 #define TYPE_FN_FIELD_VIRTUAL_P(thisfn, n) ((thisfn)[n].voffset > 1)
 #define TYPE_FN_FIELD_STATIC_P(thisfn, n) ((thisfn)[n].voffset == VOFFSET_STATIC)
+
+/* Modula 3 */
+
+#define TYPE_FIELD_M3_UID(t,n) (TYPE_FIELDS(t)[n].m3_uid)
+
+extern struct type *m3_resolve_type PARAMS ((char *));
+/* FIXME: Get this M3 stuff out of gdbtypes.h, including the above prototype,
+   which duplicates one in m3-lang.h. */
+
+#define TYPE_M3_FIELD_TYPE(t,n) \
+  (TYPE_FIELD_TYPE (t, n) \
+    ? TYPE_FIELD_TYPE (t, n) \
+    : (/*TYPE_FIELD_TYPE (t, n) = */m3_resolve_type (TYPE_FIELD_M3_UID (t,n))))
+/*     ^ See SYMBOL_TYPE in symtab.h.  rodney.bates@wichita.edu 2005-2-9 */ 
+
+#define TYPE_M3_UNIT(t)                 TYPE_M3_STUFF(t).unit
+#define TYPE_M3_NAME(t)                 TYPE_M3_STUFF(t).name
+
+#define TYPE_M3_SIZE(t)                 TYPE_M3_STUFF(t).m3_size
+#define TYPE_M3_STUFF(t)                TYPE_MAIN_TYPE(t)->type_specific.m3_stuff
+
+#define TYPE_M3_TARGET(t)               TYPE_M3_FIELD_TYPE(t,0)
+
+
+#define TYPE_M3_ARRAY_INDEX(t)          TYPE_M3_FIELD_TYPE(t,0)
+#define LHS_TYPE_M3_ARRAY_INDEX(t)      TYPE_FIELD_TYPE(t,0)
+#define TYPE_M3_ARRAY_ELEM(t)           TYPE_M3_FIELD_TYPE(t,1)
+#define LHS_TYPE_M3_ARRAY_ELEM(t)       TYPE_FIELD_TYPE(t,1)
+
+#define TYPE_M3_OPEN_ARRAY_ELEM(t)      TYPE_M3_FIELD_TYPE(t,0)
+
+#define TYPE_M3_ENUM_NVALS(t)           TYPE_NFIELDS(t)
+#define TYPE_M3_ENUM_VALNAME(t,n)       TYPE_FIELD_NAME(t,n)
+
+#define TYPE_M3_PACKED_TARGET(t)        TYPE_M3_FIELD_TYPE(t,0)
+
+#define TYPE_M3_REC_NFIELDS(t)          TYPE_NFIELDS(t)
+#define TYPE_M3_REC_FIELD_NAME(t,n)     TYPE_FIELD_NAME(t,n)
+#define TYPE_M3_REC_FIELD_TYPE(t,n)     TYPE_M3_FIELD_TYPE(t,n)
+#define TYPE_M3_REC_FIELD_BITPOS(t,n)   TYPE_FIELD_BITPOS(t,n)
+#define TYPE_M3_REC_FIELD_BITSIZE(t,n)  TYPE_FIELD_BITSIZE(t,n)
+
+#define TYPE_M3_OBJ_SUPER(t)            TYPE_M3_FIELD_TYPE(t,0)
+#define TYPE_M3_OBJ_NFIELDS(t)          TYPE_M3_STUFF(t).a
+#define TYPE_M3_OBJ_FIELD_NAME(t,n)     TYPE_FIELD_NAME(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_FIELD_TYPE(t,n)     TYPE_M3_FIELD_TYPE(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_FIELD_BITPOS(t,n)   TYPE_FIELD_BITPOS(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_FIELD_BITSIZE(t,n)  TYPE_FIELD_BITSIZE(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_NMETHODS(t)         TYPE_M3_STUFF(t).b
+#define TYPE_M3_OBJ_METHOD_NAME(t,n)    TYPE_FIELD_NAME(t,1+n)
+#define TYPE_M3_OBJ_METHOD_TYPE(t,n)    TYPE_M3_FIELD_TYPE(t,1+n)
+#define TYPE_M3_OBJ_METHOD_BITPOS(t,n)  TYPE_FIELD_BITPOS(t,1+n)
+#define TYPE_M3_OBJ_METHOD_BITSIZE(t,n) TYPE_FIELD_BITSIZE(t,1+n)
+#define TYPE_M3_OBJ_TRACED(t)           TYPE_M3_STUFF(t).c
+#define TYPE_M3_OBJ_BRANDED(t)          TYPE_M3_STUFF(t).d
+#define TYPE_M3_OBJ_BRAND(t)            TYPE_M3_STUFF(t).s
+
+#define TYPE_M3_SET_TARGET(t)           TYPE_M3_FIELD_TYPE(t,0)
+
+#define TYPE_M3_SUBRANGE_MIN(t)         TYPE_M3_STUFF(t).a
+#define TYPE_M3_SUBRANGE_MAX(t)         TYPE_M3_STUFF(t).b
+#define TYPE_M3_SUBRANGE_TARGET(t)      TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_M3_POINTER_TARGET(t)       TYPE_M3_FIELD_TYPE (t,0)
+#define TYPE_M3_POINTER_TRACED(t)       TYPE_M3_STUFF(t).a
+#define TYPE_M3_POINTER_BRANDED(t)      TYPE_M3_STUFF(t).b
+#define TYPE_M3_POINTER_BRAND(t)        TYPE_M3_STUFF(t).s
+
+#define TYPE_M3_INDIRECT_TARGET(t)      TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_M3_PROC_NARGS(t)           TYPE_M3_STUFF(t).a
+#define TYPE_M3_PROC_NRAISES(t)         TYPE_M3_STUFF(t).b
+#define TYPE_M3_PROC_RESTYPE(t)         TYPE_M3_FIELD_TYPE(t,0)
+#define TYPE_M3_PROC_ARG_NAME(t,n)      TYPE_FIELD_NAME(t,n+1)
+#define TYPE_M3_PROC_ARG_TYPE(t,n)      TYPE_M3_FIELD_TYPE(t,n+1)
+#define TYPE_M3_PROC_RAISE_NAME(t,n)    TYPE_FIELD_NAME(t,n+1+TYPE_M3_PROC_NARGS(t))
+#define TYPE_M3_PROC_RAISE_TYPE(t,n)    TYPE_M3_FIELD_TYPE(t,n+1+TYPE_M3_PROC_NARGS(t))
+
+#define TYPE_M3_OPAQUE_REVEALED(t)      TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_M3_TYPE_TYPE(t)            TYPE_M3_FIELD_TYPE (t,0)
+#define TYPE_M3_TYPE_NAME_TYPE(t)       TYPE_M3_FIELD_TYPE (t,0)
 
 #define TYPE_RUNTIME_PTR(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->runtime_ptr)
 #define TYPE_VTABLE(thistype) (TYPE_RUNTIME_PTR(thistype)->has_vtable)

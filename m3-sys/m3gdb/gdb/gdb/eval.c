@@ -49,8 +49,10 @@ extern int objectprint;
 
 static struct value *evaluate_subexp_for_sizeof (struct expression *, int *);
 
+/* This function made visible in expression.h m3_lang.c needs it. 
 static struct value *evaluate_subexp_for_address (struct expression *,
 						  int *, enum noside);
+*/
 
 static struct value *evaluate_subexp (struct type *, struct expression *,
 				      int *, enum noside);
@@ -2113,7 +2115,7 @@ nosideret:
    NOSIDE may be EVAL_AVOID_SIDE_EFFECTS;
    then only the type of the result need be correct.  */
 
-static struct value *
+struct value *
 evaluate_subexp_for_address (struct expression *exp, int *pos,
 			     enum noside noside)
 {

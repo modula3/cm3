@@ -35,6 +35,7 @@
 #include "cp-abi.h"
 #include "typeprint.h"
 #include "gdb_string.h"
+#include "m3-lang.h" 
 #include <errno.h>
 
 /* For real-type printing in whatis_exp() */
@@ -80,6 +81,10 @@ typedef_print (struct type *type, struct symbol *new, struct ui_file *stream)
       else
 	fprintf_filtered (stream, "<builtin> = ");
       type_print (type, "", stream, 0);
+#endif
+#ifdef _LANG_m3
+    case language_m3:
+      m3_typedef_print ( type, new, stream ); 
       break;
 #endif
 #ifdef _LANG_pascal

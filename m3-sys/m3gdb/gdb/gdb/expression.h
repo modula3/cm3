@@ -111,6 +111,32 @@ enum exp_opcode
        the second operand with itself that many times. */
     BINOP_CONCAT,
 
+    /* Modula-3 binary ops. Must go before BINOP_END, which forces them to
+       be separated from other Modula-3 operators. */
+    /* All the BINOP_M3_* have two operands. */  
+    BINOP_M3_SUBSCRIPT,
+    BINOP_M3_MULT,
+    BINOP_M3_DIVIDE,
+    BINOP_M3_DIV,
+    BINOP_M3_MOD,
+    BINOP_M3_ADD,
+    BINOP_M3_MINUS,
+    BINOP_M3_CAT,
+    BINOP_M3_EQUAL,
+    BINOP_M3_NE,
+    BINOP_M3_LT,
+    BINOP_M3_LE,
+    BINOP_M3_GT,
+    BINOP_M3_GE,
+    BINOP_M3_IN,
+    BINOP_M3_AND,
+    BINOP_M3_OR,
+    BINOP_M3_MAX,
+    BINOP_M3_MIN,
+    BINOP_M3_VAL,
+    BINOP_M3_FLOAT,
+    BINOP_M3_LOOPHOLE,
+
     /* For (the deleted) Chill and Pascal. */
     BINOP_IN,			/* Returns 1 iff ARG1 IN ARG2. */
 
@@ -315,6 +341,47 @@ enum exp_opcode
        the GDB "::" operator, or the Modula-2 '.' operator. */
     OP_TYPE,
 
+    /* Modula-3 */
+    /* OP_M3_LONG, OP_M3_CHAR, and OP_M3_WIDECHAR each contain 
+       a type and a long value. */
+    OP_M3_LONG,
+    OP_M3_CHAR,
+    OP_M3_WIDECHAR, 
+    /* OP_M3_REEL, OP_M3_LREEL, and OP_M3_XREEL each contain a type 
+       and a double value. */
+    OP_M3_REEL,
+    OP_M3_LREEL,
+    OP_M3_XREEL,
+    /* OP_M3_TEXT and OP_M3_WIDTEXT contain a string and the usual lengths. */
+    OP_M3_TEXT,
+    OP_M3_WIDETEXT,
+    /* OP_M3_TYPE contains a type. */
+    OP_M3_TYPE,
+    /* STRUCTOP_M3_STRUCT, STRUCTOP_M3_INTERFACE, STRUCTOP_M3_MODULE, and 
+       STRUCTOP_M3_ENUM contain a string and its usual lengths. */
+    STRUCTOP_M3_STRUCT,
+    STRUCTOP_M3_INTERFACE,
+    STRUCTOP_M3_MODULE,
+    STRUCTOP_M3_ENUM,
+    /* M3_FINAL_TYPE and all the UNOP_M3_* have one operand. */  
+    M3_FINAL_TYPE,
+    UNOP_M3_ABS,
+    UNOP_M3_ADR,
+    UNOP_M3_ADRSIZE,
+    UNOP_M3_BITSIZE,
+    UNOP_M3_BYTESIZE,
+    UNOP_M3_CEILING,
+    UNOP_M3_DEREF,
+    UNOP_M3_FIRST,
+    UNOP_M3_FLOOR,
+    UNOP_M3_LAST,
+    UNOP_M3_NEG,
+    UNOP_M3_NOT,
+    UNOP_M3_NUMBER,
+    UNOP_M3_ORD,
+    UNOP_M3_ROUND,
+    UNOP_M3_TRUNC,
+
     /* An un-looked-up identifier. */
     OP_NAME,
 
@@ -411,6 +478,9 @@ enum noside
 
 extern struct value *evaluate_subexp_standard
   (struct type *, struct expression *, int *, enum noside);
+
+extern struct value *evaluate_subexp_for_address (struct expression *,
+						  int *, enum noside);
 
 /* From expprint.c */
 

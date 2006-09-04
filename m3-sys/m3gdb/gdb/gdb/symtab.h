@@ -127,7 +127,7 @@ struct general_symbol_info
   {
     struct cplus_specific
     {
-      /* This is in fact used for C++, Java, and Objective C.  */
+      /* This is in fact used for C++, Java, Objective C, and Modula-3.  */
       char *demangled_name;
     }
     cplus_specific;
@@ -259,8 +259,8 @@ extern char *symbol_demangled_name (struct general_symbol_info *symbol);
   (strcmp_iw (SYMBOL_NATURAL_NAME (symbol), (name)) == 0)
 
 /* Macro that returns the name to be used when sorting and searching symbols. 
-   In  C++, Chill, and Java, we search for the demangled form of a name,
-   and so sort symbols accordingly.  In Ada, however, we search by mangled
+   In  C++, Chill, Modula-3, and Java, we search for the demangled form of a 
+   name, and so sort symbols accordingly.  In Ada, however, we search by mangled
    name.  If there is no distinct demangled name, then SYMBOL_SEARCH_NAME
    returns the same value (same pointer) as SYMBOL_LINKAGE_NAME. */
 #define SYMBOL_SEARCH_NAME(symbol)					 \
@@ -656,13 +656,32 @@ struct symbol
   }
   aux_value;
 
+ /* ----- Modula-3 */
+  char m3_uid[9];
+
   struct symbol *hash_next;
 };
 
 
 #define SYMBOL_DOMAIN(symbol)	(symbol)->domain
 #define SYMBOL_CLASS(symbol)		(symbol)->aclass
-#define SYMBOL_TYPE(symbol)		(symbol)->type
+/* Modula-3 support: 
+   LHS_SYMBOL_TYPE just refers to symbol->type and is for use on LHS.  
+   SYMBOL_TYPE does lazy evaluation of symbol->type required by Modula-3
+   and only works on a RHS.  rodney.bates@wichita.edu 2005-01-05 */ 
+#define LHS_SYMBOL_TYPE(symbol)		(symbol)->type
+#define SYMBOL_TYPE(symbol)		((symbol)->type ? (symbol)->type : \
+                 (/*((struct symbol *)symbol)->type = */ \
+                      m3_resolve_type ((symbol)->m3_uid)))
+/*                 ^ this caching of resolved type in the symbol->type field
+   creates dangling pointers.  The type could be allocated in the 
+   objfile_objstack of a dynamically loaded library, while the symbol is
+   allocated in the objfile_objstack of the main executable.  When a "run"
+   command happens, the dynamic libraries are discarded and reloaded, 
+   deallocating the type, but the main is not, so the pointer stays around.
+   This is a trial fix, just not caching the type.  Fixing it while still
+   caching seems hard. 
+    rodney.bates@wichita.edu 2005-2-9 */ 
 #define SYMBOL_LINE(symbol)		(symbol)->line
 #define SYMBOL_BASEREG(symbol)		(symbol)->aux_value.basereg
 #define SYMBOL_OBJFILE(symbol)          (symbol)->aux_value.objfile
@@ -1036,6 +1055,20 @@ extern struct symbol *lookup_symbol_global (const char *name,
 					    const char *linkage_name,
 					    const domain_enum domain,
 					    struct symtab **symtab);
+
+extern
+struct symbol *lookup_symbol_aux_symtabs (int block_index,
+					  const char *name,
+					  const char *linkage_name,
+					  const domain_enum domain,
+					  struct symtab **symtab);
+
+extern
+struct symbol *lookup_symbol_aux_psymtabs (int block_index,
+					   const char *name,
+					   const char *linkage_name,
+					   const domain_enum domain,
+					   struct symtab **symtab);
 
 /* Lookup a symbol within the block BLOCK.  This, unlike
    lookup_symbol_block, will set SYMTAB and BLOCK_FOUND correctly, and

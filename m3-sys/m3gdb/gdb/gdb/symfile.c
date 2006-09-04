@@ -50,6 +50,7 @@
 #include "block.h"
 #include "observer.h"
 #include "exec.h"
+#include "m3-lang.h"
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -275,6 +276,8 @@ decrement_reading_symtab (void *dummy)
 struct symtab *
 psymtab_to_symtab (struct partial_symtab *pst)
 {
+  int i;
+
   /* If it's been looked up before, return it. */
   if (pst->symtab)
     return pst->symtab;
@@ -287,6 +290,15 @@ psymtab_to_symtab (struct partial_symtab *pst)
       (*pst->read_symtab) (pst);
       do_cleanups (back_to);
     }
+
+  for (i = 0; i < pst->number_of_dependencies; i++) {
+    if (pst->dependencies[i]->symtab &&
+	pst->dependencies[i]->symtab->language == language_m3)
+      m3_fix_symtab (pst->dependencies[i]->symtab);
+  }
+
+  if (pst->symtab && pst->symtab->language == language_m3) {
+    m3_fix_symtab (pst->symtab); }
 
   return pst->symtab;
 }
@@ -2312,7 +2324,7 @@ init_filename_language_table (void)
 {
   if (fl_table_size == 0)	/* protect against repetition */
     {
-      fl_table_size = 20;
+      fl_table_size = 30;
       fl_table_next = 0;
       filename_language_table =
 	xmalloc (fl_table_size * sizeof (*filename_language_table));
@@ -2328,6 +2340,10 @@ init_filename_language_table (void)
       add_filename_language (".m", language_objc);
       add_filename_language (".f", language_fortran);
       add_filename_language (".F", language_fortran);
+      add_filename_language (".m3", language_m3);
+      add_filename_language (".i3", language_m3);
+      add_filename_language (".mc", language_m3);
+      add_filename_language (".ic", language_m3);
       add_filename_language (".s", language_asm);
       add_filename_language (".S", language_asm);
       add_filename_language (".pas", language_pascal);
@@ -2841,7 +2857,9 @@ add_psymbol_with_dem_name_to_list (char *name, int namelength, char *dem_name,
   SYMBOL_LANGUAGE (&psymbol) = language;
   PSYMBOL_DOMAIN (&psymbol) = domain;
   PSYMBOL_CLASS (&psymbol) = class;
-  SYMBOL_INIT_LANGUAGE_SPECIFIC (&psymbol, language);
+  /* M3: need this to find the structs that encode type information */
+  /* was SYMBOL_INIT_LANGUAGE_SPECIFIC (&psymbol, language); */
+  SYMBOL_INIT_DEMANGLED_NAME (&psymbol,  &objfile->objfile_obstack); 
 
   /* Stash the partial symbol away in the cache */
   psym = deprecated_bcache (&psymbol, sizeof (struct partial_symbol),

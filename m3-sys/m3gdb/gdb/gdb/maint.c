@@ -37,6 +37,7 @@
 #include "symfile.h"
 #include "objfiles.h"
 #include "value.h"
+#include "m3-lang.h" 
 
 #include "cli/cli-decode.h"
 
@@ -163,10 +164,19 @@ maintenance_demangle (char *args, int from_tty)
 	  printf_unfiltered ("%s\n", demangled);
 	  xfree (demangled);
 	}
-      else
-	{
-	  printf_unfiltered (_("Can't demangle \"%s\"\n"), args);
-	}
+      else 
+        { 
+          demangled = m3_demangle (args, 0);
+          if (demangled != NULL)
+	    {
+	      printf_unfiltered ("%s\n", demangled);
+  	      xfree (demangled);
+	    }
+          else
+	    {
+	      printf_unfiltered ("Can't demangle \"%s\"\n", args);
+	    }
+        } 
     }
 }
 

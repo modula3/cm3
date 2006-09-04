@@ -36,6 +36,7 @@
 #include "gdb_string.h"
 #include "infcall.h"
 #include "dummy-frame.h"
+#include "m3-lang.h"
 
 /* NOTE: cagney/2003-04-16: What's the future of this code?
 
@@ -184,15 +185,24 @@ find_function_addr (struct value *function, struct type **retval_type)
   struct type *value_type;
   CORE_ADDR funaddr;
 
+  /* Determine address to call.  */
+
+#ifdef _LANG_m3
+  /* Check for Modula-3 closure. */ 
+  funaddr = m3_proc_value_code_addr ( function ); 
+  if ( funaddr != 0 ) { value_type = m3_proc_value_result_type ( function ); } 
+  else 
+#endif 
+
   /* If it's a member function, just look at the function
      part of it.  */
 
-  /* Determine address to call.  */
-  if (code == TYPE_CODE_FUNC || code == TYPE_CODE_METHOD)
+  if (code == TYPE_CODE_FUNC || code == TYPE_CODE_METHOD
+     )
     {
       funaddr = VALUE_ADDRESS (function);
       value_type = TYPE_TARGET_TYPE (ftype);
-    }
+   }
   else if (code == TYPE_CODE_PTR)
     {
       funaddr = value_as_address (function);
@@ -316,6 +326,22 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
   CORE_ADDR dummy_addr;
   struct type *values_type;
   unsigned char struct_return;
+
+#ifdef _LANG_m3 
+  /* Nonzero m3_struct_return will cause call_function_by_hand to push
+     space for a function result, as will nonzero struct_return.  But
+     m3_struct_return does not get passed to gdb_arch_push_dummy_call,
+     because the target-dependent *_push_dummy_call it dispatches to
+     may push the pointer to result space at the wrong end of the
+     argument list.  Modula-3 compilers have their own idea (also
+     target-dependent) where this pointer goes, so Modula-3-specific
+     gdb code just puts an element into args for it, in the right
+     place, prior to calling call_function_by_hand.  We still have to patch 
+     the address in this element of args, after it becomes known, 
+     in this function, when the space is pushed on the inferior stack. */ 
+  unsigned char m3_struct_return = 0;
+#endif 
+
   CORE_ADDR struct_addr = 0;
   struct regcache *retbuf;
   struct cleanup *retbuf_cleanup;
@@ -432,8 +458,27 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
 
   /* Are we returning a value using a structure return or a normal
      value return? */
-
+#ifdef _LANG_m3 
+  { if ( TYPE_CODE ( values_type ) == TYPE_CODE_M3_INDIRECT ) 
+    /* Modula-3 style struct return. */ 
+      { values_type = TYPE_TARGET_TYPE ( values_type ); 
+        m3_struct_return = 1; 
+        struct_return = 0; 
+      } 
+    else if ( SYMBOL_LANGUAGE ( find_pc_function ( funaddr ) ) == language_m3 )  
+      /* It's a call on Modula-3 code, but not struct return. */ 
+      { m3_struct_return = 0;
+        struct_return = 0; 
+      } 
+    else 
+      /* Some other language, do it the standard way. */ 
+      { m3_struct_return = 0; 
+        struct_return = using_struct_return (values_type, using_gcc); 
+      } 
+  } 
+#else
   struct_return = using_struct_return (values_type, using_gcc);
+#endif 
 
   /* Determine the location of the breakpoint (and possibly other
      stuff) that the called function will return to.  The SPARC, for a
@@ -477,7 +522,7 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
       bp_addr = dummy_addr;
       break;
     case AT_SYMBOL:
-      /* Some executables define a symbol __CALL_DUMMY_ADDRESS whose
+/* Some executables define a symbol __CALL_DUMMY_ADDRESS whose
 	 address is the location where the breakpoint should be
 	 placed.  Once all targets are using the overhauled frame code
 	 this can be deleted - ON_STACK is a better option.  */
@@ -504,72 +549,83 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
       internal_error (__FILE__, __LINE__, _("bad switch"));
     }
 
-  if (nargs < TYPE_NFIELDS (ftype))
-    error (_("too few arguments in function call"));
+#ifdef _LANG_m3
+  /* For Modula-3, checking and coercing actuals/formals requires a lot more 
+     information than is passed in here, so most of the work is done before 
+     calling call_function_by_hand and we skip doing it here.  However, there 
+     are some kinds of parameters that require pushing auxiliary data on the 
+     stack, prior to pushing any of the parameters themselves.  
+     m3_push_aux_param_data takes care of this.  */ 
+  if ( SYMBOL_LANGUAGE ( find_pc_function ( funaddr ) ) == language_m3 )
+    { m3_push_aux_param_data ( nargs, args, & sp ); }  
+  else /* not Modula-3. */ 
+#endif 
+  { if (nargs < TYPE_NFIELDS (ftype))
+      error (_("too few arguments in function call"));
 
-  {
-    int i;
-    for (i = nargs - 1; i >= 0; i--)
-      {
-	int prototyped;
-	struct type *param_type;
-	
-	/* FIXME drow/2002-05-31: Should just always mark methods as
-	   prototyped.  Can we respect TYPE_VARARGS?  Probably not.  */
-	if (TYPE_CODE (ftype) == TYPE_CODE_METHOD)
-	  prototyped = 1;
-	else if (i < TYPE_NFIELDS (ftype))
-	  prototyped = TYPE_PROTOTYPED (ftype);
-	else
-	  prototyped = 0;
+    {
+      int i;
+      for (i = nargs - 1; i >= 0; i--)
+        {
+          int prototyped;
+          struct type *param_type;
 
-	if (i < TYPE_NFIELDS (ftype))
-	  param_type = TYPE_FIELD_TYPE (ftype, i);
-	else
-	  param_type = NULL;
-	
-	args[i] = value_arg_coerce (args[i], param_type, prototyped);
+          /* FIXME drow/2002-05-31: Should just always mark methods as
+             prototyped.  Can we respect TYPE_VARARGS?  Probably not.  */
+          if (TYPE_CODE (ftype) == TYPE_CODE_METHOD)
+            prototyped = 1;
+          else if (i < TYPE_NFIELDS (ftype))
+            prototyped = TYPE_PROTOTYPED (ftype);
+          else
+            prototyped = 0;
 
-	/* elz: this code is to handle the case in which the function
-	   to be called has a pointer to function as parameter and the
-	   corresponding actual argument is the address of a function
-	   and not a pointer to function variable.  In aCC compiled
-	   code, the calls through pointers to functions (in the body
-	   of the function called by hand) are made via
-	   $$dyncall_external which requires some registers setting,
-	   this is taken care of if we call via a function pointer
-	   variable, but not via a function address.  In cc this is
-	   not a problem. */
+          if (i < TYPE_NFIELDS (ftype))
+            param_type = TYPE_FIELD_TYPE (ftype, i);
+          else
+            param_type = NULL;
 
-	if (using_gcc == 0)
-	  {
-	    if (param_type != NULL && TYPE_CODE (ftype) != TYPE_CODE_METHOD)
-	      {
-		/* if this parameter is a pointer to function.  */
-		if (TYPE_CODE (param_type) == TYPE_CODE_PTR)
-		  if (TYPE_CODE (TYPE_TARGET_TYPE (param_type)) == TYPE_CODE_FUNC)
-		    /* elz: FIXME here should go the test about the
-		       compiler used to compile the target. We want to
-		       issue the error message only if the compiler
-		       used was HP's aCC.  If we used HP's cc, then
-		       there is no problem and no need to return at
-		       this point.  */
-		    /* Go see if the actual parameter is a variable of
-		       type pointer to function or just a function.  */
-		    if (VALUE_LVAL (args[i]) == not_lval)
-		      {
-			char *arg_name;
-			/* NOTE: cagney/2005-01-02: THIS IS BOGUS.  */
-			if (find_pc_partial_function ((CORE_ADDR) value_contents (args[i])[0], &arg_name, NULL, NULL))
-			  error (_("\
-You cannot use function <%s> as argument. \n\
-You must use a pointer to function type variable. Command ignored."), arg_name);
-		      }
-	      }
-	  }
-      }
+          args[i] = value_arg_coerce (args[i], param_type, prototyped);
+
+          /* elz: this code is to handle the case in which the function
+             to be called has a pointer to function as parameter and the
+             corresponding actual argument is the address of a function
+             and not a pointer to function variable.  In aCC compiled
+             code, the calls through pointers to functions (in the body
+             of the function called by hand) are made via
+             $$dyncall_external which requires some registers setting,
+             this is taken care of if we call via a function pointer
+             variable, but not via a function address.  In cc this is
+             not a problem. */
+
+          if (using_gcc == 0)
+            {
+              if (param_type != NULL && TYPE_CODE (ftype) != TYPE_CODE_METHOD)
+                {
+                  /* if this parameter is a pointer to function.  */
+                  if (TYPE_CODE (param_type) == TYPE_CODE_PTR)
+                    if (TYPE_CODE (TYPE_TARGET_TYPE (param_type)) == TYPE_CODE_FUNC)
+                      /* elz: FIXME here should go the test about the
+                         compiler used to compile the target. We want to
+                         issue the error message only if the compiler
+                         used was HP's aCC.  If we used HP's cc, then
+                         there is no problem and no need to return at
+                         this point.  */
+                      /* Go see if the actual parameter is a variable of
+                         type pointer to function or just a function.  */
+                      if (VALUE_LVAL (args[i]) == not_lval)
+                        {
+                          char *arg_name;
+                          /* NOTE: cagney/2005-01-02: THIS IS BOGUS.  */
+                          if (find_pc_partial_function ((CORE_ADDR) value_contents (args[i])[0], &arg_name, NULL, NULL))
+                            error (_("\
+  You cannot use function <%s> as argument. \n\
+  You must use a pointer to function type variable. Command ignored."), arg_name);
+                        }
+                }
+            }
+        }
+    }
   }
-
   if (DEPRECATED_REG_STRUCT_HAS_ADDR_P ())
     {
       int i;
@@ -628,7 +684,11 @@ You must use a pointer to function type variable. Command ignored."), arg_name);
      stack, if necessary.  Make certain that the value is correctly
      aligned. */
 
-  if (struct_return)
+  if ( struct_return
+#ifdef _LANG_m3 
+       || m3_struct_return 
+#endif 
+     )
     {
       int len = TYPE_LENGTH (values_type);
       if (INNER_THAN (1, 2))
@@ -652,6 +712,16 @@ You must use a pointer to function type variable. Command ignored."), arg_name);
 	    sp = gdbarch_frame_align (current_gdbarch, sp);
 	}
     }
+
+#ifdef _LANG_m3
+  /* Now that the space for a struct return has been pushed, patch its 
+     address into the already-existing element of args that is a 
+     pointer to it. */ 
+  /* GENERALIZE ME:  For Windows targets, the struct_return parameter is on
+     the other end of the parameter list. */  
+  if ( m3_struct_return ) 
+    { *(CORE_ADDR *) value_contents_raw ( args [ nargs - 1 ] ) = struct_addr; }
+#endif 
 
   /* Create the dummy stack frame.  Pass in the call dummy address as,
      presumably, the ABI code knows where, in the call dummy, the
@@ -857,6 +927,10 @@ the function call)."), name);
 	   return value.  */
 	retval = allocate_value (values_type);
       }
+#ifdef _LANG_m3
+    else if ( m3_struct_return ) 
+      { retval = value_at (values_type, struct_addr); } 
+#endif 
     else
       {
 	struct gdbarch *arch = current_gdbarch;

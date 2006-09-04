@@ -44,6 +44,8 @@
 #include "target.h"
 #include "value.h"
 #include "dis-asm.h"
+#include "language.h"
+#include "m3-lang.h"
 
 #include "gdb_assert.h"
 #include "gdb_string.h"
@@ -1271,6 +1273,16 @@ i386_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
   /* ...and fake a frame pointer.  */
   regcache_cooked_write (regcache, I386_EBP_REGNUM, buf);
 
+#ifdef _LANG_m3
+  /* Take care of passing a static link, for Modula-3. */ 
+  { CORE_ADDR static_link = m3_proc_value_env_ptr ( function ); 
+
+    if ( static_link != 0 ) 
+      { store_unsigned_integer ( buf, 4, static_link );
+        regcache_cooked_write (regcache, I386_ECX_REGNUM, buf); 
+      } 
+  } 
+#endif 
   /* MarkK wrote: This "+ 8" is all over the place:
      (i386_frame_this_id, i386_sigtramp_frame_this_id,
      i386_unwind_dummy_id).  It's there, since all frame unwinders for
@@ -1405,9 +1417,9 @@ i386_store_return_value (struct gdbarch *gdbarch, struct type *type,
 	internal_error (__FILE__, __LINE__,
 			_("Cannot store return value of %d bytes long."), len);
     }
-
 #undef I387_ST0_REGNUM
 }
+
 
 
 /* This is the variable that is set with "set struct-convention", and

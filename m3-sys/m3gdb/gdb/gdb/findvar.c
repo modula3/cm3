@@ -36,6 +36,7 @@
 #include "regcache.h"
 #include "user-regs.h"
 #include "block.h"
+#include "language.h" 
 
 /* Basic byte-swapping routines.  GDB has needed these for a long time...
    All extract a target-format integer at ADDR which is LEN bytes long.  */
@@ -237,13 +238,35 @@ store_unsigned_integer (gdb_byte *addr, int len, ULONGEST val)
 void
 store_typed_address (gdb_byte *buf, struct type *type, CORE_ADDR addr)
 {
-  if (TYPE_CODE (type) != TYPE_CODE_PTR
-      && TYPE_CODE (type) != TYPE_CODE_REF)
-    internal_error (__FILE__, __LINE__,
-		    _("store_typed_address: "
-		    "type is not a pointer or reference"));
+  switch (TYPE_CODE (type))
+    { case TYPE_CODE_PTR:
+      case TYPE_CODE_REF:
+#ifdef _LANG_m3 
+      /* Can be called from value_from_pointer, from 
+         m3_push_aux_param_data, with these types. */ 
+      case TYPE_CODE_M3_OBJECT: 
+      case TYPE_CODE_M3_ADDRESS:
+      case TYPE_CODE_M3_POINTER:
+      case TYPE_CODE_M3_INDIRECT:
+      case TYPE_CODE_M3_REFANY:
+      case TYPE_CODE_M3_TRANSIENT_REFANY:
+      case TYPE_CODE_M3_ROOT:
+      case TYPE_CODE_M3_TRANSIENT_ROOT:
+      case TYPE_CODE_M3_UN_ROOT:
+      case TYPE_CODE_M3_MUTEX:
+      case TYPE_CODE_M3_TEXT: 
+      case TYPE_CODE_M3_NULL: 
+      case TYPE_CODE_M3_PROC: /* Which is also a pointer. */  
+      case TYPE_CODE_FUNC: /* Needed to pass a proc closures. */
+#endif 
+        ADDRESS_TO_POINTER (type, buf, addr);
+        break; 
+      default: 
+        internal_error (__FILE__, __LINE__,
+		        _("store_typed_address: "
+		        "type is not a pointer or reference"));
+    } 
 
-  ADDRESS_TO_POINTER (type, buf, addr);
 }
 
 

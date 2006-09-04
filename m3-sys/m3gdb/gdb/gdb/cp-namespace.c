@@ -804,7 +804,7 @@ check_one_possible_namespace_symbol (const char *name, int len,
       SYMBOL_LANGUAGE (sym) = language_cplus;
       SYMBOL_SET_NAMES (sym, name_copy, len, objfile);
       SYMBOL_CLASS (sym) = LOC_TYPEDEF;
-      SYMBOL_TYPE (sym) = type;
+      LHS_SYMBOL_TYPE (sym) = type;
       SYMBOL_DOMAIN (sym) = VAR_DOMAIN;
 
       dict_add_symbol (BLOCK_DICT (block), sym);
