@@ -4,12 +4,19 @@
 %
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
 %
+
+% Define quick to avoid doing a configure.  It should only need to be done
+%  once on a given platform. 
+%quick = 1
+
 readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_OSF" : "alpha-dec-osf1",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
+  "BSDI4"     : "i386-unknown-freebsdelf",
   "DS3100"    : "decstation",
+  "FBSD_ALPHA": "alpha-unknown-freebsd",
   "FreeBSD"   : "i486-unknown-bsd",
   "FreeBSD2"  : "i486-unknown-freebsd",
   "FreeBSD3"  : "i486-unknown-freebsdelf",
@@ -21,8 +28,10 @@ readonly Platform_info = {
   "IRIX5"     : "mips-sgi-irix5",
   "LINUX"     : "i486--linux",
   "LINUXELF"  : "i486--linuxelf",
+  "LINUXLIBC6": "i486--linuxelf",
   "NEXT"      : "next-bsd",
   "NT386"     : "i486--nt",
+  "NT386GNU"  : "i486--cygwin32",
   "OKI"       : "i860--sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -30,6 +39,7 @@ readonly Platform_info = {
   "SPARC"     : "sparc-sun-sunos4.1",
   "SUN3"      : "m68k-sun-sunos4.1",
   "SUN386"    : "i386-sun-sunos4.1",
+  "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix"
 }
@@ -63,6 +73,8 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
+M3GDB_CFLAGS="-g"
+
 % check for overrides, otherwise use the defaults from the configuration file
 if not defined ("M3GDB_HOST")    M3GDB_HOST   = TARGET     end
 if not defined ("M3GDB_CC")      M3GDB_CC     = GNU_CC     end
@@ -76,16 +88,45 @@ ARG0 = get_overrides ("CC", M3GDB_CC)
 ARG1 = get_overrides ("CFLAGS", M3GDB_CFLAGS)
 
 if defined ("quick")
-  % don't bother reconfiguring, just build gdb
-  exec ("cd gdb;", M3GDB_MAKE, ARG0, ARG1)
+  % do not bother reconfiguring, just build gdb
+  %PM3: returnCode = exec ([M3GDB_MAKE, ARG0, ARG1])
+  exec(M3GDB_MAKE, ARG0, ARG1)
 else
   % configure the sources & compile
-  exec ("../gdb/configure", M3GDB_CONFIG,
-           "--srcdir=../gdb", GNU_platform (M3GDB_HOST))
-  exec (M3GDB_MAKE, ARG0, ARG1)
+  % Here, current directory is LINUXLIBC6 
+  CONFIG_PLATFORM = GNU_platform (M3GDB_HOST)
+  %PM3: r = exec(["echo", "###################### CONFIGURE: ##################"])
+  %PM3: returnCode = exec (["../m3gdb-6.4/configure", M3GDB_CONFIG,
+  %PM3:                     "--srcdir=../m3gdb-6.4", CONFIG_PLATFORM])
+  %PM3: returnCode = exec (["../m3gdb-6.4/configure", "--srcdir=../m3gdb-6.4"])
+  %PM3: r = exec(["echo", "###################### MAKE: ##################"])
+  %PM3: returnCode = exec ([M3GDB_MAKE, ARG0, ARG1])
+  exec("echo", "###################### CONFIGURE: ##################")
+  exec ("../m3gdb-6.4/configure", M3GDB_CONFIG, "--srcdir=../m3gdb-6.4", 
+        CONFIG_PLATFORM )
+  exec("echo", "###################### MAKE: ##################")
+  exec(M3GDB_MAKE, ARG0, ARG1)
 end
 
 % finally, build the exportable link and man page and export them
+%PM3: r = exec(["echo", "###################### LINK_FILE: ##################"])
+exec("echo", "###################### LINK_FILE: ##################")
 link_file ("gdb/gdb", "m3gdb")
+%PM3: r = exec(["echo", "###################### BINDEXPORT: ##################"])
+exec("echo", "###################### BINDEXPORT: ##################")
 BindExport ("m3gdb")
+%PM3: r = exec(["echo", "###################### MANPAGE: ##################"])
+exec("echo", "###################### MANPAGE: ##################")
 ManPage ("m3gdb","1")
+
+%PM3: r = exec(["echo", "###################### IMPORT: ##################"])
+%exec("echo", "###################### IMPORT: ##################")
+%import("m3doc")
+%PM3: r = exec(["echo", "###################### HTMLFILE: ##################"])
+%exec("echo", "###################### HTMLFILE: ##################")
+%HtmlFile("index")
+
+%PM3: r = exec(["echo", "###################### OTHERPACKAGE: ##################"])
+%exec("echo", "###################### OTHERPACKAGE: ##################")
+%OtherPackage("m3gdb")
+
