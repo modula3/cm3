@@ -233,7 +233,7 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, options, objects, imported_libs ]
+  args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
   if shared
     return try_exec ("@gcc", args, GCWRAPFLAGS)
   else
