@@ -1,6 +1,6 @@
 /*******************************************************************************
- * $Revision: 1.2.2.1 $
- * $Date: 2006-09-04 19:09:50 $
+ * $Revision: 1.2.2.2 $
+ * $Date: 2006-09-05 12:37:50 $
  * $Author: stsp $
  *
  * Contents: A streambuf which uses the GNU readline library for line I/O

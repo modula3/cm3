@@ -10,8 +10,8 @@
  * ardi.h
  * ADP RDI interfaces
  *
- * $Revision: 1.2.2.1 $
- *     $Date: 2006-09-04 19:08:23 $
+ * $Revision: 1.2.2.2 $
+ *     $Date: 2006-09-05 12:37:49 $
  */
 
 #include "host.h"
