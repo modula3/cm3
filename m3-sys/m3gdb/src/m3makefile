@@ -19,8 +19,8 @@ readonly Platform_info = {
   "FBSD_ALPHA": "alpha-unknown-freebsd",
   "FreeBSD"   : "i486-unknown-bsd",
   "FreeBSD2"  : "i486-unknown-freebsd",
-  "FreeBSD3"  : "i486-unknown-freebsdelf",
-  "FreeBSD4"  : "i486-unknown-freebsdelf",
+  "FreeBSD3"  : "i386-unknown-freebsd3",
+  "FreeBSD4"  : "i386-unknown-freebsd4",
   "HP300"     : "m68k-hp-hpux",
   "HPPA"      : "hppa1.1-hp-hpux",
   "IBMR2"     : "rs6000-ibm-aix3.2",
@@ -31,7 +31,7 @@ readonly Platform_info = {
   "LINUXLIBC6": "i486--linuxelf",
   "NEXT"      : "next-bsd",
   "NT386"     : "i486--nt",
-  "NT386GNU"  : "i486--cygwin32",
+  "NT386GNU"  : "i486-pc-cygwin",
   "OKI"       : "i860--sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -41,7 +41,11 @@ readonly Platform_info = {
   "SUN386"    : "i386-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
-  "VAX"       : "vax-dec-ultrix"
+  "VAX"       : "vax-dec-ultrix",
+  "I386_DARWIN" : "i386-apple-darwin8.7.1",
+  "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
+  "PPC_LINUX"   : "powerpc-apple-linuxelf",
+  "NetBSD2_i386" : "i386-unknown-netbsdelf"
 }
 
 readonly proc GNU_platform (x) is
