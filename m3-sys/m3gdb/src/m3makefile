@@ -109,7 +109,11 @@ else
   exec ("../gdb/configure", M3GDB_CONFIG, "--srcdir=../gdb", 
         CONFIG_PLATFORM )
   exec("echo", "###################### MAKE: ##################")
-  exec(M3GDB_MAKE, ARG0, ARG1)
+  EXTRA_MAKEFLAGS = ""
+  if (equal(M3GDB_HOST, "SOLgnu"))
+    EXTRA_MAKEFLAGS = "LDFLAGS=-lintl"
+  end
+  exec(M3GDB_MAKE, EXTRA_MAKEFLAGS, ARG0, ARG1)
 end
 
 % finally, build the exportable link and man page and export them
