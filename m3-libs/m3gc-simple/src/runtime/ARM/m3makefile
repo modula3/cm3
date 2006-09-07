@@ -1,3 +1,0 @@
-
-% No runtime specific support needed right now for simple garbage collection.
-% This may change once enhanced garbage collection is implemented though.
