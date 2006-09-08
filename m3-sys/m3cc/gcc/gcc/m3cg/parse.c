@@ -1448,7 +1448,7 @@ scan_label (void)
   if (i < 0) { return 0; }
   VARRAY_EXTEND (all_labels, i + 1);
   if (VARRAY_TREE (all_labels, i) == NULL)
-    VARRAY_TREE (all_labels, i) = build_decl (LABEL_DECL, NULL_TREE, t_addr);
+    VARRAY_TREE (all_labels, i) = build_decl (LABEL_DECL, NULL_TREE, t_void);
   return VARRAY_TREE (all_labels, i);
 }
 
@@ -1521,6 +1521,7 @@ debug_field_fmt (long id, ...)
 static void
 debug_struct (void)
 {
+  tree d;
   tree t = make_node (RECORD_TYPE);
   TYPE_NAME (t) =
     build_decl (TYPE_DECL, get_identifier (current_dbg_type_tag), t);
@@ -1534,7 +1535,7 @@ debug_struct (void)
   TYPE_ALIGN (t) = BITS_PER_UNIT;
   TYPE_MODE (t) = QImode;
 
-  tree d = build_decl (TYPE_DECL, NULL_TREE, t);
+  d = build_decl (TYPE_DECL, NULL_TREE, t);
   TREE_CHAIN (d) = global_decls;
   global_decls = d;
 }
@@ -1645,6 +1646,7 @@ declare_temp (tree t)
   add_stmt (build1 (DECL_EXPR, t_void, v));
   TREE_CHAIN (v) = BLOCK_VARS (current_block);
   BLOCK_VARS (current_block) = v;
+
   return v;
 }
 
@@ -1750,6 +1752,7 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 static void
 m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
+  tree val;
 #if 1
   if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
@@ -1765,7 +1768,7 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
   }
 #endif
   TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
-  tree val = m3_cast (src_t, EXPR_REF (-1));
+  val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T) {
     val = m3_build1 (CONVERT_EXPR, dst_t, val);
   }
@@ -1776,24 +1779,28 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 static void
 setop (tree p, int n, int q)
 {
+  tree t;
+
   m3_start_call ();
   EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
   while (q--) {
     m3_pop_param (t_addr);
   }
-  tree t = TREE_TYPE (TREE_TYPE (p));
+  t = TREE_TYPE (TREE_TYPE (p));
   m3_call_direct (p, t);
 }
 
 static void
 setop2 (tree p, int q)
 {
+  tree t;
+
   m3_start_call ();
   while (q--) {
     m3_pop_param (t_addr);
   }
-  tree t = TREE_TYPE (TREE_TYPE (p));
+  t = TREE_TYPE (TREE_TYPE (p));
   m3_call_direct (p, t);
 }
 
@@ -1804,14 +1811,14 @@ static int  fault_offs;                /*   + offset                */
 static void
 declare_fault_proc (void)
 {
-  tree proc, parm;
+  tree proc, parm, resultdecl;
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
 
   proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
 		     build_function_type_list (t_void, t_word, NULL_TREE));
 
-  tree resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
+  resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
   DECL_CONTEXT (resultdecl) = proc;
   DECL_ARTIFICIAL (resultdecl) = 1;
   DECL_IGNORED_P (resultdecl) = 1;
@@ -1900,7 +1907,7 @@ emit_fault_proc (void)
   current_stmts = TREE_VALUE (pending_stmts);
   pending_stmts = TREE_CHAIN (pending_stmts);
 
- /* good line numbers for epilog */
+  /* good line numbers for epilog */
   DECL_STRUCT_FUNCTION (p)->function_end_locus = input_location;
 
   input_location = save_loc;
@@ -1918,8 +1925,10 @@ emit_fault_proc (void)
 static tree
 generate_fault (int code)
 {
+  tree arg;
+
   if (fault_proc == 0) declare_fault_proc ();
-  tree arg = m3_build_int ((LOCATION_LINE(input_location) << LINE_SHIFT) + (code & FAULT_MASK));
+  arg = m3_build_int ((LOCATION_LINE(input_location) << LINE_SHIFT) + (code & FAULT_MASK));
   return build_function_call_expr (fault_proc,
 				   build_tree_list (NULL_TREE, arg));
 }
@@ -2537,9 +2546,11 @@ m3cg_declare_param (void)
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, PARM_DECL);
 
+  tree p;
+
   if (current_param_count == 0) return;	/* ignore */
 
-  tree p = current_function_decl;
+  p = current_function_decl;
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
@@ -2664,7 +2675,7 @@ m3cg_init_label (void)
 
   one_field (o, t_addr, &f, &v);
   TREE_USED (l) = 1;
-  TREE_VALUE (v) = l;
+  TREE_VALUE (v) = build1 (ADDR_EXPR, t_addr, l);
 }
 
 static void
@@ -2713,7 +2724,6 @@ m3cg_init_offset (void)
       j = XWINT (r, 0);  /* offset */
     }
   }
-
   TREE_VALUE (v) = size_int (j);
 }
 
@@ -2813,6 +2823,7 @@ m3cg_declare_procedure (void)
   PROC    (parent);
   PROC    (p);
 
+  tree resultdecl;
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
 
@@ -2841,7 +2852,7 @@ m3cg_declare_procedure (void)
   DECL_CONTEXT (p) = parent;
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   DECL_MODE (p) = FUNCTION_MODE;
-  tree resultdecl = build_decl (RESULT_DECL, NULL_TREE, return_type);
+  resultdecl = build_decl (RESULT_DECL, NULL_TREE, return_type);
   DECL_CONTEXT (resultdecl) = p;
   DECL_ARTIFICIAL (resultdecl) = 1;
   DECL_IGNORED_P (resultdecl) = 1;
@@ -2973,6 +2984,9 @@ m3cg_set_label (void)
   BOOLEAN (barrier);
 
   DECL_CONTEXT (l) = current_function_decl;
+  DECL_MODE (l) = VOIDmode;
+  DECL_SOURCE_LOCATION (l) = input_location;
+
   if (barrier)
     {
       FORCED_LABEL (l) = 1;
@@ -3132,12 +3146,14 @@ m3cg_load_indirect (void)
   MTYPE2     (src_t, src_T);
   MTYPE2     (dst_t, dst_T);
 
+  tree v;
+
   if (option_vars_trace) {
     fprintf(stderr, "  load address offset %ld src_t %d dst_t %d\n",
             o, src_T, dst_T);
   }
 
-  tree v = EXPR_REF (-1);
+  v = EXPR_REF (-1);
   if (o != 0) { 
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
@@ -3175,12 +3191,14 @@ m3cg_store_indirect (void)
   MTYPE2 (src_t, src_T);
   MTYPE2 (dst_t, dst_T);
 
+  tree v;
+
   if (option_vars_trace) {
     fprintf(stderr, "  store indirect offset %ld src_t %d dst_t %d\n",
             o, src_T, dst_T);
   }
 
-  tree v = EXPR_REF (-2);
+  v = EXPR_REF (-2);
   if (o != 0) {
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
