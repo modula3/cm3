@@ -47,7 +47,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
    The first one is marked as continued with a double-backslash at the
    end of its "name".
 
-   The kind-of-symbol letter distinguished function names from global
+   The kind-of-symbol letter distinguishes function names from global
    variables from file-scope variables from parameters from auto
    variables in memory from typedef names from register variables.
    See `dbxout_symbol'.
@@ -145,6 +145,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #ifndef STABS_GCC_MARKER
 #define STABS_GCC_MARKER "gcc2_compiled."
 #endif
+
+/* Keep this string consistent with that of the same name in m3gdb, 
+   m3-lang.c. */ 
+static const char * procedures_have_extra_block_string 
+  = "procedures_have_extra_block."; 
 
 enum typestatus {TYPE_UNSEEN, TYPE_XREF, TYPE_DEFINED};
 
@@ -529,6 +534,10 @@ dbxout_init (const char *input_file_name)
   fprintf (asmfile, "%s\"%s\",%d,0,0,0\n",
 	   ASM_STABS_OP, STABS_GCC_MARKER, N_OPT);
 #endif
+
+  /* Emit an N_OPT stab to indicate that procedures have an extra block. */
+  fprintf (asmfile, "%s\"%s\",%d,0,0,0\n",
+	   ASM_STABS_OP, procedures_have_extra_block_string, N_OPT);
 
   base_input_file = lastfile = input_file_name;
 
@@ -3190,6 +3199,58 @@ dbxout_block (tree block, int depth, tree args)
     }
 }
 
+/* Register HARD_FRAME_POINTER_REGNUM holds the frame pointer, and it is
+   relative to this that stabs displacement values for locals are emitted.
+   However, when static links are used to access nonlocal variables, they
+   use FRAME_POINTER_REGNUM as a base.  If this is a distinct register, it
+   is possible, for some functions, that it points to a different place in
+   the activation record.  If so, we emit a pseudo-local-variable stabs
+   with a canned name, so m3gdb can figure out where static links really
+   point.  The value is the offset to be added to the contents of register
+   HARD_FRAME_POINTER_REGNUM to get the address where register 
+   FRAME_POINTER_REGNUM will point, when used to access the same activation
+   record from within a nested function. */ 
+
+#if HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM
+
+/* The value of this must agree with the string of the same name in m3gdb,
+   file m3-util.c, used by function m3_frame_base_to_base_offset. */ 
+static const char * frame_offset_name = "__frame_offset"; 
+
+int
+dbxout_emit_frame_offset ( tree funcdecl )
+
+  { int value; 
+
+    /* The code below will use global variable cfun to get the function
+       info from which to compute value. */ 
+#ifdef ELIMINABLE_REGS
+    INITIAL_ELIMINATION_OFFSET 
+      ( FRAME_POINTER_REGNUM, HARD_FRAME_POINTER_REGNUM, value );
+#else
+    INITIAL_FRAME_POINTER_OFFSET ( value );
+#endif
+
+    if ( value != 0 ) 
+      { emit_pending_bincls_if_required ( );
+        dbxout_prepare_symbol ( funcdecl /* UNUSED */ );
+        current_sym_code = N_LSYM;
+        current_sym_value = value; 
+        FORCE_TEXT;
+        fprintf (asmfile, ASM_STABS_OP );
+        putc ( '"' , asmfile ); 
+        fprintf (asmfile, frame_offset_name );
+        current_sym_nchars = strlen ( frame_offset_name );   
+        /* No "letter" for local variable. */ 
+        putc ( ':' , asmfile ); 
+        CHARS ( 1 );
+        dbxout_type ( void_type_node, 0 );
+        dbxout_finish_symbol ( funcdecl );
+      } 
+  } /* dbxout_emit_frame_offset */ 
+
+#endif /* HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM */ 
+
 /* Output the information about a function and its arguments and result.
    Usually this follows the function's code,
    but on some systems, it comes before.  */
@@ -3214,6 +3275,11 @@ dbxout_begin_function (tree decl)
   dbxout_parms (DECL_ARGUMENTS (decl));
   if (DECL_NAME (DECL_RESULT (decl)) != 0)
     dbxout_symbol (DECL_RESULT (decl), 1);
+
+#if HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM
+  dbxout_emit_frame_offset ( decl );
+#endif 
+
 }
 #endif /* DBX_DEBUGGING_INFO */
 
