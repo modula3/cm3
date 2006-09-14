@@ -3176,7 +3176,7 @@ no enclosing block"));
 	    }
 #ifdef _LANG_m3
           m3_check_compiler ( name ); 
-          if ( processing_m3_compilation ) { } 
+          if ( processing_pm3_compilation ) { } 
 #endif
 	  else
 	    n_opt_found = 1;

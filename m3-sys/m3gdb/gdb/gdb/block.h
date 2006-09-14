@@ -95,6 +95,12 @@ struct block
       struct block_namespace_info *namespace;
     }
     cplus_specific;
+#ifdef _LANG_m3
+    struct
+      { struct block * body_block;
+      } 
+    m3_specific; 
+#endif 
   }
   language_specific;
 
@@ -118,6 +124,10 @@ struct block
 #define BLOCK_GCC_COMPILED(bl)	(bl)->gcc_compile_flag
 #define BLOCK_DICT(bl)		(bl)->dict
 #define BLOCK_NAMESPACE(bl)   (bl)->language_specific.cplus_specific.namespace
+#ifdef _LANG_m3
+#define M3_BLOCK_BODY_BLOCK(bl)  \
+  ((bl)->language_specific.m3_specific.body_block)
+#endif 
 
 /* Macro to loop through all symbols in a block BL, in no particular
    order.  ITER helps keep track of the iteration, and should be a
