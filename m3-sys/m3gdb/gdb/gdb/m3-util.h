@@ -90,9 +90,9 @@ m3_value_from_longest ( struct type *type, LONGEST num);
 extern struct symtab * 
 m3_symtab_of_block ( const struct block * blk ); 
 
-extern struct type *find_m3_type_named (char *, int);
+extern struct type * find_m3_type_named (char *, int);
 
-extern char *find_m3_type_name (struct type *);
+extern char * find_m3_type_name (struct type *);
 
 /* Lookup a symbol in the one global block associated with block.  */
 extern struct symbol *
@@ -186,7 +186,7 @@ extern void note_is_pm3 ( void );
 
 extern void note_is_cm3 ( void );
 
-bool m3_is_cm3 ( void ); 
+extern bool m3_is_cm3 ( void ); 
 
 /* Return the typecode of the object at inferior address addr. */ 
 LONGEST m3_typecode_from_inf_address ( CORE_ADDR addr ); 
@@ -369,10 +369,25 @@ m3_proc_code_addr ( const gdb_byte * valaddr );
 extern CORE_ADDR 
 m3_proc_env_ptr ( const gdb_byte * valaddr );  
 
+/* Return the first superblock ancestor of block that is a function block. */
+extern struct block * 
+m3_proc_block ( struct block * blk );  
+
 extern bool 
 m3_address_lies_within_frame_locals ( 
     CORE_ADDR address, 
     struct frame_info * frame 
   );  
+
+/* Given a block for a procedure procblock, return the amount to add
+   to the frame base address to get the place in the activation record
+   where static links point. */ 
+extern ULONGEST 
+m3_frame_base_to_sl_target_offset ( struct block * procblock ); 
+
+/* If proc_block was discovered earlier to contain an artificial, 
+   compiler-generated block, return it, otherwise, identity. */ 
+extern struct block * 
+m3_proc_body_block ( struct block * proc_block );
 
 /* End of file m3-util.h */ 

@@ -31,10 +31,17 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
    do not cause this to be nonzero, but they do cause 
    processing_gcc_compilation to be nonzero. */ 
-extern int processing_m3_compilation; 
+extern int processing_pm3_compilation; 
+
+/* Nonzero indicates that the debug info will show an extra block 
+   surrounding the non-prologue-non-epilogue part of every procedure. 
+   This happens when code was produced by a code generator derived from
+   later gcc versions (3.4.5, for example).  
+*/   
+extern int procedures_have_extra_block; 
 
 /* Use the string from the N_OPT stabs entry to maybe set 
-   processing_m3_compilation*/
+   processing_pm3_compilation and procedures_have_extra_block. */
 extern void
 m3_check_compiler ( char * name ); 
 

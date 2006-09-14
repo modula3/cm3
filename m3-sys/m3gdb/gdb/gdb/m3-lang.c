@@ -65,22 +65,36 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 extern void _initialize_m3_language ( );
 
-static const char * SRC_compiler_string = "SRC-Modula3_compiled."; 
-
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.  
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
    do not cause this to be nonzero, but they do cause 
    processing_gcc_compilation to be nonzero. */ 
-int processing_m3_compilation = 0; 
+int processing_pm3_compilation = 0; 
+
+/* Nonzero indicates that the debug info will show an extra block 
+   surrounding the non-prologue-non-epilogue part of every procedure. 
+   This happens when code was produced by a code generator derived from
+   later gcc versions (3.4.5, for example).  
+*/   
+int procedures_have_extra_block = 0; 
+
+static const char * SRC_compiler_string = "SRC-Modula3_compiled."; 
+
+/* Keep this string consistent with that of the same name in gcc, 
+   */ 
+static const char * procedures_have_extra_block_string 
+  = "procedures_have_extra_block."; 
 
 /* Use the string from the N_OPT stabs entry to maybe set 
-   processing_m3_compilation*/
+   processing_pm3_compilation and procedures_have_extra_block. */
 void
 m3_check_compiler ( char * name ) 
 
-{ if ( strcmp ( name, SRC_compiler_string ) == 0 ) 
-  { processing_m3_compilation = 1; } 
-} /* m3_check_compiler */ 
+  { if ( strcmp ( name, SRC_compiler_string ) == 0 ) 
+      { processing_pm3_compilation = 1; } 
+    if ( strcmp ( name, procedures_have_extra_block_string ) == 0 ) 
+      { procedures_have_extra_block = 1; } 
+  } /* m3_check_compiler */ 
  
 static struct type *
 m3_create_fundamental_type (objfile, typeid)
@@ -533,6 +547,7 @@ m3_fix_param (
 
 static const char * dot_only = "."; 
 
+#if 0 /* Currently not called. Suppress warning. */ 
 /* If name has dot-separated components, return the pointer to the
    last such component.  Otherwise, identity. */ 
 static const char * 
@@ -551,6 +566,7 @@ simple_name ( const char * name )
       remaining_len -= prefix_len + 1; 
     } 
 } /* simple_name */ 
+#endif 
 
 void 
 m3_decode_struct ( struct type *t ) 
@@ -1139,7 +1155,11 @@ list_block_symbols ( struct block * blockp, int max )
   if ( sym == NULL ) { printf_filtered ("    <empty>\n" ); } 
   else 
     { while ( sym != NULL && id_ct < max ) 
-        { printf_filtered ( "    \"%s\"\n", SYMBOL_SEARCH_NAME ( sym ) ); 
+        { printf_filtered 
+            ( "    \"%s\",\"%s\"\n", 
+              SYMBOL_SEARCH_NAME ( sym ), 
+              SYMBOL_LINKAGE_NAME ( sym ) 
+            ); 
           id_ct ++;
           sym = dict_iterator_next ( &iter ); 
         } 
@@ -1155,12 +1175,16 @@ dump_blockvector ( struct blockvector * block_vec, int max_syms_per_block )
   struct symbol * sym; 
 
   printf_filtered ( "Dump of blockvector 0x%08x:\n", (int)block_vec );
-  for ( block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ); block_ss ++) 
+  for ( block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ); block_ss ++)
     { blk = BLOCKVECTOR_BLOCK ( block_vec, block_ss ); 
       sym = BLOCK_FUNCTION ( blk ); 
       printf_filtered 
          ( "%3d 0x%08x superblock=0x%08x", 
-            block_ss, (int) blk, (int) BLOCK_SUPERBLOCK( blk) 
+            block_ss, ( int ) blk, ( int ) BLOCK_SUPERBLOCK( blk) 
+         );
+      printf_filtered 
+         ( ", bodyblock=0x%08x", 
+            ( int ) M3_BLOCK_BODY_BLOCK( blk) 
          );
       if ( sym == NULL ) 
         { printf_filtered ( ", anonymous, contains:\n" );
@@ -1298,19 +1322,21 @@ find_m3_proc_in_blockvector (
       and remember the uid in the place where the type resolver will find it.
    We also want to find the connection between an interface record
       and its type description (the uid of interface records is -1; 
-      this is about the only place where we have the scope information
+      This is about the only place where we have the scope information
       that is necessary to make the connection. 
    We also need to set the BLOCK_SUPERBLOCK pointers of the blocks of
-      nested procedures to the rght block. 
+      nested procedures to the right block. 
 */
 void
 m3_fix_symtab ( struct symtab *st )
 { struct blockvector * block_vec; 
   int block_ss;
-  struct block *bl;
-  struct symbol *sym;
-  struct symbol *ir = 0;
-  struct type *ir_type = 0;
+  int body_block_ss;
+  struct block *bl = NULL;
+  struct block *superblock = NULL;
+  struct symbol *sym = NULL;
+  struct symbol *ir = NULL;
+  struct type *ir_type = NULL;
   char *ir_name = NULL;
   char *ir_kind = NULL;
   struct space_info prefix_space; 
@@ -1325,18 +1351,34 @@ m3_fix_symtab ( struct symtab *st )
  
   if (info_verbose)
     { printf_filtered ("Fixing M3 symtab for file \"%s\"\n", st->filename);
-      dump_blockvector ( block_vec, 50 );
       gdb_flush (gdb_stdout);
     }
 
-  for (block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS (block_vec); block_ss ++) 
-    { bl = BLOCKVECTOR_BLOCK (block_vec, block_ss);
-      ALL_BLOCK_SYMBOLS (bl, iter, sym) 
-        { char *name = SYMBOL_LINKAGE_NAME (sym);
+  /* Make a pass over the blockvector, setting the M3_BLOCK_BODY_BLOCK
+     pointers. */ 
+  for ( block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ); block_ss ++)
+    { bl = BLOCKVECTOR_BLOCK ( block_vec, block_ss );
+      M3_BLOCK_BODY_BLOCK ( bl ) = bl; 
+      if ( block_ss != GLOBAL_BLOCK 
+           && block_ss != STATIC_BLOCK 
+           && procedures_have_extra_block 
+         )
+        { superblock = BLOCK_SUPERBLOCK ( bl ); 
+          if ( superblock != NULL && BLOCK_FUNCTION ( superblock ) != NULL ) 
+            { M3_BLOCK_BODY_BLOCK ( superblock ) = bl; } 
+        }  
+    } 
+
+  /* Make another pass, looking for the interface/module record, its name,
+     and kind, and patching up nested procedure superblocks. */ 
+  for ( block_ss = 0; block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ); block_ss ++)
+    { bl = BLOCKVECTOR_BLOCK ( block_vec, block_ss );
+      ALL_BLOCK_SYMBOLS ( bl, iter, sym ) 
+        { char *name = SYMBOL_LINKAGE_NAME ( sym );
 
           if ( info_verbose )
             { printf_filtered 
-                ("Fixing block %d M3 symbol \"%sym\"\n", block_ss , name );
+                ("Fixing block %d, linker symbol \"%s\"\n", block_ss , name );
               gdb_flush (gdb_stdout);
             }
 
@@ -1393,11 +1435,13 @@ m3_fix_symtab ( struct symtab *st )
           int parent_block_ss;
           int child_ss; 
           struct block *parent_block = NULL;
-          struct symbol *parent_sym;
-          int block_num;
-          int block_num_2; 
+          struct block *body_block = NULL;
+          struct symbol *parent_sym = NULL;
+          struct symbol *proc_sym = NULL;
+          int block_num = - 1;
+          int block_num_2 = - 1; 
           int block_level = 0; 
-          struct block * child_block; 
+          struct block * child_block = NULL; 
           char ch; 
 
           full_name = SYMBOL_LINKAGE_NAME ( sym ); 
@@ -1412,14 +1456,16 @@ m3_fix_symtab ( struct symtab *st )
                 ( prev_start , &prev_end, &next_start ) 
             );
           /* Here, next_start is the start of the last identifier in the 
-             qualified name.  */
+             qualified linker name.  */
           if ( ident_ct < 2 /* Not a procedure name */
                || ( ident_ct == 2 && prev_end + 2 == next_start ) 
                   /* Two idents with no block in between.  This is a top-level
                      procedure.  Its superblock will already be set to the 
                      static block. */  
              ) 
-            { /* This block does not need its superblock field patched. */ }
+            { /* This block is for a topmost procedure, thus does not need 
+                 its superblock field patched. */ 
+            }
           else  /* This procedure is inside another programmer-declared 
                    procedure. [full_name, prev_end) is the qualified name of 
                    the containing procedure.  There could be anonymous blocks 
@@ -1438,29 +1484,44 @@ m3_fix_symtab ( struct symtab *st )
                       prefix_space . space_ptr, full_name 
                     ); 
                   goto done_with_nested; 
+                }
+              parent_block = BLOCKVECTOR_BLOCK ( block_vec, parent_block_ss );
+              parent_sym = BLOCK_FUNCTION ( parent_block ); 
+              proc_sym = parent_sym; 
+              body_block = M3_BLOCK_BODY_BLOCK ( parent_block ); 
+              if ( body_block != NULL && body_block != parent_block ) 
+                { parent_block = body_block;  
+                  while ( BLOCKVECTOR_BLOCK ( block_vec, parent_block_ss ) 
+                          != parent_block 
+                        ) 
+                    { parent_block_ss ++; 
+                      gdb_assert 
+                        ( parent_block_ss < BLOCKVECTOR_NBLOCKS ( block_vec ) ); 
+                    } 
+                  parent_sym = BLOCK_FUNCTION ( parent_block ); 
                 } 
 
               prev_end += 2; /* Skip "__" before the next name component. */ 
-              parent_block = BLOCKVECTOR_BLOCK (block_vec, parent_block_ss);
-              parent_sym = BLOCK_FUNCTION ( parent_block ); 
               if ( ident_ct == 2 
                    && cm3_comp_unit_body_name_len 
-                        ( SYMBOL_LINKAGE_NAME ( parent_sym ) )
+                        ( SYMBOL_LINKAGE_NAME ( proc_sym ) )
                       > 0  
                  ) 
                 /* The parent procedure is a CM3-compiled compilation
                    unit body procedure, possibly with some anonymous
-                   blocks between.  This will only happen if the comp
-                   unit is a module.  Peculiarly and inconsistently,
-                   CM3 flattens a block located inside the executable
-                   body of a module into its <moduleName>_M3 procedure
-                   in the actual stabs block construction, yet still
-                   adds a block number 1 to the name of procedures
-                   located inside it.  We must consume this "1__" to
-                   get the code below to find the right block. */ 
+                   blocks between the nested procedure and it.  This 
+                   will only happen if the comp unit is a module.  
+                   CM3 flattens a block located inside the executable 
+                   body of a module into its <moduleName>_M3 procedure 
+                   in the actual stabs block construction, (by omitting 
+                   the usual N_LBRAC, N_RBRAC pair), yet, peculiarly 
+                   and inconsistently,  still adds a block number 1 
+                   to the name of procedures located inside it.  We must 
+                   consume this "1__" to get the code below to find the 
+                   right block. */ 
                 { while ( '0' <= *prev_end && *prev_end <= '9') 
                     { prev_end ++; } 
-                  prev_end += 2; /* Skip "__" before the next name component. */ 
+                  prev_end += 2; /* Skip "__" before the next name component. */
                 }  
         
               /* Handle any anonymous blocks between parent and nested. */ 
@@ -1474,13 +1535,17 @@ m3_fix_symtab ( struct symtab *st )
                         } 
                       else { break ; } 
                     } /* while */
-                  /* Now block_num is a block sequence number of an M3 anonymous
-                     block that is immediately inside the one identified by
-                     blockvector index parent_block_ss.  The gdb block we want 
-                     is the block_num-th such block.  For anonymous blocks, 
-                     the children always come after the parent in the 
-                     blockvector, so search forwards from parent_block_ss.
+
+                  /* Now block_num is a block sequence number of one
+                     of possibly many M3 anonymous blocks that are
+                     immediately inside the one identified by
+                     parent_block_ss/parent_block/parent_sym.  The gdb
+                     block we want is the block_num-th such block.
+                     For anonymous blocks, the children always come
+                     after the parent in the blockvector, so search
+                     forwards from parent_block_ss.
                    */   
+
                   child_ss = parent_block_ss + 1; 
                   block_num_2 = block_num; 
                   while ( true ) 
@@ -1494,17 +1559,19 @@ m3_fix_symtab ( struct symtab *st )
                               ); 
                           goto done_with_nested; 
                         }   
-                      child_block = BLOCKVECTOR_BLOCK (block_vec, child_ss ); 
+                      child_block = BLOCKVECTOR_BLOCK ( block_vec, child_ss ); 
                       if ( BLOCK_FUNCTION ( child_block ) == NULL 
-                            && BLOCK_SUPERBLOCK ( child_block )
-                               == BLOCKVECTOR_BLOCK 
-                                    ( block_vec, parent_block_ss )
+                            && BLOCK_SUPERBLOCK ( child_block ) == parent_block
                           ) 
                         /* child_block is for an anonymous, immediate child of 
                            block at parent_block_ss. */  
                         { block_num_2 --; 
                           if ( block_num_2 == 0 ) 
                             { parent_block_ss = child_ss; 
+                              parent_block 
+                                = BLOCKVECTOR_BLOCK 
+                                    ( block_vec, parent_block_ss ); 
+                              parent_sym = BLOCK_FUNCTION ( parent_block ); 
                               break; 
                             } 
                         } 
@@ -1517,27 +1584,27 @@ m3_fix_symtab ( struct symtab *st )
               /* Here, parent_block_ss is the immediate parent block of nested 
                  procedure block block_ss. */ 
 
-              parent_block = BLOCKVECTOR_BLOCK (block_vec, parent_block_ss ); 
               if ( info_verbose )
-                { parent_sym = BLOCK_FUNCTION ( parent_block ); 
-                if ( parent_sym != NULL ) 
-                  { printf_filtered 
-                      ( "Setting superblock of nested procedure \"%s\", bv %d, "
-                        " to \"%s\", bv %d.\n",
-                        full_name, block_ss, SYMBOL_SEARCH_NAME ( parent_sym ),
-                        parent_block_ss 
-                      );
-                    list_block_symbols ( parent_block, 1); 
-                  } 
-                else 
-                  { printf_filtered 
-                      ( "Setting superblock of nested procedure \"%s\", bv %d,"
-                        "to anonymous block, bv %d\n",
-                        full_name, block_ss, parent_block_ss
-                      );
-                    list_block_symbols ( parent_block, 1 ); 
-                  } 
-                  gdb_flush (gdb_stdout);
+                { if ( parent_sym != NULL ) 
+                    { printf_filtered 
+                        ( "Setting superblock of nested procedure \"%s\", "
+                          " bv %d, to \"%s\", bv %d.\n",
+                          full_name, 
+                          block_ss, 
+                          SYMBOL_SEARCH_NAME ( parent_sym ),
+                          parent_block_ss 
+                        );
+                      list_block_symbols ( parent_block, 1); 
+                    } 
+                  else 
+                    { printf_filtered 
+                        ( "Setting superblock of nested procedure \"%s\","
+                          " bv %d, to anonymous block, bv %d\n",
+                          full_name, block_ss, parent_block_ss
+                        );
+                      list_block_symbols ( parent_block, 1 ); 
+                    } 
+                    gdb_flush (gdb_stdout);
                 }
               BLOCK_SUPERBLOCK ( BLOCKVECTOR_BLOCK ( block_vec, block_ss ) )
                 = parent_block; 
@@ -1546,7 +1613,8 @@ m3_fix_symtab ( struct symtab *st )
         } /* if this is a procedure block. */ 
     } /* for blocks in blockvector. */ 
 
-  if ( prefix_space . space_ptr != NULL ) { free ( prefix_space . space_ptr ); } 
+  if ( prefix_space . space_ptr != NULL ) 
+    { free ( prefix_space . space_ptr ); } 
 
   if ( ir != 0 ) 
     { if ( ir_type == 0 ) 
@@ -1557,15 +1625,17 @@ m3_fix_symtab ( struct symtab *st )
              interfaces as well as the one MM_ or MI_ for the unit itself.  
              But there is no MR_zzzzzz symbol.
           */ 
-          error ("Debug info for file \"%s\" not in stabs format", st->filename);
+          error 
+            ( "Debug info for file \"%s\" not in stabs format", st->filename );
           LHS_SYMBOL_TYPE (ir) = 0;
         } 
       else { LHS_SYMBOL_TYPE (ir) = ir_type; }
     }
 
-  if ( info_verbose) 
-    { printf_filtered ("Done with M3 symtab for file \"%s\"\n", st->filename);
-      gdb_flush (gdb_stdout);
+  if ( info_verbose ) 
+    { dump_blockvector ( block_vec, 50 );
+      printf_filtered ( "Done with M3 symtab for file \"%s\"\n", st->filename );
+      gdb_flush ( gdb_stdout );
     }
 
 } /* m3_fix_symtab */ 

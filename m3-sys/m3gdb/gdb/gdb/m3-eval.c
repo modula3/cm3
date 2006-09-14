@@ -861,18 +861,6 @@ m3_subtype_relation ( struct type * left, struct type * right )
       } /* switch ( left_code ) */ 
   } /* m3_subtype_relation */ 
 
-/* Given a block, find the first superblock ancestor that is a function block. */
-static struct block * 
-m3_proc_block ( struct block * blk ) 
-
-  { struct block * l_block; 
-
-    l_block = blk ; 
-    while ( l_block != NULL && BLOCK_FUNCTION ( l_block ) == NULL ) 
-      { l_block = BLOCK_SUPERBLOCK ( l_block ) ; } 
-    return l_block; 
-  } /* m3_proc_block */ 
-
 bool use_static_link = true; 
 
 /* Follow static links, as needed, to get the right frame for target_block. */ 
@@ -1475,7 +1463,7 @@ m3_check_and_coerce_array (
 /* The Modula-3 compilers do a poor job of giving enough info to figure out if 
    we have a function procedure and if so, what its result type is.  Here is a 
    hare-brained scheme, worked out experimentally, for inferring it.  
-   If it's a function and the result type is "small", there will be a local
+   If it's a function and the result type is "small", it will have a local
    variable named "_result" whose type is what we want.  If the result type is
    "big" (i.e., compiled as if it were a VAR parameter), there will be a formal
    parameter, of the same name, whose type is that of a VAR parameter of the
@@ -1487,10 +1475,10 @@ m3_check_and_coerce_array (
    type that is almost no help, except when it has a builtin type.  However,
    its block will have entries for the formals, also constructed from N_PSYM
    entries, and locals, constructed from N_LSYM entries.  
-   The type of "_result" is what is returned.  .    
+   The type of "_result" is what is returned.    
    Procedure type stabs entries for procedure variables and methods are produced
-   a little differently by the compilers, and don't contain enough info at all.  
-   Fortunately, for evaluating a user-typed call, we can get the runtime address 
+   a little differently by the compilers, and don't contain enough info at all.
+   Fortunately, for evaluating a user-typed call, we can get the runtime address
    of the procedure constant first, then get the symbol from that. 
    It is not clear that the type of "_result" will be available when the 
    procedure constant symbol is constructed, so we delay this lookup until 
@@ -1500,7 +1488,7 @@ m3_check_and_coerce_array (
    This function patches the result type of the procedure constant symbol
    and also returns its result type.  result_is_ref_param  (which may be NULL) 
    is set to true iff it is a result that is, at machine-code level, 
-   implemented as a  VAR parameter. 
+   implemented as a VAR parameter. 
 */
 static struct type * 
 m3_patched_proc_result_type ( 
@@ -1517,7 +1505,9 @@ m3_patched_proc_result_type (
   if ( proc_sym == NULL ) 
     { error ( "Can't get symbol for procedure \"%s\".", name ); /* NORETURN */ }
   proc_block = SYMBOL_BLOCK_VALUE ( proc_sym );
-  result_sym = lookup_block_symbol ( proc_block, "_result", NULL, VAR_DOMAIN ); 
+  result_sym 
+    = lookup_block_symbol 
+        ( m3_proc_body_block ( proc_block ), "_result", NULL, VAR_DOMAIN ); 
   if ( result_sym == NULL ) /* No result type => proper procedure. */ 
     { l_result_is_ref_param = false; 
       result_type = builtin_type_m3_void; 
@@ -1528,14 +1518,14 @@ m3_patched_proc_result_type (
       gdb_assert  
         ( l_result_is_ref_param 
           == ( TYPE_CODE ( result_type ) == TYPE_CODE_M3_INDIRECT )
-          /* We will need this inside call_fuction_by_hand to tell if result
-                    is passed by reference. */ 
+          /* ^call_function_by_hand will need this to ascertain whether the
+              result is passed by reference. */ 
         ); 
     } 
   if ( result_is_ref_param != NULL ) 
     { * result_is_ref_param = l_result_is_ref_param; } 
   /* Patch the procedure type's result type, which will be used elsewhere to
-     detect that this is a function whose result is actually a ref parameter. */ 
+     detect that this is a function whose result is actually a ref parameter. */
   TYPE_TARGET_TYPE ( SYMBOL_TYPE ( proc_sym ) ) = result_type; 
   return result_type; 
 } /* m3_patched_proc_result_type */
@@ -1595,12 +1585,13 @@ m3_nested_proc_const_closure (
 
 { struct type * proc_type; 
   struct block * callee_block; 
-  struct block * callee_pred_block; 
+  struct block * callee_parent_proc_block; 
   struct frame_info * static_link_frame; 
   struct value * result; 
   CORE_ADDR inf_code_addr; 
   CORE_ADDR static_link; 
   
+  if ( inf_code_addr_result != NULL ) { * inf_code_addr_result = 0; }
   if ( proc_const_value == NULL ) { return NULL; } 
   proc_type = value_type ( proc_const_value ); 
   if ( proc_type == NULL || TYPE_CODE ( proc_type ) != TYPE_CODE_FUNC ) 
@@ -1613,17 +1604,21 @@ m3_nested_proc_const_closure (
     = VALUE_ADDRESS ( proc_const_value ) + value_offset ( proc_const_value ); 
   if ( inf_code_addr == 0 ) { return proc_const_value; } 
   callee_block = block_for_pc ( inf_code_addr );
-  callee_pred_block = m3_proc_block ( BLOCK_SUPERBLOCK ( callee_block ) );
-  if ( callee_pred_block == NULL ) /* Not nested. */
+  callee_parent_proc_block 
+    = m3_proc_block ( BLOCK_SUPERBLOCK ( callee_block ) );
+  if ( callee_parent_proc_block == NULL ) /* Not nested. */
     { result = proc_const_value; } 
   else /* Nested procedure. */  
-    { static_link_frame = m3_frame_for_block ( callee_pred_block );  
-      static_link = get_frame_base_address ( static_link_frame );  
+    { static_link_frame = m3_frame_for_block ( callee_parent_proc_block );  
+      static_link 
+        = get_frame_base_address ( static_link_frame )  
+          + m3_frame_base_to_sl_target_offset ( callee_parent_proc_block ); 
       result  
         = m3_build_gdb_proc_closure 
             ( proc_type, inf_code_addr, static_link ); 
     } 
-  if ( inf_code_addr_result != NULL ) { * inf_code_addr_result = inf_code_addr; }
+  if ( inf_code_addr_result != NULL ) 
+    { * inf_code_addr_result = inf_code_addr; }
   return result; 
 } /* m3_nested_proc_const_closure */  
 

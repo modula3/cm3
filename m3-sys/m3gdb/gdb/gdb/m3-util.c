@@ -1669,7 +1669,7 @@ m3_set_value_open_array_shape_component (
    So reuse existing pointer-type mechanism from C/C++, but change
    its type code.  
    This could duplicate a compiler-generated type, but that would be
-   hard to find. */ 
+   a lot of code and execution to find. */ 
 struct type *
 m3_indirect_type_from_type (struct type *type)
 { struct type * result; 
@@ -1679,8 +1679,11 @@ m3_indirect_type_from_type (struct type *type)
   return result; 
 }
 
-/* TODO:  Make this value more dependable: */ 
-const int static_link_offset = 0; 
+/* TODO:  Make this target-dependent value adapt.  It does seems to be very 
+          deeply built in to gcc (and the standalone backend too) that it is 
+          always the first thing in the local variables area, but it will
+          still vary with stack growth direction. */ 
+static const int static_link_location_offset = - 4; 
 
 struct frame_info * 
 m3_static_parent_frame ( struct frame_info *start_frame ) 
@@ -1693,7 +1696,8 @@ m3_static_parent_frame ( struct frame_info *start_frame )
     /* Maybe just call read_memory? */
     static_link 
        = read_memory_typed_address /* from gdbcore.h */ 
-           ( get_frame_locals_address ( start_frame ) + static_link_offset, 
+           ( get_frame_locals_address ( start_frame ) 
+               + static_link_location_offset, 
              builtin_type_void_data_ptr 
            ); 
     frame = start_frame; 
@@ -1704,7 +1708,12 @@ m3_static_parent_frame ( struct frame_info *start_frame )
             /* NORETURN */ 
           }  
       } 
-    while ( ! m3_address_lies_within_frame_locals ( static_link, frame ) ); 
+    while 
+      ( /* Using m3_address_lies_within_frame_locals makes this immune to gcc's
+           evil habit of making static links point to variable places within the
+           activation record besides where the frame pointer does. */ 
+              ! m3_address_lies_within_frame_locals ( static_link, frame ) 
+      ); 
     return frame; 
   } /* m3_static_parent_frame */ 
 
@@ -1835,6 +1844,18 @@ m3_proc_env_ptr ( const gdb_byte * valaddr )
     else { return 0; } 
   } /* m3_proc_env_ptr */ 
 
+/* Return the first superblock ancestor of block that is a function block. */
+struct block * 
+m3_proc_block ( struct block * blk ) 
+
+  { struct block * l_block; 
+
+    l_block = blk ; 
+    while ( l_block != NULL && BLOCK_FUNCTION ( l_block ) == NULL ) 
+      { l_block = BLOCK_SUPERBLOCK ( l_block ) ; } 
+    return l_block; 
+  } /* m3_proc_block */ 
+
 /* mininum and maximum displacements of local variables in a block.  
    the range will be half-open, such that the variables occupy 
    displacements [min,max) */
@@ -1879,7 +1900,7 @@ m3_address_lies_within_frame_locals (
   CORE_ADDR locals_address; 
   
   if ( frame == NULL ) { return false; } 
-  blk = get_frame_block ( frame, NULL ); 
+  blk = m3_proc_block ( get_frame_block ( frame, NULL ) ); 
   if ( blk == NULL ) { return false; } 
   m3_block_locals_range ( blk, & min_displ, & max_displ ); 
   locals_address = get_frame_locals_address ( frame ); 
@@ -1887,5 +1908,50 @@ m3_address_lies_within_frame_locals (
   if ( address >= locals_address + max_displ ) { return false; } 
   return true; 
 } /* m3_address_lies_within_block_locals */ 
+
+/* Return the block for the declared procedure that contains bl,
+   where "contains" is reflexive.   */
+static struct block *
+m3_block_proc_block ( struct block *bl )
+
+  { while ( BLOCK_FUNCTION ( bl ) == NULL && BLOCK_SUPERBLOCK ( bl ) != NULL )
+      { bl = BLOCK_SUPERBLOCK ( bl ); } 
+    return bl;
+  } /* m3_block_proc_block */ 
+
+/* This must agree with the string defined by the same name in the gcc backend, 
+   dbxout.c, and used by dbxout_emit_frame_offset: */ 
+static const char * frame_offset_name = "__frame_offset"; 
+
+/* Given a block for a procedure procblock, return the amount to add
+   to the frame base address to get the place in the activation record
+   where static links point. */ 
+ULONGEST 
+m3_frame_base_to_sl_target_offset ( struct block * procblock ) 
+
+  { struct symbol * offset_sym; 
+
+    if ( procblock == NULL ) { return 0; } 
+    offset_sym 
+      = lookup_block_symbol 
+          ( m3_block_proc_block ( procblock ), 
+            frame_offset_name, NULL, VAR_DOMAIN 
+          );
+    if ( offset_sym == NULL ) { return 0; }
+    return SYMBOL_VALUE ( offset_sym );  
+  } /* m3_frame_base_to_sl_target_offset */ 
+
+/* If proc_block was discovered earlier to contain an artificial, 
+   compiler-generated block, return it, otherwise, identity. */ 
+struct block * 
+m3_proc_body_block ( struct block * proc_block )
+
+{ struct block * result; 
+
+  if ( proc_block == NULL ) { return NULL; } 
+  result = M3_BLOCK_BODY_BLOCK ( proc_block );   
+  if ( result== NULL ) { return proc_block; }  
+  return result; 
+} /* m3_proc_body_block */ 
 
 /* End of file m3-util.c */ 
