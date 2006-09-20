@@ -2406,6 +2406,7 @@ m3cg_declare_segment (void)
   TREE_STATIC (v) = 1;
   TREE_PUBLIC (v) = 1;
   TREE_READONLY (v) = is_const;
+  TREE_ADDRESSABLE (v) = 1;
   DECL_DEFER_OUTPUT (v) = 1;
   current_segment = v;
 
@@ -2425,7 +2426,7 @@ m3cg_bind_segment (void)
   ALIGNMENT (a);
   TYPE      (t);
   BOOLEAN   (exported);
-  UNUSED_BOOLEAN   (initialized);
+  BOOLEAN   (initialized);
 
   if (option_vars_trace)
     fprintf(stderr, "  bind segment %s type %d size %ld alignment %ld\n",
@@ -2439,7 +2440,9 @@ m3cg_bind_segment (void)
   DECL_MODE (v) = VOIDmode;
   TREE_TYPE (v) = m3_build_type (t, s, a);
   layout_decl (v, a);
+
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
+  DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
   TREE_STATIC (v) = 1;
 }
