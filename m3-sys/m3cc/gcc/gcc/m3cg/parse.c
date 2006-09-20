@@ -2432,14 +2432,8 @@ m3cg_bind_segment (void)
     fprintf(stderr, "  bind segment %s type %d size %ld alignment %ld\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
   current_segment = v;
-  /* Clear the size, alignment, and mode of the variable so that layout_decl
-     will set them properly using our updated information. */
-  DECL_SIZE (v) = 0;
-  DECL_SIZE_UNIT (v) = 0;
-  DECL_ALIGN (v) = 0;
-  DECL_MODE (v) = VOIDmode;
   TREE_TYPE (v) = m3_build_type (t, s, a);
-  layout_decl (v, a);
+  relayout_decl (v);
 
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
   DECL_COMMON (v) = (initialized == 0);
