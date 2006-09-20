@@ -1232,6 +1232,7 @@ setup_pointers_and_addressables (struct alias_info *ai)
 	{
 	  if (!bitmap_bit_p (addressable_vars, DECL_UID (var))
 	      && TREE_CODE (var) != RESULT_DECL
+	      && !TREE_THIS_VOLATILE (var) /* M3 hack to preserve TREE_ADDRESSABLE */
 	      && !is_global_var (var))
 	    {
 	      bool okay_to_mark = true;
