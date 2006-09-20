@@ -866,6 +866,7 @@ m3_write_globals (void)
 
     FOR_EACH_CONSTRUCTOR_VALUE (elts, idx, value) {
       if (TREE_CODE(value) == VAR_DECL) {
+	gcc_assert (TREE_ADDRESSABLE (value)); /* ensure optimizers play fair */
 	/* take apart the rtx, which is of the form
 	   (insn n m p (use (mem: (plus: (reg: r $fp) 
 	   (const_int offset))) ...)
