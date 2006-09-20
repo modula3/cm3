@@ -2749,6 +2749,7 @@ m3cg_init_offset (void)
   tree f, v;
   TREE_USED (var) = 1;
   /* M3 hack to preserve TREE_ADDRESSABLE: see setup_pointers_and_addressables */
+  TREE_THIS_VOLATILE (var) = 1;
   one_field (o, t_int, &f, &v);
   TREE_VALUE (v) = var;		/* we will fix the offset later */
 }
