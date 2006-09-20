@@ -128,6 +128,7 @@ enum m3_tree_index
   M3TI_PENDING_BLOCKS,
   M3TI_CURRENT_STMTS,
   M3TI_PENDING_STMTS,
+  M3TI_PENDING_INITS,
 
   M3TI_MAX
 };
@@ -185,6 +186,7 @@ static GTY (()) tree m3_global_trees[M3TI_MAX];
 #define pending_blocks	m3_global_trees[M3TI_PENDING_BLOCKS]
 #define current_stmts	m3_global_trees[M3TI_CURRENT_STMTS]
 #define pending_stmts	m3_global_trees[M3TI_PENDING_STMTS]
+#define pending_inits   m3_global_trees[M3TI_PENDING_INITS]
 
 /* Types expected by gcc's garbage collector.
    These types exist to allow language front-ends to
@@ -254,8 +256,9 @@ static tree getdecls (void);
 static int global_bindings_p (void);
 static void insert_block (tree block);
 
-static void m3_push_type_decl (tree id, tree type_node);
-static void m3_expand_function (tree fndecl);
+static void m3_push_type_decl (tree, tree);
+static void m3_expand_function (tree);
+static void m3_write_globals (void);
 
 /* The front end language hooks (addresses of code for this front
    end).  These are not really very language-dependent, i.e.
@@ -280,6 +283,8 @@ static void m3_expand_function (tree fndecl);
 
 #undef LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION
 #define LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION m3_expand_function
+#undef LANG_HOOKS_WRITE_GLOBALS
+#define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
 
 /* Hook routines and data unique to Modula-3 back-end.  */
 
@@ -846,6 +851,44 @@ m3_expand_function (tree fndecl)
 {
   /* We have nothing special to do while expanding functions for Modula-3.  */
   tree_rest_of_compilation (fndecl);
+}
+
+static void
+m3_write_globals (void)
+{
+  tree ctors;
+
+  /* Fix init_offset fields in constructors: VAR_DECL -> offset */
+  for (ctors = pending_inits; ctors; ctors = TREE_CHAIN(ctors)) {
+    VEC(constructor_elt,gc) *elts = CONSTRUCTOR_ELTS (TREE_VALUE (ctors));
+    unsigned HOST_WIDE_INT idx;
+    tree value;
+
+    FOR_EACH_CONSTRUCTOR_VALUE (elts, idx, value) {
+      if (TREE_CODE(value) == VAR_DECL) {
+	/* take apart the rtx, which is of the form
+	   (insn n m p (use (mem: (plus: (reg: r $fp) 
+	   (const_int offset))) ...)
+	   or 
+	   (insn n m p (use (mem: (reg: r $fp))) ...)
+	   for offset 0. */
+	{
+	  int j;
+	  rtx r = DECL_RTL (value);	/* (mem ...) */
+	  r = XEXP (r, 0);	/* (plus ...) or (reg ...) */
+	  if (REG_P (r)) {
+	    j = 0;
+	  } else {
+	    r = XEXP (r, 1);	/* (const_int ...) */
+	    j = XWINT (r, 0);  /* offset */
+	  }
+	  VEC_index (constructor_elt, elts, idx)->value = size_int (j);
+	}
+      }
+    }
+  }
+
+  write_global_declarations ();
 }
 
 /* Create the predefined scalar types of M3CG,
@@ -2633,9 +2676,13 @@ m3cg_end_init (void)
     nreverse (TYPE_FIELDS (current_record_type));
   layout_type (current_record_type);
 
-  DECL_INITIAL (v)
-    = build_constructor_from_list (current_record_type,
-				   nreverse (current_record_vals));
+  /* remember this init so we can fix any init_offset later */
+  pending_inits
+    = tree_cons (NULL_TREE,
+		 build_constructor_from_list (current_record_type,
+					      nreverse (current_record_vals)),
+		 pending_inits);
+  DECL_INITIAL (v) = TREE_VALUE (pending_inits);
 }
 
 static void
@@ -2699,29 +2746,9 @@ m3cg_init_offset (void)
   VAR        (var);
 
   tree f, v;
-  int j;
-
   TREE_USED (var) = 1;
-
   one_field (o, t_int, &f, &v);
-
-  /* take apart the rtx, which is of the form
-       (insn n m p (use (mem: (plus: (reg: r $fp) 
-       (const_int offset))) ...)
-     or 
-       (insn n m p (use (mem: (reg: r $fp))) ...)
-       for offset 0. */
-  {
-    rtx r = DECL_RTL (var);	/* (mem ...) */
-    r = XEXP (r, 0);	/* (plus ...) or (reg ...) */
-    if (REG_P (r)) {
-      j = 0;
-    } else {
-      r = XEXP (r, 1);	/* (const_int ...) */
-      j = XWINT (r, 0);  /* offset */
-    }
-  }
-  TREE_VALUE (v) = size_int (j);
+  TREE_VALUE (v) = var;		/* we will fix the offset later */
 }
 
 static void
