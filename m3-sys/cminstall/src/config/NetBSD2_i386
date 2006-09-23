@@ -99,12 +99,66 @@ readonly INSTALL_IMPLS = TRUE
 
 SYSTEM_LIBS = {
   "LIBC"       : [ "-lm" ],
-  "LEX-YACC"   : [ "-L/usr/lib", "-ll" ],
-  "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
-  "POSTGRES95" : [ "-L/usr/pkg/lib", "-lpq" ],
-  "OPENGL"     : [ "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
-  "MOTIF"      : [ "-L/usr/pkg/lib", "-lXm" ],
-  "X11"        : [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
+  "LEX-YACC"   : [ BEGIN_CONFIG
+                       "Where are the lex/yacc libraries?"
+                       11 "libl.a"
+                       12 "/usr/lib",
+                       12 "/usr/pkg/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-ll" ],
+  "FLEX-BISON" : [ BEGIN_CONFIG
+                     "Where are the flex/bison libraries?"
+                       11 "libfl.a"
+                       12 "/usr/lib",
+                       12 "/usr/pkg/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lfl" ],
+  "POSTGRES95" : [ BEGIN_CONFIG
+                     "Where are the Postgres95 libraries?"
+                       11 "libpq.a"
+                       12 "/usr/pkg/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lpq" ],
+  "OPENGL"     : [ BEGIN_CONFIG
+                     "Where are the OpenGL libraries?"
+                       11 "libGLU.a"
+                       11 "libGL.a"
+                       12 "/usr/X11R6/lib"
+                       12 "/usr/lib"
+                       13 "/usr/pkg/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ BEGIN_CONFIG
+                     "Where are the ODBC libraries?"
+                       11 "libodbc.a"
+                       12 "/usr/pkg/lib"
+                       12 "/usr/local/lib"
+                       12 "/usr/lib"
+                       12 "/usr/local/pgsql/lib"
+                       12 "/usr/local/postgres95/lib"
+                   END_CONFIG, "-lodbc" ],
+  "MOTIF"      : [ BEGIN_CONFIG
+                     "Where are the Motif libraries?"
+                       11 "libXm.a"
+                       12 "/usr/pkg/lib"
+                       12 "/usr/X11R6/lib"
+                       12 "/usr/lib"
+                       12 "/usr/local/lib"
+                   END_CONFIG, "-lXm" ],
+  "X11"        : [ BEGIN_CONFIG
+                     "Where are the X11 libraries?"
+                       11 "libXaw.a"
+                       11 "libXmu.a"
+                       11 "libXext.a"
+                       11 "libXt.a"
+                       11 "libSM.a"
+                       11 "libICE.a"
+                       11 "libX11.a"
+                       12 "/usr/X11R6/lib"
+                       12 "/usr/lib"
+                       12 "/usr/pkg/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
 }
