@@ -45,7 +45,25 @@ INITIAL_REACTOR_BROWSER = "netscape"
 % A World-Wide Web browser.  Reactor passes it an initial URL
 % its first command-line argument.
 
-INITIAL_REACTOR_EDITOR = "emacsclient"
+INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
+  "What should be the default text editor for new Reactor users?"
+    10 "EDITOR"
+     0 "emacsclient"
+     0 "emacs"
+     0 "vi"
+     0 "textedit"
+     0 "xedit"
+     6 "/usr/local/emacs/bin" "emacsclient"
+     6 "/usr/local/bin"       "emacsclient"
+     6 "/usr/local/emacs/bin" "emacs"
+     6 "/usr/local/bin"       "emacs"
+     6 "/usr/bin"             "vi"
+     6 "/usr/local/X11R5/bin" "xedit"
+     6 "/usr/openwin/bin"     "textedit"
+     6 "/usr/openwin/bin"     "xedit"
+     6 "/usr/X11/bin"         "xedit"
+     6 "/usr/bin/X11"         "xedit"
+END_CONFIG
 % A text editor.  Reactor passes it "<file> +<line>" on the
 % command-line when it wants to edit <file> initially positioned
 % at <line>.
@@ -57,7 +75,11 @@ INITIAL_REACTOR_EDITOR = "emacsclient"
 % fixed the permissions.
 
 %INSTALL_ROOT = "/proj/cmass/install.2/LINUXELF/"
-INSTALL_ROOT = "/usr/local/cm3/"
+INSTALL_ROOT = BEGIN_CONFIG
+  "Where should Reactor be installed?"
+    7 %-- user specified install root
+END_CONFIG
+
 %-- handy for installations that keep all M3 stuff together
 
 BIN_INSTALL   = INSTALL_ROOT & "bin"        % executables
@@ -168,6 +190,42 @@ SYSTEM_LIBS = {
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
                     "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+
+%---------------------------------------------------------- system programs ---
+
+readonly SYSTEM_CC  = BEGIN_CONFIG
+  "Where is your C compiler?"
+    0 "gcc"
+    6 "/bin"           "gcc"
+    6 "/usr/bin"       "gcc"
+    6 "/usr/local"     "gcc"
+    6 "/usr/local/bin" "gcc"
+    6 "/usr/local/gnu" "gcc"
+    0 "cc"
+    6 "/bin"           "cc"
+    6 "/usr/bin"       "cc"
+    6 "/usr/local"     "cc"
+    6 "/usr/local/bin" "cc"
+    6 "/usr/local/gnu" "cc"
+END_CONFIG % C compiler
+readonly SYSTEM_AR  = BEGIN_CONFIG
+  "Where is your library archiver?"
+    0 "ar"
+    6 "/usr/bin"       "ar"
+    6 "/bin"           "ar"
+    6 "/usr/local"     "ar"
+    6 "/usr/local/bin" "ar"
+    6 "/usr/local/gnu" "ar"
+END_CONFIG % Archiver
+readonly SYSTEM_ASM = BEGIN_CONFIG
+  "Where is your assembler?"
+    0 "as"
+    6 "/usr/bin"       "as"
+    6 "/bin"           "as"
+    6 "/usr/local"     "as"
+    6 "/usr/local/bin" "as"
+    6 "/usr/local/gnu" "as"
+END_CONFIG % Assembler
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
