@@ -11,103 +11,389 @@
   </head>
 
   <body bgcolor="#ffffff">
-    <h2>CM3 Installation Notes</h2>
+    <h1>CM3 5.4 installation notes</h1>
+
+    <hr>
+    <h2>Terminology</h2>
+    <p>
+    This section explains some of the terms that are used throughout
+    this document. Some of them may be familiar, but in the context of
+    CM3 they may have slightly different meanings.
+    </p>
+
+    <h3>Package</h3>
+    <p>
+      A <i>package</i> in CM3-speak is a software component of the
+      CM3 system. Packages are devided into categories.
+      The top-level directory of the CM3 source tree contains
+      a lot of directories representing these categories.
+    </p>
 
     <p>
-      CM3 5.1 comes as a full source distribution contained in a file
-      named 
+      Packages have explicit import and export declarations, i.e.
+      they implement the principle of information hiding on a
+      higher level than modules. For details on packages see
+      http://...
     </p>
-    <blockquote><tt>cm3-src-all-CM3VERSION.tgz</tt>,</blockquote>
+
+    <p>Packages can be local to a given user's workspace, or can be installed system-wide,
+    so other users on the system can use them, too. Installing a package
+    system-wide is also called <i>shipping</i> the package.</p>
+
     <p>
-      a considerably smaller standard distribution
+    For example, the <i>m3-sys</i> category contains, among others,
+    the packages <i>cm3</i> (the compiler user interface), <i>m3front</i>
+    (the compiler frontend), <i>cminstall</i> (the installation program),
+    <i>m3cc</i> (the compiler backend) and <i>m3quake</i> (the Quake language
+    interpreter).
     </p>
-    <blockquote><tt>cm3-src-std-CM3VERSION.tgz</tt>,</blockquote>
+
+    <h3>Quake?</h3>
     <p>
-      a (big) system archive containing the compiler, linker, and
-      debugger sources for those who just want to work on the tools 
+    Yes, <i>Quake</i>. Although this term has been overloaded for a while
+    by a very popular video game, CM3 stuck to the name <i>quake</i>
+      for its built-in scripting language for bulid management
+      (replacing the UNIX make program).
     </p>
-    <blockquote><tt>cm3-sys-std-CM3VERSION.tgz</tt>,</blockquote>
+
     <p>
-      and several minimal binary installation archives named
+    CM3 reads and understand so-called <i>m3makefiles</i>. These files
+      have a similar purpose as Makefiles processed by UNIX make.
+      This is part of the reason why installing CM3 is quite different
+      from installing other software on a UNIX system - other software
+      does not have make-like functionality built-in.
     </p>
-    <blockquote><tt>cm3-min-OSTYPE-TARGET-CM3VERSION.tgz</tt>.</blockquote>
+
+    <h3>Target</h3>
     <p>
-      The binary installation archives only contain the compiler,
-      system support libraries (if needed), m3core, libm3, and the CM3
-      installer. This should be everything for a minimal but still
-      usable CM3 system. 
+      A <i>target</i> is short for target platform and defines a combination
+      of an operating system and a
+      certain processor architecture. CM3 needs to know the details
+      of both to work correctly. We do not consider cross-compilation
+      here, and assume that you want to install CM3 on the target
+      you want to run it on to produce code for the same target.
+      An example target would be the FreeBSD operating system
+      running on x86 processors.
+    </p>
+
+    <hr>
+    <h2>Installation Prerequisits</h2>
+
+    <h3>Supported Targets</h3>
+      <p>
+        For this release, the following targets are supported:
+      </p>
+        <table border=1>
+          <tr>
+            <td><b>Name</b></td>        <td><b>Description</b></td>
+          </tr>
+          <tr>
+            <td>FreeBSD4</td>   <td>FreeBSD 4.x and later on x86</td>
+          </tr>
+          <tr>
+            <td>LINUXLIBC6</td> <td>Linux with glibc-6 on x86</td>
+          </tr>
+          <tr>
+            <td>SOLgnu</td>     <td>Solaris 8 and later on sparc with GNU compiler</td>
+          </tr>
+          <tr>
+            <td>PPC_DARWIN</td> <td>Apple's Darwin (MacOS X) system on powerpc</td>
+          </tr>
+          <tr>
+            <td>NetBSD2_i386</td>       <td>NetBSD 2 and later on x86</td>
+          </tr>
+          <tr>
+            <td>NT386</td>      <td>Microsoft Windows NT/2000/XP</td>
+          </tr>
+      </table>
+
+
+    <h3>Minimal Binary Installation Archives</h3>
+        <p>
+        To install CM3, the first thing you need is a so-called
+        <i>minimal binary installation archive</i> for your platform.
+        </p>
+        
+        <p>
+        The archive contains a very bare-bones cm3 installation.
+        It contains a complete compiler and runtime
+        libraries, but it should only be used for bootstrapping
+        a full cm3 installation from source. A full installation
+        contains a lot of additional tools and libraries,
+        some of which are vital for common use.
+        <p>
+        A minimal binary installation archive is named as follows:
+        </p>
+
+        <blockquote><tt>cm3-min-OSTYPE-TARGET-CM3VERSION.tgz</tt>.</blockquote>
+
+        <p>
+        <i>OSTYPE</i> is POSIX for most platforms supported by this release.
+        </p>
+
+        <p>
+        <i>TARGET</i> is the cm3 target.
+        </p>
+
+        <p>
+        You can download a minimal binary installation archive <a href="download.html">here</a>.
+        </p>
+
+      <h3>CM3 source packages</h3>
+
+      <p>
+        As mentioned above, you also need the CM3 source code
+        to install CM3. Several source packages are available:
+      </p>
+
+    <blockquote><tt>cm3-src-all-CM3VERSION.tgz</tt></blockquote>
+    <p>
+        The <i>src-all</i> archive contains the full source code for the cm3
+        distribution. Not all of this is needed to get a working
+        installation. Contains experimental packages that are
+        not compiled and installed by default, and may even be
+        broken. 
+        Includes everything included in other packages below.
+        Most interesting for developers who want to extend
+        and enhance the CM3 system, or fix broken packages.
+    </p>
+
+    <blockquote><tt>cm3-src-std-CM3VERSION.tgz</tt></blockquote>
+    <p>
+      The <i>src-std</i> archive contains source code for a pre-defined set
+      of standard packages that will compile and work.
+    </p>
+
+    <blockquote><tt>cm3-sys-std-CM3VERSION.tgz</tt></blockquote>
+    <p>
+      The <i>sys-std</i> archive contains source code for the compiler, the
+      linker and the debugger.
     </p>
     <p>
-      You will need to download one of the binary installation
-      archives suitable for your system, and any of the source
-      archives you want. You can then use the minimal binary
-      installation to build any of the packages contained in the
-      source distributions. Some useful scripts have been added in the
-      <tt>scripts</tt> subdirectory (contained in all the source and
-      scripts distribution archives) to help with the installation and
-      package build management.
-    </p>
-    <p>
-      <b>Note:</b> Please verify the integrity of the downloaded
+    To get a working cm3 installation, you need either the src-all
+    archive or <b>both</b> the src-std and sys-std archives.
+    You can download source archives <a href="download.html">here</a>.
+      You can verify the integrity of the downloaded
       archives by using the checksums and md5 hashes provided 
       <a href="checksums.php3">here</a>.
     </p>
-    <p>
-      If you have got the binary installation package, unpack it using
-      the following command:
+
+    <hr>
+    <h2>Performing the installation</h2>
+
+    <h3>Step 1: Minimal binary installation</h3>
+     <p>
+     Once you have got the binary installation package, create a
+     new temporary directory (for example, /tmp/cm3), go there,
+     and unpack the minimal binary installation archive.
+     </p>
+     
+     <p>
+     Use a command like this on UNIX-like systems:
     </p>
     <pre>
   gzip -c -d cm3-min-OSTYPE-TARGET-CM3VERSION.tgz | tar xf -
     </pre>
+    <p>On Windows, you can unpack the installation archive with most common
+    archiver programs such as winzip or 7zip.</p>
+
     <p>
-      You will then get the installation program
+      You will get the installation program
       (<tt>cminstall(.exe)</tt>), a copyright notice, a system archive
       (<tt>system.tgz</tt>) with the 
       precompiled standard libraries <tt>m3core</tt> and <tt>libm3</tt>.
       You can place additional archives,
       e.g. the doc distribution (<tt>cm3-doc-CM3VERSION.tgz</tt>) in
-      the same directory. Start the installer with
-    </p>
+      the same directory.
+      </p>
+      
+      <p>
+      The installion program helps you setting up your initial CM3 configuration
+      and extracts <i>system.tgz</i>. Alas, it is not perfect, and be very
+      confusing to use, especially for the first time. There are plans to
+      improve the installer in a future release.
+      </p>
+
+      <p>
+      Change into the directory where you unpacked the archive, and
+      start the installer by running
     <pre>
   ./cminstall
     </pre>
+      on UNIX-like systems and
+      <pre>
+      cminstall.exe
+      </pre>
+      on Windows.
+    Note that the installer is text-based. You will need to open
+    a command-line window in order to use it.</p>
+
     <p>
-      and answer all the questions. If the installation fails for any
-      reason, send mail to <a
-      href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a>. Keep in
-      mind that this is still a pre-release and may not work as
-      expected. As always, please include as much useful information
-      as possible in your email, especially the log file written by
-      cminstall and hardware/operating system information.
+    The installer will first ask you where you want to install CM3.
+    The default installation prefix is <i>/usr/local/cm3</i>.
     </p>
+
+    <p>Next, it will ask about the default editor. This question is present
+    for historical reasons. It is related to
+    the graphical CM3 IDE called <i>Reactor</i>, which is not
+    yet included in CM3. It used to be distributed with the commercial CM3 releases
+    made by Critical Mass Inc., and was removed from the Open Source distribution
+    because of licensing issues. There are efforts to add the IDE again in a future release.
+    For now, you can simply ignore this question and pick the default by hitting Enter.</p>
+
+    <p>Next, it will ask about paths to various development tools and libaries.
+    This is a very important part, since some packages in CM3 will not compile if
+    these libraries cannot be found. Given the amount of targets cm3
+    runs on and the differences between them, we cannot give concrete
+    examples for every possible situation. You will have to find out
+    how to install the required tools and libraries on your system yourself.</p>
+
+    <p>However, I will elaborate a bit on what cminstall does when it
+    asks a question, since this can be a bit confusing at first. The example
+    output is based on the FreeBSD version, and may look slightly different
+    on your system.</p>
+
+    <p>Let's consider this question cminstall is asking:
+    <pre>
+    Where are the flex/bison libraries?
+    looking for library file(s): libfl.a
+    checking for library files in directory /usr/lib... found 
+    checking for library files in directory /usr/local/lib... not found
+    checking for library files in directory /usr/local/gnu/lib... not found
+    checking for directory /usr/lib... found 
+
+     1: /usr/lib
+     Where are the flex/bison libraries? [/usr/lib](1 of 1)</pre>
+    </p>
+    
     <p>
-      If everything worked fine, extend your PATH and LD_LIBRARAY_PATH
-      settings as needed, and unpack the source distribution
-      archive(s) and install all the rest from source, for example
+    As you can see, cminstall prints the name of the library file it
+    is looking for, <i>libfl.a</i>.
+    It then searches a couple of directories for this file, and
+    reports whether it found it. The
+    <i>found</i> and <i>not found</i> lines are the only indicators
+    whether cminstall was successful.
+    </p>
+
+    <p>
+    In this case, the file was only found in one directory.
+    Hitting enter would use the default answer <i>/usr/lib</i>, which is displayed in
+    square brackets, and continue with the installation.
+    This is perfectly fine here, since the file has indeed been found in /usr/lib,
+    as indicated by the line
     </p>
     <pre>
-  gzip -c -d cm3-src-XXX-CM3VERSION.tgz | tar xf -
-  cd scripts
-  PATH="${PATH}:/usr/local/cm3/bin"
-  LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/cm3/lib"
-  more README
-  ./do-cm3-std.sh -help
-  ./do-cm3-std.sh buildship
+    checking for library files in directory /usr/lib... found 
     </pre>
+
+    <p>However, if cminstall cannot find the file, it behaves
+    like this:</p>
+
+    <pre>
+    Where are the flex/bison libraries?
+    looking for library file(s): libfl.a
+    checking for library files in directory /usr/lib... not found
+    checking for library files in directory /usr/local/lib... not found
+    checking for library files in directory /usr/local/gnu/lib... not found
+    checking for directory /usr/lib... found 
+
+    1: /usr/lib
+    Where are the flex/bison libraries? [/usr/lib](1 of 1) 
+    </pre>
+
+    <p>As you can see, it still suggests <i>/usr/lib</i> as the default,
+    even though the library was not found. Simply hitting enter now
+    results in the following question:</p>
+    <pre>
+    The libraries libfl.a are not present in the chosen directory.
+    Would you like to change the library names? [yes] 
+    </pre>
+    <p>Even though the default answer is <i>yes</i>, one would usually
+    want to answer <i>no</i> here, and search the software packages available
+    for the operating system for a package containing the needed library file.
+    After installing the package, you can tell cminstall to try to find the
+    library again by answering <i>no</i> to the next question:</p>
+    <pre>
+    Would you like to continue nonetheless? [yes]
+    </pre>
+    <p>If you answer <i>no</i> here, cminstall will try to find the library
+    again. If you answer <i>yes</i> the default directory is entered into the
+    configuration file and installation continues. If the library is not present in
+    the chosen directory however, compiling
+    the full cm3 installation will probably fail, so answering <i>yes</i>
+    is usually not a really good idea (even though it is the default answer).</p>
+    
     <p>
-      If you want to upgrade the compiler itself, consider using the
+    If the installation fails for any reason, send mail to
+    <a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a>.
+      As always, please include as much useful information
+      as possible in your email, especially the log file written by
+      cminstall, which resides in the installation prefix you chose,
+      and of course hardware/operating system information.
+    </p>
+
+    <p>Now update your environment so that CM3 binaries and libraries can be
+    found by the system.</p>
+    <p>
+    On UNIX-like systems, extend your PATH and LD_LIBRARY_PATH settings so they include
+    CM3 binaues and libraries. Here is an example for bourne shells:
+    </p>
+    <pre>
+  export PATH="${PATH}:/usr/local/cm3/bin"
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/cm3/lib"
+  </pre>
+
+    <p>On Windows, you need to append the <i>bin</i> directory that resides
+    in the cm3 installation prefix to the PATH environment
+    variable in the system preferences.</p>
+
+
+    <h3>Step 2: Bootstrapping the full CM3 installation</h3>
+
+    <p>
+    First, create a new directory for the source tree and unpack the source
+    distribution archive(s) there. Here are example comamnds for UNIX-like systems:
+    </p>
+    <pre>
+    mkdir cm3
+    cd cm3
+    gzip -c -d /path/to/cm3-src-XXX-CM3VERSION.tgz | tar xf -
+    </pre>
+   
+   <p>
+      Shell scripts in the 
+      <tt>scripts/</tt> subdirectory of the source tree can be used to
+      build and install (or &quot;ship&quot;) single packages or groups of packages.
+      See the file <tt>scripts/README</tt> for details.
+    </p>
+    <p>We use one two scripts to bootstrap a full CM3 installation.</p>
+  <pre>
+  cd scripts
+  ./do-cm3-core.sh buildship
+  ./install-cm3-compiler.sh upgrade
+  ./do-cm3-std.sh buildship
+   </pre>
+   <p>
+    The scripts directory also contains corresponding .cmd scripts that can
+    be used on the Windows platform. Running the .sh scripts from within
+    Cygwin also works.
+    </p>
+
+    <p>These steps take a while, especially the last one. When this is done,
+    the installation is finished.</p>
+
+    <hr>
+    <h2>Upgrading CM3</h2>
+    <p>
+      If you want to upgrade to a new CM3 version, use the
       <tt>upgrade.sh</tt> script, and have a look at the <a
         href="upgrading.html">chapter about upgrading</a>.
     </p>
-    <p>
-      The latest scripts archive (as of today, 2001-04-08) contains
-      also a simple cmd script to compile and install the standard
-      packages on WIN32, do-cm3-std.cmd. This script is very
-      simple. If anybody with some knowledge of win32 scripting feels
-      encouraged to produce some more advanced scripts, this would be
-      a very welcome contribution.
+    <p>If you are using a pre-5.3 version of cm3, a fresh install is
+    recommended instead of upgrading. But you can also try using the upgrade-5.3.sh script
+    instead of the upgrade.sh script.
     </p>
-
+    
     <p>
       <b>Note:</b> Please have a look at the
       <a href="known-problems.html">Known Problems Page</a>. If you
@@ -118,9 +404,10 @@
       report</a> (perferably with a working fix :-)
     </p>
 
-    <h2>Platform Notes</h2>
+    <hr>
+    <h2>Platform-specific Notes</h2>
 
-    <h3>WIN32</h3>
+    <h3>Windows</h3>
 
     <p>
       CM3 (like any other currently available Modula-3 distribution)
@@ -134,7 +421,9 @@
       changes as it does not support the definition of entry
       points. This needs to be further investigated, though. Anybody
       who knows about other usable linkers or who gets M3 programs
-      linked without the Microsoft tools should tell us.
+      linked without the Microsoft tools, please let us know.
+      The Microsoft Visual C++ Express Edition which can be downloaded
+      free of charge does <b>not</b> seem to work with CM3, unfortunately.
     </p>
 
     <p>
@@ -143,7 +432,7 @@
     </p>
 
     <p>
-      If you want to use the build scripts provided in the scripts
+      If you want to use the UNIX shell scripts provided in the scripts
       directory, you will also need a recent installation of the
       cygwin32 emulation environment, which is a good idea anyway,
       since it provides you with a more-or-less standard shell (bash)
@@ -172,26 +461,27 @@
       used by the binary installer itself. 
     </p>
 
-    <h3>POSIX</h3>
+    <h3>NetBSD</h3>
 
-    <p>
-      This release (5.1.3) has been bootstrapped on FreeBSD3,
-      LINUXLIBC6, and SOLgnu, where the majority of the supplied
-      packages compiles. The newly ported compiler backend based on
-      gcc 2.95.2 still seems to contains some minor problems, though,
-      which need to be fixed.
-    </p>
+    <p>On NetBSD, you may have to add the line
+    <pre>
+        /usr/X11R6/lib
+        </pre>
+    to the file <i>/etc/ld.so.conf</i> for the compile to succeed.
 
+    <h3>Solaris</h3>
     <p>
-      I have made no attempt to compile m3gdb yet. My experience is
-      that it will take at least a week. The current m3gdb which
-      exists as a port on FreeBSD (and is based on a much later
-      version) is partially usable; it fails on displaying of several
-      types (TEXTs, WIDECHARs, etc.) which have been changed in CM3
-      5.1. I haven't even investigated yet if someone at Critical Mass
-      has made changes to m3gdb to make it work again with the new
-      system. 
-    </p>
+        On Solaris, this release likely needs to use the
+        GNU ld linker. The GNU linker is expected to be  installed
+        as <i>/usr/local/bin/ld</i>.
+        This was done because there were issues
+        with a configure script in the gcc sources of the cm3 compiler
+        backend. It fails to detect linkers properly passed arguments
+        in GNU linker conventions to the native Solaris linker, causing the compile to fail.
+        The installation program lets you decide which linker to use
+        for CM3 package builds, but you may run into problems if you
+        do not use the GNU linker.
+     </p>
 
     <hr>
     <address><a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a></address>
