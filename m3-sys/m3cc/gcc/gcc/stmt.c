@@ -220,13 +220,6 @@ expand_label (tree label)
 	= gen_rtx_EXPR_LIST (VOIDmode, label_r,
 			     nonlocal_goto_handler_labels);
     }
-  else if (TREE_THIS_VOLATILE (label))
-    {
-      /* M3 hack for ex_stack implementations */
-      nonlocal_goto_handler_labels
-	= gen_rtx_EXPR_LIST (VOIDmode, label_r,
-			     nonlocal_goto_handler_labels);
-    }
 
   if (FORCED_LABEL (label))
     forced_labels = gen_rtx_EXPR_LIST (VOIDmode, label_r, forced_labels);
