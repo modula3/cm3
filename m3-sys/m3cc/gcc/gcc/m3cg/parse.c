@@ -240,6 +240,7 @@ static tree m3_signed_type (tree type_node);
 static tree m3_signed_or_unsigned_type (int unsignedp, tree type);
 static unsigned int m3_init_options (unsigned int argc, const char **argv);
 static int m3_handle_option (size_t scode, const char *arg, int value);
+static bool m3_post_options (const char **);
 static bool m3_init (void);
 static void m3_parse_file (int);
 static void m3_finish (void);
@@ -298,6 +299,8 @@ static void m3_write_globals (void);
 #define LANG_HOOKS_INIT_OPTIONS  m3_init_options
 #undef LANG_HOOKS_HANDLE_OPTION
 #define LANG_HOOKS_HANDLE_OPTION m3_handle_option
+#undef LANG_HOOKS_POST_OPTIONS
+#define LANG_HOOKS_POST_OPTIONS m3_post_options
 const struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
 /* Tree code type/name/code tables.  */
@@ -1770,23 +1773,29 @@ m3_swap (void)
 }
 
 static void
-m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_load (tree var, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
+  tree v = var;
 #if 1
-  if (o != 0 || TREE_TYPE (v) != src_t) {
+  if (TREE_ADDRESSABLE (v)) {
+    v = m3_build1 (ADDR_EXPR, t_addr, v);
+    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+    v = m3_build1 (INDIRECT_REF, src_t, m3_cast (build_pointer_type (src_t), v));
+    TREE_THIS_VOLATILE (v) = 1;
+  } else if (o != 0 || TREE_TYPE (v) != src_t) {
     v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
 		   bitsize_int (o));
   }
 #else
   /* failsafe, but inefficient */
-  if (o != 0 || TREE_TYPE (v) != src_t) {
+  if (o != 0 || TREE_ADDRESSABLE (v) || TREE_TYPE (v) != src_t) {
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, src_t,
 		   m3_cast (build_pointer_type (src_t), v));
+    TREE_THIS_VOLATILE (v) = TREE_ADDRESSABLE (var);
   }
 #endif
-  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
@@ -1794,28 +1803,33 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 }
 
 static void
-m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_store (tree var, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-  tree val;
+  tree v = var;
+  tree val = m3_cast (src_t, EXPR_REF (-1));
+  if (src_T != dst_T) {
+    val = m3_build1 (CONVERT_EXPR, dst_t, val);
+  }
 #if 1
-  if (o != 0 || TREE_TYPE (v) != dst_t) {
+  if (TREE_ADDRESSABLE (v)) {
+    v = m3_build1 (ADDR_EXPR, t_addr, v);
+    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+    v = m3_build1 (INDIRECT_REF, dst_t, m3_cast (build_pointer_type (dst_t), v));
+    TREE_THIS_VOLATILE (v) = 1;
+  } else if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
 		   bitsize_int (o));
   }
 #else
   /* failsafe, but inefficient */
-  if (o != 0 || TREE_TYPE (v) != dst_t) {
+  if (o != 0 || TREE_ADDRESSABLE (var) || TREE_TYPE (v) != dst_t) {
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, dst_t,
 		   m3_cast (build_pointer_type (dst_t), v));
+    TREE_THIS_VOLATILE (v) = TREE_ADDRESSABLE (var);
   }
 #endif
-  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
-  val = m3_cast (src_t, EXPR_REF (-1));
-  if (src_T != dst_T) {
-    val = m3_build1 (CONVERT_EXPR, dst_t, val);
-  }
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
 }
@@ -3016,13 +3030,26 @@ m3cg_set_label (void)
 
   if (barrier)
     {
+      tree bar;
+      rtx list;
+      rtx r = label_rtx (l);
+      LABEL_PRESERVE_P (r) = 1;
       FORCED_LABEL (l) = 1;
-
-      /* M3 hack for ex_stack implementations: see expand_label */
-      TREE_THIS_VOLATILE (l) = 1;
+      DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
+      list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
+      DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
+	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
+
+      bar = build4 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL);
+      ASM_VOLATILE_P (bar) = 1;
+      add_stmt (bar);
+      add_stmt (build1 (LABEL_EXPR, t_void, l));
+      bar = build4 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL);
+      ASM_VOLATILE_P (bar) = 1;
+      add_stmt (bar);
     }
-  add_stmt (build1 (LABEL_EXPR, t_void, l));
+  else add_stmt (build1 (LABEL_EXPR, t_void, l));
 }
 
 static void
@@ -4493,6 +4520,25 @@ m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
     }
 
   return 1;
+}
+
+/* Post-switch processing. */
+bool
+m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
+{
+  if (flag_reorder_blocks)
+    {
+      warning (OPT_freorder_blocks,
+	       "-freorder-blocks disabled for Modula-3 ex_stack exception handling");
+      flag_reorder_blocks = 0;
+    }
+  if (flag_reorder_blocks_and_partition)
+    {
+      warning (OPT_freorder_blocks_and_partition,
+	       "-freorder-blocks-and-partition disabled for Modula-3 ex_stack exception handling");
+      flag_reorder_blocks_and_partition = 0;
+    }
+  return false;
 }
 
 /* Language dependent parser setup.  */
