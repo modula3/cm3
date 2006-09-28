@@ -1773,29 +1773,23 @@ m3_swap (void)
 }
 
 static void
-m3_load (tree var, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-  tree v = var;
 #if 1
-  if (TREE_ADDRESSABLE (v)) {
-    v = m3_build1 (ADDR_EXPR, t_addr, v);
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-    v = m3_build1 (INDIRECT_REF, src_t, m3_cast (build_pointer_type (src_t), v));
-    TREE_THIS_VOLATILE (v) = 1;
-  } else if (o != 0 || TREE_TYPE (v) != src_t) {
+  if (o != 0 || TREE_TYPE (v) != src_t) {
     v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
 		   bitsize_int (o));
   }
 #else
   /* failsafe, but inefficient */
-  if (o != 0 || TREE_ADDRESSABLE (v) || TREE_TYPE (v) != src_t) {
+  if (o != 0 || TREE_TYPE (v) != src_t) {
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, src_t,
 		   m3_cast (build_pointer_type (src_t), v));
-    TREE_THIS_VOLATILE (v) = TREE_ADDRESSABLE (var);
   }
 #endif
+  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
@@ -1803,33 +1797,28 @@ m3_load (tree var, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 }
 
 static void
-m3_store (tree var, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-  tree v = var;
-  tree val = m3_cast (src_t, EXPR_REF (-1));
-  if (src_T != dst_T) {
-    val = m3_build1 (CONVERT_EXPR, dst_t, val);
-  }
+  tree val;
 #if 1
-  if (TREE_ADDRESSABLE (v)) {
-    v = m3_build1 (ADDR_EXPR, t_addr, v);
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-    v = m3_build1 (INDIRECT_REF, dst_t, m3_cast (build_pointer_type (dst_t), v));
-    TREE_THIS_VOLATILE (v) = 1;
-  } else if (o != 0 || TREE_TYPE (v) != dst_t) {
+  if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
 		   bitsize_int (o));
   }
 #else
   /* failsafe, but inefficient */
-  if (o != 0 || TREE_ADDRESSABLE (var) || TREE_TYPE (v) != dst_t) {
+  if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, dst_t,
 		   m3_cast (build_pointer_type (dst_t), v));
-    TREE_THIS_VOLATILE (v) = TREE_ADDRESSABLE (var);
   }
 #endif
+  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
+  val = m3_cast (src_t, EXPR_REF (-1));
+  if (src_T != dst_T) {
+    val = m3_build1 (CONVERT_EXPR, dst_t, val);
+  }
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
 }
