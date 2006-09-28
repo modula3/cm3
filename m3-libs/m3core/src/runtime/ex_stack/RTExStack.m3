@@ -565,5 +565,6 @@ PROCEDURE PutFrame (READONLY f: RTStack.Frame;  info: ADDRESS) =
 
 BEGIN
   dump_enabled := RTParams.IsPresent ("stackdump");
+  DEBUG := RTParams.IsPresent ("debugex");
   <*ASSERT RTStack.Has_walker*>
 END RTExStack.

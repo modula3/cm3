@@ -275,6 +275,7 @@ PROCEDURE PutExcept (tag: TEXT;  READONLY a: RT0.RaiseActivation) =
 
 BEGIN
   dump_enabled := RTParams.IsPresent ("stackdump");
+  DEBUG := RTParams.IsPresent ("debugex");
   EVAL SanityCheck; (* avoid the unused warning *)
 END RTExFrame.
 
