@@ -15,7 +15,10 @@ P="${P} m3scanner"
 P="${P} m3tools"
 P="${P} m3cgcat"
 P="${P} m3cggen"
-#[ "${M3GDB}" = yes ] && P="${P} m3gdb" # not yet tested anywhere
+if [ ${TARGET} = FreeBSD4 ] || [ ${TARGET} = LINUXLIBC6 ] \
+  || [ ${TARGET} = SOLgnu ] || [ ${TARGET} = NetBSD2_i386 ] ; then
+        P="${P} m3gdb" 
+fi
 P="${P} m3bundle"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} mklib"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} dll2lib"
