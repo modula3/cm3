@@ -13,7 +13,7 @@
   </head>
 
   <body bgcolor="#ffffff">
-    <h2>Known Problems with CM3 5.1 and 5.2</h2>
+    <h2>Known Problems with CM3</h2>
 
     <p>
       Contents:<br><br>
@@ -68,6 +68,14 @@
         OSError exception on SOLgnu platform</a><br>
       &nbsp;&nbsp;
       <a href="#p_5_5">5.5 Segmentation fault errors on Fedora 3 and Gentoo Linux</a><br>
+      <br>
+      <a href="#p_6">6 Release 5.4.X</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_6_1">6.1 Segmentation violations on Fedora Core Linux</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_6_2">6.2 Unresolved X11 libraries on NetBSD</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_6_3">6.3 Issues with /usr/bin/ld on Solaris</a><br>
     </p>
 
     <a name="p_1">
@@ -804,9 +812,78 @@ Abort</pre>
     </p>
     <p>
       <b>Solution:</b>
-      Use the cm3-min-POSIX-LINUXLIBC6-d5.2.7-2005-03-31.tgz release. Previous versions of the cm3 compiler for Linux will not work on these distributions. Changes were made in m3core (tag >= devel_m3core_d2_1_13) and m3gc-enhanced (tag >= devel_m3gc-enhanced_d1_0_6).
+      Use the cm3-min-POSIX-LINUXLIBC6-d5.2.7-2005-03-31.tgz release. Previous versions of the cm3 compiler for Linux will not work on these distributions. Changes were made in m3core (tag &gt;= devel_m3core_d2_1_13) and m3gc-enhanced (tag &gt;= devel_m3gc-enhanced_d1_0_6).
     </p>
-    <!--
+
+  <a name="p_6">
+    <h3>
+      6 Release 5.4.X
+    </h3> 
+    </a>
+
+    <a name="p_6_1">
+    <h4>
+      6.1 Segmentation violations on Fedora Core Linux
+    </h4>
+
+    <p>
+      <b>Platforms:</b> Fedora Core Linux, maybe other distributions
+    </p>
+
+    <p>
+    <b>Description:</b> All Modula3 programs (including cm3 itself)
+    exit with a segmentation violation.
+    </p>
+
+    <p>
+      <b>Solution:</b>
+     Set the LD_POINTER_GUARD environment
+     variable to 0 before running Modula3 programs, using
+     a command like &quot;<tt>export LD_POINTER_GUARD=0</tt>&quot; or equivalent.
+    <a name="p_6_2">
+    <h4>
+      6.2 Unresolved X11 libraries on NetBSD
+    </h4>
+    <p>
+      <b>Platforms:</b> NetBSD
+    </p>
+
+    <p>
+      <b>Description:</b> Running Modula3 programs, and hence building cm3, fails due to unresolved symbols to X11 libraries.
+    </p>
+
+    <p>
+    <b>Solution:</b> Add the <tt>/usr/X11R6/lib</tt> directory
+    to <tt>/etc/ld.so.conf</tt>.
+    </p>
+
+    <a name="p_6_3">
+    <h4>
+      6.3 Issues with /usr/bin/ld on Solaris
+    </h4>
+    <p>
+      <b>Platforms:</b> Solaris
+    </p>
+
+    <p>
+      <b>Description:</b> 
+        On Solaris, the 5.4 release likely needs to use the
+        GNU ld linker. The GNU linker is expected to be  installed
+        as <i>/usr/local/bin/ld</i>.
+        This was done because there were issues
+        with a configure script in the gcc sources of the cm3 compiler
+        backend. It fails to detect linkers properly passed arguments
+        in GNU linker conventions to the native Solaris linker, causing the
+        compile to fail.
+        The installation program lets you decide which linker to use
+        for CM3 package builds, but you may run into problems if you
+        do not use the GNU linker.
+    </p>
+
+    <p>
+      <b>Solution:</b> Make sure that /usr/local/bin/ld is GNU ld.
+    </p>
+
     <!--
     <h4></h4>
 
