@@ -79,6 +79,15 @@
     <hr>
     <h2>Installation Prerequisits</h2>
 
+    <h3>Check the list of known problems</h3>
+    <p>
+    Read the <a href="known-problems.html">known problems page</a>,
+    especially the parts regarding CM3 5.4. You may run into one
+    or more of the problems mentioned there while installing CM3,
+    so it is a good idea to know about them in advance.
+    </p>
+
+
     <h3>Supported Targets</h3>
       <p>
         For this release, the following targets are supported:
@@ -102,9 +111,11 @@
           <tr>
             <td>NetBSD2_i386</td>       <td>NetBSD 2 and later on x86</td>
           </tr>
+          <!-- ENOSUPP: Windows is not supported (yet?)
           <tr>
             <td>NT386</td>      <td>Microsoft Windows NT/2000/XP</td>
           </tr>
+          -->
       </table>
 
 
@@ -184,7 +195,7 @@
     <h3>Step 1: Minimal binary installation</h3>
      <p>
      Once you have got the binary installation package, create a
-     new temporary directory (for example, /tmp/cm3), go there,
+     new temporary directory (for example, /tmp/cm3), change into it,
      and unpack the minimal binary installation archive.
      </p>
      
@@ -194,8 +205,10 @@
     <pre>
   gzip -c -d cm3-min-OSTYPE-TARGET-CM3VERSION.tgz | tar xf -
     </pre>
+    <!-- ENOSUPP
     <p>On Windows, you can unpack the installation archive with most common
     archiver programs such as winzip or 7zip.</p>
+    -->
 
     <p>
       You will get the installation program
@@ -220,11 +233,13 @@
     <pre>
   ./cminstall
     </pre>
+      <!-- ENOSUPP
       on UNIX-like systems and
       <pre>
       cminstall.exe
       </pre>
       on Windows.
+      -->
     Note that the installer is text-based. You will need to open
     a command-line window in order to use it.</p>
 
@@ -343,9 +358,11 @@
   export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/cm3/lib"
   </pre>
 
+    <!-- ENOSUPP
     <p>On Windows, you need to append the <i>bin</i> directory that resides
     in the cm3 installation prefix to the PATH environment
     variable in the system preferences.</p>
+    -->
 
 
     <h3>Step 2: Bootstrapping the full CM3 installation</h3>
@@ -373,11 +390,13 @@
   ./install-cm3-compiler.sh upgrade
   ./do-cm3-std.sh buildship
    </pre>
+    <!-- ENOSUPP
    <p>
     The scripts directory also contains corresponding .cmd scripts that can
     be used on the Windows platform. Running the .sh scripts from within
     Cygwin also works.
     </p>
+    -->
 
     <p>These steps take a while, especially the last one. When this is done,
     the installation is finished.</p>
@@ -394,8 +413,10 @@
     instead of the upgrade.sh script.
     </p>
     
+    <hr>
+    <h1>Troubleshooting</h1>
     <p>
-      <b>Note:</b> Please have a look at the
+      Please have a look at the
       <a href="known-problems.html">Known Problems Page</a>. If you
       encounter any problem or difficulty that isn't mentioned there,
       don't hesitate to contact <a
@@ -404,10 +425,9 @@
       report</a> (perferably with a working fix :-)
     </p>
 
+    <!-- ENOSUPP
     <hr>
-    <h2>Platform-specific Notes</h2>
-
-    <h3>Windows</h3>
+    <h1>Windows-specific Notes</h1>
 
     <p>
       CM3 (like any other currently available Modula-3 distribution)
@@ -460,28 +480,7 @@
          type="application/octet-stream">cygwin.dll</a> that are also
       used by the binary installer itself. 
     </p>
-
-    <h3>NetBSD</h3>
-
-    <p>On NetBSD, you may have to add the line
-    <pre>
-        /usr/X11R6/lib
-        </pre>
-    to the file <i>/etc/ld.so.conf</i> for the compile to succeed.
-
-    <h3>Solaris</h3>
-    <p>
-        On Solaris, this release likely needs to use the
-        GNU ld linker. The GNU linker is expected to be  installed
-        as <i>/usr/local/bin/ld</i>.
-        This was done because there were issues
-        with a configure script in the gcc sources of the cm3 compiler
-        backend. It fails to detect linkers properly passed arguments
-        in GNU linker conventions to the native Solaris linker, causing the compile to fail.
-        The installation program lets you decide which linker to use
-        for CM3 package builds, but you may run into problems if you
-        do not use the GNU linker.
-     </p>
+    -->
 
     <hr>
     <address><a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a></address>
