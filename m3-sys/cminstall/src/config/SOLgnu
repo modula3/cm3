@@ -139,9 +139,9 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lsocket", "-lnsl",
                         "-lw",    % wide-char (Unicode) support
                         "-ldl",   % dynamic loader support
-                        "-lm",
-                        "-lpthread -lthread", % threads
-                        "-lrt" ]  % semaphores
+                        "-lpthread", "-lthread", % threads
+                        "-lrt",   % semaphores
+                        "-lm" ],
   "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the lex/yacc libraries?"
                        11 "libl.a"
