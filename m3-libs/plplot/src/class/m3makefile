@@ -1,9 +1,0 @@
-% an object oriented interface to PLPlot
-% that should be a bit more comfortable than the original one.
-import("set")
-
-module("LongRealPLPlotFigure")
-module("LongRealPLPlotFrame")
-module("LongRealPLPlotStream")
-
-module("LongRealPLPlotLineStyle")
