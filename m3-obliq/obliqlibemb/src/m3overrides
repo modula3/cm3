@@ -1,2 +1,0 @@
-override ("obliq", ROOT & "/m3-obliq")
-override ("embutils", ROOT & "/m3-libs")
