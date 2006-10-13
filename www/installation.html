@@ -139,15 +139,16 @@
         <blockquote><tt>cm3-min-OSTYPE-TARGET-CM3VERSION.tgz</tt>.</blockquote>
 
         <p>
-        <i>OSTYPE</i> is POSIX for most platforms supported by this release.
+        <i>OSTYPE</i> is POSIX for most platforms supported by CM3.
         </p>
 
         <p>
-        <i>TARGET</i> is the cm3 target.
+        <i>TARGET</i> is the target CM3 shall produce code for.
         </p>
 
         <p>
-        You can download a minimal binary installation archive <a href="download.html">here</a>.
+        You can download a minimal binary installation archive from
+        the <a href="download.html">download page</a>.
         </p>
 
       <h3>CM3 source packages</h3>
@@ -157,16 +158,19 @@
         to install CM3. Several source packages are available:
       </p>
 
-    <blockquote><tt>cm3-src-all-CM3VERSION.tgz</tt></blockquote>
+    <blockquote><tt>cm3-src-sys-CM3VERSION.tgz</tt></blockquote>
     <p>
-        The <i>src-all</i> archive contains the full source code for the cm3
-        distribution. Not all of this is needed to get a working
-        installation. Contains experimental packages that are
-        not compiled and installed by default, and may even be
-        broken. 
-        Includes everything included in other packages below.
-        Most interesting for developers who want to extend
-        and enhance the CM3 system, or fix broken packages.
+    The <i>src-sys</i> archive contains source code for the compiler
+    (except the compiler backend), the linker and vital core libraries.
+    </p>
+
+    <blockquote><tt>cm3-src-gnu-CM3VERSION.tgz</tt></blockquote>
+    <p>
+    The <i>src-gnu</i> archive contains source code for the compiler
+    backend, which is based on the
+    <a href="http://gcc.gnu.org">GNU C compiler</a>, and the debugger
+    m3gdb, which is based on the
+    <a href="http://www.gnu.org/software/gdb/">GNU debugger</a>.
     </p>
 
     <blockquote><tt>cm3-src-std-CM3VERSION.tgz</tt></blockquote>
@@ -175,15 +179,25 @@
       of standard packages that will compile and work.
     </p>
 
-    <blockquote><tt>cm3-sys-std-CM3VERSION.tgz</tt></blockquote>
+    <blockquote><tt>cm3-src-all-CM3VERSION.tgz</tt></blockquote>
     <p>
-    The <i>sys-std</i> archive contains source code for the compiler,
-    the linker and vital core libraries.
+        The <i>src-all</i> archive contains the full source code for the cm3
+        distribution. Not all of this is needed to get a working
+        installation. It contains experimental packages that are
+        not compiled and installed by default, and may even be
+        broken. It also includes everything included in other packages below.
+        This archive is most interesting for developers who want to extend
+        and enhance the CM3 system, or fix broken packages.
     </p>
+
     <p>
-    To get a working cm3 installation, you need either the src-all
-    archive or <b>both</b> the src-std and sys-std archives.
-    You can download source archives <a href="download.html">here</a>.
+    To get a complete cm3 installation, you need either the src-all
+    archive or <b>all three of</b> the src-std, src-sys and src-gnu archives.
+    If you really do not need or want the standard packages (unlikely),
+    you could skip the src-std package.</p>
+    
+    <p>You can download the source archives from the
+    <a href="download.html">download page</a>.
       You can verify the integrity of the downloaded
       archives by using the checksums and md5 hashes provided 
       <a href="checksums.php3">here</a>.
@@ -203,7 +217,7 @@
      Use a command like this on UNIX-like systems:
     </p>
     <pre>
-  gzip -c -d cm3-min-OSTYPE-TARGET-CM3VERSION.tgz | tar xf -
+    tar -zxf cm3-min-OSTYPE-TARGET-CM3VERSION.tgz
     </pre>
     <!-- ENOSUPP
     <p>On Windows, you can unpack the installation archive with most common
@@ -434,13 +448,16 @@
     <h3>Bootstrapping the full CM3 installation</h3>
 
     <p>
-    First, create a new directory for the source tree and unpack the source
-    distribution archive(s) there. Here are example commands for UNIX-like systems:
+    First, create a new directory for the source tree and unpack all
+    needed source distribution archives there. Here are example
+    commands for UNIX-like systems:
     </p>
     <pre>
     mkdir cm3
     cd cm3
-    gzip -c -d /path/to/cm3-src-XXX-CM3VERSION.tgz | tar xf -
+    tar -zxf /path/to/cm3-src-sys-CM3VERSION.tgz
+    tar -zxf /path/to/cm3-src-gnu-CM3VERSION.tgz
+    tar -zxf /path/to/cm3-src-std-CM3VERSION.tgz
     </pre>
    
    <p>
