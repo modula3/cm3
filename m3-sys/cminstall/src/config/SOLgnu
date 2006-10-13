@@ -144,7 +144,7 @@ SYSTEM_LIBS = {
                         "-lm" ],
   "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the lex/yacc libraries?"
-                       11 "libl.a"
+                       11 "libl.so"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
@@ -160,7 +160,7 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lfl" ],
   "POSTGRES95" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
-                       11 "libpq.a"
+                       11 "libpq.so"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
@@ -169,8 +169,8 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lpq" ],
   "OPENGL"     : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
-                       11 "libGLU.a"
-                       11 "libGL.a"
+                       11 "libGLU.so"
+                       11 "libGL.so"
                        12 "/usr/openwin/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
@@ -181,7 +181,7 @@ SYSTEM_LIBS = {
                       "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
                      "Where are the ODBC libraries?"
-                       11 "libodbc.a"
+                       11 "libodbc.so"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
                        12 "/usr/local/pgsql/lib"
@@ -190,7 +190,7 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lodbc" ],
   "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the Motif libraries?"
-                       11 "libXm.a"
+                       11 "libXm.so"
                        12 "/usr/dt/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
@@ -200,11 +200,11 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lXm" ],
   "X11"        : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the X11 libraries?"
-                       11 "libXaw.a"
-                       11 "libXmu.a"
-                       11 "libXext.a"
-                       11 "libXt.a"
-                       11 "libX11.a"
+                       11 "libXaw.so"
+                       11 "libXmu.so"
+                       11 "libXext.so"
+                       11 "libXt.so"
+                       11 "libX11.so"
                        12 "/usr/openwin/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
