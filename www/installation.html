@@ -192,7 +192,7 @@
     <hr>
     <h2>Performing the installation</h2>
 
-    <h3>Step 1: Minimal binary installation</h3>
+    <h3>Unpacking the archive</h3>
      <p>
      Once you have got the binary installation package, create a
      new temporary directory (for example, /tmp/cm3), change into it,
@@ -220,11 +220,14 @@
       the same directory.
       </p>
       
+     <h3>Coping with cminstall</h3>
+
       <p>
-      The installion program helps you setting up your initial CM3 configuration
-      and extracts <i>system.tgz</i>. Alas, it is not perfect, and be very
-      confusing to use, especially for the first time. There are plans to
-      improve the installer in a future release.
+      The cminstall installation program helps you setting up your initial CM3 configuration
+      and extracts <i>system.tgz</i>. Alas, it is not perfect, and can be very
+      confusing to use, especially for first-time users. There are plans to
+      improve the installer in a future release. I will try to guide you through it
+      as best as I can.
       </p>
 
       <p>
@@ -239,9 +242,10 @@
       cminstall.exe
       </pre>
       on Windows.
-      -->
     Note that the installer is text-based. You will need to open
-    a command-line window in order to use it.</p>
+    a command-line window in order to use it.
+      -->
+    </p>
 
     <p>
     The installer will first ask you where you want to install CM3.
@@ -261,9 +265,11 @@
     these libraries cannot be found. Given the amount of targets cm3
     runs on and the differences between them, we cannot give concrete
     examples for every possible situation. You will have to find out
-    how to install the required tools and libraries on your system yourself.</p>
+    how to install the required tools and libraries on your system yourself.
+    (Hint to Linux users: You may need to install library packages having a -dev or
+    -devel suffix.)</p>
 
-    <p>However, I will elaborate a bit on what cminstall does when it
+    <p>I will elaborate a bit on what cminstall does when it
     asks a question, since this can be a bit confusing at first. The example
     output is based on the FreeBSD version, and may look slightly different
     on your system.</p>
@@ -337,21 +343,82 @@
     the chosen directory however, compiling
     the full cm3 installation will probably fail, so answering <i>yes</i>
     is usually not a really good idea (even though it is the default answer).</p>
-    
-    <p>
-    If the installation fails for any reason, send mail to
-    <a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a>.
-      As always, please include as much useful information
-      as possible in your email, especially the log file written by
-      cminstall, which resides in the installation prefix you chose,
-      and of course hardware/operating system information.
-    </p>
 
-    <p>Now update your environment so that CM3 binaries and libraries can be
+    <p>Next, let us consider the situation where you would have to rename
+    a library file so cminstall can find it. This mostly applies to targets
+    where CM3 uses shared libraries (Linux, for example). The following
+    example uses output generated on a Fedora Core 5 Linux system.</p>
+
+    <pre>
+    Where are the OpenGL libraries?
+    looking for library file(s): libGLU.so
+    looking for library file(s): libGL.so libGLU.so
+    checking for library files in directory /usr/lib... not found
+    checking for library files in directory /usr/local/lib... not found
+    checking for library files in directory /usr/local/gnu/lib... not found
+    checking for directory /usr/lib... found
+    </pre>
+    
+    <p>The output above suggests that cminstall could not find either libGL.so or
+    libGLU.so, or both. Unfortunately, cminstall is not very smart when looking for
+    libraries. It does not (yet) do wildcard matching on the files it is looking for.
+    Manually searching our system, we find the following libraries in the /usr/lib
+    directory:</p>
+
+    <pre>
+    [user@fedora ~]$ ls -l /usr/lib/libGL*  
+    lrwxrwxrwx 1 root root     10 Jul 24 15:28 /usr/lib/libGL.so -&gt; libGL.so.1
+    lrwxrwxrwx 1 root root     12 Jul 24 15:22 /usr/lib/libGL.so.1 -&gt; libGL.so.1.2
+    -rwxr-xr-x 1 root root 389656 Jun 26 14:51 /usr/lib/libGL.so.1.2
+    lrwxrwxrwx 1 root root     20 Jul 24 15:22 /usr/lib/libGLU.so.1 -&gt; libGLU.so.1.3.060402
+    -rwxr-xr-x 1 root root 498828 Jun 26 14:51 /usr/lib/libGLU.so.1.3.060402
+    </pre>
+
+    <p>So we do indeed have a libGL.so file. What is missing is a libGLU.so file.
+    We have a libGLU.so.1 file, however. Let's use that instead, by telling cminstall
+    that we want to rename the libraries.</p>
+
+    <pre>
+    checking for directory /usr/lib... found
+
+    1: /usr/lib
+    Where are the OpenGL libraries? [/usr/lib](1 of 1) /usr/lib
+    The libraries libGL.so libGLU.so are not present in the chosen directory.
+    Would you like to change the library names? [yes] yes
+    Warning: Changing the required library names is currently only partially
+    supported by the installer. You will have to edit /usr/local/cm3/bin/cm3.cfg
+    manually after the installation and adapt the -l suffixes in the SYSTEM_LIBS
+    array.
+    Sorry for the inconvenience.
+    </pre>
+
+    <p>The warning about having to adapt -l suffixes can be ignored in our case,
+    since we are not renaming the library itself. We are only adding a version number.</p>
+    <pre>
+    enter library file (or ENTER to continue):  libGL.so
+    enter library file (or ENTER to continue):  libGLU.so.1
+    enter library file (or ENTER to continue):
+    Would you like to add library search paths? [yes] no
+    </pre>
+    <p>We do not need to add a search path, since cminstall is already searching /usr/lib,
+    where our GL libraries reside.</p>
+    
+    <p>Cminstall now suceeds:</p>
+    <pre>
+    looking for library file(s): libGLU.so.1 libGL.so
+    checking in directory /usr/lib... found
+    checking in directory /usr/local/lib... not found
+    checking in directory /usr/local/gnu/lib... not found
+    checking in directory /usr/lib... found
+    </pre>
+    <p>Cminstall found the library in /usr/lib, so the installation can continue.</p>
+    
+    <h3>After cminstall is done</h3>
+    <p>When cminstall is done, update your environment so that CM3 binaries and libraries can be
     found by the system.</p>
     <p>
     On UNIX-like systems, extend your PATH and LD_LIBRARY_PATH settings so they include
-    CM3 binaues and libraries. Here is an example for bourne shells:
+    CM3 binaries and libraries. Here is an example for bourne shells:
     </p>
     <pre>
   export PATH="${PATH}:/usr/local/cm3/bin"
@@ -364,12 +431,11 @@
     variable in the system preferences.</p>
     -->
 
-
-    <h3>Step 2: Bootstrapping the full CM3 installation</h3>
+    <h3>Bootstrapping the full CM3 installation</h3>
 
     <p>
     First, create a new directory for the source tree and unpack the source
-    distribution archive(s) there. Here are example comamnds for UNIX-like systems:
+    distribution archive(s) there. Here are example commands for UNIX-like systems:
     </p>
     <pre>
     mkdir cm3
@@ -382,8 +448,8 @@
       <tt>scripts/</tt> subdirectory of the source tree can be used to
       build and install (or &quot;ship&quot;) single packages or groups of packages.
       See the file <tt>scripts/README</tt> for details.
-    </p>
-    <p>We use one two scripts to bootstrap a full CM3 installation.</p>
+      We use a few of these scripts to bootstrap a full CM3 installation.
+  </p>
   <pre>
   cd scripts
   ./do-cm3-core.sh buildship
@@ -402,6 +468,17 @@
     the installation is finished.</p>
 
     <hr>
+    <h2>If the installation fails</h2>
+    <p>
+    If the installation fails for any reason, send mail to
+    <a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a>.
+      As always, please include as much useful information
+      as possible in your email, especially the log file written by
+      cminstall, which resides in the installation prefix you chose,
+      and of course hardware/operating system information.
+    </p>
+    <hr>
+
     <h2>Upgrading CM3</h2>
     <p>
       If you want to upgrade to a new CM3 version, use the
@@ -422,7 +499,7 @@
       don't hesitate to contact <a
       href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a>, or --
       even better -- <a href="cm3-problem-report.html">file a problem
-      report</a> (perferably with a working fix :-)
+      report</a> (preferably with a working fix :-)
     </p>
 
     <!-- ENOSUPP
