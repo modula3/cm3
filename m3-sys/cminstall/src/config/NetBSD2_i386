@@ -82,17 +82,17 @@ END_CONFIG
 
 %-- handy for installations that keep all M3 stuff together
 
-BIN_INSTALL   = INSTALL_ROOT & "bin"        % executables
+BIN_INSTALL   = INSTALL_ROOT & "/bin"        % executables
 if M3_PROFILING 
-  LIB_INSTALL   = INSTALL_ROOT & "libp"       % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
 else
-  LIB_INSTALL   = INSTALL_ROOT & "lib"        % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/lib"        % libraries
 end
-PKG_INSTALL   = INSTALL_ROOT & "pkg"        % packages
-DOC_INSTALL   = INSTALL_ROOT & "doc"        % documents
-EMACS_INSTALL = INSTALL_ROOT & "elisp"      % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "man"        % man pages
-HTML_INSTALL  = INSTALL_ROOT & "www"        % public hypertext
+PKG_INSTALL   = INSTALL_ROOT & "/pkg"        % packages
+DOC_INSTALL   = INSTALL_ROOT & "/doc"        % documents
+EMACS_INSTALL = INSTALL_ROOT & "/elisp"      % emacs lisp code
+MAN_INSTALL   = INSTALL_ROOT & "/man"        % man pages
+HTML_INSTALL  = INSTALL_ROOT & "/www"        % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
