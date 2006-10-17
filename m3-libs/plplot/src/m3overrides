@@ -1,1 +1,3 @@
+%import_lib("plplotd","/home/thielema/applications/plplot/lib")
 override ("libm3", ROOT & SL & "m3-libs")
+override ("set", ROOT & SL & "m3-libs")
