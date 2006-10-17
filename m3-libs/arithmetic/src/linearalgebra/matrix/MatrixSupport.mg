@@ -46,7 +46,7 @@ PROCEDURE Transpose (x: T; ): T =
    diagonal and the result of 'extendClow' as lower triangle of the weight
    matrix.
 
-   Note that only the lower triangle of 'cl0' is used.  Is is somewhat
+   Note that only the lower triangle of 'cl0' is used.  It is somewhat
    waste of space, but saving space would lead to more complicated (time
    inefficient) array handling *)
 PROCEDURE LongerClow (x: T; cl0: T; ): T =
@@ -83,9 +83,10 @@ PROCEDURE LongerClow (x: T; cl0: T; ): T =
   END LongerClow;
 
 (* Compute the determinant with about n^4 multiplications without division
-   according to the clow decomposition algorithm presented by Günter Rote:
-   "Division-Free Algorithms for the Determinant and the Pfaffian:
-   Algebraic and Combinatorial Approaches." *)
+   according to the clow decomposition algorithm of Mahajan and Vinay, and
+   Berkowitz presented by Günter Rote: "Division-Free Algorithms for the
+   Determinant and the Pfaffian: Algebraic and Combinatorial
+   Approaches." *)
 PROCEDURE Determinant (x: T; ): R.T =
   VAR
     y   := NewOne(NUMBER(x^));
