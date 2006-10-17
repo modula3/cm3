@@ -30,9 +30,11 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1)
-      THEN TWord.Multiply (w0, w1, result);  RETURN IntegerExpr.New (result);
-      ELSE RETURN NIL;
+    IF WordPlus.GetArgs (ce.args, w0, w1) THEN
+      EVAL TWord.Multiply (w0, w1, result);
+      RETURN IntegerExpr.New (result);
+    ELSE
+      RETURN NIL;
     END;
   END Fold;
 

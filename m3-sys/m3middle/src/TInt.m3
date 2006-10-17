@@ -259,7 +259,7 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     minus   : BOOLEAN := FALSE;
     bump    : BOOLEAN := FALSE;
     i, j    : INTEGER;
-    result  : ARRAY [0..BITSIZE(Int)] OF CHAR;
+    result  : ARRAY [0..ChunkSize * NUMBER(IChunks)] OF CHAR;
     rr      := r;
     quo, rem: Int;
   BEGIN
