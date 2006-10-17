@@ -4,7 +4,7 @@
    David Nichols, Xerox PARC
    July, 1991
 
-   $Id: FBEPostScript.m3,v 1.2 2005-11-17 03:23:56 hosking Exp $
+   $Id: FBEPostScript.m3,v 1.3 2006-10-17 09:49:18 thielema Exp $
 *)
 (* Copyright (c) 1991 Xerox Corporation.  All rights reserved.
 
@@ -17,8 +17,8 @@
 
 MODULE FBEPostScript;
 
-IMPORT FBE, FileRd, Fmt, RefList, Rd, Lex, Text, Wr, Thread, Env;
-IMPORT OSError, FloatMode, TextRd, Rsrc, AFMBundle;
+IMPORT FBE, Fmt, RefList, Rd, Lex, Text, Wr, Thread;
+IMPORT FloatMode, TextRd, Rsrc, AFMBundle;
 
 <* FATAL Thread.Alerted *>
 
