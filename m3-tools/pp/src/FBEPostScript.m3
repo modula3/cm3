@@ -17,8 +17,8 @@
 
 MODULE FBEPostScript;
 
-IMPORT FBE, FileRd, Fmt, RefList, Rd, Lex, Text, Wr, Thread, Env;
-IMPORT OSError, FloatMode, TextRd, Rsrc, AFMBundle;
+IMPORT FBE, Fmt, RefList, Rd, Lex, Text, Wr, Thread;
+IMPORT FloatMode, TextRd, Rsrc, AFMBundle;
 
 <* FATAL Thread.Alerted *>
 
