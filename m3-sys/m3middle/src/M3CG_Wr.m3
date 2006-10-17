@@ -235,7 +235,7 @@ PROCEDURE TName (u: U;  t: Type) =
 PROCEDURE Flt (u: U;  READONLY f: Target.Float) =
   CONST FType = ARRAY Target.Precision OF TEXT { " R ", " L ", " X " };
   VAR
-    buf : ARRAY [0..BITSIZE (Target.Extended)] OF CHAR;
+    buf : ARRAY [0..BITSIZE(EXTENDED)] OF CHAR;
     len := TFloat.ToChars (f, buf);
   BEGIN
     OutT (u, FType [TFloat.Prec (f)]);
@@ -272,7 +272,7 @@ PROCEDURE Int (u: U;  i: INTEGER) =
 
 PROCEDURE TInt (u: U;  READONLY i: Target.Int) =
   VAR
-    buf : ARRAY [0..BITSIZE (Target.Integer)] OF CHAR;
+    buf : ARRAY [0..Target.ChunkSize * NUMBER (Target.IChunks)] OF CHAR;
     len := TargetInt.ToChars (i, buf);
   BEGIN
     OutC (u, ' ');

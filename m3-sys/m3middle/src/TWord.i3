@@ -25,13 +25,13 @@ PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: INTEGER;
 (* converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' *)
 
-PROCEDURE Add (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Add (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'Word.Plus (a, b)' *)
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.Minus (a, b)' *)
 
-PROCEDURE Multiply (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Multiply (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'Word.Times (a, b)' *)
 
 PROCEDURE Div (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
