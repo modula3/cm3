@@ -65,7 +65,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT IntegerExpr.Split (b, i) THEN RETURN FALSE END;
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => EVAL TWord.Add (p.value, i, j);  c := New (j);  RETURN TRUE;
+    | P(p) => TWord.Add (p.value, i, j);  c := New (j);  RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Add;
