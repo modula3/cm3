@@ -37,14 +37,14 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: INTEGER; VAR r: Int): BOOLEAN =
       END;
       digitI.x[0] := digit;
 
-      IF NOT Multiply (r, baseI, rr) THEN RETURN FALSE END;
-      IF NOT Add (rr, digitI, r)     THEN RETURN FALSE END;
+      IF NOT InternalMultiply (r, baseI, rr) THEN RETURN FALSE END;
+      IF NOT InternalAdd (rr, digitI, r)     THEN RETURN FALSE END;
     END;
 
     RETURN TRUE;
   END New;
 
-PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE InternalAdd (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR carry := 0;
   BEGIN
     FOR i := 0 TO last_chunk DO
@@ -53,6 +53,11 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
       carry := RShift (carry, ChunkSize);
     END;
     RETURN carry = 0;
+  END InternalAdd;
+
+PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
+  BEGIN
+    EVAL InternalAdd (a, b, r);
   END Add;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
@@ -65,7 +70,7 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
     END;
   END Subtract;
 
-PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE InternalMultiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR k, carry: INTEGER;  result := TRUE;
   BEGIN
     r := TInt.Zero;
@@ -83,6 +88,11 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
       END;
     END;
     RETURN result;
+  END InternalMultiply;
+
+PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
+  BEGIN
+    EVAL InternalMultiply (a, b, r);
   END Multiply;
 
 PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
@@ -218,7 +228,7 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     END;
 
     (* finally, compute the remainder *)
-    EVAL Multiply (q, y, r);
+    Multiply (q, y, r);
     Subtract (x, r, r);
   END DivMod;
 
