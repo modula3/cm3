@@ -152,7 +152,7 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-ll" ],
   "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
-                       11 "libfl.so"
+                       11 "libfl.a"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
