@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.47.2.1 2006-10-11 15:44:11 stsp Exp $
+# $Id: sysinfo.sh,v 1.47.2.2 2006-10-25 18:24:54 stsp Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -12,7 +12,7 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
 # set some defaults
-CM3VERSION=${CM3VERSION:-"5.4-0"}
+CM3VERSION=${CM3VERSION:-"5.4.0"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 CM3_INSTALL=/usr/local/cm3
