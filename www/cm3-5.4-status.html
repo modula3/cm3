@@ -10,30 +10,36 @@
    <META NAME="robots" content="noindex">
   </head>
   <body>
-    <h2>CM3 5.4 Release Status</h2>
+    <h2>CM3 5.4.x Release Status</h2>
 
     <p>
-    This page summarises the current status of the cm3 5.4 release.
-    See the <a href="http://mailarchive.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-07/1154373463000#1154373463000">release plan</a> for details.
+    This page summarises the current status of the cm3 5.4 release
+    branch.
     </p>
 
-    <h3>Getting the source code for this release</h3>
+    <p><b>CM3 5.4.0 has been released.</b> You can get it from the
+    <a href="download.html">download page</a>.<br>
+    This page may still be used to track further development on the 5.4
+    release branch, if necessary.
+    </p>
+
+
+    <h3>Getting source code from the 5.4 release branch</h3>
 
     <p>
-    You can check out the source code for this release from the release branch via anonymous CVS.
+    You can check out the source code for this release from the release
+    branch via anonymous CVS.
     </p>
     <pre>
     cvs -d :pserver:anonymous@birch.elegosoft.com:/usr/cvs login
     [The password is empty, just hit return.]
     cvs -z3 -d :pserver:anonymous@birch.elegosoft.com:/usr/cvs checkout -r release_branch_cm3_5_4 -P cm3
     </pre>
+    <p>The tag for the CM3 5.4.0 release is <i>release_CM3_5_4_0</i></p>
+
     <p>
-    You will need this source tree if you want to install a full cm3 distribution from
-    test installation archives linked below. See the (somewhat outdated)
-    <a href="installation.html">installation notes</a> for details.
-    </p>
-    <p>
-    There will be no tarball download of the source code for this release until the release is made.
+    There are source code archives for the 5.4.0 release available from
+    the <a href="download.html">download page</a>.
     </p>
 
     <h3>Mandatory Targets</h3>
@@ -49,9 +55,11 @@
         <td>
           <b>Comment</b>
         </td>
+        <!--
         <td>
           <b>Test Installation Archive</b>
         </td>
+        -->
       </tr>
       <tr>
         <td>
@@ -63,9 +71,11 @@
         <td>
           Even mentor runs fine. Only tested FreeBSD 6.1.
         </td>
+        <!--
         <td>
           <a href="cm3-min-POSIX-FreeBSD4-d5.4-0.tgz">download</a>
         </td>
+        -->
       </tr>
       <tr>
         <td>
@@ -79,9 +89,11 @@
           See <a href="http://mailarchive.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-09/1157492987000/index_html?fullMode=1#1157632667000">here</a> for details.
           Test archive built on Debian Sarge.
         </td>
+        <!--
         <td>
           <a href="cm3-min-POSIX-LINUXLIBC6-d5.4-0.tgz">download</a>
         </td>
+        -->
       </tr>
       <tr>
         <td>
@@ -97,9 +109,11 @@
           <a href="http://mailarchive.elegosoft.com/Zope/m3/m3commit/archive/2006/2006-08/1154440726000/index_html?fullMode=1#1156343464000">this commit</a>.
           <br>
         </td>
+        <!--
         <td>
           <a href="cm3-min-POSIX-SOLgnu-d5.4-0.tgz">download</a>
         </td>
+        -->
       </tr>
       <tr>
         <td>
@@ -111,9 +125,11 @@
         <td>
           Now fine.
         </td>
+        <!--
         <td>
           <a href="cm3-min-POSIX-PPC_DARWIN-d5.4-0.tgz">download</a>
         </td>
+        -->
       </tr>
     </table>
 
@@ -130,21 +146,23 @@
         <td>
           <b>Comment</b>
         </td>
+        <!--
         <td>
           <b>Test Installation Archive</b>
         </td>
+        -->
       </tr>
       <tr>
         <td>
           NT386
         </td>
-        <td bgcolor="#FF0000">
-          <b>:-(</b>
+        <td bgcolor="#FFFFFF">
+          <b>--</b>
         </td>
         <td>
-          Investigating. There seem to be problems with the linker.
-          See <a href="http://mailarchive.elegosoft.com/Zope/m3/m3devel/archive/2006/2006-09/1157299250000#1157299250000">here</a>
-          for details.
+          Dropped from 5.4 release. Work is being done on the HEAD
+          branch by Jay Krell to get things working on Windows again.
+          Will likely be included in 5.5.
         </td>
         <td>
         </td>
@@ -175,7 +193,6 @@
           to the file /etc/ld.so.conf for the compile to succeed.
         </td>
         <td>
-          <a href="cm3-min-POSIX-NetBSD2_i386-d5.4-0.tgz">download</a>
         </td>
       </tr>
     </table>
@@ -345,11 +362,11 @@
         <td>
           Test installation on all platforms.
         </td>
-        <td bgcolor="#FFFF00">
-          <b>:-/</b>
+        <td bgcolor="#00FF00">
+          <b>:-)</b>
         </td>
         <td>
-          In progress. Installation on FreeBSD and Linux has been tested.
+          Done.
         </td>
       </tr> <tr>
         <td>
