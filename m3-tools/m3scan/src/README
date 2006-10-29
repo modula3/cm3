@@ -1,5 +1,0 @@
-This is a different implementation of the M3 scanner, which is more
-modular than that contained in m3-sys/m3scanner. Several modules will
-conflict with those of m3-sys/m3scanner, so that both can not be used
-at once. This package has been imported from the PM3 distribution for
-quick porting of other PM3 packages.
