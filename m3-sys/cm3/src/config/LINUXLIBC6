@@ -228,7 +228,6 @@ end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
-%---  "-pdb:none" enables the use of windbg with the resulting executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
