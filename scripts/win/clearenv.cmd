@@ -1,4 +1,4 @@
-@rem $Id: clearenv.cmd,v 1.1 2006-12-30 01:33:51 jkrell Exp $
+@rem $Id: clearenv.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
