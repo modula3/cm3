@@ -5,6 +5,9 @@ library("m3gcdefs")
 > "libm3gcdefs.m3x" in 
   write("")
 end
+> "libm3gcdefs.m3x" in 
+  write("")
+end
 > ".M3WEB" in 
   write("")
 end
