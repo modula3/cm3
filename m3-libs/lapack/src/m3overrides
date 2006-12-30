@@ -1,2 +1,2 @@
-override ("libm3", ROOT & SL & "m3-libs")
-override ("arithmetic", ROOT & SL & "m3-libs")
+override ("libm3", ROOT & "/m3-libs")
+override ("arithmetic", ROOT & "/m3-libs")
