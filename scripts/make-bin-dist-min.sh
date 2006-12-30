@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.22 2006-08-31 22:33:06 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.23 2006-12-30 03:27:06 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -100,7 +100,7 @@ sed -e '
 
 #-----------------------------------------------------------------------------
 # clean everything
-header "clean evrything for build with new compiler"
+header "clean everything for build with new compiler"
 "${ROOT}/scripts/do-cm3-min.sh" realclean || exit 1
 
 #-----------------------------------------------------------------------------
