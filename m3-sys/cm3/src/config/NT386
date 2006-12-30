@@ -281,7 +281,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
                         entry, m3_link_flags, options, objects, imports ])
 
   deriveds ("", [ listing, map_file ])
-  return try_exec ("LINK", args, ">", listing)
+  return try_exec ("link", args, ">", listing)
 end
 
 %-------------------------------------------------------------------
