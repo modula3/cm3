@@ -1191,25 +1191,84 @@ PROCEDURE DoCopyIfNew (t: T;  n_args: INTEGER) RAISES {Error} =
     CopyIfNew (t, src, dest);
   END DoCopyIfNew;
 
-PROCEDURE CopyIfNew (t: T;  src, dest: TEXT) RAISES {Error} =
-  VAR equal := FALSE;
+PROCEDURE FileExists(fn : Pathname.T) : BOOLEAN =
+  VAR s : File.Status;
   BEGIN
+    TRY
+      s := FS.Status(fn);
+    EXCEPT ELSE
+      RETURN FALSE;
+    END;
+    RETURN TRUE;
+  END FileExists;
+
+PROCEDURE CopyIfExists (t: T; Source, Destination: TEXT) RAISES {Error} =
+BEGIN
+    IF FileExists(Source)
+    THEN
+        TRY
+            M3File.Copy(Source, Destination);
+        EXCEPT OSError.E(ec) =>
+            Err(t, Fmt.F("unable to copy \"%s\" to \"%s\"%s", Source, Destination, OSErr(ec)));
+        END;
+    END
+END CopyIfExists;
+
+PROCEDURE CopyIfNew (t: T;  src, dest: TEXT) RAISES {Error} =
+VAR
+    equal := FALSE;
+    Extension: TEXT;
+    Source: TEXT;
+    Destination: TEXT;
+BEGIN
+
     IF M3File.IsDirectory (dest) THEN
-      dest := Pathname.Join (dest, Pathname.Last (src), NIL);
+        dest := Pathname.Join (dest, Pathname.Last (src), NIL);
     END;
 
-    TRY
-      equal := M3File.IsEqual (src, dest);
-    EXCEPT OSError.E =>
+    Source := src;
+    Destination := dest;
+
+    IF NOT FileExists(Source) THEN
+        Err(t, Fmt.F("unable to copy \"%s\" to \"%s\", \"%s\" does not exist", Source, Destination, Source));
+        RETURN;
     END;
 
-    TRY
-      IF NOT equal THEN M3File.Copy (src, dest); END;
-    EXCEPT OSError.E(ec) =>
-      Err (t, Fmt.F ("unable to copy \"%s\" to \"%s\"%s",
-                     src, dest, OSErr (ec)));
+    IF FileExists(Destination) THEN
+        equal := M3File.IsEqual (Source, Destination);
     END;
-  END CopyIfNew;
+
+    IF NOT equal
+    THEN
+        TRY
+            M3File.Copy(Source, Destination);
+
+            (* Sometimes copy along .pdb and .manifest files.
+            Consider: Only Win32, and at a higher level where more decisions can be made.
+            This could occur for arbitrary extensions, but should not all.
+            In particular, ..exes, .dlls, .libs can all have arbitrary extensions.
+            It is the file format that matters, and still the "extra" files are optional.
+            *)
+            Extension := Pathname.LastExt(src);
+            IF (Text.Length(Extension) = 3
+                AND ((CIEqual(Extension, "exe")
+                    OR CIEqual(Extension, "dll")
+                    OR CIEqual(Extension, "lib")
+                    )))
+            THEN
+                Source := (src & ".manifest");
+                Destination := (dest & ".manifest"); (* append, not change extension -- foo.exe => foo.exe.manifest, not foo.manifest *)
+                CopyIfExists(t, Source, Destination);
+
+                Source := Pathname.ReplaceExt(src, "pdb"); (* change extension -- foo.exe => foo.pdb *)
+                Destination := Pathname.ReplaceExt(dest, "pdb");
+                CopyIfExists(t, Source, Destination);
+            END;
+        EXCEPT OSError.E(ec) =>
+            Err(t, Fmt.F("unable to copy \"%s\" to \"%s\"%s", Source, Destination, OSErr(ec)));
+        END;
+    END;
+END CopyIfNew;
 
 PROCEDURE DoDefined (t: T;  n_args: INTEGER) RAISES {Error} =
   VAR val: QValue.T;
