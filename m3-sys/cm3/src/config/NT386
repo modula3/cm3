@@ -80,13 +80,6 @@ readonly INSTALL_IMPLS = TRUE
 %    => save only the exported interfaces and templates 
 %    => makes the installed system slightly smaller.
 
-%------------------------------------------------ C development environment ---
-% These are handy definitions for access the local C development environment.
-% They are only used within this configuration file for convenience.
-
-readonly DEV_LIB = "G:\\MSDEV\\LIB\\"  % libraries
-readonly DEV_BIN = "G:\\MSDEV\\BIN\\"  % executables
-
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
@@ -96,22 +89,22 @@ readonly DEV_BIN = "G:\\MSDEV\\BIN\\"  % executables
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ DEV_LIB & "msvcrt.lib",
-                   DEV_LIB & "winspool.lib",
-                   DEV_LIB & "\\comctl32.lib",
-                   LIB_USE & "\\wsock32.lib",
-                   LIB_USE & "\\comdlg32.lib",
-                   LIB_USE & "\\netapi32.lib",
-                   LIB_USE & "\\gdi32.lib",
-                   LIB_USE & "\\user32.lib",
-                   LIB_USE & "\\advapi32.lib",
-                   LIB_USE & "\\kernel32.lib" ],
-% "LEX-YACC"   : [ DEV_LIB & "lex.lib" ], %-- not on most Win32 platforms
-% "FLEX-BISON" : [ DEV_LIB & "flex.lib" ], %-- not on most Win32 platforms
-  "ODBC"       : [ LIB_USE & "\\odbc32.lib",
-                   LIB_USE & "\\odbccp32.lib" ],
-  "OPENGL"     : [ LIB_USE & "\\opengl32.lib",
-                   LIB_USE & "\\glu32.lib" ],
+  "LIBC"       : [ "msvcrt.lib",
+                   "winspool.lib",
+                   "comctl32.lib",
+                   "wsock32.lib",
+                   "comdlg32.lib",
+                   "netapi32.lib",
+                   "gdi32.lib",
+                   "user32.lib",
+                   "advapi32.lib",
+                   "kernel32.lib" ],
+% "LEX-YACC"   : [ "lex.lib" ], %-- not on most Win32 platforms
+% "FLEX-BISON" : [ "flex.lib" ], %-- not on most Win32 platforms
+  "ODBC"       : [ "odbc32.lib",
+                   "odbccp32.lib" ],
+  "OPENGL"     : [ "opengl32.lib",
+                   "glu32.lib" ],
   "TCP"        : [  ]
 }
 
@@ -144,7 +137,7 @@ proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-D_MT", "-D_DLL", "-D_X86_", "-DWIN32", "-nologo", options ]
   if optimize  args += "-O2"            end
   if debug     args += [ "-Od", "-Zi" ] end
-  local res = try_exec ("@" & DEV_BIN & "cl", arglist ("@", [ args,"-c", source ]))
+  local res = try_exec ("@" & "cl", arglist ("@", [ args,"-c", source ]))
   delete_file ("vc40.pdb")
   return res
 end
@@ -156,7 +149,7 @@ end
 
 proc assemble (source, object) is
   local args = arglist ("@", [ "/Ml", "/t", "/z", source & "," & object & ";" ])
-  return try_exec ("@" & DEV_BIN & "masm386", args)
+  return try_exec ("@" & "masm386", args)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -183,7 +176,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
                                     "-implib:" & lib_file,
                                      options, objects, imported_libs ])
 
-  ret_code = try_exec ("@" & BIN_USE & "\\mklib", lib_args, ">", listing)
+  ret_code = try_exec ("@" & "mklib", lib_args, ">", listing)
   if not equal (ret_code, 0) return ret_code end
   if stale (lib_file, lib_file) 
     write("error: library creation failed" & EOL)
@@ -194,7 +187,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     % build an import library & DLL
     delete_file (lib0_file)
     exec ("@ren", lib_file, lib0_file)
-    ret_code = try_exec ("@" & DEV_BIN & "link", link_args, ">", listing)
+    ret_code = try_exec ("@" & "link", link_args, ">", listing)
     % make sure the extra stuff gets shipped
     BindExport (dll_file)
     install_derived (lib0_file)
@@ -220,7 +213,7 @@ end
 %   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
 %                                options, objects ])
 %   deriveds ("", [ listing ])
-%   return try_exec ("@" & DEV_BIN & "lib", args, ">", listing)
+%   return try_exec ("@" & "lib", args, ">", listing)
 % end
 
 
@@ -288,7 +281,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
                         entry, m3_link_flags, options, objects, imports ])
 
   deriveds ("", [ listing, map_file ])
-  return try_exec ("@" & DEV_BIN & "LINK", args, ">", listing)
+  return try_exec ("@" & "LINK", args, ">", listing)
 end
 
 %-------------------------------------------------------------------
@@ -324,7 +317,7 @@ M3_OPTIONS = [ ]
 % M3_COVERAGE = TRUE
 % --- compile & link with coverage options
 
-M3_COVERAGE_LIB = LIB_USE & "\\report_coverage.obj"
+M3_COVERAGE_LIB = "report_coverage.obj"
 % --- library linked in programs compiled with "-Z" coverage option
 
 % M3_SPLIT_LIBNAMES = TRUE
