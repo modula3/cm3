@@ -1,9 +1,9 @@
 # cl is "C:\MSVC20\BIN\CL.EXE" 
 # link is "C:\MSVC20\BIN\LINK.EXE" 
-# C:\dev2\cm3\scripts\win\lib\make-lib-1.cmd c:\cm3\lib\winspool.lib run at Fri Dec 29 17:21:17 2006 on JAY-WIN4 by Jay.
+# C:\dev2\cm3\scripts\win\lib\make-lib-1.cmd C:\MSVC20\LIB\WINSPOOL.LIB run at Fri Dec 29 20:01:39 2006 on JAY-WIN4 by Jay.
 # cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
 # link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
-# link /dump /all "c:\cm3\lib\winspool.lib"
+# link /dump /all "C:\MSVC20\LIB\WINSPOOL.LIB"
 Export SetFormA 16
 Export EnumPrintProcessorDatatypesA 28
 Export AdvancedDocumentPropertiesW 20
