@@ -350,25 +350,26 @@ VAR (* LL = slotMu *)
 
 PROCEDURE InitActivations () =
   VAR
-    threadhandle, processhandle: WinNT.HANDLE;
+    CurrentThread := WinBase.GetCurrentThread();
+    CurrentProcess := WinBase.GetCurrentProcess();
+    CurrentThreadHandle : WinNT.HANDLE;
     me := NEW(Activation);
   BEGIN
     threadIndex := WinBase.TlsAlloc();
-    IF threadIndex < 0 THEN Choke() END;
+    IF threadIndex = WinBase.TLS_OUT_OF_INDEXES THEN Choke() END;
     IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (me, WinDef.DWORD)) = 0 THEN
       Choke();
     END;
+    IF WinBase.DuplicateHandle(CurrentProcess, CurrentThread, CurrentProcess,
+                               LOOPHOLE(ADR(CurrentThreadHandle), WinNT.PHANDLE), 0,
+                               0, WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
+      Choke();
+    END;
+    me.handle := CurrentThreadHandle;
+    me.next := me;
+    me.prev := me;
     WinBase.EnterCriticalSection(activeMu);
       <* ASSERT allThreads = NIL *>
-      threadhandle := WinBase.GetCurrentThread();
-      processhandle := WinBase.GetCurrentProcess();
-      IF WinBase.DuplicateHandle(processhandle, threadhandle, processhandle,
-                                 LOOPHOLE(ADR(me.handle), WinNT.PHANDLE), 0,
-                                 0, WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
-        Choke();
-      END;
-      me.next := me;
-      me.prev := me;
       allThreads := me;
       initActivations := FALSE;
     WinBase.LeaveCriticalSection(activeMu);
@@ -653,9 +654,9 @@ PROCEDURE Fork(closure: Closure): T =
           t := CreateT(NEW(Activation));
         WinBase.EnterCriticalSection(idleMu);
         act := t.act;
+        act.handle := WinBase.CreateThread(NIL, stack_size, ThreadBase,
+                         act, WinBase.CREATE_SUSPENDED, ADR(id));
         WinBase.EnterCriticalSection(activeMu);
-          act.handle := WinBase.CreateThread(NIL, stack_size, ThreadBase,
-                           act, WinBase.CREATE_SUSPENDED, ADR(id));
           act.next := allThreads;
           act.prev := allThreads.prev;
           allThreads.prev.next := act;
@@ -957,7 +958,7 @@ PROCEDURE Choke() =
 PROCEDURE Init() =
   VAR
     self: T;
-    me := GetActivation();
+    me: Activation;
   BEGIN
     cm := ADR (cm_x);
     WinBase.InitializeCriticalSection(cm);
@@ -971,6 +972,8 @@ PROCEDURE Init() =
     slotMu := ADR (slotMu_x);
     WinBase.InitializeCriticalSection(slotMu);
 
+    me := GetActivation();
+
     threadMu := NEW(Mutex);
     self := CreateT(me);
     self.id := nextId;  INC (nextId);
@@ -978,10 +981,9 @@ PROCEDURE Init() =
     mutex := NEW(MUTEX);
     condition := NEW(Condition);
 
-    WinBase.EnterCriticalSection(activeMu);
-      me.stackbase := InitialStackBase (ADR (self));
-      IF me.stackbase = NIL THEN Choke(); END;
-    WinBase.LeaveCriticalSection(activeMu);
+    me.stackbase := InitialStackBase (ADR (self));
+    IF me.stackbase = NIL THEN Choke(); END;
+
     IF RTParams.IsPresent("backgroundgc") THEN
       RTCollectorSRC.StartBackgroundCollection();
     END;
