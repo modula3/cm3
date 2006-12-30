@@ -134,10 +134,10 @@ M3_BACKEND_MODE = "0"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-D_MT", "-D_DLL", "-D_X86_", "-DWIN32", "-nologo", options ]
-  if optimize  args += "-O2"            end
-  if debug     args += [ "-Od", "-Zi" ] end
-  local res = try_exec ("cl", arglist ("@", [ args,"-c", source ]))
+  local args = [ "/D_MT", "/D_DLL", "/D_X86_", "/DWIN32", "/nologo", options ]
+  if optimize  args += "/O2"            end
+  if debug     args += [ "/Od", "/Zi" ] end
+  local res = try_exec ("cl", arglist ("@", [ args,"/c", source ]))
   delete_file ("vc40.pdb")
   return res
 end
@@ -159,7 +159,7 @@ end
 %% NOTE: we should set the "base" load address of the various DLLs
 %%  to avoid relocating them everytime they're loaded....
 
-%% m3_lib_flags = [ "-debugtype:cv", "-machine:i386" ]
+%% m3_lib_flags = [ "/debugtype:cv", "/machine:i386" ]
 m3_lib_flags = [ "-ign:__real" ]
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
@@ -171,9 +171,9 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local listing   = lib & ".lst"
   local lib_args  = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
                                      options, objects ])
-  local link_args = arglist ("@", [ m3_link_flags, "-def:" & def_file,
-                                    "-dll", "-out:" & dll_file,
-                                    "-implib:" & lib_file,
+  local link_args = arglist ("@", [ m3_link_flags, "/def:" & def_file,
+                                    "/dll", "/out:" & dll_file,
+                                    "/implib:" & lib_file,
                                      options, objects, imported_libs ])
 
   ret_code = try_exec ("mklib", lib_args, ">", listing)
@@ -210,7 +210,7 @@ end
 % proc make_lib (lib, options, objects, imported_libs, shared) is
 %   local lib_file = lib & ".lib"
 %   local listing  = lib & ".lst"
-%   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
+%   local args = arglist ("@", [ m3_lib_flags, "/out:" & lib_file,
 %                                options, objects ])
 %   deriveds ("", [ listing ])
 %   return try_exec ("lib", args, ">", listing)
@@ -246,11 +246,11 @@ end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
-%---  "-pdb:none" enables the use of windbg with the resulting executable.
+%---  "/pdb:none" enables the use of windbg with the resulting executable.
 
-m3_link_flags = [ "-debug:mapped,partial", "-debugtype:cv", "-pdb:none",
-                  "-align:0x1000", "-ignore:505", "-machine:i386",
-                  "-nodefaultlib:libc" ]
+m3_link_flags = [ "/debug:mapped,partial", "/debugtype:cv", "/pdb:none",
+                  "/align:0x1000", "/ignore:505", "/machine:i386",
+                  "/nodefaultlib:libc" ]
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local pgm_file = prog & ".exe"
@@ -258,10 +258,10 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   local listing  = prog & ".lst"
   local imports  = imported_libs
 
-  local entry = [ "-subsystem:console", "-entry:mainCRTStartup" ]
+  local entry = [ "/subsystem:console", "/entry:mainCRTStartup" ]
   if defined ("M3_WINDOWS_GUI")
     if M3_WINDOWS_GUI
-      entry = [ "-subsystem:windows", "-entry:WinMainCRTStartup" ]
+      entry = [ "/subsystem:windows", "/entry:WinMainCRTStartup" ]
     end
   end
 
@@ -277,7 +277,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     end
   end
 
-  local args = arglist ("@", [ "-out:" & pgm_file, "-map:" & map_file,
+  local args = arglist ("@", [ "/out:" & pgm_file, "/map:" & map_file,
                         entry, m3_link_flags, options, objects, imports ])
 
   deriveds ("", [ listing, map_file ])
