@@ -11,6 +11,9 @@ readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
+% readonly INSTALL_KEY  = "4JJ2-D7A2-2KE2"
+% readonly INSTALL_KEY  = "4TD2-87A2-2KW2"
+% readonly INSTALL_KEY  = "4HC2-J7A2-2K92"
 
 %
 % It easier to bootstrap with Visual C++ 8.0 using the static C runtime (static CRT, libcmt.lib).
@@ -242,6 +245,15 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   return ret_code
 end
+
+% proc make_lib (lib, options, objects, imported_libs, shared) is   
+%   local lib_file = lib & ".lib"   
+%   local listing  = lib & ".lst"   
+%   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,   
+%                                options, objects ])   
+%   deriveds ("", [ listing ])   
+%   return try_exec ("lib", args, ">", listing)   
+% end   
 
 %-------------------------------------------------------------------
 % "skip_lib" is called when the compiler decides it doesn't need to
