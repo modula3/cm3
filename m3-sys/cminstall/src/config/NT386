@@ -11,10 +11,21 @@ readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
-%readonly INSTALL_KEY  = BEGIN_CONFIG
-%  "What is your installation key?"
-%    14 %-- user specified key
-%END_CONFIG
+
+%
+% It easier to bootstrap with Visual C++ 8.0 using the static C runtime (static CRT, libcmt.lib).
+% Once scripts\win\msvcr80.cmd is run or cm3.exe updated to copy the linker generated foo.exe.manifest,
+% this can be switched to TRUE.
+%
+UseDynamicCRuntime = FALSE
+
+if UseDynamicCRuntime 
+    CRuntimeLib = "msvcrt.lib"
+    CRuntimeFlags = "/MD"
+else
+    CRuntimeLib = "libcmt.lib"
+    CRuntimeFlags = "/MT"
+end
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
@@ -86,6 +97,7 @@ EMACS_INSTALL = INSTALL_ROOT & "\\elisp"        % emacs lisp code
 MAN_INSTALL   = INSTALL_ROOT & "\\man"          % man pages
 HTML_INSTALL  = INSTALL_ROOT & "\\www"          % public hypertext
 
+%
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
@@ -103,42 +115,6 @@ readonly INSTALL_IMPLS = TRUE
 %    => save only the exported interfaces and templates 
 %    => makes the installed system slightly smaller.
 
-%------------------------------------------------ C development environment ---
-% These are handy definitions for access the local C development environment.
-% They are only used within this configuration file for convenience.
-
-readonly DEV_LIB = BEGIN_CONFIG
-  "What directory contains the Microsoft Visual C++ libraries?"
-     2 ".mdp" "..\\LIB"
-     9 "MSDEVDIR" "LIB"
-     8 "C:\\MSDEV\\LIB"
-     8 "C:\\MSDEVSTD\\LIB"
-     8 "D:\\MSDEV\\LIB"
-     8 "D:\\MSDEVSTD\\LIB"
-     8 "E:\\MSDEV\\LIB"
-     8 "E:\\MSDEVSTD\\LIB"
-     8 "C:\\MSVS\\VC98\\LIB"
-     8 "D:\\MSVS\\VC98\\LIB"
-     8 "E:\\MSVS\\VC98\\LIB"
-     5 "cl.exe" "..\\LIB"
-END_CONFIG  % libraries
-readonly DEV_BIN = BEGIN_CONFIG
-  "What directory contains the Microsoft Visual C++ executables?"
-     2 ".mdp" "..\\BIN"
-     9 "MSDEVDIR" "BIN"
-     8 "C:\\MSDEV\\BIN"
-     8 "C:\\MSDEVSTD\\BIN"
-     8 "D:\\MSDEV\\BIN"
-     8 "D:\\MSDEVSTD\\BIN"
-     8 "E:\\MSDEV\\BIN"
-     8 "E:\\MSDEVSTD\\BIN"
-     8 "C:\\MSVS\\VC98\\BIN"
-     8 "D:\\MSVS\\VC98\\BIN"
-     8 "E:\\MSVS\\VC98\\BIN"
-     5 "cl.exe"        "..\\BIN"
-END_CONFIG % executables
-
-
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
@@ -148,30 +124,30 @@ END_CONFIG % executables
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ DEV_LIB & "\\msvcrt.lib",
-                   DEV_LIB & "\\winspool.lib",
-                   DEV_LIB & "\\comctl32.lib",
-                   LIB_USE & "\\wsock32.lib",
-                   LIB_USE & "\\comdlg32.lib",
-                   LIB_USE & "\\netapi32.lib",
-                   LIB_USE & "\\gdi32.lib",
-                   LIB_USE & "\\user32.lib",
-                   LIB_USE & "\\advapi32.lib",
-                   LIB_USE & "\\kernel32.lib" ],
-% "LEX-YACC"   : [ DEV_LIB & "\\lex.lib" ], %-- not on most Win32 platforms
-% "FLEX-BISON" : [ DEV_LIB & "\\flex.lib" ], %-- not on most Win32 platforms
-  "ODBC"       : [ LIB_USE & "\\odbc32.lib",
-                   LIB_USE & "\\odbccp32.lib" ],
-  "OPENGL"     : [ LIB_USE & "\\opengl32.lib",
-                   LIB_USE & "\\glu32.lib" ],
-  "TCP"        : [ ]
+  "LIBC"       : [ CRuntimeLib,
+                   "winspool.lib",
+                   "comctl32.lib",
+                   "wsock32.lib",
+                   "comdlg32.lib",
+                   "netapi32.lib",
+                   "gdi32.lib",
+                   "user32.lib",
+                   "advapi32.lib",
+                   "kernel32.lib" ],
+% "LEX-YACC"   : [ "lex.lib" ], %-- not on most Win32 platforms
+% "FLEX-BISON" : [ "flex.lib" ], %-- not on most Win32 platforms
+  "ODBC"       : [ "odbc32.lib",
+                   "odbccp32.lib" ],
+  "OPENGL"     : [ "opengl32.lib",
+                   "glu32.lib" ],
+  "TCP"        : [  ]
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+                    "FLEX-BISON", "LEX-YACC", "LIBC" ]
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
@@ -193,12 +169,10 @@ M3_BACKEND_MODE = "0"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-D_MT", "-D_DLL", "-D_X86_", "-DWIN32", "-nologo", options ]
-  if optimize  args += "-O2"            end
-  if debug     args += [ "-Od", "-Zi" ] end
-  local res = try_exec ("@" & DEV_BIN & "\\cl", arglist ("@", [ args,"-c", source ]))
-  delete_file ("vc40.pdb")
-  return res
+  local args = [ CRuntimeFlags, "/Z7", "/D_X86_", "/DWIN32", options ]
+  if optimize  args += "/O2" end
+  if debug     args += "/Od" end
+  return try_exec ("cl", arglist ("@", [ args, "/c", source ]))
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -208,7 +182,7 @@ end
 
 proc assemble (source, object) is
   local args = arglist ("@", [ "/Ml", "/t", "/z", source & "," & object & ";" ])
-  return try_exec ("@" & DEV_BIN & "\\masm386", args)
+  return try_exec ("masm386", args)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -218,7 +192,7 @@ end
 %% NOTE: we should set the "base" load address of the various DLLs
 %%  to avoid relocating them everytime they're loaded....
 
-%% m3_lib_flags = [ "-debugtype:cv", "-machine:i386" ]
+%% m3_lib_flags = [ "/debugtype:cv", "/machine:i386" ]
 m3_lib_flags = [ "-ign:__real" ]
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
@@ -227,15 +201,17 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib0_file = lib & ".lib.sa"
   local def_file  = lib & ".def"
   local dll_file  = lib & ".dll"
+  local manifest_file  = lib & ".dll.manifest"
+  local pdb_file  = lib & ".pdb"
   local listing   = lib & ".lst"
   local lib_args  = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
                                      options, objects ])
-  local link_args = arglist ("@", [ m3_link_flags, "-def:" & def_file,
-                                    "-dll", "-out:" & dll_file,
-                                    "-implib:" & lib_file,
+  local link_args = arglist ("@", [ m3_link_flags, "/def:" & def_file,
+                                    "/dll", "/out:" & dll_file,
+                                    "/implib:" & lib_file,
                                      options, objects, imported_libs ])
 
-  ret_code = try_exec ("@" & BIN_USE & "\\mklib", lib_args, ">", listing)
+  ret_code = try_exec ("mklib", lib_args, ">", listing)
   if not equal (ret_code, 0) return ret_code end
   if stale (lib_file, lib_file) 
     write("error: library creation failed" & EOL)
@@ -245,9 +221,9 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build an import library & DLL
     delete_file (lib0_file)
-    exec ("@ren", lib_file, lib0_file)
-    ret_code = try_exec ("@" & DEV_BIN & "\\link", link_args, ">", listing)
-    % make sure the extra stuff gets shipped
+    exec ("@ren", lib_file, lib0_file) % TBD a process here is a waste
+    ret_code = try_exec ("link", link_args, ">", listing)
+    % make sure the extra files get shipped
     BindExport (dll_file)
     install_derived (lib0_file)
     if stale (dll_file, dll_file) 
@@ -257,23 +233,15 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   else
     delete_file (lib0_file)
     delete_file (dll_file)
+    delete_file (pdb_file)
+    delete_file (manifest_file)
   end
 
-  % make sure the junk gets cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file ])
+  % make sure files get cleaned up
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file, manifest_file ])
 
   return ret_code
 end
-
-% proc make_lib (lib, options, objects, imported_libs, shared) is
-%   local lib_file = lib & ".lib"
-%   local listing  = lib & ".lst"
-%   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
-%                                options, objects ])
-%   deriveds ("", [ listing ])
-%   return try_exec ("@" & DEV_BIN & "\\lib", args, ">", listing)
-% end
-
 
 %-------------------------------------------------------------------
 % "skip_lib" is called when the compiler decides it doesn't need to
@@ -285,6 +253,8 @@ proc skip_lib (lib, shared) is
   local lib0_file = lib & ".lib.sa"
   local def_file  = lib & ".def"
   local dll_file  = lib & ".dll"
+  local manifest_file  = lib & ".dll.manifest"
+  local pdb_file  = lib & ".pdb"
   local listing   = lib & ".lst"
 
   if shared
@@ -294,32 +264,36 @@ proc skip_lib (lib, shared) is
   else
     delete_file (lib0_file)
     delete_file (dll_file)
+    delete_file (manifest_file)
   end
 
-  % make sure the junk gets cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file ])
+  % make sure files get cleaned up
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file, manifest_file ])
 
   return 0
 end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
-%---  "-pdb:none" enables the use of windbg with the resulting executable.
 
-m3_link_flags = [ "-debug:mapped,partial", "-debugtype:cv", "-pdb:none",
-                  "-align:0x1000", "-ignore:505", "-machine:i386",
-                  "-nodefaultlib:libc" ]
+m3_link_flags =
+[
+    "/debug",
+    "/incremental:no",
+]
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local pgm_file = prog & ".exe"
+  local pdb_file = prog & ".pdb"
+  local manifest_file = prog & ".exe.manifest"
   local map_file = prog & ".map"
   local listing  = prog & ".lst"
   local imports  = imported_libs
 
-  local entry = [ "-subsystem:console", "-entry:mainCRTStartup" ]
+  local entry = [ "/subsystem:console", "/entry:mainCRTStartup" ]
   if defined ("M3_WINDOWS_GUI")
     if M3_WINDOWS_GUI
-      entry = [ "-subsystem:windows", "-entry:WinMainCRTStartup" ]
+      entry = [ "/subsystem:windows", "/entry:WinMainCRTStartup" ]
     end
   end
 
@@ -335,11 +309,11 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     end
   end
 
-  local args = arglist ("@", [ "-out:" & pgm_file, "-map:" & map_file,
+  local args = arglist ("@", [ "/out:" & pgm_file, "/map:" & map_file,
                         entry, m3_link_flags, options, objects, imports ])
 
-  deriveds ("", [ listing, map_file ])
-  return try_exec ("@" & DEV_BIN & "\\LINK", args, ">", listing)
+  deriveds ("", [ listing, map_file, pdb_file, manifest_file ])
+  return try_exec ("link", args, ">", listing)
 end
 
 %-------------------------------------------------------------------
@@ -349,9 +323,11 @@ end
 
 proc skip_link (prog, shared) is
   local map_file = prog & ".map"
+  local pdb_file = prog & ".pdb"
+  local manifest_file = prog & ".exe.manifest"
   local listing  = prog & ".lst"
 
-  deriveds ("", [ listing, map_file ])
+  deriveds ("", [ listing, map_file, pdb_file, manifest_file ])
   return 0
 end
 
@@ -375,7 +351,7 @@ M3_OPTIONS = [ ]
 % M3_COVERAGE = TRUE
 % --- compile & link with coverage options
 
-M3_COVERAGE_LIB = LIB_USE & "\\report_coverage.obj"
+M3_COVERAGE_LIB = "report_coverage.obj"
 % --- library linked in programs compiled with "-Z" coverage option
 
 % M3_SPLIT_LIBNAMES = TRUE
