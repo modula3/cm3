@@ -137,7 +137,7 @@ proc compile_c (source, object, options, optimize, debug) is
   local args = [ "/D_MT", "/D_DLL", "/D_X86_", "/DWIN32", "/nologo", options ]
   if optimize  args += "/O2"            end
   if debug     args += [ "/Od", "/Zi" ] end
-  local res = try_exec ("cl", arglist ("@", [ args,"/c", source ]))
+  local res = try_exec ("cl", arglist ("@", [ args, "/c", source ]))
   delete_file ("vc40.pdb")
   return res
 end
