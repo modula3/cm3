@@ -52,16 +52,16 @@ INITIAL_REACTOR_EDITOR = "C:\\GNU\\emacs.bat"
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-INSTALL_ROOT = "c:\\cm3\\"
+INSTALL_ROOT = "c:\\cm3"
 %-- handy for installations that keep all M3 stuff together
 
-BIN_INSTALL   = INSTALL_ROOT & "bin"          % executables
-LIB_INSTALL   = INSTALL_ROOT & "lib"          % libraries
-PKG_INSTALL   = INSTALL_ROOT & "pkg"          % packages
-DOC_INSTALL   = INSTALL_ROOT & "doc"          % documents
-EMACS_INSTALL = INSTALL_ROOT & "elisp"        % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "man"          % man pages
-HTML_INSTALL  = INSTALL_ROOT & "www"          % public hypertext
+BIN_INSTALL   = INSTALL_ROOT & "\\bin"          % executables
+LIB_INSTALL   = INSTALL_ROOT & "\\lib"          % libraries
+PKG_INSTALL   = INSTALL_ROOT & "\\pkg"          % packages
+DOC_INSTALL   = INSTALL_ROOT & "\\doc"          % documents
+EMACS_INSTALL = INSTALL_ROOT & "\\elisp"        % emacs lisp code
+MAN_INSTALL   = INSTALL_ROOT & "\\man"          % man pages
+HTML_INSTALL  = INSTALL_ROOT & "\\www"          % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
