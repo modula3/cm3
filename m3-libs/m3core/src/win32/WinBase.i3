@@ -2129,6 +2129,9 @@ PROCEDURE llseek (hFile: HFILE; lOffset: LONG; iOrigin: int): LONG;
 <*EXTERNAL TlsAlloc:WINAPI*>
 PROCEDURE TlsAlloc (): DWORD;
 
+CONST
+  TLS_OUT_OF_INDEXES    = 16_FFFFFFFF;
+
 (* The values passed to "TlsSetValue" and returned by "TlsGetValue"
    were originally declared "LPVOID".  But, since it's clear that they're
    going to stuff the values somewhere hidden to the collector, any attempt
