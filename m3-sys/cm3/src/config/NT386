@@ -15,6 +15,21 @@ readonly INSTALL_KEY  = "4JJ2-D7A2-2KE2"
 % readonly INSTALL_KEY  = "4TD2-87A2-2KW2"
 % readonly INSTALL_KEY  = "4HC2-J7A2-2K92"
 
+%
+% It easier to bootstrap with Visual C++ 8.0 using the static C runtime (static CRT, libcmt.lib).
+% Once scripts\win\msvcr80.cmd is run or cm3.exe updated to copy the linker generated foo.exe.manifest,
+% this can be switched to TRUE.
+%
+UseDynamicCRuntime = FALSE
+
+if UseDynamicCRuntime 
+    CRuntimeLib = "msvcrt.lib"
+    CRuntimeFlags = "/MD"
+else
+    CRuntimeLib = "libcmt.lib"
+    CRuntimeFlags = "/MT"
+end
+
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
@@ -36,12 +51,32 @@ end
 % The first time a user runs Reactor, it will configure itself to use
 % the executables defined below.
 
-INITIAL_REACTOR_BROWSER = "C:\\PROGRA~1\\PLUS!\\MICROS~1\\EXPLORE.EXE"
-%-or- INIITAL_REACTOR_BROWSER = "C:\\Netscape\\Navigator\\Program\Netscape.exe"
+%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
+%  "What should be the default World-Wide Web browser for new Reactor users?"
+%     1  ".html" 
+%     0  "netscape.exe"
+%     0  "iexplore.exe"
+%     4  "windir"       "iexplore.exe"
+%     6  "C:\\WINNT40"  "iexplore.exe"
+%     0  "mosaic.exe"
+%END_CONFIG
 % A World-Wide Web browser.  Reactor passes it an initial URL
 % its first command-line argument.
 
-INITIAL_REACTOR_EDITOR = "C:\\GNU\\emacs.bat"
+INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
+  "What should be the default text editor for new Reactor users?"
+     0  "pfe32.exe"
+     0  "pfe.exe"
+     0  "vi.exe"
+     0  "emacs.bat"
+     1  ".txt"
+     0  "notepad.exe"
+     6  "C:\\WINDOWS"  "notepad.exe"
+     4  "windir"       "notepad.exe"
+     4  "winbootdir"   "notepad.exe"
+     0  "write.exe"
+     0  "writepad.exe" ]
+END_CONFIG
 % A text editor.  Reactor passes it "<file> +<line>" on the
 % command-line when it wants to edit <file> initially positioned
 % at <line>.
@@ -52,8 +87,10 @@ INITIAL_REACTOR_EDITOR = "C:\\GNU\\emacs.bat"
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-INSTALL_ROOT = "c:\\cm3"
-%-- handy for installations that keep all M3 stuff together
+INSTALL_ROOT = BEGIN_CONFIG
+  "Where should CM3 be installed?"
+    7 %-- user specified install root
+END_CONFIG
 
 BIN_INSTALL   = INSTALL_ROOT & "\\bin"          % executables
 LIB_INSTALL   = INSTALL_ROOT & "\\lib"          % libraries
@@ -63,6 +100,7 @@ EMACS_INSTALL = INSTALL_ROOT & "\\elisp"        % emacs lisp code
 MAN_INSTALL   = INSTALL_ROOT & "\\man"          % man pages
 HTML_INSTALL  = INSTALL_ROOT & "\\www"          % public hypertext
 
+%
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
@@ -89,7 +127,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "msvcrt.lib",
+  "LIBC"       : [ CRuntimeLib,
                    "winspool.lib",
                    "comctl32.lib",
                    "wsock32.lib",
@@ -134,12 +172,10 @@ M3_BACKEND_MODE = "0"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "/D_MT", "/D_DLL", "/D_X86_", "/DWIN32", "/nologo", options ]
-  if optimize  args += "/O2"            end
-  if debug     args += [ "/Od", "/Zi" ] end
-  local res = try_exec ("cl", arglist ("@", [ args, "/c", source ]))
-  delete_file ("vc40.pdb")
-  return res
+  local args = [ CRuntimeFlags, "/Z7", "/D_X86_", "/DWIN32", options ]
+  if optimize  args += "/O2" end
+  if debug     args += "/Od" end
+  return try_exec ("cl", arglist ("@", [ args, "/c", source ]))
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -168,6 +204,8 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib0_file = lib & ".lib.sa"
   local def_file  = lib & ".def"
   local dll_file  = lib & ".dll"
+  local manifest_file  = lib & ".dll.manifest"
+  local pdb_file  = lib & ".pdb"
   local listing   = lib & ".lst"
   local lib_args  = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
                                      options, objects ])
@@ -186,36 +224,27 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build an import library & DLL
     delete_file (lib0_file)
-    exec ("@ren", lib_file, lib0_file)
+    exec ("@ren", lib_file, lib0_file) % TBD a process here is a waste
     ret_code = try_exec ("link", link_args, ">", listing)
-    % make sure the extra stuff gets shipped
+    % make sure the extra files gets shipped
     BindExport (dll_file)
     install_derived (lib0_file)
     if stale (dll_file, dll_file) 
       write("error: dynamic link library creation failed" & EOL)
       return 1
     end
-
   else
     delete_file (lib0_file)
     delete_file (dll_file)
+    delete_file (pdb_file)
+    delete_file (manifest_file)
   end
 
-  % make sure the junk gets cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file ])
+  % make sure files get cleaned up
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file, manifest_file ])
 
   return ret_code
 end
-
-% proc make_lib (lib, options, objects, imported_libs, shared) is
-%   local lib_file = lib & ".lib"
-%   local listing  = lib & ".lst"
-%   local args = arglist ("@", [ m3_lib_flags, "/out:" & lib_file,
-%                                options, objects ])
-%   deriveds ("", [ listing ])
-%   return try_exec ("lib", args, ">", listing)
-% end
-
 
 %-------------------------------------------------------------------
 % "skip_lib" is called when the compiler decides it doesn't need to
@@ -227,6 +256,8 @@ proc skip_lib (lib, shared) is
   local lib0_file = lib & ".lib.sa"
   local def_file  = lib & ".def"
   local dll_file  = lib & ".dll"
+  local manifest_file  = lib & ".dll.manifest"
+  local pdb_file  = lib & ".pdb"
   local listing   = lib & ".lst"
 
   if shared
@@ -236,24 +267,28 @@ proc skip_lib (lib, shared) is
   else
     delete_file (lib0_file)
     delete_file (dll_file)
+    delete_file (manifest_file)
   end
 
-  % make sure the junk gets cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file ])
+  % make sure files get cleaned up
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file, manifest_file ])
 
   return 0
 end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
-%---  "/pdb:none" enables the use of windbg with the resulting executable.
 
-m3_link_flags = [ "/debug:mapped,partial", "/debugtype:cv", "/pdb:none",
-                  "/align:0x1000", "/ignore:505", "/machine:i386",
-                  "/nodefaultlib:libc" ]
+m3_link_flags =
+[
+    "/debug",
+    "/incremental:no",
+]
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local pgm_file = prog & ".exe"
+  local pdb_file = prog & ".pdb"
+  local manifest_file = prog & ".exe.manifest"
   local map_file = prog & ".map"
   local listing  = prog & ".lst"
   local imports  = imported_libs
@@ -280,7 +315,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = arglist ("@", [ "/out:" & pgm_file, "/map:" & map_file,
                         entry, m3_link_flags, options, objects, imports ])
 
-  deriveds ("", [ listing, map_file ])
+  deriveds ("", [ listing, map_file, pdb_file, manifest_file ])
   return try_exec ("link", args, ">", listing)
 end
 
@@ -291,9 +326,11 @@ end
 
 proc skip_link (prog, shared) is
   local map_file = prog & ".map"
+  local pdb_file = prog & ".pdb"
+  local manifest_file = prog & ".exe.manifest"
   local listing  = prog & ".lst"
 
-  deriveds ("", [ listing, map_file ])
+  deriveds ("", [ listing, map_file, pdb_file, manifest_file ])
   return 0
 end
 
