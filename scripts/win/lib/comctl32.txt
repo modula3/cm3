@@ -1,0 +1,41 @@
+# cl is "C:\MSVC20\BIN\CL.EXE" 
+# link is "C:\MSVC20\BIN\LINK.EXE" 
+# C:\dev2\cm3\scripts\win\lib\make-lib-1.cmd c:\cm3\lib\comctl32.lib run at Fri Dec 29 17:21:10 2006 on JAY-WIN4 by Jay.
+# cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
+# link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
+# link /dump /all "c:\cm3\lib\comctl32.lib"
+Export ImageList_ReplaceIcon 12
+Export CreateHeaderWindowW 16
+Export ImageList_GetIcon 12
+Export CreateStatusWindow 16
+Export DrawStatusTextW 16
+Export MakeDragList 4
+Export LBItemFromPt 16
+Export ImageList_LoadImageA 28
+Export GetPrivateProfileStructW 20
+Export WritePrivateProfileStructA 20
+Export WritePrivateProfileStruct 20
+Export DrawInsert 12
+Export CreateStatusWindowW 16
+Export HeaderWndProc 16
+Export CreateHeaderWindow 16
+Export InitCommonControls 0
+Export CreateHeaderWindowA 16
+Export ShowHideMenuCtl 12
+Export DrawStatusText 16
+Export CreateStatusWindowA 16
+Export CreateUpDownControl 48
+Export StatusWndProc 16
+Export MenuHelp 28
+Export ImageList_Remove 8
+Export ToolbarWndProc 16
+Export WritePrivateProfileStructW 20
+Export GetPrivateProfileStruct 20
+Export CreateToolbar 32
+Export GetPrivateProfileStructA 20
+Export DrawStatusTextA 16
+Export UpDownWndProc 16
+Export TrackBarWndProc 16
+Export GetEffectiveClientRect 12
+Export CreateMappedBitmap 20
+Extension dll

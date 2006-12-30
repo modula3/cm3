@@ -1,0 +1,77 @@
+# cl is "C:\MSVC20\BIN\CL.EXE" 
+# link is "C:\MSVC20\BIN\LINK.EXE" 
+# C:\dev2\cm3\scripts\win\lib\make-lib-1.cmd c:\cm3\lib\wsock32.lib run at Fri Dec 29 17:21:18 2006 on JAY-WIN4 by Jay.
+# cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
+# link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
+# link /dump /all "c:\cm3\lib\wsock32.lib"
+Export dn_expand 20
+Export GetServiceW 28
+Export getsockname 12
+Export inet_network 4
+Export __WSAFDIsSet 8
+Export listen 8
+Export WSAAsyncSelect 16
+Export ioctlsocket 12
+Export getservbyport 8
+Export GetAddressByNameW 40
+Export GetAddressByNameA 40
+Export WSAAsyncGetHostByAddr 28
+Export s_perror 8
+Export getpeername 12
+Export WSApSetPostRoutine 4
+Export gethostname 8
+Export inet_ntoa 4
+Export getprotobyname 4
+Export WSAAsyncGetProtoByName 20
+Export WSARecvEx 16
+Export EnumProtocolsW 12
+Export NPLoadNameSpaces 12
+Export getprotobynumber 4
+Export WSAAsyncGetHostByName 20
+Export WSAAsyncGetServByName 24
+Export ntohl 4
+Export WSACancelAsyncRequest 4
+Export htonl 4
+Export WSASetBlockingHook 4
+Export SetServiceA 24
+Export getsockopt 20
+Export WSACleanup 0
+Export getnetbyname 4
+Export GetTypeByNameW 8
+Export gethostbyaddr 12
+Export sendto 24
+Export WSAGetLastError 0
+Export shutdown 8
+Export GetServiceA 28
+Export recvfrom 24
+Export bind 12
+Export getservbyname 8
+Export socket 12
+Export setsockopt 20
+Export WSAStartup 8
+Export rresvport 4
+Export closesocket 4
+Export sethostname 8
+Export WSAAsyncGetProtoByNumber 20
+Export recv 16
+Export GetNameByTypeW 12
+Export send 16
+Export WSAIsBlocking 0
+Export WSAAsyncGetServByPort 24
+Export WSASetLastError 4
+Export inet_addr 4
+Export WSAUnhookBlockingHook 0
+Export SetServiceW 24
+Export gethostbyname 4
+Export EnumProtocolsA 12
+Export GetTypeByNameA 8
+Export connect 12
+Export select 20
+Export accept 12
+Export GetNameByTypeA 12
+Export rcmd 24
+Export WSACancelBlockingCall 0
+Export rexec 24
+Export htons 4
+Export ntohs 4
+Extension dll

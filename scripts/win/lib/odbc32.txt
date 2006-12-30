@@ -1,0 +1,66 @@
+# cl is "C:\MSVC20\BIN\CL.EXE" 
+# link is "C:\MSVC20\BIN\LINK.EXE" 
+# C:\dev2\cm3\scripts\win\lib\make-lib-1.cmd c:\cm3\lib\odbc32.lib run at Fri Dec 29 17:21:14 2006 on JAY-WIN4 by Jay.
+# cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
+# link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
+# link /dump /all "c:\cm3\lib\odbc32.lib"
+Export SQLFreeEnv 4
+Export SQLExecute 4
+Export SQLConnect 28
+Export SQLSetParam 32
+Export SQLDrivers 32
+Export SQLDriverConnect 32
+Export SQLGetStmtOption 12
+Export SQLAllocEnv 4
+Export SQLStatistics 36
+Export SQLGetCursorName 16
+Export SQLDescribeCol 36
+Export SQLGetFunctions 12
+Export SQLMoreResults 4
+Export SQLDisconnect 4
+Export SQLDescribeParam 24
+Export SQLColAttributes 28
+Export SQLSetStmtOption 12
+Export SQLError 32
+Export SQLGetTypeInfo 8
+Export SQLColumnPrivileges 36
+Export SQLSpecialColumns 40
+Export SQLParamOptions 12
+Export SQLGetConnectOption 12
+Export SQLFetch 4
+Export SQLNumParams 8
+Export SQLFreeConnect 4
+Export SQLRowCount 8
+Export SQLPutData 12
+Export SQLFreeStmt 8
+Export SQLExtendedFetch 20
+Export SQLAllocConnect 8
+Export SQLSetScrollOptions 16
+Export PostODBCError 16
+Export SQLBindCol 24
+Export SQLBrowseConnect 24
+Export SQLGetData 24
+Export SQLTables 36
+Export SQLProcedures 28
+Export SQLPrepare 12
+Export PostError 20
+Export SQLCancel 4
+Export SQLColumns 36
+Export SQLExecDirect 12
+Export SQLDataSources 32
+Export SQLForeignKeys 52
+Export SQLSetCursorName 12
+Export SQLGetInfo 20
+Export SQLSetPos 16
+Export SQLTablePrivileges 28
+Export SQLParamData 8
+Export SQLNativeSql 24
+Export SQLBindParameter 40
+Export SQLTransact 12
+Export SQLPrimaryKeys 28
+Export ConnectDlg 16
+Export SQLProcedureColumns 36
+Export SQLAllocStmt 8
+Export SQLSetConnectOption 12
+Export SQLNumResultCols 8
+Extension dll
