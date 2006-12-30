@@ -226,7 +226,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     delete_file (lib0_file)
     exec ("@ren", lib_file, lib0_file) % TBD a process here is a waste
     ret_code = try_exec ("link", link_args, ">", listing)
-    % make sure the extra files gets shipped
+    % make sure the extra files get shipped
     BindExport (dll_file)
     install_derived (lib0_file)
     if stale (dll_file, dll_file) 
