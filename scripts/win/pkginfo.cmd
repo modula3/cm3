@@ -1,4 +1,4 @@
-@rem $Id: pkginfo.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: pkginfo.cmd,v 1.3 2006-12-30 16:11:29 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -19,7 +19,7 @@ call %~dp0sysinfo || exit /b 1
 @rem
 
 if exist %PKGSDB% (
-	findstr /i /b %ROOT% %PKGSDB% 1>nul 2>&1 || (
+	findstr /i /b %ROOT:\=\\% %PKGSDB% 1>nul 2>&1 || (
 		echo %PKGSDB% is invalid, deleting and regenerating.
 		del %PKGSDB%
 	)

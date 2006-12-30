@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.3 2006-12-30 16:11:29 jkrell Exp $
 
 @if "%SYSINFO_DONE%" == "yes" goto :eof
 
@@ -146,30 +146,19 @@ call :environment_variables_must_be_set INSTALLROOT || goto :eof
 
 rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
 
-if not exist %INSTALLROOT%\lib (
-    @echo %INSTALLROOT%\lib does not exist.
-    exit /b 1
-)
-
-if not exist %INSTALLROOT%\lib\comctl32.lib (
-    @echo %INSTALLROOT%\lib\comctl32.lib does not exist, run %~dp0make-lib-2.
-    exit /b 1
-)
-
-if not exist %INSTALLROOT%\lib\user32.lib (
-    @echo %INSTALLROOT%\lib\user32.lib does not exist, run %~dp0make-lib-2.
-    exit /b 1
-)
-
-if not exist %INSTALLROOT%\lib\wsock32.lib (
-    @echo %INSTALLROOT%\lib\wsock32.lib does not exist, run %~dp0make-lib-2.
-    exit /b 1
-)
-
-if not exist %INSTALLROOT%\lib\gdi32.lib (
-    @echo %INSTALLROOT%\lib\gdi32.lib does not exist, run %~dp0make-lib-2.
-    exit /b 1
-)
+@rem
+@rem There are multiple problems with the installed .libs.
+@rem Just delete them and fallback to whatever is next in %LIB%.
+@rem
+call :my_del ^
+    %INSTALLROOT%\lib\advapi32.lib ^
+    %INSTALLROOT%\lib\comdlg32.lib ^
+    %INSTALLROOT%\lib\gdi32.lib ^
+    %INSTALLROOT%\lib\glu32.lib ^
+    %INSTALLROOT%\lib\netapi32.lib ^
+    %INSTALLROOT%\lib\odbc32.lib ^
+    %INSTALLROOT%\lib\odbccp32.lib ^
+    %INSTALLROOT%\lib\opengl32.lib ^
 
 @rem
 @rem This is a warning because it can be confusing
@@ -180,8 +169,13 @@ if not exist %INSTALLROOT%\lib\gdi32.lib (
 @rem It is only for use by other scripts.
 @rem
 
-echo warning: set lib=%%INSTALLROOT%%\lib;%%lib%%
-set lib=%INSTALLROOT%\lib;%lib%
+@rem
+@rem Further testing of bootstrapping from the latest Modula-3 release
+@rem with older versions of Visual C++ show these .libs don't help and
+@rem do hurt, so don't use them.
+@rem
+@rem echo warning: set lib=%%INSTALLROOT%%\lib;%%lib%%
+@rem set lib=%INSTALLROOT%\lib;%lib%
 
 :got_other_libs
 
@@ -280,3 +274,9 @@ goto :environment_variable_must_contain_files_1
 )
 (set %1 2>nul| findstr /i /b %1= >nul) || set %1=%2
 goto :eof
+
+:my_del
+@if (%1) == () @goto :eof
+@if exist %1 del %1
+@shift
+@goto :my_del
