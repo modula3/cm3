@@ -137,7 +137,7 @@ proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-D_MT", "-D_DLL", "-D_X86_", "-DWIN32", "-nologo", options ]
   if optimize  args += "-O2"            end
   if debug     args += [ "-Od", "-Zi" ] end
-  local res = try_exec ("@" & "cl", arglist ("@", [ args,"-c", source ]))
+  local res = try_exec ("cl", arglist ("@", [ args,"-c", source ]))
   delete_file ("vc40.pdb")
   return res
 end
@@ -149,7 +149,7 @@ end
 
 proc assemble (source, object) is
   local args = arglist ("@", [ "/Ml", "/t", "/z", source & "," & object & ";" ])
-  return try_exec ("@" & "masm386", args)
+  return try_exec ("masm386", args)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -176,7 +176,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
                                     "-implib:" & lib_file,
                                      options, objects, imported_libs ])
 
-  ret_code = try_exec ("@" & "mklib", lib_args, ">", listing)
+  ret_code = try_exec ("mklib", lib_args, ">", listing)
   if not equal (ret_code, 0) return ret_code end
   if stale (lib_file, lib_file) 
     write("error: library creation failed" & EOL)
@@ -187,7 +187,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     % build an import library & DLL
     delete_file (lib0_file)
     exec ("@ren", lib_file, lib0_file)
-    ret_code = try_exec ("@" & "link", link_args, ">", listing)
+    ret_code = try_exec ("link", link_args, ">", listing)
     % make sure the extra stuff gets shipped
     BindExport (dll_file)
     install_derived (lib0_file)
@@ -213,7 +213,7 @@ end
 %   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
 %                                options, objects ])
 %   deriveds ("", [ listing ])
-%   return try_exec ("@" & "lib", args, ">", listing)
+%   return try_exec ("lib", args, ">", listing)
 % end
 
 
@@ -281,7 +281,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
                         entry, m3_link_flags, options, objects, imports ])
 
   deriveds ("", [ listing, map_file ])
-  return try_exec ("@" & "LINK", args, ">", listing)
+  return try_exec ("LINK", args, ">", listing)
 end
 
 %-------------------------------------------------------------------
