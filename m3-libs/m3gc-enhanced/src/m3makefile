@@ -2,6 +2,9 @@ include_dir ("runtime")
 
 library("m3gcdefs")
 
+> "m3gcdefs.m3x" in 
+  write("")
+end
 > "libm3gcdefs.m3x" in 
   write("")
 end
