@@ -1,6 +1,6 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
-% 
+%
 % Standard configuration file for a 386 box running Windows NT or Windows 95.
 %
 
@@ -11,24 +11,6 @@ readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
-% readonly INSTALL_KEY  = "4JJ2-D7A2-2KE2"
-% readonly INSTALL_KEY  = "4TD2-87A2-2KW2"
-% readonly INSTALL_KEY  = "4HC2-J7A2-2K92"
-
-%
-% It easier to bootstrap with Visual C++ 8.0 using the static C runtime (static CRT, libcmt.lib).
-% Once scripts\win\msvcr80.cmd is run or cm3.exe updated to copy the linker generated foo.exe.manifest,
-% this can be switched to TRUE.
-%
-UseDynamicCRuntime = FALSE
-
-if UseDynamicCRuntime 
-    CRuntimeLib = "msvcrt.lib"
-    CRuntimeFlags = "/MD"
-else
-    CRuntimeLib = "libcmt.lib"
-    CRuntimeFlags = "/MT"
-end
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
@@ -47,44 +29,10 @@ proc set_config_options () is
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
 
-%--------------------------------------------------------- Reactor defaults ---
-% The first time a user runs Reactor, it will configure itself to use
-% the executables defined below.
-
-%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
-%  "What should be the default World-Wide Web browser for new Reactor users?"
-%     1  ".html" 
-%     0  "netscape.exe"
-%     0  "iexplore.exe"
-%     4  "windir"       "iexplore.exe"
-%     6  "C:\\WINNT40"  "iexplore.exe"
-%     0  "mosaic.exe"
-%END_CONFIG
-% A World-Wide Web browser.  Reactor passes it an initial URL
-% its first command-line argument.
-
-INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
-  "What should be the default text editor for new Reactor users?"
-     0  "pfe32.exe"
-     0  "pfe.exe"
-     0  "vi.exe"
-     0  "emacs.bat"
-     1  ".txt"
-     0  "notepad.exe"
-     6  "C:\\WINDOWS"  "notepad.exe"
-     4  "windir"       "notepad.exe"
-     4  "winbootdir"   "notepad.exe"
-     0  "write.exe"
-     0  "writepad.exe" ]
-END_CONFIG
-% A text editor.  Reactor passes it "<file> +<line>" on the
-% command-line when it wants to edit <file> initially positioned
-% at <line>.
-
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exists
 % will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have 
+% the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
 INSTALL_ROOT = BEGIN_CONFIG
@@ -115,7 +63,7 @@ readonly INSTALL_IMPLS = TRUE
 %    => save all source files during the install
 %    => makes debugging easier and browsing more fruitful
 % FALSE
-%    => save only the exported interfaces and templates 
+%    => save only the exported interfaces and templates
 %    => makes the installed system slightly smaller.
 
 %------------------------------------------------ external system libraries ---
@@ -127,7 +75,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ CRuntimeLib,
+  "LIBC"       : [ "msvcrt.lib",
                    "winspool.lib",
                    "comctl32.lib",
                    "wsock32.lib",
@@ -166,16 +114,61 @@ M3_BACKEND_MODE = "0"
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
 
+%------------------------------------------------------------------------------
+
+proc delete_bad_libs() is
+%
+% The kernel32.lib installed by 5.2.6 is missing InterlockedCompareExchange
+% that is needed by msvcrt.lib 8.0 so delete it and fall back to whatever comes
+% with the compiler/linker (the next in %LIB%).
+%
+    delete_file(INSTALL_ROOT & "\\lib\\kernel32.lib")
+%
+% The user32.lib installed by 5.2.6 causes the Visual C++ 4.0 linker to
+% have an "internal error" so delete it and fall back to whatever comes
+% with the compiler/linker (the next in %LIB%).
+%
+    delete_file(INSTALL_ROOT & "\\lib\\user32.lib")
+%
+% The wsock32.lib installed by 5.2.6 causes the Visual C++ 4.0 linker to
+% error regarding corrupt debugging information so delete it and fall back
+% to whatever comes with the compiler/linker (the next in %LIB%).
+%
+    delete_file(INSTALL_ROOT & "\\lib\\wsock32.lib")
+%
+% There are more link errors, delete everything.
+%
+    delete_file(INSTALL_ROOT & "\\lib\\advapi32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\comdlg32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\gdi32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\glu32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\netapi32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\odbc32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\odbccp32.lib")
+    delete_file(INSTALL_ROOT & "\\lib\\opengl32.lib")
+%
+% There are more errors, probably something in the mklib output we'll see later.
+% For now, the oldest toolset that works is 5.0 from 1997.
+%
+end
+
+%------------------------------------------------------------------------------
+% This should be built-in.
+
+proc file_exists(a) is
+  return not stale (a, a)
+end
+
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ CRuntimeFlags, "/Z7", "/D_X86_", "/DWIN32", options ]
+  local args = [ "/MD", "/Z7", "/D_X86_", "/DWIN32", options ]
   if optimize  args += "/O2" end
   if debug     args += "/Od" end
-  return try_exec ("cl", arglist ("@", [ args, "/c", source ]))
+  return try_exec ("cl", [ args, "/c", source ])
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -199,6 +192,9 @@ end
 m3_lib_flags = [ "-ign:__real" ]
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
+
+  delete_bad_libs()
+
   local ret_code  = "0"
   local lib_file  = lib & ".lib"
   local lib0_file = lib & ".lib.sa"
@@ -216,7 +212,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   ret_code = try_exec ("mklib", lib_args, ">", listing)
   if not equal (ret_code, 0) return ret_code end
-  if stale (lib_file, lib_file) 
+  if stale (lib_file, lib_file)
     write("error: library creation failed" & EOL)
     return 1
   end
@@ -228,8 +224,12 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     ret_code = try_exec ("link", link_args, ">", listing)
     % make sure the extra files get shipped
     BindExport (dll_file)
+    BindExport (pdb_file)
+    if file_exists(manifest_file)
+        BindExport (manifest_file)
+    end
     install_derived (lib0_file)
-    if stale (dll_file, dll_file) 
+    if stale (dll_file, dll_file)
       write("error: dynamic link library creation failed" & EOL)
       return 1
     end
@@ -241,19 +241,19 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   end
 
   % make sure files get cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file, manifest_file ])
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, manifest_file, pdb_file ])
 
   return ret_code
 end
 
-% proc make_lib (lib, options, objects, imported_libs, shared) is   
-%   local lib_file = lib & ".lib"   
-%   local listing  = lib & ".lst"   
-%   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,   
-%                                options, objects ])   
-%   deriveds ("", [ listing ])   
-%   return try_exec ("lib", args, ">", listing)   
-% end   
+% proc make_lib (lib, options, objects, imported_libs, shared) is
+%   local lib_file = lib & ".lib"
+%   local listing  = lib & ".lst"
+%   local args = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
+%                                options, objects ])
+%   deriveds ("", [ listing ])
+%   return try_exec ("lib", args, ">", listing)
+% end
 
 %-------------------------------------------------------------------
 % "skip_lib" is called when the compiler decides it doesn't need to
@@ -272,15 +272,20 @@ proc skip_lib (lib, shared) is
   if shared
     % would have built an import library & DLL
     BindExport (dll_file)
+    BindExport (pdb_file)
+    if file_exists(manifest_file)
+        BindExport (manifest_file)
+    end
     install_derived (lib0_file)
   else
     delete_file (lib0_file)
     delete_file (dll_file)
+    delete_file (pdb_file)
     delete_file (manifest_file)
   end
 
   % make sure files get cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file, manifest_file ])
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, manifest_file, pdb_file ])
 
   return 0
 end
@@ -295,10 +300,12 @@ m3_link_flags =
 ]
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
+
+  delete_bad_libs()
+
   local pgm_file = prog & ".exe"
-  local pdb_file = prog & ".pdb"
   local manifest_file = prog & ".exe.manifest"
-  local map_file = prog & ".map"
+  local pdb_file = prog & ".pdb"
   local listing  = prog & ".lst"
   local imports  = imported_libs
 
@@ -307,6 +314,11 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     if M3_WINDOWS_GUI
       entry = [ "/subsystem:windows", "/entry:WinMainCRTStartup" ]
     end
+  end
+
+  BindExport (pdb_file)
+  if file_exists(manifest_file)
+    BindExport(manifest_file)
   end
 
   if not shared
@@ -321,10 +333,10 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     end
   end
 
-  local args = arglist ("@", [ "/out:" & pgm_file, "/map:" & map_file,
+  local args = arglist ("@", [ "/out:" & pgm_file,
                         entry, m3_link_flags, options, objects, imports ])
 
-  deriveds ("", [ listing, map_file, pdb_file, manifest_file ])
+  deriveds ("", [ manifest_file, pdb_file, listing ])
   return try_exec ("link", args, ">", listing)
 end
 
@@ -334,12 +346,11 @@ end
 % files that should be deleted or shipped.
 
 proc skip_link (prog, shared) is
-  local map_file = prog & ".map"
   local pdb_file = prog & ".pdb"
   local manifest_file = prog & ".exe.manifest"
   local listing  = prog & ".lst"
 
-  deriveds ("", [ listing, map_file, pdb_file, manifest_file ])
+  deriveds ("", [ manifest_file, pdb_file, listing ])
   return 0
 end
 
