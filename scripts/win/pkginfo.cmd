@@ -19,7 +19,7 @@ call %~dp0sysinfo || exit /b 1
 @rem
 
 if exist %PKGSDB% (
-	findstr /i /b %ROOT% %PKGSDB% 1>nul 2>&1 || (
+	findstr /i /b %ROOT:\=\\% %PKGSDB% 1>nul 2>&1 || (
 		echo %PKGSDB% is invalid, deleting and regenerating.
 		del %PKGSDB%
 	)
