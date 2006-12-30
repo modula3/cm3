@@ -100,7 +100,7 @@ sed -e '
 
 #-----------------------------------------------------------------------------
 # clean everything
-header "clean evrything for build with new compiler"
+header "clean everything for build with new compiler"
 "${ROOT}/scripts/do-cm3-min.sh" realclean || exit 1
 
 #-----------------------------------------------------------------------------
