@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-core.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: do-cm3-core.cmd,v 1.3 2006-12-31 14:38:05 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -10,6 +10,7 @@
 @call %~dp0pkgcmds || exit /b 1
 
 set P=
+if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
 set P=%P% m3gc-enhanced
 set P=%P% m3core
 set P=%P% libm3

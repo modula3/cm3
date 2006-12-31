@@ -1,4 +1,4 @@
-@rem $Id: def-std-pkgs.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: def-std-pkgs.cmd,v 1.3 2006-12-31 14:38:05 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -9,6 +9,7 @@
 
 set P=
 @rem base libraries
+if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
 if not "%TARGET%" == "NT386" (
   set P=%P% m3gc-simple
 )
