@@ -1,0 +1,56 @@
+% This is Quake source code, to initialize data. 
+% Quake is the Modula-3 build extension language. 
+% cl is "C:\MSVC20\BIN\CL.EXE" 
+% link is "C:\MSVC20\BIN\LINK.EXE" 
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\MSVC20\LIB\GLU32.LIB run at Sun Dec 31 03:51:27 2006 on JAY-WIN4 by Jay.
+% cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
+% link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
+% link /dump /all "C:\MSVC20\LIB\GLU32.LIB"
+local readonly glu32 = {
+"gluNewQuadric" : "0",
+"gluLoadSamplingMatrices" : "16",
+"gluErrorString" : "4",
+"gluNewTess" : "0",
+"gluEndTrim" : "4",
+"gluEndCurve" : "4",
+"gluQuadricOrientation" : "8",
+"gluDeleteNurbsRenderer" : "4",
+"gluTessVertex" : "12",
+"gluSphere" : "20",
+"gluBeginTrim" : "4",
+"gluTessCallback" : "12",
+"gluErrorUnicodeStringEXT" : "4",
+"gluBeginCurve" : "4",
+"gluDeleteQuadric" : "4",
+"gluNurbsCallback" : "12",
+"gluGetNurbsProperty" : "12",
+"gluCylinder" : "36",
+"gluNewNurbsRenderer" : "0",
+"gluBeginSurface" : "4",
+"gluPartialDisk" : "44",
+"gluNextContour" : "8",
+"gluDeleteTess" : "4",
+"gluProject" : "48",
+"gluBuild2DMipmaps" : "28",
+"gluQuadricNormals" : "8",
+"gluOrtho2D" : "32",
+"gluPerspective" : "32",
+"gluUnProject" : "48",
+"gluDisk" : "28",
+"gluNurbsSurface" : "44",
+"gluScaleImage" : "36",
+"gluEndSurface" : "4",
+"gluPickMatrix" : "36",
+"gluEndPolygon" : "4",
+"gluLookAt" : "72",
+"gluNurbsProperty" : "12",
+"gluQuadricCallback" : "12",
+"gluBuild1DMipmaps" : "24",
+"gluQuadricTexture" : "8",
+"gluNurbsCurve" : "28",
+"gluQuadricDrawStyle" : "8",
+"gluPwlCurve" : "20",
+"gluBeginPolygon" : "4",
+"Extension" : "dll"
+}
+Files{"glu32"} = glu32

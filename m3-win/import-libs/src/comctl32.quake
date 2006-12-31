@@ -1,0 +1,46 @@
+% This is Quake source code, to initialize data. 
+% Quake is the Modula-3 build extension language. 
+% cl is "C:\MSVC20\BIN\CL.EXE" 
+% link is "C:\MSVC20\BIN\LINK.EXE" 
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\MSVC20\LIB\COMCTL32.LIB run at Sun Dec 31 03:51:24 2006 on JAY-WIN4 by Jay.
+% cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
+% link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
+% link /dump /all "C:\MSVC20\LIB\COMCTL32.LIB"
+local readonly comctl32 = {
+"ImageList_ReplaceIcon" : "12",
+"CreateHeaderWindowW" : "16",
+"ImageList_GetIcon" : "12",
+"CreateStatusWindow" : "16",
+"DrawStatusTextW" : "16",
+"MakeDragList" : "4",
+"LBItemFromPt" : "16",
+"ImageList_LoadImageA" : "28",
+"GetPrivateProfileStructW" : "20",
+"WritePrivateProfileStructA" : "20",
+"WritePrivateProfileStruct" : "20",
+"DrawInsert" : "12",
+"CreateStatusWindowW" : "16",
+"HeaderWndProc" : "16",
+"CreateHeaderWindow" : "16",
+"InitCommonControls" : "0",
+"CreateHeaderWindowA" : "16",
+"ShowHideMenuCtl" : "12",
+"DrawStatusText" : "16",
+"CreateStatusWindowA" : "16",
+"CreateUpDownControl" : "48",
+"StatusWndProc" : "16",
+"MenuHelp" : "28",
+"ImageList_Remove" : "8",
+"ToolbarWndProc" : "16",
+"WritePrivateProfileStructW" : "20",
+"GetPrivateProfileStruct" : "20",
+"CreateToolbar" : "32",
+"GetPrivateProfileStructA" : "20",
+"DrawStatusTextA" : "16",
+"UpDownWndProc" : "16",
+"TrackBarWndProc" : "16",
+"GetEffectiveClientRect" : "12",
+"CreateMappedBitmap" : "20",
+"Extension" : "dll"
+}
+Files{"comctl32"} = comctl32
