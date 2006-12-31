@@ -96,11 +96,6 @@ if not exist %CM3_ROOT%\bin (
 )
 
 @rem
-@rem Initially use copy in source tree.
-@rem
-set use_msvcr_manifest=%MyDir%\use_msvcr80.manifest
-
-@rem
 @rem In case cm3 on different drive than Windows, use the "first" set of files as the source to hard link.
 @rem
 
@@ -108,7 +103,6 @@ call :HandleFile %CM3_EXE%
 
 set msvcr_dll=%CM3_BIN%\%msvcr_dll_file%
 set msvcr_sysman=%CM3_BIN%\%msvcr_appman_file%
-set use_msvcr_manifest=%CM3_EXE%.manifest
 
 @rem
 @rem Handle all .exes and their directories.
@@ -144,7 +138,6 @@ if /i "%~nx1" == "%msvcr_dll_file%" (
     rem echo skipping %1
     goto :eof
 )
-call :CopyOrHardLink %use_msvcr_manifest% %1.manifest
 call :GetFullPathName %1\..
 call :HandleDirectory %a%
 goto :eof
