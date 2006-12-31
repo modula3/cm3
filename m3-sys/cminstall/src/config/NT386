@@ -10,7 +10,7 @@ readonly TARGET       = "NT386"    % code generation target
 readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
+%readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
@@ -53,7 +53,7 @@ HTML_INSTALL  = INSTALL_ROOT & "\\www"          % public hypertext
 % place from where you use them.  If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
 %
-USE_ROOT  = INSTALL_ROOT
+%USE_ROOT  = INSTALL_ROOT
 BIN_USE   = BIN_INSTALL   % executables
 LIB_USE   = LIB_INSTALL   % libraries
 PKG_USE   = PKG_INSTALL   % packages
@@ -85,8 +85,6 @@ SYSTEM_LIBS = {
                    "user32.lib",
                    "advapi32.lib",
                    "kernel32.lib" ],
-% "LEX-YACC"   : [ "lex.lib" ], %-- not on most Win32 platforms
-% "FLEX-BISON" : [ "flex.lib" ], %-- not on most Win32 platforms
   "ODBC"       : [ "odbc32.lib",
                    "odbccp32.lib" ],
   "OPENGL"     : [ "opengl32.lib",
@@ -97,8 +95,7 @@ SYSTEM_LIBS = {
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "FLEX-BISON", "LEX-YACC", "LIBC" ]
+SYSTEM_LIBORDER = [ "OPENGL", "TCP", "ODBC", "LIBC" ]
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
@@ -115,48 +112,17 @@ M3_BACKEND_MODE = "0"
 %  "3"  -- call m3_backend, it produces assembly code
 
 %------------------------------------------------------------------------------
+% This should be built-in.
 
-proc delete_bad_libs() is
-%
-% The kernel32.lib installed by 5.2.6 is missing InterlockedCompareExchange
-% that is needed by msvcrt.lib 8.0 so delete it and fall back to whatever comes
-% with the compiler/linker (the next in %LIB%).
-%
-    delete_file(INSTALL_ROOT & "\\lib\\kernel32.lib")
-%
-% The user32.lib installed by 5.2.6 causes the Visual C++ 4.0 linker to
-% have an "internal error" so delete it and fall back to whatever comes
-% with the compiler/linker (the next in %LIB%).
-%
-    delete_file(INSTALL_ROOT & "\\lib\\user32.lib")
-%
-% The wsock32.lib installed by 5.2.6 causes the Visual C++ 4.0 linker to
-% error regarding corrupt debugging information so delete it and fall back
-% to whatever comes with the compiler/linker (the next in %LIB%).
-%
-    delete_file(INSTALL_ROOT & "\\lib\\wsock32.lib")
-%
-% There are more link errors, delete everything.
-%
-    delete_file(INSTALL_ROOT & "\\lib\\advapi32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\comdlg32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\gdi32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\glu32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\netapi32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\odbc32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\odbccp32.lib")
-    delete_file(INSTALL_ROOT & "\\lib\\opengl32.lib")
-%
-% There are more errors, probably something in the mklib output we'll see later.
-% For now, the oldest toolset that works is 5.0 from 1997.
-%
+proc file_exists (a) is
+  return not stale (a, a)
 end
 
 %------------------------------------------------------------------------------
-% This should be built-in.
+% This should be built-in and it should it not cost a process.
 
-proc file_exists(a) is
-  return not stale (a, a)
+proc rename_file (a, b) is
+  exec ("@ren", a, b)
 end
 
 %--------------------------------------------------------------- C compiler ---
@@ -165,9 +131,32 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "/MD", "/Z7", "/D_X86_", "/DWIN32", options ]
-  if optimize  args += "/O2" end
-  if debug     args += "/Od" end
+  local args = [
+%
+% Be quiet. Remove this if response file are used, since it
+% inhibits the compiler dumping the response file, which is useful
+% in any log.
+%
+    "/nologo",
+%
+% Use msvcrt.lib and define _MT and _DLL.
+%
+    "/MD",
+%
+% Put type information in .objs/.libs instead of shared in vc80.pdb, etc.
+% vc80.pdb can be renamed with /Fd, we'd need the target name.
+% This is bigger/slower but has advantages too.
+% Debug information does not inhibit optimization so always generate it.
+%
+    "/Z7",
+%
+% needed for older headers such as with Visual C++ 2.0
+%
+    "/DWIN32",
+    options
+    ]
+  if optimize  args += "/Ox" end
+  if debug     args += "/Oi" end
   return try_exec ("cl", [ args, "/c", source ])
 end
 
@@ -192,52 +181,50 @@ end
 m3_lib_flags = [ "-ign:__real" ]
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
-
-  delete_bad_libs()
-
   local ret_code  = "0"
   local lib_file  = lib & ".lib"
   local lib0_file = lib & ".lib.sa"
   local def_file  = lib & ".def"
   local dll_file  = lib & ".dll"
-  local manifest_file  = lib & ".dll.manifest"
+  local manifest_file  = dll_file & ".manifest"
   local pdb_file  = lib & ".pdb"
   local listing   = lib & ".lst"
   local lib_args  = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
                                      options, objects ])
   local link_args = arglist ("@", [ m3_link_flags, "/def:" & def_file,
                                     "/dll", "/out:" & dll_file,
-                                    "/implib:" & lib_file,
                                      options, objects, imported_libs ])
 
   ret_code = try_exec ("mklib", lib_args, ">", listing)
-  if not equal (ret_code, 0) return ret_code end
-  if stale (lib_file, lib_file)
-    write("error: library creation failed" & EOL)
+  if not equal (ret_code, 0)
+    return ret_code
+  end
+  if not file_exists (lib_file)
+    write("error: library creation failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
     return 1
   end
 
   if shared
     % build an import library & DLL
     delete_file (lib0_file)
-    exec ("@ren", lib_file, lib0_file) % TBD a process here is a waste
+    rename_file (lib_file, lib0_file)
     ret_code = try_exec ("link", link_args, ">", listing)
     % make sure the extra files get shipped
     BindExport (dll_file)
-    BindExport (pdb_file)
-    if file_exists(manifest_file)
+    if file_exists (manifest_file)
         BindExport (manifest_file)
     end
+    BindExport (pdb_file)
     install_derived (lib0_file)
-    if stale (dll_file, dll_file)
+    if not file_exists (dll_file)
       write("error: dynamic link library creation failed" & EOL)
       return 1
     end
   else
     delete_file (lib0_file)
     delete_file (dll_file)
-    delete_file (pdb_file)
     delete_file (manifest_file)
+    delete_file (pdb_file)
   end
 
   % make sure files get cleaned up
@@ -265,23 +252,23 @@ proc skip_lib (lib, shared) is
   local lib0_file = lib & ".lib.sa"
   local def_file  = lib & ".def"
   local dll_file  = lib & ".dll"
-  local manifest_file  = lib & ".dll.manifest"
+  local manifest_file  = dll_file & ".manifest"
   local pdb_file  = lib & ".pdb"
   local listing   = lib & ".lst"
 
   if shared
     % would have built an import library & DLL
     BindExport (dll_file)
-    BindExport (pdb_file)
-    if file_exists(manifest_file)
+    if file_exists (manifest_file)
         BindExport (manifest_file)
     end
+    BindExport (pdb_file)
     install_derived (lib0_file)
   else
     delete_file (lib0_file)
     delete_file (dll_file)
-    delete_file (pdb_file)
     delete_file (manifest_file)
+    delete_file (pdb_file)
   end
 
   % make sure files get cleaned up
@@ -295,16 +282,28 @@ end
 
 m3_link_flags =
 [
+%
+% Generate a .pdb for debugging.
+%
     "/debug",
+%
+% Spend a little longer producing a slightly smaller/faster .dll/.exe and
+% avoid some warnings.
+%
     "/incremental:no",
+%
+% Remove unused code/data.
+%
+    "/opt:ref",
+%
+% With newer linkers, combine identical code/data.
+%
+%   "/opt:icf",
 ]
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-
-  delete_bad_libs()
-
   local pgm_file = prog & ".exe"
-  local manifest_file = prog & ".exe.manifest"
+  local manifest_file = pgm_file & ".manifest"
   local pdb_file = prog & ".pdb"
   local listing  = prog & ".lst"
   local imports  = imported_libs
@@ -314,11 +313,6 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     if M3_WINDOWS_GUI
       entry = [ "/subsystem:windows", "/entry:WinMainCRTStartup" ]
     end
-  end
-
-  BindExport (pdb_file)
-  if file_exists(manifest_file)
-    BindExport(manifest_file)
   end
 
   if not shared
@@ -337,7 +331,22 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
                         entry, m3_link_flags, options, objects, imports ])
 
   deriveds ("", [ manifest_file, pdb_file, listing ])
-  return try_exec ("link", args, ">", listing)
+  ret_code = try_exec ("link", args, ">", listing)
+
+  if not equal (ret_code, 0)
+    return ret_code
+  end
+  if not file_exists (pgm_file)
+    write("error: link failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
+    return 1
+  end
+
+  if file_exists (manifest_file)
+    BindExport (manifest_file)
+  end
+  BindExport (pdb_file)
+
+  return ret_code
 end
 
 %-------------------------------------------------------------------
@@ -346,8 +355,9 @@ end
 % files that should be deleted or shipped.
 
 proc skip_link (prog, shared) is
+  local pgm_file = prog & ".exe"
+  local manifest_file = pgm_file & ".manifest"
   local pdb_file = prog & ".pdb"
-  local manifest_file = prog & ".exe.manifest"
   local listing  = prog & ".lst"
 
   deriveds ("", [ manifest_file, pdb_file, listing ])

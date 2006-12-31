@@ -56,6 +56,8 @@
 @rem Presumably msdev42 => 1020 but I don't have this version yet.
 @rem \msdev50\vc\bin\cl /EP 1.c 2>nul
 @rem 1100
+@rem \msdev60\vc\bin\cl /EP 1.c 2>nul
+@rem 1200
 @rem "\Program Files\Microsoft Visual Studio .NET\\Vc7\bin\cl" /EP 1.c 2>nul
 @rem 1300
 @rem "\Program Files\Microsoft Visual C++ Toolkit 2003\bin\cl" /EP 1.c 2>nul
@@ -144,21 +146,15 @@ call :environment_variables_must_be_set INSTALLROOT || goto :eof
 @rem Check the %lib% environment variable.
 @rem
 
-rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
+@rem
+@rem The .libs shipped by CM3 5.2.6 do %INSTALLROOT%\lib do not work Visual C++ 2.0, 4.0, or 8.0, at least.
+@rem They are presumably of too new a format for 2.0 and 4.0.
+@rem They are missing function(s) needed by msvcrt.lib 8.0 (kernel32!InterlockedCompareExchange).
+@rem The 7.1 and 8.0 Express Editions lack many .libs so we need something here, such as the
+@rem Platform SDK or our own. We make our own in m3-win\imports-libs.
+@rem
 
-@rem
-@rem There are multiple problems with the installed .libs.
-@rem Just delete them and fallback to whatever is next in %LIB%.
-@rem
-call :my_del ^
-    %INSTALLROOT%\lib\advapi32.lib ^
-    %INSTALLROOT%\lib\comdlg32.lib ^
-    %INSTALLROOT%\lib\gdi32.lib ^
-    %INSTALLROOT%\lib\glu32.lib ^
-    %INSTALLROOT%\lib\netapi32.lib ^
-    %INSTALLROOT%\lib\odbc32.lib ^
-    %INSTALLROOT%\lib\odbccp32.lib ^
-    %INSTALLROOT%\lib\opengl32.lib ^
+rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
 
 @rem
 @rem This is a warning because it can be confusing
@@ -169,13 +165,8 @@ call :my_del ^
 @rem It is only for use by other scripts.
 @rem
 
-@rem
-@rem Further testing of bootstrapping from the latest Modula-3 release
-@rem with older versions of Visual C++ show these .libs don't help and
-@rem do hurt, so don't use them.
-@rem
-@rem echo warning: set lib=%%INSTALLROOT%%\lib;%%lib%%
-@rem set lib=%INSTALLROOT%\lib;%lib%
+@echo warning: set lib=%%INSTALLROOT%%\lib;%%lib%%
+@set lib=%INSTALLROOT%\lib;%lib%
 
 :got_other_libs
 
