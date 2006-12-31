@@ -1,0 +1,44 @@
+% This is Quake source code, to initialize data. 
+% Quake is the Modula-3 build extension language. 
+% cl is "C:\MSVC20\BIN\CL.EXE" 
+% link is "C:\MSVC20\BIN\LINK.EXE" 
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\MSVC20\LIB\COMDLG32.LIB run at Sun Dec 31 03:51:25 2006 on JAY-WIN4 by Jay.
+% cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
+% link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
+% link /dump /all "C:\MSVC20\LIB\COMDLG32.LIB"
+local readonly comdlg32 = {
+"PrintSetupDlgProc" : "16",
+"ColorDlgProc" : "16",
+"GetFileTitleA" : "12",
+"FileSaveDlgProc" : "16",
+"GetSaveFileNameA" : "4",
+"FindTextA" : "4",
+"EditIntegerOnly" : "16",
+"ReplaceTextW" : "4",
+"dwLBSubclass" : "16",
+"FileOpenDlgProc" : "16",
+"PrintDlgW" : "4",
+"ChooseFontW" : "4",
+"GetFileTitleW" : "12",
+"dwOKSubclass" : "16",
+"GetSaveFileNameW" : "4",
+"LoadAlterBitmap" : "12",
+"GetOpenFileNameW" : "4",
+"GetOpenFileNameA" : "4",
+"FindTextW" : "4",
+"CommDlgExtendedError" : "0",
+"PrintDlgA" : "4",
+"ArrowBtnWndProc" : "16",
+"FontStyleEnumProc" : "16",
+"ReplaceTextA" : "4",
+"WantArrows" : "16",
+"ChooseColorA" : "4",
+"ChooseFontA" : "4",
+"ChooseColorW" : "4",
+"PrintDlgProc" : "16",
+"FormatCharDlgProc" : "16",
+"FindReplaceDlgProc" : "16",
+"FontFamilyEnumProc" : "16",
+"Extension" : "dll"
+}
+Files{"comdlg32"} = comdlg32

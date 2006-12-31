@@ -1,1 +1,2 @@
-call %~dp0make-lib-2
+This directory is dead.
+It has been replaced by the similar m3-win\import-libs.
