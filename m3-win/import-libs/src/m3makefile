@@ -186,7 +186,6 @@ foreach File in Files
         %exec(CommandPrefix & "cl /c /X /nologo /W4 /WX /Tp" & CppFilePath)
         %exec(CommandPrefix & "link /nologo /dll /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension & " " & ObjFilePath)
         exec(CommandPrefix & "cl /LD /Zl /X /nologo /W4 /WX /Tp" & CppFilePath & " /link /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension)
-        LibdExport(File & ".lib")
 
         %
         % .m3x files needed but not otherwise produced.
@@ -195,6 +194,7 @@ foreach File in Files
           write("")
         end
     end
+    LibdExport(File & ".lib")
 end
 
 %
