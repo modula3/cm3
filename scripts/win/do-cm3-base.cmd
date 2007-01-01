@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-base.cmd,v 1.3 2006-12-31 14:38:05 jkrell Exp $
+@rem $Id: do-cm3-base.cmd,v 1.4 2007-01-01 19:24:02 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -10,7 +10,7 @@
 @call %~dp0pkgcmds || exit /b 1
 
 set P=
-if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
+set P=%P% import-libs
 set P=%P% m3core
 set P=%P% libm3
 set P=%P% m3middle
@@ -19,12 +19,11 @@ set P=%P% m3scanner
 set P=%P% m3tools
 set P=%P% m3cgcat
 set P=%P% m3cggen
-if "%M3GDB%" == "yes" set P=%P% m3gdb
 set P=%P% m3bundle
-if "%M3OSTYPE%" == "WIN32" set P=%P% mklib
-if "%M3OSTYPE%" == "WIN32" set P=%P% dll2lib
-if "%M3OSTYPE%" == "WIN32" set P=%P% fix_nl
-if "%M3OSTYPE%" == "WIN32" set P=%P% libdump
+set P=%P% mklib
+set P=%P% dll2lib
+set P=%P% fix_nl
+set P=%P% libdump
 set P=%P% bitvector
 set P=%P% digraph
 set P=%P% parseparams
@@ -36,7 +35,7 @@ set P=%P% table-list
 set P=%P% tempfiles
 if "%HAVE_TCL%" == "yes" set P=%P% tcl
 set P=%P% tcp
-if "%M3OSTYPE%" == "WIN32" set P=%P% tapi
+set P=%P% tapi
 if "%HAVE_SERIAL%" == "yes" set P=%P% serial
 
 call %~dp0pkgcmds extract_options %* || (
@@ -54,18 +53,18 @@ call %~dp0pkgcmds add_action_opts %* || (
 
 call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %P%
 
-endlocal
+@endlocal
 @goto :eof
 
 :Run
-setlocal
-set x=%*
-set x=%x:  = %
-set x=%x:  = %
-echo %x%
+@setlocal
+@set x=%*
+@set x=%x:  = %
+@set x=%x:  = %
+@echo %x%
 %x% || (
 	echo error : %x% failed
 	exit /b 1
 )
-endlocal
+@endlocal
 @goto :eof
