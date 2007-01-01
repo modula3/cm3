@@ -10,6 +10,7 @@ readonly TARGET       = "NT386"    % code generation target
 readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
+%readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
