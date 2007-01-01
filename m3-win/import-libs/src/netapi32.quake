@@ -2,7 +2,7 @@
 % Quake is the Modula-3 build extension language. 
 % cl is "C:\MSVC20\BIN\CL.EXE" 
 % link is "C:\MSVC20\BIN\LINK.EXE" 
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\MSVC20\LIB\NETAPI32.LIB run at Sun Dec 31 03:51:29 2006 on JAY-WIN4 by Jay.
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\MSVC20\LIB\NETAPI32.LIB run at Mon Jan  1 10:39:42 2007 on JAY-WIN4 by Jay.
 % cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
 % link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
 % link /dump /all "C:\MSVC20\LIB\NETAPI32.LIB"
