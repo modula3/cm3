@@ -232,6 +232,7 @@ while ($Line = <$Pipe>)
         next if ($Function eq "WEP");
         next if ($Function =~ /^Char(Next|Prev)/);
         next if ($Function =~ /^SystemFunction/);
+        next if ($Function =~ /^DllInitialize$/);
         $Exports{$Function} = $Signature;
         # print "%% Function is $Function\n";
     }

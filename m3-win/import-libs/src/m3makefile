@@ -54,28 +54,26 @@
 %
 
 % It would be nice if we could turn off linking to all .libs, but we cannot. This does nothing.
+% This is only part of the commented out attempt to use Quake more and exec("cl...") less.
+% It does nothing either way.
 SYSTEM_LIBS = { }
 SYSTEM_LIBORDER = { }
 
-local Files = { }
-
-foreach File in [
-        "advapi32",
-        "comctl32",
-        "comdlg32",
-        "gdi32",
-        "glu32",
-        "kernel32",
-        "netapi32",
-        "odbc32",
-        "odbccp32",
-        "opengl32",
-        "user32",
-        "winspool",
-        "wsock32",
-        ]
-    include(File & ".quake")
-end
+local Files = {
+    "advapi32",
+    "comctl32",
+    "comdlg32",
+    "gdi32",
+    "glu32",
+    "kernel32",
+    "netapi32",
+    "odbc32",
+    "odbccp32",
+    "opengl32",
+    "user32",
+    "winspool",
+    "wsock32",
+}
 
 local readonly Signatures = {
  "0" : "void",
@@ -100,69 +98,102 @@ local readonly Signatures = {
 % Quake can't do math so we'd have to resort to leveraging the pass 1 Perl or some C++.
 }
 
+proc SourceFilePath(a) is
+    return ".." & SL & "src" & SL & a
+end
+
 foreach File in Files
+
+    local readonly QuakeFileName = File & ".quake"
+    local readonly CppFilePath = File & ".c"
+    local readonly ObjFilePath = File & ".obj"
+    local readonly DefFilePath = File & ".def"
+    local readonly LibFilePath = File & ".lib"
+
+    if stale(LibFilePath, [SourceFilePath(QuakeFileName),
+        %SourceFilePath("m3makefile")
+        ])
+
+        include(QuakeFileName)
+
+        local Extension = "dll"
+        local CppFileContents = [ ]
+        local DefFileContents = [ ]
 %
 % These should be large strings and we'd say
 % CppFileContents = CppFileContents & ...
 % but that overflows buffers in the Modula-3 code, so use arrays instead.
 % This nets us some extra whitespace, but that is ok.
 %
-    local Extension = "dll"
-    local CppFileContents = [ ]
-    local DefFileContents = [ ]
+        CppFileContents += ["#if defined(__cplusplus)" & CR]
+        CppFileContents += ["extern \"C\" {" & CR]
+        CppFileContents += ["#endif" & CR]
+        CppFileContents += ["#pragma warning(disable:4100) /* unused parameter */" & CR]
+        CppFileContents += ["typedef unsigned u;" & CR]
 
-    CppFileContents += ["#ifdef __cplusplus" & CR]
-    CppFileContents += ["extern \"C\" {" & CR]
-    CppFileContents += ["#endif" & CR]
-    CppFileContents += ["#pragma warning(disable:4100) /* unused parameter */" & CR]
-    CppFileContents += ["typedef unsigned u;" & CR]
+        %
+        % This is only used if you build with derived_c + library below.
+        %
+        %CppFileContents += ["void __stdcall _DllMainCRTStartup(u a, u b, u c) { }" & CR]
 
-    %
-    % This is only used if you build with derived_c + library below.
-    %
-    CppFileContents += ["void __stdcall _DllMainCRTStartup(u a, u b, u c) { }" & CR]
+        DefFileContents += [DefFileContents & "EXPORTS" & CR]
 
-    DefFileContents += [DefFileContents & "EXPORTS" & CR]
-
-    foreach FunctionName in Files{File}
-        if equal(FunctionName, "Extension")
-            Signature = Files{File}{"Extension"}
-        else
-            Signature = Files{File}{FunctionName}
-            DefFileContents += [" " & FunctionName & CR]
-            if equal(Signature, "__cdecl")
-                CppFileContents += ["void __cdecl " & FunctionName & "() { }" & CR]
+        foreach FunctionName in Files{File}
+            if equal(FunctionName, "Extension")
+                Extension = Files{File}{"Extension"}
             else
-                CppFileContents += ["void __stdcall " & FunctionName & "("
-                    & Signatures{Signature} & ") { }" & CR]
+                Signature = Files{File}{FunctionName}
+                DefFileContents += [" " & FunctionName & CR]
+                if equal(Signature, "__cdecl")
+                    CppFileContents += ["void __cdecl " & FunctionName & "() { }" & CR]
+                else
+                    CppFileContents += ["void __stdcall " & FunctionName & "("
+                        & Signatures{Signature} & ") { }" & CR]
+                end
             end
         end
-    end
-    CppFileContents += ["#ifdef __cplusplus" & CR]
-    CppFileContents += ["} /* extern \"C\" */" & CR]
-    CppFileContents += ["#endif" & CR]
-    local readonly CppFilePath = File & ".c"
-    local readonly DefFilePath = File & ".def"
-    > CppFilePath in
-        write(CppFileContents)
-    end
-    > DefFilePath in
-        write(DefFileContents)
-    end
-    %
-    % This almost works but does a lot of extra stuff and installs a lot of extra files including
-    % bogus .dlls to \cm3\bin
-    %
-    %derived_c(File)
-    %library(File)
-    exec("cl /LD /Zl /W4 /WX /Tp" & CppFilePath & " /link /noentry /def:" & DefFilePath)
-    LibdExport(File & ".lib")
+        CppFileContents += ["#if defined(__cplusplus)" & CR]
+        CppFileContents += ["} /* extern \"C\" */" & CR]
+        CppFileContents += ["#endif" & CR]
+        > CppFilePath in
+            write(CppFileContents)
+        end
+        > DefFilePath in
+            write(DefFileContents)
+        end
+        %
+        % This almost works but does a lot of extra stuff and installs a lot of extra files including
+        % bogus .dlls to \cm3\bin. We want the .libs but not the .dlls.
+        %
+        %derived_c(File)
+        %library(File)
 
-    %
-    % .m3x files needed but not otherwise produced.
-    %
-    > File & ".m3x" in 
-      write("")
+        %
+        % This needs work.
+        % In order for folks using older toolsets to be able to use the .libs in the distribution,
+        % try to use an older toolset.
+        %
+        local msvc20 = "\\msvc20\\bin"
+        local CommandPrefix = ""
+        if file_exists(msvc20) and equal($OS, "Windows_NT")
+            %
+            % Visual C++ does like the spaces from 8.0, at least in %INCLUDE%.
+            % /X works
+            %
+            %CommandPrefix = "set INCLUDE= && set LIB= && " & msvc20 & SL
+            CommandPrefix = msvc20 & SL
+        end
+        %exec(CommandPrefix & "cl /c /X /nologo /W4 /WX /Tp" & CppFilePath)
+        %exec(CommandPrefix & "link /nologo /dll /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension & " " & ObjFilePath)
+        exec(CommandPrefix & "cl /LD /Zl /X /nologo /W4 /WX /Tp" & CppFilePath & " /link /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension)
+        LibdExport(File & ".lib")
+
+        %
+        % .m3x files needed but not otherwise produced.
+        %
+        > File & ".m3x" in 
+          write("")
+        end
     end
 end
 
@@ -171,4 +202,11 @@ end
 %
 > ".M3WEB" in 
   write("")
+end
+
+%
+% This should be built-in.
+%
+proc file_exists(a) is
+  return not stale (a, a)
 end
