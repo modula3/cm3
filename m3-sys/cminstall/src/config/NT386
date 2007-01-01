@@ -10,7 +10,6 @@ readonly TARGET       = "NT386"    % code generation target
 readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
-%readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
@@ -35,10 +34,20 @@ end
 % the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
-INSTALL_ROOT = BEGIN_CONFIG
-  "Where should CM3 be installed?"
-    7 %-- user specified install root
-END_CONFIG
+% INSTALL_ROOT = BEGIN_CONFIG
+%   "Where should CM3 be installed?"
+%     7 %-- user specified install root
+% END_CONFIG
+
+% INSTALL_ROOT = "c:\\cm3"
+
+if not defined("INSTALL_ROOT")
+    if not equal ($INSTALLROOT, "")
+        INSTALL_ROOT = $INSTALLROOT
+    else
+        INSTALL_ROOT = (path() & "\\..")
+    end
+end
 
 BIN_INSTALL   = INSTALL_ROOT & "\\bin"          % executables
 LIB_INSTALL   = INSTALL_ROOT & "\\lib"          % libraries
@@ -197,10 +206,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   ret_code = try_exec ("mklib", lib_args, ">", listing)
   if not equal (ret_code, 0)
-    return ret_code
-  end
-  if not file_exists (lib_file)
-    write("error: library creation failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
+        or not file_exists (lib_file)
+    error("library creation failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
+    if not equal (ret_code, 0)
+        return ret_code
+    end
     return 1
   end
 
@@ -209,6 +219,16 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     delete_file (lib0_file)
     rename_file (lib_file, lib0_file)
     ret_code = try_exec ("link", link_args, ">", listing)
+
+    if not equal (ret_code, 0)
+            or not file_exists (dll_file)
+        error("dynamic link library creation failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
+        if not equal (ret_code, 0)
+            return ret_code
+        end
+        return 1
+    end
+
     % make sure the extra files get shipped
     BindExport (dll_file)
     if file_exists (manifest_file)
@@ -216,10 +236,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     end
     BindExport (pdb_file)
     install_derived (lib0_file)
-    if not file_exists (dll_file)
-      write("error: dynamic link library creation failed" & EOL)
-      return 1
-    end
   else
     delete_file (lib0_file)
     delete_file (dll_file)
@@ -331,13 +347,14 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
                         entry, m3_link_flags, options, objects, imports ])
 
   deriveds ("", [ manifest_file, pdb_file, listing ])
-  ret_code = try_exec ("link", args, ">", listing)
+  local ret_code = try_exec ("link", args, ">", listing)
 
   if not equal (ret_code, 0)
-    return ret_code
-  end
-  if not file_exists (pgm_file)
-    write("error: link failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
+        or not file_exists (pgm_file)
+    error("link failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
+    if not equal (ret_code, 0)
+        return ret_code
+    end
     return 1
   end
 
