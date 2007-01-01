@@ -9,16 +9,10 @@
 @call %~dp0pkginfo || exit /b 1
 @call %~dp0pkgcmds || exit /b 1
 
-set P=
-@rem base libraries
-if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
-if not "%TARGET%" == "NT386" (
-  set P=%P% m3gc-simple
-) else (
-	set P=%P% m3gc-enhanced
-)
-set P=%P% m3core
-set P=%P% libm3
+set P=^
+ import-libs ^
+ m3core ^
+ libm3
 
 call %~dp0pkgcmds extract_options %* || (
 	echo error : pkgcmds extract_options failed
@@ -35,18 +29,18 @@ call %~dp0pkgcmds add_action_opts %* || (
 
 call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %P%
 
-endlocal
-goto :eof
+@endlocal
+@goto :eof
 
 :Run
-setlocal
-set x=%*
-set x=%x:  = %
-set x=%x:  = %
-echo %x%
+@setlocal
+@set x=%*
+@set x=%x:  = %
+@set x=%x:  = %
+@echo %x%
 %x% || (
 	echo error : %x% failed
 	exit /b 1
 )
-endlocal
-goto :eof
+@endlocal
+@goto :eof

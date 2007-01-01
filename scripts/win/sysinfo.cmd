@@ -8,7 +8,7 @@
 @rem
 
 @rem
-@rem Currently the user must run vcvars32 or vsvars32, to set %path%, %lib%, and %include%, and a
+@rem Currently the user must run vcvars32 or vsvars32, to set %PATH%, %LIB%, and %INCLUDE%, and a
 @rem static configuration will attempt to work with various versions.
 @rem
 @rem In the future the environment should perhaps be probed to the configuration
@@ -84,26 +84,26 @@
 if "%ROOT%" == "" call :set_full_path ROOT %~dp0..\..
 
 @rem
-@rem The variabls %temp%, %lib%, %path%, %include%, must be set.
+@rem The variabls %temp%, %LIB%, %PATH%, %INCLUDE%, must be set.
 @rem
 
 call :environment_variables_must_be_set temp lib path include || goto :eof
 
 @rem
-@rem cl.exe, link.exe, cm3.exe must be in %path%.
+@rem cl.exe, link.exe, cm3.exe must be in %PATH%.
 @rem
 
 call :environment_variable_must_contain_files path cl.exe link.exe cm3.exe || goto :eof
 
 @rem
-@rem errno.h must be in %include%, at least as a sanity check.
+@rem errno.h must be in %INCLUDE%, at least as a sanity check.
 @rem
 
 call :environment_variable_must_contain_files include errno.h || goto :eof
 
 
 @rem
-@rem Libcmt.lib must be in %lib%, at least as a sanity check.
+@rem Libcmt.lib must be in %LIB%, at least as a sanity check.
 @rem Msvcrt.lib would be good to require, but the 2003 Express Edition lacks it.
 @rem
 
@@ -112,7 +112,7 @@ call :environment_variable_must_contain_files lib kernel32.lib libcmt.lib || got
 @rem
 @rem The Microsoft Visual C++ 2003 and 2005 Express Editions
 @rem do not include user32.lib, gdi32.lib, comctl32.lib. Therefore we make our own.
-@rem Therefore we add %INSTALLROOT%\lib to %lib%. Therefore we set %INSTALLROOT%
+@rem Therefore we add %INSTALLROOT%\lib to %LIB%. Therefore we set %INSTALLROOT%
 @rem based on where cm3.exe is in the path.
 @rem
 
@@ -129,11 +129,12 @@ goto :got_INSTALLROOT
 call :set_INSTALLROOT_2 %~$PATH:1\..\..
 goto :eof
 :set_INSTALLROOT_2
-@echo warning: set INSTALLROOT=%~f1
 @set INSTALLROOT=%~f1
 goto :eof
 
 :got_INSTALLROOT
+@rem @echo 3: INSTALLROOT=%INSTALLROOT%
+@echo INSTALLROOT=%INSTALLROOT%
 
 @rem
 @rem The %INSTALLROOT% environment variable must be set.
@@ -143,7 +144,7 @@ goto :eof
 call :environment_variables_must_be_set INSTALLROOT || goto :eof
 
 @rem
-@rem Check the %lib% environment variable.
+@rem Check the %LIB% environment variable.
 @rem
 
 @rem
@@ -165,8 +166,8 @@ rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.li
 @rem It is only for use by other scripts.
 @rem
 
-@echo warning: set lib=%%INSTALLROOT%%\lib;%%lib%%
-@set lib=%INSTALLROOT%\lib;%lib%
+@set LIB=%INSTALLROOT%\lib;%LIB%
+@echo LIB=%%INSTALLROOT%%\LIB;%%LIB%%
 
 :got_other_libs
 
@@ -194,7 +195,7 @@ if defined TAR          set TAR=
 @rem TBD: Support bootstrapping from DEC SRC Modula-3, PM3, etc.
 @rem
 call :set_if_empty M3BUILD m3build
-call :set_if_empty M3SHIP:m3ship
+call :set_if_empty M3SHIP m3ship
 
 call :set_if_empty CM3         cm3
 call :set_if_empty PKGSDB      %ROOT%\scripts\win\PKGS
@@ -205,6 +206,7 @@ call :set_if_empty GCC_BACKEND no
 call :set_if_empty INSTALLROOT c:\cm3
 
 set CM3ROOT=%ROOT:\=\\%
+echo CM3ROOT=%CM3ROOT%
 
 call :set_if_empty CM3VERSION d5.3.2
 
@@ -259,11 +261,19 @@ if "%~$b:1" == "" (
 goto :environment_variable_must_contain_files_1
 
 :set_if_empty
-(set %1 2>nul) || (
+(set %1 >nul 2>nul) || (
     set %1=%2
+    @rem @echo 2: %1=%2
     goto :eof
 )
-(set %1 2>nul| findstr /i /b %1= >nul) || set %1=%2
+@rem
+@rem This second check is needed for when an undefined variable is a prefix of a defined variable.
+@rem For example call :set_if_empty CM3ROO foo
+@rem
+(set %1 2>nul| findstr /i /b %1= >nul) || (
+    set %1=%2
+    @rem @echo 1: %1=%2
+)
 goto :eof
 
 :my_del
