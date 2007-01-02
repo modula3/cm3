@@ -1,0 +1,3 @@
+On computers without Visual C++ 2005 installed, download and
+ run the setup for the Visual C++ runtime -- vcredist_x86.exe -- from
+http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE
