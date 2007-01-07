@@ -448,10 +448,11 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
         Expr.Prep (p.expr);
         IF lhs AND Host.doGenGC THEN
           EVAL Type.CheckInfo (p.type, info);
-          IF info.isTraced THEN
-            CompileLV (p, lhs := TRUE);
-            p.temp := CG.Pop ();
-          END
+          IF NOT info.isTraced THEN RETURN END;
+          EVAL Type.CheckInfo (Expr.TypeOf (p.expr), info);
+          IF NOT info.isTraced THEN RETURN END;
+          CompileLV (p, lhs := TRUE);
+          p.temp := CG.Pop ();
         END
     | Class.cMETHOD =>
         Expr.Prep (p.expr);
