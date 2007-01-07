@@ -1122,32 +1122,37 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
     ELSE 
       (* we are starting the execution of a forked thread *)
-      handlerStack := self.context.handlers;
-      Cerrno.SetErrno(self.context.errno);
-      RTThread.allow_sigvtalrm ();
-      DEC (inCritical);
-      
-      IF debug THEN
-        OutAddr("> DetermineContext: start thread, handlerStack = ", handlerStack);
-        DumpThread(self);
-      END;
-      FloatMode.InitThread (self.floatState);
-      self.result := self.closure.apply ();
-      
-      INC (inCritical);
-      Broadcast (self.endCondition);
-      RTHeapRep.ClosePool(newPool);
-      ICannotRun (State.dying);
-      INC (stats.n_dead);
-      DEC (inCritical);
-      IF debug THEN
-        OutT("> DetermineContext: thread finished\n");
-        DumpThread(self);
-      END;
-      InternalYield ();
-      <* ASSERT FALSE *> END;
+      StartThread ();
+    END;
   END DetermineContext;
 
+PROCEDURE StartThread () =
+  BEGIN
+    handlerStack := self.context.handlers;
+    Cerrno.SetErrno(self.context.errno);
+    RTThread.allow_sigvtalrm ();
+    DEC (inCritical);
+
+    IF debug THEN
+      OutAddr("> DetermineContext: start thread, handlerStack = ", handlerStack);
+      DumpThread(self);
+    END;
+    FloatMode.InitThread (self.floatState);
+    self.result := self.closure.apply ();
+
+    INC (inCritical);
+    Broadcast (self.endCondition);
+    RTHeapRep.ClosePool(newPool);
+    ICannotRun (State.dying);
+    INC (stats.n_dead);
+    DEC (inCritical);
+    IF debug THEN
+      OutT("> DetermineContext: thread finished\n");
+      DumpThread(self);
+    END;
+    InternalYield ();
+    <* ASSERT FALSE *>
+  END StartThread;
 
 PROCEDURE InitContext (VAR c: Context;  size: INTEGER) =
   VAR
