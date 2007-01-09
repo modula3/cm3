@@ -93,7 +93,7 @@ END CopierSpecial;
 PROCEDURE CopierApply(this: Copier; field: ADDRESS; <*UNUSED*> k: RTTypeMap.Kind) RAISES ANY =
 BEGIN
   IF Debug THEN <*DEBUG "Apply of "&Fmt.Unsigned(LOOPHOLE(field, REF INTEGER)^)*> END;
-  WITH ref = LOOPHOLE(field, REF REFANY) DO
+  WITH ref = LOOPHOLE(field, UNTRACED REF REFANY) DO
     ref^ := this.copy(ref^);
   END;
 END CopierApply;
