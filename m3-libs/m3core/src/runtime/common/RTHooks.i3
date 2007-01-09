@@ -97,9 +97,9 @@ PROCEDURE DisposeUntracedRef (VAR a: ADDRESS);
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT);
 
-PROCEDURE CheckLoadTracedRef (ref: ADDRESS);
+PROCEDURE CheckLoadTracedRef (ref: REFANY);
 
-PROCEDURE CheckStoreTraced (ref: ADDRESS);
+PROCEDURE CheckStoreTraced (ref: REFANY);
 
 (*-------------------------------------------------------- runtime errors ---*)
 
