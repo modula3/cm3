@@ -6,7 +6,7 @@
 
 UNSAFE MODULE RTTypeMap;
 
-IMPORT RT0, RTMapOp, RTType;
+IMPORT RT0, RTMapOp, RTType, RTHooks;
 
 TYPE
   Byte = RTMapOp.Byte;
@@ -29,6 +29,8 @@ PROCEDURE WalkRef (r: REFANY;  m: Mask;  v: Visitor) RAISES ANY =
     IF (r = NIL) THEN RETURN END;
     tc := TYPECODE (r);
     t := RTType.Get (tc);
+    (* assume the worst (REFs get written) if the visitor messes with REFs *)
+    IF Kind.Ref IN m THEN RTHooks.CheckStoreTraced (r) END;
     DoWalkRef (t, LOOPHOLE (r, ADDRESS), m, v);
   END WalkRef;
 

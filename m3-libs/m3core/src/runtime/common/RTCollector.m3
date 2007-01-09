@@ -2377,7 +2377,7 @@ PROCEDURE Protect (p: Page;  m: Mode) =
     IF perfOn THEN PerfChange(p, n_pages); END;
   END Protect;
 
-PROCEDURE CheckLoadTracedRef (ref: RefReferent) =
+PROCEDURE CheckLoadTracedRef (ref: REFANY) =
   VAR p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
   BEGIN
     IF NOT incremental THEN RETURN END;
@@ -2438,10 +2438,10 @@ PROCEDURE CheckLoadTracedRef (ref: RefReferent) =
     RETURN;			       (* was protected, protection cleared *)
   END CheckLoadTracedRef;
 
-PROCEDURE CheckStoreTraced (ref: RefReferent) =
+PROCEDURE CheckStoreTraced (ref: REFANY) =
   VAR
     p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
-    h := HeaderOf (ref);
+    h := HeaderOf (LOOPHOLE(ref, RefReferent));
   BEGIN
     h.dirty := TRUE;
     IF NOT generational THEN RETURN END;
