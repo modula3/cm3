@@ -16,8 +16,13 @@ EXPORTS Scheduler, Thread, ThreadF, RTOS, RTHooks;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
+IMPORT ThreadEvent, RTPerfTool, RTProcess;
+FROM Compiler IMPORT ThisFile, ThisLine;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
+
+TYPE
+  LPCRITICAL_SECTION = WinBase.LPCRITICAL_SECTION;
 
 VAR
   cm: WinBase.LPCRITICAL_SECTION;
@@ -125,14 +130,16 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
-    IF self = NIL THEN Die("Acquire called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Acquire called from non-Modula-3 thread") END;
+    IF perfOn THEN PerfChanged(self.id, State.locking) END;
+
     WinBase.EnterCriticalSection(cm);
 
       self.alertable := FALSE;
       IF (m.holder = NIL) THEN
         m.holder := self;  (* I get it! *)
       ELSIF (m.holder = self) THEN
-        Die("Attempt to lock mutex already locked by self");
+        Die(ThisLine(), "Attempt to lock mutex already locked by self");
       ELSE
         (* somebody else already has the mutex locked.  We'll need to wait *)
         wait := TRUE;
@@ -156,12 +163,15 @@ PROCEDURE LockMutex (m: Mutex) =
         Choke();
       END;
     END;
+
+    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+
   END LockMutex;
 
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self();  prevCount: WinDef.LONG;  next: T;
   BEGIN
-    IF self = NIL THEN Die("Release called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Release called from non-Modula-3 thread") END;
     WinBase.EnterCriticalSection(cm);
 
       (* Make sure I'm allowed to release this mutex. *)
@@ -169,9 +179,9 @@ PROCEDURE UnlockMutex(m: Mutex) =
         (* ok, we're releasing the mutex *)
         m.holder := NIL;
       ELSIF m.holder = NIL THEN
-        Die("attempt to release an unlocked mutex");
+        Die(ThisLine(), "attempt to release an unlocked mutex");
       ELSE
-        Die("attempt to release an mutex locked by another thread");
+        Die(ThisLine(), "attempt to release an mutex locked by another thread");
       END;
 
       (* Let the next guy go... *)
@@ -246,7 +256,8 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF self = NIL THEN Die("AlertWait called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
+    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     WinBase.EnterCriticalSection(cm);
     InnerTestAlert(self);
     self.alertable := TRUE;
@@ -254,15 +265,18 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     WinBase.EnterCriticalSection(cm);
     InnerTestAlert(self);
     WinBase.LeaveCriticalSection(cm);
+    IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF self = NIL THEN Die("Wait called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
+    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     WinBase.EnterCriticalSection(cm);
     InnerWait(m, c, self);
+    IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -295,7 +309,7 @@ PROCEDURE Broadcast (c: Condition) =
 PROCEDURE Alert(t: T) =
     VAR prevCount: WinDef.LONG; prev, next: T;
   BEGIN
-    IF t = NIL THEN Die("Alert called from non-Modula-3 thread") END;
+    IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     WinBase.EnterCriticalSection(cm);
     t.alerted := TRUE;
     IF t.alertable THEN
@@ -404,7 +418,7 @@ PROCEDURE Self (): T =
     WinBase.EnterCriticalSection (slotMu);
       t := slots[me.slot];
     WinBase.LeaveCriticalSection (slotMu);
-    IF (t.act # me) THEN Die ("thread with bad slot!"); END;
+    IF (t.act # me) THEN Die (ThisLine(), "thread with bad slot!"); END;
     RETURN t;
   END Self;
 
@@ -459,7 +473,7 @@ PROCEDURE FreeSlot (t: T) =
     
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
-        IF (z # t) THEN Die ("unslotted thread!"); END;
+        IF (z # t) THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
       t.act.slot := 0;
@@ -554,12 +568,13 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
     UnlockMutex(threadMu);
 
     IF (cl = NIL) THEN
-      Die ("NIL closure passed to Thread.Fork!");
+      Die (ThisLine(), "NIL closure passed to Thread.Fork!");
     ELSIF (LOOPHOLE (cl, ObjRef)^^.method0 = NIL) THEN
-      Die ("NIL apply method passed to Thread.Fork!");
+      Die (ThisLine(), "NIL apply method passed to Thread.Fork!");
     END;
 
     (* Run the user-level code. *)
+    IF perfOn THEN PerfRunning(self.id) END;
     res := cl.apply();
 
     next_self := NIL;
@@ -585,7 +600,10 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
       self.result := res;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
+      IF perfOn THEN PerfChanged(self.id, State.dying) END;
     UnlockMutex(threadMu);
+
+    IF perfOn THEN PerfDeleted(self.id) END;
 
     IF next_self # NIL THEN
       (* we're going to be reborn! *)
@@ -680,6 +698,8 @@ PROCEDURE Fork(closure: Closure): T =
       END;
     END;
 
+    IF perfOn THEN PerfChanged(t.id, State.alive) END;
+
     RETURN t
   END Fork;
 
@@ -687,12 +707,13 @@ PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
     LockMutex(threadMu);
-      IF t.joined THEN Die("attempt to join with thread twice"); END;
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
       t.cond := NIL;
+      IF perfOn THEN PerfChanged(t.id, State.dead) END;
     UnlockMutex(threadMu);
     RETURN res;
   END Join;
@@ -702,12 +723,13 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   BEGIN
     LockMutex(threadMu);
     TRY
-      IF t.joined THEN Die("attempt to join with thread twice"); END;
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
       t.cond := NIL;
+      IF perfOn THEN PerfChanged(t.id, State.dead) END;
     FINALLY
       UnlockMutex(threadMu);
     END;
@@ -736,10 +758,12 @@ PROCEDURE Pause(n: LONGREAL) =
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   VAR amount, thisTime: LONGREAL;
-  CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
-  VAR self: T;
-  BEGIN
     self := Self();
+  CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
+  BEGIN
+    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
+    IF n <= 0.0d0 THEN RETURN END;
+    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     amount := n;
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
@@ -761,6 +785,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
       END;
       WinBase.LeaveCriticalSection(cm);
     END;
+    IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END AlertPause;
 
 PROCEDURE Yield() =
@@ -790,7 +815,7 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
    handler of the garbage collector.  So, if they touched traced references,
    they could trigger indefinite invocations of the fault handler. *)
 
-(* In verisons of SuspendOthers prior to the addition of the incremental
+(* In versions of SuspendOthers prior to the addition of the incremental
    collector, it acquired 'cm' to guarantee that no suspended thread held it.
    That way when the collector tried to acquire a mutex or signal a
    condition, it wouldn't deadlock with the suspended thread that held cm.
@@ -925,7 +950,7 @@ PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
     RETURN info.BaseAddress;
   END VerifySP;
 
-(*------------------------------------------------------------ misc. junk ---*)
+(*------------------------------------------------------------ misc. stuff ---*)
 
 PROCEDURE MyId(): Id RAISES {}=
   VAR self := Self ();
@@ -941,9 +966,9 @@ PROCEDURE MyAllocPool(): UNTRACED REF RTHeapRep.AllocPool =
 
 (*---------------------------------------------------------------- errors ---*)
 
-PROCEDURE Die(msg: TEXT) =
+PROCEDURE Die(lineno: INTEGER; msg: TEXT) =
   BEGIN
-    RTError.Msg ("ThreadWin32.m3", 880, "Thread client error: ", msg);
+    RTError.Msg (ThisFile(), lineno, "Thread client error: ", msg);
   END Die;
 
 PROCEDURE Choke() =
@@ -953,6 +978,71 @@ PROCEDURE Choke() =
         WinBase.GetLastError ());
   END Choke;
 
+(*------------------------------------------------------ ShowThread hooks ---*)
+
+VAR
+  perfW : RTPerfTool.Handle;
+  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+  perfMu := ADR (perfMu_x);
+  perfMu_x: WinBase.CRITICAL_SECTION;
+
+PROCEDURE PerfStart () =
+  BEGIN
+    IF RTPerfTool.Start ("showthread", perfW) THEN
+      perfOn := TRUE;
+      RTProcess.RegisterExitor (PerfStop);
+    END;
+  END PerfStart;
+
+PROCEDURE PerfStop () =
+  BEGIN
+    (* UNSAFE, but needed to prevent deadlock if we're crashing! *)
+    RTPerfTool.Close (perfW);
+  END PerfStop;
+
+CONST
+  EventSize = (BITSIZE(ThreadEvent.T) + BITSIZE(CHAR) - 1) DIV BITSIZE(CHAR);
+
+TYPE
+  TE = ThreadEvent.Kind;
+
+PROCEDURE EnterCriticalSection (x: LPCRITICAL_SECTION) =
+BEGIN
+    WinBase.EnterCriticalSection(x);
+END EnterCriticalSection;
+
+PROCEDURE LeaveCriticalSection (x: LPCRITICAL_SECTION) =
+BEGIN
+    WinBase.LeaveCriticalSection(x);
+END LeaveCriticalSection;
+
+PROCEDURE PerfChanged (id: Id; s: State) =
+  (* LL = threadMu *)
+  VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
+  BEGIN
+    EnterCriticalSection(perfMu);
+      perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
+    LeaveCriticalSection(perfMu);
+  END PerfChanged;
+
+PROCEDURE PerfDeleted (id: Id) =
+  (* LL = threadMu *)
+  VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
+  BEGIN
+    EnterCriticalSection(perfMu);
+      perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
+    LeaveCriticalSection(perfMu);
+  END PerfDeleted;
+
+PROCEDURE PerfRunning (id: Id) =
+  (* LL = threadMu *)
+  VAR e := ThreadEvent.T {kind := TE.Running, id := id};
+  BEGIN
+    EnterCriticalSection(perfMu);
+      perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
+    LeaveCriticalSection(perfMu);
+  END PerfRunning;
+
 (*-------------------------------------------------------- Initialization ---*)
 
 PROCEDURE Init() =
@@ -960,6 +1050,8 @@ PROCEDURE Init() =
     self: T;
     me: Activation;
   BEGIN
+    WinBase.InitializeCriticalSection(perfMu);
+
     cm := ADR (cm_x);
     WinBase.InitializeCriticalSection(cm);
 
@@ -983,6 +1075,9 @@ PROCEDURE Init() =
 
     me.stackbase := InitialStackBase (ADR (self));
     IF me.stackbase = NIL THEN Choke(); END;
+
+    PerfStart();
+    IF perfOn THEN PerfChanged(self.id, State.alive) END;
 
     IF RTParams.IsPresent("backgroundgc") THEN
       RTCollectorSRC.StartBackgroundCollection();

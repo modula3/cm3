@@ -59,4 +59,17 @@ PROCEDURE SetCurrentHandlers(h: ADDRESS);
 
 PROCEDURE Init();
 
+(*-------------------------------------------------- showthreads support ---*)
+
+TYPE
+  State = {
+        alive    (* can run *),
+        waiting  (* waiting for a condition via Wait *),
+        locking  (* waiting for a mutex to be unlocked *),
+        pausing  (* waiting until some time is arrived *),
+        blocking (* waiting for some IO *),
+        dying    (* done, but not yet joined *),
+        dead     (* done and joined *)
+	};
+
 END ThreadF.
