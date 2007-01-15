@@ -746,8 +746,8 @@ PROCEDURE Pause(n: LONGREAL) =
     self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     IF n <= 0.0d0 THEN RETURN END;
+    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     ToNTime(n, amount);
     WHILE Utime.nanosleep(amount, remaining) # 0 DO
       amount := remaining;
@@ -761,8 +761,8 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     IF n <= 0.0d0 THEN RETURN END;
+    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
     ToNTime(Time.Now() + n, until);
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     InnerTestAlert(self);
