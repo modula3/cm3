@@ -23,9 +23,25 @@ FROM Compiler IMPORT ThisFile, ThisLine;
 
 TYPE
   LPCRITICAL_SECTION = WinBase.LPCRITICAL_SECTION;
+  HANDLE = WinNT.HANDLE;
+
+PROCEDURE EnterCriticalSection (x: LPCRITICAL_SECTION) =
+BEGIN
+    WinBase.EnterCriticalSection(x);
+END EnterCriticalSection;
+
+PROCEDURE LeaveCriticalSection (x: LPCRITICAL_SECTION) =
+BEGIN
+    WinBase.LeaveCriticalSection(x);
+END LeaveCriticalSection;
+
+PROCEDURE CloseHandle(x: HANDLE) =
+BEGIN
+    EVAL WinBase.CloseHandle(x);
+END CloseHandle ;
 
 VAR
-  cm: WinBase.LPCRITICAL_SECTION;
+  cm := ADR (cm_x);
   cm_x: WinBase.CRITICAL_SECTION;
     (* Global lock for internals of Mutex and Condition *)
 
@@ -36,18 +52,18 @@ VAR
   threadMu: Mutex;
     (* Global lock for internal fields of Thread.T *)
 
-  activeMu: WinBase.LPCRITICAL_SECTION;
+  activeMu := ADR (activeMu_x);
   activeMu_x: WinBase.CRITICAL_SECTION;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
        holding activeMu because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
-  idleMu: WinBase.LPCRITICAL_SECTION;
+  idleMu := ADR (idleMu_x);
   idleMu_x: WinBase.CRITICAL_SECTION;
     (* Global lock for list of idle threads *)
 
-  slotMu: WinBase.LPCRITICAL_SECTION;
+  slotMu := ADR(slotMu_x);
   slotMu_x: WinBase.CRITICAL_SECTION;
     (* Global lock for thread slot table *)
 
@@ -353,7 +369,7 @@ PROCEDURE TestAlert(): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR
-  initActivations := TRUE;
+  initialized := FALSE;
   threadIndex: WinDef.DWORD;
     (* read-only;  TLS (Thread Local Storage) index *)
 
@@ -368,6 +384,7 @@ PROCEDURE InitActivations () =
     CurrentProcess := WinBase.GetCurrentProcess();
     CurrentThreadHandle : WinNT.HANDLE;
     me := NEW(Activation);
+    didInitialization := FALSE;
   BEGIN
     threadIndex := WinBase.TlsAlloc();
     IF threadIndex = WinBase.TLS_OUT_OF_INDEXES THEN Choke() END;
@@ -383,16 +400,23 @@ PROCEDURE InitActivations () =
     me.next := me;
     me.prev := me;
     WinBase.EnterCriticalSection(activeMu);
-      <* ASSERT allThreads = NIL *>
-      allThreads := me;
-      initActivations := FALSE;
+      IF NOT initialized THEN
+        <* ASSERT allThreads = NIL *>
+        allThreads := me;
+        initialized := TRUE;
+        didInitialization := TRUE;
+      END;
     WinBase.LeaveCriticalSection(activeMu);
+    IF NOT didInitialization THEN
+        CloseHandle(me.handle);
+        DISPOSE(me);
+    END;
   END InitActivations;
 
 PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   BEGIN
-    IF initActivations THEN InitActivations() END;
+    IF NOT initialized THEN InitActivations() END;
     IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (act, WinDef.DWORD)) = 0 THEN
       Choke();
     END;
@@ -402,7 +426,7 @@ PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   BEGIN
-    IF initActivations THEN InitActivations() END;
+    IF NOT initialized THEN InitActivations() END;
     RETURN LOOPHOLE (WinBase.TlsGetValue(threadIndex), Activation);
   END GetActivation;
 
@@ -1006,16 +1030,6 @@ CONST
 TYPE
   TE = ThreadEvent.Kind;
 
-PROCEDURE EnterCriticalSection (x: LPCRITICAL_SECTION) =
-BEGIN
-    WinBase.EnterCriticalSection(x);
-END EnterCriticalSection;
-
-PROCEDURE LeaveCriticalSection (x: LPCRITICAL_SECTION) =
-BEGIN
-    WinBase.LeaveCriticalSection(x);
-END LeaveCriticalSection;
-
 PROCEDURE PerfChanged (id: Id; s: State) =
   (* LL = threadMu *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
@@ -1051,17 +1065,9 @@ PROCEDURE Init() =
     me: Activation;
   BEGIN
     WinBase.InitializeCriticalSection(perfMu);
-
-    cm := ADR (cm_x);
     WinBase.InitializeCriticalSection(cm);
-
-    activeMu := ADR (activeMu_x);
     WinBase.InitializeCriticalSection(activeMu);
-
-    idleMu := ADR (idleMu_x);
     WinBase.InitializeCriticalSection(idleMu);
-
-    slotMu := ADR (slotMu_x);
     WinBase.InitializeCriticalSection(slotMu);
 
     me := GetActivation();
