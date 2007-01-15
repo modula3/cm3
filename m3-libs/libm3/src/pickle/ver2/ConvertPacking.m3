@@ -373,7 +373,7 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
           CASE elem.kind OF
           | PklAction.Kind.Copy =>
             WriteData (v, src, length);
-            INC(src, length);
+            INC(src, length); 
 
           | PklAction.Kind.Skip =>
             v.skipData(length);
@@ -960,6 +960,8 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
 	<* ASSERT toDiff >= 0 *>
   
         self.addSkip(fromDiff, toDiff);
+        self.fromSize := newFromSize; 
+        self.toSize := newToSize; 
       END;
     END;
     self.addDone();
