@@ -53,7 +53,7 @@ else
     program("vorun")
     deriveds ("vostart", [])
     deriveds ("vostart.cmd", [])
-    install_derived ("..\\src\\vostart") % This isn't derived, but it gets it to te pkg\target directory.
+    install_derived ("..\\src\\vostart") % This isn't derived, but it gets it to the pkg\target directory.
     install_derived ("vostart.cmd")
   end
   %
