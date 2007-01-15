@@ -56,6 +56,8 @@
 #include "opts.h"
 #include "options.h"
 
+#include "debug.h"
+
 /*================================================================= TREES ===*/
 
 typedef enum
@@ -1585,6 +1587,8 @@ debug_struct (void)
   d = build_decl (TYPE_DECL, NULL_TREE, t);
   TREE_CHAIN (d) = global_decls;
   global_decls = d;
+  debug_hooks -> type_decl 
+    ( d, false /* This argument means "IsLocal", but it's unused by dbx. */ ); 
 }
 
 /*========================================== GLOBALS FOR THE M3CG MACHINE ===*/
