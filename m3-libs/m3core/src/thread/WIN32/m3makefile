@@ -11,3 +11,4 @@
 Interface ("ThreadF")
 Interface ("ThreadContext")
 implementation ("ThreadWin32")
+Interface ("ThreadEvent")
