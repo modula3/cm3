@@ -9,6 +9,5 @@
 
 Interface ("SchedulerPosix")
 Interface ("ThreadF")
-Interface ("ThreadEvent")
 
 implementation ("ThreadPosix")
