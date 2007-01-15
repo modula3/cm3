@@ -20,7 +20,7 @@
 
 @pushd %~dp0
 
-@rem @call :make-lib-1 "%~f0" advapi32.lib advapi32.quake cl.exe link.exe
+@rem @call :make-lib-1 "%~f0" advapi32.lib advapi32.quake cl.exe link.exe perl.exe
 @rem goto :eof
 
 @for %%i in (
@@ -38,7 +38,7 @@
     winspool
     wsock32
 ) do @(
-    @call :make-lib-1 "%~f0" %%i.lib %%i.quake cl.exe link.exe
+    @call :make-lib-1 "%~f0" %%i.lib %%i.quake cl.exe link.exe perl.exe
     @if errorlevel 1 goto :eof
 )
 @goto :eof
@@ -50,10 +50,21 @@ if exist %3 del %3
     @error 2> nul
     @goto :eof
 )
-@echo %% This is Quake source code, to initialize data. >> %3
-@echo %% Quake is the Modula-3 build extension language. >> %3
-@echo %% cl is "%~$PATH:4" >> %3
-@echo %% link is "%~$PATH:5" >> %3
+@echo %% >> %3
+@echo %% This is GENERATED Quake source code, to initialize data. >> %3
+@echo %% Quake is the Modula-3 "build extension language". >> %3
+@echo %% That is, most of the "build system" implemented in Modula-3, but >> %3
+@echo %% there is a small "scripting" language to extend it. >> %3
+@echo %% >> %3
+@echo %% This data is then consumed by a second pass that uses the Modula-3 compiler and a C++ compiler and linker. >> %3
+@echo %% >> %3
+@echo %% Here is some information about the environment in which this code was generated: >> %3
+@echo %% >> %3
+@echo %%   cl is "%~$PATH:4" >> %3
+@echo %%   link is "%~$PATH:5" >> %3
+@echo %%   perl is "%~$PATH:6" >> %3
+@echo %%   current working directory is %CD% >> %3
+@echo %% >> %3
 @call perl -w -x %1 "%~$LIB:2" >> %3
 @goto :eof
 
@@ -84,8 +95,9 @@ sub GetVersion
 }
 
 printf("%% $0 @ARGV run at %s on %s by %s.\n", scalar localtime(), $ENV{ComputerName}, $ENV{UserName});
-printf("%% cl is %s.\n", GetVersion("cl"));
-printf("%% link is %s.\n", GetVersion("link"));
+printf("%%\n");
+printf("%%   cl is %s.\n", GetVersion("cl"));
+printf("%%   link is %s.\n", GetVersion("link"));
 
 my $Lib = shift;
 die if !defined $Lib;
@@ -104,7 +116,9 @@ my $Line;
 # and be done with it.
 #
 $Command = "link /dump /all \"$Lib\"";
+printf("%%\n");
 print("% $Command\n");
+printf("%%\n");
 print STDERR "$Command\n";
 if (!open($Pipe, "$Command 2>&1 |"))
 {
@@ -227,12 +241,23 @@ while ($Line = <$Pipe>)
         #
         # Exclude various functions.
         # CharPrevEx changed signatures and CharPrev/Next are useless -- just use Unicode and add/subtract 1.
-        # WEP, SystemFunction don't belong in import .libs.
+        # WEP, SystemFunction don't belong in import .libs. The all caps names look bogus.
+        # Remove various other undocumented functions that are in public import libs.
         #
         next if ($Function eq "WEP");
         next if ($Function =~ /^Char(Next|Prev)/);
         next if ($Function =~ /^SystemFunction/);
-        next if ($Function =~ /^DllInitialize$/);
+        next if ($Function eq "InitializeDll");
+        next if ($Function eq "DllInitialize");
+        next if ($Function eq "DEVICECAPABILITIES");
+        next if ($Function eq "EXTDEVICEMODE");
+        next if ($Function eq "ADVANCEDSETUPDIALOG");
+        next if ($Function eq "DEVICEMODE");
+        next if ($Function eq "LsaGetSystemAccessAccount"); # not documented
+        next if ($Function eq "wvsprintfA"); # useless esp. for Modula-3, use C runtime if necessary
+        next if ($Function eq "wvsprintfW"); # useless esp. for Modula-3, use C runtime if necessary
+        next if ($Function eq "wsprintfA"); # useless esp. for Modula-3, use C runtime if necessary
+        next if ($Function eq "wsprintfW"); # useless esp. for Modula-3, use C runtime if necessary
         $Exports{$Function} = $Signature;
         # print "%% Function is $Function\n";
     }
@@ -252,6 +277,7 @@ my $Signature = $Exports{$Function};
 
 #
 # Add functions missing in Visual C++ 2.0 import .libs.
+# These were all added in Windows NT 3.51 and Windows 95.
 #
 if (lc GetPathBaseName($Lib) eq "comctl32")
 {
@@ -265,6 +291,10 @@ elsif (lc GetPathBaseName($Lib) eq "kernel32")
 #
 # Note that binaries built using the Visual C++ 8.0 C runtime won't run on very old versions of Windows
 # due to the use of these functions.
+#
+# GetSystemTimeAsFileTime is missing in Windows NT 3.1, requires Windows NT 3.5 or Windows 95
+# IsDebuggerPresent is missing in Windows NT 3.x and Windows 95, requires Windows NT 4 or Windows 98
+# InterlockedCompareExchange is missing in Windows NT 3.x and Windows 95, requires Windows NT 4 or Windows 98, or can be a comiler instrinsic
 #
     $Exports{InterlockedCompareExchange} = "12";
     $Exports{GetSystemTimeAsFileTime} = "4";
