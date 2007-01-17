@@ -413,7 +413,7 @@ m3_operator_name (enum exp_opcode opcode)
 static void
 m3_error (char *msg)
 { if (msg) error (msg); 
-  else error ( "Invalid syntax in expression." );
+  else error ( "Invalid syntax in Modula-3 expression." );
 } /* m3_error */ 
 
 struct type ** const (m3_builtin_types[]) = 
@@ -746,9 +746,9 @@ static const char * m3_id_chars_no_underscore  = m3_id_chars + 1;
 static const char * m3_id_letters  = m3_id_chars + 11;   
 
 /* See whether the string name is a PM3-style compilation unit body procedure
-   name These have the form "_INITI_<interfaceName> or "_INITM_<moduleName>"...
+   name.  These have the form "_INITI_<interfaceName> or "_INITM_<moduleName>"...
    If so, return the pointer to the beginning of <interfaceName> or
-   <interfaceName>.  Otherwise, return NULL. "*/
+   <moduleName>.  Otherwise, return NULL. "*/
 static const char * 
 pm3_comp_unit_body_name_start ( const char * name ) 
 
@@ -767,8 +767,8 @@ pm3_comp_unit_body_name_start ( const char * name )
 } /* pm3_comp_unit_body_name_start */ 
 
 /* See whether the string name is a CM3-style compilation unit body procedure 
-   name. These have the form "<interfaceName>_I3..." or "<moduleName>_M3...".  
-   If so, return the length of <interfaceName> or <interfaceName>.  
+   name.  These have the form "<interfaceName>_I3..." or "<moduleName>_M3...".
+   If so, return the length of <interfaceName> or <moduleName>.  
     Otherwise, return 0. 
 */ 
 /* FIXME: This form of compiler-generated name can be easily and accidentally
@@ -795,20 +795,21 @@ cm3_comp_unit_body_name_len ( const char * name )
   } /* cm3_comp_unit_body_name_len */ 
 
 /* Between the various compilers and different kinds of things to look up,
-   there is a real hodge-podge of places to find them in the debug info
-   we get.  Here is a table, laboriously constructed from many experiments:
+   there is a real hodge-podge of places to find _global_ identifiers  in 
+   the debug info we get.  Here is a table, laboriously constructed from 
+   many experiments:
 
    Type T:           Always in the static block of the unit declared in.  
                      One entry has linkage name Mn_zzzzzz_U.T and maps to
                      the uid.  Another has linkage name MN_<uid> and maps 
                      to U.T.         
 
-   Variable V:       A field of the globals record of the unit declared in.
-                     Has no gdb symbol.  
+   Variable V:       A field of the globals record of the unit that V is
+                     declared in.  Has no gdb symbol.  
 
    Globals record:   Has a variable-like entry in the global block for
                      PM3 and friends, or the static block for CM3, of
-                     the unit declared in.  It has linkage name 
+                     the unit it belongs to.  It has linkage name 
                      MI_<interfaceName> or MM_<moduleName>.  Its type
                      is patched by m3_fix_symtab to point to the globals
                      record type.  
@@ -823,15 +824,15 @@ cm3_comp_unit_body_name_len ( const char * name )
                      all such record types. 
 
    Procedure in      PM3 only has a field in the globals record of the 
-   an interface:     interface. CM3 has nothing in the interface symtab. 
+   an interface:     interface.  CM3 has nothing in the interface symtab. 
 
    Procedure in a    In the static block of the module, for all compilers.  
    module, not in    Linkage name is <moduleName>__<procName>.  PM3 also 
    any exported      has a field in the globals record of the module. 
    interface:
 
-   Procedure in a    For CM3, only in the global block of the module. 
-   module, also in   For PM3, in the local block of the module.  
+   Procedure in a    For CM3, only in the global block of the exporting module.
+   module, also in   For PM3, in the local block of the exporting module.  
    an exported       Linkage name is <InterfaceName>__<procName>.  
    interface:        PM3 also has a field in the globals record of the module. 
 
@@ -2022,11 +2023,11 @@ m3_proc_value_env_ptr ( struct value * closure_value )
    prior to pushing the real parameters.  This is data that was
    constructed and exists only in gdb process space.  It includes
    closures for procedure values and dope for open arrays.  If array
-   constructors are ever implemented and allowed to be passed to open
-   array formals, it will also have to include the gdb-space_only
-   contents of the array, in addition to the dope.  This gets called
-   from inside call_function_by_hand, after it has set things up for
-   gdb to push stuff on the stack. */ 
+   constructors in expressions given to gdb are ever implemented and
+   allowed to be passed to open array formals, it will also have to
+   include the gdb-space-only contents of the array, in addition to
+   the dope.  This gets called from inside call_function_by_hand,
+   after it has set things up for gdb to push stuff on the stack. */ 
 void 
 m3_push_aux_param_data ( int nargs, struct value **args, CORE_ADDR * sp )
 
