@@ -227,6 +227,9 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         return 1
     end
 
+    %
+    % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
+    %
     if file_exists (manifest_file)
       ret_code = try_exec("mt /nologo /manifest " & manifest_file & " /outputresource:" & dll_file & ";2")
       if not equal (ret_code, 0)
@@ -357,12 +360,15 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     return 1
   end
 
+  %
+  % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
+  %
   if file_exists (manifest_file)
-      ret_code = try_exec("mt /nologo /manifest " & manifest_file & " /outputresource:" & pgm_file & ";1")
-      if not equal (ret_code, 0)
-         return ret_code
-      end
-      delete_file (manifest_file)
+    ret_code = try_exec("mt /nologo /manifest " & manifest_file & " /outputresource:" & pgm_file & ";1")
+    if not equal (ret_code, 0)
+       return ret_code
+    end
+    delete_file (manifest_file)
   end
 
   deriveds ("", [ pdb_file, listing ])
