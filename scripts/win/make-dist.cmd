@@ -158,7 +158,7 @@ if not exist symbols mkdir symbols
 for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
 if exist system.tgz del system.tgz
 tar cvzf system.tgz bin lib pkg || exit /b 1
-call :CopyFile %ROOT%\m3-sys\cminstall\%TARGET%\cminstall.exe . || exit /b 1
+call :CopyFile %STAGE%\cminstall.exe . || exit /b 1
 call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
 call :CopyFile %ROOT%\tools\win32\tar.exe . || exit /b 1
 call :CopyFile %ROOT%\tools\win32\gzip.exe . || exit /b 1
