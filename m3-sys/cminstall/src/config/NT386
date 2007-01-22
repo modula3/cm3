@@ -10,7 +10,6 @@ readonly TARGET       = "NT386"    % code generation target
 readonly BUILD_DIR    = TARGET     % directory for results
 readonly OS_TYPE      = "WIN32"    % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"   % { "32BITS" or "64BITS" }
-%readonly GNU_PLATFORM = "i486--nt" % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
@@ -206,8 +205,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
                                      options, objects, imported_libs ])
 
   ret_code = try_exec ("mklib", lib_args, ">", listing)
-  if not equal (ret_code, 0)
-        or not file_exists (lib_file)
+  if not equal (ret_code, 0) or not file_exists (lib_file)
     error("library creation failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
     if not equal (ret_code, 0)
         return ret_code
@@ -221,8 +219,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     rename_file (lib_file, lib0_file)
     ret_code = try_exec ("link", link_args, ">", listing)
 
-    if not equal (ret_code, 0)
-            or not file_exists (dll_file)
+    if not equal (ret_code, 0) or not file_exists (dll_file)
         error("dynamic link library creation failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
         if not equal (ret_code, 0)
             return ret_code
@@ -230,11 +227,16 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         return 1
     end
 
+    if file_exists (manifest_file)
+      ret_code = try_exec("mt /manifest " & manifest_file & " /outputresource:" & dll_file & ";2")
+      if not equal (ret_code, 0)
+         return ret_code
+      end
+      delete_file (manifest_file)
+    end
+
     % make sure the extra files get shipped
     BindExport (dll_file)
-    if file_exists (manifest_file)
-        BindExport (manifest_file)
-    end
     BindExport (pdb_file)
     install_derived (lib0_file)
   else
@@ -245,7 +247,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   end
 
   % make sure files get cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, manifest_file, pdb_file ])
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file ])
 
   return ret_code
 end
@@ -276,9 +278,7 @@ proc skip_lib (lib, shared) is
   if shared
     % would have built an import library & DLL
     BindExport (dll_file)
-    if file_exists (manifest_file)
-        BindExport (manifest_file)
-    end
+    delete_file (manifest_file)
     BindExport (pdb_file)
     install_derived (lib0_file)
   else
@@ -289,7 +289,7 @@ proc skip_lib (lib, shared) is
   end
 
   % make sure files get cleaned up
-  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, manifest_file, pdb_file ])
+  deriveds ("", [ listing, lib_file, lib0_file, def_file, dll_file, pdb_file ])
 
   return 0
 end
@@ -347,11 +347,9 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = arglist ("@", [ "/out:" & pgm_file,
                         entry, m3_link_flags, options, objects, imports ])
 
-  deriveds ("", [ manifest_file, pdb_file, listing ])
   local ret_code = try_exec ("link", args, ">", listing)
 
-  if not equal (ret_code, 0)
-        or not file_exists (pgm_file)
+  if not equal (ret_code, 0) or not file_exists (pgm_file)
     error("link failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
     if not equal (ret_code, 0)
         return ret_code
@@ -360,8 +358,14 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   end
 
   if file_exists (manifest_file)
-    BindExport (manifest_file)
+      ret_code = try_exec("mt /manifest " & manifest_file & " /outputresource:" & pgm_file & ";1")
+      if not equal (ret_code, 0)
+         return ret_code
+      end
+      delete_file (manifest_file)
   end
+
+  deriveds ("", [ pdb_file, listing ])
   BindExport (pdb_file)
 
   return ret_code
@@ -374,11 +378,10 @@ end
 
 proc skip_link (prog, shared) is
   local pgm_file = prog & ".exe"
-  local manifest_file = pgm_file & ".manifest"
   local pdb_file = prog & ".pdb"
   local listing  = prog & ".lst"
 
-  deriveds ("", [ manifest_file, pdb_file, listing ])
+  deriveds ("", [ pdb_file, listing ])
   return 0
 end
 
