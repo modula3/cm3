@@ -147,6 +147,24 @@ call :environment_variables_must_be_set INSTALLROOT || goto :eof
 @rem Check the %LIB% environment variable.
 @rem
 
+rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
+
+if not exist %INSTALLROOT%\lib\comctl32.lib (
+    @call :Echo "%INSTALLROOT%\lib\comctl32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+)
+
+if not exist %INSTALLROOT%\lib\user32.lib (
+    @call :Echo "%INSTALLROOT%\lib\user32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+)
+
+if not exist %INSTALLROOT%\lib\wsock32.lib (
+    @call :Echo "%INSTALLROOT%\lib\wsock32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+)
+
+if not exist %INSTALLROOT%\lib\gdi32.lib (
+    @call :Echo "%INSTALLROOT%\lib\gdi32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+)
+
 @rem
 @rem The .libs shipped by CM3 5.2.6 do %INSTALLROOT%\lib do not work Visual C++ 2.0, 4.0, or 8.0, at least.
 @rem They are presumably of too new a format for 2.0 and 4.0.
@@ -276,8 +294,11 @@ goto :environment_variable_must_contain_files_1
 )
 goto :eof
 
-:my_del
-@if (%1) == () @goto :eof
-@if exist %1 del %1
-@shift
-@goto :my_del
+:Echo
+    @setlocal
+    @set a=%*
+    @rem first and last character -- quotes
+    @set a=%a:~1,-1%
+    @echo %a%
+    @endlocal
+    @goto :eof
