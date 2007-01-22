@@ -23,8 +23,9 @@ set INSTALLROOT_STD=%STAGE%\std
 set INSTALLROOT_CORE=%STAGE%\core
 set INSTALLROOT_BASE=%STAGE%\base
 
-@echo on
-@goto :TarGzip
+@rem for incremental runs to recover at this step..
+if /i "%1" == "tar" goto :TarGzip
+if /i "%1" == "min" goto :min
 
 @rem ------------------------------------------------------------------------------------------------------------------------
 call :Echo build new compiler with old compiler (%INSTALLROOT_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_PREVIOUS%)
@@ -49,6 +50,9 @@ set P=^
 
 setlocal
 
+@rem
+@rem cm3 is run out of %path%, but mklib is not, so we have to copy it..
+@rem
 call :CopyMklib %INSTALLROOT% %INSTALLROOT_COMPILER_WITH_PREVIOUS%
 set INSTALLROOT=%INSTALLROOT_COMPILER_WITH_PREVIOUS%
 call :RealClean || exit /b 1
@@ -69,6 +73,8 @@ set PATH=%INSTALLROOT_COMPILER_WITH_PREVIOUS%\bin;%PATH%
 call :RealClean || exit /b 1
 call :BuildShip || exit /b 1
 call :ShipCompiler || exit /b 1
+rem don't clean -- keep mklib and cminstall
+rem call :RealClean || exit /b 1
 @rem
 @rem save cminstall.exe away for later
 @rem
@@ -82,6 +88,8 @@ set P=
 @rem ----------------------------------------------------------------------------------------------------------------------------------
 call :Echo build minimal packages with new compiler
 @rem ----------------------------------------------------------------------------------------------------------------------------------
+
+:min
 
 setlocal
 
@@ -140,27 +148,24 @@ rem echo INSTALLROOT_BASE=%INSTALLROOT_BASE%
 
 echo now need to tar/gzip it up
 rem we want tar.exe, gzip.exe, cygwin.dll, cminstall.exe, copyright-cmass, and system.tgz, tar/gziped
-rem into cm3-min-win32-nt386-<version>.tar.gz
+rem into cm3-min-win32-nt386-<version>.tgz
 rem bzip2 would be preferable for a smaller size
 
 :TarGzip
 
 pushd %INSTALLROOT_MIN%
-cacls . /t /e /g everyone:r
-mkdir symbols
+if not exist symbols mkdir symbols
 for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
 if exist system.tgz del system.tgz
-tar -cvzf system.tgz bin lib pkg || exit /b 1
-@rem cheat
-call %~dp0do-pkg buildship cminstall
+tar cvzf system.tgz bin lib pkg || exit /b 1
 call :CopyFile %ROOT%\m3-sys\cminstall\%TARGET%\cminstall.exe . || exit /b 1
 call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
 call :CopyFile %ROOT%\tools\win32\tar.exe . || exit /b 1
 call :CopyFile %ROOT%\tools\win32\gzip.exe . || exit /b 1
 call :CopyFile %ROOT%\tools\win32\cygwin.dll . || exit /b 1
 if exist cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz del cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz
-tar -cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CMASS system.tgz tar.exe gzip.exe cygwin.dll  || exit /b 1
-tar -cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols  || exit /b 1
+tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CMASS system.tgz tar.exe gzip.exe cygwin.dll || exit /b 1
+tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols || exit /b 1
 popd
 
 echo DONE!
@@ -207,6 +212,7 @@ goto :eof
     call :CopyFile       %1\bin\cm3.pdb %2\bin\cm3.pdb || exit /b 1
     call :CopyFileIfExist %1\bin\cm3.exe.manifest %2\bin\cm3.exe.manifest || exit /b 1
     call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %2\bin\cm3.cfg || exit /b 1
+    call :CopyMkLib %1 %2 || exit /b 1
     goto :eof
 
 :CopyMklib
