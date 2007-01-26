@@ -18,14 +18,16 @@ set INSTALLROOT_PREVIOUS=%INSTALLROOT%
 set INSTALLROOT_COMPILER_WITH_PREVIOUS=%STAGE%\compiler_with_previous
 set INSTALLROOT_COMPILER_WITH_SELF=%STAGE%\compiler_with_self
 
-set INSTALLROOT_MIN=%STAGE%\min
-set INSTALLROOT_STD=%STAGE%\std
-set INSTALLROOT_CORE=%STAGE%\core
-set INSTALLROOT_BASE=%STAGE%\base
+set INSTALLROOT_MIN=%STAGE%\min\cm3
+set INSTALLROOT_STD=%STAGE%\std\cm3
+set INSTALLROOT_CORE=%STAGE%\core\cm3
+set INSTALLROOT_BASE=%STAGE%\base\cm3
 
 @rem for incremental runs to recover at this step..
-if /i "%1" == "tar" goto :TarGzip
-if /i "%1" == "min" goto :min
+if /i "%1" == "goto_tar" shift & goto :TarGzip
+if /i "%1" == "goto_min" shift & goto :min
+if /i "%1" == "goto_zip" shift & goto :Zip
+if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
 
 @rem ------------------------------------------------------------------------------------------------------------------------
 call :Echo build new compiler with old compiler (%INSTALLROOT_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_PREVIOUS%)
@@ -145,6 +147,7 @@ rem echo INSTALLROOT_STD=%INSTALLROOT_STD%
 rem echo INSTALLROOT_CORE=%INSTALLROOT_CORE%
 rem echo INSTALLROOT_BASE=%INSTALLROOT_BASE%
 
+goto :TarBZip2
 
 echo now need to tar/gzip it up
 rem we want tar.exe, gzip.exe, cygwin.dll, cminstall.exe, copyright-cmass, and system.tgz, tar/gziped
@@ -174,6 +177,59 @@ echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbol
 echo Lots of intermediate state remains in %STAGE%.
 
 goto :eof
+
+:Zip
+
+pushd %INSTALLROOT_MIN%
+call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
+cd ..
+if not exist symbols mkdir symbols
+for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
+
+del *.bz2 *.zip *.exe *.tar
+
+rem set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tar.bz2
+rem tar cfvj %symbols% symbols
+
+set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.zip
+call :RunZip -9 -r -D -X %symbols% symbols
+
+set zip=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.zip
+call :RunZip -9 -r -D -X %zip% cm3
+
+set exe=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.exe
+rem copy /b \bin\unzipsfx-upx.exe + %zip% %exe%
+copy /b \bin\upx\unzipsfx.exe + %zip% %exe%
+call :RunZip -A %exe%
+
+popd
+goto :done
+
+:TarBzip2
+
+pushd %INSTALLROOT_MIN%
+call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
+cd ..
+if not exist symbols mkdir symbols
+for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
+set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tar.bz2
+set zip=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tar.bz2
+if exist %zip% del %zip%
+if exist %symbols% del %symbols%
+tar cfvj %symbols% symbols
+tar cfvj %zip% cm3
+popd
+goto :done
+
+:done
+echo DONE!
+if defined exe if exist %exe% echo Output is %STAGE%\min\%exe%
+echo Output is %STAGE%\min\%zip%
+echo Output is %STAGE%\min\%symbols%
+echo Lots of intermediate state remains in %STAGE%.
+
+goto :eof
+
 
 :Run
     setlocal
@@ -283,3 +339,12 @@ goto :eof
 :CreateDirectory
     if not exist %1 mkdir %1
     goto :eof
+
+:RunZip
+    @rem lame workaround
+    @rem zip appends %zip% to its command line
+    @rem and I really want to use it for my own purposes
+    setlocal
+    set zip=
+    zip %*
+    endlocal
