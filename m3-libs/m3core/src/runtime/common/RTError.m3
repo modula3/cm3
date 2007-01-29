@@ -40,10 +40,19 @@ PROCEDURE MsgS (file            : ADDRESS;
     EndError (crash := TRUE);
   END MsgS;
 
-PROCEDURE MsgI (msg: TEXT := NIL;  i: INTEGER) =
+PROCEDURE MsgI (file: TEXT; line: INTEGER; msg: TEXT := NIL; i: INTEGER) =
   BEGIN
     StartError (msg);
     RTIO.PutInt (i);
+    IF (file # NIL) THEN
+      RTIO.PutText ("\n***    file \"");
+      RTIO.PutText (file);
+      RTIO.PutText ("\"");
+      IF (line # 0) THEN
+        RTIO.PutText (", line ");
+        RTIO.PutInt  (line);
+      END;
+    END;
     EndError (crash := TRUE);
   END MsgI;
 
