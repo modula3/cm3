@@ -11,7 +11,7 @@ PROCEDURE Msg (file: TEXT; line: INTEGER; a, b, c: TEXT := NIL);
 PROCEDURE MsgS (file: ADDRESS; line: INTEGER; a, b, c: TEXT := NIL);
 (* report an error (file = C-style null-terminated string)  *)
 
-PROCEDURE MsgI (msg: TEXT := NIL; i: INTEGER);
+PROCEDURE MsgI (file: TEXT; line: INTEGER; msg: TEXT := NIL; i: INTEGER);
 (* report an error with an integer argument *)
 
 PROCEDURE MsgPC (pc: INTEGER; a, b, c: TEXT := NIL);
