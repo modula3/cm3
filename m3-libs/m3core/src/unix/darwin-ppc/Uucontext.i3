@@ -7,7 +7,7 @@
 INTERFACE Uucontext;
 
 FROM Ctypes IMPORT int, void_star, unsigned_int, unsigned_long, double;
-FROM Utypes IMPORT size_t;
+FROM Utypes IMPORT size_t, u_int32_t;
 
 (*** <mach/ppc/thread_state.h> ***)
 
