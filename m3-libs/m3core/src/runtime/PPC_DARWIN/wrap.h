@@ -48,14 +48,3 @@
   #define shutdown      SOCKSshutdown
   #define write         SOCKSwrite
 #endif /* } */
-
-extern int RT0u__inCritical;
-#define ENTER_CRITICAL RT0u__inCritical++
-#define EXIT_CRITICAL  RT0u__inCritical--
-
-static char RTHeapDepC__c;
-#define MAKE_READABLE(x) \
-    if ((int)x) { RTHeapDepC__c = *(char*)(x); }
-
-#define MAKE_WRITABLE(x) \
-    if ((int)x) { *(char*)(x) = RTHeapDepC__c = *(char*)(x); }

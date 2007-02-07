@@ -9,11 +9,54 @@ INTERFACE Uucontext;
 FROM Ctypes IMPORT int, void_star, unsigned_int, unsigned_long, double;
 FROM Utypes IMPORT size_t;
 
-(*** <mach/ppc/thread_status.h> ***)
+(*** <mach/ppc/thread_state.h> ***)
+
+CONST
+  PPC_THREAD_STATE_MAX = 144;    (* Size of biggest state possible *)
+
+  THREAD_STATE_MAX = PPC_THREAD_STATE_MAX;
+
+(*** <mach/thread_status.h> ***)
+
+(*
+ *	Generic definition for machine-dependent thread status.
+ *)
+TYPE
+  natural_t = unsigned_int;
+  thread_state_t = UNTRACED REF natural_t; (* Variable-length array *)
+
+(* THREAD_STATE_MAX is now defined in <mach/machine/thread_state.h> *)
+TYPE
+  thread_state_data_t = ARRAY [0..THREAD_STATE_MAX-1] OF natural_t;
+
+CONST
+  THREAD_STATE_FLAVOR_LIST = 0;       (* List of valid flavors *)
+  THREAD_STATE_FLAVOR_LIST_NEW = 128;
 
 TYPE
-  (* ppc_thread_state is the structure that is exported to user threads for 
-     use in status/mutate calls.  This structure should never change. *)
+  thread_state_flavor_t = int;
+  thread_state_flavor_array_t = UNTRACED REF thread_state_flavor_t;
+
+(*** <mach/ppc/thread_status.h> ***)
+
+(*
+ * THREAD_STATE_FLAVOR_LIST 0
+ * 	these are the supported flavors
+ *)
+CONST
+  PPC_THREAD_STATE      = 1;
+  PPC_FLOAT_STATE       = 2;
+  PPC_EXCEPTION_STATE   = 3;
+  PPC_VECTOR_STATE      = 4;
+  PPC_THREAD_STATE64    = 5;
+  PPC_EXCEPTION_STATE64 = 6;
+  THREAD_STATE_NONE     = 7;
+
+(*
+ * ppc_thread_state is the structure that is exported to user threads for 
+ * use in status/mutate calls.  This structure should never change.
+ *)
+TYPE
   struct_ppc_thread_state = RECORD
     srr0: unsigned_int;		(* Instruction address register (PC) *)
     srr1: unsigned_int;		(* Machine state register (supervisor) *)
@@ -60,7 +103,8 @@ TYPE
   END;
   ppc_thread_state_t = struct_ppc_thread_state;
 
-  (* This structure should be double-word aligned for performance *)
+(* This structure should be double-word aligned for performance *)
+TYPE
   struct_ppc_float_state = RECORD
     fpregs:    ARRAY [0..31] OF double;
 
@@ -78,16 +122,24 @@ TYPE
   END;
   ppc_vector_state_t = struct_ppc_vector_state;
 
-  (* ppc_exception_state
+(*
+ * ppc_exception_state
+ *
+ * This structure corresponds to some additional state of the user
+ * registers as saved in the PCB upon kernel entry. They are only
+ * available if an exception is passed out of the kernel, and even
+ * then not all are guaranteed to be updated.
+ *
+ * Some padding is included in this structure which allows space for
+ * servers to store temporary values if need be, to maintain binary
+ * compatiblity.
+ *)
 
-     This structure corresponds to some additional state of the user
-     registers as saved in the PCB upon kernel entry. They are only
-     available if an exception is passed out of the kernel, and even
-     then not all are guaranteed to be updated.
+(* Exception state for 32-bit thread (on 32-bit processor) *)
+(* Still available on 64-bit processors, but may fall short *)
+(* of covering the full potential state (hi half available). *)
 
-     Some padding is included in this structure which allows space for
-     servers to store temporary values if need be, to maintain binary
-     compatiblity. *)
+TYPE
   struct_ppc_exception_state = RECORD
     dar:       unsigned_long;	(* Fault registers for coredump *)
     dsisr:     unsigned_long;
@@ -191,10 +243,9 @@ TYPE
 (*** <sys/ucontext.h> ***)
 
 TYPE
-  sigset_t = unsigned_int;
-
+  sigset_t = u_int32_t;
   struct_ucontext = RECORD
-    sc_onstack:  int;
+    uc_onstack:  int;
     uc_sigmask:  sigset_t;       	 (* signal mask used by this context *)
     uc_stack:    stack_t;		 (* stack used by this context *)
     uc_link:     struct_ucontext_star;	 (* pointer to resuming context *)
@@ -204,6 +255,5 @@ TYPE
   struct_ucontext_star = UNTRACED REF struct_ucontext;
   ucontext_t = struct_ucontext;
   ucontext_t_star = UNTRACED REF ucontext_t;
-
 
 END Uucontext.

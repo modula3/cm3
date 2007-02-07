@@ -38,10 +38,11 @@ void
 RTMachine__GetState (pthread_t t, void **sp, i386_thread_state_t *state)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
-  mach_msg_type_number_t thread_state_count = MACHINE_THREAD_STATE_COUNT;
-  if (thread_get_state(mach_thread, MACHINE_THREAD_STATE,
+  mach_msg_type_number_t thread_state_count = i386_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, i386_THREAD_STATE,
 		       (thread_state_t)state, &thread_state_count)
-      != KERN_SUCCESS) abort();;
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != i386_THREAD_STATE_COUNT) abort();
   *sp = (void *)(state->esp);
 }
 
