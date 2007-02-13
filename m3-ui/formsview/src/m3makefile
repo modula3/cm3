@@ -1,6 +1,6 @@
 
 import("formsvbt")
 implementation("formsview")
-build_standalone()
+%build_standalone()
 program("formsview")
  
