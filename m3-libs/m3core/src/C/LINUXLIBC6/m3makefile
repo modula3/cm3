@@ -11,5 +11,5 @@ Interface ("Cstring")
 
 Module ("Cstdio")
 
-s_source("CsetjmpASM")
+%s_source("CsetjmpASM")
 
