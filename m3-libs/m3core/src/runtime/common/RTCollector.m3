@@ -170,7 +170,7 @@ PROCEDURE FinishVM () =
       CollectorOn();
       (* no gray pages now; only protected pages are in older generation *)
       FOR p := p0 TO p1 - 1 DO
-        IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite); END;
+        IF NOT desc[p - p0].dirty THEN DirtyPage(p) END;
       END;
       CollectorOff();
     END;
@@ -565,31 +565,31 @@ CONST
   PromoteDesc = ARRAY PromoteReason OF Desc {
     (* OldProtected *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := FALSE,
-      note := Note.OlderGeneration, protected := TRUE, continued := FALSE },
+      note := Note.OlderGeneration, dirty := FALSE, continued := FALSE },
 
     (* OldPure *)
     Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
-      note := Note.OlderGeneration, protected := FALSE, continued := FALSE },
+      note := Note.OlderGeneration, dirty := TRUE, continued := FALSE },
 
     (* OldImpure *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
-      note := Note.OlderGeneration, protected := FALSE, continued := FALSE },
+      note := Note.OlderGeneration, dirty := FALSE, continued := FALSE },
 
     (* LargePure *)
     Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
-      note := Note.Large, protected := FALSE, continued := FALSE },
+      note := Note.Large, dirty := TRUE, continued := FALSE },
 
     (* LargeImpure *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
-      note := Note.Large, protected := FALSE, continued := FALSE },
+      note := Note.Large, dirty := FALSE, continued := FALSE },
 
     (* AmbiguousPure *)
     Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
-      note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE },
+      note := Note.AmbiguousRoot, dirty := TRUE, continued := FALSE },
 
     (* AmbiguousImpure *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
-      note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE }
+      note := Note.AmbiguousRoot, dirty := FALSE, continued := FALSE }
   };
 
 PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
@@ -601,17 +601,22 @@ PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
 
     WITH pd = desc[p - p0] DO
       <* ASSERT pd.space = Space.Previous *>
-      <* ASSERT NOT pd.continued*>
-
-      IF pd.protected # d.protected THEN
-        <*ASSERT NOT d.protected*>
-        Protect(p, Mode.ReadWrite);
-      END;
+      <* ASSERT NOT pd.continued *>
+      <* ASSERT NOT pd.gray *>
 
       IF d.gray THEN
+        <*ASSERT NOT d.dirty*>
+        IF NOT pd.dirty THEN
+          Protect(p, n_pages, Mode.ReadWrite);
+        END;
         WITH hdr = PageToHeader(p) DO
           GrayBetween(hdr, hdr + BytesPerPage);
         END;
+        Protect(p, n_pages, Mode.NoAccess);
+      ELSIF pd.dirty THEN
+        <*ASSERT d.dirty*>
+      ELSE
+        <*ASSERT NOT d.dirty*>
       END;
 
       pd := d;
@@ -757,9 +762,8 @@ PROCEDURE CollectorOn () =
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
         <* ASSERT pd.gray *>
-        <* ASSERT pd.protected *>
       END;
-      Protect(impureCopy.page, Mode.ReadWrite);
+      Protect(impureCopy.page, 1, Mode.ReadWrite);
     END;
   END CollectorOn;
 
@@ -771,18 +775,8 @@ PROCEDURE CollectorOff () =
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
         <* ASSERT pd.gray *>
-        <* ASSERT NOT pd.protected *>
       END;
-      Protect(impureCopy.page, Mode.NoAccess);
-    END;
-
-    VAR p := impureCopy.stack; BEGIN
-      WHILE p # Nil DO
-        IF desc[p - p0].gray AND NOT desc[p - p0].protected THEN
-          Protect(p, Mode.NoAccess);
-        END;
-        p := desc[p - p0].link;
-      END;
+      Protect(impureCopy.page, 1, Mode.NoAccess);
     END;
 
     IF incremental AND NOT RTLinker.incremental
@@ -919,9 +913,10 @@ PROCEDURE CollectSomeInStateZero () =
     FOR p := p0 TO p1 - 1 DO
       WITH pd = desc[p - p0] DO
         IF pd.space = Space.Previous AND NOT pd.continued THEN
+          <*ASSERT NOT pd.gray*>
           IF pd.generation = Generation.Older THEN
             IF partialCollection THEN
-              IF pd.protected THEN
+              IF NOT pd.dirty THEN
                 <* ASSERT NOT pd.pure *>
                 (* no need to scan *)
                 PromotePage(p, PromoteReason.OldProtected, pureCopy);
@@ -931,10 +926,10 @@ PROCEDURE CollectSomeInStateZero () =
                 PromotePage(p, PromoteReason.OldImpure,    impureCopy);
               END;
             ELSE
-              IF pd.protected THEN Protect(p, Mode.ReadWrite); END;
+              IF NOT pd.dirty THEN DirtyPage(p) END;
             END;
           ELSE
-            <* ASSERT NOT pd.protected *>
+            <* ASSERT pd.dirty *>
           END;
         END;
       END;
@@ -969,18 +964,17 @@ PROCEDURE CollectSomeInStateZero () =
 
 PROCEDURE FinishThreadPages () =
   (* Clean any pages referenced from the threads. *)
-  VAR
-    p      : Page := impureCopy.stack;
-    next_p : Page;
+  VAR p := impureCopy.stack;
   BEGIN
     WHILE (p # Nil) DO
-      WITH pd = desc[p - p0] DO
-        next_p := pd.link;
-        IF pd.gray AND pd.note = Note.AmbiguousRoot THEN
-          CleanPage(p, thread_page := TRUE);
+      VAR d := desc[p - p0];
+      BEGIN
+        IF d.gray AND d.note = Note.AmbiguousRoot THEN
+          desc[p - p0].dirty := TRUE;
+          CleanPage(p);
         END;
+        p := d.link;
       END;
-      p := next_p;
     END;
   END FinishThreadPages;
 
@@ -1029,12 +1023,15 @@ PROCEDURE CollectSomeInStateFour () =
 PROCEDURE CollectSomeInStateFive () =
   BEGIN
     (* free all oldspace pages; oldspace becomes freespace *)
-    FOR i := 0 TO p1 - p0 - 1 DO
-      IF desc[i].space = Space.Previous THEN
-        desc[i].space := Space.Free;
-        desc[i].continued := FALSE;
-        <* ASSERT NOT desc[i].protected *>
-        IF perfOn THEN PerfChange(p0 + i, 1); END;
+    FOR p := p0 TO p1 - 1 DO
+      WITH pd = desc[p - p0] DO
+        IF pd.space = Space.Previous THEN
+          pd.space := Space.Free;
+          pd.continued := FALSE;
+          <* ASSERT NOT pd.gray *>
+          <* ASSERT pd.dirty *>
+          IF perfOn THEN PerfChange(p, 1); END;
+        END;
       END;
     END;
 
@@ -1049,7 +1046,7 @@ PROCEDURE CollectSomeInStateFive () =
         IF pd.generation = Generation.Older THEN
           <* ASSERT pd.note # Note.AmbiguousRoot *>
           <* ASSERT pd.space = Space.Current *>
-          Protect(impureCopy.page, Mode.ReadOnly);
+          Protect(impureCopy.page, 1, Mode.ReadOnly);
         END;
       END;
       IF perfOn THEN PerfChange(impureCopy.page, 1); END;
@@ -1122,12 +1119,15 @@ PROCEDURE CopySome (): BOOLEAN =
 
     (* originalPage is now in the stack; mark it not gray *)
     IF originalPage # Nil THEN
-      WITH pd = desc[originalPage - p0] DO
+      WITH pd = desc[originalPage - p0],
+           dirty = pd.dirty OR pd.generation = Generation.Younger DO
+        <*ASSERT pd.gray*>
         pd.gray := FALSE;
-        IF pd.generation = Generation.Older THEN
+        pd.dirty := dirty;
+        IF NOT dirty THEN
           <* ASSERT pd.note # Note.AmbiguousRoot *>
           <* ASSERT pd.space = Space.Current *>
-          Protect(originalPage, Mode.ReadOnly);
+          Protect(originalPage, 1, Mode.ReadOnly);
         END;
       END;
       IF perfOn THEN PerfChange(originalPage, 1); END;
@@ -1136,22 +1136,27 @@ PROCEDURE CopySome (): BOOLEAN =
     RETURN TRUE;
   END CopySome;
 
-PROCEDURE CleanPage (p: Page;  thread_page := FALSE) =
+PROCEDURE CleanPage (p: Page) =
   VAR
     hdr := PageToHeader(p);
-    dirty := thread_page OR desc[p - p0].generation = Generation.Younger;
+    dirty := desc[p - p0].dirty OR desc[p - p0].generation = Generation.Younger;
+    n_pages := PageCount(p);
   BEGIN
-    IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite); END;
+    <*ASSERT desc[p - p0].gray*>
+    Protect(p, n_pages, Mode.ReadWrite);
     CleanBetween(hdr, hdr + BytesPerPage, dirty);
-    FOR i := 0 TO PageCount(p) - 1 DO
-      desc[p + i - p0].gray := FALSE;
+    FOR i := 0 TO n_pages - 1 DO
+      WITH pd = desc[p + i - p0] DO
+        pd.gray := FALSE;
+        pd.dirty := dirty;
+      END;
     END;
     IF NOT dirty THEN
-      <* ASSERT RTHeapDep.VM OR desc[p - p0].note # Note.AmbiguousRoot *>
+      <* ASSERT desc[p - p0].note # Note.AmbiguousRoot *>
       <* ASSERT desc[p - p0].space = Space.Current *>
-      Protect(p, Mode.ReadOnly);
+      Protect(p, n_pages, Mode.ReadOnly);
     END;
-    IF perfOn THEN PerfChange(p, PageCount(p)); END;
+    IF perfOn THEN PerfChange(p, n_pages); END;
   END CleanPage;
 
 PROCEDURE CleanBetween (h, he: RefHeader;  dirty := FALSE) =
@@ -1586,12 +1591,12 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     newPtr := LOOPHOLE(res + dataSize, RefHeader);
 
     (* mark the new pages *)
-    VAR pd := pool.desc;
+    VAR d := pool.desc;
     BEGIN
-      desc[newPage - p0] := pd;
-      pd.continued := TRUE;
+      desc[newPage - p0] := d;
+      d.continued := TRUE;
       FOR i := 1 TO n_pages - 1 DO
-        desc[newPage + i - p0] := pd;
+        desc[newPage + i - p0] := d;
       END;
     END;
     IF perfOn THEN PerfChange (newPage, n_pages); END;
@@ -1614,8 +1619,15 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     END;
 
     IF filePage # Nil THEN
-      desc[filePage - p0].link := pool.stack;
-      pool.stack := filePage;
+      WITH pd = desc[filePage - p0] DO
+        pd.link := pool.stack;
+        pool.stack := filePage;
+        IF pd.gray THEN
+          Protect(filePage, n_pages, Mode.NoAccess);
+        ELSE
+          <*ASSERT pd.dirty*>
+        END;
+      END;
     END;
 
     RETURN res;
@@ -1739,7 +1751,13 @@ PROCEDURE Crash (): BOOLEAN =
 
     (* unprotect all pages *)
     FOR p := p0 TO p1 - 1 DO
-      IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite); END;
+      WITH pd = desc[p - p0] DO
+        IF NOT pd.continued THEN
+          IF pd.gray OR NOT pd.dirty THEN
+            Protect(p, PageCount(p), Mode.ReadWrite);
+          END;
+        END;
+      END;
     END;
 
     RETURN result;
@@ -1784,7 +1802,7 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
       | Space.Current =>
           <* ASSERT NOT desc[p - p0].gray *>
           <* ASSERT NOT desc[p - p0].continued *>
-          IF desc[p - p0].protected THEN
+          IF NOT desc[p - p0].dirty THEN
             <* ASSERT desc[p - p0].generation = Generation.Older *>
           END;
           (* visit the objects on the page *)
@@ -1795,7 +1813,7 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
             WHILE h < he DO
               (* check the references in the object *)
               <* ASSERT NOT h.gray *>
-              IF desc[p - p0].protected THEN
+              IF NOT desc[p - p0].dirty THEN
                 <* ASSERT NOT h.dirty *>
                 RTHeapMap.WalkRef (h, protectedCheck);
               ELSE
@@ -1927,7 +1945,7 @@ PROCEDURE PrintDesc(p: Page) =
     RTIO.PutChar('\n');
 
     RTIO.PutText("gray="); RTIO.PutInt(ORD(d.gray)); RTIO.PutChar('\n');
-    RTIO.PutText("protected="); RTIO.PutInt(ORD(d.protected)); RTIO.PutChar('\n');
+    RTIO.PutText("dirty="); RTIO.PutInt(ORD(d.dirty)); RTIO.PutChar('\n');
     RTIO.PutText("continued="); RTIO.PutInt(ORD(d.continued)); RTIO.PutChar('\n');
     RTIO.PutChar('\n'); RTIO.Flush();
 
@@ -2356,141 +2374,80 @@ PROCEDURE PageCount (p: Page): CARDINAL =
     RETURN n;
   END PageCount;
 
+PROCEDURE DirtyPage (p: Page) =
+  VAR n_pages := PageCount(p);
+  BEGIN
+    <* ASSERT NOT desc[p - p0].gray *>
+    <* ASSERT NOT desc[p - p0].dirty *>
+    FOR i := 0 TO n_pages - 1 DO
+      WITH pd = desc[p + i - p0] DO
+        <*ASSERT NOT pd.gray*>
+        <*ASSERT NOT pd.dirty*>
+        pd.dirty := TRUE;
+      END;
+    END;
+    Protect(p, n_pages, Mode.ReadWrite);
+    IF perfOn THEN PerfChange(p, n_pages); END;
+  END DirtyPage;
+
 (* ----------------------------------------------------------------------- *)
 
 TYPE Mode = { ReadWrite, ReadOnly, NoAccess };
 
-PROCEDURE Protect (p: Page;  m: Mode) =
+PROCEDURE Protect (p: Page;  n_pages: CARDINAL;  m: Mode) =
   CONST
     Readable = ARRAY Mode OF BOOLEAN { TRUE, TRUE, FALSE };
     Writable = ARRAY Mode OF BOOLEAN { TRUE, FALSE, FALSE };
-  VAR
-    n_pages   := PageCount(p);
-    protected := (m # Mode.ReadWrite);
   BEGIN
-    <* ASSERT collectorOn OR (m = Mode.ReadWrite) *>
     <* ASSERT NOT desc[p - p0].pure *>
     IF RTHeapDep.VM AND disableVMCount = 0 THEN
       RTHeapDep.Protect(p, n_pages, Readable[m], Writable[m]);
     END;
-    FOR i := 0 TO n_pages - 1 DO desc[p + i - p0].protected := protected; END;
-    IF perfOn THEN PerfChange(p, n_pages); END;
   END Protect;
 
 PROCEDURE CheckLoadTracedRef (ref: REFANY) =
-  VAR p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
   BEGIN
-    IF NOT incremental THEN RETURN END;
-
     RTOS.LockHeap ();
+    INC(checkLoadTracedRef);
 
-    INC(countCheckLoadTracedRef);
-
-    IF (p < p0) OR (p1 <= p) THEN
-      RTOS.UnlockHeap();
-      RETURN;				 (* not in heap *)
+    WITH hdr = HeaderOf (LOOPHOLE(ref, RefReferent)), h = hdr^ DO
+      <*ASSERT h.typecode # RT0.TextLitTypecode*>
+      IF NOT h.gray THEN
+        RTOS.UnlockHeap ();		 (* was gray, but not any more *)
+        RETURN;
+      END;
+      CleanBetween (hdr, hdr + ADRSIZE(Header)); (* just this object *)
+      h.gray := FALSE;
+      hdr^ := h;
     END;
 
-    WITH pd = desc[p - p0] DO
-
-      IF pd.space = Space.Unallocated THEN
-        RTOS.UnlockHeap();
-        RETURN;				 (* not in heap *)
-      END;
-
-      IF NOT pd.protected THEN
-        RTOS.UnlockHeap();
-        RETURN;				 (* was protected, but not any more *)
-      END;
-
-      <* ASSERT NOT pd.pure *>
-      <* ASSERT NOT pd.continued *>
-
-      IF pd.gray THEN
-        CollectorOn();
-        IF p # impureCopy.page THEN
-          CleanPage(p);
-        ELSIF CopySome() THEN
-          (* we cleaned the impureCopy page, but still have more to clean *)
-          <* ASSERT NOT desc[p - p0].gray *>
-        ELSIF desc[p - p0].gray THEN
-          <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
-          (* We just finished the collection!! *)
-          FillPool(impureCopy);
-          impureCopy.page  := Nil;
-          impureCopy.stack := Nil;
-          FOR i := 0 TO PageCount(p) - 1 DO
-            desc[p + i - p0].gray := FALSE;
-          END;
-          IF desc[p - p0].generation = Generation.Older THEN
-            <* ASSERT desc[p - p0].note # Note.AmbiguousRoot *>
-            <* ASSERT desc[p - p0].space = Space.Current *>
-            Protect(p, Mode.ReadOnly);
-          END;
-          IF perfOn THEN PerfChange(p, 1); END;
-        END;
-        CollectorOff();
-      END;
-
-    END; (* WITH *)
-
-    RTOS.UnlockHeap();
-    RETURN;			       (* was protected, protection cleared *)
+    RTOS.UnlockHeap ();
+    RETURN;
   END CheckLoadTracedRef;
 
 PROCEDURE CheckStoreTraced (ref: REFANY) =
-  VAR
-    p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
-    h := HeaderOf (LOOPHOLE(ref, RefReferent));
+  VAR p : INTEGER := Word.RightShift (LOOPHOLE(ref, INTEGER), LogBytesPerPage);
   BEGIN
-    h.dirty := TRUE;
-    IF NOT generational THEN RETURN END;
-
     RTOS.LockHeap ();
-    <* ASSERT (p0 <= p) AND (p < p1) *>
+    INC(checkStoreTraced);
 
-    INC(countCheckStoreTraced);
-
-    WITH pd = desc[p - p0] DO
-
-      <* ASSERT pd.space # Space.Unallocated *>
-
-      IF NOT pd.protected THEN
-        RTOS.UnlockHeap();
-        RETURN;				 (* was protected, but not any more *)
+    WITH hdr = HeaderOf (LOOPHOLE(ref, RefReferent)), h = hdr^ DO
+      <*ASSERT h.typecode # RT0.TextLitTypecode*>
+      <*ASSERT NOT h.gray*>
+      IF h.dirty THEN
+        <*ASSERT desc[p - p0].dirty*>
+        RTOS.UnlockHeap();		 (* was clean, but not any more *)
+        RETURN;
       END;
-
-      <* ASSERT NOT pd.continued *>
-      <* ASSERT NOT pd.pure *>
-      IF p # impureCopy.page THEN
-        <* ASSERT NOT pd.gray *>
-      ELSE
-        <* ASSERT pd.gray *>
-        CollectorOn ();
-        (* only partly clean *)
-        <* ASSERT NOT h.gray *>
-        IF CopySome() THEN
-          (* we cleaned the impureCopy page, but still have more to clean *)
-          <* ASSERT NOT desc[p - p0].gray *>
-        ELSIF desc[p - p0].gray THEN
-          <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
-          (* We just finished the collection!! *)
-          FillPool(impureCopy);
-          impureCopy.page  := Nil;
-          impureCopy.stack := Nil;
-          FOR i := 0 TO PageCount(p) - 1 DO
-            desc[p + i - p0].gray := FALSE;
-          END;
-        END;
-        CollectorOff ();
+      FOR i := 0 TO PageCount(p) - 1 DO
+        desc[p + i - p0].dirty := TRUE;
       END;
-    END; (* WITH *)
-
-    <* ASSERT desc[p - p0].generation = Generation.Older *>
-    Protect(p, Mode.ReadWrite);
+      h.dirty := TRUE;
+      hdr^ := h;
+    END;
 
     RTOS.UnlockHeap();
-    RETURN;			       (* was protected, protection cleared *)
+    RETURN;
   END CheckStoreTraced;
 
 PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
@@ -2516,13 +2473,7 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
         RETURN FALSE;              (* not in heap *)
       END;
 
-      IF NOT pd.protected THEN
-        RTOS.UnlockHeap();
-        RETURN TRUE;               (* was protected, but not any more *)
-      END;
-
       <* ASSERT NOT pd.pure *>
-
       IF pd.gray THEN
         INC(countFaultGray);
         CollectorOn();
@@ -2537,26 +2488,20 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
           FillPool(impureCopy);
           impureCopy.page  := Nil;
           impureCopy.stack := Nil;
-          FOR i := 0 TO PageCount(p) - 1 DO
-            desc[p + i - p0].gray := FALSE;
-          END;
+          desc[p - p0].gray := FALSE;
           IF desc[p - p0].generation = Generation.Older THEN
             <* ASSERT desc[p - p0].note # Note.AmbiguousRoot *>
             <* ASSERT desc[p - p0].space = Space.Current *>
-            Protect(p, Mode.ReadOnly);
+            Protect(p, 1, Mode.ReadOnly);
           END;
           IF perfOn THEN PerfChange(p, 1); END;
         END;
         CollectorOff();
-      ELSIF NOT pd.continued THEN
+      ELSIF NOT pd.dirty THEN
         INC(countFaultOlder);
         <* ASSERT pd.generation = Generation.Older *>
-        Protect(p, Mode.ReadWrite);
-      ELSE
-        INC(countFaultOlder);
-        p := FirstPage(p);
-        <* ASSERT desc[p - p0].generation = Generation.Older *>
-        Protect(p, Mode.ReadWrite);
+        IF pd.continued THEN p := FirstPage(p) END;
+        DirtyPage(p);
       END;
 
     END; (* WITH *)
@@ -3051,8 +2996,8 @@ PROCEDURE GetGCRatio () =
 VAR
   minorCollections := 0;                 (* the number of minor GCs begun *)
   majorCollections := 0;		 (* the number of major GCs begun *)
-  countCheckLoadTracedRef := 0;
-  countCheckStoreTraced := 0;
+  checkLoadTracedRef := 0;
+  checkStoreTraced := 0;
   countFault, countFaultGray, countFaultOlder := 0;
   tStamps: ARRAY [0..1048575] OF Time.T;
   tsIndex := -1;
@@ -3062,8 +3007,8 @@ PROCEDURE StartBench() =
   BEGIN
     majorCollections := 0;
     minorCollections := 0;
-    countCheckLoadTracedRef := 0;
-    countCheckStoreTraced := 0;
+    checkLoadTracedRef := 0;
+    checkStoreTraced := 0;
     countFault := 0;
     countFaultGray := 0;
     countFaultOlder := 0;
@@ -3096,9 +3041,9 @@ PROCEDURE FinishBench() =
     RTIO.PutInt(minorCollections); RTIO.PutText(" partial)\n");
 
     RTIO.PutText("Slow path inc barriers: ");
-    RTIO.PutInt(countCheckLoadTracedRef);
+    RTIO.PutInt(checkLoadTracedRef);
     RTIO.PutText("\nSlow path gen barriers: ");
-    RTIO.PutInt(countCheckStoreTraced);
+    RTIO.PutInt(checkStoreTraced);
     RTIO.PutText("\nVM faults: ");
     RTIO.PutInt(countFault);
     RTIO.PutText(" (gray: ");

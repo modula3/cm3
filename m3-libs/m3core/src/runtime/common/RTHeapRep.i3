@@ -71,7 +71,7 @@ TYPE
            pure      : BITS 1 FOR BOOLEAN;
            note      : BITS 3 FOR Note;
            gray      : BITS 1 FOR BOOLEAN;
-           protected : BITS 1 FOR BOOLEAN;
+           dirty     : BITS 1 FOR BOOLEAN;
            continued : BITS 1 FOR BOOLEAN;
            link: BITS BITSIZE(ADDRESS) - LogAdrPerPage FOR Page := Nil;
          END;
@@ -202,21 +202,21 @@ CONST
   NewPool = AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Allocated, gray := FALSE,
-                  protected := FALSE, continued := FALSE },
+                  dirty := TRUE, continued := FALSE },
     notAfter := Notes {Note.Copied} };
 
 VAR (* LL >= LockHeap *)
   pureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := TRUE, note := Note.Copied, gray := FALSE,
-                  protected := FALSE, continued := FALSE },
+                  dirty := TRUE, continued := FALSE },
     notAfter := Notes {Note.Allocated} };
 
 VAR (* LL >= LockHeap *)
   impureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Copied, gray := TRUE,
-                  protected := FALSE, continued := FALSE },
+                  dirty := FALSE, continued := FALSE },
     notAfter := Notes {Note.Allocated} };
 
 (****** MODULE OBJECTS ******)
