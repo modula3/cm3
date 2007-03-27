@@ -36,7 +36,7 @@ VAR
 PROCEDURE CounterOf (d: Desc): Counter =
   BEGIN
     RETURN counterOf[
-             d.space, d.generation, d.pure, d.note, d.gray, d.protected];
+             d.space, d.generation, d.pure, d.note, d.gray, d.dirty];
   END CounterOf;
 
 (*---------------------------------------------------------------- colors ---*)
@@ -62,13 +62,13 @@ PROCEDURE CounterOf (d: Desc): Counter =
 
 VAR
   rgb: ARRAY Space, Generation, BOOLEAN (* pure *), Note,
-         BOOLEAN (* gray *), BOOLEAN (* protected *) OF
+         BOOLEAN (* gray *), BOOLEAN (* dirty *) OF
          Color.T;
   tint: ARRAY Space, Generation, BOOLEAN (* pure *), Note,
-          BOOLEAN (* gray *), BOOLEAN (* protected *) OF
+          BOOLEAN (* gray *), BOOLEAN (* dirty *) OF
           PaintOp.T;
   counterOf: ARRAY Space, Generation, BOOLEAN (* pure *), Note,
-          BOOLEAN (* gray *), BOOLEAN (* protected *) OF
+          BOOLEAN (* gray *), BOOLEAN (* dirty *) OF
           Counter;
   mapBackGround := ComputeColor("LightLightGray");
   red           := ComputeColor("Red");
@@ -92,91 +92,90 @@ PROCEDURE InitColors () =
         FOR pure := FIRST(BOOLEAN) TO LAST(BOOLEAN) DO
           FOR note := FIRST(Note) TO LAST(Note) DO
             FOR gray := FIRST(BOOLEAN) TO LAST(BOOLEAN) DO
-              FOR protected := FIRST(BOOLEAN) TO LAST(BOOLEAN) DO
+              FOR dirty := FIRST(BOOLEAN) TO LAST(BOOLEAN) DO
                 CASE space OF
                 | Space.Unallocated =>
-                    rgb[space, generation, pure, note, gray, protected] :=
+                    rgb[space, generation, pure, note, gray, dirty] :=
                       Color.T{0.0, 0.0, 0.0};
                     counterOf[
-                      space, generation, pure, note, gray, protected] :=
+                      space, generation, pure, note, gray, dirty] :=
                       Counter.None;
                 | Space.Free =>
-                    rgb[space, generation, pure, note, gray, protected] :=
+                    rgb[space, generation, pure, note, gray, dirty] :=
                       Color.T{1.0, 1.0, 1.0};
                     counterOf[
-                      space, generation, pure, note, gray, protected] :=
+                      space, generation, pure, note, gray, dirty] :=
                       Counter.None;
                 | Space.Previous =>
-                    rgb[space, generation, pure, note, gray, protected] :=
+                    rgb[space, generation, pure, note, gray, dirty] :=
                       Color.T{0.25, 0.25, 0.25};
                     counterOf[
-                      space, generation, pure, note, gray, protected] :=
+                      space, generation, pure, note, gray, dirty] :=
                       Counter.None;
                 | Space.Current =>
                     CASE note OF
                     | Note.Allocated =>
-                        rgb[space, generation, pure, note, gray, protected] :=
+                        rgb[space, generation, pure, note, gray, dirty] :=
                           Color.T{0.730, 0.730, 1.0};
                         counterOf[
-                          space, generation, pure, note, gray, protected] :=
+                          space, generation, pure, note, gray, dirty] :=
                           Counter.New;
                     | Note.Copied, Note.Large =>
                         IF gray THEN
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{1.0, 0.343, 0.343};
                         ELSE
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{0.75, 0.421, 0.421};
                         END;
                         counterOf[
-                          space, generation, pure, note, gray, protected] :=
+                          space, generation, pure, note, gray, dirty] :=
                           Counter.Copied;
                     | Note.AmbiguousRoot =>
                         IF gray THEN
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{0.0, 0.812, 0.0};
                         ELSE
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{0.275, 0.676, 0.275};
                         END;
                         counterOf[
-                          space, generation, pure, note, gray, protected] :=
+                          space, generation, pure, note, gray, dirty] :=
                           Counter.Immobile;
                     | Note.Frozen =>
                         IF gray THEN
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{0.0, 0.812, 0.0};
                         ELSE
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{0.275, 0.676, 0.275};
                         END;
                         counterOf[
-                          space, generation, pure, note, gray, protected] :=
+                          space, generation, pure, note, gray, dirty] :=
                           Counter.Immobile;
                     | Note.OlderGeneration =>
                         IF gray THEN
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{1.0, 0.198, 1.0};
                         ELSE
                           rgb[
-                            space, generation, pure, note, gray, protected] :=
+                            space, generation, pure, note, gray, dirty] :=
                             Color.T{0.725, 0.225, 0.725};
                         END;
                         counterOf[
-                          space, generation, pure, note, gray, protected] :=
+                          space, generation, pure, note, gray, dirty] :=
                           Counter.Older;
                     END;
                 END;
-                WITH rgb = rgb[space, generation, pure, note, gray,
-                               protected] DO
-                  tint[space, generation, pure, note, gray, protected] :=
+                WITH rgb = rgb[space, generation, pure, note, gray, dirty] DO
+                  tint[space, generation, pure, note, gray, dirty] :=
                     PaintOp.FromRGB(rgb.r, rgb.g, rgb.b);
                 END;
               END;
@@ -281,8 +280,8 @@ PROCEDURE RepaintHeapMap (                    self: HeapMapVBT;
     p       := 0;
     nbPages := lastPage - firstPage + 1;
     square  := self.firstSquare;
-  BEGIN                          (* Fill the map with the background
-                                    color *)
+  BEGIN
+    (* Fill the map with the background color *)
     VBT.PaintTint(self, self.rect, mapBackGround);
 
     (* redisplay each page *)
@@ -298,7 +297,7 @@ PROCEDURE RepaintHeapMap (                    self: HeapMapVBT;
             IF NOT d.continued THEN INC(sq.west, 2); END;
             VBT.PaintTint(self, square, white);
             VBT.PaintTint(self, sq, tint[d.space, d.generation, d.pure,
-                                         d.note, d.gray, d.protected]);
+                                         d.note, d.gray, d.dirty]);
           END;
         END;
         INC(p);
@@ -327,7 +326,7 @@ PROCEDURE RepaintOnePage (self: HeapMapVBT; page: Page) =
     VBT.PaintTint(self, square, white);
     VAR
       d := desc[p];
-      t := tint[d.space, d.generation, d.pure, d.note, d.gray, d.protected];
+      t := tint[d.space, d.generation, d.pure, d.note, d.gray, d.dirty];
       sq := square;
     BEGIN
       INC(sq.north, 1);
