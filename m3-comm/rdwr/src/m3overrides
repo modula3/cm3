@@ -1,4 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("tcp", ROOT & "/m3-comm")
-override ("netobj", ROOT & "/m3-comm")
-

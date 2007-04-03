@@ -1,4 +1,0 @@
-
-% This is still untested! It is not known if any wrappers are needed for
-% this target platform right now, but probably not.
-% c_source("sysdeps")
