@@ -314,6 +314,7 @@ PROCEDURE Mouse (ch: T; READONLY cd: VBT.MouseRec) =
                 AddLog(prev, log, next, FALSE);
                 VBTRep.Redisplay()
               END;
+              Thread.Pause(0.25D0);
             END;
           END
         EXCEPT
