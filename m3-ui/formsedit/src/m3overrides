@@ -1,8 +1,0 @@
-
-%% M3_FRONT_FLAGS += "-vsdebug"
-
-%% override ("libm3", "N:\\m3-libs")
-override ("ui", "N:\\m3-ui")
-override ("vbtkit", "N:\\m3-ui")
-
-build_standalone ()
