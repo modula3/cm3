@@ -71,11 +71,13 @@
       <br>
       <a href="#p_6">6 Release 5.4.X</a><br>
       &nbsp;&nbsp;
-      <a href="#p_6_1">6.1 Segmentation violations on Fedora Core Linux</a><br>
+      <a href="#p_6_1">6.1 Segmentation violations on Linux, compile fails with PklFonts core dumping</a><br>
       &nbsp;&nbsp;
       <a href="#p_6_2">6.2 Unresolved X11 libraries on NetBSD</a><br>
       &nbsp;&nbsp;
       <a href="#p_6_3">6.3 Issues with /usr/bin/ld on Solaris</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_6_4">6.4 asm/ipc.h not found on Linux</a><br>
     </p>
 
     <a name="p_1">
@@ -823,16 +825,20 @@ Abort</pre>
 
     <a name="p_6_1">
     <h4>
-      6.1 Segmentation violations on Fedora Core Linux
+      6.1 Segmentation violations on Linux, compile fails with PklFonts core dumping
     </h4>
 
     <p>
-      <b>Platforms:</b> Fedora Core Linux, maybe other distributions
+      <b>Platforms:</b> Fedora Core Linux, Ubuntu and possibly other distributions
     </p>
 
     <p>
     <b>Description:</b> All Modula3 programs (including cm3 itself)
-    exit with a segmentation violation.
+    exit with a segmentation violation. The bootstrap process aborts with:
+    <pre>
+      cd ../pkl-fonts/LINUXLIBC6 && ./PklFonts > FontData.pkl
+      Segmentation fault (core dumped)
+    </pre>
     </p>
 
     <p>
@@ -883,6 +889,46 @@ Abort</pre>
     <p>
       <b>Solution:</b> Make sure that /usr/local/bin/ld is GNU ld.
     </p>
+
+    <a name="p_6_4">
+    <h4>
+      6.4 asm/ipc.h not found on Linux
+    </h4>
+
+    <p>
+      <b>Platforms:</b> Ubuntu 6.10 (edgy), possibly other distributions.
+    </p>
+
+    <p>
+      <b>Description:</b>
+      The compiler complains about a missing asm/ipc.h
+      like this:
+      <pre>
+ new source -> compiling RTVM.c
+ new source -> compiling sysdeps.c
+ ../src/runtime/LINUXLIBC6/sysdeps.c:20:21: error: asm/ipc.h: No such
+ file or directory
+ compilation failed => not building library "libm3gcdefs.a"
+ Fatal Error: package build failed
+ *** execution of  failed ***</pre>
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      Frankly, asm/ipc.h is not needed to compile. It is sufficient to delete
+      or comment the lines 19-21 in file
+      m3-libs/m3gc-simple/src/runtime/LINUXLIBC6/sysdeps.c like this:
+
+      <pre>
+ // #if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
+ // #include &lt;asm/ipc.h&gt;
+ // #endif
+      </pre>
+
+      This change has been committed to the repository, but it was too
+      late to be included in the 5.4.0 release.
+    </p>
+
 
     <!--
     <h4></h4>
