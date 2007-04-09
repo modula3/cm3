@@ -24,7 +24,7 @@
     <h3>Package</h3>
     <p>
       A <i>package</i> in CM3-speak is a software component of the
-      CM3 system. Packages are devided into categories.
+      CM3 system. Packages are divided into categories.
       The top-level directory of the CM3 source tree contains
       a lot of directories representing these categories.
     </p>
@@ -52,12 +52,12 @@
     <p>
     Yes, <i>Quake</i>. Although this term has been overloaded for a while
     by a very popular video game, CM3 stuck to the name <i>quake</i>
-      for its built-in scripting language for bulid management
+      for its built-in scripting language for build management
       (replacing the UNIX make program).
     </p>
 
     <p>
-    CM3 reads and understand so-called <i>m3makefiles</i>. These files
+    CM3 reads and understands so-called <i>m3makefiles</i>. These files
       have a similar purpose as Makefiles processed by UNIX make.
       This is part of the reason why installing CM3 is quite different
       from installing other software on a UNIX system - other software
@@ -77,7 +77,7 @@
     </p>
 
     <hr>
-    <h2>Installation Prerequisits</h2>
+    <h2>Installation Prerequisites</h2>
 
     <h3>Check the list of known problems</h3>
     <p>
@@ -207,6 +207,11 @@
     <h2>Performing the installation</h2>
 
     <h3>Unpacking the archive</h3>
+
+     <p>
+     <b>WARNING:</b> The archive unpacks into the <b>current</b> directory!
+     </p>
+
      <p>
      Once you have got the binary installation package, create a
      new temporary directory (for example, /tmp/cm3), change into it,
@@ -452,6 +457,11 @@
     needed source distribution archives there. Here are example
     commands for UNIX-like systems:
     </p>
+
+    <p>
+    <b>WARNING:</b> The archives unpack into the <b>current</b> directory!
+    </p>
+
     <pre>
     mkdir cm3
     cd cm3
