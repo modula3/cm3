@@ -649,12 +649,12 @@ PROCEDURE ClosePool (VAR pool: AllocPool) =
   BEGIN
     <* ASSERT pool.desc.note = Note.Allocated *>
     <* ASSERT NOT pool.busy *>
-    pool.busy := TRUE;
+    RTOS.LockHeap();
     FillPool(pool);
     IF pool.page # Nil THEN BumpCnts(pool.page) END;
     pool.page := Nil;
     pool.stack := Nil;
-    pool.busy := FALSE;
+    RTOS.UnlockHeap();
   END ClosePool;
 
 PROCEDURE FillPool (VAR p: AllocPool) =
@@ -1511,8 +1511,8 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
         BumpCnts(oldPage);
       END;
 
-      pool.busy := TRUE;
       RTOS.UnlockHeap();
+      pool.busy := TRUE;
       RETURN res;
     END;
 
@@ -1585,6 +1585,11 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     (* allocate the object from the new page *)
     newPtr := LOOPHOLE(res + dataSize, RefHeader);
 
+    (* set up as filler in case of GC before it can be initialized *)
+    WITH ptr = LOOPHOLE(res - ADRSIZE(Header), RefHeader) DO
+      InsertFiller(ptr, newPtr - ptr);
+    END;
+
     (* mark the new pages *)
     VAR pd := pool.desc;
     BEGIN
@@ -1622,6 +1627,7 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
   END LongAlloc;
 
 PROCEDURE BumpCnts (p: Page) =
+  (* LL >= RTOS.LockHeap *)
   VAR
     h  := PageToHeader(p);
     he := PageToHeader(p + 1);
@@ -1629,7 +1635,6 @@ PROCEDURE BumpCnts (p: Page) =
     def: TypeDefn;
     size: INTEGER;
   BEGIN
-    RTOS.LockHeap();
     WHILE h < he DO
       (* increment the allocation counts *)
       tc := h.typecode;
@@ -1655,7 +1660,6 @@ PROCEDURE BumpCnts (p: Page) =
       END;
       INC(h, ADRSIZE(Header) + size);
     END;
-    RTOS.UnlockHeap();
   END BumpCnts;
 
 (*--------------------------------------------------*)
