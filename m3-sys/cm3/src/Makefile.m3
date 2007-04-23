@@ -90,6 +90,7 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
     END Emit;
 
   BEGIN
+    Msg.Debug( "Build(", src_dir, ")", Wr.EOL );
     s.args := Arg.NewList ();
     s.prepend_files := NEW(TextSeq.T).init();
     s.append_files := NEW(TextSeq.T).init();

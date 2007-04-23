@@ -74,9 +74,27 @@ PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
 PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
-    IF (b # NIL) THEN a := Pathname.Join (a, b, NIL); END;
-    IF (c # NIL) THEN a := Pathname.Join (a, c, NIL); END;
-    IF (d # NIL) THEN a := Pathname.Join (a, d, NIL); END;
+    IF (b # NIL) THEN
+      IF Pathname.Absolute (b) THEN
+        a := b;
+      ELSE
+        a := Pathname.Join (a, b, NIL);
+      END;
+    END;
+    IF (c # NIL) THEN
+      IF Pathname.Absolute (c) THEN
+        a := c;
+      ELSE
+        a := Pathname.Join (a, c, NIL);
+      END;
+    END;
+    IF (d # NIL) THEN
+      IF Pathname.Absolute (d) THEN
+        a := d;
+      ELSE
+        a := Pathname.Join (a, d, NIL);
+      END;
+    END;
     len := Text.Length (a);
     IF (len <= NUMBER (buf)) THEN
       Text.SetChars (buf, a);
