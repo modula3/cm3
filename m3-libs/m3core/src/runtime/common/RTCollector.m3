@@ -16,11 +16,11 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 
 IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
-IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError, RTAllocCnts;
+IMPORT Word, Thread, ThreadF, RuntimeError, RTAllocCnts;
 IMPORT TextLiteral AS TextLit, RTLinker, Convert;
 IMPORT Scheduler, Time;
 
-FROM RT0 IMPORT Typecode, TypeDefn;
+FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
 FROM Text IMPORT Length, GetChar, SetChars;
 TYPE TK = RT0.TypeKind;
 
@@ -333,7 +333,7 @@ PROCEDURE TextLitSize (h: RefHeader): CARDINAL =
   END TextLitSize;
     
 
-PROCEDURE OpenArraySize (h: RefHeader; def: RT0.TypeDefn): CARDINAL =
+PROCEDURE OpenArraySize (h: RefHeader; adef: RT0.ArrayTypeDefn): CARDINAL =
 (* The referent is an open array; it has the following layout:
 |     pointer to the elements (ADDRESS)
 |     size 1
@@ -346,7 +346,6 @@ PROCEDURE OpenArraySize (h: RefHeader; def: RT0.TypeDefn): CARDINAL =
    and each size is the number of elements along the dimension. *)
 
   VAR
-    adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
     res: INTEGER;
     sizes: UNTRACED REF INTEGER := h + ADRSIZE(Header) + ADRSIZE(ADDRESS);
                                                          (* ^ elt pointer*)
@@ -357,7 +356,7 @@ PROCEDURE OpenArraySize (h: RefHeader; def: RT0.TypeDefn): CARDINAL =
       INC(sizes, ADRSIZE(sizes^));
     END;
     res := res * adef.elementSize;
-    res := RTMisc.Upper(res + def.dataSize, BYTESIZE(Header));
+    res := RTMisc.Upper(res + adef.common.dataSize, BYTESIZE(Header));
     RETURN res;
   END OpenArraySize;
 
@@ -384,7 +383,7 @@ PROCEDURE ReferentSize (h: RefHeader): CARDINAL =
     END;
 
     (* Otherwise, the referent is an open array *)
-    RETURN OpenArraySize(h, def);
+    RETURN OpenArraySize(h, LOOPHOLE(def, RT0.ArrayTypeDefn));
   END ReferentSize;
 
 (* The convention about page numbering allows for a simple conversion from
@@ -473,9 +472,6 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       ELSE
         np := AllocCopy(dataSize, def.dataAlignment, impureCopy);
         gray := TRUE;
-      END;
-      IF (np = NIL) THEN
-        RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
       END;
       WITH nh = HeaderOf(np) DO
         RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
@@ -1452,23 +1448,13 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
     RETURN s.xA = s.x0;
   END StackEmpty;
 
-(* Allocate space in the untraced heap *)
-
-PROCEDURE AllocUntraced (size: INTEGER): ADDRESS =
-  VAR res: ADDRESS;
-  BEGIN
-    RTOS.LockHeap();
-      res := Cstdlib.malloc(size);
-    RTOS.UnlockHeap();
-    RETURN res;
-  END AllocUntraced;
-
 (* Allocate space in the traced heap for NEW or collector copies *)
 
 PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
+                       initProc: TypeInitProc;
                        VAR pool: AllocPool): RefReferent =
   (* Allocates space from "pool" in the traced heap. *)
-  (* LL >= 0 *)
+  (* LL = 0 *)
   VAR
     res       : ADDRESS := pool.next + ADRSIZE(Header);
     cur_align : INTEGER := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
@@ -1478,6 +1464,7 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
     n_bytes   : CARDINAL;
     n_pages   : CARDINAL;
   BEGIN
+    <*ASSERT pool.busy*>
     IF nextPtr > pool.limit THEN
       (* not enough space left in the pool, take the long route *)
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
@@ -1496,8 +1483,6 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       n_bytes := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
       n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
       res := LongAlloc (n_pages, dataSize, dataAlignment, pool);
-      IF res = NIL THEN RTOS.UnlockHeap(); RETURN NIL; END;
-
       INC(n_new, n_pages);
       IF oldPage = pool.page THEN
         (* we filed the new page *)
@@ -1510,6 +1495,10 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
         (* we filed the old page *)
         BumpCnts(oldPage);
       END;
+
+      LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
+          Header{typecode := def.typecode};
+      IF initProc # NIL THEN initProc (res) END;
 
       RTOS.UnlockHeap();
       pool.busy := TRUE;
@@ -1524,13 +1513,16 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
     END;
 
     pool.next := nextPtr;
+    LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
+        Header{typecode := def.typecode};
+    IF initProc # NIL THEN initProc (res) END;
     RETURN res;
   END AllocTraced;
 
 PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
   (* Allocates space from "pool" in the traced heap. *)
-  (* LL >= 0 *)
+  (* LL >= RTOS.LockHeap *)
   VAR
     res       : ADDRESS := pool.next + ADRSIZE(Header);
     cur_align : INTEGER := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
@@ -1544,7 +1536,6 @@ PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
       n_bytes := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
       n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
       res := LongAlloc (n_pages, dataSize, dataAlignment, pool);
-      IF res = NIL THEN RETURN NIL END;
       INC(n_copied, n_pages);
       RETURN res;
     END;
@@ -1571,7 +1562,10 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     newPtr   := LOOPHOLE (newPage * AdrPerPage, ADDRESS);
     newLimit := LOOPHOLE (newPtr  + AdrPerPage, ADDRESS);
   BEGIN
-    IF (newPage = Nil) THEN RETURN NIL; END;
+    IF (newPage = Nil) THEN
+      RTOS.UnlockHeap();
+      RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+    END;
 
     <*ASSERT NOT pool.busy*>
     <*ASSERT initialized*>
@@ -1584,11 +1578,6 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
 
     (* allocate the object from the new page *)
     newPtr := LOOPHOLE(res + dataSize, RefHeader);
-
-    (* set up as filler in case of GC before it can be initialized *)
-    WITH ptr = LOOPHOLE(res - ADRSIZE(Header), RefHeader) DO
-      InsertFiller(ptr, newPtr - ptr);
-    END;
 
     (* mark the new pages *)
     VAR pd := pool.desc;
@@ -1654,7 +1643,7 @@ PROCEDURE BumpCnts (p: Page) =
           size := def.dataSize;
           RTAllocCnts.BumpCnt(tc);
         ELSE
-          size := OpenArraySize(h, def);
+          size := OpenArraySize(h, LOOPHOLE(def, RT0.ArrayTypeDefn));
           RTAllocCnts.BumpSize(tc, size);
         END;
       END;

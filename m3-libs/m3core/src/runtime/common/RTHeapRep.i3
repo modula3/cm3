@@ -19,7 +19,7 @@ INTERFACE RTHeapRep;
    elsewhere. *)
 
 IMPORT RT0, RTHeapDep;
-FROM RT0 IMPORT Typecode, TypeDefn;
+FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
 
 (* The allocator and collector maintain two heaps of objects.  One heap is
    "traced" (its objects are collected); the other is "untraced".
@@ -162,11 +162,8 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
-PROCEDURE AllocUntraced (size: INTEGER): ADDRESS;
-(* Return the address of "size" bytes of untraced, un-zeroed storage,
-   if possible.  Otherwise, return "NIL".  *)
-
 PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
+                       initProc: TypeInitProc;
                        VAR pool: AllocPool): ADDRESS;
 (* Return the address of "size" bytes of traced storage on an
    "alignment" byte boundary from the allocation pool "pool".
