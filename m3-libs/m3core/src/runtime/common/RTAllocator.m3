@@ -28,42 +28,62 @@ TYPE
 
 PROCEDURE NewTraced(tc: Typecode): REFANY
   RAISES {OutOfMemory} =
-  VAR res := GetTraced(RTType.Get(tc));
   BEGIN
-    IF (res = NIL) THEN RAISE OutOfMemory; END;
-    RETURN res;
+    TRY
+      RETURN GetTraced(RTType.Get(tc));
+    EXCEPT RTE.E(v) =>
+      IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
+      ELSE RAISE RTE.E(v);
+      END;
+    END;
   END NewTraced;
 
 PROCEDURE NewUntraced(tc: Typecode): ADDRESS
   RAISES {OutOfMemory} =
-  VAR res := GetUntracedRef(RTType.Get(tc));
   BEGIN
-    IF (res = NIL) THEN RAISE OutOfMemory; END;
-    RETURN res;
+    TRY
+      RETURN GetUntracedRef(RTType.Get(tc));
+    EXCEPT RTE.E(v) =>
+      IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
+      ELSE RAISE RTE.E(v);
+      END;
+    END;
   END NewUntraced;
 
 PROCEDURE NewUntracedObject(tc: Typecode): UNTRACED ROOT
   RAISES {OutOfMemory} =
-  VAR res := GetUntracedObj(RTType.Get(tc));
   BEGIN
-    IF (res = NIL) THEN RAISE OutOfMemory; END;
-    RETURN res;
+    TRY
+      RETURN GetUntracedObj(RTType.Get(tc));
+    EXCEPT RTE.E(v) =>
+      IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
+      ELSE RAISE RTE.E(v);
+      END;
+    END;
   END NewUntracedObject;
 
 PROCEDURE NewTracedArray(tc: Typecode; READONLY s: Shape): REFANY
   RAISES {OutOfMemory} =
-  VAR res := GetOpenArray(RTType.Get(tc), s);
   BEGIN
-    IF (res = NIL) THEN RAISE OutOfMemory; END;
-    RETURN res;
+    TRY
+      RETURN GetOpenArray(RTType.Get(tc), s);
+    EXCEPT RTE.E(v) =>
+      IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
+      ELSE RAISE RTE.E(v);
+      END;
+    END;
   END NewTracedArray;
 
 PROCEDURE NewUntracedArray(tc: Typecode; READONLY s: Shape): ADDRESS
   RAISES {OutOfMemory} =
-  VAR res := GetUntracedOpenArray(RTType.Get(tc), s);
   BEGIN
-    IF (res = NIL) THEN RAISE OutOfMemory;  END;
-    RETURN res;
+    TRY
+      RETURN GetUntracedOpenArray(RTType.Get(tc), s);
+    EXCEPT RTE.E(v) =>
+      IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
+      ELSE RAISE RTE.E(v);
+      END;
+    END;
   END NewUntracedArray;
 
 PROCEDURE Clone (ref: REFANY): REFANY
@@ -97,39 +117,29 @@ PROCEDURE Clone (ref: REFANY): REFANY
 (*--------------------------------------------------------------- RTHooks ---*)
 
 PROCEDURE Allocate (defn: ADDRESS): REFANY =
-  VAR res := GetTraced(defn);
   BEGIN
-    IF (res = NIL) THEN  RAISE RTE.E (RTE.T.OutOfMemory);  END;
-    RETURN res;
+    RETURN GetTraced(defn);
   END Allocate;
 
 PROCEDURE AllocateUntracedRef (defn: ADDRESS): ADDRESS =
-  VAR res := GetUntracedRef(defn);
   BEGIN
-    IF (res = NIL) THEN  RAISE RTE.E (RTE.T.OutOfMemory);  END;
-    RETURN res;
+    RETURN GetUntracedRef(defn);
   END AllocateUntracedRef;
 
 PROCEDURE AllocateUntracedObj (defn: ADDRESS): UNTRACED ROOT =
-  VAR res := GetUntracedObj(defn);
   BEGIN
-    IF (res = NIL) THEN  RAISE RTE.E (RTE.T.OutOfMemory);  END;
-    RETURN res;
+    RETURN GetUntracedObj(defn);
   END AllocateUntracedObj;
 
 PROCEDURE AllocateOpenArray (defn: ADDRESS; READONLY s: Shape): REFANY =
-  VAR res := GetOpenArray(defn, s);
   BEGIN
-    IF (res = NIL) THEN  RAISE RTE.E (RTE.T.OutOfMemory);  END;
-    RETURN res;
+    RETURN GetOpenArray(defn, s);
   END AllocateOpenArray;
 
 PROCEDURE AllocateUntracedOpenArray (defn : ADDRESS;
                             READONLY s    : Shape): ADDRESS =
-  VAR res := GetUntracedOpenArray(defn, s);
   BEGIN
-    IF (res = NIL) THEN  RAISE RTE.E (RTE.T.OutOfMemory);  END;
-    RETURN res;
+    RETURN GetUntracedOpenArray(defn, s);
   END AllocateUntracedOpenArray;
 
 PROCEDURE DisposeUntracedRef (VAR a: ADDRESS) =
@@ -153,32 +163,63 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 (*-------------------------------------------------------------- internal ---*)
 
-PROCEDURE GetTraced (defn: ADDRESS): REFANY =
+PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
+  BEGIN
+    IF (def.kind # ORD(TK.Obj)) THEN
+      RETURN GetTracedRef (def);
+    ELSE
+      RETURN GetTracedObj (def);
+    END;
+  END GetTraced;
+
+PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR
-    def : RT0.TypeDefn := defn;
     tc  : Typecode := def.typecode;
     res : ADDRESS;
     pool:= ThreadF.MyAllocPool();
   BEGIN
-    IF (tc = 0) OR (def.traced = 0) OR (def.kind = ORD (TK.Array)) THEN
+    IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Ref)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
 
     pool.busy := TRUE;
     BEGIN
-      res := AllocTraced(def, def.dataSize, def.dataAlignment, pool^);
-      IF res = NIL THEN <*ASSERT NOT pool.busy*> RETURN NIL; END;
-      InitRef (res, def);
+      res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc, pool^);
+      <*ASSERT pool.busy*>
     END;
     pool.busy := FALSE;
 
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
-  END GetTraced;
+  END GetTracedRef;
 
-PROCEDURE GetUntracedRef (defn: ADDRESS): ADDRESS =
+PROCEDURE GetTracedObj (def: RT0.TypeDefn): REFANY =
+  PROCEDURE initProc (res: ADDRESS) =
+    BEGIN
+      InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
+    END initProc;
   VAR
-    def : RT0.TypeDefn := defn;
+    tc  : Typecode := def.typecode;
+    res : ADDRESS;
+    pool:= ThreadF.MyAllocPool();
+  BEGIN
+    IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Obj)) THEN
+      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+    END;
+
+    pool.busy := TRUE;
+    BEGIN
+      res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc, pool^);
+      <*ASSERT pool.busy*>
+    END;
+    pool.busy := FALSE;
+
+    IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
+    RETURN LOOPHOLE(res, REFANY);
+  END GetTracedObj;
+
+PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
+  VAR
     tc  : Typecode := def.typecode;
     res : ADDRESS;
   BEGIN
@@ -188,7 +229,10 @@ PROCEDURE GetUntracedRef (defn: ADDRESS): ADDRESS =
     RTOS.LockHeap();
     BEGIN
       res := Cstdlib.malloc(def.dataSize);
-      IF (res = NIL) THEN RTOS.UnlockHeap(); RETURN NIL; END;
+      IF (res = NIL) THEN
+        RTOS.UnlockHeap();
+        RAISE RTE.E(RTE.T.OutOfMemory);
+      END;
       BumpCnt (tc);
     END;
     RTOS.UnlockHeap();
@@ -197,10 +241,9 @@ PROCEDURE GetUntracedRef (defn: ADDRESS): ADDRESS =
     RETURN res;
   END GetUntracedRef;
 
-PROCEDURE GetUntracedObj (defn: ADDRESS): UNTRACED ROOT =
+PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
   (* NOTE: result requires special treatment by DisposeUntracedObj *)
   VAR
-    def     : RT0.TypeDefn := defn;
     hdrSize := MAX(BYTESIZE(Header), def.dataAlignment);
     tc      : Typecode := def.typecode;
     res     : ADDRESS;
@@ -211,66 +254,48 @@ PROCEDURE GetUntracedObj (defn: ADDRESS): UNTRACED ROOT =
     RTOS.LockHeap();
     BEGIN
       res := Cstdlib.malloc(hdrSize + def.dataSize);
-      IF (res = NIL) THEN RTOS.UnlockHeap(); RETURN NIL; END;
+      IF (res = NIL) THEN
+        RTOS.UnlockHeap();
+        RAISE RTE.E(RTE.T.OutOfMemory);
+      END;
+      res := res + hdrSize;
       BumpCnt (tc);
     END;
     RTOS.UnlockHeap();
-    res := res + hdrSize;
-    InitRef (res, def);
+    LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
+        Header{typecode := def.typecode};
+    InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
     RETURN res;
   END GetUntracedObj;
 
-PROCEDURE InitRef (res: ADDRESS;  def: RT0.TypeDefn) =
-  VAR hdr := LOOPHOLE(res - ADRSIZE(Header), RefHeader);
+PROCEDURE InitObj (res: ADDRESS;  def: RT0.ObjectTypeDefn) =
   BEGIN
-    hdr^ := RT0.RefHeader {};
-    hdr.typecode := def.typecode;
-    IF (def.kind = ORD(TK.Obj)) THEN
-      VAR objdef := LOOPHOLE (def, RT0.ObjectTypeDefn);
-      BEGIN
-        LOOPHOLE(res, UNTRACED REF ADDRESS)^ := objdef.defaultMethods;
-        WHILE objdef # NIL DO
-          IF objdef.common.initProc # NIL THEN objdef.common.initProc(res); END;
-          IF objdef.common.kind # ORD (TK.Obj) THEN EXIT; END;
-          objdef := LOOPHOLE (objdef.parent, RT0.ObjectTypeDefn);
-        END;
-      END;
-    ELSE
-      IF def.initProc # NIL THEN def.initProc(res); END;
+    LOOPHOLE(res, UNTRACED REF ADDRESS)^ := def.defaultMethods;
+    WHILE def # NIL DO
+      IF def.common.initProc # NIL THEN def.common.initProc(res); END;
+      IF def.common.kind # ORD (TK.Obj) THEN EXIT; END;
+      def := LOOPHOLE (def.parent, RT0.ObjectTypeDefn);
     END;
-  END InitRef;
-
-TYPE
-  ArrayInfo = RECORD
-    def        : RT0.ArrayTypeDefn;
-    alignment  : INTEGER;
-    nDataBytes : INTEGER;
-    nBytes     : INTEGER;
-    tc         : Typecode;
-  END;
+  END InitObj;
 
 PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
+  PROCEDURE initProc (res: ADDRESS) =
+    BEGIN
+      InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
+    END initProc;
   VAR
-    res: ADDRESS;
-    info: ArrayInfo;
-    pool:= ThreadF.MyAllocPool();
+    tc    : Typecode := def.typecode;
+    res   : ADDRESS;
+    pool := ThreadF.MyAllocPool();
   BEGIN
-    GetArrayInfo (def, s, info, TRUE);
+    IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD(TK.Array)) THEN
+      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+    END;
 
     pool.busy := TRUE;
-    BEGIN
-      res := AllocTraced(def, info.nBytes, info.alignment, pool^);
-      IF res = NIL THEN <*ASSERT NOT pool.busy*> RETURN NIL; END;
-      LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-        Header{typecode := info.tc, forwarded := FALSE};
-      WITH data_start = res + info.def.common.dataSize DO
-        LOOPHOLE(res, UNTRACED REF ADDRESS)^ := data_start;
-      END;
-      FOR i := 0 TO NUMBER(s) - 1 DO
-        LOOPHOLE(res + ADRSIZE(ADDRESS) + i * ADRSIZE(INTEGER),
-                 UNTRACED REF INTEGER)^ := s[i];
-      END;
-      IF info.def.common.initProc # NIL THEN info.def.common.initProc(res) END;
+    WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
+      res := AllocTraced(def, nBytes, def.dataAlignment, initProc, pool^);
+      <*ASSERT pool.busy*>
     END;
     pool.busy := FALSE;
 
@@ -278,54 +303,53 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
     RETURN LOOPHOLE(res, REFANY);
   END GetOpenArray;
 
-PROCEDURE GetUntracedOpenArray (defn: ADDRESS;  READONLY s: Shape): ADDRESS =
-  VAR res: ADDRESS;  info: ArrayInfo;
+PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
+  VAR
+    tc  : Typecode := def.typecode;
+    res : ADDRESS;
   BEGIN
-    GetArrayInfo (defn, s, info, FALSE);
+    IF (tc = 0) OR (def.traced # 0) OR (def.kind # ORD(TK.Array)) THEN
+      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+    END;
 
     RTOS.LockHeap();
-    BEGIN
-      res := Cstdlib.malloc(info.nBytes);
-      IF (res = NIL) THEN RTOS.UnlockHeap(); RETURN NIL; END;
-      BumpSize (info.tc, info.nBytes);
+    WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
+      res := Cstdlib.malloc(nBytes);
+      IF (res = NIL) THEN
+        RTOS.UnlockHeap();
+        RAISE RTE.E(RTE.T.OutOfMemory);
+      END;
+      RTMisc.Zero (res, nBytes);
+      BumpSize (def.typecode, nBytes);
     END;
     RTOS.UnlockHeap();
 
-    WITH data_start = res + info.def.common.dataSize DO
-      RTMisc.Zero(data_start, info.nDataBytes);
+    InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
+    RETURN res;
+  END GetUntracedOpenArray;
+
+PROCEDURE InitArray (res: ADDRESS; def: RT0.ArrayTypeDefn; READONLY s: Shape) =
+  BEGIN
+    WITH data_start = res + def.common.dataSize DO
       LOOPHOLE(res, UNTRACED REF ADDRESS)^ := data_start;
     END;
     FOR i := 0 TO NUMBER(s) - 1 DO
       LOOPHOLE(res + ADRSIZE(ADDRESS) + i * ADRSIZE(INTEGER),
                UNTRACED REF INTEGER)^ := s[i];
     END;
-    IF info.def.common.initProc # NIL THEN info.def.common.initProc(res); END;
-    RETURN res;
-  END GetUntracedOpenArray;
+    IF def.common.initProc # NIL THEN def.common.initProc(res) END;
+  END InitArray;
 
-PROCEDURE GetArrayInfo (def: RT0.TypeDefn;  READONLY s: Shape;
-                        VAR ai: ArrayInfo;  traced: BOOLEAN) =
+PROCEDURE ArraySize (def: RT0.ArrayTypeDefn;  READONLY s: Shape): CARDINAL =
   VAR n_elts := 1;  c: CARDINAL;
   BEGIN
-    ai.def        := LOOPHOLE (def, RT0.ArrayTypeDefn);
-    ai.tc         := def.typecode;
-    ai.alignment  := def.dataAlignment;
-
-    IF (def.typecode = 0)
-      OR (def.traced # ORD (traced))
-      OR (def.kind # ORD (TK.Array))
-      OR (NUMBER(s) # ai.def.nDimensions) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
-
     FOR i := 0 TO NUMBER(s) - 1 DO
       c := s[i];  (* force a range check *)
       n_elts := c * n_elts;
     END;
-
-    ai.nDataBytes := ai.def.elementSize * n_elts;
-    ai.nBytes     := RTMisc.Upper(def.dataSize + ai.nDataBytes, BYTESIZE(Header));
-  END GetArrayInfo;
+    RETURN RTMisc.Upper(def.common.dataSize + def.elementSize * n_elts,
+                        BYTESIZE(Header));
+  END ArraySize;
 
 (*---------------------------------------------------------- RTAllocCnts ---*)
 
