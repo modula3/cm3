@@ -968,17 +968,6 @@ PROCEDURE ResumeOthers () =
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
-PROCEDURE LookupActivation (pthread: pthread_t): Activation =
-  (* LL=activeMu *)
-  VAR act := allThreads;
-  BEGIN
-    REPEAT
-      IF Upthread.equal(pthread, act.handle) # 0 THEN RETURN act END;
-      act := act.next;
-    UNTIL act = allThreads;
-    RETURN NIL;
-  END LookupActivation;
-
 PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR act := allThreads;
@@ -1164,8 +1153,7 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
   VAR
     errno := Cerrno.GetErrno();
     xx: INTEGER;
-    self := Upthread.self();
-    me := LookupActivation(self);
+    me := GetActivation();
     myStopCount := stopCount;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
@@ -1190,8 +1178,7 @@ PROCEDURE RestartHandler (<*UNUSED*> sig: Ctypes.int;
                           <*UNUSED*> sip: Usignal.siginfo_t_star;
                           <*UNUSED*> uap: Uucontext.ucontext_t_star) =
   VAR
-    self := Upthread.self();
-    me := LookupActivation(self);
+    me := GetActivation();
   BEGIN
     me.signal := SIG_RESTART;
   END RestartHandler;
