@@ -1079,8 +1079,12 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
       (* No native suspend routine so signal thread to suspend *)
       WHILE act # me DO
         IF act.lastStopCount # stopCount THEN
-          WITH r = Upthread.kill(act.handle, SIG_SUSPEND) DO
-            <*ASSERT r=0*>
+          LOOP
+            WITH r = Upthread.kill(act.handle, SIG_SUSPEND) DO
+              IF r = 0 THEN EXIT END;
+              <*ASSERT r = Uerror.EAGAIN*>
+              (* try it again... *)
+            END;
           END;
           INC(nLive);
         END;
@@ -1142,7 +1146,13 @@ PROCEDURE StartWorld (me: Activation) =
     ELSE
       (* No native restart routine so signal thread to restart *)
       WHILE act # me DO
-        WITH r = Upthread.kill(act.handle, SIG_RESTART) DO <*ASSERT r=0*> END;
+        LOOP
+          WITH r = Upthread.kill(act.handle, SIG_RESTART) DO
+            IF r = 0 THEN EXIT END;
+            <*ASSERT r = Uerror.EAGAIN*>
+            (* try it again... *)
+          END;
+        END;
         act := act.next;
       END;
     END;
