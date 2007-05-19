@@ -77,8 +77,8 @@ TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 TYPE ThreadState = RECORD END;
 
 CONST
-  SIG_SUSPEND = Usignal.NSIG-1;
-  SIG_RESTART = Usignal.SIGXCPU;
+  SIG_SUSPEND = Usignal.NSIG-1;		 (* SIGRTMAX *)
+  SIG_RESTART = Usignal.NSIG-2;		 (* SIGRTMAX-1 *)
   SuspendThread: PROCEDURE(t: pthread_t) = NIL;
   RestartThread: PROCEDURE(t: pthread_t) = NIL;
   GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
