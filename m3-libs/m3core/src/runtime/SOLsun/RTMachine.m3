@@ -8,9 +8,10 @@ FROM Upthread IMPORT pthread_t;
 FROM Uucontext IMPORT stack_t;
 FROM Ctypes IMPORT int;
 
-PROCEDURE SuspendThread (t: pthread_t) =
+PROCEDURE SuspendThread (t: pthread_t): BOOLEAN =
   BEGIN
     WITH res = Uthread.suspend(t) DO <*ASSERT res = 0*> END;
+    RETURN TRUE;
   END SuspendThread;
 
 PROCEDURE RestartThread (t: pthread_t) =

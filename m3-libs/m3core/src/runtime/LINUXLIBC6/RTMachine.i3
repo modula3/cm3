@@ -78,8 +78,7 @@ TYPE ThreadState = RECORD END;
 
 CONST
   SIG_SUSPEND = Usignal.NSIG-1;		 (* SIGRTMAX *)
-  SIG_RESTART = Usignal.NSIG-2;		 (* SIGRTMAX-1 *)
-  SuspendThread: PROCEDURE(t: pthread_t) = NIL;
+  SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
   RestartThread: PROCEDURE(t: pthread_t) = NIL;
   GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
                       VAR state: ThreadState) = NIL;
