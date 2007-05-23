@@ -1042,12 +1042,15 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
       LOOP
         WHILE act # me DO
           IF act.running THEN
-            RTMachine.SuspendThread(act.handle);
-            IF act.newPool.busy THEN
-              RTMachine.RestartThread(act.handle);
-              INC(nLive);
+            IF RTMachine.SuspendThread(act.handle) THEN
+              IF act.newPool.busy THEN
+                RTMachine.RestartThread(act.handle);
+                INC(nLive);
+              ELSE
+                act.running := FALSE;
+              END;
             ELSE
-              act.running := FALSE;
+              INC(nLive);
             END;
           END;
           act := act.next;
@@ -1127,9 +1130,9 @@ PROCEDURE StopWorld (me: Activation) =
     RETRY_INTERVAL = 10000000;
   BEGIN
     (* RTIO.PutText("stopping");  RTIO.Flush(); *)
-    WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
     nLive := SuspendAll (me);
     IF nLive = 0 THEN RETURN END;
+    WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
     LOOP
       (* RTIO.PutText(".");  RTIO.Flush(); *)
       WITH r = Usem.getvalue(suspendAckSem, acks) DO <*ASSERT r=0*> END;
@@ -1159,9 +1162,9 @@ PROCEDURE StartWorld (me: Activation) =
     RETRY_INTERVAL = 10000000;
   BEGIN
     (* RTIO.PutText("starting");  RTIO.Flush(); *)
-    WITH r = Usem.init(restartAckSem, 0, 0) DO <*ASSERT r=0*> END;
     nDead := RestartAll (me);
     IF nDead = 0 THEN RETURN END;
+    WITH r = Usem.init(restartAckSem, 0, 0) DO <*ASSERT r=0*> END;
     LOOP
       (* RTIO.PutText(".");  RTIO.Flush(); *)
       WITH r = Usem.getvalue(restartAckSem, acks) DO <*ASSERT r=0*> END;
