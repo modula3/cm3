@@ -145,6 +145,9 @@ PROCEDURE killpg (pgrp, sig: int): int;
 <*EXTERNAL*>
 PROCEDURE sigpending (VAR set: sigset_t): int;
 
+(*** sigwait(2) - wait until a signal is posted ***)
+<*EXTERNAL*> PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
+
 (*** sigaction(2) - detailed signal management ***)
 
 <*EXTERNAL*>

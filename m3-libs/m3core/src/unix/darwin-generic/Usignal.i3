@@ -211,6 +211,9 @@ PROCEDURE sigismember(VAR set: sigset_t; signo: int) : int;
 (*** sigpending(2) - examine pending signals ***)
 <*EXTERNAL*> PROCEDURE sigpending (VAR set: sigset_t): int;
 
+(* Select any of pending signals from SET or wait for any to arrive.  *)
+<*EXTERNAL*> PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
+
 (* FIXME - It is OK for vec and/or ovec to be NIL, so we shouldn't use VAR *)
 <*EXTERNAL*>
 PROCEDURE sigprocmask (how: int;
