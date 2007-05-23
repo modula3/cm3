@@ -31,8 +31,8 @@ void
 RTMachine__SuspendThread (pthread_t t)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
-  mach_msg_type_number_t thread_state_count = MACHINE_THREAD_STATE_COUNT;
   if (thread_suspend(mach_thread) != KERN_SUCCESS) abort();
+  if (thread_abort(mach_thread) != KERN_SUCCESS) abort();
 }
 
 void
