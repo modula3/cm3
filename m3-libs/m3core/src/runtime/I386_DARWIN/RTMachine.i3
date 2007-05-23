@@ -74,7 +74,7 @@ CONST
   SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 
 <*EXTERNAL RTMachine__SuspendThread*>
-PROCEDURE SuspendThread (t: pthread_t);
+PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 <*EXTERNAL RTMachine__RestartThread*>
 PROCEDURE RestartThread (t: pthread_t);
 <*EXTERNAL RTMachine__GetState*>

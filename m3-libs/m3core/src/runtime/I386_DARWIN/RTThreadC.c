@@ -26,12 +26,12 @@ void* ThreadF__handlerStack = 0;
 #include <mach/mach.h>
 #include <mach/thread_act.h>
 
-void
+int
 RTMachine__SuspendThread (pthread_t t)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
   if (thread_suspend(mach_thread) != KERN_SUCCESS) abort();
-  if (thread_abort(mach_thread) != KERN_SUCCESS) abort();
+  return thread_abort_safely(mach_thread) == KERN_SUCCESS;
 }
 
 void
