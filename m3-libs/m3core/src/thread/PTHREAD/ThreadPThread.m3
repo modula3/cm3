@@ -1023,7 +1023,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 
 (* Signal based suspend/resume *)
 VAR
-  ackSem: Usem.sem_t;
+  suspendAckSem: Usem.sem_t;
 
 CONST SIG_SUSPEND = RTMachine.SIG_SUSPEND;
 
@@ -1065,6 +1065,7 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
       END;  
     ELSE
       (* No native suspend routine so signal thread to suspend *)
+      WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
       WHILE act # me DO
         IF act.running THEN
           LOOP
@@ -1082,11 +1083,9 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
     RETURN nLive;	      (* return number still live (i.e., signalled) *)
   END SuspendAll;
 
-PROCEDURE RestartAll (me: Activation): INTEGER =
+PROCEDURE RestartAll (me: Activation) =
   (* LL=activeMu *)
-  VAR
-    nDead := 0;
-    act := me.next;
+  VAR act := me.next;
   BEGIN
     IF RTMachine.RestartThread # NIL THEN
       (* Use the native restart routine *)
@@ -1097,24 +1096,22 @@ PROCEDURE RestartAll (me: Activation): INTEGER =
         RTMachine.RestartThread(act.handle);
         act := act.next;
       END;
-      <*ASSERT nDead = 0*>
     ELSE
       (* No native suspend routine so signal thread to suspend *)
       WHILE act # me DO
-        IF NOT act.running THEN
-          LOOP
-            WITH r = Upthread.kill(act.handle, SIG_SUSPEND) DO
-              IF r = 0 THEN EXIT END;
-              <*ASSERT r = Uerror.EAGAIN*>
-              (* try it again... *)
-            END;
+        <*ASSERT NOT act.running*>
+        <*ASSERT NOT act.newPool.busy*>
+        act.running := TRUE;
+        LOOP
+          WITH r = Upthread.kill(act.handle, SIG_SUSPEND) DO
+            IF r = 0 THEN EXIT END;
+            <*ASSERT r = Uerror.EAGAIN*>
+            (* try it again... *)
           END;
-          INC(nDead);
         END;
         act := act.next;
       END;
     END;
-    RETURN nDead;	      (* return number still dead (i.e., signalled) *)
   END RestartAll;
 
 PROCEDURE StopWorld (me: Activation) =
@@ -1130,56 +1127,30 @@ PROCEDURE StopWorld (me: Activation) =
   BEGIN
     IF DEBUG THEN RTIO.PutText("stopping threads"); RTIO.Flush(); END;
     nLive := SuspendAll (me);
-    IF nLive = 0 THEN RETURN END;
-    WITH r = Usem.init(ackSem, 0, 0) DO <*ASSERT r=0*> END;
-    LOOP
-      WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
-      IF acks = nLive THEN IF DEBUG THEN RTIO.PutText("!"); END; EXIT END;
-      IF wait_nsecs > RETRY_INTERVAL THEN
-        IF DEBUG THEN RTIO.PutText("."); RTIO.Flush(); END;
-        IF SuspendAll(me) = 0 THEN EXIT END;
-        wait_nsecs  := 0;
+    IF nLive > 0 THEN
+      LOOP
+        WITH r = Usem.getvalue(suspendAckSem, acks) DO <*ASSERT r=0*> END;
+        IF acks = nLive THEN IF DEBUG THEN RTIO.PutText("!"); END; EXIT END;
+        <*ASSERT acks < nLive*>
+        IF wait_nsecs > RETRY_INTERVAL THEN
+          IF DEBUG THEN RTIO.PutText("."); RTIO.Flush(); END;
+          IF SuspendAll(me) = 0 THEN EXIT END;
+          wait_nsecs := 0;
+        END;
+        wait.tv_sec := 0;
+        wait.tv_nsec := WAIT_UNIT;
+        WHILE Utime.nanosleep(wait, remaining) # 0 DO
+          wait := remaining;
+        END;
+        INC(wait_nsecs, WAIT_UNIT);
       END;
-      wait.tv_sec := 0;
-      wait.tv_nsec := WAIT_UNIT;
-      WHILE Utime.nanosleep(wait, remaining) # 0 DO
-        wait := remaining;
-      END;
-      INC(wait_nsecs, WAIT_UNIT);
     END;
     IF DEBUG THEN RTIO.PutText("\n"); RTIO.Flush(); END;
   END StopWorld;
 
 PROCEDURE StartWorld (me: Activation) =
-  VAR
-    nDead: INTEGER;
-    wait_nsecs := 0;
-    wait, remaining: Utime.struct_timespec;
-    acks: Ctypes.int;
-  CONST
-    WAIT_UNIT = 1000000;
-    RETRY_INTERVAL = 10000000;
   BEGIN
-    IF DEBUG THEN RTIO.PutText("starting threads"); RTIO.Flush(); END;
-    nDead := RestartAll (me);
-    IF nDead = 0 THEN RETURN END;
-    WITH r = Usem.init(ackSem, 0, 0) DO <*ASSERT r=0*> END;
-    LOOP
-      WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
-      IF acks = nDead THEN IF DEBUG THEN RTIO.PutText("!"); END; EXIT END;
-      IF wait_nsecs > RETRY_INTERVAL THEN
-        IF DEBUG THEN RTIO.PutText("."); RTIO.Flush(); END;
-        IF RestartAll(me) = 0 THEN EXIT END;
-        wait_nsecs  := 0;
-      END;
-      wait.tv_sec := 0;
-      wait.tv_nsec := WAIT_UNIT;
-      WHILE Utime.nanosleep(wait, remaining) # 0 DO
-        wait := remaining;
-      END;
-      INC(wait_nsecs, WAIT_UNIT);
-    END;
-    IF DEBUG THEN RTIO.PutText("\n"); RTIO.Flush(); END;
+    RestartAll (me);
   END StartWorld;
 
 PROCEDURE SuspendHandler (sig: Ctypes.int;
@@ -1193,23 +1164,23 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me = NIL THEN RETURN END;
+    <*ASSERT me.running*>
     IF me.newPool.busy THEN RETURN END;
-    IF NOT me.running THEN RETURN END;
     IF RTMachine.SaveRegsInStack # NIL THEN
       me.sp := RTMachine.SaveRegsInStack();
     ELSE
       me.sp := ADR(xx);
     END;
     me.running := FALSE;
-    WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
+    WITH r = Usem.post(suspendAckSem) DO <*ASSERT r=0*> END;
 
     WITH r = Usignal.sigemptyset(m) DO <*ASSERT r=0*> END;
     WITH r = Usignal.sigaddset(m, SIG_SUSPEND) DO <*ASSERT r=0*> END;
     WITH r = Upthread.sigmask(Usignal.SIG_BLOCK, m, om) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigwait(m, sig) DO <*ASSERT r=0*> END;
-    <*ASSERT sig = SIG_SUSPEND*>
-    me.running := TRUE;
-    WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
+    REPEAT
+      WITH r = Usignal.sigwait(m, sig) DO <*ASSERT r=0*> END;
+      <*ASSERT sig = SIG_SUSPEND*>
+    UNTIL me.running;
 
     Cerrno.SetErrno(errno);
   END SuspendHandler;
