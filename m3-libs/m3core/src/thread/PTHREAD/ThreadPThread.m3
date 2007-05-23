@@ -1189,8 +1189,7 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
     errno := Cerrno.GetErrno();
     xx: INTEGER;
     me := GetActivation();
-    msk, omsk: Usignal.sigset_t;
-    signal: Ctypes.int;
+    m, om: Usignal.sigset_t;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me = NIL THEN RETURN END;
@@ -1204,11 +1203,11 @@ PROCEDURE SuspendHandler (sig: Ctypes.int;
     me.running := FALSE;
     WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
 
-    WITH r = Usignal.sigemptyset(msk) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigaddset(msk, SIG_SUSPEND) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.sigmask(Usignal.SIG_BLOCK, msk, omsk) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigwait(msk, signal) DO <*ASSERT r=0*> END;
-    <*ASSERT signal = SIG_SUSPEND*>
+    WITH r = Usignal.sigemptyset(m) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigaddset(m, SIG_SUSPEND) DO <*ASSERT r=0*> END;
+    WITH r = Upthread.sigmask(Usignal.SIG_BLOCK, m, om) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigwait(m, sig) DO <*ASSERT r=0*> END;
+    <*ASSERT sig = SIG_SUSPEND*>
     me.running := TRUE;
     WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
 
