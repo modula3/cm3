@@ -71,7 +71,6 @@ TYPE ThreadState = i386_thread_state_t;
 
 CONST
   SIG_SUSPEND = 0;
-  SIG_RESTART = 0;
   SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 
 <*EXTERNAL RTMachine__SuspendThread*>

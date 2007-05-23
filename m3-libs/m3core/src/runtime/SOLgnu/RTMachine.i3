@@ -89,14 +89,12 @@ TYPE
 (* Full context is in the signal handler frame so no need for state here. *)
 TYPE ThreadState = Uucontext.gregset_t;
 
-CONST
-  SIG_SUSPEND = 0;
-  SIG_RESTART = 0;
+CONST SIG_SUSPEND = 0;
 
 <*EXTERNAL RTMachine__SaveRegsInStack*>
 PROCEDURE SaveRegsInStack(): ADDRESS;
 
-PROCEDURE SuspendThread(t: pthread_t);
+PROCEDURE SuspendThread(t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread(t: pthread_t);
 PROCEDURE GetState(t: pthread_t; VAR sp: ADDRESS; VAR state: ThreadState);
 

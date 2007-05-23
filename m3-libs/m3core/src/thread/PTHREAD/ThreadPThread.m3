@@ -1025,9 +1025,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 VAR
   ackSem: Usem.sem_t;
 
-CONST
-  SIG_SUSPEND = RTMachine.SIG_SUSPEND;
-  SIG_RESTART = RTMachine.SIG_RESTART;
+CONST SIG_SUSPEND = RTMachine.SIG_SUSPEND;
 
 PROCEDURE SuspendAll (me: Activation): INTEGER =
   (* LL=activeMu *)
@@ -1221,13 +1219,10 @@ PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
     IF RTMachine.SuspendThread # NIL THEN <*ASSERT SIG_SUSPEND = 0*> END;
-    IF RTMachine.RestartThread # NIL THEN <*ASSERT SIG_RESTART = 0*> END;
     IF SIG_SUSPEND = 0 AND SIG_SUSPEND = 0 THEN RETURN END;
       
     act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
     WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
-    (* SIG_RESTART is set in the resulting mask.      *)
-    (* It is unmasked by the handler when necessary. *)
     act.sa_sigaction := SuspendHandler;
     WITH r = Usignal.sigaction(SIG_SUSPEND, act, oact) DO <*ASSERT r=0*> END;
   END SetupHandlers;
