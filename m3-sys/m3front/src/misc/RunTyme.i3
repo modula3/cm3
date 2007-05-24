@@ -14,7 +14,7 @@ TYPE
     CheckIsType, ScanTypecase,
     RaiseEx, ResumeRaiseEx, PushEFrame, PopEFrame,
     Concat, MultiCat,
-    NewTracedRef, NewTracedArray,
+    NewTracedObj, NewTracedRef, NewTracedArray,
     NewUntracedObj, NewUntracedRef, NewUntracedArray,
     DisposeRef, DisposeObj,
     Abort, AssertFailed, DebugMsg,

@@ -81,7 +81,12 @@ TYPE
 
 TYPE ArrayShape = ARRAY OF INTEGER;
 
+(* deprecated -- needed only with unbootstrapped compilers *)
 PROCEDURE Allocate (t: ADDRESS(*RT0.TypeDefn*)): REFANY;
+
+PROCEDURE AllocateTracedObj (t: ADDRESS(*RT0.TypeDefn*)): ROOT;
+
+PROCEDURE AllocateTracedRef (t: ADDRESS(*RT0.TypeDefn*)): REFANY;
 
 PROCEDURE AllocateOpenArray (t: ADDRESS(*RT0.TypeDefn*);
                                READONLY sizes: ArrayShape): REFANY;

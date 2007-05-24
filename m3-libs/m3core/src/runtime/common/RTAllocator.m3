@@ -28,9 +28,14 @@ TYPE
 
 PROCEDURE NewTraced(tc: Typecode): REFANY
   RAISES {OutOfMemory} =
+  VAR def := RTType.Get(tc);
   BEGIN
     TRY
-      RETURN GetTraced(RTType.Get(tc));
+      IF (def.kind # ORD(TK.Obj)) THEN
+        RETURN GetTracedRef (def);
+      ELSE
+        RETURN GetTracedObj (def);
+      END;
     EXCEPT RTE.E(v) =>
       IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
       ELSE RAISE RTE.E(v);
@@ -117,9 +122,24 @@ PROCEDURE Clone (ref: REFANY): REFANY
 (*--------------------------------------------------------------- RTHooks ---*)
 
 PROCEDURE Allocate (defn: ADDRESS): REFANY =
+  VAR def: RT0.TypeDefn := defn;
   BEGIN
-    RETURN GetTraced(defn);
+    IF (def.kind # ORD(TK.Obj)) THEN
+      RETURN GetTracedRef (def);
+    ELSE
+      RETURN GetTracedObj (def);
+    END;
   END Allocate;
+
+PROCEDURE AllocateTracedRef (defn: ADDRESS): REFANY =
+  BEGIN
+    RETURN GetTracedRef(defn);
+  END AllocateTracedRef;
+
+PROCEDURE AllocateTracedObj (defn: ADDRESS): ROOT =
+  BEGIN
+    RETURN GetTracedObj(defn);
+  END AllocateTracedObj;
 
 PROCEDURE AllocateUntracedRef (defn: ADDRESS): ADDRESS =
   BEGIN
@@ -163,15 +183,6 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 (*-------------------------------------------------------------- internal ---*)
 
-PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
-  BEGIN
-    IF (def.kind # ORD(TK.Obj)) THEN
-      RETURN GetTracedRef (def);
-    ELSE
-      RETURN GetTracedObj (def);
-    END;
-  END GetTraced;
-
 PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR
     tc  : Typecode := def.typecode;
@@ -193,7 +204,7 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
     RETURN LOOPHOLE(res, REFANY);
   END GetTracedRef;
 
-PROCEDURE GetTracedObj (def: RT0.TypeDefn): REFANY =
+PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
   PROCEDURE initProc (res: ADDRESS) =
     BEGIN
       InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
