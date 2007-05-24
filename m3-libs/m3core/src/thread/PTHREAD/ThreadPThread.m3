@@ -1189,8 +1189,8 @@ PROCEDURE SetupHandlers () =
   VAR act, oact: Usignal.struct_sigaction;
   BEGIN
     IF RTMachine.SuspendThread # NIL THEN <*ASSERT SIG_SUSPEND = 0*> END;
-    IF SIG_SUSPEND = 0 AND SIG_SUSPEND = 0 THEN RETURN END;
-      
+    IF SIG_SUSPEND = 0 THEN RETURN END;
+
     act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
     WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
     act.sa_sigaction := SuspendHandler;
