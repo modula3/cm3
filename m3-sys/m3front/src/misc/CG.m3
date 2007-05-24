@@ -2501,11 +2501,15 @@ PROCEDURE Load_static_link (p: Proc) =
 
 (*------------------------------------------------ builtin type operations --*)
 
-PROCEDURE Ref_to_info (offset, size: INTEGER) =
-  VAR base: INTEGER;
+PROCEDURE Ref_to_hdr () =
   BEGIN
     Boost_alignment (Target.Address.align);
     Load_indirect (Target.Integer.cg_type, -Target.Address.pack, Target.Address.size);
+  END Ref_to_hdr;
+
+PROCEDURE Hdr_to_info (offset, size: INTEGER) =
+  VAR base: INTEGER;
+  BEGIN
     Force ();
     IF Target.Little_endian THEN
       base := offset;
@@ -2513,6 +2517,12 @@ PROCEDURE Ref_to_info (offset, size: INTEGER) =
       base := Target.Integer.size - offset - size;
     END;
     cg.extract_mn (Target.Integer.cg_type, FALSE, base, size);
+  END Hdr_to_info;
+
+PROCEDURE Ref_to_info (offset, size: INTEGER) =
+  BEGIN
+    Ref_to_hdr ();
+    Hdr_to_info (offset, size);
   END Ref_to_info;
 
 (*------------------------------------------------------------ open arrays --*)
