@@ -17,7 +17,7 @@ CONST
     "CheckIsType", "ScanTypecase",
     "Raise",  "ResumeRaise",  "PushEFrame", "PopEFrame",
     "Concat", "MultiCat",
-    "Allocate", "AllocateOpenArray",
+    "AllocateTracedObj", "AllocateTracedRef", "AllocateOpenArray",
     "AllocateUntracedObj", "AllocateUntracedRef", "AllocateUntracedOpenArray",
     "DisposeUntracedRef", "DisposeUntracedObj",
     "ReportFault", "AssertFailed", "DebugMsg",

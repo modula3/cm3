@@ -356,7 +356,7 @@ PROCEDURE GenRecord (t, r: Type.T;  traced: BOOLEAN;
 
 PROCEDURE GenObject (t: Type.T;  ce: CallExpr.T) =
   CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedObj,
-                                                RunTyme.Hook.NewTracedRef };
+                                                RunTyme.Hook.NewTracedObj };
   VAR
     key: M3ID.T;
     value: Expr.T;
