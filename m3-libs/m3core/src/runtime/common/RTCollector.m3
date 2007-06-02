@@ -638,7 +638,6 @@ PROCEDURE SuspendPool (VAR pool: AllocPool) =
   BEGIN
     <* ASSERT pool.desc.note = Note.Allocated *>
     <* ASSERT NOT pool.busy *>
-    InsertFiller(pool.next, pool.limit - pool.next);
   END SuspendPool;
 
 PROCEDURE ClosePool (VAR pool: AllocPool) =
@@ -646,19 +645,13 @@ PROCEDURE ClosePool (VAR pool: AllocPool) =
     <* ASSERT pool.desc.note = Note.Allocated *>
     <* ASSERT NOT pool.busy *>
     RTOS.LockHeap();
-    FillPool(pool);
+    pool.next := NIL;
+    pool.limit := NIL;
     IF pool.page # Nil THEN BumpCnts(pool.page) END;
     pool.page := Nil;
     pool.stack := Nil;
     RTOS.UnlockHeap();
   END ClosePool;
-
-PROCEDURE FillPool (VAR p: AllocPool) =
-  BEGIN
-    InsertFiller(p.next, p.limit - p.next);
-    p.next  := NIL;
-    p.limit := NIL;
-  END FillPool;
 
 PROCEDURE InsertFiller (start: RefHeader; n: INTEGER) =
   BEGIN
@@ -1037,7 +1030,8 @@ PROCEDURE CollectSomeInStateFive () =
     RebuildFreelist();
 
     (* fill the rest of the current copy pages *)
-    FillPool(pureCopy);  FillPool(impureCopy);
+    pureCopy.next  := NIL; impureCopy.next  := NIL;
+    pureCopy.limit := NIL; impureCopy.limit := NIL;
 
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
@@ -1189,7 +1183,8 @@ PROCEDURE PreHandleWeakRefs () =
   VAR s: Stacker;
   BEGIN
     (* get ready to allocate on a new page (take this out!) *)
-    FillPool(pureCopy);  FillPool(impureCopy);
+    pureCopy.next  := NIL; impureCopy.next  := NIL;
+    pureCopy.limit := NIL; impureCopy.limit := NIL;
 
     (* allocate a stack on the side for walking the old space *)
     s := InitStack();
@@ -1286,7 +1281,8 @@ PROCEDURE WeakWalk2 (s: Stacker;  ref: RefReferent) =
 PROCEDURE PostHandleWeakRefs () =
   BEGIN
     (* move to a new page (take this out!) *)
-    FillPool(pureCopy);  FillPool(impureCopy);
+    pureCopy.next  := NIL; impureCopy.next  := NIL;
+    pureCopy.limit := NIL; impureCopy.limit := NIL;
 
     (* iterate over all weak refs.  if the object hasn't been promoted,
        schedule a cleanup *)
@@ -1598,13 +1594,11 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     ELSIF newLimit - newPtr > pool.limit - pool.next THEN
       (* more space remains on the new page *)
       filePage := pool.page;
-      IF pool.page # Nil THEN FillPool(pool); END;
       pool.next  := newPtr;
       pool.limit := newLimit;
       pool.page  := newPage;
     ELSE (* more space remains on the existing pool page *)
       filePage := newPage;
-      InsertFiller(newPtr, newLimit - newPtr);
     END;
 
     IF filePage # Nil THEN
@@ -2409,7 +2403,8 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
         ELSIF desc[p - p0].gray THEN
           <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
           (* We just finished the collection!! *)
-          FillPool(impureCopy);
+          impureCopy.next  := NIL;
+          impureCopy.limit := NIL;
           impureCopy.page  := Nil;
           impureCopy.stack := Nil;
           FOR i := 0 TO PageCount(p) - 1 DO
@@ -2468,7 +2463,8 @@ PROCEDURE CheckStoreTraced (ref: REFANY) =
         ELSIF desc[p - p0].gray THEN
           <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
           (* We just finished the collection!! *)
-          FillPool(impureCopy);
+          impureCopy.next  := NIL;
+          impureCopy.limit := NIL;
           impureCopy.page  := Nil;
           impureCopy.stack := Nil;
           FOR i := 0 TO PageCount(p) - 1 DO
@@ -2527,7 +2523,8 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
         ELSIF desc[p - p0].gray THEN
           <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
           (* We just finished the collection!! *)
-          FillPool(impureCopy);
+          impureCopy.next  := NIL;
+          impureCopy.limit := NIL;
           impureCopy.page  := Nil;
           impureCopy.stack := Nil;
           FOR i := 0 TO PageCount(p) - 1 DO
