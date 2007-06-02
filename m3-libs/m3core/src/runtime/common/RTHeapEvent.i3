@@ -27,7 +27,7 @@ TYPE
                   space := RTHeapRep.Space.Unallocated, generation :=
                   RTHeapRep.Generation.Younger, pure := FALSE, note :=
                   RTHeapRep.Note.Allocated, gray := FALSE, protected :=
-                  FALSE, continued := FALSE};
+                  FALSE, continued := FALSE, clean := FALSE };
       END;
 
 END RTHeapEvent.
