@@ -179,7 +179,7 @@ TYPE
   RefHeader = RECORD
     forwarded : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     typecode  : BITS 20 FOR Typecode   := 0;     (* the typecode *)
-    dirty     : BITS  1 FOR BOOLEAN    := TRUE;  (* used during collection *)
+    dirty     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     gray      : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     weak      : BITS  1 FOR BOOLEAN    := FALSE; (* any weakrefs? *)
     marka     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
