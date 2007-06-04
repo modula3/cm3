@@ -627,7 +627,7 @@ PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
       IF d.gray THEN
         <*ASSERT NOT pd.protected*>
         WITH hdr = PageToHeader(p) DO
-          GrayBetween(hdr, hdr + BytesPerPage);
+          GrayBetween(hdr, hdr + BytesPerPage, r);
         END;
       END;
 
@@ -645,13 +645,15 @@ PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
     IF perfOn THEN PerfChange(p, n_pages); END;
   END PromotePage;
 
-PROCEDURE GrayBetween (h, he: RefHeader) =
+PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
   BEGIN
     WHILE h < he DO
       <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
       <* ASSERT NOT h.forwarded *>
-      h.dirty := FALSE;
-      h.gray := TRUE;
+      IF r # PromoteReason.OldImpure OR h.dirty THEN
+        h.dirty := FALSE;
+        h.gray := TRUE;
+      END;
       INC(h, ADRSIZE(Header) + ReferentSize(h));
     END;
   END GrayBetween;
@@ -1181,10 +1183,8 @@ PROCEDURE CleanPage (p: Page) =
   END CleanPage;
 
 PROCEDURE CleanBetween (h, he: RefHeader; p: Page) =
-  VAR clean: BOOLEAN;
+  VAR clean := desc[p - p0].clean;
   BEGIN
-    <*ASSERT p # Nil*>
-    clean := desc[p - p0].clean;
     WHILE h < he DO
       <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
       <* ASSERT NOT h.forwarded *>
@@ -2520,9 +2520,10 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
         <*ASSERT desc[p - p0].generation = Generation.Older*>
         <*ASSERT desc[p - p0].clean*>
         desc[p - p0].clean := FALSE;
-        WITH n_pages = PageCount(p) DO
+        WITH n_pages = PageCount(p), hdr = PageToHeader(p) DO
           Protect(p, Mode.ReadWrite, n_pages);
           IF perfOn THEN PerfChange(p, n_pages); END;
+          DirtyBetween(hdr, hdr + BytesPerPage);
         END;
       END;
 
@@ -2531,6 +2532,15 @@ PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
     RTOS.UnlockHeap();
     RETURN TRUE;        (* was protected, protection cleared *)
   END Fault;
+
+PROCEDURE DirtyBetween (h, he: RefHeader) =
+  BEGIN
+    WHILE h < he DO
+      <*ASSERT NOT h.dirty*>
+      h.dirty := TRUE;
+      INC(h, ADRSIZE(Header) + ReferentSize(h));
+    END;
+  END DirtyBetween;
 
 (* ----------------------------------------------------------------------- *)
 
