@@ -9,8 +9,8 @@
 
 # Defaults that apply to all the collections
 
-# This host address will probably change soon
-*default host=birch.elegosoft.com
+# This host address is permanent:
+*default host=modula3.elegosoft.com
 
 # Please change the local destination as you like
 *default base=/usr/tmp/cvs
