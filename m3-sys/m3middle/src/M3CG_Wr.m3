@@ -14,7 +14,7 @@ FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
-FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 
 TYPE WrVar    = Var    OBJECT tag: INTEGER END;
 TYPE WrProc   = Proc   OBJECT tag: INTEGER END;
@@ -174,6 +174,13 @@ TYPE
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        fetch_and_op := fetch_and_op;
+        op_and_fetch := op_and_fetch;
+        bool_compare_and_swap := bool_compare_and_swap;
+        val_compare_and_swap := val_compare_and_swap;
+        synchronize := synchronize;
+        lock_test_and_set := lock_test_and_set;
+        lock_release := lock_release;
       END;
         
 
@@ -1746,6 +1753,62 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
     END;
   END Cmt;
 
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: IType) =
+  CONST OpName = ARRAY AtomicOp OF TEXT { "fetch_and_add", "fetch_and_sub",
+                                          "fetch_and_or",  "fetch_and_and",
+                                          "fetch_and_xor", "fetch_and_nand" };
+  BEGIN
+    Cmd   (u, OpName [op]);
+    TName (u, t);
+    NL    (u);
+  END fetch_and_op;
+
+PROCEDURE op_and_fetch (u: U;  op: AtomicOp;  t: IType) =
+  CONST OpName = ARRAY AtomicOp OF TEXT { "add_and_fetch", "sub_and_fetch",
+                                          "or_and_fetch",  "and_and_fetch",
+                                          "xor_and_fetch", "nand_and_fetch" };
+  BEGIN
+    Cmd   (u, OpName [op]);
+    TName (u, t);
+    NL    (u);
+  END op_and_fetch;
+
+PROCEDURE bool_compare_and_swap (u: U;  t: IType;  z: IType) =
+  BEGIN
+    Cmd   (u, "compare_and_swap");
+    TName (u, t);
+    TName (u, z);
+    NL    (u);
+  END bool_compare_and_swap;
+
+PROCEDURE val_compare_and_swap (u: U;  t: IType) =
+  BEGIN
+    Cmd   (u, "val_compare_and_swap");
+    TName (u, t);
+    NL    (u);
+  END val_compare_and_swap;
+
+PROCEDURE synchronize (u: U) =
+  BEGIN
+    Cmd (u, "synchronize");
+    NL  (u);
+  END synchronize;
+
+PROCEDURE lock_test_and_set (u: U;  t: IType) =
+  BEGIN
+    Cmd   (u, "lock_test_and_set");
+    TName (u, t);
+    NL    (u);
+  END lock_test_and_set;
+  
+PROCEDURE lock_release (u: U;  t: IType) =
+  BEGIN
+    Cmd   (u, "lock_release");
+    TName (u, t);
+    NL    (u);
+  END lock_release;
 
 BEGIN
 END M3CG_Wr.
