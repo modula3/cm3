@@ -4,7 +4,7 @@
 MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
-IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread, Wr;
+IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
@@ -18,7 +18,6 @@ VAR
 
 PROCEDURE DoIt () =
   BEGIN
-    RTCollectorSRC.DisableVM ();
     IF RTParams.IsPresent ("verbose") THEN
       Msg.SetLevel (Msg.Level.Verbose);
       M3Timers.Start ();
