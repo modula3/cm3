@@ -23,7 +23,7 @@ UNSAFE MODULE XClientF;
 IMPORT XClient, TrestleOnX, TrestleClass, Trestle, Rect, ProperSplit,
        IntRefTbl, IntTextTbl, TextIntTbl, X, XEventQueue, Thread,
        XAtomQueue, XScreenType, VBT, Ctypes, TrestleComm, Fmt, XProperties,
-       RTParams, KeyboardKey, RTHeapRep, RTCollectorSRC, RTHeapDep,
+       RTParams, KeyboardKey, RTHeapRep,
        VBTClass, Env, M3toC, XInput, XMessenger, Split, Text,
        IP, ASCII, XExtensions, IntIntTbl, XClientExt, TrslOnXF; 
 
@@ -716,13 +716,10 @@ PROCEDURE Error (dpy: X.DisplayStar; errEv: X.XErrorEventStar):
   END Error;
 
 VAR
-  doHack := NOT RTParams.IsPresent("StarTrek")
-              AND NOT ((RTCollectorSRC.incremental AND RTHeapDep.VM
-                          AND RTHeapRep.disableVMCount = 0));
+  doHack := RTParams.IsPresent("StarTrek");
 (* If doHack is TRUE, XClient will change the cursor of every installed
    window to the Star Trek cursor whenever the garbage collector is
-   running.  At runtime, you can force no StarTrek cursor by running your
-   program @M3StarTrek. *)
+   running.  You can enable this with @M3StarTrek. *)
 
 TYPE
   GCClosure = RTHeapRep.MonitorClosure OBJECT
@@ -743,11 +740,8 @@ VAR hacking := FALSE;
 
 PROCEDURE HackOn (<*UNUSED*> cl: GCClosure) =
   BEGIN
-    IF NOT ((RTCollectorSRC.incremental AND RTHeapDep.VM
-               AND RTHeapRep.disableVMCount = 0)) THEN
-      HackToggle(TRUE);
-      hacking := TRUE
-    END
+    HackToggle(TRUE);
+    hacking := TRUE
   END HackOn;
 
 PROCEDURE HackOff (<*UNUSED*> cl: GCClosure) =
