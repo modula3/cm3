@@ -233,18 +233,6 @@
         <p></p>
       </dd>
 
-      <dt><tt>m3-libs/m3gc-simple/src/runtime/GREATOS</tt></dt>
-      <dd>
-        <p>
-          This directory contains the runtime support that is needed
-          even for simple garbage collection (non-imcremental,
-          non-generational). These are usually some wrapper routines
-          for system calls. Have a look at the other platforms for
-          examples.
-        </p>
-        <p></p>
-      </dd>
-
       <dt><tt>m3-libs/m3core/src/unix/great-os</tt></dt>
       <dd>
         <p>
@@ -449,12 +437,12 @@
 
     will archive the following cross-compiled packages:
 
-     m3gc-simple        m3gc-enhanced      m3core             libm3 
-     m3middle           m3linker           m3front            m3quake
-     cm3                m3scanner          m3tools            m3cgcat
-     m3cggen            m3bundle           bitvector          digraph
-     parseparams        realgeometry       set                slisp
-     sortedtableextras  table-list         tempfiles
+     m3core             libm3              m3middle           m3linker
+     m3front            m3quake            cm3                m3scanner
+     m3tools            m3cgcat            m3cggen            m3bundle
+     bitvector          digraph            parseparams        realgeometry
+     set                slisp              sortedtableextras  table-list
+     tempfiles
 
     The archives will be saved in a cm3/CROSS_TARGET.
     </pre>
@@ -502,8 +490,6 @@
   fi
 
   P=""
-  P="${P} m3-libs/m3gc-simple"
-  P="${P} m3-libs/m3gc-enhanced"
   P="${P} m3-libs/m3core"
   P="${P} m3-libs/libm3"
   P="${P} m3-sys/m3middle"
