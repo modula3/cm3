@@ -38,6 +38,7 @@
 #include "flags.h"
 #include "output.h"
 #include "ggc.h"
+#include "hashtab.h"
 #include "toplev.h"
 #include "varray.h"
 #include "langhooks-def.h"
@@ -830,18 +831,48 @@ m3_push_type_decl(tree id, tree type_node)
    copied from gcc/c-decl.c
 */
 
+static GTY((param_is (union tree_node))) htab_t builtins;
+
+static hashval_t
+htab_hash_builtin (const PTR p)
+{
+  tree t = (tree)p;
+
+  return htab_hash_pointer(DECL_NAME(t));
+}
+
+static int
+htab_eq_builtin (const PTR p1, const PTR p2)
+{
+  tree t1 = (tree)p1;
+  tree t2 = (tree)p2;
+
+  return DECL_NAME(t1) == DECL_NAME(t2);
+}
+
 static tree
 builtin_function (const char *name, tree type, int function_code,
 		  enum built_in_class class, const char *library_name,
 		  tree attrs ATTRIBUTE_UNUSED)
 {
-  tree decl = build_decl (FUNCTION_DECL, get_identifier (name), type);
-  DECL_EXTERNAL (decl) = 1;
+  tree id = get_identifier (name);
+  tree decl = build_decl (FUNCTION_DECL, id, type);
   TREE_PUBLIC (decl) = 1;
-  if (library_name)
-    SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
+  DECL_EXTERNAL (decl) = 1;
   DECL_BUILT_IN_CLASS (decl) = class;
   DECL_FUNCTION_CODE (decl) = function_code;
+  if (library_name)
+    SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
+
+  {
+    tree *slot;
+    if (!builtins)
+      builtins = htab_create_ggc (1021, htab_hash_builtin,
+				  htab_eq_builtin, NULL);
+    slot = (tree *)htab_find_slot (builtins, decl, INSERT);
+    gcc_assert (*slot == NULL);
+    *slot = decl;
+  }
 
   TREE_CHAIN (decl) = global_decls;
   global_decls = decl;
@@ -895,6 +926,15 @@ m3_write_globals (void)
   }
 
   write_global_declarations ();
+}
+
+static void
+sync_builtin (enum built_in_function fncode, tree type, const char *name)
+{
+  tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL, NULL,
+				NULL_TREE);
+  TREE_NOTHROW (decl) = 1;
+  built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
 
 /* Create the predefined scalar types of M3CG,
@@ -977,6 +1017,138 @@ m3_init_decl_processing (void)
   build_common_builtin_nodes ();
 
   targetm.init_builtins ();
+
+  t = t_int_8;
+  t = build_function_type_list (t, t_addr, t, NULL_TREE);
+  sync_builtin (BUILT_IN_FETCH_AND_ADD_1,  t, "__sync_fetch_and_add_1");
+  sync_builtin (BUILT_IN_FETCH_AND_SUB_1,  t, "__sync_fetch_and_sub_1");
+  sync_builtin (BUILT_IN_FETCH_AND_OR_1,   t, "__sync_fetch_and_or_1");
+  sync_builtin (BUILT_IN_FETCH_AND_AND_1,  t, "__sync_fetch_and_and_1");
+  sync_builtin (BUILT_IN_FETCH_AND_XOR_1,  t, "__sync_fetch_and_xor_1");
+  sync_builtin (BUILT_IN_FETCH_AND_NAND_1, t, "__sync_fetch_and_nand_1");
+  sync_builtin (BUILT_IN_ADD_AND_FETCH_1,  t, "__sync_add_and_fetch_1");
+  sync_builtin (BUILT_IN_SUB_AND_FETCH_1,  t, "__sync_sub_and_fetch_1");
+  sync_builtin (BUILT_IN_OR_AND_FETCH_1,   t, "__sync_or_and_fetch_1");
+  sync_builtin (BUILT_IN_AND_AND_FETCH_1,  t, "__sync_and_and_fetch_1");
+  sync_builtin (BUILT_IN_XOR_AND_FETCH_1,  t, "__sync_xor_and_fetch_1");
+  sync_builtin (BUILT_IN_NAND_AND_FETCH_1, t, "__sync_nand_and_fetch_1");
+
+  t = t_int_16;
+  t = build_function_type_list (t, t_addr, t, NULL_TREE);
+  sync_builtin (BUILT_IN_FETCH_AND_ADD_2,  t, "__sync_fetch_and_add_2");
+  sync_builtin (BUILT_IN_FETCH_AND_SUB_2,  t, "__sync_fetch_and_sub_2");
+  sync_builtin (BUILT_IN_FETCH_AND_OR_2,   t, "__sync_fetch_and_or_2");
+  sync_builtin (BUILT_IN_FETCH_AND_AND_2,  t, "__sync_fetch_and_and_2");
+  sync_builtin (BUILT_IN_FETCH_AND_XOR_2,  t, "__sync_fetch_and_xor_2");
+  sync_builtin (BUILT_IN_FETCH_AND_NAND_2, t, "__sync_fetch_and_nand_2");
+  sync_builtin (BUILT_IN_ADD_AND_FETCH_2,  t, "__sync_add_and_fetch_2");
+  sync_builtin (BUILT_IN_SUB_AND_FETCH_2,  t, "__sync_sub_and_fetch_2");
+  sync_builtin (BUILT_IN_OR_AND_FETCH_2,   t, "__sync_or_and_fetch_2");
+  sync_builtin (BUILT_IN_AND_AND_FETCH_2,  t, "__sync_and_and_fetch_2");
+  sync_builtin (BUILT_IN_XOR_AND_FETCH_2,  t, "__sync_xor_and_fetch_2");
+  sync_builtin (BUILT_IN_NAND_AND_FETCH_2, t, "__sync_nand_and_fetch_2");
+
+  t = t_int_32;
+  t = build_function_type_list (t, t_addr, t, NULL_TREE);
+  sync_builtin (BUILT_IN_FETCH_AND_ADD_4,  t, "__sync_fetch_and_add_4");
+  sync_builtin (BUILT_IN_FETCH_AND_SUB_4,  t, "__sync_fetch_and_sub_4");
+  sync_builtin (BUILT_IN_FETCH_AND_OR_4,   t, "__sync_fetch_and_or_4");
+  sync_builtin (BUILT_IN_FETCH_AND_AND_4,  t, "__sync_fetch_and_and_4");
+  sync_builtin (BUILT_IN_FETCH_AND_XOR_4,  t, "__sync_fetch_and_xor_4");
+  sync_builtin (BUILT_IN_FETCH_AND_NAND_4, t, "__sync_fetch_and_nand_4");
+  sync_builtin (BUILT_IN_ADD_AND_FETCH_4,  t, "__sync_add_and_fetch_4");
+  sync_builtin (BUILT_IN_SUB_AND_FETCH_4,  t, "__sync_sub_and_fetch_4");
+  sync_builtin (BUILT_IN_OR_AND_FETCH_4,   t, "__sync_or_and_fetch_4");
+  sync_builtin (BUILT_IN_AND_AND_FETCH_4,  t, "__sync_and_and_fetch_4");
+  sync_builtin (BUILT_IN_XOR_AND_FETCH_4,  t, "__sync_xor_and_fetch_4");
+  sync_builtin (BUILT_IN_NAND_AND_FETCH_4, t, "__sync_nand_and_fetch_4");
+
+  t = t_int_64;
+  t = build_function_type_list (t, t_addr, t, NULL_TREE);
+  sync_builtin (BUILT_IN_FETCH_AND_ADD_8,  t, "__sync_fetch_and_add_8");
+  sync_builtin (BUILT_IN_FETCH_AND_SUB_8,  t, "__sync_fetch_and_sub_8");
+  sync_builtin (BUILT_IN_FETCH_AND_OR_8,   t, "__sync_fetch_and_or_8");
+  sync_builtin (BUILT_IN_FETCH_AND_AND_8,  t, "__sync_fetch_and_and_8");
+  sync_builtin (BUILT_IN_FETCH_AND_XOR_8,  t, "__sync_fetch_and_xor_8");
+  sync_builtin (BUILT_IN_FETCH_AND_NAND_8, t, "__sync_fetch_and_nand_8");
+  sync_builtin (BUILT_IN_ADD_AND_FETCH_8,  t, "__sync_add_and_fetch_8");
+  sync_builtin (BUILT_IN_SUB_AND_FETCH_8,  t, "__sync_sub_and_fetch_8");
+  sync_builtin (BUILT_IN_OR_AND_FETCH_8,   t, "__sync_or_and_fetch_8");
+  sync_builtin (BUILT_IN_AND_AND_FETCH_8,  t, "__sync_and_and_fetch_8");
+  sync_builtin (BUILT_IN_XOR_AND_FETCH_8,  t, "__sync_xor_and_fetch_8");
+  sync_builtin (BUILT_IN_NAND_AND_FETCH_8, t, "__sync_nand_and_fetch_8");
+
+  t = t_int_8;
+  sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_1,
+		build_function_type_list (boolean_type_node, t_addr, t, t,
+					  NULL_TREE),
+		"__sync_bool_compare_and_swap_1");
+  sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_1,
+		build_function_type_list (t, t_addr, t, t, NULL_TREE),
+		"__sync_val_compare_and_swap_1");
+
+  t = t_int_16;
+  sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_2,
+		build_function_type_list (boolean_type_node, t_addr, t, t,
+					  NULL_TREE),
+		"__sync_bool_compare_and_swap_2");
+  sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_2,
+		build_function_type_list (t, t_addr, t, t, NULL_TREE),
+		"__sync_val_compare_and_swap_2");
+
+  t = t_int_32;
+  sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_4,
+		build_function_type_list (boolean_type_node, t_addr, t, t,
+					  NULL_TREE),
+		"__sync_bool_compare_and_swap_4");
+  sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_4,
+		build_function_type_list (t, t_addr, t, t, NULL_TREE),
+		"__sync_val_compare_and_swap_4");
+
+  t = t_int_64;
+  sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_8,
+		build_function_type_list (boolean_type_node, t_addr, t, t,
+					  NULL_TREE),
+		"__sync_bool_compare_and_swap_8");
+  sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_8,
+		build_function_type_list (t, t_addr, t, t, NULL_TREE),
+		"__sync_val_compare_and_swap_8");
+
+  sync_builtin (BUILT_IN_SYNCHRONIZE,
+		 build_function_type_list (t_void, NULL_TREE),
+		 "__sync_synchronize");
+
+  t = t_int_8;
+  sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_1,
+		 build_function_type_list (t, t_addr, t, NULL_TREE),
+		 "__sync_lock_test_and_set_1");
+  sync_builtin (BUILT_IN_LOCK_RELEASE_1,
+		 build_function_type_list (t, t_addr, NULL_TREE),
+		 "__sync_lock_release_1");
+
+  t = t_int_16;
+  sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_2,
+		 build_function_type_list (t, t_addr, t, NULL_TREE),
+		 "__sync_lock_test_and_set_2");
+  sync_builtin (BUILT_IN_LOCK_RELEASE_2,
+		 build_function_type_list (t, t_addr, NULL_TREE),
+		 "__sync_lock_release_2");
+
+  t = t_int_32;
+  sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_4,
+		 build_function_type_list (t, t_addr, t, NULL_TREE),
+		 "__sync_lock_test_and_set_4");
+  sync_builtin (BUILT_IN_LOCK_RELEASE_4,
+		 build_function_type_list (t, t_addr, NULL_TREE),
+		 "__sync_lock_release_4");
+
+  t = t_int_64;
+  sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_8,
+		 build_function_type_list (t, t_addr, t, NULL_TREE),
+		 "__sync_lock_test_and_set_8");
+  sync_builtin (BUILT_IN_LOCK_RELEASE_8,
+		 build_function_type_list (t, t_addr, NULL_TREE),
+		 "__sync_lock_release_8");
 
 #if 0
   t = build_function_type_list (t_addr, t_addr, t_addr, t_int, NULL_TREE);
@@ -1734,11 +1906,12 @@ static void
 m3_call_direct (tree p, tree t)
 {
   tree call;
-
+  tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
+  if (slot) p = *slot;
   TREE_USED (p) = 1;
   call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
 		      CALL_TOP_STATIC_CHAIN ());
-  if (t == t_void) {
+  if (VOID_TYPE_P(t)) {
     add_stmt (call);
   } else {
     TREE_SIDE_EFFECTS (call) = 1;
@@ -1759,7 +1932,7 @@ m3_call_indirect (tree t)
 
   call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
 		 CALL_TOP_STATIC_CHAIN ());
-  if (t == t_void) {
+  if (VOID_TYPE_P(t)) {
     add_stmt (call);
   } else {
     TREE_SIDE_EFFECTS (call) = 1;
@@ -4244,6 +4417,154 @@ m3cg_comment (void)
     fprintf(stderr, "  comment: `%s'\n", comment);
 }
 
+static void
+m3cg_fetch (enum built_in_function fncode)
+{
+  MTYPE2     (t, T);
+
+  int size;
+
+  if (!INTEGRAL_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  m3_start_call ();
+  m3_pop_param (t);
+  m3_pop_param (t_addr);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
+static void
+m3cg_fetch_and_add (void) { m3cg_fetch (BUILT_IN_FETCH_AND_ADD_N); }
+static void
+m3cg_fetch_and_sub (void) { m3cg_fetch (BUILT_IN_FETCH_AND_SUB_N); }
+static void
+m3cg_fetch_and_or  (void) { m3cg_fetch (BUILT_IN_FETCH_AND_OR_N); }
+static void
+m3cg_fetch_and_and (void) { m3cg_fetch (BUILT_IN_FETCH_AND_AND_N); }
+static void
+m3cg_fetch_and_xor (void) { m3cg_fetch (BUILT_IN_FETCH_AND_XOR_N); }
+static void
+m3cg_fetch_and_nand (void) { m3cg_fetch (BUILT_IN_FETCH_AND_NAND_N); }
+static void
+m3cg_add_and_fetch (void) { m3cg_fetch (BUILT_IN_ADD_AND_FETCH_N); }
+static void
+m3cg_sub_and_fetch (void) { m3cg_fetch (BUILT_IN_SUB_AND_FETCH_N); }
+static void
+m3cg_or_and_fetch  (void) { m3cg_fetch (BUILT_IN_OR_AND_FETCH_N); }
+static void
+m3cg_and_and_fetch (void) { m3cg_fetch (BUILT_IN_AND_AND_FETCH_N); }
+static void
+m3cg_xor_and_fetch (void) { m3cg_fetch (BUILT_IN_XOR_AND_FETCH_N); }
+static void
+m3cg_nand_and_fetch (void) { m3cg_fetch (BUILT_IN_NAND_AND_FETCH_N); }
+
+static void
+m3cg_bool_compare_and_swap (void)
+{
+  MTYPE2     (t, T);
+  MTYPE2     (u, U);
+
+  int size;
+  enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
+
+  if (!INTEGRAL_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  m3_start_call ();
+  m3_pop_param (t);
+  m3_pop_param (t);
+  m3_pop_param (t_addr);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
+static void
+m3cg_val_compare_and_swap (void)
+{
+  MTYPE2     (t, T);
+
+  int size;
+  enum built_in_function fncode = BUILT_IN_VAL_COMPARE_AND_SWAP_N;
+
+  if (!INTEGRAL_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  m3_start_call ();
+  m3_pop_param (t);
+  m3_pop_param (t);
+  m3_pop_param (t_addr);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
+static void
+m3cg_synchronize (void)
+{
+  m3_start_call ();
+  m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
+}
+
+static void
+m3cg_lock_test_and_set (void)
+{
+  MTYPE2     (t, T);
+
+  int size;
+  enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
+
+  if (!INTEGRAL_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  m3_start_call ();
+  m3_pop_param (t);
+  m3_pop_param (t_addr);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
+static void
+m3cg_lock_release (void)
+{
+  MTYPE2     (t, T);
+
+  int size;
+  enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
+
+  if (!INTEGRAL_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  m3_start_call ();
+  m3_pop_param (t_addr);
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t_void);
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
 /*----------------------------------------------------------- M3CG parser ---*/
 
 typedef void (*OP_HANDLER) (void);
@@ -4401,6 +4722,23 @@ OpProc ops[] = {
   { M3CG_LOAD_PROCEDURE,         m3cg_load_procedure         },
   { M3CG_LOAD_STATIC_LINK,       m3cg_load_static_link       },
   { M3CG_COMMENT,                m3cg_comment                },
+  { M3CG_FETCH_AND_ADD,          m3cg_fetch_and_add          },
+  { M3CG_FETCH_AND_SUB,          m3cg_fetch_and_sub          },
+  { M3CG_FETCH_AND_OR,           m3cg_fetch_and_or           },
+  { M3CG_FETCH_AND_AND,          m3cg_fetch_and_and          },
+  { M3CG_FETCH_AND_XOR,          m3cg_fetch_and_xor          },
+  { M3CG_FETCH_AND_NAND,         m3cg_fetch_and_nand         },
+  { M3CG_ADD_AND_FETCH,          m3cg_add_and_fetch          },
+  { M3CG_SUB_AND_FETCH,          m3cg_sub_and_fetch          },
+  { M3CG_OR_AND_FETCH,           m3cg_or_and_fetch           },
+  { M3CG_AND_AND_FETCH,          m3cg_and_and_fetch          },
+  { M3CG_XOR_AND_FETCH,          m3cg_xor_and_fetch          },
+  { M3CG_NAND_AND_FETCH,         m3cg_nand_and_fetch         },
+  { M3CG_BOOL_COMPARE_AND_SWAP,  m3cg_bool_compare_and_swap  },
+  { M3CG_VAL_COMPARE_AND_SWAP,   m3cg_val_compare_and_swap   },
+  { M3CG_SYNCHRONIZE,            m3cg_synchronize            },
+  { M3CG_LOCK_TEST_AND_SET,      m3cg_lock_test_and_set      },
+  { M3CG_LOCK_RELEASE,           m3cg_lock_release           },
   { LAST_OPCODE,                 0                              }
   };
 

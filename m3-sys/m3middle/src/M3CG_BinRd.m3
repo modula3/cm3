@@ -6,7 +6,7 @@ MODULE M3CG_BinRd;
 IMPORT Fmt, Rd, Stdio, Text, Thread, Word, Wr;
 IMPORT M3ID, M3CG, M3CG_Ops, M3CG_Binary;
 IMPORT Target, TargetMap, TInt, TFloat, TWord;
-FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 
 TYPE
   Bop = M3CG_Binary.Op;
@@ -188,7 +188,24 @@ CONST
     Cmd {Bop.pop_static_link, pop_static_link},
     Cmd {Bop.load_procedure, load_procedure},
     Cmd {Bop.load_static_link, load_static_link},
-    Cmd {Bop.comment, comment}
+    Cmd {Bop.comment, comment},
+    Cmd {Bop.fetch_and_add,  fetch_and_add},
+    Cmd {Bop.fetch_and_sub,  fetch_and_sub},
+    Cmd {Bop.fetch_and_or,   fetch_and_or},
+    Cmd {Bop.fetch_and_and,  fetch_and_and},
+    Cmd {Bop.fetch_and_xor,  fetch_and_xor},
+    Cmd {Bop.fetch_and_nand, fetch_and_nand},
+    Cmd {Bop.add_and_fetch,  add_and_fetch},
+    Cmd {Bop.sub_and_fetch,  sub_and_fetch},
+    Cmd {Bop.or_and_fetch,   or_and_fetch},
+    Cmd {Bop.and_and_fetch,  and_and_fetch},
+    Cmd {Bop.xor_and_fetch,  xor_and_fetch},
+    Cmd {Bop.nand_and_fetch, nand_and_fetch},
+    Cmd {Bop.bool_compare_and_swap, bool_compare_and_swap},
+    Cmd {Bop.val_compare_and_swap, val_compare_and_swap},
+    Cmd {Bop.synchronize, synchronize},
+    Cmd {Bop.lock_test_and_set, lock_test_and_set},
+    Cmd {Bop.lock_release, lock_release}
   };
 
 PROCEDURE Inhale (rd: Rd.T;  cg: M3CG.T) =
@@ -1623,6 +1640,110 @@ PROCEDURE comment (VAR s: State) =
   BEGIN
     s.cg.comment (x);
   END comment;
+
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE fetch_and_op (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.fetch_and_op (op, type);
+  END fetch_and_op;
+
+PROCEDURE fetch_and_add (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Add);
+  END fetch_and_add;
+
+PROCEDURE fetch_and_sub (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Sub);
+  END fetch_and_sub;
+
+PROCEDURE fetch_and_or (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Or);
+  END fetch_and_or;
+
+PROCEDURE fetch_and_and (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.And);
+  END fetch_and_and;
+
+PROCEDURE fetch_and_xor (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Xor);
+  END fetch_and_xor;
+
+PROCEDURE fetch_and_nand (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Nand);
+  END fetch_and_nand;
+
+PROCEDURE op_and_fetch (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.op_and_fetch (op, type);
+  END op_and_fetch;
+
+PROCEDURE add_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Add);
+  END add_and_fetch;
+
+PROCEDURE sub_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Sub);
+  END sub_and_fetch;
+
+PROCEDURE or_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Or);
+  END or_and_fetch;
+
+PROCEDURE and_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.And);
+  END and_and_fetch;
+
+PROCEDURE xor_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Xor);
+  END xor_and_fetch;
+
+PROCEDURE nand_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Nand);
+  END nand_and_fetch;
+
+PROCEDURE bool_compare_and_swap (VAR s: State) =
+  VAR src    := Scan_type (s);
+      dest   := Scan_type (s);
+  BEGIN
+    s.cg.bool_compare_and_swap (src, dest);
+  END bool_compare_and_swap;
+
+PROCEDURE val_compare_and_swap (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.val_compare_and_swap (type);
+  END val_compare_and_swap;
+
+PROCEDURE synchronize (VAR s: State) =
+  BEGIN
+    s.cg.synchronize ();
+  END synchronize;
+
+PROCEDURE lock_test_and_set (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_test_and_set (type);
+  END lock_test_and_set;
+
+PROCEDURE lock_release (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_release (type);
+  END lock_release;
 
 BEGIN
   FOR op := FIRST (CmdMap) TO LAST (CmdMap) DO

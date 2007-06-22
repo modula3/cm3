@@ -9,7 +9,7 @@ MODULE M3CG_Rd;
 
 IMPORT Text, Rd, IntIntTbl, Thread, Convert, Wr, Stdio, Fmt;
 IMPORT M3ID, M3CG, M3CG_Ops, Target, TInt, TFloat;
-FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 
 CONST
   EOF = '\000';
@@ -38,7 +38,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [0..151] OF Cmd {
+  CmdMap = ARRAY [0..168] OF Cmd {
     Cmd {"begin_unit", begin_unit},
     Cmd {"end_unit", end_unit},
     Cmd {"import_unit", import_unit},
@@ -190,7 +190,24 @@ CONST
     Cmd {"pop_static_link", pop_static_link},
     Cmd {"load_procedure", load_procedure},
     Cmd {"load_static_link", load_static_link},
-    Cmd {"#", comment}
+    Cmd {"#", comment},
+    Cmd {"fetch_and_add",  fetch_and_add},
+    Cmd {"fetch_and_sub",  fetch_and_sub},
+    Cmd {"fetch_and_or",   fetch_and_or},
+    Cmd {"fetch_and_and",  fetch_and_and},
+    Cmd {"fetch_and_xor",  fetch_and_xor},
+    Cmd {"fetch_and_nand", fetch_and_nand},
+    Cmd {"add_and_fetch",  add_and_fetch},
+    Cmd {"sub_and_fetch",  sub_and_fetch},
+    Cmd {"or_and_fetch",   or_and_fetch},
+    Cmd {"and_and_fetch",  and_and_fetch},
+    Cmd {"xor_and_fetch",  xor_and_fetch},
+    Cmd {"nand_and_fetch", nand_and_fetch},
+    Cmd {"bool_compare_and_swap", bool_compare_and_swap},
+    Cmd {"val_compare_and_swap", val_compare_and_swap},
+    Cmd {"synchronize", synchronize},
+    Cmd {"lock_test_and_set", lock_test_and_set},
+    Cmd {"lock_release", lock_release}
   };
 
 VAR
@@ -1746,6 +1763,110 @@ PROCEDURE comment (VAR s: State) =
     x := Scan_line (s);
     s.cg.comment (x);
   END comment;
+
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE fetch_and_op (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.fetch_and_op (op, type);
+  END fetch_and_op;
+
+PROCEDURE fetch_and_add (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Add);
+  END fetch_and_add;
+
+PROCEDURE fetch_and_sub (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Sub);
+  END fetch_and_sub;
+
+PROCEDURE fetch_and_or (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Or);
+  END fetch_and_or;
+
+PROCEDURE fetch_and_and (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.And);
+  END fetch_and_and;
+
+PROCEDURE fetch_and_xor (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Xor);
+  END fetch_and_xor;
+
+PROCEDURE fetch_and_nand (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Nand);
+  END fetch_and_nand;
+
+PROCEDURE op_and_fetch (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.op_and_fetch (op, type);
+  END op_and_fetch;
+
+PROCEDURE add_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Add);
+  END add_and_fetch;
+
+PROCEDURE sub_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Sub);
+  END sub_and_fetch;
+
+PROCEDURE or_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Or);
+  END or_and_fetch;
+
+PROCEDURE and_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.And);
+  END and_and_fetch;
+
+PROCEDURE xor_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Xor);
+  END xor_and_fetch;
+
+PROCEDURE nand_and_fetch (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Nand);
+  END nand_and_fetch;
+
+PROCEDURE bool_compare_and_swap (VAR s: State) =
+  VAR src    := Scan_type (s);
+      dest   := Scan_type (s);
+  BEGIN
+    s.cg.bool_compare_and_swap (src, dest);
+  END bool_compare_and_swap;
+
+PROCEDURE val_compare_and_swap (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.val_compare_and_swap (type);
+  END val_compare_and_swap;
+
+PROCEDURE synchronize (VAR s: State) =
+  BEGIN
+    s.cg.synchronize ();
+  END synchronize;
+
+PROCEDURE lock_test_and_set (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_test_and_set (type);
+  END lock_test_and_set;
+
+PROCEDURE lock_release (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_release (type);
+  END lock_release;
 
 BEGIN
 END M3CG_Rd.

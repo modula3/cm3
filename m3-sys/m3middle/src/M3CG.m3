@@ -147,6 +147,13 @@ REVEAL
     load_procedure := load_procedure;
     load_static_link := load_static_link;
     comment := comment;
+    fetch_and_op := fetch_and_op;
+    op_and_fetch := op_and_fetch;
+    bool_compare_and_swap := bool_compare_and_swap;
+    val_compare_and_swap := val_compare_and_swap;
+    synchronize := synchronize;
+    lock_test_and_set := lock_test_and_set;
+    lock_release := lock_release;
   END; 
 
 (*----------------------------------------------------------- ID counters ---*)
@@ -906,6 +913,43 @@ PROCEDURE comment (xx: T;  a, b, c, d: TEXT := NIL) =
   BEGIN
     xx.child.comment (a, b, c, d);
   END comment;
+
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE fetch_and_op (xx: T;  op: AtomicOp;  t: IType) =
+  BEGIN
+    xx.child.fetch_and_op (op, t);
+  END fetch_and_op;
+
+PROCEDURE op_and_fetch (xx: T;  op: AtomicOp;  t: IType) =
+  BEGIN
+    xx.child.op_and_fetch (op, t);
+  END op_and_fetch;
+
+PROCEDURE bool_compare_and_swap (xx: T;  t: IType;  u: IType) =
+  BEGIN
+    xx.child.bool_compare_and_swap (t, u);
+  END bool_compare_and_swap;
+
+PROCEDURE val_compare_and_swap (xx: T;  t: IType) =
+  BEGIN
+    xx.child.val_compare_and_swap (t);
+  END val_compare_and_swap;
+
+PROCEDURE synchronize (xx: T) =
+  BEGIN
+    xx.child.synchronize ();
+  END synchronize;
+
+PROCEDURE lock_test_and_set (xx: T;  t: IType) =
+  BEGIN
+    xx.child.lock_test_and_set (t);
+  END lock_test_and_set;
+
+PROCEDURE lock_release (xx: T;  t: IType) =
+  BEGIN
+    xx.child.lock_release (t);
+  END lock_release;
 
 BEGIN
 END M3CG.

@@ -58,6 +58,7 @@ TYPE
 TYPE
   CompareOp = { EQ, NE, GT, GE, LT, LE };
   ConvertOp = { Round, Trunc, Floor, Ceiling };
+  AtomicOp = { Add, Sub, Or, And, Xor, Nand };
 
 CONST (*  A op B  ===  B SwappedCompare[op] A  *)
   SwappedCompare = ARRAY CompareOp OF CompareOp {

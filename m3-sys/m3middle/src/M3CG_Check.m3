@@ -12,7 +12,7 @@ IMPORT M3ID, M3CG, M3CG_Ops, Target, TargetMap;
 
 FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT ByteSize, Alignment, Frequency, RuntimeError;
-FROM M3CG IMPORT Var, Proc, Label, Sign, CompareOp, ConvertOp;
+FROM M3CG IMPORT Var, Proc, Label, Sign, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 
 TYPE (* stack data types *)
@@ -166,6 +166,13 @@ TYPE
         pop_static_link := pop_static_link;
         load_procedure := load_procedure;
         load_static_link := load_static_link;
+        fetch_and_op := fetch_and_op;
+        op_and_fetch := op_and_fetch;
+        bool_compare_and_swap := bool_compare_and_swap;
+        val_compare_and_swap := val_compare_and_swap;
+        synchronize := synchronize;
+        lock_test_and_set := lock_test_and_set;
+        lock_release := lock_release;
       END;
         
 
@@ -1299,6 +1306,59 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
     self.s_push (Type.Addr);
     self.child.load_static_link (p);
   END load_static_link;
+
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  t: IType) =
+  BEGIN
+    self.s_pop (ST.Addr);
+    self.s_push (t);
+    self.child.fetch_and_op (op, t);
+  END fetch_and_op;
+
+PROCEDURE op_and_fetch (self: U;  op: AtomicOp;  t: IType) =
+  BEGIN
+    self.s_pop (ST.Addr);
+    self.s_push (t);
+    self.child.op_and_fetch (op, t);
+  END op_and_fetch;
+
+PROCEDURE bool_compare_and_swap (self: U;  t: IType;  u: IType) =
+  BEGIN
+    self.s_pop (T_to_ST [t]);
+    self.s_pop (T_to_ST [t]);
+    self.s_pop (ST.Addr);
+    self.s_push (u);
+    self.child.bool_compare_and_swap (t, u);
+  END bool_compare_and_swap;
+
+PROCEDURE val_compare_and_swap (self: U;  t: IType) =
+  BEGIN
+    self.s_pop (T_to_ST [t]);
+    self.s_pop (T_to_ST [t]);
+    self.s_pop (ST.Addr);
+    self.s_push (t);
+    self.child.val_compare_and_swap (t);
+  END val_compare_and_swap;
+
+PROCEDURE synchronize (self: U) =
+  BEGIN
+    self.child.synchronize ();
+  END synchronize;
+
+PROCEDURE lock_test_and_set (self: U;  t: IType) =
+  BEGIN
+    self.s_pop (T_to_ST [t]);
+    self.s_pop (ST.Addr);
+    self.s_push (t);
+    self.child.lock_test_and_set (t);
+  END lock_test_and_set;
+
+PROCEDURE lock_release (self: U;  t: IType) =
+  BEGIN
+    self.s_pop (ST.Addr);
+    self.child.lock_release (t);
+  END lock_release;
 
 BEGIN
 END M3CG_Check.
