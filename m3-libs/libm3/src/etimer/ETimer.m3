@@ -9,7 +9,7 @@
 UNSAFE (*because of RTHeapRep*)
 MODULE ETimer;
 
-IMPORT Wr, Time, Fmt, RTHeapRep, RTHeapDep;
+IMPORT Wr, Time, Fmt, RTHeapRep;
 
 REVEAL
   T = BRANDED "ETimer.T" REF RECORD
@@ -219,12 +219,7 @@ PROCEDURE Enable () =
     IF enabled THEN RETURN END;
     LOCK mu DO
       enabled := TRUE;
-      IF NOT RTHeapDep.VM THEN
-        RTHeapRep.RegisterMonitor (NEW (GCClosure));
-        (* VM = TRUE => GC times are smeared across many page faults
-           so the beginning and ending of collections aren't meaningful
-           points to collect timing info. *)
-      END;
+      RTHeapRep.RegisterMonitor (NEW (GCClosure));
     END;
   END Enable;
 
