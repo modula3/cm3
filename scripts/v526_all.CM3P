@@ -200,8 +200,6 @@ PKG m3-sys\windowsResources
 PKG m3-sys\reactor
 ;
 ;**FAILS ON NT386** PKG m3-libs\dps
-;**FAILS ON NT386** PKG m3-libs\m3gc-enhanced
-;**FAILS ON NT386** PKG m3-libs\m3gc-simple
 PKG m3-libs\tcl
 ;**TEST** PKG m3-libs\tcl\test
 ;

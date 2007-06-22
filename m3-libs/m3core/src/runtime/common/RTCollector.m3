@@ -14,7 +14,7 @@
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
                                   RTHeapRep, RTWeakRef, RTHooks;
 
-IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
+IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Thread, ThreadF, RuntimeError, RTAllocCnts;
 IMPORT TextLiteral AS TextLit, RTLinker, Convert;
@@ -44,7 +44,7 @@ PROCEDURE Disable () =
   BEGIN
     RTOS.LockHeap();
     BEGIN
-      FinishVM();
+      FinishGC();
       INC(disableCount);
       partialCollectionNext := FALSE;
     END;
@@ -109,7 +109,7 @@ PROCEDURE StartCollection () =
            AND disableCount + disableMotionCount = 0 THEN
         partialCollectionNext := FALSE;
         REPEAT CollectSome(); UNTIL collectorState # CollectorState.Zero;
-        IF NOT (incremental AND (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.incremental)) THEN
+        IF NOT (incremental AND RTLinker.incremental) THEN
           REPEAT CollectSome(); UNTIL collectorState = CollectorState.Zero;
         END;
       END;
@@ -131,61 +131,6 @@ PROCEDURE FinishCollection () =
     END;
     RTOS.UnlockHeap();
   END FinishCollection;
-
-(* DisableVM disables the use of VM protection.  While VM protection is
-   disabled, no objects on the heap will be protected.*)
-
-PROCEDURE DisableVM () =
-  BEGIN
-    RTOS.LockHeap();
-    IF RTHeapDep.VM THEN
-      FinishVM();
-      INC(disableVMCount);
-    END;
-    RTOS.UnlockHeap();
-  END DisableVM;
-
-(* EnableVM reenables the use of VM protection if EnableVM has been called
-   as many times as DisableVM.  It is a checked runtime error to call
-   EnableVM more times than DisableVM. *)
-
-PROCEDURE EnableVM () =
-  BEGIN
-    RTOS.LockHeap();
-    IF RTHeapDep.VM THEN
-      DEC(disableVMCount);
-      EVAL CollectEnough();
-    END;
-    RTOS.UnlockHeap();
-  END EnableVM;
-
-(* FinishVM is equivalent to DisableVM{}; EnableVM().  FinishVM unprotects
-   all heap pages, and is intended for use from the debugger. *)
-
-PROCEDURE FinishVM () =
-  BEGIN
-    RTOS.LockHeap();
-    IF RTHeapDep.VM THEN
-      FinishGC();
-      CollectorOn();
-      (* no gray pages now; only protected pages are in older generation *)
-      FOR p := p0 TO p1 - 1 DO
-        WITH pd = desc[p - p0] DO
-          <*ASSERT NOT pd.gray*>
-          IF pd.protected THEN
-            <*ASSERT pd.clean*>
-            pd.clean := FALSE;
-            WITH n_pages = PageCount(p) DO
-              Protect(p, Mode.ReadWrite, n_pages);
-              IF perfOn THEN PerfChange(p, n_pages); END;
-            END;
-          END;
-        END;
-      END;
-      CollectorOff();
-    END;
-    RTOS.UnlockHeap();
-  END FinishVM;
 
 (* StartBackgroundCollection starts the background thread, if not already
    started *)
@@ -565,47 +510,40 @@ PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
 
 TYPE
   PromoteReason = {
-    OldProtected, OldPure, OldImpure,
+    OldClean, OldPure, OldImpure,
     LargePure, LargeImpure,
     AmbiguousPure, AmbiguousImpure
   };
 
 CONST
   PromoteDesc = ARRAY PromoteReason OF Desc {
-    (* OldProtected *)
+    (* OldClean *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := FALSE,
-      note := Note.OlderGeneration, protected := TRUE, continued := FALSE,
-      clean := TRUE },
+      note := Note.OlderGeneration, continued := FALSE, clean := TRUE },
 
     (* OldPure *)
     Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
-      note := Note.OlderGeneration, protected := FALSE, continued := FALSE,
-      clean := FALSE },
+      note := Note.OlderGeneration, continued := FALSE, clean := FALSE },
 
     (* OldImpure *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
-      note := Note.OlderGeneration, protected := FALSE, continued := FALSE,
-      clean := TRUE },
+      note := Note.OlderGeneration, continued := FALSE, clean := TRUE },
 
     (* LargePure *)
     Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
-      note := Note.Large, protected := FALSE, continued := FALSE,
-      clean := FALSE },
+      note := Note.Large, continued := FALSE, clean := FALSE },
 
     (* LargeImpure *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
-      note := Note.Large, protected := FALSE, continued := FALSE,
-      clean := TRUE },
+      note := Note.Large, continued := FALSE, clean := TRUE },
 
     (* AmbiguousPure *)
     Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
-      note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE,
-      clean := FALSE },
+      note := Note.AmbiguousRoot, continued := FALSE, clean := FALSE },
 
     (* AmbiguousImpure *)
     Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
-      note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE,
-      clean := FALSE }
+      note := Note.AmbiguousRoot, continued := FALSE, clean := FALSE }
   };
 
 PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
@@ -619,13 +557,7 @@ PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
       <* ASSERT pd.space = Space.Previous *>
       <* ASSERT NOT pd.continued*>
 
-      IF pd.protected # d.protected THEN
-        <*ASSERT NOT d.protected*>
-        Protect(p, Mode.ReadWrite, n_pages);
-      END;
-
       IF d.gray THEN
-        <*ASSERT NOT pd.protected*>
         WITH hdr = PageToHeader(p) DO
           GrayBetween(hdr, hdr + BytesPerPage, r);
         END;
@@ -720,7 +652,7 @@ PROCEDURE CollectEnough (): BOOLEAN =
     IF collectorOn THEN RETURN FALSE; END;
     IF Behind() THEN
       CollectorOn();
-      IF incremental AND (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.incremental) THEN
+      IF incremental AND RTLinker.incremental THEN
         REPEAT CollectSome();
         UNTIL NOT Behind() OR collectorState = CollectorState.Zero;
       ELSE
@@ -770,9 +702,7 @@ PROCEDURE CollectorOn () =
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
         <* ASSERT pd.gray *>
-        <* ASSERT pd.protected *>
       END;
-      Protect(impureCopy.page, Mode.ReadWrite, 1);
     END;
   END CollectorOn;
 
@@ -784,17 +714,6 @@ PROCEDURE CollectorOff () =
     IF impureCopy.page # Nil THEN
       WITH pd = desc[impureCopy.page - p0] DO
         <* ASSERT pd.gray *>
-        <* ASSERT NOT pd.protected *>
-      END;
-      Protect(impureCopy.page, Mode.NoAccess, 1);
-    END;
-
-    VAR p := impureCopy.stack; BEGIN
-      WHILE p # Nil DO
-        IF desc[p - p0].gray AND NOT desc[p - p0].protected THEN
-          Protect(p, Mode.NoAccess, PageCount(p));
-        END;
-        p := desc[p - p0].link;
       END;
     END;
 
@@ -859,9 +778,7 @@ PROCEDURE CollectSomeInStateZero () =
     END;
 
     (* make generational decisions *)
-    IF generational AND
-      (RTHeapDep.VM AND disableVMCount = 0 OR RTLinker.generational)
-     THEN
+    IF generational AND RTLinker.generational THEN
       pureCopy.desc.generation   := Generation.Older;
       impureCopy.desc.generation := Generation.Older;
       partialCollection := partialCollectionNext AND cycleL < cycleLength;
@@ -920,7 +837,7 @@ PROCEDURE CollectSomeInStateZero () =
 
     (* Conservatively scan the stacks for possible pointers. *)
     (* Note: we must scan thread stacks before promoting old
-       pages, because we want to make sure that old, impure, unprotected
+       pages, because we want to make sure that old, impure, dirty
        pages referenced by threads are marked as ambiguous roots.
        Otherwise, these pages won't get cleaned by "FinishThreadPages". *)
     heap_min := PageToAddress (p0);
@@ -936,41 +853,31 @@ PROCEDURE CollectSomeInStateZero () =
             IF partialCollection THEN
               IF pd.clean THEN
                 <*ASSERT NOT pd.pure*>
-                <*ASSERT pd.protected*>
                 (* no need to scan *)
-                PromotePage(p, PromoteReason.OldProtected, pureCopy);
+                PromotePage(p, PromoteReason.OldClean,  pureCopy);
               ELSIF pd.pure THEN
-                <*ASSERT NOT pd.protected*>
-                PromotePage(p, PromoteReason.OldPure,      pureCopy);
+                PromotePage(p, PromoteReason.OldPure,   pureCopy);
               ELSE
-                PromotePage(p, PromoteReason.OldImpure,    impureCopy);
-              END;
-            ELSE
-              IF pd.protected THEN
-                Protect(p, Mode.ReadWrite, PageCount(p));
+                PromotePage(p, PromoteReason.OldImpure, impureCopy);
               END;
             END;
           ELSE
-            <*ASSERT NOT pd.protected*>
             <*ASSERT NOT pd.clean*>
           END;
         END;
       END;
     END;
-    (* Now, nothing in the previous space is protected or in the older
+    (* Now, nothing in the previous space is clean or in the older
        generation. *)
 
     mover := NEW (Mover);  (* get one in the new space *)
 
     (* It is possible that this collection started after a thread had
        validated references from its stack.  We must ensure that the heap
-       pages referenced by such threads remain unprotected after the
-       collection begins.  This also means that system call wrappers need not
-       be atomic with respect to the collector, since validated system call
-       parameters held on the stack will remain valid (i.e., unprotected). *)
+       pages referenced by such threads remain valid after the
+       collection begins. *)
     IF generational AND RTLinker.generational
-      OR incremental AND RTLinker.incremental
-      OR RTHeapDep.VM AND NOT RTHeapDep.AtomicWrappers THEN
+      OR incremental AND RTLinker.incremental THEN
       FinishThreadPages ();
     END;
 
@@ -1051,7 +958,6 @@ PROCEDURE CollectSomeInStateFive () =
     FOR p := p0 TO p1 - 1 DO
       WITH pd = desc[p - p0] DO
         IF pd.space = Space.Previous THEN
-          <*ASSERT NOT pd.protected*>
           pd.space := Space.Free;
           pd.continued := FALSE;
           IF perfOn THEN PerfChange(p, 1); END;
@@ -1071,7 +977,6 @@ PROCEDURE CollectSomeInStateFive () =
         IF pd.clean AND pd.generation = Generation.Older THEN
           <* ASSERT pd.note # Note.AmbiguousRoot *>
           <* ASSERT pd.space = Space.Current *>
-          Protect(impureCopy.page, Mode.ReadOnly, 1);
         ELSE
           pd.clean := FALSE;
         END;
@@ -1150,7 +1055,6 @@ PROCEDURE CopySome (): BOOLEAN =
         IF pd.clean AND pd.generation = Generation.Older THEN
           <* ASSERT pd.note # Note.AmbiguousRoot *>
           <* ASSERT pd.space = Space.Current *>
-          Protect(originalPage, Mode.ReadOnly, 1);
         ELSE
           pd.clean := FALSE;
         END;
@@ -1167,7 +1071,6 @@ PROCEDURE CleanPage (p: Page) =
     n_pages := PageCount(p);
   BEGIN
     <*ASSERT NOT desc[p - p0].pure*>
-    IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite, n_pages); END;
     CleanBetween(hdr, hdr + BytesPerPage, p);
     FOR i := 0 TO n_pages - 1 DO
       desc[p + i - p0].gray := FALSE;
@@ -1175,7 +1078,6 @@ PROCEDURE CleanPage (p: Page) =
     IF desc[p - p0].clean AND desc[p - p0].generation = Generation.Older THEN
       <*ASSERT desc[p - p0].note # Note.AmbiguousRoot*>
       <*ASSERT desc[p - p0].space = Space.Current*>
-      Protect(p, Mode.ReadOnly, n_pages);
     ELSE
       desc[p - p0].clean := FALSE;
     END;
@@ -1608,7 +1510,6 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     <*ASSERT NOT pool.busy*>
     <*ASSERT initialized*>
 
-    <*ASSERT NOT desc[newPage - p0].protected*>
     RTMisc.Zero(newPtr, n_pages * BytesPerPage);
 
     (* maybe we have to insert a filler to align this thing *)
@@ -1647,7 +1548,6 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     IF filePage # Nil THEN
       desc[filePage - p0].link := pool.stack;
       pool.stack := filePage;
-      <*ASSERT NOT desc[filePage - p0].protected*>
     END;
 
     RETURN res;
@@ -1768,28 +1668,20 @@ PROCEDURE Crash (): BOOLEAN =
       result := FALSE;
     END;
 
-    (* unprotect all pages *)
-    FOR p := p0 TO p1 - 1 DO
-      IF desc[p - p0].protected THEN
-        Protect(p, Mode.ReadWrite, PageCount(p));
-      END;
-    END;
-
     RETURN result;
   END Crash;
 
 (* --------------------------------------------------------- debugging *)
 
 VAR
-  protectedCheck, refCheck: RTHeapMap.Visitor;
+  cleanCheck, refCheck: RTHeapMap.Visitor;
 
 PROCEDURE InstallSanityCheck () =
   BEGIN
     RegisterMonitor(
       NEW(MonitorClosure, before := Before, after := After));
     IF (refCheck = NIL) THEN
-      protectedCheck := NEW (RTHeapMap.Visitor,
-                             apply := ProtectedOlderRefSanityCheck);
+      cleanCheck := NEW (RTHeapMap.Visitor, apply := CleanOlderRefSanityCheck);
       refCheck := NEW (RTHeapMap.Visitor, apply := RefSanityCheck);
     END;
   END InstallSanityCheck;
@@ -1818,7 +1710,6 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
           <* ASSERT NOT desc[p - p0].gray *>
           <* ASSERT NOT desc[p - p0].continued *>
           IF desc[p - p0].clean THEN
-            <*ASSERT desc[p - p0].protected*>
             <*ASSERT desc[p - p0].generation = Generation.Older*>
           END;
           (* visit the objects on the page *)
@@ -1831,7 +1722,7 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
               <* ASSERT NOT h.gray *>
               IF desc[p - p0].clean THEN
                 <*ASSERT NOT h.dirty*>
-                RTHeapMap.WalkRef (h, protectedCheck);
+                RTHeapMap.WalkRef (h, cleanCheck);
               ELSE
                 RTHeapMap.WalkRef (h, refCheck);
               END;                
@@ -1893,8 +1784,8 @@ PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
     END;
   END RefSanityCheck;
 
-PROCEDURE ProtectedOlderRefSanityCheck (<*UNUSED*> v  : RTHeapMap.Visitor;
-                                                   cp : ADDRESS) =
+PROCEDURE CleanOlderRefSanityCheck (<*UNUSED*> v: RTHeapMap.Visitor;
+                                    cp: ADDRESS) =
   VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
   BEGIN
     IF ref # NIL THEN
@@ -1916,7 +1807,7 @@ PROCEDURE ProtectedOlderRefSanityCheck (<*UNUSED*> v  : RTHeapMap.Visitor;
         END;
       END;
     END;
-  END ProtectedOlderRefSanityCheck;
+  END CleanOlderRefSanityCheck;
 
 <*UNUSED*>
 PROCEDURE P(p: Page; b: BOOLEAN): BOOLEAN =
@@ -1964,7 +1855,6 @@ PROCEDURE PrintDesc(p: Page) =
 
     RTIO.PutText("gray="); RTIO.PutInt(ORD(d.gray)); RTIO.PutChar('\n');
     RTIO.PutText("clean="); RTIO.PutInt(ORD(d.clean)); RTIO.PutChar('\n');
-    RTIO.PutText("protected="); RTIO.PutInt(ORD(d.protected)); RTIO.PutChar('\n');
     RTIO.PutText("continued="); RTIO.PutInt(ORD(d.continued)); RTIO.PutChar('\n');
     RTIO.PutChar('\n'); RTIO.Flush();
 
@@ -2395,23 +2285,6 @@ PROCEDURE PageCount (p: Page): CARDINAL =
 
 (* ----------------------------------------------------------------------- *)
 
-TYPE Mode = { ReadWrite, ReadOnly, NoAccess };
-
-PROCEDURE Protect (p: Page;  m: Mode;  n_pages: CARDINAL) =
-  CONST
-    Readable = ARRAY Mode OF BOOLEAN { TRUE, TRUE, FALSE };
-    Writable = ARRAY Mode OF BOOLEAN { TRUE, FALSE, FALSE };
-  VAR
-    protected := (m # Mode.ReadWrite);
-  BEGIN
-    <* ASSERT collectorOn OR (m = Mode.ReadWrite) *>
-    <* ASSERT NOT desc[p - p0].pure *>
-    IF RTHeapDep.VM AND disableVMCount = 0 THEN
-      RTHeapDep.Protect(p, n_pages, Readable[m], Writable[m]);
-    END;
-    FOR i := 0 TO n_pages - 1 DO desc[p + i - p0].protected := protected; END;
-  END Protect;
-
 PROCEDURE CheckLoadTracedRef (ref: REFANY) =
   VAR p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
   BEGIN
@@ -2454,93 +2327,6 @@ PROCEDURE CheckStoreTraced (ref: REFANY) =
     RTOS.UnlockHeap();
     RETURN;
   END CheckStoreTraced;
-
-PROCEDURE Fault (addr: ADDRESS): BOOLEAN =
-  VAR p : INTEGER := Word.RightShift (LOOPHOLE(addr, INTEGER), LogBytesPerPage);
-  BEGIN
-    <* ASSERT RTHeapDep.VM *>
-    RTOS.LockHeap();
-
-    INC(countFault);
-
-    (* remember the time spent handling faults *)
-    cycleCost := cycleCost + RTHeapDep.VMFaultTime;
-
-    IF (p < p0) OR (p1 <= p) THEN
-      RTOS.UnlockHeap();
-      RETURN FALSE; (* not in heap *)
-    END;
-
-    WITH pd = desc[p - p0] DO
-
-      IF pd.space = Space.Unallocated THEN
-        RTOS.UnlockHeap();
-        RETURN FALSE;              (* not in heap *)
-      END;
-
-      IF NOT pd.protected THEN
-        RTOS.UnlockHeap();
-        RETURN TRUE;               (* was protected, but not any more *)
-      END;
-
-      <* ASSERT NOT pd.pure *>
-
-      IF pd.gray THEN
-        INC(countFaultGray);
-        CollectorOn();
-        IF p # impureCopy.page THEN
-          CleanPage(FirstPage(p));
-        ELSIF CopySome() THEN
-          (* we cleaned the impureCopy page, but still have more to clean *)
-          <* ASSERT NOT desc[p - p0].gray *>
-        ELSIF desc[p - p0].gray THEN
-          <* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *>
-          (* We just finished the collection!! *)
-          impureCopy.next  := NIL;
-          impureCopy.limit := NIL;
-          impureCopy.page  := Nil;
-          FOR i := 0 TO PageCount(p) - 1 DO
-            desc[p + i - p0].gray := FALSE;
-          END;
-          <*ASSERT NOT desc[p - p0].protected*>
-          IF desc[p - p0].clean
-            AND desc[p - p0].generation = Generation.Older THEN
-            <* ASSERT desc[p - p0].note # Note.AmbiguousRoot *>
-            <* ASSERT desc[p - p0].space = Space.Current *>
-            Protect(p, Mode.ReadOnly, 1);
-          ELSE
-            desc[p - p0].clean := FALSE;
-          END;
-          IF perfOn THEN PerfChange(p, 1); END;
-        END;
-        CollectorOff();
-      ELSE
-        INC(countFaultOlder);
-        p := FirstPage(p);
-        <*ASSERT desc[p - p0].generation = Generation.Older*>
-        <*ASSERT desc[p - p0].clean*>
-        desc[p - p0].clean := FALSE;
-        WITH n_pages = PageCount(p), hdr = PageToHeader(p) DO
-          Protect(p, Mode.ReadWrite, n_pages);
-          IF perfOn THEN PerfChange(p, n_pages); END;
-          DirtyBetween(hdr, hdr + BytesPerPage);
-        END;
-      END;
-
-    END; (* WITH *)
-
-    RTOS.UnlockHeap();
-    RETURN TRUE;        (* was protected, protection cleared *)
-  END Fault;
-
-PROCEDURE DirtyBetween (h, he: RefHeader) =
-  BEGIN
-    WHILE h < he DO
-      <*ASSERT NOT h.dirty*>
-      h.dirty := TRUE;
-      INC(h, ADRSIZE(Header) + ReferentSize(h));
-    END;
-  END DirtyBetween;
 
 (* ----------------------------------------------------------------------- *)
 
@@ -2966,10 +2752,9 @@ PROCEDURE Init () =
     END;
     initialized := TRUE;
 
-    incremental  := RTHeapDep.VM OR RTLinker.incremental;
-    generational := RTHeapDep.VM OR RTLinker.generational;
+    incremental  := RTLinker.incremental;
+    generational := RTLinker.generational;
     IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
-    IF RTParams.IsPresent("novm") THEN disableVMCount := 1; END;
     IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
     IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
     IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
@@ -3030,7 +2815,6 @@ VAR
   majorCollections := 0;		 (* the number of major GCs begun *)
   checkLoadTracedRef := 0;
   checkStoreTraced := 0;
-  countFault, countFaultGray, countFaultOlder := 0;
   tStamps: ARRAY [0..1048575] OF Time.T;
   tsIndex := -1;
   tStart: Time.T;
@@ -3041,9 +2825,6 @@ PROCEDURE StartBench() =
     minorCollections := 0;
     checkLoadTracedRef := 0;
     checkStoreTraced := 0;
-    countFault := 0;
-    countFaultGray := 0;
-    countFaultOlder := 0;
     tsIndex := 0;
     tStart := Time.Now();
   END StartBench;
@@ -3076,15 +2857,8 @@ PROCEDURE FinishBench() =
     RTIO.PutInt(checkLoadTracedRef);
     RTIO.PutText("\nSlow path gen barriers: ");
     RTIO.PutInt(checkStoreTraced);
-    RTIO.PutText("\nVM faults: ");
-    RTIO.PutInt(countFault);
-    RTIO.PutText(" (gray: ");
-    RTIO.PutInt(countFaultGray);
-    RTIO.PutText(", older: ");
-    RTIO.PutInt(countFaultOlder);
-    RTIO.PutText(")\n");
 
-    RTIO.PutText ("Total heap: ");
+    RTIO.PutText ("\nTotal heap: ");
     RTIO.PutInt  (total_heap DIV MB);
     RTIO.PutText (".");
     RTIO.PutInt  ((total_heap MOD MB) DIV (MB DIV 10));

@@ -42,15 +42,6 @@ CONST
   AdrPerHeapPage      = 8192;        (* addresses per page *)
   LogAdrPerHeapPage   = 13;
 
-(*** hooks for the C wrapper functions ***)
-
-<*EXTERNAL*> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
-<*EXTERNAL*> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
-
-(*** hooks for the stack walker ***)
-<*EXTERNAL*> VAR RTProcedureSRC_FromPC: ADDRESS; (* => RTProcedureSRC.FromPC *)
-<*EXTERNAL*> VAR RTHeapDep_Fault: ADDRESS;  (* => RTHeapDep.Fault *)
-
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST

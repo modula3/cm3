@@ -54,11 +54,9 @@ if not defined BACKUPID (
     @exit /b 1
 )
 
-rem m3gc-simple
 rem m3cc
 
 @set p_runtime=^
-m3gc-enhanced ^
 m3core ^
 libm3
 @set p_compiler=^

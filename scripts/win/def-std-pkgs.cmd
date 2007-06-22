@@ -10,14 +10,6 @@
 set P=
 @rem base libraries
 if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
-if not "%TARGET%" == "NT386" (
-  set P=%P% m3gc-simple
-)
-if not "%M3GC_SIMPLE%" == "" (
-  if not "%TARGET%" == "NT386" (
-    set P=%P% m3gc-enhanced
-  )
-)
 set P=%P% m3core
 set P=%P% libm3
 set P=%P% m3core

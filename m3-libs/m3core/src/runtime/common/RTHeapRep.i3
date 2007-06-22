@@ -18,7 +18,7 @@ INTERFACE RTHeapRep;
    garbage collector.  Some items here should be made private or moved
    elsewhere. *)
 
-IMPORT RT0, RTHeapDep;
+IMPORT RT0, RTMachine, Word;
 FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
 
 (* The allocator and collector maintain two heaps of objects.  One heap is
@@ -34,8 +34,7 @@ FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
 (* The (traced) heap consists of a number of aligned pages, divided among
    three spaces: Free, Previous, and Current.  All other pages in the
    address space are in the "Unallocated" space.  Pages are numbered 0, 1,
-   2, ....  The pagesize used is fixed; if incremental or generational
-   collection is to be allowed, it must be at least the VM page size.
+   2, ....  The pagesize used is fixed and must be a power of two.
 
    The global variable p0 and p1 hold the bounds of the heap pages: only
    pages in the range [p0, p1) are in a space other than Unallocated.  For
@@ -43,12 +42,12 @@ FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
    state for page "p". *)
 
 CONST
-  BytesPerPage    = RTHeapDep.BytesPerPage;
-  LogBytesPerPage = RTHeapDep.LogBytesPerPage;
-  AdrPerPage      = RTHeapDep.AdrPerPage;
-  LogAdrPerPage   = RTHeapDep.LogAdrPerPage;
+  BytesPerPage    = RTMachine.BytesPerHeapPage;
+  LogBytesPerPage = RTMachine.LogBytesPerHeapPage;
+  AdrPerPage      = RTMachine.AdrPerHeapPage;
+  LogAdrPerPage   = RTMachine.LogAdrPerHeapPage;
 
-TYPE Page = RTHeapDep.Page;
+TYPE Page = [0 .. Word.Divide(-1, AdrPerPage)];
 
 CONST
   Nil: Page = 0;                 (* page 0 cannot be part of the traced
@@ -70,7 +69,6 @@ TYPE
            generation: BITS 1 FOR Generation;
            pure      : BITS 1 FOR BOOLEAN;
            note      : BITS 3 FOR Note;
-           protected : BITS 1 FOR BOOLEAN;
            gray      : BITS 1 FOR BOOLEAN;
            clean     : BITS 1 FOR BOOLEAN;
            continued : BITS 1 FOR BOOLEAN;
@@ -199,21 +197,21 @@ CONST
   NewPool = AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Allocated, gray := FALSE,
-                  protected := FALSE, continued := FALSE, clean := FALSE },
+                  continued := FALSE, clean := FALSE },
     notAfter := Notes {Note.Copied} };
 
 VAR (* LL >= LockHeap *)
   pureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := TRUE, note := Note.Copied, gray := FALSE,
-                  protected := FALSE, continued := FALSE, clean := FALSE },
+                  continued := FALSE, clean := FALSE },
     notAfter := Notes {Note.Allocated} };
 
 VAR (* LL >= LockHeap *)
   impureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Copied, gray := TRUE,
-                  protected := FALSE, continued := FALSE, clean := TRUE },
+                  continued := FALSE, clean := TRUE },
     notAfter := Notes {Note.Allocated} };
 
 (****** MODULE OBJECTS ******)
@@ -243,8 +241,6 @@ VAR
   disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)
   disableMotionCount: CARDINAL := 0; (* how many more DisableMotions than
                                         EnableMotions *)
-  disableVMCount: CARDINAL := 0; (* how many more DisableVMs than
-                                    EnableVMs *)
 
 PROCEDURE Crash (): BOOLEAN;
 (* Crash is called by the runtime when the program is about to crash.  When
@@ -272,15 +268,6 @@ PROCEDURE InvokeMonitors (before: BOOLEAN);
 (* called by the collector to trigger the registered monitors.
    If "before" is "TRUE", the "before" methods are called, otherwise
    the "after" methods are called. *)
-
-(*** VM support ***)
-
-PROCEDURE Fault (addr: ADDRESS): BOOLEAN;
-
-(* Fault is called from the RTHeapDep when a VM fault occurs.  If Fault
-   returns TRUE, protection has been changed and the operation should be
-   retried.  If Fault returns FALSE, the faulting address is not part of
-   the traced heap, and the fault should be treated as an error. *)
 
 (****** DEBUGGING ******)
 

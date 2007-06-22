@@ -127,7 +127,6 @@ do-cm3-core.sh [callable]
   M3GDB => m3gdb
   HAVE_TCL => tcl
   OMIT_GCC => omit package m3cc
-  M3GC_SIMPLE => don't compile m3gc-enhanced
 
 upgrade.sh [callable]
 ----------
@@ -205,7 +204,6 @@ do-cm3-std.sh [callable]
   HAVE_TCL => tcl
   HAVE_SERIAL => serial
   OMIT_GCC => omit package m3cc
-  M3GC_SIMPLE => don't compile m3gc-enhanced
 
 do-pkg.sh [callable]
 ---------

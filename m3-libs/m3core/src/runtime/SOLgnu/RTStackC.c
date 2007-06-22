@@ -107,28 +107,12 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
 
   caller->lock = FrameLock;
 
-  /* We must be careful when unwinding through signal trampolines that we also
-     restore the signal mask of the previous context. */
-  RTProcedureSRC_FromPC(callee->pc, &proc, &file, &name);
-  if (proc == RTHeapDep_Fault) {
-    /* SIGNAL HANDLER: previous frame information can be found in third
-       argument of RTHeapDep_Fault */
-    link = (ucontext_t *)callee->sp->fr_arg[2];
-    caller->ctxt = *link;
-    caller->pc = (void *)link->uc_mcontext.gregs[REG_PC];
-    if (caller->pc) {
-      caller->sp = (struct frame *)link->uc_mcontext.gregs[REG_SP];
-      caller->fp = caller->sp->fr_savfp;
-    } else
-      caller->sp = caller->fp = 0;
-  } else {
-    if (callee->sp && callee->fp && callee->sp->fr_savpc) {
-      caller->pc = (void *)callee->sp->fr_savpc;
-      caller->fp = (caller->sp = callee->fp)->fr_savfp;
-    } else
-      caller->sp = caller->fp = caller->pc = 0;
-    caller->ctxt = callee->ctxt;
-  }
+  if (callee->sp && callee->fp && callee->sp->fr_savpc) {
+    caller->pc = (void *)callee->sp->fr_savpc;
+    caller->fp = (caller->sp = callee->fp)->fr_savfp;
+  } else
+    caller->sp = caller->fp = caller->pc = 0;
+  caller->ctxt = callee->ctxt;
   if (caller->lock != FrameLock) abort();
 }
 

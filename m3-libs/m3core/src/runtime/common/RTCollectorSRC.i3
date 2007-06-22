@@ -20,37 +20,6 @@ PROCEDURE StartCollection();
 PROCEDURE FinishCollection();
 (* Finish the current collection, if one is on progress. *)
 
-(* \paragraph*{Disabling VM protection.}
-
-   The SRC collector uses VM protection to implement incremental and
-   generational collection.  The SRC collector's use of VM protection is
-   normally invisible to programs, but can complicate debugging Modula-3
-   programs.
-
-   The "DisableVM" and "EnableVM" procedures are analogous to
-   "RTCollector"'s "DisableMotion" and "EnableMotion", and allow the
-   programmer to disable the use of VM protection.  Disabling VM protection
-   does not disable the collector, but collections will be neither
-   incremental nor generational.
-
-   The "@M3novm" flag performs an initial call to "DisableVM".
-
-   The SRC collector cannot use VM protection at all on some
-   architectures. *)
-
-PROCEDURE DisableVM();
-(* Disable the use of VM protection.  While VM protection is disabled, no
-   objects on the heap will be protected.*)
-
-PROCEDURE EnableVM();
-(* Reenable the use of VM protection if "EnableVM" has been called as many
-   times as "DisableVM".  It is a checked runtime error to call "EnableVM"
-   more times than "DisableVM". *)
-
-PROCEDURE FinishVM();
-(* Equivalent to "DisableVM{}; EnableVM()".  "FinishVM" unprotects all heap
-   pages, and is intended for use from the debugger. *)
-
 (* \paragraph*{Tuning the SRC collector.}
 
    The following read/write parameters tune the SRC collector's
@@ -73,12 +42,11 @@ VAR incremental := FALSE;         (* incremental collection *)
    pages.  In other words, to keep the same space bounds, "gcRatio" must be
    twice as large in the incremental case.
 
-   If compiler support is enabled or VM protection is enabled and available
-   on the current architecture, the collector will behave as if
+   If compiler support is enabled the collector will behave as if
    "incremental" = TRUE.
 
    Use incremental collection when the program is interactive.
-   Stop-and-copy collection gives better performance. *)
+   Stop-and-copy collection gives better total throughput. *)
 
 VAR generational := FALSE;        (* generational collection *)
 (* Generational collection causes most collections to take much less time
@@ -87,8 +55,7 @@ VAR generational := FALSE;        (* generational collection *)
    large number of accessible objects, but most new objects are discarded
    shortly after they are allocated.
 
-   If compiler support is enabled or VM protection is enabled and available
-   on the current architecture, the collector will behave as if
+   If compiler support is enabled the collector will behave as if
    "generational" = TRUE.
 
    Generational collection almost always leads to performance

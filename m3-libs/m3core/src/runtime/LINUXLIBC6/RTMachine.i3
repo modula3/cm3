@@ -41,9 +41,6 @@ CONST
   AdrPerHeapPage      = 8192;        (* addresses per page *)
   LogAdrPerHeapPage   = 13;
 
-<*EXTERNAL*> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
-<*EXTERNAL*> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
-
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST

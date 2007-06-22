@@ -152,7 +152,7 @@ CONST (* l_type values *)
   F_WRLCK = 3; (* Write lock *)
   F_UNLCK = 2; (* Remove lock(s) *)
 
-<*EXTERNAL "ufcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
+<*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
 (* ok *)
 
 (*** flock - apply or remove an advisory lock on an open file ***)
@@ -748,7 +748,7 @@ CONST
 
 (* Somebody will have to work really hard to get all those ioctl
    parameters right. Beware when using them! *)
-<*EXTERNAL *> PROCEDURE ioctl (d: int; request: u_long; 
+<*EXTERNAL*> PROCEDURE ioctl (d: int; request: u_long; 
                                          argp: ADDRESS): int;
 (* ok *)
 
@@ -819,8 +819,7 @@ CONST (* flags *)
 
   M3_NONBLOCK = O_NONBLOCK;  (* -1 => would block, 0 => EOF *)
 
-<*EXTERNAL "uopen" *> PROCEDURE open (name: char_star; 
-                                       flags, mode: int): int;
+<*EXTERNAL*> PROCEDURE open (name: char_star; flags: int; mode: mode_t): int;
 (* ok *)
 
 (*** pipe - create an interprocess channel ***)
@@ -881,8 +880,8 @@ TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
 
 <*EXTERNAL*> PROCEDURE select (nfds: int;
-                           readfds, writefds, exceptfds: UNTRACED REF FDSet;
-                           timeout: UNTRACED REF struct_timeval): int;
+                               readfds, writefds, exceptfds: UNTRACED REF FDSet;
+                               timeout: UNTRACED REF struct_timeval): int;
 (* ok *)
 
 (*** setgroups - set group access list ***)

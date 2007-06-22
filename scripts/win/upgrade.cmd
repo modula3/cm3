@@ -8,7 +8,6 @@
 
 @set p_runtime=^
  import-libs ^
- m3gc-enhanced ^
  m3core ^
  libm3
 

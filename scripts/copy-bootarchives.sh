@@ -36,8 +36,6 @@ else
 fi
 
 P=""
-P="${P} m3-libs/m3gc-simple"
-P="${P} m3-libs/m3gc-enhanced"
 P="${P} m3-libs/m3core"
 P="${P} m3-libs/libm3"
 P="${P} m3-sys/m3middle"

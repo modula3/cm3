@@ -233,20 +233,20 @@ TYPE
     sun_path: ARRAY [0..103] OF char;	 (* path name (gag) *)
   END;
 
-<*EXTERNAL "m3_accept"*>
+<*EXTERNAL*>
 PROCEDURE accept(s: int; addr: struct_sockaddr_star; addrlen: int_star): int;
 
-<*EXTERNAL "m3_bind"*>
+<*EXTERNAL*>
 PROCEDURE bind(s: int; name: struct_sockaddr_star; namelen: int): int;
 
-<*EXTERNAL "m3_connect"*>
+<*EXTERNAL*>
 PROCEDURE connect(s: int; name: struct_sockaddr_star; namelen: int): int;
 
-<*EXTERNAL "m3_getpeername"*>
+<*EXTERNAL*>
 PROCEDURE getpeername(s: int; name: struct_sockaddr_star;
                       namelen: int_star): int;
 
-<*EXTERNAL "m3_getsockname"*>
+<*EXTERNAL*>
 PROCEDURE getsockname(s: int; name: struct_sockaddr_star;
                       namelen: int_star): int;
 
@@ -254,23 +254,23 @@ PROCEDURE getsockname(s: int; name: struct_sockaddr_star;
 PROCEDURE getsockopt(s, level, optname: int; optval: void_star;
                      optlen: int_star): int;
 
-<*EXTERNAL "m3_listen"*>
+<*EXTERNAL*>
 PROCEDURE listen(s, backlog: int): int;
 
-<*EXTERNAL "m3_recv"*>
+<*EXTERNAL*>
 PROCEDURE recv(s: int; buf: void_star; len: size_t; flags: int): int;
 
-<*EXTERNAL "m3_recvfrom"*>
+<*EXTERNAL*>
 PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int;
                    from: struct_sockaddr_star; fromlen: int_star): int;
 
 <*EXTERNAL*>
 PROCEDURE recvmsg(s: int; msg: struct_msghdr_star; flags: int): ssize_t;
 
-<*EXTERNAL "m3_send"*>
+<*EXTERNAL*>
 PROCEDURE send(s: int; msg: const_void_star; len: size_t; flags: int): int;
 
-<*EXTERNAL "m3_sendto"*>
+<*EXTERNAL*>
 PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int;
                  to: struct_sockaddr_star; tolen: int): int;
 
@@ -280,10 +280,10 @@ PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int;
 PROCEDURE setsockopt(s, level, optname: int; optval: const_void_star;
                      optlen: int): int;
 
-<*EXTERNAL "m3_shutdown"*>
+<*EXTERNAL*>
 PROCEDURE shutdown(s, how: int): int;
 
-<*EXTERNAL "m3_socket" *>
+<*EXTERNAL*>
 PROCEDURE socket(af, type, protocol: int): int;
 
 <*EXTERNAL*>
