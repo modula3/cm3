@@ -228,7 +228,7 @@ TYPE
     sun_path: ARRAY [0..103] OF Ctypes.char;  (* path name (gag) *)
   END;
 
-<*EXTERNAL "m3_accept"*>
+<*EXTERNAL*>
 PROCEDURE accept(
     s: Ctypes.int;
     addr: UNTRACED REF struct_sockaddr;
@@ -236,7 +236,7 @@ PROCEDURE accept(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_bind"*>
+<*EXTERNAL*>
 PROCEDURE bind(
     s: Ctypes.int;
     name: UNTRACED REF struct_sockaddr;
@@ -244,7 +244,7 @@ PROCEDURE bind(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_connect"*>
+<*EXTERNAL*>
 PROCEDURE connect(
     s: Ctypes.int;
     name: UNTRACED REF struct_sockaddr;
@@ -252,7 +252,7 @@ PROCEDURE connect(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_getpeername"*>
+<*EXTERNAL*>
 PROCEDURE getpeername(
     s: Ctypes.int;
     name: UNTRACED REF struct_sockaddr;
@@ -260,7 +260,7 @@ PROCEDURE getpeername(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_getsockname"*>
+<*EXTERNAL*>
 PROCEDURE getsockname(
     s: Ctypes.int;
     name: UNTRACED REF struct_sockaddr;
@@ -276,10 +276,10 @@ PROCEDURE getsockopt(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_listen"*>
+<*EXTERNAL*>
 PROCEDURE listen(s, backlog: Ctypes.int): Ctypes.int RAISES {};
 
-<*EXTERNAL "m3_recv"*>
+<*EXTERNAL*>
 PROCEDURE recv(
     s: Ctypes.int;
     buf: Ctypes.void_star;
@@ -288,7 +288,7 @@ PROCEDURE recv(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_recvfrom"*>
+<*EXTERNAL*>
 PROCEDURE recvfrom(
     s: Ctypes.int;
     buf: Ctypes.void_star;
@@ -301,7 +301,7 @@ PROCEDURE recvfrom(
 
 (* FIXME - recvmsg *)
 
-<*EXTERNAL "m3_send"*>
+<*EXTERNAL*>
 PROCEDURE send(
     s: Ctypes.int;
     msg: Ctypes.const_void_star;
@@ -310,7 +310,7 @@ PROCEDURE send(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_sendto"*>
+<*EXTERNAL*>
 PROCEDURE sendto(
     s: Ctypes.int;
     msg: Ctypes.const_void_star;
@@ -331,10 +331,10 @@ PROCEDURE setsockopt(
     : Ctypes.int
     RAISES {};
 
-<*EXTERNAL "m3_shutdown"*>
+<*EXTERNAL*>
 PROCEDURE shutdown(s, how: Ctypes.int): Ctypes.int RAISES {};
 
-<*EXTERNAL "m3_socket" *>
+<*EXTERNAL*>
 PROCEDURE socket(af, type, protocol: Ctypes.int): Ctypes.int RAISES {};
 
 <*EXTERNAL*>

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade-5.3.sh,v 1.2 2005-08-31 20:31:58 wagner Exp $
+# $Id: upgrade-5.3.sh,v 1.3 2007-06-22 20:04:04 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -54,13 +54,11 @@ ${ROOT}/scripts/do-cm3-core.sh realclean
 
 header "step 8: building new compiler using new runtime"
 env -i PATH="${PATH}" INSTALLROOT="${INSTALLROOT}" M3CONFIG="${M3CONFIG}" \
-  M3GC_SIMPLE=yes \
   ${ROOT}/scripts/do-pkg.sh buildship \
-  m3gc-simple m3core libm3 m3middle m3linker m3front m3quake cm3 || exit 1
+  m3core libm3 m3middle m3linker m3front m3quake cm3 || exit 1
 
 header "step 9: installing new compiler"
 env -i PATH="${PATH}" INSTALLROOT="${INSTALLROOT}" M3CONFIG="${M3CONFIG}" \
-  M3GC_SIMPLE=yes \
   ${ROOT}/scripts/install-cm3-compiler.sh upgrade
 ls -l ${INSTALLROOT}/bin/cm3*
 
@@ -73,12 +71,10 @@ ${ROOT}/scripts/do-cm3-core.sh realclean
 
 header "step 12: rebuilding runtime and compiler using new gc support"
 env -i PATH="${PATH}" INSTALLROOT="${INSTALLROOT}" M3CONFIG="${M3CONFIG}" \
-  M3GC_SIMPLE=yes \
   ${ROOT}/scripts/do-pkg.sh buildship \
-  m3gc-simple m3core libm3 m3middle m3linker m3front m3quake cm3 || exit 1
+  m3core libm3 m3middle m3linker m3front m3quake cm3 || exit 1
 
 header "step 13: installing new compiler"
 env -i PATH="${PATH}" INSTALLROOT="${INSTALLROOT}" M3CONFIG="${M3CONFIG}" \
-  M3GC_SIMPLE=yes \
   ${ROOT}/scripts/install-cm3-compiler.sh upgrade
 ls -l ${INSTALLROOT}/bin/cm3*

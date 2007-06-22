@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: copy-bootarchives.sh,v 1.2 2003-07-10 23:17:41 wagner Exp $
+# $Id: copy-bootarchives.sh,v 1.3 2007-06-22 20:04:04 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -36,8 +36,6 @@ else
 fi
 
 P=""
-P="${P} m3-libs/m3gc-simple"
-P="${P} m3-libs/m3gc-enhanced"
 P="${P} m3-libs/m3core"
 P="${P} m3-libs/libm3"
 P="${P} m3-sys/m3middle"

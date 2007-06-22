@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pack-crossbuild.sh,v 1.2 2003-01-26 23:43:48 wagner Exp $
+# $Id: pack-crossbuild.sh,v 1.3 2007-06-22 20:04:04 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -29,8 +29,6 @@ export M3CONFIG
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
-P="${P} m3gc-simple"
-P="${P} m3gc-enhanced"
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"

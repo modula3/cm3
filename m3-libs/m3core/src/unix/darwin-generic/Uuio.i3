@@ -7,7 +7,8 @@
 
 INTERFACE Uuio;
 
-FROM Ctypes IMPORT int, char_star, void_star;
+FROM Ctypes IMPORT int, void_star, const_void_star;
+FROM Utypes IMPORT size_t;
 
 (*** sys/uio.h ***)
 
@@ -50,16 +51,16 @@ CONST
 
 (*** read, readv(2) - read from a file ***)
 
-<*EXTERNAL "m3_read"*>
-PROCEDURE read (d: int; buf: char_star; nbytes: int): int;
+<*EXTERNAL*>
+PROCEDURE read (d: int; buf: void_star; nbytes: size_t): int;
 
 <*EXTERNAL*> PROCEDURE readv (d: int; iov: struct_iovec_star;
                               iovcnt: int): int;
 
 (*** write, writev(2) - write on a file ***)
 
-<*EXTERNAL "m3_write"*>
-PROCEDURE write (d: int; buf: char_star; nbytes: int): int;
+<*EXTERNAL*>
+PROCEDURE write (d: int; buf: const_void_star; nbytes: size_t): int;
 
 <*EXTERNAL*> PROCEDURE writev (d: int; iov: struct_iovec_star;
                                ioveclen: int): int;

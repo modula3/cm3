@@ -188,7 +188,7 @@ PROCEDURE signal (sig: int; handler: SignalHandler): SignalHandler;
 <*EXTERNAL*> PROCEDURE kill (pid, sig: int): int;
 
 (*** sigaction(2) - software signal facilities ***)
-<*EXTERNAL "m3_sigaction"*>
+<*EXTERNAL*>
 PROCEDURE sigaction (sig: int;
                      READONLY new: struct_sigaction;
                      VAR old: struct_sigaction): int;

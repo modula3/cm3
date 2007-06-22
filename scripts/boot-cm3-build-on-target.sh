@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.5 2003-07-10 22:16:05 wagner Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.6 2007-06-22 20:04:04 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -32,10 +32,6 @@ fi
 
 L=""
 P=""
-if [ $CROSS_TARGET != NT386GNU ] ; then
-  L="${L} m3-libs/m3gc-simple"
-fi
-#L="${L} m3-libs/m3gc-enhanced"
 L="${L} m3-libs/m3core"
 L="${L} m3-libs/libm3"
 L="${L} m3-sys/m3middle"
@@ -86,13 +82,11 @@ get_libs() {
       echo -n "${p}/m3-sys/m3middle/${CROSS_TARGET}/libm3middle.a ";
       echo -n "${p}/m3-libs/libm3/${CROSS_TARGET}/libm3.a ";
       echo -n "${p}/m3-libs/m3core/${CROSS_TARGET}/libm3core.a ";
-      echo -n "${p}/m3-libs/m3gc-simple/${CROSS_TARGET}/libm3gc-simple.a ";
       echo -n "-lm ";
     ;;
     m3bundle)
       echo -n "${p}/m3-libs/libm3/${CROSS_TARGET}/libm3.a ";
       echo -n "${p}/m3-libs/m3core/${CROSS_TARGET}/libm3core.a ";
-      echo -n "${p}/m3-libs/m3gc-simple/${CROSS_TARGET}/libm3gc-simple.a ";
       echo -n "-lm ";
     ;;
   esac

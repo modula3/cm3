@@ -93,14 +93,14 @@ CONST
 <*EXTERNAL*> PROCEDURE chroot (dirname: char_star): int;
 
 (*** close - delete a descriptor ***)
-<*EXTERNAL "m3_close"*> PROCEDURE close (d: int): int;
+<*EXTERNAL*> PROCEDURE close (d: int): int;
 
 (*** creat - create a new file ***)
 <*EXTERNAL*> PROCEDURE creat (name: char_star; mode: mode_t): int;
 
 (*** dup, dup2 - duplicate an open file descriptor ***)
-<*EXTERNAL "m3_dup"*> PROCEDURE dup (oldd: int): int;
-<*EXTERNAL "m3_dup2"*> PROCEDURE dup2 (oldd, newd: int): int;
+<*EXTERNAL*> PROCEDURE dup (oldd: int): int;
+<*EXTERNAL*> PROCEDURE dup2 (oldd, newd: int): int;
 
 (*** execve - execute a file ***)
 <*EXTERNAL*> PROCEDURE execve (name: char_star;
@@ -146,7 +146,7 @@ CONST (* l_type values *)
   F_WRLCK = 3; (* Write lock *)
   F_UNLCK = 2; (* Remove lock(s) *)
 
-<*EXTERNAL "m3_fcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
+<*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
 
 (*** flock - apply or remove an advisory lock on an open file ***)
 CONST
@@ -790,7 +790,7 @@ CONST (* flags *)
 
   M3_NONBLOCK = O_NONBLOCK;  (* -1 => would block, 0 => EOF *)
 
-<*EXTERNAL "m3_open"*> PROCEDURE open (name: char_star; flags, mode: int): int;
+<*EXTERNAL*> PROCEDURE open (name: const_char_star; flags, mode: mode_t): int;
 
 (*** pipe - create an interprocess channel ***)
 CONST
@@ -809,8 +809,8 @@ CONST (* op *)
 *)
 
 (*** profil - execution time profile ***)
-<*EXTERNAL "m3_profil"*> PROCEDURE profil (samples: char_star; size: size_t;
-                                           offset: u_long; scale: u_int): int;
+<*EXTERNAL*> PROCEDURE profil (samples: char_star; size: size_t;
+                               offset: u_long; scale: u_int): int;
 
 (*** ptrace - process trace ***)
 <*EXTERNAL*> PROCEDURE ptrace (request: int; pid: pid_t; addr: caddr_t;
@@ -843,11 +843,9 @@ TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
   FDSet_star = UNTRACED REF FDSet;
 
-<*EXTERNAL "m3_select"*> PROCEDURE select (nfds: int;
-                                           readfds,
-                                           writefds,
-                                           exceptfds: FDSet_star;
-                                           timeout: struct_timeval_star): int;
+<*EXTERNAL*> PROCEDURE select (nfds: int;
+                               readfds, writefds, exceptfds: FDSet_star;
+                               timeout: struct_timeval_star): int;
 
 (*** setgroups - set group access list ***)
 <*EXTERNAL*> PROCEDURE setgroups (ngroups: int; READONLY gidset: gid_t): int;

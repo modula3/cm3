@@ -94,7 +94,7 @@ PROCEDURE wait (status: w_A_star): Utypes.pid_t;
 PROCEDURE wait3 (status: w_A_star; options: Ctypes.int;
                  rusage: Uresource.struct_rusage_star): Utypes.pid_t;
 
-<*EXTERNAL waitpidwrap*>
+<*EXTERNAL*>
 PROCEDURE waitpid (pid: Utypes.pid_t; status: w_A_star; 
                    options: Ctypes.int): Utypes.pid_t;
 

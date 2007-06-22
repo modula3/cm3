@@ -40,21 +40,6 @@ CONST
   AdrPerHeapPage      = 4096;        (* addresses per page *)
   LogAdrPerHeapPage   = 12;
 
-(* The collector supports the use of VM protection to achieve incremental,
-   generational collection.  This is not possible on all architectures, and
-   it may not be implemented in all cases where it is possible.  The
-   boolean constant "VMHeap" is "TRUE" iff all necessary support is
-   present for this architecture.  "VMHeap" is "TRUE" for the DS3100,
-   whose implementation you might use as a reference. *)
-
-CONST
-  VMHeap = FALSE;
-
-(*** hooks for the C wrapper functions ***)
-
-<*EXTERNAL *> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
-<*EXTERNAL *> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
-
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST

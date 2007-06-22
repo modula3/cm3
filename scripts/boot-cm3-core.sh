@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-core.sh,v 1.5 2003-07-10 23:17:41 wagner Exp $
+# $Id: boot-cm3-core.sh,v 1.6 2007-06-22 20:04:04 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -34,12 +34,6 @@ export M3CONFIG BUILDARGS
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
-if [ "$CROSS_TARGET" != "NT386GNU" ] ; then
-  P="${P} m3gc-simple"
-  if TARGET=${CROSS_TARGET} syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
-    [ ${CROSS_TARGET} != NT386 ] && P="${P} m3gc-enhanced"
-  fi
-fi
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"

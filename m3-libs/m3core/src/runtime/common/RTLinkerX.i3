@@ -19,7 +19,6 @@ IMPORT RT0;
 <*EXTERNAL*> PROCEDURE RTException_I3     (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTHeap_I3          (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTHeapDebug_I3     (mode: INTEGER): RT0.ModulePtr;
-<*EXTERNAL*> PROCEDURE RTHeapDep_I3       (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTHeapEvent_I3     (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTHeapInfo_I3      (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTHeapMap_I3       (mode: INTEGER): RT0.ModulePtr;

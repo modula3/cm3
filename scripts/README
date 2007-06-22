@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.8 2004-02-03 18:20:17 thielema Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.9 2007-06-22 20:04:04 hosking Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -127,7 +127,6 @@ do-cm3-core.sh [callable]
   M3GDB => m3gdb
   HAVE_TCL => tcl
   OMIT_GCC => omit package m3cc
-  M3GC_SIMPLE => don't compile m3gc-enhanced
 
 upgrade.sh [callable]
 ----------
@@ -205,7 +204,6 @@ do-cm3-std.sh [callable]
   HAVE_TCL => tcl
   HAVE_SERIAL => serial
   OMIT_GCC => omit package m3cc
-  M3GC_SIMPLE => don't compile m3gc-enhanced
 
 do-pkg.sh [callable]
 ---------

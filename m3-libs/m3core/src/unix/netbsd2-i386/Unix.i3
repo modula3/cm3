@@ -154,11 +154,7 @@ CONST (* l_type values *)
   F_WRLCK = 3; (* Write lock *)
   F_UNLCK = 2; (* Remove lock(s) *)
 
-(* with vm use this
-<*EXTERNAL "ufcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
-*)
-<*EXTERNAL "m3_fcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
-(* ok *)
+<*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
 
 (*** flock - apply or remove an advisory lock on an open file ***)
 CONST
@@ -753,7 +749,7 @@ CONST
 
 (* Somebody will have to work really hard to get all those ioctl
    parameters right. Beware when using them! *)
-<*EXTERNAL *> PROCEDURE ioctl (d: int; request: u_long; 
+<*EXTERNAL*> PROCEDURE ioctl (d: int; request: u_long; 
                                          argp: ADDRESS): int;
 (* ok *)
 
@@ -825,11 +821,7 @@ CONST (* flags *)
 
   M3_NONBLOCK = O_NONBLOCK;  (* -1 => would block, 0 => EOF *)
 
-(* with vm use this
-<*EXTERNAL "uopen" *> PROCEDURE open (name: char_star; 
-                                       flags, mode: int): int;
-*)
-<*EXTERNAL "m3_open" *> PROCEDURE open (name: char_star; 
+<*EXTERNAL*> PROCEDURE open (name: char_star; 
                                        flags, mode: int): int;
 (* ok *)
 

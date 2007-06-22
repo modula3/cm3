@@ -1,4 +1,4 @@
-@rem $Id: upgrade.cmd,v 1.3 2007-01-01 19:24:02 jkrell Exp $
+@rem $Id: upgrade.cmd,v 1.4 2007-06-22 20:04:04 hosking Exp $
 
 @setlocal
 
@@ -8,7 +8,6 @@
 
 @set p_runtime=^
  import-libs ^
- m3gc-enhanced ^
  m3core ^
  libm3
 
