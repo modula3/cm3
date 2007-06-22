@@ -296,8 +296,6 @@ end
 % "make_lib" is called to combine a collection of object modules into
 % a library.
 
-GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-
 proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
@@ -311,11 +309,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build the shared library
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared " & GCWRAPFLAGS & 
+      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared " &
                            "-Wl,-soname," & lib_sox,
                            "-o", lib_sox, objects)
     else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared " & GCWRAPFLAGS & 
+      ret_code = try_exec ("@" & SYSTEM_CC, "-shared " &
                            "-Wl,-soname," & lib_sox,
                            "-o", lib_sox, objects)
     end
@@ -369,9 +367,9 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
   if shared
-    return try_exec ("@" & SYSTEM_CC, args, GCWRAPFLAGS)
+    return try_exec ("@" & SYSTEM_CC, args)
   else
-    return try_exec ("@" & SYSTEM_CC, "-static", args, GCWRAPFLAGS)
+    return try_exec ("@" & SYSTEM_CC, "-static", args)
     %%% -- see M3_NEED_STANDALONE_LINKS  below
     %%%return try_exec ("@" & SYSTEM_CC, args)
   end
