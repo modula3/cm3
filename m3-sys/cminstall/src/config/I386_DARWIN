@@ -17,7 +17,7 @@ else
 end
 readonly OS_TYPE      = "POSIX"          % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"         % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486-apple-darwin8.7.0"
+readonly GNU_PLATFORM = "i386-apple-darwin8.8.2"
                                          % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
@@ -211,6 +211,7 @@ SYSTEM_LIBS = {
                        13 "/usr/X11R6/lib"
                    END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
+  "PTHREAD"    : [ ],
   "TCP"        : [ ]
 }
 
@@ -218,7 +219,7 @@ SYSTEM_LIBS = {
 % scanned by the linker.
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "PTHREAD", "LIBC" ]
 
 %---------------------------------------------------------- system programs ---
 
@@ -272,7 +273,8 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
+  local args = [ "-quiet", source, "-o", object, "-fPIC", "-march=i686" ]
+  args += "-fno-reorder-blocks"
   if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
@@ -292,7 +294,8 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fPIC", options ]
+  local args = [ "-fPIC", "-arch", "i486", options ]
+  args += [ "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk" ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -305,7 +308,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, source, "-o", object)
+  return try_exec ("@" & SYSTEM_ASM, "-q", "-arch", "i486", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -330,14 +333,14 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build the shared library
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg", "-dynamiclib",
+      ret_code = try_exec ("@" & SYSTEM_CC, "-pg", "-arch", "i486", "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk", "-dynamiclib",
                            "-multiply_defined suppress",
                            "-twolevel_namespace",
                            "-compatibility_version", vmaj,
                            "-current_version", version, "-install_name", lib_pn,
                            "-lgcc", "-o", lib_soxx, objects, imported_libs)
     else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-dynamiclib",
+      ret_code = try_exec ("@" & SYSTEM_CC, "-arch", "i486", "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk", "-dynamiclib",
                            "-multiply_defined suppress",
                            "-twolevel_namespace",
                            "-compatibility_version", vmaj,
@@ -408,8 +411,10 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
+  args += [ "-arch", "i486" ]
   args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
   args += [ "-multiply_defined suppress", "-bind_at_load", "-shared-libgcc" ]
+  args += [ "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk" ]
   return try_exec ("@cc", args)
 end
 
