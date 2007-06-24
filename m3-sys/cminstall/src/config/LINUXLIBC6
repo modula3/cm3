@@ -204,6 +204,7 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
+  "PTHREAD"    : [ "-L/usr/lib", "-lpthread" ],
   "TCP"        : [ ]
 }
 
@@ -211,7 +212,7 @@ SYSTEM_LIBS = {
 % scanned by the linker.
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "PTHREAD", "LIBC" ]
 
 %---------------------------------------------------------- system programs ---
 
@@ -256,8 +257,8 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
-  if optimize  args += "-O"  end
+  local args = [ "-quiet", source, "-o", object, "-fPIC", "-m32", "-fno-reorder-blocks" ]
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs+"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
@@ -276,7 +277,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fPIC", options ]
+  local args = [ "-m32", "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs+"  end
   if M3_PROFILING args += "-pg" end
@@ -289,7 +290,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, source, "-o", object)
+  return try_exec ("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -309,11 +310,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build the shared library
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared " &
+      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared -m32 " &
                            "-Wl,-soname," & lib_sox,
                            "-o", lib_sox, objects)
     else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared " &
+      ret_code = try_exec ("@" & SYSTEM_CC, "-shared -m32 " &
                            "-Wl,-soname," & lib_sox,
                            "-o", lib_sox, objects)
     end
@@ -365,7 +366,7 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
+  args += [ "-m32", "-o", prog, "-fPIC", options, objects, imported_libs ]
   if shared
     return try_exec ("@" & SYSTEM_CC, args)
   else
