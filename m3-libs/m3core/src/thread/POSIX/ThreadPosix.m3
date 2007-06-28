@@ -508,26 +508,24 @@ PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
   END ProcessPools;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+  (* we need to be careful to avoid read/write barriers here --
+     hence the extensive use of LOOPHOLE. *)
   VAR
-    t:= self; start, stop: ADDRESS;
-    context := self.context;
+    me := LOOPHOLE(LOOPHOLE(ADR(self), UNTRACED REF ADDRESS)^, T);
+    t: T; start, stop: ADDRESS;
   BEGIN
     (* save my state *)
-    EVAL RTThread.Save (context.buf);
-    Tos (context, start, stop);		 (* process the stack *)
-    p (start, stop);
-    WITH z = context.buf DO		 (* process the registers *)
-      p (ADR (z), ADR (z) + ADRSIZE (z))
-    END;
-    t := self.next;
-    WHILE t # self DO
+    EVAL RTThread.Save (me.context.buf);
+
+    t := me;
+    REPEAT
       Tos (t.context, start, stop);	 (* process the stack *)
       p (start, stop);
       WITH z = t.context.buf DO		 (* process the registers *)
         p (ADR (z), ADR (z) + ADRSIZE (z))
       END;
-      t := t.next;
-    END;
+      t := LOOPHOLE(LOOPHOLE(ADR(t.next), UNTRACED REF ADDRESS)^, T);
+    UNTIL t = me;
   END ProcessStacks;
 
 (*------------------------------------------------- I/O and Timer support ---*)
@@ -1083,7 +1081,6 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
      threads. It also saves the jmp_buf at the beginning of the 
      call in a global; that jmp_buf will be (after updating the 
      stack pointer) for forked threads *)
-  <*FATAL Alerted*>
   BEGIN
     
     IF debug THEN
@@ -1127,6 +1124,7 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
   END DetermineContext;
 
 PROCEDURE StartThread () =
+  <*FATAL Alerted*>
   BEGIN
     handlerStack := self.context.handlers;
     Cerrno.SetErrno(self.context.errno);
