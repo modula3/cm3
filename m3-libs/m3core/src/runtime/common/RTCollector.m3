@@ -479,20 +479,18 @@ PROCEDURE Moved (ref: RefReferent): BOOLEAN =
    each stack, where start and stop are the addresses of the first and last
    word of the stack under consideration. *)
 
-VAR
-  heap_min, heap_max: ADDRESS;
-  (* Must be set before calling NoteStackLocations *)
-
 PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
   VAR
     fp : ADDRESS := start;
+    firstAllocatedAddress             := PageToAddress(p0);
+    firstNonAllocatedAddress          := PageToAddress(p1);
     p  : ADDRESS;
     pp : Page;
   BEGIN
     stop := stop - ADRSIZE (ADDRESS); (* so we don't overrun the valid addresses *)
     WHILE fp <= stop DO               (* with the memory read on the next line.  *)
       p := LOOPHOLE(fp, UNTRACED REF ADDRESS)^;
-      IF heap_min <= p AND p < heap_max THEN
+      IF firstAllocatedAddress <= p AND p < firstNonAllocatedAddress THEN
         pp := Word.RightShift (LOOPHOLE(p, INTEGER), LogBytesPerPage);
         WITH pd = desc[pp - p0] DO
           IF pd.space = Space.Previous THEN
@@ -840,8 +838,6 @@ PROCEDURE CollectSomeInStateZero () =
        pages, because we want to make sure that old, impure, dirty
        pages referenced by threads are marked as ambiguous roots.
        Otherwise, these pages won't get cleaned by "FinishThreadPages". *)
-    heap_min := PageToAddress (p0);
-    heap_max := PageToAddress (p1);
     ThreadF.ProcessStacks(NoteStackLocations);
     (* Now, nothing in previous space is referenced by a thread. *)
 
