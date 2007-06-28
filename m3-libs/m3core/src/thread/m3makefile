@@ -42,7 +42,7 @@ readonly USE_PTHREADS = {
 }
 
 include_dir ("Common")
-if defined("PTHREAD") or USE_PTHREADS{TARGET}
+if not defined("NOPTHREAD") and USE_PTHREADS{TARGET}
   include_dir("PTHREAD")
 else
   include_dir (OS_TYPE)
