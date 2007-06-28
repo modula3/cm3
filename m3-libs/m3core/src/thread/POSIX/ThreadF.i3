@@ -78,7 +78,6 @@ VAR myId: Id;
 
 (*------------------------------------------------------ mutual exclusion ---*)
 
-<*EXTERNAL ThreadF__inCritical*>
 VAR inCritical: INTEGER;
 (* inCritical provides low-level mutual exclusion between the thread
    runtime, garbage collector and the Unix signal that triggers thread
