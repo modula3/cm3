@@ -519,6 +519,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 
     t := me;
     REPEAT
+      p (ADR (t), ADR (t) + ADRSIZE (t));
       Tos (t.context, start, stop);	 (* process the stack *)
       p (start, stop);
       WITH z = t.context.buf DO		 (* process the registers *)
