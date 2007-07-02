@@ -2185,7 +2185,7 @@ PROCEDURE WeakRefToRef (READONLY t: WeakRef): REFANY =
             END;
           END;
         END;
-        r := LOOPHOLE(entry.r, REFANY);
+        r := LOOPHOLE(ADR(entry.r), UNTRACED REF REFANY)^;
       END;
     END;
     RTOS.UnlockHeap();
@@ -2251,7 +2251,7 @@ PROCEDURE WeakCleaner (<*UNUSED*> closure: Thread.Closure): REFANY =
         IF copy.p # NIL THEN
           LOOPHOLE(copy.p, WeakRefCleanUpProc)(
             LOOPHOLE(WeakRefAB{a := i, b := copy.t.b}, WeakRef),
-            LOOPHOLE(copy.r, REFANY));
+            LOOPHOLE(ADR(copy.r), UNTRACED REF REFANY)^);
         END;
         copy.r := NIL;           (* to help conservative collector *)
       END;
