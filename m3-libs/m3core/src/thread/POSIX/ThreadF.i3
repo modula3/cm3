@@ -72,19 +72,6 @@ PROCEDURE RegisterHooks (h: Hooks; init := TRUE): Hooks RAISES {};
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
 
-<*EXTERNAL "ThreadF__myId"*>
-VAR myId: Id;
-(* The id of the currently running thread *)
-
-(*------------------------------------------------------ mutual exclusion ---*)
-
-VAR inCritical: INTEGER;
-(* inCritical provides low-level mutual exclusion between the thread
-   runtime, garbage collector and the Unix signal that triggers thread
-   preemption.  If inCritical is greater than zero, thread preemption
-   is disabled.  We *ASSUME* that "INC(inCritical)" and "DEC(inCritical)"
-   generate code that is atomic with respect to Unix signal delivery. *)
-
 (*------------------------------------------------------------ preemption ---*)
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL);
