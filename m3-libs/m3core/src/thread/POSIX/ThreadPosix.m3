@@ -120,6 +120,15 @@ REVEAL
 TYPE
   IntPtr = UNTRACED REF INTEGER;
 
+(*------------------------------------------------------ mutual exclusion ---*)
+
+VAR inCritical: INTEGER;
+(* inCritical provides low-level mutual exclusion between the thread
+   runtime, garbage collector and the Unix signal that triggers thread
+   preemption.  If inCritical is greater than zero, thread preemption
+   is disabled.  We *ASSUME* that "INC(inCritical)" and "DEC(inCritical)"
+   generate code that is atomic with respect to Unix signal delivery. *)
+
 (*------------------------------------------------------- Unix time hack! ---*)
 
 TYPE
@@ -1225,7 +1234,6 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
       from.handlers := handlerStack;
       from.errno := Cerrno.GetErrno();
       self := new_self;
-      myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
       handlerStack := from.handlers;
       Cerrno.SetErrno(from.errno);
@@ -1500,7 +1508,6 @@ PROCEDURE Init()=
       stack_grows_down := ADR (xx) > QQ();
       InitTopContext (topThread.context, ADR(xx));
       self := topThread;
-      myId := self.id;
 
       pausedThreads := NIL;
 
