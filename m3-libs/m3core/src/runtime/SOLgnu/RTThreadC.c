@@ -17,9 +17,6 @@ void RTThread__Transfer (ucontext_t *from, ucontext_t *to)
   }
 }
 
-/* global thread ID used by 'etp' */
-int ThreadF__myId = 1;
-
 /* global, per-thread linked list of exception handlers */
 void* ThreadF__handlerStack = 0;
 
