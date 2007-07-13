@@ -280,7 +280,7 @@ m3_parse_e8 ( )
            other than an interface.) */ 
         sym = lookup_symbol 
                 ( cur_tok . string, 
-                  expression_context_block,
+                  m3_proc_body_block ( expression_context_block ),
                   VAR_DOMAIN, 0, NULL
                 ); 
         if ( sym != NULL ) 
