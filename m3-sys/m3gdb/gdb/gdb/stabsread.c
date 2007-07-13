@@ -636,8 +636,11 @@ define_symbol (CORE_ADDR valu, char *string, int desc, int type,
       SYMBOL_LINE (sym) = desc;
     }
 #ifdef _LANG_m3
-  else if ( processing_m3_compilation )
-         { SYMBOL_LINE ( sym ) = desc; }
+  else if ( processing_pm3_compilation )
+      
+    { /* So does the integrated Modula-3 back end. */ 
+      SYMBOL_LINE ( sym ) = desc; 
+    }
 #endif 
   else
     {

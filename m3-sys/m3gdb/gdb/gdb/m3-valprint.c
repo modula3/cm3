@@ -14,7 +14,6 @@
 #include "gdb_string.h"
 #include "symtab.h" 
 #include "valprint.h" 
-#include "gdb_assert.h" 
 
 #include "m3-valprint.h"
 #include "m3-lang.h"
@@ -1074,8 +1073,8 @@ m3_frame_no_from_static_link ( CORE_ADDR inf_static_link )
   if ( inf_static_link == 0 ) { return - 1; } 
   l_frame = deprecated_safe_get_selected_frame ( ); 
   /* Using m3_address_lies_within_frame_locals makes this immune to gcc's
-     evil habit of making static links point to various places within the
-     activation record besides where the base pointer would. */ 
+     evil habit of making static links point to variable places within the
+     activation record besides where the frame pointer does. */ 
   while ( ! m3_address_lies_within_frame_locals ( inf_static_link , l_frame ) ) 
     { l_frame = m3_static_parent_frame ( l_frame ); } 
   return frame_relative_level ( l_frame ); 
@@ -1090,7 +1089,7 @@ m3_print_proc_value (
     proc_sym = find_pc_function ( inf_code_addr ); 
     fputs_filtered ( "{\"", stream ); 
     m3_print_proc_name ( proc_sym, stream ); 
-    /* FIXME:  This is just full of calls on wrap_here, which takes no stream
+    /* FIXME:  gdb is just full of calls on wrap_here, which takes no stream
        parameter, but instead is hard-coded to use gdb_stdout.  Everything else
        take a stream parameter.  Either it's inconsistent, or the stream 
        parameter is unnecessary. */ 
