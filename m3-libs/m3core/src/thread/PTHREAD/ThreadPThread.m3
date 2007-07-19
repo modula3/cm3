@@ -218,6 +218,7 @@ PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
   (* LL = cm on entry; LL = cm on normal exit, 0 on exception exit *)
   (* If self.alerted, clear "alerted", leave cm and raise "Alerted". *)
   BEGIN
+    <*ASSERT NOT self.alertable*>
     IF self.alerted THEN
       self.alerted := FALSE;
       WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
@@ -236,6 +237,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     InnerTestAlert(self);
     self.alertable := TRUE;
     InnerWait(m, c, self);
+    self.alertable := FALSE;
     InnerTestAlert(self);
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
@@ -741,16 +743,16 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
 
 PROCEDURE Pause(n: LONGREAL) =
   VAR
-    amount, remaining: Utime.struct_timespec;
+    until: Utime.struct_timespec;
     self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
     IF n <= 0.0d0 THEN RETURN END;
     IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-    ToNTime(n, amount);
-    WHILE Utime.nanosleep(amount, remaining) # 0 DO
-      amount := remaining;
-    END;
+    ToNTime(Time.Now() + n, until);
+    WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
+    WHILE Upthread.cond_timedwait(self.waitCond^, cm, until) = 0 DO END;
+    WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END Pause;
 
@@ -813,8 +815,8 @@ PROCEDURE IOAlertWait(fd: INTEGER; read: BOOLEAN;
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     result := XIOWait(fd, read, timeoutInterval);
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-      InnerTestAlert(self);
       self.alertable := FALSE;
+      InnerTestAlert(self);
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
     RETURN result;
