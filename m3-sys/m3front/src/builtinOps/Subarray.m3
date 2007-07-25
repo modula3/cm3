@@ -27,7 +27,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     IF (NOT ArrayType.Split (t, index, elt)) THEN
       Error.Msg ("SUBARRAY: first argument must be an array");
     ELSIF (NOT Type.IsAssignable (Card.T, u)) THEN
-      Error.Msg ("SUBARRAY: second argrment must be assignable to CARDINAL");
+      Error.Msg ("SUBARRAY: second argument must be assignable to CARDINAL");
     ELSIF (NOT Type.IsAssignable (Card.T, v)) THEN
       Error.Msg ("SUBARRAY: third argument must be assignable to CARDINAL");
     ELSE
