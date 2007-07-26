@@ -4,7 +4,7 @@
 UNSAFE MODULE BuiltinSpecials;
 
 IMPORT Atom, Pickle, Rd, RefList;
-IMPORT Text, Text8, Text16, TextLiteral, Thread, Wr;
+IMPORT Text, Text8, Text16, TextLiteral, Text8CString, TextClass, Thread, Wr;
 
 FROM Pickle IMPORT Error, RefID, Special, Reader, Writer;
 
@@ -15,6 +15,8 @@ PROCEDURE Register () =
     IF init_done THEN RETURN; END;
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (TextLiteral.T),
                                  write := TextPklWrite, read  := TextPklRead));
+    Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (Text8CString.T),
+                                 write := TextPklWrite, read  := TextPklRead));
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (Atom.T),
                                  write := AtomPklWrite, read  := AtomPklRead));
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (RefList.T),
@@ -22,34 +24,36 @@ PROCEDURE Register () =
     init_done := TRUE;
   END Register;
 
-(*-------------------------------------------------------- TextLiteral.T ---*)
+(*-------------------------------------------------------- TEXT specials ---*)
 
 PROCEDURE TextPklWrite (<*UNUSED*> sp: Special;  r: REFANY;  pwr: Writer)
   RAISES {Error, Wr.Failure, Thread.Alerted} =
   TYPE CPtr  = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes] OF CHAR;
   TYPE WCPtr = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes DIV 2] OF WIDECHAR;
-  VAR txt := NARROW (r, TextLiteral.T);  cp: CPtr;  wcp: WCPtr;
+  VAR txt := LOOPHOLE (r, TEXT);  cp: CPtr;  wcp: WCPtr;  info: TextClass.Info;
   BEGIN
-    IF TYPECODE (r) # TYPECODE (TextLiteral.T) THEN
-      (* subtypes cannot be pickled by the default specials because
-         they'll try to write something that matches the type
-         declaration with a gazillion characters *)
-      RAISE Error ("cannot pickle TextLiteral.T subtypes");
-    END;
-    pwr.writeInt (txt.cnt);
-    IF (txt.cnt >= 0) THEN
-      cp := LOOPHOLE (ADR (txt.buf[0]), CPtr);
-      Wr.PutString (pwr.wr, SUBARRAY (cp^, 0, txt.cnt));
+    TYPECASE (txt) OF
+    | TextLiteral.T  => (* ok *)
+    | Text8CString.T => (* ok *)
     ELSE
-      wcp := LOOPHOLE (ADR (txt.buf[0]), WCPtr);
-      Wr.PutWideString (pwr.wr, SUBARRAY (wcp^, 0, -txt.cnt));
+      RAISE Error ("cannot pickle subtypes of TextLiteral.T or Text8CString.T");
+    END;
+    txt.get_info (info);
+    IF info.wide THEN
+      pwr.writeInt (-info.length);
+      wcp := LOOPHOLE (info.start, WCPtr);
+      Wr.PutWideString (pwr.wr, SUBARRAY (wcp^, 0, info.length));
+    ELSE
+      pwr.writeInt (info.length);
+      cp := LOOPHOLE (info.start, CPtr);
+      Wr.PutString (pwr.wr, SUBARRAY (cp^, 0, info.length));
     END;
   END TextPklWrite;
 
 PROCEDURE TextPklRead (<*UNUSED*> sp: Special;  prd: Reader;
-                        <*UNUSED*> id: RefID): REFANY
+                              <*UNUSED*> id: RefID): REFANY
   RAISES {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
-  VAR len := ReadLength  (prd);
+  VAR len: INTEGER := prd.readInt ();
   BEGIN
     IF (len >= 0)
       THEN RETURN Text8Read (prd, len);
