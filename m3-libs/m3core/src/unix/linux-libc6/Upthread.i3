@@ -293,7 +293,7 @@ PROCEDURE rwlockattr_setpshared (VAR attr: pthread_rwlockattr_t;
 (* Functions for handling conditional variables.  *)
 <*EXTERNAL pthread_cond_init*>
 PROCEDURE cond_init (VAR cond: pthread_cond_t;
-                     READONLY attr: pthread_condattr_t): int;
+                     attr: UNTRACED REF pthread_condattr_t): int;
 <*EXTERNAL pthread_cond_destroy*>
 PROCEDURE cond_destroy (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_signal*>

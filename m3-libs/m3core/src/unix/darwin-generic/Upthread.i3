@@ -63,6 +63,7 @@ CONST
 TYPE
   struct_opaque_pthread_t = RECORD
     sig: long;
+    cleanup_stack: ADDRESS;
     opaque: ARRAY [0..PTHREAD_SIZE-1] OF char;
   END;
   pthread_t = UNTRACED REF struct_opaque_pthread_t;
@@ -254,7 +255,7 @@ PROCEDURE cond_broadcast (VAR cond: pthread_cond_t): int;
 PROCEDURE cond_destroy (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_init*>
 PROCEDURE cond_init (VAR cond: pthread_cond_t;
-                     READONLY attr: pthread_condattr_t): int;
+                     attr: UNTRACED REF pthread_condattr_t): int;
 <*EXTERNAL pthread_cond_signal*>
 PROCEDURE cond_signal (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_wait*>
