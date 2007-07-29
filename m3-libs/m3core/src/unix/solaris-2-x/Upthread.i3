@@ -313,7 +313,7 @@ PROCEDURE condattr_getpshared (READONLY attr: pthread_condattr_t;
                                VAR pshared: int): int;
 <*EXTERNAL pthread_cond_init*>
 PROCEDURE cond_init (VAR cond: pthread_cond_t;
-                     READONLY attr: pthread_condattr_t): int;
+                     attr: UNTRACED REF pthread_condattr_t): int;
 <*EXTERNAL pthread_cond_destroy*>
 PROCEDURE cond_destroy (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_broadcast*>
