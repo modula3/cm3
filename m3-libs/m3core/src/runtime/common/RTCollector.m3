@@ -1987,7 +1987,7 @@ PROCEDURE PerfStart () =
     IF RTPerfTool.Start("showheap", perfW) THEN
       perfOn := TRUE;
       RTProcess.RegisterExitor(PerfStop);
-      PerfGrow(p0, p1 - p0);
+      IF p1 > p0 THEN PerfGrow(p0, p1 - p0) END;
 
       i := p0;
       WHILE i # Nil AND i < p1 DO
@@ -2750,14 +2750,6 @@ PROCEDURE Init () =
 
     incremental  := RTLinker.incremental;
     generational := RTLinker.generational;
-    IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
-    IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
-    IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
-    IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
-    IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
-    GetMaxHeap();
-    GetGCRatio();
-    PerfStart();
   END Init;
 
 PROCEDURE GetMaxHeap () =
@@ -2871,4 +2863,12 @@ PROCEDURE FinishBench() =
   END FinishBench;
 
 BEGIN
+  IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
+  IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
+  IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
+  IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
+  IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
+  GetMaxHeap();
+  GetGCRatio();
+  PerfStart();
 END RTCollector.
