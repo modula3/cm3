@@ -283,7 +283,7 @@ PROCEDURE mutexattr_getrobust_np (READONLY attr: pthread_mutexattr_t;
                                   VAR robustness: int): int;
 <*EXTERNAL pthread_mutex_init*>
 PROCEDURE mutex_init (VAR mutex: pthread_mutex_t;
-                      READONLY attr: pthread_mutexattr_t): int;
+                      attr: UNTRACED REF pthread_mutexattr_t): int;
 <*EXTERNAL pthread_mutex_consistent_np*>
 PROCEDURE mutex_consistent_np (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_mutex_destroy*>
