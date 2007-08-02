@@ -304,7 +304,7 @@ PROCEDURE mutex_getprioceiling(READONLY mutex: pthread_mutex_t;
                                VAR prioceiling: int): int;
 <*EXTERNAL pthread_mutex_init*>
 PROCEDURE mutex_init (VAR mutex: pthread_mutex_t;
-                      READONLY attr: pthread_mutexattr_t): int;
+                      attr: UNTRACED REF pthread_mutexattr_t): int;
 <*EXTERNAL pthread_mutex_lock*>
 PROCEDURE mutex_lock (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_mutex_setprioceiling*>

@@ -222,7 +222,7 @@ PROCEDURE testcancel ();
 (* Mutex handling.  *)
 <*EXTERNAL pthread_mutex_init*>
 PROCEDURE mutex_init (VAR mutex: pthread_mutex_t;
-                      READONLY attr: pthread_mutexattr_t): int;
+                      attr: UNTRACED REF pthread_mutexattr_t): int;
 <*EXTERNAL pthread_mutex_destroy*>
 PROCEDURE mutex_destroy (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_mutex_trylock*>
