@@ -19,8 +19,6 @@ IMPORT Ctypes, Utypes;
 (*----------------------------------------------------- types and globals ---*)
 
 VAR
-  cm := PTHREAD_MUTEX_INITIALIZER; (* global lock for fields of Mutex/Condition *)
-
   stack_grows_down: BOOLEAN;
 
   nextId: CARDINAL := 1;
@@ -55,7 +53,10 @@ REVEAL
     cond: Condition := NIL;		 (* LL = threadMu *)
 
     (* the alert flag *)
-    alerted : BOOLEAN := FALSE;		 (* LL = cm *)
+    alerted : BOOLEAN := FALSE;		 (* LL = threadMu *)
+
+    (* indicates that "result" is set *)
+    completed: BOOLEAN := FALSE;	 (* LL = threadMu *)
 
     (* "Join" or "AlertJoin" has already returned *)
     joined: BOOLEAN := FALSE;            (* LL = threadMu *)
@@ -181,14 +182,11 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
 
 PROCEDURE XTestAlert (self: T) RAISES {Alerted} =
   BEGIN
-    TRY
-      WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
+    LOCK threadMu DO
       IF self.alerted THEN
         self.alerted := FALSE;
         RAISE Alerted;
       END;
-    FINALLY
-      WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     END;
   END XTestAlert;
 
@@ -247,9 +245,9 @@ PROCEDURE Broadcast (c: Condition) =
 
 PROCEDURE Alert (t: T) =
   BEGIN
-    WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-    t.alerted := TRUE;
-    WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
+    LOCK threadMu DO
+      t.alerted := TRUE;
+    END;
   END Alert;
 
 PROCEDURE TestAlert (): BOOLEAN =
@@ -258,12 +256,13 @@ PROCEDURE TestAlert (): BOOLEAN =
     IF self = NIL THEN
       Die(ThisLine(), "TestAlert called from non-Modula-3 thread");
     END;
-    TRY
-      WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-      RETURN self.alerted;
-    FINALLY
-      self.alerted := FALSE;
-      WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
+    LOCK threadMu DO
+      IF self.alerted THEN
+        self.alerted := FALSE;
+        RETURN TRUE;
+      ELSE
+        RETURN FALSE;
+      END;
     END;
   END TestAlert;
 
@@ -403,6 +402,7 @@ PROCEDURE CheckSlot (t: T): BOOLEAN =
     RTIO.PutText("  result:     "); RTIO.PutAddr(LOOPHOLE(t.result, ADDRESS));        RTIO.PutChar('\n');
     RTIO.PutText("  cond:       "); RTIO.PutAddr(LOOPHOLE(t.cond, ADDRESS));          RTIO.PutChar('\n');
     RTIO.PutText("  alerted:    "); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
+    RTIO.PutText("  completed:  "); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
     RTIO.PutText("  joined:     "); RTIO.PutInt(ORD(t.joined));    RTIO.PutChar('\n');
     RTIO.PutText("  id:         "); RTIO.PutInt(t.id);             RTIO.PutChar('\n');
     RTIO.Flush();
@@ -448,27 +448,25 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation) =
-  VAR self: T;  cl: Closure; res: REFANY;
+  VAR self: T;  res: REFANY;
   BEGIN
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
       self := slots [me.slot];
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
 
-    LOCK threadMu DO
-      (* wait for the work *)
-      WHILE self.closure = NIL DO Wait(threadMu, self.cond) END;
-      cl := self.closure;
-    END;
+    (* Let parent know we are running *)
+    LOCK threadMu DO Signal(self.cond) END;
 
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning(self.id) END;
-    res := cl.apply();
+    res := self.closure.apply();
     IF perfOn THEN PerfChanged(self.id, State.dying) END;
 
     LOCK threadMu DO
       (* mark "self" done and clean it up a bit *)
       self.result := res;
       self.closure := NIL;
+      self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
     END;
 
@@ -502,7 +500,6 @@ PROCEDURE Fork (closure: Closure): T =
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
     | SizedClosure (scl) => size := scl.stackSize;
-    | NULL => RETURN NIL;		 (* nothing to do *)
     ELSE (*skip*)
     END;
 
@@ -513,30 +510,29 @@ PROCEDURE Fork (closure: Closure): T =
       WITH r = Upthread.attr_getstacksize(attr, bytes)  DO <*ASSERT r=0*> END;
       bytes := MAX(bytes, size * ADRSIZE(Word.T));
       EVAL Upthread.attr_setstacksize(attr, bytes);
-      WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
-        IF r # 0 THEN
-          RTError.MsgI(ThisFile(), ThisLine(),
-                       "Thread client error: Fork failed with error: ", r);
-        END;
-      END;
       act.next := allThreads;
       act.prev := allThreads.prev;
       act.size := size;
       allThreads.prev.next := act;
       allThreads.prev := act;
+      LOCK threadMu DO
+        WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
+          IF r # 0 THEN
+            RTError.MsgI(ThisFile(), ThisLine(),
+                         "Thread client error: Fork failed with error: ", r);
+          END;
+        END;
+        (* last minute sanity checking *)
+        <* ASSERT CheckSlot (t) *>
+        <* ASSERT t.act.next # NIL *>
+        <* ASSERT t.act.prev # NIL *>
+
+        t.closure := closure;
+        t.id := nextId;  INC(nextId);
+        IF perfOn THEN PerfChanged(t.id, State.alive) END;
+        Wait(threadMu, t.cond);
+      END;
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
-
-    (* last minute sanity checking *)
-    <* ASSERT CheckSlot (t) *>
-    <* ASSERT t.act.next # NIL *>
-    <* ASSERT t.act.prev # NIL *>
-
-    LOCK threadMu DO
-      t.closure := closure;
-      t.id := nextId;  INC(nextId);
-      Signal(t.cond);
-      IF perfOn THEN PerfChanged(t.id, State.alive) END;
-    END;
 
     RETURN t;
   END Fork;
@@ -548,11 +544,9 @@ PROCEDURE Join (t: T): REFANY =
       IF t.joined THEN
         Die(ThisLine(), "attempt to join with thread twice");
       END;
-      WHILE t.closure # NIL DO Wait(threadMu, t.cond) END;
+      WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
       res := t.result;
-      t.result := NIL;
       t.joined := TRUE;
-      t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
@@ -565,9 +559,8 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
       IF t.joined THEN
         Die(ThisLine(), "attempt to join with thread twice");
       END;
-      WHILE t.closure # NIL DO AlertWait(threadMu, t.cond) END;
+      WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
       res := t.result;
-      t.result := NIL;
       t.joined := TRUE;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
