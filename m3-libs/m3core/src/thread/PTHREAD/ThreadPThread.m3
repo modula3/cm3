@@ -167,18 +167,22 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   VAR until: Utime.struct_timespec;
   BEGIN
-    IF alertable THEN XTestAlert(self) END;
     IF c.cond = NIL THEN InitCondition(c) END;
     IF m.mutex = NIL THEN InitMutex(m) END;
-    LOOP
-      ToNTime(Time.Now() + 1.0d0, until);
-      WITH r = Upthread.cond_timedwait(c.cond^, m.mutex^, until) DO
-        IF alertable THEN XTestAlert(self) END;
-        IF r = 0 THEN EXIT END;
-        <*ASSERT r=Uerror.ETIMEDOUT*>
+    IF alertable THEN
+      XTestAlert(self);
+      LOOP
+        ToNTime(Time.Now() + 1.0d0, until);
+        WITH r = Upthread.cond_timedwait(c.cond^, m.mutex^, until) DO
+          XTestAlert(self);
+          IF r = 0 THEN EXIT END;
+          <*ASSERT r=Uerror.ETIMEDOUT*>
+        END;
       END;
+    ELSE
+      WITH r = Upthread.cond_wait(c.cond^, m.mutex^) DO <*ASSERT r=0*> END;
     END;
-  END XWait;  
+  END XWait;
 
 PROCEDURE XTestAlert (self: T) RAISES {Alerted} =
   BEGIN
@@ -394,7 +398,7 @@ PROCEDURE CheckSlot (t: T): BOOLEAN =
     RETURN result;
   END CheckSlot;
 
-<*UNUSED*> PROCEDURE DumpThread (t: T) =
+PROCEDURE DumpThread (t: T) =
   BEGIN
     RTIO.PutText("Thread: "); RTIO.PutAddr(LOOPHOLE(t, ADDRESS)); RTIO.PutChar('\n');
     RTIO.PutText("  act:        "); RTIO.PutAddr(LOOPHOLE(t.act, ADDRESS));           RTIO.PutChar('\n');
@@ -407,6 +411,18 @@ PROCEDURE CheckSlot (t: T): BOOLEAN =
     RTIO.PutText("  id:         "); RTIO.PutInt(t.id);             RTIO.PutChar('\n');
     RTIO.Flush();
   END DumpThread;
+
+<*UNUSED*>
+PROCEDURE DumpThreads () =
+  VAR t: T;
+  BEGIN
+    FOR i := 1 TO LAST(slots^) DO
+      t := slots[i];
+      IF t # NIL THEN
+        DumpThread(t);
+      END;
+    END;
+  END DumpThreads;
 
 (*------------------------------------------------------------ Fork, Join ---*)
 
@@ -925,7 +941,7 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
         END;
         act := me.next;
         nLive := 0;
-      END;  
+      END;
     ELSE
       (* No native suspend routine so signal thread to suspend *)
       WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
