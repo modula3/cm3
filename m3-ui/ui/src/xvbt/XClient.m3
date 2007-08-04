@@ -880,8 +880,8 @@ PROCEDURE Sync (v: T; ch: VBT.T; wait := TRUE) RAISES {} =
           END
         END
       FINALLY
-        Thread.Acquire(ch);
         Exit(v);
+        Thread.Acquire(ch);
       END
     EXCEPT
       X.Error, TrestleComm.Failure =>     (* skip *)
