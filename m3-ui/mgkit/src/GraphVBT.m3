@@ -2658,8 +2658,8 @@ PROCEDURE RefreshGraph (graph: T; all := TRUE) =
         TRY
           ScaleFilter.Scale(graph, hs, vs);
         FINALLY
-          Thread.Acquire(graph.mgv.mu);
           Thread.Acquire(graph.mu);
+          Thread.Acquire(graph.mgv.mu);
         END;
       END;
     END;
