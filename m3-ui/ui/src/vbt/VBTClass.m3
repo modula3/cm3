@@ -796,8 +796,8 @@ PROCEDURE SyncDefault(v: VBT.Split; ch: VBT.T; wait := TRUE) RAISES {} =
       WITH p = v.parent DO
         IF p # NIL THEN p.sync(v, wait) END
       END;
-      Thread.Acquire(ch);
     END;
+    Thread.Acquire(ch);
   END SyncDefault;
 
 PROCEDURE CaptureDefault(
