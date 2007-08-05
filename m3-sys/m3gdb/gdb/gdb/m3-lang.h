@@ -29,29 +29,33 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.  
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
-   do not cause this to be nonzero, but they do cause 
+   do not cause this to be true, but they do cause 
    processing_gcc_compilation to be nonzero. */ 
-extern int processing_pm3_compilation; 
+extern bool processing_pm3_compilation; 
 
-/* Nonzero indicates that the debug info will show an extra block 
+/* true indicates that the debug info will show an extra block 
    surrounding the non-prologue-non-epilogue part of every procedure. 
-   This happens when code was produced by a code generator derived from
-   later gcc versions (3.4.5, for example).  
+   The outer block of the pair has the procedure symbol in block_function
+   and contains the formals.  The inner has NULL block_function and 
+   contains the locals.  This happens when code was produced by a code 
+   generator derived from later gcc versions (3.4.5, for example).  
 */   
-extern int procedures_have_extra_block; 
+extern bool procedures_have_extra_block; 
 
 /* Use the string from the N_OPT stabs entry to maybe set 
    processing_pm3_compilation and procedures_have_extra_block. */
 extern void
 m3_check_compiler ( char * name ); 
 
-extern struct type * m3_resolve_type PARAMS ((char *));
+extern struct type * 
+m3_resolve_type (char * uid);
 
 /* FIXME: This is a mess.  Prototypes are here for functions that are
      defined all over the place. 
 */
 
-extern char * m3_demangle (const char *mangled, int options /*UNUSED*/);
+extern char * 
+m3_demangle (const char *mangled, int options /*UNUSED*/);
   
 extern struct type *builtin_type_m3_address;
 extern struct type *builtin_type_m3_boolean;
@@ -76,17 +80,22 @@ extern struct type *builtin_type_m3_proc_closure;
 extern void
 m3_patch_nested_procs ( struct blockvector *bv );  
 
-extern int is_m3_type ( struct type * m3_type );  
+extern int 
+is_m3_type ( struct type * m3_type );  
 
-extern int m3_value_print (struct value *, struct ui_file *, int,
+extern int 
+m3_value_print (struct value *, struct ui_file *, int,
 			   enum val_prettyprint);
 
-extern void  m3_fix_param (
+extern void  
+m3_fix_param (
     struct type * func_type, int fieldno, struct symbol * param_sym ); 
 
-extern void m3_decode_struct (struct type *);
+extern void 
+m3_decode_struct (struct type *);
 
-extern void m3_fix_symtab (struct symtab *st);
+extern void 
+m3_fix_symtab (struct symtab *st);
 
 /* A NOTE on global variables.  The debug information produced by the
    Modula-3 compilers describes the set of local variables of an interface 
@@ -120,7 +129,7 @@ m3_proc_value_result_type ( struct value * proc_value );
 
 /* If closure is a Modula-3 procedure closure value, return its code address.  
    Otherwise, return zero. */ 
-CORE_ADDR 
+extern CORE_ADDR 
 m3_proc_value_code_addr ( struct value * closure_value ); 
  
 /* If closure is a Modula-3 procedure closure, return its environment pointer. 
@@ -132,7 +141,7 @@ m3_proc_value_env_ptr ( struct value * closure );
    pushing the real parameters.  This is data that was constructed and
    exists only in gdb process space.  It includes closures for procedure
    values and dope for open arrays. */ 
-void 
+extern void 
 m3_push_aux_param_data ( int nargs, struct value **args, CORE_ADDR * sp ); 
 
 extern void  
@@ -151,7 +160,37 @@ m3_print_type (
      int indent
    ); 
  
-extern CORE_ADDR m3_value_as_address (struct value *);
+extern CORE_ADDR 
+m3_value_as_address (struct value *);
+
+/* See whether the string name is a PM3-style compilation unit body procedure
+   name.  These have the form "_INITI_<interfaceName> or "_INITM_<moduleName>"...
+   If so, return the pointer to the beginning of <interfaceName> or
+   <moduleName>.  Otherwise, return NULL. "*/
+extern const char * 
+pm3_comp_unit_body_name_start ( const char * name );  
+
+/* See whether the string name is a CM3-style compilation unit body procedure 
+   name.  These have the form "<interfaceName>_I3..." or "<moduleName>_M3...".  
+   If so, return the length of <interfaceName> or <moduleName>.  
+   Otherwise, return 0. 
+*/ 
+extern int  
+cm3_comp_unit_body_name_len ( const char * name );  
+
+/* If m3_decode_linespec returns with result.nelts == 0, nothing was found 
+   that has a Modula-3 interpretation, but other interpretations (including
+   file:line, etc.) should be tried.  If argptr has a Modula-3 interpretation,
+   but it is somehow invalid, this will produce an error and/or throw an
+   exception. 
+ */ 
+extern struct symtabs_and_lines 
+m3_decode_linespec ( 
+    char ** argptr, 
+    int funfirstline, 
+    char * * * canonical, 
+    int *not_found_ptr  
+  );
 
 #endif /* !defined (M3_LANG_H) */
  

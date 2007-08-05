@@ -672,10 +672,12 @@ symbol_demangled_name (struct general_symbol_info *gsymbol)
     case language_cplus:
     case language_java:
     case language_objc:
+#ifdef _LANG_m3
     case language_m3:
       if (gsymbol->language_specific.cplus_specific.demangled_name != NULL)
 	return gsymbol->language_specific.cplus_specific.demangled_name;
       break;
+#endif /* _LANG_m3 */ 
     case language_ada:
       if (gsymbol->language_specific.cplus_specific.demangled_name != NULL)
 	return gsymbol->language_specific.cplus_specific.demangled_name;
@@ -1044,7 +1046,7 @@ lookup_symbol (const char *name, const struct block *block,
 	}
     }
   else 
-#endif 
+#endif /* _LANG_m3 */ 
   if (current_language->la_language == language_cplus)
     {
       demangled_name = cplus_demangle (name, DMGL_ANSI | DMGL_PARAMS);
@@ -2464,7 +2466,7 @@ find_function_start_sal (struct symbol *sym, int funfirstline)
   pc = BLOCK_START (SYMBOL_BLOCK_VALUE (sym));
   fixup_symbol_section (sym, NULL);
   if (funfirstline)
-    {				/* skip "first line" of function (which is actually its prologue) */
+    { /* skip "first line" of function (which is actually its prologue) */
       asection *section = SYMBOL_BFD_SECTION (sym);
       /* If function is in an unmapped overlay, use its unmapped LMA
          address, so that SKIP_PROLOGUE has something unique to work on */

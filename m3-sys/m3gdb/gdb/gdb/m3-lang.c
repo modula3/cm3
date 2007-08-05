@@ -30,6 +30,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "command.h" 
 #include "block.h"
 #include "dictionary.h" 
+#include "exceptions.h"
 
 #include "m3-lang.h"
 #include "m3-util.h"
@@ -39,6 +40,21 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "m3-threads.h"
 #include "m3-typeprint.h"
 #include "m3-valprint.h"
+
+/* Do I even need to describe what this does? */ 
+static bool
+is_digit ( char the_char )
+  { switch ( the_char ) 
+      { /* Before you roll your eyes, remember, you'll thank me for this 
+           in the highly likely event you someday have to port this to work
+           in a character code where the digits are not contiguous. */ 
+        case '0': case '1': case '2': case '3': case '4': 
+        case '5': case '6': case '7': case '8': case '9':  
+          { return true; }  
+        default: 
+          { return false; } 
+      } 
+  } /* is_digit */  
 
 /* Create a fundamental C type using default reasonable for the current
    target machine.
@@ -67,21 +83,22 @@ extern void _initialize_m3_language ( );
 
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.  
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
-   do not cause this to be nonzero, but they do cause 
+   do not cause this to be true, but they do cause 
    processing_gcc_compilation to be nonzero. */ 
-int processing_pm3_compilation = 0; 
+bool processing_pm3_compilation = 0; 
 
-/* Nonzero indicates that the debug info will show an extra block 
+/* true indicates that the debug info will show an extra block 
    surrounding the non-prologue-non-epilogue part of every procedure. 
-   This happens when code was produced by a code generator derived from
-   later gcc versions (3.4.5, for example).  
+   The outer block of the pair has the procedure symbol in block_function
+   and contains the formals.  The inner has NULL block_function and 
+   contains the locals.  This happens when code was produced by a code 
+   generator derived from later gcc versions (3.4.5, for example).  
 */   
-int procedures_have_extra_block = 0; 
+bool procedures_have_extra_block = false; 
 
 static const char * SRC_compiler_string = "SRC-Modula3_compiled."; 
 
-/* Keep this string consistent with that of the same name in gcc, 
-   */ 
+/* Keep the value of this string consistent with that of the same name in gcc. */
 static const char * procedures_have_extra_block_string 
   = "procedures_have_extra_block."; 
 
@@ -91,9 +108,9 @@ void
 m3_check_compiler ( char * name ) 
 
   { if ( strcmp ( name, SRC_compiler_string ) == 0 ) 
-      { processing_pm3_compilation = 1; } 
+      { processing_pm3_compilation = true; } 
     if ( strcmp ( name, procedures_have_extra_block_string ) == 0 ) 
-      { procedures_have_extra_block = 1; } 
+      { procedures_have_extra_block = true; } 
   } /* m3_check_compiler */ 
  
 static struct type *
@@ -765,7 +782,7 @@ static const char * m3_id_letters  = m3_id_chars + 11;
    name.  These have the form "_INITI_<interfaceName> or "_INITM_<moduleName>"...
    If so, return the pointer to the beginning of <interfaceName> or
    <moduleName>.  Otherwise, return NULL. "*/
-static const char * 
+const char * 
 pm3_comp_unit_body_name_start ( const char * name ) 
 
 { int len = strlen ( name ); 
@@ -785,12 +802,12 @@ pm3_comp_unit_body_name_start ( const char * name )
 /* See whether the string name is a CM3-style compilation unit body procedure 
    name.  These have the form "<interfaceName>_I3..." or "<moduleName>_M3...".  
    If so, return the length of <interfaceName> or <moduleName>.  
-    Otherwise, return 0. 
+   Otherwise, return 0. 
 */ 
 /* FIXME: This form of compiler-generated name can be easily and accidentally
    spoofed by the Modula-3 programmer.  Make it start with an underscore 
    instead.  This requires a coordinated CM3 compiler fix. */ 
-static int  
+int  
 cm3_comp_unit_body_name_len ( const char * name ) 
 
   { int id_len; 
@@ -930,9 +947,11 @@ m3_lookup_symbol_nonlocal (
 
   /* Look in all interfaces exported by the current module. */ 
   if ( unit_name != NULL ) 
-    { sym = m3_lookup_exported ( unit_name, name, symtab ); } 
+    { sym = m3_lookup_exported ( unit_name, name, symtab ); 
+      if ( sym != NULL ) { return sym; }  
+    } 
 
-  return sym; 
+  return NULL; 
 
 } /* m3_lookup_symbol_nonlocal */ 
 
@@ -1283,7 +1302,13 @@ find_m3_proc_in_blockvector (
 { int block_ss; 
   struct block * blk; 
   struct symbol * sym; 
+  int proc_len; 
+  char * space; 
+  int space_len; 
   char * linkage_name; 
+  int linkage_len; 
+  char * fixed_linkage_name; 
+  int fixed_len; 
 
   /* Do this by brute-force search through the blocks.  Note that
      there is no ordering constraint on the blocks for separate
@@ -1294,6 +1319,10 @@ find_m3_proc_in_blockvector (
      can't put a symbol in >1 hashed dictionary, because the symbols
      are linked using a field located right in the symbol node. */ 
   block_ss = 0; 
+  proc_len = strlen ( proc_name ); 
+  space_len = proc_len + 22; 
+  space = ( char * ) alloca ( space_len + 1 ); 
+    /* ^Parent name has to be shorter than this. */ 
   while ( true ) 
     { if ( block_ss >= BLOCKVECTOR_NBLOCKS ( block_vec ) ) 
         { return - 1; } 
@@ -1302,7 +1331,25 @@ find_m3_proc_in_blockvector (
           sym = BLOCK_FUNCTION ( blk ); 
           if ( sym != NULL ) 
             { linkage_name = SYMBOL_LINKAGE_NAME ( sym ); 
-              if ( strcmp ( linkage_name, proc_name ) == 0 )   
+              linkage_len = strlen ( linkage_name ); 
+              fixed_len = linkage_len - 1 ; 
+              if ( linkage_len <= space_len 
+                   && is_digit ( linkage_name [ fixed_len ] ) 
+                 ) 
+                { /* CM3 puts a dot and an integer at the end of the linkage
+                     name.  We have to remove this before comparing. */ 
+                  fixed_len --; 
+                  while ( is_digit ( linkage_name [ fixed_len ] ) ) 
+                    { fixed_len --; } 
+                  if ( linkage_name [ fixed_len ] == '.' ) 
+                    { fixed_linkage_name = space;  
+                      strncpy ( fixed_linkage_name, linkage_name, fixed_len ); 
+                      fixed_linkage_name [ fixed_len ] = '\0';
+                    } 
+                  else { fixed_linkage_name = linkage_name; } 
+                } 
+              else { fixed_linkage_name = linkage_name; } 
+              if ( strcmp ( fixed_linkage_name, proc_name ) == 0 )   
                 { return block_ss; } 
               if ( cm3_comp_unit_body_name_len ( linkage_name ) > 0 
                    && strcmp ( SYMBOL_DEMANGLED_NAME ( sym ) , proc_name ) == 0 
@@ -1979,35 +2026,35 @@ m3_patch_nested_procs ( struct blockvector *bv )
         )  
       { block_ptr = BLOCKVECTOR_BLOCK (bv, block_no); 
         if (block_ptr) 
-        { sym = BLOCK_FUNCTION (block_ptr);
-          if (sym && SYMBOL_LANGUAGE (sym) == language_m3)  
-            { name = SYMBOL_SEARCH_NAME (sym); 
-              prefix_len = nested_prefix_len (name);  
-              if (prefix_len > 0) 
-                { prefix_copy = alloca (prefix_len + 1); 
-                  memcpy (prefix_copy, name, prefix_len);
-                  prefix_copy[prefix_len] = '\0';
-                  parent_sym 
-                    = dict_iter_name_first (dict, prefix_copy, &iter);  
-                  if (parent_sym) 
-                    { if (info_verbose) 
-                        { printf_filtered 
-                            ( "Patching parent \"%s\" of \"%s\"\n", 
-                              prefix_copy, name 
-                            ); 
-                        } 
-                      BLOCK_SUPERBLOCK (block_ptr) 
-                        = SYMBOL_BLOCK_VALUE (parent_sym);  
-                    } 
-                  else if (info_verbose) 
-                    { printf_filtered 
-                        ( "Parent \"%s\" of \"%s\" not found\n", 
-                          prefix_copy, name 
-                        ); 
-                    } 
-                } 
-            } 
-        } 
+          { sym = BLOCK_FUNCTION (block_ptr);
+            if (sym && SYMBOL_LANGUAGE (sym) == language_m3)  
+              { name = SYMBOL_SEARCH_NAME (sym); 
+                prefix_len = nested_prefix_len (name);  
+                if (prefix_len > 0) 
+                  { prefix_copy = alloca (prefix_len + 1); 
+                    memcpy (prefix_copy, name, prefix_len);
+                    prefix_copy[prefix_len] = '\0';
+                    parent_sym 
+                      = dict_iter_name_first (dict, prefix_copy, &iter);  
+                    if (parent_sym) 
+                      { if (info_verbose) 
+                          { printf_filtered 
+                              ( "Patching parent \"%s\" of \"%s\"\n", 
+                                prefix_copy, name 
+                              ); 
+                          } 
+                        BLOCK_SUPERBLOCK (block_ptr) 
+                          = SYMBOL_BLOCK_VALUE (parent_sym);  
+                      } 
+                    else if (info_verbose) 
+                      { printf_filtered 
+                          ( "Parent \"%s\" of \"%s\" not found\n", 
+                            prefix_copy, name 
+                          ); 
+                      } 
+                  } 
+              } 
+          } 
       } 
     dict_free (dict); 
   } /* m3_patch_nested_procs */ 
@@ -2205,7 +2252,7 @@ m3_value_print (
           fprintf_filtered (stream, "*)");
         }
       return 
-        ( val_print 
+        ( val_print /* will be m3_val_print. */ 
             ( val_type, value_contents (val),
 	      value_embedded_offset (val), 
 	      VALUE_ADDRESS (val) + value_offset ( val ), 
@@ -2217,10 +2264,382 @@ m3_value_print (
 
 CORE_ADDR
 m3_value_as_address (struct value * val)
-{
-  /* REVIEWME: Do we need the other cases found in value_as_address? */ 
-  return m3_extract_address ( ( gdb_byte * ) value_contents ( val ), 0 );
-}
+  { /* REVIEWME: Do we need the other cases found in value_as_address? */ 
+    return m3_extract_address ( ( gdb_byte * ) value_contents ( val ), 0 );
+  } /* m3_value_as_address */ 
+
+/* A crude lexical scanner for use by m3_decode_linespec.  It scans a 
+   token that is an integer, a dot, or an identifier, with possibly blanks
+   and tabs leading.  It points * start to the first character of the
+   token and points * finish one past the end of the token it finds. */ 
+/* PRE: start != NULL && * start != NULL && finish != NULL */ 
+/* PRE: * start points to a string containing only blanks, tabs,
+        digits, dots, and identifier characters. */ 
+
+static void 
+get_linespec_token ( char * * start, char * * finish )
+
+  { while ( * * start == ' ' || * * start == '\t' ) { ( * start ) ++; } 
+    * finish = * start + 1; 
+    switch ( * * start ) 
+      { case '.' : { break; } 
+        case '0': case '1': case '2': case '3': case '4': 
+        case '5': case '6': case '7': case '8': case '9':  
+          { while ( is_digit ( * * finish ) ) { ( * finish ) ++; } 
+            break; 
+          } 
+        default: 
+          { while ( * * finish != '\0' 
+                    && * * finish != '.' 
+                    && * * finish != ' ' 
+                    && * * finish != '\t' 
+                  ) 
+              { ( * finish ) ++; } 
+            break; 
+          } 
+      } 
+  } /* get_linespec_token */ 
+
+#if 0 /* Use this code to handle discovery of a non-procedure, if we ever
+         decide to give errors in this case. */ 
+                    else /* Found something, but it's not a procedure. */ 
+                      { if ( not_found_ptr == NULL ) 
+                          { error (_("\"%s\" is not a procedure"), * argptr ); }
+                        else { * not_found_ptr = 1; } 
+                        throw_error 
+                          ( NOT_FOUND_ERROR, 
+                            _("\"%s\" is not a procedure."), 
+                            * argptr 
+                          );
+                      }  
+#endif 
+
+
+/* If m3_decode_linespec returns with result.nelts == 0, nothing was found 
+   that has a Modula-3 interpretation, but other interpretations (including
+   file:line, etc.) should be tried.  If argptr has a Modula-3 interpretation,
+   but it is somehow invalid, this will produce an error and/or throw an
+   exception. 
+ */ 
+struct symtabs_and_lines 
+m3_decode_linespec ( 
+    char ** argptr, 
+    int funfirstline, 
+    char * * * canonical, 
+    int *not_found_ptr  
+  )
+
+  { struct symtabs_and_lines result_sals; 
+    char * tok = NULL;
+    char * tok_end = NULL;
+    char * name = NULL; 
+    int name_len = 0; 
+    char * unit_name = NULL; 
+    int linelen = 0; 
+    struct symbol * local_sym = NULL;
+    struct symbol * interface_sym = NULL;
+    struct symbol * module_sym = NULL;
+    struct symbol * module_body_sym = NULL;
+    struct symbol * qual_sym = NULL;
+    struct symbol * new_sym = NULL;
+    struct symtab * local_symtab = NULL; 
+    struct symtab * interface_symtab = NULL; 
+    struct symtab * module_symtab = NULL; 
+    struct symtab * module_body_symtab = NULL; 
+    struct symtab * qual_symtab = NULL; 
+    struct block * qual_block = NULL; 
+    struct block * new_block = NULL; 
+    int block_no = 0; 
+
+    /* Setup to return if we don't find anything interesting. */ 
+    result_sals . sals = NULL; 
+    result_sals . nelts = 0; 
+    if ( not_found_ptr != NULL ) { * not_found_ptr = 0; } 
+
+    tok = * argptr; 
+    linelen = strlen ( tok );
+    /* Only consider nonempty sequence of M3 identifiers and integers, 
+       separated by dots and interspersed with blanks and tabs. */ 
+    if ( linelen <= 0 ) { return result_sals; }  
+    if ( strspn 
+           ( tok, 
+           " \t._ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" 
+           ) 
+         < linelen 
+       ) 
+      { /* Contains a bad character. */ return result_sals; }  
+    get_linespec_token ( & tok, & tok_end ); 
+    if ( * tok == '.' || is_digit ( * tok ) ) 
+      { /* Must start with an identifier to be interesting. */ 
+        return result_sals; 
+      } 
+    name_len = tok_end - tok;
+    unit_name = ( char * ) alloca ( name_len + 1 );
+    strncpy ( unit_name, tok, name_len ); 
+    unit_name [ name_len ] = '\0';  
+    if ( current_language->la_language == language_m3 )
+      { /* Try interpreting tok in the current M3 addressing environment. */
+/* Do we really want to do this?  If there is a locally referencable M3
+   procedure, it could hide a globally-declared id in another language and
+   make the latter inaccessible altogether. */ 
+        local_sym = lookup_symbol 
+                ( unit_name,
+                  m3_proc_body_block ( expression_context_block ),
+                  VAR_DOMAIN, 0, & local_symtab
+                );
+        if ( local_sym != NULL 
+             && TYPE_CODE ( SYMBOL_TYPE ( local_sym ) ) != TYPE_CODE_FUNC 
+           )
+          { /* Ignore non-procedure. */ 
+            local_sym = NULL; 
+          } 
+      }  
+
+    interface_sym 
+      = m3_unit_name_globals_symbol ( 'I', unit_name, & interface_symtab ); 
+    module_sym 
+      = m3_unit_name_globals_symbol ( 'M', unit_name, & module_symtab );  
+    if ( module_sym != NULL ) 
+      { if ( m3_is_cm3 ( ) )  
+          { module_body_sym 
+              = lookup_symbol_aux_symtabs 
+                  ( GLOBAL_BLOCK, unit_name, NULL, VAR_DOMAIN, 
+                    & module_body_symtab 
+                  );
+          } 
+        else
+          { module_body_sym 
+              = lookup_symbol_aux_symtabs 
+                  ( STATIC_BLOCK, unit_name, NULL, VAR_DOMAIN, 
+                    & module_body_symtab 
+                  );
+          } 
+        if ( module_body_sym != NULL 
+             && ( TYPE_CODE ( SYMBOL_TYPE ( module_body_sym ) ) 
+                  != TYPE_CODE_FUNC 
+                  || ( pm3_comp_unit_body_name_start 
+                         ( SYMBOL_LINKAGE_NAME ( module_body_sym ) )
+                       == NULL 
+                       && cm3_comp_unit_body_name_len 
+                            ( SYMBOL_LINKAGE_NAME ( module_body_sym ) ) 
+                          == 0 
+                     ) 
+                ) 
+           ) 
+          { /* It's not really a module body symbol. */ 
+            module_body_sym = NULL; 
+          }
+      } 
+
+    /* Consume 1st identifier. */ 
+    tok = tok_end; 
+    get_linespec_token ( & tok, & tok_end );  
+
+    if ( * tok  == '\0' ) 
+      { /* The starting identifier is the only component. */ 
+        if ( local_sym != NULL ) 
+          { qual_sym = local_sym; 
+            qual_block = SYMBOL_BLOCK_VALUE ( local_sym ); 
+            qual_symtab = local_symtab; 
+          } 
+        else if ( module_body_sym != NULL ) 
+          { qual_sym = module_body_sym; 
+            qual_block = SYMBOL_BLOCK_VALUE ( module_body_sym ); 
+            qual_symtab = module_body_symtab; 
+          } 
+        else /* Interface name alone doesn't denote a line. */  
+          { return result_sals; } 
+      } 
+    else if ( * tok  == '.' ) 
+      { tok = tok_end; /* Consume dot. */ 
+        get_linespec_token ( & tok, & tok_end );  
+        if ( * tok == '\0' || * tok == '.' )  
+          { /* Malformed. */ 
+            return result_sals; 
+          }  
+        else if ( is_digit ( * tok ) ) 
+          { /* Dot and integer. Only a procedure or module name as first 
+               identifier is meaningful here.  It denotes an anonymous block
+               within the module body or procedure. */
+            block_no = m3_int_value ( tok, tok_end ); 
+            if ( local_sym == NULL ) 
+              { if ( module_body_sym == NULL ) 
+/* TODO:  Possibly emit/throw error here? */ 
+                  { return result_sals; } 
+                else 
+                  { /* For a module name, the block number must be 1. The 1 in
+                       the linespec refers to the anonymous block that is the 
+                       module body, but he compiler has made it a named 
+                       procedure denoted by module_body_sym. */ 
+                    if ( block_no != 1 ) 
+/* TODO:  Possibly emit/throw error here? */ 
+                      { return result_sals; } 
+                    else 
+                      { qual_sym = module_body_sym; 
+                        qual_block = SYMBOL_BLOCK_VALUE ( module_body_sym ); 
+                        qual_symtab = module_body_symtab; 
+                      } 
+                  } 
+              } 
+            else 
+              { qual_sym = local_sym; 
+                qual_block 
+                  = m3_find_nested_block 
+                      ( SYMBOL_BLOCK_VALUE ( local_sym ), 
+                        local_symtab, 
+                        block_no 
+                      );
+                qual_symtab = local_symtab; 
+              } 
+            tok = tok_end; /* Consume integer. */ 
+            get_linespec_token ( & tok, & tok_end );  
+          } 
+        else /* Dot and identifier. */  
+          { name = tok; 
+            name_len = tok_end - tok;
+            name = ( char * ) alloca ( name_len + 1 );
+            strncpy ( name, tok, name_len ); 
+            name [ name_len ] = '\0';  
+            if ( local_sym != NULL ) 
+              { qual_sym  
+                  = m3_lookup_nested_proc 
+                      ( SYMBOL_BLOCK_VALUE ( local_sym ), 
+                        local_symtab, 
+                        name,
+                        NULL
+                      );
+                if ( qual_sym != NULL ) 
+                  { qual_block = SYMBOL_BLOCK_VALUE ( qual_sym );
+                    qual_symtab = local_symtab; 
+                  } 
+              } 
+            if ( qual_sym == NULL && interface_sym != NULL ) 
+              { qual_sym 
+                  = m3_lookup_interface_id ( unit_name, name, & qual_symtab ); 
+              } 
+            if ( qual_sym == NULL && module_sym != NULL ) 
+              { qual_sym 
+                  = m3_lookup_module_id ( unit_name, name, & qual_symtab ); 
+              } 
+            if ( qual_sym == NULL && module_sym != NULL ) 
+              { qual_sym 
+                  = m3_lookup_exported ( unit_name, name, & qual_symtab ); 
+              } 
+            if ( qual_sym != NULL ) 
+              { if ( TYPE_CODE ( SYMBOL_TYPE ( qual_sym ) ) != TYPE_CODE_FUNC ) 
+                  /* Not a procedure. */ 
+/* TODO:  Possibly emit/throw error here? */ 
+                  { return result_sals; } 
+                qual_block = SYMBOL_BLOCK_VALUE ( qual_sym ); 
+              } 
+            tok = tok_end; /* Consume identifier. */ 
+            get_linespec_token ( & tok, & tok_end );  
+          } 
+      }
+    else /* Not valid. */ { return result_sals; } 
+
+    /* At this point, we finally have a uniform system for handling further
+       dot qualifiers.  qual_block is the block identified so far, and it
+       lies inside procedure qual_sym and in qual_symtab; . */
+
+    while ( true ) /* Thru additional tokens. */ 
+      { if ( * tok == '\0' ) 
+          /* We are at the end of the linespec. */ 
+          { if ( qual_sym != NULL )  
+              { result_sals.sals = (struct symtab_and_line *)
+                  xmalloc (sizeof (struct symtab_and_line));
+                if ( qual_block == SYMBOL_BLOCK_VALUE ( qual_sym ) ) 
+                  { /* Found a procedure. */ 
+                    result_sals.sals [ 0 ] 
+                      = find_function_start_sal ( qual_sym, funfirstline );
+                  }  
+                else /* Anonymous block. */ 
+                  { result_sals.sals [ 0 ] 
+                      = find_pc_line ( BLOCK_START ( qual_block ), 0 );
+                   } 
+                result_sals.nelts = 1; 
+                m3_make_canonical ( & result_sals, canonical ); 
+                * argptr = tok; 
+                return result_sals; 
+              } 
+            else { return result_sals; } 
+          } 
+        else if ( * tok == '.' ) 
+          { /* Another dot qualifier follows. */ 
+            tok = tok_end; /* Consume dot. */ 
+            get_linespec_token ( & tok, & tok_end ); 
+            if ( * tok == '\0' || * tok == '.' ) 
+              { /* Malformed for Modula-3. */ 
+                return result_sals; 
+              } 
+            else if ( is_digit ( * tok ) ) 
+              { /* Integer qualifier denotes an anonymous block. */
+                block_no = m3_int_value ( tok, tok_end ); 
+                new_block 
+                  = m3_find_nested_block ( qual_block, qual_symtab, block_no );
+                tok = tok_end; /* Consume integer. */ 
+                get_linespec_token ( & tok, & tok_end );  
+                if ( new_block != NULL ) 
+                  { qual_block = new_block; 
+                    /* qual_sym and qual_symtab don't change. */ 
+                  } 
+                else /* No such block. */ 
+                  { if ( not_found_ptr == NULL ) 
+                      { error (_("\"%s\" has no block numbered %d."), 
+                                SYMBOL_PRINT_NAME ( qual_sym ),
+/* FIXME: use the whole string up to this point. */ 
+                                block_no
+                              ); 
+                      }
+                    else { * not_found_ptr = 1; } 
+                    throw_error 
+                      ( NOT_FOUND_ERROR, 
+                        _("\"%s\" has no block numbered %d."), 
+                        SYMBOL_PRINT_NAME ( qual_sym ),
+/* FIXME: use the whole string up to this point. */ 
+                        block_no
+                      ); 
+                  }  
+              } 
+            else /* Dot and identifier. */  
+              { new_sym = m3_lookup_nested_proc 
+                  ( qual_block, qual_symtab, tok, tok_end );
+                if ( new_sym != NULL ) 
+                  { qual_sym = new_sym; 
+                    qual_block = SYMBOL_BLOCK_VALUE ( new_sym );
+                    /* qual_symtab doesn't change. */ 
+                    tok = tok_end; /* Consume identifier. */ 
+                    get_linespec_token ( & tok, & tok_end );  
+                  } 
+                else /* No such nested procedure . */ 
+                  { name = tok; 
+                    name_len = tok_end - tok;
+                    name = ( char * ) alloca ( name_len + 1 );
+/* FIXME?           ^Will this string last long enough? */ 
+                    strncpy ( name, tok, name_len ); 
+                    name [ name_len ] = '\0';  
+                    if ( not_found_ptr == NULL ) 
+                      { error (_("\"%s\" has no nested procedure named \"%s\"."),
+                                SYMBOL_PRINT_NAME ( qual_sym ),
+/* FIXME: use the whole string up to this point. */ 
+                                name 
+                              ); 
+                      }
+                    else { * not_found_ptr = 1; } 
+                    throw_error 
+                      ( NOT_FOUND_ERROR, 
+                        _("\"%s\" has no nested procedure named \"%s\"."), 
+                        SYMBOL_PRINT_NAME ( qual_sym ),
+/* FIXME: use the whole string up to this point. */ 
+                        name 
+                      ); 
+                  }  
+              } 
+          } 
+        else /* Malformed for Modula-3. */ 
+          { return result_sals; } 
+      } /* while */  
+  } /* m3_decode_linespec */ 
 
 /* End of file m3-lang.c */ 
 

@@ -267,63 +267,88 @@ m3_parse_e8 ( )
   switch (cur_tok.kind) {
 
     case TK_EOF:
-      error ("unexpected EOF in expression");
+      error ("Incomplete Modula-3 expression");
       return 1;
 
     case TK_IDENT: 
       { struct symbol * sym;
+        struct symbol * interface_sym;
+        struct symbol * module_sym;
         char * name = NULL;
         char * unit_name = NULL;
+        char * decl_name = NULL;
         struct symtab * l_symtab; 
+        bool dot_consumed = false; 
+
+        name = cur_tok . string;
+        get_token  ( ); /* Consume TK_IDENT. */ 
 
         /* Try to find the ident as an unqualified reference (to something
            other than an interface.) */ 
         sym = lookup_symbol 
-                ( cur_tok . string, 
+                ( name,  
                   m3_proc_body_block ( expression_context_block ),
                   VAR_DOMAIN, 0, NULL
                 ); 
-        if ( sym != NULL ) 
-          { name = cur_tok . string;
-            get_token  ( ); /* Consume TK_IDENT. */ 
-            return m3_write_id_ref ( sym, name );  
-          } 
+        if ( sym != NULL 
+             && pm3_comp_unit_body_name_start ( SYMBOL_LINKAGE_NAME ( sym ) )
+                == NULL 
+             && cm3_comp_unit_body_name_len ( SYMBOL_LINKAGE_NAME ( sym ) ) == 0
+             /* ^These two conditions are to circumvent the case where the 
+                language-independent part of lookup_symbol, after m3-dependent
+                functions have failed, looks in all static blocks for what is
+                a module name and finds what is actually the module-body 
+                procedure (i.e., the initialization code) for a module name.  
+                We want to handle a module name differently, below. */  
+/* FIXME: Maybe a user actually wants to name the module-body code? */ 
+           ) 
+          { return m3_write_id_ref ( sym, name ); } 
 
-        /* Try to make this the start of a qualified reference, either 
-           <interfaceName>.<decl>.  Other meanings of dot are handled 
-           during evaluation. */ 
-        if ( m3_unit_name_globals_symbol ( 'I', cur_tok . string, NULL ) ) 
-          { /* Name of an interface.  We take the extravagant view that
-               every interface name is accessible in m3gdb commands without
-               needing anything like an IMPORT. There is no other possible
-               interpretation, so it's error messages if this doesn't work. */
-            unit_name = cur_tok . string;  
-            get_token ( ); /* Consume TK_IDENT */ 
-            if ( cur_tok . kind != TK_DOT ) 
-              { error ( "Interface name %s requires a dot and identifier", 
-                        unit_name
-                      );
-                return 1;
-              }
-            get_token ( ); /* Consume TK_DOT */ 
-            if ( cur_tok . kind != TK_IDENT ) 
-              { error ( "Interface name %s requires a selector after the dot", 
-                         unit_name
-                      );
-                return 1;
-              }
-            name = cur_tok . string; 
-            sym = m3_lookup_interface_id ( unit_name, name, & l_symtab ); 
-            if ( sym != NULL ) 
-              { get_token  ( ); /* Consume second TK_IDENT */ 
-                return m3_write_id_ref ( sym, name );  
+        /* Try to make this a qualified reference starting with a unit name, 
+           either <interfaceName>.<decl> or <moduleName>,<decl>.  Other 
+           meanings of dot are handled during expression evaluation. */ 
+
+        interface_sym = m3_unit_name_globals_symbol ( 'I', name, NULL ); 
+        module_sym = m3_unit_name_globals_symbol ( 'M', name, NULL ); 
+        if ( interface_sym != NULL || module_sym != NULL ) 
+          { /* Name of an interface and/or module.  We take the extravagant view 
+               that every unit name is accessible to m3gdb expressions as if
+               declared in a kind of superglobal scope,  without needing 
+               anything like an IMPORT or EXPORTS. */
+            unit_name = name ;  
+            if ( cur_tok . kind == TK_DOT ) 
+              { get_token ( ); /* Consume TK_DOT */   
+                if ( cur_tok . kind != TK_IDENT ) 
+                  { error ( "Unit name %s requires a selector after the dot", 
+                            unit_name
+                          );
+                    return 1;
+                  }
+                decl_name = cur_tok . string; 
+                get_token  ( ); /* Consume second TK_IDENT */ 
+                sym = m3_lookup_interface_id 
+                        ( unit_name, decl_name, & l_symtab ); 
+                if ( sym != NULL ) 
+                  { return m3_write_id_ref ( sym, decl_name ); } 
+                sym = m3_lookup_module_id ( unit_name, decl_name, & l_symtab );
+                if ( sym != NULL ) 
+                  { return m3_write_id_ref ( sym, decl_name ); } 
+                sym = m3_lookup_exported ( unit_name, decl_name, & l_symtab ); 
+                if ( sym != NULL ) 
+                  { return m3_write_id_ref ( sym, decl_name ); } 
+                error ( "Can't find Modula-3 qualified reference: %s.%s", 
+                        unit_name, decl_name
+                      ); /* NORETURN */ 
               } 
-            error ( "Can't find Modula-3 qualified reference: %s.%s", 
-                    unit_name, name
-                  ); /* NORETURN */ 
+            else 
+/* TODO: It would be nice to be able to just name a unit and have expression
+         evaluation give info about it, e.g. source file name. */ 
+              { error 
+                  ( "Unit name %s alone is not implemented." , unit_name ); 
+              } 
           } 
 
-        error ( "Can't find Modula-3 identifier: %s", cur_tok . string ); 
+        error ( "Can't find Modula-3 identifier: %s", name ); 
           /* NORETURN */ 
       } /* case TK_IDENT */
       
@@ -490,12 +515,12 @@ m3_parse_e8 ( )
     case TK_BITS: 
     case TK_OBJECT: 
     case TK_BRANDED: 
-      error ( "Programmer-defined types not implemented: \"%s\".", 
+      error ( "Modula-3 programmer-defined types not implemented: \"%s\".", 
               m3_token_name (&cur_tok)
             ); 
 
     default: 
-      error ("unexpected token in expression \"%s\" (kind = %d)",
+      error ("Bad Modula-3 expression \"%s\" (kind = %d)",
 	      m3_token_name (&cur_tok), (int)cur_tok.kind );
       return 1;
 
@@ -526,7 +551,7 @@ m3_parse_e7 ( )
            dot-construct expression and let evaluation figure it out later. */
 
 	if (cur_tok.kind != TK_IDENT) {
-	  error ("Field name must be an identifier"); 
+	  error ("An identifier must follow a dot."); 
 	  return 1; }
 
 	write_exp_text (STRUCTOP_M3_STRUCT, cur_tok.string, cur_tok.length);

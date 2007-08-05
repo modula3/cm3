@@ -885,10 +885,10 @@ m3_frame_for_block (struct block *target_block )
          but the number would have to be computed during expression 
          parsing and stored in the OP_VAR_VALUE node, which would have 
          to be changed to M3_OP_VAR_VALUE. */ 
-      l_target_proc_block = m3_proc_block ( target_block ); 
+      l_target_proc_block = m3_block_proc_block ( target_block ); 
       while ( true ) 
         { l_frame_proc_block 
-            = m3_proc_block 
+            = m3_block_proc_block 
                 ( get_frame_block ( l_frame , NULL ) 
                   /* ^ Which may not be the right static ancestor block at all,
                        but it doesn't matter, because we skip to the enclosing 
@@ -1605,7 +1605,7 @@ m3_nested_proc_const_closure (
   if ( inf_code_addr == 0 ) { return proc_const_value; } 
   callee_block = block_for_pc ( inf_code_addr );
   callee_parent_proc_block 
-    = m3_proc_block ( BLOCK_SUPERBLOCK ( callee_block ) );
+    = m3_block_proc_block ( BLOCK_SUPERBLOCK ( callee_block ) );
   if ( callee_parent_proc_block == NULL ) /* Not nested. */
     { result = proc_const_value; } 
   else /* Nested procedure. */  
@@ -2331,6 +2331,7 @@ m3_evaluate_subexp_maybe_packed (
     {
     case OP_VAR_VALUE: 
       { struct symbol * sym;
+        struct symbol * proc_sym; 
         struct block *b;
         struct value *val;
         struct frame_info *frame;
@@ -2341,16 +2342,22 @@ m3_evaluate_subexp_maybe_packed (
         b = exp->elts[pc+1].block; 
         sym = exp->elts[pc+2].symbol; 
         if (symbol_read_needs_frame (sym))
-          {
-            frame = m3_frame_for_block (b);
-            if (!frame)
-              {
-                if (BLOCK_FUNCTION (b)
-                    && SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)))
-                  error (_("No frame is currently executing in block %s."),
-                         SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)));
+          { frame = m3_frame_for_block (b);
+            if (frame == NULL)
+              { proc_sym = BLOCK_FUNCTION ( m3_block_proc_block ( b ) ); 
+                if ( proc_sym != NULL 
+                     && SYMBOL_PRINT_NAME ( proc_sym ) != NULL 
+                   )
+                  { error (_("No frame is currently executing in procedure \"%s\" containing variable \"%s\"."),
+                            SYMBOL_PRINT_NAME ( proc_sym ),
+                            SYMBOL_PRINT_NAME ( sym ) 
+                          );
+                  } 
                 else
-                  error (_("No frame is currently executing in specified block"));
+                  { error (_("No frame is currently executing in block containing \"%s\""),
+                            SYMBOL_PRINT_NAME ( sym ) 
+                          );
+                  } 
               }
           }
         else { frame = NULL; } 

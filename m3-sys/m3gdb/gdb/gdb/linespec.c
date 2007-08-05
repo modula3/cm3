@@ -606,6 +606,28 @@ decode_line_2 (struct symbol *sym_arr[], int nelts, int funfirstline,
   discard_cleanups (old_chain);
   return return_values;
 }
+
+#ifdef _LANG_m3 
+static struct symtab_and_line
+find_m3_function_start_sal (
+     int funfirstline,
+     CORE_ADDR pc
+  ) 
+{
+  struct symtab_and_line sal;
+
+  if (funfirstline)
+    {
+      pc += DEPRECATED_FUNCTION_START_OFFSET;
+      SKIP_PROLOGUE (pc);
+    }
+  sal = find_pc_line (pc, 0);
+  sal.pc = pc;
+
+  return sal;
+}
+#endif /* _LANG_m3 */
+
 
 /* The parser of linespec itself. */
 
@@ -655,27 +677,6 @@ decode_line_2 (struct symbol *sym_arr[], int nelts, int funfirstline,
    kludge, which exists because the completer can't yet deal with the
    lack of single quotes.  FIXME: write a linespec_completer which we
    can use as appropriate instead of make_symbol_completion_list.  */
-
-#ifdef _LANG_m3 
-static struct symtab_and_line
-find_m3_function_start_sal (
-     int funfirstline,
-     CORE_ADDR pc
-  ) 
-{
-  struct symtab_and_line sal;
-
-  if (funfirstline)
-    {
-      pc += DEPRECATED_FUNCTION_START_OFFSET;
-      SKIP_PROLOGUE (pc);
-    }
-  sal = find_pc_line (pc, 0);
-  sal.pc = pc;
-
-  return sal;
-}
-#endif /* _LANG_m3 */
 
 struct symtabs_and_lines
 decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
@@ -728,6 +729,16 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
      point to "::B::foo". Argptr is not changed by this call.  */
 
   p = locate_first_half (argptr, &is_quote_enclosed);
+
+#ifdef _LANG_m3 
+  {
+    struct symtabs_and_lines values;
+    values = m3_decode_linespec 
+      ( argptr, funfirstline, canonical, not_found_ptr ); 
+    if ( values . nelts > 0 ) 
+      { return values; } 
+  } 
+#endif /* _LANG_m3 */ 
 
   /* Check if this is an Objective-C method (anything that starts with
      a '+' or '-' and a '[').  */
