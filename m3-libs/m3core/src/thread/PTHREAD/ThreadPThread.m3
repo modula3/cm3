@@ -84,8 +84,6 @@ TYPE
 
     (* allocation pool *)
     newPool := RTHeapRep.NewPool;
-
-    heapLockedByMe := FALSE;
   END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -562,7 +560,9 @@ PROCEDURE Join (t: T): REFANY =
       END;
       WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
       res := t.result;
+      t.result := NIL;
       t.joined := TRUE;
+      t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
@@ -577,7 +577,9 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
       END;
       WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
       res := t.result;
+      t.result := NIL;
       t.joined := TRUE;
+      t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
@@ -627,9 +629,11 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(n, amount);
     LOOP
-      IF alertable THEN XTestAlert(self) END;
-      IF Utime.nanosleep(amount, remaining) = 0 THEN EXIT END;
-      amount := remaining;
+      WITH r = Utime.nanosleep(amount, remaining) DO
+        IF alertable THEN XTestAlert(self) END;
+        IF r = 0 THEN EXIT END;
+        amount := remaining;
+      END;
     END;
   END XPause;
 
