@@ -102,7 +102,7 @@ static int
 compare (const gdb_byte *valaddr, int bitpos1, int bitpos2, int bitsize)
 {
   if ((bitpos1 % 8) != 0 || (bitpos2 % 8) != 0 || (bitsize % 8 != 0)) {
-    /* this comparaisons are too hard for now */
+    /* these comparisons are too hard for now */
     return 0; }
   return memcmp (valaddr + bitpos1/8, valaddr + bitpos2/8, bitsize/8) == 0;
 }
@@ -125,12 +125,12 @@ struct field_info {
 static int text_debug__warning_ct = 0; 
 
 static bool /* success */ 
-get_type_info 
+get_TEXT_subtype_info 
   ( char *nm, 
     int wide_mode, 
     struct type_info *ti, 
     int default_uid /* If can't find type named nm in symbol tables, use this
-                       to match types.  This happens if the CM3 libraries ard
+                       to match types.  This happens if the CM3 libraries are
                        compiled without debug info. */ 
   )
 
@@ -164,7 +164,7 @@ get_type_info
     { warning ( "No information on TEXT subtype %s." , nm );  
       return false; 
     } 
-} /* get_type_info */
+} /* get_TEXT_subtype_info */
 
 static bool /* success */ 
 get_obj_field_info  ( struct type_info * ti, 
@@ -250,9 +250,10 @@ init_m3_text_info ( )
   if ( ! text_info_is_initialized ) 
     { if ( m3_is_cm3 ( ) ) 
         { if ( ! Text . tc_addr && ! Text . uid ) 
-             { get_type_info ( "Text.T", 2, &Text, 0x7e2f4762 ); } 
+             { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0x7e2f4762 ); } 
           if ( ! TextLiteral.tc_addr  && ! TextLiteral . uid ) 
-             { get_type_info ( "TextLiteral.T", 2, &TextLiteral, 0xc69eecff ); 
+             { get_TEXT_subtype_info 
+                 ( "TextLiteral.T", 2, &TextLiteral, 0xc69eecff ); 
                get_obj_field_info 
                  ( &TextLiteral, "cnt", &TextLiteral_cnt ,32, 32);
                get_obj_field_info 
@@ -260,36 +261,39 @@ init_m3_text_info ( )
 
              } 
           if ( ! Text8 . tc_addr && ! Text8 . uid ) 
-             { get_type_info ( "Text8.T", 0, &Text8, 0x49d4e83f );
+             { get_TEXT_subtype_info ( "Text8.T", 0, &Text8, 0x49d4e83f );
                get_obj_field_info 
                  ( &Text8, "contents", &Text8_contents, 32, 32 );
              } 
           if ( ! Text8Short . tc_addr  & ! Text8Short . uid ) 
-             { get_type_info ( "Text8Short.T", 0, &Text8Short, 0xe57bbfe0 ); 
+             { get_TEXT_subtype_info 
+                 ( "Text8Short.T", 0, &Text8Short, 0xe57bbfe0 ); 
                get_obj_field_info 
                  ( &Text8Short, "len", &Text8Short_len, 32, 32 ); 
                get_obj_field_info 
                  ( &Text8Short, "contents", &Text8Short_contents, 64, 128 ); 
              } 
           if ( ! Text16 . tc_addr && ! Text16 . uid ) 
-             { get_type_info ( "Text16.T", 1, &Text16, 0x89ce6bf1 );
+             { get_TEXT_subtype_info ( "Text16.T", 1, &Text16, 0x89ce6bf1 );
                get_obj_field_info 
                  ( &Text16, "contents", &Text16_contents, 32, 32 ); 
              } 
           if ( ! Text16Short . tc_addr && ! Text16Short . uid ) 
-             { get_type_info ( "Text16Short.T", 1, &Text16Short, 0xed75fe12 );
+             { get_TEXT_subtype_info 
+                 ( "Text16Short.T", 1, &Text16Short, 0xed75fe12 );
                get_obj_field_info 
                  ( &Text16Short, "len", &Text16Short_len, 32, 32 ); 
                get_obj_field_info 
                  ( &Text16Short, "contents", &Text16Short_contents, 64, 256 ); 
              } 
           if ( ! Text8CString . tc_addr && ! Text8CString . uid ) 
-             { get_type_info ( "Text8CString.T", 0, &Text8CString, 0xbd2b102e );
+             { get_TEXT_subtype_info 
+                 ( "Text8CString.T", 0, &Text8CString, 0xbd2b102e );
                get_obj_field_info 
                  ( &Text8CString, "str", &Text8CString_str, 32, 32 ); 
              } 
           if ( ! TextSub . tc_addr && ! TextSub . uid ) 
-             { get_type_info ( "TextSub.TT", 3, &TextSub, 0xe2215acf );
+             { get_TEXT_subtype_info ( "TextSub.TT", 3, &TextSub, 0xe2215acf );
                get_obj_field_info 
                  ( &TextSub, "base", &TextSub_base, 32, 32 ); 
                get_obj_field_info 
@@ -298,7 +302,7 @@ init_m3_text_info ( )
                  ( &TextSub, "start", &TextSub_start, 64, 32 ); 
              } 
           if ( ! TextCat.tc_addr && ! TextCat . uid ) 
-             { get_type_info ( "TextCat.T", 3, &TextCat, 0x493d82da );
+             { get_TEXT_subtype_info ( "TextCat.T", 3, &TextCat, 0x493d82da );
                get_obj_field_info 
                  ( &TextCat, "a", &TextCat_a, 32, 32 ); 
                get_obj_field_info 
@@ -313,7 +317,7 @@ init_m3_text_info ( )
         } 
       else /* PM3 */ 
         { if ( ! Text . tc_addr & ! Text . uid ) 
-            { get_type_info ( "Text.T", 2, &Text, 0xcd7f2264 ); } 
+            { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0xcd7f2264 ); } 
         } 
       text_info_is_initialized = true; 
     } 
@@ -1087,26 +1091,28 @@ m3_print_proc_value (
   { struct symbol * proc_sym; 
 
     proc_sym = find_pc_function ( inf_code_addr ); 
-    fputs_filtered ( "{\"", stream ); 
-    m3_print_proc_name ( proc_sym, stream ); 
-    /* FIXME:  gdb is just full of calls on wrap_here, which takes no stream
-       parameter, but instead is hard-coded to use gdb_stdout.  Everything else
-       take a stream parameter.  Either it's inconsistent, or the stream 
-       parameter is unnecessary. */ 
-    wrap_here ( "" ); 
-    fputs_filtered ( "\", Declared at: ", stream ); 
-    m3_print_proc_file_and_line ( proc_sym, stream ); 
-    if ( inf_static_link != 0 )
-      { fputs_filtered ( ", ", stream ); 
+    if (proc_sym != NULL ) 
+      { fputs_filtered ( "{\"", stream ); 
+        m3_print_proc_name ( proc_sym, stream ); 
+        /* FIXME:  gdb is just full of calls on wrap_here, which takes no 
+           stream parameter, but instead is hard-coded to use gdb_stdout.  
+           Everything else takes a stream parameter.  Either it's inconsistent,
+           or the stream parameter is unnecessary. */ 
         wrap_here ( "" ); 
-        fprintf_filtered 
-          ( stream,
-            "Static ancestor=(16_%lx)frame #%d", 
-            inf_static_link,  
-            m3_frame_no_from_static_link ( inf_static_link )
-          ); 
-      }  
-    fputs_filtered ( "}", stream ); 
+        fputs_filtered ( "\", Declared at: ", stream ); 
+        m3_print_proc_file_and_line ( proc_sym, stream ); 
+        if ( inf_static_link != 0 )
+          { fputs_filtered ( ", ", stream ); 
+            wrap_here ( "" ); 
+            fprintf_filtered 
+              ( stream,
+                "Static ancestor=(16_%lx)frame #%d", 
+                inf_static_link,  
+                m3_frame_no_from_static_link ( inf_static_link )
+              ); 
+          }  
+        fputs_filtered ( "}", stream ); 
+      } 
   } /* m3_print_proc_value */ 
 
 int
@@ -1460,14 +1466,24 @@ m3_val_print2 (
 
     case TYPE_CODE_M3_POINTER: {
       int down_format; 
+      CORE_ADDR text_value;
+      CORE_ADDR chars_addr;
+      int nelems;
 
       if ( format == 0 || format == m3_text_object_format ) 
         { down_format = 'x'; } 
       else { down_format = format; } 
-      if ( m3_is_cm3 ( ) )
+      if ( m3_is_cm3 ( ) 
+           || m3_extract_address ( valaddr, bitpos) == 0 
+/*            ^If the inferior process has not been created yet, 
+               init_m3_text_info, called below, won't be able to get the needed 
+               types and will ungracefully display warnings right in the middle
+               of the value.  This condition will at least prevent this from
+               happening unnecessarily when the text is NIL. */ 
+         )
         { m3_print_scalar ( valaddr, bitpos, bitsize, stream, down_format , 0 );
         } 
-      else /* PM3 */   
+      else /* PM3, and non-NIL */   
         { init_m3_text_info ( ); 
           if ( format != m3_text_object_format 
                && ( ( Text . type != 0 && Text . type == type ) 
@@ -1477,11 +1493,7 @@ m3_val_print2 (
                   ) 
              )  
             /* PM3 TEXT value. */ 
-            { CORE_ADDR text_value;
-              CORE_ADDR chars_addr;
-              int nelems;
-
-              text_value = m3_extract_address (valaddr, bitpos);
+            { text_value = m3_extract_address (valaddr, bitpos);
               /* text_value is the pointer to the open array. */ 
               if (text_value == 0) 
                 { fputs_filtered ("NIL", stream); }
@@ -1493,8 +1505,8 @@ m3_val_print2 (
                   chars_addr = m3_inf_open_array_elems_addr ( text_value ); 
                   /* val_print_string will stop on a null byte, but not exceed
                      nelems.  For a properly-formed PM3 text value, that will
-                     work fine, as it has both a null byte and a count (that
-                     includes the null byte.  To see the bytes as an array, the
+                     work fine, as it has both a null byte and a count (which
+                     includes the null byte).  To see the bytes as an array, the
                      user can dereference the TEXT value. */ 
                   val_print_string (chars_addr, nelems, 1, stream); 
                 }

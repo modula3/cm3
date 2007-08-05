@@ -121,16 +121,21 @@ extern struct symbol *
 m3_block_globals_symbol ( 
   const struct block * blk, const char kind, char * * unit_name ); 
 
-/* Return the pseudo-record-type that has one field for each 
-   globally-declared identifier in an interface or module.  
+/* Return the interface or module global variable record symbol for
+   interface or module named 'unit_name'.  kind == 'M' to find a 
+   module global symbol, or kind == 'I' for an interface. 
    For an interface, its demangled name is "I$<interfaceName>".
    For a module, its demangled name is "M$<moduleName>".
    kind should be either 'I' or 'M', for interface or module. 
-   It could be in any static or global block.
+   It could be in any static or global block. name is a terminated
+   string (see m3_term_strings_equal). 
 */ 
 extern struct symbol *
 m3_unit_name_globals_symbol ( 
-  int kind, const char *unit_name, struct symtab * * symtab ); 
+    int kind, 
+    const char *unit_name, 
+    struct symtab * * symtab 
+  ); 
 
 /* Is sym the symbol of a Modula-3 globals record for either an interface
    of a module? */ 
@@ -165,13 +170,32 @@ m3_lookup_type (
   );  
 
 /* See if identifier 'ident' is declared in interface named 'interface_name'. 
-   Return its symbol, if so, NULL if not.  EXCEPT: global variables have no
-   symbol.  If it's a global variable, return the globals record for the
-   interface.  Caller will have to detect this case and combine it with
-   'ident' in its own way. */ 
+   Return its symbol if so, or NULL if not.  EXCEPT: global variables have no
+   symbol.  If it's a global variable, return the symbol for the globals 
+   record for the interface.  Caller will have to detect this case and combine 
+   it with 'ident' in its own way.  If a symbol is found and symtab is non-NULL,
+   set symtab to the containing symbol table.  If this is a procedure declared
+   in interface 'interface_name', the symbol and symtab returned will belong
+   to the exporting _module_ (this is the only symbol we have.)  This will not
+   find a procedure that is not declared in an interface. */ 
 extern struct symbol *
 m3_lookup_interface_id ( 
-    const char * interface_name, const char * ident, struct symtab * * symtab );
+    const char * interface_name, 
+    const char * ident, 
+    struct symtab * * symtab 
+  );
+
+/* See if identifier 'ident' is declared in module named 'module_name'. 
+   Return its symbol if so, or NULL if not.  EXCEPT: global variables have no
+   symbol.  If it's a global variable, return the globals record for the
+   module.  Caller will have to detect this case and combine it with
+   'ident' in its own way. */ 
+extern struct symbol *
+m3_lookup_module_id ( 
+    const char * module_name, 
+    const char * ident, 
+    struct symtab * * symtab 
+  ); 
 
 /* See if 'ident' is declared in an exported interface of module named 'module',
    which we assume we are currently executing in some block of. 
@@ -369,9 +393,9 @@ m3_proc_code_addr ( const gdb_byte * valaddr );
 extern CORE_ADDR 
 m3_proc_env_ptr ( const gdb_byte * valaddr );  
 
-/* Return the first superblock ancestor of block that is a function block. */
+/* Return the first superblock ancestor* of block that is a function block. */
 extern struct block * 
-m3_proc_block ( struct block * blk );  
+m3_block_proc_block ( struct block * blk );  
 
 extern bool 
 m3_address_lies_within_frame_locals ( 
@@ -389,5 +413,36 @@ m3_frame_base_to_sl_target_offset ( struct block * procblock );
    compiler-generated block, return it, otherwise, identity. */ 
 extern struct block * 
 m3_proc_body_block ( struct block * proc_block );
+
+/* Return the symbol of procedure named 'name', that is nested inside
+   the block parent_block, found in block_symtab.  Name is a "terminated
+   string", see m3_term_strings_equal. NULL if anything goes wrong. */ 
+extern struct symbol * 
+m3_lookup_nested_proc ( 
+    struct block * parent_block, 
+    struct symtab * block_symtab, 
+    char * name,  
+    char * name_to 
+  );
+
+/* Return the 'block_no'-th block, that is nested directly inside
+   'parent_block', found in 'block_symtab'.  Here, blocks are numbered
+   starting from one.  NULL if anything goes wrong. */ 
+extern struct block * 
+m3_find_nested_block ( 
+  struct block * parent_block, struct symtab * block_symtab, int block_no ); 
+
+/* PRE: string,string_to are a terminated string that is all digits.
+   Convert it to an integer.
+*/ 
+extern int 
+m3_int_value ( char * string, char * string_to );
+
+/* Make a list of canonical linespecs for values.  This will always
+   have one element, because there is no user-defined overloading in
+   Modula-3, and however the procedure is identified, it will be unique.
+*/ 
+extern void 
+m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical );  
 
 /* End of file m3-util.h */ 

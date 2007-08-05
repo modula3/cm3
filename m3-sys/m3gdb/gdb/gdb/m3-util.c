@@ -68,6 +68,36 @@ int rttype_infomap_cnt_offset = 0;
 
 static bool constant_init_done = false;
 
+/* Compare two terminated strings for equality.  A terminated string is
+   has a from pointer and a to pointer.  Its last character is the character
+   before either a null byte or before the character pointed to by the 
+   to pointer. */ 
+static bool
+m3_term_strings_equal ( 
+    const char * left, 
+    const char * left_to, 
+    const char * right, 
+    const char * right_to 
+  ) 
+  { bool left_done, right_done;  
+
+    left_done = ( left == NULL || left == left_to || * left == '\0' ); 
+    right_done = ( right == NULL || right == right_to || * right == '\0' ); 
+    while ( true ) 
+      { if ( left_done ) { return right_done; } 
+        else /* ! left_done */ 
+          { if ( right_done ) { return false; } 
+            else if ( * left != * right ) { return false; } 
+            else 
+              { left ++; 
+                left_done = ( left == left_to || * left == '\0' ); 
+                right ++; 
+                right_done = ( right == right_to || * right == '\0' ); 
+              } 
+          }  
+      } 
+  } 
+
 void
 init_m3_constants ( )
 { bool is_cm3; 
@@ -491,6 +521,46 @@ m3_lookup_symbol_one_global (
     return sym;  
   } /* m3_lookup_symbol_one_global */ 
 
+/* Lookup a symbol in the all static blocks.  */
+struct symbol *
+m3_lookup_symbol_all_static (
+    const char *name,
+    const char *linkage_name,
+    const domain_enum domain,
+    struct symtab * * symtab
+  )
+
+  { struct symbol * sym;
+
+    if ( symtab != NULL ) { * symtab = NULL; } /* In case we find nothing. */ 
+    sym = lookup_symbol_aux_symtabs 
+            ( STATIC_BLOCK, name, linkage_name, domain, symtab );
+    if ( sym != NULL ) { return sym; } 
+    sym = lookup_symbol_aux_psymtabs 
+            ( STATIC_BLOCK, name, linkage_name, domain, symtab );
+    return sym;  
+  } /* m3_lookup_symbol_all_static */ 
+
+/* Lookup a symbol in the all global blocks.  */
+struct symbol *
+m3_lookup_symbol_all_global (
+    const char *name,
+    const char *linkage_name,
+    const domain_enum domain,
+    struct symtab * * symtab
+  )
+
+  { struct symbol * sym;
+
+    if ( symtab != NULL ) { * symtab = NULL; } /* In case we find nothing. */ 
+    sym = lookup_symbol_aux_symtabs 
+            ( GLOBAL_BLOCK, name, linkage_name, domain, symtab );
+    if ( sym != NULL ) { return sym; } 
+    sym = lookup_symbol_aux_psymtabs 
+            ( GLOBAL_BLOCK, name, linkage_name, domain, symtab );
+    return sym;  
+  } /* m3_lookup_symbol_all_global */ 
+
 /* Lookup a symbol in the all static and global blocks.  */
 struct symbol *
 m3_lookup_symbol_all_static_and_global (
@@ -565,23 +635,31 @@ m3_block_globals_symbol (
    For an interface, its demangled name is "I$<interfaceName>".
    For a module, its demangled name is "M$<moduleName>".
    kind should be either 'I' or 'M', for interface or module. 
-   It could be in any static or global block.
+   It could be in any static or global block. name is a terminated
+   string (see m3_term_strings_equal). 
 */ 
 struct symbol *
 m3_unit_name_globals_symbol ( 
-    int kind, const char *unit_name, struct symtab * * symtab ) 
+    int kind, 
+    const char *unit_name, 
+    struct symtab * * symtab 
+  ) 
 
   { struct symbol * sym; 
-    char struct_name [ M3_MAX_SYMBOLLEN ]; 
+    char struct_name [ M3_MAX_SYMBOLLEN + 3 ]; 
+    char * struct_name_to = struct_name + M3_MAX_SYMBOLLEN; 
 
-    snprintf (struct_name, M3_MAX_SYMBOLLEN, "%c$%s", kind, unit_name);
+    struct_name [ 0 ] = kind; 
+    struct_name [ 1 ] = '$'; 
+    struct_name [ 2 ] = '\0'; 
+    strncat ( struct_name, unit_name, M3_MAX_SYMBOLLEN ); 
     sym = m3_lookup_symbol_all_static_and_global 
             ( struct_name, NULL, VAR_DOMAIN, symtab );
    return sym; 
   } /* m3_unit_name_globals_symbol */ 
 
 /* Is sym the symbol of a Modula-3 globals record for either an interface
-   of a module? */ 
+   or a module? */ 
 bool
 m3_is_globals_record_symbol ( const struct symbol * sym ) 
 
@@ -638,63 +716,60 @@ struct type *
 find_m3_exported_interfaces ( const char * module_name )
 
   { char struct_name [ M3_MAX_SYMBOLLEN ]; 
-    const struct block * static_block
-      = block_static_block ( expression_context_block ); 
     struct symbol *sym;
 
     snprintf ( struct_name, M3_MAX_SYMBOLLEN, "H$%s", module_name );
-    sym = lookup_symbol_static 
-            ( struct_name, NULL, static_block, STRUCT_DOMAIN, NULL );
+    sym = m3_lookup_symbol_all_static_and_global 
+            ( struct_name, NULL, STRUCT_DOMAIN, NULL );
     if ( sym != NULL ) 
       { return SYMBOL_TYPE ( sym ); } 
     else { return NULL; }
   } /* find_m3_exported_interfaces */ 
 
 char *
-find_m3_type_name (t)
-     struct type *t;
-{
-  char *uid = TYPE_TAG_NAME (t);
-  char struct_name [ M3_MAX_SYMBOLLEN ]; 
-  struct symbol *sym;
+find_m3_type_name ( struct type * t )
 
-  if (TYPE_NAME (t) == 0) {
-    if (uid == NULL) return NULL;
-    snprintf (struct_name, M3_MAX_SYMBOLLEN, "G$%s", uid);
-    if ((sym = lookup_symbol (struct_name, 0, STRUCT_DOMAIN, 0, 0))) {
-      TYPE_NAME (t) = TYPE_FIELD_NAME (SYMBOL_TYPE (sym), 0);
-    } else {
-      char *n;
-      if (uid == NULL) {
-	  n = malloc (strlen("<typeid=(null)>")+1);
-	  strcpy(n, "<typeid=(null)>");
+  { char *uid = TYPE_TAG_NAME (t);
+    char struct_name [ M3_MAX_SYMBOLLEN ]; 
+    struct symbol *sym;
+
+    if (TYPE_NAME (t) == 0) {
+      if (uid == NULL) return NULL;
+      snprintf (struct_name, M3_MAX_SYMBOLLEN, "G$%s", uid);
+      if ((sym = lookup_symbol (struct_name, 0, STRUCT_DOMAIN, 0, 0))) {
+        TYPE_NAME (t) = TYPE_FIELD_NAME (SYMBOL_TYPE (sym), 0);
       } else {
-	  n = malloc (strlen(uid)+strlen("<typeid=>")+1);
-	  snprintf (n, M3_MAX_SYMBOLLEN, "<typeid=%s>", uid);
+        char *n;
+        if (uid == NULL) {
+            n = malloc (strlen("<typeid=(null)>")+1);
+            strcpy(n, "<typeid=(null)>");
+        } else {
+            n = malloc (strlen(uid)+strlen("<typeid=>")+1);
+            snprintf (n, M3_MAX_SYMBOLLEN, "<typeid=%s>", uid);
+        }
+        TYPE_NAME (t) = n;
       }
-      TYPE_NAME (t) = n;
     }
-  }
-  return TYPE_NAME (t);
-}
+    return TYPE_NAME (t);
+  } /* find_m3_type_name */ 
 
 /* Is sym the symbol of a Modula-3 type name? */
 bool
 m3_is_type_name_symbol ( const struct symbol * sym ) 
 
-{ char * name; 
-  size_t len; 
+  { char * name; 
+    size_t len; 
 
-  name = SYMBOL_SEARCH_NAME ( sym );
-  if ( name == NULL ) { return false; }  
-  len = strlen ( name ); 
-  if ( len < 3 ) { return false; } 
-  if ( name [ 0 ] == 'B' 
-       && name [ 1 ] == '$' 
-     ) 
-    { return true; } 
-  else { return false; } 
-} /* m3_is_type_name_symbol */ 
+    name = SYMBOL_SEARCH_NAME ( sym );
+    if ( name == NULL ) { return false; }  
+    len = strlen ( name ); 
+    if ( len < 3 ) { return false; } 
+    if ( name [ 0 ] == 'B' 
+         && name [ 1 ] == '$' 
+       ) 
+      { return true; } 
+    else { return false; } 
+  } /* m3_is_type_name_symbol */ 
 
 /* Look in 'block' for a declaration of a type. */ 
 struct symbol *
@@ -705,92 +780,238 @@ m3_lookup_type (
     struct symtab * * symtab
   ) 
 
-{ char type_name [ M3_MAX_SYMBOLLEN ];
-  struct symbol * sym; 
+  { char type_name [ M3_MAX_SYMBOLLEN * 2 + 4 ];
+    struct symbol * sym; 
 
-  /* Just in case we ever demangle these into unqualified names. */ 
-  snprintf ( type_name, M3_MAX_SYMBOLLEN, "B$%s", name );
-  sym = lookup_symbol_static ( type_name, NULL, blk, STRUCT_DOMAIN, symtab );
-  if ( sym != NULL ) { return sym; } 
-  if ( unit_name != NULL ) 
-    { snprintf ( type_name, M3_MAX_SYMBOLLEN, "B$%s.%s", unit_name, name );
-      sym 
-        = lookup_symbol_static ( type_name, NULL, blk, STRUCT_DOMAIN, symtab );
-    } 
-  return sym; 
-} /* m3_lookup_type */ 
+    /* Just in case we ever demangle these into unqualified names. */ 
+    snprintf ( type_name, M3_MAX_SYMBOLLEN, "B$%s", name );
+    sym = lookup_symbol_static ( type_name, NULL, blk, STRUCT_DOMAIN, symtab );
+    if ( sym != NULL ) { return sym; } 
+    if ( unit_name != NULL ) 
+      { type_name [ 0 ] = 'B'; 
+        type_name [ 1 ] = '$'; 
+        type_name [ 2 ] = '\0'; 
+        strncat ( type_name, unit_name, M3_MAX_SYMBOLLEN ); 
+        strcat ( type_name, "." ); 
+        strncat ( type_name, name, M3_MAX_SYMBOLLEN ); 
+        /* ^I know this is absurdly inefficient, but it's the C way. */ 
+        sym 
+          = lookup_symbol_static ( type_name, NULL, blk, STRUCT_DOMAIN, symtab );
+      } 
+    return sym; 
+  } /* m3_lookup_type */ 
 
 /* See if identifier 'ident' is declared in interface named 'interface_name'. 
-   Return its symbol, if so, NULL if not.  EXCEPT: global variables have no
-   symbol.  If it's a global variable, return the globals record for the
-   interface.  Caller will have to detect this case and combine it with
-   'ident' in its own way. */ 
+   Return its symbol if so, or NULL if not.  EXCEPT: global variables have no
+   symbol.  If it's a global variable, return the symbol for the globals 
+   record for the interface.  Caller will have to detect this case and combine 
+   it with 'ident' in its own way.  If a symbol is found and symtab is non-NULL,
+   set symtab to the containing symbol table.  If this is a procedure declared
+   in interface 'interface_name', the symbol and symtab returned will belong
+   to the exporting _module_ (this is the only symbol we have.)  This will not
+   find a procedure that is not declared in an interface. */ 
 struct symbol *
 m3_lookup_interface_id ( 
-  const char * interface_name, const char * ident, struct symtab * * symtab ) 
+    const char * interface_name, 
+    const char * ident, 
+    struct symtab * * symtab 
+  ) 
 
   { struct symbol * interface_rec_sym;
     struct symbol * sym;
     struct block * interface_static_block; 
-    int found; 
     struct type * global_type; 
-    char linkage_name [ M3_MAX_SYMBOLLEN ];
+    char linkage_name [ M3_MAX_SYMBOLLEN * 2 + 3 ];
     struct blockvector *bv;
-    struct symtab * l_symtab;
+    struct symtab * interface_symtab;
+    struct symtab * module_symtab;
+    bool found; 
     
-    /* Try looking in the interface global record for a variable. */
+    /* Look for the interface global record. */
     interface_rec_sym 
-      = m3_unit_name_globals_symbol ( 'I', interface_name, & l_symtab ); 
+      = m3_unit_name_globals_symbol ( 'I', interface_name, & interface_symtab ); 
     if ( interface_rec_sym != NULL ) 
-      { if ( symtab != NULL) { * symtab = l_symtab; } 
-        /* Look in the interface global record of an exported interface, 
-           where we will find a procedure or variable that was declared 
-           in the interface. */ 
+      { /* Look in the interface global record, where we will find a variable
+           or, for PM3, a procedure, that was declared  in the interface. */ 
         found 
           = m3_find_rec_field 
               ( SYMBOL_TYPE ( interface_rec_sym ), 
                 ident, 0, 0, & global_type 
               );
         if ( found 
-             /* SRC, PM3, and EZM3 put a procedure declared in an
-                interface into the interface global record.  We don't
-                want to use it from there, because that gives no symbol 
-                for it.  Ignore a procedure here, and find it differently, 
-                below. CM3 does not put it in the interface record in this 
-                case.  */ 
-             && ( global_type == NULL 
-                  || TYPE_CODE ( global_type ) != TYPE_CODE_FUNC 
+             && /* SRC, PM3, and EZM3 put a procedure declared in an
+                   interface into the interface global record.  But we don't
+                   want to use it from here, because this gives no symbol 
+                   for it.  Ignore a procedure here, and find it differently, 
+                   below.  However, for PM3 and friends, just its presence here 
+                   will be important below. */ 
+                ( global_type == NULL 
+                  || TYPE_CODE ( global_type ) != TYPE_CODE_M3_PROC 
                 ) 
            ) 
-          { return interface_rec_sym; }
+          /* Found a variable. */ 
+          { if ( symtab != NULL) { * symtab = interface_symtab; } 
+            return interface_rec_sym; 
+          }
 
         /* Look in the static block of the interface, where we will find 
            a type declared in the interface, with transformed name, the 
            same for all compilers. */ 
-        if ( l_symtab != NULL ) 
-          { bv = BLOCKVECTOR ( l_symtab );
+        if ( interface_symtab != NULL ) 
+          { bv = BLOCKVECTOR ( interface_symtab );
             interface_static_block = BLOCKVECTOR_BLOCK ( bv, STATIC_BLOCK );
             sym = m3_lookup_type 
-                    ( interface_name, ident, interface_static_block, symtab ); 
+                    ( interface_name, 
+                      ident, 
+                      interface_static_block, 
+                      symtab 
+                    ); 
             if ( sym != NULL ) { return sym; } 
           }
 
-      }
-
-    /* The consistent way to find a procedure declared in an interface
-       and get its symbol is to construct the linkage name
-       "interfaceName__ProcName" and look in all symtabs for it. */
-    strncpy ( linkage_name, interface_name, M3_MAX_SYMBOLLEN );
-    strncat ( linkage_name, "__", M3_MAX_SYMBOLLEN );
-    strncat ( linkage_name, ident, M3_MAX_SYMBOLLEN );
-    sym = m3_lookup_symbol_all_static_and_global 
-            ( ident, linkage_name, VAR_DOMAIN, symtab ); 
-    if ( sym != NULL 
-         && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
-       ) 
-      { return sym; }
+        /* A procedure declared in an interface has a symbol only in the 
+           exporting module.  Look for it by constructing the linkage name
+           "interfaceName__ProcName" and looking in all global and static 
+           blocks. */
+        linkage_name [ 0 ] = '\0'; 
+        strncat ( linkage_name, interface_name, M3_MAX_SYMBOLLEN );
+        strcat ( linkage_name, "__" );
+        strncat ( linkage_name, ident, M3_MAX_SYMBOLLEN );
+        sym = m3_lookup_symbol_all_global 
+                ( ident, linkage_name, VAR_DOMAIN, & module_symtab ); 
+        if ( sym != NULL 
+             && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
+           )
+          /* Finding this linkage name in a global block means this is CM3 and 
+             this is a procedure declared in interface 'interface_name'.  Even 
+             so, it is in the symbol table for the exporting _module_ where sym 
+             will have been found.  This could have a different module name.  
+             'symtab' will be set for this module. */  
+          { if ( symtab != NULL) { * symtab = module_symtab; } 
+            return sym; 
+          }
+        /* Now try the static block of all symtabs. */ 
+        sym = m3_lookup_symbol_all_static 
+                ( ident, linkage_name, VAR_DOMAIN, & module_symtab ); 
+        if ( sym != NULL 
+             && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
+             && found 
+           )
+          /* Finding 'linkage_name' in a static block after having previously 
+             found 'name' in the interface globals record means this is PM3 etc. 
+             and this is a procedure declared in interface 'interface_name'.  
+             Even so, it is in the symbol table for the exporting _module_, 
+             where sym will have been found.  This could have a different 
+             module name.  'symtab' will be set for this module. */  
+          { if ( symtab != NULL) { * symtab = module_symtab; } 
+            return sym; 
+          }
+      } 
+    /* 'name' is not declared in an interface named 'interface_name'. */ 
     return NULL; 
   } /* m3_lookup_interface_id */ 
+
+/* See if identifier 'ident' is declared in module named 'module_name'. 
+   Return its symbol if so, or NULL if not.  EXCEPT: global variables have no
+   symbol.  If it's a global variable, return the globals record for the
+   module.  Caller will have to detect this case and combine it with
+   'ident' in its own way. */ 
+struct symbol *
+m3_lookup_module_id ( 
+    const char * module_name, 
+    const char * ident, 
+    struct symtab * * symtab 
+  ) 
+
+  { struct symbol * module_rec_sym;
+    struct symbol * sym;
+    struct block * module_static_block; 
+    struct block * module_global_block; 
+    struct type * global_type; 
+    char linkage_name [ M3_MAX_SYMBOLLEN * 2 + 3 ];
+/* FIXME: ^Get the space allocation right for this. */ 
+    struct blockvector *bv;
+    struct symtab * module_symtab;
+    struct symtab * l_symtab;
+    bool found; 
+    
+    /* Look for the module global record. */
+    module_rec_sym 
+      = m3_unit_name_globals_symbol ( 'M', module_name, & module_symtab ); 
+    if ( module_rec_sym != NULL ) 
+      { /* Look in the module global record, where we will find a variable
+           or, for PM3, a procedure, that was declared  in the module. */ 
+        found 
+          = m3_find_rec_field 
+              ( SYMBOL_TYPE ( module_rec_sym ), 
+                ident, 0, 0, & global_type 
+              );
+        if ( found 
+             && /* SRC, PM3, and EZM3 put a procedure declared in a
+                   module into the module global record.  But we don't
+                   want to use it from here, because this gives no symbol 
+                   for it.  Ignore a procedure here, and find it differently, 
+                   below. */ 
+                ( global_type == NULL 
+                  || TYPE_CODE ( global_type ) != TYPE_CODE_M3_PROC 
+                ) 
+           ) 
+          /* Found a variable. */ 
+        { if ( symtab != NULL) { * symtab = module_symtab; } 
+          return module_rec_sym; 
+        }
+
+        /* Look in the static block of the module, where we will find 
+           a type or procedure declared in the module.  This is the same 
+           for all compilers. */ 
+        if ( module_symtab != NULL ) 
+          { bv = BLOCKVECTOR ( module_symtab );
+            module_static_block = BLOCKVECTOR_BLOCK ( bv, STATIC_BLOCK );
+            sym = m3_lookup_type 
+                    ( module_name, 
+                      ident, 
+                      module_static_block, 
+                      symtab 
+                    ); 
+            if ( sym != NULL ) { return sym; } 
+
+            /* Construct the linkage name "moduleName__ProcName" and look for it
+               in the static and global blocks of this module. */
+            linkage_name [ 0 ] = '\0'; 
+            strncat ( linkage_name, module_name , M3_MAX_SYMBOLLEN );
+            strcat ( linkage_name, "__" );
+            strncat ( linkage_name, ident, M3_MAX_SYMBOLLEN );
+            sym = lookup_symbol_aux_block
+                    ( ident, linkage_name, module_static_block, 
+                      VAR_DOMAIN, & l_symtab 
+                    );
+            /* This is the procedure we want, regardless of whether it is 
+               exported. */ 
+            if ( sym != NULL 
+                 && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
+               )
+              { if ( symtab != NULL) { * symtab = l_symtab; } 
+                return sym; 
+              }      
+            
+            /* For CM3, if the procedure is exported, it will be in the
+               global block. */ 
+            module_global_block = BLOCKVECTOR_BLOCK ( bv, GLOBAL_BLOCK );
+            sym = lookup_symbol_aux_block
+                    ( ident, linkage_name, module_global_block, 
+                      VAR_DOMAIN, & l_symtab 
+                    );
+            if ( sym != NULL 
+                 && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
+               )
+              { if ( symtab != NULL) { * symtab = l_symtab; } 
+                return sym; 
+              } 
+          }
+      }
+
+    return NULL; 
+  } /* m3_lookup_module_id */ 
 
 /* See if 'ident' is declared in an exported interface of module named 'module',
    which we assume we are currently executing in some block of. 
@@ -817,8 +1038,7 @@ m3_lookup_exported (
     else 
       { for ( i = 0; i < TYPE_NFIELDS ( exports ); i++ ) 
           { interface_name = TYPE_FIELD_NAME ( exports, i ); 
-            sym = m3_lookup_interface_id 
-                    ( interface_name, ident, symtab ); 
+            sym = m3_lookup_interface_id ( interface_name, ident, symtab ); 
             if ( sym != NULL ) { return sym; } 
 	  }
       }
@@ -834,20 +1054,29 @@ static enum compiler_kind_typ { ck_unknown, ck_pm3, ck_cm3 } compiler_kind
 void 
 note_is_cm3 ( void )
 
-  { gdb_assert ( compiler_kind == ck_unknown ) ; 
+  { gdb_assert ( compiler_kind != ck_pm3 ) ; 
     compiler_kind = ck_cm3; 
   } /* note_is_cm3 */ 
 
 void 
 note_is_pm3 ( void )
 
-  { gdb_assert ( compiler_kind == ck_unknown ) ; 
+  { gdb_assert ( compiler_kind != ck_cm3 ) ; 
     compiler_kind = ck_pm3; 
   } /* note_is_pm3 */ 
 
 bool 
 m3_is_cm3 ( void ) 
-  { init_m3_constants ( ); 
+  { struct symbol * sym; 
+
+    /* init_m3_constants ( ); This method can fail if we haven't done a run
+       command yet and libm3core is dynamically linked. */ 
+
+    sym = m3_lookup_symbol_all_static 
+            ( "m3main", "MM__m3main", VAR_DOMAIN, NULL); 
+    if ( sym != NULL ) { note_is_cm3 ( ); } 
+    else { note_is_pm3 ( ); } 
+
     if ( compiler_kind == ck_unknown ) 
       { warning ( "Can't tell what Modula-3 compiler was used, assuming CM3." ); 
         return true; 
@@ -1844,9 +2073,9 @@ m3_proc_env_ptr ( const gdb_byte * valaddr )
     else { return 0; } 
   } /* m3_proc_env_ptr */ 
 
-/* Return the first superblock ancestor of block that is a function block. */
+/* Return the first superblock ancestor* of block that is a function block. */
 struct block * 
-m3_proc_block ( struct block * blk ) 
+m3_block_proc_block ( struct block * blk ) 
 
   { struct block * l_block; 
 
@@ -1854,7 +2083,7 @@ m3_proc_block ( struct block * blk )
     while ( l_block != NULL && BLOCK_FUNCTION ( l_block ) == NULL ) 
       { l_block = BLOCK_SUPERBLOCK ( l_block ) ; } 
     return l_block; 
-  } /* m3_proc_block */ 
+  } /* m3_block_proc_block */ 
 
 /* mininum and maximum displacements of local variables in a block.  
    the range will be half-open, such that the variables occupy 
@@ -1900,7 +2129,7 @@ m3_address_lies_within_frame_locals (
   CORE_ADDR locals_address; 
   
   if ( frame == NULL ) { return false; } 
-  blk = m3_proc_block ( get_frame_block ( frame, NULL ) ); 
+  blk = m3_block_proc_block ( get_frame_block ( frame, NULL ) ); 
   if ( blk == NULL ) { return false; } 
   m3_block_locals_range ( blk, & min_displ, & max_displ ); 
   locals_address = get_frame_locals_address ( frame ); 
@@ -1908,16 +2137,6 @@ m3_address_lies_within_frame_locals (
   if ( address >= locals_address + max_displ ) { return false; } 
   return true; 
 } /* m3_address_lies_within_block_locals */ 
-
-/* Return the block for the declared procedure that contains bl,
-   where "contains" is reflexive.   */
-static struct block *
-m3_block_proc_block ( struct block *bl )
-
-  { while ( BLOCK_FUNCTION ( bl ) == NULL && BLOCK_SUPERBLOCK ( bl ) != NULL )
-      { bl = BLOCK_SUPERBLOCK ( bl ); } 
-    return bl;
-  } /* m3_block_proc_block */ 
 
 /* This must agree with the string defined by the same name in the gcc backend, 
    dbxout.c, and used by dbxout_emit_frame_offset: */ 
@@ -1947,11 +2166,139 @@ struct block *
 m3_proc_body_block ( struct block * proc_block )
 
 { struct block * result; 
+  struct symbol * proc_sym; 
 
-  if ( proc_block == NULL ) { return NULL; } 
+  if ( proc_block == NULL ) { return NULL; }
+  proc_sym = BLOCK_FUNCTION ( proc_block );
+  if ( proc_sym == NULL || SYMBOL_LANGUAGE ( proc_sym ) != language_m3 ) 
+    { return proc_block; }  
   result = M3_BLOCK_BODY_BLOCK ( proc_block );   
-  if ( result== NULL ) { return proc_block; }  
+  if ( result == NULL ) { return proc_block; }  
   return result; 
 } /* m3_proc_body_block */ 
+
+/* Return the symbol of procedure named 'name', that is nested inside
+   the block parent_block, found in block_symtab.  name is a "terminated
+   string", see m3_term_strings_equal.  parent_block can be a procedure 
+   block that contains an extra block for the procedure body.  
+   Return NULL if anything goes wrong. */ 
+struct symbol * 
+m3_lookup_nested_proc ( 
+    struct block * parent_block, 
+    struct symtab * block_symtab, 
+    char * name, 
+    char * name_to 
+  )
+
+  { struct blockvector * bv; 
+    struct block * body_block;
+    struct block * trial_block;
+    int i; 
+    struct symbol * trial_sym; 
+
+    if ( parent_block == NULL ) { return NULL; } 
+    body_block = m3_proc_body_block ( parent_block ); 
+    bv = BLOCKVECTOR ( block_symtab );
+    for ( i = 0; i < BLOCKVECTOR_NBLOCKS ( bv ); i ++ ) 
+      { trial_block = BLOCKVECTOR_BLOCK ( bv, i ); 
+        trial_sym = BLOCK_FUNCTION ( trial_block ); 
+        if ( trial_sym != NULL 
+             && TYPE_CODE ( SYMBOL_TYPE ( trial_sym ) ) == TYPE_CODE_FUNC 
+                /* ^Probably can't fail, but I'm paranoid. */ 
+             && BLOCK_SUPERBLOCK ( trial_block ) == body_block 
+             && m3_term_strings_equal 
+                  ( SYMBOL_NATURAL_NAME ( trial_sym ), NULL, name, name_to )
+           ) 
+          { return trial_sym; } 
+      } 
+    return NULL; 
+    
+  } /* m3_lookup_nested_proc */ 
+
+/* Return the 'block_no'-th block that is nested directly inside
+   'parent_block', found in 'block_symtab'.  Here, blocks are numbered
+   starting from one.  parent_block can be a procedure block that
+   contains an extra block for the procedure body. Return NULL if 
+   anything goes wrong. */ 
+struct block * 
+m3_find_nested_block ( 
+    struct block * parent_block, 
+    struct symtab * block_symtab, 
+    int block_no 
+  ) 
+
+  { struct blockvector * bv; 
+    struct block * body_block;
+    struct block * trial_block;
+    int i; 
+    int trial_block_no; 
+
+    if ( parent_block == NULL ) { return NULL; } 
+    body_block = m3_proc_body_block ( parent_block ); 
+    bv = BLOCKVECTOR ( block_symtab );
+    trial_block_no = 1; 
+    for ( i = 0; i < BLOCKVECTOR_NBLOCKS ( bv ); i ++ ) 
+      { trial_block = BLOCKVECTOR_BLOCK ( bv, i ); 
+        if ( BLOCK_FUNCTION ( trial_block ) == NULL 
+             && BLOCK_SUPERBLOCK ( trial_block ) == body_block 
+           ) 
+          { /* It's a directly nested block.  See if the right one. */ 
+            if ( trial_block_no == block_no ) 
+              { return trial_block; } 
+            else { trial_block_no ++; }  
+          } 
+      } 
+    return NULL; 
+    
+  } /* m3_find_nested_block */ 
+
+/* PRE: string,string_to are a terminated string that is all digits.
+   Convert it to an integer.
+*/ 
+int 
+m3_int_value ( char * string, char * string_to )
+
+  { int result; 
+
+    result = 0; 
+    while ( string != string_to && * string != '\0' ) 
+      { result = result * 10 + ( * string - '0' ); 
+        /* God help us if it has nondigits or a value too big. */  
+        string ++; 
+      } 
+    return result;
+  } /* m3_int_value */ 
+
+/* Make a list of canonical linespecs for values.  This will always
+   have one element, because there is no user-defined overloading in
+   Modula-3, and however the procedure is identified, it will be unique.
+*/ 
+void 
+m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical ) 
+
+  { char * * canonical_arr;
+    char * canonical_name; 
+    struct symtab * sym;  
+
+    if ( canonical != NULL && values != NULL && values -> nelts == 1 )
+      { sym = values -> sals [ 0 ] . symtab;  
+        if ( sym != NULL ) 
+          { canonical_arr = (char * *) xmalloc (sizeof (char *));
+            *canonical = canonical_arr;
+            /* Apparently, callers know how big this array is by making
+               it parallel to the array values . sals, with values . nelts. */ 
+
+            canonical_name = xmalloc (strlen (sym ->filename) + 30);
+            sprintf 
+              ( canonical_name, 
+                "%s:%d", 
+                sym -> filename, 
+                values -> sals [ 0 ] . line
+              );
+            canonical_arr[0] = canonical_name;
+
+          } 
+      } 
+  } /* m3_make_canonical */ 
 
 /* End of file m3-util.c */ 
