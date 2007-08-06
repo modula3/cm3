@@ -865,7 +865,7 @@ cm3_comp_unit_body_name_len ( const char * name )
    interface:
 
    Procedure in a    For CM3, only in the global block of the exporting module.
-   module, also in   For PM3, in the local block of the exporting module.  
+   module, also in   For PM3, in the static block of the exporting module.  
    an exported       Linkage name is <InterfaceName>__<procName>.  
    interface:        PM3 also has a field in the globals record of the module. 
 
