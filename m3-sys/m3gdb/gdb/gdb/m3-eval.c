@@ -33,125 +33,18 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "m3-util.h" 
 #include "m3-valprint.h" 
 
-static LONGEST
-m3_div (a, b)
-  LONGEST a, b;
-{
-  if (a == 0) { return 0; }
-  if (a < 0) {
-    return (b < 0)
-             ? ((-a) / (-b))
-	     : (- ((-a-1) / b) - 1);
-  } else {
-    return (b < 0)
-             ? (- ((a - 1) / (-b)) - 1)
-             : (a / b);
-  }
-} /* m3_div */
+enum subtype_rel 
+  { subtype_sub, subtype_equal, subtype_super, subtype_both, subtype_norel };
 
-static LONGEST
-m3_modi (a, b)
-  LONGEST a, b;
-{
-  if (a == 0) { return 0; }
-  if (a < 0) {
-    return (b < 0)
-             ? (- ((-a) % (-b)))
-             : (b - 1 - ((-a-1) % b));
-  } else {
-    return (b < 0)
-             ? (b + 1 + ((a - 1) % (-b)))
-             : (a % b);
-  }
-} /* m3_modi */
+static enum subtype_rel 
+commute_subtype_relation ( enum subtype_rel param_rel ) 
 
-static double
-m3_modf (a, b)
-  double a, b;
-{
-  double  z = a / b;
-  LONGEST zi = (LONGEST) z;
-  if ((z < 0.0) && ((double)zi != z)) { zi--; }
-  return a - b * (double)zi;
-} /* m3_modf */
-
-/* Simulate the Modula-3  operator = by returning a 1
-   iff ARG1 and ARG2 have equal contents.  */
-
-static int
-m3_value_equal (struct value *arg1, struct value *arg2) 
-{
-  int len;
-  const char * p1, * p2;
-  enum type_code code1;
-  enum type_code code2;
-
-  coerce_array (arg1);
-  coerce_array (arg2);
-
-  code1 = TYPE_CODE (value_type (arg1));
-  code2 = TYPE_CODE (value_type (arg2));
-
-  if (code1 == TYPE_CODE_M3_INTEGER) { code1 = TYPE_CODE_INT; }
-  if (code2 == TYPE_CODE_M3_INTEGER) { code2 = TYPE_CODE_INT; }
-  if (code1 == TYPE_CODE_M3_POINTER) { code1 = TYPE_CODE_PTR; }
-  if (code2 == TYPE_CODE_M3_POINTER) { code2 = TYPE_CODE_PTR; }
-
-  if (code1 == TYPE_CODE_M3_INTEGER && code2 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_integer (arg1) == m3_value_as_integer (arg2);
-  else if (code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_float (arg1) == (double) m3_value_as_integer (arg2);
-  else if (code2 == TYPE_CODE_FLT && code1 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_float (arg2) == (double) m3_value_as_integer (arg1);
-  else if (code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_FLT)
-    return m3_value_as_float (arg1) == m3_value_as_float (arg2);
-
-  /* FIXME: Need to promote to either CORE_ADDR or LONGEST, whichever
-     is bigger.  */
-  else if (code1 == TYPE_CODE_M3_POINTER && code2 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_address (arg1) == (CORE_ADDR) m3_value_as_integer (arg2);
-  else if (code2 == TYPE_CODE_M3_POINTER && code1 == TYPE_CODE_M3_INTEGER)
-    return (CORE_ADDR) m3_value_as_integer (arg1) == m3_value_as_address (arg2);
-
-  else if (code1 == code2
-           && ((len = TYPE_LENGTH (value_type (arg1)))
-               == TYPE_LENGTH (value_type (arg2))))
-    {
-      p1 = value_contents (arg1);
-      p2 = value_contents (arg2);
-      while (--len >= 0)
-        {
-          if (*p1++ != *p2++)
-            break;
-        }
-      return len < 0;
-    }
-  else
-    {
-      error ("Invalid type combination in equality test.");
-      return 0;  /* For lint -- never reached */
-    }
-}
-
-static bool
-m3_types_equal ( struct type * left, struct type * right ); 
-
-static bool 
-m3_type_fields_equal ( struct type * left, struct type * right ) 
-
-{ int i;
-
-  if ( TYPE_NFIELDS ( left ) != TYPE_NFIELDS ( right ) )
-    { return false; } 
-  for ( i = 0; i < TYPE_NFIELDS ( left ); i ++ ) 
-    { if ( ! m3_types_equal 
-               ( TYPE_M3_FIELD_TYPE ( left, i ), 
-                 TYPE_M3_FIELD_TYPE ( right, i ) 
-               ) 
-         ) { return false; } 
-    } 
-  return true; 
-} 
+  { switch ( param_rel ) 
+      { case subtype_sub : return subtype_super; 
+        case subtype_super : return subtype_sub; 
+        default: return param_rel; 
+      } 
+  } /* commute_subtype_relation */ 
 
 /* Strip away any indirect types from a type. */ 
 static struct type * 
@@ -197,6 +90,26 @@ m3_revealed_type ( struct type * opaque_type )
       { return TYPE_M3_OPAQUE_REVEALED ( opaque_type ); } 
     return opaque_type; 
   } /* m3_revealed_type */ 
+
+static bool
+m3_types_equal ( struct type * left, struct type * right ); 
+
+static bool 
+m3_type_fields_equal ( struct type * left, struct type * right ) 
+
+{ int i;
+
+  if ( TYPE_NFIELDS ( left ) != TYPE_NFIELDS ( right ) )
+    { return false; } 
+  for ( i = 0; i < TYPE_NFIELDS ( left ); i ++ ) 
+    { if ( ! m3_types_equal 
+               ( TYPE_M3_FIELD_TYPE ( left, i ), 
+                 TYPE_M3_FIELD_TYPE ( right, i ) 
+               ) 
+         ) { return false; } 
+    } 
+  return true; 
+} 
 
 bool
 m3_types_equal ( struct type * left, struct type * right ) 
@@ -376,6 +289,268 @@ m3_types_equal ( struct type * left, struct type * right )
     } /* switch */ 
 } /* m3_types_equal */
 
+static struct type * 
+m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
+
+  { struct type * result_type; 
+
+    if ( is_int_or_card != NULL ) { * is_int_or_card = false; } 
+    result_type = param_type; 
+    while ( true ) 
+      { switch ( TYPE_CODE ( result_type ) ) 
+          { case TYPE_CODE_M3_INDIRECT :
+              result_type = TYPE_M3_INDIRECT_TARGET ( result_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_OPAQUE :
+              result_type = TYPE_M3_OPAQUE_REVEALED ( result_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_PACKED : 
+              /* The value should still be in packed form, with bitpos and 
+                 bitsize fields set. */ 
+              result_type = TYPE_M3_PACKED_TARGET ( result_type );
+              break; /* And loop. */  
+            case TYPE_CODE_M3_SUBRANGE :
+              result_type = TYPE_M3_SUBRANGE_TARGET ( result_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_INTEGER : 
+            case TYPE_CODE_M3_CARDINAL : 
+              if ( is_int_or_card != NULL ) { * is_int_or_card = true; } 
+              return result_type;  
+            case TYPE_CODE_M3_BOOLEAN : 
+            case TYPE_CODE_M3_CHAR : 
+            case TYPE_CODE_M3_WIDECHAR : 
+            case TYPE_CODE_M3_ENUM : 
+              return result_type;  
+            default: 
+              return NULL; 
+          } 
+      } 
+  } /* m3_ordinal_base_type */ 
+
+/* Call this only if left_type is known to be neither indirect nor packed and
+   an ordinal type. */ 
+static enum subtype_rel
+m3_ordinal_subtype_relation ( 
+    struct type * left_type, 
+    struct type * left_base_type, 
+    struct type * right_type
+  ) 
+
+  { enum type_code left_base_code; 
+    enum type_code right_base_code; 
+    struct type * right_base_type;
+    LONGEST left_lower; 
+    LONGEST left_upper; 
+    LONGEST right_lower; 
+    LONGEST right_upper; 
+
+    right_type = m3_unpacked_type ( right_type ); 
+    switch ( TYPE_CODE ( right_type ) ) 
+      { case TYPE_CODE_M3_SUBRANGE : 
+          right_base_type = TYPE_M3_SUBRANGE_TARGET ( right_type ); 
+        case TYPE_CODE_M3_BOOLEAN : 
+        case TYPE_CODE_M3_CHAR : 
+        case TYPE_CODE_M3_WIDECHAR : 
+        case TYPE_CODE_M3_INTEGER : 
+        case TYPE_CODE_M3_CARDINAL : 
+        case TYPE_CODE_M3_ENUM : 
+          right_base_type = right_type;
+        default : 
+          return subtype_norel; 
+      } 
+    left_base_code = TYPE_CODE ( left_base_type ); 
+    right_base_code = TYPE_CODE ( right_base_type ); 
+    if ( left_base_code != right_base_code ) 
+      { return subtype_norel; } 
+    if ( left_base_code == TYPE_CODE_M3_ENUM ) 
+      { if ( ! m3_type_fields_equal ( left_base_type, right_base_type ) ) 
+          { return subtype_norel; } 
+      } 
+    /* Here, we know the two base types are equal. */   
+    if ( left_type == left_base_type && right_type == right_base_type ) 
+      { return subtype_equal; } 
+    /* Here, at least one is a subrange. */ 
+    m3_ordinal_bounds ( left_type , & left_lower, & left_upper );  
+    m3_ordinal_bounds ( right_type , & right_lower, & right_upper );  
+    if ( left_lower == right_lower && left_upper == right_upper ) 
+      /* Bounds are equal. */ 
+      { if ( left_type != left_base_type && right_type != right_base_type ) 
+          /* Both are subranges. */ 
+          { return subtype_equal; } 
+        else 
+          { return subtype_both; }
+      }  
+    if ( left_lower <= right_lower && left_upper >= right_upper ) 
+      { return subtype_super; } /* Left is supertype. */ 
+    if ( left_lower >= right_lower && left_upper <= right_upper ) 
+      { return subtype_sub; } /* Left is subtype. */ 
+    return subtype_norel; 
+  } /* m3_ordinal_subtype_relation */ 
+
+static LONGEST
+m3_div (a, b)
+  LONGEST a, b;
+{
+  if (a == 0) { return 0; }
+  if (a < 0) {
+    return (b < 0)
+             ? ((-a) / (-b))
+	     : (- ((-a-1) / b) - 1);
+  } else {
+    return (b < 0)
+             ? (- ((a - 1) / (-b)) - 1)
+             : (a / b);
+  }
+} /* m3_div */
+
+static LONGEST
+m3_modi (a, b)
+  LONGEST a, b;
+{
+  if (a == 0) { return 0; }
+  if (a < 0) {
+    return (b < 0)
+             ? (- ((-a) % (-b)))
+             : (b - 1 - ((-a-1) % b));
+  } else {
+    return (b < 0)
+             ? (b + 1 + ((a - 1) % (-b)))
+             : (a % b);
+  }
+} /* m3_modi */
+
+static double
+m3_modf (a, b)
+  double a, b;
+{
+  double  z = a / b;
+  LONGEST zi = (LONGEST) z;
+  if ((z < 0.0) && ((double)zi != z)) { zi--; }
+  return a - b * (double)zi;
+} /* m3_modf */
+
+/* Simulate the Modula-3  operator = by returning a 1
+   iff ARG1 and ARG2 have equal contents.  */
+
+static int
+m3_value_equal (struct value *arg1, struct value *arg2) 
+{
+  int len;
+  const char * p1, * p2;
+  enum type_code code1;
+  enum type_code code2;
+
+  coerce_array (arg1);
+  coerce_array (arg2);
+
+  code1 = TYPE_CODE (value_type (arg1));
+  code2 = TYPE_CODE (value_type (arg2));
+
+  if (code1 == TYPE_CODE_M3_INTEGER) { code1 = TYPE_CODE_INT; }
+  if (code2 == TYPE_CODE_M3_INTEGER) { code2 = TYPE_CODE_INT; }
+  if (code1 == TYPE_CODE_M3_POINTER) { code1 = TYPE_CODE_PTR; }
+  if (code2 == TYPE_CODE_M3_POINTER) { code2 = TYPE_CODE_PTR; }
+
+  /* FIXME: This need a lot of rework.  For one thing, changing the type 
+     codes above will prevent the tests below for integer types from
+     succeeding. */ 
+
+  if (code1 == TYPE_CODE_M3_INTEGER && code2 == TYPE_CODE_M3_INTEGER)
+    return m3_value_as_integer (arg1) == m3_value_as_integer (arg2);
+  else if (code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_M3_INTEGER)
+    return m3_value_as_float (arg1) == (double) m3_value_as_integer (arg2);
+  else if (code2 == TYPE_CODE_FLT && code1 == TYPE_CODE_M3_INTEGER)
+    return m3_value_as_float (arg2) == (double) m3_value_as_integer (arg1);
+  else if (code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_FLT)
+    return m3_value_as_float (arg1) == m3_value_as_float (arg2);
+
+  /* FIXME: Need to promote to either CORE_ADDR or LONGEST, whichever
+     is bigger.  */
+  else if (code1 == TYPE_CODE_M3_POINTER && code2 == TYPE_CODE_M3_INTEGER)
+    return m3_value_as_address (arg1) == (CORE_ADDR) m3_value_as_integer (arg2);
+  else if (code2 == TYPE_CODE_M3_POINTER && code1 == TYPE_CODE_M3_INTEGER)
+    return (CORE_ADDR) m3_value_as_integer (arg1) == m3_value_as_address (arg2);
+
+  else if (code1 == code2
+           && ((len = TYPE_LENGTH (value_type (arg1)))
+               == TYPE_LENGTH (value_type (arg2))))
+    {
+      p1 = value_contents (arg1);
+      p2 = value_contents (arg2);
+      while (--len >= 0)
+        {
+          if (*p1++ != *p2++)
+            break;
+        }
+      return len < 0;
+    }
+  else
+    {
+      error ("Invalid type combination in equality test.");
+      return 0;  /* For lint -- never reached */
+    }
+}
+
+static bool
+m3_value_less (struct value *arg1, struct value *arg2)
+{
+  struct type * type1;
+  struct type * type2;
+  enum type_code code1;
+  enum type_code code2;
+  struct type * base_type1; 
+  struct type * base_type2; 
+  LONGEST l1; 
+  LONGEST l2; 
+  DOUBLEST d1;
+  DOUBLEST d2;
+  CORE_ADDR a1; 
+  CORE_ADDR a2; 
+
+  type1 = value_type ( arg1 ); 
+  type2 = value_type ( arg2 ); 
+  code1 = TYPE_CODE ( type1 );
+  code2 = TYPE_CODE ( type2 );
+
+  if ( m3_is_ordinal_type ( type1 ) && m3_is_ordinal_type ( type2 ) )
+    { base_type1 = m3_ordinal_base_type ( type1, NULL ); 
+      base_type2 = m3_ordinal_base_type ( type2,NULL  ); 
+      if ( m3_types_equal ( base_type1, base_type2 ) ) 
+        { l1 = value_as_long ( arg1 ); 
+          l2 = value_as_long ( arg2 ); 
+          return l1 < l2;
+        } 
+    } 
+
+  else if ( code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_FLT )
+    { if ( m3_types_equal ( type1, type2 ) ) 
+        { /* NOTE: kettenis/20050816: Avoid compiler bug on systems where
+	 `   long double' values are returned in static storage (m68k).  */
+          d1 = value_as_double ( arg1 );
+          d2 = value_as_double ( arg2 );
+          /* FIXME: ^This seems very unlikely to be right for the 3 Modula-3 
+                     floating types. */ 
+          /* FIXME: This also probably doesn't agree with the M3 definition
+                    for < and > on floating types. */ 
+          return d1 < d2;
+        } 
+    }
+  else if ( code1 == TYPE_CODE_M3_ADDRESS && code2 == TYPE_CODE_M3_ADDRESS )
+    { a1 = value_as_address ( arg1 ); 
+      a2 = value_as_address ( arg2 ); 
+      return a1 < a2; 
+    } 
+  else if ( code1 == TYPE_CODE_SET && code2 == TYPE_CODE_M3_SET )
+    { /* Is arg1 a proper subset of arg2? */ 
+      LONGEST l1 = value_as_long ( arg1 ); 
+      LONGEST l2 = value_as_long ( arg2 ); 
+      return ( l1 != l2 ) && ( l1 & ! l2 ) == 0;
+    } 
+
+  error (_("Invalid type combination in M3 ordering comparison.") );
+  /* NORETURN*/ return 0;
+} /* m3_value_less */ 
+
 /* This system is crafted so that (hopefully), 
    if m3_type_code_tier ( tc1 ) < m3_type_code_tier ( tc2 ), 
    then, loosely, m3_subtype_relation ( tc1, tc2 ) != subtype_super.
@@ -440,19 +615,6 @@ m3_type_code_tier ( enum type_code code )
       } /* switch */ 
   } /* m3_type_code_tier */ 
 
-enum subtype_rel 
-  { subtype_sub, subtype_equal, subtype_super, subtype_both, subtype_norel };
-
-static enum subtype_rel 
-commute_subtype_relation ( enum subtype_rel param_rel ) 
-
-  { switch ( param_rel ) 
-      { case subtype_sub : return subtype_super; 
-        case subtype_super : return subtype_sub; 
-        default: return param_rel; 
-      } 
-  } /* commute_subtype_relation */ 
-
 /* Does not strip off indirects, unless it's a real value of reference type. */
 static struct type * 
 m3_allocated_type ( struct value * val ) 
@@ -485,66 +647,6 @@ m3_allocated_type ( struct value * val )
           } 
       } 
   } /* m3_allocated_type*/ 
-
-/* Call this only if left_type is known to be neither indirect nor packed and
-   an ordinal type. */ 
-static enum subtype_rel
-m3_ordinal_subtype_relation ( 
-    struct type * left_type, 
-    struct type * left_base_type, 
-    struct type * right_type
-  ) 
-
-  { enum type_code left_base_code; 
-    enum type_code right_base_code; 
-    struct type * right_base_type;
-    LONGEST left_lower; 
-    LONGEST left_upper; 
-    LONGEST right_lower; 
-    LONGEST right_upper; 
-
-    right_type = m3_unpacked_type ( right_type ); 
-    switch ( TYPE_CODE ( right_type ) ) 
-      { case TYPE_CODE_M3_SUBRANGE : 
-          right_base_type = TYPE_M3_SUBRANGE_TARGET ( right_type ); 
-        case TYPE_CODE_M3_BOOLEAN : 
-        case TYPE_CODE_M3_CHAR : 
-        case TYPE_CODE_M3_WIDECHAR : 
-        case TYPE_CODE_M3_INTEGER : 
-        case TYPE_CODE_M3_CARDINAL : 
-        case TYPE_CODE_M3_ENUM : 
-          right_base_type = right_type;
-        default : 
-          return subtype_norel; 
-      } 
-    left_base_code = TYPE_CODE ( left_base_type ); 
-    right_base_code = TYPE_CODE ( right_base_type ); 
-    if ( left_base_code != right_base_code ) 
-      { return subtype_norel; } 
-    if ( left_base_code == TYPE_CODE_M3_ENUM ) 
-      { if ( ! m3_type_fields_equal ( left_base_type, right_base_type ) ) 
-          { return subtype_norel; } 
-      } 
-    /* Here, we know the two base types are equal. */   
-    if ( left_type == left_base_type && right_type == right_base_type ) 
-      { return subtype_equal; } 
-    /* Here, at least one is a subrange. */ 
-    m3_ordinal_bounds ( left_type , & left_lower, & left_upper );  
-    m3_ordinal_bounds ( right_type , & right_lower, & right_upper );  
-    if ( left_lower == right_lower && left_upper == right_upper ) 
-      /* Bounds are equal. */ 
-      { if ( left_type != left_base_type && right_type != right_base_type ) 
-          /* Both are subranges. */ 
-          { return subtype_equal; } 
-        else 
-          { return subtype_both; }
-      }  
-    if ( left_lower <= right_lower && left_upper >= right_upper ) 
-      { return subtype_super; } /* Left is supertype. */ 
-    if ( left_lower >= right_lower && left_upper <= right_upper ) 
-      { return subtype_sub; } /* Left is subtype. */ 
-    return subtype_norel; 
-  } /* m3_ordinal_subtype_relation */ 
 
 /* FIXME: This has been replaced by m3_types_equal.  Take it out. */ 
 static bool
@@ -917,44 +1019,6 @@ m3_frame_for_block (struct block *target_block )
         } /* while */ 
     } /* else */ 
 } /* m3_frame_for_block */ 
-
-static struct type * 
-m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
-
-  { struct type * result_type; 
-
-    result_type = param_type; 
-    while ( true ) 
-      { switch ( TYPE_CODE ( result_type ) ) 
-          { case TYPE_CODE_M3_INDIRECT :
-              result_type = TYPE_M3_INDIRECT_TARGET ( result_type ); 
-              break; /* And loop. */  
-            case TYPE_CODE_M3_OPAQUE :
-              result_type = TYPE_M3_OPAQUE_REVEALED ( result_type ); 
-              break; /* And loop. */  
-            case TYPE_CODE_M3_PACKED : 
-              /* The value should still be in packed form, with bitpos and 
-                 bitsize fields set. */ 
-              result_type = TYPE_M3_PACKED_TARGET ( result_type );
-              break; /* And loop. */  
-            case TYPE_CODE_M3_SUBRANGE :
-              result_type = TYPE_M3_SUBRANGE_TARGET ( result_type ); 
-              break; /* And loop. */  
-            case TYPE_CODE_M3_INTEGER : 
-            case TYPE_CODE_M3_CARDINAL : 
-              if ( is_int_or_card != NULL ) { * is_int_or_card = true; } 
-              return result_type;  
-            case TYPE_CODE_M3_BOOLEAN : 
-            case TYPE_CODE_M3_CHAR : 
-            case TYPE_CODE_M3_WIDECHAR : 
-            case TYPE_CODE_M3_ENUM : 
-              if ( is_int_or_card != NULL ) { * is_int_or_card = false; } 
-              return result_type;  
-            default: 
-              return NULL; 
-          } 
-      } 
-  } /* m3_ordinal_base_type */ 
 
 /* Handle value conversion of an ordinal value for either assignment
    or parameter passing.  Returns an appropriate struct value * if 
@@ -1561,7 +1625,7 @@ m3_patched_proc_result_type (
    TYPE_CODE_FUNC).  These have a relatively short lifetime.  This is just 
    a trick to get extra information into call_function_by_hand and several 
    other functions it can call, including many target-dependent functions,
-   without changing their parameter lists.  These are built: 
+   without changing their parameter lists.  These gdb-space closures are built: 
      1) When a user-typed call on a nested procedure constant is evaluated.
         The closure is built and passed in to call_function_by_hand as the
         function to be called.  It is then recognized and used by m3-dependent  
@@ -1768,7 +1832,7 @@ m3_check_and_coerce_actual (
           return result_direct_value; 
         }  
 
-      /* Remaining cases ust take address of coerced actual. */ 
+      /* Remaining cases just take address of coerced actual. */ 
       result_value = value_from_pointer 
         ( m3_indirect_type_from_type ( value_type ( result_direct_value ) ),
           VALUE_ADDRESS ( result_direct_value )
@@ -2080,13 +2144,16 @@ m3_evaluate_dot (
                typecodes: */ 
             supertype_tc_addr = allocated_tc_addr; 
             supertype = m3_type_from_tc ( supertype_tc_addr ); 
-            while ( false && supertype != lhs_type ) 
+            if ( false ) 
+          { while ( supertype != lhs_type ) 
               { supertype_tc_addr 
                   = m3_super_tc_addr_from_tc_addr ( supertype_tc_addr ); 
                 supertype = m3_type_from_tc ( supertype_tc_addr ); 
               } 
             supertype = lhs_type; 
             /* Here, supertype_tc_addr and supertype are for the static type. */
+          }
+            /* Here, supertype_tc_addr and supertype are for the allocated type. */
             while ( true ) /* Search supertypes for field/method. */ 
               { if ( TYPE_CODE ( supertype ) != TYPE_CODE_M3_OBJECT ) 
                   { error 
@@ -2512,7 +2579,9 @@ m3_evaluate_subexp_maybe_packed (
       return arg1;
 
     case UNOP_M3_DEREF: {
-      struct type *res_type, *arg1_type;
+      struct type * arg1_type;
+      struct type * allocated_type;
+      struct type * res_type;
 
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (0, exp, pos, noside);
@@ -2523,7 +2592,10 @@ m3_evaluate_subexp_maybe_packed (
 	  arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1)); 
         }
 
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_REFANY) 
+      if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_REFANY 
+           || TYPE_CODE (arg1_type) == TYPE_CODE_M3_TRANSIENT_REFANY 
+           || TYPE_CODE (arg1_type) == TYPE_CODE_M3_POINTER
+         ) 
         { if (value_as_address (arg1) == 0) 
             { error ("^ applied to NIL"); 
               return arg1; 
@@ -2531,21 +2603,22 @@ m3_evaluate_subexp_maybe_packed (
         /* REVIEWME:  Do we really want to allow dereferencing of REFANY to
            take the allocated type?  If so, don't we want to do the same
            for a traced pointer type as well? */ 
-	  res_type 
+	  allocated_type 
             = m3_allocated_type_from_object_addr (value_as_address (arg1)); 
+          res_type = TYPE_M3_TARGET (allocated_type);
           return value_at_lazy (res_type, m3_value_as_address (arg1)); 
         }
 
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_POINTER) 
-        { if (value_as_address (arg1) == 0) 
-            { error ("^ applied to NIL"); 
-              return arg1; 
-            }
-          res_type = TYPE_M3_TARGET (arg1_type); 
-          return value_at_lazy (res_type, m3_value_as_address (arg1)); 
-        }
-
-      else if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OBJECT ) 
+      else if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_OBJECT 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_TRANSIENT_ROOT 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_ROOT 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_UN_ROOT 
+                   /* CHECK: ^Can we get an allocated type for this? */  
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_TEXT 
+                   /* TODO: ^Maybe make this do the same as the /k format. */ 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_MUTEX 
+                   /* CHECK: ^Do we want to display this? */ 
+              ) 
         /* FIXME:  Do this for builtin object types as well, e.g. ROOT. */ 
         { warning ("Ignoring redundant ^ applied to object"); 
           if (value_as_address (arg1) == 0) 
@@ -3142,7 +3215,7 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg2 = m3_evaluate_subexp (value_type (arg1), exp, pos, noside);
-      tempval = value_less (arg1, arg2);
+      tempval = m3_value_less (arg1, arg2);
       return m3_value_from_longest 
                (builtin_type_m3_boolean, (LONGEST) tempval); }
 
@@ -3150,7 +3223,7 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg2 = m3_evaluate_subexp (value_type (arg1), exp, pos, noside);
-      tempval = ! (value_less (arg2, arg1));
+      tempval = ! (m3_value_less (arg2, arg1));
       return m3_value_from_longest 
                (builtin_type_m3_boolean, (LONGEST) tempval); }
 
@@ -3158,7 +3231,7 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg2 = m3_evaluate_subexp (value_type (arg1), exp, pos, noside);
-      tempval = value_less (arg2, arg1);
+      tempval = m3_value_less (arg2, arg1);
       return m3_value_from_longest 
               (builtin_type_m3_boolean, (LONGEST) tempval); }
 
@@ -3166,7 +3239,7 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg2 = m3_evaluate_subexp (value_type (arg1), exp, pos, noside);
-      tempval = ! (value_less (arg1, arg2));
+      tempval = ! (m3_value_less (arg1, arg2));
       return m3_value_from_longest 
                (builtin_type_m3_boolean, (LONGEST) tempval); }
 
@@ -3174,13 +3247,13 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg2 = m3_evaluate_subexp (value_type (arg1), exp, pos, noside);
-      return value_less (arg1, arg2) ? arg1 : arg2; }
+      return m3_value_less (arg1, arg2) ? arg1 : arg2; }
 
     case BINOP_M3_MAX: {
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg2 = m3_evaluate_subexp (value_type (arg1), exp, pos, noside);
-      return value_less (arg1, arg2) ? arg2 : arg1; }
+      return m3_value_less (arg1, arg2) ? arg2 : arg1; }
 
     case BINOP_M3_CAT:
       error ("Not yet implemented: '&' text concatenation");

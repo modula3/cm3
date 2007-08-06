@@ -1468,8 +1468,7 @@ m3_find_obj_method (
   } /* m3_find_obj_method */ 
 
 bool
-m3_is_ordinal_type (type)
-     struct type *type;
+m3_is_ordinal_type (struct type *type )
 {
   enum type_code tc;
 
@@ -2031,7 +2030,7 @@ m3_value_is_proc_closure ( struct value * closure_value )
   } /* m3_value_is_proc_closure */ 
 
 /* valaddr points to a gdb-space value of Modula-3 procedure type, which
-   in turn could be a pointer to the procedures 's code or to a closure.  
+   in turn could be a pointer to the procedure's code or to a closure.  
    Either way, return the code address. */ 
 CORE_ADDR 
 m3_proc_code_addr ( const gdb_byte * valaddr ) 
@@ -2052,7 +2051,7 @@ m3_proc_code_addr ( const gdb_byte * valaddr )
   } /* m3_proc_code_addr */ 
 
 /* valaddr points to a gdb-space value of Modula-3 procedure type, which
-   in turn could be a pointer to the procedures 's code or to a closure.  
+   in turn could be a pointer to the procedure's code or to a closure.  
    Either way, return the enviroment pointer, which will, of course, be
    zero in the former case. */ 
 CORE_ADDR 

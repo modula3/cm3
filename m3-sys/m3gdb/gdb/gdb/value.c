@@ -1008,11 +1008,14 @@ unpack_long (struct type *type, const gdb_byte *valaddr)
   if (current_language->la_language == language_scm
       && is_scmvalue_type (type))
     return scm_unpack (type, valaddr, TYPE_CODE_INT);
-
+#ifdef _LANG_m3
   /* REVIEWME: What is this for? If len > sizeof(LONGEST), it will cause 
              extract(un)signed_integer to fail. Should this ever happen? 
-             rodney.bates@wichita.edu */ 
+             rodney.bates@wichita.edu 
+             Yes, functions in m3-eval.c can (indirectly) call this with 
+             M3 types.  Tis maked them work. This needs thorough review. */ 
   if ( M3_TYPEP ( code) ) { code = TYPE_CODE_INT; } 
+#endif 
 
   switch (code)
     {
