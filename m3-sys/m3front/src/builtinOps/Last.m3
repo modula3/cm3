@@ -9,7 +9,7 @@
 MODULE Last;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, First, ArrayType;
-IMPORT TypeExpr, IntegerExpr, EnumExpr, Int, ArrayExpr;
+IMPORT TypeExpr, IntegerExpr, EnumExpr, Int, LInt, ArrayExpr;
 IMPORT Reel, LReel, EReel, ReelExpr, Target, TInt;
 
 VAR Z: CallExpr.MethodList;
@@ -87,16 +87,16 @@ PROCEDURE LastOfType (t: Type.T): Expr.T =
     END;
     t_base:= Type.Base (t);
     IF Type.GetBounds (t, min, max) THEN
-      IF t_base = Int.T
+      IF t_base = Int.T OR t_base = LInt.T
         THEN RETURN IntegerExpr.New (max);
         ELSE RETURN EnumExpr.New (t, max);
       END;
     ELSIF t_base = Reel.T THEN
-      RETURN ReelExpr.New (Target.Real.max, ReelExpr.Precision.Short);
+      RETURN ReelExpr.New (Target.Real.max);
     ELSIF t_base = LReel.T THEN
-      RETURN ReelExpr.New (Target.Longreal.max, ReelExpr.Precision.Long);
+      RETURN ReelExpr.New (Target.Longreal.max);
     ELSIF t_base = EReel.T THEN
-      RETURN ReelExpr.New (Target.Extended.max, ReelExpr.Precision.Extended);
+      RETURN ReelExpr.New (Target.Extended.max);
     ELSE
       RETURN NIL;
     END;

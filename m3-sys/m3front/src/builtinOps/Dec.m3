@@ -8,7 +8,7 @@
 
 MODULE Dec;
 
-IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, Int, Module;
+IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, Int, LInt, Module;
 IMPORT M3ID, Addr, Target, TInt, IntegerExpr, Host, NamedExpr;
 
 VAR Z: CallExpr.MethodList;
@@ -41,9 +41,16 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;
       Expr.NeedsAddress (e);
     END;
     IF (NUMBER (ce.args^) > 1) THEN
-      t := Type.Base (Expr.TypeOf (ce.args[1]));
-      IF (t # Int.T) THEN
-        Error.Txt (name, "second argument must be an integer");
+      IF (Type.IsSubtype (t, LInt.T)) THEN
+        t := Type.Base (Expr.TypeOf (ce.args[1]));
+        IF (t # LInt.T) THEN
+          Error.Txt (name, "type of second argument must match base type of first");
+        END;
+      ELSE
+        t := Type.Base (Expr.TypeOf (ce.args[1]));
+        IF (t # Int.T) THEN
+          Error.Txt (name, "second argument must be an integer");
+        END;
       END;
     END;
     ce.type := NIL;
@@ -68,16 +75,28 @@ PROCEDURE Compile (ce: CallExpr.T) =
     EVAL Type.CheckInfo (tlhs, info);
     IF (NUMBER (ce.args^) > 1)
       THEN dec := ce.args[1];
-      ELSE dec := IntegerExpr.New (TInt.One);  Expr.Prep (dec);
-    END;
+      ELSE
+        IF Type.IsSubtype (tlhs, LInt.T)
+          THEN dec := IntegerExpr.New (TInt.OneL);
+          ELSE dec := IntegerExpr.New (TInt.One);
+        END;
+        Expr.Prep (dec);
+      END;
     Expr.GetBounds (lhs, bmin, bmax);
     Expr.GetBounds (dec, imin, imax);
 
     IF Host.doRangeChk THEN
-      IF NOT TInt.EQ (bmin, Target.Integer.min)
-         AND TInt.LT (TInt.Zero, imax) THEN INC (check) END;
-      IF NOT TInt.EQ (bmax, Target.Integer.max)
-         AND TInt.LT (imin, TInt.Zero) THEN INC (check, 2) END;
+      IF Type.IsSubtype (tlhs, LInt.T) THEN
+        IF NOT TInt.EQ (bmin, Target.Longint.min)
+           AND TInt.LT (TInt.ZeroL, imax) THEN INC (check) END;
+        IF NOT TInt.EQ (bmax, Target.Longint.max)
+           AND TInt.LT (imin, TInt.ZeroL) THEN INC (check, 2) END;
+      ELSE
+        IF NOT TInt.EQ (bmin, Target.Integer.min)
+           AND TInt.LT (TInt.Zero, imax) THEN INC (check) END;
+        IF NOT TInt.EQ (bmax, Target.Integer.max)
+           AND TInt.LT (imin, TInt.Zero) THEN INC (check, 2) END;
+      END;
     END;
 
     Expr.CompileLValue (lhs);
@@ -89,8 +108,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.Compile (dec);
 
     IF (info.stk_type = CG.Type.Addr)
-      THEN CG.Index_bytes (-Target.Byte);  check := 0;
-      ELSE CG.Subtract (Target.Integer.cg_type);
+      THEN CG.Index_bytes (-Target.Byte);  check := 0;      
+      ELSE CG.Subtract (info.stk_type);
     END;
 
     CASE check OF

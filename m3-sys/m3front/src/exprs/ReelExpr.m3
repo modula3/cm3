@@ -9,7 +9,7 @@
 MODULE ReelExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Target, TFloat;
-IMPORT M3Buf, Reel, LReel, EReel, IntegerExpr;
+IMPORT M3Buf, Int, LInt, Reel, LReel, EReel, IntegerExpr;
 
 TYPE
   P = Expr.T OBJECT
@@ -37,8 +37,8 @@ TYPE
         note_write   := ExprRep.NotWritable;
       END;
 
-PROCEDURE New (READONLY value: Target.Float;  pre: Precision): Expr.T =
-  VAR p := NEW (P);
+PROCEDURE New (READONLY value: Target.Float): Expr.T =
+  VAR p := NEW (P);  pre := TFloat.Prec (value);
   BEGIN
     ExprRep.Init (p);
     p.pre     := pre;
@@ -72,7 +72,7 @@ PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF    TFloat.LT (x, y) THEN sign := -1
     ELSIF TFloat.LT (y, x) THEN sign := +1
-    ELSE                          sign :=  0
+    ELSE                        sign :=  0
     END;
     RETURN TRUE;
   END Compare;
@@ -82,7 +82,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TFloat.Add (x, y, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Add;
 
@@ -91,7 +91,7 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TFloat.Subtract (x, y, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Subtract;
 
@@ -100,7 +100,7 @@ PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TFloat.Multiply (x, y, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Multiply;
 
@@ -109,7 +109,7 @@ PROCEDURE Divide (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TFloat.Divide (x, y, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Divide;
 
@@ -118,7 +118,7 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
     IF NOT TFloat.Mod (x, y, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Mod;
 
@@ -153,7 +153,7 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
     ELSE                                 zero := TFloat.ZeroX;
     END;
     IF NOT TFloat.Subtract (zero, x, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Negate;
 
@@ -162,47 +162,71 @@ PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
     IF    (x.pre = Precision.Short) THEN zero := TFloat.ZeroR;
-    ELSIF (x.pre = Precision.Long) THEN  zero := TFloat.ZeroL;
+    ELSIF (x.pre = Precision.Long)  THEN zero := TFloat.ZeroL;
     ELSE                                 zero := TFloat.ZeroX;
     END;
     IF NOT TFloat.LT (x, zero) THEN  c := a; RETURN TRUE  END;
     IF NOT TFloat.Subtract (zero, x, res) THEN RETURN FALSE END;
-    c := New (res, res.pre);
+    c := New (res);
     RETURN TRUE;
   END Abs;
 
-PROCEDURE Floor (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;
+PROCEDURE Floor (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
+  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
   BEGIN
+    t := Type.Base (t);
+    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
+    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
+    ELSE  RETURN FALSE;
+    END;
+
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Floor (x, res) THEN RETURN FALSE END;
+    IF NOT TFloat.Floor (x, res, new_pre) THEN RETURN FALSE END;
     c := IntegerExpr.New (res);
     RETURN TRUE;
   END Floor;
 
-PROCEDURE Ceiling (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;
+PROCEDURE Ceiling (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
+  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
   BEGIN
+    t := Type.Base (t);
+    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
+    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
+    ELSE  RETURN FALSE;
+    END;
+
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Ceiling (x, res) THEN RETURN FALSE END;
+    IF NOT TFloat.Ceiling (x, res, new_pre) THEN RETURN FALSE END;
     c := IntegerExpr.New (res);
     RETURN TRUE;
   END Ceiling;
 
-PROCEDURE Trunc (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;
+PROCEDURE Trunc (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
+  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
   BEGIN
+    t := Type.Base (t);
+    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
+    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
+    ELSE  RETURN FALSE;
+    END;
+
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Trunc (x, res) THEN RETURN FALSE END;
+    IF NOT TFloat.Trunc (x, res, new_pre) THEN RETURN FALSE END;
     c := IntegerExpr.New (res);
     RETURN TRUE;
   END Trunc;
 
-PROCEDURE Round (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;
+PROCEDURE Round (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
+  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
   BEGIN
+    t := Type.Base (t);
+    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
+    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
+    ELSE  RETURN FALSE;
+    END;
+
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Round (x, res) THEN RETURN FALSE END;
+    IF NOT TFloat.Round (x, res, new_pre) THEN RETURN FALSE END;
     c := IntegerExpr.New (res);
     RETURN TRUE;
   END Round;
@@ -224,7 +248,7 @@ PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
     ELSE
       RETURN FALSE;
     END;
-    c := New (res, new_pre);
+    c := New (res);
     RETURN TRUE;
   END Float;
 

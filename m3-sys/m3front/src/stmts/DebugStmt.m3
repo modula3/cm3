@@ -153,7 +153,7 @@ PROCEDURE EmitDebug (p: P) =
 
     (* initialize the count of array sizes *)
     CG.Load_intt (p.n_msgs);
-    CG.Store_int (msgs, M3RT.OA_size_0);
+    CG.Store_int (msgs, Target.Integer.cg_type, M3RT.OA_size_0);
 
     (* initialize each message *)
     offset := M3RT.OA_size_1;

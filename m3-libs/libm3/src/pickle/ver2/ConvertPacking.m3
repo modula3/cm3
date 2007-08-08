@@ -1085,8 +1085,9 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
 	END;
       | RTTipe.Kind.Integer, RTTipe.Kind.Boolean, RTTipe.Kind.Cardinal,
         RTTipe.Kind.Char, RTTipe.Kind.Enum, RTTipe.Kind.Set,
-        RTTipe.Kind.Subrange => 
-        WITH signed = (fromTipe.kind = RTTipe.Kind.Integer) DO
+        RTTipe.Kind.Subrange, RTTipe.Kind.Longint => 
+        WITH signed = (fromTipe.kind = RTTipe.Kind.Integer) OR
+            (fromTipe.kind = RTTipe.Kind.Longint) DO
 	  CASE self.kind OF
 	  | Kind.Copy =>
 	    <* ASSERT fromTipe.size = toTipe.size *>
@@ -1390,6 +1391,7 @@ PROCEDURE KindToText(kind: RTTipe.Kind) =
     | RTTipe.Kind.Enum => IO.Put( "Enum");
     | RTTipe.Kind.Extended => IO.Put( "Extended");
     | RTTipe.Kind.Integer => IO.Put( "Integer");
+    | RTTipe.Kind.Longint => IO.Put( "Longint");
     | RTTipe.Kind.Longreal => IO.Put( "Longreal");
     | RTTipe.Kind.Null => IO.Put( "Null");
     | RTTipe.Kind.Object => IO.Put( "Object");

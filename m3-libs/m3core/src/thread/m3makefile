@@ -21,7 +21,7 @@ readonly USE_PTHREADS = {
   "IRIX5"      : FALSE,
   "LINUX"      : FALSE,
   "LINUXELF"   : FALSE,
-  "LINUXLIBC6" : TRUE,  % old versions without NPTL should be FALSE
+  "LINUXLIBC6" : TRUE,  % old kernels without NPTL should be FALSE
   "NEXT"       : FALSE,
   "NT386"      : FALSE,
   "NT386GNU"   : FALSE,

@@ -8,12 +8,12 @@
 
 MODULE AddExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Int, Reel, LReel, EReel;
+IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT SetType, Addr, Module, Error, Target, ErrType, TInt;
 IMPORT AddressExpr, SetExpr, IntegerExpr, ReelExpr;
 
 TYPE
-  Class = { cINT, cREAL, cLONG, cEXTND, cADDR, cSET };
+  Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET };
 
 CONST
   FPType = ARRAY [Class.cREAL .. Class.cEXTND] OF CG.AType {
@@ -74,6 +74,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (ta = Int.T)   AND (tb = Int.T)   THEN
       p.class := Class.cINT;
+    ELSIF (ta = LInt.T)  AND (tb = LInt.T) THEN
+      p.class := Class.cLINT
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)  THEN
       p.class := Class.cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T) THEN
@@ -138,6 +140,10 @@ PROCEDURE Compile (p: P) =
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Add (Target.Integer.cg_type);
+    | Class.cLINT =>
+        Expr.Compile (p.a);
+        Expr.Compile (p.b);
+        CG.Add (Target.Longint.cg_type);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);

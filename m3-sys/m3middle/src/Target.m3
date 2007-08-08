@@ -30,61 +30,63 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     Int8.cg_type     := CGType.Int8;
     Int8.size        := 8;
     Int8.align       := 8;
-    Int8.min.x       := IChunks { 16_ff80, FF, FF, FF };
-    Int8.max.x       := IChunks { 16_007f, 00, 00, 00 };
+    Int8.min         := Int{IChunks { 16_ff80, FF, FF, FF }, Pre.Integer};
+    Int8.max         := Int{IChunks { 16_007f, 00, 00, 00 }, Pre.Integer};
 
     Int16.cg_type    := CGType.Int16;
     Int16.size       := 16;
     Int16.align      := 16;
-    Int16.min.x      := IChunks { 16_8000, FF, FF, FF };
-    Int16.max.x      := IChunks { 16_7fff, 00, 00, 00 };
+    Int16.min        := Int{IChunks { 16_8000, FF, FF, FF }, Pre.Integer};
+    Int16.max        := Int{IChunks { 16_7fff, 00, 00, 00 }, Pre.Integer};
 
     Int32.cg_type    := CGType.Int32;
     Int32.size       := 32;
     Int32.align      := 32;
-    Int32.min.x      := IChunks { 00, 16_8000, FF, FF };
-    Int32.max.x      := IChunks { FF, 16_7fff, 00, 00 };
+    Int32.min        := Int{IChunks { 00, 16_8000, FF, FF }, Pre.Integer};
+    Int32.max        := Int{IChunks { FF, 16_7fff, 00, 00 }, Pre.Integer};
 
     Int64.cg_type    := CGType.Int64;
     Int64.size       := 64;
     Int64.align      := 64;
-    Int64.min.x      := IChunks { 00, 00, 00, 16_8000 };
-    Int64.max.x      := IChunks { FF, FF, FF, 16_7fff };
+    Int64.min        := Int{IChunks { 00, 00, 00, 16_8000 }, Pre.Longint};
+    Int64.max        := Int{IChunks { FF, FF, FF, 16_7fff }, Pre.Longint};
 
-    Word8.cg_type   := CGType.Word8;
-    Word8.size      := 8;
-    Word8.align     := 8;
-    Word8.min.x     := IChunks { 16_0000, 00, 00, 00 };
-    Word8.max.x     := IChunks { 16_00ff, 00, 00, 00 };
+    Word8.cg_type    := CGType.Word8;
+    Word8.size       := 8;
+    Word8.align      := 8;
+    Word8.min        := Int{IChunks { 16_0000, 00, 00, 00 }, Pre.Integer};
+    Word8.max        := Int{IChunks { 16_00ff, 00, 00, 00 }, Pre.Integer};
 
     Word16.cg_type   := CGType.Word16;
     Word16.size      := 16;
     Word16.align     := 16;
-    Word16.min.x     := IChunks { 00, 00, 00, 00 };
-    Word16.max.x     := IChunks { FF, 00, 00, 00 };
+    Word16.min       := Int{IChunks { 00, 00, 00, 00 }, Pre.Integer};
+    Word16.max       := Int{IChunks { FF, 00, 00, 00 }, Pre.Integer};
 
     Word32.cg_type   := CGType.Word32;
     Word32.size      := 32;
     Word32.align     := 32;
-    Word32.min.x     := IChunks { 00, 00, 00, 00 };
-    Word32.max.x     := IChunks { FF, FF, 00, 00 };
+    Word32.min       := Int{IChunks { 00, 00, 00, 00 }, Pre.Integer};
+    Word32.max       := Int{IChunks { FF, FF, 00, 00 }, Pre.Integer};
 
     Word64.cg_type   := CGType.Word64;
     Word64.size      := 64;
     Word64.align     := 64;
-    Word64.min.x     := IChunks { 00, 00, 00, 00 };
-    Word64.max.x     := IChunks { FF, FF, FF, FF };
+    Word64.min       := Int{IChunks { 00, 00, 00, 00 }, Pre.Longint};
+    Word64.max       := Int{IChunks { FF, FF, FF, FF }, Pre.Longint};
 
     Integer          := Int32;  (* default for the 32-bit platforms *)
-    Word             := Word32;
+    Longint          := Int64;
+    Word             := Word32; (* default for the 32-bit platforms *)
+    Longword         := Word64;
     Address          := Word32;  Address.cg_type := CGType.Addr;
     Char             := Word8;
 
     Void.cg_type     := CGType.Void;
     Void.size        := 0;
     Void.align       := Byte;
-    Void.min.x       := IChunks { 0, 0, 0, 0 };
-    Void.max.x       := IChunks { 0, 0, 0, 0 };
+    Void.min         := Int{IChunks { 0, 0, 0, 0 }, Pre.Integer};
+    Void.max         := Int{IChunks { 0, 0, 0, 0 }, Pre.Integer};
 
     Real.cg_type     := CGType.Reel;
     Real.pre         := Precision.Short;
@@ -138,7 +140,11 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  EOL                       := "\n";
 
     |  Systems.ALPHA_OSF =>
+                 Int64.min.pre := Pre.Integer;
+                 Int64.max.pre := Pre.Integer;
                  Integer := Int64;
+                 Word64.min.pre := Pre.Integer;
+                 Word64.max.pre := Pre.Integer;
                  Word    := Word64;
                  Address := Word64;   Address.cg_type := CGType.Addr;
 
@@ -749,11 +755,16 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
 
 
     <*ASSERT Integer.size MOD ChunkSize = 0 *>
-    last_chunk := Integer.size DIV ChunkSize - 1;
+    last_chunk[Pre.Integer] := Integer.size DIV ChunkSize - 1;
+    <*ASSERT Longint.size MOD ChunkSize = 0 *>
+    last_chunk[Pre.Longint] := Longint.size DIV ChunkSize - 1;
 
     (* fill in the "bytes" and "pack" fields *)
     FixI (Address, max_align);
     FixI (Integer, max_align);
+    FixI (Word, max_align);
+    FixI (Longint, max_align);
+    FixI (Longword, max_align);
     FixF (Real, max_align);
     FixF (Longreal, max_align);
     FixF (Extended, max_align);

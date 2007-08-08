@@ -9,7 +9,7 @@
 MODULE Max;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error, Target, TInt;
-IMPORT Int, Reel, LReel, EReel, IntegerExpr, EnumExpr, ReelExpr;
+IMPORT Int, LInt, Reel, LReel, EReel, IntegerExpr, EnumExpr, ReelExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -31,7 +31,7 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T) =
 
     IF (NOT Type.IsEqual (ta, tb, NIL)) THEN
       Error.Txt (name, "incompatible argument types");
-    ELSIF (ta = Int.T) OR (Type.IsOrdinal (ta)) THEN
+    ELSIF (ta = Int.T) OR (ta = LInt.T) OR (Type.IsOrdinal (ta)) THEN
       (* ok *)
     ELSIF (ta = Reel.T) OR (ta = LReel.T) OR (ta = EReel.T) THEN
       (* ok *)

@@ -309,7 +309,7 @@ PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
     x := Type.InitCost (p.element, zeroed);
-    IF NOT TInt.FromInt (x, m) THEN RETURN LAST (INTEGER) END;
+    IF NOT TInt.FromInt (x, Target.Pre.Integer, m) THEN RETURN LAST (INTEGER) END;
     n := Type.Number (p.index);
     IF TInt.LT (n, TInt.Zero) THEN (*open array?*) RETURN 20 * x END;
     IF NOT TInt.Multiply (m, n, res) THEN RETURN LAST (INTEGER) END;

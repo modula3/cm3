@@ -447,7 +447,8 @@ PROCEDURE EmitArg (proc: Expr.T;  formal: Value.T; actual: Expr.T) =
     CASE t.kind OF
     | Type.Class.Error, Type.Class.Named, Type.Class.Packed
         =>  <*ASSERT FALSE*>
-    | Type.Class.Integer, Type.Class.Enum, Type.Class.Subrange
+    | Type.Class.Integer, Type.Class.Enum, Type.Class.Subrange,
+      Type.Class.Longint
         =>  GenOrdinal (t, actual);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended
         =>  GenFloat (t, actual);
@@ -577,7 +578,7 @@ PROCEDURE GenClosure (actual: Expr.T;  proc: Expr.T) =
       (* and fill it in *)
       CG.Store_addr (tmp, M3RT.CL_proc);
       CG.Load_intt  (M3RT.CL_marker_value);
-      CG.Store_int (tmp, M3RT.CL_marker);
+      CG.Store_int (tmp, Target.Integer.cg_type, M3RT.CL_marker);
       Procedure.LoadStaticLink (proc_v);
       CG.Store_addr (tmp, M3RT.CL_frame);
       CG.Load_addr_of_temp (tmp,  0, Target.Address.align);
@@ -692,7 +693,8 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
         ELSE
           CG.Load_integer (Type.Number (index));
         END;
-        CG.Store_int (tmp, M3RT.OA_sizes + i * Target.Integer.pack);
+        CG.Store_int (tmp, Target.Integer.cg_type,
+                      M3RT.OA_sizes + i * Target.Integer.pack);
         trhs := elt;
       END;
 
@@ -710,7 +712,7 @@ PROCEDURE ReshapeArray (tlhs, trhs: Type.T) =
         CG.Push (rhs);
         CG.Open_size (i);
         CG.Load_integer (Type.Number (index));
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       END;
 
       (* leave the old dope vector as the result *)

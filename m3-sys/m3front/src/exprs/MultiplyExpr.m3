@@ -8,19 +8,20 @@
 
 MODULE MultiplyExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Int, Reel, EReel, Target;
+IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, EReel, Target;
 IMPORT SetExpr, IntegerExpr, ReelExpr, LReel, SetType, ErrType;
 
 CONST
   cINT   = 0;
-  cREAL  = 1;
-  cLONG  = 2;
-  cEXTND = 3;
-  cSET   = 4;
+  cLINT  = 1;
+  cREAL  = 2;
+  cLONG  = 3;
+  cEXTND = 4;
+  cSET   = 5;
 
 CONST
-  CGType = ARRAY [0..3] OF CG.Type {
-             CG.Type.Void, CG.Type.Reel, CG.Type.LReel, CG.Type.XReel };
+  CGType = ARRAY [cREAL..cEXTND] OF CG.Type {
+             CG.Type.Reel, CG.Type.LReel, CG.Type.XReel };
 
 TYPE
   P = ExprRep.Tabc BRANDED "MultiplyExpr.T" OBJECT
@@ -72,6 +73,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (tb = Int.T)   AND (ta = Int.T)   THEN
       p.class := cINT;
+    ELSIF (tb = LInt.T)  AND (ta = LInt.T)  THEN
+      p.class := cLINT;
     ELSIF (tb = Reel.T)  AND (ta = Reel.T)  THEN
       p.class := cREAL;
     ELSIF (tb = LReel.T) AND (ta = LReel.T) THEN
@@ -117,6 +120,10 @@ PROCEDURE Compile (p: P) =
       Expr.Compile (p.a);
       Expr.Compile (p.b);
       CG.Multiply (Target.Integer.cg_type);
+    ELSIF (p.class = cLINT) THEN
+      Expr.Compile (p.a);
+      Expr.Compile (p.b);
+      CG.Multiply (Target.Longint.cg_type);
     ELSIF (p.class # cSET) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);

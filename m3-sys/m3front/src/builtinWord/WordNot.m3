@@ -23,7 +23,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
-    CG.Not ();
+    CG.Not (Target.Integer.cg_type);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

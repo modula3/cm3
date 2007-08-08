@@ -116,6 +116,7 @@ TYPE
 
 CONST
   INTEGER_UID = 16_195c2a74;
+  LONGINT_UID = 16_05562176;
   REFANY_UID  = 16_1c1c45e6;
   ADDRESS_UID = 16_08402063;
   ROOT_UID    = 16_9d8fb489;
@@ -2558,7 +2559,7 @@ PROCEDURE GenTypeExpr (defn     : Buf.T;
                fmt.putText (" .. ");
                fmt.putText (idX);
                fmt.putText (" ]");
-               IF (a # INTEGER_UID) THEN
+               IF (a # INTEGER_UID) OR (a # LONGINT_UID) THEN
                  fmt.putChar (' ');
                  fmt.break ();
                  fmt.putText ("(OF ");

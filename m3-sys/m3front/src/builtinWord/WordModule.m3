@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT for a full description.              *)
 
 (* File: WordModule.m3                                         *)
-(* Last Modified On Tue Mar  2 09:13:12 PST 1993 By kalsow         *)
+(* Last Modified On Tue Mar  2 09:13:12 PST 1993 By kalsow     *)
 (*      Modified On Thu Jul 27 17:10:39 1989 By muller         *)
 
 MODULE WordModule;
@@ -17,7 +17,8 @@ PROCEDURE Initialize () =
   VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
   BEGIN
 
-    b := TInt.FromInt (Target.Integer.size, size); <*ASSERT b*>
+    b := TInt.FromInt (Target.Integer.size, Target.Pre.Integer, size);
+    <*ASSERT b*>
     M := Module.NewDefn ("Word", TRUE, NIL);
 
     (* WARNING: The following list must be in the same order

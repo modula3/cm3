@@ -134,8 +134,8 @@ CONST (* fd flags *)
 
 TYPE
   struct_flock = RECORD
-    l_start := off_t{};			 (* starting offset *)
-    l_len   := off_t{};			 (* len = 0 means until end of file *)
+    l_start := VAL(0, off_t);		 (* starting offset *)
+    l_len   := VAL(0, off_t);		 (* len = 0 means until end of file *)
     l_pid:    pid_t;			 (* lock owner *)
     l_type:   short;			 (* lock type: read/write, etc. *)
     l_whence: short;			 (* type of l_start *)
@@ -735,8 +735,7 @@ CONST (* whence *)
   L_INCR = 1;
   L_XTND = 2;
 
-<*EXTERNAL "m3_lseek"*> PROCEDURE lseek (d: int; offset: int;
-                                         whence: int): int;
+<*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 
 (*** mkfifo - make a FIFO (named pipe) ***)
 <*EXTERNAL*> PROCEDURE mkfifo (path: char_star; mode: mode_t): int;
@@ -863,9 +862,8 @@ TYPE
 <*EXTERNAL*> PROCEDURE sync ();
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
-<*EXTERNAL "m3_truncate"*> PROCEDURE truncate (path: const_char_star;
-                                               length: int): int;
-<*EXTERNAL "m3_ftruncate"*> PROCEDURE ftruncate (fd: int; length: int): int;
+<*EXTERNAL*> PROCEDURE truncate (path: const_char_star; length: off_t): int;
+<*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
 (* not implemented 
 (*** ulimit - get and set user limits ***)

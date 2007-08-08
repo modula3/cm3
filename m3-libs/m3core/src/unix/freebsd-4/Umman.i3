@@ -37,8 +37,8 @@ CONST
   MADV_WILLNEED    = 3;
   MADV_DONTNEED    = 4;
 
-<*EXTERNAL "m3_mmap" *>
-PROCEDURE mmap (addr: caddr_t; len: size_t; prot,flags,fd: int; off: int)
+<*EXTERNAL*>
+PROCEDURE mmap (addr: caddr_t; len: size_t; prot,flags,fd: int; off: off_t)
   : caddr_t;
 
 <*EXTERNAL*>

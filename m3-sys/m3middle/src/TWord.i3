@@ -18,9 +18,9 @@ INTERFACE TWord;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int;
+FROM Target IMPORT Int, Pre;
 
-PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: INTEGER;
+PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16]; p: Pre;
                VAR i: Int): BOOLEAN;
 (* converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' *)

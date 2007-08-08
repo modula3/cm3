@@ -7,22 +7,20 @@
 
 INTERFACE BasicCtypes;
 
-IMPORT Word;
-
 TYPE
   (* the four signed integer types *)
   signed_char        = [-16_80 .. 16_7f];
   short_int          = [-16_8000 .. 16_7fff];
   int                = [-16_80000000 .. 16_7fffffff];
-  long_int           = [-16_7fffffffffffffff - 1 .. 16_7fffffffffffffff];
-  long_long          = long_int;
+  long_int           = int;
+  long_long          = LONGINT;
 
   (* the four unsigned integer types *)
   unsigned_char      = [16_0 .. 16_ff];
   unsigned_short_int = [16_0 .. 16_ffff];
   unsigned_int       = [16_0 .. 16_ffffffff];
-  unsigned_long_int  = Word.T;
-  unsigned_long_long = unsigned_long_int;
+  unsigned_long_int  = unsigned_int;
+  unsigned_long_long = Long.T;
 
   (* the three floating types *)
   float              = REAL;

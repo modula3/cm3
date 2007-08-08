@@ -100,6 +100,7 @@ PROCEDURE Classify (ta, tb: Type.T): Kind =
     CASE ia.class OF
     | Type.Class.Error,
       Type.Class.Integer,
+      Type.Class.Longint,
       Type.Class.Real,
       Type.Class.Longreal,
       Type.Class.Extended,
@@ -223,7 +224,10 @@ PROCEDURE CompileSolidUnrolled (p: P) =
       CG.Load_indirect (cmp_type, i * chunk_size, chunk_size);
       CG.Compare (Target.Word.cg_type, p.op);
       IF (i > 0) THEN
-        IF (p.op = CG.Cmp.EQ) THEN  CG.And ();  ELSE  CG.Or ();  END;
+        IF (p.op = CG.Cmp.EQ)
+          THEN CG.And (Target.Word.cg_type);
+          ELSE CG.Or  (Target.Word.cg_type);
+        END;
       END;
     END;
 

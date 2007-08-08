@@ -116,19 +116,19 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       (* a is an open array *)
       p.depth := OpenArrayType.OpenDepth (ta);
       IF NOT Type.IsSubtype (tb, Int.T) THEN
-        Error.Msg ("open arrays must be indexed by integer expressions");
+        Error.Msg ("open arrays must be indexed by expressions of INTEGER base type");
       END;
 
     ELSIF Type.IsSubtype (tb, Type.Base (ti)) THEN
       (* the index value's type has a common base type with the index type *)
-      IF NOT TInt.EQ (mini, TInt.Zero) THEN
+      IF NOT TInt.EQ (mini, TInt.Zeros[TInt.Prec (mini)]) THEN
         p.biased_b := SubtractExpr.New (p.b, IntegerExpr.New (mini), TRUE);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
       END;
       IF TInt.LT (minb, mini) AND TInt.LT (maxi, maxb) THEN
         b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
-        p.biased_b := CheckExpr.New (p.biased_b, TInt.Zero, z,
+        p.biased_b := CheckExpr.New (p.biased_b, TInt.Zeros[TInt.Prec (z)], z,
                                      CG.RuntimeError.SubscriptOutOfRange);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
@@ -136,7 +136,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
         IF TInt.LT (maxb, mini) THEN
           Error.Warn (2, "subscript is out of range");
         END;
-        p.biased_b := CheckExpr.NewLower (p.biased_b, TInt.Zero,
+        p.biased_b :=
+            CheckExpr.NewLower (p.biased_b, TInt.Zeros[TInt.Prec (mini)],
                                      CG.RuntimeError.SubscriptOutOfRange);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
@@ -210,6 +211,7 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
     t         : Type.T;
     fixed     := FALSE;
     ta        := Type.Base (Expr.TypeOf (p.a));
+    tb        := Type.Base (Expr.TypeOf (p.b));
     b         := ArrayType.Split (ta, ti, te);
     elt_pack  := ArrayType.EltPack (ta);
     t1, t2    : CG.Val;
@@ -235,6 +237,7 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
         CG.Add_offset (subscript * elt_pack);
       ELSE
         Expr.Compile (p.biased_b);
+        CG.Loophole (Type.CGType (tb), Target.Integer.cg_type);
         ArrayType.GenIndex (ta);
       END;
 
@@ -244,6 +247,7 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
       CG.Push (t1);
       CG.Open_elt_ptr (ArrayType.EltAlign (ta));
       Expr.Compile (p.biased_b);
+      <*ASSERT Type.CGType (tb) = Target.Integer.cg_type*>
       IF Host.doRangeChk THEN
         (* range check the subscript *)
         CG.Push (t1);
@@ -261,6 +265,7 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
       t1 := CG.Pop ();
 
       Expr.Compile (p.biased_b);
+      <*ASSERT Type.CGType (tb) = Target.Integer.cg_type*>
       IF Host.doRangeChk THEN
         (* range check the subscript *)
         CG.Push (t1);
@@ -276,7 +281,8 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
       FOR i := 1 TO p.depth-1 DO
         CG.Push (t1);
         CG.Open_size (i);
-        CG.Store_int (t3, M3RT.OA_sizes + (i-1) * Target.Integer.pack);
+        CG.Store_int (t3, Target.Integer.cg_type,
+                      M3RT.OA_sizes + (i-1) * Target.Integer.pack);
       END;
 
       (* build the new data pointer *)
@@ -284,7 +290,8 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
       CG.Open_elt_ptr (ArrayType.EltAlign (ta));
       CG.Push (t2);
       FOR i := 0 TO p.depth-2 DO
-        CG.Load_int (t3, M3RT.OA_sizes + i * Target.Integer.pack);
+        CG.Load_int (t3, Target.Integer.cg_type,
+                     M3RT.OA_sizes + i * Target.Integer.pack);
         CG.Multiply (Target.Word.cg_type);
       END;
       CG.Index_bytes (elt_pack);

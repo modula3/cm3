@@ -7,22 +7,22 @@
 
 INTERFACE BasicCtypes;
 
-IMPORT Word;
+IMPORT Word, Long;
 
 TYPE
   (* the four signed integer types *)
   signed_char        = [-16_80 .. 16_7f];
   short_int          = [-16_8000 .. 16_7fff];
-  int                = [-16_7fffffff-1 .. 16_7fffffff];
+  int                = INTEGER;
   long_int           = int;
-  long_long          = RECORD val := ARRAY [0..1] OF int {0,0}; END;
+  long_long          = LONGINT;
 
   (* the four unsigned integer types *)
   unsigned_char      = [16_0 .. 16_ff];
   unsigned_short_int = [16_0 .. 16_ffff];
   unsigned_int       = Word.T;
   unsigned_long_int  = unsigned_int;
-  unsigned_long_long = RECORD val := ARRAY [0..1] OF unsigned_int {0,0}; END;
+  unsigned_long_long = Long.T;
 
   (* the three floating types *)
   float              = REAL;

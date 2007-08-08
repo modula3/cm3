@@ -148,12 +148,13 @@ CONST
   ChunkSize = 16;  (* # of bits per array element *)
 
 TYPE
-  Int = (* OPAQUE *) RECORD x: IChunks END;
+  Pre = { Integer, Longint };
+  Int = (* OPAQUE *) RECORD x: IChunks; pre: Pre END;
   IChunks = ARRAY [0..3] OF IChunk;
   IChunk = BITS ChunkSize FOR [0..16_ffff];
 
 VAR
-  last_chunk: [0..LAST(IChunks)];
+  last_chunk: ARRAY Pre OF [0..LAST(IChunks)];
   (* only chunks in the range [0..last_chunk] contain valid bits. *)
 
 TYPE
@@ -193,7 +194,9 @@ TYPE
 VAR (*CONST*)
   Address   : Int_type;
   Integer   : Int_type;
+  Longint   : Int_type;
   Word      : Int_type;
+  Longword  : Int_type;
   Real      : Float_type;
   Longreal  : Float_type;
   Extended  : Float_type;

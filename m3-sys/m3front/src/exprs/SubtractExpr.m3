@@ -8,12 +8,12 @@
 
 MODULE SubtractExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Error, Int, Reel, EnumType;
+IMPORT CG, Expr, ExprRep, Type, Error, LInt, Int, Reel, EnumType;
 IMPORT SetType, Addr, Module, AddressExpr, Target, EnumExpr;
 IMPORT IntegerExpr, ReelExpr, SetExpr, LReel, EReel, TInt, ErrType;
 
 TYPE
-  Class = { cINT, cREAL, cLONG, cEXTND, cADDR, cSET, cENUM };
+  Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET, cENUM };
 
 CONST
   FPType = ARRAY [Class.cREAL .. Class.cEXTND] OF CG.Type {
@@ -80,6 +80,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (ta = Int.T)   AND (tb = Int.T)   THEN
       p.class := Class.cINT;
+    ELSIF (ta = LInt.T)  AND (tb = LInt.T)  THEN
+      p.class := Class.cLINT;
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)  THEN
       p.class := Class.cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T) THEN
@@ -141,6 +143,10 @@ PROCEDURE Compile (p: P) =
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Subtract (Target.Integer.cg_type);
+    | Class.cLINT =>
+        Expr.Compile (p.a);
+        Expr.Compile (p.b);
+        CG.Subtract (Target.Longint.cg_type);
     | Class.cREAL, Class.cLONG, Class.cEXTND =>
         Expr.Compile (p.a);
         Expr.Compile (p.b);

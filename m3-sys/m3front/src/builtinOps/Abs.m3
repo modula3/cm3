@@ -9,7 +9,7 @@
 MODULE Abs;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Error;
-IMPORT Target, TInt, Int, Reel, LReel, EReel, IntegerExpr, ReelExpr;
+IMPORT Target, TInt, Int, LInt, Reel, LReel, EReel, IntegerExpr, ReelExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -22,7 +22,8 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
   VAR t := TypeOf (ce);
   BEGIN
     ce.type := t;
-    IF (t = Int.T) OR (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
+    IF (t = Int.T) OR (t = LInt.T)
+      OR (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
       (* ok *)
     ELSE
       Error.Msg ("ABS: wrong argument type");
@@ -37,14 +38,15 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
-  VAR e, x: Expr.T;  i, j: Target.Int;
+  VAR e, x: Expr.T;  i, j: Target.Int;  pre: Target.Pre; zero: Target.Int;
   BEGIN
     e := Expr.ConstValue (ce.args[0]);
     IF (e = NIL) THEN
       RETURN NIL;
     ELSIF IntegerExpr.Split (e, i) THEN
-      IF TInt.LT (i, TInt.Zero) THEN
-        IF NOT TInt.Subtract (TInt.Zero, i, j) THEN RETURN NIL END;
+      pre := TInt.Prec (i);  zero := TInt.Zeros[pre];
+      IF TInt.LT (i, zero) THEN
+        IF NOT TInt.Subtract (zero, i, j) THEN RETURN NIL END;
         e := IntegerExpr.New (j);
       END;
       RETURN e;
@@ -56,9 +58,11 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
+  VAR pre: Target.Pre;  zero: Target.Int;
   BEGIN
     Expr.GetBounds (ce.args[0], min, max);
-    IF TInt.LT (min, TInt.Zero) THEN min := TInt.Zero; END;
+    pre := TInt.Prec (min);  zero := TInt.Zeros[pre];
+    IF TInt.LT (min, zero) THEN min := zero; END;
   END GetBounds;
 
 PROCEDURE Initialize () =

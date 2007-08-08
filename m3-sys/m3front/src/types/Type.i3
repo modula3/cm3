@@ -16,7 +16,7 @@ TYPE
   ModuleInfo <: REFANY;
 
 TYPE
-  Class = { Error, Named, Integer, Real, Longreal, Extended,
+  Class = { Error, Named, Integer, Longint, Real, Longreal, Extended,
             Array, Enum, Object, Opaque, OpenArray, Packed,
             Procedure, Record, Ref, Set, Subrange };
 
@@ -80,7 +80,7 @@ PROCEDURE Base (t: T): T;
 PROCEDURE CGType (t: T;  in_memory: BOOLEAN := FALSE): CG.Type;
 (* returns the code generator's representation for 't', either
    as a variable in memory or as an operand on the evaluation stack
-   depending on 'im_memory' *)
+   depending on 'in_memory' *)
 
 PROCEDURE IsStructured (t: T): BOOLEAN;
 (* <=> rec, set, or array <=> is represented as an address on the CG stack *)

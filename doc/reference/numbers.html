@@ -14,8 +14,8 @@
 <P>
 
 Numeric literals denote constant non-negative integers or reals.  
-The types of these literals are <TT>INTEGER</TT>, <TT>REAL</TT>, 
-<TT>LONGREAL</TT>, and <TT>EXTENDED</TT>.
+The types of these literals are <TT>INTEGER</TT>, <TT>LONGINT</TT>,
+<TT>REAL</TT>, <TT>LONGREAL</TT>, and <TT>EXTENDED</TT>.
 <P>
 
 A literal <TT>INTEGER</TT> has the form <TT>base_digits</TT>,
@@ -38,6 +38,15 @@ and its interpretation uses the convention of the
 <A HREF="word-intf.html"><TT>Word</TT></A> interface.
 For example, on a sixteen-bit two's complement machine,
 <TT>16_FFFF</TT> and <TT>-1</TT> represent the same value.
+<P>
+
+A literal <TT>LONGINT</TT> has the form <TT>integer L</TT>, where
+<TT>integer</TT> has the same form as a literal <TT>INTEGER</TT>.  If no
+explicit base is present, the value of the literal must be at most
+<TT>LAST(LONGINT)</TT>.  If an explicit base is present, the value of the
+literal must be less than <TT>2^Long.Size</TT>, and its interpretation uses
+the convention of the <A HREF="word-intf.html"><TT>Long</TT></A> interface.
+For example, the <TT>LONGINT</TT> having the value 0 would be written '0L'.
 <P>
 
 <A NAME=idx.168>A</A>

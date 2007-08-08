@@ -110,10 +110,4 @@ PROCEDURE FD_CLR (n: int; VAR p: fd_set): int;
 PROCEDURE FD_ISSET (n: int; READONLY p: fd_set): int;
 PROCEDURE FD_ZERO  (VAR p: fd_set);
 
-<*EXTERNAL "m3_asLong"*>
-PROCEDURE asLong(val: off_t): long;
-
-<*EXTERNAL "m3_assignOffT"*>
-PROCEDURE assignOffT (VAR dest: off_t; src: long);
-
 END Utypes.

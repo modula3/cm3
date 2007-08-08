@@ -169,7 +169,6 @@ PROCEDURE E6 (types: BOOLEAN; ): Expr.T =
   END E6;
 
 PROCEDURE E8 (types: BOOLEAN): Expr.T =
-  TYPE RP = ReelExpr.Precision;
   VAR a: Expr.T;  here := offset;
   BEGIN
     CASE cur.token OF
@@ -179,9 +178,7 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
     | TK.tWCHARCONST   => a := EnumExpr.New (WCharr.T, cur.int);    GetToken ();
     | TK.tTEXTCONST    => a := TextExpr.New8 (cur.str);             GetToken ();
     | TK.tWTEXTCONST   => a := TextExpr.New16 (cur.wstr);           GetToken ();
-    | TK.tREALCONST    => a := ReelExpr.New (cur.float, RP.Short);  GetToken ();
-    | TK.tLONGREALCONST=> a := ReelExpr.New (cur.float,RP.Long);    GetToken ();
-    | TK.tEXTENDEDCONST=> a := ReelExpr.New(cur.float, RP.Extended); GetToken();
+    | TK.tFLOATCONST   => a := ReelExpr.New (cur.float);            GetToken ();
 
     | TK.tLPAREN =>
         GetToken ();

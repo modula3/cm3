@@ -138,7 +138,7 @@ PROCEDURE PutInt  (t: T;  i: INTEGER) =
 
 PROCEDURE PutIntt (t: T;  READONLY i: Target.Int) =
   VAR j: INTEGER;
-      buf: ARRAY [0..Target.ChunkSize * NUMBER (Target.IChunks)] OF CHAR;
+      buf: TInt.CharArray;
   BEGIN
     IF TInt.ToInt (i, j) THEN
       PutInt (t, j);

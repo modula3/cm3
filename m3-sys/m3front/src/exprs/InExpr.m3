@@ -85,17 +85,17 @@ PROCEDURE Prep (p: P) =
         Error.Msg ("set too large");
       END;
       Expr.Compile (p.a);
-      IF NOT TInt.EQ (min, TInt.Zero) THEN
+      IF NOT (TInt.EQ (min, TInt.Zero) OR TInt.EQ (min, TInt.ZeroL)) THEN
         CG.Load_integer (min);
-        CG.Subtract (Target.Integer.cg_type);
+        CG.Subtract (Type.CGType (range));
       END;
       index := CG.Pop ();
       CG.Load_integer (TInt.Zero);
       p.tmp := CG.Pop_temp ();
       CG.Push (index);
-      CG.Loophole (Target.Integer.cg_type, Target.Word.cg_type);
+      CG.Loophole (Type.CGType (range), Target.Word.cg_type);
       CG.Load_integer (n_elts);
-      CG.Loophole (Target.Integer.cg_type, Target.Word.cg_type);
+      CG.Loophole (Type.CGType (range), Target.Word.cg_type);
       skip := CG.Next_label ();
       CG.If_compare (Target.Word.cg_type, CG.Cmp.GT, skip, CG.Never);
       Expr.Compile (p.b);
@@ -128,10 +128,11 @@ PROCEDURE Compile (p: P) =
       (* no range checking is needed *)
       Expr.Compile (p.b);
       Expr.Compile (p.a);
-      IF NOT TInt.EQ (min, TInt.Zero) THEN
+      IF NOT (TInt.EQ (min, TInt.Zero) OR TInt.EQ (min, TInt.ZeroL)) THEN
         CG.Load_integer (min);
-        CG.Subtract (Target.Integer.cg_type);
+        CG.Subtract (Type.CGType (range));
       END;
+      CG.Loophole (Type.CGType (range), Target.Integer.cg_type);
       CG.Set_member (info.size);
     END;
   END Compile;

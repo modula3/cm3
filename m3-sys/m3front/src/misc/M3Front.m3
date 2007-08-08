@@ -11,7 +11,7 @@ MODULE M3Front;
 IMPORT Wr, Fmt, Thread(** , RTCollector, RTCollectorSRC **);
 IMPORT Token, Error, Scanner, Value, Scope, M3String, M3WString, Brand;
 IMPORT Module, Type, BuiltinTypes, Host, Tracer, M3Header, InfoModule;
-IMPORT BuiltinOps, WordModule, M3, Time, Coverage, Marker, TypeFP;
+IMPORT BuiltinOps, WordModule, LongModule, M3, Time, Coverage, Marker, TypeFP;
 IMPORT Ident, TextExpr, Procedure, SetExpr, TipeDesc, Pathname;
 IMPORT ESet, CG, TextWr, Target, ProcBody, RunTyme, M3ID, Variable;
 
@@ -82,6 +82,10 @@ PROCEDURE Initialize () =
 
     Scanner.Push ("Word.i3", NIL, is_main := Host.emitBuiltins);
       WordModule.Initialize ();
+    Scanner.Pop ();
+
+    Scanner.Push ("Long.i3", NIL, is_main := Host.emitBuiltins);
+      LongModule.Initialize ();
     Scanner.Pop ();
 
     Scanner.Push ("Compiler.i3", NIL, is_main := Host.emitBuiltins);

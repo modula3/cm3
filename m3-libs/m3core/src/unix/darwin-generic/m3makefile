@@ -33,6 +33,3 @@ Interface ("Uugid")
 Interface ("Uuio")
 Interface ("Uutmp")
 Interface ("Uutsname")
-
-c_source ("off_t_wrap")
-
