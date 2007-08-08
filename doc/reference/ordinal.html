@@ -14,21 +14,29 @@
 <P>
 
 There are three kinds of ordinal types: enumerations, subranges,
-and <TT>INTEGER</TT>.  An enumeration type is declared like this:
+and integers.
+<P>
+
+There are two integer types, which in order of increasing range
+and precision are <TT>INTEGER</TT> and <TT>LONGINT</TT>.
+<P>
+
+An enumeration type is declared like this:
 <PRE>
     TYPE T = {id_1, id_2, ..., id_n}
 </PRE>
 where the <TT>id</TT>'s are distinct identifiers.  The type <TT>T</TT> is an
 ordered set of <TT>n</TT> values; the expression <TT>T.id_i</TT> denotes
-the $'th value of the type in increasing order.  The empty enumeration
+the <TT>i</TT>'th value of the type in increasing order.  The empty enumeration
 <TT>{ }</TT> is allowed.
 <P>
 
 <A NAME=idx.32>Integers</A>
 and enumeration elements are collectively called <EM>ordinal values</EM>.
 The <EM>base type</EM> of an ordinal value <TT>v</TT> is
-<TT>INTEGER</TT> if <TT>v</TT> is an integer, otherwise it is the unique 
-enumeration type that contains <TT>v</TT>. 
+<TT>INTEGER</TT> (or <TT>LONGINT</TT>) if <TT>v</TT> is an integer (or
+extended precision integer, respectively), otherwise it is the unique
+enumeration type that contains <TT>v</TT>.
 <P>
 
 <A NAME=idx.33>A</A>
@@ -48,7 +56,8 @@ The operators
 <A HREF="typeops.html#idx.200"><TT>ORD</TT> and <TT>VAL</TT></A>
 convert between enumerations and integers.
 The operators
-<A HREF="typeops.html#idx.202"><TT>FIRST</TT>, <TT>LAST</TT></A>,
+<A HREF="typeops.html#idx.202"><TT>FIRST</TT></A>,
+<A HREF="typeops.html#idx.202"><TT>LAST</TT></A>,
 and
 <A HREF="typeops.html#idx.201"><TT>NUMBER</TT></A> 
 applied to an ordinal type return the first element, last element, 
@@ -58,7 +67,8 @@ and number of elements, respectively.
 <A NAME=idx.34>Here</A>
 are the predeclared ordinal types:
 <PRE>
-    INTEGER   All integers represented by the implementation
+    INTEGER   All integers naturally represented by the implementation
+    LONGINT   Extended precision integers, at least as precise as <TT>INTEGER</TT>
     CARDINAL  Behaves just like the subrange <TT>[0..LAST(INTEGER)]</TT>
     BOOLEAN   The enumeration <TT>{FALSE, TRUE}</TT>
     CHAR      An enumeration containing at least 256 elements

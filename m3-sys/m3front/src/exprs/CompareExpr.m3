@@ -8,19 +8,20 @@
 
 MODULE CompareExpr;
 
-IMPORT M3, CG, Expr, ExprRep, Type, Int, Reel, LReel, EReel;
+IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT EnumType, SetType, Bool, Module, Addr, Target, TInt;
 IMPORT IntegerExpr, EnumExpr, ReelExpr, AddressExpr;
 IMPORT SetExpr, Error;
 
 CONST
   cINT   = 0;
-  cREAL  = 1;
-  cLONG  = 2;
-  cEXTND = 3;
-  cADDR  = 4;
-  cENUM  = 5;
-  cSET   = 6;
+  cLINT  = 1;
+  cREAL  = 2;
+  cLONG  = 3;
+  cEXTND = 4;
+  cADDR  = 5;
+  cENUM  = 6;
+  cSET   = 7;
 
 CONST
   CGType = ARRAY [cREAL..cADDR] OF CG.Type {
@@ -88,6 +89,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     p.class := cINT;
     IF    (ta = Int.T)   AND (tb = Int.T)    THEN  p.class := cINT;
+    ELSIF (ta = LInt.T)  AND (tb = LInt.T)   THEN  p.class := cLINT;
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)   THEN  p.class := cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T)  THEN  p.class := cLONG;
     ELSIF (ta = EReel.T) AND (tb = EReel.T)  THEN  p.class := cEXTND;
@@ -138,9 +140,12 @@ PROCEDURE Compile (p: P) =
     IF (p.class # cSET) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      IF (p.class = cINT) OR (p.class = cENUM)
-        THEN type := Target.Integer.cg_type;
-        ELSE type := CGType [p.class];
+      IF (p.class = cINT) OR (p.class = cENUM) THEN
+        type := Target.Integer.cg_type;
+      ELSIF (p.class = cLINT) THEN
+        type := Target.Longint.cg_type;
+      ELSE
+        type := CGType [p.class];
       END;
       CG.Compare (type, p.op);
 
@@ -153,10 +158,10 @@ PROCEDURE Compile (p: P) =
       CG.Compare (Target.Word.cg_type, CG.Cmp.NE);
       CG.Push (ta);
       CG.Push (tb);
-      CG.Or ();
+      CG.Or (Target.Word.cg_type);
       CG.Push (tb);
       CG.Compare (Target.Word.cg_type, CG.Cmp.EQ);
-      CG.And ();
+      CG.And (Target.Word.cg_type);
       CG.Free (ta);
       CG.Free (tb);
 
@@ -178,9 +183,12 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
     IF (p.class # cSET) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      IF (p.class = cINT) OR (p.class = cENUM)
-        THEN type := Target.Integer.cg_type;
-        ELSE type := CGType [p.class];
+      IF (p.class = cINT) OR (p.class = cENUM) THEN
+        type := Target.Integer.cg_type;
+      ELSIF (p.class = cLINT) THEN
+        type := Target.Longint.cg_type;
+      ELSE
+        type := CGType [p.class];
       END;
       CG.If_then (type, p.op, true, false, freq);
 
@@ -193,11 +201,11 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
       CG.Compare (Target.Word.cg_type, CG.Cmp.NE);
       CG.Push (ta);
       CG.Push (tb);
-      CG.Not ();
-      CG.And ();
+      CG.Not (Target.Word.cg_type);
+      CG.And (Target.Word.cg_type);
       CG.Load_integer (TInt.Zero);
       CG.Compare (Target.Word.cg_type, CG.Cmp.EQ);
-      CG.And ();
+      CG.And (Target.Word.cg_type);
       IF (true # CG.No_label)
         THEN CG.If_true  (true,  freq);
         ELSE CG.If_false (false, freq);

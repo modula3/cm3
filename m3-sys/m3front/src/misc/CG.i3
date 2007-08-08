@@ -415,11 +415,8 @@ PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  a: Alignment);
 PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size);
 (* s0.t := Mem [s0.A + o : s] *)
 
-PROCEDURE Load_int (v: Var;  o: Offset := 0);
-(* == Load (v, o, Target.Integer.size, Target.Integer.align, Type.Int) *)
-
-PROCEDURE Load_int_temp (v: Var;  o: Offset := 0);
-(* == Load_int (v, o); free v when this R-value is consumed *)
+PROCEDURE Load_int (v: Var;  t: IType;  o: Offset := 0);
+(* == Load (v, o, t.size, t.align, t) *)
 
 PROCEDURE Load_addr (v: Var;  o: Offset := 0);
 (* == Load (v, o, Target.Address.size, Target.Address.align, Type.Addr) *)
@@ -430,8 +427,8 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type);
 PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size);
 (* Mem [s1.A + o : s] := s0.t ; pop (2) *)
 
-PROCEDURE Store_int (v: Var;  o: Offset := 0);
-(* == Store (v, o, Target.Integer.size, Target.Integer.align, Type.Int) *)
+PROCEDURE Store_int (v: Var;  t: IType;  o: Offset := 0);
+(* == Store (v, o, t.size, t.align, t) *)
 
 PROCEDURE Store_addr (v: Var;  o: Offset := 0);
 (* == Store (v, o, Target.Address.size, Target.Address.align, Type.Addr) *)
@@ -462,7 +459,7 @@ PROCEDURE Negate    (t: AType);  (* s0.t := - s0.t *)
 PROCEDURE Abs       (t: AType);  (* s0.t := ABS (s0.t) (noop on Words) *)
 PROCEDURE Max       (t: ZType);  (* s1.t := MAX (s1.t, s0.t) ; pop *)
 PROCEDURE Min       (t: ZType);  (* s1.t := MIN (s1.t, s0.t) ; pop *)
-PROCEDURE Cvt_int   (t: RType;  op: Cvt);  (* s0.I := op (s0.t) *)
+PROCEDURE Cvt_int   (t: RType;  u: IType;  op: Cvt);  (* s0.u := op (s0.t) *)
 PROCEDURE Cvt_float (t: AType;  u: RType);   (* s0.u := FLOAT (s0.t, u) *)
 PROCEDURE Div       (t: IType;  a, b: Sign); (* s1.t := s1.t DIV s0.t;pop*)
 PROCEDURE Mod       (t: IType;  a, b: Sign); (* s1.t := s1.t MOD s0.t;pop*)
@@ -485,40 +482,40 @@ PROCEDURE Set_singleton      (s: Size);  (* s1.A [s0.I] := 1; pop(2) *)
 PROCEDURE Set_range          (s: Size);  (* s2.A[s1.I..s0.I] := 1; pop(3)
                                              --- S2.A must be forced *)
 
-(*------------------------------------------------- Word.T bit operations ---*)
+(*------------------------------------------ Word.T/Long.T bit operations ---*)
 
-PROCEDURE Not ();  (* s0.I := Word.Not (s0.I) *)
-PROCEDURE And ();  (* s1.I := Word.And (s1.I, s0.I) ; pop *)
-PROCEDURE Or  ();  (* s1.I := Word.Or  (s1.I, s0.I) ; pop *)
-PROCEDURE Xor ();  (* s1.I := Word.Xor (s1.I, s0.I) ; pop *)
+PROCEDURE Not (t: IType);  (* s0.t := Word.Not (s0.t) *)
+PROCEDURE And (t: IType);  (* s1.t := Word.And (s1.t, s0.t) ; pop *)
+PROCEDURE Or  (t: IType);  (* s1.t := Word.Or  (s1.t, s0.t) ; pop *)
+PROCEDURE Xor (t: IType);  (* s1.t := Word.Xor (s1.t, s0.t) ; pop *)
 
-PROCEDURE Shift        ();  (* s1.I := Word.Shift  (s1.I, s0.I) ; pop *)
-PROCEDURE Shift_left   ();  (* s1.I := Word.Shift  (s1.I, s0.I) ; pop *)  
-PROCEDURE Shift_right  ();  (* s1.I := Word.Shift  (s1.I, -s0.I) ; pop *)
-PROCEDURE Rotate       ();  (* s1.I := Word.Rotate (s1.I, s0.I) ; pop *)
-PROCEDURE Rotate_left  ();  (* s1.I := Word.Rotate (s1.I, s0.I) ; pop *)
-PROCEDURE Rotate_right ();  (* s1.I := Word.Rotate (s1.I, -s0.I) ; pop *)
+PROCEDURE Shift       (t: IType); (* s1.t := Word.Shift  (s1.t, s0.I) ; pop *)
+PROCEDURE Shift_left  (t: IType); (* s1.t := Word.Shift  (s1.t, s0.I) ; pop *)  
+PROCEDURE Shift_right (t: IType); (* s1.t := Word.Shift  (s1.t, -s0.I) ; pop *)
+PROCEDURE Rotate      (t: IType); (* s1.t := Word.Rotate (s1.t, s0.I) ; pop *)
+PROCEDURE Rotate_left (t: IType); (* s1.t := Word.Rotate (s1.t, s0.I) ; pop *)
+PROCEDURE Rotate_right(t: IType); (* s1.t := Word.Rotate (s1.t, -s0.I) ; pop *)
 
-PROCEDURE Extract (sign: BOOLEAN);
-  (* s2.I := Word.Extract(s2.I, s1.I, s0.I);
-     IF sign THEN SignExtend s2 ; pop(2) *)
+PROCEDURE Extract (t: IType; sign: BOOLEAN);
+(* s2.t := Word.Extract(s2.t, s1.I, s0.I);
+   IF sign THEN SignExtend s2 ; pop(2) *)
 
-PROCEDURE Extract_n (sign: BOOLEAN;  n: INTEGER);
-(* s1.I := Word.Extract(s1.I, s0.I, n);
+PROCEDURE Extract_n (t: IType; sign: BOOLEAN;  n: INTEGER);
+(* s1.t := Word.Extract(s1.t, s0.I, n);
    IF sign THEN SignExtend s1; pop(1) *)
 
-PROCEDURE Extract_mn (sign: BOOLEAN;  m, n: INTEGER);
-(* s0.I := Word.Extract(s0.I, m, n);
+PROCEDURE Extract_mn (t: IType; sign: BOOLEAN;  m, n: INTEGER);
+(* s0.t := Word.Extract(s0.t, m, n);
    IF sign THEN SignExtend s0 *)
 
-PROCEDURE Insert  ();
-  (* s3.I := Word.Insert (s3.I, s2.I, s1.I, s0.I) ; pop(3) *)
+PROCEDURE Insert  (t: IType);
+(* s3.t := Word.Insert (s3.t, s2.t, s1.I, s0.I) ; pop(3) *)
 
-PROCEDURE Insert_n (n: INTEGER);
-(* s2.I := Word.Insert (s2.I, s1.I, s0.I, n); pop(2) *)
+PROCEDURE Insert_n (t: IType; n: INTEGER);
+(* s2.t := Word.Insert (s2.t, s1.t, s0.I, n); pop(2) *)
 
-PROCEDURE Insert_mn (m, n: INTEGER);
-(* s1.I := Word.Insert (s1.I, s0.I, m, n); pop(1) *)
+PROCEDURE Insert_mn (t: IType; m, n: INTEGER);
+(* s1.t := Word.Insert (s1.t, s0.t, m, n); pop(1) *)
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
 
@@ -563,8 +560,8 @@ PROCEDURE Check_range (READONLY a, b: Target.Int;  code: RuntimeError);
 PROCEDURE Check_index (code: RuntimeError);
 (* IF NOT (0 <= s1.I < s0.I) THEN abort(code) END; pop *)
 
-PROCEDURE Check_eq (code: RuntimeError);
-(* IF (s0.I # s1.I) THEN abort(code);  Pop (2) *)
+PROCEDURE Check_eq (t: IType;  code: RuntimeError);
+(* IF (s0.t # s1.t) THEN abort(code);  Pop (2) *)
 
 PROCEDURE Check_byte_aligned ();
 (* IF unaligned(s0.A) THEN abort(RuntimeError.UnalignedAddress); *)

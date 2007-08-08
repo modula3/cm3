@@ -7,7 +7,7 @@ IMPORT Rd, Target, TInt, TFloat, TWord;
 IMPORT M3ID, M3Scanner, Text;
 
 FROM M3Scanner IMPORT TK_Comment, TK_Error, TK_EOF,
-  TK_Ident, TK_Card_const, TK_Real_const, TK_Longreal_const,
+  TK_Ident, TK_Card_const, TK_Long_const, TK_Real_const, TK_Longreal_const,
   TK_Extended_const, TK_Char_const, TK_Text_const,
   TK_Begin_pragma, TK_End_pragma, TK_Comma;
 
@@ -89,7 +89,8 @@ PROCEDURE NextToken (t: T) =
         SUPER.next (t);
         CASE t.token OF
         | TK_Ident          => FixID (t);
-        | TK_Card_const     => FixInt (t);
+        | TK_Card_const     => FixInt (t, Target.Pre.Integer);
+        | TK_Long_const     => FixInt (t, Target.Pre.Longint);
         | TK_Real_const     => FixFloat (t, Target.Precision.Short);
         | TK_Longreal_const => FixFloat (t, Target.Precision.Long);
         | TK_Extended_const => FixFloat (t, Target.Precision.Extended);
@@ -107,7 +108,7 @@ PROCEDURE FixID (t: T) =
     t.id := M3ID.FromStr (SUBARRAY (t.buffer^, t.offset, t.length));
   END FixID;
 
-PROCEDURE FixInt (t: T) =
+PROCEDURE FixInt (t: T;  prec: Target.Pre) =
   VAR break := -1;  base: INTEGER;
   BEGIN
     FOR i := t.offset TO t.offset + t.length - 1 DO
@@ -119,16 +120,16 @@ PROCEDURE FixInt (t: T) =
     END;
 
     IF (break < 0) THEN (* scan a simple integer *)
-      IF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, t.length), t.int) THEN
+      IF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, t.length), prec, t.int) THEN
         Err (t, "illegal integer literal");
       END;
-    ELSIF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, break - t.offset), t.int)
+    ELSIF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, break - t.offset), prec, t.int)
        OR NOT TInt.ToInt (t.int, base)
        OR (base < 2) OR (16 < base) THEN
       Err (t, "illegal base for integer literal");
     ELSIF NOT TWord.New (SUBARRAY (t.buffer^, break+1,
                                    t.offset + t.length - break - 1),
-                         base, t.int) THEN
+                         base, prec, t.int) THEN
       Err (t, "illegal based integer literal");
     END;
   END FixInt;

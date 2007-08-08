@@ -8,8 +8,8 @@
 
 MODULE TWord;
 
-IMPORT Word, TInt;
-FROM Target IMPORT Int, Integer, IChunks, ChunkSize, last_chunk;
+IMPORT Word, TInt, Target;
+FROM Target IMPORT Int, Pre, Integer, Longint, IChunks, ChunkSize;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -21,13 +21,13 @@ CONST
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR; base: INTEGER; VAR r: Int): BOOLEAN =
-  VAR baseI, digitI, rr: Int;  digit: INTEGER;  ch: CHAR;
+PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
+               VAR r: Int): BOOLEAN =
+  VAR rr: Int;  digit: INTEGER;  ch: CHAR;
+      last_chunk := Target.last_chunk[pre];
+      zero := TInt.Zeros[pre];
   BEGIN
-    r := TInt.Zero;
-    IF NOT TInt.FromInt (base, baseI) THEN RETURN FALSE; END;
-    digitI := TInt.Zero;
-    
+    r := zero;
     FOR i := FIRST (x) TO LAST (x) DO
       ch := x [i];
       IF    ('0' <= ch) AND (ch <= '9') THEN  digit := ORD (ch) - ORD ('0');
@@ -35,34 +35,58 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: INTEGER; VAR r: Int): BOOLEAN =
       ELSIF ('a' <= ch) AND (ch <= 'f') THEN  digit := ORD (ch) - ORD ('a')+10;
       ELSE  RETURN FALSE;
       END;
-      digitI.x[0] := digit;
+  
+      (* rr := r * base *)
+      rr := zero;
+      FOR i := 0 TO last_chunk DO
+        VAR carry := Word.Times (r.x [i], base);
+        BEGIN
+          FOR j := i TO last_chunk DO
+            IF carry = 0 THEN EXIT END;
+            INC (carry, rr.x [j]);
+            rr.x [j] := Word.And (carry, Mask);
+            carry := RShift (carry, ChunkSize);
+          END;
+          IF carry # 0 THEN RETURN FALSE END;
+        END;
+      END;
 
-      IF NOT InternalMultiply (r, baseI, rr) THEN RETURN FALSE END;
-      IF NOT InternalAdd (rr, digitI, r)     THEN RETURN FALSE END;
+      (* r := rr + digit *)
+      VAR carry := digit;
+      BEGIN
+        FOR i := 0 TO last_chunk DO
+          INC (carry, rr.x [i]);
+          r.x [i] := Word.And (carry, Mask);
+          carry := RShift (carry, ChunkSize);
+        END;
+        IF carry # 0 THEN RETURN FALSE END;
+      END;
     END;
 
     RETURN TRUE;
   END New;
 
-PROCEDURE InternalAdd (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
   VAR carry := 0;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
   BEGIN
+    <*ASSERT a.pre = b.pre*>
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       carry := a.x [i] + b.x [i] + carry;
       r.x [i] := Word.And (carry, Mask);
       carry := RShift (carry, ChunkSize);
     END;
-    RETURN carry = 0;
-  END InternalAdd;
-
-PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
-  BEGIN
-    EVAL InternalAdd (a, b, r);
   END Add;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
   VAR borrow := 0;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
   BEGIN
+    <*ASSERT a.pre = b.pre*>
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       borrow := a.x [i] - b.x [i] - borrow;
       r.x [i] := Word.And (borrow, Mask);
@@ -70,46 +94,48 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
     END;
   END Subtract;
 
-PROCEDURE InternalMultiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
-  VAR k, carry: INTEGER;  result := TRUE;
+PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
+  VAR carry: INTEGER;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+      zero := TInt.Zeros[pre];
   BEGIN
-    r := TInt.Zero;
+    <*ASSERT a.pre = b.pre*>
+    r := zero;
     FOR i := 0 TO last_chunk DO
       FOR j := 0 TO last_chunk DO
-        k := i + j;
         carry := Word.Times (a.x [i], b.x [j]);
-        WHILE carry # 0 AND k <= last_chunk DO
+        FOR k := i + j TO last_chunk DO
+          IF carry = 0 THEN EXIT END;
           carry := carry + r.x [k];
           r.x [k] := Word.And (carry, Mask);
           carry := RShift (carry, ChunkSize);
-          INC (k);
         END;
-        IF carry # 0 THEN result := FALSE END;
       END;
     END;
-    RETURN result;
-  END InternalMultiply;
-
-PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
-  BEGIN
-    EVAL InternalMultiply (a, b, r);
   END Multiply;
 
-PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
+PROCEDURE Div (READONLY a, b: Int;  VAR q: Int): BOOLEAN =
   VAR r: Int;
+      pre := a.pre;
+      zero := TInt.Zeros[pre];
   BEGIN
-    IF TInt.EQ (den, TInt.Zero) THEN  RETURN FALSE;  END;
-    IF TInt.EQ (num, TInt.Zero) THEN  q := TInt.Zero;  RETURN TRUE;  END;
-    DivMod (num, den, q, r);
+    IF a.pre # b.pre THEN RETURN FALSE END;
+    IF TInt.EQ (b, zero) THEN  RETURN FALSE;  END;
+    IF TInt.EQ (a, zero) THEN  q := zero;  RETURN TRUE;  END;
+    DivMod (a, b, q, r);
     RETURN TRUE;
   END Div;
 
-PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE Mod (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR q: Int;
+      pre := a.pre;
+      zero := TInt.Zeros[pre];
   BEGIN
-    IF TInt.EQ (den, TInt.Zero) THEN  RETURN FALSE;  END;
-    IF TInt.EQ (num, TInt.Zero) THEN  r := TInt.Zero;  RETURN TRUE;  END;
-    DivMod (num, den, q, r);
+    IF a.pre # b.pre THEN RETURN FALSE END;
+    IF TInt.EQ (b, zero) THEN  RETURN FALSE;  END;
+    IF TInt.EQ (a, zero) THEN  r := zero;  RETURN TRUE;  END;
+    DivMod (a, b, q, r);
     RETURN TRUE;
   END Mod;
 
@@ -125,7 +151,11 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     num_hi  : INTEGER;
     x1,x2,x3: INTEGER;
     num, den: ARRAY [0..NUMBER(IChunks)] OF INTEGER;
+    pre := x.pre;
+    last_chunk := Target.last_chunk[pre];
+    zero := TInt.Zeros[pre];
   BEGIN
+    <*ASSERT x.pre = y.pre*>
     (* initialize the numerator and denominator,
        and find the highest non-zero digits *)
     FOR i := last_chunk TO LAST (num) DO  num[i] := 0;  den[i] := 0; END;
@@ -138,8 +168,8 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
       IF den[i] # 0 THEN max_den := i; END;
     END;
 
-    q := TInt.Zero;
-    r := TInt.Zero;
+    q := zero;
+    r := zero;
 
     IF max_den = 0 THEN
       (* single digit denominator case *)
@@ -233,7 +263,11 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
   END DivMod;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
     FOR i := last_chunk TO 0 BY -1 DO
       IF    a.x [i] < b.x [i] THEN RETURN TRUE;
       ELSIF a.x [i] > b.x [i] THEN RETURN FALSE;
@@ -243,7 +277,11 @@ PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
   END LT;
 
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
     FOR i := last_chunk TO 0 BY -1 DO
       IF    a.x [i] < b.x [i] THEN RETURN TRUE;
       ELSIF a.x [i] > b.x [i] THEN RETURN FALSE;
@@ -253,29 +291,47 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
   END LE;
 
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    <*ASSERT a.pre = b.pre*>
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       r.x [i] := Word.And (a.x [i], b.x[i]);
     END;
   END And;
 
 PROCEDURE Or (READONLY a, b: Int;  VAR r: Int) =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    <*ASSERT a.pre = b.pre*>
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       r.x [i] := Word.Or (a.x [i], b.x[i]);
     END;
   END Or;
 
 PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    <*ASSERT a.pre = b.pre*>
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       r.x [i] := Word.Xor (a.x [i], b.x[i]);
     END;
   END Xor;
 
-
 PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       r.x [i] := Word.And (Word.Not (a.x [i]), Mask);
     END;
@@ -283,9 +339,13 @@ PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
 
 PROCEDURE Shift (READONLY a, b: Int;  VAR r: Int) =
   VAR bb, w, i, j, z, x1, x2: INTEGER;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+      size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
+      zero := TInt.Zeros[pre];
   BEGIN
-    IF NOT TInt.ToInt (b, bb) OR ABS (bb) >= Integer.size THEN
-      r := TInt.Zero;
+    IF NOT TInt.ToInt (b, bb) OR ABS (bb) >= size[pre] THEN
+      r := zero;
       RETURN;
     END;
 
@@ -293,6 +353,7 @@ PROCEDURE Shift (READONLY a, b: Int;  VAR r: Int) =
       r := a;
 
     ELSIF bb > 0 THEN (* left shift *)
+      r.pre := pre;
       w := bb DIV ChunkSize;
       i := bb MOD ChunkSize;
       j := ChunkSize - i;
@@ -304,6 +365,7 @@ PROCEDURE Shift (READONLY a, b: Int;  VAR r: Int) =
       END;
 
     ELSE (* right shift *)
+      r.pre := pre;
       w := (-bb) DIV ChunkSize;
       i := (-bb) MOD ChunkSize;
       j := ChunkSize - i;
@@ -320,17 +382,21 @@ PROCEDURE Shift (READONLY a, b: Int;  VAR r: Int) =
 PROCEDURE Rotate (READONLY a, b: Int;  VAR r: Int) =
   VAR
     bb, w, i, j, z, x1, x2: INTEGER;
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
+    size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
     n_chunks: CARDINAL := last_chunk + 1;
     tmp: Int;
   BEGIN
-    EVAL TInt.FromInt (Integer.size, tmp);
-    EVAL TInt.Mod (b, tmp, tmp);
-    EVAL TInt.ToInt (tmp, bb);
+    WITH z = TInt.FromInt (size[pre], Pre.Integer, tmp) DO <*ASSERT z*> END;
+    WITH z = TInt.Mod (b, tmp, tmp) DO <*ASSERT z*> END;
+    WITH z = TInt.ToInt (tmp, bb) DO <*ASSERT z*> END;
 
     IF bb = 0 THEN
       r := a; 
 
     ELSIF bb > 0 THEN (* left rotate *)
+      tmp.pre := pre;
       w := bb DIV ChunkSize;
       i := bb MOD ChunkSize;
       j := ChunkSize - i;
@@ -343,6 +409,7 @@ PROCEDURE Rotate (READONLY a, b: Int;  VAR r: Int) =
       r := tmp;
 
     ELSE (* right rotate *)
+      tmp.pre := pre;
       w := (-bb) DIV ChunkSize;
       i := (-bb) DIV ChunkSize;
       j := ChunkSize - i;
@@ -360,12 +427,15 @@ PROCEDURE Rotate (READONLY a, b: Int;  VAR r: Int) =
 
 PROCEDURE Extract (READONLY x, iI, nI: Int;  VAR r: Int): BOOLEAN =
   VAR i, n, w, b: INTEGER;  neg_iI: Int;
+      pre := x.pre;
+      last_chunk := Target.last_chunk[pre];
+      size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
   BEGIN
     IF NOT TInt.ToInt (iI, i) THEN RETURN FALSE; END;
     IF NOT TInt.ToInt (nI, n) THEN RETURN FALSE; END;
-    IF i + n > Integer.size   THEN RETURN FALSE; END;
+    IF i + n > size[pre]      THEN RETURN FALSE; END;
 
-    EVAL TInt.FromInt (-i, neg_iI);
+    WITH z = TInt.FromInt (-i, Pre.Integer, neg_iI) DO <*ASSERT z*> END;
     Shift (x, neg_iI, r);
 
     w := n DIV ChunkSize;
@@ -379,26 +449,29 @@ PROCEDURE Extract (READONLY x, iI, nI: Int;  VAR r: Int): BOOLEAN =
 
 PROCEDURE Insert (READONLY x, y, iI, nI: Int;  VAR r: Int): BOOLEAN =
   VAR k, yy, yyy, yyyy: Int; i, n: INTEGER;
+      pre := x.pre;
+      size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
   BEGIN
+    IF x.pre # y.pre THEN RETURN FALSE END;
     IF NOT TInt.ToInt (iI, i) THEN RETURN FALSE; END;
     IF NOT TInt.ToInt (nI, n) THEN RETURN FALSE; END;
-    IF i + n > Integer.size   THEN RETURN FALSE; END;
+    IF i + n > size[pre]      THEN RETURN FALSE; END;
 
-    EVAL TInt.FromInt (-(i + n), k);
+    WITH z = TInt.FromInt (-(i + n), Pre.Integer, k) DO <*ASSERT z*> END;
     Shift (x, k, yy);
     Shift (yy, nI, r);
 
-    EVAL TInt.FromInt (Integer.size - n, k);
+    WITH z = TInt.FromInt (size[pre] - n, Pre.Integer, k) DO <*ASSERT z*> END;
     Shift (y, k, yy);
-    EVAL TInt.FromInt (-(Integer.size - n), k);
+    WITH z = TInt.FromInt (-(size[pre] - n), Pre.Integer, k) DO <*ASSERT z*> END;
     Shift (yy, k, yyy);
     Or (r, yyy, r);
     Shift (r, iI, yyyy);
     r := yyyy;
 
-    EVAL TInt.FromInt (Integer.size - i, k);
+    WITH z = TInt.FromInt (size[pre] - i, Pre.Integer, k) DO <*ASSERT z*> END;
     Shift (x, k, yy);
-    EVAL TInt.FromInt (-(Integer.size - i), k);
+    WITH z = TInt.FromInt (-(size[pre] - i), Pre.Integer, k) DO <*ASSERT z*> END;
     Shift (yy, k, yyy);
     Or (r, yyy, r);
 

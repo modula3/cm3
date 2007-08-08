@@ -8,8 +8,8 @@
 
 MODULE TInt;
 
-IMPORT Word, TWord;
-FROM Target IMPORT Int, Integer, IChunk, IChunks, ChunkSize, last_chunk;
+IMPORT Word, TWord, Target;
+FROM Target IMPORT Int, Pre, IChunk, IChunks, ChunkSize;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -21,10 +21,14 @@ CONST
   SignMask = LShift (1, ChunkSize - 1);
   Base     = Mask + 1;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
-  Ten      = Int { IChunks {10, 0, 0, 0}};
+  TenI     = Int{IChunks{10,0,..}, Pre.Integer};
+  TenL     = Int{IChunks{10,0,..}, Pre.Longint};
+  Ten      = ARRAY Pre OF Int {TenI, TenL};
 
-PROCEDURE FromInt (x: INTEGER;  VAR r: Int): BOOLEAN =
+PROCEDURE FromInt (x: INTEGER;  pre: Pre;  VAR r: Int): BOOLEAN =
+  VAR last_chunk := Target.last_chunk[pre];  zero := Zeros[pre];
   BEGIN
+    r := zero;
     FOR i := 0 TO last_chunk DO
       r.x [i] := And (x, Mask);
       x := x DIV Base;
@@ -34,7 +38,9 @@ PROCEDURE FromInt (x: INTEGER;  VAR r: Int): BOOLEAN =
 
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   CONST Extras = BITSIZE (INTEGER) DIV ChunkSize;
-  VAR j := 0;  sign_chunk := MIN (Extras - 1, last_chunk);
+  VAR pre := r.pre;
+      last_chunk := Target.last_chunk[pre];
+      j := 0;  sign_chunk := MIN (Extras - 1, last_chunk);
   BEGIN
     (* check that any extra bits are the same as the sign bit *)
     IF And (r.x [sign_chunk], SignMask) # 0 THEN j := Mask; END;
@@ -56,33 +62,84 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
     RETURN TRUE;
   END ToInt;
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR;  VAR r: Int): BOOLEAN =
-  CONST ZERO = ORD ('0');   ZEROZERO = 10 * ZERO + ZERO;
-  VAR tmp, digit: Int;
+PROCEDURE Ord (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  CONST pre = Pre.Integer;
+  VAR Extras := Target.last_chunk[a.pre] + 1;
+      last_chunk := Target.last_chunk[pre];
+      j := 0;  sign_chunk := MIN (Extras - 1, last_chunk);
   BEGIN
-    r := Zero;
+    (* check that any extra bits are the same as the sign bit *)
+    IF And (a.x [sign_chunk], SignMask) # 0 THEN j := Mask; END;
+    FOR i := Extras TO last_chunk DO
+      IF a.x [i] # j THEN RETURN FALSE; END;
+    END;
+    r.pre := pre;
+    FOR i := 0 TO sign_chunk DO
+      r.x [i] :=  a.x [i]
+    END;
+    FOR i := sign_chunk + 1 TO last_chunk DO
+      r.x [i] := j;
+    END;
+    RETURN TRUE;
+  END Ord;
+
+PROCEDURE Val (READONLY a: Int;  pre: Pre;  VAR r: Int): BOOLEAN =
+  VAR Extras := Target.last_chunk[a.pre] + 1;
+      last_chunk := Target.last_chunk[pre];
+      j := 0;  sign_chunk := MIN (Extras - 1, last_chunk);
+  BEGIN
+    IF a.pre # Pre.Integer THEN RETURN FALSE END;
+    (* check that any extra bits are the same as the sign bit *)
+    IF And (a.x [sign_chunk], SignMask) # 0 THEN j := Mask; END;
+    FOR i := Extras TO last_chunk DO
+      IF a.x [i] # j THEN RETURN FALSE; END;
+    END;
+    r.pre := pre;
+    FOR i := 0 TO sign_chunk DO
+      r.x [i] :=  a.x [i]
+    END;
+    FOR i := sign_chunk + 1 TO last_chunk DO
+      r.x [i] := j;
+    END;
+    RETURN TRUE;
+  END Val;
+
+PROCEDURE New (READONLY x: ARRAY OF CHAR;  pre: Pre;  VAR r: Int): BOOLEAN =
+  CONST ZERO = ORD ('0');   ZEROZERO = 10 * ZERO + ZERO;
+  VAR tmp, digit: Int;  zero := Zeros[pre];
+  BEGIN
+    r := zero;
     IF (NUMBER (x) = 1) THEN
       r.x[0] := ORD (x[0]) - ZERO;
     ELSIF (NUMBER (x) = 2) THEN
       r.x[0] := 10 * ORD (x[0]) + ORD (x[1]) - ZEROZERO;
     ELSE
-      digit := Zero;
+      digit := zero;
       FOR i := FIRST (x) TO LAST (x) DO
         digit.x [0] := ORD (x[i]) - ZERO;
-        IF NOT Multiply (r, Ten, tmp) THEN RETURN FALSE; END;
+        IF NOT Multiply (r, Ten[pre], tmp) THEN RETURN FALSE; END;
         IF NOT Add (tmp, digit, r)    THEN RETURN FALSE; END;
       END;
     END;
     RETURN TRUE;
   END New;
 
+PROCEDURE Prec (READONLY a: Int): Pre =
+  BEGIN
+    RETURN a.pre;
+  END Prec;
+
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
   VAR carry := 0;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
       a_sign := And (a.x [last_chunk], SignMask);
       b_sign := And (b.x [last_chunk], SignMask);
       r_sign : Word.T;
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       carry := a.x [i] + b.x [i] + carry;
       r.x [i] := And (carry, Mask);
@@ -94,11 +151,15 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
-  VAR borrow := 0; 
+  VAR borrow := 0;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
       a_sign := And (a.x [last_chunk], SignMask);
       b_sign := And (b.x [last_chunk], SignMask);
       r_sign : Word.T;
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       borrow := a.x [i] - b.x [i] - borrow;
       r.x [i] := And (borrow, Mask);
@@ -113,7 +174,11 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     k, carry: INTEGER;
     q: Int;
     p := ARRAY [0.. 2 * NUMBER(IChunks) - 1] OF IChunk {0, ..};
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
+    r.pre := pre;
     FOR i := 0 TO last_chunk DO
       FOR j := 0 TO last_chunk DO
         k := i + j;
@@ -165,40 +230,47 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
     den     := b;
     num_neg : BOOLEAN;
     den_neg : BOOLEAN;
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
+    min := ARRAY Pre OF Int {Target.Integer.min, Target.Longint.min};
+    zero := Zeros[pre];
+    one  := Ones [pre];
+    mone := MOnes[pre];
   BEGIN
-    IF EQ (b, Zero) THEN  RETURN FALSE;  END;
-    IF EQ (a, Zero) THEN  q := Zero;  RETURN TRUE;  END;
+    IF a.pre # b.pre THEN RETURN FALSE END;
+    IF EQ (b, zero) THEN  RETURN FALSE;  END;
+    IF EQ (a, zero) THEN  q := zero;  RETURN TRUE;  END;
 
     (* grab the signs *)
     num_neg := And (a.x [last_chunk], SignMask) # 0;
     den_neg := And (b.x [last_chunk], SignMask) # 0;
 
-    (* check for the only possible overflow:  FIRST(INTEGER) DIV -1 *)
+    (* check for the only possible overflow:  FIRST DIV -1 *)
     IF num_neg AND den_neg
-      AND EQ (a, Integer.min)
-      AND EQ (b, MOne) THEN
+      AND EQ (a, min[pre])
+      AND EQ (b, mone) THEN
       RETURN FALSE;
     END;
 
     (* convert the operands to unsigned.  *)
-    IF num_neg THEN  EVAL Subtract (Zero, a, num);  END;
-    IF den_neg THEN  EVAL Subtract (Zero, b, den);  END;
+    IF num_neg THEN  EVAL Subtract (zero, a, num);  END;
+    IF den_neg THEN  EVAL Subtract (zero, b, den);  END;
 
     (* compute the unsigned quotient and remainder *)
     TWord.DivMod (num, den, q, r);
 
     (* fix-up the results to match the signs (see note below) *)
-    IF EQ (r, Zero) THEN
-      IF (num_neg # den_neg) THEN EVAL Subtract (Zero, q, q); END;
+    IF EQ (r, zero) THEN
+      IF (num_neg # den_neg) THEN EVAL Subtract (zero, q, q); END;
     ELSIF num_neg AND den_neg THEN
-      EVAL Subtract (Zero, r, r);
+      EVAL Subtract (zero, r, r);
     ELSIF num_neg THEN
-      EVAL Subtract (Zero, q, q);
-      EVAL Subtract (q, One, q);
+      EVAL Subtract (zero, q, q);
+      EVAL Subtract (q, one, q);
       EVAL Subtract (den, r, r);
     ELSIF den_neg THEN
-      EVAL Subtract (Zero, q, q);
-      EVAL Subtract (q, One, q);
+      EVAL Subtract (zero, q, q);
+      EVAL Subtract (q, one, q);
       EVAL Subtract (r, den, r);
   (*ELSE everything's already ok *)
     END;
@@ -226,7 +298,11 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 *)
 
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
     FOR i := 0 TO last_chunk DO
       IF a.x[i] # b.x[i] THEN RETURN FALSE; END;
     END;
@@ -234,9 +310,12 @@ PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
   END EQ;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
-  VAR a_sign := And (a.x [last_chunk], SignMask);
+  VAR pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+      a_sign := And (a.x [last_chunk], SignMask);
       b_sign := And (b.x [last_chunk], SignMask);
   BEGIN
+    IF a.pre # b.pre THEN RETURN FALSE END;
     IF (a_sign # b_sign) THEN RETURN (a_sign # 0); END;
 
     FOR i := last_chunk TO 0 BY -1 DO
@@ -262,8 +341,13 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     result  : ARRAY [0..ChunkSize * NUMBER(IChunks)] OF CHAR;
     rr      := r;
     quo, rem: Int;
+    pre := r.pre;
+    last_chunk := Target.last_chunk[pre];
+    min := ARRAY Pre OF Int {Target.Integer.min, Target.Longint.min};
+    zero := Zeros[pre];
+    one  := Ones [pre];
   BEGIN
-    IF EQ (r, Zero) THEN
+    IF EQ (r, zero) THEN
       result [0] := '0';
       INC (nDigits);
 
@@ -271,18 +355,18 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
 
       (* get rid of negative numbers *)
       IF And (r.x [last_chunk], SignMask) # 0 THEN
-        IF EQ (r, Integer.min) THEN
+        IF EQ (r, min[pre]) THEN
           (* 2's complement makes FIRST(INTEGER) a special case *)
           bump := TRUE;
-	  EVAL Add (rr, One, rr);
+	  EVAL Add (rr, one, rr);
         END;
         minus := TRUE;
-        EVAL Subtract (Zero, rr, rr);
+        EVAL Subtract (zero, rr, rr);
       END;
 
       (* convert the bulk of the digits *)
-      WHILE LT (Zero, rr) DO
-        TWord.DivMod (rr, Ten, quo, rem);
+      WHILE LT (zero, rr) DO
+        TWord.DivMod (rr, Ten[pre], quo, rem);
         result [nDigits] := Digits [rem.x [0]];
         rr := quo;
         INC (nDigits);
@@ -325,6 +409,8 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
 
 PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ByteArray): INTEGER =
   VAR j, k: INTEGER := 0;
+      pre := r.pre;
+      last_chunk := Target.last_chunk[pre];
   BEGIN
     (* unpack the bytes *)
     FOR i := 0 TO last_chunk DO

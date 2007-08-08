@@ -20,21 +20,22 @@ TYPE (* This list must be kept in sync with the compiler *)
      Enum,          (* 05, #elements: INT                   *)
      Extended,      (* 06                                   *)
      Integer,       (* 07                                   *)
-     Longreal,      (* 08                                   *)
-     Null,          (* 09                                   *)
-     Object,        (* 0a, #fields: INT, {fields: TYPE}     *)
-     OpenArray,     (* 0b, #dimensions: INT, element: TYPE  *)
-     Packed,        (* 0c, bit size: INT, base type: TYPE   *)
-     Proc,          (* 0d                                   *)
-     Real,          (* 0e                                   *)
-     Record,        (* 0f, #fields: INT, {fields: TYPE}     *)
-     Ref,           (* 10, self id: UID                     *)
-     Refany,        (* 11                                   *)
-     Set,           (* 12, #elements: INT                   *)
-     Subrange,      (* 13, min, max: INT                    *)
-     UntracedRef,   (* 14, self id: UID                     *)
-     OldN,          (* 15, node #: INT                      *)
-     Old0           (* 16                                   *)
+     Longint,       (* 08                                   *)
+     Longreal,      (* 09                                   *)
+     Null,          (* 0a                                   *)
+     Object,        (* 0b, #fields: INT, {fields: TYPE}     *)
+     OpenArray,     (* 0c, #dimensions: INT, element: TYPE  *)
+     Packed,        (* 0d, bit size: INT, base type: TYPE   *)
+     Proc,          (* 0e                                   *)
+     Real,          (* 0f                                   *)
+     Record,        (* 10, #fields: INT, {fields: TYPE}     *)
+     Ref,           (* 11, self id: UID                     *)
+     Refany,        (* 12                                   *)
+     Set,           (* 13, #elements: INT                   *)
+     Subrange,      (* 14, min, max: INT                    *)
+     UntracedRef,   (* 15, self id: UID                     *)
+     OldN,          (* 16, node #: INT                      *)
+     Old0           (* 17                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)
 
 TYPE Byte  = BITS 8 FOR [0..255];
@@ -98,6 +99,7 @@ PROCEDURE ReadOp (VAR s: State): T =
     | ORD (Op.Char)     => t := NEW (Builtin, kind := Kind.Char);
     | ORD (Op.Extended) => t := NEW (Builtin, kind := Kind.Extended);
     | ORD (Op.Integer)  => t := NEW (Builtin, kind := Kind.Integer);
+    | ORD (Op.Longint)  => t := NEW (Builtin, kind := Kind.Longint);
     | ORD (Op.Longreal) => t := NEW (Builtin, kind := Kind.Longreal);
     | ORD (Op.Null)     => t := NEW (Builtin, kind := Kind.Null);
     | ORD (Op.Proc)     => t := NEW (Builtin, kind := Kind.Proc);
@@ -290,18 +292,28 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
         t.size  := p.word_size;
         t.align := p.word_align;
 
-    | Kind.Boolean,
-      Kind.Char =>
-        t.size  := 8;
-        t.align := 8;
-
-    | Kind.Real =>
-        t.size  := 32;
+    | Kind.Longint =>
+        t.size := BITSIZE(LONGINT);
         t.align := MIN (t.size, p.max_align);
 
-    | Kind.Longreal,
-      Kind.Extended =>
-        t.size  := 64;
+    | Kind.Boolean =>
+        t.size  := BITSIZE(BOOLEAN);
+        t.align := MIN (t.size, p.max_align);
+
+    | Kind.Char =>
+        t.size  := BITSIZE(CHAR);
+        t.align := MIN (t.size, p.max_align);
+
+    | Kind.Real =>
+        t.size  := BITSIZE(REAL);
+        t.align := MIN (t.size, p.max_align);
+
+    | Kind.Longreal =>
+        t.size  := BITSIZE(LONGREAL);
+        t.align := p.max_align;
+
+    | Kind.Extended =>
+        t.size  := BITSIZE(EXTENDED);
         t.align := p.max_align;
 
     | Kind.Enum =>
@@ -468,6 +480,7 @@ PROCEDURE IsAlignedOK (t: T;  offset: INTEGER;  READONLY p: Packing): BOOLEAN =
     | Kind.Address,
       Kind.Cardinal,
       Kind.Integer,
+      Kind.Longint,
       Kind.Null,
       Kind.Proc,
       Kind.Ref,

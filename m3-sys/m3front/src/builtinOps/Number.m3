@@ -76,6 +76,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       IF TInt.LT (max, min) THEN
         CG.Load_integer (TInt.Zero);
       ELSIF TInt.Subtract (max, min, tmp)
+        AND TInt.Val (tmp, Target.Pre.Integer, tmp)
         AND TInt.Add (tmp, TInt.One, num) THEN
         CG.Load_integer (num);
       ELSE
@@ -99,6 +100,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
         IF (e = NIL) THEN RETURN NIL END;
         IF ArrayExpr.GetBounds (e, min, max)
           AND TInt.Subtract (max, min, tmp)
+          AND TInt.Val (tmp, Target.Pre.Integer, tmp)
           AND TInt.Add (tmp, TInt.One, num)
           THEN RETURN IntegerExpr.New (num);
           ELSE RETURN NIL;
@@ -111,6 +113,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     IF TInt.LT (max, min) THEN
       RETURN IntegerExpr.New (TInt.Zero);
     ELSIF TInt.Subtract (max, min, tmp)
+      AND TInt.Val (tmp, Target.Pre.Integer, tmp)
       AND TInt.Add (tmp, TInt.One, num) THEN
       RETURN IntegerExpr.New (num);
     ELSE

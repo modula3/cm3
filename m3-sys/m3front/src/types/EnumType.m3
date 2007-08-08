@@ -44,7 +44,7 @@ PROCEDURE Parse (): Type.T =
       n := Ident.ParseList ();
       j := Ident.top - n;
       FOR i := 0 TO n - 1 DO
-        b := TInt.FromInt (i, val); <*ASSERT b*>
+        b := TInt.FromInt (i, Target.Pre.Integer, val); <*ASSERT b*>
         Scope.Insert (EnumElt.New (Ident.stack[j + i], val, p));
       END;
       DEC (Ident.top, n);
@@ -70,7 +70,7 @@ PROCEDURE Build (READONLY elt_nms: ARRAY OF TEXT): Type.T =
   BEGIN
     p := Create (Scope.PushNew (FALSE, M3ID.NoID));
     FOR i := 0 TO LAST (elt_nms) DO
-      b := TInt.FromInt (i, val);  <*ASSERT b*>
+      b := TInt.FromInt (i, Target.Pre.Integer, val);  <*ASSERT b*>
       Scope.Insert (EnumElt.New (M3ID.Add (elt_nms[i]), val, p));
     END;
     Scope.PopNew ();
@@ -121,7 +121,7 @@ PROCEDURE Create (elts: Scope.T): P =
 PROCEDURE SetRep (p: P) =
   VAR max: Target.Int;
   BEGIN
-    IF NOT TInt.FromInt (p.n_elts-1, max) THEN
+    IF NOT TInt.FromInt (p.n_elts-1, Target.Pre.Integer, max) THEN
       Error.Msg ("enumeration type too large");
     END;
     FOR i := FIRST (Rep) TO LAST (Rep) DO
@@ -222,7 +222,7 @@ PROCEDURE InitCoster (p: P;  zeroed: BOOLEAN): INTEGER =
   VAR max: Target.Int;
   BEGIN
     IF (p.n_elts <= 0) OR (zeroed) THEN RETURN 0; END;
-    IF NOT TInt.FromInt (p.n_elts-1, max) THEN RETURN 1 END;
+    IF NOT TInt.FromInt (p.n_elts-1, Target.Pre.Integer, max) THEN RETURN 1 END;
     IF TInt.EQ (TargetMap.Word_types[p.rep].max, max)
       THEN RETURN 0;
       ELSE RETURN 1;

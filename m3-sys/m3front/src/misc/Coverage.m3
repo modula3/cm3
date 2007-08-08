@@ -190,10 +190,10 @@ PROCEDURE CountLine () =
     IF used [line] = LineSeen.generated THEN RETURN END;
     <*ASSERT tbl # NIL*>
     offset := lines_offset + (line - minLine) * Target.Integer.size;
-    CG.Load_int (tbl, offset);
+    CG.Load_int (tbl, Target.Integer.cg_type, offset);
     CG.Load_integer (TInt.One);
     CG.Add (Target.Word.cg_type);
-    CG.Store_int (tbl, offset);
+    CG.Store_int (tbl, Target.Integer.cg_type, offset);
     used [line] := LineSeen.generated;
   END CountLine;
 
@@ -211,10 +211,10 @@ PROCEDURE CountProcedure (v: Value.T) =
     END;
     <*ASSERT p # NIL *>
 
-    CG.Load_int (tbl, p.offset);
+    CG.Load_int (tbl, Target.Integer.cg_type, p.offset);
     CG.Load_integer (TInt.One);
     CG.Add (Target.Word.cg_type);
-    CG.Store_int (tbl, p.offset);
+    CG.Store_int (tbl, Target.Integer.cg_type, p.offset);
   END CountProcedure;
 
 PROCEDURE Reset () =

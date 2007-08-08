@@ -6,7 +6,7 @@
 UNSAFE MODULE OSSupport;
 
 IMPORT OSError, File, FileWr, WrClass;
-IMPORT Unix, OSErrorPosix, FilePosix;
+IMPORT Unix, OSErrorPosix, FilePosix, Utypes;
 
 REVEAL
   T = FileWr.T BRANDED OBJECT
@@ -31,7 +31,7 @@ PROCEDURE Truncate(wr: T) RAISES {OSError.E} =
   BEGIN
     WrClass.Lock(wr);
     TRY
-      IF Unix.ftruncate(wr.fd, wr.cur) < 0 THEN
+      IF Unix.ftruncate(wr.fd, VAL(wr.cur, Utypes.off_t)) < 0 THEN
         OSErrorPosix.Raise();
       END;
     FINALLY

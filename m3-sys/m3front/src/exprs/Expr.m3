@@ -96,9 +96,12 @@ PROCEDURE GetSign (t: T): CG.Sign =
   VAR min, max: Target.Int;
   BEGIN
     GetBounds (t, min, max);
-    IF    TInt.LE (TInt.Zero, min) THEN  RETURN CG.Sign.Positive;
-    ELSIF TInt.LE (max, TInt.Zero) THEN  RETURN CG.Sign.Negative;
-    ELSE                                        RETURN CG.Sign.Unknown;
+    IF TInt.LE (TInt.Zero, min) OR TInt.LE (TInt.ZeroL, min) THEN
+      RETURN CG.Sign.Positive;
+    ELSIF TInt.LE (max, TInt.Zero) OR TInt.LE (max, TInt.ZeroL) THEN
+      RETURN CG.Sign.Negative;
+    ELSE
+      RETURN CG.Sign.Unknown;
     END;
   END GetSign;
 

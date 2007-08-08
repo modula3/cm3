@@ -43,8 +43,8 @@ CONST
   MS_SYNC          = 16_02;
   MS_INVALIDATE    = 16_04;
 
-<*EXTERNAL "m3_mmap" *>
-PROCEDURE mmap (addr: void_star; len: size_t; prot,flags,fd: int; off: int)
+<*EXTERNAL*>
+PROCEDURE mmap (addr: void_star; len: size_t; prot,flags,fd: int; off: off_t)
   : void_star;
 
 <*EXTERNAL*>

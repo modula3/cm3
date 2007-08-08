@@ -16,7 +16,7 @@ TYPE
        (* lexical classes *)
        tIDENT,
        tCARDCONST,
-       tREALCONST, tLONGREALCONST, tEXTENDEDCONST,
+       tFLOATCONST,
        tCHARCONST, tWCHARCONST,
        tTEXTCONST, tWTEXTCONST,
 
@@ -78,8 +78,7 @@ CONST
                    T.tUNTRACED, T.tOBJECT, T.tPROCEDURE, T.tRECORD,
 		   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
 
-  ExprStart = Set {T.tNOT, T.tPLUS, T.tMINUS, T.tIDENT, T.tCARDCONST,
-                   T.tLONGREALCONST, T.tREALCONST, T.tEXTENDEDCONST,
+  ExprStart = Set {T.tNOT, T.tPLUS, T.tMINUS, T.tIDENT, T.tCARDCONST, T.tFLOATCONST,
                    T.tCHARCONST, T.tWCHARCONST, T.tTEXTCONST, T.tWTEXTCONST,
                    T.tLPAREN, T.tARRAY, T.tBITS, T.tRECORD, T.tSET};
 

@@ -1,6 +1,6 @@
 <HTML>
 <HEAD>
-<TITLE>Modula-3: Word interface</TITLE>
+<TITLE>Modula-3: Word and Long interfaces</TITLE>
 </HEAD>
 <BODY BGCOLOR="#ffffff" VLINK="#006633">
 
@@ -102,9 +102,33 @@ END Word.
 </PRE>
 <P>
 
+<H2>The Long interface</H2>
+<P>
+
+The <TT>Long</TT> interface is identical to <TT>Word</TT>, except in the
+preamble:
+<PRE>
+INTERFACE Long;
+
+TYPE T = LONGINT;
+
+...
+
+END Long.
+</PRE>
+The operations are the same except that they operate on
+<TT>T = LONGINT</TT> instead of <TT>T = INTEGER</TT>.
+<P>
+
 The
 <A HREF="/public/m3core/src/Word.i3">
 CM Modula-3 version of Word</A>
+is here.
+<P>
+
+The
+<A HREF="/public/m3core/src/Long.i3">
+CM Modula-3 version of Long</A>
 is here.
 <P>
 

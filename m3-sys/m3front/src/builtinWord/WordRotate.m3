@@ -36,27 +36,29 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Rotate ();
+    CG.Rotate (Target.Integer.cg_type);
   END Compile;
 
 PROCEDURE CompileL (ce: CallExpr.T) =
-  VAR max: Target.Int;  b := TInt.FromInt (Target.Integer.size -1, max);
+  VAR max: Target.Int;
+      b := TInt.FromInt (Target.Integer.size -1, Target.Pre.Integer, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
     CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
-    CG.Rotate_left ();
+    CG.Rotate_left (Target.Integer.cg_type);
   END CompileL;
 
 PROCEDURE CompileR (ce: CallExpr.T) =
-  VAR max: Target.Int;  b := TInt.FromInt (Target.Integer.size -1, max);
+  VAR max: Target.Int;
+      b := TInt.FromInt (Target.Integer.size -1, Target.Pre.Integer, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
     CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
-    CG.Rotate_right ();
+    CG.Rotate_right (Target.Integer.cg_type);
   END CompileR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -82,7 +84,7 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
       AND TInt.LE (TInt.Zero, i1)
-      AND TInt.FromInt (Target.Integer.size, max)
+      AND TInt.FromInt (Target.Integer.size, Target.Pre.Integer, max)
       AND TInt.LT (i1, max)
     THEN
       TWord.Rotate (w0, i1, result);
@@ -100,7 +102,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
       AND TInt.LE (TInt.Zero, i1)
-      AND TInt.FromInt (Target.Integer.size, max)
+      AND TInt.FromInt (Target.Integer.size, Target.Pre.Integer, max)
       AND TInt.LT (i1, max)
       AND TInt.Subtract (TInt.Zero, i1, neg_i1)
     THEN
@@ -114,7 +116,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
 PROCEDURE Initialize () =
   VAR
     max : Target.Int;
-    b   := TInt.FromInt (Target.Integer.size-1, max);
+    b   := TInt.FromInt (Target.Integer.size-1, Target.Pre.Integer, max);
     sub := SubrangeType.New (TInt.Zero, max, Int.T, FALSE);
 
     f0  := Formal.NewBuiltin ("x", 0, Int.T);

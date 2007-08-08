@@ -111,9 +111,9 @@ PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =
       IF (info.class = Type.Class.OpenArray) THEN RETURN NIL END;
     END;
     t := Type.CheckInfo (t, info);
-    IF    TInt.FromInt (info.size, size)
-      AND TInt.FromInt (unit, a)
-      AND TInt.FromInt (unit - 1, b)
+    IF    TInt.FromInt (info.size, Target.Pre.Integer, size)
+      AND TInt.FromInt (unit, Target.Pre.Integer, a)
+      AND TInt.FromInt (unit - 1, Target.Pre.Integer, b)
       AND TInt.Add (size, b, c)
       AND TInt.Div (c, a, d)
       THEN RETURN IntegerExpr.New (d);

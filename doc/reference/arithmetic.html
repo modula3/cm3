@@ -40,11 +40,11 @@ associative either for bounded integers or for floating-point values.
 
 <A NAME=idx.183>
 <PRE>
-    prefix    +  (x: INTEGER)    : INTEGER
+    prefix    +  (x: Integer)    : Integer
               +  (x: Float)      : Float
 
 
-     infix    +  (x,y: INTEGER)  : INTEGER
+     infix    +  (x,y: Integer)  : Integer
                  (x,y: Float)    : Float
                  (x,y: Set)      : Set
 </PRE>
@@ -61,10 +61,10 @@ In unsafe modules, <TT>+</TT> is extended to <TT>ADDRESS</TT>.
 
 <A NAME=idx.184>
 <PRE>
-    prefix    -  (x: INTEGER)    : INTEGER
+    prefix    -  (x: Integer)    : Integer
                  (x: Float)      : Float
 
-     infix    -  (x,y: INTEGER)  : INTEGER
+     infix    -  (x,y: Integer)  : Integer
                  (x,y: Float)    : Float
                  (x,y: Set)      : Set
 </PRE>
@@ -81,7 +81,7 @@ In unsafe modules, <TT>-</TT> is extended to <TT>ADDRESS</TT>.
 
 <A NAME=idx.185>
 <PRE>
-    infix     *  (x,y: INTEGER)  : INTEGER
+    infix     *  (x,y: Integer)  : Integer
                  (x,y: Float)    : Float
                  (x,y: Set)      : Set
 </PRE>
@@ -108,8 +108,8 @@ is the same type as both.
 
 <A NAME=idx.187>
 <PRE>
-    infix    DIV (x,y: INTEGER) : INTEGER
-    infix    MOD (x,y: INTEGER) : INTEGER
+    infix    DIV (x,y: Integer) : Integer
+    infix    MOD (x,y: Integer) : Integer
              MOD (x, y: Float)  : Float
 </PRE>
 </A>
@@ -136,18 +136,17 @@ be the same, and the result is the same type as both.
 
 <A NAME=idx.188>
 <PRE>
-             ABS (x: INTEGER) : INTEGER
+             ABS (x: Integer) : Integer
                  (x: Float)   : Float
 </PRE>
 </A>
 <TT>ABS(x)</TT> is the absolute value of <TT>x</TT>.
-If <TT>x</TT> is a float,
-the type of <TT>ABS(x)</TT> is the same as the type of <TT>x</TT>.
+The type of <TT>ABS(x)</TT> is the same as the type of <TT>x</TT>.
 <P>
 
 <A NAME=idx.189>
 <PRE>
-           FLOAT (x: INTEGER; T: Type := REAL): T
+           FLOAT (x: Integer; T: Type := REAL): T
                  (x: Float;   T: Type := REAL): T
 </PRE>
 </A>
@@ -161,20 +160,21 @@ thread's current rounding mode, as defined in the required interface
 
 <A NAME=idx.190>
 <PRE>
-           FLOOR   (x: Float) : INTEGER
+           FLOOR   (x: Float; T: Type := INTEGER): T
 
-           CEILING (x: Float) : INTEGER
+           CEILING (x: Float; T: Type := INTEGER): T
 </PRE>
 </A>
 <TT>FLOOR(x)</TT> is the greatest integer not exceeding <TT>x</TT>.  
 <TT>CEILING(x)</TT> is the least integer not less than <TT>x</TT>.
+The type <TT>T</TT> must be an integer type; it defaults to <TT>INTEGER</TT>.
 <P>
 
 <A NAME=idx.191>
 <PRE>
-           ROUND (r: Float)   : INTEGER
+           ROUND (r: Float; T: Type := INTEGER): T
 
-           TRUNC (r: Float)   : INTEGER
+           TRUNC (r: Float; T: Type := INTEGER): T
 </PRE>
 </A>
 <TT>ROUND(r)</TT> is the nearest integer to <TT>r</TT>; ties are broken 
@@ -183,6 +183,7 @@ according to the constant <TT>RoundDefault</TT> in the required interface
 <TT>TRUNC(r)</TT> rounds <TT>r</TT> toward zero; it equals 
 <TT>FLOOR(r)</TT> for positive <TT>r</TT> and <TT>CEILING(r)</TT> for 
 negative <TT>r</TT>.
+The type <TT>T</TT> must be an integer type; it defaults to <TT>INTEGER</TT>.
 <P>
 
 <A NAME=idx.192>

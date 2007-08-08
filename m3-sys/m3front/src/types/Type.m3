@@ -277,7 +277,7 @@ PROCEDURE LoadScalar (t: T) =
   BEGIN
     t := Check (t);
     CASE t.info.class OF
-    | Class.Integer, Class.Real, Class.Longreal, Class.Extended,
+    | Class.Integer, Class.Longint, Class.Real, Class.Longreal, Class.Extended,
       Class.Enum, Class.Object, Class.Opaque, Class.Procedure,
       Class.Ref, Class.Subrange =>
         CG.Load_indirect (t.info.stk_type, 0, t.info.size);
@@ -377,7 +377,7 @@ PROCEDURE AddCell (t: T) =
 PROCEDURE IsOrdinal (t: T): BOOLEAN =
   VAR u := Check (t);  c := u.info.class;
   BEGIN
-    RETURN (c = Class.Integer) OR (c = Class.Subrange)
+    RETURN (c = Class.Integer) OR (c = Class.Longint) OR (c = Class.Subrange)
            OR (c = Class.Enum) OR (c = Class.Error)
            OR ((c = Class.Packed) AND IsOrdinal (StripPacked (t)));
   END IsOrdinal;
@@ -392,11 +392,15 @@ PROCEDURE Number (t: T): Target.Int =
     IF (c = Class.Subrange) THEN
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
     ELSIF (c = Class.Enum) THEN
-      b := TInt.FromInt (EnumType.NumElts (u), max);  <*ASSERT b*>
+      b := TInt.FromInt (EnumType.NumElts (u), Target.Pre.Integer, max);
+      <*ASSERT b*>
       RETURN max;
     ELSIF (c = Class.Integer) THEN
       min := Target.Integer.min;
       max := Target.Integer.max;
+    ELSIF (c = Class.Longint) THEN
+      min := Target.Longint.min;
+      max := Target.Longint.max;
     ELSIF (c = Class.Error) THEN
       RETURN TInt.Zero;
     ELSIF (c = Class.Packed) THEN
@@ -406,8 +410,9 @@ PROCEDURE Number (t: T): Target.Int =
       <*ASSERT FALSE*>
     END;
     IF TInt.Subtract (max, min, tmp)
-      AND TInt.Add (tmp, TInt.One, max) THEN
-      RETURN max;
+      AND TInt.Ord (tmp, tmp)
+      AND TInt.Add (tmp, TInt.One, max)
+      THEN RETURN max;
     END;
     Error.Msg ("type has too many elements");
     RETURN Target.Integer.max;
@@ -420,13 +425,18 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
       RETURN TRUE;
     ELSIF (c = Class.Enum) THEN
-      b := TInt.FromInt (EnumType.NumElts (u), min);   <*ASSERT b*>
+      b := TInt.FromInt (EnumType.NumElts (u), Target.Pre.Integer, min);
+      <*ASSERT b*>
       b := TInt.Subtract (min, TInt.One, max);   <*ASSERT b*>
       min := TInt.Zero;
       RETURN TRUE;
     ELSIF (c = Class.Integer) THEN
       min := Target.Integer.min;
       max := Target.Integer.max;
+      RETURN TRUE;
+    ELSIF (c = Class.Longint) THEN
+      min := Target.Longint.min;
+      max := Target.Longint.max;
       RETURN TRUE;
     ELSIF (c = Class.Packed) THEN
       RETURN GetBounds (StripPacked (u), min, max);
@@ -682,7 +692,7 @@ PROCEDURE LoadInfo (t: T;  offset: INTEGER;  addr: BOOLEAN := FALSE) =
       CG.Load_addr (v, c.offset);
       CG.Boost_alignment (M3RT.TC_ALIGN);
     ELSIF (offset = M3RT.TC_typecode) THEN
-      CG.Load_int (v, c.offset + Target.Address.pack);
+      CG.Load_int (v, Target.Integer.cg_type, c.offset + Target.Address.pack);
     ELSE
       CG.Load_addr (v, c.offset);
       CG.Boost_alignment (M3RT.TC_ALIGN);
@@ -807,6 +817,9 @@ PROCEDURE Zero (full_t: T) =
     | Class.Integer, Class.Subrange, Class.Enum =>
         CG.Load_integer (TInt.Zero);
         CG.Store_indirect (u.info.stk_type(*Target.Integer.cg_type*), 0, size);
+    | Class.Longint =>
+        CG.Load_integer (TInt.ZeroL);
+        CG.Store_indirect (u.info.stk_type(*Target.Longint.cg_type*), 0, size);
     | Class.Real =>
         CG.Load_float (TFloat.ZeroR);
         CG.Store_indirect (CG.Type.Reel, 0, size);

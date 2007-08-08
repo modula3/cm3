@@ -11,7 +11,7 @@ IMPORT Expr, Type, Target;
 
 TYPE Precision = Target.Precision;
 
-PROCEDURE New  (READONLY value: Target.Float;  pre: Precision): Expr.T;
+PROCEDURE New  (READONLY value: Target.Float): Expr.T;
 
 (* returns TRUE iff the operation was successful *)
 PROCEDURE Compare  (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN;
@@ -24,10 +24,10 @@ PROCEDURE Min      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Max      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Negate   (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
 PROCEDURE Abs      (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
-PROCEDURE Floor    (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
-PROCEDURE Ceiling  (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
-PROCEDURE Trunc    (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
-PROCEDURE Round    (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
+PROCEDURE Floor    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
+PROCEDURE Ceiling  (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
+PROCEDURE Trunc    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
+PROCEDURE Round    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Float    (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN;
 
 END ReelExpr.

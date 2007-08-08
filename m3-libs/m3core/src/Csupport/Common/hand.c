@@ -17,6 +17,17 @@ long a, b;
   return c;
 }
 
+long long m3_divL (b, a)
+long long a, b;
+{
+  register long long c;
+  if ((a == 0LL) && (b != 0LL))  {  c = 0LL;
+  } else if (a > 0LL)  {  c = (b >= 0LL) ? (a) / (b) : -1LL - (a-1LL) / (-b);
+  } else /* a < 0LL */ {  c = (b >= 0LL) ? -1LL - (-1LL-a) / (b) : (-a) / (-b);
+  }
+  return c;
+}
+
 long m3_mod (b, a)
 long a, b;
 {
@@ -24,6 +35,17 @@ long a, b;
   if ((a == 0L) && (b != 0L)) {  c = 0L;
   } else if (a > 0L)  {  c = (b >= 0L) ? a % b : b + 1L + (a-1L) % (-b);
   } else /* a < 0L */ {  c = (b >= 0L) ? b - 1L - (-1L-a) % (b) : - ((-a) % (-b));
+  }
+  return c;
+}
+
+long long m3_modL (b, a)
+long long a, b;
+{
+  register long long c;
+  if ((a == 0LL) && (b != 0LL)) {  c = 0LL;
+  } else if (a > 0LL)  {  c = (b >= 0LL) ? a % b : b + 1LL + (a-1LL) % (-b);
+  } else /* a < 0LL */ {  c = (b >= 0LL) ? b - 1LL - (-1LL-a) % (b) : - ((-a) % (-b));
   }
   return c;
 }

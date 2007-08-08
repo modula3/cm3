@@ -347,10 +347,14 @@ PROCEDURE AddBigInt (u: U;  i: INTEGER) =
   END AddBigInt;
 
 PROCEDURE AddBigX (u: U;  READONLY i: Target.Int) =
-  VAR n := i;  z: IntDesc;
+  VAR n := i;  z: IntDesc;  zero := TargetInt.Zeros[TargetInt.Prec (i)];
   BEGIN
-    z.negative := TargetInt.LT (n, TargetInt.Zero);
-    IF (z.negative) THEN TWord.Subtract (TargetInt.Zero, i, n); END;
+    IF TargetInt.LT (n, zero) THEN
+      TWord.Subtract (zero, i, n);
+      z.negative := TRUE;
+    ELSE
+      z.negative := FALSE;
+    END;
     z.n_bytes := TargetInt.ToBytes (n, z.bytes);
     DumpInt (u, z);
   END AddBigX;

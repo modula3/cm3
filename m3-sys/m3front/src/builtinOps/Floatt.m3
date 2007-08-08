@@ -8,8 +8,8 @@
 
 MODULE Floatt;
 
-IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Reel, LReel, EReel, Int;
-IMPORT Error, ReelExpr, TypeExpr;
+IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Reel, LReel, EReel;
+IMPORT Int, LInt, Error, ReelExpr, TypeExpr;
 
 VAR Z: CallExpr.MethodList;
 
@@ -19,8 +19,9 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
     u := Reel.T;
     IF (NUMBER (ce.args^) > 1) THEN
       EVAL TypeExpr.Split (ce.args[1], u);
+      u := Type.Base (u);
     END;
-    RETURN Type.Base (u);
+    RETURN u;
   END TypeOf;
 
 PROCEDURE Check (ce: CallExpr.T;
@@ -38,7 +39,8 @@ PROCEDURE Check (ce: CallExpr.T;
     END;
 
     t := Type.Base (Expr.TypeOf (ce.args[0]));
-    IF (t # Int.T) AND (t # Reel.T) AND (t # LReel.T) AND (t # EReel.T) THEN
+    IF (t # Int.T) AND (t # LInt.T)
+      AND (t # Reel.T) AND (t # LReel.T) AND (t # EReel.T) THEN
       Error.Msg ("FLOAT: wrong first argument type");
     END;
 
@@ -58,12 +60,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
   VAR
     e := ce.args[0];
     t := Expr.TypeOf (e);
-    u := Reel.T;
+    u := TypeOf (ce);
   BEGIN
-    IF (NUMBER (ce.args^) > 1) THEN
-      EVAL TypeExpr.Split (ce.args[1], u);
-      u := Type.Base (u);
-    END;
     Expr.Compile (e);
     CG.Cvt_float (Type.CGType (t), Type.CGType (u));
   END Compile;

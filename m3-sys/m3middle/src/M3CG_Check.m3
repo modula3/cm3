@@ -21,13 +21,7 @@ TYPE (* stack data types *)
          Any, Missing, DontCare, Match };
 
 VAR (* CONST after "begin_unit" call *)
-  T_to_ST := ARRAY Type OF ST {
-    ST.Int32, ST.Int32, ST.Int32, ST.Int32,  (* Word8, Int8, Word16, Int16 *)
-    ST.Int32, ST.Int32, ST.Int64, ST.Int64,  (* Word32, Int32, Word64, Int64 *)
-    ST.Reel, ST.LReel, ST.XReel,             (* Reel, LReel, XReel *)
-    ST.Addr, ST.Addr,                        (* Addr, Struct *)
-    ST.Void
-  };
+  T_to_ST := ARRAY Type OF ST {ST.Void,..};
 
 CONST
   ST_name = ARRAY ST OF TEXT {
@@ -341,13 +335,17 @@ PROCEDURE set_error_handler (self: U;  p: M3CG_Ops.ErrorHandler) =
 
 PROCEDURE begin_unit (self: U;  optimize : INTEGER) =
   (* called before any other method to initialize the compilation unit *)
+  CONST IntMap = ARRAY [0..1] OF ST {ST.Int32, ST.Int64};
+  VAR ST_Int := IntMap[Target.Integer.bytes DIV 8];
   BEGIN
-    IF Target.Integer.size # 32 THEN
-      (* fix the mapping of stack types *)
-      FOR i := FIRST (T_to_ST) TO LAST (T_to_ST) DO
-        IF T_to_ST[i] = ST.Int32 THEN T_to_ST[i] := ST.Int64; END;
-      END;
-    END;
+    (* initialize the mapping of stack types *)
+    T_to_ST := ARRAY Type OF ST
+        {ST_Int, ST_Int, ST_Int, ST_Int,      (* Word8, Int8, Word16, Int16 *)
+         ST_Int, ST_Int, ST.Int64, ST.Int64,  (* Word32, Int32, Word64, Int64 *)
+         ST.Reel, ST.LReel, ST.XReel,         (* Reel, LReel, XReel *)
+         ST.Addr, ST.Addr,                    (* Addr, Struct *)
+         ST.Void};
+
     self.s_empty ();
     self.child.begin_unit (optimize);
   END begin_unit;
@@ -981,42 +979,48 @@ PROCEDURE xor (self: U;  t: IType) =
 PROCEDURE shift (self: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.shift (t);
   END shift;
 
 PROCEDURE shift_left (self: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)  
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.shift_left (t);
   END shift_left;
 
 PROCEDURE shift_right  (self: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.shift_right (t);
   END shift_right;
 
 PROCEDURE rotate (self: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.rotate (t);
   END rotate;
 
 PROCEDURE rotate_left  (self: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.rotate_left (t);
   END rotate_left;
 
 PROCEDURE rotate_right (self: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, -s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.rotate_right (t);
   END rotate_right;
 
@@ -1040,7 +1044,9 @@ PROCEDURE extract (self: U;  t: IType;  sign: BOOLEAN) =
   (* s2.t := Word.Extract(s2.t, s1.t, s0.t);
      IF sign THEN SignExtend s2 END; pop(2) *)
   BEGIN
-    self.s_pop (T_to_ST[t], T_to_ST[t], T_to_ST [t]);
+    self.s_pop (T_to_ST[Target.Integer.cg_type],
+                T_to_ST[Target.Integer.cg_type],
+                T_to_ST [t]);
     self.s_push (t);
     self.child.extract (t, sign);
   END extract;
@@ -1049,7 +1055,9 @@ PROCEDURE extract_n (self: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
   (* s1.t := Word.Extract(s1.t, s0.t, n);
      IF sign THEN SignExtend s1 END; pop(1) *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type],
+                T_to_ST [t]);
+    self.s_push (t);
     self.child.extract_n (t, sign, n);
   END extract_n;
 
@@ -1064,7 +1072,9 @@ PROCEDURE extract_mn (self: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
 PROCEDURE insert  (self: U;  t: IType) =
   (* s3.t := Word.Insert (s3.t, s2.t, s1.t, s0.t) ; pop(3) *)
   BEGIN
-    self.s_pop (T_to_ST[t], T_to_ST[t], T_to_ST[t], T_to_ST[t]);
+    self.s_pop (T_to_ST[Target.Integer.cg_type],
+                T_to_ST[Target.Integer.cg_type],
+                T_to_ST[t], T_to_ST[t]);
     self.s_push (t);
     self.child.insert (t);
   END insert;
@@ -1072,7 +1082,7 @@ PROCEDURE insert  (self: U;  t: IType) =
 PROCEDURE insert_n  (self: U;  t: IType;  n: INTEGER) =
   (* s2.t := Word.Insert (s2.t, s1.t, s0.t, n) ; pop(2) *)
   BEGIN
-    self.s_pop (T_to_ST[t], T_to_ST[t], T_to_ST[t]);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t], T_to_ST[t]);
     self.s_push (t);
     self.child.insert_n (t, n);
   END insert_n;
@@ -1080,7 +1090,8 @@ PROCEDURE insert_n  (self: U;  t: IType;  n: INTEGER) =
 PROCEDURE insert_mn  (self: U;  t: IType;  m, n: INTEGER) =
   (* s1.t := Word.Insert (s1.t, s0.t, m, n) ; pop(2) *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t]);
+    self.s_push (t);
     self.child.insert_mn (t, m, n);
   END insert_mn;
 

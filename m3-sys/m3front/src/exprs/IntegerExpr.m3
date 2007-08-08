@@ -8,11 +8,12 @@
 
 MODULE IntegerExpr;
 
-IMPORT M3, CG, Expr, ExprRep, Type, Int, Error, M3Buf, Target, TInt;
+IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Error, M3Buf, Target, TInt;
 
 TYPE
   P = Expr.T BRANDED "IntegerExpr.T" OBJECT
-        value: Target.Int;
+        pre : Precision;
+        val : Target.Int;
       OVERRIDES
         typeOf       := ExprRep.NoType;
         check        := ExprRep.NoCheck;
@@ -35,24 +36,27 @@ TYPE
         note_write   := ExprRep.NotWritable;
       END;
 
-VAR cache := ARRAY [-7 .. 64] OF P { NIL, .. };
+VAR cache: ARRAY Precision OF ARRAY [-7 .. 64] OF P;
 
 PROCEDURE New (READONLY value: Target.Int): Expr.T =
-  VAR p: P;  n: INTEGER;
+  VAR p: P;  n: INTEGER;  pre := TInt.Prec (value);
   BEGIN
     IF TInt.ToInt (value, n)
-      AND (FIRST (cache) <= n) AND (n <= LAST (cache)) THEN
-      p := cache[n];
+      AND (FIRST (cache[pre]) <= n) AND (n <= LAST (cache[pre])) THEN
+      p := cache[pre, n];
       IF (p # NIL) THEN RETURN p; END;
     END;
     p := NEW (P);
     ExprRep.Init (p);
-    p.value   := value;
-    p.type    := Int.T;
+    p.val := value;
+    CASE pre OF
+    | Precision.Integer => p.type := Int.T;
+    | Precision.Longint => p.type := LInt.T;
+    END;
     p.checked := TRUE;
     IF TInt.ToInt (value, n)
-      AND (FIRST (cache) <= n) AND (n <= LAST (cache)) THEN
-      cache[n] := p;
+      AND (FIRST (cache[pre]) <= n) AND (n <= LAST (cache[pre])) THEN
+      cache[pre][n] := p;
     END;
     RETURN p;
   END New;
@@ -61,20 +65,20 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(b) => RETURN TInt.EQ (a.value, b.value);
+    | P(b) => RETURN TInt.EQ (a.val, b.val);
     ELSE      RETURN FALSE;
     END;
   END EqCheck;
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    CG.Load_integer (p.value);
+    CG.Load_integer (p.val);
   END Compile;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
   BEGIN
-    min := p.value;
-    max := p.value;
+    min := p.val;
+    max := p.val;
   END Bounder;
 
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
@@ -119,7 +123,7 @@ PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, y, res: Target.Int;
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
-    IF TInt.EQ (y, TInt.Zero) THEN
+    IF TInt.EQ (y, TInt.Zero) OR TInt.EQ (y, TInt.ZeroL) THEN
       Error.Msg ("attempt to DIV by 0");
       RETURN FALSE;
     END;
@@ -132,7 +136,7 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, y, res: Target.Int;
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
-    IF TInt.EQ (y, TInt.Zero) THEN
+    IF TInt.EQ (y, TInt.Zero) OR TInt.EQ (y, TInt.ZeroL) THEN
       Error.Msg ("attempt to MOD by 0");
       RETURN FALSE;
     END;
@@ -146,7 +150,8 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
+    | P(p) => IF NOT (TInt.Subtract (TInt.Zero,  p.val, res)
+                  OR  TInt.Subtract (TInt.ZeroL, p.val, res)) THEN
                 RETURN FALSE;
               END;
               c := New (res);  RETURN TRUE;
@@ -158,12 +163,12 @@ PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int): BOOLEAN =
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => x := p.value;
+    | P(p) => x := p.val;
     ELSE      RETURN FALSE;
     END;
     TYPECASE b OF
     | NULL => RETURN FALSE;
-    | P(p) => y := p.value; RETURN TRUE;
+    | P(p) => y := p.val; RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END SplitPair;
@@ -172,20 +177,21 @@ PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(p) => value := p.value; RETURN TRUE;
+    | P(p) => value := p.val; RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Split;
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN TInt.EQ (p.value, TInt.Zero);
+    RETURN TInt.EQ (p.val, TInt.Zero) OR TInt.EQ (p.val, TInt.ZeroL);
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
+  CONST mark = ARRAY Precision OF TEXT { "INT<", "LONGINT<" };
   BEGIN
-    M3Buf.PutText (buf, "INT<");
-    M3Buf.PutIntt (buf, p.value);
+    M3Buf.PutText (buf, mark [p.pre]);
+    M3Buf.PutIntt (buf, p.val);
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
 
@@ -193,7 +199,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
   VAR info: Type.Info;
   BEGIN
     EVAL Type.CheckInfo (type, info);
-    CG.Init_int (offset, info.size, p.value, is_const);
+    CG.Init_int (offset, info.size, p.val, is_const);
   END GenLiteral;
 
 BEGIN

@@ -709,7 +709,7 @@ PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
     (*** CG.Check_byte_aligned (); ****)
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
     CG.Load_intt (depth);
-    CG.Store_int (sizes, M3RT.OA_size_0);
+    CG.Store_int (sizes, Target.Integer.cg_type, M3RT.OA_size_0);
         
     (* allocate the storage *)
     proc := RunTyme.LookUpProc (RunTyme.Hook.NewTracedArray);

@@ -322,7 +322,7 @@ PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
     array := OpenArrayType.DeclareTemp (p.tipe);
     CG.Store_addr (array, M3RT.OA_elt_ptr);
     CG.Load_intt (src_size DIV elt_info.size);
-    CG.Store_int (array, M3RT.OA_size_0);
+    CG.Store_int (array, Target.Integer.cg_type, M3RT.OA_size_0);
     RETURN array;
   END BuildArray;
 

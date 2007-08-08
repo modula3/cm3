@@ -247,7 +247,7 @@ REVEAL
 PROCEDURE GetEnumInfo (self: Enum;  VAR x: Info) RAISES {Error} =
   VAR n_elts := NUMBER (self.elements^);   max: Target.Int;  rep: EnumRep;
   BEGIN
-    IF NOT TInt.FromInt (n_elts-1, max) THEN
+    IF NOT TInt.FromInt (n_elts-1, Target.Pre.Integer, max) THEN
       Err ("enumeration type too large");
     END;
     rep := FindEnumRep (max);
@@ -288,7 +288,8 @@ PROCEDURE EnumBounds (self: Enum;  VAR min, max: Target.Int): BOOLEAN =
   VAR b: BOOLEAN;
   BEGIN
     min := TInt.Zero;
-    b := TInt.FromInt (NUMBER (self.elements^) - 1, max);  <*ASSERT b*>
+    b := TInt.FromInt (NUMBER (self.elements^) - 1, Target.Pre.Integer, max);
+    <*ASSERT b*>
     RETURN TRUE;
   END EnumBounds;
 
@@ -758,7 +759,9 @@ PROCEDURE SubrangeBounds (self: Subrange;  VAR min, max: Target.Int): BOOLEAN =
 (*------------------------------------------------------------- INTEGER ---*)
 
 TYPE
-  IntType = T BRANDED "M3Type.IntType" OBJECT OVERRIDES
+  IntType = T BRANDED "M3Type.IntType" OBJECT
+    prec: Target.Pre;
+  OVERRIDES
     get_info   := GetIntInfo;
     base       := SelfBase;
     is_ordinal := IsAlways;
@@ -913,7 +916,8 @@ PROCEDURE Err (msg: TEXT) RAISES {Error} =
 
 PROCEDURE InitBuiltins () =
   BEGIN
-    Integer  := NEW (IntType);
+    Integer  := NEW (IntType, prec := Target.Pre.Integer);
+    Longint  := NEW (IntType, prec := Target.Pre.Longint);
     Real     := NEW (FloatType, prec := Target.Precision.Short);
     LongReal := NEW (FloatType, prec := Target.Precision.Long);
     Extended := NEW (FloatType, prec := Target.Precision.Extended);

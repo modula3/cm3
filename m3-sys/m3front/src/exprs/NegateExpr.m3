@@ -8,7 +8,7 @@
 
 MODULE NegateExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Int, Reel, LReel, EReel;
+IMPORT CG, Expr, ExprRep, Type, Int, LInt, Reel, LReel, EReel;
 IMPORT IntegerExpr, ReelExpr;
 
 TYPE
@@ -56,7 +56,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   BEGIN
     Expr.TypeCheck (p.a, cs);
     t := Type.Base (Expr.TypeOf (p.a));
-    IF (t = Int.T) OR (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
+    IF (t = Int.T) OR (t = LInt.T)
+      OR (t = Reel.T) OR (t = LReel.T) OR (t = EReel.T) THEN
       (* ok *)
     ELSE
       t := Expr.BadOperands ("unary \'-\'", t);

@@ -9,10 +9,10 @@
 UNSAFE MODULE TFloat;
 
 IMPORT Convert, TInt, TargetMap;
-FROM Target IMPORT Int, Float, Precision;
+FROM Target IMPORT Int, Pre, Float, Precision;
 
 PROCEDURE New (READONLY chars: ARRAY OF CHAR;  pre: Precision;
-                                                       VAR f: Float): BOOLEAN =
+               VAR f: Float): BOOLEAN =
   VAR used: INTEGER;
   BEGIN
     f.pre      := pre;
@@ -116,47 +116,47 @@ PROCEDURE FloatI (READONLY iI: Int;  p: Precision;  VAR f: Float): BOOLEAN =
     RETURN Normalize (f);
   END FloatI;
 
-PROCEDURE Trunc (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE Trunc (READONLY a: Float;  VAR r: Int;  p: Pre): BOOLEAN =
   BEGIN
     IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (TRUNC (ToReal (a)), r);
+      RETURN TInt.FromInt (TRUNC (ToReal (a)), p, r);
     ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (TRUNC (ToLongreal (a)), r);
+      RETURN TInt.FromInt (TRUNC (ToLongreal (a)), p, r);
     ELSE
-      RETURN TInt.FromInt (TRUNC (ToExtended (a)), r);
+      RETURN TInt.FromInt (TRUNC (ToExtended (a)), p, r);
     END;
   END Trunc;
 
-PROCEDURE Round (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE Round (READONLY a: Float;  VAR r: Int;  p: Pre): BOOLEAN =
   BEGIN
     IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (ROUND (ToReal (a)), r);
+      RETURN TInt.FromInt (ROUND (ToReal (a)), p, r);
     ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (ROUND (ToLongreal (a)), r);
+      RETURN TInt.FromInt (ROUND (ToLongreal (a)), p, r);
     ELSE
-      RETURN TInt.FromInt (ROUND (ToExtended (a)), r);
+      RETURN TInt.FromInt (ROUND (ToExtended (a)), p, r);
     END;
   END Round;
 
-PROCEDURE Floor (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE Floor (READONLY a: Float;  VAR r: Int;  p: Pre): BOOLEAN =
   BEGIN
     IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (FLOOR (ToReal (a)), r);
+      RETURN TInt.FromInt (FLOOR (ToReal (a)), p, r);
     ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (FLOOR (ToLongreal (a)), r);
+      RETURN TInt.FromInt (FLOOR (ToLongreal (a)), p, r);
     ELSE
-      RETURN TInt.FromInt (FLOOR (ToExtended (a)), r);
+      RETURN TInt.FromInt (FLOOR (ToExtended (a)), p, r);
     END;
   END Floor;
 
-PROCEDURE Ceiling (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE Ceiling (READONLY a: Float;  VAR r: Int;  p: Pre): BOOLEAN =
   BEGIN
     IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (CEILING (ToReal (a)), r);
+      RETURN TInt.FromInt (CEILING (ToReal (a)), p, r);
     ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (CEILING (ToLongreal (a)), r);
+      RETURN TInt.FromInt (CEILING (ToLongreal (a)), p, r);
     ELSE
-      RETURN TInt.FromInt (CEILING (ToExtended (a)), r);
+      RETURN TInt.FromInt (CEILING (ToExtended (a)), p, r);
     END;
   END Ceiling;
 

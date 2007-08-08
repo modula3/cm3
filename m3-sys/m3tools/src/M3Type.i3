@@ -19,7 +19,7 @@ TYPE
     err_msg   : TEXT;     (* class = Unknown => possible error *)
   END;
 
-  Class = { Unknown, Integer, Real, Longreal, Extended,
+  Class = { Unknown, Integer, Longint, Real, Longreal, Extended,
             Array, Enum, Object, Opaque, OpenArray, Packed,
             Procedure, Record, Ref, Set, Subrange };
 
@@ -82,7 +82,7 @@ TYPE
   END;
 
 VAR(*READONLY*)  (* builtin types *)
-  Integer, Cardinal         : T;
+  Integer, Longint, Cardinal: T;
   Real, LongReal, Extended  : T;
   Root, UntracedRoot        : T;
   Refany, Address, Null     : T;

@@ -28,7 +28,7 @@ PROCEDURE Fold (<*UNUSED*> ce: CallExpr.T): Expr.T =
   BEGIN
     Scanner.Here (file, line);
     line := MAX (0,  line);
-    b := TInt.FromInt (line, val);  <*ASSERT b*>
+    b := TInt.FromInt (line, Target.Pre.Integer, val);  <*ASSERT b*>
     RETURN IntegerExpr.New (val);
   END Fold;
 

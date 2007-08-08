@@ -763,8 +763,7 @@ CONST (* whence *)
   L_INCR = 1;
   L_XTND = 2;
 
-<*EXTERNAL "m3_lseek"*>
- PROCEDURE lseek (d: int; offset: int; whence: int): int;
+<*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 (* ok *)
 
 (*** mkdir - make a directory file ***)
@@ -913,10 +912,8 @@ TYPE
 (* ok *)
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
-<*EXTERNAL "m3_truncate" *> 
-   PROCEDURE truncate (path: char_star; length: int): int;
-<*EXTERNAL "m3_ftruncate" *> 
-   PROCEDURE ftruncate (fd, length: int): int;
+<*EXTERNAL*> PROCEDURE truncate (path: char_star; length: off_t): int;
+<*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 (* ok *)
 
 (* not implemented 

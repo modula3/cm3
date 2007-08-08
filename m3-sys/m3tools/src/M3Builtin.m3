@@ -67,7 +67,7 @@ CONST
 PROCEDURE Eval (p: Proc;  READONLY args: ARRAY OF M3Const.T;
                 VAR(*OUT*) val: M3Const.T)
   RAISES {M3Const.Error} =
-  VAR n_args := NUMBER (args);  zero: Target.Float;
+  VAR n_args := NUMBER (args);  fzero: Target.Float;  izero: Target.Int;
   BEGIN
     MustBe (PDesc[p].is_const);
     IF (n_args < PDesc[p].min_args) OR (PDesc[p].max_args < n_args) THEN
@@ -80,19 +80,22 @@ PROCEDURE Eval (p: Proc;  READONLY args: ARRAY OF M3Const.T;
           IF z.class = M3Const.Class.Integer THEN
             val.class := z.class;
             val.type  := M3Type.Integer;
-            IF TInt.LT (z.int, TInt.Zero)
-              THEN MustBe (TInt.Subtract (TInt.Zero, z.int, val.int));
+            IF    (z.int.pre = Target.Pre.Integer) THEN izero := TInt.Zero;
+            ELSIF (z.int.pre = Target.Pre.Longint) THEN izero := TInt.ZeroL;
+            ELSE END;
+            IF TInt.LT (z.int, izero)
+              THEN MustBe (TInt.Subtract (izero, z.int, val.int));
               ELSE val.int := z.int;
             END;
           ELSIF z.class = M3Const.Class.Float THEN
-            IF    (z.float.pre = Target.Precision.Short) THEN zero := TFloat.ZeroR;
-            ELSIF (z.float.pre = Target.Precision.Long) THEN  zero := TFloat.ZeroL;
-            ELSE                                              zero := TFloat.ZeroX;
+            IF    (z.float.pre = Target.Precision.Short) THEN fzero := TFloat.ZeroR;
+            ELSIF (z.float.pre = Target.Precision.Long) THEN  fzero := TFloat.ZeroL;
+            ELSE                                              fzero := TFloat.ZeroX;
             END;
             val.class := z.class;
             val.type  := z.type;
-            IF TFloat.LT (z.float, zero)
-              THEN MustBe (TFloat.Subtract (zero, z.float, val.float));
+            IF TFloat.LT (z.float, fzero)
+              THEN MustBe (TFloat.Subtract (fzero, z.float, val.float));
               ELSE val.float := z.float;
             END;
           ELSE
@@ -111,7 +114,7 @@ PROCEDURE Eval (p: Proc;  READONLY args: ARRAY OF M3Const.T;
               val.type  := M3Type.Integer;
               val.class := M3Const.Class.Integer;
               MustBe (info.size >= 0);
-              MustBe (TInt.FromInt (info.size, val.int));
+              MustBe (TInt.FromInt (info.size, Target.Pre.Integer, val.int));
             END;
           ELSE
             NotImpl ("BYTESIZE(expr)");

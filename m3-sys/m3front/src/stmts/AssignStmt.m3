@@ -125,7 +125,7 @@ PROCEDURE CheckOrdinal (tlhs: Type.T;  rhs: Expr.T) =
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
       AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
-      (* non-overlappling, non-empty ranges *)
+      (* non-overlapping, non-empty ranges *)
       Error.Warn (2, "value not assignable (range fault)");
     END;
   END CheckOrdinal;
@@ -274,7 +274,8 @@ PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
     END;
 
     CASE t_info.class OF
-    | Type.Class.Integer, Type.Class.Subrange, Type.Class.Enum =>
+    | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
+      Type.Class.Enum =>
         AssignOrdinal (tlhs, rhs, lhs_info);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =>
         AssignFloat (rhs, lhs_info);
@@ -288,7 +289,8 @@ PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
         AssignRecord (tlhs, rhs, lhs_info);
     | Type.Class.Set =>
         AssignSet (tlhs, rhs, lhs_info);
-    ELSE <* ASSERT FALSE *>
+    | Type.Class.Error =>
+    ELSE <*ASSERT FALSE*>
     END;
   END DoEmit;
 
@@ -452,18 +454,18 @@ PROCEDURE GenOpenArraySizeChecks (READONLY lhs, rhs: CG.Val;
         CG.Push (rhs);
         CG.Open_size (n);
         CG.Load_integer (Type.Number (ilhs));
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       ELSIF (irhs # NIL) THEN
         CG.Push (lhs);
         CG.Open_size (n);
         CG.Load_integer (Type.Number (irhs));
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       ELSE (* both arrays are open *)
         CG.Push (lhs);
         CG.Open_size (n);
         CG.Push (rhs);
         CG.Open_size (n);
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       END;
       INC (n);
       tlhs := elhs;
@@ -502,7 +504,8 @@ PROCEDURE DoEmitCheck (tlhs: Type.T;  rhs: Expr.T) =
     tlhs := Type.CheckInfo (tlhs, lhs_info);
 
     CASE t_info.class OF
-    | Type.Class.Integer, Type.Class.Subrange, Type.Class.Enum =>
+    | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
+      Type.Class.Enum =>
         DoCheckOrdinal (tlhs, rhs);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =>
         DoCheckFloat (rhs);
@@ -619,7 +622,7 @@ PROCEDURE GenOpenArraySizeChk (READONLY rhs: CG.Val;  tlhs, trhs: Type.T) =
       CG.Push (rhs);
       CG.Open_size (n);
       CG.Load_integer (Type.Number (ilhs));
-      CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+      CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
 
       INC (n);
       tlhs := elhs;

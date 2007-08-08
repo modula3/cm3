@@ -60,8 +60,8 @@ PROCEDURE GenMap (<*UNUSED*> p: P; offset, size: INTEGER; refs_only: BOOLEAN) =
   BEGIN
     <*ASSERT size = Target.Integer.size*>
     IF    (refs_only)    THEN (* skip *)
-    ELSIF (IntBytes = 4) THEN TipeMap.Add (offset, TipeMap.Op.Int_4, 0);
     ELSIF (IntBytes = 8) THEN TipeMap.Add (offset, TipeMap.Op.Int_8, 0);
+    ELSIF (IntBytes = 4) THEN TipeMap.Add (offset, TipeMap.Op.Int_4, 0);
     ELSIF (IntBytes = 2) THEN TipeMap.Add (offset, TipeMap.Op.Int_2, 0);
     ELSIF (IntBytes = 1) THEN TipeMap.Add (offset, TipeMap.Op.Int_1, 0);
     ELSE  <*ASSERT FALSE *>

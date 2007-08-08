@@ -8,16 +8,15 @@
 
 MODULE ModExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Int, IntegerExpr, Target;
+IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, Target;
 IMPORT Reel, LReel, EReel, ReelExpr, DivExpr, TInt;
 
 TYPE
-  Class = { cINT, cREAL, cLONG, cEXTND, cERR };
+  Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cERR };
 
 CONST
-  CGType = ARRAY Class OF CG.Type {
-             CG.Type.Void,   CG.Type.Reel, CG.Type.LReel,
-             CG.Type.XReel,  CG.Type.Void };
+  CGType = ARRAY [Class.cREAL .. Class.cEXTND] OF CG.Type {
+             CG.Type.Reel, CG.Type.LReel, CG.Type.XReel};
 
 TYPE
   P = ExprRep.Tab BRANDED "ModExpr.P" OBJECT
@@ -68,6 +67,8 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (ta = Int.T)   AND (tb = Int.T)   THEN
       p.class := Class.cINT;
+    ELSIF (ta = LInt.T)  AND (tb = LInt.T)  THEN
+      p.class := Class.cLINT;
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)  THEN
       p.class := Class.cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T) THEN
@@ -85,7 +86,7 @@ PROCEDURE Prep (p: P) =
   BEGIN
     Expr.Prep (p.a);
     Expr.Prep (p.b);
-    IF (p.class # Class.cINT) THEN
+    IF (p.class # Class.cINT) AND (p.class # Class.cLINT) THEN
       (* floating point: x MOD y == x - y * FLOOR (x / y)  *)
       EVAL Type.CheckInfo (p.a.type, info);
       sz := info.size;
@@ -130,7 +131,7 @@ PROCEDURE Compile (p: P) =
           EVAL TInt.Subtract (divisor, TInt.One, mask);
           Expr.Compile (e1);
           CG.Load_integer (mask);
-          CG.And ();
+          CG.And (Target.Integer.cg_type);
         END;
       ELSE
         IF (e1 = NIL) THEN e1 := p.a; END;
@@ -138,6 +139,34 @@ PROCEDURE Compile (p: P) =
         Expr.Compile (e1);
         Expr.Compile (e2);
         CG.Mod (Target.Integer.cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+      END;
+    ELSIF (p.class = Class.cLINT) THEN
+      e1 := Expr.ConstValue (p.a);
+      e2 := Expr.ConstValue (p.b);
+      e3 := NIL;
+      IF (e1 # NIL) AND (e2 # NIL) AND IntegerExpr.Mod (e1, e2, e3) THEN
+        Expr.Compile (e3);
+      ELSIF (e2 # NIL)
+        AND IntegerExpr.Split (e2, divisor)
+        AND DivExpr.SmallPowerOfTwo (divisor, log) THEN
+        IF (e1 = NIL) THEN e1 := p.a; END;
+        IF (log = 0) THEN
+          (* mod 1 => zero *)
+          Expr.Compile (e1);
+          CG.Discard (Target.Longint.cg_type);
+          CG.Load_integer (TInt.ZeroL);
+        ELSE
+          EVAL TInt.Subtract (divisor, TInt.OneL, mask);
+          Expr.Compile (e1);
+          CG.Load_integer (mask);
+          CG.And (Target.Longint.cg_type);
+        END;
+      ELSE
+        IF (e1 = NIL) THEN e1 := p.a; END;
+        IF (e2 = NIL) THEN e2 := p.b; END;
+        Expr.Compile (e1);
+        Expr.Compile (e2);
+        CG.Mod (Target.Longint.cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
       END;
     ELSE
       (* floating point: x MOD y == x - y * FLOOR (x / y)  *)
@@ -149,7 +178,7 @@ PROCEDURE Compile (p: P) =
       CG.Load (p.tmp1, 0, sz, align, cg_type);
       CG.Load (p.tmp2, 0, sz, align, cg_type);
       CG.Divide (cg_type);
-      CG.Cvt_int (cg_type, CG.Cvt.Floor);
+      CG.Cvt_int (cg_type, Target.Integer.cg_type, CG.Cvt.Floor);
       CG.Cvt_float (Target.Integer.cg_type, cg_type);
       CG.Load (p.tmp2, 0, sz, align, cg_type);
       CG.Multiply (cg_type);
@@ -188,6 +217,16 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
         min := TInt.Zero;
         IF NOT TInt.Subtract (max_b, TInt.One, max) THEN
           max := Target.Integer.max;
+        END;
+      END;
+    ELSIF (p.class = Class.cLINT) THEN
+      Expr.GetBounds (p.b, min_b, max_b);
+      IF TInt.LT (min_b, TInt.ZeroL) OR TInt.LT (max_b, TInt.ZeroL) THEN
+        ExprRep.NoBounds (p, min, max);
+      ELSE
+        min := TInt.ZeroL;
+        IF NOT TInt.Subtract (max_b, TInt.OneL, max) THEN
+          max := Target.Longint.max;
         END;
       END;
     ELSE

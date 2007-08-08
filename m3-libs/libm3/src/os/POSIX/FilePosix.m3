@@ -100,9 +100,9 @@ PROCEDURE FileStatus(h: File.T): File.Status RAISES {OSError.E} =
     ELSE <* ASSERT FALSE *>
     END;
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    WITH size = Utypes.asLong(statBuf.st_size) DO
-      IF size < 0 THEN OSErrorPosix.Raise() END;
-      status.size := size;
+    WITH size = statBuf.st_size DO
+      IF size < VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
+      status.size := ORD(size);
     END;
     RETURN status
   END FileStatus;  
@@ -147,9 +147,9 @@ PROCEDURE RegularFileSeek(
     h: RegularFile.T; origin: RegularFile.Origin; offset: INTEGER)
   : INTEGER RAISES {OSError.E} =
   BEGIN
-    WITH result = Unix.lseek(h.fd, offset, ORD(origin)) DO
-      IF result < 0 THEN OSErrorPosix.Raise() END;
-      RETURN result
+    WITH result = Unix.lseek(h.fd, VAL(offset, Utypes.off_t), ORD(origin)) DO
+      IF result < VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
+      RETURN ORD(result)
     END
   END RegularFileSeek;
 

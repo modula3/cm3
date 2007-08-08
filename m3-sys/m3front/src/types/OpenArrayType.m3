@@ -209,8 +209,9 @@ PROCEDURE Reduce (t: Type.T): P =
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
-    IF    TInt.FromInt (Type.InitCost (p.element, zeroed), m)
-      AND TInt.FromInt (20, n) (* guess that there are 20 elements *)
+    IF    TInt.FromInt (Type.InitCost (p.element, zeroed), Target.Pre.Integer, m)
+      AND TInt.FromInt (20, Target.Pre.Integer, n)
+      (* guess that there are 20 elements *)
       AND TInt.Multiply (m, n, res)
       AND TInt.ToInt (res, x)
       THEN RETURN x;

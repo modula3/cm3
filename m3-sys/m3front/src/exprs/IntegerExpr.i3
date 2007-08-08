@@ -9,6 +9,8 @@ INTERFACE IntegerExpr;
 
 IMPORT Expr, Target;
 
+TYPE Precision = Target.Pre;
+
 PROCEDURE New  (READONLY value: Target.Int): Expr.T;
 
 PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN;

@@ -7,6 +7,7 @@ IMPORT Fmt, Rd, Stdio, Text, Thread, Word, Wr;
 IMPORT M3ID, M3CG, M3CG_Ops, M3CG_Binary;
 IMPORT Target, TargetMap, TInt, TFloat, TWord;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
+FROM TargetMap IMPORT Integer_types;
 
 TYPE
   Bop = M3CG_Binary.Op;
@@ -404,30 +405,31 @@ PROCEDURE Scan_Tint (VAR s: State): Target.Int =
     ok: BOOLEAN;
   BEGIN
     CASE i OF
-    | M3CG_Binary.Int1  =>  n_bytes := 0;  i := GetByte (s);
-    | M3CG_Binary.NInt1 =>  n_bytes := 0;  i := - GetByte (s);
+    | M3CG_Binary.Int1  =>  n_bytes := 1;  sign := +1;
+    | M3CG_Binary.NInt1 =>  n_bytes := 1;  sign := -1;
     | M3CG_Binary.Int2  =>  n_bytes := 2;  sign := +1;
     | M3CG_Binary.NInt2 =>  n_bytes := 2;  sign := -1;
     | M3CG_Binary.Int4  =>  n_bytes := 4;  sign := +1;
     | M3CG_Binary.NInt4 =>  n_bytes := 4;  sign := -1;
     | M3CG_Binary.Int8  =>  n_bytes := 8;  sign := +1;
     | M3CG_Binary.NInt8 =>  n_bytes := 8;  sign := -1;
-    ELSE                    n_bytes := 0;
+    ELSE
+      ok := TInt.FromInt (i, LAST(Target.Pre), val);
+      RETURN val;
     END;
 
-    IF (n_bytes = 0) THEN
-      ok := TInt.FromInt (i, val);
+    val := Target.Int{Target.IChunks{0,..}, LAST(Target.Pre)};  shift := 0;
+    FOR i := 0 TO n_bytes-1 DO
+      ok := TInt.FromInt (GetByte (s), LAST(Target.Pre), byte);
       <*ASSERT ok*>
-    ELSE
-      val := TInt.Zero;  shift := 0;
-      FOR i := 0 TO n_bytes-1 DO
-        ok := TInt.FromInt (GetByte (s), byte);  <*ASSERT ok*>
-        ok := TInt.FromInt (shift, tmp);  <*ASSERT ok*>
-        TWord.Shift (byte, tmp, byte);
-        TWord.Or (val, byte, val);
-        INC (shift, 8);
-      END;
-      IF (sign < 0) THEN TWord.Subtract (TInt.Zero, val, val); END;
+      ok := TInt.FromInt (shift, Target.Pre.Integer, tmp);  <*ASSERT ok*>
+      TWord.Shift (byte, tmp, byte);
+      TWord.Or (val, byte, val);
+      INC (shift, 8);
+    END;
+    IF (sign < 0) THEN
+      TWord.Subtract (Target.Int{Target.IChunks{0,..}, LAST(Target.Pre)},
+                      val, val);
     END;
 
     RETURN val;
@@ -606,7 +608,17 @@ PROCEDURE declare_subrange (VAR s: State) =
       max    := Scan_Tint (s);
       size   := Scan_int (s);
   BEGIN
-    s.cg.declare_subrange (type, domain, min, max, size);
+    FOR t := FIRST (Integer_types) TO LAST (Integer_types) DO
+      WITH z = Integer_types[t] DO
+        IF size <= z.size THEN
+          min.pre := z.min.pre;
+          max.pre := z.max.pre;
+          s.cg.declare_subrange (type, domain, min, max, size);
+          RETURN;
+        END;
+      END;
+    END;
+    <*ASSERT FALSE*>
   END declare_subrange;
 
 PROCEDURE declare_pointer (VAR s: State) =
@@ -848,7 +860,16 @@ PROCEDURE init_int (VAR s: State) =
       value  := Scan_Tint (s);
       type   := Scan_type (s);
   BEGIN
-    s.cg.init_int (offset, value, type);
+    FOR t := FIRST (Integer_types) TO LAST (Integer_types) DO
+      WITH z = Integer_types[t] DO
+        IF type = z.cg_type THEN
+          value.pre := z.min.pre;
+          s.cg.init_int (offset, value, type);
+          RETURN;
+        END;
+      END;
+    END;
+    <*ASSERT FALSE*>
   END init_int;
 
 PROCEDURE init_proc (VAR s: State) =
@@ -1099,7 +1120,16 @@ PROCEDURE load_integer  (VAR s: State) =
   VAR type  := Scan_type (s);
       value := Scan_Tint (s);
   BEGIN
-    s.cg.load_integer (type, value);
+    FOR t := FIRST (Integer_types) TO LAST (Integer_types) DO
+      WITH z = Integer_types[t] DO
+        IF type = z.cg_type THEN
+          value.pre := z.min.pre;
+          s.cg.load_integer (type, value);
+          RETURN;
+        END;
+      END;
+    END;
+    <*ASSERT FALSE*>
   END load_integer;
 
 PROCEDURE load_float    (VAR s: State) =
@@ -1521,7 +1551,16 @@ PROCEDURE check_lo (VAR s: State) =
       i    := Scan_Tint (s);
       code := Scan_error (s);
   BEGIN
-    s.cg.check_lo (type, i, code);
+    FOR t := FIRST (Integer_types) TO LAST (Integer_types) DO
+      WITH z = Integer_types[t] DO
+        IF type = z.cg_type THEN
+          i.pre := z.min.pre;
+          s.cg.check_lo (type, i, code);
+          RETURN;
+        END;
+      END;
+    END;
+    <*ASSERT FALSE*>
   END check_lo;
 
 PROCEDURE check_hi (VAR s: State) =
@@ -1529,7 +1568,16 @@ PROCEDURE check_hi (VAR s: State) =
       i    := Scan_Tint (s);
       code := Scan_error (s);
   BEGIN
-    s.cg.check_hi (type, i, code);
+    FOR t := FIRST (Integer_types) TO LAST (Integer_types) DO
+      WITH z = Integer_types[t] DO
+        IF type = z.cg_type THEN
+          i.pre := z.min.pre;
+          s.cg.check_hi (type, i, code);
+          RETURN;
+        END;
+      END;
+    END;
+    <*ASSERT FALSE*>
   END check_hi;
 
 PROCEDURE check_range (VAR s: State) =
@@ -1538,7 +1586,17 @@ PROCEDURE check_range (VAR s: State) =
       b    := Scan_Tint (s);
       code := Scan_error (s);
   BEGIN
-    s.cg.check_range (type, a, b, code);
+    FOR t := FIRST (Integer_types) TO LAST (Integer_types) DO
+      WITH z = Integer_types[t] DO
+        IF type <= z.cg_type THEN
+          a.pre := z.min.pre;
+          b.pre := z.max.pre;
+          s.cg.check_range (type, a, b, code);
+          RETURN;
+        END;
+      END;
+    END;
+    <*ASSERT FALSE*>
   END check_range;
 
 PROCEDURE check_index (VAR s: State) =

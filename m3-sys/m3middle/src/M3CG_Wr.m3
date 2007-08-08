@@ -279,7 +279,7 @@ PROCEDURE Int (u: U;  i: INTEGER) =
 
 PROCEDURE TInt (u: U;  READONLY i: Target.Int) =
   VAR
-    buf : ARRAY [0..Target.ChunkSize * NUMBER (Target.IChunks)] OF CHAR;
+    buf : TargetInt.CharArray;
     len := TargetInt.ToChars (i, buf);
   BEGIN
     OutC (u, ' ');

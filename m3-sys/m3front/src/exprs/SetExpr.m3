@@ -645,17 +645,19 @@ PROCEDURE EmitAssign (set: CG.Var;  index: INTEGER;
                       READONLY value: Target.Int) =
   BEGIN
     CG.Load_integer (value);
-    CG.Store_int (set, index * Grain);
+    CG.Store_int (set, Target.Integer.cg_type, index * Grain);
     <* ASSERT Grain = Target.Integer.size *>
   END EmitAssign;
 
 PROCEDURE GenElement (e: Expr.T;  READONLY min, max: Target.Int) =
+  VAR t := Type.Base (Expr.TypeOf (e));
   BEGIN
     CheckExpr.EmitChecks (e, min, max, CG.RuntimeError.ValueOutOfRange);
-    IF NOT TInt.EQ (min, TInt.Zero) THEN
+    IF NOT (TInt.EQ (min, TInt.Zero) OR TInt.EQ (max, TInt.ZeroL)) THEN
       CG.Load_integer (min);
-      CG.Subtract (Target.Integer.cg_type);
+      CG.Subtract (Type.CGType (t));
     END;
+    CG.Loophole (Type.CGType (t), Target.Integer.cg_type);
   END GenElement;
 
 PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
@@ -810,9 +812,9 @@ PROCEDURE Init () =
     Grain := MAX (Target.Integer.size, Target.Set_grain);
     TWord.Not (TInt.Zero, full);
     FOR i := 0 TO Grain - 1 DO
-      b := TInt.FromInt (i + 1 - Grain, s);  <*ASSERT b*>
+      b := TInt.FromInt (i + 1 - Grain, Target.Pre.Integer, s);  <*ASSERT b*>
       TWord.Shift (full, s, right [i]);
-      b := TInt.FromInt (i, s);  <*ASSERT b*>
+      b := TInt.FromInt (i, Target.Pre.Integer, s);  <*ASSERT b*>
       TWord.Shift (full, s, left [i]);
     END;
   END Init;
