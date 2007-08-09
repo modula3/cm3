@@ -235,7 +235,7 @@ m3_emit_char (c, stream, quoter)
 	  fputs_filtered ("\\r", stream);
 	  break;
 	default:
-	  fprintf_filtered (stream, "\\%.2X", (unsigned int) c);
+	  fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
 	  break;
 	}
     }
