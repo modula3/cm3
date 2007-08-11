@@ -5,4 +5,4 @@
 /* Last modified on Tue Feb 11 17:20:01 PST 1992 by muller                   */
 
 Module ("Word")
-Module ("Long")
+include_dir (OS_TYPE)
