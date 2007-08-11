@@ -8,7 +8,7 @@
 @rem
 
 for %%i in (ACTION ARGS BUILDGLOBAL BUILDLOCAL CLEANGLOBAL       ) do if defined %%i set %%i=
-for %%i in (CLEANLOCAL CM3 CM3BINSEARCHPATH CM3LIBSEARCHPATH     ) do if defined %%i set %%i=
+for %%i in (CLEANLOCAL CM3BINSEARCHPATH CM3LIBSEARCHPATH         ) do if defined %%i set %%i=
 for %%i in (CM3ROOT CM3VERSION EXE GCC_BACKEND GREP IGNORE_MISS  ) do if defined %%i set %%i=
 for %%i in (INSTALLROOT M3BUILD M3GDB M3OSTYPE M3SHIP PKG_ACTION ) do if defined %%i set %%i=
 for %%i in (PKGS PKGSDB REALCLEAN ROOT SCRIPTS SYSINFO_DONE      ) do if defined %%i set %%i=
