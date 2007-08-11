@@ -11,16 +11,16 @@
   Glassman, Mick Jordan, Bill Kalsow, and Greg Nelson.}
 
 \begin{quote}
-  \emph{ The language designer should be familiar with many alternative
+  \emph{The language designer should be familiar with many alternative
     features designed by others, and should have excellent judgment in
     choosing the best and rejecting any that are mutually inconsistent... One
     thing he should not do is to include untried ideas of his own.  His task is
-    consolidation, not innovation.  ---C.A.R.\ Hoare }
+    consolidation, not innovation.  ---C.A.R.\ Hoare}
 \end{quote}
 
 The original definition of Modula-3 was given in SRC Research Report 31,
-August 1988.  It was revised in report 52, November 1989.  And finally published
-in Systems Programming with Modula-3, November 1989.
+August 1988.  It was revised in report 52, November 1989.  And finally
+published in Systems Programming with Modula-3, November 1989.
 
 This edition of the language definition is derived from all of the above.  In
 the few places where it differs from the version published in Systems
@@ -32,10 +32,10 @@ Copyright (C) 1988 Digital Equipment Corporation, Ing.\ C.\ Olivetti and C.,
 SpA.
 
 This work may not be copied or reproduced in whole or in part except in
-accordance with this provision.  Permission to copy in whole or in part without
-payment of fee is granted only to licensees under (and is subject to the terms
-and conditions of) the Digital License Agreement for SRC Modula-3, as it
-appears, for example, on the Internet at the URL
+accordance with this provision.  Permission to copy in whole or in part
+without payment of fee is granted only to licensees under (and is subject to
+the terms and conditions of) the Digital License Agreement for SRC Modula-3,
+as it appears, for example, on the Internet at the URL
 \url{http://www.research.digital.com/SRC/m3sources/html/COPYRIGHT.html}.  All
 such whole or partial copies must include the following: a notice that such
 copying is by permission of the Systems Research Center of Digital Equipment
@@ -53,7 +53,6 @@ reserved.
     Generics, Threads, Safety, Garbage collection, Exceptions, Type System,
     Simplicity
   \end{itemize}
-
 \item 2.1 Definitions
 \item 2.2 Types
   \begin{itemize}
@@ -61,26 +60,22 @@ reserved.
     Sets, References, Procedures, Objects, Subtyping rules, Predeclared opaque
     types
   \end{itemize}
-
 \item 2.3 Statements
   \begin{itemize}
   \item Assignment, Procedure call, Eval, Block statement, Sequential
     composition, RAISE, TRY-EXCEPT, TRY-FINALLY, LOOP, EXIT, RETURN, IF,
     WHILE, REPEAT, WITH, FOR, CASE, TYPECASE, LOCK, INC \& DEC
   \end{itemize}
-
 \item 2.4 Declarations
   \begin{itemize}
   \item Types, Constants, Variables, Procedures, Exceptions, Opaque types,
     Revelations, Recursive declarations,
   \end{itemize}
-
 \item 2.5 Modules and interfaces
   \begin{itemize}
   \item Import statements, Interfaces, Modules, Example, Generics,
     Initialization, Safety
   \end{itemize}
-
 \item 2.6 Expressions
   \begin{itemize}
   \item Conventions, Operation syntax, Designators, Numeric literals, Text and
@@ -88,7 +83,6 @@ reserved.
     constructors, NEW, Arithmetic operations, Relations, Boolean operations,
     Type operations, Text operations, Constant expressions
   \end{itemize}
-
 \item 2.7 Unsafe operations
 \item 2.8 Syntax
   \begin{itemize}
@@ -96,7 +90,6 @@ reserved.
     Conventions, Compilation units, Statements, Types, Expressions,
     Miscellaneous, Tokens
   \end{itemize}
-
 \item About the authors
 \end{itemize}
 
@@ -114,7 +107,7 @@ Maurice Wilkes had the inspiration that sparked the project.
 Our technical starting point was Modula-2+, which was designed by Paul Rovner,
 Roy Levin, John Wick, Andrew Birrell, Butler Lampson, and Garret Swart.  We
 made good use of the ruthlessly complete description of Modula-2+ in
-Mary-Claire van Leunen's \emph{Modula-2+ User's Manual} .  The ideas in the
+Mary-Claire van Leunen's \emph{Modula-2+ User's Manual}.  The ideas in the
 ``+'' part of Modula-2+ were mostly derived from the Mesa and Cedar languages
 developed at Xerox PARC.
 
@@ -123,9 +116,9 @@ also reviewed the evolving design and made many valuable suggestions---not one
 of which was a suggested addition.  Indeed, he inspired us with the courage to
 pull out a number of deep-rooted weeds.
 
-SRC Modula-3 was implemented by Bill Kalsow and Eric Muller.  Olivetti Modula-3
-was implemented by Mick Jordan, Trevor Morris, David Chase, Steve Glassman,
-and Marion Sturtevant.
+SRC Modula-3 was implemented by Bill Kalsow and Eric Muller.  Olivetti
+Modula-3 was implemented by Mick Jordan, Trevor Morris, David Chase, Steve
+Glassman, and Marion Sturtevant.
 
 The language and book were greatly improved by the helpful feedback from Bob
 Ayers, Andrew Black, Regis Crelier, Dan Craft, Hans Eberle, John Ellis, Stu
@@ -150,9 +143,8 @@ and Bob Taylor and Sam Fuller in particular.
 \subsubsection*{1.1 History}
 
 On November 6th, 1986, Maurice Wilkes wrote to Niklaus Wirth proposing that
-the Modula-2+ language be revised and standardized as a successor to
-Modula-2.  Wirth gave this project his blessing, and the Modula-3 committee was
-born.
+the Modula-2+ language be revised and standardized as a successor to Modula-2.
+Wirth gave this project his blessing, and the Modula-3 committee was born.
 
 At the first meeting, the committee unanimously agreed to be true to the
 spirit of Modula-2 by selecting simple, safe, proven features rather than
@@ -162,9 +154,8 @@ to achieve when we got to the details.
 Modula-3 supports interfaces, objects, generics, lightweight threads of
 control, the isolation of unsafe code, garbage collection, exceptions, and
 subtyping.  Some of the more problematical features of Modula-2 have been
-removed, like variant records and the built-in unsigned numeric data
-type.  Modula-3 is substantially simpler than other languages with comparable
-power.
+removed, like variant records and the built-in unsigned numeric data type.
+Modula-3 is substantially simpler than other languages with comparable power.
 
 Modula-3 is closely based on Modula-2+, which was designed at the Digital
 Equipment Corporation Systems Research Center and used to build the Topaz
@@ -184,26 +175,24 @@ configuration files for DEC, IBM, HP, and Sun workstations.
 
 Most systems programming today is done in the BCPL family of languages, which
 includes B, Bliss, and C.  The beauty of these languages is the modest cost
-with which they were able to take a great leap forward from assembly
-language.  To fully appreciate them, you must consider the engineering
-constraints of machines in the 1960s.  What language designed in the 1980s has
-a compiler that fits into four thousand 18-bit words, like Ken Thompson's B
-compiler for the PDP-7? The most successful of these languages was C, which by
-the early 1970s had almost completely displaced assembly language in the Unix
-system.
+with which they were able to take a great leap forward from assembly language.
+To fully appreciate them, you must consider the engineering constraints of
+machines in the 1960s.  What language designed in the 1980s has a compiler
+that fits into four thousand 18-bit words, like Ken Thompson's B compiler for
+the PDP-7? The most successful of these languages was C, which by the early
+1970s had almost completely displaced assembly language in the Unix system.
 
 The BCPL-like languages are easy to implement efficiently for the same reason
 they are attractive to skeptical assembly language programmers: they present a
-programming model that is close to the target machine.  Pointers are identified
-with arrays, and address arithmetic is ubiquitous.  Unfortunately, this
-low-level programming model is inherently dangerous.  Many errors are as
+programming model that is close to the target machine.  Pointers are
+identified with arrays, and address arithmetic is ubiquitous.  Unfortunately,
+this low-level programming model is inherently dangerous.  Many errors are as
 disastrous as they would be in machine language.  The type system is scanty,
 and reveals enough quirks of the target machine that even experienced and
-disciplined programmers sometimes write unportable code simply by
-accident.  The most modern language in this family, C++, has enriched C by
-adding objects; but it has also given up C's best
-virtue---simplicity---without relieving C's worst drawback---its low-level
-programming model.
+disciplined programmers sometimes write unportable code simply by accident.
+The most modern language in this family, C++, has enriched C by adding
+objects; but it has also given up C's best virtue---simplicity---without
+relieving C's worst drawback---its low-level programming model.
 
 At the other extreme are languages like Lisp, ML, Smalltalk, and CLU, whose
 programming models originate from mathematics.  Lisp is the hybrid of the
@@ -228,11 +217,11 @@ solutions.
 Between the extremes of BCPL and Lisp is the Algol family of languages, whose
 modern representatives include Pascal, Ada, Modula-2, and Modula-3.  These
 languages have programming models that reflect the engineering constraints of
-random-access machines but conceal the details of any particular machine.  They
-give up the beauty and mathematical symmetry of the Lisp family in order to
-make efficient implementations possible without special tricks; they also have
-strong type systems that avoid most of the dangerous and machine-dependent
-features of the BCPL family.
+random-access machines but conceal the details of any particular machine.
+They give up the beauty and mathematical symmetry of the Lisp family in order
+to make efficient implementations possible without special tricks; they also
+have strong type systems that avoid most of the dangerous and
+machine-dependent features of the BCPL family.
 
 In the 1960s, the trend in the Algol family was toward features for control
 flow and data structuring.  In the 1970s, the trend was toward
@@ -243,10 +232,10 @@ Modula-3, Oberon, and Cedar, to name three languages that have floated
 portable implementations in the last few years.
 
 Modula-3, Oberon, and Cedar all provide garbage collection, previously viewed
-as a luxury available only in the closed runtime systems of the Lisp
-family.  But the world is starting to understand that garbage collection is the
-only way to achieve an adequate level of safety, and that modern garbage
-collectors can work in open runtime environments.
+as a luxury available only in the closed runtime systems of the Lisp family.
+But the world is starting to understand that garbage collection is the only
+way to achieve an adequate level of safety, and that modern garbage collectors
+can work in open runtime environments.
 
 At the same time, these three languages allow a small set of unsafe,
 machine-dependent operations of the sort usually associated with the BCPL
@@ -259,7 +248,7 @@ device drivers.
 \subsubsection*{1.3 Overview}
 
 [ This section discusses the organization of the entire book, \emph{Systems
-  Programming with Modula-3} .  It doesn't seem worth including this material
+  Programming with Modula-3}.  It doesn't seem worth including this material
 in the on-line version. ]
 
 \subsubsection*{1.4 Features}
@@ -284,9 +273,9 @@ about large systems without holding the whole system in your head at once.
 Programmers who have never used Modula-style interfaces tend to underestimate
 them, observing, for example, that anything that can be done with interfaces
 can also be done with C-style include files.  This misses the point: many
-things can be done with include files that cannot be done with interfaces.  For
-example, the meaning of an include file can be changed by defining macros in
-the environment into which it is included.  Include files tempt programmers
+things can be done with include files that cannot be done with interfaces.
+For example, the meaning of an include file can be changed by defining macros
+in the environment into which it is included.  Include files tempt programmers
 into shortcuts across abstraction boundaries.  To keep large programs well
 structured, you either need super-human will power, or proper language support
 for interfaces.
@@ -295,13 +284,13 @@ for interfaces.
 
 The better we understand our programs, the bigger the building blocks we use
 to structure them.  After the instruction came the statement, after the
-statement came the procedure, after the procedure came the interface.  The next
-step seems to be the \emph{abstract type} .
+statement came the procedure, after the procedure came the interface.  The
+next step seems to be the \emph{abstract type}.
 
 At the theoretical level, an abstract type is a type defined by the
-specifications of its operations instead of by the representation of its
-data.  As realized in modern programming languages, a value of an abstract type
-is represented by an ``object'' whose operations are implemented by a suite of
+specifications of its operations instead of by the representation of its data.
+As realized in modern programming languages, a value of an abstract type is
+represented by an ``object'' whose operations are implemented by a suite of
 procedure values called the object's ``methods''.  A new object type can be
 defined as a \emph{subtype} of an existing type, in which case the new type
 has all the methods of the old type, and possibly new ones as well
@@ -314,10 +303,10 @@ are always references, they have both data fields and methods, and they have
 single inheritance but not multiple inheritance.
 
 Small examples are often used to get across the basic idea: truck as a subtype
-of vehicle; rectangle as a subtype of polygon.  Modula-3 aims at larger systems
-that illustrate how object types provide structure for large programs.  In
-Modula-3 the main design effort is concentrated into specifying the properties
-of a single abstract type---a stream of characters, a window on the
+of vehicle; rectangle as a subtype of polygon.  Modula-3 aims at larger
+systems that illustrate how object types provide structure for large programs.
+In Modula-3 the main design effort is concentrated into specifying the
+properties of a single abstract type---a stream of characters, a window on the
 screen.  Then dozens of interfaces and modules are coded that provide useful
 subtypes of the central abstraction.  The abstract type provides the blueprint
 for a whole family of interfaces and modules.  If the central abstraction is
@@ -325,7 +314,7 @@ well-designed then useful subtypes can be produced easily, and the original
 design cost will be repaid with interest.
 
 The combination of object types with Modula-2 opaque types produces something
-new: the \emph{partially opaque type} , where some of an object's fields are
+new: the \emph{partially opaque type}, where some of an object's fields are
 visible in a scope and others are hidden.  Because the committee had no
 experience with partially opaque types, the first version of Modula-3
 restricted them severely; but after a year of experience it was clear that
@@ -339,8 +328,8 @@ subtypes; however it is through subtyping that object-oriented techniques
 offer the most leverage.  The approach works badly when subtyping is needed:
 either you allocate the data records for the different parts of the object
 individually (which is expensive and notationally cumbersome) or you must rely
-on unchecked type transfers, which is unsafe.  Whichever approach is taken, the
-subtype relations are all in the programmer's head: only with an
+on unchecked type transfers, which is unsafe.  Whichever approach is taken,
+the subtype relations are all in the programmer's head: only with an
 object-oriented language is it possible to get object-oriented static
 typechecking.
 
@@ -374,14 +363,14 @@ fundamental method of separating concerns.  For example, suppose you are
 programming a terminal emulator with a blinking cursor: the most satisfactory
 way to separate the cursor blinking code from the rest of the program is to
 make it a separate thread.  Or suppose you are augmenting a program with a new
-module that communicates over a buffered channel.  Without threads, the rest of
-the program will be blocked whenever the new module blocks on its buffer, and
-conversely, the new module will be unable to service the buffer whenever any
-other part of the program blocks.  If this is unacceptable (as it almost always
-is) there is no way to add the new module without finding and modifying every
-statement of the program that might block.  These modifications destroy the
-structure of the program by introducing undesirable dependencies between what
-would otherwise be independent modules.
+module that communicates over a buffered channel.  Without threads, the rest
+of the program will be blocked whenever the new module blocks on its buffer,
+and conversely, the new module will be unable to service the buffer whenever
+any other part of the program blocks.  If this is unacceptable (as it almost
+always is) there is no way to add the new module without finding and modifying
+every statement of the program that might block.  These modifications destroy
+the structure of the program by introducing undesirable dependencies between
+what would otherwise be independent modules.
 
 The provisions for threads in Modula-2 are weak, amounting essentially to
 coroutines.  Hoare's monitors [Hoare] are a sounder basis for concurrent
@@ -394,14 +383,14 @@ introduced the Broadcast primitive as a convenience [Lampson].  The Mesa
 primitives were simplified in the Modula-2+ design, and the result was
 successful enough to be incorporated with no substantial changes in Modula-3.
 
-A threads package is a tool with a very sharp edge.  A common programming error
-is to access a shared variable without obtaining the necessary lock.  This
-introduces a race condition that can lie dormant throughout testing and strike
-after the program is shipped.  Theoretical work on process algebra has raised
-hopes that the rendezvous model of concurrency may be safer than the shared
-memory model, but the experience with Ada, which adopted the rendezvous, lends
-at best equivocal support for this hope---Ada still allows shared variables,
-and apparently they are widely used.
+A threads package is a tool with a very sharp edge.  A common programming
+error is to access a shared variable without obtaining the necessary lock.
+This introduces a race condition that can lie dormant throughout testing and
+strike after the program is shipped.  Theoretical work on process algebra has
+raised hopes that the rendezvous model of concurrency may be safer than the
+shared memory model, but the experience with Ada, which adopted the
+rendezvous, lends at best equivocal support for this hope---Ada still allows
+shared variables, and apparently they are widely used.
 
 \paragraph{1.4.5 Safety}
 
@@ -409,10 +398,10 @@ A language feature is \emph{unsafe} if its misuse can corrupt the runtime
 system so that further execution of the program is not faithful to the
 language semantics.  An example of an unsafe feature is array assignment
 without bounds checking: if the index is out of bounds, then an arbitrary
-location can be clobbered and the address space can become fatally
-corrupted.  An error in a safe program can cause the computation to abort with
-a run-time error message or to give the wrong answer, but it can't cause the
-computation to crash in a rubble of bits.
+location can be clobbered and the address space can become fatally corrupted.
+An error in a safe program can cause the computation to abort with a run-time
+error message or to give the wrong answer, but it can't cause the computation
+to crash in a rubble of bits.
 
 Safe programs can share the same address space, each safe from corruption by
 errors in the others.  To get similar protection for unsafe programs requires
@@ -423,16 +412,16 @@ safety becomes more and more important.
 Unfortunately, it is generally impossible to program the lowest levels of a
 system with complete safety.  Neither the compiler nor the runtime system can
 check the validity of a bus address for an I/O controller, nor can they limit
-the ensuing havoc if it is invalid.  This presents the language designer with a
-dilemma.  If he holds out for safety, then low level code will have to be
+the ensuing havoc if it is invalid.  This presents the language designer with
+a dilemma.  If he holds out for safety, then low level code will have to be
 programmed in another language.  But if he adopts unsafe features, then his
 safety guarantee becomes void everywhere.
 
 The languages of the BCPL family are full of unsafe features; the languages of
 the Lisp family generally have none (or none that are documented).  In this
 area Modula-3 follows the lead of Cedar by adopting a small number of unsafe
-features that are allowed only in modules explicitly labeled unsafe.  In a safe
-module, the compiler prevents any errors that could corrupt the runtime
+features that are allowed only in modules explicitly labeled unsafe.  In a
+safe module, the compiler prevents any errors that could corrupt the runtime
 system; in an unsafe module, it is the programmer's responsibility to avoid
 them.
 
@@ -452,9 +441,9 @@ Modula-3 therefore provides ``traced references'', which are like Modula-2
 pointers except that the storage they point to is kept in the ``traced heap''
 where it will be freed automatically when all references to it are gone.
 
-Another great benefit of garbage collection is that it simplifies
-interfaces.  Without garbage collection, an interface must specify whether the
-client or the implementation has the responsibility for freeing each allocated
+Another great benefit of garbage collection is that it simplifies interfaces.
+Without garbage collection, an interface must specify whether the client or
+the implementation has the responsibility for freeing each allocated
 reference, and the conditions under which it is safe to do so.  This can swamp
 the interface in complexity.  For example, Modula-3 supports text strings by a
 simple required interface Text, rather than with a built-in type.  Without
@@ -467,8 +456,8 @@ storage leaks and dangling pointers makes garbage collection a bargain, but
 the lowest levels of a system may not be able to afford it.  For example, in
 SRC's Topaz system, the part of the operating system that manages files and
 heavy-weight processes relies on garbage collection, but the inner ``nub''
-that implements virtual memory and thread context switching does
-not.  Essentially all Topaz application programs rely on garbage collection.
+that implements virtual memory and thread context switching does not.
+Essentially all Topaz application programs rely on garbage collection.
 
 For programs that cannot afford garbage collection, Modula-3 provides a set of
 reference types that are not traced by the garbage collector.  In most other
@@ -476,8 +465,8 @@ respects, traced and untraced references behave identically.
 
 \paragraph{1.4.7 Exceptions}
 
-An exception is a control construct that exits many scopes at once.  Raising an
-exception exits active scopes repeatedly until a handler is found for the
+An exception is a control construct that exits many scopes at once.  Raising
+an exception exits active scopes repeatedly until a handler is found for the
 exception, and transfers control to the handler.  If there is no handler, the
 computation terminates in some system-dependent way---for example, by entering
 the debugger.
@@ -491,27 +480,28 @@ error must return an additional code to the caller to identify whether an
 error has occurred.  This can be clumsy, and has the practical drawback that
 even careful programmers may inadvertently omit the test for the error return
 code.  The frequency with which returned error codes are ignored has become
-something of a standing joke in the Unix/C world.  Raising an exception is more
-robust, since it stops the program unless there is an explicit handler for it.
+something of a standing joke in the Unix/C world.  Raising an exception is
+more robust, since it stops the program unless there is an explicit handler
+for it.
 
 \paragraph{1.4.8 Type system}
 
 Like all languages in the Algol family, Modula-3 is strongly typed.  The basic
 idea of strong typing is to partition the value space into types, restrict
 variables to hold values of a single type, and restrict operations to apply to
-operands of fixed types.  In actuality, strong typing is rarely so simple.  For
-example, each of the following complications is present in at least one
+operands of fixed types.  In actuality, strong typing is rarely so simple.
+For example, each of the following complications is present in at least one
 language of the Algol family: a variable of type [0..9] may be safely assigned
 to an INTEGER, but not vice-versa (subtyping).  Operations like absolute value
 may apply both to REALs and to INTEGERs instead of to a single type
-(overloading).  The types of literals (for example, NIL) can be ambiguous.  The
-type of an expression may be determined by how it is used
-(target-typing).  Type mismatches may cause automatic conversions instead of
-errors (as when a fractional real is rounded upon assignment to an integer).
+(overloading).  The types of literals (for example, NIL) can be ambiguous.
+The type of an expression may be determined by how it is used (target-typing).
+Type mismatches may cause automatic conversions instead of errors (as when a
+fractional real is rounded upon assignment to an integer).
 
 We adopted several principles in order to make Modula-3's type system as
-uniform as possible.  First, there are no ambiguous types or target-typing: the
-type of every expression is determined by its subexpressions, not by its
+uniform as possible.  First, there are no ambiguous types or target-typing:
+the type of every expression is determined by its subexpressions, not by its
 use.  Second, there are no automatic conversions.  In some cases the
 \emph{representation} of a value changes when it is assigned (for example,
 when assigning to a packed field of a record type) but the abstract value
@@ -525,50 +515,51 @@ defining the type compatibility rules for conventional types.
 In the early days of the Ada project, a general in the Ada Program Office
 opined that ``obviously the Department of Defense is not interested in an
 artificially simplified language such as Pascal''.  Modula-3 represents the
-opposite point of view.  We used every artifice that we could find or invent to
-make the language simple.
+opposite point of view.  We used every artifice that we could find or invent
+to make the language simple.
 
 C.A.R.\ Hoare has suggested that as a rule of thumb a language is too
-complicated if it can't be described precisely and readably in fifty
-pages.  The Modula-3 committee elevated this to a design principle: we gave
-ourselves a ``complexity budget'' of fifty pages, and chose the most useful
-features that we could accommodate within this budget.  In the end, we were
-over budget by six lines plus the syntax equations.  This policy is a bit
-arbitrary, but there are so many good ideas in programming language design
-that some kind of arbitrary budget seems necessary to keep a language from
-getting too complicated.
+complicated if it can't be described precisely and readably in fifty pages.
+The Modula-3 committee elevated this to a design principle: we gave ourselves
+a ``complexity budget'' of fifty pages, and chose the most useful features
+that we could accommodate within this budget.  In the end, we were over budget
+by six lines plus the syntax equations.  This policy is a bit arbitrary, but
+there are so many good ideas in programming language design that some kind of
+arbitrary budget seems necessary to keep a language from getting too
+complicated.
 
 In retrospect, the features that made the cut were directed toward two main
-goals.  Interfaces, objects, generics, and threads provide fundamental patterns
-of abstraction that help to structure large programs.  The isolation of unsafe
-code, garbage collection, and exceptions help make programs safer and more
-robust.  Of the techniques that we used to keep the language internally
-consistent, the most important was the definition of a clean type system based
-on a subtype relation.  There is no special novelty in any one of these
-features individually, but there is simplicity and power in their combination.
+goals.  Interfaces, objects, generics, and threads provide fundamental
+patterns of abstraction that help to structure large programs.  The isolation
+of unsafe code, garbage collection, and exceptions help make programs safer
+and more robust.  Of the techniques that we used to keep the language
+internally consistent, the most important was the definition of a clean type
+system based on a subtype relation.  There is no special novelty in any one of
+these features individually, but there is simplicity and power in their
+combination.
 
 \subsection*{2.1 Definitions}
 
 A Modula-3 program specifies a computation that acts on a sequence of digital
-components called \emph{locations} .  A \emph{variable} is a set of locations
+components called \emph{locations}.  A \emph{variable} is a set of locations
 that represents a mathematical value according to a convention determined by
-the variable's \emph{type} .  If a value can be represented by some variable of
+the variable's \emph{type}.  If a value can be represented by some variable of
 type T, then we say that the value is a \emph{member} of T and T
 \emph{contains} the value.
 
 An \emph{identifier} is a symbol declared as a name for a variable, type,
 procedure, etc.  The region of the program over which a declaration applies is
-called the \emph{scope} of the declaration.  Scopes can be nested.  The meaning
-of an identifier is determined by the smallest enclosing scope in which the
-identifier is declared.
+called the \emph{scope} of the declaration.  Scopes can be nested.  The
+meaning of an identifier is determined by the smallest enclosing scope in
+which the identifier is declared.
 
 An \emph{expression} specifies a computation that produces a value or
-variable.  Expressions that produce variables are called \emph{designators} .  A
-designator can denote either a variable or the value of that variable,
-depending on the context.  Some designators are \emph{readonly} , which means
+variable.  Expressions that produce variables are called \emph{designators}.
+A designator can denote either a variable or the value of that variable,
+depending on the context.  Some designators are \emph{readonly}, which means
 that they cannot be used in contexts that might change the value of the
-variable.  A designator that is not readonly is called \emph{writable}
-.  Expressions whose values can be determined statically are called
+variable.  A designator that is not readonly is called \emph{writable}.
+Expressions whose values can be determined statically are called
 \emph{constant expressions} ; they are never designators.
 
 A \emph{static error} is an error that the implementation must detect before
@@ -599,8 +590,8 @@ types, the expansion is the infinite limit of the partial expansions.  A type
 expression is generally allowed wherever a type is required.
 
 A type is \emph{empty} if it contains no values.  For example, [1..0] is an
-empty type.  Empty types can be used to build non-empty types (for example, SET
-OF [1..0], which is not empty because it contains the empty set).  It is a
+empty type.  Empty types can be used to build non-empty types (for example,
+SET OF [1..0], which is not empty because it contains the empty set).  It is a
 static error to declare a variable of an empty type.
 
 Every expression has a statically-determined type, which contains every value
@@ -609,14 +600,14 @@ variable it produces.
 
 Assignability and type compatibility are defined in terms of a single
 syntactically specified subtype relation with the property that if T is a
-subtype of U, then every member of T is a member of U.  The subtype relation is
-reflexive and transitive.
+subtype of U, then every member of T is a member of U.  The subtype relation
+is reflexive and transitive.
 
-Every expression has a unique type, but a value can be a member of many
-types.  For example, the value 6 is a member of both [0..9] and INTEGER.  It
-would be ambiguous to talk about ``the type of a value''.  Thus the phrase
-``type of x'' means ``type of the expression x'', while ``x is a member of T''
-means ``the value of x is a member of T''.
+Every expression has a unique type, but a value can be a member of many types.
+For example, the value 6 is a member of both [0..9] and INTEGER.  It would be
+ambiguous to talk about ``the type of a value''.  Thus the phrase ``type of
+x'' means ``type of the expression x'', while ``x is a member of T'' means
+``the value of x is a member of T''.
 
 However, there is one sense in which a value can be said to have a type: every
 object or traced reference value includes a code for a type, called the
@@ -625,8 +616,8 @@ TYPECASE.
 
 \subsubsection*{2.2.1 Ordinal types}
 
-There are three kinds of ordinal types: enumerations, subranges, and
-INTEGER.  An enumeration type is declared like this:
+There are three kinds of ordinal types: enumerations, subranges, and INTEGER.
+An enumeration type is declared like this:
 \begin{verbatim}
     TYPE T = {id_1, id_2, ..., id_n}
 \end{verbatim}
@@ -635,7 +626,7 @@ values; the expression T.id\_i denotes the i'th value of the type in
 increasing order.  The empty enumeration \{ \} is allowed.
 
 Integers and enumeration elements are collectively called \emph{ordinal
-  values} .  The \emph{base type} of an ordinal value v is INTEGER if v is an
+  values}.  The \emph{base type} of an ordinal value v is INTEGER if v is an
 integer, otherwise it is the unique enumeration type that contains v.
 
 A subrange type is declared like this:
@@ -691,10 +682,10 @@ specified by required interfaces.
 
 An \emph{array} is an indexed collection of component variables, called the
 \emph{elements} of the array.  The indexes are the values of an ordinal type,
-called the \emph{index type} of the array.  The elements all have the same size
-and the same type, called the \emph{element type} of the array.
+called the \emph{index type} of the array.  The elements all have the same
+size and the same type, called the \emph{element type} of the array.
 
-There are two kinds of array types, \emph{fixed} and \emph{open} .  The length
+There are two kinds of array types, \emph{fixed} and \emph{open}.  The length
 of a fixed array is determined at compile time.  The length of an open array
 type is determined at runtime, when it is allocated or bound.  The length
 cannot be changed thereafter.
@@ -777,18 +768,19 @@ where FieldList is a list of field declarations, each of which has the form:
     fieldName: Type := default
 \end{verbatim}
 where fieldName is an identifier, Type is any non-empty type other than an
-open array type, and default is a constant expression.  The field names must be
-distinct.  A record is a member of T if it has fields with the given names and
-types, in the given order, and no other fields.  Empty records are allowed.
+open array type, and default is a constant expression.  The field names must
+be distinct.  A record is a member of T if it has fields with the given names
+and types, in the given order, and no other fields.  Empty records are
+allowed.
 
 The constant default is a default value used when a record is constructed or
-allocated.  Either ``:= default'' or ``: Type'' can be omitted, but not
-both.  If Type is omitted, it is taken to be the type of default.  If both are
+allocated.  Either ``:= default'' or ``: Type'' can be omitted, but not both.
+If Type is omitted, it is taken to be the type of default.  If both are
 present, the value of default must be a member of Type.
 
 When a series of fields shares the same type and default, any fieldName can be
-a list of identifiers separated by commas.  Such a list is shorthand for a list
-in which the type and default are repeated for each identifier.  That is:
+a list of identifiers separated by commas.  Such a list is shorthand for a
+list in which the type and default are repeated for each identifier.  That is:
 \begin{verbatim}
     f_1, ..., f_m: Type := default
 \end{verbatim}
@@ -847,8 +839,8 @@ type declaration has the form:
     TYPE T = SET OF Base
 \end{verbatim}
 where Base is an ordinal type.  The values of T are all sets whose elements
-have type Base.  For example, a variable whose type is SET OF [0..1] can assume
-the following values:
+have type Base.  For example, a variable whose type is SET OF [0..1] can
+assume the following values:
 \begin{verbatim}
     {}     {0}     {1}     {0,1}
 \end{verbatim}
@@ -862,11 +854,11 @@ for an ARRAY T OF BITS 1 FOR BOOLEAN.  Hence, programmers should expect SET OF
 A \emph{reference} value is either NIL or the address of a variable, called
 the referent.
 
-A reference type is either \emph{traced} or \emph{untraced} .  When all traced
+A reference type is either \emph{traced} or \emph{untraced}.  When all traced
 references to a piece of allocated storage are gone, the implementation
 reclaims the storage.  Two reference types are of the same \emph{reference
-  class} if they are both traced or both untraced.  A general type is traced if
-it is a traced reference type, a record type any of whose field types is
+  class} if they are both traced or both untraced.  A general type is traced
+if it is a traced reference type, a record type any of whose field types is
 traced, an array type whose element type is traced, or a packed type whose
 underlying unpacked type is traced.
 
@@ -886,9 +878,9 @@ modules.) The values of T are the untraced references to variables of type
 Type.
 
 In both the traced and untraced cases, the keyword REF can optionally be
-preceded by ``BRANDED b'' where b is a text constant called the \emph{brand}
-.  Brands distinguish types that would otherwise be the same; they have no
-other semantic effect.  All brands in a program must be distinct.  If BRANDED is
+preceded by ``BRANDED b'' where b is a text constant called the \emph{brand}.
+Brands distinguish types that would otherwise be the same; they have no other
+semantic effect.  All brands in a program must be distinct.  If BRANDED is
 present and b is absent, the implementation automatically supplies a unique
 value for b.  Explicit brands are useful for persistent data storage.
 
@@ -921,21 +913,21 @@ Examples of reference types:
 
 A \emph{procedure} is either NIL or a triple consisting of:
 \begin{itemize}
-\item the \emph{body} , which is a statement,
-\item the \emph{signature} , which specifies the procedure's formal arguments,
+\item the \emph{body}, which is a statement,
+\item the \emph{signature}, which specifies the procedure's formal arguments,
   result type, and raises set (the set of exceptions that the procedure can
   raise),
-\item the \emph{environment} , which is the scope with respect to which
+\item the \emph{environment}, which is the scope with respect to which
   variable names in the body will be interpreted.
 \end{itemize}
 
 A procedure that returns a result is called a \emph{function procedure} ; a
-procedure that does not return a result is called a \emph{proper procedure}
-.  A \emph{top-level} procedure is a procedure declared in the outermost scope
-of a module.  Any other procedure is a \emph{local} procedure.  A local
-procedure can be passed as a parameter but not assigned, since in a stack
-implementation a local procedure becomes invalid when the frame for the
-procedure containing it is popped.
+procedure that does not return a result is called a \emph{proper procedure}.
+A \emph{top-level} procedure is a procedure declared in the outermost scope of
+a module.  Any other procedure is a \emph{local} procedure.  A local procedure
+can be passed as a parameter but not assigned, since in a stack implementation
+a local procedure becomes invalid when the frame for the procedure containing
+it is popped.
 
 A \emph{procedure constant} is an identifier declared as a procedure.  (As
 opposed to a procedure variable, which is a variable declared with a procedure
@@ -951,7 +943,7 @@ where sig is a signature specification, which has the form:
 \end{verbatim}
 where
 \begin{itemize}
-\item  Each formal\_i is a formal parameter declaration, as described below.
+\item Each formal\_i is a formal parameter declaration, as described below.
 \item R is the result type, which can be any type but an open array type.  The ``: R'' can be omitted, making the signature that of a proper procedure.
 \item S is the raises set, which is either an explicit set of exceptions with
   the syntax \{E\_1, ..., E\_n\}, or the symbol ANY representing the set of
@@ -966,14 +958,14 @@ where
 \begin{itemize}
 \item Mode is a parameter mode, which can be VALUE, VAR, or READONLY.  If Mode
   is omitted, it defaults to VALUE.
-\item Name is an identifier that names the parameter.  The parameter names must
-  be distinct.
+\item Name is an identifier that names the parameter.  The parameter names
+  must be distinct.
 \item Type is the type of the parameter.
-\item Default is a constant expression, the default value for the
-  parameter.  If Mode is VAR, ``:= Default'' must be omitted, otherwise either
-  ``:= Default'' or `` : Type'' can be omitted, but not both.  If Type is
-  omitted, it is taken to be the type of Default.  If both are present, the
-  value of Default must be a member of Type.
+\item Default is a constant expression, the default value for the parameter.
+  If Mode is VAR, ``:= Default'' must be omitted, otherwise either ``:=
+  Default'' or `` : Type'' can be omitted, but not both.  If Type is omitted,
+  it is taken to be the type of Default.  If both are present, the value of
+  Default must be a member of Type.
 \end{itemize}
 
 When a series of parameters share the same mode, type, and default, Name can
@@ -997,7 +989,7 @@ if:
 \item They have the same number of parameters, and corresponding parameters
   have the same type and mode.
 \item  They have the same result type, or neither has a result type.
-\item  The raises set of signature\_1 contains the raises set of signature\_2.
+\item The raises set of signature\_1 contains the raises set of signature\_2.
 \end{itemize}
 
 The parameter names and defaults affect the type of a procedure, but not its
@@ -1081,17 +1073,17 @@ The declaration of an object type has the form:
 \end{verbatim}
 where ST is an optional supertype, Fields is a list of field declarations,
 exactly as in a record type, Methods is a list of \emph{method declarations}
-and Overrides is a list of \emph{method overrides} .  The fields of T consist
+and Overrides is a list of \emph{method overrides}.  The fields of T consist
 of the fields of ST followed by the fields declared in Fields.  The methods of
 T consist of the methods of ST modified by Overrides and followed by the
 methods declared in Methods.  T has the same reference class as ST.
 
 The names introduced in Fields and Methods must be distinct from one another
 and from the names overridden in Overrides.  If ST is omitted, it defaults to
-ROOT.  If ST is untraced, then the fields must not include traced types.  (This
-restriction is lifted in unsafe modules.) If ST is declared as an opaque type,
-the declaration of T is legal only in scopes where ST's concrete type is known
-to be an object type.
+ROOT.  If ST is untraced, then the fields must not include traced types.
+(This restriction is lifted in unsafe modules.) If ST is declared as an opaque
+type, the declaration of T is legal only in scopes where ST's concrete type is
+known to be an object type.
 
 The keyword OBJECT can optionally be preceded by ``BRANDED'' or by ``BRANDED
 b'', where b is a text constant.  The meaning is the same as in non-object
@@ -1102,11 +1094,11 @@ A method declaration has the form:
     m sig := proc
 \end{verbatim}
 where m is an identifier, sig is a procedure signature, and proc is a
-top-level procedure constant.  It specifies that T's m method has signature sig
-and value proc.  If ``:= proc'' is omitted, ``:= NIL'' is assumed.  If proc is
-non-nil, its first parameter must have mode VALUE and type some supertype of
-T, and dropping its first parameter must result in a signature that is covered
-by sig.
+top-level procedure constant.  It specifies that T's m method has signature
+sig and value proc.  If ``:= proc'' is omitted, ``:= NIL'' is assumed.  If
+proc is non-nil, its first parameter must have mode VALUE and type some
+supertype of T, and dropping its first parameter must result in a signature
+that is covered by sig.
 
 A method override has the form:
 \begin{verbatim}
@@ -1142,9 +1134,9 @@ valid subtype of A.  A more interesting example is:
 \begin{verbatim}
     TYPE T3 = AB OBJECT OVERRIDES p := Pa END
 \end{verbatim}
-which declares a type with an AB data record and a p method that expects an
-A.  Since every AB is an A, the method is not too choosy for the objects in
-which it will be placed.  T3 is a valid subtype of AB.  In contrast,
+which declares a type with an AB data record and a p method that expects an A.
+Since every AB is an A, the method is not too choosy for the objects in which
+it will be placed.  T3 is a valid subtype of AB.  In contrast,
 \begin{verbatim}
     TYPE T4 = A OBJECT OVERRIDES p := Pab END
 \end{verbatim}
@@ -1169,9 +1161,9 @@ we have that
     b.m()  activates  Q(b)
     c.m()  activates  Q(c)
 \end{verbatim}
-So far there is no difference between overriding and extending.  But c's method
-suite has two methods, while b's has only one, as can be revealed if b and c
-are viewed as members of type A:
+So far there is no difference between overriding and extending.  But c's
+method suite has two methods, while b's has only one, as can be revealed if b
+and c are viewed as members of type A:
 \begin{verbatim}
     NARROW(b, A).m()   activates  Q(b)
     NARROW(c, A).m()   activates  P(c)
@@ -1273,8 +1265,8 @@ contained in the raises set for U.
     NULL <: T OBJECT ... END <: T
 \end{verbatim}
 That is, every object is a reference, NIL is a member of every object type,
-and every subtype is included in its supertype.  The third rule also applies to
-branded types.
+and every subtype is included in its supertype.  The third rule also applies
+to branded types.
 
 \begin{verbatim}
     BITS n FOR T <: T   and  T <: BITS n FOR T
@@ -1309,9 +1301,9 @@ The language predeclares the two types:
     TEXT  <: REFANY
     MUTEX <: ROOT
 \end{verbatim}
-which represent text strings and mutual exclusion semaphores,
-respectively.  These are opaque types.  Their properties are specified in the
-required interfaces Text and Thread.
+which represent text strings and mutual exclusion semaphores, respectively.
+These are opaque types.  Their properties are specified in the required
+interfaces Text and Thread.
 
 \subsection*{2.3 Statements}
 
@@ -1327,9 +1319,9 @@ raise an exception, cause a checked runtime error, or loop forever.  If the
 outcome is an exception, it can optionally be paired with an argument.
 
 We define the semantics of EXIT and RETURN with exceptions called the
-\emph{exit-exception} and the \emph{return-exception} .  The exit-exception
-takes no argument; the return-exception takes an argument of arbitrary
-type.  Programs cannot name these exceptions explicitly.
+\emph{exit-exception} and the \emph{return-exception}.  The exit-exception
+takes no argument; the return-exception takes an argument of arbitrary type.
+Programs cannot name these exceptions explicitly.
 
 Implementations should speed up normal outcomes at the expense of exceptions
 (except for the return-exception and exit-exception).  Expending a thousand
@@ -1359,7 +1351,7 @@ A type T is \emph{assignable} to a type U if:
 
 An expression e is \emph{assignable} to a variable v if:
 \begin{itemize}
-\item  the type of e is assignable to the type of v, and
+\item the type of e is assignable to the type of v, and
 \item the value of e is a member of the type of v, is not a local procedure,
   and if it is an array, then it has the same shape as v.
 \end{itemize}
@@ -1378,8 +1370,8 @@ An assignment statement has the form:
     v := e
 \end{verbatim}
 where v is a writable designator and e is an expression assignable to the
-variable designated by v.  The statement sets v to the value of e.  The order of
-evaluation of v and e is undefined, but e will be evaluated before v is
+variable designated by v.  The statement sets v to the value of e.  The order
+of evaluation of v and e is undefined, but e will be evaluated before v is
 updated.  In particular, if v and e are overlapping subarrays, the assignment
 is performed in such a way that no element is used as a target before it is
 used as a source.
@@ -1484,7 +1476,7 @@ A procedure call can also have the form:
 \begin{verbatim}
     o.m(Bindings)
 \end{verbatim}
- where o is an object and m names one of o's methods.  This is equivalent to:
+where o is an object and m names one of o's methods.  This is equivalent to:
 \begin{verbatim}
     (o's m method) (o, Bindings)
 \end{verbatim}
@@ -1495,8 +1487,8 @@ An EVAL statement has the form:
 \begin{verbatim}
     EVAL e
 \end{verbatim}
-where e is an expression.  The effect is to evaluate e and ignore the
-result.  For example:
+where e is an expression.  The effect is to evaluate e and ignore the result.
+For example:
 \begin{verbatim}
     EVAL Thread.Fork(p)
 \end{verbatim}
@@ -1561,10 +1553,10 @@ the list of id's.
 The statement executes Body.  If the outcome is normal, the except clause is
 ignored.  If Body raises any listed exception id\_i, then Handler\_i is
 executed.  If Body raises any other exception and ``ELSE Handler\_0'' is
-present, then it is executed.  In either case, the outcome of the TRY statement
-is the outcome of the selected handler.  If Body raises an unlisted exception
-and ``ELSE Handler\_0'' is absent, then the outcome of the TRY statement is
-the exception raised by Body.
+present, then it is executed.  In either case, the outcome of the TRY
+statement is the outcome of the selected handler.  If Body raises an unlisted
+exception and ``ELSE Handler\_0'' is absent, then the outcome of the TRY
+statement is the exception raised by Body.
 
 Each (v\_i) declares a variable whose type is the argument type of the
 exception id\_i and whose scope is Handler\_i.  When an exception id\_i paired
@@ -1596,8 +1588,8 @@ A statement of the form:
 executes statement S\_1 and then statement S\_2.  If the outcome of S\_1 is
 normal, the TRY statement is equivalent to S\_1; S\_2.  If the outcome of S\_1
 is an exception and the outcome of S\_2 is normal, the exception from S\_1 is
-re-raised after S\_2 is executed.  If both outcomes are exceptions, the outcome
-of the TRY is the exception from S\_2.
+re-raised after S\_2 is executed.  If both outcomes are exceptions, the
+outcome of the TRY is the exception from S\_2.
 
 \subsubsection*{2.3.9 Loop}
 
@@ -1621,8 +1613,8 @@ raises the exit-exception.  An EXIT statement must be textually enclosed by a
 LOOP, WHILE, REPEAT, or FOR statement.
 
 We define EXIT and RETURN in terms of exceptions in order to specify their
-interaction with the exception handling statements.  As a pathological example,
-consider the following code, which is an elaborate infinite loop:
+interaction with the exception handling statements.  As a pathological
+example, consider the following code, which is an elaborate infinite loop:
 \begin{verbatim}
     LOOP
       TRY
@@ -1646,9 +1638,9 @@ A RETURN statement for a function procedure has the form:
 \begin{verbatim}
     RETURN Expr
 \end{verbatim}
-where Expr is an expression assignable to the result type of the
-procedure.  The statement raises the return-exception with the argument
-Expr.  It is allowed only in the body of a function procedure.
+where Expr is an expression assignable to the result type of the procedure.
+The statement raises the return-exception with the argument Expr.  It is
+allowed only in the body of a function procedure.
 
 Failure to return a value from a function procedure is a checked runtime
 error.
@@ -1732,12 +1724,12 @@ variables, RETURNs, and EXITs that occur in the WITH statement are interpreted
 in the context of the WITH statement, not in the context of P (see the section
 on designators).
 
-A single WITH can contain multiple bindings, which are evaluated
-sequentially.  That is:
+A single WITH can contain multiple bindings, which are evaluated sequentially.
+That is:
 \begin{verbatim}
     WITH id_1 = e_1, id_2 = e_2, ...
 \end{verbatim}
- is equivalent to:
+is equivalent to:
 \begin{verbatim}
     WITH id_1 = e_1 DO
       WITH id_2 = e_2 DO ...
@@ -1750,8 +1742,8 @@ A FOR statement has the form:
     FOR id := first TO last BY step DO S END
 \end{verbatim}
 where id is an identifier, first and last are ordinal expressions with the
-same base type, step is an integer-valued expression, and S is a
-statement.  ``BY step'' is optional; if omitted, step defaults to 1.
+same base type, step is an integer-valued expression, and S is a statement.
+``BY step'' is optional; if omitted, step defaults to 1.
 
 The identifier id denotes a readonly variable whose scope is S and whose type
 is the common basetype of first and last.
@@ -1759,8 +1751,8 @@ is the common basetype of first and last.
 If id is an integer, the statement steps id through the values first,
 first+step, first+2*step, ..., stopping when the value of id passes last.  S
 executes once for each value; if the sequence of values is empty, S never
-executes.  The expressions first, last, and step are evaluated once, before the
-loop is entered.  If step is negative, the loop iterates downward.
+executes.  The expressions first, last, and step are evaluated once, before
+the loop is entered.  If step is negative, the loop iterates downward.
 
 The case in which id is an element of an enumeration is similar.  In either
 case, the semantics are defined precisely by the following rewriting, in which
@@ -1804,10 +1796,10 @@ represented by any two L's overlap or if the value of any of the constant
 expressions is not a member of the type of Expr.  The ``ELSE S\_0'' is
 optional.
 
-The statement evaluates Expr.  If the resulting value is in any L\_i, then S\_i
-is executed.  If the value is in no L\_i and ``ELSE S\_0'' is present, then it
-is executed.  If the value is in no L\_i and ``ELSE S\_0'' is absent, a checked
-runtime error occurs.
+The statement evaluates Expr.  If the resulting value is in any L\_i, then
+S\_i is executed.  If the value is in no L\_i and ``ELSE S\_0'' is present,
+then it is executed.  If the value is in no L\_i and ``ELSE S\_0'' is absent,
+a checked runtime error occurs.
 
 \subsubsection*{2.3.18 Typecase}
 
@@ -1828,12 +1820,12 @@ of Expr.  The ``ELSE S\_0'' and each ``(v)'' are optional.
 The statement evaluates Expr.  If the resulting reference value is a member of
 any listed type T\_i, then S\_i is executed, for the minimum such i.  (Thus a
 NULL case is useful only if it comes first.) If the value is a member of no
-listed type and ``ELSE S\_0'' is present, then it is executed.  If the value is
-a member of no listed type and ``ELSE S\_0'' is absent, a checked runtime
+listed type and ``ELSE S\_0'' is present, then it is executed.  If the value
+is a member of no listed type and ``ELSE S\_0'' is absent, a checked runtime
 error occurs.
 
-Each (v\_i) declares a variable whose type is T\_i and whose scope is S\_i.  If
-v\_i is present, it is initialized to the value of Expr before S\_i is
+Each (v\_i) declares a variable whose type is T\_i and whose scope is S\_i.
+If v\_i is present, it is initialized to the value of Expr before S\_i is
 executed.
 
 If (v\_i) is absent, then T\_i can be a list of type expressions separated by
@@ -1883,8 +1875,9 @@ INC and DEC statements have the form:
     DEC(v, n)
 \end{verbatim}
 where v designates a variable of an ordinal type and n is an optional
-integer-valued argument.  If omitted, n defaults to 1.  The statements increment
-and decrement v by n, respectively.  The statements are equivalent to:
+integer-valued argument.  If omitted, n defaults to 1.  The statements
+increment and decrement v by n, respectively.  The statements are equivalent
+to:
 \begin{verbatim}
     WITH x = v DO x := VAL(ORD(x) + n, T) END
     WITH x = v DO x := VAL(ORD(x) - n, T) END
@@ -1944,9 +1937,9 @@ E an expression, then:
 \begin{verbatim}
     VAR id: T := E
 \end{verbatim}
-declares id as a variable of type T whose initial value is the value of
-E.  Either ``:= E'' or ``: T'' can be omitted, but not both.  If T is omitted,
-it is taken to be the type of E.  If E is omitted, the initial value is an
+declares id as a variable of type T whose initial value is the value of E.
+Either ``:= E'' or ``: T'' can be omitted, but not both.  If T is omitted, it
+is taken to be the type of E.  If E is omitted, the initial value is an
 arbitrary value of type T.  If both are present, E must be assignable to T.
 
 The initial value is a shorthand that is equivalent to inserting the
@@ -1994,8 +1987,8 @@ outer level of B; the parameter types and default values are evaluated in the
 scope containing the procedure declaration.  The procedure name id must be
 repeated after the END that terminates the body.
 
-The second form declares id to be a procedure constant whose signature is
-sig.  The procedure body is specified in a module exporting the interface, by a
+The second form declares id to be a procedure constant whose signature is sig.
+The procedure body is specified in a module exporting the interface, by a
 declaration of the first form.
 
 \subsubsection*{2.4.5 Exceptions}
@@ -2015,7 +2008,7 @@ An \emph{opaque type} is a name that denotes an unknown subtype of some given
 reference type.  For example, an opaque subtype of REFANY is an unknown traced
 reference type; an opaque subtype of UNTRACED ROOT is an unknown untraced
 object type.  The actual type denoted by an opaque type name is called its
-\emph{concrete type} .
+\emph{concrete type}.
 
 Different scopes can reveal different information about an opaque type.  For
 example, what is known in one scope only to be a subtype of REFANY could be
@@ -2031,10 +2024,10 @@ T.  The concrete type of T must be revealed elsewhere in the program.
 
 \subsubsection*{2.4.7 Revelations}
 
-A \emph{revelation} introduces information about an opaque type into a
-scope.  Unlike other declarations, revelations introduce no new names.
+A \emph{revelation} introduces information about an opaque type into a scope.
+Unlike other declarations, revelations introduce no new names.
 
-There are two kinds of revelations, \emph{partial} and \emph{complete} .  A
+There are two kinds of revelations, \emph{partial} and \emph{complete}.  A
 program can contain any number of partial revelations for an opaque type; it
 must contain exactly one complete revelation.
 
@@ -2047,8 +2040,9 @@ where V is a type expression (possibly just a name) and T is an identifier
 supertype of T.
 
 In any scope, the revealed supertypes of an opaque type must be linearly
-ordered by the subtype relation.  That is, if it is revealed that T $<$: U1 and
-T $<$: U2, it must also be revealed either that U1 $<$: U2 or that U2 $<$: U1.
+ordered by the subtype relation.  That is, if it is revealed that T $<$: U1
+and T $<$: U2, it must also be revealed either that U1 $<$: U2 or that U2 $<$:
+U1.
 
 A complete revelation has the form:
 \begin{verbatim}
@@ -2081,8 +2075,8 @@ For example, consider:
 An importer of I sees I.T as an opaque subtype of ROOT, and is limited to
 allocating objects of type I.T, passing them to I.P, or declaring subtypes of
 I.T.  An importer of IClass sees that every I.T is a MUTEX, and can therefore
-lock objects of type I.T.  Finally, an importer of IRep sees the concrete type,
-and can access the count field.
+lock objects of type I.T.  Finally, an importer of IRep sees the concrete
+type, and can access the count field.
 
 \subsubsection*{2.4.8 Recursive declarations}
 
@@ -2137,8 +2131,8 @@ is visible in a block if it is declared in the block or in some enclosing
 block; an entity is visible in a module if it is declared in the module or in
 an interface that is imported or exported by the module.
 
-An \emph{interface} is a group of declarations.  Declarations in interfaces are
-the same as in blocks, except that any variable initializations must be
+An \emph{interface} is a group of declarations.  Declarations in interfaces
+are the same as in blocks, except that any variable initializations must be
 constant, and procedure declarations must specify only the signature, not the
 body.
 
@@ -2149,11 +2143,11 @@ the procedures declared in the interface.  A module or interface X
 A \emph{program} is a collection of modules and interfaces that contains every
 interface imported or exported by any of its modules or interfaces, and in
 which no procedure, module, or interface is multiply defined.  The effect of
-executing a program is to execute the bodies of each of its modules.  The order
-of execution of the modules is constrained by the initialization rule.
+executing a program is to execute the bodies of each of its modules.  The
+order of execution of the modules is constrained by the initialization rule.
 
-The module whose body is executed last is called the \emph{main module}
-.  Implementations are expected to provide a way to specify the main module, in
+The module whose body is executed last is called the \emph{main module}.
+Implementations are expected to provide a way to specify the main module, in
 case the initialization rule does not determine it uniquely.  The recommended
 rule is that the main module be the one that exports the interface Main, whose
 contents are implementation-dependent.
@@ -2187,8 +2181,8 @@ The second form is
     FROM I IMPORT N
 \end{verbatim}
 which introduces N as the local name for the entity declared as N in the
-interface I.  A local binding for I takes precedence over a global binding.  For
-example,
+interface I.  A local binding for I takes precedence over a global binding.
+For example,
 \begin{verbatim}
     IMPORT I AS J, J AS I; FROM I IMPORT N
 \end{verbatim}
@@ -2213,8 +2207,8 @@ An interface has the form:
 where id is an identifier that names the interface, Imports is a sequence of
 import statements, and Decls is a sequence of declarations that contains no
 procedure bodies or non-constant variable initializations.  The names declared
-in Decls and the visible imported names must be distinct.  It is a static error
-for two or more interfaces to form an import cycle.
+in Decls and the visible imported names must be distinct.  It is a static
+error for two or more interfaces to form an import cycle.
 
 \subsubsection*{2.5.3 Modules}
 
@@ -2230,7 +2224,12 @@ import statements, and Block is a block, the \emph{body} of the module.  The
 name id must be repeated after the END that terminates the body.  ``EXPORTS
 Interfaces'' can be omitted, in which case Interfaces defaults to id.
 
-If module M exports interface I, then all declared names in I are visible without qualification in M.  Any procedure declared in I can be redeclared in M, with a body.  The signature in M must be covered by the signature in I.  To determine the interpretation of keyword bindings and parameter defaults in calls to the procedure, the signature in M is used within M; the signature in I is used everywhere else.
+If module M exports interface I, then all declared names in I are visible
+without qualification in M.  Any procedure declared in I can be redeclared in
+M, with a body.  The signature in M must be covered by the signature in I.  To
+determine the interpretation of keyword bindings and parameter defaults in
+calls to the procedure, the signature in M is used within M; the signature in
+I is used everywhere else.
 
 Except for the redeclaration of exported procedures, the names declared at the
 top level of Block, the visible imported names, and the names declared in the
@@ -2461,7 +2460,7 @@ implementation-dependent.
 The keyword UNSAFE can precede the declaration of any interface or module to
 indicate that it is \emph{unsafe} ; that is, uses the unsafe features of the
 language.  An interface or module not explicitly labeled UNSAFE is called
-\emph{safe} .
+\emph{safe}.
 
 An interface is \emph{intrinsically safe} if there is no way to produce an
 unchecked runtime error by using the interface in a safe module.  If all
@@ -2561,7 +2560,7 @@ their fully parenthesized forms:
     A OR B AND C     A OR (B AND C)     AND before OR
 \end{verbatim}
 
-Operators without special syntax are \emph{procedural} .  An application of a
+Operators without special syntax are \emph{procedural}.  An application of a
 procedural operator has the form op(args), where op is the operation and args
 is the list of argument expressions.  For example, MAX and MIN are procedural
 operators.
@@ -2582,18 +2581,18 @@ LOOPHOLE can also produce a designator.
 r\^{}
 \begin{quote}
   denotes the the referent of r; this operation is called \emph{dereferencing}
-  .  The expression r\^{} is always a writable designator.  It is a static error
-  if the type of r is REFANY, ADDRESS, NULL, an object type, or an opaque
-  type, and a checked runtime error if r is NIL.  The type of r\^{} is the
-  referent type of r.
+  .  The expression r\^{} is always a writable designator.  It is a static
+  error if the type of r is REFANY, ADDRESS, NULL, an object type, or an
+  opaque type, and a checked runtime error if r is NIL.  The type of r\^{} is
+  the referent type of r.
 \end{quote}
 
 a[i]
 \begin{quote}
   denotes the (i + 1 - FIRST(a))-th element of the array a.  The expression
-  a[i] is a designator if a is, and is writable if a is.  The expression i must
-  be assignable to the index type of a.  The type of a[i] is the element type
-  of a.
+  a[i] is a designator if a is, and is writable if a is.  The expression i
+  must be assignable to the index type of a.  The type of a[i] is the element
+  type of a.
 
   An expression of the form a[i\_1, ..., i\_n] is shorthand for
   a[i\_1]...[i\_n].  If a is a reference to an array, then a[i] is shorthand
@@ -2603,8 +2602,8 @@ a[i]
 r.f, o.f, I.x, T.m, E.id
 \begin{quote}
   If r denotes a record, r.f denotes its f field.  In this case r.f is a
-  designator if r is, and is writable if r is.  The type of r.f is the declared
-  type of the field.
+  designator if r is, and is writable if r is.  The type of r.f is the
+  declared type of the field.
 
   If r is a reference to a record, then r.f is shorthand for r\^{}.f.
 
@@ -2621,8 +2620,8 @@ r.f, o.f, I.x, T.m, E.id
   type is the procedure type whose first argument has mode VALUE and type T,
   and whose remaining arguments are determined by the method declaration for m
   in T.  The name of the first argument is unspecified; thus in calls to T.m,
-  this argument must be given positionally, not by keyword.  T.m is a procedure
-  constant.
+  this argument must be given positionally, not by keyword.  T.m is a
+  procedure constant.
 
   If E is an enumerated type, then E.id denotes its value named id.  In this
   case E.id is not a designator.  The type of E.id is E.
@@ -2652,8 +2651,8 @@ A literal INTEGER has the form base\_digits, where base is one of ``2'',
 ``3'', ..., ``16'', and digits is a non-empty sequence of the decimal digits 0
 through 9 plus the hexadecimal digits A through F.  The ``base\_'' can be
 omitted, in which case base defaults to 10.  The digits are interpreted in the
-given base.  Each digit must be less than base.  For example, 16\_FF and 255 are
-equivalent integer literals.
+given base.  Each digit must be less than base.  For example, 16\_FF and 255
+are equivalent integer literals.
 
 If no explicit base is present, the value of the literal must be at most
 LAST(INTEGER).  If an explicit base is present, the value of the literal must
@@ -2679,12 +2678,12 @@ and 3.1415926535d0 a LONGREAL.
 \subsubsection*{2.6.5 Text and character literals}
 
 A character literal is a pair of single quotes enclosing either a single
-ISO-Latin-1 printing character (excluding single quote) or an escape
-sequence.  The type of a character literal is CHAR.
+ISO-Latin-1 printing character (excluding single quote) or an escape sequence.
+The type of a character literal is CHAR.
 
 A text literal is a pair of double quotes enclosing a sequence of ISO-Latin-1
-printing characters (excluding double quote) and escape sequences.  The type of
-a text literal is TEXT.
+printing characters (excluding double quote) and escape sequences.  The type
+of a text literal is TEXT.
 
 Here are are the legal escape sequences and the characters they denote:
 \begin{verbatim}
@@ -2697,7 +2696,8 @@ A $\backslash$ followed by exactly three octal digits specifies the character
 whose code is that octal value.  A $\backslash$ that is not a part of one of
 these escape sequences is a static error.
 
-For example, 'a' and '$\backslash$'' are valid character literals, ''' is not; "" and "Don't$\backslash$n" are valid text literals, """ is not.
+For example, 'a' and '$\backslash$'' are valid character literals, ''' is not;
+"" and "Don't$\backslash$n" are valid text literals, """ is not.
 
 \subsubsection*{2.6.6 Nil}
 
@@ -2715,8 +2715,8 @@ A set constructor has the form:
     S{e_1, ..., e_n}
 \end{verbatim}
 where S is a set type and the e's are expressions or ranges of the form
-lo..hi.  The constructor denotes a value of type S containing the listed values
-and the values in the listed ranges.  The e's, lo's, and hi's must be
+lo..hi.  The constructor denotes a value of type S containing the listed
+values and the values in the listed ranges.  The e's, lo's, and hi's must be
 assignable to the element type of S.
 
 An array constructor has the form:
@@ -2738,15 +2738,15 @@ A record constructor has the form:
     R{Bindings}
 \end{verbatim}
 where R is a record type and Bindings is a list of keyword or positional
-bindings, exactly as in a procedure call.  The list of bindings is rewritten to
-fit the list of fields and defaults of R, exactly as for a procedure call; the
-record field names play the role of the procedure formal parameters.  The
+bindings, exactly as in a procedure call.  The list of bindings is rewritten
+to fit the list of fields and defaults of R, exactly as for a procedure call;
+the record field names play the role of the procedure formal parameters.  The
 expression denotes a value of type R whose field values are specified by the
 rewritten binding.
 
 The rewritten binding must bind only field names and must bind each field name
-exactly once.  Each expression in the binding must be assignable to the type of
-the corresponding record field.
+exactly once.  Each expression in the binding must be assignable to the type
+of the corresponding record field.
 
 \subsubsection*{2.6.9 New}
 
@@ -2754,10 +2754,10 @@ An allocation operation has the form:
 \begin{verbatim}
     NEW(T, ...)
 \end{verbatim}
-where T is a reference type other than REFANY, ADDRESS, or NULL.  The operation
-returns the address of a newly-allocated variable of T's referent type; or if
-T is an object type, a newly-allocated data record paired with a method
-suite.  The reference returned by NEW is distinct from all existing
+where T is a reference type other than REFANY, ADDRESS, or NULL.  The
+operation returns the address of a newly-allocated variable of T's referent
+type; or if T is an object type, a newly-allocated data record paired with a
+method suite.  The reference returned by NEW is distinct from all existing
 references.  The allocated type of the new reference is T.
 
 It is a static error if T's referent type is empty.  If T is declared as an
@@ -2765,8 +2765,8 @@ opaque type, NEW(T) is legal only in scopes where T's concrete type is known
 completely, or is known to be an object type.
 
 The initial state of the referent generally represents an arbitrary value of
-its type.  If T is an object type or a reference to a record or open array then
-NEW takes additional arguments to control the initial state of the new
+its type.  If T is an object type or a reference to a record or open array
+then NEW takes additional arguments to control the initial state of the new
 variable.
 
 If T is a reference to an array with k open dimensions, the NEW operation has
@@ -2775,8 +2775,8 @@ the form:
     NEW(T, n_1, ..., n_k)
 \end{verbatim}
 where the n's are integer-valued expressions that specify the lengths of the
-new array in its first k dimensions.  The values in the array will be arbitrary
-values of their type.
+new array in its first k dimensions.  The values in the array will be
+arbitrary values of their type.
 
 If T is an object type or a reference to a record, the NEW operation has the
 form:
@@ -2794,10 +2794,9 @@ types.
 The order of the field bindings makes no difference.
 
 If T is an object type then Bindings can also include method overrides of the
-form m := P, where m is a method of T and P is a top-level procedure
-constant.  This is syntactic sugar for the allocation of a subtype of T that
-includes the given overrides, in the given order.  For example, NEW(T, m := P)
-is sugar for
+form m := P, where m is a method of T and P is a top-level procedure constant.
+This is syntactic sugar for the allocation of a subtype of T that includes the
+given overrides, in the given order.  For example, NEW(T, m := P) is sugar for
 \begin{verbatim}
     NEW(T OBJECT OVERRIDES m := P END).
 \end{verbatim}
@@ -2808,9 +2807,9 @@ The basic arithmetic operations are built into the language; additional
 operations are provided by the required floating-point interfaces.
 
 To test or set the implementation's behavior for overflow, underflow,
-rounding, and division by zero, see the required interface FloatMode.  Modula-3
-arithmetic was designed to support the IEEE floating-point standard, but not
-to require it.
+rounding, and division by zero, see the required interface FloatMode.
+Modula-3 arithmetic was designed to support the IEEE floating-point standard,
+but not to require it.
 
 To perform arithmetic operations modulo the word size, programs should use the
 routines in the required interface Word.
@@ -2828,10 +2827,11 @@ integers or for floating-point values.
                  (x,y: Float)    : Float
                  (x,y: Set)      : Set
 \end{verbatim}
-As a prefix operator, +x returns x.  As an infix operator on numeric arguments,
-+ denotes addition.  On sets, + denotes set union.  That is, e IN (x + y) if and
-only if (e IN x) OR (e IN y).  The types of x and y must be the same, and the
-result is the same type as both.  In unsafe modules, + is extended to ADDRESS.
+As a prefix operator, +x returns x.  As an infix operator on numeric
+arguments, + denotes addition.  On sets, + denotes set union.  That is, e IN
+(x + y) if and only if (e IN x) OR (e IN y).  The types of x and y must be the
+same, and the result is the same type as both.  In unsafe modules, + is
+extended to ADDRESS.
 
 \begin{verbatim}
     prefix    -  (x: INTEGER)    : INTEGER
@@ -2841,11 +2841,11 @@ result is the same type as both.  In unsafe modules, + is extended to ADDRESS.
                  (x,y: Float)    : Float
                  (x,y: Set)      : Set
 \end{verbatim}
-As a prefix operator, -x is the negative of x.  As an infix operator on numeric
-arguments, - denotes subtraction.  On sets, - denotes set difference.  That is,
-e IN (x - y) if and only if (e IN x) AND NOT (e IN y).  The types of x and y
-must be the same, and the result is the same type as both.  In unsafe modules,
-- is extended to ADDRESS.
+As a prefix operator, -x is the negative of x.  As an infix operator on
+numeric arguments, - denotes subtraction.  On sets, - denotes set difference.
+That is, e IN (x - y) if and only if (e IN x) AND NOT (e IN y).  The types of
+x and y must be the same, and the result is the same type as both.  In unsafe
+modules, - is extended to ADDRESS.
 
 \begin{verbatim}
     infix     *  (x,y: INTEGER)  : INTEGER
@@ -2853,8 +2853,9 @@ must be the same, and the result is the same type as both.  In unsafe modules,
                  (x,y: Set)      : Set
 \end{verbatim}
 On numeric arguments, * denotes multiplication.  On sets, * denotes
-intersection.  That is, e IN (x * y) if and only if (e IN x) AND (e IN y).  The
-types of x and y must be the same, and the result is the same type as both.
+intersection.  That is, e IN (x * y) if and only if (e IN x) AND (e IN y).
+The types of x and y must be the same, and the result is the same type as
+both.
 
 \begin{verbatim}
     infix     /  (x,y: Float)    : Float
@@ -2929,18 +2930,18 @@ result is the same type as both.
 \begin{verbatim}
      infix    =, #  (x, y: Any): BOOLEAN
 \end{verbatim}
-The operator = returns TRUE if x and y are equal.  The operator \# returns TRUE
-if x and y are not equal.  It is a static error if the type of x is not
+The operator = returns TRUE if x and y are equal.  The operator \# returns
+TRUE if x and y are not equal.  It is a static error if the type of x is not
 assignable to the type of y or vice versa.
 
 Ordinals are equal if they have the same value.  Floats are equal if the
 underlying implementation defines them to be; for example, on an IEEE
 implementation, +0 equals -0 and NaN does not equal itself.  References are
-equal if they address the same location.  Procedures are equal if they agree as
-closures; that is, if they refer to the same procedure body and
+equal if they address the same location.  Procedures are equal if they agree
+as closures; that is, if they refer to the same procedure body and
 environment.  Sets are equal if they have the same elements.  Arrays are equal
-if they have the same length and corresponding elements are equal.  Records are
-equal if they have the same fields and corresponding fields are equal.
+if they have the same length and corresponding elements are equal.  Records
+are equal if they have the same fields and corresponding fields are equal.
 
 \begin{verbatim}
      infix    <=, >=  (x,y: Ordinal) : BOOLEAN
@@ -2968,9 +2969,9 @@ Warning: with IEEE floating-point, x $<$= y is not the same as NOT x $>$ y.
 \begin{verbatim}
      infix    IN (e: Ordinal; s: Set): BOOLEAN
 \end{verbatim}
-Returns TRUE if e is an element of the set s.  It is a static error if the type
-of e is not assignable to the element type of s.  If the value of e is not a
-member of the element type, no error occurs, but IN returns FALSE.
+Returns TRUE if e is an element of the set s.  It is a static error if the
+type of e is not assignable to the element type of s.  If the value of e is
+not a member of the element type, no error occurs, but IN returns FALSE.
 
 \subsubsection*{2.6.12 Boolean operations}
 
@@ -3018,14 +3019,15 @@ REFANY or is not an object type or traced reference type.
 \end{verbatim}
 ORD converts an element of an enumeration to the integer that represents its
 position in the enumeration order.  The first value in any enumeration is
-represented by zero.  If the type of element is a subrange of an enumeration T,
-the result is the position of the element within T, not within the subrange.
+represented by zero.  If the type of element is a subrange of an enumeration
+T, the result is the position of the element within T, not within the
+subrange.
 
 VAL is the inverse of ORD; it converts from a numeric position i into the
-element that occupies that position in an enumeration.  If T is a subrange, VAL
-returns the element with the position i in the original enumeration type, not
-the subrange.  It is a checked runtime error for the value of i to be out of
-range for T.
+element that occupies that position in an enumeration.  If T is a subrange,
+VAL returns the element with the position i in the original enumeration type,
+not the subrange.  It is a checked runtime error for the value of i to be out
+of range for T.
 
 If n is an integer, ORD(n) = VAL(n, INTEGER) = n.
 
@@ -3051,19 +3053,19 @@ the expression a will be evaluated only if it denotes an open array.
                     (a: Array)          : BaseType(IndexType(a))
 \end{verbatim}
 For a non-empty ordinal type T, FIRST returns the smallest value of T and LAST
-returns the largest value.  If T is the empty enumeration, FIRST(T) and LAST(T)
-are static errors.  If T is any other empty ordinal type, the values returned
-are implementation-dependent, but they satisfy FIRST(T) $>$ LAST(T).
+returns the largest value.  If T is the empty enumeration, FIRST(T) and
+LAST(T) are static errors.  If T is any other empty ordinal type, the values
+returned are implementation-dependent, but they satisfy FIRST(T) $>$ LAST(T).
 
 For a floating-point type T, FIRST(T) and LAST(T) are the smallest and largest
-values of the type, respectively.  On IEEE implementations, these are minus and
-plus infinity.
+values of the type, respectively.  On IEEE implementations, these are minus
+and plus infinity.
 
 For a fixed array type A, FIRST(A) is defined by FIRST(IndexType(A)) and
-LAST(A) by LAST(IndexType(A)).  Similarly, for an array a, FIRST(a) and LAST(a)
-are defined by FIRST(IndexType(a)) and LAST(IndexType(a)).  The expression a
-will be evaluated only if it is an open array.  Note that if a is an open
-array, FIRST(a) and LAST(a) have type INTEGER.
+LAST(A) by LAST(IndexType(A)).  Similarly, for an array a, FIRST(a) and
+LAST(a) are defined by FIRST(IndexType(a)) and LAST(IndexType(a)).  The
+expression a will be evaluated only if it is an open array.  Note that if a is
+an open array, FIRST(a) and LAST(a) have type INTEGER.
 
 \begin{verbatim}
               BITSIZE  (x: Any)  : CARDINAL
@@ -3075,8 +3077,8 @@ array, FIRST(a) and LAST(a) have type INTEGER.
               ADRSIZE  (x: Any)  : CARDINAL
                        (T: Type) : CARDINAL
 \end{verbatim}
-These operations return the size of the variable x or of variables of type
-T.  BITSIZE returns the number of bits, BYTESIZE the number of 8-bit bytes, and
+These operations return the size of the variable x or of variables of type T.
+BITSIZE returns the number of bits, BYTESIZE the number of 8-bit bytes, and
 ADRSIZE the number of addressable locations.  In all cases, x must be a
 designator and T must not be an open array type.  A designator x will be
 evaluated only if its type is an open array type.
@@ -3116,11 +3118,11 @@ An unchecked type transfer operation has the form:
 \begin{verbatim}
     LOOPHOLE(e, T)
 \end{verbatim}
-where e is an expression whose type is not an open array type and T is a
-type.  It denotes e's bit pattern interpreted as a variable or value of type
-T.  It is a designator if e is, and is writable if e is.  An unchecked runtime
-error can occur if e's bit pattern is not a legal T, or if e is a designator
-and some legal bit pattern for T is not legal for e.
+where e is an expression whose type is not an open array type and T is a type.
+It denotes e's bit pattern interpreted as a variable or value of type T.  It
+is a designator if e is, and is writable if e is.  An unchecked runtime error
+can occur if e's bit pattern is not a legal T, or if e is a designator and
+some legal bit pattern for T is not legal for e.
 
 If T is not an open array type, BITSIZE(e) must equal BITSIZE(T).  If T is an
 open array type, its element type must not be an open array type, and e's bit
@@ -3136,8 +3138,8 @@ The following operations are primarily used for address arithmetic:
      infix     -    (x,y: ADDRESS)          : INTEGER
 \end{verbatim}
 ADR(x) is the address of the variable x.  The actual argument must be a
-designator but need not be writable.  The operations + and - treat addresses as
-integers.  The validity of the addresses produced by these operations is
+designator but need not be writable.  The operations + and - treat addresses
+as integers.  The validity of the addresses produced by these operations is
 implementation-dependent.  For example, the address of a variable in a local
 procedure frame is probably valid only for the duration of the call.  The
 address of the referent of a traced reference is probably valid only as long
@@ -3157,15 +3159,15 @@ A DISPOSE statement has the form:
 \begin{verbatim}
                DISPOSE (v)
 \end{verbatim}
-where v is a writable designator whose type is not REFANY, ADDRESS, or
-NULL.  If v is untraced, the statement frees the storage for v's referent and
-sets v to NIL.  Freeing storage to which active references remain is an
-unchecked runtime error.  If v is traced, the statement is equivalent to v :=
-NIL.  If v is NIL, the statement is a no-op.
+where v is a writable designator whose type is not REFANY, ADDRESS, or NULL.
+If v is untraced, the statement frees the storage for v's referent and sets v
+to NIL.  Freeing storage to which active references remain is an unchecked
+runtime error.  If v is traced, the statement is equivalent to v := NIL.  If v
+is NIL, the statement is a no-op.
 
 In unsafe interfaces and modules the definition of ``assignable'' for types is
-extended: two reference types T and U are assignable if T $<$: U or U $<$:
-T.  The only effect of this change is to allow a value of type ADDRESS to be
+extended: two reference types T and U are assignable if T $<$: U or U $<$: T.
+The only effect of this change is to allow a value of type ADDRESS to be
 assigned to a variable of type UNTRACED REF T.  It is an unchecked runtime
 error if the value does not address a variable of type T.
 
@@ -3221,14 +3223,14 @@ BOOLEAN   DISPOSE    INC       MAX        NULL    SUBARRAY
 
 \subsubsection*{2.8.4 Comments}
 
-A comment is an arbitrary character sequence opened by (* and closed by
-*).  Comments can be nested and can extend over more than one line.
+A comment is an arbitrary character sequence opened by (* and closed by *).
+Comments can be nested and can extend over more than one line.
 
 \subsubsection*{2.8.5 Pragmas}
 
-A pragma is an arbitrary character sequence opened by $<$* and closed by
-*$>$.  Pragmas can be nested and can extend over more than one line.  Pragmas
-are hints to the implementation; they do not affect the language semantics.
+A pragma is an arbitrary character sequence opened by $<$* and closed by *$>$.
+Pragmas can be nested and can extend over more than one line.  Pragmas are
+hints to the implementation; they do not affect the language semantics.
 
 We recommend supporting the two pragmas $<$*INLINE*$>$ and $<$*EXTERNAL*$>$.
 The pragma $<$*INLINE*$>$ precedes a procedure declaration to indicate that
@@ -3251,9 +3253,9 @@ We use the following notation for defining syntax:
 \end{verbatim}
 ``Followed by'' has greater binding power than | or \&; parentheses are used
 to override this precedence rule.  Non-terminals begin with an upper-case
-letter.  Terminals are either keywords or quoted operators.  The symbols Ident,
-Number, TextLiteral, and CharLiteral are defined in the token grammar.  Each
-production is terminated by a period.  The syntax does not reflect the
+letter.  Terminals are either keywords or quoted operators.  The symbols
+Ident, Number, TextLiteral, and CharLiteral are defined in the token grammar.
+Each production is terminated by a period.  The syntax does not reflect the
 restrictions that revelations and exceptions can be declared only at the top
 level; nor does it include explicit productions for NEW, INC, and DEC, which
 parse like procedure calls.
@@ -3455,32 +3457,33 @@ ExtendedChar = any char with ISO-Latin-1 code in [8_ 240..8_ 377].
 
 \subsection*{About the authors}
 
-Luca Cardelli was an undergraduate in Pisa and has a Ph.D.\ in Computer Science
-from the University of Edinburgh (1982).  He worked at AT\&T Bell Labs, Murray
-Hill, from 1982 to 1985 before assuming his current position at DEC SRC.  His
-main interests are in constructive logic, type theory, and language design and
-implementation.
+Luca Cardelli was an undergraduate in Pisa and has a Ph.D.\ in Computer
+Science from the University of Edinburgh (1982).  He worked at AT\&T Bell
+Labs, Murray Hill, from 1982 to 1985 before assuming his current position at
+DEC SRC.  His main interests are in constructive logic, type theory, and
+language design and implementation.
 
 Jim Donahue received his Ph.D.\ in Computer Science at the University of
 Toronto (1975).  He was an Assistant Professor at Cornell University from 1975
 to 1981.  In 1981, he joined the Computer Science Laboratory of the Xerox Palo
-Alto Research Center.  In 1986, he established the Olivetti Research Center and
-was its Director until 1990.  He is now a Senior Scientist and Product Manager
-for Teknekron Software Systems.  His interests include programming language
-design, distributed system design, and database systems and applications.
+Alto Research Center.  In 1986, he established the Olivetti Research Center
+and was its Director until 1990.  He is now a Senior Scientist and Product
+Manager for Teknekron Software Systems.  His interests include programming
+language design, distributed system design, and database systems and
+applications.
 
 Lucille Glassman is a technical writer for DEC SRC.
 
-Mick Jordan has a Ph.D.\ in Computer Science from the University of
-Cambridge.  From 1984 to 1988 he worked at the Acorn Research Center in Palo
-Alto on a programming environment for Modula-2+.  Before joining DEC SRC in
-1990 he was at Olivetti Research, where he led the group that produced the
-Olivetti Modula-3 implementation.  His principal current interest is in
-programming tools that are based on Modula-3 Abstract Syntax Trees.
+Mick Jordan has a Ph.D.\ in Computer Science from the University of Cambridge.
+From 1984 to 1988 he worked at the Acorn Research Center in Palo Alto on a
+programming environment for Modula-2+.  Before joining DEC SRC in 1990 he was
+at Olivetti Research, where he led the group that produced the Olivetti
+Modula-3 implementation.  His principal current interest is in programming
+tools that are based on Modula-3 Abstract Syntax Trees.
 
 Bill Kalsow received his Ph.D.\ in Computer Science from the University of
-Wisconsin at Madison (1986).  Since then he has worked as DEC SRC.  His primary
-interests are programming languages and their implementations.
+Wisconsin at Madison (1986).  Since then he has worked as DEC SRC.  His
+primary interests are programming languages and their implementations.
 
 Greg Nelson got his Ph.D.\ from Stanford in 1980, where he worked on program
 verification and algorithms for mechanical theorem proving.  He was the author
