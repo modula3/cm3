@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.6 2007-01-22 01:42:03 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.7 2007-08-12 19:02:06 jkrell Exp $
 
 @if "%SYSINFO_DONE%" == "yes" goto :eof
 
@@ -226,7 +226,7 @@ call :set_if_empty INSTALLROOT c:\cm3
 set CM3ROOT=%ROOT:\=\\%
 echo CM3ROOT=%CM3ROOT%
 
-call :set_if_empty CM3VERSION d5.3.2
+call :set_if_empty CM3VERSION d5.5.0
 
 set SYSINFO_DONE=yes
 
