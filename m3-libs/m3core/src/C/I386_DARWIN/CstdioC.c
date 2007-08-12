@@ -5,23 +5,23 @@
 
 int fbsd_feof(FILE *f){
    return feof(f);
-};
+}
 
 int fbsd_getc(FILE *f){
    return fgetc(f);
-};
+}
 
 int fbsd_ungetc(int c, FILE *f){
    return ungetc(c, f);
-};
+}
 
 int fbsd_putc(int c, FILE *f){
    return fputc(c, f);
-};
+}
 
 int fbsd_fflush(FILE *f){
    return fflush(f);
-};
+}
 
 FILE* fbsd_fdopen(int fildes, char *mode){
    FILE* f;
@@ -35,4 +35,4 @@ FILE* fbsd_fdopen(int fildes, char *mode){
 
 int fbsd_fclose(FILE *f){
    return fclose(f);
-};
+}
