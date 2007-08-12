@@ -2685,18 +2685,15 @@ selection, and \verb|SUBARRAY|.  This section defines these operations and
 specifies the conditions under which they produce designators.  In unsafe
 modules, \verb|LOOPHOLE| can also produce a designator.
 
-\verb|r^|
-\begin{quote}
+\begin{description}
+\item \verb|r^| \\
   denotes the the referent of \verb|r|; this operation is called
   \emph{dereferencing}.  The expression \verb|r^| is always a writable
   designator.  It is a static error if the type of \verb|r| is \verb|REFANY|,
   \verb|ADDRESS|, \verb|NULL|, an object type, or an opaque type, and a
   checked runtime error if \verb|r| is \verb|NIL|.  The type of \verb|r^| is
   the referent type of \verb|r|.
-\end{quote}
-
-\verb|a[i]|
-\begin{quote}
+\item \verb|a[i]| \\
   denotes the \verb|(i + 1 - FIRST(a))|-th element of the array \verb|a|.  The
   expression \verb|a[i]| is a designator if \verb|a| is, and is writable if
   \verb|a| is.  The expression \verb|i| must be assignable to the index type
@@ -2705,10 +2702,7 @@ modules, \verb|LOOPHOLE| can also produce a designator.
   An expression of the form \verb|a[i_1, ..., i_n]| is shorthand for
   \verb|a[i_1]...[i_n]|.  If \verb|a| is a reference to an array, then
   \verb|a[i]| is shorthand for \verb|a^[i]|.
-\end{quote}
-
-\verb|r.f|, \verb|o.f|, \verb|I.x|, \verb|T.m|, \verb|E.id|
-\begin{quote}
+\item \verb|r.f|, \verb|o.f|, \verb|I.x|, \verb|T.m|, \verb|E.id| \\
   If \verb|r| denotes a record, \verb|r.f| denotes its \verb|f| field.  In
   this case \verb|r.f| is a designator if \verb|r| is, and is writable if
   \verb|r| is.  The type of \verb|r.f| is the declared type of the field.
@@ -2738,10 +2732,7 @@ modules, \verb|LOOPHOLE| can also produce a designator.
   If \verb|E| is an enumerated type, then \verb|E.id| denotes its value named
   \verb|id|.  In this case \verb|E.id| is not a designator.  The type of
   \verb|E.id| is \verb|E|.
-\end{quote}
-
-\verb|SUBARRAY(a: Array; from, for: CARDINAL): ARRAY OF ElemType(a)|
-\begin{quote}
+\item \verb|SUBARRAY(a: Array; from, for: CARDINAL): ARRAY OF ElemType(a)| \\
   \verb|SUBARRAY| produces a subarray of \verb|a|.  It does not copy the
   array; it is a designator if \verb|a| is, and is writable if \verb|a| is.
   If \verb|a| is a multi-dimensional array, \verb|SUBARRAY| applies only to
@@ -2755,7 +2746,7 @@ modules, \verb|LOOPHOLE| can also produce a designator.
 
   Implementations may restrict or prohibit the \verb|SUBARRAY| operation for
   arrays with packed element types.
-\end{quote}
+\end{description}
 
 \subsubsection*{2.6.4 Numeric literals}
 
