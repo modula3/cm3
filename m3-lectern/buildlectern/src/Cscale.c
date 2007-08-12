@@ -383,7 +383,10 @@ long     *map;
     long      *lim = line + nline;
 
     while (line < lim)
-         *line++ = map[*line];
+    {
+         *line = map[*line];
+         line += 1;
+    }
 }
 
 
@@ -496,13 +499,14 @@ int      lim;
         }
         if (++self == plim) return (self - start);
         c = *self;
-        if (c != *++prev)
+        if (c != *++prev) {
             if (c == 0) {
                 while (*++self == 0)
                     if (self == plim) break;
                 return -(self - start);
             } else
                 return (self - start);
+        }
     }
 }
 
