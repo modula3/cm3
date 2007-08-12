@@ -1,8 +1,11 @@
-@rem $Id: make-dist.cmd,v 1.5 2007-01-26 09:10:14 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.6 2007-08-12 18:17:53 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
 setlocal
+
+@rem Start with the installed cm3.
+@set CM3=
 
 call %~dp0clearenv || exit /b 1
 call %~dp0sysinfo || exit /b 1
