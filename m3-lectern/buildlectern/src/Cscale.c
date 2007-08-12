@@ -8,7 +8,16 @@
 /* Last modified on Tue Feb 14 11:28:31 PST 1995 by birrell  */
 /*      modified on Tue Nov 15 18:31:53 PST 1994 by wobber   */
 
-#define PIXWORDBITS   sizeof(int)*8
+#if (_MSC_VER >= 800)
+#pragma warning(disable:4131) /* uses old-style declarator */
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#define PIXWORDBITS   (sizeof(int)*8)
 
 int bitsIn[256];
 
@@ -26,10 +35,19 @@ void ScaleInit()
 
 /* corresponds to LGM.FastScaleBy2 */
 
+#ifdef __cplusplus
+void
+By2(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By2(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i = 0;
     int       j = 0;
@@ -53,10 +71,19 @@ int       width;
 
 /* corresponds to LGM.FastScaleBy3 */
 
+#ifdef __cplusplus
+void
+By3(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By3(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i = 0;
     int       j = 0;
@@ -101,10 +128,19 @@ int       width;
 
 /* corresponds to LGM.FastScaleBy4 */
 
+#ifdef __cplusplus
+void
+By4(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By4(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i = 0;
     int       j = 0;
@@ -128,10 +164,19 @@ int       width;
 
 /* corresponds to LGM.FastScaleBy48 */
 
+#ifdef __cplusplus
+void
+By48(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By48(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i,k;
     int       j = PIXWORDBITS/8;
@@ -164,11 +209,21 @@ int       width;
 
 /* corresponds to LGM.FastScaleByN */
 
+#ifdef __cplusplus
+void
+ByN(
+    long     *line,
+    unsigned *pixels,
+    int       width,
+    int       n
+    )
+#else
 void ByN(line, pixels, width, n)
 long     *line;
 unsigned *pixels;
 int       width;
 int       n;
+#endif
 {
     int       i, k;
     int       j = 0;
@@ -188,10 +243,18 @@ int       n;
 
 /* corresponds to LGM.FastScaleBy2R */
 
+#ifdef __cplusplus
+void By2R(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By2R(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i;
     int       j = PIXWORDBITS;
@@ -203,16 +266,25 @@ int       width;
         if (j == 0) {
             source = *++pixels;
             j = PIXWORDBITS;
-        };
+        }
     }
 }
 
 /* corresponds to LGM.FastScaleBy4R */
 
+#ifdef __cplusplus
+void
+By4R(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By4R(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i;
     int       j = PIXWORDBITS;
@@ -224,16 +296,25 @@ int       width;
         if (j == 0) {
             source = *++pixels;
             j = PIXWORDBITS;
-        };
+        }
     }
 }
 
 /* corresponds to LGM.FastScaleBy48R */
 
+#ifdef __cplusplus
+void
+By48R(
+    long     *line,
+    unsigned *pixels,
+    int       width
+    )
+#else
 void By48R(line, pixels, width)
 long     *line;
 unsigned *pixels;
 int       width;
+#endif
 {
     int       i,k;
     int       j = PIXWORDBITS;
@@ -253,11 +334,21 @@ int       width;
 
 /* corresponds to LGM.FastScaleByNR */
 
+#ifdef __cplusplus
+void
+ByNR(
+    long     *line,
+    unsigned *pixels,
+    int       width,
+    int       n
+    )
+#else
 void ByNR(line, pixels, width, n)
 long     *line;
 unsigned *pixels;
 int       width;
 int       n;
+#endif
 {
     int       i, k;
     int       j = 0;
@@ -275,10 +366,19 @@ int       n;
     }
 }
 
+#ifdef __cplusplus
+void
+FastMap(
+    long     *line,
+    int       nline,
+    long     *map
+    )
+#else
 void FastMap(line, nline, map)
 long     *line;
 int       nline;
 long     *map;
+#endif
 {
     long      *lim = line + nline;
 
@@ -289,11 +389,21 @@ long     *map;
 
 /* accumulate totals for scaling a line of RGB pixels */
 
+#ifdef __cplusplus
+void
+ScaleRGB(
+    long             *line,
+    int               nline,
+    unsigned char    *unscaled,
+    int               scale
+    )
+#else
 void ScaleRGB(line, nline, unscaled, scale)
 long             *line;
 int               nline;
 unsigned char    *unscaled;
 int               scale;
+#endif
 {
     long      *lim = line + nline;
     int        i;
@@ -306,7 +416,7 @@ int               scale;
             total0 += *unscaled++;
             total1 += *unscaled++;
             total2 += *unscaled++;
-	  };
+	  }
         *line++ += total0;
         *line++ += total1;
         *line++ += total2;
@@ -316,11 +426,21 @@ int               scale;
 
 /* map accumulated total to [0..255], for RGB scaling */
 
+#ifdef __cplusplus
+void
+FastMapToChar(
+    long     *line,
+    int       nline,
+    char     *map,
+    char     *destChars
+    )
+#else
 void FastMapToChar(line, nline, map, destChars)
 long     *line;
 int       nline;
 char     *map;
 char     *destChars;
+#endif
 {
     long      *lim = line + nline;
 
@@ -328,56 +448,86 @@ char     *destChars;
          *destChars++ = map[*line++];
 }
 
+#ifdef __cplusplus
+void
+FastPack(
+    long    *src,
+    char    *dest,
+    int      n
+    )
+#else
 void FastPack(src, dest, n)
 long    *src;
 char    *dest;
 int      n;
+#endif
 {
     while (n-- > 0) {
-        *dest++ = (src[0] << 6) +  (src[1] << 4) + (src[2] << 2) + src[3];
+        *dest++ = (char) ((src[0] << 6) +  (src[1] << 4) + (src[2] << 2) + src[3]);
         src += 4;
     }
 }
 
-/* corresponds to LGM.FinishPRun, this and prev point at th[h], prev[h] */
+/* corresponds to LGM.FinishPRun, self and prev point at th[h], prev[h] */
 
-int FinishPRun(this, prev, lim)
-char    *this;
+#ifdef __cplusplus
+int
+FinishPRun(
+    char    *self,
+    char    *prev,
+    int      lim
+    )
+#else
+int FinishPRun(self, prev, lim)
+char    *self;
 char    *prev;
 int      lim;
+#endif
 {
-    char    c = *this;
-    char   *start = this;
-    char   *plim = this + lim;
+    char    c = *self;
+    char   *start = self;
+    char   *plim = self + lim;
 
     for (;;) {
         if (c != 0) {
-            while (*++this == *++prev)
-                if (this == plim) break;
-            return (this - start);
+            while (*++self == *++prev)
+                if (self == plim) break;
+            return (self - start);
         }
-        if (++this == plim) return (this - start);
-        c = *this;
+        if (++self == plim) return (self - start);
+        c = *self;
         if (c != *++prev)
             if (c == 0) {
-                while (*++this == 0)
-                    if (this == plim) break;
-                return -(this - start);
+                while (*++self == 0)
+                    if (self == plim) break;
+                return -(self - start);
             } else
-                return (this - start);
+                return (self - start);
     }
 }
 
-/* corresponds to LGM.FinishPRun, this points at th[h] */
+/* corresponds to LGM.FinishPRun, self points at th[h] */
 
-int FinishZRun(this, lim)
-char    *this;
+#ifdef __cplusplus
+int
+FinishZRun(
+    char    *self,
+    int      lim
+    )
+#else
+int FinishZRun(self, lim)
+char    *self;
 int      lim;
+#endif
 {
-    char   *start = this;
-    char   *plim = this + lim;
+    char   *start = self;
+    char   *plim = self + lim;
 
-    while (*++this == 0)
-        if (this == plim) break;
-    return (this - start);
+    while (*++self == 0)
+        if (self == plim) break;
+    return (self - start);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
