@@ -2295,7 +2295,7 @@ PROCEDURE RecycleCopy (copy: RootList) =
 (*****************************************************************************)
 
 VAR
-  showGC := NOT RTParams.IsPresent("StarTrek");
+  showGC := RTParams.IsPresent("StarTrek");
 
 (* If showGC is TRUE, the cursor of every installed window will change to the 
    Star Trek cursor whenever the garbage collector is running.  At runtime, 
