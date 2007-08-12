@@ -7,7 +7,7 @@
 @rem
 
 @rem Start with the installed cm3.
-@set CM3=
+@if defined CM3 set CM3=
 
 @set p_runtime=^
  import-libs ^

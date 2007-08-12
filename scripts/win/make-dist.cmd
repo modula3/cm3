@@ -5,7 +5,7 @@
 setlocal
 
 @rem Start with the installed cm3.
-@set CM3=
+@if defined CM3 set CM3=
 
 call %~dp0clearenv || exit /b 1
 call %~dp0sysinfo || exit /b 1
