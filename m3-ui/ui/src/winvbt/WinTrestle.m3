@@ -2296,10 +2296,9 @@ PROCEDURE RecycleCopy (copy: RootList) =
 
 VAR
   showGC := RTParams.IsPresent("StarTrek");
-
 (* If showGC is TRUE, the cursor of every installed window will change to the 
    Star Trek cursor whenever the garbage collector is running.  At runtime, 
-   you can force no StarTrek cursor by running your program @M3StarTrek. *)
+   you can force the StarTrek cursor by running your program @M3StarTrek. *)
 
 TYPE
   GCClosure = RTHeapRep.MonitorClosure OBJECT
