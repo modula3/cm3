@@ -1,4 +1,4 @@
-@rem $Id: upgrade.cmd,v 1.5 2007-08-12 18:17:53 jkrell Exp $
+@rem $Id: upgrade.cmd,v 1.6 2007-08-12 18:21:55 jkrell Exp $
 
 @setlocal
 
@@ -7,7 +7,7 @@
 @rem
 
 @rem Start with the installed cm3.
-@set CM3=
+@if defined CM3 set CM3=
 
 @set p_runtime=^
  import-libs ^
