@@ -624,8 +624,12 @@ object or traced reference value includes a code for a type, called the
 
 \subsubsection*{2.2.1 Ordinal types}
 
-There are three kinds of ordinal types: enumerations, subranges, and
-\verb|INTEGER|.  An enumeration type is declared like this:
+There are three kinds of ordinal types: enumerations, subranges, and integers.
+
+There are two integer types, which in order of increasing range and precision
+are \verb|INTEGER| and \verb|LONGINT|.
+
+An enumeration type is declared like this:
 \begin{verbatim}
     TYPE T = {id_1, id_2, ..., id_n}
 \end{verbatim}
@@ -636,8 +640,9 @@ $i$'th value of the type in increasing order.  The empty enumeration
 
 Integers and enumeration elements are collectively called \emph{ordinal
   values}.  The \emph{base type} of an ordinal value \verb|v| is
-\verb|INTEGER| if \verb|v| is an integer, otherwise it is the unique
-enumeration type that contains \verb|v|.
+\verb|INTEGER| (or \verb|LONGINT|) if \verb|v| is an integer (or extended
+precision integer, respectively), otherwise it is the unique enumeration type
+that contains \verb|v|.
 
 A subrange type is declared like this:
 \begin{verbatim}
@@ -657,6 +662,8 @@ Here are the predeclared ordinal types:
 \begin{quote}
   \begin{tabular}{ll}
     \verb|INTEGER|  & All integers represented by the implementation \\
+    \verb|LONGINT|  & Extended precision integers, at least as precise as
+                      \verb|INTEGER| \\
     \verb|CARDINAL| & Behaves just like the subrange \verb|[0..LAST(INTEGER)]|
     \\
     \verb|BOOLEAN|  & The enumeration \verb|{FALSE, TRUE}| \\
@@ -1267,7 +1274,7 @@ unpacked fields, but there is no subtype relation between them.  This section
 presents the rules that define the subtyping relation.
 
 For ordinal types \verb|T| and \verb|U,| we have \verb|T <: U| if they have
-the same basetype and every member of \verb|T| is a member of \verb|U|.  That
+the same base type and every member of \verb|T| is a member of \verb|U|.  That
 is, subtyping on ordinal types reflects the subset relation on the value sets.
 
 For array types,
@@ -1823,7 +1830,7 @@ expression, and \verb|S| is a statement.  ``\verb|BY step|'' is optional; if
 omitted, step defaults to \verb|1|.
 
 The identifier \verb|id| denotes a readonly variable whose scope is \verb|S|
-and whose type is the common basetype of \verb|first| and \verb|last|.
+and whose type is the common base type of \verb|first| and \verb|last|.
 
 If \verb|id| is an integer, the statement steps \verb|id| through the values
 \verb|first|, \verb|first+step|, \verb|first+2*step|, ..., stopping when the
@@ -1853,8 +1860,9 @@ statement:
     END
 \end{verbatim}
 
-If the upper bound of the loop is \verb|LAST(INTEGER)|, it should be rewritten
-as a \verb|WHILE| loop to avoid overflow.
+If the upper bound of the loop is \verb|LAST(INTEGER)| or
+\verb|LAST(LONGINT)|, it should be rewritten as a \verb|WHILE| loop to avoid
+overflow.
 
 \subsubsection*{2.3.17 Case}
 
@@ -2607,7 +2615,7 @@ A single operation name can be overloaded, which means that it denotes more
 than one operation.  In this case, we write a separate signature for each of
 the operations.  For example:
 \begin{verbatim}
-    ABS (x: INTEGER) : INTEGER
+    ABS (x: Integer) : Integer
         (x: Float)   : Float
 \end{verbatim}
 The particular operation will be selected so that each actual argument type is
@@ -2751,8 +2759,8 @@ modules, \verb|LOOPHOLE| can also produce a designator.
 \subsubsection*{2.6.4 Numeric literals}
 
 Numeric literals denote constant non-negative integers or reals.  The types of
-these literals are \verb|INTEGER|, \verb|REAL|, \verb|LONGREAL|, and
-\verb|EXTENDED|.
+these literals are \verb|INTEGER|, \verb|LONGING|, \verb|REAL|,
+\verb|LONGREAL|, and \verb|EXTENDED|.
 
 A literal \verb|INTEGER| has the form \verb|base_digits|, where \verb|base| is
 one of ``\verb|2|'', ``\verb|3|'', ..., ``\verb|16|'', and \verb|digits| is a
@@ -2767,6 +2775,14 @@ If no explicit base is present, the value of the literal must be at most
 literal must be less than \verb|2^Word.Size|, and its interpretation uses the
 convention of the \verb|Word| interface.  For example, on a sixteen-bit two's
 complement machine, \verb|16_FFFF| and \verb|-1| represent the same value.
+
+A literal \verb|LONGINT| has the form \verb|integer L|, where \verb|integer|
+has the same form as a literal \verb|INTEGER|.  If no explicit base is
+present, the value of the literal must be at most \verb|LAST(LONGINT)|.  If an
+explicit base is present, the value of the literal must be less than
+\verb|2^Long.Size|, and its interpretation uses the convention of the
+\verb|Long| interface.  For example, the \verb|LONGINT| having the value zero
+would be written \verb|0L|.
 
 A literal \verb|REAL| has the form \verb|decimal E exponent|, where
 \verb|decimal| is a non-empty sequence of decimal digits followed by a decimal
@@ -2942,9 +2958,9 @@ bounded integers or for floating-point values.
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-    prefix \> \verb|+|       \> \verb|(x: INTEGER)    : INTEGER| \\
+    prefix \> \verb|+|       \> \verb|(x: Integer)    : Integer| \\
            \>                \> \verb|(x: Float)      : Float| \\
-    infix  \> \verb|+|       \> \verb|(x,y: INTEGER)  : INTEGER| \\
+    infix  \> \verb|+|       \> \verb|(x,y: Integer)  : Integer| \\
            \>                \> \verb|(x,y: Float)    : Float| \\
            \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
@@ -2959,9 +2975,9 @@ extended to \verb|ADDRESS|.
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-    prefix \> \verb|-|       \> \verb|(x: INTEGER)    : INTEGER| \\
+    prefix \> \verb|-|       \> \verb|(x: Integer)    : Integer| \\
            \>                \> \verb|(x: Float)      : Float| \\
-    infix  \> \verb|-|       \> \verb|(x,y: INTEGER)  : INTEGER| \\
+    infix  \> \verb|-|       \> \verb|(x,y: Integer)  : Integer| \\
            \>                \> \verb|(x,y: Float)    : Float| \\
            \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
@@ -2976,7 +2992,7 @@ the same, and the result is the same type as both.  In unsafe modules,
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|*|       \> \verb|(x,y: INTEGER)  : INTEGER| \\
+    infix  \> \verb|*|       \> \verb|(x,y: Integer)  : Integer| \\
            \>                \> \verb|(x,y: Float)    : Float| \\
            \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
@@ -3001,8 +3017,8 @@ same, and the result is the same type as both.
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|DIV|     \> \verb|(x,y: INTEGER) : INTEGER| \\
-    infix  \> \verb|MOD|     \> \verb|(x,y: INTEGER) : INTEGER| \\
+    infix  \> \verb|DIV|     \> \verb|(x,y: Integer) : Integer| \\
+    infix  \> \verb|MOD|     \> \verb|(x,y: Integer) : Integer| \\
            \>                \> \verb|(x,y: Float)   : Float|
   \end{tabbing}
 \end{quote}
@@ -3025,17 +3041,17 @@ type as both.
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|ABS|     \> \verb|(x: INTEGER) : INTEGER| \\
+           \> \verb|ABS|     \> \verb|(x: Integer) : Integer| \\
            \>                \> \verb|(x: Float)   : Float|
   \end{tabbing}
 \end{quote}
-\verb|ABS(x)| is the absolute value of \verb|x|.  If \verb|x| is a float, the
-type of \verb|ABS(x)| is the same as the type of x.
+\verb|ABS(x)| is the absolute value of \verb|x|.  The type of \verb|ABS(x)| is
+the same as the type of \verb|x|.
 
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|FLOAT|   \> \verb|(x: INTEGER; T: Type := REAL): T| \\
+           \> \verb|FLOAT|   \> \verb|(x: Integer; T: Type := REAL): T| \\
            \>                \> \verb|(x: Float;   T: Type := REAL): T|
   \end{tabbing}
 \end{quote}
@@ -3047,18 +3063,19 @@ rounding mode, as explained in the required interface \verb|FloatMode|.
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|FLOOR|   \> \verb|(x: Float) : INTEGER| \\
-           \> \verb|CEILING| \> \verb|(x: Float) : INTEGER|
+           \> \verb|FLOOR|   \> \verb|(x: Float; T: Type := INTEGER): T| \\
+           \> \verb|CEILING| \> \verb|(x: Float; T: Type := INTEGER): T|
   \end{tabbing}
 \end{quote}
 \verb|FLOOR(x)| is the greatest integer not exceeding \verb|x|.
 \verb|CEILING(x)| is the least integer not less than \verb|x|.
+The type \verb|T| must be an integer type; it defaults to \verb|INTEGER|.
 
 \begin{quote}
   \begin{tabbing}
     prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|ROUND|   \> \verb|(r: Float) : INTEGER| \\
-           \> \verb|TRUNC|   \> \verb|(r: Float) : INTEGER|
+           \> \verb|ROUND|   \> \verb|(r: Float; T: Type := INTEGER): T| \\
+           \> \verb|TRUNC|   \> \verb|(r: Float; T: Type := INTEGER): T|
   \end{tabbing}
 \end{quote}
 \verb|ROUND(r)| is the nearest integer to \verb|r|; ties are broken according
@@ -3066,6 +3083,7 @@ to the constant \verb|RoundDefault| in the required interface
 \verb|FloatMode|.  \verb|TRUNC(r)| rounds \verb|r| toward zero; it equals
 \verb|FLOOR(r)| for positive \verb|r| and \verb|CEILING(r)| for negative
 \verb|r|.
+The type \verb|T| must be an integer type; it defaults to \verb|INTEGER|.
 
 \begin{quote}
   \begin{tabbing}
@@ -3220,7 +3238,8 @@ an enumeration \verb|T|, the result is the position of the element within
 \verb|i| in the original enumeration type, not the subrange.  It is a checked
 runtime error for the value of \verb|i| to be out of range for \verb|T|.
 
-If \verb|n| is an integer, \verb|ORD(n) = VAL(n, INTEGER) = n|.
+If \verb|n| is an integer, \verb|ORD(n) = VAL(n, INTEGER) = n|.  Similarly,
+\verb|ORD(VAL(n, LONGINT)) = n|.
 
 \begin{quote}
   \begin{tabbing}
