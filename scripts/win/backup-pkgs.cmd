@@ -1,4 +1,4 @@
-@rem $Id: backup-pkgs.cmd,v 1.3 2007-06-22 20:04:04 hosking Exp $
+@rem $Id: backup-pkgs.cmd,v 1.4 2007-08-12 18:59:56 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -77,7 +77,6 @@ m3tools ^
 m3cgcat ^
 m3cggen ^
 m3bundle ^
-dll2lib ^
 fix_nl ^
 libdump
 

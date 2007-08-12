@@ -1,4 +1,4 @@
-@rem $Id: def-std-pkgs.cmd,v 1.4 2007-06-22 20:04:04 hosking Exp $
+@rem $Id: def-std-pkgs.cmd,v 1.5 2007-08-12 18:59:56 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -26,9 +26,9 @@ set P=%P% m3cggen
 @rem )
 set P=%P% m3bundle
 if "%M3OSTYPE%" == "WIN32" (
-  set P=%P% mklib dll2lib fix_nl libdump
+  set P=%P% mklib fix_nl libdump
 ) else if not "%CM3_ALL" == "" (
-  set P=%P% mklib dll2lib fix_nl libdump
+  set P=%P% mklib fix_nl libdump
 )
 @rem more useful quasi-standard libraries
 set P=%P% bitvector

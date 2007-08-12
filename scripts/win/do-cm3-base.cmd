@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-base.cmd,v 1.4 2007-01-01 19:24:02 jkrell Exp $
+@rem $Id: do-cm3-base.cmd,v 1.5 2007-08-12 18:59:56 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -21,7 +21,6 @@ set P=%P% m3cgcat
 set P=%P% m3cggen
 set P=%P% m3bundle
 set P=%P% mklib
-set P=%P% dll2lib
 set P=%P% fix_nl
 set P=%P% libdump
 set P=%P% bitvector
