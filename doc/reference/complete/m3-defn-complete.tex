@@ -1,5 +1,9 @@
 \documentclass[10pt]{article}
 \usepackage{fullpage, graphicx, url}
+
+\renewcommand{\sfdefault}{phv}
+\renewcommand{\rmdefault}{ptm}
+
 \setlength{\parskip}{1ex}
 \setlength{\parindent}{0ex}
 \title{Modula-3: Language definition (single page)}
@@ -46,7 +50,7 @@ reserved.
 \subsection*{Contents}
 
 \begin{itemize}
-\item[] Acknowledgments
+\item Acknowledgments
 \item[1.~] Introduction
    \begin{itemize}
   \item History, Perspective, Overview, Features, Interfaces, Objects,
@@ -63,10 +67,10 @@ reserved.
 \item[2.3] Statements
   \begin{itemize}
   \item Assignment, Procedure call, Eval, Block statement, Sequential
-    composition, \verb|RAISE|, \verb|TRY-EXCEPT|, \verb|TRY-FINALLY|,
-    \verb|LOOP|, \verb|EXIT|, \verb|RETURN|, \verb|IF|, \verb|WHILE|,
-    \verb|REPEAT|, \verb|WITH|, \verb|FOR|, \verb|CASE|, \verb|TYPECASE|,
-    \verb|LOCK|, \verb|INC|, \& \verb|DEC|
+    composition, \verb|RAISE|, \verb|TRY|-\verb|EXCEPT|,
+    \verb|TRY|-\verb|FINALLY|, \verb|LOOP|, \verb|EXIT|, \verb|RETURN|,
+    \verb|IF|, \verb|WHILE|, \verb|REPEAT|, \verb|WITH|, \verb|FOR|,
+    \verb|CASE|, \verb|TYPECASE|, \verb|LOCK|, \verb|INC|, \& \verb|DEC|
   \end{itemize}
 \item[2.4] Declarations
   \begin{itemize}
@@ -92,7 +96,7 @@ reserved.
     Conventions, Compilation units, Statements, Types, Expressions,
     Miscellaneous, Tokens
   \end{itemize}
-\item[] About the authors
+\item About the authors
 \end{itemize}
 
 \subsection*{Acknowledgments}
@@ -864,7 +868,7 @@ whose elements have type \verb|Base|.  For example, a variable whose type is
 \end{verbatim}
 
 Implementations are expected to use the same representation for a
-\verb|SET OF T| as for an \verb|ARRAY T OF BITS 1 FOR BOOLEAN|.  Hence,
+\verb|SET OF T| as for an \texttt{ARRAY T OF BITS 1 FOR BOOLEAN}.  Hence,
 programmers should expect \verb|SET OF [0..1023]| to be practical, but not
 \verb|SET OF INTEGER|.
 
@@ -1596,7 +1600,7 @@ exception \verb|e| paired with the argument \verb|x|.
 
 \subsubsection*{2.3.7 Try Except}
 
-A \verb|TRY-EXCEPT| statement has the form:
+A \verb|TRY|-\verb|EXCEPT| statement has the form:
 \begin{verbatim}
     TRY
       Body
@@ -2671,7 +2675,7 @@ operation and \verb|args| is the list of argument expressions.  For example,
 
 An identifier is a \emph{writable designator} if it is declared as a variable,
 is a \verb|VAR| or \verb|VALUE| parameter, is a local of a \verb|TYPECASE| or
-\verb|TRY-EXCEPT| statement, or is a \verb|WITH| local that is bound to a
+\verb|TRY|-\verb|EXCEPT| statement, or is a \verb|WITH| local that is bound to a
 writable designator.  An identifier is a \emph{readonly designator} if it is a
 \verb|READONLY| parameter, a local of a \verb|FOR| statement, or a \verb|WITH|
 local bound to a non-designator or readonly designator.
@@ -3466,7 +3470,7 @@ semantics.
 We recommend supporting the two pragmas \verb|<*INLINE*>| and
 \verb|<*EXTERNAL*>|.  The pragma \verb|<*INLINE*>| precedes a procedure
 declaration to indicate that the procedure should be expanded at the point of
-call.  The pragma \verb|<*EXTERNAL N:L*>| precedes an interface or a
+call.  The pragma \verb|<*EXTERNAL| \verb|N:L*>| precedes an interface or a
 declaration in an interface to indicate that the entity it precedes is
 implemented by the language \verb|L|, where it has the name \verb|N|.  If
 ``\verb|:L|'' is omitted, then the implementation's default external language
