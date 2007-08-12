@@ -10,7 +10,7 @@
 UNSAFE MODULE WinTrestle;
 
 IMPORT Axis, Batch, Cstring, Ctypes, Env, Fmt, M3toC, Point, ProperSplit,
-       Rect, Region, RTCollectorSRC, RTHeapDep, RTHeapRep, RTParams, RTLinker, 
+       Rect, Region, RTHeapRep, RTParams, RTLinker, 
        ScrnColorMap, ScrnCursor, ScrnPixmap, Split, Text, Thread,
        Trestle, TrestleClass, TrestleImpl, VBT, VBTClass, VBTRep, WinBase, 
        WinDef, WinGDI, WinKey, WinMsg, WinPaint, WinScreenType,
@@ -2295,9 +2295,8 @@ PROCEDURE RecycleCopy (copy: RootList) =
 (*****************************************************************************)
 
 VAR
-  showGC := NOT RTParams.IsPresent("StarTrek") 
-                AND NOT (RTCollectorSRC.incremental AND RTHeapDep.VM
-                         AND RTHeapRep.disableVMCount = 0);
+  showGC := NOT RTParams.IsPresent("StarTrek");
+
 (* If showGC is TRUE, the cursor of every installed window will change to the 
    Star Trek cursor whenever the garbage collector is running.  At runtime, 
    you can force no StarTrek cursor by running your program @M3StarTrek. *)
@@ -2320,11 +2319,8 @@ PROCEDURE DoHackInit (trsl: T) =
 
 PROCEDURE HackOn (cl: GCClosure) =
   BEGIN
-    IF NOT ((RTCollectorSRC.incremental AND RTHeapDep.VM
-               AND RTHeapRep.disableVMCount = 0)) THEN
-      HackToggle(cl.trsl, TRUE);
-      hacking := TRUE
-    END
+    HackToggle(cl.trsl, TRUE);
+    hacking := TRUE
   END HackOn;
 
 PROCEDURE HackOff (cl: GCClosure) =
