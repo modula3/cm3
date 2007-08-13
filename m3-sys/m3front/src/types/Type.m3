@@ -637,6 +637,7 @@ PROCEDURE InitCompilation () =
     EVAL TypeTbl.Put (compiled, Check(Card.T),      Card.T);
     EVAL TypeTbl.Put (compiled, Check(EReel.T),     EReel.T);
     EVAL TypeTbl.Put (compiled, Check(Int.T),       Int.T);
+    EVAL TypeTbl.Put (compiled, Check(LInt.T),      LInt.T);
     EVAL TypeTbl.Put (compiled, Check(LReel.T),     LReel.T);
     EVAL TypeTbl.Put (compiled, Check(Mutex.T),     Mutex.T);
     EVAL TypeTbl.Put (compiled, Check(Null.T),      Null.T);
