@@ -76,7 +76,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
   VAR v: Expr.T;  i: Target.Int;  u: Type.T;   skip: CG.Label;
   BEGIN
     IF Host.doAsserts THEN
-      i := TInt.MOne;
+      i := TInt.MOneI;
       v := Expr.ConstValue (p.cond);
       IF (v = NIL) THEN
         skip := CG.Next_label ();
@@ -85,12 +85,12 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         Expr.CompileBranch (p.cond, skip, CG.No_label, CG.Always);
         Crash (p);
         CG.Set_label (skip);
-      ELSIF EnumExpr.Split (v, i, u) AND TInt.EQ (i, TInt.Zero) THEN
+      ELSIF EnumExpr.Split (v, i, u) AND TInt.Sig (i) = 0 THEN
         (* ASSERT (FALSE) *)
         IF (p.msg # NIL) THEN Expr.Prep (p.msg); END;
         Crash (p);
         RETURN Stmt.Outcomes {};
-      ELSE <* ASSERT TInt.EQ (i, TInt.One) *>
+      ELSE <* ASSERT TInt.Sig (i) # 0 *>
         (* ASSERT (TRUE) *)
       END;
     END;

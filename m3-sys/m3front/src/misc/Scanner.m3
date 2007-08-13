@@ -524,7 +524,7 @@ PROCEDURE ScanNumber () =
       END;
       IF (len = 0) THEN
         Error.Msg ("illegal based integer literal, zero used");
-        val := TInt.Zero;
+        val := TInt.ZeroI;
       ELSIF (ch = 'l') OR (ch = 'L') THEN
         GetCh (); (* eat the precision character *)
         IF NOT (TWord.New (SUBARRAY (buf, 0, len), base,
@@ -535,7 +535,7 @@ PROCEDURE ScanNumber () =
       ELSIF NOT (TWord.New (SUBARRAY (buf, 0, len), base,
                             Target.Pre.Integer, val)) THEN
         Error.Msg ("illegal based INTEGER literal, zero used");
-        val := TInt.Zero;
+        val := TInt.ZeroI;
       END;
       cur.token := TK.tCARDCONST;
       cur.int   := val;
@@ -552,7 +552,7 @@ PROCEDURE ScanNumber () =
 
         IF NOT TInt.New (SUBARRAY (buf, 0, len-1), Target.Pre.Integer, val) THEN
           Error.Msg ("illegal integer literal, zero used");
-          val := TInt.Zero;
+          val := TInt.ZeroI;
         END;
         cur.token := TK.tCARDCONST;
         cur.int   := val;
@@ -618,7 +618,7 @@ PROCEDURE ScanNumber () =
         END;
       ELSIF NOT TInt.New (SUBARRAY (buf, 0, len), Target.Pre.Integer, val) THEN
         Error.Msg ("illegal integer literal, zero used");
-        val := TInt.Zero;
+        val := TInt.ZeroI;
       END;
       cur.token := TK.tCARDCONST;
       cur.int   := val;
@@ -631,7 +631,7 @@ PROCEDURE ScanChar (wide: BOOLEAN) =
   VAR val := 0;
   BEGIN
     cur.token := Tok[wide];
-    cur.int   := TInt.Zero;
+    cur.int   := TInt.ZeroI;
     GetCh ();
     IF (ch = '\'') THEN
       Error.Msg ("missing character in character literal");

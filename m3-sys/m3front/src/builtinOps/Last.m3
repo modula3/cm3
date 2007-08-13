@@ -45,7 +45,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     IF (t = NIL) THEN (* open array *)
       Expr.Compile (e);
       CG.Open_size (0);
-      CG.Load_integer (TInt.One);
+      CG.Load_integer (TInt.OneI);
       CG.Subtract (Target.Integer.cg_type);
     ELSIF Type.GetBounds (t, min, max) THEN (* ordinal type *)
       CG.Load_integer (max);

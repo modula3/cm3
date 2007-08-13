@@ -41,18 +41,18 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   BEGIN
     Expr.GetBounds (ce.args[0], min_a, max_a);
     Expr.GetBounds (ce.args[1], min_b, max_b);
-    IF TInt.LT (min_a, TInt.ZeroL) OR TInt.LT (max_a, TInt.ZeroL) THEN
+    IF TInt.Sig (min_a) < 0 OR TInt.Sig (max_a) < 0 THEN
       (* "a" could be 16_ffff...  => any bits from "b" can survive *)
-      IF TInt.LT (min_b, TInt.ZeroL) OR TInt.LT (max_b, TInt.ZeroL) THEN
+      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
         (* too complicated *)
-        min := Target.Longint.min;
-        max := Target.Longint.max;
+        min := Target.Int{Target.Longint.min, Target.Pre.Longint};
+        max := Target.Int{Target.Longint.max, Target.Pre.Longint};
       ELSE
         (* "b" is non-negative, but "a" could be 16_ffff... *)
         min := TInt.ZeroL;  (* no bits in common *)
         max := max_b;
       END;
-    ELSIF TInt.LT (min_b, TInt.ZeroL) OR TInt.LT (max_b, TInt.ZeroL) THEN
+    ELSIF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
       (* "a" is non-negative, but "b" could be 16_ffff... *)
       min := TInt.ZeroL;  (* no bits in common *)
       max := max_a;

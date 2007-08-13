@@ -32,7 +32,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     inc    : Expr.T;
     check  : [0..3] := 0;
     lvalue : CG.Val;
-    bmin, bmax, imin, imax: Target.Int;
+    min, max, bmin, bmax, imin, imax: Target.Int;
   BEGIN
     tlhs := Type.CheckInfo (tlhs, info);
     IF (NUMBER (ce.args^) > 1)
@@ -40,7 +40,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       ELSE
         IF Type.IsSubtype (tlhs, LInt.T)
           THEN inc := IntegerExpr.New (TInt.OneL);
-          ELSE inc := IntegerExpr.New (TInt.One);
+          ELSE inc := IntegerExpr.New (TInt.OneI);
         END;
         Expr.Prep (inc);
     END;
@@ -49,16 +49,14 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     IF Host.doRangeChk THEN
       IF Type.IsSubtype (tlhs, LInt.T) THEN
-        IF NOT TInt.EQ (bmin, Target.Longint.min)
-          AND TInt.LT (imin, TInt.ZeroL) THEN INC (check) END;
-        IF NOT TInt.EQ (bmax, Target.Longint.max)
-          AND TInt.LT (TInt.ZeroL, imax) THEN INC (check, 2) END;
+        min := Target.Int {Target.Longint.min, Target.Pre.Longint};
+        max := Target.Int {Target.Longint.max, Target.Pre.Longint};
       ELSE        
-        IF NOT TInt.EQ (bmin, Target.Integer.min)
-           AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
-        IF NOT TInt.EQ (bmax, Target.Integer.max)
-           AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
+        min := Target.Int {Target.Integer.min, Target.Pre.Integer};
+        max := Target.Int {Target.Integer.max, Target.Pre.Integer};
       END;
+      IF NOT TInt.EQ (bmin, min) AND TInt.Sig (imin) < 0 THEN INC (check) END;
+      IF NOT TInt.EQ (bmax, max) AND TInt.Sig (imax) > 0 THEN INC (check, 2) END;
     END;
 
     Expr.CompileLValue (lhs);

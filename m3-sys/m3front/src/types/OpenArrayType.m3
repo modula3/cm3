@@ -243,7 +243,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     array := CG.Pop ();
 
     (* put down a loop to map the elements *)
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (TInt.ZeroI);
     cnt := CG.Pop_temp ();
     top := CG.Next_label (2);
     CG.Jump (top+1);
@@ -257,7 +257,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
 
     (* cnt := cnt + 1 *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (TInt.OneI);
     CG.Add (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 

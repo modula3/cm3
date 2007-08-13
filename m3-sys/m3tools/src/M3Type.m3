@@ -48,10 +48,11 @@ PROCEDURE Number (t: T): Target.Int =
   BEGIN
     IF t.get_bounds (min, max)
       AND TInt.Subtract (max, min, tmp)
-      AND TInt.Add (tmp, TInt.One, max) THEN
+      AND TInt.Ord (tmp, tmp)
+      AND TInt.Inc (tmp, max) THEN
       RETURN max;
     END;
-    RETURN Target.Integer.max;
+    RETURN Target.Int{Target.Integer.max, Target.Pre.Integer};
   END Number;
 
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
@@ -268,7 +269,8 @@ PROCEDURE FindEnumRep (READONLY max: Target.Int): EnumRep =
   BEGIN
     FOR i := FIRST (EnumRep) TO LAST (EnumRep) DO
       WITH t = TargetMap.Word_types[i] DO
-        IF (t.size <= Target.Word.size) AND TInt.LE (max, t.max) THEN
+        IF (t.size <= Target.Word.size)
+          AND TInt.LE (max, Target.Int{t.max, Target.Pre.Integer}) THEN
           RETURN i;
         END;
       END;
@@ -287,7 +289,7 @@ PROCEDURE MinEnumSize (n_elts: INTEGER): INTEGER =
 PROCEDURE EnumBounds (self: Enum;  VAR min, max: Target.Int): BOOLEAN =
   VAR b: BOOLEAN;
   BEGIN
-    min := TInt.Zero;
+    min := TInt.ZeroI;
     b := TInt.FromInt (NUMBER (self.elements^) - 1, Target.Pre.Integer, max);
     <*ASSERT b*>
     RETURN TRUE;
@@ -705,7 +707,7 @@ REVEAL
   END;
 
 PROCEDURE GetSubrangeInfo (self: Subrange;  VAR x: Info) =
-  VAR rep := FindRangeRep (self.min, self.max);
+  VAR rep := FindRangeRep (self);
   BEGIN
     x.size      := TargetMap.CG_Size[rep];
     x.min_size  := MinIntegerSize (self.min, self.max);
@@ -716,14 +718,18 @@ PROCEDURE GetSubrangeInfo (self: Subrange;  VAR x: Info) =
     x.is_solid  := TRUE;
   END GetSubrangeInfo;
 
-PROCEDURE FindRangeRep (READONLY min, max: Target.Int): Target.CGType =
+PROCEDURE FindRangeRep (self: Subrange): Target.CGType =
+  VAR pre: Target.Pre;
   BEGIN
-    IF TInt.LE (TInt.Zero, min) THEN
+    IF self.super = Longint
+      THEN pre := Target.Pre.Longint;
+      ELSE pre := Target.Pre.Integer;
+    END;
+    IF TInt.Sig (self.min) >= 0 THEN
       (* look for an unsigned type *)
       FOR i := FIRST (TargetMap.Word_types) TO LAST (TargetMap.Word_types) DO
         WITH z = TargetMap.Word_types[i] DO
-          IF (z.size <= Target.Word.size)
-            AND TWord.LE (max, z.max) THEN
+          IF TWord.LE (self.max, Target.Int{z.max, pre}) THEN
             RETURN z.cg_type;
           END;
         END;
@@ -732,16 +738,16 @@ PROCEDURE FindRangeRep (READONLY min, max: Target.Int): Target.CGType =
       (* look for a signed type *)
       FOR i := FIRST (TargetMap.Integer_types) TO LAST (TargetMap.Integer_types) DO
         WITH z = TargetMap.Integer_types[i] DO
-          IF (z.size <= Target.Integer.size)
-            AND TInt.LE (z.min, min)
-            AND TInt.LE (max, z.max) THEN
+          IF TInt.LE (Target.Int{z.min, pre}, self.min)
+            AND TInt.LE (self.max, Target.Int{z.max, pre}) THEN
             RETURN z.cg_type;
           END;
         END;
       END;
     END;
 
-    RETURN Target.Integer.cg_type;
+    RETURN ARRAY Target.Pre OF Target.CGType {Target.Integer.cg_type,
+                                              Target.Longint.cg_type}[pre];
   END FindRangeRep;
 
 PROCEDURE SubrangeBase (self: Subrange): T =
@@ -756,7 +762,7 @@ PROCEDURE SubrangeBounds (self: Subrange;  VAR min, max: Target.Int): BOOLEAN =
     RETURN TRUE;
   END SubrangeBounds;
 
-(*------------------------------------------------------------- INTEGER ---*)
+(*----------------------------------------------------- INTEGER/LONGINT ---*)
 
 TYPE
   IntType = T BRANDED "M3Type.IntType" OBJECT
@@ -772,22 +778,42 @@ TYPE
     ********************)
   END;
 
-PROCEDURE GetIntInfo (<*UNUSED*> self: IntType;  VAR x: Info) =
+PROCEDURE GetIntInfo (self: IntType;  VAR x: Info) =
   BEGIN
-    x.size      := Target.Integer.size;
-    x.min_size  := Target.Integer.size;
-    x.alignment := Target.Integer.align;
-    x.class     := Class.Integer;
+    CASE self.prec OF
+    | Target.Pre.Integer => 
+      x.size      := Target.Integer.size;
+      x.min_size  := Target.Integer.size;
+      x.alignment := Target.Integer.align;
+      x.class     := Class.Integer;
+    | Target.Pre.Longint =>
+      x.size      := Target.Longint.size;
+      x.min_size  := Target.Longint.size;
+      x.alignment := Target.Longint.align;
+      x.class     := Class.Longint;
+    END;
     x.is_traced := FALSE;
     x.is_empty  := FALSE;
     x.is_solid  := TRUE;
   END GetIntInfo;
 
-PROCEDURE IntBounds (<*UNUSED*> t: T;  VAR min, max: Target.Int): BOOLEAN =
+PROCEDURE IntBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
   BEGIN
-    min := Target.Integer.min;
-    max := Target.Integer.max;
-    RETURN TRUE;
+    TYPECASE t OF
+    | IntType (z) =>
+      CASE z.prec OF
+      | Target.Pre.Longint =>
+        min := Target.Int{Target.Longint.min, Target.Pre.Longint};
+        max := Target.Int{Target.Longint.max, Target.Pre.Longint};
+        RETURN TRUE;
+      | Target.Pre.Integer =>
+        min := Target.Int{Target.Integer.min, Target.Pre.Integer};
+        max := Target.Int{Target.Integer.max, Target.Pre.Integer};
+        RETURN TRUE;
+      END;
+    ELSE
+      RETURN FALSE;
+    END;
   END IntBounds;
 
 (*-------------------------------------------------------------- FLOATS ---*)
@@ -838,34 +864,46 @@ PROCEDURE MinIntegerSize (READONLY min, max: Target.Int): INTEGER =
 PROCEDURE BitWidth (n: Target.Int;  VAR width: INTEGER;  VAR neg: BOOLEAN) =
   (***  valid for  Target.Integer.min <= n <= Target.Integer.max ***)
   VAR tmp: Target.Int;
+      pre := TInt.Prec (n);
+      size := ARRAY Target.Pre OF INTEGER {Target.Integer.size,
+                                           Target.Longint.size}[pre];
   BEGIN
-    neg := TInt.LT (n, TInt.Zero);
+    neg := TInt.Sig (n) < 0;
     IF (neg) THEN
-      IF NOT TInt.Add (n, TInt.One, tmp)
-        OR NOT TInt.Subtract (TInt.Zero, tmp, n) THEN
+      IF NOT TInt.Inc (n, tmp) OR NOT TInt.Negate (tmp, n) THEN
         (* value too large??? *)
-        width := Target.Integer.size;
+        width := size;
         RETURN;
       END;
     END;
 
     IF NOT powers_done THEN BuildPowerTables () END;
-    width := Target.Integer.size;
-    FOR i := 0 TO LAST (power) DO
-      IF TInt.LE (n, power[i]) THEN width := i;  EXIT END;
+    width := size;
+    FOR i := 0 TO LAST (power[pre]) DO
+      IF TInt.LE (n, power[pre][i]) THEN width := i;  EXIT END;
     END;
   END BitWidth;
 
 VAR (*CONST*)
-  power : ARRAY [0..BITSIZE (Target.Int)] OF Target.Int;
+  power : ARRAY Target.Pre OF ARRAY [0..BITSIZE (Target.Int)] OF Target.Int;
   powers_done := FALSE;
 
 PROCEDURE BuildPowerTables () =
   BEGIN
-    power [0] := TInt.One;
-    FOR i := 1 TO LAST (power) DO
-      IF NOT TInt.Add (power[i-1], power[i-1], power[i]) THEN
-        power[i] := Target.Integer.max;
+    WITH p = power[Target.Pre.Integer] DO
+      p[0] := TInt.OneI;
+      FOR i := 1 TO LAST (p) DO
+        IF NOT TInt.Add (p[i-1], p[i-1], p[i]) THEN
+          p[i] := Target.Int{Target.Integer.max, Target.Pre.Integer};
+        END;
+      END;
+    END;
+    WITH p = power[Target.Pre.Longint] DO
+      p[0] := TInt.OneL;
+      FOR i := 1 TO LAST (p) DO
+        IF NOT TInt.Add (p[i-1], p[i-1], p[i]) THEN
+          p[i] := Target.Int{Target.Longint.max, Target.Pre.Longint};
+        END;
       END;
     END;
     powers_done := TRUE;
@@ -890,8 +928,8 @@ PROCEDURE IsAlways (<*UNUSED*> t: T): BOOLEAN =
 
 PROCEDURE NoBounds (<*UNUSED*> t: T;  VAR min, max: Target.Int): BOOLEAN =
   BEGIN
-    min := TInt.Zero;
-    max := TInt.MOne;
+    min := TInt.ZeroI;
+    max := TInt.MOneI;
     RETURN FALSE;
   END NoBounds;
 
@@ -933,8 +971,8 @@ PROCEDURE InitBuiltins () =
     Null    := NEW (Ref, brand := NIL, target := NIL, traced := FALSE);
 
     Cardinal := NEW (Subrange,
-                     min := TInt.Zero,
-                     max := Target.Integer.max,
+                     min := TInt.ZeroI,
+                     max := Target.Int{Target.Integer.max, Target.Pre.Integer},
                      super := Integer);
 
     VAR elts := NEW (REF ARRAY OF M3ID.T, 2); BEGIN

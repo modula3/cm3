@@ -123,7 +123,7 @@ PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, y, res: Target.Int;
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
-    IF TInt.EQ (y, TInt.Zero) OR TInt.EQ (y, TInt.ZeroL) THEN
+    IF TInt.Sig (y) = 0 THEN
       Error.Msg ("attempt to DIV by 0");
       RETURN FALSE;
     END;
@@ -136,7 +136,7 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, y, res: Target.Int;
   BEGIN
     IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
-    IF TInt.EQ (y, TInt.Zero) OR TInt.EQ (y, TInt.ZeroL) THEN
+    IF TInt.Sig (y) = 0 THEN
       Error.Msg ("attempt to MOD by 0");
       RETURN FALSE;
     END;
@@ -150,8 +150,7 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => IF NOT (TInt.Subtract (TInt.Zero,  p.val, res)
-                  OR  TInt.Subtract (TInt.ZeroL, p.val, res)) THEN
+    | P(p) => IF NOT TInt.Negate (p.val, res) THEN
                 RETURN FALSE;
               END;
               c := New (res);  RETURN TRUE;
@@ -184,7 +183,7 @@ PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN =
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN TInt.EQ (p.val, TInt.Zero) OR TInt.EQ (p.val, TInt.ZeroL);
+    RETURN TInt.Sig (p.val) = 0;
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =

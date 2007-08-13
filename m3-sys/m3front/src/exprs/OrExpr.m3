@@ -8,7 +8,7 @@
 
 MODULE OrExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt;
+IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt, Value;
 
 TYPE
   P = ExprRep.Tab BRANDED "OrExpr.P" OBJECT
@@ -62,10 +62,10 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 PROCEDURE Prep (p: P) =
   VAR true := CG.Next_label ();
   BEGIN
-    CG.Load_integer (TInt.One);
+    Value.Load (Bool.True);
     p.tmp := CG.Pop_temp ();
     PrepBR (p, true, CG.No_label, CG.Maybe);
-    CG.Load_integer (TInt.Zero);
+    Value.Load (Bool.False);
     CG.Store_temp (p.tmp);
     CG.Set_label (true);
   END Prep;

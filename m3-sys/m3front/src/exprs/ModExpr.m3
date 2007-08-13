@@ -126,9 +126,9 @@ PROCEDURE Compile (p: P) =
           (* mod 1 => zero *)
           Expr.Compile (e1);
           CG.Discard (Target.Integer.cg_type);
-          CG.Load_integer (TInt.Zero);
+          CG.Load_integer (TInt.ZeroI);
         ELSE
-          EVAL TInt.Subtract (divisor, TInt.One, mask);
+          EVAL TInt.Dec (divisor, mask);
           Expr.Compile (e1);
           CG.Load_integer (mask);
           CG.And (Target.Integer.cg_type);
@@ -156,7 +156,7 @@ PROCEDURE Compile (p: P) =
           CG.Discard (Target.Longint.cg_type);
           CG.Load_integer (TInt.ZeroL);
         ELSE
-          EVAL TInt.Subtract (divisor, TInt.OneL, mask);
+          EVAL TInt.Dec (divisor, mask);
           Expr.Compile (e1);
           CG.Load_integer (mask);
           CG.And (Target.Longint.cg_type);
@@ -211,22 +211,22 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
   BEGIN
     IF (p.class = Class.cINT) THEN
       Expr.GetBounds (p.b, min_b, max_b);
-      IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
+      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
         ExprRep.NoBounds (p, min, max);
       ELSE
-        min := TInt.Zero;
-        IF NOT TInt.Subtract (max_b, TInt.One, max) THEN
-          max := Target.Integer.max;
+        min := TInt.ZeroI;
+        IF NOT TInt.Dec (max_b, max) THEN
+          max := Target.Int{Target.Integer.max, Target.Pre.Integer};
         END;
       END;
     ELSIF (p.class = Class.cLINT) THEN
       Expr.GetBounds (p.b, min_b, max_b);
-      IF TInt.LT (min_b, TInt.ZeroL) OR TInt.LT (max_b, TInt.ZeroL) THEN
+      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
         ExprRep.NoBounds (p, min, max);
       ELSE
         min := TInt.ZeroL;
-        IF NOT TInt.Subtract (max_b, TInt.OneL, max) THEN
-          max := Target.Longint.max;
+        IF NOT TInt.Dec (max_b, max) THEN
+          max := Target.Int{Target.Longint.max, Target.Pre.Longint};
         END;
       END;
     ELSE

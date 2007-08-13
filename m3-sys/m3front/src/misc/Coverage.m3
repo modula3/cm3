@@ -122,7 +122,7 @@ PROCEDURE GenerateTables () =
     CG.Init_chars (size, Header, FALSE);
     INC (size, l_header * Target.Char.size);     (*header*)
 
-    (* CG.Init_int (size, Target.Integer.size, TInt.Zero, FALSE); *)
+    (* CG.Init_int (size, Target.Integer.size, TInt.ZeroI, FALSE); *)
     INC (size, Target.Integer.size);             (*timestamp*)
 
     CG.Init_intt (size, Target.Integer.size, Text.Length (fname), FALSE);
@@ -191,7 +191,7 @@ PROCEDURE CountLine () =
     <*ASSERT tbl # NIL*>
     offset := lines_offset + (line - minLine) * Target.Integer.size;
     CG.Load_int (tbl, Target.Integer.cg_type, offset);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (TInt.OneI);
     CG.Add (Target.Word.cg_type);
     CG.Store_int (tbl, Target.Integer.cg_type, offset);
     used [line] := LineSeen.generated;
@@ -212,7 +212,7 @@ PROCEDURE CountProcedure (v: Value.T) =
     <*ASSERT p # NIL *>
 
     CG.Load_int (tbl, Target.Integer.cg_type, p.offset);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (TInt.OneI);
     CG.Add (Target.Word.cg_type);
     CG.Store_int (tbl, Target.Integer.cg_type, p.offset);
   END CountProcedure;

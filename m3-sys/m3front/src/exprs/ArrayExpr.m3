@@ -102,7 +102,7 @@ PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
       RETURN FALSE;
     END;
     IF p.index = NIL THEN
-      min := TInt.Zero (* FIRST (p.args^) *);
+      min := TInt.ZeroI (* FIRST (p.args^) *);
       b := TInt.FromInt (LAST (p.args^), Target.Pre.Integer, max);  <* ASSERT b *>
     ELSE
       EVAL Type.GetBounds (p.index, min, max);
@@ -110,9 +110,7 @@ PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
     
     (* correct for the base index of the array *)
     IF NOT TInt.Subtract (int, min, offs) THEN RETURN FALSE END;
-    IF TInt.LT (offs, TInt.Zero) OR TInt.LT (offs, TInt.ZeroL) THEN
-      RETURN FALSE;
-    END;
+    IF TInt.Sig (offs) < 0 THEN RETURN FALSE END;
     b := TInt.ToInt (offs, i); <* ASSERT b *>
 
     n := LAST (p.args^);
@@ -128,7 +126,7 @@ PROCEDURE GetBounds (array: Expr.T;  VAR min, max: Target.Int): BOOLEAN =
     | NULL => RETURN FALSE;
     | P(p) => IF p.index = NIL THEN
                 (* open array type *)
-                min := TInt.Zero (* FIRST (p.args^) *);
+                min := TInt.ZeroI (* FIRST (p.args^) *);
                 b := TInt.FromInt (LAST (p.args^), Target.Pre.Integer, max);
                 <*ASSERT b*>
                 RETURN TRUE;
@@ -217,7 +215,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       IF (solidElt # NIL)
         AND TInt.FromInt (LAST (p.args^), Target.Pre.Integer, nn) THEN
         p.kind := Kind.FixedOpen;
-        index := SubrangeType.New (TInt.Zero, nn, Int.T, FALSE);
+        index := SubrangeType.New (TInt.ZeroI, nn, Int.T, FALSE);
         p.solidType := ArrayType.New (index, solidElt);
         p.solidType := Type.CheckInfo (p.solidType, elt_info);
         element := solidElt;
@@ -376,7 +374,7 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
 
       (* t2 := t2 + 1 *)
       CG.Push (t2);
-      CG.Load_integer (TInt.One);
+      CG.Load_integer (TInt.OneI);
       CG.Add (Target.Integer.cg_type);
       CG.Store_temp (t2);
 
@@ -415,7 +413,7 @@ PROCEDURE DoEmpty (p: P) =
                            in_memory := TRUE);
     CG.Load_nil ();
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (TInt.ZeroI);
     CG.Store_int (t1, Target.Integer.cg_type, M3RT.OA_size_0);
 
     (* remember the result *)

@@ -9,7 +9,7 @@
 MODULE InExpr;
 
 IMPORT CG, Expr, ExprRep, Error, Type, SetType, Bool, SetExpr;
-IMPORT Target, TInt;
+IMPORT Target, TInt, Value;
 
 TYPE
   P = ExprRep.Tab BRANDED "InExpr.P" OBJECT
@@ -85,12 +85,12 @@ PROCEDURE Prep (p: P) =
         Error.Msg ("set too large");
       END;
       Expr.Compile (p.a);
-      IF NOT (TInt.EQ (min, TInt.Zero) OR TInt.EQ (min, TInt.ZeroL)) THEN
+      IF TInt.Sig (min) # 0 THEN
         CG.Load_integer (min);
         CG.Subtract (Type.CGType (range));
       END;
       index := CG.Pop ();
-      CG.Load_integer (TInt.Zero);
+      Value.Load (Bool.False);
       p.tmp := CG.Pop_temp ();
       CG.Push (index);
       CG.Loophole (Type.CGType (range), Target.Word.cg_type);
@@ -128,7 +128,7 @@ PROCEDURE Compile (p: P) =
       (* no range checking is needed *)
       Expr.Compile (p.b);
       Expr.Compile (p.a);
-      IF NOT (TInt.EQ (min, TInt.Zero) OR TInt.EQ (min, TInt.ZeroL)) THEN
+      IF TInt.Sig (min) # 0 THEN
         CG.Load_integer (min);
         CG.Subtract (Type.CGType (range));
       END;

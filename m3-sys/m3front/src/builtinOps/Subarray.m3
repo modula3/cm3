@@ -49,8 +49,8 @@ PROCEDURE CheckPositive (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
   BEGIN
     IF (e = NIL) THEN RETURN NIL; END;
     Expr.GetBounds (e, min, max);
-    IF TInt.LT (min, TInt.Zero) OR TInt.LT (max, min) THEN
-      e := CheckExpr.NewLower (e, TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+    IF TInt.Sig (min) < 0 OR TInt.LT (max, min) THEN
+      e := CheckExpr.NewLower (e, TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
       Expr.TypeCheck (e, cs);
     END;
     RETURN e;
@@ -153,7 +153,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             Expr.CompileAddress (base);
             CG.Push (t_start);
             CG.Free (t_start);
-          ELSIF TInt.LT (max, TInt.Zero) THEN
+          ELSIF TInt.Sig (max) < 0 THEN
             Error.Warn (2, "SUBARRAY length out of range");
             Expr.CompileAddress (base);
             Expr.Compile (start);
@@ -184,7 +184,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Add (Target.Integer.cg_type);
             CG.Check_hi (n_elts, CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
-          ELSIF TInt.LT (max, TInt.Zero) THEN
+          ELSIF TInt.Sig (max) < 0 THEN
             (* initialize and check the new count *)
             Error.Warn (2, "SUBARRAY initial index out of range");
             Expr.Compile (len);
@@ -249,7 +249,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -279,7 +279,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -308,7 +308,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -341,7 +341,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           ELSE
             CG.Load_integer (x_start);
@@ -350,7 +350,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 

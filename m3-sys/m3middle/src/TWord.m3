@@ -25,7 +25,7 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
                VAR r: Int): BOOLEAN =
   VAR rr: Int;  digit: INTEGER;  ch: CHAR;
       last_chunk := Target.last_chunk[pre];
-      zero := TInt.Zeros[pre];
+      zero := TInt.Zero[pre];
   BEGIN
     r := zero;
     FOR i := FIRST (x) TO LAST (x) DO
@@ -66,6 +66,24 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
     RETURN TRUE;
   END New;
 
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int) =
+  BEGIN
+    Subtract (TInt.Zero[a.pre], a, r);
+  END Negate;
+
+PROCEDURE Inc (READONLY a: Int;  VAR r: Int) =
+  VAR carry := 1;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+  BEGIN
+    r.pre := pre;
+    FOR i := 0 TO last_chunk DO
+      carry := a.x [i] + carry;
+      r.x [i] := Word.And (carry, Mask);
+      carry := RShift (carry, ChunkSize);
+    END;
+  END Inc;
+
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
   VAR carry := 0;
       pre := a.pre;
@@ -79,6 +97,19 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
       carry := RShift (carry, ChunkSize);
     END;
   END Add;
+
+PROCEDURE Dec (READONLY a: Int;  VAR r: Int) =
+  VAR borrow := 1;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+  BEGIN
+    r.pre := pre;
+    FOR i := 0 TO last_chunk DO
+      borrow := a.x [i] - borrow;
+      r.x [i] := Word.And (borrow, Mask);
+      borrow := Word.And (RShift (borrow, ChunkSize), 1);
+    END;
+  END Dec;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
   VAR borrow := 0;
@@ -98,7 +129,7 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
   VAR carry: INTEGER;
       pre := a.pre;
       last_chunk := Target.last_chunk[pre];
-      zero := TInt.Zeros[pre];
+      zero := TInt.Zero[pre];
   BEGIN
     <*ASSERT a.pre = b.pre*>
     r := zero;
@@ -118,7 +149,7 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
 PROCEDURE Div (READONLY a, b: Int;  VAR q: Int): BOOLEAN =
   VAR r: Int;
       pre := a.pre;
-      zero := TInt.Zeros[pre];
+      zero := TInt.Zero[pre];
   BEGIN
     IF a.pre # b.pre THEN RETURN FALSE END;
     IF TInt.EQ (b, zero) THEN  RETURN FALSE;  END;
@@ -130,7 +161,7 @@ PROCEDURE Div (READONLY a, b: Int;  VAR q: Int): BOOLEAN =
 PROCEDURE Mod (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR q: Int;
       pre := a.pre;
-      zero := TInt.Zeros[pre];
+      zero := TInt.Zero[pre];
   BEGIN
     IF a.pre # b.pre THEN RETURN FALSE END;
     IF TInt.EQ (b, zero) THEN  RETURN FALSE;  END;
@@ -153,7 +184,7 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     num, den: ARRAY [0..NUMBER(IChunks)] OF INTEGER;
     pre := x.pre;
     last_chunk := Target.last_chunk[pre];
-    zero := TInt.Zeros[pre];
+    zero := TInt.Zero[pre];
   BEGIN
     <*ASSERT x.pre = y.pre*>
     (* initialize the numerator and denominator,
@@ -342,7 +373,7 @@ PROCEDURE Shift (READONLY a, b: Int;  VAR r: Int) =
       pre := a.pre;
       last_chunk := Target.last_chunk[pre];
       size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
-      zero := TInt.Zeros[pre];
+      zero := TInt.Zero[pre];
   BEGIN
     IF NOT TInt.ToInt (b, bb) OR ABS (bb) >= size[pre] THEN
       r := zero;

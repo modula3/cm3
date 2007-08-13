@@ -80,7 +80,7 @@ PROCEDURE Eval (p: Proc;  READONLY args: ARRAY OF M3Const.T;
           IF z.class = M3Const.Class.Integer THEN
             val.class := z.class;
             val.type  := M3Type.Integer;
-            IF    (z.int.pre = Target.Pre.Integer) THEN izero := TInt.Zero;
+            IF    (z.int.pre = Target.Pre.Integer) THEN izero := TInt.ZeroI;
             ELSIF (z.int.pre = Target.Pre.Longint) THEN izero := TInt.ZeroL;
             ELSE END;
             IF TInt.LT (z.int, izero)

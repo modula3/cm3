@@ -104,7 +104,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
   VAR v: Expr.T;  i: Target.Int;  u: Type.T;   skip: CG.Label;
   BEGIN
     IF Host.doDebugs THEN
-      i := TInt.MOne;
+      i := TInt.MOneI;
       v := Expr.ConstValue (p.cond);
       IF (p.cond = NIL) THEN
         (* DEBUG with no test condition *)
@@ -118,10 +118,10 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         Expr.CompileBranch (p.cond, CG.No_label, skip, CG.Always);
         EmitDebug (p);
         CG.Set_label (skip);
-      ELSIF EnumExpr.Split (v, i, u) AND TInt.EQ (i, TInt.Zero) THEN
+      ELSIF EnumExpr.Split (v, i, u) AND TInt.Sig (i) = 0 THEN
         (* DEBUG (FALSE) *)
-      ELSE <* ASSERT TInt.EQ (i, TInt.One) *>
-        (* Debug (TRUE) *)
+      ELSE <* ASSERT TInt.Sig (i) # 0 *>
+        (* DEBUG (TRUE) *)
         PrepMsgs (p);
         EmitDebug (p);
       END;

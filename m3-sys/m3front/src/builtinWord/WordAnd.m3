@@ -41,24 +41,24 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   BEGIN
     Expr.GetBounds (ce.args[0], min_a, max_a);
     Expr.GetBounds (ce.args[1], min_b, max_b);
-    IF TInt.LT (min_a, TInt.Zero) OR TInt.LT (max_a, TInt.Zero) THEN
+    IF TInt.Sig (min_a) < 0 OR TInt.Sig (max_a) < 0 THEN
       (* "a" could be 16_ffff...  => any bits from "b" can survive *)
-      IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
+      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
         (* too complicated *)
-        min := Target.Integer.min;
-        max := Target.Integer.max;
+        min := Target.Int{Target.Integer.min, Target.Pre.Integer};
+        max := Target.Int{Target.Integer.max, Target.Pre.Integer};
       ELSE
         (* "b" is non-negative, but "a" could be 16_ffff... *)
-        min := TInt.Zero;  (* no bits in common *)
+        min := TInt.ZeroI;  (* no bits in common *)
         max := max_b;
       END;
-    ELSIF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
+    ELSIF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
       (* "a" is non-negative, but "b" could be 16_ffff... *)
-      min := TInt.Zero;  (* no bits in common *)
+      min := TInt.ZeroI;  (* no bits in common *)
       max := max_a;
     ELSE
       (* both a and b are non-negative *)
-      min := TInt.Zero;  (* no bits in common *)
+      min := TInt.ZeroI;  (* no bits in common *)
       TWord.And (max_a, max_b, max);
     END;
   END GetBounds;

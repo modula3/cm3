@@ -164,8 +164,8 @@ TYPE
     align   : CARDINAL;  (* minimum bit alignment *)
     pack    : CARDINAL;  (* minimum width bit packing *)
     bytes   : CARDINAL;  (* byte size *)
-    min     : Int;       (* minimum value of this type *)
-    max     : Int;       (* maximum value of this type *)
+    min     : IChunks;   (* minimum value of this type *)
+    max     : IChunks;   (* maximum value of this type *)
   END;
 
 (*------------------------------------------------- floating point values ---*)

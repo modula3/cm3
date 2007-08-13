@@ -95,8 +95,8 @@ PROCEDURE Fold (p: P): Expr.T =
   BEGIN
     e := Expr.ConstValue (p.a);
     IF (e = NIL) THEN RETURN NIL END;
-    IF  NOT AddressExpr.Split (e, i) THEN RETURN NIL END;
-    IF TInt.EQ (i, TInt.Zero) THEN RETURN NIL END;
+    IF NOT AddressExpr.Split (e, i) THEN RETURN NIL END;
+    IF TInt.Sig (i) = 0 THEN RETURN NIL END;
     RETURN e;
   END Fold;
 

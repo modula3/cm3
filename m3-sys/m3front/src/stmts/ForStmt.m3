@@ -94,10 +94,9 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     END;
 
     IF p.step = NIL THEN
-      IF Type.IsSubtype (tFrom, LInt.T) THEN
-        p.step := IntegerExpr.New (TInt.OneL);
-      ELSE
-        p.step := IntegerExpr.New (TInt.One);
+      IF Type.IsSubtype (tFrom, LInt.T)
+        THEN p.step := IntegerExpr.New (TInt.OneL);
+        ELSE p.step := IntegerExpr.New (TInt.OneI);
       END;
     END;
 
@@ -126,8 +125,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
       ELSE Expr.GetBounds (p.limit, minLimit, maxLimit);
     END;
 
-    IF (TInt.EQ (minStep, TInt.Zero) OR TInt.EQ (minStep, TInt.ZeroL))
-      AND (TInt.EQ (maxStep, TInt.Zero) OR TInt.EQ (maxStep, TInt.ZeroL)) THEN
+    IF TInt.Sig (minStep) = 0 AND TInt.Sig (maxStep) = 0 THEN
       (* warning suggested by Ernst A. Heinz <heinze@ira.uka.de>
          to catch typos. (March 19, 1995) *)
       Error.Warn (1, "zero \'by\' value in FOR loop");
@@ -135,11 +133,11 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     END;
 
     (* try to tighten up the range of the new index variable *)
-    IF TInt.LE (TInt.Zero, minStep) OR TInt.LE (TInt.ZeroL, minStep) THEN
+    IF TInt.Sig (minStep) >= 0 THEN
       (* we're counting up! *)
       newMin := minFrom;
       newMax := maxLimit;
-    ELSIF TInt.LT (maxStep, TInt.Zero) OR TInt.LT (maxStep, TInt.ZeroL) THEN
+    ELSIF TInt.Sig (maxStep) < 0 THEN
       (* we're counting down *)
       newMin := minLimit;
       newMax := maxFrom;
@@ -199,7 +197,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
 
     IF p.iType = LInt.T
       THEN zero := TInt.ZeroL; iType := Target.Longint.cg_type;
-      ELSE zero := TInt.Zero;  iType := Target.Integer.cg_type;
+      ELSE zero := TInt.ZeroI; iType := Target.Integer.cg_type;
     END;
 
     from := Expr.ConstValue (p.from);

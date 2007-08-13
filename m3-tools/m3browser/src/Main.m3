@@ -851,6 +851,7 @@ CONST
     & "@**PREDEFINED**\n"
     & "BM3_BUILTIN\n"
     & "?195c2a74 INTEGER\n"
+    & "?05562176 LONGINT\n"
     & "?97e237e2 CARDINAL\n"
     & "?1e59237d BOOLEAN\n"
     & "?08402063 ADDRESS\n"

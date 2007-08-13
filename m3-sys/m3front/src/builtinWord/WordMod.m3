@@ -41,13 +41,13 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   VAR min_b, max_b: Target.Int;
   BEGIN
     Expr.GetBounds (ce.args[1], min_b, max_b);
-    IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
+    IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
       (* almost anything is possible *)
-      min := Target.Integer.min;
-      max := Target.Integer.max;
+      min := Target.Int{Target.Integer.min, Target.Pre.Integer};
+      max := Target.Int{Target.Integer.max, Target.Pre.Integer};
     ELSE
-      min := TInt.Zero;
-      TWord.Subtract (max_b, TInt.One, max);
+      min := TInt.ZeroI;
+      TWord.Dec (max_b, max);
     END;
   END GetBounds;
 

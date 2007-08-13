@@ -136,11 +136,13 @@ VAR(*CONST*)
 PROCEDURE SmallPowerOfTwo (READONLY x: Target.Int;  VAR log: INTEGER): BOOLEAN=
   VAR lo, hi, mid: INTEGER;
       pre := TInt.Prec (x);
-      One := ARRAY Target.Pre OF Target.Int { TInt.One, TInt.OneL };
+      size := ARRAY Target.Pre OF CARDINAL {Target.Integer.size,
+                                            Target.Longint.size}[pre];
+      one := TInt.One[pre];
   BEGIN
     IF max_power[pre] <= 0 THEN
-      powers[pre][0] := One[pre];
-      FOR i := 1 TO MIN (Target.Integer.size - 2, LAST (powers[pre])) DO
+      powers[pre][0] := one;
+      FOR i := 1 TO MIN (size - 2, LAST (powers[pre])) DO
         IF TInt.Add (powers[pre][i-1], powers[pre][i-1], powers[pre][i]) THEN
           max_power[pre] := i;
         END;

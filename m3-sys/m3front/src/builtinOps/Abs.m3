@@ -38,15 +38,14 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
-  VAR e, x: Expr.T;  i, j: Target.Int;  pre: Target.Pre; zero: Target.Int;
+  VAR e, x: Expr.T;  i, j: Target.Int;
   BEGIN
     e := Expr.ConstValue (ce.args[0]);
     IF (e = NIL) THEN
       RETURN NIL;
     ELSIF IntegerExpr.Split (e, i) THEN
-      pre := TInt.Prec (i);  zero := TInt.Zeros[pre];
-      IF TInt.LT (i, zero) THEN
-        IF NOT TInt.Subtract (zero, i, j) THEN RETURN NIL END;
+      IF TInt.Sig (i) < 0 THEN
+        IF NOT TInt.Negate (i, j) THEN RETURN NIL END;
         e := IntegerExpr.New (j);
       END;
       RETURN e;
@@ -58,11 +57,9 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
-  VAR pre: Target.Pre;  zero: Target.Int;
   BEGIN
     Expr.GetBounds (ce.args[0], min, max);
-    pre := TInt.Prec (min);  zero := TInt.Zeros[pre];
-    IF TInt.LT (min, zero) THEN min := zero; END;
+    IF TInt.Sig (min) < 0 THEN min := TInt.Zero[TInt.Prec (min)]; END;
   END GetBounds;
 
 PROCEDURE Initialize () =

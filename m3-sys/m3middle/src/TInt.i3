@@ -21,16 +21,16 @@ INTERFACE TInt;
 FROM Target IMPORT Int, IChunks, ChunkSize, Pre;
 
 CONST
-  Zero  = Int{IChunks{0,..}, Pre.Integer};
+  ZeroI = Int{IChunks{0,..}, Pre.Integer};
   ZeroL = Int{IChunks{0,..}, Pre.Longint};
-  One   = Int{IChunks{1,0,..}, Pre.Integer};
+  OneI  = Int{IChunks{1,0,..}, Pre.Integer};
   OneL  = Int{IChunks{1,0,..}, Pre.Longint};
-  MOne  = Int{IChunks{16_ffff,..}, Pre.Integer};
+  MOneI = Int{IChunks{16_ffff,..}, Pre.Integer};
   MOneL = Int{IChunks{16_ffff,..}, Pre.Longint};
 
-  Zeros = ARRAY Pre OF Int {Zero, ZeroL};
-  Ones  = ARRAY Pre OF Int { One,  OneL};
-  MOnes = ARRAY Pre OF Int {MOne, MOneL};
+  Zero = ARRAY Pre OF Int {ZeroI, ZeroL};
+  One  = ARRAY Pre OF Int { OneI,  OneL};
+  MOne = ARRAY Pre OF Int {MOneI, MOneL};
 
 PROCEDURE FromInt (x: INTEGER;  p: Pre;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
@@ -50,6 +50,18 @@ PROCEDURE New (READONLY chars: ARRAY OF CHAR;  p: Pre;  VAR i: Int): BOOLEAN;
 
 PROCEDURE Prec (READONLY i: Int): Pre;
 (* returns the precision of 'i' *)
+
+PROCEDURE Sig (READONLY i: Int): [-1 .. +1];
+(* returns -1 if 'i < 0', 0 if 'i = 0', +1 if 'i > 0' *)
+
+PROCEDURE Negate (READONLY a: Int;  VAR i: Int): BOOLEAN;
+(* returns '0 - a' unless there's an overflow *)
+
+PROCEDURE Inc (READONLY a: Int;  VAR i: Int): BOOLEAN;
+(* returns 'INC(a)' unless there's an overflow *)
+
+PROCEDURE Dec (READONLY a: Int;  VAR i: Int): BOOLEAN;
+(* returns 'DEC(a)' unless there's an overflow *)
 
 PROCEDURE Add (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'a + b' unless there's an overflow *)

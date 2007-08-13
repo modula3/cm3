@@ -40,25 +40,21 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
         (* trim bounds to INTEGER bounds *)
         <*ASSERT TInt.Prec (mint) = Target.Pre.Longint*>
         <*ASSERT TInt.Prec (maxt) = Target.Pre.Longint*>
-        WITH z = TInt.Val (Target.Integer.min, Target.Pre.Longint, min) DO
-          <*ASSERT z*>
-        END;
+        min := Target.Int{Target.Integer.min, Target.Pre.Longint};
+        max := Target.Int{Target.Integer.max, Target.Pre.Longint};
         IF TInt.LT (mint, min) THEN
-          mint := Target.Integer.min;
+          mint := Target.Int{Target.Integer.min, Target.Pre.Integer};
         ELSIF TInt.Ord (mint, min) THEN
           mint := min;
         ELSE
-          mint := Target.Integer.max;
-        END;
-        WITH z = TInt.Val (Target.Integer.max, Target.Pre.Longint, max) DO
-          <*ASSERT z*>
+          mint := Target.Int{Target.Integer.max, Target.Pre.Integer};
         END;
         IF TInt.LT (max, maxt) THEN
-          maxt := Target.Integer.max;
+          maxt := Target.Int{Target.Integer.max, Target.Pre.Integer};
         ELSIF TInt.Ord (maxt, max) THEN
           maxt := max;
         ELSE
-          maxt := Target.Integer.min;
+          maxt := Target.Int{Target.Integer.min, Target.Pre.Integer};
         END;
       END;
       <*ASSERT TInt.Prec (mint) = Target.Pre.Integer*>

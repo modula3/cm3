@@ -88,7 +88,7 @@ VAR
   fields      : ARRAY BOOLEAN OF Node;
   in_init     : BOOLEAN     := FALSE;
   init_pc     : INTEGER     := 0;
-  init_bits   : Target.Int  := TInt.Zero;
+  init_bits   : Target.Int  := TInt.ZeroI;
   free_temps  : TempWrapper := NIL;
   busy_temps  : TempWrapper := NIL;
   free_values : Val         := NIL;
@@ -142,7 +142,7 @@ PROCEDURE Init () =
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := TInt.Zero;
+    init_bits      := TInt.ZeroI;
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -788,7 +788,7 @@ PROCEDURE Begin_init (v: Var) =
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := TInt.Zero;
+    init_bits := TInt.ZeroI;
   END Begin_init;
 
 PROCEDURE End_init (v: Var) =
@@ -923,7 +923,7 @@ PROCEDURE AdvanceInit (o: Offset) =
     <*ASSERT n_bytes >= 0*>
     <*ASSERT in_init*>
     WHILE (n_bytes > 0) DO
-      IF TInt.EQ (init_bits, TInt.Zero) THEN
+      IF TInt.Sig (init_bits) = 0 THEN
         (* no more bits to flush *)
         n_bytes := 0;
         init_pc := (o DIV Target.Byte) * Target.Byte;
@@ -933,12 +933,12 @@ PROCEDURE AdvanceInit (o: Offset) =
         b_size := TargetMap.CG_Bytes[t];
         IF (b_size = Target.Integer.bytes) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := TInt.Zero;
+          init_bits := TInt.ZeroI;
         ELSIF Target.Little_endian
           AND TInt.FromInt (b_size * Target.Byte, Target.Pre.Integer, base)
           AND TInt.FromInt (Target.Integer.size - b_size*Target.Byte,
                             Target.Pre.Integer, n_bits)
-          AND TWord.Extract (init_bits, TInt.Zero, base, tmp)
+          AND TWord.Extract (init_bits, TInt.ZeroI, base, tmp)
           AND TWord.Extract (init_bits, base, n_bits, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
@@ -1990,11 +1990,11 @@ PROCEDURE Set_member (s: Size) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
     IF (s <= Target.Integer.size) THEN
-      cg.load_integer (Target.Integer.cg_type, TInt.One);
+      cg.load_integer (Target.Integer.cg_type, TInt.OneI);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.shift_left (Target.Integer.cg_type);
       cg.and (Target.Integer.cg_type);
-      cg.load_integer (Target.Integer.cg_type, TInt.Zero);
+      cg.load_integer (Target.Integer.cg_type, TInt.ZeroI);
       cg.compare (Target.Word.cg_type, Target.Integer.cg_type, Cmp.NE);
     ELSE
       cg.set_member (AsBytes (s), Target.Integer.cg_type);
@@ -2022,7 +2022,7 @@ PROCEDURE Set_range (s: Size) =
     IF (s <= Target.Integer.size) THEN
       (* given x, a, b:  compute  x || {a..b} *)
 
-      cg.load_integer (Target.Integer.cg_type, TInt.MOne);
+      cg.load_integer (Target.Integer.cg_type, TInt.MOneI);
         (* -1 = 16_ffffff = {0..N} *)
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       Push_int (Target.Integer.size-1);
@@ -2032,7 +2032,7 @@ PROCEDURE Set_range (s: Size) =
 
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type); (*  x, {0..b}, a *)
 
-      cg.load_integer (Target.Integer.cg_type, TInt.MOne);
+      cg.load_integer (Target.Integer.cg_type, TInt.MOneI);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.shift_left (Target.Integer.cg_type);           (*  x, {0..b}, {a..N} *)
 
@@ -2050,7 +2050,7 @@ PROCEDURE Set_singleton (s: Size) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
     IF (s <= Target.Integer.size) THEN
-      cg.load_integer (Target.Integer.cg_type, TInt.One);
+      cg.load_integer (Target.Integer.cg_type, TInt.OneI);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.shift_left (Target.Integer.cg_type);
       cg.or (Target.Integer.cg_type);
@@ -2364,7 +2364,7 @@ PROCEDURE Check_byte_aligned () =
         Push_int (Target.Byte - 1);  (*** Push_int (Target.Byte); ***)
         cg.and (Target.Integer.cg_type);
           (*** cg.mod (Target.Integer.cg_type, Sign.Unknown, Sign.Positive); ***)
-        cg.load_integer (Target.Integer.cg_type, TInt.Zero);
+        cg.load_integer (Target.Integer.cg_type, TInt.ZeroI);
         cg.check_eq (Target.Integer.cg_type, RuntimeError.UnalignedAddress);
         Boost_alignment (Target.Byte);
         Force ();
@@ -2783,7 +2783,7 @@ PROCEDURE SPush (t: Type) =
       x.base      := NIL;
       x.bits      := NIL;
       x.offset    := 0;
-      x.int       := TInt.Zero;
+      x.int       := TInt.ZeroI;
       x.float     := TFloat.ZeroR;
       x.next      := NIL;
     END;

@@ -26,12 +26,8 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
       Expr.GetBounds (e, emin, emax);
       <*ASSERT TInt.Prec (emin) = Target.Pre.Longint*>
       <*ASSERT TInt.Prec (emax) = Target.Pre.Longint*>
-      WITH z = TInt.Val (Target.Integer.min, Target.Pre.Longint, min) DO
-        <*ASSERT z*>
-      END;
-      WITH z = TInt.Val (Target.Integer.max, Target.Pre.Longint, max) DO
-        <*ASSERT z*>
-      END;
+      min := Target.Int{Target.Integer.min, Target.Pre.Longint};
+      max := Target.Int{Target.Integer.max, Target.Pre.Longint};
       IF TInt.LT (emin, min) THEN
         (* we need a lower bound check *)
         IF TInt.LT (max, emax) THEN
