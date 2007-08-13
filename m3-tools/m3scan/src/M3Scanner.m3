@@ -214,10 +214,10 @@ PROCEDURE GetToken (t: Default) =
         INC (offset);
         Err (t, offset, "Illegal character: " & Fmt.Int (ORD (ch)));
         EXIT;
-      
+
       END; (*case*)
     END; (*loop*)
-      
+
     (* record the length of the token and where we are *)
     t.length := offset - t.offset;
     t.next_offset := offset;
@@ -230,26 +230,33 @@ PROCEDURE ScanNumber (t: Default) =
   BEGIN
     (* scan the decimal digits *)
     WHILE Digits[ch] DO  INC (offset);  ch := t.buffer [offset];  END;
-           
+
     IF (ch = '_') THEN
       (* scan a based integer *)
       INC (offset);  ch := t.buffer [offset];
       IF HexDigits[ch] THEN
         WHILE HexDigits[ch] DO  INC (offset);  ch := t.buffer [offset];  END;
-        t.token := TK.Card_const;
+        IF (ch = 'L') OR (ch = 'l') THEN
+          t.token := TK.Long_const;
+          t.length := offset - t.offset;
+          t.next_offset := offset + 1;
+          RETURN;
+        ELSE
+          t.token := TK.Card_const;
+        END;
       ELSE
         Err (t, offset, "illegal based integer: missing digits");
         RETURN;
       END;
-               
+
     ELSIF (ch = '.') AND (t.buffer [offset+1] = '.') THEN
       (* we saw  "dddd.." *)
       t.token := TK.Card_const;
-                  
+
     ELSIF (ch = '.') THEN
       (* scan a floating point number *)
       INC (offset);  ch := t.buffer [offset];
-                     
+
       (* scan the fractional digits *)
       IF Digits[ch] THEN
         WHILE Digits[ch] DO  INC (offset);  ch := t.buffer [offset];  END;
@@ -257,7 +264,7 @@ PROCEDURE ScanNumber (t: Default) =
         Err (t, offset, "missing digits in real fraction");
         RETURN;
       END;
-                        
+
       (* check for the exponent *)
       IF (ch = 'e') OR (ch = 'E') THEN
         t.token := TK.Real_const;
@@ -272,29 +279,34 @@ PROCEDURE ScanNumber (t: Default) =
         RETURN;
       END;
       INC (offset);  ch := t.buffer [offset]; (* eat the e/d/x *)
-                           
+
       (* get the exponent sign *)
       IF (ch = '+') OR (ch = '-') THEN
         INC (offset);  ch := t.buffer [offset];
       END;
-                              
+
       (* finally, get the exponent digits *)
       IF Digits[ch] THEN
         WHILE Digits[ch] DO  INC (offset);  ch := t.buffer [offset];  END;
       ELSE
         Err (t, offset, "missing digits in real exponent");
       END;
-                                 
+
     ELSE
       (* scanned a simple decimal integer *)
-      t.token := TK.Card_const;
-                                    
+      IF (ch = 'L') OR (ch = 'l') THEN
+        t.token := TK.Long_const;
+        t.length := offset - t.offset;
+        t.next_offset := offset + 1;
+      ELSE
+        t.token := TK.Card_const;
+      END;
     END;
-                                    
+
     t.length := offset - t.offset;
     t.next_offset := offset;
   END ScanNumber;
-                                    
+
 PROCEDURE ScanChar (t: Default) =
   VAR
     offset : CARDINAL := t.offset+1;
@@ -374,7 +386,7 @@ PROCEDURE ScanEscape (t: Default;  VAR offset: CARDINAL): BOOLEAN =
   VAR ch := t.buffer [offset];
   BEGIN
     INC (offset);
-    IF (ch = 'n') OR (ch = 't') OR (ch = 'r') OR (ch = 'f') 
+    IF (ch = 'n') OR (ch = 't') OR (ch = 'r') OR (ch = 'f')
       OR (ch = '\\') OR (ch = '\'') OR (ch = '\"') THEN
       RETURN TRUE;
     END;

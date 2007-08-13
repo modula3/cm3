@@ -12,7 +12,7 @@ TYPE
     EOF, Comment, Error,
 
     (* lexical classes with variable literals *)
-    Ident, Card_const, Real_const, Longreal_const,
+    Ident, Card_const, Long_const, Real_const, Longreal_const,
     Extended_const, Char_const, Text_const,
 
     (* operators *)
