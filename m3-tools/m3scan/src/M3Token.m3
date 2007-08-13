@@ -14,6 +14,7 @@ BEGIN
   name [T.Error]          := "**ERROR**";
   name [T.Ident]          := "<id>";
   name [T.Card_const]     := "<cardinal>";
+  name [T.Long_const]     := "<long>";
   name [T.Real_const]     := "<real>";
   name [T.Longreal_const] := "<longreal>";
   name [T.Extended_const] := "<extended>";

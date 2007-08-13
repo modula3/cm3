@@ -404,9 +404,10 @@ PROCEDURE MarkUpQualTypeIdent (lex: M3Scanner.T;  VAR ins: Insertion;
     IF Text.Equal (id, "ADDRESS") OR Text.Equal (id, "BOOLEAN") OR
       Text.Equal (id, "CARDINAL") OR Text.Equal (id, "CHAR") OR
       Text.Equal (id, "EXTENDED") OR Text.Equal (id, "INTEGER") OR
-      Text.Equal (id, "LONGREAL") OR Text.Equal (id, "MUTEX") OR
-      Text.Equal (id, "NULL") OR Text.Equal (id, "REAL") OR
-      Text.Equal (id, "REFANY") OR Text.Equal (id, "TEXT") THEN
+      Text.Equal (id, "LONGINT") OR Text.Equal (id, "LONGREAL") OR
+      Text.Equal (id, "MUTEX") OR Text.Equal (id, "NULL") OR
+      Text.Equal (id, "REAL") OR Text.Equal (id, "REFANY") OR
+      Text.Equal (id, "TEXT") THEN
       Add (ins, id_offs, id);
     ELSE
       Add (ins, id_offs, unit & "." & id);
