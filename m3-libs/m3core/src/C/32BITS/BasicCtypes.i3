@@ -13,9 +13,9 @@ TYPE
   (* the four signed integer types *)
   signed_char        = [-16_80 .. 16_7f];
   short_int          = [-16_8000 .. 16_7fff];
-  int                = [16_80000000 .. 16_7fffffff];
+  int                = INTEGER;
   long_int           = int;
-  long_long          = [16_8000000000000000L .. 16_7fffffffffffffffL];
+  long_long          = LONGINT;
 
   (* the four unsigned integer types *)
   unsigned_char      = [16_0 .. 16_ff];
