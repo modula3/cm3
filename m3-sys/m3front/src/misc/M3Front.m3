@@ -161,9 +161,11 @@ RTCollector.Enable ();
     IF (Host.emitBuiltins) THEN
       Module.MakeCurrent (builtins);
       Module.MakeCurrent (WordModule.M);
+      Module.MakeCurrent (LongModule.M);
       Module.MakeCurrent (InfoModule.M);
       Module.Compile (builtins);
       Module.Compile (WordModule.M);
+      Module.Compile (LongModule.M);
       Module.Compile (InfoModule.M);
     ELSE
       Module.Compile (m);
@@ -176,6 +178,7 @@ PROCEDURE CheckBuiltins () =
   BEGIN
     Value.TypeCheck (builtins, cs);
     Value.TypeCheck (WordModule.M, cs);
+    Value.TypeCheck (LongModule.M, cs);
     Value.TypeCheck (InfoModule.M, cs);
   END CheckBuiltins;
 
