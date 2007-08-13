@@ -51,16 +51,14 @@ PROCEDURE New (a: Expr.T;  READONLY min, max: Target.Int;
 
 PROCEDURE NewLower (a: Expr.T;  READONLY min: Target.Int;
                     err: CG.RuntimeError): Expr.T =
-  VAR zero := TInt.Zeros[TInt.Prec (min)];
   BEGIN
-    RETURN Create (a, min, zero, Class.cLOWER, err);
+    RETURN Create (a, min, TInt.Zero[TInt.Prec (min)], Class.cLOWER, err);
   END NewLower;
 
 PROCEDURE NewUpper (a: Expr.T;  READONLY max: Target.Int;
                     err: CG.RuntimeError): Expr.T =
-  VAR zero := TInt.Zeros[TInt.Prec (max)];
   BEGIN
-    RETURN Create (a, zero, max, Class.cUPPER, err);
+    RETURN Create (a, TInt.Zero[TInt.Prec (max)], max, Class.cUPPER, err);
   END NewUpper;
 
 PROCEDURE Create (a: Expr.T; READONLY min, max: Target.Int; c: Class;

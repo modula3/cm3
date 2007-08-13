@@ -121,14 +121,14 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 
     ELSIF Type.IsSubtype (tb, Type.Base (ti)) THEN
       (* the index value's type has a common base type with the index type *)
-      IF NOT TInt.EQ (mini, TInt.Zeros[TInt.Prec (mini)]) THEN
+      IF TInt.Sig (mini) # 0 THEN
         p.biased_b := SubtractExpr.New (p.b, IntegerExpr.New (mini), TRUE);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
       END;
       IF TInt.LT (minb, mini) AND TInt.LT (maxi, maxb) THEN
         b := TInt.Subtract (maxi, mini, z);  <*ASSERT b *>
-        p.biased_b := CheckExpr.New (p.biased_b, TInt.Zeros[TInt.Prec (z)], z,
+        p.biased_b := CheckExpr.New (p.biased_b, TInt.Zero[TInt.Prec (z)], z,
                                      CG.RuntimeError.SubscriptOutOfRange);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
@@ -137,7 +137,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
           Error.Warn (2, "subscript is out of range");
         END;
         p.biased_b :=
-            CheckExpr.NewLower (p.biased_b, TInt.Zeros[TInt.Prec (mini)],
+            CheckExpr.NewLower (p.biased_b, TInt.Zero[TInt.Prec (mini)],
                                      CG.RuntimeError.SubscriptOutOfRange);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);

@@ -24,10 +24,12 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
 PROCEDURE Compile (ce: CallExpr.T) =
   VAR t2, t3: CG.Val;  b: BOOLEAN;  max: Target.Int;
   BEGIN
-    CheckExpr.EmitChecks (ce.args[2], TInt.Zero, Target.Integer.max,
+    CheckExpr.EmitChecks (ce.args[2], TInt.ZeroI,
+                          Target.Int{Target.Integer.max, Target.Pre.Integer},
                           CG.RuntimeError.ValueOutOfRange);
     t2 := CG.Pop ();
-    CheckExpr.EmitChecks (ce.args[3], TInt.Zero, Target.Integer.max,
+    CheckExpr.EmitChecks (ce.args[3], TInt.ZeroI,
+                          Target.Int{Target.Integer.max, Target.Pre.Integer},
                           CG.RuntimeError.ValueOutOfRange);
     t3 := CG.Pop ();
     IF Host.doRangeChk THEN

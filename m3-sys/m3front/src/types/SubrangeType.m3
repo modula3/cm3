@@ -36,7 +36,7 @@ TYPE
 
 PROCEDURE Parse (): Type.T =
   TYPE TK = Token.T;
-  VAR p: P := New (TInt.Zero, TInt.MOne, NIL, FALSE);
+  VAR p: P := New (TInt.ZeroI, TInt.MOneI, NIL, FALSE);
   BEGIN
     Match (TK.tLBRACKET);
     p.minE := Expr.Parse ();
@@ -77,25 +77,25 @@ PROCEDURE Split (t: Type.T;  VAR min, max: Target.Int): BOOLEAN =
   END Split;
 
 PROCEDURE SetRep (p: P) =
+  VAR rep: CG.Type;  pre: Target.Pre;
   BEGIN
+    IF Type.IsSubtype (p.baseType, LInt.T)
+      THEN rep := Target.Longint.cg_type;  pre := Target.Pre.Longint;
+      ELSE rep := Target.Integer.cg_type;  pre := Target.Pre.Integer;
+    END;
+
     IF TInt.LT (p.max, p.min) THEN
-      IF Type.IsSubtype (p.baseType, LInt.T) THEN
-        p.min := TInt.ZeroL;
-        p.max := TInt.MOneL;
-        p.rep := Target.Longint.cg_type;
-      ELSE
-        p.min := TInt.Zero;
-        p.max := TInt.MOne;
-        p.rep := Target.Integer.cg_type;
-      END;
+      p.min := TInt.Zero[pre];
+      p.max := TInt.MOne[pre];
+      p.rep := rep;
       RETURN;
     END;
 
-    IF TInt.LE (TInt.Zero, p.min) OR TInt.LE (TInt.ZeroL, p.min) THEN
+    IF TInt.Sig (p.min) >= 0 THEN
       (* look for an unsigned type *)
       FOR i := FIRST (TargetMap.Word_types) TO LAST (TargetMap.Word_types) DO
         WITH z = TargetMap.Word_types[i] DO
-          IF TWord.LE (p.max, z.max) THEN
+          IF TWord.LE (p.max, Target.Int{z.max, pre}) THEN
             p.rep := z.cg_type; RETURN;
           END;
         END;
@@ -104,18 +104,15 @@ PROCEDURE SetRep (p: P) =
       (* look for a signed type *)
       FOR i := FIRST (TargetMap.Integer_types) TO LAST (TargetMap.Integer_types) DO
         WITH z = TargetMap.Integer_types[i] DO
-          IF TInt.LE (z.min, p.min) AND TInt.LE (p.max, z.max) THEN
+          IF TInt.LE (Target.Int{z.min, pre}, p.min)
+            AND TInt.LE (p.max, Target.Int{z.max, pre}) THEN
             p.rep := z.cg_type; RETURN;
           END;
         END;
       END;
     END;
 
-    IF Type.IsSubtype (p.baseType, LInt.T) THEN
-      p.rep := Target.Longint.cg_type;
-    ELSE
-      p.rep := Target.Integer.cg_type;
-    END;
+    p.rep := rep;
   END SetRep;
 
 PROCEDURE Seal (p: P) =
@@ -129,7 +126,7 @@ PROCEDURE Seal (p: P) =
         Error.Msg ("subrange lower bound is not constant");
         IF Type.IsSubtype (tmin, LInt.T)
           THEN p.min := TInt.ZeroL; tmin := LInt.T;
-          ELSE p.min := TInt.Zero;  tmin := Int.T;
+          ELSE p.min := TInt.ZeroI; tmin := Int.T;
         END;
       ELSIF IntegerExpr.Split (emin, p.min) THEN
         IF Type.IsSubtype (tmin, LInt.T)
@@ -142,7 +139,7 @@ PROCEDURE Seal (p: P) =
         Error.Msg ("subrange lower bound is not an ordinal value");
         IF Type.IsSubtype (tmin, LInt.T)
           THEN p.min := TInt.ZeroL; tmin := LInt.T;
-          ELSE p.min := TInt.Zero;  tmin := Int.T;
+          ELSE p.min := TInt.ZeroI; tmin := Int.T;
         END;
       END;
 
@@ -152,7 +149,7 @@ PROCEDURE Seal (p: P) =
         Error.Msg ("subrange upper bound is not constant");
         IF Type.IsSubtype (tmin, LInt.T)
           THEN p.max := TInt.ZeroL; tmax := LInt.T;
-          ELSE p.max := TInt.Zero;  tmax := Int.T;
+          ELSE p.max := TInt.ZeroI; tmax := Int.T;
         END;
       ELSIF IntegerExpr.Split (emax, p.max) THEN
         IF Type.IsSubtype (tmax, LInt.T)
@@ -165,7 +162,7 @@ PROCEDURE Seal (p: P) =
         Error.Msg ("subrange upper bound is not an ordinal value");
         IF Type.IsSubtype (tmax, LInt.T)
           THEN p.max := TInt.ZeroL; tmax := LInt.T;
-          ELSE p.max := TInt.Zero;  tmax := Int.T;
+          ELSE p.max := TInt.ZeroI; tmax := Int.T;
         END;
       END;
 
@@ -288,22 +285,19 @@ PROCEDURE BitWidth (n: Target.Int;  VAR width: INTEGER;  VAR neg: BOOLEAN) =
   VAR tmp: Target.Int;
       pre := TInt.Prec (n);
       size := ARRAY Target.Pre OF INTEGER {Target.Integer.size,
-                                           Target.Longint.size};
+                                           Target.Longint.size}[pre];
   BEGIN
-    neg := TInt.LT (n, TInt.Zero) OR TInt.LT (n, TInt.ZeroL);
+    neg := TInt.Sig (n) < 0;
     IF (neg) THEN
-      IF NOT (TInt.Add (n, TInt.One, tmp)
-           OR TInt.Add (n, TInt.OneL, tmp))
-        OR NOT (TInt.Subtract (TInt.Zero, tmp, n)
-             OR TInt.Subtract (TInt.ZeroL, tmp, n)) THEN
+      IF NOT TInt.Inc (n, tmp) OR NOT TInt.Negate (tmp, n) THEN
         (* value too large??? *)
-        width := size[pre];
+        width := size;
         RETURN;
       END;
     END;
 
     IF NOT powers_done THEN BuildPowerTables () END;
-    width := size[pre];
+    width := size;
     FOR i := 0 TO LAST (power[pre]) DO
       IF TInt.LE (n, power[pre][i]) THEN width := i;  EXIT END;
     END;
@@ -316,10 +310,10 @@ VAR (*CONST*)
 PROCEDURE BuildPowerTables () =
   BEGIN
     WITH p = power[Target.Pre.Integer] DO
-      p[0] := TInt.One;
+      p[0] := TInt.OneI;
       FOR i := 1 TO LAST (p) DO
         IF NOT TInt.Add (p[i-1], p[i-1], p[i]) THEN
-          p[i] := Target.Integer.max;
+          p[i] := Target.Int{Target.Integer.max, Target.Pre.Integer};
         END;
       END;
     END;
@@ -327,7 +321,7 @@ PROCEDURE BuildPowerTables () =
       p[0] := TInt.OneL;
       FOR i := 1 TO LAST (p) DO
         IF NOT TInt.Add (p[i-1], p[i-1], p[i]) THEN
-          p[i] := Target.Longint.max;
+          p[i] := Target.Int{Target.Longint.max, Target.Pre.Longint};
         END;
       END;
     END;
@@ -335,33 +329,63 @@ PROCEDURE BuildPowerTables () =
   END BuildPowerTables;
 
 PROCEDURE InitCoster (p: P;  zeroed: BOOLEAN): INTEGER =
-  VAR rep_min, rep_max: Target.Int;
+  VAR zero, rep_min, rep_max: Target.Int;  pre: Target.Pre;  size: INTEGER;
   BEGIN
     Seal (p);
 
-    IF zeroed AND (TInt.LE (p.min, TInt.Zero) OR TInt.LE (p.min, TInt.ZeroL))
-      AND (TInt.LE (TInt.Zero, p.max) OR TInt.LE (TInt.ZeroL, p.max)) THEN
+    IF Type.IsSubtype (p.baseType, LInt.T) THEN
+      pre := Target.Pre.Longint;
+      size := Target.Longint.size;
+      rep_min := Target.Int{Target.Longint.min, pre};
+      rep_max := Target.Int{Target.Longint.max, pre};
+      zero := TInt.ZeroL;
+    ELSE
+      pre := Target.Pre.Integer;
+      size := Target.Integer.size;
+      rep_min := Target.Int{Target.Integer.min, pre};
+      rep_max := Target.Int{Target.Integer.max, pre};
+      zero := TInt.ZeroI;
+    END;
+
+    IF zeroed AND TInt.LE (p.min, zero) AND TInt.LE (zero, p.max) THEN
       RETURN 0;
     END;
 
-    IF (TargetMap.CG_Size[p.rep] = Target.Integer.size)
-      AND NOT (TInt.EQ (p.min, Target.Integer.min)
-               AND TInt.EQ (p.max, Target.Integer.max)) THEN
+    IF (TargetMap.CG_Size[p.rep] = size)
+      AND NOT (TInt.EQ (p.min, rep_min) AND TInt.EQ (p.max, rep_max)) THEN
       (* this rep uses a full integer word, but doesn't actually
          use all possible bit patterns => unsigned word =>  CARDINAL *)
       RETURN 1;
     END;
 
     CASE p.rep OF
-    | CG.Type.Word8  => rep_min := Target.Word8.min;  rep_max := Target.Word8.max;
-    | CG.Type.Word16 => rep_min := Target.Word16.min; rep_max := Target.Word16.max;
-    | CG.Type.Word32 => rep_min := Target.Word32.min; rep_max := Target.Word32.max;
-    | CG.Type.Word64 => rep_min := Target.Word64.min; rep_max := Target.Word64.max;
-    | CG.Type.Int8   => rep_min := Target.Int8.min;   rep_max := Target.Int8.max;
-    | CG.Type.Int16  => rep_min := Target.Int16.min;  rep_max := Target.Int16.max;
-    | CG.Type.Int32  => rep_min := Target.Int32.min;  rep_max := Target.Int32.max;
-    | CG.Type.Int64  => rep_min := Target.Int64.min;  rep_max := Target.Int64.max;
-    ELSE                rep_min := TInt.Zero;         rep_max := TInt.MOne;
+    | CG.Type.Word8  =>
+      rep_min := Target.Int{Target.Word8.min,  pre};
+      rep_max := Target.Int{Target.Word8.max,  pre};
+    | CG.Type.Word16 =>
+      rep_min := Target.Int{Target.Word16.min, pre};
+      rep_max := Target.Int{Target.Word16.max, pre};
+    | CG.Type.Word32 =>
+      rep_min := Target.Int{Target.Word32.min, pre};
+      rep_max := Target.Int{Target.Word32.max, pre};
+    | CG.Type.Word64 =>
+      rep_min := Target.Int{Target.Word64.min, pre};
+      rep_max := Target.Int{Target.Word64.max, pre};
+    | CG.Type.Int8   =>
+      rep_min := Target.Int{Target.Int8.min,   pre};
+      rep_max := Target.Int{Target.Int8.max,   pre};
+    | CG.Type.Int16  =>
+      rep_min := Target.Int{Target.Int16.min,  pre};
+      rep_max := Target.Int{Target.Int16.max,  pre};
+    | CG.Type.Int32  =>
+      rep_min := Target.Int{Target.Int32.min,  pre};
+      rep_max := Target.Int{Target.Int32.max,  pre};
+    | CG.Type.Int64  =>
+      rep_min := Target.Int{Target.Int64.min,  pre};
+      rep_max := Target.Int{Target.Int64.max,  pre};
+    ELSE
+      rep_min := TInt.Zero[pre];
+      rep_max := TInt.MOne[pre];
     END;
 
     IF TInt.EQ (p.min, rep_min) AND TInt.EQ (p.max, rep_max)
@@ -374,17 +398,15 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     EVAL Type.CheckInfo (p, info);
-    IF TInt.LT (TInt.Zero, p.min) OR TInt.LT (TInt.ZeroL, p.min)
-      OR TInt.LT (p.max, TInt.Zero) OR TInt.LT (p.max, TInt.ZeroL) THEN
+    IF TInt.Sig (p.min) > 0 OR TInt.Sig (p.max) < 0 THEN
       CG.Load_integer (p.min);
       CG.Store_indirect (info.stk_type, 0, info.size);
     ELSIF zeroed THEN
       CG.Discard (CG.Type.Addr);
     ELSE
-      IF Type.IsSubtype (p.baseType, LInt.T) THEN
-        CG.Load_integer (TInt.ZeroL);
-      ELSE
-        CG.Load_integer (TInt.Zero);
+      IF Type.IsSubtype (p.baseType, LInt.T)
+        THEN CG.Load_integer (TInt.ZeroL);
+        ELSE CG.Load_integer (TInt.ZeroI);
       END;
       CG.Store_indirect (info.stk_type, 0, info.size);
     END;
@@ -394,8 +416,7 @@ PROCEDURE GenMap (p: P;  offset, size: INTEGER;  refs_only: BOOLEAN) =
   VAR bit_offset := offset MOD Target.Byte;  op: TipeMap.Op;
   BEGIN
     IF refs_only THEN RETURN END;
-    IF TInt.LT (p.min, TInt.Zero) OR TInt.LT (p.min, TInt.ZeroL)
-      OR TInt.LT (p.max, TInt.Zero) OR TInt.LT (p.max, TInt.ZeroL) THEN
+    IF TInt.Sig (p.min) < 0 OR TInt.Sig (p.max) < 0 THEN
       (* value is signed *)
       IF (bit_offset # 0) THEN             op := TipeMap.Op.Int_Field;
       ELSIF (size = 1 * Target.Byte) THEN  op := TipeMap.Op.Int_1;

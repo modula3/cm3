@@ -12,7 +12,7 @@ IMPORT M3, CG, Error, Token, Scanner, NamedType, Word;
 IMPORT ArrayType, PackedType, EnumType, ObjectType, RefType;
 IMPORT ProcType, UserProc, RecordType, SetType, SubrangeType, OpaqueType;
 IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
-IMPORT Addr, Bool, Charr, Card, EReel, Int, LReel, Mutex, Null;
+IMPORT Addr, Bool, Charr, Card, EReel, Int, LInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
 
@@ -396,13 +396,13 @@ PROCEDURE Number (t: T): Target.Int =
       <*ASSERT b*>
       RETURN max;
     ELSIF (c = Class.Integer) THEN
-      min := Target.Integer.min;
-      max := Target.Integer.max;
+      min := Target.Int{Target.Integer.min, Target.Pre.Integer};
+      max := Target.Int{Target.Integer.max, Target.Pre.Integer};
     ELSIF (c = Class.Longint) THEN
-      min := Target.Longint.min;
-      max := Target.Longint.max;
+      min := Target.Int{Target.Longint.min, Target.Pre.Longint};
+      max := Target.Int{Target.Longint.max, Target.Pre.Longint};
     ELSIF (c = Class.Error) THEN
-      RETURN TInt.Zero;
+      RETURN TInt.ZeroI;
     ELSIF (c = Class.Packed) THEN
       RETURN Number (StripPacked (u));
     ELSE
@@ -411,11 +411,11 @@ PROCEDURE Number (t: T): Target.Int =
     END;
     IF TInt.Subtract (max, min, tmp)
       AND TInt.Ord (tmp, tmp)
-      AND TInt.Add (tmp, TInt.One, max)
+      AND TInt.Inc (tmp, max)
       THEN RETURN max;
     END;
     Error.Msg ("type has too many elements");
-    RETURN Target.Integer.max;
+    RETURN Target.Int{Target.Integer.max, Target.Pre.Integer};
   END Number;
 
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
@@ -427,22 +427,22 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
     ELSIF (c = Class.Enum) THEN
       b := TInt.FromInt (EnumType.NumElts (u), Target.Pre.Integer, min);
       <*ASSERT b*>
-      b := TInt.Subtract (min, TInt.One, max);   <*ASSERT b*>
-      min := TInt.Zero;
+      b := TInt.Dec (min, max);   <*ASSERT b*>
+      min := TInt.ZeroI;
       RETURN TRUE;
     ELSIF (c = Class.Integer) THEN
-      min := Target.Integer.min;
-      max := Target.Integer.max;
+      min := Target.Int{Target.Integer.min, Target.Pre.Integer};
+      max := Target.Int{Target.Integer.max, Target.Pre.Integer};
       RETURN TRUE;
     ELSIF (c = Class.Longint) THEN
-      min := Target.Longint.min;
-      max := Target.Longint.max;
+      min := Target.Int{Target.Longint.min, Target.Pre.Longint};
+      max := Target.Int{Target.Longint.max, Target.Pre.Longint};
       RETURN TRUE;
     ELSIF (c = Class.Packed) THEN
       RETURN GetBounds (StripPacked (u), min, max);
     ELSE
-      min := TInt.Zero;
-      max := TInt.MOne;
+      min := TInt.ZeroI;
+      max := TInt.MOneI;
       RETURN FALSE;
     END;
   END GetBounds;
@@ -814,12 +814,12 @@ PROCEDURE Zero (full_t: T) =
     size := u.info.size;
   BEGIN
     CASE t.info.class OF
-    | Class.Integer, Class.Subrange, Class.Enum =>
-        CG.Load_integer (TInt.Zero);
-        CG.Store_indirect (u.info.stk_type(*Target.Integer.cg_type*), 0, size);
-    | Class.Longint =>
-        CG.Load_integer (TInt.ZeroL);
-        CG.Store_indirect (u.info.stk_type(*Target.Longint.cg_type*), 0, size);
+    | Class.Integer, Class.Longint, Class.Subrange, Class.Enum =>
+        IF IsSubtype (t, LInt.T)
+          THEN CG.Load_integer (TInt.ZeroL);
+          ELSE CG.Load_integer (TInt.ZeroI);
+        END;
+        CG.Store_indirect (u.info.stk_type, 0, size);
     | Class.Real =>
         CG.Load_float (TFloat.ZeroR);
         CG.Store_indirect (CG.Type.Reel, 0, size);
@@ -834,7 +834,7 @@ PROCEDURE Zero (full_t: T) =
         CG.Store_indirect (CG.Type.Addr, 0, size);
     | Class.Set =>
         IF (size <= Target.Integer.size) THEN
-          CG.Load_integer (TInt.Zero);
+          CG.Load_integer (TInt.ZeroI);
           CG.Store_indirect (Target.Integer.cg_type, 0, size);
         ELSIF (size <= 8 * Target.Integer.size) THEN
           ZeroWords (size);
@@ -859,7 +859,7 @@ PROCEDURE ZeroWords (size: INTEGER) =
   BEGIN
     WHILE (size >= Target.Integer.size) DO
       CG.Push (lv);
-      CG.Load_integer (TInt.Zero);
+      CG.Load_integer (TInt.ZeroI);
       CG.Store_indirect (Target.Integer.cg_type, offset, Target.Integer.size);
       INC (offset, Target.Integer.size);
       DEC (size, Target.Integer.size);

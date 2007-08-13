@@ -829,7 +829,7 @@ PROCEDURE EvalUnaryMinus (VAR s: State;  VAR val: T)
     EvalX (s, s.ch[0], a);
 
     IF (a.class = Class.Integer) THEN
-      IF    (a.int.pre = Target.Pre.Integer) THEN izero := TInt.Zero;
+      IF    (a.int.pre = Target.Pre.Integer) THEN izero := TInt.ZeroI;
       ELSIF (a.int.pre = Target.Pre.Longint) THEN izero := TInt.ZeroL;
       ELSE END;
       IF NOT TInt.Subtract (izero, a.int, val.int) THEN
@@ -879,7 +879,7 @@ PROCEDURE EvalSubscript (VAR s: State;  VAR val: T)
           Err ("bad operand for subscript operation");
         END;
     | M3Type.OpenArray =>
-        min_index := TInt.Zero;
+        min_index := TInt.ZeroI;
     ELSE
       Err ("bad operand for subscript operation");
     END;
@@ -1034,7 +1034,7 @@ PROCEDURE EvalSetCons (VAR s: State;  tipe: M3Type.Set;
     IF NOT M3Type.GetBounds (tipe.domain, min, max)
       OR NOT TInt.Subtract (max, min, t0)
       OR NOT TInt.Ord (t0, t1)
-      OR NOT TInt.Add (t1, TInt.One, t0)
+      OR NOT TInt.Inc (t1, t0)
       OR NOT TInt.ToInt (t0, n_elts) THEN
       Err ("illegal set constructor");
     END;
@@ -1354,11 +1354,11 @@ Out ("***??? Didn't find a type for ", M3ID.ToText (id), " => class ", Fmt.Int(O
 (*------------------------------------------- built-in types and procedures ---*)
 
 CONST
-  BuiltinNames = ARRAY [0..40] OF TEXT {
+  BuiltinNames = ARRAY [0..41] OF TEXT {
     "ABS", "ADDRESS", "ADR", "ADRSIZE", "BITSIZE", "BOOLEAN",
     "BYTESIZE", "CARDINAL", "CEILING", "CHAR", "DEC", "DISPOSE",
     "EXTENDED", "FALSE", "FIRST", "FLOAT", "FLOOR", "INC",
-    "INTEGER", "ISTYPE", "LAST", "LONGREAL", "LOOPHOLE",
+    "INTEGER", "ISTYPE", "LAST", "LONGINT", "LONGREAL", "LOOPHOLE",
     "MAX", "MIN", "MUTEX", "NARROW", "NEW", "NIL", "NULL",
     "NUMBER", "ORD", "REAL", "REFANY", "ROUND", "SUBARRAY",
     "TEXT", "TRUE", "TRUNC", "TYPECODE", "VAL"
@@ -1366,7 +1366,7 @@ CONST
 
 VAR
   init_builtins := FALSE;
-  BuiltinIDs : ARRAY [0..40] OF M3ID.T;
+  BuiltinIDs : ARRAY [0..41] OF M3ID.T;
 
 PROCEDURE InitBuiltins () =
   BEGIN
@@ -1488,104 +1488,108 @@ PROCEDURE FindBuiltin (id: M3ID.T;  VAR(*OUT*) val: T): BOOLEAN =
                 val.info  := ORD (M3Builtin.Proc.Last);
                 RETURN TRUE;
 
-        | 21 => (* LONGREAL *)
+        | 21 => (* LONGINT *)
+                val.class := Class.Type;
+                val.type := M3Type.Longint;
+
+        | 22 => (* LONGREAL *)
                 val.class := Class.Type;
                 val.type := M3Type.LongReal;
                 RETURN TRUE;
 
-        | 22 => (* LOOPHOLE *)
+        | 23 => (* LOOPHOLE *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Loophole);
                 RETURN TRUE;
 
-        | 23 => (* MAX *)
+        | 24 => (* MAX *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Max);
                 RETURN TRUE;
 
-        | 24 => (* MIN *)
+        | 25 => (* MIN *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Min);
                 RETURN TRUE;
 
-        | 25 => (* MUTEX *)
+        | 26 => (* MUTEX *)
                 val.class := Class.Type;
                 val.type := M3Type.Mutex;
                 RETURN TRUE;
 
-        | 26 => (* NARROW *)
+        | 27 => (* NARROW *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Narrow);
                 RETURN TRUE;
 
-        | 27 => (* NEW *)
+        | 28 => (* NEW *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.New);
                 RETURN TRUE;
 
-        | 28 => (* NIL *)
+        | 29 => (* NIL *)
                 val.class := Class.Addr;
                 val.info  := 0;
                 val.type  := M3Type.Null;
                 RETURN TRUE;
 
-        | 29 => (* NULL *)
+        | 30 => (* NULL *)
                 val.class := Class.Type;
                 val.type := M3Type.Null;
                 RETURN TRUE;
 
-        | 30 => (* NUMBER *)
+        | 31 => (* NUMBER *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Number);
                 RETURN TRUE;
 
-        | 31 => (* ORD *)
+        | 32 => (* ORD *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Ord);
                 RETURN TRUE;
 
-        | 32 => (* REAL *)
+        | 33 => (* REAL *)
                 val.class := Class.Type;
                 val.type := M3Type.Real;
                 RETURN TRUE;
 
-        | 33 => (* REFANY *)
+        | 34 => (* REFANY *)
                 val.class := Class.Type;
                 val.type := M3Type.Refany;
                 RETURN TRUE;
 
-        | 34 => (* ROUND *)
+        | 35 => (* ROUND *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Round);
                 RETURN TRUE;
 
-        | 35 => (* SUBARRAY *)
+        | 36 => (* SUBARRAY *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Subarray);
                 RETURN TRUE;
 
-        | 36 => (* TEXT *)
+        | 37 => (* TEXT *)
                 val.class := Class.Type;
                 val.type := M3Type.Txt;
                 RETURN TRUE;
 
-        | 37 => (* TRUE *)
+        | 38 => (* TRUE *)
                 val.class := Class.Enum;
                 val.info  := ORD (TRUE);
                 val.type  := M3Type.Boolean;
                 RETURN TRUE;
 
-        | 38 => (* TRUNC *)
+        | 39 => (* TRUNC *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Trunc);
                 RETURN TRUE;
 
-        | 39 => (* TYPECODE *)
+        | 40 => (* TYPECODE *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Typecode);
                 RETURN TRUE;
 
-        | 40 => (* VAL *)
+        | 41 => (* VAL *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Val);
                 RETURN TRUE;

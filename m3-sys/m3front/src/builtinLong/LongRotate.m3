@@ -46,7 +46,7 @@ PROCEDURE CompileL (ce: CallExpr.T) =
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
-    CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
+    CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI, max,
                           CG.RuntimeError.ValueOutOfRange);
     CG.Rotate_left (Target.Longint.cg_type);
   END CompileL;
@@ -57,7 +57,7 @@ PROCEDURE CompileR (ce: CallExpr.T) =
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
-    CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
+    CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI, max,
                           CG.RuntimeError.ValueOutOfRange);
     CG.Rotate_right (Target.Longint.cg_type);
   END CompileR;
@@ -84,7 +84,7 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
-      AND TInt.LE (TInt.Zero, i1)
+      AND TInt.Sig (i1) >= 0
       AND TInt.FromInt (Target.Longint.size, Target.Pre.Integer, max)
       AND TInt.LT (i1, max)
     THEN
@@ -102,10 +102,10 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
-      AND TInt.LE (TInt.Zero, i1)
+      AND TInt.Sig (i1) >= 0
       AND TInt.FromInt (Target.Longint.size, Target.Pre.Integer, max)
       AND TInt.LT (i1, max)
-      AND TInt.Subtract (TInt.Zero, i1, neg_i1)
+      AND TInt.Negate (i1, neg_i1)
     THEN
       TWord.Rotate (w0, neg_i1, result);
       RETURN IntegerExpr.New (result);
@@ -118,7 +118,7 @@ PROCEDURE Initialize () =
   VAR
     max : Target.Int;
     b   := TInt.FromInt (Target.Longint.size-1, Target.Pre.Integer, max);
-    sub := SubrangeType.New (TInt.Zero, max, Int.T, FALSE);
+    sub := SubrangeType.New (TInt.ZeroI, max, Int.T, FALSE);
 
     f0  := Formal.NewBuiltin ("x", 0, LInt.T);
     f1  := Formal.NewBuiltin ("n", 1, Int.T);

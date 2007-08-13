@@ -8,7 +8,7 @@
 
 MODULE NotExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt;
+IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt, Value;
 
 TYPE
   P = ExprRep.Ta BRANDED "NotExpr.P" OBJECT
@@ -62,7 +62,7 @@ PROCEDURE Prep (p: P) =
 PROCEDURE Compile (p: P) =
   BEGIN
     Expr.Compile (p.a);
-    CG.Load_integer (TInt.Zero);
+    Value.Load (Bool.False);
     CG.Compare (Target.Integer.cg_type, CG.Cmp.EQ);
   END Compile;
 

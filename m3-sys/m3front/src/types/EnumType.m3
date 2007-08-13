@@ -127,7 +127,7 @@ PROCEDURE SetRep (p: P) =
     FOR i := FIRST (Rep) TO LAST (Rep) DO
       WITH t = TargetMap.Word_types[i] DO
         IF (t.size <= Target.Word.size)
-          AND TWord.LE (max, t.max) THEN
+          AND TWord.LE (max, Target.Int{t.max, Target.Pre.Integer}) THEN
           p.rep := i; RETURN;
         END;
       END;
@@ -223,9 +223,11 @@ PROCEDURE InitCoster (p: P;  zeroed: BOOLEAN): INTEGER =
   BEGIN
     IF (p.n_elts <= 0) OR (zeroed) THEN RETURN 0; END;
     IF NOT TInt.FromInt (p.n_elts-1, Target.Pre.Integer, max) THEN RETURN 1 END;
-    IF TInt.EQ (TargetMap.Word_types[p.rep].max, max)
-      THEN RETURN 0;
-      ELSE RETURN 1;
+    WITH rep = TargetMap.Word_types[p.rep] DO
+      IF TInt.EQ (Target.Int{rep.max, Target.Pre.Integer}, max)
+        THEN RETURN 0;
+        ELSE RETURN 1;
+      END;
     END;
   END InitCoster;
 

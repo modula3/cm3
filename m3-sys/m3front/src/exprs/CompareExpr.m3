@@ -203,7 +203,7 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
       CG.Push (tb);
       CG.Not (Target.Word.cg_type);
       CG.And (Target.Word.cg_type);
-      CG.Load_integer (TInt.Zero);
+      CG.Load_integer (TInt.ZeroI);
       CG.Compare (Target.Word.cg_type, CG.Cmp.EQ);
       CG.And (Target.Word.cg_type);
       IF (true # CG.No_label)

@@ -591,7 +591,7 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
                            CG.Type.Struct, in_memory := TRUE);
 
     (* generate the constant words *)
-    n := p.tree;  curWord := 0;   curMask := TInt.Zero;
+    n := p.tree;  curWord := 0;   curMask := TInt.ZeroI;
     WHILE (n # NIL) DO
       w1 := (n.min - minT) DIV Grain; 
       b1 := (n.min - minT) MOD Grain;
@@ -599,9 +599,9 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
       b2 := (n.max - minT) MOD Grain;
       IF (w1 # curWord) THEN
         EmitAssign (t1, curWord, curMask);
-        FOR i := curWord+1 TO w1-1 DO  EmitAssign (t1, i, TInt.Zero) END;
+        FOR i := curWord+1 TO w1-1 DO  EmitAssign (t1, i, TInt.ZeroI) END;
         curWord := w1;
-        curMask := TInt.Zero;
+        curMask := TInt.ZeroI;
       END;
       IF (w1 # w2) THEN
         TWord.Or (curMask, left [b1], tmp);
@@ -620,7 +620,7 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
     EmitAssign (t1, curWord, curMask);
 
     (* write zeros for the remainder of the set *)
-    FOR i := curWord+1 TO nWords-1 DO EmitAssign (t1, i, TInt.Zero) END;
+    FOR i := curWord+1 TO nWords-1 DO EmitAssign (t1, i, TInt.ZeroI) END;
 
     (* finally, add the non-constant elements *)
     FOR i := 0 TO p.nOthers-1 DO
@@ -653,7 +653,7 @@ PROCEDURE GenElement (e: Expr.T;  READONLY min, max: Target.Int) =
   VAR t := Type.Base (Expr.TypeOf (e));
   BEGIN
     CheckExpr.EmitChecks (e, min, max, CG.RuntimeError.ValueOutOfRange);
-    IF NOT (TInt.EQ (min, TInt.Zero) OR TInt.EQ (max, TInt.ZeroL)) THEN
+    IF TInt.Sig (min) # 0 THEN
       CG.Load_integer (min);
       CG.Subtract (Type.CGType (t));
     END;
@@ -689,7 +689,7 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
     END;
 
     (* generate the constant words *)
-    n := p.tree;  curMask := TInt.Zero;
+    n := p.tree;  curMask := TInt.ZeroI;
     WHILE (n # NIL) DO
       b1 := (n.min - minT);
       b2 := (n.max - minT);
@@ -766,7 +766,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     EVAL BuildMap (p, p);
     <* ASSERT p.others = NIL *>
 
-    n := p.tree;  curWord := 0;   curMask := TInt.Zero;
+    n := p.tree;  curWord := 0;   curMask := TInt.ZeroI;
     WHILE (n # NIL) DO
       w1 := (n.min - minT) DIV Grain;
       b1 := (n.min - minT) MOD Grain;
@@ -774,12 +774,12 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
       b2 := (n.max - minT) MOD Grain;
       IF (w1 # curWord) THEN
         (* write the mask we've accumulated *)
-        IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+        IF TInt.Sig (curMask) # 0 THEN
           CG.Init_int (offset + curWord*Target.Integer.pack,
                         Target.Integer.size, curMask, is_const);
         END;
         curWord := w1;
-        curMask := TInt.Zero;
+        curMask := TInt.ZeroI;
       END;
       IF (w1 # w2) THEN
         (* write the full words [w1..w2-1] *)
@@ -800,7 +800,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
     END;
 
     (* write the last mask *)
-    IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+    IF TInt.Sig (curMask) # 0 THEN
       CG.Init_int (offset + curWord * Target.Integer.pack,
                    Target.Integer.size, curMask, is_const);
     END;
@@ -810,7 +810,7 @@ PROCEDURE Init () =
   VAR b: BOOLEAN;  s: Target.Int;
   BEGIN
     Grain := MAX (Target.Integer.size, Target.Set_grain);
-    TWord.Not (TInt.Zero, full);
+    TWord.Not (TInt.ZeroI, full);
     FOR i := 0 TO Grain - 1 DO
       b := TInt.FromInt (i + 1 - Grain, Target.Pre.Integer, s);  <*ASSERT b*>
       TWord.Shift (full, s, right [i]);

@@ -103,7 +103,7 @@ PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int): BOOLEAN =
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN TInt.EQ (p.value, TInt.Zero);
+    RETURN TInt.Sig (p.value) = 0;
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =

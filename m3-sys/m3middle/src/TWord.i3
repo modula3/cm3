@@ -25,6 +25,15 @@ PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16]; p: Pre;
 (* converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' *)
 
+PROCEDURE Negate (READONLY a: Int;  VAR i: Int);
+(* returns 'Word.Minus (0, a)' *)
+
+PROCEDURE Inc (READONLY a: Int;  VAR i: Int);
+(* returns 'Word.Plus (a, 1)' *)
+
+PROCEDURE Dec (READONLY a: Int;  VAR i: Int);
+(* returns 'Word.Minus (a, 1)' *)
+
 PROCEDURE Add (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.Plus (a, b)' *)
 

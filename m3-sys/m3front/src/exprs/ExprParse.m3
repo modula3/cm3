@@ -199,7 +199,7 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
         a.origin := here;
 
     ELSE
-        Fail ("bad expression"); a := IntegerExpr.New (TInt.Zero);
+        Fail ("bad expression"); a := IntegerExpr.New (TInt.ZeroI);
     END;
     RETURN a;
   END E8;

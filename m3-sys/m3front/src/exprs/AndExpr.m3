@@ -8,7 +8,7 @@
 
 MODULE AndExpr;
 
-IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt;
+IMPORT CG, Expr, ExprRep, Type, Bool, EnumExpr, Target, TInt, Value;
 
 TYPE
   P = ExprRep.Tab BRANDED "AndExpr.P" OBJECT
@@ -62,10 +62,10 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
 PROCEDURE Prep (p: P) =
   VAR false := CG.Next_label ();
   BEGIN
-    CG.Load_integer (TInt.Zero);
+    Value.Load (Bool.False);
     p.tmp := CG.Pop_temp ();
     PrepBR (p, CG.No_label, false, CG.Maybe);
-    CG.Load_integer (TInt.One);
+    Value.Load (Bool.True);
     CG.Store_temp (p.tmp);
     CG.Set_label (false);
   END Prep;

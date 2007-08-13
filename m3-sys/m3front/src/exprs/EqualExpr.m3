@@ -173,11 +173,11 @@ PROCEDURE Prep (p: P) =
       (* use the branching code to compute a value *)
       false := CG.Next_label (2);
       PrepBR (p, CG.No_label, false, CG.Maybe);
-      CG.Load_integer (TInt.One);
+      Value.Load (Bool.True);
       p.tmp := CG.Pop_temp ();
       CG.Jump (false+1);
       CG.Set_label (false);
-      CG.Load_integer (TInt.Zero);
+      Value.Load (Bool.False);
       CG.Store_temp (p.tmp);
       CG.Set_label (false+1);
     END;
@@ -620,14 +620,14 @@ PROCEDURE GenOpenValueCheck (t1: Type.T;  p1, p2: CG.Val;
 
     (* decrement the count *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (TInt.OneI);
     CG.Subtract (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
     (* test for completion *)
     CG.Set_label (top+1);
     CG.Push (cnt);
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (TInt.ZeroI);
     CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
     CG.Free (cnt);
@@ -670,14 +670,14 @@ PROCEDURE GenFixedValueCheck (t1, i1, e1: Type.T;  p1, p2: CG.Val;
 
     (* decrement the count *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (TInt.OneI);
     CG.Subtract (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
     (* test for completion *)
     CG.Set_label (top+1);
     CG.Push (cnt);
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (TInt.ZeroI);
     CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
     CG.Free (cnt);
@@ -764,14 +764,14 @@ PROCEDURE CompileSolid (p1, p2: CG.Val;  t1, t2: Type.T;
 
       (* decrement the count *)
       CG.Push (cnt);
-      CG.Load_integer (TInt.One);
+      CG.Load_integer (TInt.OneI);
       CG.Subtract (Target.Integer.cg_type);
       CG.Store_temp (cnt);
 
       (* test for completion *)
       CG.Set_label (top+1);
       CG.Push (cnt);
-      CG.Load_integer (TInt.Zero);
+      CG.Load_integer (TInt.ZeroI);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
       CG.Free (cnt);

@@ -26,7 +26,7 @@ CONST
   Ten      = ARRAY Pre OF Int {TenI, TenL};
 
 PROCEDURE FromInt (x: INTEGER;  pre: Pre;  VAR r: Int): BOOLEAN =
-  VAR last_chunk := Target.last_chunk[pre];  zero := Zeros[pre];
+  VAR last_chunk := Target.last_chunk[pre];  zero := Zero[pre];
   BEGIN
     r := zero;
     FOR i := 0 TO last_chunk DO
@@ -106,7 +106,7 @@ PROCEDURE Val (READONLY a: Int;  pre: Pre;  VAR r: Int): BOOLEAN =
 
 PROCEDURE New (READONLY x: ARRAY OF CHAR;  pre: Pre;  VAR r: Int): BOOLEAN =
   CONST ZERO = ORD ('0');   ZEROZERO = 10 * ZERO + ZERO;
-  VAR tmp, digit: Int;  zero := Zeros[pre];
+  VAR tmp, digit: Int;  zero := Zero[pre];
   BEGIN
     r := zero;
     IF (NUMBER (x) = 1) THEN
@@ -129,6 +129,41 @@ PROCEDURE Prec (READONLY a: Int): Pre =
     RETURN a.pre;
   END Prec;
 
+PROCEDURE Sig (READONLY a: Int): [-1 .. +1] =
+  VAR
+    pre := a.pre;
+    last_chunk := Target.last_chunk[pre];
+  BEGIN
+    IF And (a.x [last_chunk], SignMask) # 0 THEN RETURN -1 END;
+    FOR i := 0 TO last_chunk DO
+      IF a.x[i] # 0 THEN RETURN +1 END;
+    END;
+    RETURN 0;
+  END Sig;
+
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  BEGIN
+    RETURN Subtract (Zero[a.pre], a, r);
+  END Negate;
+
+PROCEDURE Inc (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a or b *)
+  VAR carry := 1;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+      a_sign := And (a.x [last_chunk], SignMask);
+      r_sign : Word.T;
+  BEGIN
+    r.pre := pre;
+    FOR i := 0 TO last_chunk DO
+      carry := a.x [i] + carry;
+      r.x [i] := And (carry, Mask);
+      carry := RShift (carry, ChunkSize);
+    END;
+    r_sign := And (r.x [last_chunk], SignMask);
+    RETURN (a_sign # 0) OR (a_sign = r_sign);
+  END Inc;
+
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
   VAR carry := 0;
@@ -148,6 +183,24 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     r_sign := And (r.x [last_chunk], SignMask);
     RETURN (a_sign # b_sign) OR (a_sign = r_sign);
   END Add;
+
+PROCEDURE Dec (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a or b *)
+  VAR borrow := 1;
+      pre := a.pre;
+      last_chunk := Target.last_chunk[pre];
+      a_sign := And (a.x [last_chunk], SignMask);
+      r_sign : Word.T;
+  BEGIN
+    r.pre := pre;
+    FOR i := 0 TO last_chunk DO
+      borrow := a.x [i] - borrow;
+      r.x [i] := And (borrow, Mask);
+      borrow := And (RShift (borrow, ChunkSize), 1);
+    END;
+    r_sign := And (r.x [last_chunk], SignMask);
+    RETURN (a_sign = 0) OR (a_sign = r_sign);
+  END Dec;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
@@ -232,10 +285,11 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
     den_neg : BOOLEAN;
     pre := a.pre;
     last_chunk := Target.last_chunk[pre];
-    min := ARRAY Pre OF Int {Target.Integer.min, Target.Longint.min};
-    zero := Zeros[pre];
-    one  := Ones [pre];
-    mone := MOnes[pre];
+    min := ARRAY Pre OF Int{Int{Target.Integer.min, Target.Pre.Integer},
+                            Int{Target.Longint.min, Target.Pre.Longint}}[pre];
+    zero := Zero[pre];
+    one  := One [pre];
+    mone := MOne[pre];
   BEGIN
     IF a.pre # b.pre THEN RETURN FALSE END;
     IF EQ (b, zero) THEN  RETURN FALSE;  END;
@@ -247,7 +301,7 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 
     (* check for the only possible overflow:  FIRST DIV -1 *)
     IF num_neg AND den_neg
-      AND EQ (a, min[pre])
+      AND EQ (a, min)
       AND EQ (b, mone) THEN
       RETURN FALSE;
     END;
@@ -343,9 +397,10 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     quo, rem: Int;
     pre := r.pre;
     last_chunk := Target.last_chunk[pre];
-    min := ARRAY Pre OF Int {Target.Integer.min, Target.Longint.min};
-    zero := Zeros[pre];
-    one  := Ones [pre];
+    min := ARRAY Pre OF Int{Int{Target.Integer.min, Target.Pre.Integer},
+                            Int{Target.Longint.min, Target.Pre.Longint}}[pre];
+    zero := Zero[pre];
+    one  := One [pre];
   BEGIN
     IF EQ (r, zero) THEN
       result [0] := '0';
@@ -355,7 +410,7 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
 
       (* get rid of negative numbers *)
       IF And (r.x [last_chunk], SignMask) # 0 THEN
-        IF EQ (r, min[pre]) THEN
+        IF EQ (r, min) THEN
           (* 2's complement makes FIRST(INTEGER) a special case *)
           bump := TRUE;
 	  EVAL Add (rr, one, rr);

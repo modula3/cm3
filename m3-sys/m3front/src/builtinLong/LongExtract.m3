@@ -35,8 +35,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
       (* we can use the extract_mn operator *)
       IF (i1 + i2 > Target.Longint.size) THEN
         Error.Warn (2, "Word.Extract: i+n value out of range");
-        CG.Load_integer (TInt.One);
-        CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+        CG.Load_integer (TInt.OneI);
+        CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
       ELSE
         Expr.Compile (ce.args[0]);
         CG.Extract_mn (Target.Longint.cg_type, FALSE, i1, i2);
@@ -47,7 +47,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       b := TInt.FromInt (Target.Longint.size - i2, Target.Pre.Integer, max);
       <*ASSERT b*>
       Expr.Compile (ce.args[0]);
-      CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
+      CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI, max,
                             CG.RuntimeError.ValueOutOfRange);
       CG.Extract_n (Target.Longint.cg_type, FALSE, i2);
 
@@ -59,16 +59,18 @@ PROCEDURE Compile (ce: CallExpr.T) =
       Expr.Compile (ce.args[0]);
       CG.Force ();
       CG.Load_intt (i1);
-      CheckExpr.EmitChecks (ce.args[2], TInt.Zero, max,
+      CheckExpr.EmitChecks (ce.args[2], TInt.ZeroI, max,
                             CG.RuntimeError.ValueOutOfRange);
       CG.Extract (Target.Longint.cg_type, sign := FALSE);
 
     ELSE
       (* we need the general purpose extract operator *)
-      CheckExpr.EmitChecks (ce.args[1], TInt.Zero, Target.Integer.max,
+      CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI,
+                            Target.Int{Target.Integer.max, Target.Pre.Integer},
                             CG.RuntimeError.ValueOutOfRange);
       t1 := CG.Pop ();
-      CheckExpr.EmitChecks (ce.args[2], TInt.Zero, Target.Integer.max,
+      CheckExpr.EmitChecks (ce.args[2], TInt.ZeroI,
+                            Target.Int{Target.Integer.max, Target.Pre.Integer},
                             CG.RuntimeError.ValueOutOfRange);
       t2 := CG.Pop ();
       IF Host.doRangeChk THEN
@@ -124,7 +126,7 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     IF TInt.LT (max_bits, int_size) THEN
       min := TInt.ZeroL;
       IF NOT TWord.Extract (TInt.MOneL, TInt.ZeroL, max_bits, max) THEN
-        max := Target.Longint.max;
+        max := Target.Int{Target.Longint.max, Target.Pre.Longint};
       END;
     ELSE
       (* possible that we'll preserve all bits *)

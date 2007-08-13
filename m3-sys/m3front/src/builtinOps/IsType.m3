@@ -9,7 +9,7 @@
 MODULE IsType;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr, Reff, RefType;
-IMPORT Procedure, Bool, ObjectType, Null, TInt, M3RT, Target, RunTyme;
+IMPORT Procedure, Bool, ObjectType, Null, Value, M3RT, Target, RunTyme;
 
 VAR Z: CallExpr.MethodList;
 
@@ -54,7 +54,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       (* the test succeeds statically *)
       Expr.Compile (ce.args[0]);
       CG.Discard (CG.Type.Addr);
-      CG.Load_integer (TInt.One);
+      Value.Load (Bool.True);
       ce.tmp := CG.Pop ();
 
     ELSIF Type.IsEqual (t, Null.T, NIL) THEN
@@ -67,7 +67,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       Expr.Compile (ce.args[0]);
       true := CG.Next_label ();
       ptr := CG.Pop ();
-      CG.Load_integer (TInt.One);
+      Value.Load (Bool.True);
       CG.Force (); (* we need a temp *)
       ce.tmp := CG.Pop_temp ();
       CG.Push (ptr);
@@ -79,7 +79,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, true, CG.Always);
 
-      CG.Load_integer (TInt.Zero);
+      Value.Load (Bool.False);
       CG.Store_temp (ce.tmp);
       CG.Set_label (true);
 

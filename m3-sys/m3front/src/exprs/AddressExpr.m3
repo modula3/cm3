@@ -43,7 +43,7 @@ PROCEDURE New (READONLY value: Target.Int): Expr.T =
     ExprRep.Init (p);
     p.value   := value;
     p.checked := TRUE;
-    IF TInt.EQ (value, TInt.Zero)
+    IF TInt.Sig (value) = 0
       THEN p.type := Null.T;
       ELSE p.type := Addr.T;
     END;
@@ -146,7 +146,7 @@ PROCEDURE Bounder (p: P;   VAR min, max: Target.Int) =
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN p = Null.Nil OR TInt.EQ (p.value, TInt.Zero);
+    RETURN p = Null.Nil OR TInt.Sig (p.value) = 0;
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
@@ -159,7 +159,7 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
 PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
                       is_const: BOOLEAN) =
   BEGIN
-    IF NOT TInt.EQ (p.value, TInt.Zero) THEN
+    IF TInt.Sig (p.value) # 0 THEN
       CG.Init_int (offset, MIN (Target.Integer.size, Target.Address.size),
                    p.value, is_const);
     END;
