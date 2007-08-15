@@ -313,12 +313,8 @@ PROCEDURE Alert (t: T) =
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
   END Alert;
 
-PROCEDURE TestAlert (): BOOLEAN =
-  VAR self := Self();
+PROCEDURE XTestAlert (self: T): BOOLEAN =
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "TestAlert called from non-Modula-3 thread");
-    END;
     TRY
       WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
       <*ASSERT NOT self.alertable*>
@@ -328,6 +324,15 @@ PROCEDURE TestAlert (): BOOLEAN =
       <*ASSERT NOT self.alertable*>
       WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     END;
+  END XTestAlert;
+
+PROCEDURE TestAlert (): BOOLEAN =
+  VAR self := Self();
+  BEGIN
+    IF self = NIL THEN
+      Die(ThisLine(), "TestAlert called from non-Modula-3 thread");
+    END;
+    RETURN XTestAlert(self);
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -665,27 +670,17 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
   END ToNTime;
 
 PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
-  VAR until: Utime.struct_timespec;
+  VAR amount, remaining: Utime.struct_timespec;
   BEGIN
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-      <*ASSERT NOT self.alertable*>
-      self.alertable := alertable;
-      IF alertable THEN InnerTestAlert(self) END;
-      IF n <= 0.0d0 THEN RETURN END;
-      ToNTime(Time.Now() + n, until);
-      LOOP
-        WITH r = Upthread.cond_timedwait(self.waitCond^, cm, until) DO
-          IF alertable THEN InnerTestAlert(self) END;
-          IF r = Uerror.ETIMEDOUT THEN RETURN END;
-          <*ASSERT r=0*>
-        END;
+    IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+    IF n <= 0.0d0 THEN RETURN END;
+    ToNTime(n, amount);
+    LOOP
+      WITH r = Utime.nanosleep(amount, remaining) DO
+        IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+        IF r = 0 THEN EXIT END;
+        amount := remaining;
       END;
-    FINALLY
-      self.alertable := FALSE;
-      WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
-      IF perfOn THEN PerfRunning(self.id) END;
     END;
   END XPause;
 
@@ -696,7 +691,14 @@ PROCEDURE Pause (n: LONGREAL) =
     IF self = NIL THEN
       Die(ThisLine(), "Pause called from a non-Modula-3 thread");
     END;
-    XPause(self, n, alertable := FALSE);
+    TRY
+      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
+      <*ASSERT NOT self.alertable*>
+      XPause(self, n, alertable := FALSE);
+    FINALLY
+      <*ASSERT NOT self.alertable*>
+      IF perfOn THEN PerfRunning(self.id) END;
+    END;
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
@@ -705,7 +707,14 @@ PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
     IF self = NIL THEN
       Die(ThisLine(), "AlertPause called from a non-Modula-3 thread");
     END;
-    XPause(self, n, alertable := TRUE);
+    TRY
+      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
+      <*ASSERT NOT self.alertable*>
+      XPause(self, n, alertable := TRUE);
+    FINALLY
+      <*ASSERT NOT self.alertable*>
+      IF perfOn THEN PerfRunning(self.id) END;
+    END;
   END AlertPause;
 
 PROCEDURE Yield () =
@@ -816,14 +825,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       subInterval := interval;
     END;
 
-    IF alertable THEN
-      TRY
-        WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-        IF self.alerted THEN self.alerted := FALSE; RAISE Alerted; END;
-      FINALLY
-        WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
-      END;
-    END;
+    IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
     LOOP
       FOR i := 0 TO fdindex-1 DO
         gReadFDS[i] := FDSet{};
@@ -843,14 +845,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
         res := CallSelect(fd+1, NIL);
       END;
 
-      IF alertable THEN
-        TRY
-          WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-          IF self.alerted THEN self.alerted := FALSE; RAISE Alerted; END;
-        FINALLY
-          WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
-        END;
-      END;
+      IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
 
       IF    res > 0 THEN RETURN TestFDS(fdindex, fdset, read);
       ELSIF res = 0 THEN
