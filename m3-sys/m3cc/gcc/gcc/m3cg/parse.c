@@ -1517,9 +1517,9 @@ scan_target_int (void)
   hi = low = 0;
   for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8) {
     if (shift < HOST_BITS_PER_WIDE_INT) {
-      low = low | (((long) get_byte ()) << shift);
+      low = low | (((HOST_WIDE_INT) get_byte ()) << shift);
     } else {
-      hi = hi | (((long) get_byte ()) << shift);
+      hi = hi | (((HOST_WIDE_INT) get_byte ()) << shift);
     }
   };
 
