@@ -6,9 +6,6 @@
 @rem This is based on upgrade-5.3.sh.
 @rem
 
-@rem Start with the installed cm3.
-@if defined CM3 set CM3=
-
 @set p_runtime=^
  import-libs ^
  m3core ^

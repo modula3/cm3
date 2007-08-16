@@ -77,6 +77,7 @@ m3tools ^
 m3cgcat ^
 m3cggen ^
 m3bundle ^
+dll2lib ^
 fix_nl ^
 libdump
 

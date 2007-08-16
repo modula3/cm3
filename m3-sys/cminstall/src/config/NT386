@@ -303,10 +303,6 @@ end
 m3_link_flags =
 [
 %
-% Ignore that some .libs think they want libc.lib.
-%
-	"/nodefaultlib",
-%
 % Generate a .pdb for debugging.
 %
     "/debug",
@@ -343,10 +339,10 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     imports = []
     foreach f in imported_libs
       local ff = f & ".sa"
-      if file_exists (ff)
-        imports += ff
-      else
+      if stale (f, ff)
         imports += f
+      else
+        imports += ff
       end
     end
   end

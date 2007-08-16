@@ -10,23 +10,23 @@
 
 int nbsd_feof(FILE *f){
    return feof(f);
-}
+};
 
 int nbsd_getc(FILE *f){
    return fgetc(f);
-}
+};
 
 int nbsd_ungetc(int c, FILE *f){
    return ungetc(c, f);
-}
+};
 
 int nbsd_putc(int c, FILE *f){
    return fputc(c, f);
-}
+};
 
 int nbsd_fflush(FILE *f){
    return fflush(f);
-}
+};
 
 FILE* nbsd_fdopen(int fildes, char *mode){
    FILE* f;
@@ -40,4 +40,4 @@ FILE* nbsd_fdopen(int fildes, char *mode){
 
 int nbsd_fclose(FILE *f){
    return fclose(f);
-}
+};

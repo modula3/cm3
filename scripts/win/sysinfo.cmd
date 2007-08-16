@@ -226,7 +226,7 @@ call :set_if_empty INSTALLROOT c:\cm3
 set CM3ROOT=%ROOT:\=\\%
 echo CM3ROOT=%CM3ROOT%
 
-call :set_if_empty CM3VERSION d5.5.0
+call :set_if_empty CM3VERSION d5.3.2
 
 set SYSINFO_DONE=yes
 

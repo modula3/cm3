@@ -28,6 +28,7 @@ set P=%P% m3cgcat
 set P=%P% m3cggen
 set P=%P% m3bundle
 set P=%P% mklib
+set P=%P% dll2lib
 set P=%P% fix_nl
 set P=%P% libdump
 set P=%P% bitvector

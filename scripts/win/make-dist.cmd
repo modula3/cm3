@@ -4,9 +4,6 @@
 
 setlocal
 
-@rem Start with the installed cm3.
-@if defined CM3 set CM3=
-
 call %~dp0clearenv || exit /b 1
 call %~dp0sysinfo || exit /b 1
 call %~dp0pkginfo || exit /b 1
@@ -33,7 +30,7 @@ if /i "%1" == "goto_zip" shift & goto :Zip
 if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
 
 @rem ------------------------------------------------------------------------------------------------------------------------
-call :Echo build new compiler with old compiler and old runtime (%INSTALLROOT_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_PREVIOUS%)
+call :Echo build new compiler with old compiler (%INSTALLROOT_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_PREVIOUS%)
 @rem ------------------------------------------------------------------------------------------------------------------------
 
 set P=^
@@ -55,18 +52,11 @@ set P=^
 
 setlocal
 
-@rem build just compiler this pass, not the runtime
-set P=import-libs m3middle m3linker m3front m3quake m3objfile m3back m3staloneback m3objfile cm3
-
-@rem copy over runtime package store from old to new
-for %%a in (libm3 m3core) do xcopy /fiveryh %INSTALLROOT%\pkg\%%a %INSTALLROOT_COMPILER_WITH_PREVIOUS%\pkg\%%a || exit /b 1
-
 @rem
 @rem cm3 is run out of %path%, but mklib is not, so we have to copy it..
 @rem
 call :CopyMklib %INSTALLROOT% %INSTALLROOT_COMPILER_WITH_PREVIOUS%
 set INSTALLROOT=%INSTALLROOT_COMPILER_WITH_PREVIOUS%
-set LIB=%INSTALLROOT%\lib;%LIB%
 call :RealClean || exit /b 1
 call :BuildShip || exit /b 1
 call :ShipCompiler || exit /b 1
@@ -75,17 +65,18 @@ call :RealClean || exit /b 1
 endlocal
 
 @rem ----------------------------------------------------------------------------------------------------------------------------------
-call :Echo build new compiler and new runtime with new compiler (%INSTALLROOT_COMPILER_WITH_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_SELF%)
+call :Echo build compiler with itself (%INSTALLROOT_COMPILER_WITH_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_SELF%)
 @rem ----------------------------------------------------------------------------------------------------------------------------------
 
 setlocal
 
 set INSTALLROOT=%INSTALLROOT_COMPILER_WITH_SELF%
-set LIB=%INSTALLROOT%\lib;%LIB%
 set PATH=%INSTALLROOT_COMPILER_WITH_PREVIOUS%\bin;%PATH%
 call :RealClean || exit /b 1
 call :BuildShip || exit /b 1
 call :ShipCompiler || exit /b 1
+rem don't clean -- keep mklib and cminstall
+rem call :RealClean || exit /b 1
 @rem
 @rem save cminstall.exe away for later
 @rem
@@ -105,7 +96,6 @@ call :Echo build minimal packages with new compiler
 setlocal
 
 set INSTALLROOT=%INSTALLROOT_MIN%
-set LIB=%INSTALLROOT%\lib;%LIB%
 call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || exit /b 1
 set PATH=%INSTALLROOT%\bin;%PATH%
 
@@ -122,7 +112,6 @@ call :Echo build core packages with new compiler
 setlocal
 
 set INSTALLROOT=%INSTALLROOT_CORE%
-set LIB=%INSTALLROOT%\lib;%LIB%
 call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || exit /b 1
 set PATH=%INSTALLROOT%\bin;%PATH%
 
@@ -140,7 +129,6 @@ call :Echo build standard packages with new compiler
 setlocal
 
 set INSTALLROOT=%INSTALLROOT_STD%
-set LIB=%INSTALLROOT%\lib;%LIB%
 call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || exit /b 1
 set PATH=%INSTALLROOT%\bin;%PATH%
 

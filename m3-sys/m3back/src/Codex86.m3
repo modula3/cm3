@@ -1942,7 +1942,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
 
     WHILE f_lit # NIL DO
       FOR i := 0 TO f_lit.size-1 DO
-        EVAL TargetInt.FromInt(f_lit.arr[i], Target.Pre.Integer, tint);
+        EVAL TargetInt.FromInt(f_lit.arr[i], tint);
         t.parent.init_int(f_lit.loc + i, tint, Type.Word8);
       END;
 
