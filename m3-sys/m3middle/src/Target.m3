@@ -393,6 +393,10 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                     a process's memory on NT are "free" and unreadable.
                     --- WKK  9/9/94 *)
 
+                 (* m3back doesn't handle 64 bit integers *)
+                 Longint := Int32;
+                 Longword := Word32;
+
                  CCs := NEW (REF ARRAY OF CallingConvention, 9);
                  NTCall (0, "C",          0); (* __cdecl *)
                  NTCall (1, "WINAPI",     1); (* __stdcall *)
