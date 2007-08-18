@@ -86,9 +86,9 @@ TYPE
     (* thread handle *)
     handle: pthread_t;			 (* LL = activeMu *)
     (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;
-    sp: ADDRESS := NIL;
-    size: INTEGER;
+    stackbase: ADDRESS := NIL;		 (* LL = activeMu *)
+    sp: ADDRESS := NIL;			 (* LL = activeMu *)
+    size: INTEGER;			 (* LL = activeMu *)
 
     state := ActState.Started;		 (* LL = activeMu *)
 
@@ -581,8 +581,8 @@ PROCEDURE RunThread (me: Activation) =
 
 PROCEDURE Fork (closure: Closure): T =
   VAR
-    t: T;
-    act: Activation := NIL;
+    act := NEW(Activation);
+    t := CreateT(act);
     attr: pthread_attr_t;
     size := defaultStackSize;
     bytes: Utypes.size_t;
@@ -593,8 +593,6 @@ PROCEDURE Fork (closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    t := CreateT(NEW(Activation));
-    act := t.act;
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       WITH r = Upthread.attr_init(attr) DO <*ASSERT r=0*> END;
       WITH r = Upthread.attr_getstacksize(attr, bytes)  DO <*ASSERT r=0*> END;
@@ -957,10 +955,9 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
       IF (act.stackbase # NIL) THEN
         (* Process the registers *)
         IF act = me THEN
-          IF RTMachine.SaveRegsInStack # NIL THEN
-            me.sp := RTMachine.SaveRegsInStack();
-          ELSE
-            me.sp := ADR(xx);
+          IF RTMachine.SaveRegsInStack # NIL
+            THEN me.sp := RTMachine.SaveRegsInStack();
+            ELSE me.sp := ADR(xx);
           END;
           EVAL RTMachine.SaveState(myState);
           WITH z = myState DO
@@ -989,8 +986,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   END ProcessStacks;
 
 (* Signal based suspend/resume *)
-VAR
-  suspendAckSem: Usem.sem_t;
+VAR ackSem: Usem.sem_t;
 
 CONST SIG = RTMachine.SIG_SUSPEND;
 
@@ -1009,12 +1005,18 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
         WHILE act # me DO
           IF act.state # ActState.Stopped THEN
             act.state := ActState.Stopping;
+            IF DEBUG THEN
+              RTIO.PutText("Stopping act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+            END;
             IF RTMachine.SuspendThread(act.handle) THEN
               IF act.newPool.busy THEN
                 RTMachine.RestartThread(act.handle);
                 INC(nLive);
               ELSE
                 act.state := ActState.Stopped;
+                IF DEBUG THEN
+                  RTIO.PutText("Stopped act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+                END;
               END;
             ELSE
               INC(nLive);
@@ -1033,11 +1035,13 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
       END;
     ELSE
       (* No native suspend routine so signal thread to suspend *)
-      WITH r = Usem.init(suspendAckSem, 0, 0) DO <*ASSERT r=0*> END;
       WHILE act # me DO
         IF act.state # ActState.Stopped THEN
           LOOP
             act.state := ActState.Stopping;
+            IF DEBUG THEN
+              RTIO.PutText("Stopping act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+            END;
             WITH r = Upthread.kill(act.handle, SIG) DO
               IF r = 0 THEN EXIT END;
               <*ASSERT r = Uerror.EAGAIN*>
@@ -1062,6 +1066,9 @@ PROCEDURE RestartAll (me: Activation) =
         <*ASSERT act.state = ActState.Stopped*>
         <*ASSERT NOT act.newPool.busy*>
         act.state := ActState.Starting;
+        IF DEBUG THEN
+          RTIO.PutText("Starting act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+        END;
         RTMachine.RestartThread(act.handle);
         act.state := ActState.Started;
         act := act.next;
@@ -1073,6 +1080,9 @@ PROCEDURE RestartAll (me: Activation) =
         <*ASSERT NOT act.newPool.busy*>
         act.state := ActState.Starting;
         LOOP
+          IF DEBUG THEN
+            RTIO.PutText("Starting act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+          END;
           WITH r = Upthread.kill(act.handle, SIG) DO
             IF r = 0 THEN EXIT END;
             <*ASSERT r = Uerror.EAGAIN*>
@@ -1087,7 +1097,7 @@ PROCEDURE RestartAll (me: Activation) =
 PROCEDURE StopWorld (me: Activation) =
   (* LL=activeMu *)
   VAR
-    nLive: INTEGER;
+    nLive, newlySent: INTEGER;
     wait_nsecs := 0;
     wait, remaining: Utime.struct_timespec;
     acks: Ctypes.int;
@@ -1095,16 +1105,22 @@ PROCEDURE StopWorld (me: Activation) =
     WAIT_UNIT = 1000000;
     RETRY_INTERVAL = 10000000;
   BEGIN
-    IF DEBUG THEN RTIO.PutText("stopping threads"); RTIO.Flush(); END;
+    IF DEBUG THEN
+      RTIO.PutText("Stopping from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+    END;
     nLive := SuspendAll (me);
     IF nLive > 0 THEN
       LOOP
-        WITH r = Usem.getvalue(suspendAckSem, acks) DO <*ASSERT r=0*> END;
-        IF acks = nLive THEN IF DEBUG THEN RTIO.PutText("!"); END; EXIT END;
+        WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+        IF acks = nLive THEN EXIT END;
         <*ASSERT acks < nLive*>
         IF wait_nsecs > RETRY_INTERVAL THEN
-          IF DEBUG THEN RTIO.PutText("."); RTIO.Flush(); END;
-          IF SuspendAll(me) = 0 THEN EXIT END;
+          newlySent := SuspendAll(me);
+          WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+          IF newlySent < nLive - acks THEN
+            (* how did we manage to lose some? *)
+            nLive := acks + newlySent;
+          END;
           wait_nsecs := 0;
         END;
         wait.tv_sec := 0;
@@ -1114,13 +1130,34 @@ PROCEDURE StopWorld (me: Activation) =
         END;
         INC(wait_nsecs, WAIT_UNIT);
       END;
+      FOR i := 0 TO nLive-1 DO
+        LOOP
+          WITH r = Usem.wait(ackSem) DO
+            IF r = 0 THEN EXIT END;
+            IF Cerrno.GetErrno() = Uerror.EINTR THEN
+              (*retry*)
+            ELSE
+              <*ASSERT FALSE*>
+            END;
+          END;
+        END;
+      END;
     END;
-    IF DEBUG THEN RTIO.PutText("\n"); RTIO.Flush(); END;
+
+    IF DEBUG THEN
+      RTIO.PutText("Stopped from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+    END;
   END StopWorld;
 
 PROCEDURE StartWorld (me: Activation) =
   BEGIN
+    IF DEBUG THEN
+      RTIO.PutText("Starting from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+    END;
     RestartAll (me);
+    IF DEBUG THEN
+      RTIO.PutText("Started from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+    END;
   END StartWorld;
 
 PROCEDURE SignalHandler (sig: Ctypes.int;
@@ -1136,13 +1173,15 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
     IF me = NIL THEN RETURN END;
     <*ASSERT me.state = ActState.Stopping*>
     IF me.newPool.busy THEN RETURN END;
-    IF RTMachine.SaveRegsInStack # NIL THEN
-      me.sp := RTMachine.SaveRegsInStack();
-    ELSE
-      me.sp := ADR(xx);
+    IF RTMachine.SaveRegsInStack # NIL
+      THEN me.sp := RTMachine.SaveRegsInStack();
+      ELSE me.sp := ADR(xx);
     END;
     me.state := ActState.Stopped;
-    WITH r = Usem.post(suspendAckSem) DO <*ASSERT r=0*> END;
+    IF DEBUG THEN
+      RTIO.PutText("Stopped act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+    END;
+    WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
 
     WITH r = Usignal.sigemptyset(m) DO <*ASSERT r=0*> END;
     WITH r = Usignal.sigaddset(m, SIG) DO <*ASSERT r=0*> END;
@@ -1152,6 +1191,9 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
       <*ASSERT sig = SIG*>
     UNTIL me.state = ActState.Starting;
     me.state := ActState.Started;
+    IF DEBUG THEN
+      RTIO.PutText("Started act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+    END;
 
     Cerrno.SetErrno(errno);
   END SignalHandler;
@@ -1162,8 +1204,14 @@ PROCEDURE SetupHandlers () =
     IF RTMachine.SuspendThread # NIL THEN <*ASSERT SIG = 0*> END;
     IF SIG = 0 THEN RETURN END;
 
+    WITH r = Usem.init(ackSem, 0, 0) DO <*ASSERT r=0*> END;
+
     act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
     WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(act.sa_mask, Usignal.SIGINT) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(act.sa_mask, Usignal.SIGQUIT) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(act.sa_mask, Usignal.SIGABRT) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(act.sa_mask, Usignal.SIGTERM) DO <*ASSERT r=0*> END;
     act.sa_sigaction := SignalHandler;
     WITH r = Usignal.sigaction(SIG, act, oact) DO <*ASSERT r=0*> END;
   END SetupHandlers;
