@@ -1379,7 +1379,6 @@ PROCEDURE UnlockHeap () =
       <*ASSERT Upthread.equal(holder, self) # 0*>
       DEC(lock_cnt);
       IF lock_cnt = 0 THEN
-        holder := NIL;
         WITH r = Upthread.cond_signal(lockCond) DO <*ASSERT r=0*> END;
         IF do_signal THEN sig := TRUE; do_signal := FALSE; END;
       END;
