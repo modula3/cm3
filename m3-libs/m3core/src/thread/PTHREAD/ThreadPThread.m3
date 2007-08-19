@@ -125,8 +125,9 @@ PROCEDURE InnerLockMutex (self: T; m: Mutex) =
         WHILE (next # NIL) DO prev := next; next := next.nextWaiter; END;
         prev.nextWaiter := self;
       END;
-      WHILE m.holder # self DO
+      LOOP
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
+        IF m.holder = self THEN EXIT END;
       END;
       <*ASSERT self.waitingOn = NIL*>
       <*ASSERT self.nextWaiter = NIL*>
@@ -912,15 +913,11 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR world := ActState.Started;		 (* LL=activeMu *)
-
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
   VAR me := GetActivation();
   BEGIN
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-    <*ASSERT world = ActState.Started*>
-    world := ActState.Stopped;
     StopWorld(me);
   END SuspendOthers;
 
@@ -928,8 +925,6 @@ PROCEDURE ResumeOthers () =
   (* LL=activeMu.  Always preceded by SuspendOthers. *)
   VAR me := GetActivation();
   BEGIN
-    <*ASSERT world = ActState.Stopped*>
-    world := ActState.Started;
     StartWorld(me);
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
@@ -1357,7 +1352,6 @@ VAR
   lockMu := PTHREAD_MUTEX_INITIALIZER;
   lockCond := PTHREAD_COND_INITIALIZER;
   holder: pthread_t;
-  lockers: CARDINAL := 0;
   lock_cnt := 0;
   do_signal := FALSE;
   heapMu: MUTEX;
@@ -1366,22 +1360,11 @@ VAR
 PROCEDURE LockHeap () =
   VAR self := Upthread.self();
   BEGIN
-    IF world = ActState.Stopped THEN
-      (* other threads are stopped and we hold the lock *)
-      <*ASSERT lock_cnt # 0*>
-      <*ASSERT Upthread.equal(holder, self) # 0*>
-      RETURN;
-    END;
     WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
-    IF lock_cnt = 0 THEN
-      holder := self;
-    ELSIF Upthread.equal(holder, self) = 0 THEN
-      REPEAT
-        INC(lockers);
-        WITH r = Upthread.cond_wait(lockCond, lockMu) DO <*ASSERT r=0*> END;
-        DEC(lockers);
-      UNTIL lock_cnt = 0;
-      holder := self;
+    LOOP
+      IF lock_cnt = 0 THEN holder := self; EXIT END;
+      IF Upthread.equal(holder, self) # 0 THEN EXIT END;
+      WITH r = Upthread.cond_wait(lockCond, lockMu) DO <*ASSERT r=0*> END;
     END;
     INC(lock_cnt);
     WITH r = Upthread.mutex_unlock(lockMu) DO <*ASSERT r=0*> END;
@@ -1392,18 +1375,12 @@ PROCEDURE UnlockHeap () =
     sig := FALSE;
     self := Upthread.self();
   BEGIN
-    IF world = ActState.Stopped THEN
-      (* threads are stopped and we hold the lock *)
-      <*ASSERT lock_cnt # 0*>
-      <*ASSERT Upthread.equal(holder, self) # 0*>
-      RETURN;
-    END;
     WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
+      <*ASSERT Upthread.equal(holder, self) # 0*>
       DEC(lock_cnt);
       IF lock_cnt = 0 THEN
-        IF lockers # 0 THEN
-          WITH r = Upthread.cond_signal(lockCond) DO <*ASSERT r=0*> END;
-        END;
+        holder := NIL;
+        WITH r = Upthread.cond_signal(lockCond) DO <*ASSERT r=0*> END;
         IF do_signal THEN sig := TRUE; do_signal := FALSE; END;
       END;
     WITH r = Upthread.mutex_unlock(lockMu) DO <*ASSERT r=0*> END;
