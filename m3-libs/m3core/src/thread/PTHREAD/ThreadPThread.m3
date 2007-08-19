@@ -912,23 +912,25 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspend_cnt: CARDINAL := 0;		 (* LL=activeMu *)
+VAR world := ActState.Started;		 (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
   VAR me := GetActivation();
   BEGIN
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-    IF suspend_cnt = 0 THEN StopWorld(me) END;
-    INC(suspend_cnt);
+    <*ASSERT world = ActState.Started*>
+    world := ActState.Stopped;
+    StopWorld(me);
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   (* LL=activeMu.  Always preceded by SuspendOthers. *)
   VAR me := GetActivation();
   BEGIN
-    DEC(suspend_cnt);
-    IF (suspend_cnt = 0) THEN StartWorld(me) END;
+    <*ASSERT world = ActState.Stopped*>
+    world := ActState.Started;
+    StartWorld(me);
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
@@ -1364,8 +1366,8 @@ VAR
 PROCEDURE LockHeap () =
   VAR self := Upthread.self();
   BEGIN
-    (* suspend_cnt # 0 => other threads are stopped and we hold the lock *)
-    IF suspend_cnt # 0 THEN
+    IF world = ActState.Stopped THEN
+      (* other threads are stopped and we hold the lock *)
       <*ASSERT lock_cnt # 0*>
       <*ASSERT Upthread.equal(holder, self) # 0*>
       RETURN;
@@ -1386,12 +1388,14 @@ PROCEDURE LockHeap () =
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR sig := FALSE;
+  VAR
+    sig := FALSE;
+    self := Upthread.self();
   BEGIN
-    (* suspend_cnt # 0 => other threads are stopped and we hold the lock *)
-    IF suspend_cnt # 0 THEN
+    IF world = ActState.Stopped THEN
+      (* threads are stopped and we hold the lock *)
       <*ASSERT lock_cnt # 0*>
-      <*ASSERT holder = Upthread.self()*>
+      <*ASSERT Upthread.equal(holder, self) # 0*>
       RETURN;
     END;
     WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
