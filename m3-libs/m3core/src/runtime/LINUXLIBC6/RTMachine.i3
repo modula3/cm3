@@ -77,7 +77,6 @@ CONST
   SIG_SUSPEND = Usignal.NSIG-1;		 (* SIGRTMAX *)
   SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
   RestartThread: PROCEDURE(t: pthread_t) = NIL;
-  GetState: PROCEDURE(t: pthread_t; VAR sp: ADDRESS;
-                      VAR state: ThreadState) = NIL;
+  GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
   SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 END RTMachine.

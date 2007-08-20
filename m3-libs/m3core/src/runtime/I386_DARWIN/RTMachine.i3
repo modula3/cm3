@@ -78,6 +78,6 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 <*EXTERNAL RTMachine__RestartThread*>
 PROCEDURE RestartThread (t: pthread_t);
 <*EXTERNAL RTMachine__GetState*>
-PROCEDURE GetState (t: pthread_t; VAR sp: ADDRESS; VAR context: ThreadState);
+PROCEDURE GetState (t: pthread_t; VAR context: ThreadState): ADDRESS;
 
 END RTMachine.
