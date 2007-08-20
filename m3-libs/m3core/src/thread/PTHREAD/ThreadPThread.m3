@@ -106,7 +106,7 @@ TYPE
 
 PROCEDURE InnerLockMutex (self: T; m: Mutex) =
   (* LL = cm *)
-  VAR next, prev: T;
+  VAR next, prev: T;  xx: INTEGER;
   BEGIN
     IF (m.holder = NIL) THEN
       m.holder := self;
@@ -126,7 +126,12 @@ PROCEDURE InnerLockMutex (self: T; m: Mutex) =
         prev.nextWaiter := self;
       END;
       LOOP
+        IF RTMachine.SaveRegsInStack # NIL
+          THEN self.act.sp := RTMachine.SaveRegsInStack();
+          ELSE self.act.sp := ADR(xx);
+        END;
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
+        self.act.sp := NIL;
         IF m.holder = self THEN EXIT END;
       END;
       <*ASSERT self.waitingOn = NIL*>
@@ -188,7 +193,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
-  VAR next, prev: T;
+  VAR next, prev: T;  xx: INTEGER;
   BEGIN
     TRY
       <*ASSERT self.waitingOn = NIL*>
@@ -218,7 +223,12 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         prev.nextWaiter := self;
       END;
       LOOP
+        IF RTMachine.SaveRegsInStack # NIL
+          THEN self.act.sp := RTMachine.SaveRegsInStack();
+          ELSE self.act.sp := ADR(xx);
+        END;
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
+        self.act.sp := NIL;
         IF alertable THEN InnerTestAlert(self) END;
         IF self.waitingOn = NIL THEN RETURN END;
       END;
@@ -669,13 +679,18 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
   END ToNTime;
 
 PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
-  VAR amount, remaining: Utime.struct_timespec;
+  VAR amount, remaining: Utime.struct_timespec;  xx: INTEGER;
   BEGIN
     IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(n, amount);
     LOOP
+      IF RTMachine.SaveRegsInStack # NIL
+       THEN self.act.sp := RTMachine.SaveRegsInStack();
+       ELSE self.act.sp := ADR(xx);
+      END;
       WITH r = Utime.nanosleep(amount, remaining) DO
+        self.act.sp := NIL;
         IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
         IF r = 0 THEN EXIT END;
         amount := remaining;
@@ -943,18 +958,22 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
+    sp: ADDRESS;
     myState: RTMachine.State;
     state: RTMachine.ThreadState;
     act := me;
     xx: INTEGER;
   BEGIN
     REPEAT
+      IF DEBUG THEN
+        RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+      END;
       IF (act.stackbase # NIL) THEN
         (* Process the registers *)
         IF act = me THEN
           IF RTMachine.SaveRegsInStack # NIL
-            THEN me.sp := RTMachine.SaveRegsInStack();
-            ELSE me.sp := ADR(xx);
+            THEN sp := RTMachine.SaveRegsInStack();
+            ELSE sp := ADR(xx);
           END;
           EVAL RTMachine.SaveState(myState);
           WITH z = myState DO
@@ -963,7 +982,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
         ELSIF RTMachine.GetState # NIL THEN
           (* Process explicit state *)
           <*ASSERT act.state = ActState.Stopped*>
-          RTMachine.GetState(act.handle, act.sp, state);
+          sp := RTMachine.GetState(act.handle, state);
           WITH z = state DO
             p(ADR(z), ADR(z) + ADRSIZE(z));
           END;
@@ -972,10 +991,11 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
         END;
 
         (* Process the stack *)
+        IF act.sp # NIL THEN sp := act.sp END; (* don't trust GetState  *)
         IF stack_grows_down THEN
-          p(act.sp, act.stackbase);
+          p(sp, act.stackbase);
         ELSE
-          p(act.stackbase, act.sp);
+          p(act.stackbase, sp);
         END;
       END;
       act := act.next;
@@ -1187,6 +1207,7 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
       WITH r = Usignal.sigwait(m, sig) DO <*ASSERT r=0*> END;
       <*ASSERT sig = SIG*>
     UNTIL me.state = ActState.Starting;
+    me.sp := NIL;
     me.state := ActState.Started;
     IF DEBUG THEN
       RTIO.PutText("Started act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
@@ -1358,13 +1379,19 @@ VAR
   heapCond: Condition;
 
 PROCEDURE LockHeap () =
-  VAR self := Upthread.self();
+  VAR self := Upthread.self();  xx: INTEGER;  me: Activation;
   BEGIN
     WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
     LOOP
       IF lock_cnt = 0 THEN holder := self; EXIT END;
       IF Upthread.equal(holder, self) # 0 THEN EXIT END;
+      me := GetActivation();
+      IF me # NIL AND RTMachine.SaveRegsInStack # NIL
+        THEN me.sp := RTMachine.SaveRegsInStack();
+        ELSE me.sp := ADR(xx);
+      END;
       WITH r = Upthread.cond_wait(lockCond, lockMu) DO <*ASSERT r=0*> END;
+      IF me # NIL THEN me.sp := NIL END;
     END;
     INC(lock_cnt);
     WITH r = Upthread.mutex_unlock(lockMu) DO <*ASSERT r=0*> END;
