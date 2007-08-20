@@ -4,6 +4,7 @@
 
 /* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking    */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -68,7 +69,7 @@ void RTStack__GetThreadFrame (Frame *f, void *start, int len)
   f->pc = 0;
   f->sp = 0;
   if (len == sizeof (ucontext_t)) {
-    RTStack__Flush();
+    RTMachine__SaveRegsInStack();
 
     f->ctxt = *(ucontext_t *)start;
     f->pc = (void *)reg[REG_PC];
@@ -103,7 +104,7 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller == 0) abort();
   if (callee->lock != FrameLock) abort();
 
-  RTStack__Flush();
+  RTMachine__SaveRegsInStack();
 
   caller->lock = FrameLock;
 
@@ -121,7 +122,7 @@ void RTStack__Unwind (Frame* target)
   struct frame *sp = target->sp;
   greg_t *reg = target->ctxt.uc_mcontext.gregs;
 
-  RTStack__Flush();
+  RTMachine__SaveRegsInStack();
 
   if (target->lock != FrameLock) abort();
   reg[REG_PC] = (int)target->pc + 8;/* for return address */
