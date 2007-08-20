@@ -245,7 +245,7 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention;
                         left->right or right->left.
 
   results_on_left => when the front-end is passing structures the return
-                     result is the left-most parameter.  Otherwise, it's
+                     result is the left-most parameter.  Otherwise, it is
                      the right-most parameter.
 
   standard_structs =>
