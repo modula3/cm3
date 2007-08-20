@@ -87,6 +87,6 @@ PROCEDURE SaveRegsInStack(): ADDRESS;
 
 PROCEDURE SuspendThread(t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread(t: pthread_t);
-PROCEDURE GetState(t: pthread_t; VAR sp: ADDRESS; VAR state: ThreadState);
+PROCEDURE GetState(t: pthread_t; VAR state: ThreadState): ADDRESS;
 
 END RTMachine.

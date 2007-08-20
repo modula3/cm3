@@ -19,7 +19,7 @@ PROCEDURE RestartThread (t: pthread_t) =
     WITH res = Uthread.continue(t) DO <*ASSERT res = 0*> END;
   END RestartThread;
 
-PROCEDURE GetState(t: pthread_t; VAR sp: ADDRESS; VAR state: ThreadState) =
+PROCEDURE GetState(t: pthread_t; VAR state: ThreadState): ADDRESS =
   VAR
     flag: int;
     lwp: Uthread.lwpid_t;
@@ -28,7 +28,7 @@ PROCEDURE GetState(t: pthread_t; VAR sp: ADDRESS; VAR state: ThreadState) =
     WITH res = Uthread.getstate(t, flag, lwp, ss, state) DO
       <*ASSERT res = 0*>
     END;
-    sp := LOOPHOLE(state.sp, ADDRESS);
+    RETURN LOOPHOLE(state.sp, ADDRESS);
   END GetState;
 
 BEGIN

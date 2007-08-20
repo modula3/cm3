@@ -4,6 +4,7 @@
 
 /* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking    */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -68,7 +69,7 @@ void RTStack__GetThreadFrame (Frame *f, void *start, int len)
   f->pc = 0;
   f->sp = 0;
   if (len == sizeof (ucontext_t)) {
-    RTStack__Flush();
+    RTMachine__SaveRegsInStack();
 
     f->ctxt = *(ucontext_t *)start;
     f->pc = (void *)reg[REG_PC];
@@ -103,32 +104,16 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller == 0) abort();
   if (callee->lock != FrameLock) abort();
 
-  RTStack__Flush();
+  RTMachine__SaveRegsInStack();
 
   caller->lock = FrameLock;
 
-  /* We must be careful when unwinding through signal trampolines that we also
-     restore the signal mask of the previous context. */
-  RTProcedureSRC_FromPC(callee->pc, &proc, &file, &name);
-  if (proc == RTHeapDep_Fault) {
-    /* SIGNAL HANDLER: previous frame information can be found in third
-       argument of RTHeapDep_Fault */
-    link = (ucontext_t *)callee->sp->fr_arg[2];
-    caller->ctxt = *link;
-    caller->pc = (void *)link->uc_mcontext.gregs[REG_PC];
-    if (caller->pc) {
-      caller->sp = (struct frame *)link->uc_mcontext.gregs[REG_SP];
-      caller->fp = caller->sp->fr_savfp;
-    } else
-      caller->sp = caller->fp = 0;
-  } else {
+  if (callee->sp && callee->fp && callee->sp->fr_savpc) {
     caller->pc = (void *)callee->sp->fr_savpc;
-    if (caller->pc) {
-      caller->fp = (caller->sp = callee->fp)->fr_savfp;
-    } else
-      caller->sp = caller->fp = 0;
-    caller->ctxt = callee->ctxt;
-  }
+    caller->fp = (caller->sp = callee->fp)->fr_savfp;
+  } else
+    caller->sp = caller->fp = caller->pc = 0;
+  caller->ctxt = callee->ctxt;
   if (caller->lock != FrameLock) abort();
 }
 
@@ -137,7 +122,7 @@ void RTStack__Unwind (Frame* target)
   struct frame *sp = target->sp;
   greg_t *reg = target->ctxt.uc_mcontext.gregs;
 
-  RTStack__Flush();
+  RTMachine__SaveRegsInStack();
 
   if (target->lock != FrameLock) abort();
   reg[REG_PC] = (int)target->pc + 8;/* for return address */
