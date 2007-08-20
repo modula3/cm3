@@ -22,6 +22,7 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <setjmp.h>
@@ -1589,28 +1590,32 @@ scan_float (int *fkind)
 {
   long i = get_int ();
   long n_bytes;
-  struct { double xx_align;  char z[XREEL_BYTES]; } data;
+  float x1;
+  double x2;
+  long double x3;
+  void *adr;
+
   tree tipe;
   REAL_VALUE_TYPE val;
 
   *fkind = i;
   switch (i) {
-  case 0:  tipe = t_reel;  n_bytes = REEL_BYTES;  break;
-  case 1:  tipe = t_lreel; n_bytes = LREEL_BYTES; break;
-  case 2:  tipe = t_xreel; n_bytes = XREEL_BYTES; break;
+  case 0:  tipe = t_reel;  n_bytes = REEL_BYTES;  adr = &x1;  break;
+  case 1:  tipe = t_lreel; n_bytes = LREEL_BYTES; adr = &x2;  break;
+  case 2:  tipe = t_xreel; n_bytes = XREEL_BYTES; adr = &x3;  break;
   default:
     fatal_error(" *** invalid floating point value, precision = %ld, at m3cg_lineno %d",
                 i, m3cg_lineno);
   }
 
   /* read the value's bytes */
-  for (i = 0;  i < n_bytes;  i++)  { data.z[i] = get_int (); }
+  for (i = 0;  i < n_bytes;  i++)  { ((char *)adr)[i] = get_int (); }
 
   /* finally, assemble a floating point value */
   if (tipe == t_reel) {
-    real_from_target_fmt (&val, (long *)(&data.z[0]), &ieee_single_format);
+    real_from_target_fmt (&val, adr, &ieee_single_format);
   } else {
-    real_from_target_fmt (&val, (long *)(&data.z[0]), &ieee_double_format);
+    real_from_target_fmt (&val, adr, &ieee_double_format);
   }
   return build_real (tipe, val);
 }
