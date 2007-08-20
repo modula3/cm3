@@ -63,8 +63,6 @@ REVEAL
     (* condition for blocking during "Wait" *)
     waitCond: UNTRACED REF pthread_cond_t;
 
-    (* distinguishes "Wait/Pause" from "AlertWait/AlertPause" *)
-    alertable: BOOLEAN := FALSE;	 (* LL = cm *)
     (* the alert flag *)
     alerted : BOOLEAN := FALSE;		 (* LL = cm *)
 
@@ -208,9 +206,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         Die(ThisLine(), "Wait using mutex not associated with condition");
       END;
       InnerUnlockMutex(self, m);
-      <*ASSERT NOT self.alertable*>
-      self.alertable := alertable;
-      IF alertable THEN InnerTestAlert(self) END;
+      IF alertable AND self.alerted THEN self.alerted := FALSE; RAISE Alerted; END;
       self.waitingOn := c;
       next := c.waiters;
       IF next = NIL THEN
@@ -229,11 +225,24 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         END;
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
         self.act.sp := NIL;
-        IF alertable THEN InnerTestAlert(self) END;
+        IF alertable AND self.alerted THEN self.alerted := FALSE; RAISE Alerted; END;
         IF self.waitingOn = NIL THEN RETURN END;
       END;
     FINALLY
-      self.alertable := FALSE;
+      IF self.waitingOn # NIL THEN
+        (* alerted: dequeue from condition *)
+        next := self.waitingOn.waiters; prev := NIL;
+        WHILE next # self DO
+          <*ASSERT next # NIL*>
+          prev := next; next := next.nextWaiter;
+        END;
+        IF prev = NIL
+          THEN self.waitingOn.waiters := self.nextWaiter;
+          ELSE prev.nextWaiter := self.nextWaiter;
+        END;
+        self.nextWaiter := NIL;
+        self.waitingOn := NIL;
+      END;
       InnerLockMutex(self, m);
       WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
       IF perfOn THEN PerfRunning(self.id) END;
@@ -241,16 +250,6 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
       <*ASSERT self.nextWaiter = NIL*>
     END;
   END XWait;
-
-PROCEDURE InnerTestAlert (self: T) RAISES {Alerted} =
-  (* LL=cm *)
-  BEGIN
-    <*ASSERT self.alertable*>
-    IF self.alerted THEN
-      self.alerted := FALSE;
-      RAISE Alerted;
-    END;
-  END InnerTestAlert;
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
@@ -299,28 +298,10 @@ PROCEDURE Broadcast (c: Condition) =
   END Broadcast;
 
 PROCEDURE Alert (t: T) =
-  VAR prev, next: T;
   BEGIN
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     t.alerted := TRUE;
-    IF t.alertable THEN
-      (* Dequeue from any CV and unblock from the semaphore *)
-      IF t.waitingOn # NIL THEN
-        next := t.waitingOn.waiters; prev := NIL;
-        WHILE next # t DO
-          <* ASSERT next # NIL *>
-          prev := next; next := next.nextWaiter;
-        END;
-        IF prev = NIL THEN
-          t.waitingOn.waiters := t.nextWaiter
-        ELSE
-          prev.nextWaiter := t.nextWaiter;
-        END;
-        t.nextWaiter := NIL;
-        t.waitingOn := NIL;
-      END;
-      WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
-    END;
+    WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
   END Alert;
 
@@ -328,11 +309,9 @@ PROCEDURE XTestAlert (self: T): BOOLEAN =
   BEGIN
     TRY
       WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
-      <*ASSERT NOT self.alertable*>
       RETURN self.alerted;
     FINALLY
       self.alerted := FALSE;
-      <*ASSERT NOT self.alertable*>
       WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
     END;
   END XTestAlert;
@@ -484,7 +463,6 @@ PROCEDURE DumpThread (t: T) =
     RTIO.PutText("  waitingOn:  "); RTIO.PutAddr(LOOPHOLE(t.waitingOn, ADDRESS));     RTIO.PutChar('\n');
     RTIO.PutText("  nextWaiter: "); RTIO.PutAddr(LOOPHOLE(t.nextWaiter, ADDRESS));    RTIO.PutChar('\n');
     RTIO.PutText("  waitCond:   "); RTIO.PutAddr(t.waitCond);      RTIO.PutChar('\n');
-    RTIO.PutText("  alertable:  "); RTIO.PutInt(ORD(t.alertable)); RTIO.PutChar('\n');
     RTIO.PutText("  alerted:    "); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
     RTIO.PutText("  completed:  "); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
     RTIO.PutText("  joined:     "); RTIO.PutInt(ORD(t.joined));    RTIO.PutChar('\n');
@@ -707,10 +685,8 @@ PROCEDURE Pause (n: LONGREAL) =
     END;
     TRY
       IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      <*ASSERT NOT self.alertable*>
       XPause(self, n, alertable := FALSE);
     FINALLY
-      <*ASSERT NOT self.alertable*>
       IF perfOn THEN PerfRunning(self.id) END;
     END;
   END Pause;
@@ -723,10 +699,8 @@ PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
     END;
     TRY
       IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      <*ASSERT NOT self.alertable*>
       XPause(self, n, alertable := TRUE);
     FINALLY
-      <*ASSERT NOT self.alertable*>
       IF perfOn THEN PerfRunning(self.id) END;
     END;
   END AlertPause;
@@ -755,10 +729,8 @@ PROCEDURE IOWait (fd: INTEGER; read: BOOLEAN;
   BEGIN
     TRY
       IF perfOn THEN PerfChanged(self.id, State.blocking) END;
-      <*ASSERT self.alertable = FALSE*>
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
-      <*ASSERT self.alertable = FALSE*>
       IF perfOn THEN PerfRunning(self.id) END;
     END;
   END IOWait;
@@ -770,10 +742,8 @@ PROCEDURE IOAlertWait (fd: INTEGER; read: BOOLEAN;
   BEGIN
     TRY
       IF perfOn THEN PerfChanged(self.id, State.blocking) END;
-      <*ASSERT self.alertable = FALSE*>
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
-      <*ASSERT self.alertable = FALSE*>
       IF perfOn THEN PerfRunning(self.id) END;
     END;
   END IOAlertWait;
