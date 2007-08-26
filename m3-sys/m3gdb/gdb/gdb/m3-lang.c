@@ -98,7 +98,8 @@ bool procedures_have_extra_block = false;
 
 static const char * SRC_compiler_string = "SRC-Modula3_compiled."; 
 
-/* Keep the value of this string consistent with that of the same name in gcc. */
+/* Keep the value of this string consistent with that of the same name in 
+   gcc, dbxout.c. */
 static const char * procedures_have_extra_block_string 
   = "procedures_have_extra_block."; 
 
