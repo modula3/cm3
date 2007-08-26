@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.12 2007-08-26 10:31:13 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.13 2007-08-26 10:35:52 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -249,14 +249,15 @@ goto :eof
     set x=%x:  = %
     set x=%x:  = %
     echo %x%
-    %x% || (
-	    echo ERROR: %x%
-		call :Where cm3.exe
-		echo %STAGE% and/or %%TEMP%%\cm3 will be full of stuff.
-	    exit /b 1
-    )
+    %x% || goto :RunError
     endlocal
     goto :eof
+
+:RunError
+	echo ERROR: %x%
+	call :Where cm3.exe
+	echo %STAGE% and/or %%TEMP%%\cm3 will be full of stuff.
+	exit /b 1
 
 :Where
 @echo WHERE: %1 =^> %~$PATH:1
