@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.11 2007-08-26 10:29:33 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.12 2007-08-26 10:31:13 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -252,7 +252,7 @@ goto :eof
     %x% || (
 	    echo ERROR: %x%
 		call :Where cm3.exe
-		echo %STAGE% and/or %TEMP%\cm3 will be full of stuff. ^(aka %%STAGE%% and %%TEMP%%\cm3^)
+		echo %STAGE% and/or %%TEMP%%\cm3 will be full of stuff.
 	    exit /b 1
     )
     endlocal
