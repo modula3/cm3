@@ -1,4 +1,4 @@
-@rem $Id: pkgmap.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: pkgmap.cmd,v 1.3 2007-08-26 10:25:05 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -69,7 +69,8 @@ for %%p in (%PKGS%) do (
     echo === package %%p ===
     call :exec_cmd %%p || (
         if not "%KEEP_GOING%" == "yes" (
-            echo *** execution of %ACTION% failed with %errorlevel% ***
+            echo ERROR: "%ACTION%"
+            echo ERROR: cd %%p
             endlocal
             exit /b 1
         ) else (

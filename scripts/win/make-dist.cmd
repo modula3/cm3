@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.9 2007-08-26 10:13:16 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.10 2007-08-26 10:25:05 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -250,8 +250,7 @@ goto :eof
     set x=%x:  = %
     echo %x%
     %x% || (
-	    echo ERROR : %x% failed
-	    rem echo ERROR : PATH was %PATH%
+	    echo ERROR: %x%
 		call :Where cm3.exe
 	    exit /b 1
     )
@@ -259,7 +258,7 @@ goto :eof
     goto :eof
 
 :Where
-@echo WHERE %1: %~$PATH:1
+@echo WHERE: %1 =^> %~$PATH:1
 goto :eof
 
 :ShipCompiler
