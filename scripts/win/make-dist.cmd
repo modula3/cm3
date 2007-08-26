@@ -252,7 +252,7 @@ goto :eof
     %x% || (
 	    echo ERROR: %x%
 		call :Where cm3.exe
-		echo %STAGE% and/or %TEMP%\cm3 will be full of stuff. ^(aka %%STAGE%% and %%TEMP%%\cm3^)
+		echo %STAGE% and/or %%TEMP%%\cm3 will be full of stuff.
 	    exit /b 1
     )
     endlocal
