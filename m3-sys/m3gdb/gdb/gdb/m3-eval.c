@@ -1560,6 +1560,7 @@ m3_patched_proc_result_type (
 
 { struct symbol * proc_sym; 
   struct block * proc_block;
+  struct block * body_block;
   struct symbol * result_sym; 
   struct type * result_type;  
   bool l_result_is_ref_param; 
@@ -1570,9 +1571,19 @@ m3_patched_proc_result_type (
     { error ( "Can't get symbol for procedure \"%s\".", name ); /* NORETURN */ }
   proc_block = SYMBOL_BLOCK_VALUE ( proc_sym );
   result_sym 
-    = lookup_block_symbol 
-        ( m3_proc_body_block ( proc_block ), "_result", NULL, VAR_DOMAIN ); 
+    = lookup_block_symbol ( proc_block, "_result", NULL, VAR_DOMAIN ); 
+  if ( result_sym == NULL ) 
+    { body_block = m3_proc_body_block ( proc_block ); 
+      if ( body_block != NULL ) 
+        { result_sym 
+            = lookup_block_symbol 
+                ( body_block, "_result", NULL, VAR_DOMAIN ); 
+        } 
+    } 
   if ( result_sym == NULL ) /* No result type => proper procedure. */ 
+    /* CHECK:  This could happen just because of inadequate debug info,
+               even for a function procedure.  Is there anything we
+               can do? */ 
     { l_result_is_ref_param = false; 
       result_type = builtin_type_m3_void; 
     } 
