@@ -69,7 +69,8 @@ for %%p in (%PKGS%) do (
     echo === package %%p ===
     call :exec_cmd %%p || (
         if not "%KEEP_GOING%" == "yes" (
-            echo *** execution of %ACTION% failed with %errorlevel% ***
+            echo ERROR: "%ACTION%"
+            echo ERROR: cd %%p
             endlocal
             exit /b 1
         ) else (

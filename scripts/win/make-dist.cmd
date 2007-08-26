@@ -250,8 +250,7 @@ goto :eof
     set x=%x:  = %
     echo %x%
     %x% || (
-	    echo ERROR : %x% failed
-	    rem echo ERROR : PATH was %PATH%
+	    echo ERROR: %x%
 		call :Where cm3.exe
 	    exit /b 1
     )
@@ -259,7 +258,7 @@ goto :eof
     goto :eof
 
 :Where
-@echo WHERE %1: %~$PATH:1
+@echo WHERE: %1 =^> %~$PATH:1
 goto :eof
 
 :ShipCompiler
