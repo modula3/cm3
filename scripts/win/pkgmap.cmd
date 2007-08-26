@@ -71,6 +71,7 @@ for %%p in (%PKGS%) do (
         if not "%KEEP_GOING%" == "yes" (
             echo ERROR: "%ACTION%"
             echo ERROR: cd %%p
+            echo ERROR: set INSTALLROOT=%INSTALLROOT%
             endlocal
             exit /b 1
         ) else (
