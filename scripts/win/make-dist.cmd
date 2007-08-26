@@ -64,7 +64,7 @@ for %%a in (libm3 m3core) do xcopy /fiveryh %INSTALLROOT%\pkg\%%a %INSTALLROOT_C
 @rem
 @rem cm3 is run out of %path%, but mklib is not, so we have to copy it..
 @rem
-call :CopyMklib %INSTALLROOT% %INSTALLROOT_COMPILER_WITH_PREVIOUS%
+call :Run call :CopyMklib %INSTALLROOT% %INSTALLROOT_COMPILER_WITH_PREVIOUS% || exit /b 1
 set INSTALLROOT=%INSTALLROOT_COMPILER_WITH_PREVIOUS%
 set LIB=%INSTALLROOT%\lib;%LIB%
 call :RealClean || exit /b 1
@@ -250,11 +250,17 @@ goto :eof
     set x=%x:  = %
     echo %x%
     %x% || (
-	    echo error : %x% failed
+	    echo ERROR : %x% failed
+	    rem echo ERROR : PATH was %PATH%
+		call :Where cm3.exe
 	    exit /b 1
     )
     endlocal
     goto :eof
+
+:Where
+@echo WHERE %1: %~$PATH:1
+goto :eof
 
 :ShipCompiler
     @rem
@@ -287,10 +293,10 @@ goto :eof
     @rem
     @rem Copy mklib from one INSTALLROOT to another, possibly having cleaned out the intermediate directories.
     @rem
-    call :CreateDirectory %2\bin
-    call :CopyFile        %1\bin\mklib.exe %2\bin\mklib.exe || exit /b 1
-    call :CopyFile        %1\bin\mklib.pdb %2\bin\mklib.pdb || exit /b 1
-    call :CopyFileIfExist %1\bin\mklib.exe.manifest %2\bin\mklib.exe.manifest || exit /b 1
+    call :Run call :CreateDirectory %2\bin || exit /b 1
+    call :Run call :CopyFile        %1\bin\mklib.exe %2\bin\mklib.exe || exit /b 1
+    call :Run call :CopyFileIfExist %1\bin\mklib.pdb %2\bin\mklib.pdb || exit /b 1
+    call :Run call :CopyFileIfExist %1\bin\mklib.exe.manifest %2\bin\mklib.exe.manifest || exit /b 1
     goto :eof
 
 :CopyFile
@@ -299,7 +305,7 @@ goto :eof
     set to=%2
     if "%to%" == "." set to=.\%~nx1
     if exist %to% del %to% || exit /b 1
-    copy %from% %to% || exit /b 1
+    call :Run copy %from% %to% || exit /b 1
     endlocal
     goto :eof
 
