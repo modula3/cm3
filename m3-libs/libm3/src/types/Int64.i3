@@ -15,8 +15,7 @@ INTERFACE Int64;
 
 IMPORT Long;
 
-(*TYPE T = BITS 64 FOR [ -16_7fffffffffffffffL-1L .. 16_7fffffffffffffffL ];*)
-TYPE T = BITS BITSIZE(LONGINT) FOR [ FIRST(LONGINT) .. LAST(LONGINT) ];
+TYPE T = BITS 64 FOR [ -16_7fffffffffffffffL-1L .. 16_7fffffffffffffffL ];
 
 CONST Brand = "Int64";
 

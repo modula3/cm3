@@ -12,7 +12,10 @@
 Module ("Boolean")
 Module ("Char")
 Module ("Int32")
-Module ("Int64")
+%% NT386 non-gcc backend cannot handle 64-bits yet so omit Int64 for now
+if not equal (TARGET, "NT386")
+  Module ("Int64")
+end
 Module ("Integer")
 Module ("Longint")
 Module ("Refany")
