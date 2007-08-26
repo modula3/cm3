@@ -183,12 +183,6 @@ TYPE
     stack      : Page    := Nil; (* linked list of new pages from this pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-
-    (* BEWARE: a thread cannot be suspended while its pool is busy.  The busy
-       flag permits the thread to decline being suspended until it is done
-       allocating from its pool.  Otherwise, the GC could see incoherent
-       object state in the pool's page. *)
-    busy : BOOLEAN := FALSE;
   END;
 
 PROCEDURE ClosePool (VAR pool: AllocPool);
@@ -213,6 +207,16 @@ VAR (* LL >= LockHeap *)
                   pure := FALSE, note := Note.Copied, gray := TRUE,
                   continued := FALSE, clean := TRUE },
     notAfter := Notes {Note.Allocated} };
+
+TYPE
+  ThreadState = RECORD
+    (* BEWARE: a thread cannot be suspended while its pool is busy.
+       The busy flag permits the thread to decline being suspended for
+       GC until it is done allocating from its pool.  Otherwise, the
+       GC could see incoherent object state in the pool's page. *)
+    busy : BOOLEAN := FALSE;
+    newPool := NewPool;
+  END;
 
 (****** MODULE OBJECTS ******)
 

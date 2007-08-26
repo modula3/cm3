@@ -96,8 +96,8 @@ TYPE
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;
 
-    (* allocation pool *)
-    newPool := RTHeapRep.NewPool;
+    (* state that is available to the heap routines *)
+    heapState : RTHeapRep.ThreadState;
   END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -549,7 +549,7 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfDeleted(self.id) END;
 
     (* we're dying *)
-    RTHeapRep.ClosePool(me.newPool);
+    RTHeapRep.ClosePool(me.heapState.newPool);
 
     WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
     DISPOSE(self.waitCond);
@@ -919,7 +919,7 @@ PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
   VAR act := allThreads;
   BEGIN
     REPEAT
-      p(act.newPool);
+      p(act.heapState.newPool);
       act := act.next;
     UNTIL act = allThreads;
   END ProcessPools;
@@ -996,7 +996,7 @@ PROCEDURE SuspendAll (me: Activation): INTEGER =
               RTIO.PutText("Stopping act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
             END;
             IF RTMachine.SuspendThread(act.handle) THEN
-              IF act.newPool.busy THEN
+              IF act.heapState.busy THEN
                 RTMachine.RestartThread(act.handle);
                 INC(nLive);
               ELSE
@@ -1051,7 +1051,7 @@ PROCEDURE RestartAll (me: Activation) =
       (* Use the native restart routine *)
       WHILE act # me DO
         <*ASSERT act.state = ActState.Stopped*>
-        <*ASSERT NOT act.newPool.busy*>
+        <*ASSERT NOT act.heapState.busy*>
         act.state := ActState.Starting;
         IF DEBUG THEN
           RTIO.PutText("Starting act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
@@ -1064,7 +1064,7 @@ PROCEDURE RestartAll (me: Activation) =
       (* No native restart routine so signal thread to resume *)
       WHILE act # me DO
         <*ASSERT act.state = ActState.Stopped*>
-        <*ASSERT NOT act.newPool.busy*>
+        <*ASSERT NOT act.heapState.busy*>
         act.state := ActState.Starting;
         LOOP
           IF DEBUG THEN
@@ -1159,7 +1159,7 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
     <*ASSERT sig = SIG*>
     IF me = NIL THEN RETURN END;
     <*ASSERT me.state = ActState.Stopping*>
-    IF me.newPool.busy THEN RETURN END;
+    IF me.heapState.busy THEN RETURN END;
     IF RTMachine.SaveRegsInStack # NIL
       THEN me.sp := RTMachine.SaveRegsInStack();
       ELSE me.sp := ADR(xx);
@@ -1224,11 +1224,11 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
     writer(me.floatState);
   END SetMyFPState;
 
-PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool =
+PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.newPool);
-  END MyAllocPool;
+    RETURN ADR(me.heapState);
+  END MyHeapState;
 
 PROCEDURE DisableSwitching () =
   BEGIN
