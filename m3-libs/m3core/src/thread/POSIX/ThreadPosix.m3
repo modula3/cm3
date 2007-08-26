@@ -513,7 +513,7 @@ PROCEDURE ResumeOthers () =
 
 PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
   BEGIN
-    p(newPool);
+    p(heapState.newPool);
   END ProcessPools;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
@@ -767,7 +767,7 @@ PROCEDURE StartSwitching () =
 PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
-    IF inCritical = 0 AND NOT newPool.busy THEN InternalYield () END;
+    IF inCritical = 0 AND NOT heapState.busy THEN InternalYield () END;
   END switch_thread;
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL) =
@@ -818,7 +818,7 @@ VAR t, from: T;
 BEGIN
   INC (inCritical);
   <*ASSERT inCritical = 1 *>
-  <*ASSERT NOT newPool.busy *>
+  <*ASSERT NOT heapState.busy *>
 
   from := self.next; (* remember where we started *)
   now            := UTimeNow ();
@@ -1149,7 +1149,7 @@ PROCEDURE StartThread () =
 
     INC (inCritical);
     Broadcast (self.endCondition);
-    RTHeapRep.ClosePool(newPool);
+    RTHeapRep.ClosePool(heapState.newPool);
     ICannotRun (State.dying);
     INC (stats.n_dead);
     DEC (inCritical);
@@ -1272,11 +1272,11 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
     writer(self.floatState);
   END SetMyFPState;
 
-VAR newPool := RTHeapRep.NewPool;
-PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool =
+VAR heapState: RTHeapRep.ThreadState;
+PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
-    RETURN ADR(newPool);
-  END MyAllocPool;
+    RETURN ADR(heapState);
+  END MyHeapState;
 
 (*----------------------------------------------------- debugging support ---*)
 

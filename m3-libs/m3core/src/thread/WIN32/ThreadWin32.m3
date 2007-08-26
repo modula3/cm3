@@ -105,8 +105,8 @@ TYPE
       slot: INTEGER;
         (* LL = slotMu;  index into global array of active, slotted threads *)
 
-      (* allocation pool *)
-      newPool := RTHeapRep.NewPool;
+      (* thread state *)
+      heapState: RTHeapRep.ThreadState;
     END;
 
 (* ---- initialization helpers -------------------------------------------- *)
@@ -622,7 +622,7 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
       RETURN next_self.waitSema;
     ELSE
       (* we're dying *)
-      RTHeapRep.ClosePool(me.newPool);
+      RTHeapRep.ClosePool(me.heapState.newPool);
 
       IF WinBase.CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
       self.waitSema := NIL;
@@ -862,7 +862,7 @@ PROCEDURE StopWorld (me: Activation) =
     LOOP
       WHILE act # me DO
         IF WinBase.SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        IF act.newPool.busy THEN
+        IF act.heapState.busy THEN
           IF WinBase.ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           INC(nLive);
         END;
@@ -896,7 +896,7 @@ PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
   VAR act := allThreads;
   BEGIN
     REPEAT
-      p(act.newPool);
+      p(act.heapState.newPool);
       act := act.next;
     UNTIL act = allThreads;
   END ProcessPools;
@@ -963,11 +963,11 @@ PROCEDURE MyId(): Id RAISES {}=
     RETURN self.id;
   END MyId;
 
-PROCEDURE MyAllocPool(): UNTRACED REF RTHeapRep.AllocPool =
+PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.newPool);
-  END MyAllocPool;
+    RETURN ADR(me.heapState;
+  END MyHeapState;
 
 (*---------------------------------------------------------------- errors ---*)
 

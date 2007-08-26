@@ -591,13 +591,13 @@ PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
 PROCEDURE SuspendPool (VAR pool: AllocPool) =
   BEGIN
     <* ASSERT pool.desc.note = Note.Allocated *>
-    <* ASSERT NOT pool.busy *>
+    <* ASSERT NOT ThreadF.MyHeapState().busy *>
   END SuspendPool;
 
 PROCEDURE ClosePool (VAR pool: AllocPool) =
   BEGIN
     <* ASSERT pool.desc.note = Note.Allocated *>
-    <* ASSERT NOT pool.busy *>
+    <* ASSERT NOT ThreadF.MyHeapState().busy *>
     RTOS.LockHeap();
     pool.next := NIL;
     pool.limit := NIL;
@@ -1400,11 +1400,11 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
     n_bytes   : CARDINAL;
     n_pages   : CARDINAL;
   BEGIN
-    <*ASSERT pool.busy*>
+    <*ASSERT ThreadF.MyHeapState().busy*>
     IF nextPtr > pool.limit THEN
       (* not enough space left in the pool, take the long route *)
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
-      pool.busy := FALSE;
+      ThreadF.MyHeapState().busy := FALSE;
       Scheduler.Yield();                 (* we may be a while *)
 
       RTOS.LockHeap();
@@ -1437,7 +1437,7 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       IF initProc # NIL THEN initProc (res) END;
 
       RTOS.UnlockHeap();
-      pool.busy := TRUE;
+      ThreadF.MyHeapState().busy := TRUE;
       RETURN res;
     END;
 
@@ -1503,7 +1503,7 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
       RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
     END;
 
-    <*ASSERT NOT pool.busy*>
+    <*ASSERT NOT ThreadF.MyHeapState().busy*>
     <*ASSERT initialized*>
 
     RTMisc.Zero(newPtr, n_pages * BytesPerPage);

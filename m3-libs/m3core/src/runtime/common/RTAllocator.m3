@@ -187,18 +187,18 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR
     tc  : Typecode := def.typecode;
     res : ADDRESS;
-    pool:= ThreadF.MyAllocPool();
+    state := ThreadF.MyHeapState();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Ref)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
 
-    pool.busy := TRUE;
+    state.busy := TRUE;
     BEGIN
-      res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc, pool^);
-      <*ASSERT pool.busy*>
+      res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc, state.newPool);
+      <*ASSERT state.busy*>
     END;
-    pool.busy := FALSE;
+    state.busy := FALSE;
 
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
@@ -212,18 +212,18 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
   VAR
     tc  : Typecode := def.typecode;
     res : ADDRESS;
-    pool:= ThreadF.MyAllocPool();
+    state := ThreadF.MyHeapState();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Obj)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
 
-    pool.busy := TRUE;
+    state.busy := TRUE;
     BEGIN
-      res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc, pool^);
-      <*ASSERT pool.busy*>
+      res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc, state.newPool);
+      <*ASSERT state.busy*>
     END;
-    pool.busy := FALSE;
+    state.busy := FALSE;
 
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
@@ -297,18 +297,18 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
   VAR
     tc    : Typecode := def.typecode;
     res   : ADDRESS;
-    pool := ThreadF.MyAllocPool();
+    state := ThreadF.MyHeapState();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD(TK.Array)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
 
-    pool.busy := TRUE;
+    state.busy := TRUE;
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
-      res := AllocTraced(def, nBytes, def.dataAlignment, initProc, pool^);
-      <*ASSERT pool.busy*>
+      res := AllocTraced(def, nBytes, def.dataAlignment, initProc, state.newPool);
+      <*ASSERT state.busy*>
     END;
-    pool.busy := FALSE;
+    state.busy := FALSE;
 
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);

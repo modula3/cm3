@@ -28,7 +28,7 @@ PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
 (* Apply p to each thread allocation pool.  All other threads must be
    suspended.  ProcessPools exists solely for the garbage collector.  *)
 
-PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool;
+PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
 
 (*------------------------------------------------ floating point support ---*)
 
