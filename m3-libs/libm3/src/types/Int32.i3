@@ -15,7 +15,6 @@ INTERFACE Int32;
 
 IMPORT Word;
 
-(*TYPE T = BITS BITSIZE(INTEGER) FOR [ FIRST(INTEGER) .. LAST(INTEGER) ];*)
 TYPE T = BITS 32 FOR [ -16_7fffffff-1 .. 16_7fffffff ];
 
 CONST Brand = "Int32";
