@@ -1,4 +1,4 @@
-@rem $Id: pkgmap.cmd,v 1.3 2007-08-26 10:25:05 jkrell Exp $
+@rem $Id: pkgmap.cmd,v 1.4 2007-08-26 10:43:40 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -71,6 +71,7 @@ for %%p in (%PKGS%) do (
         if not "%KEEP_GOING%" == "yes" (
             echo ERROR: "%ACTION%"
             echo ERROR: cd %%p
+            echo ERROR: set INSTALLROOT=%INSTALLROOT%
             endlocal
             exit /b 1
         ) else (
