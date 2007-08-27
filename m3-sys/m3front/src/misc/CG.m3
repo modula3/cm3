@@ -110,10 +110,10 @@ PROCEDURE Init () =
     Max_alignment := Target.Alignments [LAST (Target.Alignments)];
 
     FOR t := FIRST (Type) TO LAST (Type) DO StackType[t] := t; END;
-    FOR t := Type.Word8 TO Type.Int64 DO
+    FOR t := Type.Word8 TO Type.Int32 DO
       StackType[t] := Target.Integer.cg_type;
     END;
-    StackType[Type.Int64] := Type.Int64;
+    StackType[Type.Int64]  := Type.Int64;
     StackType[Type.Word64] := Type.Int64;
 
     cg_wr := Host.env.init_code_generator ();
