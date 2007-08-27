@@ -2506,6 +2506,7 @@ in buffer."
 			    (forward-word -3)
 			    (looking-at "MODULE")))))
 
+    ("EXTENDED" . (5 (ls-of)))
     ("FALSE" . (4 ()))
     ("FINALLY" . (3 (ls-ok) (lambda (on-lm starts-ssl)
 			      (m3::end-matcher-is-p "TRY"))))
@@ -2558,6 +2559,12 @@ in buffer."
 		 (lambda (on-lm starts-ssl)
 		   (save-excursion (forward-word -2)
 				   (not (looking-at "OF"))))))
+    ("LONGINT" . (5 (ls-ok)
+		    (lambda (on-lm starts-ssl)
+		      (or (not starts-ssl)
+			  (save-excursion
+			    (forward-word -2)
+			    (looking-at "OF"))))))
     ("LOOP" . (2 (ls-only)
 		 (lambda (on-lm starts-ssl)
 		   (save-excursion (forward-word -2)
