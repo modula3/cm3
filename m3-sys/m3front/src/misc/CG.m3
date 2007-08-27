@@ -113,8 +113,8 @@ PROCEDURE Init () =
     FOR t := Type.Word8 TO Type.Int64 DO
       StackType[t] := Target.Integer.cg_type;
     END;
-    StackType[Type.Int64] := Target.Longint.cg_type;
-    StackType[Type.Word64] := Target.Longint.cg_type;
+    StackType[Type.Int64] := Type.Int64;
+    StackType[Type.Word64] := Type.Int64;
 
     cg_wr := Host.env.init_code_generator ();
     IF (cg_wr = NIL) THEN
