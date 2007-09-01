@@ -782,16 +782,21 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
 
   PROCEDURE CallSelect (nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
     TYPE FDSPtr = UNTRACED REF Unix.FDSet;
-    VAR res: INTEGER;
+    VAR res: INTEGER;  xx: INTEGER;
     BEGIN
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
+      END;
+      IF RTMachine.SaveRegsInStack # NIL
+       THEN self.act.sp := RTMachine.SaveRegsInStack();
+       ELSE self.act.sp := ADR(xx);
       END;
       res := Unix.select(nfd,
                          LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
                          LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
                          LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
                          timeout);
+      self.act.sp := NIL;
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
