@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1992, Digital Equipment Corporation        */
 /* All rights reserved.                                     */
 /* See the file COPYRIGHT for a full description.           */
@@ -6,232 +7,264 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
-long m3_div (b, a)
-long a, b;
+#ifdef __cplusplus
+extern "C"
+{           
+#endif
+
+#ifdef _MSC_VER
+    #if _MSC_VER < 900
+        #error __int64 support is required.
+        /* avoid cascade */
+        typedef long longlong;
+    #else
+        typedef __int64 longlong;
+    #endif
+#else
+        typedef long long longlong;
+#endif
+
+#ifdef __cplusplus
+#define ANSI(x) x
+#define KR(x)
+#else
+#define ANSI(x)
+#define KR(x) x
+#endif
+
+long m3_div
+    ANSI((      long b, long a))
+      KR((b, a) long b; long a;)
 {
   register long c;
-  if ((a == 0L) && (b != 0L))  {  c = 0L;
-  } else if (a > 0L)  {  c = (b >= 0L) ? (a) / (b) : -1L - (a-1L) / (-b);
-  } else /* a < 0L */ {  c = (b >= 0L) ? -1L - (-1L-a) / (b) : (-a) / (-b);
+  if ((a == 0) && (b != 0))  {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
   }
   return c;
 }
 
-long long m3_divL (b, a)
-long long a, b;
+longlong m3_divL
+    ANSI((      longlong b, longlong a))
+      KR((b, a) longlong b; longlong a;)
 {
-  register long long c;
-  if ((a == 0LL) && (b != 0LL))  {  c = 0LL;
-  } else if (a > 0LL)  {  c = (b >= 0LL) ? (a) / (b) : -1LL - (a-1LL) / (-b);
-  } else /* a < 0LL */ {  c = (b >= 0LL) ? -1LL - (-1LL-a) / (b) : (-a) / (-b);
+  register longlong c;
+  if ((a == 0) && (b != 0))  {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
   }
   return c;
 }
 
-long m3_mod (b, a)
-long a, b;
+long m3_mod
+    ANSI((      long b, long a))
+      KR((b, a) long b; long a;)
 {
   register long c;
-  if ((a == 0L) && (b != 0L)) {  c = 0L;
-  } else if (a > 0L)  {  c = (b >= 0L) ? a % b : b + 1L + (a-1L) % (-b);
-  } else /* a < 0L */ {  c = (b >= 0L) ? b - 1L - (-1L-a) % (b) : - ((-a) % (-b));
+  if ((a == 0) && (b != 0)) {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
   }
   return c;
 }
 
-long long m3_modL (b, a)
-long long a, b;
+longlong m3_modL
+    ANSI((      longlong b, longlong a))
+      KR((b, a) longlong b; longlong a;)
 {
-  register long long c;
-  if ((a == 0LL) && (b != 0LL)) {  c = 0LL;
-  } else if (a > 0LL)  {  c = (b >= 0LL) ? a % b : b + 1LL + (a-1LL) % (-b);
-  } else /* a < 0LL */ {  c = (b >= 0LL) ? b - 1LL - (-1LL-a) % (b) : - ((-a) % (-b));
+  register longlong c;
+  if ((a == 0) && (b != 0)) {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
   }
   return c;
 }
 
 #define SET_GRAIN (sizeof (long) * 8)
 
-long set_member (elt, set)
-long elt;
-long* set;
+long set_member
+    ANSI((          long elt, long* set))
+      KR((elt, set) long elt; long* set;)
 {
   register long word = elt / SET_GRAIN;
   register long bit  = elt % SET_GRAIN;
-  return (set[word] & (1L << bit)) != 0L;
+  return (set[word] & (1L << bit)) != 0;
 }
 
-void set_union (n_bits, c, b, a)
-long n_bits;
-long *c, *b, *a;
+void set_union
+    ANSI((                 long n_bits, long *c, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
+  for (i = 0; i < n_words; i++) {
     a[i] = b[i] | c[i];
   }
 }
 
-void set_intersection (n_bits, c, b, a)
-long n_bits;
-long *c, *b, *a;
+void set_intersection
+    ANSI((                 long n_bits, long *c, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
+  for (i = 0; i < n_words; i++) {
     a[i] = b[i] & c[i];
   }
 }
 
-void set_difference (n_bits, c, b, a)
-long n_bits;
-long *c, *b, *a;
+void set_difference
+    ANSI((                 long n_bits, long *c, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
+  for (i = 0; i < n_words; i++) {
     a[i] = b[i] & (~ c[i]);
   }
 }
 
-void set_sym_difference (n_bits, c, b, a)
-long n_bits;
-long *c, *b, *a;
+void set_sym_difference
+    ANSI((                 long n_bits, long *c, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
+  for (i = 0; i < n_words; i++) {
     a[i] = b[i] ^ c[i];
   }
 }
 
-long set_eq (n_bits, b, a)
-long n_bits;
-long *b, *a;
+long set_eq
+    ANSI((                 long n_bits, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
-    if (a[i] != b[i]) return 0L;
+  for (i = 0; i < n_words; i++) {
+    if (a[i] != b[i]) return 0;
   }
-  return 1L;
+  return 1;
 }
 
-long set_ne (n_bits, b, a)
-long n_bits;
-long *b, *a;
+long set_ne
+    ANSI((                 long n_bits, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
-    if (a[i] != b[i]) return 1L;
+  for (i = 0; i < n_words; i++) {
+    if (a[i] != b[i]) return 1;
   }
-  return 0L;
+  return 0;
 }
 
-long set_ge (n_bits, b, a)
-long n_bits;
-long *b, *a;
+long set_ge
+    ANSI((                 long n_bits, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
-    if ((~ a[i]) & b[i]) return 0L;
+  for (i = 0; i < n_words; i++) {
+    if ((~ a[i]) & b[i]) return 0;
   }
-  return 1L;
+  return 1;
 }
 
-long set_gt (n_bits, b, a)
-long n_bits;
-long *b, *a;
+long set_gt
+    ANSI((                 long n_bits, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  register long eq = 0L;
-  for (i = 0L; i < n_words; i++) {
-    if ((~ a[i]) & b[i]) return 0L;
+  register long eq = 0;
+  for (i = 0; i < n_words; i++) {
+    if ((~ a[i]) & b[i]) return 0;
     eq |=  (a[i] ^ b[i]);
   }
-  return (eq != 0L);
+  return (eq != 0);
 }
 
-long set_le (n_bits, b, a)
-long n_bits;
-long *b, *a;
+long set_le
+    ANSI((                 long n_bits, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  for (i = 0L; i < n_words; i++) {
-    if (a[i] & (~ b[i])) return 0L;
+  for (i = 0; i < n_words; i++) {
+    if (a[i] & (~ b[i])) return 0;
   }
-  return 1L;
+  return 1;
 }
 
-long set_lt (n_bits, b, a)
-long n_bits;
-long *b, *a;
+long set_lt
+    ANSI((                 long n_bits, long *b, long *a))
+      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
-  register long eq = 0L;
-  for (i = 0L; i < n_words; i++) {
-    if (a[i] & (~ b[i])) return 0L;
+  register long eq = 0;
+  for (i = 0; i < n_words; i++) {
+    if (a[i] & (~ b[i])) return 0;
     eq |= (a[i] ^ b[i]);
   }
-  return (eq != 0L);
+  return (eq != 0);
 }
 
-static long tables_built = 0L;
+static int tables_built;
 static unsigned long LoBits[SET_GRAIN];  /* LoBits [i] = SET { 0..i } */
 static unsigned long HiBits[SET_GRAIN];  /* HiBits [i] = SET { i..GRAIN-1 } */
 
 void BuildTables ()
 {
-  long i, j;
-
-  tables_built = 1L;
+  unsigned i;
+  long j;
 
   /* LoBits [i] = SET { 0..i } */
-  j = 0L;  /* == SET { } */
-  for (i = 0L; i < SET_GRAIN; i++) {
-    j = (j << 1L) + 1L;
+  j = 0;  /* == SET { } */
+  for (i = 0; i < SET_GRAIN; i++) {
+    j = (j << 1) + 1;
     LoBits[i] = j;
   }
 
   /* HiBits [i] = SET { i..GRAIN-1 } */
   j = ~0L; /* == SET { 0..GRAIN-1 } */
-  for (i = 0L; i < SET_GRAIN; i++) {
+  for (i = 0; i < SET_GRAIN; i++) {
     HiBits[i] = j;
-    j = (j << 1L);
+    j = (j << 1);
   }
+
+  tables_built = 1;
 }
 
-void set_range (b, a, s)
-long b, a;
-long *s;
+void set_range
+    ANSI((       long b, long a, long *s))
+    KR((b, a, s) long b; long a; long *s;)
 {
-  long a_word = a / SET_GRAIN;
-  long a_bit  = a % SET_GRAIN;
-  long b_word = b / SET_GRAIN;
-  long b_bit  = b % SET_GRAIN;
-  long i;
-
-  if (!tables_built) BuildTables ();
-
   if (b < a) {
       /* no bits to set */
-  } else if (a_word == b_word) {
-      s [a_word] |= (HiBits [a_bit] & LoBits [b_bit]);
   } else {
-      s [a_word] |= HiBits [a_bit];
-      for (i = a_word+1L; i < b_word; i++)  s[i] = HiBits [0];
-      s [b_word] |= LoBits [b_bit];
-  }
+      long a_word = a / SET_GRAIN;
+      long a_bit  = a % SET_GRAIN;
+      long b_word = b / SET_GRAIN;
+      long b_bit  = b % SET_GRAIN;
+      long i;
+
+      if (!tables_built) BuildTables ();
+
+      if (a_word == b_word) {
+          s [a_word] |= (HiBits [a_bit] & LoBits [b_bit]);
+      } else {
+          s [a_word] |= HiBits [a_bit];
+          for (i = a_word+1; i < b_word; i++)  s[i] = ~0L;
+          s [b_word] |= LoBits [b_bit];
+      }
+    }
 }
 
-void set_singleton (a, s)
-long a;
-long *s;
+void set_singleton
+    ANSI((      long a, long* s))
+      KR((a, s) long a; long *s;)
 {
   long a_word = a / SET_GRAIN;
   long a_bit  = a % SET_GRAIN;
@@ -281,3 +314,6 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 **************************************************************************/
 
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
