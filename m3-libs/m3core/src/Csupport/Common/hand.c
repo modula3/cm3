@@ -211,7 +211,7 @@ long set_lt
   return (eq != 0);
 }
 
-static int tables_built;
+static volatile int tables_built;
 static unsigned long LoBits[SET_GRAIN];  /* LoBits [i] = SET { 0..i } */
 static unsigned long HiBits[SET_GRAIN];  /* HiBits [i] = SET { i..GRAIN-1 } */
 
@@ -313,6 +313,26 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
+
+#if 0 /* work in progress */
+
+#include <assert.h>
+
+int __cdecl wmain()
+{
+    unsigned i;
+
+    BuildTables();
+    for (i = 0 ; i != 32 ; ++i)
+    {
+        assert(LoBits[i] == _lowbits[i + 1]);
+        assert(HiBits[i] == _highbits[i]);
+    }
+
+    return 0;
+}
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
