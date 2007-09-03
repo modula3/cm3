@@ -12,7 +12,11 @@ extern "C"
 {           
 #endif
 
+typedef unsigned long ulong;
+typedef unsigned int uint;
+
 #ifdef _MSC_VER
+#pragma warning(disable:4131) /* old style */
     #if _MSC_VER < 900
         #error __int64 support is required.
         /* avoid cascade */
@@ -83,17 +87,17 @@ longlong m3_modL
 #define SET_GRAIN (sizeof (long) * 8)
 
 long set_member
-    ANSI((          long elt, long* set))
-      KR((elt, set) long elt; long* set;)
+    ANSI((          long elt, ulong* set))
+      KR((elt, set) long elt; ulong* set;)
 {
   register long word = elt / SET_GRAIN;
   register long bit  = elt % SET_GRAIN;
-  return (set[word] & (1L << bit)) != 0;
+  return (set[word] & (1UL << bit)) != 0;
 }
 
 void set_union
-    ANSI((                 long n_bits, long *c, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
+    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -103,8 +107,8 @@ void set_union
 }
 
 void set_intersection
-    ANSI((                 long n_bits, long *c, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
+    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -114,8 +118,8 @@ void set_intersection
 }
 
 void set_difference
-    ANSI((                 long n_bits, long *c, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
+    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -125,8 +129,8 @@ void set_difference
 }
 
 void set_sym_difference
-    ANSI((                 long n_bits, long *c, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *c; long *b; long *a;)
+    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -136,8 +140,8 @@ void set_sym_difference
 }
 
 long set_eq
-    ANSI((                 long n_bits, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
+    ANSI((              long n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -148,8 +152,8 @@ long set_eq
 }
 
 long set_ne
-    ANSI((                 long n_bits, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
+    ANSI((              long n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -160,8 +164,8 @@ long set_ne
 }
 
 long set_ge
-    ANSI((                 long n_bits, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
+    ANSI((              long n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -172,8 +176,8 @@ long set_ge
 }
 
 long set_gt
-    ANSI((                 long n_bits, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
+    ANSI((              long n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -186,8 +190,8 @@ long set_gt
 }
 
 long set_le
-    ANSI((                 long n_bits, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
+    ANSI((              long n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -198,8 +202,8 @@ long set_le
 }
 
 long set_lt
-    ANSI((                 long n_bits, long *b, long *a))
-      KR((n_bits, c, b, a) long n_bits; long *b; long *a;)
+    ANSI((              long n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
@@ -218,7 +222,7 @@ static unsigned long HiBits[SET_GRAIN];  /* HiBits [i] = SET { i..GRAIN-1 } */
 void BuildTables ()
 {
   unsigned i;
-  long j;
+  ulong j;
 
   /* LoBits [i] = SET { 0..i } */
   j = 0;  /* == SET { } */
@@ -228,7 +232,7 @@ void BuildTables ()
   }
 
   /* HiBits [i] = SET { i..GRAIN-1 } */
-  j = ~0L; /* == SET { 0..GRAIN-1 } */
+  j = ~0UL; /* == SET { 0..GRAIN-1 } */
   for (i = 0; i < SET_GRAIN; i++) {
     HiBits[i] = j;
     j = (j << 1);
@@ -238,8 +242,8 @@ void BuildTables ()
 }
 
 void set_range
-    ANSI((       long b, long a, long *s))
-    KR((b, a, s) long b; long a; long *s;)
+    ANSI((       long b, long a, ulong* s))
+    KR((b, a, s) long b; long a; ulong* s;)
 {
   if (b < a) {
       /* no bits to set */
@@ -256,23 +260,26 @@ void set_range
           s [a_word] |= (HiBits [a_bit] & LoBits [b_bit]);
       } else {
           s [a_word] |= HiBits [a_bit];
-          for (i = a_word+1; i < b_word; i++)  s[i] = ~0L;
+          for (i = a_word+1; i < b_word; i++)  s[i] = ~0UL;
           s [b_word] |= LoBits [b_bit];
       }
     }
 }
 
 void set_singleton
-    ANSI((      long a, long* s))
-      KR((a, s) long a; long *s;)
+    ANSI((      long a, ulong* s))
+      KR((a, s) long a; ulong* s;)
 {
   long a_word = a / SET_GRAIN;
   long a_bit  = a % SET_GRAIN;
-  s [a_word] |= 1L << a_bit;
+  s[a_word] |= (1UL << a_bit);
 }
 
 /* _lowbits[i] = bits{(i-1)..0} for 32-bit integer masks */
-int _lowbits [33] = {
+#ifdef __cplusplus
+extern
+#endif
+const uint _lowbits [33] = {
   0x0,
   0x1, 0x3, 0x7, 0xf,
   0x1f, 0x3f, 0x7f, 0xff,
@@ -284,7 +291,10 @@ int _lowbits [33] = {
   0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff };
 
 /* _highbits[i] = bits{31..i} for 32-bit integer masks */
-int _highbits [33] = {
+#ifdef __cplusplus
+extern
+#endif
+const uint _highbits [33] = {
   0xffffffff, 0xfffffffe, 0xfffffffc, 0xfffffff8,
   0xfffffff0, 0xffffffe0, 0xffffffc0, 0xffffff80,
   0xffffff00, 0xfffffe00, 0xfffffc00, 0xfffff800,
