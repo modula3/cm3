@@ -6,7 +6,7 @@
 
 UNSAFE MODULE RTOS;
 
-IMPORT RTMachInfo, RTSignal, Thread, ThreadF;
+IMPORT RTMachInfo, RTSignal, ThreadF;
 IMPORT WinBase, WinNT, WinCon, WinDef, Word;
 
 (*--------------------------------------------------- process termination ---*)
