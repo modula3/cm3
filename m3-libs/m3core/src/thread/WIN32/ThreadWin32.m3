@@ -963,6 +963,12 @@ PROCEDURE MyId(): Id RAISES {}=
     RETURN self.id;
   END MyId;
 
+PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
+  VAR me := GetActivation();
+  BEGIN
+    RETURN ADR(me.heapState);
+  END MyHeapState;
+
 (*---------------------------------------------------------------- errors ---*)
 
 PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
