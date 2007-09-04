@@ -966,7 +966,7 @@ PROCEDURE MyId(): Id RAISES {}=
 PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.heapState;
+    RETURN ADR(me.heapState);
   END MyHeapState;
 
 (*---------------------------------------------------------------- errors ---*)
