@@ -25,17 +25,14 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
 (* Apply p to each thread stack, with [start..stop) being the limits
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
+(* Feature:  Windows threads not created by Thread.Fork are not suspended
+    or resumed, and their stacks are not processed. *)
 
 PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
 (* Apply p to each thread allocation pool.  All other threads must be
    suspended.  ProcessPools exists solely for the garbage collector.  *)
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
-
-PROCEDURE MyAllocPool (): UNTRACED REF RTHeapRep.AllocPool;
-
-(* Feature:  Windows threads not created by Thread.Fork are not suspended
-    or resumed, and their stacks are not processed. *)
 
 (*------------------------------------------------------------ preemption ---*)
 
