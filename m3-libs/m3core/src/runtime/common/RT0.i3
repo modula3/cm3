@@ -184,7 +184,7 @@ TYPE
     weak      : BITS  1 FOR BOOLEAN    := FALSE; (* any weakrefs? *)
     marka     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
     markb     : BITS  1 FOR BOOLEAN    := FALSE; (* used during collection *)
-    spare     : BITS SB FOR [0 .. 64] := 0;      (* for future expansion *)
+    spare     : BITS SB FOR [0 .. 63]  := 0;     (* for future expansion *)
   END;
 
 (*--------------------------------- compiler generated procedure closures ---*)
