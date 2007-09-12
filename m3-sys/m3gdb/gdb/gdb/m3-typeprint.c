@@ -91,7 +91,8 @@ m3_type_print_base (type, stream, show, level)
       break;
 
     case TYPE_CODE_M3_PACKED:
-      fprintf_filtered (stream, "BITS %d FOR ", (int)TYPE_M3_SIZE (type));
+      fprintf_filtered 
+        (stream, "BITS %d FOR ", (int)TYPE_M3_SIZE (type));
       m3_type_print_base (TYPE_M3_PACKED_TARGET (type), stream, show-1, level);
       break;
 

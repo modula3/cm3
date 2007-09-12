@@ -85,7 +85,7 @@ extern void _initialize_m3_language ( );
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
    do not cause this to be true, but they do cause 
    processing_gcc_compilation to be nonzero. */ 
-bool processing_pm3_compilation = 0; 
+bool processing_pm3_compilation = false; 
 
 /* true indicates that the debug info will show an extra block 
    surrounding the non-prologue-non-epilogue part of every procedure. 
@@ -251,6 +251,7 @@ static const struct op_print m3_op_print_tab[] =
   {"NUMBER", UNOP_M3_NUMBER, PREC_BUILTIN_FUNCTION, 0},
   {"ORD", UNOP_M3_ORD, PREC_BUILTIN_FUNCTION, 0},
   {"ROUND", UNOP_M3_ROUND, PREC_BUILTIN_FUNCTION, 0},
+  {"TYPECODE", UNOP_M3_TYPECODE, PREC_BUILTIN_FUNCTION, 0},
   {"TRUNC", UNOP_M3_TRUNC, PREC_BUILTIN_FUNCTION, 0},
 
   {"^", UNOP_M3_DEREF, PREC_SUFFIX, 1},
@@ -358,6 +359,7 @@ m3_operator_length (struct expression *expr, int endpos,
     case UNOP_M3_NUMBER:
     case UNOP_M3_ORD:
     case UNOP_M3_ROUND:
+    case UNOP_M3_TYPECODE:
     case UNOP_M3_TRUNC:
     case M3_FINAL_TYPE:
       *argsp = 1;
@@ -415,6 +417,7 @@ m3_operator_name (enum exp_opcode opcode)
       case UNOP_M3_NUMBER: return "UNOP_M3_NUMBER";
       case UNOP_M3_ORD: return "UNOP_M3_ORD";
       case UNOP_M3_ROUND: return "UNOP_M3_ROUND";
+      case UNOP_M3_TYPECODE: return "UNOP_M3_TYPECODE";
       case UNOP_M3_TRUNC: return "UNOP_M3_TRUNC";
       case BINOP_M3_SUBSCRIPT: return "BINOP_M3_SUBSCRIPT";
       case BINOP_M3_MULT: return "BINOP_M3_MULT";
@@ -1815,6 +1818,30 @@ struct type *builtin_type_m3_void;
 struct type *builtin_type_m3_widechar;
 struct type *builtin_type_m3_proc_closure;
 
+static void 
+m3_info_m3_command ( char * args, int from_tty ) 
+
+  { m3_is_cm3 ( ); /* ignore result. */ 
+  /* TODO:  This is messy.  Get the initialization of compiler_kind out 
+            of m3_is_cm3 and do it once, early on.
+  */ 
+    switch ( compiler_kind ) 
+      { case ck_unknown : 
+          printf_filtered ("Modula-3 compiler is unknown.\n" );
+          return; 
+        case ck_pm3 : 
+          printf_filtered ("Compiled by SRC, PM3, or EZM3 Modula-3 compiler" );
+          break; 
+        case ck_cm3 : 
+          printf_filtered ("Compiled by CM3 Modula-3 compiler" );
+          break; 
+      } 
+    if ( processing_pm3_compilation ) 
+      { printf_filtered (", using integrated back end.\n" ); }
+    else 
+      { printf_filtered (", using gcc-derived back end.\n" ); }
+  } /* m3_info_m3_command */ 
+
 void
 _initialize_m3_language ()
 {
@@ -1929,6 +1956,18 @@ _initialize_m3_language ()
   add_com ( "switch", class_stack, switch_command, 
             "Allows to examine the stack of another thread."
           );
+  add_info ("Modula-3", 
+             m3_info_m3_command, 
+             _("Identifies the Modula-3 compiler and backend used to compile \
+the debugged program.\n\
+Aliases: Modula-3, modula-3, Modula3, modula3, M3, m3."
+              ) 
+           ); 
+  add_info_alias ("Modula3", "Modula-3", 0 ); 
+  add_info_alias ("modula-3", "Modula-3", 0 ); 
+  add_info_alias ("modula3", "Modula-3", 0 ); 
+  add_info_alias ("M3", "Modula-3", 0 ); 
+  add_info_alias ("m3", "Modula-3", 0 ); 
 }
 
 /* Name is a string that might be the demangled name of a nested procedure.

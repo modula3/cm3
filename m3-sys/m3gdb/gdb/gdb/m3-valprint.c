@@ -1238,8 +1238,8 @@ m3_val_print2 (
             }
         }
       else {
-	gdb_byte *a = alloca (eltsize);
-	gdb_byte *previous = alloca (eltsize);
+        gdb_byte *a = alloca (eltsize);
+        gdb_byte *previous = alloca (eltsize);
 	reps = 0;
 	for (i = things_printed = 0; 
 	     i < nelems && things_printed < print_max; i++) {
@@ -1317,7 +1317,7 @@ m3_val_print2 (
       break; }
       
     case TYPE_CODE_M3_INDIRECT: {
-      CORE_ADDR target_addr = m3_extract_address (valaddr, 0);
+      CORE_ADDR target_addr = m3_extract_address (valaddr, bitpos);
       struct type *target = TYPE_M3_INDIRECT_TARGET (type);
       int target_size = TYPE_LENGTH (target);
       gdb_byte *target_val = alloca (target_size); 
@@ -1332,7 +1332,10 @@ m3_val_print2 (
     case TYPE_CODE_M3_METHOD:  
     case TYPE_CODE_M3_PROC: 
       m3_print_proc_value 
-        ( m3_proc_code_addr ( valaddr ), m3_proc_env_ptr ( valaddr ), stream ); 
+        ( m3_proc_code_addr ( valaddr, bitpos ), 
+          m3_proc_env_ptr ( valaddr, bitpos ), 
+          stream 
+        ); 
       break; 
       
     case TYPE_CODE_M3_RECORD: {
@@ -1506,8 +1509,8 @@ m3_val_print2 (
                   /* val_print_string will stop on a null byte, but not exceed
                      nelems.  For a properly-formed PM3 text value, that will
                      work fine, as it has both a null byte and a count (which
-                     includes the null byte).  To see the bytes as an array, the
-                     user can dereference the TEXT value. */ 
+                     includes the null byte).  To see the bytes as an array, 
+                     the user can dereference the TEXT value. */ 
                   val_print_string (chars_addr, nelems, 1, stream); 
                 }
             }
