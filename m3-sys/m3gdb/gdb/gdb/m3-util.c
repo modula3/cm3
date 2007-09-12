@@ -1048,8 +1048,7 @@ m3_lookup_exported (
     return NULL;
   } /* m3_lookup_exported */ 
 
-static enum compiler_kind_typ { ck_unknown, ck_pm3, ck_cm3 } compiler_kind 
-  = ck_unknown; 
+enum compiler_kind_typ compiler_kind = ck_unknown; 
 
 void 
 note_is_cm3 ( void )
@@ -1069,6 +1068,8 @@ bool
 m3_is_cm3 ( void ) 
   { struct symbol * sym; 
 
+    if ( ! have_full_symbols ( ) && ! have_partial_symbols ( ) )
+      { error (_("No symbol table is loaded.  Use the \"file\" command.")); }
     /* init_m3_constants ( ); This method can fail if we haven't done a run
        command yet and libm3core is dynamically linked. */ 
 
@@ -1084,7 +1085,81 @@ m3_is_cm3 ( void )
     return compiler_kind == ck_cm3; 
   } 
 
-/* Return the typecode of the object at inferior address addr. */ 
+/* Strip away any indirect types from a type. */ 
+struct type * 
+m3_direct_type ( struct type * param_type ) 
+
+  { struct type * l_type; 
+
+    if ( param_type == NULL ) { return NULL; } 
+    l_type = param_type; 
+    while ( TYPE_CODE ( l_type ) == TYPE_CODE_M3_INDIRECT ) 
+      { l_type = TYPE_M3_INDIRECT_TARGET ( l_type ); } 
+    return l_type; 
+  } /* m3_direct_type */ 
+
+/* Strip away any indirect and packed types from a type. */ 
+struct type * 
+m3_unpacked_direct_type ( struct type * param_type ) 
+
+  { struct type * l_type; 
+
+    if ( param_type == NULL ) { return NULL; } 
+    l_type = param_type; 
+    while ( true ) 
+      { switch  ( TYPE_CODE ( l_type ) ) 
+          { case TYPE_CODE_M3_INDIRECT: 
+              l_type = TYPE_M3_INDIRECT_TARGET ( l_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_PACKED: 
+              l_type = TYPE_M3_PACKED_TARGET ( l_type ); 
+              break; /* And loop. */  
+            default:
+              return l_type; 
+          }
+      } 
+  } /* m3_unpacked_direct_type */ 
+
+/* Convert an opaque type to its revealed type, or identity. */ 
+struct  type *  
+m3_revealed_type ( struct type * opaque_type ) 
+
+  { if ( opaque_type != NULL 
+         && TYPE_CODE ( opaque_type ) == TYPE_CODE_M3_OPAQUE 
+       ) 
+      { return TYPE_M3_OPAQUE_REVEALED ( opaque_type ); } 
+    return opaque_type; 
+  } /* m3_revealed_type */ 
+
+/* Strip off any indirects, packeds, and opaques. */ 
+struct  type *  
+m3_revealed_unpacked_direct_type ( struct type * param_type ) 
+
+  { struct type * l_type; 
+
+    if ( param_type == NULL ) { return NULL; } 
+    l_type = param_type; 
+    while ( true ) 
+      { switch  ( TYPE_CODE ( l_type ) ) 
+          { case TYPE_CODE_M3_INDIRECT: 
+              l_type = TYPE_M3_INDIRECT_TARGET ( l_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_PACKED: 
+              l_type = TYPE_M3_PACKED_TARGET ( l_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_OPAQUE: 
+              l_type = TYPE_M3_OPAQUE_REVEALED ( l_type );
+              break; /* And loop. */ 
+            default:
+              return l_type; 
+          }
+      } 
+  } /* m3_revealed_unpacked_direct_type */ 
+
+/* Return the typecode of the object at inferior address addr. 
+   PRE: addr is the inferior address of a object with a typecode header,
+        i.e., either it's a traced ref or an untraced object type. 
+*/ 
 LONGEST 
 m3_typecode_from_inf_address ( CORE_ADDR addr ) 
 
@@ -1102,14 +1177,13 @@ m3_typecode_from_inf_address ( CORE_ADDR addr )
 
 } /* m3_typecode_from_inf_address */ 
 
-/* Return the inferior address of the typecell for the dyanamic (allocated) type
-   of the object at inferior address addr.  
+/* Return the inferior address of the typecell for the dyanamic (allocated) 
+   type of the object at inferior address addr.  
 */
 CORE_ADDR 
-m3_tc_addr_from_object_addr (CORE_ADDR addr)
+m3_tc_addr_from_object_addr ( CORE_ADDR addr )
 
-{
-  LONGEST typecode, n_types;
+{ LONGEST typecode, n_types;
   CORE_ADDR result, map_ptr;
 
   if (!addr) { return 0; }
@@ -1263,6 +1337,10 @@ m3_type_from_tc (tc_addr)
   return (m3_resolve_type (m3uid_from_int (selfID)));
 } /* m3_type_from_tc */ 
 
+/* Given a heap reference, find it's actual type. 
+   PRE: addr is the inferior address of a object with a typecode header,
+        i.e., either it's a traced ref or an untraced object type. 
+*/ 
 struct type *
 m3_allocated_type_from_object_addr (addr)
      CORE_ADDR addr;
@@ -1468,52 +1546,39 @@ m3_find_obj_method (
   } /* m3_find_obj_method */ 
 
 bool
-m3_is_ordinal_type (struct type *type )
-{
-  enum type_code tc;
+m3_is_ordinal_type ( struct type * param_type )
+  { struct type *unpacked_type; 
+    enum type_code tc;
 
-  tc = TYPE_CODE (type);
-  while (tc == TYPE_CODE_M3_PACKED) {
-    type = TYPE_M3_PACKED_TARGET (type);
-    tc = TYPE_CODE (type);
-  }
+    unpacked_type = m3_unpacked_direct_type ( param_type ); 
+    tc = TYPE_CODE ( unpacked_type );
 
-  switch (tc) {
-    case TYPE_CODE_M3_SUBRANGE:
-    case TYPE_CODE_M3_ENUM:
-    case TYPE_CODE_M3_BOOLEAN:
-    case TYPE_CODE_M3_CHAR:
-    case TYPE_CODE_M3_WIDECHAR:
-    case TYPE_CODE_M3_CARDINAL:
-    case TYPE_CODE_M3_INTEGER:
-      return 1;
-    default:
-      return 0;
-  }
-} /* m3_is_ordinal_type */ 
+    switch (tc) 
+      { case TYPE_CODE_M3_SUBRANGE:
+        case TYPE_CODE_M3_ENUM:
+        case TYPE_CODE_M3_BOOLEAN:
+        case TYPE_CODE_M3_CHAR:
+        case TYPE_CODE_M3_WIDECHAR:
+        case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_INTEGER:
+          return true;
+        default:
+          return false;
+      }
+  } /* m3_is_ordinal_type */ 
 
 bool 
-m3_type_is_signed ( struct type *type ) 
+m3_type_is_signed ( struct type * param_type ) 
 
-  { enum type_code tc;
+  { struct type *unpacked_type; 
+    enum type_code tc;
     LONGEST lower; 
 
-    tc = TYPE_CODE (type);
-    while ( true ) 
-      { if ( tc == TYPE_CODE_M3_INDIRECT ) 
-          { type = TYPE_M3_INDIRECT_TARGET ( type );
-            tc = TYPE_CODE ( type );
-          }
-        else if ( tc == TYPE_CODE_M3_PACKED ) 
-          { type = TYPE_M3_PACKED_TARGET ( type );
-            tc = TYPE_CODE ( type );
-          }
-        else break; 
-      } 
-
+    unpacked_type = m3_unpacked_direct_type ( param_type ); 
+    tc = TYPE_CODE ( unpacked_type );
     switch ( tc ) 
       { case TYPE_CODE_M3_SUBRANGE:
-          lower = TYPE_M3_SUBRANGE_MIN (type);
+          lower = TYPE_M3_SUBRANGE_MIN ( unpacked_type );
           return lower < 0; 
         case TYPE_CODE_M3_INTEGER:
           return true; 
@@ -1523,59 +1588,55 @@ m3_type_is_signed ( struct type *type )
   } /* m3_type_is_signed */ 
 
 void
-m3_ordinal_bounds ( struct type *type, LONGEST *lower, LONGEST *upper ) 
+m3_ordinal_bounds ( 
+    struct type * param_type, LONGEST * f_lower, LONGEST * f_upper ) 
 
-  { enum type_code tc;
+  { struct type *unpacked_type; 
+    enum type_code tc;
+    LONGEST lower; 
+    LONGEST upper; 
 
-    tc = TYPE_CODE (type);
-    while ( true ) 
-      { if ( tc == TYPE_CODE_M3_INDIRECT ) 
-          { type = TYPE_M3_INDIRECT_TARGET ( type );
-            tc = TYPE_CODE ( type );
-          }
-        else if ( tc == TYPE_CODE_M3_PACKED ) 
-          { type = TYPE_M3_PACKED_TARGET ( type );
-            tc = TYPE_CODE ( type );
-          }
-        else break; 
-      } 
-
+    unpacked_type = m3_unpacked_direct_type ( param_type ); 
+    tc = TYPE_CODE ( unpacked_type );
     switch ( tc ) 
       { case TYPE_CODE_M3_SUBRANGE:
-          *lower = TYPE_M3_SUBRANGE_MIN (type);
-          *upper = TYPE_M3_SUBRANGE_MAX (type);
+          lower = TYPE_M3_SUBRANGE_MIN ( unpacked_type );
+          upper = TYPE_M3_SUBRANGE_MAX ( unpacked_type );
           break;
         case TYPE_CODE_M3_ENUM:
-          *lower = 0;
-          *upper = TYPE_M3_ENUM_NVALS (type) - 1;
+          lower = 0;
+          upper = TYPE_M3_ENUM_NVALS ( unpacked_type ) - 1;
           break;
         case TYPE_CODE_M3_BOOLEAN:
-          *lower = 0;
-          *upper = 1;
+          lower = 0;
+          upper = 1;
           break;
         case TYPE_CODE_M3_CHAR:
-          *lower = 0;
-          *upper = 255;
+          lower = 0;
+          upper = 255;
           break;
         case TYPE_CODE_M3_WIDECHAR:
-          *lower = 0;
-          *upper = 0xffff;
+          lower = 0;
+          upper = 0xffff;
           break;
         case TYPE_CODE_M3_CARDINAL:
           /* assumes a 2's complement machine... */
-          *lower = 0;
-          *upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
+          lower = 0;
+          upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
           break;
         case TYPE_CODE_M3_INTEGER:
           /* assumes a 2's complement machine... */
-          *lower = (-1L) << (TARGET_LONG_BIT-1);
-          *upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
+          lower = (-1L) << (TARGET_LONG_BIT-1);
+          upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
           break;
         default:
-          error ("gdb internal error: bad Modula-3 ordinal type code %d", tc );
-          *lower = 0;
-          *upper = 0;
+          error ("m3gdb internal error: bad Modula-3 ordinal type code %d", tc );
+          lower = 0;
+          upper = 0;
+          break; 
       }
+    if ( f_lower != NULL ) { * f_lower = lower; } 
+    if ( f_upper != NULL ) { * f_upper = upper; } 
   } /* m3_ordinal_bounds */ 
 
 gdb_byte *
@@ -1837,7 +1898,9 @@ m3_value_open_array_elems_addr ( struct value * array_value )
 
   result 
     = m3_extract_address 
-        ( ( gdb_byte * ) value_contents ( array_value ), 0 ); 
+        ( ( gdb_byte * ) value_contents ( array_value ),
+          value_offset ( array_value )  
+        ); 
   return result; 
 } /* m3_value_open_array_elems_addr */ 
 
@@ -1850,7 +1913,8 @@ m3_set_value_open_array_elems_addr (
   ) 
 
 { store_unsigned_integer 
-    ( ( gdb_byte * ) value_contents_raw ( array_value ), 
+    ( ( gdb_byte * ) 
+        value_contents_raw ( array_value ) + value_offset ( array_value ), 
       TARGET_PTR_BIT / HOST_CHAR_BIT, 
       ( ULONGEST ) val
     ) ; 
@@ -2029,16 +2093,16 @@ m3_value_is_proc_closure ( struct value * closure_value )
     else { return false; } 
   } /* m3_value_is_proc_closure */ 
 
-/* valaddr points to a gdb-space value of Modula-3 procedure type, which
-   in turn could be a pointer to the procedure's code or to a closure.  
+/* valaddr/bitpos point to a gdb-space value of Modula-3 procedure type, 
+   which in turn could be a pointer to the procedure's code or to a closure.  
    Either way, return the code address. */ 
 CORE_ADDR 
-m3_proc_code_addr ( const gdb_byte * valaddr ) 
+m3_proc_code_addr ( const gdb_byte * valaddr, int bitpos ) 
 
   { CORE_ADDR inf_addr; 
     struct value * closure_value;
 
-    inf_addr = m3_extract_address ( valaddr, 0 );  
+    inf_addr = m3_extract_address ( valaddr, bitpos );  
     if ( m3_inf_address_is_proc_closure ( inf_addr ) ) 
       { closure_value = value_at_lazy ( builtin_type_m3_proc_closure, inf_addr );
       /* Kinda sleazy, reusing builtin_type_m3_proc_closure, without even 
@@ -2050,17 +2114,17 @@ m3_proc_code_addr ( const gdb_byte * valaddr )
     else { return inf_addr; } 
   } /* m3_proc_code_addr */ 
 
-/* valaddr points to a gdb-space value of Modula-3 procedure type, which
-   in turn could be a pointer to the procedure's code or to a closure.  
+/* valaddr/bitpos point to a gdb-space value of Modula-3 procedure type, 
+   which in turn could be a pointer to the procedure's code or to a closure.  
    Either way, return the enviroment pointer, which will, of course, be
    zero in the former case. */ 
 CORE_ADDR 
-m3_proc_env_ptr ( const gdb_byte * valaddr ) 
+m3_proc_env_ptr ( const gdb_byte * valaddr, int bitpos ) 
 
   { CORE_ADDR inf_addr; 
     struct value * closure_value;
 
-    inf_addr = m3_extract_address ( valaddr, 0 );  
+    inf_addr = m3_extract_address ( valaddr, bitpos );  
     if ( m3_inf_address_is_proc_closure ( inf_addr ) ) 
       { closure_value = value_at_lazy ( builtin_type_m3_proc_closure, inf_addr );
       /* Kinda sleazy, reusing builtin_type_m3_proc_closure, without even 
