@@ -12,7 +12,7 @@ UNSAFE MODULE Pickle2 EXPORTS Pickle2, PickleRd;
 
 IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
        RTTypeMap, Thread, Word, Wr, Fingerprint, RTPacking,
-       ConvertPacking, PklTipeMap, Swap, PickleRd, BuiltinSpecials2;
+       ConvertPacking, PklTipeMap, Swap, PickleRd, BuiltinSpecials2, Fmt;
 
 (* *)
 (* Syntax of a pickle, and constants pertaining thereto *)
@@ -212,6 +212,23 @@ VAR v2_header: Header;            (* header for the pickles we write *)
 VAR myPackingCode: INTEGER;       (* our local packing. *)
 VAR myTrailer: Trailer;           (* trailer for pickles we write *)
 VAR nullReaderRef: REF INTEGER;   (* null value for reader.refs entries *)
+
+PROCEDURE FPImage(READONLY fp: Fingerprint.T): TEXT = 
+  (* Return a readable image of "fp". *) 
+
+  BEGIN
+    RETURN 
+      "{"
+      & Fmt.Int(fp.byte[0]) & "," 
+      & Fmt.Int(fp.byte[1]) & "," 
+      & Fmt.Int(fp.byte[2]) & "," 
+      & Fmt.Int(fp.byte[3]) & "," 
+      & Fmt.Int(fp.byte[4]) & "," 
+      & Fmt.Int(fp.byte[5]) & "," 
+      & Fmt.Int(fp.byte[6]) & "," 
+      & Fmt.Int(fp.byte[7])  
+      & "}"
+  END FPImage;
 
 (* *)
 (* Top-level sugar: Write and Read *)
@@ -475,7 +492,9 @@ PROCEDURE ReadFP(reader: Reader): TypeCode
     tc := RTTypeFP.FromFingerprint(fp);
     IF tc = RTType.NoSuchType THEN
       RAISE Error(
-             "Can't read pickle (type not known in this program)")
+             "Can't read pickle, Fingerprint " 
+             & FPImage(fp) & 
+             " not known in this program")
     END;
     reader.pklToTC[reader.tcCount] := tc;
     RETURN tc
