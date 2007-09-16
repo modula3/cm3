@@ -72,6 +72,20 @@
    a "BRANDED REF INTEGER", since the implicit brand can
    vary from program to program.  Therefore, you should
    use explicit brands in types that will be pickled.
+
+   SRC/PM3/EXM3 Incompatibility notes:
+
+   1. Pickles written by programs compiled by SRC, PM3, or EZM3 are
+      not generally readable by CM3-compiled programs because of 
+      byte-order differences in the writing of fingerprints in pickles. 
+      These differences are probably also endian-dependent. 
+
+   2. In CM3, for a type recorded in a pickle to be readable, the type
+      must be declared in the EXPORT/IMPORT closure of the main program.
+      This is more restrictive than in SRC/PM3/EZM3, where it is enough
+      that the type be declared in an interface or module named in the
+      m3makefile.  Thus, porting code that uses pickles from PM3 to CM3 
+      could require adding new IMPORTs. 
 *)
 
 INTERFACE Pickle2;
