@@ -55,7 +55,7 @@ PROCEDURE Check (<*UNUSED*> t: T;  <*UNUSED*> VAR cs: Value.CheckState) =
 
 PROCEDURE Load (t: T) =
   BEGIN
-    CG.Load_integer (t.value);
+    CG.Load_integer (Target.Integer.cg_type, t.value);
   END Load;
 
 PROCEDURE ToExpr (t: T): Expr.T =

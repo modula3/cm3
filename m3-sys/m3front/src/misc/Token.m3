@@ -14,7 +14,8 @@ CONST
   Keywords = ARRAY T OF TEXT { 
     "*EOF*",
 
-    "*id*", "*cardinal*", "*float*",
+    "*id*", "*integer*", "*longint*",
+    "*real*", "*longreal*", "*extended*",
     "*char*", "*wchar*", "*text*", "*wtext*",
 
     "+", "-", "*", "/", ":=", "&", ".", ",",

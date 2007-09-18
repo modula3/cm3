@@ -1014,7 +1014,7 @@ PROCEDURE EmitBody (x: InitBody) =
     CG.Gen_location (t.body_origin);
     CG.Begin_procedure (x.cg_proc);
 
-    CG.Load_int (x.arg, Target.Integer.cg_type);
+    CG.Load_int (Target.Integer.cg_type, x.arg);
     CG.If_false (skip, CG.Never);
 
     Scope.InitValues (t.importScope);

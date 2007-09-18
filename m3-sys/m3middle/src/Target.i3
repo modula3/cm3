@@ -144,18 +144,13 @@ CONST
    an array of small host values, with the low order bits in the first
    element of the array. *)
 
-CONST
-  ChunkSize = 16;  (* # of bits per array element *)
-
 TYPE
-  Pre = { Integer, Longint };
-  Int = (* OPAQUE *) RECORD x: IChunks; pre: Pre END;
-  IChunks = ARRAY [0..3] OF IChunk;
-  IChunk = BITS ChunkSize FOR [0..16_ffff];
-
-VAR
-  last_chunk: ARRAY Pre OF [0..LAST(IChunks)];
-  (* only chunks in the range [0..last_chunk] contain valid bits. *)
+  Int = (* OPAQUE *) RECORD
+    n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
+    x := IBytes{0,..};    (* default is Zero *)
+  END;
+  IBytes = ARRAY [0..7] OF IByte;
+  IByte = BITS 8 FOR [0..16_ff];
 
 TYPE
   Int_type = RECORD
@@ -164,8 +159,8 @@ TYPE
     align   : CARDINAL;  (* minimum bit alignment *)
     pack    : CARDINAL;  (* minimum width bit packing *)
     bytes   : CARDINAL;  (* byte size *)
-    min     : IChunks;   (* minimum value of this type *)
-    max     : IChunks;   (* maximum value of this type *)
+    min     : Int;       (* minimum value of this type *)
+    max     : Int;       (* maximum value of this type *)
   END;
 
 (*------------------------------------------------- floating point values ---*)
@@ -196,7 +191,7 @@ VAR (*CONST*)
   Integer   : Int_type;
   Longint   : Int_type;
   Word      : Int_type;
-  Longword  : Int_type;
+  Long      : Int_type;
   Real      : Float_type;
   Longreal  : Float_type;
   Extended  : Float_type;

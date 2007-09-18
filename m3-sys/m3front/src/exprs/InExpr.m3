@@ -70,32 +70,34 @@ PROCEDURE Prep (p: P) =
     skip: CG.Label;
     index: CG.Val;
     info: Type.Info;
+    cg_type: CG.Type;
   BEGIN
     set := Type.Base (Type.CheckInfo (Expr.TypeOf (p.b), info));
     b := SetType.Split (set, range);  <*ASSERT b*>
     b := Type.GetBounds (range, min, max);  <*ASSERT b*>
     Expr.GetBounds (p.a, emin, emax);
+    cg_type := Type.CGType (range);
 
     Expr.Prep (p.a);
     Expr.Prep (p.b);
 
     IF TInt.LT (emin, min) OR TInt.LT (max, emax) THEN
       (* we need to range check a *)
-      IF NOT TInt.Subtract (max, min, n_elts) THEN
+      IF NOT TInt.Subtract (max, min, n_elts)
+        OR TInt.LT (Target.Integer.max, n_elts) THEN
         Error.Msg ("set too large");
       END;
       Expr.Compile (p.a);
-      IF TInt.Sig (min) # 0 THEN
-        CG.Load_integer (min);
-        CG.Subtract (Type.CGType (range));
+      IF NOT TInt.EQ (min, TInt.Zero) THEN
+        CG.Load_integer (cg_type, min);
+        CG.Subtract (cg_type);
       END;
       index := CG.Pop ();
       Value.Load (Bool.False);
       p.tmp := CG.Pop_temp ();
       CG.Push (index);
-      CG.Loophole (Type.CGType (range), Target.Word.cg_type);
-      CG.Load_integer (n_elts);
-      CG.Loophole (Type.CGType (range), Target.Word.cg_type);
+      CG.Loophole (cg_type, Target.Word.cg_type);
+      CG.Load_integer (Target.Word.cg_type, n_elts);
       skip := CG.Next_label ();
       CG.If_compare (Target.Word.cg_type, CG.Cmp.GT, skip, CG.Never);
       Expr.Compile (p.b);
@@ -113,6 +115,7 @@ PROCEDURE Compile (p: P) =
     b: BOOLEAN;
     min, max, emin, emax: Target.Int;
     info: Type.Info;
+    cg_type: CG.Type;
   BEGIN
     set := Type.Base (Type.CheckInfo (Expr.TypeOf (p.b), info));
     b := SetType.Split (set, range);  <*ASSERT b*>
@@ -128,11 +131,12 @@ PROCEDURE Compile (p: P) =
       (* no range checking is needed *)
       Expr.Compile (p.b);
       Expr.Compile (p.a);
-      IF TInt.Sig (min) # 0 THEN
-        CG.Load_integer (min);
-        CG.Subtract (Type.CGType (range));
+      cg_type := Type.CGType (range);
+      IF NOT TInt.EQ (min, TInt.Zero) THEN
+        CG.Load_integer (cg_type, min);
+        CG.Subtract (cg_type);
       END;
-      CG.Loophole (Type.CGType (range), Target.Integer.cg_type);
+      CG.Loophole (cg_type, Target.Integer.cg_type);
       CG.Set_member (info.size);
     END;
   END Compile;

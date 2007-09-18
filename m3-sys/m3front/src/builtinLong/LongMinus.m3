@@ -9,7 +9,9 @@
 MODULE LongMinus;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, ProcType;
-IMPORT LInt, IntegerExpr, LongPlus, Value, Formal, Target, TWord;
+IMPORT IntegerExpr, Value, Formal, Target, TWord;
+FROM LInt IMPORT T;
+IMPORT LongPlus AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -17,32 +19,33 @@ VAR formals: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := LInt.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Subtract (Target.Longword.cg_type);
+    CG.Subtract (Target.Long.cg_type);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF LongPlus.GetArgs (ce.args, w0, w1)
-      THEN TWord.Subtract (w0, w1, result);  RETURN IntegerExpr.New (result);
-      ELSE RETURN NIL;
+    IF Plus.GetArgs (ce.args, w0, w1) THEN
+      TWord.Subtract (w0, w1, result);
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END Fold;
 
 PROCEDURE Initialize () =
   VAR
-    x0 := Formal.NewBuiltin ("x", 0, LInt.T);
-    y0 := Formal.NewBuiltin ("y", 1, LInt.T);
-    t0 := ProcType.New (LInt.T, x0, y0);
+    x0 := Formal.NewBuiltin ("x", 0, T);
+    y0 := Formal.NewBuiltin ("y", 1, T);
+    t0 := ProcType.New (T, x0, y0);
   BEGIN
-    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, LInt.T,
+    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,

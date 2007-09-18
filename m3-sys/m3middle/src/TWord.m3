@@ -8,26 +8,25 @@
 
 MODULE TWord;
 
-IMPORT Word, TInt, Target;
-FROM Target IMPORT Int, Pre, Integer, Longint, IChunks, ChunkSize;
+IMPORT Word, TInt;
+FROM Target IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
   LShift = Word.LeftShift;
 
 CONST
-  Mask = RShift (Word.Not (0), Word.Size - ChunkSize);
+  Mask = RShift (Word.Not (0), Word.Size - BITSIZE (IByte));
   Base = Mask + 1;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
+PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  n: CARDINAL;
                VAR r: Int): BOOLEAN =
-  VAR rr: Int;  digit: INTEGER;  ch: CHAR;
-      last_chunk := Target.last_chunk[pre];
-      zero := TInt.Zero[pre];
+  VAR rr: IBytes;  digit: INTEGER;  ch: CHAR;
   BEGIN
-    r := zero;
+    <*ASSERT n # 0*>
+    r := Int{n};
     FOR i := FIRST (x) TO LAST (x) DO
       ch := x [i];
       IF    ('0' <= ch) AND (ch <= '9') THEN  digit := ORD (ch) - ORD ('0');
@@ -37,15 +36,15 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
       END;
   
       (* rr := r * base *)
-      rr := zero;
-      FOR i := 0 TO last_chunk DO
-        VAR carry := Word.Times (r.x [i], base);
+      rr := IBytes {0,..};
+      FOR i := 0 TO n-1 DO
+        VAR carry := Word.Times (r.x[i], base);
         BEGIN
-          FOR j := i TO last_chunk DO
+          FOR j := i TO n-1 DO
             IF carry = 0 THEN EXIT END;
-            INC (carry, rr.x [j]);
-            rr.x [j] := Word.And (carry, Mask);
-            carry := RShift (carry, ChunkSize);
+            INC (carry, rr[j]);
+            rr[j] := Word.And (carry, Mask);
+            carry := RShift (carry, BITSIZE (IByte));
           END;
           IF carry # 0 THEN RETURN FALSE END;
         END;
@@ -54,10 +53,10 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
       (* r := rr + digit *)
       VAR carry := digit;
       BEGIN
-        FOR i := 0 TO last_chunk DO
-          INC (carry, rr.x [i]);
-          r.x [i] := Word.And (carry, Mask);
-          carry := RShift (carry, ChunkSize);
+        FOR i := 0 TO n-1 DO
+          INC (carry, rr[i]);
+          r.x[i] := Word.And (carry, Mask);
+          carry := RShift (carry, BITSIZE (IByte));
         END;
         IF carry # 0 THEN RETURN FALSE END;
       END;
@@ -66,107 +65,63 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  pre: Pre;
     RETURN TRUE;
   END New;
 
-PROCEDURE Negate (READONLY a: Int;  VAR r: Int) =
-  BEGIN
-    Subtract (TInt.Zero[a.pre], a, r);
-  END Negate;
-
-PROCEDURE Inc (READONLY a: Int;  VAR r: Int) =
-  VAR carry := 1;
-      pre := a.pre;
-      last_chunk := Target.last_chunk[pre];
-  BEGIN
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      carry := a.x [i] + carry;
-      r.x [i] := Word.And (carry, Mask);
-      carry := RShift (carry, ChunkSize);
-    END;
-  END Inc;
-
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
-  VAR carry := 0;
-      pre := a.pre;
-      last_chunk := Target.last_chunk[pre];
+  VAR carry := 0;  n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT a.pre = b.pre*>
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      carry := a.x [i] + b.x [i] + carry;
-      r.x [i] := Word.And (carry, Mask);
-      carry := RShift (carry, ChunkSize);
+    <*ASSERT n # 0*>
+    r.n := n;
+    FOR i := 0 TO n-1 DO
+      carry := a.x[i] + b.x[i] + carry;
+      r.x[i] := Word.And (carry, Mask);
+      carry := RShift (carry, BITSIZE (IByte));
     END;
   END Add;
 
-PROCEDURE Dec (READONLY a: Int;  VAR r: Int) =
-  VAR borrow := 1;
-      pre := a.pre;
-      last_chunk := Target.last_chunk[pre];
-  BEGIN
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      borrow := a.x [i] - borrow;
-      r.x [i] := Word.And (borrow, Mask);
-      borrow := Word.And (RShift (borrow, ChunkSize), 1);
-    END;
-  END Dec;
-
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
-  VAR borrow := 0;
-      pre := a.pre;
-      last_chunk := Target.last_chunk[pre];
+  VAR borrow := 0;  n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT a.pre = b.pre*>
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      borrow := a.x [i] - b.x [i] - borrow;
-      r.x [i] := Word.And (borrow, Mask);
-      borrow := Word.And (RShift (borrow, ChunkSize), 1);
+    <*ASSERT n # 0*>
+    r.n := n;
+    FOR i := 0 TO n-1 DO
+      borrow := a.x[i] - b.x[i] - borrow;
+      r.x[i] := Word.And (borrow, Mask);
+      borrow := Word.And (RShift (borrow, BITSIZE (IByte)), 1);
     END;
   END Subtract;
 
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
-  VAR carry: INTEGER;
-      pre := a.pre;
-      last_chunk := Target.last_chunk[pre];
-      zero := TInt.Zero[pre];
+  VAR carry: INTEGER;  n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT a.pre = b.pre*>
-    r := zero;
-    FOR i := 0 TO last_chunk DO
-      FOR j := 0 TO last_chunk DO
-        carry := Word.Times (a.x [i], b.x [j]);
-        FOR k := i + j TO last_chunk DO
+    <*ASSERT n # 0*>
+    r := Int{n};
+    FOR i := 0 TO n-1 DO
+      FOR j := 0 TO n-1 DO
+        carry := Word.Times (a.x[i], b.x[j]);
+        FOR k := i + j TO n-1 DO
           IF carry = 0 THEN EXIT END;
-          carry := carry + r.x [k];
-          r.x [k] := Word.And (carry, Mask);
-          carry := RShift (carry, ChunkSize);
+          carry := carry + r.x[k];
+          r.x[k] := Word.And (carry, Mask);
+          carry := RShift (carry, BITSIZE (IByte));
         END;
       END;
     END;
   END Multiply;
 
-PROCEDURE Div (READONLY a, b: Int;  VAR q: Int): BOOLEAN =
+PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
   VAR r: Int;
-      pre := a.pre;
-      zero := TInt.Zero[pre];
   BEGIN
-    IF a.pre # b.pre THEN RETURN FALSE END;
-    IF TInt.EQ (b, zero) THEN  RETURN FALSE;  END;
-    IF TInt.EQ (a, zero) THEN  q := zero;  RETURN TRUE;  END;
-    DivMod (a, b, q, r);
+    IF TInt.EQ (den, TInt.Zero) THEN  RETURN FALSE;  END;
+    IF TInt.EQ (num, TInt.Zero) THEN  q := TInt.Zero;  RETURN TRUE;  END;
+    DivMod (num, den, q, r);
     RETURN TRUE;
   END Div;
 
-PROCEDURE Mod (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
   VAR q: Int;
-      pre := a.pre;
-      zero := TInt.Zero[pre];
   BEGIN
-    IF a.pre # b.pre THEN RETURN FALSE END;
-    IF TInt.EQ (b, zero) THEN  RETURN FALSE;  END;
-    IF TInt.EQ (a, zero) THEN  r := zero;  RETURN TRUE;  END;
-    DivMod (a, b, q, r);
+    IF TInt.EQ (den, TInt.Zero) THEN  RETURN FALSE;  END;
+    IF TInt.EQ (num, TInt.Zero) THEN  r := TInt.Zero;  RETURN TRUE;  END;
+    DivMod (num, den, q, r);
     RETURN TRUE;
   END Mod;
 
@@ -181,26 +136,23 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     quo_est : INTEGER;
     num_hi  : INTEGER;
     x1,x2,x3: INTEGER;
-    num, den: ARRAY [0..NUMBER(IChunks)] OF INTEGER;
-    pre := x.pre;
-    last_chunk := Target.last_chunk[pre];
-    zero := TInt.Zero[pre];
+    num, den: ARRAY [0..NUMBER (IBytes)] OF INTEGER;
+    n := MIN (x.n, y.n);
   BEGIN
-    <*ASSERT x.pre = y.pre*>
+    <*ASSERT n # 0*>
     (* initialize the numerator and denominator,
        and find the highest non-zero digits *)
-    FOR i := last_chunk TO LAST (num) DO  num[i] := 0;  den[i] := 0; END;
-    FOR i := 0 TO last_chunk DO
-      num[i] := x.x[i];
-      IF num[i] # 0 THEN max_num := i; END;
+    FOR i := 0 TO n-1 DO
+      num[i] := x.x[i];  IF num[i] # 0 THEN max_num := i END;
+      den[i] := y.x[i];  IF den[i] # 0 THEN max_den := i END;
     END;
-    FOR i := 0 TO last_chunk DO
-      den[i] := y.x[i];
-      IF den[i] # 0 THEN max_den := i; END;
+    FOR i := n TO LAST (num) DO
+      num[i] := 0;
+      den[i] := 0;
     END;
 
-    q := zero;
-    r := zero;
+    q := Int{n};
+    r := Int{n};
 
     IF max_den = 0 THEN
       (* single digit denominator case *)
@@ -223,7 +175,7 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
       FOR i := FIRST (num) TO LAST (num) DO
         tmp := (num[i] * scale) + carry;
         num [i] := Word.And (tmp, Mask);
-        carry := RShift (tmp, ChunkSize);
+        carry := RShift (tmp, BITSIZE (IByte));
         IF num[i] # 0 THEN max_num := i; END;
       END;
       
@@ -231,7 +183,7 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
       FOR i := FIRST (den) TO LAST (den) DO
         tmp := (den[i] * scale) + carry;
         den[i] := Word.And (tmp, Mask);
-        carry := RShift (tmp, ChunkSize);
+        carry := RShift (tmp, BITSIZE (IByte));
         IF den[i] # 0 THEN max_den := i; END;
       END;
     END;
@@ -294,216 +246,184 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
   END DivMod;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
-  VAR
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
+  VAR n := MIN (a.n, b.n);
   BEGIN
-    IF a.pre # b.pre THEN RETURN FALSE END;
-    FOR i := last_chunk TO 0 BY -1 DO
-      IF    a.x [i] < b.x [i] THEN RETURN TRUE;
-      ELSIF a.x [i] > b.x [i] THEN RETURN FALSE;
+    <*ASSERT n # 0*>
+    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
+    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN TRUE  END END;
+    FOR i := n-1 TO 0 BY -1 DO
+      IF    a.x[i] < b.x[i] THEN RETURN TRUE;
+      ELSIF a.x[i] > b.x[i] THEN RETURN FALSE;
       END;
     END;
     RETURN FALSE;
   END LT;
 
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
-  VAR
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
+  VAR n := MIN (a.n, b.n);
   BEGIN
-    IF a.pre # b.pre THEN RETURN FALSE END;
-    FOR i := last_chunk TO 0 BY -1 DO
-      IF    a.x [i] < b.x [i] THEN RETURN TRUE;
-      ELSIF a.x [i] > b.x [i] THEN RETURN FALSE;
+    <*ASSERT n # 0*>
+    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
+    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN TRUE  END END;
+    FOR i := n-1 TO 0 BY -1 DO
+      IF    a.x[i] < b.x[i] THEN RETURN TRUE;
+      ELSIF a.x[i] > b.x[i] THEN RETURN FALSE;
       END;
     END;
     RETURN TRUE;
   END LE;
 
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
-  VAR
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
+  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT a.pre = b.pre*>
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      r.x [i] := Word.And (a.x [i], b.x[i]);
+    <*ASSERT n # 0*>
+    r.n := n;
+    FOR i := 0 TO n-1 DO
+      r.x[i] := Word.And (a.x[i], b.x[i]);
     END;
   END And;
 
 PROCEDURE Or (READONLY a, b: Int;  VAR r: Int) =
-  VAR
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
+  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT a.pre = b.pre*>
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      r.x [i] := Word.Or (a.x [i], b.x[i]);
+    r.n := n;
+    FOR i := 0 TO n-1 DO
+      r.x[i] := Word.Or (a.x[i], b.x[i]);
     END;
   END Or;
 
 PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
-  VAR
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
+  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT a.pre = b.pre*>
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      r.x [i] := Word.Xor (a.x [i], b.x[i]);
+    <*ASSERT n # 0*>
+    r.n := n;
+    FOR i := 0 TO n-1 DO
+      r.x[i] := Word.Xor (a.x[i], b.x[i]);
     END;
   END Xor;
 
 PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
-  VAR
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
+  VAR n := a.n;
   BEGIN
-    r.pre := pre;
-    FOR i := 0 TO last_chunk DO
-      r.x [i] := Word.And (Word.Not (a.x [i]), Mask);
+    <*ASSERT n # 0*>
+    r.n := n;
+    FOR i := 0 TO n-1 DO
+      r.x[i] := Word.And (Word.Not (a.x[i]), Mask);
     END;
   END Not;
 
-PROCEDURE Shift (READONLY a, b: Int;  VAR r: Int) =
-  VAR bb, w, i, j, z, x1, x2: INTEGER;
-      pre := a.pre;
-      last_chunk := Target.last_chunk[pre];
-      size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
-      zero := TInt.Zero[pre];
+PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+  VAR w, i, j, z, x1, x2: INTEGER;
+      n := a.n;  size := n * BITSIZE (IByte);
   BEGIN
-    IF NOT TInt.ToInt (b, bb) OR ABS (bb) >= size[pre] THEN
-      r := zero;
+    <*ASSERT n # 0*>
+    IF ABS (b) >= size THEN
+      r := Int{n};
       RETURN;
     END;
 
-    IF bb = 0 THEN (* no shift *)
+    IF b = 0 THEN (* no shift *)
       r := a;
 
-    ELSIF bb > 0 THEN (* left shift *)
-      r.pre := pre;
-      w := bb DIV ChunkSize;
-      i := bb MOD ChunkSize;
-      j := ChunkSize - i;
-      FOR k := last_chunk TO 0 BY -1 DO
+    ELSIF b > 0 THEN (* left shift *)
+      w := b DIV BITSIZE (IByte);
+      i := b MOD BITSIZE (IByte);
+      j := BITSIZE (IByte) - i;
+      FOR k := n-1 TO 0 BY -1 DO
         z := k - w;  x1 := 0;  x2 := 0;
         IF z   >= 0 THEN  x1 := LShift (a.x[z], i);   END;
         IF z-1 >= 0 THEN  x2 := RShift (a.x[z-1], j); END;
         r.x[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
+      r.n := a.n;
 
     ELSE (* right shift *)
-      r.pre := pre;
-      w := (-bb) DIV ChunkSize;
-      i := (-bb) MOD ChunkSize;
-      j := ChunkSize - i;
-      FOR k := 0 TO last_chunk DO
+      w := (-b) DIV BITSIZE (IByte);
+      i := (-b) MOD BITSIZE (IByte);
+      j := BITSIZE (IByte) - i;
+      FOR k := 0 TO n-1 DO
         z := k + w;  x1 := 0;  x2 := 0;
-        IF z   <= last_chunk THEN x1 := RShift (a.x[z], i);   END;
-        IF z+1 <= last_chunk THEN x2 := LShift (a.x[z+1], j); END;
+        IF z   <= n-1 THEN x1 := RShift (a.x[z], i);   END;
+        IF z+1 <= n-1 THEN x2 := LShift (a.x[z+1], j); END;
         r.x[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
+      r.n := a.n;
 
     END;
   END Shift;
 
-PROCEDURE Rotate (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   VAR
-    bb, w, i, j, z, x1, x2: INTEGER;
-    pre := a.pre;
-    last_chunk := Target.last_chunk[pre];
-    size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
-    n_chunks: CARDINAL := last_chunk + 1;
-    tmp: Int;
+    w, i, j, z, x1, x2: INTEGER;
+    tmp: IBytes;
+    n := a.n;  size := n * BITSIZE (IByte);
   BEGIN
-    WITH z = TInt.FromInt (size[pre], Pre.Integer, tmp) DO <*ASSERT z*> END;
-    WITH z = TInt.Mod (b, tmp, tmp) DO <*ASSERT z*> END;
-    WITH z = TInt.ToInt (tmp, bb) DO <*ASSERT z*> END;
+    <*ASSERT n # 0*>
+    b := b MOD size;
 
-    IF bb = 0 THEN
-      r := a; 
+    IF b = 0 THEN
+      r := a;
 
-    ELSIF bb > 0 THEN (* left rotate *)
-      tmp.pre := pre;
-      w := bb DIV ChunkSize;
-      i := bb MOD ChunkSize;
-      j := ChunkSize - i;
-      FOR k := 0 TO last_chunk DO
+    ELSIF b > 0 THEN (* left rotate *)
+      w := b DIV BITSIZE (IByte);
+      i := b MOD BITSIZE (IByte);
+      j := BITSIZE (IByte) - i;
+      FOR k := 0 TO n-1 DO
         z := k - w;  x1 := 0;  x2 := 0;
-        x1 := LShift (a.x[z MOD n_chunks], i);
-        x2 := RShift (a.x[(z-1) MOD n_chunks], j);
-        tmp.x[k] := Word.And (Word.Or (x1, x2), Mask);
+        x1 := LShift (a.x[z MOD n], i);
+        x2 := RShift (a.x[(z-1) MOD n], j);
+        tmp[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
-      r := tmp;
+      r := Int {a.n, tmp};
 
     ELSE (* right rotate *)
-      tmp.pre := pre;
-      w := (-bb) DIV ChunkSize;
-      i := (-bb) DIV ChunkSize;
-      j := ChunkSize - i;
-      FOR k := 0 TO last_chunk DO
+      w := (-b) DIV BITSIZE (IByte);
+      i := (-b) DIV BITSIZE (IByte);
+      j := BITSIZE (IByte) - i;
+      FOR k := 0 TO n-1 DO
         z := k + w;  x1 := 0;  x2 := 0;
-        x1 := RShift (a.x[z MOD n_chunks], i);
-        x2 := LShift (a.x[(z+1) MOD n_chunks], j);
-        tmp.x[k] := Word.And (Word.Or (x1, x2), Mask);
+        x1 := RShift (a.x[z MOD n], i);
+        x2 := LShift (a.x[(z+1) MOD n], j);
+        tmp[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
-      r := tmp;
+      r := Int {a.n, tmp};
 
     END;
   END Rotate;
 
-
-PROCEDURE Extract (READONLY x, iI, nI: Int;  VAR r: Int): BOOLEAN =
-  VAR i, n, w, b: INTEGER;  neg_iI: Int;
-      pre := x.pre;
-      last_chunk := Target.last_chunk[pre];
-      size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
+PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR w, b: INTEGER;
+      size := x.n * BITSIZE (IByte);
   BEGIN
-    IF NOT TInt.ToInt (iI, i) THEN RETURN FALSE; END;
-    IF NOT TInt.ToInt (nI, n) THEN RETURN FALSE; END;
-    IF i + n > size[pre]      THEN RETURN FALSE; END;
+    IF i + n > size THEN RETURN FALSE; END;
 
-    WITH z = TInt.FromInt (-i, Pre.Integer, neg_iI) DO <*ASSERT z*> END;
-    Shift (x, neg_iI, r);
+    Shift (x, -i, r);
 
-    w := n DIV ChunkSize;
-    b := n MOD ChunkSize;
-    r.x [w] := Word.And (r.x[w], RShift (Mask, ChunkSize - b));
-    FOR k := w + 1 TO last_chunk DO r.x [k] := 0; END;
+    w := n DIV BITSIZE (IByte);
+    b := n MOD BITSIZE (IByte);
+    r.x[w] := Word.And (r.x[w], RShift (Mask, BITSIZE (IByte) - b));
+    FOR k := w + 1 TO LAST (IBytes) DO r.x[k] := 0; END;
 
     RETURN TRUE;
   END Extract;
 
-
-PROCEDURE Insert (READONLY x, y, iI, nI: Int;  VAR r: Int): BOOLEAN =
-  VAR k, yy, yyy, yyyy: Int; i, n: INTEGER;
-      pre := x.pre;
-      size := ARRAY Pre OF CARDINAL {Integer.size, Longint.size};
+PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR yy, yyy, yyyy: Int;
+      size := x.n * BITSIZE (IByte);
   BEGIN
-    IF x.pre # y.pre THEN RETURN FALSE END;
-    IF NOT TInt.ToInt (iI, i) THEN RETURN FALSE; END;
-    IF NOT TInt.ToInt (nI, n) THEN RETURN FALSE; END;
-    IF i + n > size[pre]      THEN RETURN FALSE; END;
+    IF i + n > size THEN RETURN FALSE; END;
 
-    WITH z = TInt.FromInt (-(i + n), Pre.Integer, k) DO <*ASSERT z*> END;
-    Shift (x, k, yy);
-    Shift (yy, nI, r);
+    Shift (x, -(i + n), yy);
+    Shift (yy, n, r);
 
-    WITH z = TInt.FromInt (size[pre] - n, Pre.Integer, k) DO <*ASSERT z*> END;
-    Shift (y, k, yy);
-    WITH z = TInt.FromInt (-(size[pre] - n), Pre.Integer, k) DO <*ASSERT z*> END;
-    Shift (yy, k, yyy);
+    Shift (y, size - n, yy);
+    Shift (yy, -(size - n), yyy);
     Or (r, yyy, r);
-    Shift (r, iI, yyyy);
+    Shift (r, i, yyyy);
     r := yyyy;
 
-    WITH z = TInt.FromInt (size[pre] - i, Pre.Integer, k) DO <*ASSERT z*> END;
-    Shift (x, k, yy);
-    WITH z = TInt.FromInt (-(size[pre] - i), Pre.Integer, k) DO <*ASSERT z*> END;
-    Shift (yy, k, yyy);
+    Shift (x, size - i, yy);
+    Shift (yy, -(size - i), yyy);
     Or (r, yyy, r);
 
     RETURN TRUE;

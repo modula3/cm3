@@ -415,7 +415,7 @@ PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  a: Alignment);
 PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size);
 (* s0.t := Mem [s0.A + o : s] *)
 
-PROCEDURE Load_int (v: Var;  t: IType;  o: Offset := 0);
+PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0);
 (* == Load (v, o, t.size, t.align, t) *)
 
 PROCEDURE Load_addr (v: Var;  o: Offset := 0);
@@ -427,7 +427,7 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type);
 PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size);
 (* Mem [s1.A + o : s] := s0.t ; pop (2) *)
 
-PROCEDURE Store_int (v: Var;  t: IType;  o: Offset := 0);
+PROCEDURE Store_int (t: IType;  v: Var;  o: Offset := 0);
 (* == Store (v, o, t.size, t.align, t) *)
 
 PROCEDURE Store_addr (v: Var;  o: Offset := 0);
@@ -439,7 +439,7 @@ PROCEDURE Store_addr (v: Var;  o: Offset := 0);
 PROCEDURE Load_nil     ();                         (*push ; s0.A := NIL*)
 PROCEDURE Load_byte_address (x: INTEGER);          (*push ; s0.A := x *)
 PROCEDURE Load_intt    (i: INTEGER);               (*push;  s0.I := i *)
-PROCEDURE Load_integer (READONLY i: Target.Int);   (*push ; s0.I := i *)
+PROCEDURE Load_integer (t: IType; READONLY i: Target.Int); (*push ; s0.t := i *)
 PROCEDURE Load_float   (READONLY f: Target.Float); (*push ; s0.t := f *)
 
 (*------------------------------------------------------------ arithmetic ---*)
@@ -548,13 +548,13 @@ PROCEDURE Abort (code: RuntimeError);
 PROCEDURE Check_nil (code: RuntimeError);
 (* IF (s0.A = NIL) THEN abort(code) *)
 
-PROCEDURE Check_lo (READONLY i: Target.Int;  code: RuntimeError);
+PROCEDURE Check_lo (t: IType;  READONLY i: Target.Int;  code: RuntimeError);
 (* IF (s0.I < i) THEN abort(code) *)
 
-PROCEDURE Check_hi (READONLY i: Target.Int;  code: RuntimeError);
+PROCEDURE Check_hi (t: IType;  READONLY i: Target.Int;  code: RuntimeError);
 (* IF (i < s0.I) THEN abort(code) *)
 
-PROCEDURE Check_range (READONLY a, b: Target.Int;  code: RuntimeError);
+PROCEDURE Check_range (t: IType; READONLY a, b: Target.Int; code: RuntimeError);
 (* IF (s0.I < a) OR (b < s0.I) THEN abort(code) *)
 
 PROCEDURE Check_index (code: RuntimeError);

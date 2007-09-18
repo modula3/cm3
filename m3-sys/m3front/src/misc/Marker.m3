@@ -174,7 +174,7 @@ PROCEDURE PushFrame (frame: CG.Var;  class: M3RT.HandlerClass) =
   VAR stack := frame_stack;  push: Procedure.T;
   BEGIN
     CG.Load_intt (ORD (class));
-    CG.Store_int (frame, Target.Integer.cg_type, M3RT.EF_class);
+    CG.Store_int (Target.Integer.cg_type, frame, M3RT.EF_class);
     IF Target.Global_handler_stack THEN
       IF (stack = NIL) THEN stack := GetFrameStack () END;
       CG.Load_addr (stack);
@@ -348,12 +348,12 @@ PROCEDURE EmitExit1 () =
         CASE z.kind OF
         | Kind.zTRYELSE =>
             CG.Load_intt (Exit_exception);
-            CG.Store_int (z.info, Target.Integer.cg_type);
+            CG.Store_int (Target.Integer.cg_type, z.info);
             CG.Jump (z.stop);
             EXIT;
         | Kind.zFINALLY, Kind.zFINALLYPROC =>
             CG.Load_intt (Exit_exception);
-            CG.Store_int (z.info, Target.Integer.cg_type);
+            CG.Store_int (Target.Integer.cg_type, z.info);
             CG.Jump (z.stop);
             EXIT;
         | Kind.zLOCK =>
@@ -384,8 +384,8 @@ PROCEDURE EmitExit2 () =
         | Kind.zTRYELSE, Kind.zFINALLY =>
             PopFrame (z.info);
             CG.Load_intt (Exit_exception);
-            CG.Store_int (z.info, Target.Integer.cg_type,
-                          M3RT.EF1_info + M3RT.EA_exception);
+            CG.Store_int (Target.Integer.cg_type,
+                          z.info, M3RT.EF1_info + M3RT.EA_exception);
             CG.Jump (z.stop);
             EXIT;
         | Kind.zFINALLYPROC =>
@@ -579,12 +579,12 @@ PROCEDURE EmitReturn1 (): INTEGER =
         CASE z.kind OF
         | Kind.zTRYELSE =>
             CG.Load_intt (Return_exception);
-            CG.Store_int (z.info, Target.Integer.cg_type);
+            CG.Store_int (Target.Integer.cg_type, z.info);
             CG.Jump (z.stop);
             EXIT;
         | Kind.zFINALLY, Kind.zFINALLYPROC =>
             CG.Load_intt (Return_exception);
-            CG.Store_int (z.info, Target.Integer.cg_type);
+            CG.Store_int (Target.Integer.cg_type, z.info);
             CG.Jump (z.stop);
             EXIT;
         | Kind.zLOCK =>
@@ -621,8 +621,8 @@ PROCEDURE EmitReturn2 (): INTEGER =
         | Kind.zFINALLY =>
             PopFrame (z.info);
             CG.Load_intt (Return_exception);
-            CG.Store_int (z.info, Target.Integer.cg_type,
-                          M3RT.EF1_info + M3RT.EA_exception);
+            CG.Store_int (Target.Integer.cg_type,
+                          z.info, M3RT.EF1_info + M3RT.EA_exception);
             CG.Jump (z.stop);
             EXIT;
         | Kind.zFINALLYPROC =>

@@ -18,21 +18,12 @@ INTERFACE TWord;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int, Pre;
+FROM Target IMPORT Int;
 
-PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16]; p: Pre;
+PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];  n: CARDINAL;
                VAR i: Int): BOOLEAN;
 (* converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' *)
-
-PROCEDURE Negate (READONLY a: Int;  VAR i: Int);
-(* returns 'Word.Minus (0, a)' *)
-
-PROCEDURE Inc (READONLY a: Int;  VAR i: Int);
-(* returns 'Word.Plus (a, 1)' *)
-
-PROCEDURE Dec (READONLY a: Int;  VAR i: Int);
-(* returns 'Word.Minus (a, 1)' *)
 
 PROCEDURE Add (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.Plus (a, b)' *)
@@ -70,16 +61,16 @@ PROCEDURE Xor (READONLY a, b: Int;  VAR i: Int);
 PROCEDURE Not (READONLY a: Int;  VAR i: Int);
 (* returns 'Word.Not (a)' *)
 
-PROCEDURE Shift (READONLY a, b: Int;  VAR i: Int);
-(* returns 'Word.Shift (a, b)' *)
+PROCEDURE Shift (READONLY x: Int;  n: INTEGER;  VAR r: Int);
+(* returns 'Word.Shift (x, n)' *)
 
-PROCEDURE Rotate (READONLY a, b: Int;  VAR i: Int);
-(* returns 'Word.Rotate (a, b)' *)
+PROCEDURE Rotate (READONLY x: Int;  n: INTEGER;  VAR r: Int);
+(* returns 'Word.Rotate (x, n)' *)
 
-PROCEDURE Extract (READONLY a, b, c: Int;  VAR i: Int): BOOLEAN;
-(* returns 'Word.Extract (a, b, c)' *)
+PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
+(* returns 'Word.Extract (x, i, n)' *)
 
-PROCEDURE Insert (READONLY a, b, c, d: Int;  VAR i: Int): BOOLEAN;
-(* returns 'Word.Insert (a, b, c, d)' *)
+PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
+(* returns 'Word.Insert (x, y, i, n)' *)
 
 END TWord.

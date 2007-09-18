@@ -8,7 +8,7 @@
 
 MODULE Ceiling;
 
-IMPORT CG, CallExpr, Expr, Type, Procedure, Int, LInt;
+IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Int, LInt;
 IMPORT Reel, LReel, EReel, Error, ReelExpr, TypeExpr;
 
 VAR Z: CallExpr.MethodList;
@@ -47,6 +47,8 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;
     IF (t # Int.T) AND (t # LInt.T) THEN
       Error.Txt (name, "second argument must be an integer type");
     END;
+
+    ce.type := t;
   END DoCheck;
 
 PROCEDURE Prep (ce: CallExpr.T) =

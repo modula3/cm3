@@ -12,9 +12,7 @@ IMPORT SubrangeType, Target, TInt, Tipe, Int;
 
 PROCEDURE Initialize () =
   BEGIN
-    T := SubrangeType.New (TInt.ZeroI,
-                           Target.Int{Target.Integer.max, Target.Pre.Integer},
-                           Int.T, TRUE);
+    T := SubrangeType.New (TInt.Zero, Target.Integer.max, Int.T, TRUE);
     Tipe.Define ("CARDINAL", T, TRUE);
   END Initialize;
 

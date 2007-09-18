@@ -9,8 +9,9 @@
 MODULE WordExtract;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure;
-IMPORT Int, IntegerExpr, ProcType, Host, Card;
+IMPORT IntegerExpr, Type, ProcType, Host, Card;
 IMPORT Target, TInt, TWord, Value, Formal, CheckExpr, Error;
+FROM Int IMPORT T;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -18,7 +19,7 @@ VAR formals: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := Int.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
@@ -35,8 +36,9 @@ PROCEDURE Compile (ce: CallExpr.T) =
       (* we can use the extract_mn operator *)
       IF (i1 + i2 > Target.Integer.size) THEN
         Error.Warn (2, "Word.Extract: i+n value out of range");
-        CG.Load_integer (TInt.OneI);
-        CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+        CG.Load_integer (Target.Integer.cg_type, TInt.One);
+        CG.Check_hi (Target.Integer.cg_type,
+                     TInt.Zero, CG.RuntimeError.ValueOutOfRange);
       ELSE
         Expr.Compile (ce.args[0]);
         CG.Extract_mn (Target.Integer.cg_type, FALSE, i1, i2);
@@ -44,42 +46,41 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     ELSIF x2 THEN
       (* we can use the extract_n operator *)
-      b := TInt.FromInt (Target.Integer.size - i2, Target.Pre.Integer, max);
+      b := TInt.FromInt (Target.Integer.size - i2, Target.Integer.bytes, max);
       <*ASSERT b*>
       Expr.Compile (ce.args[0]);
-      CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI, max,
+      CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
       CG.Extract_n (Target.Integer.cg_type, FALSE, i2);
 
     ELSIF x1 THEN
       (* we need the general purpose extract operator, but can simplify
          the range checking code *)
-      b := TInt.FromInt (Target.Integer.size - i1, Target.Pre.Integer, max);
+      b := TInt.FromInt (Target.Integer.size - i1, Target.Integer.bytes, max);
       <*ASSERT b*>
       Expr.Compile (ce.args[0]);
       CG.Force ();
       CG.Load_intt (i1);
-      CheckExpr.EmitChecks (ce.args[2], TInt.ZeroI, max,
+      CheckExpr.EmitChecks (ce.args[2], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
       CG.Extract (Target.Integer.cg_type, sign := FALSE);
 
     ELSE
       (* we need the general purpose extract operator *)
-      CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI,
-                            Target.Int{Target.Integer.max, Target.Pre.Integer},
+      CheckExpr.EmitChecks (ce.args[1], TInt.Zero, Target.Integer.max,
                             CG.RuntimeError.ValueOutOfRange);
       t1 := CG.Pop ();
-      CheckExpr.EmitChecks (ce.args[2], TInt.ZeroI,
-                            Target.Int{Target.Integer.max, Target.Pre.Integer},
+      CheckExpr.EmitChecks (ce.args[2], TInt.Zero, Target.Integer.max,
                             CG.RuntimeError.ValueOutOfRange);
       t2 := CG.Pop ();
       IF Host.doRangeChk THEN
-        b := TInt.FromInt (Target.Integer.size, Target.Pre.Integer, max);
+        b := TInt.FromInt (Target.Integer.size, Target.Integer.bytes, max);
         <*ASSERT b*>
         CG.Push (t1);
         CG.Push (t2);
         CG.Add (Target.Integer.cg_type);
-        CG.Check_hi (max, CG.RuntimeError.ValueOutOfRange);
+        CG.Check_hi (Target.Integer.cg_type,
+                     max, CG.RuntimeError.ValueOutOfRange);
         CG.Discard (Target.Integer.cg_type);
       END;
       Expr.Compile (ce.args[0]);
@@ -93,40 +94,36 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
-  VAR x: Target.Int;
   BEGIN
     e := Expr.ConstValue (e);
     IF (e = NIL) THEN RETURN FALSE END;
-    RETURN IntegerExpr.Split (e, x)
-       AND TInt.ToInt (x, i)
+    RETURN IntegerExpr.ToInt (e, i)
        AND (0 <= i) AND (i <= Target.Integer.size);
   END GetBitIndex;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
-  VAR e0, e1, e2: Expr.T;  w0, i1, i2, result: Target.Int;
+  VAR e0, e1, e2: Expr.T;  w0, result: Target.Int;  i1, i2: INTEGER;  t: Type.T;
   BEGIN
     e0 := Expr.ConstValue (ce.args[0]);
     e1 := Expr.ConstValue (ce.args[1]);
     e2 := Expr.ConstValue (ce.args[2]);
-    IF (e0 = NIL) OR (NOT IntegerExpr.Split (e0, w0)) OR 
-       (e1 = NIL) OR (NOT IntegerExpr.Split (e1, i1)) OR 
-       (e2 = NIL) OR (NOT IntegerExpr.Split (e2, i2)) OR
+    IF (e0 = NIL) OR (NOT IntegerExpr.Split (e0, w0, t)) OR 
+       (e1 = NIL) OR (NOT IntegerExpr.ToInt (e1, i1)) OR 
+       (e2 = NIL) OR (NOT IntegerExpr.ToInt (e2, i2)) OR
        NOT TWord.Extract (w0, i1, i2, result) THEN
       RETURN NIL;
     END;
-    RETURN IntegerExpr.New (result);
+    RETURN IntegerExpr.New (T, result);
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
-  VAR b: BOOLEAN;  int_size, min_bits, max_bits: Target.Int;
+  VAR min_bits, max_bits: Target.Int;  i: INTEGER;
   BEGIN
-    b := TInt.FromInt (Target.Integer.size, Target.Pre.Integer, int_size);
-    <*ASSERT b*>
     Expr.GetBounds (ce.args[2], min_bits, max_bits);
-    IF TInt.LT (max_bits, int_size) THEN
-      min := TInt.ZeroI;
-      IF NOT TWord.Extract (TInt.MOneI, TInt.ZeroI, max_bits, max) THEN
-        max := Target.Int{Target.Integer.max, Target.Pre.Integer};
+    IF TInt.ToInt (max_bits, i) AND i < Target.Integer.size THEN
+      min := TInt.Zero;
+      IF NOT TWord.Extract (TInt.MOne, 0, i, max) THEN
+        max := Target.Integer.max;
       END;
     ELSE
       (* possible that we'll preserve all bits *)
@@ -136,12 +133,12 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
 
 PROCEDURE Initialize () =
   VAR
-    f0 := Formal.NewBuiltin ("x", 0, Int.T);
+    f0 := Formal.NewBuiltin ("x", 0, T);
     f1 := Formal.NewBuiltin ("i", 1, Card.T);
     f2 := Formal.NewBuiltin ("n", 2, Card.T);
-    t  := ProcType.New (Int.T, f0, f1, f2);
+    t  := ProcType.New (T, f0, f1, f2);
   BEGIN
-    Z := CallExpr.NewMethodList (3, 3, TRUE, TRUE, TRUE, Int.T,
+    Z := CallExpr.NewMethodList (3, 3, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,

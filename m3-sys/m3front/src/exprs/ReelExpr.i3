@@ -9,8 +9,6 @@ INTERFACE ReelExpr;
 
 IMPORT Expr, Type, Target;
 
-TYPE Precision = Target.Precision;
-
 PROCEDURE New  (READONLY value: Target.Float): Expr.T;
 
 (* returns TRUE iff the operation was successful *)

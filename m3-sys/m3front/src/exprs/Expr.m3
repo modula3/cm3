@@ -66,7 +66,7 @@ PROCEDURE ConstValue (t: T): T =
 
 PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int) =
   BEGIN
-    IF (t = NIL) THEN min := TInt.ZeroI; max := TInt.MOneI; RETURN END;
+    IF (t = NIL) THEN min := TInt.Zero; max := TInt.MOne; RETURN END;
     <* ASSERT t.checked *>
     t.getBounds (min, max);
   END GetBounds;
@@ -96,9 +96,10 @@ PROCEDURE GetSign (t: T): CG.Sign =
   VAR min, max: Target.Int;
   BEGIN
     GetBounds (t, min, max);
-    IF TInt.Sig (min) >= 0 THEN RETURN CG.Sign.Positive END;
-    IF TInt.Sig (max) <= 0 THEN RETURN CG.Sign.Negative END;
-    RETURN CG.Sign.Unknown;
+    IF    TInt.LE (TInt.Zero, min) THEN  RETURN CG.Sign.Positive;
+    ELSIF TInt.LE (max, TInt.Zero) THEN  RETURN CG.Sign.Negative;
+    ELSE                                        RETURN CG.Sign.Unknown;
+    END;
   END GetSign;
 
 (********************************************************************)

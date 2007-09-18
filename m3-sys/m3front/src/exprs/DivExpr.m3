@@ -8,7 +8,8 @@
 
 MODULE DivExpr;
 
-IMPORT CG, Expr, ExprRep, Type, ErrType, Int, LInt, IntegerExpr, TInt, Target;
+IMPORT CG, Expr, ExprRep, Type, Int, LInt, IntegerExpr, TInt, Target;
+IMPORT TargetMap;
 
 TYPE
   P = ExprRep.Tab BRANDED "DivExpr.P" OBJECT
@@ -46,17 +47,8 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
   END New;
 
 PROCEDURE TypeOf (p: P): Type.T =
-  VAR
-    ta := Type.Base (Expr.TypeOf (p.a));
-    tb := Type.Base (Expr.TypeOf (p.b));
   BEGIN
-    IF ((ta = Int.T) AND (tb = Int.T)) THEN
-      RETURN Int.T;
-    ELSIF ((ta = LInt.T) AND (tb = LInt.T)) THEN
-      RETURN LInt.T;
-    ELSE
-      RETURN ErrType.T;
-    END;
+    RETURN Type.Base (Expr.TypeOf (p.a));
   END TypeOf;
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
@@ -66,9 +58,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     Expr.TypeCheck (p.b, cs);
     ta := Type.Base (Expr.TypeOf (p.a));
     tb := Type.Base (Expr.TypeOf (p.b));
-    IF ((ta = Int.T) AND (tb = Int.T)) THEN
+    IF (ta = Int.T) AND (tb = Int.T) THEN
       p.type := Int.T;
-    ELSIF ((ta = LInt.T) AND (tb = LInt.T)) THEN
+    ELSIF (ta = LInt.T) AND (tb = LInt.T) THEN
       p.type := LInt.T;
     ELSE
       p.type := Expr.BadOperands ("DIV", ta, tb);
@@ -83,6 +75,7 @@ PROCEDURE Prep (p: P) =
 
 PROCEDURE Compile (p: P) =
   VAR e1, e2, e3: Expr.T;  divisor: Target.Int;  log: INTEGER;
+      t: Type.T;  cg_type: CG.Type;
   BEGIN
     e1 := Expr.ConstValue (p.a);
     e2 := Expr.ConstValue (p.b);
@@ -90,7 +83,7 @@ PROCEDURE Compile (p: P) =
     IF (e1 # NIL) AND (e2 # NIL) AND IntegerExpr.Div (e1, e2, e3) THEN
       Expr.Compile (e3);
     ELSIF (e2 # NIL)
-      AND IntegerExpr.Split (e2, divisor)
+      AND IntegerExpr.Split (e2, divisor, t)
       AND SmallPowerOfTwo (divisor, log) THEN
       IF (e1 = NIL) THEN e1 := p.a; END;
       IF (log = 0) THEN
@@ -98,24 +91,15 @@ PROCEDURE Compile (p: P) =
         Expr.Compile (e1);
       ELSE
         Expr.Compile (e1);
-        IF p.type = LInt.T THEN
-          CG.Extract_mn (Target.Longint.cg_type, TRUE, log,
-                         Target.Longint.size - log);
-        ELSE
-          CG.Extract_mn (Target.Integer.cg_type, TRUE, log,
-                         Target.Integer.size - log);
-        END;
+        cg_type := Type.CGType (p.type);
+        CG.Extract_mn (cg_type, TRUE, log, TargetMap.CG_Size[cg_type] - log);
       END;
     ELSE
       IF (e1 = NIL) THEN e1 := p.a; END;
       IF (e2 = NIL) THEN e2 := p.b; END;
       Expr.Compile (e1);
       Expr.Compile (e2);
-      IF p.type = LInt.T THEN
-        CG.Div (Target.Longint.cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
-      ELSE
-        CG.Div (Target.Integer.cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
-      END;
+      CG.Div (Type.CGType (p.type), Expr.GetSign (e1), Expr.GetSign (e2));
     END;
   END Compile;
 
@@ -130,32 +114,28 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 VAR(*CONST*)
-  powers    : ARRAY Target.Pre OF ARRAY [0..63] OF Target.Int;
-  max_power := ARRAY Target.Pre OF INTEGER {0, 0};
+  powers    : ARRAY [0..63] OF Target.Int;
+  max_power := 0;
 
 PROCEDURE SmallPowerOfTwo (READONLY x: Target.Int;  VAR log: INTEGER): BOOLEAN=
   VAR lo, hi, mid: INTEGER;
-      pre := TInt.Prec (x);
-      size := ARRAY Target.Pre OF CARDINAL {Target.Integer.size,
-                                            Target.Longint.size}[pre];
-      one := TInt.One[pre];
   BEGIN
-    IF max_power[pre] <= 0 THEN
-      powers[pre][0] := one;
-      FOR i := 1 TO MIN (size - 2, LAST (powers[pre])) DO
-        IF TInt.Add (powers[pre][i-1], powers[pre][i-1], powers[pre][i]) THEN
-          max_power[pre] := i;
+    IF max_power <= 0 THEN
+      powers[0] := TInt.One;
+      FOR i := 1 TO MIN (Target.Longint.size - 2, LAST (powers)) DO
+        IF TInt.Add (powers[i-1], powers[i-1], powers[i]) THEN
+          max_power := i;
         END;
       END;
     END;
     lo := 0;
-    hi := max_power[pre]+1;
+    hi := max_power+1;
     WHILE (lo < hi) DO
       mid := (lo + hi) DIV 2;
-      IF TInt.EQ (x, powers[pre][mid]) THEN
+      IF TInt.EQ (x, powers[mid]) THEN
         log := mid;
         RETURN TRUE;
-      ELSIF TInt.LT (x, powers[pre][mid]) THEN
+      ELSIF TInt.LT (x, powers[mid]) THEN
         hi := mid;
       ELSE
         lo := mid + 1;

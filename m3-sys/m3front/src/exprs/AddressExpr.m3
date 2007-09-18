@@ -43,7 +43,7 @@ PROCEDURE New (READONLY value: Target.Int): Expr.T =
     ExprRep.Init (p);
     p.value   := value;
     p.checked := TRUE;
-    IF TInt.Sig (value) = 0
+    IF TInt.EQ (value, TInt.Zero)
       THEN p.type := Null.T;
       ELSE p.type := Addr.T;
     END;
@@ -60,9 +60,9 @@ PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN =
   END Split;
 
 PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR i, j: Target.Int;
+  VAR i, j: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT IntegerExpr.Split (b, i) THEN RETURN FALSE END;
+    IF NOT IntegerExpr.Split (b, i, t) THEN RETURN FALSE END;
     TYPECASE a OF
     | NULL => RETURN FALSE;
     | P(p) => TWord.Add (p.value, i, j);  c := New (j);  RETURN TRUE;
@@ -71,7 +71,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
   END Add;
 
 PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR i, j, k: Target.Int;
+  VAR i, j, k: Target.Int;  t: Type.T;
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
@@ -79,13 +79,13 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
 
-    IF IntegerExpr.Split (b, j) THEN
+    IF IntegerExpr.Split (b, j, t) THEN
       TWord.Subtract (i, j, k);
       c := New (k);
     ELSE (* address - address *)
       TYPECASE b OF
       | NULL => RETURN FALSE;
-      | P(p) => TWord.Subtract (i, p.value, k);  c := IntegerExpr.New (k);
+      | P(p) => TWord.Subtract (i, p.value, k);  c := IntegerExpr.New (t, k);
       ELSE      RETURN FALSE;
       END;
     END;
@@ -146,7 +146,7 @@ PROCEDURE Bounder (p: P;   VAR min, max: Target.Int) =
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN p = Null.Nil OR TInt.Sig (p.value) = 0;
+    RETURN p = Null.Nil OR TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
@@ -159,7 +159,7 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
 PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*> type: Type.T;
                       is_const: BOOLEAN) =
   BEGIN
-    IF TInt.Sig (p.value) # 0 THEN
+    IF NOT TInt.EQ (p.value, TInt.Zero) THEN
       CG.Init_int (offset, MIN (Target.Integer.size, Target.Address.size),
                    p.value, is_const);
     END;

@@ -520,13 +520,13 @@ PROCEDURE GenShapeCheck (p1, p2 : CG.Val;
         CG.Push (p1);
         CG.Open_size (n);
       ELSE
-        CG.Load_integer (Type.Number (i1));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (i1));
       END;
       IF (i2 = NIL) THEN
         CG.Push (p2);
         CG.Open_size (n);
       ELSE
-        CG.Load_integer (Type.Number (i2));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (i2));
       END;
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, false, freq);
 
@@ -620,14 +620,14 @@ PROCEDURE GenOpenValueCheck (t1: Type.T;  p1, p2: CG.Val;
 
     (* decrement the count *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.OneI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Subtract (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
     (* test for completion *)
     CG.Set_label (top+1);
     CG.Push (cnt);
-    CG.Load_integer (TInt.ZeroI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
     CG.Free (cnt);
@@ -670,14 +670,14 @@ PROCEDURE GenFixedValueCheck (t1, i1, e1: Type.T;  p1, p2: CG.Val;
 
     (* decrement the count *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.OneI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Subtract (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
     (* test for completion *)
     CG.Set_label (top+1);
     CG.Push (cnt);
-    CG.Load_integer (TInt.ZeroI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
     CG.Free (cnt);
@@ -764,14 +764,14 @@ PROCEDURE CompileSolid (p1, p2: CG.Val;  t1, t2: Type.T;
 
       (* decrement the count *)
       CG.Push (cnt);
-      CG.Load_integer (TInt.OneI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Subtract (Target.Integer.cg_type);
       CG.Store_temp (cnt);
 
       (* test for completion *)
       CG.Set_label (top+1);
       CG.Push (cnt);
-      CG.Load_integer (TInt.ZeroI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
       CG.Free (cnt);

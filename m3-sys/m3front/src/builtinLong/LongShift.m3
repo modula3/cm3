@@ -8,9 +8,9 @@
 
 MODULE LongShift;
 
-IMPORT CG, CallExpr, Expr, ExprRep, Procedure, SubrangeType, Formal;
-IMPORT LInt, IntegerExpr, Value, ProcType, CheckExpr, Target, TInt, TWord;
-IMPORT Int;
+IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, SubrangeType, Formal;
+IMPORT Int, IntegerExpr, Value, ProcType, CheckExpr, Target, TInt, TWord;
+FROM LInt IMPORT T;
 
 VAR Z, ZL, ZR: CallExpr.MethodList;
 VAR formals, formalsL, formalsR: Value.T;
@@ -18,19 +18,19 @@ VAR formals, formalsL, formalsR: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := LInt.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE CheckL (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formalsL, ce.proc);
-    ce.type := LInt.T;
+    ce.type := T;
   END CheckL;
 
 PROCEDURE CheckR (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formalsR, ce.proc);
-    ce.type := LInt.T;
+    ce.type := T;
   END CheckR;
 
 PROCEDURE Compile (ce: CallExpr.T) =
@@ -42,98 +42,90 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
 PROCEDURE CompileL (ce: CallExpr.T) =
   VAR max: Target.Int;
-      b := TInt.FromInt (Target.Longint.size -1, Target.Pre.Integer, max);
+      b := TInt.FromInt (Target.Longint.size -1, Target.Integer.bytes, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
-    CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI, max,
+    CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
     CG.Shift_left (Target.Longint.cg_type);
   END CompileL;
 
 PROCEDURE CompileR (ce: CallExpr.T) =
   VAR max: Target.Int;
-      b := TInt.FromInt (Target.Longint.size -1, Target.Pre.Integer, max);
+      b := TInt.FromInt (Target.Longint.size -1, Target.Integer.bytes, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
-    CheckExpr.EmitChecks (ce.args[1], TInt.ZeroI, max,
+    CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
     CG.Shift_right (Target.Longint.cg_type);
   END CompileR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
-  VAR e0, e1: Expr.T;  w0, i1, result: Target.Int;
+  VAR e0, e1: Expr.T;  w0, result: Target.Int;  i1: INTEGER;  t: Type.T;
   BEGIN
     e0 := Expr.ConstValue (ce.args[0]);
     e1 := Expr.ConstValue (ce.args[1]);
-    IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
-      AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
+    IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
+      AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
     THEN
       TWord.Shift (w0, i1, result);
-      RETURN IntegerExpr.New (result);
-    ELSE
-      RETURN NIL;
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END Fold;
 
 PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
-  VAR e0, e1: Expr.T;  w0, i1, max, result: Target.Int;
+  VAR e0, e1: Expr.T;  w0, result: Target.Int;  i1: INTEGER;  t: Type.T;
   BEGIN
     e0 := Expr.ConstValue (ce.args[0]);
     e1 := Expr.ConstValue (ce.args[1]);
-    IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
-      AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
-      AND TInt.Sig (i1) >= 0
-      AND TInt.FromInt (Target.Longint.size, Target.Pre.Integer, max)
-      AND TInt.LT (i1, max)
+    IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
+      AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
+      AND 0 <= i1 AND i1 < Target.Longint.size
     THEN
       TWord.Shift (w0, i1, result);
-      RETURN IntegerExpr.New (result);
-    ELSE
-      RETURN NIL;
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END FoldL;
 
 PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
-  VAR e0, e1: Expr.T;  w0, i1, max, neg_i1, result: Target.Int;
+  VAR e0, e1: Expr.T;  w0, result: Target.Int;  i1: INTEGER;  t: Type.T;
   BEGIN
     e0 := Expr.ConstValue (ce.args[0]);
     e1 := Expr.ConstValue (ce.args[1]);
-    IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
-      AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
-      AND TInt.Sig (i1) >= 0
-      AND TInt.FromInt (Target.Longint.size, Target.Pre.Integer, max)
-      AND TInt.LT (i1, max)
-      AND TInt.Negate (i1, neg_i1)
+    IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
+      AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
+      AND 0 <= i1 AND i1 < Target.Longint.size
     THEN
-      TWord.Shift (w0, neg_i1, result);
-      RETURN IntegerExpr.New (result);
-    ELSE
-      RETURN NIL;
+      TWord.Shift (w0, -i1, result);
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END FoldR;
 
 PROCEDURE Initialize () =
   VAR
     max : Target.Int;
-    b   := TInt.FromInt (Target.Longint.size-1, Target.Pre.Integer, max);
-    sub := SubrangeType.New (TInt.ZeroI, max, Int.T, FALSE);
+    b   := TInt.FromInt (Target.Longint.size-1, Target.Integer.bytes, max);
+    sub := SubrangeType.New (TInt.Zero, max, Int.T, FALSE);
 
-    f0  := Formal.NewBuiltin ("x", 0, LInt.T);
+    f0  := Formal.NewBuiltin ("x", 0, T);
     f1  := Formal.NewBuiltin ("n", 1, Int.T);
-    t   := ProcType.New (LInt.T, f0, f1);
+    t   := ProcType.New (T, f0, f1);
 
-    Lf0 := Formal.NewBuiltin ("x", 0, LInt.T);
+    Lf0 := Formal.NewBuiltin ("x", 0, T);
     Lf1 := Formal.NewBuiltin ("n", 1, sub);
-    Lt  := ProcType.New (LInt.T, Lf0, Lf1);
+    Lt  := ProcType.New (T, Lf0, Lf1);
 
-    Rf0 := Formal.NewBuiltin ("x", 0, LInt.T);
+    Rf0 := Formal.NewBuiltin ("x", 0, T);
     Rf1 := Formal.NewBuiltin ("n", 1, sub);
-    Rt  := ProcType.New (LInt.T, Rf0, Rf1);
+    Rt  := ProcType.New (T, Rf0, Rf1);
   BEGIN
     <*ASSERT b*>
-    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, LInt.T,
+    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,
@@ -152,7 +144,7 @@ PROCEDURE Initialize () =
     formals := ProcType.Formals (t);
 
 
-    ZL := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, LInt.T,
+    ZL := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  CheckL,
@@ -171,7 +163,7 @@ PROCEDURE Initialize () =
     formalsL := ProcType.Formals (Lt);
 
 
-    ZR := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, LInt.T,
+    ZR := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  CheckR,

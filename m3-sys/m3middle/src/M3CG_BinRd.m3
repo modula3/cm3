@@ -400,7 +400,7 @@ PROCEDURE Scan_Tint (VAR s: State): Target.Int =
   VAR
     i : INTEGER := GetByte (s);
     n_bytes, sign, shift: INTEGER;
-    val, byte, tmp: Target.Int;
+    val, byte: Target.Int;
     ok: BOOLEAN;
   BEGIN
     CASE i OF
@@ -413,22 +413,19 @@ PROCEDURE Scan_Tint (VAR s: State): Target.Int =
     | M3CG_Binary.Int8  =>  n_bytes := 8;  sign := +1;
     | M3CG_Binary.NInt8 =>  n_bytes := 8;  sign := -1;
     ELSE
-      ok := TInt.FromInt (i, LAST(Target.Pre), val);
+      ok := TInt.FromInt (i, NUMBER (val.x), val);  <*ASSERT ok*>
       RETURN val;
     END;
 
-    val := Target.Int{Target.IChunks{0,..}, LAST(Target.Pre)};  shift := 0;
+    val := TInt.Zero;  shift := 0;
     FOR i := 0 TO n_bytes-1 DO
-      ok := TInt.FromInt (GetByte (s), LAST(Target.Pre), byte);
-      <*ASSERT ok*>
-      ok := TInt.FromInt (shift, Target.Pre.Integer, tmp);  <*ASSERT ok*>
-      TWord.Shift (byte, tmp, byte);
+      ok := TInt.FromInt (GetByte (s), NUMBER (byte.x), byte);  <*ASSERT ok*>
+      TWord.Shift (byte, shift, byte);
       TWord.Or (val, byte, val);
       INC (shift, 8);
     END;
     IF (sign < 0) THEN
-      TWord.Subtract (Target.Int{Target.IChunks{0,..}, LAST(Target.Pre)},
-                      val, val);
+      TWord.Subtract (TInt.Zero, val, val);
     END;
 
     RETURN val;

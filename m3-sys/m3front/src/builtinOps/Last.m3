@@ -45,10 +45,10 @@ PROCEDURE Compile (ce: CallExpr.T) =
     IF (t = NIL) THEN (* open array *)
       Expr.Compile (e);
       CG.Open_size (0);
-      CG.Load_integer (TInt.OneI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Subtract (Target.Integer.cg_type);
     ELSIF Type.GetBounds (t, min, max) THEN (* ordinal type *)
-      CG.Load_integer (max);
+      CG.Load_integer (Type.CGType (t), max);
     ELSIF Type.IsEqual (t, Reel.T, NIL) THEN
       CG.Load_float (Target.Real.max);
     ELSIF Type.IsEqual (t, LReel.T, NIL) THEN
@@ -72,7 +72,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
       e := Expr.ConstValue (e);
       IF (e = NIL) THEN RETURN NIL END;
       IF ArrayExpr.GetBounds (e, min, max)
-        THEN RETURN IntegerExpr.New (max);
+        THEN RETURN IntegerExpr.New (Int.T, max);
         ELSE RETURN NIL;
       END;
     END;
@@ -88,7 +88,7 @@ PROCEDURE LastOfType (t: Type.T): Expr.T =
     t_base:= Type.Base (t);
     IF Type.GetBounds (t, min, max) THEN
       IF t_base = Int.T OR t_base = LInt.T
-        THEN RETURN IntegerExpr.New (max);
+        THEN RETURN IntegerExpr.New (t_base, max);
         ELSE RETURN EnumExpr.New (t, max);
       END;
     ELSIF t_base = Reel.T THEN

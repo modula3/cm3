@@ -26,14 +26,14 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     BitSize.DoCompile (ce.args[0], 8);
     (* Note: the language defines "8 bit bytes" otherwise, we'd use
-       Target.Byte or Target.Char.size as a byte... *)
+       Target.ByteSize or Target.Char.size as a byte... *)
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   BEGIN
     RETURN BitSize.DoFold (ce.args[0], 8);
     (* Note: the language defines "8 bit bytes" otherwise, we'd use
-       Target.Byte or Target.Char.size as a byte... *)
+       Target.ByteSize or Target.Char.size as a byte... *)
   END Fold;
 
 PROCEDURE Initialize () =

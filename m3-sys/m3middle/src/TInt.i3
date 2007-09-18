@@ -18,50 +18,26 @@ INTERFACE TInt;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int, IChunks, ChunkSize, Pre;
+FROM Target IMPORT Int, IBytes;
 
 CONST
-  ZeroI = Int{IChunks{0,..}, Pre.Integer};
-  ZeroL = Int{IChunks{0,..}, Pre.Longint};
-  OneI  = Int{IChunks{1,0,..}, Pre.Integer};
-  OneL  = Int{IChunks{1,0,..}, Pre.Longint};
-  MOneI = Int{IChunks{16_ffff,..}, Pre.Integer};
-  MOneL = Int{IChunks{16_ffff,..}, Pre.Longint};
+  Zero = Int{NUMBER (IBytes), IBytes{16_00,16_00,..}};
+  One  = Int{NUMBER (IBytes), IBytes{16_01,16_00,..}};
+  MOne = Int{NUMBER (IBytes), IBytes{16_ff,16_ff,..}};
 
-  Zero = ARRAY Pre OF Int {ZeroI, ZeroL};
-  One  = ARRAY Pre OF Int { OneI,  OneL};
-  MOne = ARRAY Pre OF Int {MOneI, MOneL};
-
-PROCEDURE FromInt (x: INTEGER;  p: Pre;  VAR i: Int): BOOLEAN;
+PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
+
+PROCEDURE IntI (READONLY x: Int;  n: CARDINAL;  VAR i: Int): BOOLEAN;
+(* converts a target integer 'x' to a target integer 'i' *)
 
 PROCEDURE ToInt (READONLY i: Int;  VAR x: INTEGER): BOOLEAN;
 (* converts a target integer 'i' to a host integer 'x' *)
 
-PROCEDURE Ord (READONLY i: Int;  VAR x: Int): BOOLEAN;
-(* returns 'ORD (i)' unless there's an overflow *)
-
-PROCEDURE Val (READONLY i: Int;  p: Pre;  VAR x: Int): BOOLEAN;
-(* returns 'VAL (i, p)' unless there's an overflow *)
-
-PROCEDURE New (READONLY chars: ARRAY OF CHAR;  p: Pre;  VAR i: Int): BOOLEAN;
+PROCEDURE New (READONLY chars: ARRAY OF CHAR;  n: CARDINAL;
+               VAR i: Int): BOOLEAN;
 (* converts the string of decimal characters in 'chars' to an integer
    value in 'i' *)
-
-PROCEDURE Prec (READONLY i: Int): Pre;
-(* returns the precision of 'i' *)
-
-PROCEDURE Sig (READONLY i: Int): [-1 .. +1];
-(* returns -1 if 'i < 0', 0 if 'i = 0', +1 if 'i > 0' *)
-
-PROCEDURE Negate (READONLY a: Int;  VAR i: Int): BOOLEAN;
-(* returns '0 - a' unless there's an overflow *)
-
-PROCEDURE Inc (READONLY a: Int;  VAR i: Int): BOOLEAN;
-(* returns 'INC(a)' unless there's an overflow *)
-
-PROCEDURE Dec (READONLY a: Int;  VAR i: Int): BOOLEAN;
-(* returns 'DEC(a)' unless there's an overflow *)
 
 PROCEDURE Add (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'a + b' unless there's an overflow *)
@@ -87,15 +63,13 @@ PROCEDURE LT (READONLY a, b: Int): BOOLEAN;
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
 (* returns 'a <= b' *)
 
-TYPE CharArray = ARRAY [0..ChunkSize * NUMBER (IChunks)] OF CHAR;
 PROCEDURE ToChars (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. *)
 
-TYPE ByteArray = ARRAY [0..7] OF [0..255];
-PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ByteArray): INTEGER;
+PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): INTEGER;
 (* converts 'i' to the shortest sequence of bytes in little-endian order
    which when sign-extended equal 'i'.  Returns the number of
-   significant bytes in the result. *)
+   significant bytes in the result.  Returns -1 if 'buf' is too short. *)
 
 END TInt.

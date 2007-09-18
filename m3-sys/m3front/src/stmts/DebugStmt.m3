@@ -104,7 +104,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
   VAR v: Expr.T;  i: Target.Int;  u: Type.T;   skip: CG.Label;
   BEGIN
     IF Host.doDebugs THEN
-      i := TInt.MOneI;
+      i := TInt.MOne;
       v := Expr.ConstValue (p.cond);
       IF (p.cond = NIL) THEN
         (* DEBUG with no test condition *)
@@ -118,9 +118,9 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         Expr.CompileBranch (p.cond, CG.No_label, skip, CG.Always);
         EmitDebug (p);
         CG.Set_label (skip);
-      ELSIF EnumExpr.Split (v, i, u) AND TInt.Sig (i) = 0 THEN
+      ELSIF EnumExpr.Split (v, i, u) AND TInt.EQ (i, TInt.Zero) THEN
         (* DEBUG (FALSE) *)
-      ELSE <* ASSERT TInt.Sig (i) # 0 *>
+      ELSE <* ASSERT TInt.EQ (i, TInt.One) *>
         (* DEBUG (TRUE) *)
         PrepMsgs (p);
         EmitDebug (p);
@@ -153,7 +153,7 @@ PROCEDURE EmitDebug (p: P) =
 
     (* initialize the count of array sizes *)
     CG.Load_intt (p.n_msgs);
-    CG.Store_int (msgs, Target.Integer.cg_type, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, msgs, M3RT.OA_size_0);
 
     (* initialize each message *)
     offset := M3RT.OA_size_1;

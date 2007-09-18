@@ -9,7 +9,8 @@
 MODULE LongNot;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
-IMPORT LInt, IntegerExpr, Value, Formal, ProcType;
+IMPORT IntegerExpr, Value, Formal, Type, ProcType;
+FROM LInt IMPORT T;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -17,7 +18,7 @@ VAR formals: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := LInt.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
@@ -27,21 +28,22 @@ PROCEDURE Compile (ce: CallExpr.T) =
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
-  VAR e: Expr.T;  w, result: Target.Int;
+  VAR e: Expr.T;  w, result: Target.Int;  t: Type.T;
   BEGIN
     e := Expr.ConstValue (ce.args[0]);
-    IF (e # NIL) AND IntegerExpr.Split (e, w)
-      THEN TWord.Not (w, result);  RETURN IntegerExpr.New (result);
-      ELSE RETURN NIL;
+    IF (e # NIL) AND IntegerExpr.Split (e, w, t) THEN
+      TWord.Not (w, result);
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END Fold;
 
 PROCEDURE Initialize () =
   VAR
-    f0 := Formal.NewBuiltin ("x", 0, LInt.T);
-    t  := ProcType.New (LInt.T, f0);
+    f0 := Formal.NewBuiltin ("x", 0, T);
+    t  := ProcType.New (T, f0);
   BEGIN
-    Z := CallExpr.NewMethodList (1, 1, TRUE, TRUE, TRUE, LInt.T,
+    Z := CallExpr.NewMethodList (1, 1, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,

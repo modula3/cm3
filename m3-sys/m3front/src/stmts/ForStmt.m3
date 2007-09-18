@@ -22,7 +22,6 @@ TYPE
         limit   : Expr.T;
         step    : Expr.T;
         body    : Stmt.T;
-        iType   : Type.T;
       OVERRIDES
         check       := Check;
 	compile     := Compile;
@@ -71,38 +70,32 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     Expr.TypeCheck (p.limit, cs);
     tFrom := Type.Base (Expr.TypeOf (p.from));
     tTo   := Type.Base (Expr.TypeOf (p.limit));
-
+    
     IF (tFrom = ErrType.T) OR (tTo = ErrType.T) THEN
       (* already an error... *)
       tFrom := ErrType.T;
       tTo := ErrType.T;
-      p.iType := Int.T;
+      tStep := Int.T;
       errored := TRUE;
     ELSIF EnumType.Is (tFrom) THEN
       IF NOT Type.IsEqual (tFrom, tTo, NIL) THEN
         Error.Msg ("\'from\' and \'to\' expressions are incompatible");
         errored := TRUE;
       END;
-      p.iType := Int.T;
+      tStep := Int.T;
     ELSIF (tFrom = Int.T) AND (tTo = Int.T) THEN
-      p.iType := Int.T;
+      tStep := Int.T;
     ELSIF (tFrom = LInt.T) AND (tTo = LInt.T) THEN
-      p.iType := LInt.T;
+      tStep := LInt.T;
     ELSE
       Error.Msg("\'from\' and \'to\' expressions must be compatible ordinals");
       errored := TRUE;
+      tStep := Int.T;
     END;
 
-    IF p.step = NIL THEN
-      IF Type.IsSubtype (tFrom, LInt.T)
-        THEN p.step := IntegerExpr.New (TInt.OneL);
-        ELSE p.step := IntegerExpr.New (TInt.OneI);
-      END;
-    END;
-
+    IF p.step = NIL THEN p.step := IntegerExpr.New (tStep, TInt.One) END;
     Expr.TypeCheck (p.step, cs);
-    tStep := Expr.TypeOf (p.step);
-    IF NOT (Type.IsSubtype (tStep, Int.T) OR Type.IsSubtype (tStep, LInt.T)) THEN
+    IF NOT Type.IsSubtype (Expr.TypeOf (p.step), tStep) THEN
       Error.Msg ("\'by\' expression must be an integer");
       errored := TRUE;
     END;
@@ -125,7 +118,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
       ELSE Expr.GetBounds (p.limit, minLimit, maxLimit);
     END;
 
-    IF TInt.Sig (minStep) = 0 AND TInt.Sig (maxStep) = 0 THEN
+    IF TInt.EQ (minStep, TInt.Zero) AND TInt.EQ (maxStep, TInt.Zero) THEN
       (* warning suggested by Ernst A. Heinz <heinze@ira.uka.de>
          to catch typos. (March 19, 1995) *)
       Error.Warn (1, "zero \'by\' value in FOR loop");
@@ -133,11 +126,11 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     END;
 
     (* try to tighten up the range of the new index variable *)
-    IF TInt.Sig (minStep) >= 0 THEN
+    IF TInt.LE (TInt.Zero, minStep) THEN
       (* we're counting up! *)
       newMin := minFrom;
       newMax := maxLimit;
-    ELSIF TInt.Sig (maxStep) < 0 THEN
+    ELSIF TInt.LT (maxStep, TInt.Zero) THEN
       (* we're counting down *)
       newMin := minLimit;
       newMax := maxFrom;
@@ -172,7 +165,7 @@ PROCEDURE Reduce (VAR expr: Expr.T;  VAR i: Target.Int): BOOLEAN =
     e := Expr.ConstValue (expr);
     IF (e = NIL) THEN RETURN FALSE END;
     expr := e;
-    RETURN IntegerExpr.Split (e, i) OR EnumExpr.Split (e, i, t);
+    RETURN IntegerExpr.Split (e, i, t) OR EnumExpr.Split (e, i, t);
   END Reduce;
 
 PROCEDURE Compile (p: P): Stmt.Outcomes =
@@ -190,14 +183,13 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     global, indirect, lhs, index_copy: BOOLEAN;
     info: Type.Info;
     offset: INTEGER;
-    iType: CG.Type;
-    zero: Target.Int;
+    cg_type: CG.Type;
+    uid: INTEGER;
   BEGIN
     Variable.Split (p.var, type, global, indirect, lhs);
-
-    IF p.iType = LInt.T
-      THEN zero := TInt.ZeroL; iType := Target.Longint.cg_type;
-      ELSE zero := TInt.ZeroI; iType := Target.Integer.cg_type;
+    IF Type.IsSubtype (type, LInt.T)
+      THEN cg_type := Target.Longint.cg_type; uid := Type.GlobalUID (LInt.T);
+      ELSE cg_type := Target.Integer.cg_type; uid := Type.GlobalUID (Int.T);
     END;
 
     from := Expr.ConstValue (p.from);
@@ -207,8 +199,8 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
       t_index := CG.Pop_temp ();
     ELSE
       (* lower bound is a constant *)
-      from_val := zero;
-      EVAL IntegerExpr.Split (from, from_val)
+      from_val := TInt.Zero;
+      EVAL IntegerExpr.Split (from, from_val, t)
         OR EnumExpr.Split (from, from_val, t);
     END;
 
@@ -218,8 +210,8 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
       Expr.Compile (p.limit);
       t_to := CG.Pop_temp ();
     ELSE (* upper bound is a constant *)
-      limit_val := zero;
-      EVAL IntegerExpr.Split (limit, limit_val)
+      limit_val := TInt.Zero;
+      EVAL IntegerExpr.Split (limit, limit_val, t)
         OR EnumExpr.Split (limit, limit_val, t);
     END;
 
@@ -231,8 +223,8 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
       t_by := CG.Pop_temp ();
       Expr.GetBounds (p.step, step_min, step_max);
     ELSE (* step is a constant *)
-      step_val := zero;
-      EVAL IntegerExpr.Split (step, step_val)
+      step_val := TInt.Zero;
+      EVAL IntegerExpr.Split (step, step_val, t)
         OR EnumExpr.Split (step, step_val, t);
     END;
 
@@ -253,50 +245,50 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         (* declare a fresh local variable for the index *)
         (* 'cause small variables may overflow at the end of their ranges *)
         index_copy := TRUE;
-        index := CG.Declare_local (M3ID.NoID, TargetMap.CG_Size[iType],
-                                   TargetMap.CG_Align[iType], iType,
-                                   Type.GlobalUID (p.iType), in_memory := FALSE,
-                                   up_level := FALSE, f := CG.Always);
+        index := CG.Declare_local (M3ID.NoID, TargetMap.CG_Size[cg_type],
+                                   TargetMap.CG_Align[cg_type], cg_type, uid,
+                                   in_memory := FALSE, up_level := FALSE,
+                                   f := CG.Always);
       END;
 
       IF (from = NIL) THEN
         CG.Push (t_index);
-        CG.Store_int (index, iType);
+        CG.Store_int (cg_type, index);
         CG.Free (t_index);
       ELSE
-        CG.Load_integer (from_val);
-        CG.Store_int (index, iType);
+        CG.Load_integer (cg_type, from_val);
+        CG.Store_int (cg_type, index);
       END;
 
       IF (limit = NIL) THEN
         (* declare the local variable *)
-        to := CG.Declare_local (M3ID.NoID, TargetMap.CG_Size[iType],
-                                TargetMap.CG_Align[iType], iType,
-                                Type.GlobalUID (p.iType), in_memory := FALSE,
-                                up_level := FALSE, f := CG.Maybe);
+        to := CG.Declare_local (M3ID.NoID, TargetMap.CG_Size[cg_type],
+                                TargetMap.CG_Align[cg_type], cg_type, uid,
+                                in_memory := FALSE, up_level := FALSE,
+                                f := CG.Maybe);
         CG.Push (t_to);
-        CG.Store_int (to, iType);
+        CG.Store_int (cg_type, to);
         CG.Free (t_to);
       END;
 
       IF (step = NIL) THEN
         (* declare the local variable *)
-        by := CG.Declare_local (M3ID.NoID, TargetMap.CG_Size[iType],
-                                TargetMap.CG_Align[iType], iType,
-                                Type.GlobalUID (p.iType), in_memory := FALSE,
-                                up_level := FALSE, f := CG.Maybe);
+        by := CG.Declare_local (M3ID.NoID, TargetMap.CG_Size[cg_type],
+                                TargetMap.CG_Align[cg_type], cg_type, uid,
+                                in_memory := FALSE, up_level := FALSE,
+                                f := CG.Maybe);
         CG.Push (t_by);
-        CG.Store_int (by, iType);
+        CG.Store_int (cg_type, by);
         CG.Free (t_by);
       END;
 
       IF (from = NIL) OR (limit = NIL) OR (step = NIL) THEN
         (* we don't know all three values... *)
         CG.Jump (l_test);
-      ELSIF TInt.LE (zero, step_val)
+      ELSIF TInt.LE (TInt.Zero, step_val)
         AND TInt.LE (from_val, limit_val) THEN
         (* we know we'll execute the loop at least once. *)
-      ELSIF TInt.LE (step_val, zero)
+      ELSIF TInt.LE (step_val, TInt.Zero)
         AND TInt.LE (limit_val, from_val) THEN
         (* we know we'll execute the loop at least once. *)
       ELSE
@@ -311,7 +303,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
         (* make the user's variable equal to the counter *)
         EVAL Type.CheckInfo (type, info);
         Variable.LoadLValue (p.var);
-        CG.Load_int (index, iType);
+        CG.Load_int (cg_type, index);
         CG.Store_indirect (info.stk_type, 0, info.size);
       END;
       Variable.ScheduleTrace (p.var);
@@ -320,62 +312,62 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
 
       (* increment the counter *)
       CG.Gen_location (p.origin);
-      CG.Load_int (index, iType);
+      CG.Load_int (cg_type, index);
       IF (step # NIL)
-        THEN CG.Load_integer (step_val);
-        ELSE CG.Load_int (by, iType);
+        THEN CG.Load_integer (cg_type, step_val);
+        ELSE CG.Load_int (cg_type, by);
       END;
-      CG.Add (iType);
-      CG.Store_int (index, iType);
+      CG.Add (cg_type);
+      CG.Store_int (cg_type, index);
 
       (* generate the loop test *)
       CG.Gen_location (p.origin);
       CG.Set_label (l_test);
       IF (step # NIL) THEN (* constant step value *)
-        CG.Load_int (index, iType);
+        CG.Load_int (cg_type, index);
         IF (limit # NIL)
-          THEN CG.Load_integer (limit_val);
-          ELSE CG.Load_int (to, iType);
+          THEN CG.Load_integer (cg_type, limit_val);
+          ELSE CG.Load_int (cg_type, to);
         END;
-        IF TInt.LE (zero, step_val)
-          THEN CG.If_compare (iType, CG.Cmp.LE, l_top, CG.Likely);
-          ELSE CG.If_compare (iType, CG.Cmp.GE, l_top, CG.Likely);
+        IF TInt.LE (TInt.Zero, step_val)
+          THEN CG.If_compare (cg_type, CG.Cmp.LE, l_top, CG.Likely);
+          ELSE CG.If_compare (cg_type, CG.Cmp.GE, l_top, CG.Likely);
         END;
-      ELSIF TInt.LE (zero, step_min) THEN
+      ELSIF TInt.LE (TInt.Zero, step_min) THEN
         (* positive, variable step value *)
-        CG.Load_int (index, iType);
+        CG.Load_int (cg_type, index);
         IF (limit # NIL)
-          THEN CG.Load_integer (limit_val);
-          ELSE CG.Load_int (to, iType);
+          THEN CG.Load_integer (cg_type, limit_val);
+          ELSE CG.Load_int (cg_type, to);
         END;
-        CG.If_compare (iType, CG.Cmp.LE, l_top, CG.Likely);
-      ELSIF TInt.LT (step_max, zero) THEN
+        CG.If_compare (cg_type, CG.Cmp.LE, l_top, CG.Likely);
+      ELSIF TInt.LT (step_max, TInt.Zero) THEN
         (* negative, variable step value *)
-        CG.Load_int (index, iType);
+        CG.Load_int (cg_type, index);
         IF (limit # NIL)
-          THEN CG.Load_integer (limit_val);
-          ELSE CG.Load_int (to, iType);
+          THEN CG.Load_integer (cg_type, limit_val);
+          ELSE CG.Load_int (cg_type, to);
         END;
-        CG.If_compare (iType, CG.Cmp.GE, l_top, CG.Likely);
+        CG.If_compare (cg_type, CG.Cmp.GE, l_top, CG.Likely);
       ELSE (* variable step value *)
         l_less := CG.Next_label (2);
-        CG.Load_int (by, iType);
-        CG.Load_integer (zero);
-        CG.If_compare (iType, CG.Cmp.LT, l_less, CG.Likely);
-        CG.Load_int (index, iType);
+        CG.Load_int (cg_type, by);
+        CG.Load_integer (cg_type, TInt.Zero);
+        CG.If_compare (cg_type, CG.Cmp.LT, l_less, CG.Likely);
+        CG.Load_int (cg_type, index);
         IF (limit # NIL)
-          THEN CG.Load_integer (limit_val);
-          ELSE CG.Load_int (to, iType);
+          THEN CG.Load_integer (cg_type, limit_val);
+          ELSE CG.Load_int (cg_type, to);
         END;
-        CG.If_compare (iType, CG.Cmp.LE, l_top, CG.Likely);
+        CG.If_compare (cg_type, CG.Cmp.LE, l_top, CG.Likely);
         CG.Jump (l_less+1);
         CG.Set_label (l_less);
-        CG.Load_int (index, iType);
+        CG.Load_int (cg_type, index);
         IF (limit # NIL)
-          THEN CG.Load_integer (limit_val);
-          ELSE CG.Load_int (to, iType);
+          THEN CG.Load_integer (cg_type, limit_val);
+          ELSE CG.Load_int (cg_type, to);
         END;
-        CG.If_compare (iType, CG.Cmp.GE, l_top, CG.Likely);
+        CG.If_compare (cg_type, CG.Cmp.GE, l_top, CG.Likely);
         CG.Set_label (l_less+1);
       END;
 
@@ -389,8 +381,8 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     (* or if its body can fall through or exit.  -- Ernst Heinz *)
     IF (Stmt.Outcome.Exits IN oc)
       OR (from = NIL) OR (limit = NIL) OR (step = NIL) OR
-       (NOT TInt.LT (step_val, zero) AND TInt.LT (limit_val, from_val)) OR
-       (    TInt.LT (step_val, zero) AND TInt.LT (from_val, limit_val))
+       (NOT TInt.LT (step_val, TInt.Zero) AND TInt.LT (limit_val, from_val)) OR
+       (    TInt.LT (step_val, TInt.Zero) AND TInt.LT (from_val, limit_val))
       THEN oc := oc + Stmt.Outcomes {Stmt.Outcome.FallThrough};
     END;
 

@@ -4,7 +4,7 @@
 MODULE InfoThisLine;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, ProcType;
-IMPORT Card, IntegerExpr, Formal, Value, Target, TInt, Scanner;
+IMPORT Int, Card, IntegerExpr, Formal, Value, Target, TInt, Scanner;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -28,8 +28,8 @@ PROCEDURE Fold (<*UNUSED*> ce: CallExpr.T): Expr.T =
   BEGIN
     Scanner.Here (file, line);
     line := MAX (0,  line);
-    b := TInt.FromInt (line, Target.Pre.Integer, val);  <*ASSERT b*>
-    RETURN IntegerExpr.New (val);
+    b := TInt.FromInt (line, Target.Integer.bytes, val);  <*ASSERT b*>
+    RETURN IntegerExpr.New (Int.T, val);
   END Fold;
 
 PROCEDURE Initialize () =

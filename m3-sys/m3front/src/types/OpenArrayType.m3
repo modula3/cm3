@@ -209,9 +209,9 @@ PROCEDURE Reduce (t: Type.T): P =
 PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
-    IF    TInt.FromInt (Type.InitCost (p.element, zeroed), Target.Pre.Integer, m)
-      AND TInt.FromInt (20, Target.Pre.Integer, n)
-      (* guess that there are 20 elements *)
+    IF    TInt.FromInt (Type.InitCost (p.element, zeroed),
+                        Target.Integer.bytes, m)
+      AND TInt.FromInt (20, Target.Integer.bytes, n) (* guess 20 elements *)
       AND TInt.Multiply (m, n, res)
       AND TInt.ToInt (res, x)
       THEN RETURN x;
@@ -243,7 +243,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     array := CG.Pop ();
 
     (* put down a loop to map the elements *)
-    CG.Load_integer (TInt.ZeroI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     cnt := CG.Pop_temp ();
     top := CG.Next_label (2);
     CG.Jump (top+1);
@@ -257,7 +257,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
 
     (* cnt := cnt + 1 *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.OneI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Add (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 

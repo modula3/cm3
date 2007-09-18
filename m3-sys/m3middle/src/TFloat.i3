@@ -18,7 +18,7 @@ INTERFACE TFloat;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int, Pre, Float, Precision;
+FROM Target IMPORT Float, Precision;
 
 CONST
   ZeroR = Float { Precision.Short,    0, 0.0x0 };
@@ -61,20 +61,20 @@ PROCEDURE LE (READONLY a, b: Float): BOOLEAN;
 PROCEDURE FloatF (READONLY a: Float;  p: Precision;  VAR f: Float): BOOLEAN;
 (* returns 'FLOAT (a, p)' unless there's an overflow *)
 
-PROCEDURE FloatI (READONLY i: Int;  p: Precision;  VAR f: Float): BOOLEAN;
+PROCEDURE FloatI (READONLY i: INTEGER;  p: Precision;  VAR f: Float): BOOLEAN;
 (* returns 'FLOAT (i, p)' unless there's an overflow *)
 
-PROCEDURE Trunc (READONLY a: Float;  VAR i: Int;  p: Pre): BOOLEAN;
-(* returns 'TRUNC(a)' unless there's an overflow *)
+PROCEDURE Trunc (READONLY a: Float): INTEGER;
+(* returns 'TRUNC(a)' *)
 
-PROCEDURE Round (READONLY a: Float;  VAR i: Int;  p: Pre): BOOLEAN;
-(* returns 'ROUND(a)' unless there's an overflow *)
+PROCEDURE Round (READONLY a: Float): INTEGER;
+(* returns 'ROUND(a)' *)
 
-PROCEDURE Floor (READONLY a: Float;  VAR i: Int;  p: Pre): BOOLEAN;
+PROCEDURE Floor (READONLY a: Float): INTEGER;
 (* returns 'FLOOR(a)' unless there's an overflow *)
 
-PROCEDURE Ceiling (READONLY a: Float;  VAR i: Int;  p: Pre): BOOLEAN;
-(* returns 'CEILING(a)' unless there's an overflow *)
+PROCEDURE Ceiling (READONLY a: Float): INTEGER;
+(* returns 'CEILING(a)' *)
 
 PROCEDURE ToChars (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'f' to a printable string in 'buf'.  Returns the

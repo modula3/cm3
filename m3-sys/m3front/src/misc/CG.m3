@@ -88,7 +88,7 @@ VAR
   fields      : ARRAY BOOLEAN OF Node;
   in_init     : BOOLEAN     := FALSE;
   init_pc     : INTEGER     := 0;
-  init_bits   : Target.Int  := TInt.ZeroI;
+  init_bits   : Target.Int;
   free_temps  : TempWrapper := NIL;
   busy_temps  : TempWrapper := NIL;
   free_values : Val         := NIL;
@@ -106,6 +106,7 @@ VAR (*CONST*)
 (*---------------------------------------------------------------------------*)
 
 PROCEDURE Init () =
+  VAR ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     Max_alignment := Target.Alignments [LAST (Target.Alignments)];
 
@@ -142,7 +143,7 @@ PROCEDURE Init () =
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := TInt.ZeroI;
+    init_bits      := ZeroI;
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -685,8 +686,6 @@ PROCEDURE XForce () =
   END XForce;
 
 PROCEDURE Force () =
-  VAR t := ARRAY Target.Pre OF Target.CGType {Target.Integer.cg_type,
-                                              Target.Longint.cg_type};
   BEGIN
     WITH x = stack [SCheck (1, "Force")] DO
 
@@ -694,7 +693,17 @@ PROCEDURE Force () =
       CASE (x.kind) OF
 
       | VKind.Integer =>
-          x.type := t[TInt.Prec (x.int)];
+          IF x.type = Target.Word.cg_type THEN
+            x.type := Target.Integer.cg_type;
+          ELSIF x.type = Target.Long.cg_type THEN
+            x.type := Target.Longint.cg_type;
+          ELSIF x.type = Target.Integer.cg_type THEN
+            (* ok *)
+          ELSIF x.type = Target.Longint.cg_type THEN
+            (* ok *)
+          ELSE
+            <*ASSERT FALSE*>
+          END;
           cg.load_integer (x.type, x.int);
 
       | VKind.Float =>
@@ -784,11 +793,12 @@ PROCEDURE Force2 (tag: TEXT;  commute: BOOLEAN): BOOLEAN =
 (*---------------------------------------- static variable initialization ---*)
 
 PROCEDURE Begin_init (v: Var) =
+  VAR ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := TInt.ZeroI;
+    init_bits := ZeroI;
   END Begin_init;
 
 PROCEDURE End_init (v: Var) =
@@ -916,43 +926,39 @@ PROCEDURE DumpNode (<*UNUSED*> n: Node) =
 PROCEDURE AdvanceInit (o: Offset) =
   VAR
     n_bytes := (o - init_pc) DIV Target.Byte;
-    base, n_bits, tmp, new_bits: Target.Int;
-    b_size: INTEGER;
+    tmp, new_bits: Target.Int;
+    size, n_bits: CARDINAL;
     t: Type;
+    ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     <*ASSERT n_bytes >= 0*>
     <*ASSERT in_init*>
     WHILE (n_bytes > 0) DO
-      IF TInt.Sig (init_bits) = 0 THEN
+      IF TInt.EQ (init_bits, TInt.Zero) THEN
         (* no more bits to flush *)
         n_bytes := 0;
         init_pc := (o DIV Target.Byte) * Target.Byte;
       ELSE
         (* send out some number of bytes *)
         EVAL FindInitType (n_bytes, init_pc, t);
-        b_size := TargetMap.CG_Bytes[t];
-        IF (b_size = Target.Integer.bytes) THEN
+        size := TargetMap.CG_Size[t];
+        n_bits := Target.Integer.size - size;
+        IF (n_bits = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := TInt.ZeroI;
+          init_bits := ZeroI;
         ELSIF Target.Little_endian
-          AND TInt.FromInt (b_size * Target.Byte, Target.Pre.Integer, base)
-          AND TInt.FromInt (Target.Integer.size - b_size*Target.Byte,
-                            Target.Pre.Integer, n_bits)
-          AND TWord.Extract (init_bits, TInt.ZeroI, base, tmp)
-          AND TWord.Extract (init_bits, base, n_bits, new_bits) THEN
+          AND TWord.Extract (init_bits, 0, size, tmp)
+          AND TWord.Extract (init_bits, size, n_bits, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
         ELSIF (NOT Target.Little_endian)
-          AND TInt.FromInt (Target.Integer.size - b_size * Target.Byte,
-                            Target.Pre.Integer, base)
-          AND TInt.FromInt (b_size*Target.Byte, Target.Pre.Integer, n_bits)
-          AND TWord.Extract (init_bits, base, n_bits, tmp) THEN
-          TWord.Shift (init_bits, n_bits, new_bits);
+          AND TWord.Extract (init_bits, n_bits, size, tmp) THEN
+          TWord.Shift (init_bits, size, new_bits);
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
         ELSE
           Err ("unable to convert or initialize bit field value??  n_bytes="
-                & Fmt.Int(n_bytes) & "  b_size=" & Fmt.Int (b_size));
+                & Fmt.Int(n_bytes) & "  size=" & Fmt.Int (size));
           (** <*ASSERT FALSE*> **)
         END;
         DEC (n_bytes, TargetMap.CG_Bytes[t]);
@@ -980,7 +986,7 @@ PROCEDURE FindInitType (n_bytes, offset: INTEGER;  VAR t: Type): BOOLEAN =
 
 PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
                     is_const: BOOLEAN) =
-  VAR bit_offset: INTEGER;  itype: Type;  base, n_bits, tmp: Target.Int;
+  VAR bit_offset: CARDINAL;  itype: Type;  tmp: Target.Int;
   BEGIN
     IF (NOT in_init) THEN
       PushPending (NEW (IntNode, o := o, s := s, v := value), is_const);
@@ -999,9 +1005,7 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
       AND (TargetMap.CG_Size[itype] = s) THEN
       (* simple, aligned integer initialization *)
       cg.init_int (o DIV Target.Byte, value, itype);
-    ELSIF TInt.FromInt (bit_offset, Target.Pre.Integer, base)
-      AND TInt.FromInt (s, Target.Pre.Integer, n_bits)
-      AND TWord.Insert (init_bits, value, base, n_bits, tmp) THEN
+    ELSIF TWord.Insert (init_bits, value, bit_offset, s, tmp) THEN
       init_bits := tmp;
     ELSE
       Err ("unable to stuff bit field value??");
@@ -1010,7 +1014,7 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
   END Init_int;
 
 PROCEDURE Init_intt (o: Offset;  s: Size;  value: INTEGER;  is_const: BOOLEAN) =
-  VAR val: Target.Int;  b := TInt.FromInt (value, Target.Pre.Integer, val);
+  VAR val: Target.Int;  b := TInt.FromInt (value, Target.Integer.bytes, val);
   BEGIN
     IF NOT b THEN ErrI (value, "integer const not representable") END;
     Init_int (o, s, val, is_const);
@@ -1352,7 +1356,7 @@ PROCEDURE Load_addr_of_temp (v: Var;  o: Offset;  a: Alignment) =
     stack[tos-1].temp_base := TRUE;
   END Load_addr_of_temp;
 
-PROCEDURE Load_int (v: Var;  t: IType;  o: Offset := 0) =
+PROCEDURE Load_int (t: IType;  v: Var;  o: Offset := 0) =
   BEGIN
     SimpleLoad (v, o, t);
   END Load_int;
@@ -1565,7 +1569,7 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     SPop (1, "Store");
   END Store;
 
-PROCEDURE Store_int (v: Var;  t: IType;  o: Offset := 0) =
+PROCEDURE Store_int (t: IType;  v: Var;  o: Offset := 0) =
   BEGIN
     Store (v, o, TargetMap.CG_Size[t], TargetMap.CG_Align[t], t);
   END Store_int;
@@ -1800,17 +1804,15 @@ PROCEDURE Load_byte_address (x: INTEGER) =
   END Load_byte_address;
 
 PROCEDURE Load_intt (i: INTEGER) =
-  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Pre.Integer, val);
+  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Integer.bytes, val);
   BEGIN
     IF NOT b THEN ErrI (i, "integer not representable") END;
-    Load_integer (val);
+    Load_integer (Target.Integer.cg_type, val);
   END Load_intt;
 
-PROCEDURE Load_integer (READONLY i: Target.Int) =
-  VAR t := ARRAY Target.Pre OF Target.CGType {Target.Integer.cg_type,
-                                              Target.Longint.cg_type};
+PROCEDURE Load_integer (t: IType;  READONLY i: Target.Int) =
   BEGIN
-    SPush (t[TInt.Prec (i)]);
+    SPush (t);
     WITH x = stack[tos-1] DO
       x.kind := VKind.Integer;
       x.int  := i;
@@ -1990,11 +1992,11 @@ PROCEDURE Set_member (s: Size) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
     IF (s <= Target.Integer.size) THEN
-      cg.load_integer (Target.Integer.cg_type, TInt.OneI);
+      cg.load_integer (Target.Integer.cg_type, TInt.One);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.shift_left (Target.Integer.cg_type);
       cg.and (Target.Integer.cg_type);
-      cg.load_integer (Target.Integer.cg_type, TInt.ZeroI);
+      cg.load_integer (Target.Integer.cg_type, TInt.Zero);
       cg.compare (Target.Word.cg_type, Target.Integer.cg_type, Cmp.NE);
     ELSE
       cg.set_member (AsBytes (s), Target.Integer.cg_type);
@@ -2022,7 +2024,7 @@ PROCEDURE Set_range (s: Size) =
     IF (s <= Target.Integer.size) THEN
       (* given x, a, b:  compute  x || {a..b} *)
 
-      cg.load_integer (Target.Integer.cg_type, TInt.MOneI);
+      cg.load_integer (Target.Integer.cg_type, TInt.MOne);
         (* -1 = 16_ffffff = {0..N} *)
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       Push_int (Target.Integer.size-1);
@@ -2032,7 +2034,7 @@ PROCEDURE Set_range (s: Size) =
 
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type); (*  x, {0..b}, a *)
 
-      cg.load_integer (Target.Integer.cg_type, TInt.MOneI);
+      cg.load_integer (Target.Integer.cg_type, TInt.MOne);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.shift_left (Target.Integer.cg_type);           (*  x, {0..b}, {a..N} *)
 
@@ -2050,7 +2052,7 @@ PROCEDURE Set_singleton (s: Size) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
     IF (s <= Target.Integer.size) THEN
-      cg.load_integer (Target.Integer.cg_type, TInt.OneI);
+      cg.load_integer (Target.Integer.cg_type, TInt.One);
       cg.swap (Target.Integer.cg_type, Target.Integer.cg_type);
       cg.shift_left (Target.Integer.cg_type);
       cg.or (Target.Integer.cg_type);
@@ -2305,31 +2307,26 @@ PROCEDURE Check_nil (code: RuntimeError) =
     cg.check_nil (code);
   END Check_nil;
 
-PROCEDURE Check_lo (READONLY i: Target.Int;  code: RuntimeError) =
-  VAR t := ARRAY Target.Pre OF Target.CGType {Target.Integer.cg_type,
-                                              Target.Longint.cg_type};
+PROCEDURE Check_lo (t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_lo (t[TInt.Prec (i)], i, code);
+    cg.check_lo (t, i, code);
   END Check_lo;
 
-PROCEDURE Check_hi (READONLY i: Target.Int;  code: RuntimeError) =
-  VAR t := ARRAY Target.Pre OF Target.CGType {Target.Integer.cg_type,
-                                              Target.Longint.cg_type};
+PROCEDURE Check_hi (t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_hi (t[TInt.Prec (i)], i, code);
+    cg.check_hi (t, i, code);
   END Check_hi;
 
-PROCEDURE Check_range (READONLY a, b: Target.Int;  code: RuntimeError) =
-  VAR t := ARRAY Target.Pre OF Target.CGType {Target.Integer.cg_type,
-                                              Target.Longint.cg_type};
+PROCEDURE Check_range (t: IType;  READONLY a, b: Target.Int;
+                       code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_range (t[TInt.Prec (a)], a, b, code);
+    cg.check_range (t, a, b, code);
   END Check_range;
 
 PROCEDURE Check_index (code: RuntimeError) =
@@ -2364,7 +2361,7 @@ PROCEDURE Check_byte_aligned () =
         Push_int (Target.Byte - 1);  (*** Push_int (Target.Byte); ***)
         cg.and (Target.Integer.cg_type);
           (*** cg.mod (Target.Integer.cg_type, Sign.Unknown, Sign.Positive); ***)
-        cg.load_integer (Target.Integer.cg_type, TInt.ZeroI);
+        cg.load_integer (Target.Integer.cg_type, TInt.Zero);
         cg.check_eq (Target.Integer.cg_type, RuntimeError.UnalignedAddress);
         Boost_alignment (Target.Byte);
         Force ();
@@ -2663,7 +2660,7 @@ PROCEDURE AsBytes (n: INTEGER): INTEGER =
   END AsBytes;
 
 PROCEDURE Push_int (i: INTEGER) =
-  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Pre.Integer, val);
+  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Integer.bytes, val);
   BEGIN
     IF NOT b THEN ErrI (i, "integer not representable") END;
     cg.load_integer (Target.Integer.cg_type, val);
@@ -2783,7 +2780,7 @@ PROCEDURE SPush (t: Type) =
       x.base      := NIL;
       x.bits      := NIL;
       x.offset    := 0;
-      x.int       := TInt.ZeroI;
+      x.int       := TInt.Zero;
       x.float     := TFloat.ZeroR;
       x.next      := NIL;
     END;

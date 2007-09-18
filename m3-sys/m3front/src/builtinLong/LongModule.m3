@@ -8,16 +8,20 @@
 
 MODULE LongModule;
 
-IMPORT Scope, Tipe, Module, LInt, IntegerExpr, Constant, Target, TInt, NamedType;
-IMPORT LongPlus, LongMinus, LongTimes, LongLT, LongLE, LongGT, LongGE;
-IMPORT LongAnd, LongOr, LongXor, LongShift, LongRotate, LongExtract;
-IMPORT LongInsert, LongNot, LongDivide, LongMod;
+IMPORT Scope, Tipe, Module, Int, IntegerExpr, Constant, Target, TInt, NamedType;
+IMPORT LongPlus AS Plus, LongMinus AS Minus, LongTimes AS Times;
+IMPORT LongLT AS LT, LongLE AS LE, LongGT AS GT, LongGE AS GE;
+IMPORT LongAnd AS And, LongOr AS Or, LongXor AS Xor;
+IMPORT LongShift AS Shift, LongRotate AS Rotate;
+IMPORT LongExtract AS Extract, LongInsert AS Insert;
+IMPORT LongNot AS Not, LongDivide AS Divide, LongMod AS Mod;
+FROM LInt IMPORT T;
 
 PROCEDURE Initialize () =
   VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
   BEGIN
 
-    b := TInt.FromInt (Target.Longint.size, Target.Pre.Integer, size);
+    b := TInt.FromInt (Target.Longint.size, Target.Integer.bytes, size);
     <*ASSERT b*>
     M := Module.NewDefn ("Long", TRUE, NIL);
 
@@ -26,25 +30,25 @@ PROCEDURE Initialize () =
         stamps will be messed up! *)
 
     zz := Scope.Push (Module.ExportScope (M));
-    Tipe.Define ("T", NamedType.New (LInt.T), FALSE);
-    Constant.Declare ("Size", IntegerExpr.New (size), FALSE);
-    LongPlus.Initialize ();
-    LongTimes.Initialize ();
-    LongMinus.Initialize ();
-    LongDivide.Initialize ();
-    LongMod.Initialize ();
-    LongLT.Initialize ();
-    LongLE.Initialize ();
-    LongGT.Initialize ();
-    LongGE.Initialize ();
-    LongAnd.Initialize ();
-    LongOr.Initialize ();
-    LongXor.Initialize ();
-    LongNot.Initialize ();
-    LongShift.Initialize ();
-    LongRotate.Initialize ();
-    LongExtract.Initialize ();
-    LongInsert.Initialize ();
+    Tipe.Define ("T", NamedType.New (T), FALSE);
+    Constant.Declare ("Size", IntegerExpr.New (Int.T, size), FALSE);
+    Plus.Initialize ();
+    Times.Initialize ();
+    Minus.Initialize ();
+    Divide.Initialize ();
+    Mod.Initialize ();
+    LT.Initialize ();
+    LE.Initialize ();
+    GT.Initialize ();
+    GE.Initialize ();
+    And.Initialize ();
+    Or.Initialize ();
+    Xor.Initialize ();
+    Not.Initialize ();
+    Shift.Initialize ();
+    Rotate.Initialize ();
+    Extract.Initialize ();
+    Insert.Initialize ();
     Scope.Pop (zz);
   END Initialize;
 
