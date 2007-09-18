@@ -148,7 +148,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 
     IF (Outcome.Returns IN oc) THEN
       l := CG.Next_label ();
-      CG.Load_int (info, Target.Integer.cg_type, M3RT.EA_exception);
+      CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
       CG.Load_intt (Marker.Return_exception);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, l, CG.Always);
       Marker.EmitReturn (NIL, fromFinally := TRUE);
@@ -157,7 +157,7 @@ PROCEDURE Compile1 (p: P): Stmt.Outcomes =
 
     IF (Outcome.Exits IN oc) THEN
       l := CG.Next_label ();
-      CG.Load_int (info, Target.Integer.cg_type, M3RT.EA_exception);
+      CG.Load_int (Target.Integer.cg_type, info, M3RT.EA_exception);
       CG.Load_intt (Marker.Exit_exception);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, l, CG.Always);
       Marker.EmitExit ();
@@ -331,8 +331,8 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
 
       IF (exitSeen) THEN
         xx := CG.Next_label ();
-        CG.Load_int (frame, Target.Integer.cg_type,
-                     M3RT.EF1_info + M3RT.EA_exception);
+        CG.Load_int (Target.Integer.cg_type,
+                     frame, M3RT.EF1_info + M3RT.EA_exception);
         CG.Load_intt (Marker.Exit_exception);
         CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, xx, CG.Always);
         Marker.EmitExit ();
@@ -341,8 +341,8 @@ PROCEDURE Compile3 (p: P): Stmt.Outcomes =
 
       IF (returnSeen) THEN
         xx := CG.Next_label ();
-        CG.Load_int (frame, Target.Integer.cg_type,
-                     M3RT.EF1_info + M3RT.EA_exception);
+        CG.Load_int (Target.Integer.cg_type,
+                     frame, M3RT.EF1_info + M3RT.EA_exception);
         CG.Load_intt (Marker.Return_exception);
         CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, xx, CG.Always);
         Marker.EmitReturn (NIL, fromFinally := TRUE);

@@ -14,7 +14,7 @@ IMPORT DivideExpr, ModExpr, AddExpr, SubtractExpr, InExpr, PlusExpr;
 IMPORT NegateExpr, NotExpr, ConcatExpr, IntegerExpr, ReelExpr;
 IMPORT TextExpr, DerefExpr, QualifyExpr, SubscriptExpr, TypeExpr;
 IMPORT CallExpr, ConsExpr, RangeExpr, NamedExpr, KeywordExpr, EnumExpr;
-IMPORT NamedType, TInt, WCharr, CG, Brand;
+IMPORT NamedType, TInt, WCharr, CG, Brand, Int, LInt;
 
 FROM Scanner IMPORT Match, MatchID, GetToken, Fail, cur, offset;
 
@@ -173,12 +173,15 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
   BEGIN
     CASE cur.token OF
     | TK.tIDENT        => a := NamedExpr.New (cur.id, cur.defn);    GetToken ();
-    | TK.tCARDCONST    => a := IntegerExpr.New (cur.int);           GetToken ();
+    | TK.tINTEGERCONST => a := IntegerExpr.New (Int.T, cur.int);    GetToken ();
+    | TK.tLONGINTCONST => a := IntegerExpr.New (LInt.T, cur.int);   GetToken ();
     | TK.tCHARCONST    => a := EnumExpr.New (Charr.T, cur.int);     GetToken ();
     | TK.tWCHARCONST   => a := EnumExpr.New (WCharr.T, cur.int);    GetToken ();
     | TK.tTEXTCONST    => a := TextExpr.New8 (cur.str);             GetToken ();
     | TK.tWTEXTCONST   => a := TextExpr.New16 (cur.wstr);           GetToken ();
-    | TK.tFLOATCONST   => a := ReelExpr.New (cur.float);            GetToken ();
+    | TK.tREALCONST    => a := ReelExpr.New (cur.float);            GetToken ();
+    | TK.tLONGREALCONST=> a := ReelExpr.New (cur.float);            GetToken ();
+    | TK.tEXTENDEDCONST=> a := ReelExpr.New (cur.float);            GetToken();
 
     | TK.tLPAREN =>
         GetToken ();
@@ -199,7 +202,7 @@ PROCEDURE E8 (types: BOOLEAN): Expr.T =
         a.origin := here;
 
     ELSE
-        Fail ("bad expression"); a := IntegerExpr.New (TInt.ZeroI);
+        Fail ("bad expression"); a := IntegerExpr.New (Int.T, TInt.Zero);
     END;
     RETURN a;
   END E8;

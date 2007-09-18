@@ -7,13 +7,11 @@
 
 INTERFACE IntegerExpr;
 
-IMPORT Expr, Target;
+IMPORT Type, Expr, Target;
 
-TYPE Precision = Target.Pre;
+PROCEDURE New  (type: Type.T;  READONLY value: Target.Int): Expr.T;
 
-PROCEDURE New  (READONLY value: Target.Int): Expr.T;
-
-PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN;
+PROCEDURE Split (e: Expr.T;  VAR v: Target.Int;  VAR t: Type.T): BOOLEAN;
 
 PROCEDURE Compare  (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN;
 PROCEDURE Add      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
@@ -22,5 +20,7 @@ PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Div      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Mod      (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN;
 PROCEDURE Negate   (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
+PROCEDURE Abs      (a: Expr.T;     VAR c: Expr.T): BOOLEAN;
+PROCEDURE ToInt    (a: Expr.T;     VAR i: INTEGER): BOOLEAN;
 
 END IntegerExpr.

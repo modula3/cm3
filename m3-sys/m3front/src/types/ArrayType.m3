@@ -309,9 +309,11 @@ PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
     x := Type.InitCost (p.element, zeroed);
-    IF NOT TInt.FromInt (x, Target.Pre.Integer, m) THEN RETURN LAST (INTEGER) END;
+    IF NOT TInt.FromInt (x, Target.Integer.bytes, m) THEN
+      RETURN LAST (INTEGER);
+    END;
     n := Type.Number (p.index);
-    IF TInt.Sig (n) < 0 THEN (*open array?*) RETURN 20 * x END;
+    IF TInt.LT (n, TInt.Zero) THEN (*open array?*) RETURN 20 * x END;
     IF NOT TInt.Multiply (m, n, res) THEN RETURN LAST (INTEGER) END;
     IF NOT TInt.ToInt (res, x) THEN RETURN LAST (INTEGER) END;
     RETURN x;
@@ -324,7 +326,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
     array := CG.Pop ();  (* capture the array's l-value *)
   BEGIN
     (* put down a loop to initialize the additional elements *)
-    CG.Load_integer (TInt.ZeroI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     cnt := CG.Pop_temp ();
     top := CG.Next_label ();
     CG.Set_label (top);
@@ -337,7 +339,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
 
     (* cnt := cnt + 1 *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.OneI);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Add (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 

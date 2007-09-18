@@ -453,12 +453,12 @@ PROCEDURE GenOpenArraySizeChecks (READONLY lhs, rhs: CG.Val;
       ELSIF (ilhs # NIL) THEN
         CG.Push (rhs);
         CG.Open_size (n);
-        CG.Load_integer (Type.Number (ilhs));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
         CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       ELSIF (irhs # NIL) THEN
         CG.Push (lhs);
         CG.Open_size (n);
-        CG.Load_integer (Type.Number (irhs));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (irhs));
         CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       ELSE (* both arrays are open *)
         CG.Push (lhs);
@@ -621,7 +621,7 @@ PROCEDURE GenOpenArraySizeChk (READONLY rhs: CG.Val;  tlhs, trhs: Type.T) =
 
       CG.Push (rhs);
       CG.Open_size (n);
-      CG.Load_integer (Type.Number (ilhs));
+      CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
       CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
 
       INC (n);

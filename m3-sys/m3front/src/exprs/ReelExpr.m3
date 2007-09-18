@@ -8,12 +8,11 @@
 
 MODULE ReelExpr;
 
-IMPORT M3, CG, Expr, ExprRep, Type, Target, TFloat;
+IMPORT M3, CG, Expr, ExprRep, Type, Target, TInt, TFloat;
 IMPORT M3Buf, Int, LInt, Reel, LReel, EReel, IntegerExpr;
 
 TYPE
   P = Expr.T OBJECT
-        pre : Precision;
         val : Target.Float;
       OVERRIDES
         typeOf       := ExprRep.NoType;
@@ -38,16 +37,15 @@ TYPE
       END;
 
 PROCEDURE New (READONLY value: Target.Float): Expr.T =
-  VAR p := NEW (P);  pre := TFloat.Prec (value);
+  VAR p := NEW (P);
   BEGIN
     ExprRep.Init (p);
-    p.pre     := pre;
     p.val     := value;
     p.checked := TRUE;
-    CASE pre OF
-    | Precision.Short    => p.type := Reel.T;
-    | Precision.Long     => p.type := LReel.T;
-    | Precision.Extended => p.type := EReel.T;
+    CASE TFloat.Prec (value) OF
+    | Target.Precision.Short    => p.type := Reel.T;
+    | Target.Precision.Long     => p.type := LReel.T;
+    | Target.Precision.Extended => p.type := EReel.T;
     END;
     RETURN p;
   END New;
@@ -56,7 +54,7 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(b) => RETURN (a.pre = b.pre) AND TFloat.EQ (a.val, b.val);
+    | P(b) => RETURN TFloat.EQ (a.val, b.val);
     ELSE      RETURN FALSE;
     END;
   END EqCheck;
@@ -148,9 +146,10 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR x, zero, res: Target.Float;
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF    (x.pre = Precision.Short) THEN zero := TFloat.ZeroR;
-    ELSIF (x.pre = Precision.Long) THEN  zero := TFloat.ZeroL;
-    ELSE                                 zero := TFloat.ZeroX;
+    CASE TFloat.Prec (x) OF
+    | Target.Precision.Short    => zero := TFloat.ZeroR;
+    | Target.Precision.Long     => zero := TFloat.ZeroL;
+    | Target.Precision.Extended => zero := TFloat.ZeroX;
     END;
     IF NOT TFloat.Subtract (zero, x, res) THEN RETURN FALSE END;
     c := New (res);
@@ -161,9 +160,10 @@ PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   VAR  x, zero, res: Target.Float;
   BEGIN
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF    (x.pre = Precision.Short) THEN zero := TFloat.ZeroR;
-    ELSIF (x.pre = Precision.Long)  THEN zero := TFloat.ZeroL;
-    ELSE                                 zero := TFloat.ZeroX;
+    CASE TFloat.Prec (x) OF
+    | Target.Precision.Short    => zero := TFloat.ZeroR;
+    | Target.Precision.Long     => zero := TFloat.ZeroL;
+    | Target.Precision.Extended => zero := TFloat.ZeroX;
     END;
     IF NOT TFloat.LT (x, zero) THEN  c := a; RETURN TRUE  END;
     IF NOT TFloat.Subtract (zero, x, res) THEN RETURN FALSE END;
@@ -172,78 +172,64 @@ PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   END Abs;
 
 PROCEDURE Floor (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
+  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
   BEGIN
-    t := Type.Base (t);
-    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
-    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
-    ELSE  RETURN FALSE;
-    END;
-
+    IF    t = Int.T  THEN n := Target.Integer.bytes;
+    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
+    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Floor (x, res, new_pre) THEN RETURN FALSE END;
-    c := IntegerExpr.New (res);
+    IF NOT TInt.FromInt (TFloat.Floor (x), n, res) THEN RETURN FALSE END;
+    c := IntegerExpr.New (t, res);
     RETURN TRUE;
   END Floor;
 
 PROCEDURE Ceiling (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
+  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
   BEGIN
-    t := Type.Base (t);
-    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
-    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
-    ELSE  RETURN FALSE;
-    END;
-
+    IF    t = Int.T  THEN n := Target.Integer.bytes;
+    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
+    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Ceiling (x, res, new_pre) THEN RETURN FALSE END;
-    c := IntegerExpr.New (res);
+    IF NOT TInt.FromInt (TFloat.Ceiling (x), n, res) THEN RETURN FALSE END;
+    c := IntegerExpr.New (t, res);
     RETURN TRUE;
   END Ceiling;
 
 PROCEDURE Trunc (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
+  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
   BEGIN
-    t := Type.Base (t);
-    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
-    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
-    ELSE  RETURN FALSE;
-    END;
-
+    IF    t = Int.T  THEN n := Target.Integer.bytes;
+    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
+    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Trunc (x, res, new_pre) THEN RETURN FALSE END;
-    c := IntegerExpr.New (res);
+    IF NOT TInt.FromInt (TFloat.Trunc (x), n, res) THEN RETURN FALSE END;
+    c := IntegerExpr.New (t, res);
     RETURN TRUE;
   END Trunc;
 
 PROCEDURE Round (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  new_pre: IntegerExpr.Precision;
+  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
   BEGIN
-    t := Type.Base (t);
-    IF    (t = Int.T)  THEN new_pre := IntegerExpr.Precision.Integer;
-    ELSIF (t = LInt.T) THEN new_pre := IntegerExpr.Precision.Longint;
-    ELSE  RETURN FALSE;
-    END;
-
+    IF    t = Int.T  THEN n := Target.Integer.bytes;
+    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
+    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TFloat.Round (x, res, new_pre) THEN RETURN FALSE END;
-    c := IntegerExpr.New (res);
+    IF NOT TInt.FromInt (TFloat.Round (x), n, res) THEN RETURN FALSE END;
+    c := IntegerExpr.New (t, res);
     RETURN TRUE;
   END Round;
 
 PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR i: Target.Int;  x, res: Target.Float;  new_pre: Precision;
+  VAR i: INTEGER;  x, res: Target.Float;  new_pre: Target.Precision;
   BEGIN
-    t := Type.Base (t);
-    IF    (t = Reel.T)  THEN new_pre := Precision.Short;
-    ELSIF (t = LReel.T) THEN new_pre := Precision.Long;
-    ELSIF (t = EReel.T) THEN new_pre := Precision.Extended;
-    ELSE  RETURN FALSE;
-    END;
+    IF    (t = Reel.T)  THEN new_pre := Target.Precision.Short;
+    ELSIF (t = LReel.T) THEN new_pre := Target.Precision.Long;
+    ELSIF (t = EReel.T) THEN new_pre := Target.Precision.Extended;
+    ELSE RETURN FALSE END;
 
     IF Split (a, x) THEN
       IF NOT TFloat.FloatF (x, new_pre, res) THEN RETURN FALSE END;
-    ELSIF IntegerExpr.Split (a, i) THEN
+    ELSIF IntegerExpr.ToInt (a, i) THEN
       IF NOT TFloat.FloatI (i, new_pre, res) THEN RETURN FALSE END;
     ELSE
       RETURN FALSE;
@@ -253,11 +239,18 @@ PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
   END Float;
 
 PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Float): BOOLEAN =
+  VAR t: Type.T;
   BEGIN
-    IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT Split (b, y) THEN RETURN FALSE END;
-    IF (x.pre # y.pre) THEN RETURN FALSE END;
-    RETURN TRUE;
+    TYPECASE a OF
+    | NULL => RETURN FALSE;
+    | P(p) => x := p.val;  t := p.type;
+    ELSE      RETURN FALSE;
+    END;
+    TYPECASE b OF
+    | NULL => RETURN FALSE;
+    | P(p) => y := p.val;  RETURN t = p.type;
+    ELSE      RETURN FALSE;
+    END;
   END SplitPair;
 
 PROCEDURE Split (e: Expr.T;  VAR x: Target.Float): BOOLEAN =
@@ -277,9 +270,11 @@ PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
-  CONST mark = ARRAY Precision OF TEXT { "REAL<", "LREAL<", "EREAL<" };
   BEGIN
-    M3Buf.PutText  (buf, mark [p.pre]);
+    IF    p.type = Reel.T  THEN M3Buf.PutText  (buf, "REAL<");
+    ELSIF p.type = LReel.T THEN M3Buf.PutText  (buf, "LREAL<");
+    ELSIF p.type = EReel.T THEN M3Buf.PutText  (buf, "EREAL<");
+    ELSE <*ASSERT FALSE*> END;
     M3Buf.PutFloat (buf, p.val);
     M3Buf.PutChar  (buf, '>');
   END GenFPLiteral;

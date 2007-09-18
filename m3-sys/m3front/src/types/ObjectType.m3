@@ -734,7 +734,7 @@ PROCEDURE FillMethods (t: Type.T;  VAR m: ARRAY OF MethodValue): BOOLEAN =
           (* method default is a named procedure *)
           info.known := TRUE;
           info.proc  := Procedure.CGName (proc);
-        ELSIF AddressExpr.Split (expr, addr) AND TInt.Sig (addr) = 0 THEN
+        ELSIF AddressExpr.Split (expr, addr) AND TInt.EQ (addr, TInt.Zero) THEN
           (* method default is NIL *)
           (*************************
             The runtime will initialize this slot to a routine that

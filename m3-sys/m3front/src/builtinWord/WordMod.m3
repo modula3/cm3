@@ -9,7 +9,9 @@
 MODULE WordMod;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, ProcType, TInt;
-IMPORT Int, IntegerExpr, WordPlus, Value, Formal, Target, TWord;
+IMPORT IntegerExpr, Value, Formal, Target, TWord;
+FROM Int IMPORT T;
+IMPORT WordPlus AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -17,7 +19,7 @@ VAR formals: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := Int.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
@@ -31,33 +33,33 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1) AND TWord.Mod (w0, w1, result)
-      THEN RETURN IntegerExpr.New (result);
-      ELSE RETURN NIL;
+    IF Plus.GetArgs (ce.args, w0, w1) AND TWord.Mod (w0, w1, result) THEN
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   VAR min_b, max_b: Target.Int;
   BEGIN
     Expr.GetBounds (ce.args[1], min_b, max_b);
-    IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
+    IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
       (* almost anything is possible *)
-      min := Target.Int{Target.Integer.min, Target.Pre.Integer};
-      max := Target.Int{Target.Integer.max, Target.Pre.Integer};
+      min := Target.Integer.min;
+      max := Target.Integer.max;
     ELSE
-      min := TInt.ZeroI;
-      TWord.Dec (max_b, max);
+      min := TInt.Zero;
+      TWord.Subtract (max_b, TInt.One, max);
     END;
   END GetBounds;
 
 PROCEDURE Initialize () =
   VAR
-    x0 := Formal.NewBuiltin ("x", 0, Int.T);
-    y0 := Formal.NewBuiltin ("y", 1, Int.T);
-    t0 := ProcType.New (Int.T, x0, y0);
+    x0 := Formal.NewBuiltin ("x", 0, T);
+    y0 := Formal.NewBuiltin ("y", 1, T);
+    t0 := ProcType.New (T, x0, y0);
   BEGIN
-    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, Int.T,
+    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,

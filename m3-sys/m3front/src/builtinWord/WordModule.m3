@@ -9,15 +9,19 @@
 MODULE WordModule;
 
 IMPORT Scope, Tipe, Module, Int, IntegerExpr, Constant, Target, TInt, NamedType;
-IMPORT WordPlus, WordMinus, WordTimes, WordLT, WordLE, WordGT, WordGE;
-IMPORT WordAnd, WordOr, WordXor, WordShift, WordRotate, WordExtract;
-IMPORT WordInsert, WordNot, WordDivide, WordMod;
+IMPORT WordPlus AS Plus, WordMinus AS Minus, WordTimes AS Times;
+IMPORT WordLT AS LT, WordLE AS LE, WordGT AS GT, WordGE AS GE;
+IMPORT WordAnd AS And, WordOr AS Or, WordXor AS Xor;
+IMPORT WordShift AS Shift, WordRotate AS Rotate;
+IMPORT WordExtract AS Extract, WordInsert AS Insert;
+IMPORT WordNot AS Not, WordDivide AS Divide, WordMod AS Mod;
+FROM Int IMPORT T;
 
 PROCEDURE Initialize () =
   VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
   BEGIN
 
-    b := TInt.FromInt (Target.Integer.size, Target.Pre.Integer, size);
+    b := TInt.FromInt (Target.Integer.size, Target.Integer.bytes, size);
     <*ASSERT b*>
     M := Module.NewDefn ("Word", TRUE, NIL);
 
@@ -26,25 +30,25 @@ PROCEDURE Initialize () =
         stamps will be messed up! *)
 
     zz := Scope.Push (Module.ExportScope (M));
-    Tipe.Define ("T", NamedType.New (Int.T), FALSE);
-    Constant.Declare ("Size", IntegerExpr.New (size), FALSE);
-    WordPlus.Initialize ();
-    WordTimes.Initialize ();
-    WordMinus.Initialize ();
-    WordDivide.Initialize ();
-    WordMod.Initialize ();
-    WordLT.Initialize ();
-    WordLE.Initialize ();
-    WordGT.Initialize ();
-    WordGE.Initialize ();
-    WordAnd.Initialize ();
-    WordOr.Initialize ();
-    WordXor.Initialize ();
-    WordNot.Initialize ();
-    WordShift.Initialize ();
-    WordRotate.Initialize ();
-    WordExtract.Initialize ();
-    WordInsert.Initialize ();
+    Tipe.Define ("T", NamedType.New (T), FALSE);
+    Constant.Declare ("Size", IntegerExpr.New (Int.T, size), FALSE);
+    Plus.Initialize ();
+    Times.Initialize ();
+    Minus.Initialize ();
+    Divide.Initialize ();
+    Mod.Initialize ();
+    LT.Initialize ();
+    LE.Initialize ();
+    GT.Initialize ();
+    GE.Initialize ();
+    And.Initialize ();
+    Or.Initialize ();
+    Xor.Initialize ();
+    Not.Initialize ();
+    Shift.Initialize ();
+    Rotate.Initialize ();
+    Extract.Initialize ();
+    Insert.Initialize ();
     Scope.Pop (zz);
   END Initialize;
 

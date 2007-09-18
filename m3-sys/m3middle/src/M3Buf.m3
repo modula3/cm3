@@ -138,7 +138,7 @@ PROCEDURE PutInt  (t: T;  i: INTEGER) =
 
 PROCEDURE PutIntt (t: T;  READONLY i: Target.Int) =
   VAR j: INTEGER;
-      buf: TInt.CharArray;
+      buf: ARRAY [0..BITSIZE (Target.Int)] OF CHAR;
   BEGIN
     IF TInt.ToInt (i, j) THEN
       PutInt (t, j);

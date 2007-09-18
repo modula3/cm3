@@ -658,10 +658,10 @@ PROCEDURE EvalAdd (VAR s: State;  VAR val: T)
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
-      AND (a.int.pre = b.int.pre)
+      AND (a.type = b.type)
       AND TInt.Add (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -690,10 +690,10 @@ PROCEDURE EvalSubtract (VAR s: State;  VAR val: T)
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
-      AND (a.int.pre = b.int.pre)
+      AND (a.type = b.type)
       AND TInt.Subtract (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -736,10 +736,10 @@ PROCEDURE EvalMultiply (VAR s: State;  VAR val: T)
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
-      AND (a.int.pre = b.int.pre)
+      AND (a.type = b.type)
       AND TInt.Multiply (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -784,10 +784,10 @@ PROCEDURE EvalDiv (VAR s: State;  VAR val: T)
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
-      AND (a.int.pre = b.int.pre)
+      AND (a.type = b.type)
       AND TInt.Div (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
     ELSE
       Err ("bad operand for 'DIV'");
     END;
@@ -800,10 +800,10 @@ PROCEDURE EvalMod (VAR s: State;  VAR val: T)
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
-      AND (a.int.pre = b.int.pre)
+      AND (a.type = b.type)
       AND TInt.Mod (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -824,26 +824,21 @@ PROCEDURE EvalUnaryPlus (VAR s: State;  VAR val: T)
 
 PROCEDURE EvalUnaryMinus (VAR s: State;  VAR val: T)
   RAISES {Error} =
-  VAR a: T;  fzero: Target.Float;  izero: Target.Int;
+  VAR a: T;  zero: Target.Float;
   BEGIN
     EvalX (s, s.ch[0], a);
 
-    IF (a.class = Class.Integer) THEN
-      IF    (a.int.pre = Target.Pre.Integer) THEN izero := TInt.ZeroI;
-      ELSIF (a.int.pre = Target.Pre.Longint) THEN izero := TInt.ZeroL;
-      ELSE END;
-      IF NOT TInt.Subtract (izero, a.int, val.int) THEN
-        Err ("bad operand for unary '-'");
-      END;
+    IF (a.class = Class.Integer)
+      AND TInt.Subtract (TInt.Zero, a.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) THEN
-      IF    (a.float.pre = Target.Precision.Short) THEN fzero := TFloat.ZeroR;
-      ELSIF (a.float.pre = Target.Precision.Long)  THEN fzero := TFloat.ZeroL;
-      ELSE                                              fzero := TFloat.ZeroX;
+      IF    (a.float.pre = Target.Precision.Short) THEN zero := TFloat.ZeroR;
+      ELSIF (a.float.pre = Target.Precision.Long)  THEN zero := TFloat.ZeroL;
+      ELSE                                              zero := TFloat.ZeroX;
       END;
-      IF NOT TFloat.Subtract (fzero, a.float, val.float) THEN
+      IF NOT TFloat.Subtract (zero, a.float, val.float) THEN
         Err ("bad operand for unary '-'");
       END;
       val.class := Class.Float;
@@ -867,7 +862,7 @@ PROCEDURE EvalSubscript (VAR s: State;  VAR val: T)
     ELSIF (b.class = Class.Integer) THEN
       (* ok *)
     ELSIF (b.class = Class.Enum)
-      AND TInt.FromInt (b.info, Target.Pre.Integer, b.int) THEN
+      AND TInt.FromInt (b.info, Target.Integer.bytes, b.int) THEN
       (* ok *)
     ELSE
       Err ("bad operand for subscript operation");
@@ -879,7 +874,7 @@ PROCEDURE EvalSubscript (VAR s: State;  VAR val: T)
           Err ("bad operand for subscript operation");
         END;
     | M3Type.OpenArray =>
-        min_index := TInt.ZeroI;
+        min_index := TInt.Zero;
     ELSE
       Err ("bad operand for subscript operation");
     END;
@@ -1033,9 +1028,8 @@ PROCEDURE EvalSetCons (VAR s: State;  tipe: M3Type.Set;
   BEGIN
     IF NOT M3Type.GetBounds (tipe.domain, min, max)
       OR NOT TInt.Subtract (max, min, t0)
-      OR NOT TInt.Ord (t0, t1)
-      OR NOT TInt.Inc (t1, t0)
-      OR NOT TInt.ToInt (t0, n_elts) THEN
+      OR NOT TInt.Add (t0, TInt.One, t1)
+      OR NOT TInt.ToInt (t1, n_elts) THEN
       Err ("illegal set constructor");
     END;
     set := M3SetVal.NewEmpty (n_elts);
@@ -1167,7 +1161,7 @@ PROCEDURE EvalInt (VAR s: State;  VAR val: T)
   BEGIN
     val.class := Class.Integer;
     val.type  := M3Type.Integer;
-    IF NOT TInt.FromInt (s.info, Target.Pre.Integer, val.int) THEN
+    IF NOT TInt.FromInt (s.info, Target.Integer.bytes, val.int) THEN
       Err ("illegal integer value");
     END;
   END EvalInt;
@@ -1177,7 +1171,7 @@ PROCEDURE EvalLInt (VAR s: State;  VAR val: T)
   BEGIN
     val.class := Class.Integer;
     val.type  := M3Type.Longint;
-    IF NOT TInt.FromInt (s.info, Target.Pre.Longint, val.int) THEN
+    IF NOT TInt.FromInt (s.info, Target.Longint.bytes, val.int) THEN
       Err ("illegal integer value");
     END;
   END EvalLInt;

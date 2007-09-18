@@ -279,7 +279,7 @@ PROCEDURE Int (u: U;  i: INTEGER) =
 
 PROCEDURE TInt (u: U;  READONLY i: Target.Int) =
   VAR
-    buf : TargetInt.CharArray;
+    buf : ARRAY [0..BITSIZE (Target.Int)] OF CHAR;
     len := TargetInt.ToChars (i, buf);
   BEGIN
     OutC (u, ' ');
@@ -294,8 +294,8 @@ PROCEDURE BInt (u: U;  i: INTEGER) =
 
 (*********
 PROCEDURE BInt (u: U;  i: INTEGER) =
-  VAR x := i MOD Target.Byte;
-      y := i DIV Target.Byte;
+  VAR x := i MOD Target.ByteSize;
+      y := i DIV Target.ByteSize;
   BEGIN
     IF (x = 0)
       THEN Int (u, y);

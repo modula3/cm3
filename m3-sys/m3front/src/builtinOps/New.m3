@@ -291,14 +291,14 @@ PROCEDURE GenOpenArray (t: Type.T;  traced: BOOLEAN;
 
     (* initialize the count of array sizes *)
     CG.Load_intt (n);
-    CG.Store_int (sizes, Target.Integer.cg_type, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, sizes, M3RT.OA_size_0);
 
     (* initialize each array size *)
     offset := M3RT.OA_size_1;
     FOR i := 1 TO n DO
       Expr.Prep (ce.args[i]);
       Expr.Compile (ce.args[i]);
-      CG.Store_int (sizes, Target.Integer.cg_type, offset);
+      CG.Store_int (Target.Integer.cg_type, sizes, offset);
       INC (offset, Target.Integer.pack);
     END;
 

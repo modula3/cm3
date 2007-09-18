@@ -55,7 +55,7 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T) =
       index := Int.T;
     END;
     IF EnumType.Is (index) THEN
-      IF TInt.Sig (Type.Number (index)) <= 0 THEN
+      IF NOT TInt.LT (TInt.Zero, Type.Number (index)) THEN
         Error.Txt (name, "empty enumeration type");
       END;
     ELSIF Type.IsOrdinal (index)             THEN (* ordinal type => OK*)
@@ -84,9 +84,9 @@ PROCEDURE Compile (ce: CallExpr.T) =
     IF ArrayType.Split (t, index, element) THEN t := index END;
 
     IF (t = NIL) THEN (* open array *)
-      CG.Load_integer (TInt.ZeroI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     ELSIF Type.GetBounds (t, min, max) THEN (* ordinal type *)
-      CG.Load_integer (min);
+      CG.Load_integer (Type.CGType (t), min);
     ELSIF Type.IsEqual (t, Reel.T, NIL) THEN
       CG.Load_float (Target.Real.min);
     ELSIF Type.IsEqual (t, LReel.T, NIL) THEN
@@ -112,12 +112,12 @@ PROCEDURE FirstOfType (t: Type.T): Expr.T =
   VAR min, max: Target.Int;  elem, t_base: Type.T;
   BEGIN
     IF ArrayType.Split (t, t, elem) AND (t = NIL) THEN
-      RETURN IntegerExpr.New (TInt.ZeroI);
+      RETURN IntegerExpr.New (Int.T, TInt.Zero);
     END;
     t_base := Type.Base (t);
     IF Type.GetBounds (t, min, max) THEN
       IF t_base = Int.T OR t_base = LInt.T
-        THEN RETURN IntegerExpr.New (min);
+        THEN RETURN IntegerExpr.New (t_base, min);
         ELSE RETURN EnumExpr.New (t, min);
       END;
     ELSIF t_base = Reel.T THEN

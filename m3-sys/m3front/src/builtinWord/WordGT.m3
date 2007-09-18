@@ -9,7 +9,9 @@
 MODULE WordGT;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
-IMPORT Int, Bool, WordPlus, Value, Formal, ProcType;
+IMPORT Bool, Value, Formal, ProcType;
+FROM Int IMPORT T;
+IMPORT WordPlus AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -39,7 +41,7 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1)
+    IF Plus.GetArgs (ce.args, w0, w1)
       THEN RETURN Bool.Map [TWord.LT (w1, w0)];
       ELSE RETURN NIL;
     END;
@@ -47,8 +49,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
 
 PROCEDURE Initialize () =
   VAR
-    x1 := Formal.NewBuiltin ("x", 0, Int.T);
-    y1 := Formal.NewBuiltin ("y", 1, Int.T);
+    x1 := Formal.NewBuiltin ("x", 0, T);
+    y1 := Formal.NewBuiltin ("y", 1, T);
     t1 := ProcType.New (Bool.T, x1, y1);
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, Bool.T,

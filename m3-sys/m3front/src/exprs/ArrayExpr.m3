@@ -97,20 +97,21 @@ PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
     ELSE      RETURN FALSE;
     END;
     index := Expr.ConstValue (index);
-    IF (NOT IntegerExpr.Split (index, int))
+    IF (NOT IntegerExpr.Split (index, int, t))
       AND (NOT EnumExpr.Split (index, int, t)) THEN
       RETURN FALSE;
     END;
     IF p.index = NIL THEN
-      min := TInt.ZeroI (* FIRST (p.args^) *);
-      b := TInt.FromInt (LAST (p.args^), Target.Pre.Integer, max);  <* ASSERT b *>
+      min := TInt.Zero (* FIRST (p.args^) *);
+      b := TInt.FromInt (LAST (p.args^), Target.Integer.bytes, max);
+      <* ASSERT b *>
     ELSE
       EVAL Type.GetBounds (p.index, min, max);
     END;
     
     (* correct for the base index of the array *)
     IF NOT TInt.Subtract (int, min, offs) THEN RETURN FALSE END;
-    IF TInt.Sig (offs) < 0 THEN RETURN FALSE END;
+    IF TInt.LT (offs, TInt.Zero)  THEN RETURN FALSE END;
     b := TInt.ToInt (offs, i); <* ASSERT b *>
 
     n := LAST (p.args^);
@@ -126,8 +127,8 @@ PROCEDURE GetBounds (array: Expr.T;  VAR min, max: Target.Int): BOOLEAN =
     | NULL => RETURN FALSE;
     | P(p) => IF p.index = NIL THEN
                 (* open array type *)
-                min := TInt.ZeroI (* FIRST (p.args^) *);
-                b := TInt.FromInt (LAST (p.args^), Target.Pre.Integer, max);
+                min := TInt.Zero (* FIRST (p.args^) *);
+                b := TInt.FromInt (LAST (p.args^), Target.Integer.bytes, max);
                 <*ASSERT b*>
                 RETURN TRUE;
               ELSE
@@ -213,9 +214,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       END;
  
       IF (solidElt # NIL)
-        AND TInt.FromInt (LAST (p.args^), Target.Pre.Integer, nn) THEN
+        AND TInt.FromInt (LAST (p.args^), Target.Integer.bytes, nn) THEN
         p.kind := Kind.FixedOpen;
-        index := SubrangeType.New (TInt.ZeroI, nn, Int.T, FALSE);
+        index := SubrangeType.New (TInt.Zero, nn, Int.T, FALSE);
         p.solidType := ArrayType.New (index, solidElt);
         p.solidType := Type.CheckInfo (p.solidType, elt_info);
         element := solidElt;
@@ -334,7 +335,7 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
     EVAL Type.CheckInfo (p.tipe, info);
     align := info.alignment;
     b := TInt.ToInt (nn_elts, n_elts);    <*ASSERT b*>
-    b := TInt.FromInt (n_args, Target.Pre.Integer, nn_args);  <*ASSERT b*>
+    b := TInt.FromInt (n_args, Target.Integer.bytes, nn_args);  <*ASSERT b*>
 
     (* If this is a direct structure assignment, the LHS has already
      * been prepped and compiled -- save it.
@@ -355,7 +356,7 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
 
     (* fill in the '..' section *)
     IF (p.dots) AND (n_elts > n_args) THEN
-      CG.Load_integer (nn_args);
+      CG.Load_integer (Target.Integer.cg_type, nn_args);
       t2 := CG.Pop_temp ();
       top := CG.Next_label ();
       CG.Set_label (top);
@@ -374,13 +375,13 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
 
       (* t2 := t2 + 1 *)
       CG.Push (t2);
-      CG.Load_integer (TInt.OneI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Add (Target.Integer.cg_type);
       CG.Store_temp (t2);
 
       (* IF (t2 < NUMBER(ARRAY) GOTO TOP-OF-LOOP *)
       CG.Push (t2);
-      CG.Load_integer (nn_elts);
+      CG.Load_integer (Target.Integer.cg_type, nn_elts);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, top, CG.Likely);
 
       CG.Free (t2);
@@ -413,8 +414,8 @@ PROCEDURE DoEmpty (p: P) =
                            in_memory := TRUE);
     CG.Load_nil ();
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
-    CG.Load_integer (TInt.ZeroI);
-    CG.Store_int (t1, Target.Integer.cg_type, M3RT.OA_size_0);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
 
     (* remember the result *)
     CG.Load_addr_of_temp (t1, 0, Target.Address.align);
@@ -452,7 +453,7 @@ PROCEDURE DoFixedOpen (p: P;  elt_pack: INTEGER) =
 
     (* initialize size[0] of the dope vector *)
     CG.Load_intt (n_args);
-    CG.Store_int (t1, Target.Integer.cg_type, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
 
     (* initialize the remaining sizes of the dope vector *)
     EVAL ArrayType.Split (p.solidType, index, element);
@@ -460,8 +461,8 @@ PROCEDURE DoFixedOpen (p: P;  elt_pack: INTEGER) =
     FOR i := 1 TO openDepth-1 DO
       EVAL ArrayType.Split (element, index, element);
       <*ASSERT index # NIL*>
-      CG.Load_integer (Type.Number (index));
-      CG.Store_int (t1, Target.Integer.cg_type, offset);
+      CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
+      CG.Store_int (Target.Integer.cg_type, t1, offset);
       INC (offset, Target.Integer.pack);
     END;
 
@@ -506,10 +507,10 @@ PROCEDURE DoOpen (p: P;  elt_pack, elt_align: INTEGER) =
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
 
     CG.Load_intt (openDepth);
-    CG.Store_int (t1, Target.Integer.cg_type, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
 
     CG.Load_intt (n_args);
-    CG.Store_int (t1, Target.Integer.cg_type, M3RT.OA_size_1);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_1);
 
     element := Expr.TypeOf (p.args[0]);
     offset := M3RT.OA_size_1 + Target.Integer.pack;
@@ -519,9 +520,9 @@ PROCEDURE DoOpen (p: P;  elt_pack, elt_align: INTEGER) =
         CG.Push (t2);
         CG.Open_size (i - 1);
       ELSE
-        CG.Load_integer (Type.Number (index));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
       END;
-      CG.Store_int (t1, Target.Integer.cg_type, offset);
+      CG.Store_int (Target.Integer.cg_type, t1, offset);
       INC (offset, Target.Integer.pack);
     END;
 
@@ -546,16 +547,16 @@ PROCEDURE DoOpen (p: P;  elt_pack, elt_align: INTEGER) =
     CG.Open_elt_ptr (Target.Integer.align);
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
     FOR i := 0 TO openDepth-2 DO
-      CG.Load_int (t1, Target.Integer.cg_type,
-                   M3RT.OA_sizes + (i + 2) * Target.Integer.pack);
-      CG.Store_int (t1, Target.Integer.cg_type,
-                    M3RT.OA_sizes + i * Target.Integer.pack);
+      CG.Load_int (Target.Integer.cg_type,
+                   t1, M3RT.OA_sizes + (i + 2) * Target.Integer.pack);
+      CG.Store_int (Target.Integer.cg_type,
+                    t1, M3RT.OA_sizes + i * Target.Integer.pack);
     END;
 
     (* compute the size of each element in "elt_pack" units *)
     FOR i := 0 TO openDepth-2 DO
-      CG.Load_int (t1, Target.Integer.cg_type,
-                   M3RT.OA_sizes + i * Target.Integer.pack);
+      CG.Load_int (Target.Integer.cg_type,
+                   t1, M3RT.OA_sizes + i * Target.Integer.pack);
       IF (i # 0) THEN CG.Multiply (Target.Integer.cg_type) END;
     END;
     t4 := CG.Pop ();

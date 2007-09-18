@@ -17,18 +17,18 @@ PROCEDURE Initialize () =
     elts := Scope.PushNew (FALSE, M3ID.Add ("BOOLEAN"));
     T := EnumType.New (2, elts);
 
-    False := EnumElt.New (M3ID.Add ("FALSE"), TInt.ZeroI, T);
+    False := EnumElt.New (M3ID.Add ("FALSE"), TInt.Zero, T);
     Scope.Insert (False);
 
-    True := EnumElt.New (M3ID.Add ("TRUE"), TInt.OneI, T);
+    True := EnumElt.New (M3ID.Add ("TRUE"), TInt.One, T);
     Scope.Insert (True);
 
     Scope.PopNew ();
     Scope.TypeCheck (elts, cs);
     Tipe.Define ("BOOLEAN", T, TRUE);
 
-    false := EnumExpr.New (T, TInt.ZeroI);
-    true  := EnumExpr.New (T, TInt.OneI);
+    false := EnumExpr.New (T, TInt.Zero);
+    true  := EnumExpr.New (T, TInt.One);
 
     Constant.Declare ("FALSE", false, TRUE);
     Constant.Declare ("TRUE", true, TRUE);

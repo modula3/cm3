@@ -111,62 +111,36 @@ PROCEDURE Compile (p: P) =
     e1, e2, e3: Expr.T;
     divisor, mask: Target.Int;
     log: INTEGER;
+    t: Type.T;
   BEGIN
-    IF (p.class = Class.cINT) THEN
+    IF (p.class = Class.cINT) OR (p.class = Class.cLINT) THEN
+      cg_type := Type.CGType (p.type);
       e1 := Expr.ConstValue (p.a);
       e2 := Expr.ConstValue (p.b);
       e3 := NIL;
       IF (e1 # NIL) AND (e2 # NIL) AND IntegerExpr.Mod (e1, e2, e3) THEN
         Expr.Compile (e3);
       ELSIF (e2 # NIL)
-        AND IntegerExpr.Split (e2, divisor)
+        AND IntegerExpr.Split (e2, divisor, t)
         AND DivExpr.SmallPowerOfTwo (divisor, log) THEN
         IF (e1 = NIL) THEN e1 := p.a; END;
         IF (log = 0) THEN
           (* mod 1 => zero *)
           Expr.Compile (e1);
-          CG.Discard (Target.Integer.cg_type);
-          CG.Load_integer (TInt.ZeroI);
+          CG.Discard (cg_type);
+          CG.Load_integer (cg_type, TInt.Zero);
         ELSE
-          EVAL TInt.Dec (divisor, mask);
+          EVAL TInt.Subtract (divisor, TInt.One, mask);
           Expr.Compile (e1);
-          CG.Load_integer (mask);
-          CG.And (Target.Integer.cg_type);
+          CG.Load_integer (cg_type, mask);
+          CG.And (cg_type);
         END;
       ELSE
         IF (e1 = NIL) THEN e1 := p.a; END;
         IF (e2 = NIL) THEN e2 := p.b; END;
         Expr.Compile (e1);
         Expr.Compile (e2);
-        CG.Mod (Target.Integer.cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
-      END;
-    ELSIF (p.class = Class.cLINT) THEN
-      e1 := Expr.ConstValue (p.a);
-      e2 := Expr.ConstValue (p.b);
-      e3 := NIL;
-      IF (e1 # NIL) AND (e2 # NIL) AND IntegerExpr.Mod (e1, e2, e3) THEN
-        Expr.Compile (e3);
-      ELSIF (e2 # NIL)
-        AND IntegerExpr.Split (e2, divisor)
-        AND DivExpr.SmallPowerOfTwo (divisor, log) THEN
-        IF (e1 = NIL) THEN e1 := p.a; END;
-        IF (log = 0) THEN
-          (* mod 1 => zero *)
-          Expr.Compile (e1);
-          CG.Discard (Target.Longint.cg_type);
-          CG.Load_integer (TInt.ZeroL);
-        ELSE
-          EVAL TInt.Dec (divisor, mask);
-          Expr.Compile (e1);
-          CG.Load_integer (mask);
-          CG.And (Target.Longint.cg_type);
-        END;
-      ELSE
-        IF (e1 = NIL) THEN e1 := p.a; END;
-        IF (e2 = NIL) THEN e2 := p.b; END;
-        Expr.Compile (e1);
-        Expr.Compile (e2);
-        CG.Mod (Target.Longint.cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
+        CG.Mod (cg_type, Expr.GetSign (e1), Expr.GetSign (e2));
       END;
     ELSE
       (* floating point: x MOD y == x - y * FLOOR (x / y)  *)
@@ -208,25 +182,21 @@ PROCEDURE Fold (p: P): Expr.T =
 
 PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
   VAR min_b, max_b: Target.Int;
+      OneI := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
+      OneL := Target.Int{Target.Longint.bytes, Target.IBytes{1,0,..}};
+      One := ARRAY[Class.cINT..Class.cLINT] OF Target.Int { OneI, OneL };
+      MaxI := Target.Integer.max;
+      MaxL := Target.Longint.max;
+      Max := ARRAY [Class.cINT..Class.cLINT] OF Target.Int { MaxI, MaxL };
   BEGIN
-    IF (p.class = Class.cINT) THEN
+    IF (p.class = Class.cINT) OR (p.class = Class.cLINT) THEN
       Expr.GetBounds (p.b, min_b, max_b);
-      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
+      IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
         ExprRep.NoBounds (p, min, max);
       ELSE
-        min := TInt.ZeroI;
-        IF NOT TInt.Dec (max_b, max) THEN
-          max := Target.Int{Target.Integer.max, Target.Pre.Integer};
-        END;
-      END;
-    ELSIF (p.class = Class.cLINT) THEN
-      Expr.GetBounds (p.b, min_b, max_b);
-      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
-        ExprRep.NoBounds (p, min, max);
-      ELSE
-        min := TInt.ZeroL;
-        IF NOT TInt.Dec (max_b, max) THEN
-          max := Target.Int{Target.Longint.max, Target.Pre.Longint};
+        min := TInt.Zero;
+        IF NOT TInt.Subtract (max_b, One[p.class], max) THEN
+          max := Max[p.class];
         END;
       END;
     ELSE

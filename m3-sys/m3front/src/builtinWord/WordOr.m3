@@ -9,7 +9,9 @@
 MODULE WordOr;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, ProcType;
-IMPORT Int, IntegerExpr, WordPlus, Value, Formal, Target, TWord;
+IMPORT IntegerExpr, Value, Formal, Target, TWord;
+FROM Int IMPORT T;
+IMPORT WordPlus AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -17,7 +19,7 @@ VAR formals: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := Int.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
@@ -30,19 +32,20 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1)
-      THEN TWord.Or (w0, w1, result);  RETURN IntegerExpr.New (result);
-      ELSE RETURN NIL;
+    IF Plus.GetArgs (ce.args, w0, w1) THEN
+      TWord.Or (w0, w1, result);
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END Fold;
 
 PROCEDURE Initialize () =
   VAR
-    x0 := Formal.NewBuiltin ("x", 0, Int.T);
-    y0 := Formal.NewBuiltin ("y", 1, Int.T);
-    t0 := ProcType.New (Int.T, x0, y0);
+    x0 := Formal.NewBuiltin ("x", 0, T);
+    y0 := Formal.NewBuiltin ("y", 1, T);
+    t0 := ProcType.New (T, x0, y0);
   BEGIN
-    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, Int.T,
+    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,

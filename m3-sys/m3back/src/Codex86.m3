@@ -1942,7 +1942,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
 
     WHILE f_lit # NIL DO
       FOR i := 0 TO f_lit.size-1 DO
-        EVAL TargetInt.FromInt(f_lit.arr[i], Target.Pre.Integer, tint);
+        EVAL TargetInt.FromInt(f_lit.arr[i], Target.Integer.bytes, tint);
         t.parent.init_int(f_lit.loc + i, tint, Type.Word8);
       END;
 
@@ -1950,7 +1950,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
     END;
 
     WHILE abscall # NIL DO
-      t.parent.init_int(abscall.loc, TargetInt.Zero[Target.Pre.Integer], Type.Int32);
+      t.parent.init_int(abscall.loc, TargetInt.Zero, Type.Int32);
       t.obj.relocate(intvar.symbol, abscall.loc, abscall.sym);
       abscall := abscall.link;
     END;

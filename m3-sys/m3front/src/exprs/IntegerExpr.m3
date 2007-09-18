@@ -12,8 +12,7 @@ IMPORT M3, CG, Expr, ExprRep, Type, Int, LInt, Error, M3Buf, Target, TInt;
 
 TYPE
   P = Expr.T BRANDED "IntegerExpr.T" OBJECT
-        pre : Precision;
-        val : Target.Int;
+        value: Target.Int;
       OVERRIDES
         typeOf       := ExprRep.NoType;
         check        := ExprRep.NoCheck;
@@ -36,27 +35,29 @@ TYPE
         note_write   := ExprRep.NotWritable;
       END;
 
-VAR cache: ARRAY Precision OF ARRAY [-7 .. 64] OF P;
+VAR cache := ARRAY BOOLEAN, [-7 .. 64] OF P {ARRAY [-7 .. 64] OF P{NIL, ..},..};
 
-PROCEDURE New (READONLY value: Target.Int): Expr.T =
-  VAR p: P;  n: INTEGER;  pre := TInt.Prec (value);
+PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
+  VAR p: P;  n: INTEGER;  v: Target.Int;  t := type = LInt.T;
   BEGIN
     IF TInt.ToInt (value, n)
-      AND (FIRST (cache[pre]) <= n) AND (n <= LAST (cache[pre])) THEN
-      p := cache[pre, n];
+      AND (FIRST (cache[t]) <= n) AND (n <= LAST (cache[t])) THEN
+      p := cache[t][n];
       IF (p # NIL) THEN RETURN p; END;
     END;
+    IF type = Int.T THEN
+      IF NOT TInt.IntI (value, Target.Integer.bytes, v) THEN RETURN NIL END;
+    ELSIF type = LInt.T THEN
+      IF NOT TInt.IntI (value, Target.Longint.bytes, v) THEN RETURN NIL END;
+    ELSE RETURN NIL END;
     p := NEW (P);
     ExprRep.Init (p);
-    p.val := value;
-    CASE pre OF
-    | Precision.Integer => p.type := Int.T;
-    | Precision.Longint => p.type := LInt.T;
-    END;
+    p.value   := v;
+    p.type    := type;
     p.checked := TRUE;
     IF TInt.ToInt (value, n)
-      AND (FIRST (cache[pre]) <= n) AND (n <= LAST (cache[pre])) THEN
-      cache[pre][n] := p;
+      AND (FIRST (cache[t]) <= n) AND (n <= LAST (cache[t])) THEN
+      cache[t][n] := p;
     END;
     RETURN p;
   END New;
@@ -65,26 +66,26 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(b) => RETURN TInt.EQ (a.val, b.val);
+    | P(b) => RETURN TInt.EQ (a.value, b.value);
     ELSE      RETURN FALSE;
     END;
   END EqCheck;
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    CG.Load_integer (p.val);
+    CG.Load_integer (Type.CGType (p.type), p.value);
   END Compile;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
   BEGIN
-    min := p.val;
-    max := p.val;
+    min := p.value;
+    max := p.value;
   END Bounder;
 
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
-  VAR x, y: Target.Int;
+  VAR x, y: Target.Int; t: Type.T;
   BEGIN
-    IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
+    IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF    TInt.LT (x, y) THEN  sign := -1
     ELSIF TInt.LT (y, x) THEN  sign := +1
     ELSE                       sign :=  0
@@ -93,55 +94,55 @@ PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
   END Compare;
 
 PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;
+  VAR x, y, res: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
+    IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Add (x, y, res) THEN RETURN FALSE END;
-    c := New (res);
+    c := New (t, res);
     RETURN TRUE;
   END Add;
 
 PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;
+  VAR x, y, res: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
+    IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Subtract (x, y, res) THEN RETURN FALSE END;
-    c := New (res);
+    c := New (t, res);
     RETURN TRUE;
   END Subtract;
 
 PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;
+  VAR x, y, res: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
+    IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Multiply (x, y, res) THEN RETURN FALSE END;
-    c := New (res);
+    c := New (t, res);
     RETURN TRUE;
   END Multiply;
 
 PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;
+  VAR x, y, res: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
-    IF TInt.Sig (y) = 0 THEN
+    IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
+    IF TInt.EQ (y, TInt.Zero) THEN
       Error.Msg ("attempt to DIV by 0");
       RETURN FALSE;
     END;
     IF NOT TInt.Div (x, y, res) THEN RETURN FALSE END;
-    c := New (res);
+    c := New (t, res);
     RETURN TRUE;
   END Div;
 
 PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;
+  VAR x, y, res: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
-    IF TInt.Sig (y) = 0 THEN
+    IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
+    IF TInt.EQ (y, TInt.Zero) THEN
       Error.Msg ("attempt to MOD by 0");
       RETURN FALSE;
     END;
     IF NOT TInt.Mod (x, y, res) THEN RETURN FALSE END;
-    c := New (res);
+    c := New (t, res);
     RETURN TRUE;
   END Mod;
 
@@ -150,47 +151,77 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => IF NOT TInt.Negate (p.val, res) THEN
+    | P(p) => IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
                 RETURN FALSE;
               END;
-              c := New (res);  RETURN TRUE;
+              c := New (p.type, res);  RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Negate;
 
-PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int): BOOLEAN =
+PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
+  VAR res: Target.Int;
   BEGIN
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => x := p.val;
+    | P(p) => IF TInt.LE (TInt.Zero, p.value) THEN
+                c := a;  RETURN TRUE;
+              END;
+              IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
+                RETURN FALSE;
+              END;
+              c := New (p.type, res);  RETURN TRUE;
+    ELSE      RETURN FALSE;
+    END;
+  END Abs;
+
+PROCEDURE ToInt (a: Expr.T;  VAR i: INTEGER): BOOLEAN =
+  BEGIN
+    TYPECASE a OF
+    | NULL => RETURN FALSE;
+    | P(p) => IF NOT TInt.ToInt (p.value, i) THEN
+                RETURN FALSE;
+              END;
+              RETURN TRUE;
+    ELSE      RETURN FALSE;
+    END;
+  END ToInt;
+
+PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int;  VAR t: Type.T):
+  BOOLEAN =
+  BEGIN
+    TYPECASE a OF
+    | NULL => RETURN FALSE;
+    | P(p) => x := p.value; t := p.type;
     ELSE      RETURN FALSE;
     END;
     TYPECASE b OF
     | NULL => RETURN FALSE;
-    | P(p) => y := p.val; RETURN TRUE;
+    | P(p) => y := p.value; RETURN t = p.type;
     ELSE      RETURN FALSE;
     END;
   END SplitPair;
 
-PROCEDURE Split (e: Expr.T;  VAR value: Target.Int): BOOLEAN =
+PROCEDURE Split (e: Expr.T;  VAR value: Target.Int;  VAR t: Type.T): BOOLEAN =
   BEGIN
     TYPECASE e OF
     | NULL => RETURN FALSE;
-    | P(p) => value := p.val; RETURN TRUE;
+    | P(p) => value := p.value; t := p.type;  RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Split;
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN TInt.Sig (p.val) = 0;
+    RETURN TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
-  CONST mark = ARRAY Precision OF TEXT { "INT<", "LONGINT<" };
   BEGIN
-    M3Buf.PutText (buf, mark [p.pre]);
-    M3Buf.PutIntt (buf, p.val);
+    IF    p.type = Int.T  THEN M3Buf.PutText (buf, "INT<");
+    ELSIF p.type = LInt.T THEN M3Buf.PutText (buf, "LINT<");
+    ELSE <*ASSERT FALSE*> END;
+    M3Buf.PutIntt (buf, p.value);
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
 
@@ -198,7 +229,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
   VAR info: Type.Info;
   BEGIN
     EVAL Type.CheckInfo (type, info);
-    CG.Init_int (offset, info.size, p.val, is_const);
+    CG.Init_int (offset, info.size, p.value, is_const);
   END GenLiteral;
 
 BEGIN

@@ -14,7 +14,7 @@ VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
 
 PROCEDURE Init (system: TEXT): BOOLEAN =
-  CONST FF = 16_ffff;
+  CONST FF = 16_ff;
   VAR sys := 0;  max_align := 64;
   BEGIN
     (* lookup the system *)
@@ -30,63 +30,63 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     Int8.cg_type     := CGType.Int8;
     Int8.size        := 8;
     Int8.align       := 8;
-    Int8.min         := IChunks { 16_ff80, FF, FF, FF };
-    Int8.max         := IChunks { 16_007f, 00, 00, 00 };
+    Int8.min         := Int{NUMBER(IBytes), IBytes{16_80,FF,..}};
+    Int8.max         := Int{NUMBER(IBytes), IBytes{16_7f,00,..}};
 
     Int16.cg_type    := CGType.Int16;
     Int16.size       := 16;
     Int16.align      := 16;
-    Int16.min        := IChunks { 16_8000, FF, FF, FF };
-    Int16.max        := IChunks { 16_7fff, 00, 00, 00 };
+    Int16.min        := Int{NUMBER(IBytes), IBytes{00,16_80,FF,..}};
+    Int16.max        := Int{NUMBER(IBytes), IBytes{FF,16_7f,00,..}};
 
     Int32.cg_type    := CGType.Int32;
     Int32.size       := 32;
     Int32.align      := 32;
-    Int32.min        := IChunks { 00, 16_8000, FF, FF };
-    Int32.max        := IChunks { FF, 16_7fff, 00, 00 };
+    Int32.min        := Int{NUMBER(IBytes), IBytes{00,00,00,16_80,FF,..}};
+    Int32.max        := Int{NUMBER(IBytes), IBytes{FF,FF,FF,16_7f,00,..}};
 
     Int64.cg_type    := CGType.Int64;
     Int64.size       := 64;
     Int64.align      := 64;
-    Int64.min        := IChunks { 00, 00, 00, 16_8000 };
-    Int64.max        := IChunks { FF, FF, FF, 16_7fff };
+    Int64.min        := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,16_80}};
+    Int64.max        := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,16_7f}};
 
     Word8.cg_type    := CGType.Word8;
     Word8.size       := 8;
     Word8.align      := 8;
-    Word8.min        := IChunks { 16_0000, 00, 00, 00 };
-    Word8.max        := IChunks { 16_00ff, 00, 00, 00 };
+    Word8.min        := Int{NUMBER(IBytes), IBytes{00,00,..}};
+    Word8.max        := Int{NUMBER(IBytes), IBytes{FF,00,..}};
 
     Word16.cg_type   := CGType.Word16;
     Word16.size      := 16;
     Word16.align     := 16;
-    Word16.min       := IChunks { 00, 00, 00, 00 };
-    Word16.max       := IChunks { FF, 00, 00, 00 };
+    Word16.min       := Int{NUMBER(IBytes), IBytes{00,00,00,..}};
+    Word16.max       := Int{NUMBER(IBytes), IBytes{FF,FF,00,..}};
 
     Word32.cg_type   := CGType.Word32;
     Word32.size      := 32;
     Word32.align     := 32;
-    Word32.min       := IChunks { 00, 00, 00, 00 };
-    Word32.max       := IChunks { FF, FF, 00, 00 };
+    Word32.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,..}};
+    Word32.max       := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,00,..}};
 
     Word64.cg_type   := CGType.Word64;
     Word64.size      := 64;
     Word64.align     := 64;
-    Word64.min       := IChunks { 00, 00, 00, 00 };
-    Word64.max       := IChunks { FF, FF, FF, FF };
+    Word64.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,00}};
+    Word64.max       := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,FF}};
 
     Integer          := Int32;  (* default for the 32-bit platforms *)
     Longint          := Int64;
     Word             := Word32; (* default for the 32-bit platforms *)
-    Longword         := Word64;
+    Long             := Word64;
     Address          := Word32;  Address.cg_type := CGType.Addr;
     Char             := Word8;
 
     Void.cg_type     := CGType.Void;
     Void.size        := 0;
     Void.align       := Byte;
-    Void.min         := IChunks { 0, 0, 0, 0 };
-    Void.max         := IChunks { 0, 0, 0, 0 };
+    Void.min         := Int{0};
+    Void.max         := Int{0};
 
     Real.cg_type     := CGType.Reel;
     Real.pre         := Precision.Short;
@@ -395,7 +395,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
 
                  (* m3back doesn't handle 64 bit integers *)
                  Longint := Int32;
-                 Longword := Word32;
+                 Long    := Word32;
 
                  CCs := NEW (REF ARRAY OF CallingConvention, 9);
                  NTCall (0, "C",          0); (* __cdecl *)
@@ -753,18 +753,12 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     END;
     DefaultCall := CCs[0];
 
-
-    <*ASSERT Integer.size MOD ChunkSize = 0 *>
-    last_chunk[Pre.Integer] := Integer.size DIV ChunkSize - 1;
-    <*ASSERT Longint.size MOD ChunkSize = 0 *>
-    last_chunk[Pre.Longint] := Longint.size DIV ChunkSize - 1;
-
     (* fill in the "bytes" and "pack" fields *)
     FixI (Address, max_align);
     FixI (Integer, max_align);
     FixI (Word, max_align);
     FixI (Longint, max_align);
-    FixI (Longword, max_align);
+    FixI (Long, max_align);
     FixF (Real, max_align);
     FixF (Longreal, max_align);
     FixF (Extended, max_align);

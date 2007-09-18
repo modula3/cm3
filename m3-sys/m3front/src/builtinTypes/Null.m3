@@ -13,7 +13,7 @@ IMPORT RefType, Constant, Tipe, AddressExpr, Brand, TInt;
 PROCEDURE Initialize () =
   BEGIN
     T := RefType.New (NIL, FALSE, Brand.New ("$null$"));
-    Nil := AddressExpr.New (TInt.ZeroI);
+    Nil := AddressExpr.New (TInt.Zero);
     Tipe.Define ("NULL", T, TRUE);
     Constant.Declare ("NIL", Nil, TRUE);
   END Initialize;

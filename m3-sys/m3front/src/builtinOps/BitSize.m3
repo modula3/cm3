@@ -9,7 +9,7 @@
 MODULE BitSize;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, IntegerExpr;
-IMPORT TypeExpr, OpenArrayType, Error, Card, Target, TInt;
+IMPORT TypeExpr, OpenArrayType, Error, Card, Target, TInt, Int;
 
 VAR Z: CallExpr.MethodList;
 
@@ -111,12 +111,12 @@ PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =
       IF (info.class = Type.Class.OpenArray) THEN RETURN NIL END;
     END;
     t := Type.CheckInfo (t, info);
-    IF    TInt.FromInt (info.size, Target.Pre.Integer, size)
-      AND TInt.FromInt (unit, Target.Pre.Integer, a)
-      AND TInt.FromInt (unit - 1, Target.Pre.Integer, b)
+    IF    TInt.FromInt (info.size, Target.Integer.bytes, size)
+      AND TInt.FromInt (unit, Target.Integer.bytes, a)
+      AND TInt.FromInt (unit - 1, Target.Integer.bytes, b)
       AND TInt.Add (size, b, c)
       AND TInt.Div (c, a, d)
-      THEN RETURN IntegerExpr.New (d);
+      THEN RETURN IntegerExpr.New (Int.T, d);
       ELSE RETURN NIL;
     END;
   END DoFold;

@@ -9,7 +9,9 @@
 MODULE LongAnd;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, ProcType;
-IMPORT LInt, IntegerExpr, Formal, Value, LongPlus, Target, TWord, TInt;
+IMPORT IntegerExpr, Formal, Value, Target, TWord, TInt;
+FROM LInt IMPORT T;
+IMPORT LongPlus AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -17,7 +19,7 @@ VAR formals: Value.T;
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
     EVAL Formal.CheckArgs (cs, ce.args, formals, ce.proc);
-    ce.type := LInt.T;
+    ce.type := T;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
@@ -30,10 +32,11 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF LongPlus.GetArgs (ce.args, w0, w1)
-      THEN TWord.And (w0, w1, result); RETURN IntegerExpr.New (result);
-      ELSE RETURN NIL;
+    IF Plus.GetArgs (ce.args, w0, w1) THEN
+      TWord.And (w0, w1, result);
+      RETURN IntegerExpr.New (T, result);
     END;
+    RETURN NIL;
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
@@ -41,35 +44,35 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   BEGIN
     Expr.GetBounds (ce.args[0], min_a, max_a);
     Expr.GetBounds (ce.args[1], min_b, max_b);
-    IF TInt.Sig (min_a) < 0 OR TInt.Sig (max_a) < 0 THEN
+    IF TInt.LT (min_a, TInt.Zero) OR TInt.LT (max_a, TInt.Zero) THEN
       (* "a" could be 16_ffff...  => any bits from "b" can survive *)
-      IF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
+      IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
         (* too complicated *)
-        min := Target.Int{Target.Longint.min, Target.Pre.Longint};
-        max := Target.Int{Target.Longint.max, Target.Pre.Longint};
+        min := Target.Longint.min;
+        max := Target.Longint.max;
       ELSE
         (* "b" is non-negative, but "a" could be 16_ffff... *)
-        min := TInt.ZeroL;  (* no bits in common *)
+        min := TInt.Zero;  (* no bits in common *)
         max := max_b;
       END;
-    ELSIF TInt.Sig (min_b) < 0 OR TInt.Sig (max_b) < 0 THEN
+    ELSIF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
       (* "a" is non-negative, but "b" could be 16_ffff... *)
-      min := TInt.ZeroL;  (* no bits in common *)
+      min := TInt.Zero;  (* no bits in common *)
       max := max_a;
     ELSE
       (* both a and b are non-negative *)
-      min := TInt.ZeroL;  (* no bits in common *)
+      min := TInt.Zero;  (* no bits in common *)
       TWord.And (max_a, max_b, max);
     END;
   END GetBounds;
 
 PROCEDURE Initialize () =
   VAR
-    x0 := Formal.NewBuiltin ("x", 0, LInt.T);
-    y0 := Formal.NewBuiltin ("y", 1, LInt.T);
-    t0 := ProcType.New (LInt.T, x0, y0);
+    x0 := Formal.NewBuiltin ("x", 0, T);
+    y0 := Formal.NewBuiltin ("y", 1, T);
+    t0 := ProcType.New (T, x0, y0);
   BEGIN
-    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, LInt.T,
+    Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,
                                  Check,

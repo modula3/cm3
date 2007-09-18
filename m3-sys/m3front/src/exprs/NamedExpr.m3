@@ -229,8 +229,8 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
     IF (p.value = NIL) THEN Resolve (p) END;
     IF (p.inGetBounds) THEN
       Value.IllegalRecursion (p.value);
-      min := TInt.ZeroI;
-      max := TInt.OneI;
+      min := TInt.Zero;
+      max := TInt.One;
       RETURN;
     END;
     p.inGetBounds := TRUE;

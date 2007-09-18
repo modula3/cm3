@@ -373,10 +373,10 @@ PROCEDURE EmitBody (x: Raiser) =
       CG.Pop_param (CG.Type.Addr);
       CG.Load_addr (x.module);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_int (x.line, Target.Integer.cg_type);
+      CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
     ELSE
-      CG.Load_int (x.line, Target.Integer.cg_type);
+      CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
       CG.Load_addr (x.module);
       CG.Pop_param (CG.Type.Addr);

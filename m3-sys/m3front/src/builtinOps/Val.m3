@@ -23,7 +23,7 @@ PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
   END TypeOf;
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
-  VAR t, u: Type.T;  min, max, mint, maxt, minu, maxu: Target.Int;
+  VAR t, u: Type.T;  mint, maxt, minu, maxu: Target.Int;
   BEGIN
     u := Expr.TypeOf (ce.args[0]);
     t := Int.T;
@@ -36,29 +36,6 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     ELSE (* looks ok *)
       Expr.GetBounds (ce.args[0], minu, maxu);
       EVAL Type.GetBounds (t, mint, maxt);
-      IF Type.IsSubtype (t, LInt.T) THEN
-        (* trim bounds to INTEGER bounds *)
-        <*ASSERT TInt.Prec (mint) = Target.Pre.Longint*>
-        <*ASSERT TInt.Prec (maxt) = Target.Pre.Longint*>
-        min := Target.Int{Target.Integer.min, Target.Pre.Longint};
-        max := Target.Int{Target.Integer.max, Target.Pre.Longint};
-        IF TInt.LT (mint, min) THEN
-          mint := Target.Int{Target.Integer.min, Target.Pre.Integer};
-        ELSIF TInt.Ord (mint, min) THEN
-          mint := min;
-        ELSE
-          mint := Target.Int{Target.Integer.max, Target.Pre.Integer};
-        END;
-        IF TInt.LT (max, maxt) THEN
-          maxt := Target.Int{Target.Integer.max, Target.Pre.Integer};
-        ELSIF TInt.Ord (maxt, max) THEN
-          maxt := max;
-        ELSE
-          maxt := Target.Int{Target.Integer.min, Target.Pre.Integer};
-        END;
-      END;
-      <*ASSERT TInt.Prec (mint) = Target.Pre.Integer*>
-      <*ASSERT TInt.Prec (maxt) = Target.Pre.Integer*>
       IF TInt.LT (minu, mint) THEN
         (* we need a lower bound check *)
         IF TInt.LT (maxt, maxu) THEN
@@ -100,16 +77,11 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR t: Type.T;  e: Expr.T;  x, min, max: Target.Int;
   BEGIN
     e := Expr.ConstValue (ce.args[0]);
-    IF (e = NIL) OR (NOT IntegerExpr.Split (e, x))
+    IF (e = NIL) OR (NOT IntegerExpr.Split (e, x, t))
       OR (NOT TypeExpr.Split (ce.args[1], t)) THEN
       RETURN NIL;
     END;
     EVAL Type.GetBounds (t, min, max);
-    IF Type.IsSubtype (t, LInt.T) THEN
-      <*ASSERT TInt.Prec (min) = Target.Pre.Longint*>
-      <*ASSERT TInt.Prec (max) = Target.Pre.Longint*>
-      WITH z = TInt.Val (x, Target.Pre.Longint, x) DO <*ASSERT z*> END;
-    END;
     IF TInt.LT (x, min) OR TInt.LT (max, x) THEN
       Error.Msg ("VAL: value out of range");
       RETURN NIL;
@@ -117,17 +89,13 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     t := Type.Base (t);
     IF EnumType.Is (t)
       THEN RETURN EnumExpr.New (t, x);
-      ELSE RETURN IntegerExpr.New (x);
+      ELSE RETURN IntegerExpr.New (t, x);
     END;
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   BEGIN
     Expr.GetBounds (ce.args[0], min, max);
-    IF Type.IsSubtype (ce.type, LInt.T) THEN
-      WITH z = TInt.Val (min, Target.Pre.Longint, min) DO <*ASSERT z*> END;
-      WITH z = TInt.Val (max, Target.Pre.Longint, max) DO <*ASSERT z*> END;
-    END;
   END GetBounds;
 
 PROCEDURE Initialize () =

@@ -189,7 +189,7 @@ PROCEDURE CheckLabel (p: P;  tree: Tree;  e: Expr.T;  type: Type.T;
     Error.Count (n_errs, n_warns);
       Expr.TypeCheck (e, cs);
     Error.Count (n_xxx, n_warns);
-    IF (n_xxx > n_errs) THEN tree.bad := TRUE;  RETURN TInt.ZeroI; END;
+    IF (n_xxx > n_errs) THEN tree.bad := TRUE;  RETURN TInt.Zero; END;
 
     t := Expr.TypeOf (e);
     IF (NOT p.badLabels) AND NOT Type.IsAssignable (type, t) THEN
@@ -202,8 +202,8 @@ PROCEDURE CheckLabel (p: P;  tree: Tree;  e: Expr.T;  type: Type.T;
       Error.Msg ("case label must be constant");
       tree.bad := TRUE;
     END;
-    i := TInt.ZeroI;
-    IF IntegerExpr.Split (e, i) OR EnumExpr.Split (e, i, t) THEN END;
+    i := TInt.Zero;
+    IF IntegerExpr.Split (e, i, t) OR EnumExpr.Split (e, i, t) THEN END;
     RETURN i;
   END CheckLabel;
 
@@ -230,15 +230,15 @@ PROCEDURE AddToTree (p: P;  old, new: Tree): Tree =
       new_max := TInt.LT (old.max, new.max);
       IF new_min AND new_max THEN
         z := NEW (Tree);  z^ := new^;
-        EVAL TInt.Dec (old.min, z.max);
+        EVAL TInt.Subtract (old.min, TInt.One, z.max);
         old.less := AddToTree (p, old.less, z);
-        EVAL TInt.Inc (old.max, new.min);
+        EVAL TInt.Add (old.max, TInt.One, new.min);
         old.greater := AddToTree (p, old.greater, new);
       ELSIF new_min THEN
-        EVAL TInt.Dec (old.min, new.max);
+        EVAL TInt.Subtract (old.min, TInt.One, new.max);
         old.less := AddToTree (p, old.less, new);
       ELSIF new_max THEN
-        EVAL TInt.Inc (old.max, new.min);
+        EVAL TInt.Add (old.max, TInt.One, new.min);
         old.greater := AddToTree (p, old.greater, new);
       END;
     END;
@@ -247,6 +247,7 @@ PROCEDURE AddToTree (p: P;  old, new: Tree): Tree =
 
 PROCEDURE CompleteTree (t: Tree;  min, max: Target.Int): BOOLEAN =
   VAR x, y: Target.Int;
+      One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     WHILE (t # NIL) DO
       IF TInt.LT (t.max, min) OR TInt.LT (max, t.min) THEN
@@ -255,18 +256,18 @@ PROCEDURE CompleteTree (t: Tree;  min, max: Target.Int): BOOLEAN =
       IF    TInt.Subtract (t.min, min, x)
         AND TInt.Subtract (max, t.max, y)
         AND TInt.LT (y, x) THEN
-        IF TInt.Inc (t.max, x) THEN
+        IF TInt.Add (t.max, One, x) THEN
           IF NOT CompleteTree (t.greater, x, max) THEN RETURN FALSE END;
         END;
-        IF NOT TInt.Dec (t.min, max) THEN
+        IF NOT TInt.Subtract (t.min, One, max) THEN
           RETURN TRUE;
         END;
 	t := t.less;
       ELSE
-        IF TInt.Dec (t.min, x) THEN
+        IF TInt.Subtract (t.min, One, x) THEN
           IF NOT CompleteTree (t.less, min, x) THEN RETURN FALSE END;
         END;
-        IF NOT TInt.Inc (t.max, min) THEN
+        IF NOT TInt.Add (t.max, One, min) THEN
           RETURN TRUE;
         END;
 	t := t.greater;  
@@ -280,7 +281,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
       min_L, max_L: INTEGER;
   BEGIN
     (* find the smallest label *)
-    minL := Target.Int{Target.Integer.max, Target.Pre.Integer};
+    minL := Target.Integer.max;
     t := p.tree;
     WHILE (t # NIL) DO
       minL := t.min;
@@ -288,7 +289,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     END;
 
     (* find the largest label *)
-    maxL := Target.Int{Target.Integer.min, Target.Pre.Integer};
+    maxL := Target.Integer.min;
     t := p.tree;
     WHILE (t # NIL) DO
       maxL := t.max;
@@ -330,10 +331,10 @@ PROCEDURE ShouldBeIndexed (p: P;  maxL, minL: INTEGER): BOOLEAN =
     (* don't bother with tiny tables *)
     (* => count the number of IF tests that would be needed *)
     n_tests := 0;
-    last := Target.Int{Target.Integer.min, Target.Pre.Integer};
+    last := Target.Integer.min;
     t := p.tree;
     WHILE (t # NIL) DO
-      IF TInt.Dec (t.min, zz)
+      IF TInt.Subtract (t.min, TInt.One, zz)
         AND TInt.LT (last, zz) THEN INC (n_tests) END;
       INC (n_tests);
       last := t.max;
@@ -408,7 +409,7 @@ PROCEDURE GenIndexedBranch (p: P;  l_min, l_max: INTEGER;
       (* upper bound is OK *)
       x := CG.Pop ();
       CG.Push (x);
-      CG.Load_integer (TInt.ZeroI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, l_else, CG.Never);
       CG.Push (x);
       CG.Free (x);
@@ -416,7 +417,7 @@ PROCEDURE GenIndexedBranch (p: P;  l_min, l_max: INTEGER;
       (* need to check both bounds *)
       x := CG.Pop ();
       CG.Push (x);
-      CG.Load_integer (TInt.ZeroI);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, l_else, CG.Never);
       CG.Push (x);
       CG.Load_intt (l_max - l_min);
@@ -457,6 +458,7 @@ PROCEDURE GenIfTable (p: P): Stmt.Outcomes =
     next: Target.Int;
     oc, xc: Stmt.Outcomes;
     l_bodies, l_else, l_end: INTEGER;
+    One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     p.tree := CollapseTree (p.tree);
     l_bodies := CG.Next_label (p.nCases);
@@ -477,13 +479,13 @@ PROCEDURE GenIfTable (p: P): Stmt.Outcomes =
       CG.Gen_location (t.origin);
       IF TInt.LT (next, t.min) THEN
         CG.Push (x);
-        CG.Load_integer (t.min);
+        CG.Load_integer (Target.Integer.cg_type, t.min);
         CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, l_else, CG.Never);
       END;
       CG.Push (x);
-      CG.Load_integer (t.max);
+      CG.Load_integer (Target.Integer.cg_type, t.max);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LE, l_bodies+t.body, CG.Maybe);
-      IF NOT TInt.Inc (t.max, next) THEN
+      IF NOT TInt.Add (t.max, One, next) THEN
         IF (t.greater # NIL) THEN Error.Msg ("case label too large") END;
         next := t.max;
       END;
@@ -521,7 +523,7 @@ PROCEDURE CollapseTree (t: Tree): Tree =
       x := t1.max;
       t2 := t1.greater;
       WHILE (t2 # NIL) AND (t2.body = c)
-        AND TInt.Inc (x, xx)
+        AND TInt.Add (x, TInt.One, xx)
         AND TInt.EQ (xx, t2.min) DO
         x := t2.max;
         t2 := t2.greater;

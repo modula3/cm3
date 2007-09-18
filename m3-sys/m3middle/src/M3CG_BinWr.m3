@@ -329,8 +329,8 @@ PROCEDURE OutI  (u: U;  i: INTEGER) =
 TYPE
   IntDesc = RECORD
     negative : BOOLEAN;
-    n_bytes  : [0 .. NUMBER (TargetInt.ByteArray)];
-    bytes    : TargetInt.ByteArray;
+    n_bytes  : CARDINAL;
+    bytes    : ARRAY [0..7] OF [0..255];
   END;
 
 PROCEDURE AddBigInt (u: U;  i: INTEGER) =
@@ -349,8 +349,8 @@ PROCEDURE AddBigInt (u: U;  i: INTEGER) =
 PROCEDURE AddBigX (u: U;  READONLY i: Target.Int) =
   VAR n := i;  z: IntDesc;
   BEGIN
-    z.negative := TargetInt.Sig (i) < 0;
-    IF (z.negative) THEN TWord.Negate (i, n); END;
+    z.negative := TargetInt.LT (n, TargetInt.Zero);
+    IF (z.negative) THEN TWord.Subtract (TargetInt.Zero, i, n); END;
     z.n_bytes := TargetInt.ToBytes (n, z.bytes);
     DumpInt (u, z);
   END AddBigX;

@@ -132,23 +132,24 @@ PROCEDURE AddBigInt (i: INTEGER) =
   END AddBigInt;
 
 PROCEDURE AddX (READONLY i: Target.Int) =
-  VAR x: INTEGER;  pre := TInt.Prec (i);
+  VAR x: INTEGER;
   BEGIN
-    IF    TInt.ToInt (i, x)                              THEN AddI (x);
-    ELSIF TInt.EQ (i, Target.Int{Target.Int32.max, pre}) THEN Stuff (16_7e);
-    ELSIF TInt.EQ (i, Target.Int{Target.Int32.min, pre}) THEN Stuff (16_fe);
-    ELSIF TInt.EQ (i, Target.Int{Target.Int64.max, pre}) THEN Stuff (16_7f);
-    ELSIF TInt.EQ (i, Target.Int{Target.Int64.min, pre}) THEN Stuff (16_ff);
+    IF    TInt.ToInt (i, x)             THEN AddI (x);
+    ELSIF TInt.EQ (i, Target.Int32.max) THEN Stuff (16_7e);
+    ELSIF TInt.EQ (i, Target.Int32.min) THEN Stuff (16_fe);
+    ELSIF TInt.EQ (i, Target.Int64.max) THEN Stuff (16_7f);
+    ELSIF TInt.EQ (i, Target.Int64.min) THEN Stuff (16_ff);
     ELSE  AddBigX (i);
     END;
   END AddX;
 
 PROCEDURE AddBigX (READONLY ii: Target.Int) =
   CONST Sign = ARRAY BOOLEAN OF INTEGER { 16_40, 16_c0 };
-  VAR x: TInt.ByteArray;  key, n_bytes: INTEGER;  i := ii;
+  VAR x: ARRAY [0..LAST (Target.IBytes)] OF [0..255];
+      key, n_bytes: INTEGER;  i := ii;
   BEGIN
-    key := Sign [TInt.Sig (i) < 0];
-    IF (key # 16_40) THEN TWord.Negate (ii, i); END;
+    key := Sign [TInt.LT (i, TInt.Zero)];
+    IF (key # 16_40) THEN TWord.Subtract (TInt.Zero, ii, i); END;
 
     (* extract the bytes *)
     n_bytes := TInt.ToBytes (i, x);

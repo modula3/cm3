@@ -9,7 +9,9 @@
 MODULE LongLT;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
-IMPORT LInt, Bool, LongPlus, Value, Formal, ProcType;
+IMPORT Bool, Value, Formal, ProcType;
+FROM LInt IMPORT T;
+IMPORT LongPlus AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -24,7 +26,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Compare (Target.Longword.cg_type, CG.Cmp.LT);
+    CG.Compare (Target.Long.cg_type, CG.Cmp.LT);
   END Compile;
 
 PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
@@ -33,13 +35,13 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
     Expr.Prep (ce.args[1]);
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.If_then (Target.Longword.cg_type, CG.Cmp.LT, true, false, freq);
+    CG.If_then (Target.Long.cg_type, CG.Cmp.LT, true, false, freq);
   END PrepBR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1: Target.Int;
   BEGIN
-    IF LongPlus.GetArgs (ce.args, w0, w1)
+    IF Plus.GetArgs (ce.args, w0, w1)
       THEN RETURN Bool.Map [TWord.LT (w0, w1)];
       ELSE RETURN NIL;
     END;
@@ -47,8 +49,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
 
 PROCEDURE Initialize () =
   VAR
-    x1 := Formal.NewBuiltin ("x", 0, LInt.T);
-    y1 := Formal.NewBuiltin ("y", 1, LInt.T);
+    x1 := Formal.NewBuiltin ("x", 0, T);
+    y1 := Formal.NewBuiltin ("y", 1, T);
     t1 := ProcType.New (Bool.T, x1, y1);
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, Bool.T,

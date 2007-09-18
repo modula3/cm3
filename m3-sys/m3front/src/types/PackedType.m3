@@ -8,7 +8,7 @@
 
 MODULE PackedType;
 
-IMPORT M3, CG, Word, Type, TypeRep, Error, Expr, Target, TInt;
+IMPORT M3, CG, Word, Type, TypeRep, Error, Expr, Target;
 IMPORT M3Buf, Token, IntegerExpr, Scanner, TipeDesc;
 
 CONST
@@ -63,14 +63,13 @@ PROCEDURE Reduce (t: Type.T): P =
   END Reduce;
 
 PROCEDURE GetSize (p: P): INTEGER =
-  VAR new_sz: INTEGER;  new_size: Target.Int;  e: Expr.T;
+  VAR newSize: INTEGER;  e: Expr.T;
   BEGIN
     IF (p.newSize = NO_SIZE) AND (p.sizeE # NIL) THEN
       e := Expr.ConstValue (p.sizeE);
-      IF (e = NIL) OR NOT IntegerExpr.Split (e, new_size)
-        OR NOT TInt.ToInt (new_size, new_sz)
+      IF (e = NIL) OR NOT IntegerExpr.ToInt (e, newSize)
         THEN Error.Msg ("BITS FOR size must be a constant integer");
-        ELSE p.sizeE := e;  p.newSize := new_sz;
+        ELSE p.sizeE := e;  p.newSize := newSize;
       END;
     END;
     RETURN p.newSize;

@@ -57,7 +57,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     e2 := Expr.ConstValue (ce.args[1]);
     IF (e2 = NIL) THEN RETURN NIL END;
 
-    IF IntegerExpr.Split (e1, i1) AND IntegerExpr.Split (e2, i2) THEN
+    IF IntegerExpr.Split (e1, i1, t) AND IntegerExpr.Split (e2, i2, t) THEN
       IF TInt.LT (i1, i2)
         THEN RETURN e2;
         ELSE RETURN e1;

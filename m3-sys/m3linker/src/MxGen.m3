@@ -430,7 +430,7 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
 
       (* argc = -1; *)
       s.cg.set_source_line (src_line);  INC (src_line);
-      s.cg.load_integer (int_t, TInt.MOneI);
+      s.cg.load_integer (int_t, TInt.MOne);
       s.cg.store (argc, 0, int_t, int_t);
 
       (* envp = (_ADDRESS)GetEnvironmentStringsA(); *)
@@ -456,7 +456,7 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
       
       (* self = 0; *)
       s.cg.set_source_line (src_line);  INC (src_line);
-      s.cg.load_integer (int_t, TInt.ZeroI);
+      s.cg.load_integer (int_t, TInt.Zero);
       s.cg.store (self, 0, int_t, int_t);
     END; (* if GUI *)
 
@@ -491,13 +491,13 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     (*  RTProcess.Exit (0); *)
     s.cg.set_source_line (src_line);  INC (src_line);
     s.cg.start_call_direct (exit_proc, 0, Target.CGType.Void);
-    s.cg.load_integer (int_t, TInt.ZeroI);
+    s.cg.load_integer (int_t, TInt.Zero);
     s.cg.pop_param (int_t);
     s.cg.call_direct (exit_proc, Target.CGType.Void);
 
     (*  return 0; *)
     s.cg.set_source_line (src_line);  INC (src_line);
-    s.cg.load_integer (int_t, TInt.ZeroI);
+    s.cg.load_integer (int_t, TInt.Zero);
     s.cg.exit_proc (int_t);
     s.cg.end_procedure (main);
     s.cg.end_unit ();

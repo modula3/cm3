@@ -9,7 +9,7 @@
 MODULE CheckExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, IntegerExpr, EnumExpr, Host;
-IMPORT Target, TInt, Error;
+IMPORT Target, TInt, Error, LInt;
 
 TYPE
   Class = { cLOWER, cUPPER, cBOTH };
@@ -52,13 +52,13 @@ PROCEDURE New (a: Expr.T;  READONLY min, max: Target.Int;
 PROCEDURE NewLower (a: Expr.T;  READONLY min: Target.Int;
                     err: CG.RuntimeError): Expr.T =
   BEGIN
-    RETURN Create (a, min, TInt.Zero[TInt.Prec (min)], Class.cLOWER, err);
+    RETURN Create (a, min, TInt.Zero, Class.cLOWER, err);
   END NewLower;
 
 PROCEDURE NewUpper (a: Expr.T;  READONLY max: Target.Int;
                     err: CG.RuntimeError): Expr.T =
   BEGIN
-    RETURN Create (a, TInt.Zero[TInt.Prec (max)], max, Class.cUPPER, err);
+    RETURN Create (a, TInt.Zero, max, Class.cUPPER, err);
   END NewUpper;
 
 PROCEDURE Create (a: Expr.T; READONLY min, max: Target.Int; c: Class;
@@ -105,36 +105,39 @@ PROCEDURE Prep (p: P) =
   END Prep;
 
 PROCEDURE Compile (p: P) =
+  VAR cg_type := Type.CGType (Expr.TypeOf (p.expr));
   BEGIN
     Expr.Compile (p.expr);
     CASE p.class OF
-    | Class.cLOWER => CG.Check_lo (p.min, p.err);
-    | Class.cUPPER => CG.Check_hi (p.max, p.err);
-    | Class.cBOTH  => CG.Check_range (p.min, p.max, p.err);
+    | Class.cLOWER => CG.Check_lo (cg_type, p.min, p.err);
+    | Class.cUPPER => CG.Check_hi (cg_type, p.max, p.err);
+    | Class.cBOTH  => CG.Check_range (cg_type, p.min, p.max, p.err);
     END;
   END Compile;
 
 PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
                       err: CG.RuntimeError) =
-  VAR minE, maxE: Target.Int;  x: Expr.T;
+  VAR minE, maxE: Target.Int;  x: Expr.T;  t := Type.Base (Expr.TypeOf (e));
+      cg_type := Target.Integer.cg_type;
   BEGIN
+    IF Type.IsSubtype (t, LInt.T) THEN cg_type := Target.Longint.cg_type END;
     x := Expr.ConstValue (e);
     IF (x # NIL) THEN e := x;  END;
     Expr.Compile (e);
     IF Host.doRangeChk THEN
       Expr.GetBounds (e, minE, maxE);
       IF TInt.LT (minE, min) AND TInt.LT (max, maxE) THEN
-        CG.Check_range (min, max, err);
+        CG.Check_range (cg_type, min, max, err);
       ELSIF TInt.LT (minE, min) THEN
         IF TInt.LT (maxE, min) THEN
           Error.Warn (2, "value out of range");
         END;
-        CG.Check_lo (min, err);
+        CG.Check_lo (cg_type, min, err);
       ELSIF TInt.LT (max, maxE) THEN
         IF TInt.LT (max, minE) THEN
           Error.Warn (2, "value out of range");
         END;
-        CG.Check_hi (max, err);
+        CG.Check_hi (cg_type, max, err);
       END;
     END;
   END EmitChecks;
@@ -144,7 +147,7 @@ PROCEDURE Fold (p: P): Expr.T =
   BEGIN
     e := Expr.ConstValue (p.expr);
     IF (e = NIL) THEN RETURN NIL END;
-    IF (NOT IntegerExpr.Split (e, i))
+    IF (NOT IntegerExpr.Split (e, i, t))
       AND (NOT EnumExpr.Split (e, i, t)) THEN
       RETURN NIL;
     END;

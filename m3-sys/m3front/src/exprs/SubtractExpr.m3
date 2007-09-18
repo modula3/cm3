@@ -188,9 +188,9 @@ PROCEDURE Fold (p: P): Expr.T =
     ELSIF IntegerExpr.Subtract (e1, e2, e3) THEN
     ELSIF (p.extended)
       AND EnumExpr.Split (e1, x1, t1)
-      AND IntegerExpr.Split (e2, x2)
+      AND IntegerExpr.Split (e2, x2, t1)
       AND TInt.Subtract (x1, x2, x3) THEN
-      e3 := IntegerExpr.New (x3);
+      e3 := IntegerExpr.New (t1, x3);
     ELSIF ReelExpr.Subtract    (e1, e2, e3) THEN
     ELSIF AddressExpr.Subtract (e1, e2, e3) THEN
     ELSIF SetExpr.Difference   (e1, e2, e3) THEN

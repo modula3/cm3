@@ -9,7 +9,7 @@
 MODULE Inc;
 
 IMPORT CG, CallExpr, Expr, Type, Procedure, Dec, Target, TInt;
-IMPORT IntegerExpr, Host, LInt;
+IMPORT IntegerExpr, Host, Int, LInt;
 
 VAR Z: CallExpr.MethodList;
 
@@ -32,31 +32,30 @@ PROCEDURE Compile (ce: CallExpr.T) =
     inc    : Expr.T;
     check  : [0..3] := 0;
     lvalue : CG.Val;
-    min, max, bmin, bmax, imin, imax: Target.Int;
+    bmin, bmax, imin, imax: Target.Int;
   BEGIN
     tlhs := Type.CheckInfo (tlhs, info);
     IF (NUMBER (ce.args^) > 1)
       THEN inc := ce.args[1];
-      ELSE
-        IF Type.IsSubtype (tlhs, LInt.T)
-          THEN inc := IntegerExpr.New (TInt.OneL);
-          ELSE inc := IntegerExpr.New (TInt.OneI);
-        END;
-        Expr.Prep (inc);
+    ELSIF Type.IsSubtype (tlhs, LInt.T)
+      THEN inc := IntegerExpr.New (LInt.T, TInt.One);  Expr.Prep (inc);
+      ELSE inc := IntegerExpr.New (Int.T,  TInt.One);  Expr.Prep (inc);
     END;
     Expr.GetBounds (lhs, bmin, bmax);
     Expr.GetBounds (inc, imin, imax);
 
     IF Host.doRangeChk THEN
       IF Type.IsSubtype (tlhs, LInt.T) THEN
-        min := Target.Int {Target.Longint.min, Target.Pre.Longint};
-        max := Target.Int {Target.Longint.max, Target.Pre.Longint};
+        IF NOT TInt.EQ (bmin, Target.Longint.min)
+           AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
+        IF NOT TInt.EQ (bmax, Target.Longint.max)
+           AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
       ELSE        
-        min := Target.Int {Target.Integer.min, Target.Pre.Integer};
-        max := Target.Int {Target.Integer.max, Target.Pre.Integer};
+         IF NOT TInt.EQ (bmin, Target.Integer.min)
+            AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
+         IF NOT TInt.EQ (bmax, Target.Integer.max)
+            AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
       END;
-      IF NOT TInt.EQ (bmin, min) AND TInt.Sig (imin) < 0 THEN INC (check) END;
-      IF NOT TInt.EQ (bmax, max) AND TInt.Sig (imax) > 0 THEN INC (check, 2) END;
     END;
 
     Expr.CompileLValue (lhs);
@@ -74,9 +73,10 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     CASE check OF
     | 0 => (* no range checking *)
-    | 1 => CG.Check_lo (bmin, CG.RuntimeError.ValueOutOfRange);
-    | 2 => CG.Check_hi (bmax, CG.RuntimeError.ValueOutOfRange);
-    | 3 => CG.Check_range (bmin, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 1 => CG.Check_lo (info.stk_type, bmin, CG.RuntimeError.ValueOutOfRange);
+    | 2 => CG.Check_hi (info.stk_type, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 3 => CG.Check_range (info.stk_type, bmin, bmax,
+                           CG.RuntimeError.ValueOutOfRange);
     END;
 
     CG.Store_indirect (info.stk_type, 0, info.size);

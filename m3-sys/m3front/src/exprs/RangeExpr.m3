@@ -90,13 +90,13 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
     EVAL Type.GetBounds (p.type, min, max);
     e := Expr.ConstValue (p.a);
     IF (e = NIL) THEN (* can't improve lower bound *)
-    ELSIF IntegerExpr.Split (e, i) THEN  min := i;
-    ELSIF EnumExpr.Split (e, i, t) THEN  min := i;
+    ELSIF IntegerExpr.Split (e, i, t) THEN  min := i;
+    ELSIF EnumExpr.Split (e, i, t)    THEN  min := i;
     END;
     e := Expr.ConstValue (p.a);
     IF (e = NIL) THEN (* can't improve upper bound *)
-    ELSIF IntegerExpr.Split (e, i) THEN  max := i;
-    ELSIF EnumExpr.Split (e, i, t) THEN  max := i;
+    ELSIF IntegerExpr.Split (e, i, t) THEN  max := i;
+    ELSIF EnumExpr.Split (e, i, t)    THEN  max := i;
     END;
   END Bounder;
 

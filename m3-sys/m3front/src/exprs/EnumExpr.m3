@@ -57,7 +57,7 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  <*UNUSED*> x: M3.EqAssumption): BOOLEAN =
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    CG.Load_integer (p.value);
+    CG.Load_integer (Target.Integer.cg_type, p.value);
   END Compile;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
@@ -103,7 +103,7 @@ PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int): BOOLEAN =
 
 PROCEDURE IsZeroes (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN TInt.Sig (p.value) = 0;
+    RETURN TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;
 
 PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =

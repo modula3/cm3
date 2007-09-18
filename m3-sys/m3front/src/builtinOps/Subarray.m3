@@ -49,8 +49,8 @@ PROCEDURE CheckPositive (e: Expr.T;  VAR cs: Expr.CheckState): Expr.T =
   BEGIN
     IF (e = NIL) THEN RETURN NIL; END;
     Expr.GetBounds (e, min, max);
-    IF TInt.Sig (min) < 0 OR TInt.LT (max, min) THEN
-      e := CheckExpr.NewLower (e, TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+    IF TInt.LT (min, TInt.Zero) OR TInt.LT (max, min) THEN
+      e := CheckExpr.NewLower (e, TInt.Zero, CG.RuntimeError.ValueOutOfRange);
       Expr.TypeCheck (e, cs);
     END;
     RETURN e;
@@ -112,7 +112,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
 
           (* initialize the new count *)
           Expr.Compile (len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
             Expr.CompileAddress (base);
@@ -120,9 +120,10 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           ELSE
             Expr.Compile (start);         t_start := CG.Pop ();
             CG.Push (t_start);
-            CG.Load_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+            CG.Load_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
             CG.Add (Target.Integer.cg_type);
-            CG.Check_hi (n_elts, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, n_elts,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
             Expr.CompileAddress (base);
             CG.Push (t_start);
@@ -136,8 +137,8 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
     | 1 =>  (* fixed array, var start, const len ----------------------------*)
 
           (* initialize the new count *)
-          CG.Load_integer (x_len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Load_integer (Target.Integer.cg_type, x_len);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
             Expr.CompileAddress (base);
@@ -146,22 +147,25 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             (* cannot compute n-len at compile time *)
            Expr.Compile (start);         t_start := CG.Pop ();
             CG.Push (t_start);
-            CG.Load_integer (x_len);
+            CG.Load_integer (Target.Integer.cg_type, x_len);
             CG.Add (Target.Integer.cg_type);
-            CG.Check_hi (n_elts, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type,
+                         n_elts, CG.RuntimeError.ValueOutOfRange);
            CG.Discard (Target.Integer.cg_type);
             Expr.CompileAddress (base);
             CG.Push (t_start);
             CG.Free (t_start);
-          ELSIF TInt.Sig (max) < 0 THEN
+          ELSIF TInt.LT (max, TInt.Zero) THEN
             Error.Warn (2, "SUBARRAY length out of range");
             Expr.CompileAddress (base);
             Expr.Compile (start);
-            CG.Check_hi (max, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type,
+                         max, CG.RuntimeError.ValueOutOfRange);
           ELSE
             Expr.CompileAddress (base);
             Expr.Compile (start);
-            CG.Check_hi (max, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, max,
+                         CG.RuntimeError.ValueOutOfRange);
           END;
 
           (* initialize the new data pointer *)
@@ -173,28 +177,31 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           IF NOT Host.doRangeChk THEN
             (* no check => initialize the new count *)
             Expr.Compile (len);
-            CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+            CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           ELSIF NOT TInt.Subtract (n_elts, x_start, max) THEN
             (* initialize the new count *)
             Expr.Compile (len);
-            CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+            CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
             (* cannot compute n-start at compile time *)
-            CG.Load_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
-            CG.Load_integer (x_start);
+            CG.Load_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
+            CG.Load_integer (Target.Integer.cg_type, x_start);
             CG.Add (Target.Integer.cg_type);
-            CG.Check_hi (n_elts, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, n_elts,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
-          ELSIF TInt.Sig (max) < 0 THEN
+          ELSIF TInt.LT (max, TInt.Zero) THEN
             (* initialize and check the new count *)
             Error.Warn (2, "SUBARRAY initial index out of range");
             Expr.Compile (len);
-            CG.Check_hi (max, CG.RuntimeError.ValueOutOfRange);
-            CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+            CG.Check_hi (Target.Integer.cg_type,
+                         max, CG.RuntimeError.ValueOutOfRange);
+            CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           ELSE
             (* initialize and check the new count *)
             Expr.Compile (len);
-            CG.Check_hi (max, CG.RuntimeError.ValueOutOfRange);
-            CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+            CG.Check_hi (Target.Integer.cg_type, max,
+                         CG.RuntimeError.ValueOutOfRange);
+            CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           END;
 
           (* initialize the new data pointer *)
@@ -205,23 +212,25 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
     | 3 =>  (* fixed array, const start, const len --------------------------*)
 
           (* initialize the new count *)
-          CG.Load_integer (x_len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Load_integer (Target.Integer.cg_type, x_len);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
             (* no check *)
           ELSIF NOT TInt.Add (x_start, x_len, max) THEN
             (* cannot compute start+len at compile time *)
-            CG.Load_integer (x_start);
-            CG.Load_integer (x_len);
+            CG.Load_integer (Target.Integer.cg_type, x_start);
+            CG.Load_integer (Target.Integer.cg_type, x_len);
             CG.Add (Target.Integer.cg_type);
-            CG.Check_hi (n_elts, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, n_elts,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           ELSIF TInt.LT (n_elts, max) THEN
             (* oops, they're too big *)
             Error.Warn (2, "SUBARRAY start+length out of range");
-            CG.Load_integer (max);
-            CG.Check_hi (n_elts, CG.RuntimeError.ValueOutOfRange);
+            CG.Load_integer (Target.Integer.cg_type, max);
+            CG.Check_hi (Target.Integer.cg_type, n_elts,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           ELSE
             (* ok *)
@@ -239,17 +248,18 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
 
           (* initialize the new counts *)
           Expr.Compile (len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           CopyDopeVector (t_base, t_result, src_depth);
 
           IF Host.doRangeChk THEN
             CG.Push (t_start);
-            CG.Load_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+            CG.Load_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
             CG.Add (Target.Integer.cg_type);
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -268,18 +278,19 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           Expr.Compile (start);         t_start := CG.Pop ();
 
           (* initialize the new counts *)
-          CG.Load_integer (x_len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Load_integer (Target.Integer.cg_type, x_len);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           CopyDopeVector (t_base, t_result, src_depth);
 
           IF Host.doRangeChk THEN
             CG.Push (t_start);
-            CG.Load_integer (x_len);
+            CG.Load_integer (Target.Integer.cg_type, x_len);
             CG.Add (Target.Integer.cg_type);
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -298,17 +309,18 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
 
           (* initialize the new counts *)
           Expr.Compile (len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           CopyDopeVector (t_base, t_result, src_depth);
 
           IF Host.doRangeChk THEN
-            CG.Load_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
-            CG.Load_integer (x_start);
+            CG.Load_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
+            CG.Load_integer (Target.Integer.cg_type, x_start);
             CG.Add (Target.Integer.cg_type);
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -319,7 +331,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Add_offset (i_start * elt_pack);
             CG.Store_addr (t_result, M3RT.OA_elt_ptr);
           ELSE
-            CG.Load_integer (x_start);
+            CG.Load_integer (Target.Integer.cg_type, x_start);
             ComputeOffset (t_result, src_depth, elt_pack);
           END;
 
@@ -330,27 +342,29 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           Expr.CompileAddress (base);   t_base  := CG.Pop ();
 
           (* initialize the new counts *)
-          CG.Load_integer (x_len);
-          CG.Store_int (t_result, Target.Integer.cg_type, M3RT.OA_size_0);
+          CG.Load_integer (Target.Integer.cg_type, x_len);
+          CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
           CopyDopeVector (t_base, t_result, src_depth);
 
           IF NOT Host.doRangeChk THEN
             (* no check *)
           ELSIF TInt.Add (x_start, x_len, max) THEN
-            CG.Load_integer (max);
+            CG.Load_integer (Target.Integer.cg_type, max);
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           ELSE
-            CG.Load_integer (x_start);
-            CG.Load_integer (x_len);
+            CG.Load_integer (Target.Integer.cg_type, x_start);
+            CG.Load_integer (Target.Integer.cg_type, x_len);
             CG.Add (Target.Integer.cg_type);
             CG.Push (t_base);
             CG.Open_size (0);
             CG.Subtract (Target.Integer.cg_type);
-            CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+            CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                         CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
           END;
 
@@ -361,7 +375,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Add_offset (i_start * elt_pack);
             CG.Store_addr (t_result, M3RT.OA_elt_ptr);
           ELSE
-            CG.Load_integer (x_start);
+            CG.Load_integer (Target.Integer.cg_type, x_start);
             ComputeOffset (t_result, src_depth, elt_pack);
           END;
 
@@ -376,10 +390,11 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
   END PrepLV;
 
 PROCEDURE GetCard (e: Expr.T;  VAR i: INTEGER;  VAR x: Target.Int): BOOLEAN =
+  VAR t: Type.T;
   BEGIN
     e := Expr.ConstValue (e);
     IF (e = NIL) THEN RETURN FALSE END;
-    RETURN IntegerExpr.Split (e, x)
+    RETURN IntegerExpr.Split (e, x, t)
        AND TInt.ToInt (x, i)
        AND (0 <= i);
   END GetCard;
@@ -389,16 +404,16 @@ PROCEDURE CopyDopeVector (src: CG.Val;  dest: CG.Var;  depth: INTEGER) =
     FOR i := 1 TO depth - 1 DO
       CG.Push (src);
       CG.Open_size (i);
-      CG.Store_int (dest, Target.Integer.cg_type,
-                    M3RT.OA_sizes + i * Target.Integer.pack);
+      CG.Store_int (Target.Integer.cg_type,
+                    dest, M3RT.OA_sizes + i * Target.Integer.pack);
     END;
   END CopyDopeVector;
 
 PROCEDURE ComputeOffset (array: CG.Var;  depth, elt_pack: INTEGER) =
   BEGIN
     FOR i := 1 TO depth - 1 DO
-      CG.Load_int (array, Target.Integer.cg_type,
-                   M3RT.OA_sizes + i * Target.Integer.pack);
+      CG.Load_int (Target.Integer.cg_type,
+                   array, M3RT.OA_sizes + i * Target.Integer.pack);
       CG.Multiply (Target.Integer.cg_type);
     END;
     CG.Index_bytes (elt_pack);

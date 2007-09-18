@@ -34,7 +34,7 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
       index := Int.T;
     END;
     IF EnumType.Is (index) THEN
-      IF TInt.Sig (Type.Number (index)) <= 0 THEN
+      IF NOT TInt.LT (TInt.Zero, Type.Number (index)) THEN
         Error.Msg ("NUMBER: empty enumeration type");
       END;
     ELSIF Type.IsOrdinal (index) THEN
@@ -64,6 +64,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     e := ce.args[0];
     t, index, element: Type.T;
     min, max, tmp, num: Target.Int;
+    One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
     IF ArrayType.Split (t, index, element) THEN t := index END;
@@ -74,21 +75,22 @@ PROCEDURE Compile (ce: CallExpr.T) =
     ELSE
       EVAL Type.GetBounds (t, min, max);
       IF TInt.LT (max, min) THEN
-        CG.Load_integer (TInt.ZeroI);
+        CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       ELSIF TInt.Subtract (max, min, tmp)
-        AND TInt.Val (tmp, Target.Pre.Integer, tmp)
-        AND TInt.Inc (tmp, num) THEN
-        CG.Load_integer (num);
+        AND TInt.Add (tmp, One, num) THEN
+        CG.Load_integer (Target.Integer.cg_type, num);
       ELSE
         Error.Warn (2, "result of NUMBER too large");
-        CG.Load_integer (Target.Int{Target.Integer.max, Target.Pre.Integer});
-        CG.Check_hi (TInt.ZeroI, CG.RuntimeError.ValueOutOfRange);
+        CG.Load_integer (Target.Integer.cg_type, Target.Integer.max);
+        CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                     CG.RuntimeError.ValueOutOfRange);
       END;
     END;
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR min, max, tmp, num: Target.Int;  t, index, elem: Type.T;  e: Expr.T;
+      One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     e := ce.args[0];
     IF NOT TypeExpr.Split (e, t) THEN
@@ -100,9 +102,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
         IF (e = NIL) THEN RETURN NIL END;
         IF ArrayExpr.GetBounds (e, min, max)
           AND TInt.Subtract (max, min, tmp)
-          AND TInt.Val (tmp, Target.Pre.Integer, tmp)
-          AND TInt.Inc (tmp, num)
-          THEN RETURN IntegerExpr.New (num);
+          AND TInt.Add (tmp, One, num)
+          THEN RETURN IntegerExpr.New (Int.T, num);
           ELSE RETURN NIL;
         END;
       END;
@@ -111,11 +112,10 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     IF NOT Type.GetBounds (t, min, max) THEN RETURN NIL; END;
 
     IF TInt.LT (max, min) THEN
-      RETURN IntegerExpr.New (TInt.ZeroI);
+      RETURN IntegerExpr.New (Int.T, TInt.Zero);
     ELSIF TInt.Subtract (max, min, tmp)
-      AND TInt.Val (tmp, Target.Pre.Integer, tmp)
-      AND TInt.Inc (tmp, num) THEN
-      RETURN IntegerExpr.New (num);
+      AND TInt.Add (tmp, One, num) THEN
+      RETURN IntegerExpr.New (Int.T, num);
     ELSE
       RETURN NIL;
     END;

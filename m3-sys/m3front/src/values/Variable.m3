@@ -12,7 +12,7 @@ MODULE Variable;
 IMPORT M3, M3ID, CG, Value, ValueRep, Type, Expr, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, IntegerExpr, TipeMap, M3String;
 IMPORT OpenArrayType, Target, TInt, Token, Ident, Module, CallExpr;
-IMPORT Decl, Null, Int, Fmt, Procedure, Tracer, TextExpr, NamedExpr;
+IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, TextExpr, NamedExpr;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 CONST
@@ -341,7 +341,10 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
         t.initDone := TRUE;
       ELSIF Type.GetBounds (t.tipe, min, max) THEN
         (* synthesize an initialization expression *)
-        t.init := IntegerExpr.New (min);
+        IF Type.IsSubtype (t.tipe, LInt.T)
+          THEN t.init := IntegerExpr.New (LInt.T, min);
+          ELSE t.init := IntegerExpr.New (Int.T, min);
+        END;
       END;
     END;
 
@@ -709,7 +712,7 @@ PROCEDURE CopyOpenArray (t: T;  ref: Type.T) =
     (*** CG.Check_byte_aligned (); ****)
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
     CG.Load_intt (depth);
-    CG.Store_int (sizes, Target.Integer.cg_type, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, sizes, M3RT.OA_size_0);
         
     (* allocate the storage *)
     proc := RunTyme.LookUpProc (RunTyme.Hook.NewTracedArray);
