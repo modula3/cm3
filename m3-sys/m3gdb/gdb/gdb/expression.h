@@ -380,7 +380,6 @@ enum exp_opcode
     UNOP_M3_NUMBER,
     UNOP_M3_ORD,
     UNOP_M3_ROUND,
-    UNOP_M3_TYPECODE,
     UNOP_M3_TRUNC,
 
     /* An un-looked-up identifier. */

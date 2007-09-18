@@ -206,38 +206,17 @@ extern struct symbol *
 m3_lookup_exported ( 
   const char *module_name, const char * ident, struct symtab * * symtab );
 
-extern enum compiler_kind_typ { ck_unknown, ck_pm3, ck_cm3 } compiler_kind; 
-
 extern void note_is_pm3 ( void );
 
 extern void note_is_cm3 ( void );
 
 extern bool m3_is_cm3 ( void ); 
 
-/* Strip away any indirect types from a type. */ 
-extern struct type * 
-m3_direct_type ( struct type * param_type ); 
-
-/* Strip away any indirect and packed types from a type. */ 
-extern struct type * 
-m3_unpacked_direct_type ( struct type * param_type ); 
-
-/* Convert an opaque type to its revealed type, or identity. */ 
-extern struct  type *  
-m3_revealed_type ( struct type * opaque_type ); 
-
-/* Strip off any indirects, packeds, and opaques. */ 
-extern struct  type *  
-m3_revealed_unpacked_direct_type ( struct type * param_type ); 
-
-/* Return the typecode of the object at inferior address addr. 
-   PRE: addr is the inferior address of a object with a typecode header,
-        i.e., either it's a traced ref or an untraced object type. 
-*/ 
+/* Return the typecode of the object at inferior address addr. */ 
 LONGEST m3_typecode_from_inf_address ( CORE_ADDR addr ); 
 
-/* Return the inferior address of the typecell for the dyanamic (allocated) 
-   type of the object at inferior address addr.  
+/* Return the inferior address of the typecell for the dyanamic (allocated) type
+   of the object at inferior address addr.  
 */
 extern CORE_ADDR m3_tc_addr_from_object_addr (CORE_ADDR);
 
@@ -253,10 +232,7 @@ extern int m3_int_uid_from_tc (CORE_ADDR);
 /* given the address of a typecell, find the gdb type for it */
 extern struct type *m3_type_from_tc (CORE_ADDR);
 
-/* Given a heap reference, find it's actual type. 
-   PRE: addr is the inferior address of a object with a typecode header,
-        i.e., either it's a traced ref or an untraced object type. 
-*/ 
+/* given a heap reference, find it's actual type */
 extern struct type * m3_allocated_type_from_object_addr (CORE_ADDR);
 
 extern int m3_dataOffset_from_tc_addr (CORE_ADDR);
@@ -404,18 +380,18 @@ m3_inf_address_is_proc_closure ( CORE_ADDR inf_addr );
 extern bool 
 m3_value_is_proc_closure ( struct value * closure_value ); 
 
-/* valaddr/bitpos point to a gdb-space value of Modula-3 procedure type, 
-   which in turn could be a pointer to the procedures 's code or to a closure. 
+/* valaddr points to a gdb-space value of Modula-3 procedure type, which
+   in turn could be a pointer to the procedures 's code or to a closure.  
    Either way, return the code address. */ 
 extern CORE_ADDR 
-m3_proc_code_addr ( const gdb_byte * valaddr, int bitpos );  
+m3_proc_code_addr ( const gdb_byte * valaddr );  
 
-/* valaddr/bitpos point to a gdb-space value of Modula-3 procedure type, 
-   which in turn could be a pointer to the procedures 's code or to a closure.
+/* valaddr points to a gdb-space value of Modula-3 procedure type, which
+   in turn could be a pointer to the procedures 's code or to a closure.  
    Either way, return the enviroment pointer, which will, of course, be
    zero in the former case. */ 
 extern CORE_ADDR 
-m3_proc_env_ptr ( const gdb_byte * valaddr, int bitpos );  
+m3_proc_env_ptr ( const gdb_byte * valaddr );  
 
 /* Return the first superblock ancestor* of block that is a function block. */
 extern struct block * 

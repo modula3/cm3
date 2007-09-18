@@ -472,46 +472,39 @@ m3_parse_e8 ( )
     case TK_ROUND:     m3_builtin_1_param (UNOP_M3_ROUND);     break;
     case TK_SUBARRAY:  m3_not_yet ("SUBARRAY");          break;
     case TK_TRUNC:     m3_builtin_1_param (UNOP_M3_TRUNC);     break;
-    case TK_TYPECODE:  m3_builtin_1_param (UNOP_M3_TYPECODE);     break;
+    case TK_TYPECODE:  m3_not_yet ("TYPECODE");          break;
     case TK_VAL:       m3_builtin_2_params (BINOP_M3_VAL);      break;
 
     /*---- builtin types ---- */
 
+    case TK_ADDRESS:   write_m3_type (builtin_type_m3_address);   break;
     case TK_BOOLEAN:   write_m3_type (builtin_type_m3_boolean);   break;
-    case TK_INTEGER:   write_m3_type (builtin_type_m3_integer);   break;
     case TK_CARDINAL:  write_m3_type (builtin_type_m3_cardinal);  break;
     case TK_CHAR:      write_m3_type (builtin_type_m3_char);      break;
-    case TK_WIDECHAR:  write_m3_type (builtin_type_m3_widechar);  break;
-    case TK_REAL:      write_m3_type (builtin_type_m3_real);      break;
-    case TK_LONGREAL:  write_m3_type (builtin_type_m3_longreal);  break;
     case TK_EXTENDED:  write_m3_type (builtin_type_m3_extended);  break;
-
-    case TK_REFANY:    write_m3_type (builtin_type_m3_refany);    break;
-    case TK_ADDRESS:   write_m3_type (builtin_type_m3_address);   break;
-    case TK_TEXT:      write_m3_type (builtin_type_m3_text);      break;
-    case TK_ROOT:      write_m3_type (builtin_type_m3_root);      break;
+    case TK_INTEGER:   write_m3_type (builtin_type_m3_integer);   break;
+    case TK_LONGREAL:  write_m3_type (builtin_type_m3_longreal);  break;
     case TK_MUTEX:     write_m3_type (builtin_type_m3_mutex);     break;
     case TK_NULL:      write_m3_type (builtin_type_m3_null);      break;
+    case TK_REAL:      write_m3_type (builtin_type_m3_real);      break;
+    case TK_REFANY:    write_m3_type (builtin_type_m3_refany);    break;
+    case TK_ROOT:      write_m3_type (builtin_type_m3_root);      break;
+    case TK_TEXT:      write_m3_type (builtin_type_m3_text);      break;
+    case TK_WIDECHAR:  write_m3_type (builtin_type_m3_widechar);  break;
 
     case TK_UNTRACED:
       get_token ();
       if (cur_tok.kind != TK_ROOT) {
-	error 
-          ("Modula-3 type constructors in expressions not implemented: \"%s\".", 
-            m3_token_name (&cur_tok)
-          ); /* NORETURN */ 
+	error ("UNTRACED not followed by ROOT");
       };
       write_m3_type (builtin_type_m3_untraced_root);
       break;
 
     /*---- builtin constants ---*/
 
-    case TK_TRUE:  
-      write_m3_const ((LONGEST) 1, builtin_type_m3_boolean); break;
-    case TK_FALSE: 
-      write_m3_const ((LONGEST) 0, builtin_type_m3_boolean); break;
-    case TK_NIL:   
-      write_m3_const ((LONGEST) 0, builtin_type_m3_null);    break;
+    case TK_TRUE:  write_m3_const ((LONGEST) 1, builtin_type_m3_boolean); break;
+    case TK_FALSE: write_m3_const ((LONGEST) 0, builtin_type_m3_boolean); break;
+    case TK_NIL:   write_m3_const ((LONGEST) 0, builtin_type_m3_null);    break;
 
     /*--- programmer-defined types --- */ 
 
@@ -522,14 +515,13 @@ m3_parse_e8 ( )
     case TK_BITS: 
     case TK_OBJECT: 
     case TK_BRANDED: 
-      error ( "Modula-3 type constructors in expressions not implemented: \"%s\".", 
+      error ( "Modula-3 programmer-defined types not implemented: \"%s\".", 
               m3_token_name (&cur_tok)
-            ); /* NORETURN */ 
+            ); 
 
     default: 
-      error ( "Bad Modula-3 expression \"%s\" (kind = %d)",
-	      m3_token_name (&cur_tok), (int)cur_tok.kind 
-            ); /* NORETURN */ 
+      error ("Bad Modula-3 expression \"%s\" (kind = %d)",
+	      m3_token_name (&cur_tok), (int)cur_tok.kind );
       return 1;
 
   } /* switch */
@@ -1010,7 +1002,6 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
     case UNOP_M3_NUMBER:
     case UNOP_M3_ORD:
     case UNOP_M3_ROUND:
-    case UNOP_M3_TYPECODE:
     case UNOP_M3_TRUNC:
       elt = dump_subexp ( exp, stream, elt); 
       break; 

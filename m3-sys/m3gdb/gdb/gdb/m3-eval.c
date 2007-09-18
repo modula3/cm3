@@ -46,6 +46,51 @@ commute_subtype_relation ( enum subtype_rel param_rel )
       } 
   } /* commute_subtype_relation */ 
 
+/* Strip away any indirect types from a type. */ 
+static struct type * 
+m3_direct_type ( struct type * param_type ) 
+
+  { struct type * l_type; 
+
+    if ( param_type == NULL ) { return NULL; } 
+    l_type = param_type; 
+    while ( TYPE_CODE ( l_type ) == TYPE_CODE_M3_INDIRECT ) 
+      { l_type = TYPE_M3_INDIRECT_TARGET ( l_type ); } 
+    return l_type; 
+  } /* m3_direct_type */ 
+
+/* Strip away any indirect and packed types from a type. */ 
+static struct type * 
+m3_unpacked_type ( struct type * param_type ) 
+
+  { struct type * l_type; 
+
+    if ( param_type == NULL ) { return NULL; } 
+    l_type = param_type; 
+    while ( true ) 
+      { switch  ( TYPE_CODE ( l_type ) ) 
+          { case TYPE_CODE_M3_INDIRECT: 
+              l_type = TYPE_M3_INDIRECT_TARGET ( l_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_PACKED: 
+              l_type = TYPE_M3_PACKED_TARGET ( l_type ); 
+              break; /* And loop. */  
+            default:
+              return l_type; 
+          }
+      } 
+  } /* m3_unpacked_type */ 
+
+static struct  type *  
+m3_revealed_type ( struct type * opaque_type ) 
+
+  { if ( opaque_type != NULL 
+         && TYPE_CODE ( opaque_type ) == TYPE_CODE_M3_OPAQUE 
+       ) 
+      { return TYPE_M3_OPAQUE_REVEALED ( opaque_type ); } 
+    return opaque_type; 
+  } /* m3_revealed_type */ 
+
 static bool
 m3_types_equal ( struct type * left, struct type * right ); 
 
@@ -76,9 +121,8 @@ m3_types_equal ( struct type * left, struct type * right )
   if ( left == NULL || right == NULL ) { return false; } 
   left_direct = m3_direct_type ( left ); 
   right_direct = m3_direct_type ( right ); 
-  /* Avoid stripping off packed, because it affects type equality. */ 
-  left_direct = m3_revealed_type ( left_direct ); 
-  right_direct = m3_revealed_type ( right_direct ); 
+  left_direct = m3_revealed_type ( left ); 
+  right_direct = m3_revealed_type ( right ); 
   if ( left_direct == right_direct ) { return true; } 
   if ( TYPE_CODE ( left_direct ) != TYPE_CODE ( right_direct ) ) 
     { return false; } 
@@ -284,7 +328,7 @@ m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
   } /* m3_ordinal_base_type */ 
 
 /* Call this only if left_type is known to be neither indirect nor packed and
-   an ordinal type and left tier <= right tier. */ 
+   an ordinal type. */ 
 static enum subtype_rel
 m3_ordinal_subtype_relation ( 
     struct type * left_type, 
@@ -300,7 +344,7 @@ m3_ordinal_subtype_relation (
     LONGEST right_lower; 
     LONGEST right_upper; 
 
-    right_type = m3_unpacked_direct_type ( right_type ); 
+    right_type = m3_unpacked_type ( right_type ); 
     switch ( TYPE_CODE ( right_type ) ) 
       { case TYPE_CODE_M3_SUBRANGE : 
           right_base_type = TYPE_M3_SUBRANGE_TARGET ( right_type ); 
@@ -325,20 +369,19 @@ m3_ordinal_subtype_relation (
     /* Here, we know the two base types are equal. */   
     if ( left_type == left_base_type && right_type == right_base_type ) 
       { return subtype_equal; } 
-    /* Here, left is a subrange and right could be too. */ 
+    /* Here, at least one is a subrange. */ 
     m3_ordinal_bounds ( left_type , & left_lower, & left_upper );  
     m3_ordinal_bounds ( right_type , & right_lower, & right_upper );  
     if ( left_lower == right_lower && left_upper == right_upper ) 
       /* Bounds are equal. */ 
-      { if ( right_type != right_base_type ) 
+      { if ( left_type != left_base_type && right_type != right_base_type ) 
           /* Both are subranges. */ 
           { return subtype_equal; } 
-      else /* left is a subrange of right, with equal bounds. */ 
-        { return subtype_sub; }
+        else 
+          { return subtype_both; }
       }  
     if ( left_lower <= right_lower && left_upper >= right_upper ) 
-      /* Right must be a subrange too.  Left is supertype. */ 
-      { return subtype_super; } 
+      { return subtype_super; } /* Left is supertype. */ 
     if ( left_lower >= right_lower && left_upper <= right_upper ) 
       { return subtype_sub; } /* Left is subtype. */ 
     return subtype_norel; 
@@ -508,123 +551,97 @@ m3_value_less (struct value *arg1, struct value *arg2)
   /* NORETURN*/ return 0;
 } /* m3_value_less */ 
 
-/* The purpose is just to cut down the portion of the cartesian
-   square of type codes that has to be checked to a triangular matrix.
-   Indirects and opaques need to be removed first, on both left and
-   right types.    
-
-   After that, the tiers order of types by their code for subtype
-   checking.  This system is crafted so that if 
-   m3_type_code_tier ( tc1 ) < m3_type_code_tier ( tc2 ), 
+/* This system is crafted so that (hopefully), 
+   if m3_type_code_tier ( tc1 ) < m3_type_code_tier ( tc2 ), 
    then, loosely, m3_subtype_relation ( tc1, tc2 ) != subtype_super.
    Also, the reference types are all at the high end and ordered 
    such that if tc1 is a reference type code and 
    m3_type_code_tier ( tc1 ) < m3_type_code_tier ( tc2 )
    then loosely, m3_subtype_relation ( tc1, tc2 ) == subtype_sub,
-   except for different types with TYPE_CODE_M3_OBJECT and reference
-   class. 
+   except for different types with TYPE_CODE_M3_OBJECT. 
 
+   It allows ordering of types by their code for subtype checking, 
+   so as to cut down on the number of elements of the cartesion square 
+   of type codes that have to be explicitly coded.  Don't try this on 
    TYPE_CODE_M3_INDIRECT, which can't be made to fit such a system. */ 
 
 static int 
 m3_type_code_tier ( enum type_code code ) 
 
   { switch ( code ) 
-      { case TYPE_CODE_M3_INDIRECT : 
+      { case TYPE_CODE_M3_PACKED :
+        case TYPE_CODE_M3_OPAQUE : /* Probably shouldn't happen. */  
           return 0; 
-        case TYPE_CODE_M3_OPAQUE : 
-          return 1; 
-        case TYPE_CODE_M3_PACKED :
-          return 2; 
         case TYPE_CODE_M3_SET : 
         case TYPE_CODE_M3_RECORD : 
         case TYPE_CODE_M3_METHOD : 
         case TYPE_CODE_M3_VOID : 
-          return 3; 
-        case TYPE_CODE_M3_ARRAY : 
-          return 4; 
+          return 1; 
         case TYPE_CODE_M3_OPEN_ARRAY : 
-          return 5; 
+          return 2; 
+        case TYPE_CODE_M3_ARRAY : 
+          return 3; 
         case TYPE_CODE_M3_SUBRANGE : 
-          return 6; 
+          return 4; 
         case TYPE_CODE_M3_BOOLEAN : 
         case TYPE_CODE_M3_CHAR : 
         case TYPE_CODE_M3_WIDECHAR : 
         case TYPE_CODE_M3_INTEGER : 
         case TYPE_CODE_M3_CARDINAL : 
         case TYPE_CODE_M3_ENUM : 
-          return 7; 
+          return 5; 
         case TYPE_CODE_M3_PROC : 
         case TYPE_CODE_M3_PROC_CLOSURE :
-          return 8; 
-        case TYPE_CODE_M3_NULL : 
-          return 9; 
-        case TYPE_CODE_M3_TEXT : 
-          return 10; 
-        case TYPE_CODE_M3_POINTER : 
-          return 11; 
-        case TYPE_CODE_M3_MUTEX : 
-        case TYPE_CODE_M3_OBJECT : 
-          return 12; 
-        case TYPE_CODE_M3_ROOT : 
-        case TYPE_CODE_M3_TRANSIENT_ROOT : 
-        case TYPE_CODE_M3_UN_ROOT : 
-          return 13; 
+          return 6; 
         case TYPE_CODE_M3_REFANY : 
         case TYPE_CODE_M3_TRANSIENT_REFANY : 
         case TYPE_CODE_M3_ADDRESS : 
-          return 14;  
+          return 7;  
+        case TYPE_CODE_M3_TEXT : 
+          return 8; 
+        case TYPE_CODE_M3_ROOT : 
+        case TYPE_CODE_M3_TRANSIENT_ROOT : 
+        case TYPE_CODE_M3_UN_ROOT : 
+        case TYPE_CODE_M3_POINTER : 
+          return 9; 
+        case TYPE_CODE_M3_MUTEX : 
+          return 10; 
+        case TYPE_CODE_M3_OBJECT : 
+          return 11; 
+        case TYPE_CODE_M3_NULL : 
+          return 12; 
         default : 
-          return - 1;  
+          return 1;  
       } /* switch */ 
   } /* m3_type_code_tier */ 
 
-/* Strips off indirects, packeds, and opaques only if this leads to a 
-   reference type.  Otherwise, identity. 
-*/
+/* Does not strip off indirects, unless it's a real value of reference type. */
 static struct type * 
 m3_allocated_type ( struct value * val ) 
 
   { struct type * val_type; 
     struct type * direct_type; 
+    struct type * result_type; 
     CORE_ADDR val_contents; 
 
     val_type = value_type ( val ) ; 
     if ( * ( LONGEST * ) value_contents ( val ) == m3_type_magic_value ) 
       { return val_type; } 
     else 
-      { direct_type = m3_revealed_unpacked_direct_type ( val_type ); 
+      { direct_type = m3_direct_type ( val_type ); 
+        direct_type = m3_revealed_type ( val_type ); 
         switch ( TYPE_CODE ( direct_type ) ) 
-          { 
-            case TYPE_CODE_M3_ADDRESS:
-              val_contents = value_as_address ( val ); 
-              if ( val_contents == 0 ) 
-                { return builtin_type_m3_null; } 
-              return direct_type; 
-
-            case TYPE_CODE_M3_POINTER:
-              val_contents = value_as_address ( val ); 
-              if ( val_contents == 0 ) 
-                { return builtin_type_m3_null; } 
-              if ( TYPE_M3_POINTER_TRACED ( direct_type ) )
-                { return m3_allocated_type_from_object_addr ( val_contents ); }
-              return direct_type;  
-
-            case TYPE_CODE_M3_REFANY:
-            case TYPE_CODE_M3_TRANSIENT_REFANY:
+          { case TYPE_CODE_M3_REFANY:
             case TYPE_CODE_M3_ROOT:
-            case TYPE_CODE_M3_TRANSIENT_ROOT:
-            case TYPE_CODE_M3_UN_ROOT:
             case TYPE_CODE_M3_OBJECT:
-            case TYPE_CODE_M3_MUTEX:
-            case TYPE_CODE_M3_TEXT:
+            case TYPE_CODE_M3_TRANSIENT_ROOT:
+            case TYPE_CODE_M3_TRANSIENT_REFANY:
               val_contents = value_as_address ( val ); 
               if ( val_contents == 0 ) 
                 { return builtin_type_m3_null; } 
-              return m3_allocated_type_from_object_addr ( val_contents ); 
-
-            case TYPE_CODE_M3_NULL:
-              return builtin_type_m3_null;  
+              result_type 
+                = m3_allocated_type_from_object_addr ( val_contents ); 
+              return result_type; 
             default: 
               return val_type; 
           } 
@@ -792,56 +809,35 @@ m3_subtype_relation ( struct type * left, struct type * right )
     if ( left == NULL || right == NULL ) { return subtype_norel; } 
     left_direct = m3_direct_type ( left ); 
     right_direct = m3_direct_type ( right ); 
-  /* Avoid stripping off packed, because it affects the subtype relation. */ 
     left_direct = m3_revealed_type ( left ); 
     right_direct = m3_revealed_type ( right ); 
 
-    if ( left_direct == right_direct ) 
-      { return subtype_equal; } 
-    if ( m3_types_equal ( left_direct, right_direct ) ) 
-      { return subtype_equal; }
+    if ( left_direct == right_direct ) { return subtype_equal; } 
+    if ( m3_types_equal ( left_direct, right_direct ) ) { return subtype_equal; }
     left_code = TYPE_CODE ( left_direct ); 
     right_code = TYPE_CODE ( right_direct ); 
+    /* Swap operands so that if the type codes differ, left will not be the 
+       supertype only. */ 
     left_tier = m3_type_code_tier ( left_code );
     right_tier = m3_type_code_tier ( right_code ); 
-    /* Swap operands so that left_tier <= right_tier. */  
     if ( left_tier > right_tier ) 
       { return commute_subtype_relation 
                  ( m3_subtype_relation ( right_direct, left_direct ) ); 
       } 
 
-    /* Here: left, left_direct, right, and right-direct are non-NULL.
-             left_code and right-code are neither TYPE_CODE_M3_INDIRECT 
-               nor TYPE_CODE_M3_OPAQUE.
-             left_direct and right_direct are not equal types. 
-             left_tier <= right_tier
-    */ 
     switch ( left_code ) 
       { case TYPE_CODE_M3_PACKED :
-          if ( right_code == TYPE_CODE_M3_PACKED ) /* And they're unequal. */ 
-            { return subtype_norel; } 
           child_rel 
             = m3_subtype_relation 
                 ( TYPE_M3_PACKED_TARGET ( left_direct ) , right_direct ); 
-          if ( child_rel == subtype_equal ) 
+          if ( child_rel == subtype_equal 
+               && right_code != TYPE_CODE_M3_PACKED 
+             ) 
             { return subtype_both; } 
-          else /* This case covers transitive subtypes. */
-            { return child_rel; } 
+          else { return child_rel; } 
 
-        case TYPE_CODE_M3_VOID : 
-          return right_code == left_code; 
-
-        case TYPE_CODE_M3_ARRAY : 
-        case TYPE_CODE_M3_OPEN_ARRAY : 
-        case TYPE_CODE_M3_PROC : 
-        case TYPE_CODE_M3_PROC_CLOSURE :
-          error ( "Subtype relation not implemented for array or procedure, "
-                  "types." 
-                ); /* NORETURN */  
-
-        case TYPE_CODE_M3_SET : 
-        case TYPE_CODE_M3_RECORD : 
-        case TYPE_CODE_M3_METHOD :
+        case TYPE_CODE_M3_OPAQUE : 
+          /* Shouldn't get here. */
           return subtype_norel;  
 
         case TYPE_CODE_M3_SUBRANGE : 
@@ -860,56 +856,47 @@ m3_subtype_relation ( struct type * left, struct type * right )
           return m3_ordinal_subtype_relation 
                    ( left_direct, left_direct, right_direct ); 
 
+        case TYPE_CODE_M3_REFANY : 
+        case TYPE_CODE_M3_TRANSIENT_REFANY : 
+        case TYPE_CODE_M3_ADDRESS : 
+        case TYPE_CODE_M3_ROOT : 
+        case TYPE_CODE_M3_TRANSIENT_ROOT : 
+        case TYPE_CODE_M3_UN_ROOT : 
         case TYPE_CODE_M3_NULL : 
-          if ( left_code == right_code ) /* Probably can't happen. */ 
+          if ( left_code == right_code )
             { return subtype_equal; } 
           else if ( left_tier < right_tier ) 
-            /* right's reference class is irrelevant. */ 
             { return subtype_sub; } 
           else { return subtype_norel; }  
 
         case TYPE_CODE_M3_POINTER : 
-          switch ( right_code ) 
-            { case TYPE_CODE_M3_REFANY :  
-              case TYPE_CODE_M3_TRANSIENT_REFANY :  
-                if ( TYPE_M3_POINTER_TRACED ( left_direct ) ) 
-                  { return subtype_sub; } 
-                else { return subtype_norel; } 
-              case TYPE_CODE_M3_ADDRESS :  
-                if ( ! TYPE_M3_POINTER_TRACED ( left_direct ) ) 
-                  { return subtype_sub; } 
-                else { return subtype_norel; } 
-              default : 
-                if ( right_code != left_code ) 
-                  { return subtype_norel; } 
-                else if ( ! m3_type_fields_equal ( left_direct, right_direct ) ) 
-                  { return subtype_norel; } 
-                else if ( TYPE_M3_POINTER_TRACED ( left_direct ) 
-                          != TYPE_M3_POINTER_TRACED ( right_direct ) 
-                        )
-                  { return subtype_norel; } 
-                else if ( TYPE_M3_POINTER_BRANDED ( left_direct ) 
-                          != TYPE_M3_POINTER_BRANDED ( right_direct ) 
-                        )
-                  { return subtype_norel; } 
-                else if ( TYPE_M3_POINTER_BRANDED ( left_direct ) 
-                          && strcmp ( TYPE_M3_POINTER_BRAND ( left_direct ), 
-                                      TYPE_M3_POINTER_BRAND ( right_direct )
-                                    ) 
-                             != 0 
-                        ) 
-                  { return subtype_norel; } 
-                else { return subtype_equal; } 
-            } /* switch ( right_code ) */
+          if ( right_code != left_code ) 
+            { return subtype_norel; } 
+          else if ( ! m3_type_fields_equal ( left_direct, right_direct ) ) 
+            { return subtype_norel; } 
+          else if ( TYPE_M3_POINTER_TRACED ( left_direct ) 
+                    != TYPE_M3_POINTER_TRACED ( right_direct ) 
+                  )
+            { return subtype_norel; } 
+          else if ( TYPE_M3_POINTER_BRANDED ( left_direct ) 
+                    != TYPE_M3_POINTER_BRANDED ( right_direct ) 
+                  )
+            { return subtype_norel; } 
+          else if ( TYPE_M3_POINTER_BRANDED ( left_direct ) 
+                    && strcmp ( TYPE_M3_POINTER_BRAND ( left_direct ), 
+                                TYPE_M3_POINTER_BRAND ( right_direct )
+                              ) 
+                       != 0 
+                  ) 
+            { return subtype_norel; } 
+          else { return subtype_equal; } 
 
         case TYPE_CODE_M3_TEXT : 
           if ( ! m3_is_cm3 ( ) )  
-            { if ( right_code == TYPE_CODE_M3_REFANY 
-                   || right_code == TYPE_CODE_M3_TRANSIENT_REFANY 
-                 )
-                { return subtype_sub; } 
-              if ( is_pm3_text_revelation ( right_direct ) ) 
+            { if ( left_code == right_code )
                 { return subtype_equal; } 
+              if ( is_pm3_text_revelation ( left_direct ) ) 
+                { return subtype_sub; } 
               else { return subtype_norel; }  
             } 
           /* else for CM3, fall through to object case. */ 
@@ -917,20 +904,8 @@ m3_subtype_relation ( struct type * left, struct type * right )
         case TYPE_CODE_M3_MUTEX : 
         case TYPE_CODE_M3_OBJECT : 
           switch ( right_code ) 
-            { case TYPE_CODE_M3_ROOT: 
-              case TYPE_CODE_M3_TRANSIENT_ROOT: 
-              case TYPE_CODE_M3_REFANY: 
-              case TYPE_CODE_M3_TRANSIENT_REFANY: 
-                { if ( TYPE_M3_POINTER_TRACED ( left_direct ) )
-                    { return subtype_sub; } 
-                  return subtype_norel; 
-                } 
-              case TYPE_CODE_M3_UN_ROOT: 
-              case TYPE_CODE_M3_ADDRESS: 
-                { if ( ! TYPE_M3_POINTER_TRACED ( left_direct ) )
-                    { return subtype_sub; } 
-                  return subtype_norel; 
-                } 
+            { case TYPE_CODE_M3_NULL: 
+                return subtype_sub; 
               case TYPE_CODE_M3_MUTEX : 
               case TYPE_CODE_M3_OBJECT: 
                 { int left_depth; 
@@ -949,7 +924,6 @@ m3_subtype_relation ( struct type * left, struct type * right )
                         } 
                       if ( m3_types_equal ( left_super, right_super ) ) 
                         { return subtype_super; }
-                      return subtype_norel;  
                     } 
                   else if ( left_depth > right_depth ) 
                     { while ( left_depth > right_depth ) 
@@ -958,7 +932,6 @@ m3_subtype_relation ( struct type * left, struct type * right )
                         } 
                       if ( m3_types_equal ( left_super, right_super ) ) 
                         { return subtype_sub; }
-                      return subtype_norel;  
                     } 
                   else if ( m3_types_equal ( left_super, right_super ) ) 
                     { return subtype_equal; }
@@ -966,22 +939,25 @@ m3_subtype_relation ( struct type * left, struct type * right )
                 } 
               default: 
                 return subtype_norel; 
-            } /* switch ( right_code ) */ 
+            } 
 
-        case TYPE_CODE_M3_REFANY : 
-        case TYPE_CODE_M3_TRANSIENT_REFANY : 
-        case TYPE_CODE_M3_ADDRESS : 
-        case TYPE_CODE_M3_ROOT : 
-        case TYPE_CODE_M3_TRANSIENT_ROOT : 
-        case TYPE_CODE_M3_UN_ROOT : 
-          if ( left_code == right_code ) /* Probably can't happen. */ 
+        case TYPE_CODE_M3_ARRAY : 
+        case TYPE_CODE_M3_OPEN_ARRAY : 
+        case TYPE_CODE_M3_PROC : 
+        case TYPE_CODE_M3_PROC_CLOSURE :
+          error ( "Subtype relation not implemented for array or procedure, "
+                  "types." 
+                ); /* NORETURN */  
+
+        case TYPE_CODE_M3_SET : 
+        case TYPE_CODE_M3_RECORD : 
+        case TYPE_CODE_M3_METHOD :
+          if ( m3_types_equal ( left_direct, right_direct ) )  
             { return subtype_equal; } 
-          else if ( left_tier < right_tier 
-                    && TYPE_M3_POINTER_TRACED ( left_direct ) 
-                       == TYPE_M3_POINTER_TRACED ( right_direct )
-                  ) 
-            { return subtype_sub; } 
-          else { return subtype_norel; }  
+          else { return subtype_norel; } 
+
+        case TYPE_CODE_M3_VOID : 
+          return right_code == left_code; 
 
         default : { return subtype_norel; } 
       } /* switch ( left_code ) */ 
@@ -1158,34 +1134,31 @@ m3_check_and_coerce_reference (
   { enum subtype_rel static_rel; 
     enum subtype_rel allocated_rel; 
     struct type * allocated_type; 
-    struct type * lhs_revealed_type; 
-    struct type * rhs_revealed_type;  
-
-    lhs_revealed_type = m3_revealed_unpacked_direct_type ( lhs_type ); 
-    rhs_revealed_type = m3_revealed_unpacked_direct_type ( rhs_type ); 
+    struct type * lhs_revealed_type = m3_revealed_type ( lhs_type ); 
+    struct type * rhs_revealed_type = m3_revealed_type ( rhs_type ); 
 
     switch ( TYPE_CODE ( lhs_revealed_type ) ) 
-      { case TYPE_CODE_M3_REFANY:
-        case TYPE_CODE_M3_TRANSIENT_REFANY:
-        case TYPE_CODE_M3_ADDRESS:
+      { case TYPE_CODE_M3_OBJECT:
         case TYPE_CODE_M3_POINTER:
+        case TYPE_CODE_M3_ADDRESS:
+        case TYPE_CODE_M3_REFANY:
+        case TYPE_CODE_M3_TRANSIENT_REFANY:
         case TYPE_CODE_M3_ROOT:
         case TYPE_CODE_M3_TRANSIENT_ROOT:
         case TYPE_CODE_M3_UN_ROOT:
-        case TYPE_CODE_M3_OBJECT:
         case TYPE_CODE_M3_MUTEX:
         case TYPE_CODE_M3_TEXT:
         case TYPE_CODE_M3_NULL:
           /* LHS is a reference type */ 
           switch ( TYPE_CODE ( rhs_revealed_type ) ) 
-            { case TYPE_CODE_M3_REFANY:
-              case TYPE_CODE_M3_TRANSIENT_REFANY:
-              case TYPE_CODE_M3_ADDRESS:
+            { case TYPE_CODE_M3_OBJECT:
               case TYPE_CODE_M3_POINTER:
+              case TYPE_CODE_M3_ADDRESS:
+              case TYPE_CODE_M3_REFANY:
+              case TYPE_CODE_M3_TRANSIENT_REFANY:
               case TYPE_CODE_M3_ROOT:
               case TYPE_CODE_M3_TRANSIENT_ROOT:
               case TYPE_CODE_M3_UN_ROOT:
-              case TYPE_CODE_M3_OBJECT:
               case TYPE_CODE_M3_MUTEX:
               case TYPE_CODE_M3_TEXT:
               case TYPE_CODE_M3_NULL:
@@ -1539,7 +1512,7 @@ m3_check_and_coerce_array (
                 of the dope has to be pushed on the inferior stack,
                 then the copy's address passed as the parameter, all
                 of which has to be done inside call_function_by_hand,
-                after it has done various inferior stack-aligning, etc.
+                after it has done various stack-aligning, etc.
                 call_function_by_hand can distinguish this case by
                 TYPE_CODE_M3_OPEN_ARRAY, which will not occur
                 otherwise.  (If the dope is already in inferior space,
@@ -1835,7 +1808,7 @@ m3_check_and_coerce_actual (
         { /* Something other than an array type. */ 
           if ( ! m3_types_equal ( formal_direct_type, actual_direct_type ) ) 
             { error 
-                ( "Actual parameter type not equal for VAR/READONLY formal \"%s\" "
+                ( "Actual parameter type not equal for VAR formal \"%s\" "
                   "of procedure \"%s\"", 
                   formal_name, proc_name
                 ); /* NORETURN */ 
@@ -1844,7 +1817,7 @@ m3_check_and_coerce_actual (
                && ! VALUE_LVAL ( actual_direct_value ) 
              ) 
             { error 
-                ( "Actual parameter is not a designator for VAR/READONLY formal \"%s\" "
+                ( "Actual parameter is not a designator for VAR formal \"%s\" "
                   "of procedure \"%s\".", 
                   formal_name, proc_name
                 ); /* NORETURN */ 
@@ -2371,7 +2344,7 @@ m3_check_and_coerce_assignment (
          = value_at_lazy 
              ( lhs_direct_type , value_as_address ( lhs_value ) );
     }
-  else 
+  else /* VALUE mode (passed by value.) */ 
     { lhs_direct_type = lhs_type; 
       lhs_direct_value = lhs_value; 
       if ( ! VALUE_LVAL ( lhs_direct_value ) ) 
@@ -2618,68 +2591,58 @@ m3_evaluate_subexp_maybe_packed (
 
     case UNOP_M3_DEREF: {
       struct type * arg1_type;
-      struct type * revealed_type;
       struct type * allocated_type;
       struct type * res_type;
-      CORE_ADDR ref_value; 
 
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (0, exp, pos, noside);
-      arg1_type = value_type ( arg1 );
+      arg1_type = value_type (arg1);
 
-      while ( TYPE_CODE ( arg1_type ) == TYPE_CODE_M3_INDIRECT ) 
+      while (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INDIRECT) 
         { arg1_type = TYPE_M3_TARGET (arg1_type);
-	  arg1 = value_at_lazy ( arg1_type, m3_value_as_address ( arg1 ) ); 
+	  arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1)); 
         }
-      revealed_type = m3_revealed_type ( arg1_type ); 
 
-      switch ( TYPE_CODE ( revealed_type ) ) 
-        { case TYPE_CODE_M3_ADDRESS : 
-            { error ("^ applied to ADDRESS."); /* NORETURN */ 
+      if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_REFANY 
+           || TYPE_CODE (arg1_type) == TYPE_CODE_M3_TRANSIENT_REFANY 
+           || TYPE_CODE (arg1_type) == TYPE_CODE_M3_POINTER
+         ) 
+        { if (value_as_address (arg1) == 0) 
+            { error ("^ applied to NIL"); 
               return arg1; 
             }
-          case TYPE_CODE_M3_REFANY : 
-          case TYPE_CODE_M3_TRANSIENT_REFANY: 
-          case TYPE_CODE_M3_POINTER: 
-            ref_value = m3_value_as_address ( arg1 ) ; 
-            { if ( ref_value == 0 ) 
-                { error ("^ applied to NIL"); /* NORETURN */
-                  return arg1; 
-                }
-              allocated_type = m3_allocated_type ( arg1 ); 
-              if ( TYPE_CODE ( allocated_type ) == TYPE_CODE_M3_POINTER )   
-                { res_type = TYPE_M3_TARGET ( allocated_type );
-                  return value_at_lazy ( res_type, ref_value ); 
-                } 
-              /* else fall through to object cases. 
-                 This is bizarre, but reflects the m3gdb dynamic philosophy 
-                 of using allocated types.  If an expression of type REFANY
-                 has an allocated REF type, we allow the dereference. 
-                 If an object type, we treat it as redundant. 
-              */ 
-            }
+        /* REVIEWME:  Do we really want to allow dereferencing of REFANY to
+           take the allocated type?  If so, don't we want to do the same
+           for a traced pointer type as well? */ 
+	  allocated_type 
+            = m3_allocated_type_from_object_addr (value_as_address (arg1)); 
+          res_type = TYPE_M3_TARGET (allocated_type);
+          return value_at_lazy (res_type, m3_value_as_address (arg1)); 
+        }
 
-          case TYPE_CODE_M3_OBJECT: 
-          case TYPE_CODE_M3_TRANSIENT_ROOT: 
-          case TYPE_CODE_M3_ROOT: 
-          case TYPE_CODE_M3_UN_ROOT: 
-          case TYPE_CODE_M3_TEXT: 
-               /* TODO: ^Maybe make this do the same as the /k format. */ 
-          case TYPE_CODE_M3_MUTEX: 
-               /* CHECK: ^Do we want to display this? */ 
-            { warning ("Ignoring redundant ^ applied to object"); 
-              if ( value_as_address ( arg1 ) == 0 ) 
-                /* REVIEWME: Is this check really necessary here? */ 
-                { error ("^ applied to NIL object"); }
-              return arg1; 
-            }
+      else if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_OBJECT 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_TRANSIENT_ROOT 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_ROOT 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_UN_ROOT 
+                   /* CHECK: ^Can we get an allocated type for this? */  
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_TEXT 
+                   /* TODO: ^Maybe make this do the same as the /k format. */ 
+                || TYPE_CODE (arg1_type) == TYPE_CODE_M3_MUTEX 
+                   /* CHECK: ^Do we want to display this? */ 
+              ) 
+        /* FIXME:  Do this for builtin object types as well, e.g. ROOT. */ 
+        { warning ("Ignoring redundant ^ applied to object"); 
+          if (value_as_address (arg1) == 0) 
+            /* REVIEWME: Is this check really necessary here? */ 
+            { error ("^ applied to NIL object"); }
+          return arg1; 
+        }
 
-          default: 
-            { error ("^ applied to a non-reference."); /* NORETURN */ 
-              return arg1; 
-            }
-        } 
-      }
+      else 
+        { error ("^ applied to a non-REF"); 
+          return arg1; 
+        }
+      } 
 
     case UNOP_M3_NEG: {
       struct type *neg_type; 
@@ -2878,55 +2841,6 @@ m3_evaluate_subexp_maybe_packed (
 	error ("ROUND must be applied to a floating-point value");
 	return arg1;
       }
-    }
-
-    case UNOP_M3_TYPECODE: {
-      struct type * arg1_type;
-      CORE_ADDR val_contents; 
-      LONGEST typecode; 
-
-      (*pos) += 1; 
-      arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); 
-      if ( * ( LONGEST * ) value_contents ( arg1 ) == m3_type_magic_value )
-        { error 
-            ( "TYPECODE is not implemented for types." ); /* NORETURN */ 
-        }
-      arg1_type = value_type ( arg1 );
-      switch ( TYPE_CODE ( arg1_type ) )  
-        { case TYPE_CODE_M3_NULL : 
-            /* This probably can't happen. */ 
-            { error 
-                ( "TYPECODE ( NIL ) not implemented." ); /* NORETURN */ 
-            }
-          case TYPE_CODE_M3_POINTER : 
-            if ( ! TYPE_M3_POINTER_TRACED ( arg1_type ) ) 
-              { error 
-                  ( "TYPECODE can't apply to an untraced REF type." ); 
-                  /* NORETURN */ 
-              }
-            /* Otherwise, fall through. */ 
-          case TYPE_CODE_M3_TEXT : 
-          case TYPE_CODE_M3_MUTEX : 
-          case TYPE_CODE_M3_OBJECT : 
-          case TYPE_CODE_M3_ROOT : 
-          case TYPE_CODE_M3_TRANSIENT_ROOT : 
-          case TYPE_CODE_M3_UN_ROOT : 
-          case TYPE_CODE_M3_REFANY : 
-          case TYPE_CODE_M3_TRANSIENT_REFANY : 
-            val_contents = value_as_address ( arg1 ); 
-            if ( val_contents == 0 ) 
-              { error 
-                  ( "TYPECODE ( NIL ) not implemented." ); /* NORETURN */ 
-              }
-            typecode = m3_typecode_from_inf_address ( val_contents ); 
-            return m3_value_from_longest 
-                     ( builtin_type_m3_integer, typecode );
-          default : 
-            error 
-              ( "TYPECODE must be applied to a traced reference or object \
-                value or a reference type."
-              );
-        } 
     }
 
     case UNOP_M3_TRUNC: {
@@ -3192,17 +3106,11 @@ m3_evaluate_subexp_maybe_packed (
 	  ival1 = value_as_long (arg1);
 	  arg1_type = builtin_type_m3_integer;
 	  break;
-        case TYPE_CODE_M3_REFANY:
-        case TYPE_CODE_M3_TRANSIENT_REFANY:
         case TYPE_CODE_M3_ADDRESS:
         case TYPE_CODE_M3_POINTER:
-        case TYPE_CODE_M3_TEXT:
-        case TYPE_CODE_M3_ROOT:
-        case TYPE_CODE_M3_TRANSIENT_ROOT:
-        case TYPE_CODE_M3_UN_ROOT:
-        case TYPE_CODE_M3_OBJECT:
-        case TYPE_CODE_M3_MUTEX:
         case TYPE_CODE_M3_NULL:
+        case TYPE_CODE_M3_UN_ROOT:
+          /* FIXME:  And the rest of the reference types? */ 
           ival1 = (LONGEST) m3_value_as_address (arg1);
 	  arg1_type = builtin_type_m3_integer;
 	  break;
@@ -3236,17 +3144,11 @@ m3_evaluate_subexp_maybe_packed (
 	  ival2 = value_as_long (arg2);
 	  arg2_type = builtin_type_m3_integer;
 	  break;
-        case TYPE_CODE_M3_REFANY:
-        case TYPE_CODE_M3_TRANSIENT_REFANY:
         case TYPE_CODE_M3_ADDRESS:
         case TYPE_CODE_M3_POINTER:
-        case TYPE_CODE_M3_TEXT:
-        case TYPE_CODE_M3_ROOT:
-        case TYPE_CODE_M3_TRANSIENT_ROOT:
-        case TYPE_CODE_M3_UN_ROOT:
-        case TYPE_CODE_M3_OBJECT:
-        case TYPE_CODE_M3_MUTEX:
         case TYPE_CODE_M3_NULL:
+        case TYPE_CODE_M3_UN_ROOT:
+          /* FIXME:  And the rest of the reference types? */ 
           ival2 = (LONGEST) m3_value_as_address (arg2);
 	  arg2_type = builtin_type_m3_integer;
 	  break;
