@@ -64,16 +64,14 @@ PROCEDURE BuildFPMap () =
 PROCEDURE FPHash (READONLY fp: RT0.Fingerprint;  x: INTEGER): INTEGER =
   BEGIN
     RETURN 
-      Word.Xor 
-        ( Word.Xor 
-	    ( Word.Xor ( fp[0], Word.Shift (fp[1], 4)	) 
-	    , Word.Xor ( Word.Shift (fp[2], 8), Word.Shift (fp[3], 11) ) 
-	    ) 
-        , Word.Xor 
-	    ( Word.Xor ( Word.Shift (fp[4], 14), Word.Shift (fp[5], 16) ) 
-	    , Word.Xor ( Word.Shift (fp[6], 20), Word.Shift (fp[7], 24) ) 
-	    ) 
-        ) 
+      Word.Xor (Word.Xor (Word.Xor (Word.Shift (fp[0], 0),
+                                    Word.Shift (fp[1], 3)),
+                          Word.Xor (Word.Shift (fp[2], 7),
+                                    Word.Shift (fp[3], 11))),
+                Word.Xor (Word.Xor (Word.Shift (fp[4], 13),
+                                    Word.Shift (fp[5], 17)),
+                          Word.Xor (Word.Shift (fp[6], 19),
+                                    Word.Shift (fp[7], 23))))
       MOD x 
   END FPHash;
 
