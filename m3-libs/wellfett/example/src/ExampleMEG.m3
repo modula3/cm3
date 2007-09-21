@@ -13,7 +13,8 @@ IMPORT LongRealBasic                          AS R,
        LongRealSignalIntegerPower             AS SIntPow,
        LongRealVectorFmtLex                   AS VF,
        LongRealSignalFmtLex                   AS SF,
-       LongRealDyadicFilterBank               AS FilterBank,
+       LongRealDyadicFilterBank               AS Bank,
+       LongRealVanillaDyadicFilterBank        AS VBank,
        LongRealDyadicDiscreteWaveletTransform AS DWT,
        LongRealBSplineWavelet                 AS BSpline,
        LongRealWaveletMatchBasis              AS WMBasis,
@@ -94,6 +95,9 @@ PROCEDURE DetectPeriod (READONLY x: V.TBody; ): CARDINAL =
     RETURN iMax;
   END DetectPeriod;
 
+
+(* ***** CombFilter and MovingAverage are good candidates for a filter
+   module. *)
 
 (* k must be between 0 and 1, the higher k the slower the filter reacts on
    differences in the shape of the periodic signal but the more of the
@@ -179,6 +183,8 @@ PROCEDURE Highpass (x: V.T; windowSize: CARDINAL; order: CARDINAL := 1; ):
     END;
   END Highpass;
 
+(* should be in a separate module together with removing leading and
+   trailing pauses *)
 PROCEDURE Limit (READONLY x: V.TBody; limit: LONGREAL; ): V.T =
   VAR z := NEW(V.T, NUMBER(x));
   BEGIN
@@ -458,28 +464,6 @@ PROCEDURE ShowTranslatedMatch (filename: Pathname.T; )
     PL.Exit();
   END ShowTranslatedMatch;
 
-TYPE BankPair = ARRAY [0 .. 1] OF FilterBank.TBody;
-
-PROCEDURE ScaleBank (READONLY bank: BankPair; ): BankPair =
-  VAR newBank: BankPair;
-  BEGIN
-    newBank[0, 0] := bank[0, 0].scale(RT.SqRtTwo);
-    newBank[0, 1] := bank[0, 1].scale(RT.SqRtTwo);
-    newBank[1, 0] := bank[1, 0].scale(RT.SqRtTwo);
-    newBank[1, 1] := bank[1, 1].scale(RT.SqRtTwo);
-    RETURN newBank;
-  END ScaleBank;
-
-PROCEDURE ReverseBank (READONLY bank: BankPair; ): BankPair =
-  VAR revBank: BankPair;
-  BEGIN
-    revBank[0, 0] := bank[0, 0].reverse();
-    revBank[0, 1] := bank[0, 1].reverse();
-    revBank[1, 0] := bank[1, 0].reverse();
-    revBank[1, 1] := bank[1, 1].reverse();
-    RETURN revBank;
-  END ReverseBank;
-
 
 PROCEDURE Normalise (x: S.T; ): S.T =
   BEGIN
@@ -501,17 +485,16 @@ PROCEDURE DWTFilter (filename: Pathname.T; frequency: LONGREAL; )
     resolution := R.One / frequency;
     clip       := NEW(S.T).fromArray(SUBARRAY(x^, 0, 2000));
 
-    bank, revBank: BankPair;
+    bank, revBank: Bank.Pair;
 
   BEGIN
     PL.Init();
     TRY
       IF FALSE THEN
         (* CDF-wavelet base *)
-        bank[0] :=
-          FilterBank.TBody{BSpline.GeneratorMask(4).scale(RT.SqRtTwo),
-                           BSpline.WaveletMask(4, 2).scale(RT.SqRtTwo)};
-        bank[1] := FilterBank.DualToPrimal(bank[0]);
+        bank[0] := Bank.TBody{BSpline.GeneratorMask(4).scale(RT.SqRtTwo),
+                              BSpline.WaveletMask(4, 2).scale(RT.SqRtTwo)};
+        bank[1] := Bank.DualToPrimal(bank[0]);
 
       ELSE
         <* FATAL Wr.Failure *>
@@ -538,9 +521,9 @@ PROCEDURE DWTFilter (filename: Pathname.T; frequency: LONGREAL; )
               WaveletMatchSmooth.FlagSet{WaveletMatchSmooth.Flag.Plot},
               WaveletMatchSmooth.Options{maxIter := 0});
           (* Note that the dual filters are the matched ones. *)
-          bank := ScaleBank(bank);
+          bank := VBank.ScaleSqRtTwo(bank);
           (* For correlation the filter must be flipped *)
-          revBank := ReverseBank(bank);
+          revBank := VBank.Reverse(bank);
 
           IO.Put("Dual lowpass: " & SF.Fmt(bank[0, 0]) & "\n");
           IO.Put("Primal lowpass: " & SF.Fmt(bank[1, 0]) & "\n");
@@ -660,7 +643,7 @@ PROCEDURE PlotMatchedWaveletSlides (path: Pathname.T; )
                               / VT.NormInf(peakClipNormalised.getData()));
       BEGIN
         (* Note that the dual filters are the matched ones. *)
-        bank := ScaleBank(bank);
+        bank := VBank.ScaleSqRtTwo(bank);
 
         InitPS("meg-peak");
         PlotReal(
@@ -888,16 +871,16 @@ PROCEDURE PlotMatchedWaveletPhDThesis (path: Pathname.T; )
         vanishing := SIntPow.MulPower(S.One, WMBasis.vanishingAtom,
                                       primalSmooth - dualVanishing);
 
-        revBank     : BankPair;
-        revVanishing           := vanishing.reverse();
+        revBank     : Bank.Pair;
+        revVanishing            := vanishing.reverse();
 
       <* FATAL Wr.Failure *>
       BEGIN
         (* Note that the dual filters are the matched ones. *)
-        bank := ScaleBank(bank);
+        bank := VBank.ScaleSqRtTwo(bank);
         bank[0, 1] := bank[0, 1].translate(-2);
         bank[1, 1] := bank[1, 1].translate(2);
-        revBank := ReverseBank(bank);
+        revBank := VBank.Reverse(bank);
 
         IO.Put("Dual lowpass: " & SF.Fmt(bank[0, 0]) & "\n\n");
         IO.Put("Dual highpass: " & SF.Fmt(bank[0, 1]) & "\n\n");
