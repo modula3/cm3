@@ -1,6 +1,6 @@
 MODULE Main;
 
-FROM ExampleMEG IMPORT Run;
+FROM ExampleTube IMPORT Run;
 
 BEGIN
   Run();

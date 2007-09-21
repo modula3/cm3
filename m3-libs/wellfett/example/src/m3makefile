@@ -3,9 +3,8 @@ import("arithmetic")
 import("wellfett")
 import("fftw")
 import("bilist")
-import("commandrw")
-
-module("GZipRd")
+import("commandrw")  % GZipRd
+import("dosunixrw")
 
 module("ExampleDaubechies")
 module("ExampleTransition")
@@ -16,6 +15,7 @@ module("ExampleTransform")
 module("ExampleSmoothness")
 module("ExampleCWT")
 module("ExampleMEG")
+module("ExampleTube")
 implementation("Main")
 
 program("example")
