@@ -1,8 +1,13 @@
 GENERIC INTERFACE DyadicFilterBank(S);
 
+(* This is intended for the bare filters as used in the convolution based
+   discrete wavelet transform.  That is, when translating from the primal
+   to the dual or back, no flip of the filter is performed. *)
+
 TYPE
   T = REF TBody;
   TBody = ARRAY [0 .. 1] OF S.T;
+  Pair = ARRAY [0 .. 1] OF TBody;
 
 
 PROCEDURE PrimalLowPassToDualHighPass (x: S.T; ): S.T;

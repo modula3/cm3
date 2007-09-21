@@ -5,15 +5,13 @@ CONST
   translationDualToPrimal = -1;
 
 <* INLINE *>
-PROCEDURE CrossLowPassToHighPass
-  (READONLY x: S.T; translation: [-1 .. 1]; ): S.T =
+PROCEDURE CrossLowPassToHighPass (x: S.T; translation: [-1 .. 1]; ): S.T =
   BEGIN
     RETURN x.alternate().translate(translation);
   END CrossLowPassToHighPass;
 
 <* INLINE *>
-PROCEDURE CrossHighPassToLowPass
-  (READONLY x: S.T; translation: [-1 .. 1]; ): S.T =
+PROCEDURE CrossHighPassToLowPass (x: S.T; translation: [-1 .. 1]; ): S.T =
   BEGIN
     RETURN x.translate(translation).alternate();
   END CrossHighPassToLowPass;
