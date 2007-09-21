@@ -301,7 +301,9 @@ PROCEDURE Alert (t: T) =
   BEGIN
     WITH r = Upthread.mutex_lock(cm) DO <*ASSERT r=0*> END;
     t.alerted := TRUE;
-    WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
+    IF t.waitCond # NIL THEN
+      WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
+    END;
     WITH r = Upthread.mutex_unlock(cm) DO <*ASSERT r=0*> END;
   END Alert;
 
@@ -981,6 +983,52 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 VAR ackSem: Usem.sem_t;
 
 CONST SIG = RTMachine.SIG_SUSPEND;
+
+PROCEDURE SuspendOne (act: Activation): BOOLEAN =
+  BEGIN
+    IF RTMachine.SuspendThread # NIL THEN
+      (* Use the native suspend routine *)
+      LOOP
+        IF act.state # ActState.Stopped THEN
+          act.state := ActState.Stopping;
+          IF DEBUG THEN
+            RTIO.PutText("Stopping act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+          END;
+          IF RTMachine.SuspendThread(act.handle) THEN
+            IF act.heapState.busy THEN
+              RTMachine.RestartThread(act.handle);
+            ELSE
+              act.state := ActState.Stopped;
+              IF DEBUG THEN
+                RTIO.PutText("Stopped act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+              END;
+              RETURN TRUE;
+            END;
+          END;
+        END;
+        wait.tv_sec := 0;
+        wait.tv_nsec := WAIT_UNIT;
+        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+      END;
+      RETURN TRUE;
+    ELSE
+      (* No native suspend routine so signal thread to suspend *)
+      IF act.state # ActState.Stopped THEN
+        LOOP
+          act.state := ActState.Stopping;
+          IF DEBUG THEN
+            RTIO.PutText("Stopping act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
+          END;
+          WITH r = Upthread.kill(act.handle, SIG) DO
+            IF r = 0 THEN EXIT END;
+            <*ASSERT r = Uerror.EAGAIN*>
+            (* try it again... *)
+          END;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END SuspendOne;
 
 PROCEDURE SuspendAll (me: Activation): INTEGER =
   (* LL=activeMu *)
