@@ -13,8 +13,18 @@ readonly proc FilterBank (nm, rfield) is
 end
 
 readonly proc DyadicFilterBank (nm, rfield) is
-  local basic  = nm & "DyadicFilterBank"
-  local signal = nm & "Signal"
-  build_generic_intf (basic, "DyadicFilterBank", [signal], VISIBLE)
-  build_generic_impl (basic, "DyadicFilterBank", [signal])
+  local basic   = nm & "DyadicFilterBank"
+  local signal  = nm & "Signal"
+  build_generic_intf (basic,   "DyadicFilterBank", [signal], VISIBLE)
+  build_generic_impl (basic,   "DyadicFilterBank", [signal])
+end
+
+% this cannot be instantiated for rational numbers
+readonly proc VanillaDyadicFilterBank (nm, rfield) is
+  local basic   = nm & "DyadicFilterBank"
+  local vanilla = nm & "VanillaDyadicFilterBank"
+  local signal  = nm & "Signal"
+  local rtrans  = nm & "Trans"
+  build_generic_intf (vanilla, "VanillaDyadicFilterBank", [signal, basic], VISIBLE)
+  build_generic_impl (vanilla, "VanillaDyadicFilterBank", [rtrans])
 end
