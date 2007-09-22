@@ -239,7 +239,7 @@ m3_types_equal ( struct type * left, struct type * right )
       case TYPE_CODE_M3_TEXT : 
       case TYPE_CODE_M3_NULL : 
       case TYPE_CODE_M3_VOID : 
-        /* There is only one type with each of these code. */ 
+        /* There is only one type with each of these codes. */ 
         return TYPE_CODE ( left_direct ) == TYPE_CODE ( right_direct ); 
       default : { return false; } 
     } /* switch */ 
@@ -443,7 +443,7 @@ m3_value_equal (struct value *arg1, struct value *arg2)
     }
   else
     {
-      error ("Invalid type combination in equality test.");
+      error (_("Invalid type combination in equality test."));
       return 0;  /* For lint -- never reached */
     }
 }
@@ -508,12 +508,12 @@ m3_value_less (struct value *arg1, struct value *arg2)
   /* NORETURN*/ return 0;
 } /* m3_value_less */ 
 
-/* The purpose is just to cut down the portion of the cartesian
+/* The purpose of tiers is just to cut down the portion of the cartesian
    square of type codes that has to be checked to a triangular matrix.
    Indirects and opaques need to be removed first, on both left and
    right types.    
 
-   After that, the tiers order of types by their code for subtype
+   After that, the tiers order the types by their code for subtype
    checking.  This system is crafted so that if 
    m3_type_code_tier ( tc1 ) < m3_type_code_tier ( tc2 ), 
    then, loosely, m3_subtype_relation ( tc1, tc2 ) != subtype_super.
@@ -523,8 +523,7 @@ m3_value_less (struct value *arg1, struct value *arg2)
    then loosely, m3_subtype_relation ( tc1, tc2 ) == subtype_sub,
    except for different types with TYPE_CODE_M3_OBJECT and reference
    class. 
-
-   TYPE_CODE_M3_INDIRECT, which can't be made to fit such a system. */ 
+*/ 
 
 static int 
 m3_type_code_tier ( enum type_code code ) 
@@ -835,8 +834,8 @@ m3_subtype_relation ( struct type * left, struct type * right )
         case TYPE_CODE_M3_OPEN_ARRAY : 
         case TYPE_CODE_M3_PROC : 
         case TYPE_CODE_M3_PROC_CLOSURE :
-          error ( "Subtype relation not implemented for array or procedure, "
-                  "types." 
+          error (_( "Subtype relation not implemented for array or "
+                    "procedure types.") 
                 ); /* NORETURN */  
 
         case TYPE_CODE_M3_SET : 
@@ -1076,12 +1075,12 @@ m3_check_and_coerce_ordinal (
     if ( rhs_base_type == NULL ) 
       { if ( proc_name == NULL ) 
           { error 
-              ( "Type not assignable to ordinal type." ); /* NORETURN */ 
+              (_("Type not assignable to ordinal type.")); /* NORETURN */ 
           } 
         else 
           { error 
-              ( "Type not assignable to ordinal type, " 
-                " formal \"%s\" of procedure \"%s\", ",
+              (_("Type not assignable to ordinal type, " 
+                 " formal \"%s\" of procedure \"%s\", "),
                 formal_name, proc_name 
               ); /* NORETURN */ 
           } 
@@ -1094,12 +1093,12 @@ m3_check_and_coerce_ordinal (
     else 
       { if ( proc_name == NULL ) 
           { error 
-              ( "Ordinal types with different base types." ); /* NORETURN */ 
+              (_("Ordinal types with different base types.")); /* NORETURN */ 
           } 
         else 
           { error 
-              ( "Ordinal types with different base types, " 
-                " formal \"%s\" of procedure \"%s\", ",
+              (_("Ordinal types with different base types, " 
+                  " formal \"%s\" of procedure \"%s\", "),
                 formal_name, proc_name 
               ); /* NORETURN */ 
           } 
@@ -1111,12 +1110,12 @@ m3_check_and_coerce_ordinal (
       { /* Disjoint value sets.  A static error. */ 
         if ( proc_name == NULL ) 
           { error 
-              ( "Ordinal types with disjoint ranges." ); /* NORETURN */ 
+              (_("Ordinal types with disjoint ranges.")); /* NORETURN */ 
           } 
         else 
           { error 
-              ( "Ordinal types with disjoint ranges, " 
-                " formal \"%s\" of procedure \"%s\", ",
+              (_("Ordinal types with disjoint ranges, " 
+                 " formal \"%s\" of procedure \"%s\", "),
                 formal_name, proc_name 
               ); /* NORETURN */ 
           } 
@@ -1125,12 +1124,12 @@ m3_check_and_coerce_ordinal (
       { /* value not in LHS range. */ 
         if ( proc_name == NULL ) 
           { error 
-              ( "Value out of range." ); /* NORETURN */ 
+              (_("Value out of range.")); /* NORETURN */ 
           } 
         else 
           { error 
-              ( "Value out of range, " 
-                " formal \"%s\" of procedure \"%s\", ",
+              (_("Value out of range, " 
+                 " formal \"%s\" of procedure \"%s\", "),
                 formal_name, proc_name 
               ); /* NORETURN */ 
           } 
@@ -1216,11 +1215,11 @@ m3_check_and_coerce_reference (
                             return rhs_value; 
                           case subtype_sub: 
                             if ( proc_name == NULL ) 
-                              { error ( "NARROW failure." ); /* NORETURN */ }  
+                              { error (_("NARROW failure.")); /* NORETURN */ }
                             else 
                               { error 
-                                 ( "NARROW failure, " 
-                                   "formal \"%s\" of procedure \"%s\"",
+                                 (_("NARROW failure, " 
+                                    "formal \"%s\" of procedure \"%s\""),
                                    formal_name, proc_name 
                                  ); /* NORETURN */
                               }  
@@ -1233,11 +1232,11 @@ m3_check_and_coerce_reference (
           return NULL; 
       } 
     if ( proc_name == NULL ) 
-      { error ( "Reference type not assignable." ); /* NORETURN */ }  
+      { error (_("Reference type not assignable.")); /* NORETURN */ }  
     else 
       { error 
-         ( "Reference type not assignable, " 
-           "formal \"%s\" of procedure \"%s\"",
+         (_("Reference type not assignable, " 
+            "formal \"%s\" of procedure \"%s\""),
            formal_name, proc_name 
          ); /* NORETURN */
       }  
@@ -1277,13 +1276,13 @@ m3_get_array_info ( struct type * array_type,
     } 
 } /* m3_get_array_info */ 
 
-/* Handle value conversion of an array value for either assignment or parameter 
+/* Handle value conversion of an array value for either assignment or parameter
    passing.  If lhs_value is non NULL, its element counts for open dimensions
    are shape-checked against the rhs shape.  Otherwise, open dimensions have
    their element counts set from the rhs shape. Returns NULL if either lhs
    or rhs is not an array type.  Emits error and doesn't return if something
    is wrong.  Otherwise returns a suitable value, which may be equal to
-   rhs_vlue, if nothing has to be done, or is constructed dope otherwise. */ 
+   rhs_value, if nothing has to be done, or is constructed dope otherwise. */ 
 static struct value * 
 m3_check_and_coerce_array ( 
     struct value * lhs_value,
@@ -1346,15 +1345,15 @@ m3_check_and_coerce_array (
                 if ( VALUE_LVAL ( rhs_value ) != lval_memory ) 
                   { if ( proc_name == NULL ) 
                       { error 
-                          ( "Assigning an array constructor to an open array "
-                            "is not supported, " 
+                          (_("Assigning an array constructor to an open array "
+                             "is not supported.") 
                           ); /* NORETURN */ 
                       } 
                     else 
                       { error 
-                          ( "Passing an array constructor to an open array "
-                            "formal is not supported, " 
-                            " formal \"%s\" of procedure \"%s\"",
+                          (_("Passing an array constructor to an open array "
+                             "formal is not supported, " 
+                             " formal \"%s\" of procedure \"%s\""),
                             formal_name, proc_name 
                           ); /* NORETURN */ 
                       } 
@@ -1366,11 +1365,11 @@ m3_check_and_coerce_array (
                 break; 
               default: 
                 if ( proc_name == NULL ) 
-                  { error ( "Non-assignable types." ); /* NORETURN */ } 
+                  { error (_("Non-assignable types.")); /* NORETURN */ } 
                 else 
                   { error 
-                      ( "Non-assignable types, " 
-                        " formal \"%s\" of procedure \"%s\"",
+                      (_("Non-assignable types, " 
+                         " formal \"%s\" of procedure \"%s\""),
                         formal_name, proc_name 
                       ); /* NORETURN */ 
                   } 
@@ -1397,11 +1396,11 @@ m3_check_and_coerce_array (
                 break; 
               default: 
                 if ( proc_name == NULL ) 
-                  { error ( "Non-assignable types." ); /* NORETURN */ } 
+                  { error (_("Non-assignable types.")); /* NORETURN */ } 
                 else 
                   { error 
-                      ( "Non-assignable types, " 
-                        " formal \"%s\" of procedure \"%s\"",
+                      (_("Non-assignable types, " 
+                         " formal \"%s\" of procedure \"%s\""),
                         formal_name, proc_name 
                       ); /* NORETURN */ 
                   } 
@@ -1413,15 +1412,15 @@ m3_check_and_coerce_array (
     if ( lhs_open_dims + lhs_fixed_dims != rhs_open_dims + rhs_fixed_dims ) 
       { if ( proc_name == NULL ) 
           { error 
-              ( "Unequal array dimensions, %d, %d",
+              (_("Unequal array dimensions, %d, and %d."),
                 lhs_open_dims + lhs_fixed_dims,
                 rhs_open_dims + rhs_fixed_dims
               ); /* NORETURN */ 
           } 
         else 
           { error 
-              ( "Unequal array dimensions, %d, %d, "
-                "formal \"%s\" of procedure \"%s\"",
+              (_("Unequal array dimensions, %d, and %d, "
+                 "formal \"%s\" of procedure \"%s\""),
                 lhs_open_dims + lhs_fixed_dims,
                 rhs_open_dims + rhs_fixed_dims,
                 formal_name, proc_name 
@@ -1430,11 +1429,11 @@ m3_check_and_coerce_array (
       }  
     if ( ! m3_types_equal ( lhs_elem_type, rhs_elem_type ) ) 
       { if ( proc_name == NULL ) 
-          { error ( "Unequal array element types." ); /* NORETURN */ }  
+          { error (_("Unequal array element types.")); /* NORETURN */ }  
         else 
           { error 
-              ( "Unequal array element types,"
-                " formal \"%s\" of procedure \"%s\"",
+              (_("Unequal array element types,"
+                 " formal \"%s\" of procedure \"%s\""),
                 formal_name, proc_name 
               ); /* NORETURN */
           }  
@@ -1471,16 +1470,16 @@ m3_check_and_coerce_array (
                   if ( lhs_shape_comp != rhs_shape_comp ) 
                     { if ( proc_name == NULL ) 
                         { error 
-                            ( "Shape check failure." 
-                              "dimension %d, lhs %d, rhs %d.",
+                            (_("Shape check failure." 
+                               "dimension %d, lhs %d, rhs %d."),
                                dimension, lhs_shape_comp, rhs_shape_comp
                             ); /* NORETURN */ 
                         } 
                       else 
                         { error 
-                            ( "Shape check failure." 
-                              " formal \"%s\" of procedure \"%s\", "
-                              "dimension %d, lhs %d, rhs %d.",
+                            (_("Shape check failure." 
+                               " formal \"%s\" of procedure \"%s\", "
+                               "dimension %d, lhs %d, rhs %d."),
                               formal_name, proc_name, 
                               dimension, lhs_shape_comp, rhs_shape_comp
                             ); /* NORETURN */ 
@@ -1516,16 +1515,16 @@ m3_check_and_coerce_array (
               if ( lhs_shape_comp != rhs_shape_comp ) 
                 { if ( proc_name == NULL ) 
                     { error 
-                        ( "Shape check failure." 
-                          "dimension %d, lhs %d, rhs %d.",
+                        (_("Shape check failure." 
+                           "dimension %d, lhs %d, rhs %d."),
                            dimension, lhs_shape_comp, rhs_shape_comp
                         ); /* NORETURN */ 
                     } 
                   else 
                     { error 
-                        ( "Shape check failure." 
-                          " formal \"%s\" of procedure \"%s\", "
-                          "dimension %d, lhs %d, rhs %d.",
+                        (_("Shape check failure." 
+                           " formal \"%s\" of procedure \"%s\", "
+                           "dimension %d, lhs %d, rhs %d."),
                           formal_name, proc_name, 
                           dimension, lhs_shape_comp, rhs_shape_comp
                         ); /* NORETURN */ 
@@ -1554,11 +1553,15 @@ m3_check_and_coerce_array (
 /* The Modula-3 compilers do a poor job of giving enough info to figure out if 
    we have a function procedure and if so, what its result type is.  Here is a 
    hare-brained scheme, worked out experimentally, for inferring it.  
+
    If it's a function and the result type is "small", it will have a local
    variable named "_result" whose type is what we want.  If the result type is
    "big" (i.e., compiled as if it were a VAR parameter), there will be a formal
    parameter, of the same name, whose type is that of a VAR parameter of the
    result type.  
+
+   The type of "_result" is what is returned.    
+
    In order to do this, We have to have the symbol for the actual procedure 
    constant.  This will have a type whose code is TYPE_CODE_FUNC, and whose 
    "fields" have been built from the separate N_PSYM stab entries that follow
@@ -1566,16 +1569,20 @@ m3_check_and_coerce_array (
    type that is almost no help, except when it has a builtin type.  However,
    its block will have entries for the formals, also constructed from N_PSYM
    entries, and locals, constructed from N_LSYM entries.  
-   The type of "_result" is what is returned.    
-   Procedure type stabs entries for procedure variables and methods are produced
-   a little differently by the compilers, and don't contain enough info at all.
-   Fortunately, for evaluating a user-typed call, we can get the runtime address
-   of the procedure constant first, then get the symbol from that. 
+
+   Procedure type stabs entries for procedure variables and methods are 
+   produced a little differently by the compilers, and don't contain enough 
+   information at all. Fortunately, for evaluating a user-typed call, we can 
+   get the runtime address of the procedure constant first, then get the 
+   symbol from that. 
+
    It is not clear that the type of "_result" will be available when the 
    procedure constant symbol is constructed, so we delay this lookup until 
    a user-typed call is being evaluated.  
+
    Note that Modula-3 identifiers must begin with a letter, so the compiler-
    generated name "_result" can't be spoofed by the Modula-3 programmer. 
+
    This function patches the result type of the procedure constant symbol
    and also returns its result type.  result_is_ref_param  (which may be NULL) 
    is set to true iff it is a result that is, at machine-code level, 
@@ -1595,7 +1602,8 @@ m3_patched_proc_result_type (
   if ( result_is_ref_param != NULL ) { * result_is_ref_param = false; } 
   proc_sym = find_pc_function ( code_addr ); 
   if ( proc_sym == NULL ) 
-    { error ( "Can't get symbol for procedure \"%s\".", name ); /* NORETURN */ }
+    { error 
+       (_("Can't get symbol for procedure \"%s\"."), name ); /* NORETURN */ }
   proc_block = SYMBOL_BLOCK_VALUE ( proc_sym );
   result_sym 
     = lookup_block_symbol ( proc_block, "_result", NULL, VAR_DOMAIN ); 
@@ -1663,10 +1671,10 @@ m3_patched_proc_result_type (
    TYPE_CODE_FUNC).  These have a relatively short lifetime.  This is just 
    a trick to get extra information into call_function_by_hand and several 
    other functions it can call, including many target-dependent functions,
-   without changing their parameter lists.  These gdb-space closures are built: 
+   without changing their parameter lists.  These gdb-space closures are built:
      1) When a user-typed call on a nested procedure constant is evaluated.
         The closure is built and passed in to call_function_by_hand as the
-        function to be called.  It is then recognized and used by m3-dependent  
+        function to be called.  It is then recognized and used by m3-dependent 
         code to pass the static link.  
      2) When a user_typed call that passes a nested procedure constant as
         an actual parameter is evaluated.  It is later used by m3-dependent 
@@ -1726,7 +1734,7 @@ m3_nested_proc_const_closure (
 
 /* This handles both assignment and parameter passing of procedure types. 
    Returns NULL if at least one of the types is not a procedure type.  
-   For it to do something significant, lhs_type needs to have TYPE_CODE_M3_PROC 
+   For it to do something significant, lhs_type needs to have TYPE_CODE_M3_PROC
    and rhs_type needs to have TYPE_CODE_FUNC. */ 
 static struct value * 
 m3_check_and_coerce_proc (
@@ -1746,12 +1754,12 @@ m3_check_and_coerce_proc (
     /* FIXME: Do type check of two similar procedure types. */ 
     if ( false )
       { if ( proc_name == NULL )  
-          { error ( "Procedure type not assignable." ); /* NORETURN */ } 
+          { error (_("Procedure type not assignable.")); /* NORETURN */ } 
         else 
           { error 
-              ( "Actual parameter type not assignable to procedure "
-                " formal \"%s\" of procedure \"%s\"" 
-                , formal_name, proc_name
+              (_("Actual parameter type not assignable to procedure "
+                 " formal \"%s\" of procedure \"%s\""), 
+                formal_name, proc_name
               ); /* NORETURN */ 
           } 
       } 
@@ -1835,8 +1843,8 @@ m3_check_and_coerce_actual (
         { /* Something other than an array type. */ 
           if ( ! m3_types_equal ( formal_direct_type, actual_direct_type ) ) 
             { error 
-                ( "Actual parameter type not equal for VAR/READONLY formal \"%s\" "
-                  "of procedure \"%s\"", 
+                (_("Actual parameter type not equal for VAR/READONLY formal "
+                  "\"%s\" of procedure \"%s\""), 
                   formal_name, proc_name
                 ); /* NORETURN */ 
             } 
@@ -1844,8 +1852,8 @@ m3_check_and_coerce_actual (
                && ! VALUE_LVAL ( actual_direct_value ) 
              ) 
             { error 
-                ( "Actual parameter is not a designator for VAR/READONLY formal \"%s\" "
-                  "of procedure \"%s\".", 
+                (_("Actual parameter is not a designator for VAR/READONLY "
+                  "formal \"%s\" of procedure \"%s\"."), 
                   formal_name, proc_name
                 ); /* NORETURN */ 
             } 
@@ -1909,9 +1917,9 @@ m3_check_and_coerce_actual (
       if ( result_direct_value != NULL ) { return result_direct_value; }  
 
       error 
-        ( "Actual parameter type not assignable to formal \"%s\" "
-          "of procedure \"%s\"" 
-          , formal_name, proc_name
+        (_("Actual parameter type not assignable to formal \"%s\" "
+           "of procedure \"%s\""), 
+          formal_name, proc_name
         ); /* NORETURN */
     } 
   return NULL; /* Suppress warnings.  Shouldn't get here. */ 
@@ -1919,12 +1927,12 @@ m3_check_and_coerce_actual (
 
 static struct value *
 m3_evaluate_call ( 
-    struct value * proc_const_value,  /* Procedure constant to be called.  Should
+    struct value * proc_const_value,  /* Procedure constant to be called. Should
                                          have a type with TYPE_CODE_FUNC. */
     struct type * check_actuals_type, /* Use for checking/coercing actuals. Can
                                          be either TYPE_CODE_M3_PROC or 
                                          TYPE_CODE_FUNC. */ 
-    CORE_ADDR code_addr,              /* Inferior address of procedure code. */ 
+    CORE_ADDR code_addr,              /* Inferior address of procedure code. */
     struct value * self,          /* If a method call, the self expression. */
     int nargs,                    /* Number actually typed by user. */ 
     char * name, 
@@ -1950,7 +1958,7 @@ m3_evaluate_call (
         expected_args --;
       } 
     result_type 
-      = m3_patched_proc_result_type ( code_addr, name, & result_is_ref_param ); 
+      = m3_patched_proc_result_type ( code_addr, name, & result_is_ref_param );
     if ( result_type != NULL 
          && TYPE_CODE ( result_type ) == TYPE_CODE_M3_INDIRECT 
          && TYPE_CODE ( check_actuals_type ) == TYPE_CODE_FUNC 
@@ -1959,7 +1967,7 @@ m3_evaluate_call (
       { expected_args --; } 
     if ( nargs != expected_args ) 
       { error 
-         ( "Procedure %s requires %d parameters, but %d were supplied.", 
+         (_("Procedure \"%s\" requires %d parameters, but %d were supplied."), 
            name,
            expected_args, 
            nargs  
@@ -1989,9 +1997,9 @@ m3_evaluate_call (
     if ( result_is_ref_param ) 
       { argvec [ next_argvec ] 
           = allocate_value ( result_type /* has TYPE_CODE_M3_INDIRECT */ ); 
-      /* Setting value_contents_raw ( argvec [ i ])  will have to wait until the
-         space for the result is pushed on the inferior stack, which happens 
-         inside call_function_by_hand. */ 
+      /* Setting value_contents_raw ( argvec [ i ])  will have to wait until 
+         the space for the result is pushed on the inferior stack, which 
+         happens inside call_function_by_hand. */ 
         set_value_lazy ( argvec [ next_argvec ], 0 ); 
         next_argvec ++;
       } 
@@ -2061,8 +2069,8 @@ m3_evaluate_enum_const (
   while ( true ) 
     { if ( i >= nconsts ) 
         { error 
-            ( "Enumeration type \"%s\" has no value named \"%s\".", 
-              SYMBOL_NATURAL_NAME ( sym ) + 2 /* Strip off the "B$" */ , 
+            (("Enumeration type \"%s\" has no value named \"%s\"."), 
+              SYMBOL_NATURAL_NAME ( sym ) + 2 /* Strip off leading "B$" */ , 
               field_name
             ); /* NORETURN */ 
         } 
@@ -2079,12 +2087,12 @@ m3_evaluate_enum_const (
    to denote a method of an object value, the caller will need values for
    both the dot construct itself (what to call) and the left operand of the
    dot (to pass as the first, ('self') parameter.  The former value is returned
-   as the function result.  If this is a method, 'self' will be set to the latter
-   value.  Otherwise, 'self' will be set to null. */ 
-/* NOTE: As of 2006-6-5, m3_parse_e8, in m3-exp.c, during expression parsing,
-         handles dot-constructs that are merely qualified references to 
-         declared entities.  So This only needs to handle access to fields
-         and methods of record and object values. 
+   as the function result.  If this is a method, 'self' will be set to the 
+   latter value.  Otherwise, 'self' will be set to null. */ 
+/* NOTE: m3_parse_e8, in m3-exp.c, during expression parsing, handles
+         dot-constructs that are merely qualified references to declared 
+         entities.  So This only needs to handle access to fields and 
+         methods of record and object values. 
 */ 
 static struct value *
 m3_evaluate_dot ( 
@@ -2127,7 +2135,8 @@ m3_evaluate_dot (
     { lhs_inf_addr = value_as_address ( lhs_value ); 
       if ( lhs_inf_addr == 0 ) 
         { error 
-            ( "Attempt to implicitly dereference NIL, for record field \"%s\".",
+            (_("Attempt to implicitly dereference NIL, for record field "
+              "\"%s\"."),
               field_name
             ); /* NORETURN */ 
         } 
@@ -2140,14 +2149,15 @@ m3_evaluate_dot (
         if ( m3_find_rec_field 
                ( lhs_type, field_name, & bitsize, & bitpos, & dot_type ) 
            ) 
-          { dot_value = m3_field_value ( lhs_value, bitsize, bitpos, dot_type ); 
+          { dot_value 
+              = m3_field_value ( lhs_value, bitsize, bitpos, dot_type ); 
             if ( out_field_name != NULL ) 
               { *out_field_name = field_name; } 
              return dot_value; 
           } 
         else 
-          { error 
-              ( "Record has no field named \"%s\".", field_name ); /* NORETURN */
+          { error (_("Record has no field named \"%s\"."), field_name ); 
+              /* NORETURN */
           } 
         break; 
 
@@ -2159,19 +2169,21 @@ m3_evaluate_dot (
         lhs_inf_addr = value_as_address ( lhs_value ); 
         if ( lhs_inf_addr == 0 ) 
           { error 
-              ( "NIL object cannot have a selection (\".%s\") applied.",
+              (_("NIL object cannot have a selection (\".%s\") applied."),
                 field_name
               ); /* NORETURN */ 
           } 
 	allocated_tc_addr = m3_tc_addr_from_object_addr ( lhs_inf_addr );
         if ( m3_check_TextLiteral_buf 
-              ( lhs_inf_addr, allocated_tc_addr, field_name, & bitsize, & bitpos,
-                & dot_type 
+              ( lhs_inf_addr, allocated_tc_addr, field_name, & bitsize, 
+                & bitpos, & dot_type 
               ) 
            ) 
           { dot_value = value_at_lazy ( dot_type, lhs_inf_addr ); 
             set_value_offset 
-              ( dot_value, value_offset ( dot_value ) + bitpos / TARGET_CHAR_BIT );
+              ( dot_value, 
+                value_offset ( dot_value ) + bitpos / TARGET_CHAR_BIT 
+              );
             if ( out_field_name != NULL ) 
               { *out_field_name = field_name; } 
             return dot_value; 
@@ -2195,7 +2207,7 @@ m3_evaluate_dot (
             while ( true ) /* Search supertypes for field/method. */ 
               { if ( TYPE_CODE ( supertype ) != TYPE_CODE_M3_OBJECT ) 
                   { error 
-                      ( "Object has no field or method named \"%s\"."
+                      (_("Object has no field or method named \"%s\".")
                       , field_name 
                       ); /* NORETURN */ 
                     break; 
@@ -2246,8 +2258,8 @@ m3_evaluate_dot (
         break; 
 
       default:  
-        error ( "A selection (\".%s\") can apply only to a RECORD, "
-                "REF RECORD, or OBJECT.",
+        error (_("A selection (\".%s\") can apply only to a RECORD, "
+                "REF RECORD, or OBJECT."),
                 field_name
               ); /* NORETURN */ 
     } /* switch */ 
@@ -2283,7 +2295,9 @@ m3_call_proc_const_or_var (
     { inf_addr = value_as_address ( proc_value ); 
       if ( inf_addr == 0 ) 
         { error 
-            ( "NIL indirect.  Modula-3 compiler shouldn't allow this to happen." ); 
+            (_("NIL indirect.  Modula-3 compiler shouldn't allow this to "
+                "happen.") 
+            ); 
           /* NORETURN */ 
         } 
       proc_value = value_at_lazy ( TYPE_M3_TARGET ( proc_type ), inf_addr ); 
@@ -2297,7 +2311,7 @@ m3_call_proc_const_or_var (
       case TYPE_CODE_M3_PROC: /* A procedure variable. */  
         inf_addr = value_as_address ( proc_value ); 
         if ( inf_addr == 0 ) 
-          { error ( "Attempt to call NIL procedure variable \"%s\".", name ); 
+          { error (_("Attempt to call NIL procedure variable \"%s\"."), name );
             /* NORETURN */ 
           } 
         if ( m3_inf_address_is_proc_closure ( inf_addr ) ) 
@@ -2322,7 +2336,8 @@ m3_call_proc_const_or_var (
           }
         break; 
       default: 
-        error ( "Attempt to call non-procedure \"%s\".", name ); /* NORETURN */  
+        error (_("Attempt to call non-procedure \"%s\"."), name ); 
+          /* NORETURN */  
     } 
   
   return 
@@ -2375,7 +2390,9 @@ m3_check_and_coerce_assignment (
     { lhs_direct_type = lhs_type; 
       lhs_direct_value = lhs_value; 
       if ( ! VALUE_LVAL ( lhs_direct_value ) ) 
-        { error ( "LHS of assignment is not a designator." ); /* NORETURN */ } 
+        { error (_("LHS of assignment is not a designator.") ); 
+            /* NORETURN */ 
+        } 
     } 
   if ( m3_types_equal ( lhs_direct_type, rhs_direct_type ) ) 
     { return rhs_direct_value; } 
@@ -2404,8 +2421,8 @@ m3_check_and_coerce_assignment (
     );  
   if ( result_direct_value != NULL ) { return result_direct_value; }  
 
-  error ( "RHS expression type not assignable to LHS type in "
-          "assignment statement/" 
+  error (_("RHS expression type not assignable to LHS type in "
+           "assignment statement.")  
         ); /* NORETURN */
 
   return NULL; /* Suppress warnings.  Shouldn't get here. */ 
@@ -2453,13 +2470,15 @@ m3_evaluate_subexp_maybe_packed (
                 if ( proc_sym != NULL 
                      && SYMBOL_PRINT_NAME ( proc_sym ) != NULL 
                    )
-                  { error (_("No frame is currently executing in procedure \"%s\" containing variable \"%s\"."),
+                  { error (_("No frame is currently executing in procedure "
+                             "\"%s\" containing variable \"%s\"."),
                             SYMBOL_PRINT_NAME ( proc_sym ),
                             SYMBOL_PRINT_NAME ( sym ) 
                           );
                   } 
                 else
-                  { error (_("No frame is currently executing in block containing \"%s\""),
+                  { error (_("No frame is currently executing in block "
+                             "containing \"%s\"."),
                             SYMBOL_PRINT_NAME ( sym ) 
                           );
                   } 
@@ -2482,7 +2501,7 @@ m3_evaluate_subexp_maybe_packed (
            = value_of_register (regno, get_selected_frame ("No frame"));
 	(*pos) += 3;
 	if (val == NULL)
-	  error ("Value of register %s not available.",
+	  error (_("Value of register %s not available."),
 		 frame_map_regnum_to_name 
                    (get_selected_frame ("No frame"), regno));
 
@@ -2635,7 +2654,7 @@ m3_evaluate_subexp_maybe_packed (
 
       switch ( TYPE_CODE ( revealed_type ) ) 
         { case TYPE_CODE_M3_ADDRESS : 
-            { error ("^ applied to ADDRESS."); /* NORETURN */ 
+            { error (_("^ applied to ADDRESS.")); /* NORETURN */ 
               return arg1; 
             }
           case TYPE_CODE_M3_REFANY : 
@@ -2643,7 +2662,7 @@ m3_evaluate_subexp_maybe_packed (
           case TYPE_CODE_M3_POINTER: 
             ref_value = m3_value_as_address ( arg1 ) ; 
             { if ( ref_value == 0 ) 
-                { error ("^ applied to NIL"); /* NORETURN */
+                { error (_("^ applied to NIL")); /* NORETURN */
                   return arg1; 
                 }
               allocated_type = m3_allocated_type ( arg1 ); 
@@ -2667,15 +2686,15 @@ m3_evaluate_subexp_maybe_packed (
                /* TODO: ^Maybe make this do the same as the /k format. */ 
           case TYPE_CODE_M3_MUTEX: 
                /* CHECK: ^Do we want to display this? */ 
-            { warning ("Ignoring redundant ^ applied to object"); 
+            { warning (_("Ignoring redundant ^ applied to object")); 
               if ( value_as_address ( arg1 ) == 0 ) 
                 /* REVIEWME: Is this check really necessary here? */ 
-                { error ("^ applied to NIL object"); }
+                { error (_("^ applied to NIL object")); }
               return arg1; 
             }
 
           default: 
-            { error ("^ applied to a non-reference."); /* NORETURN */ 
+            { error (_("^ applied to a non-reference.")); /* NORETURN */ 
               return arg1; 
             }
         } 
@@ -2692,7 +2711,7 @@ m3_evaluate_subexp_maybe_packed (
       else if (TYPE_CODE (neg_type) == TYPE_CODE_M3_INTEGER)
 	return m3_value_from_longest (neg_type, - m3_value_as_integer (arg1));
       else {
-	error ("'-' must be applied to an integer or floating-point value");
+	error (_("'-' must be applied to an integer or floating-point value"));
 	return arg1;
       }}
       
@@ -2720,7 +2739,7 @@ m3_evaluate_subexp_maybe_packed (
 	array_type = TYPE_M3_TARGET (array_type);
 	array = value_at_lazy (array_type, m3_value_as_address (array));
         if (array == 0) {
-          error ("FIRST, LAST or NUMBER applied to NIL");  }}
+          error (_("FIRST, LAST or NUMBER applied to NIL"));  }}
 
       if (TYPE_CODE (array_type) == TYPE_CODE_M3_ARRAY) {
 	index_type = TYPE_M3_ARRAY_INDEX (array_type);
@@ -2733,7 +2752,7 @@ m3_evaluate_subexp_maybe_packed (
 	index_type = array_type;
 	m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
       } else {
-	error ("FIRST, LAST, NUMBER can only be applied to arrays.");
+	error (_("FIRST, LAST, NUMBER can only be applied to arrays."));
       }
 
       res = allocate_value (builtin_type_m3_integer);
@@ -2765,7 +2784,8 @@ m3_evaluate_subexp_maybe_packed (
 	if (val < 0.0) { val = -val; };
 	return value_from_double (arg1_type, val);
       } else {
-	error ("ABS requires an INTEGER, REAL, LONGREAL, or EXTENDED parameter");
+	error (_("ABS requires an INTEGER, REAL, LONGREAL, or EXTENDED "
+                 "parameter"));
 	return arg1;
       }}
 
@@ -2787,7 +2807,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type) / HOST_CHAR_BIT;
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("ADRSIZE(open array) not implemented");
+	error (_("ADRSIZE(<open array>) not implemented"));
 	sz = 1;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz); }
@@ -2801,7 +2821,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type);
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("BITSIZE(open array) not implemented");
+	error (_("BITSIZE(<open array>) not implemented"));
 	sz = 8;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz); }
@@ -2815,7 +2835,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type) / 8;
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("BYTESIZE(open array) not implemented");
+	error (_("BYTESIZE(<open array>) not implemented"));
 	sz = 1;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz);
@@ -2836,7 +2856,7 @@ m3_evaluate_subexp_maybe_packed (
         if ((val > 0.0e0) && ((double)intval != val)) { intval++; }
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("CEILING must be applied to a floating-point value");
+	error (_("CEILING must be applied to a floating-point value"));
 	return arg1;
       }
     }
@@ -2856,7 +2876,7 @@ m3_evaluate_subexp_maybe_packed (
         if ((val < 0.0e0) && ((double)intval != val)) { intval--; }
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("FLOOR must be applied to a floating-point value");
+	error (_("FLOOR must be applied to a floating-point value"));
 	return arg1;
       }
     }
@@ -2875,7 +2895,7 @@ m3_evaluate_subexp_maybe_packed (
         intval = (LONGEST) (val + 0.5);
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("ROUND must be applied to a floating-point value");
+	error (_("ROUND must be applied to a floating-point value"));
 	return arg1;
       }
     }
@@ -2889,19 +2909,19 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); 
       if ( * ( LONGEST * ) value_contents ( arg1 ) == m3_type_magic_value )
         { error 
-            ( "TYPECODE is not implemented for types." ); /* NORETURN */ 
+            (_("TYPECODE is not implemented for types.")); /* NORETURN */ 
         }
       arg1_type = value_type ( arg1 );
       switch ( TYPE_CODE ( arg1_type ) )  
         { case TYPE_CODE_M3_NULL : 
             /* This probably can't happen. */ 
             { error 
-                ( "TYPECODE ( NIL ) not implemented." ); /* NORETURN */ 
+                (_("TYPECODE ( NIL ) not implemented.")); /* NORETURN */ 
             }
           case TYPE_CODE_M3_POINTER : 
             if ( ! TYPE_M3_POINTER_TRACED ( arg1_type ) ) 
               { error 
-                  ( "TYPECODE can't apply to an untraced REF type." ); 
+                  (_("TYPECODE can't apply to an untraced REF type.")); 
                   /* NORETURN */ 
               }
             /* Otherwise, fall through. */ 
@@ -2916,15 +2936,15 @@ m3_evaluate_subexp_maybe_packed (
             val_contents = value_as_address ( arg1 ); 
             if ( val_contents == 0 ) 
               { error 
-                  ( "TYPECODE ( NIL ) not implemented." ); /* NORETURN */ 
+                  (_("TYPECODE ( NIL ) not implemented.")); /* NORETURN */ 
               }
             typecode = m3_typecode_from_inf_address ( val_contents ); 
             return m3_value_from_longest 
                      ( builtin_type_m3_integer, typecode );
           default : 
             error 
-              ( "TYPECODE must be applied to a traced reference or object \
-                value or a reference type."
+              (_("TYPECODE must be applied to a traced reference or object "
+                 "value or a reference type.")
               );
         } 
     }
@@ -2943,7 +2963,7 @@ m3_evaluate_subexp_maybe_packed (
         intval = (LONGEST) (val);
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("TRUNC must be applied to a floating-point value");
+	error (_("TRUNC must be applied to a floating-point value"));
 	return arg1;
       }
     }
@@ -2956,7 +2976,7 @@ m3_evaluate_subexp_maybe_packed (
         val  = m3_value_as_integer (arg1);
         return m3_value_from_longest (builtin_type_m3_integer, val);
       } else {
-	error ("value passed to ORD is not of an ordinal type");
+	error (_("value passed to ORD is not of an ordinal type"));
         return arg1;
       }
     }
@@ -2970,18 +2990,19 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
 
       if (TYPE_CODE (arg1_type) != TYPE_CODE_M3_INTEGER) {
-	error ("first argument of VAL must be an integer");
+	error (_("first argument of VAL must be an integer"));
 	return arg1;
       } else if ((*(LONGEST *) value_contents (arg2) != m3_type_magic_value) ||
 		 (! m3_is_ordinal_type (value_type(arg2)))) {
-	error ("second argument of VAL must be an ordinal type");
+	error (_("second argument of VAL must be an ordinal type"));
 	return arg1;
       } else {
         LONGEST val, lower, upper;
         val  = m3_value_as_integer (arg1);
 	m3_ordinal_bounds (value_type(arg2), &lower, &upper);
 	if ((val < lower) || (upper < val)) {
-	  error ("value passed to VAL is out of range");
+          /* FIXME: Put value, lower, and Upper into this message: */ 
+	  error (_("value passed to VAL is out of range"));
 	  return arg1;
         } else {
           return m3_value_from_longest (value_type(arg2), val);
@@ -3004,15 +3025,16 @@ m3_evaluate_subexp_maybe_packed (
         val = (double) m3_value_as_integer (arg1);
       } else {
 	error 
-          ("first parameter of FLOAT must be an INTEGER, REAL, LONGREAL, "
-            "or EXTENDED value" 
+          (_("first parameter of FLOAT must be an INTEGER, REAL, LONGREAL, "
+             "or EXTENDED value") 
           );
 	return arg1;
       }
 
       if ((*(LONGEST *) value_contents (arg2) != m3_type_magic_value)
 	 || (TYPE_CODE (value_type(arg2)) != TYPE_CODE_FLT)) {
-	error ("second parameter of FLOAT must be REAL, LONGREAL, or EXTENDED");
+	error 
+          (_("second parameter of FLOAT must be REAL, LONGREAL, or EXTENDED"));
 	return arg1;
       }
 
@@ -3029,16 +3051,16 @@ m3_evaluate_subexp_maybe_packed (
       arg2_type = value_type (arg2);
 
       if (TYPE_CODE(arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("LOOPHOLE of open array values is illegal");
+	error (_("LOOPHOLE of open array values is illegal"));
         return arg1;
       } else if (*(LONGEST *) value_contents (arg2) != m3_type_magic_value) {
-	error ("second parameter of LOOPHOLE must be a type");
+	error (_("Second parameter of LOOPHOLE must be a type"));
 	return arg1;
       } else if (TYPE_CODE (arg2_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("LOOPHOLE to an open array type is not (yet) supported");
+	error (_("LOOPHOLE to an open array type is not (yet) supported"));
         return arg1;
       } else if (TYPE_M3_SIZE (arg1_type) != TYPE_M3_SIZE (arg2_type)) {
-	error ("size of value and type passed to LOOPHOLE don't agree");
+	error (_("Size of value and type passed to LOOPHOLE don't agree"));
 	return arg1;
       }
 
@@ -3086,18 +3108,19 @@ m3_evaluate_subexp_maybe_packed (
 	    e = TYPE_M3_OPEN_ARRAY_ELEM (e); }
 	  elt_size *= TYPE_M3_SIZE (e); }}
       else {
-	error ("indexed expression is not an array"); }
+	error (_("Indexed expression is not an array")); }
 
       array = coerce_ref (array);
 
       index_val = m3_value_as_integer (index);
       if (lowerbound > index_val || index_val > upperbound) {
-	error ("range fault on array access");
+	error (_("Range fault on array access"));
 	return 0; }
 
       offset = elt_size * (index_val - lowerbound);
       if (offset % 8 != 0) {
-	error ("Non-byte-aligned, bit-packed array elements not supported."); 
+	error 
+          (_("Non-byte-aligned, bit-packed array elements not supported.")); 
 	return 0; }
       
       v = allocate_value (elem_type);
@@ -3259,7 +3282,7 @@ m3_evaluate_subexp_maybe_packed (
 	  || TYPE_CODE (arg1_type) == TYPE_CODE_M3_VOID
 	  || (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER && !int_ok)
 	  || (TYPE_CODE (arg1_type) == TYPE_CODE_FLT && !float_ok)) {
-	error ("wrong arguments for binary operation");
+	error (_("Wrong argument types for binary operation"));
       }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
@@ -3365,11 +3388,11 @@ m3_evaluate_subexp_maybe_packed (
       return m3_value_less (arg1, arg2) ? arg2 : arg1; }
 
     case BINOP_M3_CAT:
-      error ("Not yet implemented: '&' text concatenation");
+      error (_("Not yet implemented: '&' text concatenation"));
       return 0; 
 
     case BINOP_M3_IN:
-      error ("Not yet implemented: 'IN' set membership test");
+      error (_("Not yet implemented: 'IN' set membership test"));
       return 0; 
 
     case BINOP_ASSIGN:
