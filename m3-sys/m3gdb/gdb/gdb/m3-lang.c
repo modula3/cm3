@@ -589,6 +589,116 @@ simple_name ( const char * name )
 } /* simple_name */ 
 #endif 
 
+/* Try to scan a signed integer value, as either PM3 or CM3 encode it,
+   from the string starting at *string.  If found, convert and store the 
+   value in *result and return the pointer to the character following.  
+   Otherwise, return p unchanged.  A leading underscore is OK and skipped. 
+   Values lexically correct but in excess of the range of LONGEST give
+   undefined results. */ 
+static char * 
+m3_scan_stabs_integer ( char * string, LONGEST * result ) 
+
+  { /* This is messy.  PM3, etc. puts integer values such as bounds into 
+       stabs entries in character coded signed decimal.  In the case of
+       subrange bounds, CM3 puts them in character coded hex, twos-complement,
+       but variable length.  The leftmost bit if the hex value is always a
+       sign bit and must always be sign-extended, but its location is variable.
+
+       This could be done with a duct-tape-baling-wire hodge-podge of calls
+       on scanf, strlen, etc, but it appears to require three passes of the
+       the characters and making a copy of some of them.  Instead, this is
+       a purpose-specific scanner, that makes one pass over the characters,
+       in place. 
+
+       Octal values are also handled.  They probably can't happen right now,
+       but later gdb's do expect them, so this might become needed someday. 
+    */ 
+
+    char * p = string; 
+    bool is_neg = false;
+    int bitct = 0;  
+    LONGEST l_result = 0L ; 
+    LONGEST longest_bitct = sizeof ( LONGEST ) * HOST_CHAR_BIT; 
+    LONGEST one = 1L; 
+
+    if ( p == NULL || * p == '\0' ) { return p; } 
+    if ( * p == '_' ) { p ++; } 
+    if ( * p == '0' ) 
+      { if ( * ( p + 1 ) == 'x' || * ( p + 1 ) == 'X' )   
+          { /* Hex twos-complement format. */
+            p += 2; 
+            while ( true ) 
+              { if ( '0' <= * p && * p <= '9' )
+                  { l_result = ( l_result << 4 ) - '0' + * p; 
+                    bitct += 4; 
+                    p ++; 
+                  }   
+                else if ( 'a' <= * p && * p <= 'f' )
+                  { l_result = ( l_result << 4 ) - 'a' + 10 + * p; 
+                    bitct += 4; 
+                    p ++; 
+                  }   
+                else if ( 'A' <= * p && * p <= 'F' )
+                  { l_result = ( l_result << 4 ) - 'A' + 10 + * p; 
+                    bitct += 4; 
+                    p ++; 
+                  }   
+                else /* We are done. */   
+                  { if ( bitct < longest_bitct 
+                         && ( ( one << ( bitct - 1 ) ) & l_result ) != 0  
+                       ) 
+                      { /* Must do negative sign extend. */ 
+                        l_result = l_result | ( - one ) << bitct; 
+                      }  
+                    if ( result != NULL ) { * result = l_result; } 
+                    return p; 
+                  } 
+              }  
+          } 
+        else /* Octal twos-complement format. */ 
+          { p ++;
+            while ( true ) 
+              { if ( '0' <= * p && * p <= '7' )
+                  { l_result = ( l_result << 3 ) - '0' + * p; 
+                    bitct += 3; 
+                    p ++;
+                  }  
+                else /* We are done. */   
+                  { if ( bitct < longest_bitct 
+                         && ( ( one << ( bitct - 1 ) ) & l_result ) != 0  
+                       ) 
+                      { /* Must do negative sign extend. */ 
+                        l_result = l_result | ( - one ) << bitct; 
+                      }  
+                    if ( result != NULL ) { * result = l_result; } 
+                    return p; 
+                  } 
+              }  
+          } 
+      }
+    else 
+      { if ( * p == '-' ) 
+          { is_neg = true; p ++; }  
+        if ( '0' <= * p && * p <= '9' ) 
+          { /* Signed decimal format. */
+            l_result = * p - '0';
+            p ++;
+            while ( '0' <= * p && * p <= '9' ) 
+              { l_result = l_result * 10 - '0' + * p;
+              /* Oh what a hack.  If the digits give the absolute value of
+                 the maximum negative number, this will overflow to max
+                 negative.  Then the sign change below will overflow again,
+                 but to the same value.  */ 
+                p ++; 
+              }   
+            if ( is_neg ) { l_result = - l_result; } 
+            if ( result != NULL ) { * result = l_result; } 
+            return p; 
+          }
+        else { return string; } 
+      }
+  } /* m3_scan_stabs_integer */
+
 void 
 m3_decode_struct ( struct type *t ) 
 {
@@ -646,7 +756,7 @@ m3_decode_struct ( struct type *t )
       TYPE_CODE (t) = TYPE_CODE_M3_RECORD;
       for (i = 0; i < TYPE_NFIELDS (t); i++) {
 	set_field_uid (t, i);
-	sscanf (TYPE_FIELD_NAME (t, i), "_%ld_%ld", &tmp1, &tmp2);
+	sscanf (TYPE_FIELD_NAME (t, i), "_%li_%li", &tmp1, &tmp2);
         TYPE_FIELD_BITPOS (t, i) = tmp1;
 	TYPE_FIELD_BITSIZE (t, i) = tmp2; 
 	TYPE_FIELD_NAME (t, i) =
@@ -655,7 +765,7 @@ m3_decode_struct ( struct type *t )
 
     case 'O':
       TYPE_CODE (t) = TYPE_CODE_M3_OBJECT;
-      sscanf (type_specific_info, "%ld_%ld_%ld_", &tmp1, &tmp2, &tmp3);
+      sscanf (type_specific_info, "%li_%li_%li_", &tmp1, &tmp2, &tmp3);
       TYPE_M3_OBJ_NFIELDS (t) = tmp1;
       TYPE_M3_OBJ_TRACED (t) = tmp2;
       TYPE_M3_OBJ_BRANDED (t) = tmp3;
@@ -669,7 +779,7 @@ m3_decode_struct ( struct type *t )
 
       for (i = 1; i < TYPE_NFIELDS (t); i++) {
 	set_field_uid (t, i);
-	sscanf (TYPE_FIELD_NAME (t, i), "_%ld_%ld_", &tmp1, &tmp2);
+	sscanf (TYPE_FIELD_NAME (t, i), "_%li_%li_", &tmp1, &tmp2);
         TYPE_FIELD_BITPOS (t, i) = tmp1;
 	TYPE_FIELD_BITSIZE (t, i) = tmp2; 
 	TYPE_FIELD_NAME (t, i) =
@@ -682,16 +792,21 @@ m3_decode_struct ( struct type *t )
       break;
 
     case 'Z':
-      TYPE_CODE (t) = TYPE_CODE_M3_SUBRANGE;
-      sscanf (type_specific_info, "%ld_%ld", &tmp1, &tmp2);
-      TYPE_M3_SUBRANGE_MIN (t) = tmp1;
-      TYPE_M3_SUBRANGE_MAX (t) = tmp2;
-      set_field_uid (t, 0);
-      break;
+      { LONGEST lo = 0; 
+        LONGEST hi = 0; 
+        char * p; 
+        TYPE_CODE (t) = TYPE_CODE_M3_SUBRANGE;
+        p = m3_scan_stabs_integer ( type_specific_info, &lo ); 
+        p = m3_scan_stabs_integer ( p , &hi ); 
+        TYPE_M3_SUBRANGE_MIN (t) = lo;
+        TYPE_M3_SUBRANGE_MAX (t) = hi;
+        set_field_uid (t, 0);
+        break;
+      }
 
     case 'Y':
       TYPE_CODE (t) = TYPE_CODE_M3_POINTER;
-      sscanf (type_specific_info, "%ld_%ld_", &tmp1, &tmp2);
+      sscanf (type_specific_info, "%li_%li_", &tmp1, &tmp2);
       TYPE_M3_POINTER_TRACED (t) = tmp1;
       TYPE_M3_POINTER_BRANDED (t) = tmp2;
       if (TYPE_M3_POINTER_BRANDED (t)) {
@@ -727,7 +842,7 @@ m3_decode_struct ( struct type *t )
       TYPE_CODE (t) = TYPE_CODE_M3_PROC; 
       gdb_assert ( TYPE_NFIELDS ( t ) >= 1 ); 
       TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type ;
-      sscanf (type_specific_info, "%c%ld", &c, &tmp1);
+      sscanf (type_specific_info, "%c%li", &c, &tmp1);
       TYPE_M3_PROC_NRAISES (t) = tmp1;
       if (c == 'A') {		/* RAISES ANY */
 	TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t);
@@ -755,7 +870,7 @@ m3_decode_struct ( struct type *t )
     TYPE_M3_SIZE (t) = 0;
     TYPE_LENGTH (t) = 0;
   } else {
-    sscanf (key + 3 + M3UID_LEN, "_%ld", &tmp1);
+    sscanf (key + 3 + M3UID_LEN, "_%li", &tmp1);
     TYPE_M3_SIZE (t) = tmp1;
     if ( TYPE_CODE ( t ) == TYPE_CODE_M3_PACKED ) 
       /* A field of packed type might not be aligned on a byte boundary,
