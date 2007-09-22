@@ -1681,8 +1681,8 @@ m3_extract_ord (
       lsbcount = bitpos % HOST_CHAR_BIT;
     val >>= lsbcount;
 
-    /* If the field does not entirely fill a LONGEST, either zero the sign bits.
-       or sign extend, as requested. */
+    /* If the field does not entirely fill a LONGEST, either zero the sign 
+       bits or sign extend, as requested. */
     if ( bitsize < HOST_CHAR_BIT * ( int ) sizeof ( val ) )
       {
         valmask = ( ( ( ULONGEST ) 1 ) << bitsize ) - 1;
@@ -1699,7 +1699,7 @@ LONGEST
 m3_value_as_integer ( struct value * val )
 
 { LONGEST lower; 
- LONGEST upper; 
+  LONGEST upper; 
   struct type * type = value_type ( val );
   int typebitsize;
   int valbitsize;
