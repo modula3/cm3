@@ -1181,6 +1181,30 @@ m3_check_and_coerce_ordinal (
 
   } /* m3_check_and_coerce_ordinal */
 
+static struct value * 
+m3_proc_value_from_qualified_name (
+    const char * unit_name, const char * proc_name ) 
+
+  { struct symbol * proc_sym; 
+    struct value * proc_val; 
+
+    proc_sym = m3_lookup_interface_id ( unit_name, proc_name, NULL ); 
+    if ( proc_sym == NULL ) 
+      { proc_sym = m3_lookup_module_id ( unit_name, proc_name, NULL ); } 
+    if ( proc_sym == NULL ) 
+      { error 
+         (_("Can't find builtin procedure %s.%s"), unit_name, proc_name); 
+        /* NORETURN */  
+      } 
+    proc_val = read_var_value ( proc_sym, NULL ); 
+    if ( proc_val == NULL ) 
+      { error 
+         (_("Can't evaluate builtin procedure %s.%s"), unit_name, proc_name); 
+        /* NORETURN */  
+      } 
+    return proc_val;
+  } /* m3_proc_value_from_qualified_name */ 
+
 static const char * FromChars_proc_name = "FromChars";  
 static const char * FromWideChars_proc_name = "FromWideChars";  
 
@@ -1215,12 +1239,9 @@ m3_coerce_m3gdb_string ( struct value * m3gdb_string )
         default: 
           return m3gdb_string; ; 
       } 
-    proc_sym = m3_lookup_interface_id ( "Text", proc_name, NULL ); 
-    if ( proc_sym == NULL ) 
-      { error (_("Can't find Text.%s"), proc_name); } /* NORETURN */  
-    proc_val = read_var_value ( proc_sym, NULL ); 
-    if ( proc_val == NULL ) 
-      { error (_("Can't evaluate Text.%s"), proc_name); } /* NORETURN */  
+    proc_val = m3_proc_value_from_qualified_name ( "Text", proc_name ); 
+    if ( proc_val == NULL ) /* Shouldn't be possible. */ 
+      { return NULL; } 
     argvec [ 0 ] = m3gdb_string; 
     argvec [ 1 ] = NULL; 
     result = call_function_by_hand ( proc_val, 1, argvec); 
@@ -3514,8 +3535,15 @@ m3_evaluate_subexp_maybe_packed (
       return m3_value_less (arg1, arg2) ? arg2 : arg1; }
 
     case BINOP_M3_CAT:
-      error (_("Not yet implemented: '&' text concatenation"));
-      return 0; 
+      { struct value * proc_val; 
+
+        (*pos) += 1; 
+        proc_val = m3_proc_value_from_qualified_name ( "Text", "Cat" ); 
+        if ( proc_val == NULL ) 
+          { return 0; } 
+        return m3_call_proc_const_or_var 
+                 ( proc_val, 2, "Text.Cat", exp, pos, noside );  
+      } 
 
     case BINOP_M3_IN:
       error (_("Not yet implemented: 'IN' set membership test"));
