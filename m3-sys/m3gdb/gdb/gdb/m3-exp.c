@@ -42,7 +42,8 @@ static struct m3_token cur_tok;
 
 /** #define DEBUG_M3_SCANNER **/
 
-static void get_token ()
+static void 
+get_token ( )
 
 {
 #ifdef DEBUG_M3_SCANNER
@@ -311,9 +312,9 @@ m3_parse_e8 ( )
         interface_sym = m3_unit_name_globals_symbol ( 'I', name, NULL ); 
         module_sym = m3_unit_name_globals_symbol ( 'M', name, NULL ); 
         if ( interface_sym != NULL || module_sym != NULL ) 
-          { /* Name of an interface and/or module.  We take the extravagant view 
-               that every unit name is accessible to m3gdb expressions as if
-               declared in a kind of superglobal scope,  without needing 
+          { /* Name of an interface and/or module.  We take the extravagant 
+               view that every unit name is accessible to m3gdb expressions as 
+               if declared in a kind of superglobal scope,  without needing 
                anything like an IMPORT or EXPORTS. */
             unit_name = name ;  
             if ( cur_tok . kind == TK_DOT ) 
@@ -401,7 +402,8 @@ m3_parse_e8 ( )
       str.ptr = cur_tok.string;
       str.length = cur_tok.length;
       write_exp_elt_opcode (OP_M3_TEXT);
-      write_exp_string (str);
+      write_exp_string (str); 
+      /* ^Appends a zero byte, not counted in str.length. */ 
       write_exp_elt_opcode (OP_M3_TEXT); 
       get_token ();
       break;
@@ -410,10 +412,13 @@ m3_parse_e8 ( )
     case TK_WIDETEXT_LIT: {
       struct stoken str;
       str.ptr = cur_tok.string;
-      str.length = cur_tok.length;
+      str.length = cur_tok.length; /* Length in bytes. */ 
       write_exp_elt_opcode (OP_M3_WIDETEXT);
       write_exp_string (str);
-      write_exp_elt_opcode (OP_M3_WIDETEXT); 
+      /* ^Appends a zero byte, not counted in str.length. */ 
+      write_exp_elt_opcode (OP_M3_WIDETEXT);
+      free (cur_tok.string); 
+      /* ^Was allocated in m3-token.c, scan_widetext. */ 
       get_token ();
       break;
     }
@@ -845,18 +850,20 @@ m3_print_subexp (
 		   stream, 0, Val_no_prettyprint);
       return;
 
-    case OP_M3_WIDETEXT: 
-      /* like OP_STRING */
-      length = longest_to_int (exp -> elts[pc + 1].longconst);
-      (*pos) += 3 + 2 * BYTES_TO_EXP_ELEM (length + 1);
-      LA_PRINT_STRING (stream, &exp->elts[pc + 2].string, length, 2, 0);
-      return;
-
     case OP_M3_TEXT: 
       /* like OP_STRING */
       length = longest_to_int (exp -> elts[pc + 1].longconst);
       (*pos) += 3 + BYTES_TO_EXP_ELEM (length + 1);
       LA_PRINT_STRING (stream, &exp->elts[pc + 2].string, length, 1, 0);
+      return;
+
+    case OP_M3_WIDETEXT: 
+      /* like OP_STRING */
+      length = longest_to_int (exp -> elts[pc + 1].longconst);
+      (*pos) += 3 + BYTES_TO_EXP_ELEM (length + 1);
+      LA_PRINT_STRING (stream, &exp->elts[pc + 2].string, length, 2, 0);
+      /* FIXME: ^Here, length is in _bytes_, but there is confusion in
+                m3_print_string about what units it is in. */ 
       return;
 
     case M3_FINAL_TYPE:
@@ -958,8 +965,10 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
 
     case OP_M3_WIDETEXT: 
       length = longest_to_int (exp -> elts[pc + 1].longconst);
-      elt += 3 + 2 * BYTES_TO_EXP_ELEM (length + 1);
+      elt += 3 + BYTES_TO_EXP_ELEM (length + 1);
       LA_PRINT_STRING (stream, &(exp->elts[pc + 2].string), length, 2, 0);
+      /* FIXME: ^Here, length is in _bytes_, but there is confusion in
+                m3_print_string about what units it is in. */ 
       break;
 
     case OP_M3_TYPE:

@@ -29,6 +29,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #define M3_MAX_SYMBOLLEN 350 
 
+/* FIXME: define TARGET_M3_WIDECHAR_BYTE properly. */
+#define TARGET_M3_WIDECHAR_BYTE ( 2 ) 
+#define TARGET_M3_WIDECHAR_BIT ( TARGET_CHAR_BIT * TARGET_M3_WIDECHAR_BYTE) 
+
 extern int rt0_tc_selfID_size; 
 extern int rt0_tc_selfID_offset;
 extern int rt0_tc_dataSize_size; 
@@ -45,8 +49,8 @@ extern int rt0_parent_offset;
 extern int rt0_defaultMethods_size; 
 extern int rt0_defaultMethods_offset;
 
-extern CORE_ADDR rt0u_types_value; /* SRC, PM3 and EZM3 only. */
-extern CORE_ADDR rttype_types_addr; /* CM3 only. */
+extern CORE_ADDR rt0u_types_value; /* used for SRC, PM3 and EZM3 only. */
+extern CORE_ADDR rttype_types_addr; /* Used for CM3 only. */
 
 extern int rttype_info_def_size; 
 extern int rttype_info_def_offset;
@@ -69,9 +73,9 @@ extern void m3_emit_char (int, struct ui_file *, int);
 
 extern void m3_emit_widechar (int, struct ui_file *, int);
 
-extern void m3_print_char (int, struct ui_file *);
+extern void m3_print_char_lit (int, struct ui_file *);
 
-extern void m3_print_widechar (int, struct ui_file *);
+extern void m3_print_widechar_lit (int, struct ui_file *);
 
 extern void
 m3_print_string (
@@ -297,6 +301,11 @@ extern LONGEST m3_value_as_integer (struct value *);
 extern double m3_value_as_float (struct value *);
 
 extern struct value * m3_ensure_value_is_unpacked ( struct value * packed_val ); 
+extern int m3_open_array_dope_align ( ); 
+
+/* Return the gdb-space byte offset of 'dimension'-th shape component, relative
+   to the beginning of open arrray dope. */ 
+extern int m3_shape_component_offset ( int dimension );  
 
 extern CORE_ADDR m3_open_array_elems_addr ( const gdb_byte * addr ); 
 
@@ -330,7 +339,7 @@ extern void
 m3_set_value_open_array_shape_component ( 
   struct value * array_value, int dimension, ULONGEST val ); 
 
-/* Fetch the inferior address of the zero-th element of the Modula-3 open array 
+/* Fetch the inferior address of the zero-th element of the Modula-3 open array
    whose dope begins at inferior address ref. */ 
 extern CORE_ADDR 
 m3_inf_open_array_elems_addr ( CORE_ADDR ref ); 
@@ -368,6 +377,8 @@ extern const int static_link_offset;
 
 extern struct frame_info * 
 m3_static_parent_frame ( struct frame_info *start_frame ); 
+
+extern int m3_proc_closure_align ( ); 
 
 /* FIXME:  This struct is the wrong way to do this, because it now needs
    to reflect target layout, in addition to values constructed entirely
