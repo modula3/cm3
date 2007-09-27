@@ -559,6 +559,8 @@ m3_type_code_tier ( enum type_code code )
         case TYPE_CODE_M3_NULL : 
           return 9; 
         case TYPE_CODE_M3_TEXT : 
+        case TYPE_CODE_M3GDB_STRING : 
+        case TYPE_CODE_M3GDB_WIDESTRING : 
           return 10; 
         case TYPE_CODE_M3_POINTER : 
           return 11; 
@@ -742,6 +744,7 @@ reference_type_depth ( struct type * start_type )
 
 /* Is this type TEXT or the PM3 revelation of TEXT, namely 
    BRANDED "Text-1.0" REF ARRAY OF CHAR? 
+   PRE: Indirects, packed, and opaque have been removed from 'text_type'.
 */ 
 static bool
 is_pm3_text_revelation ( struct type * text_type ) 
@@ -750,8 +753,11 @@ is_pm3_text_revelation ( struct type * text_type )
   struct type * elem_type; 
 
   if ( text_type == NULL ) { return false; } 
+  if ( m3_is_cm3 ( ) ) { return false; } 
   switch ( TYPE_CODE ( text_type ) ) 
     { case TYPE_CODE_M3_TEXT: 
+      case TYPE_CODE_M3GDB_STRING:
+      case TYPE_CODE_M3GDB_WIDESTRING:
         return true; 
       case TYPE_CODE_M3_POINTER:
         if ( ! TYPE_M3_POINTER_BRANDED ( text_type ) )  
@@ -773,6 +779,37 @@ is_pm3_text_revelation ( struct type * text_type )
         return false; 
     } 
 } /* is_pm3_text_revelation */ 
+
+/* Is this type CM3 TEXT, its revelation, or any subtype thereof? 
+   PRE: Indirects, packed, and opaque have been removed from 'text_type'.
+*/ 
+static bool
+is_cm3_text_subtype ( struct type * text_type ) 
+
+{ struct type * supertype; 
+
+  if ( ! m3_is_cm3 ( ) ) 
+    { return false; } 
+  supertype = text_type; 
+  while ( true ) 
+    { if ( supertype == NULL ) 
+        { return false; } 
+      switch ( TYPE_CODE ( supertype ) ) 
+        { case TYPE_CODE_M3_TEXT: 
+          case TYPE_CODE_M3GDB_STRING:
+          case TYPE_CODE_M3GDB_WIDESTRING:
+            return true; 
+          case TYPE_CODE_M3_OBJECT:
+            if ( TYPE_M3_POINTER_BRANDED ( supertype )   
+                 && strcmp ( TYPE_M3_POINTER_BRAND ( supertype ), "Text-2.0" ) 
+                    == 0 )
+              { return true; }
+            supertype = TYPE_M3_OBJ_SUPER ( supertype ); 
+          default: 
+            return false; 
+        } 
+    }
+} /* is_cm3_text_subtype */ 
 
 /* Computes the type-to-type subtype relation. */ 
 static enum subtype_rel 
@@ -902,17 +939,27 @@ m3_subtype_relation ( struct type * left, struct type * right )
             } /* switch ( right_code ) */
 
         case TYPE_CODE_M3_TEXT : 
-          if ( ! m3_is_cm3 ( ) )  
-            { if ( right_code == TYPE_CODE_M3_REFANY 
-                   || right_code == TYPE_CODE_M3_TRANSIENT_REFANY 
-                 )
-                { return subtype_sub; } 
-              if ( is_pm3_text_revelation ( right_direct ) ) 
+        case TYPE_CODE_M3GDB_STRING : 
+        case TYPE_CODE_M3GDB_WIDESTRING : 
+          switch ( right_code ) 
+            { case TYPE_CODE_M3_TEXT: 
+              case TYPE_CODE_M3GDB_STRING: 
+              case TYPE_CODE_M3GDB_WIDESTRING:
                 { return subtype_equal; } 
-              else { return subtype_norel; }  
-            } 
-          /* else for CM3, fall through to object case. */ 
-
+                  /* ^Even though the m3gdb representation might differ. */
+              case TYPE_CODE_M3_REFANY: 
+              case TYPE_CODE_M3_TRANSIENT_REFANY: 
+                { return subtype_sub; } 
+              case TYPE_CODE_M3_POINTER: 
+                if ( is_pm3_text_revelation ( right_direct ) ) 
+                  { return subtype_equal; } 
+                else { return subtype_norel; } 
+              case TYPE_CODE_M3_OBJECT: 
+                if ( is_cm3_text_subtype ( right_direct ) )  
+                  { return subtype_sub; } 
+                else { return subtype_norel; } 
+              default : return subtype_norel;             }  
+                    
         case TYPE_CODE_M3_MUTEX : 
         case TYPE_CODE_M3_OBJECT : 
           switch ( right_code ) 
@@ -920,16 +967,11 @@ m3_subtype_relation ( struct type * left, struct type * right )
               case TYPE_CODE_M3_TRANSIENT_ROOT: 
               case TYPE_CODE_M3_REFANY: 
               case TYPE_CODE_M3_TRANSIENT_REFANY: 
-                { if ( TYPE_M3_POINTER_TRACED ( left_direct ) )
-                    { return subtype_sub; } 
-                  return subtype_norel; 
-                } 
+                { return subtype_sub; }  
               case TYPE_CODE_M3_UN_ROOT: 
               case TYPE_CODE_M3_ADDRESS: 
-                { if ( ! TYPE_M3_POINTER_TRACED ( left_direct ) )
-                    { return subtype_sub; } 
-                  return subtype_norel; 
-                } 
+                { return subtype_norel; } 
+
               case TYPE_CODE_M3_MUTEX : 
               case TYPE_CODE_M3_OBJECT: 
                 { int left_depth; 
@@ -1137,19 +1179,65 @@ m3_check_and_coerce_ordinal (
     result_value = m3_value_from_longest ( lhs_base_type, contents ); 
     return result_value; 
 
-  } /* m3_check_and_coerce_ordinal */ 
+  } /* m3_check_and_coerce_ordinal */
+
+static const char * FromChars_proc_name = "FromChars";  
+static const char * FromWideChars_proc_name = "FromWideChars";  
+
+/* m3gdb_string might be  a value of a string of chars or wide chars that is
+   located in m3gdb space.  If so, convert it to a TEXT in inferior space,
+   by making a call on Text.FromChars or Text.FromWideChars.  Otherwise,
+   identity. */ 
+static struct value * 
+m3_coerce_m3gdb_string ( struct value * m3gdb_string ) 
+
+  { struct type * m3gdb_type; 
+    enum type_code code; 
+    LONGEST length; /* Always in bytes. */ 
+    const char * proc_name; 
+    struct symbol * proc_sym;
+    struct value * argvec [ 2 ]; 
+    struct value * result; 
+    struct value * proc_val; 
+
+    m3gdb_type = value_type ( m3gdb_string ); 
+    code = TYPE_CODE ( m3gdb_type ); 
+    length = TYPE_LENGTH ( m3gdb_type ); 
+    switch ( code ) 
+      { case TYPE_CODE_M3GDB_STRING: 
+          proc_name = FromChars_proc_name;
+          break;  
+        case TYPE_CODE_M3GDB_WIDESTRING: 
+          proc_name = FromWideChars_proc_name;
+          /* ^We disallow wide text literals from being scanned unless this
+             is cm3-compiled code, so FromWideChars will exist in m3core. */  
+          break;  
+        default: 
+          return m3gdb_string; ; 
+      } 
+    proc_sym = m3_lookup_interface_id ( "Text", proc_name, NULL ); 
+    if ( proc_sym == NULL ) 
+      { error (_("Can't find Text.%s"), proc_name); } /* NORETURN */  
+    proc_val = read_var_value ( proc_sym, NULL ); 
+    if ( proc_val == NULL ) 
+      { error (_("Can't evaluate Text.%s"), proc_name); } /* NORETURN */  
+    argvec [ 0 ] = m3gdb_string; 
+    argvec [ 1 ] = NULL; 
+    result = call_function_by_hand ( proc_val, 1, argvec); 
+    return result; 
+  } /* m3_coerce_m3gdb_string */ 
 
 /* Handle value conversion of a reference value for either assignment
    or parameter passing.  Returns an appropriate struct value * if the
    types are reference types and everything is OK.  Displays an error
    (and thus doesn't return) if reference types are involved but
-   something is wrong.  Retuns NULL if reference types are
+   something is wrong.  Returns NULL if reference types are
    irrelevant. */  
 static struct value * 
 m3_check_and_coerce_reference ( 
     struct type * lhs_type,
     struct value * rhs_value,
-    struct type * rhs_type,
+   struct type * rhs_type,
     char * proc_name,
     char * formal_name 
  ) 
@@ -1159,7 +1247,8 @@ m3_check_and_coerce_reference (
     struct type * allocated_type; 
     struct type * lhs_revealed_type; 
     struct type * rhs_revealed_type;  
-
+    enum type_code rhs_revealed_type_code; 
+   
     lhs_revealed_type = m3_revealed_unpacked_direct_type ( lhs_type ); 
     rhs_revealed_type = m3_revealed_unpacked_direct_type ( rhs_type ); 
 
@@ -1176,7 +1265,8 @@ m3_check_and_coerce_reference (
         case TYPE_CODE_M3_TEXT:
         case TYPE_CODE_M3_NULL:
           /* LHS is a reference type */ 
-          switch ( TYPE_CODE ( rhs_revealed_type ) ) 
+          rhs_revealed_type_code = TYPE_CODE ( rhs_revealed_type ); 
+          switch ( rhs_revealed_type_code ) 
             { case TYPE_CODE_M3_REFANY:
               case TYPE_CODE_M3_TRANSIENT_REFANY:
               case TYPE_CODE_M3_ADDRESS:
@@ -1188,6 +1278,8 @@ m3_check_and_coerce_reference (
               case TYPE_CODE_M3_MUTEX:
               case TYPE_CODE_M3_TEXT:
               case TYPE_CODE_M3_NULL:
+              case TYPE_CODE_M3GDB_STRING:     /* These can occur only on */ 
+              case TYPE_CODE_M3GDB_WIDESTRING: /* the RHS */ 
                 /* RHS is a reference type too. */ 
                 static_rel 
                    = m3_subtype_relation 
@@ -1199,7 +1291,7 @@ m3_check_and_coerce_reference (
                     case subtype_super: 
                     case subtype_both: /* Can this happen? */
                       /* Statically legal, no runtime check needed. */ 
-                      return rhs_value; 
+                      { return m3_coerce_m3gdb_string ( rhs_value ); }
                     case subtype_sub: 
                       allocated_type = m3_allocated_type ( rhs_value ); 
                       allocated_rel 
@@ -1224,6 +1316,7 @@ m3_check_and_coerce_reference (
                                  ); /* NORETURN */
                               }  
                         }  
+                      break;
                   }
               default: 
                 break; 
@@ -1557,8 +1650,8 @@ m3_check_and_coerce_array (
    If it's a function and the result type is "small", it will have a local
    variable named "_result" whose type is what we want.  If the result type is
    "big" (i.e., compiled as if it were a VAR parameter), there will be a formal
-   parameter, of the same name, whose type is that of a VAR parameter of the
-   result type.  
+   parameter, also named "_result", whose type is that of a VAR parameter of 
+   the result type.  
 
    The type of "_result" is what is returned.    
 
@@ -1572,7 +1665,7 @@ m3_check_and_coerce_array (
 
    Procedure type stabs entries for procedure variables and methods are 
    produced a little differently by the compilers, and don't contain enough 
-   information at all. Fortunately, for evaluating a user-typed call, we can 
+   information at all.  Fortunately, for evaluating a user-typed call, we can 
    get the runtime address of the procedure constant first, then get the 
    symbol from that. 
 
@@ -1654,7 +1747,7 @@ m3_patched_proc_result_type (
 
    In gdb, we handle closures in two ways.  Procedure values that are stored
    in the inferior program are represented in gdb space as struct value 
-   objects  whose value is the pointer (to either kind), and whose type has 
+   objects whose value is the pointer (to either kind), and whose type has 
    TYPE_CODE_M3_PROC.  In evaluating user-typed expressions and statements,
    gdb checks which kind it is when:
      1) Trying to assign it to a variable.  Only top-level is legal.
@@ -1664,7 +1757,7 @@ m3_patched_proc_result_type (
    When passing it as a parameter, which kind it is does not matter.  The
    pointer itself is just passed. 
 
-   gdb also constructs closures in gdb space that don't exist in inferior
+   m3gdb also constructs closures in gdb space that don't exist in inferior
    space.  These are represented by a struct value node whose value is the
    entire 3-word closure, and whose type has TYPE_CODE_M3_PROC_CLOSURE and
    whose TYPE_TARGET_TYPE is the type of the procedure constant (which has
@@ -1674,8 +1767,8 @@ m3_patched_proc_result_type (
    without changing their parameter lists.  These gdb-space closures are built:
      1) When a user-typed call on a nested procedure constant is evaluated.
         The closure is built and passed in to call_function_by_hand as the
-        function to be called.  It is then recognized and used by m3-dependent 
-        code to pass the static link.  
+        function to be called.  There it will be recognized and used by 
+        m3-dependent code to pass the static link.  
      2) When a user_typed call that passes a nested procedure constant as
         an actual parameter is evaluated.  It is later used by m3-dependent 
         code to push a copy of the closure onto the inferior stack and then 
@@ -1927,7 +2020,7 @@ m3_check_and_coerce_actual (
 
 static struct value *
 m3_evaluate_call ( 
-    struct value * proc_const_value,  /* Procedure constant to be called. Should
+    struct value * proc_const_value,  /* Procedure constant to be called.  Must
                                          have a type with TYPE_CODE_FUNC. */
     struct type * check_actuals_type, /* Use for checking/coercing actuals. Can
                                          be either TYPE_CODE_M3_PROC or 
@@ -2428,6 +2521,28 @@ m3_check_and_coerce_assignment (
   return NULL; /* Suppress warnings.  Shouldn't get here. */ 
 } /* m3_check_and_coerce_assignment */ 
 
+/* Build a struct type and struct value for a (possibly wide) text string,
+   that, for now, will only exist in m3gdb space.  It takes quite a bit of
+   work to get it into inferior space, so will postpone that unless/until 
+   it is known to be needed.  */ 
+static struct value * 
+m3_evaluate_text_literal ( 
+    char * value, LONGEST length, enum type_code code ) 
+
+  { struct value *val;
+    struct type * text_type; 
+
+    text_type = alloc_type (NULL);
+    /* FIXME: ^Figure out how to create a cleanup that will deallocate 
+              this when the current command is done. */ 
+    TYPE_CODE (text_type) = code; 
+    TYPE_LENGTH (text_type) = length; 
+
+    val = allocate_value (text_type);
+    memcpy (value_contents_raw (val), value, length);
+    return val;
+  } /* m3_evaluate_text_literal */ 
+
 static struct value *
 m3_evaluate_subexp_maybe_packed ( 
     struct type *expect_type,
@@ -2524,14 +2639,25 @@ m3_evaluate_subexp_maybe_packed (
         }
       }
 
-    case OP_M3_WIDETEXT:
     case OP_M3_TEXT:
       length = longest_to_int (exp->elts[pc + 1].longconst);
       (*pos) += 4 + BYTES_TO_EXP_ELEM (length + 1);
       if (noside == EVAL_SKIP)
         return m3_value_from_longest (builtin_type_long, (LONGEST) 1);
       else 
-      return value_string (&exp->elts[pc + 2].string, length);
+        return 
+          m3_evaluate_text_literal 
+            ( & exp->elts[pc + 2].string, length, TYPE_CODE_M3GDB_STRING ); 
+
+    case OP_M3_WIDETEXT:
+      length = longest_to_int (exp->elts[pc + 1].longconst);
+      (*pos) += 4 + BYTES_TO_EXP_ELEM (length + 1);
+      if (noside == EVAL_SKIP)
+        return m3_value_from_longest (builtin_type_long, (LONGEST) 1);
+      else 
+        return 
+          m3_evaluate_text_literal 
+            ( & exp->elts[pc + 2].string, length, TYPE_CODE_M3GDB_WIDESTRING );
 
     case OP_M3_LONG:
     case OP_M3_CHAR:

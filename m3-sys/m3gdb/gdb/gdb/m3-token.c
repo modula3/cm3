@@ -28,6 +28,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "gdb_string.h"
 
 #include "m3-token.h"
+#include "m3-util.h"
 
 /*-------------------------------------------------------- reserved words ---*/
 
@@ -201,10 +202,9 @@ m3_scan_number (char *input, struct m3_token *tok)
           c++; 
           if ((base < 2) || (16 < base)) 
             { error 
-                ("%d is an illegal base for a Modula-3 literal, using 10 instead." 
+                (_("%d is an illegal base for a Modula-3 literal.") 
                 , (int) base 
-                );
-              base = 10;
+                ); /* NORETURN */ 
             }
         } 
       else is_based = false; 
@@ -225,10 +225,8 @@ m3_scan_number (char *input, struct m3_token *tok)
       c++;
     }
 
-    if (c == input) {
-      error ("illegal based integer literal, zero used");
-      val = 0;
-    }
+    if (c == input) 
+      { error (_("Based integer literal has no digits.") ); /* NORETURN */ }
 
     tok->kind   = TK_CARD_LIT;
     tok->intval = val;
@@ -239,7 +237,7 @@ m3_scan_number (char *input, struct m3_token *tok)
 
     /* scan the fractional digits */
     if ((*c < '0') || ('9' < *c)) {
-      error ("missing digits in real fraction");
+      error (_("Missing digits in real fraction") ); /* NORETURN */ 
     }
     while ('0' <= *c && *c <= '9') { c++; }
 
@@ -264,7 +262,7 @@ m3_scan_number (char *input, struct m3_token *tok)
 
     /* scan the exponent digits */
     if ((*c < '0') || ('9' < *c)) {
-      error ("missing digits in real exponent");
+      error (_("Missing digits in real exponent") ); /* NORETURN */ 
     }
     while ('0' <= *c && *c <= '9') { c++; }
 
@@ -361,14 +359,13 @@ scan_gdb_token (input, tok)
 /*-------------------------------------------------- char & text literals ---*/
 
 static void
-bad_octal (wide)
-     int wide;
-{
-  error ( "octal %scharacter escape sequence must have exactly %d digits", 
-          ( wide ? "wide " : "" ), 
-          ( wide ? 6 : 3)
-        );
-} /* bad_octal */
+bad_octal ( bool wide )
+
+  { error (_("Octal %sCHAR escape sequence must have exactly %d digits"), 
+            ( wide ? "WIDE" : "" ), 
+            ( wide ? 6 : 3)
+          ); /* NORETURN */ 
+  } /* bad_octal */
 
 static bool
 octal_digit ( char ch, int *digit ) 
@@ -380,85 +377,75 @@ octal_digit ( char ch, int *digit )
 } /* octal_digit */
 
 static char *
-scan_octal (input, val, wide)
-  char *input;
-  LONGEST *val;
-  int wide;
-{
-  int digit;
+scan_octal ( char *input, LONGEST *val,  bool wide ) 
 
-  *val = 0;
+  { int digit;
+    *val = 0;
 
-  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
-  *val = digit;  input++;
-  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
-  *val = 8 * (*val) + digit;  input++;
-  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
-  *val = 8 * (*val) + digit;  input++;
+    if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+    *val = digit;  input++;
+    if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+    *val = 8 * (*val) + digit;  input++;
+    if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+    *val = 8 * (*val) + digit;  input++;
 
-  if (!wide) { return input; }
+    if (!wide) { return input; }
 
-  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
-  *val = 8 * (*val) + digit;  input++;
-  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
-  *val = 8 * (*val) + digit;  input++;
-  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
-  *val = 8 * (*val) + digit;  input++;
+    if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+    *val = 8 * (*val) + digit;  input++;
+    if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+    *val = 8 * (*val) + digit;  input++;
+    if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+    *val = 8 * (*val) + digit;  input++;
 
-  return input;
-} /* scan_octal */
+    return input;
+  } /* scan_octal */
 
 static void
-bad_hex (wide)
-     int wide;
-{
-  error ( "hex character %sescape sequence must exactly have %d digits", 
-          ( wide ? "wide " : "" ), 
-          ( wide ? 4 : 2 )
-        );
-} /* bad_hex */
+bad_hex ( bool wide ) 
 
+  { error (_("Hex %scharacter escape sequence must exactly have %d digits"), 
+            ( wide ? "wide " : "" ), 
+            ( wide ? 4 : 2 )
+          ); /* NORETURN */ 
+  } /* bad_hex */
 
 static bool
 hex_digit ( char ch, int *digit )
 
-{ if ( '0' <= ch && ch <= '9' ) 
-    { *digit = ch - '0';       return true; }
-  if ( 'A' <= ch && ch <= 'F' ) 
-    { *digit = ch - 'A' + 10;  return true; }
-  if ( 'a' <= ch && ch <= 'f' ) 
-    { *digit = ch - 'a' + 10;  return true; }
-  return false;
-} /* hex_digit */
+  { if ( '0' <= ch && ch <= '9' ) 
+      { *digit = ch - '0';       return true; }
+    if ( 'A' <= ch && ch <= 'F' ) 
+      { *digit = ch - 'A' + 10;  return true; }
+    if ( 'a' <= ch && ch <= 'f' ) 
+      { *digit = ch - 'a' + 10;  return true; }
+    return false;
+  } /* hex_digit */
 
 static char *
-scan_hex (input, val, wide)
-  char *input;
-  LONGEST *val;
-  int wide;
-{
-  int digit;
+scan_hex ( char *input, LONGEST *val, bool wide ) 
 
-  *val = 0;
+  { int digit;
+    *val = 0;
 
-  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
-  *val = digit;  input++;
-  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
-  *val = 16 * (*val) + digit;  input++;
+    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    *val = digit;  input++;
+    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    *val = 16 * (*val) + digit;  input++;
 
-  if (!wide) { return input; }
+    if (!wide) { return input; }
 
-  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
-  *val = 16 * (*val) + digit;  input++;
-  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
-  *val = 16 * (*val) + digit;  input++;
+    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    *val = 16 * (*val) + digit;  input++;
+    if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+    *val = 16 * (*val) + digit;  input++;
 
-  return input;
-} /* scan_hex */
+    return input;
+  } /* scan_hex */
 
 /* PRE: input points to the opening single quote. */ 
 static char *
-scan_char ( char *input, struct m3_token *tok, int wide ) 
+scan_char ( char *input, struct m3_token *tok, bool wide ) 
 
 {
   int val = 0;
@@ -469,11 +456,11 @@ scan_char ( char *input, struct m3_token *tok, int wide )
   input++;  /* skip opening quote */
 
   if (*input == '\'') {
-    error ("missing character in character literal");
+    error (_("No character in character literal") ); /* NORETURN */ 
     return input+1;
 
   } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
-    error ("end-of-line encountered in character literal");
+    error (_("End-of-line encountered in character literal") ); /* NORETURN */
     return input+1;
 
   } else if (*input == '\\') {
@@ -490,12 +477,12 @@ scan_char ( char *input, struct m3_token *tok, int wide )
     } else if (('0' <= *input) && (*input <= '7')) {
       input = scan_octal (input, &tok->intval, wide);
     } else {
-      error ("unknown escape sequence in character literal");
+      error (_("Unknown escape sequence in character literal") ); /* NORETURN */
       return input;
     }
 
   } else if (*input == 0) {
-    error ("EOF encountered in character literal");
+    error (_("EOF encountered in character literal") ); /* NORETURN */ 
     return input;
 
   } else {
@@ -506,12 +493,19 @@ scan_char ( char *input, struct m3_token *tok, int wide )
   if (*input == '\'') {
     input++;
   } else {
-    error ("missing closing quote on character literal");
+    error (_("Missing closing quote on character literal") ); /* NORETURN */ 
   }
 
   return input;
 } /* scan_char */
 
+/* Do not insert a trailing zero character.  A Modula-3 text literal can have
+   embedded zero characters, and all uses of this string will use a separate 
+   length. */ 
+/* BEWARE: This just changes a portion of the user-typed command, in place,
+           into the collected string, with escapes and trailing quote
+           removed, and trailing \0 inserted; and puts the pointer to
+           that into the token.  Don't ever try to rescan the input line! */ 
 static char *
 scan_text (input, tok)
   char *input;
@@ -532,7 +526,7 @@ scan_text (input, tok)
       break;
 
     } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
-      error ("end-of-line encountered in text literal");
+      error (_("End-of-line encountered in text literal") ); /* NORETURN */ 
       input++;
       break;
 
@@ -547,18 +541,18 @@ scan_text (input, tok)
       else if (*input == '"')  { *next++ = '"';   input++; }
       else if (*input == 'x' || *input == 'X') {
 	LONGEST hexval;
-        input = scan_hex (++input, &hexval, 0);
+        input = scan_hex (++input, &hexval, false);
 	*next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
 	LONGEST octval;
-        input = scan_octal (input, &octval, 0);
+        input = scan_octal (input, &octval, false);
 	*next++ = octval;
       } else {
-        error ("unknown escape sequence in text literal");
+        error (_("Unknown escape sequence in text literal") ); /* NORETURN */ 
       }
 
     } else if (*input == 0) {
-      error ("EOF encountered in text literal");
+      error (_("EOF encountered in text literal") ); /* NORETURN */ 
       break;
 
     } else {
@@ -567,118 +561,125 @@ scan_text (input, tok)
     }
   }
 
-  /* finish the string */
-  *next++ = 0;
+  /* finish the string. */
   tok->length = next - start;
   return input;
 } /* scan_text */
 
-/* PRE: input points to the opening double quote. */ 
+/* Do not insert a trailing zero character.  A Modula-3 text literal can have
+   embedded zero characters, and all uses of this string will use a separate 
+   length. */ 
+/* PRE: input points to the opening double quote. 
+   POST: tok->string is a newly-allocated (by malloc) array of bytes,
+         possibly a bit overlength, containing the wide characters 
+         and terminated by a wide null.
+   POST: tok->length is length in bytes of the actual contents of
+         tok->string. 
+*/ 
 static char *
-scan_widetext (input, tok, wide)
-  char *input;
-  struct m3_token *tok;
-  int wide;
-{
-  char *start, *out;
-  int len;
+scan_widetext ( char *input, struct m3_token *tok ) 
 
-  input++;  /* skip the leading quote */
-  start = input;
+  { char *start;
+    char *out;
+    int wchar_value; 
+    int len;
 
-  /* prescan the string to estimate its final length */
-  len = 0;
-  while (1) {
-    if (*input == '"') {
-      input++;
-      break;
+    input++;  /* skip the leading quote */
+    start = input;
 
-    } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
-      input++;
-      break;
+    /* prescan the string to estimate its final length */
+    len = 0;
+    while ( true ) {
+      if (*input == '"') {
+        input++;
+        break;
 
-    } else if (*input == '\\') {
-      input ++;
-      if      (*input == 'n')  { len++;  input++; }
-      else if (*input == 't')  { len++;  input++; }
-      else if (*input == 'r')  { len++;  input++; }
-      else if (*input == 'f')  { len++;  input++; }
-      else if (*input == '\\') { len++;  input++; }
-      else if (*input == '\'') { len++;  input++; }
-      else if (*input == '"')  { len++;  input++; }
-      else if (*input == 'x' || *input == 'X')  {
-	len++;  input++;  /* assume the hex digits each count as characters */
-      } else if (('0' <= *input) && (*input <= '7')) {
-	len++;  input++;  /* assume the octal digits each count as characters */
+      } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
+        input++;
+        break;
+
+      } else if (*input == '\\') {
+        input ++;
+        if      (*input == 'n')  { len++;  input++; }
+        else if (*input == 't')  { len++;  input++; }
+        else if (*input == 'r')  { len++;  input++; }
+        else if (*input == 'f')  { len++;  input++; }
+        else if (*input == '\\') { len++;  input++; }
+        else if (*input == '\'') { len++;  input++; }
+        else if (*input == '"')  { len++;  input++; }
+        else if (*input == 'x' || *input == 'X')  {
+          len++;  input++; /* The hex digits all count as one widechar. */
+        } else if (('0' <= *input) && (*input <= '7')) {
+          len++;  input++; /* The octal digits all count as one widechar. */
+        } else {
+          len++;  input++;  /* ??? */
+        }
+
+      } else if (*input == 0) {
+        break;
+
       } else {
-	len++;  input++;  /* ??? */
+        len++;  input++; /* vanilla character */
       }
-
-    } else if (*input == 0) {
-      break;
-
-    } else {
-      len++;  input++; /* vanilla character */
     }
-  }
 
-  /* finally, scan and build the string */
-  out   = (char*) malloc (2 * (len + 1));
-  input = start;
+    /* finally, scan and build the string */
+    out   = (char *) malloc (2 * (len + 1));
+    /* ^ This gets freed in m3-exp.c, m3_parse_e8. */ 
+    input = start;
 
-  tok->kind   = TK_WIDETEXT_LIT;
-  tok->string = out;
+    tok->kind   = TK_WIDETEXT_LIT;
+    tok->string = (char *) out;
 
-  while (1) {
-    if (*input == '"') {
-      input++;
-      break;
+    while ( true ) {
+      if (*input == '"') {
+        input++;
+        break; /* Exit loop. */ 
 
-    } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
-      error ("end-of-line encountered in text literal");
-      input++;
-      break;
+      } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
+        warning (_("End-of-line encountered in text literal") ); 
+        input++;
+        break; /* Exit loop. */ 
 
-    } else if (*input == '\\') {
-      input ++;
-      if      (*input == 'n')  { *out++ = 0;  *out++ = '\n';  input++; }
-      else if (*input == 't')  { *out++ = 0;  *out++ = '\t';  input++; }
-      else if (*input == 'r')  { *out++ = 0;  *out++ = '\r';  input++; }
-      else if (*input == 'f')  { *out++ = 0;  *out++ = '\f';  input++; }
-      else if (*input == '\\') { *out++ = 0;  *out++ = '\\';  input++; }
-      else if (*input == '\'') { *out++ = 0;  *out++ = '\'';  input++; }
-      else if (*input == '"')  { *out++ = 0;  *out++ = '"';   input++; }
-      else if (*input == 'x' || *input == 'X') {
-	LONGEST hexval;
-        input = scan_hex (++input, &hexval, wide);
-	*out++ = (hexval & 0xffff) >> 8;
-	*out++ = (hexval & 0xff);
-      } else if (('0' <= *input) && (*input <= '7')) {
-	LONGEST octval;
-        input = scan_octal (input, &octval, wide);
-	*out++ = (octval & 0xffff) >> 8;
-	*out++ = (octval & 0xff);
+      } else if (*input == '\\') {
+        input ++;
+        if      (*input == 'n')  { wchar_value = '\n';  input++; }
+        else if (*input == 't')  { wchar_value = '\t';  input++; }
+        else if (*input == 'r')  { wchar_value = '\r';  input++; }
+        else if (*input == 'f')  { wchar_value = '\f';  input++; }
+        else if (*input == '\\') { wchar_value = '\\';  input++; }
+        else if (*input == '\'') { wchar_value = '\'';  input++; }
+        else if (*input == '"')  { wchar_value = '"';   input++; }
+        else if (*input == 'x' || *input == 'X') {
+          LONGEST hexval;
+          input = scan_hex (++input, &hexval, true );
+          wchar_value = hexval & 0xffff;
+        } else if (('0' <= *input) && (*input <= '7')) {
+          LONGEST octval;
+          input = scan_octal (input, &octval, true );
+          wchar_value = octval & 0xffff;
+        } else {
+          error 
+            (_("Unknown escape sequence in wide text literal") ); /* NORETURN */
+        }
+
+      } else if (*input == 0) {
+        error (_("EOF encountered in wide text literal") ); /* NORETURN */ 
+        break;
+
       } else {
-        error ("unknown escape sequence in text literal");
+        /* vanilla character */
+        wchar_value = *input++;
       }
-
-    } else if (*input == 0) {
-      error ("EOF encountered in text literal");
-      break;
-
-    } else {
-      /* vanilla character */
-      *out++ = 0;
-      *out++ = *input++;
+      store_unsigned_integer ( out, TARGET_M3_WIDECHAR_BYTE, wchar_value ); 
+      out += 2; 
     }
-  }
 
-  /* finish the string */
-  *out++ = 0;  *out++ = 0;
-  tok->length = out - tok->string;
+    /* finish the string */
+    tok->length = out - tok->string;
 
-  return input;
-} /* scan_widetext */
+    return input;
+  } /* scan_widetext */
 
 /*-------------------------------------------------------------- comments ---*/
 
@@ -693,8 +694,9 @@ skip_comment (input)
       input++;  if (*input == ')') { nest--; input++; }
     } else if (*input == '(') {
       input++;  if (*input == '*') { nest++; input++; }
-    } else if (*input == 0) {
-      error ("EOF encountered in comment");  nest = 0;
+    } else if (*input == 0) { 
+      nest = 0; 
+      error (_("EOF encountered in comment" ) ); /* NORETURN */ 
     } else {
       input++;
     }
@@ -740,13 +742,23 @@ scan_m3_token (input, tok)
       input = tokstart + 1;
 
       if (*input == '\'' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
-        { /* oops, it's a wide char */
-          input = scan_char ( input, tok, 1);
+        { /* oops, it's actually a wide char literal. */
+          if ( ! m3_is_cm3 ( ) ) 
+            { error 
+                (_("WIDECHAR literals not supported by this "
+                   "Modula-3 compiler ") ); 
+            } /* NORETURN */ 
+          input = scan_char ( input, tok, true );
            break;
         }
 
       if (*input == '"' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
-        { /* oops, it's a wide text literal */
+        { /* oops, it's actually a wide text literal. */
+          if ( ! m3_is_cm3 ( ) ) 
+            { error 
+                (_("Wide text literals not supported by this "
+                   "Modula-3 compiler ") ); 
+            } /* NORETURN */ 
           input = scan_widetext ( input, tok);
           break;
         }
@@ -772,7 +784,7 @@ scan_m3_token (input, tok)
       break;
 
     case '\'':
-      input = scan_char (tokstart, tok, 0);
+      input = scan_char (tokstart, tok, false );
       break;
 
     case '"':
@@ -835,7 +847,8 @@ scan_m3_token (input, tok)
       break;
 
     default:
-      error ("can't recognize start of Modula-3 token: %s", input);
+      error (_("Can't recognize start of Modula-3 token: %s"), input );
+        /* ^NORETURN */ 
 
     } /* switch */
 

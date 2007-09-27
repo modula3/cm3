@@ -68,10 +68,10 @@ int rttype_infomap_cnt_offset = 0;
 
 static bool constant_init_done = false;
 
-/* Compare two terminated strings for equality.  A terminated string is
-   has a from pointer and a to pointer.  Its last character is the character
-   before either a null byte or before the character pointed to by the 
-   to pointer. */ 
+/* Compare two terminated strings for equality.  A terminated string is 
+   described by a from pointer and a to pointer.  Its last character is 
+   the character before either a null byte or before the character pointed 
+   to by the to pointer. */ 
 static bool
 m3_term_strings_equal ( 
     const char * left, 
@@ -199,110 +199,94 @@ const LONGEST LONGEST_MAXxx = ( ( ULONGEST ) ( 0 - 1 ) ) / 2;
    characters and strings is language specific. */
 
 void
-m3_emit_char (c, stream, quoter)
-     int c;
-     struct ui_file *stream;
-     int quoter;
-{
-
-  c &= 0xFF;			/* Avoid sign bit follies */
-
-  if (PRINT_LITERAL_FORM (c))
-    {
-      if (c == '\\' || c == quoter)
-	{
-	  fputs_filtered ("\\", stream);
-	}
+m3_emit_char (
+     int c,
+     struct ui_file *stream,
+     int quoter
+   ) 
+{ c &= 0xFF; /* Avoid sign bit follies */
+  if ( PRINT_LITERAL_FORM ( c ) )
+    { if (c == '\\' || c == quoter)
+	{ fputs_filtered ("\\", stream); }
       fprintf_filtered (stream, "%c", c);
     }
   else
-    {
-      switch (c)
-	{
-	case '\n':
-	  fputs_filtered ("\\n", stream);
-	  break;
-	case '\b':
-	  fputs_filtered ("\\b", stream);
-	  break;
-	case '\t':
-	  fputs_filtered ("\\t", stream);
-	  break;
-	case '\f':
-	  fputs_filtered ("\\f", stream);
-	  break;
-	case '\r':
-	  fputs_filtered ("\\r", stream);
-	  break;
-	default:
-	  fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
-	  break;
+    { switch (c)
+	{ case '\n':
+            fputs_filtered ("\\n", stream);
+            break;
+          case '\b':
+            fputs_filtered ("\\b", stream);
+            break;
+          case '\t':
+            fputs_filtered ("\\t", stream);
+            break;
+          case '\f':
+            fputs_filtered ("\\f", stream);
+            break;
+          case '\r':
+            fputs_filtered ("\\r", stream);
+            break;
+          default:
+            fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
+            break;
 	}
     }
-}
+} /* m3_emit_char */
 
 void
-m3_emit_widechar (c, stream, quoter)
-     int c;
-     struct ui_file *stream;
-     int quoter;
-{
-
-  c &= 0xFFFF;			/* Avoid sign bit follies */
-
-  if ((c <= 0xFF) && PRINT_LITERAL_FORM (c))
-    {
-      if (c == '\\' || c == quoter)
-	{
-	  fputs_filtered ("\\", stream);
-	}
-      fprintf_filtered (stream, "%c", c);
-    }
-  else
-    {
-      switch (c)
-	{
-	case '\n':
-	  fputs_filtered ("\\n", stream);
-	  break;
-	case '\b':
-	  fputs_filtered ("\\b", stream);
-	  break;
-	case '\t':
-	  fputs_filtered ("\\t", stream);
-	  break;
-	case '\f':
-	  fputs_filtered ("\\f", stream);
-	  break;
-	case '\r':
-	  fputs_filtered ("\\r", stream);
-	  break;
-	default:
-	  fprintf_filtered (stream, "\\x%.4X", (unsigned int) c);
-	  break;
-	}
-    }
-}
+m3_emit_widechar (
+    int c, struct ui_file *stream, int quoter ) 
+    
+  { c &= 0xFFFF; /* Avoid sign bit follies */
+    if ((c <= 0xFF) && PRINT_LITERAL_FORM (c))
+      { if (c == '\\' || c == quoter)
+         { fputs_filtered ("\\", stream); } 
+        fprintf_filtered (stream, "%c", c);
+      }
+    else
+      { switch (c)
+          { case '\n':
+              fputs_filtered ("\\n", stream);
+              break;
+            case '\b':
+              fputs_filtered ("\\b", stream);
+              break;
+            case '\t':
+              fputs_filtered ("\\t", stream);
+              break;
+            case '\f':
+              fputs_filtered ("\\f", stream);
+              break;
+            case '\r':
+              fputs_filtered ("\\r", stream);
+              break;
+            default:
+              fprintf_filtered (stream, "\\x%.4X", (unsigned int) c);
+              break;
+          }
+      }
+  } /* m3_emit_widechar */ 
 
 void
-m3_print_char (c, stream)
-     int c;
-     struct ui_file *stream;
-{
-  fputs_filtered ("'", stream);
-  m3_emit_char (c, stream, '\'');
-  fputs_filtered ("'", stream);
-} /* m3_print_char */ 
+m3_print_char_lit (
+    int c,
+    struct ui_file *stream
+  )
+  { fputs_filtered ("'", stream);
+    m3_emit_char (c, stream, '\'');
+    fputs_filtered ("'", stream);
+  } /* m3_print_char_lit */ 
 
 void
-m3_print_widechar (c, stream)
-     int c;
-     struct ui_file *stream;
-{
-  fputs_filtered ("W'", stream);
-  m3_emit_widechar (c, stream, '\'');
-  fputs_filtered ("'", stream);
-} /* m3_print_widechar */ 
+m3_print_widechar_lit (
+    int c,
+    struct ui_file *stream
+  )
+  { fputs_filtered ("W'", stream);
+    m3_emit_widechar (c, stream, '\'');
+    fputs_filtered ("'", stream);
+  } /* m3_print_widechar_lit */ 
 
 /* Print the character string STRING, printing at most LENGTH characters.
    LENGTH is -1 if the string is nul terminated.  Each character is WIDTH bytes
@@ -324,14 +308,18 @@ m3_print_string (
   int in_quotes = 0;
   int need_comma = 0;
   extern int inspect_it;
+  /* FIXME:  This looks like a mess.  The length passed seems to be in
+             bytes regardless of width, but this looks mostly coded to
+             assume in is in units of width bytes.  But not everywhere,
+             see, eg. call on m3_print_char_lit(string[i]. */ 
 
   /* If the string was not truncated due to `set print elements', and
      the last byte of it is a null, we don't print that, in traditional C
      style.  */
   if ((!force_ellipsis) && length > 0 
-      && extract_unsigned_integer (string + (length - 1) * width, width) == '\0'
+      && extract_unsigned_integer (string + (length - 1)*width, width) == '\0'
      )
-    length--;
+    length -+ width;
 
   if (length == 0)
     {
@@ -378,7 +366,7 @@ m3_print_string (
 		fputs_filtered ("\", ", stream);
 	      in_quotes = 0;
 	    }
-	  m3_print_char (string[i], stream);
+	  m3_print_char_lit (string[i], stream);
 	  fprintf_filtered (stream, " <repeats %u times>", reps);
 	  i = rep1 - 1;
 	  things_printed += repeat_count_threshold;
@@ -796,7 +784,8 @@ m3_lookup_type (
         strncat ( type_name, name, M3_MAX_SYMBOLLEN ); 
         /* ^I know this is absurdly inefficient, but it's the C way. */ 
         sym 
-          = lookup_symbol_static ( type_name, NULL, blk, STRUCT_DOMAIN, symtab );
+          = lookup_symbol_static 
+              ( type_name, NULL, blk, STRUCT_DOMAIN, symtab );
       } 
     return sym; 
   } /* m3_lookup_type */ 
@@ -805,7 +794,7 @@ m3_lookup_type (
    Return its symbol if so, or NULL if not.  EXCEPT: global variables have no
    symbol.  If it's a global variable, return the symbol for the globals 
    record for the interface.  Caller will have to detect this case and combine 
-   it with 'ident' in its own way.  If a symbol is found and symtab is non-NULL,
+   it with 'ident' in its own way. If a symbol is found and symtab is non-NULL,
    set symtab to the containing symbol table.  If this is a procedure declared
    in interface 'interface_name', the symbol and symtab returned will belong
    to the exporting _module_ (this is the only symbol we have.)  This will not
@@ -829,7 +818,8 @@ m3_lookup_interface_id (
     
     /* Look for the interface global record. */
     interface_rec_sym 
-      = m3_unit_name_globals_symbol ( 'I', interface_name, & interface_symtab ); 
+      = m3_unit_name_globals_symbol 
+          ( 'I', interface_name, & interface_symtab ); 
     if ( interface_rec_sym != NULL ) 
       { /* Look in the interface global record, where we will find a variable
            or, for PM3, a procedure, that was declared  in the interface. */ 
@@ -843,7 +833,7 @@ m3_lookup_interface_id (
                    interface into the interface global record.  But we don't
                    want to use it from here, because this gives no symbol 
                    for it.  Ignore a procedure here, and find it differently, 
-                   below.  However, for PM3 and friends, just its presence here 
+                   below.  However, for PM3 and friends, just its presence here
                    will be important below. */ 
                 ( global_type == NULL 
                   || TYPE_CODE ( global_type ) != TYPE_CODE_M3_PROC 
@@ -884,7 +874,7 @@ m3_lookup_interface_id (
            )
           /* Finding this linkage name in a global block means this is CM3 and 
              this is a procedure declared in interface 'interface_name'.  Even 
-             so, it is in the symbol table for the exporting _module_ where sym 
+             so, it is in the symbol table for the exporting _module_ where sym
              will have been found.  This could have a different module name.  
              'symtab' will be set for this module. */  
           { if ( symtab != NULL) { * symtab = module_symtab; } 
@@ -898,11 +888,12 @@ m3_lookup_interface_id (
              && found 
            )
           /* Finding 'linkage_name' in a static block after having previously 
-             found 'name' in the interface globals record means this is PM3 etc. 
-             and this is a procedure declared in interface 'interface_name'.  
-             Even so, it is in the symbol table for the exporting _module_, 
-             where sym will have been found.  This could have a different 
-             module name.  'symtab' will be set for this module. */  
+             found 'name' in the interface globals record means this is PM3 
+             etc. and this is a procedure declared in interface 
+             'interface_name'.  Even so, it is in the symbol table for the 
+             exporting _module_, where sym will have been found.  This could 
+             have a different module name.  'symtab' will be set for this
+              module. */  
           { if ( symtab != NULL) { * symtab = module_symtab; } 
             return sym; 
           }
@@ -975,8 +966,8 @@ m3_lookup_module_id (
                     ); 
             if ( sym != NULL ) { return sym; } 
 
-            /* Construct the linkage name "moduleName__ProcName" and look for it
-               in the static and global blocks of this module. */
+            /* Construct the linkage name "moduleName__ProcName" and look for 
+               it in the static and global blocks of this module. */
             linkage_name [ 0 ] = '\0'; 
             strncat ( linkage_name, module_name , M3_MAX_SYMBOLLEN );
             strcat ( linkage_name, "__" );
@@ -1013,8 +1004,8 @@ m3_lookup_module_id (
     return NULL; 
   } /* m3_lookup_module_id */ 
 
-/* See if 'ident' is declared in an exported interface of module named 'module',
-   which we assume we are currently executing in some block of. 
+/* See if 'ident' is declared in an exported interface of module named 
+   'module', which we assume we are currently executing in some block of. 
    An exported procedure whose body is actually provided in the module named 
    'module_name' should have been previously found in the static or 
    global block of the module itself.  */ 
@@ -1079,7 +1070,8 @@ m3_is_cm3 ( void )
     else { note_is_pm3 ( ); } 
 
     if ( compiler_kind == ck_unknown ) 
-      { warning ( "Can't tell what Modula-3 compiler was used, assuming CM3." ); 
+      { warning 
+          (_("Can't tell what Modula-3 compiler was used, assuming CM3.") ); 
         return true; 
       } 
     return compiler_kind == ck_cm3; 
@@ -1338,7 +1330,7 @@ m3_type_from_tc (tc_addr)
 } /* m3_type_from_tc */ 
 
 /* Given a heap reference, find it's actual type. 
-   PRE: addr is the inferior address of a object with a typecode header,
+   PRE: addr is the inferior address of an object with a typecode header,
         i.e., either it's a traced ref or an untraced object type. 
 */ 
 struct type *
@@ -1485,7 +1477,8 @@ m3_find_rec_field (
           { * bitsize = TYPE_M3_REC_FIELD_BITSIZE ( rec_type, i ); }
         if ( bitpos != NULL ) 
           { * bitpos = TYPE_M3_REC_FIELD_BITPOS ( rec_type, i ); }
-        if ( type != NULL ) { * type = TYPE_M3_REC_FIELD_TYPE ( rec_type, i ); }
+        if ( type != NULL ) 
+          { * type = TYPE_M3_REC_FIELD_TYPE ( rec_type, i ); }
         return 1;
       }
     }
@@ -1538,7 +1531,8 @@ m3_find_obj_method (
           { * bitsize   = TYPE_M3_OBJ_METHOD_BITSIZE ( obj_type, i ); }
         if ( bitpos != NULL ) 
           { * bitpos = TYPE_M3_OBJ_METHOD_BITPOS ( obj_type, i ); }
-        if ( type != NULL ) { * type = TYPE_M3_OBJ_METHOD_TYPE ( obj_type, i ); }
+        if ( type != NULL ) 
+          { * type = TYPE_M3_OBJ_METHOD_TYPE ( obj_type, i ); }
         return 1;
       }
     }
@@ -1630,7 +1624,8 @@ m3_ordinal_bounds (
           upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
           break;
         default:
-          error ("m3gdb internal error: bad Modula-3 ordinal type code %d", tc );
+          error 
+            (_("m3gdb internal error: bad Modula-3 ordinal type code %d"), tc );
           lower = 0;
           upper = 0;
           break; 
@@ -1795,14 +1790,20 @@ m3_ensure_value_is_unpacked ( struct value * packed_val )
     return result_val; 
   } /* m3_ensure_value_is_unpacked */ 
 
-static int 
+int 
+m3_open_array_dope_align ( ) 
+  { return TARGET_PTR_BIT / TARGET_CHAR_BIT; } 
+
+/* Return the gdb-space offset of 'dimension'-th shape component, relative
+   to the beginning of open arrray dope. */ 
+int 
 m3_shape_component_offset ( int dimension ) 
 
   { int result; 
 
     result 
       = TARGET_PTR_BIT / HOST_CHAR_BIT /* Skip the elements pointer. */
-        + dimension * ( TARGET_LONG_BIT/TARGET_CHAR_BIT );
+        + dimension * ( TARGET_LONG_BIT/HOST_CHAR_BIT );
     return result; 
   } /* m3_shape_component_offset */ 
 
@@ -1817,7 +1818,7 @@ m3_open_array_elems_addr ( const gdb_byte * addr )
     return result; 
   } /* m3_open_array_elems_addr */ 
 
-/* Store elements address val into the Modula-3 open array 
+/* Store elements address 'val' into the Modula-3 open array 
    dope value located in gdb-space at address addr. */ 
 void
 m3_set_open_array_elems_addr ( gdb_byte * addr, CORE_ADDR val ) 
@@ -1857,7 +1858,7 @@ m3_set_open_array_shape_component (
       ( addr + target_offset, TARGET_LONG_BIT / HOST_CHAR_BIT, val ); 
   } /* m3_set_open_array_shape_component */ 
 
-/* Fetch the inferior address of the zero-th element of the Modula-3 open array 
+/* Fetch the inferior address of the zero-th element of the Modula-3 open array
    whose dope begins at inferior address ref. */ 
 CORE_ADDR 
 m3_inf_open_array_elems_addr ( CORE_ADDR ref ) 
@@ -1884,6 +1885,9 @@ m3_inf_open_array_shape_component ( CORE_ADDR ref, int dimension )
   gdb_byte buf [16]; /* liberal. */ 
 
   target_offset = m3_shape_component_offset ( dimension ); 
+  /* FIXME: ^This would fail if TARGET_CHAR_BIT /= HOST_CHAR_BIT, because 
+     m3-shape_component_offset returns a gdb-space offset, while we need
+     a target offset here. */ 
   read_memory ( ref + target_offset, buf, TARGET_LONG_BIT );  
   result = m3_extract_ord (buf, 0, TARGET_LONG_BIT, 0);
   return result; 
@@ -1924,19 +1928,20 @@ m3_set_value_open_array_elems_addr (
    dimension-th dimension), of the Modula-3 open array whose dope is in 
    gdb-space value array_val. */ 
 ULONGEST 
-m3_value_open_array_shape_component ( struct value * array_value, int dimension )
+m3_value_open_array_shape_component ( 
+    struct value * array_value, int dimension )
 
-{ ULONGEST result; 
-  int target_offset; 
+  { ULONGEST result; 
+    int target_offset; 
 
-  target_offset = m3_shape_component_offset ( dimension );
-  result 
-    = m3_extract_ord 
-        ( ( gdb_byte * ) value_contents ( array_value ) + target_offset, 
-          0, TARGET_LONG_BIT, 0
-        );
-  return result; 
-} /* m3_value_open_array_shape_component */ 
+    target_offset = m3_shape_component_offset ( dimension );
+    result 
+      = m3_extract_ord 
+          ( ( gdb_byte * ) value_contents ( array_value ) + target_offset, 
+            0, TARGET_LONG_BIT, 0
+          );
+    return result; 
+  } /* m3_value_open_array_shape_component */ 
 
 /* Store shape component val into the dimension-th slot of the Modula-3 
    open array dope that is in gdb-space value array_val. */ 
@@ -2008,6 +2013,10 @@ m3_static_parent_frame ( struct frame_info *start_frame )
       ); 
     return frame; 
   } /* m3_static_parent_frame */ 
+
+int 
+m3_proc_closure_align ( ) 
+  { return TARGET_LONG_BIT / TARGET_CHAR_BIT; }
 
 /* CHECK: Is this value target-dependent? */ 
 const CORE_ADDR closure_mark = - 1L;  

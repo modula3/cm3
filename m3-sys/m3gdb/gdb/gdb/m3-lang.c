@@ -308,6 +308,7 @@ m3_operator_length (struct expression *expr, int endpos,
     case OP_M3_TEXT:
     case OP_M3_WIDETEXT:
       strlen = longest_to_int (expr->elts[endpos - 2].longconst);
+      /* ^ Length in bytes, TEXT or WIDETEXT. */ 
       *oplenp = 4 + BYTES_TO_EXP_ELEM (strlen + 1);
       break;
 
@@ -494,7 +495,7 @@ const struct language_defn m3_language_defn = {
   m3_parse,                      /* la_parser: */ 
   m3_error,                      /* la_error: */ 
   null_post_parser,              /* la_post_parser: */ 
-  m3_print_char,       		 /* la_printchar: Print a character constant */
+  m3_print_char_lit,   		 /* la_printchar: Print a character constant */
   m3_print_string,		 /* la_printstr: Print a string constant */
   m3_emit_char,			 /* la_emitchar: Print a character constant */
   m3_create_fundamental_type,	 /* la_fund_type: Create fundamental type */
@@ -826,7 +827,7 @@ m3_decode_struct ( struct type *t )
 
       /* The debug info for procedures and methods is greatly weird. 
          For each procedure constant, there is an LSYM entry whose name is
-         "MP_", followed by a uid for its type, with signature info after that.  
+         "MP_", followed by a uid for its type, with signature info after that.
 
          But unless this signature was declared as a procedure type
          and then named as the type of a variable, etc. there is
@@ -1932,6 +1933,8 @@ struct type *builtin_type_m3_untraced_root;
 struct type *builtin_type_m3_void;
 struct type *builtin_type_m3_widechar;
 struct type *builtin_type_m3_proc_closure;
+struct type *builtin_type_m3_array_of_char;
+struct type *builtin_type_m3_array_of_widechar;
 
 static void 
 m3_info_m3_command ( char * args, int from_tty ) 
@@ -2060,11 +2063,36 @@ _initialize_m3_language ()
   builtin_type_m3_proc_closure =
     init_type (TYPE_CODE_M3_PROC_CLOSURE, 
                ( TARGET_PTR_BIT / HOST_CHAR_BIT ) * 3, 
-               /* Flag work (-1), code address, environment pointer. */ 
-               0, "<Modula-3 procedure closure", 
+               /* Flag word (-1), code address, environment pointer. */ 
+               0, "<Modula-3 procedure closure>", 
                (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_proc_closure) 
     = TARGET_PTR_BIT * 3;
+
+  /* builtin_type_m3_array_of_char and builtin_type_m3_array_of_widechar
+     are needed to make m3gdb-initiated calls to Text.FromChars and
+     Text.FromWideChars, which m3gdb does to get interactively-typed
+     text and wide text literals converted into target-space TEXT values. */ 
+  builtin_type_m3_array_of_char =
+    init_type (TYPE_CODE_M3_OPEN_ARRAY , 
+               m3_shape_component_offset ( 1 ), 
+               0, "<ARRAY OF CHAR>", 
+               (struct objfile *) NULL);
+  TYPE_M3_SIZE (builtin_type_m3_array_of_char) 
+    = TYPE_LENGTH (builtin_type_m3_array_of_char) * TARGET_CHAR_BIT; 
+  TYPE_TARGET_TYPE (builtin_type_m3_array_of_char) = builtin_type_m3_char; 
+  /* REVIEW: Do we need to set TYPE_M3_OPEN_ARRAY_ELEM? */ 
+
+  builtin_type_m3_array_of_widechar =
+    init_type (TYPE_CODE_M3_OPEN_ARRAY , 
+               m3_shape_component_offset ( 1 ), 
+               0, "<ARRAY OF WIDECHAR>", 
+               (struct objfile *) NULL);
+  TYPE_M3_SIZE (builtin_type_m3_array_of_widechar) 
+    = TYPE_LENGTH (builtin_type_m3_array_of_widechar) 
+      * TARGET_M3_WIDECHAR_BIT; 
+  TYPE_TARGET_TYPE (builtin_type_m3_array_of_widechar ) 
+    = builtin_type_m3_widechar; 
 
   add_language (&m3_language_defn);
   add_com ( "threads", class_stack, threads_command, "Lists the threads." );
@@ -2073,9 +2101,9 @@ _initialize_m3_language ()
           );
   add_info ("Modula-3", 
              m3_info_m3_command, 
-             _("Identifies the Modula-3 compiler and backend used to compile \
-the debugged program.\n\
-Aliases: Modula-3, modula-3, Modula3, modula3, M3, m3."
+             _("Identifies the Modula-3 compiler and backend used to compile"
+               "the debugged program.\n"
+               "Aliases: Modula-3, modula-3, Modula3, modula3, M3, m3."
               ) 
            ); 
   add_info_alias ("Modula3", "Modula-3", 0 ); 
@@ -2291,62 +2319,150 @@ m3_proc_value_env_ptr ( struct value * closure_value )
     else { return 0; } 
   } /* m3_proc_value_env_ptr */ 
 
+/* Push data from gdb-space onto target stack.  * sp is located in gdb-space,
+   the its values are target addresses.  'align' must be a power of 2 and
+   > 0. */ 
+static CORE_ADDR 
+m3_push_data ( 
+    CORE_ADDR * sp, const gdb_byte * data, LONGEST length, int align )
+
+  { CORE_ADDR stack_addr; 
+
+  /* FIXME: Take care of stack alignment. */ 
+    if (INNER_THAN (1, 2))
+      { /* stack grows toward decreasing addresses  and the address of what 
+           we push is the stack pointer after we push it.*/
+        * sp -= length;
+        * sp = * sp & ~ ( align - 1 );  
+        stack_addr = * sp;
+      }
+    else
+      { /* The stack grows toward increasing addresses, so the address of what 
+           we push is the stack pointer before we push it.  */
+        * sp = ( * sp + align - 1 ) & ~ ( align - 1 );  
+        stack_addr = * sp;
+        * sp += length;
+      }
+    /* Store the data. */
+    write_memory ( stack_addr, data, length );
+    return stack_addr; 
+
+  } /* m3_push_data */ 
+
+/* Convert an m3gdb string into an open array.  Push both the string
+   itself and open array dope for it. */ 
+static struct value * 
+m3_push_m3gdb_string ( 
+    CORE_ADDR * sp, 
+    const gdb_byte * data,
+    LONGEST byte_length, 
+    LONGEST width, /* Should be 1 or 2. */ 
+    struct type * open_array_type
+  ) 
+
+  { struct value * result;
+    CORE_ADDR string_inf_addr;
+    CORE_ADDR dope_inf_addr;
+    LONGEST elem_ct;
+    gdb_byte dope [ 2 * sizeof ( LONGEST ) /* Should be generous. */ ]; 
+
+    /* Push the string itself. We are passing an open array of [WIDE]CHAR,
+       and it does not contain a terminating zero character. */ 
+    string_inf_addr 
+      = m3_push_data ( sp, data, byte_length, /* align = */ width );  
+    /* Construct and push the dope.  The string and the dope do not need 
+       to be stored in any relationship, so we can push in a fixed order, 
+       regardless of stack growth direction. */ 
+    elem_ct = byte_length / width; 
+    m3_set_open_array_elems_addr ( dope, string_inf_addr ); 
+    m3_set_open_array_shape_component ( dope, 0, elem_ct ); 
+    dope_inf_addr 
+      = m3_push_data 
+          ( sp, dope, m3_shape_component_offset ( 1 ), 
+            m3_open_array_dope_align ( ) 
+          );  
+    result 
+      = value_from_pointer 
+          ( m3_indirect_type_from_type ( open_array_type ), dope_inf_addr );
+    return result; 
+  } /* m3_push_m3gdb_string */ 
+
 /* Take care of pushing any required auxiliary data on the stack,
    prior to pushing the real parameters.  This is data that was
    constructed and exists only in gdb process space.  It includes
-   closures for procedure values and dope for open arrays.  If array
-   constructors in expressions given to gdb are ever implemented and
-   allowed to be passed to open array formals, it will also have to
-   include the gdb-space-only contents of the array, in addition to
-   the dope.  This gets called from inside call_function_by_hand,
-   after it has set things up for gdb to push stuff on the stack. */
+   closures for procedure values, dope for open arrays, and narrow and
+   wide strings.  If array constructors in expressions given to gdb
+   are ever implemented and allowed to be passed to open array
+   formals, it will also have to include the gdb-space-only contents
+   of the array, in addition to the dope.
 
+   This gets called from inside call_function_by_hand, after it has
+   set things up for gdb to push stuff on the stack.
+
+   Each struct value * in args that needs this treatment is initially
+   for the auxiliary data, but this function changes it to be a 
+   pointer thereto, which the caller will then push as the actual
+   parameter. */
 void 
 m3_push_aux_param_data ( int nargs, struct value **args, CORE_ADDR * sp )
 
-{ struct  value * actual_value; 
-  struct type * actual_type; 
-  struct type * pointer_type; 
-  int i; 
-  int aux_len; 
-  CORE_ADDR aux_addr;
+  { struct value * actual_value; 
+    struct type * actual_type; 
+    int i; 
+    int aux_len; 
+    CORE_ADDR aux_addr;
 
-  for ( i = nargs - 1; i >= 0; i -- ) 
-    { actual_value = args [ i ];
-      actual_type = value_type ( actual_value ); 
-      switch ( TYPE_CODE ( actual_type ) ) 
-        { default: 
-            continue; 
-          case TYPE_CODE_M3_PROC_CLOSURE : 
-            aux_len = TYPE_LENGTH ( actual_type ); 
-            pointer_type = TYPE_TARGET_TYPE ( actual_type );  
-            break; 
-          case TYPE_CODE_M3_OPEN_ARRAY: 
-            aux_len = TYPE_LENGTH ( actual_type );  
-            pointer_type = m3_indirect_type_from_type ( actual_type ); 
-            break;
-        }  
-      if (INNER_THAN (1, 2))
-        { /* stack grows downward and the address of what 
-             we push is the stack pointer after we push it.*/
-          * sp -= aux_len;
-          aux_addr = * sp;
-        }
-      else
-        { /* The stack grows up, so the address of what 
-             we push is the stack pointer before we push it.  */
-          aux_addr = * sp;
-          * sp += aux_len;
-        }
-      /* Store the auxiliary data. */
-      write_memory 
-        ( aux_addr, 
-          value_contents_all ( actual_value ), 
-          aux_len  
-        );
-      args [ i ] = value_from_pointer ( pointer_type , aux_addr );
-    }  
-} /* m3_push_aux_param_data */  
+    for ( i = nargs - 1; i >= 0; i -- ) 
+      { actual_value = args [ i ];
+        actual_type = value_type ( actual_value ); 
+        switch ( TYPE_CODE ( actual_type ) ) 
+          { default: 
+              continue; 
+            case TYPE_CODE_M3_PROC_CLOSURE :
+              aux_addr 
+                = m3_push_data 
+                    ( sp, 
+                      value_contents_all ( actual_value ), 
+                      TYPE_LENGTH ( actual_type ),
+                      m3_proc_closure_align ( ) 
+                    );  
+              args [ i ] = value_from_pointer 
+                ( TYPE_TARGET_TYPE ( actual_type ), aux_addr );
+              break; 
+            case TYPE_CODE_M3_OPEN_ARRAY: 
+              aux_addr 
+                = m3_push_data 
+                    ( sp, 
+                      value_contents_all ( actual_value ), 
+                      TYPE_LENGTH ( actual_type ),
+                      m3_open_array_dope_align ( ) 
+                    );  
+              args [ i ] = value_from_pointer 
+                ( m3_indirect_type_from_type ( actual_type ), aux_addr );
+              break;
+            case TYPE_CODE_M3GDB_STRING: 
+              args [ i ] 
+                = m3_push_m3gdb_string 
+                    ( sp, 
+                      value_contents_all ( actual_value ), 
+                      TYPE_LENGTH ( actual_type ), 
+                      /* width = */ 1, 
+                      builtin_type_m3_array_of_char
+                    );
+              break;
+            case TYPE_CODE_M3GDB_WIDESTRING: 
+              args [ i ] 
+                = m3_push_m3gdb_string 
+                    ( sp, 
+                      value_contents_all ( actual_value ), 
+                      TYPE_LENGTH ( actual_type ), 
+                      /* width = */ 2, 
+                      builtin_type_m3_array_of_widechar
+                    );
+              break;
+          }  
+      }  
+  } /* m3_push_aux_param_data */  
 
 /* Print a description of a type in the format of a 
    typedef for the current language.

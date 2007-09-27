@@ -1489,12 +1489,18 @@ retry:
     case TYPE_CODE_REF:
     case TYPE_CODE_PTR:
 #ifdef _LANG_m3
-    case TYPE_CODE_M3_REFANY:
-    case TYPE_CODE_M3_POINTER:
-    case TYPE_CODE_M3_ADDRESS:
-    case TYPE_CODE_M3_ROOT:
-    case TYPE_CODE_M3_UN_ROOT:
     case TYPE_CODE_M3_NULL:
+    case TYPE_CODE_M3_INDIRECT:
+    case TYPE_CODE_M3_TEXT : 
+    case TYPE_CODE_M3_POINTER:
+    case TYPE_CODE_M3_MUTEX : 
+    case TYPE_CODE_M3_OBJECT : 
+    case TYPE_CODE_M3_ROOT : 
+    case TYPE_CODE_M3_TRANSIENT_ROOT : 
+    case TYPE_CODE_M3_UN_ROOT : 
+    case TYPE_CODE_M3_REFANY : 
+    case TYPE_CODE_M3_TRANSIENT_REFANY : 
+    case TYPE_CODE_M3_ADDRESS : 
 #endif 
       store_typed_address (value_contents_raw (val), type, (CORE_ADDR) num);
       break;

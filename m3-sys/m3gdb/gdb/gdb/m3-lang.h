@@ -50,10 +50,6 @@ m3_check_compiler ( char * name );
 extern struct type * 
 m3_resolve_type (char * uid);
 
-/* FIXME: This is a mess.  Prototypes are here for functions that are
-     defined all over the place. 
-*/
-
 extern char * 
 m3_demangle (const char *mangled, int options /*UNUSED*/);
   
@@ -76,6 +72,8 @@ extern struct type *builtin_type_m3_untraced_root;
 extern struct type *builtin_type_m3_void;
 extern struct type *builtin_type_m3_widechar;
 extern struct type *builtin_type_m3_proc_closure;
+extern struct type *builtin_type_m3_array_of_char;
+extern struct type *builtin_type_m3_array_of_widechar;
 
 extern void
 m3_patch_nested_procs ( struct blockvector *bv );  

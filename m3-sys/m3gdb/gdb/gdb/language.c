@@ -747,6 +747,8 @@ string_type (struct type *type)
     case language_m3:
       return ( TYPE_CODE (type) != TYPE_CODE_STRING) && 
              ( TYPE_CODE (type) != TYPE_CODE_M3_TEXT) &&
+        /* REVIEW:  This could need to check for pm3 and cm3 revelations 
+                    of TEXT too. */ 
         ? 0 : 1; /* Why is this coded negatively and then inverted? */
     case language_c:
     case language_cplus:
@@ -831,6 +833,7 @@ structured_type (struct type *type)
 	(TYPE_CODE (type) == TYPE_CODE_M3_OPEN_ARRAY) ||
 	(TYPE_CODE (type) == TYPE_CODE_M3_MUTEX) ||
 	(TYPE_CODE (type) == TYPE_CODE_M3_TEXT) ||
+        /* REVIEW: M3_ROOT? Others? */ 
 	(TYPE_CODE (type) == TYPE_CODE_M3_PROC) ||
 	(TYPE_CODE (type) == TYPE_CODE_M3_METHOD);
 #endif
