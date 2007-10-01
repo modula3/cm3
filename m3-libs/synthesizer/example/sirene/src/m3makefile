@@ -1,0 +1,5 @@
+import("synthesizer")
+
+implementation("Main")
+
+program("sirene")
