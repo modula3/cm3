@@ -1,0 +1,10 @@
+Module("ProcessOscillator")
+Module("ProcessOscillatorModulated")
+Module("WaveSine")
+Module("WaveSquare")
+Module("WaveSaw")
+Module("WaveTriangle")
+
+% remained in the library for didactical purposes
+Module("ProcessOscillatorSine")
+Module("ProcessOscillatorSineModulated")

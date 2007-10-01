@@ -1,0 +1,10 @@
+import("libm3")
+import("unittest")
+import("synthesizer")
+
+module("TestSplit")
+module("TestControl")
+module("TestModulation")
+implementation("Main")
+
+program("test")
