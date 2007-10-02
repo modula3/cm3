@@ -1117,29 +1117,33 @@ m3_print_proc_value (
 
   { struct symbol * proc_sym; 
 
-    proc_sym = find_pc_function ( inf_code_addr ); 
-    if (proc_sym != NULL ) 
-      { fputs_filtered ( "{\"", stream ); 
-        m3_print_proc_name ( proc_sym, stream ); 
-        /* FIXME:  gdb is just full of calls on wrap_here, which takes no 
-           stream parameter, but instead is hard-coded to use gdb_stdout.  
-           Everything else takes a stream parameter.  Either it's inconsistent,
-           or the stream parameter is unnecessary. */ 
-        wrap_here ( "" ); 
-        fputs_filtered ( "\", Declared at: ", stream ); 
-        m3_print_proc_file_and_line ( proc_sym, stream ); 
-        if ( inf_static_link != 0 )
-          { fputs_filtered ( ", ", stream ); 
+    if ( inf_code_addr == 0 ) 
+      { fputs_filtered ( "NIL", stream ); } 
+    else 
+      { proc_sym = find_pc_function ( inf_code_addr ); 
+        if (proc_sym != NULL ) 
+          { fputs_filtered ( "{\"", stream ); 
+            m3_print_proc_name ( proc_sym, stream ); 
+            /* FIXME:  gdb is just full of calls on wrap_here, which takes no 
+               stream parameter, but instead is hard-coded to use gdb_stdout.  
+               Everything else takes a stream parameter.  Either it's 
+               inconsistent, or the stream parameter is unnecessary. */ 
             wrap_here ( "" ); 
-            fprintf_filtered 
-              ( stream,
-                "Static ancestor=(16_%lx)frame #%d", 
-                inf_static_link,  
-                m3_frame_no_from_static_link ( inf_static_link )
-              ); 
-          }  
-        fputs_filtered ( "}", stream ); 
-      } 
+            fputs_filtered ( "\", Declared at: ", stream ); 
+            m3_print_proc_file_and_line ( proc_sym, stream ); 
+            if ( inf_static_link != 0 )
+              { fputs_filtered ( ", ", stream ); 
+                wrap_here ( "" ); 
+                fprintf_filtered 
+                  ( stream,
+                    "Static ancestor=(16_%lx)frame #%d", 
+                    inf_static_link,  
+                    m3_frame_no_from_static_link ( inf_static_link )
+                  ); 
+              }  
+            fputs_filtered ( "}", stream ); 
+          } 
+      }
   } /* m3_print_proc_value */ 
 
 int

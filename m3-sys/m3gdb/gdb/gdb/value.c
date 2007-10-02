@@ -1501,6 +1501,7 @@ retry:
     case TYPE_CODE_M3_REFANY : 
     case TYPE_CODE_M3_TRANSIENT_REFANY : 
     case TYPE_CODE_M3_ADDRESS : 
+    case TYPE_CODE_M3_PROC : 
 #endif 
       store_typed_address (value_contents_raw (val), type, (CORE_ADDR) num);
       break;
