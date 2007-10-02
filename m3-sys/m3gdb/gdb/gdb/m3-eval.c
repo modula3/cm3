@@ -555,6 +555,7 @@ m3_type_code_tier ( enum type_code code )
           return 7; 
         case TYPE_CODE_M3_PROC : 
         case TYPE_CODE_M3_PROC_CLOSURE :
+        case TYPE_CODE_FUNC : 
           return 8; 
         case TYPE_CODE_M3_NULL : 
           return 9; 
@@ -1877,8 +1878,14 @@ m3_check_and_coerce_proc (
     struct value * result_val_2;  
     CORE_ADDR inf_code_addr; 
 
-    if ( TYPE_CODE ( lhs_type ) != TYPE_CODE_M3_PROC ) { return NULL; } 
-    if ( TYPE_CODE ( rhs_type ) != TYPE_CODE_FUNC ) { return NULL; }  
+    if ( TYPE_CODE ( lhs_type ) != TYPE_CODE_M3_PROC ) 
+      { return NULL; } 
+    if ( TYPE_CODE ( rhs_type ) == TYPE_CODE_M3_NULL ) 
+      { return rhs_value; } 
+    if ( TYPE_CODE ( rhs_type ) != TYPE_CODE_M3_PROC 
+         && TYPE_CODE ( rhs_type ) != TYPE_CODE_FUNC 
+       ) 
+      { return NULL; }  
     /* FIXME: Do type check of two similar procedure types. */ 
     if ( false )
       { if ( proc_name == NULL )  
@@ -1891,6 +1898,7 @@ m3_check_and_coerce_proc (
               ); /* NORETURN */ 
           } 
       } 
+    warning (_("m3gdb does not check procedure types.") ); 
     result_val 
       = m3_nested_proc_const_closure 
           ( rhs_value, & inf_code_addr /* unused. */ ); 
