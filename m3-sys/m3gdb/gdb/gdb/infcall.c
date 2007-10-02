@@ -720,7 +720,19 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
   /* GENERALIZE ME:  For Windows targets, the struct_return parameter is on
      the other end of the parameter list. */  
   if ( m3_struct_return ) 
-    { *(CORE_ADDR *) value_contents_raw ( args [ nargs - 1 ] ) = struct_addr; }
+    { int return_arg;
+      switch ( TYPE_M3_FUNC_RESULT_CODE ( ftype ) ) 
+        { case m3_res_leftmost : 
+            return_arg = 0; 
+            break;  
+          case m3_res_rightmost :  
+            return_arg = nargs - 1; 
+            break; 
+          default:  
+            gdb_assert ( false ); /* NORETURN */ 
+        } 
+      *(CORE_ADDR *) value_contents_raw ( args [ return_arg] ) = struct_addr; 
+    }
 #endif 
 
   /* Create the dummy stack frame.  Pass in the call dummy address as,

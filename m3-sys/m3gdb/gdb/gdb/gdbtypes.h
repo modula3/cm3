@@ -199,6 +199,102 @@ enum type_code
 
 #define M3_TYPEP(x) (((int)TYPE_CODE_M3_first < (int) (x)) \
 		     && ((int) (x) < (int) (TYPE_CODE_M3_last)))
+#define TYPE_FIELD_M3_UID(t,n) (TYPE_FIELDS(t)[n].m3_uid)
+
+extern struct type *m3_resolve_type PARAMS ((char *));
+/* FIXME: Get this M3 stuff out of gdbtypes.h, including the above prototype,
+   which duplicates one in m3-lang.h. */
+
+#define TYPE_M3_FIELD_TYPE(t,n) \
+  (TYPE_FIELD_TYPE (t, n) \
+    ? TYPE_FIELD_TYPE (t, n) \
+    : (/*TYPE_FIELD_TYPE (t, n) = */m3_resolve_type (TYPE_FIELD_M3_UID (t,n))))
+/*     ^ See SYMBOL_TYPE in symtab.h.  rodney.bates@wichita.edu 2005-2-9 */ 
+
+#define TYPE_M3_STUFF(t)                TYPE_MAIN_TYPE(t)->type_specific.m3_stuff
+#define TYPE_M3_UNIT(t)                 TYPE_M3_STUFF(t).m3_specific_unit
+#define TYPE_M3_NAME(t)                 TYPE_M3_STUFF(t).m3_specific_name
+
+#define TYPE_M3_SIZE(t)                 TYPE_M3_STUFF(t).m3_specific_size
+
+#define TYPE_M3_TARGET(t)               TYPE_M3_FIELD_TYPE(t,0)
+
+
+#define TYPE_M3_ARRAY_INDEX(t)          TYPE_M3_FIELD_TYPE(t,0)
+#define LHS_TYPE_M3_ARRAY_INDEX(t)      TYPE_FIELD_TYPE(t,0)
+#define TYPE_M3_ARRAY_ELEM(t)           TYPE_M3_FIELD_TYPE(t,1)
+#define LHS_TYPE_M3_ARRAY_ELEM(t)       TYPE_FIELD_TYPE(t,1)
+
+#define TYPE_M3_OPEN_ARRAY_ELEM(t)      TYPE_M3_FIELD_TYPE(t,0)
+
+#define TYPE_M3_ENUM_NVALS(t)           TYPE_NFIELDS(t)
+#define TYPE_M3_ENUM_VALNAME(t,n)       TYPE_FIELD_NAME(t,n)
+
+#define TYPE_M3_PACKED_TARGET(t)        TYPE_M3_FIELD_TYPE(t,0)
+
+#define TYPE_M3_REC_NFIELDS(t)          TYPE_NFIELDS(t)
+#define TYPE_M3_REC_FIELD_NAME(t,n)     TYPE_FIELD_NAME(t,n)
+#define TYPE_M3_REC_FIELD_TYPE(t,n)     TYPE_M3_FIELD_TYPE(t,n)
+#define TYPE_M3_REC_FIELD_BITPOS(t,n)   TYPE_FIELD_BITPOS(t,n)
+#define TYPE_M3_REC_FIELD_BITSIZE(t,n)  TYPE_FIELD_BITSIZE(t,n)
+
+#define TYPE_M3_OBJ_SUPER(t)            TYPE_M3_FIELD_TYPE(t,0)
+#define TYPE_M3_OBJ_NFIELDS(t)          TYPE_M3_STUFF(t).m3_specific_longest_1
+#define TYPE_M3_OBJ_FIELD_NAME(t,n)     TYPE_FIELD_NAME(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_FIELD_TYPE(t,n)     TYPE_M3_FIELD_TYPE(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_FIELD_BITPOS(t,n)   TYPE_FIELD_BITPOS(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_FIELD_BITSIZE(t,n)  TYPE_FIELD_BITSIZE(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
+#define TYPE_M3_OBJ_NMETHODS(t)         TYPE_M3_STUFF(t).m3_specific_longest_2
+#define TYPE_M3_OBJ_METHOD_NAME(t,n)    TYPE_FIELD_NAME(t,1+n)
+#define TYPE_M3_OBJ_METHOD_TYPE(t,n)    TYPE_M3_FIELD_TYPE(t,1+n)
+#define TYPE_M3_OBJ_METHOD_BITPOS(t,n)  TYPE_FIELD_BITPOS(t,1+n)
+#define TYPE_M3_OBJ_METHOD_BITSIZE(t,n) TYPE_FIELD_BITSIZE(t,1+n)
+#define TYPE_M3_OBJ_TRACED(t)           TYPE_M3_STUFF(t).m3_specific_char_1
+#define TYPE_M3_OBJ_BRANDED(t)          TYPE_M3_STUFF(t).m3_specific_char_2
+#define TYPE_M3_OBJ_BRAND(t)            TYPE_M3_STUFF(t).m3_specific_brand
+
+#define TYPE_M3_SET_TARGET(t)           TYPE_M3_FIELD_TYPE(t,0)
+
+#define TYPE_M3_SUBRANGE_MIN(t)         TYPE_M3_STUFF(t).m3_specific_longest_1
+#define TYPE_M3_SUBRANGE_MAX(t)         TYPE_M3_STUFF(t).m3_specific_longest_2
+#define TYPE_M3_SUBRANGE_TARGET(t)      TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_M3_POINTER_TARGET(t)       TYPE_M3_FIELD_TYPE (t,0)
+#define TYPE_M3_POINTER_TRACED(t)       TYPE_M3_STUFF(t).m3_specific_char_1
+#define TYPE_M3_POINTER_BRANDED(t)      TYPE_M3_STUFF(t).m3_specific_char_2
+#define TYPE_M3_POINTER_BRAND(t)        TYPE_M3_STUFF(t).m3_specific_brand
+
+#define TYPE_M3_INDIRECT_TARGET(t)      TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_M3_PROC_NARGS(t)           TYPE_M3_STUFF(t).m3_specific_longest_1
+#define TYPE_M3_PROC_NRAISES(t)         TYPE_M3_STUFF(t).m3_specific_longest_2
+#define TYPE_M3_PROC_RESTYPE(t)         TYPE_M3_FIELD_TYPE(t,0)
+#define TYPE_M3_PROC_ARG_NAME(t,n)      TYPE_FIELD_NAME(t,n+1)
+#define TYPE_M3_PROC_ARG_TYPE(t,n)      TYPE_M3_FIELD_TYPE(t,n+1)
+#define TYPE_M3_PROC_RAISE_NAME(t,n)    TYPE_FIELD_NAME(t,n+1+TYPE_M3_PROC_NARGS(t))
+#define TYPE_M3_PROC_RAISE_TYPE(t,n)    TYPE_M3_FIELD_TYPE(t,n+1+TYPE_M3_PROC_NARGS(t))
+#define TYPE_M3_FUNC_RESULT_CODE(t)     TYPE_M3_STUFF(t).m3_specific_char_1
+
+#define TYPE_M3_OPAQUE_REVEALED(t)      TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_M3_TYPE_TYPE(t)            TYPE_M3_FIELD_TYPE (t,0)
+#define TYPE_M3_TYPE_NAME_TYPE(t)       TYPE_M3_FIELD_TYPE (t,0)
+
+#define TYPE_RUNTIME_PTR(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->runtime_ptr)
+#define TYPE_VTABLE(thistype) (TYPE_RUNTIME_PTR(thistype)->has_vtable)
+#define TYPE_HAS_VTABLE(thistype) (TYPE_RUNTIME_PTR(thistype) && TYPE_VTABLE(thistype))
+#define TYPE_PRIMARY_BASE(thistype) (TYPE_RUNTIME_PTR(thistype)->primary_base)
+#define TYPE_VIRTUAL_BASE_LIST(thistype) (TYPE_RUNTIME_PTR(thistype)->virtual_base_list)
+
+#define TYPE_LOCALTYPE_PTR(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->localtype_ptr)
+#define TYPE_LOCALTYPE_FILE(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->localtype_ptr->file)
+#define TYPE_LOCALTYPE_LINE(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->localtype_ptr->line)
+
+#define TYPE_IS_OPAQUE(thistype) (((TYPE_CODE (thistype) == TYPE_CODE_STRUCT) ||        \
+                                   (TYPE_CODE (thistype) == TYPE_CODE_UNION))        && \
+                                  (TYPE_NFIELDS (thistype) == 0)                     && \
+                                  (TYPE_CPLUS_SPECIFIC (thistype) && (TYPE_NFN_FIELDS (thistype) == 0)))
+
 
 /* For now allow source to use TYPE_CODE_CLASS for C++ classes, as an
    alias for TYPE_CODE_STRUCT.  This is for DWARF, which has a distinct
@@ -361,11 +457,21 @@ enum array_bound_type
 
 /* Modula 3 */
 
-struct m3_type 
-  { LONGEST a, b, c, d, e;
-    char *s;
-    LONGEST m3_size; 
-    char *unit, *name;
+struct m3_specific 
+  { LONGEST m3_specific_size; 
+    LONGEST m3_specific_longest_1; 
+    LONGEST m3_specific_longest_2; 
+    char *m3_specific_name;
+    char *m3_specific_unit;
+    char *m3_specific_brand;
+    char m3_specific_char_1; 
+    char m3_specific_char_2; 
+    /* TODO: This could probably be squeezed down some more, using a union.  
+             Subranges need two LONGEST values and nothing else.  
+             The integer-like fields used by all other types would 
+             quite adequate as ints, and require at most, two 
+             additional char-sized fields.  
+    */ 
   };
 
 struct main_type
@@ -499,6 +605,7 @@ struct main_type
        In an array type, the domain-type of the array.  */
 
     char m3_uid [9];
+
     struct type *type;
 
     /* Name of field, value or argument.
@@ -538,7 +645,7 @@ struct main_type
 
     const struct floatformat *floatformat;
 
-    struct m3_type m3_stuff; 
+    struct m3_specific m3_stuff; 
     /* Rodney M. Bates: It would be nice to put m3_stuff out of line,
        like cplus_stuff is, but that would require studying gobs of
        code to get the allocation  and deallocation right.  Since 
@@ -999,103 +1106,6 @@ extern void allocate_cplus_struct_type (struct type *);
 #define TYPE_FN_FIELD_VOFFSET(thisfn, n) ((thisfn)[n].voffset-2)
 #define TYPE_FN_FIELD_VIRTUAL_P(thisfn, n) ((thisfn)[n].voffset > 1)
 #define TYPE_FN_FIELD_STATIC_P(thisfn, n) ((thisfn)[n].voffset == VOFFSET_STATIC)
-
-/* Modula 3 */
-
-#define TYPE_FIELD_M3_UID(t,n) (TYPE_FIELDS(t)[n].m3_uid)
-
-extern struct type *m3_resolve_type PARAMS ((char *));
-/* FIXME: Get this M3 stuff out of gdbtypes.h, including the above prototype,
-   which duplicates one in m3-lang.h. */
-
-#define TYPE_M3_FIELD_TYPE(t,n) \
-  (TYPE_FIELD_TYPE (t, n) \
-    ? TYPE_FIELD_TYPE (t, n) \
-    : (/*TYPE_FIELD_TYPE (t, n) = */m3_resolve_type (TYPE_FIELD_M3_UID (t,n))))
-/*     ^ See SYMBOL_TYPE in symtab.h.  rodney.bates@wichita.edu 2005-2-9 */ 
-
-#define TYPE_M3_UNIT(t)                 TYPE_M3_STUFF(t).unit
-#define TYPE_M3_NAME(t)                 TYPE_M3_STUFF(t).name
-
-#define TYPE_M3_SIZE(t)                 TYPE_M3_STUFF(t).m3_size
-#define TYPE_M3_STUFF(t)                TYPE_MAIN_TYPE(t)->type_specific.m3_stuff
-
-#define TYPE_M3_TARGET(t)               TYPE_M3_FIELD_TYPE(t,0)
-
-
-#define TYPE_M3_ARRAY_INDEX(t)          TYPE_M3_FIELD_TYPE(t,0)
-#define LHS_TYPE_M3_ARRAY_INDEX(t)      TYPE_FIELD_TYPE(t,0)
-#define TYPE_M3_ARRAY_ELEM(t)           TYPE_M3_FIELD_TYPE(t,1)
-#define LHS_TYPE_M3_ARRAY_ELEM(t)       TYPE_FIELD_TYPE(t,1)
-
-#define TYPE_M3_OPEN_ARRAY_ELEM(t)      TYPE_M3_FIELD_TYPE(t,0)
-
-#define TYPE_M3_ENUM_NVALS(t)           TYPE_NFIELDS(t)
-#define TYPE_M3_ENUM_VALNAME(t,n)       TYPE_FIELD_NAME(t,n)
-
-#define TYPE_M3_PACKED_TARGET(t)        TYPE_M3_FIELD_TYPE(t,0)
-
-#define TYPE_M3_REC_NFIELDS(t)          TYPE_NFIELDS(t)
-#define TYPE_M3_REC_FIELD_NAME(t,n)     TYPE_FIELD_NAME(t,n)
-#define TYPE_M3_REC_FIELD_TYPE(t,n)     TYPE_M3_FIELD_TYPE(t,n)
-#define TYPE_M3_REC_FIELD_BITPOS(t,n)   TYPE_FIELD_BITPOS(t,n)
-#define TYPE_M3_REC_FIELD_BITSIZE(t,n)  TYPE_FIELD_BITSIZE(t,n)
-
-#define TYPE_M3_OBJ_SUPER(t)            TYPE_M3_FIELD_TYPE(t,0)
-#define TYPE_M3_OBJ_NFIELDS(t)          TYPE_M3_STUFF(t).a
-#define TYPE_M3_OBJ_FIELD_NAME(t,n)     TYPE_FIELD_NAME(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
-#define TYPE_M3_OBJ_FIELD_TYPE(t,n)     TYPE_M3_FIELD_TYPE(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
-#define TYPE_M3_OBJ_FIELD_BITPOS(t,n)   TYPE_FIELD_BITPOS(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
-#define TYPE_M3_OBJ_FIELD_BITSIZE(t,n)  TYPE_FIELD_BITSIZE(t,1+n+TYPE_M3_OBJ_NMETHODS(t))
-#define TYPE_M3_OBJ_NMETHODS(t)         TYPE_M3_STUFF(t).b
-#define TYPE_M3_OBJ_METHOD_NAME(t,n)    TYPE_FIELD_NAME(t,1+n)
-#define TYPE_M3_OBJ_METHOD_TYPE(t,n)    TYPE_M3_FIELD_TYPE(t,1+n)
-#define TYPE_M3_OBJ_METHOD_BITPOS(t,n)  TYPE_FIELD_BITPOS(t,1+n)
-#define TYPE_M3_OBJ_METHOD_BITSIZE(t,n) TYPE_FIELD_BITSIZE(t,1+n)
-#define TYPE_M3_OBJ_TRACED(t)           TYPE_M3_STUFF(t).c
-#define TYPE_M3_OBJ_BRANDED(t)          TYPE_M3_STUFF(t).d
-#define TYPE_M3_OBJ_BRAND(t)            TYPE_M3_STUFF(t).s
-
-#define TYPE_M3_SET_TARGET(t)           TYPE_M3_FIELD_TYPE(t,0)
-
-#define TYPE_M3_SUBRANGE_MIN(t)         TYPE_M3_STUFF(t).a
-#define TYPE_M3_SUBRANGE_MAX(t)         TYPE_M3_STUFF(t).b
-#define TYPE_M3_SUBRANGE_TARGET(t)      TYPE_M3_FIELD_TYPE (t,0)
-
-#define TYPE_M3_POINTER_TARGET(t)       TYPE_M3_FIELD_TYPE (t,0)
-#define TYPE_M3_POINTER_TRACED(t)       TYPE_M3_STUFF(t).a
-#define TYPE_M3_POINTER_BRANDED(t)      TYPE_M3_STUFF(t).b
-#define TYPE_M3_POINTER_BRAND(t)        TYPE_M3_STUFF(t).s
-
-#define TYPE_M3_INDIRECT_TARGET(t)      TYPE_M3_FIELD_TYPE (t,0)
-
-#define TYPE_M3_PROC_NARGS(t)           TYPE_M3_STUFF(t).a
-#define TYPE_M3_PROC_NRAISES(t)         TYPE_M3_STUFF(t).b
-#define TYPE_M3_PROC_RESTYPE(t)         TYPE_M3_FIELD_TYPE(t,0)
-#define TYPE_M3_PROC_ARG_NAME(t,n)      TYPE_FIELD_NAME(t,n+1)
-#define TYPE_M3_PROC_ARG_TYPE(t,n)      TYPE_M3_FIELD_TYPE(t,n+1)
-#define TYPE_M3_PROC_RAISE_NAME(t,n)    TYPE_FIELD_NAME(t,n+1+TYPE_M3_PROC_NARGS(t))
-#define TYPE_M3_PROC_RAISE_TYPE(t,n)    TYPE_M3_FIELD_TYPE(t,n+1+TYPE_M3_PROC_NARGS(t))
-
-#define TYPE_M3_OPAQUE_REVEALED(t)      TYPE_M3_FIELD_TYPE (t,0)
-
-#define TYPE_M3_TYPE_TYPE(t)            TYPE_M3_FIELD_TYPE (t,0)
-#define TYPE_M3_TYPE_NAME_TYPE(t)       TYPE_M3_FIELD_TYPE (t,0)
-
-#define TYPE_RUNTIME_PTR(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->runtime_ptr)
-#define TYPE_VTABLE(thistype) (TYPE_RUNTIME_PTR(thistype)->has_vtable)
-#define TYPE_HAS_VTABLE(thistype) (TYPE_RUNTIME_PTR(thistype) && TYPE_VTABLE(thistype))
-#define TYPE_PRIMARY_BASE(thistype) (TYPE_RUNTIME_PTR(thistype)->primary_base)
-#define TYPE_VIRTUAL_BASE_LIST(thistype) (TYPE_RUNTIME_PTR(thistype)->virtual_base_list)
-
-#define TYPE_LOCALTYPE_PTR(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->localtype_ptr)
-#define TYPE_LOCALTYPE_FILE(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->localtype_ptr->file)
-#define TYPE_LOCALTYPE_LINE(thistype) (TYPE_CPLUS_SPECIFIC(thistype)->localtype_ptr->line)
-
-#define TYPE_IS_OPAQUE(thistype) (((TYPE_CODE (thistype) == TYPE_CODE_STRUCT) ||        \
-                                   (TYPE_CODE (thistype) == TYPE_CODE_UNION))        && \
-                                  (TYPE_NFIELDS (thistype) == 0)                     && \
-                                  (TYPE_CPLUS_SPECIFIC (thistype) && (TYPE_NFN_FIELDS (thistype) == 0)))
 
 struct builtin_type
 {
