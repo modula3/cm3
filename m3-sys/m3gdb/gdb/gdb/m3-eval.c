@@ -1707,6 +1707,7 @@ m3_patched_proc_result_type (
   CORE_ADDR code_addr, char * name, bool * result_is_ref_param )
 
 { struct symbol * proc_sym; 
+  struct type * proc_type;
   struct block * proc_block;
   struct block * body_block;
   struct symbol * result_sym; 
@@ -1718,6 +1719,7 @@ m3_patched_proc_result_type (
   if ( proc_sym == NULL ) 
     { error 
        (_("Can't get symbol for procedure \"%s\"."), name ); /* NORETURN */ }
+  proc_type = SYMBOL_TYPE ( proc_sym ); 
   proc_block = SYMBOL_BLOCK_VALUE ( proc_sym );
   result_sym 
     = lookup_block_symbol ( proc_block, "_result", NULL, VAR_DOMAIN ); 
@@ -1735,6 +1737,7 @@ m3_patched_proc_result_type (
                can do? */ 
     { l_result_is_ref_param = false; 
       result_type = builtin_type_m3_void; 
+      TYPE_M3_FUNC_RESULT_CODE ( proc_type ) = m3_res_none; 
     } 
   else 
     { l_result_is_ref_param = ( SYMBOL_CLASS ( result_sym ) == LOC_ARG ); 
@@ -1745,6 +1748,17 @@ m3_patched_proc_result_type (
           /* ^call_function_by_hand will need this to ascertain whether the
               result is passed by reference. */ 
         ); 
+      if ( l_result_is_ref_param ) 
+        { if ( strcmp ( TYPE_FIELD_NAME ( proc_type, 0 ), "_result" ) == 0 ) 
+            { TYPE_M3_FUNC_RESULT_CODE ( proc_type ) = m3_res_leftmost; } 
+          else if ( strcmp 
+                     ( TYPE_FIELD_NAME 
+                         ( proc_type, TYPE_NFIELDS ( proc_type ) - 1 ), 
+                       "_result" ) == 0 
+                     ) 
+            { TYPE_M3_FUNC_RESULT_CODE ( proc_type ) = m3_res_rightmost; }
+          else { gdb_assert ( false ); }  
+        } 
     } 
   if ( result_is_ref_param != NULL ) 
     { * result_is_ref_param = l_result_is_ref_param; } 
@@ -2056,6 +2070,7 @@ m3_evaluate_call (
   )
 
   { struct type * result_type; 
+    struct type * proc_type; 
     bool result_is_ref_param; 
     struct value * * argvec; 
     int downward_nargs; /* number in argvec, passed at machine level. */ 
@@ -2067,7 +2082,8 @@ m3_evaluate_call (
     next_formal = 0; 
     expected_args = TYPE_NFIELDS ( check_actuals_type ); 
     if ( TYPE_CODE ( check_actuals_type ) == TYPE_CODE_M3_PROC ) 
-      /* First "formal" in fields is actually result type, possibly void. */ 
+      /* First "formal" in fields is actually result type, possibly void. 
+         We don't want a user-typed actual to correspond to it. */ 
       { next_formal ++; 
         expected_args --;
       } 
@@ -2076,8 +2092,8 @@ m3_evaluate_call (
     if ( result_type != NULL 
          && TYPE_CODE ( result_type ) == TYPE_CODE_M3_INDIRECT 
          && TYPE_CODE ( check_actuals_type ) == TYPE_CODE_FUNC 
-       ) /* Last "formal" of check_actuals_type is really a large function 
-            result, passed by reference. */ 
+       ) /* First or last "formal" of check_actuals_type is really a large 
+            function result, passed by reference. */ 
       { expected_args --; } 
     if ( nargs != expected_args ) 
       { error 
@@ -2088,10 +2104,23 @@ m3_evaluate_call (
          ); /* NORETURN */ 
       }
     downward_nargs = nargs + ( self != NULL ) + ( result_is_ref_param );
+    /* ^Number of actuals in the machine code call. */ 
     argvec 
       = ( struct value * * ) 
         alloca ( sizeof ( struct value * ) * ( downward_nargs + 1 ) );
     next_argvec = 0; 
+    proc_type = value_type ( proc_const_value ); 
+    if ( result_is_ref_param 
+         && TYPE_M3_FUNC_RESULT_CODE ( proc_type ) == m3_res_leftmost
+       ) 
+      { argvec [ next_argvec ] 
+          = allocate_value ( result_type /* has TYPE_CODE_M3_INDIRECT */ ); 
+      /* Setting value_contents_raw ( argvec [ i ])  will have to wait until 
+         the space for the result is pushed on the inferior stack, which 
+         happens inside call_function_by_hand. */ 
+        set_value_lazy ( argvec [ next_argvec ], 0 ); 
+        next_argvec ++;
+      } 
     if ( self != NULL ) /* This is a method call. */ 
       { argvec [ 0 ] = self; 
         next_argvec ++; 
@@ -2108,12 +2137,12 @@ m3_evaluate_call (
         next_formal ++; 
         next_argvec ++; 
       } 
-    if ( result_is_ref_param ) 
+    if ( result_is_ref_param 
+         && TYPE_M3_FUNC_RESULT_CODE ( proc_type ) == m3_res_rightmost
+       ) 
       { argvec [ next_argvec ] 
-          = allocate_value ( result_type /* has TYPE_CODE_M3_INDIRECT */ ); 
-      /* Setting value_contents_raw ( argvec [ i ])  will have to wait until 
-         the space for the result is pushed on the inferior stack, which 
-         happens inside call_function_by_hand. */ 
+          = allocate_value 
+              ( result_type /* See comments above for leftmost case. */ ); 
         set_value_lazy ( argvec [ next_argvec ], 0 ); 
         next_argvec ++;
       } 

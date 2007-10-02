@@ -27,6 +27,17 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "symtab.h"
 #include "value.h"
 
+/* Values of type m3_result_code are stored in the struct type node of a
+   procedure constant (which has TYPE_CODE_FUNC) to show whether it has
+   a function result of a "large" type that is, at machine code level,
+   passed as a reference parameter, and, if so, which end of the machine-
+   level parameter list it is at.  The latter varies for different targets. */ 
+enum m3_result_code
+  { m3_res_none,
+    m3_res_leftmost,
+    m3_res_rightmost
+  };  
+
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.  
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They 
    do not cause this to be true, but they do cause 
