@@ -1203,7 +1203,7 @@ m3_val_print2 (
       struct type *elt   = TYPE_M3_ARRAY_ELEM (type);
       LONGEST lower, upper, n;
       
-      fputs_filtered ("[", stream);
+      fputs_filtered ("{", stream);
 
       m3_ordinal_bounds (index, &lower, &upper);
       n = upper - lower + 1;
@@ -1231,7 +1231,7 @@ m3_val_print2 (
       if (i < n) {
 	fputs_filtered ("...", stream); }
 
-      fputs_filtered ("]", stream);
+      fputs_filtered ("}", stream);
       break; }
       
     case TYPE_CODE_M3_OPEN_ARRAY: {
@@ -1267,7 +1267,7 @@ m3_val_print2 (
 	error (_("Improperly aligned open array elements")); }
       eltsize = eltsize / 8;
 
-      fputs_filtered ("[", stream);
+      fputs_filtered ("{", stream);
       if ( TYPE_CODE ( elt_type ) == TYPE_CODE_M3_OPEN_ARRAY ) 
         { gdb_byte * subval = alloca ( TYPE_LENGTH ( elt_type ) ); 
           int dimension;
@@ -1349,7 +1349,7 @@ m3_val_print2 (
 	      things_printed++; }}}}
       if (things_printed < nelems) {
 	fputs_filtered ("...", stream); }
-      fputs_filtered ("]", stream);
+      fputs_filtered ("}", stream);
       break; }
 
     case TYPE_CODE_M3_PACKED: { 
