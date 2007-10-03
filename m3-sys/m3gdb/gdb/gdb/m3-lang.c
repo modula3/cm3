@@ -583,7 +583,8 @@ simple_name ( const char * name )
   remaining_len = strlen ( start ); 
   while ( true ) 
     { prefix_len = strcspn ( start, dot_only ); 
-      if ( prefix_len >= remaining_len ) { return start; }   
+      if ( prefix_len >= remaining_len ) 
+        { return start; }   
       start += prefix_len + 1; 
       remaining_len -= prefix_len + 1; 
     } 
@@ -622,8 +623,10 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
     LONGEST longest_bitct = sizeof ( LONGEST ) * HOST_CHAR_BIT; 
     LONGEST one = 1L; 
 
-    if ( p == NULL || * p == '\0' ) { return p; } 
-    if ( * p == '_' ) { p ++; } 
+    if ( p == NULL || * p == '\0' ) 
+      { return p; } 
+    if ( * p == '_' ) 
+      { p ++; } 
     if ( * p == '0' ) 
       { if ( * ( p + 1 ) == 'x' || * ( p + 1 ) == 'X' )   
           { /* Hex twos-complement format. */
@@ -651,7 +654,8 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
                       { /* Must do negative sign extend. */ 
                         l_result = l_result | ( - one ) << bitct; 
                       }  
-                    if ( result != NULL ) { * result = l_result; } 
+                    if ( result != NULL ) 
+                      { * result = l_result; } 
                     return p; 
                   } 
               }  
@@ -671,7 +675,8 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
                       { /* Must do negative sign extend. */ 
                         l_result = l_result | ( - one ) << bitct; 
                       }  
-                    if ( result != NULL ) { * result = l_result; } 
+                    if ( result != NULL ) 
+                      { * result = l_result; } 
                     return p; 
                   } 
               }  
@@ -692,8 +697,10 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
                  but to the same value.  */ 
                 p ++; 
               }   
-            if ( is_neg ) { l_result = - l_result; } 
-            if ( result != NULL ) { * result = l_result; } 
+            if ( is_neg ) 
+              { l_result = - l_result; } 
+            if ( result != NULL ) 
+              { * result = l_result; } 
             return p; 
           }
         else { return string; } 
@@ -979,15 +986,14 @@ cm3_comp_unit_body_name_len ( const char * name )
    Procedure in      PM3 only has a field in the globals record of the 
    an interface:     interface.  CM3 has nothing in the interface symtab. 
 
-   Procedure in a    In the static block of the module, for all compilers.  
-   module, not in    Linkage name is <moduleName>__<procName>.  PM3 also 
-   any exported      has a field in the globals record of the module. 
-   interface:
-
-   Procedure in a    For CM3, only in the global block of the exporting module.
-   module, also in   For PM3, in the static block of the exporting module.  
-   an exported       Linkage name is <InterfaceName>__<procName>.  
-   interface:        PM3 also has a field in the globals record of the module. 
+   Procedure in a    In the static block of the module, for PM3.  For CM3,
+   module:           it may be in the static block if the procedure is not
+                     exported, and the compiler is older.  Otherwise, it is
+                     in the global block. 
+                     Linkage name is <moduleName>__<procName>, if it's 
+                     exported, or <InterfaceName>__<procName>, if not. 
+                     Either way, it's in the module file, not the interface.  
+                     PM3 also has a field in the globals record of the module. 
 
 */ 
 
@@ -1011,21 +1017,24 @@ m3_lookup_symbol_nonlocal (
   int found; 
 
   /* Look in the static block surrounding the execution context, where we 
-     will find exported and nonexported  global procedures in PM3 etc. and 
-     nonexported global procedures in CM3.  "exported" here means the 
+     will find all global procedures in PM3 etc. and nonexported global 
+     procedures in older versions of CM3.  "exported" here means the 
      procedure body is actually provided in this module. */ 
   if ( static_block != NULL ) 
     { sym = lookup_symbol_static 
               ( name, linkage_name, static_block, domain, symtab );
-      if ( sym != NULL ) { return sym; } 
+      if ( sym != NULL ) 
+        { return sym; } 
     } 
 
   /* Look in the one global block surrounding the execution context, where 
-     we will find exported global procedures in CM3. */ 
+     we will find exported global procedures in older versions of CM3 and
+     all global procedures in newer versions of CM3. */ 
   if ( global_block != NULL ) 
     { sym = m3_lookup_symbol_one_global 
               ( name, linkage_name, global_block, domain, symtab );
-      if ( sym != NULL ) { return sym; }  
+      if ( sym != NULL ) 
+       { return sym; }  
     } 
 
   /* Look in the module's globals record, were we will find global variables 
@@ -1062,15 +1071,39 @@ m3_lookup_symbol_nonlocal (
      compilers. */ 
   if ( static_block != NULL && unit_name != NULL ) 
     { sym = m3_lookup_type ( unit_name, name, static_block, symtab ); 
-      if ( sym != NULL ) { return sym; } 
+      if ( sym != NULL ) 
+        { return sym; } 
     } 
 
   /* Look in all interfaces exported by the current module. */ 
   if ( unit_name != NULL ) 
     { sym = m3_lookup_exported ( unit_name, name, symtab ); 
-      if ( sym != NULL ) { return sym; }  
+      if ( sym != NULL ) 
+        { return sym; }  
     } 
 
+  /* We are now beyond finding the id via Modula-3 language lookup
+     rules in the current environment.  Now just look for linkage
+     names of globally procedures in the entire compilation closure.
+     
+     To get all the places a procedure declared in a module might be
+     found, we need to look in all the static blocks for PM3, all the
+     global blocks for newer CM3s, and both places, for older CM3s.
+     Our language- independent caller will look in all the static
+     blocks if we return without success.  It probably doesn't matter
+     what order we do this in, so just look in the global blocks here.
+  */ 
+
+  sym = lookup_symbol_aux_symtabs 
+          (GLOBAL_BLOCK, name, linkage_name, domain, symtab);
+  if ( sym != NULL ) 
+    { return sym; } 
+  
+  sym = lookup_symbol_aux_psymtabs 
+          (GLOBAL_BLOCK, name, linkage_name, domain, symtab);
+  if ( sym != NULL ) 
+    { return sym; } 
+  
   return NULL; 
 
 } /* m3_lookup_symbol_nonlocal */ 
@@ -1292,7 +1325,8 @@ list_block_symbols ( struct block * blockp, int max )
   struct dict_iterator iter; 
 
   sym = dict_iterator_first ( BLOCK_DICT ( blockp ), &iter ); 
-  if ( sym == NULL ) { printf_filtered ("    <empty>\n" ); } 
+  if ( sym == NULL ) 
+    { printf_filtered ("    <empty>\n" ); } 
   else 
     { while ( sym != NULL && id_ct < max ) 
         { printf_filtered 
@@ -1303,7 +1337,8 @@ list_block_symbols ( struct block * blockp, int max )
           id_ct ++;
           sym = dict_iterator_next ( &iter ); 
         } 
-    if ( sym != NULL ) { printf_filtered ( "    ...\n" ); } 
+    if ( sym != NULL ) 
+      { printf_filtered ( "    ...\n" ); } 
     } 
 } /* list_block_symbols */ 
 
@@ -1361,15 +1396,18 @@ find_m3_nested_component (
     char * l_next_start; 
     char ch; 
 #if 0
-    if ( next_start != NULL ) { * next_start = NULL; } 
-    if ( first_end != NULL ) { * first_end = NULL; } 
+    if ( next_start != NULL ) 
+      { * next_start = NULL; } 
+    if ( first_end != NULL ) 
+      { * first_end = NULL; } 
 #endif 
     ch = * start; 
     if ( ( 'A' <= ch && ch <= 'Z' ) || ( 'a' <= ch && ch <= 'z' ) ) 
       { start ++; 
         while ( true ) 
           { l_first_end  = start + strspn ( start, m3_id_chars_no_underscore ); 
-            if ( * l_first_end != '_' ) { return false; } 
+            if ( * l_first_end != '_' ) 
+              { return false; } 
             else if ( * ( l_first_end + 1 ) == '_' ) 
               /* We have "__", beginning at l_first_end. */ 
               { l_next_start = l_first_end + 2; 
@@ -1377,10 +1415,13 @@ find_m3_nested_component (
                    produce would reduce the likelihood of spoofing. */ 
                 l_next_start 
                   = l_next_start + strcspn ( l_next_start , m3_id_letters );
-                if ( * l_next_start == '\0' ) { return false; } 
+                if ( * l_next_start == '\0' ) 
+                  { return false; } 
                 else 
-                  { if ( next_start != NULL ) { * next_start = l_next_start; } 
-                    if ( first_end != NULL ) { * first_end = l_first_end; } 
+                  { if ( next_start != NULL ) 
+                      { * next_start = l_next_start; } 
+                    if ( first_end != NULL ) 
+                      { * first_end = l_first_end; } 
                     return true; 
                   } 
               } 
@@ -1515,7 +1556,8 @@ m3_fix_symtab ( struct symtab *st )
 
   block_vec = BLOCKVECTOR ( st ); 
 
-  if ( st -> language != language_m3 ) { return; } 
+  if ( st -> language != language_m3 ) 
+    { return; } 
  
   if (info_verbose)
     { printf_filtered ("Fixing M3 symtab for file \"%s\"\n", st->filename);
@@ -2134,7 +2176,8 @@ nested_prefix_len ( char * name)
     current++; 
     current = strchr (current, '.'); 
     if (current == 0) return 0;
-    while ( (i = strchr (current + 1 , '.') ) > current) { current = i; } 
+    while ( (i = strchr (current + 1 , '.') ) > current) 
+      { current = i; } 
     return current - name;
   } /* nested_prefix_len */ 
 
@@ -2550,13 +2593,15 @@ m3_value_as_address (struct value * val)
 static void 
 get_linespec_token ( char * * start, char * * finish )
 
-  { while ( * * start == ' ' || * * start == '\t' ) { ( * start ) ++; } 
+  { while ( * * start == ' ' || * * start == '\t' ) 
+      { ( * start ) ++; } 
     * finish = * start + 1; 
     switch ( * * start ) 
       { case '.' : { break; } 
         case '0': case '1': case '2': case '3': case '4': 
         case '5': case '6': case '7': case '8': case '9':  
-          { while ( is_digit ( * * finish ) ) { ( * finish ) ++; } 
+          { while ( is_digit ( * * finish ) ) 
+              { ( * finish ) ++; } 
             break; 
           } 
         default: 
@@ -2625,13 +2670,15 @@ m3_decode_linespec (
     /* Setup to return if we don't find anything interesting. */ 
     result_sals . sals = NULL; 
     result_sals . nelts = 0; 
-    if ( not_found_ptr != NULL ) { * not_found_ptr = 0; } 
+    if ( not_found_ptr != NULL ) 
+      { * not_found_ptr = 0; } 
 
     tok = * argptr; 
     linelen = strlen ( tok );
     /* Only consider nonempty sequence of M3 identifiers and integers, 
        separated by dots and interspersed with blanks and tabs. */ 
-    if ( linelen <= 0 ) { return result_sals; }  
+    if ( linelen <= 0 ) 
+      { return result_sals; }  
     if ( strspn 
            ( tok, 
            " \t._ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" 
