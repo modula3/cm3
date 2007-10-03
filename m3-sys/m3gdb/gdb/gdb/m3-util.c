@@ -985,8 +985,8 @@ m3_lookup_module_id (
                 return sym; 
               }      
             
-            /* For CM3, if the procedure is exported, it will be in the
-               global block. */ 
+            /* For CM3, if the procedure is exported or it's a later compiler,
+               it will be in the global block. */ 
             module_global_block = BLOCKVECTOR_BLOCK ( bv, GLOBAL_BLOCK );
             sym = lookup_symbol_aux_block
                     ( ident, linkage_name, module_global_block, 
