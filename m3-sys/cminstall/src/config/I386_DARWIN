@@ -211,7 +211,6 @@ SYSTEM_LIBS = {
                        13 "/usr/X11R6/lib"
                    END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
-  "PTHREAD"    : [ ],
   "TCP"        : [ ]
 }
 
@@ -219,7 +218,7 @@ SYSTEM_LIBS = {
 % scanned by the linker.
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "PTHREAD", "LIBC" ]
+                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
 
 %---------------------------------------------------------- system programs ---
 
