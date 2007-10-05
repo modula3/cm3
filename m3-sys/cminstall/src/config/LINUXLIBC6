@@ -129,7 +129,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-lm" ],
+  "LIBC"       : [ "-lm", "-lpthread" ],
 %-- not on most Linux platforms
 % "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
@@ -204,7 +204,6 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG, "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
-  "PTHREAD"    : [ "-L/usr/lib", "-lpthread" ],
   "TCP"        : [ ]
 }
 
@@ -212,7 +211,7 @@ SYSTEM_LIBS = {
 % scanned by the linker.
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "PTHREAD", "LIBC" ]
+                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
 
 %---------------------------------------------------------- system programs ---
 

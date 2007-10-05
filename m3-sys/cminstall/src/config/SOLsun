@@ -11,10 +11,10 @@ readonly BUILD_DIR    = TARGET                % directory for results
 readonly OS_TYPE      = "POSIX"               % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"              % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "sparc-sun-solaris2"  % "cpu-vendor-os" string for GNU
-readonly INSTALL_KEY  = BEGIN_CONFIG
-  "What is your installation key?"
-    14 %-- user specified key
-END_CONFIG
+%readonly INSTALL_KEY  = BEGIN_CONFIG
+%  "What is your installation key?"
+%    14 %-- user specified key
+%END_CONFIG
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
@@ -37,17 +37,17 @@ end
 % The first time a user runs Reactor, it will configure itself to use
 % the executables defined below.
 
-INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
-  "What should be the default World-Wide Web browser for new Reactor users?"
-     0  "netscape"
-     6 "/usr/local/bin"           "netscape"
-     6 "/usr/local/netscape/bin"  "netscape"
-     6 "/usr/local/netscape/bin"  "netscape-3"
-     6 "/usr/local/netscape/bin"  "netscape-2"
-     6 "/usr/local/netscape"      "netscape"
-     6 "/usr/local/mosaic"        "mosaic"
-     6 "/usr/local/moasic"        "Xmosaic"
-END_CONFIG
+%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
+%  "What should be the default World-Wide Web browser for new Reactor users?"
+%     0  "netscape"
+%     6 "/usr/local/bin"           "netscape"
+%     6 "/usr/local/netscape/bin"  "netscape"
+%     6 "/usr/local/netscape/bin"  "netscape-3"
+%     6 "/usr/local/netscape/bin"  "netscape-2"
+%     6 "/usr/local/netscape"      "netscape"
+%     6 "/usr/local/mosaic"        "mosaic"
+%     6 "/usr/local/moasic"        "Xmosaic"
+%END_CONFIG
 % A World-Wide Web browser.  Reactor passes it an initial URL
 % its first command-line argument.
 
@@ -122,6 +122,8 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-Bdynamic",
                      "-lm", "-lsunmath", "-lsocket", "-lnsl",
                      "-lw",      % wide-char (Unicode) support
+                     "-L/usr/lib/lwp", "-lpthread",
+                     "-lrt",     % semaphores
                      "-ldl" ],   % dynamic loader support
   "LEX-YACC"   : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the lex/yacc libraries?"
@@ -147,15 +149,6 @@ SYSTEM_LIBS = {
                        12 "/usr/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lpq" ],
-  "ODBC"       : [ BEGIN_CONFIG
-                     "Where are the ODBC libraries?"
-                       11 "libodbc.a"
-                       12 "/usr/local/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/pgsql/lib"
-                       12 "/usr/local/postgres95/lib"
-                       13 "/usr/local/lib"
-                   END_CONFIG, "-lodbc" ],
   "OPENGL"     : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
                        11 "libGLU.a"
@@ -168,6 +161,15 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG,
                      "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ BEGIN_CONFIG
+                     "Where are the ODBC libraries?"
+                       11 "libodbc.a"
+                       12 "/usr/local/lib"
+                       12 "/usr/lib"
+                       12 "/usr/local/pgsql/lib"
+                       12 "/usr/local/postgres95/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lodbc" ],
   "MOTIF"      : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.a"
@@ -280,7 +282,7 @@ M3_BACKEND_MODE = "3"
 %   trouble.  To use gcc, try the "SOLgnu" configuration.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-w", "-KPIC", options ]
+  local args = [ "-mt", "-w", "-KPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
@@ -303,6 +305,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
@@ -310,14 +313,21 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % then, build the shared library
-    ret_code = try_exec ("@" & SYSTEM_LD, "-G -ztext -o", lib_so, objects)
+    ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -z text -o",
+			 lib_sox, "-h", lib_sox, objects)
     if not equal (ret_code, 0) return ret_code end
 
+    % create the version aliases
+    link_file(lib_sox, lib_so)
+
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_so)
+    install_derived (lib_sox)
+    install_derived_link (lib_sox, lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -330,13 +340,17 @@ end
 
 proc skip_lib (lib, shared) is
   local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   if shared
     % make sure the shared library stuff gets installed properly
+    install_derived (lib_sox)
     install_derived (lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -346,8 +360,8 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local linker = "@" & SYSTEM_CC
-  local args = [ "-o", prog, options, "-R" & LIB_USE, objects, imported_libs ]
+  local linker = [ "@" & SYSTEM_CC, "-mt" ]
+  local args = [ "-o", prog, options, objects, imported_libs ]
   if shared
     return try_exec (linker, "-Bdynamic", args)
   else
@@ -394,7 +408,7 @@ M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
-% --- generate bootstrap code (assembly) instead of finaly object code
+% --- generate bootstrap code (assembly) instead of final object code
 
 % M3_COMPILE_ONCE = TRUE
 % --- don't recompile code to improve opaque object references

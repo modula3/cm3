@@ -124,12 +124,7 @@ PROCEDURE InnerLockMutex (self: T; m: Mutex) =
         prev.nextWaiter := self;
       END;
       LOOP
-        IF RTMachine.SaveRegsInStack # NIL
-          THEN self.act.sp := RTMachine.SaveRegsInStack();
-          ELSE self.act.sp := ADR(xx);
-        END;
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
-        self.act.sp := NIL;
         IF m.holder = self THEN EXIT END;
       END;
       <*ASSERT self.waitingOn = NIL*>
@@ -219,12 +214,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         prev.nextWaiter := self;
       END;
       LOOP
-        IF RTMachine.SaveRegsInStack # NIL
-          THEN self.act.sp := RTMachine.SaveRegsInStack();
-          ELSE self.act.sp := ADR(xx);
-        END;
         WITH r = Upthread.cond_wait(self.waitCond^, cm) DO <*ASSERT r=0*> END;
-        self.act.sp := NIL;
         IF alertable AND self.alerted THEN self.alerted := FALSE; RAISE Alerted; END;
         IF self.waitingOn = NIL THEN RETURN END;
       END;
@@ -665,12 +655,7 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(n, amount);
     LOOP
-      IF RTMachine.SaveRegsInStack # NIL
-       THEN self.act.sp := RTMachine.SaveRegsInStack();
-       ELSE self.act.sp := ADR(xx);
-      END;
       WITH r = Utime.nanosleep(amount, remaining) DO
-        self.act.sp := NIL;
         IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
         IF r = 0 THEN EXIT END;
         amount := remaining;
@@ -789,16 +774,11 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      IF RTMachine.SaveRegsInStack # NIL
-       THEN self.act.sp := RTMachine.SaveRegsInStack();
-       ELSE self.act.sp := ADR(xx);
-      END;
       res := Unix.select(nfd,
                          LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
                          LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
                          LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
                          timeout);
-      self.act.sp := NIL;
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
@@ -968,11 +948,9 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
         END;
 
         (* Process the stack *)
-        IF act.sp # NIL THEN sp := act.sp END; (* don't trust GetState  *)
-        IF stack_grows_down THEN
-          p(sp, act.stackbase);
-        ELSE
-          p(act.stackbase, sp);
+        IF stack_grows_down
+          THEN p(sp, act.stackbase);
+          ELSE p(act.stackbase, sp);
         END;
       END;
       act := act.next;
@@ -1161,11 +1139,11 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
     errno := Cerrno.GetErrno();
     xx: INTEGER;
     me := GetActivation();
-    m, om: Usignal.sigset_t;
+    m: Usignal.sigset_t;
   BEGIN
     <*ASSERT sig = SIG*>
     IF me = NIL THEN RETURN END;
-    <*ASSERT me.state = ActState.Stopping*>
+    IF me.state # ActState.Stopping THEN RETURN END;
     IF me.heapState.busy THEN RETURN END;
     IF RTMachine.SaveRegsInStack # NIL
       THEN me.sp := RTMachine.SaveRegsInStack();
@@ -1177,13 +1155,9 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
     END;
     WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
 
-    WITH r = Usignal.sigemptyset(m) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigaddset(m, SIG) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.sigmask(Usignal.SIG_BLOCK, m, om) DO <*ASSERT r=0*> END;
-    REPEAT
-      WITH r = Usignal.sigwait(m, sig) DO <*ASSERT r=0*> END;
-      <*ASSERT sig = SIG*>
-    UNTIL me.state = ActState.Starting;
+    WITH r = Usignal.sigfillset(m) DO <*ASSERT r=0*> END;
+    WITH r = Usignal.sigdelset(m, SIG) DO <*ASSERT r=0*> END;
+    REPEAT EVAL Usignal.sigsuspend(m) UNTIL me.state = ActState.Starting;
     me.sp := NIL;
     me.state := ActState.Started;
     IF DEBUG THEN
@@ -1363,12 +1337,7 @@ PROCEDURE LockHeap () =
       IF lock_cnt = 0 THEN holder := self; EXIT END;
       IF Upthread.equal(holder, self) # 0 THEN EXIT END;
       me := GetActivation();
-      IF me # NIL AND RTMachine.SaveRegsInStack # NIL
-        THEN me.sp := RTMachine.SaveRegsInStack();
-        ELSE me.sp := ADR(xx);
-      END;
       WITH r = Upthread.cond_wait(lockCond, lockMu) DO <*ASSERT r=0*> END;
-      IF me # NIL THEN me.sp := NIL END;
     END;
     INC(lock_cnt);
     WITH r = Upthread.mutex_unlock(lockMu) DO <*ASSERT r=0*> END;

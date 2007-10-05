@@ -136,12 +136,12 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lsocket", "-lnsl",
+  "LIBC"       : [ "-Xlinker", "-Bdynamic",
+                        "-lm", "-lsocket", "-lnsl",
                         "-lw",    % wide-char (Unicode) support
-                        "-ldl",   % dynamic loader support
-                        "-lpthread", "-lthread", % threads
+			"-L/usr/lib/lwp", "-lpthread",
                         "-lrt",   % semaphores
-                        "-lm" ],
+                        "-ldl" ], % dynamic loader support
   "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the lex/yacc libraries?"
                        11 "libl.so"
@@ -225,19 +225,13 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 %---------------------------------------------------------- system programs ---
 
 readonly SYSTEM_CC  = BEGIN_CONFIG
-  "Where is your C compiler?"
+  "Where is your gcc compiler?"
     0 "gcc"
     6 "/bin"           "gcc"
     6 "/usr/bin"       "gcc"
     6 "/usr/local"     "gcc"
     6 "/usr/local/bin" "gcc"
     6 "/usr/local/gnu" "gcc"
-    0 "cc"
-    6 "/bin"           "cc"
-    6 "/usr/bin"       "cc"
-    6 "/usr/local"     "cc"
-    6 "/usr/local/bin" "cc"
-    6 "/usr/local/gnu" "cc"
 END_CONFIG % C compiler
 readonly SYSTEM_LD  = BEGIN_CONFIG
   "Where is your linker?"
@@ -298,7 +292,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fPIC", options ]
+  local args = [ "-pthreads", "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -322,6 +316,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
@@ -331,18 +326,24 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     % then, build the shared library
     if M3_PROFILING  % FIXME: This is probably wrong (untested)
       ret_code = try_exec ("@" & SYSTEM_LD, "-pg -dy -G -z text -o", 
-                           lib_so, objects)
+                           lib_sox, "-h", lib_sox, objects)
     else
       ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -z text -o", 
-                           lib_so, objects)
+                           lib_sox, "-h", lib_sox, objects)
     end
     if not equal (ret_code, 0) return ret_code end
 
+    % create the version aliases
+    link_file(lib_sox, lib_so)
+
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_so)
+    install_derived (lib_sox)
+    install_derived_link (lib_sox, lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -354,14 +355,18 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
-  local lib_so = format ("lib%s.so", lib)
+  local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   if shared
     % make sure the shared library stuff gets installed properly
+    install_derived (lib_sox)
     install_derived (lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -371,7 +376,7 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local linker = [ "@" & SYSTEM_CC, "-fPIC" ]
+  local linker = [ "@" & SYSTEM_CC, "-pthreads", "-fPIC" ]
   local args = []
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, options, objects, imported_libs ]
@@ -417,11 +422,11 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 M3_SPLIT_LIBNAMES = TRUE
 % --- split library names and pass -L/-l arguments to the linker
 
-% M3_SHARED_LIB_ARG = "-R"
+M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
-% --- generate bootstrap code (assembly) instead of finaly object code
+% --- generate bootstrap code (assembly) instead of final object code
 
 % M3_COMPILE_ONCE = TRUE
 % --- don't recompile code to improve opaque object references
