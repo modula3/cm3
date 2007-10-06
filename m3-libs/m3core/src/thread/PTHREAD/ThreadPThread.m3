@@ -104,7 +104,7 @@ TYPE
 
 PROCEDURE InnerLockMutex (self: T; m: Mutex) =
   (* LL = cm *)
-  VAR next, prev: T;  xx: INTEGER;
+  VAR next, prev: T;
   BEGIN
     IF (m.holder = NIL) THEN
       m.holder := self;
@@ -186,7 +186,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
-  VAR next, prev: T;  xx: INTEGER;
+  VAR next, prev: T;
   BEGIN
     TRY
       <*ASSERT self.waitingOn = NIL*>
@@ -649,7 +649,7 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
   END ToNTime;
 
 PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
-  VAR amount, remaining: Utime.struct_timespec;  xx: INTEGER;
+  VAR amount, remaining: Utime.struct_timespec;
   BEGIN
     IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
     IF n <= 0.0d0 THEN RETURN END;
@@ -769,7 +769,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
 
   PROCEDURE CallSelect (nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
     TYPE FDSPtr = UNTRACED REF Unix.FDSet;
-    VAR res: INTEGER;  xx: INTEGER;
+    VAR res: INTEGER;
     BEGIN
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
@@ -944,7 +944,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
             p(ADR(z), ADR(z) + ADRSIZE(z));
           END;
         ELSE
-          (* assume registers are saved in suspended thread's stack *)
+          sp := act.sp;
         END;
 
         (* Process the stack *)
@@ -1330,7 +1330,7 @@ VAR
   heapCond: Condition;
 
 PROCEDURE LockHeap () =
-  VAR self := Upthread.self();  xx: INTEGER;  me: Activation;
+  VAR self := Upthread.self();  me: Activation;
   BEGIN
     WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
     LOOP
