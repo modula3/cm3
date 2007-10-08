@@ -254,7 +254,7 @@ init_m3_text_info ( )
      more robust.
   */ 
   if ( ! text_info_is_initialized ) 
-    { if ( m3_is_cm3 ( ) ) 
+    { if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
         { if ( ! Text . tc_addr && ! Text . uid ) 
              { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0x7e2f4762 ); } 
           if ( ! TextLiteral.tc_addr  && ! TextLiteral . uid ) 
@@ -321,7 +321,7 @@ init_m3_text_info ( )
                  ( &TextCat, "a_or_b_wide", &TextCat_a_or_b_wide, 160, 8 ); 
              } 
         } 
-      else /* PM3 */ 
+      else if ( m3_compiler_kind ( ) == m3_ck_pm3 )  
         { if ( ! Text . tc_addr & ! Text . uid ) 
             { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0xcd7f2264 ); } 
         } 
@@ -639,7 +639,8 @@ m3_print_widechars (
    a field named "buf", whose type is a very long array, but actually, only
    contains (usually far) fewer CHARs or WIDECHARs, as indicated by the value
    of field "ABS(cnt)".  Also, it's WIDECHARs iff cnt < 0. 
-   PRE: m3_is_cm3 ( ), and init_m3_text_info has been called.  
+   PRE: m3_compiler_kind ( ) == m3_ck_cm3, and init_m3_text_info has been 
+   called.  
 */ 
 static void 
 m3_print_cm3_TextLiteral_object ( 
@@ -998,7 +999,7 @@ m3_print_object (
   fprintf_filtered (stream, "*) ");
 
   /* Is it a CM3 TEXT? */
-  if ( m3_is_cm3 ( ) && format != m3_text_object_format ) 
+  if ( m3_compiler_kind ( ) == m3_ck_cm3 && format != m3_text_object_format ) 
     { int actual_printed; 
 
       actual_printed 
@@ -1010,8 +1011,10 @@ m3_print_object (
               return ; 
             }  
           case - 2: /* Ill-formed CM3 string.  Also print it as an object. */  
-          case - 3: /* Wasn't a CM3 string. */ { break; }   
-          default: /* CM3 string, was printed at full length. */ { return; } 
+          case - 3: /* Wasn't a CM3 string. */ 
+            { break; }   
+          default: /* CM3 string, was printed at full length. */ 
+            { return; } 
         } 
     } 
 
@@ -1536,7 +1539,7 @@ m3_val_print2 (
       if ( format == 0 || format == m3_text_object_format ) 
         { down_format = 'x'; } 
       else { down_format = format; } 
-      if ( m3_is_cm3 ( ) 
+      if ( m3_compiler_kind ( ) == m3_ck_cm3 
            || m3_extract_address ( valaddr, bitpos) == 0 
 /*            ^If the inferior process has not been created yet, 
                init_m3_text_info, called below, won't be able to get the needed

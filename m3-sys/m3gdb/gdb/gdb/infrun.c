@@ -55,8 +55,6 @@
 
 static void signals_info (char *, int);
 
-static void handle_command (char *, int);
-
 static void sig_print_info (enum target_signal);
 
 static void sig_print_header (void);
@@ -3220,7 +3218,7 @@ sig_print_info (enum target_signal oursig)
 
 /* Specify how various signals in the inferior should be handled.  */
 
-static void
+void
 handle_command (char *args, int from_tty)
 {
   char **argv;

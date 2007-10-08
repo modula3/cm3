@@ -427,6 +427,7 @@ solib_read_symbols (struct so_list *so, int from_tty)
 	  if (from_tty)
 	    printf_unfiltered (_("Loaded symbols for %s\n"), so->so_name);
 	  so->symbols_loaded = 1;
+          observer_notify_solib_symbols_loaded(so); 
 	  return 1;
 	}
     }
@@ -822,6 +823,7 @@ clear_solib (void)
       so_list_head = so->next;
       if (so->abfd)
 	remove_target_sections (so->abfd);
+      observer_notify_solib_unloaded (so); 
       free_so (so);
     }
 

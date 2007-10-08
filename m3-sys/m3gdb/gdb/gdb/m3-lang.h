@@ -201,6 +201,9 @@ m3_decode_linespec (
     int *not_found_ptr  
   );
 
+extern char * 
+m3_main_name ( ); 
+
 #endif /* !defined (M3_LANG_H) */
  
 /* End of file m3-lang.h */ 

@@ -104,6 +104,11 @@ when @value{GDBN} calls this observer, the library's symbols probably
 haven't been loaded yet.
 @end deftypefun
 
+@deftypefun void solib_symbols_loaded (struct so_list *@var{solib})
+The shared library specified by @var{solib} really has been loaded,
+meaning its symbols have been loaded into gdb.  
+@end deftypefun
+
 @deftypefun void solib_unloaded (struct so_list *@var{solib})
 The shared library specified by @var{solib} has been unloaded.
 @end deftypefun

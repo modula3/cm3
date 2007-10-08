@@ -31,6 +31,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "block.h"
 #include "dictionary.h" 
 #include "exceptions.h"
+#include "observer.h"
+#include "target.h"
+#include "inferior.h" /* For handle_command. */ 
+#include "solib.h"
+#include "solist.h"
 
 #include "m3-lang.h"
 #include "m3-util.h"
@@ -291,7 +296,7 @@ m3_operator_length (struct expression *expr, int endpos,
   int strlen; 
 
   if (endpos < 1)
-    error ("?bad endpos parameter given to m3_operator_length");
+    error (_("?bad endpos parameter given to m3_operator_length"));
   *oplenp = 1;
   *argsp = 0;
   opcode = expr->elts[endpos - 1].opcode;
@@ -448,9 +453,10 @@ m3_operator_name (enum exp_opcode opcode)
 
 static void
 m3_error (char *msg)
-{ if (msg) error (msg); 
-  else error ( "Invalid syntax in Modula-3 expression." );
-} /* m3_error */ 
+  { if  (msg != NULL ) 
+      { error ( "%s", msg ); }  
+    else { error (_("Invalid syntax in Modula-3 expression." )); } 
+  } /* m3_error */ 
 
 struct type ** const (m3_builtin_types[]) = 
 {
@@ -1268,9 +1274,8 @@ m3_demangle (const char *mangled, int options)
     } 
 
   /* The following two cases occur only for SRC,  PM3, and EZM3.
-     But we can't call m3_is_cm3, because it calls m3_init_constants,
-     and we can get here while loading an object file, before
-     it is possible for m3_init_constants to find its symbols.
+     We can't yet reliably detect what compiler we have, since we
+     don't have all symbols loaded yet, even for the executable. 
      Instead, just assume these patterns will not occur in
      CM3-generated code. */
 
@@ -1976,34 +1981,247 @@ struct type *builtin_type_m3_void;
 struct type *builtin_type_m3_widechar;
 struct type *builtin_type_m3_proc_closure;
 struct type *builtin_type_m3_array_of_char;
-struct type *builtin_type_m3_array_of_widechar;
+struct type *builtin_type_m3_array_of_widechar; 
+
+static bool new_executable = true;  
+static bool m3_libm3core_so_is_loaded = false;  
+static bool m3_waiting_for_libm3core_so_to_unload = false ;  
+
+enum m3_gc_kind_typ { gc_unknown, gc_vm, gc_multicore }; 
+
+static enum m3_gc_kind_typ m3_gc_kind_cached = gc_unknown; 
+
+/* PRE: symbols for libm3core have been loaded. */ 
+static enum m3_gc_kind_typ 
+m3_gc_kind_pure ( ) 
+  { struct minimal_symbol * minsym; 
+
+    minsym = lookup_minimal_symbol ( "RTCollectorSRC__DisableVM", NULL, NULL);
+    if ( minsym != NULL )
+      { return gc_vm; } 
+    minsym = lookup_minimal_symbol 
+      ( "RTCollector__CleanOlderRefSanityCheck", NULL, NULL); 
+    if ( minsym != NULL )
+      { return gc_multicore; } 
+    return gc_unknown;   
+  } /* m3_gc_kind_pure */ 
+
+/* PRE: symbols for libm3core have been loaded. */ 
+static enum m3_gc_kind_typ 
+m3_gc_kind ( ) 
+  { if ( m3_gc_kind_cached == gc_unknown 
+         && ! m3_waiting_for_libm3core_so_to_unload 
+       ) 
+      { m3_gc_kind_cached = m3_gc_kind_pure ( ); }  
+    return m3_gc_kind_cached; 
+  } /* m3_gc_kind */ 
+
+/* PRE: symbols for libm3core have been loaded. */ 
+static void
+m3_disable_vm_gc ( ) 
+  { struct value * val; 
+    const struct language_defn * saved_language; 
+
+    if ( m3_gc_kind ( ) == gc_vm ) 
+      { saved_language = current_language; 
+        current_language = & m3_language_defn; 
+        val = m3_evaluate_string ( "RTHeapRep.disableVMCount:=1" ); 
+        if ( val != NULL ) 
+          { printf_filtered 
+              (_("VM-synchronized GC disabled, because it causes false stops "
+                 "in the debugger.\n" 
+              ) ); 
+            printf_filtered 
+              (_("You can undo this by typing \"print RTCollectorSRC__EnableVM()\"\n" 
+              ) ); 
+          } 
+        else { printf_filtered ( "Can't disable VM GC.\n"); } 
+        current_language = saved_language; 
+      } 
+  } /* m3_disable_vm_gc */ 
+
+enum m3_thread_kind_typ { tk_unknown, tk_posix, tk_pthread, tk_win32 }; 
+
+static enum m3_thread_kind_typ m3_thread_kind_cached = tk_unknown; 
+static enum m3_thread_kind_typ m3_old_thread_kind = tk_unknown;  
+
+/* PRE: Symbols for libm3core have been loaded. */ 
+static enum m3_thread_kind_typ 
+m3_thread_kind_pure ( )
+  { struct symbol * sym; 
+    struct minimal_symbol * minsym; 
+
+    minsym = lookup_minimal_symbol ( "MM_ThreadPThread", NULL, NULL);  
+    if ( minsym != NULL ) 
+      { return tk_pthread; } 
+    minsym = lookup_minimal_symbol ( "MM_ThreadPosix", NULL, NULL);  
+    if ( minsym != NULL ) 
+      { return tk_posix; } 
+    minsym = lookup_minimal_symbol ( "MM_ThreadWin23", NULL, NULL);  
+    if ( minsym != NULL ) 
+      { return tk_win32; } 
+    return tk_unknown; 
+  } /* m3_thread_kind_pure */ 
+
+/* PRE: Symbols for libm3core have been loaded. */ 
+static enum m3_thread_kind_typ 
+m3_thread_kind ( )
+  { struct symbol * sym; 
+    struct minimal_symbol * minsym; 
+
+    if ( m3_thread_kind_cached == tk_unknown 
+         && ! m3_waiting_for_libm3core_so_to_unload 
+       )
+      { m3_thread_kind_cached = m3_thread_kind_pure ( ); }  
+    return m3_thread_kind_cached; 
+  } /* m3_thread_kind */ 
+
+/* Callbacks for (re)reading of symbols.  */ 
+
+static enum m3_compiler_kind_typ m3_old_compiler_kind; 
+/* ^Before a previous executable was unloaded. */  
+
+/* m3_observer_executable_changed handles executable_changed events.  
+   It is called back before the new symbols are loaded, so we can't do
+   any symbol table lookup here. 
+*/
+static void
+m3_observer_executable_changed ( void * unused )
+  /* This is too early to do much.  No symbol information of any kind has 
+       been read.  About all that has happened is the old executable has 
+       been dumped. */ 
+  { m3_old_thread_kind = m3_thread_kind ( );  
+    m3_thread_kind_cached = tk_unknown;
+    m3_gc_kind_cached = gc_unknown; 
+    m3_old_compiler_kind = m3_compiler_kind_value; 
+    m3_compiler_kind_value = m3_ck_unknown;
+    m3_waiting_for_libm3core_so_to_unload = m3_libm3core_so_is_loaded; 
+    new_executable = true;  
+  } /* m3_observer_executable_changed */ 
+
+/* Pointer to the next function on the objfile event chain.  */
+static void (* m3_old_objfile_chain ) ( struct objfile * objfile );
+
+/* m3_new_objfile uses an entirely different (older?) callback mechanism.
+   We need it because it is called back after (re)load of symbols, when it 
+   is possible to look symbols up from the executable itself.  Symbols for
+   dynamically linked libraries are not loaded yet, and the RTS is often 
+   dynamically linked. */ 
+static void
+m3_new_objfile ( struct objfile *objfile )
+  { new_executable = false;
+
+    /* Maybe somebody else had other callbacks registered for this event. */ 
+    if ( m3_old_objfile_chain != NULL )
+      { m3_old_objfile_chain (objfile); } 
+  } /* m3_new_objfile */ 
+
+/* The symbols for a shared object library are loaded.  Note that the
+   misleadingly-named event "solib_loaded" is too early, as it gets 
+   called back shortly _before_ loading symbols for a shared object. */ 
+static void
+m3_observer_solib_symbols_loaded ( struct so_list * so ) 
+
+  { enum m3_thread_kind_typ l_thread_kind;  
+
+    if ( strstr ( so->so_name, "libm3core.so" ) != NULL ) 
+      { /* Now the symbols for libm3core are loaded.  We still can't call
+           things in the RTS, because RT initialization has not been done.
+           But we can lookup symbols and examine or change global variables.
+        */
+        m3_libm3core_so_is_loaded = true; 
+        m3_disable_vm_gc ( );  
+        l_thread_kind = m3_thread_kind ( ); 
+        if ( l_thread_kind == tk_pthread ) 
+          { if ( m3_old_thread_kind != tk_pthread ) 
+              { handle_command 
+                  ( "SIG64 nostop noprint pass", /* from_tty = */ 1 ); 
+              }
+          } 
+        else 
+          { if ( m3_old_thread_kind == tk_pthread ) 
+              { handle_command 
+                  ( "SIG64 stop print pass", /* from_tty = */ 1 ); 
+              }
+          } 
+      } 
+
+  } /* m3_observer_solib_symbols_loaded */ 
+
+static void
+m3_observer_solib_unloaded ( struct so_list * so ) 
+
+  { if ( strstr ( so->so_name, "libm3core.so" ) != NULL ) 
+      { /* It seems very convoluted to do things this way, but I am 
+           afraid to mess with unloading shared libraries sooner than
+           stock gdb does. 
+        */
+        m3_libm3core_so_is_loaded = false; 
+        m3_waiting_for_libm3core_so_to_unload = false; 
+      } 
+  } /* m3_observer_solib_loaded */ 
+
+static void 
+m3_observer_inferior_created (struct target_ops *objfile, int from_tty)
+  { /* Currently not needed, but it took work to figure out how to hook
+       this event, so I am leaving this empty function here for now. 
+       rodney.bates@wichita.edu. */  
+  } /* m3_observer_inferior_created */ 
+
+/*
+extern struct observer *observer_attach_inferior_created (observer_inferior_created_ftype *f);
+*/ 
 
 static void 
 m3_info_m3_command ( char * args, int from_tty ) 
 
-  { m3_is_cm3 ( ); /* ignore result. */ 
-  /* TODO:  This is messy.  Get the initialization of compiler_kind out 
-            of m3_is_cm3 and do it once, early on.
-  */ 
-    switch ( compiler_kind ) 
-      { case ck_unknown : 
-          printf_filtered ("Modula-3 compiler is unknown.\n" );
+  { m3_ascertain_compiler_kind ( ); 
+    switch ( m3_compiler_kind ( ) ) 
+      { case m3_ck_unknown : 
+          printf_filtered (_("Modula-3 compiler is unknown.\n" ));
           return; 
-        case ck_pm3 : 
-          printf_filtered ("Compiled by SRC, PM3, or EZM3 Modula-3 compiler" );
+        case m3_ck_pm3 : 
+          printf_filtered 
+            (_("Compiled by SRC, PM3, or EZM3 Modula-3 compiler" ));
           break; 
-        case ck_cm3 : 
-          printf_filtered ("Compiled by CM3 Modula-3 compiler" );
+        case m3_ck_cm3 : 
+          printf_filtered (_("Compiled by CM3 Modula-3 compiler" ));
           break; 
       } 
     if ( processing_pm3_compilation ) 
-      { printf_filtered (", using integrated back end.\n" ); }
+      { printf_filtered (_(", using integrated back end.\n" )); }
     else 
-      { printf_filtered (", using gcc-derived back end.\n" ); }
+      { printf_filtered (_(", using gcc-derived back end.\n" )); }
+    switch ( m3_thread_kind ( ) ) 
+      { case tk_pthread: 
+          printf_filtered (_("Using PThreads")); 
+          break; 
+        case tk_posix: 
+          printf_filtered (_("Using Posix threads")); 
+          break; 
+        case tk_win32:
+          printf_filtered (_("Using Win32 threads")); 
+          break; 
+        case tk_unknown: 
+          printf_filtered (_("Using unknown thread implementation")); 
+          break; 
+      } 
+    switch ( m3_gc_kind ( ) ) 
+      {
+        case gc_vm: 
+          printf_filtered (_(" and vm-synchronized garbage collector.\n")); 
+          break; 
+        case gc_multicore:
+          printf_filtered (_(" and multicore garbage collector.\n")); 
+          break; 
+        case gc_unknown: 
+          printf_filtered (_(" and unknown garbage collector.\n")); 
+          break; 
+      } 
   } /* m3_info_m3_command */ 
 
 void
-_initialize_m3_language ()
+_initialize_m3_language ( )
 {
 #ifdef AT_SRC
   a_client ();
@@ -2153,6 +2371,15 @@ _initialize_m3_language ()
   add_info_alias ("modula3", "Modula-3", 0 ); 
   add_info_alias ("M3", "Modula-3", 0 ); 
   add_info_alias ("m3", "Modula-3", 0 ); 
+
+  /* Set up callbacks for (re)loading of symbols. */ 
+  observer_attach_executable_changed (m3_observer_executable_changed);
+  observer_attach_solib_symbols_loaded (m3_observer_solib_symbols_loaded);
+  observer_attach_solib_unloaded (m3_observer_solib_unloaded);
+  observer_attach_inferior_created (m3_observer_inferior_created);
+
+  m3_old_objfile_chain = deprecated_target_new_objfile_hook;
+  deprecated_target_new_objfile_hook = m3_new_objfile;
 }
 
 /* Name is a string that might be the demangled name of a nested procedure.
@@ -2520,7 +2747,7 @@ m3_typedef_print (
     struct symbol *new,
     struct ui_file *stream
   ) 
-{ fprintf_filtered(stream, "TYPE %s = ", SYMBOL_NATURAL_NAME(new));
+{ fprintf_filtered(stream, _("TYPE %s = "), SYMBOL_NATURAL_NAME(new));
   type_print(type,"",stream,0);
 } /* m3_typedef_print */ 
 
@@ -2718,14 +2945,15 @@ m3_decode_linespec (
     module_sym 
       = m3_unit_name_globals_symbol ( 'M', unit_name, & module_symtab );  
     if ( module_sym != NULL ) 
-      { if ( m3_is_cm3 ( ) )  
+      { 
+        if ( m3_compiler_kind ( ) == m3_ck_cm3 )  
           { module_body_sym 
               = lookup_symbol_aux_symtabs 
                   ( GLOBAL_BLOCK, unit_name, NULL, VAR_DOMAIN, 
                     & module_body_symtab 
                   );
           } 
-        else
+        else if ( m3_compiler_kind ( ) == m3_ck_pm3 ) 
           { module_body_sym 
               = lookup_symbol_aux_symtabs 
                   ( STATIC_BLOCK, unit_name, NULL, VAR_DOMAIN, 
@@ -2779,26 +3007,24 @@ m3_decode_linespec (
           { /* Dot and integer. Only a procedure or module name as first 
                identifier is meaningful here.  It denotes an anonymous block
                within the module body or procedure. */
-            block_no = m3_int_value ( tok, tok_end ); 
-            if ( local_sym == NULL ) 
-              { if ( module_body_sym == NULL ) 
+            block_no = m3_int_value ( tok, tok_end );
+            if ( module_body_sym != NULL )  
+              { /* For a module name, the block number must be 1. The 1 in
+                   the linespec refers to the anonymous block that is the 
+                   module body, but he compiler has made it a named 
+                   procedure denoted by module_body_sym. */ 
+                if ( block_no != 1 ) 
 /* TODO:  Possibly emit/throw error here? */ 
                   { return result_sals; } 
                 else 
-                  { /* For a module name, the block number must be 1. The 1 in
-                       the linespec refers to the anonymous block that is the 
-                       module body, but he compiler has made it a named 
-                       procedure denoted by module_body_sym. */ 
-                    if ( block_no != 1 ) 
-/* TODO:  Possibly emit/throw error here? */ 
-                      { return result_sals; } 
-                    else 
-                      { qual_sym = module_body_sym; 
-                        qual_block = SYMBOL_BLOCK_VALUE ( module_body_sym ); 
-                        qual_symtab = module_body_symtab; 
-                      } 
+                  { qual_sym = module_body_sym; 
+                    qual_block = SYMBOL_BLOCK_VALUE ( module_body_sym ); 
+                    qual_symtab = module_body_symtab; 
                   } 
               } 
+            else if ( local_sym == NULL ) 
+                      /* No procedure to select a block of.*/ 
+              { return result_sals; } 
             else 
               { qual_sym = local_sym; 
                 qual_block 
@@ -2807,6 +3033,8 @@ m3_decode_linespec (
                         local_symtab, 
                         block_no 
                       );
+                if ( qual_block == NULL ) /* No such block. */ 
+              { return result_sals; } 
                 qual_symtab = local_symtab; 
               } 
             tok = tok_end; /* Consume integer. */ 
@@ -2958,6 +3186,18 @@ m3_decode_linespec (
           { return result_sals; } 
       } /* while */  
   } /* m3_decode_linespec */ 
+
+char * 
+m3_main_name ( ) 
+  { /* These places will result in stopping after all internal runtime 
+       initialization, but before any user-coded initialization (i.e, 
+       before executing any module body code). */
+    if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
+      { return "RTLinker__RunMainBody"; } 
+    else if ( m3_compiler_kind ( ) == m3_ck_pm3 ) 
+      { return "RTLinker__RunMainBodies"; } 
+    else { return NULL; } 
+  } /* m3_main_name */ 
 
 /* End of file m3-lang.c */ 
 
