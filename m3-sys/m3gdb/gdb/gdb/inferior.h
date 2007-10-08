@@ -287,6 +287,9 @@ extern int signal_print_update (int, int);
 
 extern int signal_pass_update (int, int);
 
+extern void handle_command (char *args, int from_tty);
+/* ^Implemented in infrun.c */ 
+
 extern void get_last_target_status(ptid_t *ptid,
                                    struct target_waitstatus *status);
 

@@ -929,7 +929,7 @@ extern char *normal_pid_to_str (ptid_t ptid);
  * Sometimes a GDB component wants to get notified whenever a new
  * objfile is loaded.  Mainly this is used by thread-debugging
  * implementations that need to know when symbols for the target
- * thread implemenation are available.
+ * thread implementation are available.
  *
  * The old way of doing this is to define a macro 'target_new_objfile'
  * that points to the function that you want to be called on every

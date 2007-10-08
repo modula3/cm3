@@ -4141,6 +4141,10 @@ find_main_name (void)
      that order of call for these methods becomes important, which means
      a more complicated approach.  */
   new_main_name = ada_main_name ();
+#ifdef _LANG_m3
+  if ( new_main_name == NULL ) 
+    { new_main_name = m3_main_name ( ); } 
+#endif /* _LANG_m3 */ 
   if (new_main_name != NULL)
     { 
       set_main_name (new_main_name);

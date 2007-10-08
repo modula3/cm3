@@ -35,6 +35,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "block.h" 
 #include "parser-defs.h"
 #include "objfiles.h"
+#include "exceptions.h" 
 
 #include "m3-util.h"
 #include "m3-lang.h"
@@ -128,7 +129,7 @@ init_m3_constants ( )
         struct symbol *rttype;
         int types_size, types_offset;
 
-        note_is_cm3 ( ); 
+        gdb_assert ( m3_compiler_kind ( ) == m3_ck_cm3 );  
         m3_find_rec_field 
           (rt0_tc, "kind", &rt0_tc_kind_size, &rt0_tc_kind_offset, 0);
 
@@ -155,7 +156,7 @@ init_m3_constants ( )
         struct symbol *rt0u;
         int rt0u_types_size, rt0u_types_offset;
 
-        note_is_pm3 ( ); 
+        gdb_assert ( m3_compiler_kind ( ) == m3_ck_pm3 );  
         rt0u = m3_unit_name_globals_symbol ('I', "RT0u", NULL );
 
         m3_find_rec_field (SYMBOL_TYPE (rt0u), "types", 
@@ -520,10 +521,12 @@ m3_lookup_symbol_all_static (
 
   { struct symbol * sym;
 
-    if ( symtab != NULL ) { * symtab = NULL; } /* In case we find nothing. */ 
+    if ( symtab != NULL ) 
+      { * symtab = NULL; } /* In case we find nothing. */ 
     sym = lookup_symbol_aux_symtabs 
             ( STATIC_BLOCK, name, linkage_name, domain, symtab );
-    if ( sym != NULL ) { return sym; } 
+    if ( sym != NULL ) 
+       { return sym; } 
     sym = lookup_symbol_aux_psymtabs 
             ( STATIC_BLOCK, name, linkage_name, domain, symtab );
     return sym;  
@@ -1039,43 +1042,57 @@ m3_lookup_exported (
     return NULL;
   } /* m3_lookup_exported */ 
 
-enum compiler_kind_typ compiler_kind = ck_unknown; 
+enum m3_compiler_kind_typ m3_compiler_kind_value = m3_ck_unknown; 
+enum m3_compiler_kind_typ m3_old_compiler_kind = m3_ck_unknown; 
 
-void 
-note_is_cm3 ( void )
-
-  { gdb_assert ( compiler_kind != ck_pm3 ) ; 
-    compiler_kind = ck_cm3; 
-  } /* note_is_cm3 */ 
-
-void 
-note_is_pm3 ( void )
-
-  { gdb_assert ( compiler_kind != ck_cm3 ) ; 
-    compiler_kind = ck_pm3; 
-  } /* note_is_pm3 */ 
-
-bool 
-m3_is_cm3 ( void ) 
+/* This must be called after symbols for the executable itself have been
+   loaded, but RTS symbols (which could be dynamically linked) are not
+   required. */ 
+void  
+m3_ascertain_compiler_kind ( void ) 
   { struct symbol * sym; 
+    struct minimal_symbol * minsym; 
 
-    if ( ! have_full_symbols ( ) && ! have_partial_symbols ( ) )
-      { error (_("No symbol table is loaded.  Use the \"file\" command.")); }
-    /* init_m3_constants ( ); This method can fail if we haven't done a run
-       command yet and libm3core is dynamically linked. */ 
+    if ( m3_compiler_kind_value == m3_ck_unknown ) 
+      { if ( ! have_full_symbols ( ) && ! have_partial_symbols ( ) )
+          { error 
+              (_("No symbol table is loaded.  Use the \"file\" command.")); 
+            /* NORETURN */ 
+          }
 
-    sym = m3_lookup_symbol_all_static 
-            ( "m3main", "MM__m3main", VAR_DOMAIN, NULL); 
-    if ( sym != NULL ) { note_is_cm3 ( ); } 
-    else { note_is_pm3 ( ); } 
+        sym = m3_lookup_symbol_all_static 
+                ( "m3main", "MM__m3main", VAR_DOMAIN, NULL); 
+        /* ^This symbol appears in _m3main.o, of CM3-compiled code only. */
+        if ( sym != NULL ) 
+           { m3_compiler_kind_value = m3_ck_cm3; 
+             return; 
+           } 
+        sym = m3_lookup_symbol_all_static 
+                ( "m3_link_info", "m3_link_info", VAR_DOMAIN, NULL); 
+            /* ^This symbol appears in _m3main.o, of PM3-compiled code only. */
+        if ( sym != NULL ) 
+           { m3_compiler_kind_value = m3_ck_pm3; 
+             return; 
+           }
+        minsym = lookup_minimal_symbol ( "MM__m3main", NULL, NULL);  
+        if ( minsym != NULL ) 
+           { m3_compiler_kind_value = m3_ck_cm3; 
+             return; 
+           } 
+        minsym = lookup_minimal_symbol ( "m3_link_info", NULL, NULL);  
+        if ( minsym != NULL ) 
+           { m3_compiler_kind_value = m3_ck_pm3; 
+             return; 
+           } 
+        m3_compiler_kind_value = m3_ck_not_m3;
+      }
+  } /* m3_ascertain_compiler_kind */ 
 
-    if ( compiler_kind == ck_unknown ) 
-      { warning 
-          (_("Can't tell what Modula-3 compiler was used, assuming CM3.") ); 
-        return true; 
-      } 
-    return compiler_kind == ck_cm3; 
-  } 
+enum m3_compiler_kind_typ 
+m3_compiler_kind ( ) 
+  { m3_ascertain_compiler_kind ( ); 
+    return m3_compiler_kind_value; 
+  } /* m3_compiler_kind */ 
 
 /* Strip away any indirect types from a type. */ 
 struct type * 
@@ -1184,9 +1201,8 @@ m3_tc_addr_from_object_addr ( CORE_ADDR addr )
 
   init_m3_constants ();
 
-  if ( m3_is_cm3 ( ) ) 
-    { 
-      n_types = 0;
+  if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
+    { n_types = 0;
       read_memory (rttype_types_addr + rttype_infomap_cnt_offset / 8,
                           (char*)&n_types, rttype_infomap_cnt_size / 8);
 
@@ -1225,14 +1241,14 @@ m3_tc_addr_from_object_addr ( CORE_ADDR addr )
 
       return result;
     } 
-  else /* pm3, etc. */
-    {
-      read_memory (rt0u_types_value 
+  else if ( m3_compiler_kind ( ) == m3_ck_pm3 ) 
+    { read_memory (rt0u_types_value 
 	  	          + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
 		          (char *)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
       return result; 
 
     } 
+  else { return 0; } 
 } /* m3_tc_addr_from_object_addr */
 
 /* Given a type from a Modula-3 program, return its numeric uid. */ 
@@ -1257,7 +1273,8 @@ m3_tc_addr_from_type (t)
 
   init_m3_constants ( );
 
-  if (! m3_is_cm3 ( ) ) return 0; 
+  if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
+    { return 0; } 
   /* The following is only used for cm3's Text* modules. */
 
   if ((TYPE_CODE(t) != TYPE_CODE_M3_OBJECT)
@@ -1345,15 +1362,13 @@ m3_allocated_type_from_object_addr (addr)
 int 
 m3_dataOffset_from_tc_addr (tc_addr)
      CORE_ADDR tc_addr;
-{
-  int result;
+{ int result;
   char kind;
 
   init_m3_constants ();
 
-  if ( m3_is_cm3 ( ) )
-    { 
-      kind = 0;
+  if ( m3_compiler_kind ( ) == m3_ck_cm3 )
+    { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
 
@@ -1374,13 +1389,13 @@ m3_methodOffset_from_tc_addr (tc_addr)
 
   init_m3_constants ();
 
-  if ( m3_is_cm3 ( ) )
-    { 
-      kind = 0;
+  if ( m3_compiler_kind ( ) == m3_ck_cm3 )
+    { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
 
-      if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
+      if (kind != 2 /*RT0.TypeKind.Obj*/) 
+        { return 0; }
     } 
 
   read_memory (tc_addr + rt0_methodOffset_offset / TARGET_CHAR_BIT,
@@ -1402,15 +1417,13 @@ m3_dataSize_from_tc_addr (tc_addr)
 CORE_ADDR  
 m3_super_tc_addr_from_tc_addr (tc_addr)
      CORE_ADDR tc_addr;
-{
-  char kind;
+{ char kind;
   CORE_ADDR  result;
 
   init_m3_constants ();
 
-  if ( m3_is_cm3 ( ) )
-    { 
-      kind = 0;
+  if ( m3_compiler_kind ( ) == m3_ck_cm3 )
+    { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
 
@@ -1424,14 +1437,12 @@ m3_super_tc_addr_from_tc_addr (tc_addr)
 		      
 CORE_ADDR 
 m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr ) 
-{
-  char kind;
+{ char kind;
   CORE_ADDR result;
 
   init_m3_constants ();
-  if ( m3_is_cm3 ( ) )
-    { 
-      kind = 0;
+  if ( m3_compiler_kind ( ) == m3_ck_cm3 )
+    { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
 
@@ -2372,5 +2383,29 @@ m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical )
           } 
       } 
   } /* m3_make_canonical */ 
+
+/* Evaluate the string.  If any errors occur, ignore them and return NULL. */ 
+struct value * 
+m3_evaluate_string ( char * string ) 
+
+  { struct expression * expr; 
+    struct value * val; 
+    volatile struct gdb_exception exception1;
+    volatile struct gdb_exception exception2;
+
+    exception1.reason = 0; 
+    exception2.reason = 0; 
+    TRY_CATCH (exception1, RETURN_MASK_ALL) 
+      { expr = parse_expression ( string ); }
+    if (exception1.reason != 0)
+      { return NULL; } 
+    TRY_CATCH (exception2, RETURN_MASK_ALL) 
+      { val = evaluate_expression ( expr ); }
+    if (exception2.reason != 0)
+      { return NULL; }
+    return val;  
+  } 
+
+/* */ 
 
 /* End of file m3-util.c */ 

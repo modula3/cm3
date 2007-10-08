@@ -201,8 +201,8 @@ m3_lookup_module_id (
     struct symtab * * symtab 
   ); 
 
-/* See if 'ident' is declared in an exported interface of module named 'module',
-   which we assume we are currently executing in some block of. 
+/* See if 'ident' is declared in an exported interface of module named 
+   'module', which we assume we are currently executing in some block of. 
    An exported procedure whose body is actually provided in the module named 
    'module_name' should have been previously found in the static or 
    global block of the module itself.  */ 
@@ -210,13 +210,19 @@ extern struct symbol *
 m3_lookup_exported ( 
   const char *module_name, const char * ident, struct symtab * * symtab );
 
-extern enum compiler_kind_typ { ck_unknown, ck_pm3, ck_cm3 } compiler_kind; 
+/* Which Modula-3 compiler do we have, if any. */ 
 
-extern void note_is_pm3 ( void );
+enum m3_compiler_kind_typ 
+  { m3_ck_unknown,   /* We haven't tested it yet. */ 
+    m3_ck_pm3,       /* It's SRC, PM3, oor EZM3. */ 
+    m3_ck_cm3,       /* It's CM3. */ 
+    m3_ck_not_m3     /* It's not a Modula-3 compiler. */ 
+  }; 
+extern enum m3_compiler_kind_typ m3_compiler_kind_value; 
 
-extern void note_is_cm3 ( void );
+extern void m3_ascertain_compiler_kind ( void ); 
 
-extern bool m3_is_cm3 ( void ); 
+extern enum m3_compiler_kind_typ m3_compiler_kind ( ); 
 
 /* Strip away any indirect types from a type. */ 
 extern struct type * 
@@ -479,5 +485,8 @@ m3_int_value ( char * string, char * string_to );
 */ 
 extern void 
 m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical );  
+/* Evaluate the string.  If any errors occur, ignore them and return NULL. */ 
+extern struct value * 
+m3_evaluate_string ( char * string );  
 
 /* End of file m3-util.h */ 

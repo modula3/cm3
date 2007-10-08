@@ -919,8 +919,8 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 	     want to isolate a. */
 	  int interface_name_length = *argptr - sans_file_name;
 	  char *interface_name = alloca (interface_name_length + 1);
-          /* FIXME:  Uses of foo are classic C buffer overrun bugs. */ 
-	  char foo [1000];
+          /* FIXME:  Uses of char_buf are classic C buffer overrun bugs. */ 
+	  char char_buf [1000];
 	  int i;
 	  strncpy (interface_name, sans_file_name, interface_name_length);
 	  interface_name [interface_name_length] = 0;
@@ -933,11 +933,11 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
 					    interface_name, 1))
 	      != 0) {
 	    for (i = 0; i < TYPE_NFIELDS (implementers); i++) {
-	      sprintf (foo, "%s%s", TYPE_FIELD_NAME (implementers, i),
+	      sprintf (char_buf, "%s%s", TYPE_FIELD_NAME (implementers, i),
 		       *argptr);
 	      if ((expr = (struct expression *) catch_errors
                      ( (int (*)()) parse_expression, 
-                       foo, 
+                       char_buf, 
                        (char *) 0, RETURN_MASK_ALL
                      )
                  )) {

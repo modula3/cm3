@@ -743,7 +743,7 @@ scan_m3_token (input, tok)
 
       if (*input == '\'' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
         { /* oops, it's actually a wide char literal. */
-          if ( ! m3_is_cm3 ( ) ) 
+          if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
             { error 
                 (_("WIDECHAR literals not supported by this "
                    "Modula-3 compiler ") ); 
@@ -754,7 +754,7 @@ scan_m3_token (input, tok)
 
       if (*input == '"' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
         { /* oops, it's actually a wide text literal. */
-          if ( ! m3_is_cm3 ( ) ) 
+          if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
             { error 
                 (_("Wide text literals not supported by this "
                    "Modula-3 compiler ") ); 

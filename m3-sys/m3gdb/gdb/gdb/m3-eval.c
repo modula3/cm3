@@ -726,7 +726,7 @@ reference_type_depth ( struct type * start_type )
           case TYPE_CODE_M3_UN_ROOT : 
             return result + 1;
           case TYPE_CODE_M3_TEXT : 
-            return result + ( int ) m3_is_cm3 ( ); 
+            return result + ( int ) m3_compiler_kind ( ) == m3_ck_cm3 ; 
 
           case TYPE_CODE_M3_MUTEX : 
             return result + 2; 
@@ -753,8 +753,10 @@ is_pm3_text_revelation ( struct type * text_type )
 { struct type * array_type; 
   struct type * elem_type; 
 
-  if ( text_type == NULL ) { return false; } 
-  if ( m3_is_cm3 ( ) ) { return false; } 
+  if ( text_type == NULL ) 
+    { return false; } 
+  if ( m3_compiler_kind ( ) != m3_ck_pm3  ) 
+    { return false; } 
   switch ( TYPE_CODE ( text_type ) ) 
     { case TYPE_CODE_M3_TEXT: 
       case TYPE_CODE_M3GDB_STRING:
@@ -789,7 +791,7 @@ is_cm3_text_subtype ( struct type * text_type )
 
 { struct type * supertype; 
 
-  if ( ! m3_is_cm3 ( ) ) 
+  if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
     { return false; } 
   supertype = text_type; 
   while ( true ) 
