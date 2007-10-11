@@ -885,23 +885,25 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspend_cnt: CARDINAL := 0;		 (* LL=activeMu *)
+VAR suspended: BOOLEAN;			 (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
   VAR me := GetActivation();
   BEGIN
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-    IF suspend_cnt = 0 THEN StopWorld(me) END;
-    INC(suspend_cnt);
+    StopWorld(me);
+    <*ASSERT NOT suspended*>
+    suspended := TRUE;
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   (* LL=activeMu.  Always preceded by SuspendOthers. *)
   VAR me := GetActivation();
   BEGIN
-    DEC(suspend_cnt);
-    IF (suspend_cnt = 0) THEN StartWorld(me) END;
+    <*ASSERT suspended*>
+    suspended := FALSE;
+    StartWorld(me);
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
@@ -1336,8 +1338,8 @@ VAR
 PROCEDURE LockHeap () =
   VAR self := Upthread.self();
   BEGIN
-    (* suspend_cnt # 0 => other threads are stopped and we hold the lock *)
-    IF suspend_cnt # 0 THEN
+    (* suspended => other threads are stopped and we hold the lock *)
+    IF suspended THEN
       <*ASSERT lock_cnt # 0*>
       <*ASSERT Upthread.equal(holder, self) # 0*>
       RETURN;
@@ -1357,8 +1359,8 @@ PROCEDURE UnlockHeap () =
     sig := FALSE;
     self := Upthread.self();
   BEGIN
-    (* suspend_cnt # 0 => other threads are stopped and we hold the lock *)
-    IF suspend_cnt # 0 THEN
+    (* suspended => other threads are stopped and we hold the lock *)
+    IF suspended THEN
       <*ASSERT lock_cnt # 0*>
       <*ASSERT Upthread.equal(holder, self) # 0*>
       RETURN;
