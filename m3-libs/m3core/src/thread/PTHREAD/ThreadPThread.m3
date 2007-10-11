@@ -885,7 +885,7 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspended: BOOLEAN;			 (* LL=activeMu *)
+VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
