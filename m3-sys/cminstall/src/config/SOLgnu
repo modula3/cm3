@@ -139,7 +139,8 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-Xlinker", "-Bdynamic",
                         "-lm", "-lsocket", "-lnsl",
                         "-lw",    % wide-char (Unicode) support
-			"-L/usr/lib/lwp", "-lpthread",
+			"-L/usr/lib/lwp", "-R/usr/lib/lwp", "-lpthread",
+			"-L/usr/lib/lwp", "-R/usr/lib/lwp", "-lthread",
                         "-lrt",   % semaphores
                         "-ldl" ], % dynamic loader support
   "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
