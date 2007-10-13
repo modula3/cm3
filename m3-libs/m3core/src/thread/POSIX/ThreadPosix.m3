@@ -17,6 +17,7 @@ IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
        Unix, Usignal, Utime, Word;
+FROM Compiler IMPORT ThisFile, ThisLine;
 
 REVEAL
   (* Remember, the report (p 43-44) says that MUTEX is predeclared and <: ROOT;
@@ -445,7 +446,7 @@ PROCEDURE ImpossibleAcquire (m: Mutex) =
     OutT (" is trying to reacquire mutex ");
     OutA (m, 0);
     OutT (" which it already holds.\n");
-    RTError.Msg ("ThreadPosix.m3", 438, "impossible Thread.Acquire");
+    RTError.Msg (ThisFile(), ThisLine(), "impossible Thread.Acquire");
   END ImpossibleAcquire;
 
 PROCEDURE UnlockMutex (m: Mutex) =
@@ -496,7 +497,7 @@ PROCEDURE SleazyRelease (m: Mutex) =
       OutI (m.holder.id, 0);
       OutT (".\n");
     END;
-    RTError.Msg ("Thread.m3", 489, "illegal Thread.Release");
+    RTError.Msg (ThisFile(), ThisLine(), "illegal Thread.Release");
   END SleazyRelease;
 
 (*--------------------------------------------- garbage collector support ---*)
@@ -999,7 +1000,7 @@ BEGIN
     ELSE
       IF perfOn THEN PerfRunning (-1); END;
       DumpEverybody ();
-      RTError.Msg (NIL, 0, "Deadlock !");
+      RTError.Msg (ThisFile(), ThisLine(), "Deadlock !");
     END;
   END;
 END InternalYield;
@@ -1248,7 +1249,7 @@ PROCEDURE SmashedStack (t: T) =
     OutI (t.id, 0);
     OutT ("'s stack overflowed its limits.\n");
     OutT ("*** Use Thread.IncDefaultStackSize to get bigger stacks.\n");
-    RTError.Msg ("ThreadPosix.m3", 1215, "corrupt thread stack");
+    RTError.Msg (ThisFile(), ThisLine(), "corrupt thread stack");
   END SmashedStack;
 
 PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
