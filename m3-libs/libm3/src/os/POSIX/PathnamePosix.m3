@@ -13,7 +13,7 @@ CONST
   DirSepChar = '/'; ExtSepChar = '.';
   DirSepText = "/"; ExtSepText = ".";
 
-CONST Legal = SET OF CHAR {'\001' .. '\177'} - SET OF CHAR {DirSepChar};
+CONST Illegal = SET OF CHAR {DirSepChar};
 
 PROCEDURE Valid(pn: T): BOOLEAN =
   PROCEDURE Ignore(<* UNUSED *> start, end: CARDINAL) = BEGIN END Ignore;
@@ -51,7 +51,7 @@ PROCEDURE Compose(a: Arcs): T RAISES {Invalid}=
       WITH arc = a.get(i) DO
 	IF arc = NIL THEN RAISE Invalid END;
 	FOR i := 0 TO Text.Length(arc) - 1 DO
-	  IF NOT Text.GetChar(arc, i) IN Legal THEN RAISE Invalid END
+	  IF Text.GetChar(arc, i) IN Illegal THEN RAISE Invalid END
 	END;
 	t := t & arc
       END;
@@ -159,7 +159,7 @@ PROCEDURE ParsePosixPathname(pn: T; visit: Visit): BOOLEAN RAISES {Invalid} =
           IF c = DirSepChar THEN
             visit(s, e);
             s := e + 1
-          ELSIF NOT c IN Legal THEN
+          ELSIF c IN Illegal THEN
             RAISE Invalid
           END
         END;
