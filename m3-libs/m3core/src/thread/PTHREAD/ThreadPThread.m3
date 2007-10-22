@@ -975,12 +975,12 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       THEN sp := RTMachine.SaveRegsInStack();
       ELSE sp := ADR(xx);
     END;
-    EVAL RTMachine.SaveState(state);
-    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
     IF stack_grows_down
       THEN p(sp, me.stackbase);
       ELSE p(me.stackbase, sp);
     END;
+    EVAL RTMachine.SaveState(state);
+    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -997,7 +997,6 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     IF RTMachine.GetState # NIL THEN
       (* process explicit state *)
       sp := RTMachine.GetState(act.handle, state);
-      WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
     ELSE
       (* assume registers are saved in suspended thread's stack *)
       sp := act.sp;
@@ -1006,6 +1005,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       THEN p(sp, act.stackbase);
       ELSE p(act.stackbase, sp);
     END;
+    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
   END ProcessOther;
 
 (* Signal based suspend/resume *)
