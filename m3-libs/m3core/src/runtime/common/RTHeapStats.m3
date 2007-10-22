@@ -96,6 +96,7 @@ PROCEDURE ReportReachable () =
     (* freeze the world *)
     RTCollector.Disable ();
     RTOS.LockHeap (); (* freeze the heap *)
+    ThreadF.SuspendOthers ();
 
     (* capture the heap limits *)
     heap_min  := LOOPHOLE (RTHeapRep.p0 * RTHeapRep.BytesPerPage, ADDRESS);
@@ -145,6 +146,7 @@ PROCEDURE ReportReachable () =
     (* thaw the world *)
     DISPOSE (visit_stack);
     DISPOSE (map);
+    Thread.ResumeOthers ();
     RTOS.UnlockHeap (); (* unfreeze the heap *)
     RTCollector.Enable ();
   END ReportReachable;
