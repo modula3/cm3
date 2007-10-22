@@ -146,7 +146,7 @@ PROCEDURE ReportReachable () =
     (* thaw the world *)
     DISPOSE (visit_stack);
     DISPOSE (map);
-    Thread.ResumeOthers ();
+    ThreadF.ResumeOthers ();
     RTOS.UnlockHeap (); (* unfreeze the heap *)
     RTCollector.Enable ();
   END ReportReachable;
