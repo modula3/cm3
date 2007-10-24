@@ -33,7 +33,7 @@ PROCEDURE Hash (t: T): INTEGER;
 (* Returns the hash value of "t". *)
 
 PROCEDURE Put (wr: M3Buf.T;  t: T);
-(* == M3Buf.PutText (ToText(t)), without the impiled TEXT allocation *)
+(* == M3Buf.PutText (ToText(t)), without the implied TEXT allocation *)
 
 PROCEDURE AdvanceMarks ();
 (* start using a "new" set of marks.  They're recycled after 256 advances. *)
