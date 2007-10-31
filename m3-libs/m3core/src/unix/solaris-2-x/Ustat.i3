@@ -53,15 +53,15 @@ TYPE
 
             (* st_atime  : timestruc_t;  *** KLUDGE for FSPosix and FilePosix*)
                st_atime  : time_t;
-               st_spare1 : long;
+               st_atimensec : long;
 
             (* st_mtime  : timestruc_t;  *** KLUDGE for FSPosix and FilePosix*)
                st_mtime  : time_t;
-               st_spare2 : long;
+               st_mtimensec : long;
 
             (* st_ctime  : timestruc_t;  *** KLUDGE for FSPosix and FilePosix*)
                st_ctime  : time_t;
-               st_spare3 : long;
+               st_ctimensec : long;
 
                st_blksize: long;
                st_blocks : long;
