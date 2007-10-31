@@ -53,18 +53,18 @@ TYPE
   cnt_t        = short;               (* sys V compatibility *)
   swblk_t      = long;
   size_t       = int;
-  time_t       = int;
-  dev_t        = long;
+  time_t       = long;
+  dev_t        = ulong_t;
   off_t        = long;
   rlim_t       = unsigned_long;
   paddr_t      = long;                (* sys V compatibility *)
   key_t        = long;                (* sys V compatibility *)
   clock_t      = int;                 (* POSIX compliance    *)
   mode_t       = ulong_t;             (* POSIX compliance    *)
-  nlink_t      = ushort_t;            (* POSIX compliance    *)
-  uid_t        = ulong_t;             (* POSIX compliance    *)
+  nlink_t      = ulong_t;             (* POSIX compliance    *)
+  uid_t        = long;                (* POSIX compliance    *)
   pid_t        = long;                (* POSIX compliance    *)
-  gid_t        = ulong_t;             (* POSIX compliance    *)
+  gid_t        = uid_t;               (* POSIX compliance    *)
 
 CONST
   NBBY = 8;                           (* number of bits in a byte *)
