@@ -20,7 +20,7 @@ PROCEDURE LinkStatus(p: Pathname.T): File.Status RAISES {OSError.E} =
     (* StatBufToStatus(statBuf, status); *)
       status.type := (*FilePosix.*)FileTypeFromStatbuf(statBuf);
       status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-      status.size := Utypes.asLong(statBuf.st_size);
+      status.size := ORD(statBuf.st_size);
     RETURN status
   END LinkStatus;
 
