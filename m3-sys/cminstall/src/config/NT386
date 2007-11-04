@@ -323,6 +323,19 @@ m3_link_flags =
 % With newer linkers, combine identical code/data.
 %
 %   "/opt:icf",
+
+%
+% The default static dependencies of Modula-3 binaries
+% are larger than they should be. Reduce them sleazily via delayload.
+% This requires a Visual C++ 6.0 or newer linker.
+%
+    "/delayload:wsock32.dll",
+    "/delayload:advapi32.dll",
+    "/delayload:gdi32.dll",
+    "/delayload:netapi32.dll",
+    "/delayload:user32.dll",
+    "/delayload:comctl32.dll",
+    "delayimp.lib",
 ]
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
