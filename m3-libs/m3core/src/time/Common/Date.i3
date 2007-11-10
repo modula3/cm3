@@ -33,7 +33,7 @@ TYPE
     day: [1 .. 31];
     hour: [0 .. 23];
     minute: [0 .. 59];
-    second: [0 .. 59];
+    second: [0 .. 60];
     offset: INTEGER;
     zone: TEXT;
     weekDay: WeekDay
