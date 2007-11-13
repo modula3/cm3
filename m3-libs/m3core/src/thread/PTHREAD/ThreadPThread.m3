@@ -517,7 +517,9 @@ PROCEDURE CreateT (act: Activation): T =
     t.waitCond := NEW(UNTRACED REF pthread_cond_t);
     WITH r = Upthread.cond_init (t.waitCond^, NIL) DO <*ASSERT r=0*> END;
     t.cond     := NEW(Condition);
+    InitCondition (t.cond);
     t.mutex    := NEW(Mutex);
+    InitMutex (t.mutex);
     FloatMode.InitThread (act.floatState);
     AssignSlot (t);
     RETURN t;
