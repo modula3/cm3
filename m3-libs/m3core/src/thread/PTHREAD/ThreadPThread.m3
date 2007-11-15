@@ -614,24 +614,24 @@ PROCEDURE Fork (closure: Closure): T =
       act.size := size;
       allThreads.prev.next := act;
       allThreads.prev := act;
-      LOCK t.mutex DO
-        WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
-          IF r # 0 THEN
-            RTError.MsgI(ThisFile(), ThisLine(),
-                         "Thread client error: Fork failed with error: ", r);
-          END;
+      Acquire(t.mutex);
+      WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
+        IF r # 0 THEN
+          RTError.MsgI(ThisFile(), ThisLine(),
+                       "Thread client error: Fork failed with error: ", r);
         END;
-        (* last minute sanity checking *)
-        <* ASSERT CheckSlot (t) *>
-        <* ASSERT t.act.next # NIL *>
-        <* ASSERT t.act.prev # NIL *>
-
-        t.closure := closure;
-        t.id := nextId;  INC(nextId);
-        IF perfOn THEN PerfChanged(t.id, State.alive) END;
-        Wait(t.mutex, t.cond);
       END;
-    WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+      WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+      (* last minute sanity checking *)
+      <* ASSERT CheckSlot (t) *>
+      <* ASSERT t.act.next # NIL *>
+      <* ASSERT t.act.prev # NIL *>
+
+      t.closure := closure;
+      t.id := nextId;  INC(nextId);
+      IF perfOn THEN PerfChanged(t.id, State.alive) END;
+      Wait(t.mutex, t.cond);
+    Release(t.mutex);
 
     RETURN t;
   END Fork;
