@@ -685,6 +685,8 @@ integral_type (struct type *type)
           TYPE_CODE_M3_WIDECHAR:
           TYPE_CODE_M3_INTEGER:
           TYPE_CODE_M3_CARDINAL:
+          TYPE_CODE_M3_LONGINT:
+          TYPE_CODE_M3_LONGCARD:
 /* FIXME: TYPE_CODE_M3_PACKED needs to look at its underlying type.  But this
    function looks uncalled, to me, as of 6.4.  rodney.bates@wichita.edu */ 
             return 1;

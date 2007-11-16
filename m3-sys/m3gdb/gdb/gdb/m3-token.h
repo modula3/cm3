@@ -29,7 +29,8 @@ enum m3_token_kind {
   /* literals */
 
   TK_IDENT,            /* identifier       => string, length */
-  TK_CARD_LIT,         /* CARDINAL literal => intval         */
+  TK_INTEGER_LIT,      /* INTEGER literal => intval         */
+  TK_LONGINT_LIT,      /* LONGINT literal => intval         */
   TK_REAL_LIT,         /* REAL literal     => floatval       */
   TK_LREAL_LIT,        /* LONGREAL literal => floatval       */
   TK_XREAL_LIT,        /* EXTENDED literal => floatval       */
@@ -63,10 +64,10 @@ enum m3_token_kind {
   TK_ABS, TK_ADDRESS, TK_ADR, TK_ADRSIZE, TK_BITSIZE, TK_BOOLEAN,
   TK_BYTESIZE, TK_CARDINAL, TK_CEILING, TK_CHAR, TK_DEC, TK_DISPOSE,
   TK_EXTENDED, TK_FALSE, TK_FIRST, TK_FLOAT, TK_FLOOR, TK_INC,
-  TK_INTEGER, TK_ISTYPE, TK_LAST, TK_LONGREAL, TK_LOOPHOLE, TK_MAX,
-  TK_MIN, TK_MUTEX, TK_NARROW, TK_NEW, TK_NIL, TK_NULL, TK_NUMBER,
-  TK_ORD, TK_REAL, TK_REFANY, TK_ROUND, TK_SUBARRAY, TK_TEXT, TK_TRUE,
-  TK_TRUNC, TK_TYPECODE, TK_VAL, TK_WIDECHAR,
+  TK_INTEGER, TK_ISTYPE, TK_LAST, TK_LONGCARD, TK_LONGINT, TK_LONGREAL, 
+  TK_LOOPHOLE, TK_MAX, TK_MIN, TK_MUTEX, TK_NARROW, TK_NEW, TK_NIL, TK_NULL, 
+  TK_NUMBER, TK_ORD, TK_REAL, TK_REFANY, TK_ROUND, TK_SUBARRAY, TK_TEXT, 
+  TK_TRUE, TK_TRUNC, TK_TYPECODE, TK_VAL, TK_WIDECHAR,
 
   /* misc. debugger tokens */
 

@@ -28,6 +28,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "gdb_string.h"
 
 #include "m3-token.h"
+#include "m3-lang.h"
 #include "m3-util.h"
 
 /*-------------------------------------------------------- reserved words ---*/
@@ -85,6 +86,8 @@ static struct reserved reserved [] = {
   { "ISTYPE",    TK_ISTYPE    },
   { "LAST",      TK_LAST      },
   { "LOCK",      TK_LOCK      },
+  { "LONGCARD",  TK_LONGCARD  },
+  { "LONGINT",   TK_LONGINT  },
   { "LONGREAL",  TK_LONGREAL  },
   { "LOOP",      TK_LOOP      },
   { "LOOPHOLE",  TK_LOOPHOLE  },
@@ -172,110 +175,169 @@ recognize_reserved_word (tok)
 
 static char *
 m3_scan_number (char *input, struct m3_token *tok)
-{
-  char *c;
-  int i;
-  int digit;
-  LONGEST val;
-  LONGEST base;
-  bool is_based; 
 
-  c = input; 
-  val = 0;
-  if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) ) 
-    { /* Go ahead and accept the C lexical syntax for hex numbers. */ 
-      is_based = true;
-      base = 16; 
-      c = c + 2;
-    } 
-  else 
-    { /* scan the leading decimal digits */
-      while ('0' <= *c && *c <= '9') 
-        { digit = *c - '0';
-          val = val * 10 + digit;
-          c++; 
-        }
-      if (*c == '_') 
-        { /* It's a based value in Modula-3 syntax. */ 
-          is_based = true; 
-          base = val;
-          c++; 
-          if ((base < 2) || (16 < base)) 
-            { error 
-                (_("%d is an illegal base for a Modula-3 literal.") 
-                , (int) base 
-                ); /* NORETURN */ 
-            }
-        } 
-      else is_based = false; 
-    } 
+  { char *c;
+    char *based_start; 
+    int i;
+    int digit;
+    ULONGEST val;
+    ULONGEST base;
+    LONGEST signed_val; 
+    LONGEST lower; 
+    LONGEST upper; 
+    bool is_based; 
 
-  if ( is_based ) 
-  { /* scan a based integer */
-    /* scan the value */
+    c = input; 
     val = 0;
-    input = c;
-    while (1) {
-      if      ('0' <= *c && *c <= '9') { digit = *c - '0'; }
-      else if ('A' <= *c && *c <= 'F') { digit = *c - 'A' + 10; }
-      else if ('a' <= *c && *c <= 'f') { digit = *c - 'a' + 10; }
-      else { break; }
-      if (digit >= base) { break; }
-      val = val * base + digit;
-      c++;
-    }
+    if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) ) 
+      { /* Go ahead and accept the C lexical syntax for hex numbers. */ 
+	is_based = true;
+	base = 16; 
+	c = c + 2;
+      } 
+    else 
+      { /* Scan and convert the leading decimal digits */
+	while ('0' <= *c && *c <= '9') 
+	  { digit = *c - '0';
+	    if ( ( ULONGEST_MAX - digit ) / 10 < val ) 
+	      { error 
+                  (_("Numeric literal value too large.\n")); /* NORETURN */ 
+              }
+	    val = val * 10 + digit;
+	    c++; 
+	  }
+	if (*c == '_') 
+	  { /* It's a based value in Modula-3 syntax. */ 
+	    is_based = true; 
+	    base = val;
+	    c++; 
+	    if ((base < 2) || (16 < base)) 
+	      { error 
+		  (_("%d is an illegal base for a Modula-3 literal.") 
+		  , (int) base 
+		  ); /* NORETURN */ 
+	      }
+	  } 
+	else is_based = false; 
+      } 
 
-    if (c == input) 
-      { error (_("Based integer literal has no digits.") ); /* NORETURN */ }
+    /* See if it's a real literal. If so, throw away the converted integer
+       value, lexically check it, then call atof to convert. */ 
+    if ( (*c == '.') && (c[1] != '.') ) 
+      { if ( is_based ) 
+	  { error (_("Based number cannot be real.\n") ); /* NORETURN */ } 
+        /* scan a floating point number */
+        c++; /* skip the decimal point */
 
-    tok->kind   = TK_CARD_LIT;
+        /* scan the fractional digits */
+        if ( (*c < '0') || ('9' < *c) ) 
+	  { error (_("Missing digits in real fraction") ); /* NORETURN */ } 
+       
+        while ( '0' <= *c && *c <= '9' ) 
+          { c++; }
+
+        /* check for the exponent */
+        if ( ( *c == 'e' ) || ( *c == 'E' ) ) 
+          { *c++ = 'e';  /* since atof only knows about 'e' */
+	    tok->kind = TK_REAL_LIT;
+          } 
+        else if ( ( *c == 'd' ) || ( *c == 'D' ) ) 
+          { *c++ = 'e';  /* since atof only knows about 'e' */
+	    tok->kind = TK_LREAL_LIT;
+          } 
+        else if ( ( *c == 'x' ) || ( *c == 'X' ) ) 
+          { *c++ = 'e';  /* since atof only knows about 'e' */
+	    tok->kind = TK_XREAL_LIT;
+          } 
+        else /* real constant with no exponent */
+          { tok->kind = TK_REAL_LIT;  
+            tok->floatval = atof (input);
+            return c;
+          } 
+
+	/* check for an exponent sign */
+	if ( ( *c == '+' ) || ( *c == '-' ) ) 
+	  { c++; } 
+
+	/* scan the exponent digits */
+	if ( ( *c < '0' ) || ( '9' < *c ) ) 
+	  { error (_("Missing digits in real exponent") ); /* NORETURN */ }
+	while ( '0' <= *c && *c <= '9' ) 
+	  { c++; }
+
+	/* and do the conversion... */
+	tok->floatval = atof (input);
+        return c; 
+      }
+
+    /* It wasn't real.  Must be INTEGER or LONGINT. */ 
+    if ( is_based ) 
+      { /* scan a based integer */
+	val = 0;
+	based_start = c;
+	while ( true ) 
+	  { if ('0' <= *c && *c <= '9') 
+	      { digit = *c - '0'; }
+	    else if ('A' <= *c && *c <= 'F') 
+	      { digit = *c - 'A' + 10; }
+	    else if ('a' <= *c && *c <= 'f') 
+	      { digit = *c - 'a' + 10; }
+	    else { break; }
+	    if (digit >= base) 
+	      { error 
+                  (_("Numeric literal digit too large.\n") ); /* NORETURN */ 
+              }
+	    if ( ( ULONGEST_MAX - digit ) / base < val ) 
+	      { error 
+                  (_("Numeric literal value too large.\n") ); /* NORETURN */ 
+              }
+	    val = val * base + digit;
+	    c++;
+	  }
+
+	if ( c == based_start ) 
+	  { error 
+              (_("Based integer literal has no digits.") ); /* NORETURN */ 
+          }
+      }
+
+    /* See if it's LONGINT. */ 
+    if ( * c == 'l' || * c == 'L' ) 
+      { if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
+	/* FIXME: ^This error condition is too weak.  Earlier CM3 compilers
+		   do not support LONGINT either, but how do we detect this? */
+	  { error 
+	      (_("LONGINT literals not supported by this "
+		 "Modula-3 compiler ") ); 
+	  } /* NORETURN */ 
+	tok->kind   = TK_LONGINT_LIT; 
+	m3_ordinal_bounds ( builtin_type_m3_longint, & lower, & upper );  
+	c ++; 
+      } 
+    else /* It's INTEGER. */ 
+      { tok->kind   = TK_INTEGER_LIT; /* Could change. */ 
+	m3_ordinal_bounds ( builtin_type_m3_integer, & lower, & upper );  
+      } 
+
+    if ( is_based ) 
+      { if ( val / 2 > upper ) 
+	  { error 
+	      (_("Based integer literal value too large.\n")); 
+	      /* NORETURN */ 
+	  }
+      }
+    else 
+      { if ( val > upper ) 
+	  { error 
+	      (_("Integer literal value too large.\n")); 
+	      /* NORETURN */ 
+	  }
+      } 
+    signed_val = (LONGEST) val; /* Hopefully, no overflow checks happen. */
     tok->intval = val;
 
-  } else if ((*c == '.') && (c[1] != '.')) {
-    /* scan a floating point number */
-    c++; /* skip the decimal point */
-
-    /* scan the fractional digits */
-    if ((*c < '0') || ('9' < *c)) {
-      error (_("Missing digits in real fraction") ); /* NORETURN */ 
-    }
-    while ('0' <= *c && *c <= '9') { c++; }
-
-    /* check for the exponent */
-    if ((*c == 'e') || (*c == 'E')) {
-      *c++ = 'e';  /* since atof only knows about 'e' */
-      tok->kind = TK_REAL_LIT;
-    } else if ((*c == 'd') || (*c == 'D')) {
-      *c++ = 'e';  /* since atof only knows about 'e' */
-      tok->kind = TK_LREAL_LIT;
-    } else if ((*c == 'x') || (*c == 'X')) {
-      *c++ = 'e';  /* since atof only knows about 'e' */
-      tok->kind = TK_XREAL_LIT;
-    } else { /* real constant with no exponent */
-      tok->kind = TK_REAL_LIT;
-      tok->floatval = atof (input);
-      return c;
-    }
-
-    /* check for an exponent sign */
-    if ((*c == '+') || (*c == '-')) c++;
-
-    /* scan the exponent digits */
-    if ((*c < '0') || ('9' < *c)) {
-      error (_("Missing digits in real exponent") ); /* NORETURN */ 
-    }
-    while ('0' <= *c && *c <= '9') { c++; }
-
-    /* and do the conversion... */
-    tok->floatval = atof (input);
-
-  } else {
-    /* already scanned a decimal integer */
-    tok->kind   = TK_CARD_LIT;
-    tok->intval = val;
-  }
-  return c;
-} /* m3_scan_number */
+    return c;
+  } /* m3_scan_number */
 
 /*------------------------------------------------------------- GDB tokens --*/
 

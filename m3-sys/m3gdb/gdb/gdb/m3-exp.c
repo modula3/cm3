@@ -353,8 +353,12 @@ m3_parse_e8 ( )
           /* NORETURN */ 
       } /* case TK_IDENT */
       
-    case TK_CARD_LIT:
+    case TK_INTEGER_LIT:
       write_m3_const (cur_tok.intval, builtin_type_m3_integer);
+      break; 
+      
+    case TK_LONGINT_LIT:
+      write_m3_const (cur_tok.intval, builtin_type_m3_longint);
       break; 
       
     case TK_REAL_LIT:
@@ -485,6 +489,8 @@ m3_parse_e8 ( )
     case TK_BOOLEAN:   write_m3_type (builtin_type_m3_boolean);   break;
     case TK_INTEGER:   write_m3_type (builtin_type_m3_integer);   break;
     case TK_CARDINAL:  write_m3_type (builtin_type_m3_cardinal);  break;
+    case TK_LONGINT:   write_m3_type (builtin_type_m3_longint);   break;
+    case TK_LONGCARD:  write_m3_type (builtin_type_m3_longcard);   break;
     case TK_CHAR:      write_m3_type (builtin_type_m3_char);      break;
     case TK_WIDECHAR:  write_m3_type (builtin_type_m3_widechar);  break;
     case TK_REAL:      write_m3_type (builtin_type_m3_real);      break;

@@ -108,6 +108,47 @@ static const char * SRC_compiler_string = "SRC-Modula3_compiled.";
 static const char * procedures_have_extra_block_string 
   = "procedures_have_extra_block."; 
 
+/* Use the directory name and object file name (taken from stabs SO entries,)
+   to maybe detect the Modula-3 target name. */  
+void
+m3_check_target ( char * dir_name, char * file_name )
+  { int len; 
+    char * begp; 
+    char * endp; 
+    char saved_slash; 
+
+    if ( m3_current_target != TARGET_UNKNOWN ) 
+      { return; } 
+    if ( dir_name == NULL || file_name == NULL ) 
+      { return; } 
+    if ( strcmp ( file_name, "m3main.mc" ) != 0   /* PM3 and friends. */ 
+         && strcmp ( file_name, "_m3main.mc" ) != 0 /* CM3. */ 
+       ) 
+      { return; } 
+    len = strlen ( dir_name );
+    if ( len < 3 ) /* We need at least slashes at each end and 1 target char. */ 
+      { return; }    
+    endp = dir_name + len - 1; /* Slash at end. */
+    saved_slash = *endp; 
+    if ( * endp == '\\' )
+      { * endp = '/'; /* Oh, how sleazy. */ } 
+    if ( * endp != '/' ) 
+      { * endp = saved_slash; 
+        return; 
+      }  
+    begp = endp - 1; 
+    while ( begp > dir_name && * begp != * endp )
+      { begp --; } 
+    begp ++; 
+    if ( begp >= endp ) 
+      { * endp = saved_slash; 
+        return; 
+      }  
+    m3_current_target = m3_target_pure ( begp ); 
+    m3_set_derived_target_info ( ); 
+    * endp = saved_slash; 
+  } /* m3_check_target */ 
+
 /* Use the string from the N_OPT stabs entry to maybe set 
    processing_pm3_compilation and procedures_have_extra_block. */
 void
@@ -123,6 +164,7 @@ static struct type *
 m3_create_fundamental_type (objfile, typeid)
      struct objfile *objfile;
      int typeid;
+/* CHECK: Why do we need these types? They don't look like Modula-3 types. */ 
 {
   struct type *type = NULL;
 
@@ -461,6 +503,9 @@ m3_error (char *msg)
 struct type ** const (m3_builtin_types[]) = 
 {
   &builtin_type_m3_integer,
+  &builtin_type_m3_cardinal,
+  &builtin_type_m3_longint,
+  &builtin_type_m3_longcard,
   &builtin_type_long,
   &builtin_type_short,
   &builtin_type_char,
@@ -1903,6 +1948,7 @@ m3_resolve_type ( char *uid )
 
   if (m3uid_to_int (uid, &uid_val)) {
     if      (uid_val == 0x195c2a74) { return builtin_type_m3_integer; }
+    else if (uid_val == 0x05562176) { return builtin_type_m3_longint; }
     else if (uid_val == 0x50f86574) { return builtin_type_m3_text; }
     else if (uid_val == 0x97e237e2) { return builtin_type_m3_cardinal; }
     else if (uid_val == 0x1e59237d) { return builtin_type_m3_boolean; }
@@ -1963,6 +2009,8 @@ static a_client ()
 
 struct type *builtin_type_m3_integer;
 struct type *builtin_type_m3_cardinal;
+struct type *builtin_type_m3_longint;
+struct type *builtin_type_m3_longcard;
 struct type *builtin_type_m3_boolean;
 struct type *builtin_type_m3_address;
 struct type *builtin_type_m3_root;
@@ -2096,6 +2144,8 @@ m3_observer_executable_changed ( void * unused )
     m3_old_compiler_kind = m3_compiler_kind_value; 
     m3_compiler_kind_value = m3_ck_unknown;
     m3_waiting_for_libm3core_so_to_unload = m3_libm3core_so_is_loaded; 
+    m3_current_target = TARGET_UNKNOWN; 
+    m3_set_derived_target_info ( ); 
     new_executable = true;  
   } /* m3_observer_executable_changed */ 
 
@@ -2228,16 +2278,28 @@ _initialize_m3_language ( )
 #endif
 
   builtin_type_m3_integer =
-    init_type (TYPE_CODE_M3_INTEGER, TARGET_LONG_BIT / HOST_CHAR_BIT,
+    init_type (TYPE_CODE_M3_INTEGER, m3_target_integer_bit / HOST_CHAR_BIT,
 	       0,
 	       "INTEGER", (struct objfile *) NULL);
-  TYPE_M3_SIZE (builtin_type_m3_integer) = TARGET_LONG_BIT;
+  TYPE_M3_SIZE (builtin_type_m3_integer) = m3_target_integer_bit;
 
   builtin_type_m3_cardinal =
-    init_type (TYPE_CODE_M3_CARDINAL, TARGET_LONG_BIT / HOST_CHAR_BIT,
+    init_type (TYPE_CODE_M3_CARDINAL, m3_target_integer_bit / HOST_CHAR_BIT,
 	       0,
 	       "CARDINAL", (struct objfile *) NULL);
-  TYPE_M3_SIZE (builtin_type_m3_cardinal) = TARGET_LONG_BIT;
+  TYPE_M3_SIZE (builtin_type_m3_cardinal) = m3_target_integer_bit;
+
+  builtin_type_m3_longint =
+    init_type (TYPE_CODE_M3_LONGINT, m3_target_longint_bit / HOST_CHAR_BIT,
+	       0,
+	       "LONGINT", (struct objfile *) NULL);
+  TYPE_M3_SIZE (builtin_type_m3_longint) = m3_target_longint_bit;
+
+  builtin_type_m3_longcard =
+    init_type (TYPE_CODE_M3_LONGCARD, m3_target_longint_bit / HOST_CHAR_BIT,
+	       0,
+	       "LONGCARD", (struct objfile *) NULL);
+  TYPE_M3_SIZE (builtin_type_m3_longcard) = m3_target_longint_bit;
 
   builtin_type_m3_boolean =
     init_type (TYPE_CODE_M3_BOOLEAN, 1,
@@ -2533,6 +2595,8 @@ int is_m3_type ( struct type * m3_type )
         case TYPE_CODE_M3_CHAR:
         case TYPE_CODE_M3_INTEGER:
         case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_LONGINT:
+        case TYPE_CODE_M3_LONGCARD:
         case TYPE_CODE_M3_REFANY:
         case TYPE_CODE_M3_TRANSIENT_REFANY:
         case TYPE_CODE_M3_MUTEX:
@@ -2779,7 +2843,7 @@ m3_value_print (
   struct type * val_type;
 
   val_type = value_type (val);
-  if (*(LONGEST *) value_contents (val) == m3_type_magic_value) 
+  if ( m3_value_is_type ( val ) )  
     { m3_print_type (val_type, 0, stream, 0, 0); 
       return 0; 
     } 
