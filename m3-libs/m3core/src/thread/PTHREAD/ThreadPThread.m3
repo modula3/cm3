@@ -605,6 +605,10 @@ PROCEDURE Fork (closure: Closure): T =
     END;
 
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
+      t.closure := closure;
+      t.id := nextId;  INC(nextId);
+      IF perfOn THEN PerfChanged(t.id, State.alive) END;
+
       WITH r = Upthread.attr_init(attr) DO <*ASSERT r=0*> END;
       WITH r = Upthread.attr_getstacksize(attr, bytes)  DO <*ASSERT r=0*> END;
       bytes := MAX(bytes, size * ADRSIZE(Word.T));
@@ -614,25 +618,17 @@ PROCEDURE Fork (closure: Closure): T =
       act.size := size;
       allThreads.prev.next := act;
       allThreads.prev := act;
-      Acquire(t.mutex);
       WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
         IF r # 0 THEN
           RTError.MsgI(ThisFile(), ThisLine(),
                        "Thread client error: Fork failed with error: ", r);
         END;
       END;
-      WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
-      (* last minute sanity checking *)
-      <* ASSERT CheckSlot (t) *>
-      <* ASSERT t.act.next # NIL *>
-      <* ASSERT t.act.prev # NIL *>
-
-      t.closure := closure;
-      t.id := nextId;  INC(nextId);
-      IF perfOn THEN PerfChanged(t.id, State.alive) END;
-      Wait(t.mutex, t.cond);
-    Release(t.mutex);
-
+    WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+    (* last minute sanity checking *)
+    <* ASSERT CheckSlot (t) *>
+    <* ASSERT t.act.next # NIL *>
+    <* ASSERT t.act.prev # NIL *>
     RETURN t;
   END Fork;
 
