@@ -67,9 +67,6 @@ REVEAL
     (* indicates that "result" is set *)
     completed: BOOLEAN := FALSE;	 (* LL = mutex *)
 
-    (* "Join" or "AlertJoin" has already returned *)
-    joined: BOOLEAN := FALSE;            (* LL = mutex *)
-
     (* unique Id of this thread *)
     id: Id := 0;			 (* LL = mutex *)
   END;
@@ -486,7 +483,6 @@ PROCEDURE DumpThread (t: T) =
     RTIO.PutText("  waitCond:   "); RTIO.PutAddr(t.waitCond);      RTIO.PutChar('\n');
     RTIO.PutText("  alerted:    "); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
     RTIO.PutText("  completed:  "); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
-    RTIO.PutText("  joined:     "); RTIO.PutInt(ORD(t.joined));    RTIO.PutChar('\n');
     RTIO.PutText("  id:         "); RTIO.PutInt(t.id);             RTIO.PutChar('\n');
     RTIO.Flush();
   END DumpThread;
@@ -546,7 +542,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation) =
-  VAR self: T;  res: REFANY;  cl: Closure;
+  VAR self: T;  cl: Closure;
   BEGIN
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
       self := slots [me.slot];
@@ -561,12 +557,11 @@ PROCEDURE RunThread (me: Activation) =
 
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning(self.id) END;
-    res := cl.apply();
+    self.result := cl.apply();
     IF perfOn THEN PerfChanged(self.id, State.dying) END;
 
     LOCK self.mutex DO
       (* mark "self" done and clean it up a bit *)
-      self.result := res;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
     END;
@@ -642,13 +637,12 @@ PROCEDURE Join (t: T): REFANY =
   VAR res: REFANY;
   BEGIN
     LOCK t.mutex DO
-      IF t.joined THEN
+      IF t.cond = NIL THEN
         Die(ThisLine(), "attempt to join with thread twice");
       END;
       WHILE NOT t.completed DO Wait(t.mutex, t.cond) END;
       res := t.result;
       t.result := NIL;
-      t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
@@ -659,13 +653,12 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
   VAR res: REFANY;
   BEGIN
     LOCK t.mutex DO
-      IF t.joined THEN
+      IF t.cond = NIL THEN
         Die(ThisLine(), "attempt to join with thread twice");
       END;
       WHILE NOT t.completed DO AlertWait(t.mutex, t.cond) END;
       res := t.result;
       t.result := NIL;
-      t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
