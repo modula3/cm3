@@ -546,24 +546,27 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation) =
-  VAR self: T;  res: REFANY;
+  VAR self: T;  res: REFANY;  cl: Closure;
   BEGIN
     WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
       self := slots [me.slot];
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
 
     (* Let parent know we are running *)
-    LOCK self.mutex DO Signal(self.cond) END;
+    LOCK self.mutex DO
+      cl := self.closure;
+      self.closure := NIL;
+      Signal(self.cond);
+    END;
 
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning(self.id) END;
-    res := self.closure.apply();
+    res := cl.apply();
     IF perfOn THEN PerfChanged(self.id, State.dying) END;
 
     LOCK self.mutex DO
       (* mark "self" done and clean it up a bit *)
       self.result := res;
-      self.closure := NIL;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
     END;
@@ -629,6 +632,9 @@ PROCEDURE Fork (closure: Closure): T =
     <* ASSERT CheckSlot (t) *>
     <* ASSERT t.act.next # NIL *>
     <* ASSERT t.act.prev # NIL *>
+    LOCK t.mutex DO
+      WHILE t.closure # NIL DO Wait(t.mutex, t.cond) END;
+    END;      
     RETURN t;
   END Fork;
 
