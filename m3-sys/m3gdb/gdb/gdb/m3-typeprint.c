@@ -258,6 +258,14 @@ m3_type_print_base (type, stream, show, level)
       fprintf_filtered (stream, "CARDINAL");
       break; 
 
+    case TYPE_CODE_M3_LONGINT:
+      fprintf_filtered (stream, "LONGINT");
+      break; 
+
+    case TYPE_CODE_M3_LONGCARD:
+      fprintf_filtered (stream, "LONGCARD");
+      break; 
+
     case TYPE_CODE_M3_REFANY:
       fprintf_filtered (stream, "REFANY");
       break; 

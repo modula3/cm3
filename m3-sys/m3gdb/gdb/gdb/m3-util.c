@@ -193,8 +193,6 @@ is_unsafe ( void )
 
 const LONGEST m3_type_magic_value = ( LONGEST ) M3_TYPE_MAGIC;
 
-const LONGEST LONGEST_MAXxx = ( ( ULONGEST ) ( 0 - 1 ) ) / 2;  
-
 /* Print the character C on STREAM as part of the contents of a literal
    string whose delimiter is QUOTER.  Note that that format for printing
    characters and strings is language specific. */
@@ -406,19 +404,26 @@ struct value *
 m3_value_from_longest (struct type *type, LONGEST num)
 
   { struct value * val = allocate_value ( type );
-    enum type_code code = TYPE_CODE ( type );
+    struct type * base_type = m3_ordinal_base_type ( type, NULL ); 
+    enum type_code code = TYPE_CODE ( base_type );
     int len = TYPE_LENGTH ( type );
 
+    /* FIXME: Do bounds checks here? */ 
     switch ( code )
       { case TYPE_CODE_M3_INTEGER:
+        case TYPE_CODE_M3_LONGINT:
         case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_LONGCARD:
+          /* Although CARDINAL and LONGCARD are non-negative, they are
+             effectively subranges of INTEGER and LONGINT. */ 
+          store_signed_integer ( value_contents_raw ( val ), len, num );
+          break;
+
         case TYPE_CODE_M3_CHAR:
         case TYPE_CODE_M3_WIDECHAR:
         case TYPE_CODE_M3_ENUM:
-        case TYPE_CODE_M3_SUBRANGE:
         case TYPE_CODE_M3_BOOLEAN:
-        case TYPE_CODE_M3_PACKED:
-          store_signed_integer ( value_contents_raw ( val ), len, num );
+          store_unsigned_integer ( value_contents_raw ( val ), len, num );
           break;
 
         case TYPE_CODE_M3_REFANY:
@@ -438,6 +443,29 @@ m3_value_from_longest (struct type *type, LONGEST num)
       }
     return val;
   } /* m3_value_from_longest */ 
+
+/* Modula-3 expressions can be either values or types.  m3gdb 
+   'struct value's represent either, despite the name.  This
+   creates a 'struct value' that represents a type. */ 
+struct value * 
+m3_allocate_value_that_is_type ( struct type * type_of_value ) 
+  { struct value * result; 
+
+    result = allocate_value ( type_of_value );
+    * ( LONGEST * ) value_contents_raw ( result ) = m3_type_magic_value;
+    return result; 
+  } /* m3_allocate_value_that_is_type */ 
+
+/* Modula-3 expressions can be either values or types.  m3gdb 
+   'struct value's represent either, despite the name.  This
+   distinguishes. */ 
+bool 
+m3_value_is_type ( struct value * val ) 
+  { bool result; 
+
+    result = ( * ( LONGEST * ) value_contents ( val ) == m3_type_magic_value );
+    return result; 
+  } /* m3_value_is_type */ 
 
 /* Given a block, return the symtab it belongs to.  This result is probably 
    never used, but we need it to satisfy the interface of the language-specific
@@ -1100,7 +1128,8 @@ m3_direct_type ( struct type * param_type )
 
   { struct type * l_type; 
 
-    if ( param_type == NULL ) { return NULL; } 
+    if ( param_type == NULL ) 
+      { return NULL; } 
     l_type = param_type; 
     while ( TYPE_CODE ( l_type ) == TYPE_CODE_M3_INDIRECT ) 
       { l_type = TYPE_M3_INDIRECT_TARGET ( l_type ); } 
@@ -1113,7 +1142,8 @@ m3_unpacked_direct_type ( struct type * param_type )
 
   { struct type * l_type; 
 
-    if ( param_type == NULL ) { return NULL; } 
+    if ( param_type == NULL ) 
+      { return NULL; } 
     l_type = param_type; 
     while ( true ) 
       { switch  ( TYPE_CODE ( l_type ) ) 
@@ -1165,12 +1195,54 @@ m3_revealed_unpacked_direct_type ( struct type * param_type )
       } 
   } /* m3_revealed_unpacked_direct_type */ 
 
+/* The base type of param_type, if, after stripping indirects and packeds, 
+   it is an ordinal type. Otherwise, NULL. */ 
+struct type * 
+m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
+  { struct type * result_type; 
+
+    if ( is_int_or_card != NULL ) { * is_int_or_card = false; } 
+    result_type = param_type; 
+    while ( true ) 
+      { switch ( TYPE_CODE ( result_type ) ) 
+          { case TYPE_CODE_M3_INDIRECT :
+              result_type = TYPE_M3_INDIRECT_TARGET ( result_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_OPAQUE :
+              result_type = TYPE_M3_OPAQUE_REVEALED ( result_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_PACKED : 
+              /* The value should still be in packed form, with bitpos and 
+                 bitsize fields set. */ 
+              result_type = TYPE_M3_PACKED_TARGET ( result_type );
+              break; /* And loop. */  
+            case TYPE_CODE_M3_SUBRANGE :
+              result_type = TYPE_M3_SUBRANGE_TARGET ( result_type ); 
+              break; /* And loop. */  
+            case TYPE_CODE_M3_INTEGER : 
+            case TYPE_CODE_M3_CARDINAL : 
+            case TYPE_CODE_M3_LONGINT : 
+            case TYPE_CODE_M3_LONGCARD : 
+              if ( is_int_or_card != NULL ) 
+                { * is_int_or_card = true; } 
+              return result_type;  
+            case TYPE_CODE_M3_BOOLEAN : 
+            case TYPE_CODE_M3_CHAR : 
+            case TYPE_CODE_M3_WIDECHAR : 
+            case TYPE_CODE_M3_ENUM : 
+              return result_type;  
+            default: 
+              return NULL; 
+          } 
+      } 
+  } /* m3_ordinal_base_type */ 
+
 /* Return the typecode of the object at inferior address addr. 
    PRE: addr is the inferior address of a object with a typecode header,
         i.e., either it's a traced ref or an untraced object type. 
 */ 
 LONGEST 
-m3_typecode_from_inf_address ( CORE_ADDR addr ) 
+m3_typecode_from_inf_object_addr ( CORE_ADDR addr ) 
 
 {
   LONGEST typecodeword, typecode;
@@ -1184,20 +1256,20 @@ m3_typecode_from_inf_address ( CORE_ADDR addr )
   typecode = m3_extract_ord((char *)&typecodeword, 1, 20, 0);
   return typecode; 
 
-} /* m3_typecode_from_inf_address */ 
+} /* m3_typecode_from_inf_object_addr */ 
 
 /* Return the inferior address of the typecell for the dyanamic (allocated) 
    type of the object at inferior address addr.  
 */
 CORE_ADDR 
-m3_tc_addr_from_object_addr ( CORE_ADDR addr )
+m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
 
 { LONGEST typecode, n_types;
   CORE_ADDR result, map_ptr;
 
   if (!addr) { return 0; }
 
-  typecode = m3_typecode_from_inf_address ( addr ) ; 
+  typecode = m3_typecode_from_inf_object_addr ( addr ) ; 
 
   init_m3_constants ();
 
@@ -1249,7 +1321,7 @@ m3_tc_addr_from_object_addr ( CORE_ADDR addr )
 
     } 
   else { return 0; } 
-} /* m3_tc_addr_from_object_addr */
+} /* m3_tc_addr_from_inf_object_addr */
 
 /* Given a type from a Modula-3 program, return its numeric uid. */ 
 int /* Numeric uid. */ 
@@ -1264,8 +1336,7 @@ int_uid_from_m3_type ( struct type * t )
  *  Return the address of the runtime typecell that corresponds to type "t".
  */
 CORE_ADDR
-m3_tc_addr_from_type (t)
-     struct type *t;
+m3_tc_addr_from_type ( struct type * t )
 {
   LONGEST typecode, n_types;
   CORE_ADDR map_ptr, info_ptr, tc_addr;
@@ -1275,7 +1346,7 @@ m3_tc_addr_from_type (t)
 
   if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
     { return 0; } 
-  /* The following is only used for cm3's Text* modules. */
+  /* The following is only used for CM3's Text* modules. */
 
   if ((TYPE_CODE(t) != TYPE_CODE_M3_OBJECT)
       && (TYPE_CODE(t) != TYPE_CODE_M3_POINTER)) {
@@ -1319,8 +1390,7 @@ m3_tc_addr_from_type (t)
 } /* m3_tc_addr_from_type */ 
 
 int 
-m3_int_uid_from_tc (tc_addr)
-     CORE_ADDR tc_addr;
+m3_int_uid_from_tc_addr ( CORE_ADDR tc_addr )
 {
   int selfID;
 
@@ -1330,11 +1400,10 @@ m3_int_uid_from_tc (tc_addr)
 		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
   return selfID;
-} /* m3_int_uid_from_tc */ 
+} /* m3_int_uid_from_tc_addr */ 
 
 struct type *
-m3_type_from_tc (tc_addr)
-     CORE_ADDR tc_addr;
+m3_type_from_tc ( CORE_ADDR tc_addr ) 
 {
   int selfID;
 
@@ -1351,17 +1420,15 @@ m3_type_from_tc (tc_addr)
         i.e., either it's a traced ref or an untraced object type. 
 */ 
 struct type *
-m3_allocated_type_from_object_addr (addr)
-     CORE_ADDR addr;
+m3_allocated_type_from_object_addr ( CORE_ADDR addr )
 {
-  return m3_type_from_tc (m3_tc_addr_from_object_addr (addr));
+  return m3_type_from_tc (m3_tc_addr_from_inf_object_addr (addr));
 } /* m3_allocated_type_from_object_addr */ 
 
 
 /* return LOOPHOLE (tc_addr, RT0.ObjectTypeDefn).dataOffset */
 int 
-m3_dataOffset_from_tc_addr (tc_addr)
-     CORE_ADDR tc_addr;
+m3_dataOffset_from_tc_addr ( CORE_ADDR tc_addr ) 
 { int result;
   char kind;
 
@@ -1381,8 +1448,7 @@ m3_dataOffset_from_tc_addr (tc_addr)
 } /* m3_dataOffset_from_tc_addr */ 
 
 int 
-m3_methodOffset_from_tc_addr (tc_addr)
-     CORE_ADDR tc_addr;
+m3_methodOffset_from_tc_addr ( CORE_ADDR tc_addr ) 
 {
   int result;
   char kind;
@@ -1404,8 +1470,7 @@ m3_methodOffset_from_tc_addr (tc_addr)
 } /* m3_methodOffset_from_tc_addr */ 
 		      
 int 
-m3_dataSize_from_tc_addr (tc_addr)
-     CORE_ADDR tc_addr;
+m3_dataSize_from_tc_addr ( CORE_ADDR tc_addr ) 
 {
   int result;
   init_m3_constants ();
@@ -1415,8 +1480,7 @@ m3_dataSize_from_tc_addr (tc_addr)
 } /* m3_dataSize_from_tc_addr */ 
 		      
 CORE_ADDR  
-m3_super_tc_addr_from_tc_addr (tc_addr)
-     CORE_ADDR tc_addr;
+m3_super_tc_addr_from_tc_addr ( CORE_ADDR tc_addr ) 
 { char kind;
   CORE_ADDR  result;
 
@@ -1559,13 +1623,15 @@ m3_is_ordinal_type ( struct type * param_type )
     tc = TYPE_CODE ( unpacked_type );
 
     switch (tc) 
-      { case TYPE_CODE_M3_SUBRANGE:
-        case TYPE_CODE_M3_ENUM:
-        case TYPE_CODE_M3_BOOLEAN:
-        case TYPE_CODE_M3_CHAR:
-        case TYPE_CODE_M3_WIDECHAR:
-        case TYPE_CODE_M3_CARDINAL:
-        case TYPE_CODE_M3_INTEGER:
+      { case TYPE_CODE_M3_SUBRANGE :
+        case TYPE_CODE_M3_ENUM :
+        case TYPE_CODE_M3_BOOLEAN :
+        case TYPE_CODE_M3_CHAR :
+        case TYPE_CODE_M3_WIDECHAR :
+        case TYPE_CODE_M3_INTEGER :
+        case TYPE_CODE_M3_CARDINAL :
+        case TYPE_CODE_M3_LONGINT :
+        case TYPE_CODE_M3_LONGCARD :
           return true;
         default:
           return false;
@@ -1582,16 +1648,20 @@ m3_type_is_signed ( struct type * param_type )
     unpacked_type = m3_unpacked_direct_type ( param_type ); 
     tc = TYPE_CODE ( unpacked_type );
     switch ( tc ) 
-      { case TYPE_CODE_M3_SUBRANGE:
+      { case TYPE_CODE_M3_SUBRANGE :
           lower = TYPE_M3_SUBRANGE_MIN ( unpacked_type );
           return lower < 0; 
-        case TYPE_CODE_M3_INTEGER:
+        case TYPE_CODE_M3_INTEGER :
+        case TYPE_CODE_M3_LONGINT :
           return true; 
         default:
           return false; 
       }
   } /* m3_type_is_signed */ 
 
+/* For unsigned param_type, f_lower and f_upper wiii actually be unsigned
+   values, stored in a LONGEST.  Caller can cast it to a ULONGEST, and
+   this is defined by C to do what you want. */ 
 void
 m3_ordinal_bounds ( 
     struct type * param_type, LONGEST * f_lower, LONGEST * f_upper ) 
@@ -1624,15 +1694,25 @@ m3_ordinal_bounds (
           lower = 0;
           upper = 0xffff;
           break;
+        case TYPE_CODE_M3_INTEGER:
+          /* assumes a 2's complement machine... */
+          lower = (-1L) << (m3_target_integer_bit-1);
+          upper = ~ ((-1L) << (m3_target_integer_bit-1));
+          break;
         case TYPE_CODE_M3_CARDINAL:
           /* assumes a 2's complement machine... */
           lower = 0;
-          upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
+          upper = ~ ((-1L) << (m3_target_integer_bit-1));
           break;
-        case TYPE_CODE_M3_INTEGER:
+        case TYPE_CODE_M3_LONGINT:
           /* assumes a 2's complement machine... */
-          lower = (-1L) << (TARGET_LONG_BIT-1);
-          upper = ~ ((-1L) << (TARGET_LONG_BIT-1));
+          lower = (-1L) << (m3_target_longint_bit-1);
+          upper = ~ ((-1L) << (m3_target_longint_bit-1));
+          break;
+        case TYPE_CODE_M3_LONGCARD:
+          /* assumes a 2's complement machine... */
+          lower = 0;
+          upper = ~ ((-1L) << (m3_target_longint_bit-1));
           break;
         default:
           error 
@@ -1641,19 +1721,52 @@ m3_ordinal_bounds (
           upper = 0;
           break; 
       }
-    if ( f_lower != NULL ) { * f_lower = lower; } 
-    if ( f_upper != NULL ) { * f_upper = upper; } 
+    if ( f_lower != NULL ) 
+      { * f_lower = lower; } 
+    if ( f_upper != NULL ) 
+      { * f_upper = upper; } 
   } /* m3_ordinal_bounds */ 
 
+/* If range_type is an ordinal type, range-check value against it.  
+   If the check fails, emit an error (which implies noreturn.) */ 
+void 
+m3_ordinal_range_check ( 
+    LONGEST value, struct type * range_type, char * purpose ) 
+
+  { ULONGEST uval, ulower, uupper;
+    LONGEST sval, slower, supper;
+
+    if ( ! m3_is_ordinal_type ( range_type ) ) 
+      { return; } 
+    m3_ordinal_bounds ( range_type, & slower, & supper );
+    if ( m3_type_is_signed ( range_type ) ) 
+      { if ( ( sval < slower) || ( supper < sval ) ) 
+          { error (_( "Value is out of range for %s.\n" ), purpose );
+            /* FIXME: Put value, lower, and Upper into this message: */ 
+            /* NORETURN */ 
+          } 
+      } 
+    else 
+      { uval = ( ULONGEST ) sval;      /* C defines these conversions as */ 
+        ulower = ( ULONGEST ) slower;  /* Modulo the variable size. */ 
+        uupper = ( ULONGEST ) supper; 
+        if ( ( uval < ulower) || ( uupper < uval ) ) 
+          { error (_( "Value is out of range for %s.\n" ), purpose );
+            /* FIXME: Put value, lower, and upper into this message: */ 
+            /* NORETURN */ 
+          } 
+      } 
+  } /* m3_ordinal_range_check */ 
+
 gdb_byte *
-m3_read_object_fields_bits (CORE_ADDR ref)
+m3_read_object_fields_bits ( CORE_ADDR ref )
 {
   CORE_ADDR tc_addr;
   int dataSize;
   gdb_byte *bits;
 
   if (ref == 0) { return 0; }
-  tc_addr = m3_tc_addr_from_object_addr (ref);
+  tc_addr = m3_tc_addr_from_inf_object_addr (ref);
   dataSize = m3_dataSize_from_tc_addr (tc_addr);
   bits = malloc (dataSize);
   /* FIXME^ Surely this is not the right way to allocate space in gdb. 
@@ -1669,29 +1782,33 @@ m3_extract_ord (
   {
     ULONGEST val;
     ULONGEST valmask;
+    int bytesize; 
     int lsbcount;
-
-    /* FIXME: Using extract_unsigned_integer to get the range of bytes that
+    
+    if ( bitsize == sizeof ( ULONGEST ) * TARGET_CHAR_BIT ) 
+      { bytesize = 8; } /* Special case to circumvent the problem below,
+                           for 64-bit operands, until we get this rewritten
+                           properly. */ 
+    else 
+      { bytesize = ( bitsize + TARGET_CHAR_BIT - 2 ) / TARGET_CHAR_BIT + 1; } 
+    /* FIXME: ^Using extract_unsigned_integer to get the range of bytes that
        cover the packed field into val will fail for packed fields that 
        could (depending on their bit alignment) span one more byte than
        is in a ULONGEST.  We should be able to handle this case.  It would
        require combining the functions of this function and 
        extract_unsigned_integer. */ 
     val = extract_unsigned_integer 
-            ( valaddr + bitpos / TARGET_CHAR_BIT, 
-              ( bitsize + TARGET_CHAR_BIT - 2 ) / TARGET_CHAR_BIT + 1
-            );
+            ( valaddr + bitpos / TARGET_CHAR_BIT, bytesize );
     if ( BITS_BIG_ENDIAN )
-      lsbcount = sizeof val * HOST_CHAR_BIT - bitpos - bitsize ;
+      { lsbcount = sizeof val * HOST_CHAR_BIT - bitpos - bitsize; }
     else
-      lsbcount = bitpos % HOST_CHAR_BIT;
+      { lsbcount = bitpos % HOST_CHAR_BIT; } 
     val >>= lsbcount;
 
     /* If the field does not entirely fill a LONGEST, either zero the sign 
        bits or sign extend, as requested. */
     if ( bitsize < HOST_CHAR_BIT * ( int ) sizeof ( val ) )
-      {
-        valmask = ( ( ( ULONGEST ) 1 ) << bitsize ) - 1;
+      { valmask = ( ( ( ULONGEST ) 1 ) << bitsize ) - 1;
         val &= valmask;
         if ( sign_extend )
           { if ( val & ( valmask ^ ( valmask >> 1 ) ) )
@@ -1706,13 +1823,23 @@ m3_value_as_integer ( struct value * val )
 
 { LONGEST lower; 
   LONGEST upper; 
-  struct type * type = value_type ( val );
+  struct type * val_type = value_type ( val );
   int typebitsize;
   int valbitsize;
   int bitsize;
+  bool is_signed; 
 
-  m3_ordinal_bounds ( type, & lower, & upper );
-  typebitsize = TYPE_M3_SIZE ( type );
+  if ( m3_type_is_signed ( val_type ) ) 
+    { m3_ordinal_bounds ( val_type, & lower, & upper ); 
+      /* ^Here, lower is guaranteed signed. */ 
+      is_signed = ( lower < 0 ); 
+      /* ^If a compiler represented a bit-packed, non-negative subrange of
+         a signed type maximally compactly by omitting a sign bit, we must
+         not sign-extend.  OTOH, if there is a sign bit, it won't hurt to not
+         sign-extend. */ 
+    }       
+  else { is_signed = false; } 
+  typebitsize = TYPE_M3_SIZE ( val_type );
   valbitsize = value_bitsize ( val ); 
   if ( valbitsize == 0 ) 
     { bitsize = typebitsize; } 
@@ -1721,7 +1848,7 @@ m3_value_as_integer ( struct value * val )
            ( value_contents ( val ),  
              value_bitpos ( val ),
 	     bitsize, 
-             ( lower < 0 )
+             is_signed 
            );
 } /* m3_value_as_integer */ 
 
@@ -1760,7 +1887,8 @@ m3_ensure_value_is_unpacked ( struct value * packed_val )
     LONGEST value; 
     void * source_addr; 
 
-    if ( packed_val == NULL ) { return packed_val; } 
+    if ( packed_val == NULL ) 
+      { return packed_val; } 
     bitsize = value_bitsize ( packed_val ); 
     if ( bitsize == 0 ) /* Size will come from the type. */
        { return packed_val; } 
@@ -1814,7 +1942,7 @@ m3_shape_component_offset ( int dimension )
 
     result 
       = TARGET_PTR_BIT / HOST_CHAR_BIT /* Skip the elements pointer. */
-        + dimension * ( TARGET_LONG_BIT/HOST_CHAR_BIT );
+        + dimension * ( m3_target_integer_bit/HOST_CHAR_BIT );
     return result; 
   } /* m3_shape_component_offset */ 
 
@@ -1849,7 +1977,7 @@ m3_open_array_shape_component ( const gdb_byte * addr , int dimension )
 
     target_offset = m3_shape_component_offset ( dimension );
     result 
-      = m3_extract_ord ( addr + target_offset, 0, TARGET_LONG_BIT, 0 );
+      = m3_extract_ord ( addr + target_offset, 0, m3_target_integer_bit, 0 );
     return result; 
   } /* m3_open_array_shape_component */ 
 
@@ -1866,7 +1994,7 @@ m3_set_open_array_shape_component (
 
     target_offset = m3_shape_component_offset ( dimension );
     store_unsigned_integer 
-      ( addr + target_offset, TARGET_LONG_BIT / HOST_CHAR_BIT, val ); 
+      ( addr + target_offset, m3_target_integer_bit / HOST_CHAR_BIT, val ); 
   } /* m3_set_open_array_shape_component */ 
 
 /* Fetch the inferior address of the zero-th element of the Modula-3 open array
@@ -1899,8 +2027,8 @@ m3_inf_open_array_shape_component ( CORE_ADDR ref, int dimension )
   /* FIXME: ^This would fail if TARGET_CHAR_BIT /= HOST_CHAR_BIT, because 
      m3-shape_component_offset returns a gdb-space offset, while we need
      a target offset here. */ 
-  read_memory ( ref + target_offset, buf, TARGET_LONG_BIT );  
-  result = m3_extract_ord (buf, 0, TARGET_LONG_BIT, 0);
+  read_memory ( ref + target_offset, buf, m3_target_integer_bit );  
+  result = m3_extract_ord (buf, 0, m3_target_integer_bit, 0);
   return result; 
 } /* m3_inf_open_array_shape_component */ 
 
@@ -1949,7 +2077,7 @@ m3_value_open_array_shape_component (
     result 
       = m3_extract_ord 
           ( ( gdb_byte * ) value_contents ( array_value ) + target_offset, 
-            0, TARGET_LONG_BIT, 0
+            0, m3_target_integer_bit, 0
           );
     return result; 
   } /* m3_value_open_array_shape_component */ 
@@ -1968,7 +2096,7 @@ m3_set_value_open_array_shape_component (
   target_offset = m3_shape_component_offset ( dimension );
   store_unsigned_integer 
     ( ( gdb_byte * ) value_contents_raw ( array_value ) + target_offset, 
-      TARGET_LONG_BIT / HOST_CHAR_BIT, 
+      m3_target_integer_bit / HOST_CHAR_BIT, 
       val
     ) ; 
 } /* m3_set_value_open_array_shape_component */ 
@@ -2027,7 +2155,8 @@ m3_static_parent_frame ( struct frame_info *start_frame )
 
 int 
 m3_proc_closure_align ( ) 
-  { return TARGET_LONG_BIT / TARGET_CHAR_BIT; }
+  { return m3_target_integer_bit / TARGET_CHAR_BIT; }
+ /* CHECK: ^Is this value always right? */ 
 
 /* CHECK: Is this value target-dependent? */ 
 const CORE_ADDR closure_mark = - 1L;  
@@ -2221,7 +2350,7 @@ m3_address_lies_within_frame_locals (
   return true; 
 } /* m3_address_lies_within_block_locals */ 
 
-/* This must agree with the string defined by the same name in the gcc backend, 
+/* This must agree with the string defined by the same name in the gcc backend,
    dbxout.c, and used by dbxout_emit_frame_offset: */ 
 static const char * frame_offset_name = "__frame_offset"; 
 
@@ -2384,7 +2513,8 @@ m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical )
       } 
   } /* m3_make_canonical */ 
 
-/* Evaluate the string.  If any errors occur, ignore them and return NULL. */ 
+/* Evaluate the string as an expression.  If any errors occur, ignore them 
+   and return NULL. */ 
 struct value * 
 m3_evaluate_string ( char * string ) 
 
@@ -2404,8 +2534,55 @@ m3_evaluate_string ( char * string )
     if (exception2.reason != 0)
       { return NULL; }
     return val;  
-  } 
+  } /* m3_evaluate_string */ 
 
-/* */ 
+enum m3_target_typ m3_current_target = TARGET_UNKNOWN; 
+
+int m3_target_integer_bit = 32; 
+int m3_target_longint_bit = 64; 
+
+/* After m3_current_target has been set or changed, this sets variables
+   that can be derived from it. */ 
+void
+m3_set_derived_target_info ( void ) 
+  { m3_target_integer_bit = 32; 
+    m3_target_longint_bit = 64; 
+    switch ( m3_current_target ) 
+      { case TARGET_NT386 : 
+          m3_target_longint_bit = 32; 
+          break; 
+        case TARGET_ALPHA_OSF : 
+          m3_target_integer_bit = 64; 
+          break; 
+        default: 
+          break; 
+      } 
+  TYPE_LENGTH ( builtin_type_m3_integer ) 
+    = m3_target_integer_bit / HOST_CHAR_BIT; 
+  TYPE_M3_SIZE (builtin_type_m3_integer) = m3_target_integer_bit;
+
+  TYPE_LENGTH ( builtin_type_m3_cardinal ) 
+    = m3_target_integer_bit / HOST_CHAR_BIT;
+  TYPE_M3_SIZE (builtin_type_m3_cardinal) = m3_target_integer_bit;
+
+  TYPE_LENGTH ( builtin_type_m3_longint ) 
+    = m3_target_longint_bit / HOST_CHAR_BIT;
+  TYPE_M3_SIZE (builtin_type_m3_longint) = m3_target_longint_bit;
+
+  TYPE_LENGTH ( builtin_type_m3_longcard ) 
+    = m3_target_longint_bit / HOST_CHAR_BIT; 
+  TYPE_M3_SIZE (builtin_type_m3_longcard) = m3_target_longint_bit;
+
+  } /* m3_set_derived_target_info */ 
+
+enum m3_target_typ
+m3_target_pure ( char * name ) 
+  { if ( strcmp ( name, "NT386/" ) == 0 ) 
+      { return TARGET_NT386; } 
+    if ( strcmp ( name, "ALPHA_OSF/" ) == 0 ) 
+      { return TARGET_ALPHA_OSF; } 
+    /* FIXME: Positively check for all M3 compiler target names. */ 
+    return TARGET_OTHER; 
+  } /* m3_target_pure */ 
 
 /* End of file m3-util.c */ 

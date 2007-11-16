@@ -60,22 +60,25 @@ extern int rttype_infomap_cnt_size;
 extern int rttype_infomap_cnt_offset;
 
 /* We are allowing unsafe operations. */ 
-extern bool is_unsafe ( void );  
+extern bool 
+is_unsafe ( void );  
 
 /* Special value attached to "type" values 
    FIXME: There has to be a cleaner way to do this. */
 #define M3_TYPE_MAGIC 766579803L
 extern const LONGEST m3_type_magic_value;
 
-extern const LONGEST LONGEST_MAXxxx; 
+extern void 
+m3_emit_char (int, struct ui_file *, int);
 
-extern void m3_emit_char (int, struct ui_file *, int);
+extern void 
+m3_emit_widechar (int, struct ui_file *, int);
 
-extern void m3_emit_widechar (int, struct ui_file *, int);
+extern void 
+m3_print_char_lit (int, struct ui_file *);
 
-extern void m3_print_char_lit (int, struct ui_file *);
-
-extern void m3_print_widechar_lit (int, struct ui_file *);
+extern void 
+m3_print_widechar_lit (int, struct ui_file *);
 
 extern void
 m3_print_string (
@@ -87,8 +90,20 @@ m3_print_string (
   );
 
 /* Convert Modula-3 numbers into newly allocated values */
-struct value * 
+extern struct value * 
 m3_value_from_longest ( struct type *type, LONGEST num);
+
+/* Modula-3 expressions can be either values or types.  m3gdb 
+   'struct value's represent either, despite the name.  This
+   creates a 'struct value' that represents a type. */ 
+extern struct value * 
+m3_allocate_value_that_is_type ( struct type * type_of_value ); 
+ 
+/* Modula-3 expressions can be either values or types.  m3gdb 
+   'struct value's represent either, despite the name.  This
+   distinguishes. */ 
+extern bool 
+m3_value_is_type ( struct value * val );  
 
 /* Given a block, return the symtab it belongs to. */ 
 extern struct symtab * 
@@ -220,9 +235,11 @@ enum m3_compiler_kind_typ
   }; 
 extern enum m3_compiler_kind_typ m3_compiler_kind_value; 
 
-extern void m3_ascertain_compiler_kind ( void ); 
+extern void 
+m3_ascertain_compiler_kind ( void ); 
 
-extern enum m3_compiler_kind_typ m3_compiler_kind ( ); 
+extern enum m3_compiler_kind_typ 
+m3_compiler_kind ( ); 
 
 /* Strip away any indirect types from a type. */ 
 extern struct type * 
@@ -240,82 +257,122 @@ m3_revealed_type ( struct type * opaque_type );
 extern struct  type *  
 m3_revealed_unpacked_direct_type ( struct type * param_type ); 
 
+/* The base type of param_type, if, after stripping indirects and packeds, 
+   it is an ordinal type. Otherwise, NULL. */ 
+extern struct type * 
+m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card );
+
 /* Return the typecode of the object at inferior address addr. 
    PRE: addr is the inferior address of a object with a typecode header,
         i.e., either it's a traced ref or an untraced object type. 
 */ 
-LONGEST m3_typecode_from_inf_address ( CORE_ADDR addr ); 
+LONGEST 
+m3_typecode_from_inf_object_addr ( CORE_ADDR addr ); 
 
 /* Return the inferior address of the typecell for the dyanamic (allocated) 
    type of the object at inferior address addr.  
 */
-extern CORE_ADDR m3_tc_addr_from_object_addr (CORE_ADDR);
+extern CORE_ADDR 
+m3_tc_addr_from_inf_object_addr ( CORE_ADDR );
 
 /* Given a type from a Modula-3 program, return its numeric uid. */ 
-extern int int_uid_from_m3_type ( struct type * t );  
+extern int 
+int_uid_from_m3_type ( struct type * t );  
 
 /* given a gdb type, find the address of the corresponding typecell */
-extern CORE_ADDR m3_tc_addr_from_type (struct type *t);
+extern CORE_ADDR 
+m3_tc_addr_from_type ( struct type * t );
 
 /* given the address of a typecell, find the M3 numeric uid for it. */
-extern int m3_int_uid_from_tc (CORE_ADDR);
+extern int 
+m3_int_uid_from_tc_addr ( CORE_ADDR addr );
 
 /* given the address of a typecell, find the gdb type for it */
-extern struct type *m3_type_from_tc (CORE_ADDR);
+extern struct type * 
+m3_type_from_tc ( CORE_ADDR );
 
 /* Given a heap reference, find it's actual type. 
    PRE: addr is the inferior address of a object with a typecode header,
         i.e., either it's a traced ref or an untraced object type. 
 */ 
-extern struct type * m3_allocated_type_from_object_addr (CORE_ADDR);
+extern struct type * 
+m3_allocated_type_from_object_addr ( CORE_ADDR );
 
-extern int m3_dataOffset_from_tc_addr (CORE_ADDR);
+extern int 
+m3_dataOffset_from_tc_addr (CORE_ADDR);
 
-extern int m3_methodOffset_from_tc_addr (CORE_ADDR);
+extern int 
+m3_methodOffset_from_tc_addr (CORE_ADDR);
 
-extern int m3_dataSize_from_tc_addr (CORE_ADDR);
+extern int 
+m3_dataSize_from_tc_addr (CORE_ADDR);
 
-extern CORE_ADDR m3_super_tc_addr_from_tc_addr (CORE_ADDR);
+extern CORE_ADDR 
+m3_super_tc_addr_from_tc_addr (CORE_ADDR);
 
-extern CORE_ADDR m3_defaultMethods_from_tc_addr (CORE_ADDR);
+extern CORE_ADDR 
+m3_defaultMethods_from_tc_addr (CORE_ADDR);
 
-extern int m3_find_rec_field (struct type *, const char *, int *, int *,
+extern int 
+m3_find_rec_field (struct type *, const char *, int *, int *,
 			      struct type **);
 
-extern int m3_find_obj_field (struct type *, char *, int *, int *,
+extern int 
+m3_find_obj_field (struct type *, char *, int *, int *,
 			      struct type **);
 
-extern int m3_find_obj_method (struct type *obj_type,
+extern int 
+m3_find_obj_method (struct type *obj_type,
                                char *name,
                                int *size, int *offset,
                                struct type **type);
 
-extern bool m3_is_ordinal_type (struct type *);
+extern bool 
+m3_is_ordinal_type (struct type *);
 
-extern bool m3_type_is_signed ( struct type *type );  
+extern bool 
+m3_type_is_signed ( struct type *type );  
 
-extern void m3_ordinal_bounds (struct type *, LONGEST *, LONGEST *);
+extern void 
+m3_ordinal_bounds (struct type *, LONGEST *, LONGEST *);
 
-extern gdb_byte *m3_read_object_fields_bits (CORE_ADDR);
+/* If range_type is an ordinal type, range-check value against it.  
+   If the check fails, emit an error (which implies noreturn.) */ 
+extern void 
+m3_ordinal_range_check ( 
+    LONGEST value, struct type * range_type, char * purpose ); 
 
-extern LONGEST m3_extract_ord (const gdb_byte *, int, int, int);
+extern gdb_byte *
+m3_read_object_fields_bits (CORE_ADDR);
 
-extern CORE_ADDR m3_extract_address (const gdb_byte *, int);
+extern LONGEST 
+m3_extract_ord (const gdb_byte *, int, int, int);
 
-extern LONGEST m3_value_as_integer (struct value *);
+extern CORE_ADDR 
+m3_extract_address (const gdb_byte *, int);
 
-extern double m3_value_as_float (struct value *);
+extern LONGEST 
+m3_value_as_integer (struct value *);
 
-extern struct value * m3_ensure_value_is_unpacked ( struct value * packed_val ); 
-extern int m3_open_array_dope_align ( ); 
+extern double 
+m3_value_as_float (struct value *);
+
+extern struct value * 
+m3_ensure_value_is_unpacked ( struct value * packed_val ); 
+
+extern int 
+m3_open_array_dope_align ( ); 
 
 /* Return the gdb-space byte offset of 'dimension'-th shape component, relative
    to the beginning of open arrray dope. */ 
-extern int m3_shape_component_offset ( int dimension );  
+extern int 
+m3_shape_component_offset ( int dimension );  
 
-extern CORE_ADDR m3_open_array_elems_addr ( const gdb_byte * addr ); 
+extern CORE_ADDR 
+m3_open_array_elems_addr ( const gdb_byte * addr ); 
 
-extern void m3_set_open_array_elems_addr ( gdb_byte * addr, CORE_ADDR val );  
+extern void 
+m3_set_open_array_elems_addr ( gdb_byte * addr, CORE_ADDR val );  
 
 /* Return the dimension-th shape component (i.e., the element count for the
    dimension-th dimension), of the Modula-3 open array whose dope is in 
@@ -384,7 +441,8 @@ extern const int static_link_offset;
 extern struct frame_info * 
 m3_static_parent_frame ( struct frame_info *start_frame ); 
 
-extern int m3_proc_closure_align ( ); 
+extern int 
+m3_proc_closure_align ( ); 
 
 /* FIXME:  This struct is the wrong way to do this, because it now needs
    to reflect target layout, in addition to values constructed entirely
@@ -489,4 +547,22 @@ m3_make_canonical ( struct symtabs_and_lines * values, char * * * canonical );
 extern struct value * 
 m3_evaluate_string ( char * string );  
 
+enum m3_target_typ 
+  { TARGET_UNKNOWN, 
+    TARGET_NT386,
+    TARGET_ALPHA_OSF,
+    TARGET_OTHER
+  }; 
+
+extern enum m3_target_typ m3_current_target; 
+
+extern int m3_target_integer_bit; 
+extern int m3_target_longint_bit; 
+
+extern void
+m3_set_derived_target_info ( void ); 
+
+extern enum m3_target_typ
+m3_target_pure ( char * name );
+ 
 /* End of file m3-util.h */ 

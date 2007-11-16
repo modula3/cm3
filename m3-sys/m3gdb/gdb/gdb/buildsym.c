@@ -645,6 +645,9 @@ patch_subfile_names (struct subfile *subfile, char *name)
       subfile->dirname = subfile->name;
       subfile->name = savestring (name, strlen (name));
       last_source_file = name;
+#ifdef _LANG_m3
+      m3_check_target ( subfile->dirname, subfile->name ); 
+#endif /* _LANG_m3 */ 
 
       /* Default the source language to whatever can be deduced from
          the filename.  If nothing can be deduced (such as for a C/C++

@@ -53,6 +53,11 @@ extern bool processing_pm3_compilation;
 */   
 extern bool procedures_have_extra_block; 
 
+/* Use the directory name and object file name (taken from stabs SO entries,)
+   to maybe detect the Modula-3 target name. */  
+extern void
+m3_check_target ( char * dir_name, char * file_name ); 
+
 /* Use the string from the N_OPT stabs entry to maybe set 
    processing_pm3_compilation and procedures_have_extra_block. */
 extern void
@@ -70,6 +75,9 @@ extern struct type *builtin_type_m3_cardinal;
 extern struct type *builtin_type_m3_char;
 extern struct type *builtin_type_m3_extended;
 extern struct type *builtin_type_m3_integer;
+extern struct type *builtin_type_m3_cardinal;
+extern struct type *builtin_type_m3_longint;
+extern struct type *builtin_type_m3_longcard;
 extern struct type *builtin_type_m3_longreal;
 extern struct type *builtin_type_m3_mutex;
 extern struct type *builtin_type_m3_null;

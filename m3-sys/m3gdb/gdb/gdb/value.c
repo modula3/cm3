@@ -1475,6 +1475,8 @@ retry:
 #ifdef _LANG_m3
     case TYPE_CODE_M3_INTEGER:
     case TYPE_CODE_M3_CARDINAL:
+    case TYPE_CODE_M3_LONGINT:
+    case TYPE_CODE_M3_LONGCARD:
     case TYPE_CODE_M3_CHAR:
     case TYPE_CODE_M3_WIDECHAR:
     case TYPE_CODE_M3_ENUM:

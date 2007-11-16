@@ -230,6 +230,8 @@ m3_types_equal ( struct type * left, struct type * right )
       case TYPE_CODE_M3_WIDECHAR : 
       case TYPE_CODE_M3_INTEGER : 
       case TYPE_CODE_M3_CARDINAL : 
+      case TYPE_CODE_M3_LONGINT : 
+      case TYPE_CODE_M3_LONGCARD : 
       case TYPE_CODE_M3_REFANY : 
       case TYPE_CODE_M3_TRANSIENT_REFANY : 
       case TYPE_CODE_M3_ROOT : 
@@ -244,44 +246,6 @@ m3_types_equal ( struct type * left, struct type * right )
       default : { return false; } 
     } /* switch */ 
 } /* m3_types_equal */
-
-static struct type * 
-m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
-
-  { struct type * result_type; 
-
-    if ( is_int_or_card != NULL ) { * is_int_or_card = false; } 
-    result_type = param_type; 
-    while ( true ) 
-      { switch ( TYPE_CODE ( result_type ) ) 
-          { case TYPE_CODE_M3_INDIRECT :
-              result_type = TYPE_M3_INDIRECT_TARGET ( result_type ); 
-              break; /* And loop. */  
-            case TYPE_CODE_M3_OPAQUE :
-              result_type = TYPE_M3_OPAQUE_REVEALED ( result_type ); 
-              break; /* And loop. */  
-            case TYPE_CODE_M3_PACKED : 
-              /* The value should still be in packed form, with bitpos and 
-                 bitsize fields set. */ 
-              result_type = TYPE_M3_PACKED_TARGET ( result_type );
-              break; /* And loop. */  
-            case TYPE_CODE_M3_SUBRANGE :
-              result_type = TYPE_M3_SUBRANGE_TARGET ( result_type ); 
-              break; /* And loop. */  
-            case TYPE_CODE_M3_INTEGER : 
-            case TYPE_CODE_M3_CARDINAL : 
-              if ( is_int_or_card != NULL ) { * is_int_or_card = true; } 
-              return result_type;  
-            case TYPE_CODE_M3_BOOLEAN : 
-            case TYPE_CODE_M3_CHAR : 
-            case TYPE_CODE_M3_WIDECHAR : 
-            case TYPE_CODE_M3_ENUM : 
-              return result_type;  
-            default: 
-              return NULL; 
-          } 
-      } 
-  } /* m3_ordinal_base_type */ 
 
 /* Call this only if left_type is known to be neither indirect nor packed and
    an ordinal type and left tier <= right tier. */ 
@@ -309,6 +273,8 @@ m3_ordinal_subtype_relation (
         case TYPE_CODE_M3_WIDECHAR : 
         case TYPE_CODE_M3_INTEGER : 
         case TYPE_CODE_M3_CARDINAL : 
+        case TYPE_CODE_M3_LONGINT : 
+        case TYPE_CODE_M3_LONGCARD : 
         case TYPE_CODE_M3_ENUM : 
           right_base_type = right_type;
         default : 
@@ -397,42 +363,40 @@ m3_value_equal (struct value *arg1, struct value *arg2)
   enum type_code code1;
   enum type_code code2;
 
-  coerce_array (arg1);
-  coerce_array (arg2);
-
   code1 = TYPE_CODE (value_type (arg1));
   code2 = TYPE_CODE (value_type (arg2));
 
-  if (code1 == TYPE_CODE_M3_INTEGER) { code1 = TYPE_CODE_INT; }
-  if (code2 == TYPE_CODE_M3_INTEGER) { code2 = TYPE_CODE_INT; }
-  if (code1 == TYPE_CODE_M3_POINTER) { code1 = TYPE_CODE_PTR; }
-  if (code2 == TYPE_CODE_M3_POINTER) { code2 = TYPE_CODE_PTR; }
+  /* FIXME: This need a lot of rework.  */ 
 
-  /* FIXME: This need a lot of rework.  For one thing, changing the type 
-     codes above will prevent the tests below for integer types from
-     succeeding. */ 
-
-  if (code1 == TYPE_CODE_M3_INTEGER && code2 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_integer (arg1) == m3_value_as_integer (arg2);
+  if ( (code1 == TYPE_CODE_M3_INTEGER && code2 == TYPE_CODE_M3_INTEGER)
+       || (code1 == TYPE_CODE_M3_CARDINAL && code2 == TYPE_CODE_M3_CARDINAL)
+       || (code1 == TYPE_CODE_M3_LONGINT && code2 == TYPE_CODE_M3_LONGINT)
+       || (code1 == TYPE_CODE_M3_LONGCARD && code2 == TYPE_CODE_M3_LONGCARD)
+     ) 
+    { return m3_value_as_integer (arg1) == m3_value_as_integer (arg2); } 
   else if (code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_float (arg1) == (double) m3_value_as_integer (arg2);
+    { return m3_value_as_float (arg1) == (double) m3_value_as_integer (arg2); }
   else if (code2 == TYPE_CODE_FLT && code1 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_float (arg2) == (double) m3_value_as_integer (arg1);
+    { return m3_value_as_float (arg2) == (double) m3_value_as_integer (arg1); }
   else if (code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_FLT)
-    return m3_value_as_float (arg1) == m3_value_as_float (arg2);
+    { return m3_value_as_float (arg1) == m3_value_as_float (arg2); }
 
-  /* FIXME: Need to promote to either CORE_ADDR or LONGEST, whichever
-     is bigger.  */
+  /* FIXME: Need to promote to LONGEST. is bigger.  */
   else if (code1 == TYPE_CODE_M3_POINTER && code2 == TYPE_CODE_M3_INTEGER)
-    return m3_value_as_address (arg1) == (CORE_ADDR) m3_value_as_integer (arg2);
+    { return 
+        m3_value_as_address (arg1) == (CORE_ADDR) m3_value_as_integer (arg2);
+    } 
   else if (code2 == TYPE_CODE_M3_POINTER && code1 == TYPE_CODE_M3_INTEGER)
-    return (CORE_ADDR) m3_value_as_integer (arg1) == m3_value_as_address (arg2);
+    { return 
+        (CORE_ADDR) m3_value_as_integer (arg1) == m3_value_as_address (arg2);
+    } 
 
-  else if (code1 == code2
-           && ((len = TYPE_LENGTH (value_type (arg1)))
-               == TYPE_LENGTH (value_type (arg2))))
-    {
-      p1 = value_contents (arg1);
+  else if ( code1 == code2
+             && ( ( len = TYPE_LENGTH (value_type (arg1)))
+                  == TYPE_LENGTH (value_type (arg2))
+                )
+          )
+    { p1 = value_contents (arg1);
       p2 = value_contents (arg2);
       while (--len >= 0)
         {
@@ -551,6 +515,8 @@ m3_type_code_tier ( enum type_code code )
         case TYPE_CODE_M3_WIDECHAR : 
         case TYPE_CODE_M3_INTEGER : 
         case TYPE_CODE_M3_CARDINAL : 
+        case TYPE_CODE_M3_LONGINT : 
+        case TYPE_CODE_M3_LONGCARD : 
         case TYPE_CODE_M3_ENUM : 
           return 7; 
         case TYPE_CODE_M3_PROC : 
@@ -591,8 +557,8 @@ m3_allocated_type ( struct value * val )
     struct type * direct_type; 
     CORE_ADDR val_contents; 
 
-    val_type = value_type ( val ) ; 
-    if ( * ( LONGEST * ) value_contents ( val ) == m3_type_magic_value ) 
+    val_type = value_type ( val ) ;
+    if ( m3_value_is_type ( val ) )  
       { return val_type; } 
     else 
       { direct_type = m3_revealed_unpacked_direct_type ( val_type ); 
@@ -895,6 +861,8 @@ m3_subtype_relation ( struct type * left, struct type * right )
         case TYPE_CODE_M3_WIDECHAR : 
         case TYPE_CODE_M3_INTEGER : 
         case TYPE_CODE_M3_CARDINAL : 
+        case TYPE_CODE_M3_LONGINT : 
+        case TYPE_CODE_M3_LONGCARD : 
         case TYPE_CODE_M3_ENUM : 
           return m3_ordinal_subtype_relation 
                    ( left_direct, left_direct, right_direct ); 
@@ -2326,7 +2294,7 @@ m3_evaluate_dot (
                 field_name
               ); /* NORETURN */ 
           } 
-	allocated_tc_addr = m3_tc_addr_from_object_addr ( lhs_inf_addr );
+	allocated_tc_addr = m3_tc_addr_from_inf_object_addr ( lhs_inf_addr );
         if ( m3_check_TextLiteral_buf 
               ( lhs_inf_addr, allocated_tc_addr, field_name, & bitsize, 
                 & bitpos, & dot_type 
@@ -2603,6 +2571,95 @@ m3_evaluate_text_literal (
     return val;
   } /* m3_evaluate_text_literal */ 
 
+/* If 'arg' is any ordinal value (including a type) that FIRST, LAST, or 
+   NUMBER can be applied to, return 'true' and set the ordinal base type 
+   and bounds of 'arg'.  Write an error (and don't return) if something
+   is known illegal.  Return false if other legal possibilities exist. */ 
+static bool
+m3_ordinal_FIRST_info ( 
+    struct value * arg, 
+    struct type * * base_type, 
+    LONGEST * lower, 
+    LONGEST * upper, 
+    char * op_name
+  )
+  { struct type * arg_type = NULL;
+    struct type * ordinal_type = NULL; 
+
+    arg_type = value_type ( arg );
+
+    while ( TYPE_CODE ( arg_type ) == TYPE_CODE_M3_INDIRECT ) 
+      { arg_type = TYPE_M3_TARGET ( arg_type );
+        arg = value_at_lazy ( arg_type, m3_value_as_address ( arg ) );
+      }
+    /* FIXME: ^first, use a function to dereference indirects.  Second, pull 
+              this out to call sites, so FIRST and LAST can be make to work on 
+              floating types via other code. */ 
+
+    if ( m3_is_ordinal_type ( arg_type ) ) 
+      { ordinal_type = arg_type;
+        m3_ordinal_bounds ( ordinal_type, lower, upper );
+      } 
+    else if ( TYPE_CODE ( arg_type ) == TYPE_CODE_M3_ARRAY ) 
+      { ordinal_type = TYPE_M3_ARRAY_INDEX ( arg_type );
+        m3_ordinal_bounds ( ordinal_type, lower, upper );
+      } 
+    else if ( TYPE_CODE ( arg_type ) == TYPE_CODE_M3_OPEN_ARRAY ) 
+      { if ( m3_value_is_type ( arg ) ) 
+          { error 
+              (_("Cannot apply %s to an open array type.\n" ), op_name );
+            /* NORETURN */ 
+          } 
+        if ( lower != NULL ) 
+          { * lower = 0; } 
+        if ( upper != NULL ) 
+          { * upper = m3_value_open_array_shape_component ( arg, 0 ) - 1; }
+        ordinal_type = builtin_type_m3_integer; 
+      } 
+    else { return false; } /* Let caller try something else. */  
+    if ( base_type != NULL ) 
+      { * base_type = m3_ordinal_base_type ( ordinal_type, NULL ); }
+    return true;  
+  } /* m3_ordinal_FIRST_info */ 
+ 
+static struct value * 
+m3_eval_VAL ( struct expression *exp, int *pos, enum noside noside )
+
+  { struct value * arg1; 
+    struct value * arg2; 
+    struct type * arg1_type;
+    struct type * arg2_type;
+    struct type * arg1_base_type;
+    LONGEST sval; 
+    bool arg1_is_int_or_card; 
+
+    (*pos) += 1; 
+    arg1 = m3_evaluate_subexp ( NULL_TYPE, exp, pos, noside );
+    arg2 = m3_evaluate_subexp ( NULL_TYPE, exp, pos, noside );
+    arg1_type = value_type ( arg1 );
+    arg2_type = value_type ( arg2 );
+
+    if ( ! m3_value_is_type ( arg2 )   
+         || ! m3_is_ordinal_type ( arg2_type ) 
+       ) 
+      { error 
+          (_( "Second argument of VAL must be an ordinal type.\n " ) );
+        /* NORETURN */ 
+      } 
+    arg1_base_type 
+      = m3_ordinal_base_type ( arg1_type, & arg1_is_int_or_card ); 
+    if ( ! arg1_is_int_or_card ) 
+      { error 
+          (_( "First argument of VAL must be a value assignable to an "
+              "integer or cardinal type.\n"
+          ) );
+        /* NORETURN */ 
+      } 
+    sval  = m3_value_as_integer ( arg1 );
+    m3_ordinal_range_check ( sval, arg2_type, "first argument to VAL" ); 
+    return m3_value_from_longest ( arg2_type, sval );
+  } /* m3_eval_VAL */ 
+
 static struct value *
 m3_evaluate_subexp_maybe_packed ( 
     struct type *expect_type,
@@ -2817,8 +2874,7 @@ m3_evaluate_subexp_maybe_packed (
 
     case OP_M3_TYPE:
       (*pos) += 3;
-      arg1 = allocate_value (exp->elts[pc+1].type);
-      *(LONGEST *) value_contents_raw (arg1) = m3_type_magic_value;
+      arg1 = m3_allocate_value_that_is_type ( exp -> elts [ pc + 1 ] . type ); 
       return arg1;
 
     case UNOP_M3_DEREF: {
@@ -2892,14 +2948,21 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (0, exp, pos, noside);
       neg_type = value_type (arg1);
-      if (TYPE_CODE (neg_type) == TYPE_CODE_FLT)
-	return value_from_double (neg_type, - m3_value_as_float (arg1));
-      else if (TYPE_CODE (neg_type) == TYPE_CODE_M3_INTEGER)
-	return m3_value_from_longest (neg_type, - m3_value_as_integer (arg1));
-      else {
-	error (_("'-' must be applied to an integer or floating-point value"));
-	return arg1;
-      }}
+      switch ( TYPE_CODE ( neg_type ) ) 
+        { case TYPE_CODE_FLT: 
+            return 
+              value_from_double ( neg_type, - m3_value_as_float ( arg1 ) ) ;
+          case TYPE_CODE_M3_INTEGER: 
+          case TYPE_CODE_M3_LONGINT: 
+          case TYPE_CODE_M3_LONGCARD: 
+            return 
+              m3_value_from_longest 
+                ( neg_type, - m3_value_as_integer ( arg1 ) );
+          default: 
+            error 
+              (_("Unary '-' must be applied to an integer or floating-point value.\n"));
+        } 
+      }
       
     case UNOP_M3_NOT: {
       LONGEST val;
@@ -2910,50 +2973,74 @@ m3_evaluate_subexp_maybe_packed (
       return m3_value_from_longest (builtin_type_m3_boolean, val);  }
 	
     case UNOP_M3_FIRST:
+      { struct value * arg;
+        struct value * res;
+        struct type * base_type;
+        LONGEST lower;
+        LONGEST upper;
+
+        (*pos) += 1; 
+        arg = m3_evaluate_subexp (0, exp, pos, noside);
+        /* FIXME: We want noside to be conditional.  Evaluate the argument
+                  iff it is a value of open array type. */ 
+        if ( m3_ordinal_FIRST_info 
+              ( arg, & base_type, & lower, & upper, "FIRST" ) 
+           )
+          { res = m3_value_from_longest ( base_type, lower ); 
+            return res;
+          } 
+        /* IMPLEMENTME: Implement this on floating types. */ 
+        else 
+          { error 
+              (_("FIRST is implemented only on ordinal and array types.\n") ); 
+          } 
+      }
+
     case UNOP_M3_LAST: 
-    case UNOP_M3_NUMBER: {
-      struct value * res, * array;
-      struct type * array_type, * index_type = NULL;
-      LONGEST lowerbound, upperbound, val = 0;
+      { struct value * arg;
+        struct value * res;
+        struct type * base_type;
+        LONGEST lower;
+        LONGEST upper;
 
-      (*pos) += 1; 
-      array = m3_evaluate_subexp (0, exp, pos, noside);
-      array_type = value_type (array);
-
-      while (TYPE_CODE (array_type) == TYPE_CODE_M3_POINTER
-	     || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
-	array_type = TYPE_M3_TARGET (array_type);
-	array = value_at_lazy (array_type, m3_value_as_address (array));
-        if (array == 0) {
-          error (_("FIRST, LAST or NUMBER applied to NIL"));  }}
-
-      if (TYPE_CODE (array_type) == TYPE_CODE_M3_ARRAY) {
-	index_type = TYPE_M3_ARRAY_INDEX (array_type);
-	m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
-      } else if (TYPE_CODE (array_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	lowerbound = 0;
-	upperbound = *(long*) (value_contents (array) + sizeof(long)) - 1;
-        index_type = builtin_type_m3_integer; 
-      } else if (m3_is_ordinal_type (array_type)) {
-	index_type = array_type;
-	m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
-      } else {
-	error (_("FIRST, LAST, NUMBER can only be applied to arrays."));
+        (*pos) += 1; 
+        arg = m3_evaluate_subexp (0, exp, pos, noside);
+        /* FIXME: We want noside to be conditional.  Evaluate the argument
+                  iff it is a value of open array type. */ 
+        if ( m3_ordinal_FIRST_info 
+               ( arg, & base_type, & lower, & upper, "LAST" ) 
+           )  
+          { res = m3_value_from_longest ( base_type, upper ); 
+            return res;
+          } 
+        /* IMPLEMENTME: Implement this on floating types. */ 
+        else 
+          { error 
+              (_("LAST is implemented only on ordinal and array types.\n") ); 
+          } 
       }
 
-      res = allocate_value (builtin_type_m3_integer);
-      set_value_lazy (res, 0);
-      switch (op) {
-	case UNOP_M3_FIRST:   val = lowerbound;  break;
-	case UNOP_M3_LAST:    val = upperbound;  break;
-	case UNOP_M3_NUMBER:  val = upperbound - lowerbound + 1; 
-                              index_type = builtin_type_m3_cardinal;  break;
+    case UNOP_M3_NUMBER: 
+      { struct value * arg;
+        struct value * res;
+        struct type * base_type;
+        LONGEST lower;
+        LONGEST upper;
+
+        (*pos) += 1; 
+        arg = m3_evaluate_subexp (0, exp, pos, noside);
+        if ( m3_ordinal_FIRST_info 
+               ( arg, & base_type, & lower, & upper, "NUMBER" ) 
+           )
+          { res = m3_value_from_longest 
+                    ( builtin_type_m3_cardinal, upper - lower + 1 ); 
+            return res;
+          } 
+        else 
+          { error 
+              (_("NUMBER can apply only to ordinal and array types.\n") ); 
+          } 
       }
-      res = allocate_value (index_type);
-      *(LONGEST *)value_contents_raw (res) = val;
-      set_value_lazy (res, 0);
-      return res;
-    }
 
     case UNOP_M3_ABS: {
       struct type *arg1_type;
@@ -2961,19 +3048,27 @@ m3_evaluate_subexp_maybe_packed (
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg1_type = value_type (arg1);
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
-	LONGEST val = m3_value_as_integer (arg1);
-	if (val < 0) { val = -val; };
-	return m3_value_from_longest (arg1_type, val);
-      } else if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
-	double val = m3_value_as_float (arg1);
-	if (val < 0.0) { val = -val; };
-	return value_from_double (arg1_type, val);
-      } else {
-	error (_("ABS requires an INTEGER, REAL, LONGREAL, or EXTENDED "
-                 "parameter"));
-	return arg1;
-      }}
+      switch ( TYPE_CODE (arg1_type) ) 
+        { case TYPE_CODE_M3_INTEGER:
+          case TYPE_CODE_M3_LONGINT:
+            { LONGEST val = m3_value_as_integer ( arg1 );
+              if ( val < 0 ) 
+                { val = - val; }
+              return m3_value_from_longest ( arg1_type, val );
+            }
+
+          case TYPE_CODE_FLT:
+            { double val = m3_value_as_float ( arg1 );
+              if ( val < 0.0 ) 
+                { val = - val; }
+              return value_from_double ( arg1_type, val );
+            } 
+          default: 
+	    error (_("ABS requires an INTEGER, LONGINT, REAL, LONGREAL, "
+                     "or EXTENDED parameter.\n"
+                  ) );
+        }
+      } 
 
     case UNOP_M3_ADR: 
       { struct value * v; 
@@ -3093,7 +3188,7 @@ m3_evaluate_subexp_maybe_packed (
 
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); 
-      if ( * ( LONGEST * ) value_contents ( arg1 ) == m3_type_magic_value )
+      if ( m3_value_is_type ( arg1 ) ) 
         { error 
             (_("TYPECODE is not implemented for types.")); /* NORETURN */ 
         }
@@ -3124,7 +3219,7 @@ m3_evaluate_subexp_maybe_packed (
               { error 
                   (_("TYPECODE ( NIL ) not implemented.")); /* NORETURN */ 
               }
-            typecode = m3_typecode_from_inf_address ( val_contents ); 
+            typecode = m3_typecode_from_inf_object_addr ( val_contents ); 
             return m3_value_from_longest 
                      ( builtin_type_m3_integer, typecode );
           default : 
@@ -3154,47 +3249,28 @@ m3_evaluate_subexp_maybe_packed (
       }
     }
 
-    case UNOP_M3_ORD: {
-      (*pos) += 1; 
-      arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      if (m3_is_ordinal_type (value_type (arg1))) {
-        LONGEST val;
-        val  = m3_value_as_integer (arg1);
-        return m3_value_from_longest (builtin_type_m3_integer, val);
-      } else {
-	error (_("value passed to ORD is not of an ordinal type"));
-        return arg1;
+    case UNOP_M3_ORD: 
+      { struct value * arg1;
+        LONGEST sval;
+
+        (*pos) += 1; 
+        arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
+        if ( m3_is_ordinal_type ( value_type ( arg1 ) ) 
+             && ! m3_value_is_type ( arg1 ) 
+           ) 
+          { sval = m3_value_as_integer ( arg1 );
+            m3_ordinal_range_check 
+              ( sval, builtin_type_m3_integer, "argument of ORD" ); 
+            return m3_value_from_longest ( builtin_type_m3_integer, sval );
+          } 
+        else 
+          { error (_("Argument to ORD is not a value of ordinal type.\n" ) );
+            /* NORETURN */ 
+          }
       }
-    }
 
-    case BINOP_M3_VAL: {
-      struct type *arg1_type;
-
-      (*pos) += 1; 
-      arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      arg2 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      arg1_type = value_type (arg1);
-
-      if (TYPE_CODE (arg1_type) != TYPE_CODE_M3_INTEGER) {
-	error (_("first argument of VAL must be an integer"));
-	return arg1;
-      } else if ((*(LONGEST *) value_contents (arg2) != m3_type_magic_value) ||
-		 (! m3_is_ordinal_type (value_type(arg2)))) {
-	error (_("second argument of VAL must be an ordinal type"));
-	return arg1;
-      } else {
-        LONGEST val, lower, upper;
-        val  = m3_value_as_integer (arg1);
-	m3_ordinal_bounds (value_type(arg2), &lower, &upper);
-	if ((val < lower) || (upper < val)) {
-          /* FIXME: Put value, lower, and Upper into this message: */ 
-	  error (_("value passed to VAL is out of range"));
-	  return arg1;
-        } else {
-          return m3_value_from_longest (value_type(arg2), val);
-        }
-      }
-    }
+    case BINOP_M3_VAL: 
+      { return m3_eval_VAL ( exp, pos, noside ); }  
 
     case BINOP_M3_FLOAT: {
       struct type *arg1_type;
@@ -3205,26 +3281,33 @@ m3_evaluate_subexp_maybe_packed (
       arg2 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg1_type = value_type (arg1);
 
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
-        val = m3_value_as_float (arg1);
-      } else if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
-        val = (double) m3_value_as_integer (arg1);
-      } else {
+      switch ( TYPE_CODE ( arg1_type ) ) 
+        { case TYPE_CODE_FLT: 
+            val = m3_value_as_float ( arg1 );
+            break; 
+          case TYPE_CODE_M3_INTEGER:
+          case TYPE_CODE_M3_CARDINAL:
+          case TYPE_CODE_M3_LONGINT:
+          case TYPE_CODE_M3_LONGCARD:
+           val = (double) m3_value_as_integer ( arg1 );
+            break; 
+          default: 
+            error 
+              (_("First parameter to FLOAT must be a value of integer or "
+                 "real type.\n"
+              ) ); /* NORETURN */ 
+        }
+
+      if ( ! m3_value_is_type ( arg2 ) 
+	   || (TYPE_CODE ( value_type( arg2 ) ) != TYPE_CODE_FLT )
+         ) {
 	error 
-          (_("first parameter of FLOAT must be an INTEGER, REAL, LONGREAL, "
-             "or EXTENDED value") 
-          );
-	return arg1;
+          (_("Second parameter to FLOAT must be REAL, LONGREAL, "
+             "or EXTENDED.\n"
+          ) ); /* NORETURN */ 
       }
 
-      if ((*(LONGEST *) value_contents (arg2) != m3_type_magic_value)
-	 || (TYPE_CODE (value_type(arg2)) != TYPE_CODE_FLT)) {
-	error 
-          (_("second parameter of FLOAT must be REAL, LONGREAL, or EXTENDED"));
-	return arg1;
-      }
-
-      return value_from_double (value_type(arg2), val);
+      return value_from_double ( value_type( arg2 ), val );
     }
 
     case BINOP_M3_LOOPHOLE: {
@@ -3239,7 +3322,8 @@ m3_evaluate_subexp_maybe_packed (
       if (TYPE_CODE(arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
 	error (_("LOOPHOLE of open array values is illegal"));
         return arg1;
-      } else if (*(LONGEST *) value_contents (arg2) != m3_type_magic_value) {
+      } 
+      else if ( ! m3_value_is_type ( arg2 ) ) {
 	error (_("Second parameter of LOOPHOLE must be a type"));
 	return arg1;
       } else if (TYPE_CODE (arg2_type) == TYPE_CODE_M3_OPEN_ARRAY) {
@@ -3285,12 +3369,12 @@ m3_evaluate_subexp_maybe_packed (
 	upperbound 
           = *(long*) (value_contents (array) + TARGET_PTR_BIT/HOST_CHAR_BIT) - 1;
         { struct type *e = elem_type;
-	  long n = (TARGET_PTR_BIT + TARGET_LONG_BIT) / HOST_CHAR_BIT;
+	  long n = (TARGET_PTR_BIT + m3_target_integer_bit) / HOST_CHAR_BIT;
 	  elt_size = 1;
 	  while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY) {
             /* FIXME: This should be a target long, not a host long. */
 	    elt_size *= *(long*) (value_contents (array) + n);
-            n += TARGET_LONG_BIT / HOST_CHAR_BIT;
+            n += m3_target_integer_bit / HOST_CHAR_BIT;
 	    e = TYPE_M3_OPEN_ARRAY_ELEM (e); }
 	  elt_size *= TYPE_M3_SIZE (e); }}
       else {
@@ -3317,8 +3401,8 @@ m3_evaluate_subexp_maybe_packed (
 	  /* recreate a dope vector for the next guy */
 	  memcpy (value_contents_raw (v) + (TARGET_PTR_BIT / HOST_CHAR_BIT),
 		  value_contents (array)
-		    + (TARGET_PTR_BIT + TARGET_LONG_BIT)/ HOST_CHAR_BIT, 
-		  TYPE_LENGTH (elem_type) - TARGET_LONG_BIT / HOST_CHAR_BIT);
+		    + (TARGET_PTR_BIT + m3_target_integer_bit)/ HOST_CHAR_BIT, 
+		  TYPE_LENGTH (elem_type) - m3_target_integer_bit / HOST_CHAR_BIT);
 	  *(char **)value_contents_raw (v) = 
 	    *(char **)value_contents (array) + offset / 8; }
 
@@ -3370,12 +3454,14 @@ m3_evaluate_subexp_maybe_packed (
       LONGEST ival1 = 0, ival2 = 0;
       double fval1 = 0.0, fval2 = 0.0;
       struct type *arg1_type, *arg2_type;
+      struct type * result_type; 
 
       (*pos) += 1; 
       arg1 = m3_evaluate_subexp (0, exp, pos, noside);
       arg2 = m3_evaluate_subexp (0, exp, pos, noside);
 
       arg1_type = value_type (arg1);
+      result_type = builtin_type_m3_integer; 
     restart:
       switch (TYPE_CODE (arg1_type)) 
 	{
@@ -3389,8 +3475,18 @@ m3_evaluate_subexp_maybe_packed (
 	case TYPE_CODE_M3_CARDINAL:
 	case TYPE_CODE_M3_SUBRANGE:
 	  arg1_type = builtin_type_m3_integer;
-	  /* fall through */
+	  ival1 = m3_value_as_integer (arg1);
+	  break;
 	case TYPE_CODE_M3_INTEGER:
+	  ival1 = m3_value_as_integer (arg1);
+	  break;
+	case TYPE_CODE_M3_LONGCARD:
+	  arg1_type = builtin_type_m3_longint;
+          result_type = builtin_type_m3_longint; 
+	  ival1 = m3_value_as_integer (arg1);
+	  break;
+	case TYPE_CODE_M3_LONGINT:
+          result_type = builtin_type_m3_longint; 
 	  ival1 = m3_value_as_integer (arg1);
 	  break;
 	case TYPE_CODE_FLT:
@@ -3433,8 +3529,18 @@ m3_evaluate_subexp_maybe_packed (
 	case TYPE_CODE_M3_CARDINAL:
 	case TYPE_CODE_M3_SUBRANGE:
 	  arg2_type = builtin_type_m3_integer;
-	  /* fall through */
+	  ival2 = m3_value_as_integer (arg2);
+	  break;
 	case TYPE_CODE_M3_INTEGER:
+	  ival2 = m3_value_as_integer (arg2);
+	  break;
+	case TYPE_CODE_M3_LONGCARD:
+	  arg2_type = builtin_type_m3_longint;
+          result_type = builtin_type_m3_longint; 
+	  ival2 = m3_value_as_integer (arg2);
+	  break;
+	case TYPE_CODE_M3_LONGINT:
+          result_type = builtin_type_m3_longint; 
 	  ival2 = m3_value_as_integer (arg2);
 	  break;
 	case TYPE_CODE_FLT:
@@ -3464,14 +3570,21 @@ m3_evaluate_subexp_maybe_packed (
 	  break; }
 
 
-      if (TYPE_CODE (arg1_type) != TYPE_CODE (arg2_type)
-	  || TYPE_CODE (arg1_type) == TYPE_CODE_M3_VOID
-	  || (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER && !int_ok)
-	  || (TYPE_CODE (arg1_type) == TYPE_CODE_FLT && !float_ok)) {
-	error (_("Wrong argument types for binary operation"));
-      }
+      if ( TYPE_CODE (arg1_type) != TYPE_CODE (arg2_type)
+	   || TYPE_CODE (arg1_type) == TYPE_CODE_M3_VOID
+         ) 
+        { error (_("Incompatible argument types for binary operation.")); 
+        /* FIXME: This is too restrictive, for some operators. */ 
+          /* NORETURN */ 
+        } 
 
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
+      if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER
+           || TYPE_CODE (arg1_type) == TYPE_CODE_M3_LONGINT
+         ) 
+      { if ( ! int_ok ) 
+          { error (_("Binary operation requires integer typed operands.")); 
+            /* NORETURN */ 
+          } 
 	LONGEST res = 0;
 	switch (op) {
 	  case BINOP_M3_MULT: 	res = ival1 * ival2;          break;
@@ -3480,10 +3593,15 @@ m3_evaluate_subexp_maybe_packed (
 	  case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
 	  case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
 	} /* switch */
-	return m3_value_from_longest (builtin_type_m3_integer, res);
+	return m3_value_from_longest (result_type, res);
       }
 
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
+      if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) 
+      { if ( ! float_ok ) 
+          { error (_("Binary operation requires floating typed operands.")); 
+            /* NORETURN */ 
+          } 
+	
 	double res = 0.0;
 	switch (op) {
 	  case BINOP_M3_DIVIDE: res = fval1 / fval2;          break;
