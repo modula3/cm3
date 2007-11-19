@@ -31,13 +31,12 @@ REVEAL T = Public BRANDED OBJECT
 CONST ExpectedItems = 1000;
 
 PROCEDURE Init (bd: T; stable: SmallDB.T; recover: BOOLEAN): T 
-    RAISES {OSError.E, SmallDB.CorruptedDB, Pickle.Error} =
+    RAISES {OSError.E, SmallDB.Failed, Pickle.Error} =
   VAR nc := NEW (NotifyClosure, bd := bd);
       state: AtomicItemTbl.State;
   BEGIN 
     IF recover THEN
-      state := stable.recoverSnapshot ();
-      Log.Recover (stable, state);
+      state := stable.recover()
     ELSE 
       state := NEW (AtomicItemTbl.State, 
                     tbl := NEW (ItemTbl.Default).init (ExpectedItems),

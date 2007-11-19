@@ -6,7 +6,9 @@ UNSAFE MODULE BoardServerX;
 
 IMPORT SmallDB, FS, Atom, AtomList, Pickle, Scan, 
        OSError, Uerror, M3toC, Text,
-       Board, BoardX, BoardServer, BoardTbl;
+       Board, BoardX, BoardServer, BoardTbl, Log;
+
+IMPORT Lex, FloatMode;
 
 REVEAL T = Public BRANDED OBJECT
     mu: MUTEX;
@@ -33,11 +35,12 @@ PROCEDURE Create (bs: T; boardName: TEXT): Board.T
         RAISES {BoardServer.Failed} =
   VAR board: Board.T;
       pickle: SmallDB.T;
+      cl := NEW(Log.UpdateClosure);
   BEGIN
     TRY
       LOCK bs.mu DO
         FS.CreateDirectory (boardName);
-        pickle := SmallDB.New (boardName);
+        pickle := SmallDB.New (boardName, cl);
         board := NEW (BoardX.T).init (pickle, recover := FALSE);
         EVAL bs.boards.put (boardName, board);
         RETURN board;
@@ -45,8 +48,8 @@ PROCEDURE Create (bs: T; boardName: TEXT): Board.T
     EXCEPT
     | OSError.E (code) =>
       RAISE BoardServer.Failed (OSError2Text (code));
-    | SmallDB.CorruptedDB => 
-      RAISE BoardServer.Failed ("SmallDB.CorruptedDB");
+    | SmallDB.Failed => 
+      RAISE BoardServer.Failed ("SmallDB.Failed");
     | Pickle.Error =>
       RAISE BoardServer.Failed ("Pickle.Error");
     END;
@@ -57,6 +60,7 @@ PROCEDURE Open (bs: T; boardName: TEXT): Board.T
         RAISES {BoardServer.Failed} =
   VAR board: Board.T;
       pickle: SmallDB.T;
+      cl := NEW(Log.UpdateClosure);
   BEGIN
     TRY
       LOCK bs.mu DO
@@ -66,7 +70,7 @@ PROCEDURE Open (bs: T; boardName: TEXT): Board.T
           IF NOT FileExists (boardName & "/" & "Version_Number") THEN
             RAISE BoardServer.Failed (boardName & " not found");
           END;
-          pickle := SmallDB.New (boardName);
+          pickle := SmallDB.New (boardName,cl);
           board := NEW (BoardX.T).init (pickle, recover := TRUE);
           EVAL bs.boards.put (boardName, board);
           RETURN board;
@@ -75,8 +79,8 @@ PROCEDURE Open (bs: T; boardName: TEXT): Board.T
     EXCEPT
     | OSError.E (code) =>
       RAISE BoardServer.Failed (OSError2Text (code));
-    | SmallDB.CorruptedDB => 
-      RAISE BoardServer.Failed ("SmallDB.CorruptedDB");
+    | SmallDB.Failed => 
+      RAISE BoardServer.Failed ("SmallDB.Failed");
     | Pickle.Error =>
       RAISE BoardServer.Failed ("Pickle.Error");
     END;
@@ -168,15 +172,7 @@ PROCEDURE Remove (bs: T; boardName: TEXT)
 PROCEDURE OSError2Text (al: AtomList.T): TEXT =
   VAR text := Atom.ToText (al.head);
   BEGIN 
-    IF Text.Equal ("errno=", Text.Sub (text, 0, 6)) THEN
-      TRY
-        RETURN M3toC.StoT (Uerror.GetFrom_sys_errlist 
-               (Scan.Int (Text.Sub (text, 6))))
-      EXCEPT 
-      | Scan.BadFormat =>
-      END;
-    END;
-    RETURN text;
+    RETURN "OSError.E: " & text;
   END OSError2Text;
 
 PROCEDURE FileExists (name:TEXT): BOOLEAN =

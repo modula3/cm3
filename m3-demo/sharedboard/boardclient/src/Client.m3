@@ -9,6 +9,8 @@ IMPORT VBT, Trestle, FormsVBT, NetObj, Atom, AtomList, Err, Thread, TrestleComm,
        View, Win, WinUIBundle, Board, BoardServer, 
        ItemFont, Focus, PointR;
 
+IMPORT Lex, FloatMode;
+
 TYPE WinMouse = Win.T OBJECT
   OVERRIDES
     mouse := Mouse;
@@ -435,7 +437,7 @@ PROCEDURE ChangeZoomRate (fv: FormsVBT.T; <*UNUSED*> event: TEXT;
                 <*UNUSED*> data: REFANY; <*UNUSED*> ts: VBT.TimeStamp) =
   BEGIN
     zoomrate := FLOAT (FormsVBT.GetInteger (fv, "zoomrate")) / 10.0;
-    FormsVBT.PutText (fv, "zoomrate_feedback", Fmt.Real (zoomrate, 1));
+    FormsVBT.PutText (fv, "zoomrate_feedback", Fmt.Real (zoomrate, prec := 1));
     IF state # State.Disconnected THEN
       Win.ChangeZoomRate (wn, zoomrate);
     END;
@@ -454,7 +456,7 @@ PROCEDURE ChangeFocus (fv: FormsVBT.T; <*UNUSED*> event: TEXT;
         View.ChangeFocus (wn, focus);
       END;
     EXCEPT
-    | Scan.BadFormat => Error (fv, "Bad format for a number");
+    | Lex.Error, FloatMode.Trap => Error (fv, "Bad format for a number");
       DisplayFocus (View.GetFocus (wn));
     END;
   END ChangeFocus;
@@ -474,9 +476,9 @@ PROCEDURE ResetFocus (<*UNUSED*> fv: FormsVBT.T; <*UNUSED*> event: TEXT;
 PROCEDURE DisplayFocus (READONLY focus: Focus.T) =
   (* makes use of the global variable "fv". *)
   BEGIN
-    FormsVBT.PutText (fv, "off_h", Fmt.Real (focus.offset.h, 3, Fmt.Style.Sci));
-    FormsVBT.PutText (fv, "off_v", Fmt.Real (focus.offset.v, 3, Fmt.Style.Sci));
-    FormsVBT.PutText (fv, "scale", Fmt.Real (focus.scale, 3, Fmt.Style.Sci));
+    FormsVBT.PutText (fv, "off_h", Fmt.Real (focus.offset.h, prec := 3, style := Fmt.Style.Sci));
+    FormsVBT.PutText (fv, "off_v", Fmt.Real (focus.offset.v, prec := 3, style := Fmt.Style.Sci));
+    FormsVBT.PutText (fv, "scale", Fmt.Real (focus.scale, prec := 3, style := Fmt.Style.Sci));
   END DisplayFocus; 
 
 PROCEDURE Unselect (<*UNUSED*> fv: FormsVBT.T; <*UNUSED*> event: TEXT;
