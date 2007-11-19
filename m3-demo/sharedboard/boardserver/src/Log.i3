@@ -6,8 +6,8 @@
 
 INTERFACE Log;
 
-IMPORT SmallDB, OSError, Pickle,
-       AtomicItemTbl, NotifyRec, BoardX;
+IMPORT SmallDB, OSError, 
+       NotifyRec, BoardX;
 
 PROCEDURE Update (stable: SmallDB.T; bd: BoardX.T; nr: NotifyRec.T) 
     RAISES {OSError.E};
@@ -17,8 +17,6 @@ PROCEDURE Update (stable: SmallDB.T; bd: BoardX.T; nr: NotifyRec.T)
    "BoardX.Save (bd)".
 *)
 
-PROCEDURE Recover (stable: SmallDB.T; state: AtomicItemTbl.State)
-    RAISES {OSError.E, SmallDB.Failed, Pickle.Error};
-(* Updates "state" by recovering updates logged in "stable". *)
+TYPE UpdateClosure <: SmallDB.Closure;
 
 END Log.

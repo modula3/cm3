@@ -3,8 +3,8 @@
 
 MODULE Log;
 
-IMPORT SmallDB, OSError, Pickle,
-       AtomicItemTbl, NotifyRec, Item, BoardX;
+IMPORT SmallDB, OSError, Pickle, ItemTbl,
+       AtomicItemTbl, NotifyRec, Item, BoardX, Rd, Wr;
 
 TYPE UpdateRec = REF RECORD
     code: NotifyRec.Code;
@@ -12,15 +12,33 @@ TYPE UpdateRec = REF RECORD
     ids: Item.IDArray;
   END;
 
-TYPE UpdateClosure = SmallDB.UpdateClosure OBJECT
-    state: AtomicItemTbl.State;
+REVEAL UpdateClosure = SmallDB.Closure BRANDED OBJECT
   OVERRIDES
-    apply := UpdateApply;
+    readUpdate := ReadUpdate;
+    new := New;
+    recover := Recover;
+    snapshot := Snapshot;
+    logUpdate := Snapshot;
   END;
 
-PROCEDURE UpdateApply (uc: UpdateClosure; value: REFANY) =
-  VAR ur: UpdateRec := value;
-      tbl := uc.state.tbl;
+PROCEDURE Recover(uc : UpdateClosure; rd : Rd.T) : REFANY =
+  BEGIN RETURN Pickle.Read(rd) END Recover;
+
+PROCEDURE Snapshot(uc : UpdateClosure; wr : Wr.T; r : REFANY) =
+  BEGIN Pickle.Write(wr,r) END Snapshot;
+
+PROCEDURE New(uc : UpdateClosure) : REFANY =
+  CONST ExpectedItems = 1000;
+  BEGIN RETURN 
+      NEW (AtomicItemTbl.State,
+                    tbl := NEW (ItemTbl.Default).init (ExpectedItems),
+                    id := 0);
+  END New;
+
+PROCEDURE ReadUpdate (uc: UpdateClosure; rd : Rd.T; stateA: REFANY) : REFANY =
+  VAR ur: UpdateRec := Pickle.Read(rd);
+      state := NARROW(stateA,AtomicItemTbl.State);
+      tbl := state.tbl;
       its := ur.its;
       ids := ur.ids;
       old: Item.T;
@@ -29,7 +47,7 @@ PROCEDURE UpdateApply (uc: UpdateClosure; value: REFANY) =
     | NotifyRec.Code.Create, NotifyRec.Code.Modify => 
       FOR i := FIRST (its^) TO LAST (its^) DO
         EVAL tbl.put (its[i].id, its[i]);
-        uc.state.id := MAX (uc.state.id, its[i].id);
+        state.id := MAX (state.id, its[i].id);
       END;
     | NotifyRec.Code.Delete => 
       FOR i := FIRST (ids^) TO LAST (ids^) DO
@@ -37,7 +55,9 @@ PROCEDURE UpdateApply (uc: UpdateClosure; value: REFANY) =
       END;
     ELSE (*SKIP*)
     END;
-  END UpdateApply;
+
+    RETURN state
+  END ReadUpdate;
 
 CONST LogLimit = 100000;
       (* When the log grows bigger than this, a snapshot is taken 
@@ -55,13 +75,6 @@ PROCEDURE Update (stable: SmallDB.T; bd: BoardX.T; nr: NotifyRec.T)
       BoardX.Save (bd);
     END;
   END Update;
-
-PROCEDURE Recover (stable: SmallDB.T; state: AtomicItemTbl.State)
-    RAISES {OSError.E, SmallDB.Failed, Pickle.Error} =
-  VAR uc := NEW (UpdateClosure, state := state);
-  BEGIN
-      stable.recoverUpdates (uc);
-  END Recover;
 
 BEGIN
 END Log.
