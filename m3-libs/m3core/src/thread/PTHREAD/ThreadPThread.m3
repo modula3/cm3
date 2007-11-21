@@ -459,18 +459,6 @@ PROCEDURE FreeSlot (t: T) =
     WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
 
-PROCEDURE CheckSlot (t: T): BOOLEAN =
-  (* LL = 0 *)
-  VAR
-    me := t.act;
-    result := me # NIL AND me.slot > 0;
-  BEGIN
-    WITH r = Upthread.mutex_lock(slotMu) DO <*ASSERT r=0*> END;
-      result := result AND slots[me.slot] = t;
-    WITH r = Upthread.mutex_unlock(slotMu) DO <*ASSERT r=0*> END;
-    RETURN result;
-  END CheckSlot;
-
 PROCEDURE DumpThread (t: T) =
   BEGIN
     RTIO.PutText("Thread: "); RTIO.PutAddr(LOOPHOLE(t, ADDRESS)); RTIO.PutChar('\n');
@@ -623,10 +611,6 @@ PROCEDURE Fork (closure: Closure): T =
         END;
       END;
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
-    (* last minute sanity checking *)
-    <* ASSERT CheckSlot (t) *>
-    <* ASSERT t.act.next # NIL *>
-    <* ASSERT t.act.prev # NIL *>
     LOCK t.mutex DO
       WHILE t.closure # NIL DO Wait(t.mutex, t.cond) END;
     END;      
