@@ -1151,39 +1151,43 @@ PROCEDURE doshift (t: T) =
           END
         END
       ELSE
-        find(t, stack0, Force.regset, RegSet {Codex86.ECX});
 
-        find(t, stack1, Force.anytemp);
-        IF stop1.loc = OLoc.imm THEN
-          find(t, stack1, Force.anyreg);
+        IF ((stop1.loc # OLoc.imm) OR (stop1.imm # 0)) THEN
+
+          find(t, stack0, Force.regset, RegSet {Codex86.ECX});
+
+          find(t, stack1, Force.anytemp);
+          IF stop1.loc = OLoc.imm THEN
+            find(t, stack1, Force.anyreg);
+          END;
+
+          t.cg.immOp(Op.oCMP, stop0, 0);
+
+          leftlab := t.cg.reserve_labels(1, TRUE);
+          ovflshift := t.cg.reserve_labels(1, TRUE);
+          endlab := t.cg.reserve_labels(1, TRUE);
+
+          t.cg.brOp(Cond.GE, leftlab);
+          t.cg.unOp(Op.oNEG, stop0);
+          t.cg.immOp(Op.oCMP, stop0, 32);
+          t.cg.brOp(Cond.GE, ovflshift);
+          t.cg.unOp(Op.oSHR, stop1);
+          t.cg.brOp(Cond.Always, endlab);
+          t.cg.set_label(ovflshift);
+          (* .ovflshift *)
+          t.cg.binOp(Op.oXOR, stop1, stop1);
+          t.cg.brOp(Cond.Always, endlab);
+          t.cg.set_label(leftlab);
+          (* .leftlab *)
+          t.cg.immOp(Op.oCMP, stop0, 32);
+          t.cg.brOp(Cond.GE, ovflshift);
+          t.cg.unOp(Op.oSAL, stop1);
+          t.cg.set_label(endlab);
+          (* .endlab  *)
+
+          newdest(t, stop1);
+          newdest(t, stop0);
         END;
-
-        t.cg.immOp(Op.oCMP, stop0, 0);
-
-        leftlab := t.cg.reserve_labels(1, TRUE);
-        ovflshift := t.cg.reserve_labels(1, TRUE);
-        endlab := t.cg.reserve_labels(1, TRUE);
-
-        t.cg.brOp(Cond.GE, leftlab);
-        t.cg.unOp(Op.oNEG, stop0);
-        t.cg.immOp(Op.oCMP, stop0, 32);
-        t.cg.brOp(Cond.GE, ovflshift);
-        t.cg.unOp(Op.oSHR, stop1);
-        t.cg.brOp(Cond.Always, endlab);
-        t.cg.set_label(ovflshift);
-        (* .ovflshift *)
-        t.cg.binOp(Op.oXOR, stop1, stop1);
-        t.cg.brOp(Cond.Always, endlab);
-        t.cg.set_label(leftlab);
-        (* .leftlab *)
-        t.cg.immOp(Op.oCMP, stop0, 32);
-        t.cg.brOp(Cond.GE, ovflshift);
-        t.cg.unOp(Op.oSAL, stop1);
-        t.cg.set_label(endlab);
-        (* .endlab  *)
-
-        newdest(t, stop1);
-        newdest(t, stop0);
       END;
 
       discard(t, 1);
