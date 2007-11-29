@@ -2224,10 +2224,12 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           u.vstack.set_imm(stack1, Word.Shift(u.vstack.op(stack1).imm,
                                               u.vstack.op(stack0).imm));
         ELSE
-          u.vstack.find(stack1, Force.anytemp);
           u.vstack.set_imm(stack0, Word.And(u.vstack.op(stack0).imm, 16_1F));
-          u.cg.immOp(Op.oSAL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
-          u.vstack.newdest(u.vstack.op(stack1));
+          IF (u.vstack.op(stack0).imm # 0) THEN
+              u.vstack.find(stack1, Force.anytemp);
+              u.cg.immOp(Op.oSAL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
+              u.vstack.newdest(u.vstack.op(stack1));
+          END
         END
       ELSE
         u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
@@ -2262,10 +2264,12 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           u.vstack.set_imm(stack1, Word.Shift(u.vstack.op(stack1).imm,
                                               -u.vstack.op(stack0).imm));
         ELSE
-          u.vstack.find(stack1, Force.anytemp);
           u.vstack.set_imm(stack0, Word.And(u.vstack.op(stack0).imm, 16_1F));
-          u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
-          u.vstack.newdest(u.vstack.op(stack1));
+          IF (u.vstack.op(stack0).imm # 0) THEN
+            u.vstack.find(stack1, Force.anytemp);
+            u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
+            u.vstack.newdest(u.vstack.op(stack1));
+          END
         END
       ELSE
         u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
