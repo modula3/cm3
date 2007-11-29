@@ -61,10 +61,5 @@ PROCEDURE FD_ZERO (p: UNTRACED REF fd_set) =
     END;
   END FD_ZERO;
 
-PROCEDURE asLong (val: off_t): long =
-  BEGIN
-    RETURN val;
-  END asLong;
-
 BEGIN
 END Utypes.
