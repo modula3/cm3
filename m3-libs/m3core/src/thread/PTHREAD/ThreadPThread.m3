@@ -313,12 +313,9 @@ PROCEDURE Alert (t: T) =
   BEGIN
     LOCK t.mutex DO
       t.alerted := TRUE;
-      c := t.waitingOn;
-    END;
-    IF c # NIL THEN
-      WITH r = Upthread.mutex_lock(c.mutex^) DO <*ASSERT r=0*> END;
-      WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
-      WITH r = Upthread.mutex_unlock(c.mutex^) DO <*ASSERT r=0*> END;
+      IF t.waitCond # NIL THEN
+        WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
+      END;
     END;
   END Alert;
 
@@ -552,15 +549,14 @@ PROCEDURE RunThread (me: Activation) =
       (* mark "self" done and clean it up a bit *)
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
+      WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
+      DISPOSE(self.waitCond);
     END;
 
     IF perfOn THEN PerfDeleted(self.id) END;
 
     (* we're dying *)
     RTHeapRep.ClosePool(me.heapState.newPool);
-
-    WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
-    DISPOSE(self.waitCond);
 
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
