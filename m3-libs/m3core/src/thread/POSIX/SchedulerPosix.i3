@@ -80,13 +80,4 @@ PROCEDURE IOAlertWait(fd: INTEGER; read: BOOLEAN;
       END;
 *)
 
-PROCEDURE DisableSwitching ();
-PROCEDURE EnableSwitching ();
-(* Increment/decrement the counter that controls whether thread
-   switches may occur.  The counter is initialized to zero.  If
-   the counter is greater than zero, switching is disabled.  It's
-   a checked runtime error to use any thread primitives (e.g. LOCK,
-   Wait, Signal, Yield, ...) that would result in thread switches
-   while switching is disabled. *)
-
 END SchedulerPosix.

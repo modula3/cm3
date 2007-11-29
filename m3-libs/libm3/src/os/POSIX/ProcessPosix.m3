@@ -9,7 +9,7 @@ UNSAFE MODULE ProcessPosix EXPORTS Process;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
-  SchedulerPosix, Text, Thread, Unix, Uerror, Uexec, Uprocess, Ustat,
+  Scheduler, Text, Thread, Unix, Uerror, Uexec, Uprocess, Ustat,
   Utime, Uugid, Word;
  
 REVEAL T = BRANDED REF RECORD
@@ -78,7 +78,7 @@ PROCEDURE Create(
     END;
 
     (* Disable the scheduler. *)
-    SchedulerPosix.DisableSwitching ();
+    Scheduler.DisableSwitching ();
 
     execResult := 0;
     forkResult := Unix.vfork();
@@ -97,7 +97,7 @@ PROCEDURE Create(
     forkErrno := Cerrno.GetErrno();
 
     (* Enable scheduler. *)
-    SchedulerPosix.EnableSwitching ();
+    Scheduler.EnableSwitching ();
 
     (* Restore previous virtual timer. *)
     IF Utime.setitimer(Utime.ITIMER_VIRTUAL, oit, nit) < 0 THEN

@@ -161,12 +161,10 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
 PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
-                       initProc: TypeInitProc;
-                       VAR pool: AllocPool): ADDRESS;
-(* Return the address of "size" bytes of traced storage on an
-   "alignment" byte boundary from the allocation pool "pool".
-   The storage is not zeroed.  If the request cannot be satisfied,
-   "NIL" is returned.  LL >= LockHeap. *)
+                       initializer: TypeInitProc): ADDRESS;
+(* Return the address of "size" zeroed bytes of traced storage on an
+   "alignment" byte boundary from the thread's allocation pool.
+   Invoke "initializer" (if not "NIL") on the result. *)
 
 (* Objects in the traced heap are allocated from one of three "pools".
    A pool is collection of pages with similar properties.  The "newPool"
@@ -183,6 +181,7 @@ TYPE
     stack      : Page    := Nil; (* linked list of new pages from this pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
+    filePage   : Page    := Nil; (* page last filed *)
   END;
 
 PROCEDURE ClosePool (VAR pool: AllocPool);
@@ -210,11 +209,11 @@ VAR (* LL >= LockHeap *)
 
 TYPE
   ThreadState = RECORD
-    (* BEWARE: a thread cannot be suspended while its pool is busy.
-       The busy flag permits the thread to decline being suspended for
+    (* BEWARE: a thread cannot be suspended while inCritical # 0
+       This permits the thread to decline being suspended for
        GC until it is done allocating from its pool.  Otherwise, the
        GC could see incoherent object state in the pool's page. *)
-    busy : BOOLEAN := FALSE;
+    inCritical: INTEGER := 0;
     newPool := NewPool;
   END;
 

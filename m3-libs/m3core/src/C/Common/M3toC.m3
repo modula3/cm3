@@ -11,6 +11,7 @@ UNSAFE MODULE M3toC;
 
 IMPORT Ctypes, Cstdlib, Cstring;
 IMPORT Text, TextClass, Text8, Text8CString;
+IMPORT Scheduler;
 
 VAR
   zeroValue := 0;
@@ -30,7 +31,9 @@ PROCEDURE CopyTtoS (t: TEXT): Ctypes.char_star =
   BEGIN
     IF (t = NIL) THEN RETURN zeroPtr; END;
     t.get_info (info);
+    Scheduler.DisableSwitching();
     arr.start  := Cstdlib.malloc (info.length + 1);
+    Scheduler.EnableSwitching();
     arr.length := info.length;
     Text.SetChars (LOOPHOLE (ADR (arr), ArrayPtr)^, t, 0);
     LOOPHOLE (arr.start + info.length, CharPtr)^ := '\000';

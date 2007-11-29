@@ -309,7 +309,6 @@ PROCEDURE Broadcast (c: Condition) =
   END Broadcast;
 
 PROCEDURE Alert (t: T) =
-  VAR c: Condition;
   BEGIN
     LOCK t.mutex DO
       t.alerted := TRUE;
@@ -1007,7 +1006,7 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
     IF RTMachine.SuspendThread = NIL THEN RETURN FALSE END;
     SetState(act, ActState.Stopping);
     IF NOT RTMachine.SuspendThread(act.handle) THEN RETURN FALSE END;
-    IF act.heapState.busy THEN
+    IF act.heapState.inCritical # 0 THEN
       RTMachine.RestartThread(act.handle);
       RETURN FALSE;
     END;
@@ -1153,7 +1152,7 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
     <*ASSERT sig = SIG*>
     IF me = NIL THEN RETURN END;
     IF me.state # ActState.Stopping THEN RETURN END;
-    IF me.heapState.busy THEN RETURN END;
+    IF me.heapState.inCritical # 0 THEN RETURN END;
     IF RTMachine.SaveRegsInStack # NIL
       THEN me.sp := RTMachine.SaveRegsInStack();
       ELSE me.sp := ADR(xx);
@@ -1215,10 +1214,12 @@ PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
 
 PROCEDURE DisableSwitching () =
   BEGIN
+    (* no user-level thread switching *)
   END DisableSwitching;
 
 PROCEDURE EnableSwitching () =
   BEGIN
+    (* no user-level thread switching *)
   END EnableSwitching;
 
 (*---------------------------------------------------------------- errors ---*)
