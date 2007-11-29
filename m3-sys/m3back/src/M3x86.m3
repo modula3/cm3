@@ -2218,9 +2218,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
 
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "shift_left"),
-         stack1 = u.vstack.pos(1, "shift_left"),
-         stop0 = u.vstack.op(stack0),
-         stop1 = u.vstack.op(stack1) DO
+         stack1 = u.vstack.pos(1, "shift_left") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
           u.vstack.set_imm(stack1, Word.Shift(u.vstack.op(stack1).imm,
@@ -2234,7 +2232,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           END
         END
       ELSE
-        IF ((stop1.loc # OLoc.imm) OR (stop1.imm # 0)) THEN
+        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (u.vstack.op(stack1).imm # 0)) THEN
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
           u.vstack.find(stack1, Force.anytemp);
 
@@ -2262,9 +2260,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
 
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "shift_right"),
-         stack1 = u.vstack.pos(1, "shift_right"),
-         stop0 = u.vstack.op(stack0),
-         stop1 = u.vstack.op(stack1) DO
+         stack1 = u.vstack.pos(1, "shift_right") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
           u.vstack.set_imm(stack1, Word.Shift(u.vstack.op(stack1).imm,
@@ -2278,7 +2274,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           END
         END
       ELSE
-        IF ((stop1.loc # OLoc.imm) OR (stop1.imm # 0)) THEN
+        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (u.vstack.op(stack1).imm # 0)) THEN
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
           u.vstack.find(stack1, Force.anytemp);
 
