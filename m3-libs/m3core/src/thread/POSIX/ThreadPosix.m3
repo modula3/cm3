@@ -768,7 +768,7 @@ PROCEDURE StartSwitching () =
 PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
-    IF inCritical = 0 AND NOT heapState.busy THEN InternalYield () END;
+    IF inCritical = 0 AND heapState.inCritical = 0 THEN InternalYield () END;
   END switch_thread;
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL) =
@@ -819,7 +819,7 @@ VAR t, from: T;
 BEGIN
   INC (inCritical);
   <*ASSERT inCritical = 1 *>
-  <*ASSERT NOT heapState.busy *>
+  <*ASSERT heapState.inCritical = 0 *>
 
   from := self.next; (* remember where we started *)
   now            := UTimeNow ();

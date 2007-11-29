@@ -5,6 +5,8 @@ INTERFACE RTAllocCnts;
 
 IMPORT RT0;
 
+VAR countsOn := FALSE;
+
 PROCEDURE BumpCnt (tc: RT0.Typecode);
 PROCEDURE BumpSize (tc: RT0.Typecode; size: INTEGER);
 

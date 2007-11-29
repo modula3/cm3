@@ -862,7 +862,7 @@ PROCEDURE StopWorld (me: Activation) =
     LOOP
       WHILE act # me DO
         IF WinBase.SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        IF act.heapState.busy THEN
+        IF act.heapState.inCritical # 0 THEN
           IF WinBase.ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           INC(nLive);
         END;
@@ -968,6 +968,16 @@ PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
     RETURN ADR(me.heapState);
   END MyHeapState;
+
+PROCEDURE DisableSwitching () =
+  BEGIN
+    (* no user-level thread switching *)
+  END DisableSwitching;
+
+PROCEDURE EnableSwitching () =
+  BEGIN
+    (* no user-level thread switching *)
+  END EnableSwitching;
 
 (*---------------------------------------------------------------- errors ---*)
 

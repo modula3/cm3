@@ -17,4 +17,13 @@ PROCEDURE Yield();
    from system to system.  You shouldn't use it without consulting the
    detailed documentation for your implementation. *)
 
+PROCEDURE DisableSwitching ();
+PROCEDURE EnableSwitching ();
+(* Increment/decrement the counter that controls whether user-level
+   thread switches may occur.  The counter is initialized to zero.  If
+   the counter is greater than zero, switching is disabled.  It's
+   a checked runtime error to use any thread primitives (e.g. LOCK,
+   Wait, Signal, Yield, ...) that would result in thread switches
+   while switching is disabled. *)
+
 END Scheduler.

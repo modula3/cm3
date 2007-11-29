@@ -11,8 +11,8 @@
 UNSAFE MODULE FSPosix EXPORTS FS;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, File, FilePosix, M3toC, OSError,
-       OSErrorPosix, Pathname, Process, RTOS, Time, Text, TextSeq, Unix,
-       Udir, Uerror, Ustat, Utime, Word;
+       OSErrorPosix, Pathname, Process, Time, Text, TextSeq, Unix,
+       Udir, Uerror, Ustat, Utime, Word, Scheduler;
 
 FROM Unix IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
@@ -240,9 +240,10 @@ PROCEDURE Iterate(pn: Pathname.T): Iterator RAISES {OSError.E} =
       pn := Pathname.Join(Process.GetWorkingDirectory(), pn, NIL)
     END;
     fname := M3toC.SharedTtoS(pn);
-    RTOS.LockHeap ();(*HACK -- opendir() calls malloc() => not thread safe *)
+    Scheduler.DisableSwitching();
+      (* opendir() calls malloc() => not user-thread safe *)
       d := Udir.opendir(fname);
-    RTOS.UnlockHeap ();
+    Scheduler.EnableSwitching();
     IF d = NIL THEN Fail(pn, fname); END;
     M3toC.FreeSharedS(pn, fname);
     RETURN NEW(Iterator, d := d, pn := pn)
@@ -279,9 +280,10 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
       ELSE
         WITH e = Udir.readdir(iter.d) DO
           IF e = NIL THEN
-            RTOS.LockHeap ();(*HACK -- closedir() calls free() => not thread safe *)
-            EVAL Udir.closedir(iter.d);
-            RTOS.UnlockHeap ();
+            Scheduler.DisableSwitching ();
+              (* closedir() calls free() => not user-thread safe *)
+              EVAL Udir.closedir(iter.d);
+            Scheduler.EnableSwitching ();
             iter.d := NIL;
             RETURN FALSE
           ELSE
@@ -306,9 +308,10 @@ PROCEDURE DotOrDotDot(n: NamePrefix): BOOLEAN =
 PROCEDURE IterClose(iter: Iterator) =
   BEGIN
     IF iter.d # NIL THEN
-      RTOS.LockHeap ();(*HACK -- closedir() calls free() => not thread safe *)
-      EVAL Udir.closedir(iter.d);
-      RTOS.UnlockHeap ();
+      Scheduler.DisableSwitching ();
+        (* closedir() calls free() => not user-thread safe *)
+        EVAL Udir.closedir(iter.d);
+      Scheduler.EnableSwitching ();
       iter.d := NIL;
     END;
     iter.closed := TRUE

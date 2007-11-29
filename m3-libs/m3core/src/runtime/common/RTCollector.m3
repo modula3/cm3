@@ -591,17 +591,17 @@ PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
 PROCEDURE SuspendPool (VAR pool: AllocPool) =
   BEGIN
     <* ASSERT pool.desc.note = Note.Allocated *>
-    <* ASSERT NOT ThreadF.MyHeapState().busy *>
+    <* ASSERT ThreadF.MyHeapState().inCritical = 0 *>
   END SuspendPool;
 
 PROCEDURE ClosePool (VAR pool: AllocPool) =
   BEGIN
     <* ASSERT pool.desc.note = Note.Allocated *>
-    <* ASSERT NOT ThreadF.MyHeapState().busy *>
+    <* ASSERT ThreadF.MyHeapState().inCritical = 0 *>
     RTOS.LockHeap();
     pool.next := NIL;
     pool.limit := NIL;
-    IF pool.page # Nil THEN BumpCnts(pool.page) END;
+    IF pool.page # Nil AND RTAllocCnts.countsOn THEN BumpCnts(pool.page) END;
     pool.page := Nil;
     pool.stack := Nil;
     RTOS.UnlockHeap();
@@ -1387,24 +1387,30 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
 (* Allocate space in the traced heap for NEW or collector copies *)
 
 PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
-                       initProc: TypeInitProc;
-                       VAR pool: AllocPool): RefReferent =
-  (* Allocates space from "pool" in the traced heap. *)
+                       initProc: TypeInitProc): RefReferent =
+  (* Allocates space in the traced heap. *)
   (* LL = 0 *)
   VAR
-    res       : ADDRESS := pool.next + ADRSIZE(Header);
-    cur_align : INTEGER := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
-    alignment : INTEGER := align[cur_align, dataAlignment];
-    nextPtr   : ADDRESS := res + (alignment + dataSize);
-    oldPage   : Page;
+    thread := ThreadF.MyHeapState();
+    res       : ADDRESS;
+    cur_align : INTEGER;
+    alignment : INTEGER;
+    nextPtr   : ADDRESS;
+    filePage  : Page;
     n_bytes   : CARDINAL;
     n_pages   : CARDINAL;
   BEGIN
-    <*ASSERT ThreadF.MyHeapState().busy*>
-    IF nextPtr > pool.limit THEN
+    INC(thread.inCritical);
+
+    res       := thread.newPool.next + ADRSIZE(Header);
+    cur_align := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
+    alignment := align[cur_align, dataAlignment];
+    nextPtr   := res + (alignment + dataSize);
+
+    IF nextPtr > thread.newPool.limit THEN
       (* not enough space left in the pool, take the long route *)
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
-      ThreadF.MyHeapState().busy := FALSE;
+      DEC(thread.inCritical);
       Scheduler.Yield();                 (* we may be a while *)
 
       RTOS.LockHeap();
@@ -1415,43 +1421,31 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
         tStamps[tsIndex] := timeOnExit;  INC(tsIndex);
       END;
 
-      oldPage := pool.page;
       n_bytes := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
       n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
-      res := LongAlloc (n_pages, dataSize, dataAlignment, pool);
-      INC(n_new, n_pages);
-      IF oldPage = pool.page THEN
-        (* we filed the new page *)
-        IF def.kind = ORD(TK.Array) THEN
-          RTAllocCnts.BumpSize(def.typecode, dataSize);
-        ELSE
-          RTAllocCnts.BumpCnt(def.typecode);
-        END;
-      ELSIF oldPage # Nil THEN
-        (* we filed the old page *)
-        BumpCnts(oldPage);
-      END;
-
+      res := LongAlloc (n_pages, dataSize, dataAlignment, thread.newPool);
       LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
           Header{typecode := def.typecode, dirty := TRUE};
       IF initProc # NIL THEN initProc (res) END;
-
+      INC(n_new, n_pages);
+      filePage := thread.newPool.filePage;
+      IF filePage # Nil AND RTAllocCnts.countsOn THEN BumpCnts(filePage) END;
       RTOS.UnlockHeap();
-      ThreadF.MyHeapState().busy := TRUE;
       RETURN res;
     END;
 
     (* Align the referent *)
     IF alignment # 0 THEN
-      InsertFiller(pool.next, alignment);
-      pool.next := pool.next + alignment;
-      res := pool.next + ADRSIZE(Header);
+      InsertFiller(thread.newPool.next, alignment);
+      thread.newPool.next := thread.newPool.next + alignment;
+      res := thread.newPool.next + ADRSIZE(Header);
     END;
 
-    pool.next := nextPtr;
+    thread.newPool.next := nextPtr;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode, dirty := TRUE};
     IF initProc # NIL THEN initProc (res) END;
+    DEC(thread.inCritical);
     RETURN res;
   END AllocTraced;
 
@@ -1503,7 +1497,7 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
       RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
     END;
 
-    <*ASSERT NOT ThreadF.MyHeapState().busy*>
+    <*ASSERT ThreadF.MyHeapState().inCritical = 0*>
     <*ASSERT initialized*>
 
     RTMisc.Zero(newPtr, n_pages * BytesPerPage);
@@ -1540,7 +1534,7 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
     ELSE (* more space remains on the existing pool page *)
       filePage := newPage;
     END;
-
+    pool.filePage := filePage;
     IF filePage # Nil THEN
       desc[filePage - p0].link := pool.stack;
       pool.stack := filePage;

@@ -14,7 +14,7 @@
 UNSAFE MODULE RTAllocator
 EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTHeap, RTMisc, RTOS, RTType, ThreadF;
+IMPORT Cstdlib, RT0, RTHeap, RTMisc, RTOS, RTType, Scheduler;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
 
@@ -164,21 +164,21 @@ PROCEDURE AllocateUntracedOpenArray (defn : ADDRESS;
 
 PROCEDURE DisposeUntracedRef (VAR a: ADDRESS) =
   BEGIN
-    RTOS.LockHeap();
+    Scheduler.DisableSwitching();
     IF a # NIL THEN Cstdlib.free(a); a := NIL; END;
-    RTOS.UnlockHeap();
+    Scheduler.EnableSwitching();
   END DisposeUntracedRef;
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
   VAR def: RT0.TypeDefn;
   BEGIN
-    RTOS.LockHeap();
+    Scheduler.DisableSwitching();
     IF a # NIL THEN
       def := RTType.Get (TYPECODE (a));
       Cstdlib.free (a - MAX(BYTESIZE(Header), def.dataAlignment));
       a := NIL;
     END;
-    RTOS.UnlockHeap();
+    Scheduler.EnableSwitching();
   END DisposeUntracedObj;
 
 (*-------------------------------------------------------------- internal ---*)
@@ -187,19 +187,11 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR
     tc  : Typecode := def.typecode;
     res : ADDRESS;
-    state := ThreadF.MyHeapState();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Ref)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-
-    state.busy := TRUE;
-    BEGIN
-      res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc, state.newPool);
-      <*ASSERT state.busy*>
-    END;
-    state.busy := FALSE;
-
+    res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc);
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
   END GetTracedRef;
@@ -212,19 +204,11 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
   VAR
     tc  : Typecode := def.typecode;
     res : ADDRESS;
-    state := ThreadF.MyHeapState();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Obj)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-
-    state.busy := TRUE;
-    BEGIN
-      res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc, state.newPool);
-      <*ASSERT state.busy*>
-    END;
-    state.busy := FALSE;
-
+    res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc);
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
   END GetTracedObj;
@@ -237,18 +221,13 @@ PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
     IF (tc = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Ref)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    RTOS.LockHeap();
-    BEGIN
-      res := Cstdlib.malloc(def.dataSize);
-      IF (res = NIL) THEN
-        RTOS.UnlockHeap();
-        RAISE RTE.E(RTE.T.OutOfMemory);
-      END;
-      BumpCnt (tc);
-    END;
-    RTOS.UnlockHeap();
+    Scheduler.DisableSwitching();
+    res := Cstdlib.malloc(def.dataSize);
+    Scheduler.EnableSwitching();
+    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
     RTMisc.Zero (res, def.dataSize);
     IF def.initProc # NIL THEN def.initProc(res); END;
+    IF countsOn THEN BumpCnt(tc) END;
     RETURN res;
   END GetUntracedRef;
 
@@ -262,20 +241,15 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     IF (tc = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Obj)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    RTOS.LockHeap();
-    BEGIN
-      res := Cstdlib.malloc(hdrSize + def.dataSize);
-      IF (res = NIL) THEN
-        RTOS.UnlockHeap();
-        RAISE RTE.E(RTE.T.OutOfMemory);
-      END;
-      res := res + hdrSize;
-      BumpCnt (tc);
-    END;
-    RTOS.UnlockHeap();
+    Scheduler.DisableSwitching();
+    res := Cstdlib.malloc(hdrSize + def.dataSize);
+    Scheduler.EnableSwitching();
+    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
+    res := res + hdrSize;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode};
     InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
+    IF countsOn THEN BumpCnt (tc) END;
     RETURN res;
   END GetUntracedObj;
 
@@ -297,19 +271,13 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
   VAR
     tc    : Typecode := def.typecode;
     res   : ADDRESS;
-    state := ThreadF.MyHeapState();
   BEGIN
     IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD(TK.Array)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-
-    state.busy := TRUE;
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
-      res := AllocTraced(def, nBytes, def.dataAlignment, initProc, state.newPool);
-      <*ASSERT state.busy*>
+      res := AllocTraced(def, nBytes, def.dataAlignment, initProc);
     END;
-    state.busy := FALSE;
-
     IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
     RETURN LOOPHOLE(res, REFANY);
   END GetOpenArray;
@@ -323,19 +291,15 @@ PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
 
-    RTOS.LockHeap();
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
+      Scheduler.DisableSwitching();
       res := Cstdlib.malloc(nBytes);
-      IF (res = NIL) THEN
-        RTOS.UnlockHeap();
-        RAISE RTE.E(RTE.T.OutOfMemory);
-      END;
-      RTMisc.Zero (res, nBytes);
-      BumpSize (def.typecode, nBytes);
+      Scheduler.EnableSwitching();
+      IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
+      RTMisc.Zero(res, nBytes);
+      InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
+      IF countsOn THEN BumpSize (def.typecode, nBytes) END;
     END;
-    RTOS.UnlockHeap();
-
-    InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
     RETURN res;
   END GetUntracedOpenArray;
 
@@ -366,15 +330,19 @@ PROCEDURE ArraySize (def: RT0.ArrayTypeDefn;  READONLY s: Shape): CARDINAL =
 
 PROCEDURE BumpCnt (tc: RT0.Typecode) =
   BEGIN
+    RTOS.LockHeap();
     IF (tc >= n_types) THEN ExpandCnts (tc); END;
     WITH z = n_objects[tc] DO z := Word.Plus (z, 1) END;
+    RTOS.UnlockHeap();
   END BumpCnt;
 
 PROCEDURE BumpSize (tc: RT0.Typecode;  size: INTEGER) =
   BEGIN
+    RTOS.LockHeap();
     IF (tc >= n_types) THEN ExpandCnts (tc); END;
     WITH z = n_objects[tc] DO z := Word.Plus (z, 1)    END;
     WITH z = n_bytes[tc]   DO z := Word.Plus (z, size) END;
+    RTOS.UnlockHeap();
   END BumpSize;
 
 PROCEDURE ExpandCnts (tc: RT0.Typecode) =

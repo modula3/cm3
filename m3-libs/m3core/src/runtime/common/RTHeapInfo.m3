@@ -143,6 +143,7 @@ PROCEDURE SetUpdate (txt: TEXT) =
 PROCEDURE Init () =
   BEGIN
     IF RTPerfTool.Start ("shownew", drain) THEN
+      RTAllocCnts.countsOn := TRUE;
       SetUpdate (RTParams.Value ("update"));
       self := Thread.Fork (NEW (Closure));
     END;
