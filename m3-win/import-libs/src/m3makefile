@@ -182,7 +182,7 @@ foreach File in Files
         % In order for folks using older toolsets to be able to use the .libs in the distribution,
         % try to use an older toolset.
         %
-        local msvc20 = "\\msvc20\\bin"
+        local msvc20 = "\\msdev\\20\\bin"
         local CommandPrefix = ""
         if file_exists(msvc20) and equal($OS, "Windows_NT")
             %
