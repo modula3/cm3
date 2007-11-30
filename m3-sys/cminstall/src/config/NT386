@@ -231,6 +231,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local listing   = lib & ".lst"
   local lib_args  = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
                                      options, objects ])
+
   local link_args = arglist ("@", [ m3_link_flags, "/def:" & def_file,
                                     "/dll", "/out:" & dll_file,
                                      options, objects, imported_libs ])
