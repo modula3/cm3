@@ -232,9 +232,35 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_args  = arglist ("@", [ m3_lib_flags, "-out:" & lib_file,
                                      options, objects ])
 
+  %
+  % Noentry cuts out the C runtime startup code,
+  % which usually brings in most of our dependency on msvcr*.dll.
+  % This leaves most Modula-3 .dlls using very few C runtime functions,
+  % mainly setjmp for exception handling, and sometimes memmove, and
+  % sometimes a few other functions.
+  % This will break some scenarios that mix C and C++ with Modula-3, but
+  % should get a link warning. Therefore this probably be configurable,
+  % with the default being noentry.
+  %
+  % We don't use this when using libcmt.lib since that brings in more "real"
+  % code that might require the initialization.
+  %
+  % For .exes a minimal custom entry point could be used, like:
+  %  for gui: return WinMain(GetCommandLine(), GetModuleHandle(NULL), GetStartupInfo()...);
+  %  for console: getmainargs...
+  %
+  % It would be nice to reduce the C runtime dependency to zero at some point.
+  % On the other hand, it would be nice to get back a backend that generates
+  % portable C, in order to get good codegen, on more platforms, without gcc.
+  %
+  local entry = 0
+  if not equal($USE_MSVCRT, "0")
+    entry = "/noentry"
+  end
+
   local link_args = arglist ("@", [ m3_link_flags, "/def:" & def_file,
                                     "/dll", "/out:" & dll_file,
-                                     options, objects, imported_libs ])
+                                     options, objects, imported_libs, entry ])
 
   ret_code = try_exec ("mklib", lib_args, ">", listing)
   if not equal (ret_code, 0) or not file_exists (lib_file)
