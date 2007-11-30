@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.10 2007-11-30 11:45:42 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.11 2007-11-30 12:36:44 jkrell Exp $
 
 @if "%SYSINFO_DONE%" == "yes" goto :eof
 
@@ -114,7 +114,7 @@ for %%a in (MSVCRT) do call :check_for_lib %%a
 @goto :end_check_for_link_switch
 :check_for_link_switch
     set USE_%1=0
-    link | findstr /i /c:" %1" > nul && (
+    link | findstr /i /c:" /%1" > nul && (
          set USE_%1=1
     )
     @goto :eof
@@ -123,7 +123,7 @@ for %%a in (MSVCRT) do call :check_for_lib %%a
 @goto :end_check_for_lib
 :check_for_lib
     set USE_%1=1
-    link %1.lib /nologo | findstr /i %.lib >nul && (
+    link %1.lib /nologo | findstr /i %1.lib >nul && (
          set USE_%1=0
     )
     @goto :eof
