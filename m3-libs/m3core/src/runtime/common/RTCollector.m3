@@ -688,13 +688,6 @@ PROCEDURE CollectorOn () =
     <* ASSERT NOT collectorOn *>
     collectorOn := TRUE;
 
-    IF incremental AND NOT RTLinker.incremental
-      OR generational AND NOT RTLinker.generational THEN
-      ThreadF.SuspendOthers ();
-      (* If the collector is unprotecting pages and moving stuff around,
-         other threads cannot be running!  -- 7/16/96 WKK *)
-    END;
-
     timeOnEntry := Time.Now();
 
     IF impureCopy.page # Nil THEN
@@ -713,11 +706,6 @@ PROCEDURE CollectorOff () =
       WITH pd = desc[impureCopy.page - p0] DO
         <* ASSERT pd.gray *>
       END;
-    END;
-
-    IF incremental AND NOT RTLinker.incremental
-      OR generational AND NOT RTLinker.generational THEN
-      ThreadF.ResumeOthers ();
     END;
 
     collectorOn := FALSE;
