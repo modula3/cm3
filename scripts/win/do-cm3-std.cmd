@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-std.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: do-cm3-std.cmd,v 1.3 2007-11-30 09:47:43 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -34,6 +34,8 @@ call %~dp0pkgcmds add_action_opts %* || (
 )
 
 call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %P%
+
+@echo %~n0 : Done.
 
 endlocal
 goto :eof

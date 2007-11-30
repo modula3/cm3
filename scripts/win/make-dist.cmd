@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.13 2007-08-26 10:35:52 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.14 2007-11-30 09:47:43 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -183,7 +183,7 @@ tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CM
 tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols || exit /b 1
 popd
 
-echo DONE!
+echo Done.
 echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz
 echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz
 echo Lots of intermediate state remains in %STAGE%.
@@ -234,7 +234,7 @@ popd
 goto :done
 
 :done
-echo DONE!
+echo Done.
 if defined exe if exist %exe% echo Output is %STAGE%\min\%exe%
 echo Output is %STAGE%\min\%zip%
 echo Output is %STAGE%\min\%symbols%
