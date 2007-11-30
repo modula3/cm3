@@ -1,4 +1,4 @@
-@rem $Id: clearenv.cmd,v 1.4 2007-08-26 10:44:17 jkrell Exp $
+@rem $Id: clearenv.cmd,v 1.5 2007-11-30 11:31:46 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -21,6 +21,13 @@ call :Clear INSTALLROOT_MIN
 call :Clear INSTALLROOT_STD
 call :Clear INSTALLROOT_CORE
 call :Clear INSTALLROOT_BASE
+
+for %%i in (USE_LIBCMT USE_MSVCRT USE_DELAYLOAD USE_DELAYIMP) do if defined %%i set %%i=
+for %%i in (SRC_BUILDGLOBAL SRC_BUILDLOCAL SRC_CLEANGLOBAL SRC_CLEANLOCAL SRC_SHIP) do if defined %%i set %%i=
+for %%i in (CM3 CM3_BUILDGLOBAL CM3_BUILDLOCAL CM3_CLEANGLOBAL CM3_CLEANLOCAL CM3_SHIP) do if defined %%i set %%i=
+for %%i in (PM3_BUILDGLOBAL PM3_BUILDLOCAL PM3_CLEANGLOBAL PM3_CLEANLOCAL PM3_SHIP) do if defined %%i set %%i=
+for %%i in (DEST BACKUPID CLEANLINK ADDARGS RESTORE) do if defined %%i set %%i=
+for %%i in (P p_compiler p_runtime) do if defined %%i set %%i=
 
 goto :eof
 

@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.8 2007-11-30 09:53:49 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.9 2007-11-30 11:31:46 jkrell Exp $
 
 @if "%SYSINFO_DONE%" == "yes" goto :eof
 
@@ -101,13 +101,33 @@ call :environment_variable_must_contain_files path cl.exe link.exe cm3.exe || go
 
 call :environment_variable_must_contain_files include errno.h || goto :eof
 
-
 @rem
 @rem Libcmt.lib must be in %LIB%, at least as a sanity check.
 @rem Msvcrt.lib would be good to require, but the 2003 Express Edition lacks it.
 @rem
 
 call :environment_variable_must_contain_files lib kernel32.lib libcmt.lib || goto :eof
+
+for %%a in (DELAYLOAD) do call :check_for_link_switch %%a
+for %%a in (MSVCRT) do call :check_for_lib %%a
+
+@goto :end_check_for_link_switch
+:check_for_link_switch
+    set USE_%1=0
+    link | findstr /i /c:" %1" > nul && (
+         set USE_%1=1
+    )
+    @goto :eof
+:end_check_for_link_switch
+
+@goto :end_check_for_lib
+:check_for_lib
+    set USE_%1=1
+    link %1.lib /nologo >nul | findstr /i %.lib >nul && (
+         set USE_%1=0
+    )
+    @goto :eof
+:end_check_for_lib
 
 @rem
 @rem The Microsoft Visual C++ 2003 and 2005 Express Editions

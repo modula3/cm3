@@ -148,10 +148,6 @@ proc compile_c (source, object, options, optimize, debug) is
 %
     "/nologo",
 %
-% Use msvcrt.lib and define _MT and _DLL.
-%
-    "/MD",
-%
 % Put type information in .objs/.libs instead of shared in vc80.pdb, etc.
 % vc80.pdb can be renamed with /Fd, we'd need the target name.
 % This is bigger/slower but has advantages too.
@@ -164,6 +160,17 @@ proc compile_c (source, object, options, optimize, debug) is
     "/DWIN32",
     options
     ]
+  if not equal($USE_MSVCRT, "0")
+    %
+    % Use msvcrt.lib and define _MT and _DLL.
+    %
+    args += [ "/MD" ]
+  else
+    %
+    % Use libcmt.lib and define _MT.
+    %
+    args += [ "/MT" ]
+  end
   if optimize  args += "/Ox" end
   if debug     args += "/Oi" end
   return try_exec ("cl", [ args, "/c", source ])
@@ -323,20 +330,25 @@ m3_link_flags =
 % With newer linkers, combine identical code/data.
 %
 %   "/opt:icf",
-
-%
-% The default static dependencies of Modula-3 binaries
-% are larger than they should be. Reduce them sleazily via delayload.
-% This requires a Visual C++ 6.0 or newer linker.
-%
-    "/delayload:wsock32.dll",
-    "/delayload:advapi32.dll",
-    "/delayload:gdi32.dll",
-    "/delayload:netapi32.dll",
-    "/delayload:user32.dll",
-    "/delayload:comctl32.dll",
-    "delayimp.lib",
 ]
+
+if not equal($USE_DELAYLOAD, "0")
+    m3_link_flags +=
+    [
+    %
+    % The default static dependencies of Modula-3 binaries
+    % are larger than they should be. Reduce them sleazily via delayload.
+    % This requires a Visual C++ 6.0 or newer linker.
+    %
+        "/delayload:wsock32.dll",
+        "/delayload:advapi32.dll",
+        "/delayload:gdi32.dll",
+        "/delayload:netapi32.dll",
+        "/delayload:user32.dll",
+        "/delayload:comctl32.dll",
+        "delayimp.lib",
+    ]
+end
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local pgm_file = prog & ".exe"
