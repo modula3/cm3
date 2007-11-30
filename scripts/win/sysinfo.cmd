@@ -149,21 +149,21 @@ call :environment_variables_must_be_set INSTALLROOT || goto :eof
 
 rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
 
-if not exist %INSTALLROOT%\lib\comctl32.lib (
-    @call :Echo "%INSTALLROOT%\lib\comctl32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-)
+@rem if not exist %INSTALLROOT%\lib\comctl32.lib (
+@rem     @call :Echo "%INSTALLROOT%\lib\comctl32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+@rem )
 
-if not exist %INSTALLROOT%\lib\user32.lib (
-    @call :Echo "%INSTALLROOT%\lib\user32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-)
+@rem if not exist %INSTALLROOT%\lib\user32.lib (
+@rem     @call :Echo "%INSTALLROOT%\lib\user32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+@rem )
 
-if not exist %INSTALLROOT%\lib\wsock32.lib (
-    @call :Echo "%INSTALLROOT%\lib\wsock32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-)
+@rem if not exist %INSTALLROOT%\lib\wsock32.lib (
+@rem     @call :Echo "%INSTALLROOT%\lib\wsock32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+@rem )
 
-if not exist %INSTALLROOT%\lib\gdi32.lib (
-    @call :Echo "%INSTALLROOT%\lib\gdi32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-)
+@rem if not exist %INSTALLROOT%\lib\gdi32.lib (
+@rem     @call :Echo "%INSTALLROOT%\lib\gdi32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
+@rem )
 
 @rem
 @rem The .libs shipped by CM3 5.2.6 do %INSTALLROOT%\lib do not work Visual C++ 2.0, 4.0, or 8.0, at least.

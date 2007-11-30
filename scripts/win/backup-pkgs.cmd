@@ -81,7 +81,7 @@ fix_nl ^
 libdump
 
 @echo cd /d %INSTALLROOT%
-cd /d %INSTALLROOT% || exit /b 1
+      cd /d %INSTALLROOT% || exit /b 1
 
 @rem
 @rem delete if empty, to automatically recover from some error situations
@@ -93,9 +93,9 @@ if not defined RESTORE (
     set DEST=pkg-%BACKUPID%
     if exist pkg-%BACKUPID% (
         if not defined FORCE (
-            call :check_complete_backup || exit /b 1
-            echo %~n0 : %CD%\pkg-%BACKUPID% already exists, and appears complete, ok
-            exit /b 0
+            call :check_complete_backup %0 || exit /b 1
+            @echo %~n0 : %CD%\pkg-%BACKUPID% already exists, and appears complete, ok
+            goto :handle_compiler
         )
     ) else (
       mkdir pkg-%BACKUPID%
@@ -106,26 +106,104 @@ if not defined RESTORE (
 )
 
 for %%a in (%P%) do (
-    if not exist %SRC%\%%a (
-        echo %SRC%\%%a does not exist
-		echo Be sure to build everything with latest released tools
-		echo before trying to upgrade the compiler and build it with itself.
-		echo That is, run do-cm3-core buildship before running upgrade.
-        exit /b 1
-    )
-    echo %CD%\%SRC%\%%a --^> %CD%\%DEST%\%%a
-    (xcopy /iveryc %SRC%\%%a %DEST%\%%a | findstr copied) || exit /b 1
+    if not exist %CD%\%SRC%\%%a call :nonexistant %0 %CD%\%SRC%\%%a || exit /b 1
+    if exist %CD%\%SRC%\%%a call :existant %0 %CD%\%SRC%\%%a || exit /b 1
+)
+
+@rem
+@rem Packages, at least some of them, go with the compiler that built them.
+@rem In particular, if you were to run upgrade twice in a row, the 5.5.0 compiler
+@rem chokes on the 5.2.6 m3core/libm3. Therefore backup/restore the compiler too.
+@rem It would be nice if BACKUPID was derived from cm3 -version, however that
+@rem doesn't allow for a new compiler to find old packages, so there is just
+@rem one manually managed BACKUPID.
+@rem
+
+:handle_compiler
+
+if not defined RESTORE (
+    call :CopyFile bin\cm3.exe %DEST%\cm3.exe
+) else (
+    call :CopyFile %SRC%\cm3.exe bin\cm3.exe
 )
 
 @endlocal
 
 @goto :eof
 
+:existant
+    @echo %CD%\%SRC%\%~nx2 --^> %CD%\%DEST%\%~nx2
+    (xcopy /iveryc %CD%\%SRC%\%~nx2 %CD%\%DEST%\%~nx2 | findstr copied) || exit /b 1
+    exit /b 0
+
+:nonexistant
+    if %~nx2 == libm3 (
+        call :nonexistant_fatal %* || exit /b 1
+    ) else if %~nx2 == m3core (
+        call :nonexistant_fatal %* || exit /b 1
+    ) else (
+        call :nonexistant_warn %* || exit /b 1
+    )
+    exit /b 0
+
+:nonexistant_warn
+    @rem @echo %~n1 : %2 does not exist, will not backup/restore, ok
+    exit /b 0
+
+:nonexistant_fatal
+    @echo %~n1 : %2 does not exist.
+    @echo %~n1 : Be sure to build it with latest released tools
+    @echo %~n1 : before trying to upgrade the compiler and build it with itself.
+    @echo %~n1 : That is, run "do-pkg %~nx2 -buildship" before running upgrade.
+    @echo %~n1 : OR get it from a binary release (as some older compilers (5.2.6)
+    @echo %~n1 : cannot build newer runtimes (5.5.0 -- int64 support))
+    exit /b 1
+
+:check_nonexistant
+    if %~nx2 == libm3 (
+        call :check_nonexistant_fatal %* || exit /b 1
+    ) else if %~nx2 == m3core (
+        call :check_nonexistant_fatal %* || exit /b 1
+    ) else (
+        exit /b 0
+    )
+
+:check_nonexistant_warn
+    @rem @echo %~n1 : %2 does not exist, will not restore, ok
+    exit /b 0
+
+:check_nonexistant_fatal
+    @echo %~n1 : %CD%\%DEST% already exists but %1 does not.
+    @echo %~n1 : Whatever you are doing, try backing up a few steps, sorry..
+    @echo %~n1 : Perhaps rmdir /q/s %CD%\%DEST%.
+    exit /b 1
+
 :check_complete_backup
 for %%a in (%P%) do (
-    if not exist %DEST%\%%a (
-        echo %~n0 : %CD%\%DEST% already exists but %CD%\%DEST%\%%a does not
-        exit /b 1
-    )
+    if not exist %CD%\%DEST%\%%a call :check_nonexistant %0 %CD%\%DEST%\%%a || exit /b 1
 )
 @goto :eof
+
+:CopyFile
+    setlocal
+    set from=%1
+    set to=%2
+    if "%to%" == "." set to=.\%~nx1
+    if exist %to% del %to% || exit /b 1
+    call :Run copy %from% %to% || exit /b 1
+    endlocal
+    goto :eof
+
+:Run
+    setlocal
+    set x=%*
+    set x=%x:  = %
+    set x=%x:  = %
+    echo %x%
+    %x% || goto :RunError
+    endlocal
+    goto :eof
+
+:RunError
+	echo ERROR: %x%
+	exit /b 1

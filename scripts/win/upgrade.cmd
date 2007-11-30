@@ -40,8 +40,8 @@ call %~dp0backup-pkgs -restore  || exit /b 1
 call %~dp0do-cm3-core realclean || exit /b 1
 @echo on
 
-@call :header "rebuilding runtime/compiler"
-call %~dp0do-pkg buildship %p_runtime% %p_compiler% || exit /b 1
+@call :header "building just new compiler with old compiler (old compiler cannot necessarily build new runtime)"
+call %~dp0do-pkg buildship import-libs %p_compiler% || exit /b 1
 @echo on
 
 @call :header "installing new compiler"
@@ -52,9 +52,23 @@ call %~dp0install-cm3-compiler upgrade || exit /b 1
 call %~dp0do-cm3-core realclean || exit /b 1
 @echo on
 
+@call :header "building compiler and runtime with new compiler"
+call %~dp0do-pkg buildship %p_runtime% %p_compiler% || exit /b 1
+@echo on
+
+@call :header "installing new compiler"
+call %~dp0install-cm3-compiler upgrade || exit /b 1
+@echo on
+
 @call :header "building core packages"
 call %~dp0do-cm3-core buildship || exit /b 1
 @echo on
+
+@echo %~n0 : Done.
+@echo %~n0 : You should now have a current compiler, runtime, and core
+@echo %~n0 : packages, and be able to build and/or ship "anything" up to and
+@echo %~n0 : including "standard". i.e. do-cm3-std buildship, or cd around the
+@echo %~n0 : source tree and cm3 or cm3 -ship.
 
 @endlocal
 
