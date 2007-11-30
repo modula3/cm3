@@ -32,6 +32,8 @@ call %~dp0pkgcmds get_args %* || (
 
 call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %ARGS%
 
+@echo %~n0 : Done.
+
 endlocal
 goto :eof
 

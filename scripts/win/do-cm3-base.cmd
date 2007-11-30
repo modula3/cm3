@@ -52,6 +52,8 @@ call %~dp0pkgcmds add_action_opts %* || (
 
 call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %P%
 
+@echo %~n0 : Done.
+
 @endlocal
 @goto :eof
 
