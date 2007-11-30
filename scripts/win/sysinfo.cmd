@@ -123,7 +123,7 @@ for %%a in (MSVCRT) do call :check_for_lib %%a
 @goto :end_check_for_lib
 :check_for_lib
     set USE_%1=1
-    link %1.lib /nologo >nul | findstr /i %.lib >nul && (
+    link %1.lib /nologo | findstr /i %.lib >nul && (
          set USE_%1=0
     )
     @goto :eof
