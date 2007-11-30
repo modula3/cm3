@@ -84,8 +84,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "msvcrt.lib",
-                   "winspool.lib",
+  "LIBC"       : [ "winspool.lib",
                    "comctl32.lib",
                    "wsock32.lib",
                    "comdlg32.lib",
@@ -100,6 +99,12 @@ SYSTEM_LIBS = {
                    "glu32.lib" ],
   "TCP"        : [  ]
 }
+
+if not equal($USE_MSVCRT, "0")
+    SYSTEM_LIBS{"LIBC"} += [ "msvcrt.lib" ]
+else
+    SYSTEM_LIBS{"LIBC"} += [ "libcmt.lib" ]
+end
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
