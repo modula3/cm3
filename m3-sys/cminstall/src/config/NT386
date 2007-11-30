@@ -316,6 +316,17 @@ m3_link_flags =
 [
 %
 % Ignore that some .libs think they want libc.lib.
+% This should not needed in a full coherent build, however
+% existing distributions, such as 5.2.6, have C code built
+% without /MD or /MT and bootstrapping uses their files,
+% such as m3core.lib.sa(hand.obj).
+%
+% As well, we must explicitly specify libcmt.lib or msvcrt.lib
+% in our link command because many links contain no C code and
+% no /defaultlib directives. The Modula-3 backend should perhaps
+% output those directives.
+%
+% Cutting the C runtime dependency from Modula-3 may be desirable.
 %
 	"/nodefaultlib",
 %
