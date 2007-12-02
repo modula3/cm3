@@ -12,7 +12,7 @@
    are unchecked.  Passing bad parameters will cause disaster!
 *)
 
-UNSAFE INTERFACE RTHooks;
+INTERFACE RTHooks;
 
 (*----------------------------------------------------------------- types ---*)
 

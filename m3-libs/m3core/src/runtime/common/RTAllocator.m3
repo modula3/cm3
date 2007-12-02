@@ -28,14 +28,9 @@ TYPE
 
 PROCEDURE NewTraced(tc: Typecode): REFANY
   RAISES {OutOfMemory} =
-  VAR def := RTType.Get(tc);
   BEGIN
     TRY
-      IF (def.kind # ORD(TK.Obj)) THEN
-        RETURN GetTracedRef (def);
-      ELSE
-        RETURN GetTracedObj (def);
-      END;
+      RETURN GetTraced(RTType.Get(tc));
     EXCEPT RTE.E(v) =>
       IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
       ELSE RAISE RTE.E(v);
@@ -122,13 +117,8 @@ PROCEDURE Clone (ref: REFANY): REFANY
 (*--------------------------------------------------------------- RTHooks ---*)
 
 PROCEDURE Allocate (defn: ADDRESS): REFANY =
-  VAR def: RT0.TypeDefn := defn;
   BEGIN
-    IF (def.kind # ORD(TK.Obj)) THEN
-      RETURN GetTracedRef (def);
-    ELSE
-      RETURN GetTracedObj (def);
-    END;
+    RETURN GetTraced(defn);
   END Allocate;
 
 PROCEDURE AllocateTracedRef (defn: ADDRESS): REFANY =
@@ -157,7 +147,7 @@ PROCEDURE AllocateOpenArray (defn: ADDRESS; READONLY s: Shape): REFANY =
   END AllocateOpenArray;
 
 PROCEDURE AllocateUntracedOpenArray (defn : ADDRESS;
-                            READONLY s    : Shape): ADDRESS =
+                                     READONLY s: Shape): ADDRESS =
   BEGIN
     RETURN GetUntracedOpenArray(defn, s);
   END AllocateUntracedOpenArray;
@@ -183,17 +173,25 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 (*-------------------------------------------------------------- internal ---*)
 
-PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
-  VAR
-    tc  : Typecode := def.typecode;
-    res : ADDRESS;
+PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
   BEGIN
-    IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Ref)) THEN
+    CASE def.kind OF
+    | ORD(TK.Ref) => RETURN GetTracedRef(def);
+    | ORD(TK.Obj) => RETURN GetTracedObj(def);
+    ELSE
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc);
-    IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
-    RETURN LOOPHOLE(res, REFANY);
+  END GetTraced;      
+
+PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
+  BEGIN
+    IF (def.typecode = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Ref)) THEN
+      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+    END;
+    WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc) DO
+      IF (callback # NIL) THEN callback (res) END;
+      RETURN res;
+    END;
   END GetTracedRef;
 
 PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
@@ -201,24 +199,20 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
     BEGIN
       InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
     END initProc;
-  VAR
-    tc  : Typecode := def.typecode;
-    res : ADDRESS;
   BEGIN
-    IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Obj)) THEN
+    IF (def.typecode = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Obj)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc);
-    IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
-    RETURN LOOPHOLE(res, REFANY);
+    WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, initProc) DO
+      IF (callback # NIL) THEN callback (res) END;
+      RETURN res;
+    END;
   END GetTracedObj;
 
 PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
-  VAR
-    tc  : Typecode := def.typecode;
-    res : ADDRESS;
+  VAR res : ADDRESS;
   BEGIN
-    IF (tc = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Ref)) THEN
+    IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Ref)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
     Scheduler.DisableSwitching();
@@ -227,7 +221,7 @@ PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
     IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
     RTMisc.Zero (res, def.dataSize);
     IF def.initProc # NIL THEN def.initProc(res); END;
-    IF countsOn THEN BumpCnt(tc) END;
+    IF countsOn THEN BumpCnt(def.typecode) END;
     RETURN res;
   END GetUntracedRef;
 
@@ -235,10 +229,9 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
   (* NOTE: result requires special treatment by DisposeUntracedObj *)
   VAR
     hdrSize := MAX(BYTESIZE(Header), def.dataAlignment);
-    tc      : Typecode := def.typecode;
     res     : ADDRESS;
   BEGIN
-    IF (tc = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Obj)) THEN
+    IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Obj)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
     Scheduler.DisableSwitching();
@@ -249,7 +242,7 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode};
     InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
-    IF countsOn THEN BumpCnt (tc) END;
+    IF countsOn THEN BumpCnt (def.typecode) END;
     RETURN res;
   END GetUntracedObj;
 
@@ -268,29 +261,23 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
     BEGIN
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
     END initProc;
-  VAR
-    tc    : Typecode := def.typecode;
-    res   : ADDRESS;
   BEGIN
-    IF (tc = 0) OR (def.traced = 0) OR (def.kind # ORD(TK.Array)) THEN
+    IF (def.typecode = 0) OR (def.traced = 0) OR (def.kind # ORD(TK.Array)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
-      res := AllocTraced(def, nBytes, def.dataAlignment, initProc);
+    WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s),
+         res = AllocTraced(def, nBytes, def.dataAlignment, initProc) DO
+      IF (callback # NIL) THEN callback (res) END;
+      RETURN res;
     END;
-    IF (callback # NIL) THEN callback (LOOPHOLE (res, REFANY)); END;
-    RETURN LOOPHOLE(res, REFANY);
   END GetOpenArray;
 
 PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
-  VAR
-    tc  : Typecode := def.typecode;
-    res : ADDRESS;
+  VAR res : ADDRESS;
   BEGIN
-    IF (tc = 0) OR (def.traced # 0) OR (def.kind # ORD(TK.Array)) THEN
+    IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD(TK.Array)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
       Scheduler.DisableSwitching();
       res := Cstdlib.malloc(nBytes);

@@ -161,13 +161,13 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
 PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
-                       initializer: TypeInitProc): ADDRESS;
-(* Return the address of "size" zeroed bytes of traced storage on an
-   "alignment" byte boundary from the thread's allocation pool.
-   Invoke "initializer" (if not "NIL") on the result. *)
+                       initializer: TypeInitProc): REFANY;
+(* Allocate 'size' zeroed bytes of traced storage of type 'def' on an
+   'alignment' byte boundary from the thread's allocation pool, initializing
+   the result using 'initializer' (if not "NIL"). *)
 
 (* Objects in the traced heap are allocated from one of three "pools".
-   A pool is collection of pages with similar properties.  The "newPool"
+   A pool is collection of pages with similar properties.  A "NewPool"
    contains NEWed objects.  The "pureCopy" pool contains objects that
    were copied by the collector into new space, but that contain no
    internal REFs.  Similarly, the "impureCopy" pool is for copied
