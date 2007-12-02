@@ -1372,10 +1372,10 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
     RETURN s.xA = s.x0;
   END StackEmpty;
 
-(* Allocate space in the traced heap for NEW or collector copies *)
+(* Allocate space in the traced heap for NEW *)
 
 PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
-                       initProc: TypeInitProc): RefReferent =
+                       initProc: TypeInitProc): REFANY =
   (* Allocates space in the traced heap. *)
   (* LL = 0 *)
   VAR
@@ -1419,7 +1419,7 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       filePage := thread.newPool.filePage;
       IF filePage # Nil AND RTAllocCnts.countsOn THEN BumpCnts(filePage) END;
       RTOS.UnlockHeap();
-      RETURN res;
+      RETURN LOOPHOLE(res, REFANY);
     END;
 
     (* Align the referent *)
@@ -1434,8 +1434,10 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
         Header{typecode := def.typecode, dirty := TRUE};
     IF initProc # NIL THEN initProc (res) END;
     DEC(thread.inCritical);
-    RETURN res;
+    RETURN LOOPHOLE(res, REFANY);
   END AllocTraced;
+
+(* Allocate space in the traced heap for collector copies *)
 
 PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
@@ -2141,6 +2143,7 @@ PROCEDURE ExpandWeakTable () =
         weakFree0 := i;
       END;
     END;
+    DISPOSE(weakTable);
     weakTable := newTable;
   END ExpandWeakTable;
 
