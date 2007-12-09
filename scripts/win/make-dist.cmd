@@ -209,7 +209,25 @@ call :RunZip -9 -r -D -X %symbols% symbols
 set zip=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.zip
 call :RunZip -9 -r -D -X %zip% cm3
 
+@rem
+@rem On my machine \bin\unzipsfx.exe is a
+@rem Win32 x86 unzip self extracting archive prefix,
+@rem with an MS-DOS unzip self extracting archive prefix for a stub.
+@rem As such, you can do several things with it.
+@rem  Run it under MS-DOS. However long file names are probably used.
+@rem  Run it from a Windows command line.
+@rem  Open it with various archive utilities, including maybe Explorer (might need to rename it to end in .zip).
+@rem
+@rem However, .tar.bz2 is generally significantly smaller than .zip and therefore used instead.
+@rem
+@rem I built this unzipsfx from the publically available source. That source
+@rem and building of it is not in the CM3 tree, and probably should be
+@rem if this path is to be used. In fact, that license may make
+@rem these tools favorable over tar/bzip2, despite the compression loss.
+@rem
+
 set exe=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.exe
+rem UPX proved unreliable after not much use.
 rem copy /b \bin\unzipsfx-upx.exe + %zip% %exe%
 copy /b \bin\upx\unzipsfx.exe + %zip% %exe%
 call :RunZip -A %exe%
