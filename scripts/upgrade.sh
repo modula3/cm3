@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.2 2005-04-23 18:32:53 wagner Exp $
+# $Id: upgrade.sh,v 1.3 2007-12-16 17:56:24 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -35,8 +35,23 @@ OPTIONS=`extract_options $@`
 #ACTION=`map_action $@`
 #ADDARGS=`add_action_opts $@`
 
-echo "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship"
-. "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship" || exit 1
+#echo "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship"
+#. "$ROOT/scripts/boot-cm3-with-m3.sh" "$@" "buildship" || exit 1
+
+P=""
+P="${P} m3middle"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+P="${P} m3linker"
+[ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
+[ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
+P="${P} m3front"
+P="${P} m3quake"
+[ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
+P="${P} cm3"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+
+echo "$ROOT/scripts/do-pkg.sh" "$@" "buildship ${P}"
+. "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
 "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
