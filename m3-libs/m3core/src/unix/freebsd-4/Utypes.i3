@@ -11,7 +11,7 @@ INTERFACE Utypes;
 
 FROM Ctypes IMPORT 
 	long, unsigned_long, int, unsigned_int, short, unsigned_short,
-        char, unsigned_char;
+        char, unsigned_char, long_long;
 
 (*** <sys/types.h> ***)
 
