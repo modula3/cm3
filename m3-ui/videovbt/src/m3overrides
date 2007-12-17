@@ -1,3 +1,0 @@
-
-override ("ui", ROOT & "/m3-ui")
-override ("jvideo", ROOT & "/m3-ui")
