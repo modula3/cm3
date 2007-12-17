@@ -21,13 +21,12 @@ BODY { font-family: 'Times New Roman', 'New Century Schoolbook', serif ; }
 
 /* { font-family: Verdana, Arial, Helvetica, sans-serif ; */
 
-/*
-BODY
-{ font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
+
+BODY { font-family: Helvetica, Arial, sans-serif ;
        background:  #FFFFFF ;
        color     :  #000000 ; 
-      }
-*/
+     }
+
 
 /* TD.highlight { background: #99CCFF } */
 /* TD.highlight { background: #FFFFFF } */
