@@ -1,8 +1,0 @@
-readonly proc _squat (nm, elt, vis) is
-    local squat = nm & "Squat"
-    build_generic_intf (squat, "Squat", [elt], vis)
-    build_generic_impl (squat, "Squat", [elt])
-  end
-  
-readonly proc Squat (nm, elt) is _squat (nm, elt, VISIBLE) end
-readonly proc squat (nm, elt) is _squat (nm, elt, HIDDEN)  end
