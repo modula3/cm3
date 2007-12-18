@@ -3581,11 +3581,12 @@ m3_evaluate_subexp_maybe_packed (
       if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER
            || TYPE_CODE (arg1_type) == TYPE_CODE_M3_LONGINT
          ) 
-      { if ( ! int_ok ) 
+       {
+       LONGEST res = 0;
+       if ( ! int_ok ) 
           { error (_("Binary operation requires integer typed operands.")); 
             /* NORETURN */ 
           } 
-	LONGEST res = 0;
 	switch (op) {
 	  case BINOP_M3_MULT: 	res = ival1 * ival2;          break;
 	  case BINOP_M3_ADD:	res = ival1 + ival2;          break;
@@ -3597,12 +3598,13 @@ m3_evaluate_subexp_maybe_packed (
       }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) 
-      { if ( ! float_ok ) 
+      {
+       double res = 0.0;
+       if ( ! float_ok ) 
           { error (_("Binary operation requires floating typed operands.")); 
             /* NORETURN */ 
           } 
 	
-	double res = 0.0;
 	switch (op) {
 	  case BINOP_M3_DIVIDE: res = fval1 / fval2;          break;
 	  case BINOP_M3_MULT:   res = fval1 * fval2;          break;
