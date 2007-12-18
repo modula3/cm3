@@ -1,3 +1,4 @@
+.exe
 @rem $Id$
 
 @if "%_echo%" == "" @echo off
@@ -229,7 +230,7 @@ call :RunZip -9 -r -D -X %zip% cm3
 set exe=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.exe
 rem UPX proved unreliable after not much use.
 rem copy /b \bin\unzipsfx-upx.exe + %zip% %exe%
-copy /b \bin\upx\unzipsfx.exe + %zip% %exe%
+copy /b \bin\unzipsfx.exe + %zip% %exe%
 call :RunZip -A %exe%
 
 popd
