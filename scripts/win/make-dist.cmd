@@ -1,4 +1,3 @@
-.exe
 @rem $Id$
 
 @if "%_echo%" == "" @echo off
