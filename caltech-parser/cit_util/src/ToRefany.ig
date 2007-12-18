@@ -1,2 +1,0 @@
-GENERIC INTERFACE ToRefany(); END ToRefany.
-
