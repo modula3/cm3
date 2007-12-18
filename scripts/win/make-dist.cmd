@@ -1,5 +1,4 @@
-.exe
-@rem $Id: make-dist.cmd,v 1.17 2007-12-18 13:36:02 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.18 2007-12-18 13:37:04 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
