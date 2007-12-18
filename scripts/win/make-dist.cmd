@@ -159,7 +159,7 @@ rem echo INSTALLROOT_STD=%INSTALLROOT_STD%
 rem echo INSTALLROOT_CORE=%INSTALLROOT_CORE%
 rem echo INSTALLROOT_BASE=%INSTALLROOT_BASE%
 
-goto :TarBZip2
+goto :Zip
 
 echo now need to tar/gzip it up
 rem we want tar.exe, gzip.exe, cygwin.dll, cminstall.exe, copyright-cmass, and system.tgz, tar/gziped
