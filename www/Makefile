@@ -1,6 +1,7 @@
 # Automation of miscellaneous administrative tasks on the web server
 
 ARCHIVES := ${wildcard *.tgz}
+ARCHIVES += ${wildcard *.zip}
 
 BASES := ${basename ${ARCHIVES}}
 CKSUMS := ${addsuffix .cksum, ${BASES}}
@@ -15,6 +16,12 @@ all: ${CKSUMS} ${MD5S} archive.list archive.md5 archive.cksum
 	cksum $< >$@
 
 %.md5: %.tgz
+	md5sum $< >$@
+
+%.cksum: %.zip
+	cksum $< >$@
+
+%.md5: %.zip
 	md5sum $< >$@
 
 archive.cksum: ${CKSUMS}
