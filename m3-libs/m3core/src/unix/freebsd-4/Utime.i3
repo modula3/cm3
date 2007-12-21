@@ -11,7 +11,7 @@
 
 INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star, int, long, long_star, 
+FROM Ctypes IMPORT char_star, int, long, long_star, long_int,
                    unsigned_short, short;
 
 (*** <sys/time.h> ***)
@@ -24,6 +24,10 @@ TYPE
   struct_timezone = RECORD
     tz_minuteswest:  int; (* minutes west of Greenwich *)
     tz_dsttime:      int; (* type of dst correction *) END;
+
+  struct_timespec = RECORD
+    tv_sec: time_t;			 (* Seconds *)
+    tv_nsec: long_int;			 (* Nanoseconds *) END;
 
 CONST
   DST_NONE = 0;  (* not on dst *)
@@ -151,4 +155,6 @@ PROCEDURE setitimer (which: int;
 (*** mktime(3) - convert a struct_tm to a time_t ***)
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
 
+<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec;
+                                  VAR rem: struct_timespec): int;
 END Utime.

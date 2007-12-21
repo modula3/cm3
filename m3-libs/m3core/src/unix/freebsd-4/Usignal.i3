@@ -8,7 +8,9 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int, unsigned_int;
+IMPORT Uucontext;
+FROM Ctypes IMPORT int, unsigned_int, long;
+FROM Utypes IMPORT pid_t, uid_t;
 
 (*** <signal.h> ***)
 
@@ -54,6 +56,7 @@ CONST
   SIGINFO   =  29;     (* information request *)
   SIGUSR1   =  30;     (* user defined signal 1 *)
   SIGUSR2   =  31;     (* user defined signal 2 *)
+  SIGTHR    =  32;     (* reserved by thread library *)
 
   (* System V definitions *)
   SIGCLD    = SIGCHLD;
@@ -65,6 +68,10 @@ TYPE
   SignalHandler = PROCEDURE (sig, code: int;
                              scp: UNTRACED REF struct_sigcontext);
 
+  SignalActionHandler = PROCEDURE (sig: int;
+                                   sip: siginfo_t_star;
+                                   uap: Uucontext.ucontext_t_star);
+
   sigset_t = ARRAY [0..3] OF unsigned_int;
   sigset_t_star = UNTRACED REF sigset_t;
 
@@ -74,6 +81,20 @@ TYPE
     sv_flags:   int;               (* see signal options below *)
   END;
     
+  siginfo_t = RECORD
+    si_signo:   int;
+    si_errno:   int;
+    si_code:    int;
+    si_pid:     pid_t;
+    si_uid:     uid_t;
+    si_status:  int;
+    si_addr:    ADDRESS;
+    si_value:   int; (* union int / void* *)
+    si_band:    long;
+    spare__:  ARRAY [0..6] OF int;
+  END;
+
+  siginfo_t_star = UNTRACED REF siginfo_t;
 
 CONST
   empty_sigset_t = sigset_t{ 0, .. };
@@ -94,9 +115,9 @@ CONST
 
 TYPE
   struct_sigaction = RECORD
-    sa_handler  : SignalHandler;        (* signal handler *)
-    sa_flags    : int;                  (* signal action flags *)
-    sa_mask     : sigset_t;             (* signals to block while in handler *)
+    sa_sigaction : SignalActionHandler; (* union with signal handler *)
+    sa_flags     : int;                 (* signal action flags *)
+    sa_mask      : sigset_t;            (* signals to block while in handler *)
   END;
 
   struct_sigaction_star = UNTRACED REF struct_sigaction;
@@ -108,6 +129,8 @@ CONST
   SA_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
   SA_NOCLDSTOP   = 16_0008;   (* do not generate SIGCHLD on child stop *)
   SA_NODEFER     = 16_0010;   (* don't mask the signal we're delivering *)
+  SA_NOCLDWAIT   = 16_0020;
+  SA_SIGINFO     = 16_0040;
 
 TYPE
   struct_sigstack = RECORD 
@@ -200,8 +223,9 @@ PROCEDURE sigsuspend (VAR sigmask: sigset_t): int;
 
 (*** sigaction(2) - software signal facilities ***)
 
-<*EXTERNAL*>
-PROCEDURE sigaction (sig: int;  act, oact: struct_sigaction_star): int;
+<*EXTERNAL*> PROCEDURE sigaction (sig: int;
+                                  READONLY act: struct_sigaction;
+                                  VAR oact: struct_sigaction): int;
 
 (*** sigvec(2) - software signal facilities ***)
 

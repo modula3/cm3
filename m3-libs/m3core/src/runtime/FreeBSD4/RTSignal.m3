@@ -7,21 +7,18 @@
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RTError, (* RTMisc, *) RTProcess, Usignal, Uprocess;
+IMPORT RTError, (* RTMisc, *) RTProcess, Usignal, Uprocess, Uucontext;
 FROM Ctypes IMPORT int;
 
-TYPE
-  SigInfo = UNTRACED REF Usignal.struct_sigcontext;
-
 VAR
-  DefaultHandler   : Usignal.SignalHandler;
-  IgnoreSignal     : Usignal.SignalHandler;
+  DefaultHandler   : Usignal.SignalActionHandler;
+  IgnoreSignal     : Usignal.SignalActionHandler;
   initial_handlers : ARRAY [0..5] OF Usignal.struct_sigaction;
 
 PROCEDURE InstallHandlers () =
   BEGIN
-    DefaultHandler := LOOPHOLE (0, Usignal.SignalHandler);
-    IgnoreSignal   := LOOPHOLE (1, Usignal.SignalHandler);
+    DefaultHandler := LOOPHOLE (0, Usignal.SignalActionHandler);
+    IgnoreSignal   := LOOPHOLE (1, Usignal.SignalActionHandler);
 
     SetHandler (0, Usignal.SIGHUP,  Shutdown);
     SetHandler (1, Usignal.SIGINT,  Interrupt);
@@ -31,18 +28,19 @@ PROCEDURE InstallHandlers () =
     SetHandler (5, Usignal.SIGTERM, Shutdown);
   END InstallHandlers;
 
-PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
+PROCEDURE SetHandler (id: INTEGER; sig: int; 
+                      handler: Usignal.SignalActionHandler) =
   (* Note: we use the LOOPHOLE to prevent the runtime check for
      nested procedure.  The runtime check crashes when
      handler = IgnoreSignal = 1. *)
   VAR new: Usignal.struct_sigaction;
   BEGIN
-    new.sa_handler := LOOPHOLE (handler, Usignal.SignalHandler);
+    new.sa_sigaction := LOOPHOLE (handler, Usignal.SignalActionHandler);
     new.sa_flags   := 0;
-    EVAL Usignal.sigaction (sig, ADR(new), ADR(initial_handlers[id]));
-    IF (initial_handlers[id].sa_handler # DefaultHandler) THEN
+    EVAL Usignal.sigaction (sig, new, initial_handlers[id]);
+    IF (initial_handlers[id].sa_sigaction # DefaultHandler) THEN
       (* don't override inherited, non-default handlers *)
-      EVAL Usignal.sigaction (sig, ADR(initial_handlers[id]), ADR(new));
+      EVAL Usignal.sigaction (sig, initial_handlers[id], new);
     END;
   END SetHandler;
 
@@ -57,14 +55,62 @@ PROCEDURE RestoreHandlers () =
   END RestoreHandlers;
 
 PROCEDURE RestoreHandler (id: INTEGER;  sig: int) =
+  VAR dummy: Usignal.struct_sigaction;
   BEGIN
-    EVAL Usignal.sigaction (sig, ADR(initial_handlers[id]), NIL);
+    EVAL Usignal.sigaction (sig, initial_handlers[id], dummy);
   END RestoreHandler;
 
+PROCEDURE Shutdown (sig: int;
+         <*UNUSED*> sip: Usignal.siginfo_t_star;
+         <*UNUSED*> uap: Uucontext.ucontext_t_star) =
+  VAR new, old: Usignal.struct_sigaction;
+  BEGIN
+    new.sa_sigaction := DefaultHandler;
+    new.sa_flags := 0;
+    EVAL Usignal.sigemptyset(new.sa_mask);
+    RTProcess.InvokeExitors ();                   (* flush stdio... *)
+    (* restore default handler *)
+    EVAL Usignal.sigaction (sig, new, old);
+    EVAL Usignal.kill (Uprocess.getpid (), sig);  (* and resend the signal *)
+  END Shutdown;
+
+PROCEDURE Interrupt (sig: int;
+                     sip: Usignal.siginfo_t_star;
+                     uap: Uucontext.ucontext_t_star) =
+  VAR h := RTProcess.OnInterrupt (NIL);
+  BEGIN
+    IF (h = NIL) THEN
+      Shutdown (sig, sip, uap);
+    ELSE
+      EVAL RTProcess.OnInterrupt (h); (* reinstall the handler *)
+      h ();
+    END;
+  END Interrupt;
+
+PROCEDURE Quit (<*UNUSED*> sig: int;
+                <*UNUSED*> sip: Usignal.siginfo_t_star;
+                           uap: Uucontext.ucontext_t_star) =
+  VAR pc := 0;
+  BEGIN
+    IF (uap # NIL) THEN pc := uap.uc_mcontext.mc_eip; END;
+    RTError.MsgPC (pc, "aborted");
+  END Quit;
+
+PROCEDURE SegV (<*UNUSED*> sig: int;
+                <*UNUSED*> sip: Usignal.siginfo_t_star;
+                           uap: Uucontext.ucontext_t_star) =
+  VAR pc := 0;
+  BEGIN
+    IF (uap # NIL) THEN pc := uap.uc_mcontext.mc_eip; END;
+    RTError.MsgPC (pc,
+      "Segmentation violation - possible attempt to dereference NIL");
+  END SegV;
+
+(*
 PROCEDURE Shutdown (sig: int; <*UNUSED*> code: int; <*UNUSED*> scp: SigInfo) =
   VAR new, old: Usignal.struct_sigaction;
   BEGIN
-    new.sa_handler := DefaultHandler;
+    new.sa_sigaction := DefaultHandler;
     new.sa_flags   := 0;
     RTProcess.InvokeExitors ();                   (* flush stdio... *)
     EVAL Usignal.sigaction (sig, ADR(new), ADR(old));       (* restore default handler *)
@@ -99,6 +145,7 @@ PROCEDURE SegV (<*UNUSED*> sig, code: int; scp: SigInfo) =
     (* RTMisc.FatalErrorPC (pc,
       "Segmentation violation - possible attempt to dereference NIL"); *)
   END SegV;
+*)
 
 BEGIN
 END RTSignal.
