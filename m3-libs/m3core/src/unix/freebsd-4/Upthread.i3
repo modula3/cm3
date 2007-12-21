@@ -18,14 +18,14 @@ CONST
 (* <bits/pthreadtypes.h> *)
 
 CONST
-  SIZEOF_PTHREAD_ATTR_T        = 36;
-  SIZEOF_PTHREAD_MUTEX_T       = 24;
-  SIZEOF_PTHREAD_MUTEXATTR_T   =  4;
-  SIZEOF_PTHREAD_COND_T        = 48;
-  SIZEOF_PTHREAD_COND_COMPAT_T = 12;
-  SIZEOF_PTHREAD_CONDATTR_T    =  4;
-  SIZEOF_PTHREAD_RWLOCK_T      = 32;
-  SIZEOF_PTHREAD_RWLOCKATTR_T  =  8;
+  SIZEOF_PTHREAD_ATTR_T        = 44;
+  SIZEOF_PTHREAD_MUTEX_T       = 44;
+  SIZEOF_PTHREAD_MUTEXATTR_T   = 16;
+  SIZEOF_PTHREAD_COND_T        = 86;
+  (* SIZEOF_PTHREAD_COND_COMPAT_T = 12; *)
+  SIZEOF_PTHREAD_CONDATTR_T    =  8;
+  SIZEOF_PTHREAD_RWLOCK_T      = 20;
+  SIZEOF_PTHREAD_RWLOCKATTR_T  =  4;
   SIZEOF_PTHREAD_BARRIER_T     = 20;
   SIZEOF_PTHREAD_BARRIERATTR_T =  4;
 
@@ -59,12 +59,13 @@ TYPE
 
 (* Keys for thread-specific data *)
 TYPE
-  pthread_key_t = unsigned_int;
+  pthread_key_t = int;
 
 (* Once-only execution *)
 TYPE
   pthread_once_t = RECORD
     data: int;
+    mutex: pthread_mutex_t;
   END;
 
 (* Data structure for read-write lock variable handling.  The
@@ -101,8 +102,10 @@ CONST
     pthread_cond_t { ARRAY [1..SIZEOF_PTHREAD_COND_T] OF char {0, .. } };
 
 (* Single execution handling.  *)
+(*
 CONST
   PTHREAD_ONCE_INITIALIZER = pthread_once_t { 0 };
+*)
 
 TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 <*EXTERNAL pthread_create*>
