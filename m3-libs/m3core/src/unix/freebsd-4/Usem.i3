@@ -8,8 +8,8 @@
 
 UNSAFE INTERFACE Usem;
 
-FROM Ctypes IMPORT short, int;
-FROM Utypes IMPORT ushort, time_t;
+FROM Ctypes IMPORT short, int, unsigned_int, const_char_star;
+FROM Utypes IMPORT ushort, time_t, mode_t;
 FROM Uexec  IMPORT wait_queue_star;
 FROM Uipc   IMPORT struct_ipc_perm;
 
@@ -150,6 +150,34 @@ TYPE
    union_buf = UNTRACED REF struct_semid_ds;
 (* union_array = ARRAY OF ushort *)
 
+(*** <semaphore.h> ***)
 
+  sem_t = UNTRACED REF ARRAY [0..7] OF int;
+
+  sem_t_star = UNTRACED REF sem_t;
+
+<*EXTERNAL sem_init*>
+PROCEDURE init (VAR sem: sem_t; pshared: int; value: unsigned_int): int;
+<*EXTERNAL sem_destroy*>
+PROCEDURE destroy (VAR sem: sem_t): int;
+<*EXTERNAL sem_open*>
+PROCEDURE open (name: const_char_star; flags: int): sem_t_star;
+<*EXTERNAL sem_open*>
+PROCEDURE open_create (name: const_char_star;
+                       flags: int;
+                       mode: mode_t;
+                       value: unsigned_int): sem_t_star;
+<*EXTERNAL sem_close*>
+PROCEDURE close (VAR sem: sem_t): int;
+<*EXTERNAL sem_unlink*>
+PROCEDURE unlink (name: const_char_star): int;
+<*EXTERNAL sem_trywait*>
+PROCEDURE trywait (VAR sem: sem_t): int;
+<*EXTERNAL sem_wait*>
+PROCEDURE wait (VAR sem: sem_t): int;
+<*EXTERNAL sem_post*>
+PROCEDURE post (VAR sem: sem_t): int;
+<*EXTERNAL sem_getvalue*>
+PROCEDURE getvalue (VAR sem: sem_t; VAR value: int): int;
 
 END Usem.
