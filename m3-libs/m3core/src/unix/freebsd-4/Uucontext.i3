@@ -94,12 +94,12 @@ TYPE
   ucontext_t_star = UNTRACED REF ucontext_t;
 
 <*EXTERNAL*>
-PROCEDURE swapcontext(VAR oucp, ucp: ucontext_t): int;
+PROCEDURE swapcontext(VAR oucp: ucontext_t; READONLY ucp: ucontext_t): int;
 
 <*EXTERNAL*>
 PROCEDURE getcontext(VAR ucp: ucontext_t): int;
 
 <*EXTERNAL*>
-PROCEDURE setcontext(VAR ucp: ucontext_t): int;
+PROCEDURE setcontext(READONLY ucp: ucontext_t): int;
 
 END Uucontext.
