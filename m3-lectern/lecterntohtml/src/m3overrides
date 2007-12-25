@@ -1,2 +1,0 @@
-override ("lecterndoc", ROOT & "/m3-lectern")
-override ("mtex", ROOT & "/m3-tools")
