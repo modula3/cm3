@@ -3,17 +3,36 @@
 
 UNSAFE MODULE RuntimeError;
 
-IMPORT RT0, Compiler;
+IMPORT RT0, Compiler, M3toC;
 
 VAR self: RT0.ExceptionPtr := NIL;
 
+    beenHere: BOOLEAN := FALSE;
+
+    exc: RT0.ExceptionDesc;
+
+
 PROCEDURE Self (): RT0.ExceptionPtr =
   BEGIN
-    IF (self = NIL) THEN
-      TRY
-        RAISE E (T.Unknown);
-      EXCEPT E =>
-        self := LOOPHOLE (Compiler.ThisException(), RT0.ActivationPtr).exception;
+    beenHere := TRUE;
+    IF self = NIL THEN
+      IF NOT beenHere THEN
+        TRY
+          RAISE E (T.Unknown);
+        EXCEPT E =>
+          self := LOOPHOLE (Compiler.ThisException(), RT0.ActivationPtr).exception;
+        END;
+      ELSE
+        beenHere := FALSE;
+        VAR
+          p := ADR(exc);
+        BEGIN
+          exc.uid := -1;
+          exc.name := LOOPHOLE(M3toC.CopyTtoS("unknown recursive exception"),
+                               RT0.String);
+          exc.implicit := -1;
+          RETURN p;
+        END;
       END;
     END;
     RETURN self;
