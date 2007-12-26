@@ -166,8 +166,19 @@ SYSTEM_LIBS = {
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+SYSTEM_LIBORDER =
+[
+    "OPENGL",
+    "DECPEX",
+    "MOTIF",
+    "X11",
+    "TCP",
+    "ODBC",
+    "POSTGRES95",
+    "FLEX-BISON",
+    "LEX-YACC",
+    "LIBC"
+]
 
 %---------------------------------------------------------- system programs ---
 
@@ -269,10 +280,18 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % build the shared library
-    ret_code = try_exec ("@" & SYSTEM_CC, "-dynamiclib", "-multiply_defined suppress",
-                         "-twolevel_namespace", "-compatibility_version", vmaj,
-                         "-current_version", version, "-install_name", lib_pn,
-                         "-lgcc", "-o", lib_soxx, objects, imported_libs)
+    ret_code = try_exec (
+        "@" & SYSTEM_CC, "-dynamiclib",
+        "-multiply_defined suppress",
+        "-twolevel_namespace",
+        "-compatibility_version", vmaj,
+        "-current_version", version,
+        "-install_name", lib_pn,
+        "-lgcc",
+        "-o", lib_soxx,
+        objects,
+        imported_libs
+        )
     if not equal (ret_code, 0)
       delete_file (lib_a)
       return ret_code
