@@ -9,16 +9,16 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "PPC_DARWIN"     % code generation target
+readonly TARGET       = "PPC_DARWIN"    % code generation target
 if M3_PROFILING
-  readonly BUILD_DIR  = TARGET & "p"     % code generation target
+  readonly BUILD_DIR  = TARGET & "p"    % code generation target
 else
-  readonly BUILD_DIR  = TARGET           % directory for results
+  readonly BUILD_DIR  = TARGET          % directory for results
 end
-readonly OS_TYPE      = "POSIX"          % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"         % { "32BITS" or "64BITS" }
+readonly OS_TYPE      = "POSIX"         % { "WIN32" or "POSIX" }
+readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
-                                         % "cpu-vendor-os" string for GNU
+                                        % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
 %    14 %-- user specified key
