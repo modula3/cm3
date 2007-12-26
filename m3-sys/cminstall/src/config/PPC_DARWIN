@@ -86,7 +86,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-lm" ],
+  "LIBC"       : [ ],
 % "LEX-YACC"   : [ BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
 %                      11 "libl.a"
