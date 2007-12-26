@@ -223,7 +223,14 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
+  local args =
+  [
+    "-quiet",
+    source,
+    "-o",
+    object,
+    "-fPIC",
+  ]
   if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
