@@ -19,10 +19,6 @@ readonly OS_TYPE      = "POSIX"         % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
                                         % "cpu-vendor-os" string for GNU
-%readonly INSTALL_KEY  = BEGIN_CONFIG
-%  "What is your installation key?"
-%    14 %-- user specified key
-%END_CONFIG
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
@@ -40,53 +36,6 @@ proc set_config_options () is
   m3_debug (TRUE)      %-- produce object code with debugging symbols
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
-
-%--------------------------------------------------------- Reactor defaults ---
-% The first time a user runs Reactor, it will configure itself to use
-% the executables defined below.
-
-%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
-%  "What should be the default World-Wide Web browser for new Reactor users?"
-%     0  "netscape"
-%     6 "/usr/local/bin"           "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape-3"
-%     6 "/usr/local/netscape/bin"  "netscape-2"
-%     6 "/usr/local/netscape"      "netscape"
-%     6 "/usr/local/mosaic"        "mosaic"
-%     6 "/usr/local/moasic"        "Xmosaic"
-%END_CONFIG
-% A World-Wide Web browser.  Reactor passes it an initial URL
-% its first command-line argument.
-
-INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
-  "What should be the default text editor for new CM3 users?"
-    10 "EDITOR"
-     0 "emacsclient"
-     0 "emacs"
-     0 "gnuclient"
-     0 "xemacs"
-     0 "ee"
-     0 "vi"
-     0 "vim"
-     0 "textedit"
-     0 "xedit"
-     6 "/usr/local/emacs/bin"  "emacsclient"
-     6 "/usr/local/bin"        "emacsclient"
-     6 "/usr/local/xemacs/bin" "gnuclient"
-     6 "/usr/local/bin"        "gnuclient"
-     6 "/usr/local/emacs/bin"  "emacs"
-     6 "/usr/local/bin"        "emacs"
-     6 "/usr/bin"              "vi"
-     6 "/usr/local/X11R5/bin"  "xedit"
-     6 "/usr/openwin/bin"      "textedit"
-     6 "/usr/openwin/bin"      "xedit"
-     6 "/usr/X11/bin"          "xedit"
-     6 "/usr/bin/X11"          "xedit"
-END_CONFIG
-% A text editor.  Reactor passes it "<file> +<line>" on the
-% command-line when it wants to edit <file> initially positioned
-% at <line>.
 
 %------------------------------------------------------------- export paths ---
 % During the installation, destination directories that do not exist
