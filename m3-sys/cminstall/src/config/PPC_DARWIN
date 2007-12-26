@@ -1,6 +1,6 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
-% 
+%
 % Standard configuration file for FreeBSD with ELF object files
 %
 
@@ -10,7 +10,7 @@
 %M3_PROFILING = FALSE
 
 readonly TARGET       = "PPC_DARWIN"     % code generation target
-if M3_PROFILING 
+if M3_PROFILING
   readonly BUILD_DIR  = TARGET & "p"     % code generation target
 else
   readonly BUILD_DIR  = TARGET           % directory for results
@@ -91,7 +91,7 @@ END_CONFIG
 %------------------------------------------------------------- export paths ---
 % During the installation, destination directories that do not exist
 % will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have 
+% the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
 INSTALL_ROOT = BEGIN_CONFIG
@@ -100,7 +100,7 @@ INSTALL_ROOT = BEGIN_CONFIG
 END_CONFIG
 
 BIN_INSTALL   = INSTALL_ROOT & "/bin"        % executables
-if M3_PROFILING 
+if M3_PROFILING
   LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
 else
   LIB_INSTALL   = INSTALL_ROOT & "/lib"        % libraries
@@ -125,7 +125,7 @@ readonly INSTALL_IMPLS = TRUE
 %    => save all source files during the install
 %    => makes debugging easier and browsing more fruitful
 % FALSE
-%    => save only the exported interfaces and templates 
+%    => save only the exported interfaces and templates
 %    => makes the installed system slightly smaller.
 
 %------------------------------------------------ external system libraries ---
@@ -333,7 +333,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
                          "-twolevel_namespace", "-compatibility_version", vmaj,
                          "-current_version", version, "-install_name", lib_pn,
                          "-lgcc", "-o", lib_soxx, objects, imported_libs)
-    if not equal (ret_code, 0) 
+    if not equal (ret_code, 0)
       delete_file (lib_a)
       return ret_code
     end
