@@ -353,10 +353,19 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local args = []
+  local args =
+  [
+    "-o",
+    prog,
+    "-fPIC",
+    options,
+    objects,
+    imported_libs,
+    "-multiply_defined suppress",
+    "-bind_at_load",
+    "-shared-libgcc",
+  ]
   if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
-  args += [ "-multiply_defined suppress", "-bind_at_load", "-shared-libgcc" ]
   return try_exec ("@" & SYSTEM_CC, args)
 end
 
