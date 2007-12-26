@@ -195,15 +195,6 @@ readonly SYSTEM_LIBTOOL  = BEGIN_CONFIG
     6 "/usr/local/bin" "libtool"
     6 "/usr/local/gnu" "libtool"
 END_CONFIG % Archiver
-readonly SYSTEM_RANLIB  = BEGIN_CONFIG
-  "Where is your library indexer?"
-    0 "ranlib"
-    6 "/usr/bin"       "ranlib"
-    6 "/bin"           "ranlib"
-    6 "/usr/local"     "ranlib"
-    6 "/usr/local/bin" "ranlib"
-    6 "/usr/local/gnu" "ranlib"
-END_CONFIG % Archiver
 readonly SYSTEM_ASM = BEGIN_CONFIG
   "Where is your assembler?"
     0 "as"
