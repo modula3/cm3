@@ -416,6 +416,13 @@ M3_OPTIONS = [ ]
 M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
+%
+% This is critical on MacOSX to achieve dynamic linking.
+% Specifying /foo/bar.a statically links to bar.a.
+% Specifying -L/foo -lbar probes first for /foo/bar.dylib
+% and then for /foo/bar.a, achieving dynamic linking if possible.
+% See "man ld".
+%
 M3_SPLIT_LIBNAMES = TRUE
 % --- split shared library names and pass -L/-l arguments to the linker
 
