@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.48 2006-10-30 09:04:43 stsp Exp $
+# $Id: sysinfo.sh,v 1.49 2007-12-26 01:01:06 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -15,13 +15,21 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 CM3VERSION=${CM3VERSION:-"d5.5.0"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
-CM3_INSTALL=/usr/local/cm3
+#
+# if CM3_INSTALL is not set, and cm3 is in $PATH, cm3's directory's directory is CM3_INSTALL,
+# else CM3_DEFAULTS defaults to /usr/local/cm3
+# Unfortunately, which always prints something and always succeeds, so we have to sniff
+# out its error message -- given "which foo", it prints "no foo in ..", where .. is
+# space delimited elements of $PATH -- at least on Mac OSX 10.4.
+#
+CM3_INSTALL=${CM3_INSTALL:-`dirname \`dirname \\\`which cm3 | grep -v ^no\\ cm3\\ in\\ \\\` 2>/dev/null\` 2>/dev/null`}
+CM3_INSTALL=${CM3_INSTALL:-"/usr/local/cm3"}
 CM3=${CM3:-cm3}
 M3BUILD=${M3BUILD:-m3build}
 M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
-SYSLIBDIR="/usr/local/cm3/lib"
+SYSLIBDIR="$CM3_INSTALL/lib"
 SYSLIBS=""
 XDEV_LIB=""
 XDEV_BIN=""
