@@ -933,6 +933,62 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+  (* LL=0 *)
+  CONST
+    WAIT_UNIT = 1000000;
+  VAR
+    me := GetActivation();
+    act: Activation;
+    acks: INTEGER;
+    wait, remaining: Utime.struct_timespec;
+  BEGIN
+    WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
+
+    ProcessMe(me, p);
+
+    act := me.next;
+    WHILE act # me DO
+      (* stop *)
+      LOOP
+        IF StopThread(act) THEN EXIT END;
+        IF SignalThread(act, ActState.Stopping) THEN
+          WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+          IF acks > 0 THEN
+            WHILE Usem.wait(ackSem) # 0 DO
+              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+            END;
+            EXIT;
+          END;
+        END;
+        wait.tv_sec := 0;
+        wait.tv_nsec := WAIT_UNIT;
+        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+      END;
+      (* process *)
+      ProcessOther(act, p);
+      (* start *)
+      LOOP
+        IF StartThread(act) THEN EXIT END;
+        IF SignalThread(act, ActState.Starting) THEN
+          WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+          IF acks > 0 THEN
+            WHILE Usem.wait(ackSem) # 0 DO
+              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+            END;
+            EXIT;
+          END;
+        END;
+        wait.tv_sec := 0;
+        wait.tv_nsec := WAIT_UNIT;
+        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+      END;
+      act := act.next;
+    END;
+
+    WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+  END ProcessEachStack;
+
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
@@ -1117,24 +1173,90 @@ PROCEDURE StopWorld () =
 
 PROCEDURE StartWorld () =
   (* LL=activeMu *)
+  CONST
+    WAIT_UNIT = 1000000;
+    RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
     act: Activation;
+    acks, nDead, newlySent: INTEGER;
+    retry: BOOLEAN;
+    wait_nsecs := RETRY_INTERVAL;
+    wait, remaining: Utime.struct_timespec;
   BEGIN
     IF DEBUG THEN
       RTIO.PutText("Starting from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
-    act := me.next;
-    WHILE act # me DO
-      IF StartThread(act) THEN
-        (* good *)
-      ELSIF SignalThread(act, ActState.Starting) THEN
-        (* good *)
-      ELSE
-        <*ASSERT FALSE*>
+
+    nDead := 0;
+    LOOP
+      retry := FALSE;
+      act := me.next;
+      WHILE act # me DO
+        IF act.state # ActState.Started THEN
+          IF StartThread(act) THEN
+            (* good *)
+          ELSIF SignalThread(act, ActState.Starting) THEN
+            INC(nDead);
+          ELSE
+            (* try again *)
+            retry := TRUE;
+          END;
+        END;
+        act := act.next;
       END;
-      act := act.next;
+      IF NOT retry THEN EXIT END;
+      wait.tv_sec := 0;
+      wait.tv_nsec := WAIT_UNIT;
+      WHILE Utime.nanosleep(wait, remaining) # 0 DO
+        wait := remaining;
+      END;
     END;
+    WHILE nDead > 0 DO
+      WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+      IF acks = nDead THEN EXIT END;
+      <*ASSERT acks < nDead*>
+      IF wait_nsecs <= 0 THEN
+        newlySent := 0;
+        act := me.next;
+        WHILE act # me DO
+          IF act.state = ActState.Started THEN
+            (* good *)
+          ELSIF SignalThread(act, ActState.Starting) THEN
+            INC(newlySent);
+          ELSE
+            <*ASSERT FALSE*>
+          END;
+          act := act.next;
+        END;
+        IF newlySent < nDead - acks THEN
+          (* how did we manage to lose some? *)
+          nDead := acks + newlySent;
+        END;
+        wait_nsecs := RETRY_INTERVAL;
+      ELSE
+        wait.tv_sec := 0;
+        wait.tv_nsec := WAIT_UNIT;
+        WHILE Utime.nanosleep(wait, remaining) # 0 DO
+          wait := remaining;
+        END;
+        DEC(wait_nsecs, WAIT_UNIT);
+      END;
+    END;
+    (* drain semaphore *)
+    FOR i := 0 TO nDead-1 DO
+      LOOP
+        WITH r = Usem.wait(ackSem) DO
+          IF r = 0 THEN EXIT END;
+          IF Cerrno.GetErrno() = Uerror.EINTR THEN
+            (*retry*)
+          ELSE
+            <*ASSERT FALSE*>
+          END;
+        END;
+      END;
+    END;
+
     IF DEBUG THEN
       RTIO.PutText("Started from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
@@ -1162,6 +1284,7 @@ PROCEDURE SignalHandler (sig: Ctypes.int;
     REPEAT EVAL Usignal.sigsuspend(mask) UNTIL me.state = ActState.Starting;
     me.sp := NIL;
     SetState(me, ActState.Started);
+    WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
 
