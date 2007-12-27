@@ -30,6 +30,11 @@ PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
 
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS));
+(* Apply p to each thread stack, with [start..stop) being the limits
+   of the stack.  Each thread is suspended individually.  ProcessEachStack
+   exists solely for the garbage collector.  *)
+
 (*------------------------------------------------ floating point support ---*)
 
 (* access to the saved floating point state for the current thread. *)
