@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.8 2006-01-17 00:17:15 rodney Exp $
+# $Id: pkgcmds.sh,v 1.9 2007-12-28 16:28:54 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -42,8 +42,7 @@ SRC_SHIP="${SHIP:-${M3SHIP} -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 REALCLEAN="${REALCLEAN:-rm -rf ${TARGET}}"
 
 # choose the compiler to use
-echo CM3C = ${CM3C}
-if type ${CM3C} 2>/dev/null >/dev/null ; then
+if type ${CM3} 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${CM3_BUILDLOCAL}"
   CLEANLOCAL="${CM3_CLEANLOCAL}"
   BUILDGLOBAL="${CM3_BUILDGLOBAL}"
@@ -57,7 +56,7 @@ elif type ${M3BUILD} 2>/dev/null >/dev/null ; then
   SHIP="${CM3_SHIP}"
 else
   if [ -z "${BUILDLOCAL}" -o -z "${BUILDGLOBAL}" -o -z "${SHIP}" ] ; then
-    echo "${CM3C} or ${M3BUILD} not found in your path, don't know how to compile" \
+    echo "${CM3} or ${M3BUILD} not found in your path, don't know how to compile" \
       1>&2
     exit 1
   fi
