@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.8 2007-06-22 20:04:04 hosking Exp $
+# $Id: pkginfo.sh,v 1.9 2007-12-28 14:04:15 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -51,9 +51,15 @@ pkgpath() {
 }
 
 listpkgs() {
+  egrep "/$a\$" "$PKGSDB"
   if [ -n "$1" ] ; then
     while [ -n "$1" ] ; do
-      egrep "$1" "$PKGSDB"
+      a="$1"
+      # remove ROOT from the start of a
+      a=`echo $a | sed -e "s;^${ROOT}/;;"`
+      # if a has no slashes, then it needs a leading slash
+      a=`echo $a | sed -e '/\//!s;^;/;'`
+      egrep "$a\$" "$PKGSDB"
       shift
     done | sed -e "s;^;${ROOT}/;"
   else
