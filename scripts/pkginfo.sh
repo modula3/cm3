@@ -51,9 +51,15 @@ pkgpath() {
 }
 
 listpkgs() {
+  egrep "/$a\$" "$PKGSDB"
   if [ -n "$1" ] ; then
     while [ -n "$1" ] ; do
-      egrep "$1" "$PKGSDB"
+      a="$1"
+      # remove ROOT from the start of a
+      a=`echo $a | sed -e "s;^${ROOT}/;;"`
+      # if a has no slashes, then it needs a leading slash
+      a=`echo $a | sed -e '/\//!s;^;/;'`
+      egrep "$a\$" "$PKGSDB"
       shift
     done | sed -e "s;^;${ROOT}/;"
   else
