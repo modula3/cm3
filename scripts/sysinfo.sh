@@ -34,13 +34,6 @@ SYSLIBS=""
 XDEV_LIB=""
 XDEV_BIN=""
 TAR=tar
-if [ -z "${M3GC_ENHANCED}" -o "x${M3GC_ENHANCED}" = "xno" -o \
-     "x${M3GC_ENHANCED}" = "xNO" -o \
-     "x${M3GC_ENHANCED}" = "xN" -o \
-     "x${M3GC_ENHANCED}" = "x0" ]; then
-  M3GC_SIMPLE=yes
-fi
-export M3GC_SIMPLE
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
@@ -179,15 +172,7 @@ case "${UNAME}" in
       powerpc*)
         CM3_TARGET=PPC_DARWIN;;
       i[3456]86*)
-        M3GC_SIMPLE=yes
-        export M3GC_SIMPLE
         CM3_TARGET=I386_DARWIN;;
-    esac
-    # disable system call wrappers and enhanced gc on older systems
-    case "`uname -r`" in
-      6.8)
-        M3GC_SIMPLE=yes
-        export M3GC_SIMPLE;;
     esac
     GMAKE=${GMAKE:-make}
   ;;
