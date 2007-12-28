@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.51 2007-12-28 07:56:47 jkrell Exp $
+# $Id: sysinfo.sh,v 1.52 2007-12-28 07:57:57 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -123,7 +123,7 @@ case "${UNAME}" in
       L="${L} e:/reactor5/bin c:/reactor/bin d:/reactor/bin"
       L="${L} e:/reactor/bin /usr/local/cm3/bin /usr/local/reactor/bin"
       L="${L} /usr/cm3/bin /usr/reactor/bin"
-      CM3BINSEARCHPATH=${L}
+      CM3BINSEARCHPATH="${L}"
       if f="`find_file KERNEL32.LIB ${L}`" ; then
         SYSLIBDIR="`dirname $f`"
       else
