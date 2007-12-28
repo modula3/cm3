@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.10 2007-12-28 07:43:28 jkrell Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.11 2007-12-28 23:02:01 jkrell Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -53,8 +53,7 @@ sysinfo.sh [include]
   the M3OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
   the INSTALLROOT etc. This script needs to be adapted for every new
   supported platform. Also exports find_file() for the location of
-  directories and files, and some other general useful functions like
-  debug() and head().
+  files, and some other general useful functions like debug() and header().
 
 find-packages.sh [include | callable ]
 ----------------
