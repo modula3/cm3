@@ -73,15 +73,6 @@ fi
 
 #-----------------------------------------------------------------------------
 # some localization functions
-find_dir() {
-  for d in $@ ; do
-    if [ -d "$d" ] ; then
-      echo "$d"
-      return 0
-    fi
-  done
-  return 1
-}
 
 find_file() {
   f="$1"
@@ -237,7 +228,6 @@ if [ -n "$root" ] ; then
 else
   ROOT=${ROOT:-${PRJ_ROOT}/cm3}
 fi
-SCRIPTS=${SCRIPTS:-${ROOT}/scripts}
 M3GDB=${M3GDB:-${CM3_GDB}}
 M3OSTYPE=${M3OSTYPE:-${CM3_OSTYPE}}
 TARGET=${TARGET:-${CM3_TARGET}}
@@ -292,7 +282,6 @@ fi
 #-----------------------------------------------------------------------------
 # debug output
 debug "ROOT        = $ROOT"
-debug "SCRIPTS     = $SCRIPTS"
 debug "M3GDB       = $M3GDB"
 debug "M3OSTYPE    = $M3OSTYPE"
 debug "TARGET      = $TARGET"
@@ -311,7 +300,7 @@ debug "DEV_LIB     = $DEV_LIB"
 debug "TAR         = $TAR"
 debug "CM3ROOT     = $CM3ROOT"
 
-export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
+export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
 export CM3LIBSEARCHPATH CM3BINSEARCHPATH CM3ROOT
 export SYSINFO_DONE
