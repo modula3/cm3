@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.11 2007-12-28 23:02:01 jkrell Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.12 2007-12-28 23:03:49 jkrell Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -10,7 +10,9 @@ some minor tweaks might be needed). On Windows, you can use the Cygwin
 distribution which comes with bash and most of the GNU tools, or the
 MKS tool kit and its Korn shell. Alternatively, you may want to use
 the Windows CMD scripts contributed by Randy Coleburn. See README-WIN32
-for details.
+for details. Alternatively, you may want to use the Windows CMD scripts
+in the win directory contributed by Jay Krell. They work very much like
+the sh scripts documented here.
 
 You are probably most interested in one of the following:
 
