@@ -119,12 +119,11 @@ case "${UNAME}" in
       SYSLIBS="ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
       SYSLIBS="${SYSLIBS} OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
       SYSLIBS="${SYSLIBS} GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
-      L="c:/cm3/lib d:/cm3/lib e:/cm3/lib c:/reactor5/lib d:/reactor5/lib"
-      L="${L} e:/reactor5/lib c:/reactor/lib d:/reactor/lib"
-      L="${L} e:/reactor/lib /usr/local/cm3/lib /usr/local/reactor/lib"
-      L="${L} /usr/cm3/lib /usr/reactor/lib"
-      CM3LIBSEARCHPATH="${L}"
-      CM3BINSEARCHPATH="`echo ${L} | sed -e 's/lib/bin/g'`"
+      L="c:/cm3/bin d:/cm3/bin e:/cm3/bin c:/reactor5/bin d:/reactor5/bin"
+      L="${L} e:/reactor5/bin c:/reactor/bin d:/reactor/bin"
+      L="${L} e:/reactor/bin /usr/local/cm3/bin /usr/local/reactor/bin"
+      L="${L} /usr/cm3/bin /usr/reactor/bin"
+      CM3BINSEARCHPATH=${L}
       if f="`find_file KERNEL32.LIB ${L}`" ; then
         SYSLIBDIR="`dirname $f`"
       else
@@ -302,7 +301,7 @@ debug "CM3ROOT     = $CM3ROOT"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
-export CM3LIBSEARCHPATH CM3BINSEARCHPATH CM3ROOT
+export CM3BINSEARCHPATH CM3ROOT
 export SYSINFO_DONE
 
 fi
