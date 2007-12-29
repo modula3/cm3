@@ -7,14 +7,32 @@ setlocal
 @rem Start with the installed cm3.
 @if defined CM3 set CM3=
 
-call %~dp0clearenv || exit /b 1
-call %~dp0sysinfo || exit /b 1
-call %~dp0pkginfo || exit /b 1
-call %~dp0pkgcmds || exit /b 1
+call %~dp0clearenv || call :ReportFatalError || exit /b 1
+call %~dp0sysinfo || call :ReportFatalError || exit /b 1
+call %~dp0pkginfo || call :ReportFatalError || exit /b 1
+call %~dp0pkgcmds || call :ReportFatalError || exit /b 1
 
 if not defined STAGE (
     set STAGE=%TEMP%\cm3\%~n0\%random%
 )
+@mkdir %STAGE%\logs 2>nul
+@set LogCounter=0
+@call :IncrementLogCounter_init
+@goto :IncrementLogCounter_end
+
+:IncrementLogCounter
+@rem
+@rem Setlocal interferes with incrementing this, so we are..creative..
+@rem When your programming language has insufficient scoping rules,
+@rem ferry globals around in the file system. Do not confuse an add
+@rem instruction with opening/reading/writing a file.
+@rem Oops.
+@rem
+@call %STAGE%\logs\LogCounter.bat
+:IncrementLogCounter_init
+@echo set /a LogCounter=%LogCounter% + 1 > %STAGE%\logs\LogCounter.bat
+@goto :eof
+:IncrementLogCounter_end
 
 set INSTALLROOT_PREVIOUS=%INSTALLROOT%
 
@@ -59,18 +77,18 @@ setlocal
 set P=import-libs m3middle m3linker m3front m3quake m3objfile m3back m3staloneback m3objfile cm3
 
 @rem copy over runtime package store from old to new
-for %%a in (libm3 m3core) do xcopy /fiveryh %INSTALLROOT%\pkg\%%a %INSTALLROOT_COMPILER_WITH_PREVIOUS%\pkg\%%a || exit /b 1
+for %%a in (libm3 m3core) do call :Run xcopy /fiveryh %INSTALLROOT%\pkg\%%a %INSTALLROOT_COMPILER_WITH_PREVIOUS%\pkg\%%a || exit /b 1
 
 @rem
 @rem cm3 is run out of %path%, but mklib is not, so we have to copy it..
 @rem
-call :Run call :CopyMklib %INSTALLROOT% %INSTALLROOT_COMPILER_WITH_PREVIOUS% || exit /b 1
+call :CopyMklib %INSTALLROOT% %INSTALLROOT_COMPILER_WITH_PREVIOUS%
 set INSTALLROOT=%INSTALLROOT_COMPILER_WITH_PREVIOUS%
 set LIB=%INSTALLROOT%\lib;%LIB%
-call :RealClean || exit /b 1
-call :BuildShip || exit /b 1
-call :ShipCompiler || exit /b 1
-call :RealClean || exit /b 1
+call :RealClean || call :ReportFatalError || exit /b 1
+call :BuildShip || call :ReportFatalError || exit /b 1
+call :ShipCompiler || call :ReportFatalError || exit /b 1
+call :RealClean || call :ReportFatalError || exit /b 1
 
 endlocal
 
@@ -83,14 +101,14 @@ setlocal
 set INSTALLROOT=%INSTALLROOT_COMPILER_WITH_SELF%
 set LIB=%INSTALLROOT%\lib;%LIB%
 set PATH=%INSTALLROOT_COMPILER_WITH_PREVIOUS%\bin;%PATH%
-call :RealClean || exit /b 1
-call :BuildShip || exit /b 1
-call :ShipCompiler || exit /b 1
+call :RealClean || call :ReportFatalError || exit /b 1
+call :BuildShip || call :ReportFatalError || exit /b 1
+call :ShipCompiler || call :ReportFatalError || exit /b 1
 @rem
 @rem save cminstall.exe away for later
 @rem
-call :CopyFile %ROOT%\m3-sys\cminstall\%TARGET%\cminstall.exe %STAGE%\cminstall.exe || exit /b 1
-call :RealClean || exit /b 1
+call :CopyFile %ROOT%\m3-sys\cminstall\%TARGET%\cminstall.exe %STAGE%\cminstall.exe || call :ReportFatalError || exit /b 1
+call :RealClean || call :ReportFatalError || exit /b 1
 
 endlocal
 
@@ -106,12 +124,12 @@ setlocal
 
 set INSTALLROOT=%INSTALLROOT_MIN%
 set LIB=%INSTALLROOT%\lib;%LIB%
-call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || exit /b 1
+call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || call :ReportFatalError || exit /b 1
 set PATH=%INSTALLROOT%\bin;%PATH%
 
-call %~dp0do-cm3-min realclean || exit /b 1
-call %~dp0do-cm3-min buildship || exit /b 1
-call %~dp0do-cm3-min realclean || exit /b 1
+call :Run %~dp0do-cm3-min realclean || call :ReportFatalError || exit /b 1
+call :Run %~dp0do-cm3-min buildship || call :ReportFatalError || exit /b 1
+call :Run %~dp0do-cm3-min realclean || call :ReportFatalError || exit /b 1
 
 endlocal
 
@@ -119,42 +137,49 @@ endlocal
 call :Echo build core packages with new compiler
 @rem ----------------------------------------------------------------------------------------------------------------------------------
 
+call :Echo skipping..
+goto :core_end
+
 setlocal
 
 set INSTALLROOT=%INSTALLROOT_CORE%
 set LIB=%INSTALLROOT%\lib;%LIB%
-call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || exit /b 1
+call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || call :ReportFatalError || exit /b 1
 set PATH=%INSTALLROOT%\bin;%PATH%
 
-call :Echo skipping..
-rem call %~dp0do-cm3-core realclean || exit /b 1
-rem call %~dp0do-cm3-core buildship || exit /b 1
-rem call %~dp0do-cm3-core realclean || exit /b 1
+call %~dp0do-cm3-core realclean || call :ReportFatalError || exit /b 1
+call %~dp0do-cm3-core buildship || call :ReportFatalError || exit /b 1
+call %~dp0do-cm3-core realclean || call :ReportFatalError || exit /b 1
 
 endlocal
+
+:core_end
 
 @rem ----------------------------------------------------------------------------------------------------------------------------------
 call :Echo build standard packages with new compiler
 @rem ----------------------------------------------------------------------------------------------------------------------------------
 
+call :Echo skipping..
+goto :std_end
+
 setlocal
 
 set INSTALLROOT=%INSTALLROOT_STD%
 set LIB=%INSTALLROOT%\lib;%LIB%
-call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || exit /b 1
+call :CopyCompiler %INSTALLROOT_COMPILER_WITH_SELF% %INSTALLROOT% || call :ReportFatalError || exit /b 1
 set PATH=%INSTALLROOT%\bin;%PATH%
 
-call :Echo skipping..
-rem call %~dp0do-cm3-std realclean || exit /b 1
-rem call %~dp0do-cm3-std buildship || exit /b 1
-rem call %~dp0do-cm3-std realclean || exit /b 1
+call %~dp0do-cm3-std realclean || call :ReportFatalError || exit /b 1
+call %~dp0do-cm3-std buildship || call :ReportFatalError || exit /b 1
+call %~dp0do-cm3-std realclean || call :ReportFatalError || exit /b 1
 
 endlocal
 
+:std_end
 
 @rem ----------------------------------------------------------------------------------------------------------------------------------
 
-echo INSTALLROOT_MIN=%INSTALLROOT_MIN%
+rem echo INSTALLROOT_MIN=%INSTALLROOT_MIN%
 rem echo INSTALLROOT_STD=%INSTALLROOT_STD%
 rem echo INSTALLROOT_CORE=%INSTALLROOT_CORE%
 rem echo INSTALLROOT_BASE=%INSTALLROOT_BASE%
@@ -172,15 +197,15 @@ pushd %INSTALLROOT_MIN%
 if not exist symbols mkdir symbols
 for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
 if exist system.tgz del system.tgz
-tar cvzf system.tgz bin lib pkg || exit /b 1
-call :CopyFile %STAGE%\cminstall.exe . || exit /b 1
-call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
-call :CopyFile %ROOT%\tools\win32\tar.exe . || exit /b 1
-call :CopyFile %ROOT%\tools\win32\gzip.exe . || exit /b 1
-call :CopyFile %ROOT%\tools\win32\cygwin.dll . || exit /b 1
+tar cvzf system.tgz bin lib pkg || call :ReportFatalError || exit /b 1
+call :CopyFile %STAGE%\cminstall.exe . || call :ReportFatalError || exit /b 1
+call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || call :ReportFatalError || exit /b 1
+call :CopyFile %ROOT%\tools\win32\tar.exe . || call :ReportFatalError || exit /b 1
+call :CopyFile %ROOT%\tools\win32\gzip.exe . || call :ReportFatalError || exit /b 1
+call :CopyFile %ROOT%\tools\win32\cygwin.dll . || call :ReportFatalError || exit /b 1
 if exist cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz del cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz
-tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CMASS system.tgz tar.exe gzip.exe cygwin.dll || exit /b 1
-tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols || exit /b 1
+tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CMASS system.tgz tar.exe gzip.exe cygwin.dll || call :ReportFatalError || exit /b 1
+tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols || call :ReportFatalError || exit /b 1
 popd
 
 echo Done.
@@ -193,7 +218,7 @@ goto :eof
 :Zip
 
 pushd %INSTALLROOT_MIN%
-call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
+call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || call :ReportFatalError || exit /b 1
 cd ..
 if not exist symbols mkdir symbols
 for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
@@ -210,7 +235,9 @@ set zip=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.zip
 call :RunZip -9 -r -D -X %zip% cm3
 
 @rem
-@rem On my machine \bin\unzipsfx.exe is a
+@rem HACK ALERT
+@rem
+@rem ON MY MACHINE \bin\unzipsfx.exe is a
 @rem Win32 x86 unzip self extracting archive prefix,
 @rem with an MS-DOS unzip self extracting archive prefix for a stub.
 @rem As such, you can do several things with it.
@@ -218,7 +245,8 @@ call :RunZip -9 -r -D -X %zip% cm3
 @rem  Run it from a Windows command line.
 @rem  Open it with various archive utilities, including maybe Explorer (might need to rename it to end in .zip).
 @rem
-@rem However, .tar.bz2 is generally significantly smaller than .zip and therefore used instead.
+@rem .tar.bz2 is generally significantly smaller, but .zip is currently used
+@rem for ease of Windows users.
 @rem
 @rem I built this unzipsfx from the publically available source. That source
 @rem and building of it is not in the CM3 tree, and probably should be
@@ -227,10 +255,12 @@ call :RunZip -9 -r -D -X %zip% cm3
 @rem
 
 set exe=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.exe
-rem UPX proved unreliable after not much use.
-rem copy /b \bin\unzipsfx-upx.exe + %zip% %exe%
-copy /b \bin\unzipsfx.exe + %zip% %exe%
-call :RunZip -A %exe%
+if not exist \bin\unzipsfx.exe (
+    echo \bin\unzipsfx.exe does not exist, skipping making self extracting .zip
+) else (
+    call :Run copy /b \bin\unzipsfx.exe + %zip% %exe%
+    call :RunZip -A %exe%
+)
 
 popd
 goto :done
@@ -238,7 +268,7 @@ goto :done
 :TarBzip2
 
 pushd %INSTALLROOT_MIN%
-call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || exit /b 1
+call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || call :ReportFatalError || exit /b 1
 cd ..
 if not exist symbols mkdir symbols
 for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
@@ -262,24 +292,29 @@ goto :eof
 
 
 :Run
+    @call :IncrementLogCounter
+    @echo.
     setlocal
+    @rem remove some extraneous spaces that come
+    @rem concating possibly empty variables with
+    @rem spaces between them
     set x=%*
     set x=%x:  = %
     set x=%x:  = %
-    echo %x%
-    %x% || goto :RunError
+    echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
+    echo.>> %STAGE%\logs\all.log
+    echo.>> %STAGE%\logs\%LogCounter%_%~n1.log
+    echo %x% ^>^> %STAGE%\logs\%LogCounter%_%~n1.log
+    call %x% >> %STAGE%\logs\%LogCounter%_%~n1.log || (
+        echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
+        type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
+	    echo ERROR: %x% failed
+	    exit /b 1
+    )
+    echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
+    type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
     endlocal
     goto :eof
-
-:RunError
-	echo ERROR: %x%
-	call :Where cm3.exe
-	echo %STAGE% and/or %%TEMP%%\cm3 will be full of stuff.
-	exit /b 1
-
-:Where
-@echo WHERE: %1 =^> %~$PATH:1
-goto :eof
 
 :ShipCompiler
     @rem
@@ -288,11 +323,11 @@ goto :eof
     @rem Do it manually for now.
     @rem
     call :CreateDirectory %INSTALLROOT%
-    call :CopyFile       %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe %INSTALLROOT%\bin\cm3.exe || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cm3\%TARGET%\cm3.pdb %INSTALLROOT%\bin\cm3.pdb || exit /b 1
-    call :CopyFileIfExist %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe.manifest %INSTALLROOT%\bin\cm3.exe.manifest || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || exit /b 1
+    call :CopyFile       %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe %INSTALLROOT%\bin\cm3.exe || call :ReportFatalError || exit /b 1
+    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || call :ReportFatalError || exit /b 1
+    call :CopyFile       %ROOT%\m3-sys\cm3\%TARGET%\cm3.pdb %INSTALLROOT%\bin\cm3.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFileIfExist %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe.manifest %INSTALLROOT%\bin\cm3.exe.manifest || call :ReportFatalError || exit /b 1
+    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CopyCompiler
@@ -301,21 +336,21 @@ goto :eof
     @rem The config file always comes right out of the source tree.
     @rem
     call :CreateDirectory %2\bin
-    call :CopyFile       %1\bin\cm3.exe %2\bin\cm3.exe || exit /b 1
-    call :CopyFile       %1\bin\cm3.pdb %2\bin\cm3.pdb || exit /b 1
-    call :CopyFileIfExist %1\bin\cm3.exe.manifest %2\bin\cm3.exe.manifest || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %2\bin\cm3.cfg || exit /b 1
-    call :CopyMkLib %1 %2 || exit /b 1
+    call :CopyFile       %1\bin\cm3.exe %2\bin\cm3.exe || call :ReportFatalError || exit /b 1
+    call :CopyFile       %1\bin\cm3.pdb %2\bin\cm3.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFileIfExist %1\bin\cm3.exe.manifest %2\bin\cm3.exe.manifest || call :ReportFatalError || exit /b 1
+    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %2\bin\cm3.cfg || call :ReportFatalError || exit /b 1
+    call :CopyMkLib %1 %2 || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CopyMklib
     @rem
     @rem Copy mklib from one INSTALLROOT to another, possibly having cleaned out the intermediate directories.
     @rem
-    call :Run call :CreateDirectory %2\bin || exit /b 1
-    call :Run call :CopyFile        %1\bin\mklib.exe %2\bin\mklib.exe || exit /b 1
-    call :Run call :CopyFileIfExist %1\bin\mklib.pdb %2\bin\mklib.pdb || exit /b 1
-    call :Run call :CopyFileIfExist %1\bin\mklib.exe.manifest %2\bin\mklib.exe.manifest || exit /b 1
+    call :CreateDirectory %2\bin
+    call :CopyFile        %1\bin\mklib.exe %2\bin\mklib.exe || call :ReportFatalError || exit /b 1
+    call :CopyFile        %1\bin\mklib.pdb %2\bin\mklib.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFileIfExist %1\bin\mklib.exe.manifest %2\bin\mklib.exe.manifest || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CopyFile
@@ -323,14 +358,14 @@ goto :eof
     set from=%1
     set to=%2
     if "%to%" == "." set to=.\%~nx1
-    if exist %to% del %to% || exit /b 1
-    call :Run copy %from% %to% || exit /b 1
+    if exist %to% del %to% || call :ReportFatalError || exit /b 1
+    call :Run copy %from% %to% || call :ReportFatalError || exit /b 1
     endlocal
     goto :eof
 
 :CopyFileIfExist
-    if exist %2 del %2 || exit /b 1
-    if exist %1 copy %1 %2 || exit /b 1
+    if exist %2 del %2 || call :ReportFatalError || exit /b 1
+    if exist %1 call :Run copy %1 %2 || call :ReportFatalError || exit /b 1
     goto :eof
 
 :Echo
@@ -343,34 +378,34 @@ goto :eof
 
 :BuildShip
     call :CreateSkel
-    call :Do buildship || exit /b 1
+    call :Do buildship || call :ReportFatalError || exit /b 1
     goto :eof
 
 :RealClean
     call :CreateSkel
-    call :Do realclean || exit /b 1
+    call :Do realclean || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CreateSkel
-    call :CreateDirectory %INSTALLROOT%\bin || exit /b 1
-    call :CreateDirectory %INSTALLROOT%\lib || exit /b 1
-    call :CreateDirectory %INSTALLROOT%\pkg || exit /b 1
+    call :CreateDirectory %INSTALLROOT%\bin || call :ReportFatalError || exit /b 1
+    call :CreateDirectory %INSTALLROOT%\lib || call :ReportFatalError || exit /b 1
+    call :CreateDirectory %INSTALLROOT%\pkg || call :ReportFatalError || exit /b 1
     goto :eof
 
 :Do
     call %~dp0pkgcmds extract_options %1 || (
-	    echo error : pkgcmds extract_options failed
+	    echo ERROR: pkgcmds extract_options failed
 	    exit /b 1
     )
     call %~dp0pkgcmds map_action %1 || (
-	    echo error : pkgcmds map_action failed
+	    echo ERROR: pkgcmds map_action failed
 	    exit /b 1
     )
     call %~dp0pkgcmds add_action_opts %1 || (
-	    echo error : pkgcmds add_action_opts failed
+	    echo ERROR: pkgcmds add_action_opts failed
 	    exit /b 1
     )
-    call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %P% || exit /b 1
+    call :Run %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %P% || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CreateDirectory
@@ -383,5 +418,20 @@ goto :eof
     @rem and I really want to use it for my own purposes
     setlocal
     set zip=
-    zip %*
+    call :Run zip %*
     endlocal
+    goto :eof
+
+:ReportFatalError
+    setlocal
+    set t=%time%
+    set t=%t::=%
+    set t=%t:.=%
+    if exist %TEMP%\env.bat del %TEMP%\cm3\env%t%.bat
+    for /f "tokens=*" %%a in ('set') do echo set %%a>>%TEMP%\cm3\env%t%.bat
+    @rem This turns out not to be useful, because
+    @rem we have already returned to the caller's directory.
+    @rem echo ERROR: Current working directory was %CD%
+    echo ERROR: Environment saved in %TEMP%\cm3\env%t%.bat
+    echo ERROR: See %STAGE%\logs
+    exit /b 1
