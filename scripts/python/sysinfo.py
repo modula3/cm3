@@ -314,10 +314,12 @@ def find_file(file, dirs):
 # abstraction functions
 
 def cygpath(a, b):
+    print("cygpath:return b")
     return b
 
 def strip_exe(a):
-    os.system("strip " + a)
+    print("strip_exe:os.system(\"strip " + a + "\")")
+    #os.system("strip " + a)
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
@@ -335,7 +337,7 @@ if (UNAME.startswith("Windows")
         or UNAME.startswith("WinNT")
         or UNAME.startswith("Cygwin")
         or UNAME.startswith("CYGWIN")
-        or TARGET.startswith("NT386GNU")
+        or TARGET.startswith("NT386")
     ):
 
     if (TARGET.startswith("NT386GNU")):
@@ -384,9 +386,12 @@ if (UNAME.startswith("Windows")
         GMAKE = getenv("GMAKE") or "make"
 
         def cygpath(a, b):
-            return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
+            print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
+            return b
+            #return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
 
         def strip_exe(a):
+            print("strip_exe:pass")
             pass
 
 elif (UNAME.startswith("FreeBSD")):
@@ -452,7 +457,8 @@ DEV_LIB = (getenv("DEV_LIB") or XDEV_LIB)
 #
 # ROOT is two levels above this program.
 #
-ROOT = (ROOT or dirname(dirname(dirname(__file__))))
+
+ROOT = (ROOT or dirname(dirname(dirname(abspath(__file__)))))
 
 INSTALLROOT = (INSTALLROOT or CM3_INSTALL)
 M3GDB = (M3GDB or CM3_GDB)
@@ -510,3 +516,10 @@ debug("DEV_BIN")
 debug("DEV_LIB")
 debug("TAR")
 debug("CM3ROOT")
+
+if __name__ == "__main__":
+    #
+    # run test code if module run directly
+    #
+    cygpath("a", "b")
+    strip_exe("c")
