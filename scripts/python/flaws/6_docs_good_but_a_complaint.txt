@@ -1,0 +1,16 @@
+Flaw #6
+
+The docs are very good.
+
+However the reference doesn't give much in the way
+of semantic description.
+
+It is surprising that an experienced programmer MUST
+depend on the tutorial.
+
+There needs to be links from the reference back to the tutorial.
+
+Perhaps merge the indices for Tutorial, Language Reference, Library Reference.
+Or maybe that's what search is for.
+
+On the other hand, way better than Perl.
