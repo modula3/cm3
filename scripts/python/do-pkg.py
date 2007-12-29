@@ -1,12 +1,11 @@
 import sys
-from  sysinfo import *
-from  pkgcmds import *
-from  pkgmap import *
 import os
+from lib import *
+import lib
 
 map = {"basename" : os.path.basename(__file__)}
 map.update(vars())
-sysinfo.USAGE = """
+lib.USAGE = """
   %(basename)s [ generic_options ] [ generic_cmd ] pkg+
 
   will apply the given symbolic command to one or more CM3 packages.
@@ -20,7 +19,7 @@ sysinfo.USAGE = """
 show_usage(sys.argv)
 
 OPTIONS = extract_options(sys.argv[1:])
-sysinfo.IGNORE_MISS = True
+lib.IGNORE_MISS = True
 ACTION = map_action(sys.argv[1:])
 ADDARGS = add_action_opts(sys.argv[1:])
 P = get_args(sys.argv[1:]) # This should be changed to a list.
@@ -30,4 +29,4 @@ a = a.replace("  ", " ")
 a = a.replace("  ", " ")
 print(a)
 
-pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P.split(" "))
+lib.pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P.split(" "))
