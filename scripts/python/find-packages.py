@@ -7,7 +7,6 @@ import os
 import os.path
 from sysinfo import PKGSDB, ROOT
 
-def find_packages(argv):
 def Callback(Result, Directory, Names):
     if (os.path.split(Directory)[1] != "src"):
         return
