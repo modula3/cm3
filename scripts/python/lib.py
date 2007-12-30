@@ -695,7 +695,7 @@ def show_usage(args, USAGE = None):
             print("")
             print("usage " + os.path.split(args[0])[1] + ":")
             if (USAGE):
-                basename = os.path.basename(arg[0])
+                basename = os.path.basename(args[0])
                 GEN_CMDS = """
   build | buildlocal          build a package with local overrides (default)
   buildglobal | buildship     build a package without overrides and ship it
