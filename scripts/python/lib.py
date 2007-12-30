@@ -891,6 +891,37 @@ def pkgmap(args):
         else:
             print(" ==> %(PKG)s done" % vars())
 
+def do_pkg(args):
+    show_usage(
+        args,
+"""
+%(basename)s [ generic_options ] [ generic_cmd ] pkg+
+
+will apply the given symbolic command to one or more CM3 packages.
+
+generic_options:
+%(GEN_OPTS)s
+
+generic_cmd:
+%(GEN_CMDS)s"""
+        )
+    
+    OPTIONS = extract_options(args[1:])
+    global IGNORE_MISS
+    IGNORE_MISS = True
+    ACTION = map_action(args[1:])
+    ADDARGS = add_action_opts(args[1:])
+    P = get_args(args[1:]) # This should be changed to a list.
+    
+    v = vars();
+    v.update(globals())
+    a = ("%(ROOT)s/scripts/python/pkgmap.py %(OPTIONS)s %(ADDARGS)s -c \"%(ACTION)s\" %(P)s" % v)
+    a = a.replace("  ", " ")
+    a = a.replace("  ", " ")
+    print(a)
+    
+    pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P.split(" "))
+
 if __name__ == "__main__":
     #
     # run test code if module run directly
