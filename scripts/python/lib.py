@@ -1,10 +1,10 @@
 import os
+from os import getcwd, chdir, getenv
+import os.path
+from os.path import isfile, isdir, join, abspath, dirname, pathsep
 import glob
 import sys
-import os.path
 import copy
-from os import getcwd, chdir, getenv
-from os.path import isfile, isdir, join, abspath, dirname, pathsep
 import platform
 
 env_OS = getenv("OS")
@@ -185,6 +185,9 @@ Variables = [
 
     "REALCLEAN",
     "IGNORE_MISS",
+    "HAVE_TCL",
+    "HAVE_SERIAL",
+    "OMIT_GCC",
 ]
 
 #
@@ -280,6 +283,7 @@ M3SHIP = M3SHIP or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
 SL = "/" # path slash, forward or backward
 Q = "'"
+
 SYSLIBDIR = join(CM3_INSTALL, "lib")
 SYSLIBS = ""
 XDEV_LIB = " "
@@ -357,10 +361,15 @@ if (UNAME.startswith("Windows")
         CM3_TARGET = "NT386GNU"
         GMAKE = getenv("GMAKE") or "make"
 
+
         def cygpath(a, b):
+
             #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
+
             #return b
+
             return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
+
 
     else:
 
@@ -634,7 +643,7 @@ def extract_options(args):
     return RES
 
 def get_args(args):
-    ARGS = "" # This should be changed to a list.
+    ARGS = [ ]
     i = 0
     j = len(args)
     while (i != j):
@@ -659,47 +668,51 @@ def get_args(args):
         if (arg.startswith("-")):
             sys.stderr.write("encountered option after command: %s (%s)\n" % (arg, i))
         else:
-            if (ARGS):
-                ARGS += " "
-            ARGS += arg
+            ARGS += [arg]
         i += 1
     return ARGS
 
 def format_one(width, string):
     return ("%-*s" % (width, string))
 
-def print_list(strings):
-    for string in strings:
-        print("  " + string)
-
 def print_list2(strings):
+    Newline = ""
+    Result = ""
     if (len(strings) % 2 != 0):
         strings = copy.copy(strings) # unfortunate expense
         strings.append("")
-    width = 36
+    width = 36 # roughly 80 / 2
     for i in range(0, len(strings) / 2):
-        print(
-            "  "
+        Result += (
+            Newline
+            + "  "
             + format_one(width, strings[i * 2])
             + format_one(width, strings[i * 2 + 1])
             )
+        Newline = "\n"
+    return Result
 
 def print_list4(strings):
-    width = 18
+    Newline = ""
+    Result = ""
+    width = 18 # roughly 80 / 4
     if (len(strings) % 4 != 0):
         strings = copy.copy(strings) # unfortunate expense
         while (len(strings) % 4 != 0):
             strings.append("")
     for i in range(0, len(strings) / 4):
-        print(
-            "  "
+        Result += (
+            Newline
+            + "  "
             + format_one(width, strings[i * 4])
             + format_one(width, strings[i * 4 + 1])
             + format_one(width, strings[i * 4 + 2])
             + format_one(width, strings[i * 4 + 3])
             )
+        Newline = "\n"
+    return Result
 
-def show_usage(args, USAGE = None):
+def show_usage(args, USAGE, P):
     for arg in args[1:]:
         if (arg in ["-h", "-help", "--help", "-?"]):
             print("")
@@ -719,6 +732,9 @@ def show_usage(args, USAGE = None):
   -n                          no action (do not execute anything)
   -k                          keep going (ignore errors if possible)
 """
+                if (P):
+                    N = len(P)
+                    P = print_list4(P)
                 print(USAGE % vars())
             else:
                 print("")
@@ -816,10 +832,14 @@ def exec_cmd(PKG):
     print(" +++ %s +++" % PKG_ACTION)
     if (NO_ACTION):
         return 0
+
     PreviousDirectory = getcwd()
+
     chdir(PKG)
     Result = os.system(PKG_ACTION)
+
     chdir(PreviousDirectory)
+
     return Result
 
 def pkgmap(args):
@@ -856,8 +876,10 @@ def pkgmap(args):
                 PKG_ACTION += args[i]
                 break
             p = os.path.join(ROOT, arg)
+
             #print("ROOT is " + ROOT)
             #print("p is " + p)
+
             if (isdir(p)):
                 #print("1 %(p)s" % vars())
                 PKGS.append(p)
@@ -867,7 +889,9 @@ def pkgmap(args):
                 PKGS.append(arg)
                 break
             #print("arg is " + arg)
+
             #print("p is " + p)
+
             p = pkgpath(arg)
             if (not p):
                 sys.stderr.write(" *** cannot find package %(arg)s\n" % vars())
@@ -908,9 +932,24 @@ def pkgmap(args):
         else:
             print(" ==> %(PKG)s done" % vars())
 
-def do_pkg(args):
-    show_usage(
-        args,
+def do_pkg(args, P = None):
+
+    if (P):
+        USAGE = \
+"""
+%(basename)s [ generic_options ] [ generic_cmd ]
+
+  will apply the given symbolic command to the following %(N)s packages:
+
+%(P)s
+
+generic_options:
+%(GEN_OPTS)s
+
+generic_cmd:
+%(GEN_CMDS)s"""
+    else:
+        USAGE = \
 """
 %(basename)s [ generic_options ] [ generic_cmd ] pkg+
 
@@ -921,14 +960,21 @@ generic_options:
 
 generic_cmd:
 %(GEN_CMDS)s"""
+
+    show_usage(
+        args,
+        USAGE,
+        P,
         )
 
     OPTIONS = extract_options(args[1:])
     global IGNORE_MISS, ACTION
-    IGNORE_MISS = True
+    if (not P):
+        IGNORE_MISS = True
     ACTION = map_action(args[1:])
     ADDARGS = add_action_opts(args[1:])
-    P = get_args(args[1:]) # This should be changed to a list.
+    if (not P):
+        P = get_args(args[1:])
 
     v = vars()
     v.update(globals())
@@ -937,7 +983,7 @@ generic_cmd:
     a = a.replace("  ", " ")
     print(a)
 
-    pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P.split(" "))
+    pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P)
 
 if __name__ == "__main__":
     #
