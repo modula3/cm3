@@ -286,7 +286,7 @@ void RTStack__Unwind (Frame *target)
     longjmp (env, 1);    (* do a full longjmp to destination *)
   } else {
     _longjmp (env, 1);   (* cheap longjmp to destination *)
-  };
+  }
   ********************************************************************/
 }
 
