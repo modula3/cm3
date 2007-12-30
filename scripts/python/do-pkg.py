@@ -3,20 +3,19 @@ import os
 from lib import *
 import lib
 
-map = {"basename" : os.path.basename(__file__)}
-map.update(vars())
-lib.USAGE = """
-  %(basename)s [ generic_options ] [ generic_cmd ] pkg+
+show_usage(
+    sys.argv,
+"""
+%(basename)s [ generic_options ] [ generic_cmd ] pkg+
 
-  will apply the given symbolic command to one or more CM3 packages.
+will apply the given symbolic command to one or more CM3 packages.
 
-  generic_options:
+generic_options:
 %(GEN_OPTS)s
-  
-  generic_cmd:
-%(GEN_CMDS)s""" % map
 
-show_usage(sys.argv)
+generic_cmd:
+%(GEN_CMDS)s"""
+    )
 
 OPTIONS = extract_options(sys.argv[1:])
 lib.IGNORE_MISS = True

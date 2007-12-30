@@ -7,11 +7,13 @@ from os import getcwd, chdir, getenv, uname
 from os.path import isfile, isdir, join, abspath, dirname, pathsep
 import platform
 
+# Should these be initialized from environment?
 PKGS = [ ]
 PKG_ACTION = ""
 LIST_ONLY = False
 NO_ACTION = False
 KEEP_GOING = False
+
 PackageDB = None
 
 #
@@ -175,7 +177,6 @@ Variables = [
     
     "REALCLEAN",
     "IGNORE_MISS",
-    "USAGE",
 ]
 
 #
@@ -654,20 +655,6 @@ def get_args(args):
         i += 1;
     return ARGS
 
-GEN_CMDS = """
-  build | buildlocal          build a package with local overrides (default)
-  buildglobal | buildship     build a package without overrides and ship it
-  ship                        ship a package
-  clean | cleanlocal          clean a package with local overrides
-  cleanglobal                 clean a package without overrides
-  realclean                   remove the TARGET directory of a package
-"""
-
-GEN_OPTS = """
-  -n                          no action (do not execute anything)
-  -k                          keep going (ignore errors if possible)
-"""
-
 def format_one(width, string):
     return ("%-*s" % (width, string))
 
@@ -701,14 +688,28 @@ def print_list4(strings):
             + format_one(width, strings[i * 4 + 2])
             + format_one(width, strings[i * 4 + 3])
             )
-    
-def show_usage(args):
-    for arg in args:
+
+def show_usage(args, USAGE = None):
+    for arg in args[1:]:
         if (arg in ["-h", "-help", "--help", "-?"]):
             print("")
             print("usage " + os.path.split(args[0])[1] + ":")
             if (USAGE):
-                print(USAGE)
+                basename = os.path.basename(arg[0])
+                GEN_CMDS = """
+  build | buildlocal          build a package with local overrides (default)
+  buildglobal | buildship     build a package without overrides and ship it
+  ship                        ship a package
+  clean | cleanlocal          clean a package with local overrides
+  cleanglobal                 clean a package without overrides
+  realclean                   remove the TARGET directory of a package
+"""
+
+                GEN_OPTS = """
+  -n                          no action (do not execute anything)
+  -k                          keep going (ignore errors if possible)
+"""
+                print(USAGE % vars())
             else:
                 print("")
                 print("No specific usage notes available.")
