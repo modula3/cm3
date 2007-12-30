@@ -1,3 +1,0 @@
-
-include_dir("discrete")
-include_dir("continuous")
