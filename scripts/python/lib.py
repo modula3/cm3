@@ -467,7 +467,7 @@ M3GDB = (M3GDB or CM3_GDB)
 M3OSTYPE = (M3OSTYPE or CM3_OSTYPE)
 TARGET = (TARGET or CM3_TARGET)
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
-PKGSDB = (PKGSDB or join(dirname(__file__), "PKGS"))
+PKGSDB = (PKGSDB or join(dirname(abspath(__file__)), "PKGS"))
 GREP = (GREP or "egrep")
 GMAKE = (GMAKE or "gmake")
 
@@ -813,7 +813,7 @@ def exec_cmd(PKG):
 
 def pkgmap(args):
     # Which of these should be primed from the environment?
-    global PKGS, PKG_ACTION, LIST_ONLY, NO_ACTION, KEEP_GOING
+    global PKGS, PKG_ACTION, LIST_ONLY, NO_ACTION, KEEP_GOING, ACTION
     PKGS = [ ]
     PKG_ACTION = ""
     LIST_ONLY = False
@@ -884,7 +884,9 @@ def pkgmap(args):
         res = exec_cmd(PKG)
         if (res != 0):
             if (not KEEP_GOING):
-                print(" *** execution of %(ACTION)s failed ***")
+                v = vars()
+                v.update(globals())
+                print(" *** execution of %(ACTION)s failed ***" % v)
                 sys.exit(1)
         if (KEEP_GOING):
             print(" ==> %s returned %s" % (PKG_ACTION, res))
@@ -907,7 +909,7 @@ generic_cmd:
         )
     
     OPTIONS = extract_options(args[1:])
-    global IGNORE_MISS
+    global IGNORE_MISS, ACTION
     IGNORE_MISS = True
     ACTION = map_action(args[1:])
     ADDARGS = add_action_opts(args[1:])
