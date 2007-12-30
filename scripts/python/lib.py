@@ -316,12 +316,12 @@ def find_file(file, dirs):
 # abstraction functions
 
 def cygpath(a, b):
-    print("cygpath:return b")
+    #print("cygpath:return b")
     return b
 
 def strip_exe(a):
-    print("strip_exe:os.system(\"strip " + a + "\")")
-    #os.system("strip " + a)
+    #print("strip_exe:os.system(\"strip " + a + "\")")
+    os.system("strip " + a)
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
@@ -388,12 +388,12 @@ if (UNAME.startswith("Windows")
         GMAKE = getenv("GMAKE") or "make"
 
         def cygpath(a, b):
-            print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
-            return b
-            #return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
+            #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
+            #return b
+            return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
 
         def strip_exe(a):
-            print("strip_exe:pass")
+            #print("strip_exe:pass")
             pass
 
 elif (UNAME.startswith("FreeBSD")):
