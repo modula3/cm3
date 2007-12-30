@@ -3,9 +3,17 @@ import glob
 import sys
 import os.path
 import copy
-from os import getcwd, chdir, getenv, uname
+from os import getcwd, chdir, getenv
 from os.path import isfile, isdir, join, abspath, dirname, pathsep
 import platform
+
+env_OS = getenv("OS")
+if env_OS == "Windows_NT":
+    def uname():
+        PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
+        return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+else:
+    from os import uname
 
 # Should these be initialized from environment?
 PKGS = [ ]
@@ -209,7 +217,7 @@ debug("platform.machine()")
 debug("platform.processor()")
 debug("platform.release()")
 
-uname_tuple = os.uname()
+uname_tuple = uname()
 debug("uname_tuple")
 UNAME = uname_tuple[0]
 UNAME_P = platform.processor()
@@ -271,6 +279,7 @@ M3BUILD = M3BUILD or ExeName("m3build")
 M3SHIP = M3SHIP or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
 SL = "/" # path slash, forward or backward
+Q = "'"
 SYSLIBDIR = join(CM3_INSTALL, "lib")
 SYSLIBS = ""
 XDEV_LIB = " "
@@ -348,6 +357,11 @@ if (UNAME.startswith("Windows")
         CM3_TARGET = "NT386GNU"
         GMAKE = getenv("GMAKE") or "make"
 
+        def cygpath(a, b):
+            #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
+            #return b
+            return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
+
     else:
 
         CM3_OSTYPE = "WIN32"
@@ -356,7 +370,8 @@ if (UNAME.startswith("Windows")
         CM3_GCC_BACKEND = False
         HAVE_SERIAL = True
         EXE = ".exe"
-        SL = "\\\\"
+        SL = "\\"
+        Q = ""
         # consider using arrays here
         # Or just remove all this stuff and rely on $LIB
         SYSLIBS =  "ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
@@ -386,11 +401,6 @@ if (UNAME.startswith("Windows")
         if (isfile(f)):
             TAR = f
         GMAKE = getenv("GMAKE") or "make"
-
-        def cygpath(a, b):
-            #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
-            #return b
-            return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
 
         def strip_exe(a):
             #print("strip_exe:pass")
@@ -521,27 +531,27 @@ debug("CM3ROOT")
 
 # define build and ship programs for Critical Mass Modula-3
 
-CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override -DROOT='%(CM3ROOT)s' %(BUILDARGS)s" % vars()
-CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
-CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build -DROOT='%(CM3ROOT)s' %(BUILDARGS)s" % vars()
-CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
-CM3_SHIP = SHIP or "%(CM3)s -ship -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
+CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
+CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
+CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+CM3_SHIP = SHIP or "%(CM3)s -ship -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 
-PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O -DROOT='%(CM3ROOT)s' %(BUILDARGS)s" % vars()
-PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
-PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s -DROOT='%(CM3ROOT)s' %(BUILDARGS)s)s" % vars()
-PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
-PM3_SHIP = SHIP or "%(M3SHIP)s -DROOT='%(CM3ROOT)s' %(SHIPARGS)s" % vars()
+PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
+PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s)s" % vars()
+PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+PM3_SHIP = SHIP or "%(M3SHIP)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(SHIPARGS)s" % vars()
 
 # define build and ship programs for DEC SRC Modula-3
 
-SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O -DROOT='%(CM3ROOT)s' %(BUILDARGS)s" % vars()
-SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
-SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s -DROOT='%(CM3ROOT)s' %(BUILDARGS)s" % vars()
-SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean -DROOT='%(CM3ROOT)s' %(CLEANARGS)s" % vars()
-SRC_SHIP = SHIP or "%(M3SHIP)s -DROOT='%(CM3ROOT)s' %(SHIPARGS)s" % vars()
+SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
+SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
+SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+SRC_SHIP = SHIP or "%(M3SHIP)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(SHIPARGS)s" % vars()
 
 # other commands
 
@@ -764,19 +774,19 @@ def ReadPackageDB():
 
 def pkg_defined(a):
     ReadPackageDB()
-    a = ("/" + a)
+    a = (SL + a)
     for i in PackageDB:
         if i.endswith(a):
             return True
 
 def pkgpath(a):
     ReadPackageDB()
-    b = ("/" + a)
+    b = (SL + a)
     for i in PackageDB:
         if (i.endswith(b)):
             #print("pkgpath(%(a)s returning %(i)s (%(b)s)" % vars())
             return i
-    sys.stderr.write("package " + a + " not found\n")
+    sys.stderr.write("package " + a + " not found (%s)\n" % b)
 
 def listpkgs(pkgs):
     ReadPackageDB()
@@ -784,12 +794,12 @@ def listpkgs(pkgs):
     if pkgs:
         for pkg in pkgs.split(" "):
             # remove ROOT from the start
-            if (pkg.startswith(ROOT + "/")):
+            if (pkg.startswith(ROOT + SL)):
                 pkg = pkg[len(ROOT) + 1:]
                 #print("1 " + pkg)
             # if no slashes, then need a leading slash
-            if (pkg.find("/") == -1):
-                pkg = ("/" + pkg)
+            if (pkg.find(SL) == -1):
+                pkg = (SL + pkg)
                 #print("2 " + pkg)
             for q in PackageDB:
                 if (q.find(pkg) != -1):
@@ -798,7 +808,7 @@ def listpkgs(pkgs):
                     break
     else:
         Result = PackageDB
-    return map(lambda(a): (ROOT + "/" + a), Result)
+    return map(lambda(a): (ROOT + SL + a), Result)
 
 def exec_cmd(PKG):
     # lame temporary
@@ -846,6 +856,8 @@ def pkgmap(args):
                 PKG_ACTION += args[i]
                 break
             p = os.path.join(ROOT, arg)
+            #print("ROOT is " + ROOT)
+            #print("p is " + p)
             if (isdir(p)):
                 #print("1 %(p)s" % vars())
                 PKGS.append(p)
@@ -854,6 +866,8 @@ def pkgmap(args):
                 #print("2 %(arg)s" % vars())
                 PKGS.append(arg)
                 break
+            #print("arg is " + arg)
+            #print("p is " + p)
             p = pkgpath(arg)
             if (not p):
                 sys.stderr.write(" *** cannot find package %(arg)s\n" % vars())
@@ -918,7 +932,7 @@ generic_cmd:
     
     v = vars();
     v.update(globals())
-    a = ("%(ROOT)s/scripts/python/pkgmap.py %(OPTIONS)s %(ADDARGS)s -c \"%(ACTION)s\" %(P)s" % v)
+    a = ("pkgmap %(OPTIONS)s %(ADDARGS)s -c \"%(ACTION)s\" %(P)s" % v)
     a = a.replace("  ", " ")
     a = a.replace("  ", " ")
     print(a)
