@@ -16,6 +16,10 @@ import ("m3front")
 import ("m3quake")
 %import ("cmkey")
 
+include ("version.quake")
+version_impl ("Version")
+interface ("Version")
+
 if equal (OS_TYPE, "POSIX")
   interface ("M3Backend")
   implementation ("M3BackPosix")

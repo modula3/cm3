@@ -6,7 +6,7 @@ MODULE Makefile;
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
 IMPORT MxConfig AS M3Config;
-IMPORT Dirs;
+IMPORT Dirs, Version;
 
 TYPE
   NK = M3Path.Kind;
@@ -554,7 +554,8 @@ PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
 PROCEDURE PrintVersion (exit: BOOLEAN) =
   BEGIN
     Msg.Out ("Critical Mass Modula-3 version ", Val("CM3_RELEASE"), Wr.EOL);
-    Msg.Out ("  last updated: ", Val("CM3_CREATED"), Wr.EOL);
+    Msg.Out ("  last updated: ", Val("CM3_CHANGED"), Wr.EOL);
+    Msg.Out ("  compiled: ", Val("CM3_COMPILED"), Wr.EOL);
     Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
@@ -665,9 +666,11 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "d5.5.0");      (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050500");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2007-12-17");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", Version.Text);  (* readable release version *)
+  EVAL defs.put("CM3_VERSION", Version.Number);(* version as number *)
+  EVAL defs.put("CM3_CHANGED", Version.LastChanged); (* date of last change *)
+  EVAL defs.put("CM3_CREATED", Version.LastChanged); (* backw. compatibility *)
+  EVAL defs.put("CM3_COMPILED", Version.Created); (* date of compilation *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
