@@ -180,7 +180,7 @@ Variables = [
 ]
 
 #
-# Ensure all exports have some value.
+# Ensure all variables have some value.
 #
 b = ""
 for a in Variables:
