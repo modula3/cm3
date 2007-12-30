@@ -15,6 +15,12 @@ call %~dp0pkgcmds || call :ReportFatalError || exit /b 1
 if not defined STAGE (
     set STAGE=%TEMP%\cm3\%~n0\%random%
 )
+if /i "%1" == "" (
+    if exist %STAGE% (
+        echo ERROR: %%STAGE%% ^(%STAGE%^) must not exist ahead of time, in order that we may be safely destructive to it.
+        exit /b 1
+    )
+)
 @mkdir %STAGE%\logs 2>nul
 @set LogCounter=0
 @call :IncrementLogCounter_init
@@ -225,6 +231,11 @@ for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
 
 del *.bz2 *.zip *.exe *.tar
 
+del /s *.m3
+del /s .m3web
+rem Can be useful for bootstrapping standalone cm3.exe in future.
+rem del /s *.lib.sa
+
 rem set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tar.bz2
 rem tar cfvj %symbols% symbols
 
@@ -304,6 +315,7 @@ goto :eof
     echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
     echo.>> %STAGE%\logs\all.log
     echo.>> %STAGE%\logs\%LogCounter%_%~n1.log
+    echo %x% >> %STAGE%\logs\%LogCounter%_%~n1.log
     echo %x% ^>^> %STAGE%\logs\%LogCounter%_%~n1.log
     call %x% >> %STAGE%\logs\%LogCounter%_%~n1.log || (
         echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
