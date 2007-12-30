@@ -53,30 +53,30 @@ Variables = [
     "CM3ROOT",
 
     "CM3VERSION",
-    
+
     #
     # used in making distribution
     #
     "DEV_BIN",
     "DEV_LIB",
-    
+
     #
     # an empty string for Posix, ".exe" for Win32
     # appended to executable paths to form actual file paths
     #
     "EXE",
-    
+
     #
     # True or False -- does this platform use the gcc backend.
     # True for all but NT386
     #
     "GCC_BACKEND",
-    
+
     #
     # link flags particular to Linux
     #
     "GCWRAPFLAGS",
-    
+
     #
     # grep to use in building pkgsdb
     # This will be unused in the Python scripts.
@@ -87,43 +87,43 @@ Variables = [
     # This is easily computed by searching for cm3 or cm3.exe
     # in $PATH.
     "INSTALLROOT",
-    
+
     #
     # True or False -- should we build m3gdb.
     #
     "M3GDB",
-    
+
     #
     # WIN32 or POSIX -- used to help decide what
     # packages to build
     #
     "M3OSTYPE",
-    
+
     #
     # path to the pkgsdb file
     # usually __file__/../pkgsdb
     #
     "PKGSDB",
 
-    #    
+    #
     # the root of the source code, e.g. /dev2/cm3
     # This is easily computed from __file__.
-    #    
+    #
     "ROOT",
-    
+
     #
     # a slash to use in file paths, e.g. \ or /
     # Forward slashes often work on Win32 so
     # this can probably go away.
     #
     "SL",
-    
+
     #
     # A temporary "staging" location? For
     # building distributions?
     #
     "STAGE",
-    
+
     #
     # directory that contains kernel32.lib, etc. that
     # are included in the Win32 distributation
@@ -137,7 +137,7 @@ Variables = [
     # This can go away.
     #
     "SYSLIBS",
-    
+
     #
     # tar to use when building distributions
     # This can go away and just use "tar" from $PATH
@@ -151,14 +151,14 @@ Variables = [
     "TARGET",
 
     "TMPDIR",
-    
+
     "BUILDARGS",
     "CLEANARGS",
     "SHIPARGS",
-    
+
     "M3SHIP",
     "M3BUILD",
- 
+
     "BUILDLOCAL",
     "CLEANLOCAL",
     "BUILDGLOBAL",
@@ -170,19 +170,19 @@ Variables = [
     "CM3_BUILDGLOBAL",
     "CM3_CLEANGLOBAL",
     "CM3_SHIP",
-    
+
     "PM3_BUILDLOCAL",
     "PM3_CLEANLOCAL",
     "PM3_BUILDGLOBAL",
     "PM3_CLEANGLOBAL",
     "PM3_SHIP",
-    
+
     "SRC_BUILDLOCAL",
     "SRC_CLEANLOCAL",
     "SRC_BUILDGLOBAL",
     "SRC_CLEANGLOBAL",
     "SRC_SHIP",
-    
+
     "REALCLEAN",
     "IGNORE_MISS",
 ]
@@ -639,8 +639,8 @@ def get_args(args):
     j = len(args)
     while (i != j):
         if (not args[i].startswith("-")):
-            break;
-        i += 1        
+            break
+        i += 1
     if ((i != j)
             and (args[i] in {
                 "build": None,
@@ -662,7 +662,7 @@ def get_args(args):
             if (ARGS):
                 ARGS += " "
             ARGS += arg
-        i += 1;
+        i += 1
     return ARGS
 
 def format_one(width, string):
@@ -675,7 +675,7 @@ def print_list(strings):
 def print_list2(strings):
     if (len(strings) % 2 != 0):
         strings = copy.copy(strings) # unfortunate expense
-        strings.append("")       
+        strings.append("")
     width = 36
     for i in range(0, len(strings) / 2):
         print(
@@ -689,7 +689,7 @@ def print_list4(strings):
     if (len(strings) % 4 != 0):
         strings = copy.copy(strings) # unfortunate expense
         while (len(strings) % 4 != 0):
-            strings.append("")       
+            strings.append("")
     for i in range(0, len(strings) / 4):
         print(
             "  "
@@ -746,26 +746,26 @@ def MakePackageDB():
             if (not os.path.isfile(os.path.join(Directory, "m3makefile"))):
                 return
             Result.append(Directory[len(ROOT) + 1:-4] + "\n")
-        
+
         print("making " + PKGSDB + "..")
         Result = [ ]
-        
+
         os.path.walk(
             ROOT,
             Callback,
             Result
             )
-        
+
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
-            
+
         if (not isfile(PKGSDB)):
             sys.stderr.write("cannot generate package list\n")
             sys.exit(1)
 
 def ReadPackageDB():
-    MakePackageDB();
-    global PackageDB;
+    MakePackageDB()
+    global PackageDB
     PackageDB = (PackageDB or
             map(
                 lambda(a): a.replace("\n", ""),
@@ -816,11 +816,11 @@ def exec_cmd(PKG):
     print(" +++ %s +++" % PKG_ACTION)
     if (NO_ACTION):
         return 0
-    a = "cd %s && %s" % (PKG, PKG_ACTION)
-    if (os.name != "nt"):
-        a = "/bin/sh -c \"" + a + "\""    
-    #print(a)
-    return os.system(a)
+    PreviousDirectory = getcwd()
+    chdir(PKG)
+    Result = os.system(PKG_ACTION)
+    chdir(PreviousDirectory)
+    return Result
 
 def pkgmap(args):
     # Which of these should be primed from the environment?
@@ -849,8 +849,8 @@ def pkgmap(args):
             if (arg == "-c"):
                 i += 1
                 if (i == j):
-                    sys.stderr.write("missing parameter to -c\n");
-                    sys.exit(1)            
+                    sys.stderr.write("missing parameter to -c\n")
+                    sys.exit(1)
                 if (PKG_ACTION):
                     PKG_ACTION += " ; "
                 PKG_ACTION += args[i]
@@ -883,7 +883,7 @@ def pkgmap(args):
                 break
             sys.stderr.write(" *** cannot find package %(arg)s / %(p)s\n" % vars())
             sys.exit(1)
-        i += 1                    
+        i += 1
     if (not PKG_ACTION):
         sys.stderr.write("no PKG_ACTION defined, aborting\n")
         sys.exit(1)
@@ -893,7 +893,7 @@ def pkgmap(args):
     if (LIST_ONLY):
         listpkgs(PKGS)
         sys.exit(0)
-    
+
     for PKG in PKGS:
         print("== package %(PKG)s ==" % vars())
         res = exec_cmd(PKG)
@@ -922,21 +922,21 @@ generic_options:
 generic_cmd:
 %(GEN_CMDS)s"""
         )
-    
+
     OPTIONS = extract_options(args[1:])
     global IGNORE_MISS, ACTION
     IGNORE_MISS = True
     ACTION = map_action(args[1:])
     ADDARGS = add_action_opts(args[1:])
     P = get_args(args[1:]) # This should be changed to a list.
-    
-    v = vars();
+
+    v = vars()
     v.update(globals())
     a = ("pkgmap %(OPTIONS)s %(ADDARGS)s -c \"%(ACTION)s\" %(P)s" % v)
     a = a.replace("  ", " ")
     a = a.replace("  ", " ")
     print(a)
-    
+
     pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P.split(" "))
 
 if __name__ == "__main__":
@@ -947,7 +947,7 @@ if __name__ == "__main__":
     #print(listpkgs("libm3"))
     #print(listpkgs("m3-libs/libm3"))
     #print(listpkgs(ROOT + "/m3-libs/libm3"))
-    
+
     print_list2(["a"])
     print("print_list2------------------------------")
     print_list2(["a", "b"])
@@ -958,7 +958,7 @@ if __name__ == "__main__":
     print("print_list2------------------------------")
     print_list2(["a", "b", "c", "d", "e"])
     print("print_list2------------------------------")
-    
+
     print_list4(["a"])
     print("print_list4------------------------------")
     print_list4(["a", "b"])
@@ -969,7 +969,7 @@ if __name__ == "__main__":
     print("print_list4------------------------------")
     print_list4(["a", "b", "c", "d", "e"])
     print("print_list4------------------------------")
-    
+
     CommandLines = [
         [],
         ["build"],
@@ -985,7 +985,7 @@ if __name__ == "__main__":
         #["unknown"],
         ["clean", "-bar"],
         ["-a", "-b", "-c"],
-    
+
         #["m3core", "libm3"],
         ["build", "m3core", "libm3"],
         ["buildlocal", "m3core", "libm3"],
@@ -1001,14 +1001,14 @@ if __name__ == "__main__":
         ["clean", "-bar", "m3core", "libm3"],
         #["-a", "-b", "-c", "m3core", "libm3"],
         ]
-    
+
     Functions = [
         map_action,
         add_action_opts,
         extract_options,
         get_args,
         ]
-    
+
     Width = 0
     for CommandLine in CommandLines:
         Length = 0
@@ -1017,12 +1017,12 @@ if __name__ == "__main__":
             Length += len(Arg)
         if (Length > Width):
             Width = Length
-    
+
     for Function in Functions:
         for CommandLine in CommandLines:
             print("%s(%-*s): %s" % (Function.__name__, Width, CommandLine, Function(CommandLine)))
 
     pkgmap(["-c"])
-    
+
     cygpath("a", "b")
     strip_exe("c")
