@@ -737,6 +737,7 @@ def MakePackageDB():
                 return
             Result.append(Directory[len(ROOT) + 1:-4] + "\n")
         
+        print("making " + PKGSDB + "..")
         Result = [ ]
         
         os.path.walk(
