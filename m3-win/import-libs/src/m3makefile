@@ -81,6 +81,15 @@ local Files = {
     "wsock32",
 }
 
+foreach File in Files
+    deriveds(File, [ ".obj", ".c", ".cpp", ".def", ".lib", ".dll", ".drv", ".exp", ".m3x" ])
+end
+deriveds("", [".M3WEB"])
+if equal(M3_MODE, "clean")
+    % neuter the data rather than indent the whole rest of the file
+    Files = { }
+end
+
 local readonly Signatures = {
  "0" : "void",
  "4" : "u a1",
@@ -180,18 +189,19 @@ foreach File in Files
         %
         % This needs work.
         % In order for folks using older toolsets to be able to use the .libs in the distribution,
-        % try to use an older toolset.
+        % try to use an older toolset. Or just don't support anything prior to 5.0sp?.
         %
-        local msvc20 = "\\msdev\\20\\bin"
-        local CommandPrefix = ""
-        if file_exists(msvc20) and equal($OS, "Windows_NT")
-            %
-            % Old versions of Visual C++ do not like the spaces from 8.0, at least in %INCLUDE%.
-            % We don't use any header or libs so clearing the variables works, but so dies /X.
-            %
-            %CommandPrefix = "set INCLUDE= && set LIB= && " & msvc20 & SL
-            CommandPrefix = msvc20 & SL
-        end
+        %local msvc50 = "\\msdev\\50\\vc\\bin"
+        %local msvc20 = "\\msdev\\20\\bin"
+    % make this more visible
+    local CommandPrefix = ""
+        %if file_exists(msvc50)
+        %    CommandPrefix = msvc20 & SL
+        %else
+        %    if file_exists(msvc20)
+        %        CommandPrefix = msvc20 & SL
+        %    end
+        %end
         %exec(CommandPrefix & "cl /c /X /nologo /W4 /WX /Tp" & CppFilePath)
         %exec(CommandPrefix & "link /nologo /dll /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension & " " & ObjFilePath)
         exec(CommandPrefix & "cl /LD /Zl /X /nologo /W4 /WX /Tp" & CppFilePath & " /link /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension)
@@ -206,9 +216,11 @@ foreach File in Files
     LibdExport(File & ".lib")
 end
 
-%
-% .M3WEB needed but not otherwise produced.
-%
-> ".M3WEB" in 
-  write("")
+if not equal(M3_MODE, "clean")
+    %
+    % .M3WEB needed but not otherwise produced.
+    %
+    > ".M3WEB" in 
+      write("")
+    end
 end
