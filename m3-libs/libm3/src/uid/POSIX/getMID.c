@@ -23,13 +23,13 @@ main() {
     if (s < 0) {
        perror("socket");
        exit(1);
-    };
+    }
 
     list.ifc_len = sizeof(buf);
     list.ifc_req = buf;
 
     if (-1 == ioctl(s, SIOCGIFCONF, &list))
-      {perror("SIOCGIFCONF"); exit(2);};
+      {perror("SIOCGIFCONF"); exit(2);}
 
     printf("list.ifc_len %d\n", list.ifc_len);
 
@@ -42,7 +42,7 @@ main() {
         printf("  Device address %02x%02x%02x%02x%02x%02x\n",
 	     req.default_pa[0], req.default_pa[1],
 	     req.default_pa[2], req.default_pa[3],
-	     req.default_pa[4], req.default_pa[5]);};
-    };
+	     req.default_pa[4], req.default_pa[5]);}
+    }
     exit(0);
 }
