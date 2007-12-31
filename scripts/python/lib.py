@@ -1,3 +1,5 @@
+# $Id: lib.py,v 1.13 2007-12-31 10:11:16 jkrell Exp $
+
 import os
 from os import getcwd, chdir, getenv
 import os.path
