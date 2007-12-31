@@ -1,18 +1,16 @@
-# $Id: libpy.py,v 1.1 2007-12-31 11:26:56 jkrell Exp $
+# $Id: libpy.py,v 1.2 2007-12-31 11:53:32 jkrell Exp $
 
 import os
-from os import getcwd, chdir, getenv
 import os.path
-from os.path import isfile, isdir, join, abspath, dirname, pathsep
 import glob
 import sys
 import copy
 import platform
 
-env_OS = getenv("OS")
+env_OS = os.getenv("OS")
 if env_OS == "Windows_NT":
     def uname():
-        PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
+        PROCESSOR_ARCHITECTURE = os.getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
 else:
     from os import uname
@@ -196,7 +194,7 @@ Variables += DefaultsFromSh.keys()
 #
 b = ""
 for a in Variables:
-    b += ("%s = getenv(\"%s\") or \"\"\n" % (a, a))
+    b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a))
 exec(b)
 
 for a in DefaultsFromSh.keys():
@@ -215,7 +213,7 @@ CM3_DEBUG = 0
 # output functions
 
 def debug(a):
-    if (getenv("CM3_DEBUG") or CM3_DEBUG):
+    if (os.getenv("CM3_DEBUG") or CM3_DEBUG):
         print(a + " is " + eval("str(" + a + ")"))
 
 def header(a):
@@ -261,8 +259,8 @@ def GetDefaultFromSh(Key):
     # CM3LASTCHANGED=${CM3LASTCHANGED:-"2007-12-30"}
     #
     RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ")=\\$\\{\\1:-\"([^\"]+)\"\\}$")
-    ShFilePath = join(dirname(dirname(abspath(__file__))), "sysinfo.sh")
-    for Line in open(join(dirname(dirname(abspath(__file__))), "sysinfo.sh")):
+    ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")
+    for Line in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")):
         Match = RegExp.match(Line)
         if (Match):
             MatchKey = Match.group(1)
@@ -297,10 +295,10 @@ def GetDefaultFromSh(Key):
 
     return DefaultsFromSh.get(Key)
 
-CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
+CM3VERSION = os.getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
 #print("3: CM3VERSION is " + CM3VERSION)
-CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
-CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
+CM3VERSIONNUM = os.getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
+CM3LASTCHANGED = os.getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 
 CM3_GCC_BACKEND = True
 CM3_GDB = False
@@ -323,21 +321,21 @@ def ExeName(a):
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
 #
-def SearchPath(name, paths = getenv("PATH")):
+def SearchPath(name, paths = os.getenv("PATH")):
     #Given a search path, find file
     if (os.name == "nt"):
         # support for $PATHEXT might be nice
         if (name.find(".") == -1):
             name += ".exe"
-    for path in paths.split(pathsep):
-        candidate = join(path, name)
+    for path in paths.split(os.path.pathsep):
+        candidate = os.path.join(path, name)
         # print("candidate is " + candidate)
-        if (isfile(candidate)):
-            return abspath(candidate)
+        if (os.path.isfile(candidate)):
+            return os.path.abspath(candidate)
 
 CM3_INSTALL = (
-    getenv("CM3_INSTALL")
-    or dirname(dirname(SearchPath("cm3") or ""))
+    os.getenv("CM3_INSTALL")
+    or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
     or "/usr/local/cm3"
     )
 
@@ -350,7 +348,7 @@ EXE = "" # executable extension, ".exe" or empty
 SL = "/" # path slash, forward or backward
 Q = "'"
 
-SYSLIBDIR = join(CM3_INSTALL, "lib")
+SYSLIBDIR = os.path.join(CM3_INSTALL, "lib")
 SYSLIBS = ""
 XDEV_LIB = " "
 XDEV_BIN = ""
@@ -358,8 +356,8 @@ TAR = "tar"
 
 for TMPDIR in [
         TMPDIR,
-        getenv("TMP"),
-        getenv("TEMP"),
+        os.getenv("TMP"),
+        os.getenv("TEMP"),
         "/var/tmp",
         "/usr/tmp",
         "/tmp",
@@ -370,7 +368,7 @@ for TMPDIR in [
         "d:/temp",
         "e:/temp",
         ]:
-    if (TMPDIR and isdir(TMPDIR)):
+    if (TMPDIR and os.path.isdir(TMPDIR)):
         break
 
 if (not TMPDIR):
@@ -387,9 +385,9 @@ GCWRAPFLAGS = ""
 
 def find_file(file, dirs):
     for dir in dirs.split(" "):
-        if (isdir(dir)):
-            a = join(dir, file)
-            if (isfile(a)):
+        if (os.path.isdir(dir)):
+            a = os.path.join(dir, file)
+            if (os.path.isfile(a)):
                 return a
 
 #-----------------------------------------------------------------------------
@@ -413,7 +411,7 @@ def strip_exe(a):
 # to get other things correct such as M3OSTYPE
 #
 
-TARGET = getenv("TARGET") or ""
+TARGET = os.getenv("TARGET") or ""
 
 if (UNAME.startswith("Windows")
         or UNAME.startswith("WinNT")
@@ -426,7 +424,7 @@ if (UNAME.startswith("Windows")
 
         CM3_OSTYPE = "POSIX"
         CM3_TARGET = "NT386GNU"
-        GMAKE = getenv("GMAKE") or "make"
+        GMAKE = os.getenv("GMAKE") or "make"
 
         def cygpath(a, b):
             #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
@@ -455,23 +453,23 @@ if (UNAME.startswith("Windows")
         CM3BINSEARCHPATH = L
         f = find_file("KERNEL32.LIB", L)
         if (f):
-            SYSLIBDIR = dirname(f)
+            SYSLIBDIR = os.path.dirname(f)
         else:
             SYSLIBDIR = "unknown"
 
         D = "c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
         f = find_file("cl.exe", D)
         if (f):
-            XDEV_BIN = dirname(f)
-            XDEV_LIB = join(XDEV_BIN, "lib")
+            XDEV_BIN = os.path.dirname(f)
+            XDEV_LIB = os.path.join(XDEV_BIN, "lib")
         else:
             XDEV_LIB = ""
             XDEV_BIN = ""
 
         f = "/usr/bin/tar.exe"
-        if (isfile(f)):
+        if (os.path.isfile(f)):
             TAR = f
-        GMAKE = getenv("GMAKE") or "make"
+        GMAKE = os.getenv("GMAKE") or "make"
 
         def strip_exe(a):
             #print("strip_exe:pass")
@@ -502,7 +500,7 @@ elif (UNAME.startswith("Darwin")):
         CM3_TARGET = "PPC_DARWIN"
     elif (re.match("i[3456]86", UNAME_P)):
         CM3_TARGET = "I386_DARWIN"
-    GMAKE = getenv("GMAKE") or "make"
+    GMAKE = os.getenv("GMAKE") or "make"
 
 elif (UNAME.startswith("SunOS")):
 
@@ -513,7 +511,7 @@ elif (UNAME.startswith("SunOS")):
 elif (UNAME.startswith("Linux")):
 
     CM3_OSTYPE = "POSIX"
-    GMAKE = getenv("GMAKE") or "make"
+    GMAKE = os.getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if (UNAME_M == "ppc"):
         CM3_TARGET = "PPC_LINUX"
@@ -523,7 +521,7 @@ elif (UNAME.startswith("Linux")):
 elif (UNAME.startswith("NetBSD")):
 
     CM3_OSTYPE = "POSIX"
-    GMAKE = getenv("GMAKE") or "make"
+    GMAKE = os.getenv("GMAKE") or "make"
     CM3_TARGET = "NetBSD2_i386" # only arch/version combination supported yet
 
 else:
@@ -531,8 +529,8 @@ else:
     # more need to be added here, I haven't got all the platform info ready
     pass
 
-DEV_BIN = (getenv("DEV_BIN") or XDEV_BIN)
-DEV_LIB = (getenv("DEV_LIB") or XDEV_LIB)
+DEV_BIN = (os.getenv("DEV_BIN") or XDEV_BIN)
+DEV_LIB = (os.getenv("DEV_LIB") or XDEV_LIB)
 
 #-----------------------------------------------------------------------------
 # define the exported values
@@ -541,7 +539,7 @@ DEV_LIB = (getenv("DEV_LIB") or XDEV_LIB)
 # ROOT is two levels above this program.
 #
 
-ROOT = (ROOT or dirname(dirname(dirname(abspath(__file__)))))
+ROOT = (ROOT or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 INSTALLROOT = (INSTALLROOT or CM3_INSTALL)
 
@@ -549,11 +547,10 @@ M3GDB = (M3GDB or CM3_GDB)
 M3OSTYPE = (M3OSTYPE or CM3_OSTYPE)
 TARGET = (TARGET or CM3_TARGET)
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
-PKGSDB = (PKGSDB or join(dirname(abspath(__file__)), "PKGS"))
+PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
 if (M3OSTYPE == "WIN32"):
-    # quoteing madness.. is it correct?
     CM3ROOT = cygpath("-w", ROOT).replace("\\", "\\\\")
 else:
     CM3ROOT = ROOT
@@ -563,7 +560,7 @@ else:
 #
 # comment these if they interfere with your environment
 
-if (not getenv("STAGE")):
+if (not os.getenv("STAGE")):
 
     if ((M3OSTYPE == "POSIX")
             and os.system("type domainname > /dev/null 2>/dev/null")
@@ -571,7 +568,7 @@ if (not getenv("STAGE")):
 
         STAGE = "/pub/lang/m3/cm3-dist"
 
-    elif (M3OSTYPE == "WIN32" and (getenv("HOSTNAME") == "FIR")):
+    elif (M3OSTYPE == "WIN32" and (os.getenv("HOSTNAME") == "FIR")):
 
         STAGE = "c:/tmp/cm3stage"
 
@@ -813,7 +810,7 @@ def show_usage(args, USAGE, P):
             sys.exit(0)
 
 def MakePackageDB():
-    if (not isfile(PKGSDB)):
+    if (not os.path.isfile(PKGSDB)):
         #
         # Look for all files src/m3makefile in the CM3 source
         # and write their relative paths from ROOT to PKGSDB.
@@ -827,9 +824,9 @@ def MakePackageDB():
                 return
             if (not os.path.isfile(os.path.join(Directory, "m3makefile"))):
                 return
-            Result.append(Directory[len(ROOT) + 1:-4] + "\n")
+            Result.append(Directory[len(ROOT) + 1:-4].replace(os.path.sep, "/") + "\n")
 
-        print("making " + PKGSDB + "..")
+        print("making " + PKGSDB + ".. (slow but rare)")
         Result = [ ]
 
         os.path.walk(
@@ -841,7 +838,7 @@ def MakePackageDB():
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
 
-        if (not isfile(PKGSDB)):
+        if (not os.path.isfile(PKGSDB)):
             File = __file__
             sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
@@ -851,7 +848,7 @@ def ReadPackageDB():
     global PackageDB
     PackageDB = (PackageDB or
             map(
-                lambda(a): a.replace("\n", ""),
+                lambda(a): a.replace("\n", "").replace("/", os.path.sep),
                 open(PKGSDB).readlines(),
                 ))
 
@@ -901,12 +898,12 @@ def exec_cmd(PKG):
     if (NO_ACTION):
         return 0
 
-    PreviousDirectory = getcwd()
+    PreviousDirectory = os.getcwd()
 
-    chdir(PKG)
+    os.chdir(PKG)
     Result = os.system(PKG_ACTION)
 
-    chdir(PreviousDirectory)
+    os.chdir(PreviousDirectory)
 
     return Result
 
@@ -949,11 +946,11 @@ def pkgmap(args):
             #print("ROOT is " + ROOT)
             #print("p is " + p)
 
-            if (isdir(p)):
+            if (os.path.isdir(p)):
                 #print("1 %(p)s" % vars())
                 PKGS.append(p)
                 break
-            if (isdir(arg)):
+            if (os.path.isdir(arg)):
                 #print("2 %(arg)s" % vars())
                 PKGS.append(arg)
                 break
@@ -966,12 +963,12 @@ def pkgmap(args):
                 File = __file__
                 sys.stderr.write("%(File)s *** cannot find package %(arg)s\n" % vars())
                 sys.exit(1)
-            if (isdir(p)):
+            if (os.path.isdir(p)):
                 #print("3 %(p)s" % vars())
                 PKGS.append(p)
                 break
             p = os.path.join(ROOT, p)
-            if (isdir(p)):
+            if (os.path.isdir(p)):
                 #print("4 %(p)s" % vars())
                 PKGS.append(p)
                 break
