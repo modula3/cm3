@@ -42,7 +42,7 @@ VAR
 (* date of creation of this binary *)
 
   LastChanged: TEXT; (* CONST *)
-(* date of last compiler change (manually set in scripts/sysinfo.h) *)
+(* date of last compiler change (manually set in scripts/sysinfo.sh) *)
 
   Target: TEXT;  (* CONST *)
 (* Contains the Modula-3 name of the platform for which the program was
