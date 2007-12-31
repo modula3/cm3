@@ -1,4 +1,4 @@
-# $Id: do-cm3-base.py,v 1.4 2007-12-31 12:12:50 jkrell Exp $
+# $Id: do-cm3-base.py,v 1.5 2007-12-31 17:53:42 jkrell Exp $
 
 import sys
 from pylib import *

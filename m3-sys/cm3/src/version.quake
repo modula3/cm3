@@ -28,7 +28,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.4 2007-12-31 17:27:49 jkrell Exp $
+% $Id: version.quake,v 1.5 2007-12-31 17:51:32 jkrell Exp $
 
 % Generate the "Version.m3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.

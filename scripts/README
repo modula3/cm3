@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.12 2007-12-28 23:03:49 jkrell Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.13 2007-12-31 17:53:41 jkrell Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
