@@ -4,6 +4,8 @@
 
 setlocal
 
+@echo %~n0 %*
+
 call %~dp0sysinfo || exit /b 1
 call %~dp0pkginfo || exit /b 1
 

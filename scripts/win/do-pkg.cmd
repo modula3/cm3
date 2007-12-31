@@ -13,11 +13,21 @@ call %~dp0pkgcmds extract_options %* || (
 	exit /b 1
 )
 
-set IGNORE_MISS=yes
-
-call %~dp0pkgcmds map_action %* || (
-	echo error : pkgcmds map_action failed
+call %~dp0pkgcmds extract_options %* || (
+	echo error : pkgcmds extract_options failed
 	exit /b 1
+)
+
+if not defined ACTION (
+    set IGNORE_MISS=yes
+    call %~dp0pkgcmds map_action %* || (
+	    echo error : pkgcmds map_action failed
+	    exit /b 1
+    )
+) else (
+    @rem do-pkg is pretty useful, echo this
+    @rem to educate people of its existance
+    @echo %~n0 %*
 )
 
 call %~dp0pkgcmds add_action_opts %* || (
@@ -30,22 +40,6 @@ call %~dp0pkgcmds get_args %* || (
 	exit /b 1
 )
 
-call :Run call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %ARGS%
+call %~dp0pkgmap %OPTIONS% %ADDARGS% -c "%ACTION%" %ARGS% || exit /b 1
 
-@echo %~n0 : Done.
-
-endlocal
-goto :eof
-
-:Run
-setlocal
-set x=%*
-set x=%x:  = %
-set x=%x:  = %
-echo %x%
-%x% || (
-	echo error : %x% failed
-	exit /b 1
-)
-endlocal
-goto :eof
+@echo %~n0 : Success.
