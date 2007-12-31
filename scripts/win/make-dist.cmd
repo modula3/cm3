@@ -214,7 +214,7 @@ tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CM
 tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols || call :ReportFatalError || exit /b 1
 popd
 
-echo Done.
+echo Success.
 echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz
 echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz
 echo Lots of intermediate state remains in %STAGE%.
@@ -293,7 +293,7 @@ popd
 goto :done
 
 :done
-echo Done.
+echo Success.
 if defined exe if exist %exe% echo Output is %STAGE%\min\%exe%
 echo Output is %STAGE%\min\%zip%
 echo Output is %STAGE%\min\%symbols%

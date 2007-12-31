@@ -64,7 +64,7 @@ call %~dp0install-cm3-compiler upgrade || exit /b 1
 call %~dp0do-cm3-core buildship || exit /b 1
 @echo on
 
-@echo %~n0 : Done.
+@echo %~n0 : Success.
 @echo %~n0 : You should now have a current compiler, runtime, and core
 @echo %~n0 : packages, and be able to build and/or ship "anything" up to and
 @echo %~n0 : including "standard". i.e. do-cm3-std buildship, or cd around the
