@@ -1,4 +1,4 @@
-# $Id: chext.py,v 1.3 2007-12-31 12:00:40 jkrell Exp $
+# $Id: chext.py,v 1.4 2007-12-31 12:02:55 jkrell Exp $
 
 import glob
 import os
@@ -10,4 +10,4 @@ for a in glob.glob("*.sh"):
         print("skipping " + dest + " because it already exists")
     else:
         print(a + " => " + dest)
-        os.rename(a, dest + ".py")
+        os.rename(a, dest)
