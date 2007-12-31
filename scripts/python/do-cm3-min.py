@@ -1,6 +1,6 @@
 # $Id$
 
-import lib
+import libpy
 import sys
 
-lib.do_pkg(sys.argv, ["m3core", "libm3"])
+libpy.do_pkg(sys.argv, ["m3core", "libm3"])

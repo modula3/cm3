@@ -1,7 +1,7 @@
 # $Id$
 
 import sys
-from lib import *
+from libpy import *
 
 # This needs to be data driven via separate files?
 # As well, it might be reasonable for the m3makefiles to do the
