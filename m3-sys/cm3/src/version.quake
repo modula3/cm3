@@ -28,7 +28,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.2 2007-12-31 10:09:31 jkrell Exp $
+% $Id: version.quake,v 1.3 2007-12-31 13:09:15 jkrell Exp $
 
 % Generate the "Version.m3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.
@@ -50,7 +50,7 @@ proc version_impl(name) is
         % ?
         exec("@echo NOW = \"%DATE% %TIME%\" > " & datefn)
     else
-        dcmd = "\\cygwin\\bin\\date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
+        dcmd = "date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
         > datefn in
           write("NOW = \"")
         end
