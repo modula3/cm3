@@ -50,7 +50,7 @@ proc version_impl(name) is
         % ?
         exec("@echo NOW = \"%DATE% %TIME%\" > " & datefn)
     else
-        dcmd = "\\cygwin\\bin\\date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
+        dcmd = "date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
         > datefn in
           write("NOW = \"")
         end
