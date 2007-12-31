@@ -1,6 +1,6 @@
 # $Id$
 
-from libpy import *
+from pylib import *
 import sys
 
 # This needs to be data driven via separate files?

@@ -1,6 +1,6 @@
 # $Id$
 
 import sys
-import libpy
+import pylib
 
-libpy.do_pkg(sys.argv)
+pylib.do_pkg(sys.argv)
