@@ -1,4 +1,4 @@
-@rem $Id: do-pkg.cmd,v 1.4 2007-12-31 10:09:31 jkrell Exp $
+@rem $Id: do-pkg.cmd,v 1.5 2007-12-31 10:33:25 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -7,11 +7,6 @@ setlocal
 call %~dp0sysinfo || exit /b 1
 call %~dp0pkginfo || exit /b 1
 call %~dp0pkgcmds || exit /b 1
-
-call %~dp0pkgcmds extract_options %* || (
-	echo error : pkgcmds extract_options failed
-	exit /b 1
-)
 
 call %~dp0pkgcmds extract_options %* || (
 	echo error : pkgcmds extract_options failed
