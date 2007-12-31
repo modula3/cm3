@@ -1,6 +1,6 @@
-# $Id: do-cm3-min.py,v 1.2 2007-12-31 10:11:16 jkrell Exp $
+# $Id: do-cm3-min.py,v 1.3 2007-12-31 11:50:39 jkrell Exp $
 
-import lib
+import libpy
 import sys
 
-lib.do_pkg(sys.argv, ["m3core", "libm3"])
+libpy.do_pkg(sys.argv, ["m3core", "libm3"])

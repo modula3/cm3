@@ -1,7 +1,7 @@
-# $Id: do-cm3-base.py,v 1.2 2007-12-31 10:11:16 jkrell Exp $
+# $Id: do-cm3-base.py,v 1.3 2007-12-31 11:50:39 jkrell Exp $
 
 import sys
-from lib import *
+from libpy import *
 
 # This needs to be data driven via separate files?
 # As well, it might be reasonable for the m3makefiles to do the
