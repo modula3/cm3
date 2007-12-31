@@ -10,4 +10,4 @@ for a in glob.glob("*.sh"):
         print("skipping " + dest + " because it already exists")
     else:
         print(a + " => " + dest)
-        os.rename(a, dest + ".py")
+        os.rename(a, dest)
