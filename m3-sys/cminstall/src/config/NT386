@@ -200,6 +200,8 @@ proc compile_c (source, object, options, optimize, debug) is
   return try_exec ("cl", [ args, "/c", source ])
 end
 
+readonly c_preprocessor = "cl -nologo -EP"
+
 %---------------------------------------------------------------- assembler ---
 % "assemble" is called to assemble .s or .asm files.  Note that this function
 % is only called if your program or library explicitly includes assembly source
