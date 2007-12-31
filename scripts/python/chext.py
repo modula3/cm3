@@ -1,7 +1,13 @@
-# $Id: chext.py,v 1.2 2007-12-31 10:11:16 jkrell Exp $
+# $Id: chext.py,v 1.3 2007-12-31 12:00:40 jkrell Exp $
 
 import glob
 import os
 
 for a in glob.glob("*.sh"):
-	os.rename(a, os.path.splitext(a)[0] + ".py")
+    base = os.path.splitext(a)[0]
+    dest = (base + ".py")
+    if os.path.isfile(dest):
+        print("skipping " + dest + " because it already exists")
+    else:
+        print(a + " => " + dest)
+        os.rename(a, dest + ".py")
