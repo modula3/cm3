@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: Version.i3,v 1.1 2007-12-30 16:24:32 wagner Exp $ *)
+ * $Id: Version.i3,v 1.2 2007-12-31 13:16:21 jkrell Exp $ *)
 
 INTERFACE Version;
 
@@ -42,7 +42,7 @@ VAR
 (* date of creation of this binary *)
 
   LastChanged: TEXT; (* CONST *)
-(* date of last compiler change (manually set in scripts/sysinfo.h) *)
+(* date of last compiler change (manually set in scripts/sysinfo.sh) *)
 
   Target: TEXT;  (* CONST *)
 (* Contains the Modula-3 name of the platform for which the program was
