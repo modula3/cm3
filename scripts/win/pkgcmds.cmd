@@ -1,4 +1,4 @@
-@rem $Id: pkgcmds.cmd,v 1.2 2006-12-30 11:36:38 jkrell Exp $
+@rem $Id: pkgcmds.cmd,v 1.3 2007-12-31 10:09:31 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -11,37 +11,39 @@ call %~dp0sysinfo || exit /b 1
 @rem define build and ship programs for Critical Mass Modula-3
 @rem
 
+set DEFS=-DROOT=%CM3ROOT% -DCM3_VERSION_TEXT=%CM3VERSION% -DCM3_VERSION_NUMBER=%CM3VERSIONNUM% -DCM3_LAST_CHANGED=%CM3LASTCHANGED%
+
 if not defined CM3_BUILDLOCAL (
     if not defined BUILDLOCAL (
-        set CM3_BUILDLOCAL=%CM3% -build -override -DROOT=%CM3ROOT% %BUILDARGS%
+        set CM3_BUILDLOCAL=%CM3% -build -override %DEFS% %BUILDARGS%
     ) else (
         set CM3_BUILDLOCAL=%BUILDLOCAL%
     )
 )
 if not defined CM3_CLEANLOCAL (
     if not defined CLEANLOCAL (
-        set CM3_CLEANLOCAL=%CM3% -clean -override -DROOT=%CM3ROOT% %CLEANARGS%
+        set CM3_CLEANLOCAL=%CM3% -clean -override %DEFS% %CLEANARGS%
     ) else (
         set CM3_CLEANLOCAL=%CLEANLOCAL%
     )
 )
 if not defined CM3_BUILDGLOBAL (
     if not defined BUILDGLOBAL (
-        set CM3_BUILDGLOBAL=%CM3% -build  -DROOT=%CM3ROOT% %BUILDARGS%
+        set CM3_BUILDGLOBAL=%CM3% -build  %DEFS% %BUILDARGS%
     ) else (
         set CM3_BUILDGLOBAL=%BUILDGLOBAL%
     )
 )
 if not defined CM3_CLEANGLOBAL (
     if not defined CLEANGLOBAL (
-        set CM3_CLEANGLOBAL=%CM3% -clean -DROOT=%CM3ROOT% %CLEANARGS%
+        set CM3_CLEANGLOBAL=%CM3% -clean %DEFS% %CLEANARGS%
     ) else (
         set CM3_CLEANGLOBAL=%CLEANGLOBAL%
     )
 )
 if not defined CM3_SHIP (
     if not defined SHIP (
-        set CM3_SHIP=%CM3% -ship -DROOT=%CM3ROOT% %SHIPARGS%
+        set CM3_SHIP=%CM3% -ship %DEFS% %SHIPARGS%
     ) else (
         set CM3_SHIP=%SHIP%
     )
@@ -53,35 +55,35 @@ if not defined CM3_SHIP (
 
 if not defined PM3_BUILDLOCAL (
     if not defined BUILDLOCAL (
-        set PM3_BUILDLOCAL=%M3BUILD% -O -DROOT=%CM3ROOT% %BUILDARGS%
+        set PM3_BUILDLOCAL=%M3BUILD% -O %DEFS% %BUILDARGS%
     ) else (
         set PM3_BUILDLOCAL=%BUILDLOCAL%
     )
 )
 if not defined PM3_CLEANLOCAL (
     if not defined CLEANLOCAL (
-        set PM3_CLEANLOCAL=%M3BUILD% clean -O -DROOT=%CM3ROOT% %CLEANARGS%
+        set PM3_CLEANLOCAL=%M3BUILD% clean -O %DEFS% %CLEANARGS%
     ) else (
         set PM3_CLEANLOCAL=%CLEANLOCAL%
     )
 )
 if not defined PM3_BUILDGLOBAL (
     if not defined BUILDGLOBAL (
-        set PM3_BUILDGLOBAL=%M3BUILD% -DROOT=%CM3ROOT% %BUILDARGS%
+        set PM3_BUILDGLOBAL=%M3BUILD% %DEFS% %BUILDARGS%
     ) else (
         set PM3_BUILDGLOBAL=%BUILDGLOBAL%
     )
 )
 if not defined PM3_CLEANGLOBAL (
     if not defined CLEANGLOBAL (
-        set PM3_CLEANGLOBAL=%M3BUILD% clean -DROOT=%CM3ROOT% %CLEANARGS%
+        set PM3_CLEANGLOBAL=%M3BUILD% clean %DEFS% %CLEANARGS%
     ) else (
         set PM3_CLEANGLOBAL=%CLEANGLOBAL%
     )
 )
 if not defined PM3_SHIP (
     if not defined SHIP (
-        set PM3_SHIP=%M3SHIP% -DROOT=%CM3ROOT% %SHIPARGS%
+        set PM3_SHIP=%M3SHIP% %DEFS% %SHIPARGS%
     ) else (
         set PM3_SHIP=%SHIP%
     )
@@ -93,35 +95,35 @@ if not defined PM3_SHIP (
 
 if not defined SRC_BUILDLOCAL (
     if not defined BUILDLOCAL (
-        set SRC_BUILDLOCAL=%M3BUILD% -O -DROOT=%CM3ROOT% %BUILDARGS%
+        set SRC_BUILDLOCAL=%M3BUILD% -O %DEFS% %BUILDARGS%
     ) else (
         set SRC_BUILDLOCAL=%BUILDLOCAL%
     )
 )
 if not defined SRC_CLEANLOCAL (
     if not defined CLEANLOCAL (
-        set SRC_CLEANLOCAL=%M3BUILD% clean -O -DROOT=%CM3ROOT% %CLEANARGS%
+        set SRC_CLEANLOCAL=%M3BUILD% clean -O %DEFS% %CLEANARGS%
     ) else (
         set SRC_CLEANLOCAL=%CLEANLOCAL%
     )
 )
 if not defined SRC_BUILDGLOBAL (
     if not defined BUILDGLOBAL (
-        set SRC_BUILDGLOBAL=%M3BUILD% -DROOT=%CM3ROOT% %BUILDARGS%
+        set SRC_BUILDGLOBAL=%M3BUILD% %DEFS% %BUILDARGS%
     ) else (
         set SRC_BUILDGLOBAL=%BUILDGLOBAL%
     )
 )
 if not defined SRC_CLEANGLOBAL (
     if not defined CLEANGLOBAL (
-        set SRC_CLEANGLOBAL=%M3BUILD% clean -DROOT=%CM3ROOT% %CLEANARGS%
+        set SRC_CLEANGLOBAL=%M3BUILD% clean %DEFS% %CLEANARGS%
     ) else (
         set SRC_CLEANGLOBAL=%CLEANGLOBAL%
     )
 )
 if not defined SRC_SHIP (
     if not defined SHIP (
-        set SRC_SHIP=%M3SHIP% -DROOT=%CM3ROOT% %SHIPARGS%
+        set SRC_SHIP=%M3SHIP% %DEFS% %SHIPARGS%
     ) else (
         set SRC_SHIP=%SHIP%
     )
@@ -135,6 +137,7 @@ set CLEANLINK=if exist %TARGET% del %TARGET%\*.exe %TARGET%\*.exe.manifest %TARG
 
 @rem
 @rem choose the compiler to use
+@rem (This SHOULD be via searching %PATH% for cm3.exe and m3build.exe.)
 @rem
 if defined USE_SRC (
     set BUILDLOCAL=%SRC_BUILDLOCAL%
@@ -212,9 +215,6 @@ shift
 goto :get_args_2
 :get_args_end
 endlocal & set ARGS=%ARGS%
-if not "%ARGS%" == "" (
-  echo %ARGS%
-)
 goto :eof
 
 :add_action_opts

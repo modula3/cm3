@@ -25,9 +25,7 @@ KEEP_GOING = False
 PackageDB = None
 
 #
-# In order to support the sh semantics, here we list
-# every variable the sh scripts read/write, and set them
-# to the environment variable, if set, else empty string.
+# User can override all these from environment, as in sh.
 #
 Variables = [
 
@@ -77,12 +75,6 @@ Variables = [
     #
     "GCWRAPFLAGS",
 
-    #
-    # grep to use in building pkgsdb
-    # This will be unused in the Python scripts.
-    #
-    "GREP",
-
     # the root if the cm3 install, e.g. /cm3 or /usr/local/cm3
     # This is easily computed by searching for cm3 or cm3.exe
     # in $PATH.
@@ -100,8 +92,7 @@ Variables = [
     "M3OSTYPE",
 
     #
-    # path to the pkgsdb file
-    # usually __file__/../pkgsdb
+    # path to the pkgsdb file, usually __file__/../pkgsdb
     #
     "PKGSDB",
 
@@ -190,6 +181,14 @@ Variables = [
     "OMIT_GCC",
 ]
 
+DefaultsFromSh = {
+    "CM3VERSION" : None,
+    "CM3VERSIONNUM" : None,
+    "CM3LASTCHANGED" : None,
+    }
+    
+Variables += DefaultsFromSh.keys()
+
 #
 # Ensure all variables have some value.
 #
@@ -197,6 +196,15 @@ b = ""
 for a in Variables:
     b += ("%s = getenv(\"%s\") or \"\"\n" % (a, a))
 exec(b)
+
+for a in DefaultsFromSh.keys():
+    DefaultsFromSh[a] = eval(a)
+
+#def WriteVariablesIntoEnvironment():
+#    #print("2: CM3VERSION is " + CM3VERSION)
+#    for a in Variables:
+#        #print("1: %s = %s" % (a, eval(a, locals(), globals())))
+#        os.putenv(a, eval(a))
 
 #CM3_DEBUG = 1
 CM3_DEBUG = 0
@@ -235,7 +243,63 @@ debug("UNAME_R")
 #-----------------------------------------------------------------------------
 # set some defaults
 
-CM3VERSION =  getenv("CM3VERSION") or "d5.5.0"
+def GetDefaultFromSh(Key):
+    #
+    # Only read the file if an environment variable is "missing" (they
+    # usually all are, ok), and only read it once.
+    #
+    #print("WriteVariablesIntoEnvironment:3")
+    Value = DefaultsFromSh.get(Key)
+    if (Value):
+        return Value
+    import re
+    #
+    # CM3VERSION=${CM3VERSION:-"d5.5.1"}
+    # CM3VERSIONNUM=${CM3VERSIONNUM:-"050501"}
+    # CM3LASTCHANGED=${CM3LASTCHANGED:-"2007-12-30"}
+    #
+    RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ")=\\$\\{\\1:-\"([^\"]+)\"\\}$")
+    ShFilePath = join(dirname(dirname(abspath(__file__))), "sysinfo.sh")
+    for Line in open(join(dirname(dirname(abspath(__file__))), "sysinfo.sh")):
+        Match = RegExp.match(Line)
+        if (Match):
+            MatchKey = Match.group(1)
+            #
+            # We are here because one of them wasn't found, but we should be
+            # sure only to overwrite what we don't have.
+            #
+            if (not DefaultsFromSh[MatchKey]):
+                Value = Match.group(2)
+                DefaultsFromSh[MatchKey] = Value
+                exec("%s = \"%s\"" % (MatchKey, Value), locals(), globals())
+
+    #
+    # Make sure we found every key in the file (at least those
+    # not defined in the environment)
+    #
+    MissingKey = None
+    for Item in DefaultsFromSh.iteritems():
+        #print(Item)
+        if (Item[1] is None):
+            MissingKey = Item[0]
+            File = __file__
+            sys.stderr.write("%(File)s: %(MissingKey)s not found in %(ShFilePath)s\n" % vars())
+            
+    if (MissingKey):
+        sys.exit(1)
+
+    #print("WriteVariablesIntoEnvironment:2")
+
+    # not needed, whatever is needed is passed on the cm3 command line
+    #WriteVariablesIntoEnvironment()
+
+    return DefaultsFromSh.get(Key)
+
+CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
+#print("3: CM3VERSION is " + CM3VERSION)
+CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
+CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
+
 CM3_GCC_BACKEND = True
 CM3_GDB = False
 
@@ -270,11 +334,11 @@ def SearchPath(name, paths = getenv("PATH")):
             return abspath(candidate)
 
 CM3_INSTALL = (
-    getenv("CM3_INSTALL")	
+    getenv("CM3_INSTALL")
     or dirname(dirname(SearchPath("cm3") or ""))
     or "/usr/local/cm3"
     )
-	
+
 debug("CM3_INSTALL")
 
 CM3 = CM3 or ExeName("cm3")
@@ -308,7 +372,8 @@ for TMPDIR in [
         break
 
 if (not TMPDIR):
-    sys.stderr.write("please define TMPDIR\n")
+    File = __file__
+    sys.stderr.write("%(File)s please define TMPDIR\n" % vars())
     sys.exit(1)
 
 debug("TMPDIR")
@@ -361,15 +426,10 @@ if (UNAME.startswith("Windows")
         CM3_TARGET = "NT386GNU"
         GMAKE = getenv("GMAKE") or "make"
 
-
         def cygpath(a, b):
-
             #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
-
             #return b
-
             return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
-
 
     else:
 
@@ -482,16 +542,13 @@ DEV_LIB = (getenv("DEV_LIB") or XDEV_LIB)
 ROOT = (ROOT or dirname(dirname(dirname(abspath(__file__)))))
 
 INSTALLROOT = (INSTALLROOT or CM3_INSTALL)
+
 M3GDB = (M3GDB or CM3_GDB)
 M3OSTYPE = (M3OSTYPE or CM3_OSTYPE)
 TARGET = (TARGET or CM3_TARGET)
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (PKGSDB or join(dirname(abspath(__file__)), "PKGS"))
-GREP = (GREP or "egrep")
 GMAKE = (GMAKE or "gmake")
-
-def qgrep():
-    pass
 
 if (M3OSTYPE == "WIN32"):
     # quoteing madness.. is it correct?
@@ -526,7 +583,6 @@ debug("TARGET")
 debug("GCC_BACKEND")
 debug("INSTALLROOT")
 debug("PKGSDB")
-debug("GREP")
 debug("GMAKE")
 debug("TMPDIR")
 debug("EXE")
@@ -540,27 +596,32 @@ debug("CM3ROOT")
 
 # define build and ship programs for Critical Mass Modula-3
 
-CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
-CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
-CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
-CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
-CM3_SHIP = SHIP or "%(CM3)s -ship -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
+DEFS = "-DROOT=%(Q)s%(CM3ROOT)s%(Q)s" % vars()
+DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s" % vars()
+DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s" % vars()
+DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s" % vars()
+
+CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override %(DEFS)s %(BUILDARGS)s" % vars()
+CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override %(DEFS)s %(CLEANARGS)s" % vars()
+CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build %(DEFS)s %(BUILDARGS)s" % vars()
+CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean %(DEFS)s %(CLEANARGS)s" % vars()
+CM3_SHIP = SHIP or "%(CM3)s -ship %(DEFS)s %(CLEANARGS)s" % vars()
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 
-PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
-PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
-PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s)s" % vars()
-PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
-PM3_SHIP = SHIP or "%(M3SHIP)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(SHIPARGS)s" % vars()
+PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s" % vars()
+PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s" % vars()
+PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s)s" % vars()
+PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s" % vars()
+PM3_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s" % vars()
 
 # define build and ship programs for DEC SRC Modula-3
 
-SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
-SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
-SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(BUILDARGS)s" % vars()
-SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(CLEANARGS)s" % vars()
-SRC_SHIP = SHIP or "%(M3SHIP)s -DROOT=%(Q)s%(CM3ROOT)s%(Q)s %(SHIPARGS)s" % vars()
+SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s" % vars()
+SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s" % vars()
+SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s" % vars()
+SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s" % vars()
+SRC_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s" % vars()
 
 # other commands
 
@@ -585,7 +646,8 @@ elif (SearchPath(M3BUILD)):
     SHIP = CM3_SHIP
 else:
     if (not BUILDLOCAL or not BUILDGLOBAL or not SHIP):
-        sys.stderr.write("%(CM3)s or %(M3BUILD)s not found in your path, don't know how to compile\n" % vars())
+        File = __file__
+        sys.stderr.write("%(File)s: %(CM3)s or %(M3BUILD)s not found in your path, don't know how to compile\n" % vars())
         sys.exit(1)
 
 BUILDLOCAL = BUILDLOCAL.strip()
@@ -615,7 +677,8 @@ def map_action(args):
         if (IGNORE_MISS):
             ACTION = BUILDLOCAL
         else:
-            sys.stderr.write("unknown action %s\n" % arg)
+            File = __file__
+            sys.stderr.write("%(File)s: unknown action %(arg)s\n" % vars())
             sys.exit(1)
     return ACTION
 
@@ -666,7 +729,8 @@ def get_args(args):
     while (i != j):
         arg = args[i]
         if (arg.startswith("-")):
-            sys.stderr.write("encountered option after command: %s (%s)\n" % (arg, i))
+            File = __file__
+            sys.stderr.write("%(File)s: encountered option after command: %(arg)s (%(i)s)\n" % vars())
         else:
             ARGS += [arg]
         i += 1
@@ -755,7 +819,7 @@ def MakePackageDB():
         def Callback(Result, Directory, Names):
             if (os.path.split(Directory)[1] != "src"):
                 return
-            if 	(Directory.find("_darcs") != -1):
+            if (Directory.find("_darcs") != -1):
                 return
             if not "m3makefile" in Names:
                 return
@@ -776,7 +840,8 @@ def MakePackageDB():
         open(PKGSDB, "w").writelines(Result)
 
         if (not isfile(PKGSDB)):
-            sys.stderr.write("cannot generate package list\n")
+            File = __file__
+            sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
 
 def ReadPackageDB():
@@ -802,7 +867,8 @@ def pkgpath(a):
         if (i.endswith(b)):
             #print("pkgpath(%(a)s returning %(i)s (%(b)s)" % vars())
             return i
-    sys.stderr.write("package " + a + " not found (%s)\n" % b)
+    File = __file__
+    sys.stderr.write("%(File)s: package %(a)s not found (%(b)s)\n" % vars())
 
 def listpkgs(pkgs):
     ReadPackageDB()
@@ -869,7 +935,8 @@ def pkgmap(args):
             if (arg == "-c"):
                 i += 1
                 if (i == j):
-                    sys.stderr.write("missing parameter to -c\n")
+                    File = __file__
+                    sys.stderr.write("%(File)s: missing parameter to -c\n" % vars())
                     sys.exit(1)
                 if (PKG_ACTION):
                     PKG_ACTION += " ; "
@@ -894,7 +961,8 @@ def pkgmap(args):
 
             p = pkgpath(arg)
             if (not p):
-                sys.stderr.write(" *** cannot find package %(arg)s\n" % vars())
+                File = __file__
+                sys.stderr.write("%(File)s *** cannot find package %(arg)s\n" % vars())
                 sys.exit(1)
             if (isdir(p)):
                 #print("3 %(p)s" % vars())
@@ -905,14 +973,17 @@ def pkgmap(args):
                 #print("4 %(p)s" % vars())
                 PKGS.append(p)
                 break
-            sys.stderr.write(" *** cannot find package %(arg)s / %(p)s\n" % vars())
+            File = __file__
+            sys.stderr.write("%(File)s *** cannot find package %(arg)s / %(p)s\n" % vars())
             sys.exit(1)
         i += 1
     if (not PKG_ACTION):
-        sys.stderr.write("no PKG_ACTION defined, aborting\n")
+        File = __file__
+        sys.stderr.write("%(File)s: no PKG_ACTION defined, aborting\n" % vars())
         sys.exit(1)
     if (not PKGS):
-        sys.stderr.write("no packages\n")
+        File = __file__
+        sys.stderr.write("%(File)s: no packages\n" % vars())
         sys.exit(1)
     if (LIST_ONLY):
         listpkgs(PKGS)
@@ -989,6 +1060,12 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+    
+    GetDefaultFromSh("CM3VERSION")
+    #sys.stdout.flush()
+    os.system("set")
+
+    sys.exit(1)
 
     #print(listpkgs("libm3"))
     #print(listpkgs("m3-libs/libm3"))

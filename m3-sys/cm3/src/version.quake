@@ -28,7 +28,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.1 2007-12-30 16:24:32 wagner Exp $
+% $Id: version.quake,v 1.2 2007-12-31 10:09:31 jkrell Exp $
 
 % Generate the "Version.m3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.
@@ -42,14 +42,23 @@ proc version_impl(name) is
     > tempname in
       write("MODULE Version;", CR, CR, "BEGIN", CR)
     end
-    dcmd = "date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\n'"
-    > datefn in
-      write("NOW = \"")
-    end
-    dcmd = dcmd & " >> " & datefn
-    exec("@-" & dcmd)
-    >> datefn in
-      write("\"" & CR)
+
+    if equal($OS, "Windows_NT")
+        % This does NOT match other platforms, and even varies
+        % with the locale of the builder, but PRESUMABLY it is ONLY
+        % informative. Nobody is picking it apart and doing math on it.
+        % ?
+        exec("@echo NOW = \"%DATE% %TIME%\" > " & datefn)
+    else
+        dcmd = "\\cygwin\\bin\\date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
+        > datefn in
+          write("NOW = \"")
+        end
+        dcmd = dcmd & " >> " & datefn
+        exec("@-" & dcmd)
+        >> datefn in
+          write("\"" & CR)
+        end
     end
     include(datefn)
     if not defined("CM3_VERSION_NUMBER")

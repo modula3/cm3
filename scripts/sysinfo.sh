@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.54 2007-12-30 14:08:15 wagner Exp $
+# $Id: sysinfo.sh,v 1.55 2007-12-31 10:09:31 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -12,9 +12,27 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
 # set some defaults
+#
+# These three lines must be carefully formed as they are parsed by other code.
+#
+# For cmd:
+#  They must start with a name and an equals sign.
+#  They must contain one and only one colon.
+#  They must contain one and only one equals sign.
+#  The content to the right of the colon, minus the first two
+#  and last two characters, is the value.
+#
+# For Python, we have much more flexibility. Currently the code
+# looks for fairly precisely A=${A:-"value"}, but this can be easily
+# relaxed or changed.
+#
+# Refer to scripts/win/sysinfo.cmd and scripts/python/lib.py.
+# Specifically look for "DefaultsFromSh".
+#
 CM3VERSION=${CM3VERSION:-"d5.5.1"}
 CM3VERSIONNUM=${CM3VERSIONNUM:-"050501"}
 CM3LASTCHANGED=${CM3LASTCHANGED:-"2007-12-30"}
+
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 #

@@ -1,8 +1,10 @@
-@rem $Id: pkgmap.cmd,v 1.4 2007-08-26 10:43:40 jkrell Exp $
+@rem $Id: pkgmap.cmd,v 1.5 2007-12-31 10:09:31 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
 setlocal
+
+@echo %~n0 %*
 
 call %~dp0sysinfo || exit /b 1
 call %~dp0pkginfo || exit /b 1
