@@ -12,6 +12,7 @@ IMPORT Pathname, Process, File, FS, RTParams;
 IMPORT M3Buf, M3File, M3Process, CoffTime;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
+IMPORT Date, Time;
 (* IMPORT IO; *)
 
 CONST
@@ -1099,6 +1100,25 @@ PROCEDURE InitBuiltins (t: T) =
     EVAL t.globals.put (b.name, b);
     b := NewConst (t, "FALSE", t.map.boolean [FALSE]);
     EVAL t.globals.put (b.name, b);
+
+    WITH date = Date.FromTime(Time.Now(), Date.UTC) DO
+        b := NewConst(
+            t,
+            "CM3_VERSION_NOW",
+            t.map.txt2id(
+                Fmt.FN(
+                    "%04s-%02s-%02s %02s:%02s:%02s",
+                    ARRAY OF TEXT{
+                        Fmt.Int(date.year),
+                        Fmt.Int(ORD(date.month) + 1),
+                        Fmt.Int(date.day),
+                        Fmt.Int(date.hour),
+                        Fmt.Int(date.minute),
+                        Fmt.Int(date.second)
+                        })));
+        EVAL t.globals.put(b.name, b);
+    END;
+
   END InitBuiltins;
 
 PROCEDURE NewBuiltin (t       : T;
