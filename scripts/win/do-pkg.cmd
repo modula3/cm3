@@ -13,11 +13,6 @@ call %~dp0pkgcmds extract_options %* || (
 	exit /b 1
 )
 
-call %~dp0pkgcmds extract_options %* || (
-	echo error : pkgcmds extract_options failed
-	exit /b 1
-)
-
 if not defined ACTION (
     set IGNORE_MISS=yes
     call %~dp0pkgcmds map_action %* || (
