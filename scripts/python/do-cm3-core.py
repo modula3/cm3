@@ -1,6 +1,6 @@
-# $Id: do-cm3-core.py,v 1.3 2007-12-31 11:49:44 jkrell Exp $
+# $Id: do-cm3-core.py,v 1.4 2007-12-31 12:12:50 jkrell Exp $
 
-from libpy import *
+from pylib import *
 import sys
 
 # This needs to be data driven via separate files?
