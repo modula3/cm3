@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# $Id$
 
 import glob
 import os

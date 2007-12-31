@@ -1,3 +1,5 @@
+# $Id$
+
 from lib import *
 import sys
 

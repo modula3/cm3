@@ -1,3 +1,5 @@
+# $Id$
+
 import os
 from os import getcwd, chdir, getenv
 import os.path
