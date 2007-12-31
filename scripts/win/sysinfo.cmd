@@ -1,5 +1,7 @@
 @rem $Id$
 
+@if not "%1" == "" (shift & goto :%1)
+
 @if "%SYSINFO_DONE%" == "yes" goto :eof
 
 @rem
@@ -246,7 +248,7 @@ call :set_if_empty INSTALLROOT c:\cm3
 set CM3ROOT=%ROOT:\=\\%
 echo CM3ROOT=%CM3ROOT%
 
-call :GetDefaultsFromSh || exit /b 1
+call :GetDefaultsFromSh %~dp0..\sysinfo.sh || exit /b 1
 
 set SYSINFO_DONE=yes
 
@@ -358,7 +360,10 @@ for %%a in (%CM3DefaultsFromSh%) do (
         @rem We are forced to make a function call here
         @rem because cmd has problems with parentheses.
         @rem
-        call :GetDefaultsFromSh_ReadFile %~dp0..\sysinfo.sh || exit /b 1
+        call :GetDefaultsFromSh_ReadFile %1 || (
+            set CM3DefaultsFromSh=
+            exit /b 1
+        )
     )
 )
 
@@ -392,7 +397,7 @@ for /f "tokens=1,3 delims=:=" %%a in ('findstr /b !SearchStrings! %1') do (
         @rem echo set %%a=!b:~2,-2!
         @rem
         @rem if you merely set %%a=!b:~2,-2! here, getting
-        @rem the results past the EndLocal takes a bit more work.
+        @rem the results past the EndLocal takes more work.
         @rem
         set Result=!Result! "%%a=!b:~2,-2!"
     )

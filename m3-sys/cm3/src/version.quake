@@ -44,11 +44,120 @@ proc version_impl(name) is
     end
 
     if equal($OS, "Windows_NT")
-        % This does NOT match other platforms, and even varies
-        % with the locale of the builder, but PRESUMABLY it is ONLY
-        % informative. Nobody is picking it apart and doing math on it.
-        % ?
-        exec("@echo NOW = \"%DATE% %TIME%\" > " & datefn)
+        %
+        % A ".cmd.i" file is a .cmd file that first is run through the C
+        % preprocessor. I have never seen this done before, but the C
+        % preprocessor does get around.
+        %
+        > "date.cmd.i" in
+        write(
+            %
+            % This is localtime instead of UTC.
+            %
+            % desired 2007-12-31 13:20:36
+            % __DATE__ "Dec 31 2007"
+            %          012345679012
+            % __TIME__ "05:20:50"
+            %
+            % Initializing this from C code in cm3 would
+            % also be a very good idea. I'm not sure how,
+            % but will try shortly.
+            %
+            "@echo off", CR,
+            "SetLocal", CR, % just for testing, not really needed
+            "set d=__DATE__", CR,
+            "set t=__TIME__", CR,
+            "set y=%d:~-5,4%", CR,
+            "set m=%d:~1,3%", CR,
+            "set d=%d:~5,2%", CR,
+            "set m=%m:Jan=01%", CR,
+            "set m=%m:Feb=02%", CR,
+            "set m=%m:Mar=03%", CR,
+            "set m=%m:Apr=04%", CR,
+            "set m=%m:May=05%", CR,
+            "set m=%m:Jun=06%", CR,
+            "set m=%m:Jul=07%", CR,
+            "set m=%m:Aug=08%", CR,
+            "set m=%m:Sep=09%", CR,
+            "set m=%m:Oct=10%", CR,
+            "set m=%m:Nov=11%", CR,
+            "set m=%m:Dec=12%", CR,
+            "echo NOW = \"%Y%-%m%-%d% %t:~1,-1%\"", CR,
+            )
+        end
+
+        % why two names for these?
+        local readonly Map =
+        {
+            "CM3_VERSION_NUMBER" : 
+                { "EnvName"  : "CM3VERSIONNUM",
+                  "EnvValue" : $CM3VERSIONNUM,
+                },
+
+            "CM3_VERSION_TEXT" : 
+                { "EnvName"  : "CM3VERSION",
+                  "EnvValue" : $CM3VERSION,
+                },
+
+            "CM3_LAST_CHANGED" : 
+                { "EnvName"  : "CM3LASTCHANGED",
+                  "EnvValue" : $CM3LASTCHANGED,
+                },
+        }
+
+        local readonly True = "True"
+        local readonly False = ""
+
+        % are any not defined, and not in the environment
+        % if so, we need to run sysinfo.cmd to look at sysinfo.sh
+        local Missing = [ ]
+        local AnyMissing = False
+
+        % were any initially missing, but then gotten from environment
+        % we still need to write and include a file for this
+        local AnyChanged = False
+        local Changed = [ ]
+
+        foreach Name in Map
+            if not defined(Name)
+                EnvValue = Map{Name}{"EnvValue"}
+                if not equal(EnvValue, "")
+                    write("getting " & Name & " from environment " & Map{Name}{"EnvName"} & "=" & EnvValue & CR)
+                    Map{Name}{"Value"} = EnvValue
+                    Changed += Name
+                    AnyChanged = True
+                else
+                    write("missing " & Name & " will read sysinfo.sh" & CR)
+                    Missing += Name
+                    AnyMissing = True
+                end
+            end
+        end
+
+        if (AnyChanged or AnyMissing)
+            if AnyMissing
+                >> "date.cmd.i" in
+                    %    
+                    % It does not make sense to me that we have to pass in the path to sysinfo.sh here.
+                    % The useof %~dp0 in sysinfo.cmd is oddly not working, it is resolving
+                    % to the cm3/src/<TARGET> directory of this calling .cmd file.
+                    %
+                    write("call ..\\..\\..\\scripts\\win\\sysinfo GetDefaultsFromSh ..\\..\\..\\scripts\\sysinfo.sh || exit /b 1", CR)
+                end
+            end
+            foreach Name in Missing
+                >> "date.cmd.i" in
+                    write("echo ", Name, " = \"%", Map{Name}{"EnvName"}, "%\"", CR)
+                end
+            end
+            foreach Name in Changed
+                >> "date.cmd.i" in
+                    write("echo ", Name, " = \"", Map{Name}{"Value"}, "\"", CR)
+                end
+            end
+        end
+        exec("@" & c_preprocessor & " date.cmd.i>date.cmd 2>nul")
+        exec("@.\\date.cmd > " & datefn)
     else
         dcmd = "date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
         > datefn in
