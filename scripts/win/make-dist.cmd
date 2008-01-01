@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.21 2007-12-31 17:23:42 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.22 2008-01-01 13:46:06 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -335,11 +335,10 @@ goto :eof
     @rem Do it manually for now.
     @rem
     call :CreateDirectory %INSTALLROOT%
-    call :CopyFile       %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe %INSTALLROOT%\bin\cm3.exe || call :ReportFatalError || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || call :ReportFatalError || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cm3\%TARGET%\cm3.pdb %INSTALLROOT%\bin\cm3.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFile        %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe %INSTALLROOT%\bin\cm3.exe || call :ReportFatalError || exit /b 1
+    call :CopyFile        %ROOT%\m3-sys\cm3\%TARGET%\cm3.pdb %INSTALLROOT%\bin\cm3.pdb || call :ReportFatalError || exit /b 1
     call :CopyFileIfExist %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe.manifest %INSTALLROOT%\bin\cm3.exe.manifest || call :ReportFatalError || exit /b 1
-    call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || call :ReportFatalError || exit /b 1
+    call :CopyFile        %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CopyCompiler
@@ -348,8 +347,8 @@ goto :eof
     @rem The config file always comes right out of the source tree.
     @rem
     call :CreateDirectory %2\bin
-    call :CopyFile       %1\bin\cm3.exe %2\bin\cm3.exe || call :ReportFatalError || exit /b 1
-    call :CopyFile       %1\bin\cm3.pdb %2\bin\cm3.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFile        %1\bin\cm3.exe %2\bin\cm3.exe || call :ReportFatalError || exit /b 1
+    call :CopyFile        %1\bin\cm3.pdb %2\bin\cm3.pdb || call :ReportFatalError || exit /b 1
     call :CopyFileIfExist %1\bin\cm3.exe.manifest %2\bin\cm3.exe.manifest || call :ReportFatalError || exit /b 1
     call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %2\bin\cm3.cfg || call :ReportFatalError || exit /b 1
     call :CopyMkLib %1 %2 || call :ReportFatalError || exit /b 1
