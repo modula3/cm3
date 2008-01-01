@@ -20,6 +20,13 @@ def Done():
     print("Lots of intermediate state remains in " + STAGE)
     sys.exit(0)
 
+def Echo(a):
+    print("")
+    print("=============================================================================")
+    print(a)
+    print("=============================================================================")
+    print("")
+
 def Run(a):
     return (os.system(a) == 0)
     # @call :IncrementLogCounter
@@ -282,7 +289,7 @@ if OriginalPATH:
 # if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
 
 # ------------------------------------------------------------------------------------------------------------------------
-print("build new compiler with old compiler and old runtime (%(INSTALLROOT_PREVIOUS)s to %(INSTALLROOT_COMPILER_WITH_PREVIOUS)s)" % vars())
+Echo("build new compiler with old compiler and old runtime (%(INSTALLROOT_PREVIOUS)s to %(INSTALLROOT_COMPILER_WITH_PREVIOUS)s)" % vars())
 # ------------------------------------------------------------------------------------------------------------------------
 
 # build just compiler this pass, not the runtime
@@ -323,7 +330,7 @@ ShipCompiler() or FatalError()
 RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-print("build new compiler and new runtime with new compiler (%(INSTALLROOT_COMPILER_WITH_PREVIOUS)s to %(INSTALLROOT_COMPILER_WITH_SELF)s)" % vars())
+Echo("build new compiler and new runtime with new compiler (%(INSTALLROOT_COMPILER_WITH_PREVIOUS)s to %(INSTALLROOT_COMPILER_WITH_SELF)s)" % vars())
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -355,7 +362,7 @@ BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-print("build minimal packages with new compiler")
+Echo("build minimal packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 #:min
@@ -373,7 +380,7 @@ BuildShip(Packages) or FatalError()
 RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-print("build core packages with new compiler")
+Echo("build core packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 print("skipping..")
@@ -394,7 +401,7 @@ if (False):
 
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-print("build standard packages with new compiler")
+Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 print("skipping..")
