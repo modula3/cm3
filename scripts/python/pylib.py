@@ -4,7 +4,6 @@ import os
 import os.path
 import glob
 import sys
-import copy
 import platform
 import re
 
@@ -284,10 +283,9 @@ def GetDefaultFromSh(Key):
 
     return DefaultsFromSh.get(Key)
 
-CM3VERSION = os.getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
-#print("3: CM3VERSION is " + CM3VERSION)
-CM3VERSIONNUM = os.getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
-CM3LASTCHANGED = os.getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
+CM3VERSION = CM3VERSION or GetDefaultFromSh("CM3VERSION")
+CM3VERSIONNUM = CM3VERSIONNUM or GetDefaultFromSh("CM3VERSIONNUM")
+CM3LASTCHANGED = CM3LASTCHANGED or GetDefaultFromSh("CM3LASTCHANGED")
 
 CM3_GCC_BACKEND = True
 CM3_GDB = False
@@ -718,42 +716,28 @@ def get_args(args):
 def format_one(width, string):
     return ("%-*s" % (width, string))
 
-def print_list2(strings):
-    Newline = ""
+def print_list(strings, NumberOfColumns):
     Result = ""
-    if (len(strings) % 2 != 0):
-        strings = copy.copy(strings) # unfortunate expense
-        strings.append("")
-    width = 36 # roughly 80 / 2
-    for i in range(0, len(strings) / 2):
-        Result += (
-            Newline
-            + "  "
-            + format_one(width, strings[i * 2])
-            + format_one(width, strings[i * 2 + 1])
-            )
-        Newline = "\n"
+    Width = (72 / NumberOfColumns)
+    Length = len(strings)
+    i = 0
+    while (i != Length):
+        j = 0
+        while ((i != Length) and (j != NumberOfColumns)):
+            if (j == 0):
+                if (i != 0):
+                    Result += "\n"
+                Result += "  "
+            Result += format_one(Width, strings[i])
+            i += 1
+            j += 1
     return Result
 
+def print_list2(strings):
+    return print_list(strings, 2)
+
 def print_list4(strings):
-    Newline = ""
-    Result = ""
-    width = 18 # roughly 80 / 4
-    if (len(strings) % 4 != 0):
-        strings = copy.copy(strings) # unfortunate expense
-        while (len(strings) % 4 != 0):
-            strings.append("")
-    for i in range(0, len(strings) / 4):
-        Result += (
-            Newline
-            + "  "
-            + format_one(width, strings[i * 4])
-            + format_one(width, strings[i * 4 + 1])
-            + format_one(width, strings[i * 4 + 2])
-            + format_one(width, strings[i * 4 + 3])
-            )
-        Newline = "\n"
-    return Result
+    return print_list(strings, 4)
 
 def show_usage(args, USAGE, P):
     for arg in args[1:]:
@@ -972,9 +956,7 @@ def pkgmap(args):
         res = exec_cmd(PKG)
         if (res != 0):
             if (not KEEP_GOING):
-                v = copy.copy(vars())
-                v.update(globals())
-                print(" *** execution of %(ACTION)s failed ***" % v)
+                print(" *** execution of %s failed ***" % (ACTION))
                 sys.exit(1)
         if (KEEP_GOING):
             print(" ==> %s returned %s" % (PKG_ACTION, res))
@@ -1025,9 +1007,7 @@ generic_cmd:
     if (not P):
         P = get_args(args[1:])
 
-    v = copy.copy(vars())
-    v.update(globals())
-    a = ("pkgmap %(OPTIONS)s %(ADDARGS)s -c \"%(ACTION)s\" %(P)s" % v)
+    a = ("pkgmap %s %s -c \"%s\" %s" % (OPTIONS, ADDARGS, ACTION, P))
     a = a.replace("  ", " ")
     a = a.replace("  ", " ")
     print(a)
