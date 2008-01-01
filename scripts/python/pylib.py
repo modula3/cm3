@@ -1,4 +1,4 @@
-# $Id: pylib.py,v 1.2 2007-12-31 17:53:42 jkrell Exp $
+# $Id: pylib.py,v 1.3 2008-01-01 09:40:27 jkrell Exp $
 
 import os
 import os.path
@@ -6,6 +6,7 @@ import glob
 import sys
 import copy
 import platform
+import re
 
 env_OS = os.getenv("OS")
 if env_OS == "Windows_NT":
@@ -98,7 +99,7 @@ Variables = [
 
     #
     # the root of the source code, e.g. /dev2/cm3
-    # This is easily computed from __file__.
+    # This is __file__/../../..
     #
     "ROOT",
 
@@ -200,12 +201,6 @@ exec(b)
 for a in DefaultsFromSh.keys():
     DefaultsFromSh[a] = eval(a)
 
-#def WriteVariablesIntoEnvironment():
-#    #print("2: CM3VERSION is " + CM3VERSION)
-#    for a in Variables:
-#        #print("1: %s = %s" % (a, eval(a, locals(), globals())))
-#        os.putenv(a, eval(a))
-
 #CM3_DEBUG = 1
 CM3_DEBUG = 0
 
@@ -230,10 +225,10 @@ debug("platform.release()")
 
 uname_tuple = uname()
 debug("uname_tuple")
-UNAME = uname_tuple[0]
-UNAME_P = platform.processor()
-UNAME_M = uname_tuple[4]
-UNAME_R = uname_tuple[2]
+UNAME = uname_tuple[0].lower()
+UNAME_P = platform.processor().lower()
+UNAME_M = uname_tuple[4].lower()
+UNAME_R = uname_tuple[2].lower()
 
 debug("UNAME")
 debug("UNAME_M")
@@ -252,7 +247,6 @@ def GetDefaultFromSh(Key):
     Value = DefaultsFromSh.get(Key)
     if (Value):
         return Value
-    import re
     #
     # CM3VERSION=${CM3VERSION:-"d5.5.1"}
     # CM3VERSIONNUM=${CM3VERSIONNUM:-"050501"}
@@ -260,7 +254,7 @@ def GetDefaultFromSh(Key):
     #
     RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ")=\\$\\{\\1:-\"([^\"]+)\"\\}$")
     ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")
-    for Line in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")):
+    for Line in open(ShFilePath):
         Match = RegExp.match(Line)
         if (Match):
             MatchKey = Match.group(1)
@@ -288,11 +282,6 @@ def GetDefaultFromSh(Key):
     if (MissingKey):
         sys.exit(1)
 
-    #print("WriteVariablesIntoEnvironment:2")
-
-    # not needed, whatever is needed is passed on the cm3 command line
-    #WriteVariablesIntoEnvironment()
-
     return DefaultsFromSh.get(Key)
 
 CM3VERSION = os.getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
@@ -308,9 +297,6 @@ debug("CM3VERSION")
 #
 # if CM3_INSTALL is not set, and cm3 is in $PATH, cm3's directory's directory is CM3_INSTALL,
 # else CM3_DEFAULTS defaults to /usr/local/cm3
-# Unfortunately, which always prints something and always succeeds, so we have to sniff
-# out its error message -- given "which foo", it prints "no foo in ..", where .. is
-# space delimited elements of $PATH -- at least on Mac OSX 10.4.
 #
 def ExeName(a):
     debug("os.name")
@@ -349,8 +335,7 @@ SL = "/" # path slash, forward or backward
 Q = "'"
 
 SYSLIBDIR = os.path.join(CM3_INSTALL, "lib")
-SYSLIBS = ""
-XDEV_LIB = " "
+XDEV_LIB = ""
 XDEV_BIN = ""
 TAR = "tar"
 
@@ -378,13 +363,11 @@ if (not TMPDIR):
 
 debug("TMPDIR")
 
-GCWRAPFLAGS = ""
-
 #-----------------------------------------------------------------------------
 # some localization functions
 
 def find_file(file, dirs):
-    for dir in dirs.split(" "):
+    for dir in dirs:
         if (os.path.isdir(dir)):
             a = os.path.join(dir, file)
             if (os.path.isfile(a)):
@@ -413,10 +396,9 @@ def strip_exe(a):
 
 TARGET = os.getenv("TARGET") or ""
 
-if (UNAME.startswith("Windows")
-        or UNAME.startswith("WinNT")
-        or UNAME.startswith("Cygwin")
-        or UNAME.startswith("CYGWIN")
+if (UNAME.startswith("windows")
+        or UNAME.startswith("winnt")
+        or UNAME.startswith("cygwin")
         or TARGET.startswith("NT386")
     ):
 
@@ -441,15 +423,13 @@ if (UNAME.startswith("Windows")
         EXE = ".exe"
         SL = "\\"
         Q = ""
-        # consider using arrays here
-        # Or just remove all this stuff and rely on $LIB
-        SYSLIBS =  "ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
-        SYSLIBS += " OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
-        SYSLIBS += " GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
-        L =  "c:/cm3/bin d:/cm3/bin e:/cm3/bin c:/reactor5/bin d:/reactor5/bin"
-        L += " e:/reactor5/bin c:/reactor/bin d:/reactor/bin"
-        L += " e:/reactor/bin /usr/local/cm3/bin /usr/local/reactor/bin"
-        L += " /usr/cm3/bin /usr/reactor/bin"
+        SYSLIBS =  ["ADVAPI32.LIB", "GDI32.LIB", "KERNEL32.LIB", "ODBC32.LIB"]
+        SYSLIBS += [" OPENGL32.LIB", "WSOCK32.LIB", "COMDLG32.LIB"]
+        SYSLIBS += [" GLU32.LIB", "NETAPI32.LIB", "ODBCCP32.LIB", "USER32.LIB"]
+        L =  ["c:/cm3/bin", "d:/cm3/bin e:/cm3/bin", "c:/reactor5/bin", "d:/reactor5/bin"]
+        L += ["e:/reactor5/bin", "c:/reactor/bin", "d:/reactor/bin"]
+        L += ["e:/reactor/bin", "/usr/local/cm3/bin", "/usr/local/reactor/bin"]
+        L += ["/usr/cm3/bin", "/usr/reactor/bin"]
         CM3BINSEARCHPATH = L
         f = find_file("KERNEL32.LIB", L)
         if (f):
@@ -457,14 +437,11 @@ if (UNAME.startswith("Windows")
         else:
             SYSLIBDIR = "unknown"
 
-        D = "c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
+        D = ["c:/msdev/bin", "d:/msdev/bin", "e:/msdev/bin", "f:/msdev/bin", "g:/msdev/bin"]
         f = find_file("cl.exe", D)
         if (f):
             XDEV_BIN = os.path.dirname(f)
             XDEV_LIB = os.path.join(XDEV_BIN, "lib")
-        else:
-            XDEV_LIB = ""
-            XDEV_BIN = ""
 
         f = "/usr/bin/tar.exe"
         if (os.path.isfile(f)):
@@ -475,7 +452,7 @@ if (UNAME.startswith("Windows")
             #print("strip_exe:pass")
             pass
 
-elif (UNAME.startswith("FreeBSD")):
+elif (UNAME.startswith("freebsd")):
 
     CM3_OSTYPE = "POSIX"
     if (UNAME_M == "i386"):
@@ -492,23 +469,23 @@ elif (UNAME.startswith("FreeBSD")):
     else:
         CM3_TARGET = "FBSD_ALPHA"
 
-elif (UNAME.startswith("Darwin")):
+elif (UNAME.startswith("darwin")):
 
     CM3_OSTYPE = "POSIX"
-    # detect the m3 platform (Darwin runs on ppc and ix86
+    # detect the m3 platform (Darwin runs on ppc and ix86)
     if (UNAME_P.startswith("powerpc")):
         CM3_TARGET = "PPC_DARWIN"
     elif (re.match("i[3456]86", UNAME_P)):
         CM3_TARGET = "I386_DARWIN"
     GMAKE = os.getenv("GMAKE") or "make"
 
-elif (UNAME.startswith("SunOS")):
+elif (UNAME.startswith("sunos")):
 
     CM3_OSTYPE = "POSIX"
     CM3_TARGET = "SOLgnu"
     #CM3_TARGET = "SOLsun"
 
-elif (UNAME.startswith("Linux")):
+elif (UNAME.startswith("linux")):
 
     CM3_OSTYPE = "POSIX"
     GMAKE = os.getenv("GMAKE") or "make"
@@ -518,7 +495,7 @@ elif (UNAME.startswith("Linux")):
     else:
         CM3_TARGET = "LINUXLIBC6"
 
-elif (UNAME.startswith("NetBSD")):
+elif (UNAME.startswith("netbsd")):
 
     CM3_OSTYPE = "POSIX"
     GMAKE = os.getenv("GMAKE") or "make"
@@ -529,8 +506,8 @@ else:
     # more need to be added here, I haven't got all the platform info ready
     pass
 
-DEV_BIN = (os.getenv("DEV_BIN") or XDEV_BIN)
-DEV_LIB = (os.getenv("DEV_LIB") or XDEV_LIB)
+DEV_BIN = (DEV_BIN or XDEV_BIN)
+DEV_LIB = (DEV_LIB or XDEV_LIB)
 
 #-----------------------------------------------------------------------------
 # define the exported values
@@ -595,39 +572,42 @@ debug("CM3ROOT")
 
 # define build and ship programs for Critical Mass Modula-3
 
-DEFS = "-DROOT=%(Q)s%(CM3ROOT)s%(Q)s" % vars()
-DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s" % vars()
-DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s" % vars()
-DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s" % vars()
+DEFS = "-DROOT=%(Q)s%(CM3ROOT)s%(Q)s"
+DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
+DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s"
+DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
+DEFS = (DEFS % vars())
 
-CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override %(DEFS)s %(BUILDARGS)s" % vars()
-CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override %(DEFS)s %(CLEANARGS)s" % vars()
-CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build %(DEFS)s %(BUILDARGS)s" % vars()
-CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean %(DEFS)s %(CLEANARGS)s" % vars()
-CM3_SHIP = SHIP or "%(CM3)s -ship %(DEFS)s %(CLEANARGS)s" % vars()
+CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override %(DEFS)s %(BUILDARGS)s"
+CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override %(DEFS)s %(CLEANARGS)s"
+CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build %(DEFS)s %(BUILDARGS)s"
+CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean %(DEFS)s %(CLEANARGS)s"
+CM3_SHIP = SHIP or "%(CM3)s -ship %(DEFS)s %(CLEANARGS)s"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 
-PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s" % vars()
-PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s" % vars()
-PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s)s" % vars()
-PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s" % vars()
-PM3_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s" % vars()
+PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s"
+PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s"
+PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s)s"
+PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s"
+PM3_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s"
 
 # define build and ship programs for DEC SRC Modula-3
 
-SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s" % vars()
-SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s" % vars()
-SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s" % vars()
-SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s" % vars()
-SRC_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s" % vars()
+SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s"
+SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s"
+SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s"
+SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s"
+SRC_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s"
 
 # other commands
 
 if (os.name == "nt"):
-    REALCLEAN = REALCLEAN or "if exist %(TARGET)s rmdir /q/s %(TARGET)s" % vars()
+    REALCLEAN = REALCLEAN or "if exist %(TARGET)s rmdir /q/s %(TARGET)s"
 else:
-    REALCLEAN = REALCLEAN or "rm -rf %(TARGET)s" % vars()
+    REALCLEAN = REALCLEAN or "rm -rf %(TARGET)s"
+
+REALCLEAN = REALCLEAN % vars()
 
 # choose the compiler to use
 
@@ -649,11 +629,11 @@ else:
         sys.stderr.write("%(File)s: %(CM3)s or %(M3BUILD)s not found in your path, don't know how to compile\n" % vars())
         sys.exit(1)
 
-BUILDLOCAL = BUILDLOCAL.strip()
-CLEANLOCAL = CLEANLOCAL.strip()
-BUILDGLOBAL = BUILDGLOBAL.strip()
-CLEANGLOBAL = CLEANGLOBAL.strip()
-SHIP = SHIP.strip()
+BUILDLOCAL = BUILDLOCAL.strip() % vars()
+CLEANLOCAL = CLEANLOCAL.strip() % vars()
+BUILDGLOBAL = BUILDGLOBAL.strip() % vars()
+CLEANGLOBAL = CLEANGLOBAL.strip() % vars()
+SHIP = SHIP.strip() % vars()
 
 def map_action(args):
     arg = "build"
@@ -849,7 +829,7 @@ def ReadPackageDB():
     PackageDB = (PackageDB or
             map(
                 lambda(a): a.replace("\n", "").replace("/", os.path.sep),
-                open(PKGSDB).readlines(),
+                open(PKGSDB)
                 ))
 
 def pkg_defined(a):
@@ -899,12 +879,11 @@ def exec_cmd(PKG):
         return 0
 
     PreviousDirectory = os.getcwd()
-
     os.chdir(PKG)
+
     Result = os.system(PKG_ACTION)
 
     os.chdir(PreviousDirectory)
-
     return Result
 
 def pkgmap(args):
@@ -993,7 +972,7 @@ def pkgmap(args):
         res = exec_cmd(PKG)
         if (res != 0):
             if (not KEEP_GOING):
-                v = vars()
+                v = copy.copy(vars())
                 v.update(globals())
                 print(" *** execution of %(ACTION)s failed ***" % v)
                 sys.exit(1)
@@ -1046,7 +1025,7 @@ generic_cmd:
     if (not P):
         P = get_args(args[1:])
 
-    v = vars()
+    v = copy.copy(vars())
     v.update(globals())
     a = ("pkgmap %(OPTIONS)s %(ADDARGS)s -c \"%(ACTION)s\" %(P)s" % v)
     a = a.replace("  ", " ")
