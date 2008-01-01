@@ -294,7 +294,7 @@ goto :done
 
 :done
 echo Success.
-if defined exe if exist %exe% echo Output is %STAGE%\min\%exe%
+if defined exe if exist %STAGE%\min\%exe% echo Output is %STAGE%\min\%exe%
 echo Output is %STAGE%\min\%zip%
 echo Output is %STAGE%\min\%symbols%
 echo Lots of intermediate state remains in %STAGE%.
