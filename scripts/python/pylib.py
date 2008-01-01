@@ -1,4 +1,4 @@
-# $Id: pylib.py,v 1.7 2008-01-01 23:26:04 jkrell Exp $
+# $Id: pylib.py,v 1.8 2008-01-01 23:28:14 jkrell Exp $
 
 import os
 import os.path
@@ -574,7 +574,7 @@ if (os.name == "nt"):
 else:
     REALCLEAN = REALCLEAN or "rm -rf %(TARGET)s"
 
-REALCLEAN = REALCLEAN % vars()
+REALCLEAN = (REALCLEAN % vars())
 
 # choose the compiler to use
 
@@ -611,8 +611,8 @@ def map_action(args):
     ACTION = {
         "build": BUILDLOCAL,
         "buildlocal": BUILDLOCAL,
-        "buildglobal": BUILDGLOBAL + " && " + SHIP,
-        "buildship": BUILDGLOBAL + " && " + SHIP,
+        "buildglobal": (BUILDGLOBAL + " && " + SHIP),
+        "buildship": (BUILDGLOBAL + " && " + SHIP),
         "ship": SHIP,
         "clean": CLEANLOCAL,
         "cleanlocal": CLEANLOCAL,
