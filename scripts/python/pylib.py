@@ -6,6 +6,7 @@ import glob
 import sys
 import platform
 import re
+import tempfile
 
 env_OS = os.getenv("OS")
 if env_OS == "Windows_NT":
@@ -140,8 +141,6 @@ Variables = [
     # we are building for
     #
     "TARGET",
-
-    "TMPDIR",
 
     "BUILDARGS",
     "CLEANARGS",
@@ -336,30 +335,6 @@ SYSLIBDIR = os.path.join(CM3_INSTALL, "lib")
 XDEV_LIB = ""
 XDEV_BIN = ""
 TAR = "tar"
-
-for TMPDIR in [
-        TMPDIR,
-        os.getenv("TMP"),
-        os.getenv("TEMP"),
-        "/var/tmp",
-        "/usr/tmp",
-        "/tmp",
-        "c:/tmp",
-        "d:/tmp",
-        "e:/tmp",
-        "c:/temp",
-        "d:/temp",
-        "e:/temp",
-        ]:
-    if (TMPDIR and os.path.isdir(TMPDIR)):
-        break
-
-if (not TMPDIR):
-    File = __file__
-    sys.stderr.write("%(File)s please define TMPDIR\n" % vars())
-    sys.exit(1)
-
-debug("TMPDIR")
 
 #-----------------------------------------------------------------------------
 # some localization functions
@@ -558,7 +533,6 @@ debug("GCC_BACKEND")
 debug("INSTALLROOT")
 debug("PKGSDB")
 debug("GMAKE")
-debug("TMPDIR")
 debug("EXE")
 debug("SL")
 debug("SYSLIBDIR")
@@ -743,7 +717,7 @@ def show_usage(args, USAGE, P):
     for arg in args[1:]:
         if (arg in ["-h", "-help", "--help", "-?"]):
             print("")
-            print("usage " + os.path.split(args[0])[1] + ":")
+            print("usage " + os.path.basename(args[0]) + ":")
             if (USAGE):
                 basename = os.path.basename(args[0])
                 GEN_CMDS = """
@@ -780,7 +754,7 @@ def MakePackageDB():
         # and write their relative paths from ROOT to PKGSDB.
         #
         def Callback(Result, Directory, Names):
-            if (os.path.split(Directory)[1] != "src"):
+            if (os.path.basename(Directory) != "src"):
                 return
             if (Directory.find("_darcs") != -1):
                 return
@@ -837,7 +811,7 @@ def listpkgs(pkgs):
     ReadPackageDB()
     Result = [ ]
     if pkgs:
-        for pkg in pkgs.split(" "):
+        for pkg in pkgs:
             # remove ROOT from the start
             if (pkg.startswith(ROOT + SL)):
                 pkg = pkg[len(ROOT) + 1:]
@@ -900,6 +874,7 @@ def pkgmap(args):
                     File = __file__
                     sys.stderr.write("%(File)s: missing parameter to -c\n" % vars())
                     sys.exit(1)
+                    #return False
                 if (PKG_ACTION):
                     PKG_ACTION += " ; "
                 PKG_ACTION += args[i]
@@ -939,22 +914,31 @@ def pkgmap(args):
             sys.stderr.write("%(File)s *** cannot find package %(arg)s / %(p)s\n" % vars())
             sys.exit(1)
         i += 1
+
     if (not PKG_ACTION):
         File = __file__
         sys.stderr.write("%(File)s: no PKG_ACTION defined, aborting\n" % vars())
         sys.exit(1)
+        #return False
+
     if (not PKGS):
         File = __file__
         sys.stderr.write("%(File)s: no packages\n" % vars())
         sys.exit(1)
+        #return False
+
     if (LIST_ONLY):
         listpkgs(PKGS)
         sys.exit(0)
+        #return True
+
+    Success = True
 
     for PKG in PKGS:
         print("== package %(PKG)s ==" % vars())
         res = exec_cmd(PKG)
         if (res != 0):
+            Success = False
             if (not KEEP_GOING):
                 print(" *** execution of %s failed ***" % (ACTION))
                 sys.exit(1)
@@ -962,6 +946,8 @@ def pkgmap(args):
             print(" ==> %s returned %s" % (PKG_ACTION, res))
         else:
             print(" ==> %(PKG)s done" % vars())
+
+    return Success
 
 def do_pkg(args, P = None):
 
@@ -1012,7 +998,7 @@ generic_cmd:
     a = a.replace("  ", " ")
     print(a)
 
-    pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P)
+    return pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P)
 
 if __name__ == "__main__":
     #
