@@ -1109,12 +1109,12 @@ PROCEDURE InitBuiltins (t: T) =
                 Fmt.FN(
                     "%04s-%02s-%02s %02s:%02s:%02s",
                     ARRAY OF TEXT{
-                        Fmt.Unsigned(date.year),
-                        Fmt.Unsigned(ORD(date.month) + 1),
-                        Fmt.Unsigned(date.day),
-                        Fmt.Unsigned(date.hour),
-                        Fmt.Unsigned(date.minute),
-                        Fmt.Unsigned(date.second)
+                        Fmt.Int(date.year),
+                        Fmt.Int(ORD(date.month) + 1),
+                        Fmt.Int(date.day),
+                        Fmt.Int(date.hour),
+                        Fmt.Int(date.minute),
+                        Fmt.Int(date.second)
                         })));
         EVAL t.globals.put(b.name, b);
     END;
