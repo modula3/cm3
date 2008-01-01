@@ -1,4 +1,4 @@
-# $Id: pylib.py,v 1.6 2008-01-01 15:54:50 jkrell Exp $
+# $Id: pylib.py,v 1.7 2008-01-01 23:26:04 jkrell Exp $
 
 import os
 import os.path
@@ -368,6 +368,7 @@ def strip_exe(a):
 #
 
 TARGET = os.getenv("TARGET") or ""
+CM3_OSTYPE = "POSIX"
 
 if (UNAME.startswith("windows")
         or UNAME.startswith("winnt")
@@ -377,7 +378,6 @@ if (UNAME.startswith("windows")
 
     if (TARGET.startswith("NT386GNU")):
 
-        CM3_OSTYPE = "POSIX"
         CM3_TARGET = "NT386GNU"
         GMAKE = os.getenv("GMAKE") or "make"
 
@@ -427,7 +427,6 @@ if (UNAME.startswith("windows")
 
 elif (UNAME.startswith("freebsd")):
 
-    CM3_OSTYPE = "POSIX"
     if (UNAME_M == "i386"):
         if (UNAME_R.startswith("1")):
             CM3_TARGET = "FreeBSD"
@@ -444,7 +443,6 @@ elif (UNAME.startswith("freebsd")):
 
 elif (UNAME.startswith("darwin")):
 
-    CM3_OSTYPE = "POSIX"
     # detect the m3 platform (Darwin runs on ppc and ix86)
     if (UNAME_P.startswith("powerpc")):
         CM3_TARGET = "PPC_DARWIN"
@@ -454,13 +452,11 @@ elif (UNAME.startswith("darwin")):
 
 elif (UNAME.startswith("sunos")):
 
-    CM3_OSTYPE = "POSIX"
     CM3_TARGET = "SOLgnu"
     #CM3_TARGET = "SOLsun"
 
 elif (UNAME.startswith("linux")):
 
-    CM3_OSTYPE = "POSIX"
     GMAKE = os.getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if (UNAME_M == "ppc"):
@@ -470,7 +466,6 @@ elif (UNAME.startswith("linux")):
 
 elif (UNAME.startswith("netbsd")):
 
-    CM3_OSTYPE = "POSIX"
     GMAKE = os.getenv("GMAKE") or "make"
     CM3_TARGET = "NetBSD2_i386" # only arch/version combination supported yet
 
