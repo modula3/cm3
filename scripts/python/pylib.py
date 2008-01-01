@@ -1,4 +1,4 @@
-# $Id: pylib.py,v 1.5 2008-01-01 15:53:11 jkrell Exp $
+# $Id: pylib.py,v 1.6 2008-01-01 15:54:50 jkrell Exp $
 
 import os
 import os.path

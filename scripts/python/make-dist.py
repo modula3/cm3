@@ -1,4 +1,4 @@
-# $Id: make-dist.py,v 1.1 2008-01-01 15:53:11 jkrell Exp $
+# $Id: make-dist.py,v 1.2 2008-01-01 15:54:50 jkrell Exp $
 
 import sys
 import os.path
