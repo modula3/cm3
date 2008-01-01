@@ -574,7 +574,7 @@ if (os.name == "nt"):
 else:
     REALCLEAN = REALCLEAN or "rm -rf %(TARGET)s"
 
-REALCLEAN = REALCLEAN % vars()
+REALCLEAN = (REALCLEAN % vars())
 
 # choose the compiler to use
 
@@ -611,8 +611,8 @@ def map_action(args):
     ACTION = {
         "build": BUILDLOCAL,
         "buildlocal": BUILDLOCAL,
-        "buildglobal": BUILDGLOBAL + " && " + SHIP,
-        "buildship": BUILDGLOBAL + " && " + SHIP,
+        "buildglobal": (BUILDGLOBAL + " && " + SHIP),
+        "buildship": (BUILDGLOBAL + " && " + SHIP),
         "ship": SHIP,
         "clean": CLEANLOCAL,
         "cleanlocal": CLEANLOCAL,
