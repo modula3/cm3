@@ -8,14 +8,14 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "PPC_LINUX"      % code generation target
+readonly TARGET       = "PPC_LINUX"     % code generation target
 if M3_PROFILING 
-  readonly BUILD_DIR  = TARGET & "p"      % code generation target
+  readonly BUILD_DIR  = TARGET & "p"    % code generation target
 else
-  readonly BUILD_DIR  = TARGET            % directory for results
+  readonly BUILD_DIR  = TARGET          % directory for results
 end
-readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
+readonly OS_TYPE      = "POSIX"         % { "WIN32" or "POSIX" }
+readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "powerpc-apple-linuxelf"  % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
@@ -91,26 +91,26 @@ INSTALL_ROOT = BEGIN_CONFIG
     7 %-- user specified install root
 END_CONFIG
 
-BIN_INSTALL   = INSTALL_ROOT & "/bin"        % executables
+BIN_INSTALL   = INSTALL_ROOT & "/bin"       % executables
 if M3_PROFILING 
-  LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/libp"    % libraries
 else
-  LIB_INSTALL   = INSTALL_ROOT & "/lib"        % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/lib"     % libraries
 end
-PKG_INSTALL   = INSTALL_ROOT & "/pkg"        % packages
-DOC_INSTALL   = INSTALL_ROOT & "/doc"        % documents
-EMACS_INSTALL = INSTALL_ROOT & "/elisp"      % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "/man"        % man pages
-HTML_INSTALL  = INSTALL_ROOT & "/www"        % public hypertext
+PKG_INSTALL   = INSTALL_ROOT & "/pkg"       % packages
+DOC_INSTALL   = INSTALL_ROOT & "/doc"       % documents
+EMACS_INSTALL = INSTALL_ROOT & "/elisp"     % emacs lisp code
+MAN_INSTALL   = INSTALL_ROOT & "/man"       % man pages
+HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
 %
 USE_ROOT  = INSTALL_ROOT
-BIN_USE   = BIN_INSTALL       % executables
-LIB_USE   = LIB_INSTALL       % libraries
-PKG_USE   = PKG_INSTALL       % packages
+BIN_USE   = BIN_INSTALL     % executables
+LIB_USE   = LIB_INSTALL     % libraries
+PKG_USE   = PKG_INSTALL     % packages
 
 readonly INSTALL_IMPLS = TRUE
 % TRUE
