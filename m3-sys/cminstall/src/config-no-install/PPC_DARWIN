@@ -43,10 +43,7 @@ end
 % the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
-INSTALL_ROOT = BEGIN_CONFIG
-  "Where should CM3 be installed?"
-    7 %-- user specified install root
-END_CONFIG
+INSTALL_ROOT = path() & "/../bin"
 
 BIN_INSTALL   = INSTALL_ROOT & "/bin"       % executables
 if M3_PROFILING
@@ -87,79 +84,14 @@ readonly INSTALL_IMPLS = TRUE
 
 SYSTEM_LIBS = {
   "LIBC"       : [ ],
-% "LEX-YACC"   : [ BEGIN_CONFIG
-%                    "Where are the lex/yacc libraries?"
-%                      11 "libl.a"
-%                      12 "/usr/lib"
-%                      12 "/usr/local/lib"
-%                      12 "/usr/local/gnu/lib"
-%                      13 "/usr/lib"
-%                  END_CONFIG, "-ll" ],
-  "FLEX-BISON" : [ BEGIN_CONFIG
-                     "Where are the flex/bison libraries?"
-                       11 "libfl.a"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lfl" ],
-  "POSTGRES95" : [ BEGIN_CONFIG
-                     "Where are the Postgres95 libraries?"
-                       11 "libpq.a"
-                       12 "/usr/local/pgsql/lib"
-                       12 "/usr/local/postgres95/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/lib"
-                       13 "/usr/local/pgsql/lib"
-                   END_CONFIG, "-lpq" ],
-  "OPENGL"     : [ BEGIN_CONFIG
-                     "Where are the OpenGL libraries?"
-                       11 "libGLU.a"
-                       11 "libGL.a"
-                       12 "/usr/X11R6/lib"
-                       12 "/usr/X11/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/X11R6/lib"
-                   END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ BEGIN_CONFIG
-                     "Where are the ODBC libraries?"
-                       11 "libiodbc.a"
-                       12 "/usr/local/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/pgsql/lib"
-                       12 "/usr/local/postgres95/lib"
-                       13 "/usr/local/lib"
-                   END_CONFIG, "-liodbc", "-liodbcinst" ],
-% FIXME: What is this?  PKG_USE & "/pgodbc/FreeBSD3/libpgodbc.a" ],
-  "MOTIF"      : [ BEGIN_CONFIG
-                     "Where are the Motif libraries?"
-                       11 "libXm.a"
-                       12 "/usr/X11R6/lib"
-                       12 "/usr/X11/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/X11R6/lib"
-                   END_CONFIG, "-lXm" ],
-  "X11"        : [ BEGIN_CONFIG
-                     "Where are the X11 libraries?"
-                       11 "libXaw.a"
-                       11 "libXmu.a"
-                       11 "libXext.a"
-                       11 "libXt.a"
-                       11 "libSM.a"
-                       11 "libICE.a"
-                       11 "libX11.a"
-                       12 "/usr/X11R6/lib"
-                       12 "/usr/X11/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/X11R6/lib"
-                   END_CONFIG, "-lXaw", "-lXmu", "-lXext",
-                        "-lXt", "-lSM", "-lICE", "-lX11" ],
+  "LEX-YACC"   : [ "-ll" ],
+  "FLEX-BISON" : [ "-lfl" ],
+  "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+  "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ "-lXm" ],
+  "X11"        : [ "-L/usr/X11R6/lib",
+                    "-lXaw", "-lXmu", "-lXext",
+                    "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
 }
 
@@ -182,39 +114,9 @@ SYSTEM_LIBORDER =
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = BEGIN_CONFIG
-  "Where is your C compiler?"
-    0 "gcc"
-    6 "/usr/bin"       "gcc"
-    6 "/bin"           "gcc"
-    6 "/usr/local"     "gcc"
-    6 "/usr/local/bin" "gcc"
-    6 "/usr/local/gnu" "gcc"
-    0 "cc"
-    6 "/usr/bin"       "cc"
-    6 "/bin"           "cc"
-    6 "/usr/local"     "cc"
-    6 "/usr/local/bin" "cc"
-    6 "/usr/local/gnu" "cc"
-END_CONFIG % C compiler
-readonly SYSTEM_LIBTOOL  = BEGIN_CONFIG
-  "Where is your library archiver tool?"
-    0 "libtool"
-    6 "/usr/bin"       "libtool"
-    6 "/bin"           "libtool"
-    6 "/usr/local"     "libtool"
-    6 "/usr/local/bin" "libtool"
-    6 "/usr/local/gnu" "libtool"
-END_CONFIG % Archiver
-readonly SYSTEM_ASM = BEGIN_CONFIG
-  "Where is your assembler?"
-    0 "as"
-    6 "/usr/bin"       "as"
-    6 "/bin"           "as"
-    6 "/usr/local"     "as"
-    6 "/usr/local/bin" "as"
-    6 "/usr/local/gnu" "as"
-END_CONFIG % Assembler
+readonly SYSTEM_CC  = "cc" % C compiler
+readonly SYSTEM_LIBTOOL = "libtool" % Archiver
+readonly SYSTEM_ASM = "as" % Assembler
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
