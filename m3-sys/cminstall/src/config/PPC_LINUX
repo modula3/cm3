@@ -207,8 +207,19 @@ SYSTEM_LIBS = {
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+SYSTEM_LIBORDER =
+[
+    "OPENGL",
+    "DECPEX",
+    "MOTIF",
+    "X11",
+    "TCP",
+    "ODBC",
+    "POSTGRES95",
+    "FLEX-BISON",
+    "LEX-YACC",
+    "LIBC"
+]
 
 %---------------------------------------------------------- system programs ---
 
