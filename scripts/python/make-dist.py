@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.4 2008-01-03 22:08:52 jkrell Exp $
+# $Id: make-dist.py,v 1.5 2008-01-03 23:04:01 jkrell Exp $
 
 import sys
 import os.path
@@ -298,6 +298,7 @@ Packages = [
     "m3back",
     "m3staloneback",
     "m3objfile",
+    "m3cc",
     "cm3",
     ]
 
