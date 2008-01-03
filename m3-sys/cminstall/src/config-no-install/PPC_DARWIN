@@ -45,7 +45,7 @@ end
 
 INSTALL_ROOT = path() & "/../bin"
 
-BIN_INSTALL   = INSTALL_ROOT & "/bin"       % executables
+BIN_INSTALL   = path()                      % executables
 if M3_PROFILING
   LIB_INSTALL   = INSTALL_ROOT & "/libp"    % libraries
 else
