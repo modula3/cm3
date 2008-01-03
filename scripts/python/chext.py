@@ -1,4 +1,5 @@
-# $Id: chext.py,v 1.5 2007-12-31 17:53:41 jkrell Exp $
+#! /usr/bin/env python
+# $Id: chext.py,v 1.6 2008-01-03 22:08:52 jkrell Exp $
 
 import glob
 import os

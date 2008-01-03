@@ -1,4 +1,5 @@
-# $Id: do-pkg.py,v 1.8 2007-12-31 17:53:42 jkrell Exp $
+#! /usr/bin/env python
+# $Id: do-pkg.py,v 1.9 2008-01-03 22:08:52 jkrell Exp $
 
 import sys
 import pylib

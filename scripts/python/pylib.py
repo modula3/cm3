@@ -1,4 +1,5 @@
-# $Id: pylib.py,v 1.8 2008-01-01 23:28:14 jkrell Exp $
+#! /usr/bin/env python
+# $Id: pylib.py,v 1.9 2008-01-03 22:08:52 jkrell Exp $
 
 import os
 import os.path
@@ -8,6 +9,8 @@ import platform
 import re
 import tempfile
 
+# print("loading pylib..")
+
 env_OS = os.getenv("OS")
 if env_OS == "Windows_NT":
     def uname():
@@ -16,17 +19,11 @@ if env_OS == "Windows_NT":
 else:
     from os import uname
 
-# Should these be initialized from environment?
-PKGS = [ ]
-PKG_ACTION = ""
-LIST_ONLY = False
-NO_ACTION = False
-KEEP_GOING = False
-
 PackageDB = None
 
 #
 # User can override all these from environment, as in sh.
+# The environment variable names are all UPPERCASE.
 #
 Variables = [
 
@@ -70,11 +67,6 @@ Variables = [
     # True for all but NT386
     #
     "GCC_BACKEND",
-
-    #
-    # link flags particular to Linux
-    #
-    "GCWRAPFLAGS",
 
     # the root if the cm3 install, e.g. /cm3 or /usr/local/cm3
     # This is easily computed by searching for cm3 or cm3.exe
@@ -142,42 +134,48 @@ Variables = [
     #
     "TARGET",
 
-    "BUILDARGS",
-    "CLEANARGS",
-    "SHIPARGS",
+    "BuildArgs",
+    "CleanArgs",
+    "ShipArgs",
 
-    "M3SHIP",
-    "M3BUILD",
+    "M3Ship",
+    "M3Build",
 
-    "BUILDLOCAL",
-    "CLEANLOCAL",
-    "BUILDGLOBAL",
-    "CLEANGLOBAL",
-    "SHIP",
+    "BuildLocal",
+    "CleanLocal",
+    "BuildGlobal",
+    "CleanGlobal",
+    "Ship",
 
-    "CM3_BUILDLOCAL",
-    "CM3_CLEANLOCAL",
-    "CM3_BUILDGLOBAL",
-    "CM3_CLEANGLOBAL",
-    "CM3_SHIP",
+    "CM3_BuildLocal",
+    "CM3_CleanLocal",
+    "CM3_BuildGlobal",
+    "CM3_CleanGlobal",
+    "CM3_Ship",
 
-    "PM3_BUILDLOCAL",
-    "PM3_CLEANLOCAL",
-    "PM3_BUILDGLOBAL",
-    "PM3_CLEANGLOBAL",
-    "PM3_SHIP",
+    "PM3_BuildLocal",
+    "PM3_CleanLocal",
+    "PM3_BuildGlobal",
+    "PM3_CleanGlobal",
+    "PM3_Ship",
 
-    "SRC_BUILDLOCAL",
-    "SRC_CLEANLOCAL",
-    "SRC_BUILDGLOBAL",
-    "SRC_CLEANGLOBAL",
-    "SRC_SHIP",
+    "SRC_BuildLocal",
+    "SRC_CleanLocal",
+    "SRC_BuildGlobal",
+    "SRC_CleanGlobal",
+    "SRC_Ship",
 
-    "REALCLEAN",
-    "IGNORE_MISS",
+    "RealClean",
+    #"IGNORE_MISS",
     "HAVE_TCL",
     "HAVE_SERIAL",
     "OMIT_GCC",
+
+    # whether or not this program should print extra stuff
+    "CM3_Debug",
+
+    # build all packages, generally does not work
+    "CM3_ALL",
 ]
 
 DefaultsFromSh = {
@@ -185,7 +183,7 @@ DefaultsFromSh = {
     "CM3VERSIONNUM" : None,
     "CM3LASTCHANGED" : None,
     }
-    
+
 Variables += DefaultsFromSh.keys()
 
 #
@@ -193,20 +191,20 @@ Variables += DefaultsFromSh.keys()
 #
 b = ""
 for a in Variables:
-    b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a))
+    b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a.upper()))
 exec(b)
+
+# print("pylib: INSTALLROOT is "  + INSTALLROOT)
+# print("pylib: env_INSTALLROOT is " + (os.environ.get("INSTALLROOT") or ""))
 
 for a in DefaultsFromSh.keys():
     DefaultsFromSh[a] = eval(a)
-
-#CM3_DEBUG = 1
-CM3_DEBUG = 0
 
 #-----------------------------------------------------------------------------
 # output functions
 
 def debug(a):
-    if (os.getenv("CM3_DEBUG") or CM3_DEBUG):
+    if (os.getenv("CM3_DEBUG") or CM3_Debug):
         print(a + " is " + eval("str(" + a + ")"))
 
 def header(a):
@@ -276,7 +274,7 @@ def GetDefaultFromSh(Key):
             MissingKey = Item[0]
             File = __file__
             sys.stderr.write("%(File)s: %(MissingKey)s not found in %(ShFilePath)s\n" % vars())
-            
+
     if (MissingKey):
         sys.exit(1)
 
@@ -325,8 +323,8 @@ CM3_INSTALL = (
 debug("CM3_INSTALL")
 
 CM3 = CM3 or ExeName("cm3")
-M3BUILD = M3BUILD or ExeName("m3build")
-M3SHIP = M3SHIP or "m3ship"
+M3Build = M3Build or ExeName("m3build")
+M3Ship = M3Ship or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
 SL = "/" # path slash, forward or backward
 Q = "'"
@@ -358,7 +356,7 @@ def strip_exe(a):
     os.system("strip " + a)
 
 #-----------------------------------------------------------------------------
-# evaluate uname information
+# evaluate uname ermation
 
 #
 # This is all a bit wonky.
@@ -541,146 +539,77 @@ debug("CM3ROOT")
 
 DEFS = "-DROOT=%(Q)s%(CM3ROOT)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
-DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s"
+DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 DEFS = (DEFS % vars())
 
-CM3_BUILDLOCAL = BUILDLOCAL or "%(CM3)s -build -override %(DEFS)s %(BUILDARGS)s"
-CM3_CLEANLOCAL = CLEANLOCAL or "%(CM3)s -clean -build -override %(DEFS)s %(CLEANARGS)s"
-CM3_BUILDGLOBAL = BUILDGLOBAL or "%(CM3)s -build %(DEFS)s %(BUILDARGS)s"
-CM3_CLEANGLOBAL = CLEANGLOBAL or "%(CM3)s -clean %(DEFS)s %(CLEANARGS)s"
-CM3_SHIP = SHIP or "%(CM3)s -ship %(DEFS)s %(CLEANARGS)s"
+if BuildArgs:
+    BuildArgs = " " + BuildArgs
+
+if CleanArgs:
+    CleanArgs = " " + CleanArgs
+
+if ShipArgs:
+    ShipArgs = " " + ShipArgs
+
+CM3_BuildLocal = BuildLocal or "%(CM3)s -build -override %(DEFS)s%(BuildArgs)s"
+CM3_CleanLocal = CleanLocal or "%(CM3)s -clean -build -override %(DEFS)s%(CleanArgs)s"
+CM3_BuildGlobal = BuildGlobal or "%(CM3)s -build %(DEFS)s%(BuildArgs)s"
+CM3_CleanGlobal = CleanGlobal or "%(CM3)s -clean %(DEFS)s%(CleanArgs)s"
+CM3_Ship = Ship or "%(CM3)s -ship %(DEFS)s%(CleanArgs)s"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 
-PM3_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s"
-PM3_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s"
-PM3_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s)s"
-PM3_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s"
-PM3_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s"
+PM3_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
+PM3_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
+PM3_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s %(BuildArgs)s)s"
+PM3_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
+PM3_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 
 # define build and ship programs for DEC SRC Modula-3
 
-SRC_BUILDLOCAL = BUILDLOCAL or "%(M3BUILD)s -O %(DEFS)s %(BUILDARGS)s"
-SRC_CLEANLOCAL = CLEANLOCAL or "%(M3BUILD)s clean -O %(DEFS)s %(CLEANARGS)s"
-SRC_BUILDGLOBAL = BUILDGLOBAL or "%(M3BUILD)s %(DEFS)s %(BUILDARGS)s"
-SRC_CLEANGLOBAL = CLEANGLOBAL or "%(M3BUILD)s clean %(DEFS)s %(CLEANARGS)s"
-SRC_SHIP = SHIP or "%(M3SHIP)s %(DEFS)s %(SHIPARGS)s"
+SRC_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
+SRC_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
+SRC_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s%(BuildArgs)s"
+SRC_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
+SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
 if (os.name == "nt"):
-    REALCLEAN = REALCLEAN or "if exist %(TARGET)s rmdir /q/s %(TARGET)s"
+    RealClean = RealClean or "if exist %(TARGET)s rmdir /q/s %(TARGET)s"
 else:
-    REALCLEAN = REALCLEAN or "rm -rf %(TARGET)s"
+    RealClean = RealClean or "rm -rf %(TARGET)s"
 
-REALCLEAN = (REALCLEAN % vars())
+RealClean = (RealClean % vars())
 
 # choose the compiler to use
 
 if (SearchPath(CM3)):
-    BUILDLOCAL = CM3_BUILDLOCAL
-    CLEANLOCAL = CM3_CLEANLOCAL
-    BUILDGLOBAL = CM3_BUILDGLOBAL
-    CLEANGLOBAL = CM3_CLEANGLOBAL
-    SHIP = CM3_SHIP
-elif (SearchPath(M3BUILD)):
-    BUILDLOCAL = PM3_BUILDLOCAL
-    CLEANLOCAL = PM3_CLEANLOCAL
-    BUILDGLOBAL = PM3_BUILDGLOBAL
-    CLEANGLOBAL = PM3_CLEANGLOBAL
-    SHIP = CM3_SHIP
+    BuildLocal = CM3_BuildLocal
+    CleanLocal = CM3_CleanLocal
+    BuildGlobal = CM3_BuildGlobal
+    CleanGlobal = CM3_CleanGlobal
+    Ship = CM3_Ship
+elif (SearchPath(M3Build)):
+    BuildLocal = PM3_BuildLocal
+    CleanLocal = PM3_CleanLocal
+    BuildGlobal = PM3_BuildGlobal
+    CleanGlobal = PM3_CleanGlobal
+    Ship = CM3_Ship
 else:
-    if (not BUILDLOCAL or not BUILDGLOBAL or not SHIP):
+    if (not BuildLocal or not BuildGlobal or not Ship):
         File = __file__
-        sys.stderr.write("%(File)s: %(CM3)s or %(M3BUILD)s not found in your path, don't know how to compile\n" % vars())
+        sys.stderr.write(
+            "%(File)s: %(CM3)s or %(M3Build)s not found in your path, don't know how to compile\n"
+            % vars())
         sys.exit(1)
 
-BUILDLOCAL = BUILDLOCAL.strip() % vars()
-CLEANLOCAL = CLEANLOCAL.strip() % vars()
-BUILDGLOBAL = BUILDGLOBAL.strip() % vars()
-CLEANGLOBAL = CLEANGLOBAL.strip() % vars()
-SHIP = SHIP.strip() % vars()
-
-def map_action(args):
-    arg = "build"
-    for a in args:
-        if (not a.startswith("-")):
-            arg = a
-            break
-    ACTION = {
-        "build": BUILDLOCAL,
-        "buildlocal": BUILDLOCAL,
-        "buildglobal": (BUILDGLOBAL + " && " + SHIP),
-        "buildship": (BUILDGLOBAL + " && " + SHIP),
-        "ship": SHIP,
-        "clean": CLEANLOCAL,
-        "cleanlocal": CLEANLOCAL,
-        "cleanglobal": CLEANGLOBAL,
-        "realclean": REALCLEAN,
-    }.get(arg)
-    if (not ACTION):
-        if (IGNORE_MISS):
-            ACTION = BUILDLOCAL
-        else:
-            File = __file__
-            sys.stderr.write("%(File)s: unknown action %(arg)s\n" % vars())
-            sys.exit(1)
-    return ACTION
-
-def add_action_opts(args):
-    arg = "build"
-    for a in args:
-        if (not a.startswith("-")):
-            arg = a
-            break
-    ARGS = {
-        "clean": "-k",
-        "cleanlocal": "-k",
-        "cleanglobal": "-k",
-        "realclean": "-k",
-    }.get(arg, "")
-    return ARGS
-
-def extract_options(args):
-    RES = ""
-    for a in args:
-        if (a.startswith("-")):
-            if (RES):
-                RES += " "
-            RES += a
-    return RES
-
-def get_args(args):
-    ARGS = [ ]
-    i = 0
-    j = len(args)
-    while (i != j):
-        if (not args[i].startswith("-")):
-            break
-        i += 1
-    if ((i != j)
-            and (args[i] in {
-                "build": None,
-                "buildlocal": None,
-                "buildglobal": None,
-                "buildship": None,
-                "ship": None,
-                "clean": None,
-                "cleanlocal": None,
-                "cleanglobal": None,
-                "realclean": None,
-            })):
-        i += 1
-    while (i != j):
-        arg = args[i]
-        if (arg.startswith("-")):
-            File = __file__
-            sys.stderr.write("%(File)s: encountered option after command: %(arg)s (%(i)s)\n" % vars())
-        else:
-            ARGS += [arg]
-        i += 1
-    return ARGS
+BuildLocal = BuildLocal.strip() % vars()
+CleanLocal = CleanLocal.strip() % vars()
+BuildGlobal = BuildGlobal.strip() % vars()
+CleanGlobal = CleanGlobal.strip() % vars()
+Ship = Ship.strip() % vars()
 
 def format_one(width, string):
     return ("%-*s" % (width, string))
@@ -785,14 +714,14 @@ def ReadPackageDB():
                 open(PKGSDB)
                 ))
 
-def pkg_defined(a):
+def IsPackageDefined(a):
     ReadPackageDB()
     a = (SL + a)
     for i in PackageDB:
         if i.endswith(a):
             return True
 
-def pkgpath(a):
+def GetPackagePath(a):
     ReadPackageDB()
     b = (SL + a)
     for i in PackageDB:
@@ -802,7 +731,7 @@ def pkgpath(a):
     File = __file__
     sys.stderr.write("%(File)s: package %(a)s not found (%(b)s)\n" % vars())
 
-def listpkgs(pkgs):
+def ListPackages(pkgs):
     ReadPackageDB()
     Result = [ ]
     if pkgs:
@@ -824,176 +753,263 @@ def listpkgs(pkgs):
         Result = PackageDB
     return map(lambda(a): (ROOT + SL + a), Result)
 
-def exec_cmd(PKG):
-    # lame temporary
-    global PKG_ACTION, NO_ACTION
-    print(" +++ %s +++" % PKG_ACTION)
-    if (NO_ACTION):
+def _Run(NoAction, Actions, PackageDirectory):
+
+    print(" +++ %s +++" % Actions)
+
+    if (NoAction):
         return 0
 
     PreviousDirectory = os.getcwd()
-    os.chdir(PKG)
+    os.chdir(PackageDirectory)
 
-    Result = os.system(PKG_ACTION)
+    for a in Actions:
+        Result = os.system(a)
+        if (Result != 0):
+            break
 
     os.chdir(PreviousDirectory)
     return Result
 
-def pkgmap(args):
-    # Which of these should be primed from the environment?
-    global PKGS, PKG_ACTION, LIST_ONLY, NO_ACTION, KEEP_GOING, ACTION
-    PKGS = [ ]
-    PKG_ACTION = ""
-    LIST_ONLY = False
-    NO_ACTION = False
-    KEEP_GOING = False
-    i = 0
-    j = len(args)
-    while (i != j):
-        arg = args[i]
-        while (True):
-            if (arg == ""):
-                break
-            if (arg == "-k"):
-                KEEP_GOING = True
-                break
-            if (arg == "-n"):
-                NO_ACTION = True
-                break
-            if (arg == "-l"):
-                LIST_ONLY = True
-                break
-            if (arg == "-c"):
-                i += 1
-                if (i == j):
-                    File = __file__
-                    sys.stderr.write("%(File)s: missing parameter to -c\n" % vars())
-                    sys.exit(1)
-                    #return False
-                if (PKG_ACTION):
-                    PKG_ACTION += " ; "
-                PKG_ACTION += args[i]
-                break
-            p = os.path.join(ROOT, arg)
+ActionInfo = {
+    "build":
+    {
+        "Commands": [BuildLocal],
+    },
+    "buildlocal":
+    {
+        "Commands": [BuildLocal],
+    },
+    "buildglobal":
+    {
+        "Commands": [BuildGlobal, Ship],
+    },
+    "buildship":
+    {
+        "Commands": [BuildGlobal, Ship],
+    },
+    "ship":
+    {
+        "Commands": [Ship],
+    },
+    "clean":
+    {
+        "Commands": [CleanLocal],
+        "KeepGoing": True,
+    },
+    "cleanlocal":
+    {
+        "Commands": [CleanLocal],
+        "KeepGoing": True,
+    },
+    "cleanglobal":
+    {
+        "Commands": [CleanGlobal],
+        "KeepGoing": True,
+    },
+    "realclean":
+    {
+        "Commands": [RealClean],
+        "KeepGoing": True,
+    },
+}
 
-            #print("ROOT is " + ROOT)
-            #print("p is " + p)
+def _FilterPackage(Package):
+    PackageConditions = {
+        "m3gdb":
+            (M3GDB or CM3_GDB) and
+            {"FreeBSD4": True,
+            "LINUXLIBC6" : True,
+            "SOLgnu" : True,
+            "NetBSD2_i386" : True
+            }.get(TARGET, False),
 
-            if (os.path.isdir(p)):
-                #print("1 %(p)s" % vars())
-                PKGS.append(p)
-                break
-            if (os.path.isdir(arg)):
-                #print("2 %(arg)s" % vars())
-                PKGS.append(arg)
-                break
-            #print("arg is " + arg)
+        "m3objfile": CM3_ALL or M3OSTYPE == "WIN32",
+        "mklib": CM3_ALL or M3OSTYPE == "WIN32",
+        "dll2lib": CM3_ALL or M3OSTYPE == "WIN32",
+        "fix_nl": CM3_ALL or M3OSTYPE == "WIN32",
+        "libdump": CM3_ALL or M3OSTYPE == "WIN32",
+        "import-libs": CM3_ALL or M3OSTYPE == "WIN32",
 
-            #print("p is " + p)
+        "tcl": CM3_ALL or HAVE_TCL,
+        "udp": CM3_ALL or M3OSTYPE == "POSIX",
+        "tapi": CM3_ALL or M3OSTYPE == "POSIX",
+        "serial": CM3_ALL or HAVE_SERIAL,
 
-            p = pkgpath(arg)
-            if (not p):
-                File = __file__
-                sys.stderr.write("%(File)s *** cannot find package %(arg)s\n" % vars())
-                sys.exit(1)
-            if (os.path.isdir(p)):
-                #print("3 %(p)s" % vars())
-                PKGS.append(p)
-                break
-            p = os.path.join(ROOT, p)
-            if (os.path.isdir(p)):
-                #print("4 %(p)s" % vars())
-                PKGS.append(p)
-                break
-            File = __file__
-            sys.stderr.write("%(File)s *** cannot find package %(arg)s / %(p)s\n" % vars())
+        "X11R4": CM3_ALL or M3OSTYPE != "WIN32",
+        "showthread": CM3_ALL or M3OSTYPE != "WIN32",
+        "pkl-fonts": CM3_ALL or M3OSTYPE != "WIN32",
+        "juno-machine": CM3_ALL or M3OSTYPE != "WIN32",
+        "juno-compiler": CM3_ALL or M3OSTYPE != "WIN32",
+        "juno-app": CM3_ALL or M3OSTYPE != "WIN32",
+
+        "m3back": not GCC_BACKEND,
+        "m3staloneback": not GCC_BACKEND,
+        "m3cc": GCC_BACKEND and not OMIT_GCC,
+    }
+    return PackageConditions.get(Package, True)
+
+def _FilterPackages(Packages):
+    Packages = filter(_FilterPackage, Packages)
+    return Packages
+
+def do_pkg(args, PackagesFromCaller = None):
+
+    if PackagesFromCaller:
+        PackagesFromCaller = _FilterPackages(PackagesFromCaller)
+
+    if PackagesFromCaller:
+        Usage = \
+"""
+%(BaseName)s [ GenericOptions ] [ GenericCommand ]
+
+  will apply the given symbolic command to the following %(N)s packages:
+
+%(PackagesFromCaller)s
+
+GenericOptions:
+%(GenericOptions)s
+
+GenericCommand:
+%(GenericCommands)s"""
+    else:
+        Usage = \
+"""
+%(BaseName)s [ GenericOptions ] [ GenericCommand ] pkg+
+
+will apply the given symbolic command to one or more CM3 packages.
+
+GenericOptions:
+%(GenericOptions)s
+
+GenericCommand:
+%(GenericCommands)s"""
+
+    show_usage(
+        args,
+        Usage,
+        PackagesFromCaller,
+        )
+
+    if (not PackagesFromCaller and not args[1:]):
+        print("no actions and no packages specified\n")
+        sys.stdout.flush()
+        sys.exit(1)
+
+    PackagesFromCommandLine = []
+    ActionCommands = []
+    Packages = None
+    ListOnly = False
+    KeepGoing = False
+    NoAction = False
+    for arg in args[1:]:
+        if (arg.startswith("-")):
+            if arg == "-l":
+                ListOnly = True
+            elif arg == "-k":
+                KeepGoing = True
+            elif arg == "-n":
+                NoAction = True
+            else:
+                ExtraArgs += arg
+        else:
+            if not ActionCommands:
+                Action = ActionInfo.get(arg)
+                if Action:
+                    ActionCommands = Action["Commands"]
+                    KeepGoing = Action.get("KeepGoing", False)
+                else:
+                    PackagesFromCommandLine.append(arg)
+            else:
+                PackagesFromCommandLine.append(arg)
+ 
+    if not ActionCommands:
+        if not PackagesFromCaller:
+            ActionCommands = ActionInfo["build"]["Commands"]
+        else:
+            print("no actions specified " + args[0])
+            sys.stdout.flush()
             sys.exit(1)
-        i += 1
 
-    if (not PKG_ACTION):
+    if PackagesFromCaller:
+        if PackagesFromCommandLine:
+            print("cannot specify packages on command line with " + args[0])
+            sys.stdout.flush()
+            sys.exit(1)
+        Packages = PackagesFromCaller
+    else: # not PackagesFromCaller:
+        if not PackagesFromCommandLine:
+            print("no packages specified " + args[0])
+            sys.stdout.flush()
+            sys.exit(1)
+        Packages = PackagesFromCommandLine
+
+    PackageDirectories = [ ]
+
+    for p in Packages:
+
+        q = p
+        if (os.path.isdir(q)):
+            PackageDirectories.append(q)
+            continue
+
+        q = os.path.join(ROOT, p)
+        if (os.path.isdir(q)):
+            PackageDirectories.append(q)
+            continue
+
+        q = GetPackagePath(p)
+        if (not q):
+            File = __file__
+            sys.stderr.write("%(File)s *** cannot find package %(p)s\n" % vars())
+            sys.exit(1)
+
+        if (os.path.isdir(q)):
+            PackageDirectories.append(q)
+            continue
+
+        q = os.path.join(ROOT, q)
+        if (os.path.isdir(q)):
+            PackageDirectories.append(q)
+            continue
+
         File = __file__
-        sys.stderr.write("%(File)s: no PKG_ACTION defined, aborting\n" % vars())
+        sys.stderr.write("%(File)s *** cannot find package %(p)s / %(q)s\n" % vars())
+        sys.exit(1)
+
+    if (not ActionCommands):
+        File = __file__
+        sys.stderr.write("%(File)s: no action defined, aborting\n" % vars())
         sys.exit(1)
         #return False
 
-    if (not PKGS):
+    if (not PackageDirectories):
         File = __file__
         sys.stderr.write("%(File)s: no packages\n" % vars())
         sys.exit(1)
         #return False
 
-    if (LIST_ONLY):
-        listpkgs(PKGS)
+    if (ListOnly):
+        ListPackage(PackageDirectories)
         sys.exit(0)
         #return True
 
     Success = True
 
-    for PKG in PKGS:
-        print("== package %(PKG)s ==" % vars())
-        res = exec_cmd(PKG)
-        if (res != 0):
+    for p in PackageDirectories:
+        print("== package %(p)s ==" % vars())
+        ExitCode = _Run(NoAction, ActionCommands, p)
+        if (ExitCode != 0):
             Success = False
-            if (not KEEP_GOING):
-                print(" *** execution of %s failed ***" % (ACTION))
+            if (not KeepGoing):
+                print(" *** execution of %s failed ***" % (str(ActionCommands)))
                 sys.exit(1)
-        if (KEEP_GOING):
-            print(" ==> %s returned %s" % (PKG_ACTION, res))
+        if (KeepGoing):
+            print(" ==> %s returned %s" % (str(ActionCommands), ExitCode))
         else:
-            print(" ==> %(PKG)s done" % vars())
+            print(" ==> %(p)s done" % vars())
 
     return Success
-
-def do_pkg(args, P = None):
-
-    if (P):
-        USAGE = \
-"""
-%(basename)s [ generic_options ] [ generic_cmd ]
-
-  will apply the given symbolic command to the following %(N)s packages:
-
-%(P)s
-
-generic_options:
-%(GEN_OPTS)s
-
-generic_cmd:
-%(GEN_CMDS)s"""
-    else:
-        USAGE = \
-"""
-%(basename)s [ generic_options ] [ generic_cmd ] pkg+
-
-will apply the given symbolic command to one or more CM3 packages.
-
-generic_options:
-%(GEN_OPTS)s
-
-generic_cmd:
-%(GEN_CMDS)s"""
-
-    show_usage(
-        args,
-        USAGE,
-        P,
-        )
-
-    OPTIONS = extract_options(args[1:])
-    global IGNORE_MISS, ACTION
-    if (not P):
-        IGNORE_MISS = True
-    ACTION = map_action(args[1:])
-    ADDARGS = add_action_opts(args[1:])
-    if (not P):
-        P = get_args(args[1:])
-
-    a = ("pkgmap %s %s -c \"%s\" %s" % (OPTIONS, ADDARGS, ACTION, P))
-    a = a.replace("  ", " ")
-    a = a.replace("  ", " ")
-    print(a)
-
-    return pkgmap([OPTIONS, ADDARGS, "-c", ACTION] + P)
 
 if __name__ == "__main__":
     #
