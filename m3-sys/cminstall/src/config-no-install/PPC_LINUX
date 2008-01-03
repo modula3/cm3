@@ -91,8 +91,8 @@ SYSTEM_LIBS = {
 
   "FLEX-BISON" : [ "libfl.a" ],
 
-% not present
-% "POSTGRES95" : [ "-lpq" ],
+% not present by default, but this is the default install location
+  "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
 
   "OPENGL" : [
     "-L/usr/lib",
@@ -188,6 +188,31 @@ proc assemble (source, object) is
   return try_exec ("@" & SYSTEM_ASM, source, "-o", object)
 end
 
+GcWrapFlags = ""
+GcWrapFlagsSet = FALSE
+
+proc file_exists(a) is
+    return not stale(a, a)
+end
+
+proc GetGcWrapFlags() is
+    if not GcWrapFlagsSet
+        % To be expanded as versions are found that need them.
+        % Testing the result of try_exec is not working..
+        NeedsGcWrapFlags = "NeedsGcWrapFlags"
+        delete_file(NeedsGcWrapFlags)
+        local ExitCode = try_exec("-@cm3 -version | grep -F 5.2.6 > /dev/null && echo > " & NeedsGcWrapFlags)
+        if (file_exists(NeedsGcWrapFlags))
+            delete_file(NeedsGcWrapFlags)
+            GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+         end
+        GcWrapFlagsSet = TRUE
+    end
+    return GcWrapFlags
+end
+
+% error("GcWrapFlags is " & GetGcWrapFlags() & CR)
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -208,7 +233,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     if M3_PROFILING
       pg = "-pg"
     end
-    ret_code = try_exec ("@" & SYSTEM_CC, pg, "-shared " &
+    ret_code = try_exec ("@" & SYSTEM_CC, pg, "-shared " & GetGcWrapFlags() &
                          "-Wl,-soname," & lib_sox,
                          "-o", lib_sox, objects)
     if not equal (ret_code, 0) return ret_code end
@@ -264,7 +289,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     args += "-pg"
   end
   args += [ "-o", prog, options, objects, imported_libs ]
-  return try_exec ("@" & SYSTEM_CC, args)
+  return try_exec ("@" & SYSTEM_CC, args, GetGcWrapFlags())
 end
 
 %-------------------------------------------------------------------
