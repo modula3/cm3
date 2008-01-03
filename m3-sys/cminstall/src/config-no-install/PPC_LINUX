@@ -44,7 +44,7 @@ end
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-INSTALL_ROOT = path() & "/../bin"
+INSTALL_ROOT = path() & "/.."
 
 BIN_INSTALL   = path()                      % executables
 if M3_PROFILING 
