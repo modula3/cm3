@@ -137,7 +137,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lm" ],
+  "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lm", "-lpthread" ],
 % "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
 %                      11 "libl.so"
@@ -292,7 +292,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fpic", options ]
+  local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -317,7 +317,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
   local lib_sox  = format ("lib%s.so.5", lib)
-  local lib_soxx = format ("lib%s.so.5.1", lib)
+  local lib_soxx = format ("lib%s.so.5.5", lib)
 
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
@@ -381,15 +381,14 @@ end
 %---  "-pdb:none" enables the use of windbg with the resulting executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
+  local linker = [ "@" & SYSTEM_CC, "-pthread", "-fPIC" ]
   local args = []
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, options, objects, imported_libs ]
   if shared
-    return try_exec ("@" & SYSTEM_CC, args)
+    return try_exec (linker, args)
   else
-    return try_exec ("@" & SYSTEM_CC, "-static", args)
-    %%% -- see M3_NEED_STANDALONE_LINKS  below
-    %%%return try_exec ("@" & SYSTEM_CC, args)
+    return try_exec (linker, "-Xlinker", "-dy", "-Xlinker", "-Bstatic", args)
   end
 end
 
