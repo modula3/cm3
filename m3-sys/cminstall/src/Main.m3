@@ -49,6 +49,8 @@ VAR
   cminstall_root    : TEXT := NIL;
   gzip              : TEXT (* = OS.MakePath (cminstall_root, GZIP_EXE) *);
   tar               : TEXT (* = OS.MakePath (cminstall_root, TAR_EXE) *);
+  interactive       : BOOLEAN := FALSE;
+  dumpConfig        : BOOLEAN := FALSE;
 
 PROCEDURE DoIt () =
   BEGIN
@@ -66,10 +68,9 @@ PROCEDURE DoIt () =
     Out ("If this is not correct, please restart the installer with");
     Out ("-root <directory-of-installer-and-system-archive>");
     Out ();
-    Out ("The installer will ask you some questions about the locations",
-         " of programs");
-    Out ("and libraries. Usually it will display a default inside [],",
-         " which can be");
+    Out ("If the installer runs interactively, it will ask you some questions");
+    Out ("about the locations of programs and libraries.");
+    Out ("Usually it will display a default inside [], which can be");
     Out ("accepted with <Enter>.");
     Out ("If the installer has found several choices, you may cycle through",
          " them");
@@ -101,8 +102,10 @@ PROCEDURE DoIt () =
     (* get the install directory *)
     LOOP
       Out ();
-      install_root := Ask ("Where would you like the system installed?",
-                            DefaultInstallDir);
+      IF interactive THEN
+        install_root := Ask ("Where would you like the system installed?",
+                              DefaultInstallDir);
+      END;
       install_root := OS.CleanDirName (install_root);
       Msg.Debug ("install_root => ", install_root);
 
@@ -121,7 +124,8 @@ PROCEDURE DoIt () =
              " megabytes of space");
         Out ("in that directory.  CM3 requires about ",
              Fmt.Int (MinDiskSpace), "MB of disk space.");
-        IF AskBool ("Do you want to use this directory anyway?", "N") THEN
+        IF interactive AND
+          AskBool ("Do you want to use this directory anyway?", "N") THEN
           EXIT;
         END;
       END;
@@ -135,6 +139,12 @@ PROCEDURE DoIt () =
     (* process the cfg prototype *)
     Msg.Debug ("processsing config script");
     initial_cfg := GenConfig ();
+
+    IF dumpConfig THEN
+      Msg.Quiet := FALSE;
+      Out (initial_cfg);
+      Process.Exit(0);
+    END;
 
     (* install the new cm3.cfg file before unpacking in case it chokes *)
     EVAL OS.MakeDir (Pathname.Prefix (cm3_cfg));
@@ -248,18 +258,66 @@ PROCEDURE ParseParams () =
   BEGIN
     WHILE (i < Params.Count) DO
       arg := Params.Get (i);  INC (i);
-      IF Text.Equal (arg, "-debug") THEN
+      IF Text.Equal (arg, "-debug") OR
+         Text.Equal (arg, "-d") THEN
         Msg.Debugging := TRUE;
       ELSIF Text.Equal (arg, "-root") THEN
         IF (i >= Params.Count) THEN
           Msg.Error (NIL, "Missing directory for \"-root <dir>\" option");
         END;
         cminstall_root := Params.Get (i);  INC (i);
-      ELSE
+      ELSIF Text.Equal (arg, "-interactive") OR 
+            Text.Equal (arg, "-i") THEN
+        interactive := TRUE;
+      ELSIF Text.Equal (arg, "-help") OR 
+            Text.Equal (arg, "-h") THEN
+        Out("");
+        Out("cminstall [<opts>] [-root <installfrom>] [installroot]");
+        Out("");
+        Out("  <opts> ::= -debug       | -d");
+        Out("          |  -quiet       | -q");
+        Out("          |  -interactive | -i");
+        Out("          |  -dumpcfg     | -c");
+        Out("          |  -help        | -h");
+        Out("");
+        Out("  will try to install CM3 from the given <installfrom>, if any.");
+        Out("  The default installation location is ", DefaultInstallDir, ".");
+        Out("");
+        Out("  -interactive or -i will make the installer ask several questions.");
+        Out("");
+        Out("  -debug will output some debugging information during the installation.");
+        Out("    This should rarely be of interest to the end user.");
+        Out("");
+        Out("  -quiet or -q will suppress output except for warnings and errors.");
+        Out("");
+        Out("  -dumpcfg or -c will print the resulting config file to stdout.");
+        Out("");
+        Out("Contact m3-support@elegosoft.com or m3devel@elegosoft.com in case of problems.");
+        Out("");
+        Process.Exit(0);        
+      ELSIF Text.Equal (arg, "-quiet") OR 
+            Text.Equal (arg, "-q") THEN
+        Msg.Quiet := TRUE;
+        interactive := FALSE;
+      ELSIF Text.Equal (arg, "-dumpcfg") OR 
+            Text.Equal (arg, "-c") THEN
+        dumpConfig := TRUE;
+        Msg.Quiet := TRUE;
+        interactive := FALSE;
+      ELSIF Text.GetChar (arg, 0) = '-'THEN 
         Msg.Error (NIL, "Unrecognized option: ", arg);
+      ELSE
+        IF install_root = NIL THEN
+          install_root := arg;
+        ELSE
+          Msg.Error (NIL, "Unrecognized argument: ", arg);
+        END;
       END;
     END;
 
+    IF install_root = NIL THEN
+      install_root := DefaultInstallDir;
+    END;
     IF (cminstall_root = NIL) THEN
       (* use the directory containing this executable *)
       cminstall_root := Pathname.Prefix (Params.Get (0));
@@ -348,7 +406,7 @@ PROCEDURE GenConfig (): TEXT =
 
       kind := Kind.Any;  lib_files := NIL;
       WHILE (scan.token = TK.Cardinal) DO
-        confirm := TRUE;
+        confirm := interactive;
         result := NIL;
 
         rule := scan.cardinal;
@@ -598,7 +656,12 @@ PROCEDURE GenConfig (): TEXT =
         END; (* LOOP *)
         Out ();
         result := v0;
+      ELSIF NOT interactive THEN
+        IF choices.size() > 0 THEN
+          result := choices.get(0);
+        END;
       END;
+      Out("  --> ", Text2.EscapeString (result));
       Wr.PutText (wr, Text2.EscapeString (result));
 
       (* skip to the end of the config section *)
