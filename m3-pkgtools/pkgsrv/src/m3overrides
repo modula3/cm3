@@ -1,5 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("netobj", ROOT & "/m3-comm")
-override ("tcp", ROOT & "/m3-comm")
-override ("pkgobj", ROOT & "/m3-pkgtools")
-override ("smalldb", ROOT & "/m3-db")
