@@ -305,15 +305,13 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % build the shared library
-    if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared " & GCWRAPFLAGS & 
-                           "-Wl,-soname," & lib_sox,
-                           "-o", lib_sox, objects)
-    else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared " & GCWRAPFLAGS & 
-                           "-Wl,-soname," & lib_sox,
-                           "-o", lib_sox, objects)
+    pg = ""
+    if M3_PROFILING
+      pg = "-pg"
     end
+    ret_code = try_exec ("@" & SYSTEM_CC, pg, "-shared " & GCWRAPFLAGS &
+                         "-Wl,-soname," & lib_sox,
+                         "-o", lib_sox, objects)
     if not equal (ret_code, 0) return ret_code end
 
     % create the version aliases
@@ -360,15 +358,14 @@ end
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
-  if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, options, objects, imported_libs ]
-  if shared
-    return try_exec ("@" & SYSTEM_CC, args, GCWRAPFLAGS)
-  else
-    return try_exec ("@" & SYSTEM_CC, "-static", args, GCWRAPFLAGS)
-    %%% -- see M3_NEED_STANDALONE_LINKS  below
-    %%%return try_exec ("@" & SYSTEM_CC, args)
+  if not shared
+    args += "-static"
   end
+  if M3_PROFILING
+    args += "-pg"
+  end
+  args += [ "-o", prog, options, objects, imported_libs ]
+  return try_exec ("@" & SYSTEM_CC, args, GCWRAPFLAGS)
 end
 
 %-------------------------------------------------------------------
