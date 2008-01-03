@@ -5,7 +5,9 @@ INTERFACE Msg;
 
 IMPORT AtomList, TextSeq;
 
-VAR Debugging := FALSE;
+VAR
+  Debugging := FALSE;
+  Quiet := FALSE;
 
 PROCEDURE AskBool   (question, default: TEXT): BOOLEAN;
 PROCEDURE Ask       (question, default: TEXT; suf : TEXT := NIL): TEXT;
