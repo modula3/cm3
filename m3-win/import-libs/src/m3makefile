@@ -85,7 +85,7 @@ foreach File in Files
     deriveds(File, [ ".obj", ".c", ".cpp", ".def", ".lib", ".dll", ".drv", ".exp", ".m3x" ])
 end
 deriveds("", [".M3WEB"])
-if equal(M3_MODE, "clean")
+if equal(M3_MODE, "clean") or not equal(TARGET, "NT386")
     % neuter the data rather than indent the whole rest of the file
     Files = { }
 end
