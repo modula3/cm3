@@ -86,10 +86,10 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ ],
+  "LIBC"       : ["-lm" ],
 % "LEX-YACC"   : [ BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
-%                      11 "libl.a"
+%                      11 "libl.dylib"
 %                      12 "/usr/lib"
 %                      12 "/usr/local/lib"
 %                      12 "/usr/local/gnu/lib"
@@ -97,7 +97,7 @@ SYSTEM_LIBS = {
 %                  END_CONFIG, "-ll" ],
   "FLEX-BISON" : [ BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
-                       11 "libfl.a"
+                       11 "libfl.dylib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
@@ -105,17 +105,18 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lfl" ],
   "POSTGRES95" : [ BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
-                       11 "libpq.a"
+                       11 "libpq.dylib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
+                       12 "/sw/lib"
                        13 "/usr/local/pgsql/lib"
                    END_CONFIG, "-lpq" ],
   "OPENGL"     : [ BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
-                       11 "libGLU.a"
-                       11 "libGL.a"
+                       11 "libGLU.dylib"
+                       11 "libGL.dylib"
                        12 "/usr/X11R6/lib"
                        12 "/usr/X11/lib"
                        12 "/usr/lib"
@@ -125,17 +126,16 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
                      "Where are the ODBC libraries?"
-                       11 "libiodbc.a"
+                       11 "libiodbc.dylib"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        13 "/usr/local/lib"
                    END_CONFIG, "-liodbc", "-liodbcinst" ],
-% FIXME: What is this?  PKG_USE & "/pgodbc/FreeBSD3/libpgodbc.a" ],
   "MOTIF"      : [ BEGIN_CONFIG
                      "Where are the Motif libraries?"
-                       11 "libXm.a"
+                       11 "libXm.dylib"
                        12 "/usr/X11R6/lib"
                        12 "/usr/X11/lib"
                        12 "/usr/lib"
@@ -145,13 +145,13 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lXm" ],
   "X11"        : [ BEGIN_CONFIG
                      "Where are the X11 libraries?"
-                       11 "libXaw.a"
-                       11 "libXmu.a"
-                       11 "libXext.a"
-                       11 "libXt.a"
-                       11 "libSM.a"
-                       11 "libICE.a"
-                       11 "libX11.a"
+                       11 "libXaw.dylib"
+                       11 "libXmu.dylib"
+                       11 "libXext.dylib"
+                       11 "libXt.dylib"
+                       11 "libSM.dylib"
+                       11 "libICE.dylib"
+                       11 "libX11.dylib"
                        12 "/usr/X11R6/lib"
                        12 "/usr/X11/lib"
                        12 "/usr/lib"
