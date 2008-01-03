@@ -298,6 +298,7 @@ Packages = [
     "m3back",
     "m3staloneback",
     "m3objfile",
+    "m3cc",
     "cm3",
     ]
 
