@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 # $Id$
 
 import sys
@@ -7,7 +8,7 @@ from pylib import *
 # As well, it might be reasonable for the m3makefiles to do the
 # tests to build or not. That greatly simplifies here.
 
-P = [
+do_pkg(sys.argv, [
     "m3core",
     "libm3",
     "m3middle",
@@ -16,21 +17,12 @@ P = [
     "m3tools",
     "m3cgcat",
     "m3cggen",
-    ]
-if (M3GDB):
-	P += ["m3gdb"]
-
-P += ["m3bundle"]
-
-if (M3OSTYPE == "WIN32"):
-	P += [
-        "mklib",
-        "dll2lib",
-        "fix_nl",
-        "libdump"
-	]
-
-P += [
+	"m3gdb",
+    "m3bundle",
+    "mklib",
+    "dll2lib",
+    "fix_nl",
+    "libdump",
     "bitvector",
     "digraph",
     "parseparams",
@@ -40,17 +32,8 @@ P += [
     "sortedtableextras",
     "table-list",
     "tempfiles",
-    ]
-
-if (HAVE_TCL):
-    P += ["tcl"]
-
-P += ["tcp"]
-
-if (M3OSTYPE == "WIN32"):
-    P += ["tapi"]
-
-if (HAVE_SERIAL):	
-    P += ["serial"]
-
-do_pkg(sys.argv, P)
+    "tcl",
+    "tcp",
+    "tapi",
+    "serial",
+    ])
