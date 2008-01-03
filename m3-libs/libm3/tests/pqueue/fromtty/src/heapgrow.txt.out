@@ -1,0 +1,49 @@
+> showheap
+LAST(pq.heap^) = 0; pq.sz = 0
+pq.heap = Elts{NIL}
+> i z
+"z" => 1
+> showheap
+LAST(pq.heap^) = 1; pq.sz = 1
+pq.heap = Elts{NIL, "z"}
+> i y
+"y" => 2
+> showheap
+LAST(pq.heap^) = 3; pq.sz = 2
+pq.heap = Elts{NIL, "y", "z", NIL}
+> i w
+"w" => 3
+> showheap
+LAST(pq.heap^) = 3; pq.sz = 3
+pq.heap = Elts{NIL, "w", "z", "y"}
+> i x
+"x" => 4
+> showheap
+LAST(pq.heap^) = 7; pq.sz = 4
+pq.heap = Elts{NIL, "w", "x", "y", "z", NIL (X3)}
+> i g
+"g" => 5
+> showheap
+LAST(pq.heap^) = 7; pq.sz = 5
+pq.heap = Elts{NIL, "g", "w", "y", "z", "x", NIL (X2)}
+> i f
+"f" => 6
+> showheap
+LAST(pq.heap^) = 7; pq.sz = 6
+pq.heap = Elts{NIL, "f", "w", "g", "z", "x", "y", NIL}
+> i e
+"e" => 7
+> showheap
+LAST(pq.heap^) = 7; pq.sz = 7
+pq.heap = Elts{NIL, "e", "w", "f", "z", "x", "y", "g"}
+> i d
+"d" => 8
+> showheap
+LAST(pq.heap^) = 15; pq.sz = 8
+pq.heap = Elts{NIL, "d", "e", "f", "w", "x", "y", "g", "z", NIL (X7)}
+> i c
+"c" => 9
+> showheap
+LAST(pq.heap^) = 15; pq.sz = 9
+pq.heap = Elts{NIL, "c", "d", "f", "e", "x", "y", "g", "z", "w", NIL (X6)}
+> ^D

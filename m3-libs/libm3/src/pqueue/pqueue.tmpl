@@ -1,0 +1,25 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Sep 16 19:19:07 PDT 1994 by heydon
+%      modified on Fri Aug 27 08:18:15 PDT 1993 by kalsow
+
+% Quake function to instantiate a generic priority queue named "nmPQ"
+% with priorities of type "elt.T".
+
+readonly proc _build_pqueue(nm, elt, vis) is
+  local pq  = nm & "PQ"
+  local rep = pq & "Rep"
+  build_generic_intf (pq,  "PQueue",    [elt],         vis)
+  build_generic_intf (rep, "PQueueRep", [pq],          vis)
+  build_generic_impl (pq,  "PQueue",    [elt, pq, rep])
+end
+
+readonly proc pqueue (nm, elt) is
+  _build_pqueue(nm, elt, HIDDEN)
+end
+
+readonly proc Pqueue (nm, elt) is
+  _build_pqueue(nm, elt, VISIBLE)
+end

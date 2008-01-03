@@ -1,0 +1,19 @@
+/* Copyright (C) 1994, Digital Equipment Corporation        */
+/* All rights reserved.                                     */
+/* See the file COPYRIGHT for a full description.           */
+/* Last modified on Wed May 29 14:09:05 PDT 1996 by mcjones */
+
+import("lecterndoc")
+import("mtex") /* for manpage */
+
+module("TimeHTML")
+module("HTML")
+interface("FSPosix") /* merge into os package? */
+implementation("FSPosixExtras")
+sequence("HTML", "HTML")
+sequence("TimeHTML", "TimeHTML")
+array_sort("TimeHTML", "TimeHTML")
+implementation("LecternToHTML")
+
+Program("LecternToHTML")
+Mtex("LecternToHTML", 1) /* manpage */

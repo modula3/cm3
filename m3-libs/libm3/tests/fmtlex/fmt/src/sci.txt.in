@@ -1,0 +1,57 @@
+# Last modified on Wed Mar 16 17:02:35 PST 1994 by heydon
+
+# This file tests formating of floating-point numbers with the "Fmt.Sci"
+# style. This file always requests a precision at least the number of digits
+# after the decimal, so it does not test the rounding functionality of the
+# "Fmt" implementation; see the test file "round.txt.in" for those tests.
+
+# Set the rounding mode for the rest of this test file (for lexing only)
+m NearestElseEven
+
+# zero precision (whole numbers)
+
+r S 0 -5e-10	# "-5e-10",  "-5.0e-10"
+r S 0 1e-1	# " 1e-01",  " 1.0e-01"
+r S 0 -2	# "-2e+00",  "-2.0e+00"
+r S 0 3e1	# " 3e+01",  " 3.0e+01"
+r S 0 8e10	# " 8e+10",  " 8.0e+10"
+l S 0 -5e-10	# "-5e-010", "-5.0d-010"
+l S 0 1e-1	# " 1e-001", " 1.0d-001"
+l S 0 -2	# "-2e+000", "-2.0d+000"
+l S 0 3e1	# " 3e+001", " 3.0d+001"
+l S 0 8e10	# " 8e+010", " 8.0d+010"
+e S 0 -5e-10	# "-5e-010", "-5.0x-010"
+e S 0 1e-1	# " 1e-001", " 1.0x-001"
+e S 0 -2	# "-2e+000", "-2.0x+000"
+e S 0 3e1	# " 3e+001", " 3.0x+001"
+e S 0 8e10	# " 8e+010", " 8.0x+010"
+
+# non-zero precision
+
+r S 1 -5e-10	# "-5.0e-10",  	ditto
+r S 2 -5e-10	# "-5.00e-10", 	ditto
+r S 2 2.1e2	# " 2.10e+02",  ditto
+r S 2 3.68e2	# " 3.68e+02",  ditto
+r S 2 9.99e1    # " 9.99e+01",  ditto
+l S 1 -5e-10	# "-5.0e-010", 	ditto (e->d)
+l S 2 -5e-10	# "-5.00e-010",	ditto (e->d)
+l S 2 2.1e2	# " 2.10e+002", ditto (e->d)
+l S 2 3.68e2	# " 3.68e+002", ditto (e->d)
+l S 2 9.99e1    # " 9.99e+001", ditto (e->d)
+e S 1 -5e-10	# "-5.0e-010", 	ditto (e->x)
+e S 2 -5e-10	# "-5.00e-010",	ditto (e->x)
+e S 2 2.1e2	# " 2.10e+002", ditto (e->x)
+e S 2 3.68e2	# " 3.68e+002", ditto (e->x)
+e S 2 9.99e1    # " 9.99e+001", ditto (e->x)
+
+# large precision
+
+r S 20 2.56e3	# " 2.56000000000000000000e+03",  ditto
+r S 21 2.56e-3	# " 2.560000000000000000000e-03", ditto
+r S 40 2.56e3	# " 2.5600000000000000000000000000000000000000e+03",  ditto
+r S 41 2.56e3	# " 2.56000000000000000000000000000000000000000e+03", ditto
+l S 20 2.56e3	# " 2.56000000000000000000e+003",  ditto (e->d)
+l S 21 2.56e-3	# " 2.560000000000000000000e-003", ditto (e->d)
+l S 30 2.56e3	# " 2.560000000000000000000000000000e+003",  ditto (e->d)
+l S 31 2.56e3	# " 2.5600000000000000000000000000000e+003", ditto (e->d)
+

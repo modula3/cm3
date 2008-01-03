@@ -1,0 +1,119 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Jan  9 12:17:21 PST 1995 by najork                   *)
+(*      modified on Wed Oct 13 17:34:18 PDT 1993 by mann                     *)
+(*      modified on Mon Jul 19 11:33:20 PDT 1993 by perl                     *)
+
+(* Zeus event for the Wheeler Block sorting algorithm *)
+
+IMPORT TextConv, MiscFmt;
+
+OUTPUT StartPermute(string, alphabet: TEXT[TextConv.Encode]);
+(* Start of first phase of compression, in which we permute the
+   original string *)
+
+OUTPUT NextRotation(i: INTEGER[Fmt.Int]; string: TEXT[TextConv.Encode]);
+(* Forming the matrix of rotations.  The ith row of the matrix is string.
+   The 0th row does cause an event, with string equal to the initial string.
+*)
+
+OUTPUT RotationsSorted(rotations: MiscFmt.RefTextArray[MiscFmt.TextArray];
+                       rowIndex: INTEGER[Fmt.Int]);
+(* The matrix of rotations, in sorted order; rowIndex is the index
+   where the original string landed.
+*)
+
+OUTPUT PermuteDone(lastchars: TEXT[TextConv.Encode];
+                   rowIndex: INTEGER[Fmt.Int]);
+(* Done with first phase of compression.  The permuted string (last column
+   of the sorted matrix of rotations) is lastchars.  The row index of the
+   original string in the matrix is rowIndex.
+*)
+
+OUTPUT StartEncode(alphabet: TEXT[TextConv.Encode]);
+(* Ready to start encoding the permuted string using the given alphabet *)
+
+OUTPUT EncodeNextChar(i: INTEGER[Fmt.Int]; c: CHAR[MiscFmt.Char]);
+(* About to find the code for character number i in the permuted string.
+   The character value is c.
+*)
+
+OUTPUT EncodeDistinctCount(i, k, n: INTEGER[Fmt.Int]; c: CHAR[MiscFmt.Char]);
+(* Found another distinct character at position k in (alphabet & string) 
+   while computing the code corresponding to character i in (string).  The 
+   number of distinct characters found so far is n.  The character value
+   is c.*)
+
+OUTPUT EncodeFoundCode(i, k, code: INTEGER[Fmt.Int]; c: CHAR[MiscFmt.Char]);
+(* Found that the code for character i in (string) is code; the closest
+   previous occurrence of the same character was at position k in
+   (alphabet & string).  The character value is c. *)
+
+OUTPUT EncodeDone(alphabet: TEXT[TextConv.Encode];
+                  codes: MiscFmt.RefIntArray[MiscFmt.IntArray];
+                  rowIndex: INTEGER[Fmt.Int]);
+(* End of encode phase; (codes, rowIndex) are now ready to be compressed
+   by Huffman coding, arithmetic coding, or whatever; not shown in this
+   animation.  
+*)
+
+OUTPUT InitDecode(alphabet: TEXT[TextConv.Encode];
+                  codes: MiscFmt.RefIntArray[MiscFmt.IntArray];
+                  rowIndex: INTEGER[Fmt.Int]);
+(* Initialize for phase where we reconstruct lastchars from codes. *)
+
+OUTPUT StartDecode();
+(* This event comes immediately after InitDecode *)
+
+OUTPUT DecodeNextCode(i: INTEGER[Fmt.Int]);
+(* Looking at i'th code, before starting to find its corresponding
+   character. *)
+
+OUTPUT DecodeDistinctCount(i, k, n: INTEGER[Fmt.Int]);
+(* Found another distinct character at position k while looking for 
+   the character corresponding to code i. The number of distinct characters
+   found so far is n. *)
+
+OUTPUT DecodeFoundChar(i, k: INTEGER[Fmt.Int]; c: CHAR[MiscFmt.Char]);
+(* Found that the character for code i is at position k in the
+   concatenated alphabet and current string and its value is c. *)
+
+OUTPUT DecodeDone(lastchars: TEXT[TextConv.Encode];
+                  rowIndex: INTEGER[Fmt.Int]);
+(* Declare computed lastchars array. *)
+
+OUTPUT StartReconstruct(lastchars: TEXT[TextConv.Encode];
+                        rowIndex: INTEGER[Fmt.Int]);
+(* Start of phase where we undo the initial permutation, reconstructing the
+   original string from lastchars and pos.
+*)
+
+OUTPUT FirstChars(t: TEXT[TextConv.Encode]);
+(* Declare sorted firstchars array. *)
+
+OUTPUT ConsiderChar(i: INTEGER[Fmt.Int]);
+(* About to look for match for element i for firstchars *)
+
+OUTPUT EqualChars(i, j: INTEGER[Fmt.Int]);
+(* Decided element i of firstchars matches element j of lastchars. *)
+
+OUTPUT FinishCharRun();
+(* Done with a run of identical chars in firstchar column. *)
+
+OUTPUT StartResult();
+(* Setup to pick off result chars. *)
+
+OUTPUT ResultNextChar(pos, k: INTEGER[Fmt.Int]);
+(* Pick off the pos'th element of firstchars and put into the
+   k'th position in the result string. *)
+
+OUTPUT EndResult();
+
+(* Additional events for WhyDecompressWorks view *)
+OUTPUT Reveal(i: INTEGER[Fmt.Int]);
+(* Reveal(1) immediately after StartReconstruct *)
+(* Reveal(2) immediately after FirstChars *)
+
+(* Done. *)

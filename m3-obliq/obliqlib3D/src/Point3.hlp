@@ -1,0 +1,10 @@
+  Point3_Plus(a b: Point3): Point3              
+  Point3_Minus(a b: Point3): Point3             
+  Point3_ScaleToLen(a: Point3, s: Num): Point3  
+  Point3_TimesScalar(a: Point3, s: Num): Point3 
+  Point3_Length(a: Point3): Real                
+  Point3_Distance(a b: Point3): Real            
+  Point3_MidPoint(a b: Point3): Point3          
+WHERE                                           
+  Point3 = [3*Num]                              
+  Num = Real + Int

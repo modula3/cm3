@@ -1,0 +1,28 @@
+ (Shape %choiceatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Choice")
+     (Glue 10)
+      (HBox Fill (Shape (Width 100) (Boolean %chInitial "Initial Value")) Fill)
+      (Glue 10)
+    (BoxAround 50
+     (HBox (RField Choicefbs "Feedback Style :" 
+             (VBox (Glue 5) (Choice %CCheckBox CheckBox "Check Box")
+                   (Choice %CCheckMark CheckMark "Check Mark")
+                   (Choice %CInverting Inverting "Inverting")
+                   (Glue 5)
+              ) 45 Active 5) Fill))
+     (Glue 10)
+     (Radio %chRadio
+     (BoxAround 95
+      (VBox
+        (HBox  (Text  "Label") (Glue 250))
+        (Glue 10)
+        (Choice (Color "VeryDarkBlue") %chTChoice (LField "Text       :" 250 (TypeIn (TabTo chPix) %chText (BgColor "White") ExpandOnDemand (Value "Choice"))))
+        (Glue 10)
+        (Choice %chPChoice (Color "VeryDarkBlue") (LField "Pixmap :" 250 (TypeIn (TabTo name) %chPix ExpandOnDemand (BgColor "White") (Value ""))))
+        (Glue 10)
+       )))
+      Fill
+   )
+  )

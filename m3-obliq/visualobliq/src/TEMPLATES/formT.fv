@@ -1,0 +1,30 @@
+(ZChild $ZChildState$ %@ 
+  (Filter %@filter $FilterState$ 
+    (Radio %@radio
+      $ZSplitHeader$
+      (Shape %@shape 
+        (Width $XSpan$ + $XStretch$ - $XShrink$) 
+        (Height $YSpan$ + $YStretch$ - $YShrink$)
+        (BgColor "$BgColor$") 
+        (Color "$FgColor$")
+        (LabelFont "$Font$")
+        (Rim %@rim (Pen $RimPen$) 
+          (Border %@border (Pen $BorderPen$)
+            (VBox
+              (Shape %@title (Height 20)
+                (Frame $FrameStyle$ 
+                  (BgColor "$TitleBgColor$") 
+                  (Color "$TitleFgColor$")
+                  (HBox 
+                    (Shape (Width 15) 
+                      (CloseButton (ShadowSize 0) (Pixmap "close.pbm"))) 
+                    Chisel
+                    (Shape (Width + 1000)  
+                       (ZMove (ShadowSize 0) (Text %@titlestring "$TitleString$")))    
+                    Chisel 
+                    (Shape (Width 15) 
+                      (ZGrow (ShadowSize 0) (Pixmap "grow.pbm"))))))
+              $MenuStructure$
+              (Text  %@background "" )))))
+      $ZSplitFooter$
+)))         

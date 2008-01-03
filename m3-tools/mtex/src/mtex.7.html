@@ -1,0 +1,913 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<HEAD>
+<TITLE>The MTeX File Format</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>mtex(7)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+<P>
+
+<B>mtex</B> - LaTeX-like file format for describing man pages<P>
+
+</BLOCKQUOTE>
+
+<H3>TABLE OF CONTENTS</H3>
+<BLOCKQUOTE>
+<P>
+
+<UL>
+<LI> <A HREF="#Introduction">Introduction</A>
+<LI> <A HREF="#Input">Input Characters</A>
+<LI> <A HREF="#Comments">Comments</A>
+<LI> <A HREF="#Para">Paragraphs</A>
+<LI> <A HREF="#TypefaceCmds">Typeface Commands</A>
+<LI> <A HREF="#ManpageCmd">The Manpage Command</A>
+<LI> <A HREF="#SectionCmd">The Section Command</A>
+<LI> <A HREF="#EnvCmds">Environments</A>
+<LI> <A HREF="#VerbCmd">The Verbatim Environment</A>
+<LI> <A HREF="#LeftCmd">The Flushleft Environment</A>
+<LI> <A HREF="#ListEnv">The List Environments</A>
+<LI> <A HREF="#OutputSpecEnv">Output-specific Environments</A>
+<LI> <A HREF="#AnchorLink">Anchors and Links</A>
+<LI> <A HREF="#Examples">Examples</A>
+<LI> <A HREF="#M3Build">M3Build Support</A>
+<LI> <A HREF="#Makefile">Makefile Support</A>
+<LI> <A HREF="#Diagnostics">Diagnostics</A>
+<LI> <A HREF="#Bugs">Bugs</A>
+<LI> <A HREF="#SeeAlso">See Also</A>
+</UL>
+<P>
+
+</BLOCKQUOTE>
+
+<H3><A NAME="Introduction">INTRODUCTION</A></H3>
+<BLOCKQUOTE>
+<P>
+
+This document describes <I>mtex</I>, a file format suitable for describing
+formatted man pages. The programs <A HREF="mtex2html.1.html">mtex2html(1)</A>, <A HREF="mtex2man.1.html">mtex2man(1)</A>, and
+<A HREF="mtex2tex.1.html">mtex2tex(1)</A> are filters that convert
+<I>mtex</I> documents into HTML-, man-, and LaTeX-formatted documents suitable
+for viewing with a World-Wide Web browser such as Netscape(1), with
+nroff(1)/troff(1) (using the man(7) or man.nopage(7) macro packages),
+and with latex(1)/xdvi(1) respectively.<P>
+
+The <I>mtex</I> file format is loosely based on LaTeX, but it contains
+far fewer commands and is somewhat fragile. Like LaTeX, <I>mtex</I> commands
+are introduced by the <TT>\</TT> (backslash) character, and command
+arguments are delimited by curly braces <TT>{ }</TT>. <I>Mtex</I>
+also uses <TT>\begin</TT> and <TT>\end</TT> commands to bracket
+<I>environments</I>. Some commands have multiple arguments, in which
+case the arguments are specified like this:
+<PRE>
+  \cmd{arg1}{arg2}...{argN}
+</PRE>
+
+In such cases, the arguments may be separated by arbitrary
+whitespace. Unlike LaTeX, braces are <I>not</I> used in <I>mtex</I> to
+delimit scopes; they are used only to delimit arguments.<P>
+
+Except where noted below, the filter programs parse <I>mtex</I> files
+as a sequence of whitespace-separated tokens. The programs for
+viewing the resulting output files automatically fill paragraphs,
+so how the input is divided into lines is generally
+unimportant. There are a few exceptions to this rule. For example,
+certain commands must start at the beginning of a line, and text
+within the <A HREF="#VerbCmd"><TT>verbatim</TT></A> environment is not
+"filled" or justified.<P>
+
+The <I>mtex</I> commands may be divided into two groups: <I>running</I>
+commands and <I>line</I> commands. The running commands may appear
+anywhere in running text. The line commands must appear at the
+start of a new line, and they generally cause a line break in the
+output.<P>
+
+The running commands are:
+<UL>
+<LI> the typeface-changing commands:
+<A HREF="#TypefaceCmds"><TT>\bf</TT>, <TT>\it</TT>, <TT>\tt</TT></A>;
+<LI> the hypertext commands:
+<A HREF="#LinkAnchor"><TT>\link</TT>, <TT>\anchor</TT></A>; and
+<LI> the line-breaking command:
+<A HREF="#NewlineCmd"><TT>\newline</TT></A>.
+</UL>
+<P>
+
+The line commands are:
+<UL>
+<LI> the command to declare a man page:
+<A HREF="#ManpageCmd"><TT>\manpage</TT></A>;
+<LI> the command to start a new section:
+<A HREF="#SectionCmd"><TT>\section</TT></A>;
+<LI> the commands for bracketing environments:
+<A HREF="#EnvCmds"><TT>\begin</TT>, <TT>\end</TT></A>; and
+<LI> the command for starting a new list item:
+<A HREF="#ItemCmd"><TT>\item</TT></A>
+</UL>
+<P>
+
+</BLOCKQUOTE>
+
+<H3><A NAME="Input">INPUT CHARACTERS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Any character is legal in an <I>mtex</I> file, but five characters are
+special.<P>
+
+Commands in <I>mtex</I> begin with a '<TT>\</TT>' (backslash) character,
+and have arguments enclosed by <TT>{</TT> braces <TT>}</TT>. The backslash
+character is also used to escape other characters, as described below.
+Hence, these three characters are special. Braces that do not delimit
+arguments may appear in your input. However, to include a closing
+brace in the argument to a command, you must escape it as described
+below.<P>
+
+As in TeX, double-quotes are indicated by pairs of single quotes: the
+input <TT>``hello''</TT> produces "hello". Hence each of the single
+quote characters is special. Stand-alone single quote characters may
+appear in your input (for example, as an apostrophe in a conjunction
+or possessive). However, to produce two consecutive single quote
+characters like <TT>``this''</TT>, you must escape the characters as
+described below.<P>
+
+Each of the five special characters may be escaped with the
+backslash character itself:<P>
+
+<UL>
+<LI> <TT>\\</TT> produces backslash (<TT>\</TT>)
+<LI> <TT>\{</TT> produces left brace (<TT>{</TT>)
+<LI> <TT>\}</TT> produces right brace (<TT>}</TT>)
+<LI> <TT>\`</TT> produces single left quote (<TT>`</TT>)
+<LI> <TT>\'</TT> produces single right quote (<TT>'</TT>)
+</UL>
+<P>
+
+The escape for the left brace character is not strictly necessary; it
+is provided only for symmetry.<P>
+
+You are advised not to use the double-quote character in your input,
+since there is no way to reliably specify this character in nroff
+input. In particular, double-quote is known <I>not</I> to work in the
+arguments of the <TT>\manpage</TT> and <TT>\section</TT>
+commands. Use <TT>``</TT> and <TT>''</TT> wherever possible.<P>
+
+For each output format, certain additional characters are
+special. For example, in HTML, the "<TT>&lt;</TT>" character is special;
+to produce it in an HTML file for viewing, you would have to write
+"<TT>&amp;lt;</TT>". Each of the filter programs translates the characters
+that are special for its output format automatically, so
+mtex2html(1) will in fact convert the input "<TT>a &lt; b</TT>" to
+produce "<TT>a &amp;lt; b</TT>" in the HTML output.<P>
+
+To include one of the output-specific characters in the output
+without translating it, you can escape the character with a <TT>\</TT>
+(backslash). However, since such escape sequences are
+output-specific, they are only allowed in the
+<A HREF="#OutputSpecEnv">output-specific environments</A> described below.
+</BLOCKQUOTE>
+
+<H3><A NAME="Comments">COMMENTS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Lines beginning with the <TT>%</TT> (percent) character start comments in
+the input file. All characters from the percent character up to and
+including the first newline character are ignored.<P>
+
+To include a percent character in your output, simply make sure that
+it does not appear at the start of an input line.
+</BLOCKQUOTE>
+
+<H3><A NAME="Para">PARAGRAPHS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Paragraphs in the input are separated by one or more consecutive blank
+lines. Both mtex2html(1) and mtex2man(1) produce a single blank line
+in the output at the start of a new paragraph; mtex2tex(1)
+indents the first line of the new paragraph without skipping
+a line.
+</BLOCKQUOTE>
+
+<H3><A NAME="TypefaceCmds">TYPEFACE COMMANDS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+The <I>mtex</I> format includes commands for typesetting short bits of
+text in a <B>bold</B>, <I>italic</I>, or <TT>typewriter</TT> typeface:<P>
+
+<UL>
+<LI> <TT>\bf{&lt;Text&gt;}</TT> typesets <TT>&lt;Text&gt;</TT> in <B>bold face</B>
+<LI> <TT>\it{&lt;Text&gt;}</TT> typesets <TT>&lt;Text&gt;</TT> in <I>italics</I>
+<LI> <TT>\tt{&lt;Text&gt;}</TT> typesets <TT>&lt;Text&gt;</TT> in <TT>typewriter font</TT>
+</UL>
+<P>
+
+The syntax of these commands is slightly different from standard
+TeX, since the arguments are expected to be short, and only one
+alternative typeface should be used at a time.<P>
+
+Typeface commands may be nested, but the output will probably not be
+what you expect. For example, the input <TT>\it{one \bf{bold}
+word}</TT> will most likely set the words "one" and "word" in an
+italic typeface, but the word "bold" in a bold roman typeface,
+not a bold italic typeface.<P>
+
+Typeface commands may appear in running text, but it is
+an unchecked error to include them in arguments to the
+<A HREF="#ManpageCmd"><TT>\manpage</TT></A> and
+<A HREF="#SectionCmd"><TT>\section</TT></A> commands, since these commands
+automatically typeset their arguments in an output-dependent way.
+</BLOCKQUOTE>
+
+<H3><A NAME="ManpageCmd">THE MANPAGE COMMAND</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Every <I>mtex</I> manpage should begin with the <I>manpage</I>
+command. It has the format:
+<PRE>
+  \manpage{&lt;PageTitle&gt;}{&lt;Name&gt;}{&lt;Section&gt;}
+</PRE>
+
+The <TT>&lt;PageTitle&gt;</TT> is the nominal title for this page, and is
+used in HTML output only. The <TT>&lt;Name&gt;</TT> value should be the
+name of the command or routine, and <TT>&lt;Section&gt;</TT> should be the
+section of the manual in which this man page appears. For example,
+the source for this manpage begins with the line:
+<PRE>
+  \manpage{The MTeX File Format}{mtex}{7}
+</PRE>
+
+The <TT>\manpage</TT> command must start on its own line, and no other
+non-whitespace characters may appear after its last argument on the
+same line. Any blank lines after it are ignored. The arguments
+should not include typeface commands.
+</BLOCKQUOTE>
+
+<H3><A NAME="SectionCmd">THE SECTION COMMAND</A></H3>
+<BLOCKQUOTE>
+<P>
+
+New man page sections are introduced with the <TT>\section</TT>
+command, which has the form:
+<PRE>
+  \section{&lt;Text&gt;}
+</PRE>
+
+The <TT>&lt;Text&gt;</TT> will be typeset as a section title, indicated by
+typeface, font size, or indentation level. The <TT>\section</TT>
+command must start on its own line, and no other non-whitespace
+characters may appear after its argument on the same line. Only
+<TT>\link</TT> and <TT>\anchor</TT> commands may be used within the
+<TT>&lt;Text&gt;</TT> argument.
+</BLOCKQUOTE>
+
+<H3><A NAME="EnvCmds">ENVIRONMENTS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+An <I>environment</I> is a syntactic scope for formatting multiple
+input lines in a certain way. For example, the lines in a
+<A HREF="#VerbCmd">verbatim environment</A> are formatted in a
+fixed-width font without being filled or justified.<P>
+
+The lines of an environment are delimited by a matching
+<TT>\begin</TT>-<TT>\end</TT> pair, like this:
+<PRE>
+  \begin{&lt;EnvType&gt;}
+  ...
+  \end{&lt;EnvType&gt;}
+</PRE>
+
+Environments may be nested, but matching <TT>\begin</TT> and
+<TT>\end</TT> lines must have matching <TT>&lt;EnvType&gt;</TT> arguments. The
+legal <TT>&lt;EnvType&gt;</TT> values are <A HREF="#VerbCmd"><I>verbatim</I></A>;
+<A HREF="#LeftCmd"><I>flushleft</I></A>; the list environments
+<A HREF="#ListEnv"><I>itemize</I>, <I>enumerate</I>, and <I>description</I></A>;
+and the output-specific environments <A HREF="#OutputSpecEnv"><I>html</I>,
+<I>roff</I>, and <I>tex</I></A>.<P>
+
+Both the <TT>\begin</TT> and <TT>\end</TT> commands must start on their
+own lines, and neither may be followed by any non-whitespace
+characters.
+</BLOCKQUOTE>
+
+<H3><A NAME="VerbCmd">THE VERBATIM ENVIRONMENT</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Text within the <I>verbatim</I> environment is typeset in a
+fixed-width font and is not filled. This means that whitespace
+within this environment is significant. Moreover, no characters
+within this environment are special, so in particular, all commands
+are ignored; special characters need not be escaped by a preceding
+backslash.<P>
+
+Regardless of whether there are blank lines before and/or after the
+verbatim environment, the verbatim text will be preceeded and followed
+by a blank line in the formated output.
+</BLOCKQUOTE>
+
+<H3><A NAME="LeftCmd">THE FLUSHLEFT ENVIRONMENT</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Normally, the lines of a paragraph are filled automatically by the
+programs that process the output produced by the mtex filters. To
+produce ragged-right text in which you specify the line break
+positions manually, use the <I>flushleft</I> environment together with
+the <A NAME="NewLineCmd"><TT>\newline</TT></A> command.<P>
+
+Within the <I>flushleft</I> environment, <TT>\newline</TT> starts a new
+line of output flush with the current left margin. Only whitespace
+characters are allowed to follow this command on its line. It is an
+error for <TT>\newline</TT> to occur outside the scope of a
+<I>flushleft</I> environment.<P>
+
+For example, the input:
+<PRE>
+  \begin{flushleft}
+  Systems Research Center\newline
+  131 Lytton Avenue\newline
+  Palo Alto, CA 94301
+  \end{flushleft}
+</PRE>
+
+produces<P>
+
+Systems Research Center<BR>
+131 Lytton Avenue<BR>
+Palo Alto, CA 94301
+<BR>
+<P>
+
+</BLOCKQUOTE>
+
+<H3><A NAME="ListEnv">THE LIST ENVIRONMENTS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+<I>Mtex</I> provides three list environments for formatting a list of
+items: <I>itemize</I>, <I>enumerate</I>, and <I>description</I>. Items
+within the <I>itemize</I> environment are set off by tick marks,
+those within the <I>enumerate</I> environment are set off by cardinal
+numbers, and those within the <I>description</I> environment are set
+off by a user-supplied string.<P>
+
+Items within the three list environment are denoted by the
+<A NAME="ItemCmd"><TT>\item</TT></A> command. In the <I>itemize</I>
+and <I>enumerate</I> environments, this command has no
+arguments, but in the <I>description</I> environment, it has a
+single argument which is the description string. Typeface
+changes are allowed within this argument, as are the other
+running commands, but the backslash escape sequence
+"<TT>\\</TT>" should not be used in this argument.<P>
+
+Paragraph breaks may be used between and within items to produce
+blank lines in the formatted output. However, since the text of
+items within the <I>itemize</I> and <I>enumerate</I> environments is
+expected to immediately follow the tick mark or cardinal tag, you
+are advised <I>not</I> to follow the zero-argument <TT>\item</TT>
+command with a paragraph break.<P>
+
+List environments may be nested arbitrarily, but the introduction
+of a new list environment indents the output, so nestings more than
+three deep are not advised.<P>
+
+The following example captures many of the possible ways in which
+the list environments can be used. The input:
+<PRE>
+  \begin{description}
+  \item{The \it{itemize} environment}
+  The \it{itemize} environment yields itemized lists:
+  \begin{itemize}
+  \item indented
+  \item set off by tick marks
+  \end{itemize}
+
+  \item{The \it{enumerate} environment}
+  The items within \it{enumerate} are numbered:
+  \begin{enumerate}
+  \item start your manpage with \tt{\\manpage}
+  \item then, use \tt{\\section} for the sections
+  \end{enumerate}
+  The numbers are produced automatically.
+
+  \item{The \it{description} environment}
+  In the \it{description} environment, each item is
+  labeled with a user-supplied string.
+
+  Notice that blank lines within an item produce
+  paragraph breaks in the formatted output.
+  \end{description}
+</PRE>
+
+produces:<P>
+
+<DL>
+<DT>The <I>itemize</I> environment<DD>
+The <I>itemize</I> environment yields itemized lists:
+<UL>
+<LI> indented
+<LI> set off by tick marks
+</UL>
+<P>
+
+<DT>The <I>enumerate</I> environment<DD>
+The items within <I>enumerate</I> are numbered:
+<OL>
+<LI> start your manpage with <TT>\manpage</TT>
+<LI> then, use <TT>\section</TT> for the sections
+</OL>
+The numbers are produced automatically.<P>
+
+<DT>The <I>description</I> environment<DD>
+In the <I>description</I> environment, each item is
+labeled with a user-supplied string.<P>
+
+Notice that blank lines within an item produce
+paragraph breaks in the formatted output.
+</DL>
+<P>
+
+</BLOCKQUOTE>
+
+<H3><A NAME="OutputSpecEnv">OUTPUT-SPECIFIC ENVIRONMENTS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+The <I>html</I>, <I>roff</I>, and <I>tex</I> environments can be used to
+include text for one particular output format. Text within the
+<I>html</I> environment is only processed by the mtex2html(1) filter,
+text within the <I>roff</I> environment is only processed by the
+mtex2man(1) filter, and text within the <I>tex</I> environment is only
+processed by the mtex2tex(1) filter.<P>
+
+The special characters particular to an output format <I>are</I>
+converted in each of these environments. If you want to include
+any of them literally, you must escape them. For example, the
+following code includes an inlined image in the HTML file produced
+by mtex2html(1), but is ignored by the other filters:
+<PRE>
+  \begin{html}
+  \&lt;IMG SRC="image.gif"\&gt;
+  \end{html}
+</PRE>
+
+Notice how the <TT>&lt;</TT> and <TT>&gt;</TT> characters are escaped in this
+example, since those two characters are special for HTML. Each of the
+man pages for the filter programs has a section listing the characters
+that are special for its output format.
+</BLOCKQUOTE>
+
+<H3><A NAME="AnchorLink">ANCHORS AND LINKS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+You can create anchor locations using the <TT>\anchor</TT> command,
+and links to other documents or to anchors in the current document
+using the <TT>\link</TT> command. Both of these commands are running
+commands and may appear anywhere in the input.<P>
+
+The syntax of the anchor command is:
+<PRE>
+  \anchor{&lt;Name&gt;}{&lt;Text&gt;}
+</PRE>
+
+This associates an anchor named <TT>&lt;Name&gt;</TT> with the text
+<TT>&lt;Text&gt;</TT>. The <TT>&lt;Text&gt;</TT> argument may contain other running
+commands, such as the <A HREF="#TypefaceCmds">typeface commands</A>.<P>
+
+The syntax of the link command is:
+<PRE>
+  \link{&lt;Anchor&gt;}{&lt;Text&gt;}
+</PRE>
+
+This makes the text <TT>&lt;Text&gt;</TT> a link to the anchor <TT>&lt;Anchor&gt;</TT>. The
+<TT>&lt;Anchor&gt;</TT> argument may be any legal HTML anchor, as described in
+<A HREF="http://www.ncsa.uiuc.edu/General/Internet/WWW/HTMLPrimer.html#A1.3.3"><I>The Beginner's Guide to HTML</I></A>. If you want the link to point to
+an anchor within the same document, <TT>&lt;Anchor&gt;</TT> should start with
+the <TT>#</TT> (pound-sign) character.<P>
+
+Here is an example of a file with an anchor and a link to that local
+anchor:
+<PRE>
+  \section{\anchor{DescSect}{Description}}
+  Here is the description section text...
+
+  Later in the file, here is a link to
+  the \link{#DescSect}{description} section.
+
+  Here is a non-local link to the
+  \link{http://src-www.pa.dec.com/src.home.html}
+  {SRC Home Page}.
+</PRE>
+
+Notice in the second <TT>\link</TT> example how we've taken
+advantage of the fact that command arguments may be separated
+by arbitrary amounts of whitespace.
+</BLOCKQUOTE>
+
+<H3><A NAME="Examples">EXAMPLES</A></H3>
+<BLOCKQUOTE>
+<P>
+
+Here is the mtex source for the <B>quake(1L)</B> man page:
+<PRE>
+  \manpage{quake}{quake}{1L}
+
+  \section{NAME}
+  quake - a system for compiling Modula-3 program descriptions
+
+  \section{SYNOPSIS}
+  \bf{quake} [-nV] [definitions | files ...]
+
+  \section{DESCRIPTION}
+  Quake is a simple, specialized language and its interpreter
+  drawing on elements of the C language, the Bourne shell, and
+  the C pre-processor. It was designed to be a component of
+  m3build(1)-the replacement for m3make (q.v.). Building a
+  complete, general-purpose language was not one of the goals.
+
+  For a full description, see URL:
+
+  \link{http://www.research.digital.com/SRC/modula-3/html/quake/quake.html}
+  {http://www.research.digital.com/SRC/modula-3/html/quake/quake.html}
+
+  \section{SEE ALSO}
+  m3build(1)
+
+  \section{AUTHOR}
+  Stephen Harrison
+</PRE>
+
+Here is the mtex source of a slightly more complicated man page ---
+the <A HREF="mtex2html.1.html">mtex2html(1)</A> man page itself:
+<PRE>
+  \manpage{mtex2html Man Page}{mtex2html}{1}
+  
+  \section{NAME}
+
+  mtex2html - translate mtex(7) files to HTML format
+  
+  \section{SYNTAX}
+
+  \bf{mtex2html}
+  
+  \section{DESCRIPTION}
+  
+  \it{mtex2html} is a filter that reads a file in \link{mtex.7.html}
+  {mtex(7)} format from its standard input, and writes an
+  \link{http://www.ncsa.uiuc.edu/General/Internet/WWW/HTMLPrimer.html}{HTML
+  (HyperText Markup Language)} file to standard output suitable for viewing
+  with xmosaic(1).
+  
+  \it{mtex2html} is written entirely in LIM (see lim(1)).
+  
+  \section{SPECIAL CHARACTERS}
+  
+  There are three special characters for the HTML output format. Here
+  are the characters and the strings they are translated to by
+  mtex2html(1):
+  
+  \begin{flushleft}
+  ``\tt{&lt;}'' becomes ``\tt{&amp;lt;}''\newline
+  ``\tt{&gt;}'' becomes ``\tt{&amp;gt;}''\newline
+  ``\tt{&amp;}'' becomes ``\tt{&amp;amp;}''
+  \end{flushleft}
+  
+  To prevent these characters from being translated within the
+  scope of an \it{html} environment, you must escape them with a
+  \tt{\\} (backslash) character.
+  
+  \section{DIAGNOSTICS}
+  
+  See the \link{mtex.7.html#Diagnostics}{Diagnostics} section of the
+  \link{mtex.7.html}{mtex(7)} manpage for a complete description.
+
+  \section{SEE ALSO}
+  
+  \link{mtex.7.html}{mtex(7)},
+  \link{mtex2man.1.html}{mtex2man(1)},
+  \link{mtex2tex.1.html}{mtex2tex(1)},
+  xmosaic(1)
+  \begin{roff}
+  
+  This man page is also available as a hypertext document under
+  Mosaic at URL
+  \tt{http://src-www.pa.dec.com/SRC/man/DS/mtex2html.1.html}.
+  \end{roff}
+  
+  \section{AUTHOR OF PROGRAM AND DOCUMENTATION}
+  
+  \link{http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html}
+  {Allan Heydon} (\tt{heydon@src.dec.com})
+</PRE>
+
+Note the use of the <I>roff</I> environment in the SEE ALSO section. The
+text within this environment will not appear in the HTML file produced
+by the <A HREF="mtex2html.1.html">mtex2html(1)</A> filter program.
+</BLOCKQUOTE>
+
+<H3><A NAME="M3Build">M3BUILD SUPPORT</A></H3>
+<BLOCKQUOTE>
+<P>
+
+To build and install HTML- and man-formatted output files
+automatically using
+<A HREF="http://src-www.pa.dec.com/SRC/external/modula-3/html/m3build/m3build.html">m3build(1)</A>, just add the following lines to your <I>m3makefile</I>:
+<PRE>
+  import("mtex")
+  Mtex(&lt;title&gt;, &lt;section&gt;)
+</PRE>
+
+You should have one <TT>Mtex</TT> line for each man page; you should
+have exactly one <TT>import("mtex")</TT> line (and it must appear
+before the <TT>Mtex</TT> lines).<P>
+
+Each <TT>Mtex</TT> line runs mtex2html(1) and mtex2man(1) on the file
+named "&lt;title&gt;.&lt;section&gt;.mtex" in your source directory. The
+corresponding derived files are called "&lt;title&gt;.&lt;section&gt;.html"
+and "&lt;title&gt;.&lt;section&gt;". For example, the lines:
+<PRE>
+  import("mtex")
+  Mtex("Juno", 1)
+</PRE>
+
+cause the file "Juno.1.mtex" to be used as a source to produce
+the derived files "Juno.1.html" and "Juno.1". When you ship
+your package, the man-formatted man pages are installed as per
+the <TT>ManExport</TT> function, and the HTML-formatted pages are
+installed in a site-specific subdirectory of the default HTML
+export directory. At SRC, they are installed in:
+<PRE>
+  /proj/www/SRC/man/&lt;BuildDir&gt;
+</PRE>
+
+where "&lt;BuildDir&gt;" is the name of the build directory, such as
+"DS" or "AOSF".
+</BLOCKQUOTE>
+
+<H3><A NAME="Makefile">MAKEFILE SUPPORT</A></H3>
+<BLOCKQUOTE>
+<P>
+
+To build HTML-, man-, and LaTeX-formatted output files
+automatically using make(1), you can add the following line to
+your Makefile:
+<PRE>
+  include /proj/cra/pkg/mtex/mtex.makestub
+</PRE>
+
+This includes the dependency rules specified in the <TT>mtex.makestub</TT>
+file, whose contents are:
+<PRE>
+  .SUFFIXES: .txt .tex .man .html .mtex
+
+  .mtex.html: ; mtex2html &lt; $? &gt; $@
+  .mtex.man:  ; mtex2man &lt; $? &gt; $@
+  .mtex.tex:  ; mtex2tex &lt; $? &gt; $@
+  .man.txt:   ; nroff -man.nopage $? &gt; $@
+</PRE>
+
+This file specifies rules for building the HTML-, man-, and
+LaTeX-formatted manpages using the mtex2html(1), mtex2man(1),
+and mtex2tex(1) filter programs. The last line uses
+nroff(1) to produce an ASCII version of the manpage from the
+man-formatted version.<P>
+
+This makefile stub defines rules for converting ".<TT>mtex</TT>"
+files to ".<TT>html</TT>", ".<TT>man</TT>", ".<TT>tex</TT>", and ".<TT>txt</TT>"
+files. Typically, your filename will include a section number, so the
+mtex source file will have the form "&lt;name&gt;.&lt;sect&gt;.<TT>mtex</TT>". With the
+above rules, you'll get files of the form "&lt;name&gt;.&lt;sect&gt;.<TT>html</TT>" and
+"&lt;name&gt;.&lt;sect&gt;.<TT>man</TT>". The former is fine to ship, but the latter is
+not, since the ".man" extension is extraneous. Tim Mann has discovered
+some make(1) magic for shipping the files correctly (this is only
+known to work with the version of make(1) running on OSF/1).<P>
+
+First, you'll need to define variables for naming the man pages. Since
+man pages for different sections are shipped to different places,
+you'll have to divide your package's man pages by section. Here's an
+example for the mtex man pages:
+<PRE>
+MAN1_DOCS = mtextohtml.1 mtextoman.1 mtextotex.1
+MAN7_DOCS = mtex.7
+MAN_DOCS  = $(MAN1_DOCS) $(MAN7_DOCS)
+HTML_DOCS = $(MAN_DOCS/$/.html)
+</PRE>
+
+The magic in the definition of <TT>HTML_DOCS</TT> expands to a list of
+files of the form "&lt;name&gt;.&lt;sect&gt;.<TT>html</TT>". Now, the line for building
+all of the documents is:
+<PRE>
+docs: $(HTML_DOCS) $(MAN_DOCS/$/.man)
+</PRE>
+
+The magic at the end of this line expands to a list of files of the
+form "&lt;name&gt;.&lt;sect&gt;.<TT>man</TT>". Hence, typing "<TT>make</TT> <TT>docs</TT>"
+produces a set of ".<TT>html</TT>" and ".<TT>man</TT>" files.<P>
+
+All that remains now is to ship the files to correct places with the
+correct names. At SRC, the roff-formated man pages are shipped to the
+directory
+<PRE>
+  /proj/man/&lt;arch&gt;/man&lt;sect&gt;/
+</PRE>
+
+where &lt;arch&gt; is either "<TT>alpha</TT>" or "<TT>mips</TT>", and &lt;sect&gt; is the
+manual section number. The HTML-formatted man pages are shipped to the
+directory
+<PRE>
+  /proj/www/SRC/man/&lt;arch&gt;/
+</PRE>
+
+where &lt;arch&gt; is either "<TT>AOSF</TT>" or "<TT>DS</TT>". Here is a typical
+shippackage(1) line:
+<PRE>
+ship: tidy
+        shippackage $(PACKAGE)\
+          -l /proj/www/SRC/man/AOSF $(HTML_DOCS)\
+          -l /proj/man/alpha/man1 $(MAN1_DOCS/*/&amp;=&amp;.man)\
+          -l /proj/man/alpha/man7 $(MAN7_DOCS/*/&amp;=&amp;.man)
+</PRE>
+
+The make magic in the lines for shipping the roff-formatted man pages
+expands to a list of expressions of the form
+"&lt;name&gt;.&lt;sect&gt;=&lt;name&gt;.&lt;sect&gt;.<TT>man</TT>". This causes the link to be made
+to the ".<TT>man</TT>" file in the current directory, but for the shipped link
+to have the name "&lt;name&gt;.&lt;sect&gt;", as required.
+</BLOCKQUOTE>
+
+<H3><A NAME="Diagnostics">DIAGNOSTICS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+All of the filter programs use the same core program to do
+their processing, so they all have the same diagnostics.<P>
+
+If there are any errors in the input, the filter prints a
+descriptive error message followed by the line of the filter
+program at which the program aborted together with the number
+of characters read and written at the time of failure. In
+this case, the process exits with Unix exit code 2. If there
+were no errors, the process exits with Unix exit code 0.<P>
+
+Each error message gives a line number and a description of
+the error. The possible error messages and their meanings
+are:<P>
+
+<UL>
+<LI> <TT>command must appear at start of line</TT><P>
+
+One of the line commands <TT>\manpage</TT>, <TT>\section</TT>, <TT>\begin</TT>,
+<TT>\end</TT> or <TT>\item</TT> on the indicated line does not appear at the start
+the a line.<P>
+
+<LI> <TT>command not followed by left brace</TT><P>
+
+The command on the indicated line is a known command, but it has at least
+one argument. The command name must be followed immediately by a left
+brace (<TT>{</TT>) character.<P>
+
+<LI> <TT>no text allowed after command on this line</TT><P>
+
+Either the <TT>\newline</TT> command or one of the line commands <TT>\manpage</TT>,
+<TT>\section</TT>, <TT>\begin</TT>, or <TT>\end</TT> on the indicated line has a
+non-whitespace character after its last argument on the same line as that
+argument.<P>
+
+<LI> <TT>command illegal in argument begun on line &lt;X&gt;</TT><P>
+
+One of the commands <TT>\manpage</TT>, <TT>\section</TT>,
+<TT>\begin</TT>, <TT>\end</TT>, <TT>\item</TT>, or <TT>\newline</TT>
+on the indicated line appears within a command argument.
+The opening left brace of the argument is on line number <TT>&lt;X&gt;</TT>.
+You may have simply left out the closing right brace. Only the
+running commands <TT>\bf</TT>, <TT>\it</TT>, <TT>\tt</TT>, <TT>\link</TT>,
+and <TT>\anchor</TT> are allowed to appear in command arguments.<P>
+
+<LI> <TT>command illegal in list environment</TT><P>
+
+The <TT>\manpage</TT> and <TT>\section</TT> commands must appear at top-level; they
+are not allowed to appear within one of the <A HREF="#ListEnv">list
+environments</A>.<P>
+
+<LI> <TT>syntax error in \&lt;cmd&gt;</TT><P>
+
+A syntax error occurred while parsing the named <TT>&lt;cmd&gt;</TT> starting on the
+specified line. Most likely this is due to a missing argument or to an
+incorrect curly brace. Command syntax is described in the
+<A HREF="#Introduction">Introduction</A> section above.<P>
+
+<LI> <TT>unrecognized command or special character "\&lt;cmd&gt;"</TT><P>
+
+A <TT>\</TT> (backslash) character on the specified line is followed by
+the characters <TT>&lt;cmd&gt;</TT> that are neither a command, one of the five
+escape characters listed in the <A HREF="#Input">Input Characters</A>
+section, nor one of the special characters for this output format.<P>
+
+<LI> <TT>illegal output-specific quoted character "\&lt;char&gt;"</TT><P>
+
+The quoted character <TT>&lt;char&gt;</TT> is special for this output format,
+but does not appear inside the corresponding output-specific
+environment.<P>
+
+<LI> <TT>unrecognized \begin/\end argument</TT><P>
+
+The argument to the <TT>\begin</TT> or <TT>\end</TT> command on the specified line
+is not one of: <TT>verbatim</TT>, <TT>flushleft</TT>, <TT>itemize</TT>,
+<TT>enumerate</TT>, <TT>description</TT>, <TT>html</TT>, <TT>roff</TT>, or <TT>tex</TT>.<P>
+
+<LI> <TT>not expecting \end</TT><P>
+
+An <TT>\end</TT> command was encountered for which there is no matching
+<TT>\begin</TT>, or which is contained within the argument to a command.<P>
+
+<LI> <TT>expecting \end{&lt;env&gt;}</TT><P>
+
+The most recent <TT>\begin</TT> command introduced the environment <TT>&lt;env&gt;</TT>,
+but the <TT>\end</TT> command on the specified line closes a different
+environment.<P>
+
+<LI> <TT>no matching \end for \begin</TT><P>
+
+End-of-file was reached before an <TT>\end</TT> command was found that matches
+the <TT>\begin</TT> command on the specified line.<P>
+
+<LI> <TT>no matching right brace for \&lt;cmd&gt;</TT><P>
+
+A matching right brace could not be found for one of the arguments to the
+command <TT>&lt;cmd&gt;</TT>. In this case, the line number given is that on which the
+command <I>begins</I>.<P>
+
+<LI> <TT>\newline not in flushleft environment</TT><P>
+
+The <TT>\newline</TT> command is only allowed to appear in the scope of
+a <I>flushleft</I> environment.<P>
+
+<LI> <TT>\item should not have an argument in itemize/enumerate environment</TT><P>
+
+The <TT>\item</TT> command on the specified line has an argument, yet it should
+not because it appears within either an <TT>itemize</TT> or <TT>enumerate</TT>
+environment.<P>
+
+<LI> <TT>\item must have an argument in description environment</TT><P>
+
+The <TT>\item</TT> command on the specified line has no argument, yet it should
+because it appears within a <TT>description</TT> environment.<P>
+
+<LI> <TT>\item not in list environment</TT><P>
+
+The <TT>\item</TT> command on the specified line does not appear in a
+list environment.<P>
+
+</UL>
+<P>
+
+</BLOCKQUOTE>
+
+<H3><A NAME="Bugs">BUGS</A></H3>
+<BLOCKQUOTE>
+<P>
+
+There are no provisions for distinguishing between dashes, hyphens,
+and minus signs.<P>
+
+The <TT>"</TT> (double-quote) and <TT>\</TT> (backslash) characters
+should work in all circumstances. They don't due to
+difficulties with nroff(1) and the man(7) macros.
+</BLOCKQUOTE>
+
+<H3><A NAME="SeeAlso">SEE ALSO</A></H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="mtex2html.1.html">mtex2html(1)</A>,
+<A HREF="mtex2man.1.html">mtex2man(1)</A>,
+<A HREF="mtex2tex.1.html">mtex2tex(1)</A><BR>
+make(1), latex(1), xdvi(1), xmosaic(1)<BR>
+nroff(1), troff(1), man(7), man.nopage(7)
+<BR>
+</BLOCKQUOTE>
+
+<H3>AUTHOR OF DOCUMENTATION</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html">Allan Heydon</A>
+(<TT>heydon@src.dec.com</TT>)
+<PRE>
+Last modified on Tue Nov  7 10:41:29 PST 1995 by heydon
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

@@ -1,0 +1,35 @@
+fromelts e d c b a t r s u    
+showheap
+c 5 x
+showheap
+c 4 x
+showheap
+c 3 x
+showheap
+c 7 x
+showheap
+c 2 x
+showheap
+c 1 x
+showheap
+c 8 x
+showheap
+c 6 x
+showheap
+c 9 x
+showheap
+showelts
+c 5 z
+showheap
+c 8 y
+showheap
+dmin
+dmin
+dmin
+dmin
+dmin
+dmin
+dmin
+dmin
+dmin
+dmin

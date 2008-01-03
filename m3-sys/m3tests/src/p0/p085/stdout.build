@@ -1,0 +1,6 @@
+"../src/Main.m3", line 12: warning: potentially unhandled exceptions: Thread.Alerted, Wr.Failure
+"../src/Main.m3", line 17: warning: potentially unhandled exception: Thread.Alerted
+"../src/Main.m3", line 28: warning: potentially unhandled exception: Thread.Alerted
+"../src/Main.m3", line 41: warning: potentially unhandled exception: Thread.Alerted
+"../src/Main.m3", line 45: warning: potentially unhandled exceptions: Thread.Alerted, Wr.Failure
+5 warnings encountered

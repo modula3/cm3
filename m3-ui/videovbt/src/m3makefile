@@ -1,0 +1,16 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Sep  7 09:59:54 PDT 1995 by najork
+%      modified on Tue Nov  1 09:28:18 PST 1994 by kalsow
+
+import ("ui")
+import ("jvideo")
+
+Interface ("AudioVBT")
+Interface ("VideoVBT")
+
+include_dir (OS_TYPE)
+
+Library("videovbt")

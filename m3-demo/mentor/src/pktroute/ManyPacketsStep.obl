@@ -1,0 +1,344 @@
+(* Copyright 1993 Digital Equipment Corporation.                             *)
+(* Distributed only by permission.                                           *)
+(*                                                                           *)
+(* Last modified on Thu Oct 14 17:06:57 PDT 1993 by heydon                   *)
+(*      modified on Tue Aug 10 23:56:52 PDT 1993 by rsanchez                 *)
+
+(* This view shows the total number of steps that each packet needs *)
+(* to traverse to go from its source to its destination node.       *)
+(* (Condensed Version).                                             *)
+
+let MoveColor = color_named("Green");
+let NoMoveColor = color_named("Yellow");
+let BlockedColor = color_named("Red");
+let InitialColor = color_named("Black");
+let FinishedColor = color_named("Black");
+let LabelColor = color_named("Black");
+let BackgroundColor = color_named("White");
+let EdgeColor = color_named("Black");
+let BorderColor = color_named("Black");
+
+let CondColor = [MoveColor, NoMoveColor, BlockedColor];
+
+let moveIndx = 0;
+let noMoveIndx = 1;
+let blockedIndx = 2;
+
+let BarWidth = 0.40;
+let Gap = 0.05;
+let SouthInit = ~3.0;
+let BorderSize = 0.0;
+let ScaleFactor = 1.5;
+
+let PartialColumns = 3;
+let TotalColumnIndex = 3;
+let LabelColumns = 4;
+
+let FontFromSize =
+  proc(g, sz)
+      graph_newFont(g, "Helvetica", sz, "Roman", "bold", "*")
+  end;
+
+let MoveTextVertex =
+  proc(vtx, font, width, height, x, y)
+    graph_setVertexFont(vtx, font);
+    graph_moveVertex(vtx, x, y, false);
+    graph_setVertexSize(vtx, width, height);
+  end;
+
+let MakeTextVertex =
+  proc(vtx, font, width, height, x, y)
+    graph_setVertexColor(vtx, BackgroundColor);
+    graph_setVertexLabelColor(vtx, LabelColor);
+    MoveTextVertex(vtx, font, width, height, x, y)
+  end;
+
+let MoveBlockVertex =
+  proc(vtx, width, height, x, y)
+    graph_setVertexSize(vtx, width, height);
+    graph_moveVertex(vtx, x, y, false);
+  end;
+    
+let MakeBlockVertex =
+  proc(vtx, clr, width, height, x, y)
+    graph_setVertexBorder(vtx, 0.05);
+    graph_setVertexBorderColor(vtx, BorderColor); 
+    graph_setVertexColor(vtx, clr);
+    MoveBlockVertex(vtx, width, height, x, y)
+  end;
+
+let view =
+  {
+    graphvbt => graph_new(),
+    pktCnt => ok,
+    steps => 0,
+    maxSteps => ok,
+    hopsT => ok,
+    vtxFont => ok,
+    fontSize => 0.5,
+    border => BorderSize,
+    labelH => 1.0,
+    yLabels1 => ok,
+    yLabels2 => ok,
+    yLabels3 => ok,
+    labels1 => ok,
+    labels2 => ok,
+    labels3 => ok,
+    totalMove => 0,
+    totalNoMove => 0,
+    totalBlocked => 0,
+    east => ok,
+    west => ok,
+    north => ok,
+    south => ok,
+    labelW => meth(self) (self.east - self.west) / float(LabelColumns+2) end,
+
+    xLoc => meth(self, index)
+       self.west + (self.labelW * float(index+1))
+    end,
+
+    StartPackets => meth (self, pktCnt)
+      self.west := ~1.0;
+      self.east := float(pktCnt);
+      self.north := 11.0;
+      self.south := ~4.0;
+      self.maxSteps := 10.0;
+      self.fontSize := 1.0;
+      self.yLabels1 := ~1.0;
+      self.yLabels2 := ~2.0;
+      self.yLabels3 := ~3.0;
+      graph_setWorld(self.graphvbt, 
+                     self.west, self.east, self.north, self.south);
+      self.vtxFont := FontFromSize(self.graphvbt, self.fontSize);
+
+      self.pktCnt := pktCnt;
+
+      self.hopsT := array_new(pktCnt, ok);
+      self.labels1 := array_new(LabelColumns, ok);
+      self.labels2 := array_new(LabelColumns, ok);
+      self.labels3 := array_new(LabelColumns, ok);
+
+      for i = 0 to pktCnt-1 do
+        let vtx1 = graph_newVertex(self.graphvbt);
+        graph_vertexToBack(vtx1);
+	graph_setVertexBorder(vtx1, self.border);
+	graph_setVertexBorderColor(vtx1, BackgroundColor); 
+	graph_setVertexColor(vtx1, MoveColor);
+	graph_moveVertex(vtx1, float(i), self.border/2.0, false);
+	graph_setVertexSize(vtx1, 0.95, self.border);
+	self.hopsT[i] := {
+          minNumHops => 0,
+	  moved => false,
+	  blocked => false,
+	  progress => true,
+	  finished => false,
+	  src => ok,
+	  dst => ok,
+	  vmove => vtx1,
+	  vlastblocked => ok,
+	  blockedTempCnt => 0,
+	  vlastnomove => ok,
+	  noMoveTempCnt => 0
+        };
+      end;
+      for i = 0 to PartialColumns - 1 do
+        self.labels1[i] := graph_newVertex(self.graphvbt); 
+        MakeBlockVertex(self.labels1[i], CondColor[i], 
+                        self.labelW, self.labelH,
+                        self.xLoc(i), self.yLabels1);
+      end;
+
+      self.labels1[TotalColumnIndex] := graph_newVertex(self.graphvbt);
+
+      MakeTextVertex(self.labels1[TotalColumnIndex], self.vtxFont, 
+                     self.labelW * 2.0, self.labelH,
+                     self.xLoc(TotalColumnIndex+1), self.yLabels1);
+
+      graph_setVertexLabel(self.labels1[TotalColumnIndex], "Total:");
+
+      for i = 0 to PartialColumns - 1 do                        
+        self.labels2[i] := graph_newVertex(self.graphvbt);
+        MakeTextVertex(self.labels2[i], self.vtxFont, 
+                        self.labelW, self.labelH,
+                        self.xLoc(i), self.yLabels2);
+        graph_setVertexLabel(self.labels2[i], "0");
+
+        self.labels3[i] := graph_newVertex(self.graphvbt);
+        MakeTextVertex(self.labels3[i], self.vtxFont, 
+                        self.labelW, self.labelH,
+                        self.xLoc(i), self.yLabels3);
+        graph_setVertexLabel(self.labels3[i], "0%");
+      end;
+
+      self.labels2[TotalColumnIndex] := graph_newVertex(self.graphvbt);
+      MakeTextVertex(self.labels2[TotalColumnIndex], self.vtxFont, 
+                      self.labelW, self.labelH,
+                      self.xLoc(TotalColumnIndex+1), self.yLabels2);
+      graph_setVertexLabel(self.labels2[TotalColumnIndex], "0");
+
+      self.labels3[TotalColumnIndex] := graph_newVertex(self.graphvbt);
+      MakeTextVertex(self.labels3[TotalColumnIndex], self.vtxFont, 
+                      self.labelW * 2.0, self.labelH,
+                      self.xLoc(TotalColumnIndex+1), self.yLabels3);
+      graph_setVertexLabel(self.labels3[TotalColumnIndex], "0 Step(s)");
+
+    end,
+
+    NewPacket => meth (self, id, source, dest, fewestHops, name)
+      self.hopsT[id].minNumHops := fewestHops;
+      self.hopsT[id].src := source;
+      self.hopsT[id].dst := dest;
+    end,
+
+    EndPackets => meth (self)
+      graph_redisplay(self.graphvbt);
+    end,
+
+    Blocked => meth(self, id, fromN, toN)
+      self.hopsT[id].blocked := true;
+      self.totalBlocked := self.totalBlocked + 1;
+    end,
+
+    MovePacket => meth(self, id, fromN, toN) 
+      self.hopsT[id].moved := true;
+      self.totalMove := self.totalMove + 1; 
+    end,
+
+    Absorb => meth(self, id, node)
+      self.hopsT[id].progress := false;
+    end,
+
+    Step => meth (self)
+      let Percent = proc(num, denom)
+        fmt_int(round((100.0 * float(num)) / float(denom))) & "%"
+      end;
+
+      self.steps := self.steps + 1;
+      if float(self.steps) > self.maxSteps then
+        self.maxSteps := self.maxSteps * ScaleFactor;
+        self.north := self.north * ScaleFactor;
+	self.south := self.south * ScaleFactor;
+	self.fontSize := self.fontSize * ScaleFactor;
+	self.border := self.border * ScaleFactor;
+	self.labelH := self.labelH * ScaleFactor;
+        self.yLabels1 := self.yLabels1 * ScaleFactor;
+        self.yLabels2 := self.yLabels2 * ScaleFactor;
+        self.yLabels3 := self.yLabels3 * ScaleFactor;
+
+        var index = ok, width = ok;
+	for i = 0 to LabelColumns - 1 do
+	  index := i; width := self.labelW;
+          if i is TotalColumnIndex then
+            index := index + 1;
+            width := width * 2.0
+          end;
+	  MoveBlockVertex(self.labels1[i], 
+	    width, self.labelH, self.xLoc(index), self.yLabels1);
+          MoveTextVertex(self.labels2[i], self.vtxFont,
+            width, self.labelH, self.xLoc(index), self.yLabels2);
+          MoveTextVertex(self.labels3[i], self.vtxFont,
+            width, self.labelH, self.xLoc(index), self.yLabels3);
+	end;
+
+        graph_setWorld(self.graphvbt, 
+          self.west, self.east, self.north, self.south);
+      end;
+
+      for i = 0 to self.pktCnt-1 do
+	if self.hopsT[i].finished is false then
+          if self.hopsT[i].moved is false then
+            if self.hopsT[i].blocked is true then
+	      self.hopsT[i].blocked := false;
+	      if self.hopsT[i].vlastnomove isnot ok then
+		self.hopsT[i].vlastnomove := ok;
+		self.hopsT[i].noMoveTempCnt := 0;
+              end;
+	      if self.hopsT[i].vlastblocked is ok then
+		let vblocked = graph_newVertex(self.graphvbt);
+		graph_setVertexBorder(vblocked, self.border);
+		graph_setVertexBorderColor(vblocked, color_rgb(0.0, 0.0, 0.0));
+		graph_setVertexColor(vblocked, BlockedColor);
+		graph_moveVertex(vblocked,
+				  float(i), float(self.steps) - 0.5, false);
+                graph_setVertexSize(vblocked,  0.95, 1.0);
+		self.hopsT[i].vlastblocked:= vblocked;
+		self.hopsT[i].blockedTempCnt := 1;
+              else
+		self.hopsT[i].blockedTempCnt := 
+                                    self.hopsT[i].blockedTempCnt + 1;
+		graph_moveVertex(self.hopsT[i].vlastblocked,
+		                 float(i),
+		                 float(self.steps) -
+		                    (float(self.hopsT[i].blockedTempCnt)/2.0),
+		                 false);
+                graph_setVertexSize(self.hopsT[i].vlastblocked,
+				    0.95, float(self.hopsT[i].blockedTempCnt));
+              end;
+            else
+	      if self.hopsT[i].vlastblocked isnot ok then
+		self.hopsT[i].vlastblocked := ok;
+		self.hopsT[i].blockedTempCnt := 0;
+	      end;
+              self.totalNoMove := self.totalNoMove + 1;
+	      if self.hopsT[i].vlastnomove is ok then
+	        let vnomove = graph_newVertex(self.graphvbt);
+	        graph_setVertexBorder(vnomove, self.border);
+	        graph_setVertexBorderColor(vnomove, color_rgb(0.0, 0.0, 0.0)); 
+	        graph_setVertexColor(vnomove, NoMoveColor);
+	        graph_moveVertex(vnomove, 
+			       float(i), float(self.steps) - 0.5, false);
+                graph_setVertexSize(vnomove, 0.95, 1.0); 
+	        self.hopsT[i].vlastnomove := vnomove;
+	        self.hopsT[i].noMoveTempCnt := 1;
+              else
+	        self.hopsT[i].noMoveTempCnt := self.hopsT[i].noMoveTempCnt + 1;
+                graph_moveVertex(self.hopsT[i].vlastnomove,
+		  float(i),  
+		  float(self.steps)-(float(self.hopsT[i].noMoveTempCnt)/2.0),
+	          false);
+                graph_setVertexSize(self.hopsT[i].vlastnomove, 
+				  0.95, float(self.hopsT[i].noMoveTempCnt));
+              end;
+            end;
+          else
+	    self.hopsT[i].moved := false;
+	    self.hopsT[i].vlastnomove := ok;
+	    self.hopsT[i].noMoveTempCnt := 0;
+	    self.hopsT[i].vlastblocked := ok;
+	    self.hopsT[i].blockedTempCnt := 0;
+            graph_moveVertex(self.hopsT[i].vmove, float(i),
+	                     float(self.steps)/2.0, false);
+            graph_setVertexSize(self.hopsT[i].vmove, 0.95, float(self.steps));
+          end;
+
+          if self.hopsT[i].progress isnot true then
+	    self.hopsT[i].finished := true;
+	    let vtx = graph_newVertex(self.graphvbt);
+	    graph_setVertexColor(vtx, FinishedColor);
+	    graph_moveVertex(vtx, float(i),
+			     float(self.steps+1) - 0.75, false);
+            graph_setVertexSize(vtx, 0.96, 0.5);
+          end;
+
+	end;
+      end;
+
+      graph_setVertexLabel(self.labels2[0], fmt_int(self.totalMove));
+      graph_setVertexLabel(self.labels2[1], fmt_int(self.totalNoMove));
+      graph_setVertexLabel(self.labels2[2], fmt_int(self.totalBlocked));
+
+      let sum = self.totalMove + self.totalNoMove + self.totalBlocked;
+      graph_setVertexLabel(self.labels2[3], fmt_int(sum));
+
+      let sum = self.totalMove + self.totalNoMove + self.totalBlocked;
+      graph_setVertexLabel(self.labels3[0],
+                           Percent(self.totalMove, sum));
+      graph_setVertexLabel(self.labels3[1],
+                           Percent(self.totalNoMove, sum));
+      graph_setVertexLabel(self.labels3[2],
+                           Percent(self.totalBlocked, sum));
+      graph_setVertexLabel(self.labels3[3], fmt_int(self.steps) & " Step(s)");
+
+      graph_redisplay(self.graphvbt);
+    end
+  };

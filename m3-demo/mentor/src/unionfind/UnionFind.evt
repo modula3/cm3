@@ -1,0 +1,88 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Jan  9 12:04:43 PST 1995 by najork                   *)
+(*      modified on Fri Aug 19 12:12:22 PDT 1994 by heydon                   *)
+(*      modified on Mon Jun 13 15:33:51 PDT 1994 by shillner                 *)
+
+(* Each run of the algorithm corresponds to events of the form:
+
+|  <Run>      = SetUp <Sets> <Cmd>*
+|  <Sets>     = NewSet* FinishedSets
+|  <Cmd>      = (<FindCmd> <UnionCmd>)
+|  <FindCmd>  = StartFind <DoFind> EndFind
+|  <DoFind>   = StartDoFind <DoFind2> EndDoFind
+|  <DoFind2>  = Found
+|             | StepUp^n Found [ StepDown (StepDown ChangeParent)^(n-1) ] (n>0)
+|  <UnionCmd> = StartUnion <DoUnion> EndUnion
+|  <DoUnion>  = [<DoUnion2>] [CompareRanks] [Unite ChangeParent*]
+|  <DoUnion2> = <DoFind> FoundFirst <DoFind>
+*)
+
+OUTPUT Setup();
+(* Initialize the view; this is the first event and is only invoked
+   once per run. *)
+
+OUTPUT NewSet(nm: TEXT[ZFmt.Text]);
+(* Create a new singleton set named "nm". *)
+
+OUTPUT FinishedSets(numSets: INTEGER[ZFmt.Int]; usesRanks: BOOLEAN[ZFmt.Bool]);
+(* Displays results of "Setup" and "NewSet" events. *)
+
+OUTPUT StartFind(id: INTEGER[ZFmt.Int]);
+(* Indicate the start of a top-level "Find" meta-event. *)
+
+OUTPUT EndFind(id: INTEGER[ZFmt.Int]);
+(* Indicate the end of a top-level "Find" meta-event. *)
+
+OUTPUT StartDoFind(id: INTEGER[ZFmt.Int]);
+(* Indicate the start of a <DoFind> meta-event; this may be part of a
+   top-level <FindCmd> or a top-level <UnionCmd>. *)
+
+OUTPUT StepUp(child, parent: INTEGER[ZFmt.Int]);
+(* Indicate a step up the tree from the node with index "child" to the
+   node with index "parent". Requires that "child" is a child of
+   "parent". *)
+
+OUTPUT Found(id: INTEGER[ZFmt.Int]);
+(* Indicate that the node with index "id" is the result of a <DoFind>
+   meta-event. *)
+
+OUTPUT StepDown(child, parent: INTEGER[ZFmt.Int]);
+(* For algorithms with path compression, indicate a step down the
+   tree from the node with index "parent" to the node with index
+   "child". Requires that "child" is a child of "parent". *) 
+
+OUTPUT ChangeParent(child, parent, root: INTEGER[ZFmt.Int]);
+(* Make the node with index "root" the new parent of the node with
+   index "child". Requires that "parent # root", that "child" is a
+   child of "parent", and that "parent" is a child of "root". *)
+
+OUTPUT EndDoFind(id: INTEGER[ZFmt.Int]);
+(* Indicate the end of a <DoFind> meta-event; this may be part of a
+   top-level <FindCmd> or a top-level <UnionCmd>. *)
+
+OUTPUT StartUnion(id1, id2: INTEGER[ZFmt.Int]; bothRoots: BOOLEAN[ZFmt.Bool]);
+(* Indicate that the sets containing the nodes with indices "id1" and
+   "id2" should be merged. "bothRoots" should be TRUE iff both nodes
+   are known to be roots; in this case, the <DoUnion> meta-event is
+   not invoked. *)
+
+OUTPUT FoundFirst(id1: INTEGER[ZFmt.Int]);
+(* Indicate that the node with index "id1" is the result (and hence, is a
+   root) of the first <DoFind> operation within the top-level
+   <UnionCmd>. *)
+
+OUTPUT CompareRanks(id1, id2: INTEGER[ZFmt.Int]);
+(* Indicate a comparison between the ranks of the nodes with indices "id1"
+   and "id2", which must both be roots. *)
+
+OUTPUT Unite(child, parent, pRank: INTEGER[ZFmt.Int]);
+(* Make the root node with index "child" a child of the root node with
+   index "parent". If the algorithm uses ranks (i.e., if the "usesRanks"
+   boolean to the "FinishedSets" event was TRUE), then "pRank" is the
+   (possibly new) rank of the "parent". *)
+
+OUTPUT EndUnion();
+(* Indicate the end of the <UnionCmd> meta-event. *)

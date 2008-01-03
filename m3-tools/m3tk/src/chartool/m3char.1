@@ -1,0 +1,23 @@
+.SH "CHAR TOOL OPTIONS"
+.PP
+This tool warns about code fragments that depend
+on the fact that the CHAR type has only 256 elements.
+See the LaTeX document ``Finding Dependencies on the NUMBER of Modula-3's CHAR Type'' for a description of the theory behind this tool.
+.TP
+.B \-CWTypesToChange
+Warn about the code fragments identified in the ``Types to change'' subsection of ``Finding Dependencies...''.
+.TP
+.B \-CWStatsToConsider
+Warn about the code fragments identified in the ``Statements to think about'' subsection of ``Finding Dependencies...''.
+.TP
+.B \-CWExprsToReplace
+Warn about the code fragments identified in the ``Expressions with straightforward replacements'' subsection of ``Finding Dependencies...''.
+.TP
+.B \-CWExprsToConsider
+Warn about the code fragments identified in the ``Expressions that require harder thought'' subsection of ``Finding Dependencies...''.
+.TP
+.B \-CWExprsDistantlyRelated
+Warn about the code fragments identified in the ``Expressions distantly related to CHAR'' subsection of ``Finding Dependencies...''.
+.TP
+.B \-CWConsiderAll
+Warn about all code fragments identified in ``Finding Dependencies...''.

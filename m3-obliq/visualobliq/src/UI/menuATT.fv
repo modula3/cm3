@@ -1,0 +1,73 @@
+ (Shape %menuatt (Height 200 + Inf)
+  (VBox 
+         (Glue 5)
+          (Title "Menu Design")
+          (Glue 5)
+
+ 
+    (BoxAround 75
+        (VBox Fill
+          (Field "Bg Color :" 230 (ColorField mbgctypein mbgc))
+          (Field "Fg Color :" 230 (ColorField mfgctypein mfgc))  
+          (Field "Font :" 230 (FontField mfonttypein mfont)) 
+            Fill ))
+    (Glue 5)
+    
+    (HBox (Button (BgColor "PalePink") %mapply "Apply") Fill
+           (Shape (Width 50)  (LinkButton (BgColor "VeryPaleYellow") (For attrmain)  "Form")))
+     
+    (Glue 5)
+    (Title "Menu Items")
+    (Glue 5)
+   
+    (HBox  (LField "Label :" 120 (TypeIn (TabTo mname) %mlabel (BgColor "White"))) (Glue 10) 
+                (LField "Name :" 150 (TypeIn (TabTo mlabel) %mname  (BgColor "White"))))
+    (Glue 5)
+                              
+    (Border (Pen 1)
+              (Shape (Width 300 + Inf) (Height + Inf)
+                       (BgColor "White")
+                         (Frame Lowered (Browser (Font "-*-courier-bold-*R-*120-*") %menubrowser))))
+    (Glue 5)
+    (HBox   
+            (Button %maddfirst "Add First") Fill
+            (Filter %mItemFilter Dormant  
+               (HBox
+                (Button %maddafter "Add After") Fill
+                (Button %maddunder "Add Under") Fill
+                (Button %mdelete "Delete") Fill
+                (Button %mreplace "Replace"))))
+      (Glue 5)
+      (HBox (RField mInitialState "Initial State :" (HBox (Choice %mActive Inverting "Active")
+                                            (Choice %mPassive Inverting "Passive")
+                                            (Choice %mDormant Inverting "Dormant")
+                                            (Choice %mVanish Inverting "Invisible")) 20 mActive 5) 
+            (Button %mridge "Ridge") Fill)
+     (Glue 5)
+     (Title "Menu Item Callback")       
+     (Glue 5)                          
+     (Border (Pen 1)
+                 (Shape (Width 300 + Inf) (Height + Inf)
+                   (BgColor "White")
+                     (Frame Lowered (TextEdit 
+                     (Font "menucallback")             
+                     %menucallback))))
+
+     (Glue 5)
+     (HBox (Text "Execute in :")   
+                    (RField mexechow "" (HBox (Choice (Color "VeryDarkBlue") %mForeground Inverting "Foreground")
+                                          (Choice (Color "VeryDarkBlue") %mBackground Inverting "Background")) 20 mForeground 25)
+            Fill  )
+      (Glue 5)
+     (RField mexecwhere "" (HBox (Choice %mLocal (Color "VeryDarkBlue")  "Local") (Glue 5)
+                                       (Choice   (Color "VeryDarkBlue") %mRemote
+                                          (LField "Remote :" 500 (Filter %mremFilter Dormant (TypeIn ExpandOnDemand 
+                                              (TabTo type) %mLocation
+                                             (BgColor "White")) ))
+                                   )) 20 Local 5)
+               
+     
+     (Glue 5)
+))
+  
+                           

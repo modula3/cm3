@@ -1,0 +1,65 @@
+; Copyright (C) 1992, Digital Equipment Corporation                         
+; All rights reserved.                                                      
+; See the file COPYRIGHT for a full description.                            
+;                                                                           
+; Last modified on Wed Jun 15 13:18:19 PDT 1994 by heydon                   
+
+(Shape
+  (Width + 0)
+  (Height + 0)
+  (VBox
+    (Glue 10)
+    (HBox
+      Fill
+      (Shape (Width + 0) "Number of Nodes: ")
+      (Numeric %nodeCnt =10 (Min 1) (Max 1000)))
+    (Glue 4)
+    (Ridge 2)
+    (Glue 4)
+    (VBox
+      (HBox Fill "Insertion Order:" Fill)
+      (Glue 4)
+      (Radio
+        %inputtype
+        =rand
+        (HBox
+          Fill
+          (Choice %rand "Random")
+          (Glue 6)
+          (Choice %inc "Increasing")
+          (Glue 6)
+          (Choice %dec "Decreasing")
+          Fill)))
+    (Glue 4)
+    (Ridge 2)
+    (Glue 4)
+    (VBox
+      (HBox Fill "Deletion Order:" Fill)
+      (Glue 4)
+      (Radio
+        %deletetype
+        =del_rand
+        (HBox
+          Fill
+          (Choice %del_rand "Random")
+          (Glue 6)
+          (Choice %del_inc "Increasing")
+          (Glue 6)
+          (Choice %del_dec "Decreasing")
+          Fill)))
+    (Glue 4)
+    (Ridge 2)
+    (Glue 4)
+    (VBox
+      (HBox Fill "Random Sequence:" Fill)
+      (Glue 4)
+      (Radio
+        =randomRand
+        (HBox
+          Fill
+          (Choice %randomRand "Random")
+          (Glue 6)
+          (Choice %fixedRand "Fixed")
+          Fill)))
+    (Glue 10)))
+    

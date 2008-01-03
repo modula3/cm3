@@ -1,0 +1,12 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+/*                                                           */
+/* Last modified on Thu Jan 19 17:08:38 PST 1995 by mhb      */
+
+
+resource ("data.backedge")
+resource ("data.big")
+resource ("data.big2")
+resource ("data.fin")
+resource ("data.simple")

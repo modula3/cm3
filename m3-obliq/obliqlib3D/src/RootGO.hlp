@@ -1,0 +1,24 @@
+  RootGO_New(cam: CameraGO, base: GraphicsBase): RootGO             
+  RootGO_NewStd(): RootGO | GraphicsBase_Failure
+  RootGO_NewStdWithBase(base: GraphicsBase): RootGO                 
+  RootGO_Background: ColorPropName                                   
+  RootGO_DepthcueSwitch: BooleanPropName                             
+  RootGO_DepthcueColor: ColorPropName                                
+  RootGO_DepthcueFrontPlane: RealPropName                            
+  RootGO_DepthcueBackPlane: RealPropName                             
+  RootGO_DepthcueFrontScale: RealPropName                            
+  RootGO_DepthcueBackScale: RealPropName                             
+  RootGO_SetBackground(go: GO, c: ColorVal): Ok                     
+  RootGO_SetDepthcueSwitch(go: GO, b: BooleanVal): Ok                  
+  RootGO_SetDepthcueColor(go: GO, c: ColorVal): Ok                     
+  RootGO_SetDepthcueFrontPlane(go: GO, r: RealVal): Ok                 
+  RootGO_SetDepthcueBackPlane(go: GO, r: RealVal): Ok                  
+  RootGO_SetDepthcueFrontScale(go: GO, r: RealVal): Ok                 
+  RootGO_SetDepthcueBackScale(go: GO, r: RealVal): Ok                  
+WHERE                                                                
+  RootGO <: GroupGO & { changeCamera: (CameraGO) => Ok, 
+                        screenToWorld: (Point2, Real) => Point3 }
+  Point2 = [2*Int]
+  BooleanVal = BooleanPropVal + Bool                                 
+  RealVal = RealPropVal + Real + Int                                 
+  ColorVal = ColorPropVal + Color + Text                             

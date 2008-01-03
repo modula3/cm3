@@ -1,0 +1,107 @@
+# Last modified on Wed Mar 16 23:20:32 PST 1994 by heydon
+
+# This file tests formatting of floating-point numbers when the requested
+# precision is strictly less than the number of digits after the decimal in
+# the decimal approximation.
+
+# Examples from the Fmt interface ---------------------------------------------
+
+m NearestElseEven
+r A 2 1.287e6		# "1.29e6",   ditto
+r A 2 1.297e6		# "1.3e6",    ditto
+r A 2 1.297e5		# "130000",   ditto + ".0"
+r A 2 1.297e-5		# "0.000013", ditto
+r A 2 1.297e-6		# "1.3e-6",   ditto
+r A 2 9.997e5		# "1e6",      "1.0e6"
+r A 2 9.997e-6		# "0.00001",  ditto
+
+m NearestElseEven # -----------------------------------------------------------
+
+# no overflow
+r S 2 1.205		# " 1.20e+00", ditto
+r S 2 1.205001		# " 1.21e+00", ditto
+r S 2 1.214999		# " 1.21e+00", ditto
+r S 2 1.215		# " 1.22e+00", ditto
+r S 2 1.2150001		# " 1.22e+00", ditto
+r S 2 -1.205		# "-1.20e+00", ditto
+r S 2 -1.215		# "-1.22e+00", ditto
+r S 2 9.899		# " 9.90e+00", ditto
+r S 2 9.95		# " 9.95e+00", ditto
+r F 2 1.00205e2		# "100.20",    ditto
+r F 2 1.0020501e2	# "100.21",    ditto
+r F 2 1.0021499e2	# "100.21",    ditto
+r F 2 1.00215e2		# "100.22",    ditto
+r F 2 1.00215001e2	# "100.22",    ditto
+r F 4 1.205e-2		# "0.0120",    ditto
+r F 4 1.205001e-2	# "0.0121",    ditto
+r F 4 1.21499e-2	# "0.0121",    ditto
+r F 4 1.215e-2		# "0.0122",    ditto
+r F 4 1.215001e-2	# "0.0122",    ditto
+r F 3 9.9989		# "9.999",     ditto
+r F 3 9.999989e2	# "999.999",   ditto
+r F 3 8.999989e1	# "90.000",    ditto
+
+# overflow
+r S 0 9.995		# " 1e+01",    " 1.0e+01"
+r S 1 9.995		# " 1.0e+01",  ditto
+r S 2 9.995		# " 1.00e+01", ditto
+r F 2 9.99995e1		# "100.00",    ditto
+
+m NearestElseAwayFromZero # ---------------------------------------------------
+
+# no overflow
+r S 2 1.205		# " 1.21e+00", ditto
+r S 2 1.214999		# " 1.21e+00", ditto
+r S 2 1.215		# " 1.22e+00", ditto
+r S 2 9.899		# " 9.90e+00", ditto
+r S 2 9.95		# " 9.95e+00", ditto
+r S 2 -1.205		# "-1.21e+00", ditto
+r S 2 -1.215		# "-1.22e+00", ditto
+r F 2 1.00205e2		# "100.20",    ditto
+r F 2 1.0020501e2	# "100.21",    ditto
+r F 2 1.0021499e2	# "100.21",    ditto
+r F 2 1.00215e2		# "100.22",    ditto
+r F 2 1.00215001e2	# "100.22",    ditto
+r F 4 1.205e-2		# "0.0120",    ditto
+r F 4 1.205001e-2	# "0.0121",    ditto
+r F 4 1.21499e-2	# "0.0121",    ditto
+r F 4 1.215e-2		# "0.0122",    ditto
+r F 4 1.215001e-2	# "0.0122",    ditto
+r F 3 9.9989		# "9.999",     ditto
+r F 3 9.999989e2	# "999.999",   ditto
+r F 3 8.999989e1	# "90.000",    ditto
+
+# overflow
+r S 0 9.995		# " 1e+01",    " 1.0e+01"
+r S 1 9.995		# " 1.0e+01",  ditto
+r S 2 9.995		# " 1.00e+01", ditto
+r F 2 9.99995e1		# "100.00",    ditto
+
+m TowardMinusInfinity # -------------------------------------------------------
+
+# no overflow
+r S 2 1.2099		# " 1.20e+00", ditto
+r S 2 -1.2001		# "-1.21e+00", ditto
+
+# overflow
+r S 2 -9.99001		# "-1.00e+01", ditto
+
+m TowardPlusInfinity # --------------------------------------------------------
+
+# no overflow
+r S 2 1.2001		# " 1.21e+00", ditto
+r S 2 -1.2099		# "-1.20e+00", ditto
+
+# overflow
+r S 2 9.99001		# " 1.00e+01", ditto
+
+m TowardZero # ----------------------------------------------------------------
+
+# no overflow
+r S 2 1.2099		# " 1.20e+00", ditto
+r S 2 -1.2099		# "-1.20e+00", ditto
+
+# There are no examples of overflow in the "TowardZero" case, as the
+# following two examples indicate.
+r S 2 9.99999		# " 9.99e+00", ditto
+r S 2 -9.99999		# "-9.99e+00", ditto

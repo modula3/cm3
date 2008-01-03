@@ -1,0 +1,45 @@
+  TYPE
+    Type = OBJECT END;
+    TypeBot = Type BRANDED OBJECT END;
+    TypeTop = Type BRANDED OBJECT END;
+    TypeFun = Type BRANDED OBJECT dom,rng: Type END;
+
+  VAR 
+    trail: ARRAY [0..1000] OF RECORD lft,rht: Type END;
+    top: INTEGER := -1;
+
+  PROCEDURE Notice(lft, rht: Type) =
+  BEGIN
+    INC(top);
+    trail[top].lft := lft;
+    trail[top].rht := rht;
+  END Notice;
+
+  PROCEDURE Seen(lft, rht: Type): BOOLEAN =
+  BEGIN
+    FOR i:=0 TO top DO
+      IF (trail[i].lft=lft) AND (trail[i].rht=rht) THEN RETURN TRUE END;
+    END;
+    RETURN FALSE;
+  END Seen;
+
+@In
+  PROCEDURE In(lft, rht: Type): BOOLEAN = @
+  BEGIN
+@1    IF Seen(lft, rht) @ THEN @12 RETURN TRUE @ END;
+@2    Notice(lft, rht); @
+@3    TYPECASE lft OF @
+@4    | TypeBot => RETURN TRUE; @
+@5    | TypeTop => RETURN ISTYPE(rht, TypeTop); @
+@6    | TypeFun(lftFun) =>
+       TYPECASE rht OF @
+@7        | TypeBot => RETURN FALSE; @
+@8        | TypeTop => RETURN TRUE; @
+       | TypeFun(rhtFun) =>
+          RETURN 
+@10             In(rhtFun.dom, lftFun.dom) @ AND
+@11             In(lftFun.rng, rhtFun.rng); @
+       END;
+    END;
+  END In;
+@In

@@ -1,0 +1,22 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Tue Sep  6 16:26:11 PDT 1994 by bharat  */
+/*      modified on Fri Oct 22 15:14:04 PDT 1993 by mhb     */
+
+resource ("callbackTEMPLATE.obl")
+resource ("constructorTEMPLATE.obl")
+resource ("declarationTEMPLATE.obl")
+resource ("defnTEMPLATE.obl")
+resource ("sessionTEMPLATE.obl")
+resource ("vosnotice.fv")
+resource ("volib.obl")
+resource ("templates.obl")
+resource ("vos-internal.obl")
+resource("netobjexec.obl")
+resource ("vocheckpt.obl")
+resource ("vowidgets.obl")
+resource("sessionConstructor.help")
+
+

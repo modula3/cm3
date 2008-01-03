@@ -1,0 +1,832 @@
+(* Copyright 1991 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+
+MODULE ObLibUI;
+
+IMPORT Color, ColorName, FormsVBT, MultiSplit, Obliq, ObBuiltIn, ObEval, ObLib,
+       ObValue, Random, Rd, SynLocation, SynWr, Text, Thread,
+       TranslateVBT, Trestle, TrestleComm, VBT;
+
+VAR setupDone := FALSE;
+
+  PROCEDURE PackageSetup() =
+  BEGIN
+    IF NOT setupDone THEN
+      setupDone := TRUE;
+      Setup();
+    END;
+  END PackageSetup;
+
+  PROCEDURE Setup() =
+  BEGIN
+    SetupColor();
+    SetupRandom();
+    SetupVBT();
+    SetupForm();
+  END Setup;
+
+
+(* ============ "color" package ============ *)
+
+TYPE
+
+  ColorCode = {Named, RGB, HSV, R, G, B, H, S, V, Brightness};
+
+  ColorOpCode =  
+    ObLib.OpCode OBJECT
+        code: ColorCode;
+      END;
+    
+  PackageColor = 
+    ObLib.T OBJECT
+      OVERRIDES
+        Eval:=EvalColor;
+      END;
+
+  PROCEDURE IsColor(self: ValColor; other: ObValue.ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF ValColor(oth)=> RETURN self.color = oth.color;
+    ELSE RETURN FALSE END;
+  END IsColor;
+
+  PROCEDURE CopyColor(self: ObValue.ValAnything; tbl: ObValue.Tbl;
+    loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error} =
+  BEGIN
+    RETURN self;
+  END CopyColor;
+
+  PROCEDURE NewColorOC(name: TEXT; arity: INTEGER; code: ColorCode)
+    : ColorOpCode =
+  BEGIN
+    RETURN NEW(ColorOpCode, name:=name, arity:=arity, code:=code);
+  END NewColorOC;
+
+  PROCEDURE SetupColor() =
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW(REF OpCodes, NUMBER(ColorCode));
+    opCodes^ :=
+      OpCodes{
+      NewColorOC("named", 1, ColorCode.Named),
+      NewColorOC("rgb", 3, ColorCode.RGB),
+      NewColorOC("hsv", 3, ColorCode.HSV),
+      NewColorOC("r", 1, ColorCode.R),
+      NewColorOC("g", 1, ColorCode.G),
+      NewColorOC("b", 1, ColorCode.B),
+      NewColorOC("h", 1, ColorCode.H),
+      NewColorOC("s", 1, ColorCode.S),
+      NewColorOC("v", 1, ColorCode.V),
+      NewColorOC("brightness", 1, ColorCode.Brightness)
+      };
+    ObLib.Register(
+      NEW(PackageColor, name:="color", opCodes:=opCodes));
+  END SetupColor;
+
+  PROCEDURE EvalColor(self: PackageColor; opCode: ObLib.OpCode; 
+      arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
+      temp: BOOLEAN; loc: SynLocation.T)
+      : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
+    VAR real1, real2, real3: LONGREAL; rgb1: Color.T; hsv1: Color.HSV;
+      text1: TEXT;
+    BEGIN
+      CASE NARROW(opCode, ColorOpCode).code OF
+      | ColorCode.Named => 
+          TYPECASE args[1] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(1, "text", self.name, opCode.name, loc); END;
+          TRY rgb1 := ColorName.ToRGB(text1);
+          EXCEPT ColorName.NotFound => rgb1 := Color.Black;
+          END;
+          RETURN NEW(ValColor,  what:="<a Color.T>", picklable:=TRUE,
+              color:=rgb1);
+      | ColorCode.RGB => 
+          TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
+          ELSE ObValue.BadArgType(1, "real", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValReal(node) => real2:=node.real;
+          ELSE ObValue.BadArgType(2, "real", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValReal(node) => real3:=node.real;
+          ELSE ObValue.BadArgType(3, "real", self.name, opCode.name, loc); END;
+	  IF (real1<0.0d0) OR (real1>1.0d0) 
+          THEN ObValue.BadArgVal(1, "in range", self.name, opCode.name, loc);
+          END;
+	  IF (real2<0.0d0) OR (real2>1.0d0) 
+          THEN ObValue.BadArgVal(2, "in range", self.name, opCode.name, loc);
+          END;
+	  IF (real3<0.0d0) OR (real3>1.0d0) 
+          THEN ObValue.BadArgVal(3, "in range", self.name, opCode.name, loc);
+          END;
+          rgb1 := Color.T{r:=FLOAT(real1), g:=FLOAT(real2), b:=FLOAT(real3)};
+          RETURN NEW(ValColor, what:="<a Color.T>", picklable:=TRUE,
+            color:=rgb1);
+      | ColorCode.HSV => 
+          TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
+          ELSE ObValue.BadArgType(1, "real", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValReal(node) => real2:=node.real;
+          ELSE ObValue.BadArgType(2, "real", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValReal(node) => real3:=node.real;
+          ELSE ObValue.BadArgType(3, "real", self.name, opCode.name, loc); END;
+	  IF (real1<0.0d0) OR (real1>1.0d0) 
+          THEN ObValue.BadArgVal(1, "in range", self.name, opCode.name, loc);
+          END;
+	  IF (real2<0.0d0) OR (real2>1.0d0) 
+          THEN ObValue.BadArgVal(2, "in range", self.name, opCode.name, loc);
+          END;
+	  IF (real3<0.0d0) OR (real3>1.0d0) 
+          THEN ObValue.BadArgVal(3, "in range", self.name, opCode.name, loc);
+          END;
+          rgb1 := Color.FromHSV(
+              Color.HSV{h:=FLOAT(real1), s:=FLOAT(real2), v:=FLOAT(real3)});
+          RETURN NEW(ValColor, what:="<a Color.T>", picklable:=TRUE,
+            color:=rgb1);
+      | ColorCode.R => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          RETURN NEW(ObValue.ValReal, real:=FLOAT(rgb1.r, LONGREAL), temp:=temp);
+      | ColorCode.G => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          RETURN NEW(ObValue.ValReal, real:=FLOAT(rgb1.g, LONGREAL), temp:=temp);
+      | ColorCode.B => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          RETURN NEW(ObValue.ValReal, real:=FLOAT(rgb1.b, LONGREAL), temp:=temp);
+      | ColorCode.H => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          hsv1 := Color.ToHSV(rgb1);
+          RETURN NEW(ObValue.ValReal, real:=FLOAT(hsv1.h, LONGREAL), temp:=temp);
+      | ColorCode.S => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          hsv1 := Color.ToHSV(rgb1);
+          RETURN NEW(ObValue.ValReal, real:=FLOAT(hsv1.s, LONGREAL), temp:=temp);
+      | ColorCode.V => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          hsv1 := Color.ToHSV(rgb1);
+          RETURN NEW(ObValue.ValReal, real:=FLOAT(hsv1.v, LONGREAL), temp:=temp);
+      | ColorCode.Brightness => 
+          TYPECASE args[1] OF | ValColor(node) => rgb1:=node.color;
+          ELSE ObValue.BadArgType(1, "color", self.name, opCode.name, loc);END;
+          RETURN NEW(ObValue.ValReal, 
+            real:=FLOAT(Color.Brightness(rgb1), LONGREAL), temp:=temp);
+      ELSE
+        ObValue.BadOp(self.name, opCode.name, loc);
+      END;
+    END EvalColor;
+
+
+(* ============ "random" package ============ *)
+
+TYPE
+
+  RandomCode = {Int, Real};
+
+  RandomOpCode =  
+    ObLib.OpCode OBJECT
+        code: RandomCode;
+      END;
+    
+  PackageRandom = 
+    ObLib.T OBJECT
+      OVERRIDES
+        Eval:=EvalRandom;
+      END;
+
+  PROCEDURE NewRandomOC(name: TEXT; arity: INTEGER; code: RandomCode)
+    : RandomOpCode =
+  BEGIN
+    RETURN NEW(RandomOpCode, name:=name, arity:=arity, code:=code);
+  END NewRandomOC;
+
+  PROCEDURE SetupRandom() =
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW(REF OpCodes, NUMBER(RandomCode));
+    opCodes^ :=
+      OpCodes{
+      NewRandomOC("int",  2, RandomCode.Int),
+      NewRandomOC("real", 2, RandomCode.Real)
+      };
+    ObLib.Register(
+      NEW(PackageRandom, name:="random", opCodes:=opCodes));
+  END SetupRandom;
+
+  PROCEDURE EvalRandom(self: PackageRandom; opCode: ObLib.OpCode; 
+      arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
+      temp: BOOLEAN; loc: SynLocation.T)
+      : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
+    VAR real1, real2: LONGREAL; int1, int2: INTEGER;
+    BEGIN
+      CASE NARROW(opCode, RandomOpCode).code OF
+      | RandomCode.Int => 
+          TYPECASE args[1] OF | ObValue.ValInt(node) => int1:=node.int;
+          ELSE ObValue.BadArgType(1, "int", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValInt(node) => int2:=node.int;
+          ELSE ObValue.BadArgType(2, "int", self.name, opCode.name, loc); END;
+          LOCK randomMu DO
+            RETURN Obliq.NewInt(random.integer(int1,int2))
+          END;
+      | RandomCode.Real => 
+          TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
+          ELSE ObValue.BadArgType(1, "real", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValReal(node) => real2:=node.real;
+          ELSE ObValue.BadArgType(2, "real", self.name, opCode.name, loc); END;
+          LOCK randomMu DO
+            RETURN Obliq.NewReal(random.longreal(real1,real2))
+          END;
+      ELSE
+        ObValue.BadOp(self.name, opCode.name, loc);
+      END;
+    END EvalRandom;
+
+VAR 
+  randomMu := NEW(MUTEX);
+  random := NEW(Random.Default).init();
+
+(* ============ "vbt" package ============= *)
+
+TYPE
+  VBTCode = {Lock, Show};
+
+  VBTOpCode = ObLib.OpCode OBJECT
+    code: VBTCode;
+  END;
+    
+  PackageVBT = ObLib.T OBJECT
+  OVERRIDES
+    Eval := EvalVBT;
+  END;
+
+VAR 
+  vbt_mu: ObValue.Val;
+
+
+PROCEDURE SetupVBT () =
+
+  PROCEDURE NewOpCode (name: TEXT; arity: INTEGER; code: VBTCode): VBTOpCode =
+    BEGIN
+      RETURN NEW (VBTOpCode, name := name, arity := arity, code := code);
+    END NewOpCode;
+
+  PROCEDURE NewMutex (mu: MUTEX): ObValue.Val =
+    BEGIN
+      RETURN NEW (ObBuiltIn.ValMutex, 
+                  what := "<a Thread.Mutex>", 
+                  picklable := FALSE,
+                  mutex := mu);
+    END NewMutex;
+
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW (REF OpCodes, NUMBER (VBTCode));
+    opCodes^ := OpCodes{NewOpCode ("mu",  -1, VBTCode.Lock),
+                        NewOpCode ("show", 1, VBTCode.Show)
+                       };
+
+    vbt_mu := NewMutex (VBT.mu);
+    ObLib.Register (NEW (PackageVBT, name := "vbt", opCodes := opCodes));
+  END SetupVBT;
+
+
+PROCEDURE EvalVBT (         self  : PackageVBT; 
+                            opCode: ObLib.OpCode; 
+                            arity : ObLib.OpArity; 
+                   READONLY args  : ObValue.ArgArray; 
+                            temp  : BOOLEAN; 
+                            loc   : SynLocation.T): ObValue.Val 
+    RAISES {ObValue.Error, ObValue.Exception} =
+  VAR
+    vbt: VBT.T;
+  BEGIN
+    CASE NARROW (opCode, VBTOpCode).code OF
+      VBTCode.Lock => RETURN vbt_mu;
+    | VBTCode.Show =>
+      TYPECASE args[1] OF | ValVBT(node) => vbt := node.vbt;
+      ELSE ObValue.BadArgType(1, "vbt", self.name, opCode.name, loc); END;
+      Trestle.Install (vbt);
+      RETURN ObValue.valOk;   
+    END;
+  END EvalVBT;
+
+PROCEDURE IsVBT(self: ValVBT; other: ObValue.ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF ValVBT(oth)=> RETURN self.vbt = oth.vbt;
+    ELSE RETURN FALSE END;
+  END IsVBT;
+
+PROCEDURE CopyVBT(self: ObValue.ValAnything; tbl: ObValue.Tbl;
+    loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error} =
+  BEGIN
+    ObValue.RaiseError("Cannot copy vbts", loc);
+  END CopyVBT;
+
+
+(* ============ "form" package ============ *)
+
+TYPE
+
+  FormCode = {Error, New, FromFile, Attach, PutGeneric, PutColor,
+    GetBool, PutBool, GetInt, PutInt, GetText, PutText, 
+    GetBoolean, PutBoolean, GetChoice, PutChoice, TakeFocus,
+    GetReactivity, PutReactivity, PopUp, PopDown, 
+    Insert, Move, Delete, DeleteRange,
+    ChildIndex, Child, NumOfChildren,
+    ShowAt, Show, Hide};
+
+  FormOpCode =  
+    ObLib.OpCode OBJECT
+        code: FormCode;
+      END;
+    
+  PackageForm = 
+    ObLib.T OBJECT
+      OVERRIDES
+        Eval:=EvalForm;
+      END;
+
+  TYPE FormClosure =
+    FormsVBT.Closure OBJECT
+      fun: ObValue.ValFun;
+      fv: ObValue.Val;
+      location: SynLocation.T;
+    OVERRIDES
+      apply := ApplyFormClosure;
+    END;
+
+  PROCEDURE ApplyFormClosure(self: FormClosure;
+      fv: FormsVBT.T; name: TEXT; time: VBT.TimeStamp) RAISES {} =
+    VAR args: ARRAY [0..0] OF ObValue.Val;
+    BEGIN
+      TRY
+        args[0] := self.fv;
+        EVAL ObEval.Call(self.fun, args, self.location);
+      EXCEPT
+      | ObValue.Error(packet) => 
+          SynWr.Text(SynWr.out,
+           "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
+          ObValue.ErrorMsg(SynWr.out, packet);
+          SynWr.Flush(SynWr.out);
+      | ObValue.Exception(packet) => 
+          SynWr.Text(SynWr.out, 
+           "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
+          ObValue.ExceptionMsg(SynWr.out, packet);
+          SynWr.Flush(SynWr.out);
+      END;
+    END ApplyFormClosure;
+
+  VAR formException: ObValue.ValException;
+
+  PROCEDURE NewFormOC(name: TEXT; arity: INTEGER; code: FormCode)
+    : FormOpCode =
+  BEGIN
+    RETURN NEW(FormOpCode, name:=name, arity:=arity, code:=code);
+  END NewFormOC;
+
+  PROCEDURE SetupForm() =
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW(REF OpCodes, NUMBER(FormCode));
+    opCodes^ :=
+      OpCodes{
+      NewFormOC("failure", -1, FormCode.Error),
+      NewFormOC("new", 1, FormCode.New),
+      NewFormOC("fromFile", 1, FormCode.FromFile),
+      NewFormOC("attach", 3, FormCode.Attach),
+      NewFormOC("putGeneric", 3, FormCode.PutGeneric),
+      NewFormOC("putColor", 4, FormCode.PutColor),
+      NewFormOC("getBool", 3, FormCode.GetBool),
+      NewFormOC("putBool", 4, FormCode.PutBool),
+      NewFormOC("getInt", 3, FormCode.GetInt),
+      NewFormOC("putInt", 4, FormCode.PutInt),
+      NewFormOC("getText", 3, FormCode.GetText),
+      NewFormOC("putText", 5, FormCode.PutText),
+      NewFormOC("getBoolean", 2, FormCode.GetBoolean),
+      NewFormOC("putBoolean", 3, FormCode.PutBoolean),
+      NewFormOC("getChoice", 2, FormCode.GetChoice),
+      NewFormOC("putChoice", 3, FormCode.PutChoice),
+      NewFormOC("takeFocus", 3, FormCode.TakeFocus),
+      NewFormOC("getReactivity", 2, FormCode.GetReactivity),
+      NewFormOC("putReactivity", 3, FormCode.PutReactivity),
+      NewFormOC("popUp", 2, FormCode.PopUp),
+      NewFormOC("popDown", 2, FormCode.PopDown),
+      NewFormOC("insert", 4, FormCode.Insert),
+      NewFormOC("move", 5, FormCode.Move),
+      NewFormOC("delete", 3, FormCode.Delete),
+      NewFormOC("deleteRange", 4, FormCode.DeleteRange),
+      NewFormOC("childIndex", 3, FormCode.ChildIndex),
+      NewFormOC("child", 3, FormCode.Child),
+      NewFormOC("numOfChildren", 2, FormCode.NumOfChildren),
+      NewFormOC("showAt", 3, FormCode.ShowAt),
+      NewFormOC("show", 1, FormCode.Show),
+      NewFormOC("hide", 1, FormCode.Hide)
+      };
+    ObLib.Register(
+      NEW(PackageForm, name:="form", opCodes:=opCodes));
+    formException := NEW(ObValue.ValException, name:="form_failure");
+    ObValue.InhibitTransmission(TYPECODE(ValForm), 
+      "forms cannot be transmitted/duplicated");
+  END SetupForm;
+
+  PROCEDURE EvalForm(self: PackageForm; opCode: ObLib.OpCode; 
+      arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
+      temp: BOOLEAN; loc: SynLocation.T)
+      : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
+    VAR text1, text2, text3: TEXT; fv1: FormsVBT.T; bool1: BOOLEAN;
+      int1, int2, index: INTEGER; fun1: ObValue.Val;
+      vbt1: VBT.T; color1: Color.T;
+      ch, toCh, p: VBT.T;
+    BEGIN
+      TRY
+      CASE NARROW(opCode, FormOpCode).code OF
+      | FormCode.Error => 
+          RETURN formException;
+      | FormCode.New => 
+          TYPECASE args[1] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(1, "text", self.name, opCode.name, loc); END;
+          fv1 :=NEW(FormsVBT.T).init(text1);
+          RETURN NEW(ValForm, what:="<a FormsVBT.T>", picklable:=FALSE, 
+              vbt:=fv1);
+      | FormCode.FromFile => 
+          TYPECASE args[1] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(1, "text", self.name, opCode.name, loc); END;
+          TRY
+            fv1 :=NEW(FormsVBT.T).initFromFile(text1);
+          EXCEPT
+          | Rd.Failure =>
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          RETURN NEW(ValForm, what:="<a FormsVBT.T>", picklable:=FALSE, 
+              vbt:=fv1);
+      | FormCode.Attach => 
+          TYPECASE args[1] OF | ValForm(node) => fv1:=node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValFun(node) => fun1:=node;
+          ELSE ObValue.BadArgType(3, "procedure", self.name, opCode.name, loc); 
+          END;
+          FormsVBT.Attach(fv1, text1, 
+              NEW(FormClosure, fun:=fun1, fv:=args[1], location:=loc));
+          RETURN ObValue.valOk;
+      | FormCode.PutGeneric => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ValVBT(node) => vbt1 :=node.vbt;
+          ELSE ObValue.BadArgType(3, "vbt", self.name, opCode.name, loc); END;
+          FormsVBT.PutGeneric(fv1, text1, TranslateVBT.New(vbt1));
+          RETURN ObValue.valOk;
+      | FormCode.PutColor => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ValColor(node) => color1:=node.color;
+          ELSE ObValue.BadArgType(4, "color", self.name, opCode.name, loc); END;
+          FormsVBT.PutColorProperty(fv1, text1, text2, color1);
+          RETURN ObValue.valOk;
+      | FormCode.GetBool => 
+          TYPECASE args[1] OF | ValForm(node) => fv1:=node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          bool1 := FormsVBT.GetBooleanProperty(fv1, text1, text2);
+          RETURN NEW(ObValue.ValBool, bool:=bool1);
+      | FormCode.PutBool => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ObValue.ValBool(node) => bool1:=node.bool;
+          ELSE ObValue.BadArgType(4, "bool", self.name, opCode.name, loc); END;
+          FormsVBT.PutBooleanProperty(fv1, text1, text2, bool1);
+          RETURN ObValue.valOk;
+      | FormCode.GetInt => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          IF Text.Empty(text2) THEN
+            int1 := FormsVBT.GetInteger(fv1, text1);
+          ELSE
+            int1 := FormsVBT.GetIntegerProperty(fv1, text1, text2);
+          END;
+          RETURN NEW(ObValue.ValInt, int:=int1);
+      | FormCode.PutInt => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ObValue.ValInt(node) => int1:=node.int;
+          ELSE ObValue.BadArgType(4, "int", self.name, opCode.name, loc); END;
+          IF Text.Empty(text2) THEN
+            FormsVBT.PutInteger(fv1, text1, int1);
+          ELSE
+            FormsVBT.PutIntegerProperty(fv1, text1, text2, int1);
+          END;
+          RETURN ObValue.valOk;
+      | FormCode.GetText => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          IF Text.Empty(text2) THEN
+            text3 := FormsVBT.GetText(fv1, text1);
+          ELSE
+            text3 := FormsVBT.GetTextProperty(fv1, text1, text2);
+          END;
+          RETURN ObValue.NewText(text3);
+      | FormCode.PutText => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ObValue.ValText(node) => text3:=node.text;
+          ELSE ObValue.BadArgType(4, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[5] OF | ObValue.ValBool(node) => bool1:=node.bool;
+          ELSE ObValue.BadArgType(5, "bool", self.name, opCode.name, loc); END;
+          IF Text.Empty(text2) THEN
+            FormsVBT.PutText(fv1, text1, text3, bool1);
+          ELSE
+            FormsVBT.PutTextProperty(fv1, text1, text2, text3);
+          END;
+          RETURN ObValue.valOk;
+      | FormCode.GetBoolean => 
+          TYPECASE args[1] OF | ValForm(node) => fv1:=node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          bool1 := FormsVBT.GetBoolean(fv1, text1);
+          RETURN NEW(ObValue.ValBool, bool:=bool1);
+      | FormCode.PutBoolean => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValBool(node) => bool1:=node.bool;
+          ELSE ObValue.BadArgType(3, "bool", self.name, opCode.name, loc); END;
+          FormsVBT.PutBoolean(fv1, text1, bool1);
+          RETURN ObValue.valOk;
+      | FormCode.GetChoice => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          text2 := FormsVBT.GetChoice(fv1, text1);
+          RETURN ObValue.NewText(text2);
+       | FormCode.PutChoice => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          IF Text.Empty(text2) THEN
+            FormsVBT.PutChoice(fv1, text1, NIL);
+          ELSE
+            FormsVBT.PutChoice(fv1, text1, text2);
+          END;
+          RETURN ObValue.valOk;
+      | FormCode.GetReactivity => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          IF FormsVBT.IsActive(fv1, text1) THEN 
+            RETURN ObValue.NewText("active");
+          ELSIF FormsVBT.IsPassive(fv1, text1) THEN 
+            RETURN ObValue.NewText("passive");
+          ELSIF FormsVBT.IsDormant(fv1, text1) THEN 
+            RETURN ObValue.NewText("dormant");
+          ELSIF FormsVBT.IsVanished(fv1, text1) THEN
+            RETURN ObValue.NewText("vanished");
+          ELSE 
+            RETURN ObValue.NewText("");
+          END;
+       | FormCode.PutReactivity => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          IF Text.Equal(text2, "active") THEN
+            FormsVBT.MakeActive(fv1, text1);
+          ELSIF Text.Equal(text2, "passive") THEN
+            FormsVBT.MakePassive(fv1, text1);
+          ELSIF Text.Equal(text2, "dormant") THEN
+            FormsVBT.MakeDormant(fv1, text1);
+          ELSIF Text.Equal(text2, "vanished") THEN
+            FormsVBT.MakeVanish(fv1, text1);
+          ELSE ObValue.BadArgVal(3, "a valid reactivity", 
+                               self.name, opCode.name, loc);
+          END;
+          RETURN ObValue.valOk;
+      | FormCode.TakeFocus => 
+          TYPECASE args[1] OF | ValForm(node) => fv1:=node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValBool(node) => bool1:=node.bool;
+          ELSE ObValue.BadArgType(3, "bool", self.name, opCode.name, loc); END;
+          FormsVBT.TakeFocus(fv1, text1, FormsVBT.GetTheEventTime(fv1), bool1);
+          RETURN ObValue.valOk;
+      | FormCode.PopUp => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          FormsVBT.PopUp(fv1, text1);
+          RETURN ObValue.valOk;
+      | FormCode.PopDown => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          FormsVBT.PopDown(fv1, text1);
+          RETURN ObValue.valOk;
+      | FormCode.Insert => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ObValue.ValInt(node) => int1:=node.int;
+          ELSE ObValue.BadArgType(4, "int", self.name, opCode.name, loc); END;
+          IF int1 < 0 THEN 
+            ObValue.BadArgVal(4, "non-negative", self.name, opCode.name, loc);
+          END;
+          EVAL FormsVBT.Insert(fv1, text1, text2, int1);
+          RETURN ObValue.valOk;
+      | FormCode.ChildIndex => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          p := FormsVBT.GetVBT(fv1, text1);
+          ch := FormsVBT.GetVBT(fv1, text2);
+          IF (p = NIL) OR (ch = NIL) THEN
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          TRY int1 := MultiSplit.Index(p, ch);
+          EXCEPT MultiSplit.NotAChild => 
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          RETURN NEW(ObValue.ValInt, int:=int1);
+      | FormCode.Child => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValInt(node) => int1:=node.int;
+          ELSE ObValue.BadArgType(3, "int", self.name, opCode.name, loc); END;
+          IF int1 < 0 THEN 
+            ObValue.BadArgVal(3, "non-negative", self.name, opCode.name, loc);
+          END;
+          p := FormsVBT.GetVBT(fv1, text1);
+	  ch := MultiSplit.Nth(p, int1);
+	  IF (p=NIL) OR (ch=NIL) THEN
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          TRY text2 := FormsVBT.GetName(ch);
+          EXCEPT FormsVBT.Error => 
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          RETURN ObValue.NewText(text2);
+      | FormCode.NumOfChildren => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          p := FormsVBT.GetVBT(fv1, text1);
+	  IF p=NIL THEN
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          TRY int1 := MultiSplit.NumChildren(p);
+          EXCEPT MultiSplit.NotAChild => 
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          RETURN NEW(ObValue.ValInt, int:=int1);
+      | FormCode.Move => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ObValue.ValText(node) => text3:=node.text;
+          ELSE ObValue.BadArgType(4, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[5] OF | ObValue.ValBool(node) => bool1:=node.bool;
+          ELSE ObValue.BadArgType(5, "bool", self.name, opCode.name, loc); END;
+          IF Text.Equal(text2, text3) THEN RETURN ObValue.valOk END;
+          p := FormsVBT.GetVBT(fv1, text1);
+          ch := FormsVBT.GetVBT(fv1, text2);
+          IF Text.Empty(text3) THEN toCh := NIL
+          ELSE toCh := FormsVBT.GetVBT(fv1, text3);
+          END;
+          IF (p = NIL) OR (ch = NIL) OR 
+            ((NOT Text.Empty(text3)) AND (toCh = NIL)) THEN
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          TRY
+            IF bool1 THEN toCh := MultiSplit.Pred(p, toCh) END;
+            MultiSplit.Move(p, toCh, ch);
+          EXCEPT MultiSplit.NotAChild => 
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          RETURN ObValue.valOk;
+      | FormCode.Delete => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          p := FormsVBT.GetVBT(fv1, text1);
+          ch := FormsVBT.GetVBT(fv1, text2);
+          IF (p = NIL) OR (ch = NIL) THEN
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          TRY
+            index := MultiSplit.Index(p, ch);
+          EXCEPT MultiSplit.NotAChild => 
+            ObValue.RaiseException(formException, opCode.name, loc);
+          END;
+          FormsVBT.Delete(fv1, text1, index, 1);
+          RETURN ObValue.valOk;
+      | FormCode.DeleteRange => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValInt(node) => int1:=node.int;
+          ELSE ObValue.BadArgType(3, "int", self.name, opCode.name, loc); END;
+          TYPECASE args[4] OF | ObValue.ValInt(node) => int2:=node.int;
+          ELSE ObValue.BadArgType(4, "int", self.name, opCode.name, loc); END;
+          IF int1 < 0 THEN 
+            ObValue.BadArgVal(3, "non-negative", self.name, opCode.name, loc);
+          END;
+          IF int2 < 0 THEN 
+            ObValue.BadArgVal(4, "non-negative", self.name, opCode.name, loc);
+          END;
+          FormsVBT.Delete(fv1, text1, int1, int2);
+          RETURN ObValue.valOk;
+      | FormCode.Show => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          Trestle.Install(fv1);
+          RETURN ObValue.valOk;      
+      | FormCode.ShowAt => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
+          ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
+          TYPECASE args[3] OF | ObValue.ValText(node) => text2:=node.text;
+          ELSE ObValue.BadArgType(3, "text", self.name, opCode.name, loc); END;
+          IF Text.Empty(text1) THEN Trestle.Install(fv1);
+          ELSE 
+            Trestle.Install(v:=fv1, trsl:=Trestle.Connect(text1),
+              windowTitle:=text2, iconTitle:=text2);
+          END;
+          RETURN ObValue.valOk;      
+      | FormCode.Hide => 
+          TYPECASE args[1] OF | ValForm(node) => fv1 := node.vbt;
+          ELSE ObValue.BadArgType(1, "form", self.name, opCode.name, loc); END;
+          Trestle.Delete(fv1);
+          RETURN ObValue.valOk;      
+      ELSE
+        ObValue.BadOp(self.name, opCode.name, loc);
+      END;
+      EXCEPT
+      | FormsVBT.Error, FormsVBT.Unimplemented, TrestleComm.Failure => 
+        ObValue.RaiseException(formException, opCode.name, loc);
+      | Thread.Alerted =>
+          ObValue.RaiseException(ObValue.threadAlerted, 
+                               self.name&"_"&opCode.name,loc);
+      END;
+    END EvalForm;
+
+BEGIN
+END ObLibUI.

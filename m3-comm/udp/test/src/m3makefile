@@ -1,0 +1,12 @@
+% Copyright (C) 1998, Compaq Computer Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Sun Dec  6 18:29:29 PST 1998 by heydon  
+
+import ("libm3")
+import ("tcp")
+import ("udp")
+
+implementation ("TestUDP")
+program ("TestUDP")

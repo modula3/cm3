@@ -1,0 +1,116 @@
+(Scale
+  (HScale 1.)
+  (VScale 1.)
+  (ZSplit
+    (Insert "shared.fv")
+    (ZBackground
+      (Filter
+        %ComposeFilter
+        (VBox
+          (Bar 1)
+          (HBox
+            (TSplit
+              %ComposeTSplit
+              (HBox
+                (Shape (Width 0 + 10000) (Button %SendOpen "Send"))
+                (barIf2D)
+                (Shape (Width 0 + 10000) (Button %DiscardOpen "Discard"))
+                (barIf2D)
+                (Shape
+                  (Width 0 + 10000)
+                  (Menu
+                    (Macro tla BOA (x) `(Text LeftAlign ,x))
+                    (HBox
+                      Fill
+                      (Shape (Width + 0) "Edit")
+                      (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+                      Fill)
+                    (borderIf2D
+                      (VBox
+                        (MButton %Undo (tla "Undo"))
+                        (MButton %Redo (tla "Redo"))
+                        (Glue 3)
+                        (menuSep)
+                        (Glue 3)
+                        (MButton %Cut (tla "Cut"))
+                        (MButton %Copy (tla "Copy"))
+                        (MButton %Paste (tla "Paste"))
+                        (MButton %Clear (tla "Clear"))
+                        (MButton %SelectAll (tla "Select All"))
+                        (Glue 3)
+                        (menuSep)
+                        (Glue 3)
+                        (MButton
+                          %ExpandOpen
+                          (Text LeftAlign "Expand Aliases"))
+                        (MButton
+                          %IncludeOpen
+                          (Text LeftAlign "Insert Selected Messages"))
+                        (PopMButton
+                          (For IncludeFileDlg)
+                          (Text LeftAlign "Insert File ..."))
+                        (MButton
+                          %UseExternalOpen
+                          (Text LeftAlign "Use External Editor"))
+                        (Bar 1)))))
+                (barIf2D)
+                (Shape (Width 0 + 10000)
+                  (bgPassive)
+                  (Text %ComposeModified LeftAlign (Margin 6) "")))
+              (HBox
+                (Shape (Width 0 + 10000) (Guard (Button %CloseOpen "Close")))
+                (barIf2D)
+                (Shape (Width 0 + 10000) (Button %ReuseOpen "Modify"))
+                (barIf2D)
+                (Shape
+                  (Width 0 + 20000)
+                  (bgPassive)
+                  (Text LeftAlign (Margin 6) %ComposeStatus "")))
+              (HBox
+                (Shape
+                  (Width 0 + 40000)
+                  (Text LeftAlign "Using external editor ..."))
+                (barIf2D)))
+            (Shape
+              (Width 0 + 40000)
+              (bgPassive)
+              (Text RightAlign (Margin 6) %Title "Title")))
+          (contents
+            (TSplit
+              %DraftTSplit
+              Flex
+              (Shape (Height 300 + Infinity - 300) (TextEdit %Draft))
+              (Shape
+                (Height 300 + Infinity - 300)
+                (Texture (Color "White") LocalAlign "inc.pbm")))))))
+    (dlg
+      %IncludeFileDlg
+      "Please choose a file to insert ..."
+      (Shape
+        (Width 250 - 150 + Inf)
+        (VBox
+          (HBox
+            (Shape
+              (Width + Inf)
+              (Height 100 + Inf)
+              (borderIf2D
+                (VBox
+                  (bgActive)
+                  (HBox
+                    (Shape (Width + Infinity) (DirMenu (For FileToInclude)))
+                    (Glue 3)
+                    (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+                    (Glue 3))
+                  (barIf2D)
+                  (Frame Lowered (FileBrowser %FileToInclude (bgInput))))))
+            (Glue 12)
+            (VBox
+              Fill
+              (btnDefault %IncludeFileButton "Insert")
+              (Glue 6)
+              (closeBtn %IncludeFileClose "Cancel")))
+          (Glue 12)
+          (HBox
+            (Text (Margin 0) LeftAlign "File:")
+            (Glue 6)
+            (input (Helper (For FileToInclude) ExpandOnDemand FirstFocus))))))))

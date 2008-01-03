@@ -1,0 +1,19 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Oct 28 17:10:50 PDT 1994 by kalsow
+%      modified on Mon May 17 18:53:08 PDT 1993 by msm
+%      modified on Fri Apr 16 09:28:36 PDT 1993 by steveg
+%      modified on Mon Feb 24 13:56:18 PST 1992 by muller
+
+Interface ("TrestleImpl")
+module ("InstallQueue")
+Module ("DpyFilter")
+module ("TrestleGoo")
+Interface ("TrestleOS")
+%% module ("ShTrestle")
+Module ("InstalledVBT")
+implementation ("Trestle")
+Interface ("TrestleConf")
+

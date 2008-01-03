@@ -1,0 +1,127 @@
+% Copyright (C) 1995, Digital Equipment Corporation.
+% All rights reserved.
+% See the file LICENSE for a full description.
+%
+% Lectern:
+%   PostScript to be prepended to a job to rotate its images by //angle,
+%   adjusting the page shape appropriately.  This works only for
+%   devices (such as ppmraw) that allow arbitrary imaging areas.
+
+% Last modified on Fri Sep 22 16:35:12 PDT 1995 by mcjones
+%      modified on Tue Mar 14 14:54:44 PST 1995 by birrell
+
+8 dict begin
+/myDict currentdict def
+/angle 90 def
+
+/doit-level2 {
+  % GS 3.49 and later have a correct setpagedevice implementation
+  <<
+    /Install {
+      //myDict begin
+%(Install in) = flush
+        currentpagedevice /PageSize get aload pop % stack: W H
+        lastH ne exch lastW ne or {
+          % /PageSize has changed: rotate it
+%(Rotating now) = flush
+          /InstallLevel InstallLevel 1 add def
+          <<
+            /PageSize [
+              currentpagedevice /PageSize get aload pop % stack: W H
+              exch % stack: newW newH
+              /lastW 2 index def
+              /lastH 1 index def
+              ]
+            /ImagingBBox null
+            >> setpagedevice %
+            /InstallLevel InstallLevel 1 sub def
+          } if
+          InstallLevel 0 eq {
+            % Rotate ctm.
+            currentpagedevice /PageSize get aload pop % stack: width height
+            2 div exch 2 div exch % stack: center
+            2 copy translate //angle rotate neg exch neg translate
+            } if
+      end % //mydict
+%(Install out) = flush
+      }
+    >> setpagedevice
+  } def
+
+/doit-gs333 {
+  % GS 3.33 has a buggy setpagedevice implementation
+  <<
+    /BeginPage {
+      //myDict begin
+      pop % page number
+      currentpagedevice /PageSize get aload pop % stack: W H
+%      (H = ) print dup =
+%      (W = ) print 1 index = flush
+%      (lastH = ) print lastH =
+%      (lastW = ) print lastW = flush
+      lastH ne exch lastW ne or {
+        % /PageSize has changed: rotate it
+        <<
+          /PageSize [
+            currentpagedevice /PageSize get aload pop % stack: W H
+            exch % stack: newW newH
+            /lastW 2 index def
+            /lastH 1 index def
+            ]
+          >> setpagedevice % calls BeginPage recursively
+%        (H := ) print lastH =
+%        (W := ) print lastW = flush
+        } {
+        % Rotate ctm.  Don't do this if we're also adjusting PageSize,
+        % because that causes another BeginPage call, which does this.
+        currentpagedevice /PageSize get aload pop % stack: width height
+        2 div exch 2 div exch % stack: center
+        2 copy translate //angle rotate neg exch neg translate
+        } ifelse
+      end % //myDict
+      }
+    >> setpagedevice
+  } def
+
+/doit-level1 {
+  % Use Ghostscript-specific code for earlier systems
+  % flip current frame buffer
+    currentdevice getdeviceprops >> /HWSize get
+    aload pop exch 2 array astore
+    mark exch /HWSize exch currentdevice putdeviceprops pop
+  % fix showpage to add a rotation and translation
+    /adbFixup {
+        currentdevice getdeviceprops >>
+        dup /HWSize get aload pop 3 -1 roll
+        /HWResolution get aload pop
+        % stack: xsize ysize xres yres
+        exch 4 -1 roll exch div 72 mul
+        % stack: ysize yres xpts
+        3 1 roll div 72 mul
+        % stack: xpts ypts
+        2 div exch 2 div exch
+        2 copy translate //angle rotate neg exch neg translate
+        } bind odef
+    /adbShowpage /showpage load def
+    userdict begin /showpage { adbShowpage adbFixup } bind odef end
+    adbFixup
+  % define new ".setpagesize" that flips its arguments
+    statusdict begin
+        /adbSet /.setpagesize load def
+        /.setpagesize {
+          exch adbSet adbFixup
+          } bind def
+        end
+  } def
+
+/languagelevel where { pop languagelevel 2 ge } { false } ifelse 
+  {
+    /lastW 0 def
+    /lastH 0 def
+    /InstallLevel 0 def
+    revision 333 gt {doit-level2} {doit-gs333} ifelse
+  }
+  {doit-level1}
+  ifelse
+
+end % //myDict

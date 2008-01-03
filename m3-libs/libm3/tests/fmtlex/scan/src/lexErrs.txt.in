@@ -1,0 +1,57 @@
+# Last modified on Sun Feb 27 16:49:52 PST 1994 by heydon
+#      modified on Fri Feb 25 15:19:02 PST 1994 by kalsow
+
+# The examples in this file should all produce lexical errors. Most of the
+# examples were created by examing the "Lex.m3" source file and picking inputs
+# to test each error case.
+
+# booleans
+b tru
+b truXYZ
+
+# signed base-10 integers
+i
+i + 5
+i -ABC
+
+# signed integers (not base 10)
+i -3_1234ABC
+I 3 -1234ABC
+i 9_789012ABC
+I 9 789012ABC
+i 11_789ABCXYZ
+I 11 789ABCXYZ
+i 5_ABC	
+i 02_101ABC
+i 016_ABC
+i 1_0000
+i 17_1234
+
+# unsigned integers
+u	
+u -2	
+u 5_ABC 
+
+# single-precision real numbers
+r ..	
+r .	
+r 1x  
+r -1x  
+r .5.	
+r .0.	
+r 0.0.	
+r 0..	
+r 1.0e2. 
+r 0.5.	
+r 1 .	
+r -1 .	
+r .5 .	
+r .0 .	
+r 0.0 .	
+r 0. .	
+r 1.0e2 . 
+r 0.5 .	
+
+# double-precision real numbers
+
+# extended-precision real numbers

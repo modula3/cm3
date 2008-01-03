@@ -1,0 +1,73 @@
+(* Copyright (C) 1989, 1993 Digital Equipment Corporation          *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Tue Jun 22 11:43:51 PDT 1993 by horning        *)
+
+GENERIC INTERFACE Table(Key, Value);
+<* 
+TRAITS
+  canonTable(Key.T, Value.T, Rel$Key.T),
+  relation(Key.T)
+
+FIELDS OF T         equiv: Rel$Key.T, map: Tab$Key.T$Val.T
+FIELDS OF Iterator  map: Tab$Key.T$Val.T, done: BOOLEAN
+FIELDS OF Default   hash: Map$Key.T$Word.T
+
+(* This module-global macro encapsulates the passing of state to the
+   LSL-defined operator "canon". *)
+LET canon(k)  BE canon(k, SELF.equiv, SELF.map)  IN
+
+METHOD T.get(READONLY k: Key.T; VAR v: Value.T): BOOLEAN;
+  MODIFIES v
+  ENSURES RESULT = defined(SELF.map, canon(k))
+    /\ IF RESULT THEN v' = apply(SELF.map, canon(k)) ELSE v' = v
+
+METHOD T.put(READONLY k: Key.T; READONLY v: Value.T): BOOLEAN;
+  MODIFIES SELF.map
+  ENSURES RESULT = defined(SELF.map, canon(k))
+    /\ SELF.map' = update(SELF.map, canon(k), v)
+
+METHOD T.delete(READONLY k: Key.T; VAR v: Value.T): BOOLEAN;
+  MODIFIES v, SELF.map
+  ENSURES RESULT = defined(SELF.map, canon(k))
+    /\ IF RESULT
+       THEN v' = apply(SELF.map, canon(k))
+         /\ SELF.map' = remove(SELF.map, canon(k))
+       ELSE UNCHANGED(ALL)
+
+METHOD T.size(): CARDINAL;
+  ENSURES RESULT = size(SELF.map)
+
+METHOD T.iterate(): Iterator;
+  ENSURES NEW(RESULT) /\ RESULT.map' = SELF.map /\ ~RESULT.done'
+
+METHOD Iterator.next(VAR k: Key.T, VAR val: Value.T): BOOLEAN;
+  CHECKS ~SELF.done
+  MODIFIES k, v, SELF.map, SELF.done
+  ENSURES RESULT = size(SELF.map) > 0 /\ SELF.done' = ~RESULT
+    /\ IF RESULT
+       THEN defined(SELF.map, k') /\ v' = apply(SELF.map, k')
+         /\ SELF.map' = remove(SELF.map, k')
+       ELSE UNCHANGED(k, v, SELF.map)
+
+(* NEW(Default, ...) must be called with keyEqual and keyHash methods with
+   the following relationship:
+
+  \forall k1, k2: Key.T
+    (SELF.keyEqual(k1, k2) => SELF.keyHash(k1) = SELF.keyHash(k2))
+
+   If these methods are defaulted, SELF.keyEqual(k1, k2) = Key.Equal(k1, k2)
+   and SELF.keyHash(k) = Key.Hash(k).
+*)
+
+METHOD Default.init(sizeHint: CARDINAL := 0): Default;
+  MODIFIES SELF.map
+  ENSURES SELF.map' = {}
+
+METHOD Default.keyEqual(READONLY k1, k2: Key.T): BOOLEAN;
+  RESULT = k1 \< SELF.equiv \> k2
+
+METHOD Default.keyHash(READONLY k: Key.T): Word.T;
+  RESULT = apply(SELF.hash, k)
+*>
+END Table.

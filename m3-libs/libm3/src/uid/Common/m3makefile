@@ -1,0 +1,14 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Feb 10 11:23:58 PST 1995 by kalsow
+%      modified on Thu Jul 15 16:14:28 PDT 1993 by swart
+%      modified on Thu Jan 28 17:33:15 PST 1993 by mjordan
+%      modified on Tue Feb 11 17:19:14 PST 1992 by muller
+
+Module    ("TimeStamp")
+Module    ("Capability")
+Module    ("Swap")
+Interface ("MachineID")
+interface ("TimeStampRep")

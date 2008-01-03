@@ -1,0 +1,18 @@
+(ZChild %searchDialog
+  (Insert "macros.fv")
+  (Shape
+    (Width + inf)
+    (Border (Pen 2)
+      (VBox
+        (HBox 
+          (Shape (Width + inf) 
+            (ZMove (Text "Global Search"))) 
+          (ZGrow (Pixmap "grow.pbm")))
+        (VBox
+          (Rim (Pen 10)
+            (Frame Lowered (BgColor "VeryLightGray")
+              (TypeIn %searchTypein FirstFocus ExpandOnDemand)))
+          (HBox
+            (DefaultBtn searchSearchButton "Search")
+            (CloseBtn "Cancel"))
+          (Glue 10))))))

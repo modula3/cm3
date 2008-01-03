@@ -1,0 +1,2430 @@
+%+---------------------------------------------------------------------------+
+%|            Copyright (C) 1992, Digital Equipment Corporation              |
+%| 		          All rights reserved.                               |
+%|                  See the file COPYRIGHT for a full description.           |
+%+---------------------------------------------------------------------------+
+%****************************************************************
+%* File: map.ps                                                 *
+%* Last modified on Wed Jun 10 17:25:56 1992 by mhb         *
+%*      modified on Wed Sep 28 22:39:56 PDT 1988 by roberts     *
+%* -----------------------------------------------------------  *
+%* Draws a map of the United States.  Each of the state names   *
+%* is defined as a procedure which sets the current path to     *
+%* the outline of that state, suitable for filling or           *
+%* stroking.                                                    *
+%****************************************************************
+
+([Loading, please wait ...) =
+
+/Rescale {
+  WindowWidth 2 div WindowHeight 2 div translate
+  WindowWidth 1000 div .03 mul
+  WindowHeight 650 div .03 mul
+  2 copy gt { exch } if pop
+  dup scale
+  0 5000 translate
+} def
+
+/startseq {
+  newpath
+} def
+
+/endseq {
+} def
+
+/gray {
+  currentgray .2 setgray fill 0 setgray stroke setgray
+} def
+
+/lightgray {
+  currentgray .4 setgray fill 0 setgray stroke setgray
+} def
+
+/Washington {
+  startseq
+    -13545 3001 moveto			% OR/WA
+    -13640 3173 lineto
+    -13805 3208 lineto
+    -13798 3414 lineto
+    -13659 3553 lineto
+    -13754 3691 lineto
+    -13745 3933 lineto
+    -13738 4105 lineto
+    -13697 4277 lineto
+    -13719 4518 lineto
+    -13745 4691 lineto
+    -13670 4862 lineto
+    -13475 4793 lineto
+    -13347 4689 lineto
+    -13185 4621 lineto
+    -13058 4518 lineto
+    -12894 4484 lineto
+    -12734 4381 lineto
+    -12773 4210 lineto
+    -12748 4004 lineto
+    -12787 3831 lineto
+    -12953 3796 lineto
+    -12790 3762 lineto
+    -12717 3935 lineto
+    -12643 4176 lineto
+    -12702 4347 lineto
+    -12729 4519 lineto
+    -12636 4382 lineto
+    -12542 4245 lineto
+    -12536 4417 lineto
+    -12594 4588 lineto
+    -12555 4760 lineto
+    -12548 4931 lineto
+    -12573 5103 lineto
+    -12315 5035 lineto
+    -11928 4935 lineto
+    -11543 4801 lineto
+    -11190 4702 lineto
+    -10806 4604 lineto
+    -10422 4508 lineto
+    -10039 4412 lineto
+    -9848 4347 lineto			% ID/WA
+    -10335 2014 lineto			% ID/OR/WA
+    -11313 2268 lineto
+    -11543 2230 lineto
+    -11806 2260 lineto
+    -12004 2257 lineto
+    -12170 2221 lineto
+    -12566 2285 lineto
+    -12762 2420 lineto
+    -13195 2416 lineto
+    -13359 2519 lineto
+    -13320 2726 lineto
+    -13347 2933 lineto
+    -13545 3001 lineto
+    closepath
+  endseq
+} def
+
+/Oregon {
+  startseq
+    -15108 -102 moveto			% CA/OR
+    -15174 73 lineto
+    -15137 248 lineto
+    -15065 423 lineto
+    -15096 598 lineto
+    -14990 774 lineto
+    -14884 949 lineto
+    -14779 1088 lineto
+    -14673 1228 lineto
+    -14534 1368 lineto
+    -14495 1543 lineto
+    -14423 1717 lineto
+    -14350 1925 lineto
+    -14277 2134 lineto
+    -14172 2272 lineto
+    -14099 2446 lineto
+    -14060 2619 lineto
+    -13987 2793 lineto
+    -13914 2965 lineto
+    -13840 3173 lineto
+    -13710 3070 lineto
+    -13545 3001 lineto			% OR/WA
+    -13347 2933 lineto
+    -13320 2726 lineto
+    -13359 2519 lineto
+    -13195 2416 lineto
+    -12762 2420 lineto
+    -12566 2285 lineto
+    -12170 2221 lineto
+    -12004 2257 lineto
+    -11806 2260 lineto
+    -11543 2230 lineto
+    -11313 2268 lineto
+    -10335 2014 lineto			% ID/OR/WA
+    -10303 1912 lineto
+    -10174 1778 lineto
+    -10175 1606 lineto
+    -10306 1432 lineto
+    -10438 1258 lineto
+    -10504 1084 lineto
+    -10636 978 lineto
+    -10735 838 lineto
+    -10670 599 lineto
+    -10704 426 lineto
+    -10770 252 lineto
+    -11097 -1137 lineto			% ID/NV/OR
+    -12098 -922 lineto
+    -12769 -764 lineto			% CA/NV/OR
+    -13544 -536 lineto
+    -15108 -102 lineto
+    closepath
+  endseq
+} def
+
+/California {
+  startseq
+    -15108 -102 moveto			% CA/OR
+    -13544 -536 lineto
+    -12769 -764 lineto			% CA/NV/OR
+    -13366 -3124 lineto
+    -10763 -7079 lineto
+    -10762 -7114 lineto			% AZ/CA/NV
+    -10758 -7220 lineto
+    -10649 -7428 lineto
+    -10607 -7640 lineto
+    -10467 -7774 lineto
+    -10666 -7856 lineto
+    -10795 -7971 lineto
+    -10788 -8150 lineto
+    -10880 -8334 lineto
+    -11010 -8449 lineto
+    -11034 -8666 lineto
+    -10895 -8765 lineto
+    -10954 -8949 lineto
+    -11085 -9029 lineto			% AZ/CA
+    -12685 -8839 lineto
+    -12729 -8625 lineto
+    -12703 -8442 lineto
+    -12782 -8194 lineto
+    -12890 -8055 lineto
+    -13036 -7847 lineto
+    -13111 -7671 lineto
+    -13280 -7716 lineto
+    -13356 -7539 lineto
+    -13498 -7402 lineto
+    -13708 -7305 lineto
+    -13816 -7166 lineto
+    -13924 -7027 lineto
+    -14134 -6929 lineto
+    -14379 -6833 lineto
+    -14554 -6769 lineto
+    -14597 -6517 lineto
+    -14570 -6300 lineto
+    -14644 -6123 lineto
+    -14651 -5872 lineto
+    -14759 -5732 lineto
+    -14867 -5557 lineto
+    -14942 -5344 lineto
+    -15015 -5167 lineto
+    -15088 -4990 lineto
+    -15094 -4739 lineto
+    -14924 -4591 lineto
+    -15030 -4452 lineto
+    -15171 -4312 lineto
+    -15175 -4099 lineto
+    -15177 -3920 lineto
+    -15145 -3741 lineto
+    -15039 -3881 lineto
+    -14933 -4020 lineto
+    -14970 -3843 lineto
+    -14972 -3665 lineto
+    -14975 -3452 lineto
+    -15111 -3633 lineto
+    -15251 -3530 lineto
+    -15357 -3391 lineto
+    -15394 -3035 lineto
+    -15500 -2753 lineto
+    -15605 -2577 lineto
+    -15571 -2328 lineto
+    -15502 -2115 lineto
+    -15467 -1938 lineto
+    -15466 -1690 lineto
+    -15604 -1445 lineto
+    -15568 -1196 lineto
+    -15428 -1019 lineto
+    -15288 -771 lineto
+    -15217 -594 lineto
+    -15181 -419 lineto
+    -15108 -102 lineto
+    closepath
+  endseq
+} def
+
+/Nevada {
+  startseq
+    -12769 -764 moveto			% CA/NV/OR
+    -12098 -922 lineto
+    -11097 -1137 lineto			% ID/NV/OR
+    -10831 -1199 lineto
+    -10632 -1228 lineto
+    -9403 -1465 lineto			% ID/NV/UT
+    -10114 -5527 lineto			% AZ/NV/UT
+    -10227 -6165 lineto
+    -10391 -6245 lineto
+    -10528 -6146 lineto
+    -10658 -6258 lineto
+    -10668 -6932 lineto
+    -10762 -7114 lineto			% AZ/CA/NV
+    -10763 -7079 lineto
+    -13366 -3124 lineto
+    -12769 -764 lineto
+  endseq
+} def
+
+/Idaho {
+  startseq
+    -11097 -1137 moveto			% ID/NV/OR
+    -10770 252 lineto
+    -10704 426 lineto
+    -10670 599 lineto
+    -10735 838 lineto
+    -10636 978 lineto
+    -10504 1084 lineto
+    -10438 1258 lineto
+    -10306 1432 lineto
+    -10175 1606 lineto
+    -10174 1778 lineto
+    -10303 1912 lineto
+    -10335 2014 lineto			% ID/OR/WA
+    -9848 4347 lineto			% ID/WA
+    -9371 4220 lineto			% ID/MT
+    -9407 3981 lineto
+    -9476 3638 lineto
+    -9478 3434 lineto
+    -9385 3197 lineto
+    -9387 3027 lineto
+    -9292 2824 lineto
+    -9196 2690 lineto
+    -9101 2522 lineto
+    -9070 2318 lineto
+    -8941 2219 lineto
+    -8909 2049 lineto
+    -9006 1876 lineto
+    -8974 1672 lineto
+    -9104 1566 lineto
+    -9071 1362 lineto
+    -8909 1366 lineto
+    -8715 1270 lineto
+    -8714 1099 lineto
+    -8649 896 lineto
+    -8680 724 lineto
+    -8518 627 lineto
+    -8484 422 lineto
+    -8321 359 lineto
+    -8127 332 lineto
+    -7933 372 lineto
+    -7706 278 lineto
+    -7676 449 lineto
+    -7513 285 lineto
+    -7447 185 lineto			% ID/MT/WY
+    -7737 -1778 lineto			% ID/UT/WY
+    -9113 -1521 lineto
+    -9403 -1465 lineto			% ID/NV/UT
+    -10632 -1228 lineto
+    -10831 -1199 lineto
+    -11097 -1137 lineto
+    closepath
+  endseq
+} def
+
+/Utah {
+  startseq
+    -9403 -1465 moveto			% ID/NV/UT
+    -9113 -1521 lineto
+    -7737 -1778 lineto			% ID/UT/WY
+    -7852 -2506 lineto			% UT/WY
+    -6709 -2663 lineto			% UT/WY/CO
+    -7026 -5936 lineto			% AZ/UT/CO/NM
+    -7919 -5837 lineto
+    -9612 -5607 lineto
+    -10114 -5527 lineto			% AZ/NV/UT
+    -9403 -1495 lineto			% ID/NV/UT
+    closepath
+  endseq
+} def
+
+/Arizona {
+  startseq
+    -10114 -5527 moveto			% AZ/NV/UT
+    -9612 -5607 lineto
+    -7919 -5837 lineto
+    -7026 -5936 lineto			% AZ/UT/CO/NM
+    -7483 -10622 lineto			% AZ/NM
+    -8844 -10464 lineto
+    -11179 -9179 lineto
+    -11085 -9029 lineto			% AZ/CA
+    -10954 -8949 lineto
+    -10895 -8765 lineto
+    -11034 -8666 lineto
+    -11010 -8449 lineto
+    -10880 -8334 lineto
+    -10788 -8150 lineto
+    -10795 -7971 lineto
+    -10666 -7856 lineto
+    -10467 -7774 lineto
+    -10607 -7640 lineto
+    -10649 -7428 lineto
+    -10758 -7220 lineto
+    -10762 -7114 lineto			% AZ/CA/NV
+    -10668 -6932 lineto
+    -10658 -6258 lineto
+    -10528 -6146 lineto
+    -10391 -6245 lineto
+    -10227 -6165 lineto
+    -10114 -5527 lineto			% AZ/NV/UT
+    closepath
+  endseq
+} def
+
+/Montana {
+  startseq
+    -9371 4220 moveto			% ID/MT
+    -9275 4222 lineto
+    -8862 4130 lineto
+    -8513 4070 lineto
+    -8355 4040 lineto
+    -8165 4011 lineto
+    -7754 3920 lineto
+    -7407 3862 lineto
+    -7060 3804 lineto
+    -6683 3782 lineto
+    -6399 3723 lineto
+    -5928 3671 lineto
+    -5552 3617 lineto
+    -5176 3596 lineto
+    -4769 3543 lineto
+    -4394 3524 lineto
+    -4019 3471 lineto
+    -3645 3451 lineto
+    -3521 3457 lineto			% MT/ND
+    -3671 1013 lineto			% ND/MT/SD
+    -3712 299 lineto
+    -5528 428 lineto
+    -7389 631 lineto			% MT/WY
+    -7447 185 lineto			% ID/MT/WY
+    -7513 285 lineto
+    -7676 449 lineto
+    -7706 278 lineto
+    -7933 372 lineto
+    -8127 332 lineto
+    -8321 359 lineto
+    -8484 422 lineto
+    -8518 627 lineto
+    -8680 724 lineto
+    -8649 896 lineto
+    -8714 1099 lineto
+    -8715 1270 lineto
+    -8909 1366 lineto
+    -9071 1362 lineto
+    -9104 1566 lineto
+    -8974 1672 lineto
+    -9006 1876 lineto
+    -8909 2049 lineto
+    -8941 2219 lineto
+    -9070 2318 lineto
+    -9101 2522 lineto
+    -9196 2690 lineto
+    -9292 2824 lineto
+    -9387 3027 lineto
+    -9385 3197 lineto
+    -9478 3434 lineto
+    -9476 3638 lineto
+    -9407 3981 lineto
+    -9371 4220 lineto			% ID/MT
+    closepath
+  endseq
+} def
+
+/Wyoming {
+  startseq
+    -7389 631 moveto			% MT/WY
+    -5528 428 lineto
+    -3712 299 lineto			% MT/SD/WY
+    -3786 -1336 lineto			% WY/SD/NB
+    -3889 -2868 lineto			% WY/NB/CO
+    -5153 -2764 lineto
+    -6709 -2663 lineto			% UT/WY/CO
+    -7852 -2506 lineto
+    -7737 -1778 lineto			% ID/UT/WY
+    -7447 185 lineto			% ID/MT/WY
+    -7389 631 lineto			% MT/WY
+    closepath
+  endseq
+} def
+
+/Colorado {
+  startseq
+    -6709 -2663 moveto			% UT/WY/CO
+    -5153 -2764 lineto
+    -3889 -2868 lineto			% WY/NB/CO
+    -2767 -2961 lineto			% CO/NB
+    -2799 -3749 lineto			% CO/NB/KS
+    -2860 -6175 lineto			% CO/NB/OK
+    -3410 -6162 lineto			% CO/OK/NM
+    -4774 -6125 lineto
+    -6307 -5997 lineto
+    -7026 -5936 lineto			% AZ/UT/CO/NM
+    -6709 -2663 lineto			% UT/WY/CO
+    closepath
+  endseq
+} def
+
+/NewMexico {
+  startseq
+    -7026 -5936 moveto			% AZ/UT/CO/NM
+    -6307 -5997 lineto
+    -4774 -6125 lineto
+    -3410 -6162 lineto			% CO/OK/NM
+    -3427 -6575 lineto			% NM/OK/TX
+    -3558 -10263 lineto
+    -5900 -10195 lineto
+    -5860 -10336 lineto			% NM/TX
+    -6909 -10297 lineto
+    -6954 -10693 lineto
+    -7483 -10622 lineto			% AZ/NM
+    -7026 -5936 lineto			% AZ/UT/CO/NM
+    closepath
+  endseq
+} def
+
+/NorthDakota {
+  startseq
+    -3521 3457 moveto			% MT/ND
+    -3271 3433 lineto
+    -2897 3414 lineto
+    -2524 3430 lineto
+    -2213 3410 lineto
+    -1809 3394 lineto
+    -1437 3410 lineto
+    -1094 3392 lineto
+    -692 3410 lineto
+    -320 3427 lineto
+    -257 3430 lineto			% ND/MN
+    -218 3263 lineto
+    -193 2758 lineto
+    -122 2592 lineto
+    -3 2091 lineto
+    19 1653 lineto
+    62 1419 lineto
+    133 1253 lineto
+    145 1017 lineto			% ND/MN/SD
+    -1619 1002 lineto
+    -3671 1013 lineto			% ND/MT/SD
+    -3521 3457 lineto			% MT/ND
+    closepath
+  endseq
+} def
+
+/SouthDakota {
+  startseq
+    -3671 1013 moveto			% ND/MT/SD
+    -1619 1002 lineto
+    145 1017 lineto			% ND/MN/SD
+    150 916 lineto
+    31 775 lineto
+    134 610 lineto
+    265 515 lineto
+    272 -908 lineto			% SD/MN/IA
+    275 -1587 lineto
+    313 -1721 lineto			% NB/SD/IA
+    179 -1592 lineto
+    17 -1532 lineto
+    -147 -1438 lineto
+    -624 -1461 lineto
+    -788 -1367 lineto
+    -3786 -1336 lineto			% WY/SD/NB
+    -3712 299 lineto			% MT/SD/WY
+    -3671 1013 lineto			% ND/MT/SD
+    closepath
+  endseq
+} def
+
+/Nebraska {
+  startseq
+    -3786 -1336 moveto			% WY/SD/NB
+    -788 -1367 lineto
+    -624 -1461 lineto
+    -147 -1438 lineto
+    17 -1532 lineto
+    179 -1592 lineto
+    313 -1721 lineto			% NB/SD/IA
+    563 -2254 lineto
+    571 -2424 lineto
+    674 -2555 lineto
+    691 -2896 lineto
+    731 -3064 lineto
+    803 -3231 lineto
+    807 -3299 lineto			% NB/IA/MO
+    811 -3401 lineto
+    946 -3532 lineto
+    1019 -3699 lineto			% NB/MO/KS
+    -2799 -3749 lineto			% CO/NB/KS
+    -2767 -2961 lineto			% CO/NB
+    -3889 -2868 lineto			% WY/NB/CO
+    -3786 -1336 lineto			% WY/SD/NB
+    closepath
+  endseq
+} def
+
+/Kansas {
+  startseq
+    -2799 -3749 moveto			% CO/NB/KS
+    1019 -3699 lineto			% NB/MO/KS
+    1182 -3760 lineto
+    1316 -3856 lineto
+    1226 -3998 lineto
+    1266 -4167 lineto
+    1370 -4299 lineto
+    1503 -4395 lineto
+    1634 -6491 lineto
+    1617 -6111 lineto			% KS/MO/OK
+    6 -6156 lineto
+    -1539 -6199 lineto
+    -2860 -6175 lineto			% CO/NB/OK
+    -2799 -3749 lineto			% CO/NB/KS
+    closepath
+  endseq
+} def
+
+/Oklahoma {
+  startseq
+    -3410 -6162 moveto			% CO/OK/NM
+    -2860 -6175 lineto			% CO/NB/OK
+    -1539 -6199 lineto
+    6 -6156 lineto
+    1617 -6111 lineto			% KS/MO/OK
+    1634 -6491 lineto
+    1719 -6937 lineto
+    1771 -7386 lineto
+    1832 -8814 lineto			% OK/AR/TX
+    1699 -8716 lineto
+    1534 -8618 lineto
+    1370 -8556 lineto
+    1179 -8636 lineto
+    1019 -8679 lineto
+    859 -8686 lineto
+    701 -8764 lineto
+    504 -8704 lineto
+    310 -8679 lineto
+    155 -8827 lineto
+    115 -8654 lineto
+    -44 -8697 lineto
+    -208 -8635 lineto
+    -366 -8713 lineto
+    -406 -8540 lineto
+    -602 -8480 lineto
+    -794 -8525 lineto
+    -957 -8464 lineto
+    -1118 -8472 lineto
+    -1190 -8301 lineto
+    -1351 -8310 lineto
+    -1516 -8214 lineto
+    -1620 -8045 lineto
+    -1620 -6550 lineto
+    -3427 -6575 lineto			% NM/OK/TX
+    -3410 -6162 lineto			% CO/OK/NM
+    closepath
+  endseq
+} def
+
+/Texas {
+  startseq
+    -3427 -6575 moveto			% NM/OK/TX
+    -1620 -6550 lineto
+    -1620 -8045 lineto
+    -1516 -8214 lineto
+    -1351 -8310 lineto
+    -1190 -8301 lineto
+    -1118 -8472 lineto
+    -957 -8464 lineto
+    -794 -8525 lineto
+    -602 -8480 lineto
+    -406 -8540 lineto
+    -366 -8713 lineto
+    -208 -8635 lineto
+    -44 -8697 lineto
+    115 -8654 lineto
+    155 -8827 lineto
+    310 -8679 lineto
+    504 -8704 lineto
+    701 -8764 lineto
+    859 -8686 lineto
+    1019 -8679 lineto
+    1179 -8636 lineto
+    1370 -8556 lineto
+    1534 -8618 lineto
+    1699 -8716 lineto
+    1832 -8814 lineto			% OK/AR/TX
+    1996 -8877 lineto
+    2161 -8939 lineto
+    2137 -9151 lineto
+    2209 -9324 lineto
+    2216 -9499 lineto
+    2190 -9676 lineto
+    2231 -9886 lineto
+    2239 -10097 lineto
+    2343 -10269 lineto
+    2417 -10514 lineto
+    2488 -10687 lineto
+    2590 -10825 lineto
+    2567 -11074 lineto
+    2511 -11290 lineto
+    2484 -11469 lineto
+    2523 -11646 lineto
+    2465 -11827 lineto
+    2440 -12043 lineto			% TX/LA
+    2281 -12086 lineto
+    2061 -12238 lineto
+    1872 -12318 lineto
+    1996 -12205 lineto
+    1835 -12213 lineto
+    1925 -12029 lineto
+    1767 -12109 lineto
+    1741 -12289 lineto
+    1716 -12469 lineto
+    1841 -12355 lineto
+    1749 -12504 lineto
+    1626 -12652 lineto
+    1439 -12805 lineto
+    1251 -12921 lineto
+    1093 -13001 lineto
+    935 -13045 lineto
+    775 -13053 lineto
+    717 -13235 lineto
+    556 -13208 lineto
+    499 -13391 lineto
+    307 -13400 lineto
+    346 -13580 lineto
+    189 -13659 lineto
+    260 -13837 lineto
+    142 -14096 lineto
+    -17 -14141 lineto
+    116 -14279 lineto
+    92 -14350 lineto
+    151 -14462 lineto
+    192 -14602 lineto
+    295 -14779 lineto
+    335 -14996 lineto
+    309 -15179 lineto
+    348 -15360 lineto
+    189 -15369 lineto
+    26 -15268 lineto
+    -134 -15239 lineto
+    -293 -15249 lineto
+    -455 -15184 lineto
+    -681 -15087 lineto
+    -909 -14955 lineto
+    -1041 -14853 lineto
+    -1082 -14636 lineto
+    -1184 -14497 lineto
+    -1225 -14281 lineto
+    -1267 -14029 lineto
+    -1435 -13859 lineto
+    -1538 -13684 lineto
+    -1640 -13545 lineto
+    -1744 -13371 lineto
+    -1846 -13233 lineto
+    -1950 -13059 lineto
+    -2022 -12883 lineto
+    -2094 -12707 lineto
+    -2166 -12532 lineto
+    -2332 -12399 lineto
+    -2435 -12261 lineto
+    -2570 -12126 lineto
+    -2733 -12101 lineto
+    -2893 -12110 lineto
+    -3087 -12086 lineto
+    -3280 -12099 lineto
+    -3402 -12250 lineto
+    -3458 -12433 lineto
+    -3578 -12621 lineto
+    -3700 -12772 lineto
+    -3864 -12712 lineto
+    -3998 -12613 lineto
+    -4164 -12515 lineto
+    -4332 -12383 lineto
+    -4466 -12284 lineto
+    -4601 -12185 lineto
+    -4676 -11975 lineto
+    -4684 -11796 lineto
+    -4758 -11621 lineto
+    -4831 -11447 lineto
+    -4967 -11312 lineto
+    -5102 -11214 lineto
+    -5206 -11078 lineto
+    -5379 -10875 lineto
+    -5515 -10741 lineto
+    -5652 -10607 lineto
+    -5756 -10472 lineto
+    -5860 -10336 lineto			% NM/TX
+    -5900 -10195 lineto
+    -3558 -10263 lineto
+    -3427 -6575 lineto			% NM/OK/TX
+    closepath
+  endseq
+} def
+
+/Minnesota {
+  startseq
+    -257 3430 moveto			% ND/MN
+    23 3410 lineto
+    393 3461 lineto
+    736 3444 lineto
+    727 3612 lineto
+    878 3688 lineto
+    949 3522 lineto
+    992 3322 lineto
+    1155 3195 lineto
+    1313 3169 lineto
+    1504 3111 lineto
+    1717 3189 lineto
+    1907 3165 lineto
+    2069 3072 lineto
+    2227 3047 lineto
+    2419 2989 lineto
+    2551 2895 lineto
+    2738 2904 lineto
+    2919 3015 lineto
+    3080 2956 lineto
+    3237 2964 lineto
+    3427 2941 lineto
+    3521 2946 lineto			% MN/Superior
+    3464 2876 lineto
+    3314 2766 lineto
+    3133 2655 lineto
+    3015 2547 lineto
+    2865 2438 lineto
+    2780 2298 lineto
+    2695 2159 lineto
+    2519 1947 lineto
+    2402 1805 lineto			% MN/WI/Superior
+    2314 1699 lineto
+    2342 1262 lineto
+    2222 1154 lineto
+    2135 1014 lineto
+    2083 842 lineto
+    2186 712 lineto
+    2196 543 lineto
+    2206 375 lineto
+    2285 108 lineto
+    2448 48 lineto
+    2581 -47 lineto
+    2719 -209 lineto
+    2852 -304 lineto
+    3018 -398 lineto
+    3060 -565 lineto
+    3068 -700 lineto			% MN/WI/IA
+    272 -908 lineto			% SD/MN/IA
+    265 515 lineto
+    134 610 lineto
+    31 775 lineto
+    150 916 lineto
+    145 1017 lineto			% ND/MN/SD
+    145 1017 lineto			% ND/MN/SD
+    133 1253 lineto
+    62 1419 lineto
+    19 1653 lineto
+    -3 2091 lineto
+    -122 2592 lineto
+    -193 2758 lineto
+    -218 3263 lineto
+    -257 3430 lineto			% ND/MN
+    closepath
+  endseq
+} def
+
+/Iowa {
+  startseq
+    272 -908 moveto			% SD/MN/IA
+    3068 -700 lineto			% MN/WI/IA
+    3070 -734 lineto
+    3176 -898 lineto
+    3187 -1068 lineto
+    3263 -1268 lineto
+    3429 -1362 lineto
+    3567 -1525 lineto
+    3738 -1686 lineto
+    3819 -1955 lineto
+    3734 -2163 lineto
+    3518 -2311 lineto
+    3365 -2455 lineto
+    3473 -2654 lineto
+    3450 -2826 lineto
+    3364 -3002 lineto
+    3277 -3177 lineto
+    3250 -3281 lineto			% IA/IL/MO
+    3080 -3119 lineto
+    807 -3299 lineto			% NB/IA/MO
+    803 -3231 lineto
+    731 -3064 lineto
+    691 -2896 lineto
+    674 -2555 lineto
+    571 -2424 lineto
+    563 -2254 lineto
+    313 -1721 lineto			% NB/SD/IA
+    275 -1587 lineto
+    272 -908 lineto			% SD/MN/IA
+    closepath
+  endseq
+} def
+
+/Missouri {
+  startseq
+    807 -3299 moveto			% NB/IA/MO
+    3080 -3119 lineto
+    3250 -3281 lineto			% IA/IL/MO
+    3224 -3385 lineto
+    3299 -3587 lineto
+    3375 -3789 lineto
+    3539 -3849 lineto
+    3644 -3981 lineto
+    3782 -4146 lineto
+    3791 -4318 lineto
+    3953 -4310 lineto
+    4116 -4336 lineto
+    4126 -4507 lineto
+    4070 -4682 lineto
+    4048 -4890 lineto
+    4217 -5019 lineto
+    4385 -5115 lineto
+    4522 -5246 lineto
+    4626 -5380 lineto
+    4636 -5587 lineto
+    4741 -5720 lineto
+    4917 -5821 lineto			% MO/IL/KY
+    4944 -5883 lineto
+    4890 -6094 lineto
+    4797 -6203 lineto
+    4676 -6381 lineto
+    4717 -6553 lineto
+    4672 -6693 lineto			% MO/TN/AR
+    4461 -6670 lineto
+    4233 -6646 lineto
+    4356 -6501 lineto
+    4312 -6260 lineto
+    1634 -6491 lineto			% OK/MO/AR
+    1617 -6111 lineto			% KS/MO/OK
+    1634 -6491 lineto
+    1503 -4395 lineto
+    1370 -4299 lineto
+    1266 -4167 lineto
+    1226 -3998 lineto
+    1316 -3856 lineto
+    1182 -3760 lineto
+    1019 -3699 lineto			% NB/MO/KS
+    946 -3532 lineto
+    811 -3401 lineto
+    807 -3299 lineto			% NB/IA/MO
+    closepath
+  endseq
+} def
+
+/Arkansas {
+  startseq
+    1634 -6491 moveto			% OK/MO/AR
+    4312 -6260 lineto
+    4356 -6501 lineto
+    4233 -6646 lineto
+    4461 -6670 lineto
+    4672 -6693 lineto			% MO/TN/AR
+    4660 -6730 lineto
+    4539 -6944 lineto
+    4486 -7191 lineto
+    4495 -7399 lineto
+    4370 -7510 lineto
+    4313 -7687 lineto
+    4224 -7900 lineto
+    4167 -8078 lineto
+    4075 -8222 lineto
+    3984 -8366 lineto
+    3959 -8542 lineto
+    4003 -8821 lineto
+    3978 -9033 lineto
+    4027 -9172 lineto			% AR/MS/LA
+    3757 -9183 lineto
+    3467 -9231 lineto
+    3305 -9238 lineto
+    2982 -9253 lineto
+    2789 -9262 lineto
+    2562 -9272 lineto
+    2370 -9316 lineto
+    2209 -9324 lineto			% TX/AR/LA
+    2137 -9151 lineto
+    2161 -8939 lineto
+    1996 -8877 lineto
+    1832 -8814 lineto			% OK/AR/TX
+    1771 -7386 lineto
+    1719 -6937 lineto
+    1634 -6491 lineto			% OK/MO/AR
+    closepath
+  endseq
+} def
+
+/Louisiana {
+  startseq
+    2209 -9324 moveto			% TX/AR/LA
+    2370 -9316 lineto
+    2562 -9272 lineto
+    2789 -9262 lineto
+    2982 -9253 lineto
+    3305 -9238 lineto
+    3467 -9231 lineto
+    3757 -9183 lineto
+    4027 -9172 lineto			% AR/MS/LA
+    4052 -9241 lineto
+    4060 -9452 lineto
+    4099 -9627 lineto
+    4141 -9872 lineto
+    4019 -10090 lineto
+    3933 -10377 lineto
+    3908 -10591 lineto
+    3816 -10737 lineto
+    3949 -10838 lineto
+    4919 -10728 lineto
+    5080 -10793 lineto
+    5023 -10973 lineto
+    5155 -11147 lineto
+    5225 -11323 lineto
+    5194 -11359 lineto			% LA/MS
+    5034 -11330 lineto
+    4838 -11230 lineto
+    4745 -11376 lineto
+    4848 -11551 lineto
+    5008 -11509 lineto
+    5195 -11395 lineto
+    5072 -11543 lineto
+    5203 -11646 lineto
+    5293 -11499 lineto
+    5456 -11601 lineto
+    5364 -11747 lineto
+    5208 -11825 lineto
+    5307 -11965 lineto
+    5469 -12067 lineto
+    5662 -12132 lineto
+    5603 -12314 lineto
+    5415 -12393 lineto
+    5506 -12245 lineto
+    5344 -12143 lineto
+    5152 -12114 lineto
+    5053 -11974 lineto
+    4893 -11944 lineto
+    5024 -12047 lineto
+    5028 -12226 lineto
+    4904 -12339 lineto
+    4802 -12163 lineto
+    4642 -12241 lineto
+    4550 -12388 lineto
+    4353 -12287 lineto
+    4158 -12258 lineto
+    4185 -12078 lineto
+    3990 -12050 lineto
+    3952 -11872 lineto
+    3791 -11915 lineto
+    3597 -11922 lineto
+    3730 -12024 lineto
+    3893 -12053 lineto
+    3732 -12096 lineto
+    3538 -12068 lineto
+    3377 -12074 lineto
+    3214 -12045 lineto
+    3019 -11982 lineto
+    2855 -11917 lineto
+    2696 -11960 lineto
+    2503 -12004 lineto
+    2440 -12043 lineto			% TX/LA
+    2465 -11827 lineto
+    2523 -11646 lineto
+    2484 -11469 lineto
+    2511 -11290 lineto
+    2567 -11074 lineto
+    2590 -10825 lineto
+    2488 -10687 lineto
+    2417 -10514 lineto
+    2343 -10269 lineto
+    2239 -10097 lineto
+    2231 -9886 lineto
+    2190 -9676 lineto
+    2216 -9499 lineto
+    2209 -9324 lineto			% TX/AR/LA
+    closepath
+  endseq
+} def
+
+/Wisconsin {
+  startseq
+    2402 1805 moveto			% MN/WI/Superior
+    2561 1780 lineto
+    2746 1857 lineto
+    3022 1973 lineto
+    3002 1803 lineto
+    3197 1746 lineto
+    3240 1758 lineto			% WI/MI/Superior
+    3325 1719 lineto
+    3461 1591 lineto
+    3782 1541 lineto
+    3974 1517 lineto
+    4108 1423 lineto
+    4298 1433 lineto
+    4462 1374 lineto
+    4629 1282 lineto
+    4673 1115 lineto
+    4778 986 lineto
+    4855 820 lineto			% WI/MI/Michigan
+    4863 719 lineto
+    4776 579 lineto
+    4693 405 lineto
+    4848 481 lineto
+    4965 623 lineto
+    5071 459 lineto
+    4993 217 lineto
+    5005 48 lineto
+    4957 -158 lineto
+    5002 -360 lineto
+    4956 -601 lineto
+    4936 -772 lineto
+    5012 -972 lineto
+    5054 -1139 lineto
+    5085 -1275 lineto			% WI/Michigan/IL
+    3511 -1459 lineto			% IA/WI/IL
+    3429 -1362 lineto
+    3263 -1268 lineto
+    3187 -1068 lineto
+    3176 -898 lineto
+    3070 -734 lineto
+    3068 -700 lineto			% MN/WI/IA
+    3060 -565 lineto
+    3018 -398 lineto
+    2852 -304 lineto
+    2719 -209 lineto
+    2581 -47 lineto
+    2448 48 lineto
+    2285 108 lineto
+    2206 375 lineto
+    2196 543 lineto
+    2186 712 lineto
+    2083 842 lineto
+    2135 1014 lineto
+    2222 1154 lineto
+    2342 1262 lineto
+    2314 1699 lineto
+    2402 1805 lineto			% MN/WI/Superior
+    closepath
+  endseq
+} def
+
+/Illinois {
+  startseq
+    3511 -1459 moveto			% IA/WI/IL
+    5085 -1275 lineto			% WI/Michigan/IL
+    5100 -1342 lineto
+    5079 -1513 lineto
+    5216 -1676 lineto
+    5290 -1843 lineto			% IL/IN/Michigan
+    5559 -3644 lineto
+    5537 -3817 lineto
+    5547 -3989 lineto
+    5650 -4122 lineto
+    5630 -4329 lineto
+    5545 -4540 lineto
+    5458 -4683 lineto
+    5466 -4855 lineto
+    5444 -5029 lineto
+    5389 -5204 lineto
+    5334 -5380 lineto
+    5245 -5522 lineto
+    5254 -5695 lineto
+    5059 -5635 lineto
+    4871 -5714 lineto
+    4917 -5821 lineto			% MO/IL/KY
+    4741 -5720 lineto
+    4636 -5587 lineto
+    4626 -5380 lineto
+    4522 -5246 lineto
+    4385 -5115 lineto
+    4217 -5019 lineto
+    4048 -4890 lineto
+    4070 -4682 lineto
+    4126 -4507 lineto
+    4116 -4336 lineto
+    3953 -4310 lineto
+    3791 -4318 lineto
+    3782 -4146 lineto
+    3644 -3981 lineto
+    3539 -3849 lineto
+    3375 -3789 lineto
+    3299 -3587 lineto
+    3224 -3385 lineto
+    3250 -3281 lineto			% IA/IL/MO
+    3277 -3177 lineto
+    3364 -3002 lineto
+    3450 -2826 lineto
+    3473 -2654 lineto
+    3365 -2455 lineto
+    3518 -2311 lineto
+    3734 -2163 lineto
+    3819 -1955 lineto
+    3738 -1686 lineto
+    3567 -1525 lineto
+    3511 -1459 lineto			% IA/WI/IL
+    closepath
+  endseq
+} def
+
+/Michigan {
+  startseq
+    3240 1758 moveto			% WI/MI/Superior
+    3352 1788 lineto
+    3471 1895 lineto
+    3653 2007 lineto
+    3806 2083 lineto
+    3925 2191 lineto
+    4041 2333 lineto
+    4154 2508 lineto
+    4273 2616 lineto
+    4428 2659 lineto
+    4346 2485 lineto
+    4262 2345 lineto
+    4211 2173 lineto
+    4367 2215 lineto
+    4531 2157 lineto
+    4694 2099 lineto
+    4799 1969 lineto
+    4960 1944 lineto
+    5149 1921 lineto
+    5266 2030 lineto
+    5382 2139 lineto
+    5538 2148 lineto
+    5691 2191 lineto
+    5807 2299 lineto
+    5960 2343 lineto
+    5974 2175 lineto
+    6136 2117 lineto
+    6293 2126 lineto
+    6427 2033 lineto
+    6532 1904 lineto
+    6450 1763 lineto
+    6293 1753 lineto
+    6210 1612 lineto
+    6076 1706 lineto
+    5914 1764 lineto
+    5761 1721 lineto
+    5643 1612 lineto
+    5490 1569 lineto
+    5376 1427 lineto
+    5261 1285 lineto
+    5310 1457 lineto
+    5165 1313 lineto
+    5090 1478 lineto
+    5043 1272 lineto
+    4966 1030 lineto
+    4855 820 lineto			% WI/MI/Michigan
+    4778 986 lineto
+    4673 1115 lineto
+    4629 1282 lineto
+    4462 1374 lineto
+    4298 1433 lineto
+    4108 1423 lineto
+    3974 1517 lineto
+    3782 1541 lineto
+    3461 1591 lineto
+    3325 1719 lineto
+    3240 1758 lineto			% WI/MI/Superior
+    closepath
+    6087 1571 moveto			% MI/Michigan/Huron
+    6278 1549 lineto
+    6469 1526 lineto
+    6603 1433 lineto
+    6764 1409 lineto
+    6924 1385 lineto
+    7030 1256 lineto
+    7013 1085 lineto
+    7122 921 lineto
+    7168 755 lineto
+    7150 583 lineto
+    7103 376 lineto
+    6984 267 lineto
+    6968 61 lineto
+    7103 -33 lineto
+    7220 110 lineto
+    7206 280 lineto
+    7354 426 lineto
+    7516 402 lineto
+    7623 272 lineto
+    7703 72 lineto
+    7786 -162 lineto
+    7892 -291 lineto
+    7874 -464 lineto
+    7887 -634 lineto
+    7732 -712 lineto
+    7714 -884 lineto
+    7628 -1026 lineto
+    7609 -1198 lineto
+    7525 -1375 lineto
+    7631 -1505 lineto			% OH/MI/Ontario
+    6775 -1658 lineto			% IN/MI/OH
+    6769 -1556 lineto			% IN/MI
+    5697 -1752 lineto
+    5756 -1681 lineto
+    5838 -1471 lineto
+    5885 -1230 lineto
+    5905 -1058 lineto
+    5891 -854 lineto
+    5816 -688 lineto
+    5709 -524 lineto
+    5634 -358 lineto
+    5619 -155 lineto
+    5576 13 lineto
+    5624 220 lineto
+    5638 458 lineto
+    5656 629 lineto
+    5736 837 lineto
+    5850 980 lineto
+    5895 813 lineto
+    6057 755 lineto
+    6013 922 lineto
+    6000 1090 lineto
+    6114 1233 lineto
+    6069 1400 lineto
+    6087 1571 lineto			% MI/Michigan/Huron
+    closepath
+  endseq
+} def
+
+/Indiana {
+  startseq
+    5290 -1843 moveto			% IL/IN/Michigan
+    5423 -1938 lineto
+    5609 -1859 lineto
+    5697 -1752 lineto			% IN/Michigan/MI
+    6769 -1556 lineto
+    6775 -1658 lineto
+    7195 -3661 lineto			% IN/OH/KY
+    7175 -3869 lineto
+    7025 -4050 lineto
+    6869 -4127 lineto
+    6754 -4375 lineto
+    6673 -4656 lineto
+    6451 -4702 lineto
+    6329 -4812 lineto
+    6171 -4854 lineto
+    6015 -4931 lineto
+    5853 -4905 lineto
+    5693 -4913 lineto
+    5537 -4990 lineto
+    5444 -5029 lineto			% IL/IN/KY
+    5466 -4855 lineto
+    5458 -4683 lineto
+    5545 -4540 lineto
+    5630 -4329 lineto
+    5650 -4122 lineto
+    5547 -3989 lineto
+    5537 -3817 lineto
+    5559 -3644 lineto
+    5290 -1843 lineto			% IL/IN/Michigan
+    closepath
+  endseq
+} def
+
+/Kentucky {
+  startseq
+    4797 -6203 moveto			% MO/KY/TN
+    4890 -6094 lineto
+    4944 -5883 lineto
+    4917 -5821 lineto			% MO/IL/KY
+    4871 -5714 lineto
+    5059 -5635 lineto
+    5254 -5695 lineto
+    5245 -5522 lineto
+    5334 -5380 lineto
+    5389 -5204 lineto
+    5444 -5029 lineto
+    5537 -4990 lineto
+    5693 -4913 lineto
+    5853 -4905 lineto
+    6015 -4931 lineto
+    6171 -4854 lineto
+    6329 -4812 lineto
+    6451 -4702 lineto
+    6673 -4656 lineto
+    6754 -4375 lineto
+    6869 -4127 lineto
+    7025 -4050 lineto
+    7175 -3869 lineto
+    7195 -3661 lineto
+    7358 -3687 lineto
+    7596 -3882 lineto
+    7761 -3942 lineto
+    7920 -3899 lineto
+    8084 -3925 lineto
+    8207 -3814 lineto
+    8372 -3874 lineto
+    8581 -4039 lineto			% KY/OH/WV
+    8554 -4176 lineto
+    8659 -4310 lineto
+    8799 -4476 lineto
+    8970 -4606 lineto			% KY/WV/VA
+    8950 -4817 lineto
+    8760 -4931 lineto
+    8638 -5077 lineto
+    8520 -5292 lineto
+    8430 -5436 lineto
+    8272 -5514 lineto
+    8162 -5601 lineto			% KY/VA/TN
+    8018 -5630 lineto
+    5372 -6140 lineto
+    4797 -6203 lineto			% MO/KY/TN
+    closepath
+  endseq
+} def
+
+/Tennessee {
+  startseq
+    4797 -6203 moveto			% MO/KY/TN
+    5372 -6140 lineto
+    8018 -5630 lineto
+    8162 -5601 lineto			% KY/VA/TN
+    9372 -5353 lineto			% TN/VA/NC
+    9349 -5530 lineto
+    9258 -5674 lineto
+    9134 -5785 lineto
+    8946 -5935 lineto
+    8754 -6014 lineto
+    8632 -6195 lineto
+    8472 -6238 lineto
+    8349 -6384 lineto
+    8190 -6461 lineto
+    8103 -6676 lineto
+    7978 -6786 lineto
+    7987 -6975 lineto			% TN/NC/GA
+    7248 -7100 lineto
+    5938 -7299 lineto
+    4410 -7475 lineto			% AR/TN/MS
+    4495 -7399 lineto
+    4486 -7191 lineto
+    4539 -6944 lineto
+    4660 -6730 lineto
+    4672 -6693 lineto			% MO/TN/AR
+    4717 -6553 lineto
+    4676 -6381 lineto
+    4797 -6203 lineto			% MO/KY/TN
+    closepath
+  endseq
+} def
+
+/Mississippi {
+  startseq
+    4410 -7475 moveto			% AR/TN/MS
+    5667 -7330 lineto			% MS/TN/AL
+    5750 -7413 lineto
+    5817 -9910 lineto
+    5952 -11117 lineto			% MS/AL
+    5856 -11121 lineto
+    5698 -11162 lineto
+    5508 -11205 lineto
+    5350 -11282 lineto
+    5194 -11359 lineto			% LA/MS
+    5225 -11323 lineto
+    5155 -11147 lineto
+    5023 -10973 lineto
+    5080 -10793 lineto
+    4919 -10728 lineto
+    3949 -10838 lineto
+    3816 -10737 lineto
+    3908 -10591 lineto
+    3933 -10377 lineto
+    4019 -10090 lineto
+    4141 -9872 lineto
+    4099 -9627 lineto
+    4060 -9452 lineto
+    4052 -9241 lineto
+    4027 -9172 lineto			% AR/MS/LA
+    3978 -9033 lineto
+    4003 -8821 lineto
+    3959 -8542 lineto
+    3984 -8366 lineto
+    4075 -8222 lineto
+    4167 -8078 lineto
+    4224 -7900 lineto
+    4313 -7687 lineto
+    4370 -7510 lineto
+    4410 -7475 lineto			% AR/TN/MS
+    closepath
+  endseq
+} def
+
+/Alabama {
+  startseq
+    5667 -7330 moveto			% MS/TN/AL
+    5938 -7299 lineto
+    7248 -7100 lineto			% TN/GA/AL
+    7285 -7204 lineto
+    7325 -7377 lineto
+    7399 -7585 lineto
+    7471 -7758 lineto
+    7511 -7933 lineto
+    7551 -8142 lineto
+    7626 -8387 lineto
+    7699 -8596 lineto
+    7771 -8805 lineto
+    7875 -8979 lineto
+    7946 -9154 lineto
+    7985 -9330 lineto
+    7894 -9512 lineto
+    7935 -9759 lineto
+    7973 -9937 lineto
+    7979 -10115 lineto			% AL/GA/FL
+    7984 -10294 lineto
+    6414 -10529 lineto
+    6553 -10881 lineto
+    6558 -11060 lineto
+    6401 -11173 lineto			% AL/FL
+    6210 -11216 lineto
+    6368 -11138 lineto
+    6268 -10998 lineto
+    6198 -10822 lineto
+    6140 -11003 lineto
+    6016 -11115 lineto
+    5952 -11117 lineto			% MS/AL
+    5817 -9910 lineto
+    5750 -7413 lineto
+    5667 -7330 lineto			% MS/TN/AL
+    closepath
+  endseq
+} def
+
+/Ohio {
+  startseq
+    6775 -1658 moveto			% IN/MI/OH
+    7631 -1505 lineto			% OH/MI/Ontario
+    7796 -1564 lineto
+    7959 -1589 lineto
+    8154 -1611 lineto
+    8308 -1499 lineto
+    8496 -1419 lineto
+    8612 -1241 lineto
+    8765 -1127 lineto
+    8886 -1017 lineto
+    9010 -941 lineto			% OH/Ontario/PA
+    9282 -1974 lineto			% OH/PA/WV
+    9269 -2198 lineto
+    9286 -2438 lineto
+    9308 -2748 lineto
+    9222 -2926 lineto
+    9102 -3072 lineto
+    8946 -3185 lineto
+    8897 -3430 lineto
+    8737 -3474 lineto
+    8722 -3751 lineto
+    8603 -3931 lineto
+    8581 -4039 lineto			% KY/OH/WV
+    8372 -3874 lineto
+    8207 -3814 lineto
+    8084 -3925 lineto
+    7920 -3899 lineto
+    7761 -3942 lineto
+    7596 -3882 lineto
+    7358 -3687 lineto
+    7195 -3661 lineto			% IN/OH/KY
+    6775 -1658 lineto
+    closepath
+  endseq
+} def
+
+/WestVirginia {
+  startseq
+    9282 -1974 moveto			% OH/PA/WV
+    9465 -2670 lineto
+    10070 -2493 lineto			% PA/WV/MD
+    10129 -2768 lineto
+    10290 -2724 lineto
+    10413 -2612 lineto
+    10502 -2467 lineto
+    10671 -2526 lineto
+    10795 -2414 lineto
+    10957 -2369 lineto
+    11096 -2464 lineto
+    11204 -2522 lineto			% WV/MD/VA
+    11046 -2676 lineto
+    10813 -2656 lineto
+    10826 -2829 lineto
+    10706 -3011 lineto
+    10551 -3159 lineto
+    10470 -3408 lineto
+    10380 -3552 lineto
+    10211 -3493 lineto
+    10190 -3668 lineto
+    10140 -3914 lineto
+    10053 -4094 lineto
+    10001 -4306 lineto
+    9978 -4482 lineto
+    9786 -4563 lineto
+    9661 -4674 lineto
+    9402 -4723 lineto
+    9243 -4801 lineto
+    9076 -4740 lineto
+    8970 -4606 lineto
+    8799 -4476 lineto
+    8659 -4310 lineto
+    8554 -4176 lineto
+    8603 -3931 lineto
+    8722 -3751 lineto
+    8737 -3474 lineto
+    8897 -3430 lineto
+    8946 -3185 lineto
+    9102 -3072 lineto
+    9222 -2926 lineto
+    9308 -2748 lineto
+    9286 -2438 lineto
+    9269 -2198 lineto
+    9282 -1974 lineto			% OH/PA/WV
+    closepath
+  endseq
+} def
+
+/Virginia {
+  startseq
+    8162 -5601 moveto			% KY/VA/TN
+    8272 -5514 lineto
+    8430 -5436 lineto
+    8520 -5292 lineto
+    8638 -5077 lineto
+    8760 -4931 lineto
+    8950 -4817 lineto
+    8970 -4606 lineto			% KY/WV/VA
+    9076 -4740 lineto
+    9243 -4801 lineto
+    9402 -4723 lineto
+    9661 -4674 lineto
+    9786 -4563 lineto
+    9978 -4482 lineto
+    10001 -4306 lineto
+    10053 -4094 lineto
+    10140 -3914 lineto
+    10190 -3668 lineto
+    10211 -3493 lineto
+    10380 -3552 lineto
+    10470 -3408 lineto
+    10551 -3159 lineto
+    10706 -3011 lineto
+    10826 -2829 lineto
+    10813 -2656 lineto
+    11046 -2676 lineto
+    11204 -2522 lineto			% WV/MD/VA
+    11269 -2558 lineto
+    11412 -2687 lineto
+    11585 -2781 lineto
+    11692 -2879 lineto
+    11669 -3020 lineto
+    11585 -3234 lineto
+    11748 -3190 lineto
+    11858 -3322 lineto
+    12027 -3346 lineto
+    12195 -3371 lineto
+    12368 -3429 lineto
+    12346 -3606 lineto
+    12459 -3775 lineto
+    12372 -3992 lineto
+    12513 -4089 lineto
+    12348 -4134 lineto
+    12176 -4074 lineto
+    12317 -4171 lineto
+    12429 -4341 lineto
+    12554 -4192 lineto
+    12722 -4182 lineto
+    12831 -4316 lineto
+    12872 -4419 lineto			% VA/NC
+    11490 -4853 lineto
+    10413 -5159 lineto
+    9372 -5353 lineto
+    8162 -5601 lineto			% KY/VA/TN
+    closepath
+    12619 -3275 moveto			% MD/VA
+    12845 -3155 lineto			% MD/VA
+    12831 -3329 lineto
+    12779 -3544 lineto
+    12724 -3723 lineto
+    12703 -3901 lineto
+    12624 -3730 lineto
+    12645 -3552 lineto
+    12666 -3375 lineto
+    12619 -3275 lineto			% MD/VA
+    closepath
+  endseq
+} def
+
+/NorthCarolina {
+  startseq
+    7987 -6975 moveto			% TN/NC/GA
+    7978 -6786 lineto
+    8103 -6676 lineto
+    8190 -6461 lineto
+    8349 -6384 lineto
+    8472 -6238 lineto
+    8632 -6195 lineto
+    8754 -6014 lineto
+    8946 -5935 lineto
+    9134 -5785 lineto
+    9258 -5674 lineto
+    9349 -5530 lineto
+    9372 -5353 lineto			% TN/VA/NC
+    10413 -5159 lineto
+    11490 -4853 lineto
+    12872 -4419 lineto			% VA/NC
+    12912 -4523 lineto
+    13022 -4658 lineto
+    13136 -4864 lineto
+    13246 -4999 lineto
+    13355 -5135 lineto
+    13400 -5311 lineto
+    13342 -5492 lineto
+    13332 -5314 lineto
+    13322 -5137 lineto
+    13210 -4966 lineto
+    13030 -4799 lineto
+    12917 -4594 lineto
+    12840 -4457 lineto
+    12885 -4631 lineto
+    12758 -4745 lineto
+    12667 -4927 lineto
+    12468 -4975 lineto
+    12671 -4998 lineto
+    12837 -4953 lineto
+    12949 -5124 lineto
+    13039 -4941 lineto
+    13117 -5114 lineto
+    13028 -5332 lineto
+    12801 -5488 lineto
+    12659 -5353 lineto
+    12533 -5503 lineto
+    12736 -5526 lineto
+    12714 -5741 lineto
+    12519 -5859 lineto
+    12817 -5771 lineto
+    12957 -5870 lineto
+    12866 -6053 lineto
+    12959 -5906 lineto
+    13081 -5650 lineto
+    13023 -5831 lineto
+    12866 -6053 lineto
+    12662 -6029 lineto
+    12533 -6143 lineto
+    12343 -6366 lineto
+    12185 -6552 lineto
+    12160 -6731 lineto
+    12103 -6949 lineto
+    11904 -6994 lineto
+    11776 -7107 lineto			% NC/SC
+    11603 -6972 lineto
+    11397 -6840 lineto
+    11224 -6706 lineto
+    11053 -6608 lineto
+    10915 -6508 lineto
+    10749 -6480 lineto
+    10585 -6524 lineto
+    10358 -6606 lineto
+    10190 -6543 lineto
+    10021 -6445 lineto
+    9856 -6453 lineto
+    9629 -6499 lineto
+    9367 -6512 lineto
+    9205 -6554 lineto
+    9045 -6632 lineto
+    8857 -6782 lineto
+    8761 -6821 lineto			% GA/NC/SC
+    8665 -6860 lineto
+    7987 -6975 lineto			% TN/NC/GA
+    closepath
+  endseq
+} def
+
+/SouthCarolina {
+  startseq
+    8761 -6821 moveto			% GA/NC/SC
+    8857 -6782 lineto
+    9045 -6632 lineto
+    9205 -6554 lineto
+    9367 -6512 lineto
+    9629 -6499 lineto
+    9856 -6453 lineto
+    10021 -6445 lineto
+    10190 -6543 lineto
+    10358 -6606 lineto
+    10585 -6524 lineto
+    10749 -6480 lineto
+    10915 -6508 lineto
+    11053 -6608 lineto
+    11224 -6706 lineto
+    11397 -6840 lineto
+    11603 -6972 lineto
+    11776 -7107 lineto			% NC/SC
+    11614 -7221 lineto
+    11524 -7440 lineto
+    11500 -7656 lineto
+    11440 -7837 lineto
+    11312 -7949 lineto
+    11218 -8097 lineto
+    11124 -8244 lineto
+    10996 -8357 lineto
+    10902 -8504 lineto
+    10775 -8652 lineto
+    10648 -8800 lineto
+    10586 -8910 lineto			% GA/SC
+    10553 -8912 lineto
+    10385 -8810 lineto
+    10312 -8634 lineto
+    10177 -8533 lineto
+    10104 -8357 lineto
+    9966 -8184 lineto
+    9763 -8050 lineto
+    9656 -7841 lineto
+    9488 -7742 lineto
+    9320 -7643 lineto
+    9184 -7508 lineto
+    9079 -7371 lineto
+    8975 -7234 lineto
+    8809 -7171 lineto
+    8673 -7036 lineto
+    8761 -6821 lineto			% GA/NC/SC
+    closepath
+  endseq
+} def
+
+/Georgia {
+  startseq
+    7248 -7100 moveto			% TN/GA/AL
+    7987 -6975 lineto			% TN/NC/GA
+    8665 -6860 lineto
+    8761 -6821 lineto			% GA/NC/SC
+    8761 -6821 lineto			% GA/NC/SC
+    8673 -7036 lineto
+    8809 -7171 lineto
+    8975 -7234 lineto
+    9079 -7371 lineto
+    9184 -7508 lineto
+    9320 -7643 lineto
+    9488 -7742 lineto
+    9656 -7841 lineto
+    9763 -8050 lineto
+    9966 -8184 lineto
+    10104 -8357 lineto
+    10177 -8533 lineto
+    10312 -8634 lineto
+    10385 -8810 lineto
+    10553 -8912 lineto
+    10586 -8910 lineto			% GA/SC
+    10496 -9165 lineto
+    10469 -9345 lineto
+    10410 -9564 lineto
+    10415 -9744 lineto
+    10388 -9925 lineto
+    10426 -10105 lineto			% GA/FL
+    10262 -10110 lineto
+    10096 -10079 lineto
+    10070 -10296 lineto
+    9907 -10338 lineto
+    8282 -10499 lineto
+    8149 -10396 lineto
+    7984 -10294 lineto
+    7979 -10115 lineto			% AL/GA/FL
+    7973 -9937 lineto
+    7935 -9759 lineto
+    7894 -9512 lineto
+    7985 -9330 lineto
+    7946 -9154 lineto
+    7875 -8979 lineto
+    7771 -8805 lineto
+    7699 -8596 lineto
+    7626 -8387 lineto
+    7551 -8142 lineto
+    7511 -7933 lineto
+    7471 -7758 lineto
+    7399 -7585 lineto
+    7325 -7377 lineto
+    7285 -7204 lineto
+    7248 -7100 lineto			% TN/GA/AL
+    closepath
+  endseq
+} def
+
+/Florida {
+  startseq
+    6401 -11173 moveto			% AL/FL
+    6558 -11060 lineto
+    6553 -10881 lineto
+    6414 -10529 lineto
+    7984 -10294 lineto
+    7979 -10115 lineto			% AL/GA/FL
+    7984 -10294 lineto
+    8149 -10396 lineto
+    8282 -10499 lineto
+    9907 -10338 lineto
+    10070 -10296 lineto
+    10096 -10079 lineto
+    10262 -10110 lineto
+    10426 -10105 lineto			% GA/FL
+    10464 -10283 lineto
+    10568 -10462 lineto
+    10638 -10641 lineto
+    10710 -10893 lineto
+    10813 -11072 lineto
+    10949 -11251 lineto
+    11085 -11430 lineto
+    11187 -11611 lineto
+    11322 -11717 lineto
+    11293 -11939 lineto
+    11223 -11757 lineto
+    11121 -11612 lineto
+    11191 -11794 lineto
+    11261 -12013 lineto
+    11362 -12158 lineto
+    11326 -11975 lineto
+    11428 -12119 lineto
+    11529 -12265 lineto
+    11631 -12411 lineto
+    11700 -12631 lineto
+    11801 -12777 lineto
+    11902 -12924 lineto
+    11969 -13109 lineto
+    11971 -13296 lineto
+    12006 -13482 lineto
+    11973 -13669 lineto
+    12007 -13893 lineto
+    11975 -14081 lineto
+    11910 -14270 lineto
+    11909 -14458 lineto
+    11910 -14646 lineto
+    11745 -14836 lineto
+    11613 -14950 lineto
+    11482 -15064 lineto
+    11284 -15103 lineto
+    11121 -15180 lineto
+    10957 -15256 lineto
+    11121 -15180 lineto
+    11284 -15103 lineto
+    11449 -15065 lineto
+    11580 -14950 lineto
+    11712 -14837 lineto
+    11844 -14722 lineto
+    11910 -14533 lineto
+    11745 -14610 lineto
+    11548 -14649 lineto
+    11383 -14575 lineto
+    11349 -14388 lineto
+    11250 -14240 lineto
+    11118 -14091 lineto
+    10921 -14018 lineto
+    10821 -13871 lineto
+    10755 -13686 lineto
+    10591 -13689 lineto
+    10590 -13503 lineto
+    10555 -13318 lineto
+    10391 -13358 lineto
+    10259 -13250 lineto
+    10192 -13066 lineto
+    10092 -12921 lineto
+    10122 -12737 lineto
+    10217 -12551 lineto
+    10052 -12444 lineto
+    10055 -12628 lineto
+    9922 -12520 lineto
+    9886 -12301 lineto
+    9948 -12117 lineto
+    9912 -11935 lineto
+    9875 -11753 lineto
+    9739 -11502 lineto
+    9576 -11507 lineto
+    9442 -11329 lineto
+    9308 -11188 lineto
+    9144 -11120 lineto
+    9042 -10979 lineto
+    8844 -10876 lineto
+    8651 -10954 lineto
+    8558 -11102 lineto
+    8399 -11216 lineto
+    8240 -11364 lineto
+    8048 -11406 lineto
+    7979 -11228 lineto
+    7814 -11126 lineto
+    7745 -10948 lineto
+    7585 -10989 lineto
+    7423 -10958 lineto
+    7322 -10818 lineto
+    7131 -10897 lineto
+    6909 -10976 lineto
+    6750 -11053 lineto
+    6875 -10941 lineto
+    6717 -11019 lineto
+    6558 -11060 lineto
+    6401 -11173 lineto			% AL/FL
+    closepath
+  endseq
+} def
+
+/Pennsylvania {
+  startseq
+    9010 -941 moveto			% OH/Ontario/PA
+    9072 -902 lineto
+    9257 -787 lineto
+    9343 -644 lineto
+    9432 -561 lineto			% PA/Ontario/NY
+    9484 -773 lineto
+    11888 -51 lineto
+    12030 -144 lineto
+    12113 -310 lineto
+    12285 -367 lineto
+    12390 -435 lineto
+    12394 -462 lineto
+    12343 -640 lineto
+    12292 -817 lineto
+    12274 -992 lineto
+    12387 -1123 lineto
+    12501 -1288 lineto
+    12677 -1380 lineto
+    12553 -1493 lineto
+    12464 -1639 lineto
+    12240 -1760 lineto
+    12215 -1866 lineto
+    12173 -1878 lineto			% MD/PA/DE
+    10070 -2493 lineto			% PA/WV/MD
+    9465 -2670 lineto
+    9282 -1974 lineto			% OH/PA/WV
+    9010 -941 lineto			% OH/Ontario/PA
+    closepath
+  endseq
+} def
+
+/Maryland {
+  startseq
+    10070 -2493 moveto			% PA/WV/MD
+    12173 -1878 lineto			% MD/PA/DE
+    12600 -2923 lineto
+    12958 -2759 lineto			% MD/DE
+    12904 -2938 lineto
+    12919 -3147 lineto
+    12849 -3117 lineto
+    12845 -3155 lineto			% MD/VA
+    12619 -3275 lineto			% MD/VA
+    12587 -3205 lineto
+    12476 -3071 lineto
+    12312 -3118 lineto
+    12170 -3022 lineto
+    12191 -2845 lineto
+    12111 -2676 lineto
+    12131 -2500 lineto
+    12021 -2368 lineto
+    12110 -2222 lineto
+    12096 -2048 lineto
+    12043 -2227 lineto
+    11921 -2375 lineto
+    11935 -2548 lineto
+    11948 -2722 lineto
+    11994 -2894 lineto
+    12140 -3059 lineto
+    12219 -3229 lineto
+    12052 -3240 lineto
+    11817 -3220 lineto
+    11648 -3196 lineto
+    11669 -3020 lineto			% MD/VA
+    11692 -2879 lineto
+    11585 -2781 lineto
+    11412 -2687 lineto
+    11269 -2558 lineto
+    11204 -2522 lineto			% WV/MD/VA
+    11096 -2464 lineto
+    10957 -2369 lineto
+    10795 -2414 lineto
+    10671 -2526 lineto
+    10502 -2467 lineto
+    10413 -2612 lineto
+    10290 -2724 lineto
+    10129 -2768 lineto
+    10070 -2493 lineto			% PA/WV/MD
+    closepath
+  endseq
+} def
+
+/Delaware {
+  startseq
+    12173 -1878 moveto			% MD/PA/DE
+    12215 -1866 lineto
+    12240 -1760 lineto
+    12365 -1692 lineto			% DE/PA/NJ
+    12326 -1998 lineto
+    12474 -2162 lineto
+    12590 -2363 lineto
+    12735 -2493 lineto
+    12846 -2626 lineto
+    12958 -2759 lineto			% MD/DE
+    12600 -2923 lineto
+    12173 -1878 lineto			% MD/PA/DE
+    closepath
+  endseq
+} def
+
+/NewYork {
+  startseq
+    9432 -561 moveto			% PA/Ontario/NY
+    9464 -533 lineto
+    9612 -352 lineto
+    9727 -172 lineto
+    9702 101 lineto
+    9587 298 lineto
+    9740 412 lineto
+    9925 528 lineto
+    10249 551 lineto
+    10411 563 lineto
+    10669 616 lineto
+    10789 728 lineto
+    10870 905 lineto
+    10977 1155 lineto
+    10993 1327 lineto
+    10751 1446 lineto
+    10910 1492 lineto
+    10994 1636 lineto
+    11074 1814 lineto
+    11157 1957 lineto
+    11236 2136 lineto
+    11352 2282 lineto
+    11471 2395 lineto
+    11724 2484 lineto
+    12011 2578 lineto
+    12141 2612 lineto
+    12187 2490 lineto			% NY/VT
+    12243 2289 lineto
+    12328 2124 lineto
+    12351 1919 lineto
+    12403 1752 lineto
+    12459 1549 lineto
+    12639 1426 lineto
+    12694 1224 lineto
+    12746 1055 lineto
+    12834 855 lineto
+    12855 650 lineto
+    12842 440 lineto
+    12893 271 lineto
+    12943 102 lineto
+    12997 -102 lineto
+    13047 -272 lineto
+    13030 -447 lineto
+    13109 -515 lineto			% NY/CT
+    13074 -548 lineto
+    13023 -726 lineto
+    12935 -872 lineto			% NJ/NY
+    12946 -628 lineto
+    12427 -459 lineto
+    12285 -367 lineto
+    12113 -310 lineto
+    12030 -144 lineto
+    11888 -51 lineto
+    9484 -773 lineto
+    9432 -561 lineto			% PA/Ontario/NY
+    closepath
+    13053 -689 moveto			% Long Island
+    12965 -835 lineto
+    13136 -857 lineto
+    13297 -774 lineto
+    13458 -692 lineto
+    13613 -539 lineto
+    13488 -654 lineto
+    13297 -774 lineto
+    13136 -857 lineto
+    13260 -742 lineto
+    13455 -657 lineto
+    13579 -542 lineto
+    13741 -459 lineto
+    13863 -309 lineto
+    13987 -194 lineto
+    13822 -243 lineto
+    13697 -358 lineto
+    13748 -180 lineto
+    13661 -326 lineto
+    13499 -409 lineto
+    13338 -492 lineto
+    13177 -574 lineto
+    13053 -689 lineto
+    closepath
+  endseq
+} def
+
+/NewJersey {
+  startseq
+    12390 -435 moveto			% PA/NY/NJ
+    12427 -459 lineto
+    12946 -628 lineto
+    12935 -872 lineto			% NJ/NY
+    12847 -1019 lineto
+    13017 -1040 lineto
+    13100 -1209 lineto
+    13148 -1379 lineto
+    13097 -1558 lineto
+    13145 -1729 lineto
+    13092 -1908 lineto
+    12967 -2022 lineto
+    12981 -2196 lineto
+    12928 -2374 lineto
+    12847 -2206 lineto
+    12680 -2217 lineto
+    12537 -2123 lineto
+    12393 -1993 lineto
+    12365 -1692 lineto			% DE/PA/NJ
+    12464 -1639 lineto
+    12553 -1493 lineto
+    12677 -1380 lineto
+    12501 -1288 lineto
+    12387 -1123 lineto
+    12274 -992 lineto
+    12292 -817 lineto
+    12343 -640 lineto
+    12394 -462 lineto
+    12390 -435 lineto			% PA/NY/NJ
+    closepath
+  endseq
+} def
+
+/Vermont {
+  startseq
+    12187 2490 moveto			% NY/VT
+    12204 2629 lineto
+    12459 2720 lineto
+    12616 2803 lineto
+    12838 2892 lineto
+    13061 2982 lineto			% VT/NH
+    13082 2811 lineto
+    13136 2644 lineto
+    13122 2470 lineto
+    13014 2253 lineto
+    13071 2051 lineto
+    13028 1840 lineto
+    13052 1635 lineto
+    13107 1432 lineto
+    13093 1258 lineto
+    13145 1089 lineto
+    13185 1054 lineto			% VT/NH/MA
+    12806 917 lineto			% NY/VT/MA
+    12746 1055 lineto
+    12694 1224 lineto
+    12639 1426 lineto
+    12459 1549 lineto
+    12403 1752 lineto
+    12351 1919 lineto
+    12328 2124 lineto
+    12243 2289 lineto
+    12187 2490 lineto			% NY/VT
+    closepath
+  endseq
+} def
+
+/NewHampshire {
+  startseq
+    13185 1054 moveto			% VT/NH/MA
+    13145 1089 lineto
+    13093 1258 lineto
+    13107 1432 lineto
+    13052 1635 lineto
+    13028 1840 lineto
+    13071 2051 lineto
+    13014 2253 lineto
+    13122 2470 lineto
+    13136 2644 lineto
+    13082 2811 lineto
+    13061 2982 lineto			% VT/NH
+    13073 3155 lineto
+    13225 3272 lineto			% NH/ME
+    13251 3068 lineto
+    13605 2377 lineto
+    13658 2209 lineto
+    13782 2013 lineto
+    13836 1845 lineto
+    14083 1764 lineto			% NH/ME
+    14069 1589 lineto
+    14122 1420 lineto
+    14088 1526 lineto			% MA/NH
+    13916 1436 lineto
+    13831 1289 lineto
+    13185 1054 lineto			% VT/NH/MA
+    closepath
+  endseq
+} def
+
+/Massachusetts {
+  startseq
+    12806 917 moveto			% NY/VT/MA
+    13185 1054 lineto			% VT/NH/MA
+    13831 1289 lineto
+    13916 1436 lineto
+    14088 1526 lineto			% MA/NH
+    14122 1420 lineto
+    14298 1367 lineto
+    14145 1214 lineto
+    14164 1041 lineto
+    14336 1023 lineto
+    14487 897 lineto
+    14603 768 lineto
+    14807 788 lineto
+    14787 960 lineto
+    14935 869 lineto
+    14814 718 lineto
+    14690 601 lineto
+    14513 655 lineto
+    14426 508 lineto
+    14377 425 lineto
+    14220 524 lineto
+    14104 653 lineto
+    13932 672 lineto
+    13765 657 lineto
+    13567 605 lineto
+    13313 445 lineto
+    13146 431 lineto
+    12873 335 lineto			% NY/MA/CT
+    12842 440 lineto
+    12855 650 lineto
+    12834 855 lineto
+    12806 917 lineto			% NY/VT/MA
+    closepath
+  endseq
+} def
+
+/Connecticut {
+  startseq
+    12873 335 moveto			% NY/MA/CT
+    13146 431 lineto
+    13313 445 lineto
+    13567 605 lineto
+    13765 657 lineto
+    13832 663 lineto			% CT/MA/RI
+    14059 149 lineto			% CT/RI
+    13926 80 lineto
+    13764 -4 lineto
+    13603 -87 lineto
+    13442 -170 lineto
+    13321 -319 lineto
+    13197 -434 lineto
+    13074 -548 lineto
+    13023 -726 lineto
+    12935 -872 lineto
+    13109 -515 lineto			% NY/CT
+    13030 -447 lineto
+    13047 -272 lineto
+    12997 -102 lineto
+    12943 102 lineto
+    12893 271 lineto
+    12873 335 lineto			% NY/MA/CT
+    closepath
+  endseq
+} def
+
+/RhodeIsland {
+  startseq
+    13832 663 moveto			% CT/MA/RI
+    13932 672 lineto
+    14104 653 lineto
+    14220 524 lineto
+    14377 425 lineto
+    14426 508 lineto
+    14339 360 lineto
+    14224 489 lineto
+    14174 311 lineto
+    14087 164 lineto
+    14059 149 lineto			% CT/RI
+    13832 663 lineto			% CT/MA/RI
+    closepath
+  endseq
+} def
+
+/Maine {
+  startseq
+    13225 3272 moveto			% NH/ME
+    13307 3418 lineto
+    13318 3592 lineto
+    13400 3737 lineto
+    13411 3910 lineto
+    13317 4108 lineto
+    13360 4284 lineto
+    13332 4487 lineto
+    13337 4694 lineto
+    13370 4938 lineto
+    13429 5219 lineto
+    13609 5135 lineto
+    13797 5224 lineto
+    13942 5376 lineto
+    14118 5326 lineto
+    14309 5175 lineto
+    14416 4911 lineto
+    14550 4684 lineto
+    14647 4487 lineto
+    14704 4320 lineto
+    14882 4271 lineto
+    15040 4115 lineto
+    15223 4032 lineto
+    15344 3906 lineto
+    15407 3705 lineto
+    15285 3587 lineto
+    15173 3402 lineto
+    15014 3315 lineto
+    14854 3228 lineto
+    14764 3392 lineto
+    14753 3218 lineto
+    14809 3050 lineto
+    14641 3033 lineto
+    14558 2886 lineto
+    14584 2680 lineto
+    14429 2560 lineto
+    14307 2445 lineto
+    14147 2359 lineto
+    14202 2191 lineto
+    14130 1941 lineto
+    14083 1764 lineto			% NH/ME
+    13982 1754 lineto
+    13836 1845 lineto
+    13782 2013 lineto
+    13658 2209 lineto
+    13605 2377 lineto
+    13251 3068 lineto
+    13225 3272 lineto			% NH/ME
+    closepath
+  endseq
+} def
+
+/Repaint {
+  initgraphics
+  erasepage
+  Rescale
+  Washington stroke
+  Oregon stroke
+  California stroke
+  Nevada stroke
+  Idaho stroke
+  Utah stroke
+  Arizona stroke
+  Montana stroke
+  Wyoming stroke
+  Colorado stroke
+  NewMexico stroke
+  NorthDakota stroke
+  SouthDakota stroke
+  Nebraska stroke
+  Kansas stroke
+  Oklahoma stroke
+  Texas stroke
+  Minnesota stroke
+  Iowa stroke
+  Missouri stroke
+  Arkansas stroke
+  Louisiana stroke
+  Wisconsin stroke
+  Illinois stroke
+  Michigan stroke
+  Indiana stroke
+  Kentucky stroke
+  Tennessee stroke
+  Mississippi stroke
+  Alabama stroke
+  Ohio stroke
+  WestVirginia stroke
+  Virginia stroke
+  NorthCarolina stroke
+  SouthCarolina stroke
+  Georgia stroke
+  Florida stroke
+  Pennsylvania stroke
+  Maryland stroke
+  Delaware stroke
+  NewYork stroke
+  NewJersey stroke
+  Vermont stroke
+  NewHampshire stroke
+  Massachusetts stroke
+  Connecticut stroke
+  RhodeIsland stroke
+  Maine stroke
+} def
+
+( done]\n) =
+
+Repaint

@@ -1,0 +1,519 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""><P>
+<HEAD>
+<TITLE>BuildLectern</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>BuildLectern(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+BuildLectern - building or editing Lectern files
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<B>BuildLectern options... dest</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+This program constructs in the file named <B>dest</B> a Lectern document composed
+of page images, attributes and other data, suitable for viewing with
+<A HREF="Lectern.1.html">Lectern(1)</A>,
+and suitable for indexing with 
+<A HREF="BuildLecternIndex.1.html">BuildLecternIndex(1)</A>.
+The page images
+come from files each containing a single image, or from a file containing a
+PostScript job, or from pre-existing Lectern documents.  The resulting
+documents include computed copies of the images at reduced scales, and derived
+OCR data.<P>
+
+Note: the arguments to BuildLectern are processed sequentially (as
+described below): an argument such as <A HREF="#-PScolor"><B>-PScolor</B></A>
+affects only input files later in the argument list.<P>
+
+Caution: it is surprisingly easy to forget the <B>dest</B> argument, and
+this can cause BuildLectern to think that the name of your last input
+file is the intended destination, and so to write the output there.<P>
+
+The program constructs the document in a temporary file in the same
+directory as the final destination; on success the temporary file is
+renamed as the destination, and on failure the temporary file is
+deleted.  So it is acceptable to use this program to modify a file
+in-place by naming the same destination file in an
+<A HREF="#-images"><B>-images</B></A>,
+<A HREF="#-include"><B>-include</B></A> or
+<A HREF="#-rescale"><B>-rescale</B></A>
+option.<P>
+
+Uncolored Lectern documents generally occupy about 100 KBytes per
+page, if you use the <A HREF="#-noUnscaled"><B>-noUnscaled</B></A> option.
+The unscaled images (not normally included for PostScript jobs) add
+about 100 KBytes per page, and color roughly doubles the size.  If you
+use the <A HREF="#-only"><B>-only 3</B></A> option, the size is reduced to
+about 35 KBytes per page.<P>
+
+This program constructs various temporary files in the same directory as the
+final destination file.  These include a temporary copy of the output, and a
+temporary copy of one image if the image is color or in TIFF format or comes
+from standard input or PostScript.  The temporary output file is the same size
+as the final output, and the temporary image copy can be up to 32 MBytes (for
+300 DPI 24-bit color plus the corresponding black and white).  You need to
+have this much disk space available!<P>
+
+For the purposes of describing the behavior of this program, the
+images within a Lectern document should be viewed as being numbered
+sequentially from 1, regardless of the user's notion of how pages are
+numbered.  The <A HREF="#-page1"><B>-page1</B></A> option allows you to
+specify the user's notion of page numbering, but does not affect the
+<I>image numbers</I> considered by this program.  (Programmers should
+note that the internal format of a Lectern document uses yet another
+numbering system for pages, starting from 0; but that need not concern
+users of this program.)<P>
+
+The program constructs the document by processing its arguments
+sequentially.  While doing so, it maintains a <I>current image
+number</I> (initially 1), a <I>mode</I> (initially <I>simplex</I>), a
+<I>current gamma value</I> (initially 1.0), a <I>current resolution</I> (initially
+300 DPI), a flag indicating whether to include the unscaled images in
+the output file (initially set), and an <A HREF="#-realOCR"><I>OCR
+flag</I></A> (initially <I>clear</I> unless BuildLectern was linked with an
+OCR library, in which case it is <I>real</I>).  The destination document
+initially has no images, no attributes and no
+<A HREF="#-original"><I>original</I></A>; its <A HREF="#-contents"><I>contents</I></A>
+is 0 (meaning <I>undefined</I>), its <A HREF="#-page1"><I>page1</I></A> is 1
+(meaning the first image), and its <A HREF="#-index"><I>index</I></A> is 0
+(meaning <I>undefined</I>).<P>
+
+If an argument is not one of the options described below, it should be
+a file's pathname.  The named file should contain either the image of
+a single page at the current resolution, in PBM, PGM, PPM, or TIFF
+format, a Lectern file, or a PostScript job.  It is also possible to
+read a PostScript job from standard input, by specifying - as the file
+name on the command line.<P>
+
+When the program encounters an image file, it copies the image into
+the document at the current image number, and updates the current
+image number: if the mode is <A HREF="#-simplex"><I>simplex</I></A> it adds 1,
+if the mode is <A HREF="#-recto"><I>recto</I></A> it adds 2 and if the mode is
+<A HREF="#-verso"><I>verso</I></A> it subtracts 2 (subject to a minimum of 1).
+While copying the image, the program creates copies of the image at
+reduced scales (using the current gamma value), and applies an OCR
+algorithm to the image unless the <A HREF="#-noOCR"><I>OCR flag</I></A> is
+not real.  The reduced images are scaled down by the integer nearest to
+(<A HREF="#-resolution"><I>current resolution</I></A> * <I>n</I> / 300),
+for <I>n</I> equal to 2, 3, and 4 (but see <A HREF="#-only"><B>-only</B></A>).
+The original image is copied to the output only if the
+<A HREF="#-includeUnscaled"><I>include unscaled flag</I></A> is set.  Note the
+<A HREF="#-stdin"><B>-stdin</B></A> option, which provides an alternative way
+to process a sequence of images without keeping them all in files.<P>
+
+When the program encounters a Lectern file, its contents are included as if
+<B>-include file 1 999999</B> had been specified.<P>
+
+When the program encounters a PostScript job, the Ghostscript
+interpreter is run to produce a sequence of images and OCR data (if
+the <A HREF="#-noOCR"><I>OCR flag</I></A> is not cleared), which are copied
+into the document in the normal way.  While processing a PostScript
+job, the program consults these additional variables: an image type
+(initially <I>black&amp;white</I>), an orientation (initially
+<I>portrait</I>), a scale (initially 1.0), and a flag indicating whether
+to include the PostScript in the final document (initially set).
+Also, different defaults are used for several normal variables:
+<A HREF="#-gamma"><I>gamma</I></A> is 0.454, the
+<A HREF="#-includeUnscaled"><I>include unscaled flag</I></A> is cleared, and
+the <I>OCR flag</I> is <A HREF="#-PSfakeOCR"><I>fake</I></A>.  The image type
+enforces an upper bound on the kind of images that will be produced by
+the PostScript interpreter, with <I>black&amp;white</I> &lt; <I>grayscale</I> &lt;
+<I>color</I>.<P>
+
+Whenever the program is placing a color image into <B>dest</B>, it reduces the
+set of colors in the image to a small set, chosen from a 4 by 4 by 4 color
+cube (i.e., 64 colors), so that the image will be suitable for color
+mapped monitors.  Similarly, it reduces the set of grays in a grayscale
+image to 16 gray levels.  Note that this means that any subsequent
+rescaling or other image processing will be based on an image from which
+information has been lost, so the image quality might then suffer.  There
+is no loss of information for black-and-white images.
+</BLOCKQUOTE>
+
+<H3>EXAMPLES</H3>
+<BLOCKQUOTE>
+<P>
+
+The simplest use is to invoke the program with a PostScript job constituting
+the entire document.<P>
+
+This will construct in <B>dest</B> a Lectern document consisting of the pages
+produced by the PostScript job, each scaled to the various resolutions, with
+no imaging adjustments and no attributes.  When you view such a document with
+Lectern, the pages will be numbered from 1 and the <B>Contents</B> and <B>Index</B>
+commands will not work.  For example:
+<PRE>
+   BuildLectern a.ps a.lect
+</PRE>
+
+You can assemble a document from several PostScript files:
+<PRE>
+   BuildLectern cover.ps chap1.ps chap2.ps chap3.ps index.ps book.lect
+</PRE>
+
+Note that concatenating PostScript files is non-trivial, so
+BuildLectern doesn't try; instead it just keeps the first PostScript
+file it encounters as the document's <I>original</I>.  In this case, it
+may be better to specify <A HREF="#-PSnoOriginal"><B>-PSnoOriginal</B></A>
+before the first PostScript argument.<P>
+
+If you have a set of image files resulting from scanning a document, you can
+use BuildLectern to build a document from them like this:
+<PRE>
+   BuildLectern *.tif a.lect
+</PRE>
+
+Alternatively, if the document was scanned from two-sided originals you might
+use a command line such as the following:
+<PRE>
+   BuildLectern -recto *.fronts.tif -verso *.backs.tif a.lect
+</PRE>
+
+If you just want to preview or display images, and the images were created
+at 300 DPI and you want to display at 100 DPI, you could use:
+<PRE>
+   BuildLectern -only 3 *.pbm a.lect
+</PRE>
+
+A third common usage pattern is to construct a new document from
+an existing one, adding attributes, specifying the location of contents
+and index pages, or modifying the images' gamma adjustments.  You could
+do these in a single run of BuildLectern, or incrementally in several
+separate runs.  For example:
+<PRE>
+   BuildLectern a.lect -contents 3 -index 57 b.lect
+</PRE>
+
+or, equivalently:
+<PRE>
+   BuildLectern -include a.lect 1 9999 -contents 3 -index 57 b.lect
+</PRE>
+
+or:
+<PRE>
+   BuildLectern b.lect -author: "Andrew Birrell" c.lect
+</PRE>
+
+or:
+<PRE>
+   BuildLectern -gamma 0.45 -rescale a.lect 1 9999 -index 59 d.lect
+</PRE>
+
+There are a few additional options, described below.  You can also use
+the options to perform detailed re-arrangements, such as replacing a single
+page of a document, or constructing a single document from multiple documents,
+or selectively modifying the gamma adjustments of individual pages.
+</BLOCKQUOTE>
+
+<H3>THE OPTIONS</H3>
+<BLOCKQUOTE>
+<P>
+
+The complete set of options is as follows.  (BuildLectern ignores case when
+checking for options.)<P>
+
+<DL>
+<DT><A NAME="-contents"><B>-contents integer</B></A><DD>
+Specifies that the image containing the start of the document's 
+table of contents is the image numbered <B>integer</B>, counting from 
+1 (regardless of the user's notion of page numbering).<P>
+
+<DT><A NAME="-gamma"><B>-gamma number</B></A><DD>
+Sets the current gamma value to the given <B>number</B>, which should 
+be in the range [0.1 .. 10.0].  The current gamma value affects 
+the appearance of the reduced scale images that the program creates.  
+Gamma adjustment alters the mid-tones of an image, leaving pure 
+white and pure black unchanged.  Gamma values greater 
+than 1.0 lighten the image, and values less than 1.0 darken it.  
+See also the 
+<A HREF="#rescale"><B>-rescale</B></A>
+ option, which lets you iterate on the 
+choice of gamma values.  The current gamma value has no effect 
+on the unscaled images of the document.  On most documents a 
+gamma value somewhere in the range 0.4 to 1.0 is satisfactory. <P>
+
+<DT><A NAME="-image"><B>-image integer</B></A><DD>
+Sets the current image number to be the given integer (which
+must be no less than 1). <P>
+
+<DT><A NAME="-images"><B>-images file from for</B></A><DD>
+This option is the same as the <A HREF="#-include"><B>-include</B></A> option,
+except that only the images (and their scaled versions and OCR data)
+are copied.  None of the source file's attributes and miscellaneous
+data (<I>page1</I>, <I>contents</I>, <I>index</I> and <I>original</I> values)
+is copied, only the images.<P>
+
+<DT><A NAME="-include"><B>-include file from for</B></A><DD>
+Includes the contents of a pre-existing Lectern document residing in
+<B>file</B> into the current document, by copying.  All the
+miscellaneous data are copied: the <I>page1</I> value, the <I>contents</I>
+value, the <I>index</I> value, the <I>original</I>, and the attributes,
+unless the corresponding datum is already defined for the destination
+document.  (In other words, any miscellaneous data specified by an
+explicit command line option, or by an earlier
+<A HREF="#-include"><B>-include</B></A> or <A HREF="#rescale"><B>-rescale</B></A> will
+dominate data from <B>file</B>).<P>
+
+The images in <B>file</B> starting at the image numbered <B>from</B>
+(counting from 1) are copied into the current document starting at the
+current image number (even if there is already such an image); after
+each image is copied, the current image number is modified in the same
+way as it is after processing an image file, with due regard to the
+current mode (<A HREF="#recto"><I>recto</I></A>, <A HREF="#verso"><I>verso</I></A>, or
+<A HREF="#simplex"><I>simplex</I></A>).  Images are copied until <B>for</B>
+images have been copied or until the last image in <B>file</B> has been
+copied.  The relevant scaled images and OCR data are copied from
+<B>file</B> intact along with the original unscaled images (except that
+the unscaled images are omitted if the
+<A HREF="#-includeUnscaled"><I>include unscaled flag</I></A> is not currently
+set).  See also the <A HREF="#rescale"><B>-rescale</B></A> option, which is
+similar, but recreates the scaled images using the current gamma
+value; and the <A HREF="#-images"><B>-images</B></A> option, which is similar
+but does not copy the miscellaneous data.<P>
+
+<DT><A NAME="-includeUnscaled"><B>-includeUnscaled</B></A><DD>
+Sets the <I>include unscaled flag</I>, which controls whether original, unscaled,
+images are written to <B>dest</B>.<P>
+
+<DT><A NAME="-index"><B>-index integer</B></A><DD>
+Specifies that the image containing the start of the document's 
+index pages is the image numbered <B>integer</B>, in the user's notion
+of page numbering.  For example, if you have used the option
+<B>-page1 3</B>, and the document hardcopy has the first index page with
+a page number of 17 printed on it, you would say <B>-index 17</B> (in
+this example, the index starts on the 20th image, counting from 1).
+Note that the meaning of this option is affected by any previous
+use of the <B>-page1</B>, 
+<A HREF="#-include"><B>-include</B></A>
+or
+<A HREF="#-rescale"><B>-rescale</B></A>
+options.<P>
+
+<DT><A NAME="-key"><B>-key: value</B></A><DD>
+For any string <B>key</B>, adds a key-value pair to the document
+with the given key and value.  For example, the option
+<B>-author: Andrew</B> specifies that the attribute <B>author</B> has the value
+<B>Andrew</B>.  Adding an attribute with a given key implicitly removes any
+previous attribute with the identical key (case is significant).<P>
+
+<DT><A NAME="-noAttribute"><B>-noAttribute key</B></A><DD>
+If there is an attribute in the document with a key identical 
+to <B>key</B> (case is significant), remove it.  This is useful primarily 
+to remove attributes that were copied in by using the
+<A HREF="#-include"><B>-include</B></A>
+option. <P>
+
+<DT><A NAME="-noOCR"><B>-noOCR</B></A><DD>
+Clears the <I>OCR flag</I>, thus preventing any OCR data from being
+generated (either by running the <A HREF="#-realOCR"><I>real</I></A> OCR
+algorithm or by doing <A HREF="#-PSfakeOCR"><I>fake</I></A> OCR as part of
+interpreting PostScript) for subsequent images.<P>
+
+<DT><A NAME="-noUnscaled"><B>-noUnscaled</B></A><DD>
+Clears the <I>include unscaled flag</I>, which controls whether original,
+unscaled, images are written to <B>dest</B>.<P>
+
+<DT><A NAME="-only"><B>-only n</B></A><DD>
+For subsequent pages, BuildLectern will compute only one version of
+the image, being the original image scaled down by a factor of <B>n</B>.
+(By default, BuildLectern includes three versions: the original image
+scaled down by factors of 4, 3, and 2.)  With this option, OCR
+processing is disabled.  This option also affects images processed by
+the
+<A HREF="#-rescale"><B>-rescale</B></A>
+option, but not those copied by the 
+<A HREF="#-include"><B>-include</B></A>
+or 
+<A HREF="#-images"><B>-images</B></A>,
+options. The purpose of this option is to permit fast document
+construction when only one scale and no OCR is needed, for example to
+proof PostScript files or to present slides.  If both <B>-only</B> and
+<A HREF="#-resolution"><B>-resolution</B></A> are used, <B>-only</B> must come
+first, since <B>-resolution</B> alters the exact scale values used.<P>
+
+<DT><A NAME="-original"><B>-original file</B></A><DD>
+Copy the contents of <B>file</B> into the document as the document's 
+<I>original</I>.  This is intended to be the PostScript that was used 
+to create the document, and if it is available it will be used 
+by 
+<A HREF="Lectern.1.html">Lectern(1)</A>,
+for printing the document, in preference to printing 
+the images themselves.  (Potentially it could also be used to 
+generate images at other resolutions, but certainly not today 
+and probably never.) <P>
+
+<DT><A NAME="-page1"><B>-page1 integer</B></A><DD>
+Specifies that the image which the user thinks of as the document's 
+page 1 (i.e. the image whose hardcopy page has the digit "1" printed
+on it) is the image numbered <B>integer</B>, counting from 1.<P>
+
+<DT><A NAME="-PSblackAndWhite"><B>-PSblackAndWhite</B></A><DD>
+Sets the image type used for processing a PostScript job to black&amp;white.<P>
+
+<DT><A NAME="-PScolor"><B>-PScolor</B></A><DD>
+Sets the image type used for processing a PostScript job to color.<P>
+
+<DT><A NAME="-PSfakeOCR"><B>-PSfakeOCR</B></A><DD>
+Sets the <I>OCR flag</I> to <I>fake</I>, which means that when PostScript is being
+interpreted, OCR data will be derived as a side-effect, rather than by running
+the actual OCR algorithm.<P>
+
+<DT><A NAME="-PSgray"><B>-PSgray</B></A><DD>
+Sets the image type used for processing a PostScript job to grayscale.<P>
+
+<DT><A NAME="-PSgs"><B>-PSgs</B></A><DD>
+Specifies the pathname of the Ghostscript executable (by default, <I>gs</I>).<P>
+
+<DT><A NAME="-PSincludeOriginal"><B>-PSincludeOriginal</B></A><P>
+
+<DD>Sets the <I>include original flag</I>, which controls whether a PostScript
+job is included as the <I>original</I> in <B>dest</B>.<P>
+
+<DT><A NAME="-PSlandscape"><B>-PSlandscape</B></A><DD>
+Sets the orientation to <I>landscape</I>, which causes output from a
+PostScript job to be rotated 90 degrees clockwise.  If this results in
+upside-down images, use <B>-PSlandscapeOther</B> instead.<P>
+
+<DT><A NAME="-PSlandscapeOther"><B>-PSlandscapeOther</B></A><DD>
+Sets the orientation to <I>upside-down landscape</I>, which causes output from a
+PostScript job to be rotated 90 degrees counter-clockwise.  If this results in
+upside-down images, use <B>-PSlandscape</B> instead.<P>
+
+<DT><A NAME="-PSportrait"><B>-PSportrait</B></A><DD>
+Sets the orientation <I>portrait</I>, which causes output from a PostScript job to
+be used as-is.<P>
+
+<DT><A NAME="-PSnoOriginal"><B>-PSnoOriginal</B></A><DD>
+Clears the <I>include original flag</I>, which controls whether a PostScript job is
+included as the <I>original</I> in dest.<P>
+
+<DT><A NAME="-PSscale"><B>-PSscale number</B></A><DD>
+Sets the scale factor to <B>number</B>, which causes PostScript jobs to
+generate images of <B>number</B>*300DPI (which are then reduced in the
+normal way).  For example, <B>-PSScale 1.1</B> increases the final image size by 10%.<P>
+
+<DT><A NAME="-realOCR"><B>-realOCR</B></A><DD>
+Sets the <I>OCR flag</I> to <I>real</I>, which causes OCR data for
+subsequent images to be acquired by running the OCR algorithm (even
+when processing PostScript files).<P>
+
+<DT><A NAME="-recto"><B>-recto</B></A><DD>
+Sets the mode to <I>recto</I>.  In this mode the current image number 
+increases by 2 after processing an image file or while processing 
+an <A HREF="#-include"><B>-include</B></A>
+option.  The expectation is that while in <I>recto</I> 
+mode the program will be processing the recto (odd-numbered or 
+front) pages of the document, in ascending order, and that <I>recto</I> 
+mode will be followed by an equal number of images in <I>verso</I> 
+mode. <P>
+
+<DT><A NAME="-resolution"><B>-resolution integer</B></A><DD>
+Sets the current resolution of image files (PNM and TIFF) to
+<B>integer</B> instead of the default, 300 DPI.  If both
+<A HREF="#-only"><B>-only</B></A> and <B>-resolution</B> are used, <B>-only</B>
+must come first, since <B>-resolution</B> alters the exact scale values
+used.<P>
+
+<DT><A NAME="-rescale"><B>-rescale file from for</B></A><DD>
+This option is the same as the 
+<A HREF="#-include"><B>-include</B></A> option, except that 
+while copying images from <B>file</B>, the existing scaled images 
+are discarded and replaced by new ones created with the current 
+gamma value.  This allows you to iterate on the gamma value for 
+a document, or for particular images in a document. <P>
+
+<DT><A NAME="-simplex"><B>-simplex</B></A><DD>
+Sets the mode to <I>simplex</I>.  In this mode the current image number 
+increases by 1 after processing an image file or while processing 
+an <A HREF="#-include"><B>-include</B></A> option.  This contrasts with 
+<A HREF="#-recto"><I>recto</I></A> and 
+<A HREF="#-verso"><I>verso</I></A> 
+modes. <P>
+
+<DT><A NAME="-stdin"><B>-stdin</B></A><DD>
+Processes a sequence of images from standard input, as if the images
+had been presented in separate files. The images should be in PPM, PGM or PBM
+raw (binary) format, and should appear sequentially on standard input,
+optionally separated by white space. The sequence is terminated by end of
+file on standard input.  Note that TIFF images and non-raw PNM images are
+not yet supported in this option. This option
+is intended primarily for passing images produced by gs(1)
+into BuildLectern through a pipe. This avoids the use of a large amount
+of temporary disk storage for the complete set of images, since this
+option keeps only one image on disk at a time. Note that you can't just pipe
+the standard output of gs(1) into BuildLectern, since gs writes status messages
+on its standard output. Instead, give gs(1) an option such as
+<PRE>
+   "-sOutputFile=|BuildLectern foo.lect -stdin"
+</PRE>
+
+including the quotes.<P>
+
+<DT><A NAME="-verbose"><B>-verbose</B></A><DD>
+Writes details of the image scaling and OCR operations to the standard
+error stream.<P>
+
+<DT><A NAME="-verso"><B>-verso</B></A><DD>
+Sets the mode to <I>verso</I> and immediately subtracts 1 from the current image
+number (recall that the current image number will have been increased by 2
+after processing the final <I>recto</I> image).  In this mode the current image
+number decreases by 2 after processing an image file or while processing an
+<A HREF="#-include"><B>-include</B></A> option.  You will get an error message if this process would result in
+an image having a number less than 1.  The expectation is that
+<I>verso</I> mode will be set immediately after <I>recto</I> mode, and
+that while in <I>verso</I> mode the program will be processing the verso
+(even-numbered or back) pages of the document, in descending order.
+</DL>
+<P>
+
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="EditLectern.1.html">EditLectern(1)</A>,
+<A HREF="Lectern.1.html">Lectern(1)</A>,
+<A HREF="pstotext.1.html">pstotext(1)</A>
+</BLOCKQUOTE>
+
+<H3>PROGRAMS INVOKED AS SUB-PROGRAMS</H3>
+<BLOCKQUOTE>
+gs(1), pgmtopbm(1), ppmtopgm(1), tifftopnm(1).
+</BLOCKQUOTE>
+
+<H3>AUTHORS</H3>
+<BLOCKQUOTE>
+<A HREF="http://www.research.digital.com/SRC/people/Andrew_Birrell/bio.html">Andrew D. Birrell</A> and 
+<A HREF="http://www.research.digital.com/SRC/people/Paul_McJones/bio.html">Paul McJones</A>
+</BLOCKQUOTE>
+
+<H3>COPYRIGHT</H3>
+<BLOCKQUOTE>
+<P>
+
+Copyright 1994 Digital Equipment Corporation.<BR>
+Distributed only by permission.<BR>
+<BR>
+<P>
+
+<PRE>
+Last modified on Fri Jun  7 14:16:12 PDT 1996 by mcjones 
+     modified on Wed Jun  7 17:09:13 PDT 1995 by birrell 
+     modified on Sun Jan  1 16:18:32 PST 1995 by glassman
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

@@ -1,0 +1,8 @@
+import("libm3")
+
+module("CommandRd")
+module("CommandWr")
+
+module("GZipRd")
+
+library("commandrw")

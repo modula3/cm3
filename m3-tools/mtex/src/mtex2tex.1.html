@@ -1,0 +1,142 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<HEAD>
+<TITLE>mtex2tex Man Page</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>mtex2tex(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+<P>
+
+mtex2tex - translate mtex(7) files to LaTeX format
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<P>
+
+<B>mtex2tex</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+<P>
+
+<I>mtex2tex</I> is a filter that reads a file in
+<A HREF="mtex.7.html">mtex(7)</A> format from its standard input, and
+writes a <I>LaTeX</I>-format file to standard output suitable for
+processing with latex(1).<P>
+
+In the output produced by <I>mtex2tex</I>, the title of the manpage is
+a LaTeX <TT>\section</TT>, and the sections of the manpage are LaTeX
+<TT>\subsection</TT>s. The output does not contain a
+<TT>\documentstyle</TT> declaration, nor <TT>\begin{document}</TT> and
+<TT>\end{document}</TT> environment brackets. It is assumed that the
+output from this filter will be <TT>\input</TT> into some other
+top-level LaTeX document containing these commands, like this:
+<PRE>
+  \documentstyle{article}
+  \begin{document}
+  \title{The \it{mtex} Package Manpages}
+  \author{Harvey Throgenbottom}
+  \date{\today}
+  \maketitle
+  \input{mtex.7.tex}
+  \input{mtex2html.1.tex}
+  \input{mtex2man.1.tex}
+  \input{mtex2tex.1.tex}
+  \end{document}
+</PRE>
+
+<I>mtex2tex</I> is written entirely in LIM (see lim(1)).
+</BLOCKQUOTE>
+
+<H3>SPECIAL CHARACTERS</H3>
+<BLOCKQUOTE>
+<P>
+
+There are several special characters for the LaTeX output format. Here
+are the characters and the strings they are translated to by
+mtex2tex(1):<P>
+
+"<TT>$</TT>" becomes "<TT>\$</TT>"<BR>
+"<TT>&amp;</TT>" becomes "<TT>\&amp;</TT>"<BR>
+"<TT>%</TT>" becomes "<TT>\%</TT>"<BR>
+"<TT>#</TT>" becomes "<TT>\#</TT>"<BR>
+"<TT>_</TT>" becomes "<TT>\_</TT>"<BR>
+"<TT>{</TT>" becomes "<TT>\{</TT>"<BR>
+"<TT>}</TT>" becomes "<TT>\}</TT>"<BR>
+"<TT>~</TT>" becomes "<TT>{\tt\symbol{'176}}</TT>"<BR>
+"<TT>^</TT>" becomes "<TT>{\tt\symbol{'136}}</TT>"<BR>
+"<TT>\</TT>" becomes "<TT>{\tt\symbol{'134}}</TT>"
+<BR>
+<P>
+
+To prevent these characters from being translated within the
+scope of a <I>tex</I> environment, you must escape them with a
+<TT>\</TT> (backslash) character.
+</BLOCKQUOTE>
+
+<H3>DIAGNOSTICS</H3>
+<BLOCKQUOTE>
+<P>
+
+See the <A HREF="mtex.7.html#Diagnostics">Diagnostics</A> section
+of the mtex(7) manpage for a complete description.
+</BLOCKQUOTE>
+
+<H3>BUGS</H3>
+<BLOCKQUOTE>
+<P>
+
+There is no way to specify that the space following a period should
+be the interword space in the case that the period does not end the
+sentence. Similarly, there is no way to indicate that a period
+following an uppercase letter actually ends a sentence.<P>
+
+By default, most LaTeX document styles do not skip a line to start a
+new paragraph. Instead, they indent the first line of the
+paragraph. This can lead to formatting anomalies compared to the
+HTML- and man-formatted versions of a manpage.<P>
+
+By default, most LaTeX document styles skip a line between list
+environment items, even if no new paragraph is indicated
+between them.<P>
+
+By default, most LaTeX document styles skip a line before the first
+line of an environment and after the last line of the environment,
+even if no new paragraph is indicated there.<P>
+
+The text following items in a description environment does not start
+on a new line.<P>
+
+Links are not indicated in any way.
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="mtex.7.html">mtex(7)</A>,
+<A HREF="mtex2html.1.html">mtex2html(1)</A>,
+<A HREF="mtex2man.1.html">mtex2man(1)</A>,
+xmosaic(1)
+</BLOCKQUOTE>
+
+<H3>AUTHOR OF PROGRAM AND DOCUMENTATION</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html">Allan Heydon</A>
+(<TT>heydon@src.dec.com</TT>)
+<PRE>
+Last modified on Mon Feb  6 16:46:23 PST 1995 by heydon
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

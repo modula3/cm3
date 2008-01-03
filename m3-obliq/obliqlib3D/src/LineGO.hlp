@@ -1,0 +1,17 @@
+  LineGO_New(p1 p2: PointVal): LineGO       
+  LineGO_Color: ColorPropName               
+  LineGO_Width: RealPropName                
+  LineGO_Type: LineTypePropName             
+  LineGO_Point1: PointPropName              
+  LineGO_Point2: PointPropName              
+  LineGO_SetColor(o: GO, c: ColorVal): Ok   
+  LineGO_SetWidth(o: GO, r: RealVal): Ok    
+  LineGO_SetType(o: GO, t: LineType): Ok    
+  LineGO_SetPoint1(o: GO, p: PointVal): Ok  
+  LineGO_SetPoint2(o: GO, p: PointVal): Ok  
+WHERE                                       
+  LineGO <: GO                               
+  PointVal = PointPropVal + Point3          
+  RealVal = RealPropVal + Real + Int        
+  ColorVal = ColorPropVal + Color + Text    
+  LineTypeVal = LineTypePropVal + LineType 

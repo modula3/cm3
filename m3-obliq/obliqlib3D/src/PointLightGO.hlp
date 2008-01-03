@@ -1,0 +1,13 @@
+  PointLightGO_New(c: ColorVal, orig: PointVal, 
+                   att0 att1: RealVal): PointLightGO
+  PointLightGO_Origin: PointPropName                                   
+  PointLightGO_SetOrigin(go: GO, orig: PointVal): Ok                   
+  PointLightGO_Attenuation0: RealPropName                              
+  PointLightGO_SetAttenuation0(go: GO, att: RealVal): Ok               
+  PointLightGO_Attenuation1: RealPropName                              
+  PointLightGO_SetAttenuation1(go: GO, att: RealVal): Ok               
+WHERE                                                                  
+  PointLightGO <: LightGO                                               
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int                                   
+  ColorVal = ColorPropVal + Color + Text                               

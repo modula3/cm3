@@ -1,0 +1,503 @@
+(Shape
+  %top
+  (Height 300 - 200 + Inf)
+  (Width 425 - 200 + Inf)
+  (LabelFont (Family "new century schoolbook"))
+  (Font "fixed")
+  (LightShadow "VeryVeryLightBlue")
+  (DarkShadow "Blue")
+  (Macro TLA BOA (x) `(Text LeftAlign ,x))
+  (Macro TRA BOA (x) `(Text RightAlign ,x))
+  (Macro SEP () '(VBox (Glue 3) Ridge (Glue 3)))
+  (Macro
+    BOX
+    (pens child)
+    (IF
+      (= pens '())
+      child
+      `(Border
+         (Pen ,(List.Nth pens 0))
+         (Rim
+           (Pen ,(List.Nth pens 1))
+           (BOX (pens ,(List.NthTail pens 2)) (child ,child))))))
+  (Macro
+    COMMAND
+    BOA
+    (name label k1 k2 k3 k4 (type (MButton)))
+    `(,@type
+       ,name
+       (HBox
+         (TLA ,label)
+         Fill
+         (TSplit
+           %,(SxSymbol.FromName
+               (Text.Cat "Model_" (SxSymbol.Name (List.Nth name 1))))
+           (TRA ,k1)
+           (TRA ,k2)
+           (TRA ,k3)
+           (TRA ,k4)))))
+  (Macro
+    QUILLMENU
+    ()
+    '(Menu
+       (Shape (Width 30) (Height 13.5) (Pixmap "pen.pbm"))
+       (Border
+         (VBox
+           (PopMButton (For aboutMFE) (TLA "About FormsEdit..."))
+           (SEP)
+           (COMMAND
+             %Help
+             "Help..."
+             "oH"
+             "M-h"
+             "M-h"
+             "M-h"
+             (PopMButton (For manpage)))
+           Bar
+           (Radio
+             %Model
+             (HBox
+               (Glue 10)
+               (VBox
+                 "Editing Model"
+                 (Choice %ivyModel MenuStyle (TLA "Ivy"))
+                 (Choice %emacsModel MenuStyle (TLA "Emacs"))
+                 (Choice %macModel MenuStyle (TLA "Mac"))
+                 (Choice %xtermModel MenuStyle (TLA "Xterm")))))
+           Bar
+           (COMMAND %quit2 "Quit" "oQ" "M-q" "M-q" "M-q")))))
+  (Macro
+    FILEMENU
+    ()
+    '(Menu
+       (Text (Margin 10) "File")
+       (Border
+         (Shape
+           (Width 110)
+           (VBox
+             (COMMAND %new "New" "oN" "M-n" "M-n" "M-n")
+             (COMMAND
+               %openMButton
+               "Open..."
+               "oO"
+               "M-o"
+               "M-o"
+               "M-o"
+               (PopMButton (For OpenDialog)))
+             (SEP)
+             (MButton %close (TLA "Close"))
+             (Filter (COMMAND %save "Save" "oS" "M-s" "M-s" "M-s"))
+             (PopMButton (For SaveAsDialog) %saveasMButton (TLA "Save As..."))
+             (PopMButton
+               (For RevertDialog)
+               %revertbutton
+               (TLA "Revert To Saved"))
+             (SEP)
+             (PopMButton
+               %ppwidthPopMButton
+               (For PPwidthNumeric)
+               (TLA "PP setup..."))
+             (COMMAND %PPrint "PPrint" "oP" "M-p" "M-p" "M-p")
+             (SEP)
+             (COMMAND %quit "Quit" "oQ" "M-q" "M-q" "M-q"))))))
+  (Macro
+    EDITMENU
+    ()
+    '(Menu
+       (Text (Margin 10) "Edit")
+       (Border
+         (Shape
+           (Width 100)
+           (VBox
+             (COMMAND %undo "Undo" "cZ" "C-_" "M-z" "M-z")
+             (COMMAND %redo "Redo" "csZ" "M-_" "M-z" "M-Z")
+             (SEP)
+             (COMMAND %cut "Cut" "oX" "C-w" "M-x" "M-x")
+             (COMMAND %copy "Copy" "oC" "M-w" "M-c" "M-c")
+             (COMMAND %paste "Paste" "oV" "C-y" "M-v" "M-v")
+             (COMMAND %clear "Clear" "" "" "" "")
+             (COMMAND %selectAll "SelectAll" "oA" "M-a" "M-a" "M-a")
+             (SEP)
+             (COMMAND
+               %findMButton
+               "Find..."
+               "oF"
+               ""
+               "M-f"
+               "M-f"
+               (LinkMButton (For FindInBuffer2)))
+             (COMMAND %findNext "Find Next" "c," "C-s" "" "")
+             (COMMAND %findPrev "Find Prev" "cM" "C-r" "" ""))))))
+  (Macro
+    MISCMENU
+    ()
+    '(Menu
+       (Text (Margin 10) "Misc")
+       (Border
+         (VBox
+           (PopMButton
+             %dumpTable
+             (For dumpTablePopup)
+             "Show the named VBTs...")
+           (PopMButton
+             %snapshot
+             (For snapshotDialog)
+             "Show current snapshot...")
+           (PopMButton (For errorPopup) "Show last error message")
+           (SEP)
+           (Filter %rescreenFilter (VBox %rescreenMenu))))))
+  (Macro FINDER (first next prev typein show close)
+	 `(TSplit Flex
+		  (LightShadow "White")
+		  (DarkShadow "Blue")
+		  (BgColor "VeryPaleBlue")
+		  (Shape (Height 0) Fill)
+		  (VBox %,show
+			Ridge
+			(Glue 2)
+			(HBox
+			 (Shape (Width + 0) "Find:")
+			 (Shape (Width 0 + 3000)
+				(Frame Lowered (TypeIn %,typein (BgColor "VeryVeryPaleBlue"))))
+			 (Glue 5)
+			 (Shape (Width 0 + 1000) (Rim (Pen 1) (Button %,first "First")))
+			 (Shape (Width 0 + 1000) (ShadowSize 2.5) (Button %,next "Next"))
+			 (Shape (Width 0 + 1000) (Rim (Pen 1) (Button %,prev "Prev.")))
+			 (Glue 20)
+			 (Rim (Pen 1) (PageButton %,close "C")))
+			(Glue 2))))
+
+  (Macro CONFIRM (Name question yes no cancel cancelMsg)
+  `(ZChild %,Name
+     (BgColor "VeryPaleBlue")
+     (LightShadow "White")
+     (DarkShadow "VeryDarkBlue")
+     (Shape (Width 300)
+       (BOX (pens (2 2 1 26))
+	 (child
+	  (VBox
+	   ,question
+	   (Glue 20)
+	   (HBox
+	    Fill
+	    (VBox
+             (Button %,yes (BgColor "Green") (Shape (Width 80) "Yes"))
+             (Glue 10)
+             (Button %,no (BgColor "Red") (Shape (Width 80) "No")))
+            (Glue 20)
+            (VBox
+             Fill
+             (Filter %,cancel
+                     (CloseButton (Shape (Width 80) ,cancelMsg))))
+            Fill)))))))
+  (Macro YESNO (Name msg yes no)
+	 `(ZChild %,Name
+		  (BgColor "VeryPaleGray")
+		  (LightShadow "White")
+		  (DarkShadow "VeryDarkGray")
+		  (Shape (Width 300)
+			 (BOX (pens (2 2 1 26))
+			      (child 
+			       (VBox
+				,msg
+				(Glue 20)
+				(HBox
+				 Fill
+				 (Button %,yes (BgColor "Red") (Shape (Width 75) "Yes"))
+				 Fill
+				 (CloseButton %,no (BgColor "Green") (Shape (Width 75) "No"))
+				 Fill)))))))
+  (ZSplit
+    (ZBackground
+      (VBox
+        (BgColor "PaleYellow")
+        (Glue 3)
+        (HBox
+          (Glue 5)
+          (QUILLMENU)
+          (Glue 5)
+          (FILEMENU)
+          (Glue 5)
+          (EDITMENU)
+          (Glue 5)
+          (MISCMENU)
+          (Glue 5)
+          Fill
+          (VBox
+            Fill
+            (Shape
+              (Width + 0)
+              (Height + 0)
+              (TSplit
+                %modified
+                (Pixmap "White.pnm")
+                (Border (Color "Red") (Pixmap "note.pnm"))))
+            Fill)
+          Fill
+          (Text %shortname LeftAlign "")
+          Fill
+          (Glue 5)
+          (Button %parse (BgColor "VeryPaleBlue") (Text (Margin 10) "Do It"))
+          (Glue 5))
+        (Glue 3)
+        Ridge
+        (TextEdit %buffer)
+        (FINDER
+          (show FindInBuffer2)
+          (first bhelpfindfirst)
+          (next bhelpfindnext)
+          (prev bhelpfindprev)
+          (typein bhelpfindtext)
+          (close bhelpfindclose))))
+    (ZChassis
+      %manpage
+      (BgColor "VeryPaleBlue")
+      (DarkShadow "Blue")
+      (Title "formsedit help")
+      (VBox
+        (HBox
+          (Menu
+            (Text (Margin 10) "Edit")
+            (VBox
+              (COMMAND %mpcopy "Copy" "oC" "M-w" "M-c" "M-c")
+              (COMMAND %mpselectAll "SelectAll" "oA" "M-a" "M-a" "M-a")
+              (SEP)
+              (COMMAND
+                %mpfindMButton
+                "Find..."
+                "oF"
+                ""
+                "M-f"
+                "M-f"
+                (LinkMButton (For FindDialog)))
+              (COMMAND %mpfindNext "Find Next" "c," "C-s" "" "")
+              (COMMAND %mpfindPrev "Find Prev" "cM" "C-r" "" "")))
+          Fill)
+        Ridge
+        (Shape
+          (Width 360 + Inf)
+          (Height 150 + Inf)
+          (TextEdit ReadOnly %manpagetext))
+        (FINDER
+          (show FindDialog)
+          (first helpfindfirst)
+          (next helpfindnext)
+          (prev helpfindprev)
+          (typein helpfindtext)
+          (close helpfindclose))))
+    (ZChild
+      %notfound
+      (BgColor "Red")
+      (Color "White")
+      (Rim (Border "Not found")))
+    (ZChild
+      %aboutMFE
+      (LightShadow "White")
+      (DarkShadow "Blue")
+      (BgColor 0.85 0.85 1)
+      (BOX
+        (pens (1.5 2 1 12))
+        (child
+          (VBox
+            (Pixmap (Color "Blue") "digitalLogo.pbm")
+            (Glue 6)
+            "FormsEdit version 2.7"
+            "Written by Jim, Marc, and Steve."
+            "Copyright \251 1993 Digital Equipment Corp."
+            "Send comments to meehan@src.dec.com"
+            (Glue 6)
+            Ridge
+            Ridge
+            (Glue 6)
+            (HBox
+              Fill
+              (CloseButton (BgColor "PaleYellow") (Text (Margin 5) "Close"))
+              Fill)))))
+    (ZChassis
+      %errorPopup
+      (At 1. 1. SE)
+      (BgColor "VeryPaleGreen")
+      (Title "Error")
+      (LightShadow "White")
+      (DarkShadow "DarkGreen")
+      (Shape
+        (Width 300 + Inf - 200)
+        (Height 50 + Inf - 50)
+        (TextEdit %stderr ReadOnly)))
+    (ZChassis
+      %PPwidthNumeric
+      NoClose
+      (BgColor "PaleGold")
+      (Title (Text "PrettyPrint width"))
+      (At 0.1 0.1 NW)
+      (Shape
+        (Width 250 + Inf)
+        (Rim
+          (Pen 10)
+          (VBox
+            (HBox
+              Fill
+              (Shape (Width 80) "Line width:")
+              (Glue 10)
+              (Shape
+                (Width 70)
+                (Numeric
+                  %ppwidth
+                  FirstFocus
+                  (BgColor "White")
+                  =78
+                  (Min 30)
+                  (Max 200)))
+              Fill)
+            (Glue 10)
+            (HBox
+              (Shape
+                (Width 0 + 1000)
+                (Rim (Pen 1) (Button %ppwRevert "Revert")))
+              (Shape
+                (Width 0 + 1000)
+                (Rim (Pen 1) (Button %ppwApply "Apply")))
+              (Shape (Width 0 + 1000) (Rim (Pen 1) (CloseButton "Cancel")))
+              (Shape (Width 0 + 1000) (ShadowSize 2.5) (Button %ppwOK "OK")))))))
+    (ZChassis
+      %snapshotDialog
+      (At 0.1 0.9 0.2 0.8 Scaled)
+      (BgColor "VeryPaleTurquoise")
+      (Title
+        (Text (BgColor "White") (Color "DarkTurquoise") "Current Snapshot"))
+      (Shape (Height 250 - 100 + Inf) (TextEdit %SnapshotText ReadOnly)))
+    (ZChassis
+      %dumpTablePopup
+      (BgColor "PaleGold")
+      (At 0.1 0.9 0.2 0.8 Scaled)
+      (Title (Text (BgColor "White") (Color "Blue") "Named VBTs"))
+      (Shape (Height 300 - 100 + Inf) (TextEdit %VBTtable ReadOnly)))
+    (ZChassis
+      %OpenDialog
+      (BgColor "VeryPaleGreen")
+      (LightShadow "White")
+      (DarkShadow "RatherDarkGreen")
+      (Title "Open an existing file")
+      (Shape
+        (Width 300 - 200 + Inf)
+        (ShadowSize 2)
+        (Rim
+          (Pen 10)
+          (VBox
+            (HBox
+              (Shape
+                (Width 150 + Inf)
+                (Height 150 + Inf)
+                (VBox
+                  (LabelFont "fixed")
+                  (DirMenu (For openfile))
+                  (Glue 6)
+                  (Frame
+                    Lowered
+                    (FileBrowser
+                      %openfile
+                      (BgColor "VeryVeryPaleGreen")
+                      ReadOnly))))
+              Fill
+              (Shape
+                (Width 100)
+                (VBox
+                  Fill
+                  (Button %open "Open")
+                  (Glue 10)
+                  (CloseButton "Cancel"))))
+            (Glue 6)
+            (HBox
+              (Shape (Width 30) (Height 16) "File:")
+              (Frame
+                Lowered
+                (Helper
+                  %fbh
+                  FirstFocus
+                  (For openfile)
+                  (BgColor "VeryVeryPaleGreen"))))
+            (Glue 6)
+            (HBox
+              (Radio
+                =newwindow
+                (VBox
+                  (Choice %reuse (TLA "Use this window"))
+                  (Choice %newwindow (TLA "Open a new window"))))
+              Fill
+              (Radio
+                =fvonly
+                (VBox
+                  (Choice %fvonly (TLA "*.fv only"))
+                  (Choice %notfvonly (TLA "Any file")))))))))
+    (ZChassis
+      %SaveAsDialog
+      (BgColor "VeryPaleBlue")
+      (Title "Save As...")
+      (Shape
+        (Width 300 - 200 + Inf)
+        (LightShadow "White")
+        (ShadowSize 2)
+        (DarkShadow "Blue")
+        (Rim
+          (Pen 10)
+          (VBox
+            (HBox
+              (Shape
+                (Width 150 + Inf)
+                (Height 150 + Inf)
+                (VBox
+                  (LabelFont "fixed")
+                  (DirMenu (For saveasfile))
+                  (Glue 6)
+                  (Frame
+                    Lowered
+                    (FileBrowser %saveasfile (BgColor "VeryVeryPaleBlue")))))
+              Fill
+              (Shape
+                (Width 100)
+                (VBox
+                  Fill
+                  (Button %saveas "Save")
+                  (Glue 10)
+                  (Filter (CloseButton %cancelsaveas "Cancel")))))
+            (Glue 6)
+            (HBox
+              (Shape (Width 30) (Height 16) "File:")
+              (Frame
+                Lowered
+                (Helper
+                  %sfbh
+                  FirstFocus
+                  (For saveasfile)
+                  (BgColor "VeryVeryPaleBlue"))))))))
+    (CONFIRM
+      %quitConfirmation
+      (question "Save changes before quitting?")
+      (yes saveandquit)
+      (no quitAnyway)
+      (cancel dontquit)
+      (cancelMsg "Don't quit"))
+    (CONFIRM
+      %switchConfirmation
+      (question "Save changes before switching?")
+      (yes saveandswitch)
+      (no switchAnyway)
+      (cancel cancelSwitch)
+      (cancelMsg "Don't switch"))
+    (CONFIRM
+      %closeConfirmation
+      (question "Save changes before closing?")
+      (yes saveandclose)
+      (no closeAnyway)
+      (cancel cancelClose)
+      (cancelMsg "Don't close"))
+    (YESNO
+      %overwriteConfirmation
+      (msg "That file already exists. Overwrite it?")
+      (yes overwrite)
+      (no dontOverwrite))
+    (YESNO
+      %RevertDialog
+      (yes revert)
+      (no dontRevert)
+      (msg "Revert to the last version saved?"))))

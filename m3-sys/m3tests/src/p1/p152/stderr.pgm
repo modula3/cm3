@@ -1,0 +1,7 @@
+"../p152/Main.m3", line 12: undefined (SCANF)
+"../p152/Main.m3", line 14: undefined (SCANF)
+"../p152/Main.m3", line 20: undefined (Rd.ScanFailed)
+"../p152/Main.m3", line 20: is not an exception (Rd.ScanFailed)
+"../p152/Main.m3", line 18: undefined (SCANF)
+5 errors encountered
+sh: pgm: not found

@@ -1,0 +1,38 @@
+(* Copyright (C) 1993 Digital Equipment Corporation                *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Fri Jun 18 17:02:54 PDT 1993 by horning        *)
+
+INTERFACE Atom;
+<* 
+TYPE Tab
+
+TRAITS atom(T, TEXT.VAL, Tab)
+
+VAR atomTable: Tab := new (* CLAIM: atomTable is 1-1 *)
+                          (* CLAIM \A a: T; a = NIL \/ a \in atomTable *)
+
+PROCEDURE FromText(txt: TEXT): T GLOBALS atomTable;
+  CHECKS txt \neq NIL
+  MODIFIES atomTable
+  ENSURES IF txt.VAL \in atomTable
+          THEN toText(RESULT, atomTable) = txt.VAL
+            /\ atomTable' = atomTable
+          ELSE NEW(RESULT)
+            /\ atomTable' = insert(atomTable, RESULT, txt.VAL)
+    
+PROCEDURE ToText(a: T): TEXT;
+  CHECKS a \neq NIL
+  ENSURES RESULT.VAL' = toText(a, atomTable)
+
+PROCEDURE Equal(a1, a2: T): BOOLEAN;
+  ENSURES RESULT = (a1 = a2)
+
+PROCEDURE Hash(a: T): INTEGER;
+  CHECKS a \neq NIL
+  ENSURES RESULT = hash(toText(a))
+
+PROCEDURE Compare(a1, a2: T): [-1..1];
+  CHECKS FALSE
+*>
+END Atom.

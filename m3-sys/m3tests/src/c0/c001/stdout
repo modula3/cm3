@@ -1,0 +1,7 @@
+inhale /proj/m3/lib.mips/libm3.a
+inhale -lm
+
+ -> compile ../c001/Main.m3
+/udir/kalsow/pkgs/compiler2/mips/m3c -D/proj/m3/pub.mips -D. -D../.. -w1 -oMain.mc -xMain.mx ../c001/Main.m3
+
+Fatal Error: bad link info file: Main.mx

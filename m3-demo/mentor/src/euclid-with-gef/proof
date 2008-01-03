@@ -1,0 +1,88 @@
+   @Proposition             Proposition 47
+@
+   In right-angled triangles the square 
+   on the side subtending the right
+   angle is equal to the squares on the 
+   sides containing the right angle.
+   @Proposition
+   
+   @Figure @
+   Let @1 ABC@ be a right-angled triangle@ 
+   having the angle BAC right;
+   
+   I say that 
+     @2 the square on BC@
+     is equal to 
+     @3 the squares on BA, AC@.
+   @Figure
+   
+   @Squares @
+   For let there be described on BC the
+   @11 square BDEC@, and on BA, AC the
+   @12 squares BAGF, ACKH@;
+   @Squares
+   
+   @LineAL @
+   Through A let @21 AL@ be drawn 
+   parallel to either @22 BD or CE@.
+   @LineAL
+   
+   @Shear1 @
+   Now the @31 triangle ABF@ is equal 
+   to the @32 triangle CBF@, for they
+   have the same @33 base BF@, and are 
+   in the same @34 parallels BF, GC@.
+   @Shear1
+   
+   @Angles @
+   And, since the @51 angle DBC@ is equal
+   to the @52 angle FBA@: for each is right:
+   
+   Let the @53 angle ABC@ be added to each;
+   
+   Therefore the whole @54 angle FBC@ is
+   equal to the whole @55 angle ABD@.
+   @Angles
+   
+   @Sides @
+   Now the @41 side BF@ is equal to the
+   @42 side BA@; and the @43 side BC@ is equal
+   to the @44 side BD@;
+   @Sides
+   
+   @Rotate @
+   Therefore @61 triangle FBC@ is equal
+   to @62 triangle ABD@.
+   @Rotate
+   
+   @Shear2 @
+   And again the @71 triangle ABD@ is 
+   equal to the @72 triangle BDL@, for they
+   have the same @73 base BD@, and are 
+   in the same @74 parallels BD, AL@.
+   @Shear2
+   
+   @End1 @
+   Thus we have shown that @81 triangle ABF@
+   is equal to the @82 triangle BDL@.  And
+   therefore, the @83 square GB@ is equal
+   to the @84 rectangle BL@.
+   @End1
+   
+   @Symmetry @
+   And by the same argument, the 
+   @91 triangle CAK@ is equal to the
+   @92 triangle CEL@.
+   
+   And the @93 square HC@ is equal to the
+   @94 rectangle CL@.
+   @Symmetry
+   
+   @Rehash @
+@100   And therefore the square 
+   on the side subtending the right
+   angle is equal to the squares on the 
+   sides containing the right angle.                                          @
+   
+@101   Which is what was to be proved.                                        @
+   @Rehash

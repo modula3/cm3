@@ -1,0 +1,45 @@
+/* Copyright 1993 Digital Equipment Corporation.                             */
+/* Distributed only by permission.                                           */
+/*                                                                           */
+/* Last modified on Thu Jun 20 15:41:40 PDT 1996 by heydon                   */
+/*      modified on Tue May  3 19:43:36 PDT 1994 by najork                   */
+/*      modified on Mon Aug  2 11:55:43 PDT 1993 by rsanchez                 */
+
+/* extra compiler options */
+m3_option ("-times")
+
+import ("zeus")
+
+zume   ("PktRoute")
+oblume ("PktRoute", "QueueSizes")
+oblume ("PktRoute", "PacketRoute")
+oblume ("PktRoute", "PacketStep")
+oblume ("PktRoute", "PacketMove")
+oblume ("PktRoute", "PacketTrace")
+oblume ("PktRoute", "ManyPacketsMove")
+oblume ("PktRoute", "ManyPacketsStep")
+
+resource ("AlgGreedy.fv")
+
+module ("AlgGreedy")
+module ("AlgTwoPhase")
+module ("OblFmt")
+module ("ObliqExtension")
+module ("VertexSizeAnim")
+module ("RefIntArray")
+module ("IntListUtils")
+module ("Packet")
+interface ("PacketRep")
+module ("MakePackets")
+module ("Topology")
+module ("MyReal")
+pqueue ("Real", "MyReal")
+module ("Graph")
+interface ("GraphRep")
+module ("ASP")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("PktRoute")
+  bundle ("PktRouteBundle")
+  program ("PktRoute")
+end

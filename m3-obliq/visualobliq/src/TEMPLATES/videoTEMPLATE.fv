@@ -1,0 +1,32 @@
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor "$BgColor$") (Color "$FgColor$")
+     (Font "$Font$")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+     (TSplit %@toggle   =$PlayVideo$
+        (Audio %@audio ="$AudioSource$" (Volume $Volume$)
+		$Mute$ $IgnoreMapping$
+            (Video %@ 
+		(Quality $Quality$)
+		(Width $Width$) (Height $Height$)
+		(Colors $Colours$) (MSecs $MSecs$)
+		$Synchronous$ $FixedSize$ $Paused$
+		"$VideoSource$"
+		)
+         )
+	(Text "")
+      )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+

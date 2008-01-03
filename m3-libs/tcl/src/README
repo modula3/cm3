@@ -1,0 +1,18 @@
+There are a number of problem when trying to do the right thing wrt
+garbage collection in the nice M3 interface.  Currently, I gave up on
+writing Tcl.i3; but the sources are there in case somebody want to
+play with it.
+
+- When AssembleCmd returns non-NIL, who is responsible to release the 
+  storage ? if not the caller, how long does that storage stay around ?
+  [I suppose that the storage is available until the next call to Assemble]
+
+- AddErrorInfo: how long do I have to make message live ? Does not seem to
+  return a char *
+
+- SetErrorCode: how long do I have to make the elements live ? Returns
+  a char *
+
+
+
+

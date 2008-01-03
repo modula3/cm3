@@ -1,0 +1,76 @@
+@UnbalancedTest
+UnbalancedTest(InsKeys, DelKeys)@
+  @1 create a new, empty tree T@
+  @2 foreach k in InsKeys do@
+    @3 create a new node n with key k@
+    @4 Insert(T, n)@
+  end
+  @5 foreach k in DelKeys do@
+    @6 n <- Search(T, k)@
+    @7 Delete(T, n)@
+  end
+end
+@UnbalancedTest
+
+@Insert
+Insert(T, n)@
+  @4 curr := root(T)@
+  @5 while curr is not the place to attach n do@
+    @7 if key(n) < key(curr)@
+      then @8 curr <- left(curr)@
+      else @9 curr <- right(curr)@
+    end
+  end
+  @11 if T has no root@
+    then @12 make n the new root of T@
+    else @13 make n the proper child of curr@
+  end
+end
+@Insert
+
+@Search
+Search(T, k)@
+  @1 n <- root(T)@
+  @2 while key(n) # k do@
+    @3 if key(n) < k@
+      then @4 n <- left(n)@
+      else @5 n <- right(n)@
+    end
+  end
+  @6 return n@
+end
+@Search
+
+@Delete
+Delete(T, n)@
+  @1 if n has < 2 children@
+    then @2 splice <- n@
+    else @3 splice <- FindMin(right(n))@
+  end
+  @4 SpliceOut(t, splice)@
+  @5 if splice # n@ then
+    @6 copy contents of splice node into n@
+  end
+end
+@Delete
+
+@FindMin
+FindMin(n)@
+  @1 while left(n) # NIL do@
+    @2 n <- left(n)@
+  end
+  @3 return n@
+end
+@FindMin
+
+@SpliceOut
+SpliceOut(T, n)@
+  @1 ch <- "a child of n, or NIL if n has no children"@
+  @4 parent(ch) <- parent(n)@
+  @6 if n = root(T)@ then
+    @7 root(T) <- ch@
+  else
+    @8 make appropriate "down" pointer of parent(n) point to ch@
+  end
+end
+@SpliceOut

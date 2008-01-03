@@ -1,0 +1,9 @@
+import ("http")
+import ("vbtkit")
+
+resource("noads.gif")
+bundle ("ProxyBundle")
+
+implementation ("Proxy")
+
+Program("Proxy")

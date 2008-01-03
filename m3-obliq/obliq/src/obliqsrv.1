@@ -1,0 +1,75 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" File: m3.1
+.\" Last modified on Wed Mar 23 17:09:09 1994 by luca
+.nh
+.TH obliqsrv 1
+.SH Name
+Obliq Server \- start an Obliq server
+
+.SH Syntax
+.B obliqsrv
+[options] &
+
+.SH Description
+
+An Obliq server. The command obliqsrv -X, where "X" is "std" or "ui", 
+starts netobjd on the local machine M, if needed,
+and exports an execution engine to it. From any machine M1 one can then issue
+the Obliq command net_importEngine("XObliqEngine","M")(p) to execute the 
+procedure p on machine M, where "X" is either "std" or "ui". 
+Here M must be an IP address, and p must be
+a procedure of one arguments. The argument given to p is the IP address of 
+the server, as a string. The result of p is returned to machine M1.
+Obliq servers are linked without a parser/printer.
+
+A server has the privileges of the account that starts it. 
+Every client acquires the privileges of the server while running in the server.
+A server is not an inherent security risk: a server's operating system and file system are not avaliable to clients, unless the server allows it.
+
+To start an Obliq server on another machine M2, issue the following command:
+
+rsh M2 exec obliqsrv [options] &
+
+.SH Options
+
+.TP
+.BI \-std
+obliq server with standard libraries
+.TP
+.BI \-ui
+obliq server with user-iterface libraries
+
+.SH SRC Documentation
+
+    /src/hypertext/SRC/obliq/Obliq.html    (quick start, for mosaic)
+
+.SH External Site Documentation
+
+    ...obliqdoc/src/Obliq.html/           (quick start, for mosaic)
+    ...obliqdoc/src/ObliqPaper.ps         (paper/manual, for printing)
+    ...obliqdoc/src/ObliqPaper-html/ObliqPaper.html (same, for mosaic)
+    ...obliqdoc/src/Example/*.obl         (example programs)
+
+.SH Files
+
+    /tmp/obliqsrvstd.log
+    /tmp/obliqsrvui.log
+
+.SH See Also
+
+    obliq
+    netobjd
+    The Modula-3 Network Objects documentation
+    "Obliq: A language with distributed scope" (Obliq.ps, above)
+
+.SH Author Of Object
+
+  Luca Cardelli
+
+.SH Author Of Documentation
+
+  Luca Cardelli
+

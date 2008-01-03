@@ -1,0 +1,13 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Sep  7 09:44:10 PDT 1995 by najork
+%      modified on Tue Nov  1 09:28:18 PST 1994 by kalsow
+
+% VideoVBTRep has no clients so far, and I 
+% think it's better if things stay that way ...
+
+interface      ("VideoVBTRep")
+implementation ("VideoVBT")
+implementation ("AudioVBT")

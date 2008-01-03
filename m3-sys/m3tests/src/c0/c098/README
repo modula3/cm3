@@ -1,0 +1,39 @@
+Return-Path: 
+Delivery-Date: Tue, 08 May 90 02:17:56 PDT
+Received: by jumbo.pa.dec.com; id AA07078; Tue, 8 May 90 02:17:52 -0700
+From: stolfi (Jorge Stolfi)
+Message-Id: <9005080917.AA07078@jumbo.pa.dec.com>
+Date:  8 May 1990 0217-PDT (Tuesday)
+To: muller
+Cc: src.m3
+X-Folder-Carbon: sw-m3
+Subject: BITS FOR RECORD constructors
+
+
+Eric,
+
+Is this a language rule violation, or a compiler limitation:
+
+  srcf3e 221> /proj/packages/m3exe/1.4/install-VAX/bin/m3 -g -c Test200.m3
+  
+    File Test200.m3, line 7: bad type expression on constructor
+    1 error encountered
+    /proj/packages/m3exe/1.4/install-VAX/bin/m3: 
+      /proj/ultrix/lib/m3/m3compiler exited, status=1
+ 
+  srcf3e 222> cat Test200.m3
+ 
+    MODULE Test200 EXPORTS Main;
+
+    TYPE 
+      Bit = BITS 1 FOR BOOLEAN;
+      Aconit = BITS 2 FOR RECORD gres, granit: Bit END;
+
+    CONST Twang = Aconit{gres := FALSE, granit := TRUE};
+
+    BEGIN
+    END Test200.
+ 
+  srcf3e 223> 
+
+--jorge

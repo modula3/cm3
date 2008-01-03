@@ -1,0 +1,28 @@
+  ShadingProp_NewConst(lt: Shading): ShadingPropVal                     
+  ShadingProp_NewSync(ah: AnimHandle, lt: Shading): ShadingPropVal      
+  ShadingProp_NewAsync(beh: ShadingPropAsyncBeh): ShadingPropVal        
+  ShadingProp_NewDep(beh: ShadingPropDepBeh): ShadingPropVal            
+  ShadingProp_NewConstBeh(lt: Shading): ShadingPropConstBeh             
+  ShadingProp_NewSyncBeh(ah: AnimHandle, lt: Shading): ShadingPropSyncBeh
+  ShadingProp_NewAsyncBeh(compute: M1):ShadingPropAsyncBeh              
+  ShadingProp_NewDepBeh(compute: M2):ShadingPropDepBeh                  
+  ShadingProp_NewRequest(start dur: Num, value: M3): ShadingPropRequest
+WHERE                                                                   
+  ShadingPropName <: PropName & { bind: (v: ShadingPropVal) => Prop }
+  ShadingPropVal <: PropVal & { getBeh: () => ShadingPropBeh,            
+                                setBeh: (ShadingPropBeh) => Ok,          
+                                get: () => Shading,                     
+                                value: (Num) => Shading }               
+  ShadingPropBeh <: PropBeh                                              
+  ShadingPropConstBeh <: ShadingPropBeh & { set: (Shading) => Ok }
+  ShadingPropSyncBeh <: ShadingPropBeh &                                 
+      { addRequest: (ShadingPropRequest) => Ok ! Prop_BadInterval,      
+        change: (Shading,Num) => Ok ! Prop_BadInterval }               
+  ShadingPropAsyncBeh <: ShadingPropBeh & { compute : M1 }               
+  ShadingPropDepBeh <: ShadingPropBeh & { compute: M2 }                  
+  ShadingPropRequest <: PropRequest & { value: M3 }                      
+  M1 = Self (X <: ShadingPropAsyncBeh) (Real) => Shading                
+  M2 = Self (X <: ShadingPropDepBeh) (Real) => Shading                  
+  M3 = Self (X <: ShadingPropRequest) (Shading,Real) => Shading         
+  Shading = Text  ("Flat" or "Gouraud")                             
+  Num = Real + Int

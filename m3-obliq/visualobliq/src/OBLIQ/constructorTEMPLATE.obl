@@ -1,0 +1,91 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:46:34 PST 1995 by mhb     *)
+
+allForms := allForms @ [proc() $form$ end];
+
+$form$Constructor := 
+(* one instance of this exists and only at the server site *)
+(* this is a synchronized object                           *)
+{serialized,
+ VORegister  => meth(s, newinstance)
+		   (* this is a critical section *)
+		   if $form$Instances is 0 then
+			$form$ := [newinstance];
+			$form$Alive := [true];
+			$form$Instances := 1;
+			0
+		  else
+		   let indx =  $form$Instances;
+  		   newinstance.INDEX := indx;
+		   $form$Alive := $form$Alive @ [true];
+	           $form$ := $form$ @ [newinstance];    	
+		   $form$Instances := indx + 1;
+		   (* now the new object is globally visible *)
+		   indx
+                  end
+		end,
+
+
+   VONew => proc(LOCAL)
+		
+(* this has to be a procedure because it needs to be done at the client site *)
+
+
+    var SELF = 0;
+    var VOInstance = 0;
+    VOInstance := 
+{ 	  
+FORM => 0,
+INDEX => 0, (* set in Register *)
+            
+(* Support Code *)	
+$SupportCode$ 
+
+(* Object Definitions *)
+$object-definitions$
+
+(* Callbacks *)
+$callbacks$
+
+(* Attachments *)
+VOAttachCBacks => meth(SELF)
+$Attachments$
+ok
+end,
+
+VOCompute => meth(s, procedure)
+                procedure(SELF);
+		ok
+	       end,
+
+VOPackUp => meth(s)
+	s.$form$.hide();
+	(* checkpt and hide form *)
+end,
+
+VOUnpack => meth(s)
+	s.$form$.show();
+end,
+ };
+
+SELF := VOInstance;
+
+(* Create the UI *)
+SELF.FORM := form_new(computeSX(SELF.$form$));
+
+
+(* Attach callbacks for the first time *)
+SELF.VOAttachCBacks();
+
+(* Initialization Code *)
+$InitializationCode$
+
+	  form_show(SELF.FORM);
+
+	  $form$Constructor.VORegister(VOInstance);
+          end
+ };
+

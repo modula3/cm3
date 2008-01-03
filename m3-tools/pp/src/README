@@ -1,0 +1,23 @@
+7/8/92
+
+This is a modified version of m3pp that supports PostScript output.
+It uses a version of Formatter (called NewFormatter) that uses REALs
+instead of INTEGERs for all the widths, and which has a replaceable
+backend.  The current backends support ordinary ASCII text and PostScript.
+
+With the PostScript backend, m3pp supports pretty-printing with multiple
+fonts for various language components (keywords, comments, etc.) but using
+the actual PostScript font widths to make formatting decisions.
+
+To install this, edit FBEPostScript.m3 and change the definition of AFMDir
+to point to whereever you have your font metric files for PostScript fonts.
+If you have Transcript from Adobe, it should have such a directory.  Then
+compile ("m3make y.tab.c lex.yy.c; m3make") and you're ready to go.  Like
+the released version of m3pp, this one requires either bison or a version
+of yacc modified to have larger internal tables.
+
+If you have any questions, bug reports, bug fixes, or enhancements, drop me
+a note at nichols@parc.xerox.com.
+
+	David Nichols
+	Xerox PARC

@@ -1,0 +1,14 @@
+@Warshall
+PROCEDURE Warshall(a: ARRAY OF ARRAY OF BOOLEAN; V: INTEGER) @=
+  BEGIN
+  @1 FOR y := 0 TO V-1 DO@
+    @2 FOR x := 0 TO V-1 DO@
+      @3 IF a[x, y] THEN @
+        @4 FOR j := 0 TO V-1 DO @
+            @5 IF a[y, j] THEN @ @6 a[x, j] := TRUE @ END; (* if *)                
+          END; (* for j *)
+        END; (* if *)
+      END; (* for x *)
+    END; (* for y *)
+  END Warshall;
+@Warshall

@@ -1,0 +1,13 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Mar  2 08:30:57 PST 1994 by kalsow
+
+override (sqrt, "../../..")
+import (sqrt)
+
+build_standalone ()
+implementation (SqrtTst)
+program (SqrtTst)
+

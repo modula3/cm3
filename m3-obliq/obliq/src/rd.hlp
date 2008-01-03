@@ -1,0 +1,39 @@
+  rd_failure: Exception
+  rd_eofFailure: Exception
+  rd_new(t: Text): Rd
+    A reader on a text (a Modula-3 TextRd).
+  rd_stdin: Rd
+    The standard input (the Modula-3 Stdio.Stdin).
+  rd_open(fs: FileSystem, t: Text): Rd ! rd_failure
+    Given a file system and a file name, returns a reader on a file 
+    (a Modula-3 FileRd, open for read). The local file system is available
+    through the predefined lexically scoped identifier "fileSys".
+    Moreover, "fileSysReader" is a read-only local file system.
+  rd_getChar(r: Rd): Char ! rd_failure rd_eofFailure thread_alerted
+    Get the next character from a reader.
+  rd_eof(r: Rd): Bool ! rd_failure thread_alerted
+    Test for the end-of-stream on a reader.
+  rd_unGetChar(r: Rd): Ok
+    Put the last character obtained by getChar back into the reader 
+    (unfortunately, it may crash if misused!).
+  rd_charsReady(r: Rd): Int ! rd_failure
+    The number of characters that can be read without blocking. 
+  rd_getText(r: Rd, n: Int): Text ! rd_failure thread_alerted
+    Read the next n characters, or at most n on end-of-file.
+  rd_getLine(r: Rd): Text ! rd_failure rd_eofFailure thread_alerted
+    Read the next line and return it without including the end-of-line 
+    character.
+  rd_index(r: Rd): Int
+    The current reader position.
+  rd_length(r: Rd): Int ! rd_failure thread_alerted
+    Length of a reader (including read part).
+  rd_seek(r: Rd, n: Int): Ok ! rd_failure thread_alerted
+    Reposition a reader.
+  rd_close(r: Rd): Ok ! rd_failure thread_alerted
+    Close a reader.
+  rd_intermittent(r: Rd): Bool
+    Whether the reader is stream-like (not file-like).
+  rd_seekable(r: Rd): Bool
+    Whether the reader can be repositioned.
+  rd_closed(r: Rd): Bool
+    Whether the reader is closed.

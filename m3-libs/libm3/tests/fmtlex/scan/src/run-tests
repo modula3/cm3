@@ -1,0 +1,24 @@
+#! /bin/csh -f
+#
+# Copyright (C) 1992, Digital Equipment Corporation 
+# All rights reserved.
+# See the file COPYRIGHT for a full description.
+#
+# Last modified on Thu Mar 24 15:54:10 PST 1994 by heydon
+#      modified on Fri Feb 25 14:24:52 PST 1994 by kalsow
+
+set arch = `/udir/heydon/libi/csh/m3arch`
+set prog = ScanTest
+
+if (-e ../$arch/$prog) then
+  set newoutfile = /tmp/scantest-$$.txt.out
+  foreach outfile ($*)
+    set infile = "$outfile:r".in
+    ../$arch/$prog $infile > $newoutfile
+    echo "diff $outfile $newoutfile"
+    diff $outfile $newoutfile
+    rm $newoutfile
+  end
+else
+  echo "Unknown host type \"$arch\""
+endif

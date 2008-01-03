@@ -1,0 +1,13 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+/*                                                                           */
+/* Last modified on Sun Aug 15 22:48:28 PDT 1993 by heydon                   */
+
+/* m3overrides for /proj/m3/pkg/juno-compiler/tests/parser/src */
+
+%override(juno-machine,  WDROOT)
+%override(juno-compiler, WDROOT)
+override ("libm3", ROOT & "/m3-libs")
+override ("juno-machine", ROOT & "/m3-ui/juno-2")
+override ("juno-compiler", ROOT & "/m3-ui/juno-2")

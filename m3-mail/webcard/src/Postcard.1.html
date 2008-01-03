@@ -1,0 +1,396 @@
+<HTML>
+<HEAD>
+<TITLE>Postcard</TITLE>
+</HEAD>
+
+<BODY>
+<H2>Postcard(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+<P>
+
+Postcard - An X-11 interface for mail and news groups
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<P>
+
+<B>Postcard</B>
+[ <A HREF="#Display"><B>-display</B> <I>name</I></A> ]
+[ <A HREF="#Geometry"><B>-geometry WxH+X+Y]</B></A> ]
+[ <A HREF="#LongFolders"><B>-longFolders</B></A> ]
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+Postcard is a user interface for reading and composing personal
+electronic mail, and for reading newsgroups and bulletin boards.
+It combines in an X-windows interface most of the functions of mail
+handling programs such as <B>mh</B> or <B>xmh</B>, and news-reading programs
+such as <B>rn</B> or <B>xrn</B>.<P>
+
+In addition, Postcard provides an integrated user interface for
+browsing the accumulated spool of newsgroups and bulletin boards,
+with a query language that includes full text indexing.  This
+browsing is done through the
+<A HREF="http://src-www/htbin/man?ni">ni(1)</A>
+news indexing program.<P>
+
+Just like mh, Postcard keeps <I>messages</I> in <I>folders</I>.  (There is
+no nesting of folders.)  One folder, <I>inbox</I>, is special: it is
+where your newly arrived personal electronic mail is placed.  You
+can create other private folders and copy or move messages into
+them.  You can also create folders that correspond to newsgroups
+    (or bulletin boards).  In many ways these behave like your other
+folders, except that they are read-only.  When new articles appear
+in a newsgroup, they automatically appear in your corresponding
+folder. You can also create aliases for newsgroups and for folders
+shared with other users.<P>
+
+Postcard uses the same file and directory structures for storing
+messages as 
+<A HREF="http://src-www/htbin/man?mh">mh(1)</A>.
+Indeed, it uses the various mh programs for
+most access to messages.  Postcard does not interfere with use of
+rn, although it does not use rn's list of active newsgroups, nor
+rn's kill file.  Postcard is compatible with some mail polling
+programs, such as <B>faces -a</B>; it is incompatible with <B>xbiff</B>.<P>
+
+Postcard uses an X-Server for all its user interactions.  Postcard
+is programmed in Modula-3, using the Trestle and VBTKit toolkit
+and the FormsVBT interface-description system.<P>
+
+Postcard has a built-in editor for message composition, but it
+also lets you use an external editor of your choice, such as
+    <B>emacs</B>, <B>epoch</B>, or <B>vi</B>.<P>
+
+Postcard has been debugged using version 6.7.1 of mh.  Your
+mileage might differ if you have a different version installed in
+your local environment.  Note that, unlike previous versions, mh
+version 6 allows more than 999 messages in a folder.
+</BLOCKQUOTE>
+
+<H3>DOCUMENTATION</H3>
+<BLOCKQUOTE>
+All of Postcard's documentation is built-in to the application.
+Click "help" on the general menu (at the top-left of the main
+window, looking like a U.S. Mail box). That produces a "help"
+window, with buttons to provide detailed explanations of
+Postcard's operations.  Please use the help window's <B>Next</B>
+button to skim the documentation at least once.
+</BLOCKQUOTE>
+
+<H3>INSTALLATION</H3>
+<BLOCKQUOTE>
+Postcard itself is a single unprivileged program, and needs no
+installation - just run it, as described below in 
+<A HREF="#StartingPostcard">Starting Postcard</A>.  
+However, Postcard uses several other programs. 
+Postcard finds most of these subsidiary programs by their simple
+name, looked up according to your PATH environment variable.  You
+    (the user) or your system administrator should make sure these
+programs are accessible.<P>
+
+Postcard requires the mh(1) system, version 6.7 or later.  From
+mh(1), Postcard uses <B>inc</B>, <B>scan</B>, <B>refile</B>, <B>rmm</B>, 
+    <B>folder</B>, <B>sortm</B> and <B>send</B>.<P>
+
+Postcard requires <B>/bin/rm</B>, <B>bin/ls</B>, and  <B>/usr/ucb/from</B>,
+each of which is referenced by absolute pathname.  Postcard
+invokes /bin/rm with the <B>-r</B> option to delete recursively, and
+invokes /bin/ls with no options.  It uses <B>/usr/ucb/from</B> to
+count the number of messages in your inbox - all that Postcard
+does is count the number of newline in the output.<P>
+
+Postcard requires the program <B>llscan</B>, which is available from SRC. <P>
+
+Postcard uses the program <B>ni</B> to implement the "Browse Discussion"
+command and the commands in Postcard's "NI Query" dialog; if <B>ni</B>
+is not available, Postcard will give you an error message when you
+use those commands.<P>
+
+Postcard can also use various other programs that you explicitly
+choose in the "Set Configuration" dialog, for printing, external
+editing, and PostScript previewing.  See the "help" popups in the
+configuration dialog for more information on these commands.<P>
+
+If you want to use Postcard to read newsgroups and bulletin boards,
+they must be available for direct file access, generally in the
+directory /usr/spool/news.  If you are using them, your system
+administrator should create a ".purge" file in a newsgroup
+directory whenever messages there are purged or renumbered, so that
+Postcard will rescan the directory.
+</BLOCKQUOTE>
+
+<H3><A NAME="StartingPostcard">STARTING POSTCARD</A></H3>
+<BLOCKQUOTE>
+Postcard takes about half a minute to start upon a modern
+workstation; you'll probably want start Postcard and leave it
+running until the machine crashes or a new version of Postcard
+comes along.<P>
+
+You start Postcard with the <B>Postcard</B> command; this creates a
+window on your display.  All your interaction with Postcard is
+centered around this window.<P>
+
+On the command line with the <B>Postcard</B> command you can give a
+    <A NAME="Geometry"><B>-geometry</B></A> parameter to specify the width, height and position of
+the main window.  The value of this parameter is in the standard
+WxH+X+Y format, e.g. "640x480+0+0".  The numbers in this parameter
+are pixels.  Positions are measured from the top left of the display
+if positive, and the bottom right if negative.  You can also provide
+a 
+    <A NAME="Display"><B>-display</B></A> 
+parameter to name the X-server and particular display
+for the main window.  Postcard creates its other windows when
+needed, near the main window.<P>
+
+The <A NAME="LongFolders"><B>-longFolders</B></A> parameter requests a slightly different layout
+for Postcard's main window, with the folder list all the way down
+the right hand side.<P>
+
+It's generally safe to run multiple copies of Postcard (e.g. in
+order to display on your X-server at work as well as your X-server
+at home).  But this is safe only if the multiple copies are
+executing on the same computer (or you're not using NFS).  And the
+multiple copies will not track additions and removals of folders,
+nor changes made with the Postcard configuration dialog.  You might
+also get confused when there are file system errors, but the
+applications will try their best to avoid losing data in those
+cases.  Don't try to interact with multiple copies of Postcard
+simultaneously - the algorithms assume there's a delay of at least
+one minute between your using one copy of Postcard and using the
+other one.<P>
+
+Postcard relies on a lot of files, programs, and settings from your
+environment.  The most important of these are as follows; section
+    5 describes many additional configuration options, and more
+environment variables are mentioned below under 
+<A HREF="#Environment">ENVIRONMENT</A>. <P>
+
+Most systems provide suitable defaults for all of the settings
+automatically.
+<DL>
+<DT>$PATH<DD>
+This environment variable must be set to a search
+path that provides access to the mh and ni commands.<P>
+
+<DT>$DISPLAY<DD>
+This environment variable describes the display
+for your X-Server, e.g. "tokay.pa.dec.com:0.0".<P>
+
+<DT>$HOME<DD>
+This environment variable should be the name of
+your user directory, e.g. "/udir/birrell".<P>
+
+<DT>$USER<DD>
+This environment variable should be your user name
+as used for mail, e.g. "birrell".  Case sensitive.<P>
+
+<DT>$HOME/Mail<DD>
+The directory containing your mail folders, as
+for <B>mh</B>.  Must be writable, and should contain at
+least "inbox" (though you can create this in
+Postcard).
+</DL>
+<P>
+
+While Postcard is running it creates directories in $HOME/Mail
+when you create folders.  It stores your Postcard configuration
+in $HOME/.postcardFV_rc and draft messages in $HOME/.pc_draft;
+it can use an alias file from $HOME/.mail_aliases.sx<P>
+
+The mh commands used by Postcard require an mh profile in
+    $HOME/.mh_profile.  You probably already have one, but if not you
+should acquire one from a friend, or read the mh documentation.
+</BLOCKQUOTE>
+
+<H3>ERROR RECOVERY</H3>
+<BLOCKQUOTE>
+Postcard does not have a generalized undo mechanism, but there are
+several ad hoc ways to recover from a mistake.  If you [move] a
+message to the wrong folder, just open that folder and [move] it
+to the correct one.<P>
+
+If you are worried about mistakes with [delete], you can use the
+Postcard option to have [delete] work by copying the message to
+a "deleted" folder (see the help information in the configuration
+dialog).  If you decide to use this option, you should try to keep
+your "deleted" folder down to a reasonable size by using the Purge
+command in the Folders menu when you have your "deleted" folder
+open.<P>
+
+If you don't use the "deleted" folder option, it is still possible
+to recover a message you accidentally deleted with the [delete]
+button.  The message is not destroyed immediately.  Instead, the
+message file is renamed to begin with a comma.  These "comma files"
+may disappear, however: if you subsequently delete a second message
+with the same number (i.e., after an [inc] or a "Sort &amp; Pack"), its
+comma file will overwrite the earlier one.  Also many installations
+include daemons that delete such files overnight.  So you have a
+short period of grace in which to recover your accidentally deleted
+message.  Just use a shell window to look in the directory
+corresponding to the folder you had open, e.g.:
+<PRE>
+tokay 1&gt; cd ~/Mail/inbox
+tokay 2&gt; ls 
+</PRE>
+
+Look for the comma file corresponding to the message you deleted,
+and note the highest existing message number.  Rename the comma
+file to a message number not in use (such as the number of the
+message you deleted, if possible):
+<PRE>
+srcff 3&gt; mv ,27 27
+</PRE>
+
+Then go back to Postcard and use the Rescan command in the Folder
+menu.  Your message will reappear in the browser.<P>
+
+If this fails, but the message you accidentally deleted had been
+in your folder for at least 24 hours, it may be possible to recover
+it from backup tapes.<P>
+
+Restoring files from backup tapes is not something that the system
+manager has time to do routinely, but he or she is willing to do
+it in an emergency.<P>
+
+The text of a draft message in a composition sub-window is written
+to a file in the $HOME/.pc_draft directory within 30 seconds of
+each edit that you make to it.  These files are named "1", "2",
+etc.; the names are re-used as composition sub-windows are
+re-used.  Postcard normally recovers these files automatically on
+a restart if you had an unsent draft.  When you click "discard" or
+after a successful "send", the message file is stored in a
+simlarly named file in $HOME/.pc_draft, but with its name prefixed
+by ",".<P>
+
+Sometimes your $HOME/.mh_profile file can get into a state that
+will confuse the mh programs. A symptom of this is persistent
+strange messages including the name of an mh program (e.g. <B>scan</B>
+or <B>inc</B>). You can often recover from this by deleting
+    $HOME/.mh_profile or by copying that file a friend.
+</BLOCKQUOTE>
+
+<H3>BUGS</H3>
+<BLOCKQUOTE>
+Postcard maintenance is handled at SRC by 
+<A HREF="http://src-www/SRC/people/Andrew_Birrell/bio.html">Andrew Birrell</A>. 
+Report  bugs in Postcard by sending a message to <B>Birrell@pa.dec.com</B>. If
+possible, include the version number, from the "About Postcard"
+dialog.
+</BLOCKQUOTE>
+
+<H3>WARNINGS</H3>
+<BLOCKQUOTE>
+To improve interactiveness, Postcard executes time-consuming
+operations in the background while giving the illusion that they
+are done immediately.  This can confuse you if you look at
+Postcard's part of the file system using other means.  To be sure
+no background operations are in progress, click on the "inc" button,
+open a different folder, or exit Postcard; each of these actions
+waits for the background queue to empty.<P>
+
+If you use mh and Postcard concurrently, it is possible that
+Postcard's internal cache of mail information can be incorrect.
+Postcard is only smart enough to detect whether a folder directory
+has been modified at the time it opens it.  If you modify the
+mail information through other means other than Postcard (i.e.,
+using mh from home), simply use the Rescan comand in
+the Folder menu.  This will bring Postcard up to date.
+</BLOCKQUOTE>
+
+<H3>MAINTENANCE NOTES</H3>
+<BLOCKQUOTE>
+During bulletin board upheavals, it is sometimes useful for the
+bulletin board wizards to force an automatic rescan the next time a
+user opens a particular bulletin board.  This is done by creating a
+file .purge in the actual /usr/spool/news directory associated with
+the bulletin board.  If a user's own cache is out of date with
+respect to this file, a complete rescan will be performed.
+</BLOCKQUOTE>
+
+<H3><A NAME="Environment">ENVIRONMENT</A></H3>
+<BLOCKQUOTE>
+Postcard uses several environment variables, and the various mh
+programs use some more. The ones used explicitly by Postcard are
+as follows.
+<DL>
+<DT>PATH<DD>
+Used to find sub-programs.
+<DT>DISPLAY<DD>
+The identity of your X-Server, e.g. "tokay.pa.dec.com:0.0".
+<DT>HOME<DD>
+The directory containing your "Mail" directory (which contains
+your folders), your ".pc_draft" directory (for message drafts),
+an optional alias file ".mail_aliases.sx", and your Postcard
+configuration file ".postcardFV_rc" and ".mh_profile".
+<DT>USER<DD>
+The user name as used for mail, e.g. "birrell".  Case-sensitive.
+<DT>MAILDROP<DD>
+The mail spool, where new personal mail arrives.  The default is
+        /usr/spool/mail/$USER
+<DT>NEWSDROP<DD>
+The news spool, where newsgroups and bulletin boards reside.
+The default is /usr/spool/news
+<DT>TextPortModel<DD>
+	The initial editing model for the built-in editing windows.
+	Should be ivy, emacs, mac, or xterm. The default is emacs.
+<DT>PostcardPATH<DD>
+The resource-path (directory name) where the startup code looks
+for the form-descriptions, pixmaps, help files, etc. By default,
+these resources are bundled with the executable.
+</DL>
+<P>
+
+FILES
+<PRE>
+    $HOME/Mail/*/*                      # folders and messages
+    $HOME/.pc_draft                     # message drafts
+    $HOME/.mail_aliases.sx              # mail aliases
+    $HOME/.postcardFV_rc                # Postcard configuration options
+    $HOME/.mh_profile                   # .mh_profile file
+llscan                              # sub-program to scan folders
+    /usr/ucb/from                       # to count new messages
+    {inc,scan,refile,rmm,folder,sortm,send}  # mh sub-programs
+    /bin/rm                             # to delete folder (rm -r)
+    /bin/ls                             # to enumerate (no options)
+the mail spool, defaulting to /usr/spool/mail/$USER
+the news spool, defaulting to /usr/spool/news
+</PRE>
+
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<A HREF="http://src-www/htbin/man?mh">mh(1)</A>.
+</BLOCKQUOTE>
+
+<H3>AUTHOR</H3>
+<BLOCKQUOTE>
+previously:  Anthony Discolo, Paul McJones, Dorothy Denning
+<BR>
+currently:   Andrew Birrell
+<BR>
+comments to: 
+<A HREF="http://src-www/SRC/people/Andrew_Birrell/bio.html">Birrell@pa.dec.com</A><P>
+
+Copyright 1994 Digital Equipment Corporation.<BR>
+Distributed only by permission.<BR>
+<BR>
+<PRE>
+Last modified on Mon Nov 28 14:17:25 PST 1994 by glassman 
+modified on Wed Apr 27 16:39:13 PDT 1994 by birrell 
+modified on Thu Feb 25 16:39:09 PST 1993 by meehan 
+modified on Fri Oct 13 16:03:09 PDT 1989 by mcjones
+modified on Tue Sep 19 10:52:36 PDT 1989 by denning
+modified on Tue Jan 12 18:21:39 PST 1988 by discolo
+modified on Fri Jan  8 14:08:27 PST 1988 by mbrown
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

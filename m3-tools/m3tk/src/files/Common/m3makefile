@@ -1,0 +1,30 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed Jun  2 22:17:44 PDT 1993 by mjordan                  */
+
+Interface("M3Extension")
+Interface("M3Directory")
+Interface("M3FindFile")
+Interface("M3DirFindFile")
+Interface("M3PathElem")
+Interface("M3PathElemList")
+Interface("M3PathElemOS")
+interface("M3PathElemOSPriv")
+Interface("M3PathDefaults")
+Interface("M3DepFindFile")
+
+implementation("M3Extension")
+implementation("M3Directory")
+implementation("M3PathElem")
+implementation("M3PathElemOS")
+implementation("M3PathElemList")
+implementation("M3DirFindFile")
+implementation("M3PathDefaults")
+implementation("M3DepFindFile")
+
+/*Interface("M3PathFile")
+implementation("M3PathFile")*/
+
+

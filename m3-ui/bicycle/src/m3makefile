@@ -1,0 +1,16 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Dec 21 14:35:56 PST 1993 by kalsow
+
+import ("ui")
+
+Module ("Card")
+module ("CardRank")
+module ("CardSuit")
+module ("FaceCards")
+Module ("PixmapFromXData")
+
+Library ("m3bicycle")
+

@@ -1,0 +1,419 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "Lectern" "1"
+.SH "NAME"
+Lectern \- viewing documents composed of rasterized images
+.SH "SYNTAX"
+\fBLectern [file]\fR
+.SH "DESCRIPTION "
+\fBLectern\fR is a document viewer.  It is intended to make it easy and
+comfortable for you to read text documents, such as technical papers,
+on\-line.
+.PP
+\fBLectern\fR lets you view documents that are in a proprietary format,
+created by the program 
+BuildLectern(1).  These documents contain
+images of each page, at original resolution and at reduced resolutions,
+as well as data derived from the document by applying an OCR algorithm.
+The page images can be acquired by scanning, or by rasterizing some machine
+readable form (e.g., by using a program such as GhostScript \- gs(1) \- to
+render PostScript files into images).  See the 
+BuildLectern(1) man page 
+for details on how to construct and modify Lectern documents.
+.PP
+When \fBLectern\fR starts up it creates a single \fIimage window\fR displaying
+the first page of the Lectern document whose path is \fBfile\fR (or an
+error message, or the Digital logo if \fBfile\fR is omitted).
+.PP
+SRC has a substantial shared repository of Lectern documents.  The repository
+can be browsed hierarchically, or through a full text index.  See the
+Virtual Paper home page to get started.
+.PP
+You can use the programs 
+LecternToHTML(1) and 
+BuildLecternIndex(1) to build
+such repositories.  
+.SH "USER INTERFACE GENERALITIES"
+You can choose whether to drive \fBLectern\fR's user interface primarily with a
+mouse or from your keyboard.  You can discover all of Lectern's commands
+using your mouse and the pull\-down menu: click the down\-arrow at the top
+left corner of the image window to see the menu, or just type m. The menu
+goes away whenever you execute a command, or when you click the up\-arrow at
+its top left, or when you type m once more.
+.PP
+If you are using the mouse as your primary tool, you will want to make
+the toolbar visible.  Type t or click \fBShow or Hide Toolbar\fR
+on the menu.  The commands on the toolbar are shortcuts for things you
+could have done from the pull\-down menu.  The \fB+\fR and \*(lqpencil\*(rq
+buttons in the link browsers (described below) are also designed to
+assist those whose are using a mouse.  In the toolbar sub\-window, the
+\fB+/\- 1/5/20\fR buttons (for moving 1, 5, or 20 pages at a time),
+activate on a down\-click, and auto\-repeat if you keep the mouse button
+held down.
+.PP
+If you are using your keyboard as your primary tool, you might still want to
+look at the menu as documentation: it describes all the keyboard shortcuts.
+Just type \fBm\fR to see the menu, then type the keyboard shortcut for the
+command you want (or \fBm\fR again) and the menu will go away.
+.PP
+The command descriptions below are given in terms of the keyboard shortcuts,
+with the equivalent menu commands in parentheses.
+.PP
+Some Lectern commands produce pop\-up dialogs.  In general, you
+can cancel or close any dialog by typing \fB[escape]\fR or by clicking
+the up\-arrow in the corner of the dialog; some also have a \fBCancel\fR
+button.  In general, one button in the dialog has a black outline;
+typing \fB[return]\fR is equivalent to clicking that button.
+.PP
+Issuing any command implicitly closes the error dialog, the About Lectern
+dialog, and the menu.  Any command other than one of the \fBFind\fR commands
+closes the Find dialog.
+.PP
+Some of the pop\-up dialogs have type\-in boxes.  You can edit text in these
+using keyboard commands as specified for the FormsVBT library: see the
+FormsVBT Reference Manual.  By default these commands are similar to simple
+Emacs commands.  You can also copy text into (or out of) them using these
+commands.
+.PP
+\fBLectern\fR refers to the images in the document by page number, as far as
+possible.  The document's creator should have specified which page should
+be treated as page 1, in a way that corresponds to the page numbers printed
+on the pages and used in tables of contents or indexes.  \fBLectern\fR refers to
+images prior to page 1 by image numbers, counting the first image in the
+document as image 1.  The menu anchor shows the current page number, 
+or the current image number when you are positioned before page 1.  
+The menu itself always shows the current image number, and the page number 
+when it is defined.
+.SH "FILES AND PRINTING"
+.PP
+This section describes explicit commands for controlling
+\fBLectern\fR's access to files.  The \fIlink\fR
+mechanism provides other ways to open files.  As mentioned earlier,
+you can also use LecternClient(1), and
+you can access Lectern documents through Mosaic and the WWW.
+.PP
+You can type \fBo (Open Document)\fR to open further \fBLectern\fR
+documents, either in separate windows (click \fBNew\fR in the \fBOpen\fR
+dialog) or replacing the document in the current window (click
+\fBHere\fR in the \fBOpen\fR dialog, or type \fB[return]\fR).
+.PP
+You can close an image window at any time using the facilities of
+your window manager or by typing \fBw (Close Viewer)\fR.  If you used the 
+links mechanism to modify the document and you haven't saved it,
+you will be asked to confirm that you really want to discard your
+modifications.
+.PP
+When you close the last image window, \fBLectern\fR quits. Typing \fBq (Quit)\fR is
+equivalent to closing each image window in turn.
+.PP
+Type \fBp\fR (Print) to send the images (or original PostScript) to
+the printer, or to save images as EPSF or PostScript job files.  Note that
+printing rasterized 300 DPI images is quite slow \-
+multiple minutes per page on typical printers.  It would be even slower for
+grayscale or color images, except that printing them isn't implemented yet.
+Printing the original PostScript (if it's available) proceeds at the original
+rate.
+.SH "SELECTIONS"
+You can select text in the image window by clicking (once) with the left mouse
+button.  You can extend the selection by dragging, or by right\-clicking,
+or by shift\-clicking.  A selection can extend over multiple pages.
+When you have selected text, it is available in
+character form as the X\-11 \*(lqsource selection\*(rq.  For example, you can
+paste it into an xterm by middle\-clicking there.  The characters you get,
+and the order of the words in an extended selection, are those provided
+by the OCR algorithm that was applied to the images by 
+BuildLectern(1).
+.PP
+If you double\-click with the left mouse button on a word, \fBLectern\fR will
+select that word then try to find the next occurrence of the word in the
+document, as if you had typed \fBf (Find)\fR, followed by the word, followed
+by \fB[return] (Find Next)\fR.
+.PP
+If you double\-click with the middle mouse button on a word that is an integer,
+\fBLectern\fR will select that word and move to that page of the document, as if
+you had typed the number followed by \fB[return] (To Page)\fR.
+.SH "NAVIGATING"
+This section describes \fBLectern\fR's basic navigation commands.  The 
+\fIlink\fR and
+\fIthumbnail\fR
+mechanisms (described later) provide further navigation tools.
+.PP
+Type \fB[space] (Go Forward)\fR to move forward in the document and
+\fB[backspace] (Go Backward)\fR to move backward.  See the section on
+View\-Area and Viewing Controls for a more precise
+description.  You can equivalently use the cursor or arrow keys on
+your keyboard: up or left means \fBGo Backward\fR, down or right means \fBGo
+Forward\fR.
+.PP
+Use \fB+ (Next Page)\fR to move to the next page.  Use \fB\- (Previous Page)\fR to
+move to the previous page.  \fBb (Beginning Page)\fR moves to the beginning of the
+document.  \fBc (Contents Page)\fR moves to the first contents page, if the
+document has a known contents page. \fBi (Index Page)\fR moves to the first index
+page, similarly.  The function key \fBnext\fR or \fBpage down\fR is equivalent to \fB+\fR,
+as is \fB=\fR; the function key \fBprior\fR or \fBpage up\fR is equivalent to \fB\-\fR.  The
+function key \fBend\fR moves to the end of the document.
+.PP
+Type \fBh (Home)\fR, or use the \fBhome\fR function key, to move to the page containing
+the selection (or the beginning of the document if there is no selection).
+.PP
+Typing any digit \fB0\fR through \fB9\fR brings up the \fBgo\fR dialog, with its type\-in
+initialized to the digit.  Finish typing a number, then type \fB[return] (To Page)\fR
+to go to that page.  Or type \fB+ (Fwd)\fR to go forward that number of pages,
+or \fB\- (Back)\fR to go back that number of pages.  For example, if you're on
+page 34, type \fB7[return]\fR to go to page 7, or \fB7+\fR to go to page 41, or \fB7\-\fR
+to go to page 27.  The meaning of page 1 was defined by the
+document's creator, so as to correspond to the page numbers in the
+document: it's likely not to be the first image in the document.
+Images before page 1 have no page numbers; you can get to them only by relative
+positioning, or commands such as \fBb (Beginning Page)\fR and \fBc (Contents Page)\fR.
+.PP
+As described above, middle\-double\-click on a number is a shortcut for typing
+\fBnumber [return]\fR, i.e., it goes to the numbered page, provided the document's
+creator correctly specified the location of page 1.
+.PP
+Type \fBf (Find)\fR to pop\-up the Find dialog.  Also, if the selection is not on
+the current page, this command sets an empty selection at the start of the
+current page.  (If you don't want that, type \fBh (Home)\fR first.)  In the
+Find dialog you can type a search target (currently only a single word), then
+click \fBFirst\fR, \fBNext\fR or \fBPrev\fR to find the first, next, or previous
+occurrence of that word in this document, starting at the beginning of the
+selection.  You can type \fB[return]\fR as a shortcut for \fBNext\fR.  After the
+search, keystrokes are interpreted as commands (any of which will implicitly
+close the Find dialog).  But while the Find dialog remains visible, you can
+continue typing [return] to find the next occurrence of the search target. 
+Type \fB[escape]\fR to close the Find dialog explicitly.
+.PP
+As described above, left\-double\-click on a word is a shortcut for typing
+\fBf word [return]\fR, i.e., it finds the next occurrence in this document.
+.PP
+Type \fBu (Undo Page Change)\fR to undo the most recent operation that moved to
+a different page or to a different resolution (\fB<\fR or \fB>\fR, described
+below).  You can repeatedly type \fBu\fR to move backwards in history, until
+you reach the point where you opened this window.  This includes moving back across places where you opened a new document into an existing window.  Type \fBr (Redo Page
+Change)\fR to redo, i.e., to undo an undo command (if you haven't moved to
+another page or resolution in between).
+.PP
+If you hold down the middle mouse button (or control\-left) in the
+image window, you can drag the image around.  The effect of this
+dragging is transient \- it is ignored the next time you issue a
+command that moves around the page or moves to another page.  See also
+the description of the View\-Area and Viewing
+Controls, which provide a more persistent way of altering the part of
+the image that is visible.
+.SH "LINKS AND THUMBNAILS"
+.PP
+Links and thumbnails provide a mechanism that lets you jump to a 
+particular page of a particular document with a single click.  If the link
+specifies a different document, jumping implicitly opens the document. 
+Jumping can also select some text starting on the specified page.
+.PP
+\fBLectern\fR supports three types of links:
+.PP
+.PD 0
+.RS 0
+.TP 6
+   1.
+\fIBookmark\fR links are personal and transient, intended for keeping 
+track of places in the short term.  Think of bookmarks as being 
+like keeping your place by sticking a finger between the pages 
+of a document.  You can have at most 10 bookmarks (no, you can't 
+use your toes).  When an eleventh bookmark is created, the first 
+bookmark is deleted.  This is the essence of bookmarks' transience:  
+you (and \fBLectern\fR) can create them casually, without cluttering 
+up your workspace, because excess bookmarks are deleted automatically.  
+If you want to keep a bookmark, use \fBe (Edit Links)\fR to convert 
+it into a diary entry, as described below.  Your bookmarks are 
+preserved in a file in your home directory ($HOME), so they aren't 
+lost when you quit \fBLectern\fR.  Indeed, when you restart \fBLectern\fR 
+your last bookmark will describe the last place you were before 
+you quitted \fBLectern\fR. 
+.IP
+.TP 6
+   2.
+\fIDiary\fR links are personal and persistent.  Think of them as 
+your personal notebook of favorite documents and places.  Diary 
+links belong to a single user; they are preserved in a file in 
+your home directory ($HOME).  It's entirely up to you to create, 
+sort and delete them. 
+.IP
+.TP 6
+   3.
+\fIOutline\fR links are attached to a particular document, and are 
+stored within the document.  They are a way for the document 
+designer to help you to navigate around the document, or to jump 
+to somewhere in a related document.  Unlike hypertext links (not 
+yet available in Lectern), all of a document's outline links are 
+available whenever you're viewing the document, independently 
+of your current position within the document.
+.RE
+.PD
+.PP
+\fIThumbnails\fR are stored with a document, and are
+generated automatically by 
+BuildLectern(1)}.  They provide a
+visual way to find a page within that document.
+.PP
+Bookmarks, diaries and outlines are all essentially the same mechanism.  
+They differ in how or when they are created, accessed and deleted, 
+and how and where they are stored.  But each of them is just a way 
+of remembering a particular place in a particular document (not necessarily 
+the current document). 
+.PP
+Bookmarks, diary links and outline links are identified by text strings.  
+Thumbnails are identified by 1/16 scale images of their pages.
+.PP
+To create a link of any type, first go to the place that you want the 
+link to jump to. Then either type \fBn (New Bookmark)\fR to create a bookmark, or click the \fB+\fR button in one of the link browsers to create a link of the corrseponding type.  Lectern chooses a name for the link and creates it. 
+.PP
+Whenever you stop viewing a document (by closing a viewer, by terminating 
+\fBLectern\fR, or by opening a new document in an existing viewer), \fBLectern\fR creates a bookmark link describing the place that you just left. 
+.PP
+Creating an eleventh bookmark link implicitly deletes the first bookmark link. 
+.PP
+A newly created link is placed at the bottom of its class.  You can 
+use \fBe (Edit Links)\fR to promote it or to rename it, or to convert it to another type of link, as described below. 
+.PP
+The simplest way to jump to a link or thumbnail is to type \fBL (Show 
+or Hide Link Browsers)\fR, so that the link browsers are visible in your 
+image window, then click once on one of the links or thumbnails. If you left\-click, the link's destination is loaded into the current window; right\-click or shift\-left\-click to load it into a new window.
+.PP
+If you prefer to use the keyboard to jump to a link, type \fBj (Jump 
+to Link)\fR.  In the popup\-up dialog, select the type of link you're 
+interested in (by default you see the bookmarks).  You can do this 
+by clicking one of the radio buttons, or by using the right\-arrow 
+and left\-arrow cursor keys on your keyboard.  Then select the link: 
+type the initial part of the its name (until the appropriate link 
+is selected); or select it manually in the dialog using the mouse; 
+or select it using the down\-arrow and up\-arrow cursor keys on your 
+keyboard.  Or use a combination of all of these methods.  Then type 
+\fB[return] (Jump)\fR to jump to it. 
+.PP
+You can use \fBe (Edit Links)\fR to modify the existing sets of links.  
+(You can't modify the thumbnails.)  In the Edit Links dialog you 
+can select a link in the usual ways.  You can use the \fB(Up)\fR and \fB(Down)\fR 
+buttons to change the order of the links.  You can convert a link 
+from one type to another.  Or you can rename a link.  You can do 
+these operations for several links in a single use of the dialog. 
+.PP
+You can also edit links by clicking the \*(lqpencil\*(rq button at the top 
+of one of the links browsers, when they are visible.
+.PP
+Changes you make to your diary or to the set of bookmarks are saved 
+when you close the New Link or Edit Links dialog. 
+.PP
+You can save changes that you make to a document's outline with the 
+\fBs (Save Document)\fR command.
+.PP
+Your bookmarks and diary are shared across simultaneously executing
+Lecterns, provided they access the same "$HOME".  When one
+\fBLectern\fR saves changes to your diary or bookmarks, any other copy
+of \fBLectern\fR notices the changes in about 10 seconds, and updates
+its viewers appropriately.
+.PP
+You can access someone else's bookmarks or diary from within \fBLectern\fR 
+by opening their $HOME/.bookmarks.lect or $HOME/.diary.lect as an 
+ordinary \fBLectern\fR document: their bookmarks or diary will appear as 
+the outline of that document. 
+.SH "WINDOWS AND SETTINGS"
+Type \fBm (Menu Buttons)\fR to pull down or release the menu.  Type \fBk
+(Menu Anchor)\fR to show or hide the menu anchor button. Type \fBv (Viewing
+Controls)\fR to show or hide the viewing controls window (described below). 
+Type \fBt (Thumbnail Window)\fR to show or hide the thumbnail window (described
+earlier).  Type [return] to confirm an operation in a modal dialog, or
+to close the \fBAbout Lectern\fR window.  Type \fB[escape]\fR to cancel or close a
+dialog.
+.PP
+You can zoom an image window by typing \fBz (Zoom)\fR (and again to unzoom it). 
+When you do this, \fBLectern\fR tries to make the image window occupy the entire
+screen.  This is especially effective if you use \fBLectern\fR for presentations.
+And you can use the \fBk (Menu Anchor)\fR command to hide the menu anchor button,
+leaving your entire screen filled with just the images.
+.PP
+By default \fBLectern\fR shows the images scaled to 100 dots per inch (DPI) (if the
+originals were 300 DPI).  This makes the image look life size or somewhat
+larger on your screen, depending on the actual resolution of your monitor. 
+Type \fB> (Larger Images)\fR to move to a finer resolution (magnifying the image), 
+or \fB< (Smaller Images)\fR to move to a coarser resolution (shrinking the
+image). Typing \fB,\fR or \fB.\fR is equivalent to \fB<\fR or \fB>\fR.  The available
+resolutions are 75, 100, 150 DPI (or more accurately, scale factors
+of 4, 3, and 2 from the original images).  Most current monitors are
+75 to 100 DPI.
+.SH "VIEW\-AREA AND VIEWING CONTROLS"
+.PP
+The \fIview\-area\fR is a rectangle specifying what part of the current 
+page image you would like to be able to view.  By default, \fBLectern\fR 
+calculates this for you automatically whenever you move to a new 
+page, and by default the \fB[space] (Go Forward)\fR command traverses through 
+the view\-area of the current page in vertical strips, starting at 
+its top\-left corner.  When you reach the bottom right, \fB[space] (Go 
+Forward)\fR moves you to the next page.  The \fB[backspace] (Go Backward)\fR 
+command works similarly in the opposite direction. 
+.PP
+This process works well if the automatic calculation corresponds 
+to the part of the page you actually want to view, and if the page 
+is set in either one or two columns, and if each column is no wider 
+than the window.  In other situations, you might need to intervene.  
+On occasion, the best fix is to change the width of the \fBLectern\fR viewer 
+window.  The rest of the time you'll need to use the viewing controls 
+sub\-window.  Type \fBv (Viewing Controls)\fR to show or hide 
+the viewing controls sub\-window. 
+.PP
+If \fBLectern\fR's automatic calculation of the view\-area is wrong, use 
+your mouse to adjust the view area rectangle's corners in the viewing 
+controls sub\-window.  Doing so flips the radio button below the thumbnail 
+from \fBautomatic\fR to \fBmanual\fR.  Your choice of rectangle persists from 
+page to page, until you choose a different rectangle, or click the 
+\fBautomatic\fR radio button or type \fBa (Automatic View Area)\fR, which 
+switches back to having Lectern calculate the view\-area for you on 
+each page.
+.PP
+If traversing the view\-area by vertical strips isn't appropriate, 
+click one of the other radio buttons in the viewing controls sub\-window.  
+Using horizontal strips is good for some pages laid out as tables.  
+Using a single strip down the center of the page is good if you want 
+to ignore marginal labels or notes.  Using "to the next page" is 
+good for concentrating on the center of the view area, ignoring intrusive 
+marginal notes, headers and footers.  I've never used a single strip 
+across the page, but it completes the set.  Note that if the entire 
+view\-area fits into the window, all the choices here are equivalent.  
+Your choice of traversal method persists from page to page, until 
+you change it. 
+.SH "LecternClient"
+.PP
+You can also create a viewer on a Lectern document with the
+\fBLecternClient\fR program.  \fBLecternClient\fR will communicate with
+an existing instance of the \fBLectern\fR program, or if necessary will
+start \fBLectern\fR for you.  See the
+LecternClient(1) man page for details.
+.PP
+Using \fBLecternClient\fR causes \fBLectern\fR to load a document into the image window
+labelled as \fIserver\fR.  The first image window is the initial \fIserver\fR.  You
+can type \fBd\fR to detach an image window, so that it is no longer the server. 
+In this situation, or if you close the server window, the next LecternClient
+request will create a new image window as the server window.
+.PP
+\fBLecternClient\fR can have one or two integer arguments following the document's
+file title.  If the first integer argument is present, it is interpreted by
+\fBLectern\fR as a word number; the second is a word count.  If they are present,
+these arguments cause \fBLectern\fR to select a range of words in the document
+(counting from 0), and to position the opened document to the page containing
+the start of that selection.
+.SH "SEE ALSO"
+.PP
+LecternClient(1),
+BuildLectern(1),
+LecternToHTML(1),
+BuildLecternIndex(1),
+EditLectern(1).
+.SH "AUTHOR"
+Andrew D. Birrell
+.SH "COPYRIGHT"
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+.br
+.BR
+.EX
+Last modified on Wed Jun  7 17:33:43 PDT 1995 by birrell  
+     modified on Sun Jan  1 08:55:47 PST 1995 by glassman 
+.EE

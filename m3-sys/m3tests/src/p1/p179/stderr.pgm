@@ -1,0 +1,10 @@
+Int32 = 32
+EventID = 64
+WireRep_T = 128
+Key = 128
+Value = 96
+Entry = 256
+Buckets = 32
+
+
+0 error(s) and 0 warning(s) detected

@@ -1,0 +1,447 @@
+(* Copyright 1993 Digital Equipment Corporation.                             *)
+(* Distributed only by permission.                                           *)
+(*                                                                           *)
+(* Last modified on Sat Oct 23 17:55:06 PDT 1993 by heydon                   *)
+
+(* View that traces the path of each packet. *)
+
+let NormalNodeColor = color_named("lightgray");
+let FullNodeColor = color_named("red");
+let BorderColor = color_named("black");
+let EdgeColor = color_named("blue");
+let BackgroundColor = color_named("white");
+let LabelColor = BorderColor;
+
+let MaxNumColors = 6;
+let Color = [
+ color_named("red"),   color_named("yellow"), color_named("blue"),
+ color_named("purple"), color_named("darkgreen"), color_named("brightorange")];
+
+let CantorPair =
+  proc((*int*) i, (*int*) j) (* : int *)
+    var m = i, n = j;
+    if i > j then m := j; n := i end;
+    let k = m + n;
+    m + ((k * (k+1)) / 2)
+  end;
+
+let MakeBezierPathProc = proc (cpp)
+(* --------------------------------------
+   cpp = array of four control points [x,y]
+
+   Return a parametric procedure that traces the bezier curve from cpp[0] to
+   cpp[3] with control points cpp[1] and cpp[2].
+  ------------------------------------- *)
+  let x000 = cpp[0][0],  y000 = cpp[0][1],
+      x001 = cpp[1][0],  y001 = cpp[1][1],
+      x011 = cpp[2][0],  y011 = cpp[2][1],
+      x111 = cpp[3][0],  y111 = cpp[3][1];
+  proc (t)
+      let s = 1.0 - t;
+      let ss = s * s, tt = t * t;
+      let sss = s * ss,
+          sst = ss * t * 3.0,
+          stt = s * tt * 3.0,
+          ttt = t * tt;
+      [(sss * x000) + (sst * x001) + (stt * x011) + (ttt * x111),
+       (sss * y000) + (sst * y001) + (stt * y011) + (ttt * y111)]
+  end
+end;
+
+let Interp = proc ((*real*) t, (*R2.T*) a,b) (* : R2.T *)
+(* Return the point a "t" fraction of the way from "a" to "b". *)
+  let s = 1.0 - t;
+  let Interp1 = proc((*real*) r1, r2) (* : real *) (r1*s)+(r2*t) end;
+  [Interp1(a[0], b[0]), Interp1(a[1], b[1])]
+end;
+
+let AnimateBezierEdge = proc(vv,cpp)
+(* --------------------------------------
+   vv = array of three vertexes
+   cpp = array of four control points [x,y]
+
+   Assuming there is an edge from some vertex to v[2] with control points v[0]
+   and v[1], this routine animates v[0]..v[2] so that the edge appears to draw
+   the bezier curve given by the control points cpp. At time 0.0 the edge is a
+   dot at cpp[0]. At time 1.0 the edge is a bezier curve from cpp[0] to cpp[3]
+   with control points cpp[1] and cpp[2]. 
+  ------------------------------------- *)
+  for i = 1 to 3 do
+      let j = i - 1;
+      let t = float(i)/3.0;
+      graph_moveVertexOnPath(vv[j],MakeBezierPathProc(
+        [cpp[0], Interp(t, cpp[0], cpp[1]), Interp(t, cpp[i], cpp[j]), cpp[i]]
+      ))
+  end
+end;
+
+let Node = {
+  (*int*) id => ok,		(* this node's unique id *)
+  (*GraphVBT.Vertex*) v => ok,	(* the vertex for this graph node *)
+  (*R2.T*) pos => ok,		(* node location *)
+
+  init =>
+    meth(self, (*graphvbt*) g, (*int*) id, (*real*) x, (*real*) y)
+      let vtx = graph_newVertex(g);
+      graph_setVertexShape(vtx, "ellipse");
+      graph_setVertexColor(vtx, NormalNodeColor);
+      graph_setVertexBorderColor(vtx, BorderColor);
+      graph_moveVertex(vtx, x, y, false);
+      self.id := id;
+      self.v := vtx;
+      self.pos := [x, y];
+      self
+    end,
+
+  setSize =>
+    meth(self, (*real*) size, (*real*) borderSz)
+      graph_setVertexSize(self.v, size, size);
+      graph_setVertexBorder(self.v, borderSz)
+    end
+}; (* Node *)
+
+let Pkt = {
+  (*GraphVBT.Vertex*) v => ok,	(* the vertex for this packet *)
+
+  init =>
+    meth(self, (*graphvbt*) g, (*int*) level, (*R2.T*) pos)
+      let vtx = graph_newVertex(g);
+      graph_setVertexShape(vtx, "ellipse");
+      graph_setVertexColor(vtx, Color[level]);
+      graph_setVertexBorderColor(vtx, BorderColor);
+      graph_moveVertex(vtx, pos[0], pos[1], false);
+      self.v := vtx;
+      self
+    end,
+
+  setSize =>
+    meth(self, (*real*) size, (*real*) borderSz)
+      graph_setVertexSize(self.v, size, size);
+      graph_setVertexBorder(self.v, borderSz)
+    end
+}; (* Pkt *)
+
+let Edge = {
+  (*R2.T*) startPos => ok,	(* location of start point *)
+  (*Vertex*) endPt => ok,	(* moved end point*)
+  (*Vertex*) c1 => ok,		(* dummy control point 1 *)
+  (*Vertex*) c2 => ok,		(* dummy control point 2 *)
+  (*Edge*) e => ok,		(* the GraphVBT object for this edge *)
+
+  init =>
+    meth(self, (*graphvbt*) g, (*int*) level, (*Node*) src, (*bool*) bezier)
+      let NewV = proc() (* : Vertex *)
+        let res = graph_newVertex(g);
+        graph_setVertexSize(res, 0.0, 0.0);
+        graph_moveVertex(res, src.pos[0], src.pos[1], false);
+        res
+      end;
+      self.startPos := src.pos;
+      self.endPt := NewV();
+      self.e := graph_newEdge(src.v, self.endPt);
+      if bezier then
+        self.c1 := NewV();
+        self.c2 := NewV();
+        graph_moveEdgeBezier(self.e, src.v,self.endPt, self.c1,self.c2, false)
+      end;
+      graph_setEdgeColor(self.e, Color[level]);
+      self
+    end,
+
+  setSize =>
+    meth(self, (*real*) width)
+      graph_setEdgeWidth(self.e, width)
+    end,
+
+  grow =>
+    meth(self, (*R2.T*) endPos)
+      graph_moveVertex(self.endPt, endPos[0], endPos[1], true)
+    end,
+
+  growBezier =>
+    meth(self, (*R2.T*) endPos, (*R2.T*) c1Pos, c2Pos)
+      AnimateBezierEdge(
+        [self.c1, self.c2, self.endPt],
+        [self.startPos, c1Pos, c2Pos, endPos])
+    end
+}; (* Edge *)
+
+let EdgeEntry = {
+  (*int*) id => ok,		(* unique identifier for this edge *)
+  (*Node*) end1 => ok,		(* edge endpoint 1 *)
+  (*Node*) end2 => ok,		(* edge endpoint 2 *)
+  (*Vertex*) c1 => ok,		(* control point 1 (or "ok" if straight edge *)
+  (*Vertex*) c2 => ok,		(* control point 2 (or "ok" if straight edge *)
+  (*GraphVBT.Edge*) e => ok,	(* the (thin blue) graph edge *)
+  (*[Edge]*) edge => ok,	(* array of NumColors Edge objects *)
+  (*EdgeEntry*) next => ok,	(* pointer to next entry in hash table *)
+
+  init =>
+    meth(self, (*int*) id, (*Node*) src, dest, (*Vertex*) c1, c2)
+      self.id := id;
+      self.end1 := src;
+      self.end2 := dest;
+      self.e := graph_newEdge(src.v, dest.v);
+      if (c1 isnot ok) andif (c2 isnot ok) then
+        self.c1 := c1; self.c2 := c2;
+        graph_moveEdgeBezier(self.e, src.v, dest.v, c1, c2, false)
+      end;
+      graph_setEdgeColor(self.e, EdgeColor);
+      self.edge := array_new(MaxNumColors, ok);
+      self
+    end,
+
+  addEdge =>
+    meth(self, (*graphvbt*) g, (*int*) level, (*Node*) src, (*bool*) bezier)
+    (* If there is already an edge in this entry at level "level", then return
+       "ok". Otherwise, create a new edge, install it in the entry, and return
+       it. *)
+      var res = self.edge[level];
+      if res is ok then
+        (* no edge on this level yet; create new Edge and animate it *)
+        res := clone(Edge).init(g, level, src, bezier);
+        self.edge[level] := res;
+        (* bring any other edges to front in reverse order *)
+        var i = (level - 1);
+        loop
+          if i < 0 then exit end;
+          if self.edge[i] isnot ok then
+            graph_edgeToFront(self.edge[i].e)
+          end;
+          i := i - 1
+        end;
+        res
+      else
+        ok
+      end
+    end
+}; (* EdgeEntry *)
+
+let TableSize = 109;
+
+let TableIterator = {
+  (*int*) bkt => ok,		(* current bucket *)
+  (*[EdgeEntry]*) bucket => ok,	(* array of buckets *)
+  (*EdgeEntry*) entry => ok,	(* current entry *)
+
+  init => meth(self, (*[EdgeEntry]*) bucket)
+    self.bkt := -1;
+    self.bucket := bucket;
+    self.entry := ok;
+    self
+  end,
+
+  next =>
+    meth(self) (* : EdgeEntry *)
+    (* Return the next EdgeEntry in the table, or "ok" if there are none. *)
+      if self.entry isnot ok then self.entry := self.entry.next end;
+      loop
+        if self.entry isnot ok then exit end;
+        self.bkt := self.bkt + 1;
+        if self.bkt >= TableSize then exit end;
+        self.entry := self.bucket[self.bkt]
+      end;
+      self.entry
+    end
+}; (* TableIterator *)
+
+let EdgeTable = {
+  (*[EdgeEntry] *) bucket => ok,	(* array of buckets *)
+
+  init => meth(self) self.bucket := array_new(TableSize, ok); self end,
+  hash => meth(self, (*int*) val) val % TableSize end,
+
+  addEntry =>
+    meth(self, (*Node*) src, dest, (*Vertex*) c1, c2) (* : EdgeEntry *)
+    (* Create and initialize a new EdgeEntry and add it to "self"; return
+       the new EdgeEntry. *)
+      let id = CantorPair(src.id, dest.id);
+      let bkt = self.hash(id);
+      var (*EdgeEntry*) entry = clone(EdgeEntry).init(id, src, dest, c1, c2);
+      entry.next := self.bucket[bkt];
+      self.bucket[bkt] := entry;
+      entry
+    end,
+
+  findEntry =>
+    meth(self, (*int*) id) (* : EdgeEntry *)
+    (* Returns the EdgeEntry with identifier "id", or "ok" if
+       there is no such entry. *)
+      var (*EdgeEntry*) entry = self.bucket[self.hash(id)];
+      loop
+        if (entry is ok) orif (entry.id is id) then exit end;
+        entry := entry.next
+      end;
+      entry
+    end,
+
+  iterate =>
+    meth(self) (* : TableIterator *)
+      clone(TableIterator).init(self.bucket)
+    end
+}; (* EdgeTable *)
+
+let view = {
+  graphvbt => graph_new(),
+  (*bool*) bounded => false,	(* bounded queue size?, set by StartGraph *)
+  (*[Node]*) node => ok,	(* allocated by StartGraph *)
+  (*font*) vertexFont => ok,	(* set by StartGraph *)
+  (*real*) maxNodeSize => ok,	(* set by EndGraph *)
+  (*real*) borderSize => ok,	(* set by EndGraph *)
+  (*real*) minPktSize => ok,	(* smallest packet, set by StartPackets *)
+  (*real*) deltaPktSize => ok,	(* packet delta, set by StartPackets *)
+  (*int*) numColors => ok,	(* number of colors, set by StartPackets *)
+  (*[Pkt]*) pkt => ok,		(* allocated by StartPackets *)
+  (*bool*) pktsMoved => false,	(* did any packets move this step? *)
+
+  pktSize =>
+    meth(self, (*int*) level)
+      self.minPktSize + (float(level) * self.deltaPktSize)
+    end,
+
+  StartGraph =>
+    meth(self, nodeCnt, unused, bounded, (*real*) xMax, (*real*) yMax)
+      self.vertexFont := graph_newFont(self.graphvbt,
+        "Helvetica", 0.5, "Roman", "bold", "*");
+      graph_setWorld(self.graphvbt, 0.0, xMax, yMax, 0.0);
+      graph_setAspect(self.graphvbt, yMax / xMax);
+      self.bounded := bounded;
+      self.node := array_new(nodeCnt, ok);
+      EdgeTable.init()
+    end,
+
+  NewNode =>
+    meth(self, id, (*real*) x, (*real*) y)
+      self.node[id] := clone(Node).init(self.graphvbt, id, x, y)
+    end,
+
+  NewStraightEdge =>
+    meth(self, (*int*) id1, id2)
+      EdgeTable.addEntry(self.node[id1], self.node[id2], ok, ok)
+    end,
+
+  NewCurvedEdge =>
+    meth(self, (*int*) id1, id2, (*real*) x1, y1, x2, y2)
+      let NewControl = proc((*real*) x, y)
+        let res = graph_newVertex(self.graphvbt);
+        graph_setVertexSize(res, 0.0, 0.0);
+        graph_moveVertex(res, x, y, false);
+        res
+      end;
+      let c1 = NewControl(x1, y1);
+      let c2 = NewControl(x2, y2);
+      EdgeTable.addEntry(self.node[id1], self.node[id2], c1, c2)
+    end,
+
+  NewLabel => meth (self, label, x, y)
+    let vl = graph_newVertex(self.graphvbt);
+    graph_setVertexFont(vl, self.vertexFont);
+    graph_setVertexSize(vl, 0.5, 0.5);
+    graph_setVertexColor(vl, BackgroundColor);
+    graph_moveVertex(vl, x, y, false);
+    graph_setVertexLabel(vl, label);
+    graph_setVertexLabelColor(vl, LabelColor);
+  end,
+
+  EndGraph =>
+    meth(self)
+      let distance = proc(pt1, pt2)
+        let dx = pt2[1] - pt1[1], dy = pt2[0] - pt1[0];
+        (dx * dx) + (dy * dy)
+      end;
+      (* set "minDst" to minimum distance between nodes *)
+      var minDst = ok;
+      minDst := distance(self.node[0].pos, self.node[1].pos);
+      for i = 0 to #(self.node) - 1 do
+	let pos1 = self.node[i].pos;
+	for j = (i + 1) to #(self.node) - 1 do
+	  let curDst = distance(pos1, self.node[j].pos);
+	  if curDst < minDst then minDst := curDst end
+	end
+      end;
+      minDst := math_sqrt(minDst);
+      (* set "maxNodeSize", "borderSize", "deltaPktSize", "minPktSize" *)
+      self.maxNodeSize := minDst * 0.7;
+      self.borderSize := self.maxNodeSize / 20.0;
+      (* set node sizes *)
+      for i = 0 to #(self.node) - 1 do
+	self.node[i].setSize(self.maxNodeSize, self.borderSize * 1.5);
+      end;
+    end,
+
+  StartPackets =>
+    meth(self, numPkts)
+      let min = proc(i, j) if i < j then i else j end end;
+      self.numColors := min(MaxNumColors, numPkts);
+      self.deltaPktSize := self.maxNodeSize / (float(self.numColors)+3.0);
+      self.minPktSize := 1.5 * self.deltaPktSize;
+      self.pkt := array_new(numPkts, ok);
+      (* set edge widths *)
+      var it = EdgeTable.iterate();	(* table iterator *)
+      var entry = ok;			(* edge entry *)
+      let edgeWidth = self.minPktSize / 2.0;
+      loop
+        entry := it.next();
+        if entry is ok then exit end;
+        graph_setEdgeWidth(entry.e, edgeWidth)
+      end
+    end,
+
+  NewPacket =>
+    meth(self, (*int*) id, (*int*) src, (*int*) dest, unused1, unused2)
+      let level = id % self.numColors;
+      let pkt = clone(Pkt).init(self.graphvbt, level, self.node[src].pos);
+      pkt.setSize(self.pktSize(level), self.borderSize);
+      self.pkt[id] := pkt
+    end,
+
+  EndPackets =>
+    meth(self)
+      (* stack the packets from back to front *)
+      let n = #(self.pkt);
+      for i = 0 to self.numColors - 1 do
+        var j = (self.numColors - 1) - i;
+        loop
+          if j >= n then exit end;
+          graph_vertexToFront(self.pkt[j].v);
+          j := j + self.numColors
+        end
+      end;
+      graph_redisplay(self.graphvbt)
+    end,
+
+  MovePacket =>
+    meth(self, (*int*) id, (*int*) src, dest)
+      let pos = self.node[dest].pos;
+      let level = id % self.numColors;
+      self.pktsMoved := true;
+      let entry = EdgeTable.findEntry(CantorPair(src, dest));
+      let bezier = (entry.c1 isnot ok) and (entry.c2 isnot ok);
+      let edge = entry.addEdge(self.graphvbt, level, self.node[src], bezier);
+      if edge isnot ok then
+        edge.setSize(self.pktSize(level));
+        if not(bezier) then
+          graph_moveVertex(self.pkt[id].v, pos[0], pos[1], true);
+          edge.grow(pos)
+        else
+          var c1 = entry.c1, c2 = entry.c2, t = ok;
+          if src isnot entry.end1.id then
+            t := c1; c1 := c2; c2 := t
+          end;
+          let c1Pos = graph_getVertexPosition(c1);
+          let c2Pos = graph_getVertexPosition(c2);
+          graph_moveVertexOnPath(self.pkt[id].v, MakeBezierPathProc(
+            [self.node[src].pos, c1Pos, c2Pos, pos]));
+          edge.growBezier(pos, c1Pos, c2Pos)
+        end
+      end
+    end,
+
+  QueueSizes =>
+    meth(self, (*UNUSED*) queueSizes)
+      if self.pktsMoved then
+        self.pktsMoved := false;
+        zeus_animate(self.graphvbt, 0.0, 1.0)
+      end
+    end
+};

@@ -1,0 +1,44 @@
+# Tests for RegEx.[im]3
+#
+# Run this with ./Main -unix < tests.input
+#
+#
+# PATTERN	SUBJECT		RESULT
+#
+
+##
+## major difference between us and regex(3) is ? and +
+##
+
+# we support + and ? but unix does not
+ab+bc	abbc	TRUE
+ab+bc	abc	FALSE
+ab+bc	abq	FALSE
+ab+bc	abbbbc	TRUE
+ab?bc	abbc	TRUE
+ab?bc	abc	TRUE
+ab?bc	abbbbc	FALSE
+ab?c	abc	TRUE
+## unix goofs on the one below:
+\(\(\(\(\(\(\(\(a\)\)\)\)\)\)\)\)	a	TRUE
+# UNIX goofs on the next two...
+abc\)	""	ERROR
+a\(abc	""	ERROR
+
+# unix goofs on the next one also
+"[ -~ -~]*"	abc	TRUE
+
+\(\(\(\(\(\(\(\(\(\(a\)\)\)\)\)\)\)\)\)\)	a	ERROR
+
+##
+## Some unfixed bugs (?)
+## 
+
+\(^\)*		""		ERROR
+$		""		TRUE
+\(a*\)*		""		TRUE
+\([abc]\)*d	abbbcd		TRUE
+\([abc]\)*bcd	abcd		TRUE
+\)\(		""		ERROR
+$		abc		TRUE
+

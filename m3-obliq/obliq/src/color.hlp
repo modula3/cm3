@@ -1,0 +1,20 @@
+  color_named(name: Text): Color
+    Get a color from its name (see the ColorName M3 interface).
+  color_rgb(r: Real, g: Real, b: Real): Color
+    Get a color from rgb (each 0.0 .. 1.0).
+  color_hsv(hr: Real, sr: Real, v: Real): Color
+    Get a color from hsv (each 0.0 .. 1.0).
+  color_r(c: Color): Real
+    The red color component.
+  color_g(c: Color): Real
+    The green color component.
+  color_b(c: Color): Real
+    The blue color component.
+  color_h(c: Color): Real
+    The hue color component.
+  color_s(c: Color): Real
+    The saturation color component.
+  color_v(c: Color): Real
+    The value color component.
+  color_brightness(c: Color): Real
+    The total brightness (0.0 .. 1.0).

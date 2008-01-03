@@ -1,0 +1,66 @@
+MODULE CPAlgorithm;
+
+IMPORT Algorithm, CPAlgClass, R2, Math;
+
+TYPE 
+  Link = REF RECORD
+    p:R2.T;
+    next: Link;
+END;
+
+CONST MaxDistance = 1.0E30;
+VAR
+   min     : REAL    := 100.0;
+   h,z    : Link;
+   N: INTEGER := 0;
+
+@CheckforMin
+PROCEDURE CheckForMin (READONLY p1, p2: R2.T) =@
+  BEGIN
+@5     IF (Dist(p1,p2) < min) THEN @
+@10        UpdateMin(p1,p2) @
+    END
+  END CheckForMin;
+@CheckforMin
+
+
+@FindClosestPair
+PROCEDURE FindClosestPair(VAR c: Link; N: INTEGER): Link =@
+  VAR
+    a, b, t1, t2: Link;
+    midX : REAL;
+    p1, p2, p3, p4: R2.T;
+
+  BEGIN
+@5     a := c;@
+@10     b := MiddleOfList(c,N);@
+@15     midX := b.p.x;@
+
+@20     t1 := FindClosestPair(a, N DIV 2);@
+@25     t2 := FindClosestPair(b, N - (N DIV 2));@
+
+@30     c := Merge(t1, t2);@
+
+@35     a := c;@
+    REPEAT
+@40       IF ((ABS(a.p.x - midX) < min) AND (p1 # z.p)) THEN@
+@45         CheckForMin(a.p, p1);@
+@50         CheckForMin(a.p, p2);@
+@55         CheckForMin(a.p, p3);@
+@60         CheckForMin(a.p, p4);@
+@65         p1 := p2; p2 := p3; p3 := p4; p4 := a.p;@
+        END (* IF *);
+@70       a := a.next;@
+@75     UNTIL a = z;@
+
+@80     RETURN c;@
+  END FindClosestPair;
+@FindClosestPair
+
+@Main
+BEGIN (* main module: computes closest pair in given set of points *) @
+@5  InitializeListofPoints(h, N);@
+@10  SortByX(h, N);@
+@15  FindClosestPair(h, N);@
+END CPAlgorithm.
+@Main

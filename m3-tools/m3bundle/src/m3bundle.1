@@ -1,0 +1,71 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Tue Sep 22 08:32:25 PDT 1992 by mhb   
+.\"      modified on Tue Jul  7 13:15:26 PDT 1992 by muller
+.\"      modified on Sun Jun 21 14:04:31 PDT 1992 by gnelson
+.nh
+.TH M3BUNDLE 1
+.SH NAME
+m3bundle \- package source files into M3 object
+
+.\"------------------------------------------------------------------------
+.SH SYNTAX
+.B m3bundle
+-name n -element e1 path1 [-element ei pathi]...
+
+.B m3bundle
+-FcmdFile
+
+.\"------------------------------------------------------------------------
+.SH DESCRIPTION
+
+.B m3bundle packages up arbitrary files so that their contents can be
+retrieved by a Modula-3 program at runtime without accessing the file
+system.  
+.B m3bundle 
+works by generating an interface (.i3) and
+implementation (.m3) file.  The implementation contains the bits from
+the files that are being bundled; the interface provides a way to
+access this information.
+
+In the first form of the command above,
+
+   n        is the name of the source module to be produced by m3bundle
+   path_i   is the path name of a file to be bundled
+   e_i      is the name of the resulting text reader
+
+That is, the command produces a Modula-3 interface n.i3 and module
+n.m3 implementing "n".  The interface n.i3 has the form:
+
+   INTERFACE n;
+   IMPORT Bundle;
+   PROCEDURE Get(): Bundle.T;
+   END n;
+
+A programmer can then use the Bundle interface to retrieve 
+elements from the Bundle.T returned by Get.
+
+The second form of the m3bundle command allows you to specify the
+parameters in the file named cmdFile. This is needed when bundling
+lots (i.e., hundreds) of files, since Unix imposes a limit on the size
+of arguments to a shell command.
+
+
+.\"------------------------------------------------------------------------
+.SH AUTHOR OF OBJECT
+
+Greg Nelson
+
+Marc H. Brown added support for large files and revamped the internals.
+
+Eric Muller added -F flag
+
+
+.\"------------------------------------------------------------------------
+.SH AUTHOR OF DOCUMENTATION
+
+Greg Nelson and Paul Mcjones
+
+

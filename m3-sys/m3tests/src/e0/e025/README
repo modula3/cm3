@@ -1,0 +1,42 @@
+/* Copyright (C) 1990, Digital Equipment Corporation.         */
+/* All rights reserved.                                       */
+/* See the file COPYRIGHT for a full description.             */
+
+/* Last modified on Thu Oct 11 01:05:46 1990 by muller        */
+
+
+Replied: Thu, 30 Aug 90 16:58:27 PDT
+Replied: "mjordan (Mick Jordan) kalsow"
+Delivery-Date: Thu, 30 Aug 90 16:44:16 PDT
+Received: by jumbo.pa.dec.com; id AA10746; Thu, 30 Aug 90 16:44:10 -0700
+From: mjordan (Mick Jordan)
+Message-Id: <9008302344.AA10746@jumbo.pa.dec.com>
+Date: 30 Aug 1990 1643-PDT (Thursday)
+To: muller
+Cc: kalsow
+Subject: Compiler bug (I hope)
+
+
+MODULE C EXPORTS Main;
+
+IMPORT Ctypes;
+
+PROCEDURE P(chars: ARRAY OF CHAR) RAISES {}=
+  BEGIN
+    
+  END P;
+
+VAR a: ARRAY [0..9] OF Ctypes.Char;
+
+BEGIN
+  P(a);
+END C.
+
+
+No error message here, despite Ctypes.Char being defined as a subrange
+[-128..127].
+
+Question: What value is there in defining it as a subrange rather than
+CHAR?
+
+Mick

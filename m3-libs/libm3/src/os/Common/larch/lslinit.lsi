@@ -1,0 +1,36 @@
+commentSym  %
+%  Larch Shared Language (LSL) Init File
+
+idChar	    '
+opChar	    ~!#$&?@|
+singleChar  ;
+
+openSym	    [ { << \< \langle
+closeSym    ] } >> \> \rangle
+selectSym   \.
+
+simpleId    \bot \top
+
+synonym	    Bool		bool
+
+synonym	    \and		/\
+synonym	    \and		&
+synonym	    \or			\/
+synonym	    \or			|
+synonym	    \implies		=>
+synonym	    \not		not
+synonym	    \not		~
+synonym	    \eq			=
+synonym	    \neq		~=
+synonym	    \arrow		->
+synonym	    \marker		__
+synonym	    \equals		==
+synonym     \forall     	forall
+synonym     \eqsep      	;
+
+synonym     \composeSort	$
+
+synonym     -|                  \precat
+synonym     |-                  \postcat
+
+

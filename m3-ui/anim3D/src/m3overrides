@@ -1,0 +1,5 @@
+override ("libm3", ROOT & "/m3-libs")
+override ("parseparams", ROOT & "/m3-libs")
+override ("vbtkit", ROOT & "/m3-ui")
+override ("opengl", ROOT & "/m3-ui")
+override ("PEX", ROOT & "/m3-ui")

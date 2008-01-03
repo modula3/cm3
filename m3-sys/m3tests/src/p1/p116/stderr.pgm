@@ -1,0 +1,164 @@
+---------------------------- REAL ---
+   1.0/0.0 # 1.0/(-0.0) test OK
+   1.0/0.0 = 1.0/(- (-0.0)) test OK
+   ILogb (MinPosNormal) test OK
+   Ilogb (MinPosNormal / 8.0) test OK
+   Logb  (MinPosNormal / 8.0) test OK
+   Ilogb (Scalb (1.1, 100)) test OK
+   Logb (Scalb (1.1, 100)) test OK
+   NextAfter (0.0, 10.0) test OK
+   NextAfter (-1.0, -2.0) test OK
+   CopySign (1.0, -0.0) test OK
+   CopySign (-1.0, 0.0) test OK
+   Class (one/ten) test OK
+   Class (MinPos/ten) test OK
+   Class (MinPosNormal/ten) test OK
+   Finite (MinPosNormal/ten) test OK
+   Class (MaxFinite*ten) test OK
+   Finite (MaxFinite*ten) test OK
+   IsNaN (MaxFinite*ten) test OK
+   Class (zero/zero) test OK
+   Finite (zero/zero) test OK
+   IsNaN (zero/zero) test OK
+   Sign (zero) test OK
+   Sign (minusZero) test OK
+** Unordered (zero, NaN) test not OK: FALSE should be TRUE
+   Unordered (zero, zero) test OK
+** Unordered (NaN, NaN) test not OK: FALSE should be TRUE
+   Differs (zero, NaN) test OK
+   Differs (zero, zero) test OK
+   Differs (zero, one) test OK
+   Differs (NaN, NaN) test OK
+   Sqrt (y*y) test OK
+   Sqrt (minusZero) test OK
+   MaxFinite  1st test OK
+   MaxFinite  2nd test OK
+   MaxFinite  3rd test OK
+   MinPosNormal  1st test OK
+   MinPosNormal  2nd test OK
+   MinPosNormal  3rd test OK
+   MinPosNormal  4th test OK
+   MinPosNormal  5th test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   SetRound  1st test OK
+   SetRound  2nd test OK
+   SetRound  3rd test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   SetRound  4th test OK
+   SetRound  5th test OK
+   SetRound  6th test OK
+   SetRound  7th test OK
+   SetFlags  1st test OK
+   SetFlags  2nd test OK
+   SetFlags  3rd test OK
+   SetFlags  4th test OK
+   SetFlags  5th test OK
+   SetFlags  6th test OK
+   SetFlags  7th test OK
+   SetFlags  8th test OK
+   SetFlags  9th test OK
+   Old behavior, DivByZero test OK
+   New behavior, DivByZero test OK
+   right flag ? test OK
+   right value ? test OK
+   Old behavior, Overflow test OK
+   New behavior, Overflow test OK
+   right flag ? test OK
+   right value ? test OK
+   Old behavior, Underflow test OK
+   New behavior, Underflow test OK
+   right flag ? test OK
+   right value ? test OK
+   IntDivByZero, default behaviour test OK
+   right flag ? test OK
+   right value ? test OK
+---------------------------- threads ---
+   Fork  1st test OK
+   Fork 2nd test OK
+   Fork  3rd test OK
+---------------------------- LONGREAL ---
+   1.0/0.0 # 1.0/(-0.0) test OK
+   1.0/0.0 = 1.0/(- (-0.0)) test OK
+   ILogb (MinPosNormal) test OK
+   Ilogb (MinPosNormal / 8.0) test OK
+   Logb (MinPosNormal / 8.0) test OK
+   Ilogb  (Scalb (1.1, 100)) test OK
+   Logb  (Scalb (1.1, 100)) test OK
+   NextAfter (0.0, 10.0) test OK
+   NextAfter (-1.0, -2.0) test OK
+   CopySign (1.0, -0.0) test OK
+   CopySign (-1.0, 0.0) test OK
+   Class (one/ten) test OK
+   Class (MinPos/ten) test OK
+   Class (MinPosNormal/ten) test OK
+   Finite (MinPosNormal/ten) test OK
+   Class  MaxFinite*ten test OK
+   Finite MaxFinite*ten test OK
+   IsNaN  MaxFinite*ten test OK
+   Class zero/zero test OK
+   Finite zero/zero test OK
+   IsNaN zero/zero test OK
+   Sign (zero) test OK
+   Sign (minusZero) test OK
+** Unordered (zero, NaN) test not OK: FALSE should be TRUE
+   Unordered (zero, zero) test OK
+** Unordered (NaN, NaN) test not OK: FALSE should be TRUE
+   Differs  (zero, NaN) test OK
+   Differs  (zero, zero) test OK
+   Differs  (zero, one) test OK
+   Differs  (NaN, NaN) test OK
+   Sqrt  (y*y) test OK
+   Sqrt  (minusZero) test OK
+   MaxFinite  1st test OK
+   MaxFinite  2nd test OK
+   MaxFinite  3rd test OK
+   MinPosNormal  1st test OK
+   MinPosNormal  2nd test OK
+   MinPosNormal  3rd test OK
+   MinPosNormal  4th test OK
+   MinPosNormal  5th test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   SetRound  1st test OK
+   SetRound  2nd test OK
+   SetRound  3rd test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   GetRound  1st test OK
+   SetRound  4th test OK
+   SetRound  5th test OK
+   SetRound  6th test OK
+   SetRound  7th test OK
+   SetFlags  1st test OK
+   SetFlags  2nd test OK
+   SetFlags  3rd test OK
+   SetFlags  4th test OK
+   SetFlags  5th test OK
+   SetFlags  6th test OK
+   SetFlags  7th test OK
+   SetFlags  8th test OK
+   SetFlags  9th test OK
+   Old behavior, DivByZero test OK
+   New behavior, DivByZero test OK
+   right flag ? test OK
+   right value ? test OK
+   Old behavior, Overflow test OK
+   New behavior, Overflow test OK
+   right flag ? test OK
+   right value ? test OK
+   Old behavior, Underflow test OK
+   New behavior, Underflow test OK
+   right flag ? test OK
+   right value ? test OK
+   IntDivByZero, default behaviour test OK
+   right flag ? test OK
+   right value test OK

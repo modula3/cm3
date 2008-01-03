@@ -1,0 +1,26 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed Jun 29 14:27:36 PDT 1994 by bharat  */
+/*      modified on Thu Oct 21 20:43:53 PDT 1993 by mhb     */
+
+resource ("dialog.fv")
+
+resource ("attributes.fv")
+resource ("booleanATT.fv")
+resource ("browserATT.fv")
+resource ("buildpopup.fv")
+resource ("buttonATT.fv")
+resource ("choiceATT.fv")
+resource ("filebrowserATT.fv")
+resource ("formATT.fv")
+resource ("frameATT.fv")
+resource ("menuATT.fv")
+resource ("numericATT.fv")
+resource ("scrollerATT.fv")
+resource ("textATT.fv")
+resource ("texteditATT.fv")
+resource ("typeinATT.fv")
+resource ("videoATT.fv")
+resource ("FlipPage.pbm")

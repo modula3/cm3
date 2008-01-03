@@ -1,0 +1,4 @@
+
+% this directory may also be used for real valued interval arithmetics
+
+Module("Range")

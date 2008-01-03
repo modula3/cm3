@@ -1,0 +1,37 @@
+.nh
+.TH visobliq 1
+.SH NAME
+visobliq \- Visual Obliq: programming environment for distributed applications
+
+.SH SYNTAX
+\fBvisobliq
+.SH DESCRIPTION
+Visual Obliq is a programming environment for
+multi-user applications, expressed in the Obliq language.
+.PP
+
+In the Visual Obliq model, a distributed session is started by loading
+an application into an Obliq interpreter. This creates a session with
+a certain unique public name. Users running interpreters at other
+sites can connect to the session via the session-name. The act of
+joining a session causes the appropriate client code and user
+interface specification to migrate to the client's address-space and
+run there.  
+.PP
+All the above activities can be supported and
+coordinated within the World-Wide Web framework. A Visual Obliq
+program may be regarded as a document with an appropriate MIME
+type. The text of an application is disseminated as a
+MIME-encapsulated document by a Visual Obliq gateway (vocgi).
+.PP
+For more information, find Luca or Marc Brown.
+.SH AUTHOR
+Krishna Bharat (summer '93)
+.PP
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+.br
+Last modified on Tue Sep 19 13:19:28 PDT 1995 by glassman
+
+

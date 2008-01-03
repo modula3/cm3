@@ -1,0 +1,8 @@
+  GroupGO_BadElement: Exception
+  GroupGO_New(): GroupGO
+  GroupGO_NewWithSizeHint(size: Int): GroupGO
+WHERE
+  GroupGO <: GO & { add: (GO) => Ok,
+                    remove: (GO) => Ok ! GroupGO_BadElement,
+                    flush: () => Ok,
+                    content: () => [GO] }

@@ -1,0 +1,13 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Aug 13 10:38:35 PDT 1993 by kalsow  
+%      modified on Wed Jun  9 17:25:51 PDT 1993 by harrison
+%      modified on Thu May  6 12:11:46 PDT 1993 by muller
+%      modified on Wed May  5 11:53:58 PDT 1993 by mjordan
+
+include_dir ("Common")
+include_dir (TARGET)
+include_dir (WORD_SIZE)
+

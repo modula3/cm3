@@ -1,0 +1,107 @@
+Compiling procedure "CCMD_PROC"...
+
+  Original Command:
+    IF 
+      VAR 
+        a[1] ~ (56.44, 246.1), b[2] ~ (100.4, 388.1), c[3] ~ (181.8, 239.1) 
+      IN 
+        (a[1], b[2]) CONG (b[2], c[3]) -> SKIP 
+      END 
+    FI; 
+    HALT
+
+  Compiled Command:
+    IF 
+      SAFE(c[3] := (181.8, 239.1); 
+           b[2] := (100.4, 388.1); 
+           a[1] := (56.44, 246.1); 
+           _x[5] := (b[2], c[3]); 
+           _x[4] := (a[1], b[2]); 
+           SKIP; 
+           (len2[26] = bdx2[24] + bdy2[25] AND 
+            len2[26] = adx2[22] + ady2[23] AND 
+            bdy2[25] = bdy[21] * bdy[21] AND 
+            _x[5] = (b[2], c[3]) AND 
+            _x[4] = (a[1], b[2]) AND 
+            _x[4] = (a1[6], a2[7]) AND 
+            a1[6] = (a1x[8], a1y[9]) AND 
+            a2[7] = (a2x[10], a2y[11]) AND 
+            _x[5] = (b1[12], b2[13]) AND 
+            b1[12] = (b1x[14], b1y[15]) AND 
+            b2[13] = (b2x[16], b2y[17]) AND 
+            a1x[8] = adx[18] + a2x[10] AND 
+            a1y[9] = ady[19] + a2y[11] AND 
+            b1x[14] = bdx[20] + b2x[16] AND 
+            b1y[15] = bdy[21] + b2y[17] AND 
+            adx2[22] = adx[18] * adx[18] AND 
+            ady2[23] = ady[19] * ady[19] AND 
+            bdx2[24] = bdx[20] * bdx[20]) 
+         ? (<a2x[10]>, <a1y[9]>, <a1[6]>, <a2[7]>, <a1x[8]>, <len2[26]>, 
+            <bdy2[25]>, <bdx2[24]>, <ady2[23]>, <adx2[22]>, <bdy[21]>, 
+            <bdx[20]>, <ady[19]>, <adx[18]>, <b2y[17]>, <b2x[16]>, 
+            <b1y[15]>, <b1x[14]>, <b2[13]>, <b1[12]>, <a2y[11]>, <~_x[4]>, 
+            <~_x[5]>, ~a[1], ~b[2], ~c[3])); 
+      SKIP 
+    FI; 
+    HALT
+
+  Assembled Command:
+L0      PUSHM3NIL 26
+L2      PUSHNUM 181.78937
+L7      PUSHNUM 239.0625
+L12     CONS 
+L13     POPL 3
+L16     PUSHNUM 100.423965
+L21     PUSHNUM 388.125
+L26     CONS 
+L27     POPL 2
+L30     PUSHNUM 56.442665
+L35     PUSHNUM 246.09375
+L40     CONS 
+L41     POPL 1
+L44     PUSHL 2
+L47     PUSHL 3
+L50     CONS 
+L51     POPL 5
+L54     PUSHL 1
+L57     PUSHL 2
+L60     CONS 
+L61     POPL 4
+L64     PUSHM3NIL 21
+L66     PUSHL 4
+L69     PUSHL 5
+L72     PUSHL 1
+L75     PUSHL 2
+L78     PUSHL 3
+L81     SOLVE 26, 0, 18: 
+          f=h+g
+          f=j+i
+          g=k*k
+          w=(y,z)
+          v=(x,y)
+          v=(c,d)
+          c=(e,b)
+          d=(a,u)
+          w=(t,s)
+          t=(r,q)
+          s=(p,o)
+          e=n+a
+          b=m+u
+          r=l+p
+          q=k+o
+          j=n*n
+          i=m*m
+          h=l*l
+L214    TJUMP L222
+L217    DECSP 26
+L219    JUMP L236
+L222    POPL 3
+L225    POPL 2
+L228    POPL 1
+L231    DECSP 23
+L233    JUMP L238
+L236    ERROR 3
+L238    ERROR 2
+L240    C-ON 
+L241    RET 
+L242    ERROR 4

@@ -1,0 +1,17 @@
+(Macro YesNo (Name msg yes no)
+  `(ZChild %,Name
+     (BgColor "VeryPaleGray")
+     (LightShadow "White")
+     (DarkShadow "VeryDarkGray")
+     (Shape (Width 300)
+       (BOX (pens (2 2 1 26))
+        (child 
+         (VBox
+          ,msg
+          (Glue 20)
+          (HBox
+           Fill
+           (Button %,yes (BgColor "Red") (Shape (Width 75) "Yes"))
+           Fill
+           (CloseButton %,no (BgColor "Green") (Shape (Width 75) "No"))
+           Fill)))))))

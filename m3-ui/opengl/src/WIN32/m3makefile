@@ -1,0 +1,15 @@
+/* Copyright (C) 1994, Digital Equipment Corporation                         */
+/* Digital Internal Use Only                                                 */
+/* All rights reserved.                                                      */
+/*                                                                           */
+/* Last modified on Tue Oct 10 15:44:30 PDT 1995 by najork                   */
+/*       Created on Fri Aug 19 15:25:43 PDT 1994 by najork                   */
+
+/* Relevant C header files:                                                  */
+/* Vendor-Independent:  gl.h glu.h glx.h                                     */
+/* Vendor-Dependent:    glxdecproto.h glxint.h glxmd.h glxproto.h            */
+
+import ("libm3") 
+
+Interface ("GL")
+Interface ("GLu")

@@ -1,0 +1,80 @@
+
+SILMENU MENU 
+{
+	POPUP "&File"
+	{
+		MENUITEM "&Open...",    101
+		MENUITEM "&Save",       102
+		MENUITEM "Save &As...", 103
+		MENUITEM "&Print...",   104
+		MENUITEM SEPARATOR
+		MENUITEM "E&xit",       105
+	}
+
+	POPUP "F&ont"
+	{
+		MENUITEM "Select...", 200
+	}
+
+	POPUP "&Settings"
+	{
+		POPUP "&Grid"
+		{
+			MENUITEM "1", 500
+			MENUITEM "2", 501
+			MENUITEM "4", 502
+			MENUITEM "8", 503
+			MENUITEM "16", 504
+			MENUITEM "32", 505
+		}
+
+		POPUP "&Zoom"
+		{
+			MENUITEM "1", 300
+			MENUITEM "2", 301
+			MENUITEM "3", 302
+			MENUITEM "4", 303
+			MENUITEM "5", 304
+			MENUITEM "6", 305
+			MENUITEM "7", 306
+			MENUITEM "8", 307
+			MENUITEM "9", 308
+		}
+
+		POPUP "&LineWidth"
+		{
+			MENUITEM "1", 400
+			MENUITEM "2", 401
+			MENUITEM "3", 402
+			MENUITEM "4", 403
+			MENUITEM "5", 404
+			MENUITEM "6", 405
+			MENUITEM "7", 406
+			MENUITEM "8", 407
+			MENUITEM "9", 408
+		}
+
+	}
+
+        POPUP "&Edit"
+        {
+		MENUITEM "&Copy",           601
+		MENUITEM "&Group",          602
+		MENUITEM "&Ungroup",        603
+		MENUITEM SEPARATOR
+                MENUITEM "&Bounding boxes", 604
+		MENUITEM SEPARATOR
+		MENUITEM "&Erase all...",   605
+        }
+
+	POPUP "&Help", HELP
+	{
+		MENUITEM "Help &Index", 700
+	}
+
+}
+
+
+ICON_1 ICON SilIcon.ico 
+
+

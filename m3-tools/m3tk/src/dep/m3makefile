@@ -1,0 +1,11 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Fri Oct 14 14:19:17 PDT 1994 by detlefs                  */
+/*      modified on Wed Jun  2 22:00:42 PDT 1993 by mjordan                  */
+
+Module("M3DepCompile")
+Module("M3DepDATool")
+Module("M3DepGenFinder")
+

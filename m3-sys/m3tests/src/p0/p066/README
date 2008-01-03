@@ -1,0 +1,99 @@
+/* Copyright (C) 1990, Digital Equipment Corporation.         */
+/* All rights reserved.                                       */
+/* See the file COPYRIGHT for a full description.             */
+
+/* Last modified on Thu Aug 23 00:53:27 1990 by muller        */
+
+
+
+Delivery-Date: Tue, 21 Aug 90 13:04:10 PDT
+Received: by jumbo.pa.dec.com; id AA08677; Tue, 21 Aug 90 12:50:28 -0700
+Received: by jumbo.pa.dec.com; id AA08671; Tue, 21 Aug 90 12:50:21 -0700
+Received: by decpa.pa.dec.com; id AA22967; Tue, 21 Aug 90 12:50:12 -0700
+Received: from Cabernet.ms by ArpaGateway.ms ; 21 AUG 90 12:49:23 PDT
+Sender: "James_Plank.PARC"@Xerox.COM
+Date: 21 Aug 90 12:49:06 PDT (Tuesday)
+Subject: Compiler Bug: Returning from TRY-EXCEPT
+From: "James_Plank.PARC"@Xerox.COM
+To: m3
+Reply-To: "James_Plank.PARC"@Xerox.COM
+Message-Id: <900821-124923-6585@Xerox>
+
+The compiler is generating bad C code for returning from
+TRY-EXCEPT blocks.  The following module is an example:
+
+MODULE Main;
+
+EXCEPTION Number1;
+EXCEPTION Number2;
+
+CONST T = TRUE;
+
+PROCEDURE ReturnFromException() =
+BEGIN
+  TRY
+    IF T THEN RETURN; END;
+  EXCEPT
+    Number1 => RETURN;
+  END;
+END ReturnFromException;
+
+PROCEDURE RaiseException2() =
+BEGIN
+  RAISE Number2;
+END RaiseException2;
+
+BEGIN
+  TRY
+    ReturnFromException();
+    RaiseException2();
+  EXCEPT 
+    Number2 => (* DO Nothing *)
+  END;
+
+END Main.
+
+
+This generates the following C code for ReturnFromException:
+
+PRIVATE t6 _Main__ReturnFromException () 
+{
+#line 8 "Main.m3"
+  {
+    {
+      CHECKSTACKOVERFLOW;
+      {
+        HANDLER htry_0;
+        PUSH_TRY (htry_0, try_labels_0, try_0);
+#line 11
+        if ( 1 ) 
+        {
+          return;
+        };
+        CUT_TO_NEXT_HANDLER (htry_0);
+        goto try_0_exit;
+        try_0: CUT_TO_NEXT_HANDLER (htry_0);
+        if ((htry_0.exception->e == & _Main__Number1)) 
+        {
+#line 11
+          return;
+        };
+        RAISE_FOR_SURE (htry_0.exception);
+        try_0_exit: /**/;
+      };
+    }
+  }
+};
+
+
+Note that the first return doesn't pop htry_0 off of the
+_ThreadSup__handlers list, so when it returns, _ThreadSup__handlers
+points to htry_0's location, which is now garbage.
+
+This bug is in the M3 compiler -- in Host.OpenWriter, but it 
+doesn't get discovered, as under normal execution, no exceptions
+are raised.
+
+Jim Plank
+
+jsp@princeton.edu or plank.parc@xerox.com

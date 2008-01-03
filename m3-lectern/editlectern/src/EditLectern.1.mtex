@@ -1,0 +1,102 @@
+\begin{html}
+\<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""\>\<P\>
+\end{html}
+\manpage{EditLectern}{EditLectern}{1}
+
+\section{NAME}
+EditLectern - Edit attributes of document in Lectern format
+
+\section{SYNTAX}
+\bf{EditLectern}
+
+\section{DESCRIPTION}
+\bf{EditLectern} provides a graphical (point-and-click) user interface
+for editing the attributes of a Lectern-format document, which you
+initially create from PostScript or image files using
+\link{BuildLectern.1.html}{BuildLectern(1)}.  \bf{EditLectern} uses
+BuildLectern to get the real work done, so if you're happier with a
+command line interface you should stick with BuildLectern.
+\bf{EditLectern} always appends the BuildLectern commands it executes
+to the file \tt{$HOME/EditLectern.log}; in deferred mode (controlled
+by a pair of radio buttons at the top of the window), the actual
+BuildLectern calls are suppressed.
+
+\bf{EditLectern} is designed to be used concurrently with
+\link{Lectern.1.html}{Lectern(1)} -- when you open a document with
+\bf{EditLectern}, the same document is automatically opened in
+Lectern.  That way you can read through the document and determine the
+attributes to add via \bf{EditLectern}, such as the locations of page
+1, the contents page, the index page, and the document title and
+author.  \bf{EditLectern} starts Lectern automatically if it isn't
+already running.
+
+The \bf{EditLectern} window is split vertically into three areas: a
+menu bar, a dialog (which is blank when no file is open), and a
+typescript.
+
+The menu bar contains a \bf{File} menu and the radio buttons
+controlling immediate/deferred mode.  The \bf{File} menu contains
+\bf{Open...}, \bf{Save}, \bf{Save As...}, \bf{Close}, \bf{Quit}, and
+\bf{About} items.  \bf{Save} and \bf{Save As...} invoke BuildLectern
+with the current settings unless deferred mode is enabled.  The
+BuildLectern command and its output are displayed in the typescript at
+the bottom of the \bf{EditLectern} window.
+
+Once a file is open, the following dialog elements become visible:
+
+\begin{itemize}
+
+\item A numeric box to specify the image number (starting with one) of
+the table of contents.  Leave it set to zero if there is no table of
+contents.
+
+\item A pair of numeric boxes to specify the correspondence between
+image numbers and page numbers: normally, you specify the image number
+of page 1, but in the case of a document starting at a page number
+higher than 1 (e.g., an issue of a journal), you can specify image
+number 1 (or higher) and the corresponding page number.
+
+\item A pair of radio buttons (labeled \bf{Page} and \bf{Image}) and a numeric
+box, to specify the page or image number of the index.  Leave it set
+to page 0 if there is no index.
+
+\item A scrolling list labeled \bf{Attribute}, a pair of typeins
+labeled \bf{Key} and \bf{Value}, and a pair of buttons labeled \bf{Delete}
+and \bf{Set}, to specify attributes (\it{author}, \it{title}, and \it{date} are
+recommended for all documents). To set an attribute, type values into
+the \bf{Key} and \bf{Value} fields, and press \bf{Set}.  To display an existing
+attribute, select it in the scrolling list.  To modify it, edit the
+\bf{Value} field and press \bf{Set}.  To delete it, press \bf{Delete}.  
+\end{itemize}
+
+Like other applications built with FormsVBT, EditLectern allows you to
+pick any of four different text-editing "models": emacs, ivy, mac, and
+xterm.  You set the model via the environment variable
+\tt{TextPortModel}, which should be set to either \tt{emacs},
+\tt{ivy}, \tt{mac}, or \tt{xterm}. If it is not set, the default model
+is emacs.  See
+\link{ftp://gatekeeper.dec.com/pub/DEC/Modula-3/contrib/vbtkit.25Mar93.ps.Z}
+{VBTkit Reference Manual} for details about each text-editing model.
+
+\section{SEE ALSO}
+\link{BuildLectern.1.html}{BuildLectern(1)}, 
+\link{Lectern.1.html}{Lectern(1)}
+
+\section{FILES}
+$HOME/EditLectern.log
+
+\section{AUTHOR}
+\link{http://www.research.digital.com/SRC/people/Paul_McJones/bio.html}{Paul McJones}
+
+\section{COPYRIGHT}
+
+\begin{flushleft}
+Copyright 1994 Digital Equipment Corporation.\newline
+Distributed only by permission.\newline
+\end{flushleft}
+\begin{verbatim}
+Last modified on Wed Jul 19 14:59:38 PDT 1995 by mcjones  
+     modified on Fri Feb 17 17:47:07 PST 1995 by birrell  
+     modified on Sun Jan  1 08:54:01 PST 1995 by glassman 
+\end{verbatim}
+

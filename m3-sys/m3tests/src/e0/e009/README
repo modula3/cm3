@@ -1,0 +1,39 @@
+Path: jumbo!goldberg@parc.xerox.com
+From: goldberg@parc.xerox.com (David Goldberg)
+Newsgroups: srcext.m3
+Subject: Is this program valid?
+Message-ID: <9003202349.AA08809@arcturia.parc.xerox.com>
+Date: 20 Mar 90 15:49:40 PST
+Sender: glassman@jumbo.dec.com
+Distribution: src
+Lines: 30
+To: m3
+
+The SRC compiler accepts the program below as valid, but if my reading
+of the manual is correct, apply does not cover SendSig (because of the
+raises clauses), and so the program has a static error.
+
+	-david
+
+
+
+MODULE Main;
+
+IMPORT Thread;
+
+PROCEDURE SendSig(self: Thread.Closure): REFANY = 
+BEGIN
+END SendSig;
+
+PROCEDURE Alarm(): Thread.T = 
+BEGIN
+	RETURN(Thread.Fork(NEW (Thread.Closure, apply := SendSig)));
+END Alarm;
+
+BEGIN
+	VAR t: Thread.T;
+	BEGIN
+		t := Alarm();
+		EVAL(Thread.Join(t));
+	END;
+END Main.

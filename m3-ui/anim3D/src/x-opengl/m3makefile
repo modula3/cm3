@@ -1,0 +1,9 @@
+/* Copyright (C) 1994, Digital Equipment Corporation                         */
+/* Digital Internal Use Only                                                 */
+/* All rights reserved.                                                      */
+/*                                                                           */
+/* Last modified on Tue Oct  3 16:34:30 PDT 1995 by najork                   */
+/*       Created on Thu Mar  3 19:12:25 PST 1994 by najork                   */
+
+import         ("opengl")
+implementation ("X_OpenGL_Base")

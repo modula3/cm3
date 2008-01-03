@@ -1,0 +1,23 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Dec 20 15:47:46 PST 1993 by kalsow
+%      modified on Thu Mar 26 23:13:18 1992 by steveg
+
+Interface ("VTDef")
+Interface ("VTextDef")
+Module ("VText")
+
+module ("VT")
+module ("VTBase")
+module ("VTCaret")
+module ("VTInterval")
+module ("VTMarker")
+module ("VTPounce")
+module ("VTRd")
+module ("VTReal")
+module ("VTTexture")
+module ("VTView")
+module ("VTVirtual")
+module ("VTextRegion")

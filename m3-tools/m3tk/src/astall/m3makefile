@@ -1,0 +1,7 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 21:02:37 PDT 1993 by mjordan                  */
+
+Interface("M3AST_all")

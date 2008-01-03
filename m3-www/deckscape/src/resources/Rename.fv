@@ -1,0 +1,16 @@
+(ZChild %renameDialog
+  (Insert "macros.fv")
+  (Shape (Width + inf)
+    (Border (Pen 2)
+      (VBox
+        (HBox 
+           (Shape (Width + inf) (ZMove (Text %renameDlgBanner "Rename deck ...")))
+           (ZGrow (Pixmap "grow.pbm")))
+        (VBox
+          (Rim (Pen 10)
+            (Frame Lowered (BgColor "VeryLightGray")
+              (TypeIn %renameTypein (FirstFocus TRUE) ExpandOnDemand)))
+          (HBox
+            (DefaultBtn renameButton "Rename") 
+            (CloseBtn "Cancel"))
+          (Glue 10))))))

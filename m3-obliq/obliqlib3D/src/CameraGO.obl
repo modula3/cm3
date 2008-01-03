@@ -1,0 +1,13 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Wed Jul 20 17:44:39 PDT 1994 by najork                   *)
+(*       Created on Tue May 31 09:40:28 PDT 1994 by najork                   *)
+
+
+module CameraGOWrap for CameraGO;
+
+let TProto = clone (GO_TProto, {});
+
+end module;

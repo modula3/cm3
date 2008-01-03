@@ -1,0 +1,15 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+/*                                                                           */
+/* Last modified on Fri Feb 25 14:25:03 PST 1994 by kalsow                   */
+/*      modified on Thu Feb 24 12:55:32 PST 1994 by heydon                   */
+
+/* m3makefile for /proj/m3/pkg/fmtlex/tests/lex/src */
+
+/* imported/included packages */
+import		(libm3)
+
+/* modules for this application */
+implementation	(ScanTest)
+program		(ScanTest)

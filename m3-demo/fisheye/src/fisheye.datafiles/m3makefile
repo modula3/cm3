@@ -1,0 +1,14 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+/* Last modified on Thu Aug 22 16:20:42 PDT 1996 by najork                   */
+/*      modified on Thu Oct 29 09:40:36 PST 1992 by mhb                      */
+
+resource ("DagData")
+resource ("CRAData")
+resource ("ParisMetroData1")
+resource ("ParisMetroData2")
+resource ("Sym20x20Data")
+resource ("Sym15x15Data")
+resource ("USCitiesData")
+resource ("USOutlineData")

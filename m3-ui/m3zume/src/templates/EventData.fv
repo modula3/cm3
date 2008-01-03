@@ -1,0 +1,60 @@
+; Copyright (C) 1995, Digital Equipment Corporation.
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+;
+; Last modified on Wed Feb  8 15:29:09 PST 1995 by kalsow
+
+;********************************************************************
+;  NOTE: This file is generated automatically from the event 
+;        definition file #(_ALGNAME_).evt.
+;********************************************************************
+
+(VBox
+  (Border (Pen 1)
+    (Shape
+      (Height 75 - 25 + Inf)
+      (Viewport
+        (HBox
+          (Glue 4 + Inf)
+          (VBox
+            (Glue 6)
+            (Shape (Height 16 + 0)
+              (HBox Fill (Shape (Width + 0) (Height + 0) 
+                                "Code View events:   Stop? ") 
+                    (Boolean %stopatCodeEvents =TRUE "")
+                    (Glue 10)
+                    (Shape (Width + 0) (Height + 0) "Weight: ")
+                    (Shape (Width 80) (Numeric %waitatCodeEvents =1 
+                                               (Min 0) (Max 100)))))
+            (Glue 6)
+#{_OUTPUT
+            (Shape (Height 16 + 0)
+              (HBox Fill (Shape (Width + 0) (Height + 0) 
+                                "#(_EVENT_):   Stop? ") 
+                    (Boolean %stopAt#(_EVENT_) =TRUE "")
+                    (Glue 10)
+                    (Shape (Width + 0) (Height + 0) "Weight: ")
+                    (Shape (Width 80) (Numeric %waitAt#(_EVENT_) =1 
+                                               (Min 0) (Max 100)))))
+            (Glue 6)
+#}
+          )
+          (Glue 4)
+          (VBox
+            (Glue 5)
+            (Shape (Width + 0) (Height 16 + 0) "Cts:")
+            (Button %eventCounts
+              (VBox
+#{_OUTPUT
+                (Glue 6)
+                (HBox Fill (Shape (Width + 0) (Height 16 + 0) 
+                                  (Text %ctOf#(_EVENT_) "0")))
+#}
+                (Glue 3))))
+          Fill
+          (Glue 4 + Inf)
+        )
+      )
+    )
+  )
+)

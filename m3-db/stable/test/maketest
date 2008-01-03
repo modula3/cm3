@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# (Weich) 
+# Start the test suite of the stable object package
+#----------------------------------------------
+
+# set to the name of your architecture directory:
+ARCH="DS"
+
+# set to "-verbose" if you want test program traces
+# VERBOSE="-verbose"
+VERBOSE=""
+
+
+# dont change anything below
+####################################################
+
+TESTS="0 999 101 102 103 104 105 106 201 202 203 204 205 206 301 403 501 502 503"
+
+while [ "$1" != "" ]
+do
+    case $1
+    in
+        "-v"|"-verbose")
+            VERBOSE="-verbose";;
+        "-testgen")
+            TESTS=$TESTS" 401 402";;
+        "-arch")
+            ARCH=$2;
+            shift;;
+        "-help"|"-h"|"-Help")
+            cat ./README
+            exit;;
+    esac
+    shift
+done
+
+if [ ! -f $ARCH/Test ]
+then
+    m3build
+fi
+for i in $TESTS
+do
+    $ARCH/Test $VERBOSE $i
+    $ARCH/Test $VERBOSE check $i
+    if [ "$?" != "0" ]
+    then
+        exit 1
+    fi
+done
+
+echo all tests passed.
+

@@ -1,0 +1,7 @@
+if defined ("STUBGEN")
+  % take the version specified by the user
+  _NETOBJ_STUBGEN = STUBGEN
+else
+  _NETOBJ_STUBGEN = format (ROOT & "/m3-comm/stubgen/%s/stubgen", BUILD_DIR)
+  STUBGEN = _NETOBJ_STUBGEN
+end

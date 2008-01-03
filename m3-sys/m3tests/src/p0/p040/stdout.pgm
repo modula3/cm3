@@ -1,0 +1,1048 @@
+
+
+0   8_0   16_0
+
+  FromInt (0, base = 2, prefix = FALSE) => "0"
+  ToInt ("0", base = 2) =>   0   used = 1
+  FromInt (0, base = 2, prefix = TRUE) => "2_0"
+  ToInt ("2_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 3, prefix = FALSE) => "0"
+  ToInt ("0", base = 3) =>   0   used = 1
+  FromInt (0, base = 3, prefix = TRUE) => "3_0"
+  ToInt ("3_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 4, prefix = FALSE) => "0"
+  ToInt ("0", base = 4) =>   0   used = 1
+  FromInt (0, base = 4, prefix = TRUE) => "4_0"
+  ToInt ("4_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 5, prefix = FALSE) => "0"
+  ToInt ("0", base = 5) =>   0   used = 1
+  FromInt (0, base = 5, prefix = TRUE) => "5_0"
+  ToInt ("5_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 6, prefix = FALSE) => "0"
+  ToInt ("0", base = 6) =>   0   used = 1
+  FromInt (0, base = 6, prefix = TRUE) => "6_0"
+  ToInt ("6_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 7, prefix = FALSE) => "0"
+  ToInt ("0", base = 7) =>   0   used = 1
+  FromInt (0, base = 7, prefix = TRUE) => "7_0"
+  ToInt ("7_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 8, prefix = FALSE) => "0"
+  ToInt ("0", base = 8) =>   0   used = 1
+  FromInt (0, base = 8, prefix = TRUE) => "8_0"
+  ToInt ("8_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 9, prefix = FALSE) => "0"
+  ToInt ("0", base = 9) =>   0   used = 1
+  FromInt (0, base = 9, prefix = TRUE) => "9_0"
+  ToInt ("9_0", base = 10) =>   0   used = 3
+  FromInt (0, base = 10, prefix = FALSE) => "0"
+  ToInt ("0", base = 10) =>   0   used = 1
+  FromInt (0, base = 10, prefix = TRUE) => "10_0"
+  ToInt ("10_0", base = 10) =>   0   used = 4
+  FromInt (0, base = 11, prefix = FALSE) => "0"
+  ToInt ("0", base = 11) =>   0   used = 1
+  FromInt (0, base = 11, prefix = TRUE) => "11_0"
+  ToInt ("11_0", base = 10) =>   0   used = 4
+  FromInt (0, base = 12, prefix = FALSE) => "0"
+  ToInt ("0", base = 12) =>   0   used = 1
+  FromInt (0, base = 12, prefix = TRUE) => "12_0"
+  ToInt ("12_0", base = 10) =>   0   used = 4
+  FromInt (0, base = 13, prefix = FALSE) => "0"
+  ToInt ("0", base = 13) =>   0   used = 1
+  FromInt (0, base = 13, prefix = TRUE) => "13_0"
+  ToInt ("13_0", base = 10) =>   0   used = 4
+  FromInt (0, base = 14, prefix = FALSE) => "0"
+  ToInt ("0", base = 14) =>   0   used = 1
+  FromInt (0, base = 14, prefix = TRUE) => "14_0"
+  ToInt ("14_0", base = 10) =>   0   used = 4
+  FromInt (0, base = 15, prefix = FALSE) => "0"
+  ToInt ("0", base = 15) =>   0   used = 1
+  FromInt (0, base = 15, prefix = TRUE) => "15_0"
+  ToInt ("15_0", base = 10) =>   0   used = 4
+  FromInt (0, base = 16, prefix = FALSE) => "0"
+  ToInt ("0", base = 16) =>   0   used = 1
+  FromInt (0, base = 16, prefix = TRUE) => "16_0"
+  ToInt ("16_0", base = 10) =>   0   used = 4
+
+
+1   8_1   16_1
+
+  FromInt (1, base = 2, prefix = FALSE) => "1"
+  ToInt ("1", base = 2) =>   1   used = 1
+  FromInt (1, base = 2, prefix = TRUE) => "2_1"
+  ToInt ("2_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 3, prefix = FALSE) => "1"
+  ToInt ("1", base = 3) =>   1   used = 1
+  FromInt (1, base = 3, prefix = TRUE) => "3_1"
+  ToInt ("3_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 4, prefix = FALSE) => "1"
+  ToInt ("1", base = 4) =>   1   used = 1
+  FromInt (1, base = 4, prefix = TRUE) => "4_1"
+  ToInt ("4_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 5, prefix = FALSE) => "1"
+  ToInt ("1", base = 5) =>   1   used = 1
+  FromInt (1, base = 5, prefix = TRUE) => "5_1"
+  ToInt ("5_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 6, prefix = FALSE) => "1"
+  ToInt ("1", base = 6) =>   1   used = 1
+  FromInt (1, base = 6, prefix = TRUE) => "6_1"
+  ToInt ("6_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 7, prefix = FALSE) => "1"
+  ToInt ("1", base = 7) =>   1   used = 1
+  FromInt (1, base = 7, prefix = TRUE) => "7_1"
+  ToInt ("7_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 8, prefix = FALSE) => "1"
+  ToInt ("1", base = 8) =>   1   used = 1
+  FromInt (1, base = 8, prefix = TRUE) => "8_1"
+  ToInt ("8_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 9, prefix = FALSE) => "1"
+  ToInt ("1", base = 9) =>   1   used = 1
+  FromInt (1, base = 9, prefix = TRUE) => "9_1"
+  ToInt ("9_1", base = 10) =>   1   used = 3
+  FromInt (1, base = 10, prefix = FALSE) => "1"
+  ToInt ("1", base = 10) =>   1   used = 1
+  FromInt (1, base = 10, prefix = TRUE) => "10_1"
+  ToInt ("10_1", base = 10) =>   1   used = 4
+  FromInt (1, base = 11, prefix = FALSE) => "1"
+  ToInt ("1", base = 11) =>   1   used = 1
+  FromInt (1, base = 11, prefix = TRUE) => "11_1"
+  ToInt ("11_1", base = 10) =>   1   used = 4
+  FromInt (1, base = 12, prefix = FALSE) => "1"
+  ToInt ("1", base = 12) =>   1   used = 1
+  FromInt (1, base = 12, prefix = TRUE) => "12_1"
+  ToInt ("12_1", base = 10) =>   1   used = 4
+  FromInt (1, base = 13, prefix = FALSE) => "1"
+  ToInt ("1", base = 13) =>   1   used = 1
+  FromInt (1, base = 13, prefix = TRUE) => "13_1"
+  ToInt ("13_1", base = 10) =>   1   used = 4
+  FromInt (1, base = 14, prefix = FALSE) => "1"
+  ToInt ("1", base = 14) =>   1   used = 1
+  FromInt (1, base = 14, prefix = TRUE) => "14_1"
+  ToInt ("14_1", base = 10) =>   1   used = 4
+  FromInt (1, base = 15, prefix = FALSE) => "1"
+  ToInt ("1", base = 15) =>   1   used = 1
+  FromInt (1, base = 15, prefix = TRUE) => "15_1"
+  ToInt ("15_1", base = 10) =>   1   used = 4
+  FromInt (1, base = 16, prefix = FALSE) => "1"
+  ToInt ("1", base = 16) =>   1   used = 1
+  FromInt (1, base = 16, prefix = TRUE) => "16_1"
+  ToInt ("16_1", base = 10) =>   1   used = 4
+
+
+12345   8_30071   16_3039
+
+  FromInt (12345, base = 2, prefix = FALSE) => "11000000111001"
+  ToInt ("11000000111001", base = 2) =>   12345   used = 14
+  FromInt (12345, base = 2, prefix = TRUE) => "2_11000000111001"
+  ToInt ("2_11000000111001", base = 10) =>   12345   used = 16
+  FromInt (12345, base = 3, prefix = FALSE) => "121221020"
+  ToInt ("121221020", base = 3) =>   12345   used = 9
+  FromInt (12345, base = 3, prefix = TRUE) => "3_121221020"
+  ToInt ("3_121221020", base = 10) =>   12345   used = 11
+  FromInt (12345, base = 4, prefix = FALSE) => "3000321"
+  ToInt ("3000321", base = 4) =>   12345   used = 7
+  FromInt (12345, base = 4, prefix = TRUE) => "4_3000321"
+  ToInt ("4_3000321", base = 10) =>   12345   used = 9
+  FromInt (12345, base = 5, prefix = FALSE) => "343340"
+  ToInt ("343340", base = 5) =>   12345   used = 6
+  FromInt (12345, base = 5, prefix = TRUE) => "5_343340"
+  ToInt ("5_343340", base = 10) =>   12345   used = 8
+  FromInt (12345, base = 6, prefix = FALSE) => "133053"
+  ToInt ("133053", base = 6) =>   12345   used = 6
+  FromInt (12345, base = 6, prefix = TRUE) => "6_133053"
+  ToInt ("6_133053", base = 10) =>   12345   used = 8
+  FromInt (12345, base = 7, prefix = FALSE) => "50664"
+  ToInt ("50664", base = 7) =>   12345   used = 5
+  FromInt (12345, base = 7, prefix = TRUE) => "7_50664"
+  ToInt ("7_50664", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 8, prefix = FALSE) => "30071"
+  ToInt ("30071", base = 8) =>   12345   used = 5
+  FromInt (12345, base = 8, prefix = TRUE) => "8_30071"
+  ToInt ("8_30071", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 9, prefix = FALSE) => "17836"
+  ToInt ("17836", base = 9) =>   12345   used = 5
+  FromInt (12345, base = 9, prefix = TRUE) => "9_17836"
+  ToInt ("9_17836", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 10, prefix = FALSE) => "12345"
+  ToInt ("12345", base = 10) =>   12345   used = 5
+  FromInt (12345, base = 10, prefix = TRUE) => "10_12345"
+  ToInt ("10_12345", base = 10) =>   12345   used = 8
+  FromInt (12345, base = 11, prefix = FALSE) => "9303"
+  ToInt ("9303", base = 11) =>   12345   used = 4
+  FromInt (12345, base = 11, prefix = TRUE) => "11_9303"
+  ToInt ("11_9303", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 12, prefix = FALSE) => "7189"
+  ToInt ("7189", base = 12) =>   12345   used = 4
+  FromInt (12345, base = 12, prefix = TRUE) => "12_7189"
+  ToInt ("12_7189", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 13, prefix = FALSE) => "5808"
+  ToInt ("5808", base = 13) =>   12345   used = 4
+  FromInt (12345, base = 13, prefix = TRUE) => "13_5808"
+  ToInt ("13_5808", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 14, prefix = FALSE) => "46db"
+  ToInt ("46db", base = 14) =>   12345   used = 4
+  FromInt (12345, base = 14, prefix = TRUE) => "14_46db"
+  ToInt ("14_46db", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 15, prefix = FALSE) => "39d0"
+  ToInt ("39d0", base = 15) =>   12345   used = 4
+  FromInt (12345, base = 15, prefix = TRUE) => "15_39d0"
+  ToInt ("15_39d0", base = 10) =>   12345   used = 7
+  FromInt (12345, base = 16, prefix = FALSE) => "3039"
+  ToInt ("3039", base = 16) =>   12345   used = 4
+  FromInt (12345, base = 16, prefix = TRUE) => "16_3039"
+  ToInt ("16_3039", base = 10) =>   12345   used = 7
+
+
+-12345   8_-30071   16_-3039
+
+  FromInt (-12345, base = 2, prefix = FALSE) => "-11000000111001"
+  ToInt ("-11000000111001", base = 2) =>   -12345   used = 15
+  FromInt (-12345, base = 2, prefix = TRUE) => "-2_11000000111001"
+  ToInt ("-2_11000000111001", base = 10) =>   -12345   used = 17
+  FromInt (-12345, base = 3, prefix = FALSE) => "-121221020"
+  ToInt ("-121221020", base = 3) =>   -12345   used = 10
+  FromInt (-12345, base = 3, prefix = TRUE) => "-3_121221020"
+  ToInt ("-3_121221020", base = 10) =>   -12345   used = 12
+  FromInt (-12345, base = 4, prefix = FALSE) => "-3000321"
+  ToInt ("-3000321", base = 4) =>   -12345   used = 8
+  FromInt (-12345, base = 4, prefix = TRUE) => "-4_3000321"
+  ToInt ("-4_3000321", base = 10) =>   -12345   used = 10
+  FromInt (-12345, base = 5, prefix = FALSE) => "-343340"
+  ToInt ("-343340", base = 5) =>   -12345   used = 7
+  FromInt (-12345, base = 5, prefix = TRUE) => "-5_343340"
+  ToInt ("-5_343340", base = 10) =>   -12345   used = 9
+  FromInt (-12345, base = 6, prefix = FALSE) => "-133053"
+  ToInt ("-133053", base = 6) =>   -12345   used = 7
+  FromInt (-12345, base = 6, prefix = TRUE) => "-6_133053"
+  ToInt ("-6_133053", base = 10) =>   -12345   used = 9
+  FromInt (-12345, base = 7, prefix = FALSE) => "-50664"
+  ToInt ("-50664", base = 7) =>   -12345   used = 6
+  FromInt (-12345, base = 7, prefix = TRUE) => "-7_50664"
+  ToInt ("-7_50664", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 8, prefix = FALSE) => "-30071"
+  ToInt ("-30071", base = 8) =>   -12345   used = 6
+  FromInt (-12345, base = 8, prefix = TRUE) => "-8_30071"
+  ToInt ("-8_30071", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 9, prefix = FALSE) => "-17836"
+  ToInt ("-17836", base = 9) =>   -12345   used = 6
+  FromInt (-12345, base = 9, prefix = TRUE) => "-9_17836"
+  ToInt ("-9_17836", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 10, prefix = FALSE) => "-12345"
+  ToInt ("-12345", base = 10) =>   -12345   used = 6
+  FromInt (-12345, base = 10, prefix = TRUE) => "-10_12345"
+  ToInt ("-10_12345", base = 10) =>   -12345   used = 9
+  FromInt (-12345, base = 11, prefix = FALSE) => "-9303"
+  ToInt ("-9303", base = 11) =>   -12345   used = 5
+  FromInt (-12345, base = 11, prefix = TRUE) => "-11_9303"
+  ToInt ("-11_9303", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 12, prefix = FALSE) => "-7189"
+  ToInt ("-7189", base = 12) =>   -12345   used = 5
+  FromInt (-12345, base = 12, prefix = TRUE) => "-12_7189"
+  ToInt ("-12_7189", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 13, prefix = FALSE) => "-5808"
+  ToInt ("-5808", base = 13) =>   -12345   used = 5
+  FromInt (-12345, base = 13, prefix = TRUE) => "-13_5808"
+  ToInt ("-13_5808", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 14, prefix = FALSE) => "-46db"
+  ToInt ("-46db", base = 14) =>   -12345   used = 5
+  FromInt (-12345, base = 14, prefix = TRUE) => "-14_46db"
+  ToInt ("-14_46db", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 15, prefix = FALSE) => "-39d0"
+  ToInt ("-39d0", base = 15) =>   -12345   used = 5
+  FromInt (-12345, base = 15, prefix = TRUE) => "-15_39d0"
+  ToInt ("-15_39d0", base = 10) =>   -12345   used = 8
+  FromInt (-12345, base = 16, prefix = FALSE) => "-3039"
+  ToInt ("-3039", base = 16) =>   -12345   used = 5
+  FromInt (-12345, base = 16, prefix = TRUE) => "-16_3039"
+  ToInt ("-16_3039", base = 10) =>   -12345   used = 8
+
+
+2147483647   8_17777777777   16_7fffffff
+
+  FromInt (2147483647, base = 2, prefix = FALSE) => "1111111111111111111111111111111"
+  ToInt ("1111111111111111111111111111111", base = 2) =>   2147483647   used = 31
+  FromInt (2147483647, base = 2, prefix = TRUE) => "2_1111111111111111111111111111111"
+  ToInt ("2_1111111111111111111111111111111", base = 10) =>   2147483647   used = 33
+  FromInt (2147483647, base = 3, prefix = FALSE) => "12112122212110202101"
+  ToInt ("12112122212110202101", base = 3) =>   2147483647   used = 20
+  FromInt (2147483647, base = 3, prefix = TRUE) => "3_12112122212110202101"
+  ToInt ("3_12112122212110202101", base = 10) =>   2147483647   used = 22
+  FromInt (2147483647, base = 4, prefix = FALSE) => "1333333333333333"
+  ToInt ("1333333333333333", base = 4) =>   2147483647   used = 16
+  FromInt (2147483647, base = 4, prefix = TRUE) => "4_1333333333333333"
+  ToInt ("4_1333333333333333", base = 10) =>   2147483647   used = 18
+  FromInt (2147483647, base = 5, prefix = FALSE) => "13344223434042"
+  ToInt ("13344223434042", base = 5) =>   2147483647   used = 14
+  FromInt (2147483647, base = 5, prefix = TRUE) => "5_13344223434042"
+  ToInt ("5_13344223434042", base = 10) =>   2147483647   used = 16
+  FromInt (2147483647, base = 6, prefix = FALSE) => "553032005531"
+  ToInt ("553032005531", base = 6) =>   2147483647   used = 12
+  FromInt (2147483647, base = 6, prefix = TRUE) => "6_553032005531"
+  ToInt ("6_553032005531", base = 10) =>   2147483647   used = 14
+  FromInt (2147483647, base = 7, prefix = FALSE) => "104134211161"
+  ToInt ("104134211161", base = 7) =>   2147483647   used = 12
+  FromInt (2147483647, base = 7, prefix = TRUE) => "7_104134211161"
+  ToInt ("7_104134211161", base = 10) =>   2147483647   used = 14
+  FromInt (2147483647, base = 8, prefix = FALSE) => "17777777777"
+  ToInt ("17777777777", base = 8) =>   2147483647   used = 11
+  FromInt (2147483647, base = 8, prefix = TRUE) => "8_17777777777"
+  ToInt ("8_17777777777", base = 10) =>   2147483647   used = 13
+  FromInt (2147483647, base = 9, prefix = FALSE) => "5478773671"
+  ToInt ("5478773671", base = 9) =>   2147483647   used = 10
+  FromInt (2147483647, base = 9, prefix = TRUE) => "9_5478773671"
+  ToInt ("9_5478773671", base = 10) =>   2147483647   used = 12
+  FromInt (2147483647, base = 10, prefix = FALSE) => "2147483647"
+  ToInt ("2147483647", base = 10) =>   2147483647   used = 10
+  FromInt (2147483647, base = 10, prefix = TRUE) => "10_2147483647"
+  ToInt ("10_2147483647", base = 10) =>   2147483647   used = 13
+  FromInt (2147483647, base = 11, prefix = FALSE) => "a02220281"
+  ToInt ("a02220281", base = 11) =>   2147483647   used = 9
+  FromInt (2147483647, base = 11, prefix = TRUE) => "11_a02220281"
+  ToInt ("11_a02220281", base = 10) =>   2147483647   used = 12
+  FromInt (2147483647, base = 12, prefix = FALSE) => "4bb2308a7"
+  ToInt ("4bb2308a7", base = 12) =>   2147483647   used = 9
+  FromInt (2147483647, base = 12, prefix = TRUE) => "12_4bb2308a7"
+  ToInt ("12_4bb2308a7", base = 10) =>   2147483647   used = 12
+  FromInt (2147483647, base = 13, prefix = FALSE) => "282ba4aaa"
+  ToInt ("282ba4aaa", base = 13) =>   2147483647   used = 9
+  FromInt (2147483647, base = 13, prefix = TRUE) => "13_282ba4aaa"
+  ToInt ("13_282ba4aaa", base = 10) =>   2147483647   used = 12
+  FromInt (2147483647, base = 14, prefix = FALSE) => "1652ca931"
+  ToInt ("1652ca931", base = 14) =>   2147483647   used = 9
+  FromInt (2147483647, base = 14, prefix = TRUE) => "14_1652ca931"
+  ToInt ("14_1652ca931", base = 10) =>   2147483647   used = 12
+  FromInt (2147483647, base = 15, prefix = FALSE) => "c87e66b7"
+  ToInt ("c87e66b7", base = 15) =>   2147483647   used = 8
+  FromInt (2147483647, base = 15, prefix = TRUE) => "15_c87e66b7"
+  ToInt ("15_c87e66b7", base = 10) =>   2147483647   used = 11
+  FromInt (2147483647, base = 16, prefix = FALSE) => "7fffffff"
+  ToInt ("7fffffff", base = 16) =>   2147483647   used = 8
+  FromInt (2147483647, base = 16, prefix = TRUE) => "16_7fffffff"
+  ToInt ("16_7fffffff", base = 10) =>   2147483647   used = 11
+
+
+-2147483648   8_-20000000000   16_-80000000
+
+  FromInt (-2147483648, base = 2, prefix = FALSE) => "-10000000000000000000000000000000"
+  ToInt ("-10000000000000000000000000000000", base = 2) =>   -2147483648   used = 33
+  FromInt (-2147483648, base = 2, prefix = TRUE) => "-2_10000000000000000000000000000000"
+  ToInt ("-2_10000000000000000000000000000000", base = 10) =>   -2147483648   used = 35
+  FromInt (-2147483648, base = 3, prefix = FALSE) => "-12112122212110202102"
+  ToInt ("-12112122212110202102", base = 3) =>   -2147483648   used = 21
+  FromInt (-2147483648, base = 3, prefix = TRUE) => "-3_12112122212110202102"
+  ToInt ("-3_12112122212110202102", base = 10) =>   -2147483648   used = 23
+  FromInt (-2147483648, base = 4, prefix = FALSE) => "-2000000000000000"
+  ToInt ("-2000000000000000", base = 4) =>   -2147483648   used = 17
+  FromInt (-2147483648, base = 4, prefix = TRUE) => "-4_2000000000000000"
+  ToInt ("-4_2000000000000000", base = 10) =>   -2147483648   used = 19
+  FromInt (-2147483648, base = 5, prefix = FALSE) => "-13344223434043"
+  ToInt ("-13344223434043", base = 5) =>   -2147483648   used = 15
+  FromInt (-2147483648, base = 5, prefix = TRUE) => "-5_13344223434043"
+  ToInt ("-5_13344223434043", base = 10) =>   -2147483648   used = 17
+  FromInt (-2147483648, base = 6, prefix = FALSE) => "-553032005532"
+  ToInt ("-553032005532", base = 6) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 6, prefix = TRUE) => "-6_553032005532"
+  ToInt ("-6_553032005532", base = 10) =>   -2147483648   used = 15
+  FromInt (-2147483648, base = 7, prefix = FALSE) => "-104134211162"
+  ToInt ("-104134211162", base = 7) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 7, prefix = TRUE) => "-7_104134211162"
+  ToInt ("-7_104134211162", base = 10) =>   -2147483648   used = 15
+  FromInt (-2147483648, base = 8, prefix = FALSE) => "-20000000000"
+  ToInt ("-20000000000", base = 8) =>   -2147483648   used = 12
+  FromInt (-2147483648, base = 8, prefix = TRUE) => "-8_20000000000"
+  ToInt ("-8_20000000000", base = 10) =>   -2147483648   used = 14
+  FromInt (-2147483648, base = 9, prefix = FALSE) => "-5478773672"
+  ToInt ("-5478773672", base = 9) =>   -2147483648   used = 11
+  FromInt (-2147483648, base = 9, prefix = TRUE) => "-9_5478773672"
+  ToInt ("-9_5478773672", base = 10) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 10, prefix = FALSE) => "-2147483648"
+  ToInt ("-2147483648", base = 10) =>   -2147483648   used = 11
+  FromInt (-2147483648, base = 10, prefix = TRUE) => "-10_2147483648"
+  ToInt ("-10_2147483648", base = 10) =>   -2147483648   used = 14
+  FromInt (-2147483648, base = 11, prefix = FALSE) => "-a02220282"
+  ToInt ("-a02220282", base = 11) =>   -2147483648   used = 10
+  FromInt (-2147483648, base = 11, prefix = TRUE) => "-11_a02220282"
+  ToInt ("-11_a02220282", base = 10) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 12, prefix = FALSE) => "-4bb2308a8"
+  ToInt ("-4bb2308a8", base = 12) =>   -2147483648   used = 10
+  FromInt (-2147483648, base = 12, prefix = TRUE) => "-12_4bb2308a8"
+  ToInt ("-12_4bb2308a8", base = 10) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 13, prefix = FALSE) => "-282ba4aab"
+  ToInt ("-282ba4aab", base = 13) =>   -2147483648   used = 10
+  FromInt (-2147483648, base = 13, prefix = TRUE) => "-13_282ba4aab"
+  ToInt ("-13_282ba4aab", base = 10) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 14, prefix = FALSE) => "-1652ca932"
+  ToInt ("-1652ca932", base = 14) =>   -2147483648   used = 10
+  FromInt (-2147483648, base = 14, prefix = TRUE) => "-14_1652ca932"
+  ToInt ("-14_1652ca932", base = 10) =>   -2147483648   used = 13
+  FromInt (-2147483648, base = 15, prefix = FALSE) => "-c87e66b8"
+  ToInt ("-c87e66b8", base = 15) =>   -2147483648   used = 9
+  FromInt (-2147483648, base = 15, prefix = TRUE) => "-15_c87e66b8"
+  ToInt ("-15_c87e66b8", base = 10) =>   -2147483648   used = 12
+  FromInt (-2147483648, base = 16, prefix = FALSE) => "-80000000"
+  ToInt ("-80000000", base = 16) =>   -2147483648   used = 9
+  FromInt (-2147483648, base = 16, prefix = TRUE) => "-16_80000000"
+  ToInt ("-16_80000000", base = 10) =>   -2147483648   used = 12
+
+
+8_0   16_0
+
+  FromUnsigned (16_0, base = 2, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 2) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 2, prefix = TRUE) => "2_0"
+  ToUnsigned ("2_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 3, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 3) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 3, prefix = TRUE) => "3_0"
+  ToUnsigned ("3_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 4, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 4) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 4, prefix = TRUE) => "4_0"
+  ToUnsigned ("4_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 5, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 5) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 5, prefix = TRUE) => "5_0"
+  ToUnsigned ("5_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 6, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 6) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 6, prefix = TRUE) => "6_0"
+  ToUnsigned ("6_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 7, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 7) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 7, prefix = TRUE) => "7_0"
+  ToUnsigned ("7_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 8, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 8) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 8, prefix = TRUE) => "8_0"
+  ToUnsigned ("8_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 9, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 9) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 9, prefix = TRUE) => "9_0"
+  ToUnsigned ("9_0", base = 10) =>   16_0   used = 3
+  FromUnsigned (16_0, base = 10, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 10) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 10, prefix = TRUE) => "10_0"
+  ToUnsigned ("10_0", base = 10) =>   16_0   used = 4
+  FromUnsigned (16_0, base = 11, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 11) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 11, prefix = TRUE) => "11_0"
+  ToUnsigned ("11_0", base = 10) =>   16_0   used = 4
+  FromUnsigned (16_0, base = 12, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 12) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 12, prefix = TRUE) => "12_0"
+  ToUnsigned ("12_0", base = 10) =>   16_0   used = 4
+  FromUnsigned (16_0, base = 13, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 13) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 13, prefix = TRUE) => "13_0"
+  ToUnsigned ("13_0", base = 10) =>   16_0   used = 4
+  FromUnsigned (16_0, base = 14, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 14) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 14, prefix = TRUE) => "14_0"
+  ToUnsigned ("14_0", base = 10) =>   16_0   used = 4
+  FromUnsigned (16_0, base = 15, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 15) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 15, prefix = TRUE) => "15_0"
+  ToUnsigned ("15_0", base = 10) =>   16_0   used = 4
+  FromUnsigned (16_0, base = 16, prefix = FALSE) => "0"
+  ToUnsigned ("0", base = 16) =>   16_0   used = 1
+  FromUnsigned (16_0, base = 16, prefix = TRUE) => "16_0"
+  ToUnsigned ("16_0", base = 10) =>   16_0   used = 4
+
+
+8_1   16_1
+
+  FromUnsigned (16_1, base = 2, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 2) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 2, prefix = TRUE) => "2_1"
+  ToUnsigned ("2_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 3, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 3) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 3, prefix = TRUE) => "3_1"
+  ToUnsigned ("3_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 4, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 4) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 4, prefix = TRUE) => "4_1"
+  ToUnsigned ("4_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 5, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 5) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 5, prefix = TRUE) => "5_1"
+  ToUnsigned ("5_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 6, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 6) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 6, prefix = TRUE) => "6_1"
+  ToUnsigned ("6_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 7, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 7) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 7, prefix = TRUE) => "7_1"
+  ToUnsigned ("7_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 8, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 8) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 8, prefix = TRUE) => "8_1"
+  ToUnsigned ("8_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 9, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 9) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 9, prefix = TRUE) => "9_1"
+  ToUnsigned ("9_1", base = 10) =>   16_1   used = 3
+  FromUnsigned (16_1, base = 10, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 10) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 10, prefix = TRUE) => "10_1"
+  ToUnsigned ("10_1", base = 10) =>   16_1   used = 4
+  FromUnsigned (16_1, base = 11, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 11) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 11, prefix = TRUE) => "11_1"
+  ToUnsigned ("11_1", base = 10) =>   16_1   used = 4
+  FromUnsigned (16_1, base = 12, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 12) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 12, prefix = TRUE) => "12_1"
+  ToUnsigned ("12_1", base = 10) =>   16_1   used = 4
+  FromUnsigned (16_1, base = 13, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 13) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 13, prefix = TRUE) => "13_1"
+  ToUnsigned ("13_1", base = 10) =>   16_1   used = 4
+  FromUnsigned (16_1, base = 14, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 14) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 14, prefix = TRUE) => "14_1"
+  ToUnsigned ("14_1", base = 10) =>   16_1   used = 4
+  FromUnsigned (16_1, base = 15, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 15) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 15, prefix = TRUE) => "15_1"
+  ToUnsigned ("15_1", base = 10) =>   16_1   used = 4
+  FromUnsigned (16_1, base = 16, prefix = FALSE) => "1"
+  ToUnsigned ("1", base = 16) =>   16_1   used = 1
+  FromUnsigned (16_1, base = 16, prefix = TRUE) => "16_1"
+  ToUnsigned ("16_1", base = 10) =>   16_1   used = 4
+
+
+8_30071   16_3039
+
+  FromUnsigned (16_3039, base = 2, prefix = FALSE) => "11000000111001"
+  ToUnsigned ("11000000111001", base = 2) =>   16_3039   used = 14
+  FromUnsigned (16_3039, base = 2, prefix = TRUE) => "2_11000000111001"
+  ToUnsigned ("2_11000000111001", base = 10) =>   16_3039   used = 16
+  FromUnsigned (16_3039, base = 3, prefix = FALSE) => "121221020"
+  ToUnsigned ("121221020", base = 3) =>   16_3039   used = 9
+  FromUnsigned (16_3039, base = 3, prefix = TRUE) => "3_121221020"
+  ToUnsigned ("3_121221020", base = 10) =>   16_3039   used = 11
+  FromUnsigned (16_3039, base = 4, prefix = FALSE) => "3000321"
+  ToUnsigned ("3000321", base = 4) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 4, prefix = TRUE) => "4_3000321"
+  ToUnsigned ("4_3000321", base = 10) =>   16_3039   used = 9
+  FromUnsigned (16_3039, base = 5, prefix = FALSE) => "343340"
+  ToUnsigned ("343340", base = 5) =>   16_3039   used = 6
+  FromUnsigned (16_3039, base = 5, prefix = TRUE) => "5_343340"
+  ToUnsigned ("5_343340", base = 10) =>   16_3039   used = 8
+  FromUnsigned (16_3039, base = 6, prefix = FALSE) => "133053"
+  ToUnsigned ("133053", base = 6) =>   16_3039   used = 6
+  FromUnsigned (16_3039, base = 6, prefix = TRUE) => "6_133053"
+  ToUnsigned ("6_133053", base = 10) =>   16_3039   used = 8
+  FromUnsigned (16_3039, base = 7, prefix = FALSE) => "50664"
+  ToUnsigned ("50664", base = 7) =>   16_3039   used = 5
+  FromUnsigned (16_3039, base = 7, prefix = TRUE) => "7_50664"
+  ToUnsigned ("7_50664", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 8, prefix = FALSE) => "30071"
+  ToUnsigned ("30071", base = 8) =>   16_3039   used = 5
+  FromUnsigned (16_3039, base = 8, prefix = TRUE) => "8_30071"
+  ToUnsigned ("8_30071", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 9, prefix = FALSE) => "17836"
+  ToUnsigned ("17836", base = 9) =>   16_3039   used = 5
+  FromUnsigned (16_3039, base = 9, prefix = TRUE) => "9_17836"
+  ToUnsigned ("9_17836", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 10, prefix = FALSE) => "12345"
+  ToUnsigned ("12345", base = 10) =>   16_3039   used = 5
+  FromUnsigned (16_3039, base = 10, prefix = TRUE) => "10_12345"
+  ToUnsigned ("10_12345", base = 10) =>   16_3039   used = 8
+  FromUnsigned (16_3039, base = 11, prefix = FALSE) => "9303"
+  ToUnsigned ("9303", base = 11) =>   16_3039   used = 4
+  FromUnsigned (16_3039, base = 11, prefix = TRUE) => "11_9303"
+  ToUnsigned ("11_9303", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 12, prefix = FALSE) => "7189"
+  ToUnsigned ("7189", base = 12) =>   16_3039   used = 4
+  FromUnsigned (16_3039, base = 12, prefix = TRUE) => "12_7189"
+  ToUnsigned ("12_7189", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 13, prefix = FALSE) => "5808"
+  ToUnsigned ("5808", base = 13) =>   16_3039   used = 4
+  FromUnsigned (16_3039, base = 13, prefix = TRUE) => "13_5808"
+  ToUnsigned ("13_5808", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 14, prefix = FALSE) => "46db"
+  ToUnsigned ("46db", base = 14) =>   16_3039   used = 4
+  FromUnsigned (16_3039, base = 14, prefix = TRUE) => "14_46db"
+  ToUnsigned ("14_46db", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 15, prefix = FALSE) => "39d0"
+  ToUnsigned ("39d0", base = 15) =>   16_3039   used = 4
+  FromUnsigned (16_3039, base = 15, prefix = TRUE) => "15_39d0"
+  ToUnsigned ("15_39d0", base = 10) =>   16_3039   used = 7
+  FromUnsigned (16_3039, base = 16, prefix = FALSE) => "3039"
+  ToUnsigned ("3039", base = 16) =>   16_3039   used = 4
+  FromUnsigned (16_3039, base = 16, prefix = TRUE) => "16_3039"
+  ToUnsigned ("16_3039", base = 10) =>   16_3039   used = 7
+
+
+8_37777747707   16_ffffcfc7
+
+  FromUnsigned (16_ffffcfc7, base = 2, prefix = FALSE) => "11111111111111111100111111000111"
+  ToUnsigned ("11111111111111111100111111000111", base = 2) =>   16_ffffcfc7   used = 32
+  FromUnsigned (16_ffffcfc7, base = 2, prefix = TRUE) => "2_11111111111111111100111111000111"
+  ToUnsigned ("2_11111111111111111100111111000111", base = 10) =>   16_ffffcfc7   used = 34
+  FromUnsigned (16_ffffcfc7, base = 3, prefix = FALSE) => "102002022201022120121"
+  ToUnsigned ("102002022201022120121", base = 3) =>   16_ffffcfc7   used = 21
+  FromUnsigned (16_ffffcfc7, base = 3, prefix = TRUE) => "3_102002022201022120121"
+  ToUnsigned ("3_102002022201022120121", base = 10) =>   16_ffffcfc7   used = 23
+  FromUnsigned (16_ffffcfc7, base = 4, prefix = FALSE) => "3333333330333013"
+  ToUnsigned ("3333333330333013", base = 4) =>   16_ffffcfc7   used = 16
+  FromUnsigned (16_ffffcfc7, base = 4, prefix = TRUE) => "4_3333333330333013"
+  ToUnsigned ("4_3333333330333013", base = 10) =>   16_ffffcfc7   used = 18
+  FromUnsigned (16_ffffcfc7, base = 5, prefix = FALSE) => "32244002024301"
+  ToUnsigned ("32244002024301", base = 5) =>   16_ffffcfc7   used = 14
+  FromUnsigned (16_ffffcfc7, base = 5, prefix = TRUE) => "5_32244002024301"
+  ToUnsigned ("5_32244002024301", base = 10) =>   16_ffffcfc7   used = 16
+  FromUnsigned (16_ffffcfc7, base = 6, prefix = FALSE) => "1550103442411"
+  ToUnsigned ("1550103442411", base = 6) =>   16_ffffcfc7   used = 13
+  FromUnsigned (16_ffffcfc7, base = 6, prefix = TRUE) => "6_1550103442411"
+  ToUnsigned ("6_1550103442411", base = 10) =>   16_ffffcfc7   used = 15
+  FromUnsigned (16_ffffcfc7, base = 7, prefix = FALSE) => "211301341360"
+  ToUnsigned ("211301341360", base = 7) =>   16_ffffcfc7   used = 12
+  FromUnsigned (16_ffffcfc7, base = 7, prefix = TRUE) => "7_211301341360"
+  ToUnsigned ("7_211301341360", base = 10) =>   16_ffffcfc7   used = 14
+  FromUnsigned (16_ffffcfc7, base = 8, prefix = FALSE) => "37777747707"
+  ToUnsigned ("37777747707", base = 8) =>   16_ffffcfc7   used = 11
+  FromUnsigned (16_ffffcfc7, base = 8, prefix = TRUE) => "8_37777747707"
+  ToUnsigned ("8_37777747707", base = 10) =>   16_ffffcfc7   used = 13
+  FromUnsigned (16_ffffcfc7, base = 9, prefix = FALSE) => "12068638517"
+  ToUnsigned ("12068638517", base = 9) =>   16_ffffcfc7   used = 11
+  FromUnsigned (16_ffffcfc7, base = 9, prefix = TRUE) => "9_12068638517"
+  ToUnsigned ("9_12068638517", base = 10) =>   16_ffffcfc7   used = 13
+  FromUnsigned (16_ffffcfc7, base = 10, prefix = FALSE) => "4294954951"
+  ToUnsigned ("4294954951", base = 10) =>   16_ffffcfc7   used = 10
+  FromUnsigned (16_ffffcfc7, base = 10, prefix = TRUE) => "10_4294954951"
+  ToUnsigned ("10_4294954951", base = 10) =>   16_ffffcfc7   used = 13
+  FromUnsigned (16_ffffcfc7, base = 11, prefix = FALSE) => "1904432251"
+  ToUnsigned ("1904432251", base = 11) =>   16_ffffcfc7   used = 10
+  FromUnsigned (16_ffffcfc7, base = 11, prefix = TRUE) => "11_1904432251"
+  ToUnsigned ("11_1904432251", base = 10) =>   16_ffffcfc7   used = 13
+  FromUnsigned (16_ffffcfc7, base = 12, prefix = FALSE) => "9ba456407"
+  ToUnsigned ("9ba456407", base = 12) =>   16_ffffcfc7   used = 9
+  FromUnsigned (16_ffffcfc7, base = 12, prefix = TRUE) => "12_9ba456407"
+  ToUnsigned ("12_9ba456407", base = 10) =>   16_ffffcfc7   used = 12
+  FromUnsigned (16_ffffcfc7, base = 13, prefix = FALSE) => "535a74081"
+  ToUnsigned ("535a74081", base = 13) =>   16_ffffcfc7   used = 9
+  FromUnsigned (16_ffffcfc7, base = 13, prefix = TRUE) => "13_535a74081"
+  ToUnsigned ("13_535a74081", base = 10) =>   16_ffffcfc7   used = 12
+  FromUnsigned (16_ffffcfc7, base = 14, prefix = FALSE) => "2ca5b2b67"
+  ToUnsigned ("2ca5b2b67", base = 14) =>   16_ffffcfc7   used = 9
+  FromUnsigned (16_ffffcfc7, base = 14, prefix = TRUE) => "14_2ca5b2b67"
+  ToUnsigned ("14_2ca5b2b67", base = 10) =>   16_ffffcfc7   used = 12
+  FromUnsigned (16_ffffcfc7, base = 15, prefix = FALSE) => "1a20d93a1"
+  ToUnsigned ("1a20d93a1", base = 15) =>   16_ffffcfc7   used = 9
+  FromUnsigned (16_ffffcfc7, base = 15, prefix = TRUE) => "15_1a20d93a1"
+  ToUnsigned ("15_1a20d93a1", base = 10) =>   16_ffffcfc7   used = 12
+  FromUnsigned (16_ffffcfc7, base = 16, prefix = FALSE) => "ffffcfc7"
+  ToUnsigned ("ffffcfc7", base = 16) =>   16_ffffcfc7   used = 8
+  FromUnsigned (16_ffffcfc7, base = 16, prefix = TRUE) => "16_ffffcfc7"
+  ToUnsigned ("16_ffffcfc7", base = 10) =>   16_ffffcfc7   used = 11
+
+
+8_17777777777   16_7fffffff
+
+  FromUnsigned (16_7fffffff, base = 2, prefix = FALSE) => "1111111111111111111111111111111"
+  ToUnsigned ("1111111111111111111111111111111", base = 2) =>   16_7fffffff   used = 31
+  FromUnsigned (16_7fffffff, base = 2, prefix = TRUE) => "2_1111111111111111111111111111111"
+  ToUnsigned ("2_1111111111111111111111111111111", base = 10) =>   16_7fffffff   used = 33
+  FromUnsigned (16_7fffffff, base = 3, prefix = FALSE) => "12112122212110202101"
+  ToUnsigned ("12112122212110202101", base = 3) =>   16_7fffffff   used = 20
+  FromUnsigned (16_7fffffff, base = 3, prefix = TRUE) => "3_12112122212110202101"
+  ToUnsigned ("3_12112122212110202101", base = 10) =>   16_7fffffff   used = 22
+  FromUnsigned (16_7fffffff, base = 4, prefix = FALSE) => "1333333333333333"
+  ToUnsigned ("1333333333333333", base = 4) =>   16_7fffffff   used = 16
+  FromUnsigned (16_7fffffff, base = 4, prefix = TRUE) => "4_1333333333333333"
+  ToUnsigned ("4_1333333333333333", base = 10) =>   16_7fffffff   used = 18
+  FromUnsigned (16_7fffffff, base = 5, prefix = FALSE) => "13344223434042"
+  ToUnsigned ("13344223434042", base = 5) =>   16_7fffffff   used = 14
+  FromUnsigned (16_7fffffff, base = 5, prefix = TRUE) => "5_13344223434042"
+  ToUnsigned ("5_13344223434042", base = 10) =>   16_7fffffff   used = 16
+  FromUnsigned (16_7fffffff, base = 6, prefix = FALSE) => "553032005531"
+  ToUnsigned ("553032005531", base = 6) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 6, prefix = TRUE) => "6_553032005531"
+  ToUnsigned ("6_553032005531", base = 10) =>   16_7fffffff   used = 14
+  FromUnsigned (16_7fffffff, base = 7, prefix = FALSE) => "104134211161"
+  ToUnsigned ("104134211161", base = 7) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 7, prefix = TRUE) => "7_104134211161"
+  ToUnsigned ("7_104134211161", base = 10) =>   16_7fffffff   used = 14
+  FromUnsigned (16_7fffffff, base = 8, prefix = FALSE) => "17777777777"
+  ToUnsigned ("17777777777", base = 8) =>   16_7fffffff   used = 11
+  FromUnsigned (16_7fffffff, base = 8, prefix = TRUE) => "8_17777777777"
+  ToUnsigned ("8_17777777777", base = 10) =>   16_7fffffff   used = 13
+  FromUnsigned (16_7fffffff, base = 9, prefix = FALSE) => "5478773671"
+  ToUnsigned ("5478773671", base = 9) =>   16_7fffffff   used = 10
+  FromUnsigned (16_7fffffff, base = 9, prefix = TRUE) => "9_5478773671"
+  ToUnsigned ("9_5478773671", base = 10) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 10, prefix = FALSE) => "2147483647"
+  ToUnsigned ("2147483647", base = 10) =>   16_7fffffff   used = 10
+  FromUnsigned (16_7fffffff, base = 10, prefix = TRUE) => "10_2147483647"
+  ToUnsigned ("10_2147483647", base = 10) =>   16_7fffffff   used = 13
+  FromUnsigned (16_7fffffff, base = 11, prefix = FALSE) => "a02220281"
+  ToUnsigned ("a02220281", base = 11) =>   16_7fffffff   used = 9
+  FromUnsigned (16_7fffffff, base = 11, prefix = TRUE) => "11_a02220281"
+  ToUnsigned ("11_a02220281", base = 10) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 12, prefix = FALSE) => "4bb2308a7"
+  ToUnsigned ("4bb2308a7", base = 12) =>   16_7fffffff   used = 9
+  FromUnsigned (16_7fffffff, base = 12, prefix = TRUE) => "12_4bb2308a7"
+  ToUnsigned ("12_4bb2308a7", base = 10) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 13, prefix = FALSE) => "282ba4aaa"
+  ToUnsigned ("282ba4aaa", base = 13) =>   16_7fffffff   used = 9
+  FromUnsigned (16_7fffffff, base = 13, prefix = TRUE) => "13_282ba4aaa"
+  ToUnsigned ("13_282ba4aaa", base = 10) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 14, prefix = FALSE) => "1652ca931"
+  ToUnsigned ("1652ca931", base = 14) =>   16_7fffffff   used = 9
+  FromUnsigned (16_7fffffff, base = 14, prefix = TRUE) => "14_1652ca931"
+  ToUnsigned ("14_1652ca931", base = 10) =>   16_7fffffff   used = 12
+  FromUnsigned (16_7fffffff, base = 15, prefix = FALSE) => "c87e66b7"
+  ToUnsigned ("c87e66b7", base = 15) =>   16_7fffffff   used = 8
+  FromUnsigned (16_7fffffff, base = 15, prefix = TRUE) => "15_c87e66b7"
+  ToUnsigned ("15_c87e66b7", base = 10) =>   16_7fffffff   used = 11
+  FromUnsigned (16_7fffffff, base = 16, prefix = FALSE) => "7fffffff"
+  ToUnsigned ("7fffffff", base = 16) =>   16_7fffffff   used = 8
+  FromUnsigned (16_7fffffff, base = 16, prefix = TRUE) => "16_7fffffff"
+  ToUnsigned ("16_7fffffff", base = 10) =>   16_7fffffff   used = 11
+
+
+8_20000000000   16_80000000
+
+  FromUnsigned (16_80000000, base = 2, prefix = FALSE) => "10000000000000000000000000000000"
+  ToUnsigned ("10000000000000000000000000000000", base = 2) =>   16_80000000   used = 32
+  FromUnsigned (16_80000000, base = 2, prefix = TRUE) => "2_10000000000000000000000000000000"
+  ToUnsigned ("2_10000000000000000000000000000000", base = 10) =>   16_80000000   used = 34
+  FromUnsigned (16_80000000, base = 3, prefix = FALSE) => "12112122212110202102"
+  ToUnsigned ("12112122212110202102", base = 3) =>   16_80000000   used = 20
+  FromUnsigned (16_80000000, base = 3, prefix = TRUE) => "3_12112122212110202102"
+  ToUnsigned ("3_12112122212110202102", base = 10) =>   16_80000000   used = 22
+  FromUnsigned (16_80000000, base = 4, prefix = FALSE) => "2000000000000000"
+  ToUnsigned ("2000000000000000", base = 4) =>   16_80000000   used = 16
+  FromUnsigned (16_80000000, base = 4, prefix = TRUE) => "4_2000000000000000"
+  ToUnsigned ("4_2000000000000000", base = 10) =>   16_80000000   used = 18
+  FromUnsigned (16_80000000, base = 5, prefix = FALSE) => "13344223434043"
+  ToUnsigned ("13344223434043", base = 5) =>   16_80000000   used = 14
+  FromUnsigned (16_80000000, base = 5, prefix = TRUE) => "5_13344223434043"
+  ToUnsigned ("5_13344223434043", base = 10) =>   16_80000000   used = 16
+  FromUnsigned (16_80000000, base = 6, prefix = FALSE) => "553032005532"
+  ToUnsigned ("553032005532", base = 6) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 6, prefix = TRUE) => "6_553032005532"
+  ToUnsigned ("6_553032005532", base = 10) =>   16_80000000   used = 14
+  FromUnsigned (16_80000000, base = 7, prefix = FALSE) => "104134211162"
+  ToUnsigned ("104134211162", base = 7) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 7, prefix = TRUE) => "7_104134211162"
+  ToUnsigned ("7_104134211162", base = 10) =>   16_80000000   used = 14
+  FromUnsigned (16_80000000, base = 8, prefix = FALSE) => "20000000000"
+  ToUnsigned ("20000000000", base = 8) =>   16_80000000   used = 11
+  FromUnsigned (16_80000000, base = 8, prefix = TRUE) => "8_20000000000"
+  ToUnsigned ("8_20000000000", base = 10) =>   16_80000000   used = 13
+  FromUnsigned (16_80000000, base = 9, prefix = FALSE) => "5478773672"
+  ToUnsigned ("5478773672", base = 9) =>   16_80000000   used = 10
+  FromUnsigned (16_80000000, base = 9, prefix = TRUE) => "9_5478773672"
+  ToUnsigned ("9_5478773672", base = 10) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 10, prefix = FALSE) => "2147483648"
+  ToUnsigned ("2147483648", base = 10) =>   16_80000000   used = 10
+  FromUnsigned (16_80000000, base = 10, prefix = TRUE) => "10_2147483648"
+  ToUnsigned ("10_2147483648", base = 10) =>   16_80000000   used = 13
+  FromUnsigned (16_80000000, base = 11, prefix = FALSE) => "a02220282"
+  ToUnsigned ("a02220282", base = 11) =>   16_80000000   used = 9
+  FromUnsigned (16_80000000, base = 11, prefix = TRUE) => "11_a02220282"
+  ToUnsigned ("11_a02220282", base = 10) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 12, prefix = FALSE) => "4bb2308a8"
+  ToUnsigned ("4bb2308a8", base = 12) =>   16_80000000   used = 9
+  FromUnsigned (16_80000000, base = 12, prefix = TRUE) => "12_4bb2308a8"
+  ToUnsigned ("12_4bb2308a8", base = 10) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 13, prefix = FALSE) => "282ba4aab"
+  ToUnsigned ("282ba4aab", base = 13) =>   16_80000000   used = 9
+  FromUnsigned (16_80000000, base = 13, prefix = TRUE) => "13_282ba4aab"
+  ToUnsigned ("13_282ba4aab", base = 10) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 14, prefix = FALSE) => "1652ca932"
+  ToUnsigned ("1652ca932", base = 14) =>   16_80000000   used = 9
+  FromUnsigned (16_80000000, base = 14, prefix = TRUE) => "14_1652ca932"
+  ToUnsigned ("14_1652ca932", base = 10) =>   16_80000000   used = 12
+  FromUnsigned (16_80000000, base = 15, prefix = FALSE) => "c87e66b8"
+  ToUnsigned ("c87e66b8", base = 15) =>   16_80000000   used = 8
+  FromUnsigned (16_80000000, base = 15, prefix = TRUE) => "15_c87e66b8"
+  ToUnsigned ("15_c87e66b8", base = 10) =>   16_80000000   used = 11
+  FromUnsigned (16_80000000, base = 16, prefix = FALSE) => "80000000"
+  ToUnsigned ("80000000", base = 16) =>   16_80000000   used = 8
+  FromUnsigned (16_80000000, base = 16, prefix = TRUE) => "16_80000000"
+  ToUnsigned ("16_80000000", base = 10) =>   16_80000000   used = 11
+
+
+0
+
+  FromFloat [Flo]    => 0.000000000000000
+  ToFloat => 0   / 17
+  FromFloat [AltFlo] => 0.
+  ToFloat => 0   / 2
+  FromFloat [Sci]    => 0.000000000000000E0
+  ToFloat => 0   / 19
+  FromFloat [AltSci] => 0.E0
+  ToFloat => 0   / 4
+  FromFloat [Mix]    => 0
+  ToFloat => 0   / 1
+
+
+1
+
+  FromFloat [Flo]    => 1.000000000000000
+  ToFloat => 1   / 17
+  FromFloat [AltFlo] => 1.
+  ToFloat => 1   / 2
+  FromFloat [Sci]    => 1.000000000000000E0
+  ToFloat => 1   / 19
+  FromFloat [AltSci] => 1.E0
+  ToFloat => 1   / 4
+  FromFloat [Mix]    => 1
+  ToFloat => 1   / 1
+
+
+0.5
+
+  FromFloat [Flo]    => 0.500000000000000
+  ToFloat => 0.5   / 17
+  FromFloat [AltFlo] => 0.5
+  ToFloat => 0.5   / 3
+  FromFloat [Sci]    => 5.000000000000000E-1
+  ToFloat => 0.5   / 20
+  FromFloat [AltSci] => 5.E-1
+  ToFloat => 0.5   / 5
+  FromFloat [Mix]    => 0.5
+  ToFloat => 0.5   / 3
+
+
+0.1
+
+  FromFloat [Flo]    => 0.100000001490116
+  ToFloat => 0.1   / 17
+  FromFloat [AltFlo] => 0.100000001490116
+  ToFloat => 0.1   / 17
+  FromFloat [Sci]    => 1.000000014901161E-1
+  ToFloat => 0.1   / 20
+  FromFloat [AltSci] => 1.000000014901161E-1
+  ToFloat => 0.1   / 20
+  FromFloat [Mix]    => 0.100000001490116
+  ToFloat => 0.1   / 17
+
+
+0.0012345678
+
+  FromFloat [Flo]    => 0.001234567840584
+  ToFloat => 0.0012345678   / 17
+  FromFloat [AltFlo] => 0.001234567840584
+  ToFloat => 0.0012345678   / 17
+  FromFloat [Sci]    => 1.234567840583622E-3
+  ToFloat => 0.0012345678   / 20
+  FromFloat [AltSci] => 1.234567840583622E-3
+  ToFloat => 0.0012345678   / 20
+  FromFloat [Mix]    => 0.001234567840584
+  ToFloat => 0.0012345678   / 17
+
+
+1.2345679e-33
+
+  FromFloat [Flo]    => 0.000000000000000
+  ToFloat => 0   / 17
+  FromFloat [AltFlo] => 0.
+  ToFloat => 0   / 2
+  FromFloat [Sci]    => 1.234567901067900E-33
+  ToFloat => 1.2345679e-33   / 21
+  FromFloat [AltSci] => 1.2345679010679E-33
+  ToFloat => 1.2345679e-33   / 19
+  FromFloat [Mix]    => 0
+  ToFloat => 0   / 1
+
+
+1.2345679e-38
+
+  FromFloat [Flo]    => 0.000000000000000
+  ToFloat => 0   / 17
+  FromFloat [AltFlo] => 0.
+  ToFloat => 0   / 2
+  FromFloat [Sci]    => 1.234567909273904E-38
+  ToFloat => 1.2345679e-38   / 21
+  FromFloat [AltSci] => 1.234567909273904E-38
+  ToFloat => 1.2345679e-38   / 21
+  FromFloat [Mix]    => 0
+  ToFloat => 0   / 1
+
+
+1.2345679e-29
+
+  FromFloat [Flo]    => 0.000000000000000
+  ToFloat => 0   / 17
+  FromFloat [AltFlo] => 0.
+  ToFloat => 0   / 2
+  FromFloat [Sci]    => 1.234567888431336E-29
+  ToFloat => 1.2345679e-29   / 21
+  FromFloat [AltSci] => 1.234567888431336E-29
+  ToFloat => 1.2345679e-29   / 21
+  FromFloat [Mix]    => 0
+  ToFloat => 0   / 1
+
+
+1234.5679
+
+  FromFloat [Flo]    => 1234.567871093750000
+  ToFloat => 1234.5679   / 20
+  FromFloat [AltFlo] => 1234.56787109375
+  ToFloat => 1234.5679   / 16
+  FromFloat [Sci]    => 1.234567871093750E3
+  ToFloat => 1234.5679   / 19
+  FromFloat [AltSci] => 1.23456787109375E3
+  ToFloat => 1234.5679   / 18
+  FromFloat [Mix]    => 1234.56787109375
+  ToFloat => 1234.5679   / 16
+
+
+1.2345679e27
+
+  FromFloat [Flo]    => 1234567900681729874025512960.000000000000000
+  ToFloat => 1.2345679e27   / 44
+  FromFloat [AltFlo] => 1234567900681729874025512960.
+  ToFloat => 1.2345679e27   / 29
+  FromFloat [Sci]    => 1.234567900681730E27
+  ToFloat => 1.2345679e27   / 20
+  FromFloat [AltSci] => 1.23456790068173E27
+  ToFloat => 1.2345679e27   / 19
+  FromFloat [Mix]    => 1.23456790068173E27
+  ToFloat => 1.2345679e27   / 19
+
+
+0
+
+  FromLongFloat [Flo]    => 0.000000000000000
+  ToLongFloat => 0   / 17
+  FromLongFloat [AltFlo] => 0.
+  ToLongFloat => 0   / 2
+  FromLongFloat [Sci]    => 0.000000000000000D0
+  ToLongFloat => 0   / 19
+  FromLongFloat [AltSci] => 0.D0
+  ToLongFloat => 0   / 4
+  FromLongFloat [Mix]    => 0
+  ToLongFloat => 0   / 1
+
+
+1
+
+  FromLongFloat [Flo]    => 1.000000000000000
+  ToLongFloat => 1   / 17
+  FromLongFloat [AltFlo] => 1.
+  ToLongFloat => 1   / 2
+  FromLongFloat [Sci]    => 1.000000000000000D0
+  ToLongFloat => 1   / 19
+  FromLongFloat [AltSci] => 1.D0
+  ToLongFloat => 1   / 4
+  FromLongFloat [Mix]    => 1
+  ToLongFloat => 1   / 1
+
+
+0.5
+
+  FromLongFloat [Flo]    => 0.500000000000000
+  ToLongFloat => 0.5   / 17
+  FromLongFloat [AltFlo] => 0.5
+  ToLongFloat => 0.5   / 3
+  FromLongFloat [Sci]    => 5.000000000000000D-1
+  ToLongFloat => 0.5   / 20
+  FromLongFloat [AltSci] => 5.D-1
+  ToLongFloat => 0.5   / 5
+  FromLongFloat [Mix]    => 0.5
+  ToLongFloat => 0.5   / 3
+
+
+0.1
+
+  FromLongFloat [Flo]    => 0.100000000000000
+  ToLongFloat => 0.1   / 17
+  FromLongFloat [AltFlo] => 0.1
+  ToLongFloat => 0.1   / 3
+  FromLongFloat [Sci]    => 1.000000000000000D-1
+  ToLongFloat => 0.1   / 20
+  FromLongFloat [AltSci] => 1.D-1
+  ToLongFloat => 0.1   / 5
+  FromLongFloat [Mix]    => 0.1
+  ToLongFloat => 0.1   / 3
+
+
+0.0012345678901235
+
+  FromLongFloat [Flo]    => 0.001234567890124
+  ToLongFloat => 0.001234567890124   / 17
+  FromLongFloat [AltFlo] => 0.001234567890124
+  ToLongFloat => 0.001234567890124   / 17
+  FromLongFloat [Sci]    => 1.234567890123500D-3
+  ToLongFloat => 0.0012345678901235   / 20
+  FromLongFloat [AltSci] => 1.2345678901235D-3
+  ToLongFloat => 0.0012345678901235   / 18
+  FromLongFloat [Mix]    => 0.001234567890124
+  ToLongFloat => 0.001234567890124   / 17
+
+
+1.2345678901235e-33
+
+  FromLongFloat [Flo]    => 0.000000000000000
+  ToLongFloat => 0   / 17
+  FromLongFloat [AltFlo] => 0.
+  ToLongFloat => 0   / 2
+  FromLongFloat [Sci]    => 1.234567890123500D-33
+  ToLongFloat => 1.2345678901235e-33   / 21
+  FromLongFloat [AltSci] => 1.2345678901235D-33
+  ToLongFloat => 1.2345678901235e-33   / 19
+  FromLongFloat [Mix]    => 0
+  ToLongFloat => 0   / 1
+
+
+1.2345678901235e-38
+
+  FromLongFloat [Flo]    => 0.000000000000000
+  ToLongFloat => 0   / 17
+  FromLongFloat [AltFlo] => 0.
+  ToLongFloat => 0   / 2
+  FromLongFloat [Sci]    => 1.234567890123500D-38
+  ToLongFloat => 1.2345678901235e-38   / 21
+  FromLongFloat [AltSci] => 1.2345678901235D-38
+  ToLongFloat => 1.2345678901235e-38   / 19
+  FromLongFloat [Mix]    => 0
+  ToLongFloat => 0   / 1
+
+
+1.2345678901235e-29
+
+  FromLongFloat [Flo]    => 0.000000000000000
+  ToLongFloat => 0   / 17
+  FromLongFloat [AltFlo] => 0.
+  ToLongFloat => 0   / 2
+  FromLongFloat [Sci]    => 1.234567890123500D-29
+  ToLongFloat => 1.2345678901235e-29   / 21
+  FromLongFloat [AltSci] => 1.2345678901235D-29
+  ToLongFloat => 1.2345678901235e-29   / 19
+  FromLongFloat [Mix]    => 0
+  ToLongFloat => 0   / 1
+
+
+1234.5678901235
+
+  FromLongFloat [Flo]    => 1234.567890123500092
+  ToLongFloat => 1234.5678901235   / 20
+  FromLongFloat [AltFlo] => 1234.567890123500092
+  ToLongFloat => 1234.5678901235   / 20
+  FromLongFloat [Sci]    => 1.234567890123500D3
+  ToLongFloat => 1234.5678901235   / 19
+  FromLongFloat [AltSci] => 1.2345678901235D3
+  ToLongFloat => 1234.5678901235   / 17
+  FromLongFloat [Mix]    => 1234.567890123500092
+  ToLongFloat => 1234.5678901235   / 20
+
+
+1.2345678901235e27
+
+  FromLongFloat [Flo]    => 1234567890123500006076841984.000000000000000
+  ToLongFloat => 1.2345678901235e27   / 44
+  FromLongFloat [AltFlo] => 1234567890123500006076841984.
+  ToLongFloat => 1.2345678901235e27   / 29
+  FromLongFloat [Sci]    => 1.234567890123500D27
+  ToLongFloat => 1.2345678901235e27   / 20
+  FromLongFloat [AltSci] => 1.2345678901235D27
+  ToLongFloat => 1.2345678901235e27   / 18
+  FromLongFloat [Mix]    => 1.2345678901235D27
+  ToLongFloat => 1.2345678901235e27   / 18

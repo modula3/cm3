@@ -1,0 +1,76 @@
+#| Copyright (C) 1991, Digital Equipment Corporation                         |#
+#| All rights reserved.                                                      |#
+#| See the file COPYRIGHT for a full description.                            |#
+
+(VBox
+  (Shape
+    (Width 260)
+    (Rim
+      (Pen 10)
+      (VBox
+        (HBox (Text " ") (Fill) (Text "Volume") (Text "Timbre"))
+        (Glue 2)
+        (HBox
+          (Boolean =TRUE %bestsofar "Best yet")
+          (Fill)
+          (VBox
+            (Numeric =64 %bestsofarVolume (Min 0) (Max 127))
+            (Shape (Height 0) (Text %bestsofarChannel "0")))
+          (Glue 2)
+          (Numeric =1 (Min 0) (Max 99) %bestsofarTimbre))
+        (Glue 2)
+        (HBox
+          (Boolean =TRUE %compare "Compare")
+          (Fill)
+          (VBox
+            (Numeric =64 %compareVolume (Min 0) (Max 127))
+            (Shape (Height 0) (Text %compareChannel "0")))
+          (Glue 2)
+          (Numeric =1 (Min 0) (Max 99) %compareTimbre))
+        (Glue 2)
+        (HBox
+          (Boolean =TRUE %set "Set")
+          (Fill)
+          (VBox
+            (Numeric =64 (Min 0) (Max 127) %setVolume)
+            (Shape (Height 0) (Text %setChannel "1")))
+          (Glue 2)
+          (Numeric =1 (Min 0) (Max 99) %setTimbre))
+        (Glue 2)
+        (HBox
+          (Boolean =TRUE %exchange1 "Exchange1")
+          (Fill)
+          (VBox
+            (Numeric =64 (Min 0) (Max 127) %exchange1Volume)
+            (Shape (Height 0) (Text %exchange1Channel "2")))
+          (Glue 2)
+          (Numeric =45 (Min 0) (Max 99) %exchange1Timbre))
+        (Glue 2)
+        (HBox
+          (Boolean =TRUE %exchange2 "Exchange2")
+          (Fill)
+          (VBox
+            (Numeric =64 (Min 0) (Max 127) %exchange2Volume)
+            (Shape (Height 0) (Text %exchange2Channel "3")))
+          (Glue 2)
+          (Numeric =89 (Min 0) (Max 99) %exchange2Timbre))
+        (Glue 2)
+        (HBox
+          (Boolean =TRUE %threads "Threads")
+          (Fill)
+          (VBox
+            (Numeric =64 (Min 0) (Max 127) %threadsVolume)
+            (Shape (Height 0) (Text %threadsChannel "4")))
+          (Glue 2)
+          (Numeric =32 (Min 0) (Max 99) %threadsTimbre)))))
+  (Glue 8)
+  (HBox
+    (Text RightAlign "Audio Server: ")
+    (Shape
+      (Width 70)
+      (Frame Lowered (TypeIn %audioServer ="scliff-ls")))
+    Fill
+    (Button %mute (Text (Margin 10) "Mute"))
+    Fill)
+  (Glue 10)
+  Fill)

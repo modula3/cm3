@@ -1,0 +1,46 @@
+(* Copyright 1992 Digital Equipment Corporation. *)
+(* Distributed only by permission.*)
+
+IMPORT PQueue;
+
+OUTPUT Setup(size: INTEGER[Fmt.Int]; doSort: BOOLEAN[Fmt.Bool]);
+(* First event in a new execution of the algorithm *)
+
+OUTPUT InitSort(vals: PQueue.Array[PQueue.PrintHeap]);
+(* Called at the beginning of heap sort.  vals is the array of data to 
+   be sorted *)
+
+OUTPUT Insert(el: INTEGER[Fmt.Int]);
+(* Attach the new element el to the end of the heap, potentially
+violating the heap property *)
+
+OUTPUT HeapOpInit(k: INTEGER[Fmt.Int]);
+(* Item k is about to be moved up or down the tree until the heap
+   property is restored.  *)
+
+OUTPUT UpHeapStep(k: INTEGER[Fmt.Int]);
+(* Swap the empty spot at k with its parent *)
+
+OUTPUT HeapStep(k, n: INTEGER[Fmt.Int]; down: BOOLEAN[Fmt.Bool]);
+(* Swap the empty spot at k with the node at n.  Down is TRUE if
+n is a child of k, FALSE otherwise. *)
+
+OUTPUT PlaceElement(k: INTEGER[Fmt.Int]);
+(* Move the pending element (from the last HeapOpInit) into the empty 
+   spot at k *)
+
+OUTPUT Remove();
+(* Remove the largest element of the heap.  Moves the last element into
+   largest element's spot. *)
+
+OUTPUT Compare(k: INTEGER[Fmt.Int]; n: INTEGER[Fmt.Int]);
+(* Indicate a comparison between nodes k and n.  If n is 0, indicate
+the comparison between k and the work node *)
+
+OUTPUT Pause();
+(* Pause *)
+
+
+OUTPUT SortStep(k: INTEGER[Fmt.Int]);
+(* The top element of the heap has sorted position k.  Remove it
+   from the heap, and move element k to the root of the tree. *)

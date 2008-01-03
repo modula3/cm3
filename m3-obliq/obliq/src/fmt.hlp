@@ -1,0 +1,12 @@
+  fmt_padLft(t: Text, length: Int): Text
+    If t is shorted then length, pad t with blanks on the left so that it has 
+    the given length.
+  fmt_padRht(t: Text, length: Int): Text
+    If t is shorted then length, pad t with blanks on the right so that it has 
+    the given length.
+  fmt_bool(b: Bool): Text
+    Convert a boolean to its printable form.
+  fmt_int(n: Int): Text
+    Convert an integer to its printable form.
+  fmt_real(r: Real): Text
+    Convert a real to its printable form.

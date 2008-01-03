@@ -1,0 +1,52 @@
+(Border
+  (Pen 1)
+  (Insert "shared.fv")
+  (Macro btnBox BOA (prompt body)
+    `(Rim
+       (Pen 6)
+       (VBox
+         (Shape (Height + 0) ,prompt)
+         (Glue 6)
+         ,body
+         (Fill))))
+  (Macro sBtn BOA (name body)
+    `(Choice (bgActive) ,name
+       (Text LeftAlign (Margin 6) ,body)))
+  (Filter
+    %ViewingFilter
+    (VBox
+      (HBox
+        (Button
+          %ViewingBtn
+          (Rim (Pen 3) (Pixmap "upArrow.pbm")))
+        (ZMove
+            (Text (Margin 9) "Viewing Controls")))
+      (Frame
+        (HBox
+          (Radio
+            (btnBox
+              "\"Go Forward\" or [space] moves:"
+              (HBox
+                (Glue 12)
+                (VBox
+                  (sBtn %VerThenHor "in vertical strips.")
+                  (sBtn %HorThenVer "in horizontal strips.")
+                  (sBtn %VerOnly "down the center of the page.")
+                  (sBtn %HorOnly "across the center of the page.")
+                  (sBtn %FullPage "to the next page.")
+                  (Fill)
+                  )
+                )
+              ))
+          (menuSep)
+          (btnBox
+            "View Area:"
+            (Radio =AutoViewArea (VBox (HBox
+              (Fill)
+              (Shape (Width 69) (Height 69)
+                (Rim (Pen 1) (Generic %ViewArea)))
+              (Fill))
+           (Glue 6)
+           (sBtn %AutoViewArea "automatic")
+           (sBtn %ManualViewArea "manual")))
+))))))

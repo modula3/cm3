@@ -1,0 +1,101 @@
+Last modified on Thu Aug 18 17:01:48 PDT 1994 by heydon
+
+The UnionFind program is an animation of two different classes of
+Union-Find algorithms. See chapter 22, pgs 440--464 of "Introduction
+to Algorithms" by Cormen, Leiserson, and Rivest (The MIT Press, 1990)
+for a more complete description of these algorithms.
+
+List Algorithms
+~~~~~~~~~~~~~~~
+
+The nodes of an equivalence class are maintained in a linked list. To
+make the implementation of the Union operation faster, the linked list
+is circular. Each element of the list contains an additional pointer
+to the representative node of the equivalence class (including the
+representative itself).
+
+In the animation, the lists are depicted as trees with a depth of at
+most 1. The root of the tree is the representative element, and the
+leaves of the tree (all direct children of the root) are the other
+nodes in the equivalence class. The pointers that link the elements
+together are not shown.
+
+The list algorithm is also sometimes known as the "Quick Find"
+algorithm, since the "Find" operation on this data structure takes
+O(1) time. (In fact, in practical implementations, the "root" field of
+each node can be revealed to clients, in which case it is not even
+necessary to define a "Find" procedure or method, thereby saving the
+cost of the procedure call overhead on every "Find".)
+
+The "Union" operation is implemented by making all the "root" fields
+of the nodes in one class point to the representative of the other
+class, and then splicing the list of nodes of one class into the
+other. This raises the obvious question: which class's representative
+should be chosen to triumph? There are two variants:
+
+  a) No Heuristics
+
+  In this variant, one class is chosen arbitrarily. For example, the
+  Union operation might be implemented so it always changed the "root"
+  fields of the nodes in the class of its first argument. The
+  disadvantage to this approach is that the longer list may be chosen
+  every time in the worst case, thus leading to a total cost of
+  "O(n^2)" for the Union operations, where "n" is the number of nodes.
+
+  b) Union by Rank
+
+  In this variant, an extra field is added to each node, and the
+  representative of a set maintains the size of the set. Then, the
+  Union operation can use the sizes stored in the representatives to
+  guarantee that the "root" fields of the smaller set are updated.
+  This leads to a worst-case performance of "O(n lg(n))" for the Union
+  operations. In practice, this variant dominates variant (a), so
+  variant (a) is never used.
+
+Tree Algorithms
+~~~~~~~~~~~~~~~
+
+The nodes of an equivalence class are maintained in a tree, and the
+root of the tree is the class's representative. The Find operation is
+implemented by walking up the tree to the root. The Union operation is
+implemented by finding the representative elements of the two
+arguments, and then making one representative the child of the other.
+Notice that with this algorithm, it is the Union operation that takes
+constant time, and the Find operation which can be costly: in the
+worst case, the Find operation takes time proportional to the height of
+the deepest tree.
+
+As before, there is a choice as to which class should be subjugated
+beneath the other. With no heuristic, the trees can easily get to be
+linear in length, which may make subsequent Find operations costly.
+There are two heuristics for reducing the heights of the trees (hence
+improving Find performance; these heuristics can be used independently
+or together.
+
+  a) Union by Rank
+
+  As before, a rank is stored in each representative, and the set with
+  the smaller rank is subjugated beneath the larger one. In this case,
+  however, the rank is not the size of the set, but rather an
+  approximation to the height of its tree.
+
+  b) Path Compression
+
+  In the course of performing a "Find" operation, this heuristic makes
+  each node on the path from the argument node to the root point to
+  the root, thereby reducing the cost of subsequent find operations on
+  all of these nodes.
+
+Summary
+~~~~~~~
+
+If the client application performs relatively few "Union" operations
+compared to the number of "Find" operations, then the List algorithm
+using the union-by-rank heuristic is probably the best. 
+
+Conversely, if the client application performs relatively few "Find"
+operations compared to the number of "Union" operations, then the Tree
+algorithm using both the union-by-rank and path-compression heuristics
+is recommended. In practice, the path compression heuristic is very
+easy to implement, but it often doesn't produce the same performance
+benefits as the union-by-rank heuristic.

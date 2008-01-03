@@ -1,0 +1,15 @@
+  true: Bool
+    The constant true.
+  false: Bool
+    The constant false.
+  All(T)All(U) bool_is(x: T, y: U): Bool
+    (also infix 'is') Identity predicate: value equality for 
+    Ok, Bool, Int, Real, Char, Text, Exception; pointer equality otherwise.
+  All(T)All(U) bool_isnot(x: T, y: U): Bool
+    (also infix 'isnot') Negation of 'is'.
+  bool_not(b: Bool): Bool
+    (also 'not(b)')
+  bool_and(b1: Bool, b2: Bool): Bool
+    (also infix 'and')
+  bool_or(b1: Bool, b2: Bool): Bool
+    (also infix 'or')

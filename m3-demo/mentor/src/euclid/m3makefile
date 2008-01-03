@@ -1,0 +1,21 @@
+/* Copyright (C) 1994, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+/*                                                             */
+/* Last modified on Tue May 24 08:56:13 PDT 1994 by najork     */
+/*      modified on Thu Sep 24 12:13:49 PDT 1992 by mhb        */
+
+import         ("zeus")
+zume           ("Euclid")
+
+interface      ("Euclid")
+implementation ("EuclidAlg")
+implementation ("EuclidView")
+
+resource       ("proof")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("EuclidBundle")
+  program        ("euclid")
+end

@@ -1,0 +1,12 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Jan 14 10:20:12 PST 1994 by kalsow
+%      modified on Mon Apr 27 11:24:34 PDT 1992 by muller
+
+
+import_lib ("tcl", "/usr/local/lib")
+import ("libm3")
+Module ("TclC")
+Library ("m3tcl")

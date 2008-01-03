@@ -1,0 +1,45 @@
+; Copyright (C) 1994, Digital Equipment Corporation                         
+; All rights reserved.                                                      
+; See the file COPYRIGHT for a full description.                            
+
+(Radio
+  (VBox
+    (Glue 6)
+    (HBox
+      (Glue 10)
+      Fill
+      (Choice %sort =TRUE "Sorting")
+      Fill)
+    (Glue 6)
+    (HBox
+      (Glue 10)
+      (Shape (Width + 0) "Number of items: ")
+      (Glue 5)
+      (Numeric (Min 1) (Max 1000) %N =15)
+      (Glue 10))
+    (Glue 8)
+    (Bar)
+    (Glue 8)
+    (HBox
+      (Glue 10)
+      Fill
+      (Choice %queue =FALSE "Priority Queue")
+      Fill)
+    (Glue 6)
+    (HBox
+      (Glue 10)
+      (Shape (Width + 0) "Maximum queue size: ")
+      (Glue 5)
+      (Numeric (Min 1) (Max 1000) %qSize =15)
+      (Glue 10)
+      Fill)
+    (Glue 6)
+    (HBox
+      (Glue 10)
+      (Shape (Width 60 + 0 - 0) (Button %insert "Insert"))
+      (Glue 10)
+      (Numeric (Min 10) (Max 100) %inselt =20)
+      Fill)
+    (Glue 6)
+    (HBox (Glue 10) (Shape (Width 60 + 0 - 0) (Button %remove "Remove")) Fill)
+    (Glue 6)))

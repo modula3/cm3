@@ -1,0 +1,24 @@
+Last modified on Thu Aug 18 16:27:03 PDT 1994 by heydon
+
+The UnionFind program is an animation of several Union-Find
+algorithms. The abstract Union-Find problem is to support the
+following three operations, which are used to build an equivalence
+relation "R". Equivalently, this can be thought of as maintaining
+the disjoint sets that are the equivalence classes induced by "R".
+
+  MakeSet(nm: Name): Node
+  (* Return a handle on a new singleton set with the name "nm". If "x"
+     is the result node, then we have "xRx" (every new set is related
+     to itself) and "(forall y: x # y => NOT xRy)" (every new set is
+     related only to itself).*) 
+
+  Find(a: Node): Node
+  (* Return the "representative" element of the set containing "a".
+     "Find" has the property that "aRb <=> Find(a) = Find(b)". *)
+
+  Union(a, b: Node): Node
+  (* Merge the sets containing "a" and "b", and return the
+     representative of the resulting set. If "R" denotes the
+     equivalence relation before the call, and "R'" denotes the 
+     equivalence relation after the call, then we have:
+     "(forall a', b': aRa' AND bRb' => a'R'b')". *)

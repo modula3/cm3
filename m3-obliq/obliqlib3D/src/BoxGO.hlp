@@ -1,0 +1,8 @@
+  BoxGO_New(p1 p2: PointVal): BoxGO        
+  BoxGO_Corner1: PointPropName              
+  BoxGO_Corner2: PointPropName              
+  BoxGO_SetCorner1(o: GO, p: PointVal): Ok 
+  BoxGO_SetCorner2(o: GO, p: PointVal): Ok 
+WHERE                                       
+  BoxGO <: SurfaceGO                         
+  PointVal = PointPropVal + Point3          

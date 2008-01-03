@@ -1,0 +1,29 @@
+% Copyright (C) 1986, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Sep  6 11:55:05 PDT 1996 by heydon
+
+\manpage{m3tohtml man page}{m3tohtml}{1}
+
+\section{Name}
+
+m3tohtml - convert Modula-3 source to HTML
+
+\section{Syntax}
+
+\bf{m3tohtml}
+
+\section{Description}
+
+\bf{m3tohtml} is a program Bill Kalsow wrote as part
+of his HTML browser for /proj/m3. He didn't write
+a man page. The sources are in /proj/m3/pkg/m3tohtml.
+
+\section{Author of object}
+
+Bill Kalsow
+
+\section{Author of documentation}
+
+Allan Heydon

@@ -1,0 +1,123 @@
+(* Copyright (C) 1989, Digital Equipment Corporation *)
+(* All rights reserved. *)
+(* See the file COPYRIGHT for a full description. *)
+(* Last modified on Fri Dec  4 08:25:05 PST 1992 by mcjones *)
+
+(* This is an unfinished implementation of Date based on the Modula-2+
+   module TimeConv.mod.  The idea is to be self-contained, rather than
+   calling lower-level functions as in the POSIX and Win32 versions. *)
+
+MODULE DateGeneric EXPORTS Date;
+
+IMPORT Time;
+
+CONST
+  EpochYear = 1970; (* useful range limited by fact that Time.T=Word.T *)
+  EpochWeekDay = WeekDay.Thu; (* 1 January 1970 was a Thursday *)
+  SecondsPerMin = 60;
+  MinutesPerHour = 60;
+  HoursPerDay = 24;
+  DaysPerQuad = 4 * 365 + 1;
+
+TYPE
+  TZ = TimeZone OBJECT METHODS
+    apply(t: Time.T; VAR (*OUT*) offset: INTEGER; VAR (*OUT*) zone: TEXT)
+  END;
+(* If "tz" is a "TZ", "z.apply(t, offset, zone)" sets offset and zone,
+   which are defined the same way as the corresponding fields of a "Date.T". *)
+
+VAR (* CONST *)
+  YMToDays: ARRAY [0 .. 4*NUMBER(Month)] OF CARDINAL;
+(* "YMToDays[n]" is the number of days through the first "n" complete
+   months within the quadyear beginning 00:00:00 UT 1 Jan EpochYear.  *)
+
+PROCEDURE ApplyLocal(
+  z: TZ; t: Time.T; VAR (*OUT*) offset: INTEGER; VAR (*OUT*) zone: TEXT) =
+  BEGIN
+    <* ASSERT FALSE *>
+    (* Implementing this is the trick. *)
+  END ApplyUTC;
+
+PROCEDURE ApplyUTC(
+  z: TZ; t: Time.T; VAR (*OUT*) offset: INTEGER; VAR (*OUT*) zone: TEXT) =
+  BEGIN
+    offset := 0;
+    zone := "UT"
+  END ApplyUTC;
+
+PROCEDURE FromTime(z: TZ; t: Time.T): T =
+  VAR d: T; ym, ymL, ymU: CARDINAL;
+  BEGIN
+    z.apply(t, d.offset, d.zone);
+    WITH
+      seconds = TRUNC(t) - d.offset,
+      minutes = seconds DIV SecondsPerMin,
+      hours = minutes DIV MinutesPerHour,
+      days = hours DIV HoursPerDay,
+      quads = days DIV DaysPerQuad,
+      dayInQuad = days MOD DaysPerQuad
+    DO
+      (* Find ym such that YMToDays[ym] <= dayInQuad < YMToDays[ym+1]. *)
+      ymL := FIRST(YMToDays); ymU := LAST(YMToDays)-1;
+      LOOP
+        ym := (ymL + ymU) DIV 2;
+        IF YMToDays[ym] <= dayInQuad THEN
+          IF dayInQuad < YMToDays[ym+1] THEN
+            EXIT
+          ELSE
+            ymL := ym+1
+          END
+        ELSE
+          ymU := ym-1
+        END
+      END;
+      WITH yearInQuad = ym DIV NUMBER(Month) DO
+        d.year := EpochYear + quads * 4 + yearInQuad;
+        d.month := VAL(ym MOD NUMBER(Month), Month);
+        d.day := 1 + dayInQuad - YMToDays[ym];
+        d.minute := minutes MOD MinutesPerHour;
+        d.second := seconds MOD SecondsPerMin;
+        d.weekDay := VAL((days+ORD(EpochWeekDay)) MOD NUMBER(WeekDay),
+                         WeekDay);
+        d.dayOfyear := 1 + dayInQuad - YMToDays[yearInQuad*NUMBER(Month)]
+      END
+    END;
+    RETURN d
+  END FromTime;
+
+PROCEDURE ToTime (READONLY d: T): Time.T RAISES {Error} =
+  BEGIN
+    (* Should bound-check fields of d. *)
+    WITH
+      days = (d.year - EpochYear) DIV 4 * DaysPerQuad
+           + YMToDays[((d.year - EpochYear) MOD 4) * 12 + ORD(d.month)]
+           + (d.day - 1),
+      hours   = days * HoursPerDay + d.hour,
+      minutes = hours * MinutesPerHour + d.minute,
+      seconds = minutes * SecondsPerMin + d.second
+    DO
+      RETURN FLOAT(seconds + d.offset)
+    END
+  END ToTime;
+
+CONST
+  MonthToDays = ARRAY Month OF [28 .. 31]{
+                  31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+VAR days: CARDINAL;
+BEGIN
+  YMToDays[0] := 0;
+  FOR ym := 0 TO LAST(YMToDays)-1 DO
+    WITH month = VAL(ym MOD 12, Month) DO
+    days := MonthToDays[month];
+    IF month = Month.February THEN
+      WITH y = EpochYear + ym DIV 12 DO
+        IF y MOD 4 = 0 AND (y MOD 100 # 0 OR y MOD 400 = 0) THEN
+          INC(days);
+        END
+      END
+    END
+    YMToDays[ym+1] := YMToDays[ym] + days
+  END;
+  Local := NEW(TZ, apply := ApplyLocal);
+  UTC := NEW(TZ, apply := ApplyUTC)
+END DateGeneric.

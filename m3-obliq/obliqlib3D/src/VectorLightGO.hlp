@@ -1,0 +1,7 @@
+  VectorLightGO_New(c: ColorVal, dir: PointVal): VectorLightGO    
+  VectorLightGO_Direction: PointPropName                           
+  VectorLightGO_SetDirection(l: VectorLightGO, dir: PointVal): Ok 
+WHERE                                                              
+  VectorLightGO <: LightGO                                          
+  PointVal = PointPropVal + Point3                                 
+  ColorVal = ColorPropVal + Color + Text                           

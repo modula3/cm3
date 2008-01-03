@@ -1,0 +1,36 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Fri Jul 22 18:04:12 PDT 1994 by najork                   *)
+(*       Created on Mon May 30 20:03:50 PDT 1994 by najork                   *)
+
+
+module GOWrap for GO;
+
+let TProto = clone (ProxiedObj_TProto, {
+  setProp   => meth (self, pn, pv) GO_SetProp (self, pn.bind (pv)) end,
+  unsetProp => meth (self, pn)     GO_UnsetProp (self, pn)         end,
+  getProp   => meth (self, pn)     GO_GetProp (self, pn)           end,
+
+  setName  => meth (self, name) GO_SetName (self, name)  end,
+  getName  => meth (self)       GO_GetName (self)        end,
+  findName => meth (self, name) GO_FindName (self, name) end,
+
+  pushMouseCB   => meth (self, cb) GO_PushMouseCB   (self, cb) end,
+  popMouseCB    => meth (self)     GO_PopMouseCB    (self)     end,
+  removeMouseCB => meth (self, cb) GO_RemoveMouseCB (self, cb) end,
+  invokeMouseCB => meth (self, mr) GO_InvokeMouseCB (self, mr) end,
+
+  pushPositionCB   => meth (self, cb) GO_PushPositionCB   (self, cb) end,
+  popPositionCB    => meth (self)     GO_PopPositionCB    (self)     end,
+  removePositionCB => meth (self, cb) GO_RemovePositionCB (self, cb) end,
+  invokePositionCB => meth (self, pr) GO_InvokePositionCB (self, pr) end,
+
+  pushKeyCB   => meth (self, cb) GO_PushKeyCB   (self, cb) end,
+  popKeyCB    => meth (self)     GO_PopKeyCB    (self)     end,
+  removeKeyCB => meth (self, cb) GO_RemoveKeyCB (self, cb) end,
+  invokeKeyCB => meth (self, kr) GO_InvokeKeyCB (self, kr) end,
+});
+
+end module;

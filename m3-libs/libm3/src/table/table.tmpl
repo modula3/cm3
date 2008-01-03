@@ -1,0 +1,21 @@
+% Copyright (C) 1993 Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Sep 20 12:26:41 PDT 1993 by kalsow 
+
+%
+%  Quake functions to instantiate a generic table.
+%
+
+readonly proc Table (nm, key, value) is
+  local tab = nm & "Tbl"
+  build_generic_intf (tab, "Table", [key, value], VISIBLE)
+  build_generic_impl (tab, "Table", [key, value])
+end
+
+readonly proc table (nm, key, value) is
+  local tab = nm & "Tbl"
+  build_generic_intf (tab, "Table", [key, value], HIDDEN)
+  build_generic_impl (tab, "Table", [key, value])
+end

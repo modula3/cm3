@@ -1,0 +1,17 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jan  7 10:51:40 PST 1993 by muller
+%
+\font\ttslant=cmsltt10
+\font\ttstraight=cmtt10
+\font\rmslant=cmsl10
+\def\tt{\ttstraight}
+\def\indentation{24pt}
+\def\tab{$ $\hbox to \indentation{\hss}}
+\long\def\procspec#1{{\advance\leftskip by \indentation
+  \noindent\rightskip = 0pt plus2em\rmslant\def\tt{\ttslant}\ignorerm#1}}
+\def\ignorerm\rm{}
+\def\display{\tab\parskip=0pt\advance\baselineskip by -0.5pt\tt }
+\def\progmode{\advance\baselineskip by -0.5pt}

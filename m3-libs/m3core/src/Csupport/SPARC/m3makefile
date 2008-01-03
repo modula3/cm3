@@ -1,0 +1,11 @@
+% Copyright (C) 1992, Xerox
+% All rights reserved.
+
+% Last modified on Tue Oct 12 09:33:46 PDT 1993 by kalsow
+%      modified on Wed Mar  4 19:13:02 PST 1992 by muller
+
+
+c_source ("dtoa")
+h_source ("float")
+c_source ("memmove")
+

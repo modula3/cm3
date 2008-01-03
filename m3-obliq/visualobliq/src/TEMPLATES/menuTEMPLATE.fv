@@ -1,0 +1,42 @@
+(Filter %@Menu
+ (Macro 
+    MenuItem
+    BOA
+    (xFilter initState x xLabel xLabelValue)
+    `(Filter %,xFilter ,initState
+        (Menu %,x (Text %,xLabel ,xLabelValue))
+     )
+  ) 
+  (Macro 
+    PullDownMenuItem
+    BOA
+    (xFilter initState x xLabel xLabelValue pulldown)
+    `(Filter %,xFilter ,initState
+        (Menu %,x (Text %,xLabel ,xLabelValue)
+            (Border (Pen 1)
+                    ,pulldown
+            )
+        )
+     )
+  ) 
+
+ (Macro
+   MenuButton
+   BOA
+   (xFilter initState x xLabel xLabelValue )
+   `(Filter %,xFilter ,initState
+       (MButton %,x
+         (Text %,xLabel ,xLabelValue) 
+       )
+    )
+  )
+    (BgColor "$MenuBgColor$") (Color "$MenuFgColor$")
+    (LabelFont "$MenuFont$")
+    (ShadowSize 0)
+    (Border  (Pen 1)
+        (HBox 
+           $MenuItems$
+           (Glue 1000)
+        )  
+    ) 
+)

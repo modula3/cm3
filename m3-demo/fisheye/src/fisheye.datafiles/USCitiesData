@@ -1,0 +1,1097 @@
+0134
+Sydney
+34.80 22.10 1.0 0000
+Edge
+0002 00 (* Canada,Halifax *)
+
+Charlottetown
+33.50 21.60 1.0 0001
+Edge
+0003 00 (* Canada,Saint John *)
+
+Halifax
+33.70 20.30 1.0 0002
+Edge
+0003 00 (* Canada,Saint John *)
+
+Saint John
+32.30 20.20 1.0 0003
+Edge
+0004 00 (* ME,Bangor *)
+Edge
+0008 01 (* Canada,Quebec *)
+
+Bangor
+31.20 19.30 1.0 0004
+Edge
+0008 00 (* Canada,Quebec *)
+Edge
+0013 01 (* Canada,Montreal *)
+Edge
+0005 02 (* ME,Portland *)
+
+Portland
+30.80 18.15 1.0 0005
+Edge
+0013 00 (* Canada,Montreal *)
+Edge
+0006 01 (* MA,Boston *)
+
+Boston
+30.70 17.05 5.0 0006
+Edge
+0007 00 (* CT,Hartford *)
+Edge
+0009 01 (* NY,Albany *)
+Edge
+0013 02 (* Canada,Montreal *)
+Edge
+0010 02 (* NY City *)
+
+Hartford
+30.40 16.10 3.0 0007
+Edge
+0010 00 (* NY,NY City *)
+
+Quebec
+29.00 20.30 3.0 0008
+Edge
+0013 00 (* Canada,Montreal *)
+
+Albany
+29.30 16.75 2.0 0009
+Edge
+0013 00 (* Canada,Montreal *)
+Edge
+0032 01 (* NY,Buffalo *)
+Edge
+0014 02 (* NY, Binghamton *)
+Edge
+0010 03 (* NY,NY City *)
+
+New York
+29.70 15.30 9.0 0010
+Edge
+0014 00 Binghamton
+Edge
+0036 01 Cleaveland
+Edge
+0015 02 Harrisburg
+Edge
+0011 03 Philadelphia
+Edge
+0017 04 DC,Washington
+Edge
+0013 05 (* Montreal *)
+
+Phildelphia
+29.10 14.60 5.0 0011
+Edge
+0015 01 Harrisburg
+Edge
+0016 02 Baltimore
+
+Norfolk
+29.20 12.10 1.0 0012
+Edge
+0016 00 Baltimore
+Edge
+0024 01 Raleigh
+Edge
+0018 02 Richmond
+Edge
+0019 03 Willmington
+
+Montreal
+28.65 18.80 9.0 0013
+Edge
+0023 00 Ottawa
+Edge
+0031 01 Toronto
+
+Binghamton
+28.40 15.97 1.0 0014
+Edge
+0032 00 Buffalo
+Edge
+0023 01 Ottawa
+
+Harrisburg
+28.10 14.40 1.0 0015
+Edge
+0033 00 Pittsburgh
+
+Baltimore
+28.60 13.90 3.0 0016
+Edge
+0017 00 DC,Washington
+
+Washington
+28.40 13.50 9.0 0017
+Edge
+0033 00 Pittsburgh
+Edge
+0041 01 Cincinati
+Edge
+0037 02 WV,Charleston
+Edge
+0042 03 Knoxville
+Edge
+0034 04 Charlotte
+Edge
+0018 05 Richmond
+
+Richmond
+28.40 12.35 1.0 0018
+Edge
+0019 00 (* NC,Willmington *)
+Edge
+0024 01 (* NC,Raleigh *)
+Edge
+0037 02 (* WV,Charleston *)
+
+Wilmington
+28.70 09.70 1.0 0019
+Edge
+0020 00 (* SC,Myrtle Beach *)
+Edge
+0024 01 (* NC,Raleigh *)
+Edge
+0034 02 (* NC,Charlotte *)
+
+Myrtle Beach
+28.35 09.30 1.0 0020
+Edge
+0034 00 Charlotte
+Edge
+0025 01 SC,Charleston
+
+Daytona Beach
+28.10 04.90 1.0 0021
+Edge
+0022 00 Miami
+Edge
+0027 01 Jacksonville
+Edge
+0028 02 Orlando
+
+Miami
+28.90 03.10 9.0 0022
+Edge
+0030 00 Key West
+Edge
+0028 01 Orlando
+Edge
+0029 02 Tampa
+Edge
+0043 03 Atlanta
+
+Ottawa
+27.55 18.30 1.0 0023
+Edge
+0031 00 Toronto
+Edge
+0044 01 Sault St. Marie
+
+Raleigh
+27.70 10.85 1.0 0024
+Edge
+0042 00 Knoxville
+Edge
+0034 01 Charlotte
+Edge
+0027 02 Jacksonville
+
+Charleston
+27.75 08.45 1.0 0025
+Edge
+0034 00 Charlotte
+Edge
+0042 01 Knoxville
+Edge
+0043 02 Atlanta
+Edge
+0026 03 Savannah
+
+Savannah
+27.30 08.05 1.0 0026
+Edge
+0043 00 Atlanta
+Edge
+0027 01 Jacksonville
+
+Jacksonville
+27.15 06.35 1.0 0027
+Edge
+0034 00 Charlotte
+Edge
+0043 01 Atlanta
+Edge
+0035 02 Lake City
+Edge
+0029 03 Tampa
+
+Orlando
+27.70 04.70 1.0 0028
+Edge
+0035 00 Lake City
+Edge
+0029 01 Tampa
+
+Tampa
+27.10 04.45 1.0 0029
+Edge
+0035 00 Lake City
+
+Key West
+27.80 01.50 1.0 0030
+
+Toronto
+26.20 16.70 3.0 0031
+Edge
+0032 00 Buffalo
+Edge
+0044 01 Sault St. Marie
+Edge
+0039 02 Detroit
+
+Buffalo
+26.65 16.10 3.0 0032
+Edge
+0039 00 Detroit
+Edge
+0036 01 Cleveland
+
+Pittsburgh
+26.35 14.20 4.0 0033
+Edge
+0036 00 Cleaveland
+Edge
+0040 01 Columbus
+Edge
+0037 02 WV,Charleston
+
+Charlotte
+26.80 10.20 1.0 0034
+Edge
+0037 00 WV,Charleston
+Edge
+0042 01 Knoxville
+Edge
+0043 02 Atlanta
+
+Lake City
+26.60 06.25 1.0 0035
+Edge
+0043 00 Atlanta
+Edge
+0038 01 Tallahassee
+
+Cleveland
+25.30 14.70 5.0 0036
+Edge
+0039 00 Detroit
+Edge
+0053 01 Chicago
+Edge
+0040 03 Columbus
+Edge
+0037 04 WV,Charleston
+
+Charleston
+25.80 12.40 1.0 0037
+Edge
+0041 00 Cincinati
+Edge
+0046 01 Louisville
+
+Tallahassee
+25.35 06.10 1.0 0038
+Edge
+0043 00 Atlanta
+Edge
+0049 01 Montgomery
+Edge
+0051 02 Mobile
+
+Detroit
+24.35 15.30 9.0 0039
+Edge
+0044 00 Sault St. Marie
+Edge
+0050 01 Grand Rapids
+Edge
+0053 02 Chicago
+Edge
+0045 03 Indianapolis
+Edge
+0041 04 Cincinati
+Edge
+0040 05 Columbus
+
+Columbus
+24.60 13.60 2.0 0040
+Edge
+0045 00 Indianapolis
+Edge
+0041 01 Cincinati
+
+Cincinnati
+24.10 12.70 7.0 0041
+Edge
+0045 00 Indianapolis
+Edge
+0042 01 Knoxville
+Edge
+0059 02 St. Louis
+Edge
+0046 03 Louisville
+
+Knoxville
+24.50 10.50 1.0 0042
+Edge
+0047 00 Nashville
+Edge
+0043 01 Atlanta
+
+Atlanta
+24.85 08.60 7.0 0043
+Edge
+0047 00 Nashville
+Edge
+0048 01 Birmingham
+Edge
+0049 02 Montgomery
+Edge
+0059 03 St. Louis
+
+Sault Ste. Marie
+23.20 18.20 1.0 0044
+Edge
+0057 00 Thunder Bay
+Edge
+0060 01 Duluth
+Edge
+0063 02 Minneapolis
+Edge
+0058 03 Madison
+Edge
+0052 04 Milwaukee
+Edge
+0050 05 Grand Rapids
+
+Indianapolis
+23.10 12.90 1.0 0045
+Edge
+0053 00 Chicago
+Edge
+0059 01 St. Louis
+Edge
+0046 02 Louisville
+
+Louisville
+23.40 11.70 1.0 0046
+Edge
+0059 00 St. Louis
+Edge
+0047 01 Nashville
+
+Nashville
+23.10 10.10 1.0 0047
+Edge
+0053 00 Chicago
+Edge
+0059 01 St. Louis
+Edge
+0054 02 Memphis
+Edge
+0048 03 Birmingham
+
+Birmingham
+23.30 08.20 1.0 0048
+Edge
+0054 00 Memphis
+Edge
+0055 01 Jackson
+Edge
+0056 02 New Orleans
+Edge
+0049 03 Montgomery
+
+Montgomery
+23.50 07.10 1.0 0049
+Edge
+0055 00 Jackson
+Edge
+0051 01 Mobile
+
+Grand Rapids
+22.80 15.40 1.0 0050
+Edge
+0053 00 Chicago
+
+Mobile
+22.90 05.80 1.0 0051
+Edge
+0056 00 New Orleans
+
+Milwaukee
+21.50 15.50 1.0 0052
+Edge
+0058 00 Madison
+Edge
+0053 01 Chicago
+
+Chicago
+21.80 14.40 9.0 0053
+Edge
+0058 00 Madison
+Edge
+0064 01 Des Monnes
+Edge
+0065 02 Kansas City
+Edge
+0059 03 St. Louis
+Edge
+0063 04 Minneapolis
+
+Memphis
+21.20 09.20 1.0 0054
+Edge
+0061 00 Springfield
+Edge
+0062 01 Little Rock
+Edge
+0055 02 Jackson
+
+Jackson
+21.30 06.95 1.0 0055
+Edge
+0062 00 Little Rock
+Edge
+0069 01 Dallas
+Edge
+0056 02 New Orleans
+
+New Orleans
+21.40 05.20 7.0 0056
+Edge
+0069 00 Dallas
+Edge
+0070 01 Houston
+
+Thunder Bay
+20.50 19.50 1.0 0057
+Edge
+0066 00 Kenora
+Edge
+0060 01 Duluth
+
+Madison
+20.10 15.50 1.0 0058
+Edge
+0066 00 Kenora
+Edge
+0063 01 Minneapolis
+Edge
+0064 02 Des Monnes
+
+St. Louis
+20.70 11.70 6.0 0059
+Edge
+0063 00 Minneapolis
+Edge
+0064 01 Des Monnes
+Edge
+0065 02 Kansas City
+Edge
+0061 03 Springfield
+Edge
+0062 04 Little Rock
+Edge
+0076 05 Oklahoma City
+Edge
+0095 06 Denver
+
+Duluth
+19.10 17.80 1.0 0060
+Edge
+0066 00 Kenora
+Edge
+0072 01 Grand Forks
+Edge
+0073 02 Fargo
+Edge
+0063 03 Minneapolis
+
+Springfield
+19.30 10.90 1.0 0061
+Edge
+0065 00 Kansas City
+Edge
+0076 01 Oklahoma City
+Edge
+0069 02 Dallas
+Edge
+0062 03 Little Rock
+
+Little Rock
+19.70 08.70 1.0 0062
+Edge
+0076 00 Oklahoma City
+Edge
+0069 01 Dallas
+Edge
+0070 02 Houston
+
+Minneapolis
+18.60 16.40 7.0 0063
+Edge
+0073 00 Fargo
+Edge
+0082 01 Pierre
+Edge
+0074 02 Sioux Falls
+Edge
+0067 03 Omaha
+Edge
+0064 04 Des Monnes
+
+Des Monnes
+18.60 13.90 1.0 0064
+Edge
+0067 00 Omaha
+Edge
+0065 01 Kansas City
+
+Kansas City
+18.20 11.90 1.0 0065
+Edge
+0068 00 Topeka
+Edge
+0075 01 Wichita
+
+Kenora
+17.90 19.90 1.0 0066
+Edge
+0071 00 Winnipeg
+
+Omaha
+17.30 13.70 1.0 0067
+Edge
+0074 00 Sioux Falls
+Edge
+0089 01 Rapid City
+Edge
+0083 02 North Platte
+Edge
+0085 03 Liberal
+Edge
+0068 04 Topeka
+
+Topeka
+17.50 11.90 1.0 0068
+Edge
+0085 00 Oakley
+Edge
+0085 01 Liberal
+Edge
+0075 02 Wichita
+
+Dallas
+17.00 07.15 4.0 0069
+Edge
+0076 00 Oklahoma City
+Edge
+0091 01 Amarillo
+Edge
+0092 02 Big Spring
+Edge
+0078 03 San Antonio
+Edge
+0070 04 Houston
+
+Houston
+17.90 04.80 9.0 0070
+Edge
+0102 00 El Paso
+Edge
+0078 01 San Antonio
+Edge
+0077 02 Brownsville
+
+Winnipeg
+16.60 20.10 1.0 0071
+Edge
+0093 00 Saskatoon
+Edge
+0088 01 Regina
+Edge
+0081 02 Bismarck
+Edge
+0072 03 Grand Forks
+
+Grand Forks
+16.60 18.70 1.0 0072
+Edge
+0080 00 Minot
+Edge
+0073 01 Fargo
+
+Fargo
+16.75 17.75 1.0 0073
+Edge
+0080 00 Minot
+Edge
+0081 01 Bismarck
+Edge
+0074 02 Sioux Falls
+
+Sioux Falls
+16.85 15.30 1.0 0074
+Edge
+0089 00 Rapid City
+
+Wichita
+16.60 10.70 1.0 0075
+Edge
+0085 00 Liberal
+Edge
+0076 01 Oklahoma City
+
+Oklahoma City
+16.50 09.25 5.0 0076
+Edge
+0085 00 Liberal
+Edge
+0091 01 Amarillo
+
+Brownsville
+16.50 01.75 1.0 0077
+Edge
+0078 00 San Antonio
+Edge
+0079 01 Laredo
+
+San Antonio
+15.80 04.45 1.0 0078
+Edge
+0092 00 Big Spring
+Edge
+0102 01 El Paso
+Edge
+0086 02 Eagle Pass
+Edge
+0079 03 Laredo
+
+Laredo
+15.20 02.90 1.0 0079
+Edge
+0086 00 Eagle Pass
+Edge
+0087 01 Monterry
+
+Minot
+14.65 19.10 1.0 0080
+Edge
+0088 00 Regina
+Edge
+0096 01 Malta
+Edge
+0081 02 Bismarck
+
+Bismarck
+14.65 17.75 1.0 0081
+Edge
+0096 00 Malta
+Edge
+0097 01 Billings
+Edge
+0089 02 Rapid City
+Edge
+0082 03 Pierre
+
+Pierre
+14.70 15.90 1.0 0082
+Edge
+0089 00 Rapid City
+Edge
+0083 01 North Platte
+
+North Platte
+14.60 13.60 1.0 0083
+Edge
+0094 00 Cheyennene
+Edge
+0095 01 Denver
+Edge
+0085 02 Oakley
+
+Oakley
+14.60 12.30 1.0 0084
+Edge
+0095 00 Denver
+Edge
+0085 01 Liberal
+
+Liberal
+14.50 10.70 1.0 0085
+Edge
+0090 00 Lamar
+Edge
+0101 01 Albuquerqueque
+Edge
+0091 02 Amarillo
+
+Eagle Pass
+15.60 04.05 1.0 0086
+Edge
+0102 01 El Paso
+
+Monterry
+14.50 01.50 1.0 0087
+
+Regina
+13.20 20.55 1.0 0088
+Edge
+0093 00 Saskatoon
+Edge
+0100 01 Swift Current
+
+Rapid City
+13.30 15.75 1.0 0089
+Edge
+0098 00 Buffalo
+Edge
+0094 01 Cheyennene
+
+Lamar
+13.35 11.35 1.0 0090
+Edge
+0095 00 Denver
+Edge
+0101 01 Albuquerqueque
+
+Amarillo
+13.75 09.00 1.0 0091
+Edge
+0101 00 Albuquerqueque
+Edge
+0102 01 El Paso
+Edge
+0092 02 Big Spring
+
+Big Spring
+13.85 06.85 1.0 0092
+Edge
+0101 00 Albuquerqueque
+Edge
+0102 01 El Paso
+
+Saskatoon
+12.40 21.78 1.0 0093
+Edge
+0106 00 Edmonton
+
+Cheyenne
+12.30 13.70 1.0 0094
+Edge
+0099 00 Rawlins
+Edge
+0095 01 Denver
+
+Denver
+12.10 12.60 7.0 0095
+Edge
+0108 00 Salt Lake City
+Edge
+0112 01 St. George
+Edge
+0101 03 Albuquerqueque
+Edge
+0133 04 San Francisco
+
+Malta
+11.34 19.40 1.0 0096
+Edge
+0100 00 Swift Current
+Edge
+0103 01 Helena
+Edge
+0097 02 Billings
+
+Billings
+11.40 17.40 1.0 0097
+Edge
+0103 00 Helena
+Edge
+0098 01 Buffalo
+
+Buffalo
+11.60 16.10 1.0 0098
+Edge
+0104 00 Old Faithful
+Edge
+0099 01 Rawlins
+
+Rawlins
+11.30 14.30 1.0 0099
+Edge
+0104 00 Old Faithful
+Edge
+0108 01 Salt Lake City
+
+Swift Current
+10.80 20.70 1.0 0100
+Edge
+0107 00 Calgary
+
+Albuquerque
+10.80 09.25 5.0 0101
+Edge
+0105 00 Cortez
+Edge
+0113 01 Flagstaff
+Edge
+0109 02 Springerville
+Edge
+0102 03 El Paso
+Edge
+0130 04 LosAngeles
+Edge
+0108 05 Salt Lake City
+
+El Paso
+10.55 06.60 1.0 0102
+Edge
+0114 00 Phoenix
+Edge
+0115 01 Tucson
+
+Helena
+09.05 18.25 1.0 0103
+Edge
+0107 00 Calgary
+Edge
+0110 01 Missoula
+Edge
+0108 02 Salt Lake City
+Edge
+0104 03 Old Faithful
+
+Old Faithful
+09.50 16.55 1.0 0104
+Edge
+0108 00 Salt Lake City
+
+Cortez
+09.70 11.20 1.0 0105
+Edge
+0108 00 Salt lake City
+Edge
+0113 01 Flagstaff
+
+Edmonton
+08.70 23.35 1.0 0106
+Edge
+0122 00 Vancouver
+Edge
+0107 01 Calgary
+
+Calgary
+08.70 21.70 1.0 0107
+Edge
+0107 00 Calgary
+Edge
+0117 01 Spokane
+Edge
+0110 02 Missoula
+
+Salt Lake City
+08.30 13.90 5.0 0108
+Edge
+0111 00 Twin Falls
+Edge
+0119 01 Ely
+Edge
+0121 02 Las Vegas
+Edge
+0112 03 St. George
+Edge
+0123 04 Seattle
+Edge
+0130 05 Los Angeles
+
+Springerville
+08.99 08.60 1.0 0109
+Edge
+0114 00 Phoenix
+
+Missoula
+07.95 18.90 1.0 0110
+Edge
+0117 00 Spokane
+Edge
+0111 01 Twin Falls
+
+Twin Falls
+07.10 15.65 1.0 0111
+Edge
+0118 00 Boise
+Edge
+0119 01 Ely
+
+St. George
+07.40 11.60 1.0 0112
+Edge
+0121 00 Las Vegas
+Edge
+0113 01 Flagstaff
+
+Flagstaff
+07.55 10.05 1.0 0113
+Edge
+0126 00 Barstow
+Edge
+0114 01 Phoenix
+
+Phoenix
+07.25 08.55 1.0 0114
+Edge
+0121 00 Las Vegas
+Edge
+0130 01 Los Angeles
+Edge
+0131 02 San Diego
+Edge
+0115 03 Tucson
+
+Tucson
+07.75 07.45 1.0 0115
+Edge
+0116 00 Nogales
+
+Nogales
+07.60 06.65 1.0 0116
+
+Spokane
+06.60 09.70 1.0 0117
+Edge
+0123 00 Seattle
+Edge
+0127 01 Portland
+Edge
+0118 02 Boise
+
+Boise
+06.45 16.55 1.0 0118
+Edge
+0123 00 Seattle
+Edge
+0127 01 Portland
+Edge
+0124 02 Riley
+Edge
+0120 03 Winnemucca
+
+Ely
+06.50 13.60 1.0 0119
+Edge
+0125 00 Reno
+Edge
+0121 01 Las Vegas
+
+Winnemucca
+05.20 14.80 1.0 0120
+Edge
+0125 00 Reno
+
+Las Vegas
+05.50 11.20 1.0 0121
+Edge
+0125 00  Reno
+Edge
+0126 01 Barstow
+
+Vancouver
+04.30 21.60 1.0 0122
+Edge
+0123 00 Seattle
+
+Seattle
+04.30 20.35 7.0 0123
+Edge
+0127 00 Portland
+
+Riley
+04.55 16.75 1.0 0124
+Edge
+0127 00 Portland
+Edge
+0128 00 Eugene
+Edge
+0125 01 Reno
+
+Reno
+04.05 14.00 1.0 0125
+Edge
+0133 00 San Fransisco
+Edge
+0129 01 Yosemite Village
+Edge
+0130 02 Los Angeles
+
+Barstow
+04.70 10.75 1.0 0126
+Edge
+0133 00 San Fransisco
+Edge
+0130 01 Los Angeles
+Edge
+0131 02 San Diego
+
+Portland
+03.70 18.90 4.0 0127
+Edge
+0132 00 Crescent City
+Edge
+0128 01 Eugene
+Edge
+0133 02 San Francisco
+
+Eugene
+03.10 17.40 1.0 0128
+Edge
+0133 00 San Fransisco
+
+Yosemite Village
+03.30 12.90 1.0 0129
+Edge
+0133 00 San Fransisco
+Edge
+0130 01 Los Angeles
+
+Los Angeles
+03.50 09.95 9.0 0130
+Edge
+0133 00 San Fransisco
+Edge
+0131 01 San Diego
+
+San Diego
+03.95 08.80 1.0 0131
+
+Crescent City
+02.05 16.10 1.0 0132
+Edge
+0133 00 San Francisco
+
+San Fransisco
+01.80 13.40 9.0 0133
+
+
+#+---------------------------------------------------------------------------+#
+#|            Copyright (C) 1992, Digital Equipment Corporation              |#
+#| 		          All rights reserved.                               |#
+#|                  See the file COPYRIGHT for a full description.           |#
+#+---------------------------------------------------------------------------+#

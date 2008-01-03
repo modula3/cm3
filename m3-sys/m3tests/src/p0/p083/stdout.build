@@ -1,0 +1,4 @@
+"../src/A.m3", line 7: warning: exception is never raised: A.e
+1 warning encountered
+"../src/B.m3", line 7: warning: exception is never raised: B.e
+1 warning encountered

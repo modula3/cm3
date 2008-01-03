@@ -1,0 +1,169 @@
+% *************************************************
+% Lectern: sendImage.ps
+% Andrew D. Birrell
+% Copyright 1994, Digital Equipment Corporation.  All rights reserved.
+% *************************************************
+
+% *************************************************
+% This is library code to render an image; use it by appending a line such as:
+%
+%	100 850 1100 false raw
+%
+% or:
+%
+%	300 2550 3300 false 1 lgm
+%
+% followed by the data for the image in appropriate format.
+%
+% The image data will be rendered with its bottom-left at (0,0), scaled as if
+% user coordinates are the default, 1 unit = 1/72 inch.  The image data should
+% be a sequence of left-to-right scan lines, in top-to-bottom order.
+% *************************************************
+
+40 dict begin % matching "end" is within "raw" or "lgm"
+
+/level2 % true iff interpreter supports level 2 PostScript
+	systemdict /languagelevel known { languagelevel 2 ge } { false } ifelse
+	def
+
+/line % buffer for reading the data
+	1024 string def % length is known by application, for padding data
+
+/hexSource % source procedure for data encoded as hexadecimal
+	{ currentfile line readhexstring pop } def
+
+/binarySource % source procedure for data in raw binary
+	{ currentfile line readstring pop } def
+
+
+% *************************************************
+% Uncompressed images
+% *************************************************
+
+/raw { % dpi width height binary
+	/source exch { /binarySource } { /hexSource } ifelse load def
+	/h exch def
+	/w exch def
+	/ratio exch 72 div def
+	w h 1 [ratio 0 0 ratio neg 0 h] /source load
+	image
+	end
+	} def
+
+
+% *************************************************
+% LGM compressed gray-scale or black & white images (Lectern Gray Map)
+% Note: this image format is Digital Equipment Corporation proprietary
+% *************************************************
+
+%
+% Action procedures for pixelsPerGroup=8. On entry stack has: h byte.
+%
+/zero8		{ 159 sub pixels h zero 0 4 index getinterval putinterval
+		h add /h exch def } bind def
+/zeroEsc8	{ pop nextByte 174 add zero8 } bind def
+/prev8		{ 174 sub h add /h exch def } bind def
+/prevEsc8	{ pop nextByte 189 add prev8 } bind def
+/literal8	{ pixels h 255 4 -1 roll sub put /h h 1 add def } bind def
+/literalEsc8	{ pop nextByte literal8 } bind def
+/actions8 256 array def				% indexed by data byte
+	0 1 159		{ actions8 exch /literal8 load put } for
+	160 1 173	{ actions8 exch /zero8 load put } for
+	174		actions8 exch /zeroEsc8 load put
+	175 1 188	{ actions8 exch /prev8 load put } for
+	189		actions8 exch /prevEsc8 load put
+	190		actions8 exch/literalEsc8 load put
+	191		actions8 exch { h 3 0 div } put
+	192 1 255	{ actions8 exch /literal8 load put } for
+
+%
+% Action procedures for pixelsPerGroup # 8. On entry stack has data byte.
+%
+/zeroX		{ 159 sub pixels h zero 0 4 index
+		pixelsPerGroup mul getinterval putinterval
+		pixelsPerGroup mul h add /h exch def } bind def
+/zeroEscX	{ pop nextByte 174 add zeroX } bind def
+/prevX		{ 174 sub pixelsPerGroup mul h add /h exch def } bind def
+/prevEscX	{ pop nextByte 189 add prevX } bind def
+/literalX	{ pixels h 255 c levels mod 255 mul maxVal idiv sub put
+		/h h 1 add def
+		pixels h 255 c levels idiv 255 mul maxVal idiv sub put
+		/h h 1 add def } bind def
+/literalEscX	{ pop nextByte literalX } bind def
+/actionsX 256 array def				% indexed by data byte
+	0 1 159		{ actionsX exch /literalX load put } for
+	160 1 173	{ actionsX exch /zeroX load put } for
+	174		actionsX exch /zeroEscX load put
+	175 1 188	{ actionsX exch /prevX load put } for
+	189		actionsX exch /prevEscX load put
+	190		actionsX exch /literalEscX load put
+	191		actionsX exch { h 2 0 div } put
+	192 1 255	{ actionsX exch /literalX load put } for
+
+%
+% Image source that decompresses LGM format data, one scan-line per call.
+%
+
+/decompress {
+	/h 0 def
+	/nextByte { %stack: data dataPos
+		2 copy exch length ge { pop pop source 0 } if
+		1 add
+		2 copy 1 sub get
+		} def
+	data dataPos
+	pixelsPerGroup 8 eq {
+		{
+			h pixelsLength ge { exit } if
+			nextByte actions8 1 index get exec
+			} loop
+		} {
+		{	h pixelsLength ge { exit } if
+			nextByte actionsX 1 index get exec
+			} loop
+		} ifelse
+	/dataPos exch def
+	/data exch def
+	pixels
+	} bind def
+
+%
+% Main control for imaging from LGM data
+%
+/lgm {	% dpi width height binary maxVal
+	/maxVal exch def
+	/source exch { /binarySource } { /hexSource } ifelse load def
+	/levels maxVal 1 add def
+	/pixelsPerGroup maxVal dup 1 le {
+		pop 8
+		} {
+		dup 2 le {
+			pop 5
+			} {
+			dup 3 le {
+				pop 4
+				} {
+				dup 5 le {
+					pop 3
+					} {
+					15 le { 2 } { 1 } ifelse
+					} ifelse
+				} ifelse
+			} ifelse
+		} ifelse def
+	/bitsPerPixel pixelsPerGroup 8 eq { 1 } { 8 } ifelse def
+	/height exch def
+	/width exch def
+	/ratio exch 72 div def
+	/pixelsLength width bitsPerPixel mul 8 idiv def
+	/pixels pixelsLength string def
+	/zero pixelsLength string def
+		0 1 zero length 1 sub { zero exch 255 put } for
+	/dataPos 0 def
+	/data 0 string def
+	width height bitsPerPixel [ratio 0 0 ratio neg 0 height]
+	/decompress load
+	image
+	end
+	} def
+

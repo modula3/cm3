@@ -1,0 +1,4 @@
+"../src/Main.m3", line 31: illegal recursive declaration (Cache)
+"../src/Main.m3", line 31: illegal recursive type declaration
+"../src/Main.m3", line 31: types are not assignable
+3 errors encountered

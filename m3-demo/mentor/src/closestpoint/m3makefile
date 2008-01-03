@@ -1,0 +1,26 @@
+/* Copyright (C) 1992, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+/*                                                             */
+/* Last modified on Thu Jun 20 15:31:42 PDT 1996 by heydon     */
+/*      modified on Mon Jan  9 13:51:57 PST 1995 by najork     */
+/*      modified on Thu Sep 24 12:29:45 PDT 1992 by mhb        */
+
+import   ("zeus")
+
+zume     ("CP")
+
+module   ("CPAlg")
+module   ("CPView")
+
+resource ("CPinput.fv")
+resource ("CPVar.fv")
+resource ("CPCode.m3c")
+resource ("CPCode.cc")
+resource ("CPCode.pasc")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("CPBundle")
+  program        ("closestpoint")
+end

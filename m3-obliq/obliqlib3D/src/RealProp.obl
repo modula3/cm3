@@ -1,0 +1,64 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Thu Jul 21 13:44:26 PDT 1994 by najork                   *)
+(*       Created on Fri May 27 20:32:05 PDT 1994 by najork                   *)
+
+
+module RealPropWrap for RealProp;
+
+
+let NameProto = clone (Prop_NameProto, {
+  bind => meth (self, pv) RealProp_NameBind (self, pv) end
+});
+
+
+let ValProto = clone (Prop_ValProto, {
+  getBeh => meth (self) RealProp_ValGetBeh (self) end,
+  setBeh => meth (self, beh) RealProp_ValSetBeh (self, beh) end,
+  get    => meth (self) RealProp_ValGet (self) end,
+  value  => meth (self, time) RealProp_ValValue (self, time) end
+});
+
+
+let BehProto = clone (Prop_BehProto, {});
+  
+
+let ConstBehProto = clone (BehProto, {
+  set => meth (self, r) RealProp_ConstBehSet (self, r) end
+});
+
+
+let SyncBehProto = clone (BehProto, {
+  addRequest => 
+    meth (self, req) 
+      RealProp_SyncBehAddRequest (self, req) 
+    end,
+  linChangeTo =>
+    meth (self, r, start, dur) 
+      RealProp_SyncBehLinChangeTo (self, r, start, dur) 
+    end,
+  linChangeBy =>
+    meth (self, r, start, dur)
+      RealProp_SyncBehLinChangeBy (self, r, start, dur) 
+    end
+});
+
+
+let AsyncBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let DepBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let RequestProto = clone (Prop_RequestProto, {
+  value => ok,
+});
+
+
+end module;

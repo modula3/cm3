@@ -1,0 +1,26 @@
+/* Copyright (C) 1994, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+/*                                                             */
+/* Last modified on Thu Jun 20 15:47:05 PDT 1996 by heydon     */
+/*      modified on Tue May 24 08:56:59 PDT 1994 by najork     */
+/*      modified on Thu Sep 24 13:15:50 PDT 1992 by mhb        */
+
+import    ("zeus")
+
+zume           ("ZPaper")
+interface      ("Fn")
+module         ("AlgFn")
+module         ("ViewFn")
+module         ("ViewMFn")
+module         ("ViewHisto")
+
+resource       ("zdata.fv")
+resource       ("zviewframe.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("ZPaperBundle")
+  manPage        ("zpaper", 1)
+  program        ("zpaper")
+end

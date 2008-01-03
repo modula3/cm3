@@ -1,0 +1,12 @@
+#! /bin/sh
+
+ROOT=/proj/cmass/src.1
+SHIP=/proj/cmass/CD
+
+cd $ROOT/m3-docs
+tar -cf - doc examples | gzip > $SHIP/BINARY/DOCS.TGZ
+
+
+
+
+

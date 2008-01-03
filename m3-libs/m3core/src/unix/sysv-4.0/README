@@ -1,0 +1,8 @@
+The contents of this directory is no more than the sum of
+
+	../osf-1.{generic,DS3100}
+
+It should be replaced by the correct stuff when we get it from Denis Brunei.
+
+Helpful things may also be found in ../solaris-2-x, since Solaris 2 is
+derived from System V Release 4.

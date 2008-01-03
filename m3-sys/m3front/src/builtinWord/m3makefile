@@ -1,0 +1,26 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% File: m3makefile
+% Last modified on Thu Apr  6 09:41:48 PDT 1995 by kalsow
+%      modified on Fri Feb  7 00:38:19 PST 1992 by muller
+
+module ("WordAnd")
+module ("WordDivide")
+module ("WordExtract")
+module ("WordGE")
+module ("WordGT")
+module ("WordInsert")
+module ("WordLE")
+module ("WordLT")
+module ("WordMinus")
+module ("WordMod")
+module ("WordModule")
+module ("WordNot")
+module ("WordOr")
+module ("WordPlus")
+module ("WordRotate")
+module ("WordShift")
+module ("WordTimes")
+module ("WordXor")

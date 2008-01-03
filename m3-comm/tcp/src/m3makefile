@@ -1,0 +1,23 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Makefile for tcp library (generic)
+% Last modified on Wed Oct 11 09:27:19 PDT 1995 by najork
+%      modified on Thu Feb  9 19:03:54 PST 1995 by wobber
+%      modified on Thu Aug 18 14:16:47 PDT 1994 by kalsow
+
+import("m3core")
+import("libm3")
+import_sys_lib ("TCP")  %%% import_TCP()  --- old m3build
+
+%m3_option ("-Y6@/udir/kalsow/pkg/m3/m3staloneback/DS/m3back@-NTObj@")
+%m3_option ("-X0@-unfold_nested_procs@")
+%m3_option ("-Y7@@")
+%m3_option ("-zINT386")
+
+include_dir(OS_TYPE)
+include_dir("common")
+
+Library("m3tcp")
+

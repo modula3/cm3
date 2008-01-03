@@ -1,0 +1,3 @@
+#!/bin/csh -f
+cd src ; ../SOLgnu/SOCodeGen -o TrackerPositionTst -so TrackerPositionTst.T TrackerPositionTst.U -i TrackerPositionTst2F -TPATHTracker ; cd ..
+

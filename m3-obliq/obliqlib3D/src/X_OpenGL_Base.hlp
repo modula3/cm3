@@ -1,0 +1,6 @@
+  X`OpenGL`Base_New(title: Text, x y w h: Int): X`OpenGL`Base ! GraphicsBase_Failure
+  X`OpenGL`Base_NewStd(): X`OpenGL`Base ! GraphicsBase_Failure              
+WHERE                                                                
+  X`OpenGL`Base <: GraphicsBase & { changeTitle: (Text) => Ok,           
+                                    awaitDelete: () => Ok, 
+                                    destroy: () => Ok }

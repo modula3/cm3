@@ -1,0 +1,30 @@
+ (Shape %booleanatt (Height 200)
+  
+   (VBox 
+     (Glue 10)
+      (Title "Boolean")
+      (Glue 10)
+      (HBox Fill (Shape (Width 100) (Boolean %boInitial "Initial Value")) Fill)
+       (Glue 10)
+    (BoxAround 50
+     (HBox (RField Booleanfbs "Feedback Style :" 
+             (VBox (Glue 5) (Choice %BCheckBox CheckBox "Check Box")
+                   (Choice %BCheckMark CheckMark "Check Mark")
+                   (Choice %BInverting Inverting "Inverting")
+                   (Glue 5)
+              ) 45 Active 5) Fill))
+     (Glue 10)
+     (Radio %boRadio
+     (BoxAround 95
+      (VBox
+        (HBox  (Text  "Label") (Glue 250))
+        (Glue 10)
+        (Choice (Color "VeryDarkBlue") %boTChoice (LField "Text       :" 250 (TypeIn (TabTo boPix) %boText (BgColor "White") ExpandOnDemand (Value "Choice"))))
+        (Glue 10)
+        (Choice %boPChoice (Color "VeryDarkBlue") (LField "Pixmap :" 250 (TypeIn (TabTo name) %boPix ExpandOnDemand (BgColor "White") (Value ""))))
+        (Glue 10)
+       )))
+      Fill
+      
+   )
+  )

@@ -1,0 +1,8 @@
+/* Copyright (C) 1994, Digital Equipment Corporation */
+/* All rights reserved. */
+/* See the file COPYRIGHT for a full description. */
+/* Makefile for pkgtool libraries - POSIX/OSF specific */
+/* Last modified on Mon Apr  4 10:56:34 PDT 1994 by wobber     */
+
+interface ("Umount")
+implementation ("FileSysExtra")

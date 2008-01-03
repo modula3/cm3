@@ -1,0 +1,16 @@
+Last modified on Fri Aug 19 16:43:49 PDT 1994 by heydon
+
+This directory contains log files written by an instrumented version
+of Juno to be read by the UnionFind Zeus animation. The logs written
+by the instrumented Juno are not in exactly the correct format
+accepted by the animation; they must be run through the "reorder"
+shell script in this directory first. The files in this directory are:
+
+  reorder    program to transform ".log" files into ".sx" files
+
+  *.log      the log file written by the instrumented version of Juno
+  *.sx       the files produced from the ".log" files by "reorder"
+  *.juno     the Juno command that was run to produce the ".log" file
+  *.solve    a dump produced by the Juno compiler of the ".juno" command
+
+See the "reorder" script itself for directions of its use.

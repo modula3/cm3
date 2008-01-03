@@ -1,0 +1,14 @@
+
+
+***
+*** illegal cycle in super types:
+***    child  = [0x10000294  _t0xd6319321  typecode=   0  Main.W]
+***    parent = [0x1000022c  _t0x5a31ef26  typecode=   0  Main.V]
+***    parent = [0x10000294  _t0xd6319321  typecode=   0  Main.W]
+***
+
+***
+*** runtime error:
+***    unable to initialize runtime types
+***
+

@@ -1,0 +1,31 @@
+; Last modified on Fri Aug 19 12:35:13 PDT 1994 by heydon
+;
+; This file contains the worst-case input for the to List algorithms
+; on 16 nodes.
+(
+  (NewSets 16)
+  (FinishedSets)
+
+  ; form sets of size 2
+  (Union 0 1 FALSE)
+  (Union 2 3 FALSE)
+  (Union 4 5 FALSE)
+  (Union 6 7 FALSE)
+  (Union 8 9 FALSE)
+  (Union 10 11 FALSE)
+  (Union 12 13 FALSE)
+  (Union 14 15 FALSE)
+
+  ; form sets of size 4
+  (Union 0 2 FALSE)
+  (Union 4 6 FALSE)
+  (Union 8 10 FALSE)
+  (Union 12 14 FALSE)
+
+  ; form sets of size 8
+  (Union 0 4 FALSE)
+  (Union 8 12 FALSE)
+
+  ; form final set of size 16
+  (Union 0 8 FALSE)
+)

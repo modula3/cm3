@@ -1,0 +1,26 @@
+Delivery-Date: Tue, 24 Apr 90 18:11:04 PDT
+Received: by jumbo; id AA29756; Tue, 24 Apr 90 18:10:54 PDT
+Received: by decwrl.dec.com; id AA25503; Tue, 24 Apr 90 18:10:45 -0700
+Received: from sun.nsfnet-relay.ac.uk by vax.NSFnet-Relay.AC.UK 
+           via Janet with NIFTP  id aa02210; 24 Apr 90 19:58 BST
+Received: from ashley.cl.cam.ac.uk by gnnt.Cl.Cam.AC.UK id aa12075;
+          24 Apr 90 17:51 BST
+To: kalsow
+Cc: muller
+Subject: Xrm.i3 problem
+Date: Tue, 24 Apr 90 17:51:47 +0100
+From: mjj%computer-lab.cambridge.ac.uk@NSFnet-Relay.AC.UK
+Message-Id:  <9004241751.aa12075@gnnt.Cl.Cam.AC.UK>
+
+This is not legal Modula-3, since procedure constants were removed.
+
+<* EXTERNAL XrmQuarkToString *>
+   PROCEDURE QuarkToString (quark: Quark): String;
+
+CONST
+  NameToString      =  QuarkToString;
+  ClassToString      =  QuarkToString;
+  RepresentationToString  =   QuarkToString;
+
+Mick 
+

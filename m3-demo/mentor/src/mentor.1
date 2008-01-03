@@ -1,0 +1,45 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Sun Aug 21 12:38:27 PDT 1994 by mhb      
+.\"      modified on Wed May 18 19:53:20 PDT 1994 by glassman 
+.\"      modified on Thu Sep 17 19:30:59 PDT 1992 by heydon 
+.nh
+.TH mentor 1
+.SH NAME
+mentor \- a slew of algorithm animations
+
+.SH SYNTAX
+mentor [-scale factor] [-xdrift x] [-ydrift y]
+
+.SH DESCRIPTION
+
+The bulk of the software in this application was developed as part of
+the 1992 and 1993 SRC Animation Festivals.
+.PP
+This application is not intended to be used by casual users. The Zeus
+UI is not documented, and many of the algorithms are buggy.  However,
+for those "in the know", mentor(1) is useful, as it collects all of
+the Zeus into a single application.
+.PP
+The -scale parameter is used to enlarge or shrink the Zeus control panel. 
+For instance, "-scale .5" would be useful when running
+mentor with a single display.
+.PP
+The -xdrift and -ydrift parameters offset each view window when it is
+restored from a snapshot. The default values of xdrift=0 and ydrift=24
+are tuned for the SRC default tvtwm. This gross and embarrassing hack
+will disappear soon. I hope.
+.PP
+The Zeus home page (See the "See Also" below) 
+gives a summary of the animations that are
+part of the mentor application.
+
+
+.SH "SEE ALSO"
+
+http://www.research.digital.com/SRC/zeus/home.html
+
+.SH AUTHOR OF DOCUMENTATION
+Marc H. Brown

@@ -1,0 +1,11 @@
+m3tk-asttrans.2 package -- created Fri Apr 3 13:47:18 PST 1992 by mjordan
+current owner mjordan
+
+This package contains some miscellaneous transformations on ASTs.
+It also includes a tool to display generic instantiations.
+
+M3CImportASTrans    Tranform to remove "IMPORT A AS B"
+M3ExpandCalls       Transform calls to include defaults and remove keywords
+M3QualNames         Transform to remove all "FROM I IMPORT N" and
+                    replaace N by I.N.
+M3GTool             See generic instantiations tool

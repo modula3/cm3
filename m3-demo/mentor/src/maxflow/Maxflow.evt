@@ -1,0 +1,40 @@
+(* Copyright 1992 Digital Equipment Corporation. *)
+(* Distributed only by permission.*)
+(* Last modified on Wed May  4 09:21:31 PDT 1994 by najork   *)
+(*      modified on Wed Aug  5 12:11:28 PDT 1992 by karsenty *)
+
+IMPORT MFGraph, GraphVBT, MFViews, MFAlgs, MFFmt, RefList, R2;
+
+       (* Call once at the beginning to initialize graph *)
+OUTPUT Setup (g: MFGraph.T[MFAlgs.NullText]; 
+	      source: MFGraph.Vertex[MFFmt.Ref]; 
+	      sink: MFGraph.Vertex[MFFmt.Ref]);
+
+OUTPUT HighlightPath (path: RefList.T[MFFmt.Ref]; maxCapacity: REAL[Fmt.Real]);
+
+OUTPUT IncFlow (edge: MFGraph.Edge[MFViews.PrintEdge]; 
+    		   flow: REAL[Fmt.Real]; 
+		   number: CARDINAL[Fmt.Int]; maxCapacity: REAL[Fmt.Real];
+ 		   capa: REAL[Fmt.Real]);
+
+OUTPUT DecFlow (edge: MFGraph.Edge[MFViews.PrintEdge]; 
+    		   oldflow: REAL[Fmt.Real]; newflow: REAL[Fmt.Real];
+                   number: CARDINAL[Fmt.Int]; maxCapacity: REAL[Fmt.Real];
+			capa: REAL[Fmt.Real]);
+
+OUTPUT ShowEdge (number, typeOfEdge: CARDINAL[Fmt.Int]);
+
+OUTPUT RemoveHighlight (sinkvertex: MFGraph.Vertex[MFFmt.Ref]);
+
+OUTPUT FinalResult(b: BOOLEAN[Fmt.Bool]);
+
+       (* create the twin GraphVBT.Vertex for v *)
+UPDATE AddVBTVertex (v: MFAlgs.MFVertex[MFFmt.Ref]; 
+		     pos: R2.T[R2.ToText]; 
+		     label: TEXT[MFAlgs.PrintText]);
+
+UPDATE AddVBTEdge (e: MFAlgs.MFEdge[MFFmt.Ref]);
+
+FEEDBACK AddVertex (pos: R2.T[R2.ToText]);
+FEEDBACK AddEdge (v0: MFGraph.Vertex[MFFmt.Ref]; 
+                  v1: MFGraph.Vertex[MFFmt.Ref]);

@@ -1,0 +1,44 @@
+App.i3: add
+?? (we don't use App)	PROCEDURE SameHost(host: TEXT): BOOLEAN;
+
+HTTP.i3:
+XX	URL.local() adds "service" parm
+XX	Request:  changed "client" data element to "postData"
+
+XX	add "defaultMsg" parm to ReplyUnauthorized()
+
+XX	add PROCEDURE WriteRedirectReply(wr: Wr.T; url, htmlMsg: TEXT; 
+				log: App.Log) 
+XX	add PROCEDURE AuthorizationAccount (request: Request;
+                                auth   : AuthType;
+                                log    : App.Log   ): TEXT
+XX	add PROCEDURE GetUserAgent (req: Request; VAR (* out *) 
+				version: INTEGER):
+
+HTTPApp.i3:
+
+XX	remove PROCEDURE PostRd(request: HTTP.Request; rd: Rd.T; 
+			log: App.Log): Rd.T RAISES {App.Error};
+
+XX	proxies handling has changed (fixed!)
+
+XX	remove PROCEDURE ParseNoProxy()
+
+XX	Serve(), ServerPort(), Client() have a new parameter (serviceValue)
+
+XX	RegisterRequestHandler() has new "port" parameter
+
+HTTPControl.i3:
+XX	new   NotAuthorized exception
+XX	Form.respond raises NotAuthorized
+XX	hide data fields in StaticForm
+XX	add "req: HTTP.Request" parameter to all Value methods, and all raise
+	 	NotAuthorized
+
+HTTPControlValue.i3:
+	add "req: HTTP.Request" parameter to all Value methods, and all raise
+	 	NotAuthorized
+	removed all visible data fields from TextValue
+
+HTTPProxy.i3:
+	changed a bit.

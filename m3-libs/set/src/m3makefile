@@ -1,0 +1,31 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Mon Jul 25 11:52:51 PDT 1994 by detlefs                  */
+/*      modified on Tue Feb 11 20:48:28 PST 1992 by muller                   */
+
+import("libm3")
+
+Generic_module ("Set")
+Generic_module ("SetDef")
+Generic_module ("SetList")
+
+template("set")
+
+MkSet("Atom", "Atom")
+MkSetDef("Atom", "Atom")
+MkSetList("Atom", "Atom")
+
+MkSet("Int", "Integer")
+MkSetDef("Int", "Integer")
+MkSetList("Int", "Integer")
+
+MkSet("Text", "Text")
+MkSetDef("Text", "Text")
+MkSetList("Text", "Text")
+
+MkSet("Ref", "Refany")
+MkSetList("Ref", "Refany")
+
+Library("set")

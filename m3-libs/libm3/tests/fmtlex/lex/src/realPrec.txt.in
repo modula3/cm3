@@ -1,0 +1,55 @@
+# Last modified on Tue Mar 15 10:17:55 PST 1994 by heydon
+
+# This file tests that the conversion routine Float.FromDecimal does in fact
+# round to the nearest floating-point number, even when it may require reading
+# many digits to decide which way to round.
+
+# For each floating-point type, we first read two adjacent numbers in the
+# type's space of representable numbers, "lo" and "hi". Let "avg" be the
+# exact average of "lo" and "hi". We then read two numbers that are slightly
+# less than and greater than "avg", differing from "avg" only in the last
+# (decimal) digit. The conversion routine should convert these values to "lo"
+# and "hi", respectively.
+
+# In all cases, "lo = 2^(-20) + 2^(-22)", and "avg = (lo + hi) / 2". The only
+# thing that changes in each case is the value of "hi", which depends on the
+# number of significant bits in the representation of the floating-point
+# type's mantissa.
+
+# The exact decimal representations of these numbers were obtained using
+# xmaple(1). For example, to obtain the values for "lo", "hi", and "avg" in
+# the single-precision case, one types:
+#    > Digits := 50;
+#    > evalf(2^(-20)+2^(-22));
+#    > evalf(2^(-20)+2^(-22)+2^(-43));
+#    > evalf(2^(-20)+2^(-22)+2^(-44));
+
+# -----------------------------------------------------------------------------
+# single-precision REAL's
+#   24 significant mantissa bits
+#   hi = lo + 2^(-43)
+#
+r 1.1920928955078125e-6				# = lo
+r 1.1920930091946502216160297393798828125e-6	# = hi
+r 1.19209295235123136080801486968994140624e-6	# avg-epsilon => lo
+r 1.19209295235123136080801486968994140626e-6	# avg+epsilon => hi
+
+# -----------------------------------------------------------------------------
+# double-precision LONGREAL's
+#   53 significant bits of mantissa
+#   hi = lo + 2^(-72)
+#
+l 1.1920928955078125e-6								# = lo
+l 1.192092895507812711758236813575084767080625169910490512847900390625e-6	# = hi
+l 1.1920928955078126058791184067875423835403125849552452564239501953124e-6	# avg-epsilon => lo
+l 1.1920928955078126058791184067875423835403125849552452564239501953126e-6	# avg+epsilon => hi
+
+# -----------------------------------------------------------------------------
+# high-precision EXTENDED's
+#   64 significant bits of mantissa
+#   hi = lo + 2^(-83)
+#
+e 1.1920928955078125e-6									# = lo
+e 1.19209289550781250010339757656912845935892608650874535669572651386260986328125e-6	# = hi
+e 1.192092895507812500051698788284564229679463043254372678347863256931304931640624e-6	# avg-epsilon => lo
+e 1.192092895507812500051698788284564229679463043254372678347863256931304931640626e-6	# avg+epsilon => hi

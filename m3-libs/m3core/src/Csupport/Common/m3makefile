@@ -1,0 +1,9 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Fri Aug 13 13:57:37 PDT 1993 by kalsow
+%      modified on Tue Feb 11 15:18:40 PST 1992 by muller
+
+h_source ("dtoa")
+c_source ("hand")

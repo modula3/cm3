@@ -1,0 +1,33 @@
+/* Copyright (C) 1994, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+/*                                                             */
+/* Last modified on Thu Aug 22 16:30:34 PDT 1996 by najork     */
+/*      modified on Thu Jun 20 15:36:19 PDT 1996 by heydon     */
+/*      modified on Sat Oct 17 13:52:24 PDT 1992 by ramshaw    */
+
+import ("zeus")
+
+module ("Site")
+list ("Site", "Site")
+
+zume  ("Hull")
+
+module  ("HullFmt")
+module  ("MyColors")
+module  ("AlgTypes")
+module  ("HullInput")
+module  ("RubberAlg")
+module  ("WrapAlg")
+% module  ("GrahamAlg") 
+module  ("ArrayView")
+module  ("GeomView")
+
+resource  ("hullinput.fv")
+resource  ("WrapAlg.m3.cv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation  ("Main")
+  bundle  ("HullBundle")
+  program  ("hull")
+end

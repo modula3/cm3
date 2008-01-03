@@ -1,0 +1,87 @@
+# Last modified on Thu Feb 24 13:11:50 PST 1994 by heydon
+
+# This file contains example of inputs that should all be read and converted
+# successfully by the "Lex" implementation. Each line ends with some
+# extraneous characters so as to verify that implementation consumes the
+# correct number of characters from the reader it is given.
+
+# scan (matches non-blanks)
+s		# => <no value>, ""
+s abc		# => "abc", ""
+s abc def	# => "abc", " def"
+# The next line tests that scan can accommate results longer than 256 chars
+s  01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789		long line
+
+# match
+m a abcde	# => "a", "bcde"
+m abc abc	# => "abc", ""
+m abc abcde	# => "abc", "de"
+
+# booleans
+b true		# => TRUE, ""
+b trueXYZ	# => TRUE, "XYZ"
+b TRUEXYZ	# => TRUE, "XYZ"
+b TrUeXYZ	# => TRUE, "XYZ"
+b falseXYZ	# => FALSE, "XYZ"
+b FALSEXYZ	# => FALSE, "XYZ"
+b FaLsEXYZ	# => FALSE, "XYZ"
+
+# signed base-10 integers
+i +5ABC		# => 5, "ABC"
+i -52ABC	# => -52, "ABC"
+i 1_0000	# => 1, "_0000"
+i 17_1234	# => 17, "_1234"
+I 3 10_12ABC	# => 3_110, "ABC"
+i 02_101ABC	# => 2, "_101ABC"
+i 016_ABC	# => 16, "_ABC"
+
+# signed integers (not base 10)
+i -2_1010ABC	# => -10, "ABC"
+I 2 -1010ABC	# => -2_1010, "ABC"
+i 8_000377XYZ	# => 255, "XYZ"
+i 15_789ABCXYZ	# => 5753427, "XYZ"
+I 15 789ABCXYZ  # => 15_789abc, "XYZ"
+i 16_00FfXYZ	# => 255, "XYZ"
+
+# unsigned (base-16) integers
+u 00fFXYZ	# => ff, "XYZ"
+u 100XYZ	# => 100, "XYZ"
+u AXYZ		# => a, "XYZ"
+
+# unsigned integers (not base 16)
+u 2_1010ABC	# => a, "ABC"
+u 10_255ABC	# => ff, "ABC"
+
+# single-precision real numbers
+r 1ABC		# => 1.E0, "ABC"
+r -1ABC		# => -1.E0, "ABC"
+r .5.		# => 5.E-1, "."
+r .0.		# => 0.E0, "."
+r 0.0.		# => 0.E0, "."
+r 0..		# => 0.E0, "."
+r 1.0e2_101	# => 1.E2, "_101"
+r 0.5		# => 0.5, ""
+
+# double-precision real numbers
+
+# extended-precision real numbers
+
+# Test that each type accepts all three exponent letters (upper and lower)
+r 1.5e3ABC	# => 1.5E3, "ABC"
+r 1.5E3ABC	# => 1.5E3, "ABC"
+r 1.5d3ABC	# => 1.5E3, "ABC"
+r 1.5D3ABC	# => 1.5E3, "ABC"
+r 1.5x3ABC	# => 1.5E3, "ABC"
+r 1.5X3ABC	# => 1.5E3, "ABC"
+l 1.5e3ABC	# => 1.5D3, "ABC"
+l 1.5E3ABC	# => 1.5D3, "ABC"
+l 1.5d3ABC	# => 1.5D3, "ABC"
+l 1.5D3ABC	# => 1.5D3, "ABC"
+l 1.5x3ABC	# => 1.5D3, "ABC"
+l 1.5X3ABC	# => 1.5D3, "ABC"
+e 1.5e3ABC	# => 1.5D3, "ABC"
+e 1.5E3ABC	# => 1.5D3, "ABC"
+e 1.5d3ABC	# => 1.5D3, "ABC"
+e 1.5D3ABC	# => 1.5D3, "ABC"
+e 1.5x3ABC	# => 1.5D3, "ABC"
+e 1.5X3ABC	# => 1.5D3, "ABC"

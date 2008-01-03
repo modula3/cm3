@@ -1,0 +1,64 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Dec  1 09:52:35 PST 1994 by kalsow
+%      modified on Mon Jan 18 11:50:18 PST 1993 by muller
+
+readonly M3Config_body = [
+  "(* Copyright (C) 1994, Digital Equipment Corporation *)",
+  "(* All rights reserved.                              *)",
+  "(* See the file COPYRIGHT for a full description.    *)",
+  "",
+  "(* This interface exports the configuration information",
+  "   used by m3build and quake.  These constants were defined",
+  "   when Modula-3 was installed. *)",
+  "",
+  "INTERFACE M3Config;",
+  "",
+  "CONST  (* misc. configuration *)",
+  "  TARGET    = \"" & escape(TARGET) & "\";",
+  "  OS_TYPE   = \"" & escape(OS_TYPE) & "\";",
+  "  WORD_SIZE = \"" & escape(WORD_SIZE) & "\";",
+  "  BUILD_DIR = \"" & escape(DEFAULT_BUILD_DIR) & "\";",
+  "  PATH_SEP  = \"" & escape(SL) & "\";",
+  "  M3        = \"" & escape(M3) & "\"; (* the compiler *)",
+  "",
+  "CONST (* installation directories *)",
+  "  BIN_INSTALL   = \"" & escape(BIN_INSTALL) & "\";",
+  "  LIB_INSTALL   = \"" & escape(LIB_INSTALL) & "\";",
+  "  DOC_INSTALL   = \"" & escape(DOC_INSTALL) & "\";",
+  "  PKG_INSTALL   = \"" & escape(PKG_INSTALL) & "\";",
+  "  MAN_INSTALL   = \"" & escape(MAN_INSTALL) & "\";",
+  "  EMACS_INSTALL = \"" & escape(EMACS_INSTALL) & "\";",
+  "  HTML_INSTALL  = \"" & escape(HTML_INSTALL) & "\";",
+  "",
+  "(* On some systems (e.g. AFS) you must install public files",
+  "   in a different place from where you use them.  The paths",
+  "   below specify where to find the installed files. *)",
+  "",
+  "CONST",
+  "  BIN_USE   = \"" & escape(BIN_USE) & "\";",
+  "  LIB_USE   = \"" & escape(LIB_USE) & "\";",
+  "  DOC_USE   = \"" & escape(DOC_INSTALL) & "\";",
+  "  PKG_USE   = \"" & escape(PKG_USE) & "\";",
+  "  MAN_USE   = \"" & escape(MAN_INSTALL) & "\";",
+  "  EMACS_USE = \"" & escape(EMACS_INSTALL) & "\";",
+  "  HTML_USE  = \"" & escape(HTML_INSTALL) & "\";",
+  "",
+  "END M3Config."
+]
+
+if defined("_all")
+  > ".M3Config.i3" in
+    foreach line in M3Config_body
+      write (line, CR)
+    end
+  end
+  cp_if (".M3Config.i3", "M3Config.i3")
+end
+
+derived_interface ("M3Config", VISIBLE)
+
+
+

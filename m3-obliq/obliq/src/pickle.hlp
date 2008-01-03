@@ -1,0 +1,7 @@
+  pickle_failure: Exception
+  All(T) pickle_write(w: Wr, v: T): Ok 
+    ! pickle_failure wr_failure thread_alerted
+    Copy a value to a writer, similarly to sys_copy.
+  Some(T) pickle_read(r: Rd): T 
+    ! pickle_failure rd_failure rd_eofFailure thread_alerted
+    Copy a value from a reader, similarly to sys_copy.

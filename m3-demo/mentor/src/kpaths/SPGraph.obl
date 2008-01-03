@@ -1,0 +1,328 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+let RingSize = [0.15, 0.10, 0.05];
+let RingColor = [color_named("darkred"), color_named("darkgreen"),
+                 color_named("darkblue")];
+let GraphEdgeColor = color_named("gray");
+let FlickerColor = color_named("verylightgray");
+let HighColor = color_named("black");
+let HighBorder = 0.01;
+
+let PathColor = color_named("red");
+let PromoteColor = RingColor;
+let CandidateColor = [GraphEdgeColor, color_named("lightred"),
+                      color_named("lightgreen"), color_named("lightblue")];
+let BackgroundColor = color_named("darkslategray");
+let EdgeWidth = [0.00575, 0.00375, 0.00375, 0.00375];
+let SourceColor = RingColor[0];
+let DestColor = RingColor[2];
+  
+let Graphic = {
+        go => ok, (* the graphical object *)
+        up => ok, (* the predecessor Graphic *)
+        bottom => ok, (* the lowest element *)
+
+        newAbove => meth(self, obj)
+          var res = clone(self);
+          res.go := obj;
+          self.up := res;
+          var lift = res;
+          loop
+            if lift is ok then exit end;
+            graph_setObjectLayer(lift.go, 0);
+            lift := lift.up
+          end;
+          res
+        end,
+          
+        down => meth(self)
+          var p = self.bottom;
+          loop
+            if p is ok then exit end;
+            if p.up is self then exit end;
+            p := p.up
+          end;
+          p
+        end,
+
+        newBelow => meth(self, obj)
+          self.down.newAbove(obj)
+        end,
+
+        remove => meth(self)
+          var p = self.down;
+          if not (p is ok) then p.up := self.up end;
+          self.go
+        end
+};
+
+let Edge = {
+  t => ok,
+  sourceV => ok,
+  sourceN => -1,
+  destV => ok,
+  destN => -1,
+  gr => ok,
+  ctls => ok,
+  sex => ok,
+
+  create => meth(self, t, fromV, fromN, toV, toN, sex)
+    let invisible = proc(pt)
+      let res = graph_newVertex(t.g);
+      graph_setVertexSize(res, 0.0, 0.0);
+      graph_moveVertex(res, pt[0], pt[1], false);
+      res
+    end;
+    let +++ = proc(p, q)
+      [ p[0] + q[0], p[1] + q[1] ]
+    end;
+    let --- = proc(p, q)
+      [ p[0] - q[0], p[1] - q[1] ]
+    end;
+    let *** = proc(p, q)
+      [ (p[0] * q[0]) - (p[1] * q[1]),
+        (p[0] * q[1]) + (p[1] * q[0]) ]
+    end;
+    let rel = proc(z, w) 
+      w[0] +++ (z *** (w[1] --- w[0]))
+    end;
+    self.gr := [ok, ok];
+    self.t := t;
+    self.sex := sex;
+    self.sourceV := fromV;
+    self.sourceN := fromN;
+    self.destV := toV;
+    self.destN := toN;
+    let spos = fromV.pos;
+    let dpos = toV.pos;
+    var skew = float(fromN + 1) / (0.0 - 10.0);
+    if sex is "L" then skew := 0.0 - skew end;
+    var mid = [0.5, skew] rel [spos, dpos];
+    var s2 = [0.33, skew] rel [spos, dpos];
+    var s1 = [0.5, skew / 4.0] rel [spos, s2];
+    var d2 = [0.67, skew] rel [spos, dpos];
+    var d1 = [0.5, skew / 4.0] rel [d2, dpos];
+    var midpt = invisible(mid);
+    var s1pt = invisible(s1);
+    var s2pt = invisible(s2);
+    var d1pt = invisible(d1);
+    var d2pt = invisible(d2);
+    self.ctls := [midpt, s1pt, s2pt, d1pt, d2pt];
+    var sedge = graph_newEdge(fromV.graphic(fromN).go, midpt);
+    graph_moveEdgeBezier(sedge, fromV.graphic(fromN).go, midpt,
+                         s1pt, s2pt, false);
+    self.gr[0] := fromV.graphic(fromN).newBelow(sedge);
+    var dedge = graph_newEdge(midpt, toV.graphic(toN).go);
+    graph_moveEdgeBezier(dedge, midpt, toV.graphic(toN).go,
+                         d2pt, d1pt, false);
+    self.gr[1] := toV.graphic(toN).newBelow(dedge);
+    graph_setEdgeColor(sedge, CandidateColor[fromN+1]);
+    graph_setEdgeColor(dedge, CandidateColor[fromN+1]);
+    graph_setEdgeWidth(sedge, EdgeWidth[fromN+1]);
+    graph_setEdgeWidth(dedge, EdgeWidth[fromN+1]);
+    graph_setEdgeArrows(dedge, false, true);
+    if toN >= 0 then toV.setInEdge(toN, self) end;
+    self
+  end,
+
+  midpt => meth(self) self.ctls[0] end,
+
+  demote => meth(self)
+    foreach g in self.gr do
+      if not (g is ok) then
+        graph_removeEdge(g.remove)
+      end
+    end;
+    foreach g in self.ctls do
+      if not (g is ok) then graph_removeVertex(g) end
+    end;
+    if (self.destN + 1) < #(RingColor) then
+      self.create(self.t, self.sourceV, self.sourceN, self.destV, 
+                  self.destN + 1)
+    end
+  end,
+
+  highlight => meth(self, clr)
+    foreach g in self.gr do
+      graph_setEdgeColor(g.go, clr);
+    end
+  end,
+};
+  
+let Vertex = {
+  position => ok,
+  t => ok,
+  gr => ok,
+  incEdge => ok,
+
+  pos => meth(self) self.position end,
+
+  graphic => meth(self, i)
+    if (i+1) < #(self.gr) then self.gr[i+1] else self.t.bottom end end,
+
+  inEdge => meth(self, i) self.incEdge[i] end,
+
+  setInEdge => meth(self, i, e) self.incEdge[i] := e end,
+
+  highlight => meth(self, i, clr)
+    graph_setVertexColor(self.graphic(i).go, clr)
+  end,
+
+ create => meth(self, t, x, y, name)
+    self.gr := [ok, ok, ok, ok];
+    self.incEdge := [ok, ok, ok];
+    var stack = t.bottom;
+    self.position := [x, y];
+    self.t := t;
+    for i = 0 to 2 do
+      var v = graph_newVertex(t.g);
+      graph_moveVertex(v, x, y, false);
+      graph_setVertexShape(v, "ellipse");
+      graph_setVertexSize(v, RingSize[i], RingSize[i]);
+      graph_setVertexLabel(v, name);
+      graph_setVertexColor(v, CandidateColor[3-i]);
+      stack := stack.newAbove(v);
+      self.gr[3-i] := stack
+    end;
+    self.gr[0] := self.gr[3];
+    self
+  end,
+};
+
+let view = {
+ graphvbt => graph_new(),
+ g => meth (self) self.graphvbt end,
+
+ bottom => clone(Graphic),
+ spotlight => {current => ok, curIndex => 0, spot =>ok},
+ 
+ vtable => ok,
+ etable => [ ],
+
+ vertex => meth(self, name)
+   var res = ok;
+   for i = 0 to #(self.vtable)-1 do
+     if self.vtable[i].name is name then
+       res := self.vtable[i].vertex;
+       exit
+     end
+   end;
+   res
+ end,
+ 
+ edge => meth(self, name)
+   var res = ok;
+   for i = 0 to #(self.etable)-1 do
+     if self.etable[i].name is name then
+       res := self.etable[i].edge;
+       exit
+     end
+   end;
+   res
+ end,
+ 
+ NewVertex => meth (self, name, x, y)
+   if self.vtable is ok then
+     self.bottom.bottom := self.bottom;
+     self.vtable := [ ];
+     graph_setAspect(self.g, 1.0);
+     graph_setWorld(self.g, 0.0, 1.0, 1.0, 0.0);
+     let bg = graph_newVertex(self.g);
+     graph_moveVertex(bg, 0.5, 0.5, false);
+     graph_setVertexColor(bg, BackgroundColor);
+     graph_setVertexSize(bg, 1.0, 1.0);
+   end;
+   self.vtable :=
+     self.vtable @
+       [{name => name,
+         vertex => clone(Vertex).create(self, x, y, name)}];
+   graph_redisplay(self.g)
+ end,
+
+ NewEdge => meth (self, name, frompt, topt, orientation)
+   self.etable :=
+     self.etable @
+       [{name => name,
+         edge => clone(Edge).create(self, self.vertex(frompt),
+                                    -1, self.vertex(topt), -1, orientation)}];
+   graph_redisplay(self.g)
+ end,
+
+ StartFind => meth (self, frompt, topt)
+   self.vertex(frompt).highlight(0, SourceColor);
+   self.spotlight.current := self.vertex(frompt);
+   self.spotlight.curIndex := 0;
+   self.spotlight.spot :=
+     self.spotlight.current.graphic(1).newAbove(
+       graph_newVertexHiLi(self.spotlight.current.graphic(0).go));
+   graph_setVertexHiLiBorder(self.spotlight.spot.go, HighBorder, HighBorder);
+   graph_setVertexHiLiColor(self.spotlight.spot.go, HighColor);
+(* self.vertex(topt).highlight(2, DestColor); *)
+   graph_redisplay(self.g)
+ end,
+
+ Promote => meth (self, edge, sIndex, dIndex)
+   let dest = self.edge(edge).destV;
+   let mid = graph_newVertex(self.g);
+   let spot = self.spotlight.spot.go;
+   let size = (* (RingSize[2-dIndex] + RingSize[2-self.spotlight.curIndex])/2.0; *) 0.0;
+   graph_setVertexSize(mid, size, size);
+   graph_setVertexColor(mid, BackgroundColor);
+   graph_setVertexShape(mid, "ellipse");
+   graph_moveVertex(mid,
+     (self.spotlight.current.pos[0] + dest.pos[0]) / 2.0,
+     (self.spotlight.current.pos[1] + dest.pos[1]) / 2.0, false);
+   graph_moveVertexHiLi(spot, mid, true);
+   zeus_animate(self.g, 0.0, 0.5);
+   self.spotlight.spot.remove;
+   self.spotlight.spot := dest.graphic(dIndex+1).newAbove(spot);
+   self.spotlight.curIndex := dIndex;
+   graph_moveVertexHiLi(spot, dest.graphic(dIndex).go, true);
+   zeus_animate(self.g, 0.5, 1.0);
+   graph_removeVertex(mid);
+   self.spotlight.current := dest;
+   dest.inEdge(dIndex).highlight(CandidateColor[sIndex+1]);
+   graph_redisplay(self.g);
+   dest.inEdge(dIndex).highlight(PromoteColor[sIndex]);
+   graph_redisplay(self.g);
+   dest.inEdge(dIndex).highlight(CandidateColor[sIndex+1]);
+   graph_redisplay(self.g);
+   dest.inEdge(dIndex).highlight(PromoteColor[sIndex]);
+   graph_redisplay(self.g);
+   self.edge(edge).destV.highlight(dIndex, RingColor[dIndex]);
+   graph_redisplay(self.g)
+ end,
+
+ Consider => meth (self, edge, sIndex, dIndex)
+   let e = self.edge(edge);
+   let s = e.sourceV;
+   let d = e.destV;
+   for t = 1 to 4 do
+     e.highlight(CandidateColor[sIndex+1]);
+     graph_redisplay(self.g);
+     e.highlight(GraphEdgeColor);
+     graph_redisplay(self.g);
+   end;
+   if dIndex >= 0 then
+     var i = #(d.incEdge)-1;
+     loop
+       let inP = d.inEdge(i);
+       if not (inP is ok) then inP.demote() end;
+       if i is dIndex then exit end;
+       i := i - 1
+     end;
+     clone(Edge).create(self, s, sIndex, d, dIndex, e.sex)
+   end;
+   graph_redisplay(self.g)
+ end,
+
+ Traceback => meth (self, edge, sIndex, dIndex)
+(*   self.edge(edge).destV.inEdge(dIndex).highlight(PathColor);
+   graph_redisplay(self.g) *)
+   ok
+ end,
+};
+

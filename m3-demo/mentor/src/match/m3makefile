@@ -1,0 +1,24 @@
+/* Copyright (C) 1994, Digital Equipment Corporation        */
+/* All rights reserved.                                     */
+/* See the file COPYRIGHT for a full description.           */
+/*                                                          */
+/* Last modified on Thu Jun 20 15:38:45 PDT 1996 by heydon  */
+/*      modified on Tue May 24 09:06:05 PDT 1994 by najork  */
+/*      modified on Mon Sep 14 21:23:20 PDT 1992 by mhb     */
+
+import    ("zeus")
+
+zume      ("Match")
+
+module    ("Match")
+module    ("AlgMatch")
+module    ("ViewMatch")
+interface ("MatchRect")
+module    ("MatchSelector")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("MatchBundle")
+  manPage        ("match", 1)
+  program        ("match")
+end

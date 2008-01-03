@@ -1,0 +1,12 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:47:07 PST 1995 by mhb     *)
+
+let top = "(Shape (Width 400) (Height 400)
+			(ZSplit %topzsplit (ZBackground \"hello\")))";
+let fv = form_new(top);
+form_show(fv);
+let sx = "(ZChild Open (At 15 15 NW Absolute)  (Button %b \"ABC\"\n))";
+form_insert(fv, "topzsplit", sx, 1);

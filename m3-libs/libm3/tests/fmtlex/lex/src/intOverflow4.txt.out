@@ -1,0 +1,56 @@
+i  16_7fffffff 	# => 2147483647
+-> 2147483647
+-> ""
+
+i   2147483647	# => 2147483647
+-> 2147483647
+-> ""
+
+i  16_80000000	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+i   2147483648	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+i  21474836400	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+i -16_80000000	# => -2147483648
+-> -2147483648
+-> ""
+
+i  -2147483648	# => -2147483648
+-> -2147483648
+-> ""
+
+i -16_80000001	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+i  -2147483649	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+i -21474836400	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+u  ffffffff	# => ffffffff
+-> ffffffff
+-> ""
+
+u 100000000	# => Integer Overflow
+** Integer Overflow
+-> ""
+
+i 999999999999999999999ABCDEFGHIJ	# => Integer Overflow, "ABCDEFGHIJ"
+** Integer Overflow
+-> "ABCDEFGHIJ"
+
+u 999999999999999999999ABCDEFGHIJ	# => Integer Overflow, "GHIJ"
+** Integer Overflow
+-> "GHIJ"
+

@@ -1,0 +1,273 @@
+		       FormsEdit -- version 2.7
+
+FormsEdit uses TextPort to support four editing "models": Emacs, Ivy,
+Mac, and Xterm.  When you change models, the keybinding-labels in the
+menus change accordingly.  The Ivy model uses the notation "oA" to
+mean "option-a"; the other models describe the same key as "M-a",
+meaning "meta-a".  This key is whatever the X-server maps to "mod1";
+on some keyboards it is labeled "Alt", "Compose", or "Compose
+Character".
+
+
+FormsEdit menu-layout:
+
+    (Quill pen icon)
+        About ...        shows info about this version
+        Help             shows this file. (The key labeled
+                            "Help" also brings up this file.)
+        Editing Model    changes the keybindings and selection controls
+	    Ivy
+	    Emacs
+            Mac
+            Xterm
+        Quit             stops the application, after notifying you
+                         about an unsaved edits
+
+    File
+        New              creates new editor and result views
+        Open...          opens an existing .fv file
+        Close            closes the editor and result views
+        Save             saves the current .fv file
+        Save As ...      allows you to choose a name for the file
+        Revert To Saved  discards edits since the last Save
+        PP setup...      allows you to change the width used by
+                         the prettyprinter
+        PPrint           prettyprints the form (it does NOT send
+                         the file to a hardcopy printer)
+        Quit             stops the application, after notifying you
+                         about an unsaved edits
+
+    Edit
+        Undo             reverses the effect of the last text-edit.
+			     This does NOT re-parse the form.
+	Redo             reinstates the last text-edit.
+			     This does NOT re-parse the form.
+        Cut              deletes the [primary] selection and saves it
+        Copy             copies the [primary] selection
+        Paste            inserts the contents of the source selection
+        Clear            deletes the current selection
+        Select All       selects the entire text
+	Find...		 opens a "search" dialog
+	Find Next
+	Find Prev
+
+    Misc
+	Show the named VBTs...
+ 		displays a list of all the named sub-forms (e.g.,
+ 		"%StartButton") along with their Modula-3 types (e.g.,
+ 		"FVTypes.ButtonVBT") and shapes (horizontal [lo, pref,
+ 		hi], vertical [lo, pref, hi]).  An asterisk indicates
+ 		that there is a procedure attached to this interactor.
+	Show current snapshot ...
+		invokes the "snapshot" method of the form (see the
+		FormsVBT interface) and displays the results in a
+		pop-up window.
+        Show last error message
+		pops up the error-message window, which normally disappears
+                5 seconds after an error.
+	Move Result to... 
+		moves the result-view to a different screen
+	Move Editor to...
+		moves the editor to a different screen
+		
+    <filename>		the name of the file being edited
+
+    Do It
+	This is a button, not a menu.  (The keyboard equivalent on an
+	LK201 is the large key labeled "Do".)  It invokes the FormsVBT
+	parser and changes the display in the result view, unless
+	there are errors.
+
+
+NOTES
+
+The language interpreted by formsedit (i.e., by the Modula-3 FormsVBT
+runtime interface) is defined in the FormsVBT Reference Manual.  Some
+of the properties can be changed at runtime.
+    
+The following universal properties are supported:
+
+        BgColor
+        Color
+        DarkShadow
+        Font
+        Labelfont
+        LightShadow
+        Name
+        ShadowSize
+
+A Macro definition can appear anywhere, as if it were a universal
+property. The syntax for defining a macro is:
+    
+        (Macro <name> [BOA] <formals> <expression>)
+
+            Example:
+
+                (Macro Boxed (x)
+                  `(Border (Pen 2) (Rim (Pen 16) ,x)))
+
+            The syntax for calling a macro is
+
+                (<name> (<formal> <actual>) (<formal> <actual>) ...)
+
+            Example:
+
+                (Boxed (x (Text (BgColor "Red") "Warning")))
+
+            That expands into
+
+                (Border (Pen 2)
+                    (Rim (Pen 16)
+                        (Text (BgColor "Red") "Warning"))))
+
+            If the keyword BOA ("by order of arguments") appears
+            in the macro definition, then the arguments are
+            positional and not named. Example:
+
+                (Macro Ht BOA (n v) `(Shape (Height ,n) ,v))
+
+            Given that definition,
+		(Ht 20 (Button "Go!"))
+	    expands into
+	        (Shape (Height 20) (Button "Go!"))
+            
+            Macros must be defined before they are called. The effect
+            of using a macro to redefine an existing name (e.g., VBox)
+            is undefined. The expressions should expand into legal
+            forms, including Macros.  Nested backquotes are permitted.
+            Within a backquote, you may use "," to insert a value,
+            or ",@" to append a list of values.  Example:
+
+                (Macro V (items) `(VBox (Color "Red") ,@items))
+                (V (items ("abc" "def")))
+
+            The second form expands into
+
+                (VBox (Color "Red") "abc" "def")
+
+Font and LabelFont take string-arguments, e.g., 
+
+    "fixed"
+    "-*-new century schoolbook-*-r-*-*-*-120-*-*-*-*-*-*"
+    
+They also take their own property lists for the individual
+metrics:
+
+	Foundry
+	Family
+	WeightName
+	Slant
+	Width
+	PointSize
+	HRes
+	VRes
+	Spacing
+	AvgWidth
+	Encoding
+	Registry
+
+PointSize is a cardinal, and it actually represents TENTHS of a point,
+so a 12-point would be specified as (PointSize 120).  All the other
+metrics are text.  The defaults are:
+
+(Font	(Foundry	"*")
+	(Family		"fixed")
+	(WeightName	"medium")
+	(Slant		"r")
+	(Width		"semicondensed")
+	(PointSize 	100)
+	(HRes 		"*")
+	(VRes 		"*")
+	(Spacing	"*")
+	(AvgWidth 	"*")
+	(Encoding 	"iso8859")
+	(Registry 	"1"))
+(LabelFont
+	(Foundry	"*")
+	(Family		"helvetica")
+	(WeightName	"bold")
+	(Slant		"r")
+	(Width		"*")
+	(PointSize 	100)
+	(HRes 		"*")
+	(VRes 		"*")
+	(Spacing	"*")
+	(AvgWidth 	"*")
+	(Encoding 	"iso8859")
+	(Registry 	"1"))
+	
+Most users will specify only Family, WeightName,
+and PointSize.  Examples:
+
+    (Font (Family "courier") (WeightName "Bold"))
+    (LabelFont (Family "Times") (PointSize 240))
+
+The chart below lists the components and the properties they support.
+See the FormsVBT Reference Manual for details.
+
+        Audio => Value, Volume, Mute, IgnoreMapping
+        Bar => SizeRange
+        Boolean => Inverting, CheckMark, CheckBox, MenuStyle, Value
+        Border => Pen, Pattern
+        Browser => Value, Select, Items, From, Quick
+        Button    
+        Choice => Inverting, CheckMark, CheckBox, MenuStyle, Value
+        CloseButton => For
+        DirMenu => For [filebrowser]
+        FileBrowser => ReadOnly, Suffixes
+        Fill => SizeRange
+        Filter => Passive, Dormant, Vanish, Active
+        Frame => ShadowStyle
+        Generic
+        Glue => SizeRange
+        Guard
+        HBox
+        HPackSplit => HGap, VGap, Background
+        HTile => Targets
+        Helper => For [filebrowser]
+        Insert => Main
+        IntApply => For, Property
+        LinkButton => For
+        LinkMButton => For
+        Macro
+        MButton
+        Menu
+        MultiBrowser => Value, Select, Items, From, Quick
+        Numeric => AllowEmpty, HideButtons, Value, Min, Max
+        PageButton => For [TSplit], Back
+        PageMButton => For [TSplit], Back
+        Pixmap => Main
+        PopButton => For [ZChild or ZChassis]
+        PopMButton => For [ZChild or ZChassis]
+        Radio => Value
+        Ridge => Main, ShadowStyle
+        Rim => Pen, Pattern
+        Scale => HScale, VScale
+        Scroller => Unrelated, Vertical, Min, Max, Value, Thumb, Step
+        Shape => Height, Width, Main
+        Source
+        Stable
+        TSplit => Value, Which, Circular, Flex
+        Target
+        Text => Main, Margin, LeftAlign, RightAlign, From
+        TextEdit => From, Value, ReadOnly
+        Texture => Main, LocalAlign
+        TrillButton
+        TypeIn => Value, ExpandOnDemand, ReadOnly, Scrollable
+        VBox
+        VPackSplit => HGap, VGap, Background
+        VTile => Targets
+        Video => Quality, Colors, Width, Height, Synchronous,
+          MSecs, Paused, FixedSize
+        Viewport => Step; HorAndVer, HorOnly, or VerOnly.
+        ZBackground
+        ZChassis => At, Open, Title, NoClose
+        ZChild   => At, Open
+        ZGrow
+        ZMove
+        ZSplit
+
+Copyright © 1992-1993, Digital Equipment Corporation.
+Distributed only by permission.
+Last modified on Thu Feb 29 12:40:04 PST 1996 by mhb   
+     modified on Sun Mar 14 18:19:28 PST 1993 by meehan

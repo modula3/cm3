@@ -1,0 +1,97 @@
+.nh
+.TH pkgfp 1
+.SH NAME
+pkgfp \- fingerprinting of package database; used by siphon
+.SH SYNTAX
+\fBpkgfp\fR [\fB-vfcpx\fR] [\fB-r replicaName\fR] [\fBpackages\fR ...]
+.SH DESCRIPTION
+This program fingerprints packages.
+.PP
+Fingerprints are used by the siphon software to make sure that
+packages are the same at distant sites (SRC and PRL). They can also be
+used to make sure that two replicas at the same site are the same.
+.PP
+The default action is to fingerprint all packages for which no valid
+fingerprint exists in the packageserver lock database.  Whenever a
+package is shipped its fingerprint is set to invalid, so by default
+\fBpkgfp\fR fingerprints all packages for which the most recent
+version hasn't been fingerprinted.
+.PP
+If packages names are present on the command line, only those
+packages are considered, otherwise all packages registered in the local
+site lock server are considered.
+.PP
+Package names can be qualified or unqualified; unqualified names
+are interpreted relative to the default ("cra" in the CRA siphon).
+.PP
+The following options are mutually exclusive:
+.TP 8
+\fB-c\fR
+compare option: if the package is fingerprinted,
+recompute its fingerprint and compares it with the value
+in the lock database; doesn't modify the lock database;
+this option allows to compare file servers.
+.TP 8
+\fB-p\fR
+print option: prints the fingerprints as registered the lock database;
+doesn't modify the lock database.
+.TP 8
+\fB-f\fR
+force option: fingerprint packages even if they are already fingerprinted.
+.TP 8
+\fB-z\fR
+reset option: invalidates the fingerprint in the lock database.
+.PP
+Other options:
+.TP 8
+\fB-r\fR
+Perform any necessary fingerprinting on "replicaName".
+.TP 8
+\fB-v\fR
+Emit per-file information about fingerprinting in progress.
+.PP
+So for example, the command \fBpkgfp\fR fingerprints all packages not
+already fingerprinted. This command should be run every day on a
+machine which have access to the packages directories.  The command
+\fBpkgfp -c\fR computes the fingerprint of already fingerprinted packages, and
+report any mismatches between the computed value and the value
+registered at lock server. This should be run on every replica of
+/proj to detect any inconsistencies.
+.SH "WHAT AFFECTS THE FINGERPRINTS"
+Only the following characteristics affect the fingerprint of a
+tree node:
+.PP
+.ti 4
++  the node type (regular file, directory, symbolic link)
+.ti 4
++  the tail (last arc) in the node pathname
+.ti 4
++  for a directory: the fingerprint of child nodes
+.ti 4
++  for a symbolic link: value of the link referent
+.ti 4
++  for a regular file: 
+.ti 8
+++  content of the file
+.ti 8
+++  "execute by owner" and "write by owner" access right bit
+.ti 8
+++  the last modify time
+.PP
+In addition, the set of export links affects the fingerprint of a package.
+Note that pkgfp use the package servers when fetching the contents
+of a package.
+.SH "SEE ALSO"
+.MS pkgq 1
+.MS packagetool 1
+.MS packageserver 8 
+.SH AUTHOR
+Ted Wobber and Francis Prusker
+.PP
+Copyright 1992 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+
+Last modified on Thu May 12 12:50:44 PDT 1994 by wobber 
+     modified on Fri Feb 12 02:42:05 PST 1993 by prusker
+     modified on Tue Feb 28 11:19:59 PST 1989 by glassman    

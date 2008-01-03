@@ -1,0 +1,24 @@
+  n: Int
+    Positive integer constants.
+  ~n: Int
+    Negative integer constants.
+  int_minus(n: Int): Int
+      Integer negation.
+  int_+(n1: Int, n2: Int): Int
+    Integer addition.
+  int_-(n1: Int, n2: Int): Int
+    Integer difference.
+  int_*(n1: Int, n2: Int): Int
+    Integer multiplication.
+  int_/(n1: Int, n2: Int): Int
+    Integer division.
+  int_%(n1: Int, n2: Int): Int
+    (also infix '%') Integer modulo.
+  int_<(n1: Int, n2: Int): Bool
+    Integer less-than predicate.
+  int_>(n1: Int, n2: Int): Bool
+    Integer greater-than predicate.
+  int_<=(n1: Int, n2: Int): Bool
+    Integer no-greater-than predicate.
+  int_>=(n1: Int, n2: Int): Bool
+    Integer no-less-than predicate.

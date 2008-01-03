@@ -1,0 +1,43 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+IMPORT R2;
+
+OUTPUT Setup();
+
+OUTPUT AddPoint(p:  R2.T [R2.ToText]; N: INTEGER [Fmt.Int]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT NotProcessed(x1, x2: REAL [Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT RemoveNotProcessed(x1, x2: REAL [Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT ActiveR(x1, x2: REAL[Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT RemoveActiveR(x1, x2: REAL[Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT CloseR(x1, x2: REAL[Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+ 	(* region min around the middle line *)
+
+OUTPUT RemoveCloseR(x1, x2: REAL[Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT Split(x: REAL[Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT SplitRemove (x: REAL[Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT NewMin( p1, p2, c1, c2 : R2.T [R2.ToText]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT NoChangeMin( p1, p2, c1, c2 : R2.T [R2.ToText]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT SelectTrialPoint(x:  R2.T[R2.ToText]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT DeselectTrialPoint(x:  R2.T[R2.ToText]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT SelectTargetPoint(trialp, targp:  R2.T[R2.ToText]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT DeselectTargetPoint(trialp, targp:  R2.T[R2.ToText]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT DrawBar(y, x1, x2: REAL [Fmt.Real]; big : BOOLEAN [Fmt.Bool]);
+
+OUTPUT RemoveBar(y, x1, x2: REAL [Fmt.Real]; big : BOOLEAN [Fmt.Bool]);

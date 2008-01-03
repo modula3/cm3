@@ -1,0 +1,11 @@
+
+This game maintains a set of score files, {Twos,Threes,Fours,Fives}.scores.
+The location of the files is determined when the program is compiled.
+To set this location,
+
+      m3build -DSCOREDIR=xyz
+
+where "xyz" is the full path name of the directory.  If you fail to
+set the score directory, /tmp or c:\temp is used.
+
+  - Bill Kalsow

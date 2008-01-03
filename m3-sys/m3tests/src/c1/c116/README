@@ -1,0 +1,64 @@
+Delivery-Date: Tue, 23 Oct 90 12:27:35 PDT
+Received: by jumbo.pa.dec.com; id AA25724; Tue, 23 Oct 90 12:27:19 -0700
+From: mjordan (Mick Jordan)
+Message-Id: <9010231927.AA25724@jumbo.pa.dec.com>
+Date: 23 Oct 1990 1227-PDT (Tuesday)
+To: muller
+Subject: Fwd: M3 ARRAY problem
+
+
+Bug report from Cambridge (plus small machine woes).  I have verified
+that this is still a bug in the 19oct90 version.
+
+Mick
+
+------- Forwarded Message
+
+To: mjordan
+Cc: pr@computer-lab.cambridge.ac.uk
+Subject: M3 ARRAY problem
+Date: Mon, 22 Oct 90 18:32:34 +0100
+From: pr@computer-lab.cambridge.ac.uk
+Message-Id: <"gannet.cl..264:22.09.90.17.33.33"@cl.cam.ac.uk>
+
+Mick -
+
+Our main problems arise from running SRC M3 on DECstation 3100s with only 12 Mb
+of memory and the local disc used just for swap and tmp, compounded by setting
+students' NFS disc quotas at 2Mb.  ld often runs out of room and leaves files in
+an unsatisfactory state.
+
+
+- Peter.
+
+Modula-3 curiosity -
+
+I have the following program:
+
+MODULE Main;
+
+TYPE
+    Letter = ['A' .. 'Z'];
+    Code = ARRAY Letter OF CHAR;
+
+VAR
+    code: Code;
+
+BEGIN
+    code ['A'] := 'B';
+
+END Main.
+
+The compiler says:
+
+$ m3 -c Main.m3
+"Main.m3", line 11: illegal operands for '-'
+1 error encountered
+$
+
+What is the problem?
+
+- Peter Robinson.
+
+
+------- End of Forwarded Message

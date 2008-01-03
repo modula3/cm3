@@ -1,0 +1,15 @@
+% Copyright (C) 1994, Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jan 19 13:57:22 PST 1995 by kalsow
+
+override ("stable", WDROOT) % try to pick up the local copy
+
+import ("libm3")
+import ("stable")
+
+module ("Fib")
+stableobj ("Fib", ["Fib"])
+implementation ("Example")
+program("example")

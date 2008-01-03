@@ -1,0 +1,9 @@
+ (Shape %frameatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Frame")
+      (Glue 10)
+      (LField "Texture :" 150 (TypeIn (TabTo name) %frametexture (BgColor "White")   (Value "Blank")))
+      Fill
+   )
+  )

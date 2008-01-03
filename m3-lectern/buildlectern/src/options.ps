@@ -1,0 +1,29 @@
+%!
+% options.ps
+% Copyright 1994 Digital Equipment Corporation
+% Distributed only by permission
+
+% Last modified on Fri Jun 23 10:17:48 PDT 1995 by mcjones
+
+% Lectern:
+%   A PostScript prolog to set GhostScript options useful for BuildLectern.
+
+% Once Ghostscript 3.x has been universally adopted, we could use the "-c"
+% command-line option instead of loading this prolog from a file.
+
+% Force the identity transfer function (Ghostscript currently uses gamma=1.25
+% when the output device has resolution of 150DPI or more).
+{} settransfer
+
+
+% Force the save level to be greater than zero.  This works around a bug
+% in PostScript in GlobalMode/LocalMode produced by VAX DOCUMENT 2.0.
+% In principle, we should do a restore after processing the user input.
+/BuildLecternSave save def
+
+% We'd like to have a way to override the effect of a PostScript job
+% setting #copies or the /NumCopies page device key to zero.  Until we
+% get such a mechanism, we set /NumCopies to one, which will override
+% a Level 1 job that sets #copies to zero.
+/languagelevel where { pop languagelevel 2 ge } { false } ifelse 
+  { << /NumCopies 1 >> setpagedevice } if

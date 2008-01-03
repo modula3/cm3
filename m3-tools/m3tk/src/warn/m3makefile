@@ -1,0 +1,13 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 20:55:58 PDT 1993 by mjordan                  */
+
+Module("M3CChkUses")
+Module("M3CChkReturn")
+Module("M3CWarnTool")
+Module("M3CChkRaises")
+Module("M3CChkNarrow")
+Module("M3CChkObsolete")
+

@@ -1,0 +1,24 @@
+#! /bin/csh -f
+#
+# Copyright (C) 1992, Digital Equipment Corporation 
+# All rights reserved.
+# See the file COPYRIGHT for a full description.
+#
+# Last modified on Thu Mar 24 15:53:07 PST 1994 by heydon
+#      modified on Fri Feb 25 13:52:13 PST 1994 by kalsow
+
+set arch = `/udir/heydon/libi/csh/m3arch`
+set prog = LexTest
+
+if (-e ../$arch/$prog) then
+  set newoutfile = /tmp/lextest-$$.txt.out
+  foreach outfile ($*)
+    set infile = "$outfile:r".in
+    ../$arch/$prog $infile > $newoutfile
+    echo "diff $outfile $newoutfile"
+    diff $outfile $newoutfile
+    rm $newoutfile
+  end
+else
+  echo "Unknown host type \"$arch\""
+endif

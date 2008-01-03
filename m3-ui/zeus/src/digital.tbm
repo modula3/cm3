@@ -1,0 +1,87 @@
+depth: 1
+bounds: 0 190 0 65
+offset: 0
+bitsPerPixel: 1
+wordsPerRow: 12
+pixelOrder: LSBFirst
+bytesPerHexValue: 2
+pixelsLength: 782
+ 0000 ffff ff8f c7ff ffff ffe3 f1ff ffff fff8 fc7f
+ 3fff 20be 0000 ffff ff8f c7ff ffff ffe3 f1ff ffff
+ fff8 fc7f 3fff 3188 0000 ffff ff8f c7ff ffff ffe3
+ f1ff ffff fff8 fc7f 3fff 2a88 0000 ffff ff8f c7ff
+ ffff ffe3 f1ff ffff fff8 fc7f 3fff 2488 0000 ffff
+ ff8f c7ff ffff ffe3 f1ff ffff fff8 fc7f 3fff 2088
+ 0000 ffff ff8f c7ff ffff ffe3 f1ff ffff fff8 fc7f
+ 3fff 2088 0000 ffff ff8f c7ff ffff ffe3 f1ff ffff
+ fff8 fc7f 3fff 2088 0000 ffff ff8f c7ff ffff ffe3
+ f1ff ffff fff8 fc7f 3fff 0000 0000 ffff ff8f c7ff
+ ffff ffe3 f1ff ffff fff8 fc7f 3fff 0000 0000 3fff
+ 7f8c c7f8 ffff 1fe3 f1fe ffff fff8 fc7f 3fc3 0000
+ 0000 3fff 7f8c c7f8 ffff 1fe3 f1fe ffff fff8 fc7f
+ 3fc3 0000 0000 3fff 7f8c c7f8 ffff 1fe3 f1fe ffff
+ fff8 fc7f 3fc3 0000 0000 3fff 7f8c c7f8 ffff 1fe3
+ f1fe ff0f fff8 fc7f 3fc3 0000 0000 3fff ff8c c7ff
+ ffff ffe3 f1ff ff0f fff8 fc7f 3fc3 0000 0000 3fff
+ ff8c c7ff ffff ffe3 f1ff ff0f fff8 fc7f 3fc3 0000
+ 0000 3fff ff8c c7ff ffff ffe3 f1ff ff0f fff8 fc7f
+ 3fc3 0000 0000 307f 7f8c c7f8 860f 1fe3 f1fe ff0f
+ 07f8 fc7f 3fc3 0000 0000 203f 7f8c c7f8 8407 1fe3
+ f1fe fc03 00f8 fc7c 3fc3 0000 0000 001f 7f8c c7f8
+ 8003 1fe3 f1fe fc03 0078 fc78 3fc3 0000 0000 000f
+ 7f8c c7f8 8003 1fe3 f1fe fc03 0078 fc78 3fc3 0000
+ 0000 060f 7f8c c7f8 8081 1fe3 f1fe ff0f f838 fc70
+ 3fc3 0000 0000 1f0f 7f8c c7f8 83e1 1fe3 f1fe ff0f
+ fc38 fc70 3fc3 0000 0000 1f07 7f8c c7f8 83e1 1fe3
+ f1fe ff0f fc38 fc70 3fc3 0000 0000 3f87 7f8c c7f8
+ 87f0 1fe3 f1fe ff0f 7ff8 fc70 3fc3 0000 0000 3f87
+ 7f8c c7f8 87f0 1fe3 f1fe ff0f 1ff8 fc70 3fc3 0000
+ 0000 3f87 7f8c c7f8 87f0 1fe3 f1fe ff0f 01f8 fc70
+ 3fc3 0000 0000 3f87 7f8c c7f8 87f0 1fe3 f1fe ff0f
+ 00f8 fc70 3fc3 0000 0000 3f87 7f8c c7f8 87f0 1fe3
+ f1fe ff0f 8078 fc70 3fc3 0000 0000 3f87 7f8c c7f8
+ 87f0 1fe3 f1fe ff0f f838 fc70 3fc3 0000 0000 1f07
+ 7f8c c7f8 83e0 1fe3 f1fe ff0f fc38 fc70 3fc3 0000
+ 0000 1f0f 7f8c c7f8 83e1 1fe3 f1fe ff0f fc38 fc70
+ 3fc3 0000 0000 0e0f 7f8c c7f8 81c1 1fe3 f1fe ff0f
+ 7c38 fc70 3fc3 0000 0000 001f 7f8c c7f8 8001 1fe3
+ f1fe fc0f 1838 fc70 3fc3 0000 0000 001f 7f8c c7f8
+ 8003 1fe3 f1fe fc0f 0078 fc70 3fc3 0000 0000 203f
+ 7f8c c7f8 8407 1fe3 f1fe fc1f 8078 fc70 3fc3 0000
+ 0000 307f 7f8c c7f8 860f 1fe3 f1fe fc3f e1f8 fc60
+ 3fc3 0000 0000 ffff ff8f c7ff 87ff ffe3 f1ff ffff
+ fff8 fc7f 3fff 0000 0000 ffff ff8f c7ff 87ff ffe3
+ f1ff ffff fff8 fc7f 3fff 0000 0000 ffff ff8f c7ff
+ 83f0 ffe3 f1ff ffff fff8 fc7f 3fff 0000 0000 ffff
+ ff8f c7ff c3f0 ffe3 f1ff ffff fff8 fc7f 3fff 0000
+ 0000 ffff ff8f c7ff c1c0 ffe3 f1ff ffff fff8 fc7f
+ 3fff 0000 0000 ffff ff8f c7ff c001 ffe3 f1ff ffff
+ fff8 fc7f 3fff 0000 0000 ffff ff8f c7ff e003 ffe3
+ f1ff ffff fff8 fc7f 3fff 0000 0000 ffff ff8f c7ff
+ f807 ffe3 f1ff ffff fff8 fc7f 3fff 0000 0000 ffff
+ ff8f c7ff ffff ffe3 f1ff ffff fff8 fc7f 3fff 0000
+ 0000 ffff ff8f c7ff ffff ffe3 f1ff ffff fff8 fc7f
+ 3fff 0000 0000 ffff ff8f c7ff ffff ffe3 f1ff ffff
+ fff8 fc7f 3fff 0000 0000 ffff ff8f c7ff ffff ffe3
+ f1ff ffff fff8 fc7f 3fff 0000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 001e 0080 0000
+ 7c00 0000 0000 0800 0780 2000 0000 0000 0000 0021
+ 0080 0000 8400 0000 0000 0800 0840 2000 0000 0000
+ 0000 1101 e1c7 8668 8403 1c38 470e 68e7 8040 71a3
+ 3a38 0000 0000 9101 1088 4999 8404 2244 c891 9910
+ 4040 2264 0644 0000 0000 911e 1080 4889 7c00 0244
+ 4f11 8810 4040 2224 0244 0000 0000 1120 f087 8889
+ 1403 1c7c 489f 8810 c040 2227 027c 0000 0000 1120
+ 1088 0888 2404 2004 4881 8810 4040 2220 0204 0000
+ 0000 9121 1088 4889 4404 2244 4891 8910 4840 2224
+ 0244 0000 0000 1e1e e307 8888 8403 1c38 4f0e 88e0
+ 8780 c223 0238 0000 0000 1000 0000 0000 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 1100 0000 0000
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0e00
+ 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+ 0000 0000

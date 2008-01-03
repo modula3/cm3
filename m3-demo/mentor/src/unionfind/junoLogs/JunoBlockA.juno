@@ -1,0 +1,45 @@
+VAR 
+  a = (33.56, 104.4), 
+  b = (71.39, 104.4), 
+  c ~ (98.88, 206.5), 
+  d ~ (173.5, 206.5), 
+  e ~ (201, 104.4), 
+  f ~ (238.8, 104.4), 
+  g ~ (155.1, 415.5), 
+  h ~ (117.3, 415.5), 
+  i ~ (163.7, 243.1), 
+  j ~ (108.7, 243.1), 
+  k ~ (136.2, 345.2) 
+IN 
+  a HOR b AND 
+  a HOR e AND 
+  a HOR f AND 
+  c HOR d AND 
+  j HOR i AND 
+  h HOR g AND 
+  (a, h) CONG (g, f) AND 
+  (b, c) CONG (j, k) AND 
+  (h, a) PARA (b, c) AND 
+  (h, a) PARA (b, j) AND 
+  (h, a) PARA (b, k) AND 
+  (h, a) PARA (b, g) AND 
+  (g, f) PARA (e, d) AND 
+  (g, f) PARA (e, i) AND 
+  (g, f) PARA (e, k) AND 
+  (g, f) PARA (e, h) AND 
+  (a, b) CONG (c, j) -> 
+    PS.MoveTo(a); 
+    PS.LineTo(b); 
+    PS.LineTo(c); 
+    PS.LineTo(d); 
+    PS.LineTo(e); 
+    PS.LineTo(f); 
+    PS.LineTo(g); 
+    PS.LineTo(h); 
+    PS.Close(); 
+    PS.MoveTo(i); 
+    PS.LineTo(j); 
+    PS.LineTo(k); 
+    PS.Close(); 
+    PS.Fill() 
+END

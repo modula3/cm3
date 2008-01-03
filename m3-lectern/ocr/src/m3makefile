@@ -1,0 +1,13 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed Nov 23 14:01:30 PST 1994 by mcjones */
+
+include_dir("Common")
+
+if equal(TARGET, "DS3100")
+  include_dir(TARGET) /* invoke DEC Character Recognition Software */
+else
+  include_dir("Stub") /* do nothing */
+end

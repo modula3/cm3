@@ -1,0 +1,28 @@
+  RealProp_NewConst(r: Num): RealPropVal                            
+  RealProp_NewSync(ah: AnimHandle, r: Num): RealPropVal             
+  RealProp_NewAsync(beh: RealPropAsyncBeh): RealPropVal              
+  RealProp_NewDep(beh: RealPropDepBeh): RealPropVal                  
+  RealProp_NewConstBeh(r: Num): RealPropConstBeh                    
+  RealProp_NewSyncBeh(ah: AnimHandle, r: Num): RealPropSyncBeh      
+  RealProp_NewAsyncBeh(compute: M1):RealPropAsyncBeh                 
+  RealProp_NewDepBeh(compute: M2):RealPropDepBeh                     
+  RealProp_NewRequest(start dur: Num, value: M3): RealPropRequest   
+WHERE                                                                
+  RealPropName <: PropName & { bind: (v: RealPropVal) => Prop }         
+  RealPropVal <: PropVal & { getBeh: () => RealPropBeh,               
+                             setBeh: (RealPropBeh) => Ok,            
+                             get: () => Real,                        
+                             value: (Num) => Real }                  
+  RealPropBeh <: PropBeh                                              
+  RealPropConstBeh <: RealPropBeh & { set: (Num) => Ok }             
+  RealPropSyncBeh <: RealPropBeh &                                    
+           { addRequest: (RealPropRequest) => Ok ! Prop_BadInterval, 
+             linChangeTo: (Num,Num,Num) => Ok ! Prop_BadInterval, 
+             linChangeBy: (Num,Num,Num) => Ok ! Prop_BadInterval }
+  RealPropAsyncBeh <: RealPropBeh & { compute: M1 }                   
+  RealPropDepBeh <: RealPropBeh & { compute: M2 }                     
+  RealPropRequest <: PropRequest & { value: M3 }                      
+  M1 = Self (X <: RealPropAsyncBeh) (Real) => Real                   
+  M2 = Self (X <: RealPropDepBeh) (Real) => Real                     
+  M3 = Self (X <: RealPropRequest) (Real,Real) => Real               
+  Num = Real + Int

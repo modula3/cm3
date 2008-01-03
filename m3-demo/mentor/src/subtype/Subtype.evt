@@ -1,0 +1,54 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+IMPORT AlgSubtype;
+
+OUTPUT Setup ();
+
+OUTPUT Begin (lftRoot, rhtRoot: INTEGER[Fmt.Int]);
+
+OUTPUT NewBot(index: INTEGER[Fmt.Int]);
+
+OUTPUT NewTop(index: INTEGER[Fmt.Int]);
+
+OUTPUT NewFun(index, domEdgeIndex, rngEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT NewDomRng(index, domIndex, rngIndex: INTEGER[Fmt.Int]);
+
+OUTPUT NewLoop(fromIndex, toIndex: INTEGER[Fmt.Int]);
+
+OUTPUT Enter(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT Exit(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int];
+  result: BOOLEAN[AlgSubtype.FmtBool]);
+
+OUTPUT SeenOK(fromIndex, toIndex: INTEGER[Fmt.Int]);
+
+OUTPUT Notice(fromIndex, toIndex: INTEGER[Fmt.Int]);
+
+OUTPUT BotLessAnyOK(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT TopLessTopOK(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT TopLessNonTopKO(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT FunLessBotKO(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT FunLessTopOK(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT FunLessFun(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT OK(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);
+
+OUTPUT KO(lftIndex, rhtIndex, 
+  lftLeadingEdgeIndex, rhtLeadingEdgeIndex: INTEGER[Fmt.Int]);

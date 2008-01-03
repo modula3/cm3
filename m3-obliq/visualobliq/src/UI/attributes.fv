@@ -1,0 +1,312 @@
+(Filter %attrfilter
+ (Shape (Width 370 + Inf) (Height + Inf)
+       (BgColor "VeryLightBlue")
+ (Rim (Pen 10)
+ (Macro
+    LField
+    BOA
+    (label wid contents)
+    `(Rim
+       (Pen 3) 
+       (Shape
+         (Width ,wid + Inf)
+         (HBox (Text ,label) (Frame Lowered ,contents))
+        )))
+ (Macro
+    BoxAround
+    BOA
+    (height contents)
+    `(Border (Pen 1)
+        (Shape (Height ,height)
+          (HBox Fill ,contents Fill))) 
+ )   
+ (Macro
+    Field
+    BOA
+    (label wid contents)
+    `(Rim
+       (Pen 3) 
+       (Shape
+         (Width ,wid + Inf)
+         (HBox (Text ,label) ,contents)
+        )))  
+ (Macro
+     Title
+     BOA
+     (label)
+    `(Frame Lowered (Shape (BgColor "VeryPaleLightBlue") (Color "VeryDarkBlue") (Height 15) (Text ,label))))
+
+ (Macro 
+    ColorField
+    BOA
+    (typeinname btnname)
+    `(HBox (PopButton %,btnname (For ColorPopup) (Pixmap "triangleSE.pbm"))
+           (Frame Raised  (BgColor "White") (TypeIn ReadOnly %,typeinname (Value ""))) ))
+ (Macro
+     RField
+     BOA
+     (radioname label contents height initial glue)
+    `(Radio %,radioname (Value ,initial)
+         (Shape (Height ,height)
+             (HBox (Text ,label) ,contents (Glue ,glue))
+         )
+      )      
+ ) 
+ (Macro 
+    FontField
+    BOA
+    (typeinname btnname)
+    `(HBox (PopButton %,btnname (For FontPopup) 
+           (Pixmap "triangleSE.pbm"))
+           (Frame Raised  (BgColor "White") (TypeIn ReadOnly %,typeinname (Value ""))) ))
+
+(ZSplit 
+ 
+ (Font "-*-fixed-bold-R-*120-*")
+(ZBackground  
+(TSplit %wholepage
+(VBox %attrmain
+  (VBox
+  
+  
+    (Title "General Attributes")
+    (Glue 10) 
+    (HBox  (LField "Name :" 150 (TypeIn (TabTo type) %name (BgColor "White"))) (Glue 10) 
+           (LField "Type :" 150 (TypeIn %type ReadOnly (BgColor "VeryPaleBlue"))))
+    (Glue 5)
+    (BoxAround 100
+    (VBox Fill
+    (HBox  (Field "Bg Color :" 230 (ColorField bgctypein bgc)) (Glue 3)
+           (Field "Rim      :" 150  (Numeric (TabTo bordersize) %rimsize (Min 0))  )
+           )
+    (Glue 5)        
+    (HBox  (Field "Fg Color :" 230 (ColorField fgctypein fgc))  (Glue 3) 
+           (Field "Border :" 150 (Numeric (TabTo name)  %bordersize (Min 0))))
+    (Glue 5)
+     (Field "Font :" 200 (FontField fonttypein font)) 
+     Fill))
+    (Glue 5)     
+    (HBox  
+           (RField Embellishment "Shadow :" (HBox (Choice %Flat Inverting "Flat")
+                                            (Choice %Raised Inverting "Raised")
+                                            (Choice %Lowered Inverting "Lowered")
+                                            (Choice %Ridged Inverting "Ridged")
+                                             (Choice %Chiseled Inverting "Chiseled")
+                                             (Choice %None Inverting "None")
+                                             ) 20  Flat 5)
+              (Shape (Width 30)  (PageButton (BgColor "PalePink") (For jeff)  (Pixmap "FlipPage.pbm"))))
+    (Glue 5)
+   (HBox (RField Reshape "Reshape :"
+      (HBox (Choice %CenterPin Inverting "Center Pin")
+            (Choice %Scaled Inverting "Scaled")
+            (Choice %HScaled Inverting "Horiz. Stretch")
+            (Choice %VScaled Inverting "Vert. Stretch")) 20 CenterPin 5))
+
+    )
+    (Glue 5)
+    
+    (BoxAround 70
+      (VBox Fill
+       (HBox (Text "Callback :")   
+        (RField exechow "" (HBox (Choice (Color "VeryDarkBlue") %Foreground Inverting "Foreground")
+                                          (Choice (Color "VeryDarkBlue") %Background Inverting "Background")) 20 Foreground 25)
+          (TSplit %cbTS (LinkButton %ecb (For wat) (LinkButton  (ShadowSize 0) (For CallbackEditor)
+          (BgColor "PalePink")  (VBox "Edit" "Attached Code") ))
+                        (LinkButton %wat (For ecb) (LinkButton  (ShadowSize 0) (For jeff) 
+                        (BgColor "SlightlyYellowishPeachpuff")  (VBox "Return To " "Widget Attributes"))))
+         (Glue 5) )
+        (Glue 5)
+        (RField execwhere "" (HBox (Choice %Local (Color "VeryDarkBlue")  "Local") (Glue 5)
+                                       (Choice   (Color "VeryDarkBlue") %Remote
+                                          (LField "Remote :" 500 (Filter %remFilter Dormant (TypeIn ExpandOnDemand 
+                                              (TabTo type) %Location
+                                             (BgColor "White")) ))
+                                   )) 20 Local 5)
+       Fill))
+       (Glue 5)
+       (HBox (RField InitialState "Initial State :" (HBox (Choice %Active Inverting "Active")
+                                            (Choice %Passive Inverting "Passive")
+                                            (Choice %Dormant Inverting "Dormant")
+                                            (Choice %Vanish Inverting "Invisible")
+                                            ) 20 Active 5)
+                                            
+      (Shape (Width 50) (Button  (BgColor "PalePink") %apply "Apply")) 
+ 
+    )
+   (Glue 5)
+     
+    
+  Ridge
+ (TSplit %mutt Circular 
+  (TSplit %jeff Circular
+      (Insert "formATT.fv")
+      (Insert "frameATT.fv")
+      (Insert "texteditATT.fv")    
+      (Insert "browserATT.fv")
+      (Insert "filebrowserATT.fv")
+      (Insert "typeinATT.fv")
+      (Insert "buttonATT.fv")
+      (Insert "numericATT.fv")
+      (Insert "scrollerATT.fv")
+      (Insert "textATT.fv")
+      (Insert "choiceATT.fv")
+      (Insert "booleanATT.fv")	
+      (Insert "videoATT.fv")	
+  )
+  (VBox (Glue 5)
+  (Frame Lowered (Shape (BgColor "VeryPaleLightBlue") (Color "VeryDarkBlue") (Height 15) (Text %codetype "Callback")))
+  (Glue 5) 
+     (Border (Pen 1) (BgColor "VeryPalePink") (TextEdit (Font "-*-courier-bold-*R-*120-*")
+                          %CallbackEditor)) )
+ )
+)
+(Insert "menuATT.fv")
+(VBox %SupportCode 
+     (Glue 10)
+     (Title "Form Support Code") 
+      (Glue 10)
+      (Border (Pen 1) (Frame Lowered (TextEdit (BgColor "White")
+      (Font "-*-courier-bold-*R-*120-*") %supportCodeEditor)))
+      (Glue 10)
+     (HBox Fill 
+         (Shape (Width 150)(Height 20)
+             (LinkButton (For attrmain)  (BgColor "SlightlyYellowishPeachpuff") "Return to Attribute Sheet" ))
+        Fill )
+     (Glue 10) )
+)
+)
+
+(ZChild %ColorPopup
+ (Border (Pen 1)
+  (Shape (Width 320) (Height 300) 
+       (VBox (BgColor "PaleTan")
+          (Glue 5)
+          (HBox Fill (Frame Lowered (Shape (BgColor "VeryPaleTan") (Height 12) (Text "Color Selection"))) Fill) 
+          (Glue 5)
+          (HBox (Glue 10)
+              (VBox
+                (HBox
+                (Border (Pen 1) (BgColor "White") (Browser Quick %modifier2))
+                (Glue 5)
+                (Border (Pen 1) (BgColor "White") (Browser Quick %modifier1))
+                )
+                (Glue 5)
+                (Frame (Text %showcolor ""))
+                )
+                (Glue 5)
+                (Shape (Width 105) (Border (Pen 1) (BgColor "White") (Browser Quick %colorlist)))
+                
+                (Glue 10)
+           )
+           
+         
+               
+           (Glue 10)
+           (HBox Fill (CloseButton (BgColor "PalePink") %inheritcolor "Inherit Color")  Fill 
+           (CloseButton (BgColor "PalePink") %applycolor "Apply") Fill 
+           (CloseButton (BgColor   "PalePink") %cancelcolor "Cancel")  Fill)
+           (Glue 10)
+       ))
+
+  ))
+        
+(ZChild %FontPopup 
+(Macro
+    FChoice
+    BOA
+    (name font label)
+    `(Shape
+       (Height 25) (Width 70)
+       (Choice
+           %,name
+           (LabelFont ,font) Inverting
+           ,label
+       ) 
+     )
+)  
+ (Border (Pen 1)
+  (Shape (Width 320) (Height 200) 
+       (VBox (BgColor "PaleTan")
+          (Glue 5)
+          (HBox Fill (Frame Lowered (Shape (BgColor "VeryPaleTan") (Height 12)
+               (Text "Font Selection"))) Fill) 
+           (Glue 10)
+           (Frame Lowered
+           (HBox
+            (Radio   %fontradio (Value tmR)
+              (HBox 
+                  (Glue 10)
+              
+                  (VBox
+                      (Glue 10)
+                          
+                      (FChoice tmR "-*-times-medium-R-*-140-*"  "Times")
+                      (FChoice  tbR "-*-times-bold-R-*-140-*"  "Times")
+                      (FChoice tmI "-*-times-medium-I-*140-*"   "Times")
+                      (FChoice tbI "-*-times-bold-I-*140-*"  "Times")
+                      (Glue 10)
+                  )
+            
+                   (VBox
+                    (Glue 10)
+                      (FChoice hmR "-*-helvetica-medium-R-*140-*" "Helvetica")
+                      (FChoice hbR "-*-helvetica-bold-R-*140-*" "Helvetica")
+                      (FChoice hmO  "-*-helvetica-medium-O-*140-*" "Helvetica")
+                      (FChoice hbO "-*-helvetica-bold-O-*140-*" "Helvetica")
+                      (Glue 10)
+                  )
+                  
+                   (VBox
+                      (Glue 10)
+                      (FChoice cmR "-*-courier-medium-R-*140-*"  "Courier")
+                      (FChoice  cbR "-*-courier-bold-R-*140-*"  "Courier")
+                      (FChoice cmO "-*-courier-medium-O-*140-*" "Courier")
+                      (FChoice cbO  "-*-courier-bold-O-*140-*" "Courier")
+                      (Glue 10)
+                   )
+                  (Glue 10)
+               ))
+             (Glue 10)
+              (Radio %sizeradio (Value pt140)
+                (VBox
+                      (Glue 10)
+                      (Choice %pt80 (LabelFont "-*-times-medium-R-*80-*") Inverting  "Tiny")
+                      (Choice %pt120 (LabelFont "-*-times-medium-R-*120-*") Inverting  "Small")
+                      (Choice %pt140 (LabelFont"-*-times-medium-R-*140-*")  Inverting "Medium")
+                      (Choice %pt180 (LabelFont "-*-times-medium-R-*180-*") Inverting "Big")
+                      (Choice %pt240  (LabelFont "-*-times-medium-R-*240-*") Inverting "Huge")
+                      (Glue 10)
+                   )
+              )
+              (Glue 10)
+             ))
+            (Glue 10)
+           (HBox Fill (CloseButton (BgColor "PalePink") %inheritfont "Inherit Font")            Fill
+           (CloseButton (BgColor "PalePink") %fixedfont "Use Fixed Font")  
+           Fill    
+           (CloseButton (BgColor "PalePink") %applyfont "Apply") Fill 
+           (CloseButton (BgColor   "PalePink") %cancelfont "Cancel")  Fill)
+           (Glue 10)
+       ))
+
+  ))
+  
+  ( ZChild %msgbox (At 0.5 0.5) 
+  (Border (Pen 2) 
+              (Shape (Width 300) (BgColor "PaleYellow") (Height 100)
+                 (VBox  Fill
+                    (Text (Color "DarkBrown") "Error")
+                    Fill
+                    (Text %msg "Invalid Color Specification") 
+                     Fill
+                    (HBox Fill (Shape (Width 80) (BgColor "PaleGreen") (CloseButton (For msgbox) "Continue")) Fill)
+                   Fill )
+              ))
+             
+) 
+
+)
+
+
+))
+)

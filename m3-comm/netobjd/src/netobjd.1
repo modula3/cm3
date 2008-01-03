@@ -1,0 +1,55 @@
+.nh
+.TH netobjd 1
+.SH NAME
+\fBnetobjd\fR \- the Network Object agent daemon
+.SH SYNTAX
+\fBnetobjd\fR &
+.SH DESCRIPTION
+.PP
+The Network Objects package provides a simple but powerful
+facility for remote method invocation in the context of Modula3.
+Under Network Objects, all subtypes of the object type NetObj.T
+are treated specially in that they can be passed to remote address
+spaces by reference.  This remote reference appears at the destination
+as a surrogate object  which is a subtype of the original object type.
+If the original type has methods, these methods can be remotely invoked
+through the surrogate.
+.PP
+The \fBnetobjd\fR program provides a mechanism to publish objects for
+use by other address spaces.  It implements a table which maps textual
+into objects.  A service provider, for example, might advertise its
+service by registering an object with \fBnetobjd\fR under some well-defined
+name.  Similarly, a client might gain access to this service by
+retrieving the server's object from the \fBnetobjd\fR insatnce on the
+server's machine.
+.PP
+There should be only one instance of \fBnetobjd\fR per machine.  This one
+instance is the machine-wide default agent for all imports and
+exports of network objects.
+.PP
+The \fBnetobjd\fR program listens on a well known socket (currently
+TCP socket 9786) for incoming requests.
+.SH DOCUMENTATION
+.PP
+A reference manual (SRC Research Report 115) can be found in:
+.IP "" 5
+/proj/doc/NetObjMan.ps
+.SH RESTRICTIONS
+.PP
+Since \fBnetobjd\fR is often run in background, it is easy to forget that
+an instance is running.  The second instance of \fBnetobjd\fR will fail
+with a TCP error when it attempts to open its listener socket.
+.PP
+If an instance of \fBnetobjd\fR dies, all of the objects that were registered
+in its table are lost.  There currently is no standard mechanism for
+restarting netobj after a failure.  Even if \fBnetobjd\fR is restarted,
+there is currently no stable record of the objects held by previous
+instantiations.
+.SH "AUTHOR"
+Ted Wobber
+.PP
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+
+Last modified on Thu May 12 15:53:47 PDT 1994 by wobber

@@ -1,0 +1,76 @@
+(* Copyright (C) 1993 Digital Equipment Corporation          *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Fri Jun 18 14:31:19 PDT 1993 by horning        *)
+
+INTERFACE Text;
+<* 
+TRAITS
+   Sequence(CHAR, T.VAL)
+   hash(T, INTEGER)
+
+PROCEDURE Cat(t, u: T): T;
+   CHECKS t \neq NIL /\ u \neq NIL
+   ENSURES RESULT.VAL = t.VAL || u.VAL
+
+PROCEDURE Equal(t, u: T): BOOLEAN;
+   CHECKS t \neq NIL /\ u \neq NIL
+   ENSURES RESULT = (t.VAL = u.VAL)
+
+PROCEDURE GetChar(t: T; i: CARDINAL): CHAR;
+   CHECKS t \neq NIL /\ i < len(t.VAL)
+   ENSURES RESULT = t.VAL[i]
+
+PROCEDURE Length(t: T): CARDINAL;
+   CHECKS t \neq NIL
+   ENSURES RESULT = len(t.VAL)
+
+PROCEDURE Empty(t: T): BOOLEAN;
+   CHECKS t \neq NIL
+   ENSURES RESULT = (len(t.VAL) = 0)
+
+PROCEDURE Sub(t: T; start: CARDINAL;
+  length: CARDINAL := LAST(CARDINAL)): T;
+   CHECKS t \neq NIL
+   ENSURES RESULT = substring(t.VAL, start, length)
+
+PROCEDURE SetChars(VAR a: ARRAY OF CHAR; t: T);
+   CHECKS t \neq NIL
+   MODIFIES a
+   ENSURES a' = prefix(t.VAL, len(a)) || removePrefix(a, len(t.VAL))
+
+PROCEDURE FromChar(ch: CHAR): T;
+   ENSURES RESULT.VAL = {ch}
+
+PROCEDURE FromChars(READONLY a: ARRAY OF CHAR): T;
+   ENSURES RESULT.VAL = a.VAL
+
+PROCEDURE Hash(t: T): INTEGER;
+   CHECKS t \neq NIL
+   ENSURES RESULT = hash(t.VAL)
+      
+PROCEDURE Compare(t1, t2: T): [-1..1];
+   CHECKS t1 \neq NIL /\ t2 \neq NIL
+   ENSURES RESULT =
+     if t1.VAL < t2.VAL then -1
+     else if t1.VAL = t2.VAL then 0
+     else 1
+
+PROCEDURE FindChar(t: T; c: CHAR; start := 0): INTEGER;
+   CHECKS t \neq NIL
+   LET source BE removePrefix(t.VAL, start) IN
+   ENSURES RESULT = if c \notin source then -1
+                    else start + find({c}, source)
+   CLAIM
+     RESULT >= 0 => 
+       t.VAL[RESULT] = c /\ c \notin prefix(source, RESULT)
+
+PROCEDURE FindCharR(t: T; c: CHAR; start := LAST(INTEGER)-5): INTEGER;
+   REQUIRES start <= LAST(INTEGER)-5
+   CHECKS t \neq NIL
+   LET source BE prefix(t.VAL, start) IN
+   ENSURES RESULT =
+     if c \notin source then -1
+     else t.VAL[RESULT] = c /\ c \notin removePrefix(source, RESULT+1)
+*>
+END Text.

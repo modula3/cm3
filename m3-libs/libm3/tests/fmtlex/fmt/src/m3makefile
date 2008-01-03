@@ -1,0 +1,15 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+/*                                                                           */
+/* Last modified on Thu Mar 10 17:30:49 PST 1994 by heydon                   */
+
+/* m3makefile for /proj/m3/pkg/fmtlex/tests/fmt/src */
+
+/* imported/included packages */
+import		(libm3)
+
+/* modules for this application */
+implementation	(FmtTest)
+build_standalone()
+program		(FmtTest)

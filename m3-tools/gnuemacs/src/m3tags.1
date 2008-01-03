@@ -1,0 +1,60 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Fri Mar 20 20:11:07 PST 1992 by muller                    .
+
+.nh
+.TH M3TAGS 1
+
+.SH NAME
+m3tags \- create a tags table for gnuemacs from Modula-3 sources
+
+.SH SYNTAX
+.PP
+.B m3tags
+[-q] [-e] [-t] [-v] [-c] [-o] [-] [files]
+
+.SH DESCRIPTION
+.B m3tags
+parses Modula-3 programs contained in files to build a tags table for
+gnuemacs.  The tags table is output on stdout.
+
+.SH OPTIONS
+
+.TP 6
+.BR -q
+Create tags for both the qualified and the unqualified version of
+identifiers (otherwise, only unqualified versions are tagged).
+
+.TP 6
+.BR -e
+Do not create tags for exceptions.
+
+.TP 6
+.BR -t
+Do no create tags for types.
+
+.TP 6
+.BR -v
+Do no create tags for variables.
+
+.TP 6
+.BR -c
+Do no create tags for constants.
+
+.TP 6
+.BR -o
+Old style: use ETAG format file instead of FTAG.
+
+.TP 6
+.BR -
+Get the names of the files to be processed from stdin, one per line.
+
+.SH SEE ALSO
+
+gnuemacs(1)
+
+.SH AUTHOR OF OBJECT
+
+David Goldberg (goldberg@parc.xerox.com)

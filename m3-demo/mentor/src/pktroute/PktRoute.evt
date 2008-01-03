@@ -1,0 +1,95 @@
+(* Copyright 1993 Digital Equipment Corporation.                             *)
+(* Distributed only by permission.                                           *)
+(*                                                                           *)
+(* Last modified on Mon Oct 25 10:20:46 PDT 1993 by heydon                   *)
+(*      modified on Tue Jul 20 17:26:49 PDT 1993 by rsanchez                 *)
+
+IMPORT TextConv, IntList, IntListUtils, RefIntArray, OblFmt;
+
+(* A single run of the program generates a stream of events corresponding to
+   the following regular expression:
+
+|    RunAlg      = DefineGraph DefinePkts (FullStep)*
+|    DefineGraph = StartGraph (GraphElt)* EndGraph
+|    GraphElt    = NewNode | NewStraightEdge | NewCurvedEdge | NewLabel
+|    DefinePkts  = StartPackets (NewPacket)* EndPackets
+|    FullStep    = (Blocked)* (MovePacket)* QueueSizes (Absorb)* Step
+*)
+
+(* The Graph --------------------------------------------------------------- *)
+
+OUTPUT StartGraph(
+    nodeCnt: CARDINAL[Fmt.Int];
+    queueSize: CARDINAL[Fmt.Int];
+    bounded: BOOLEAN[OblFmt.Bool];
+    maxX, maxY: REAL[OblFmt.Real]);
+(* Specify that the new graph will have "nodeCnt" nodes, that each will have a
+   maximum queue size of "queueSize" if "bounded" is TRUE or threshold queue
+   size of "queueSize" otherwise, and that all of their locations will lie in
+   the rectangle with opposite corners "(0, 0)" and "(maxX, maxY)". If bounded
+   is FALSE, then the threshold queue size value is the maximum queue size at
+   which queues are shown as full. *)
+
+OUTPUT NewNode(id: CARDINAL[Fmt.Int]; x, y: REAL[OblFmt.Real]);
+(* Introduces a new node with name "id" and location "(x, y)". The node's
+   location must lie within the rectangle with opposite corners "(0, 0)" and
+   "(maxX, maxY)", where "maxX" and "maxY" were the parameters to the
+   "StartSetup" event above. The name "id" must be in the range
+   "[0..nodeCnt-1]", where "nodeCnt" is the first argument to the "StartGraph"
+   event. *)
+
+OUTPUT NewStraightEdge(id1, id2: CARDINAL[Fmt.Int]);
+(* Specifies that there is a connection between nodes "id1" and "id2". The
+   connection is drawn as a line segment from "id1" to "id2". *)
+
+OUTPUT NewCurvedEdge(
+    id1, id2: CARDINAL[Fmt.Int];
+    x1, y1, x2, y2: REAL[OblFmt.Real]);
+(* Specifies that there is a connection between nodes "id1" and "id2". The
+   connection is drawn as a Bezier curve from "id1" to "id2" with control
+   points "(x1, y1)" and "(x2, y2)". *)
+
+OUTPUT NewLabel(label: TEXT[TextConv.Encode]; x, y: REAL[OblFmt.Real]);
+(* Adds the annotation "label" to the graph, centered at location "(x, y)". *)
+
+OUTPUT EndGraph();
+
+(* The Packets ------------------------------------------------------------- *)
+
+OUTPUT StartPackets(pktCnt: CARDINAL[Fmt.Int]);
+(* Specify that there will be "pktCnt" subsequent "NewPacket" events. *)
+
+OUTPUT NewPacket(
+    id, source, dest, fewestHops: CARDINAL[Fmt.Int]; 
+    name: TEXT[TextConv.Encode]);
+(* Add a new packet with name "id" to be routed from node "source" to node
+   "dest". The path with the shortest number of hops from "source" to "dest"
+   has "fewestHops" edges. The packet is given the text label "name". The name
+   "id" must be in the range "[0..pktCnt-1]", where "pktCnt" is the argument
+   to the "StartPackets" event. *)
+
+OUTPUT EndPackets();
+
+(* Graph Animation --------------------------------------------------------- *)
+
+OUTPUT Blocked(id, from, to: CARDINAL[Fmt.Int]);
+(* Specify that the packet "id" would like to have moved along the edge from
+   node "from" to node "to", but it could not because the queue at node "to"
+   was full. *)
+
+OUTPUT MovePacket(id, from, to: CARDINAL[Fmt.Int]);
+(* Specify that during the current step, the packet "id" should move from node
+   "from" to node "to". *)
+
+OUTPUT QueueSizes(sz: RefIntArray.T[RefIntArray.ToText]);
+(* This event signals the end of "MovePacket" events for the current step.
+   The value "sz[i]" is the size of the queue at node "i" *before* packets
+   that have reached their final destinations have been absorbed. If packet
+   motion is to be animated in the view, it should happen on this event. *)
+
+OUTPUT Absorb(pktId, node: CARDINAL[Fmt.Int]);
+(* This event signals that the packet with identifier "pktId" has reached its
+   destination node "node". *)
+
+OUTPUT Step();
+(* This event signals the end of the current step. *)

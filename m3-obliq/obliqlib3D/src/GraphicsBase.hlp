@@ -1,0 +1,2 @@
+GraphicsBase_Failure: Exception
+TYPE GraphicsBase <: ProxiedObj 

@@ -1,0 +1,81 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""><P>
+<HEAD>
+<TITLE>LecternToHTML</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>LecternToHTML(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+LecternToHTML - generate HTML describing repository of Lectern documents
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<B>LecternToHTML [-quiet] path</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+<P>
+
+This program walks a subtree of the filesystem rooted at the specified
+path, and annotates each directory, say <TT>p</TT>, by creating files named
+<TT>p/.ascending.html</TT> and <TT>p/.descending.html</TT> that each contain
+an HTML document describing the contents of that directory.  Each such
+document contains a hypertext link for each Lectern document and for
+each subdirectory containing (directly or indirectly) one or more
+Lectern documents.  If a directory contains no Lectern documents, no
+<TT>.ascending.html</TT> or <TT>.descending.html</TT> file is generated for it.  The
+hypertext link for a document is labeled with title, author and date
+attributes extracted from the Lectern document file -- see 
+<A HREF="BuildLectern.1.html">BuildLectern</A>{1}.<P>
+
+The hypertext link for a directory, say q, is labeled with the
+contents of the file named <TT>q/.title</TT>, if such a file exists;
+otherwise the path <TT>q</TT> is used as the label. The referent for this link
+is <TT>q/index.html</TT> if the directory <TT>q/</TT> contains a file or symbolic link
+named <TT>index.html</TT> or <TT>q/.ascending.html</TT> otherwise.<P>
+
+If a directory contains a file named <TT>.prefix</TT>, its contents are
+inserted at the beginning of the generated HTML.  Similarly, if a file
+named <TT>.postfix</TT> exists, its contents are inserted at the end.<P>
+
+If <TT>-quiet</TT> is not specified, <B>LecternToHTML</B> prints to standard
+error the name of each directory or file it visits.
+</BLOCKQUOTE>
+
+<H3>AUTHOR</H3>
+<BLOCKQUOTE>
+<A HREF="http://www.research.digital.com/SRC/people/Paul_McJones/bio.html">Paul McJones</A>
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<A HREF="Lectern.1.html">Lectern(1)</A>, 
+<A HREF="BuildLectern.1.html">BuildLectern(1)</A>, 
+<A HREF="BuildLecternIndex.1.html">BuildLecternIndex(1)</A>
+</BLOCKQUOTE>
+
+<H3>COPYRIGHT</H3>
+<BLOCKQUOTE>
+<P>
+
+Copyright 1994 Digital Equipment Corporation.<BR>
+Distributed only by permission.<BR>
+<BR>
+<P>
+
+<PRE>
+ Last modified on Fri Feb 17 17:45:14 PST 1995 by birrell  
+      modified on Sun Jan  1 09:33:44 PST 1995 by glassman 
+      modified on Tue Aug 30 15:27:12 PDT 1994 by mcjones 
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

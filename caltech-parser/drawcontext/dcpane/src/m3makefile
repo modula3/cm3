@@ -1,0 +1,13 @@
+import("libm3")
+import("drawcontext")
+import("paneman")
+Module("TrestleExtras")
+
+Module("DCPaneVBT")
+Module("PSReaderPaneVBT")
+VbtStarter("PSReader", "PSReaderPaneVBT")
+
+Module("TextSubsPaneUpdater")
+Module("TextSubsViewer")
+
+library("dcpane")

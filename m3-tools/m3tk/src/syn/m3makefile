@@ -1,0 +1,33 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Fri Oct 14 14:35:31 PDT 1994 by detlefs                  */
+/*      modified on Wed May  5 20:58:34 PDT 1993 by mjordan                  */
+
+Interface("M3CId")
+Interface("M3CParse")
+Interface("M3CSrcPos")
+Interface("M3CHash")
+Interface("M3CPragma")
+Interface("M3CPragmaF")
+Interface("M3CToken")
+Interface("M3CLiteral")
+Interface("M3CReservedWord")
+Interface("M3CLex")
+Interface("M3CLexF")
+Interface("M3CWhitespace")
+Interface("M3CComment")
+
+implementation("M3CId")
+implementation("M3CParse")
+implementation("M3CSrcPos")
+implementation("M3CHash")
+implementation("M3CPragma")
+implementation("M3CToken")
+implementation("M3CLiteral")
+implementation("M3CReservedWord")
+implementation("M3CLex")
+implementation("M3CWhitespace")
+implementation("M3CComment")
+

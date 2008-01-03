@@ -1,0 +1,14 @@
+% Copyright 1992 Digital Equipment Corporation.
+% Distributed only by permission.
+%
+% Last modified on Tue Nov  1 10:04:01 PST 1994 by kalsow 
+%      modified on Wed Sep  7 14:17:16 PDT 1994 by birrell
+%
+% Makefile for "TempFiles" library
+
+
+import         ("libm3")
+
+Module         ("TempFiles")
+
+Library        ("TempFiles")

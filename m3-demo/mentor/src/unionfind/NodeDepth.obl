@@ -1,0 +1,283 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* NodeDepth.obl - view of node depths.                                      *)
+(* Last modified on Mon Jan  9 12:04:28 PST 1995 by najork                   *)
+(*      modified on Fri Aug 19 16:17:40 PDT 1994 by heydon                   *)
+(*      modified on Thu Jul 28 10:50:11 PDT 1994 by shillner                 *)
+
+(* Screen dimensions. *)
+let North: Real = 1.0;
+let South: Real = 0.0;
+let West: Real = 0.0;
+let East: Real = 1.0;
+let Margin: Real = 5.0;
+
+(* Caption stuff. *)
+let CaptionHeight   = 0.1;
+let BackgroundColor = color_named("white");
+let FontSz          = 0.07;
+
+(* Bar settings. *)
+let BarColor    = color_named("magenta");
+let BorderColor = color_named("black");
+let BorderWidth = 0.005;
+let TextColor   = color_named("black");
+let BarGap      = 0.02;
+let AxisLabelHeight = 0.1;
+var g = ok;
+var labelFont = ok;
+
+(* Node Object ============================================================= *)
+
+let Node = {
+  parent: Node => ok,
+  children: Node => ok,
+  next: Node => ok,      (* Siblings. *)
+  prev: Node => ok,
+
+  (* Adds child as a child of parent, inserted to the right of 
+     the child "rightOf", which must be a child of parent, or as
+     the leftmost child if rightOf is ok *)
+  addChild => meth(parent, rightOf, child: Node)
+    if rightOf is ok then
+      child.next := parent.children;
+      child.prev := ok;
+      if child.next isnot ok then child.next.prev := child; end;
+      parent.children := child;
+    else
+      child.prev := rightOf;
+      child.next := rightOf.next;
+      if child.next isnot ok then child.next.prev := child; end;
+      rightOf.next := child;
+    end;
+  end,
+
+  (* removes child from parent, which must be its parent *)
+  removeChild => meth(parent, child: Node)
+    if child.prev isnot ok
+      then child.prev.next := child.next;
+      else parent.children := child.next;
+    end;
+    if child.next isnot ok then child.next.prev := child.prev; end;
+    child.prev := ok;
+    child.next := ok;
+  end,
+
+  walk => meth(node: Node, bar: Bar)
+    bar.size := bar.size + 1.0;
+    var ch = node.children;
+    if bar.next is ok then
+      bar.next := clone(bar).init(bar.col + 1);
+    end;
+    var acc = 0;
+    var count = 0;
+    loop
+      if ch is ok then exit end;
+      let res = ch.walk(bar.next);
+      acc := acc + res.acc;
+      count := count + res.count;
+      ch := ch.next;
+    end;
+    {acc => acc + bar.col, count => count + 1};
+  end,
+
+};
+
+
+(* Bar Object ============================================================== *)
+
+let Bar = {
+  size: Float => ok,
+  next: Bar => ok,
+  col: Int => ok,
+  v: Vertex => ok,
+  axisLabel: Vertex => ok,
+
+  init => meth(self: Bar, col: Int): Bar,
+    self.size := 0.0;
+    self.col := col;
+    self.next := ok;
+    if self.col >= 0 then
+      self.v := graph_newVertex(g);
+      graph_setVertexColor(self.v, BarColor);
+      graph_setVertexBorderColor(self.v, BorderColor);
+      graph_setVertexBorder(self.v, BorderWidth);
+      graph_setVertexSize(self.v, 1.0, 0.0);
+      graph_setVertexLabelColor(self.v, TextColor);
+      graph_setVertexFont(self.v, labelFont);
+      graph_moveVertex(self.v, float(self.col), 0.0, true);
+
+      self.axisLabel := graph_newVertex(g);
+      graph_setVertexColor(self.axisLabel, BackgroundColor);
+      graph_setVertexBorder(self.axisLabel, 0.0);
+      graph_setVertexLabelColor(self.axisLabel, TextColor);
+      graph_setVertexFont(self.axisLabel, labelFont);
+    end;
+    self;
+  end,
+
+  clear => meth(self: Bar)
+    self.size := 0.0;
+    if self.next isnot ok then self.next.clear() end;
+  end,
+
+  update => meth(self: Bar, maxHeight: Float, maxCols: Int,
+                 barGraph: BarGraph): ok,
+    let height = if self.size > maxHeight then self.size else maxHeight end;
+    let cols = if self.size isnot 0.0 then self.col else maxCols end;
+
+    if self.next isnot ok then self.next.update(height, cols, barGraph)
+    else barGraph.barCounts(height, cols + 1) end;
+
+    let shape = barGraph.barShape(math_sqrt(self.size), self.col);
+    if shape.h > 0.0 then
+      graph_setVertexSize(self.v, shape.w, shape.h);
+      graph_moveVertex(self.v, shape.x, shape.y, false);
+      graph_setVertexLabel(self.v, fmt_int(round(self.size)));
+
+      graph_setVertexSize(self.axisLabel, shape.w, AxisLabelHeight);
+      graph_moveVertex(self.axisLabel, shape.x, 
+                       (shape.y - (0.5 * shape.h)) - (0.5 * AxisLabelHeight),
+                       false);
+      graph_setVertexLabel(self.axisLabel, fmt_int(self.col));
+    else
+      graph_setVertexSize(self.v, 0.0, 0.0);
+      graph_setVertexSize(self.axisLabel, 0.0, 0.0);
+    end;
+  end,
+};
+
+(* BarGraph Object ========================================================= *)
+
+let BarGraph = {
+  west: Float => ok,
+  east: Float => ok,
+  north: Float => ok,
+  south: Float => ok,
+  height: Float => ok,
+  width: Float => ok,
+  bar: Bar => ok,
+  colWidth: Float => ok,
+  unitHeight: Float => ok,
+  baseCol: Float => ok,
+  barWidth: Float => ok,
+
+  init => meth(self: BarGraph, west, east, north, south: Float,
+               bar: Bar): BarGraph,
+    self.west := west;
+    self.east := east;
+    self.north := north;
+    self.south := south;
+    self.height := north - south;
+    self.width := east - west;
+    self.bar := bar;
+    self;
+  end,
+
+  barCounts => meth(self: BarGraph, height: Float, cols: Int): ok,
+    self.colWidth := self.width / float(cols);
+    self.unitHeight := (self.height - AxisLabelHeight) / math_sqrt(height);
+    self.baseCol := self.west + (0.5 * self.colWidth);
+    self.barWidth := self.colWidth - BarGap;
+  end,
+
+  barShape => meth(self: BarGraph, size: Float, col: Int): Shape,
+    var shape = {w => ok, h => ok, x => ok, y => ok};
+
+    shape.w := self.barWidth;
+    shape.h := size * self.unitHeight;
+    shape.x := self.baseCol + (self.colWidth * float(col));
+    shape.y := self.south + AxisLabelHeight + (0.5 * shape.h);
+    shape;
+  end,
+
+  update => meth(self: BarGraph)
+    self.bar.next.update(0.0, 0, self);
+  end,
+  
+};
+
+
+(* View Object ============================================================= *)
+
+let view = {
+
+  graphvbt => graph_new(),
+  counts => ok,
+  numSets => 0,
+  node => ok,
+  root: Node => ok,
+  bar: Bar => ok,
+  barGraph: BarGraph => ok,
+  height: Int => ok,
+  width: Int => ok,
+  caption: Vertex => ok,
+
+  FinishedSets => meth(self: View, numSets: Int, usesRanks: Bool)
+    g := self.graphvbt;  (* Must be done before Bar.init(). *)
+    self.numSets := numSets;
+    self.root := clone(Node);
+    self.bar := clone(Bar).init(-1);
+    self.barGraph := clone(BarGraph).init(West, East, North,
+                                          South + CaptionHeight, self.bar);
+    self.node := array_new(numSets, ok);
+    labelFont := graph_newFont(self.graphvbt, "Helvetica", FontSz,
+                               "Roman", "bold", "*");
+
+    for i=0 to numSets-1 do
+      var node = clone(Node);
+      self.root.addChild(ok, node);
+      self.node[i] := node;
+    end;
+
+    graph_setWorld(self.graphvbt, West, East, North, South);
+    graph_setMargin(self.graphvbt, Margin);
+    self.caption := graph_newVertex(self.graphvbt);
+    graph_moveVertex(self.caption, (West + East) / 2.0,
+                     South + (CaptionHeight / 2.0), false);
+    graph_setVertexSize(self.caption, East - West, CaptionHeight);
+    graph_setVertexColor(self.caption, BackgroundColor);
+    graph_setVertexFont(self.caption, labelFont);
+    graph_setVertexLabel(self.caption, "");
+    graph_setVertexLabelColor(self.caption, TextColor);
+    self.update();
+  end,
+
+  update => meth(self: View): ok,
+    self.bar.clear();
+    let res = self.root.walk(self.bar);
+    let avg = float(res.acc + 1) / float(self.numSets);
+    self.barGraph.update();
+    graph_setVertexLabel(self.caption,
+                         "Average Node Depth: " &
+                          text_replaceAll("d", "0",
+                                          text_sub(fmt_real(avg), 0, 4)));
+    graph_redisplay(self.graphvbt);
+  end,
+
+  ChangeParent => meth(self: View, childId, parentId, rootId: Int)
+    let parent = self.node[parentId];
+    let child = self.node[childId];
+    let root = self.node[rootId];
+    
+    parent.removeChild(child);
+    root.addChild(ok, child);
+
+    self.update();
+    ok;
+  end,
+
+  Unite => meth(self: View, childId, parentId, pRank: Int)
+    let parent = self.node[parentId];
+    let child = self.node[childId];
+
+    self.root.removeChild(child);
+    parent.addChild(ok, child);
+
+    self.update();
+    ok;
+  end,
+
+};

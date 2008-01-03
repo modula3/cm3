@@ -1,0 +1,60 @@
+
+CONST
+  X = ARRAY [0..41] OF Entry {
+    (* 0 *)
+    Entry {  0, Symbol.Id,        Action.Shift,   4 },
+    Entry {  0, Symbol.Stmt,      Action.Shift,   2 },
+    Entry {  0, Symbol.StmtList,  Action.Shift,   1 },
+    (* 3 *)
+    Entry {  1, Symbol.EOF,       Action.Accept,  0 },
+    (* 4 *)
+    Entry {  2, Symbol.Semi,      Action.Shift,   3 },
+    Entry {  2, Symbol.EOF,       Action.Reduce,  1 },
+    (* 6 *)
+    Entry {  3, Symbol.Id,        Action.Shift,   4 },
+    Entry {  3, Symbol.Stmt,      Action.Reduce,  -1 },
+    Entry {  3, Symbol.StmtList,  Action.Reduce,  -2 },
+    (* 9 *)
+    Entry {  4, Symbol.Assign,    Action.Shift,   5 },
+    (* 10 *)
+    Entry {  5, Symbol.Id,        Action.Reduce,  -8 },
+    Entry {  5, Symbol.LParen,    Action.Shift,   6 },
+    Entry {  5, Symbol.Factor,    Action.Reduce,  -6 },
+    Entry {  5, Symbol.Term,      Action.Shift,   7 },
+    Entry {  5, Symbol.Expr,      Action.Shift,   9 },
+    (* 15 *)
+    Entry {  6, Symbol.Id,        Action.Reduce,  -8 },
+    Entry {  6, Symbol.LParen,    Action.Shift,   6 },
+    Entry {  6, Symbol.Factor,    Action.Reduce,  -6 },
+    Entry {  6, Symbol.Term,      Action.Shift,   7 },
+    Entry {  6, Symbol.Expr,      Action.Shift,   11 },
+    (* 20 *)
+    Entry {  7, Symbol.RParen,    Action.Reduce,  4 },
+    Entry {  7, Symbol.Star,      Action.Shift,   8 },
+    Entry {  7, Symbol.Plus,      Action.Reduce,  4 },
+    Entry {  7, Symbol.Semi,      Action.Reduce,  4 },
+    Entry {  7, Symbol.EOF,       Action.Reduce,  4 },
+    (* 25 *)
+    Entry {  8, Symbol.Id,        Action.Reduce,  -8 },
+    Entry {  8, Symbol.LParen,    Action.Shift,   6 },
+    Entry {  8, Symbol.Factor,    Action.Reduce,  -7 },
+    (* 28 *)
+    Entry {  9, Symbol.Plus,      Action.Shift,   10 },
+    Entry {  9, Symbol.Semi,      Action.Reduce,  3 },
+    Entry {  9, Symbol.EOF,       Action.Reduce,  3 },
+    (* 31 *)
+    Entry { 10, Symbol.Id,        Action.Reduce,  -8 },
+    Entry { 10, Symbol.LParen,    Action.Shift,   6 },
+    Entry { 10, Symbol.Factor,    Action.Reduce,  -6 },
+    Entry { 10, Symbol.Term,      Action.Shift,   12 },
+    (* 35 *)
+    Entry { 11, Symbol.RParen,    Action.Reduce,  -9 },
+    Entry { 11, Symbol.Plus,      Action.Shift,   10 },
+    (* 37 *)
+    Entry { 12, Symbol.RParen,    Action.Reduce,  5 },
+    Entry { 12, Symbol.Star,      Action.Shift,   8 },
+    Entry { 12, Symbol.Plus,      Action.Reduce,  5 },
+    Entry { 12, Symbol.Semi,      Action.Reduce,  5 },
+    Entry { 12, Symbol.EOF,       Action.Reduce,  5 }
+    (* 42 *)
+  };

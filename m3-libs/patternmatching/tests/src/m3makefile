@@ -1,0 +1,15 @@
+
+import ("libm3")
+import ("patternmatching")
+import ("parseparams")
+interface ("regex")
+
+if equal(TARGET, "FreeBSD3") or
+   equal(TARGET, "FreeBSD4") or
+   equal(TARGET, "FreeBSD5")
+  import_lib("compat", "/usr/lib")
+end
+
+implementation("Main")
+program ("test-regex")
+

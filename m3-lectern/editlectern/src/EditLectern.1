@@ -1,0 +1,103 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "EditLectern" "1"
+.SH "NAME"
+EditLectern \- Edit attributes of document in Lectern format
+.SH "SYNTAX"
+\fBEditLectern\fR
+.SH "DESCRIPTION"
+\fBEditLectern\fR provides a graphical (point\-and\-click) user interface
+for editing the attributes of a Lectern\-format document, which you
+initially create from PostScript or image files using
+BuildLectern(1).  \fBEditLectern\fR uses
+BuildLectern to get the real work done, so if you're happier with a
+command line interface you should stick with BuildLectern.
+\fBEditLectern\fR always appends the BuildLectern commands it executes
+to the file $HOME/EditLectern.log; in deferred mode (controlled
+by a pair of radio buttons at the top of the window), the actual
+BuildLectern calls are suppressed.
+.PP
+\fBEditLectern\fR is designed to be used concurrently with
+Lectern(1) \-\- when you open a document with
+\fBEditLectern\fR, the same document is automatically opened in
+Lectern.  That way you can read through the document and determine the
+attributes to add via \fBEditLectern\fR, such as the locations of page
+1, the contents page, the index page, and the document title and
+author.  \fBEditLectern\fR starts Lectern automatically if it isn't
+already running.
+.PP
+The \fBEditLectern\fR window is split vertically into three areas: a
+menu bar, a dialog (which is blank when no file is open), and a
+typescript.
+.PP
+The menu bar contains a \fBFile\fR menu and the radio buttons
+controlling immediate/deferred mode.  The \fBFile\fR menu contains
+\fBOpen...\fR, \fBSave\fR, \fBSave As...\fR, \fBClose\fR, \fBQuit\fR, and
+\fBAbout\fR items.  \fBSave\fR and \fBSave As...\fR invoke BuildLectern
+with the current settings unless deferred mode is enabled.  The
+BuildLectern command and its output are displayed in the typescript at
+the bottom of the \fBEditLectern\fR window.
+.PP
+Once a file is open, the following dialog elements become visible:
+.PP
+.PD 0
+.RS 0
+
+.TP 6
+    *
+A numeric box to specify the image number (starting with one) of
+the table of contents.  Leave it set to zero if there is no table of
+contents.
+.IP
+.TP 6
+    *
+A pair of numeric boxes to specify the correspondence between
+image numbers and page numbers: normally, you specify the image number
+of page 1, but in the case of a document starting at a page number
+higher than 1 (e.g., an issue of a journal), you can specify image
+number 1 (or higher) and the corresponding page number.
+.IP
+.TP 6
+    *
+A pair of radio buttons (labeled \fBPage\fR and \fBImage\fR) and a numeric
+box, to specify the page or image number of the index.  Leave it set
+to page 0 if there is no index.
+.IP
+.TP 6
+    *
+A scrolling list labeled \fBAttribute\fR, a pair of typeins
+labeled \fBKey\fR and \fBValue\fR, and a pair of buttons labeled \fBDelete\fR
+and \fBSet\fR, to specify attributes (\fIauthor\fR, \fItitle\fR, and \fIdate\fR are
+recommended for all documents). To set an attribute, type values into
+the \fBKey\fR and \fBValue\fR fields, and press \fBSet\fR.  To display an existing
+attribute, select it in the scrolling list.  To modify it, edit the
+\fBValue\fR field and press \fBSet\fR.  To delete it, press \fBDelete\fR.  
+.RE
+.PD
+.PP
+Like other applications built with FormsVBT, EditLectern allows you to
+pick any of four different text\-editing "models": emacs, ivy, mac, and
+xterm.  You set the model via the environment variable
+TextPortModel, which should be set to either emacs,
+ivy, mac, or xterm. If it is not set, the default model
+is emacs.  See
+VBTkit Reference Manual for details about each text\-editing model.
+.SH "SEE ALSO"
+BuildLectern(1), 
+Lectern(1)
+.SH "FILES"
+$HOME/EditLectern.log
+.SH "AUTHOR"
+Paul McJones
+.SH "COPYRIGHT"
+.PP
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+.br
+.BR
+.EX
+Last modified on Wed Jul 19 14:59:38 PDT 1995 by mcjones  
+     modified on Fri Feb 17 17:47:07 PST 1995 by birrell  
+     modified on Sun Jan  1 08:54:01 PST 1995 by glassman 
+.EE

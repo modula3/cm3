@@ -1,0 +1,73 @@
+(ZSplit %formatt
+   (ZBackground (Shape (Height 305) (Width 350) (VBox 
+                         (Glue 10)
+                         (Title "Form Attributes")
+                         (Glue 10)
+                         (HBox
+                           (Border (Pen 1) 
+                            (HBox (Glue 20) (Boolean  %anchored "Anchored ?") (Glue 20) 
+                                 (Shape (Color "VeryDarkBlue") (Width 200)
+                                      (Filter   %anchorfilter Dormant
+                                         (Field "Parent :" 150 
+                                              (HBox (TSplit %com Circular
+                                                      (ShadowSize 0.5)
+                                                      (PageButton %opencombo (For com) (PopButton (For combo) 
+                                                      (Pixmap "arrowDown.pbm")))
+                                                      (PageButton %closecombo (For com) (CloseButton (For combo) 
+                                                      (Pixmap "arrowUp.pbm"))))
+                                                 (Frame Raised (Shape (Width 100) (BgColor "White") (TypeIn %parent )))
+                                               )
+                                          )
+                                       ) 
+                                   ) Fill ))
+                                   
+                           )        
+                                   
+                         (Glue 10)
+                         (Border (Pen 1)
+                          (HBox
+                            Fill
+                                   (VBox   (Shape (Height 15) (Text "Vertical")) (Glue 5)
+                                   (Field "Stretch :" 150  (Numeric %vstretch (TabTo vshrink) (Min 0))) (Glue 5) 
+                                   (Field "Shrink  :" 150 (Numeric %vshrink (TabTo hstretch) (Min 0))))
+                            Fill Ridge Fill
+                           
+                                   (VBox   (Shape (Height 15)(Text "Horizontal")) (Glue 5)
+                                   (Field "Stretch :" 150  (Numeric %hstretch (TabTo hshrink) (Min 0))) (Glue 5) 
+                                   (Field "Shrink  :" 150 (Numeric %hshrink (TabTo vstretch) (Min 0)))) 
+                           Fill 
+                           
+                          ))
+                          (Glue 10)
+                          (HBox
+                          (Shape (Height 30) (Border (Pen 1) 
+                           (HBox Fill (Boolean %menuBoolean "Menu ?") Fill 
+                                 (Shape (Color "VeryDarkBlue") (Height 20)
+                                      (Filter %tomenuFilter
+                                         (VBox Fill (LinkButton %tomenu (For menuatt) "Menu Design") Fill)
+                                       )
+                                  ) Fill )))
+                           (Glue 10)
+                           (Shape (Width 90)
+                          
+                           (LinkButton   (For SupportCode)(BgColor "PalePink") 
+                           (VBox "Form" "Support Code")))
+                          )
+                          (Glue 10)
+                       
+                          (BoxAround 90
+                          (VBox Fill
+                           (Field "Title Bg Color :" 280 (ColorField tbgctypein tbgc))
+                           (Field "Title Fg Color :" 280 (ColorField tfgctypein tfgc))
+                           (LField "Title Label :" 280 (TypeIn (TabTo formtexture) %ttyp (BgColor "White") (Value "Title")))
+                           Fill) 
+                           )
+                           (LField "Texture :" 150 (TypeIn (TabTo name) %formtexture (BgColor "White") (Value "Blank")))
+                         Fill
+                       )))
+              (ZChild %combo (At 200 56 NW Absolute) 
+                  (Border (Pen 1) (Frame (Shape (BgColor "White") (Height 80) (Width 113)  (Browser Quick %parentlist )))))
+             )
+
+
+                           

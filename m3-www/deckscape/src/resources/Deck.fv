@@ -1,0 +1,44 @@
+(Filter
+  (Insert "macros.fv")
+  (Target %target
+    (Stable 
+      (Border (Pen 2)
+          (VBox %vBox
+            (HBox
+              (Button %iconize (Pixmap "iconize.pbm"))
+              (Menu (Shape (Width 20) (Pixmap "pulldown.pbm"))
+               (VBox
+                  (PopMButton (For urlDialog) (Text LeftAlign "Open URL ..."))
+                  (Filter (MButton %popTitlesButton (Text LeftAlign "Goto Page ...")))
+                  (Filter (MButton %popRenameButton 
+                    (Text LeftAlign "Rename Deck ...")))
+                  (MButton %gatherButton (Text LeftAlign "Gather Up"))
+                  (Filter Dormant 
+		    (MButton %indexButton (Text LeftAlign "Make Link Index")))
+                  (Filter (MButton %deleteButton (Text LeftAlign "Delete Deck")))
+                  Bar
+                  (Filter (MButton %reloadDocButton (Text LeftAlign "Reload")))
+                  (Filter (MButton %duplicateDocButton (Text LeftAlign "Duplicate")))
+                  (Filter (MButton %expandDocButton (Text LeftAlign "Expand One Level")))))
+               (Shape (Width + inf)
+                (ZMove (Text %deckName LeftAlign "Deck Name")))
+              (Filter (Source %mergeSource "Merge"))
+              (Shape (Width + 0) (Text %locText "?/?"))
+              (Filter
+                (HBox
+                  (Button %bottomButton "B")
+                  (PageButton %prevButton (Back TRUE) (For tSplit)
+                    (Pixmap "leftArrow.pbm"))))
+              (Filter
+                (HBox
+                  (PageButton %nextButton (For tSplit)
+                    (Pixmap "rightArrow.pbm"))
+                  (Button %topButton "T")))
+              (ZGrow (Pixmap "grow.pbm")))
+            (Bar 2)
+            (ZSplit 
+              (Shape (Width + Inf) (Height + Inf) 
+                (TSplit %tSplit (Circular FALSE)))
+              (Insert "Titles.fv")
+              (Insert "OpenURL.fv")
+              (Insert "Rename.fv")))))))

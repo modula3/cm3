@@ -1,0 +1,5 @@
+          d=(a,b)
+          IS-REAL(c)
+          IS-REAL(b)
+          IS-REAL(a)
+          e=(a,c)

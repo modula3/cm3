@@ -1,0 +1,6 @@
+# Last modified on Wed Mar 23 17:58:57 PST 1994 by heydon
+
+# This file contains numbers that crashed "Float.ToDecimal" on the Alpha, but
+# not on the DECstation.
+
+l A -1 3.2767999999761581

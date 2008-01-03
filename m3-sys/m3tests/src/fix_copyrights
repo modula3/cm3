@@ -1,0 +1,42 @@
+#! /bin/csh
+
+foreach x (m3makefile *.ig *.mg *.i3 *.m3 *.c)
+  mv $x tmp
+  cat /dev/null > $x
+  switch ($x)
+  case m3makefile
+     echo "% Copyright (C) 1994, Digital Equipment Corporation." >> $x
+     echo "% All rights reserved." >> $x
+     echo "% See the file COPYRIGHT for a full description." >> $x
+     breaksw
+  case *.ig
+     echo "(* Copyright (C) 1994, Digital Equipment Corporation. *)" >> $x
+     echo "(* All rights reserved.                               *)" >> $x
+     echo "(* See the file COPYRIGHT for a full description.     *)" >> $x
+     breaksw
+  case *.mg
+     echo "(* Copyright (C) 1994, Digital Equipment Corporation. *)" >> $x
+     echo "(* All rights reserved.                               *)" >> $x
+     echo "(* See the file COPYRIGHT for a full description.     *)" >> $x
+     breaksw
+  case *.i3
+     echo "(* Copyright (C) 1994, Digital Equipment Corporation. *)" >> $x
+     echo "(* All rights reserved.                               *)" >> $x
+     echo "(* See the file COPYRIGHT for a full description.     *)" >> $x
+     breaksw
+  case *.m3
+     echo "(* Copyright (C) 1994, Digital Equipment Corporation. *)" >> $x
+     echo "(* All rights reserved.                               *)" >> $x
+     echo "(* See the file COPYRIGHT for a full description.     *)" >> $x
+     breaksw
+  case *.c
+     echo "/* Copyright (C) 1994, Digital Equipment Corporation. */" >> $x
+     echo "/* All rights reserved.                               */" >> $x
+     echo "/* See the file COPYRIGHT for a full description.     */" >> $x
+     breaksw
+  endsw
+  echo " " >> $x
+  cat tmp >> $x
+  rm tmp
+end
+

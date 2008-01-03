@@ -1,0 +1,15 @@
+(Shape (Width 600) (Height 300)
+       (Font "-*-helvetica-bold-*R-*240-*")
+       (LabelFont "-*-helvetica-bold-*R-*240-*")
+ (VBox 
+   (Text (BgColor "DarkBrown") (Color "White") "Session Request")
+   (Text (Color "DarkBrown") "You are invited to join a session of")
+   (Text (Color "Red") (Name name) "foo")
+   Fill
+   (HBox 
+     Fill 
+     (Button (Name accept) (BgColor "PaleGreen") (Rim (Pen 5) "Accept"))
+     Fill 
+     (Button (Name reject) (BgColor "LightRed") (Rim (Pen 5) "Reject")) 
+     Fill)
+  Fill))

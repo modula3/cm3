@@ -1,0 +1,13 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Thu Jun 17 19:21:28 PDT 1993 by harrison
+%      modified on Tue Feb  2 10:50:25 PST 1993 by mjordan
+%      modified on Tue Feb 11 16:43:47 PST 1992 by muller
+
+Module ("PerfTool")
+Interface ("LowPerfTool")
+
+Generic_module ("PerfComm")
+

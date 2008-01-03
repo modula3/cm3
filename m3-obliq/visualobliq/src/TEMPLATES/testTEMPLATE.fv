@@ -1,0 +1,21 @@
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - 20) (Height $YSpan$ + Inf - 20)
+  
+    (BgColor "$BgColor$") (Color "$FgColor$")
+     (LabelFont "$Font$")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (Text $Alignment$ %@text "$Initial$")
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+

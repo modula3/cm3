@@ -1,0 +1,6 @@
+"../src/FloatTest.m3", line 282: warning: exception is never raised: FloatMode.Trap
+"../src/FloatTest.m3", line 314: warning: exception is never raised: FloatMode.Trap
+2 warnings encountered
+"../src/LongTest.m3", line 277: warning: exception is never raised: FloatMode.Trap
+"../src/LongTest.m3", line 309: warning: exception is never raised: FloatMode.Trap
+2 warnings encountered

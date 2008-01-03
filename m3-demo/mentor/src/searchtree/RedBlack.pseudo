@@ -1,0 +1,102 @@
+@RedBlackTest
+RedBlackTest(Keys)@
+  @1 create a new, empty tree T@
+  @2 foreach k in Keys do@
+    @3 create a new node n with key k@
+    @4 RedBlackInsert(T, n)@
+  end
+end
+@RedBlackTest
+
+@Insert
+Insert(T, n)@
+  @4 curr := root(T)@
+  @5 while curr is not the place to attach n do@
+    @7 if key(n) < key(curr)@
+      then @8 curr <- left(curr)@
+      else @9 curr <- right(curr)@
+    end
+  end
+  @11 if T has no root@
+    then @12 make n the new root of T@
+    else @13 make n the proper child of curr@
+  end
+end
+@Insert
+
+@RedBlackInsert
+RedBlackInsert(T, n)@
+  @1 Insert(T, n)@
+  @2 type(n) <- Red@
+  @3 while n # root(T) and type(n) = Red@ do
+    @4 side <- side of parent(n) w.r.t. parent(parent(n))@
+    @7 other <- opposite side from "side"@
+    @8 y <- n's uncle@
+    @9 if type(y) # Black@ then
+      @10 handle Case 1@
+    else
+      @14 if the line from parent(parent(n)) to n is zig-zag@ then
+        @15 handle Case 2 (including Rotate(side))@
+      end
+      @17 handle Case 3 (including Rotate(other))@
+    end
+  end
+  @20 type(root(T)) <- Black@
+end
+@RedBlackInsert
+
+@Search
+Search(T, k)@
+  @1 n <- root(T)@
+  @2 while key(n) # k do@
+    @3 if key(n) < k@
+      then @4 n <- left(n)@
+      else @5 n <- right(n)@
+    end
+  end
+  @6 return n@
+end
+@Search
+
+@RedBlackDelete
+RedBlackDelete(T, n)@
+  @1 if n has < 2 children@
+    then @2 splice <- n@
+    else @3 splice <- FindMin(right(n))@
+  end
+  @4 splice_child <- SpliceOut(t, splice)@
+  @5 if splice # n@ then
+    @6 copy contents of splice node into n@
+  end
+  @7 if type(splice) = Black@ then
+    @8 RedBlackFixUp(T, splice_child)@
+  end
+end
+@RedBlackDelete
+
+@FindMin
+FindMin(n)@
+  @1 while left(n) # NIL do@
+    @2 n <- left(n)@
+  end
+  @3 return n@
+end
+@FindMin
+
+@SpliceOut
+SpliceOut(T, n)@
+  @1 ch <- "a child of n, or NIL if n has no children"@
+  @4 parent(ch) <- parent(n)@
+  @6 if n = root(T)@ then
+    @7 root(T) <- ch@
+  else
+    @8 make appropriate "down" pointer of parent(n) point to ch@
+  end
+  @11 return ch@
+end
+@SpliceOut
+
+@RedBlackFixUp
+RedBlackFixUp(T, n)@
+end
+@RedBlackFixUp

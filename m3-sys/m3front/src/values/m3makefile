@@ -1,0 +1,25 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% File: m3makefile
+% Last modified on Tue Aug  9 07:57:34 PDT 1994 by kalsow
+%      modified on Tue May 25 10:09:00 PDT 1993 by muller
+
+module ("Value")
+interface ("ValueRep")
+
+module ("Constant")
+module ("Decl")
+module ("EnumElt")
+module ("Exceptionz")
+module ("External")
+module ("Field")
+module ("Formal")
+module ("Ident")
+module ("Method")
+module ("Module")
+module ("Procedure")
+module ("Revelation")
+module ("Tipe")
+module ("Variable")

@@ -1,0 +1,26 @@
+; Copyright (C) 1994, Digital Equipment Corporation                         
+; All rights reserved.                                                      
+; See the file COPYRIGHT for a full description.                            
+
+(Rim
+  (Pen 2)
+  (VBox
+    (HBox
+      (Button %reparse "Reparse")
+      (Glue 4)
+      (Button %step "Step")
+      (Glue 4)
+      (Button %run "Run")
+      (Glue 4)
+      (Button %exit "Exit")
+      Fill)
+    (Glue 2)
+    (VTile
+      (Shape
+        (Height 35 + Infinity)
+        (Width 450 + Infinity)
+        (Frame Lowered (Browser %procedures Quick)))
+      (Shape
+        (Height 35 + Infinity)
+        (Width 450 + Infinity)
+        (Frame Ridged (TextEdit %typescript ReadOnly))))))

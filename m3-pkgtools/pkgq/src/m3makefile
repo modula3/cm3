@@ -1,0 +1,17 @@
+/* Copyright (C) 1994, Digital Equipment Corporation */
+/* All rights reserved. */
+/* See the file COPYRIGHT for a full description. */
+/* Makefile for pkgq */
+/* Last modified on Mon Apr  4 10:53:21 PDT 1994 by wobber     */
+
+
+import("libm3")
+import("netobj")
+import("tcp")
+import("pkgobj")
+
+implementation("PkgQTool")
+
+build_standalone()
+
+program("pkgq")

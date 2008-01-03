@@ -1,0 +1,253 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+{
+  graphvbt => graph_new(),
+
+  myPlayer => ok,
+
+  activePlayer => ok,
+
+  makeNodeProc => proc (graphvbt, rawBoard)
+  { objects => 
+     ( var res = [[(let v = graph_newVertex(graphvbt);
+                     graph_setVertexSize(v, 1.0, 1.0);
+                     graph_setVertexColor(v, color_rgb(1.0, 1.0 , 1.0));
+                     graph_setVertexBorder(v, 0.125);
+                     graph_setVertexBorderColor(v, color_rgb(0.0, 0.0, 0.0));
+                     v),
+                   0.0,
+                   0.0
+                   ]];
+       for cellNum = 0 to 8 do
+          if rawBoard[cellNum] isnot 2 then
+             let piece = graph_newVertex(graphvbt);
+                graph_setVertexSize(piece, 0.25, 0.25);
+                if rawBoard[cellNum] is 0 then
+                   graph_setVertexColor(piece, color_rgb(0.0, 1.0, 0.0));
+                else
+                   graph_setVertexColor(piece, color_rgb(0.0, 0.0, 1.0));
+                end;
+                res := res @ [[piece, float((cellNum/3)-1)**0.25, 
+                                     float((cellNum % 3)-1) ** 0.25]]
+           end;
+        end;
+        res;
+      ),
+    Move => 
+      meth(self, Xbase, Ybase, animate)
+         foreach object in self.objects do
+            graph_moveVertex(object[0], Xbase++object[1], Ybase ++ object[2],
+                animate);
+         end;
+      end,
+
+     SetValue =>
+       meth (self, newValue)
+         graph_setVertexBorderColor( self.objects[0][0],
+             color_hsv( ((float(newValue+10))//21.0) ** 0.8, 1.0, 1.0));
+       end,
+  }
+ end,
+
+  treeDisplayParams => ok,
+
+  makeTreeNode =>
+     meth(self, dparams, initNode, NodeWidth, initX, initY, myKey, board)
+       let newNode =
+         {
+            key => myKey,
+            displayParameters => dparams,
+            node => initNode(dparams.graphvbt, board),
+            nodeWidth => NodeWidth,
+            width => NodeWidth,
+            leftx => initX,
+            depth => 0,
+            vertex => ( let v = graph_newVertex(dparams.graphvbt);
+                        graph_setVertexSize(v, 0.0, 0.0 );
+                        v ),
+            children => [],
+            childWidth => 0.0,
+            parent => ok,
+
+            xPos => initX ++ (NodeWidth //2.0),
+            yPos => initY,
+
+            AddChild =>
+              meth(self, child)
+                self.children := self.children @ [child];
+                child.parent := self;
+                child.depth := self.depth + 1;
+                child.yPos := self.displayParameters.depth2Y()(self.depth+1);
+                if #(self.children) > 1 then
+                  self.childWidth := self.childWidth ++
+                      self.displayParameters.spacer;
+                end;
+                child.SetLeftX(self.leftx ++ self.childWidth);
+                self.childWidth := self.childWidth ++ child.width;
+                let e = graph_newEdge(self.vertex, child.vertex);
+                graph_setEdgeWidth(e, self.displayParameters.edgeWidth);
+                if self.childWidth >> self.nodeWidth then
+                  self.width := self.childWidth;
+                  if self.parent isnot ok then
+                     self.parent.ChildWidthChange(self);
+                  end;
+                  self.xPos := self.leftx ++ (self.width // 2.0);
+                  self.MoveMe();
+                end; 
+              end,
+
+            MoveMe =>
+              meth(self)
+               var reSizeWorld = false;
+               if (self.xPos >> self.displayParameters.WorldE) then
+                  self.displayParameters.WorldE := 
+                      self.displayParameters.WorldE ++ 
+                      self.displayParameters.WorldStep;
+                  reSizeWorld := true;
+               end;
+               if (self.yPos >> self.displayParameters.WorldS) then
+                  self.displayParameters.WorldS := 
+                      self.displayParameters.WorldS ++ 
+                      self.displayParameters.WorldStep;
+                  reSizeWorld := true;
+               end;
+               if reSizeWorld then
+                  graph_setWorld(self.displayParameters.graphvbt, 0.0, 
+                     self.displayParameters.WorldE, 0.0, 
+                     self.displayParameters.WorldS);
+                  graph_setAspect(self.displayParameters.graphvbt,
+                     self.displayParameters.WorldS//
+                       self.displayParameters.WorldE);
+                  graph_redisplay(self.displayParameters.graphvbt);
+               end;
+               graph_moveVertex(self.vertex, self.xPos, self.yPos, true);
+               self.node.Move(self.xPos, self.yPos, true);
+              end,
+
+            SetLeftX =>
+              meth(self, newLeftX)
+               self.leftx := newLeftX;
+               var childX = self.leftx;
+               foreach child in self.children do
+                  child.SetLeftX(childX);
+                  childX := childX ++ child.width ++ 
+                       self.displayParameters.spacer;
+               end;
+               self.xPos := self.leftx ++ (self.width // 2.0);
+               self.MoveMe()
+              end,
+
+            ChildWidthChange =>
+              meth(self, guiltyChild)
+                var childX = self.leftx;
+                foreach child in self.children do
+                   if child.leftx isnot childX then
+                      child.SetLeftX(childX);
+                   end;
+                   childX := childX ++ child.width ++
+                      self.displayParameters.spacer;
+                end;
+                self.childWidth := childX -- (self.leftx ++
+                    self.displayParameters.spacer);
+                if self.childWidth >> self.nodeWidth then
+                   self.width := self.childWidth;
+                  if self.parent isnot ok then
+                     self.parent.ChildWidthChange(self);
+                  end;
+                  self.xPos := self.leftx ++ (self.width // 2.0);
+                  self.MoveMe();
+                end;
+              end,                     
+          };
+        graph_moveVertex(newNode.vertex, newNode.xPos, newNode.yPos, false);
+        newNode.node.Move(newNode.xPos, newNode.yPos, false);
+        graph_redisplay(self.graphvbt);
+        newNode;
+     end,
+
+  lastBoard => ok,
+
+  Init => 
+    meth (self, player)
+      self.myPlayer := player;
+      self;
+    end,
+
+  Setup =>
+    meth (self)
+      graph_setWorld(self.graphvbt, 0.0, 10.0, 0.0, 10.0);
+      graph_setAspect(self.graphvbt, 1.0);
+      self.treeDisplayParams := { graphvbt => self.graphvbt,
+                                  depth2Y => proc (depth)
+                                               float((2*depth)+2)
+                                             end,
+                                  edgeWidth => 0.1,
+                                  spacer => 0.25,
+                                  WorldE => 10.0,
+                                  WorldS => 10.0,
+                                  WorldStep => 3.0};
+      self.lastBoard := ok;
+    end,
+
+  EvaluateNode =>
+    meth (self, boardData)
+      if self.activePlayer is self.myPlayer then
+       var newNode = ok;
+       if self.lastBoard is ok then
+          newNode :=  self.makeTreeNode(self.treeDisplayParams, 
+           self.makeNodeProc, 1.0, 0.0, 2.0, boardData[0], boardData[1]);
+       else
+          var parent = self.lastBoard;
+          newNode :=  self.makeTreeNode(self.treeDisplayParams, 
+            self.makeNodeProc, 1.0, self.lastBoard.xPos -- 0.5, 
+            self.lastBoard.yPos, boardData[0], boardData[1]);
+          self.lastBoard.AddChild(newNode);
+       end;
+       self.lastBoard := newNode;
+       zeus_animate(self.graphvbt, 0.0, 1.0);
+      end;
+    end,
+
+  PlayerThinking =>
+    meth (self, player, boardData)
+       self.activePlayer := player;
+       if self.activePlayer is self.myPlayer then
+         graph_clear(self.graphvbt);
+         self.treeDisplayParams.WorldE := 10.0;
+         self.treeDisplayParams.WorldS := 10.0;
+         graph_setWorld(self.graphvbt, 0.0, 10.0, 0.0, 10.0);
+         graph_setAspect(self.graphvbt, 1.0);
+         self.lastBoard := ok;
+         for c = -10 to 10 do
+          (let v = graph_newVertex(self.graphvbt);
+           graph_setVertexSize(v, 0.4, 0.5);
+           graph_setVertexColor(v, 
+               color_hsv(((float(c+10))//21.0) ** 0.8, 1.0, 1.0));
+           graph_setVertexBorder(v, 0.0);
+           graph_moveVertex(v, (float(c)**0.4)++5.0, 0.5, false);
+          )
+          end;
+          graph_redisplay(self.graphvbt);
+       end;
+    end,
+
+   FinishedEvalNode =>
+     meth (self, boardkey)
+       if self.activePlayer is self.myPlayer then
+         self.lastBoard := self.lastBoard.parent;
+       end;
+     end,
+
+   BoardValueUpdated =>
+     meth (self, boardkey, newValue)
+       if self.activePlayer is self.myPlayer then
+         self.lastBoard.node.SetValue(newValue);
+         graph_redisplay(self.graphvbt);
+       end;
+     end,
+
+  }.Init(1);
+

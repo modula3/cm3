@@ -1,0 +1,20 @@
+(Filter %@filter $FilterState$
+ (Radio %@radio
+ $ZSplitHeader$
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor "$BgColor$") (Color "$FgColor$")
+    
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) 
+       (Border %@border (Pen $BorderPen$)
+      
+        (Texture  %@ "$TextureFile$" )
+           
+        )
+      )
+    )
+   )
+ $ZSplitFooter$        
+ )
+)

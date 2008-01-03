@@ -1,0 +1,17 @@
+% Copyright (C) 1995, Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Oct 11 09:29:41 PDT 1995 by najork
+%      modified on Wed Aug 30 16:24:01 PDT 1995 by steveg
+%      modified on Mon Apr 10 16:31:31 PDT 1995 by kalsow
+%      modified on Tue Feb  7 15:29:15 PST 1995 by wobber
+%
+% Makefile for tcp library (WIN32)
+
+Interface("TCPWin32")
+implementation("IP")
+implementation("IPErrorWin32")
+implementation("TCP")
+implementation("TCPExtras")
+implementation("TCPPeer")

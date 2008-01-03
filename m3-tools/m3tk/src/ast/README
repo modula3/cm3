@@ -1,0 +1,53 @@
+m3tk-ast.2.2 package -- created Fri Mar 20 09:20:13 PST 1992 by mjordan
+current owner mjordan
+
+This package provides a specification of an Abstract Syntax Tree for
+Modula-3 in terms of the framework defined by the "m3tk-gast" package.
+It provides implementations for some of the basic methods defined
+in the "AST" interface in "m3tk-gast". Here is a guide to what is
+(publically) available:
+
+M3AST           Defines M3AST.NODE, the root type of all M3AST nodes.
+M3AST_LX        Lexical types in the AST
+M3AST_AS        Modula-3 AST specification
+M3AST_PG        Standard pragma AST extensions
+M3AST_SM        Semantic extensions to the AST
+M3AST_TM        "Temporary" attributes, mostly private.
+M3AST_FE        AST extensions to support compiler front-end
+M3AST_TL        AST extension for property sets on AST nodes
+
+The above interface are all "abstract" and do not reveal how
+the AST attributes are actually represented. There are a set of
+companion interfaces, "M3AST_XX_F", where "XX" is one of the above,
+that define the attributes as fields of the OBJECT types.
+You typically import both "M3AST_XX" and "M3AST_XX_F" into
+a client program.
+
+SeqElem         A generic interface used to specify sequences
+                and sets in the AST. It is instantiated with
+                "Elem = M3AST_XX_TYPE", where "XX" is one
+                of the above and "TYPE" is a type declared
+                in the interface "M3AST_XX", that we want
+                to make a sequence of.  So there are lots of
+                interfaces named "M3AST_XX_TYPE" that exist
+                solely to rename "M3AST_XX.TYPE" to "M3AST_XX_TYPE.T"
+                for generic instantiation.
+
+SeqElem_rep     A representation for sequences as linked lists.
+                Try not to import this as it makes your code
+                dependent on this representation and there are
+                alternatives that are, e.g., more space eficient.
+
+M3ASTWalk       Obsolete tree-walk interface. Use ASTWalk instead.
+
+M3ASTCopySM     A callback to use with ASTCopy to copy (share) the 
+                semantic attributes.
+
+M3ASTScope      An interface that maintains a "scope" handle in
+                sync with a walk of the AST.
+
+
+
+
+
+

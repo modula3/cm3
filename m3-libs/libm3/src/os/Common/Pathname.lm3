@@ -1,0 +1,57 @@
+(* Copyright (C) 1992, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(* Last modified on Wed Jun 23 18:42:04 PDT 1993 by horning *)
+
+INTERFACE Pathname;
+<*
+TRAITS pathname, extension;
+
+PROCEDURE Valid(pn: T): BOOLEAN;
+  ENSURES RESULT = valid(parse(pn))
+
+PROCEDURE Decompose(pn: T): Arcs RAISES {Invalid};
+  ENSURES seq(RESULT, Arcs.head', Arcs.tail') = parse(pn)
+  EXCEPT ~valid(parse(pn)) ==> RAISES Invalid(problem(parse(pn)))
+
+PROCEDURE Compose(a: Arcs): T RAISES {Invalid};
+  LET seq BE seq(a, Arcs.head,  Arcs.tail) IN
+  ENSURES parse(RESULT) = seq
+  EXCEPT ~valid(seq) ==> RAISES Invalid(problem(seq))
+
+PROCEDURE Absolute(pn: T): BOOLEAN;
+  ENSURES RESULT = absolute(parse(pn))
+
+PROCEDURE Prefix(pn: T): T;
+  CHECKS parse(pn) \neq empty
+  ENSURES parse(RESULT) = (IF len(parse(pn)) = 1 THEN parse(pn)
+                           ELSE init(parse(pn)))
+
+PROCEDURE Last(pn: T): T;
+  CHECKS parse(pn) \neq empty
+  ENSURES RESULT = (IF len(parse(pn)) = 1 THEN "" ELSE last(parse(pn)))
+
+PROCEDURE Base(pn: T): T;
+  ENSURES RESULT = base(pn)
+
+PROCEDURE Join(pn, base: T; ext: TEXT): T;
+  CHECKS ~(pn = NIL /\ absolute(parse(base)))
+  REQUIRES (pn = NIL \/ valid(parse(pn))) /\ valid(parse(base))
+  ENSURES
+    parse(RESULT)
+      = (IF pn = NIL THEN empty ELSE parse(pn)) 
+	|| {base & (IF ext = NIL THEN "" ELSE "." & ext)};
+
+PROCEDURE LastBase(pn: T): T;
+  CHECKS parse(pn) \notin {empty, {NIL}}
+  ENSURES RESULT = base(last(parse(pn)));
+
+PROCEDURE LastExt(pn: T): TEXT;
+  CHECKS parse(pn) \notin {empty, {NIL}}
+  ENSURES RESULT = ext(last(parse(pn)));
+
+PROCEDURE ReplaceExt(pn: T; ext: TEXT): T;
+  CHECKS parse(pn) \notin {empty, {NIL}}
+  RESULT = base(pn) & (IF ext = NIL THEN "" ELSE "." & ext);
+*>
+END Pathname.

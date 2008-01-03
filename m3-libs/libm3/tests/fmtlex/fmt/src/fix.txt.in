@@ -1,0 +1,48 @@
+# Last modified on Wed Mar 16 17:20:10 PST 1994 by heydon
+
+# This file tests formating of floating-point numbers with the "Fmt.Fix"
+# style. This file always requests a precision at least the number of digits
+# after the decimal, so it does not test the rounding functionality of the
+# "Fmt" implementation; see the test file "round.txt.in" for those tests.
+
+# Set the rounding mode for the rest of this test file (for lexing only)
+m NearestElseEven
+
+# zero precision (whole numbers)
+
+r F 0 -2	# "-2",          ditto + ".0"
+r F 0 3e1	# "30",          ditto + ".0"
+r F 0 8.72e10	# "87200000000", ditto + ".0"
+l F 0 -2	# "-2",          ditto + ".0d0"
+l F 0 3e1	# "30",          ditto + ".0d0"
+l F 0 8.72e10	# "87200000000", ditto + ".0d0"
+
+# non-zero precision
+
+r F 1 -2	# "-2.0",     ditto
+r F 4 1.5e2	# "150.0000", ditto
+r F 4 1.5e1	# "15.0000",  ditto
+r F 4 1.5e0	# "1.5000",   ditto
+r F 4 1.5e-1	# "0.1500",   ditto
+r F 4 1.5e-2	# "0.0150",   ditto
+r F 4 1.5e-3	# "0.0015",   ditto
+l F 4 1.5e2	# "150.0000", ditto + "d0"
+l F 4 1.5e1	# "15.0000",  ditto + "d0"
+l F 4 1.5e0	# "1.5000",   ditto + "d0"
+l F 4 1.5e-1	# "0.1500",   ditto + "d0"
+l F 4 1.5e-2	# "0.0150",   ditto + "d0"
+l F 4 1.5e-3	# "0.0015",   ditto + "d0"
+
+# large precision
+
+r F 20 2.56e25  # "25600000000000000000000000.00000000000000000000", ditto
+r F 20 2.56e3	# "2560.00000000000000000000",   ditto
+r F 25 2.56e-2	# "0.0256000000000000000000000", ditto
+r F 25 2.56e-22	# "0.0000000000000000000002560", ditto
+l F 20 2.56e3	# "2560.00000000000000000000",   ditto + "d0"
+l F 25 2.56e-2	# "0.0256000000000000000000000", ditto + "d0"
+l F 25 2.56e-22	# "0.0000000000000000000002560", ditto + "d0"
+e F 20 2.56e3	# "2560.00000000000000000000",   ditto + "x0"
+e F 25 2.56e-2	# "0.0256000000000000000000000", ditto + "x0"
+e F 25 2.56e-22	# "0.0000000000000000000002560", ditto + "x0"
+

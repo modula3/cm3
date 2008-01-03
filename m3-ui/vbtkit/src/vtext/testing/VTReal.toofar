@@ -1,0 +1,1642 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Fri Mar  5 23:39:28 PST 1993 by meehan *)
+(*      modified on Tue Jun 16 13:12:37 PDT 1992 by muller *)
+(*      modified on Fri Mar 27 03:00:51 1992 by steveg *)
+(*      modified on Fri Mar 20 10:25:05 PST 1992 by jdd    *)
+(*      modified on Thu Jul 11 16:07:43 PDT 1991 by mhb *)
+(*      modified on Wed May 16  7:51:26 PDT 1990 by mcjones *)
+(*      Modified On Mon Sep 25 15:23:30 PDT 1989 by brooks *)
+
+(* This module maintains the "real" screen structures. The following
+   invariants are maintained:
+
+   If line^[i].realLine.valid, the screen line i is an accurate rendering of
+   characters line^[i].realLine.from up to but not including
+   line^[i].realLine.to.
+
+   dirty is true if any line^[i].realLine.valid is false, or the information
+   is otherwise obsolete
+
+   if dirty is false, then the line^[i].realLine.from are all in order
+
+   line^[0] through line^[lines - 1] are defined. when dirty is false, then if
+   lines < nLines, then the remaining lines are zero-size. (The allWhiteBelow,
+   turned and width fields are defined through nLines - 1.) *)
+
+MODULE VTReal;
+
+IMPORT PaintOp, Point, Rd, Rect, Thread, VBT;
+IMPORT VTDef, VTBase, VTCaret, VTInterval, VTMarker, VTVirtual, VTRd,
+  VTTexture;
+
+TYPE
+  Block = VTDef.Block;
+  Coord = VTDef.Coord;
+  IntervalStyle = VTDef.IntervalStyle;
+  IntervalOptions = VTDef.IntervalOptions;
+  LineNo = VTDef.LineNo;
+  Marker = VTDef.Marker;
+  Tint = VTDef.Tint;
+  TriState = VTDef.TriState;
+  WhichEnd = VTDef.WhichEnd;
+
+PROCEDURE Change (vt: T; begin, oEnd, nEnd: I) =
+  (* Change notes a change made in the mtext. *)
+  VAR
+    i   : LineNo;
+    d            := nEnd - oEnd;
+    view         := vt.views;
+  BEGIN
+    IF oEnd = begin AND nEnd = begin THEN RETURN END;
+    WHILE view # NIL DO
+      IF view.real.lines > 0 THEN
+        i := view.real.lines;
+        LOOP
+          IF i = 0 THEN EXIT END;
+          i := i - 1;
+          WITH line = view.real.line [i].realLine DO
+            IF NOT line.valid THEN (* skip *)
+            ELSIF oEnd <= line.from THEN
+              line.from := line.from + d;
+              line.to := line.to + d
+            ELSIF begin < line.to THEN
+              line.valid := FALSE;
+              IF begin < line.from THEN line.from := begin END;
+              IF oEnd <= line.to THEN
+                line.to := line.to + d
+              ELSIF begin < line.to THEN
+                line.to := nEnd
+              END;
+              IF i > 0 THEN
+                Dirtied (view, i - 1, 2)
+              ELSE
+                Dirtied (view, i, 1)
+              END
+            ELSIF begin = line.to THEN
+              Dirtied (view, i, 1)
+            ELSE
+              EXIT
+            END                  (* IF *)
+          END                    (* WITH *)
+        END                      (* LOOP *)
+      END;                       (* IF *)
+      view := view.next
+    END                          (* WHILE *)
+  END Change;
+
+(*
+PROCEDURE Change (vt: T; begin, oEnd, nEnd: I) RAISES {} =
+  VAR view: View; i: LineNo; d: INTEGER;
+  BEGIN
+    IF (oEnd = begin) AND (nEnd = begin) THEN RETURN ;  END;
+    d := nEnd - oEnd;
+    WITH z_39 = vt^ DO
+      view := z_39.views;
+      WHILE view # NIL DO
+        WITH z_40 = view^ DO
+          IF z_40.real.lines > 0 THEN
+            i := z_40.real.lines;
+            LOOP
+              IF i = 0 THEN EXIT;  END;
+              i := i - 1;
+              WITH z_41 = z_40.real.line[i] DO
+                IF z_41.realLine.valid THEN
+                  IF oEnd <= z_41.realLine.from THEN
+                    z_41.realLine.from := z_41.realLine.from + d;
+                    z_41.realLine.to := z_41.realLine.to + d;
+                  ELSIF begin < z_41.realLine.to THEN
+                    z_41.realLine.valid := FALSE;
+                    IF begin < z_41.realLine.from THEN
+                      z_41.realLine.from := begin;
+                    END;
+                    IF oEnd <= z_41.realLine.to THEN
+                      z_41.realLine.to := z_41.realLine.to + d;
+                    ELSIF begin < z_41.realLine.to THEN
+                      z_41.realLine.to := nEnd;
+                    END;
+                    IF i > 0 THEN
+                      Dirtied (view, i - 1, 2);
+                    ELSE
+                      Dirtied (view, i, 1);
+                    END;
+                  ELSIF begin = z_41.realLine.to THEN
+                    Dirtied (view, i, 1);
+                  ELSE
+                    EXIT;
+                  END;
+                END;
+              END;
+            END;
+          END;
+          view := z_40.next;
+        END;
+      END;
+    END;
+  END Change;
+*)
+
+PROCEDURE SetStart (view: View; at: I; turned: BOOLEAN) =
+  BEGIN
+    IF view.real.start.at # at OR view.real.start.turned # turned THEN
+      view.real.start.at := at;
+      view.real.start.turned := turned;
+      Dirtied (view, 0, 0)
+    END
+  END SetStart;
+
+PROCEDURE Update (vt: T) RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  VAR view := vt.views;
+  BEGIN
+    WHILE view # NIL DO UpdateView (view); view := view.next END
+  END Update;
+  
+CONST
+  boolToTriState = ARRAY BOOLEAN OF TriState {TriState.False, TriState.True};
+
+PROCEDURE UpdateView (view: View)
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  VAR
+    a, b                 : INTEGER;
+    justBad              : BOOLEAN;
+    bad, oClip, oTextClip: Rect.T;
+    f                    : Rect.Partition;
+  BEGIN
+    IF (view.real.lines > 0)
+         AND (view.real.line [0].realLine.from # view.virtual.start.at) THEN
+      Dirtied (view, 0, 0)
+    END;
+    IF Rect.IsEmpty (view.rect.bad) THEN
+      IF NOT view.real.dirty THEN RETURN END;
+      justBad := FALSE
+    ELSE
+      Rect.Factor (view.rect.bad, view.rect.textClip, f, 0, 0);
+      FOR i := 0 TO 4 DO
+        IF i # 2 THEN
+          IF NOT Rect.IsEmpty (f [i]) THEN
+            VBT.PaintTint (view.vbt, f [i], view.vOptions.whiteBlack.bg)
+          END
+        END
+      END;
+      a := MAX ((view.rect.bad.north - view.rect.text.north)
+                  DIV view.lineSpacing, 0);
+      b := MIN ((view.rect.bad.south - 1 - view.rect.text.north)
+                  DIV view.lineSpacing, view.nLines - 1);
+      FOR i := a TO b DO
+        view.real.line [i].realLine.valid := FALSE;
+        view.real.line [i].realLine.width :=
+          MAX (MIN (view.rect.text.east, view.rect.bad.east)
+                 - view.rect.text.west, view.real.line [i].realLine.width);
+        view.real.line [i].realLine.allWhiteBelow := FALSE;
+        view.real.line [i].realLine.turned [0] := TriState.Unknown;
+        view.real.line [i].realLine.turned [1] := TriState.Unknown
+      END;
+      view.real.lines := MAX (view.real.lines, b + 1);
+      view.real.dirty := TRUE;
+      justBad := view.real.firstDirty > view.real.firstAfter;
+      IF justBad THEN bad := view.rect.bad END;
+      view.rect.bad := Rect.Empty;
+      view.real.firstDirty := MIN (a, view.real.firstDirty);
+      view.real.firstAfter := MAX (b + 1, view.real.firstAfter)
+    END;
+    VTCaret.Deactivate (view);
+    TRY
+      IF justBad THEN
+        oClip := view.rect.clip;
+        view.rect.clip := Rect.Meet (view.rect.clip, bad);
+        oTextClip := view.rect.textClip;
+        view.rect.textClip := Rect.Meet (view.rect.textClip, bad)
+      END;
+      TRY
+        IF view.virtual.dirty THEN VTVirtual.UpdateView (view) END;
+        IF justBad THEN
+          IF NOT Rect.IsEmpty (view.rect.textClip) THEN
+            view.real.blocks.n := 0;
+            PaintAll (view, (view.rect.textClip.north - view.rect.text.north)
+                              DIV view.lineSpacing,
+                      (view.rect.textClip.south - view.rect.text.north
+                         + view.lineSpacing - 1) DIV view.lineSpacing)
+          END
+        ELSE
+          a := 0;
+          b := view.nLines;
+          FindBlocks (view, a, b);
+          BltBlocks (view);
+          PaintAll (view, a, b)
+        END;
+        IF view.virtual.lines < view.real.lines THEN
+          VBT.PaintTint (
+            view.vbt,
+            Rect.Meet (
+              Rect.FromEdges (
+                view.rect.full.west, view.rect.full.east,
+                view.rect.text.north + view.virtual.lines * view.lineSpacing,
+                view.rect.text.north + view.real.lines * view.lineSpacing),
+              view.rect.clip), view.vOptions.whiteBlack.bg);
+          FOR i := view.virtual.lines TO view.real.lines - 1 DO
+            view.real.line [i].realLine.width := 0;
+            view.real.line [i].realLine.turned [0] := TriState.False;
+            view.real.line [i].realLine.turned [1] := TriState.False;
+            view.real.line [i].realLine.allWhiteBelow := TRUE
+          END;
+          IF view.vOptions.eob THEN
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (
+                Rect.FromEdges (
+                  view.rect.full.west, view.rect.full.east,
+                  view.rect.text.north + view.real.lines * view.lineSpacing,
+                  view.rect.text.north
+                    + (view.real.lines + 1) * view.lineSpacing),
+                view.rect.clip), view.vOptions.whiteBlack.bg);
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (Rect.FromEdges (
+                           view.rect.text.west, view.rect.text.east,
+                           view.rect.text.north
+                             + view.virtual.lines * view.lineSpacing,
+                           view.rect.text.north
+                             + view.virtual.lines * view.lineSpacing + 1),
+                         view.rect.textClip), view.vOptions.whiteBlack.fg);
+            view.real.line [view.virtual.lines].realLine.width :=
+              view.rect.text.east - view.rect.text.west;
+            view.real.line [view.virtual.lines].realLine.allWhiteBelow :=
+              FALSE
+          END
+        ELSIF view.virtual.lines > view.real.lines THEN
+          IF view.vOptions.eob THEN
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (Rect.FromEdges (
+                           view.rect.text.west, view.rect.text.east,
+                           view.rect.text.north
+                             + view.virtual.lines * view.lineSpacing,
+                           view.rect.text.north
+                             + view.virtual.lines * view.lineSpacing + 1),
+                         view.rect.textClip), view.vOptions.whiteBlack.fg);
+            view.real.line [view.virtual.lines].realLine.width :=
+              view.rect.text.east - view.rect.text.west;
+            view.real.line [view.virtual.lines].realLine.allWhiteBelow :=
+              FALSE
+          END
+        END;
+      FINALLY
+        IF justBad THEN
+          view.rect.clip := oClip;
+          view.rect.textClip := oTextClip
+        END
+      END;
+      view.real.lines := view.virtual.lines;
+      FOR i := 0 TO view.real.lines - 1 DO
+        view.real.line [i].realLine.valid := TRUE
+      END;
+      view.real.dirty := FALSE;
+      view.real.firstDirty := view.nLines;
+      view.real.firstAfter := 0;
+    FINALLY
+      VTCaret.Reactivate (view)
+    END
+  END UpdateView;
+
+PROCEDURE FindBlocks (view: View; VAR (*INOUT*) a, b: INTEGER) =
+  VAR
+    v, o : LineNo;
+    block: Block;
+    f    : I;
+  BEGIN
+    view.real.blocks.n := 0;
+    o := view.real.firstDirty;
+    v := MAX (a, view.real.firstDirty);
+    a := v;
+    b := MIN (b, view.virtual.lines);
+    (* find good blocks to carry over *)
+    LOOP
+      (* find a valid old line *)
+      WHILE o < view.real.lines AND NOT view.real.line [o].realLine.valid DO
+        o := o + 1
+      END;
+      IF NOT o < view.real.lines THEN EXIT END;
+      (* try to match it to some desired result *)
+      f := view.real.line [o].realLine.from;
+      WHILE v < b AND view.virtual.line [v].virtualLine.from < f DO
+        v := v + 1
+      END;
+      IF NOT v < b THEN EXIT END;
+      (* does it carry over? *)
+      IF view.virtual.line [v].virtualLine.from = f
+           AND view.virtual.line [v].virtualLine.to
+                 = view.real.line [o].realLine.to THEN
+        block.old := o;
+        block.new := v;
+        LOOP
+          o := o + 1;
+          v := v + 1;
+          IF NOT (o < view.real.lines AND v < b) THEN EXIT END;
+          IF NOT (view.real.line [o].realLine.valid
+                    AND view.real.line [o].realLine.from
+                          = view.virtual.line [v].virtualLine.from
+                    AND view.real.line [o].realLine.to
+                          = view.virtual.line [v].virtualLine.to) THEN
+            EXIT
+          END;
+          IF o = v AND NOT v < view.real.firstAfter THEN b := v; EXIT END
+        END;
+        block.length := o - block.old;
+        view.real.blocks.block [view.real.blocks.n].block := block;
+        view.real.blocks.n := view.real.blocks.n + 1;
+        v := v - 1;
+        o := o - 1
+      END;
+      (* iterate *)
+      o := o + 1
+    END
+  END FindBlocks;
+
+PROCEDURE BltBlocks (view: View) =
+  PROCEDURE Blt (READONLY block: Block) =
+    BEGIN
+      <* ASSERT block.old >= 0
+              AND block.old + block.length <= view.nLines
+              AND block.new >= 0
+              AND block.new + block.length <= view.nLines *>
+      VBT.Scroll (
+        view.vbt,
+        Rect.Meet (
+          Rect.FromEdges (view.rect.full.west, view.rect.full.east,
+                          view.rect.text.north + block.new * view.lineSpacing,
+                          view.rect.text.north
+                            + (block.new + block.length) * view.lineSpacing),
+          view.rect.clip),
+        Point.FromCoords (0, (block.new - block.old) * view.lineSpacing),
+        PaintOp.Copy)
+    END Blt;
+  PROCEDURE BltUp (READONLY block: Block) =
+    BEGIN
+      Blt (block);
+      FOR i := 0 TO block.length - 1 DO
+        view.real.line [block.new + i] := view.real.line [block.old + i]
+      END
+    END BltUp;
+  PROCEDURE BltDown (READONLY block: Block) =
+    BEGIN
+      Blt (block);
+      FOR i := block.length - 1 TO 0 BY -1 DO
+        view.real.line [block.new + i] := view.real.line [block.old + i]
+      END
+    END BltDown;
+  VAR b, start: INTEGER;
+  BEGIN
+    b := 0;
+    WHILE b < view.real.blocks.n DO
+      (* skip stationary blocks *)
+      WHILE b < view.real.blocks.n
+              AND view.real.blocks.block [b].block.old
+                    = view.real.blocks.block [b].block.new DO
+        b := b + 1
+      END;
+      (* blocks to be moved up: do them first to last *)
+      start := b;
+      WHILE b < view.real.blocks.n
+              AND view.real.blocks.block [b].block.old
+                    > view.real.blocks.block [b].block.new DO
+        b := b + 1
+      END;
+      FOR bb := start TO b - 1 DO
+        BltUp (view.real.blocks.block [bb].block)
+      END;
+      (* blocks to be moved down: do them last to first *)
+      start := b;
+      WHILE b < view.real.blocks.n
+              AND view.real.blocks.block [b].block.old
+                    < view.real.blocks.block [b].block.new DO
+        b := b + 1
+      END;
+      FOR bb := b - 1 TO start BY -1 DO
+        BltDown (view.real.blocks.block [bb].block)
+      END
+    END
+  END BltBlocks;
+
+PROCEDURE PaintAll (view: View; l0, l1: CARDINAL)
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  VAR
+    at         := l0;
+    rdSet      := FALSE;
+    rdIndex: I;
+  BEGIN
+    VTInterval.Fix (view.vt);
+    VTMarker.Fix (view.vt);
+    FOR b := 0 TO view.real.blocks.n - 1 DO
+      VAR block := view.real.blocks.block [b].block;
+      BEGIN
+        PaintGap (view, at, block.new, rdSet, rdIndex);
+        at := block.new + block.length
+      END
+    END;
+    PaintGap (view, at, l1, rdSet, rdIndex)
+  END PaintAll;
+
+PROCEDURE PaintGap (                view   : View;
+                                    l0, l1 : CARDINAL;
+                    VAR (* INOUT *) rdSet  : BOOLEAN;
+                    VAR (* INOUT *) rdIndex: I         )
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  VAR
+    f, t            : I;
+    turned0, turned1: BOOLEAN;
+    length                    := view.vt.length;
+  BEGIN
+    IF l0 >= l1 THEN RETURN END;
+    IF l0 = 0 THEN
+      turned0 := view.real.start.turned
+    ELSE
+      turned0 := view.virtual.line [l0 - 1].virtualLine.turned
+    END;
+    FOR i := l0 TO view.virtual.lines - 1 DO
+      IF view.vOptions.turnMargin > 0 THEN
+        turned0 := turned0 AND view.vOptions.wrap
+                     OR view.vOptions.leftOffset > 0
+                          AND view.virtual.line [i].virtualLine.from < length;
+        IF boolToTriState [turned0] # view.real.line [i].realLine.turned [0] THEN
+          PaintTurn (view, view.rect.full.west,
+                     view.rect.text.north + i * view.lineSpacing, turned0);
+          view.real.line [i].realLine.turned [0] := boolToTriState [turned0]
+        END
+      END;
+      IF i >= l1 THEN RETURN END;
+      f := MIN (view.virtual.line [i].virtualLine.from, length);
+      t := MIN (view.virtual.line [i].virtualLine.to, length);
+      PaintLine (view, i, f, t, rdSet, rdIndex);
+      turned1 :=
+        view.virtual.line [i].virtualLine.turned
+          OR view.virtual.line [i].virtualLine.width > view.lineWidth;
+      view.real.line [i].realLine.from :=
+        view.virtual.line [i].virtualLine.from;
+      view.real.line [i].realLine.to := view.virtual.line [i].virtualLine.to;
+      IF view.vOptions.turnMargin > 0 THEN
+        IF boolToTriState [turned1] # view.real.line [i].realLine.turned [1] THEN
+          PaintTurn (view, view.rect.full.east - view.vOptions.turnMargin,
+                     view.rect.text.north + i * view.lineSpacing, turned1);
+          view.real.line [i].realLine.turned [1] := boolToTriState [turned1]
+        END
+      END;
+      turned0 := view.virtual.line [i].virtualLine.turned
+    END
+  END PaintGap;
+
+PROCEDURE PaintLine (                view    : View;
+                                     i       : LineNo;
+                                     from, to: I;
+                     VAR (* INOUT *) rdSet   : BOOLEAN;
+                     VAR (* INOUT *) rdIndex : I        )
+  RAISES {Rd.Failure, Rd.EndOfFile, Thread.Alerted} =
+  CONST BufferSize = 128;
+  VAR
+    length             : CARDINAL;
+    intervalOptions    : IntervalOptions;
+    at, l, r, until    : I;
+    chars              : ARRAY [0 .. BufferSize - 1] OF CHAR;
+    marker             : Marker;
+    leftSide, rightSide: Point.T;
+    stroke             : Tint;
+    h                := view.rect.text.west;
+    v                := view.rect.text.north + i * view.lineSpacing;
+    line             := view.real.line [i].realLine;
+    oldAllWhiteBelow := line.allWhiteBelow;
+    oldWidth         := line.width;
+    font             := view.vScreenFont.vScreenFont;
+  BEGIN
+    line.allWhiteBelow := TRUE;
+    line.width := 0;
+    IF rdSet THEN
+      IF rdIndex # from THEN Rd.Seek (view.vt.rd, from) END
+    ELSE
+      VTRd.InitReaderIx (view.vt, from);
+      rdIndex := from;
+      rdSet := TRUE
+    END;
+    at := from;
+    IF NOT font.paintOpaque THEN
+      VBT.BeginGroup (view.vbt, 3 * (to - from));
+      WHILE at < to DO
+        intervalOptions := VTInterval.CurrentOptions (view, at, l, r);
+        until := MIN (to, r);
+        length := until - at;
+        IF length > BufferSize THEN
+          length := BufferSize;
+          until := at + length
+        END;
+        WITH a = Rd.GetSub (view.vt.rd, SUBARRAY (chars, 0, length)) DO
+          <* ASSERT a = length *>
+        END;
+        PaintBackgroundTransparent (
+          view, h, v, chars, length, intervalOptions, oldAllWhiteBelow,
+          line.allWhiteBelow, oldWidth, line.width);
+        at := until
+      END;
+      h := view.rect.text.west;
+      Rd.Seek (view.vt.rd, from);
+      at := from
+    END;
+    WHILE at < to DO
+      intervalOptions := VTInterval.CurrentOptions (view, at, l, r);
+      until := MIN (to, r);
+      length := until - at;
+      IF length > BufferSize THEN
+        length := BufferSize;
+        until := at + length
+      END;
+      WITH a = Rd.GetSub (view.vt.rd, SUBARRAY (chars, 0, length)) DO
+        <* ASSERT a = length *>
+      END;
+      IF font.paintOpaque THEN
+        PaintSegmentOpaque (
+          view, h, v, chars, length, intervalOptions, oldAllWhiteBelow,
+          line.allWhiteBelow, oldWidth, line.width, at = l, until = r)
+      ELSE
+        PaintSegmentTransparent (
+          view, h, v, chars, length, intervalOptions, oldAllWhiteBelow,
+          line.allWhiteBelow, oldWidth, line.width)
+      END;
+      at := until
+    END;
+    IF NOT font.paintOpaque THEN
+      h := view.rect.text.west;
+      Rd.Seek (view.vt.rd, from);
+      at := from;
+      WHILE at < to DO
+        intervalOptions := VTInterval.CurrentOptions (view, at, l, r);
+        until := MIN (to, r);
+        length := until - at;
+        PaintOverlayTransparent (
+          view, h, v, view.vt.rd, length, intervalOptions, oldAllWhiteBelow,
+          line.allWhiteBelow, oldWidth, line.width, at = l, until = r);
+        at := until
+      END
+    END;
+    IF h < view.rect.text.west + oldWidth THEN
+      VBT.PaintTint (
+        view.vbt,
+        Rect.Meet (Rect.FromEdges (h, view.rect.text.west + oldWidth, v,
+                                   v + view.lineSpacing), view.rect.textClip),
+        view.vOptions.whiteBlack.bg)
+    END;
+    rdIndex := to;
+    marker := VTMarker.FirstMarker (view.vt, from);
+    WHILE marker # NIL AND marker.index < to DO
+      VTBase.UnsafeLocatePoint (view, marker.index, leftSide);
+      VTBase.UnsafeLocatePoint (view, marker.index, rightSide, 0);
+      rdSet := FALSE;
+      <* ASSERT leftSide.h < rightSide.h *>(* zero-width character position *)
+      stroke := marker.options.stroke;
+      CASE marker.options.whichEnd OF
+      | WhichEnd.Left =>
+          VBT.PaintTint (
+            view.vbt,
+            Rect.Meet (Rect.FromEdges (leftSide.h, leftSide.h + 1, v,
+                                       v + (font.box.south - font.box.north)),
+                       view.rect.textClip), stroke);
+      | WhichEnd.Right =>
+          VBT.PaintTint (
+            view.vbt,
+            Rect.Meet (Rect.FromEdges (rightSide.h - 1, rightSide.h, v,
+                                       v + (font.box.south - font.box.north)),
+                       view.rect.textClip), stroke)
+      END;
+      IF marker.options.top THEN
+        VBT.PaintTint (
+          view.vbt,
+          Rect.Meet (Rect.FromEdges (leftSide.h, rightSide.h, v, v + 1),
+                     view.rect.textClip), stroke)
+      END;
+      IF marker.options.bottom THEN
+        VBT.PaintTint (
+          view.vbt, Rect.Meet (Rect.FromEdges (
+                                 leftSide.h, rightSide.h,
+                                 v + (font.box.south - font.box.north) - 1,
+                                 v + (font.box.south - font.box.north)),
+                               view.rect.textClip), stroke)
+      END;
+      IF marker.options.whichEnd = WhichEnd.Left AND NOT marker.options.top
+           AND NOT marker.options.bottom THEN
+        line.width := MAX (line.width, leftSide.h + 1 - view.rect.text.west)
+      ELSE
+        line.width := MAX (line.width, rightSide.h - view.rect.text.west)
+      END;
+      VTMarker.NextMarker (marker.vt, marker)
+    END;
+    IF NOT font.paintOpaque THEN VBT.EndGroup (view.vbt) END
+  END PaintLine;
+
+PROCEDURE PaintSegmentOpaque (                view  : View;
+                              VAR (* INOUT *) h     : Coord;
+                                              v     : Coord;
+                              READONLY        chars : ARRAY OF CHAR;
+                                              length: CARDINAL;
+                              READONLY intervalOptions : IntervalOptions;
+                                       oldAllWhiteBelow: BOOLEAN;
+                              VAR (* OUT *) allWhiteBelow: BOOLEAN;
+                                            oldWidth     : Coord;
+                              VAR (* OUT *) newWidth     : Coord;
+                              atStyleStart, atStyleStop0: BOOLEAN) =
+  PROCEDURE PaintSub (READONLY chars: ARRAY OF CHAR; start, length: CARDINAL) =
+    VAR
+      refpt: Point.T;
+      clip : Rect.T;
+      box            := view.vScreenFont.vScreenFont.box;
+      font           := view.vScreenFont.vScreenFont.vFont.vFont.font;
+    BEGIN
+      IF h0 < view.rect.textClip.east AND h > view.rect.textClip.west THEN
+        refpt := Point.FromCoords (h0 - box.west, v - box.north);
+        CASE intervalOptions.style OF
+        | IntervalStyle.NoStyle =>
+            VBT.PaintSub (
+              view.vbt, view.rect.textClip, refpt, font,
+              SUBARRAY (chars, start, length), view.vOptions.whiteBlack.bgFg);
+            FillLeading (view.vOptions.whiteBlack.bg);
+        | IntervalStyle.HighlightStyle =>
+            VBT.PaintSub (view.vbt, view.rect.textClip, refpt, font,
+                          SUBARRAY (chars, start, length),
+                          intervalOptions.whiteBlack.bgFg);
+            FillLeading (intervalOptions.leading);
+        | IntervalStyle.InverseStyle =>
+            VBT.PaintSub (view.vbt, view.rect.textClip, refpt, font,
+                          SUBARRAY (chars, start, length),
+                          intervalOptions.whiteBlack.fgBg);
+            FillLeading (intervalOptions.leading);
+        | IntervalStyle.GrayStyle =>
+            VBT.PaintSub (view.vbt, view.rect.textClip, refpt, font,
+                          SUBARRAY (chars, start, length),
+                          intervalOptions.whiteBlack.bgFg);
+            VBT.PaintTexture (
+              view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                                   view.rect.textClip),
+              intervalOptions.whiteBlack.bgTransparent, VTTexture.gray,
+              Point.FromCoords (view.rect.text.west, v));
+            FillLeading (intervalOptions.leading);
+        | IntervalStyle.UnderlineStyle =>
+            IF view.vOptions.leading > 0 THEN
+              clip := Rect.Meet (Rect.FromEdges (h0, h, v, v + charht - 1),
+                                 view.rect.textClip);
+              VBT.PaintSub (
+                view.vbt, clip, refpt, font, SUBARRAY (chars, start, length),
+                intervalOptions.whiteBlack.bgFg);
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.FromEdges (
+                                       h0, h, v + charht - 1, v + charht + 1),
+                                     view.rect.textClip),
+                intervalOptions.whiteStroke.fg);
+              IF NOT (oldAllWhiteBelow AND intervalOptions.leading.op
+                                             = view.vOptions.whiteBlack.bg.op)
+                   AND (view.vOptions.leading > 1) THEN
+                VBT.PaintTint (
+                  view.vbt, Rect.Meet (Rect.FromEdges (
+                                         h0, h, v + charht + 1,
+                                         v + charht + view.vOptions.leading),
+                                       view.rect.textClip),
+                  intervalOptions.leading)
+              END;
+              allWhiteBelow := FALSE
+            ELSE
+              clip := Rect.Meet (Rect.FromEdges (h0, h, v, v + charht - 2),
+                                 view.rect.textClip);
+              VBT.PaintSub (
+                view.vbt, clip, refpt, font, SUBARRAY (chars, start, length),
+                intervalOptions.whiteBlack.bgFg);
+              VBT.PaintTint (view.vbt,
+                             Rect.Meet (Rect.FromEdges (
+                                          h0, h, v + charht - 2, v + charht),
+                                        view.rect.textClip),
+                             intervalOptions.whiteStroke.fg)
+            END;
+        | IntervalStyle.ThinUnderlineStyle =>
+            clip := Rect.Meet (Rect.FromEdges (h0, h, v, v + charht - 1),
+                               view.rect.textClip);
+            VBT.PaintSub (
+              view.vbt, clip, refpt, font, SUBARRAY (chars, start, length),
+              intervalOptions.whiteBlack.bgFg);
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1, v + charht),
+                         view.rect.textClip), intervalOptions.whiteStroke.fg);
+            FillLeading (intervalOptions.leading)
+        | IntervalStyle.GrayUnderlineStyle =>
+            clip := Rect.Meet (Rect.FromEdges (h0, h, v, v + charht - 1),
+                               view.rect.textClip);
+            VBT.PaintSub (
+              view.vbt, clip, refpt, font, SUBARRAY (chars, start, length),
+              intervalOptions.whiteBlack.bgFg);
+            VBT.PaintTexture (
+              view.vbt,
+              Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1, v + charht),
+                         view.rect.textClip),
+              intervalOptions.whiteStroke.bgFg, VTTexture.gray,
+              Point.FromCoords (view.rect.text.west, v));
+            FillLeading (intervalOptions.leading)
+        | IntervalStyle.BoxStyle =>
+            clip := Rect.FromEdges (h0, h, v + 1, v + charht - 1);
+            IF atStyleStart THEN
+              clip := Rect.MoveEdge (clip, Rect.Edge.W, +1)
+            END;
+            IF atStyleStop THEN
+              clip := Rect.MoveEdge (clip, Rect.Edge.E, -1)
+            END;
+            clip := Rect.Meet (clip, view.rect.textClip);
+            VBT.PaintSub (
+              view.vbt, clip, refpt, font, SUBARRAY (chars, start, length),
+              intervalOptions.whiteBlack.bgFg);
+            VBT.PaintTint (
+              view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + 1),
+                                   view.rect.textClip),
+              intervalOptions.whiteStroke.fg);
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1, v + charht),
+                         view.rect.textClip), intervalOptions.whiteStroke.fg);
+            IF atStyleStart THEN
+              VBT.PaintTint (view.vbt,
+                             Rect.Meet (
+                               Rect.FromEdges (h0, h0 + 1, v, v + charht),
+                               view.rect.textClip),
+                             intervalOptions.whiteStroke.fg)
+            END;
+            IF atStyleStop THEN
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.FromEdges (h - 1, h, v, v + charht),
+                                     view.rect.textClip),
+                intervalOptions.whiteStroke.fg)
+            END;
+            FillLeading (intervalOptions.leading);
+        | IntervalStyle.SlugStyle =>
+            VBT.PaintTint (
+              view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                                   view.rect.textClip),
+              intervalOptions.whiteStroke.fg);
+            FillLeading (intervalOptions.leading);
+        | IntervalStyle.OverlapStyle =>
+            VBT.PaintTexture (
+              view.vbt,
+              Rect.Meet (
+                Rect.FromEdges (h0, h, v, v + charht + view.vOptions.leading),
+                view.rect.textClip), view.vOptions.whiteBlack.bgFg,
+              VTTexture.lightGray, Point.FromCoords (view.rect.text.west, v));
+            VBT.PaintSub (view.vbt, view.rect.textClip, refpt, font,
+                          SUBARRAY (chars, start, length),
+                          view.vOptions.whiteBlack.transparentFg);
+            allWhiteBelow := FALSE
+        END
+      ELSE
+        IF intervalOptions.style # IntervalStyle.NoStyle THEN
+          allWhiteBelow := FALSE
+        END
+      END;
+      newWidth := h - view.rect.text.west
+    END PaintSub;
+  PROCEDURE PaintWhite () =
+    VAR to: Rect.T;
+    BEGIN
+      IF h0 < view.rect.textClip.east AND h > view.rect.textClip.west THEN
+        to := Rect.FromEdges (h0, h, v, v + charht + view.vOptions.leading);
+        IF intervalOptions.style = IntervalStyle.NoStyle THEN
+          IF h0 < view.rect.text.west + oldWidth THEN
+            VBT.PaintTint (view.vbt, Rect.Meet (to, view.rect.textClip),
+                           view.vOptions.whiteBlack.bg)
+          END
+        ELSE
+          CASE intervalOptions.style OF
+          | IntervalStyle.HighlightStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.MoveEdge (to, Rect.Edge.S,
+                                                    -view.vOptions.leading),
+                                     view.rect.textClip),
+                intervalOptions.whiteBlack.bg);
+              FillLeading (intervalOptions.leading);
+          | IntervalStyle.InverseStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.MoveEdge (to, Rect.Edge.S,
+                                                    -view.vOptions.leading),
+                                     view.rect.textClip),
+                intervalOptions.whiteBlack.fg);
+              FillLeading (intervalOptions.leading);
+          | IntervalStyle.GrayStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.MoveEdge (to, Rect.Edge.S,
+                                                    -view.vOptions.leading),
+                                     view.rect.textClip),
+                intervalOptions.whiteBlack.bg);
+              IF view.vOptions.leading > 0 THEN
+                VBT.PaintTint (
+                  view.vbt, Rect.Meet (Rect.FromEdges (
+                                         h0, h, v + charht,
+                                         v + charht + view.vOptions.leading),
+                                       view.rect.textClip),
+                  intervalOptions.leading)
+              END;
+          | IntervalStyle.UnderlineStyle =>
+              IF view.vOptions.leading > 0 THEN
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.MoveEdge (
+                               to, Rect.Edge.S, -(view.vOptions.leading + 1)),
+                             view.rect.textClip),
+                  intervalOptions.whiteBlack.bg);
+                IF NOT (oldAllWhiteBelow
+                          AND (intervalOptions.leading.op
+                                 = view.vOptions.whiteBlack.bg.op))
+                     AND (view.vOptions.leading > 1) THEN
+                  VBT.PaintTint (
+                    view.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (h0, h, v + charht + 1,
+                                      v + charht + view.vOptions.leading),
+                      view.rect.textClip), intervalOptions.leading)
+                END;
+                VBT.PaintTint (
+                  view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1,
+                                                       v + charht + 1),
+                                       view.rect.textClip),
+                  intervalOptions.whiteStroke.fg);
+                allWhiteBelow := FALSE
+              ELSE
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.MoveEdge (
+                               to, Rect.Edge.S, -(view.vOptions.leading + 2)),
+                             view.rect.textClip),
+                  intervalOptions.whiteBlack.bg);
+                FillLeading (intervalOptions.leading);
+                VBT.PaintTint (
+                  view.vbt, Rect.Meet (Rect.FromEdges (
+                                         h0, h, v + charht - 2, v + charht),
+                                       view.rect.textClip),
+                  intervalOptions.whiteStroke.fg)
+              END;
+          | IntervalStyle.ThinUnderlineStyle =>
+              VBT.PaintTint (
+                view.vbt,
+                Rect.Meet (Rect.MoveEdge (
+                             to, Rect.Edge.S, -(view.vOptions.leading + 1)),
+                           view.rect.textClip), intervalOptions.whiteBlack.bg);
+              FillLeading (intervalOptions.leading);
+              VBT.PaintTint (view.vbt,
+                             Rect.Meet (Rect.FromEdges (
+                                          h0, h, v + charht - 1, v + charht),
+                                        view.rect.textClip),
+                             intervalOptions.whiteStroke.fg);
+          | IntervalStyle.GrayUnderlineStyle =>
+              VBT.PaintTint (
+                view.vbt,
+                Rect.Meet (Rect.MoveEdge (
+                             to, Rect.Edge.S, -(view.vOptions.leading + 1)),
+                           view.rect.textClip), intervalOptions.whiteBlack.bg);
+              FillLeading (intervalOptions.leading);
+              VBT.PaintTexture (
+                view.vbt,
+                Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1, v + charht),
+                           view.rect.textClip),
+                intervalOptions.whiteStroke.bgFg, VTTexture.gray,
+                Point.FromCoords (view.rect.text.west, v));
+          | IntervalStyle.BoxStyle =>
+              to := Rect.FromEdges (h0, h, v + 1, v + charht - 1);
+              IF atStyleStart THEN
+                to := Rect.MoveEdge (to, Rect.Edge.W, +1)
+              END;
+              IF atStyleStop THEN
+                to := Rect.MoveEdge (to, Rect.Edge.E, -1)
+              END;
+              VBT.PaintTint (view.vbt, Rect.Meet (to, view.rect.textClip),
+                             intervalOptions.whiteBlack.bg);
+              FillLeading (intervalOptions.leading);
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + 1),
+                                     view.rect.textClip),
+                intervalOptions.whiteStroke.fg);
+              VBT.PaintTint (view.vbt,
+                             Rect.Meet (Rect.FromEdges (
+                                          h0, h, v + charht - 1, v + charht),
+                                        view.rect.textClip),
+                             intervalOptions.whiteStroke.fg);
+              IF atStyleStart THEN
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.FromEdges (h0, h0 + 1, v, v + charht),
+                             view.rect.textClip),
+                  intervalOptions.whiteStroke.fg)
+              END;
+              IF atStyleStop THEN
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.FromEdges (h - 1, h, v, v + charht),
+                             view.rect.textClip),
+                  intervalOptions.whiteStroke.fg)
+              END;
+          | IntervalStyle.SlugStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                                     view.rect.textClip),
+                intervalOptions.whiteStroke.fg);
+              FillLeading (intervalOptions.leading);
+          | IntervalStyle.OverlapStyle =>
+              VBT.PaintTexture (view.vbt,
+                                Rect.Meet (
+                                  Rect.FromEdges (
+                                    h0, h, v,
+                                    v + charht + view.vOptions.leading),
+                                  view.rect.textClip),
+                                view.vOptions.whiteBlack.bgFg,
+                                VTTexture.lightGray,
+                                Point.FromCoords (view.rect.text.west, v));
+              allWhiteBelow := FALSE
+          ELSE                   <* ASSERT(FALSE) *>
+          END;
+          newWidth := h - view.rect.text.west
+        END
+      ELSE
+        IF intervalOptions.style # IntervalStyle.NoStyle THEN
+          allWhiteBelow := FALSE
+        END;
+        newWidth := h - view.rect.text.west
+      END
+    END PaintWhite;
+  PROCEDURE FillLeading (tint: Tint) =
+    VAR white := tint.op = view.vOptions.whiteBlack.bg.op;
+    BEGIN
+      IF NOT (oldAllWhiteBelow AND white) THEN
+        IF view.vOptions.leading > 0 THEN
+          VBT.PaintTint (
+            view.vbt,
+            Rect.Meet (Rect.FromEdges (h0, h, v + charht,
+                                       v + charht + view.vOptions.leading),
+                       view.rect.textClip), tint);
+          IF NOT white THEN allWhiteBelow := FALSE END
+        END
+      END
+    END FillLeading;
+  VAR
+    xx        : INTEGER (* Coord *);
+    c         : CHAR;
+    escape    : ARRAY [0 .. 3] OF CHAR;
+    black     : Tint;
+    charClip  : Rect.T;
+    screenFont                         := view.vScreenFont.vScreenFont;
+    font                               := screenFont.vFont.vFont;
+    charht      := screenFont.box.south - screenFont.box.north;
+    h0          := h;
+    ci0         := 0;
+    ci          := 0;
+    atStyleStop := FALSE;
+  BEGIN
+    WHILE ci < length DO
+      c := chars [ci];
+      IF c IN screenFont.defined THEN
+        h := h + screenFont.width [c]
+      ELSE
+        IF ci > ci0 THEN PaintSub (chars, ci0, ci - ci0) END;
+        ci0 := ci + 1;
+        atStyleStart := FALSE;
+        IF ci0 = length THEN atStyleStop := atStyleStop0 END;
+        h0 := h;
+        IF c = '\n' THEN
+          h := view.rect.text.east;
+          PaintWhite ()
+        ELSIF c = '\t' AND '\t' IN font.printable THEN
+          xx := h - view.rect.text.west;
+          xx := xx + screenFont.width [' '] + screenFont.width ['\t'] - 1;
+          xx := xx - xx MOD screenFont.width ['\t'];
+          h := xx + view.rect.text.west;
+          PaintWhite ();
+          IF NOT font.whiteTabs THEN
+            CASE intervalOptions.style OF
+            | IntervalStyle.NoStyle, IntervalStyle.OverlapStyle =>
+                black := view.vOptions.whiteBlack.fg;
+            | IntervalStyle.InverseStyle =>
+                black := intervalOptions.whiteBlack.bg
+            ELSE
+              black := intervalOptions.whiteBlack.fg
+            END;
+            charClip := Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                                   view.rect.textClip);
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (
+                Rect.FromEdges (h0 + 1, h0 + 2, v - screenFont.box.north - 3,
+                                v - screenFont.box.north - 1), charClip),
+              black);
+            VBT.PaintTint (
+              view.vbt,
+              Rect.Meet (
+                Rect.FromEdges (h0 + 2, h - 1, v - screenFont.box.north - 1,
+                                v - screenFont.box.north), charClip), black);
+            VBT.PaintTint (
+              view.vbt, Rect.Meet (Rect.FromEdges (
+                                     h - 1, h, v - screenFont.box.north - 3,
+                                     v - screenFont.box.north - 1), charClip),
+              black);
+            IF screenFont.box.south < 0 THEN allWhiteBelow := FALSE END;
+            newWidth := h - view.rect.text.west
+          END
+        ELSE
+          escape [0] := '\\';
+          escape [1] := VAL (ORD (c) DIV 64 + ORD ('0'), CHAR);
+          escape [2] := VAL (ORD (c) DIV 8 MOD 8 + ORD ('0'), CHAR);
+          escape [3] := VAL (ORD (c) MOD 8 + ORD ('0'), CHAR);
+          h := h + screenFont.width [c];
+          PaintSub (escape, 0, 4)
+        END;
+        h0 := h
+      END;
+      ci := ci + 1
+    END;
+    atStyleStop := atStyleStop0;
+    IF ci > ci0 THEN PaintSub (chars, ci0, ci - ci0) END
+  END PaintSegmentOpaque;
+
+PROCEDURE PaintBackgroundTransparent (                view  : View;
+                                      VAR (* INOUT *) h     : Coord;
+                                                      v     : Coord;
+                                      READONLY        chars : ARRAY OF CHAR;
+                                                      length: CARDINAL;
+                                      READONLY intervalOptions: IntervalOptions;
+                                      <* UNUSED *> oldAllWhiteBelow: BOOLEAN;
+                                      VAR (* OUT *) allWhiteBelow: BOOLEAN;
+                                                    oldWidth     : Coord;
+                                      VAR (* OUT *) newWidth     : Coord    ) =
+  VAR
+    charht : Coord;
+    h0     : INTEGER (* Coord *);
+    ci, ci0: INTEGER (* CARDINAL *);
+  PROCEDURE PaintWhite () =
+    VAR to: Rect.T;
+    BEGIN
+      IF h0 < view.rect.textClip.east AND h > view.rect.textClip.west THEN
+        to := Rect.FromEdges (h0, h, v, v + charht + view.vOptions.leading);
+        IF intervalOptions.style = IntervalStyle.NoStyle THEN
+          IF h0 < view.rect.text.west + oldWidth THEN
+            VBT.PaintTint (view.vbt, Rect.Meet (to, view.rect.textClip),
+                           view.vOptions.whiteBlack.bg)
+          END
+        ELSE
+          CASE intervalOptions.style OF
+          | IntervalStyle.HighlightStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.MoveEdge (to, Rect.Edge.S,
+                                                    -view.vOptions.leading),
+                                     view.rect.textClip),
+                intervalOptions.whiteBlack.bg);
+          | IntervalStyle.InverseStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.MoveEdge (to, Rect.Edge.S,
+                                                    -view.vOptions.leading),
+                                     view.rect.textClip),
+                intervalOptions.whiteBlack.fg);
+          | IntervalStyle.GrayStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.MoveEdge (to, Rect.Edge.S,
+                                                    -view.vOptions.leading),
+                                     view.rect.textClip),
+                intervalOptions.whiteBlack.bg);
+          | IntervalStyle.UnderlineStyle =>
+              IF view.vOptions.leading > 0 THEN
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.MoveEdge (
+                               to, Rect.Edge.S, -(view.vOptions.leading + 1)),
+                             view.rect.textClip),
+                  intervalOptions.whiteBlack.bg)
+              ELSE
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.MoveEdge (
+                               to, Rect.Edge.S, -(view.vOptions.leading + 2)),
+                             view.rect.textClip),
+                  intervalOptions.whiteBlack.bg)
+              END;
+          | IntervalStyle.GrayUnderlineStyle,
+              IntervalStyle.ThinUnderlineStyle =>
+              VBT.PaintTint (
+                view.vbt,
+                Rect.Meet (Rect.MoveEdge (
+                             to, Rect.Edge.S, -(view.vOptions.leading + 1)),
+                           view.rect.textClip), intervalOptions.whiteBlack.bg);
+          | IntervalStyle.BoxStyle =>
+              to := Rect.FromEdges (h0, h, v + 1, v + charht - 1);
+              VBT.PaintTint (view.vbt, Rect.Meet (to, view.rect.textClip),
+                             intervalOptions.whiteBlack.bg);
+          | IntervalStyle.SlugStyle =>
+          | IntervalStyle.OverlapStyle =>
+              VBT.PaintTexture (view.vbt,
+                                Rect.Meet (
+                                  Rect.FromEdges (
+                                    h0, h, v,
+                                    v + charht + view.vOptions.leading),
+                                  view.rect.textClip),
+                                view.vOptions.whiteBlack.bgFg,
+                                VTTexture.lightGray,
+                                Point.FromCoords (view.rect.text.west, v));
+              allWhiteBelow := FALSE
+          ELSE                   <* ASSERT(FALSE) *>
+          END;
+          newWidth := h - view.rect.text.west
+        END
+      ELSE
+        IF intervalOptions.style # IntervalStyle.NoStyle THEN
+          allWhiteBelow := FALSE
+        END;
+        newWidth := h - view.rect.text.west
+      END
+    END PaintWhite;
+  VAR
+    xx      : INTEGER (* Coord *);
+    c       : CHAR;
+    escape  : ARRAY [0 .. 3] OF CHAR;
+    black   : Tint;
+    charClip: Rect.T;
+  BEGIN
+    WITH z_82 = view^ DO
+      WITH z_83 = z_82.vScreenFont^ DO
+        WITH z_84 = z_83.vScreenFont.vFont^ DO
+          charht := z_83.vScreenFont.box.south - z_83.vScreenFont.box.north;
+          h0 := h;
+          ci0 := 0;
+          ci := 0;
+          WHILE (ci < length) DO
+            c := chars [ci];
+            IF c IN z_83.vScreenFont.defined THEN
+              h := h + z_83.vScreenFont.width [c]
+            ELSE
+              IF ci > ci0 THEN
+                (* PaintSub(chars, ci0, ci - ci0); *)
+                PaintWhite ()
+              END;
+              ci0 := ci + 1;
+              h0 := h;
+              IF c = '\n' THEN
+                h := z_82.rect.text.east;
+                PaintWhite ()
+              ELSIF (c = '\t') AND ('\t' IN z_84.vFont.printable) THEN
+                xx := h - z_82.rect.text.west;
+                xx := xx + z_83.vScreenFont.width [' ']
+                        + z_83.vScreenFont.width ['\t'] - 1;
+                xx := xx - xx MOD z_83.vScreenFont.width ['\t'];
+                h := xx + z_82.rect.text.west;
+                PaintWhite ();
+                IF NOT z_84.vFont.whiteTabs THEN
+                  CASE intervalOptions.style OF
+                  | IntervalStyle.NoStyle, IntervalStyle.OverlapStyle =>
+                      black := z_82.vOptions.whiteBlack.fg;
+                  | IntervalStyle.InverseStyle =>
+                      black := intervalOptions.whiteBlack.bg
+                  ELSE
+                    black := intervalOptions.whiteBlack.fg
+                  END;
+                  charClip :=
+                    Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                               z_82.rect.textClip);
+                  VBT.PaintTint (
+                    z_82.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (
+                        h0 + 1, h0 + 2, v - z_83.vScreenFont.box.north - 3,
+                        v - z_83.vScreenFont.box.north - 1), charClip), black);
+                  VBT.PaintTint (
+                    z_82.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (
+                        h0 + 2, h - 1, v - z_83.vScreenFont.box.north - 1,
+                        v - z_83.vScreenFont.box.north), charClip), black);
+                  VBT.PaintTint (
+                    z_82.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (
+                        h - 1, h, v - z_83.vScreenFont.box.north - 3,
+                        v - z_83.vScreenFont.box.north - 1), charClip), black);
+                  IF z_83.vScreenFont.box.south < 0 THEN
+                    allWhiteBelow := FALSE
+                  END;
+                  newWidth := h - z_82.rect.text.west
+                END
+              ELSE
+                escape [0] := '\\';
+                escape [1] := VAL (ORD (c) DIV 64 + ORD ('0'), CHAR);
+                escape [2] := VAL (ORD (c) DIV 8 MOD 8 + ORD ('0'), CHAR);
+                escape [3] := VAL (ORD (c) MOD 8 + ORD ('0'), CHAR);
+                h := h + z_83.vScreenFont.width [c];
+                (* PaintSub(escape, 0, 4); *)
+                PaintWhite ()
+              END;
+              h0 := h
+            END;
+            ci := ci + 1
+          END;
+          IF ci > ci0 THEN
+            (* PaintSub(chars, ci0, ci - ci0); *)
+            PaintWhite ()
+          END
+        END
+      END
+    END
+  END PaintBackgroundTransparent;
+
+PROCEDURE PaintSegmentTransparent (                view  : View;
+                                   VAR (* INOUT *) h     : Coord;
+                                                   v     : Coord;
+                                   READONLY        chars : ARRAY OF CHAR;
+                                                   length: CARDINAL;
+                                   READONLY intervalOptions: IntervalOptions;
+                                     <* UNUSED *>
+                                   oldAllWhiteBelow: BOOLEAN;
+                                   VAR (* OUT *) allWhiteBelow: BOOLEAN;
+                                     <* UNUSED *>
+                                   oldWidth: Coord;
+                                   VAR (* OUT *) newWidth: Coord) =
+  VAR
+    charht : Coord;
+    h0     : INTEGER (* Coord *);
+    ci, ci0: INTEGER (* CARDINAL *);
+  PROCEDURE PaintSub (READONLY chars        : ARRAY OF CHAR;
+                               start, length: CARDINAL       ) =
+    VAR refpt: Point.T;
+    BEGIN
+      WITH z_85 = view^ DO
+        WITH z_86 = z_85.vScreenFont^ DO
+          WITH z_87 = z_86.vScreenFont.vFont^ DO
+            IF (h0 < z_85.rect.textClip.east)
+                 AND (h > z_85.rect.textClip.west) THEN
+              refpt :=
+                Point.FromCoords (h0, v - z_86.vScreenFont.box.north);
+              CASE intervalOptions.style OF
+              | IntervalStyle.NoStyle =>
+                  VBT.PaintSub (
+                    z_85.vbt, z_85.rect.textClip, refpt, z_87.vFont.font,
+                    SUBARRAY (chars, start, length),
+                    z_85.vOptions.whiteBlack.transparentFg);
+              | IntervalStyle.HighlightStyle, IntervalStyle.GrayStyle,
+                  IntervalStyle.UnderlineStyle,
+                  IntervalStyle.GrayUnderlineStyle,
+                  IntervalStyle.ThinUnderlineStyle,
+                  IntervalStyle.BoxStyle =>
+                  VBT.PaintSub (
+                    z_85.vbt, z_85.rect.textClip, refpt, z_87.vFont.font,
+                    SUBARRAY (chars, start, length),
+                    intervalOptions.whiteBlack.transparentFg);
+              | IntervalStyle.InverseStyle =>
+                  VBT.PaintSub (
+                    z_85.vbt, z_85.rect.textClip, refpt, z_87.vFont.font,
+                    SUBARRAY (chars, start, length),
+                    intervalOptions.whiteBlack.transparentBg);
+              | IntervalStyle.SlugStyle =>
+              | IntervalStyle.OverlapStyle =>
+                  VBT.PaintSub (
+                    z_85.vbt, z_85.rect.textClip, refpt, z_87.vFont.font,
+                    SUBARRAY (chars, start, length),
+                    z_85.vOptions.whiteBlack.transparentFg)
+              END
+            ELSE
+              IF intervalOptions.style # IntervalStyle.NoStyle THEN
+                allWhiteBelow := FALSE
+              END
+            END;
+            newWidth := h - z_85.rect.text.west
+          END
+        END
+      END
+    END PaintSub;
+  VAR
+    xx      : INTEGER (* Coord *);
+    c       : CHAR;
+    escape  : ARRAY [0 .. 3] OF CHAR;
+    black   : Tint;
+    charClip: Rect.T;
+  BEGIN
+    WITH z_88 = view^ DO
+      WITH z_89 = z_88.vScreenFont^ DO
+        WITH z_90 = z_89.vScreenFont.vFont^ DO
+          charht :=
+            z_89.vScreenFont.box.south - z_89.vScreenFont.box.north;
+          h0 := h;
+          ci0 := 0;
+          ci := 0;
+          WHILE (ci < length) DO
+            c := chars [ci];
+            IF c IN z_89.vScreenFont.defined THEN
+              h := h + z_89.vScreenFont.width [c]
+            ELSE
+              IF ci > ci0 THEN PaintSub (chars, ci0, ci - ci0) END;
+              ci0 := ci + 1;
+              h0 := h;
+              IF c = '\n' THEN
+                h := z_88.rect.text.east
+              ELSIF (c = '\t') AND ('\t' IN z_90.vFont.printable) THEN
+                xx := h - z_88.rect.text.west;
+                xx := xx + z_89.vScreenFont.width [' ']
+                        + z_89.vScreenFont.width ['\t'] - 1;
+                xx := xx - xx MOD z_89.vScreenFont.width ['\t'];
+                h := xx + z_88.rect.text.west;
+                IF NOT z_90.vFont.whiteTabs THEN
+                  CASE intervalOptions.style OF
+                  | IntervalStyle.NoStyle, IntervalStyle.OverlapStyle =>
+                      black := z_88.vOptions.whiteBlack.fg;
+                  | IntervalStyle.InverseStyle =>
+                      black := intervalOptions.whiteBlack.bg
+                  ELSE
+                    black := intervalOptions.whiteBlack.fg
+                  END;
+                  charClip :=
+                    Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                               z_88.rect.textClip);
+                  VBT.PaintTint (
+                    z_88.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (
+                        h0 + 1, h0 + 2, v - z_89.vScreenFont.box.north - 3,
+                        v - z_89.vScreenFont.box.north - 1), charClip),
+                    black);
+                  VBT.PaintTint (
+                    z_88.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (
+                        h0 + 2, h - 1, v - z_89.vScreenFont.box.north - 1,
+                        v - z_89.vScreenFont.box.north), charClip), black);
+                  VBT.PaintTint (
+                    z_88.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (
+                        h - 1, h, v - z_89.vScreenFont.box.north - 3,
+                        v - z_89.vScreenFont.box.north - 1), charClip),
+                    black);
+                  IF z_89.vScreenFont.box.south < 0 THEN
+                    allWhiteBelow := FALSE
+                  END;
+                  newWidth := h - z_88.rect.text.west
+                END
+              ELSE
+                escape [0] := '\\';
+                escape [1] := VAL (ORD (c) DIV 64 + ORD ('0'), CHAR);
+                escape [2] := VAL (ORD (c) DIV 8 MOD 8 + ORD ('0'), CHAR);
+                escape [3] := VAL (ORD (c) MOD 8 + ORD ('0'), CHAR);
+                h := h + z_89.vScreenFont.width [c];
+                PaintSub (escape, 0, 4)
+              END;
+              h0 := h
+            END;
+            ci := ci + 1
+          END;
+          IF ci > ci0 THEN PaintSub (chars, ci0, ci - ci0) END
+        END
+      END
+    END
+  END PaintSegmentTransparent;
+
+PROCEDURE PaintOverlayTransparent (                view  : View;
+                                   VAR (* INOUT *) h     : Coord;
+                                                   v     : Coord;
+                                                   rd    : Rd.T;
+                                                   length: CARDINAL;
+                                   READONLY intervalOptions: IntervalOptions;
+                                                 oldAllWhiteBelow: BOOLEAN;
+                                   VAR (* OUT *) allWhiteBelow   : BOOLEAN;
+                                   <* UNUSED *> oldWidth: Coord;
+                                   VAR (* OUT *) newWidth: Coord;
+                                   atStyleStart, atStyleStop: BOOLEAN)
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  PROCEDURE PaintStroke () =
+    VAR refpt: Point.T;
+    BEGIN
+      WITH z_92 = view.vScreenFont^ DO
+        IF (h0 < view.rect.textClip.east) AND (h > view.rect.textClip.west) THEN
+          refpt := Point.FromCoords (h0, v - z_92.vScreenFont.box.north);
+          CASE intervalOptions.style OF
+          | IntervalStyle.NoStyle =>
+          | IntervalStyle.HighlightStyle =>
+          | IntervalStyle.InverseStyle =>
+          | IntervalStyle.GrayStyle =>
+          | IntervalStyle.UnderlineStyle =>
+              IF view.vOptions.leading > 0 THEN
+                VBT.PaintTint (
+                  view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1,
+                                                       v + charht + 1),
+                                       view.rect.textClip),
+                  intervalOptions.whiteStroke.fg);
+                allWhiteBelow := FALSE
+              ELSE
+                VBT.PaintTint (
+                  view.vbt, Rect.Meet (Rect.FromEdges (
+                                         h0, h, v + charht - 2, v + charht),
+                                       view.rect.textClip),
+                  intervalOptions.whiteStroke.fg)
+              END;
+          | IntervalStyle.ThinUnderlineStyle =>
+              VBT.PaintTint (view.vbt,
+                             Rect.Meet (Rect.FromEdges (
+                                          h0, h, v + charht - 1, v + charht),
+                                        view.rect.textClip),
+                             intervalOptions.whiteStroke.fg);
+          | IntervalStyle.GrayUnderlineStyle =>
+              VBT.PaintTexture (
+                view.vbt,
+                Rect.Meet (Rect.FromEdges (h0, h, v + charht - 1, v + charht),
+                           view.rect.textClip),
+                intervalOptions.whiteStroke.bgFg, VTTexture.gray,
+                Point.FromCoords (view.rect.text.west, v));
+          | IntervalStyle.BoxStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + 1),
+                                     view.rect.textClip),
+                intervalOptions.whiteStroke.fg);
+              VBT.PaintTint (view.vbt,
+                             Rect.Meet (Rect.FromEdges (
+                                          h0, h, v + charht - 1, v + charht),
+                                        view.rect.textClip),
+                             intervalOptions.whiteStroke.fg);
+              IF atStyleStart THEN
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.FromEdges (h0, h0 + 1, v, v + charht),
+                             view.rect.textClip),
+                  intervalOptions.whiteStroke.fg)
+              END;
+              IF atStyleStop THEN
+                VBT.PaintTint (
+                  view.vbt,
+                  Rect.Meet (Rect.FromEdges (h - 1, h, v, v + charht),
+                             view.rect.textClip),
+                  intervalOptions.whiteStroke.fg)
+              END;
+          | IntervalStyle.SlugStyle =>
+              VBT.PaintTint (
+                view.vbt, Rect.Meet (Rect.FromEdges (h0, h, v, v + charht),
+                                     view.rect.textClip),
+                intervalOptions.whiteStroke.fg);
+          | IntervalStyle.OverlapStyle =>
+          END
+        ELSE
+          IF intervalOptions.style # IntervalStyle.NoStyle THEN
+            allWhiteBelow := FALSE
+          END
+        END;
+        newWidth := h - view.rect.text.west
+      END
+    END PaintStroke;
+  PROCEDURE PaintLeading () =
+    VAR refpt: Point.T;
+    BEGIN
+      WITH z_94 = view.vScreenFont^ DO
+        IF (h0 < view.rect.textClip.east) AND (h > view.rect.textClip.west) THEN
+          refpt := Point.FromCoords (h0, v - z_94.vScreenFont.box.north);
+          CASE intervalOptions.style OF
+          | IntervalStyle.NoStyle =>
+          | IntervalStyle.HighlightStyle, IntervalStyle.GrayStyle,
+              IntervalStyle.GrayUnderlineStyle,
+              IntervalStyle.ThinUnderlineStyle, IntervalStyle.BoxStyle,
+              IntervalStyle.SlugStyle =>
+              FillLeading (intervalOptions.leading);
+          | IntervalStyle.InverseStyle =>
+              FillLeading (intervalOptions.leading);
+          | IntervalStyle.UnderlineStyle =>
+              IF view.vOptions.leading > 0 THEN
+                IF NOT (oldAllWhiteBelow
+                          AND (intervalOptions.leading.op
+                                 = view.vOptions.whiteBlack.bg.op))
+                     AND (view.vOptions.leading > 1) THEN
+                  VBT.PaintTint (
+                    view.vbt,
+                    Rect.Meet (
+                      Rect.FromEdges (h0, h, v + charht + 1,
+                                      v + charht + view.vOptions.leading),
+                      view.rect.textClip), intervalOptions.leading);
+                  allWhiteBelow := FALSE
+                END
+              END;
+          | IntervalStyle.OverlapStyle =>
+          END
+        ELSE
+          IF intervalOptions.style # IntervalStyle.NoStyle THEN
+            allWhiteBelow := FALSE
+          END
+        END;
+        newWidth := h - view.rect.text.west
+      END
+    END PaintLeading;
+  PROCEDURE FillLeading (tint: Tint) =
+    VAR white := tint.op = view.vOptions.whiteBlack.bg.op;
+    BEGIN
+      IF NOT (oldAllWhiteBelow AND white) THEN
+        IF view.vOptions.leading > 0 THEN
+          VBT.PaintTint (
+            view.vbt,
+            Rect.Meet (Rect.FromEdges (h0, h, v + charht,
+                                       v + charht + view.vOptions.leading),
+                       view.rect.textClip), tint);
+          IF NOT white THEN allWhiteBelow := FALSE END
+        END
+      END
+    END FillLeading;
+  VAR
+    xx  : Coord;
+    c   : CHAR;
+    buff: ARRAY [0 .. 131] OF CHAR;
+    charht := view.vScreenFont.vScreenFont.box.south
+                - view.vScreenFont.vScreenFont.box.north;
+    h0 := h;
+  BEGIN
+    FOR i := 0 TO length - 1 BY NUMBER (buff) DO
+      WITH count = Rd.GetSub (
+                     rd, SUBARRAY (buff, 0, MIN (NUMBER (buff), length - i))) DO
+        FOR j := 0 TO count - 1 DO
+          c := buff [j];
+          IF c = '\n' THEN
+            h := view.rect.text.east
+          ELSIF c = '\t'
+                  AND '\t'
+                        IN view.vScreenFont.vScreenFont.vFont.vFont.printable THEN
+            xx := h - view.rect.text.west;
+            xx := xx + view.vScreenFont.vScreenFont.width [' ']
+                    + view.vScreenFont.vScreenFont.width ['\t'] - 1;
+            xx := xx - xx MOD view.vScreenFont.vScreenFont.width ['\t'];
+            h := xx + view.rect.text.west
+          ELSE
+            h := h + view.vScreenFont.vScreenFont.width [c]
+          END
+        END
+      END
+    END;
+    IF h > h0 THEN PaintStroke (); PaintLeading () END
+  END PaintOverlayTransparent;
+
+
+PROCEDURE PaintTurn (view: View; w, n: Coord; turned: BOOLEAN) =
+  VAR
+    turnNW := Point.FromCoords (w, n);
+    box    := view.vScreenFont.vScreenFont.box;
+  BEGIN
+    VBT.PaintTexture (
+      view.vbt, Rect.Meet (Rect.FromCorner (turnNW, view.vOptions.turnMargin,
+                                            box.south - box.north),
+                           view.rect.clip), view.vOptions.whiteStroke.bgFg,
+      VTTexture.turn [turned], turnNW)
+  END PaintTurn;
+
+PROCEDURE Init (view: View) =
+  (* Initialize the Real structure of a View. *)
+  BEGIN
+    view.rect.bad := view.rect.clip;
+    FOR i := 0 TO view.nLines - 1 DO
+      WITH z_103 = view.real.line [i] DO
+        z_103.realLine.width := 0;
+        z_103.realLine.allWhiteBelow := TRUE;
+        z_103.realLine.turned [0] := TriState.False;
+        z_103.realLine.turned [1] := TriState.False
+      END
+    END;
+    view.real.lines := 0;
+    view.real.dirty := TRUE;
+    view.real.firstDirty := 0;
+    view.real.firstAfter := view.nLines
+  END Init;
+
+PROCEDURE Bad (view: View; READONLY bad: Rect.T) =
+  (* Invalidate a rectangle in the image; the rectangle will be cleared and
+     redrawn at the next Update. *)
+  VAR b := Rect.Meet (bad, view.rect.clip);
+  BEGIN
+    IF NOT Rect.IsEmpty (b) THEN
+      view.rect.bad := Rect.Join (view.rect.bad, b)
+    END;
+    view.real.lines := MIN (view.real.lines, view.nLines);
+    (* this is convenient but inelegant *)
+  END Bad;
+
+
+PROCEDURE Resize (view: View; n: CARDINAL) =
+  BEGIN
+    IF view.real.lines < n THEN
+      FOR i := view.real.lines TO n - 1 DO
+        WITH z_107 = view.real.line [i] DO
+          z_107.realLine.width := 0;
+          z_107.realLine.turned [0] := TriState.False;
+          z_107.realLine.turned [1] := TriState.False;
+          z_107.realLine.allWhiteBelow := TRUE
+        END
+      END;
+      view.real.dirty := TRUE;
+      view.real.firstDirty := MIN (view.real.lines, view.real.firstDirty);
+      view.real.firstAfter := MAX (n, view.real.firstAfter)
+    ELSE
+      view.real.lines := n;
+      view.real.firstDirty := MIN (view.real.firstDirty, n);
+      view.real.firstAfter := MIN (view.real.firstAfter, n)
+    END
+  END Resize;
+
+PROCEDURE Dirtied (view: View; i: LineNo; n: CARDINAL) =
+  (* Utility *)
+  BEGIN
+    view.real.dirty := TRUE;
+    view.real.firstDirty := MIN (view.real.firstDirty, i);
+    view.real.firstAfter := MAX (view.real.firstAfter, i + n)
+  END Dirtied;
+
+BEGIN
+END VTReal.

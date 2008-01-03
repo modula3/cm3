@@ -1,0 +1,20 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 20:53:46 PDT 1993 by mjordan                  */
+
+Interface("M3Error")
+Interface("M3Context")
+Interface("M3CUnit")
+Interface("M3CUnitRep")
+Interface("M3ErrorStream")
+Interface("M3ContextRemove")
+Interface("M3Conventions")
+
+implementation("M3Error")
+implementation("M3Context")
+implementation("M3CUnit")
+implementation("M3ContextRemove")
+implementation("M3Conventions")
+

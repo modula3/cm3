@@ -1,0 +1,116 @@
+<HTML>
+<HEAD>
+<TITLE>Modula-3 Debugging</TITLE>
+</HEAD>
+<BODY>
+
+<H1>Modula-3 Debugging</H1>
+<P>
+
+A Modula-3 aware version of gdb may be used to debug Modula-3 code.
+It understands Modula-3 types, declarations, and expressions. It also
+supports threads. The usual gdb commands may be used. This document
+discusses three areas where special care is required:
+garbage collection, threads, and calling non standard procedures.
+
+While gdb tries to determine automatically the language for
+the current frame (procedure), you may sometimes want to
+explicitely set the current language:
+<PRE>
+    (m3gdb) set language m3
+    (m3gdb) set language c
+</PRE>
+
+<H2 ID="GC">Garbage collection</H2>
+
+<P>
+On some platforms, a VM synchronized version of the garbage collector
+uses SIGSEGV signals. By default, gdb stops and prints a message each
+time SIGSEGV is received. This behavior may be changed with the
+<TT>handle</TT> command. 
+The simplest way to avoid these signals
+is to disable the VM synchronized garbage collector, using the
+<TT>@M3novm</TT> command line option:
+
+<PRE>
+cassis> m3gdb myprog
+(m3gdb) run @M3novm ...other arguments...
+</PRE>
+
+<P>
+If you prefer to keep the VM synchronized collector while debugging,
+you may use:
+
+<PRE>
+    (m3gdb) handle SIGSEGV noprint pass
+</PRE>
+
+<P>
+However, you will then not be able to examine the protected memory regions.
+You may unprotect the memory with:
+
+<PRE>
+    (m3gdb) call RTCollectorSRC.FinishVM()
+</PRE>
+
+<P>
+You may disable the memory protection for the rest of the execution with:
+
+<PRE>
+    (m3gdb) call RTCollectorSRC.DisableVM()
+</PRE>
+
+<H2>Threads</H2>
+
+<P>
+On platforms where Modula-3 uses native threads (NT), the
+gdb thread commands may be used (<TT>info thread</TT>, and <TT>thread</TT>)
+to list the threads and switch to another thread.
+
+<P>
+On other platforms, <TT>m3gdb</TT> provides <TT>threads</TT> to list the
+threads, and <TT>switch id</TT> to switch to another thread indicated by
+<TT>id</TT>. You must switch back to the thread where the program
+stopped before continuing the execution (i.e. the first thread
+listed by the <TT>threads</TT>).
+If the <TT>switch</TT> command is interrupted, the state of
+<TT>m3gdb</TT> is essentially random and it will most likely crash.
+The current language must be <TT>m3</TT> for the <TT>threads</TT>
+and <TT>switch</TT> commands to work.
+<P>
+
+<H2>Calling procedures from m3gdb</H2>
+
+<P>
+Modula-3 procedures are mapped as closely as possible into C procedures
+and may be called by gdb using <TT>call</TT>.
+Two differences exist:  "large" results and nested procedures.
+
+<P>
+First, procedures that return structured values (i.e. records, arrays
+or sets) take an extra parameter.  The last parameter is a pointer to
+the memory that will receive the returned result.  This parameter was
+necessary because some C compilers return structured results by
+momentarily copying them into global memory.  The global memory scheme
+works fine until it's preempted by the Modula-3 thread scheduler.
+
+<P>
+Second, nested procedures are passed an extra parameter, the ``static link''.
+The exact details of how that parameter are passed are system dependent.
+When a nested procedure is passed as a parameter, the address of the
+corresponding C procedure and its extra parameter are packaged
+into a small closure record.  The address of this record is actually
+passed.  Any call through a formal procedure parameter first checks to
+see whether the parameter is a closure or not and then makes the
+appropriate call.  Likewise, assignments of formal procedure
+parameters to variables perform runtime checks for closures.
+<P>
+
+<TT>&lt;*EXTERNAL*&gt;</TT>
+procedures have no extra parameters.
+<EM> except if they return large results?? </EM>
+<P>
+
+<!-- Copyright (C) 1992, 1996, Digital Equipment Corporation. All rights reserved. -->
+</BODY>
+</HTML>

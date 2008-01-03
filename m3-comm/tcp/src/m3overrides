@@ -1,0 +1,6 @@
+
+%%XXDIR = { "WIN32" : "h:\\new\\m3-libs", "POSIX" : "/proj/cmass/src.2/m3-libs" }
+%%WORKDIR = XXDIR {OS_TYPE}
+
+override ("m3core", ROOT & "/m3-libs")
+override ("libm3", ROOT & "/m3-libs")

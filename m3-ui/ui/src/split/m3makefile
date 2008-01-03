@@ -1,0 +1,54 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Oct 28 17:07:39 PDT 1994 by kalsow
+%      modified on Mon Jun  6 04:18:08 PDT 1994 by msm
+%      modified on Sat Apr  2 19:15:16 PST 1994 by heydon
+%      modified on Tue Apr  7 18:17:05 1992 by steveg
+%      modified on Mon Feb 24 13:55:37 PST 1992 by muller
+
+Interface ("BtnVBTClass")
+Interface ("TextVBTClass")
+Interface ("BdrVBTClass")
+interface ("STypeMap")
+
+sequence ("STypeMap", "STypeMap")
+
+Module ("ComposeKey")
+Module ("TranslateVBT")
+Module ("DblBufferVBT")
+module ("DblBufferUtil")
+Module ("BorderedVBT")
+Module ("FilterClass")
+Module ("HVSplit")
+Module ("ZSplit")
+Module ("TSplit")
+Module ("ButtonVBT")
+Module ("MenuBtnVBT")
+Module ("AnchorBtnVBT")
+Module ("PackSplit")
+Module ("ProperSplit")
+Module ("TextVBT")
+Module ("HVBar")
+Module ("HighlightVBT")
+Module ("QuickBtnVBT")
+Module ("RigidVBT")
+Module ("TextureVBT")
+Module ("Split")
+Module ("Filter")
+Module ("TypeInVBT")
+Module ("StableVBT")
+Module ("Gray")
+Module ("TwoTone")
+Module ("JoinedVBT")
+Module ("JoinParent")
+Module ("JoinScreen")
+module ("JoinCMap")
+module ("JoinCursor")
+module ("JoinFont")
+module ("JoinPixmap")
+module ("JoinPaintOp")
+Module ("ETAgent")
+Module ("SelectQueue")
+Module ("OverlayVBT")

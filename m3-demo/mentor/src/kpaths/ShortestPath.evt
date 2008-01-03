@@ -1,0 +1,21 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+IMPORT TextConv;
+
+OUTPUT NewVertex (name: TEXT[TextConv.Encode]; x, y: REAL[Fmt.Real]);
+
+OUTPUT NewEdge (name, from, to, orientation: TEXT[TextConv.Encode]);
+
+OUTPUT StartFind (from, to: TEXT[TextConv.Encode]);
+
+OUTPUT Promote (edge: TEXT[TextConv.Encode];
+                sIndex, dIndex: INTEGER[Fmt.Int]);
+
+OUTPUT Consider (edge: TEXT[TextConv.Encode];
+                 sIndex, dIndex: INTEGER[Fmt.Int]);
+
+OUTPUT Traceback (edge: TEXT[TextConv.Encode];
+                 sIndex, dIndex: INTEGER[Fmt.Int]);

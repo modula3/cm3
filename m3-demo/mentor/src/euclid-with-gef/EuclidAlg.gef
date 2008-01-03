@@ -1,0 +1,83 @@
+(progn
+
+  (setq Exit -1)
+
+  (defun event (name line )
+     (cond (name (Event name)))
+     (cond ((ne line Exit) (CodeViewEvent line) (Pause))
+           ((eq line Exit) (CodeViewExit))
+     ))
+
+    (CodeViewProc "Proposition")
+    (event nil 777)
+    (event nil Exit FALSE)
+
+    (CodeViewProc "Figure")
+    (event "ShowTriangle" 1)
+    (event "ShowBigSquare" 2)
+    (event "ShowLittleSquares" 3)
+    (event "ClearSquares" Exit)
+
+    (CodeViewProc "Squares")
+    (event "ShowLabeledBigSquare" 11)
+    (event "ShowLabeledLittleSquares" 12)
+    (event "ClearSquares" Exit)
+
+    (CodeViewProc "LineAL")
+    (event "RedLineAL" 21)
+    (event "GreenLinesBDandCE" 22)
+    (event "BlackLinesABandBDandCE" Exit)
+
+    (CodeViewProc "Shear1")
+    (event "TriangleABF" 31)
+    (event "ShearABFtoCBF" 32)
+    (event "GreenLineBF" 33)
+    (event "GreenLineCG" 34)
+    (event "BlackLinesBFandCG" Exit)
+
+    (CodeViewProc "Angles")
+    (event "GreenAngleCBD" 51)
+    (event "GreenAngleABF" 52)
+    (event "RedAngleABC" 53)
+    (event "ReplaceAnglesWithGreenCBF" 54)
+    (event "RotateCBF" 55)
+    (event "ClearAngle" Exit)
+
+    (CodeViewProc "Sides")
+    (event "GreenLineBF2" 41)
+    (event "RotateLineBF" 42)
+    (event "MoveBFtoBC" 43)
+    (event "RotateLineBC" 44)
+    (event "RemoveLineBC" Exit)
+
+    (CodeViewProc "Rotate")
+    (event nil 61)
+    (event "RotateCBFtoDBA" 62)
+    (event nil Exit)
+
+    (CodeViewProc "Shear2")
+    (event nil 71)
+    (event "ShearABDtoBDL" 72)
+    (event "GreenLineBD" 73)
+    (event "GreenLineAL" 74)
+    (event "ClearBDLandBDandAL" Exit)
+
+    (CodeViewProc "End1")
+    (event "ShowABF" 81)
+    (event "ShowBDL" 82)
+    (event "ReplaceABFandBDLwithABFG" 83)
+    (event "ShowBDLX" 84)
+    (event nil Exit)
+
+    (CodeViewProc "Symmetry")
+    (event "ShowACK" 91)
+    (event "ShearRotateShearACKtoCEL" 92)
+    (event "ReplaceCELwithACKH" 93)
+    (event "ShowCELX" 94)
+    (event nil Exit)
+
+    (CodeViewProc "Rehash")
+    (event nil 100)
+    (event nil 101)
+    (event nil Exit)
+)

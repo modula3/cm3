@@ -1,0 +1,24 @@
+% Copyright (C) 1994 Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Aug  2 14:34:26 PDT 1994 by kalsow 
+
+%
+%  Quake functions to instantiate a generic sorted table.
+%  Given a name XYZ, the resulting module is "SortedXYZTbl".
+%
+
+readonly proc Sorted_table (nm, key, value) is
+  local base = nm & "Tbl"
+  local tab  = "Sorted" & base
+  build_generic_intf (tab, "SortedTable", [key, base], VISIBLE)
+  build_generic_impl (tab, "SortedTable", [key, value, base])
+end
+
+readonly proc sorted_table (nm, key, value) is
+  local base = nm & "Tbl"
+  local tab  = "Sorted" & base
+  build_generic_intf (tab, "SortedTable", [key, base], HIDDEN)
+  build_generic_impl (tab, "SortedTable", [key, value, base])
+end

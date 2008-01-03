@@ -1,0 +1,50 @@
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor "$BgColor$") (Color "$FgColor$")
+     (LabelFont "$LabelFont$")  (Font "$Font$")  
+
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+       
+        (VBox
+         (Glue 5)
+          (HBox (Glue 5)
+            (Shape
+              (Width 150 + Inf - 100)
+              (Height 150 + Inf - 100)
+              (VBox
+                (LabelFont "fixed")
+                (DirMenu (For $fbName1$))
+                (Glue 6)
+                (Frame Lowered (BgColor "White")
+                     (FileBrowser %@ $ReadOnly$ 
+                         (Value "$Initial$")
+                         (Suffixes $Suffixes$)
+                     )
+                 )))
+            (Glue 5)
+            (Shape
+              (Width 50 + Inf)
+              (VBox
+                (Fill)
+                (Button %@action "$ActionLabel$")
+                (Glue 10)
+               ))
+            (Glue 5))
+          (Glue 5)
+          (HBox
+            (Glue 5)
+            (Shape (Width 30 + Inf) (Height 16) "File :")
+            (Frame Lowered (BgColor "White") (Helper %@typein (For $fbName2$) (Font "fixed")))
+            (Glue 5))
+          (Glue 5))
+        )
+           
+        )
+      )
+    )
+ )
+  

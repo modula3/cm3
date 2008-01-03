@@ -1,0 +1,58 @@
+.SH "DEPENDENCY ANALYSER TOOL OPTIONS"
+.PP
+A number of options are available to control exactly which of the interfaces and
+modules (units) found on the search path are compiled. By default, those
+units in the current directory are compiled, plus any interfaces
+from other directories that are imported by the units in the current
+directory. Usually this is exactly what you want. 
+However, it is
+posssible to expand the set of units that are compiled. 
+Two useful points in the spectrum
+are "all the units that make up my program" and "all the units on
+the search path". 
+.TP
+.B \-CompileInDirs [dir1  dir2 ...]
+With no directory arguments, this is interpreted as "compile
+the units in all directories on the search path", otherwise it means
+"compile the units in the current directory and in dir1, dir2,...".
+Note that the actual set of units that are compiled is still
+subject to filtering, see below.
+.TP
+.B \-NOFilterUnits
+By default
+compilations are restricted to those that are \fIneeded\fP by the units in the 
+current working directory. 
+The definition of \fIneeded\fP is straightforward for
+interfaces but, since Modula-3 allows any module to export any
+interface, requires a heuristic for modules, as follows. 
+For any required interface 'Foo', any module whose filename is
+of the form 'Foo*' or '*Foo', where '*' denotes a possibly empty
+sequence of characters, is considered to be needed. When this
+option is enabled, compilation starts with all the units in the current
+directory and iterates until no new units are needed.
+
+So, for example, modulo the constraints implied by the heuristic, 
+option \fB-CompileInDirs\fP, with no arguments, will cause all the units 
+that make up a program
+to be compiled (assuming that the sources can be found on the
+search path). If \fBNOFilterUnits\fP is also set, then every unit
+in every directory will be compiled.
+.TP
+.B \-FilterUnitsExact
+This option has a similar effect to \fPFilterUnits\fP, except that the
+export heuristic is altered so that only a module with the same name
+as an interface is considered as a possible exporter. 
+.TP
+.B \-HeadersOnly
+By default, the tool compiles an entire interface or module.
+This option restricts the compilation to the module header and
+\fBIMPORT\fP statements. This provides enough information for
+dependency analysis , but not enough for
+general browsing or pre-linking. The advantage is that compilations
+are much faster and memory usage is kept to a minimum.
+.TP
+.B \-Verbose
+This option provides output on the standard error stream about
+the actions of the tool. It is useful to observe the effects of
+the filter options on the set of units discovered from the
+search path.. 

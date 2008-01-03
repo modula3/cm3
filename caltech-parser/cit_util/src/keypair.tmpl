@@ -1,0 +1,11 @@
+%
+% $Id: keypair.tmpl,v 1.2 2001-09-19 14:07:43 wagner Exp $
+%
+
+readonly proc KeyPair(nm, k1, k2) is
+	Build_generic_module(nm & "Pair", "KeyPair", [k1, k2], [k1, k2])
+end
+
+readonly proc keyPair(nm, k1, k2) is
+	build_generic_module(nm & "Pair", "KeyPair", [k1, k2], [k1, k2])
+end

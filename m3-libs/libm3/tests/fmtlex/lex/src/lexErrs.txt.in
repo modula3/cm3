@@ -1,0 +1,43 @@
+# Last modified on Mon Dec 13 16:38:19 PST 1993 by heydon
+
+# The examples in this file should all produce lexical errors. Most of the
+# examples were created by examing the "Lex.m3" source file and picking inputs
+# to test each error case.
+
+# scan (matches non-blanks)
+# There is no way for Lex.Scan to fail; it doesn't raise Lex.Error.
+
+# match
+m abc abde	# => "de"
+m abcde abc	# => ""
+
+# booleans
+b tru		# => ""
+b truXYZ	# => "XYZ"
+
+# signed base-10 integers
+i		# => ""
+i + 5		# => " 5"
+i -ABC		# => "ABC"
+
+# signed integers (not base 10)
+i -3_1234ABC	# => "ABC"
+I 3 -1234ABC	# => "ABC"
+i 9_789012ABC	# => "ABC"
+I 9 789012ABC	# => "ABC"
+i 11_789ABCXYZ	# => "XYZ"
+I 11 789ABCXYZ	# => "XYZ"
+i 5_ABC		# => "ABC"
+
+# unsigned integers
+u		# => ""
+u -2		# => "-2"
+u 5_ABC		# => "ABC"
+
+# single-precision real numbers
+r ..		# => "."
+r .		# => ""
+
+# double-precision real numbers
+
+# extended-precision real numbers

@@ -1,0 +1,54 @@
+starting the outer try
+starting the inner try
+no exception raised
+executing the mandatory part of the inner try
+finishing the outer try
+starting the outer try
+starting the inner try
+raising h (3)
+executing the mandatory part of the inner try
+handling h (3)
+--------------
+raising e
+innermost finally
+outermost finally
+handling e
+------------- 6
+1  raising outer h (7)
+2  raising finally h (2)
+3  handling finally h (2)
+4  finishing the inner finally
+5  a simpler finally
+6  handling outer h (7)
+
+--- exit within a finally ----- 2
+1  before the exit
+2  finally during an exit
+
+--------------
+raising outer h (7)
+raising finally e
+handling e
+--------------
+raising outer h (7)
+raising finally h (2)
+handling h (2)
+--------------
+before the try
+nothing
+no exception raised
+after the try
+
+before the try
+raising e
+handling e
+after the try
+
+before the try
+raising f
+handling f
+after the try
+
+
+done
+

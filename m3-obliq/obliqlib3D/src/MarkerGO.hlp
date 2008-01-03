@@ -1,0 +1,15 @@
+  MarkerGO_New(point: PointVal): MarkerGO        
+  MarkerGO_Center: PointPropName                  
+  MarkerGO_Color: ColorPropName                   
+  MarkerGO_Scale: RealPropName                    
+  MarkerGO_Type: MarkerTypePropName               
+  MarkerGO_SetCenter(o: GO, p: PointVal): Ok     
+  MarkerGO_SetColor(o: GO, c: ColorVal): Ok      
+  MarkerGO_SetScale(o: GO, r: RealVal): Ok       
+  MarkerGO_SetType(o: GO, t: MarkerTypeVal): Ok  
+WHERE                                             
+  MarkerGO <: GO                                   
+  PointVal = PointPropVal + Point3                
+  RealVal = RealPropVal + Real + Int
+  ColorVal = ColorPropVal + Color + Text          
+  MarkerTypeVal = MarkerTypePropVal + MarkerType       

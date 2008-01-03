@@ -1,0 +1,7 @@
+  KeyCB_New(invoke: M): KeyCB
+WHERE
+  KeyCB <: ProxiedObj & { invoke: M }
+  M = Self (X <: KeyCB) (KeyRec) => Ok
+  KeyRec = { change: Text, wentDown: Bool, modifiers: [Modifier] }
+  Modifier = Text (one of "Left", "Middle", "Right",
+                   "Shift", "Lock", "Control", "Option")

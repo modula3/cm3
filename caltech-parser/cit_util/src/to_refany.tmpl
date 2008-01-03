@@ -1,0 +1,5 @@
+readonly proc ord_to_refany(nm, type) is
+	local ref = nm & "Ref"
+	Ref(nm, type)
+	ToRefany(ref, ref)
+end

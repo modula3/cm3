@@ -1,0 +1,32 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 20:57:05 PDT 1993 by mjordan                  */
+
+Interface("M3CBE_C_sun3")
+Interface("M3CBE_C_mips")
+Interface("M3CBackEnd_C")
+Interface("M3CBE_C_vax")
+Interface("M3CBE_C_sparc")
+Interface("M3CBE_C_i386")
+Interface("M3CBE_C_Tool")
+Interface("M3CBackEnd_C_cc")
+Generic_interface("M3CBackEnd_Float")
+Interface("M3CBackEnd_Float_Extended")
+Interface("M3CBackEnd_Float_LongReal")
+Interface("M3CBackEnd_Float_Real")
+
+implementation("M3CBE_C_sun3")
+implementation("M3CBE_C_mips")
+implementation("M3CBackEnd_C")
+implementation("M3CBE_C_vax")
+implementation("M3CBackEnd_C_cc")
+implementation("M3CBE_C_sparc")
+implementation("M3CBE_C_i386")
+implementation("M3CBE_C_Tool")
+generic_implementation("M3CBackEnd_Float")
+implementation("M3CBackEnd_Float_Extended")
+implementation("M3CBackEnd_Float_LongReal")
+implementation("M3CBackEnd_Float_Real")
+

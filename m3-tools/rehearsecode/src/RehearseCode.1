@@ -1,0 +1,74 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Tue May 17 17:20:12 PDT 1994 by mhb   
+.nh
+.TH RehearseCode 1
+.SH NAME
+RehearseCode \- run through Mentor CodeView source file annotations.
+
+.SH SYNTAX
+.B RehearseCode filename1 [filename2 [... filename4]]
+
+.SH DESCRIPTION
+
+The Mentor CodeView uses annotated files to display algorithm source
+code. 
+.B RehearseCode 
+helps you check that multiple sources in different
+languages have matching annotations by simultaneously displaying
+corresponding regions in the source files.
+
+The annotations indicate sections of the file to be used as the source
+code for a procedure, and delimit regions to be highlighted at a given
+point in the running program.  Regions are numbered within a procedure.  
+A procedure header has the form "@procedure-name\n".  A matching trailer 
+marks the end of the procedure.  Procedures must be disjoint.  The 
+procedure header implicitly starts region #0.  Other regions are started 
+with numbered tags of the form "@#### ", where '#' is a decimal digit.  
+A single '@' character delimits the end of a region.  When an '@' 
+character appears in the source, another '@' can be used to quote it. 
+Here is a simple example:
+
+        @GCD
+        PROCEDURE GCD (u, v: INTEGER): INTEGER@ =
+          BEGIN
+            @1 IF v = 0 THEN@ @2 RETURN u;@
+                     ELSE @3 RETURN GCD (v, u MOD v);@
+            END;
+          END GCD;
+        @GCD
+
+.B RehearseCode 
+installs two windows: a control panel and a CodeView window 
+containing one view for each source file specified.  The control panel 
+consists of four buttons, a browser containing all the procedure names, 
+and an error/information log.  File access errors, annotation syntax 
+errors, and annotation inconsistencies are written to the log.
+
+Clicking on a procedure name causes the source for the procedure to 
+be displayed as it will appear in each CodeView, with the procedure 
+header highlighted (region #0).  Pressing the "Step" button will 
+highlight the next region number from all the sources.  If that region 
+is not contained in a particular CodeView, its highlight will remain 
+unchanged.  When the regions are exhausted, "Step" restarts at the 
+procedure header.
+    
+The "Run" button automatically invokes "Step" periodically until the 
+end of the sequence of regions is reached.  "Run" will also start over 
+if invoked when the last of the regions is highlighted.  Clicking any 
+button or choosing a procedure name cancels the repeating before 
+performing the chosen action. 
+    
+Choosing "Reparse" is nearly the same as restarting the program: all 
+current state is cleared and the annotated source files are read and 
+parsed again.  Window shapes are unaffected.
+
+"Exit" quits the program.
+
+.SH AUTHOR OF OBJECT
+Michael Sclafani
+
+.SH AUTHOR OF DOCUMENTATION
+Michael Sclafani

@@ -1,0 +1,6 @@
+  PolygonGO_New(pts: [PointVal]): PolygonGO                          
+  PolygonGO_NewWithShapeHint(pts: [PointVal], s: Shape): PolygonGO   
+WHERE                                                                 
+  PolygonGO <: SurfaceGO                                               
+  PointVal = PointPropVal + Point3                                    
+  Shape = Text  (one of "Unknown", "Convex", "NonConvex", "Complex") 

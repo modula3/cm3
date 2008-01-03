@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3markup/src/CMarkUp.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3markup/src/CMarkUp.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright (C) 1992, Digital Equipment Corporation                         
+ All rights reserved.                                                      
+ See the file COPYRIGHT for a full description.                            
+                                                                           
+ Last modified on Thu Dec  8 10:46:37 PST 1994 by kalsow                   
+
+<P><PRE>MODULE <module><implements><A HREF="CMarkUp.i3.html">CMarkUp</A></implements></module>;
+
+IMPORT <A HREF="../../libbuf/src/Buf.i3.html">Buf</A>, <A HREF="../../libbuf/src/Wx.i3.html">Wx</A>;
+
+PROCEDURE <A NAME="Annotate"><procedure>Annotate</procedure></A> (buf: Buf.T;  wx: Wx.T) =
+  BEGIN
+    Wx.PutText (wx, &quot;&lt;PRE&gt;\n&quot;);
+    Wx.PutStr  (wx, buf^);
+    Wx.PutText (wx, &quot;/n&lt;/PRE&gt;\n&quot;);
+  END Annotate;
+
+BEGIN
+END CMarkUp.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

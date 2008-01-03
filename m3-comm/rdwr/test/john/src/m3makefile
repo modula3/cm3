@@ -1,0 +1,7 @@
+import("libm3")
+import("rdwr")
+build_standalone()
+implementation("Main")
+% module("RdWrPipe")
+
+program("pipetest")

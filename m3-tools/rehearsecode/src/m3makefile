@@ -1,0 +1,13 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+/*                                                                           */
+/* Last modified on Wed Dec 22 14:48:47 PST 1993 by mhb                      */
+
+import         ("codeview")
+
+resource       ("RehearseCode.fv")
+implementation ("RehearseCode")
+bundle         ("RehearseCodeBundle")
+ManPage        ("RehearseCode", 1)
+Program        ("RehearseCode")

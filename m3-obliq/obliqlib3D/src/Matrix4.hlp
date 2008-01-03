@@ -1,0 +1,10 @@
+  Matrix4_Id: Matrix4                                   
+  Matrix4_Multiply(m1 m2: Matrix4): Matrix4            
+  Matrix4_Translate(m: Matrix4, x y z: Num): Matrix4   
+  Matrix4_Scale(m: Matrix4, x y z: Num): Matrix4       
+  Matrix4_RotateX(m: Matrix4, a: Num): Matrix4         
+  Matrix4_RotateY(m: Matrix4, a: Num): Matrix4         
+  Matrix4_RotateZ(m: Matrix4, a: Num): Matrix4         
+WHERE                                                   
+  Matrix4 is opaque                                     
+  Num = Real + Int                                      

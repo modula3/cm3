@@ -1,0 +1,111 @@
+b tru
+** Raised "Lex.Error"
+
+b truXYZ
+** Raised "Lex.Error"
+
+i
+-> ** Raised "Lex.Error"
+
+i + 5
+-> ** Raised "Lex.Error"
+
+i -ABC
+-> ** Raised "Lex.Error"
+
+i -3_1234ABC
+-> ** Raised "Lex.Error"
+
+I 3 -1234ABC
+-> ** Raised "Lex.Error"
+
+i 9_789012ABC
+-> ** Raised "Lex.Error"
+
+I 9 789012ABC
+-> ** Raised "Lex.Error"
+
+i 11_789ABCXYZ
+-> ** Raised "Lex.Error"
+
+I 11 789ABCXYZ
+-> ** Raised "Lex.Error"
+
+i 5_ABC	
+-> ** Raised "Lex.Error"
+
+i 02_101ABC
+-> ** Raised "Lex.Error"
+
+i 016_ABC
+-> ** Raised "Lex.Error"
+
+i 1_0000
+-> ** Raised "Lex.Error"
+
+i 17_1234
+-> ** Raised "Lex.Error"
+
+u	
+-> ** Raised "Lex.Error"
+
+u -2	
+-> ** Raised "Lex.Error"
+
+u 5_ABC 
+-> ** Raised "Lex.Error"
+
+r ..	
+** Raised "Lex.Error"
+
+r .	
+** Raised "Lex.Error"
+
+r 1x  
+** Raised "Lex.Error"
+
+r -1x  
+** Raised "Lex.Error"
+
+r .5.	
+** Raised "Lex.Error"
+
+r .0.	
+** Raised "Lex.Error"
+
+r 0.0.	
+** Raised "Lex.Error"
+
+r 0..	
+** Raised "Lex.Error"
+
+r 1.0e2. 
+** Raised "Lex.Error"
+
+r 0.5.	
+** Raised "Lex.Error"
+
+r 1 .	
+** Raised "Lex.Error"
+
+r -1 .	
+** Raised "Lex.Error"
+
+r .5 .	
+** Raised "Lex.Error"
+
+r .0 .	
+** Raised "Lex.Error"
+
+r 0.0 .	
+** Raised "Lex.Error"
+
+r 0. .	
+** Raised "Lex.Error"
+
+r 1.0e2 . 
+** Raised "Lex.Error"
+
+r 0.5 .	
+** Raised "Lex.Error"
+

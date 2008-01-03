@@ -1,0 +1,15 @@
+% Copyright 1993 Digital Equipment Corporation.
+% Distributed only by permission.
+%
+% Last modified on Fri Oct 28 15:38:19 PDT 1994 by kalsow
+%      modified on Fri Sep 16 19:16:35 PDT 1994 by heydon
+
+Generic_module    ("PQueue")
+Generic_interface ("PQueueRep")
+template          ("pqueue")
+
+%% standard instances
+Pqueue ("Atom", "Atom")
+Pqueue ("Int",  "Integer")
+Pqueue ("Ref",  "Refany")
+Pqueue ("Text", "Text")

@@ -1,0 +1,330 @@
+(Border (Pen 0)
+  (Insert "shared.fv")
+
+  (Macro TextBubble BOA (child text)
+  `(Help ,child
+    (Border (Pen 1) (Color "Black") (BgColor "LightYellow")
+      (Rim (Pen 4)
+        (Text ,text)))))
+
+  (Macro myMenu BOA
+    (name anchor help menu)
+    `(TextBubble (Filter (Shape (Width 0 + 10000)
+       (Menu ,name NotInTrestle
+         (HBox
+           (Fill)
+           (Shape (Width + 0) ,anchor)
+           (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+           (Fill))
+         (borderIf2D (VBox (bgActive) ,@menu)))))
+       ,help))
+
+  (Macro fixedBtn BOA
+    (filterName name body help)
+    `(TextBubble (Filter ,filterName
+       (Filter
+         (Shape (Width 0 + 10000)
+           (Button ,name ,body))))
+       ,help))
+
+  (ZSplit
+    %MainZSplit
+    (ZBackground
+      (HTile
+        %MainHTile
+        (Shape
+          (Width 0 + 99999)
+          (VTile
+            (VBox
+              %FixedBtnsAndBrowsers
+              (HBox
+                (HBox
+                  (bgPassive)
+                  (myMenu
+                    %GeneralMenu
+                    (HBox
+                      (TSplit
+                        %IconTSplit
+                        (Pixmap "noMailIcon.pbm")
+                        (Pixmap "mailIcon.pbm"))
+                      (Glue 3))
+		    "General commands"
+                    ((MButton
+                       %About
+                       (Text
+                         LeftAlign
+                         "About Postcard ..."))
+                      (MButton
+                        %Help
+                        (Text
+                          LeftAlign
+                          "Help ..."))
+                      (MButton
+                          %SetConfiguration
+                          (Text
+                            LeftAlign
+                            "Set Configuration ..."))
+                      (Filter
+                        (MButton
+                          %Rescreen
+                          (Text
+                            LeftAlign
+                            "Rescreen ...")))
+                      (MButton
+                        %Quit
+                        (Text LeftAlign "Quit"))))
+                  (barIf2D)
+                  (myMenu
+                    %FoldersMenu
+                    "Folders"
+		    "Operations on folders"
+                    ((MButton
+                           %NewFolder
+                           (Text
+                             LeftAlign
+                             "Add Folder ..."))
+                      (Filter
+                        %RescanFilter
+                        (MButton
+                            %Rescan
+                            (Text
+                              LeftAlign
+                              "Rescan ...")))
+                      (Filter
+                        %SortPackFilter
+                        (MButton
+                            %SortPack
+                            (Text
+                              LeftAlign
+                              "Sort & Pack ...")))
+                      (Filter
+                        %PurgeFilter
+                        (MButton
+                            %Purge
+                            (Text
+                              LeftAlign
+                              "Purge ...")))
+                      (Filter
+                        %RemoveFilter
+                        (MButton
+                            %RemoveFolder
+                            (Text
+                              LeftAlign
+                              "Remove Folder ...")))))
+                  (barIf2D)
+                  (myMenu
+                    %BrowserMenu
+                    "Browse"
+		    "Browser commands"
+                    ((MButton
+                           %Find
+                           (Text
+                             LeftAlign
+                             "Search Private Folders ..."))
+                      (MButton
+                        %NI
+                        (HBox
+                          (Text
+                            LeftAlign
+                            "Browse Bulletin Boards ...")
+                          (Glue 12)
+                          (Shape
+                            (Width + 0)
+                            (Pixmap "middle.pbm"))
+                          (Glue 3)))
+                      (Filter
+                        %ShowConvFilter
+                        (MButton
+                            %ShowConversation
+                            (Text
+                              LeftAlign
+                              "Browse Discussion")))
+                      (Filter
+                        %LoadPrevFilter
+                        Dormant
+                        (MButton
+                            %LoadPrevious
+                            (HBox
+                              (Text
+                                LeftAlign
+                                "Load Previous Contents")
+                              (Glue 12)
+                              (Shape
+                                (Width + 0)
+                                (Pixmap
+                                  "right.pbm"))
+                              (Glue 3))))
+                      (Glue 3)
+                      (menuSep)
+                      (Glue 3)
+                      (Filter
+                        %PrintFilter
+                        (MButton
+                            %Print
+                            (Text
+                              LeftAlign
+                              "Print Selected Messages ...")))
+                      (Filter
+                        %SaveFilter
+                        (MButton
+                            %Save
+                            (Text
+                              LeftAlign
+                              "Save Selected Messages ..."))))))
+                (barIf2D)
+                (fixedBtn
+                  %IncFilter
+                  %Inc
+                  (Pixmap "inc.pbm")
+		  "incorporate new mail")
+                (barIf2D)
+                (fixedBtn
+                  %NewsFilter
+                  %News
+                  (Pixmap "news.pbm")
+		  "visit next newsgroup with unread news")
+                (barIf2D)
+                (TextBubble 
+		  (Shape (Width 0 + 30000)
+                  (bgPassive)
+                  (Text
+                    (Margin 6)
+                    RightAlign
+                    %Status
+                    "Status"))
+		  "status message area")
+                (Bar 1))
+              (contents
+                (Shape
+                    (Height 72 + Infinity - 72)
+                    (HTile
+                      (TextBubble (Shape (Width 0 + 99999)
+                        (HBox
+                          (Generic %Headers)
+                          (Bar 1)))  "message headers") 
+                      (ZSplit
+                        %FoldersWrap
+                        (ZBackground
+                          (TextBubble (Shape (Width 0 + 33333)
+                            (HBox
+                              (Bar 1)
+			      (Generic %Folders)
+                              (Bar 1)))  "list of folders"))
+                        (ZChild
+                          %FoldersZChild
+                          Open
+                          (At 1.0 0.0 NE)
+                          (ShadowSize 2)
+                          (HBox
+                            (Bar 1)
+                            (VBox
+                              (PageButton
+                                %FoldersFlip
+                                (For FoldersZoom)
+                                (Rim
+                                  (Pen 2)
+                                  (TSplit
+                                    %FoldersZoom
+                                    Circular
+                                    (Pixmap
+                                      "menuArrow.pbm")
+                                    (Pixmap
+                                      "upArrow.pbm"))))
+                              (Bar 1))
+                            (Bar 1)))))))
+              (HBox
+                (fixedBtn
+                  %MoveFilter
+                  %Move
+                  "Move"
+		  "move selected message(s) to selected folder")
+                (barIf2D)
+                (fixedBtn
+                  %CopyFilter
+                  %Copy
+                  "Copy"
+		  "copy selected message(s) to selected folder")
+                (barIf2D)
+                (fixedBtn
+                  %DeleteFilter
+                  %Delete
+                  "Delete"
+		  "delete selected message(s)")
+                (HBox
+                  (bgPassive)
+                  (barIf2D)
+                  (fixedBtn
+                    %DownArrowFilter
+                    %DownArrow
+                    (Pixmap "nextArrow.pbm")
+		    "display the next message in current folder")
+                  (barIf2D)
+                  (fixedBtn
+                    %UpArrowFilter
+                    %UpArrow
+                    (Pixmap "prevArrow.pbm")
+		    "display the previous message in current folder")
+                  (barIf2D))
+                (fixedBtn
+                  %ComposeFilter
+                  %Compose
+                  "Compose"
+		  "compose a new message")
+                (barIf2D)
+                (fixedBtn
+                  %ForwFilter
+                  %Forward
+                  "Forward"
+		  "forward the selected message(s)")
+                (barIf2D)
+                (myMenu
+                  %ReplyMenu
+                  "Reply"
+		  "Reply to selected message(s)"
+                  ((Filter
+                     %ReplyToSenderFilter
+                     (MButton
+                         %ReplyToSender
+                         (HBox
+                           (Text
+                             LeftAlign
+                             "Reply to Sender")
+                           (Glue 12)
+                           (Shape
+                             (Width + 0)
+                             (Pixmap "middle.pbm"))
+                           (Glue 3))))
+                    (Filter
+                      %ReplyToAllFilter
+                      (MButton
+                          %ReplyToAll
+                          (HBox
+                            (Text
+                              LeftAlign
+                              "Reply to All")
+                            (Glue 12)
+                            (Shape
+                              (Width + 0)
+                              (Pixmap "right.pbm"))
+                            (Glue 3))))))
+                (Bar 1))
+              (Bar 1))
+            (HBox
+              (Shape
+                (Width 0 + Infinity)
+                (VTile %Splitter))
+              (Bar 1))))))
+    (ZChild
+      (At 0.3 0.3 NW)
+      (dlgT
+        %AsyncErrorDlg
+        (dlgClose %AsyncErrorClose)
+        "Error in Asynchronous Thread ..."
+        (message %AsyncErrorText)))
+    (ZChild
+      %UsedOnlyToReadTheirColorAndFontProperties
+      (VBox
+        (Text %ContentsColor (bgContents) "")
+        (Text %BrowserScrollColor (bgScroll) "")
+        (Text %BrowserHiliteColor (bgHilite) "")
+        (Text %LabelFont "")))))

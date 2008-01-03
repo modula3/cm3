@@ -1,0 +1,32 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+(* Last modified on Mon Feb 10 17:52:20 PST 1992 by muller                   *)
+(*      modified on Mon Feb 10 16:54:50 PST 1992 by ayers                    *)
+
+
+The "dpslib" package is intended to be a "sandbox" that enables the client
+to easily play around with Display PostScript using Modula-3, without
+worrying at all about the C interfaces to X and to DPS.
+
+The interfaces are structured to support subclassing, so that the
+client may easily extend existing widgets.
+
+The calling structure is quite hierarchical.  The underlying software,
+for example, when passing a mouse-click to a display list element, does 
+not try to figure out what (leaf) element should get the click, but rather passes it to the root of the display-list tree. That node either 
+processes the click or figures out  which of its direct children should 
+get the click, and passes it along.  Similarly, an element paints
+to the screen by creating a PostScript text that describes a painting operation, and passing it up to its parent element; only the root
+element actually writes the PostScript to the interpreter.
+This hierarchical dynamic behavior facilitates the writing of "filter"
+display list elements, that can, e.g., make all of their descendant's 
+paint in red, or translate the coordinate system "below" them so that 
+they can cheaply implement scrolling.
+
+The "dpstest" contains two main programs that utilize dpslib in
+the fashion outlined above.  Examine them for ideas on how to
+play in the "sandbox."
+
+Bob Ayers, 6 February 1992

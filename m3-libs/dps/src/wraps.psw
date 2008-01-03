@@ -1,0 +1,36 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Mon Feb 10 17:56:18 PST 1992 by muller                   */
+/*      modified on Mon Feb 10 16:54:50 PST 1992 by ayers                    */
+
+
+
+defineps GetTransformWrap (DPSContext ctxt | float ctm[6], invctm[6];
+        int *xOffset, *yOffset)
+      matrix currentmatrix dup ctm
+      matrix invertmatrix invctm
+      currentXoffset xOffset yOffset
+endps
+
+defineps XYHitWrap (DPSContext ctxt; float x, y; char *u | boolean *in)
+      x y u inufill in
+endps 
+  
+defineps FetchIntegerWrap (DPSContext ctxt; char *u | int *flo)
+      u flo
+endps 
+  
+defineps FetchNumberWrap (DPSContext ctxt; char *u | float *flo)
+      u flo
+endps 
+  
+defineps FetchStringWrap (DPSContext ctxt; char *u | char *str)
+      u str
+endps 
+  
+defineps StringwidthWrap (DPSContext ctxt; char *f; char *s | float *dx, *dy)
+      gsave f setfont (s) stringwidth grestore dx dy
+endps   
+

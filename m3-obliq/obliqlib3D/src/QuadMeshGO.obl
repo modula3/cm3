@@ -1,0 +1,18 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Wed Jul 20 17:47:37 PDT 1994 by najork                   *)
+(*       Created on Wed Jun  1 21:54:30 PDT 1994 by najork                   *)
+
+
+module QuadMeshGOWrap for QuadMeshGO;
+
+let TProto = clone (SurfaceGO_TProto, {
+  addFacetColors =>
+    meth (self, cols) QuadMeshGO_AddFacetColors (self, cols) end,
+  setColorOfFacet =>
+    meth (self, i, j, col) QuadMeshGO_SetColorOfFacet (self, i, j, col) end
+});
+
+end module;

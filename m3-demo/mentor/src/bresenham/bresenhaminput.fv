@@ -1,0 +1,9 @@
+#| Copyright 1993 Digital Equipment Corporation. |#
+#| Distributed only by permission. |#
+#| Last modified on Tue Jul 13 19:31:37 PDT 1993 by comba |#
+#|      modified on Sun Jul 11 23:10:48 PDT 1993 by mhb |#
+
+(VBox
+  (Glue 5)
+  (HBox (Boolean %E "Show Errors") Fill) (Glue 5))
+

@@ -1,0 +1,28 @@
+  ColorProp_NewConst(r: Col): ColorPropVal                       
+  ColorProp_NewSync(ah: AnimHandle, r: Col): ColorPropVal        
+  ColorProp_NewAsync(beh: ColorPropAsyncBeh): ColorPropVal              
+  ColorProp_NewDep(beh: ColorPropDepBeh): ColorPropVal                  
+  ColorProp_NewConstBeh(r: Col): ColorPropConstBeh               
+  ColorProp_NewSyncBeh(ah: AnimHandle, r: Col): ColorPropSyncBeh 
+  ColorProp_NewAsyncBeh(compute: M1):ColorPropAsyncBeh                  
+  ColorProp_NewDepBeh(compute: M2):ColorPropDepBeh                      
+  ColorProp_NewRequest(start dur: Num, value: M3): ColorPropRequest    
+WHERE                                                                   
+  ColorPropName <: PropName & { bind: (v: ColorPropVal) => Prop }          
+  ColorPropVal <: PropVal & { getBeh: () => ColorPropBeh,                
+                              setBeh: (ColorPropBeh) => Ok,             
+                              get: () => Color,                         
+                              value: (Num) => Color }                   
+  ColorPropBeh <: PropBeh                                                
+  ColorPropConstBeh <: ColorPropBeh & { set: (Col) => Ok }        
+  ColorPropSyncBeh <: ColorPropBeh &                                     
+     { addRequest: (ColorPropRequest) => Ok ! Prop_BadInterval,         
+       rgbLinChangeTo: (Col,Num,Num) => Ok ! Prop_BadInterval }
+  ColorPropAsyncBeh <: ColorPropBeh & { compute: M1 }                    
+  ColorPropDepBeh <: ColorPropBeh & { compute: M2 }                      
+  ColorPropRequest <: PropRequest & { value: M3 }                        
+  M1 = Self (X <: ColorPropAsyncBeh) (Real) => Color                    
+  M2 = Self (X <: ColorPropDepBeh) (Real) => Color                      
+  M3 = Self (X <: ColorPropRequest) (Color,Real) => Color               
+  Col = Color + Text                                             
+  Num = Real + Int

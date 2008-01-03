@@ -1,0 +1,65 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTPacking.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3core/src/runtime/common/RTPacking.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1994, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+                                                             
+ Last modified on Fri May  6 14:38:14 PDT 1994 by kalsow     
+
+<P><PRE>INTERFACE <interface><A HREF="RTPacking.m3.html">RTPacking</A></interface>;
+
+TYPE
+  T = RECORD
+    word_size     : CARDINAL;  (* 8, 16, 32, or 64 *)
+    max_align     : CARDINAL;  (* 8, 16, 32, or 64 *)
+    struct_align  : CARDINAL;  (* 8, 16, 32, or 64 *)
+    float         : FloatKind;
+    little_endian : BOOLEAN;
+  END;
+
+TYPE
+  FloatKind = { IEEE, VAX, other };
+
+PROCEDURE <A HREF="RTPacking.m3.html#Local">Local</A> (): T;
+</PRE><BLOCKQUOTE><EM> Return the packing rules for the host machine </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RTPacking.m3.html#Encode">Encode</A> (READONLY t: T): INTEGER;
+PROCEDURE <A HREF="RTPacking.m3.html#Decode">Decode</A> (i: INTEGER): T;
+</PRE><BLOCKQUOTE><EM> convert between the packed and unpacked representations of a 'T' </EM></BLOCKQUOTE><PRE>
+
+END RTPacking.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

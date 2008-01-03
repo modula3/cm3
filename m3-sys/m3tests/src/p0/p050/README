@@ -1,0 +1,51 @@
+Return-Path: 
+Article 124 of srcext.m3:
+Path: jumbo!goldberg@parc.xerox.com
+From: goldberg@parc.xerox.com (David Goldberg)
+Newsgroups: srcext.m3
+Subject: semantics of array parameters
+Message-ID: <9003270548.AA16848@arcturia.parc.xerox.com>
+Date: 26 Mar 90 21:48:44 PST
+Sender: glassman@jumbo.dec.com
+Distribution: src
+Lines: 36
+To: m3
+
+Shouldn't array parameters be copied if there are not VAR (or READONLY?)
+That's not what happens with the SRC compiler, as the following program
+shows:
+
+MODULE Main;
+ 
+IMPORT Wr, Stdio, Fmt;
+
+CONST
+        maxPoints = 300;
+VAR
+        pointarr1: ARRAY [0 .. maxPoints - 1] OF INTEGER;
+
+PROCEDURE FooVar(VAR pointarr: ARRAY OF INTEGER) =
+BEGIN
+        FOR i := 0 TO 10 DO pointarr[i] := 2*i; END;
+END FooVar;
+
+PROCEDURE Foo(pointarr: ARRAY OF INTEGER) =
+BEGIN
+        FOR i := 0 TO 10 DO pointarr[i] := 2*i; END;
+END Foo;
+
+BEGIN
+        FOR i := 0 TO 10 DO pointarr1[i] := i; END;
+        FooVar(pointarr1);
+        Wr.PutText(Stdio.stdout, Fmt.Int(pointarr1[1]));
+
+        FOR i := 0 TO 10 DO pointarr1[i] := i; END;
+        Foo(pointarr1);
+        Wr.PutText(Stdio.stdout, Fmt.Int(pointarr1[1])); 
+END Main. 
+
+
+	David Goldberg
+	goldberg@parc.xerox.com
+
+

@@ -1,0 +1,5 @@
+"../src/B.i3", line 9: A -> B -> A: circular imports
+"../src/B.i3", line 7: symbol not exported (A.a)
+2 errors encountered
+"../src/B.i3", line 9: imported interface contains errors (A)
+1 error encountered

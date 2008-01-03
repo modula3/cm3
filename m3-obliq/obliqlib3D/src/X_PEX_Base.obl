@@ -1,0 +1,17 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Wed Jul 20 17:43:54 PDT 1994 by najork                   *)
+(*       Created on Tue May 31 11:43:38 PDT 1994 by najork                   *)
+
+
+module X`PEX`BaseWrap for X`PEX`Base;
+
+let TProto = clone (GraphicsBase_TProto, {
+  changeTitle => meth (self, title) X`PEX`Base_ChangeTitle (self, title) end,
+  awaitDelete => meth (self)        X`PEX`Base_AwaitDelete (self)        end,
+  destroy     => meth (self)        X`PEX`Base_Destroy (self)            end
+});
+
+end module;

@@ -1,0 +1,84 @@
+\manpage{mtex2man Man Page}{mtex2man}{1}
+
+\section{NAME}
+
+mtex2man - translate mtex(7) files to man format
+
+\section{SYNTAX}
+
+\bf{mtex2man}
+
+\section{DESCRIPTION}
+
+\it{mtex2man} is a filter that reads a file in \link{mtex.7.html}
+{mtex(7)} format from its standard input, and writes a \it{man}-format file to
+standard output suitable for viewing with nroff(1)/troff(1) and the man(7) or
+man.nopage(7) macro packages.
+
+\it{mtex2man} is written entirely in LIM (see lim(1)).
+
+\section{SPECIAL CHARACTERS}
+
+There are two special characters for the man output format. Here
+are the characters and the strings they are translated to by
+mtex2man(1):
+
+\begin{flushleft}
+``\tt{-}'' becomes ``\tt{\\-}''\newline
+``\tt{\\}'' becomes ``\tt{\\\\}''
+\end{flushleft}
+
+To prevent the first character from being translated within the
+scope of a \it{roff} environment, you must escape it with a
+\tt{\\} (backslash) character.
+
+Since the backslash character is the escape character used by mtex,
+the way to signal one in the input is by escaping it. Hence, the
+second translation listed above says that ``\tt{\\\\}'' in the input
+become ``\tt{\\\\}'' in the output.
+
+\section{DIAGNOSTICS}
+
+See the \link{mtex.7.html#Diagnostics}{Diagnostics} section of the
+mtex(7) manpage for a complete description.
+
+\section{BUGS}
+
+The \tt{\\tt} command for typesetting in fixed-width font is currently
+ignored.
+
+For now, there is no way to produce a single \tt{\\} (backslash)
+character in a \it{roff} environment.
+
+An escaped backslash character (\tt{\\\\}) should not be used in
+arguments to the \tt{\\item} command within the \tt{description}
+environment. There seems to be a problem with using backslash in
+arguments to certain man(7) macros.
+
+The \tt{"} (double-quote) character should not be used in arguments to the
+\tt{\\manpage} and \tt{\\section} commands. This problem seems to be due to a
+mistake in the design of nroff(1)/troff(1), which uses this character
+literally in some contexts but as a method of quoting in others.
+
+Links are not indicated in any way.
+
+\section{SEE ALSO}
+
+\link{mtex.7.html}{mtex(7)},
+\link{mtex2html.1.html}{mtex2html(1)},
+\link{mtex2tex.1.html}{mtex2tex(1)},
+nroff(1), troff(1), man(7), man.nopage(7)
+\begin{roff}
+
+This man page is also available as a hypertext document under Mosaic at URL
+\tt{http://src-www.pa.dec.com/SRC/man/DS/mtex2man.1.html}.
+\end{roff}
+
+\section{AUTHOR OF PROGRAM AND DOCUMENTATION}
+
+\link{http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html}{Allan Heydon}
+(\tt{heydon@src.dec.com})
+
+\begin{verbatim}
+Last modified on Mon Feb  6 16:46:23 PST 1995 by heydon
+\end{verbatim}

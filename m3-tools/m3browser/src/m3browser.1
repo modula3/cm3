@@ -1,0 +1,87 @@
+.\" Copyright (C) 1994, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.nh
+.TH m3browser 1
+.\"------------------------------------------------------------------------
+.SH NAME
+m3browser \- an HTTP server providing virtual Modula-3 web
+.\"------------------------------------------------------------------------
+.SH SYNTAX
+m3browser [\-port p] [\-workers n] [\-refresh m] [\-root x] [\-dir y]...
+.\"------------------------------------------------------------------------
+.SH DESCRIPTION
+M3browser is an HTTP server that provides an on-line view
+of a virtual Modula-3 web.  The server monitors a set
+of Modula-3 packages and renders the Modula-3 source
+as HTML on-the-fly.
+.PP
+While running m3browser periodically updates the file "m3browser.html"
+in the current working directory.  This file should be used as
+the entry point into the virtual Modula-3 web.
+.\"------------------------------------------------------------------------
+.SH "OPTIONS"
+M3browser recognizes the following options:
+.TP
+.bi
+\-port p
+.IP
+Listen on socket
+.i
+p
+for HTTP queries.  (default: 3829)
+.TP
+.bi
+\-workers n
+.IP
+Fork
+.i
+n
+Modula-3 threads
+to answer queries.  (default: 3)
+.TP
+.bi
+\-refresh m
+.IP
+Rescan the packages every
+.i
+m
+minutes.  (default: 30)
+.TP
+.bi
+\-root x
+.IP
+Scan each subdirectory of
+.i
+x
+for Modula-3 packages.
+(default: PKG_USE defined at Modula-3 installation time)
+.TP
+.bi
+\-dir y
+.IP
+Scan directory
+.i
+y
+for derived information in each package.
+(default: DEFAULT_BUILD_DIR defined at Modula-3 installation time)
+.\"------------------------------------------------------------------------
+.SH "BUGS"
+There must be some.
+.\"------------------------------------------------------------------------
+.SH "FILES"
+m3browser.html  \-  the root web page
+.\"------------------------------------------------------------------------
+.SH "AUTHOR OF DOCUMENTATION"
+Bill Kalsow
+.\"------------------------------------------------------------------------
+.SH "AUTHOR OF OBJECT"
+Bill Kalsow
+.PP
+Copyright (C) 1994, Digital Equipment Corporation.
+.br
+Distributed only by permission.
+.br
+.br
+Last modified on Mon Dec  5 08:41:13 PST 1994 by kalsow  
+

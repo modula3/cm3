@@ -1,0 +1,8 @@
+  LightGO_Color: ColorPropName                                       
+  LightGO_Switch: BooleanPropName                                    
+  LightGO_SetColor(go: GO, c: ColorVal): Ok                         
+  LightGO_SetSwitch(go: GO, b: Bool): Ok                            
+WHERE                                                                
+  LightGO <: GO                                                       
+  ColorVal = ColorPropVal + Color + Text                             
+  BooleanVal = BooleanPropVal + Bool                                 

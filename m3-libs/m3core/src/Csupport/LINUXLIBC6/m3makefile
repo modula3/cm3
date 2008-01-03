@@ -1,0 +1,12 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Jun  3 17:52:46 PDT 1996 by heydon  
+%      modified on Fri Aug 13 14:05:13 PDT 1993 by kalsow  
+%      modified on Fri Jun 18 13:18:18 PDT 1993 by harrison
+%      modified on Thu Feb  4 15:58:38 PST 1993 by mjordan
+%      modified on Mon Oct 12 13:51:24 PDT 1992 by muller
+
+c_source ("dtoa")
+

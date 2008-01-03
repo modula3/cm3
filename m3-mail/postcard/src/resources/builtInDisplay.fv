@@ -1,0 +1,81 @@
+(Scale
+  (HScale 1.)
+  (VScale 1.)
+  (Filter
+    %BuiltInDisplayFilter
+    (VBox
+      (Insert "shared.fv")
+      (Bar 1)
+      (HBox
+        (TSplit
+          Flex
+          %DetachTSplit
+          (HBox
+            (Shape (Width 0 + 10000) (Button %DetachOpen "Detach"))
+            (barIf2D)
+            (Shape
+              (Width 0 + 10000)
+              (Menu
+                NotInTrestle
+                (HBox
+                  Fill
+                  (Shape (Width + 0) "View")
+                  (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+                  Fill)
+                (borderIf2D
+                  (VBox
+                    (TSplit
+                      %HeaderTSplit
+                      (MButton
+                        %ShowEntire
+                        (Text LeftAlign "Show Entire Header"))
+                      (MButton
+                        %ShowBrief
+                        (Text LeftAlign "Show Brief Header")))
+                    (MButton
+                      %UseExternalOpen
+                      (Text LeftAlign "Use External Editor"))
+                    (MButton
+                      %UsePostScriptOpen
+                      (Text LeftAlign "Use PostScript Previewer"))))))
+            (barIf2D)
+            (Shape
+              (Width 0 + 10000)
+              (Menu
+                NotInTrestle
+                (HBox
+                  Fill
+                  (Shape (Width + 0) "Edit")
+                  (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+                  Fill)
+                (borderIf2D
+                  (VBox
+                    (MButton %Copy (Text LeftAlign "Copy"))
+                    (MButton %SelectAll (Text LeftAlign "Select All"))))))
+            (barIf2D)
+            (Shape
+              (Width 0 + 10000)
+              (Menu
+                NotInTrestle
+                (HBox
+                  Fill
+                  (Shape (Width + 0) "Print")
+                  (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+                  Fill)
+                (borderIf2D
+                  (VBox
+                    (MButton %PrintOpen (Text LeftAlign "Print Message Text"))
+                    (MButton
+                      %PrintPostScriptOpen
+                      (Text LeftAlign "Print PostScript"))))))
+            (barIf2D))
+          (HBox
+            (Shape (Width 0 + 10000) (Button %CloseOpen "Close"))
+            (barIf2D)
+            (Shape (Width 0 + 30000) (bgPassive) (Text LeftAlign "Detached"))))
+        (Shape
+          (Width 0 + 40000)
+          (bgPassive)
+          (Text RightAlign (Margin 6) %Title "Title")))
+      (contents
+        (Shape (Height 300 + Infinity - 300) (TextEdit %Display ReadOnly))))))

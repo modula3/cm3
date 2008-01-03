@@ -1,0 +1,41 @@
+The "Browse" menu has various commands related to browsing through your mail.
+
+Use middle-click and right-click as shortcuts for "Browse Bulletin Boards" and "Load Previous Contents".
+
+"Search Private Folders" lets you search for a given string anywhere in the message summary lines in the open folder and/or in each of your private folders. In the search dialog, you can use "Next" or "Prev" to search cyclically through multiple occurrences of the search string. You can interrupt a search by clicking "Stop" in the dialog, then "Next" or "Prev" will resume the search from where it left off.
+
+"Browse Bulletin Boards" lets you browse the entire news repository (all newsgroups and bulletin boards, regardless of whether you subscribe to them), with queries that you construct in a dialog. This command uses the "ni" news index server. In the dialog you can press "Count" to see how many messages match a chosen pattern, or "Browse" to load the matching messages into the message list sub-window.  Having loaded them, you can treat them the same as any messages: you can reply to them, forward them, copy them, print them, or save them. The ni server can efficiently handle searches for even a single word in the entire news repository.
+
+There are two ways to compose the pattern. If you click down on a keyword in the current pattern (initially the keyword "false"), you can choose a replacement for a sub-expression of the pattern. When the mouse is pointing at a keyword in the pattern, the sub-expression that will be replaced is outlined. Alternatively, if you press "Flip" you can edit the pattern as plain text. You can press "Flip" to return to the structured view, or remain permanently in the plain text view.
+
+The patterns are composed of expressions similar to the ones described in the man page for ni(1). In the plain text view, you can type any expression acceptable to ni, as well as the extensions provided by Postcard.
+
+The following expression primitives are available through the pop-up menus in the structured view:
+
+	from [string]		matches messages' "from" field
+	group [string]		matches messages' "group" field
+	subject [string]	matches messages' "subject" field
+	to_or_cc [string]	matches messages' "to" and "cc" fields
+	word [word]		matches any word anywhere in the messages
+	date [date]		selects messages by date
+	before [date]		messages preceding the date
+	after [date]		messages following the date
+	in_the_last_week	messages in the preceding 7 days
+	in_the_last_month	messages since this date last month
+	in_the_last_year	messages since this date last year
+
+In these primitives, [string] is any sequence of characters except "\" or ")", and [word] is any sequence of letters and/or digits.  You can use "*" to match arbitrary many characters, or "?" to match any arbitrary single character, or "[abc]" to match any of "a" or "b" or "c".  If you use these wild-cards at the start of the string, the search will be rather slower. Case is not significant. A space character matches any amount of space, tab, or newline characters. See the ni man page for details of the matching algorithm.
+
+A [date] can be exact, such as "2 April 1991" or "2 Apr 91", or a month such as "April" to mean "April this year" or a year such as "91". Again, see the ni man page for details.
+
+The primitive expressions can be composed with "AND", "OR", and "NOT". If you click on "AND", "OR", or "NOT" in an expression, the pop-up menu contains additional options for decomposing expressions.
+
+The "max" field in the dialog limits how many messages may be loaded into the message browser. It takes about 1 millisecond per message to load the browser.
+
+"Browse Discussion" uses the "ni" program to determine all bulletin board messages related to the selected ones.  This finds the closure of all messages referring to the same subject or the same message ID. The messages are then loaded into the message list sub-window, and the first one is selected.  You can browse through them in the usual way, by selecting them.  You can copy them to a private folder, or you can reply to them, forward them, print them, or save them.
+
+"Load Previous Contents" restores the immediately previous contents of the message browser, restoring the previous selection.  You can use this as a one-level undo.  For example, if you press the "news" button to move to another bulletin board, you can use this command to go back to the previous one, then use it again to go to the new one. Or if you use "Browse Discussion" you can then use this command to go back to your previous context.
+
+"Print Selected Messages" lets you print the selected messages. It offers a dialog with a print command initialized from the one you set in the configuration dialog. You can modify your choice of print-command in this dialog on a one-time basis. Subsequent message printing uses the one from the configuration dialog again.
+
+"Save Selected Messages" will append the selected messages to a file.

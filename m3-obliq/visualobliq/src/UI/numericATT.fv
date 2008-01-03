@@ -1,0 +1,24 @@
+ (Shape %numericatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Numeric")
+     (Glue 10)
+     (HBox
+       (Glue 10)
+             (VBox  (Field "Min  :" 150  (Numeric (TabTo numVal) %numMin  ))
+                 (Glue 3)
+                (Field "Value :" 150  (Numeric (TabTo numMax) %numVal  ))
+                (Glue 3)
+                (Field "Max  :" 150  (Numeric (TabTo name) %numMax  ))
+               )
+      (Glue 50) Fill
+              (VBox  
+                  (Boolean %numAllowEmpty "Allow Empty")
+                  Fill
+                  (Boolean %numHideButtons "Hide Buttons")
+               )
+        (Glue 10)
+     )
+      Fill
+   )
+  )

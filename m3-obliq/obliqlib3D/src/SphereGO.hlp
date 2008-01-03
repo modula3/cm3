@@ -1,0 +1,10 @@
+  SphereGO_New(p: PointVal, rad: RealVal): SphereGO                    
+  SphereGO_NewWithPrec(p: PointVal, rad: RealVal, prec: Int): SphereGO 
+  SphereGO_Center: PointPropName                                       
+  SphereGO_Radius: RealPropName                                        
+  SphereGO_SetCenter(go: GO, center: PointVal): Ok                    
+  SphereGO_SetRadius(go: GO, radius: RealVal): Ok                     
+WHERE                                                                  
+  SphereGO <: SurfaceGO                                                 
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int

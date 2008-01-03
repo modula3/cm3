@@ -1,0 +1,21 @@
+m3tk-pl.2 package -- created Fri Apr 3 14:27:46 PST 1992 by mjordan
+current owner mjordan
+
+This package contains the pre-linker tool of the Modula-3 toolkit.
+The pre-linker is based on ASTs and computes some additional attributes
+defined in the M3AST_PL interface. A tool that wants to operate on
+complete programs will find this package indispensible. 
+
+M3LTool         The pre-linker tool
+M3LBackEnd      Interface to an (imaginary) linker back end (e.g. ld)
+M3LDepends      Computes the "pl_depends_on" attribute
+M3LExports      Checks all procedures implemented and opaque types revealed
+M3LInitOrder    Computes initialisation order based on "pl_depends_on"
+M3LMain         Finds "Main" module(s) in a context
+M3LMethodTable  Computes the "pl_method_table" attribute for object types
+M3LOpaque       Causes the "current revelation" attribute to be the 
+                same as the "concrete" revelation
+M3LProgContext  Creates a program context from another context
+M3LReveals      Checks consistency of revelations
+M3LSubtype      Computes the "pl_subtype_s" attribute
+M3LTypeCodes    Computes the "tmp_type_code" attribute for TYPE_SPECs

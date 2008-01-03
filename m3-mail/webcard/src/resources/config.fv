@@ -1,0 +1,262 @@
+(Border (Pen 0)
+  (Macro
+    field
+    BOA
+    (name (args ()))
+    `(Shape (Width 180) (input (TypeIn ,name ExpandOnDemand ,@args))))
+  (Macro
+    labelled
+    BOA
+    (label body)
+    `(HBox (Text (Margin 0) LeftAlign ,label) (Glue 6) Fill ,body))
+  (Macro
+    section
+    BOA
+    (label body (helpBtn (Glue 0)))
+    `(VBox
+       (Glue 9)
+       (HBox
+         (VBox
+           (Text (Margin 0) LeftAlign ,label)
+           (menuSep))
+         (Glue 9)
+         ,helpBtn)
+       (Glue 9)
+       (HBox (Glue 12) ,body)
+       (Glue 9)
+       (Fill)))
+  (Macro
+    help
+    BOA
+    (value)
+    `(anchor
+       "Help"
+       (Shape
+         (Width 500)
+         (borderIf2D
+           (Rim
+             (Pen 6)
+             (input (TypeIn ExpandOnDemand (TurnMargin 0) ReadOnly =,value)))))))
+  (Insert "shared.fv")
+  (Frame
+    (zDecorate
+      (Filter
+        %ConfigFilter
+        (HBox
+          (VBox
+            (Glue 9)
+            (HBox
+              (help
+                "Use this dialog to review or modify options that control details of Postcard's operation.\n\nUse the six buttons below to browse amongst Postcard's various options. Examine or modify the options as you please. When you're finished, click \"Set\" to store modified values, or click \"Cancel\" to revert to the previously stored values.\n\nThe options are stored in $HOME/.postcardFV_rc, which is a plain-text file.")
+              (Fill)
+                )
+            (Glue 9)
+            (LinkButton (For Display) "Display...")
+            (Glue 9)
+            (LinkButton (For Deletion) "Deletion...")
+            (Glue 9)
+            (LinkButton (For PurgeFolder) "Purge Folder...")
+            (Glue 9)
+            (LinkButton (For Polling) "Polling...")
+            (Glue 9)
+            (LinkButton (For External) "External Cmds...")
+            (Glue 9)
+            (LinkButton (For Composition) "Composition...")
+            (Fill))
+          (Glue 9)
+          (Frame
+            Lowered
+            (borderIf2D
+              (HBox
+                (Glue 9)
+                (TSplit
+                  (VBox
+                    %Display
+                    (section
+                      "Display Options..."
+                      (VBox
+                        (Glue 3)
+                        (HBox
+                          (anchor
+                            "Font"
+                            (borderIf2D
+                              (VBox
+                                (bgActive)
+                                (MButton %FontFixed (Text LeftAlign "Fixed"))
+                                (MButton
+                                  %FontCourier
+                                  (Text LeftAlign "Courier"))
+                                (MButton %Font6x13 (Text LeftAlign "6x13"))
+                                (Glue 3)
+                                (menuSep)
+                                (Glue 3)
+                                (MButton
+                                  %FontBuiltIn
+                                  (Text LeftAlign "Built In")))))
+                          (field %displayFont ((TabTo displayFontSize))))
+                        (Glue 3)
+                        (HBox
+                          (anchor
+                            "Size (pts)"
+                            (borderIf2D
+                              (VBox
+                                (bgActive)
+                                (MButton %Size9 (Text LeftAlign "9 pt"))
+                                (MButton %Size10 (Text LeftAlign "10 pt"))
+                                (MButton %Size11 (Text LeftAlign "11 pt"))
+                                (MButton %Size12 (Text LeftAlign "12 pt"))
+                                (MButton %Size14 (Text LeftAlign "14 pt"))
+                                (Glue 3)
+                                (menuSep)
+                                (Glue 3)
+                                (MButton %SizeNone (Text LeftAlign "None")))))
+                          (Shape
+                            (Width - 72)
+                            (field
+                              %displayFontSize
+                              ((TabTo deleteMessagesToFolder)))))
+                        (Glue 6)
+                        (Boolean
+                          %autoDisplayMessages
+                          (Text LeftAlign "Auto-display Messages")))
+                      (help
+                        "Use the \"Font\" and \"Size\" pop-ups and type-ins to select the font that will be used for messages and type-in fields in all of Postcard's windows and dialogs. You can use the pop-up menus to fill in some commonly used values, or you can type a font family and size of your own into the type-in fields. Alternatively you can set the \"Size\" type-in to empty and then type an entire X-11 font name into the \"Font\" type-in field.\n\nChoose \"Auto-display Messages\" so that Postcard will display a message whenever you select one in the message list sub-window; otherwise, Postcard displays a message only when you double-click on the message.")))
+                  (VBox %Deletion
+                    (section
+                      "Deletion Options..."
+                      (Radio
+                        (VBox
+                          (Choice
+                            %reallyDeleteMessages
+                            =TRUE
+                            (Text LeftAlign "Really Delete Message"))
+                          (Glue 3)
+                          (Choice
+                            %moveMessages
+                            (Text LeftAlign "Move Message to Folder:"))
+                          (HBox
+                            (Glue 16)
+                            (field
+                              %deleteMessagesToFolder
+                              ((TabTo purgeSaveMessages))))))
+                      (help
+                        "By default, Postcard's \"Delete\" button deletes a message completely. Choose \"Move Message to Folder\" so that instead the \"Delete\" button moves the message to the folder you specify in the type-in field.")))
+                  (VBox %PurgeFolder
+                    (section
+                      "Purge Folder Options..."
+                      (VBox
+                        (labelled
+                          "Messages Saved:"
+                          (num
+                            %purgeSaveMessages
+                            0
+                            999
+                            72
+                            ((TabTo printFilter)))))
+                      (help
+                        "The \"Purge\" command on the \"Folders\" menu removes the lowest numbered messages in the open folder. Use \"Messages Saved\" to specify the number of messages that will be left in the open folder after the purge completes.")))
+                  (VBox
+                    %Polling
+                    (section
+                      "Polling Options..."
+                      (VBox
+                        (labelled
+                          "Mail poll (minutes):"
+                          (num
+                            %mailCheckInterval
+                            1
+                            999
+                            72
+                            ((TabTo newsCheckInterval))))
+                        (Glue 3)
+                        (labelled
+                          "News poll (minutes):"
+                          (num
+                            %newsCheckInterval
+                            5
+                            999
+                            72
+                            ((TabTo displayFont)))))
+                      (help
+                        "These numbers are the intervals at which Postcard polls for mail and news. The mail poll is quite cheap, but news polling is relatively expensive. The mail polling is compatible with other programs such as \"faces -a\", but it causes \"xbiff\" to think you have no new mail.")))
+                  (VBox %External
+                    (section
+                      "External Commands..."
+                      (VBox
+                        (labelled
+                          "Print:"
+                          (field %printFilter ((TabTo editFilter))))
+                        (Glue 3)
+                        (labelled
+                          "Edit:"
+                          (field %editFilter ((TabTo psViewFilter))))
+                        (Glue 3)
+                        (labelled
+                          "PS View:"
+                          (field %psViewFilter ((TabTo psPrintFilter))))
+                        (Glue 3)
+                        (labelled
+                          "PS Print:"
+                          (field %psPrintFilter ((TabTo autoFccFolder)))))
+                      (help
+                        "These type-ins specify programs that Postcard will execute in response to various commands. For each of them, the first word should be the command name (Postcard uses your $PATH environment variable as a search path to find these commands); you may follow the command name with additional arguments. Postcard appends to the arguments the full path name of the file on which the command should operate.\n\nThe \"Print\" external command is for normal plain text printing, e.g. \"enscript -Pmaccullough\".\n\nThe \"Edit\" external command specifies the external editor, if you wish to use one, e.g. \"xterm -e vi\" or \"epochclient\". Note that if your editor needs a terminal, this command must explicitly create one.\n\n\"PS View\" should be a PostScript previewer such as \"dxpsview\"\n\n\"PS Print\" should be a command for printing a PostScript file that begins with \"%!\", e.g. \"lpr -Plps40-3\".")))
+                  (VBox
+                    %Composition
+                    (section
+                      "Composition Options..."
+                      (VBox
+                        (Boolean
+                          %useExternalCompose
+                          (Text LeftAlign "Always use external editor"))
+                        (Glue 3)
+                        (Boolean
+                          %useComposeWindow
+                          (Text LeftAlign "Use separate window for drafts"))
+                        (Glue 3)
+                        (Boolean
+                          %includeMessageInDraft
+                          (Text LeftAlign "Reply draft includes message"))
+                        (Glue 3)
+                        (Boolean
+                          %autoCcToYourself
+                          (Text LeftAlign "Draft has cc to yourself"))
+                        (Glue 3)
+                        (Boolean
+                          %autoFcc
+                          (Text LeftAlign "Draft has Fcc to folder:"))
+                        (HBox
+                          (Glue 16)
+                          (field %autoFccFolder ((TabTo includeReplyString))))
+                        (Glue 3)
+                        (Shape
+                          (Height + 0)
+                          (labelled "Prefix for included messages:" (Fill)))
+                        (HBox
+                          (Glue 16)
+                          (field
+                            %includeReplyString
+                            ((TabTo mailCheckInterval))))
+                        (Glue 3)
+                        (Shape (Height + 0) (Text LeftAlign "Editing style:"))
+                        (Radio
+                          %Model
+                          (HBox
+                            (Glue 15)
+                            (Choice %emacsModel "Emacs")
+                            Fill
+                            (Choice %ivyModel "Ivy")
+                            Fill
+                            (Choice %macModel "Mac")
+                            Fill
+                            (Choice %xtermModel "Xterm"))))
+                      (help
+                        "Choose \"Always use external editor\" if you want to use a separate program for composing messages, instead of Postcard's built-in editor. In that state, the \"Compose\", \"Forward\" and \"Reply\" buttons will save the draft message in a file then use the external editor you specified in the \"Edit\" type-in in this dialog. When the external editor exits, you can click \"Send\" or \"Discard\" to deal with the draft.\n\n\"Use separate window for drafts\" causes Postcard to place draft messages in a separate window; otherwise they are tiled into Postcard's main window.\n\n\"Reply draft includes message\" causes a copy of the original message to be included in the draft form that you edit. If you only want to do this occasionally, just hold down the \"Control\" key while clicking a \"Reply\" button. You can also use \"Insert Selected Messages\" in the draft sub-window's \"Edit\" menu.\n\nYou can include a \"cc\" to yourself, or an \"fcc\" that inserts a copy of a message directly into one of your folders when you send the message.\n\nThe type-in \"Prefix for included messages\" can provide a string that will be inserted before each line of a message that you have asked to be inserted into a composition draft. The string can include blanks, e.g. \"  > \".\n\nThe choices for \"Editing style\" (Emacs, Ivy, Mac, and Xterm) affect the built-in editor's keybindings and selection model. For details, see the help information for \"Editing\" in the main \"Help\" window."))))
+                (Glue 9))))
+          (Glue 9)
+          (VBox
+            (Fill)
+            (btn %ConfigRevert "Revert")
+            (Glue 9)
+            (btn %ConfigConfirm "Set")
+            (Glue 9)
+            (btn %ConfigCancel "Cancel")))))))

@@ -1,0 +1,26 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 21:02:08 PDT 1993 by mjordan                  */
+
+Interface("AST_LAST")
+Interface("ASTCopy")
+Interface("ASTWalk")
+Interface("AST_DisplayRep")
+Interface("AST_WalkRep")
+Interface("AST_CopyRep")
+Interface("AST_Name")
+Interface("AST")
+Interface("AST_Init")
+Interface("ASTNodeArray")
+Interface("AST_Iter")
+
+implementation("ASTCopy")
+implementation("ASTWalk")
+implementation("AST_Name")
+implementation("AST_DisplayRep")
+implementation("AST_Init")
+implementation("ASTNodeArray")
+implementation("AST_Iter")
+

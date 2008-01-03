@@ -1,0 +1,166 @@
+(Border
+  (Pen 1)
+  (Insert "shared.fv")
+  (Macro sBtn BOA (name body)
+    `(Choice (bgActive) ,name
+       (Text LeftAlign (Margin 3) ,body)))
+  (Macro key BOA (key prompt)
+    `(HBox
+      (VBox
+        (Fill)
+        (Shape (Width + 0) (Height + 0)
+          (Pixmap (BgColor "White") ,key))
+        (Fill)
+        )
+      (Shape (Height + 0)
+        (Text LeftAlign (Margin 0) ,prompt)
+        )
+      )
+    )
+  (VBox
+      (HBox
+        (Button
+          %Btn
+          (Rim (Pen 3) (Pixmap "upArrow.pbm")))
+        (ZMove
+          (TSplit =1 %TSplit1
+            (Text (Margin 9) "New Link ...")
+            (Text (Margin 9) "Edit Links ...")
+            (Text (Margin 9) "Jump to Link ..."))))
+      (Frame
+        (Rim (Pen 6)
+          (VBox
+            (HBox
+              (Radio
+                (VBox
+                  (Fill)
+                  (key
+                    "rightArrowKey.pbm"
+                    " selects type"
+                    )
+                  (Glue 3)
+                  (key
+                    "downArrowKey.pbm"
+                    " selects link"
+                    )
+                  (Fill)
+                  (menuSep)
+                  (Fill)
+                  (Shape (Height + 0)
+                    (Text LeftAlign (Margin 0) "Type:"))
+                  (Glue 3)
+                  (HBox
+                    (Glue 6)
+                    (VBox
+                      (sBtn %ClassBookmark "bookmark")
+                      (sBtn %ClassDiary "diary")
+                      (Filter
+                        (sBtn %ClassOutline "outline"))
+                      (TSplit Flex =0
+                        (Glue 0)
+                        (Filter
+                          (sBtn %ClassHyper "hypertext"))
+                        )
+                      )
+                    )
+                  (Fill)
+                  )
+                )
+              (Glue 9)
+              (Shape (Height 120 + Infinity) (Width 300)
+                (Frame Lowered
+                  (Browser %Browser (bgInput) Quick)))
+              )
+          (Glue 6)
+          (HBox
+            (TSplit %TSplit3 =1 Flex
+              (Text LeftAlign (Margin 0) "New name:")
+              (Text LeftAlign (Margin 0) "Starts with:")
+              (Text LeftAlign (Margin 0) "Starts with:")
+              )
+            (Shape (Width 300)
+              (input
+                (TypeIn %LinkName
+                  ExpandOnDemand FirstFocus)
+                  )
+              )
+            )
+          (Glue 6)
+          (HBox
+            (Text LeftAlign (Margin 0) "Destination:")
+            (Glue 9)
+            (Shape (Width 300 + 0)
+              (Text %Value LeftAlign (Margin 2) "foo"))
+            )
+          (Glue 6)
+          (menuSep)
+          (Glue 6)
+          (TSplit %TSplit2 =1 Flex
+            (HBox
+              (Fill) (Fill)
+              (btnDefault %Define "Define")
+              (Fill)
+              (btn %Close1 "Cancel")
+              (Fill) (Fill)
+              )
+            (Radio
+              (VBox
+                (HBox
+                  (Text LeftAlign (Margin 0) "Rename as:")
+                  (Shape (Width 300)
+                    (input (TypeIn %LinkRename ExpandOnDemand))
+                    )
+                  )
+                (Glue 6)
+                (HBox
+                  (Text LeftAlign (Margin 0) "Move:")
+                  (Shape (Width 300)
+                    (HBox
+                      (Filter %MoveUpFilter
+                        (btn %MoveUp "up"))
+                      (Glue 6)
+                      (Filter %MoveDownFilter
+                        (btn %MoveDown "down"))
+                      (Fill)
+                      )
+                    )
+                  )
+                (Glue 6)
+                (HBox
+                  (Text LeftAlign (Margin 0) "Convert to:")
+                  (Shape (Width 300)
+                    (HBox
+                      (Filter (btn %ToBookmark "b'km'k"))
+                      (Glue 6)
+                      (Filter (btn %ToDiary "diary"))
+                      (Glue 6)
+                      (Filter (btn %ToOutline "outline"))
+                      (Glue 6)
+                      (Filter Vanish
+                        (btn %ToHyper "hyper"))
+                      (Glue 6)
+                      (Filter (btn %Delete "Delete"))
+                      )
+                    )
+                  )
+                (Glue 6)
+                (menuSep)
+                (Glue 6)
+                (HBox
+                  (Fill)
+                  (btnDefault %Close2 "Close")
+                  (Fill)
+                  )
+                )
+              )
+            (VBox
+              (HBox
+                (Fill) (Fill)
+                (btnDefault %Jump "Jump")
+                (Fill)
+                (btn %Close3 "Cancel")
+                (Fill) (Fill)
+                )
+              )
+            )
+        )))))

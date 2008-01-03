@@ -1,0 +1,64 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Thu Jul 21 13:46:12 PDT 1994 by najork                   *)
+(*       Created on Fri May 27 20:32:05 PDT 1994 by najork                   *)
+
+
+module PointPropWrap for PointProp;
+
+
+let NameProto = clone (Prop_NameProto, {
+  bind => meth (self, pv) PointProp_NameBind (self, pv) end
+});
+
+
+let ValProto = clone (Prop_ValProto, {
+  getBeh => meth (self) PointProp_ValGetBeh (self) end,
+  setBeh => meth (self, beh) PointProp_ValSetBeh (self, beh) end,
+  get    => meth (self) PointProp_ValGet (self) end,
+  value  => meth (self, time) PointProp_ValValue (self, time) end
+});
+
+
+let BehProto = clone (Prop_BehProto, {});
+
+
+let ConstBehProto = clone (BehProto, {
+  set => meth (self, p) PointProp_ConstBehSet (self, p) end
+});
+
+
+let SyncBehProto = clone (BehProto, {
+  addRequest => 
+    meth (self, req) 
+      PointProp_SyncBehAddRequest (self, req) 
+    end,
+  linMoveTo =>
+    meth (self, p, start, dur) 
+      PointProp_SyncBehLinMoveTo (self, p, start, dur) 
+    end,
+  linMoveBy =>
+    meth (self, p, start, dur)
+      PointProp_SyncBehLinMoveBy (self, p, start, dur) 
+    end
+});
+
+
+let AsyncBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let DepBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let RequestProto = clone (Prop_RequestProto, {
+  value => ok,
+});
+
+
+end module;

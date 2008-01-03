@@ -1,0 +1,1 @@
+groff -Tps -man obliq.1 | lpr -Pap2

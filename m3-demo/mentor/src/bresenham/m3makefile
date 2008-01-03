@@ -1,0 +1,24 @@
+/* Copyright 1993 Digital Equipment Corporation. */
+/* Distributed only by permission. */
+/* Last modified on Thu Jun 20 15:31:11 PDT 1996 by heydon   */
+/*      modified on Mon May 23 22:56:57 PDT 1994 by mhb      */
+/*      modified on Wed Aug 18 08:17:57 PDT 1993 by comba    */
+/*      modified on Mon Aug 16 18:35:19 PDT 1993 by harrison */
+
+import   ("zeus")
+zume     ("Bresenham")
+module   ("AlgBresenham")
+
+module   ("ViewError")
+module   ("ViewIncrementalReal")
+module   ("ViewLine")
+module   ("ViewOnlyLine")
+
+resource ("bresenhaminput.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("BresenhamBundle")
+  program        ("Bresenham")
+end
+

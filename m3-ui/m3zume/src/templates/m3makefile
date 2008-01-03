@@ -1,0 +1,42 @@
+% Copyright (C) 1995, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Feb  3 12:15:58 PST 1995 by kalsow 
+
+
+% vanilla Modula-3 templates
+resource ("AlgClass.i3")
+resource ("AlgClass.m3")
+resource ("DataView.i3")
+resource ("DataView.m3")
+resource ("EventData.fv")
+resource ("GEFView.i3")
+resource ("GEFView.m3")
+resource ("IE.i3")
+resource ("IE.m3")
+resource ("TranscriptView.fv")
+resource ("TranscriptView.i3")
+resource ("TranscriptView.m3")
+resource ("ViewClass.i3")
+resource ("ViewClass.m3")
+
+% -3D templates (also uses the vanilla M3 templates)
+resource ("IE3D.i3")
+resource ("IE3D.m3")
+resource ("ViewClass3D.i3")
+resource ("ViewClass3D.m3")
+
+% -Juno templates
+resource ("JunoView.i3")
+resource ("JunoView.m3")
+
+% -Obliq templates
+resource ("ObliqView.i3")
+resource ("ObliqView.m3")
+
+% -Obliq3D templates
+resource ("Obliq3DView.i3")
+resource ("Obliq3DView.m3")
+
+bundle ("ZoomBundle")

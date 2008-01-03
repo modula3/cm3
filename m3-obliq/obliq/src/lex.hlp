@@ -1,0 +1,15 @@
+  lex_failure: Exception
+  lex_scan(r: Rd, t: Text): Text ! rd_failure thread_alerted
+    Read from r the longest prefix formed of characters listed in t, and return 
+    it.
+  lex_skip(r: Rd, t: Text): Ok ! rd_failure thread_alerted
+    Read from r the longest prefix formed of characters listed in t, and discard 
+    it.
+  lex_match(r: Rd, t: Text): Ok ! lex_failure rd_failure thread_alerted
+    Read from r the string t and discard it; raise failure if not found.
+  lex_bool(r: Rd): Bool ! lex_failure rd_failure thread_alerted
+    Skip blanks, and attempt to read a boolean from r.
+  lex_int(r: Rd): Int ! lex_failure rd_failure thread_alerted
+    Skip blanks, and attempt to read an integer from r.
+  lex_real(r: Rd): Real ! lex_failure rd_failure thread_alerted
+    Skip blanks, and attempt to read a real from r.

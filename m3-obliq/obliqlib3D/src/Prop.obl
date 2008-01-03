@@ -1,0 +1,21 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Thu Jul 21 10:10:23 PDT 1994 by najork                   *)
+(*       Created on Fri May 27 20:29:34 PDT 1994 by najork                   *)
+
+
+module PropWrap for Prop;
+
+let TProto    = clone (ProxiedObj_TProto, {});
+let NameProto = clone (ProxiedObj_TProto, {});
+let ValProto  = clone (ProxiedObj_TProto, {});
+let BehProto  = clone (ProxiedObj_TProto, {});
+
+let RequestProto = clone (ProxiedObj_TProto, {
+  start => meth (self) Prop_RequestStart (self) end,
+  dur   => meth (self) Prop_RequestDur   (self) end
+});
+
+end module;

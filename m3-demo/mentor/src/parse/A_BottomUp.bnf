@@ -1,0 +1,11 @@
+0:   <program>   ::=  <stmt list> $
+1:   <stmt list> ::=  <stmt>
+2:                  | <stmt> ; <stmt list>
+3:   <stmt>      ::=  <id> = <expr>
+4:   <expr>      ::=  <term>
+5:                  | <expr> + <term>
+6:   <term>      ::=  <factor>
+7:                  | <term> * <factor>
+8:   <factor>    ::=  <id>
+9:                  | ( <expr> )
+

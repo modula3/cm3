@@ -1,0 +1,11 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Mar  1 08:22:19 PST 1995 by kalsow
+%      modified on Tue Feb 11 15:10:11 PST 1992 by muller
+
+Module ("Random")
+Module ("RandomPerm")
+Interface ("RandomReal")
+

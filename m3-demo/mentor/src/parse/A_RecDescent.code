@@ -1,0 +1,58 @@
+
+@Parse
+PROCEDURE Parse ()@
+   @1 token := Scan ()@
+   @2 Program ()@
+
+PROCEDURE Match (s)
+   IF (token # s) THEN ERROR END
+   token := Scan ()
+@Parse
+
+@Program
+PROCEDURE Program ()@
+   LOOP
+     @1 Stmt ()@
+     @2 IF (token # ';') THEN EXIT END@
+     @3 Match (';')@
+   END
+   @4 Match (<EOF>)@
+@Program
+
+@Stmt
+PROCEDURE Stmt ()@
+   @1 Match (<ID>)@
+   @2 Match ('=')@
+   @3 Expr ()@
+@Stmt
+
+@Expr
+PROCEDURE Expr ()@
+   @1 Term ()@
+   @2 WHILE (token = '+') DO@
+     @3 Match ('+')@
+     @4 Term ()@
+   END
+@Expr
+
+@Term
+PROCEDURE Term ()@
+   @1 Factor ()@
+   @2 WHILE (token = '*') DO@
+     @3 Match ('*')@
+     @4 Factor ()@
+   END
+@Term
+
+@Factor
+PROCEDURE Factor ()@
+   @1 IF (token = <ID>) THEN@
+      @2 Match (<ID>)@
+   @3 ELSE@
+      @4 Match ('(')@
+      @5 Expr ()@
+      @6 Match (')')@
+   END
+@Factor
+
+

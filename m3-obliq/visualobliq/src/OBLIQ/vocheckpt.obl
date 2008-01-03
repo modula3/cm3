@@ -1,0 +1,186 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:47:13 PST 1995 by mhb     *)
+
+module vocheckpt;
+(* used by module "volib" *)
+sys_pushSilence();
+
+(* Stuff to checkpoint
+
+	== all other attributes are set by method calls ==
+
+	boolean ::=  initialValue := b.getValue();
+	browser ::= Selections/Selection
+	choice ::=  initialValue := c.getValue();
+	filebrowser ::=  Value := fb.getFilename();
+	form => (checkpoint open/close state of anchored forms)
+	hscroll ::= Val := h.getValue();
+	numeric ::= Val := n.getValue();
+	textedit ::=  teContents :=  text_encode(t.getText());
+	typein  ::=  tyInit := text_encode(t.getText());
+	vscroll  ::=  Val := v.getValue();
+	
+*)
+(* generic routine - forward declaration *)
+var checkptSX = 0;
+let childOffRed = 20;
+
+let genericCP = proc(nv)
+	let width = form_getInt(nv.form, nv.name & "filter", "EastEdge") -
+			    form_getInt(nv.form, nv.name & "filter", "WestEdge");
+	let height = form_getInt(nv.form, nv.name & "filter", "SouthEdge") -
+			    form_getInt(nv.form, nv.name & "filter", "NorthEdge");
+
+	if (width isnot 0) and (height isnot 0) then
+	(* true when the widget is mapped *)
+		nv.height := height; nv.width := width;
+		if nv.class is "form" then nv.InitialState := "Active"; end;
+		let p = nv.parent;
+		if p isnot 0 then
+			nv.x := form_getInt(nv.form, nv.name & "filter", "WestEdge") -
+				     form_getInt(p.form, p.name & "filter", "WestEdge");
+			nv.y := form_getInt(nv.form, nv.name & "filter", "NorthEdge") -
+				     form_getInt(p.form, p.name & "filter", "NorthEdge");
+			if p.class is "form" then
+				if p.ParentForm is 0 then
+					nv.y := nv.y + childOffRed;
+				end;
+			end;
+		else	
+			nv.x := form_getInt(nv.form, nv.name & "filter", "WestEdge");
+			nv.y := form_getInt(nv.form, nv.name & "filter", "NorthEdge");
+		end;
+	elsif nv.class is "form" then
+		nv.InitialState := "Vanish";
+		(* otherwise this widget may be unmapped because a parent is unmapped *)
+	end;
+end;
+
+let splitCP = proc(nv)
+	genericCP(nv);
+	foreach child in nv.children do
+		checkptSX(child);		
+	end;
+
+end;
+
+let formCP = proc(nv)
+
+
+	let oldwidth = nv.width;
+	let oldheight = nv.height;
+
+	splitCP(nv); (* will also do generic *)
+
+
+	let incwidth = nv.width - oldwidth;
+	let incheight = nv.height - oldheight;
+	
+	nv.ShrinkX := nv.ShrinkX + incwidth;
+	nv.StretchX := nv.StretchX - incwidth;
+	nv.ShrinkY := nv.ShrinkY + incheight;
+	nv.StretchY := nv.StretchY - incheight;
+
+	if nv.ShrinkX < 0 then nv.ShrinkX := 0 end;
+	if nv.ShrinkY < 0 then nv.ShrinkY := 0 end;
+	if nv.StretchX < 0 then nv.StretchX := 0 end;
+	if nv.StretchY < 0 then nv.StretchY := 0 end;
+	
+
+	foreach child in nv.ChildForms do
+		checkptSX(child);		
+	end;
+	(* if this is an anchored form ... *)
+	let pf = nv.ParentForm;
+	if pf isnot 0 then
+		nv.x := form_getInt(nv.form, nv.name & "filter", "WestEdge") -
+			     form_getInt(pf.form, pf.name & "filter", "WestEdge");
+		nv.y := form_getInt(nv.form, nv.name & "filter", "NorthEdge") -
+			     form_getInt(pf.form, pf.name & "filter", "NorthEdge");		
+	else
+		(* Need to compensate for absence of title in top level form.
+		    The s-expression is computed after reducing the given height
+		    by childOffRed, so when we are computing the height from the
+		     vbt we need to add this amount  *)
+	
+		nv.height := nv.height + childOffRed;
+        end;
+	nv.CheckpointedXY := true;
+end;
+
+(* procedure dispatching kludge *)
+checkptSX := proc(wid)
+	var dogeneric = true;
+	if wid.class is "form" then
+		formCP(wid);
+		dogeneric := false;
+    	elsif wid.class is "frame" then
+		splitCP(wid);
+		dogeneric := false;
+	elsif wid.class is "boolean"  then
+		wid.initialValue := wid.getValue();
+	elsif wid.class is "browser" then
+			(* getSelection automatically does the checkpointing! *)
+			wid.getSelection();
+			ok
+	elsif wid.class is "choice" then
+		wid.initialValue := wid.getValue();
+	elsif wid.class is  "filebrowser" then 
+		wid.Value := text_encode(wid.getFilename());
+	elsif wid.class is "hscroll" then
+		 wid.Val := wid.getValue();
+	elsif wid.class is "numeric" then
+		wid.Val := wid.getValue();
+	elsif wid.class is "textedit" then
+		wid.teContents :=  text_encode(wid.getText());
+	elsif wid.class is "typein" then
+		wid.tyInit := text_encode(wid.getText());
+	elsif wid.class is "vscroll" then  
+		wid.Val := wid.getValue();
+	end;
+	if dogeneric then
+		genericCP(wid);
+	end;
+	ok;	
+end;
+
+
+let rebuildWidget = proc(wid)
+	(* not applicable to forms *)
+	(* assume already checkpointed *)
+	let f = wid.form;
+	let widpar = wid.parent;
+
+	var offsetRed = 0;
+	if widpar.class is "form" then
+		if widpar.ParentForm is 0 then
+			offsetRed := 20;
+		end
+	end;
+	let name = wid.name & "top";
+	let zname = widpar.name & "zsplit";
+	let lev = form_childIndex(f, zname, name);
+
+        let nsx = computeSX(wid); (* this mutates the name *)
+	var visibility = "";
+		if wid.InitialState isnot "Vanish" then
+			visibility := "Open";
+		end;
+	let newsx =  "(ZChild %" & wid.name & "top (At " & fmt_int(wid.x) & "  "
+                      & fmt_int(wid.y - offsetRed) & "  NW Absolute)  " & visibility & "\n " &
+                      ResizeString(wid) & nsx & ")";
+
+	form_delete(f, 	zname, name);
+	form_insert(f, zname, newsx, lev);
+	wid.SELF.VOAttachCBacks(); (* all callbacks *)
+end;
+
+let refreshWidget = proc(wid) 
+	checkptSX(wid);
+	rebuildWidget(wid);
+end;
+
+sys_popSilence();

@@ -1,0 +1,50 @@
+replied: Thu, 15 Mar 90 18:10:39 PST
+replied: "Jean-Louis Dufour <dufour@margaux.inria.fr> m3-request, levy@brouilly.inria.fr"
+Return-Path: 
+Delivery-Date: Thu, 15 Mar 90 09:18:03 PST
+Received: by jumbo; id AA29551; Thu, 15 Mar 90 09:17:56 PST
+Received: by decpa.pa.dec.com; id AA16419; Thu, 15 Mar 90 09:17:19 -0800
+Received: from margaux.inria.fr by inria.inria.fr (5.61+/89.0.8) via Fnet-EUnet id AA29899; Thu, 15 Mar 90 18:16:22 +0100 (MET)
+Received: by margaux.inria.fr
+	(5.61+/IDA-1.2.8) id AA19450; Thu, 15 Mar 90 18:16:19 +0100
+Date: Thu, 15 Mar 90 18:16:19 +0100
+From: Jean-Louis Dufour <dufour@margaux.inria.fr>
+Message-Id: <9003151716.AA19450@margaux.inria.fr>
+To: m3-request
+Subject: Possible bug.
+
+The new version of the compiler (1.4) srefusses to pass local procedures as
+arguments. The following program, which implements the successor function,
+compiled successfully which the old compiler:
+---------------Cut Here -------------------------------
+MODULE Main;
+IMPORT Wr, Stdio, Fmt;
+
+PROCEDURE app(h: PROCEDURE (i:INTEGER):INTEGER; i:INTEGER):INTEGER =
+BEGIN
+        RETURN h(i)
+END app;
+
+PROCEDURE f(x:INTEGER):INTEGER =
+        PROCEDURE g(y:INTEGER):INTEGER =
+        BEGIN
+                RETURN x+y
+        END g;
+BEGIN
+        RETURN app(g,1)
+END f;
+
+BEGIN
+         Wr.PutText (Stdio.stdout, Fmt.Int (f(36)) & "\n")
+END Main.
+----------------Cut Here-----------------------------------
+but now we obtain:
+$ m3 -C cloture.m3
+File cloture.m3, line 15: cannot assign nested procedures (g)
+1 error encountered
+m3: /usr/local/lib/m3/m3compiler exited, status=1
+$
+
+                    Jean-Louis Dufour (  (dufour@margaux.inria.fr)
+
+P.S.: I would be very pleased if you could add me to your mailing list.

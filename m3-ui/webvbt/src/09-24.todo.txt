@@ -1,0 +1,66 @@
+Tabs in <PRE> mode
+Debug glossary (DT, DD, DL)
+Resovle URL in image maps 
+Default ismap, isindex method call link method
+Show visited nodes
+Use .mailcap
+Use external viewers
+Support .lect images inline 
+Better title for .gif
+Support FORMs
+Ingore null list items 
+Allow interactive control of font family and size
+Delete old HTMLVBT
+Assume that HTMLVBT's parent is a WebVBT
+Config file
+PackSplit with baseline
+Highlight buttons without using ButtonVBT
+Support selection over multiple VBTs
+NewFromRd, FromFile, FromRsrc
+Follow HTML2.0 spec
+Parse anchors, state changes as tokens rather than recursively
+Why doesn't proxy work on "file"
+Build html/text for error pages
+Use returned location/base; e.g., http://www.research.digital.com/SRC/staff/mhb/bio.html
+scroll with space
+remove compiler warnings
+
+DeckScape
+---------
+integrate with webvbt
+
+
+WebScape
+--------
+Display correct location
+Open file
+View source
+extend via Obliq
+
+Lego
+----
+add TextPortWithButtons
+add NewPixmapVBT 
+
+FormsVBT
+--------
+add Web widget and URL helper
+add Postcard's "fastmenus"
+
+
+WebCard
+-------
+merge with MIME stuff
+instrument user actions
+activate "likely" urls
+add visited node as msgs (to a new folder?)
+
+
+Bugs:
+-----
+  http://pubweb.nexor.co.uk/public/cusi/doc/list.html (missing /a)
+  http://www.research.digital.com/SRC/people/mhb/bio.html (missing pic)
+  http://www.digital.com/www-cgi-bin/textit?  
+  http://www.waste.org/~oxymoron/crash/wah.html
+  http://src-www.pa.dec.com/~najork/to-do.html -- <A> around a header
+* TABS are ignored in <PRE> mode. 

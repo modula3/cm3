@@ -1,0 +1,57 @@
+@comment %**start of header (This is for running Texinfo on a region.)
+@setfilename modula3.info
+@comment %**end of header (This is for running Texinfo on a region.)
+@setchapternewpage odd
+
+@ignore
+Copyright (C) 1992, Digital Equipment Corporation
+All rights reserved.
+See the file COPYRIGHT for a full description.
+
+Last modified on Tue Mar 24 14:14:49 PST 1992 by muller                     .
+@end ignore
+
+@node Editing Modula-3 programs
+@chapter Editing Modula-3 programs
+
+This text describes the Modula-3 mode used to edit Modula-3 programs
+under Gnuemacs.
+
+
+@menu
+* Starting::            How to start the Modula-3 mode.
+* Pretty-printing:: 	Using m3pp(1) on the buffer.
+* Tags::                Tags for Modula-3.
+@end menu
+
+@node Starting
+@section Starting
+
+
+@node Pretty-printing
+@section Pretty-printing
+
+The Modula-3 pretty-printer program is available from gnuemacs to format
+the current buffer.   On the first invocation of the pretty-printer,
+subprocess is started.  This subprocess stays around after it has done
+its job.
+
+The variable m3pp-options is the list of options to pass to m3pp when it
+is started.
+
+The m3pp-unit command pretty-prints the unit containing the cursor.  A
+unit starts with a blank line followed by CONST, TYPE, VAR, PROCEDURE,
+EXCEPTION, IMPORT, FROM, MODULE, or BEGIN, and it extends to the start
+of the next unit.  If there is no such unit around the cursor, the
+entire file is pretty printed. 
+
+The m3pp-region command pretty-prints the region, which should consist
+of zero or more declarations, definitions, import statements or modules.
+
+
+@node Tags
+@section Tags
+
+The program m3tags can be used to create a tag table for Modula-3 source
+code. 
+

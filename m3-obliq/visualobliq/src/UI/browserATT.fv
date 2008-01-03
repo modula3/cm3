@@ -1,0 +1,71 @@
+ (Shape %browseratt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Browser")
+     (Glue 5)
+     (HBox (Boolean %brQuick "Quick") Fill 
+         (PageButton (For brNestedTS) (ShadowSize 0.01) 
+                         (Boolean (ShadowSize 1) %brMultiplicity "Allow Multiple Selection")))
+     (Glue 5)
+     (HBox (Radio %brModes (Value brEditMode)
+              (Shape (Width  100)
+                 (VBox   Fill
+                      (LinkButton (For brEdit)  (ShadowSize 0.01)
+                       (LinkButton (For page1)  
+                             (Choice (ShadowSize 1) %brEditMode Inverting "Edit Mode")))
+                       (LinkButton (For brNestedTS) (ShadowSize 0.01) 
+                           (LinkButton (For page2) 
+                         (Choice (ShadowSize 1) %brSelectMode  Inverting "Select Mode")))
+                    Fill
+                  )
+                 )
+              )
+           (Glue 10) 
+           (TSplit %brSelectionMode
+               (Border %page1 (Pen 1) (Color "VeryDarkBlue")
+                 (VBox (Glue 5)
+                        (HBox  (Glue 5) 
+                                (Button %brAddFirst "Add First") Fill
+                                (Filter %brFilter Dormant
+                                    (HBox
+                                    (Button %brAddAfter "Add After") Fill
+                                    (Button %brDelete "Delete")))
+                                Fill
+                          )
+                      (Glue 5)
+                      (LField "Item to Insert :" 300 (TypeIn ExpandOnDemand (BgColor "White") %brItem ))
+                 )
+                )
+            (Text %page2 " ")
+            )
+      )
+     (Glue 5)
+    (TSplit %brBrowsers
+        (VBox %brEdit
+          (Frame Lowered (Shape (BgColor "VeryLightPink") (Color "VeryDarkBlue") (Height 15)
+                    (Text "Initial Contents")))
+          (Border  (Pen 1)
+            (Rim (Pen 1) (Browser (BgColor "VeryLightPink") %brInitial))
+          ) 
+        )
+       (TSplit %brNestedTS Circular
+         (VBox %brUni
+          (Frame Lowered (Shape (BgColor "VeryLightPink") (Color "VeryDarkBlue") (Height 15)
+                    (Text "Initial Selection")))
+          (Border  (Pen 1)
+            (Rim (Pen 1) (Browser (BgColor "VeryLightPink") %brSingle))
+          ) 
+        )
+
+         (VBox %brMulti
+          (Frame Lowered (Shape (BgColor "VeryLightPink") (Color "VeryDarkBlue") (Height 15)
+                    (Text "Initial Selections")))
+          (Border  (Pen 1)
+            (Rim (Pen 1) (MultiBrowser (BgColor "VeryLightPink") %brMultiple))
+          ) 
+        )
+      )
+        
+    )
+   )
+  )

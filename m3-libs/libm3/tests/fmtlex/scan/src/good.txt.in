@@ -1,0 +1,75 @@
+# Last modified on Sun Feb 27 17:46:31 PST 1994 by heydon
+#      modified on Fri Feb 25 14:55:50 PST 1994 by kalsow
+
+# This file contains example of inputs that should all be read and converted
+# successfully by the "Lex" implementation. Each line ends with some
+# extraneous characters so as to verify that implementation consumes the
+# correct number of characters from the reader it is given.
+
+# booleans
+b true		# => TRUE
+b TRUE		# => TRUE
+b TrUe		# => TRUE
+b false		# => FALSE
+b FALSE		# => FALSE
+b FaLsE		# => FALSE
+
+# signed base-10 integers
+i +5		# => 5
+i -52		# => -52
+i 2_101		# => 5
+I 3 10_12	# => 3_110
+
+# signed integers (not base 10)
+i -2_1010	# => -10
+I 2 -1010	# => -2_1010
+i 8_000377	# => 255
+i 15_789ABC	# => 5753427
+I 15 789ABC     # => 15_789abc
+i 16_00Ff	# => 255
+
+# unsigned (base-16) integers
+u 00fF		# => ff
+u 100		# => 100
+u A		# => a
+
+# unsigned integers (not base 16)
+u 2_1010	# => a
+u 10_255	# => ff
+
+# single-precision real numbers
+r 1		# => 1.E0
+r -1		# => -1.E0
+r .5		# => 5.E-1
+r .0		# => 0.E0
+r 0.0		# => 0.E0
+r 0.		# => 0.E0
+r 1.0e2 	# => 1.E2
+r 0.5		# => 0.5
+
+# double-precision real numbers
+l 1.5e20
+l -1.5e20
+l -1.5e-20
+
+# extended-precision real numbers
+
+# Test that each type accepts all three exponent letters (upper and lower)
+r 1.5e3		# => 1.5E3
+r 1.5E3		# => 1.5E3
+r 1.5d3		# => 1.5E3
+r 1.5D3		# => 1.5E3
+r 1.5x3		# => 1.5E3
+r 1.5X3		# => 1.5E3
+l 1.5e3		# => 1.5D3
+l 1.5E3		# => 1.5D3
+l 1.5d3		# => 1.5D3
+l 1.5D3		# => 1.5D3
+l 1.5x3		# => 1.5D3
+l 1.5X3		# => 1.5D3
+e 1.5e3		# => 1.5D3
+e 1.5E3		# => 1.5D3
+e 1.5d3		# => 1.5D3
+e 1.5D3		# => 1.5D3
+e 1.5x3		# => 1.5D3
+e 1.5X3		# => 1.5D3

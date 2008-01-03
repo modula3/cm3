@@ -1,0 +1,12 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Rim
+  (Pen 10)
+  (VBox
+    (Text LeftAlign "Search pattern: ")
+    (Frame Lowered (TypeIn ExpandOnDemand (BgColor "White") %pattern ="abra"))
+    (Glue 10)
+    (Text LeftAlign "Text to search in: ")
+    (Frame Lowered (TypeIn ExpandOnDemand (BgColor "White") %text ="abracadabra"))))

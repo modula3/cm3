@@ -1,0 +1,56 @@
+  t: Text
+    A string in double quotes.
+  text_new(size: Int, init: Char): Text
+    A text of size 'size', all filled with 'init'.
+  text_empty(t: Text): Bool
+    Test for empty text.
+  text_length(t: Text): Int
+    Length of a text.
+  text_equal(t1: Text, t2: Text): Bool
+    Text equality (case sensitive).
+  text_char(t: Text, i: Int): Char
+    The i-th character of a text (if it exists); zero-indexed.
+  text_sub(t: Text, start: Int, size: Int): Text
+    The subtext beginning at 'start', and of size 'size' (if it exists).
+  text_&(t1: Text, t2: Text): Text
+    (also infix '&') The concatenation of two texts.
+  text_precedes(t1: Text, t2: Text): Bool
+    Whether 't1' precedes 't2' in lexicographic (ascii) order.
+  text_decode(t: Text): Text
+    Every occurrence of an escape sequence is replaced by the corresponding 
+    non-printing formatting character:  \\ = \;  \' = ';  \" = ";  \n = LF; 
+    \r = CR;  \t = HT;  \f = FF;  \t = HT;  \xxx = xxx (octals 000..177);  
+    \c = c (otherwise).
+  text_encode(t: Text): Text
+    Every occurrence of a non-printing formatting character is replaced by an 
+    escape sequence.
+  text_explode(seps: Text, t: Text): [Text]
+    Splits an input text into a similarly ordered array of texts, each a maximal 
+    subsequence of the input text not containing sep chars. The empty text is 
+    exploded as a singleton array of the empty text. Each sep char in the input 
+    produces a break, so the size of the result is 1 + the number of sep chars 
+    in the text. implode(explode( "c",text),'c') is the identity.
+  text_implode(sep: Char, a: [Text]): Text ! net_failure
+    Concatenate an array of texts into a single text, separating the pieces by a 
+    single sep char. A zero-length array is imploded as the empty text. 
+    explode("c",implode( 'c',text)) is the identity provided that the array has 
+    positive size and sep does not occur in the array elements.
+  text_hash(t: Text): Int
+    A hash function.
+  text_toInt(t: Text): Int
+    Convert a text to an integer (see also fmt_).
+  text_fromInt(n: Int): Text
+    Convert an integer to a text (see also lex_).
+  text_findFirstChar(c: Char, t: Text, n: Int): Int	
+    The index of the first occurrence of 'c' in 't', past 'n'. -1 if not found.
+  text_findLastChar(c: Char, t: Text, n: Int): Int
+    The index of the last occurrence of 'c' in 't', before 'n'. -1 if not found.
+  text_findFirst(p: Text, t: Text, n: Int): Int
+    The index of the first char of the first occurrence of 'p' in 't', past 'n'. 
+    -1 if not found.
+  text_findLast(p: Text, t: Text, n: Int): Int
+    The index of the first char of the last occurrence of 'p' in 't', before 
+    'n'. -1 if not found.
+  text_replaceAll(old: Text, new: Text, t: Text): Text
+    Replace all occurrences of 'old' by 'new' in 't', as found by iterating 
+    'findFirst'.

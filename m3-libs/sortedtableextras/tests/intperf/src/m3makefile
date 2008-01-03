@@ -1,0 +1,6 @@
+m3_option ("-O") % compile optimized code
+import ("libm3")
+import ("sortedtableextras")
+
+implementation ("IntPerfTest")
+program ("IntPerfTest")

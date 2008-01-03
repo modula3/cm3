@@ -1,0 +1,7 @@
+  OrthoCameraGO_New(from to up: PointVal, height: RealVal): OrthoCameraGO 
+  OrthoCameraGO_Height: RealPropName
+  OrthoCameraGO_SetHeight(go: GO, height: RealVal): Ok                
+WHERE                                                                  
+  OrthoCameraGO <: CameraGO                                             
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int                                   

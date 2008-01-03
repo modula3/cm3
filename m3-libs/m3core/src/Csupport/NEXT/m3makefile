@@ -1,0 +1,11 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Tue May  2 08:05:37 PDT 1995 by kalsow
+%      modified on Tue Feb 11 15:18:41 PST 1992 by muller
+
+c_source ("dtoa")
+c_source ("waitpid")
+c_source ("sbrk")
+

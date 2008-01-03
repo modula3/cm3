@@ -1,0 +1,517 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Jan  9 12:04:09 PST 1995 by najork                   *)
+(*      modified on Fri Aug 19 15:40:47 PDT 1994 by heydon                   *)
+
+(* BigTree.obl -- tree view for Union-Find designed for showing large trees *)
+
+let NodeBgColor       = color_named("Green");
+let NodeFgColor       = color_named("Black");
+let NormalEdgeColor   = color_named("Black");
+let HiliteEdgeColor   = color_named("Red");
+let RankBarBgColor    = color_named("Red");
+let RankBarFgColor    = color_named("Black");
+
+(* Hilite colors *)
+let SelectHiLiColor   = color_named("Orange");
+let FoundHiLiColor    = color_named("Blue");
+let NodeHiliteBgColor = color_named("Red");
+
+let NodeSz  = 1.0;
+let Margin  = 5.0;           (* in mm *)
+let VGap    = NodeSz * 1.0;  (* vertical gap between levels *)
+let HGap    = NodeSz * 0.2;  (* horizontal gap between siblings *)
+let RankH   = NodeSz * 0.25; (* height of rank bars *)
+let RankW   = NodeSz * 1.0;  (* width of each rank unit *)
+let RankGap = NodeSz * 0.25; (* gap between root and rank bars *)
+let RankY   = RankGap + ((NodeSz + RankH)/ 2.0);
+
+(* The "VGap" is the distance between the bottoms of nodes on level "i"
+   and the tops of nodes on level "i+1". The "HGap" is the gap between the
+   right edge of a node and the left edge of its right sibling. *)
+
+let BorderWidth   = NodeSz * 0.05;
+let ThinEdgeWidth = NodeSz * 0.05;
+let FatEdgeWidth  = NodeSz * 0.2;
+let FoundHiLiSz   = NodeSz * 0.08;
+let SelectHiLiSz  = NodeSz * 0.20;
+
+(* Node Object (to be cloned) ============================================= *)
+
+let Node = {
+  v: Vertex => ok,        (* The Vertex *)
+  e: Edge => ok,       	  (* The Edge to the parent *)
+  parent: Node => ok,     (* parent node *)
+  children: Node => ok,   (* leftmost child node *)
+  height: Int => 0, 	  (* height of tree rooted at this node *)
+  x: Real => ok,          (* x-coordinate of this node *)
+  next => ok,       	  (* ids of next and previous siblings *)
+  prev => ok,
+  rank: Int => 0,
+  rankBar: Vertex => ok,  (* the vertex of this node's rank bar (if any) *)
+
+  lastChild => meth(parent: Node): Node,
+  (* Returns the rightmost child of "parent", or "ok" if "parent"
+     is a leaf. *)
+    var curr: Node = parent.children;
+    if curr isnot ok then
+      loop
+        if curr.next is ok then exit end;
+        curr := curr.next
+      end;
+      curr
+    else
+      ok
+    end
+  end,
+
+  incHeightToRoot => meth(parent, child: Node): Ok,
+  (* the "child" of "parent" has just grown in height; grow "parent" and
+     all nodes on the path from it to the root of the tree in height as
+     necessary. *)
+    if (child.height + 1) > parent.height then
+      parent.height := (child.height + 1);
+      if parent.parent isnot ok then
+        parent.parent.incHeightToRoot(parent)
+      end
+    end;
+    ok
+  end,
+
+  addChild => meth(parent, rightOf, child: Node): Ok,
+  (* Adds child as a child of parent, inserted to the right of 
+     the child "rightOf", which must be a child of parent, or as
+     the leftmost child if rightOf is ok *)
+    if rightOf is ok then
+      child.next := parent.children;
+      child.prev := ok;
+      if child.next isnot ok then child.next.prev := child end;
+      parent.children := child;
+    else
+      child.prev := rightOf;
+      child.next := rightOf.next;
+      if (child.next isnot ok) then child.next.prev := child end;
+      rightOf.next := child;
+    end;
+    child.parent := parent;
+    parent.incHeightToRoot(child);
+    ok
+  end,
+
+  updateHeight => meth(parent: Node): Ok,
+  (* update the height of "parent" to be one greater than the maximum heights
+     of its children, or 0 if it has no children. *)
+    var maxHt: Int = ~1;
+    var ch: Node = parent.children;
+    loop
+      if ch is ok then exit end;
+      if ch.height > maxHt then maxHt := ch.height end;
+      ch := ch.next
+    end;
+    parent.height := (maxHt + 1);
+    ok
+  end,
+
+  decHeightToRoot => meth(parent: Node, oldChHeight: Int): Ok,
+  (* some child of "parent" has just decreased in height from "oldChHeight",
+     so update the height of the "parent" if necessary and those of all
+     nodes on the path to the root. *)
+    if parent.height is (oldChHeight + 1) then
+      var oldParHeight: Int = parent.height;
+      parent.updateHeight();
+      if (parent.height < oldParHeight) and (parent.parent isnot ok) then
+        parent.parent.decHeightToRoot(oldParHeight)
+      end
+    end;
+    ok
+  end,
+
+  removeChild => meth(parent, child: Node): Ok,
+  (* removes child from parent, which must be its parent *)
+    if child.prev isnot ok
+      then child.prev.next := child.next;
+      else parent.children := child.next
+    end;
+    if child.next isnot ok then
+      child.next.prev := child.prev
+    end;
+    child.prev := ok;
+    child.next := ok;
+    parent.decHeightToRoot(child.height);
+    ok
+  end,
+
+  isRightOf => meth(self, n: Node): Bool,
+  (* Returns "true" iff "self" is a right sibling of "n". *)
+    var curr: Node = n.next;
+    loop
+      if (curr is self) or (curr is ok) then exit end;
+      curr := curr.next
+    end;
+    (curr is self)
+  end,
+
+  subtreeWidth => meth(self: Node): Real,
+  (* Returns the width of the subtree rooted at "self". *)
+    if self.children is ok then
+      NodeSz
+    else
+      var res: Real = 0.0;
+      var ch: Node = self.children;
+      loop
+        res := res + ch.subtreeWidth();
+        if ch.next is ok then exit end;
+        res := res + HGap;
+        ch := ch.next
+      end;
+      res
+    end
+  end,
+
+  position => meth(self: Node, level: Int, offset: Real): Ok,
+    let depth: Real = - float(level) * (NodeSz + VGap);
+    graph_moveVertex(self.v, offset, depth, true);
+    self.x := offset;
+    ok
+  end,
+
+  positionChildren => meth(self: Node, level: Int, offset: Real): Real,
+    var ch: Node = self.children;
+    var res: Real = offset;
+    loop
+      if ch is ok then exit; end;
+      res := ch.positionSubtree(level, res);
+      if ch.next isnot ok then res := res + HGap; end;
+      ch := ch.next;
+    end;
+    res;
+  end,
+
+  positionSubtree => meth(self: Node, level: Int, offset: Real): Real,
+  (* Reposition all nodes in the subtree rooted at "self", with the leftmost
+     descendant at "offset", and the root at vertical position "level".
+     Returns the x-coordinate of the rightmost descendant. *)
+    var res = offset;
+    if self.children is ok
+      then res := res + NodeSz;
+      else res := self.positionChildren(level+1, res);
+    end;
+    self.position(level, (res + offset) / 2.0);
+    res;
+  end,
+};
+
+(* EdgeList Object ======================================================== *)
+
+let EdgeList = {
+  e: Edge => ok,
+  next: EdgeList => ok,
+};
+
+(* View Object ============================================================ *)
+
+let view: View = {
+
+  (* Data members --------------------------------------------------------- *)
+
+  graphvbt => graph_new(),
+  graphW: Real => ok,          (* the width of the graphvbt *)
+  usesRanks: Bool => ok,       (* "usesRanks" arg to "Setup" event *)
+  nodeCnt: Int => ok,          (* number of nodes (not counting root) *)
+  height: Int => ok,           (* height of window *)
+  root: Node => ok,
+  last: Node => ok,
+  node: [Node] => ok,          (* array of nodes *)
+  newEdge: Edge => ok,         (* Edge added during a unite method *)
+  bothRoots: Bool => ok,       (* are both nodes to "Union" roots? *)
+  upEdges: EdgeList => ok,     (* list of "StepUp" edges *)
+  seenStepDown: Bool => ok,    (* any "StepDown" events after "Found"? *)
+  findVh: VertexHiLi => ok,
+  unionVh1: VertexHiLi => ok,
+  unionVh2: VertexHiLi => ok,
+  foundVh: VertexHiLi => ok,
+  firstRootVh: VertexHiLi => ok,
+
+  (* The "height" field is the height of the largest tree that can fit in the
+     window; it is only ever increased. For "view: View", the system maintains
+     the invariant: "view.root.height <= view.height". *)
+
+  (* Layout method -------------------------------------------------------- *)
+
+  repositionAll => meth(self: View): Ok,
+  (* Layout all nodes of the tree rooted at the virtual root node
+     "self.root". *)
+    if self.root.children isnot ok then
+      var childrenW: Real = 0.0;
+      var numCh: Int = 0;
+      var ch: Node = self.root.children;
+      loop
+        childrenW := childrenW + ch.subtreeWidth();
+        numCh := numCh + 1;
+        if ch.next is ok then exit end;
+        ch := ch.next
+      end;
+      var gap: Real = 0.0;
+      if numCh > 1 then
+        gap := (self.graphW - childrenW) / float(numCh - 1)
+      end;
+      ch := self.root.children;
+      var res: Real = - (NodeSz / 2.0);
+      loop
+      	if ch is ok then exit end;
+      	res := ch.positionSubtree(0, res);
+      	if ch.next isnot ok then res := res + gap end;
+      	ch := ch.next
+      end
+    end;
+    ok
+  end,
+
+  repositionRanks => meth(self: View): Ok,
+  (* Reposition the rank bar vertices of those nodes that are children of
+     "self.root". This procedure just moves the necessary vertices; it doesn't
+     animate them. *)
+    var ch = self.root.children;
+    loop
+      if (ch is ok) then exit end;
+      let rankX = graph_getVertexPosition(ch.rankBar)[0];
+      if (ch.x isnot rankX) then
+        graph_moveVertex(ch.rankBar, ch.x, RankY, true)
+      end;
+      ch := ch.next
+    end;
+    ok
+  end,
+
+  setWorld => meth(self: View): Ok,
+    let rad: Real = NodeSz / 2.0;
+    let ht: Real = (float(self.height) * (NodeSz + VGap)) - VGap;
+    var north: Real = rad;
+    if self.usesRanks then north := north + RankGap + RankH end;
+    graph_setWorld(self.graphvbt,
+      (* east = *) - rad, (* west = *) (- rad) + self.graphW,
+      (* north= *) north, (* south= *) rad + (- ht));
+    ok
+  end,
+
+  (* Setup ---------------------------------------------------------------- *)
+
+  Setup => meth(self: View): Ok,
+    graph_setMargin(self.graphvbt, Margin);
+    self.nodeCnt := 0;
+    self.root := clone(Node);
+    self.last := ok;
+    ok
+  end,
+
+  NewSet => meth(self: View, (*UNUSED*) nm: Text): Ok,
+    let v = graph_newVertex(self.graphvbt);
+    graph_setVertexShape(v, "ellipse");
+    graph_setVertexSize(v, NodeSz, NodeSz);
+    graph_setVertexLabelColor(v, NodeFgColor);
+    graph_setVertexBorder(v, BorderWidth);
+    graph_setVertexColor(v, NodeBgColor);
+    var n: Node = clone(Node);
+    self.nodeCnt := self.nodeCnt + 1;
+    n.v := v;
+    self.root.addChild(self.last, n);
+    self.last := n;
+    ok
+  end,
+
+  FinishedSets => meth(self: View, numSets: Int, usesRanks: Bool): Ok,
+    (* initialize coordinate system *)
+    self.height := real_ceiling(math_log(float(numSets))) + 1;
+    self.graphW := (float(numSets) * (NodeSz + HGap)) - HGap;
+    self.usesRanks := usesRanks;
+    self.setWorld();
+
+    (* initialize nodes *)
+    self.node := array_new(numSets, ok);
+    var curr: Node = self.root.children;
+    for i = 0 to numSets - 1 do
+      self.node[i] := curr;
+      curr := curr.next
+    end;
+    self.repositionAll();
+
+    (* initialize rank bars *)
+    if usesRanks then
+      for i = 0 to numSets - 1 do
+        let node = self.node[i];
+        let v = graph_newVertex(self.graphvbt);
+        node.rankBar := v;
+      	graph_setVertexShape(v, "rectangle");
+      	graph_setVertexSize(v, RankW * 0.1, RankH);
+      	graph_setVertexBorderColor(v, RankBarFgColor);
+      	graph_setVertexBorder(v, BorderWidth);
+      	graph_setVertexColor(v, RankBarBgColor);
+        graph_moveVertex(v, node.x, RankY, false);
+      end
+    end;
+    zeus_animate(self.graphvbt, 0.0, 0.0);
+    ok
+  end,
+
+  (* Find events ---------------------------------------------------------- *)
+
+  StartFind => meth(self: View, id: Int): Ok,
+    self.findVh := graph_newVertexHiLi(self.node[id].v);
+    graph_setVertexHiLiColor(self.findVh, SelectHiLiColor);
+    graph_setVertexHiLiBorder(self.findVh, SelectHiLiSz, SelectHiLiSz);
+    graph_redisplay(self.graphvbt);
+    ok
+  end,
+
+  EndFind => meth(self: View, id: Int): Ok,
+    graph_removeVertexHiLi(self.findVh);
+    graph_removeVertexHiLi(self.foundVh);
+    graph_redisplay(self.graphvbt);
+    ok
+  end,
+
+  (* DoFind events -------------------------------------------------------- *)
+
+  StartDoFind => meth(self, id): Ok,
+    ok
+  end,
+
+  StepUp => meth(self, child, parent): Ok,
+    (* make edge thick *)
+    let upEdge: Edge = self.node[child].e;
+    graph_setEdgeWidth(upEdge, FatEdgeWidth);
+
+    (* add edge to up-edge list *)
+    var el: EdgeList = clone(EdgeList);
+    el.e := upEdge;
+    el.next := self.upEdges;
+    self.upEdges := el;
+    ok
+  end,
+
+  Found => meth(self, root): Ok,
+    self.foundVh := graph_newVertexHiLi(self.node[root].v);
+    graph_setVertexHiLiColor(self.foundVh, FoundHiLiColor);
+    graph_setVertexHiLiBorder(self.foundVh, FoundHiLiSz, FoundHiLiSz);
+    graph_redisplay(self.graphvbt);
+    self.seenStepDown := false;
+    ok
+  end,
+
+  StepDown => meth(self: View, childId, parentId: Int): Ok,
+    let child: Node = self.node[childId];
+    self.seenStepDown := true;
+    graph_setEdgeWidth(child.e, ThinEdgeWidth);
+    ok
+  end,
+
+  ChangeParent => meth(self: View, childId, parentId, rootId: Int): Ok,
+    let child: Node = self.node[childId];
+    let parent: Node = self.node[parentId];
+    let root: Node = self.node[rootId];
+
+    (* change tree structure *)
+    var rightOf: Node = parent;
+    if parent.children is child then rightOf := rightOf.prev end;
+    parent.removeChild(child);
+    root.addChild(rightOf, child);
+
+    (* move the edge and subtree *)
+    graph_moveEdge(child.e, child.v, root.v, true);
+    self.repositionAll();
+    if self.usesRanks then self.repositionRanks() end;
+    zeus_animate(self.graphvbt, 0.0, 1.0);
+    ok
+  end,
+
+  EndDoFind => meth(self, id): Ok,
+    if not(self.seenStepDown) then
+      var curr: EdgeList = self.upEdges;
+      loop
+        if curr is ok then exit end;
+        graph_setEdgeWidth(curr.e, ThinEdgeWidth);
+        curr := curr.next
+      end
+    end;
+    graph_redisplay(self.graphvbt);
+    ok
+  end,
+
+  (* Union events --------------------------------------------------------- *)
+
+  StartUnion => meth(self: View, id1, id2: Int, bothRoots: Bool): Ok,
+    self.bothRoots := bothRoots;
+    self.unionVh1 := graph_newVertexHiLi(self.node[id1].v);
+    self.unionVh2 := graph_newVertexHiLi(self.node[id2].v);
+    graph_setVertexHiLiColor(self.unionVh1, SelectHiLiColor);
+    graph_setVertexHiLiColor(self.unionVh2, SelectHiLiColor);
+    graph_setVertexHiLiBorder(self.unionVh1, SelectHiLiSz, SelectHiLiSz);
+    graph_setVertexHiLiBorder(self.unionVh2, SelectHiLiSz, SelectHiLiSz);
+    graph_redisplay(self.graphvbt);
+    self.newEdge := ok;
+    ok
+  end,
+
+  FoundFirst => meth(self: View, root1: Int): Ok,
+    self.firstRootVh := self.foundVh;
+    ok
+  end,
+
+  CompareRanks => meth(self: View, id1, id2: Int): Ok,
+    ok
+  end,
+
+  Unite => meth(self: View, childId, parentId, pRank: Int): Ok,
+    let child: Node = self.node[childId];
+    let parent: Node = self.node[parentId];
+
+    (* create and animate the new edge *)
+    self.newEdge := graph_newEdge(child.v, parent.v);
+    child.e := self.newEdge;
+    graph_setEdgeWidth(self.newEdge, FatEdgeWidth);
+    graph_setEdgeColor(self.newEdge, HiliteEdgeColor);
+
+    (* update the graph structure *)
+    var rightOf: Node = ok;
+    if child.isRightOf(parent)
+      then rightOf := parent.lastChild()
+      else rightOf := ok
+    end;
+    self.root.removeChild(child);
+    parent.addChild(rightOf, child);
+
+    (* make coordinate system larger if necessary *)
+    if self.root.height > self.height then
+      self.height := self.root.height;
+      self.setWorld();
+      graph_redisplay(self.graphvbt)
+    end;
+
+    (* animate the subtree motion *)
+    self.repositionAll();
+    if self.usesRanks then
+      graph_removeVertex(child.rankBar);
+      graph_setVertexSize(parent.rankBar, float(pRank) * RankW, RankH);
+      self.repositionRanks()
+    end;
+    zeus_animate(self.graphvbt, 0.0, 1.0);
+    ok
+  end,
+
+  EndUnion => meth(self): Ok,
+    if self.newEdge isnot ok then
+      graph_setEdgeWidth(self.newEdge, ThinEdgeWidth);
+      graph_setEdgeColor(self.newEdge, NormalEdgeColor);
+    end;
+    graph_removeVertexHiLi(self.unionVh1);
+    graph_removeVertexHiLi(self.unionVh2);
+    if not(self.bothRoots) then
+      graph_removeVertexHiLi(self.foundVh);
+      graph_removeVertexHiLi(self.firstRootVh);
+    end;
+    graph_redisplay(self.graphvbt);
+    ok
+  end,
+};

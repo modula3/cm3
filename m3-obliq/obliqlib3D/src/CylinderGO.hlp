@@ -1,0 +1,12 @@
+  CylinderGO_New(p1 p2: PointVal, rad: RealVal): CylinderGO           
+  CylinderGO_NewWithPrec(p1 p2: PointVal, rad: RealVal, prec: Int): CylinderGO
+  CylinderGO_Point1: PointPropName                                     
+  CylinderGO_Point2: PointPropName                                     
+  CylinderGO_Radius: RealPropName                                      
+  CylinderGO_SetPoint1(o: GO, p: PointVal): Ok                        
+  CylinderGO_SetPoint2(o: GO, p: PointVal): Ok                        
+  CylinderGO_SetRadius(o: GO, r: RealVal): Ok                         
+WHERE                                                                  
+  CylinderGO <: SurfaceGO                                               
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int

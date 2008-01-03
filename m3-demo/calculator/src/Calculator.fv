@@ -1,0 +1,25 @@
+(Rim (Pen 15)
+  (Macro Key BOA (name text)
+    `(Rim (Pen 1) 
+       (Shape (Width 20) (Height 20) (Button (Name ,name) (Text ,text)))))
+  (VBox
+    (Frame Lowered (TypeIn (BgColor "White") %display))
+    (Glue 8)
+    (HBox
+      (Font "vtboldp")
+      (VBox
+        (HBox (Key b1 "1") (Key b2 "2") (Key b3 "3"))
+        (HBox (Key b4 "4") (Key b5 "5") (Key b6 "6"))
+        (HBox (Key b7 "7") (Key b8 "8") (Key b9 "9"))
+        (HBox Fill (Key b0 "0") Fill))
+      (Glue 16)
+      (VBox
+        Fill
+        (HBox (Key bAdd "+") (Key bSub "-"))
+        (HBox (Key bMult "*") (Key bDiv "/"))
+        (Glue 8)
+        (Key bEquals "=")
+        Fill))
+     (Glue 16)
+     (Guard (Button %quit "QUIT") )
+  ))

@@ -1,0 +1,18 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Tue Sep 27 14:14:47 PDT 1994 by najork                   *)
+(*       Created on Tue May 31 08:55:26 PDT 1994 by najork                   *)
+
+
+module GroupGOWrap for GroupGO;
+
+let TProto = clone (GO_TProto, {
+  add     => meth (self, go) GroupGO_Add (self, go)    end,
+  remove  => meth (self, go) GroupGO_Remove (self, go) end,
+  flush   => meth (self)     GroupGO_Flush (self)      end,
+  content => meth (self)     GroupGO_Content (self)    end
+});
+
+end module;

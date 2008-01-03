@@ -1,0 +1,355 @@
+
+(******************
+PROCEDURE ScrollCom (cmdP: PaintPrivate.CommandPtr;
+                     hdc : WinDef.HDC;
+                     st  : WinScreenType.T): PaintPrivate.CommandPtr =
+  VAR
+    trop := 16_00AA0029;  (* Ternary raster op code for NO-OP *)
+  BEGIN
+    WITH op = LOOPHOLE (cmdP, PaintPrivate.ScrollPtr)^ DO
+      IF op.op >= 0 AND st.optable # NIL AND op.op < NUMBER (st.optable^) THEN
+        WITH tbl = st.optable[op.op] DO
+          IF tbl.bop.mode = WinScrnPaintOp.Mode.Copy THEN
+            trop := tbl.brop3;
+          END;
+        END;
+      END;
+
+      INC (cmdP, ADRSIZE (op));
+
+      IF CopyRectWithinDC (hdc, trop, op.clip, op.delta) THEN
+(*
+ * At this point, the xvbt counterpart has the following code:
+ *
+ *      XScrollQueue.Insert (ur.scrollQ, op^);
+ *      IF Region.OverlapRect (Rect.Sub (op.clip, op.delta), ur.badR)
+ *           AND NOT Region.SubsetRect (op.clip, ur.badR) THEN
+ *        ur.badR := Region.Join (Region.MeetRect (op.clip, 
+ *                                                 Region.Add (ur.badR, 
+ *                                                             op.delta)), 
+ *                                ur.badR)
+ *      END;
+ *)
+      END;
+    END;
+    RETURN cmdP;
+  END ScrollCom;
+
+PROCEDURE CopyRectWithinDC (         hdc  : WinDef.HDC; 
+                                     trop : WinDef.DWORD;
+                            READONLY clip : Rect.T;
+                            READONLY delta: Point.T): BOOLEAN =
+  VAR status: WinDef.BOOL;
+  BEGIN
+    IF clip.west < clip.east + 1 AND clip.north < clip.south + 1 THEN
+      status := WinGDI.BitBlt (hdc,
+                               clip.west,
+                               clip.north,
+                               clip.east - clip.west,
+                               clip.south - clip.north,
+                               hdc,
+                               clip.west - delta.h,
+                               clip.north - delta.v,
+                               trop);
+      <* ASSERT status # False *>
+      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END;
+  END CopyRectWithinDC;
+**************************)
+
+(******************
+PROCEDURE ScrollCom (cmdP : PaintPrivate.CommandPtr;
+                     hdc  : WinDef.HDC;
+                     st   : WinScreenType.T;
+                     trsl : Trestle.T): PaintPrivate.CommandPtr =
+  VAR
+    trop        := 16_00AA0029;  (* Ternary raster op code for NO-OP *)
+    copy_mode   := FALSE;
+    status      : WinDef.BOOL;
+    hwnd        : WinDef.HWND;
+  BEGIN
+    WITH op = LOOPHOLE (cmdP, PaintPrivate.ScrollPtr)^ DO
+      IF op.op >= 0 AND st.optable # NIL AND op.op < NUMBER (st.optable^) THEN
+        WITH tbl = st.optable[op.op] DO
+          trop := tbl.brop3;
+          copy_mode := (tbl.bop.mode = WinScrnPaintOp.Mode.Copy);
+        END;
+      END;
+
+      INC (cmdP, ADRSIZE (op));
+
+      IF (NOT copy_mode)
+      OR (op.clip.east <= op.clip.west)
+      OR (op.clip.south <= op.clip.north)
+      OR (op.delta.h = 0 AND op.delta.v = 0) THEN
+        RETURN cmdP;
+      END;
+
+      hwnd := WinUser.WindowFromDC (hdc);
+      IF IsObscurred (hwnd, Rect.Sub (op.clip, op.delta)) THEN
+        (* don't bother trying to scroll if Windows is covering some of
+           the source bits on the screen*)
+        VBTClass.ForceRepaint (trsl, Region.FromRect (op.clip));
+      ELSE
+        status := WinGDI.BitBlt (hdc,
+                                 op.clip.west,
+                                 op.clip.north,
+                                 op.clip.east - op.clip.west,
+                                 op.clip.south - op.clip.north,
+                                 hdc,
+                                 op.clip.west - op.delta.h,
+                                 op.clip.north - op.delta.v,
+                                 trop);
+        <* ASSERT status # False *>
+      END;
+
+    END; (* WITH op *)
+    RETURN cmdP;
+  END ScrollCom;
+
+PROCEDURE IsObscurred (hwnd: WinDef.HWND;  READONLY r: Rect.T): BOOLEAN =
+  (* Find out whether a visible window other than "hwnd" overlaps "r".
+     See KB article #Q75236 for the details... *)
+  VAR other: WinDef.RECT;
+  BEGIN
+    LOOP
+      hwnd := WinUser.GetWindow (hwnd, WinUser.GW_HWNDPREV);
+      IF (hwnd = NIL) THEN RETURN FALSE; END;
+      IF WinUser.IsWindowVisible (hwnd) # False THEN
+        IF WinUser.GetWindowRect (hwnd, ADR (other)) # False THEN
+          IF Rect.Overlap (r, ToRect (other)) THEN
+            RETURN TRUE;
+          END;
+        END;
+      END;
+      hwnd := WinUser.GetWindow (hwnd, WinUser.GW_HWNDPREV);
+    END;
+  END IsObscurred;
+**************)
+
+(********************
+PSS ID Number: Q75236
+Article last modified on 05-19-1995
+ 
+3.00 3.10 4.00 | 3.50 3.51
+WINDOWS        | WINDOWS NT
+
+----------------------------------------------------------------------
+The information in this article applies to:
+ - Microsoft Windows Software Development Kit (SDK) versions 3.0 and 3.1
+ - Microsoft Win32 SDK versions 3.5, 3.51, and 4.0
+----------------------------------------------------------------------
+ 
+SUMMARY
+=======
+There is no Windows API that reports the portion of an application's
+window that is not obscured by other windows. To determine which areas
+of the window are covered, it is necessary to walk through the window
+list managed by Windows.
+ 
+Each window that precedes the application's window is "above" that
+window on the screen. Using the IntersectRect() function, check the
+rectangle of the window with any windows above to see if they
+intersect. Any window that is above the application's window and
+intersects its window rectangle obscures part of the application's
+window. By accumulating the positions of all windows that overlap the
+application's window, it is possible to determine which areas of the
+window are covered and which are not.
+ 
+MORE INFORMATION
+================
+The following sample code demonstrates this procedure:
+ 
+  GetWindowRect(hWnd, &rMyRect);    /*  Get the window dimensions
+                                     *  for the current window.
+                                     */
+      /*  Start from the current window and use the GetWindow()
+       *  function to move through the previous window handles.
+       */
+  for (hPrevWnd = hWnd;
+      (hNextWnd = GetWindow(hPrevWnd, GW_HWNDPREV)) != NULL;
+       hPrevWnd = hNextWnd)
+    {
+      /*  Get the window rectangle dimensions of the window that
+       *  is higher Z-Order than the application's window.
+       */
+    GetWindowRect(hNextWnd, &rOtherRect);
+ 
+      /*  Check to see if this window is visible and if intersects
+       *  with the rectangle of the application's window. If it does,
+       *  call MessageBeep(). This intersection is an area of this
+       *  application's window that is not visible.
+       */
+    if (IsWindowVisible(hNextWnd) &&
+           IntersectRect(&rDestRect, &rMyRect, &rOtherRect))
+      {
+      MessageBeep(0);
+      }
+    }
+*********************)
+
+******** BitBlt with check for overlapping windows *************
+
+PROCEDURE ScrollCom (cmdP : PaintPrivate.CommandPtr;
+                     hdc  : WinDef.HDC;
+                     st   : WinScreenType.T;
+                     trsl : Trestle.T;
+       VAR(*IN/OUT*) badR : Region.T): PaintPrivate.CommandPtr =
+  VAR
+    trop        := 16_00AA0029;  (* Ternary raster op code for NO-OP *)
+    copy_mode   := FALSE;
+    status      : WinDef.BOOL;
+    had_update  : WinDef.BOOL;
+    src, update : WinDef.RECT;
+    hwnd        : WinDef.HWND;
+    bad_src     : Rect.T;
+    bad_dest    : Rect.T;
+  BEGIN
+    WITH op = LOOPHOLE (cmdP, PaintPrivate.ScrollPtr)^ DO
+      IF op.op >= 0 AND st.optable # NIL AND op.op < NUMBER (st.optable^) THEN
+        WITH tbl = st.optable[op.op] DO
+          copy_mode := (tbl.bop.mode = WinScrnPaintOp.Mode.Copy);
+          trop := tbl.brop3;
+        END;
+      END;
+
+      INC (cmdP, ADRSIZE (op));
+
+      IF (NOT copy_mode) THEN
+        (* don't know how to do this one! *)
+        badR := Region.Join (badR, Region.FromRect (clip));
+        RETURN cmdP;
+      END;
+
+      IF (op.clip.east <= op.clip.west)
+      OR (op.clip.south <= op.clip.north)
+      OR (op.delta.h = 0 AND op.delta.v = 0) THEN
+        (* no bits actually moved... *)
+        RETURN cmdP;
+      END;
+
+      (* make sure the window is fresh before we start moving stuff around *)
+      hwnd := WinUser.WindowFromDC (hdc);
+(****
+      had_update := WinUser.GetUpdateRect (hwnd, ADR (update), False);
+****)
+(*****
+      status := WinUser.UpdateWindow (hwnd);
+      <* ASSERT status # False *>
+****)
+
+      src.left   := op.clip.west  - op.delta.h;
+      src.right  := op.clip.east  - op.delta.h;
+      src.top    := op.clip.north - op.delta.v;
+      src.bottom := op.clip.south - op.delta.v;
+
+      status := WinGDI.BitBlt (hdc,
+                               op.clip.west,
+                               op.clip.north,
+                               op.clip.east - op.clip.west,
+                               op.clip.south - op.clip.north,
+                               hdc,
+                               src.left,
+                               src.top,
+                               trop);
+      <* ASSERT status # False *>
+      (*********
+      status := WinUser.ScrollWindow (hwnd, op.delta.h, op.delta.v, ADR (src), NIL);
+      <* ASSERT status # False *>
+      **********)
+FixOverlaps (trsl, hwnd, src, op.delta);
+
+(******
+      IF had_update # False THEN
+        (* maybe some bits of the source were bogus before we scrolled! *)
+        bad_src := Rect.Meet (ToRect (update), ToRect (src));
+        IF NOT Rect.IsEmpty (bad_src) THEN
+          bad_dest := Rect.Add (bad_src, op.delta);
+          VBTClass.ForceRepaint (trsl, Region.FromRect (bad_dest), FALSE);
+          (***
+          update := FromRect (bad_dest);
+          EVAL WinUser.InvalidateRect (hwnd, ADR (update), False);
+          ***)
+        END;
+      END;
+******)
+
+      (** Thread.Pause (0.05d0); **) (* give windows a chance to finish... *)
+    END; (* WITH op *)
+    RETURN cmdP;
+  END ScrollCom;
+
+PROCEDURE FixOverlaps (trsl: Trestle.T;  hwnd: WinDef.HWND;  READONLY src_x: WinDef.RECT;
+                       READONLY delta: Point.T) =
+  VAR src, screen, other: WinDef.RECT;  dest: Rect.T;  fix: Point.T;
+  BEGIN
+    DumpRect ("scroll source: ", src_x);
+    IF WinUser.GetWindowRect (hwnd, ADR (screen)) # False THEN
+      DumpRect ("  screen rect: ", screen);
+    END;
+
+    (* convert the source rectangle to screen coordinates *)
+    src.right  := src_x.right  + screen.left;
+    src.left   := src_x.left   + screen.left;
+    src.bottom := src_x.bottom + screen.top;
+    src.top    := src_x.top    + screen.top;
+    DumpRect ("  screen src:  ", src);
+
+    (* what do we add to a bad source rectangle to get the bad
+       destination rectangle in Trestle window coordinates? *)
+    fix.h := delta.h - screen.left;
+    fix.v := delta.v - screen.top;
+    
+    LOOP
+      hwnd := WinUser.GetWindow (hwnd, WinUser.GW_HWNDPREV);
+      IF (hwnd = NIL) THEN RETURN; END;
+      IF WinUser.IsWindowVisible (hwnd) # False THEN
+        IF WinUser.GetWindowRect (hwnd, ADR (other)) # False THEN
+          DumpRect ("overlap: ", other);
+          other.left   := MAX (src.left,   other.left);
+          other.right  := MIN (src.right,  other.right);
+          other.top    := MAX (src.top,    other.top);
+          other.bottom := MIN (src.bottom, other.bottom);
+          IF (other.left < other.right) AND (other.top < other.bottom) THEN
+            DumpRect ("**** bad source: ", other);
+            dest.north := other.top    + fix.v;
+            dest.south := other.bottom + fix.v;
+            dest.west  := other.left   + fix.h;
+            dest.east  := other.right  + fix.h;
+            DumpRect ("  => ", FromRect (dest));
+            VBTClass.ForceRepaint (trsl, Region.FromRect (dest), FALSE);
+          END;
+        ELSE
+          RTIO.PutText ("overlap: cannot get rect: hwnd = ");
+          RTIO.PutAddr (hwnd);
+          RTIO.PutText ("\r\n");
+          RTIO.Flush ();
+        END;
+      ELSE
+        RTIO.PutText ("overlap: not visible: hwnd = ");
+        RTIO.PutAddr (hwnd);
+        RTIO.PutText ("\r\n");
+        RTIO.Flush ();
+      END;
+      hwnd := WinUser.GetWindow (hwnd, WinUser.GW_HWNDPREV);
+    END;
+  END FixOverlaps;
+
+PROCEDURE DumpRect (tag: TEXT;  READONLY r: WinDef.RECT) =
+  BEGIN
+    RTIO.PutText (tag);
+    RTIO.PutText (" [");
+    RTIO.PutInt (r.left);
+    RTIO.PutText ("..");
+    RTIO.PutInt (r.right);
+    RTIO.PutText (" x ");
+    RTIO.PutInt (r.top);
+    RTIO.PutText (" .. ");
+    RTIO.PutInt (r.bottom);
+    RTIO.PutText ("]\r\n");
+    RTIO.Flush ();
+  END DumpRect;
+
+***************************************************

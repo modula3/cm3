@@ -1,0 +1,7 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Mon May 10 20:49:38 PDT 1993 by mjordan                  */
+
+implementation("M3PathElemPosix")

@@ -1,0 +1,36 @@
+.\" Copyright (C) 1989, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.nh
+.TH SHOWNEW 1
+.SH NAME
+shownew \- a realtime display of a Modula-3 program's heap allocations
+
+.SH DESCRIPTION
+
+.PP
+The shownew program displays a running record of the heap allocations
+in a Modula-3 program.
+
+.PP
+Normally, you should not start shownew directly.  Rather, the runtime
+will start shownew and feed it with the proper data when the argument
+@M3shownew=shownew is given to a Modula-3 program; for example, to
+run the program foo and see the allocations of that process, run foo with the
+argument @M3shownew=shownew.  A Trestle window will appear; when you
+click the start option in the control menu, the program foo will
+actually start.
+
+.PP
+To set the interval between updates to X seconds, add the argument
+@M3update=X to the commandline.  X must be an integer.
+
+.SH SEE ALSO
+showheap(1), showthread(1)
+
+.SH AUTHOR OF OBJECT
+Bill Kalsow
+
+.SH Author Of Documentation
+Bill Kalsow

@@ -1,0 +1,43 @@
+The ASCII characters are divided into the following classes:
+
+  Blank         HT LF FF CR SP
+  Reserved      " ' ~
+  Delimiter     ( ) , . ; [ ] _ { } ? !
+  Special       # $ % & * + - / : < = > @ \ ^ |
+  Digit         0 ... 9
+  Letter        A ... Z ` a ... z
+  Illegal       all the others
+
+Moreover:
+
+  a StringChar is either
+  - any single character that is not an Illegal character or one of ', ", \.
+  - any of the pairs of characters \', \", \\.
+
+  a Comment is, recursively, a sequence of non-Illegal characters and comments, 
+  enclosed between "(*" and "*)".
+
+From these, the following lexemes are formed:
+
+  Space     a sequence of Blanks and Comments.
+  AlphaNum  a sequence of Letters and Digits starting with a Letter.
+  Symbol    a sequence of Specials.
+  Char      a single StringChar enclosed between two '.
+  String    a sequence of StringChars enclosed between two ".
+  Int       a sequence of Digits, possibly preceded by a single minus sign ~.
+  Real      two Ints separated by ., possibly preceded by ~.
+  Delimiter a single Delimiter character.
+
+A stream of characters is split into lexemes by always extracting the longest 
+prefix that is a lexeme. Note that Delimiters do not stick to each other or to
+other tokens even when they are not separated by Space, but some care must be 
+taken so that Symbols are not inadvertently merged.
+
+A token is either a Char, String, Int, Real, Delimiter, Identifier, or Keyword.
+Once a stream of characters has been split into lexemes, tokens are extracted
+as follows. 
+
+  Space lexemes do not produce tokens.
+  Char, String, Int, Real, and Delimiter lexemes are also tokens.
+  AlphaNum and Symbol lexemes are Identifier tokens, except when they have been
+    explicitly declared to be keywords, in which case they are Keyword tokens.

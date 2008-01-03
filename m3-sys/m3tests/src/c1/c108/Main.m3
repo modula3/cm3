@@ -1,0 +1,15 @@
+(* Copyright (C) 1994, Digital Equipment Corporation. *)
+(* All rights reserved.                               *)
+(* See the file COPYRIGHT for a full description.     *)
+ 
+MODULE Main;
+
+IMPORT Test;
+
+VAR p := Test.T.m;
+    q := Test.T.n;
+
+BEGIN
+  EVAL p;
+  EVAL q;
+END Main.

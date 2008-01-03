@@ -1,0 +1,28 @@
+/* Copyright (C) 1994, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+/*                                                             */
+/* Last modified on Thu Jun 20 15:35:13 PDT 1996 by heydon     */
+/*      modified on Tue May 24 08:58:43 PDT 1994 by najork     */
+/*      modified on Thu Sep 24 12:23:07 PDT 1992 by mhb        */
+/*      modified on Thu Aug 20 12:27:50 PDT 1992 by swart      */
+/*      modified on Mon Jul 27  2:42:56 PDT 1992 by sclafani   */
+
+import    ("zeus")
+
+zume      ("Hash")
+
+module    ("HashFmt")
+module    ("HashAlgs")
+module    ("HashViews")
+module    ("HashStatsView")
+
+resource  ("HashVar.fv")
+resource  ("hashinput.fv")
+resource  ("hashstats.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  bundle         ("HashBundle")
+  implementation ("Main")
+  program        ("hash")
+end

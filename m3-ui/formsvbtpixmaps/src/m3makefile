@@ -1,0 +1,24 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Sat Jul 22 15:45:02 PDT 1995 by mhb   
+%      modified on Mon Dec 20 16:07:00 PST 1993 by kalsow
+
+import ("libm3")
+
+resource ("Digital.pbm")
+resource ("arrowDown.pbm")
+resource ("arrowUp.pbm")
+resource ("blank.pbm")
+resource ("close.pbm")
+resource ("grow.pbm")
+resource ("m3makefile")
+resource ("menuArrow.pbm")
+resource ("middle.pbm")
+resource ("right.pbm")
+resource ("triangleSE.pbm")
+
+bundle ("FormsVBTPixmapsBundle")
+
+Library ("m3formsvbtpixmaps")

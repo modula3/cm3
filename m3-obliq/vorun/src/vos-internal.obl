@@ -1,0 +1,58 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:50:18 PST 1995 by mhb     *)
+
+var reinstall = true;
+
+try 
+  net_import("vos", "").ping();
+  reinstall := false;
+except else
+end;
+
+if reinstall then
+  let fv = 
+    "(Shape (Width 600) (Height 300) (Font" &
+    "\"-\*-helvetica-bold-\*R-\*240-\*\") (LabelFont" &
+    "\"-\*-helvetica-bold-\*R-\*240-\*\") (VBox (Text (BgColor" &
+    "\"DarkBrown\") (Color \"White\") \"Session Request\") (Text (Color" &
+    "\"DarkBrown\") \"You are invited to join a session of\") (Text (Color" &
+    "\"Red\") (Name name) \"foo\") Fill (HBox Fill (Button (Name accept)" &
+    "(BgColor \"PaleGreen\") (Rim (Pen 5) \"Accept\")) Fill (Button (Name " &
+    "reject) (BgColor \"LightRed\") (Rim (Pen 5) \"Reject\")) Fill) Fill))";
+
+  let vos = {
+    Install => meth(s, constructor, name)
+      let noticeform = form_new(fv);
+      form_putText(noticeform, "name", "", name, false);
+      form_attach(noticeform, "accept", 
+        proc(fv) 
+          form_hide(fv);
+          (constructor)(volibLocal);
+          end);
+      form_attach(noticeform, "reject", 
+        proc(fv) 
+          form_hide(fv); 
+          ok 
+          end);
+      form_show(noticeform);
+      ok
+      end,
+     ping => meth(s)
+        true
+     end
+    };
+  net_export("vos", "", vos);
+end;
+
+
+
+
+
+
+
+
+
+

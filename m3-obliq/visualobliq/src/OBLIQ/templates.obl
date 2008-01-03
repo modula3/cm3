@@ -1,0 +1,454 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:47:02 PST 1995 by mhb     *)
+
+module templates;
+let Templates = {
+boolean => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+         (Boolean =$initValue$ %@ $fbstyle$ 
+                 ( $BooleanContents$ )
+         )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+browser => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (Font \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+      
+        ($typeOfBrowser$   %@                        
+            $quick$
+            (Items $Items$)
+            $ValueList$ 
+        )
+
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+button => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+        $GuardHeader$
+          ($Trill$Button %@
+          ($ButtonContents$)
+          )
+        $GuardFooter$
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+choice => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+         (Choice =$initValue$ %@ $fbstyle$ 
+                 ( $ChoiceContents$ )
+         )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+filebrowser => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$LabelFont$\")  (Font \"$Font$\")  
+
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+       
+        (VBox
+         (Glue 5)
+          (HBox (Glue 5)
+            (Shape
+              (Width 150 + Inf - 100)
+              (Height 150 + Inf - 100)
+              (VBox
+                (LabelFont \"fixed\")
+                (DirMenu (For $fbName1$))
+                (Glue 6)
+                (Frame Lowered (BgColor \"White\")
+                     (FileBrowser %@ $ReadOnly$ 
+                         (Value \"$Initial$\")
+                         (Suffixes $Suffixes$)
+                     )
+                 )))
+            (Glue 5)
+            (Shape
+              (Width 50 + Inf)
+              (VBox
+                (Fill)
+                (Button %@action \"$ActionLabel$\")
+                (Glue 10)
+               ))
+            (Glue 5))
+          (Glue 5)
+          (HBox
+            (Glue 5)
+            (Shape (Width 30 + Inf) (Height 16) \"File :\")
+            (Frame Lowered (BgColor \"White\") (Helper %@typein (For $fbName2$) (Font \"fixed\")))
+            (Glue 5))
+          (Glue 5))
+        )
+           
+        )
+      )
+    )
+ )
+  
+",
+form => "
+(ZChild $ZChildState$ %@ 
+  (Filter %@filter $FilterState$ 
+    (Radio %@radio
+      $ZSplitHeader$
+      (Shape %@shape 
+        (Width $XSpan$ + $XStretch$ - $XShrink$) 
+        (Height $YSpan$ + $YStretch$ - $YShrink$)
+        (BgColor \"$BgColor$\") 
+        (Color \"$FgColor$\")
+        (LabelFont \"$Font$\")
+        (Rim %@rim (Pen $RimPen$) 
+          (Border %@border (Pen $BorderPen$)
+            (VBox
+	     (Macro $TitleBar$ ()
+              '(Shape %@title (Height 20)
+                (Frame $FrameStyle$ 
+                  (BgColor \"$TitleBgColor$\") 
+                  (Color \"$TitleFgColor$\")
+                  (HBox 
+                    (Shape (Width 15) 
+                      (CloseButton (ShadowSize 0) (Pixmap \"close.pbm\"))) 
+                    Chisel
+                    (Shape (Width + 1000)  
+                       (ZMove (ShadowSize 0) (Text %@titlestring \"$TitleString$\")))    
+                    Chisel 
+                    (Shape (Width 15) 
+                      (ZGrow (ShadowSize 0) (Pixmap \"grow.pbm\"))))))
+	      )
+	      $IncludeTitleBar$		
+              $MenuStructure$
+              (Text  %@background \"\" )))))
+      $ZSplitFooter$
+)))         
+",
+frame => "
+(Filter %@filter $FilterState$
+ (Radio %@radio
+ $ZSplitHeader$
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+    
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) 
+       (Border %@border (Pen $BorderPen$)
+      
+        (Texture  %@ \"$TextureFile$\" )
+           
+        )
+      )
+    )
+   )
+ $ZSplitFooter$        
+ )
+)
+",
+hscroll => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (Scroller %@
+            (Value $Value$) (Min $Min$)
+            (Max $Max$) (Thumb $Thumb$)
+            (Step $Step$)
+        )    
+       
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+menu => "
+(Filter %@Menu
+ (Macro 
+    MenuItem
+    BOA
+    (xFilter initState x xLabel xLabelValue)
+    `(Filter %,xFilter ,initState
+        (Menu %,x (Text %,xLabel ,xLabelValue))
+     )
+  ) 
+  (Macro 
+    PullDownMenuItem
+    BOA
+    (xFilter initState x xLabel xLabelValue pulldown)
+    `(Filter %,xFilter ,initState
+        (Menu %,x (Text %,xLabel ,xLabelValue)
+            (Border (Pen 1)
+                    ,pulldown
+            )
+        )
+     )
+  ) 
+
+ (Macro
+   MenuButton
+   BOA
+   (xFilter initState x xLabel xLabelValue )
+   `(Filter %,xFilter ,initState
+       (MButton %,x
+         (Text %,xLabel ,xLabelValue) 
+       )
+    )
+  )
+    (BgColor \"$MenuBgColor$\") (Color \"$MenuFgColor$\")
+    (LabelFont \"$MenuFont$\")
+    (ShadowSize 0)
+    (Border  (Pen 1)
+        (HBox 
+           $MenuItems$
+           (Glue 1000)
+        )  
+    ) 
+)
+",
+numeric => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (Font \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (Numeric $HideButtons$ $AllowEmpty$ %@
+            (Value $Value$) (Min $Min$)
+            (Max $Max$) 
+        )    
+       
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+text => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (Text $Alignment$ %@ \"$Initial$\")
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+textedit => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (Font \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (TextEdit %@ $ReadOnly$ $Clip$ $NoScrollbar$
+            ($Initial$)
+         )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+typein => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (Font \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (TypeIn %@ $ReadOnly$ $ExpandOnDemand$
+            (Value \"$Initial$\")
+         )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+video => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (Font \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+     (TSplit %@toggle   =$PlayVideo$
+        (Audio %@audio =\"$AudioSource$\" (Volume $Volume$)
+		$Mute$ $IgnoreMapping$
+            (Video %@ 
+		(Quality $Quality$)
+		(Width $Width$) (Height $Height$)
+		(Colors $Colours$) (MSecs $MSecs$)
+		$Synchronous$ $FixedSize$ $Paused$
+		\"$VideoSource$\"
+		)
+         )
+	(Text \"\")
+      )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+vscroll => "
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor \"$BgColor$\") (Color \"$FgColor$\")
+     (LabelFont \"$Font$\")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+        (Scroller Vertical %@ 
+            (Value $Value$) (Min $Min$)
+            (Max $Max$) (Thumb $Thumb$)
+            (Step $Step$)
+        )    
+       
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+
+",
+};

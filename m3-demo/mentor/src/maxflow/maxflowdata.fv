@@ -1,0 +1,16 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (Rim
+    (Pen 10)
+    (HBox
+      (VBox
+        (Text RightAlign "current flow: ")
+        (Text RightAlign "capacity: "))
+      (VBox
+        (Shape (Width 100) (TextEdit ReadOnly %tflow))
+        (Shape (Width 100) (TextEdit ReadOnly %tcapacity))))))

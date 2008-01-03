@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: obliqlibemb/src/ObText.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>obliqlibemb/src/ObText.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1994, Digital Equipment Corporation                         
+ Digital Internal Use Only                                                 
+ All rights reserved.                                                      
+                                                                           
+ Last modified on Mon May 30 16:04:23 PDT 1994 by najork                   
+       Created on Mon Jan 24 09:34:27 PST 1994 by najork                   
+
+<P>
+<P><PRE>INTERFACE <interface><A HREF="ObText.m3.html">ObText</A></interface>;
+
+IMPORT <A HREF="../../obliqrt/src/ObLib.i3.html">ObLib</A>, <A HREF="../../obliqrt/src/ObValue.i3.html">ObValue</A>, <A HREF="../../synloc/src/SynLocation.i3.html">SynLocation</A>;
+
+TYPE T = ObValue.ValText;
+
+PROCEDURE <A HREF="ObText.m3.html#M3ToObliq">M3ToObliq</A> (val : TEXT) : T;
+PROCEDURE <A HREF="ObText.m3.html#ObliqToM3">ObliqToM3</A> (val : T) : TEXT;
+
+PROCEDURE <A HREF="ObText.m3.html#GetArg">GetArg</A> (args    : ObValue.ArgArray;
+                  idx     : INTEGER;
+                  package : ObLib.T;
+                  opCode  : ObLib.OpCode;
+                  loc     : SynLocation.T) : TEXT RAISES {ObValue.Error};
+
+END ObText.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

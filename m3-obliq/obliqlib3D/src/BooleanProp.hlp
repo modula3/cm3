@@ -1,0 +1,27 @@
+  BooleanProp_NewConst(b: Bool): BooleanPropVal
+  BooleanProp_NewSync(ah: AnimHandle, b: Bool): BooleanPropVal
+  BooleanProp_NewAsync(beh: BooleanPropAsyncBeh): BooleanPropVal
+  BooleanProp_NewDep(beh: BooleanPropDepBeh): BooleanPropVal
+  BooleanProp_NewConstBeh(b: Bool): BooleanPropConstBeh
+  BooleanProp_NewSyncBeh(ah: AnimHandle, b: Bool): BooleanPropSyncBeh
+  BooleanProp_NewAsyncBeh(compute: M1):BooleanPropAsyncBeh
+  BooleanProp_NewDepBeh(compute: M2):BooleanPropDepBeh
+  BooleanProp_NewRequest(start dur: Num, value: M3): BooleanPropRequest
+WHERE
+  BooleanPropName <: PropName & { bind: (v: BooleanPropVal) => Prop }
+  BooleanPropVal <: PropVal & { getBeh: () => BooleanPropBeh,
+                                setBeh: (BooleanPropBeh) => Ok,
+                                get: () => Bool,
+                                value: (Num) => Bool }
+  BooleanPropBeh <: PropBeh
+  BooleanPropConstBeh <: BooleanPropBeh & { set: (Bool) => Ok }
+  BooleanPropSyncBeh <: BooleanPropBeh &
+           { addRequest: (BooleanPropRequest) => Ok ! Prop_BadInterval,
+             change: (Bool,Num) => Ok ! Prop_BadInterval }
+  BooleanPropAsyncBeh <: BooleanPropBeh & { compute: M1 }
+  BooleanPropDepBeh <: BooleanPropBeh & { compute: M2 }
+  BooleanPropRequest <: PropRequest & { value: M3 }
+  M1 = Self (X <: BooleanPropAsyncBeh) (Real) => Bool
+  M2 = Self (X <: BooleanPropDepBeh) (Real) => Bool
+  M3 = Self (X <: BooleanPropRequest) (Bool,Real) => Bool
+  Num = Real + Int

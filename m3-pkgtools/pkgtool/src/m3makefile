@@ -1,0 +1,16 @@
+/* Copyright (C) 1994, Digital Equipment Corporation */
+/* All rights reserved. */
+/* See the file COPYRIGHT for a full description. */
+/* Makefile for package tool proper */
+/* Last modified on Mon Apr  4 10:53:44 PDT 1994 by wobber     */
+
+import("libm3")
+import("netobj")
+import("tcp")
+import("pkgobj")
+
+implementation ("PackageTool")
+
+build_standalone()
+
+program("packagetool")

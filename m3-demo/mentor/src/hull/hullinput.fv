@@ -1,0 +1,25 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Rim
+  (Pen 10)
+  (HBox
+    (Radio
+      %InStyle
+      =Random
+      (VBox
+        (HBox
+          (Choice %Random "Random points:")
+          (Numeric (Min 3) (Max 99) %N =10)
+          (Glue 10)
+          (Boolean %UsePrev (Value FALSE) "Prev. seed")
+          Fill)
+        (Glue 10)
+        (HBox
+          (Choice %File "From file:")
+          (Border
+            (Shape
+              (Width 120 + 200)
+              (Height 60 + 75)
+              (FileBrowser (Suffixes "pt" "") %Name))))))))

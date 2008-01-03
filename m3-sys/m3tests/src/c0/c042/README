@@ -1,0 +1,35 @@
+Addition:
+
+replied: Thu, 26 Apr 90 17:05:54 PDT
+replied: "mjj%computer-lab.cambridge.ac.uk@NSFnet-Relay.AC.UK m3-request"
+Return-Path: 
+Delivery-Date: Thu, 26 Apr 90 10:53:02 PDT
+Received: by jumbo; id AA17653; Thu, 26 Apr 90 10:52:25 PDT
+Received: by decwrl.dec.com; id AA09877; Thu, 26 Apr 90 10:52:10 -0700
+Received: from sun.nsfnet-relay.ac.uk by vax.NSFnet-Relay.AC.UK 
+           via Janet with NIFTP  id aa11408; 26 Apr 90 17:29 BST
+Received: from ashley.cl.cam.ac.uk by gnnt.Cl.Cam.AC.UK id aa07101;
+          26 Apr 90 15:18 BST
+To: m3-request
+Subject: Bug
+Date: Thu, 26 Apr 90 15:17:58 +0100
+From: mjj%computer-lab.cambridge.ac.uk@NSFnet-Relay.AC.UK
+Message-Id:  <9004261518.aa07101@gnnt.Cl.Cam.AC.UK>
+
+The following code provokes the given error message from the C compiler.
+I remember we had problems with this construct!
+
+Mick
+
+MODULE Bug1 EXPORTS Main;
+
+TYPE Property = {A,B,C}; PropertySet = SET OF Property;
+
+VAR p := PropertySet{};
+BEGIN
+END Bug1.
+
+ccom: Error: Bug1.m3, line 1: operands of CAST have incompatible types
+      extern INITLINK* Main__init;  static t1 _Bug1__p = (t1) 0;
+      ---------------------------------------------------------^
+

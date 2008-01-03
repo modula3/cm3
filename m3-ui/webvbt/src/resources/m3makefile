@@ -1,0 +1,17 @@
+% Copyright 1994 Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Sun Sep 24 12:52:20 PDT 1995 by mhb      
+
+resource 	("emptyimage.pbm")
+resource 	("errorimage.pbm")
+resource 	("filledbullet.pbm")
+resource 	("hollowbullet.pbm")
+
+resource 	("expandArrow.pbm")
+resource 	("expandOnArrow.pbm")
+resource 	("contractArrow.pbm")
+resource 	("contractOnArrow.pbm")
+
+bundle		("ResourceBundle")

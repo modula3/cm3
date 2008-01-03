@@ -1,0 +1,32 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+/*                                                           */
+/* Last modified on Thu Jun 20 15:42:56 PDT 1996 by heydon   */
+/*      modified on Tue May 24 09:12:30 PDT 1994 by najork   */
+/*      modified on Thu Sep 24 12:55:44 PDT 1992 by mhb      */
+/*      modified on Tue Sep  8 20:30:55 PDT 1992 by johnh    */
+
+import   ("zeus")
+
+zume     ("SearchTree")
+
+module   ("SkinnyBinTree")
+module   ("SkelView")
+module   ("STView")
+module   ("BSTView")
+module   ("BSTAlg")
+module   ("UnbalancedAlg")
+module   ("RedBlackAlg")
+
+resource ("Unbalanced.pseudo")
+resource ("Unbalanced.m3")
+resource ("RedBlack.pseudo")
+resource ("RedBlack.m3")
+resource ("SearchTree.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("SearchTreeBundle")
+  program        ("SearchTree")
+end

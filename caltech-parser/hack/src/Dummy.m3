@@ -1,0 +1,3 @@
+MODULE Dummy EXPORTS Main;
+
+BEGIN END Dummy.

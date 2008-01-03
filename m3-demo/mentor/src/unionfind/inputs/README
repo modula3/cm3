@@ -1,0 +1,8 @@
+Last modified on Fri Aug 19 16:42:53 PDT 1994 by heydon
+
+This directory contains various ".sx" input files for the UnionFind
+animation.
+
+  list-worst-08.sx    worst-case input for the List algorithm on 8 nodes
+  list-worst-16.sx    worst-case input for the List algorithm on 16 nodes
+  list-worst-32.sx    worst-case input for the List algorithm on 32 nodes

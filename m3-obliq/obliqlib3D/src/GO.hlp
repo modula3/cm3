@@ -1,0 +1,26 @@
+  GO_PropUndefined: Exception                                
+  GO_StackError: Exception                                   
+  GO_Transform: TransformPropName                            
+  GO_SetTransform(go: GO, xf: TransformVal): Ok             
+  GO_GetTransform(go: GO): TransformPropVal ! GO_PropUndefined 
+WHERE                                                        
+  GO <: ProxiedObj &                                          
+    { setProp: (PropName,PropVal) => Ok                      
+      unsetProp: (PropName) => Ok ! GO_PropUndefined,           
+      getProp: (PropName) => PropVal ! GO_PropUndefined,        
+      setName: (Text) => Ok,                                 
+      getName: () => Text,                                   
+      findName: (Text) => GO,                                
+      pushMouseCB: (cb: MouseCB) => Ok,                      
+      popMouseCB: () => Ok ! GO_StackError,                     
+      removeMouseCB: (cb: MouseCB) => Ok ! GO_StackError,       
+      invokeMouseCB: (mr: MouseRec) => Ok,                    
+      pushPositionCB: (cb: PositionCB) => Ok,                
+      popPositionCB: () => Ok ! GO_StackError,                  
+      removePositionCB: (cb: PositionCB) => Ok ! GO_StackError, 
+      invokePositionCB: (mr: PositionRec) => Ok,              
+      pushKeyCB: (cb: KeyCB) => Ok,                          
+      popKeyCB: () => Ok ! GO_StackError,                       
+      removeKeyCB: (cb: KeyCB) => Ok ! GO_StackError,           
+      invokeKeyCB: (mr: KeyRec) => Ok }                       
+  TransformVal = TransformPropVal + Matrix4                  

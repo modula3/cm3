@@ -1,0 +1,22 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Dec 20 15:43:51 PST 1993 by kalsow
+%      modified on Fri May 14 09:51:37 PDT 1993 by meehan
+%      modified on Thu Feb  4 09:37:15 PST 1993 by mhb
+
+Module ("ISOChar")
+Module ("Key")
+Module ("KeyFilter")
+Module ("KeyTrans")
+Module ("MTextUnit")
+Module ("TextEditVBT")
+Module ("TextPort")
+Module ("TextPortClass")
+Module ("TypeinVBT")
+Module ("TypescriptVBT")
+Module ("IvyModel")
+Module ("EmacsModel")
+Module ("XtermModel")
+Module ("MacModel")

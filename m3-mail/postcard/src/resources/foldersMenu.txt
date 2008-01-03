@@ -1,0 +1,17 @@
+The operations on the "Folders" menu let you manage your folders, and subscribe or un-subscribe to news groups or bulletin boards. See the "Folders List" help button for general information about Postcard's use of folders.
+
+"Add Folder" lets you create a new personal folder or subscribe to a news group or bulletin board. Personal folders have names with no "." in them; folders that are subscriptions to news groups and bulletin boards are generally named after the news group. E.g., "myProject" would be a personal folder, but "comp.newprod" is a news group.
+
+Some private folders are distinguished: "inbox" is where the "inc" command places your new mail, and you might have used the configuration dialog to nominate a folder to retain "deleted" messages. You can also use the "fcc" header line in mail that you send to place a copy of the message directly into a folder.
+
+You can create a folder that is a read-only alias for another folder (either a private one or a newsgroup or bulletin board). To do so, first create the folder (with no "." in its name), then manually place in that folder a file named ".bblink", containing the full pathname of the target folder, e.g. "/usr/spool/news/comp/newprod". Thereafter Postcard treats the folder just like a newsgroup or bulletin board, with the specified location being the source of the contents.
+
+See the help information on the folder list sub-window for more information on using folders.
+
+"Rescan" forces Postcard to rescan the open folder, i.e., regenerate the header summary lines that appear in the message list sub-window.  Use this if Postcard's state becomes inconsistent with what's in your file system because of changes made there by other tools. See the Postcard "man" page for hints about using this command to recover from various errors.
+
+"Sort & Pack" sorts the messages in the open folder by date and renumbers them consecutively starting from 1. You can do this only for private folders. (Hint: if there is still a gap in the numbering afterward, look for a zero-length file in the corresponding directory.)
+
+"Purge" removes old messages from the open folder and renumbers remaining messages consecutively starting from 1. Purge retains a number of messages in the folder, by default 50; you can adjust this number using the configuration dialog. Note that you can use "Purge" on your private folders or on newsgroups and bulletin boards.
+
+"Remove Folder" removes the open folder, i.e., deletes the folder and all the messages in it, irreversibly. Messages deleted this way are not moved to any "deleted" folder, or anywhere else.

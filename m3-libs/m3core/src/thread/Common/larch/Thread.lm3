@@ -1,0 +1,146 @@
+(* Copyright (C) 1993 Digital Equipment Corporation                *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Tue Jun 22 17:33:46 PDT 1993 by horning        *)
+
+INTERFACE Thread;
+<*
+TYPE Set$T
+
+TRAITS set(T)
+
+FIELDS OF T          close: Closure, done, joined: BOOLEAN
+FIELDS OF Mutex      holder: T
+FIELDS OF Condition  waiting: Set$T
+FIELDS OF Closure    res: REFANY
+
+VAR defaultStackSize: CARDINAL
+
+PROCEDURE Fork(cl: Closure): T;
+  ENSURES NEW(RESULT) /\ RESULT.close' = cl
+    /\ ~RESULT.joined' /\ ~RESULT.done'
+(* Return a newly-created thread executing "cl.apply()". *)
+
+PROCEDURE Join(t: T): REFANY;
+  CHECKS t \neq NIL /\ ~t.joined
+  MODIFIES t.joined
+  WHEN t.done ENSURES RESULT = t.close.res /\ t.joined'
+
+PROCEDURE Wait(m: Mutex; c: Condition);
+  CHECKS m \neq NIL /\ c \neq NIL
+  REQUIRES m.holder = CURRENT
+  MODIFIES m.holder, c.waiting
+  COMPOSITION OF Enqueue; Resume END
+  ACTION Enqueue
+    ENSURES m.holder' = NIL /\ c.waiting' = insert(CURRENT, c.waiting)
+  ACTION Resume
+    WHEN m.holder = NIL /\ CURRENT \notin c.waiting
+      ENSURES m.holder' = CURRENT /\ UNCHANGED(c.waiting)
+
+PROCEDURE Acquire(m: Mutex);
+  CHECKS m \neq NIL
+  MODIFIES m.holder
+  WHEN m.holder = NIL ENSURES m.holder' = CURRENT
+
+PROCEDURE Release(m: Mutex);
+  CHECKS m \neq NIL
+  REQUIRES m.holder = CURRENT
+  MODIFIES m.holder
+  ENSURES m.holder' = NIL
+
+PROCEDURE Broadcast(c: Condition);
+  CHECKS c \neq NIL
+  MODIFIES c.waiting
+  ENSURES c.waiting' = {}
+
+PROCEDURE Signal(c: Condition);
+  CHECKS c \neq NIL
+  MODIFIES c.waiting
+  ENSURES IF c.waiting \neq {} THEN c.waiting' \subset c.waiting
+          ELSE UNCHANGED(ALL)
+
+PROCEDURE Pause(n: LONGREAL)
+  COMPOSITION OF Enqueue; Resume END
+  VAR start: LONGREAL
+  ACTION Enqueue
+    ENSURES start' = NOW
+  ACTION Resume
+    WHEN (NOW - start) > n ENSURES TRUE
+
+PROCEDURE Self(): T;
+  ENSURES RESULT = CURRENT
+
+VAR pendingAlerts: Set$T := {};
+
+PROCEDURE Alert(t: T);
+  CHECKS t \neq NIL
+  MODIFIES pendingAlerts;
+  ENSURES pendingAlerts' = insert(t, pendingAlerts)
+
+PROCEDURE TestAlert(): BOOLEAN;
+  MODIFIES pendingAlerts;
+  ENSURES
+    IF RESULT
+    THEN CURRENT \in pendingAlerts
+      /\ pendingAlerts' = delete(CURRENT, pendingAlerts)
+    ELSE UNCHANGED(ALL)
+
+PROCEDURE AlertWait(m: Mutex; c: Condition) RAISES {Alerted};
+  CHECKS m \neq NIL /\ c \neq NIL
+  REQUIRES m.holder = CURRENT
+  MODIFIES m.holder, c.waiting, pendingAlerts
+  VAR signalChosen: BOOLEAN
+  COMPOSITION OF Enqueue; ChooseOutcome; Resume END
+  ACTION Enqueue
+    ENSURES m.holder' = NIL
+      /\ c.waiting' = insert(CURRENT, c.waiting)
+      /\ UNCHANGED(pendingAlerts)
+  ACTION ChooseOutcome
+    WHEN CURRENT \notin c.waiting \/ CURRENT \in pendingAlerts
+      ENSURES signalChosen' = CURRENT \notin c.waiting
+        /\ c.waiting' = delete(CURRENT, c.waiting)
+        /\ pendingAlerts' = (IF signalChosen' THEN pendingAlerts
+                             ELSE delete(CURRENT, pendingAlerts))
+        /\ UNCHANGED(m.holder')
+  ACTION Resume
+    WHEN m.holder = NIL
+      ENSURES m.holder' = CURRENT
+        /\ (IF signalChosen THEN RETURNS ELSE RAISES Alerted)
+        /\ UNCHANGED(c.waiting, pendingAlerts)
+
+PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted};
+  CHECKS t \neq NIL /\ ~t.joined
+  MODIFIES t.joined, pendingAlerts
+  WHEN t.done
+    ENSURES RESULT = t.close.res /\ t.joined'
+      /\ UNCHANGED(pendingAlerts)
+  WHEN CURRENT \in pendingAlerts 
+    ENSURES RAISES Alerted
+      /\ pendingAlerts' = delete(CURRENT, pendingAlerts)
+      /\ UNCHANGED(t.joined)
+
+PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted};
+  MODIFIES pendingAlerts
+  COMPOSITION OF Enqueue; Resume END
+  VAR start: LONGREAL
+  ACTION Enqueue
+    ENSURES start' = NOW
+  ACTION Resume
+    WHEN (NOW - start) > n ENSURES UNCHANGED(ALL)
+    WHEN CURRENT \in pendingAlerts 
+      ENSURES RAISES Alerted
+        /\ pendingAlerts' = delete(CURRENT, pendingAlerts)
+
+PROCEDURE GetDefaultStackSize(): CARDINAL;
+  ENSURES RESULT = defaultStackSize
+
+PROCEDURE MinDefaultStackSize(min: CARDINAL);
+  MODIFIES defaultStackSize
+  ENSURES  defaultStackSize' = max(defaultStackSize, min)
+
+PROCEDURE IncDefaultStackSize(inc: CARDINAL);
+  MODIFIES defaultStackSize
+  ENSURES  defaultStackSize' = defaultStackSize + inc
+*>
+END Thread.
+

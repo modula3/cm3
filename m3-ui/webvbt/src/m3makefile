@@ -1,0 +1,47 @@
+% Copyright 1994 Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Apr 12 08:17:04 PDT 1996 by mhb      
+%      modified on Wed Jan 17 14:42:47 PST 1996 by najork   
+
+import ("libm3")
+import ("formsvbt")
+import ("http")
+import ("web")
+
+UseOblets = "defined"
+
+if defined("UseOblets")
+  include_dir("oblet")
+else
+  include_dir("nooblet")
+end
+
+include_dir     ("resources")
+
+module		("CIText")
+interface	("Element")
+table		("CITextElement", "CIText", "Element")
+module		("Lexer")
+%Module		("TextExtras") % now in libm3
+Module  	("HTML")
+implementation	("HTMLParser")
+
+Module		("HTMLVBT")
+module		("HTMLVBTG")
+interface       ("HTMLVBTGRep")
+module 		("Images")
+Module 		("ImageUtils")
+interface       ("Oblet")
+
+module		("SimpleWeb")
+Module		("URLCache")
+Module		("WebVBT")
+
+module		("HTMLVBTText")
+Sequence	("TextPortButton", "TextPortButton")
+Module		("TextPortButton")
+Module		("TextPortWithButtons")
+
+library 	("webvbt")

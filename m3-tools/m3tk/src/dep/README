@@ -1,0 +1,15 @@
+m3tk-dep.2 package -- created Fri Apr 3 11:53:25 PST 1992 by mjordan
+current owner mjordan
+
+This package contains the guts of the "m3check" tool. It started life
+as a simple "dependency analyser", hence the term "dep" but has evolved
+into providing support for the compilation of large systems. In
+general, if you want to write a tool that is going to access entire
+programs or packages as AST collections, you will find this package
+useful.
+
+M3DepDATool         User interface to M3DepCompile
+M3DepCompile        Large system compilation tool
+M3DepM3Path         Access to Modula-3 files (in a set of directories)
+                    with support for detecting additions/deletions/
+                    modifications.

@@ -1,0 +1,104 @@
+#| Copyright 1993 Digital Equipment Corporation.                             |#
+#| Distributed only by permission.                                           |#
+#|                                                                           |#
+#| Last modified on Sat Jul 17 14:45:54 PDT 1993 by heydon                   |#
+#|                                                                           |#
+#| Input form for the greedy packet-routing algorithm.                       |#
+
+(Rim (Pen 4)
+  (Macro Field BOA (name)
+    `(VBox
+       (Shape (Height + 0) (Text LeftAlign ,name))
+       (Glue 2)))
+  (Macro NamedChoice BOA (label var (init FALSE))
+    `(Choice %,var =,init CheckBox
+       (Text LeftAlign ,label)))
+  (Macro Value BOA (label var init (fill Fill) (min 1))
+    `(HBox ,fill
+        (Shape (Width + 0) (Text RightAlign ,label))
+        (Numeric %,var =,init (Min ,min))))
+  (Macro Divider BOA ((g 4) (b 2))
+    `(VBox (Glue ,g) (Bar ,b) (Glue ,g)))
+  (Macro Bool BOA (label boolVar (init FALSE))
+    `(Boolean %,boolVar =,init (Text LeftAlign ,label)))
+  (VBox
+    (VBox
+      (Field "Network Topology:")
+      (Radio %topology (VBox
+        (HBox
+          (NamedChoice "Grid:" grid TRUE) Fill
+          (Value  "W =" gWidth  4)
+          (Value " H =" gHeight 5 (Glue 0))
+        )
+        (HBox
+          (NamedChoice "Torus:" torus FALSE)
+          (Value  "W =" tWidth  4)
+          (Value " H =" tHeight 5 (Glue 0))
+        )
+        (HBox
+          (NamedChoice "Butterfly:" butterfly FALSE)
+          (Value  "Dimension =" butDim  3)
+        )
+        (Glue 2)
+        (HBox
+          (NamedChoice "From File:" networkFromFile FALSE)
+          (HBox
+            (Text RightAlign "Name =")
+            (Frame Lowered (TypeIn ExpandOnDemand %networkFilename (BgColor "White")))
+          )
+        )
+      )) 
+    )
+    (Divider)
+    (VBox
+      (Field "Queue Size:")
+      (HBox
+        (Bool "Bounded?" bounded TRUE)
+        (Value "Maximum Size =" maxQueueSize 3)
+      )
+    )
+    (Divider)
+    (VBox
+      (Field "Packet Sources:")
+      (Radio %pktSources (VBox
+        (HBox
+          (NamedChoice "Random:" randomSrc TRUE)
+          (Value "Total =" pktsTotal 10)
+        )
+        (HBox
+          (NamedChoice "Constant:" constantSrc)
+          (Value "Per Node =" pktsPerNode 1)
+        )
+        (Glue 2)
+        (HBox
+          (NamedChoice "From File:" pktsFromFile)
+          (HBox
+            (Text RightAlign "Name =")
+            (Frame Lowered (TypeIn ExpandOnDemand %pktsFilename (BgColor "White")))
+          )
+        )
+      ))
+    )
+    (Divider)
+    (VBox
+      (Field "Outgoing Tie Resolution Heuristic:")
+      (Radio %tieRes (VBox
+        (NamedChoice "First Match" firstMatch TRUE)
+        (NamedChoice "Random" randomMatch FALSE)
+      ))
+    )
+    (Divider)
+    (VBox
+      (Field "Contention Resolution Heuristic:")
+      (Radio %contentionRes (VBox
+        (NamedChoice "Furthest First" furthestFirst TRUE)
+        (NamedChoice "Random" randomFirst)
+      ))
+    )
+    (Divider)
+    (VBox
+      (Field "Random Numbers:")
+      (Bool "Use Fixed Seed?" fixed)
+    )
+  )
+)

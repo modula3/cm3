@@ -1,0 +1,15 @@
+(ZChild %helpDialog (At 0.1 0.9 0.1 0.9)
+  (Insert "macros.fv")
+  (Shape (Width + inf) (Height + inf)
+    (Border
+      (Pen 2)
+      (VBox
+        (HBox
+          (Shape (Width + inf) (ZMove (Text "Browser Help")))
+          (ZGrow (Pixmap "grow.pbm")))
+        (VBox
+          (Generic %helpText)
+          (Bar)
+          (Glue 10) 
+          (HBox (DefaultCloseBtn "OK"))
+          (Glue 10))))))

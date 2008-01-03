@@ -1,0 +1,11 @@
+Postcard uses composition sub-windows when you want to compose and send a message, i.e., when you click "Compose", "Forward", or "Reply".
+
+The configuration dialog provides options to adjust whether composition sub-windows appear in a separate window, or tiled in the main window; there is also an option always to use an external editor for message composition.
+
+When you have composed your message, use the "Send" button to send it, or the "Discard" button to release this sub-window for future drafts; these buttons make the sub-window read-only. The "Edit" menu provides some high-level editing operations on drafts. When you have sent or discarded a draft, the "Modify" button lets you compose another message based on the old draft. See the help buttons for each of these commands. When you use an external editor, none of the composition sub-window's buttons is available until your external editor command exits.
+
+Postcard automatically maintains a copy of your draft text in a backing file, whose name is shown in the top-right of the composition sub-window. Postcard writes the draft out to the backing file within 30 seconds of any edit you make. (There is a "*" in the sub-window's header if there are edits that have not yet been backed up.) When you start Postcard, it checks for the existence of backing files of unsent draft messages, and if any exist Postcard creates composition sub-windows for them, so you are fairly well protected against crashes. See also the undo command, described below. Finally, see the hints for error recovery in the "man" page.
+
+See the help information for "Widgets" for a description of the scroll-bar.
+
+See the help information for "Editing" for a description of the text-editing models.

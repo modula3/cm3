@@ -1,0 +1,2 @@
+bug reported by Jorge Stolfi. The printproc for the ref type is wrong.
+

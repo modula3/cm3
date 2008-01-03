@@ -1,0 +1,44 @@
+
+SqrtTst is a testing program.  It tests single and double precision,
+and all rounding modes.  If all is well, the output from TstSqrt
+should be as below.  Otherwise you will get lines with ** ERROR.  It
+will also note if Math.sqrt gives a different answer from these
+routines.
+
+arcturia% SqrtTst
+ROUND-TO-NEAREST MODE
+testing hard to round cases
+  single
+  double
+testing random cases
+  single
+  double
+testing preturbations of regularly spaced args
+  single
+  double
+Done testing.
+
+ROUND-TO-PLUS-INF MODE
+testing hard to round cases
+  single
+  double
+testing random cases
+  single
+  double
+testing preturbations of regularly spaced args
+  single
+  double
+Done testing.
+
+ROUND-TO-MINUS-INF MODE
+testing hard to round cases
+  single
+  double
+testing random cases
+  single
+  double
+testing preturbations of regularly spaced args
+  single
+  double
+Done testing.
+

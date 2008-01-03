@@ -1,0 +1,12 @@
+/* Copyright 1992 Digital Equipment Corporation.               */
+/* Distributed only by permission.                             */
+/* Last modified on Thu Mar 10 15:29:55 PST 1994 by birrell    */
+/*                                                             */
+/* Makefile for "LecternDoc" library                           */
+
+
+import         ("libm3")
+
+Module         ("LecternDoc")
+
+Library        ("LecternDoc")

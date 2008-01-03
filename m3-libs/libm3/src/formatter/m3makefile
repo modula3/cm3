@@ -1,0 +1,8 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Sun Jun 20 14:25:10 PDT 1993 by harrison
+%      modified on Fri Feb 28 14:03:35 PST 1992 by meehan
+
+Module ("Formatter")

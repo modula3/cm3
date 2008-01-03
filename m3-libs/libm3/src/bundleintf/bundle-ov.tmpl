@@ -1,0 +1,7 @@
+if defined("M3BUNDLE")
+  _M3BUNDLE = M3BUNDLE
+else
+  _M3BUNDLE = format(ROOT & SL & "m3-tools" & SL & "m3bundle" & SL & "%s" &
+                     SL & "m3bundle", BUILD_DIR)
+  M3BUNDLE = _M3BUNDLE
+end

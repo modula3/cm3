@@ -1,0 +1,30 @@
+; Copyright (C) 1994, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Filter
+  (Macro Label BOA (text) `(Shape (Width 120) (Text RightAlign ,text)))
+  (Macro Line BOA (label expr) `(HBox (Label ,label) ,expr Fill))
+  (TSplit
+    =0
+    %opts
+    (Text %ch0 
+      (BgColor "VeryLightGreen") "Press GO or STEP to start algorithm...")
+    (Filter
+      %ch1
+      (BgColor "VeryLightBlue")
+      (HBox
+        (Button %gotMaxes "  OK  ")
+        (VBox
+          (Line "Number of bins: " (Numeric (Min 1) (Max 1000) %B =26))
+          (Glue 10)
+          (Line "Number of weights: " (Numeric (Min 1) (Max 1000) %N =10)))))
+    (Filter
+      %ch2
+      (BgColor "VeryLightRed")
+      (VBox
+        Fill
+        (VBox
+          (Text LeftAlign "New weight [0.0 .. 1.0]:")
+          (Frame Lowered (TypeIn %new)))
+        Fill))))

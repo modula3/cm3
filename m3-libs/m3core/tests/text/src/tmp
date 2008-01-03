@@ -1,0 +1,5 @@
+import(libm3)
+m3_option("-O")
+implementation(Test)
+build_standalone()
+program(Test)

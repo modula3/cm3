@@ -1,0 +1,21 @@
+#! /bin/csh -f
+#
+# SYNTAX
+#   reorder prefix
+#
+# DESCRIPTION
+#   Reads the log file named "<prefix>.log", and writes the input for
+#   the UnionFind animation to the file "<prefix>.sx".
+#
+set input = $1.log
+set output = $1.sx
+echo "Reading $input; writing to $output..."
+#
+head -1 $input > $output
+grep NewSet $input >> $output
+grep Finished $input >> $output
+echo ' ' >> $output
+grep operations $input >> $output
+egrep 'Union|Find' $input >> $output
+tail -1 $input >> $output
+echo "Done."

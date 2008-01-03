@@ -1,0 +1,35 @@
+The modula3.el gnuemacs macros provide a mode to edit Modula-3
+programs.  To use this mode, you probably want in your .emacs or in
+the system init.el:
+
+	(autoload 'modula-3-mode "modula3")
+	(setq auto-mode-alist 
+	      (append '(("\\.ig$" . modula-3-mode)
+			("\\.mg$" . modula-3-mode)
+			("\\.i3$" . modula-3-mode)
+			("\\.m3$" . modula-3-mode))
+		      auto-mode-alist))	
+
+modula3.el is an updated and simplified version of the modula-3 mode.
+This is what is currently standard at SRC.  To use it, do the same as
+above, except change the autoload line to
+
+	(autoload 'modula-3-mode "modula3")
+
+m3-debug adds some useful commands for printing Modula-3 values to the
+gnuemacs dbx and gdb modes.
+
+shell-compile is meant to be used when running the m3check program in
+a shell buffer -- it enables the use of the next-error command with
+m3check.
+
+The m3tags program builds a tag table in the FTAGS format, given a
+bunch of Modula-3 source files.  tags.el is version that understands
+the FTAGS format.  The file PUBTAGS contains the tags for the public
+interfaces; it is exported to $(LIB_USE).  You probably want to visit
+that tag table automatically; put in your .emacs or in the system
+init.el:
+
+	(visit-tags-table "$(LIB_USE)/FTAGS")
+
+where $(LIB_USE) is the value found in the config file.

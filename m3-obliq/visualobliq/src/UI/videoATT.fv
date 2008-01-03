@@ -1,0 +1,47 @@
+ (Shape %videoatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Audio Visual Widget")
+     (Glue 10)		
+     (LField "Video Source :" 150 (TypeIn (TabTo vidQuality) %vidSource (BgColor "White") (Value "oreo")))
+  
+     (Glue 10)
+    (Border (Pen 1) 
+     (VBox
+      (HBox 
+       (Field "Quality  :" 150  (Numeric (TabTo vidWidth) %vidQuality))
+       Fill
+       (Field "Width  :" 150  (Numeric (TabTo vidColours) %vidWidth  )))
+      
+      (HBox 
+       (Field "Colours  :" 150  (Numeric (TabTo vidHeight) %vidColours))
+       Fill
+       (Field "Height  :" 150  (Numeric (TabTo vidMSecs) %vidHeight  )))
+      
+      (HBox 
+       (Field "MSecs  :" 150  (Numeric (TabTo auVolume) %vidMSecs))
+       Fill
+       (Field "Volume  :" 150  (Numeric (TabTo auValue) %auVolume)))
+      ))
+    (Glue 10)
+     (LField "Audio Source :" 150 (TypeIn (TabTo vidSource) %auValue (BgColor "White") (Value "oreo")))
+
+     (Glue 10)
+(Border (Pen 1)
+ (VBox
+  (Glue 5)
+     (HBox Fill (Boolean %vidSynchronous "Synchronous")  Fill (Boolean %vidFixedSize "FixedSize") 
+	   Fill (Boolean %vidPaused "Paused") Fill)
+
+     (Glue 10)
+
+     (HBox  Fill (Boolean %auMute "Mute")
+	    Fill
+	    (Boolean %auIgnoreMapping "Ignore Mapping")
+	    Fill)
+     (Glue 5)
+  ))
+     Fill
+     
+   )
+  )

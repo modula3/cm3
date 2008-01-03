@@ -1,0 +1,24 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% File: m3makefile
+% Last modified on Wed Oct 11 15:29:04 PDT 1995 by najork
+%      modified on Fri Jan 20 14:44:03 PST 1995 by kalsow
+%      modified on Fri Dec  2 10:02:34 PST 1994 by heydon
+
+
+% define the template file
+template ("mtex")
+
+% the mtex man pages
+if defined("AT_SRC") and equal (OS_TYPE, "POSIX")
+  Mtex ("mtex", "7")
+  Mtex ("mtex2html", "1")
+  Mtex ("mtex2man", "1")
+  Mtex ("mtex2tex", "1")
+end
+
+% make sure that the template gets exported
+gen_m3exports ("mtex")
+install_sources ()

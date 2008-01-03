@@ -1,0 +1,47 @@
+(* Copyright (C) 1993 Digital Equipment Corporation                *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Tue Jun 22 11:49:36 PDT 1993 by horning        *)
+
+GENERIC INTERFACE SortedTable(Key, Tbl);
+<*
+FIELDS OF T         le: Rel$Key.T
+FIELDS OF Iterator  up: BOOLEAN, next: Key.T
+
+(* NEW(Default, ...) must be called with a keyCompare method that
+implements a total pre-order.  This defines the ordering and equivalence
+relations on keys.
+
+  k1 \< SELF.equiv \> k2 = k1 \< SELF.le \> k2 /\ k2 \< SELF.le \> k1
+*)
+
+(* Module-global macros *)
+LET ordered(k1, k2, up)  BE (IF up THEN k1 \< SELF.le \> k2
+                                   ELSE k2 \< SELF.le \> k1) IN
+LET between(a, b, c, up) BE (~ordered(b, a, up) /\ ~ordered(c, b, up)) IN
+
+METHOD T.iterateOrdered(up: BOOLEAN): Iterator;
+  ENSURES NEW(RESULT) /\ RESULT.map' = SELF.map /\ ~RESULT.done'
+    /\ RESULT.up' = up
+    /\ \forall k: Key.T (defined(SELF.map, k) => ordered(RESULT.next', k, up))
+
+STRENGTHENS METHOD Iterator.next(VAR k: Key.T; VAR val: Value.T): BOOLEAN
+  ENSURES RESULT => 
+    (ordered(SELF.next, k', SELF.up)
+      /\ ~(\exists k1: Key
+        (defined(SELF.map, k1) /\ between(SELF.next, k1, k', up))
+    )
+METHOD Iterator.seek(READONLY key: Key.T)
+  CHECKS ~SELF.done
+  MODIFIES SELF.next
+  ENSURES SELF.next' = key
+
+METHOD Default.init(): Default
+  MODIFIES SELF.map
+  ENSURES SELF.map' = {} /\ RESULT = SELF
+
+METHOD Default.keyCompare(READONLY k1, k2: Key.T): [-1..1]
+  ENSURES RESULT = IF k1 \< SELF.equiv \> k2 THEN 0
+                   ELSE IF k1 \< SELF.le \> k2 THEN -1 ELSE 1
+*>
+END SortedTable.

@@ -1,0 +1,18 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (Rim
+    (Pen 10)
+    (HBox
+      (VBox
+        (Text RightAlign "# of buckets: ")
+        (Text RightAlign "current item: ")
+        (Text RightAlign "comparing bucket #: "))
+      (VBox
+        (Frame Chiseled (Text %NBuckets ""))
+        (Frame Chiseled (Text %item ""))
+        (Frame Chiseled (Text %bucket ""))))))

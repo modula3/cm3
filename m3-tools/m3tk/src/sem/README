@@ -1,0 +1,19 @@
+m3tk-sem.2 package -- created Thu Apr 2 16:48:23 PST 1992 by mjordan
+current owner mjordan
+
+This package contains the Modula-3 toolkit semantic analyser. As well
+as checking the static semantics, it also computes the semantic
+AST attributes specified in the M3AST_SM interface (in the m3tk-ast)
+package. Most of this package is private, but some interfaces provide
+utility code that is needed by many AST clients, vis:
+
+M3ASTNext       Provides some iterators to "smooth out" the structure
+                of the AST. E.g the sequence of "Used_interface_id" nodes
+                from all of the "IMPORT", "FROM I IMPORT" nodes.
+M3CTypesMisc    Useful operations on M3TYPE, TYPE_SPEC classes.
+M3CStdProcs     Support for the "standard" procedures/functions
+M3CStdTypes     Support for the built-in types, e.g. "BOOLEAN".
+
+M3CBackEnd      Defines the interface between the front-end and
+                the back end, in terms of a set of procedures
+                that must be implemented.

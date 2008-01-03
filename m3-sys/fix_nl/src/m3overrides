@@ -1,0 +1,4 @@
+if not defined("BOOT")
+  override("libm3", ROOT & "/m3-libs")
+end
+

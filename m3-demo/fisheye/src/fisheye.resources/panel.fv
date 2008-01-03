@@ -1,0 +1,177 @@
+(Scale (HScale .75) (VScale .75) (ZSplit
+  (Rim
+    (Pen 20)
+    (HBox
+      (Shape
+        (Width + 0)
+        (VBox
+          (Scale (HScale 2) (VScale 2) "Fisheye Browser")
+          (Pixmap (Color "Blue") "digital.pbm")
+          (Text "Send comments: mhb@src.dec.com")
+          (Chisel)
+          (Glue 12)
+          (Radio
+            =us
+            %input
+            (HPackSplit
+              (Choice %us "US")
+              (Choice %metro1 "Metro")
+              (Choice %metro2 "METRO")
+              (Choice %cra "CRA")
+              (Choice %dag "DAG")
+              (Choice %sym "Sym")
+              (PopButton %popOther (For other) "Other...")))))
+      (Glue 20)
+      (VBox
+        (Frame
+          Chiseled
+          (Rim
+            (Pen 4)
+            (Rim
+              (Pen 1)
+              (Shape
+                (Height + 0)
+                (VBox
+                  (Radio
+                    (HBox
+                      (Shape (Width 50) " Mapping: ")
+                      (Glue 4)
+                      (Choice =TRUE %cartesian "Cartesian")
+                      (Glue 4)
+                      (Choice %polar "Polar")
+                      (Glue 8 + Inf)
+                      (VBox
+                        (PopButton (For moreStuff) "Parms...")
+                        (HBox (Boolean %color =FALSE "Clr") (Boolean %on =TRUE "Dtl")))))
+                  (Glue 6)
+                  (Chisel)
+                  (Glue 6)
+                  (HBox
+                    (Shape
+                      (Width 100)
+                      (HBox
+                        (VBox
+                          (Shape (Width + 0) "Vertex Size")
+                          (Shape (Height 0) (Text %fsize "????")))
+                        Fill))
+                    (VBox
+                      Fill
+                      (HBox
+                        (Shape
+                          (Width 50)
+                          (Frame
+                            Lowered
+                            (TypeIn (BgColor "VeryLightGray") %vsize )))
+                        (Glue 4)
+                        (Shape
+                          (Width 100 + Inf)
+                          (Scroller (Max 100) =10 %vsizeScroll)))
+                      Fill))
+                  (Glue 6)
+                  (Chisel)
+                  (Glue 6)
+                  (HBox
+                    (Shape
+                      (Width 100)
+                      (HBox (Shape (Width + 0) "Distortion") Fill))
+                    (Shape
+                      (Width 50)
+                      (Frame
+                        Lowered
+                        (TypeIn (BgColor "VeryLightGray") %distortion)))
+                    (Glue 4)
+                    (Shape
+                      (Width 100 + Inf)
+                      (Scroller (Max 100) =0 %distortionScroll)))
+                  (Glue 6)
+                  (Chisel)
+                  (Glue 6)
+                  (HBox
+                    (Shape
+                      (Width 100)
+                      (HBox (Shape (Width + 0) "API Coefficient") Fill))
+                    (Shape
+                      (Width 50)
+                      (Frame Lowered (TypeIn (BgColor "VeryLightGray") %coef)))
+                    (Glue 4)
+                    (Shape
+                      (Width 100 + Inf)
+                      (Scroller (Max 100) =1 %coefScroll)))
+                  (Glue 4)
+                  (HBox
+                    (Shape
+                      (Width 100)
+                      (HBox (Shape (Width + 0) "API Exponent") Fill))
+                    (Shape
+                      (Width 50)
+                      (Frame Lowered (TypeIn (BgColor "VeryLightGray") %exp)))
+                    (Glue 4)
+                    (Shape
+                      (Width 100 + Inf)
+                      (Scroller (Max 100) =1 %expScroll)))
+                  (Glue 6)
+                  (Chisel)
+                  (Glue 6)
+                  (HBox
+                    (Shape
+                      (Width 100)
+                      (HBox (Shape (Width + 0) "VW Cutoff") Fill))
+                    (Shape
+                      (Width 50)
+                      (Frame Lowered (TypeIn (BgColor "VeryLightGray") %vw)))
+                    (Glue 4)
+                    (Shape
+                      (Width 100 + Inf)
+                      (Scroller (Max 100) =0 %vwScroll))))))))
+        Fill)))
+  (ZChassis
+    (Title "Select data file...")
+    %other
+    (Shape (Width 200 + Inf) (Height 150 + Inf) (FileBrowser %file)))
+  (ZChassis
+    %moreStuff
+    (Shape
+      (VBox
+        (Radio
+          (HBox
+            (Shape (Width 50) "Mode: ")
+            (Choice =TRUE %fisheye "Fisheye")
+            (Glue 8)
+            (Choice %normal "Normal")
+            Fill))
+        (Glue 4)
+        (Radio
+          (HBox
+            (Shape (Width 50) "Focus: ")
+            (Choice =TRUE %mouse "Mouse")
+            (Glue 8)
+            (Choice %keyboard "Keyboard")
+            Fill))
+        (Glue 4)
+        (Radio
+          (HBox
+            (Shape (Width 50) "Type:     ")
+            (Choice =TRUE %graphical "Graphical")
+            (Glue 8)
+            (Choice %semantic "Semantic")
+            Fill))
+        (Glue 10)
+        (HBox "Node color: " (Border (TypeIn %nodeColor ="Blue")))
+        (Glue 4)
+        (HBox "Node interior: " (Border (TypeIn %nodeInteriorColor ="Sky")))
+        (Glue 4)
+        (HBox "Focus color: " (Border (TypeIn %focusColor ="Red")))
+        (Glue 4)
+        (HBox "Edge color: " (Border (TypeIn %edgeColor ="Black")))
+        (Glue 4)
+        (HBox "Text color: " (Border (TypeIn %textColor ="Black")))
+        (Glue 4)
+        (HBox
+          "Text font: "
+          (Border (TypeIn %textFont ="-*-helvetica-*-10-*")))
+        (Glue 4)
+        (HBox
+          (Shape (Width + 0) "Edge thickness: ")
+          (Numeric %edgeThickness =2)
+          Fill))))))
+

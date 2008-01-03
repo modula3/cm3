@@ -1,0 +1,48 @@
+T H I N G S   T O   D O   T O   I V Y :
+
+ * Convert to ISO Latin 1 (word selection)
+ * Add Rescreen as well as Move
+
+ * Eliminate empty lines from ComputeLine
+ * Clip less in transparent text drawing
+ * Worry about left kerning
+ * Worry about not erasing to right, left
+ * Think about making space potentially very narrow at right
+ * Am I doing the right thing with allWhiteBelow?
+
+ * Fix names
+ * Make tint arguments be arrays
+ * Check markers
+
+ * Make NoHighlight and Overlap unavailable from user programs
+ * Retain CaretIndex?
+
+ * Fix error if bad font or texture
+ * Worry about extra exceptions
+ * Have a version of SetStart that trusts you?
+
+ * Make sure that charht is at least 2
+ * Check Makefile, VTRd.mod, VText.def, VText.mod, to.do
+ * Get rid of hl, hr
+ * Provide a way to ask what's on line "n"
+ * Have ComputeLine not return out-of-band numbers
+ * When scroll, only scroll clip - bad
+ * Sort the views by their upper-left corners
+ * Make cursor operations not touch the screen
+ * Don't deactivate the caret so much
+ * Why does the last line in a typescript not always go at the bottom?
+ * Need better icons for typescripts
+ * Should perhaps have the rule that some text appears on every page?
+ * Do better in pounce if lines = 0
+ * Add arbitrary clipping regions for views, operations
+ * Only set dirty if things have really changed
+ * Do ComputeLine the way it's described in the book
+ * Do the right thing with scrolling if the window is partially obscured
+ * Find where storage is being allocated
+ * When clear anything, set real arrays correctly (and not otherwise?)
+ * Worry about narrow windows
+ * Should do VTCaret.Blinker.Find only when it's dirty!
+ * Should make heads more first-class
+ * How to manage file operations
+ * Don't redisplay when typeahead
+ * Use subwindows instead of regions

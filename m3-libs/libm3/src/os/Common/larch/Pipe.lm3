@@ -1,0 +1,98 @@
+(* Copyright (C) 1993, Digital Equipment Corporation. *)
+(* All rights reserved. *)
+(* See the file COPYRIGHT for a full description. *)
+(* Last modified on Tue Jun 22 17:22:38 PDT 1993 by horning *)
+
+INTERFACE Pipe;
+<*
+TYPE Channel <: ROOT
+
+FIELDS OF Channel
+  seq: File.Seq;
+  r, w: INTEGER;
+  nw, nr: CARDINAL
+
+INVARIANT CLAIM \forall c: Channel;
+  0 <= c.r <= c.w = length(seq^) 
+
+FIELDS OF T
+  INHERITS readable, writable: BOOLEAN;
+  c: Channel
+
+ABSTRACTION FUNCTION \forall t: T;
+  t.type = FileType;
+  t.eof = (t.c.r = t.c.w /\ t.c.nw = 0);
+  t.src = t.c.seq;
+  t.snk = t.c.seq;
+  t.srcCur = t.c.r;
+  t.snkCur = t.c.w;
+
+INVARIANT CLAIM \forall t: T;
+  ~(t.readable /\ t.writable)
+  /\ (t.readable => c.r >= 0)
+  /\ (t.writable => c.w >= 0)
+
+STRENGTHEN METHOD T.read(VAR (*OUT*) b: ARRAY OF Byte;
+         mayBlock: BOOLEAN := TRUE): INTEGER RAISES {OSError.E};
+  VAR i: CARDINAL := 0
+  CHECKS SELF.readable, NUMBER(b) > 0
+  MODIFIES b, SELF.c.r
+  COMPOSITION OF MoveByte*; Return END
+  ACTION MoveByte
+    REQUIRES SELF.readable
+    WHEN i < NUMBER(b) /\ SELF.c.r < SELF.c.w
+      ENSURES i' = i + 1 /\ SELF.c.r' = SELF.c.r + 1
+        /\ b' = assign(b, i, SELF.c.seq^[SELF.c.r])
+  ACTION Return
+    WHEN i = NUMBER(b)
+        \/ (SELF.c.r = SELF.c.w /\ (SELF.c.nw = 0 \/ ~mayblock))
+      ENSURES RESULT =
+          (IF i > 0 THEN i ELSE IF SELF.c.nw = 0 THEN 0 ELSE -1)  
+	/\ UNCHANGED(ALL)
+    UNLESS RAISES OSError.E
+
+STRENGTHEN METHOD T.write(READONLY b: ARRAY OF Byte) RAISES {OSError.E};
+  VAR i: CARDINAL := 0
+  CHECKS SELF.writable, NUMBER(b) > 0
+  MODIFIES SELF.c.seq^, SELF.c.w
+  COMPOSITION OF MoveByte*; Return END
+  ACTION MoveByte
+    REQUIRES SELF.writable
+    WHEN i < NUMBER(b)
+      ENSURES i' = i + 1 /\ SELF.c.w' = SELF.c.w + 1
+        /\ SELF.c.seq^' = assign(SELF.c.seq^, SELF.c.w, b[i])
+      EXCEPT SELF.c.nr = 0 ==> RAISES OSError.E
+  ACTION Return
+    WHEN i = NUMBER(b)
+      ENSURES UNCHANGED(ALL)
+    UNLESS RAISES OSError.E
+
+STRENGTHEN METHOD T.status(): Status RAISES {OSError.E};
+  ENSURES RESULT.type = FileType
+  UNLESS RAISES OSError.E
+
+STRENGTHEN METHOD T.close() RAISES {OSError.E};
+  MODIFIES SELF.readable, SELF.writable, SELF.c.nr, SELF.c.nw
+  ENSURES
+    ~SELF.readable' /\ ~SELF.writable'
+    /\ (IF SELF.readable
+          THEN SELF.c.nr' = SELF.c.nr - 1 /\ UNCHANGED(SELF.c.nw)
+        ELSE IF SELF.writable
+          THEN SELF.c.nw' = SELF.c.nw - 1 /\ UNCHANGED(SELF.c.nr)
+        ELSE UNCHANGED(ALL))
+  UNLESS RAISES OSError.E
+
+PROCEDURE Open(VAR (*OUT*) hr, hw: T) RAISES {OSError.E};
+  ENSURES \exists ch: Channel;
+    FRESH(ch, hr, hw)
+    /\ ch.r' = ch.w' = 0
+    /\ ch.nw' = ch.nr' = 1
+    /\ ch.seq = empty
+    /\ hr.type = hw.type = FileType
+    /\ hr.c' = hw.c' = ch
+    /\ hr.readable' /\ ~hr.writable'
+    /\ hw.writable' /\ ~hw.readable'
+  UNLESS RAISES OSError.E
+*>
+
+END Pipe.

@@ -1,0 +1,55 @@
+AlgFFSimple -- First-first binpacking. Doesn't respond to any feedback
+  events.
+
+AlgFFCodeView -- First-first binpacking. Doesn't respond to any
+  feedback events. Does generate events for code view, and traces for
+  variable view. 
+
+AlgFFPromptForWeights.m3 -- First-first binpacking. Doesn't respond to any
+   feedback events. Pauses to wait for the user to enter a new weight 
+   interactively. Illustrates use of ZeusPanel.StartFeedback and 
+   ZeusPaonel.EndFeedback, as a way to poll the user.
+
+AlgFF.m3 -- First-first binpacking.  Responds to feedback events
+  TryToDeleteWeight and TryToEmptyBin. Algorithm's input panel 
+  allows user to specify a weight to delete and a bin to empty.
+
+BinpackDataView.m3 -- Registers the Zeus variable view. (This should 
+  be done automatically by Zeus, just as code views do not need
+  to be explicitly registered.)
+
+alg.c -- Data file read by code view; contains C source code.
+
+binpackFFvar.fv  -- The form used by the data view.
+
+binpackinput.fv -- A simple data form for giving input to binpacking
+  algorithms. Used by AlgFFSimple, AlgFFCodeView, and AlgFF. The form
+  also has interactors for specifying a bin to empty or a weight to 
+  delete. However, this part of the form is dormant by default, and
+  only AlgFF makes use of it.
+
+binpackprompt.fv -- A data form used by AlgFFPromptForWeights to 
+  prompt the user for information along the way.
+
+Binpack.evt -- The events for binpacking algorithms.
+
+Main.m3 -- Boilerplate to mainline to drive Zeus. 
+
+PackingView1 -- A very simple view that shows the packing
+  of the weights. The view is non-pickable, and doesn't not respond 
+  to the "RepackBin" update event for an algorithm.
+
+PackingView2 -- Like PackingView1, but also responds to the 
+   "RepackBin" update event.  As such, the implementation is more
+   complex because it must maintain a list of the display objects
+   corresponding to each weight.
+
+PackingView3 -- A subclass of PackingView2 that shows the 
+   probe event. 
+
+PackingView4 -- A subclass of PackingView3 with the mouse
+   and position method overriden so that when the user clicks
+   on a weight, a feedback event goes to the algorithm to delete
+   that weight. 
+
+

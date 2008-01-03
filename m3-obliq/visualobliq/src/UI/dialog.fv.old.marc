@@ -1,0 +1,302 @@
+(Shape %base (Width + Inf) (Height + Inf)
+  (Font "-*-courier-bold-*R-*120-*")
+
+(Macro TYPEIN BOA (name tabto init)
+  `(Frame Lowered 
+     (TypeIn %,name (TabTo ,tabto) 
+        ExpandOnDemand (BgColor "White") =,init)))
+       
+(Macro LT BOA (t) 
+  `(Rim (Pen 2) (Text LeftAlign ,t)))
+  
+(Macro MT BOA (t) 
+  `(Shape (Width 40) (Rim (Pen 2) (Text Center ,t))))
+
+(Macro StdFileDialog
+  (Name Title fbName OKName OKLabel helperName
+  cancelName (cancelLabel "Cancel") (Suffixes "")
+  (ReadOnly FALSE) (other ()))
+  `(ZChassis %,Name (Title ,Title)
+     (Rim (Pen 10)
+       (VBox
+         (HBox
+           (Shape (Width 150 + Inf) (Height 150 + Inf)
+             (VBox (LabelFont "fixed")
+               (DirMenu (For ,fbName))
+               (Glue 6)
+               (Frame Lowered 
+                 (FileBrowser (ReadOnly ,ReadOnly) (Suffixes ,Suffixes) %,fbName))))
+           (Glue 10) 
+           (VBox
+             Fill
+             (Button %,OKName (Rim (Pen 2) ,OKLabel))
+             (Glue 10)
+             (CloseButton %,cancelName (Rim (Pen 2) ,cancelLabel))))
+         (Glue 5)
+         (HBox
+           (Shape (Width + 0) "File: ")
+             (Frame Lowered
+               (Helper %,helperName ExpandOnDemand FirstFocus (For ,fbName))))
+       ,@other))))
+             
+(Macro FileMenu ()
+  `(Menu (ShadowSize 0) (MT "File")
+     (Border
+       (VBox
+         (PopMButton (For openDialog) (LT "Open.."))
+         Bar
+         (MButton %addscreen (LT "Add Screen  "))
+         (PopMButton %showsettings (For settings) (LT "Settings.."))
+         Bar
+         (Filter Dormant (Button (LT "Save")))
+         (PopMButton (For saveAsDialog) (LT "Save As.."))
+         Bar
+         (MButton %clearworkspace (LT "Clear Workspace"))
+         Bar
+         (MButton %quit (LT "Quit"))))))
+    
+(Macro EditMenu ()
+  `(Menu (ShadowSize 0) (MT "Edit")
+     (Border
+       (VBox
+         (MButton %cut (Filter  %cutFilter (LT "Cut")))
+         (MButton %copy (Filter Dormant %copyFilter  (LT "Copy")))
+          (MButton %paste (Filter %pasteButton (LT "Paste")))
+         Bar
+         (MButton %delete (Filter %deleteButton  (LT "Delete")))))))
+
+(Macro CodeMenu ()
+  `(Menu (ShadowSize 0) (MT "Code")
+     (Border (Radio %testbild =bildmode
+       (VBox
+         (MButton %gensx (LT "Generate S-expression.."))
+         (PopMButton %viewlastsx (For sxviewer) (LT "View S-expression.."))
+         Bar
+         (PopMButton %gencode (For buildpopup) (LT "Generate Code.."))
+         (MButton %editsc (LT "Session Constructor.."))
+         Bar
+         (Choice MenuStyle CheckMark %testmode (LT "Test Mode"))
+         (Choice MenuStyle CheckMark %bildmode (LT "Build Mode"))
+         (Shape (Height 0) (Width 0) (Text %currentobject (Color "Black") "")))))))
+
+(Macro MenuBar ()
+  `(HBox (BgColor "VeryPaleYellow")
+     (FileMenu) 
+     (EditMenu) 
+     (CodeMenu) 
+     (Glue 20)
+     (Rim (Pen 2) (Border (Button %run "RUN")))
+     "Install at:" (Rim (Pen 2) (Border (Shape (Width 200) (TypeIn  %installAt))))
+     Fill))
+
+(Macro Key BOA (keyname wid contents)
+  `(Rim (Pen 3) (BgColor "PaleGrey")
+     (Shape (Width ,wid)
+       (Button %,keyname 
+         (Filter %,(Intern (Cat "BLOCKING_" (SymbolName keyname)))
+           (Frame Raised ,contents))))))
+
+(Macro Box BOA (outer inner rest)
+  `(Rim (Pen ,outer) (Border (Pen ,inner) ,rest)))
+          
+(Macro FormDef ()
+  `(Key form 50
+     (Border (BgColor "White") (Pen 1) 
+       (VBox (Frame (BgColor "PaleYellow") "Form") Fill ""))))
+
+(Macro TexteditDef ()
+  `(Key textedit 70
+     (Box 2 1 
+       (TextEdit (Font "Bold") (BgColor "White") ="Editor"))))
+
+(Macro TypeinDef()
+  `(Key typein 65 
+     (VBox Fill (Box 2 1 (TypeIn (BgColor "White") ="Typein")) Fill)))
+
+(Macro NumericDef ()
+  `(Key numeric 80
+     (VBox 
+       "Numeric"
+       (Box 2 1 (Numeric (BgColor "RatherPaleYellow"))))))
+
+(Macro TextDef ()
+  `(Key text 60
+     (Box 2 1 (Text (BgColor "White") "Text"))))
+
+(Macro ChoiceDef ()
+  `(Key choice 85
+     (Box 2 1 
+       (Radio 
+         (VBox (BgColor "White")
+           "Choice" 
+           (HBox Fill (Choice =TRUE " A ") Fill (Choice " B ") Fill))))))
+     
+(Macro MenuDef ()
+  `(Key menu 50 
+     (VBox 
+       (Frame Lowered (BgColor "PaleYellow") "Menu")
+       (Box 1 1  
+         (VBox (BgColor "VeryLightYellow") "..." Fill)))))
+
+(Macro BooleanDef ()
+  `(Key boolean 70 
+     (Box 2 1 (Boolean (BgColor "White") "Boolean"))))
+
+(Macro FrameDef ()
+  `(Key frame 50 
+     (Shape (Height 40) (Box 2 1 (Text (BgColor "VeryPaleYellow") "Frame")))))
+
+(Macro ButtonDef ()
+  `(Key button 65
+     (Rim (Pen 5) 
+       (Border (BgColor "RatherPaleYellow") (Button "Button")))))
+               
+(Macro VScrollDef ()
+  `(Key vscroll 30
+     (HBox Fill (Box 2 1 (Scroller Vertical)) Fill)))
+                     
+(Macro HScrollDef ()
+  `(Key hscroll 45
+     (VBox Fill (Box 2 1 (Scroller)) Fill)))
+   
+(Macro BrowserDef ()
+  `(Key browser 60
+    (VBox "Browser"
+     (Border (BgColor "White")
+       (Browser =1 (Items "one" "two" "three" "four" "five" "six"))))))
+     
+(Macro FileBrowserDef ()
+  `(Key filebrowser 85
+    (VBox "File Browser"
+     (Border (BgColor "White")
+       (FileBrowser)))))
+     
+(Macro WidgetBar ()
+  `(VBox 
+     (HBox
+       (FormDef)
+       (TexteditDef)
+       (TypeinDef)
+       (TextDef)
+       (NumericDef)
+       (ChoiceDef)
+       Fill)
+     (HBox
+       (FrameDef)
+       (BooleanDef)
+       (ButtonDef)  
+       (BrowserDef)     
+       (VScrollDef)
+       (HScrollDef)     
+       (FileBrowserDef)   
+       Fill)))
+ 
+  
+ (ZSplit
+  (VBox 
+    (MenuBar)
+    Bar
+    (WidgetBar) 
+    Bar
+    (TSplit =0 Circular %testAndbild
+      (ZSplit %topZSplit
+        (ZBackground
+          (Shape (Height 400 - 200 + Inf)
+            (Filter (BgColor "White") "Dialog Composition Area"))))
+      (ZSplit %testZSplit 
+        (ZBackground (BgColor "LightGrey") "Test Mode"))
+    ))
+
+         
+(Insert "buildpopup.fv")
+
+(ZChild %msgbox (At 0.5 0.5) FixedHV
+  (Border (Pen 2)
+    (Shape (Width 400) (Height 100)
+      (VBox
+        Fill
+        (Text %msg "Message")
+        (HBox
+          Fill
+          (Shape (Width 50) (BgColor "PaleGreen")
+            (CloseButton (For msgbox) (Rim (Pen 2) "OK")))
+          Fill)
+        Fill))))
+
+(StdFileDialog %openDialog
+  (Title "Select file to open")
+  (ReadOnly TRUE)
+  (Suffixes "vo")
+  (fbName open)
+  (OKName openbtn)
+  (OKLabel "Open")
+  (cancelName cancelopen)
+  (helperName lfbh)
+  (other
+      ((Glue 5)
+        (HBox (Boolean %openSuffixes =TRUE "Display only .vo files") Fill))))
+        
+(StdFileDialog %saveAsDialog
+  (Title "Specify name to save application")
+  (fbName saveas)
+  (OKName saveasbtn)
+  (OKLabel "Save")
+  (cancelName cancelsaveas)
+  (helperName sfbh))
+          
+(ZChassis %settings (Title "Settings") NoClose
+  (Macro LeftText BOA (text) 
+    `(Shape (Width + 0) (Text LeftAlign ,text)))
+  (Rim (Pen 10) 
+    (VBox
+      (HBox (LeftText "Grid Size: ")
+        (Numeric (TabTo bgcolor) %grid (Min 5) =5) Fill)
+      (Glue 5)
+      (HBox (LeftText "Bg Color: ") (TYPEIN bgcolor fgcolor "White"))
+      (Glue 5)
+      (HBox (LeftText "Fg Color: ") (TYPEIN fgcolor font "Black"))
+      (Glue 5)
+      (HBox (LeftText"Font: ") (TYPEIN font grid "Fixed"))
+      (Glue 20)
+      (HBox (Glue 20)
+        (CloseButton %oksettings (Shape (Width 50) "OK")) 
+        (Glue 20)
+        (CloseButton %cancelsettings (Shape (Width 50) "Cancel"))
+        (Glue 20)))))        
+         
+(ZChassis %sxviewer (Title "SX Viewer") 
+  (VBox
+    (Shape (Height 10)
+      (Text (Color "VeryDarkBlue") %sxtitle "Last S-Expression Generated"))
+    (Glue 3)
+    (Border (Pen 1)
+      (Shape
+        (Width 400 + Inf - 100)
+        (Height 250 + Inf - 100)
+        (TextEdit (BgColor "White") ReadOnly %sxview)))
+    (Glue 10)
+    (HBox
+      Fill
+      (Button (BgColor "PalePink") %sxbutton "Save As : ") 
+      (TYPEIN sxtypein sxtypein "")
+      Fill)
+    (Glue 10)))
+
+
+(ZChassis %scviewer (Title "Configure the Session")
+  (VBox
+    (Shape (Height 10)
+      (Text (Color "VeryDarkBlue") %sctitle "Session Constructor"))
+    (Glue 3)
+    (Border (Pen 1)
+      (Shape
+        (Width 400 + Inf - 100)
+        (Height 250 + Inf - 100)
+        (TextEdit (BgColor "White") %scview)))
+    (Glue 10)
+    (HBox
+      Fill
+      (Button (BgColor "PalePink") %scbutton "Save As : ") 
+      (TYPEIN sctypein sctypein "")
+      Fill)
+    (Glue 10)))))

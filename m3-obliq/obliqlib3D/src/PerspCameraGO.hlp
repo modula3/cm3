@@ -1,0 +1,7 @@
+  PerspCameraGO_New(from to up: PointVal, fovy: RealVal): PerspCameraGO
+  PerspCameraGO_Fovy: RealPropName
+  PerspCameraGO_SetFovy(go: GO, fovy: RealVal): Ok                    
+WHERE                                                                  
+  PerspCameraGO <: CameraGO                                             
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int                                   

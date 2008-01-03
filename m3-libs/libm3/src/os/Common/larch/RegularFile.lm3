@@ -1,0 +1,121 @@
+(* Copyright (C) 1993, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(* Last modified on Tue Jun 22 17:23:15 PDT 1993 by horning *)
+
+INTERFACE RegularFile;
+<* 
+FIELDS OF T
+  INHERITS readable, writable: BOOLEAN;
+  cur: INTEGER;
+  f: RegFile;
+
+ABSTRACTION FUNCTION T;
+  type = FileType;
+  eof = (cur = f.size);
+  src = f.buffer;
+  snk = f.buffer;
+  srcCur = cur;
+  snkCur = cur;
+
+TYPE
+  RegFile = OBJECT FIELDS
+    size: CARDINAL;
+    buffer, stable: File.Seq;
+    mtime: Time.T;
+    locked: Process.ID;
+    stabilized: BOOLEAN
+  END;
+
+DAEMON RegFile.stabilize
+  MODIFIES SELF.stable^, SELF.stabilized
+  ENSURES 
+    len(SELF.stable^) <= len(SELF.stable^') <= len(SELF.buffer^)
+    /\ \forall i: [0 .. len(SELF.stable^')-1]
+        SELF.stable^'[i] = SELF.buffer^[i] \/ UNCHANGED(SELF.stable^[i])
+    /\ SELF.stabilized' = (SELF.stable^' = SELF.buffer^)
+
+METHOD T.seek(origin: Origin; offset: INTEGER): INTEGER
+      RAISES {OSError.E};
+  MODIFIES SELF.cur
+  ENSURES
+    SELF.cur' = offset + (CASE origin OF
+      Origin.Beginning ==> 0
+      Origin.Current   ==> SELF.cur
+      Origin.End       ==> SELF.f.size
+    END)
+    /\ RESULT = cur'
+  UNLESS RAISES OSError.E
+
+METHOD T.flush() RAISES {OSError.E};
+  WHEN SELF.f.stabilized ENSURES TRUE
+  UNLESS RAISES OSError.E
+
+METHOD T.lock(): BOOLEAN RAISES {OSError.E};
+  MODIFIES SELF.f.locked
+  ENSURES
+    RESULT = (SELF.f.locked = Process.NullID)
+    /\ IF RESULT THEN SELF.f.locked' = CURRENT
+       ELSE UNCHANGED(SELF.f.locked)
+  UNLESS RAISES OSError.E
+
+METHOD T.unlock() RAISES {OSError.E};
+  MODIFIES SELF.f.locked
+  ENSURES SELF.f.locked' = Process.NullID
+  EXCEPT SELF.f.locked # CURRENT ==>
+    RAISES OSError.E /\ UNCHANGED(ALL)
+
+STRENGTHEN METHOD T.read(b, mayblock)
+  VAR i: CARDINAL := 0
+  CHECKS SELF.readable /\ NUMBER(b) > 0
+  MODIFIES b, SELF.cur
+  COMPOSITION OF MoveByte*; Return END
+  ACTION MoveByte
+    REQUIRES SELF.readable
+    WHEN i < NUMBER(b) /\ SELF.cur < SELF.f.size
+      ENSURES i' = i + 1 /\ SELF.cur' = SELF.cur + 1
+        /\ b' = assign (b, i, SELF.f.buffer[SELF.cur])
+  ACTION Return
+    WHEN i = NUMBER(b) \/ SELF.cur >= SELF.f.size
+      ENSURES RESULT = i /\ UNCHANGED(ALL)
+    UNLESS RAISES OSError.E
+
+STRENGTHEN METHOD T.write(b)
+  VAR i: CARDINAL := 0
+  CHECKS SELF.writable
+  MODIFIES SELF.cur,
+    SELF.f.buffer^, SELF.f.size, SELF.f.mtime, SELF.f.stabilized
+  COMPOSITION OF MoveByte*; Return END
+  ACTION MoveByte
+    REQUIRES SELF.writable
+    WHEN i < NUMBER(b)
+      ENSURES
+        i' = i + 1 /\ SELF.cur' = SELF.cur + 1
+        /\ SELF.f.buffer^' = assign(SELF.f.buffer^, SELF.cur, b[i])
+        /\ SELF.f.size' = MAX(SELF.f.size, SELF.cur')
+        /\ ~SELF.f.stabilized
+        /\ UNCHANGED(SELF.f.mtime)
+  ACTION Return
+    WHEN i = NUMBER(b)
+      ENSURES SELF.f.mtime' = Time.NOW
+        /\ UNCHANGED(SELF.f.buffer^, SELF.cur,
+                     SELF.f.size, SELF.f.stabilized) 
+    UNLESS RAISES OSError.E
+
+STRENGTHEN METHOD T.status()
+  ENSURES
+    RESULT.type = FileType
+    /\ RESULT.modificationTime = SELF.f.mtime
+    /\ RESULT.size = SELF.f.size
+  UNLESS RAISES OSError.E
+
+STRENGTHEN METHOD T.close()
+  MODIFIES SELF.readable, SELF.writable, SELF.f.locked
+  ENSURES
+    ~SELF.readable /\ ~SELF.writable
+    /\ IF SELF.f.locked = CURRENT
+         THEN SELF.f.locked' = Process.NullID
+         ELSE UNCHANGED(SELF.f.locked)
+  UNLESS RAISES OSError.E
+*>
+END RegularFile.

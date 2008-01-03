@@ -1,0 +1,782 @@
+(*  SGML parser library                                                    *)
+(*  Copyright (C) 1997 Michel Dagenais                                     *)
+(*                                                                         *)
+(*  This library is free software; you can redistribute it and/or          *)
+(*  modify it under the terms of the GNU Library General Public            *)
+(*  License as published by the Free Software Foundation; either           *)
+(*  version 2 of the License, or (at your option) any later version.       *)
+(*                                                                         *)
+(*  This library is distributed in the hope that it will be useful,        *)
+(*  but WITHOUT ANY WARRANTY; without even the implied warranty of         *)
+(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      *)
+(*  Library General Public License for more details.                       *)
+(*                                                                         *)
+(*  You should have received a copy of the GNU Library General Public      *)
+(*  License along with this library; if not, write to the Free             *)
+(*  Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.     *)
+(*                                                                         *)
+(*  For more information on this program, contact Michel Dagenais at       *)
+(*  dagenais@vlsi.polymtl.ca or Electrical Eng. Dept., Ecole Polytechnique *)
+(*  P.O. Box 6079, Station A, Montreal, Quebec, Canada, H3C 3A7.           *)
+
+COMPILER SGMLC
+
+IMPORT SGML, SGMLRep, RefSeq, TextSeq, TextRefTbl, Atom, SGMLCScanner, FSM;
+
+(* List the tokens. A hand coded scanner is provided. *)
+
+TOKENS
+
+  AttListTag
+  AttValueData
+  CData
+  CharRef
+  Coma
+  Commenttk
+  DQuote
+  DashImplied
+  DashPCData
+  DashRequired
+  DashFixed
+  DocTypeTag
+  ElementTag
+  EmptyElementEndTag
+  EndCSect
+  EndElementTag
+  EntityTag
+  EntityValueData
+  Equal
+  HexCharRef
+  IntMark
+  LP
+  LSB
+  Minus
+  NonKeywordName
+  NmToken
+  NotationTag
+  PCDataChunk
+  White
+  PItk
+  PEReference
+  Percent
+  Plus
+  PlusLP
+  Quote
+  RB
+  RP
+  RSB
+  EntityRef
+  StartCSect
+  StartElementTag
+  Star
+  Vertical
+
+  (* Names which are keywords in certain contexts *)
+  EMPTYkw
+  ANYkw
+  CDATAkw
+  IDkw
+  IDREFkw
+  IDREFSkw
+  ENTITYkw
+  ENTITIESkw
+  NAMEkw
+  NAMESkw
+  NMTOKENkw
+  NMTOKENSkw
+  NOTATIONkw
+  NUMBERkw
+  NUMBERSkw
+  SYSTEMkw
+  PUBLICkw
+  NDATAkw
+  IGNOREkw
+  INCLUDEkw
+  SGMLDECLkw
+  DOCTYPEkw
+  CATALOGkw
+  Okw
+
+PRODUCTIONS
+
+(* A name. Keywords are not reserved names. *)
+
+Name<VAR t: TEXT> = 
+  NonKeywordName (. t := p.string() .) |
+  IGNOREkw (. t := p.string() .) | 
+  INCLUDEkw (. t := p.string() .) | 
+  EMPTYkw (. t := p.string() .) | 
+  ANYkw (. t := p.string() .) | 
+  CDATAkw (. t := p.string() .) | 
+  IDkw (. t := p.string() .) | 
+  IDREFkw (. t := p.string() .) | 
+  IDREFSkw (. t := p.string() .) | 
+  ENTITYkw (. t := p.string() .) | 
+  ENTITIESkw (. t := p.string() .) | 
+  NAMEkw (. t := p.string() .) | 
+  NAMESkw (. t := p.string() .) | 
+  NMTOKENkw (. t := p.string() .) | 
+  NMTOKENSkw (. t := p.string() .) | 
+  NUMBERkw (. t := p.string() .) | 
+  NUMBERSkw (. t := p.string() .) | 
+  NOTATIONkw (. t := p.string() .) | 
+  SYSTEMkw (. t := p.string() .) | 
+  PUBLICkw (. t := p.string() .) | 
+  NDATAkw (. t := p.string() .) |
+  SGMLDECLkw (. t := p.string() .) |
+  DOCTYPEkw (. t := p.string() .) |
+  CATALOGkw (. t := p.string() .) |
+  Okw (. t := p.string() .) .
+
+(* A case insensitive name (folded to uppercase). *)
+
+CIName<VAR t: TEXT> = 
+  NonKeywordName (. t := p.name() .) |
+  IGNOREkw (. t := p.name() .) | 
+  INCLUDEkw (. t := p.name() .) | 
+  EMPTYkw (. t := p.name() .) | 
+  ANYkw (. t := p.name() .) | 
+  CDATAkw (. t := p.name() .) | 
+  IDkw (. t := p.name() .) | 
+  IDREFkw (. t := p.name() .) | 
+  IDREFSkw (. t := p.name() .) | 
+  ENTITYkw (. t := p.name() .) | 
+  ENTITIESkw (. t := p.name() .) | 
+  NAMEkw (. t := p.name() .) | 
+  NAMESkw (. t := p.name() .) | 
+  NMTOKENkw (. t := p.name() .) | 
+  NMTOKENSkw (. t := p.name() .) | 
+  NUMBERkw (. t := p.name() .) | 
+  NUMBERSkw (. t := p.name() .) | 
+  NOTATIONkw (. t := p.name() .) | 
+  SYSTEMkw (. t := p.name() .) | 
+  PUBLICkw (. t := p.name() .) | 
+  NDATAkw (. t := p.name() .) |
+  SGMLDECLkw (. t := p.name() .) |
+  DOCTYPEkw (. t := p.name() .) |
+  CATALOGkw (. t := p.name() .) |
+  Okw (. t := p.name() .) .
+
+PubidLiteral<VAR v: TEXT> (. VAR t: TEXT; r: SGMLRep.RefType; .) = 
+  (. v := "" .)
+  ( Quote | DQuote )
+      { EntityValueData (. t := p.string(); v := v & t .) | 
+        PEReference (. t := p.string(); v := v & "%" & t & ";" .) | 
+        Reference<t,r> (. v := v & "&" & t & ";" .) 
+      } 
+  ( Quote | DQuote ).
+
+EntityValue<parser: SGML.Parser; VAR v: TEXT> 
+    (. VAR t: TEXT; r: SGMLRep.RefType; e: REF SGML.Entity; .) = 
+  (. v := "" .)
+  ( Quote | DQuote )
+    { EntityValueData (. t := p.string(); v := v & t .) | 
+      PEReference (. t := p.string(); v := v & "%" & t & ";" .) | 
+      Reference<t,r>
+        (. IF r = SGMLRep.RefType.Char THEN
+             v := v & "&" & t & ";"; (* SGMLRep.CharToText(t); *)
+           ELSIF r = SGMLRep.RefType.Hex THEN
+             v := v & "&" & t & ";"; (* SGMLRep.HexToText(t); *)
+           ELSE
+             e := SGMLRep.GetEntity(parser,t,SGML.EntityDeclType.General);
+             IF e # NIL THEN
+               v := v & e.internalText;
+             ELSE
+               parser.application.error(SGML.ErrorEvent{parser.p.cur.offset,
+                   SGML.ErrorType.OtherError,"Reference to undefined entity "
+                   & t});
+             END;
+           END
+        .)
+    } 
+  ( Quote | DQuote ).
+
+(* Attribute value. The data chunks composing the value are accumulated
+   in the "dataChunks" buffer. *)
+
+AttValue<parser: SGML.Parser>  
+    (. VAR t: TEXT; r: SGMLRep.RefType; e: REF SGML.Entity; .) = 
+  (. parser.nbData := 0 .)
+  ( ( ( Quote | DQuote )
+      { AttValueData (. t := p.string() .) 
+          (. parser.dataChunks[parser.nbData].data := t;
+             parser.dataChunks[parser.nbData].entityName := NIL;
+             SGMLRep.IncData(parser)
+          .)
+        | Reference<t,r>
+          (. parser.dataChunks[parser.nbData].entityName := t;
+             IF r = SGMLRep.RefType.Char THEN
+               parser.dataChunks[parser.nbData].data := "&" & t & ";";
+                   (* SGMLRep.CharToText(t); *)
+             ELSIF r = SGMLRep.RefType.Hex THEN
+               parser.dataChunks[parser.nbData].data := "&" & t & ";";
+                   (* SGMLRep.HexToText(t); *)
+             ELSE
+               e := SGMLRep.GetEntity(parser,t,SGML.EntityDeclType.General);
+               IF e # NIL THEN
+                 parser.dataChunks[parser.nbData].data := e.internalText;
+               ELSE
+                 parser.application.error(SGML.ErrorEvent{parser.p.cur.offset,
+                     SGML.ErrorType.OtherError,"Reference to undefined entity "
+                     & t});
+               END;
+             END;
+             SGMLRep.IncData(parser)
+          .)
+      } 
+      ( Quote | DQuote ) 
+    )
+    | ( Name<t> | NmToken (. t := p.string() .) )
+      (. parser.dataChunks[parser.nbData].data := t;
+         parser.dataChunks[parser.nbData].entityName := NIL;
+         SGMLRep.IncData(parser)
+      .)
+
+  ).
+
+(* A comment. Within the document content, deliver the comment to the
+   application. *)
+
+Comment<parser: SGML.Parser> 
+    (. VAR c := NEW(REF ARRAY OF TEXT,1); .) =
+  Commenttk
+  (. c[0] := p.string();
+     IF NOT parser.markup THEN
+       parser.application.commentDecl(SGML.CommentDeclEvent{parser.p.cur.
+           offset,c,NIL});
+     END
+  .) .
+
+(* Processing instruction. They should mostly arise within the document
+   content and are thus always delivered to the application. *)
+
+PI<parser: SGML.Parser> = 
+  PItk (. parser.application.pi(SGML.PiEvent{parser.p.cur.offset,
+      p.string(),NIL}) .) .
+
+(* White space qualifies as parsed character data within the document
+   content and is ignored elsewhere. *)
+
+Misc<parser: SGML.Parser> =
+  Comment<parser> | PI<parser> |
+  White 
+    (. IF NOT parser.markup THEN
+         (* SGMLRep.StartData(parser); White is not necessarily #PCDATA *)
+         parser.application.data(SGML.DataEvent{parser.p.cur.offset,
+             p.string()});
+       END
+    .) .
+
+(* The parser is used for documents (optional markup declarations plus 
+   content), document type definitions (markup declaration), and
+   included document sections (content). The declared grammar thus
+   allows either markup or content. However, the boolean parser.markup
+   is used to check that content and markup are at the correct place. *)
+
+SGMLC (. VAR parser := NARROW(p,SGMLRep.ParserPlus).parser; .) =
+  { Misc<parser> } 
+  [ DocTypeDecl<parser> { Misc<parser> } ]
+  (. (* Found some content before any document type declaration.
+        ParseDtd is called with a NIL doctype and will select a default
+        document type. *)
+
+     IF parser.doctype = NIL THEN
+       SGMLRep.ParseDtd(parser,SGML.ExternalId{NIL,NIL,NIL});
+     END;
+
+     IF NOT parser.markup THEN
+       parser.application.endProlog(SGML.EndPrologEvent{parser.p.cur.
+           offset});
+       SGMLRep.StartContent(parser);
+     END
+  .) 
+  ( Content<parser> | ConditionalSect<parser> | MarkupDecl<parser> )
+  ( { Content<parser> | Misc<parser> | ConditionalSect<parser> | 
+      MarkupDecl<parser> 
+    }
+  )
+  (. IF NOT parser.markup THEN SGMLRep.EndContent(parser); END
+  .) .
+
+(* The document type declaration may include an external identifier
+   used to locate the Dtd. Otherwise the Dtd location is found in the
+   catalogs by ParseDtd. Then, additional markup declarations may be
+   found between [ ]. *)
+
+DocTypeDecl<parser: SGML.Parser> 
+    (. VAR name: TEXT; 
+       public: BOOLEAN := FALSE; t1, t2: TEXT := NIL;
+       e: REF SGML.Entity;
+    .) = 
+  DocTypeTag CIName<name> 
+  [ ExternalId<public,t1,t2>
+    (. e := NEW(REF SGML.Entity);
+       e.name := name;
+       e.declType := SGML.EntityDeclType.Doctype;
+       e.dataType := SGML.EntityDataType.Sgml;
+       e.internalText := NIL;
+       e.externalId := SGML.ExternalId{t1,t2,NIL};
+       SGMLRep.AddEntity(parser,e)
+    .) 
+  ] 
+  (. parser.doctype := name;
+     SGMLRep.ParseDtd(parser,SGML.ExternalId{t1,t2,NIL})
+  .)
+  [ 
+    (. parser.markup := TRUE;
+       parser.s.inMarkupDecl(TRUE)
+    .)
+    LSB { MarkupDecl<parser> | ConditionalSect<parser> | Misc<parser> } RSB
+    (. parser.markup := FALSE;
+       parser.s.inMarkupDecl(FALSE)
+    .)
+  ]  RB .
+
+(* Markup declarations must only appear within Dtd or in the document
+   type declaration, between [ ]. The "parser.markup" boolean is used
+   to remember when markup is accepted. *)
+
+MarkupDecl<parser: SGML.Parser> = 
+  (. IF NOT parser.markup THEN
+       parser.application.error(SGML.ErrorEvent{0,SGML.ErrorType.OtherError,
+           "Misplaced markup declarations"});
+     END
+  .)
+  ElementDecl<parser> | AttListDecl<parser> | EntityDecl<parser> | 
+  NotationDecl<parser> .
+
+(* Attribute within a start element tag *)
+
+Attribute<parser: SGML.Parser> (. VAR name: TEXT; .) = 
+  CIName<name> (. parser.nbData := 0 .) [ Equal AttValue<parser> ]
+  (. WITH a = parser.attributes[parser.nbAttr] DO
+       a := SGML.Attribute{name, SGML.AttributeType.CData, 
+           SGML.AttributeDefaulted.Specified,
+           NEW(REF ARRAY OF SGML.CdataChunk,parser.nbData), NIL, FALSE,
+           FALSE, NIL, SGML.Notation{NIL, SGML.ExternalId{NIL,NIL,NIL}}};
+       a.cdataChunks^ := SUBARRAY(parser.dataChunks^,0,parser.nbData);
+     END
+  .) .
+
+(* End element tag. *)
+
+EndElement<parser: SGML.Parser> (. VAR name: TEXT; .) = 
+  EndElementTag CIName<name> RB 
+  (. SGMLRep.EndElement(parser,name);
+     parser.application.endElement(SGML.EndElementEvent{parser.p.cur.offset,
+         name})
+  .) .
+
+(* Start element tag. The attribute values are parsed and a start element is
+   delivered to the application. For an empty element, an end element event
+   is delivered as well. SGMLRep.StartElement is used to check if this element
+   is allowed at this point in the content. *)
+
+StartElement<parser: SGML.Parser> 
+    (. VAR name: TEXT; e: SGML.StartElementEvent; .) = 
+  StartElementTag CIName<name> (. parser.nbAttr := 0 .) 
+  { Attribute<parser>
+    (. SGMLRep.IncAttr(parser) .)
+  } 
+  ( RB
+    (. e.pos := parser.p.cur.offset;
+       e.gi := name;
+       e.contentType := SGML.ElementContentType.Mixed;
+       e.included := FALSE;
+       e.attributes := NEW(REF ARRAY OF SGML.Attribute, parser.nbAttr);
+       e.attributes^ := SUBARRAY(parser.attributes^, 0, parser.nbAttr);
+       SGMLRep.StartElement(parser,e);
+       parser.application.startElement(e)
+    .) 
+    | 
+    EmptyElementEndTag 
+    (. e.pos := parser.p.cur.offset;
+       e.gi := name;
+       e.contentType := SGML.ElementContentType.Empty;
+       e.included := FALSE;
+       e.attributes := NEW(REF ARRAY OF SGML.Attribute, parser.nbAttr);
+       e.attributes^ := SUBARRAY(parser.attributes^, 0, parser.nbAttr);
+       SGMLRep.StartElement(parser,e);
+       parser.application.startElement(e);
+       parser.application.endElement(SGML.EndElementEvent{parser.p.cur.offset,
+           name})
+    .)
+  ) .
+
+(* Content within an element. It may be other elements start or end,
+   CDATA sections, Parsed Character Data, or an entity reference. *)
+
+Content<parser: SGML.Parser> 
+    (. VAR t: TEXT; r: SGMLRep.RefType; e: REF SGML.Entity; 
+       sdata: SGML.SdataEvent; .) = 
+  (. IF parser.markup THEN
+       parser.application.error(SGML.ErrorEvent{0,SGML.ErrorType.OtherError,
+           "Misplaced document content, in markup declarations"});
+     END
+  .)
+  ( StartElement<parser> | 
+    EndElement<parser> | 
+    CData
+      (. parser.application.markedSectionStart(SGML.MarkedSectionStartEvent{
+             parser.p.cur.offset,SGML.MarkedSectionStatus.CData,
+             SGMLRep.CDataParam});
+         SGMLRep.StartData(parser);
+         parser.application.data(SGML.DataEvent{parser.p.cur.offset,
+             p.string()});
+         parser.application.markedSectionEnd(SGML.MarkedSectionEndEvent{
+             parser.p.cur.offset,SGML.MarkedSectionStatus.CData})
+      .) |
+    PCDataChunk
+      (. SGMLRep.StartData(parser);
+         parser.application.data(SGML.DataEvent{parser.p.cur.offset,
+             p.string()})
+      .) | 
+    Reference<t,r>
+      (. sdata.pos := parser.p.cur.offset;
+         sdata.entityName := t;
+
+         (* An "sdata" event is delivered to the application for character,
+            hexadecimal and other internal entity references. An 
+            ExternalDataEntityRef event is delivered for external references.*)
+
+         IF r = SGMLRep.RefType.Char THEN
+           sdata.text := "&" & t & ";"; (* SGMLRep.CharToText(t); *)
+           SGMLRep.StartData(parser);
+           parser.application.sdata(sdata);
+         ELSIF r = SGMLRep.RefType.Hex THEN
+           sdata.text := "&" & t & ";"; (*SGMLRep.HexToText(t); *)
+           SGMLRep.StartData(parser);
+           parser.application.sdata(sdata);
+         ELSE
+           e := SGMLRep.GetEntity(parser,t,SGML.EntityDeclType.General);
+           IF e # NIL THEN
+             IF e.internalText # NIL THEN
+               sdata.text := e.internalText;
+               SGMLRep.StartData(parser);
+               parser.application.sdata(sdata);
+             ELSE
+               parser.application.externalDataEntityRef(
+                   SGML.ExternalDataEntityRefEvent{parser.p.cur.offset,e^});
+             END;
+           ELSE
+             parser.application.error(SGML.ErrorEvent{parser.p.cur.offset,
+                 SGML.ErrorType.OtherError,"Reference to undefined entity " &
+                 t});
+           END;
+         END
+      .)
+  ).
+
+(* Element declaration. Both the original content specification "r",
+   and the associated FSM "m" are produced when parsing the content
+   specification. If several elements are declared simultaneously,
+   the same content specification is used in each case. *)
+
+ElementDecl<parser: SGML.Parser> 
+    (. VAR c, r: REFANY; name: TEXT; s: TextSeq.T; omitS, omitE := FALSE; 
+    m: FSM.T; .) = 
+  ElementTag NameChoice<c>
+  [ ( Minus | Okw (. omitS := TRUE .) ) ( Minus | Okw (. omitE := TRUE .) ) ]
+  ContentSpec<r,m> RB 
+  (. TRY FSM.Wrap(m);
+     EXCEPT
+     | FSM.Error(e) =>
+         parser.application.error(SGML.ErrorEvent{parser.p.cur.offset,
+             SGML.ErrorType.OtherError,e & " in content specification"});
+     END;
+     IF ISTYPE(c,TEXT) THEN
+       name := NARROW(c,TEXT);
+       SGMLRep.AddElement(parser,name,r,m,omitS,omitE);
+
+     (* several elements are declared together *)
+     ELSE
+       s := NARROW(c,TextSeq.T);
+       FOR i := 0 TO s.size() - 1 DO
+         name := s.get(i);
+         SGMLRep.AddElement(parser,name,r,m,omitS,omitE);
+       END;
+     END
+  .) .
+
+(* One element name or several names between (). *)
+
+NameChoice<VAR c: REFANY> 
+    (. VAR t: TEXT; s: TextSeq.T; .) = 
+  CIName<t> (. c := t .) | 
+  ( LP CIName<t> 
+    (. s := NEW(TextSeq.T).init(); s.addhi(t); c := s .)
+    { Vertical CIName<t> (. s.addhi(t) .) } 
+    RP 
+  ) .
+
+(* Element content specification. *)
+
+ContentSpec<VAR r: REFANY; VAR m: FSM.T;> (. VAR t: TEXT; m1: FSM.T; .)= 
+  EMPTYkw (. r := SGMLRep.EmptyAtom; FSM.New(m,NIL) .) | 
+  ANYkw (. r := Atom.FromText("ANY"); FSM.NewElse(m1); FSM.Repeat(m1,m) .) | 
+  Elements<r,m>
+  [ Minus LP CIName<t> { Vertical CIName<t> } RP ]
+  [ PlusLP CIName<t> { Vertical CIName<t> } RP ] .
+
+Elements<VAR r: REFANY; VAR m: FSM.T;> (. VAR m1, m2: FSM.T; .) = 
+  ChoiceSeq<r,m>
+  [ IntMark 
+      (. r := NEW(SGMLRep.Optional, r := r); 
+         FSM.Optional(m,m1); m := m1 
+      .) | 
+    Star 
+      (. r := NEW(SGMLRep.Repeat, r := r); 
+         FSM.Repeat(m,m1); m := m1 
+      .) | 
+    Plus 
+      (. r := NEW(SGMLRep.RepeatPlus, r := r); 
+         FSM.Copy(m,m1); 
+         FSM.Repeat(m,m2);
+         FSM.Sequence(m1,m2,m)
+      .)
+  ] .
+
+CP<VAR r: REFANY; VAR m: FSM.T; > (. VAR t: TEXT; m1, m2: FSM.T; .) = 
+  ( CIName<t> (. r := t; FSM.New(m,Atom.FromText(t)) .) | 
+    ChoiceSeq<r,m> | 
+    DashPCData (. r := SGMLRep.PCDataAtom; FSM.New(m,SGMLRep.PCDataAtom) .)
+  ) 
+  [ IntMark 
+      (. r := NEW(SGMLRep.Optional, r := r); 
+         FSM.Optional(m,m1); m := m1 
+      .) | 
+    Star 
+      (. r := NEW(SGMLRep.Repeat, r := r); 
+         FSM.Repeat(m,m1); m := m1 
+      .) | 
+    Plus 
+      (. r := NEW(SGMLRep.RepeatPlus, r := r); 
+         FSM.Copy(m,m1); 
+         FSM.Repeat(m,m2);
+         FSM.Sequence(m1,m2,m)
+      .)
+  ] .
+
+(* Choice or Sequence of elements *)
+
+ChoiceSeq<VAR r: REFANY; VAR m: FSM.T> 
+    (. VAR r1, r2, r3: REFANY; s: RefSeq.T; m1, m2: FSM.T; .) = 
+  LP CP<r1,m1> 
+  ( RP (. r := r1; m := m1 .) | 
+    ( Vertical CP<r2,m2> 
+      (. s := NEW(SGMLRep.Choice).init();
+         r := s; 
+         s.addhi(r2);
+         FSM.Or(m1,m2,m);
+         m1 := m
+      .)
+      { Vertical CP<r3,m2> (. s.addhi(r3); FSM.Or(m1,m2,m); m1 := m .) } RP ) | 
+    ( Coma CP<r2,m2> 
+      (. s := NEW(SGMLRep.Seq).init();
+         r := s;
+         s.addhi(r2);
+         FSM.Sequence(m1,m2,m);
+         m1 := m
+      .)
+      { Coma CP<r3,m2> (. s.addhi(r3); FSM.Sequence(m1,m2,m); m1 := m .) } RP )
+  ) .
+
+(* Declaration of attribute list. Accumulate the attributes in a sequence
+   while they are parsed. Add these attributes to the definition of
+   the specified element types. *)
+
+AttListDecl<parser: SGML.Parser> 
+    (. VAR
+       names: REFANY; 
+       name: TEXT;
+       s: TextSeq.T;
+       a: SGMLRep.AttributeDesc; 
+       attributes := NEW(TextRefTbl.Default).init();
+    .) = 
+  AttListTag NameChoice<names> 
+  { (. a := NEW(SGMLRep.AttributeDesc) .) 
+    AttDef<parser,a>
+    (. EVAL attributes.put(a.name,a) .)
+  } RB 
+  (. IF ISTYPE(names,TEXT) THEN
+       name := NARROW(names,TEXT);
+       SGMLRep.AddAttributes(parser,name,attributes);
+     ELSE
+       s := NARROW(names,TextSeq.T);
+       FOR i := 0 TO s.size() - 1 DO
+         name := s.get(i);
+         SGMLRep.AddAttributes(parser,name,SGMLRep.CopyTextRefTbl(attributes));
+       END;
+     END
+  .) .
+
+(* Parse the declaration of a single attribute *)
+
+AttDef<parser: SGML.Parser; a: SGMLRep.AttributeDesc> 
+    (. VAR t: TEXT; type: REFANY; .)= 
+  CIName<t> AttType<type> Default<parser,a> 
+  (. a.name := t; a.content := type .) .
+
+(* Type for an attribute *)
+
+AttType<VAR r: REFANY> = 
+  StringType<r> | TokenizedType<r> | EnumeratedType<r> .
+
+StringType<VAR r: REFANY> = 
+  CDATAkw (. r := Atom.FromText(p.string()) .).
+
+TokenizedType<VAR r: REFANY> (. VAR t: TEXT; .) =
+  ( IDkw (. t := p.string() .) | 
+    IDREFkw (. t := p.string() .) | 
+    IDREFSkw (. t := p.string() .) | 
+    ENTITYkw (. t := p.string() .) | 
+    ENTITIESkw (. t := p.string() .) |
+    NAMEkw (. t := p.string() .) | 
+    NAMESkw (. t := p.string() .) | 
+    NMTOKENkw (. t := p.string() .) | 
+    NMTOKENSkw (. t := p.string() .) |
+    NUMBERkw (. t := p.string() .) | 
+    NUMBERSkw (. t := p.string() .) 
+  ) (. r:= Atom.FromText(t) .) .
+
+(* Enumerated types come with a list of enumeration members *)
+
+EnumeratedType<VAR r: REFANY> = NotationType<r> | Enumeration<r> .
+
+NotationType<VAR r: REFANY> 
+    (. VAR t: TEXT; s := NEW(SGMLRep.NotationType).init(); .) =
+  NOTATIONkw ( LP  ( Name<t> (. r := s; s.addhi(t) .) 
+    {  Vertical  Name<t> (. s.addhi(t) .) } ) RP 
+  ) .
+
+Enumeration<VAR r: REFANY> 
+    (. VAR t: TEXT; s := NEW(SGMLRep.Enumeration).init(); .) = 
+  LP  (Name<t> | NmToken (. t := p.string() .) ) (. r := s; s.addhi(t) .)
+  {  Vertical ( Name<t> | NmToken (. t := p.string() .) ) (. s.addhi(t) .) } 
+  RP .
+
+(* Is the attribute required/implied/fixed. Parse the default value if any. *)
+
+Default<parser: SGML.Parser; a: SGMLRep.AttributeDesc> = 
+  DashRequired (. a.required := TRUE .) | 
+  DashImplied (. a.implied := TRUE .) | 
+  ( [ DashFixed (. a.fixed := TRUE .) ] 
+    AttValue<parser> 
+    (. a.default := NEW(REF ARRAY OF SGML.CdataChunk,parser.nbData);
+       a.default^ := SUBARRAY(parser.dataChunks^,0,parser.nbData)
+    .)
+  ) .
+
+ConditionalSect<parser: SGML.Parser> = 
+  StartCSect ( IncludeSect<parser> | IgnoreSect<parser> ) .
+
+(* Included sections contain usual SGML elements. *)
+
+IncludeSect<parser: SGML.Parser> = 
+  INCLUDEkw 
+  (. IF NOT parser.markup THEN
+       parser.application.markedSectionStart(SGML.MarkedSectionStartEvent{
+           parser.p.cur.offset,SGML.MarkedSectionStatus.Include,
+           SGMLRep.IncludeParam});
+     END
+  .)
+  LSB 
+  { MarkupDecl<parser> | ConditionalSect<parser> | Misc<parser> | 
+    Content<parser> 
+  } 
+  EndCSect 
+  (. IF NOT parser.markup THEN
+       parser.application.markedSectionEnd(SGML.MarkedSectionEndEvent{
+           parser.p.cur.offset,SGML.MarkedSectionStatus.Include});
+     END
+  .) .
+
+(* Ignored sections may contain almost anything. They are skipped
+   without being parsed. *)
+
+IgnoreSect<parser: SGML.Parser> (. VAR t, s := ""; startPos, nb := 0; .) = 
+  IGNOREkw 
+  (. IF NOT parser.markup THEN
+       parser.application.markedSectionStart(SGML.MarkedSectionStartEvent{
+           parser.p.cur.offset,SGML.MarkedSectionStatus.Ignore,
+           SGMLRep.IgnoreParam});
+     END
+  .)
+  LSB 
+  { ANY (. t := p.string() .) 
+    (. s := s & t; INC(nb);
+       IF nb = 0 THEN startPos := parser.p.cur.offset;
+       ELSIF nb >= 10 THEN
+         IF NOT parser.markup THEN
+           parser.application.ignoredChars(SGML.IgnoredCharsEvent{startPos,s});
+         END;
+         nb := 0;
+         s := "";
+       END
+    .)
+  }
+  EndCSect 
+  (. IF NOT parser.markup THEN
+       parser.application.markedSectionEnd(SGML.MarkedSectionEndEvent{
+           parser.p.cur.offset,SGML.MarkedSectionStatus.Ignore});
+     END
+  .) .
+
+(* Character, Hexadecimal or entity references. *)
+
+Reference<VAR name: TEXT; VAR type: SGMLRep.RefType> = 
+  CharRef (. name := p.string(); type := SGMLRep.RefType.Char .) | 
+  HexCharRef (. name := p.string(); type := SGMLRep.RefType.Hex .) | 
+  EntityRef (. name := p.string(); type := SGMLRep.RefType.Name .) .
+
+(* Parameter or general entities. They are stored in the entities tables. *)
+
+EntityDecl<parser: SGML.Parser> 
+    (. VAR e := NEW(REF SGML.Entity); name: TEXT; .) =
+  EntityTag 
+  ( ( Name<name> EntityDef<parser,e>
+      (. e.declType := SGML.EntityDeclType.General
+      .)
+    ) | 
+    ( Percent Name<name> EntityDef<parser,e> 
+      (. e.declType := SGML.EntityDeclType.Parameter
+      .)
+    )
+  )
+  (. e.name := name;
+     e.dataType := SGML.EntityDataType.Sgml; 
+     SGMLRep.AddEntity(parser,e)
+  .) 
+  RB .
+
+(* The entity definition may contain replacement text or an external
+   identifier to a file. *)
+
+EntityDef<parser: SGML.Parser; e: REF SGML.Entity> 
+    (. VAR name, t1, t2: TEXT := NIL; public := FALSE; .) =
+  [ CDATAkw ] EntityValue<parser,t1> (. e.internalText := t1 .) | 
+  ( ExternalId<public,t1,t2> (. e.externalId := SGML.ExternalId{t1,t2,NIL} .)
+    [ NDataDecl<name> 
+      (. e.notation := SGML.Notation{name,SGML.ExternalId{t1,t2,NIL}};
+         e.externalId := SGML.ExternalId{NIL,NIL,NIL}
+      .)
+    ]
+  ) .
+
+(* A system identifier usually is a file name, while a public name
+   refers to a catalog entry. *)
+
+ExternalId<VAR public: BOOLEAN; VAR t1, t2: TEXT> = 
+  SYSTEMkw (. public := FALSE .) PubidLiteral<t1> | 
+  PUBLICkw (. public := TRUE .) PubidLiteral<t2> [ PubidLiteral<t1> ] .
+
+NDataDecl<VAR name: TEXT> = NDATAkw Name<name> .
+
+NotationDecl<parser: SGML.Parser>
+    (. VAR name, t1, t2: TEXT := NIL; public := FALSE; .) = 
+  NotationTag Name<name> ExternalId<public,t1,t2> RB 
+  (. SGMLRep.AddNotation(parser, NEW(REF SGML.Notation, name := name,
+         externalId := SGML.ExternalId{t1,t2,NIL}))
+  .) .
+
+END SGMLC.

@@ -1,0 +1,11 @@
+@Decompress
+PROCEDURE Decompress(input, alphabet) =@
+    @1 (* uncompress input to get codes array, pos *)@
+    @2 (* decode codes array (using alphabet) to get lastchars array *)@
+    @3 (* recompute original string using lastchars, pos *)@
+         @4 (* sort lastchars array to get firstchars array *)@
+         @5 (* for each character in firstchars, find corresponding
+               character in lastchars *)@
+         @6 (* starting with char in firstchars[pos], reconstruct
+               original string *)@
+@Decompress

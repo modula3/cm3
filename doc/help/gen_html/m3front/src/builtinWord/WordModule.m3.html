@@ -1,0 +1,88 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3front/src/builtinWord/WordModule.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3front/src/builtinWord/WordModule.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright (C) 1992, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+
+<P> File: WordModule.m3                                         
+ Last Modified On Tue Mar  2 09:13:12 PST 1993 By kalsow         
+      Modified On Thu Jul 27 17:10:39 1989 By muller         
+
+<P><PRE>MODULE <module><implements><A HREF="WordModule.i3.html">WordModule</A></implements></module>;
+
+IMPORT <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="../values/Tipe.i3.html">Tipe</A>, <A HREF="../values/Module.i3.html">Module</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../values/Constant.i3.html">Constant</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../types/NamedType.i3.html">NamedType</A>;
+IMPORT <A HREF="WordPlus.i3.html">WordPlus</A>, <A HREF="WordMinus.i3.html">WordMinus</A>, <A HREF="WordTimes.i3.html">WordTimes</A>, <A HREF="WordLT.i3.html">WordLT</A>, <A HREF="WordLE.i3.html">WordLE</A>, <A HREF="WordGT.i3.html">WordGT</A>, <A HREF="WordGE.i3.html">WordGE</A>;
+IMPORT <A HREF="WordAnd.i3.html">WordAnd</A>, <A HREF="WordOr.i3.html">WordOr</A>, <A HREF="WordXor.i3.html">WordXor</A>, <A HREF="WordShift.i3.html">WordShift</A>, <A HREF="WordRotate.i3.html">WordRotate</A>, <A HREF="WordExtract.i3.html">WordExtract</A>;
+IMPORT <A HREF="WordInsert.i3.html">WordInsert</A>, <A HREF="WordNot.i3.html">WordNot</A>, <A HREF="WordDivide.i3.html">WordDivide</A>, <A HREF="WordMod.i3.html">WordMod</A>;
+
+PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
+  VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
+  BEGIN
+
+    b := TInt.FromInt (Target.Integer.size, size); &lt;*ASSERT b*&gt;
+    M := Module.NewDefn (&quot;Word&quot;, TRUE, NIL);
+
+    (* WARNING: The following list must be in the same order
+        as the actual Word.i3 file, otherwise the version
+        stamps will be messed up! *)
+
+    zz := Scope.Push (Module.ExportScope (M));
+    Tipe.Define (&quot;T&quot;, NamedType.New (Int.T), FALSE);
+    Constant.Declare (&quot;Size&quot;, IntegerExpr.New (size), FALSE);
+    WordPlus.Initialize ();
+    WordTimes.Initialize ();
+    WordMinus.Initialize ();
+    WordDivide.Initialize ();
+    WordMod.Initialize ();
+    WordLT.Initialize ();
+    WordLE.Initialize ();
+    WordGT.Initialize ();
+    WordGE.Initialize ();
+    WordAnd.Initialize ();
+    WordOr.Initialize ();
+    WordXor.Initialize ();
+    WordNot.Initialize ();
+    WordShift.Initialize ();
+    WordRotate.Initialize ();
+    WordExtract.Initialize ();
+    WordInsert.Initialize ();
+    Scope.Pop (zz);
+  END Initialize;
+
+BEGIN
+END WordModule.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

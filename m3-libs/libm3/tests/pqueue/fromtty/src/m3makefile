@@ -1,0 +1,9 @@
+/* Copyright 1993 Digital Equipment Corporation.                             */
+/* Distributed only by permission.                                           */
+/*                                                                           */
+/* Last modified on Thu Sep  8 23:39:46 PDT 1994 by heydon                   */
+
+import (libm3)
+implementation (FromTTY)
+
+program(FromTTY)

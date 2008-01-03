@@ -1,0 +1,124 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""><P>
+<HEAD>
+<TITLE>EditLectern</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>EditLectern(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+EditLectern - Edit attributes of document in Lectern format
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<B>EditLectern</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+<B>EditLectern</B> provides a graphical (point-and-click) user interface
+for editing the attributes of a Lectern-format document, which you
+initially create from PostScript or image files using
+<A HREF="BuildLectern.1.html">BuildLectern(1)</A>.  <B>EditLectern</B> uses
+BuildLectern to get the real work done, so if you're happier with a
+command line interface you should stick with BuildLectern.
+<B>EditLectern</B> always appends the BuildLectern commands it executes
+to the file <TT>$HOME/EditLectern.log</TT>; in deferred mode (controlled
+by a pair of radio buttons at the top of the window), the actual
+BuildLectern calls are suppressed.<P>
+
+<B>EditLectern</B> is designed to be used concurrently with
+<A HREF="Lectern.1.html">Lectern(1)</A> -- when you open a document with
+<B>EditLectern</B>, the same document is automatically opened in
+Lectern.  That way you can read through the document and determine the
+attributes to add via <B>EditLectern</B>, such as the locations of page
+1, the contents page, the index page, and the document title and
+author.  <B>EditLectern</B> starts Lectern automatically if it isn't
+already running.<P>
+
+The <B>EditLectern</B> window is split vertically into three areas: a
+menu bar, a dialog (which is blank when no file is open), and a
+typescript.<P>
+
+The menu bar contains a <B>File</B> menu and the radio buttons
+controlling immediate/deferred mode.  The <B>File</B> menu contains
+<B>Open...</B>, <B>Save</B>, <B>Save As...</B>, <B>Close</B>, <B>Quit</B>, and
+<B>About</B> items.  <B>Save</B> and <B>Save As...</B> invoke BuildLectern
+with the current settings unless deferred mode is enabled.  The
+BuildLectern command and its output are displayed in the typescript at
+the bottom of the <B>EditLectern</B> window.<P>
+
+Once a file is open, the following dialog elements become visible:<P>
+
+<UL>
+
+<LI> A numeric box to specify the image number (starting with one) of
+the table of contents.  Leave it set to zero if there is no table of
+contents.<P>
+
+<LI> A pair of numeric boxes to specify the correspondence between
+image numbers and page numbers: normally, you specify the image number
+of page 1, but in the case of a document starting at a page number
+higher than 1 (e.g., an issue of a journal), you can specify image
+number 1 (or higher) and the corresponding page number.<P>
+
+<LI> A pair of radio buttons (labeled <B>Page</B> and <B>Image</B>) and a numeric
+box, to specify the page or image number of the index.  Leave it set
+to page 0 if there is no index.<P>
+
+<LI> A scrolling list labeled <B>Attribute</B>, a pair of typeins
+labeled <B>Key</B> and <B>Value</B>, and a pair of buttons labeled <B>Delete</B>
+and <B>Set</B>, to specify attributes (<I>author</I>, <I>title</I>, and <I>date</I> are
+recommended for all documents). To set an attribute, type values into
+the <B>Key</B> and <B>Value</B> fields, and press <B>Set</B>.  To display an existing
+attribute, select it in the scrolling list.  To modify it, edit the
+<B>Value</B> field and press <B>Set</B>.  To delete it, press <B>Delete</B>.  
+</UL>
+<P>
+
+Like other applications built with FormsVBT, EditLectern allows you to
+pick any of four different text-editing "models": emacs, ivy, mac, and
+xterm.  You set the model via the environment variable
+<TT>TextPortModel</TT>, which should be set to either <TT>emacs</TT>,
+<TT>ivy</TT>, <TT>mac</TT>, or <TT>xterm</TT>. If it is not set, the default model
+is emacs.  See
+<A HREF="ftp://gatekeeper.dec.com/pub/DEC/Modula-3/contrib/vbtkit.25Mar93.ps.Z">VBTkit Reference Manual</A> for details about each text-editing model.
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<A HREF="BuildLectern.1.html">BuildLectern(1)</A>, 
+<A HREF="Lectern.1.html">Lectern(1)</A>
+</BLOCKQUOTE>
+
+<H3>FILES</H3>
+<BLOCKQUOTE>
+$HOME/EditLectern.log
+</BLOCKQUOTE>
+
+<H3>AUTHOR</H3>
+<BLOCKQUOTE>
+<A HREF="http://www.research.digital.com/SRC/people/Paul_McJones/bio.html">Paul McJones</A>
+</BLOCKQUOTE>
+
+<H3>COPYRIGHT</H3>
+<BLOCKQUOTE>
+<P>
+
+Copyright 1994 Digital Equipment Corporation.<BR>
+Distributed only by permission.<BR>
+<BR>
+<PRE>
+Last modified on Wed Jul 19 14:59:38 PDT 1995 by mcjones  
+     modified on Fri Feb 17 17:47:07 PST 1995 by birrell  
+     modified on Sun Jan  1 08:54:01 PST 1995 by glassman 
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

@@ -1,0 +1,9 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Sat Sep  2 22:10:44 PDT 1995 by najork  
+%      modified on Fri Jun 18 18:31:31 PDT 1993 by harrison
+%      modified on Tue Feb 11 16:29:34 PST 1992 by muller
+
+Interface ("Math")

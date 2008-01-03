@@ -1,0 +1,43 @@
+/* Copyright (C) 1994, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+
+/* Last modified on Thu Jun 20 15:32:20 PDT 1996 by heydon     */
+/*      modified on Tue Jan 31 14:18:50 PST 1995 by kalsow     */
+/*      modified on Tue Jan 24 15:42:59 PST 1995 by mhb        */
+/*      modified on Tue May 24 08:55:10 PDT 1994 by najork     */
+/*      modified on Thu Jan 14 11:13:35 PST 1993 by steveg     */
+/*      modified on Tue Sep 15 12:17:13 PDT 1992 by mjordan    */
+
+import   ("zeus")
+
+zume     ("DGraph")
+
+module   ("Warshall")
+module   ("DFSTC")
+module   ("DFS")
+module   ("AdjMatrixView")
+module   ("AdjMatrixView01")
+module   ("AdjMatrixView01_K")
+module   ("ReadGraph")
+module   ("DFSTreeView")
+module   ("GraphView")
+module   ("DepthToColor")
+module   ("AdjMatrixVBT")
+module   ("GridMJJ")
+module   ("AdjMatrix")
+
+resource ("WarshallVar.fv")
+resource ("DFSVar.fv")
+resource ("DGraphinput.fv")
+resource ("Warshall.m3.cv")
+resource ("DFS.m3.cv")
+resource ("DFSTC.m3.cv")
+
+resource ("dgraph.data")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation   ("Main")
+  bundle           ("DGraphBundle")
+  program          ("dgraph")
+end

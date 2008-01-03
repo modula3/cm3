@@ -1,0 +1,10 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:46:53 PST 1995 by mhb     *)
+
+(
+process_new(processor, ["/proj/mips/bin/netobjd"], true);
+process_new(processor, ["/proj/alpha/bin/netobjd"], true);
+);

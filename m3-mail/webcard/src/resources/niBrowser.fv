@@ -1,0 +1,45 @@
+(Border (Pen 0)
+  (Insert "shared.fv")
+  (Frame
+      (zDecorate
+        (VBox
+          (HBox
+            (Text
+              (Margin 0)
+              LeftAlign
+              "Find messages matching:")
+            (menuSep)
+            (Glue 9)
+            (Shape
+              (Width + 0)
+              (Text (Margin 3) RightAlign "Max:"))
+           (Filter  (num %maxNIMessages 100 999999999 90)))
+          (Filter
+            (Shape
+              (Width 355 + Infinity)
+              (TSplit
+                Flex
+                %PredicateTSplit
+                (VBox
+                  (Glue 3)
+                  (Frame
+                    Lowered
+                    (Rim
+                      %PredicateWrap
+                      (Pen 3)
+                      (HPackSplit
+                        %Predicate
+                        (HGap 2)
+                        (VGap 2))))
+                  (Glue 9))
+                (param %PredicateTxt))))
+          (HBox
+            (Shape (Width 0 + 20000) Fill)
+            (Filter (btnDefault %NIBrowse "Browse"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btn %NICount "Count"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btn %NIReset "Reset"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btn %NIFlip "Flip"))
+            (Shape (Width 0 + 20000) Fill))))))

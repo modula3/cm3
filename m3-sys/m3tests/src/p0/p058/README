@@ -1,0 +1,47 @@
+/* Copyright (C) 1990, Digital Equipment Corporation.         */
+/* All rights reserved.                                       */
+/* See the file COPYRIGHT for a full description.             */
+
+/* Last modified on Wed Jun 20 20:26:58 1990 by muller        */
+
+Return-Path: 
+Delivery-Date: Wed, 20 Jun 90 11:19:23 PDT
+Received: by jumbo.pa.dec.com; id AA23637; Wed, 20 Jun 90 11:19:17 -0700
+From: mjordan (Michael Jordan)
+Message-Id: <9006201819.AA23637@jumbo.pa.dec.com>
+Date: 20 Jun 1990 1119-PDT (Wednesday)
+To: muller
+Cc: src.m3
+Subject: 1.5 bug
+
+The following program is compiled incorrectly and thus raises the
+exception.  It also crashes in M3Runtime__Raise trying to do the raise.
+
+Mick
+
+MODULE Bug1 EXPORTS Main;
+
+PROCEDURE P() RAISES {}=
+  VAR
+    buffer: ARRAY [0..15] OF CHAR;
+  BEGIN
+    WITH
+        half = SUBARRAY(buffer, 0, 8),
+        quarter = SUBARRAY(buffer, 0, 4) DO
+      Check(half, 8);
+      Check(quarter, 4);
+    END;
+  END P;
+
+EXCEPTION Error;
+
+PROCEDURE Check(READONLY a: ARRAY OF CHAR; size: CARDINAL) RAISES {}=
+  BEGIN
+    IF NUMBER(a) # size THEN RAISE Error END;
+  END Check;
+
+
+BEGIN
+  P();
+END Bug1.
+

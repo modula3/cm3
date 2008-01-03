@@ -1,0 +1,1 @@
+  %type = Token BRANDED "%tok.%type" OBJECT END;

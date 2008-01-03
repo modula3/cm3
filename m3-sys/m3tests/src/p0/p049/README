@@ -1,0 +1,42 @@
+Return-Path: 
+Delivery-Date: Wed, 14 Mar 90 17:20:38 PST
+Received: by jumbo; id AA02978; Wed, 14 Mar 90 17:20:22 PST
+Received: by decpa.pa.dec.com; id AA28457; Wed, 14 Mar 90 17:20:16 -0800
+Received: from arcturia.parc.Xerox.COM by arisia.Xerox.COM with SMTP
+	(5.61+/IDA-1.2.8/gandalf) id AA08361; Wed, 14 Mar 90 17:19:24 -0800
+Received: by arcturia.parc.xerox.com
+	(5.61+/IDA-1.2.8/gandalf) id AA11078; Wed, 14 Mar 90 17:18:59 PST
+Message-Id: <9003150118.AA11078@arcturia.parc.xerox.com>
+Date: Wed, 14 Mar 90 17:18:59 PST
+From: David Goldberg <goldberg@parc.xerox.com>
+To: m3-request
+Subject: bug with procedure parameters
+
+I haven't installed the bug fix you mailed me yesterday, but I believe
+that this bug is different.
+
+When the program below is compiled, the compiler generates bad code:
+
+	MODULE Main;
+
+	TYPE
+	   RecordType = PROCEDURE (xin, yin: INTEGER; first: CHAR);
+ 
+	PROCEDURE ProcessPoint (xin: INTEGER; recordIt: RecordType := NIL;) =
+	   VAR
+	      yin: INTEGER;
+ 	     first: CHAR;
+	   BEGIN
+	      (* *) IF recordIt # NIL THEN recordIt (xin, yin, first); END;
+	   END ProcessPoint;
+
+	BEGIN
+	   ProcessPoint (0);
+	END Main.
+
+In particular, line (* *) generates the C code:
+
+z2 = (((char *)_recordIt != (char *)0) || (CLOSURE_FRAME (_recordIt)!= NIL));
+
+But when _recordIt is nil, the second part of the || gets evaluated, 
+which then dereferences _recordit, causing a seg fault.

@@ -1,0 +1,17 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Fri Jun 18 13:21:42 PDT 1993 by harrison
+%      modified on Thu May  6 12:15:41 PDT 1993 by muller
+
+% setjmp.s implements _setjmp and _longjmp then same way setjmp and longjmp
+% are implemented on the OKI
+% signal.o is taken from /usr/ucblib/libucb.a
+
+pgm_source ("signal.o")
+
+Interface ("Csetjmp")
+Interface ("Cstdio")
+Interface ("Cstring")
+
