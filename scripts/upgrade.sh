@@ -51,13 +51,13 @@ P="${P} cm3"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
 
 echo "$ROOT/scripts/do-pkg.sh" "$@" "buildship ${P}"
-. "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
+"$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
 "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 
 echo "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
-. "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || exit 1
+"$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
 "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
