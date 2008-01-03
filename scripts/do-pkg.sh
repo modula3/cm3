@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-pkg.sh,v 1.1 2001-02-12 22:39:00 wagner Exp $
+# $Id: do-pkg.sh,v 1.2 2008-01-03 15:38:05 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
