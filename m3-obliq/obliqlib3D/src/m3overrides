@@ -1,3 +1,0 @@
-override ("obliq", ROOT & "/m3-obliq")
-override ("obliqlibanim", ROOT & "/m3-obliq")
-override ("anim3D", ROOT & "/m3-ui")
