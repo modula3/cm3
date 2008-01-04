@@ -15,7 +15,12 @@ else
   fi
   export root
 fi
+
 . "$sysinfo"
+# if a datestamp is set for the build of snapshots, include this, too
+if [ -n "$DS" ]; then
+  CM3VERSION="${CM3VERSION}-${DS}"
+fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
