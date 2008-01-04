@@ -183,7 +183,6 @@ SYSTEM_LIBS = {
                        12 "/usr/local/postgres95/lib"
                        13 "/usr/local/lib"
                    END_CONFIG, "-lodbc" ],
-% FIXME: What is this?  PKG_USE & "/pgodbc/FreeBSD4/libpgodbc.a" ],
   "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.so"
