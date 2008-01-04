@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.24 2007-06-22 20:04:04 hosking Exp $
+# $Id: make-bin-dist-min.sh,v 1.25 2008-01-04 21:20:53 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -15,7 +15,12 @@ else
   fi
   export root
 fi
+
 . "$sysinfo"
+# if a datestamp is set for the build of snapshots, include this, too
+if [ -n "$DS" ]; then
+  CM3VERSION="${CM3VERSION}-${DS}"
+fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
