@@ -141,7 +141,7 @@ SYSTEM_LIBORDER =
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "gcc" % C compiler
+readonly SYSTEM_CC  = "cc" % C compiler
 readonly SYSTEM_AR  = "ar" % Archiver
 readonly SYSTEM_ASM = "as" % Assembler
 
@@ -198,10 +198,12 @@ end
 proc GetGcWrapFlags() is
     if not GcWrapFlagsSet
         % To be expanded as versions are found that need them.
-        % Testing the result of try_exec is not working..
+        % Testing the result of try_exec is not working.
         NeedsGcWrapFlags = "NeedsGcWrapFlags"
         delete_file(NeedsGcWrapFlags)
-        local ExitCode = try_exec("-@cm3 -version | grep -F 5.2.6 > /dev/null && echo > " & NeedsGcWrapFlags)
+        local ExitCode =
+            try_exec(
+                "@" & path() & "/cm3 -version | grep -F 5.2.6 > /dev/null && echo > " & NeedsGcWrapFlags)
         if (file_exists(NeedsGcWrapFlags))
             delete_file(NeedsGcWrapFlags)
             GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
