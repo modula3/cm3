@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RTError, RTProcess, Csignal, Usignal, Uprocess;
+IMPORT RTError, RTProcess, Csignal, Usignal, Uprocess, Uucontext;
 FROM Ctypes IMPORT int;
 
 VAR
@@ -79,10 +79,12 @@ PROCEDURE Quit (<*UNUSED*> sig: int) =
   END Quit;
 
 PROCEDURE SegV (<*UNUSED*> sig  : int;
-                <*NOWARN*> scp  : Usignal.struct_sigcontext;
-                <*UNUSED*> code : int) =
+                <*UNUSED*> scp  : Uucontext.struct_sigcontext;
+                           uap: Uucontext.ucontext_t_star) =
+  VAR pc := 0;
   BEGIN
-    RTError.MsgPC (scp.eip,
+    IF (uap # NIL) THEN pc := uap.uc_mcontext.gregs[Uucontext.PT_NIP]; END;
+    RTError.MsgPC (pc,
       "Segmentation violation - possible attempt to dereference NIL");
   END SegV;
 

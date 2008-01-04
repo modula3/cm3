@@ -83,28 +83,34 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR x: Usignal.struct_sigaction;
+  VAR
+    x, old: Usignal.struct_sigaction;
   BEGIN
-    x.sa_handler := LOOPHOLE (handler, Usignal.SignalActionHandler);
-    x.sa_mask := Usignal.empty_sigset_t;
+    x.sa_sigaction := LOOPHOLE(handler, Usignal.SignalActionHandler);
+    EVAL Usignal.sigemptyset(x.sa_mask);
     x.sa_flags := Usignal.SA_RESTART;
-    EVAL Usignal.sigaction (Usignal.SIGVTALRM, ADR (x), NIL);
+    EVAL Usignal.sigaction (Usignal.SIGVTALRM, x, old);
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
+  VAR
+    set: Usignal.sigset_t;
+    old: Usignal.sigset_t;
   BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_UNBLOCK,ADR(sigvtalrmMask),NIL);
+    EVAL Usignal.sigemptyset(set);
+    EVAL Usignal.sigaddset(set, Usignal.SIGVTALRM);
+    EVAL Usignal.sigprocmask(Usignal.SIG_UNBLOCK, set, old);
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
+  VAR
+    set: Usignal.sigset_t;
+    old: Usignal.sigset_t;
   BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK,ADR(sigvtalrmMask),NIL);
+    EVAL Usignal.sigemptyset(set);
+    EVAL Usignal.sigaddset(set, Usignal.SIGVTALRM);
+    EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK, set, old);
   END disallow_sigvtalrm;
 
-VAR
-  sigvtalrmMask: Usignal.sigset_t;
-
 BEGIN
-  sigvtalrmMask.val[0] := Usignal.sigmask(Usignal.SIGVTALRM);
 END RTThread.
-
