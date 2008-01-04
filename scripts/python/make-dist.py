@@ -214,10 +214,11 @@ def RealClean(Packages):
     # RealClean is mostly unnecessary and a nuisance for make-dist.
     # Either STAGE is unique and there's nothing to clean,
     # or STAGE is explicit and not unique and incrementality
-    # is desired.
+    # is desired. Er, then again, this doesn't touch STAGE,
+    # it touches the output directories in the source tree.
     #
-    return True
-    #return Do("realclean", Packages)
+    #return True
+    return Do("realclean", Packages)
 
 def CreateSkel():
     for a in ("bin", "lib", "pkg"):
