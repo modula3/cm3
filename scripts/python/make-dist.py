@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.5 2008-01-03 23:04:01 jkrell Exp $
+# $Id: make-dist.py,v 1.6 2008-01-04 17:57:38 jkrell Exp $
 
 import sys
 import os.path
@@ -214,10 +214,11 @@ def RealClean(Packages):
     # RealClean is mostly unnecessary and a nuisance for make-dist.
     # Either STAGE is unique and there's nothing to clean,
     # or STAGE is explicit and not unique and incrementality
-    # is desired.
+    # is desired. Er, then again, this doesn't touch STAGE,
+    # it touches the output directories in the source tree.
     #
-    return True
-    #return Do("realclean", Packages)
+    #return True
+    return Do("realclean", Packages)
 
 def CreateSkel():
     for a in ("bin", "lib", "pkg"):
