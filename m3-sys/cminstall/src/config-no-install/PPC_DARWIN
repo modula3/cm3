@@ -318,6 +318,7 @@ M3_OPTIONS = [ ]
 M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
+if not equal(try_exec("@cm3 -version | grep -F 5.2.4 > /dev/null"), 0)
 %
 % This is critical on MacOSX to achieve dynamic linking.
 % Specifying /foo/bar.a statically links to bar.a.
@@ -325,8 +326,20 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % and then for /foo/bar.a, achieving dynamic linking if possible.
 % See "man ld".
 %
+%error("new version")
 M3_SPLIT_LIBNAMES = TRUE
 % --- split shared library names and pass -L/-l arguments to the linker
+else
+%
+% On older releases, the above breaks building standalone.
+%
+%error("old version")
+M3_SPLIT_LIBNAMES = FALSE
+M3_SPLIT_LIBNAMES_IF_SHARED = TRUE  	 
+% --- split library names and pass -L/-l arguments to the linker if linking 	 
+%     dynamically, pass full library names else 	 
+%     (assumes M3_SPLIT_LIBNAMES = FALSE)
+end
 
 % M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
