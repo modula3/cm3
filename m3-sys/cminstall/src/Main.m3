@@ -659,6 +659,9 @@ PROCEDURE GenConfig (): TEXT =
       ELSIF NOT interactive THEN
         IF choices.size() > 0 THEN
           result := choices.get(0);
+          IF kind = Kind.LibPath THEN
+            result := "-L" & result;
+          END;
         END;
       END;
       Out("  --> ", Text2.EscapeString (result));
