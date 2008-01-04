@@ -7,8 +7,8 @@
 INTERFACE Uucontext;
 
 FROM Ctypes
-IMPORT int, unsigned_long, unsigned_long_int, unsigned_short, void_star,
-       unsigned_short_int;
+IMPORT int, unsigned_long, unsigned_long_int, void_star,
+       double, unsigned_int, char;
 FROM Utypes IMPORT size_t;
 
 (* <bits/sigset.h> *)
@@ -99,7 +99,7 @@ TYPE
    Needs to be aligned on a 16-byte boundary. *)
 TYPE
   struct_libc_vrstate = RECORD
-    vrregs: ARRAY[0..32,0..4] OF unsigned_int;
+    vrregs: ARRAY[0..31],[0..3] OF unsigned_int;
     vrsave: unsigned_int;
     pad: ARRAY[0..1] OF unsigned_int;
     vscr: unsigned_int;
@@ -150,5 +150,9 @@ TYPE
   END;
   ucontext_t = struct_ucontext;
   ucontext_t_star = UNTRACED REF ucontext_t;
+
+(* ptrace.h *)
+CONST
+    PT_NIP = 32;
 
 END Uucontext.
