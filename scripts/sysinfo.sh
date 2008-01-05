@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.56 2007-12-31 17:53:41 jkrell Exp $
+# $Id: sysinfo.sh,v 1.57 2008-01-05 21:37:05 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -42,7 +42,7 @@ CM3_GDB=no
 # out its error message -- given "which foo", it prints "no foo in ..", where .. is
 # space delimited elements of $PATH -- at least on Mac OSX 10.4.
 #
-CM3_INSTALL=${CM3_INSTALL:-`dirname \`dirname \\\`which cm3 | grep -v ^no\\ cm3\\ in\\ \\\` 2>/dev/null\` 2>/dev/null`}
+CM3_INSTALL=${CM3_INSTALL:-`dirname \`dirname \\\`which cm3 | grep -v \\^no\\ cm3\\ in\\ \\\` 2>/dev/null\` 2>/dev/null`}
 CM3_INSTALL=${CM3_INSTALL:-"/usr/local/cm3"}
 CM3=${CM3:-cm3}
 M3BUILD=${M3BUILD:-m3build}
