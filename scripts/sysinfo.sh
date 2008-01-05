@@ -42,7 +42,7 @@ CM3_GDB=no
 # out its error message -- given "which foo", it prints "no foo in ..", where .. is
 # space delimited elements of $PATH -- at least on Mac OSX 10.4.
 #
-CM3_INSTALL=${CM3_INSTALL:-`dirname \`dirname \\\`which cm3 | grep -v ^no\\ cm3\\ in\\ \\\` 2>/dev/null\` 2>/dev/null`}
+CM3_INSTALL=${CM3_INSTALL:-`dirname \`dirname \\\`which cm3 | grep -v \\^no\\ cm3\\ in\\ \\\` 2>/dev/null\` 2>/dev/null`}
 CM3_INSTALL=${CM3_INSTALL:-"/usr/local/cm3"}
 CM3=${CM3:-cm3}
 M3BUILD=${M3BUILD:-m3build}
