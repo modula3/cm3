@@ -1,0 +1,46 @@
+This directory contains scripts to automatically build/test cm3 and send
+the results to a tinderbox server.
+
+!! This is a draft. currently, our tinderbox only accepts build results from
+!! internal hosts. Stay tuned ;)
+
+Automatic building & regression testing
+---------------------------------------
+
+For this purpose you can use defs.sh like the following:
+
+Install your cm3 base release once:
+# ( . defs.sh ; install_bin_dist )
+
+Then you can checkout the newest CVS with:
+# ( . defs.sh ; checkout )
+
+To build cm3 using the last release:
+# ( . defs.sh ; test_build_core_rel )
+
+Likewise, to build cm3 using the last OK build:
+# ( . defs.sh ; test_build_core_lastok )
+
+
+Tinderbox
+---------
+In order to send build results to the elegosoft tinderbox host,
+you can use the script tinderbox-build.sh.
+It takes a bulid configuration file as only argument. Check cm3.build for an
+example.
+
+For the example cm3.build to work, you need to install a base binary
+distribution:
+# export INSTBASE="${HOME}/cm3-build/`hostname`/cm3-inst"
+# ( . defs.sh; install_bin_dist )
+
+Now you can invoce the whole checkout, build, test cycle, using the
+last release binary distribution as base, with
+# ./tinderbox-build.sh cm3.build
+
+If you want to use the last sucessfully built version as base, invoke
+# BUILD_REL=lastok ./tinderbox-build.sh cm3.build
+
+If you'd like to contribute your own test results, take cm3.build as an
+example and change the functions do_checkout. do_compile and do_tests 
+according to your needs.

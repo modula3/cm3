@@ -1,0 +1,256 @@
+#!/bin/bash 
+# tinderbox-build.sh 
+
+usage () {
+	echo "usage: tinderbox-build.sh <build-config>"
+}
+
+trap cleanup 1 2 3 6
+
+if [ -z "$1" ]
+then
+	usage
+	exit 1
+fi
+
+#source build config
+. $1
+ 
+if [ -z "${PROJECT}" -o -z "${TREENAME}" -o -z "${TINDERBOX_URL}" ] 
+then 
+    echo "Parameters missing, see included README for documentation." 
+    exit 1 
+fi 
+
+# set default parameters:
+BUILDNAME=${BUILDNAME:-"`uname -n`-`uname -s`-`uname -r`-`uname -m`"}
+TINDERBOX_MAILER=${TINDERBOX_MAILER:-"wget -q -O - ${TINDERBOX_URL} --post-file"}
+
+echo "Building ${PROJECT}."
+echo "Tinderbox Tree:   \"${TREENAME}\""
+echo "Buildname:        \"${BUILDNAME}\""
+echo ""
+echo "Tinderbox URL:    \"${TINDERBOX_URL}\""
+echo "Tinderbox Mailer: \"${TINDERBOX_MAILER}\""
+
+NAME="build-${PROJECT}-`date "+%Y%m%d-%H%M%S"`" 
+
+
+tinderbox_header () {
+	TREE_NAME=$1
+		BUILD_NAME=$2
+		STATUS=$3
+		STARTTIME=$4
+
+		if [ -z "${TREE_NAME}" -o -z "${BUILD_NAME}" -o -z "${STATUS}" -o -z "${STARTTIME}" ]
+			then
+				echo ""
+				echo "example:"
+				echo "   $0 firefox debian-sarge-i386-gcc-4.1 building 1199624301"
+				echo ""
+				echo "usage:"
+				echo "   $0 <Tinderbox-tree-name> <build-name> <status> <starttime>"
+				echo "where"
+				echo "   <Tinderbox-tree-name>   a tree-name as defined in the"
+				echo "                           tinderbox-configuration"
+				echo "   <build-name>            will be the row-title on the"
+				echo "                           tinderbox build status page"
+				echo "   <status>                one of "building", "build_failed","
+				echo "                           "test_failed" or "success""
+				echo "   <starttime>             tinderbox-build-number in unix time format,"
+				echo "                           get it with:"
+				echo "                           date 'date +%s'"
+				echo "                           once for each build"
+				echo ""
+				echo "This script outputs the mail header that can be prepended"
+				echo "to the build log when sending the status mail."
+				echo ""
+				echo "Tinderbox identifies builds by starttime, so if you want to send"
+				echo "multiple status messages for the same build, be sure to always"
+				echo "use the same starttime"
+				echo ""
+				echo "ATTENTION: This script can not check validity of parameters."
+				echo "           Wrong tree-name or status will make the tinderbox"
+				echo "           ignore the status-mail."
+				return 1
+				fi
+
+				echo ""
+				echo tinderbox: tree: $TREE_NAME
+				echo tinderbox: starttime: $STARTTIME
+				echo tinderbox: timenow: `date +%s`
+				echo tinderbox: status: $STATUS
+				echo tinderbox: buildname: $BUILD_NAME
+				echo tinderbox: errorparser: unix
+				echo tinderbox: END
+				echo ""
+}
+
+mail_buildlog () {
+	if [ -z "$1" ]
+	then
+		return 1
+	fi
+
+	TMP_LOG=${BUILDDIR}/mail_temp
+
+	if [ -z ${TMP_LOG} ]
+	then
+		echo "Error: Cannot create temp file for mailer."
+		cleanup
+		exit 4
+	fi
+
+	{
+		tinderbox_header ${TREENAME} ${BUILDNAME} $1 ${STARTTIME}
+		cat ${LOG}
+	}  > $TMP_LOG
+	
+	${TINDERBOX_MAILER} ${TMP_LOG} > /dev/null
+
+	rm -f ${TMP_LOG}
+}
+
+cleanup() {
+	echo "cleaning up. waiting for tail to catch up..."
+	sleep 2 && kill -9 ${TAIL_PID}
+	echo "removing build tree ${BUILDDIR_BASE} ..." 
+	cd ${BUILDDIR_ROOT}
+	rm -rf ${BUILDDIR_BASE} 
+}
+
+STARTTIME=`date +%s`
+
+#echo "${NAME}" 
+ 
+# create repository 
+BUILDDIR_ROOT="/tmp"
+BUILDDIR_BASE="${BUILDDIR_ROOT}/${NAME}"
+BUILDDIR="${BUILDDIR_BASE}/build" 
+
+LOG="${BUILDDIR_BASE}/log.txt"
+ 
+#check builddir
+echo "creating temporary build directory ${BUILDDIR}" 
+if [ -d ${BUILDDIR} ] 
+then 
+    echo "$0: ERROR: Directory already exists: ${BUILDDIR}" 
+    exit 2
+fi 
+
+mkdir -p ${BUILDDIR} 
+ 
+if [ ! -d ${BUILDDIR} ] 
+then 
+    echo "$0: ERROR: Cannot create directory: ${BUILDDIR}" 
+    exit 3
+fi 
+
+# check logfile
+
+echo "creating log file ${LOG}"
+touch ${LOG}
+
+if [ ! -w ${LOG} ]
+then
+	echo "$0: ERROR: Cannot write to ${LOG}"
+	cleanup
+	exit 5
+fi
+
+tail -f $LOG &
+
+TAIL_PID=$!
+
+# starting build
+{
+	echo "" 
+	echo "---" 
+	echo "" 
+	echo "checkout, compile and test of ${PROJECT} ..." 
+	echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout in progress." 
+} >> ${LOG}
+
+mail_buildlog "building"
+
+{
+    echo "[start checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
+    echo cd ${BUILDDIR} 
+    cd ${BUILDDIR} 
+    
+	do_checkout
+
+    CHECKOUT_RETURN=$? 
+    echo cvs return value: ${CHECKOUT_RETURN} 
+    echo "[end checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
+} >> ${LOG} 2>&1 
+
+if [ ${CHECKOUT_RETURN} != 0 ]; then 
+    echo "*** CHECKOUT FAILED" >> ${LOG}
+    mail_buildlog "build_failed" 
+    cleanup
+    exit 1 
+else
+    mail_buildlog "building"
+fi
+ 
+{ 
+    echo "--"
+    echo "`date "+%Y.%m.%d %H:%M:%S"` -- compile in progress." 
+ 
+    echo "[start compile `date "+%Y.%m.%d %H:%M:%S"`]" 
+    
+	do_compile
+
+	COMPILE_RETURN=$? 
+ 
+    echo "compile return value: $?" 
+    echo "[end compile `date "+%Y.%m.%d %H:%M:%S"`]" 
+} >> ${LOG} 2>&1 
+
+if [ ${COMPILE_RETURN} != 0 ]; then 
+    echo "*** COMPILE FAILED" >> ${LOG}
+    mail_buildlog "build_failed" 
+    cleanup
+    exit 1 
+else
+    mail_buildlog "building"
+fi
+
+ 
+{ 
+    echo "`date "+%Y.%m.%d %H:%M:%S"` -- tests in progress." 
+    echo "[start run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
+     
+    echo cd "${BUILDDIR}" 
+    cd "${BUILDDIR}" 
+
+	do_tests
+
+    TESTS_RETURN=$?
+    echo "[end run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
+} >> ${LOG} 2>&1 
+
+if [ ${TESTS_RETURN} != 0 ]; then 
+    echo "*** TESTS FAILED" >> ${LOG}
+    mail_buildlog "test_failed" 
+    cleanup
+    exit 1 
+fi
+
+{
+	echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout, compile and test run done." 
+		echo "" 
+		echo "---" 
+		echo "" 
+} >> ${LOG}
+    
+mail_buildlog "success"
+ 
+#cp -r "${BUILDDIR}/test/01/logs/now" "${LOGDIR}/01" 
+#cp -r "${BUILDDIR}/test/03/logs/now" "${LOGDIR}/03" 
+
+cleanup
+
+echo "done." 
+
