@@ -212,7 +212,7 @@ checkout()
     mkdir -p "${WS}"
   fi
   cd "${WS}" || exit 1
-  cvs -d ${CM3CVSROOT} checkout ${COVERSION} cm3 2>&1 | tee cvs-co.log
+  cvs -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 2>&1 | tee cvs-co.log
   echo " >>> OK checkout ${DS} ${WS} ${COVERSION}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 done"
 }
@@ -434,7 +434,8 @@ testall()
     checkout
   fi
   # build everything with the last-ok version
-  test_build_core_lastok
+  ( test_build_core_lastok ) || \
+  echo " >>> KO: simple build with last version failed, full upgrade needed..."
 
   # try to build everything with the last release / perform regular upgrade
   test_build_core_rel
