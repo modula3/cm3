@@ -93,8 +93,8 @@ SYSTEM_LIBS = {
 % "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
   "POSTGRES95" : [ "-lpq" ],
-  "OPENGL"     : [ "-L/lib/w32api", "-lglu32", "-lopengl32" ], # -lglut32 ?
-  "ODBC"       : [ "-L/lib/w32api", "-lodbc32" ] # -lodbccp32 ?
+  "OPENGL"     : [ "-L/lib/w32api", "-lglu32", "-lopengl32" ], % -lglut32 ?
+  "ODBC"       : [ "-L/lib/w32api", "-lodbc32" ] % -lodbccp32 ?
 %  "MOTIF"     : [ , "-lXm" ],
 %  "X11"       : [ "-lXaw", "-lXmu", "-lXext",
 %                  "-lXt", "-lSM", "-lICE", "-lX11" ],
