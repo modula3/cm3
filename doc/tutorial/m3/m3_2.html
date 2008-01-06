@@ -27,7 +27,7 @@ VAR name: TEXT;  (* a string variable called &quot;name&quot; *)
 
 BEGIN
   IO.Put(&quot;Enter your name: &quot;);
-  IO.GetLine(name);
+  name:=IO.GetLine();
   IO.Put(&quot;Your name is: &quot; &amp; name &amp; &quot;\n&quot;);
 END Main.</pre>
 </ul>
