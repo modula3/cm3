@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.4 2008-01-03 15:38:05 wagner Exp $
+# $Id: upgrade.sh,v 1.5 2008-01-06 15:21:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -47,6 +47,7 @@ P="${P} m3linker"
 P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
+P="${P} cminstall"
 P="${P} cm3"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
 
@@ -56,8 +57,29 @@ echo "$ROOT/scripts/do-pkg.sh" "$@" "buildship ${P}"
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
 "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 
+echo "OMIT_GCC=yes $ROOT/scripts/do-cm3-core.sh" "$@" "realclean"
+OMIT_GCC=yes "$ROOT/scripts/do-cm3-core.sh" "realclean" || exit 1
+
 echo "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
-"$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || exit 1
+"$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || (
+
+  echo "core compilation failed; trying cm3.cfg upgrade..."
+  DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
+  CFG="${INSTALLROOT}/bin/cm3.cfg"
+  CFGBAK="${CFG}--${DS}"
+  mv "${CFG}" "${CFGBAK}" || exit 1
+  "$ROOT/m3-sys/cminstall/${TARGET}/cminstall" -c > "${CFG}" || exit 1
+  echo "new config file generated in ${CFG}, backup in ${CFGBAK}"
+
+  echo "trying recompile after cleanup..."
+
+  echo "OMIT_GCC=yes $ROOT/scripts/do-cm3-core.sh" "$@" "realclean"
+  OMIT_GCC=yes "$ROOT/scripts/do-cm3-core.sh" "realclean" || exit 1
+
+  echo "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+  "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+
+) || exit 1
 
 echo "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade
 "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
