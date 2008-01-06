@@ -94,8 +94,8 @@ SYSTEM_LIBS = {
   "FLEX-BISON" : [ "-lfl" ],
   "POSTGRES95" : [ "-lpq" ],
   "OPENGL"     : [ "-L/lib/w32api", "-lglu32", "-lopengl32" ], % -lglut32 ?
-  "ODBC"       : [ "-L/lib/w32api", "-lodbc32" ] % -lodbccp32 ?
-%  "MOTIF"     : [ , "-lXm" ],
+  "ODBC"       : [ "-L/lib/w32api", "-lodbc32" ], %  -lodbccp32 ?
+%  "MOTIF"     : [ "-lXm" ],
 %  "X11"       : [ "-lXaw", "-lXmu", "-lXext",
 %                  "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
@@ -186,7 +186,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     pg = ""
     if M3_PROFILING 
       pg = "-pg "
-
+    end
     ret_code = try_exec ("@" & SYSTEM_CC, pg & "-shared " & 
                          "-Wl,-soname," & lib_sox,
                          "-o", lib_sox, objects)
