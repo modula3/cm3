@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.8 2008-01-06 17:54:23 wagner Exp $
+# $Id: upgrade.sh,v 1.9 2008-01-06 18:53:22 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -47,7 +47,7 @@ echo "$ROOT/scripts/do-pkg.sh" "buildship" ${P}
 
 # Now build the compiler with the installed version of the runtime;
 # do _not_ compile m3core and libm3 here.
-# We start with the fron end...
+# We start with the front end...
 P=""
 P="${P} m3middle"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
