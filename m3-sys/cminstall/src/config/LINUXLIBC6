@@ -129,7 +129,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-lm", "-lpthread" ],
+  "LIBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lm", "-L/usr/lib", "-lpthread" ],
 %-- not on most Linux platforms
 % "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
