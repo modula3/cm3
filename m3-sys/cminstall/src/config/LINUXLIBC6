@@ -369,7 +369,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   if shared
     return try_exec ("@" & SYSTEM_CC, args)
   else
-    return try_exec ("@" & SYSTEM_CC, "-static", args)
+    return try_exec ("@" & SYSTEM_CC, "-Xlinker", "-Bstatic",  args)
     %%% -- see M3_NEED_STANDALONE_LINKS  below
     %%%return try_exec ("@" & SYSTEM_CC, args)
   end
