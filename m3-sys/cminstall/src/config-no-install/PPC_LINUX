@@ -195,6 +195,8 @@ proc file_exists(a) is
     return not stale(a, a)
 end
 
+OriginalPath = path()
+
 proc GetGcWrapFlags() is
     if not GcWrapFlagsSet
         % To be expanded as versions are found that need them.
@@ -203,7 +205,7 @@ proc GetGcWrapFlags() is
         delete_file(NeedsGcWrapFlags)
         local ExitCode =
             try_exec(
-                "@" & path() & "/cm3 -version | grep -F 5.2.6 > /dev/null && echo > " & NeedsGcWrapFlags)
+                "@" & OriginalPath & "/cm3 -version | grep -F 5.2.6 > /dev/null && echo > " & NeedsGcWrapFlags)
         if (file_exists(NeedsGcWrapFlags))
             delete_file(NeedsGcWrapFlags)
             GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
