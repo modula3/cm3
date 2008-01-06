@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.6 2008-01-06 15:36:36 wagner Exp $
+# $Id: upgrade.sh,v 1.7 2008-01-06 15:48:03 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -47,8 +47,6 @@ P="${P} m3linker"
 P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
-P="${P} patternmatching"
-P="${P} cminstall"
 P="${P} cm3"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
 
@@ -65,6 +63,10 @@ echo "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
 "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || (
 
   echo "core compilation failed; trying cm3.cfg upgrade..."
+
+  echo "$ROOT/scripts/do-pkg.sh" "buildship cminstall"
+  "$ROOT/scripts/do-pkg.sh" "buildship" cminstall || exit 1
+
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   CFG="${INSTALLROOT}/bin/cm3.cfg"
   CFGBAK="${CFG}--${DS}"
