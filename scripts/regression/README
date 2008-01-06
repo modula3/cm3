@@ -26,7 +26,7 @@ Tinderbox
 ---------
 In order to send build results to the elegosoft tinderbox host,
 you can use the script tinderbox-build.sh.
-It takes a bulid configuration file as only argument. Check cm3.build for an
+It takes a build configuration file as its only argument. Check cm3.build for an
 example.
 
 For the example cm3.build to work, you need to install a base binary
@@ -34,7 +34,7 @@ distribution:
 # export INSTBASE="${HOME}/cm3-build/`hostname`/cm3-inst"
 # ( . defs.sh; install_bin_dist )
 
-Now you can invoce the whole checkout, build, test cycle, using the
+Now you can invoke the whole checkout, build and test cycle, using the
 last release binary distribution as base, with
 # ./tinderbox-build.sh cm3.build
 
