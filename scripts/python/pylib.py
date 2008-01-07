@@ -8,6 +8,7 @@ import sys
 import platform
 import re
 import tempfile
+import shutil
 
 # print("loading pylib..")
 
@@ -849,14 +850,55 @@ def _FilterPackage(Package):
     }
     return PackageConditions.get(Package, True)
 
-def _FilterPackages(Packages):
+def FilterPackages(Packages):
     Packages = filter(_FilterPackage, Packages)
     return Packages
 
+PackageSets = {
+    "core" :
+        [
+        "m3core",
+        "libm3",
+        "patternmatching",
+        "m3middle",
+        "m3objfile",
+        "m3linker",
+        "m3back",
+        "m3staloneback",
+        "m3front",
+        "m3quake",
+        "m3cc",
+        "cm3",
+        "m3scanner",
+        "m3tools",
+        "m3cgcat",
+        "m3cggen",
+        "m3gdb",
+        "m3bundle",
+        "mklib",
+        "dll2lib",
+        "fix_nl",
+        "libdump",
+        "bitvector",
+        "digraph",
+        "parseparams",
+        "realgeometry",
+        "set",
+        "slisp",
+        "sortedtableextras",
+        "table-list",
+        "tempfiles",
+        "tcl",
+        ]
+}
+
 def DoPackage(args, PackagesFromCaller = None):
 
+    # print("args is " + str(args))
+    # sys.stdout.flush()
+
     if PackagesFromCaller:
-        PackagesFromCaller = _FilterPackages(PackagesFromCaller)
+        PackagesFromCaller = FilterPackages(PackagesFromCaller)
 
     if PackagesFromCaller:
         Usage = \
@@ -903,6 +945,8 @@ GenericCommand:
     KeepGoing = False
     NoAction = False
     for arg in args[1:]:
+        if arg == "":
+            continue
         if (arg.startswith("-")):
             if arg == "-l":
                 ListOnly = True
@@ -1010,6 +1054,59 @@ GenericCommand:
             print(" ==> %(p)s done" % vars())
 
     return Success
+
+def GetConfig(Root, Target):
+#
+# Favor the config-no-install directory, else fallback to config.
+#
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+    b = os.path.join(a, "config-no-install", Target)
+    if (os.path.isfile(b)):
+        return b
+    b = os.path.join(a, "config", Target)
+    return b
+
+def CreateDirectory(a):
+    if (not os.path.isdir(a)):
+        os.makedirs(a)
+    return True
+
+def CopyFile(From, To):
+    if (os.path.isdir(To)):
+        To = os.path.join(To, os.path.basename(From))
+    if (os.path.isfile(To)):
+        os.remove(To)
+    CopyCommand = "copy"
+    if (os.name != "nt"):
+        CopyCommand = "cp -Pv"
+    print(CopyCommand + " " + From + " " + To)
+    shutil.copy(From, To)
+    return True
+
+def CopyFileIfExist(From, To):
+    if (os.path.isfile(From)):
+        return CopyFile(From, To)
+    return True
+
+def ShipCompiler():
+    #
+    # The compiler has trouble shipping itself currently because it in use.
+    # This is easily dealt with on NT by moving it away to a unique location, MoveFileEx to delete (admin-only).
+    # Do it manually for now.
+    # Experimentation is needed on doing better than MoveFileEx, in particular, an .exe can unmapped, and then
+    # probably deleted, as long as you don't return to it. Or PERHAPS save the memory away and remap it.
+    #
+    FromSys = os.path.join(ROOT, "m3-sys")
+    FromBin = os.path.join(FromSys, "cm3", TARGET)
+    ToBin = os.path.join(INSTALLROOT, "bin")
+    CreateDirectory(ToBin)
+    CopyFile(os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
+    CopyFile(GetConfig(ROOT, TARGET), os.path.join(ToBin, "cm3.cfg")) or FatalError()
+    CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
+    if (os.name == "nt"):
+        CopyFile       (os.path.join(FromBin, "cm3.pdb"), ToBin) or FatalError()
+        CopyFileIfExist(os.path.join(FromBin, "cm3.exe.manifest"), ToBin) or FatalError()
+    return True
 
 if __name__ == "__main__":
     #
