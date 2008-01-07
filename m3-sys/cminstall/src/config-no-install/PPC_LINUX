@@ -188,6 +188,14 @@ proc assemble (source, object) is
   return try_exec ("@" & SYSTEM_ASM, source, "-o", object)
 end
 
+%------------------------------------------------------------------------------
+
+%
+% GcWrapFlags is needed for older toolsets and this config file
+% strives to work with old and new automatically.
+% This should go in some "Linux-common" file.
+%
+
 GcWrapFlags = ""
 GcWrapFlagsSet = FALSE
 
