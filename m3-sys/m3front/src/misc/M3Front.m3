@@ -159,7 +159,7 @@ RTCollector.Disable ();
 
         IF LastSlash # -1 THEN
           Dot := Text.FindCharR(Host.filename, '.');
-          IF Dot = -1 THEN
+          IF Dot < LastSlash THEN
             Dot := Text.Length(Host.filename);
           END;
           Name1 := Text.Sub(Host.filename, LastSlash + 1, Dot - LastSlash - 1);
