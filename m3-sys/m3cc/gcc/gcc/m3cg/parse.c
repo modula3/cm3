@@ -4855,7 +4855,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
   /* check the version stamp */
   i = get_int ();
   if (i != M3CG_Version) {
-    fatal_error (" *** bad M3CG version stamp (%d), expected %x",
+    fatal_error (" *** bad M3CG version stamp (0x%x), expected 0x%x",
                  i, M3CG_Version);
   }
 
