@@ -18,7 +18,7 @@ DoPackage(
     "m3bundle",
     "m3middle",
     "m3quake",
-    "patternmatching",
+    #"patternmatching",
     #"cminstall",
     "m3middle",
     "m3objfile",
