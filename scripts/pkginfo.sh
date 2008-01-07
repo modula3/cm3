@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.9 2007-12-28 14:04:15 jkrell Exp $
+# $Id: pkginfo.sh,v 1.10 2008-01-07 07:43:53 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -25,6 +25,60 @@ if [ ! -f "$PKGSDB" ] ; then
   echo "cannot generate package list" 1>&2
   exit 1
 fi
+
+FilterPackage()
+{
+    case "$1" in
+
+        m3objfile | \
+        mklib | \
+        dll2lib |\
+        fix_nl | \
+        libdump | \
+        import-libs) [ "${M3OSTYPE}" = "WIN32" ] ;;
+        
+        tcl) [ "${HAVE_TCL}" = yes ] ;;
+        serial) [ "${HAVE_SERIAL}" = yes ] ;;
+
+        udp | \
+        tapi) [ "${M3OSTYPE}" = "POSIX" ] ;;
+
+        X11R4 | \
+        showthread | \
+        pkl-fonts | \
+        juno-machine | \
+        juno-compiler | \
+        juno-app) [ "${M3OSTYPE}" != "WIN32" ] ;;
+
+        m3back | \
+        m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
+        m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
+ 
+        m3gdb)
+            ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
+                && ([ ${TARGET} = FreeBSD4 ] || [ ${TARGET} = LINUXLIBC6 ] \
+                || [ ${TARGET} = SOLgnu ] || [ ${TARGET} = NetBSD2_i386 ]) ;;
+    esac
+}
+
+FilterPackages()
+{
+	if [ "${CM3_ALL}" = yes ] ; then
+		echo $*
+	else
+		Result=""
+		for Package in $* ; do
+			if FilterPackage ${Package} ; then
+				if [ "${Result}" = "" ] ; then
+					Result="${Package}"
+				else
+					Result="${Result} ${Package}"
+				fi
+			fi
+		done
+		echo "${Result}"
+	fi
+}
 
 pkg_defined() {
   for p in $* ; do
