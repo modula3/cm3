@@ -339,7 +339,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local lib_sox  = format("lib%s.so.5", lib)
     
     % build the non-shared library
-    ret_code = try_exec(SYSTEM_AR, "crus", lib_a, objects)
+    ret_code = try_exec("@" & SYSTEM_AR, "crus", lib_a, objects)
     if not equal(ret_code, 0)
         return ret_code
     end
