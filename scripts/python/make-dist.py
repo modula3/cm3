@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.11 2008-01-07 12:39:13 jkrell Exp $
+# $Id: make-dist.py,v 1.12 2008-01-07 12:56:02 jkrell Exp $
 
 import sys
 import os.path
@@ -16,7 +16,11 @@ def Echo(a):
     print("")
 
 def Run(a):
+    
+    #print(a + " in " + os.getcwd())
+    #return True
     return (os.system(a) == 0)
+
     # @call :IncrementLogCounter
     # @echo.
     # setlocal
@@ -75,11 +79,11 @@ def MakeArchive(PackageSetName, Command, Extension):
 
     Symbols = FormArchiveName(PackageSetName, "-symbols." + Extension)
     DeleteFile(Symbols)
-    Run(Command + " " + Symbols + " " + SymbolsRoot)
+    Run(Command + " " + os.path.basename(Symbols) + " " + os.path.basename(SymbolsRoot))
 
     Archive = FormArchiveName(PackageSetName, "." + Extension)
     DeleteFile(Archive)
-    Run(Command + " " + Archive + " " + InstallRoot)
+    Run(Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
 
     if (Extension == "zip"):
         #
@@ -102,7 +106,7 @@ def MakeArchive(PackageSetName, Command, Extension):
         # these tools favorable over tar/bzip2, despite the compression loss.
         #
 
-        SelfExtractingExe = os.path.join(STAGE, "cm3-min-" + M3OSTYPE + "-" + Target + "-" + CM3VERSION + EXE)
+        SelfExtractingExe = FormArchiveName(PackageSetName, EXE)
         DeleteFile(SelfExtractingExe)
         if (not os.path.isfile("\\bin\\unzipsfx" + EXE)):
             print("\\bin\\unzipsfx" + EXE + " does not exist, skipping making self extracting .zip")
@@ -118,6 +122,11 @@ def TarGzip(PackageSetName):
 
 def TarBzip2(PackageSetName):
     MakeArchive(PackageSetName, "tar cfvj", "tar.bz2")
+
+def MakeArchives():
+    for PackageSetName in ["min", "std", "core", "base"]:
+        Zip(PackageSetName)
+        TarBzip2(PackageSetName)
 
 def CopyCompiler(From, To):
     #
@@ -242,6 +251,9 @@ if OriginalPATH:
 # if /i "%1" == "goto_min" shift & goto :min
 # if /i "%1" == "goto_zip" shift & goto :Zip
 # if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
+
+#MakeArchives()
+#sys.exit(0)
 
 # ------------------------------------------------------------------------------------------------------------------------
 Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previous)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
@@ -412,9 +424,7 @@ else:
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-for PackageSetName in ["min", "std", "core", "base"]:
-    Zip(PackageSetName)
-    TarBzip2(PackageSetName)
+MakeArchives()
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
 for a in glob.glob(os.path.join(STAGE, "*")):
