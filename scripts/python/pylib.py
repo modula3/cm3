@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.13 2008-01-07 12:39:13 jkrell Exp $
+# $Id: pylib.py,v 1.14 2008-01-07 13:17:23 jkrell Exp $
 
 import os
 import os.path
@@ -508,7 +508,7 @@ if (not os.getenv("STAGE")):
 
     if ((M3OSTYPE == "POSIX")
             and os.system("type domainname > /dev/null 2>/dev/null")
-            and (popen("domainname 2>/dev/null").read.replace("\n", "") == "elegoohm")):
+            and (os.popen("domainname 2>/dev/null").read.replace("\n", "") == "elegoohm")):
 
         STAGE = "/pub/lang/m3/cm3-dist"
 
