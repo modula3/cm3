@@ -17,10 +17,6 @@ end
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--linuxelf"  % "cpu-vendor-os" string for GNU
-%readonly INSTALL_KEY  = BEGIN_CONFIG
-%  "What is your installation key?"
-%    14 %-- user specified key
-%END_CONFIG
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
@@ -39,59 +35,15 @@ proc set_config_options () is
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
 
-%--------------------------------------------------------- Reactor defaults ---
-% The first time a user runs Reactor, it will configure itself to use
-% the executables defined below.
-
-%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
-%  "What should be the default World-Wide Web browser for new Reactor users?"
-%     0  "netscape"
-%     6 "/usr/local/bin"           "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape-3"
-%     6 "/usr/local/netscape/bin"  "netscape-2"
-%     6 "/usr/local/netscape"      "netscape"
-%     6 "/usr/local/mosaic"        "mosaic"
-%     6 "/usr/local/moasic"        "Xmosaic"
-%END_CONFIG
-% A World-Wide Web browser.  Reactor passes it an initial URL
-% its first command-line argument.
-
-INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
-  "What should be the default text editor for new Reactor users?"
-    10 "EDITOR"
-     0 "emacsclient"
-     0 "emacs"
-     0 "vi"
-     0 "textedit"
-     0 "xedit"
-     6 "/usr/local/emacs/bin" "emacsclient"
-     6 "/usr/local/bin"       "emacsclient"
-     6 "/usr/local/emacs/bin" "emacs"
-     6 "/usr/local/bin"       "emacs"
-     6 "/usr/bin"             "vi"
-     6 "/usr/local/X11R5/bin" "xedit"
-     6 "/usr/openwin/bin"     "textedit"
-     6 "/usr/openwin/bin"     "xedit"
-     6 "/usr/X11/bin"         "xedit"
-     6 "/usr/bin/X11"         "xedit"
-END_CONFIG
-% A text editor.  Reactor passes it "<file> +<line>" on the
-% command-line when it wants to edit <file> initially positioned
-% at <line>.
-
 %------------------------------------------------------------- export paths ---
 % During the installation, destination directories that do not exists 
 % will be created. You need the necessary permissions to do so; otherwise,
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-INSTALL_ROOT = BEGIN_CONFIG
-  "Where should Reactor be installed?"
-    7 %-- user specified install root
-END_CONFIG
+INSTALL_ROOT = path() & "/.."
 
-BIN_INSTALL   = INSTALL_ROOT & "/bin"        % executables
+BIN_INSTALL   = path()                       % executables
 if M3_PROFILING 
   LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
 else
@@ -130,80 +82,14 @@ readonly INSTALL_IMPLS = TRUE
 
 SYSTEM_LIBS = {
   "LIBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lm", "-L/usr/lib", "-lpthread" ],
-%-- not on most Linux platforms
-% "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-%                    "Where are the lex/yacc libraries?"
-%                      11 "libl.a"
-%                      12 "/usr/lib"
-%                      12 "/usr/local/lib"
-%                      12 "/usr/local/gnu/lib"
-%                      13 "/usr/lib"
-%                  END_CONFIG, "-ll" ],
-  "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the flex/bison libraries?"
-                       11 "libfl.a"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lfl" ],
-  "POSTGRES95" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the Postgres95 libraries?"
-                       11 "libpq.so"
-                       12 "/usr/local/postgres95/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lpq" ],
-  "OPENGL"     : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the OpenGL libraries?"
-                       11 "libGLU.so"
-                       11 "libGL.so"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the ODBC libraries?"
-                       11 "libodbc.so"
-                       12 "/usr/local/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/pgsql/lib"
-                       12 "/usr/local/postgres95/lib"
-                       13 "/usr/local/lib"
-                   END_CONFIG, "-lodbc" ],
-  "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the Motif libraries?"
-                       11 "libXm.so"
-                       12 "/usr/X11/lib"
-                       12 "/usr/X11R6/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/X11/lib"
-                       13 "/usr/X11R6/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lXm" ],
-  "X11"        : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the X11 libraries?"
-                       11 "libXaw.so"
-                       11 "libXmu.so"
-                       11 "libXext.so"
-                       11 "libXt.so"
-                       11 "libSM.so"
-                       11 "libICE.so"
-                       11 "libX11.so"
-                       12 "/usr/X11/lib"
-                       12 "/usr/X11R6/lib"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/X11/lib"
-                       13 "/usr/X11R6/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lXaw", "-lXmu", "-lXext",
-                        "-lXt", "-lSM", "-lICE", "-lX11" ],
+  "LEX-YACC" : [ "-Xlinker", "-Bdynamic", "-ll" ],
+  "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-lfl" ],
+  "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/pgsql/lib", "-lpq" ],
+  "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
+  "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
+  "X11"        : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXaw", "-lXmu", "-lXext",
+                                            "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
 }
 
@@ -215,39 +101,9 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = BEGIN_CONFIG
-  "Where is your C compiler?"
-    0 "gcc"
-    6 "/bin"           "gcc"
-    6 "/usr/bin"       "gcc"
-    6 "/usr/local"     "gcc"
-    6 "/usr/local/bin" "gcc"
-    6 "/usr/local/gnu" "gcc"
-    0 "cc"
-    6 "/bin"           "cc"
-    6 "/usr/bin"       "cc"
-    6 "/usr/local"     "cc"
-    6 "/usr/local/bin" "cc"
-    6 "/usr/local/gnu" "cc"
-END_CONFIG % C compiler
-readonly SYSTEM_AR  = BEGIN_CONFIG
-  "Where is your library archiver?"
-    0 "ar"
-    6 "/usr/bin"       "ar"
-    6 "/bin"           "ar"
-    6 "/usr/local"     "ar"
-    6 "/usr/local/bin" "ar"
-    6 "/usr/local/gnu" "ar"
-END_CONFIG % Archiver
-readonly SYSTEM_ASM = BEGIN_CONFIG
-  "Where is your assembler?"
-    0 "as"
-    6 "/usr/bin"       "as"
-    6 "/bin"           "as"
-    6 "/usr/local"     "as"
-    6 "/usr/local/bin" "as"
-    6 "/usr/local/gnu" "as"
-END_CONFIG % Assembler
+readonly SYSTEM_CC  = "cc" % C compiler
+readonly SYSTEM_AR  = "ar" % Archiver
+readonly SYSTEM_ASM = "as" % Assembler
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
@@ -303,7 +159,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_sox  = format ("lib%s.so.5", lib)
 
   % first, build the non-shared library
-  ret_code = try_exec ("@/usr/bin/ar", "crus", lib_a, objects)
+  ret_code = try_exec ("@" & SYSTEM_AR, "crus", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
