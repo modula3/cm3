@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.10 2008-01-07 07:43:53 jkrell Exp $
+# $Id: upgrade.sh,v 1.11 2008-01-07 09:04:37 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -71,6 +71,7 @@ CleanBuildShip()
 
 #
 # clean everything
+#
 P=" \
 m3bundle \
 m3middle \
@@ -101,7 +102,6 @@ BuildShip "$@"
 # do _not_ compile m3core and libm3 here.
 # We start with the front end...
 P="\
-m3gdb \
 m3middle \
 m3objfile \
 m3linker \
