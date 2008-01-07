@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.7 2008-01-07 08:58:06 jkrell Exp $
+# $Id: make-dist.py,v 1.8 2008-01-07 09:31:53 jkrell Exp $
 
 import sys
 import os.path
@@ -126,34 +126,6 @@ def TarGzip():
 def TarBzip2():
     MakeArchive("tar cfvj", "tar.bz2")
 
-def GetConfig(Root, Target):
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    b = os.path.join(a, "config-no-install", Target)
-    if (os.path.isfile(b)):
-        return b
-    b = os.path.join(a, "config", Target)
-    return a
-
-def ShipCompiler():
-    #
-    # The compiler has trouble shipping itself currently because it in use.
-    # This is easily dealt with on NT by moving it away to a unique location, MoveFileEx to delete (admin-only).
-    # Do it manually for now.
-    # Experimentation is needed on doing better than MoveFileEx, in particular, an .exe can unmapped, and then
-    # probably deleted, as long as you don't return to it. Or PERHAPS save the memory away and remap it.
-    #
-    FromSys = os.path.join(ROOT, "m3-sys")
-    FromBin = os.path.join(FromSys, "cm3", TARGET)
-    ToBin = os.path.join(INSTALLROOT, "bin")
-    CreateDirectory(ToBin)
-    CopyFile(os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile(GetConfig(ROOT, TARGET), os.path.join(ToBin, "cm3.cfg")) or FatalError()
-    CopyFileIfExist(os.path.join(FromBin, "cm3cg"), ToBin) or FatalError()
-    if (os.name == "nt"):
-        CopyFile       (os.path.join(FromBin, "cm3.pdb"), ToBin) or FatalError()
-        CopyFileIfExist(os.path.join(FromBin, "cm3.exe.manifest"), ToBin) or FatalError()
-    return True
-
 def CopyCompiler(From, To):
     #
     # Copy the compiler from one INSTALLROOT to another, possibly having cleaned out the intermediate directories.
@@ -184,23 +156,6 @@ def CopyMklib(From, To):
         CopyFileIfExist(os.path.join(From, "mklib.exe.manifest"), To) or FatalError()
     return True
 
-def CopyFile(From, To):
-    if (os.path.isdir(To)):
-        To = os.path.join(To, os.path.basename(From))
-    if (os.path.isfile(To)):
-        os.remove(To)
-    CopyCommand = "copy"
-    if (os.name != "nt"):
-        CopyCommand = "cp -Pv"
-    print(CopyCommand + " " + From + " " + To)
-    shutil.copy(From, To)
-    return True
-
-def CopyFileIfExist(From, To):
-    if (os.path.isfile(From)):
-        return CopyFile(From, To)
-    return True
-
 def BuildShip(Packages):
     # This is more indirect than necessary.
     CreateSkel()
@@ -228,11 +183,6 @@ def CreateSkel():
 def Do(Command, Packages):
     # This is more indirect than necessary.
     return DoPackage(["", Command], Packages)
-
-def CreateDirectory(a):
-    if (not os.path.isdir(a)):
-        os.makedirs(a)
-    return True
 
 def FatalError():
     # logs don't work yet
