@@ -29,9 +29,9 @@ readonly NAMING_CONVENTIONS = "0"
 % "set_config_options" is called before starting the compilation.  It should
 % be used to provide system-wide default options.
 
-proc set_config_options () is
-  m3_option ("-why")   %-- produce a listing that explains what's happening and why
-  m3_debug (TRUE)      %-- produce object code with debugging symbols
+proc set_config_options() is
+  m3_option("-why")   %-- produce a listing that explains what's happening and why
+  m3_debug(TRUE)      %-- produce object code with debugging symbols
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
 
@@ -43,26 +43,26 @@ end
 
 INSTALL_ROOT = path() & "/.."
 
-BIN_INSTALL   = path()                       % executables
+BIN_INSTALL   = path()						% executables
 if M3_PROFILING 
-  LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
+    LIB_INSTALL   = INSTALL_ROOT & "/libp"	% libraries
 else
-  LIB_INSTALL   = INSTALL_ROOT & "/lib"        % libraries
+    LIB_INSTALL   = INSTALL_ROOT & "/lib"   % libraries
 end
-PKG_INSTALL   = INSTALL_ROOT & "/pkg"        % packages
-DOC_INSTALL   = INSTALL_ROOT & "/doc"        % documents
-EMACS_INSTALL = INSTALL_ROOT & "/elisp"      % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "/man"        % man pages
-HTML_INSTALL  = INSTALL_ROOT & "/www"        % public hypertext
+PKG_INSTALL   = INSTALL_ROOT & "/pkg"       % packages
+DOC_INSTALL   = INSTALL_ROOT & "/doc"       % documents
+EMACS_INSTALL = INSTALL_ROOT & "/elisp"     % emacs lisp code
+MAN_INSTALL   = INSTALL_ROOT & "/man"       % man pages
+HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
 %
 USE_ROOT  = INSTALL_ROOT
-BIN_USE   = BIN_INSTALL       % executables
-LIB_USE   = LIB_INSTALL       % libraries
-PKG_USE   = PKG_INSTALL       % packages
+BIN_USE   = BIN_INSTALL     % executables
+LIB_USE   = LIB_INSTALL     % libraries
+PKG_USE   = PKG_INSTALL 	% packages
 
 readonly INSTALL_IMPLS = TRUE
 % TRUE
@@ -80,24 +80,47 @@ readonly INSTALL_IMPLS = TRUE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
-SYSTEM_LIBS = {
-  "LIBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lm", "-L/usr/lib", "-lpthread" ],
-  "LEX-YACC" : [ "-Xlinker", "-Bdynamic", "-ll" ],
-  "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-lfl" ],
-  "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/pgsql/lib", "-lpq" ],
-  "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
-  "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
-  "X11"        : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXaw", "-lXmu", "-lXext",
-                                            "-lXt", "-lSM", "-lICE", "-lX11" ],
-  "TCP"        : [ ]
+SYSTEM_LIBS =
+{
+    "LIBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lm", "-L/usr/lib", "-lpthread" ],
+    "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-ll" ],
+    "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lfl" ],
+    "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/pgsql/lib", "-lpq" ],
+    "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
+    "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
+    "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
+    "TCP"        : [ ]
+    "X11" :
+    [
+        "-Xlinker",
+        "-Bdynamic",
+        "-L/usr/lib",
+        "-lXaw",
+        "-lXmu",
+        "-lXext",
+        "-lXt",
+        "-lSM",
+        "-lICE",
+        "-lX11",
+    ],
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+SYSTEM_LIBORDER =
+[
+	"OPENGL",
+	"DECPEX",
+	"MOTIF",
+	"X11",
+	"TCP",
+	"ODBC",
+    "POSTGRES95",
+    "FLEX-BISON",
+    "LEX-YACC",
+    "LIBC",
+]
 
 %---------------------------------------------------------- system programs ---
 
@@ -111,12 +134,27 @@ readonly SYSTEM_ASM = "as" % Assembler
 
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
-proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC", "-m32", "-fno-reorder-blocks" ]
-  if optimize  args += "-O3"  end
-  if debug     args += "-gstabs+"  end
-  if M3_PROFILING args += "-p" end
-  return try_exec (m3back, args)
+proc m3_backend(source, object, optimize, debug) is
+    local args =
+    [
+        "-quiet",
+        source,
+        "-o",
+        object,
+        "-fPIC",
+        "-m32",
+        "-fno-reorder-blocks",
+    ]
+    if optimize
+        args += "-O3"
+    end
+    if debug
+        args += "-gstabs+"
+    end
+    if M3_PROFILING
+        args += "-p"
+    end
+    return try_exec(m3back, args)
 end
 
 M3_BACKEND_MODE = "3"
@@ -131,12 +169,23 @@ M3_BACKEND_MODE = "3"
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
-proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-m32", "-fPIC", options ]
-  if optimize  args += "-O"  end
-  if debug     args += "-gstabs+"  end
-  if M3_PROFILING args += "-pg" end
-  return try_exec ("@" & SYSTEM_CC, args, "-c", source)
+proc compile_c(source, object, options, optimize, debug) is
+    local args =
+    [
+        "-m32",
+        "-fPIC",
+        options,
+    ]
+    if optimize
+        args += "-O"
+    end
+    if debug
+        args += "-gstabs+"
+    end
+    if M3_PROFILING
+        args += "-pg"
+    end
+    return try_exec("@" & SYSTEM_CC, args, "-c", source)
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -144,8 +193,8 @@ end
 % is only called if your program or library explicitly includes assembly source
 % code, the system distributed by Critical Mass does not.
 
-proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, "--32", source, "-o", object)
+proc assemble(source, object) is
+  return try_exec("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
 %------------------------------------------------------------------------------
@@ -190,42 +239,54 @@ end
 % "make_lib" is called to combine a collection of object modules into
 % a library.
 
-proc make_lib (lib, options, objects, imported_libs, shared) is
-  local ret_code = 0
-  local lib_a    = format ("lib%s.a", lib)
-  local lib_so   = format ("lib%s.so", lib)
-  local lib_sox  = format ("lib%s.so.5", lib)
-
-  % first, build the non-shared library
-  ret_code = try_exec ("@" & SYSTEM_AR, "crus", lib_a, objects)
-  if not equal (ret_code, 0) return ret_code end
-
-  if shared
-    % build the shared library
-    local pg = ""    
-    if M3_PROFILING 
-      pg = "-pg"
+proc make_lib(lib, options, objects, imported_libs, shared) is
+    local ret_code = 0
+    local lib_a    = format("lib%s.a", lib)
+    local lib_so   = format("lib%s.so", lib)
+    local lib_sox  = format("lib%s.so.5", lib)
+    
+    % build the non-shared library
+    ret_code = try_exec(SYSTEM_AR, "crus", lib_a, objects)
+    if not equal(ret_code, 0)
+        return ret_code
     end
-    ret_code = try_exec ("@" & SYSTEM_CC, pg, "-shared -m32 " &
-                         "-Wl,-soname," & lib_sox,
-                         GetGcWrapFlags(),
-                         "-o", lib_sox, objects)
-    if not equal (ret_code, 0) return ret_code end
+    
+    if not shared
+        delete_file(lib_so)
+        delete_file(lib_sox)
+        return 0
+    end
 
+    % build the shared library
+    local pg = ""
+    if M3_PROFILING
+        pg = "-pg"
+    end
+    ret_code =
+        try_exec(
+            "@" & SYSTEM_CC,
+            GetGcWrapFlags(),
+            pg,
+            "-shared",
+            "-m32",
+            "-Wl,-soname," & lib_sox,
+            "-o", lib_sox,
+            objects
+            )
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+    
     % create the version aliases
     link_file(lib_sox, lib_so)
+    
+    % make sure the shared library stuff gets installed properly
+    install_derived(lib_sox)
+    install_derived_link(lib_sox, lib_so)
+    install_link_to_derived(lib_sox, LIB_INSTALL)
+    install_link_to_derived(lib_so, LIB_INSTALL)
 
-    % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_sox)
-    install_derived_link (lib_sox, lib_so)
-    install_link_to_derived (lib_sox, LIB_INSTALL)
-    install_link_to_derived (lib_so, LIB_INSTALL)
-  else
-    delete_file (lib_so)
-    delete_file (lib_sox)
-  end
-
-  return 0
+    return 0
 end
 
 %-------------------------------------------------------------------
@@ -233,36 +294,47 @@ end
 % call "make_lib", but it wants to discover the names of the derived
 % files that should be deleted or shipped.
 
-proc skip_lib (lib, shared) is
-  local lib_so   = format ("lib%s.so", lib)
-  local lib_sox  = format ("lib%s.so.5", lib)
-
-  if shared
-    % make sure the shared library stuff gets installed properly
-    install_derived (lib_sox)
-    install_derived (lib_so)
-    install_link_to_derived (lib_sox, LIB_INSTALL)
-    install_link_to_derived (lib_so, LIB_INSTALL)
-  else
-    delete_file (lib_so)
-    delete_file (lib_sox)
-  end
-
-  return 0
+proc skip_lib(lib, shared) is
+    local lib_so   = format("lib%s.so", lib)
+    local lib_sox  = format("lib%s.so.5", lib)
+    
+    if shared
+        % make sure the shared library stuff gets installed properly
+        install_derived(lib_sox)
+        install_derived(lib_so)
+        install_link_to_derived(lib_sox, LIB_INSTALL)
+        install_link_to_derived(lib_so, LIB_INSTALL)
+    else
+        delete_file(lib_so)
+        delete_file(lib_sox)
+    end
+    
+    return 0
 end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
 
-proc m3_link (prog, options, objects, imported_libs, shared) is
-  local args = []
-  if not shared
-    args += ["-Xlinker", "-Bstatic"]
-  end
-  if M3_PROFILING args += "-pg" end
-  args += [ "-m32", "-o", prog, "-fPIC", options, objects, imported_libs ]
-  args += GetGcWrapFlags()
-  return try_exec ("@" & SYSTEM_CC, args)
+proc m3_link(prog, options, objects, imported_libs, shared) is
+    % The parameter order here is not faithful to the original.
+    % Does it matter?
+    local args =
+    [
+        "-m32",
+        "-o", prog,
+        "-fPIC",
+        options,
+        objects,
+        imported_libs,
+    ]
+    if M3_PROFILING
+        args += "-pg"
+    end
+    args += GetGcWrapFlags()
+    if not shared
+        args +=  [ "-Xlinker", "-Bstatic" ]
+    end
+    return try_exec("@" & SYSTEM_CC, args)
 end
 
 %-------------------------------------------------------------------
@@ -270,8 +342,8 @@ end
 % call "m3_link", but it wants to discover the names of the derived
 % files that should be deleted or shipped.
 
-proc skip_link (prog, shared) is
-  return 0
+proc skip_link(prog, shared) is
+    return 0
 end
 
 %------------------------------------------------------------ misc. options ---
@@ -331,8 +403,8 @@ X11_WITH_SHARED_MEM = TRUE
 % entire function.  Note, the distributed code assumes gnuemacs version 19
 % or later.
 
-readonly proc emacs_compile (el) is
-  exec ("emacs -batch -f batch-byte-compile", el)
+readonly proc emacs_compile(el) is
+  exec("emacs -batch -f batch-byte-compile", el)
 end
 
 %------------------------------------------------------------- GNU variants ---
