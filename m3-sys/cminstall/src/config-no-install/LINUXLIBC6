@@ -89,7 +89,7 @@ SYSTEM_LIBS =
     "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
     "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
     "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
-    "TCP"        : [ ]
+    "TCP"        : [ ],
     "X11" :
     [
         "-Xlinker",
