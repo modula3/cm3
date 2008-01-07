@@ -2,8 +2,9 @@
 #----------------------------------------------------------------------------
 # global definitions
 
+TESTHOSTNAME=${TESTHOSTNAME:-`hostname -f`}
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
-WS=${WS:-${HOME}/work/cm3-ws-${DS}}
+WS=${WS:-${HOME}/work/cm3-ws/${TESTHOSTNAME}-${DS}}
 
 COVERSION=${COVERSION:-"-AP"} # version to checkout, default current
 
@@ -11,7 +12,7 @@ COVERSION=${COVERSION:-"-AP"} # version to checkout, default current
 # NOCLEAN: set to avoid cleaning for re-starts
 
 LASTREL=${LASTREL:-5.4.0}
-INSTBASE=${INSTBASE:-${HOME}/work/cm3-inst}
+INSTBASE=${INSTBASE:-${HOME}/work/cm3-inst/${TESTHOSTNAME}}
 INSTROOT_REL=${INSTROOT_REL:-${INSTBASE}/rel-${LASTREL}}
 INSTROOT_LOK=${INSTROOT_OK:-${INSTBASE}/last-ok}
 INSTROOT_POK=${INSTROOT_OK:-${INSTBASE}/prev-ok}
@@ -84,9 +85,10 @@ case "${UNAME}" in
   ;;
 esac
 
-HTMP=${HTMP:-${HOME}/tmp/cm3}
+HTMP=${HTMP:-${HOME}/tmp/cm3/${TESTHOSTNAME}}
 
 BINDISTMIN=${BINDISTMIN:-${HOME}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz}
+echo "TESTHOSTNAME=${TESTHOSTNAME}"
 echo "WS=${WS}"
 echo "LASTREL=${LASTREL}"
 echo "INSTROOT_REL=${INSTROOT_REL}"
@@ -234,6 +236,11 @@ cm3config() {
     exit 1
   fi
 }
+
+logfilter() {
+  egrep ' >>> | === 2'
+}
+
 
 #----------------------------------------------------------------------------
 # installation
@@ -454,3 +461,14 @@ main()
 {
   time testall 2>&1 | tee ${HTMP}/cm3-rlog-${DS}
 }
+
+#----------------------------------------------------------------------------
+# sample use in a regression test script
+##!/bin/sh
+#
+#(
+#  cd ${HOME}/work/cm3
+#  #export CM3CVSSERVER=localhost # if local replica exists
+#  . ./scripts/regression/defs.sh
+#  main 2>&1 | logfilter
+#) | mail -s "CM3 regression test from `hostname` at `date`" test@my.org
