@@ -31,7 +31,6 @@ example.
 
 For the example cm3.build to work, you need to install a base binary
 distribution:
-# export INSTBASE="${HOME}/cm3-build/`hostname`/cm3-inst"
 # ( . defs.sh; install_bin_dist )
 
 Now you can invoke the whole checkout, build and test cycle, using the
