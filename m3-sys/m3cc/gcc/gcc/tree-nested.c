@@ -1319,6 +1319,9 @@ convert_all_function_calls (struct nesting_info *root)
 {
   do
     {
+      if (DECL_NONLOCAL (root->context))
+	  (void)get_frame_type(root);
+
       if (root->inner)
 	convert_all_function_calls (root->inner);
 
@@ -1327,12 +1330,7 @@ convert_all_function_calls (struct nesting_info *root)
 
       /* If the function does not use a static chain, then remember that.  */
       if (root->outer && !root->chain_decl && !root->chain_field)
-	{
-	  if (!DECL_NONLOCAL (root->context))
-	    DECL_NO_STATIC_CHAIN (root->context) = 1;
-	  else
-	    gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
-	}
+	  DECL_NO_STATIC_CHAIN (root->context) = 1;
       else
 	gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
 
