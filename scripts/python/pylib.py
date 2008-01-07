@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.12 2008-01-07 09:44:50 jkrell Exp $
+# $Id: pylib.py,v 1.13 2008-01-07 12:39:13 jkrell Exp $
 
 import os
 import os.path
@@ -41,13 +41,13 @@ Variables = [
     "CM3BINSEARCHPATH",
 
     #
-    # the root of the source code (ROOT), but with
+    # the root of the source code (Root), but with
     # backward slashes doubled,
     # e.g. c:\\dev2\\cm3 or /dev2/cm3
-    # The same as ROOT on Unix.
+    # The same as Root on Unix.
     # This is easily computed from __file__.
     #
-    "CM3ROOT",
+    "CM3Root",
 
     "CM3VERSION",
 
@@ -72,7 +72,7 @@ Variables = [
     # the root if the cm3 install, e.g. /cm3 or /usr/local/cm3
     # This is easily computed by searching for cm3 or cm3.exe
     # in $PATH.
-    "INSTALLROOT",
+    "InstallRoot",
 
     #
     # True or False -- should we build m3gdb.
@@ -94,7 +94,7 @@ Variables = [
     # the root of the source code, e.g. /dev2/cm3
     # This is __file__/../../..
     #
-    "ROOT",
+    "Root",
 
     #
     # a slash to use in file paths, e.g. \ or /
@@ -133,7 +133,7 @@ Variables = [
     # very important -- what operating system/processor architecture
     # we are building for
     #
-    "TARGET",
+    "Target",
 
     "BuildArgs",
     "CleanArgs",
@@ -195,8 +195,8 @@ for a in Variables:
     b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a.upper()))
 exec(b)
 
-# print("pylib: INSTALLROOT is "  + INSTALLROOT)
-# print("pylib: env_INSTALLROOT is " + (os.environ.get("INSTALLROOT") or ""))
+# print("pylib: InstallRoot is "  + InstallRoot)
+# print("pylib: env_InstallRoot is " + (os.environ.get("InstallRoot") or ""))
 
 for a in DefaultsFromSh.keys():
     DefaultsFromSh[a] = eval(a)
@@ -246,10 +246,10 @@ def GetDefaultFromSh(Key):
         return Value
     #
     # CM3VERSION=${CM3VERSION:-"d5.5.1"}
-    # CM3VERSIONNUM=${CM3VERSIONNUM:-"050501"}
+    # CM3VERSIONNUM=${CM3VersionNum:-"050501"}
     # CM3LASTCHANGED=${CM3LASTCHANGED:-"2007-12-30"}
     #
-    RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ")=\\$\\{\\1:-\"([^\"]+)\"\\}$")
+    RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ")=\\$\\{\\1:-\"([^\"]+)\"\\}$", re.IGNORECASE)
     ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")
     for Line in open(ShFilePath):
         Match = RegExp.match(Line)
@@ -366,16 +366,16 @@ def strip_exe(a):
 # to get other things correct such as M3OSTYPE
 #
 
-TARGET = os.getenv("TARGET") or ""
+Target = os.getenv("TARGET") or ""
 CM3_OSTYPE = "POSIX"
 
 if (UNAME.startswith("windows")
         or UNAME.startswith("winnt")
         or UNAME.startswith("cygwin")
-        or TARGET.startswith("NT386")
+        or Target.startswith("NT386")
     ):
 
-    if (TARGET.startswith("NT386GNU")):
+    if (Target.startswith("NT386GNU")):
 
         CM3_TARGET = "NT386GNU"
         GMAKE = os.getenv("GMAKE") or "make"
@@ -480,24 +480,24 @@ DEV_LIB = (DEV_LIB or XDEV_LIB)
 # define the exported values
 
 #
-# ROOT is two levels above this program.
+# Root is two levels above this program.
 #
 
-ROOT = (ROOT or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+Root = (Root or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-INSTALLROOT = (INSTALLROOT or CM3_INSTALL)
+InstallRoot = (InstallRoot or CM3_INSTALL)
 
 M3GDB = (M3GDB or CM3_GDB)
 M3OSTYPE = (M3OSTYPE or CM3_OSTYPE)
-TARGET = (TARGET or CM3_TARGET)
+Target = (Target or CM3_TARGET)
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
 if (M3OSTYPE == "WIN32"):
-    CM3ROOT = cygpath("-w", ROOT).replace("\\", "\\\\")
+    CM3Root = cygpath("-w", Root).replace("\\", "\\\\")
 else:
-    CM3ROOT = ROOT
+    CM3Root = Root
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -519,12 +519,12 @@ if (not os.getenv("STAGE")):
 #-----------------------------------------------------------------------------
 # debug output
 
-debug("ROOT")
+debug("Root")
 debug("M3GDB")
 debug("M3OSTYPE")
-debug("TARGET")
+debug("Target")
 debug("GCC_BACKEND")
-debug("INSTALLROOT")
+debug("InstallRoot")
 debug("PKGSDB")
 debug("GMAKE")
 debug("EXE")
@@ -534,11 +534,11 @@ debug("SYSLIBS")
 debug("DEV_BIN")
 debug("DEV_LIB")
 debug("TAR")
-debug("CM3ROOT")
+debug("CM3Root")
 
 # define build and ship programs for Critical Mass Modula-3
 
-DEFS = "-DROOT=%(Q)s%(CM3ROOT)s%(Q)s"
+DEFS = "-DROOT=%(Q)s%(CM3Root)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
@@ -578,9 +578,9 @@ SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 # other commands
 
 if (os.name == "nt"):
-    RealClean = RealClean or "if exist %(TARGET)s rmdir /q/s %(TARGET)s"
+    RealClean = RealClean or "if exist %(Target)s rmdir /q/s %(Target)s"
 else:
-    RealClean = RealClean or "rm -rf %(TARGET)s"
+    RealClean = RealClean or "rm -rf %(Target)s"
 
 RealClean = (RealClean % vars())
 
@@ -676,7 +676,7 @@ def MakePackageDB():
     if (not os.path.isfile(PKGSDB)):
         #
         # Look for all files src/m3makefile in the CM3 source
-        # and write their relative paths from ROOT to PKGSDB.
+        # and write their relative paths from Root to PKGSDB.
         #
         def Callback(Result, Directory, Names):
             if (os.path.basename(Directory) != "src"):
@@ -687,13 +687,13 @@ def MakePackageDB():
                 return
             if (not os.path.isfile(os.path.join(Directory, "m3makefile"))):
                 return
-            Result.append(Directory[len(ROOT) + 1:-4].replace(os.path.sep, "/") + "\n")
+            Result.append(Directory[len(Root) + 1:-4].replace(os.path.sep, "/") + "\n")
 
         print("making " + PKGSDB + ".. (slow but rare)")
         Result = [ ]
 
         os.path.walk(
-            ROOT,
+            Root,
             Callback,
             Result
             )
@@ -737,9 +737,9 @@ def ListPackages(pkgs):
     Result = [ ]
     if pkgs:
         for pkg in pkgs:
-            # remove ROOT from the start
-            if (pkg.startswith(ROOT + SL)):
-                pkg = pkg[len(ROOT) + 1:]
+            # remove Root from the start
+            if (pkg.startswith(Root + SL)):
+                pkg = pkg[len(Root) + 1:]
                 #print("1 " + pkg)
             # if no slashes, then need a leading slash
             if (pkg.find(SL) == -1):
@@ -752,7 +752,7 @@ def ListPackages(pkgs):
                     break
     else:
         Result = PackageDB
-    return map(lambda(a): (ROOT + SL + a), Result)
+    return map(lambda(a): (Root + SL + a), Result)
 
 def _Run(NoAction, Actions, PackageDirectory):
 
@@ -823,7 +823,7 @@ def _FilterPackage(Package):
             "LINUXLIBC6" : True,
             "SOLgnu" : True,
             "NetBSD2_i386" : True
-            }.get(TARGET, False),
+            }.get(Target, False),
 
         "m3objfile": CM3_ALL or M3OSTYPE == "WIN32",
         "mklib": CM3_ALL or M3OSTYPE == "WIN32",
@@ -855,11 +855,202 @@ def FilterPackages(Packages):
     return Packages
 
 PackageSets = {
-    "core" :
+#
+# These lists are deliberately in a jumbled order
+# in order to depend on OrderPackages working.
+#
+# This needs to be still further data driven,
+# and a full ordering is not necessarily, only
+# a partial ordering -- stuff can be build in parallel.
+#
+    "min" :
         [
+        "import-libs",
+        "libm3",
+        "m3core",
+        ],
+
+    "std" : # This is in the proper order
+            # and is used to order core and base.
+        [
+    # demo programs
+
+        "cube",
+        "calculator",
+        "fisheye",
+        "mentor",
+
+    # base libraries
+
+        "import-libs",
+        "libm3",
+        "patternmatching",
+        "m3core",
+
+    # system / compiler libraries and tools
+
+        "m3quake",
+        "m3middle",
+        "m3scanner",
+        "m3tools",
+        "m3cgcat",
+        "m3cggen",
+
+        "m3gdb",
+        "m3bundle",
+        "mklib",
+        "dll2lib",
+        "fix_nl",
+        "libdump",
+
+    # more useful quasi-standard libraries
+
+        "arithmetic",
+        "bitvector",
+        "digraph",
+        "parseparams",
+        "realgeometry",
+        "set",
+        "slisp",
+        "sortedtableextras",
+        "table-list",
+        "tempfiles",
+        "tcl",
+        "tcp",
+        "udp",
+        "libsio",
+        "libbuf",
+        "debug",
+        "listfuncs",
+        "embutils",
+        "m3tk-misc",
+        "http",
+        "binIO",
+        # "deepcopy",
+        # "sgml",
+        "commandrw",
+
+        # some CM3 communication extensions
+
+        "tapi",
+        "serial",
+
+        # tools
+
+        "m3tk",
+        "mtex",
+        "m3totex",
+        "m3tohtml",
+        "m3scan",
+        "m3markup",
+        "m3browser",
+        "cmpdir",
+        "cmpfp",
+        "dirfp",
+        "uniq",
+        # "pp" # needs lex and yacc or flex and bison
+        # "kate"   # can be shipped only on systems with KDE
+        # "nedit",
+
+        # network objects -- distributed programming
+
+        "netobj",
+        "netobjd",
+        "stubgen",
+        "events",
+        "rdwr",
+        "sharedobj",
+        "sharedobjgen",
+
+        # database packages
+
+        "odbc",
+        "postgres95",
+        "db",
+        "smalldb",
+        "stable",
+        "stablegen",
+
+        # the standard graphical user interface: trestle and formsvbt
+
+        "X11R4",
+        "ui",
+        "PEX",
+        "vbtkit",
+        "cmvbt",
+        "jvideo",
+        "videovbt",
+        "web",
+        "formsvbtpixmaps",
+        "formsvbt",
+        "formsview",
+        "formsedit",
+        "codeview",
+        "mg",
+        "mgkit",
+        "opengl",
+        "anim3D",
+        "zeus",
+        "m3zume",
+
+        # obliq
+        "synloc",
+        "synex",
+        "metasyn",
+        "obliqrt",
+        "obliqparse",
+        "obliqprint",
+        "obliq",
+        "obliqlibemb",
+        "obliqlibm3",
+        "obliqlibui",
+        "obliqlibanim",
+        # "obliqlib3D" # does not compile
+        "obliqsrvstd",
+        "obliqsrvui",
+        "obliqbinmin",
+        "obliqbinstd",
+        "obliqbinui",
+        "obliqbinanim",
+        "visualobliq",
+        "vocgi",
+        "voquery",
+        "vorun",
+
+        # more graphics depending on obliq
+
+        "webvbt",
+
+        # more tools
+
+        "recordheap",
+        "rehearsecode",
+        "replayheap",
+        "showheap",
+        "shownew",
+        "showthread",
+        # showthread needs ThreadEvent, which does not exist on win32
+
+        # The Juno-2 graphical constraint based editor
+
+        "pkl-fonts",
+        "juno-machine",
+        "juno-compiler",
+        "juno-app",
+        ],
+
+
+    "all": # in order
+        [
+    # base libraries
+
+        "import-libs",
         "m3core",
         "libm3",
         "patternmatching",
+
+    # system / compiler libraries and tools
+
         "m3middle",
         "m3objfile",
         "m3linker",
@@ -873,12 +1064,17 @@ PackageSets = {
         "m3tools",
         "m3cgcat",
         "m3cggen",
+
         "m3gdb",
         "m3bundle",
         "mklib",
         "dll2lib",
         "fix_nl",
         "libdump",
+
+    # more useful quasi-standard libraries
+
+        "arithmetic",
         "bitvector",
         "digraph",
         "parseparams",
@@ -889,8 +1085,206 @@ PackageSets = {
         "table-list",
         "tempfiles",
         "tcl",
-        ]
+        "tcp",
+        "udp",
+        "libsio",
+        "libbuf",
+        "debug",
+        "listfuncs",
+        "embutils",
+        "m3tk-misc",
+        "http",
+        "binIO",
+        # "deepcopy",
+        # "sgml",
+        "commandrw",
+
+        # some CM3 communication extensions
+
+        "tapi",
+        "serial",
+
+        # tools
+
+        "m3tk",
+        "mtex",
+        "m3totex",
+        "m3tohtml",
+        "m3scan",
+        "m3markup",
+        "m3browser",
+        "cmpdir",
+        "cmpfp",
+        "dirfp",
+        "uniq",
+        # "pp" # needs lex and yacc or flex and bison
+        # "kate"   # can be shipped only on systems with KDE
+        # "nedit",
+
+        # network objects -- distributed programming
+
+        "netobj",
+        "netobjd",
+        "stubgen",
+        "events",
+        "rdwr",
+        "sharedobj",
+        "sharedobjgen",
+
+        # database packages
+
+        "odbc",
+        "postgres95",
+        "db",
+        "smalldb",
+        "stable",
+        "stablegen",
+
+        # the standard graphical user interface: trestle and formsvbt
+
+        "X11R4",
+        "ui",
+        "PEX",
+        "vbtkit",
+        "cmvbt",
+        "jvideo",
+        "videovbt",
+        "web",
+        "formsvbtpixmaps",
+        "formsvbt",
+        "formsview",
+        "formsedit",
+        "codeview",
+        "mg",
+        "mgkit",
+        "opengl",
+        "anim3D",
+        "zeus",
+        "m3zume",
+
+        # obliq
+        "synloc",
+        "synex",
+        "metasyn",
+        "obliqrt",
+        "obliqparse",
+        "obliqprint",
+        "obliq",
+        "obliqlibemb",
+        "obliqlibm3",
+        "obliqlibui",
+        "obliqlibanim",
+        # "obliqlib3D" # does not compile
+        "obliqsrvstd",
+        "obliqsrvui",
+        "obliqbinmin",
+        "obliqbinstd",
+        "obliqbinui",
+        "obliqbinanim",
+        "visualobliq",
+        "vocgi",
+        "voquery",
+        "vorun",
+
+        # more graphics depending on obliq
+
+        "webvbt",
+
+        # more tools
+
+        "recordheap",
+        "rehearsecode",
+        "replayheap",
+        "showheap",
+        "shownew",
+        "showthread",
+        # showthread needs ThreadEvent, which does not exist on win32
+
+        # The Juno-2 graphical constraint based editor
+
+        "pkl-fonts",
+        "juno-machine",
+        "juno-compiler",
+        "juno-app",
+
+        # demo programs
+
+        "cube",
+        "calculator",
+        "fisheye",
+        "mentor",
+        ],
 }
+
+PackageSets_CoreBaseCommon = [
+    "import-libs",
+    "m3core",
+    "libm3",
+    "m3middle",
+    "m3quake",
+    "m3scanner",
+    "m3tools",
+    "m3cgcat",
+    "m3cggen",
+    "m3gdb",
+    "m3bundle",
+    "mklib",
+    "dll2lib",
+    "fix_nl",
+    "libdump",
+    "bitvector",
+    "digraph",
+    "parseparams",
+    "realgeometry",
+    "set",
+    "slisp",
+    "sortedtableextras",
+    "table-list",
+    "tempfiles",
+    "tcl",
+    ]
+
+PackageSets["core"] = PackageSets_CoreBaseCommon
+PackageSets["base"] = PackageSets_CoreBaseCommon
+
+PackageSets["core"] += [
+    "patternmatching",
+    "m3objfile",
+    "m3linker",
+    "m3back",
+    "m3staloneback",
+    "m3cc",
+    "cm3",
+    "m3front",
+	"m3gdb",
+    ]
+
+PackageSets["base"] += [
+    "tcp",
+    "tapi",
+    "serial",
+    ]
+
+def OrderPackages(Packages):
+    AllPackagesInOrder = PackageSets["all"]
+    AllPackagesHashed = dict.fromkeys(AllPackagesInOrder)
+    PackagesInOrder =  [ ]
+    PackagesHashed = dict.fromkeys(Packages)
+
+    #
+    # Make sure everything is in AllPackagesInOrder.
+    #
+    for Package in Packages:
+        if not Package in AllPackagesHashed:
+            print("ERROR: " + Package + " is not in PackageSets[\"all\"]")
+            sys.exit(1)
+
+    for Package in AllPackagesInOrder:
+        if Package in PackagesHashed:
+            PackagesInOrder += [Package]
+            del PackagesHashed[Package]
+
+    return PackagesInOrder
 
 def DoPackage(args, PackagesFromCaller = None):
 
@@ -899,6 +1293,7 @@ def DoPackage(args, PackagesFromCaller = None):
 
     if PackagesFromCaller:
         PackagesFromCaller = FilterPackages(PackagesFromCaller)
+        PackagesFromCaller = OrderPackages(PackagesFromCaller)
 
     if PackagesFromCaller:
         Usage = \
@@ -997,7 +1392,7 @@ GenericCommand:
             PackageDirectories.append(q)
             continue
 
-        q = os.path.join(ROOT, p)
+        q = os.path.join(Root, p)
         if (os.path.isdir(q)):
             PackageDirectories.append(q)
             continue
@@ -1012,7 +1407,7 @@ GenericCommand:
             PackageDirectories.append(q)
             continue
 
-        q = os.path.join(ROOT, q)
+        q = os.path.join(Root, q)
         if (os.path.isdir(q)):
             PackageDirectories.append(q)
             continue
@@ -1066,6 +1461,10 @@ def GetConfig(Root, Target):
     b = os.path.join(a, "config", Target)
     return b
 
+def DeleteFile(a):
+    if os.path.isfile(a):
+        os.remove(a)
+
 def CreateDirectory(a):
     if (not os.path.isdir(a)):
         os.makedirs(a)
@@ -1096,12 +1495,12 @@ def ShipCompiler():
     # Experimentation is needed on doing better than MoveFileEx, in particular, an .exe can unmapped, and then
     # probably deleted, as long as you don't return to it. Or PERHAPS save the memory away and remap it.
     #
-    FromSys = os.path.join(ROOT, "m3-sys")
-    FromBin = os.path.join(FromSys, "cm3", TARGET)
-    ToBin = os.path.join(INSTALLROOT, "bin")
+    FromSys = os.path.join(Root, "m3-sys")
+    FromBin = os.path.join(FromSys, "cm3", Target)
+    ToBin = os.path.join(InstallRoot, "bin")
     CreateDirectory(ToBin)
     CopyFile(os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile(GetConfig(ROOT, TARGET), os.path.join(ToBin, "cm3.cfg")) or FatalError()
+    CopyFile(GetConfig(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
     CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
     if (os.name == "nt"):
         CopyFile       (os.path.join(FromBin, "cm3.pdb"), ToBin) or FatalError()
@@ -1113,6 +1512,12 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
+    print("\n\ncore: " + str(OrderPackages(PackageSets["core"])))
+    print("\n\nbase: " + str(OrderPackages(PackageSets["base"])))
+    print("\n\nmin: " + str(OrderPackages(PackageSets["min"])))
+    print("\n\nstd: " + str(OrderPackages(PackageSets["std"])))
+    sys.exit(1)
+
     GetDefaultFromSh("CM3VERSION")
     #sys.stdout.flush()
     os.system("set")
@@ -1121,7 +1526,7 @@ if __name__ == "__main__":
 
     #print(listpkgs("libm3"))
     #print(listpkgs("m3-libs/libm3"))
-    #print(listpkgs(ROOT + "/m3-libs/libm3"))
+    #print(listpkgs(Root + "/m3-libs/libm3"))
 
     PrintList2(["a"])
     print("PrintList2------------------------------")
