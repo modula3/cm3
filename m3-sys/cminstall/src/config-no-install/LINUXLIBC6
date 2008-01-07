@@ -36,7 +36,7 @@ proc set_config_options() is
 end
 
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exist 
 % will be created. You need the necessary permissions to do so; otherwise,
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
@@ -229,11 +229,71 @@ readonly proc GetGcWrapFlags() is
         local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
         if equal(ExitCode, 0)
             GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-         end
+
+            % find libm3gcdefs here
+            % GcWrapFlags = GcWrapFlags & " -L" & LIB_USE & " -lm3gcdefs"
+            % GcWrapFlags = GcWrapFlags & " " & LIB_USE & "/libm3gcdefs.a"
+        end
     end
     return GcWrapFlags
 end
 
+% not currently needed but on the cusp often
+% readonly proc exists(x) is
+%   return not stale(x, x)
+% end
+
+% write("exists(/) is " & exists("/") & CR)
+% write("exists(/pub/lang/m3/cm3-dist/cm3/lib) is " & exists("/pub/lang/m3/cm3-dist/cm3/lib") & CR)
+% write("exists(/bin/sh) is " & exists("/bin/sh") & CR)
+% write("exists(/bin/shx) is " & exists("/bin/shx") & CR)
+% error("")
+
+%
+% The 5.1.8 distribution seems to look for libm3gcdefs
+% in a hard-coded place unlikely to be correct. Fix it.
+%
+% Also old distributions reference errno directly.
+% That is bad in multithreaded programs but should be
+% ok for bootstrapping. This code should probably
+% be gated by if defined("BOOT") or defined("OLD_BOOT")
+% or such.
+%
+% GcWrapFlags does not necessarily coincide with references to errno.
+%
+readonly proc FixM3GcDefs(Args) is
+    local GcWrapFlags = GetGcWrapFlags()
+    if equal(GcWrapFlags, " ")
+        return Args
+    end
+    % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/lib")
+    %     return Args
+    % end
+    % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/bin/..lib")
+    %     return Args
+    % end
+    % local Result = [ ]
+    % Result += "-L" & LIB_USE
+    % foreach Arg in Args
+    %    write("Arg is " & Arg & CR)
+    %    if equal(Arg, "-L/pub/lang/m3/cm3-dist/cm3/lib")
+    %        write("changing arg" & CR)
+    %        Result += "-L" & LIB_USE
+    %    else
+    %        Result += Arg
+    %    end
+    %end
+    %Result += "/usr/lib/libc.a"
+    %return Result
+    Args += "-L" & LIB_USE
+    Args += "/usr/lib/libc.a"
+    return Args
+end
+
+%
+% Hash of command line option to TRUE or FALSE,
+% to avoid probing more than once. 
+%
 local IsM3BackFlagSupported_Cache = { }
 
 readonly proc IsM3BackFlagSupported(x) is
@@ -304,7 +364,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             "-m32",
             "-Wl,-soname," & lib_sox,
             "-o", lib_sox,
-            objects
+            objects,
             )
     if not equal(ret_code, 0)
         return ret_code
@@ -351,21 +411,22 @@ end
 proc m3_link(prog, options, objects, imported_libs, shared) is
     % The parameter order here is not faithful to the original.
     % Does it matter?
-    local args =
+    local args = [ ]
+    if not shared
+        args +=  [ "-Xlinker", "-Bstatic" ]
+    end
+    args +=
     [
+        GetGcWrapFlags(),
         "-m32",
         "-o", prog,
         "-fPIC",
         options,
         objects,
-        imported_libs,
+        FixM3GcDefs(imported_libs),
     ]
     if M3_PROFILING
         args += "-pg"
-    end
-    args += GetGcWrapFlags()
-    if not shared
-        args +=  [ "-Xlinker", "-Bstatic" ]
     end
     return try_exec("@" & SYSTEM_CC, args)
 end
