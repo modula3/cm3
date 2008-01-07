@@ -86,7 +86,6 @@ PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set) =
 
 TYPE
   State = REF RECORD
-    public        : PublicState;
     result_name   : TEXT;               (* base of program or library name *)
     info_name     : TEXT;               (* name of the version stamp file *)
     config_file   : TEXT;               (* name of the current config file *)
@@ -100,6 +99,7 @@ TYPE
     pending_impls : M3Unit.TList;       (* deferred implementation modules *)
     main          : M3ID.T;             (* "Main" *)
     m3env         : Env;                (* the compiler's environment closure *)
+    target        : TEXT;               (* target machine *)
     host_os       : M3Path.OSKind;      (* host system *)
     target_os     : M3Path.OSKind;      (* target os *)
     m3backend_mode: [0..3];             (* tells how to turn M3CG -> object *)
@@ -162,9 +162,9 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.m3env         := NEW (Env);
     s.m3env.globals := s;
 
-    s.public.target := GetConfigItem (s, "TARGET");
-    IF NOT Target.Init (s.public.target) THEN
-      Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.public.target);
+    s.target := GetConfigItem (s, "TARGET");
+    IF NOT Target.Init (s.target) THEN
+      Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.target);
     END;
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
@@ -1447,7 +1447,10 @@ PROCEDURE Pass0_InitCodeGenerator (env: Env): M3CG.T =
     env.cg     := NIL;
     env.output := Utils.OpenWriter (env.object, fatal := FALSE);
     IF (env.output # NIL) THEN
-      env.cg := M3Backend.Open (env.globals.public, env.output, env.object);
+      CASE env.globals.m3backend_mode OF
+      | 0, 1 => env.cg := M3Backend.Open (env.output, env.object, FALSE);
+      | 2, 3 => env.cg := M3Backend.Open (env.output, env.object, TRUE);
+      END;
     END;
     RETURN env.cg;
   END Pass0_InitCodeGenerator;
@@ -1947,7 +1950,10 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
     ETimer.Push (M3Timers.genMain);
     Msg.Commands ("generate ", object);
     wr := Utils.OpenWriter (object, fatal := TRUE);
-    cg := M3Backend.Open (s.public, wr, object);
+    CASE s.m3backend_mode OF
+    | 0, 1 => cg := M3Backend.Open (wr, object, FALSE);
+    | 2, 3 => cg := M3Backend.Open (wr, object, TRUE);
+    END;
     IF (cg # NIL) THEN
       MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level >= Msg.Level.Debug,
                           s.gui AND (s.target_os = M3Path.OSKind.Win32), 
@@ -2924,3 +2930,4 @@ PROCEDURE FName (u: M3Unit.T): TEXT =
 
 BEGIN
 END Builder.
+
