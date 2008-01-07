@@ -148,6 +148,44 @@ proc assemble (source, object) is
   return try_exec ("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
+%------------------------------------------------------------------------------
+
+%
+% GcWrapFlags is needed for older toolsets and this config file
+% strives to work with old and new automatically.
+% This should go in some "Linux-common" file.
+%
+
+GcWrapFlags = ""
+GcWrapFlagsSet = FALSE
+
+proc file_exists(a) is
+    return not stale(a, a)
+end
+
+proc GetGcWrapFlags() is
+    if not GcWrapFlagsSet
+        %
+        % try_exec is broken and always returns 0.
+        % (At least on PPC_LINUX.)
+        %
+        NeedsGcWrapFlags = "NeedsGcWrapFlags"
+        delete_file(NeedsGcWrapFlags)
+        local ExitCode =
+            try_exec(
+                "@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET
+                & "/.M3EXPORTS > /dev/null && echo > " & NeedsGcWrapFlags
+                )
+        if (file_exists(NeedsGcWrapFlags))
+            delete_file(NeedsGcWrapFlags)
+            GcWrapFlags =
+                "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+         end
+        GcWrapFlagsSet = TRUE
+    end
+    return GcWrapFlags
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -170,6 +208,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     end
     ret_code = try_exec ("@" & SYSTEM_CC, pg, "-shared -m32 " &
                          "-Wl,-soname," & lib_sox,
+                         GetGcWrapFlags(),
                          "-o", lib_sox, objects)
     if not equal (ret_code, 0) return ret_code end
 
@@ -223,6 +262,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   end
   if M3_PROFILING args += "-pg" end
   args += [ "-m32", "-o", prog, "-fPIC", options, objects, imported_libs ]
+  args += GetGcWrapFlags()
   return try_exec ("@" & SYSTEM_CC, args)
 end
 
