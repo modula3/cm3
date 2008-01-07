@@ -26,6 +26,60 @@ if [ ! -f "$PKGSDB" ] ; then
   exit 1
 fi
 
+FilterPackage()
+{
+    case "$1" in
+
+        m3objfile | \
+        mklib | \
+        dll2lib |\
+        fix_nl | \
+        libdump | \
+        import-libs) [ "${M3OSTYPE}" = "WIN32" ] ;;
+        
+        tcl) [ "${HAVE_TCL}" = yes ] ;;
+        serial) [ "${HAVE_SERIAL}" = yes ] ;;
+
+        udp | \
+        tapi) [ "${M3OSTYPE}" = "POSIX" ] ;;
+
+        X11R4 | \
+        showthread | \
+        pkl-fonts | \
+        juno-machine | \
+        juno-compiler | \
+        juno-app) [ "${M3OSTYPE}" != "WIN32" ] ;;
+
+        m3back | \
+        m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
+        m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
+ 
+        m3gdb)
+            ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
+                && ([ ${TARGET} = FreeBSD4 ] || [ ${TARGET} = LINUXLIBC6 ] \
+                || [ ${TARGET} = SOLgnu ] || [ ${TARGET} = NetBSD2_i386 ]) ;;
+    esac
+}
+
+FilterPackages()
+{
+	if [ "${CM3_ALL}" = yes ] ; then
+		echo $*
+	else
+		Result=""
+		for Package in $* ; do
+			if FilterPackage ${Package} ; then
+				if [ "${Result}" = "" ] ; then
+					Result="${Package}"
+				else
+					Result="${Result} ${Package}"
+				fi
+			fi
+		done
+		echo "${Result}"
+	fi
+}
+
 pkg_defined() {
   for p in $* ; do
     qgrep /$p\$ "$PKGSDB" || return 1
