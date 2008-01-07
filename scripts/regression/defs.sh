@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------------
 # global definitions
 
-TESTHOSTNAME=${TESTHOSTNAME:-`hostname -f`}
+TESTHOSTNAME=${TESTHOSTNAME:-`hostname -s`}
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 WS=${WS:-${HOME}/work/cm3-ws/${TESTHOSTNAME}-${DS}}
 
