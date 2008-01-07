@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.8 2008-01-07 09:31:53 jkrell Exp $
+# $Id: make-dist.py,v 1.9 2008-01-07 09:44:23 jkrell Exp $
 
 import sys
 import os.path
@@ -337,9 +337,6 @@ Echo("build minimal packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 #:min
-
-print(os.popen("which cm3").read())
-sys.exit(1)
 
 Setup(INSTALLROOT_COMPILER_WITH_SELF, INSTALLROOT_MIN)
 Packages = ["m3core", "libm3"]
