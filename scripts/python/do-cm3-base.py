@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-cm3-base.py,v 1.6 2008-01-03 22:08:52 jkrell Exp $
+# $Id: do-cm3-base.py,v 1.7 2008-01-07 08:58:06 jkrell Exp $
 
 import sys
 from pylib import *
@@ -8,7 +8,7 @@ from pylib import *
 # As well, it might be reasonable for the m3makefiles to do the
 # tests to build or not. That greatly simplifies here.
 
-do_pkg(sys.argv, [
+DoPackage(sys.argv, [
     "m3core",
     "libm3",
     "m3middle",
@@ -37,3 +37,5 @@ do_pkg(sys.argv, [
     "tapi",
     "serial",
     ])
+
+print("%s: Success." % os.path.basename(sys.argv[0]))

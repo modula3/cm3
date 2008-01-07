@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-cm3-core.py,v 1.6 2008-01-03 22:08:52 jkrell Exp $
+# $Id: do-cm3-core.py,v 1.7 2008-01-07 08:58:06 jkrell Exp $
 
 from pylib import *
 import sys
@@ -8,7 +8,7 @@ import sys
 # As well, it might be reasonable for the m3makefiles to do the
 # tests to build or not. That greatly simplifies here.
 
-do_pkg(sys.argv, [
+DoPackage(sys.argv, [
     "m3core",
     "libm3",
     "patternmatching",
@@ -42,3 +42,5 @@ do_pkg(sys.argv, [
     "tempfiles",
     "tcl",
     ])
+
+print("%s: Success." % os.path.basename(sys.argv[0]))
