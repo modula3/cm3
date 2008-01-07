@@ -7,8 +7,14 @@
 MODULE M3BackPosix EXPORTS M3Backend;
 
 IMPORT Wr, M3CG, M3CG_BinWr;
+IMPORT Builder;
 
-PROCEDURE Open (target: Wr.T;  <*UNUSED*> target_name: TEXT): M3CG.T =
+PROCEDURE
+Open (
+    <*UNUSED*> BuilderPublicState: Builder.PublicState;
+    target: Wr.T; 
+    <*UNUSED*> target_name: TEXT
+    ): M3CG.T =
   BEGIN
     RETURN M3CG_BinWr.New (target);
   END Open;
