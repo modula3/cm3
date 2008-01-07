@@ -120,7 +120,7 @@ SYSTEM_LIBORDER =
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "cc" % C compiler
+readonly SYSTEM_CC  = "gcc" % C compiler
 readonly SYSTEM_AR  = "ar" % Archiver
 readonly SYSTEM_ASM = "as"  % Assembler
 
@@ -151,7 +151,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fPIC", options ]
+  local args = options
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -178,7 +178,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_sox  = format ("lib%s.so.5", lib)
 
   % first, build the non-shared library
-  ret_code = try_exec ("@/usr/bin/ar", "crus", lib_a, objects)
+  ret_code = try_exec ("@" & SYSTEM_AR, "crus", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
