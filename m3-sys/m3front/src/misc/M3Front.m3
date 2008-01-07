@@ -14,7 +14,7 @@ IMPORT Module, Type, BuiltinTypes, Host, Tracer, M3Header, InfoModule;
 IMPORT BuiltinOps, WordModule, LongModule, M3, Time, Coverage, Marker, TypeFP;
 IMPORT Ident, TextExpr, Procedure, SetExpr, TipeDesc, Pathname;
 IMPORT ESet, CG, TextWr, Target, ProcBody, RunTyme, M3ID, Variable;
-IMPORT Text, IO;
+IMPORT Text;
 
 VAR mu         : MUTEX    := NEW (MUTEX);
 VAR builtins   : Module.T := NIL;
@@ -152,12 +152,13 @@ RTCollector.Disable ();
         LastForwardSlash := Text.FindCharR(Host.filename, '/');
         LastBackwardSlash := Text.FindCharR(Host.filename, '\\');
         LastSlash := MAX(LastForwardSlash, LastBackwardSlash);
-        Dot := Text.FindCharR(Host.filename, '.');
+        Dot : INTEGER;
         Name1 : TEXT;
         Name2 : TEXT;
       BEGIN
 
         IF LastSlash # -1 THEN
+          Dot := Text.FindCharR(Host.filename, '.');
           IF Dot = -1 THEN
             Dot := Text.Length(Host.filename);
           END;
