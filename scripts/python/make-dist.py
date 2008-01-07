@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.10 2008-01-07 09:44:50 jkrell Exp $
+# $Id: make-dist.py,v 1.11 2008-01-07 12:39:13 jkrell Exp $
 
 import sys
 import os.path
@@ -7,15 +7,6 @@ import os
 import shutil
 import pylib
 from pylib import *
-
-def Done(Outputs):
-
-    print("%s: Success." % os.path.basename(sys.argv[0]))
-    for a in Outputs:
-        if (a and os.path.isfile(a)):
-            print("Output is " + a)
-    print("Much intermediate state remains in " + STAGE)
-    sys.exit(0)
 
 def Echo(a):
     print("")
@@ -51,40 +42,44 @@ def Run(a):
     # endlocal
     # goto :eof
 
-def MakeArchive(Command, Extension):
-    os.chdir(INSTALLROOT_MIN)
-    CopyFile(os.path.join(ROOT, "m3-sys", "COPYRIGHT-CMASS"), os.path.curdir) or FatalError()
-    os.chdir(os.path.pardir)
-    CreateDirectory("symbols")
+def MakeArchive(PackageSetName, Command, Extension):
 
+    InstallRoot = FormInstallRoot(PackageSetName)
+    SymbolsRoot = FormInstallRoot(PackageSetName) + "-symbols"
+
+    os.chdir(InstallRoot)
+    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), os.path.curdir) or FatalError()
+    os.chdir(os.path.pardir)
+    CreateDirectory(SymbolsRoot)
+
+    #
     # delete .m3 and .m3web files, they aren't needed
     # move .pdb files into the symbols directory
     # TBD: use strip and --add-gnu-debuglink
+    #
     def Callback(Arg, Directory, Names):
-        if (os.path.basename(Directory) == "symbols"):
+        if (os.path.basename(Directory).endswith("-symbols")):
             return
         for Name in Names:
             Extension = os.path.splitext(Name)[1].lower()
             if (Extension == ".pdb"):
-                shutil.move(os.path.join(Directory, Name), "symbols")
+                shutil.move(os.path.join(Directory, Name), SymbolsRoot)
             elif (Extension == ".m3"
                     or Extension == ".m3web"
                     # Can be useful for bootstrapping standalone cm3.exe in future.
                     #or Extension == ".sa
                     ):
-                os.remove(os.path.join(Directory, Name))
+                DeleteFile(os.path.join(Directory, Name))
 
     os.path.walk(os.path.curdir, Callback, None)
 
-    Symbols = "cm3-min-" + M3OSTYPE + "-" + TARGET + "-" + CM3VERSION + "-symbols." + Extension
-    os.remove(Symbols)
-    Run(Command + " " + Symbols + " symbols")
+    Symbols = FormArchiveName(PackageSetName, "-symbols." + Extension)
+    DeleteFile(Symbols)
+    Run(Command + " " + Symbols + " " + SymbolsRoot)
 
-    Archive = "cm3-min-" + M3OSTYPE + "-" + TARGET + "-" + CM3VERSION + "." + Extension
-    os.remove(zip)
-    Run(Command + " " + Archive + " cm3")
-
-    SelfExtractingExe = None
+    Archive = FormArchiveName(PackageSetName, "." + Extension)
+    DeleteFile(Archive)
+    Run(Command + " " + Archive + " " + InstallRoot)
 
     if (Extension == "zip"):
         #
@@ -107,47 +102,45 @@ def MakeArchive(Command, Extension):
         # these tools favorable over tar/bzip2, despite the compression loss.
         #
 
-        SelfExtractingExe = "cm3-min-" + M3OSTYPE + "-" + TARGET + "-" + CM3VERSION + EXE
-        os.remove(exe)
+        SelfExtractingExe = os.path.join(STAGE, "cm3-min-" + M3OSTYPE + "-" + Target + "-" + CM3VERSION + EXE)
+        DeleteFile(SelfExtractingExe)
         if (not os.path.isfile("\\bin\\unzipsfx" + EXE)):
             print("\\bin\\unzipsfx" + EXE + " does not exist, skipping making self extracting .zip")
         else:
-            open(exe, "wb").write(open("\\bin\\unzipsfx" + EXE, "rb").read() + open(zip, "rb").read())
-            Run("zip -A " + exe)
+            open(SelfExtractingExe, "wb").write(open("\\bin\\unzipsfx" + EXE, "rb").read() + open(Archive, "rb").read())
+            Run("zip -A " + SelfExtractingExe)
 
-    Done([Archive, Symbols, SelfExtractingExe])
+def Zip(PackageSetName):
+    MakeArchive(PackageSetName, "zip -9 -r -D -X", "zip")
 
-def Zip():
-    MakeArchive("zip -9 -r -D -X", "zip")
+def TarGzip(PackageSetName):
+    MakeArchive(PackageSetName, "tar cfvz", "tar.gz")
 
-def TarGzip():
-    MakeArchive("tar cfvz", "tar.gz")
-
-def TarBzip2():
-    MakeArchive("tar cfvj", "tar.bz2")
+def TarBzip2(PackageSetName):
+    MakeArchive(PackageSetName, "tar cfvj", "tar.bz2")
 
 def CopyCompiler(From, To):
     #
-    # Copy the compiler from one INSTALLROOT to another, possibly having cleaned out the intermediate directories.
+    # Copy the compiler from one InstallRoot to another, possibly having cleaned out the intermediate directories.
     # The config file always comes right out of the source tree.
     #
     FromBin = os.path.join(From, "bin")
     ToBin = os.path.join(To, "bin")
     CreateDirectory(ToBin)
     CopyFile           (os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile           (GetConfig(ROOT, TARGET), os.path.join(ToBin, "cm3.cfg")) or FatalError()
+    CopyFile           (GetConfig(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
     CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
     if (os.name == "nt"):
-        CopyFile       (os.path.join(FromBin, "cm3.pdb"         ), ToBin) or FatalError()
+        CopyFileIfExist(os.path.join(FromBin, "cm3.pdb"         ), ToBin) or FatalError()
         CopyFileIfExist(os.path.join(FromBin, "cm3.exe.manifest"), ToBin) or FatalError()
     CopyMklib(From, To) or FatalError()
     return True
 
 def CopyMklib(From, To):
     #
-    # Copy mklib from one INSTALLROOT to another, possibly having cleaned out the intermediate directories.
+    # Copy mklib from one InstallRoot to another, possibly having cleaned out the intermediate directories.
     #
-    if (TARGET == "NT386"):
+    if (Target == "NT386"):
         From = os.path.join(From, "bin")
         To = os.path.join(To, "bin")
         CreateDirectory(To)
@@ -177,7 +170,7 @@ def RealClean(Packages):
 
 def CreateSkel():
     for a in ("bin", "lib", "pkg"):
-        CreateDirectory(os.path.join(INSTALLROOT, a)) or FatalError()
+        CreateDirectory(os.path.join(InstallRoot, a)) or FatalError()
     return True
 
 def Do(Command, Packages):
@@ -187,10 +180,14 @@ def Do(Command, Packages):
 def FatalError():
     # logs don't work yet
     #print("ERROR: see " + Logs)
+    print("fatal error")
     sys.exit(1)
 
 # Start with the installed cm3.
 # cm3 should not be set in the environment, or should be set to merely "cm3" or "cm3.exe"
+
+if os.getenv("TEMP") and not os.path.exists(os.getenv("TEMP")):
+    os.makedirs(os.getenv("TEMP"))
 
 if (not STAGE):
     tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
@@ -204,20 +201,33 @@ if (not STAGE):
 
 #LogCounter = 1
     
-INSTALLROOT_PREVIOUS = INSTALLROOT
+InstallRoot_Previous = InstallRoot
 
-INSTALLROOT_COMPILER_WITH_PREVIOUS = os.path.join(STAGE, "compiler_with_previous")
-INSTALLROOT_COMPILER_WITH_SELF = os.path.join(STAGE, "compiler_with_self")
+InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
+InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 
 #
 # The way this SHOULD work is we build the union of all desired,
 # and then pick and chose from the output into the .zip/.tar.bz2.
 # For now though, we only build min.
 #
-INSTALLROOT_MIN = os.path.join(STAGE, "min", "cm3")
-INSTALLROOT_STD = os.path.join(STAGE, "std", "cm3")
-INSTALLROOT_CORE = os.path.join(STAGE, "core", "cm3")
-INSTALLROOT_BASE = os.path.join(STAGE, "base", "cm3")
+def FormInstallRoot(PackageSetName):
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + M3OSTYPE + "-" + Target + "-" + CM3VERSION)
+
+def FormArchiveName(PackageSetName, Suffix):
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + M3OSTYPE + "-" + Target + "-" + CM3VERSION + Suffix)
+
+InstallRoot_Min = FormInstallRoot("min")
+InstallRoot_Standard = FormInstallRoot("std")
+InstallRoot_Core = FormInstallRoot("core")
+InstallRoot_Base = FormInstallRoot("base")
+
+InstallRoots = [
+    InstallRoot_Min,
+    InstallRoot_Standard,
+    InstallRoot_Core,
+    InstallRoot_Base,
+   ]
 
 OriginalLIB = os.getenv("LIB")
 if OriginalLIB:
@@ -234,7 +244,7 @@ if OriginalPATH:
 # if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
 
 # ------------------------------------------------------------------------------------------------------------------------
-Echo("build new compiler with old compiler and old runtime (%(INSTALLROOT_PREVIOUS)s to %(INSTALLROOT_COMPILER_WITH_PREVIOUS)s)" % vars())
+Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previous)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
 # ------------------------------------------------------------------------------------------------------------------------
 
 # build just compiler this pass, not the runtime
@@ -265,6 +275,7 @@ def CopyRecursive(From, To):
     else:
         CreateDirectory(ToParent)
     shutil.copytree(From, To)
+    return True
 
 #
 # copy over runtime package store from old to new
@@ -273,31 +284,38 @@ def CopyRecursive(From, To):
 RuntimeToCopy = ["libm3", "m3core"]
 for a in RuntimeToCopy:
     CopyRecursive(
-        os.path.join(INSTALLROOT, "pkg", a),
-        os.path.join(INSTALLROOT_COMPILER_WITH_PREVIOUS, "pkg", a))
-if TARGET != "NT386":
-    NewLib = os.path.join(INSTALLROOT_COMPILER_WITH_PREVIOUS, "lib")
+        os.path.join(InstallRoot, "pkg", a),
+        os.path.join(InstallRoot_CompilerWithPrevious, "pkg", a)) or FatalError()
+
+if Target != "NT386":
+    NewLib = os.path.join(InstallRoot_CompilerWithPrevious, "lib")
     CreateDirectory(NewLib)
-    for a in glob.glob(os.path.join(INSTALLROOT, "lib", "libm3gcdefs.*")):
-        CopyFile(a, NewLib)
+    for a in glob.glob(os.path.join(InstallRoot, "lib", "libm3gcdefs.*")):
+        CopyFile(a, NewLib) or FatalError()
 
 #
 # cm3 is run out of %path%, but mklib is not, so we have to copy it..
 #
-if (not CopyMklib(INSTALLROOT, INSTALLROOT_COMPILER_WITH_PREVIOUS)):
-    sys.exit(1)
+CopyMklib(InstallRoot, InstallRoot_CompilerWithPrevious) or FatalError()
 
 def Setup(ExistingCompilerRoot, NewRoot):
-    global INSTALLROOT
-    INSTALLROOT = NewRoot
+    global InstallRoot
+    InstallRoot = NewRoot
     os.environ["INSTALLROOT"] = NewRoot
     if (OriginalLIB): # This is Windows-only thing.
         os.environ["LIB"] = os.path.join(NewRoot, "lib") + OriginalLIB
     os.environ["PATH"] = (os.path.join(NewRoot, "bin") + OriginalPATH)
-    CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
-    reload(pylib)
 
-Setup(INSTALLROOT, INSTALLROOT_COMPILER_WITH_PREVIOUS)
+    if ((NewRoot != InstallRoot_CompilerWithPrevious)
+            and (NewRoot != InstallRoot_CompilerWithSelf)
+            and (NewRoot != InstallRoot_Min)):
+        CopyRecursive(InstallRoot_Min, NewRoot) or FatalError()
+    else:
+        CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
+
+    reload(pylib) or FatalError()
+
+Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
@@ -305,15 +323,13 @@ ShipCompiler() or FatalError()
 RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-Echo("build new compiler and new runtime with new compiler (%(INSTALLROOT_COMPILER_WITH_PREVIOUS)s to %(INSTALLROOT_COMPILER_WITH_SELF)s)" % vars())
+Echo("build new compiler and new runtime with new compiler (%(InstallRoot_CompilerWithPrevious)s to %(InstallRoot_CompilerWithSelf)s)" % vars())
 # ----------------------------------------------------------------------------------------------------------------------------------
-
 
 Packages = [
     "import-libs",
     "m3core",
     "libm3",
-    "patternmatching",
     "m3bundle",
     "m3middle",
     "m3objfile",
@@ -327,10 +343,12 @@ Packages = [
     "mklib",
     ]
 
-Setup(INSTALLROOT_COMPILER_WITH_PREVIOUS, INSTALLROOT_COMPILER_WITH_SELF)
+Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
+
+RealClean(pylib.PackageSets["all"]) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build minimal packages with new compiler")
@@ -338,47 +356,70 @@ Echo("build minimal packages with new compiler")
 
 #:min
 
-Setup(INSTALLROOT_COMPILER_WITH_SELF, INSTALLROOT_MIN)
-Packages = ["m3core", "libm3"]
-RealClean(Packages) or FatalError()
+Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
+Packages = pylib.PackageSets["min"]
+#RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
-RealClean(Packages) or FatalError()
+#RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build core packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-print("skipping..")
+if False:
 
-if (False):
+    print("skipping..")
 
-    Setup(INSTALLROOT_COMPILER_WITH_SELF, INSTALLROOT_CORE)
-    Packages = [ ]
-    RealClean(Packages) or FatalError()
+else:
+
+    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Core)
+    Packages = pylib.PackageSets["core"]
+    #RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
-    RealClean(Packages) or FatalError()
+    #RealClean(Packages) or FatalError()
 
+# ----------------------------------------------------------------------------------------------------------------------------------
+Echo("build base packages with new compiler")
+# ----------------------------------------------------------------------------------------------------------------------------------
+
+if False:
+
+    print("skipping..")
+
+else:
+
+    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Base)
+    Packages = pylib.PackageSets["base"]
+    #RealClean(Packages) or FatalError()
+    BuildShip(Packages) or FatalError()
+    #RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-print("skipping..")
+if False:
 
-if (False):
+    print("skipping..")
 
-    Setup(INSTALLROOT_COMPILER_WITH_SELF, INSTALLROOT_STD)
-    Packages = [ ]
-    RealClean(Packages) or FatalError()
+else:
+
+    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
+    Packages = pylib.PackageSets["std"]
+    #RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
-    RealClean(Packages) or FatalError()
+    #RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-# print("INSTALLROOT_MIN=" + INSTALLROOT_MIN)
-# print("INSTALLROOT_STD=" + INSTALLROOT_STD)
-# print("INSTALLROOT_CORE=" + INSTALLROOT_CORE)
-# print("INSTALLROOT_BASE=" + INSTALLROOT_BASE)
+for PackageSetName in ["min", "std", "core", "base"]:
+    Zip(PackageSetName)
+    TarBzip2(PackageSetName)
 
-Zip()
-TarBzip2()
+print("%s: Success." % os.path.basename(sys.argv[0]))
+for a in glob.glob(os.path.join(STAGE, "*")):
+    if (a and os.path.isfile(a)):
+        print("Output is " + a)
+print("Much intermediate state remains in " + STAGE)
+sys.exit(0)
+
