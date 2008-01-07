@@ -143,11 +143,8 @@ RTCollector.Disable ();
     m_name := Module.Name (m);
     filename := M3ID.Add (Pathname.LastBase (Host.filename));
     IF (m_name # filename) THEN
-      (*
-        This can trigger due to forward slash vs. backward slash confusion,
-        so do a looser check here.
-        "..\src/Main.m3", line 195: warning: file name (src/Main.m3) doesn't match module name (Main)
-      *)
+      (* This can trigger due to forward/backward slash confusion,
+         so do a looser check here. *)
       VAR
         LastForwardSlash := Text.FindCharR(Host.filename, '/');
         LastBackwardSlash := Text.FindCharR(Host.filename, '\\');
@@ -156,7 +153,6 @@ RTCollector.Disable ();
         Name1 : TEXT;
         Name2 : TEXT;
       BEGIN
-
         IF LastSlash # -1 THEN
           Dot := Text.FindCharR(Host.filename, '.');
           IF Dot < LastSlash THEN
@@ -164,25 +160,16 @@ RTCollector.Disable ();
           END;
           Name1 := Text.Sub(Host.filename, LastSlash + 1, Dot - LastSlash - 1);
           Name2 := M3ID.ToText(m_name);
-          (*
-          IO.Put("LastForwardSlash is " & Fmt.Int(LastForwardSlash) & "\n");
-          IO.Put("LastBackwardSlash is " & Fmt.Int(LastBackwardSlash) & "\n");
-          IO.Put("LastSlash is " & Fmt.Int(LastSlash) & "\n");
-          IO.Put("Dot is " & Fmt.Int(Dot) & "\n");
-          IO.Put("Name1 is " & Name1 & "\n");
-          IO.Put("Name2 is " & Name2 & "\n");
-          *)
           IF Text.Equal(Name1, Name2) THEN
             m_name := filename;
           END
         END;
-        IF (m_name # filename) THEN
-
-          Error.Warn (2, "file name (" & Pathname.Last (Host.filename)
-                          & ") doesn't match module name ("
-                          & M3ID.ToText (m_name) & ")");
-        END;
       END;
+    END;
+    IF (m_name # filename) THEN
+      Error.Warn (2, "file name (" & Pathname.Last (Host.filename)
+                    & ") doesn't match module name ("
+                    & M3ID.ToText (m_name) & ")");
     END;
 (***
 RTCollector.Enable ();
