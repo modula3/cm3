@@ -57,10 +57,9 @@ if equal(TARGET, "NT386GNU")
     SL = "/"
 end
 
-if equal($OS, "Windows_NT")
+EXE = ""
+if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
     EXE = ".exe"
-else
-    EXE = ""
 end
 
 %
@@ -234,4 +233,3 @@ Run (cmds)
 if defined("postcp")
   postcp()
 end
-
