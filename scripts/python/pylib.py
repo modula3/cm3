@@ -631,20 +631,20 @@ def print_list(strings, NumberOfColumns):
             j += 1
     return Result
 
-def print_list2(strings):
+def PrintList2(strings):
     return print_list(strings, 2)
 
-def print_list4(strings):
+def PrintList4(strings):
     return print_list(strings, 4)
 
-def show_usage(args, USAGE, P):
+def ShowUsage(args, Usage, P):
     for arg in args[1:]:
         if (arg in ["-h", "-help", "--help", "-?"]):
             print("")
             print("usage " + os.path.basename(args[0]) + ":")
-            if (USAGE):
-                basename = os.path.basename(args[0])
-                GEN_CMDS = """
+            if (Usage):
+                BaseName = os.path.basename(args[0])
+                GenericCommands = """
   build | buildlocal          build a package with local overrides (default)
   buildglobal | buildship     build a package without overrides and ship it
   ship                        ship a package
@@ -653,22 +653,22 @@ def show_usage(args, USAGE, P):
   realclean                   remove the TARGET directory of a package
 """
 
-                GEN_OPTS = """
+                GenericOptions = """
   -n                          no action (do not execute anything)
   -k                          keep going (ignore errors if possible)
 """
                 if (P):
                     N = len(P)
-                    P = print_list4(P)
-                print(USAGE % vars())
+                    Packages = PrintList4(P)
+                print(Usage % vars())
             else:
                 print("")
                 print("No specific usage notes available.")
                 print("")
                 print("Generic commands:")
-                print(GEN_CMDS)
+                print(GenericCommands)
                 print("Generic options:")
-                print(GEN_OPTS)
+                print(GenericOptions)
             sys.exit(0)
 
 def MakePackageDB():
@@ -853,7 +853,7 @@ def _FilterPackages(Packages):
     Packages = filter(_FilterPackage, Packages)
     return Packages
 
-def do_pkg(args, PackagesFromCaller = None):
+def DoPackage(args, PackagesFromCaller = None):
 
     if PackagesFromCaller:
         PackagesFromCaller = _FilterPackages(PackagesFromCaller)
@@ -865,7 +865,7 @@ def do_pkg(args, PackagesFromCaller = None):
 
   will apply the given symbolic command to the following %(N)s packages:
 
-%(PackagesFromCaller)s
+%(Packages)s
 
 GenericOptions:
 %(GenericOptions)s
@@ -885,7 +885,7 @@ GenericOptions:
 GenericCommand:
 %(GenericCommands)s"""
 
-    show_usage(
+    ShowUsage(
         args,
         Usage,
         PackagesFromCaller,
@@ -922,9 +922,9 @@ GenericCommand:
                     PackagesFromCommandLine.append(arg)
             else:
                 PackagesFromCommandLine.append(arg)
- 
+
     if not ActionCommands:
-        if not PackagesFromCaller:
+        if PackagesFromCaller:
             ActionCommands = ActionInfo["build"]["Commands"]
         else:
             print("no actions specified " + args[0])
@@ -1015,7 +1015,7 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
-    
+
     GetDefaultFromSh("CM3VERSION")
     #sys.stdout.flush()
     os.system("set")
@@ -1026,27 +1026,27 @@ if __name__ == "__main__":
     #print(listpkgs("m3-libs/libm3"))
     #print(listpkgs(ROOT + "/m3-libs/libm3"))
 
-    print_list2(["a"])
-    print("print_list2------------------------------")
-    print_list2(["a", "b"])
-    print("print_list2------------------------------")
-    print_list2(["a", "b", "c"])
-    print("print_list2------------------------------")
-    print_list2(["a", "b", "c", "d"])
-    print("print_list2------------------------------")
-    print_list2(["a", "b", "c", "d", "e"])
-    print("print_list2------------------------------")
+    PrintList2(["a"])
+    print("PrintList2------------------------------")
+    PrintList2(["a", "b"])
+    print("PrintList2------------------------------")
+    PrintList2(["a", "b", "c"])
+    print("PrintList2------------------------------")
+    PrintList2(["a", "b", "c", "d"])
+    print("PrintList2------------------------------")
+    PrintList2(["a", "b", "c", "d", "e"])
+    print("PrintList2------------------------------")
 
-    print_list4(["a"])
-    print("print_list4------------------------------")
-    print_list4(["a", "b"])
-    print("print_list4------------------------------")
-    print_list4(["a", "b", "c"])
-    print("print_list4------------------------------")
-    print_list4(["a", "b", "c", "d"])
-    print("print_list4------------------------------")
-    print_list4(["a", "b", "c", "d", "e"])
-    print("print_list4------------------------------")
+    PrintList4(["a"])
+    print("PrintList4------------------------------")
+    PrintList4(["a", "b"])
+    print("PrintList4------------------------------")
+    PrintList4(["a", "b", "c"])
+    print("PrintList4------------------------------")
+    PrintList4(["a", "b", "c", "d"])
+    print("PrintList4------------------------------")
+    PrintList4(["a", "b", "c", "d", "e"])
+    print("PrintList4------------------------------")
 
     CommandLines = [
         [],

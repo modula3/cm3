@@ -10,7 +10,7 @@ from pylib import *
 
 def Done(Outputs):
 
-    print("Success.")
+    print("%s: Success." % os.path.basename(sys.argv[0]))
     for a in Outputs:
         if (a and os.path.isfile(a)):
             print("Output is " + a)
@@ -227,7 +227,7 @@ def CreateSkel():
 
 def Do(Command, Packages):
     # This is more indirect than necessary.
-    return do_pkg(["foo", Command], Packages)
+    return DoPackage(["", Command], Packages)
 
 def CreateDirectory(a):
     if (not os.path.isdir(a)):

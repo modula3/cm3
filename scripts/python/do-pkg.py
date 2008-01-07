@@ -4,4 +4,6 @@
 import sys
 import pylib
 
-pylib.do_pkg(sys.argv)
+pylib.DoPackage(sys.argv)
+
+print("%s: Success." % os.path.basename(sys.argv[0]))

@@ -8,7 +8,7 @@ from pylib import *
 # As well, it might be reasonable for the m3makefiles to do the
 # tests to build or not. That greatly simplifies here.
 
-do_pkg(sys.argv, [
+DoPackage(sys.argv, [
     "m3core",
     "libm3",
     "m3middle",
@@ -37,3 +37,5 @@ do_pkg(sys.argv, [
     "tapi",
     "serial",
     ])
+
+print("%s: Success." % os.path.basename(sys.argv[0]))

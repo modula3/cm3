@@ -8,7 +8,7 @@ import sys
 # As well, it might be reasonable for the m3makefiles to do the
 # tests to build or not. That greatly simplifies here.
 
-do_pkg(sys.argv, [
+DoPackage(sys.argv, [
     "m3core",
     "libm3",
     "patternmatching",
@@ -42,3 +42,5 @@ do_pkg(sys.argv, [
     "tempfiles",
     "tcl",
     ])
+
+print("%s: Success." % os.path.basename(sys.argv[0]))
