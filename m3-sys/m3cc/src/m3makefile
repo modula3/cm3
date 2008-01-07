@@ -53,6 +53,50 @@ if not defined("SL")
   end
 end
 
+if equal(TARGET, "NT386GNU")
+    SL = "/"
+end
+
+if equal($OS, "Windows_NT")
+    EXE = ".exe"
+else
+    EXE = ""
+end
+
+%
+% Quake can't do math, or generate unique temp files.
+% Uniqueness is not critical here, it is merely useful
+% while debugging to go back and see the temp files.
+%
+readonly Increment =
+{
+    "1" : "2",
+    "2" : "3",
+    "3" : "4",
+    "4" : "5",
+    "5" : "6",
+    "6" : "7",
+    "7" : "8",
+    "8" : "9",
+    "9" : "1",
+}
+
+Counter = 1
+
+readonly proc Run (x) is
+    if equal($OS, "Windows_NT")
+        Temp = "temp" & Counter & ".sh"
+        > Temp in
+            write(x)
+        end
+        Counter = Increment{Counter}
+        write("sh ./" & Temp & " (" & x & ")" & CR)
+        exec("sh ./" & Temp)
+    else
+        exec(x)
+    end
+end
+
 readonly proc GNU_platform (x) is
   if Platform_info contains x
     return Platform_info{x}
@@ -119,9 +163,9 @@ end
 done  = ".configure-done"
 donep = build_dir & SL & done
 if defined ("FORCE")
-  exec("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
-  exec("-cd " & build_dir & " && rm -f cm3cg")
-  exec("-rm -f " & donep)
+  Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
+  Run("-cd " & build_dir & " && rm -f cm3cg" & EXE)
+  Run("-rm -f " & donep)
 end
 
 if not defined ("no_config")
@@ -129,28 +173,28 @@ if not defined ("no_config")
   if stale(donep, donep)
     if equal (M3CC_HOST, M3CC_TARGET)
       if equal (M3CC_TARGET, "SOLgnu")
-        exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+        Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
               M3CC_CONFIG,
               "--srcdir=.." & SL & "gcc",
               "--enable-languages=m3cg",
               "--disable-nls",
               "--with-gnu-ld=yes",
-              "&& echo \"done\" > " & done)
+              "&& echo \"done\" > " & done])
       else
-        exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+        Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
               M3CC_CONFIG,
               "--srcdir=.." & SL & "gcc",
               "--enable-languages=m3cg",
               "--disable-nls",
-              "&& echo \"done\" > " & done)
+              "&& echo \"done\" > " & done])
       end
     else
-      exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
+      Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
             "--srcdir=.." & SL & "gcc",
             "--target=" & GNU_platform (M3CC_TARGET),
             "--enable-languages=m3cg",
             "--disable-nls",
-            "&& echo \"done\" > " & done)
+            "&& echo \"done\" > " & done])
     end
   end
 end
@@ -163,8 +207,8 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1
 
 readonly proc postcp() is
-  pSrc  = build_dir & SL & "gcc" & SL & "m3cgc1"
-  pDest = build_dir & SL & "cm3cg"
+  pSrc  = build_dir & SL & "gcc" & SL & "m3cgc1" & EXE
+  pDest = build_dir & SL & "cm3cg" & EXE
   if stale(pDest, pSrc)
     cp_if(pSrc, pDest)
   end
@@ -178,15 +222,16 @@ readonly proc postcp() is
 end
 
 if equal (M3CC_HOST, M3CC_TARGET)
-  BindExport ("cm3cg")
+  BindExport ("cm3cg" & EXE)
   if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
     BindExport ("mips-tfile")
   end
 end
 
 % finally, compile it
-exec (cmds)
+Run (cmds)
 %write (cmds & EOL)
 if defined("postcp")
   postcp()
 end
+
