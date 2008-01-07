@@ -1201,14 +1201,14 @@ convert_tramp_reference (tree *tp, int *walk_subtrees, void *data)
   switch (TREE_CODE (t))
     {
     case ADDR_EXPR:
+      if (TREE_STATIC (t))
+	break;
+
       /* Build
 	   T.1 = &CHAIN->tramp;
 	   T.2 = __builtin_adjust_trampoline (T.1);
 	   T.3 = (func_type)T.2;
       */
-      if (TREE_STATIC (t))
-	break;
-
       decl = TREE_OPERAND (t, 0);
       if (TREE_CODE (decl) != FUNCTION_DECL)
 	break;
@@ -1327,7 +1327,12 @@ convert_all_function_calls (struct nesting_info *root)
 
       /* If the function does not use a static chain, then remember that.  */
       if (root->outer && !root->chain_decl && !root->chain_field)
-	DECL_NO_STATIC_CHAIN (root->context) = 1;
+	{
+	  if (!DECL_NONLOCAL (root->context))
+	    DECL_NO_STATIC_CHAIN (root->context) = 1;
+	  else
+	    gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
+	}
       else
 	gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
 
