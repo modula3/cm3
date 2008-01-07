@@ -1,4 +1,4 @@
-@rem $Id: upgrade.cmd,v 1.8 2007-12-31 17:23:42 jkrell Exp $
+@rem $Id: upgrade.cmd,v 1.9 2008-01-07 07:35:52 jkrell Exp $
 
 @setlocal
 
@@ -26,41 +26,41 @@
  patternmatching ^
  mklib
 
-@call :header "backing up existing packages (once only)"
+@call :header backing up existing packages (once only)
 @rem does nothing if backup already exists
 call %~dp0backup-pkgs || exit /b 1
 @echo on
 
-@call :header "restoring old packages from backup (for multiple runs)"
+@call :header restoring old packages from backup (for multiple runs)
 @rem for multiple runs of this script...
 call %~dp0backup-pkgs -restore  || exit /b 1
 @echo on
 
-@call :header "cleaning core packages"
+@call :header cleaning core packages
 call %~dp0do-cm3-core realclean || exit /b 1
 @echo on
 
-@call :header "building just new compiler with old compiler (old compiler cannot necessarily build new runtime)"
+@call :header building just new compiler with old compiler (old compiler cannot necessarily build new runtime)
 call %~dp0do-pkg buildship import-libs %p_compiler% || exit /b 1
 @echo on
 
-@call :header "installing new compiler"
+@call :header installing new compiler
 call %~dp0install-cm3-compiler upgrade || exit /b 1
 @echo on
 
-@call :header "cleaning core packages"
+@call :header cleaning core packages
 call %~dp0do-cm3-core realclean || exit /b 1
 @echo on
 
-@call :header "building compiler and runtime with new compiler"
+@call :header building compiler and runtime with new compiler
 call %~dp0do-pkg buildship %p_runtime% %p_compiler% || exit /b 1
 @echo on
 
-@call :header "installing new compiler"
+@call :header installing new compiler
 call %~dp0install-cm3-compiler upgrade || exit /b 1
 @echo on
 
-@call :header "building core packages"
+@call :header building core packages
 call %~dp0do-cm3-core buildship || exit /b 1
 @echo on
 
@@ -76,8 +76,8 @@ call %~dp0do-cm3-core buildship || exit /b 1
 
 :header
     @echo.
-	@echo "============================================================================="
-	@echo "%*"
-	@echo "============================================================================="
+	@echo =============================================================================
+	@echo %*
+	@echo =============================================================================
     @echo.
 	@goto :eof
