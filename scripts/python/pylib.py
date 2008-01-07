@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.11 2008-01-07 09:31:53 jkrell Exp $
+# $Id: pylib.py,v 1.12 2008-01-07 09:44:50 jkrell Exp $
 
 import os
 import os.path

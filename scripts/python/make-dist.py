@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.9 2008-01-07 09:44:23 jkrell Exp $
+# $Id: make-dist.py,v 1.10 2008-01-07 09:44:50 jkrell Exp $
 
 import sys
 import os.path

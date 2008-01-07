@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.1 2008-01-07 09:31:53 jkrell Exp $
+# $Id: upgrade.py,v 1.2 2008-01-07 09:44:50 jkrell Exp $
 
 import sys
 import pylib
@@ -18,7 +18,7 @@ DoPackage(
     "m3bundle",
     "m3middle",
     "m3quake",
-    "patternmatching",
+    #"patternmatching",
     #"cminstall",
     "m3middle",
     "m3objfile",
