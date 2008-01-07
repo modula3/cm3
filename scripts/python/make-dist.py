@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.6 2008-01-04 17:57:38 jkrell Exp $
+# $Id: make-dist.py,v 1.7 2008-01-07 08:58:06 jkrell Exp $
 
 import sys
 import os.path
@@ -10,7 +10,7 @@ from pylib import *
 
 def Done(Outputs):
 
-    print("Success.")
+    print("%s: Success." % os.path.basename(sys.argv[0]))
     for a in Outputs:
         if (a and os.path.isfile(a)):
             print("Output is " + a)
@@ -227,7 +227,7 @@ def CreateSkel():
 
 def Do(Command, Packages):
     # This is more indirect than necessary.
-    return do_pkg(["foo", Command], Packages)
+    return DoPackage(["", Command], Packages)
 
 def CreateDirectory(a):
     if (not os.path.isdir(a)):
