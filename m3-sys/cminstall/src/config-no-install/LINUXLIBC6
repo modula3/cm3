@@ -164,15 +164,13 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % build the shared library
+    local pg = ""    
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared -m32 " &
-                           "-Wl,-soname," & lib_sox,
-                           "-o", lib_sox, objects)
-    else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared -m32 " &
-                           "-Wl,-soname," & lib_sox,
-                           "-o", lib_sox, objects)
+      pg = "-pg"
     end
+    ret_code = try_exec ("@" & SYSTEM_CC, pg, "-shared -m32 " &
+                         "-Wl,-soname," & lib_sox,
+                         "-o", lib_sox, objects)
     if not equal (ret_code, 0) return ret_code end
 
     % create the version aliases
@@ -220,15 +218,12 @@ end
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
+  if not shared
+    args += ["-Xlinker", "-Bstatic"]
+  end
   if M3_PROFILING args += "-pg" end
   args += [ "-m32", "-o", prog, "-fPIC", options, objects, imported_libs ]
-  if shared
-    return try_exec ("@" & SYSTEM_CC, args)
-  else
-    return try_exec ("@" & SYSTEM_CC, "-Xlinker", "-Bstatic",  args)
-    %%% -- see M3_NEED_STANDALONE_LINKS  below
-    %%%return try_exec ("@" & SYSTEM_CC, args)
-  end
+  return try_exec ("@" & SYSTEM_CC, args)
 end
 
 %-------------------------------------------------------------------
