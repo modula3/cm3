@@ -12,10 +12,9 @@ TINDERBOX_MAILER="wget -q -O - ${TINDERBOX_URL} --post-file"
 
 # cm3 build script specific stuff
 BUILD_REL=${BUILD_REL:-"rel"}
-BUILDNAME="freebsd6-${BUILD_REL}-`hostname`"
-INSTBASE="${HOME}/cm3-build/`hostname`/cm3-inst"
+BUILDNAME="build-${TREENAME}-${BUILD_REL}-`hostname`"
 
-. ~/src/cm3/defs.sh
+. defs.sh
 
 do_checkout() {
 	( checkout ) 2>&1
@@ -26,6 +25,6 @@ do_compile() {
 }
 
 do_tests() {
-	echo "No tests yet."
+	[ "${BUILD_REL}" == "lastok" ] && ( test_build_std_${BUILD_REL} ) 2>&1 
 }
 
