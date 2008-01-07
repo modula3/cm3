@@ -1,12 +1,11 @@
 #! /usr/bin/env python
 # $Id$
 
+from pylib import *
 import pylib
 import sys
+import os.path
 
-pylib.DoPackage(sys.argv, [
-    "m3core",
-    "libm3",
-    ])
+DoPackage(sys.argv, pylib.PackageSets["min"]) or sys.exit(1)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
