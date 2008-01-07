@@ -25,7 +25,7 @@ CONST
 
   MAP_FIXED   = 16_10;
   MAP_RENAME  = 16_20; (* Doesn't appear to be supported any more - rrw *)
-  MAP_ANONYMOUS = 16_20;
+  MAP_ANON = 16_20;
   MAP_NORESERVE = 16_4000; 
 
   MAP_GROWSDOWN = 16_100; (* Stack-like segment *)

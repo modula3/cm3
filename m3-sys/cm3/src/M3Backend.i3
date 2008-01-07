@@ -6,9 +6,15 @@
 
 INTERFACE M3Backend;
 
-IMPORT Wr, M3CG;
+IMPORT Wr, M3CG, Builder;
 
-PROCEDURE Open (target: Wr.T;  target_name: TEXT): M3CG.T;
+PROCEDURE
+Open (
+    BuilderPublicState: Builder.PublicState;
+    target: Wr.T; 
+    target_name: TEXT
+    ): M3CG.T;
+
 PROCEDURE Close (cg: M3CG.T);
 
 END M3Backend.

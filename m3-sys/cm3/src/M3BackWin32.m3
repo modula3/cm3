@@ -8,6 +8,7 @@ MODULE M3BackWin32 EXPORTS M3Backend;
 
 IMPORT Wr, Thread;
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
+IMPORT M3CG_BinWr, Builder, Text;
 
 VAR
   obj_file : M3ObjFile.T := NIL;
@@ -16,9 +17,28 @@ VAR
   log      : Wr.T        := NIL;
   log_name : TEXT        := NIL;
 
-PROCEDURE Open (target: Wr.T;  target_name: TEXT): M3CG.T =
+PROCEDURE
+Open (
+    BuilderPublicState: Builder.PublicState;
+    target: Wr.T; 
+    target_name: TEXT
+    ): M3CG.T =
   BEGIN
     <*ASSERT obj_file = NIL *>
+
+    (*
+        For NT386GNU, use the gcc backend.
+        Checking the target name is surely at the wrong
+          level of abstraction.
+    *)
+    IF Text.Equal(BuilderPublicState.target, "NT386GNU") THEN
+
+      (*
+        This is what M3Posix.m3 does.
+      *)
+      RETURN M3CG_BinWr.New (target);
+    END;
+
     obj_file := NTObjFile.New ();
     obj_wr   := target;
     obj_name := target_name;
@@ -31,17 +51,19 @@ PROCEDURE Open (target: Wr.T;  target_name: TEXT): M3CG.T =
 
 PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
   BEGIN
-    TRY
-      NTObjFile.Dump (obj_file, obj_wr);
-    EXCEPT Wr.Failure, Thread.Alerted =>
-      Msg.FatalError (NIL, "problem writing object file: ", obj_name);
+    IF obj_file # NIL THEN
+      TRY
+        NTObjFile.Dump (obj_file, obj_wr);
+      EXCEPT Wr.Failure, Thread.Alerted =>
+        Msg.FatalError (NIL, "problem writing object file: ", obj_name);
+      END;
+      Utils.CloseWriter (log, log_name);
+      obj_file := NIL;
+      obj_wr   := NIL;
+      obj_name := NIL;
+      log      := NIL;
+      log_name := NIL;
     END;
-    Utils.CloseWriter (log, log_name);
-    obj_file := NIL;
-    obj_wr   := NIL;
-    obj_name := NIL;
-    log      := NIL;
-    log_name := NIL;
   END Close;
 
 BEGIN

@@ -5,6 +5,11 @@ INTERFACE Builder;
 
 IMPORT Arg, M3Unit, Quake;
 
+TYPE
+  PublicState = RECORD
+    target        : TEXT;               (* target machine *)
+  END;
+
 PROCEDURE BuildPgm (prog: TEXT;  READONLY units: M3Unit.Set;
                     sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine);
 (* Build a new program named "prog" from the sources in "units" *)
@@ -28,4 +33,3 @@ PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set);
 (* Output all imported packages *)
 
 END Builder.
-
