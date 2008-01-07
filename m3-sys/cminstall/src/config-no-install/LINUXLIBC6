@@ -41,11 +41,22 @@ end
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-INSTALL_ROOT = path() & "/.."
+%
+% path() is not always available?
+%
+if equal(path(), "")
+    %
+    % fill this in if necessary
+    %
+    INSTALL_ROOT = "~/cm3"
+    BIN_INSTALL  = INSTALL_ROOT & "/bin"    %  executables
+else
+    INSTALL_ROOT = path() & "/.."
+    BIN_INSTALL   = path()                  % executables
+end
 
-BIN_INSTALL   = path()						% executables
-if M3_PROFILING 
-    LIB_INSTALL   = INSTALL_ROOT & "/libp"	% libraries
+if M3_PROFILING
+    LIB_INSTALL   = INSTALL_ROOT & "/libp"  % libraries
 else
     LIB_INSTALL   = INSTALL_ROOT & "/lib"   % libraries
 end
@@ -62,7 +73,11 @@ HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
 USE_ROOT  = INSTALL_ROOT
 BIN_USE   = BIN_INSTALL     % executables
 LIB_USE   = LIB_INSTALL     % libraries
-PKG_USE   = PKG_INSTALL 	% packages
+PKG_USE   = PKG_INSTALL     % packages
+
+% write("path() is " & path() & CR)
+% write("INSTALL_ROOT is " & INSTALL_ROOT & CR)
+% write("PKG_USE is " & PKG_USE & CR)
 
 readonly INSTALL_IMPLS = TRUE
 % TRUE
@@ -110,12 +125,12 @@ SYSTEM_LIBS =
 
 SYSTEM_LIBORDER =
 [
-	"OPENGL",
-	"DECPEX",
-	"MOTIF",
-	"X11",
-	"TCP",
-	"ODBC",
+    "OPENGL",
+    "DECPEX",
+    "MOTIF",
+    "X11",
+    "TCP",
+    "ODBC",
     "POSTGRES95",
     "FLEX-BISON",
     "LEX-YACC",
@@ -142,8 +157,8 @@ proc m3_backend(source, object, optimize, debug) is
         "-o",
         object,
         "-fPIC",
-        "-m32",
-        "-fno-reorder-blocks",
+        GetM3BackFlag("-m32"),
+        GetM3BackFlag("-fno-reorder-blocks"),
     ]
     if optimize
         args += "-O3"
@@ -206,34 +221,52 @@ end
 %
 
 GcWrapFlags = ""
-GcWrapFlagsSet = FALSE
 
-proc file_exists(a) is
-    return not stale(a, a)
-end
-
-proc GetGcWrapFlags() is
-    if not GcWrapFlagsSet
-        %
-        % try_exec is broken and always returns 0.
-        % (At least on PPC_LINUX.)
-        %
-        NeedsGcWrapFlags = "NeedsGcWrapFlags"
-        delete_file(NeedsGcWrapFlags)
-        local ExitCode =
-            try_exec(
-                "@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET
-                & "/.M3EXPORTS > /dev/null && echo > " & NeedsGcWrapFlags
-                )
-        if (file_exists(NeedsGcWrapFlags))
-            delete_file(NeedsGcWrapFlags)
-            GcWrapFlags =
-                "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+readonly proc GetGcWrapFlags() is
+    if not GcWrapFlags
+        % write("checking for GcWrapFlags" & CR)
+        GcWrapFlags = " "
+        local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
+        if equal(ExitCode, 0)
+            GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
          end
-        GcWrapFlagsSet = TRUE
     end
     return GcWrapFlags
 end
+
+local IsM3BackFlagSupported_Cache = { }
+
+readonly proc IsM3BackFlagSupported(x) is
+    local Result = 0
+    if IsM3BackFlagSupported_Cache contains x
+        Result = IsM3BackFlagSupported_Cache{x}
+    else
+        % write("probing " & m3back & " for " & x & CR)
+        Result = not equal(try_exec(
+            m3back & " " & x & " /dev/null 2>&1 "
+            & "| grep -F -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
+        IsM3BackFlagSupported_Cache{x} = Result
+    end
+    return Result
+end
+
+readonly proc GetM3BackFlag(x) is
+    if not IsM3BackFlagSupported(x)
+        x = ""
+    end
+    return x
+end
+
+% write("GetGcWrapFlags is " & GetGcWrapFlags() & CR)
+% write("GetGcWrapFlags is " & GetGcWrapFlags() & CR)
+% write("GetM3BackFlag(-foo) is " & GetM3BackFlag("-foo") & CR)
+% write("GetM3BackFlag(-fno-reorder-blocks) is " & GetM3BackFlag("-fno-reorder-blocks") & CR)
+% write("GetM3BackFlag(-fno-reorder-blocks) is " & GetM3BackFlag("-fno-reorder-blocks") & CR)
+% write("GetM3BackFlag(-g) is " & GetM3BackFlag("-g") & CR)
+% write("GetM3BackFlag(-g) is " & GetM3BackFlag("-g") & CR)
+% write("GetM3BackFlag(-m32) is " & GetM3BackFlag("-m32") & CR)
+% write("GetM3BackFlag(-m32) is " & GetM3BackFlag("-m32") & CR)
+% error("")
 
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
