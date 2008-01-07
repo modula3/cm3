@@ -338,9 +338,6 @@ Echo("build minimal packages with new compiler")
 
 #:min
 
-print(os.popen("which cm3").read())
-sys.exit(1)
-
 Setup(INSTALLROOT_COMPILER_WITH_SELF, INSTALLROOT_MIN)
 Packages = ["m3core", "libm3"]
 RealClean(Packages) or FatalError()
