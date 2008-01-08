@@ -1290,8 +1290,15 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
     case STATIC_CHAIN_EXPR:
       decl = TREE_OPERAND (t, 0);
       target_context = decl_function_context (decl);
-      if (target_context && !DECL_NO_STATIC_CHAIN (decl))
-	*tp = get_static_chain (info, target_context, &wi->tsi);
+      if (target_context)
+	{
+	  if (info->context == target_context)
+	    {
+	      /* Make sure frame_decl gets created.  */
+	      (void) get_frame_type (info);
+	    }
+	  *tp = get_static_chain (info, target_context, &wi->tsi);
+	}
       else
 	*tp = null_pointer_node;
       break;
@@ -1320,7 +1327,7 @@ convert_all_function_calls (struct nesting_info *root)
   do
     {
       if (DECL_NONLOCAL (root->context))
-	  (void)get_frame_type(root);
+	(void)get_frame_type (root);
 
       if (root->inner)
 	convert_all_function_calls (root->inner);
@@ -1329,8 +1336,8 @@ convert_all_function_calls (struct nesting_info *root)
       walk_function (convert_call_expr, root);
 
       /* If the function does not use a static chain, then remember that.  */
-      if (root->outer && !root->frame_decl && !root->chain_decl && !root->chain_field)
-	  DECL_NO_STATIC_CHAIN (root->context) = 1;
+      if (root->outer && !root->chain_decl && !root->chain_field)
+	DECL_NO_STATIC_CHAIN (root->context) = 1;
       else
 	gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
 
