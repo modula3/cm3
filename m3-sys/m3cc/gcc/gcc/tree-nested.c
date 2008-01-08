@@ -1326,9 +1326,6 @@ convert_all_function_calls (struct nesting_info *root)
 {
   do
     {
-      if (DECL_NONLOCAL (root->context))
-	(void)get_frame_type (root);
-
       if (root->inner)
 	convert_all_function_calls (root->inner);
 
