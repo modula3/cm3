@@ -8,6 +8,7 @@ MODULE M3BackWin32 EXPORTS M3Backend;
 
 IMPORT Wr, Thread;
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
+IMPORT M3CG_BinWr;
 
 VAR
   obj_file : M3ObjFile.T := NIL;
@@ -19,7 +20,7 @@ VAR
 PROCEDURE Open (target: Wr.T;  target_name: TEXT; backend: BOOLEAN): M3CG.T =
   BEGIN
     IF backend THEN
-      RETURN M3CG_Wr,New (target);
+      RETURN M3CG_BinWr.New (target);
     ELSE
       <*ASSERT obj_file = NIL *>
       obj_file := NTObjFile.New ();
