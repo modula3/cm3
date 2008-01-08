@@ -4504,7 +4504,6 @@ m3cg_load_static_link (void)
   if (option_procs_trace)
     fprintf(stderr, "  load link %s\n",
             IDENTIFIER_POINTER(DECL_NAME(p)));
-  DECL_NONLOCAL (p) = 1;
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
 }
 
