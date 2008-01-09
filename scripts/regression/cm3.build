@@ -12,9 +12,17 @@ TINDERBOX_MAILER="wget -q -O - ${TINDERBOX_URL} --post-file"
 
 # cm3 build script specific stuff
 BUILD_REL=${BUILD_REL:-"rel"}
-BUILDNAME="build-${TREENAME}-${BUILD_REL}-`hostname`"
+BUILD_REL_NAME="${BUILD_REL}"
 
+if [ "${BUILD_REL}" == "rel" ] ; then
+	BUILD_REL_NAME="release"
+fi
+	
+#source cm3 build script
 . defs.sh
+
+TESTMACHINE=${TESTMACHINE:-"`uname -s` `uname -r`"}
+BUILDNAME="${CM3_TARGET}<BR>${TESTMACHINE}<BR>${TESTHOSTNAME}<BR>${BUILD_REL_NAME}"
 
 do_checkout() {
 	( checkout ) 2>&1
@@ -25,6 +33,9 @@ do_compile() {
 }
 
 do_tests() {
-	[ "${BUILD_REL}" == "lastok" ] && ( test_build_std_${BUILD_REL} ) 2>&1 
+        if [ "${BUILD_REL}" == "rel" ] ; then
+                # if we land here, core compilation succeeded with
+				# last release, so we have a new lastok
+                ( test_build_std_lastok ) 2>&1
+        fi
 }
-
