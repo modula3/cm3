@@ -31,13 +31,14 @@ END task;
 BEGIN
 
 m := NEW (MUTEX);
-task1 := NEW (T, apply := task, inc := 3);
-task2 := NEW (T, apply := task, inc := 7);
+task1 := NEW (T, apply := task, inc := 7);
+task2 := NEW (T, apply := task, inc := 3);
 
 i := 12;
 Wr.PutText (Stdio.stdout, "i = " & Fmt.Int (i) & "\n");
 
 t1 := Thread.Fork (task1);
+Thread.Pause (0.1d0);
 t2 := Thread.Fork (task2);
 
 EVAL Thread.Join (t1);
