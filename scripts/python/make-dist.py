@@ -51,10 +51,7 @@ def MakeArchive(PackageSetName, Command, Extension):
     InstallRoot = FormInstallRoot(PackageSetName)
     SymbolsRoot = FormInstallRoot(PackageSetName) + "-symbols"
 
-    os.chdir(InstallRoot)
-    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), os.path.curdir) or FatalError()
-    os.chdir(os.path.pardir)
-    CreateDirectory(SymbolsRoot)
+    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), InstallRoot) or FatalError()
 
     #
     # delete .m3 and .m3web files, they aren't needed
@@ -75,7 +72,10 @@ def MakeArchive(PackageSetName, Command, Extension):
                     ):
                 DeleteFile(os.path.join(Directory, Name))
 
-    os.path.walk(os.path.curdir, Callback, None)
+    CreateDirectory(SymbolsRoot)
+    os.path.walk(InstallRoot, Callback, None)
+
+    os.chdir(os.path.dirname(InstallRoot))
 
     Symbols = FormArchiveName(PackageSetName, "-symbols." + Extension)
     DeleteFile(Symbols)
