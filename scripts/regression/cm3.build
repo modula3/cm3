@@ -18,11 +18,17 @@ if [ "${BUILD_REL}" == "rel" ] ; then
 	BUILD_REL_NAME="release"
 fi
 	
+# source host specific overrides
+if [ -e ~/cm3/`hostname`.conf ]; then
+  . ~/cm3/`hostname`.conf
+fi
+
 #source cm3 build script
 . defs.sh
 
+  
 TESTMACHINE=${TESTMACHINE:-"`uname -s` `uname -r`"}
-BUILDNAME="${CM3_TARGET}<BR>${TESTMACHINE}<BR>${TESTHOSTNAME}<BR>${BUILD_REL_NAME}"
+BUILDNAME="${CM3_TARGET} ${TESTMACHINE} ${TESTHOSTNAME} ${BUILD_REL_NAME}-build"
 
 do_checkout() {
 	( checkout ) 2>&1
