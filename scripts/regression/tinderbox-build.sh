@@ -37,10 +37,10 @@ NAME="build-${PROJECT}-`date "+%Y%m%d-%H%M%S"`"
 
 
 tinderbox_header () {
-	TREE_NAME=$1
-		BUILD_NAME=$2
-		STATUS=$3
-		STARTTIME=$4
+	TREE_NAME="$1"
+		BUILD_NAME="$2"
+		STATUS="$3"
+		STARTTIME="$4"
 
 		if [ -z "${TREE_NAME}" -o -z "${BUILD_NAME}" -o -z "${STATUS}" -o -z "${STARTTIME}" ]
 			then
@@ -102,7 +102,7 @@ mail_buildlog () {
 	fi
 
 	{
-		tinderbox_header ${TREENAME} ${BUILDNAME} $1 ${STARTTIME}
+		tinderbox_header "${TREENAME}" "${BUILDNAME}" "$1" "${STARTTIME}"
 		cat ${LOG}
 	}  > $TMP_LOG
 	
