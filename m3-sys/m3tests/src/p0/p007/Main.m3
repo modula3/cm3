@@ -6,7 +6,7 @@
 
 UNSAFE MODULE Main;
 
-IMPORT Thread, ThreadF, RTIO;
+IMPORT Thread, (* ThreadF, *) RTIO;
 
 TYPE
   T = Thread.Closure BRANDED "p007 T" OBJECT
@@ -26,19 +26,22 @@ TYPE
 VAR
   com: A;        
   stop: Thread.Condition;
+  iolock: MUTEX;
 
 PROCEDURE Txt (t: TEXT) =
   BEGIN
-    ThreadF.SuspendOthers ();
-    RTIO.PutText (t);
-    ThreadF.ResumeOthers ();
+    (* ThreadF.SuspendOthers (); *)
+    LOCK iolock DO
+      RTIO.PutText (t);
+    END;
+    (* ThreadF.ResumeOthers (); *)
   END Txt;
 PROCEDURE Int (i: INTEGER;  width: INTEGER;  pad: TEXT) =
   BEGIN
-    ThreadF.SuspendOthers ();
-    RTIO.PutInt (i, width);
-    RTIO.PutText (pad);
-    ThreadF.ResumeOthers ();
+    LOCK iolock DO
+      RTIO.PutInt (i, width);
+      RTIO.PutText (pad);
+    END;
   END Int;
 
 (*******
@@ -123,6 +126,9 @@ VAR
 
 BEGIN
 
+(* Thread.MinDefaultStackSize (20000); *)
+
+iolock := NEW (MUTEX);
 stop := NEW (Thread.Condition);
 
 com := NEW (A, limit := 2000);

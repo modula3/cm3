@@ -13,7 +13,7 @@
 
 if equal (OS_TYPE, "POSIX")
   readonly rm_dir  = "@-rm -rf"
-  readonly diff    = "@-diff"
+  readonly diff    = "@-diff -u"
   readonly head    = "| head -30"
   readonly m3mkdir = "@-mkdir -p"
 else
@@ -30,6 +30,7 @@ import ("libm3")
 Module ("Test")
 library ("test")
 
+if not defined ("LIB_ONLY")
 %------------------------------------------------------------------------------
 % misc. utilities
 %
@@ -70,7 +71,7 @@ if stale ("TESTARGS", path_of ("m3makefile"))
 
     if defined ("local_m3")
       write (format ("M3 = \"%s/m3/%s/m3\"%s", ROOT, BUILD_DIR, CR))
-      write (format ("m3_option (\"-Y6@%s/m3cc/%s/m3cgc1@-quiet@\")%s", 
+      write (format ("m3_option (\"-Y6@%s/m3cc/%s/cm3cg@-quiet@\")%s", 
                       ROOT, BUILD_DIR, CR))
     end
     write (CR)
@@ -199,7 +200,7 @@ p_test ("p0", "p066", "exception handler stack screwed up")
 p_test ("p0", "p067", "mixup in imported names")
 % p_test ("p0", "p068", "PrintProc for arrays and array of chars and Text.T")
 p_test ("p0", "p069", "two object types that differs only by default overwriting")
-p_test ("p0", "p070", "procedure registration")
+% p_test ("p0", "p070", "procedure registration") % not supported in CM3
 p_test ("p0", "p071", "SUBARRAY := SUBARRAY")
 p_test ("p0", "p072", "CHAR literals > 127")
 p_test ("p0", "p073", "MOD and DIV - new fast versions")
@@ -555,3 +556,5 @@ c_test ("c1", "c131", "unknown")
 c_test ("c1", "c132", "unknown")
 c_test ("c1", "c133", "unknown")
 c_test ("c1", "c134", "statically initialized fields")
+
+end % NOT LIB_ONLY

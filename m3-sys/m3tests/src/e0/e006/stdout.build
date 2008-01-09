@@ -11,3 +11,4 @@
 "../src/Main.m3", line 21: variable has no type (reason)
 "../src/Main.m3", line 21: incompatible types (x)
 12 errors encountered
+Fatal Error: package build failed

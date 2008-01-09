@@ -2,7 +2,7 @@
 
 ***
 *** runtime error:
-***    Incompatible array shapes
+***    An open array had the wrong shape.
 ***    file "../src/Main.m3", line 19
 ***
 
