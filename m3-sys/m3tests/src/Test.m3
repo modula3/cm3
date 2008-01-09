@@ -59,6 +59,14 @@ PROCEDURE checkI (i: INTEGER; shouldBe: INTEGER) =
     END;
   END checkI;
 
+PROCEDURE checkN (i: LONGINT; shouldBe: LONGINT) =
+  BEGIN
+    IF NOT i = shouldBe THEN
+      (* Err (Fmt.Int (ORD(i)), " instead of ", Fmt.Int (ORD(shouldBe))); *)
+      Err ("LONGINT value check failed");
+    END;
+  END checkN;
+
 PROCEDURE checkC (c, shouldBe: CHAR) =
   BEGIN
     IF NOT c = shouldBe THEN

@@ -2,3 +2,4 @@
 1 warning encountered
 "../src/Main.m3", line 11: undefined (A.Alerted)
 1 error encountered
+Fatal Error: package build failed

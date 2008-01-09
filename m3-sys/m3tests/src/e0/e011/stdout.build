@@ -1,2 +1,3 @@
 "../src/Main.m3", line 14: incompatible types (x)
 1 error encountered
+Fatal Error: package build failed

@@ -2,6 +2,7 @@
 
 ***
 *** runtime error:
-***    Exception "Main.a" not in RAISES list
+***    Unhandled exception: Main.a
+***    file "../src/Main.m3", line 13
 ***
 
