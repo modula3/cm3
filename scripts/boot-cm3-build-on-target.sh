@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.6 2007-06-22 20:04:04 hosking Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.7 2008-01-09 10:38:33 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -48,7 +48,6 @@ P="${P} m3-sys/cm3"
 #P="${P} m3-sys/m3cggen"
 P="${P} m3-tools/m3bundle"
 #[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3-sys/mklib"
-#[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3-sys/dll2lib"
 #[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3-sys/fix_nl"
 #[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3-sys/libdump"
 #L="${L} m3-libs/bitvector"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.9 2008-01-08 23:02:49 wagner Exp $
+# $Id: do-cm3-core.sh,v 1.10 2008-01-09 10:38:33 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -40,7 +40,6 @@ P="${P} m3cggen"
 [ "${M3GDB}" = yes ] && P="${P} m3gdb"
 P="${P} m3bundle"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} dll2lib"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
 P="${P} bitvector"

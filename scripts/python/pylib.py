@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.15 2008-01-07 13:18:34 jkrell Exp $
+# $Id: pylib.py,v 1.16 2008-01-09 10:38:34 jkrell Exp $
 
 import os
 import os.path
@@ -827,7 +827,7 @@ def _FilterPackage(Package):
 
         "m3objfile": CM3_ALL or M3OSTYPE == "WIN32",
         "mklib": CM3_ALL or M3OSTYPE == "WIN32",
-        "dll2lib": CM3_ALL or M3OSTYPE == "WIN32",
+        "dll2lib": CM3_ALL,
         "fix_nl": CM3_ALL or M3OSTYPE == "WIN32",
         "libdump": CM3_ALL or M3OSTYPE == "WIN32",
         "import-libs": CM3_ALL or M3OSTYPE == "WIN32",
@@ -899,7 +899,6 @@ PackageSets = {
         "m3gdb",
         "m3bundle",
         "mklib",
-        "dll2lib",
         "fix_nl",
         "libdump",
 
@@ -1068,7 +1067,6 @@ PackageSets = {
         "m3gdb",
         "m3bundle",
         "mklib",
-        "dll2lib",
         "fix_nl",
         "libdump",
 
@@ -1229,7 +1227,6 @@ PackageSets_CoreBaseCommon = [
     "m3gdb",
     "m3bundle",
     "mklib",
-    "dll2lib",
     "fix_nl",
     "libdump",
     "bitvector",
