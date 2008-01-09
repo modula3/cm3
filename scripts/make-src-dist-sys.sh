@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-sys.sh,v 1.6 2001-11-25 14:02:58 wagner Exp $
+# $Id: make-src-dist-sys.sh,v 1.7 2008-01-09 10:38:33 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -31,7 +31,6 @@ header "building CM3 source distribution in ${ARCHIVE}"
 cd "${ROOT}" || exit 1
 
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts m3-sys/cm3 > .tar-include
-/bin/ls -1d m3-sys/cminstall m3-sys/dll2lib m3-sys/fix_nl >> .tar-include
 /bin/ls -1d m3-sys/libdump m3-sys/m3back m3-sys/m3cgcat  >> .tar-include
 /bin/ls -1d m3-sys/m3cggen m3-sys/m3front m3-sys/m3linker >> .tar-include
 /bin/ls -1d m3-sys/m3loader m3-sys/m3middle m3-sys/m3objfile >> .tar-include

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.11 2008-01-08 23:02:49 wagner Exp $
+# $Id: pkginfo.sh,v 1.12 2008-01-09 10:38:33 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -31,7 +31,6 @@ UsePackage()
   case "$1" in
     m3objfile | \
     mklib | \
-    dll2lib |\
     fix_nl | \
     libdump | \
     import-libs) [ "${M3OSTYPE}" = "WIN32" ] ;;

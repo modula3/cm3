@@ -17,7 +17,6 @@ if [ ${TARGET} = FreeBSD4 ] || [ ${TARGET} = LINUXLIBC6 ] \
 fi
 P="${P} m3bundle"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} mklib"
-[ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} dll2lib"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} fix_nl"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} libdump"
 

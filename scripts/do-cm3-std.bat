@@ -28,9 +28,6 @@ cm3 -ship
 cd ..\..\m3-sys\mklib
 cm3 -build
 cm3 -ship
-cd ..\..\m3-sys\dll2lib
-cm3 -build
-cm3 -ship
 cd ..\..\m3-sys\fix_nl
 cm3 -build
 cm3 -ship
