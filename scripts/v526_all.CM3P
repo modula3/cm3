@@ -26,7 +26,6 @@ PKG m3-sys\m3cgcat
 PKG m3-sys\m3cggen
 PKG m3-tools\m3bundle
 PKG m3-sys\mklib
-PKG m3-sys\dll2lib
 PKG m3-sys\fix_nl
 PKG m3-sys\libdump
 PKG m3-libs\bitvector

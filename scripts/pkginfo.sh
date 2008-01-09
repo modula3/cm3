@@ -31,7 +31,6 @@ UsePackage()
   case "$1" in
     m3objfile | \
     mklib | \
-    dll2lib |\
     fix_nl | \
     libdump | \
     import-libs) [ "${M3OSTYPE}" = "WIN32" ] ;;

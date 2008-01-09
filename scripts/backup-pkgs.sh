@@ -58,7 +58,6 @@ P="${P} m3cgcat"
 P="${P} m3cggen"
 P="${P} m3bundle"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} dll2lib"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
 
