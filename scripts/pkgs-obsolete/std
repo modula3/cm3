@@ -7,7 +7,11 @@ m3scanner
 m3tools
 m3cgcat
 m3cggen
+m3gdb
 m3bundle
+mklib
+fix_nl
+libdump
 arithmetic
 bitvector
 digraph
@@ -18,6 +22,7 @@ slisp
 sortedtableextras
 table-list
 tempfiles
+tcl
 tcp
 udp
 libsio
@@ -29,6 +34,8 @@ m3tk-misc
 http
 binIO
 commandrw
+tapi
+serial
 m3tk
 mtex
 m3totex
@@ -108,5 +115,3 @@ cube
 calculator
 fisheye
 mentor
-
-
