@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.16 2008-01-09 10:38:34 jkrell Exp $
+# $Id: pylib.py,v 1.17 2008-01-10 21:18:10 jkrell Exp $
 
 import os
 import os.path
@@ -834,7 +834,7 @@ def _FilterPackage(Package):
 
         "tcl": CM3_ALL or HAVE_TCL,
         "udp": CM3_ALL or M3OSTYPE == "POSIX",
-        "tapi": CM3_ALL or M3OSTYPE == "POSIX",
+        "tapi": CM3_ALL or M3OSTYPE == "WIN32",
         "serial": CM3_ALL or HAVE_SERIAL,
 
         "X11R4": CM3_ALL or M3OSTYPE != "WIN32",
