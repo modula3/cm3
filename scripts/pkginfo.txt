@@ -130,7 +130,6 @@ hack
 kate
 m3browserhack
 m3tmplhack
-nedit
 obliqlib3D
 paneman
 paneman/kemacs
