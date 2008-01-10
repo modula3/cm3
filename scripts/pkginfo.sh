@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.12 2008-01-09 10:38:33 jkrell Exp $
+# $Id: pkginfo.sh,v 1.13 2008-01-10 21:18:10 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -38,8 +38,8 @@ UsePackage()
     tcl) [ "${HAVE_TCL}" = yes ] ;;
     serial) [ "${HAVE_SERIAL}" = yes ] ;;
 
-    udp | \
-    tapi) [ "${M3OSTYPE}" = "POSIX" ] ;;
+    udp) [ "${M3OSTYPE}" = "POSIX" ] ;;
+    tapi) [ "${M3OSTYPE}" = "WIN32" ] ;;
 
     X11R4 | \
     showthread | \
