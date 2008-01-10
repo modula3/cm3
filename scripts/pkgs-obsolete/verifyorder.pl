@@ -6,22 +6,16 @@ my %Hashes;
 #
 # verify that files are in the same order, where they intersect
 #
-my %Sets =
-(
-    "front" => 1,
-    "std" => 1,
-    "core" => 1,
-    "base" => 1,
-    "min" => 1,
-);
 
-for my $FileName (<*>)
+for my $FileName (
+    "front",
+    "std",
+    "core",
+    "base",
+    "min",
+    "all",
+    )
 {
-    if (!$Sets{$FileName})
-    {
-        print("skipping $FileName\n");
-        next;
-    }
     open(my $FileHandle, "<", $FileName);
     while (my $Line = <$FileHandle>)
     {
