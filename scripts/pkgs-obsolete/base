@@ -7,6 +7,9 @@ m3tools
 m3cgcat
 m3cggen
 m3bundle
+mklib
+fix_nl
+libdump
 bitvector
 digraph
 parseparams
@@ -16,4 +19,7 @@ slisp
 sortedtableextras
 table-list
 tempfiles
+tcl
 tcp
+tapi
+serial
