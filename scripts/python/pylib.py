@@ -834,7 +834,7 @@ def _FilterPackage(Package):
 
         "tcl": CM3_ALL or HAVE_TCL,
         "udp": CM3_ALL or M3OSTYPE == "POSIX",
-        "tapi": CM3_ALL or M3OSTYPE == "POSIX",
+        "tapi": CM3_ALL or M3OSTYPE == "WIN32",
         "serial": CM3_ALL or HAVE_SERIAL,
 
         "X11R4": CM3_ALL or M3OSTYPE != "WIN32",
