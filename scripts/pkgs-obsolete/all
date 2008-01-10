@@ -10,12 +10,15 @@ m3front
 m3quake
 m3cc
 cm3
-mklib
 m3scanner
 m3tools
 m3cgcat
 m3cggen
+m3gdb
 m3bundle
+mklib
+fix_nl
+libdump
 arithmetic
 bitvector
 digraph
@@ -26,6 +29,7 @@ slisp
 sortedtableextras
 table-list
 tempfiles
+tcl
 tcp
 udp
 libsio
@@ -37,6 +41,8 @@ m3tk-misc
 http
 binIO
 commandrw
+tapi
+serial
 m3tk
 mtex
 m3totex
@@ -120,12 +126,9 @@ cit_common
 cit_util
 deepcopy
 drawcontext
-fix_nl
 hack
 kate
-libdump
 m3browserhack
-m3gdb
 m3tmplhack
 nedit
 obliqlib3D
@@ -140,8 +143,5 @@ parserlib/kyacc
 parserlib/parserlib
 parserlib/parserlib/test
 pp
-serial
 sgml
-tapi
-tcl
 term
