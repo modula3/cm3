@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.24 2008-01-11 22:51:37 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.25 2008-01-11 22:57:38 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -246,32 +246,10 @@ set zip=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.zip
 call :RunZip -9 -r -D -X %zip% cm3
 
 @rem
-@rem HACK ALERT
+@rem Building a self extracting .exe is very easy but not present for now.
+@rem It is available in history if desired.
+@rem I think it'd be more valuable if it was a gui. tbd?
 @rem
-@rem ON MY MACHINE \bin\unzipsfx.exe is a
-@rem Win32 x86 unzip self extracting archive prefix,
-@rem with an MS-DOS unzip self extracting archive prefix for a stub.
-@rem As such, you can do several things with it.
-@rem  Run it under MS-DOS. However long file names are probably used.
-@rem  Run it from a Windows command line.
-@rem  Open it with various archive utilities, including maybe Explorer (might need to rename it to end in .zip).
-@rem
-@rem .tar.bz2 is generally significantly smaller, but .zip is currently used
-@rem for ease of Windows users.
-@rem
-@rem I built this unzipsfx from the publically available source. That source
-@rem and building of it is not in the CM3 tree, and probably should be
-@rem if this path is to be used. In fact, that license may make
-@rem these tools favorable over tar/bzip2, despite the compression loss.
-@rem
-
-set exe=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.exe
-if not exist \bin\unzipsfx.exe (
-    echo \bin\unzipsfx.exe does not exist, skipping making self extracting .zip
-) else (
-    call :Run copy /b \bin\unzipsfx.exe + %zip% %exe%
-    call :RunZip -A %exe%
-)
 
 popd
 goto :done
