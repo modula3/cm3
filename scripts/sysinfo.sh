@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.57 2008-01-05 21:37:05 wagner Exp $
+# $Id: sysinfo.sh,v 1.58 2008-01-11 05:26:01 alexb Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -36,14 +36,36 @@ CM3LASTCHANGED=${CM3LASTCHANGED:-"2007-12-30"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 #
-# if CM3_INSTALL is not set, and cm3 is in $PATH, cm3's directory's directory is CM3_INSTALL,
-# else CM3_DEFAULTS defaults to /usr/local/cm3
-# Unfortunately, which always prints something and always succeeds, so we have to sniff
-# out its error message -- given "which foo", it prints "no foo in ..", where .. is
-# space delimited elements of $PATH -- at least on Mac OSX 10.4.
+# Utility function to find first occurrence of executable file in
+# $PATH.
+# Arguments are filename and default pathname.
+# Check for argument count and protect against passing a path as a
+# filename. Try to not mangle pathnames with spaces.
+# 
+find_exe() {
+  if [ $# -eq 2 -a `basename "$1"` = "$1" ] ; then
+    file="$1"
+    default="$2"
+    IFS=:
+    for path in $PATH ; do
+      if [ -f "$path/$file" -a -x "$path/$file" ]; then
+       echo "$path"
+       return 0
+      fi
+    done
+    echo "$default"
+  else
+    echo
+    return 1
+  fi
+}
 #
-CM3_INSTALL=${CM3_INSTALL:-`dirname \`dirname \\\`which cm3 | grep -v \\^no\\ cm3\\ in\\ \\\` 2>/dev/null\` 2>/dev/null`}
-CM3_INSTALL=${CM3_INSTALL:-"/usr/local/cm3"}
+# If CM3_INSTALL is not set, it will be set to the the parent directory
+# of the first path element where an executable cm3 is found.
+# Otherwise CM3_INSTALL defaults to /usr/local/cm3. (Make sure dirname
+# has a trailing directory to strip.)
+#
+CM3_INSTALL=${CM3_INSTALL:-`dirname \`find_exe cm3 /usr/local/cm3/\ \``}
 CM3=${CM3:-cm3}
 M3BUILD=${M3BUILD:-m3build}
 M3SHIP=${M3SHIP:-m3ship}
