@@ -8,8 +8,8 @@
 % This is the second stage in producing Windows import .libs.
 % Given Quake code snippets output by make-lib-1.cmd, produce
 % .c and .def files and compile and link them. The .c files just
-% contain empty functions with the right names and the signatures --
-% signatures just being the right number of bytes of parameters, the
+% contain empty functions with the right names and the Signatures --
+% Signatures just being the right number of bytes of parameters, the
 % right types are not needed.
 %
 
@@ -96,28 +96,60 @@ if equal(M3_MODE, "clean") or not equal(TARGET, "NT386")
     Files = { }
 end
 
-local readonly Signatures = {
- "0" : "void",
- "4" : "u a1",
- "8" : "u a1, u a2",
-"12" : "u a1, u a2, u a3",
-"16" : "u a1, u a2, u a3, u a4",
-"20" : "u a1, u a2, u a3, u a4, u a5",
-"24" : "u a1, u a2, u a3, u a4, u a5, u a6",
-"28" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7",
-"32" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8",
-"36" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9",
-"40" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10",
-"44" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11",
-"48" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11, u a12",
-"52" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11, u a12, u a13",
-"56" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11, u a12, u a13, u a14",
-"64" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11, u a12, u a13, u a14, u a15, u a16",
-"68" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11, u a12, u a13, u a14, u a15, u a16, u a17",
-"72" : "u a1, u a2, u a3, u a4, u a5, u a6, u a7, u a8, u a9, u a10, u a11, u a12, u a13, u a14, u a15, u a16, u a17, u a18",
-% obvious hack here, with several obvious fixes
-% Quake can't do math so we'd have to resort to leveraging the pass 1 Perl or some C++.
+%
+% Quake can't do math. We simulate it badly with hash tables and arrays.
+%
+
+local readonly Integers = [
+"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"
+]
+
+local ReverseIntegers = [ ]
+
+local UpTo = {"0": []}
+local DownFrom = {"0": []}
+
+local readonly Times4 = {
+ "0": "0", "1": "4", "2": "8", "3":"12", "4":"16", "5":"20", "6":"24", "7":"28", "8":"32", "9":"36",
+"10":"40","11":"44","12":"48","13":"52","14":"56","15":"60","16":"64","17":"68","18":"72","19":"76",
 }
+
+local Plus1 = { }
+local Minus1 = { }
+local Divide4 = { }
+
+proc InitMath() is
+    local i = ""
+    local j = ""
+    foreach j in Integers
+        %local TempReverse = [ i ]
+        %TempReverse += ReverseIntegers
+        %ReverseIntegers = TempReverse
+        if i
+            Plus1{i} = j
+            Minus1{j} = i
+
+            u = []
+            foreach k in UpTo{i}
+                u += k
+            end
+            u  += i
+            UpTo{j} = u
+
+            d = [ i ]
+            foreach k in DownFrom{i}
+                d += k
+            end
+            DownFrom{j} = d
+        end
+        i = j
+    end
+    foreach i in Times4
+        Divide4{Times4{i}} = i
+    end
+end
+
+InitMath()
 
 proc SourceFilePath(a) is
     return ".." & SL & "src" & SL & a
@@ -165,14 +197,21 @@ foreach File in Files
             if equal(FunctionName, "Extension")
                 Extension = Files{File}{"Extension"}
             else
+                local s = ""
                 Signature = Files{File}{FunctionName}
                 DefFileContents += [" " & FunctionName & CR]
                 if equal(Signature, "__cdecl")
-                    CppFileContents += ["void __cdecl " & FunctionName & "() { }" & CR]
+                    s = "void __cdecl " & FunctionName & "("
                 else
-                    CppFileContents += ["void __stdcall " & FunctionName & "("
-                        & Signatures{Signature} & ") { }" & CR]
+                    s = "void __stdcall " & FunctionName & "("
+                    foreach i in UpTo{Divide4{Signature}}
+                        if not equal(i, "0")
+                            s = s & ","
+                        end
+                        s = s & "u a" & i
+                    end
                 end
+                CppFileContents += s & ") { }" & CR
             end
         end
         CppFileContents += ["#if defined(__cplusplus)" & CR]
