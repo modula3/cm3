@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.3 2008-01-07 12:39:13 jkrell Exp $
+# $Id: upgrade.py,v 1.4 2008-01-11 22:32:23 jkrell Exp $
 
 import sys
 import pylib
@@ -15,6 +15,7 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 DoPackage(
     argv_RealClean,
     [
+    "import-libs",
     "m3bundle",
     "m3middle",
     "m3quake",
@@ -38,6 +39,7 @@ DoPackage(
 DoPackage(
     argv_BuildShip,
     [
+    "import-libs",
     "m3middle",
     "m3objfile",
     "m3linker",
