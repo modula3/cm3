@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.17 2008-01-10 21:18:10 jkrell Exp $
+# $Id: pylib.py,v 1.18 2008-01-11 22:51:36 jkrell Exp $
 
 import os
 import os.path
@@ -827,7 +827,6 @@ def _FilterPackage(Package):
 
         "m3objfile": CM3_ALL or M3OSTYPE == "WIN32",
         "mklib": CM3_ALL or M3OSTYPE == "WIN32",
-        "dll2lib": CM3_ALL,
         "fix_nl": CM3_ALL or M3OSTYPE == "WIN32",
         "libdump": CM3_ALL or M3OSTYPE == "WIN32",
         "import-libs": CM3_ALL or M3OSTYPE == "WIN32",
@@ -1501,7 +1500,6 @@ def ShipCompiler():
     CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
     if (os.name == "nt"):
         CopyFile       (os.path.join(FromBin, "cm3.pdb"), ToBin) or FatalError()
-        CopyFileIfExist(os.path.join(FromBin, "cm3.exe.manifest"), ToBin) or FatalError()
     return True
 
 if __name__ == "__main__":
