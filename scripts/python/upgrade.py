@@ -15,6 +15,7 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 DoPackage(
     argv_RealClean,
     [
+    "import-libs",
     "m3bundle",
     "m3middle",
     "m3quake",
@@ -38,6 +39,7 @@ DoPackage(
 DoPackage(
     argv_BuildShip,
     [
+    "import-libs",
     "m3middle",
     "m3objfile",
     "m3linker",
