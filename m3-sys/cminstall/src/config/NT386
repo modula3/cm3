@@ -452,10 +452,10 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   local ret_code = try_exec ("link", args, ">", listing)
 
   if not equal (ret_code, 0) or not file_exists (pgm_file)
+    % older builds, such as 5.1.3, do not define PACKAGE_DIR
     if defined("PACKAGE_DIR")
       error("link failed, see " & PACKAGE_DIR & SL & BUILD_DIR & SL & listing & " for more information" & EOL)
     else
-       % older builds, such as 5.1.3, do not define PACKAGE_DIR
       error("link failed, see " & BUILD_DIR & SL & listing & " for more information" & EOL)
     end
     if not equal (ret_code, 0)
