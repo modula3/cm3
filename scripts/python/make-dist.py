@@ -141,7 +141,6 @@ def CopyCompiler(From, To):
     CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
     if (os.name == "nt"):
         CopyFileIfExist(os.path.join(FromBin, "cm3.pdb"         ), ToBin) or FatalError()
-        CopyFileIfExist(os.path.join(FromBin, "cm3.exe.manifest"), ToBin) or FatalError()
     CopyMklib(From, To) or FatalError()
     return True
 
@@ -155,7 +154,6 @@ def CopyMklib(From, To):
         CreateDirectory(To)
         CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError()
         CopyFileIfExist(os.path.join(From, "mklib.pdb"         ), To) or FatalError()
-        CopyFileIfExist(os.path.join(From, "mklib.exe.manifest"), To) or FatalError()
     return True
 
 def BuildShip(Packages):

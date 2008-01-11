@@ -91,12 +91,10 @@ goto :main
     set FRONTEND_DEST=%FRONTEND_CM3VERSION%
     set BACKEND_DEST=%BACKEND_CM3VERSION%
     call :cp_if %FRONTEND_SRC%.exe %FRONTEND_DEST%.exe
-    call :cp_if %FRONTEND_SRC%.exe.manifest %FRONTEND_DEST%.exe.manifest
     call :cp_if %FRONTEND_SRC%.pdb %FRONTEND_DEST%.pdb
     if /i "%GCC_BACKEND%" == "yes" (
         rem call :cp_if %BACKEND_SRC% %BACKEND_DEST%
         call :cp_if %BACKEND_SRC%.exe %BACKEND_DEST%.exe
-        call :cp_if %BACKEND_SRC%.manifest %BACKEND_DEST%.manifest
         call :cp_if %BACKEND_SRC%.pdb %BACKEND_DEST%.pdb
     )
     goto :eof
@@ -104,11 +102,9 @@ goto :main
 :backup_old
     call :capture_output OLDCM3VERSION "call %~dp0install-cm3-compiler getversion %FRONTEND%"
     call :cp_if %FRONTEND%.exe %FRONTEND%-%OLDCM3VERSION%.exe
-    call :cp_if %FRONTEND%.exe.manifest %FRONTEND%-%OLDCM3VERSION%.exe.manifest
     call :cp_if %FRONTEND%.pdb %FRONTEND%-%OLDCM3VERSION%.pdb
     if /i "%GCC_BACKEND%" == "yes" (
         call :cp_if %BACKEND%.exe %BACKEND%-%OLDCM3VERSION%.exe
-        call :cp_if %BACKEND%.exe.manifest %BACKEND%-%OLDCM3VERSION%.exe.manifest
         call :cp_if %BACKEND%.pdb %BACKEND%-%OLDCM3VERSION%.pdb
     )
     goto :eof
@@ -117,12 +113,10 @@ goto :main
     if /i not "%NoAction%" == "yes" (
         if exist %FRONTEND% del /f %FRONTEND%
         if exist %FRONTEND%.exe del /f %FRONTEND%.exe
-        if exist %FRONTEND%.exe.manifest del /f %FRONTEND%.exe.manifest
         if exist %FRONTEND%.pdb del /f %FRONTEND%.pdb
         if /i "%GCC_BACKEND%" == "yes" (
             if exist %BACKEND% del /f %BACKEND%
             if exist %BACKEND%.exe del /f %BACKEND%.exe
-            if exist %BACKEND%.exe.manifest del /f %BACKEND%.exe.manifest
             if exist %BACKEND%.pdb del /f %BACKEND%.pdb
         )
     )
@@ -130,12 +124,10 @@ goto :main
 
 :cp_version
     call :cp_if %FRONTEND_CM3VERSION%.exe %FRONTEND%.exe
-    call :cp_if %FRONTEND_CM3VERSION%.exe.manifest %FRONTEND%.exe.manifest
     call :cp_if %FRONTEND_CM3VERSION%.pdb %FRONTEND%.pdb
     if /i "%GCC_BACKEND%" == "yes" (
         rem call :cp_if %BACKEND_CM3VERSION% %BACKEND%
         call :cp_if %BACKEND_CM3VERSION%.exe %BACKEND%.exe
-        call :cp_if %BACKEND_CM3VERSION%.exe.manifest %BACKEND%.exe.manifest
         call :cp_if %BACKEND_CM3VERSION%.pdb %BACKEND%.pdb
     )
     goto :eof
