@@ -85,34 +85,11 @@ def MakeArchive(PackageSetName, Command, Extension):
     DeleteFile(Archive)
     Run(Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
 
-    if (Extension == "zip"):
-        #
-        # HACK ALERT
-        #
-        # ON MY MACHINE \bin\unzipsfx.exe is a
-        # Win32 x86 unzip self extracting archive prefix,
-        # with an MS-DOS unzip self extracting archive prefix for a stub.
-        # As such, you can do several things with it.
-        #  Run it under MS-DOS. However long file names are probably used.
-        #  Run it from a Windows command line.
-        #  Open it with various archive utilities, including maybe Explorer (might need to rename it to end in .zip).
-        #
-        # .tar.bz2 is generally significantly smaller, but .zip is currently used
-        # for ease of Windows users.
-        #
-        # I built this unzipsfx from the publically available source. That source
-        # and building of it is not in the CM3 tree, and probably should be
-        # if this path is to be used. In fact, that license may make
-        # these tools favorable over tar/bzip2, despite the compression loss.
-        #
-
-        SelfExtractingExe = FormArchiveName(PackageSetName, EXE)
-        DeleteFile(SelfExtractingExe)
-        if (not os.path.isfile("\\bin\\unzipsfx" + EXE)):
-            print("\\bin\\unzipsfx" + EXE + " does not exist, skipping making self extracting .zip")
-        else:
-            open(SelfExtractingExe, "wb").write(open("\\bin\\unzipsfx" + EXE, "rb").read() + open(Archive, "rb").read())
-            Run("zip -A " + SelfExtractingExe)
+    #
+    # Building a self extracting .exe is very easy but not present for now.
+    # It is available in history if desired.
+    # I think it'd be more valuable if it was a gui. tbd?
+    #
 
 def Zip(PackageSetName):
     MakeArchive(PackageSetName, "zip -9 -r -D -X", "zip")
