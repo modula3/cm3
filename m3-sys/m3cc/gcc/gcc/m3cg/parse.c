@@ -1428,6 +1428,24 @@ scan_quoted_string (long *length)
   return result;  
 }
 
+/*---------------------------------------------------- calling convention ---*/
+
+#define CC(x) tree x = scan_cc ()
+#define UNUSED_CC(x) tree x ATTRIBUTE_UNUSED = scan_cc ()
+static tree
+scan_cc (void)
+{
+  int id = get_int ();
+
+  switch (id) {
+  case 0: return NULL_TREE;
+  case 1: return build_tree_list (get_identifier ("stdcall"), NULL);
+  default:
+    fatal_error(" *** invalid calling convention: %ld, at m3cg_lineno %d",
+		id, m3cg_lineno);
+  }
+}
+
 /*----------------------------------------------------------------- names ---*/
 
 #define NAME(x) char *x = scan_string ()
@@ -1967,7 +1985,7 @@ m3_call_direct (tree p, tree t)
 }
 
 static void
-m3_call_indirect (tree t)
+m3_call_indirect (tree t, tree cc)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
 			   tree_cons (NULL_TREE, t_void, NULL_TREE));
@@ -1975,6 +1993,8 @@ m3_call_indirect (tree t)
   tree call;
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
+
+  decl_attributes (&fntype, cc, 0);
 
   call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
 		 CALL_TOP_STATIC_CHAIN ());
@@ -2163,7 +2183,7 @@ emit_fault_proc (void)
     m3_call_direct (fault_handler, t_void);
   } else {
     m3_load (fault_intf, fault_offs, t_addr, T_addr, t_addr, T_addr);
-    m3_call_indirect (t_void);
+    m3_call_indirect (t_void, NULL_TREE);
   }
   add_stmt (build1 (RETURN_EXPR, t_void, NULL_TREE));
 
@@ -2497,7 +2517,7 @@ m3cg_declare_proctype (void)
   INTEGER (n_formals);
   TYPEID  (result_id); 
   INTEGER (n_raises);
-  UNUSED_INTEGER (call_conv);
+  UNUSED_CC (cc);
 
   if (option_types_trace)
     fprintf(stderr, 
@@ -3042,7 +3062,7 @@ m3cg_import_procedure (void)
   NAME    (n);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
-  INTEGER (call_conv);
+  CC      (cc);
   PROC    (p);
 
   if (option_procs_trace)
@@ -3062,9 +3082,6 @@ m3cg_import_procedure (void)
   }
 #endif
 
-  if (call_conv < 0 || call_conv > 1) {
-    fatal_error (" *** m3cg_import_procedure: invalid call convention id"); 
-  }
   if (p == 0) {
     p = build_decl (FUNCTION_DECL, get_identifier (n), NULL_TREE);
   } else {
@@ -3076,6 +3093,9 @@ m3cg_import_procedure (void)
   DECL_EXTERNAL (p) = 1;
   DECL_CONTEXT (p) = NULL_TREE;
   DECL_MODE (p) = FUNCTION_MODE;
+
+  decl_attributes (&TREE_TYPE (p), cc, 0);
+  decl_attributes (&p, cc, 0);
 
   TREE_CHAIN (p) = global_decls;
   global_decls = p;
@@ -3090,7 +3110,7 @@ m3cg_declare_procedure (void)
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
   UNUSED_LEVEL (lev);
-  INTEGER (call_conv);
+  CC      (cc);
   UNUSED_BOOLEAN (exported);
   PROC    (parent);
   PROC    (p);
@@ -3103,9 +3123,6 @@ m3cg_declare_procedure (void)
     fprintf(stderr, "  procedure %s nparams %ld rettype %d\n", n, n_params,
             ret_type);
 
-  if (call_conv < 0 || call_conv > 1) {
-    fatal_error(" *** m3cg_declare_procedure: invalid call convention id"); 
-  }
 #if M3CG_ADAPT_RETURN_TYPE
   /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
   if (INTEGRAL_TYPE_P (return_type)) {
@@ -3129,6 +3146,9 @@ m3cg_declare_procedure (void)
   DECL_ARTIFICIAL (resultdecl) = 1;
   DECL_IGNORED_P (resultdecl) = 1;
   DECL_RESULT (p) = resultdecl;
+
+  decl_attributes (&TREE_TYPE (p), cc, 0);
+  decl_attributes (&p, cc, 0);
 
   BLOCK_SUPERCONTEXT (parm_block) = p;
   DECL_INITIAL (p) = parm_block;
@@ -4437,7 +4457,7 @@ static void
 m3cg_start_call_indirect (void)
 {
   UNUSED_MTYPE2 (t, m3t);
-  UNUSED_INTEGER (call_conv);
+  UNUSED_CC (cc);
 
   if (option_procs_trace)
     fprintf(stderr, "  start call procedure indirect, type %d\n", m3t);
@@ -4448,11 +4468,11 @@ static void
 m3cg_call_indirect (void)
 {
   MTYPE2 (t, m3t);
-  UNUSED_INTEGER (call_conv);
+  CC (cc);
 
   if (option_procs_trace)
     fprintf(stderr, "  call procedure indirect, type %d\n", m3t);
-  m3_call_indirect (t);
+  m3_call_indirect (t, cc);
 }
 
 static void
