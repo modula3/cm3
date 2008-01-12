@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-front.sh,v 1.1 2001-03-01 20:33:27 wagner Exp $
+# $Id: do-cm3-front.sh,v 1.2 2008-01-12 12:47:30 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,19 +20,10 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} m3core"
-P="${P} libm3"
-P="${P} m3middle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
-P="${P} m3linker"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
-P="${P} m3front"
-P="${P} m3quake"
-# [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
-P="${P} cm3"
-#[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+P=`FilterPackages m3core libm3 m3middle m3objfile m3linker m3back \
+   m3staloneback m3front m3quake cm3`
+# m3cc (between m3quake and cm3, but really, anywhere)
+# mklib (last)
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
