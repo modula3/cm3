@@ -39,49 +39,6 @@
    MinPosNormal  3rd test OK
    MinPosNormal  4th test OK
    MinPosNormal  5th test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   SetRound  1st test OK
-   SetRound  2nd test OK
-   SetRound  3rd test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   SetRound  4th test OK
-   SetRound  5th test OK
-   SetRound  6th test OK
-   SetRound  7th test OK
-   SetFlags  1st test OK
-   SetFlags  2nd test OK
-   SetFlags  3rd test OK
-   SetFlags  4th test OK
-   SetFlags  5th test OK
-   SetFlags  6th test OK
-   SetFlags  7th test OK
-   SetFlags  8th test OK
-   SetFlags  9th test OK
-   Old behavior, DivByZero test OK
-   New behavior, DivByZero test OK
-   right flag ? test OK
-   right value ? test OK
-   Old behavior, Overflow test OK
-   New behavior, Overflow test OK
-   right flag ? test OK
-   right value ? test OK
-   Old behavior, Underflow test OK
-   New behavior, Underflow test OK
-   right flag ? test OK
-   right value ? test OK
-   IntDivByZero, default behaviour test OK
-   right flag ? test OK
-   right value ? test OK
----------------------------- threads ---
-   Fork  1st test OK
-   Fork 2nd test OK
-   Fork  3rd test OK
 ---------------------------- LONGREAL ---
    1.0/0.0 # 1.0/(-0.0) test OK
    1.0/0.0 = 1.0/(- (-0.0)) test OK
@@ -123,42 +80,3 @@
    MinPosNormal  3rd test OK
    MinPosNormal  4th test OK
    MinPosNormal  5th test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   SetRound  1st test OK
-   SetRound  2nd test OK
-   SetRound  3rd test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   GetRound  1st test OK
-   SetRound  4th test OK
-   SetRound  5th test OK
-   SetRound  6th test OK
-   SetRound  7th test OK
-   SetFlags  1st test OK
-   SetFlags  2nd test OK
-   SetFlags  3rd test OK
-   SetFlags  4th test OK
-   SetFlags  5th test OK
-   SetFlags  6th test OK
-   SetFlags  7th test OK
-   SetFlags  8th test OK
-   SetFlags  9th test OK
-   Old behavior, DivByZero test OK
-   New behavior, DivByZero test OK
-   right flag ? test OK
-   right value ? test OK
-   Old behavior, Overflow test OK
-   New behavior, Overflow test OK
-   right flag ? test OK
-   right value ? test OK
-   Old behavior, Underflow test OK
-   New behavior, Underflow test OK
-   right flag ? test OK
-   right value ? test OK
-   IntDivByZero, default behaviour test OK
-   right flag ? test OK
-   right value test OK

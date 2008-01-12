@@ -48,7 +48,7 @@ BEGIN
   tmp := (x + y);
   z1 := tmp - y;
 
-  Wr.PutText(Stdio.stdout, Fmt.F("%s %s\n", Fmt.Real(z), Fmt.Real(z1)));
+  Wr.PutText(Stdio.stderr, Fmt.F("%s %s\n", Fmt.Real(z), Fmt.Real(z1)));
   Test.checkR (z, z1);
   Test.done ();
 END Main.
