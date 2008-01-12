@@ -125,20 +125,20 @@ STARTTIME=`date +%s`
  
 # create repository 
 BUILDDIR_ROOT="/tmp"
-BUILDDIR_BASE="${BUILDDIR_ROOT}/${NAME}"
+BUILDDIR_BASE="`mktemp -d ${BUILDDIR_ROOT}/${NAME}-XXXXXX`"
 BUILDDIR="${BUILDDIR_BASE}/build" 
 
 LOG="${BUILDDIR_BASE}/log.txt"
  
 #check builddir
-echo "creating temporary build directory ${BUILDDIR}" 
-if [ -d ${BUILDDIR} ] 
-then 
-    echo "$0: ERROR: Directory already exists: ${BUILDDIR}" 
-    exit 2
-fi 
+#echo "creating temporary build directory ${BUILDDIR}" 
+#if [ -d ${BUILDDIR} ] 
+#then 
+#    echo "$0: ERROR: Directory already exists: ${BUILDDIR}" 
+#    exit 2
+#fi 
 
-mkdir -p ${BUILDDIR} 
+mkdir ${BUILDDIR} 
  
 if [ ! -d ${BUILDDIR} ] 
 then 
