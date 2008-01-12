@@ -1985,7 +1985,7 @@ m3_call_direct (tree p, tree t)
 }
 
 static void
-m3_call_indirect (tree t)
+m3_call_indirect (tree t, tree cc)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
 			   tree_cons (NULL_TREE, t_void, NULL_TREE));
@@ -1993,6 +1993,8 @@ m3_call_indirect (tree t)
   tree call;
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
+
+  decl_attributes (&fntype, cc, 0);
 
   call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
 		 CALL_TOP_STATIC_CHAIN ());
@@ -2181,7 +2183,7 @@ emit_fault_proc (void)
     m3_call_direct (fault_handler, t_void);
   } else {
     m3_load (fault_intf, fault_offs, t_addr, T_addr, t_addr, T_addr);
-    m3_call_indirect (t_void);
+    m3_call_indirect (t_void, NULL_TREE);
   }
   add_stmt (build1 (RETURN_EXPR, t_void, NULL_TREE));
 
@@ -3145,8 +3147,8 @@ m3cg_declare_procedure (void)
   DECL_IGNORED_P (resultdecl) = 1;
   DECL_RESULT (p) = resultdecl;
 
-  decl_attributes (&TREE_TYPE (p), cc, (n_params * 4));
-  decl_attributes (&p, cc, (n_params * 4));
+  decl_attributes (&TREE_TYPE (p), cc, 0);
+  decl_attributes (&p, cc, 0);
 
   BLOCK_SUPERCONTEXT (parm_block) = p;
   DECL_INITIAL (p) = parm_block;
@@ -4466,11 +4468,11 @@ static void
 m3cg_call_indirect (void)
 {
   MTYPE2 (t, m3t);
-  UNUSED_CC (cc);
+  CC (cc);
 
   if (option_procs_trace)
     fprintf(stderr, "  call procedure indirect, type %d\n", m3t);
-  m3_call_indirect (t);
+  m3_call_indirect (t, cc);
 }
 
 static void
