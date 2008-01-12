@@ -11,7 +11,8 @@ MODULE Main;
 IMPORT Test;
 
 CONST
-  Big = 1000000;
+  (* Big = 1000000; original value *)
+  Big = 50000;
 
 TYPE
   Element = [1 .. Big];

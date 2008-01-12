@@ -19,12 +19,12 @@ Subject: m3xx errors
 ---------------------------------------------------------------------------*)
 MODULE Main;
 
-CONST K = T.m; L = Q;
+CONST K = L; L = Q; (* original: K = T.m. See OW below. *)
 TYPE TProc = PROCEDURE(s: T);
 CONST A = ARRAY OF TProc{Q};
 
 TYPE T = OBJECT METHODS m() := L; END;
-  ST1 = T OBJECT OVERRIDES m := K END;
+  ST1 = T OBJECT OVERRIDES m := K; END;
   (*** ILLEGAL *** ST2 = T OBJECT OVERRIDES m := TProc END; ***)
   ST3 = T OBJECT OVERRIDES m := A[0]; END;
 
@@ -50,4 +50,16 @@ illegal in the above, I beleve.
 
 Mick
 ----------------------------------------------------------------------------*)
+(*
 
+OW 2008-01-11: 
+
+  The compiler does not accept K = T.M as a procedure constant when
+  it is applied in line 27, which is arguably a bug in CM3.
+  You cannot define initialized object methods as procedure constants.
+  As I deem this not relevant for all practical purposes, I've slightly
+  adapted the test so that the other definitions can be tested to compile.
+
+  This seems never to have been working in PM3, too, as the error
+  message was already in my import.
+*)

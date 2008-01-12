@@ -10,6 +10,6 @@ TYPE d = BRANDED "string" REF INTEGER;
 VAR a: b;
     c: d;
 BEGIN
-      a := c;
+    a := c;
 END Main.
 
