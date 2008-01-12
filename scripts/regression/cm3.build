@@ -31,7 +31,7 @@ TESTMACHINE=${TESTMACHINE:-"`uname -s` `uname -r`"}
 BUILDNAME="${CM3_TARGET} ${TESTMACHINE} ${TESTHOSTNAME} ${BUILD_REL_NAME}-build"
 
 do_checkout() {
-	( checkout ) 2>&1
+	( checkout ) > /dev/null
 }
 
 do_compile() {
