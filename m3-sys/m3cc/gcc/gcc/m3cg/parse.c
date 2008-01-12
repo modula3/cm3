@@ -5032,4 +5032,3 @@ m3_finish (void)
 #include "debug.h"
 #include "gtype-m3cg.h"
 #include "gt-m3cg-parse.h"
-
