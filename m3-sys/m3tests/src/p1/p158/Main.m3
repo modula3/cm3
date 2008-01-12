@@ -12,8 +12,8 @@ IMPORT Test;
 
 TYPE
   Elt    = {a, b, c, d, e};
-  Set    = (*BITS 5 FOR*) SET OF Elt;
-  Record = (*BITS 16 FOR*) RECORD p, q, r: Set END;
+  Set    = BITS 5 FOR SET OF Elt;
+  Record = BITS 16 FOR RECORD p, q, r: Set END;
 
 VAR
   g, h: Record;

@@ -17,6 +17,7 @@ PROCEDURE msgC (c: CHAR);
 PROCEDURE msgR (r: REAL);
 
 PROCEDURE check (b: BOOLEAN);
+PROCEDURE checkM (b: BOOLEAN; msg: TEXT);
 PROCEDURE checkB (b, shouldBe: BOOLEAN);
 PROCEDURE checkI (i, shouldBe: INTEGER);
 PROCEDURE checkN (i, shouldBe: LONGINT);
@@ -26,6 +27,9 @@ PROCEDURE checkL (r, shouldBe: LONGREAL);
 PROCEDURE checkX (r, shouldBe: EXTENDED);
 
 PROCEDURE warn (b: BOOLEAN);
+
+PROCEDURE Err (a, b, c, d: TEXT := NIL);
+PROCEDURE Out (a, b, c, d, e: TEXT := NIL);
 
 PROCEDURE done ();
 

@@ -45,6 +45,11 @@ PROCEDURE check (b: BOOLEAN) =
     IF NOT b THEN Err() END;
   END check;
 
+PROCEDURE checkM (b: BOOLEAN; m: TEXT) =
+  BEGIN
+    IF NOT b THEN Err(m, " failed") END;
+  END checkM;
+
 PROCEDURE checkB (b: BOOLEAN; shouldBe: BOOLEAN) =
   BEGIN
     IF NOT b = shouldBe THEN
