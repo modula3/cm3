@@ -223,7 +223,7 @@ if AnyStale
         write(CFileContents)
     end
 
-    exec("cl /nologo /c /O1 /Gy /GF /Za /Zl /X /nologo /W4 /WX " & CFilePath)
+    exec("cl /nologo /c /GF /Za /Zl /X /nologo /W4 /WX " & CFilePath)
 
     foreach File in Stale
 
