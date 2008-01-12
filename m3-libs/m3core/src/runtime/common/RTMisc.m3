@@ -16,7 +16,7 @@ IMPORT Cstring;
 
 PROCEDURE Copy (src, dest: ADDRESS;  len: INTEGER) =
   BEGIN
-    EVAL Cstring.memcpy (dest, src, len);
+    EVAL Cstring.memmove (dest, src, len);
   END Copy;
 
 PROCEDURE Zero (dest: ADDRESS;  len: INTEGER) =

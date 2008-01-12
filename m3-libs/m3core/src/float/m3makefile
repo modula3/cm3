@@ -18,7 +18,7 @@ readonly _FloatPieces = {
   "DS3100_OSF" : [ "IEEE", "IEEE-le", "DS3100" ],
   "FreeBSD"    : _float_le,
   "FreeBSD2"   : _float_le,
-  "FreeBSD3"    : _float_le,
+  "FreeBSD3"   : _float_le,
   "FreeBSD4"   : _float_le,
   "HP300"      : _float_be,
   "HPPA"       : _float_be,
@@ -46,11 +46,14 @@ readonly _FloatPieces = {
   "NetBSD2_i386"   : _float_le
 }
 
-if _FloatPieces contains TARGET
-  include_dir ("Common")
-  local pieces = _FloatPieces {TARGET}
-  foreach f in pieces  include_dir (f)  end
-else
-  error (format ("float: unsupported platform: \"%s\"%s", TARGET, CR))
+if not defined ("M3TESTS")
+  if _FloatPieces contains TARGET
+    include_dir ("Common")
+    local pieces = _FloatPieces {TARGET}
+    foreach f in pieces  include_dir (f)  end
+  else
+    error (format ("float: unsupported platform: \"%s\"%s", TARGET, CR))
+  end
 end
 
+ship_source ("m3makefile")
