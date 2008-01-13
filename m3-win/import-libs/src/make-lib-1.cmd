@@ -1,4 +1,4 @@
-@rem $Id: make-lib-1.cmd,v 1.9 2008-01-13 06:02:06 jkrell Exp $
+@rem $Id: make-lib-1.cmd,v 1.10 2008-01-13 07:25:02 jkrell Exp $
 @perl -w -x "%~f0" %* 2>&1
 @exit /b %ErrorLevel%
 #!perl -w
@@ -52,12 +52,12 @@ if (!$LibSearchPath)
 my $ClFullPath = SearchPath($Cl);
 if (!$ClFullPath)
 {
-    die("$Cl not found in path");
+    die("$Cl not found in path (This can happen when using Cygwin Perl instead of ActiveState Perl.)");
 }
 my $LinkFullPath = SearchPath($Link);
 if (!$LinkFullPath)
 {
-    die("$Link not found in path");
+    die("$Link not found in path (This can happen when using Cygwin Perl instead of ActiveState Perl.)");
 }
 
 for my $a (
@@ -214,12 +214,14 @@ LFile:
                     die if !defined $2;
                     $Function = $1;
                     $Signature = $2;
+                    #die("8: Function is $Function");
                 }
                 elsif ($Line =~ /^(?:(?:(?:Communal|COMDAT); sym=)|(?:005 00000000 SECT3 notype External \|)) __imp__(.+)$/)
                 {
                     die if !defined $1;
                     $Function = $1;
                     $Signature = "__cdecl";
+                    #die("9: Function is $Function");
                 }
             }
             if ($Line =~ /^Version *:/i
@@ -243,16 +245,14 @@ LFile:
                 {
                     $Function = $1;
                     $Signature = $2;
+                    #die("A: Function is $Function");
                 }
                 else
                 {
                     $Function = $SymbolName;
                     $Signature = "__cdecl";
-                    print("Function: $Function, Signature: $Signature\n");
-                    die();
+                    #die("B: Function: $Function, Signature: $Signature\n");
                 }
-                #print("Function: $Function, Signature: $Signature\n");
-                #die();
             }
             #
             # This is needed, or so I thought, for for odbccp32.lib, and reasonable all around.
@@ -265,10 +265,19 @@ LFile:
             }
             elsif ($Line =~ /^(?:Communal|COMDAT); sym= __imp_(.+)$/)
             {
-                # not tested (non-x86)
                 die if !defined $1;
                 $Function = $1;
                 $Signature = "__cdecl";
+                if ($x86)
+                {
+                    $Function =~ s/^_//;
+                    if ($Function =~ /^(.+)\@(\d+)$/)
+                    {
+                        $Function = $1;
+                        $Signature = $2;
+                    }
+                }
+                #die("C: Function is $Function");
             }
             elsif ($Line =~ /^Exports$/)
             {
@@ -294,11 +303,13 @@ LFile:
                     if ($Name =~ /^_(.+)\@(\d+)$/)
                     {
                         $Function = $1;
+                        #die("1: Function is $Function");
                         $Signature = $2;
                     }
                     elsif ($Name =~ /^_(.+)$/)
                     {
                         $Function = $1;
+                        #die("2: Function is $Function");
                         $Signature = "__cdecl";
                     }
                 }
@@ -306,6 +317,7 @@ LFile:
                 {
                     # not tested (non-x86)
                     $Function = $1;
+                    #die("3: Function is $Function");
                     $Signature = "__cdecl";
                 }
             }
@@ -345,6 +357,7 @@ LFile:
                 else
                 {
                     $Function = $1;
+                    #die("4: Function is $Function");
                 }
             }
             else
@@ -362,13 +375,13 @@ LFile:
                 {
                     $Function = $1;
                     $Signature = $2;
+                    #die("5: Function is $Function");
                 }
                 else
                 {
                     $Function = $MangledName;
                     $Signature = "__cdecl";
-                    print("Function: $MangledName, Signature: $Signature\n");
-                    die();
+                    #die("6: Function: $MangledName, Signature: $Signature\n");
                 }
             }
         }
@@ -395,13 +408,13 @@ LFile:
             next if ($Function eq "wsprintfA"); # useless esp. for Modula-3, use C runtime if necessary
             next if ($Function eq "wsprintfW"); # useless esp. for Modula-3, use C runtime if necessary
             $Exports{$Function} = $Signature;
-            # print("%% Function is $Function\n");
+            #print("Function is !$Function!\n");
         }
     }
     close($Pipe);
     if (($? >>= 8) != 0)
     {
-        die "$Command failed ($?)\n";
+        die("$Command failed ($?)");
     }
 
     #
@@ -496,7 +509,7 @@ LFile:
     my $Declaration = "__declspec(dllimport) void $CallingConvention $Function($Parameters);";
     my $Reference = "__declspec(dllexport) void* Reference(void) { return (void*)&$Function; }";
 
-    my $TempDir = tempdir(CLEANUP => 1);
+    my $TempDir = tempdir(CLEANUP => 0);
     my ($FileHandleC, $FileNameC) = tempfile(DIR => $TempDir, SUFFIX => ".c");
     my ($FileHandleDll, $FileNameDll) = tempfile(DIR => $TempDir, SUFFIX => ".dll");
     my ($FileHandleObj, $FileNameObj) = tempfile(DIR => $TempDir, SUFFIX => ".obj");
@@ -517,7 +530,7 @@ LFile:
     print("$Command\n");
     if (!open($Pipe, "$Command 2>&1 |"))
     {
-        die "$Command failed ($!)\n";
+        die("$Command failed ($!)");
     }
     while ($Line = <$Pipe>)
     {
@@ -526,7 +539,7 @@ LFile:
     close($Pipe);
     if (($? >>= 8) != 0)
     {
-        die "$Command failed ($?)\n";
+        die("$Command failed ($?)");
     }
 
     $Command = "link /nologo /dll \"$FileNameObj\" /noentry /nodefaultlib /out:\"$FileNameDll\" \"$Lib\"";
@@ -534,7 +547,7 @@ LFile:
     print("$Command\n");
     if (!open($Pipe, "$Command 2>&1 |"))
     {
-        die "$Command failed ($!)\n";
+        die("$Command failed ($!)");
     }
     while ($Line = <$Pipe>)
     {
@@ -543,7 +556,7 @@ LFile:
     close($Pipe);
     if (($? >>= 8) != 0)
     {
-        die "$Command failed ($?)\n";
+        die("$Command failed ($?)");
     }
 
     $Command = "link /dump /imports \"$FileNameDll\"";
@@ -551,7 +564,7 @@ LFile:
     print("$Command\n");
     if (!open($Pipe, "$Command 2>&1 |"))
     {
-        die "$Command failed ($!)\n";
+        die("$Command failed ($!)");
     }
     my $Extension;
 LFile:
@@ -581,9 +594,12 @@ LFile:
     close($Pipe);
     if (($? >>= 8) != 0)
     {
-        die "$Command failed ($?)\n";
+        die("$Command failed ($?)");
     }
-    $FileHandle->print("\"Extension\" : \"$Extension\"\n");
+    if ($Extension ne "dll")
+    {
+        $FileHandle->print("\"Extension\" : \"$Extension\"\n");
+    }
 
     $FileHandle->print("}\n");
 
@@ -655,7 +671,7 @@ sub GetVersion
     my $Pipe;
     if (!open($Pipe, "$Command 2>&1 |"))
     {
-        die "$Command failed ($!)\n";
+        die("$Command failed ($!)");
     }
     while (my $Line = <$Pipe>)
     {
