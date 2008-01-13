@@ -73,24 +73,6 @@ local Files = {
     "wsock32",
 }
 
-%
-% NOTE: USE_DLLTOOL does not quite work and USE_LD really does not work.
-%
-% dlltool's import .libs are broken such that consumption with link
-% leads to no actual imports and a crash at runtime. They do work with ld however.
-%
-% ld is difficult/impossible to convince to generate the correct symbols wrt __stdcall.
-%
-% The import .libs don't likely matter for NT386GNU, and even for NT386 they rarely matter.
-% The main thing is to delete import .libs from older CM3 distributions, and get
-% import .libs from either Visual C++ or the Platform SDK or MingGWin or Cygwin or here.
-% The main place they are not available is some Visual C++ Express Editions.
-%
-
-USE_LINK = TRUE
-USE_DLLTOOL = FALSE
-USE_LD = FALSE
-
 %local readonly M3_WIN_IMPORT_LIBS_CC = "cl"
 %local readonly M3_WIN_IMPORT_LIBS_CC = "gcc"
 local readonly M3_WIN_IMPORT_LIBS_CC = SYSTEM_CC
@@ -190,11 +172,7 @@ foreach File in Files
                 if equal(Signature, "__cdecl")
                     DefFileContents += [" " & FunctionName & " = Cdecl" & CR]
                 else
-                    if USE_DLLTOOL
-                        DefFileContents += [" " & FunctionName & "@" & Signature & " = Stdcall" & Signature & CR]
-                    else
-                        DefFileContents += [" " & FunctionName & " =Stdcall" & Signature & CR]
-                    end
+                    DefFileContents += [" " & FunctionName & " =Stdcall" & Signature & CR]
                 end
             end
         end
@@ -265,40 +243,19 @@ if AnyStale
         local readonly DefFilePath = File & ".def"
         local readonly Extension = Stale{File}
 
-        if USE_LINK
-            exec(
-                "link",
-                "-nologo",
-                ObjFilePath,
-                "-dll",
-                "-nodefaultlib",
-                "-noentry",
-                "-def:" & DefFilePath,
-                "-out:" & File & "." & Extension,
-                )
-        end
-        if USE_DLLTOOL
-            exec(
-                "dlltool",
-                "--output-lib", LibFilePath,
-                "--dllname", File & "." & Extension,
-                "--input-def", DefFilePath,
-                "--kill-at",
-                )
-        end
-        if USE_LD
-            exec(
-                "ld",
-                ObjFilePath,
-                "-nostdlib",
-                "--out-implib", LibFilePath,
-                "-o", File & "." & Extension,
-                DefFilePath,
-                "--enable-stdcall-fixup",
-                "--add-stdcall-alias",
-                "--kill-at",
-                )
-        end
+        %
+        % dlltool and ld fail to produce correct import .libs so always use link
+        %
+        exec(
+            "link",
+            "-nologo",
+            ObjFilePath,
+            "-dll",
+            "-nodefaultlib",
+            "-noentry",
+            "-def:" & DefFilePath,
+            "-out:" & File & "." & Extension,
+            )
 
         LibdExport(File & ".lib")
     end
