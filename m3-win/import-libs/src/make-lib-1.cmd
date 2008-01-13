@@ -23,6 +23,13 @@
 @rem @call :make-lib-1 "%~f0" advapi32.lib advapi32.quake cl.exe link.exe perl.exe
 @rem goto :eof
 
+@rem
+@rem odbc32
+@rem odbccp32
+@rem
+@rem removed, something is up/down with them
+@rem
+
 @for %%i in (
     advapi32
     comctl32
@@ -31,13 +38,12 @@
     glu32
     kernel32
     netapi32
-    odbc32
-    odbccp32
     opengl32
     user32
     winspool
     wsock32
 ) do @(
+    @echo :make-lib-1 "%~f0" %%i.lib %%i.quake cl.exe link.exe perl.exe
     @call :make-lib-1 "%~f0" %%i.lib %%i.quake cl.exe link.exe perl.exe
     @if errorlevel 1 goto :eof
 )
@@ -65,15 +71,27 @@ if exist %3 del %3
 @echo %%   perl is "%~$PATH:6" >> %3
 @echo %%   current working directory is %CD% >> %3
 @echo %% >> %3
-@call perl -w -x %1 "%~$LIB:2" >> %3
+@echo perl -w -x %1 "%~$LIB:2" %3
+@call perl -w -x %1 "%~$LIB:2" %3
 @goto :eof
 
 #!perl -w
-#line 60
+#line 73
 
 use strict;
+use warnings FATAL => 'uninitialized';
 use File::Temp qw(tempfile tempdir);
 use File::Basename;
+use IO::File;
+
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
+
+my $a = sprintf("%% $0 @ARGV run at %s on %s by %s.\n", scalar localtime(), $ENV{ComputerName}, $ENV{UserName});
+print($a);
+
+my $FileHandle = new IO::File($ARGV[1], "w+");
+$FileHandle->print($a);
 
 sub GetVersion
 {
@@ -94,10 +112,9 @@ sub GetVersion
     }
 }
 
-printf("%% $0 @ARGV run at %s on %s by %s.\n", scalar localtime(), $ENV{ComputerName}, $ENV{UserName});
-printf("%%\n");
-printf("%%   cl is %s.\n", GetVersion("cl"));
-printf("%%   link is %s.\n", GetVersion("link"));
+$FileHandle->printf("%%\n");
+$FileHandle->printf("%%   cl is %s.\n", GetVersion("cl"));
+$FileHandle->printf("%%   link is %s.\n", GetVersion("link"));
 
 my $Lib = shift;
 die if !defined $Lib;
@@ -112,14 +129,14 @@ my $State = 0;
 my $Line;
 
 #
-# Older versions do not understand switches such as /headers, /nologo /symbols, /exports, so just use /all
+# Older versions do not understand switches such as /headers, /nologo, /symbols, /exports, so just use /all
 # and be done with it.
 #
 $Command = "link /dump /all \"$Lib\"";
-printf("%%\n");
-print("% $Command\n");
-printf("%%\n");
-print STDERR "$Command\n";
+$FileHandle->printf("%%\n");
+$FileHandle->print("% $Command\n");
+$FileHandle->printf("%%\n");
+print("$Command\n");
 if (!open($Pipe, "$Command 2>&1 |"))
 {
     die "$Command failed ($!)\n";
@@ -130,7 +147,7 @@ while ($Line = <$Pipe>)
     my $Function;
     my $Signature;
 
-    # print "%% $Line";
+    #print("%% $Line");
     chomp($Line);
     $Line =~ s/\s+/ /g;
     $Line =~ s/^ //;
@@ -143,6 +160,7 @@ while ($Line = <$Pipe>)
     {
         if ($Line =~ /^FILE HEADER VALUES$/)
         {
+            print("1: $Line\n");
             $State = 1;
         }
     }
@@ -153,6 +171,7 @@ while ($Line = <$Pipe>)
             $Machine = 1;
             $x86 = 1;
             $State = 2;
+            print("2a: $Line\n");
         }
         elsif ($Line =~ /^\S+ +machine +\S+$/)
         {
@@ -160,10 +179,12 @@ while ($Line = <$Pipe>)
             $Machine = 1;
             $x86 = 0;
             $State = 2;
+            print("2b: $Line\n");
         }
         elsif ($Line =~ /^OPTIONAL HEADER VALUES$/)
         {
             $State = 2;
+            print("2c: $Line\n");
         }
     }
     elsif ($State == 2)
@@ -175,6 +196,9 @@ while ($Line = <$Pipe>)
         # VC2 odbc32.lib requires the 005 00000000 SECT3 notype External | __imp__ part.
         # We could also use the library member here.
         #
+        my $SymbolName;
+        my $Name;
+        #print("$Line\n");
         if ($x86)
         {
             if ($Line =~ /^(?:(?:(?:Communal|COMDAT); sym=)|(?:005 00000000 SECT3 notype External \|)) __imp__(.+)\@(\d+)$/)
@@ -190,6 +214,35 @@ while ($Line = <$Pipe>)
                 $Function = $1;
                 $Signature = "__cdecl";
             }
+            elsif ($Line =~ /^Version\s*:/i
+                    && (<$Pipe> =~ /^\s*Machine\s*:/i)
+                    && (<$Pipe> =~ /^\s*TimeDateStamp\s*:/i)
+                    && (<$Pipe> =~ /^\s*SizeOfData\s*:/i)
+                    && (<$Pipe> =~ /^\s*DLL name\s*:/i)
+                    && (($SymbolName) = (<$Pipe> =~ /^\s*Symbol name\s*:\s([^?].+)/i))
+                    && (<$Pipe> =~ /^\s*Type\s*:\s*code$/i)
+                    && (<$Pipe> =~ /^\s*Name type\s*:\s*undecorate$/i)
+                    && (<$Pipe> =~ /^\s*Hint\s*:/i)
+                    && (($Name) = (<$Pipe> =~ /^\s*Name\s*:\s(.+)/i))
+                    )
+            {
+                chomp($SymbolName);
+                $SymbolName =~ s/^_//;
+                if ($SymbolName =~ /^(.+)\@(\d+)$/)
+                {
+                    $Function = $1;
+                    $Signature = $2;
+                }
+                else
+                {
+                    $Function = $SymbolName;
+                    $Signature = "__cdecl";
+                    print("Function: $Function, Signature: $Signature\n");
+                    die();
+                }
+                #print("Function: $Function, Signature: $Signature\n");
+                #die();
+            }
         }
         elsif ($Line =~ /^(?:Communal|COMDAT); sym= __imp_(.+)$/)
         {
@@ -201,6 +254,7 @@ while ($Line = <$Pipe>)
         elsif ($Line =~ /^Exports$/)
         {
             $State = 3;
+            print("3: $Line\n");
         }
     }
     elsif ($State == 3)
@@ -208,6 +262,7 @@ while ($Line = <$Pipe>)
         if ($Line =~ /^ordinal name$/)
         {
             $State = 4;
+            print("4: $Line\n");
         }
     }
     elsif ($State == 4)
@@ -259,7 +314,7 @@ while ($Line = <$Pipe>)
         next if ($Function eq "wsprintfA"); # useless esp. for Modula-3, use C runtime if necessary
         next if ($Function eq "wsprintfW"); # useless esp. for Modula-3, use C runtime if necessary
         $Exports{$Function} = $Signature;
-        # print "%% Function is $Function\n";
+        # print("%% Function is $Function\n");
     }
 }
 close($Pipe);
@@ -301,7 +356,7 @@ elsif (lc GetPathBaseName($Lib) eq "kernel32")
     $Exports{IsDebuggerPresent} = "0";
 }
 
-print "local readonly $LibBaseName = {\n";
+$FileHandle->print("local readonly $LibBaseName = {\n");
 
 for my $Function (keys %Exports)
 {
@@ -310,7 +365,7 @@ for my $Function (keys %Exports)
         die("The name \"Extension\" is reserved"); # This is fixable if necessary.
     }
     my $Signature = $Exports{$Function};
-    print "\"$Function\" : \"$Signature\",\n";
+    $FileHandle->print("\"$Function\" : \"$Signature\",\n");
 }
 
 #
@@ -324,7 +379,7 @@ my $Parameters;
 die if !defined $Function;
 die if !defined $Signature;
 
-# print STDERR "Function is $Function, Signature is $Signature\n";
+# print("Function is $Function, Signature is $Signature\n");
 
 if ((!$x86) || ($Signature eq "__cdecl"))
 {
@@ -368,24 +423,24 @@ my ($FileHandleObj, $FileNameObj) = tempfile(DIR => $TempDir, SUFFIX => ".obj");
 close($FileHandleDll);
 close($FileHandleObj);
 
-print $FileHandleC
+$FileHandleC->print(
     "typedef unsigned u;\n"
     . $Declaration . "\n"
     . $Reference . "\n"
-    ;
+    );
 
 close($FileHandleC);
 
 $Command = "cl /nologo /c /Fo\"$FileNameObj\" \"$FileNameC\"";
 # print("% $Command\n");
-print STDERR "$Command\n";
+print("$Command\n");
 if (!open($Pipe, "$Command 2>&1 |"))
 {
     die "$Command failed ($!)\n";
 }
 while ($Line = <$Pipe>)
 {
-    print STDERR $Line;
+    print($Line);
 }
 close($Pipe);
 if (($? >>= 8) != 0)
@@ -395,14 +450,14 @@ if (($? >>= 8) != 0)
 
 $Command = "link /nologo /dll \"$FileNameObj\" /noentry /nodefaultlib /out:\"$FileNameDll\" \"$Lib\"";
 # print("% $Command\n");
-print STDERR "$Command\n";
+print("$Command\n");
 if (!open($Pipe, "$Command 2>&1 |"))
 {
     die "$Command failed ($!)\n";
 }
 while ($Line = <$Pipe>)
 {
-    print STDERR $Line;
+    print($Line);
 }
 close($Pipe);
 if (($? >>= 8) != 0)
@@ -412,7 +467,7 @@ if (($? >>= 8) != 0)
 
 $Command = "link /dump /imports \"$FileNameDll\"";
 # print("% $Command\n");
-print STDERR "$Command\n";
+print("$Command\n");
 if (!open($Pipe, "$Command 2>&1 |"))
 {
     die "$Command failed ($!)\n";
@@ -421,7 +476,7 @@ my $Extension;
 LFile:
 while ($Line = lc <$Pipe>)
 {
-    # print STDERR $Line;
+    # print($Line);
     chomp($Line);
     $Line =~ s/\s+/ /g;
     $Line =~ s/^ //;
@@ -447,11 +502,11 @@ if (($? >>= 8) != 0)
 {
     die "$Command failed ($?)\n";
 }
-print("\"Extension\" : \"$Extension\"\n");
+$FileHandle->print("\"Extension\" : \"$Extension\"\n");
 
-print "}\n";
+$FileHandle->print("}\n");
 
-print "Files\{\"$LibBaseName\"} = $LibBaseName\n";
+$FileHandle->print("Files\{\"$LibBaseName\"} = $LibBaseName\n");
 
 sub GetPathBaseName
 {
