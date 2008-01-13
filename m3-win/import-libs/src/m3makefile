@@ -66,7 +66,6 @@ local Files = {
     "kernel32",
     "netapi32",
     "odbc32",
-    "odbccp32",
     "opengl32",
     "user32",
     "winspool",
@@ -88,6 +87,7 @@ foreach File in Files
 end
 deriveds("a", [ ".c", ".o", ".obj" ])
 deriveds("", [".M3WEB"])
+delete_file(INSTALL_ROOT & SL & "lib" & SL & "odbccp32.lib")
 
 % Older Modula-3 toolsets, such as 5.1.3 from 2001, don't set M3_MODE.
 % That is ok, don't /really/ care about it, it just let'a us
@@ -105,7 +105,7 @@ end
 %
 
 local readonly Integers = [
-"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19",
+"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18",
 ]
 
 % map an integer to an array of integers from 0 to that integer minus 1
@@ -113,7 +113,7 @@ local UpTo = { }
 
 local readonly Times4 = {
  "0": "0", "1": "4", "2": "8", "3":"12", "4":"16", "5":"20", "6":"24", "7":"28", "8":"32", "9":"36",
-"10":"40","11":"44","12":"48","13":"52","14":"56","15":"60","16":"64","17":"68","18":"72","19":"76",
+"10":"40","11":"44","12":"48","13":"52","14":"56","15":"60","16":"64","17":"68","18":"72",
 }
 
 local proc InitMath() is
