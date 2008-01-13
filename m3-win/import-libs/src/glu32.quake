@@ -1,11 +1,10 @@
-% This is Quake source code, to initialize data. 
-% Quake is the Modula-3 build extension language. 
-% cl is "C:\MSVC20\BIN\CL.EXE" 
-% link is "C:\MSVC20\BIN\LINK.EXE" 
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\MSVC20\LIB\GLU32.LIB run at Mon Jan  1 10:39:41 2007 on JAY-WIN4 by Jay.
-% cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 9.00 for 80x86.
-% link is Microsoft (R) 32-Bit Incremental Linker Version 2.50      .
-% link /dump /all "C:\MSVC20\LIB\GLU32.LIB"
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\GlU32.Lib glu32.quake run at Sat Jan 12 19:01:34 2008 on JAY-WIN8 by Jay.
+%
+%   cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86.
+%   link is Microsoft (R) Incremental Linker Version 8.00.50727.42.
+%
+% link /dump /all "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\GlU32.Lib"
+%
 local readonly glu32 = {
 "gluNewQuadric" : "0",
 "gluLoadSamplingMatrices" : "16",
@@ -15,10 +14,13 @@ local readonly glu32 = {
 "gluEndCurve" : "4",
 "gluQuadricOrientation" : "8",
 "gluDeleteNurbsRenderer" : "4",
+"gluTessProperty" : "16",
+"gluTessEndContour" : "4",
 "gluTessVertex" : "12",
 "gluSphere" : "20",
 "gluBeginTrim" : "4",
 "gluTessCallback" : "12",
+"gluGetString" : "4",
 "gluErrorUnicodeStringEXT" : "4",
 "gluBeginCurve" : "4",
 "gluDeleteQuadric" : "4",
@@ -26,15 +28,19 @@ local readonly glu32 = {
 "gluGetNurbsProperty" : "12",
 "gluCylinder" : "36",
 "gluNewNurbsRenderer" : "0",
+"gluTessBeginContour" : "4",
 "gluBeginSurface" : "4",
+"gluGetTessProperty" : "12",
+"gluTessEndPolygon" : "4",
 "gluPartialDisk" : "44",
+"gluTessNormal" : "28",
 "gluNextContour" : "8",
 "gluDeleteTess" : "4",
 "gluProject" : "48",
 "gluBuild2DMipmaps" : "28",
 "gluQuadricNormals" : "8",
-"gluOrtho2D" : "32",
 "gluPerspective" : "32",
+"gluOrtho2D" : "32",
 "gluUnProject" : "48",
 "gluDisk" : "28",
 "gluNurbsSurface" : "44",
@@ -45,6 +51,7 @@ local readonly glu32 = {
 "gluLookAt" : "72",
 "gluNurbsProperty" : "12",
 "gluQuadricCallback" : "12",
+"gluTessBeginPolygon" : "8",
 "gluBuild1DMipmaps" : "24",
 "gluQuadricTexture" : "8",
 "gluNurbsCurve" : "28",

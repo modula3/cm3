@@ -93,8 +93,7 @@ SYSTEM_LIBS = {
                    "user32.lib",
                    "advapi32.lib",
                    "kernel32.lib" ],
-  "ODBC"       : [ "odbc32.lib",
-                   "odbccp32.lib" ],
+  "ODBC"       : [ "odbc32.lib" ],
   "OPENGL"     : [ "opengl32.lib",
                    "glu32.lib" ],
   "TCP"        : [  ]
