@@ -153,7 +153,7 @@ LFile:
         #print("%% $Line");
         chomp($Line);
         $Line =~ s/\s+/ /g;
-        $Line =~ s/^\s*//;
+        $Line =~ s/^ //;
         $Line =~ s/ $//;
         if ($Line eq "")
         {
@@ -222,7 +222,7 @@ LFile:
                     $Signature = "__cdecl";
                 }
             }
-            if ($Line =~ /^Version\s*:/i
+            if ($Line =~ /^Version *:/i
                     && (<$Pipe> =~ /^Machine *:/i)
                     && (<$Pipe> =~ /^TimeDateStamp *:/i)
                     && (<$Pipe> =~ /^SizeOfData *:/i)
