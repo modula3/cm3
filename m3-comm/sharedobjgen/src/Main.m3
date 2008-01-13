@@ -11,11 +11,11 @@ MODULE Main;
    that cn legitimately be marshalled.
 *)
 
-IMPORT Process, RTCollector, SOxCodeUtils;
-IMPORT Stdio, Wr, Rd;
+IMPORT Process, RTCollector;
+IMPORT Stdio, Wr;
 IMPORT AstToType;
 IMPORT TypeNames, StubGenTool;
-IMPORT M3Args, M3Context, M3Conventions, M3AST_AS, M3CUnit, M3CFETool, 
+IMPORT M3Context, M3Conventions, M3AST_AS, M3CUnit, M3CFETool, 
        M3ToolFrame;
 IMPORT M3AST_all; (* this cannot be omitted; it defines the particular
                      revelations for all the AST nodes *)
