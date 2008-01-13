@@ -146,19 +146,12 @@ DESCRIPTION
 <*EXTERNAL*> PROCEDURE strcspn  (s1: const_char_star; s2: const_char_star): size_t;
 
 
-
-
-(*
-
-  (* Functions described in ANSI C but not available in Ultrix C *)
-
   <*EXTERNAL*> PROCEDURE memmove  (s1: void_star; s2: const_void_star; n: size_t): void_star;
   <*EXTERNAL*> PROCEDURE strcoll  (s1: const_char_star; s2: const_char_star): int;
   <*EXTERNAL*> PROCEDURE strxrfm  (s1: char_star; s2: const_char_star; n: size_t): size_t;
   <*EXTERNAL*> PROCEDURE strstr   (s1: const_char_star; s2: const_char_star): char_star;
   <*EXTERNAL*> PROCEDURE strerror (errnum: int): char_star;
-
-*)
+  
 
 END Cstring.
 
