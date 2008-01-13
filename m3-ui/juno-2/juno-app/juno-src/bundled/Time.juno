@@ -1,8 +1,0 @@
-MODULE Time;
-
-PROC t := Now() IS SKIP END;
-
-(* Sets "t" to the number of seconds since some starting
-   point. The starting point may vary from one invocation
-   of the Juno application to another, but it will be fixed
-   throughout a single invocation. *)
