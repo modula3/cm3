@@ -1,4 +1,4 @@
-@rem $Id: make-lib-1.cmd,v 1.8 2008-01-13 06:01:10 jkrell Exp $
+@rem $Id: make-lib-1.cmd,v 1.9 2008-01-13 06:02:06 jkrell Exp $
 @perl -w -x "%~f0" %* 2>&1
 @exit /b %ErrorLevel%
 #!perl -w
@@ -255,8 +255,8 @@ LFile:
                 #die();
             }
             #
-            # This is needed, or so I thought, for for odbccp32.DLL, and reasonable all around.
-            # Perhaps I dumped the .dll instead of the .lib.
+            # This is needed, or so I thought, for for odbccp32.lib, and reasonable all around.
+            # I dumped the .dll instead of the .lib by accident.
             #
             if ($Line =~ /^Section contains the following exports for */i)
             {
