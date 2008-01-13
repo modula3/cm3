@@ -21,6 +21,49 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.2  2001-12-02 13:41:16  wagner
+ * add copyright notes, fix overrides for cm3, and make everything compile(except tests)
+ *
+ * added: sharedobj/COPYRIGHT-COLUMBIA
+ * added: sharedobj/src/COPYRIGHT-COLUMBIA
+ * modified: sharedobj/src/LocalObjectSpace.i3
+ * modified: sharedobj/src/LocalObjectSpace.m3
+ * modified: sharedobj/src/Message.i3
+ * modified: sharedobj/src/Message.m3
+ * modified: sharedobj/src/ObjCopy.i3
+ * modified: sharedobj/src/ObjCopy.m3
+ * modified: sharedobj/src/ObjectInfo.i3
+ * modified: sharedobj/src/ObjectInfo.m3
+ * modified: sharedobj/src/ObjectSpace.i3
+ * modified: sharedobj/src/ObjectSpace_FindObjCallBack_v1.i3
+ * modified: sharedobj/src/ObjectSpace_FindObjCallBack_v1.m3
+ * modified: sharedobj/src/ObjectSpace_FindObjCallBack_v2.i3
+ * modified: sharedobj/src/ObjectSpace_FindObjCallBack_v2.m3
+ * modified: sharedobj/src/ObjectSpace_T_v1.i3
+ * modified: sharedobj/src/ObjectSpace_T_v1.m3
+ * modified: sharedobj/src/ObjectSpace_T_v2.i3
+ * modified: sharedobj/src/ObjectSpace_T_v2.m3
+ * modified: sharedobj/src/SharedObj.i3
+ * modified: sharedobj/src/SharedObjError.i3
+ * modified: sharedobj/src/SharedObjF.i3
+ * modified: sharedobj/src/SharedObjF.m3
+ * modified: sharedobj/src/SharedObjRT.i3
+ * modified: sharedobj/src/SharedObjRT.m3
+ * modified: sharedobj/src/SharedObjRTF.i3
+ * modified: sharedobj/src/SharedObjRep.i3
+ * modified: sharedobj/src/SharedObjRep.m3
+ * modified: sharedobj/src/SharedObjStubLib.i3
+ * modified: sharedobj/src/SharedObjStubLib.m3
+ * modified: sharedobj/src/SpaceConn.i3
+ * modified: sharedobj/src/SpaceConn.m3
+ * modified: sharedobj/src/WeakerRef.i3
+ * modified: sharedobj/src/WeakerRef.m3
+ * modified: sharedobj/src/m3makefile
+ * modified: sharedobj/src/m3overrides
+ * modified: sharedobj/tests/netobjtest/src/m3makefile
+ * modified: sharedobj/tests/obsequence/src/m3makefile
+ * modified: sharedobj/tests/tracker/src/m3makefile
+ *
  * Revision 1.1.1.1  2001/12/02 13:14:14  wagner
  * Blair MacIntyre's sharedobj package
  *
@@ -90,7 +133,7 @@ TYPE
            problem := ConnProblem;
          END;
 
-PROCEDURE ConnProblem (self: Conn; al: AtomList.T) =
+PROCEDURE ConnProblem (self: Conn; <*UNUSED*>al: AtomList.T) =
   BEGIN
     IF self.connected THEN
 (*
