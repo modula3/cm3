@@ -16,11 +16,44 @@
  * Update Count    : 20
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobjgen/src/SOxDummyCode.m3,v $
- * $Date: 2001-12-03 17:23:37 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2008-01-13 03:57:47 $
+ * $Author: jkrell $
+ * $Revision: 1.3 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-03 17:23:37  wagner
+ * add copyright notes and overrides
+ *
+ * added: sharedobjgen/COPYRIGHT
+ * added: sharedobjgen/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/m3overrides
+ * modified: sharedobjgen/src/SOxCodeFiles.i3
+ * modified: sharedobjgen/src/SOxCodeFiles.m3
+ * modified: sharedobjgen/src/SOxCodeGenError.i3
+ * modified: sharedobjgen/src/SOxCodeGenError.m3
+ * modified: sharedobjgen/src/SOxCodeUtils.i3
+ * modified: sharedobjgen/src/SOxCodeUtils.m3
+ * modified: sharedobjgen/src/SOxCoder.i3
+ * modified: sharedobjgen/src/SOxDummyCode.i3
+ * modified: sharedobjgen/src/SOxDummyCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.m3
+ * modified: sharedobjgen/src/SOxIntfPklCode.i3
+ * modified: sharedobjgen/src/SOxIntfPklCode.m3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleCBCode.i3
+ * modified: sharedobjgen/src/SOxModuleCBCode.m3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.i3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleSOCode.i3
+ * modified: sharedobjgen/src/SOxModuleSOCode.m3
+ * modified: sharedobjgen/src/StubGenTool.i3
+ * modified: sharedobjgen/src/StubGenTool.m3
+ *
  * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
  * Blair MacIntyre's sharedobjgen package
  *
@@ -51,7 +84,7 @@ VAR
         ARRAY [1..1] OF Atom.T{Atom.FromText("SharedObj")};
 
 PROCEDURE initImports(<*UNUSED*>self: T;
-                      basename: TEXT; 
+                      <*UNUSED*>basename: TEXT; 
                       imports: ImportList.T) =
   BEGIN
     CodeForType.AugmentImportList(imports, extraImports);
@@ -66,48 +99,41 @@ PROCEDURE import(<*UNUSED*>self: T;
     CodeForType.ImportLst(type, imports, methods, umethods);
   END import;
 
-PROCEDURE head(self: T;
+PROCEDURE head(<*UNUSED*>self: T;
                wr: Formatter.T; 
                fname: TEXT; 
-               basename: TEXT; 
-               imports: ImportList.T) =
+               <*UNUSED*>basename: TEXT; 
+               <*UNUSED*>imports: ImportList.T) =
   BEGIN
     SOxCodeUtils.HeaderComment(wr, fname);
   END head;
 
-PROCEDURE decls(self: T;
-                wr: Formatter.T; 
-                typeID: Type.Qid;  
-                stypeID: Type.Qid;  
-                implName: TEXT; 
-                methods: ImportList.MethodList;
-                umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
+PROCEDURE decls(<*UNUSED*>self: T;
+                <*UNUSED*>wr: Formatter.T; 
+                <*UNUSED*>typeID: Type.Qid;  
+                <*UNUSED*>stypeID: Type.Qid;  
+                <*UNUSED*>implName: TEXT; 
+                <*UNUSED*>methods: ImportList.MethodList;
+                <*UNUSED*>umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
   BEGIN
   END decls;
 
-PROCEDURE main(self: T;
-               wr: Formatter.T; 
-               typeID: Type.Qid;  
-               type: Type.Object;  
-               stypeID: Type.Qid;  
-               implName: TEXT; 
-               methods: ImportList.MethodList;
-               umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
+PROCEDURE main(<*UNUSED*>self: T;
+               <*UNUSED*>wr: Formatter.T; 
+               <*UNUSED*>typeID: Type.Qid;  
+               <*UNUSED*>type: Type.Object;  
+               <*UNUSED*>stypeID: Type.Qid;  
+               <*UNUSED*>implName: TEXT; 
+               <*UNUSED*>methods: ImportList.MethodList;
+               <*UNUSED*>umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
   BEGIN
   END main;
 
-PROCEDURE bottom(self: T;
-                 wr: Formatter.T; 
-                 fname: TEXT) =
+PROCEDURE bottom(<*UNUSED*>self: T;
+                 <*UNUSED*>wr: Formatter.T; 
+                 <*UNUSED*>fname: TEXT) =
   BEGIN
   END bottom;
 
 BEGIN
 END SOxDummyCode.
-
-
-
-
-
-
-
