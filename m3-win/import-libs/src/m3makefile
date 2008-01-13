@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.21 2008-01-13 06:27:55 jkrell Exp $
+% $Id: m3makefile,v 1.22 2008-01-13 07:25:02 jkrell Exp $
 %
 % Jay Krell
 % jaykrell@cornell.edu
@@ -80,7 +80,7 @@ if defined("SYSTEM_CC")
     M3_WIN_IMPORT_LIBS_CC = SYSTEM_CC
 end
 
-local Stale = { }
+local Stale = [ ]
 local AnyStale = FALSE
 
 foreach File in Files
@@ -105,17 +105,21 @@ end
 % Quake can't do math. We simulate it badly.
 %
 
+% These don't actually have be numbers. Using letters nets us valid C identifiers.
 local readonly Integers = [
-"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18",
+"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S"
 ]
 
-% map an integer to an array of integers from 0 to that integer minus 1
+% map an integer to an array of integers from 0 to that integer mins 1
+% (Or at least that many unique values.)
 local UpTo = { }
 
+% The values here really do have to be increasing multiples of 4.
 local readonly Times4 = {
- "0": "0", "1": "4", "2": "8", "3":"12", "4":"16", "5":"20", "6":"24", "7":"28", "8":"32", "9":"36",
-"10":"40","11":"44","12":"48","13":"52","14":"56","15":"60","16":"64","17":"68","18":"72",
+"A":"0","B":"4","C":"8","D":"12","E":"16","F":"20","G":"24","H":"28","I":"32", "J":"36",
+"K":"40","L":"44","M":"48","N":"52","O":"56","P":"60","Q":"64","R":"68","S":"72",
 }
+local Divide4 = { }
 
 local proc InitMath() is
     local u = [ ]
@@ -128,6 +132,7 @@ local proc InitMath() is
             UpTo{i} += j
         end
         u += i
+        Divide4{Times4{i}} = i
     end
 end
 
@@ -163,29 +168,33 @@ foreach File in Files
     if stale(LibFilePath, SourceFilePath(QuakeFileName))
 
         AnyStale = TRUE
-
+        Stale += File
+        LibdExport(LibFilePath)
         local readonly DefFilePath = File & ".def"
+        local Extension = "dll"
 
         include(QuakeFileName)
 
-        local Extension = ""
-        local DefFileContents = ["EXPORTS" & CR]
+        > DefFilePath in
 
-        foreach FunctionName in Files{File}
-            if equal(FunctionName, "Extension")
-                Extension = Files{File}{"Extension"}
-            else
-                local Signature = Files{File}{FunctionName}
-                if equal(Signature, "__cdecl")
-                    DefFileContents += [" " & FunctionName & " = Cdecl" & CR]
+            write("EXPORTS" & CR)
+
+            foreach FunctionName in Files{File}
+                if equal(FunctionName, "Extension")
+                    Extension = Files{File}{"Extension"}
                 else
-                    DefFileContents += [" " & FunctionName & " = Stdcall" & Signature & CR]
+                    local Signature = Files{File}{FunctionName}
+                    if equal(Signature, "__cdecl")
+                        write(" " & FunctionName & " = Z" & CR)
+                    else
+                        write(" " & FunctionName & " = " & Divide4{Signature} & CR)
+                    end
                 end
             end
-        end
 
-        > DefFilePath in
-            write(DefFileContents)
+            if not equal(Extension, "dll")
+                write("LIBRARY " & File & "." & Extension & CR)
+            end
         end
 
         %
@@ -194,66 +203,44 @@ foreach File in Files
         > File & ".m3x" in 
           write("")
         end
-
-        Stale{File} = Extension
     end
 end
 
 if AnyStale
 
-    CFileContents = [ ]
-    CFileContents += [" #if defined(__cplusplus)" & CR]
-    CFileContents += ["extern \"C\" {" & CR]
-    CFileContents += ["#endif" & CR]
-    CFileContents += ["#pragma warning(disable:4100) /* unused parameter */" & CR]
-    CFileContents += ["typedef unsigned u;" & CR]
-
-    CFileContents += "void __cdecl Cdecl(void) { }" & CR
-
     local readonly CFilePath = "a.c"
 
-    foreach NumberOfParameters in Integers
-        local ArgsIn = ""
-        if equal(NumberOfParameters, "0")
-            ArgsIn = "void"
-        else
-            foreach Parameter in UpTo{NumberOfParameters}
-                if not equal(Parameter, "0")
-                    ArgsIn = ArgsIn & ","
-                end
-                ArgsIn = ArgsIn & "u a" & Parameter
-            end
-        end
-        %
-        % This is unavoidably confusing.
-        % We will end up with the symbols F0@0, F4@4, F8@8, etc.
-        %
-        CFileContents += "void __stdcall Stdcall" & Times4{NumberOfParameters} & "(" & ArgsIn & ") { }" & CR
-    end
-
-    CFileContents += ["#if defined(__cplusplus)" & CR]
-    CFileContents += ["} /* extern \"C\" */" & CR]
-    CFileContents += ["#endif" & CR]
-
     > CFilePath in
-        write(CFileContents)
+        write("typedef unsigned U;" & CR)
+        write("void __cdecl Z(void) { }" & CR)
+
+        foreach NumberOfParameters in Integers
+            local ArgsIn = ""
+            if equal(NumberOfParameters, "0")
+                ArgsIn = "void"
+            else
+                foreach Parameter in UpTo{NumberOfParameters}
+                    if not equal(Parameter, Integers[0])
+                        ArgsIn = ArgsIn & ","
+                    end
+                    ArgsIn = ArgsIn & "U " & Parameter
+                end
+            end
+            %
+            % This is unavoidably confusing.
+            % We end up with the symbols F0@0, F4@4, F8@8, etc.
+            %
+            write("void __stdcall " & NumberOfParameters & "(" & ArgsIn & ") { }" & CR)
+        end
     end
 
     exec(M3_WIN_IMPORT_LIBS_CC, "-c", CFilePath)
 
     foreach File in Stale
-
-        local readonly QuakeFileName = File & ".quake"
-        local readonly LibFilePath = File & ".lib"
-
-        local readonly ObjFilePath = ObjFile("a")
-        local readonly DefFilePath = File & ".def"
-        local readonly Extension = Stale{File}
-
         %
-        % dlltool produces import .libs that don't quite work, at least with link
-        % ld produces import .libs that really don't work
-        % link produces import .libs that don't quite work with ld
+        % dlltool produces import .libs that don't quite work, at least with link.
+        % ld produces import .libs that really don't work.
+        % link produces import .libs that don't quite work with ld.
         %
         % Specifically ld does not seem to support the usage where
         % the symbols are __stdcall but the exports are plain.
@@ -265,18 +252,26 @@ if AnyStale
         %
         % Specifically with ld consuming link .libs, same thing, imports are dropped.
         %
+        % The problem is being seen with winspool.drv, so maybe it is about the non-.dll extension?
+        %
+
+        %
+        % The .obj file is needed to match plain function names up with stdcall signatures.
+        % Thus the import .lib has two strings, Foo, and _Foo@4 (and possibly __imp__Foo@4).
+        % The compiler generates referenes to _Foo@4 (or __imp__Foo@4), which resolve to
+        % import .lib entries that cause just "Foo" to be written in the .dll or .exe.
+        %
+        % Achieving this requires "source code", barely, and a .def file.
+        % "Source code" is merely __stdcall functions with the right signatures --
+        %  the right number of parameters, the functions can all be empty.
+        %
         exec(
             "link",
+            "-lib",
             "-nologo",
-            ObjFilePath,
-            "-dll",
-            "-nodefaultlib",
-            "-noentry",
-            "-def:" & DefFilePath,
-            "-out:" & File & "." & Extension,
+            ObjFile("a"),
+            "-def:" & File & ".def",
             )
-
-        LibdExport(File & ".lib")
     end
 end
 
