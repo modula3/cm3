@@ -87,6 +87,9 @@ esac
 
 HTMP=${HTMP:-${HOME}/tmp/cm3/${TESTHOSTNAME}}
 
+M3TOUT=${M3TOUT:-${HTMP}/m3tests-${DS}.stdout}
+M3TERR=${M3TERR:-${HTMP}/m3tests-${DS}.stderr}
+
 BINDISTMIN=${BINDISTMIN:-${HOME}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz}
 echo "TESTHOSTNAME=${TESTHOSTNAME}"
 echo "WS=${WS}"
@@ -455,15 +458,28 @@ test_m3tests()
     echo "cannot cd to ${WS}/cm3" 1>2
     exit 1
   fi
-  ./scripts/do-pkg.sh build m3tests 2>${HTMP}/m3tests.stderr | \
-                                 tee  ${HTMP}/m3tests.stdout
 
+  cd "${WS}/cm3/m3-sys/m3tests" || exit 1
+
+  cm3 -build 2>${M3TERR} | tee ${M3TOUT}
+
+  
+  echo " >>> test_m3tests error extract:"
   find ${CM3_TARGET} -type f -name stderr.pgm -print | \
     xargs egrep '^\*\*|error.*and.*warning|fail' | grep -v '0 error' | \
-    tee ${HTMP}/m3tests.stderr.extract 1>2
+    tee ${M3TERR}.extract 1>&2
 
-  echo " >>> OK test_m3tests ${DS} ${WS}"
-  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+  nerrs=`awk -F: '{print $1}' ${M3TERR}.extract | sort -u | 
+         wc | awk '{print $1}'`
+  if [ 0 = "${nerrs}" ]; then
+    echo " >>> OK test_m3tests ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+    true
+  else
+    echo " >>> ${nerrs} in test_m3tests ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+    false
+  fi
 }
 
 
