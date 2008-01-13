@@ -14,12 +14,12 @@
 %   perl is C:\Perl\bin\perl.exe
 %   current working directory is C:/dev2/cm3.2/m3-win/import-libs/src
 %
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 21:49:52 2008 on JAY-WIN8 by Jay.
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 23:23:33 2008 on JAY-WIN8 by Jay.
 %
 %   cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86.
 %   link is Microsoft (R) Incremental Linker Version 8.00.50727.42.
 %
-% link /dump /all "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\comdlg32.lib"
+% link /dump /all C:\cm3\lib\comdlg32.lib
 %
 local readonly comdlg32 = {
 "ChooseColorA" : "4",
@@ -49,6 +49,5 @@ local readonly comdlg32 = {
 "WantArrows" : "16",
 "dwLBSubclass" : "16",
 "dwOKSubclass" : "16",
-"Extension" : "dll"
 }
 Files{"comdlg32"} = comdlg32

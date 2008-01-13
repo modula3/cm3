@@ -14,12 +14,12 @@
 %   perl is C:\Perl\bin\perl.exe
 %   current working directory is C:/dev2/cm3.2/m3-win/import-libs/src
 %
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 21:49:54 2008 on JAY-WIN8 by Jay.
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 23:23:35 2008 on JAY-WIN8 by Jay.
 %
 %   cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86.
 %   link is Microsoft (R) Incremental Linker Version 8.00.50727.42.
 %
-% link /dump /all "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\odbc32.lib"
+% link /dump /all C:\cm3\lib\odbc32.lib
 %
 local readonly odbc32 = {
 "CloseODBCPerfData" : "0",
@@ -204,6 +204,5 @@ local readonly odbc32 = {
 "VRetrieveDriverErrorsRowCol" : "24",
 "ValidateErrorQueue" : "8",
 "g_hHeapMalloc" : "__cdecl",
-"Extension" : "dll"
 }
 Files{"odbc32"} = odbc32
