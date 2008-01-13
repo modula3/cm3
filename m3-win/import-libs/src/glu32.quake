@@ -1,63 +1,78 @@
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\GlU32.Lib glu32.quake run at Sat Jan 12 19:01:34 2008 on JAY-WIN8 by Jay.
+%
+% This is GENERATED Quake source code, to initialize data.
+% Quake is the Modula-3 "build extension language".
+% That is, most of the "build system" implemented in Modula-3, but
+% there is a small "scripting" language to extend it.
+%
+% This data is then consumed by a second pass that uses the Modula-3 compiler and a C++ compiler and linker.
+%
+% Here is some information about the environment in which this code was generated:
+%
+%   cl is C:\msdev\80\VC\BIN\cl.exe
+%   link is C:\msdev\80\VC\BIN\link.exe
+%   perl is C:\Perl\bin\perl.exe
+%   current working directory is C:/dev2/cm3.2/m3-win/import-libs/src
+%
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 20:55:59 2008 on JAY-WIN8 by Jay.
 %
 %   cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86.
 %   link is Microsoft (R) Incremental Linker Version 8.00.50727.42.
 %
-% link /dump /all "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\GlU32.Lib"
+% link /dump /all "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\glu32.lib"
 %
 local readonly glu32 = {
-"gluNewQuadric" : "0",
-"gluLoadSamplingMatrices" : "16",
-"gluErrorString" : "4",
-"gluNewTess" : "0",
-"gluEndTrim" : "4",
-"gluEndCurve" : "4",
-"gluQuadricOrientation" : "8",
-"gluDeleteNurbsRenderer" : "4",
-"gluTessProperty" : "16",
-"gluTessEndContour" : "4",
-"gluTessVertex" : "12",
-"gluSphere" : "20",
-"gluBeginTrim" : "4",
-"gluTessCallback" : "12",
-"gluGetString" : "4",
-"gluErrorUnicodeStringEXT" : "4",
 "gluBeginCurve" : "4",
-"gluDeleteQuadric" : "4",
-"gluNurbsCallback" : "12",
-"gluGetNurbsProperty" : "12",
-"gluCylinder" : "36",
-"gluNewNurbsRenderer" : "0",
-"gluTessBeginContour" : "4",
-"gluBeginSurface" : "4",
-"gluGetTessProperty" : "12",
-"gluTessEndPolygon" : "4",
-"gluPartialDisk" : "44",
-"gluTessNormal" : "28",
-"gluNextContour" : "8",
-"gluDeleteTess" : "4",
-"gluProject" : "48",
-"gluBuild2DMipmaps" : "28",
-"gluQuadricNormals" : "8",
-"gluPerspective" : "32",
-"gluOrtho2D" : "32",
-"gluUnProject" : "48",
-"gluDisk" : "28",
-"gluNurbsSurface" : "44",
-"gluScaleImage" : "36",
-"gluEndSurface" : "4",
-"gluPickMatrix" : "36",
-"gluEndPolygon" : "4",
-"gluLookAt" : "72",
-"gluNurbsProperty" : "12",
-"gluQuadricCallback" : "12",
-"gluTessBeginPolygon" : "8",
-"gluBuild1DMipmaps" : "24",
-"gluQuadricTexture" : "8",
-"gluNurbsCurve" : "28",
-"gluQuadricDrawStyle" : "8",
-"gluPwlCurve" : "20",
 "gluBeginPolygon" : "4",
+"gluBeginSurface" : "4",
+"gluBeginTrim" : "4",
+"gluBuild1DMipmaps" : "24",
+"gluBuild2DMipmaps" : "28",
+"gluCylinder" : "36",
+"gluDeleteNurbsRenderer" : "4",
+"gluDeleteQuadric" : "4",
+"gluDeleteTess" : "4",
+"gluDisk" : "28",
+"gluEndCurve" : "4",
+"gluEndPolygon" : "4",
+"gluEndSurface" : "4",
+"gluEndTrim" : "4",
+"gluErrorString" : "4",
+"gluErrorUnicodeStringEXT" : "4",
+"gluGetNurbsProperty" : "12",
+"gluGetString" : "4",
+"gluGetTessProperty" : "12",
+"gluLoadSamplingMatrices" : "16",
+"gluLookAt" : "72",
+"gluNewNurbsRenderer" : "0",
+"gluNewQuadric" : "0",
+"gluNewTess" : "0",
+"gluNextContour" : "8",
+"gluNurbsCallback" : "12",
+"gluNurbsCurve" : "28",
+"gluNurbsProperty" : "12",
+"gluNurbsSurface" : "44",
+"gluOrtho2D" : "32",
+"gluPartialDisk" : "44",
+"gluPerspective" : "32",
+"gluPickMatrix" : "36",
+"gluProject" : "48",
+"gluPwlCurve" : "20",
+"gluQuadricCallback" : "12",
+"gluQuadricDrawStyle" : "8",
+"gluQuadricNormals" : "8",
+"gluQuadricOrientation" : "8",
+"gluQuadricTexture" : "8",
+"gluScaleImage" : "36",
+"gluSphere" : "20",
+"gluTessBeginContour" : "4",
+"gluTessBeginPolygon" : "8",
+"gluTessCallback" : "12",
+"gluTessEndContour" : "4",
+"gluTessEndPolygon" : "4",
+"gluTessNormal" : "28",
+"gluTessProperty" : "16",
+"gluTessVertex" : "12",
+"gluUnProject" : "48",
 "Extension" : "dll"
 }
 Files{"glu32"} = glu32
