@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.19 2008-01-13 05:57:46 jkrell Exp $
+% $Id: m3makefile,v 1.20 2008-01-13 06:09:28 jkrell Exp $
 %
 % Jay Krell
 % jaykrell@cornell.edu
@@ -120,7 +120,10 @@ local readonly Times4 = {
 local proc InitMath() is
     local u = [ ]
     foreach i in Integers
-        UpTo{i} = []
+        %
+        % Arrays have reference semantics. We must manually copy elements.
+        %
+        UpTo{i} = [ ]
         foreach j in u
             UpTo{i} += j
         end
@@ -176,7 +179,7 @@ foreach File in Files
                 if equal(Signature, "__cdecl")
                     DefFileContents += [" " & FunctionName & " = Cdecl" & CR]
                 else
-                    DefFileContents += [" " & FunctionName & " =Stdcall" & Signature & CR]
+                    DefFileContents += [" " & FunctionName & " = Stdcall" & Signature & CR]
                 end
             end
         end
@@ -198,7 +201,7 @@ end
 
 if AnyStale
 
-    CFileContents = []
+    CFileContents = [ ]
     CFileContents += [" #if defined(__cplusplus)" & CR]
     CFileContents += ["extern \"C\" {" & CR]
     CFileContents += ["#endif" & CR]
