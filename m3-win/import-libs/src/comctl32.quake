@@ -1,3 +1,4 @@
+% $Id: comctl32.quake,v 1.6 2008-01-13 05:57:46 jkrell Exp $
 %
 % This is GENERATED Quake source code, to initialize data.
 % Quake is the Modula-3 "build extension language".
@@ -13,7 +14,7 @@
 %   perl is C:\Perl\bin\perl.exe
 %   current working directory is C:/dev2/cm3.2/m3-win/import-libs/src
 %
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 20:55:58 2008 on JAY-WIN8 by Jay.
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 21:49:51 2008 on JAY-WIN8 by Jay.
 %
 %   cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86.
 %   link is Microsoft (R) Incremental Linker Version 8.00.50727.42.
@@ -21,16 +22,38 @@
 % link /dump /all "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\Lib\comctl32.lib"
 %
 local readonly comctl32 = {
+"AddMRUStringW" : "8",
+"CreateMRUListW" : "4",
+"CreateMappedBitmap" : "20",
 "CreatePropertySheetPage" : "4",
 "CreatePropertySheetPageA" : "4",
 "CreatePropertySheetPageW" : "4",
 "CreateStatusWindow" : "16",
+"CreateStatusWindowA" : "16",
 "CreateStatusWindowW" : "16",
 "CreateToolbarEx" : "52",
+"CreateUpDownControl" : "48",
+"DPA_DeleteAllPtrs" : "4",
+"DPA_DeletePtr" : "8",
+"DPA_DestroyCallback" : "12",
+"DPA_EnumCallback" : "12",
+"DPA_InsertPtr" : "12",
+"DPA_Search" : "24",
+"DPA_SetPtr" : "12",
+"DPA_Sort" : "12",
+"DSA_Create" : "8",
+"DSA_Destroy" : "4",
+"DSA_DestroyCallback" : "12",
+"DSA_GetItemPtr" : "8",
+"DSA_InsertItem" : "12",
+"DefSubclassProc" : "16",
 "DestroyPropertySheetPage" : "4",
+"DrawInsert" : "12",
 "DrawShadowText" : "36",
 "DrawStatusText" : "16",
+"DrawStatusTextA" : "16",
 "DrawStatusTextW" : "16",
+"EnumMRUListW" : "16",
 "FlatSB_EnableScrollBar" : "12",
 "FlatSB_GetScrollInfo" : "12",
 "FlatSB_GetScrollPos" : "8",
@@ -41,7 +64,10 @@ local readonly comctl32 = {
 "FlatSB_SetScrollProp" : "16",
 "FlatSB_SetScrollRange" : "20",
 "FlatSB_ShowScrollBar" : "12",
+"FreeMRUList" : "4",
+"GetEffectiveClientRect" : "12",
 "GetMUILanguage" : "0",
+"GetWindowSubclass" : "16",
 "HIMAGELIST_QueryInterface" : "12",
 "ImageList_Add" : "12",
 "ImageList_AddIcon" : "8",
@@ -84,13 +110,21 @@ local readonly comctl32 = {
 "ImageList_SetOverlayImage" : "12",
 "ImageList_Write" : "8",
 "ImageList_WriteEx" : "12",
+"InitCommonControls" : "0",
 "InitCommonControlsEx" : "4",
 "InitMUILanguage" : "4",
 "InitializeFlatSB" : "4",
+"LBItemFromPt" : "16",
+"MakeDragList" : "4",
+"MenuHelp" : "28",
 "PropertySheet" : "4",
 "PropertySheetA" : "4",
 "PropertySheetW" : "4",
 "RegisterClassNameW" : "4",
+"RemoveWindowSubclass" : "12",
+"SetWindowSubclass" : "16",
+"ShowHideMenuCtl" : "12",
+"Str_SetPtrW" : "8",
 "UninitializeFlatSB" : "4",
 "_TrackMouseEvent" : "4",
 "Extension" : "dll"
