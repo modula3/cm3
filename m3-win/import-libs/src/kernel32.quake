@@ -1,3 +1,4 @@
+% $Id: kernel32.quake,v 1.6 2008-01-13 05:57:46 jkrell Exp $
 %
 % This is GENERATED Quake source code, to initialize data.
 % Quake is the Modula-3 "build extension language".
@@ -13,7 +14,7 @@
 %   perl is C:\Perl\bin\perl.exe
 %   current working directory is C:/dev2/cm3.2/m3-win/import-libs/src
 %
-% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 20:56:00 2008 on JAY-WIN8 by Jay.
+% C:\dev2\cm3.2\m3-win\import-libs\src\make-lib-1.cmd  run at Sat Jan 12 21:49:53 2008 on JAY-WIN8 by Jay.
 %
 %   cl is Microsoft (R) 32-bit C/C++ Optimizing Compiler Version 14.00.50727.42 for 80x86.
 %   link is Microsoft (R) Incremental Linker Version 8.00.50727.42.

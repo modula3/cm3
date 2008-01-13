@@ -1,3 +1,4 @@
+@rem $Id: make-lib-1.cmd,v 1.7 2008-01-13 05:57:46 jkrell Exp $
 @perl -w -x "%~f0" %* 2>&1
 @exit /b %ErrorLevel%
 #!perl -w
@@ -39,13 +40,6 @@ STDERR->autoflush(1);
 
 SetCurrentDirectory($FindBin::Bin);
 
-#
-# odbc32
-# odbccp32
-#
-# removed, something is up/down with them
-#
-
 my $Cl = "cl.exe";
 my $Link = "link.exe";
 
@@ -74,6 +68,8 @@ for my $a (
     "glu32",
     "kernel32",
     "netapi32",
+    "odbc32",
+    # "odbccp32",
     "opengl32",
     "user32",
     "winspool",
@@ -95,6 +91,7 @@ for my $a (
     binmode($FileHandle);
 
     $FileHandle->print(<<End);
+% \$Id\$
 %
 % This is GENERATED Quake source code, to initialize data.
 % Quake is the Modula-3 "build extension language".
@@ -156,8 +153,12 @@ LFile:
         #print("%% $Line");
         chomp($Line);
         $Line =~ s/\s+/ /g;
-        $Line =~ s/^ //;
+        $Line =~ s/^\s*//;
         $Line =~ s/ $//;
+        if ($Line eq "")
+        {
+            next;
+        }
         if ($Line =~ /^Summary$/)
         {
             last LFile;
@@ -179,7 +180,7 @@ LFile:
                 $State = 2;
                 #print("2a: $Line\n");
             }
-            elsif ($Line =~ /^\S+ +machine +\S+$/)
+            elsif ($Line =~ /^\S+ machine \S+$/)
             {
                 # not tested (non-x86)
                 $Machine = 1;
@@ -220,35 +221,47 @@ LFile:
                     $Function = $1;
                     $Signature = "__cdecl";
                 }
-                elsif ($Line =~ /^Version\s*:/i
-                        && (<$Pipe> =~ /^\s*Machine\s*:/i)
-                        && (<$Pipe> =~ /^\s*TimeDateStamp\s*:/i)
-                        && (<$Pipe> =~ /^\s*SizeOfData\s*:/i)
-                        && (<$Pipe> =~ /^\s*DLL name\s*:/i)
-                        && (($SymbolName) = (<$Pipe> =~ /^\s*Symbol name\s*:\s([^?].+)/i))
-                        && (<$Pipe> =~ /^\s*Type\s*:\s*code$/i)
-                        && (<$Pipe> =~ /^\s*Name type\s*:\s*undecorate$/i)
-                        && (<$Pipe> =~ /^\s*Hint\s*:/i)
-                        && (($Name) = (<$Pipe> =~ /^\s*Name\s*:\s(.+)/i))
-                        )
+            }
+            if ($Line =~ /^Version\s*:/i
+                    && (<$Pipe> =~ /^Machine *:/i)
+                    && (<$Pipe> =~ /^TimeDateStamp *:/i)
+                    && (<$Pipe> =~ /^SizeOfData *:/i)
+                    && (<$Pipe> =~ /^DLL name *:/i)
+                    && (($SymbolName) = (<$Pipe> =~ /^Symbol name *: ([^?].+)/i))
+                    && (<$Pipe> =~ /^Type *: *code$/i)
+                    && (<$Pipe> =~ /^Name type *: *undecorate|ordinal$/i)
+                    && (<$Pipe> =~ /^Hint|Ordinal *:/i)
+                    #&& (($Name) = (<$Pipe> =~ /^Name *: (.+)/i))
+                    )
+            {
+                chomp($SymbolName);
+                if ($x86)
                 {
-                    chomp($SymbolName);
                     $SymbolName =~ s/^_//;
-                    if ($SymbolName =~ /^(.+)\@(\d+)$/)
-                    {
-                        $Function = $1;
-                        $Signature = $2;
-                    }
-                    else
-                    {
-                        $Function = $SymbolName;
-                        $Signature = "__cdecl";
-                        print("Function: $Function, Signature: $Signature\n");
-                        die();
-                    }
-                    #print("Function: $Function, Signature: $Signature\n");
-                    #die();
                 }
+                if ($SymbolName =~ /^(.+)\@(\d+)$/)
+                {
+                    $Function = $1;
+                    $Signature = $2;
+                }
+                else
+                {
+                    $Function = $SymbolName;
+                    $Signature = "__cdecl";
+                    print("Function: $Function, Signature: $Signature\n");
+                    die();
+                }
+                #print("Function: $Function, Signature: $Signature\n");
+                #die();
+            }
+            #
+            # This is needed, or so I thought, for for odbccp32.DLL, and reasonable all around.
+            # Perhaps I dumped the .dll instead of the .lib.
+            #
+            if ($Line =~ /^Section contains the following exports for */i)
+            {
+                $State = 5;
+                print("=> state 5\n");
             }
             elsif ($Line =~ /^(?:Communal|COMDAT); sym= __imp_(.+)$/)
             {
@@ -260,7 +273,7 @@ LFile:
             elsif ($Line =~ /^Exports$/)
             {
                 $State = 3;
-                print("3: $Line\n");
+                #print("3: $Line\n");
             }
         }
         elsif ($State == 3)
@@ -268,7 +281,7 @@ LFile:
             if ($Line =~ /^ordinal name$/)
             {
                 $State = 4;
-                print("4: $Line\n");
+                #print("4: $Line\n");
             }
         }
         elsif ($State == 4)
@@ -294,6 +307,68 @@ LFile:
                     # not tested (non-x86)
                     $Function = $1;
                     $Signature = "__cdecl";
+                }
+            }
+        }
+        elsif ($State == 5)
+        {
+            if ($Line =~ /
+                  (^[0-9A-Fa-f]+\ *characteristics$)
+                | (^[0-9A-Fa-f]+\ *time date stamp)
+                | (^[0-9.]+\ *version$)
+                | (^[0-9A-Fa-f]+\ *ordinal base$)
+                | (^[0-9A-Fa-f]+\ *number of functions$)
+                | (^[0-9A-Fa-f]+\ *number of names$)
+                /xi
+                )
+            {
+                # nothing
+            }
+            elsif ($Line =~ /^ordinal *hint *RVA *name$/i)
+            {
+                $State = 6;
+                print("=> state 6\n");
+            }
+        }
+        elsif ($State == 6)
+        {
+            if ($Line =~ /^Section contains the following imports:$/i)
+            {
+                last;
+            }
+            if ($Line =~ /^\S+ \S+ (\S+) \(forwarded to \S+\)$/)
+            {
+                if ($x86)
+                {
+                    next;
+                }
+                else
+                {
+                    $Function = $1;
+                }
+            }
+            else
+            {
+                my ($Ordinal, $Hint, $RVA, $ExportedName, $Equals, $MangledName) = split(/ /, $Line);
+                if (!$MangledName)
+                {
+                    last;
+                }
+                if ($x86)
+                {
+                    $MangledName =~ s/^_//;
+                }
+                if ($MangledName =~ /^(.+)\@(\d+)$/)
+                {
+                    $Function = $1;
+                    $Signature = $2;
+                }
+                else
+                {
+                    $Function = $MangledName;
+                    $Signature = "__cdecl";
+                    print("Function: $MangledName, Signature: $Signature\n");
+                    die();
                 }
             }
         }
