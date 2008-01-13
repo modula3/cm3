@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.20 2008-01-13 06:09:28 jkrell Exp $
+% $Id: m3makefile,v 1.21 2008-01-13 06:27:55 jkrell Exp $
 %
 % Jay Krell
 % jaykrell@cornell.edu
@@ -251,7 +251,19 @@ if AnyStale
         local readonly Extension = Stale{File}
 
         %
-        % dlltool and ld fail to produce correct import .libs so always use link
+        % dlltool produces import .libs that don't quite work, at least with link
+        % ld produces import .libs that really don't work
+        % link produces import .libs that don't quite work with ld
+        %
+        % Specifically ld does not seem to support the usage where
+        % the symbols are __stdcall but the exports are plain.
+        % Thus you either fail to link or fail to load.
+        % Perhaps I couldn't find the right switches.
+        %
+        % Specifically with dlltool produced .libs, imports often
+        % get dropped, leading to crashes.
+        %
+        % Specifically with ld consuming link .libs, same thing, imports are dropped.
         %
         exec(
             "link",
