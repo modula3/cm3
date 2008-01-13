@@ -73,9 +73,12 @@ local Files = {
     "wsock32",
 }
 
-%local readonly M3_WIN_IMPORT_LIBS_CC = "cl"
-%local readonly M3_WIN_IMPORT_LIBS_CC = "gcc"
-local readonly M3_WIN_IMPORT_LIBS_CC = SYSTEM_CC
+local M3_WIN_IMPORT_LIBS_CC = ""
+M3_WIN_IMPORT_LIBS_CC = "gcc"
+M3_WIN_IMPORT_LIBS_CC = "cl"
+if defined("SYSTEM_CC")
+    M3_WIN_IMPORT_LIBS_CC = SYSTEM_CC
+end
 
 local Stale = { }
 local AnyStale = FALSE
