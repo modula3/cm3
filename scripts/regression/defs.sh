@@ -294,7 +294,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   if type cm3 > /dev/null; then
     true
   else
-    echo "cvs not found" 1>&2
+    echo "cm3 not found" 1>&2
     exit 1
   fi
 
@@ -412,7 +412,7 @@ test_make_bin_dist()
   if type cm3 > /dev/null; then
     true
   else
-    echo "cvs not found" 1>&2
+    echo "cm3 not found" 1>&2
     exit 1
   fi
 
@@ -430,6 +430,42 @@ test_make_bin_dist()
   echo " >>> OK make_bin_dist_lastok ${DS} ${WS}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 snapshot build done"
 }
+
+test_m3tests()
+{
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` run cm3 compiler and runtime regression test suite in ${WS} with lastok version"
+  prependpath ${INSTROOT_CUR}/bin
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  INSTALLROOT=${INSTROOT_CUR}
+  export LD_LIBRARY_PATH INSTALLROOT
+
+  if type cm3 > /dev/null; then
+    true
+  else
+    echo "cm3 not found" 1>&2
+    exit 1
+  fi
+
+  cm3 -version
+
+  # checkout must have been done before
+  if cd "${WS}/cm3"; then
+    true
+  else
+    echo "cannot cd to ${WS}/cm3" 1>2
+    exit 1
+  fi
+  ./scripts/do-pkg.sh build m3tests 2>${HTMP}/m3tests.stderr | \
+                                 tee  ${HTMP}/m3tests.stdout
+
+  find ${CM3_TARGET} -type f -name stderr.pgm -print | \
+    xargs egrep '^\*\*|error.*and.*warning|fail' | grep -v '0 error' | \
+    tee ${HTMP}/m3tests.stderr.extract 1>2
+
+  echo " >>> OK test_m3tests ${DS} ${WS}"
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+}
+
 
 #----------------------------------------------------------------------------
 # testall -- checkout and perform all tests
@@ -452,6 +488,9 @@ testall()
 
   # build all standard packages
   test_build_std_lastok
+
+  # m3 regression tests
+  test_m3tests
 }
 
 #----------------------------------------------------------------------------
