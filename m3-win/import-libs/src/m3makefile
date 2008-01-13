@@ -73,6 +73,23 @@ local Files = {
     "wsock32",
 }
 
+%
+% NOTE: USE_DLLTOOL does not quite work and USE_LD really does not work.
+%
+% dlltool's import .libs are broken such that consumption with link
+% leads to no actual imports and a crash at runtime. They do work with ld however.
+%
+% ld is difficult/impossible to convince to generate the correct symbols wrt __stdcall.
+%
+% The import .libs don't likely matter for NT386GNU, and even for NT386 they rarely matter.
+% The main thing is to delete import .libs from older CM3 distributions, and get
+% import .libs from either Visual C++ or the Platform SDK or MingGWin or Cygwin or here.
+% The main place they are not available is some Visual C++ Express Editions.
+%
+USE_LINK = TRUE
+USE_DLLTOOL = FALSE
+USE_LD = FALSE
+
 local Stale = { }
 local AnyStale = FALSE
 
@@ -114,7 +131,7 @@ local Plus1 = { }
 local Minus1 = { }
 local Divide4 = { }
 
-proc InitMath() is
+local proc InitMath() is
     local i = ""
     local j = ""
     foreach j in Integers
@@ -138,15 +155,26 @@ end
 
 InitMath()
 
-proc SourceFilePath(a) is
+local proc SourceFilePath(a) is
     return ".." & SL & "src" & SL & a
 end
 
 %
 % This should be built-in.
 %
-proc file_exists(a) is
+local proc FileExists(a) is
   return not stale (a, a)
+end
+
+local proc PickExists(a, b) is
+    if FileExists(a)
+        return a
+    end
+    return b
+end
+
+local proc ObjFile(a) is
+    return PickExists(a & ".obj", a & ".o")
 end
 
 %
@@ -180,10 +208,15 @@ foreach File in Files
                 Extension = Files{File}{"Extension"}
             else
                 local Signature = Files{File}{FunctionName}
-                DefFileContents += [" " & FunctionName & CR]
                 if equal(Signature, "__cdecl")
+                    DefFileContents += [" " & FunctionName & CR]
                     CFileContents += "void __cdecl " & FunctionName & "(void) { }" & CR
                 else
+                    if USE_DLLTOOL
+                        DefFileContents += [" " & FunctionName & "@" & Signature & CR]
+                    else
+                        DefFileContents += [" " & FunctionName & CR]
+                    end
                     local ArgsIn = ""
                     foreach i in UpTo{Divide4{Signature}}
                         if not equal(i, "0")
@@ -218,23 +251,60 @@ if AnyStale
     CFileContents += ["#if defined(__cplusplus)" & CR]
     CFileContents += ["} /* extern \"C\" */" & CR]
     CFileContents += ["#endif" & CR]
+
     local readonly CFilePath = "a.c"
+
     > CFilePath in
         write(CFileContents)
     end
 
-    exec("cl /nologo /c /GF /Za /Zl /X /nologo /W4 /WX " & CFilePath)
+    exec(SYSTEM_CC, "-c", CFilePath)
 
     foreach File in Stale
 
         local readonly QuakeFileName = File & ".quake"
         local readonly LibFilePath = File & ".lib"
 
-        local readonly ObjFilePath = "a.obj"
+        local readonly ObjFilePath = ObjFile("a")
         local readonly DefFilePath = File & ".def"
         local readonly Extension = Stale{File}
 
-        exec("link /nologo " & ObjFilePath & " /dll /nodefaultlib /noentry /def:" & DefFilePath & " /out:" & File & "." & Extension)
+        if USE_LINK
+            exec(
+                "link",
+                "-nologo",
+                ObjFilePath,
+                "-dll",
+                "-nodefaultlib",
+                "-noentry",
+                "-def:" & DefFilePath,
+                "-out:" & File & "." & Extension,
+                )
+        end
+        if USE_DLLTOOL
+            exec(
+                "dlltool",
+                "--output-lib", LibFilePath,
+                "--dllname", File & "." & Extension,
+                "--input-def", DefFilePath,
+                "--kill-at",
+                ObjFilePath,
+                )
+        end
+        if USE_LD
+            exec(
+                "ld",
+                ObjFilePath,
+                "-nostdlib",
+                "--out-implib", LibFilePath,
+                "-o", File & "." & Extension,
+                DefFilePath,
+                "--enable-stdcall-fixup",
+                "--add-stdcall-alias",
+                "--kill-at",
+                )
+        end
+
         LibdExport(File & ".lib")
     end
 end
