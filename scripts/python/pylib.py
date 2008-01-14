@@ -68,7 +68,7 @@ def SearchPath(name, paths = getenv("PATH")):
 #
 # the root of the installation
 #
-CM3_INSTALL = (
+InstallRoot = (
     getenv("CM3_INSTALL")
     or getenv("INSTALLROOT")
     or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
@@ -88,6 +88,8 @@ Root = (
 # User can override all these from environment, as in sh.
 # The environment variable names are all UPPERCASE.
 # Ideally this array gets emptied or at least reduced.
+#
+# THIS IS MOSTLY NOT INTERESTING AS THE DEFAULTS AND PROBING ARE GOOD.
 #
 Variables = [
 
