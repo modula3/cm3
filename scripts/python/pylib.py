@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.26 2008-01-14 08:13:15 jkrell Exp $
+# $Id: pylib.py,v 1.27 2008-01-14 13:56:56 jkrell Exp $
 
 import os
 from os import getenv
@@ -353,6 +353,9 @@ OSType = (OSType or "POSIX")
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
+
+os.environ["CM3_TARGET"] = Target;
+os.environ["CM3_ROOT"] = Root;
 
 #-----------------------------------------------------------------------------
 # elego customizations
