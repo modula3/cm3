@@ -96,7 +96,7 @@ delete_file(INSTALL_ROOT & SL & "lib" & SL & "odbccp32.lib")
 if not defined("M3_MODE")
     M3_MODE = ""
 end
-if equal(M3_MODE, "clean") % or not equal(TARGET, "NT386")
+if equal(M3_MODE, "clean") or not equal(TARGET, "NT386")
     % neuter the data rather than indent the whole rest of the file
     Files = { }
 end
