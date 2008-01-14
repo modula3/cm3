@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.20 2008-01-14 05:27:33 jkrell Exp $
+# $Id: pylib.py,v 1.21 2008-01-14 06:42:13 jkrell Exp $
 
 import os
 import os.path
@@ -1361,6 +1361,12 @@ def CreateDirectory(a):
     if (not os.path.isdir(a)):
         os.makedirs(a)
     return True
+
+def MakeTempDir():
+    if os.getenv("TEMP") and not os.path.exists(os.getenv("TEMP")):
+        CreateDirectory(os.getenv("TEMP"))
+
+MakeTempDir()
 
 def CopyFile(From, To):
     if (os.path.isdir(To)):
