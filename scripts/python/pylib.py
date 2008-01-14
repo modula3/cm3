@@ -1362,6 +1362,12 @@ def CreateDirectory(a):
         os.makedirs(a)
     return True
 
+def MakeTempDir():
+    if os.getenv("TEMP") and not os.path.exists(os.getenv("TEMP")):
+        CreateDirectory(os.getenv("TEMP"))
+
+MakeTempDir()
+
 def CopyFile(From, To):
     if (os.path.isdir(To)):
         To = os.path.join(To, os.path.basename(From))

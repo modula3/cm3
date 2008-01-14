@@ -140,12 +140,6 @@ def FatalError():
     print("fatal error")
     sys.exit(1)
 
-# Start with the installed cm3.
-# cm3 should not be set in the environment, or should be set to merely "cm3" or "cm3.exe"
-
-if os.getenv("TEMP") and not os.path.exists(os.getenv("TEMP")):
-    os.makedirs(os.getenv("TEMP"))
-
 if (not STAGE):
     tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
     CreateDirectory(tempfile.tempdir)
