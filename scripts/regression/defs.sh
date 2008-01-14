@@ -483,6 +483,49 @@ test_m3tests()
 }
 
 
+test_m3_all_pkgs()
+{
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build all packages and generate report in ${WS} with lastok version"
+  prependpath ${INSTROOT_CUR}/bin
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  INSTALLROOT=${INSTROOT_CUR}
+  export LD_LIBRARY_PATH INSTALLROOT
+
+  if type cm3 > /dev/null; then
+    true
+  else
+    echo "cm3 not found" 1>&2
+    exit 1
+  fi
+
+  cm3 -version
+
+  # checkout must have been done before
+  if cd "${WS}/cm3"; then
+    true
+  else
+    echo "cannot cd to ${WS}/cm3" 1>2
+    exit 1
+  fi
+
+  cd "${WS}/cm3/" || exit 1
+
+  ./scripts/do-cm3-all.sh -k -report build
+  res=$?
+  
+  echo " >>> test_m3tests error extract:"
+  if [ 0 = "${res}" ]; then
+    echo " >>> OK test_m3_all_pkgs ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+    true
+  else
+    echo " >>> errors in test_m3tests ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+    false
+  fi
+}
+
+
 #----------------------------------------------------------------------------
 # testall -- checkout and perform all tests
 
@@ -507,6 +550,9 @@ testall()
 
   # m3 regression tests
   test_m3tests
+
+  # m3 all package regression tests and reports
+  test_m3_all_pkgs
 }
 
 #----------------------------------------------------------------------------
