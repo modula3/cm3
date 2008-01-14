@@ -5,19 +5,26 @@
 (*      modified on Wed May 12 16:56:05 PDT 1993 by meehan     *)
 (*      modified on Mon May 10 20:58:46 PDT 1993 by mjordan    *)
 
+(* $Id$ *)
+
 MODULE PathnameWin32 EXPORTS Pathname;
 
 IMPORT Text;
 
 CONST
-  DirSepChar = '\\'; DirSepText = "\\"; 
+  DirSepText = "\\";
   DriveSepChar = ':';
   ExtSepChar = '.';  ExtSepText = ".";
 
-CONST Legal = SET OF CHAR {'\001' .. '\177'} - SET OF CHAR {DirSepChar, ':'};
+CONST Legal = SET OF CHAR {'\001' .. '\177'} - SET OF CHAR {'\\', '/', ':', '?', '*'};
   (* *** This should be as permissive as any NT file system. *)
 
 TYPE Visit = PROCEDURE(start, len: INTEGER);
+
+PROCEDURE IsDirSepChar(ch: CHAR): BOOLEAN =
+  BEGIN
+    RETURN (ch = '\\' OR ch = '/');
+  END IsDirSepChar;
 
 PROCEDURE Valid(pn: T): BOOLEAN =
   PROCEDURE Ignore(<* UNUSED *> start, len: INTEGER) = BEGIN END Ignore;
@@ -50,8 +57,8 @@ PROCEDURE Compose(a: Arcs): T RAISES {Invalid} =
       IF t # NIL THEN
         WITH nRoot = Text.Length(t) DO
           IF ParseRoot(t) # nRoot THEN RAISE Invalid END;
-          IF Text.GetChar(t, 0) = DirSepChar AND
-             Text.GetChar(t, nRoot - 1) # DirSepChar THEN
+          IF IsDirSepChar(Text.GetChar(t, 0)) AND
+             NOT IsDirSepChar(Text.GetChar(t, nRoot - 1)) THEN
             t := t & DirSepText
           END
         END
@@ -122,7 +129,7 @@ PROCEDURE Join(pn, base: T; ext: TEXT): T =
       WITH n = Text.Length(pn) DO
         IF n # 0 THEN
           WITH c = Text.GetChar(pn, n - 1) DO
-            IF c # DirSepChar AND c # DriveSepChar THEN
+            IF NOT IsDirSepChar(c) AND c # DriveSepChar THEN
               pn := pn & DirSepText
             END
           END;
@@ -170,12 +177,12 @@ PROCEDURE ParseRoot(t: TEXT): CARDINAL RAISES {Invalid} =
     WITH n = Text.Length(t) DO
       IF n = 0 THEN RETURN 0 END;
       WITH c = Text.GetChar(t, 0) DO
-        IF c = DirSepChar THEN
-          IF n = 1 OR Text.GetChar(t, 1) # DirSepChar THEN RETURN 1 END;
+        IF IsDirSepChar(c) THEN
+          IF n = 1 OR NOT IsDirSepChar(Text.GetChar(t, 1)) THEN RETURN 1 END;
           VAR seenName, seenShare := FALSE; BEGIN
             FOR i := 2 TO n - 1 DO
               WITH cc = Text.GetChar(t, i) DO
-                IF cc = DirSepChar THEN
+                IF IsDirSepChar(cc) THEN
                   IF seenShare THEN
                     IF seenName THEN RETURN i + 1 END;
                     RAISE Invalid
@@ -193,7 +200,7 @@ PROCEDURE ParseRoot(t: TEXT): CARDINAL RAISES {Invalid} =
         END;
         IF ('a' <= c AND c <= 'z' OR 'A' <= c AND c <= 'Z') AND
            n > 1 AND Text.GetChar(t, 1) = DriveSepChar THEN
-          IF n > 2 AND Text.GetChar(t, 2) = DirSepChar THEN RETURN 3 END;
+          IF n > 2 AND IsDirSepChar(Text.GetChar(t, 2)) THEN RETURN 3 END;
           RETURN 2
         END;
         RETURN 0          
@@ -215,7 +222,7 @@ PROCEDURE ParsePN(pn: T; visit: Visit) RAISES {Invalid} =
       s := nRoot; e := s;
       WHILE e < n DO
         WITH c = Text.GetChar(pn, e) DO
-          IF c = DirSepChar THEN
+          IF IsDirSepChar(c) THEN
             visit(s, e - s);
             s := e + 1
           ELSIF NOT c IN Legal THEN
@@ -250,7 +257,7 @@ PROCEDURE NameSections(
       IF pos > 0 THEN
         DEC(pos);
         ch := Text.GetChar(pn, pos);
-        IF ch = DirSepChar OR ch = DriveSepChar THEN
+        IF IsDirSepChar(ch) OR ch = DriveSepChar THEN
           baseLwb := pos + 1;
           EXIT
         ELSIF ch = ExtSepChar THEN
