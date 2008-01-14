@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.27 2008-01-14 13:56:56 jkrell Exp $
+# $Id: pylib.py,v 1.28 2008-01-14 14:10:25 jkrell Exp $
 
 import os
 from os import getenv
@@ -182,6 +182,7 @@ def header(a):
     print("")
 
 UNameTuple = uname()
+UNameCommand = os.popen("uname").read().lower()
 UName = UNameTuple[0].lower()
 UNameArchP = platform.processor().lower()
 UNameArchM = UNameTuple[4].lower()
@@ -276,9 +277,9 @@ Target = getenv("CM3_TARGET") or getenv("TARGET") or ""
 OSType = getenv("CM3_OSTYPE") or getenv("M3OSTYPE") or ""
 
 if (UName.startswith("windows")
-        or UName.startswith("winnt")
-        or UName.startswith("cygwin")
         or Target.startswith("NT386")
+        or UNameCommand.startswith("mingw32_nt-")
+        or UNameCommand.startswith("cygwin_nt-")
     ):
 
     OSType = OSType or "WIN32"
@@ -287,7 +288,9 @@ if (UName.startswith("windows")
     HAVE_SERIAL = True
     GMAKE = getenv("GMAKE") or "make"
 
-    if Target.startswith("NT386GNU"):
+    if (Target.startswith("NT386GNU")
+        or UNameCommand.startswith("mingw32_nt-")
+        or UNameCommand.startswith("cygwin_nt-")):
         Target = Target or "NT386GNU"
     else:
         Target = Target or "NT386"
