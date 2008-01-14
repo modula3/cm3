@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.10 2007-12-30 14:08:15 wagner Exp $
+# $Id: pkgcmds.sh,v 1.11 2008-01-14 01:24:26 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -169,6 +169,7 @@ GEN_CMDS='
 GEN_OPTS='
   -n                          no action (do not execute anything)
   -k                          keep going (ignore errors if possible)
+  -report                     generate an HTML report during package building
 '
 
 format_one() {
