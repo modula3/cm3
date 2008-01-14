@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.25 2008-01-14 07:59:17 jkrell Exp $
+# $Id: pylib.py,v 1.26 2008-01-14 08:13:15 jkrell Exp $
 
 import os
 from os import getenv
+from os import path
 import os.path
 import glob
 import sys
@@ -46,7 +47,6 @@ else:
 # else CM3_DEFAULTS defaults to /usr/local/cm3
 #
 def ExeName(a):
-    debug("os.name")
     if (os.name == "nt"):
         a += ".exe"
     return a
@@ -82,7 +82,9 @@ Root = (
     getenv("CM3ROOT")
     or getenv("ROOT")
     or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ).replace("\\", os.path.sep).replace("/", os.path.sep)
+    ).replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
+
+BuildAll = getenv("CM3_ALL") or False
 
 #
 # User can override all these from environment, as in sh.
@@ -148,9 +150,6 @@ Variables = [
     "HAVE_TCL",
     "HAVE_SERIAL",
     "OMIT_GCC",
-
-    # build all packages, generally does not work
-    "CM3_ALL",
 ]
 
 DefaultsFromSh = {
@@ -175,10 +174,6 @@ for a in DefaultsFromSh.keys():
 #-----------------------------------------------------------------------------
 # output functions
 
-def debug(a):
-    if getenv("CM3_DEBUG"):
-        print(a + " is " + eval("str(" + a + ")"))
-
 def header(a):
     print("")
     print( "----------------------------------------------------------------------------")
@@ -186,22 +181,11 @@ def header(a):
     print("----------------------------------------------------------------------------")
     print("")
 
-debug("sys.platform")
-debug("platform.machine()")
-debug("platform.processor()")
-debug("platform.release()")
-
-uname_tuple = uname()
-debug("uname_tuple")
-UNAME = uname_tuple[0].lower()
-UNAME_P = platform.processor().lower()
-UNAME_M = uname_tuple[4].lower()
-UNAME_R = uname_tuple[2].lower()
-
-debug("UNAME")
-debug("UNAME_M")
-debug("UNAME_P")
-debug("UNAME_R")
+UNameTuple = uname()
+UName = UNameTuple[0].lower()
+UNameArchP = platform.processor().lower()
+UNameArchM = UNameTuple[4].lower()
+UNameRevision = UNameTuple[2].lower()
 
 #-----------------------------------------------------------------------------
 # set some defaults
@@ -291,9 +275,9 @@ def strip_exe(a):
 Target = getenv("CM3_TARGET") or getenv("TARGET") or ""
 OSType = getenv("CM3_OSTYPE") or getenv("M3OSTYPE") or ""
 
-if (UNAME.startswith("windows")
-        or UNAME.startswith("winnt")
-        or UNAME.startswith("cygwin")
+if (UName.startswith("windows")
+        or UName.startswith("winnt")
+        or UName.startswith("cygwin")
         or Target.startswith("NT386")
     ):
 
@@ -312,46 +296,46 @@ if (UNAME.startswith("windows")
         def strip_exe(a):
             pass
 
-elif (UNAME.startswith("freebsd")):
+elif (UName.startswith("freebsd")):
 
-    if (UNAME_M == "i386"):
-        if (UNAME_R.startswith("1")):
+    if (UNameArchM == "i386"):
+        if (UNameRevision.startswith("1")):
             Target = "FreeBSD"
-        elif (UNAME_R.startswith("2")):
+        elif (UNameRevision.startswith("2")):
             Target = "FreeBSD2"
-        elif (UNAME_R.startswith("3")):
+        elif (UNameRevision.startswith("3")):
             Target = "FreeBSD3"
-        elif (UNAME_R.startswith("4")):
+        elif (UNameRevision.startswith("4")):
             Target = "FreeBSD4"
         else:
             Target = "FreeBSD4"
     else:
         Target = "FBSD_ALPHA"
 
-elif (UNAME.startswith("darwin")):
+elif (UName.startswith("darwin")):
 
     # detect the m3 platform (Darwin runs on ppc and ix86)
-    if (UNAME_P.startswith("powerpc")):
+    if (UNameArchP.startswith("powerpc")):
         Target = "PPC_DARWIN"
-    elif (re.match("i[3456]86", UNAME_P)):
+    elif (re.match("i[3456]86", UNameArchP)):
         Target = "I386_DARWIN"
     GMAKE = getenv("GMAKE") or "make"
 
-elif (UNAME.startswith("sunos")):
+elif (UName.startswith("sunos")):
 
     Target = "SOLgnu"
     #Target = "SOLsun"
 
-elif (UNAME.startswith("linux")):
+elif (UName.startswith("linux")):
 
     GMAKE = getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-    if (UNAME_M == "ppc"):
+    if (UNameArchM == "ppc"):
         Target = "PPC_LINUX"
     else:
         Target = "LINUXLIBC6"
 
-elif (UNAME.startswith("netbsd")):
+elif (UName.startswith("netbsd")):
 
     GMAKE = getenv("GMAKE") or "make"
     Target = "NetBSD2_i386" # only arch/version combination supported yet
@@ -388,15 +372,6 @@ if (not getenv("STAGE")):
         STAGE = "c:/tmp/cm3stage"
 
 #-----------------------------------------------------------------------------
-# debug output
-
-debug("Root")
-debug("M3GDB")
-debug("OSType")
-debug("Target")
-debug("GCC_BACKEND")
-debug("GMAKE")
-debug("EXE")
 
 # define build and ship programs for Critical Mass Modula-3
 
@@ -692,23 +667,23 @@ def _FilterPackage(Package):
             "NetBSD2_i386" : True
             }.get(Target, False),
 
-        "m3objfile": CM3_ALL or OSType == "WIN32",
-        "mklib": CM3_ALL or OSType == "WIN32",
-        "fix_nl": CM3_ALL or OSType == "WIN32",
-        "libdump": CM3_ALL or OSType == "WIN32",
-        "import-libs": CM3_ALL or OSType == "WIN32",
+        "m3objfile": BuildAll or OSType == "WIN32",
+        "mklib": BuildAll or OSType == "WIN32",
+        "fix_nl": BuildAll or OSType == "WIN32",
+        "libdump": BuildAll or OSType == "WIN32",
+        "import-libs": BuildAll or OSType == "WIN32",
 
-        "tcl": CM3_ALL or HAVE_TCL,
-        "udp": CM3_ALL or OSType == "POSIX",
-        "tapi": CM3_ALL or OSType == "WIN32",
-        "serial": CM3_ALL or HAVE_SERIAL,
+        "tcl": BuildAll or HAVE_TCL,
+        "udp": BuildAll or OSType == "POSIX",
+        "tapi": BuildAll or OSType == "WIN32",
+        "serial": BuildAll or HAVE_SERIAL,
 
-        "X11R4": CM3_ALL or OSType != "WIN32",
-        "showthread": CM3_ALL or OSType != "WIN32",
-        "pkl-fonts": CM3_ALL or OSType != "WIN32",
-        "juno-machine": CM3_ALL or OSType != "WIN32",
-        "juno-compiler": CM3_ALL or OSType != "WIN32",
-        "juno-app": CM3_ALL or OSType != "WIN32",
+        "X11R4": BuildAll or OSType != "WIN32",
+        "showthread": BuildAll or OSType != "WIN32",
+        "pkl-fonts": BuildAll or OSType != "WIN32",
+        "juno-machine": BuildAll or OSType != "WIN32",
+        "juno-compiler": BuildAll or OSType != "WIN32",
+        "juno-app": BuildAll or OSType != "WIN32",
 
         "m3back": not GCC_BACKEND,
         "m3staloneback": not GCC_BACKEND,
