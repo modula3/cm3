@@ -1,6 +1,7 @@
 #! /usr/bin/env python
-# $Id: do-pkg.py,v 1.11 2008-01-07 09:44:50 jkrell Exp $
+# $Id: do-pkg.py,v 1.12 2008-01-14 03:30:38 jkrell Exp $
 
+import os.path
 import sys
 import pylib
 

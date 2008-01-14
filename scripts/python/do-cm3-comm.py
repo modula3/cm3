@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-# $Id: do-cm3-comm.py,v 1.2 2008-01-07 09:44:50 jkrell Exp $
+# $Id: do-cm3-comm.py,v 1.3 2008-01-14 03:30:38 jkrell Exp $
 
 from pylib import *
 import sys
+import os.path
 
 DoPackage(sys.argv, [
     "tcp",
