@@ -114,7 +114,7 @@ def CopyCompiler(From, To):
     ToBin = os.path.join(To, "bin")
     CreateDirectory(ToBin)
     CopyFile           (os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile           (GetConfig(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
+    CopyFile           (GetConfigForDistribution(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
     CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
     if (os.name == "nt"):
         CopyFileIfExist(os.path.join(FromBin, "cm3.pdb"         ), ToBin) or FatalError()
@@ -401,10 +401,9 @@ else:
 
 MakeArchives()
 
-print("%s: Success." % os.path.basename(sys.argv[0]))
 for a in glob.glob(os.path.join(STAGE, "*")):
     if (a and os.path.isfile(a)):
         print("Output is " + a)
 print("Much intermediate state remains in " + STAGE)
+print("%s: Success." % os.path.basename(sys.argv[0]))
 sys.exit(0)
-
