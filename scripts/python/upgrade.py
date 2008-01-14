@@ -61,6 +61,7 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # We do this now but keep backups of the old ones. (not yet)
 #
 ShipCompiler() or sys.exit(1)
+CopyConfigForDevelopment() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without
