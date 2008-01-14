@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.19 2008-01-14 05:01:53 jkrell Exp $
+# $Id: pylib.py,v 1.20 2008-01-14 05:27:33 jkrell Exp $
 
 import os
 import os.path
@@ -1353,20 +1353,6 @@ GenericCommand:
 
     return Success
 
-def GetConfigForDistribution(Root, Target):
-#
-# Favor the config-no-install directory, else fallback to config.
-#
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    b = os.path.join(a, "config-no-install", Target)
-    if (os.path.isfile(b)):
-        return b
-    b = os.path.join(a, "config", Target)
-    return b
-
-def GetConfigForDevelopment(Root, Target):
-    return os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg")
-
 def DeleteFile(a):
     if os.path.isfile(a):
         os.remove(a)
@@ -1393,23 +1379,64 @@ def CopyFileIfExist(From, To):
         return CopyFile(From, To)
     return True
 
+def GetConfigForDistribution():
+#
+# Favor the config-no-install directory, else fallback to config.
+#
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+    b = os.path.join(a, "config-no-install", Target)
+    if (os.path.isfile(b)):
+        return b
+    b = os.path.join(a, "config", Target)
+    return b
+
+def GetConfigForDevelopment():
+    return os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg")
+
+def CopyConfigForDevelopment():
+    CopyFile(GetConfigForDevelopment(), os.path.join(InstallRoot, "bin", "cm3.cfg")) or FatalError()
+    return True
+
+def CopyConfigForDistribution(To):
+    CopyFile(GetConfigForDistribution(), os.path.join(To, "bin", "cm3.cfg")) or FatalError()
+    return True
+
+def _CopyCompiler(From, To):
+    CreateDirectory(To)
+    CopyFile(os.path.join(From, "cm3" + EXE), To) or FatalError()
+    CopyFileIfExist(os.path.join(From, "cm3cg" + EXE), To) or FatalError()
+    CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError()
+    return True
+
 def ShipCompiler():
     #
     # The compiler has trouble shipping itself currently because it in use.
-    # This is easily dealt with on NT by moving it away to a unique location, MoveFileEx to delete (admin-only).
-    # Do it manually for now.
-    # Experimentation is needed on doing better than MoveFileEx, in particular, an .exe can unmapped, and then
-    # probably deleted, as long as you don't return to it. Or PERHAPS save the memory away and remap it.
     #
-    FromSys = os.path.join(Root, "m3-sys")
-    FromBin = os.path.join(FromSys, "cm3", Target)
-    ToBin = os.path.join(InstallRoot, "bin")
-    CreateDirectory(ToBin)
-    CopyFile(os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile(GetConfigForDevelopment(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
-    CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
-    if (os.name == "nt"):
-        CopyFile       (os.path.join(FromBin, "cm3.pdb"), ToBin) or FatalError()
+    return _CopyCompiler(
+        os.path.join(Root, "m3-sys", "cm3", Target),
+        os.path.join(InstallRoot, "bin"));
+
+def CopyMklib(From, To):
+    #
+    # Copy mklib from one InstallRoot to another, possibly having cleaned out the intermediate directories.
+    #
+    From = os.path.join(From, "bin")
+    To = os.path.join(To, "bin")
+    CreateDirectory(To)
+    if (Target == "NT386"):
+        CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError()
+    else:
+        CopyFileIfExist(os.path.join(From, "mklib" + EXE), To) or FatalError()
+    CopyFileIfExist(os.path.join(From, "mklib.pdb"), To) or FatalError()
+    return True
+
+def CopyCompiler(From, To):
+    #
+    # Copy the compiler from one InstallRoot to another, possibly having cleaned out the intermediate directories.
+    # The config file always comes right out of the source tree.
+    #
+    _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
+    CopyMklib(From, To) or FatalError()
     return True
 
 if __name__ == "__main__":

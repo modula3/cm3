@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.4 2008-01-11 22:32:23 jkrell Exp $
+# $Id: upgrade.py,v 1.5 2008-01-14 05:27:33 jkrell Exp $
 
 import sys
 import pylib
@@ -61,6 +61,7 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # We do this now but keep backups of the old ones. (not yet)
 #
 ShipCompiler() or sys.exit(1)
+CopyConfigForDevelopment() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without

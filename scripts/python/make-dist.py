@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.17 2008-01-14 05:04:21 jkrell Exp $
+# $Id: make-dist.py,v 1.18 2008-01-14 05:27:32 jkrell Exp $
 
 import sys
 import os.path
@@ -104,34 +104,6 @@ def MakeArchives():
     for PackageSetName in ["min", "std", "core", "base"]:
         Zip(PackageSetName)
         TarBzip2(PackageSetName)
-
-def CopyCompiler(From, To):
-    #
-    # Copy the compiler from one InstallRoot to another, possibly having cleaned out the intermediate directories.
-    # The config file always comes right out of the source tree.
-    #
-    FromBin = os.path.join(From, "bin")
-    ToBin = os.path.join(To, "bin")
-    CreateDirectory(ToBin)
-    CopyFile           (os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile           (GetConfigForDistribution(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
-    CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
-    if (os.name == "nt"):
-        CopyFileIfExist(os.path.join(FromBin, "cm3.pdb"         ), ToBin) or FatalError()
-    CopyMklib(From, To) or FatalError()
-    return True
-
-def CopyMklib(From, To):
-    #
-    # Copy mklib from one InstallRoot to another, possibly having cleaned out the intermediate directories.
-    #
-    if (Target == "NT386"):
-        From = os.path.join(From, "bin")
-        To = os.path.join(To, "bin")
-        CreateDirectory(To)
-        CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError()
-        CopyFileIfExist(os.path.join(From, "mklib.pdb"         ), To) or FatalError()
-    return True
 
 def BuildShip(Packages):
     # This is more indirect than necessary.
@@ -299,6 +271,8 @@ def Setup(ExistingCompilerRoot, NewRoot):
         CopyRecursive(InstallRoot_Min, NewRoot) or FatalError()
     else:
         CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
+
+    CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
     reload(pylib) or FatalError()
 
