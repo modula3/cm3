@@ -38,8 +38,8 @@ def Run(a):
     # call %x% >> %STAGE%\logs\%LogCounter%_%~n1.log or (
     #     echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
     #     type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
-	#     echo ERROR: %x% failed
-	#     exit /b 1
+    #     echo ERROR: %x% failed
+    #     exit /b 1
     # )
     # echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
     # type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
