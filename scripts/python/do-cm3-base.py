@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-# $Id: do-cm3-base.py,v 1.9 2008-01-07 12:39:13 jkrell Exp $
+# $Id: do-cm3-base.py,v 1.10 2008-01-14 03:30:38 jkrell Exp $
 
 import sys
 from pylib import *
+import os.path
 
 DoPackage(sys.argv, pylib.PackageSets["base"]) or sys.exit(1)
 
