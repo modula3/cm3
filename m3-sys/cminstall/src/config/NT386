@@ -34,22 +34,20 @@ end
 % the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
-local readonly proc CM3SetInstallRoot() is
-    if defined("INSTALL_ROOT")
-        return
-    end
-    if not equal ($CM3_INSTALL, "")
-        INSTALL_ROOT = $CM3_INSTALL
-        return
-    end
+% INSTALL_ROOT = BEGIN_CONFIG
+%   "Where should CM3 be installed?"
+%     7 %-- user specified install root
+% END_CONFIG
+
+% INSTALL_ROOT = "c:\\cm3"
+
+if not defined("INSTALL_ROOT")
     if not equal ($INSTALLROOT, "")
         INSTALL_ROOT = $INSTALLROOT
-        return
+    else
+        INSTALL_ROOT = (path() & "\\..")
     end
-    INSTALL_ROOT = (path() & SL & "..")
 end
-
-CM3SetInstallRoot()
 
 BIN_INSTALL   = INSTALL_ROOT & "\\bin"          % executables
 LIB_INSTALL   = INSTALL_ROOT & "\\lib"          % libraries
@@ -146,12 +144,14 @@ M3_BACKEND_MODE = "0"
 %  "3"  -- call m3_backend, it produces assembly code
 
 %------------------------------------------------------------------------------
+% This should be built-in.
 
 proc file_exists (a) is
   return not stale (a, a)
 end
 
 %------------------------------------------------------------------------------
+% This should be built-in and it should it not cost a process.
 
 proc rename_file (a, b) is
   exec ("@ren", a, b)
@@ -209,24 +209,6 @@ proc assemble (source, object) is
   return try_exec ("masm386", args)
 end
 
-%------------------------------------------------------------------------------
-
-local readonly proc ConvertLibsToStandalone(imported_libs, shared) is
-    if shared
-        return imported_libs
-    end
-    imports = [ ]
-    foreach f in imported_libs
-        local ff = f & ".sa"
-        if file_exists (ff)
-            imports += ff
-        else
-            imports += f
-        end
-    end
-    return imports
-end
-
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -274,9 +256,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if not equal($USE_MSVCRT, "0")
     entry = "/noentry"
   end
-
-  % not yet tested
-  % imported_libs = ConvertLibsToStandalone(imported_libs, shared)
 
   local link_args = arglist ("@", [ m3_link_flags, "/def:" & def_file,
                                     "/dll", "/out:" & dll_file,
@@ -440,8 +419,6 @@ if not equal($USE_DELAYLOAD, "0")
     ]
 end
 
-%------------------------------------------------------------------------------
-
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local pgm_file = prog & ".exe"
   local manifest_file = pgm_file & ".manifest"
@@ -456,7 +433,17 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     end
   end
 
-  imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+  if not shared
+    imports = []
+    foreach f in imported_libs
+      local ff = f & ".sa"
+      if file_exists (ff)
+        imports += ff
+      else
+        imports += f
+      end
+    end
+  end
 
   local args = arglist ("@", [ "/out:" & pgm_file,
                         entry, m3_link_flags, options, objects, imports ])
