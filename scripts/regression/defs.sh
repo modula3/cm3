@@ -510,7 +510,7 @@ test_m3_all_pkgs()
 
   cd "${WS}/cm3/" || exit 1
 
-  ./scripts/do-cm3-all.sh -k -report build
+  DOSHIP=yes ./scripts/do-cm3-all.sh -k -report build
   res=$?
   
   if [ 0 = "${res}" ]; then

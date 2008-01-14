@@ -63,6 +63,9 @@ if [ -n "S{REPORT}" ]; then
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   R="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.html}"
   ERRS=""
+  REDPKGS=""
+  GREENPKGS=""
+  YELLOWPKGS=""
 fi
 
 if [ -z "$PKG_ACTION" ] ; then
@@ -149,17 +152,18 @@ EOF
 }
 
 write_pkg_report() {
+  res=""
+  errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
+  if [ "$2" = "0" ] ; then
+    echo "<tr class=\"bggreen\">"
+  elif [ "$2" = "2" ] ; then
+    echo "<tr class=\"bgyellow\">"
+  else
+    echo "<tr class=\"bgred\">"
+    ERRS=`printf "${ERRS}${errlines}\\n"`
+    res=`printf "${PKG}${ERRS}\\n"`
+  fi >> "${R}"
   (
-    errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
-
-    if [ "$2" = "0" ] ; then
-      echo "<tr class=\"bggreen\">"
-    elif [ "$2" = "2" ] ; then
-      echo "<tr class=\"bgyellow\">"
-    else
-      echo "<tr class=\"bgred\">"
-      ERRS="${ERRS}${errlines}"
-    fi
     echo "  <td class=\"tl\">$1</td>"
     if [ "$2" = "0" ] ; then
       echo "  <td class=\"tl\">build OK</td>"
@@ -173,6 +177,7 @@ write_pkg_report() {
     echo "  </pre></td>"
     echo "</tr>"
   ) >> "${R}"
+  echo "${ERRS}"
 }
 
 if [ -n "S{REPORT}" ]; then
@@ -193,13 +198,18 @@ for PKG in ${PKGS} ; do
       if grep 'Fatal Error:' "${PKG}/stdout.log" >/dev/null 2>&1; then
         res=1
         OK=""
+        REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
       elif [ "${res}" = "1" ]; then
         OK=""
+        REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
+      else
+        GREENPKGS=`printf "${GREENPKGS}${PKG}\\\\\\n"`
       fi
     else
       touch "${PKG}/stdout.log"
       echo "=== package omitted on this platform ==="
       res=2
+      YELLOWPKGS=`printf "${YELLOWPKGS}${PKG}\\\\\\n"`
     fi
     #deps=`cd "${PKG}" && cm3 -depend | head -1`
   else
@@ -210,7 +220,7 @@ for PKG in ${PKGS} ; do
     #if grep ': imported interface' "${PKG}/stdout.log" >/dev/null 2>&1; then
     #  res=2
     #fi
-    write_pkg_report "${PKG}" $res
+    ERRS=`write_pkg_report "${PKG}" $res`
   fi
   if [ "$res" != "0" ] ; then
     if [ "${KEEP_GOING}" != "yes" ] ; then
@@ -230,9 +240,17 @@ if [ -n "S{REPORT}" ]; then
   report_footer
   if [ -n "${ERRS}" ]; then
     echo "errors:" 1>&2
-    echo "${ERRS}" 1>&2
+    printf "${ERRS}" 1>&2
+    echo ""
+    echo "compilation failed for the following packages:"
+    printf "${REDPKGS}"
   fi
   echo "HTML package report in $R"
+  if [ -n "${DOSHIP}" ]; then
+    WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+    WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
+    scp "${R}" "${WWWDEST}" < /dev/null
+  fi
 fi
 
 [ -n "${OK}" ]
