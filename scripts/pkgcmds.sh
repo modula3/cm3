@@ -169,6 +169,7 @@ GEN_CMDS='
 GEN_OPTS='
   -n                          no action (do not execute anything)
   -k                          keep going (ignore errors if possible)
+  -report                     generate an HTML report during package building
 '
 
 format_one() {
