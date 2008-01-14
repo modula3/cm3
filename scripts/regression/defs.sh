@@ -513,7 +513,6 @@ test_m3_all_pkgs()
   ./scripts/do-cm3-all.sh -k -report build
   res=$?
   
-  echo " >>> test_m3tests error extract:"
   if [ 0 = "${res}" ]; then
     echo " >>> OK test_m3_all_pkgs ${DS} ${WS}"
     echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"

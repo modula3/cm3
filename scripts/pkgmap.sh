@@ -180,6 +180,7 @@ if [ -n "S{REPORT}" ]; then
 fi
 
 M3GDB=yes
+OK=yes
 
 for PKG in ${PKGS} ; do
   echo "=== package ${PKG} ==="
@@ -191,6 +192,9 @@ for PKG in ${PKGS} ; do
       cat "${PKG}/stdout.log"
       if grep 'Fatal Error:' "${PKG}/stdout.log" >/dev/null 2>&1; then
         res=1
+        OK=""
+      elif [ "${res}" = "1" ]; then
+        OK=""
       fi
     else
       touch "${PKG}/stdout.log"
@@ -231,4 +235,4 @@ if [ -n "S{REPORT}" ]; then
   echo "HTML package report in $R"
 fi
 
-[ "${res}" = "0" -a -z "${ERRS}" ]
+[ -n "${OK}" ]
