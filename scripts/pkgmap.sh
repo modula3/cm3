@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.7 2008-01-14 01:24:27 wagner Exp $
+# $Id: pkgmap.sh,v 1.8 2008-01-14 08:17:10 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -60,7 +60,9 @@ while [ -n "$1" ] ; do
 done
 
 if [ -n "S{REPORT}" ]; then
-  R="${HTML_REPORT:-${TMPDIR}/cm3-pkgmap-report-${TARGET}-$$.html}"
+  DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
+  R="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.html}"
+  ERRS=""
 fi
 
 if [ -z "$PKG_ACTION" ] ; then
@@ -148,12 +150,15 @@ EOF
 
 write_pkg_report() {
   (
+    errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
+
     if [ "$2" = "0" ] ; then
       echo "<tr class=\"bggreen\">"
     elif [ "$2" = "2" ] ; then
       echo "<tr class=\"bgyellow\">"
     else
       echo "<tr class=\"bgred\">"
+      ERRS="${ERRS}${errlines}"
     fi
     echo "  <td class=\"tl\">$1</td>"
     if [ "$2" = "0" ] ; then
@@ -164,7 +169,7 @@ write_pkg_report() {
       echo "  <td class=\"tl\">build failed</td>"
     fi
     echo "  <td class=\"small\"><pre>"
-      egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"
+    echo "$errlines"
     echo "  </pre></td>"
     echo "</tr>"
   ) >> "${R}"
@@ -219,5 +224,11 @@ done
 
 if [ -n "S{REPORT}" ]; then
   report_footer
+  if [ -n "${ERRS}" ]; then
+    echo "errors:" 1>&2
+    echo "${ERRS}" 1>&2
+  fi
   echo "HTML package report in $R"
 fi
+
+[ "${res}" = "0" -a -z "${ERRS}" ]
