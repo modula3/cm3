@@ -354,6 +354,9 @@ GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
+os.environ["CM3_TARGET"] = Target;
+os.environ["CM3_ROOT"] = Root;
+
 #-----------------------------------------------------------------------------
 # elego customizations
 #
