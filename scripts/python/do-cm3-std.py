@@ -7,7 +7,7 @@ import sys
 import os.path
 
 if not SearchPath("m3bundle"):
-    DoPackage(["", "buildship", "m3bundle"])
+    DoPackage(sys.argv, ["m3bundle"])
 
 DoPackage(sys.argv, pylib.PackageSets["std"]) or sys.exit(1)
 

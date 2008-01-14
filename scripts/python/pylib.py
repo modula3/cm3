@@ -17,8 +17,10 @@ if env_OS == "Windows_NT":
     def uname():
         PROCESSOR_ARCHITECTURE = os.getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+    DefaultInstall = "c:/cm3"
 else:
     from os import uname
+    DefaultInstall = "/usr/local/cm3"
 
 PackageDB = None
 
@@ -128,7 +130,6 @@ Variables = [
     "SRC_Ship",
 
     "RealClean",
-    #"IGNORE_MISS",
     "HAVE_TCL",
     "HAVE_SERIAL",
     "OMIT_GCC",
@@ -279,7 +280,7 @@ def SearchPath(name, paths = os.getenv("PATH")):
 CM3_INSTALL = (
     os.getenv("CM3_INSTALL")
     or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
-    or "/usr/local/cm3"
+    or DefaultInstall # c:/cm3 or /usr/local/cm3
     )
 
 debug("CM3_INSTALL")
@@ -307,7 +308,7 @@ def strip_exe(a):
     os.system("strip " + a)
 
 #-----------------------------------------------------------------------------
-# evaluate uname ermation
+# evaluate uname information
 
 #
 # This is all a bit wonky.
@@ -316,8 +317,8 @@ def strip_exe(a):
 # to get other things correct such as M3OSTYPE
 #
 
-Target = os.getenv("TARGET") or ""
-CM3_OSTYPE = "POSIX"
+Target = os.getenv("CM3_TARGET") or os.getenv("TARGET") or ""
+M3OSTYPE = os.getenv("CM3_OSTYPE") or os.getenv("M3OSTYPE") or ""
 
 if (UNAME.startswith("windows")
         or UNAME.startswith("winnt")
@@ -325,16 +326,16 @@ if (UNAME.startswith("windows")
         or Target.startswith("NT386")
     ):
 
-    CM3_TARGET = "NT386GNU"
-    CM3_OSTYPE = "WIN32"
+    M3OSTYPE = M3OSTYPE or "WIN32"
     EXE = ".exe"
     Q = ""
     HAVE_SERIAL = True
     GMAKE = os.getenv("GMAKE") or "make"
-    CM3_INSTALL = "c:/cm3"
 
-    if not Target.startswith("NT386GNU"):
-
+    if Target.startswith("NT386GNU"):
+        Target = Target or "NT386GNU"
+    else:
+        Target = Target or "NT386"
         CM3_GCC_BACKEND = False
 
         def strip_exe(a):
@@ -344,45 +345,45 @@ elif (UNAME.startswith("freebsd")):
 
     if (UNAME_M == "i386"):
         if (UNAME_R.startswith("1")):
-            CM3_TARGET = "FreeBSD"
+            Target = "FreeBSD"
         elif (UNAME_R.startswith("2")):
-            CM3_TARGET = "FreeBSD2"
+            Target = "FreeBSD2"
         elif (UNAME_R.startswith("3")):
-            CM3_TARGET = "FreeBSD3"
+            Target = "FreeBSD3"
         elif (UNAME_R.startswith("4")):
-            CM3_TARGET = "FreeBSD4"
+            Target = "FreeBSD4"
         else:
-            CM3_TARGET = "FreeBSD4"
+            Target = "FreeBSD4"
     else:
-        CM3_TARGET = "FBSD_ALPHA"
+        Target = "FBSD_ALPHA"
 
 elif (UNAME.startswith("darwin")):
 
     # detect the m3 platform (Darwin runs on ppc and ix86)
     if (UNAME_P.startswith("powerpc")):
-        CM3_TARGET = "PPC_DARWIN"
+        Target = "PPC_DARWIN"
     elif (re.match("i[3456]86", UNAME_P)):
-        CM3_TARGET = "I386_DARWIN"
+        Target = "I386_DARWIN"
     GMAKE = os.getenv("GMAKE") or "make"
 
 elif (UNAME.startswith("sunos")):
 
-    CM3_TARGET = "SOLgnu"
-    #CM3_TARGET = "SOLsun"
+    Target = "SOLgnu"
+    #Target = "SOLsun"
 
 elif (UNAME.startswith("linux")):
 
     GMAKE = os.getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if (UNAME_M == "ppc"):
-        CM3_TARGET = "PPC_LINUX"
+        Target = "PPC_LINUX"
     else:
-        CM3_TARGET = "LINUXLIBC6"
+        Target = "LINUXLIBC6"
 
 elif (UNAME.startswith("netbsd")):
 
     GMAKE = os.getenv("GMAKE") or "make"
-    CM3_TARGET = "NetBSD2_i386" # only arch/version combination supported yet
+    Target = "NetBSD2_i386" # only arch/version combination supported yet
 
 else:
 
@@ -401,13 +402,13 @@ Root = (Root or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 InstallRoot = (InstallRoot or CM3_INSTALL)
 
 M3GDB = (M3GDB or CM3_GDB)
-M3OSTYPE = (M3OSTYPE or CM3_OSTYPE)
-Target = (Target or CM3_TARGET)
+M3OSTYPE = (M3OSTYPE or "POSIX")
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
-CM3Root = Root.replace("\\", "/")
+CM3Root = Root.replace("\\", os.path.sep)
+CM3Root = Root.replace("/", os.path.sep)
 
 #-----------------------------------------------------------------------------
 # elego customizations
