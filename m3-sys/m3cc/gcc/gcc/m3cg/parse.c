@@ -5038,7 +5038,7 @@ m3_init (void)
       input_filename = "stdin";
     }
   else
-    finput = fopen (input_filename, "rb");
+    finput = fopen (input_filename, "r");
   if (finput == 0)
     {
       fprintf (stderr, "Unable to open input file %s\n", input_filename);
