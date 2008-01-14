@@ -144,7 +144,6 @@ if (not STAGE):
     tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
     CreateDirectory(tempfile.tempdir)
     STAGE = tempfile.mkdtemp()
-    debug("STAGE")
 
 # doesn't work yet
 #Logs = os.path.join(STAGE, "logs")
@@ -163,10 +162,10 @@ InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 # For now though, we only build min.
 #
 def FormInstallRoot(PackageSetName):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + M3OSTYPE + "-" + Target + "-" + CM3VERSION)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Target + "-" + CM3VERSION)
 
 def FormArchiveName(PackageSetName, Suffix):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + M3OSTYPE + "-" + Target + "-" + CM3VERSION + Suffix)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Target + "-" + CM3VERSION + Suffix)
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_Standard = FormInstallRoot("std")
