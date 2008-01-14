@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-cm3-caltech-parser.py,v 1.4 2008-01-14 04:51:18 jkrell Exp $
+# $Id: do-cm3-caltech-parser.py,v 1.5 2008-01-14 04:52:38 jkrell Exp $
 
 from pylib import *
 import sys
