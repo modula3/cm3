@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # $Id$
 
+import os.path
 import sys
 import pylib
 

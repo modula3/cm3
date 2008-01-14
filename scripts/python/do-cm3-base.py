@@ -3,6 +3,7 @@
 
 import sys
 from pylib import *
+import os.path
 
 DoPackage(sys.argv, pylib.PackageSets["base"]) or sys.exit(1)
 

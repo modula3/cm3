@@ -3,6 +3,7 @@
 
 from pylib import *
 import sys
+import os.path
 
 DoPackage(sys.argv, [
     "X11R4",

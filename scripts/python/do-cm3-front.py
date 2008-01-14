@@ -3,6 +3,7 @@
 
 import sys
 from pylib import *
+import os.path
 
 DoPackage(sys.argv, [
     "m3core",
