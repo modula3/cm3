@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.16 2008-01-14 05:01:53 jkrell Exp $
+# $Id: make-dist.py,v 1.17 2008-01-14 05:04:21 jkrell Exp $
 
 import sys
 import os.path
@@ -38,8 +38,8 @@ def Run(a):
     # call %x% >> %STAGE%\logs\%LogCounter%_%~n1.log or (
     #     echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
     #     type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
-	#     echo ERROR: %x% failed
-	#     exit /b 1
+    #     echo ERROR: %x% failed
+    #     exit /b 1
     # )
     # echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
     # type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
