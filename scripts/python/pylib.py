@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.18 2008-01-11 22:51:36 jkrell Exp $
+# $Id: pylib.py,v 1.19 2008-01-14 05:01:53 jkrell Exp $
 
 import os
 import os.path
@@ -35,12 +35,6 @@ Variables = [
     "CM3",
 
     #
-    # where to look for tar.exe, gzip.exe when building Win32 distributions
-    # This should go away and we should just use zip.exe from that path.
-    #
-    "CM3BINSEARCHPATH",
-
-    #
     # the root of the source code (Root), but with
     # backward slashes doubled,
     # e.g. c:\\dev2\\cm3 or /dev2/cm3
@@ -50,12 +44,6 @@ Variables = [
     "CM3Root",
 
     "CM3VERSION",
-
-    #
-    # used in making distribution
-    #
-    "DEV_BIN",
-    "DEV_LIB",
 
     #
     # an empty string for Posix, ".exe" for Win32
@@ -97,37 +85,10 @@ Variables = [
     "Root",
 
     #
-    # a slash to use in file paths, e.g. \ or /
-    # Forward slashes often work on Win32 so
-    # this can probably go away.
-    #
-    "SL",
-
-    #
     # A temporary "staging" location? For
     # building distributions?
     #
     "STAGE",
-
-    #
-    # directory that contains kernel32.lib, etc. that
-    # are included in the Win32 distributation
-    # This can go away.
-    #
-    "SYSLIBDIR",
-
-    #
-    # files in SYSLIBDIR to include in the Win32 distribution
-    # kernel32.lib etc.
-    # This can go away.
-    #
-    "SYSLIBS",
-
-    #
-    # tar to use when building distributions
-    # This can go away and just use "tar" from $PATH
-    #
-    "TAR",
 
     #
     # very important -- what operating system/processor architecture
@@ -327,13 +288,7 @@ CM3 = CM3 or ExeName("cm3")
 M3Build = M3Build or ExeName("m3build")
 M3Ship = M3Ship or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
-SL = "/" # path slash, forward or backward
 Q = "'"
-
-SYSLIBDIR = os.path.join(CM3_INSTALL, "lib")
-XDEV_LIB = ""
-XDEV_BIN = ""
-TAR = "tar"
 
 #-----------------------------------------------------------------------------
 # some localization functions
@@ -348,12 +303,7 @@ def find_file(file, dirs):
 #-----------------------------------------------------------------------------
 # abstraction functions
 
-def cygpath(a, b):
-    #print("cygpath:return b")
-    return b
-
 def strip_exe(a):
-    #print("strip_exe:os.system(\"strip " + a + "\")")
     os.system("strip " + a)
 
 #-----------------------------------------------------------------------------
@@ -375,53 +325,19 @@ if (UNAME.startswith("windows")
         or Target.startswith("NT386")
     ):
 
-    if (Target.startswith("NT386GNU")):
+    CM3_TARGET = "NT386GNU"
+    CM3_OSTYPE = "WIN32"
+    EXE = ".exe"
+    Q = ""
+    HAVE_SERIAL = True
+    GMAKE = os.getenv("GMAKE") or "make"
+    CM3_INSTALL = "c:/cm3"
 
-        CM3_TARGET = "NT386GNU"
-        GMAKE = os.getenv("GMAKE") or "make"
+    if not Target.startswith("NT386GNU"):
 
-        def cygpath(a, b):
-            #print("cygpath:os.popen(/usr/bin/cygpath " + a + " " + b + ").read().replace(\"\\n\", \"\")")
-            #return b
-            return os.popen("/usr/bin/cygpath " + a + " " + b).read().replace("\n", "")
-
-    else:
-
-        CM3_OSTYPE = "WIN32"
-        CM3_TARGET = "NT386"
-        CM3_INSTALL = "c:/cm3"
         CM3_GCC_BACKEND = False
-        HAVE_SERIAL = True
-        EXE = ".exe"
-        SL = "\\"
-        Q = ""
-        SYSLIBS =  ["ADVAPI32.LIB", "GDI32.LIB", "KERNEL32.LIB", "ODBC32.LIB"]
-        SYSLIBS += [" OPENGL32.LIB", "WSOCK32.LIB", "COMDLG32.LIB"]
-        SYSLIBS += [" GLU32.LIB", "NETAPI32.LIB", "ODBCCP32.LIB", "USER32.LIB"]
-        L =  ["c:/cm3/bin", "d:/cm3/bin e:/cm3/bin", "c:/reactor5/bin", "d:/reactor5/bin"]
-        L += ["e:/reactor5/bin", "c:/reactor/bin", "d:/reactor/bin"]
-        L += ["e:/reactor/bin", "/usr/local/cm3/bin", "/usr/local/reactor/bin"]
-        L += ["/usr/cm3/bin", "/usr/reactor/bin"]
-        CM3BINSEARCHPATH = L
-        f = find_file("KERNEL32.LIB", L)
-        if (f):
-            SYSLIBDIR = os.path.dirname(f)
-        else:
-            SYSLIBDIR = "unknown"
-
-        D = ["c:/msdev/bin", "d:/msdev/bin", "e:/msdev/bin", "f:/msdev/bin", "g:/msdev/bin"]
-        f = find_file("cl.exe", D)
-        if (f):
-            XDEV_BIN = os.path.dirname(f)
-            XDEV_LIB = os.path.join(XDEV_BIN, "lib")
-
-        f = "/usr/bin/tar.exe"
-        if (os.path.isfile(f)):
-            TAR = f
-        GMAKE = os.getenv("GMAKE") or "make"
 
         def strip_exe(a):
-            #print("strip_exe:pass")
             pass
 
 elif (UNAME.startswith("freebsd")):
@@ -473,9 +389,6 @@ else:
     # more need to be added here, I haven't got all the platform info ready
     pass
 
-DEV_BIN = (DEV_BIN or XDEV_BIN)
-DEV_LIB = (DEV_LIB or XDEV_LIB)
-
 #-----------------------------------------------------------------------------
 # define the exported values
 
@@ -494,10 +407,7 @@ GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
-if (M3OSTYPE == "WIN32"):
-    CM3Root = cygpath("-w", Root).replace("\\", "\\\\")
-else:
-    CM3Root = Root
+CM3Root = Root.replace("\\", "/")
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -528,12 +438,6 @@ debug("InstallRoot")
 debug("PKGSDB")
 debug("GMAKE")
 debug("EXE")
-debug("SL")
-debug("SYSLIBDIR")
-debug("SYSLIBS")
-debug("DEV_BIN")
-debug("DEV_LIB")
-debug("TAR")
 debug("CM3Root")
 
 # define build and ship programs for Critical Mass Modula-3
@@ -687,7 +591,7 @@ def MakePackageDB():
                 return
             if (not os.path.isfile(os.path.join(Directory, "m3makefile"))):
                 return
-            Result.append(Directory[len(Root) + 1:-4].replace(os.path.sep, "/") + "\n")
+            Result.append(Directory[len(Root) + 1:-4].replace('\\', "/") + "\n")
 
         print("making " + PKGSDB + ".. (slow but rare)")
         Result = [ ]
@@ -711,24 +615,25 @@ def ReadPackageDB():
     global PackageDB
     PackageDB = (PackageDB or
             map(
-                lambda(a): a.replace("\n", "").replace("/", os.path.sep),
+                lambda(a): a.replace("\n", "").replace('\\', '/'),
                 open(PKGSDB)
                 ))
 
 def IsPackageDefined(a):
+    a = a.replace('\\', '/')
     ReadPackageDB()
-    a = (SL + a)
+    a = ('/' + a)
     for i in PackageDB:
         if i.endswith(a):
             return True
 
 def GetPackagePath(a):
+    a = a.replace('\\', '/')
     ReadPackageDB()
-    b = (SL + a)
+    b = ('/' + a)
     for i in PackageDB:
         if (i.endswith(b)):
-            #print("pkgpath(%(a)s returning %(i)s (%(b)s)" % vars())
-            return i
+            return i.replace('/', os.path.sep)
     File = __file__
     sys.stderr.write("%(File)s: package %(a)s not found (%(b)s)\n" % vars())
 
@@ -737,22 +642,24 @@ def ListPackages(pkgs):
     Result = [ ]
     if pkgs:
         for pkg in pkgs:
+            pkg = pkg.replace('\\', '/')
             # remove Root from the start
-            if (pkg.startswith(Root + SL)):
+            if (pkg.startswith(Root + '/')):
                 pkg = pkg[len(Root) + 1:]
                 #print("1 " + pkg)
             # if no slashes, then need a leading slash
-            if (pkg.find(SL) == -1):
-                pkg = (SL + pkg)
+            if (pkg.find('/') == -1):
+                pkg = ('/' + pkg)
                 #print("2 " + pkg)
             for q in PackageDB:
+                q = q.replace('\\', '/')
                 if (q.find(pkg) != -1):
                     #print("3 " + q)
                     Result.append(q)
                     break
     else:
         Result = PackageDB
-    return map(lambda(a): (Root + SL + a), Result)
+    return map(lambda(a): (Root + '/' + a), Result)
 
 def _Run(NoAction, Actions, PackageDirectory):
 
@@ -762,7 +669,7 @@ def _Run(NoAction, Actions, PackageDirectory):
         return 0
 
     PreviousDirectory = os.getcwd()
-    os.chdir(PackageDirectory)
+    os.chdir(PackageDirectory.replace('/', os.path.sep))
 
     for a in Actions:
         Result = os.system(a)
@@ -1446,7 +1353,7 @@ GenericCommand:
 
     return Success
 
-def GetConfig(Root, Target):
+def GetConfigForDistribution(Root, Target):
 #
 # Favor the config-no-install directory, else fallback to config.
 #
@@ -1456,6 +1363,9 @@ def GetConfig(Root, Target):
         return b
     b = os.path.join(a, "config", Target)
     return b
+
+def GetConfigForDevelopment(Root, Target):
+    return os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg")
 
 def DeleteFile(a):
     if os.path.isfile(a):
@@ -1496,7 +1406,7 @@ def ShipCompiler():
     ToBin = os.path.join(InstallRoot, "bin")
     CreateDirectory(ToBin)
     CopyFile(os.path.join(FromBin, "cm3" + EXE), ToBin) or FatalError()
-    CopyFile(GetConfig(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
+    CopyFile(GetConfigForDevelopment(Root, Target), os.path.join(ToBin, "cm3.cfg")) or FatalError()
     CopyFileIfExist(os.path.join(FromBin, "cm3cg" + EXE), ToBin) or FatalError()
     if (os.name == "nt"):
         CopyFile       (os.path.join(FromBin, "cm3.pdb"), ToBin) or FatalError()
@@ -1599,5 +1509,4 @@ if __name__ == "__main__":
 
     pkgmap(["-c"])
 
-    cygpath("a", "b")
     strip_exe("c")
