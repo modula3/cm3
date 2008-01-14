@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.18 2008-01-14 05:27:32 jkrell Exp $
+# $Id: make-dist.py,v 1.19 2008-01-14 06:34:19 jkrell Exp $
 
 import sys
 import os.path
@@ -51,7 +51,8 @@ def MakeArchive(PackageSetName, Command, Extension):
     InstallRoot = FormInstallRoot(PackageSetName)
     SymbolsRoot = FormInstallRoot(PackageSetName) + "-symbols"
 
-    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), InstallRoot) or FatalError()
+    for a in glob.glob(os.path.join(Root, "COPYRIGHT*")):
+        CopyFile(a, InstallRoot) or FatalError()
 
     #
     # delete .m3 and .m3web files, they aren't needed

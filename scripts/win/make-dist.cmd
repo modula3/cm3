@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.25 2008-01-11 22:57:38 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.26 2008-01-14 06:34:19 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -51,10 +51,8 @@ set INSTALLROOT_CORE=%STAGE%\core\cm3
 set INSTALLROOT_BASE=%STAGE%\base\cm3
 
 @rem for incremental runs to recover at this step..
-if /i "%1" == "goto_tar" shift & goto :TarGzip
 if /i "%1" == "goto_min" shift & goto :min
 if /i "%1" == "goto_zip" shift & goto :Zip
-if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
 
 @rem ------------------------------------------------------------------------------------------------------------------------
 call :Echo build new compiler with old compiler and old runtime (%INSTALLROOT_PREVIOUS% to %INSTALLROOT_COMPILER_WITH_PREVIOUS%)
@@ -74,7 +72,6 @@ set P=^
  m3front ^
  m3quake ^
  cm3 ^
- cminstall ^
  mklib
 
 setlocal
@@ -110,10 +107,6 @@ set PATH=%INSTALLROOT_COMPILER_WITH_PREVIOUS%\bin;%PATH%
 call :RealClean || call :ReportFatalError || exit /b 1
 call :BuildShip || call :ReportFatalError || exit /b 1
 call :ShipCompiler || call :ReportFatalError || exit /b 1
-@rem
-@rem save cminstall.exe away for later
-@rem
-call :CopyFile %ROOT%\m3-sys\cminstall\%TARGET%\cminstall.exe %STAGE%\cminstall.exe || call :ReportFatalError || exit /b 1
 call :RealClean || call :ReportFatalError || exit /b 1
 
 endlocal
@@ -190,54 +183,24 @@ rem echo INSTALLROOT_STD=%INSTALLROOT_STD%
 rem echo INSTALLROOT_CORE=%INSTALLROOT_CORE%
 rem echo INSTALLROOT_BASE=%INSTALLROOT_BASE%
 
-goto :Zip
-
-echo now need to tar/gzip it up
-rem we want tar.exe, gzip.exe, cygwin.dll, cminstall.exe, copyright-cmass, and system.tgz, tar/gziped
-rem into cm3-min-win32-nt386-<version>.tgz
-rem bzip2 would be preferable for a smaller size
-
-:TarGzip
-
-pushd %INSTALLROOT_MIN%
-if not exist symbols mkdir symbols
-for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
-if exist system.tgz del system.tgz
-tar cvzf system.tgz bin lib pkg || call :ReportFatalError || exit /b 1
-call :CopyFile %STAGE%\cminstall.exe . || call :ReportFatalError || exit /b 1
-call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || call :ReportFatalError || exit /b 1
-call :CopyFile %ROOT%\tools\win32\tar.exe . || call :ReportFatalError || exit /b 1
-call :CopyFile %ROOT%\tools\win32\gzip.exe . || call :ReportFatalError || exit /b 1
-call :CopyFile %ROOT%\tools\win32\cygwin.dll . || call :ReportFatalError || exit /b 1
-if exist cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz del cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz
-tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz cminstall.exe COPYRIGHT-CMASS system.tgz tar.exe gzip.exe cygwin.dll || call :ReportFatalError || exit /b 1
-tar cvzf cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz symbols || call :ReportFatalError || exit /b 1
-popd
-
-echo Success.
-echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tgz
-echo Output is %INSTALLROOT_MIN%\cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tgz
-echo Lots of intermediate state remains in %STAGE%.
-
-goto :eof
-
 :Zip
 
 pushd %INSTALLROOT_MIN%
-call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || call :ReportFatalError || exit /b 1
+del COPYRIGHT* 2>nul
+copy %ROOT%\COPYRIGHT* . || call :ReportFatalError || exit /b 1
 cd ..
 if not exist symbols mkdir symbols
 for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
 
 del *.bz2 *.zip *.exe *.tar
 
+rem for source debugging?
 del /s *.m3
+del /s *.c
+del /s *.h
 del /s .m3web
 rem Can be useful for bootstrapping standalone cm3.exe in future.
 rem del /s *.lib.sa
-
-rem set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tar.bz2
-rem tar cfvj %symbols% symbols
 
 set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.zip
 call :RunZip -9 -r -D -X %symbols% symbols
@@ -252,25 +215,7 @@ call :RunZip -9 -r -D -X %zip% cm3
 @rem
 
 popd
-goto :done
 
-:TarBzip2
-
-pushd %INSTALLROOT_MIN%
-call :CopyFile %ROOT%\m3-sys\COPYRIGHT-CMASS . || call :ReportFatalError || exit /b 1
-cd ..
-if not exist symbols mkdir symbols
-for /f %%a in ('dir /s/b/a-d *.pdb') do move %%a symbols
-set symbols=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%-symbols.tar.bz2
-set zip=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%.tar.bz2
-if exist %zip% del %zip%
-if exist %symbols% del %symbols%
-tar cfvj %symbols% symbols
-tar cfvj %zip% cm3
-popd
-goto :done
-
-:done
 echo Success.
 if defined exe if exist %STAGE%\min\%exe% echo Output is %STAGE%\min\%exe%
 echo Output is %STAGE%\min\%zip%
@@ -295,7 +240,7 @@ goto :eof
     echo.>> %STAGE%\logs\%LogCounter%_%~n1.log
     echo %x% >> %STAGE%\logs\%LogCounter%_%~n1.log
     echo %x% ^>^> %STAGE%\logs\%LogCounter%_%~n1.log
-    call %x% >> %STAGE%\logs\%LogCounter%_%~n1.log || (
+    call %x% >> %STAGE%\logs\%LogCounter%_%~n1.log 2>&1 || (
         echo %TIME%>>%STAGE%\logs\%LogCounter%_%~n1.log
         type %STAGE%\logs\%LogCounter%_%~n1.log >> %STAGE%\logs\all.log
 	    echo ERROR: %x% failed
@@ -314,7 +259,7 @@ goto :eof
     @rem
     call :CreateDirectory %INSTALLROOT%
     call :CopyFile        %ROOT%\m3-sys\cm3\%TARGET%\cm3.exe %INSTALLROOT%\bin\cm3.exe || call :ReportFatalError || exit /b 1
-    call :CopyFile        %ROOT%\m3-sys\cm3\%TARGET%\cm3.pdb %INSTALLROOT%\bin\cm3.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFileIfExist %ROOT%\m3-sys\cm3\%TARGET%\cm3.pdb %INSTALLROOT%\bin\cm3.pdb || call :ReportFatalError || exit /b 1
     call :CopyFile        %ROOT%\m3-sys\cminstall\src\config\%TARGET% %INSTALLROOT%\bin\cm3.cfg || call :ReportFatalError || exit /b 1
     goto :eof
 
@@ -325,7 +270,7 @@ goto :eof
     @rem
     call :CreateDirectory %2\bin
     call :CopyFile        %1\bin\cm3.exe %2\bin\cm3.exe || call :ReportFatalError || exit /b 1
-    call :CopyFile        %1\bin\cm3.pdb %2\bin\cm3.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFileIfExist %1\bin\cm3.pdb %2\bin\cm3.pdb || call :ReportFatalError || exit /b 1
     call :CopyFile       %ROOT%\m3-sys\cminstall\src\config\%TARGET% %2\bin\cm3.cfg || call :ReportFatalError || exit /b 1
     call :CopyMkLib %1 %2 || call :ReportFatalError || exit /b 1
     goto :eof
@@ -336,7 +281,7 @@ goto :eof
     @rem
     call :CreateDirectory %2\bin
     call :CopyFile        %1\bin\mklib.exe %2\bin\mklib.exe || call :ReportFatalError || exit /b 1
-    call :CopyFile        %1\bin\mklib.pdb %2\bin\mklib.pdb || call :ReportFatalError || exit /b 1
+    call :CopyFileIfExist %1\bin\mklib.pdb %2\bin\mklib.pdb || call :ReportFatalError || exit /b 1
     goto :eof
 
 :CopyFile
