@@ -1,7 +1,8 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.23 2008-01-14 07:35:54 jkrell Exp $
+# $Id: pylib.py,v 1.24 2008-01-14 07:57:49 jkrell Exp $
 
 import os
+from os import getenv
 import os.path
 import glob
 import sys
@@ -10,42 +11,85 @@ import re
 import tempfile
 import shutil
 
+#
+# Several important variables are gotten from the environment or probed.
+# The probing is usually 100% correct, and the environment variable names
+# Are sometimes a bit generic, but the environment still wins.
+#
+# CM3_TARGET / TARGET
+#    probed with $OS and uname
+#
+# CM3_OSTYPE / M3OSTYPE
+#    follows from Target
+#
+# CM3ROOT / ROOT
+#    the root of the source, computed from the path to this file
+#
+# CM3_INSTALL / INSTALLROOT
+#    the root of the installation, computed from finding cm3 in $PATH
+#
+
 # print("loading pylib..")
 
-env_OS = os.getenv("OS")
+env_OS = getenv("OS")
 if env_OS == "Windows_NT":
     def uname():
-        PROCESSOR_ARCHITECTURE = os.getenv("PROCESSOR_ARCHITECTURE")
+        PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
     DefaultInstall = "c:/cm3"
 else:
     from os import uname
     DefaultInstall = "/usr/local/cm3"
 
-PackageDB = None
+#
+# if CM3_INSTALL is not set, and cm3 is in $PATH, cm3's directory's directory is CM3_INSTALL,
+# else CM3_DEFAULTS defaults to /usr/local/cm3
+#
+def ExeName(a):
+    debug("os.name")
+    if (os.name == "nt"):
+        a += ".exe"
+    return a
+
+#
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
+#
+def SearchPath(name, paths = getenv("PATH")):
+    #Given a search path, find file
+    if (os.name == "nt"):
+        # support for $PATHEXT might be nice
+        if (name.find(".") == -1):
+            name += ".exe"
+    for path in paths.split(os.path.pathsep):
+        candidate = os.path.join(path, name)
+        if (os.path.isfile(candidate)):
+            return os.path.abspath(candidate)
+
+#
+# the root of the installation
+#
+CM3_INSTALL = (
+    getenv("CM3_INSTALL")
+    or getenv("INSTALLROOT")
+    or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
+    or DefaultInstall # c:/cm3 or /usr/local/cm3
+    )
+
+#
+# the root of the source tree
+#
+Root = (
+    getenv("CM3ROOT")
+    or getenv("ROOT")
+    or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ).replace("\\", os.path.sep).replace("/", os.path.sep)
 
 #
 # User can override all these from environment, as in sh.
 # The environment variable names are all UPPERCASE.
+# Ideally this array gets emptied or at least reduced.
 #
 Variables = [
-
-    #
-    # typically just "cm3", subject to path search,
-    # but sometimes set to a specific cm3
-    #
-    "CM3",
-
-    #
-    # the root of the source code (Root), but with
-    # backward slashes doubled,
-    # e.g. c:\\dev2\\cm3 or /dev2/cm3
-    # The same as Root on Unix.
-    # This is easily computed from __file__.
-    #
-    "CM3Root",
-
-    "CM3VERSION",
 
     #
     # an empty string for Posix, ".exe" for Win32
@@ -59,32 +103,10 @@ Variables = [
     #
     "GCC_BACKEND",
 
-    # the root if the cm3 install, e.g. /cm3 or /usr/local/cm3
-    # This is easily computed by searching for cm3 or cm3.exe
-    # in $PATH.
-    "InstallRoot",
-
     #
     # True or False -- should we build m3gdb.
     #
     "M3GDB",
-
-    #
-    # WIN32 or POSIX -- used to help decide what
-    # packages to build
-    #
-    "M3OSTYPE",
-
-    #
-    # path to the pkgsdb file, usually __file__/../pkgsdb
-    #
-    "PKGSDB",
-
-    #
-    # the root of the source code, e.g. /dev2/cm3
-    # This is __file__/../../..
-    #
-    "Root",
 
     #
     # A temporary "staging" location? For
@@ -92,18 +114,9 @@ Variables = [
     #
     "STAGE",
 
-    #
-    # very important -- what operating system/processor architecture
-    # we are building for
-    #
-    "Target",
-
     "BuildArgs",
     "CleanArgs",
     "ShipArgs",
-
-    "M3Ship",
-    "M3Build",
 
     "BuildLocal",
     "CleanLocal",
@@ -134,9 +147,6 @@ Variables = [
     "HAVE_SERIAL",
     "OMIT_GCC",
 
-    # whether or not this program should print extra stuff
-    "CM3_Debug",
-
     # build all packages, generally does not work
     "CM3_ALL",
 ]
@@ -157,9 +167,6 @@ for a in Variables:
     b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a.upper()))
 exec(b)
 
-# print("pylib: InstallRoot is "  + InstallRoot)
-# print("pylib: env_InstallRoot is " + (os.environ.get("InstallRoot") or ""))
-
 for a in DefaultsFromSh.keys():
     DefaultsFromSh[a] = eval(a)
 
@@ -167,7 +174,7 @@ for a in DefaultsFromSh.keys():
 # output functions
 
 def debug(a):
-    if (os.getenv("CM3_DEBUG") or CM3_Debug):
+    if getenv("CM3_DEBUG"):
         print(a + " is " + eval("str(" + a + ")"))
 
 def header(a):
@@ -243,51 +250,16 @@ def GetDefaultFromSh(Key):
 
     return DefaultsFromSh.get(Key)
 
-CM3VERSION = CM3VERSION or GetDefaultFromSh("CM3VERSION")
-CM3VERSIONNUM = CM3VERSIONNUM or GetDefaultFromSh("CM3VERSIONNUM")
-CM3LASTCHANGED = CM3LASTCHANGED or GetDefaultFromSh("CM3LASTCHANGED")
+CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
+CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
+CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 
 CM3_GCC_BACKEND = True
 CM3_GDB = False
 
-debug("CM3VERSION")
-
-#
-# if CM3_INSTALL is not set, and cm3 is in $PATH, cm3's directory's directory is CM3_INSTALL,
-# else CM3_DEFAULTS defaults to /usr/local/cm3
-#
-def ExeName(a):
-    debug("os.name")
-    if (os.name == "nt"):
-        a += ".exe"
-    return a
-
-#
-# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
-#
-def SearchPath(name, paths = os.getenv("PATH")):
-    #Given a search path, find file
-    if (os.name == "nt"):
-        # support for $PATHEXT might be nice
-        if (name.find(".") == -1):
-            name += ".exe"
-    for path in paths.split(os.path.pathsep):
-        candidate = os.path.join(path, name)
-        # print("candidate is " + candidate)
-        if (os.path.isfile(candidate)):
-            return os.path.abspath(candidate)
-
-CM3_INSTALL = (
-    os.getenv("CM3_INSTALL")
-    or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
-    or DefaultInstall # c:/cm3 or /usr/local/cm3
-    )
-
-debug("CM3_INSTALL")
-
-CM3 = CM3 or ExeName("cm3")
-M3Build = M3Build or ExeName("m3build")
-M3Ship = M3Ship or "m3ship"
+CM3 = getenv("CM3") or ExeName("cm3")
+M3Build = getenv("M3BUILD") or ExeName("m3build")
+M3Ship = getenv("M3SHIP") or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
 Q = "'"
 
@@ -311,14 +283,11 @@ def strip_exe(a):
 # evaluate uname information
 
 #
-# This is all a bit wonky.
-# Data derives from both uname and optional overrides in environment variables.
-# If use sets TARGET environment variable, then user is obligated to
-# to get other things correct such as M3OSTYPE
+# very important -- what operating system/processor architecture
+# we are building for
 #
-
-Target = os.getenv("CM3_TARGET") or os.getenv("TARGET") or ""
-M3OSTYPE = os.getenv("CM3_OSTYPE") or os.getenv("M3OSTYPE") or ""
+Target = getenv("CM3_TARGET") or getenv("TARGET") or ""
+OSType = getenv("CM3_OSTYPE") or getenv("M3OSTYPE") or ""
 
 if (UNAME.startswith("windows")
         or UNAME.startswith("winnt")
@@ -326,11 +295,11 @@ if (UNAME.startswith("windows")
         or Target.startswith("NT386")
     ):
 
-    M3OSTYPE = M3OSTYPE or "WIN32"
+    OSType = OSType or "WIN32"
     EXE = ".exe"
     Q = ""
     HAVE_SERIAL = True
-    GMAKE = os.getenv("GMAKE") or "make"
+    GMAKE = getenv("GMAKE") or "make"
 
     if Target.startswith("NT386GNU"):
         Target = Target or "NT386GNU"
@@ -364,7 +333,7 @@ elif (UNAME.startswith("darwin")):
         Target = "PPC_DARWIN"
     elif (re.match("i[3456]86", UNAME_P)):
         Target = "I386_DARWIN"
-    GMAKE = os.getenv("GMAKE") or "make"
+    GMAKE = getenv("GMAKE") or "make"
 
 elif (UNAME.startswith("sunos")):
 
@@ -373,7 +342,7 @@ elif (UNAME.startswith("sunos")):
 
 elif (UNAME.startswith("linux")):
 
-    GMAKE = os.getenv("GMAKE") or "make"
+    GMAKE = getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if (UNAME_M == "ppc"):
         Target = "PPC_LINUX"
@@ -382,7 +351,7 @@ elif (UNAME.startswith("linux")):
 
 elif (UNAME.startswith("netbsd")):
 
-    GMAKE = os.getenv("GMAKE") or "make"
+    GMAKE = getenv("GMAKE") or "make"
     Target = "NetBSD2_i386" # only arch/version combination supported yet
 
 else:
@@ -393,36 +362,26 @@ else:
 #-----------------------------------------------------------------------------
 # define the exported values
 
-#
-# Root is two levels above this program.
-#
-
-Root = (Root or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-InstallRoot = (InstallRoot or CM3_INSTALL)
-
 M3GDB = (M3GDB or CM3_GDB)
-M3OSTYPE = (M3OSTYPE or "POSIX")
+OSType = (OSType or "POSIX")
 GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
-PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
+PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
-
-CM3Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep)
 
 #-----------------------------------------------------------------------------
 # elego customizations
 #
 # comment these if they interfere with your environment
 
-if (not os.getenv("STAGE")):
+if (not getenv("STAGE")):
 
-    if ((M3OSTYPE == "POSIX")
+    if ((OSType == "POSIX")
             and os.system("type domainname > /dev/null 2>/dev/null")
             and (os.popen("domainname 2>/dev/null").read().replace("\n", "") == "elegoohm")):
 
         STAGE = "/pub/lang/m3/cm3-dist"
 
-    elif (M3OSTYPE == "WIN32" and (os.getenv("HOSTNAME") == "FIR")):
+    elif (OSType == "WIN32" and (getenv("HOSTNAME") == "FIR")):
 
         STAGE = "c:/tmp/cm3stage"
 
@@ -431,18 +390,15 @@ if (not os.getenv("STAGE")):
 
 debug("Root")
 debug("M3GDB")
-debug("M3OSTYPE")
+debug("OSType")
 debug("Target")
 debug("GCC_BACKEND")
-debug("InstallRoot")
-debug("PKGSDB")
 debug("GMAKE")
 debug("EXE")
-debug("CM3Root")
 
 # define build and ship programs for Critical Mass Modula-3
 
-DEFS = "-DROOT=%(Q)s%(CM3Root)s%(Q)s"
+DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
@@ -610,6 +566,8 @@ def MakePackageDB():
             sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
 
+PackageDB = None
+
 def ReadPackageDB():
     MakePackageDB()
     global PackageDB
@@ -732,23 +690,23 @@ def _FilterPackage(Package):
             "NetBSD2_i386" : True
             }.get(Target, False),
 
-        "m3objfile": CM3_ALL or M3OSTYPE == "WIN32",
-        "mklib": CM3_ALL or M3OSTYPE == "WIN32",
-        "fix_nl": CM3_ALL or M3OSTYPE == "WIN32",
-        "libdump": CM3_ALL or M3OSTYPE == "WIN32",
-        "import-libs": CM3_ALL or M3OSTYPE == "WIN32",
+        "m3objfile": CM3_ALL or OSType == "WIN32",
+        "mklib": CM3_ALL or OSType == "WIN32",
+        "fix_nl": CM3_ALL or OSType == "WIN32",
+        "libdump": CM3_ALL or OSType == "WIN32",
+        "import-libs": CM3_ALL or OSType == "WIN32",
 
         "tcl": CM3_ALL or HAVE_TCL,
-        "udp": CM3_ALL or M3OSTYPE == "POSIX",
-        "tapi": CM3_ALL or M3OSTYPE == "WIN32",
+        "udp": CM3_ALL or OSType == "POSIX",
+        "tapi": CM3_ALL or OSType == "WIN32",
         "serial": CM3_ALL or HAVE_SERIAL,
 
-        "X11R4": CM3_ALL or M3OSTYPE != "WIN32",
-        "showthread": CM3_ALL or M3OSTYPE != "WIN32",
-        "pkl-fonts": CM3_ALL or M3OSTYPE != "WIN32",
-        "juno-machine": CM3_ALL or M3OSTYPE != "WIN32",
-        "juno-compiler": CM3_ALL or M3OSTYPE != "WIN32",
-        "juno-app": CM3_ALL or M3OSTYPE != "WIN32",
+        "X11R4": CM3_ALL or OSType != "WIN32",
+        "showthread": CM3_ALL or OSType != "WIN32",
+        "pkl-fonts": CM3_ALL or OSType != "WIN32",
+        "juno-machine": CM3_ALL or OSType != "WIN32",
+        "juno-compiler": CM3_ALL or OSType != "WIN32",
+        "juno-app": CM3_ALL or OSType != "WIN32",
 
         "m3back": not GCC_BACKEND,
         "m3staloneback": not GCC_BACKEND,
@@ -1363,8 +1321,8 @@ def CreateDirectory(a):
     return True
 
 def MakeTempDir():
-    if os.getenv("TEMP") and not os.path.exists(os.getenv("TEMP")):
-        CreateDirectory(os.getenv("TEMP"))
+    if getenv("TEMP") and not os.path.exists(getenv("TEMP")):
+        CreateDirectory(getenv("TEMP"))
 
 MakeTempDir()
 
