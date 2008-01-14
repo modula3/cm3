@@ -58,14 +58,6 @@ end
 
 CM3SetInstallRoot()
 
-proc
-file_exists(
-    a,
-    )
-is
-    return not stale(a, a)
-end
-
 BIN_INSTALL   = INSTALL_ROOT & SL & "bin"   % executables
 LIB_INSTALL   = INSTALL_ROOT & SL & "lib"   % libraries
 PKG_INSTALL   = INSTALL_ROOT & SL & "pkg"   % packages
@@ -321,7 +313,7 @@ end
 % a library.
 
 %% NOTE: we should set the "base" load address of the various DLLs
-%%  to avoid relocating them everytime they're loaded....
+%%  to avoid relocating them every time they are loaded.
 
 %% m3_lib_flags = ["/debugtype:cv", "/machine:i386"]
 m3_lib_flags = ["-ign:__real"]
@@ -711,7 +703,7 @@ M3_COVERAGE_LIB = "report_coverage.obj"
 % --- split library names and pass -L/-l arguments to the linker
 
 % M3_SHARED_LIB_ARG = "-R"
-% --- pass "-R" flags to the linker too...
+% --- pass "-R" flags to the linker too.
 
 % M3_BOOTSTRAP = TRUE
 % --- generate bootstrap code (assembly) instead of finaly object code
