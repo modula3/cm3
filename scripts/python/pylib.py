@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.22 2008-01-14 07:32:43 jkrell Exp $
+# $Id: pylib.py,v 1.23 2008-01-14 07:35:54 jkrell Exp $
 
 import os
 import os.path
@@ -407,8 +407,7 @@ GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
-CM3Root = Root.replace("\\", os.path.sep)
-CM3Root = Root.replace("/", os.path.sep)
+CM3Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep)
 
 #-----------------------------------------------------------------------------
 # elego customizations
