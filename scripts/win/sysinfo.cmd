@@ -79,39 +79,66 @@
 
 @call %~dp0clearenv || exit /b 1
 
+if defined TARGET if not "%TARGET%" == "NT386" if not "%TARGET%" == "NT386GNU" (
+    @echo ERROR: If TARGET is defined, it must be NT386 or NT386GNU.
+    @echo ERROR: Support is yet lacking for other NT architectures and cross builds.
+    exit /b 1
+)
+
 @rem
 @rem ROOT is two levels above this program.
 @rem
 
 if "%ROOT%" == "" call :set_full_path ROOT %~dp0..\..
 
+if not defined TARGET set TARGET=NT386
+
+if "%TARGET%" == "NT386" (
+    call :CheckAndConifigureNT386Environment || exit /b 1
+)
+if "%TARGET%" == "NT386GNU" (
+    call :CheckAndConfigureNT386GNUEnvironment || exit /b 1
+)
+
+goto :end_CheckAndConfigureNT386GNUEnvironment
+:CheckAndConfigureNT386GNUEnvironment
+    call :environment_variables_must_be_set path || exit /b 1
+    call :environment_variables_maybe_not_to_set lib include || exit /b 1
+    call :environment_variable_must_contain_files path ld.exe gcc.exe cm3.exe || exit /b 1
+    exit /b 0
+:end_CheckAndConfigureNT386GNUEnvironment
+
+@goto :end_CheckAndConifigureNT386Environment
+:CheckAndConifigureNT386Environment
 @rem
 @rem The variabls %temp%, %LIB%, %PATH%, %INCLUDE%, must be set.
 @rem
 
-call :environment_variables_must_be_set temp lib path include || goto :eof
+call :environment_variables_must_be_set temp lib path include || exit /b 1
 
 @rem
 @rem cl.exe, link.exe, cm3.exe must be in %PATH%.
 @rem
 
-call :environment_variable_must_contain_files path cl.exe link.exe cm3.exe || goto :eof
+call :environment_variable_must_contain_files path cl.exe link.exe cm3.exe || exit /b 1
 
 @rem
 @rem errno.h must be in %INCLUDE%, at least as a sanity check.
 @rem
 
-call :environment_variable_must_contain_files include errno.h || goto :eof
+call :environment_variable_must_contain_files include errno.h || exit /b 1
 
 @rem
 @rem Libcmt.lib must be in %LIB%, at least as a sanity check.
 @rem Msvcrt.lib would be good to require, but the 2003 Express Edition lacks it.
 @rem
 
-call :environment_variable_must_contain_files lib kernel32.lib libcmt.lib || goto :eof
+call :environment_variable_must_contain_files lib kernel32.lib libcmt.lib || exit /b 1
 
 for %%a in (DELAYLOAD) do call :check_for_link_switch %%a
 for %%a in (MSVCRT) do call :check_for_lib %%a
+
+:end_CheckAndConifigureNT386Environment
 
 @goto :end_check_for_link_switch
 :check_for_link_switch
@@ -163,39 +190,7 @@ goto :eof
 @rem This is the root of the CM3 installation.
 @rem
 
-call :environment_variables_must_be_set INSTALLROOT || goto :eof
-
-@rem
-@rem Check the %LIB% environment variable.
-@rem
-
-rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
-
-@rem if not exist %INSTALLROOT%\lib\comctl32.lib (
-@rem     @call :Echo "%INSTALLROOT%\lib\comctl32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-@rem )
-
-@rem if not exist %INSTALLROOT%\lib\user32.lib (
-@rem     @call :Echo "%INSTALLROOT%\lib\user32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-@rem )
-
-@rem if not exist %INSTALLROOT%\lib\wsock32.lib (
-@rem     @call :Echo "%INSTALLROOT%\lib\wsock32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-@rem )
-
-@rem if not exist %INSTALLROOT%\lib\gdi32.lib (
-@rem     @call :Echo "%INSTALLROOT%\lib\gdi32.lib does not exist, be sure to build and ship in m3-win\import-libs (generally automatic)"
-@rem )
-
-@rem
-@rem The .libs shipped by CM3 5.2.6 do %INSTALLROOT%\lib do not work Visual C++ 2.0, 4.0, or 8.0, at least.
-@rem They are presumably of too new a format for 2.0 and 4.0.
-@rem They are missing function(s) needed by msvcrt.lib 8.0 (kernel32!InterlockedCompareExchange).
-@rem The 7.1 and 8.0 Express Editions lack many .libs so we need something here, such as the
-@rem Platform SDK or our own. We make our own in m3-win\imports-libs.
-@rem
-
-rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.lib comctl32.lib user32.lib && goto got_other_libs
+call :environment_variables_must_be_set INSTALLROOT || exit /b 1
 
 @rem
 @rem This is a warning because it can be confusing
@@ -206,10 +201,10 @@ rem call :environment_variable_must_contain_files_quiet lib wsock32.lib gdi32.li
 @rem It is only for use by other scripts.
 @rem
 
-@set LIB=%INSTALLROOT%\lib;%LIB%
-@echo LIB=%%INSTALLROOT%%\LIB;%%LIB%%
-
-:got_other_libs
+if "%TARGET%" == "NT386" (
+    @set LIB=%INSTALLROOT%\lib;%LIB%
+    @echo LIB=%%INSTALLROOT%%\LIB;%%LIB%%
+)
 
 @rem
 @rem TBD: Too many environment variables!
@@ -259,13 +254,21 @@ set %1=%~f2
 goto :eof
 
 :environment_variables_must_be_set
-if "%1" == "" goto :eof
-(set %1 2>nul| findstr /i /b %1= >nul) || (
-    echo Environment variable %1 not defined
+if "%1" == "" exit /b 0
+if not defined %1 (
+    echo ERROR: Environment variable %1 not defined
     exit /b 1
 )
 shift
 goto :environment_variables_must_be_set
+
+:environment_variables_maybe_not_to_set
+if "%1" == "" exit /b 0
+if defined %1 (
+    echo warning: The environment variable %1 is set. This is ok, but perhaps unintended.
+)
+shift
+goto :environment_variables_maybe_not_to_set
 
 :environment_variable_must_contain_files_quiet
 setlocal
@@ -300,19 +303,11 @@ if "%~$b:1" == "" (
 )
 goto :environment_variable_must_contain_files_1
 
+:set_if_not_defined
 :set_if_empty
-(set %1 >nul 2>nul) || (
+if not defined %1 (
     set %1=%2
     @rem @echo 2: %1=%2
-    goto :eof
-)
-@rem
-@rem This second check is needed for when an undefined variable is a prefix of a defined variable.
-@rem For example call :set_if_empty CM3ROO foo
-@rem
-(set %1 2>nul| findstr /i /b %1= >nul) || (
-    set %1=%2
-    @rem @echo 1: %1=%2
 )
 goto :eof
 
