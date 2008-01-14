@@ -44,22 +44,22 @@ readonly Platform_info = {
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
 }
 
-if not defined("SL")
-  if equal(TARGET, "NT386")
-    % we assume that we use cygwin for everything under NT386GNU
-    SL = "\\"
-  else
-    SL = "/"
-  end
-end
-
-if equal(TARGET, "NT386GNU")
+%
+% TARGET == NT386 means are we bootstrapping NT386GNU from NT386.
+%
+if (not defined("SL")
+        or equal(TARGET, "NT386")
+        or equal(TARGET, "NT386GNU"))
     SL = "/"
 end
 
 EXE = ""
 if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
     EXE = ".exe"
+    % star means default
+    if not defined("GNU_CC")     GNU_CC     = "*"    end
+    if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
+    if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 end
 
 %
@@ -68,19 +68,10 @@ end
 % while debugging to go back and see the temp files.
 %
 readonly Increment =
-{
-    "1" : "2",
-    "2" : "3",
-    "3" : "4",
-    "4" : "5",
-    "5" : "6",
-    "6" : "7",
-    "7" : "8",
-    "8" : "9",
-    "9" : "1",
-}
+{ "0":"1","1":"2","2":"3","3":"4","4":"5"
+  "5":"6","6":"7","7":"8","8":"9","9":"1", }
 
-Counter = 1
+Counter = 0
 
 readonly proc Run (x) is
     if equal($OS, "Windows_NT")
