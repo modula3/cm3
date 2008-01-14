@@ -407,8 +407,7 @@ GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (PKGSDB or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
-CM3Root = Root.replace("\\", os.path.sep)
-CM3Root = Root.replace("/", os.path.sep)
+CM3Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep)
 
 #-----------------------------------------------------------------------------
 # elego customizations
