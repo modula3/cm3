@@ -1,11 +1,16 @@
-@rem $Id: bootgnu.cmd,v 1.12 2008-01-15 01:03:04 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.13 2008-01-15 01:05:47 jkrell Exp $
 
 @setlocal
 
 @rem check that cl and link are in path
 @rem check that sh, ld, as, gcc, sed, make, etc. are in path
+@rem check that they are msys/mingwin versions, not cygwin (and msys make)
 
-@rem set PATH=%SystemDrive%\msys\1.0\bin;%SystemDrive%\mingw\bin;%PATH%
+@rem set PATH=%SystemDrive%\mingw\bin;%PATH%
+@rem set PATH=%SystemDrive%\msys\1.0\bin;%PATH%
+@rem set PATH=%SystemDrive%\msdev\50\vc\bin;%PATH%
+@rem set LIB=%SystemDrive%\msdev\50\vc\lib
+@rem set INCLUDE=%SystemDrive%\msdev\50\vc\include
 
 if "%CM3_ROOT%" == "" call :set_full_path CM3_ROOT %~dp0..\..
 
@@ -17,7 +22,6 @@ copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 @rem
 @rem Use the "real" scripts.
 @rem
-
 cd %CM3_ROOT%\scripts\python
 
 set CM3_TARGET=NT386
@@ -25,6 +29,8 @@ do-cm3-std realclean
 upgrade || exit /b 1
 
 set CM3_TARGET=NT386GNU
+set LIB=
+set INCLUDE=
 set P=^
     m3cc ^
     m3core ^
