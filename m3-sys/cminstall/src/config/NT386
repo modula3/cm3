@@ -319,9 +319,6 @@ end
 % It is open question as to if carry over to two digits
 % can be implemented in Quake. :)
 %
-Increment =
-{ "0":"1","1":"2","2":"3","3":"4","4":"5",
-  "5":"6","6":"7","7":"8","8":"9","9":"1", }
 
 ResponseFileCounter = "0"
 
@@ -330,12 +327,10 @@ proc
 GetResponseFileName(
     )
 is
-    local readonly Increment =
-    { "0":"1","1":"2","2":"3","3":"4","4":"5",
-      "5":"6","6":"7","7":"8","8":"9","9":"1", }
-
     local Result = "_m3responsefile" & ResponseFileCounter & ".txt"
-    ResponseFileCounter = Increment{ResponseFileCounter}
+    ResponseFileCounter =
+        { "0":"1","1":"2","2":"3","3":"4","4":"5",
+          "5":"6","6":"7","7":"8","8":"9","9":"1", }{ResponseFileCounter}
     return Result
 end
 
@@ -447,6 +442,8 @@ is
     % make sure files get cleaned up
     DeleteFiles(Outputs)
     deriveds("", Outputs)
+
+    % build the static library
 
     LibResponseFile =
         WriteResponseFile(
