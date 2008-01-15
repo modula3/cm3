@@ -59,7 +59,7 @@ while [ -n "$1" ] ; do
   shift
 done
 
-if [ -n "S{REPORT}" ]; then
+if [ -n "${REPORT}" ]; then
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   R="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.html}"
   ERRS=""
@@ -180,7 +180,7 @@ write_pkg_report() {
   echo "${ERRS}"
 }
 
-if [ -n "S{REPORT}" ]; then
+if [ -n "${REPORT}" ]; then
   report_header
 fi
 
@@ -216,7 +216,7 @@ for PKG in ${PKGS} ; do
     exec_cmd "$PKG"
     res=$?
   fi
-  if [ -n "S{REPORT}" ]; then
+  if [ -n "${REPORT}" ]; then
     #if grep ': imported interface' "${PKG}/stdout.log" >/dev/null 2>&1; then
     #  res=2
     #fi
@@ -236,7 +236,7 @@ for PKG in ${PKGS} ; do
   echo ""
 done
 
-if [ -n "S{REPORT}" ]; then
+if [ -n "${REPORT}" ]; then
   report_footer
   if [ -n "${ERRS}" ]; then
     echo "errors:" 1>&2
