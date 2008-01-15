@@ -1135,9 +1135,12 @@ def DoPackage(args, PackagesFromCaller = None):
     # print("args is " + str(args))
     # sys.stdout.flush()
 
-    if PackagesFromCaller:
+    if not PackagesFromCaller is None:
         PackagesFromCaller = FilterPackages(PackagesFromCaller)
         PackagesFromCaller = OrderPackages(PackagesFromCaller)
+        if not PackagesFromCaller:
+            print("no packages left")
+            return True
 
     if PackagesFromCaller:
         Usage = \

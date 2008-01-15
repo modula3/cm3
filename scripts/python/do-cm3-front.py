@@ -6,6 +6,7 @@ from pylib import *
 import os.path
 
 DoPackage(sys.argv, [
+    "import-libs",
     "m3core",
     "libm3",
     "m3middle",
@@ -17,7 +18,7 @@ DoPackage(sys.argv, [
     "m3quake",
     "m3cc",
     "cm3",
-# "mklib"
+    "mklib",
     ])
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
