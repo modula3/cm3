@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.16 2008-01-15 01:08:18 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.17 2008-01-15 01:09:02 jkrell Exp $
 
 @setlocal
 
@@ -15,7 +15,7 @@
 if "%CM3_ROOT%" == "" call :set_full_path CM3_ROOT %~dp0..\..
 
 rmdir /q/s \cm3
-xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3
+xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3 || exit /b 1
 del \cm3\bin\cm3.cfg
 copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 
