@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.14 2008-01-15 01:06:38 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.15 2008-01-15 01:07:52 jkrell Exp $
 
 @setlocal
 
@@ -20,7 +20,7 @@ del \cm3\bin\cm3.cfg
 copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 
 @rem
-@rem Use the "real" scripts.
+@rem Use the "real" code.
 @rem
 cd %CM3_ROOT%\scripts\python
 
