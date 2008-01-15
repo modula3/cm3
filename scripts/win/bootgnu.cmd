@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.9 2008-01-15 01:00:57 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.10 2008-01-15 01:01:20 jkrell Exp $
 
 @setlocal
 
@@ -32,7 +32,6 @@ do-pkg buildship ^
     m3staloneback ^
     m3front ^
     m3quake ^
-    m3cc ^
     cm3
 
 do-cm3-std realclean || exit /b 1
