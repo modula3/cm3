@@ -19,9 +19,24 @@ set CM3_TARGET=NT386
 upgrade || exit /b 1
 
 set CM3_TARGET=NT386GNU
-do-pkg buildship m3cc
-do-pkg buildship m3core libm3
-upgrade || exit /b 1
+do-pkg buildship ^
+    m3cc ^
+    m3core ^
+    libm3 ^
+    m3core ^
+    libm3 ^
+    m3middle ^
+    m3objfile ^
+    m3linker ^
+    m3back ^
+    m3staloneback ^
+    m3front ^
+    m3quake ^
+    m3cc ^
+    cm3 ^
+
+do-cm3-std realclean || exit /b 1
+do-cm3-std buildship || exit /b 1
 
 goto :eof
 
