@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.23 2008-01-14 15:05:26 jkrell Exp $
+% $Id: m3makefile,v 1.24 2008-01-15 12:18:26 jkrell Exp $
 %
 % Jay Krell
 % jaykrell@cornell.edu
@@ -269,8 +269,9 @@ if AnyStale
             "link",
             "-lib",
             "-nologo",
-            ObjFile("a"),
+            "-nodefaultlib",
             "-def:" & File & ".def",
+            ObjFile("a"),
             )
     end
 end
