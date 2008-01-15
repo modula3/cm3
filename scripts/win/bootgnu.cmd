@@ -3,6 +3,9 @@
 @setlocal
 
 @rem check that cl and link are in path
+@rem check that sh, ld, as, gcc, sed, make, etc. are in path
+
+@rem set PATH=%SystemDrive%\msys\1.0\bin;%SystemDrive%\mingw\bin;%PATH%
 
 if not defined CM3_ROOT (
   echo ERROR
@@ -17,16 +20,6 @@ copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 cd %CM3_ROOT%\scripts\python
 set CM3_TARGET=NT386
 upgrade || exit /b 1
-do-cm3-std realclean || exit /b 1
-do-cm3-front realclean || exit /b 1
-@rem need do-cm3-all
 
-@rem check that sh, ld, as, gcc, sed, make, etc. are in path
-
-set PATH=%SystemDrive%\msys\1.0\bin;%SystemDrive%\mingw\bin;%PATH%
-set CM3_TARGET=NT386GNU
-do-cm3-std realclean || exit /b 1
-do-cm3-front realclean || exit /b 1
-do-pkg realclean m3cc || exit /b 1
-do-pkg buildship m3cc || exit /b 1
-do-cm3-front buildship || exit /b 1
+set TARGET=NT386GNU
+upgrade || exit /b 1
