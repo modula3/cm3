@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.4 2008-01-15 12:42:22 jkrell Exp $
+# $Id: bootntgnu.py,v 1.5 2008-01-15 12:47:27 jkrell Exp $
 
 #
 # It will be profitable for the user to make local edits
@@ -22,8 +22,6 @@ argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
 # DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
-
-OriginalPath = os.environ["PATH"]
 
 #
 # Need to figure out how to do this properly, if at all.
@@ -51,18 +49,7 @@ DoPackage(argv_BuildShip, P) or sys.exit(1)
 ShipCompiler() or sys.exit(1)
 CopyConfigForDevelopment() or sys.exit(1)
 
-Path = OriginalPath
-
-PathPrefix = ""
-EnvironmentModified = False
-
 SetupEnvironment()
-
-if NT:
-    if not SearchPath("gcc") or not SearchPath("as"):
-        PathPrefix = SystemDrive + "\\mingw\\bin;" + PathPrefix
-    if not SearchPath("sh"):
-        PathPrefix = SystemDrive + "\\msys\\1.0\\bin;" + PathPrefix
 
 os.environ["CM3_TARGET"] = "NT386GNU"
 print("set CM3_TARGET=NT386GNU")
