@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-cm3-front.py,v 1.4 2008-01-15 04:56:16 jkrell Exp $
+# $Id: do-cm3-front.py,v 1.5 2008-01-15 11:22:01 jkrell Exp $
 
 import sys
 from pylib import *

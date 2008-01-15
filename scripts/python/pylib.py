@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.29 2008-01-15 04:56:16 jkrell Exp $
+# $Id: pylib.py,v 1.30 2008-01-15 11:22:01 jkrell Exp $
 
 import os
 from os import getenv
@@ -37,17 +37,11 @@ if env_OS == "Windows_NT":
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
-    DefaultInstall = "c:/cm3"
 else:
     from os import uname
-    DefaultInstall = "/usr/local/cm3"
 
-#
-# if CM3_INSTALL is not set, and cm3 is in $PATH, cm3's directory's directory is CM3_INSTALL,
-# else CM3_DEFAULTS defaults to /usr/local/cm3
-#
 def ExeName(a):
-    if (os.name == "nt"):
+    if os.name == "nt":
         a += ".exe"
     return a
 
@@ -56,33 +50,28 @@ def ExeName(a):
 #
 def SearchPath(name, paths = getenv("PATH")):
     #Given a search path, find file
-    if (os.name == "nt"):
+    if (name.find("/") != -1) or (name.find("\\") != -1):
+        if os.path.isfile(name):
+            return name
+    if os.name == "nt":
         # support for $PATHEXT might be nice
-        if (name.find(".") == -1):
+        if name.find(".") == -1:
             name += ".exe"
     for path in paths.split(os.path.pathsep):
         candidate = os.path.join(path, name)
-        if (os.path.isfile(candidate)):
+        if os.path.isfile(candidate):
             return os.path.abspath(candidate)
 
 #
 # the root of the installation
 #
-InstallRoot = (
-    getenv("CM3_INSTALL")
-    or getenv("INSTALLROOT")
-    or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
-    or DefaultInstall # c:/cm3 or /usr/local/cm3
-    )
+InstallRoot = os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
 
 #
 # the root of the source tree
 #
-Root = (
-    getenv("CM3ROOT")
-    or getenv("ROOT")
-    or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    ).replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
+Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -198,7 +187,7 @@ def GetDefaultFromSh(Key):
     #
     #print("WriteVariablesIntoEnvironment:3")
     Value = DefaultsFromSh.get(Key)
-    if (Value):
+    if Value:
         return Value
     #
     # CM3VERSION=${CM3VERSION:-"d5.5.1"}
@@ -209,13 +198,13 @@ def GetDefaultFromSh(Key):
     ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")
     for Line in open(ShFilePath):
         Match = RegExp.match(Line)
-        if (Match):
+        if Match:
             MatchKey = Match.group(1)
             #
             # We are here because one of them wasn't found, but we should be
             # sure only to overwrite what we don't have.
             #
-            if (not DefaultsFromSh[MatchKey]):
+            if not DefaultsFromSh[MatchKey]:
                 Value = Match.group(2)
                 DefaultsFromSh[MatchKey] = Value
                 exec("%s = \"%s\"" % (MatchKey, Value), locals(), globals())
@@ -227,12 +216,12 @@ def GetDefaultFromSh(Key):
     MissingKey = None
     for Item in DefaultsFromSh.iteritems():
         #print(Item)
-        if (Item[1] is None):
+        if Item[1] is None:
             MissingKey = Item[0]
             File = __file__
             sys.stderr.write("%(File)s: %(MissingKey)s not found in %(ShFilePath)s\n" % vars())
 
-    if (MissingKey):
+    if MissingKey:
         sys.exit(1)
 
     return DefaultsFromSh.get(Key)
@@ -249,16 +238,6 @@ M3Build = getenv("M3BUILD") or ExeName("m3build")
 M3Ship = getenv("M3SHIP") or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
 Q = "'"
-
-#-----------------------------------------------------------------------------
-# some localization functions
-
-def find_file(file, dirs):
-    for dir in dirs:
-        if (os.path.isdir(dir)):
-            a = os.path.join(dir, file)
-            if (os.path.isfile(a)):
-                return a
 
 #-----------------------------------------------------------------------------
 # abstraction functions
@@ -299,46 +278,46 @@ if (UName.startswith("windows")
         def strip_exe(a):
             pass
 
-elif (UName.startswith("freebsd")):
+elif UName.startswith("freebsd"):
 
-    if (UNameArchM == "i386"):
-        if (UNameRevision.startswith("1")):
+    if UNameArchM == "i386":
+        if UNameRevision.startswith("1"):
             Target = "FreeBSD"
-        elif (UNameRevision.startswith("2")):
+        elif UNameRevision.startswith("2"):
             Target = "FreeBSD2"
-        elif (UNameRevision.startswith("3")):
+        elif UNameRevision.startswith("3"):
             Target = "FreeBSD3"
-        elif (UNameRevision.startswith("4")):
+        elif UNameRevision.startswith("4"):
             Target = "FreeBSD4"
         else:
             Target = "FreeBSD4"
     else:
         Target = "FBSD_ALPHA"
 
-elif (UName.startswith("darwin")):
+elif UName.startswith("darwin"):
 
     # detect the m3 platform (Darwin runs on ppc and ix86)
-    if (UNameArchP.startswith("powerpc")):
+    if UNameArchP.startswith("powerpc"):
         Target = "PPC_DARWIN"
-    elif (re.match("i[3456]86", UNameArchP)):
+    elif re.match("i[3456]86", UNameArchP):
         Target = "I386_DARWIN"
     GMAKE = getenv("GMAKE") or "make"
 
-elif (UName.startswith("sunos")):
+elif UName.startswith("sunos"):
 
     Target = "SOLgnu"
     #Target = "SOLsun"
 
-elif (UName.startswith("linux")):
+elif UName.startswith("linux"):
 
     GMAKE = getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-    if (UNameArchM == "ppc"):
+    if UNameArchM == "ppc":
         Target = "PPC_LINUX"
     else:
         Target = "LINUXLIBC6"
 
-elif (UName.startswith("netbsd")):
+elif UName.startswith("netbsd"):
 
     GMAKE = getenv("GMAKE") or "make"
     Target = "NetBSD2_i386" # only arch/version combination supported yet
@@ -365,7 +344,7 @@ os.environ["CM3_ROOT"] = Root;
 #
 # comment these if they interfere with your environment
 
-if (not getenv("STAGE")):
+if not getenv("STAGE"):
 
     if ((OSType == "POSIX")
             and os.system("type domainname > /dev/null 2>/dev/null")
@@ -373,7 +352,7 @@ if (not getenv("STAGE")):
 
         STAGE = "/pub/lang/m3/cm3-dist"
 
-    elif (OSType == "WIN32" and (getenv("HOSTNAME") == "FIR")):
+    elif (OSType == "WIN32") and (getenv("HOSTNAME") == "FIR"):
 
         STAGE = "c:/tmp/cm3stage"
 
@@ -420,7 +399,7 @@ SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
-if (os.name == "nt"):
+if os.name == "nt":
     RealClean = RealClean or "if exist %(Target)s rmdir /q/s %(Target)s"
 else:
     RealClean = RealClean or "rm -rf %(Target)s"
@@ -429,20 +408,20 @@ RealClean = (RealClean % vars())
 
 # choose the compiler to use
 
-if (SearchPath(CM3)):
+if SearchPath(CM3):
     BuildLocal = CM3_BuildLocal
     CleanLocal = CM3_CleanLocal
     BuildGlobal = CM3_BuildGlobal
     CleanGlobal = CM3_CleanGlobal
     Ship = CM3_Ship
-elif (SearchPath(M3Build)):
+elif SearchPath(M3Build):
     BuildLocal = PM3_BuildLocal
     CleanLocal = PM3_CleanLocal
     BuildGlobal = PM3_BuildGlobal
     CleanGlobal = PM3_CleanGlobal
     Ship = CM3_Ship
 else:
-    if (not BuildLocal or not BuildGlobal or not Ship):
+    if (not BuildLocal) or (not BuildGlobal) or (not Ship):
         File = __file__
         sys.stderr.write(
             "%(File)s: %(CM3)s or %(M3Build)s not found in your path, don't know how to compile\n"
@@ -466,8 +445,8 @@ def print_list(strings, NumberOfColumns):
     while (i != Length):
         j = 0
         while ((i != Length) and (j != NumberOfColumns)):
-            if (j == 0):
-                if (i != 0):
+            if j == 0:
+                if i != 0:
                     Result += "\n"
                 Result += "  "
             Result += format_one(Width, strings[i])
@@ -483,10 +462,10 @@ def PrintList4(strings):
 
 def ShowUsage(args, Usage, P):
     for arg in args[1:]:
-        if (arg in ["-h", "-help", "--help", "-?"]):
+        if arg in ["-h", "-help", "--help", "-?"]:
             print("")
             print("usage " + os.path.basename(args[0]) + ":")
-            if (Usage):
+            if Usage:
                 BaseName = os.path.basename(args[0])
                 GenericCommands = """
   build | buildlocal          build a package with local overrides (default)
@@ -501,7 +480,7 @@ def ShowUsage(args, Usage, P):
   -n                          no action (do not execute anything)
   -k                          keep going (ignore errors if possible)
 """
-                if (P):
+                if P:
                     N = len(P)
                     Packages = PrintList4(P)
                 print(Usage % vars())
@@ -516,19 +495,19 @@ def ShowUsage(args, Usage, P):
             sys.exit(0)
 
 def MakePackageDB():
-    if (not os.path.isfile(PKGSDB)):
+    if not os.path.isfile(PKGSDB):
         #
         # Look for all files src/m3makefile in the CM3 source
         # and write their relative paths from Root to PKGSDB.
         #
         def Callback(Result, Directory, Names):
-            if (os.path.basename(Directory) != "src"):
+            if os.path.basename(Directory) != "src":
                 return
-            if (Directory.find("_darcs") != -1):
+            if Directory.find("_darcs") != -1:
                 return
             if not "m3makefile" in Names:
                 return
-            if (not os.path.isfile(os.path.join(Directory, "m3makefile"))):
+            if not os.path.isfile(os.path.join(Directory, "m3makefile")):
                 return
             Result.append(Directory[len(Root) + 1:-4].replace('\\', "/") + "\n")
 
@@ -544,7 +523,7 @@ def MakePackageDB():
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
 
-        if (not os.path.isfile(PKGSDB)):
+        if not os.path.isfile(PKGSDB):
             File = __file__
             sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
@@ -573,7 +552,7 @@ def GetPackagePath(a):
     ReadPackageDB()
     b = ('/' + a)
     for i in PackageDB:
-        if (i.endswith(b)):
+        if i.endswith(b):
             return i.replace('/', os.path.sep)
     File = __file__
     sys.stderr.write("%(File)s: package %(a)s not found (%(b)s)\n" % vars())
@@ -585,16 +564,16 @@ def ListPackages(pkgs):
         for pkg in pkgs:
             pkg = pkg.replace('\\', '/')
             # remove Root from the start
-            if (pkg.startswith(Root + '/')):
+            if pkg.startswith(Root + '/'):
                 pkg = pkg[len(Root) + 1:]
                 #print("1 " + pkg)
             # if no slashes, then need a leading slash
-            if (pkg.find('/') == -1):
+            if pkg.find('/') == -1:
                 pkg = ('/' + pkg)
                 #print("2 " + pkg)
             for q in PackageDB:
                 q = q.replace('\\', '/')
-                if (q.find(pkg) != -1):
+                if q.find(pkg) != -1:
                     #print("3 " + q)
                     Result.append(q)
                     break
@@ -606,7 +585,7 @@ def _Run(NoAction, Actions, PackageDirectory):
 
     print(" +++ %s +++" % Actions)
 
-    if (NoAction):
+    if NoAction:
         return 0
 
     PreviousDirectory = os.getcwd()
@@ -614,7 +593,7 @@ def _Run(NoAction, Actions, PackageDirectory):
 
     for a in Actions:
         Result = os.system(a)
-        if (Result != 0):
+        if Result != 0:
             break
 
     os.chdir(PreviousDirectory)
@@ -691,8 +670,8 @@ def _FilterPackage(Package):
         "juno-compiler": BuildAll or OSType != "WIN32",
         "juno-app": BuildAll or OSType != "WIN32",
 
-        "m3back": not GCC_BACKEND,
-        "m3staloneback": not GCC_BACKEND,
+        #"m3back": not GCC_BACKEND,
+        #"m3staloneback": not GCC_BACKEND,
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }
     return PackageConditions.get(Package, True)
@@ -1175,7 +1154,7 @@ GenericCommand:
         PackagesFromCaller,
         )
 
-    if (not PackagesFromCaller and not args[1:]):
+    if (not PackagesFromCaller) and (not args[1:]):
         print("no actions and no packages specified\n")
         sys.stdout.flush()
         sys.exit(1)
@@ -1189,7 +1168,7 @@ GenericCommand:
     for arg in args[1:]:
         if arg == "":
             continue
-        if (arg.startswith("-")):
+        if arg.startswith("-"):
             if arg == "-l":
                 ListOnly = True
             elif arg == "-k":
@@ -1235,27 +1214,27 @@ GenericCommand:
     for p in Packages:
 
         q = p
-        if (os.path.isdir(q)):
+        if os.path.isdir(q):
             PackageDirectories.append(q)
             continue
 
         q = os.path.join(Root, p)
-        if (os.path.isdir(q)):
+        if os.path.isdir(q):
             PackageDirectories.append(q)
             continue
 
         q = GetPackagePath(p)
-        if (not q):
+        if not q:
             File = __file__
             sys.stderr.write("%(File)s *** cannot find package %(p)s\n" % vars())
             sys.exit(1)
 
-        if (os.path.isdir(q)):
+        if os.path.isdir(q):
             PackageDirectories.append(q)
             continue
 
         q = os.path.join(Root, q)
-        if (os.path.isdir(q)):
+        if os.path.isdir(q):
             PackageDirectories.append(q)
             continue
 
@@ -1263,19 +1242,19 @@ GenericCommand:
         sys.stderr.write("%(File)s *** cannot find package %(p)s / %(q)s\n" % vars())
         sys.exit(1)
 
-    if (not ActionCommands):
+    if not ActionCommands:
         File = __file__
         sys.stderr.write("%(File)s: no action defined, aborting\n" % vars())
         sys.exit(1)
         #return False
 
-    if (not PackageDirectories):
+    if not PackageDirectories:
         File = __file__
         sys.stderr.write("%(File)s: no packages\n" % vars())
         sys.exit(1)
         #return False
 
-    if (ListOnly):
+    if ListOnly:
         ListPackage(PackageDirectories)
         sys.exit(0)
         #return True
@@ -1285,12 +1264,12 @@ GenericCommand:
     for p in PackageDirectories:
         print("== package %(p)s ==" % vars())
         ExitCode = _Run(NoAction, ActionCommands, p)
-        if (ExitCode != 0):
+        if ExitCode != 0:
             Success = False
-            if (not KeepGoing):
+            if not KeepGoing:
                 print(" *** execution of %s failed ***" % (str(ActionCommands)))
                 sys.exit(1)
-        if (KeepGoing):
+        if KeepGoing:
             print(" ==> %s returned %s" % (str(ActionCommands), ExitCode))
         else:
             print(" ==> %(p)s done" % vars())
@@ -1302,7 +1281,7 @@ def DeleteFile(a):
         os.remove(a)
 
 def CreateDirectory(a):
-    if (not os.path.isdir(a)):
+    if not os.path.isdir(a):
         os.makedirs(a)
     return True
 
@@ -1313,19 +1292,19 @@ def MakeTempDir():
 MakeTempDir()
 
 def CopyFile(From, To):
-    if (os.path.isdir(To)):
+    if os.path.isdir(To):
         To = os.path.join(To, os.path.basename(From))
-    if (os.path.isfile(To)):
+    if os.path.isfile(To):
         os.remove(To)
     CopyCommand = "copy"
-    if (os.name != "nt"):
+    if os.name != "nt":
         CopyCommand = "cp -Pv"
     print(CopyCommand + " " + From + " " + To)
     shutil.copy(From, To)
     return True
 
 def CopyFileIfExist(From, To):
-    if (os.path.isfile(From)):
+    if os.path.isfile(From):
         return CopyFile(From, To)
     return True
 
@@ -1335,7 +1314,7 @@ def GetConfigForDistribution():
 #
     a = os.path.join(Root, "m3-sys", "cminstall", "src")
     b = os.path.join(a, "config-no-install", Target)
-    if (os.path.isfile(b)):
+    if os.path.isfile(b):
         return b
     b = os.path.join(a, "config", Target)
     return b
@@ -1373,7 +1352,7 @@ def CopyMklib(From, To):
     From = os.path.join(From, "bin")
     To = os.path.join(To, "bin")
     CreateDirectory(To)
-    if (Target == "NT386"):
+    if Target == "NT386":
         CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError()
     else:
         CopyFileIfExist(os.path.join(From, "mklib" + EXE), To) or FatalError()
@@ -1388,6 +1367,101 @@ def CopyCompiler(From, To):
     _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
     CopyMklib(From, To) or FatalError()
     return True
+
+#
+# Need to figure out how to do this properly, if at all.
+#
+#
+# Pretty specific to my setup.
+# We could also honor MSDevDir, MSVCDir, VCToolkitInstallDir, VCINSTALLDIR, etc.
+# see scripts\win\sysinfo.cmd. Some of these are set always by those installers.
+# (Though I delete them. :) )
+#
+def SetupEnvironment():
+    OriginalPath = os.environ["PATH"]
+    Path = OriginalPath
+    PathPrefix = ""
+    if os.environ.get("OS") == "Windows_NT":
+        NT = True
+    else:
+        NT = False
+
+    if Target == "NT386" and NT:
+
+        SystemDrive = os.environ.get("SystemDrive", "")
+        Msdev = SystemDrive + "\\msdev\\80"
+
+        if os.environ.get("INCLUDE", "") == "":
+            os.environ["INCLUDE"] = Msdev + "\\include"
+            print("INCLUDE=" + os.environ["INCLUDE"])
+
+        if os.environ.get("LIB", "") == "":
+            os.environ["LIB"] = Msdev + "\\VC\\lib;" + InstallRoot + "\\lib"
+            print("LIB=" + os.environ["LIB"])
+
+        if not SearchPath("mspdb80.dll"):
+            PathPrefix = Msdev + "\\Common7\IDE;"
+
+        if not SearchPath("cl") or not SearchPath("link"):
+            PathPrefix = Msdev + "\\VC\\bin;" + PathPrefix
+
+        if PathPrefix:
+            os.environ["PATH"] = (PathPrefix + Path)
+            print("PATH=" + PathPrefix + "%PATH%")
+
+    elif Target == "NT386GNU" and NT:
+
+        if "LIB" in os.environ:
+            del(os.environ["LIB"])
+            print("set LIB=")
+
+        if "INCLUDE" in os.environ:
+            del(os.environ["INCLUDE"])
+            print("set INCLUDE=")
+
+        if PathPrefix:
+            os.environ["PATH"] = (PathPrefix + Path)
+            print("PATH=" + PathPrefix + "%PATH%")
+
+#
+# Need to figure out how to do this properly, if at all.
+#
+
+def CheckEnvironment():
+    #
+    # TBD:
+    #   NT386WAT (Watcom) (wcl386)
+    #   NT386DMARS (Digital Mars) (dmc)
+    #   NT386MWERKS (Metrowerks) (mwcc, mwld)
+    #   NT386SYM (Symantec) (sc)
+    #   MSDOS386DJGPP (gcc, as)
+    #
+    # aka:
+    #   X86_NT_WATCOM
+    #   X86_NT_DMARS
+    #   X86_NT_MWERKS
+    #   X86_NT_SYM
+    #   X86_MSDOS_DJGPP
+    #
+    Required = [ ]
+
+    if os.environ.get("OS") == "Windows_NT":
+        NT = True
+    else:
+        NT = False
+
+    if Target == "NT386" and NT:
+        Required = ["cl", "link"]
+
+    # not right for cross builds? (ie: cross from NT and already have m3cg)
+
+    if Target == "NT386GNU":
+        Required = ["gcc", "as", "sh"]
+
+    for a in Required:
+        if SearchPath(a):
+            print("ERROR: " + a + " is not in $PATH")
+            sys.exit(1)
 
 if __name__ == "__main__":
     #
@@ -1477,7 +1551,7 @@ if __name__ == "__main__":
         for Arg in CommandLine:
             Length += 4
             Length += len(Arg)
-        if (Length > Width):
+        if Length > Width:
             Width = Length
 
     for Function in Functions:
