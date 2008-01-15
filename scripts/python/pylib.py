@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.28 2008-01-14 14:10:25 jkrell Exp $
+# $Id: pylib.py,v 1.29 2008-01-15 04:56:16 jkrell Exp $
 
 import os
 from os import getenv
@@ -1135,9 +1135,12 @@ def DoPackage(args, PackagesFromCaller = None):
     # print("args is " + str(args))
     # sys.stdout.flush()
 
-    if PackagesFromCaller:
+    if not PackagesFromCaller is None:
         PackagesFromCaller = FilterPackages(PackagesFromCaller)
         PackagesFromCaller = OrderPackages(PackagesFromCaller)
+        if not PackagesFromCaller:
+            print("no packages left")
+            return True
 
     if PackagesFromCaller:
         Usage = \
