@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.15 2008-01-15 01:07:52 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.16 2008-01-15 01:08:18 jkrell Exp $
 
 @setlocal
 
@@ -25,8 +25,8 @@ copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 cd %CM3_ROOT%\scripts\python
 
 set CM3_TARGET=NT386
-call python \do-cm3-std.py realclean
-call python \upgrade.py || exit /b 1
+call python .\do-cm3-std.py realclean
+call python .\upgrade.py || exit /b 1
 
 set CM3_TARGET=NT386GNU
 set LIB=
@@ -46,10 +46,10 @@ set P=^
     m3quake ^
     cm3
 
-call python \do-cm3-std.py realclean
-call python \do-pkg.py realclean %P%
-call python \do-pkg.py buildship %P% || exit /b 1
-call python \do-cm3-std.py buildship || exit /b 1
+call python .\do-cm3-std.py realclean
+call python .\do-pkg.py realclean %P%
+call python .\do-pkg.py buildship %P% || exit /b 1
+call python .\do-cm3-std.py buildship || exit /b 1
 
 goto :eof
 
