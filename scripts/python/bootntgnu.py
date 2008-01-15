@@ -29,7 +29,6 @@ OriginalPath = os.environ["PATH"]
 # Need to figure out how to do this properly, if at all.
 #
 SetupEnvironment()
-CheckEnvironment()
 
 P = [
     "import-libs",
