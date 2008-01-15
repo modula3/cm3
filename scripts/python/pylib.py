@@ -1443,6 +1443,10 @@ def SetupEnvironment():
     else:
         NT = False
 
+    SystemDrive = os.environ.get("SystemDrive")
+    if SystemDrive:
+        SystemDrive += os.path.sep
+
     if Target == "NT386" and NT:
 
         VCBin = ""
@@ -1494,9 +1498,6 @@ def SetupEnvironment():
             # need to guide pylib.py to other versions.
             # (setting the environment ahead of time should make it leave it alone)
             #
-            SystemDrive = os.environ.get("SystemDrive")
-            if SystemDrive:
-                SystemDrive += os.path.sep
             Msdev = os.path.join(SystemDrive, "msdev", "80")
             VCInstallDir = os.path.join(Msdev, "VC")
             DevEnvDir = os.path.join(Msdev, "Common7", "IDE")
@@ -1536,7 +1537,7 @@ def SetupEnvironment():
         _SetupEnvironmentVariableAll(
             "PATH",
             ["gcc", "as", "ld"],
-            os.path.join(SystemDrive, "mingwin", "bin"))
+            os.path.join(SystemDrive, "mingw", "bin"))
 
 if __name__ == "__main__":
     #
