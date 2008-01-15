@@ -21,5 +21,5 @@ cd %CM3_ROOT%\scripts\python
 set CM3_TARGET=NT386
 upgrade || exit /b 1
 
-set TARGET=NT386GNU
+set CM3_TARGET=NT386GNU
 upgrade || exit /b 1
