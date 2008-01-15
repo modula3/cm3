@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.5 2008-01-14 05:27:33 jkrell Exp $
+# $Id: upgrade.py,v 1.6 2008-01-15 11:22:01 jkrell Exp $
 
 import sys
 import pylib
@@ -7,6 +7,12 @@ from pylib import *
 
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
+
+#
+# Need to figure out how to do this properly, if at all.
+#
+SetupEnvironment()
+CheckEnvironment()
 
 #
 # clean everything
