@@ -9,6 +9,12 @@ argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
 #
+# Need to figure out how to do this properly, if at all.
+#
+SetupEnvironment()
+CheckEnvironment()
+
+#
 # clean everything
 #
 
