@@ -144,7 +144,3 @@ TYPE
   PtrChar      = UNTRACED REF CHAR;
 
 END RTHooks.
-
-
-
-
