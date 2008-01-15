@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.6 2008-01-15 11:22:01 jkrell Exp $
+# $Id: upgrade.py,v 1.7 2008-01-15 12:41:27 jkrell Exp $
 
 import sys
 import pylib
@@ -12,7 +12,6 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 # Need to figure out how to do this properly, if at all.
 #
 SetupEnvironment()
-CheckEnvironment()
 
 #
 # clean everything

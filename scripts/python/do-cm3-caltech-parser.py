@@ -1,9 +1,11 @@
 #! /usr/bin/env python
-# $Id: do-cm3-caltech-parser.py,v 1.5 2008-01-14 04:52:38 jkrell Exp $
+# $Id: do-cm3-caltech-parser.py,v 1.6 2008-01-15 12:41:27 jkrell Exp $
 
 from pylib import *
 import sys
 import os.path
+
+SetupEnvironment()
 
 DoPackage(sys.argv, [
     "cit_common",

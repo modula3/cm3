@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.2 2008-01-15 11:22:01 jkrell Exp $
+# $Id: bootntgnu.py,v 1.3 2008-01-15 12:41:27 jkrell Exp $
 
 #
 # It will be profitable for the user to make local edits
@@ -58,7 +58,6 @@ PathPrefix = ""
 EnvironmentModified = False
 
 SetupEnvironment()
-CheckEnvironment()
 
 if NT:
     if not SearchPath("gcc") or not SearchPath("as"):
@@ -78,7 +77,6 @@ reload(pylib)
 # Need to figure out how to do this properly, if at all.
 #
 SetupEnvironment()
-CheckEnvironment()
 
 # DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 
