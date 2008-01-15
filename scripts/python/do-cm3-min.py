@@ -1,10 +1,12 @@
 #! /usr/bin/env python
-# $Id: do-cm3-min.py,v 1.9 2008-01-07 12:39:13 jkrell Exp $
+# $Id: do-cm3-min.py,v 1.10 2008-01-15 12:41:27 jkrell Exp $
 
 from pylib import *
 import pylib
 import sys
 import os.path
+
+SetupEnvironment()
 
 DoPackage(sys.argv, pylib.PackageSets["min"]) or sys.exit(1)
 
