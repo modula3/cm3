@@ -32,7 +32,6 @@ do-pkg buildship ^
     m3staloneback ^
     m3front ^
     m3quake ^
-    m3cc ^
     cm3
 
 do-cm3-std realclean || exit /b 1
