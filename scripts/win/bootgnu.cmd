@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.10 2008-01-15 01:01:20 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.11 2008-01-15 01:02:21 jkrell Exp $
 
 @setlocal
 
@@ -19,7 +19,7 @@ set CM3_TARGET=NT386
 upgrade || exit /b 1
 
 set CM3_TARGET=NT386GNU
-do-pkg buildship ^
+set P=^
     m3cc ^
     m3core ^
     libm3 ^
@@ -34,7 +34,9 @@ do-pkg buildship ^
     m3quake ^
     cm3
 
-do-cm3-std realclean || exit /b 1
+do-cm3-std realclean
+do-pkg realclean %P%
+do-pkg buildship %P% || exit /b 1
 do-cm3-std buildship || exit /b 1
 
 goto :eof
