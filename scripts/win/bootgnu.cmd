@@ -15,7 +15,7 @@
 if "%CM3_ROOT%" == "" call :set_full_path CM3_ROOT %~dp0..\..
 
 rmdir /q/s \cm3
-xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3
+xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3 || exit /b 1
 del \cm3\bin\cm3.cfg
 copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 
