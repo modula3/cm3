@@ -5,6 +5,8 @@ import sys
 from pylib import *
 import os.path
 
+SetupEnvironment()
+
 DoPackage(sys.argv, [
     "import-libs",
     "m3core",

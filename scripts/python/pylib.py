@@ -53,6 +53,8 @@ def SearchPath(name, paths = getenv("PATH")):
     if (name.find("/") != -1) or (name.find("\\") != -1):
         if os.path.isfile(name):
             return name
+    if paths == "":
+        return None
     if os.name == "nt":
         # support for $PATHEXT might be nice
         if name.find(".") == -1:
@@ -336,8 +338,8 @@ GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
-os.environ["CM3_TARGET"] = Target;
-os.environ["CM3_ROOT"] = Root;
+os.environ["CM3_TARGET"] = Target
+os.environ["CM3_ROOT"] = Root
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -670,8 +672,6 @@ def _FilterPackage(Package):
         "juno-compiler": BuildAll or OSType != "WIN32",
         "juno-app": BuildAll or OSType != "WIN32",
 
-        #"m3back": not GCC_BACKEND,
-        #"m3staloneback": not GCC_BACKEND,
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }
     return PackageConditions.get(Package, True)
@@ -1343,7 +1343,7 @@ def ShipCompiler():
     #
     return _CopyCompiler(
         os.path.join(Root, "m3-sys", "cm3", Target),
-        os.path.join(InstallRoot, "bin"));
+        os.path.join(InstallRoot, "bin"))
 
 def CopyMklib(From, To):
     #
@@ -1368,6 +1368,65 @@ def CopyCompiler(From, To):
     CopyMklib(From, To) or FatalError()
     return True
 
+def _FormatEnvironmentVariable(Name):
+    if os.name == "nt":
+        return "%" + Name + "%"
+    else:
+        return "$" + Name
+
+def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+    AnyMissing = False
+    Value = os.environ.get(Name)
+    if Value:
+        for File in RequiredFiles:
+            if not SearchPath(File, Value):
+                AnyMissing = True
+                break
+    else:
+        AnyMissing = True
+    if AnyMissing:
+        if Value:
+            NewValue = Attempt + os.path.pathsep + Value
+        else:
+            NewValue = Attempt
+        for File in RequiredFiles:
+            if not SearchPath(File, NewValue):
+                print("ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")")
+                sys.exit(1)
+        os.environ[Name] = NewValue
+        if Value:
+            print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+        else:
+            print(Name + "=" + NewValue)
+
+
+def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
+    Value = os.environ.get(Name)
+    if Value:
+        for File in RequiredFiles:
+            if SearchPath(File, Value):
+                return
+    if Value:
+        NewValue = Attempt + os.path.pathsep + Value
+    else:
+        NewValue = Attempt
+    for File in RequiredFiles:
+        if SearchPath(File, NewValue):
+            os.environ[Name] = NewValue
+            if Value:
+                print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+            else:
+                print(Name + "=" + NewValue)
+            return
+    print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + RequiredFiles)
+    sys.exit(1)
+
+def _ClearEnvironmentVariable(Name):
+    if Name in os.environ:
+        del(os.environ[Name])
+        print("set " + Name + "=")
+
+
 #
 # Need to figure out how to do this properly, if at all.
 #
@@ -1378,9 +1437,7 @@ def CopyCompiler(From, To):
 # (Though I delete them. :) )
 #
 def SetupEnvironment():
-    OriginalPath = os.environ["PATH"]
-    Path = OriginalPath
-    PathPrefix = ""
+    SystemDrive = os.environ.get("SystemDrive", "")
     if os.environ.get("OS") == "Windows_NT":
         NT = True
     else:
@@ -1388,80 +1445,98 @@ def SetupEnvironment():
 
     if Target == "NT386" and NT:
 
-        SystemDrive = os.environ.get("SystemDrive", "")
-        Msdev = SystemDrive + "\\msdev\\80"
+        VCBin = ""
+        VCInc = ""
+        VCLib = ""
+        MspdbDir = ""
 
-        if os.environ.get("INCLUDE", "") == "":
-            os.environ["INCLUDE"] = Msdev + "\\include"
-            print("INCLUDE=" + os.environ["INCLUDE"])
+        # 4.0 e:\MSDEV
+        # 5.0 E:\Program Files\DevStudio\SharedIDE
+        MSDevDir = os.environ.get("MSDevDir")
 
-        if os.environ.get("LIB", "") == "":
-            os.environ["LIB"] = Msdev + "\\VC\\lib;" + InstallRoot + "\\lib"
-            print("LIB=" + os.environ["LIB"])
+        # 5.0
+        MSVCDir = os.environ.get("MSVCDir") # E:\Program Files\DevStudio\VC
 
-        if not SearchPath("mspdb80.dll"):
-            PathPrefix = Msdev + "\\Common7\IDE;"
+        # 7.1 Express
+        VCToolkitInstallDir = os.environ.get("VCToolkitInstallDir") # E:\Program Files\Microsoft Visual C++ Toolkit 2003 (not set by vcvars32)
 
-        if not SearchPath("cl") or not SearchPath("link"):
-            PathPrefix = Msdev + "\\VC\\bin;" + PathPrefix
+        # 8.0 Express
+        # E:\Program Files\Microsoft Visual Studio 8\VC
+        # E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
+        DevEnvDir = os.environ.get("DevEnvDir") # E:\Program Files\Microsoft Visual Studio 8\Common7\IDE
+        VSInstallDir = os.environ.get("VSINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8
+        # VS80CommonTools = os.environ.get("VS80COMNTOOLS") # E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
+        VCInstallDir = os.environ.get("VCINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8\VC
 
-        if PathPrefix:
-            os.environ["PATH"] = (PathPrefix + Path)
-            print("PATH=" + PathPrefix + "%PATH%")
+        #
+        # untested prototype..
+        #
+        if VSInstallDir:
+            if not VCInstallDir:
+                VCInstallDir = os.path.join(VSInstallDir, "VC")
+            if not DevEnvDir:
+                DevEnvDir = os.path.join(VSInstallDir, "Common7", "IDE")
 
-    elif Target == "NT386GNU" and NT:
+            MspdbDir = DevEnvDir
 
-        if "LIB" in os.environ:
-            del(os.environ["LIB"])
-            print("set LIB=")
+        elif VCToolkitInstallDir:
+            pass # do more research
 
-        if "INCLUDE" in os.environ:
-            del(os.environ["INCLUDE"])
-            print("set INCLUDE=")
+        elif MSVCDir:
+            pass # do more research
 
-        if PathPrefix:
-            os.environ["PATH"] = (PathPrefix + Path)
-            print("PATH=" + PathPrefix + "%PATH%")
+        elif MSDevDir:
+            pass # do more research
 
-#
-# Need to figure out how to do this properly, if at all.
-#
+        else:
+            #
+            # what really happens on my machine for 8.0
+            # need to guide pylib.py to other versions.
+            # (setting the environment ahead of time should make it leave it alone)
+            #
+            SystemDrive = os.environ.get("SystemDrive")
+            if SystemDrive:
+                SystemDrive += os.path.sep
+            Msdev = os.path.join(SystemDrive, "msdev", "80")
+            VCInstallDir = os.path.join(Msdev, "VC")
+            DevEnvDir = os.path.join(Msdev, "Common7", "IDE")
 
-def CheckEnvironment():
-    #
-    # TBD:
-    #   NT386WAT (Watcom) (wcl386)
-    #   NT386DMARS (Digital Mars) (dmc)
-    #   NT386MWERKS (Metrowerks) (mwcc, mwld)
-    #   NT386SYM (Symantec) (sc)
-    #   MSDOS386DJGPP (gcc, as)
-    #
-    # aka:
-    #   X86_NT_WATCOM
-    #   X86_NT_DMARS
-    #   X86_NT_MWERKS
-    #   X86_NT_SYM
-    #   X86_MSDOS_DJGPP
-    #
-    Required = [ ]
+        if VCInstallDir:
+            VCBin = os.path.join(VCInstallDir, "bin")
+            VCLib = os.path.join(VCInstallDir, "lib")
+            VCInc = os.path.join(VCInstallDir, "include")
 
-    if os.environ.get("OS") == "Windows_NT":
-        NT = True
-    else:
-        NT = False
+        if DevEnvDir:
+            MspdbDir = DevEnvDir
 
-    if Target == "NT386" and NT:
-        Required = ["cl", "link"]
+        _SetupEnvironmentVariableAll("INCLUDE", ["errno.h"], VCInc)
 
-    # not right for cross builds? (ie: cross from NT and already have m3cg)
+        _SetupEnvironmentVariableAll(
+            "LIB",
+            ["kernel32.lib", "libcmt.lib"],
+            VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
 
-    if Target == "NT386GNU":
-        Required = ["gcc", "as", "sh"]
+        _SetupEnvironmentVariableAny(
+            "PATH",
+            ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb40.dll" ],
+            MspdbDir)
 
-    for a in Required:
-        if SearchPath(a):
-            print("ERROR: " + a + " is not in $PATH")
-            sys.exit(1)
+        _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+
+    elif Target == "NT386GNU":
+
+        _ClearEnvironmentVariable("LIB")
+        _ClearEnvironmentVariable("INCLUDE")
+
+        _SetupEnvironmentVariableAll(
+            "PATH",
+            ["sh", "sed", "gawk", "make"],
+            os.path.join(SystemDrive, "msys", "1.0", "bin"))
+
+        _SetupEnvironmentVariableAll(
+            "PATH",
+            ["gcc", "as", "ld"],
+            os.path.join(SystemDrive, "mingwin", "bin"))
 
 if __name__ == "__main__":
     #

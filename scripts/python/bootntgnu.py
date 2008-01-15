@@ -58,7 +58,6 @@ PathPrefix = ""
 EnvironmentModified = False
 
 SetupEnvironment()
-CheckEnvironment()
 
 if NT:
     if not SearchPath("gcc") or not SearchPath("as"):
@@ -78,7 +77,6 @@ reload(pylib)
 # Need to figure out how to do this properly, if at all.
 #
 SetupEnvironment()
-CheckEnvironment()
 
 # DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 

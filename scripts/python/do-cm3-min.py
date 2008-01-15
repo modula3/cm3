@@ -6,6 +6,8 @@ import pylib
 import sys
 import os.path
 
+SetupEnvironment()
+
 DoPackage(sys.argv, pylib.PackageSets["min"]) or sys.exit(1)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))

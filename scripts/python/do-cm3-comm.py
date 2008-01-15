@@ -5,6 +5,8 @@ from pylib import *
 import sys
 import os.path
 
+SetupEnvironment()
+
 DoPackage(sys.argv, [
     "tcp",
     "tapi",

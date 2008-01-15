@@ -6,6 +6,8 @@ import pylib
 import sys
 import os.path
 
+SetupEnvironment()
+
 if not SearchPath("m3bundle"):
     DoPackage(sys.argv, ["m3bundle"])
 

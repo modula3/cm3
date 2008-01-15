@@ -5,6 +5,7 @@ import os.path
 import sys
 import pylib
 
-pylib.DoPackage(sys.argv)
+SetupEnvironment()
+DoPackage(sys.argv)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
