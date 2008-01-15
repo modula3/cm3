@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.4 2008-01-15 00:54:16 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.5 2008-01-15 00:55:37 jkrell Exp $
 
 @setlocal
 
@@ -7,10 +7,7 @@
 
 @rem set PATH=%SystemDrive%\msys\1.0\bin;%SystemDrive%\mingw\bin;%PATH%
 
-if not defined CM3_ROOT (
-  echo ERROR
-  goto :eof
-)
+if "%CM3_ROOT%" == "" call :set_full_path CM3_ROOT %~dp0..\..
 
 rmdir /q/s \cm3
 xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3
@@ -23,3 +20,9 @@ upgrade || exit /b 1
 
 set CM3_TARGET=NT386GNU
 upgrade || exit /b 1
+
+goto :eof
+
+:set_full_path
+set %1=%~f2
+goto :eof
