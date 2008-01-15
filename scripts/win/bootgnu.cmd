@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.3 2008-01-15 00:54:00 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.4 2008-01-15 00:54:16 jkrell Exp $
 
 @setlocal
 
@@ -21,5 +21,5 @@ cd %CM3_ROOT%\scripts\python
 set CM3_TARGET=NT386
 upgrade || exit /b 1
 
-set TARGET=NT386GNU
+set CM3_TARGET=NT386GNU
 upgrade || exit /b 1
