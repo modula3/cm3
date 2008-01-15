@@ -269,8 +269,9 @@ if AnyStale
             "link",
             "-lib",
             "-nologo",
-            ObjFile("a"),
+            "-nodefaultlib",
             "-def:" & File & ".def",
+            ObjFile("a"),
             )
     end
 end
