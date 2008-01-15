@@ -2,26 +2,47 @@
 #----------------------------------------------------------------------------
 # global definitions
 
+# our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname -s`}
+# a user-local temporary files directory
+HTMP=${HTMP:-${HOME}/tmp/cm3/${TESTHOSTNAME}}
+
+# datestamp and workspace
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 WS=${WS:-${HOME}/work/cm3-ws/${TESTHOSTNAME}-${DS}}
 
+# version to check out from repository (usually the main trunk's head)
 COVERSION=${COVERSION:-"-AP"} # version to checkout, default current
 
 # CMINSTALL: set this to override the installer binary (full path)
 # NOCLEAN: set to avoid cleaning for re-starts
 
+# last release for installation
 LASTREL=${LASTREL:-5.4.0}
+
+# CM3 installation directories
 INSTBASE=${INSTBASE:-${HOME}/work/cm3-inst/${TESTHOSTNAME}}
 INSTROOT_REL=${INSTROOT_REL:-${INSTBASE}/rel-${LASTREL}}
 INSTROOT_LOK=${INSTROOT_OK:-${INSTBASE}/last-ok}
 INSTROOT_POK=${INSTROOT_OK:-${INSTBASE}/prev-ok}
 INSTROOT_CUR=${INSTROOT_CUR:-${INSTBASE}/current}
 
+# repository definitions
 CM3CVSSERVER=${CM3CVSSERVER:-birch.elegosoft.com}
 CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
 
+# the whole test log
+RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
+# number of last run results to keep (for cleanup in main)
+CM3_NKEEP=${CM3_NKEEP:-7}
+
 UNAME=${UNAME:-`uname`}
+
+TMP=${TMP:-/tmp}
+TMPDIR=${TMPDIR:-${TMP}}
+if [ ! -d "${TMPDIR}" ]; then
+  TMPDIR="${HTMP}"
+fi
 
 case "${UNAME}" in
 
@@ -85,12 +106,19 @@ case "${UNAME}" in
   ;;
 esac
 
-HTMP=${HTMP:-${HOME}/tmp/cm3/${TESTHOSTNAME}}
-
+# files for result aggregation of m3-sys/m3tests
 M3TOUT=${M3TOUT:-${HTMP}/m3tests-${DS}.stdout}
 M3TERR=${M3TERR:-${HTMP}/m3tests-${DS}.stderr}
 
+# the next three are just for documentation and cleanup
+CM3_VERSION=${CM3_VERSION:-"*"}
+CM3_SNAPSHOT=${CM3_SNAPSHOT:-"${HTMP}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${CM3_VERSION}-${DS}.tgz"}
+HTML_REPORT="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${CM3_TARGET}-${DS}.html}"
+
+# the binary installation archive to install from
 BINDISTMIN=${BINDISTMIN:-${HOME}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz}
+
+# display some important settings
 echo "TESTHOSTNAME=${TESTHOSTNAME}"
 echo "WS=${WS}"
 echo "LASTREL=${LASTREL}"
@@ -242,6 +270,76 @@ cm3config() {
 
 logfilter() {
   egrep ' >>> | === 2'
+}
+
+lines() {
+  wc | awk '{print $1}'
+}
+
+all_but_last_n() {
+  n=$1
+  t=${TMPDIR}/all_but_$$
+  cat > ${t}
+  m=`cat ${t} | lines`
+  if [ $m -gt $n ]; then
+    d=`expr $m - $n`
+    head -n $d ${t}
+  fi
+  rm -f ${t}
+}
+
+cleanup_all_but_last_n() { 
+  # Beware! This may ruin your disk with wrong standard input...
+  dirs=`all_but_last_n $1`
+  ${dirs} | xargs rm -rf
+}
+
+cleanup_all() {
+  if [ -z "$1" ]; then
+    n=3
+  else
+    n=$1
+  fi
+
+  echo "cleaning CM3 workspaces..."
+  pat=`echo "${WS}" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
+
+  echo "cleaning regression test log files..."
+  pat=`echo "${RLOG}" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
+
+  echo "cleaning m3test log files..."
+  pat=`echo "${M3TOUT}" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
+
+  pat=`echo "${M3TERR}" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
+
+  pat=`echo "${M3TERR}.extract" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
+
+  echo "cleaning snapshot files..."
+  pat=`echo "${CM3_SNAPSHOT}" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
+
+  echo "cleaning package reports..."
+  pat=`echo "${HTML_REPORT}" | sed -e "s/${DS}/*/"`
+  echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${n}
+  echo
 }
 
 
@@ -559,7 +657,8 @@ testall()
 
 main()
 {
-  time testall 2>&1 | tee ${HTMP}/cm3-rlog-${DS}
+  time testall 2>&1 | tee ${RLOG}
+  cleanup_all ${CM3_NKEEP}
 }
 
 #----------------------------------------------------------------------------
