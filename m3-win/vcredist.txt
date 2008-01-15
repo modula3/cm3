@@ -1,4 +1,4 @@
-On computers without Visual C++ 2005 or CLR 2.0 installed, download and
+On computers without Visual C++ 2005 (8.0) or CLR 2.0 installed, download and
  run the setup for the Visual C++ runtime -- vcredist_x86.exe -- from either
 
 RTM (release to manufacturing):
@@ -8,3 +8,7 @@ RTM (release to manufacturing):
 or Service Pack 1:
 
   http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647
+
+Or if you use Visual C++ 2008 (9.0)
+
+http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
