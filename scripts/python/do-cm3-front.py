@@ -1,11 +1,12 @@
 #! /usr/bin/env python
-# $Id: do-cm3-front.py,v 1.3 2008-01-14 03:30:38 jkrell Exp $
+# $Id: do-cm3-front.py,v 1.4 2008-01-15 04:56:16 jkrell Exp $
 
 import sys
 from pylib import *
 import os.path
 
 DoPackage(sys.argv, [
+    "import-libs",
     "m3core",
     "libm3",
     "m3middle",
@@ -17,7 +18,7 @@ DoPackage(sys.argv, [
     "m3quake",
     "m3cc",
     "cm3",
-# "mklib"
+    "mklib",
     ])
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
