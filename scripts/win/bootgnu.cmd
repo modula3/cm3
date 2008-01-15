@@ -20,7 +20,7 @@ del \cm3\bin\cm3.cfg
 copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 
 @rem
-@rem Use the "real" scripts.
+@rem Use the "real" code.
 @rem
 cd %CM3_ROOT%\scripts\python
 
