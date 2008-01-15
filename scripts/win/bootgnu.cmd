@@ -1,16 +1,19 @@
-@rem $Id: bootgnu.cmd,v 1.1 2008-01-15 00:42:26 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.2 2008-01-15 00:43:08 jkrell Exp $
 
 @setlocal
 
 @rem check that cl and link are in path
+
 if not defined CM3_ROOT (
   echo ERROR
   goto :eof
 )
+
 rmdir /q/s \cm3
 xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3
 del \cm3\bin\cm3.cfg
-copy CM3_ROOT\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
+copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
+
 cd %CM3_ROOT%\scripts\python
 set CM3_TARGET=NT386
 upgrade || exit /b 1
