@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.3 2008-01-15 12:41:27 jkrell Exp $
+# $Id: bootntgnu.py,v 1.4 2008-01-15 12:42:22 jkrell Exp $
 
 #
 # It will be profitable for the user to make local edits
@@ -29,7 +29,6 @@ OriginalPath = os.environ["PATH"]
 # Need to figure out how to do this properly, if at all.
 #
 SetupEnvironment()
-CheckEnvironment()
 
 P = [
     "import-libs",
