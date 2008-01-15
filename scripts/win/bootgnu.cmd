@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.11 2008-01-15 01:02:21 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.12 2008-01-15 01:03:04 jkrell Exp $
 
 @setlocal
 
@@ -14,8 +14,14 @@ xcopy /fivery \cm3-min-WIN32-NT386-5.1.3 \cm3
 del \cm3\bin\cm3.cfg
 copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 
+@rem
+@rem Use the "real" scripts.
+@rem
+
 cd %CM3_ROOT%\scripts\python
+
 set CM3_TARGET=NT386
+do-cm3-std realclean
 upgrade || exit /b 1
 
 set CM3_TARGET=NT386GNU
