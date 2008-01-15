@@ -1,4 +1,4 @@
-@rem $Id: bootgnu.cmd,v 1.6 2008-01-15 00:57:16 jkrell Exp $
+@rem $Id: bootgnu.cmd,v 1.7 2008-01-15 00:57:44 jkrell Exp $
 
 @setlocal
 
@@ -16,10 +16,11 @@ copy %CM3_ROOT%\m3-sys\cminstall\src\config\cm3.cfg \cm3\bin\cm3.cfg
 
 cd %CM3_ROOT%\scripts\python
 set CM3_TARGET=NT386
-do-pkg buildship m3core libm3
 upgrade || exit /b 1
 
 set CM3_TARGET=NT386GNU
+do-pkg buildship m3cc
+do-pkg buildship m3core libm3
 upgrade || exit /b 1
 
 goto :eof
