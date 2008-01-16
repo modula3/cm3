@@ -40,58 +40,68 @@ H6 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
      font-size  : .98em ;
      background : #FFFFFF ;
      color      : #0077FF;
-     text-align : center }
+     text-align : center; }
 
 P.title { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
           font-size  : .98em ;
-          text-align : left }
+          text-align : left; }
 
 SPAN.title { font-size  : 1.8em ;
              font-weight : bold; }
 
 
 SPAN.emph    { font-size : 1.08em;
-               font-weight : bold }
+               font-weight : bold; }
 
 SPAN.unemph { font-size : .74em; }
 
 
 SPAN.smaller { font-size : .74em; }
 
-SPAN.info    { color: yellow ; background: green }
-SPAN.warning { color: black ;  background: yellow }
-SPAN.error   { color: black ;  background: red }
-SPAN.new     { color: yellow ; background: blue }
+.small   { font-size : .5em; }
+
+SPAN.info    { color: yellow ; background: green; }
+SPAN.warning { color: black ;  background: yellow; }
+SPAN.error   { color: black ;  background: red; }
+SPAN.new     { color: yellow ; background: blue; }
 
 /* "Hide" Anchor border from NS */
 A.hidden { background: transparent ;
-           color     : #FFFFFF }
+           color     : #FFFFFF; }
 
 /* Hide image border from IE 4.0 and supposed to work for NS 4.0 but doesn't */
-IMG.hidden { border    : 0 }
+IMG.hidden { border    : 0; }
 
 
-IMG.middle { vertical-align: middle }
+IMG.middle { vertical-align: middle; }
 
-TD.baseline { vertical-align: baseline }
+TD.baseline { vertical-align: baseline; }
 
-TD.top { vertical-align: top }
+TD.top { vertical-align: top; }
 
 DD.indent { text-indent: -1em;
             padding-top:    0.33em;
             padding-left:   0 ;
             padding-right:  0 ;
-            padding-bottom: 0.33em }
+            padding-bottom: 0.33em; }
 
 DT.toppad {
             padding-top:    0.5em;
             padding-left:   0 ;
             padding-right:  0 ;
-            padding-bottom: 0 }
+            padding-bottom: 0; }
 
 B.pink { background: transparent ;
 	 color : #FFAAAA ; }
 
-.tablebg { background: #DDEEFF }
+.tablebg { background: #FFFFFF; /*#DDEEFF*/
+           font-size: 0.9em; }
 
-.datebg { background: #FFFFB0 }
+.topnav { background: #DDEEFF;
+          color: #0077FF;
+          font-size: 1em;
+          font-weight: bold;
+          text-align: center;
+        }
+
+.datebg { background: #FFFFB0; }
