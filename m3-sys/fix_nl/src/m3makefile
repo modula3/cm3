@@ -1,9 +1,0 @@
-
-import ("libm3")
-
-interface ("OS")
-implementation ("OS" & OS_TYPE)
-implementation ("Main")
-
-build_standalone ()
-Program ("fix_nl")

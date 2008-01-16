@@ -1,3 +1,0 @@
-import("paneman")
-implementation("Main")
-program("kemacs")
