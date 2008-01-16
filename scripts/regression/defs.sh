@@ -613,11 +613,11 @@ test_m3_all_pkgs()
   
   if [ 0 = "${res}" ]; then
     echo " >>> OK test_m3_all_pkgs ${DS} ${WS}"
-    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 package status run done"
     true
   else
-    echo " >>> errors in test_m3tests ${DS} ${WS}"
-    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
+    echo " >>> ${res} errors in test_m3_all_pkgs ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 package status run done"
     false
   fi
 }
