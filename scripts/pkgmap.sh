@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.11 2008-01-15 07:34:12 wagner Exp $
+# $Id: pkgmap.sh,v 1.12 2008-01-16 08:12:27 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -253,4 +253,4 @@ if [ -n "${REPORT}" ]; then
   fi
 fi
 
-[ -n "${OK}" ]
+[ -n "${OK}" ] || exit `printf "{$REDPKGS}" | wc | awk '{print $1}'`
