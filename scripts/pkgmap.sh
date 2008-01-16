@@ -253,4 +253,4 @@ if [ -n "${REPORT}" ]; then
   fi
 fi
 
-[ -n "${OK}" ]
+[ -n "${OK}" ] || exit `printf "{$REDPKGS}" | wc | awk '{print $1}'`
