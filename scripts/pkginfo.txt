@@ -133,6 +133,7 @@ m3tmplhack
 obliqlib3D
 paneman
 paneman/kemacs
+parserlib/kyacclib
 parserlib/kext
 parserlib/klex
 parserlib/klexlib
