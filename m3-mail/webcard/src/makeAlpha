@@ -1,6 +1,0 @@
-#! /bin/sh
-rm -rf $HOME/oldAlpha
-mv $HOME/alpha $HOME/oldAlpha
-mkdir $HOME/alpha
-cp $HOME/postcard/DS/Postcard $HOME/alpha/Postcard
-cp -r $HOME/postcard/src/* $HOME/alpha

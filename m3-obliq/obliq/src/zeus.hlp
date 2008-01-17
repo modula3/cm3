@@ -1,2 +1,0 @@
-  zeus_failure: Exception
-  zeus_animate(g: Graph, t0: Real, t1: Real): Ok
