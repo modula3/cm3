@@ -1,6 +1,0 @@
-override ("binIO", "../../..")
-
-import ("binIO")
-
-implementation ("Test")
-program ("Test")
