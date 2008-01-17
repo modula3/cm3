@@ -11,6 +11,7 @@ TARGETS=`ls -1 ${FNPATLS} |
   sed -e "s/${FNPAT1}\([A-Za-z0-6_]*\)-.*${FNPATSUF}/\1/" |
   sort -u`
 
+mv ${INDEX} ${INDEX}.old
 cat > ${INDEX} << EOF
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -47,3 +48,5 @@ cat >> ${INDEX} <<EOF
   </body>
 </html>
 EOF
+
+rm -f ${INDEX}.old
