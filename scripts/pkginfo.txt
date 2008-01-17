@@ -103,6 +103,7 @@ obliqbinmin std
 obliqbinstd std
 obliqbinui std
 obliqbinanim std
+obliqlib3D
 visualobliq std
 vocgi std
 voquery std
@@ -123,25 +124,24 @@ calculator std
 fisheye std
 mentor std
 cit_common
+m3tmplhack
 cit_util
+term
 deepcopy
 drawcontext
 hack
-kate
 m3browserhack
-m3tmplhack
-obliqlib3D
 paneman
 paneman/kemacs
-parserlib/kyacclib
-parserlib/kext
-parserlib/klex
-parserlib/klexlib
-parserlib/ktok
 parserlib/ktoklib
+parserlib/klexlib
+parserlib/kyacclib
+parserlib/ktok
+parserlib/klex
 parserlib/kyacc
+parserlib/kext
 parserlib/parserlib
 parserlib/parserlib/test
 pp
+kate
 sgml
-term
