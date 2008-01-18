@@ -135,8 +135,16 @@ call :environment_variable_must_contain_files include errno.h || exit /b 1
 
 call :environment_variable_must_contain_files lib kernel32.lib libcmt.lib || exit /b 1
 
-for %%a in (DELAYLOAD) do call :check_for_link_switch %%a
-for %%a in (MSVCRT) do call :check_for_lib %%a
+for %%a in (DELAYLOAD) do (
+    if not defined USE_%%a (
+        call :check_for_link_switch %%a
+    )
+)
+for %%a in (MSVCRT) do (
+    if not defined USE_%%a (
+        call :check_for_lib %%a
+    )
+)
 
 :end_CheckAndConifigureNT386Environment
 
