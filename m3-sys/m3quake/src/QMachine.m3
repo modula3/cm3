@@ -1060,13 +1060,12 @@ TYPE
   Builtin = RECORD
     name    : TEXT;
     proc    : QCode.BuiltinProc;
-    n_args  : INTEGER;
+    n_args  : INTEGER; (* -1 means any number of parameters *)
     is_func : BOOLEAN;
   END;
 
 CONST
   Builtins = ARRAY OF Builtin {
-    (* -1 means any number of parameters *)
     Builtin {"arglist",     DoArgList,   2, TRUE},
     Builtin {"cp_if",       DoCopyIfNew, 2, FALSE},
     Builtin {"defined",     DoDefined,   1, TRUE},
