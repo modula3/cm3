@@ -1,3 +1,4 @@
+
 % Partly copied from CVSup by John D. Polstra
 %
 % Copyright 1999-2003 John D. Polstra.
@@ -66,10 +67,12 @@ proc version_impl(name) is
       write("MODULE Version;", CR, CR, "BEGIN", CR)
     end
 
+    local NOW = ""
+
     if equal($OS, "Windows_NT")
 
-        if defined("CM3_VERSION_NOW")
-            NOW = CM3_VERSION_NOW
+        if defined("datetime")
+            NOW = datetime()
         else
             NOW = "not available"
         end
