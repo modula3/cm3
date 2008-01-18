@@ -28,14 +28,14 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.6 2007-12-31 22:06:23 jkrell Exp $
+% $Id: version.quake,v 1.7 2008-01-18 14:26:48 jkrell Exp $
 
 % Generate the "Version.m3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.
 proc version_impl(name) is
   local filename = name & ".m3"
   local tempname = "." & filename
-  local datefn = "../" & TARGET & ".datenow"
+  local datefn = ".." & SL & TARGET & SL & "_m3datenow.quake"
   local dcmd = ""
   local ret = 0
   if defined("_all")
@@ -97,11 +97,9 @@ proc version_impl(name) is
         end
 
         if (AnyChanged or AnyMissing)
-            > "version.cmd" in
+            > "_m3version.cmd" in
                 write("@echo off", CR)
-            end
-            if AnyMissing
-                >> "version.cmd" in
+                if AnyMissing
                     %    
                     % It does not make sense to me that we have to pass in the path to sysinfo.sh here.
                     % The useof %~dp0 in sysinfo.cmd is oddly not working, it is resolving
@@ -109,18 +107,14 @@ proc version_impl(name) is
                     %
                     write("call ..\\..\\..\\scripts\\win\\sysinfo GetDefaultsFromSh ..\\..\\..\\scripts\\sysinfo.sh || exit /b 1", CR)
                 end
-            end
-            foreach Name in Missing
-                >> "version.cmd" in
+                foreach Name in Missing
                     write("echo ", Name, " = \"%", Map{Name}{"EnvName"}, "%\"", CR)
                 end
-            end
-            foreach Name in Changed
-                >> "version.cmd" in
+                foreach Name in Changed
                     write("echo ", Name, " = \"", Map{Name}{"Value"}, "\"", CR)
                 end
             end
-            exec("@.\\version.cmd > " & datefn)
+            exec("@.\\_m3version.cmd > " & datefn)
         end
     else
         dcmd = "date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
@@ -133,7 +127,9 @@ proc version_impl(name) is
           write("\"" & CR)
         end
     end
-    include(datefn)
+    if FileExists(datefn)
+        include(datefn)
+    end
     if not defined("CM3_VERSION_NUMBER")
       CM3_VERSION_NUMBER = "000000"
       write(" *** warning: CM3_VERSION_NUMBER not defined", CR)
