@@ -494,9 +494,8 @@ is
     % On the other hand, it would be nice to get back a backend that generates
     % portable C, in order to get good codegen, on more platforms, without gcc.
     %
-    local entry = 0
     if USE_MSVCRT
-        entry = "-noentry"
+        options += "-noentry"
     end
 
     if shared
@@ -522,7 +521,6 @@ is
                      options,
                      objects,
                      imported_libs,
-                     entry
                 ])
 
         ret_code = try_exec("link", LinkResponseFile, ">", listing)
