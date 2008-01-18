@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-caltech-parser.sh,v 1.1 2001-09-19 15:40:10 wagner Exp $
+# $Id: do-cm3-caltech-parser.sh,v 1.2 2008-01-18 00:41:12 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -32,6 +32,7 @@ P="${P} paneman"
 P="${P} paneman/kemacs"
 P="${P} parserlib/ktoklib"
 P="${P} parserlib/klexlib"
+P="${P} parserlib/kyacclib"
 P="${P} parserlib/ktok"
 P="${P} parserlib/klex"
 P="${P} parserlib/kyacc"
