@@ -30,14 +30,37 @@
 %
 % $Id$
 
+
+%------------------------------------------------------------------------------
+
+proc
+FileExists(
+    a,
+    )
+is
+    return not stale(a, a)
+end
+
+%------------------------------------------------------------------------------
+
 % Generate the "Version.m3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.
 proc version_impl(name) is
   local filename = name & ".m3"
-  local tempname = "." & filename
+  local tempname = "_m3temp_" & filename
   local datefn = ".." & SL & TARGET & SL & "_m3datenow.quake"
   local dcmd = ""
   local ret = 0
+
+  % delete some but not all outputs
+  delete_file(datefn)
+  delete_file("_m3version.cmd")
+  delete_file(tempname)
+
+  % delete with the old names
+  delete_file(".." & SL & TARGET & ".datenow")
+  delete_file("." & filename)
+
   if defined("_all")
     > tempname in
       write("MODULE Version;", CR, CR, "BEGIN", CR)
