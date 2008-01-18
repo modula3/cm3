@@ -1066,6 +1066,7 @@ TYPE
 
 CONST
   Builtins = ARRAY OF Builtin {
+    (* -1 means any number of parameters *)
     Builtin {"arglist",     DoArgList,   2, TRUE},
     Builtin {"cp_if",       DoCopyIfNew, 2, FALSE},
     Builtin {"defined",     DoDefined,   1, TRUE},
@@ -1084,6 +1085,7 @@ CONST
     Builtin {"try_exec",    DoTryExec,  -1, TRUE},
     Builtin {"unlink_file", DoUnlink,    1, TRUE},
     Builtin {"write",       DoWrite,    -1, FALSE},
+    Builtin {"datetime",    DoDateTime,  0, TRUE},
     Builtin {"TRACE_INSTR", DoTrace,     0, FALSE}
   };
 
@@ -1100,25 +1102,6 @@ PROCEDURE InitBuiltins (t: T) =
     EVAL t.globals.put (b.name, b);
     b := NewConst (t, "FALSE", t.map.boolean [FALSE]);
     EVAL t.globals.put (b.name, b);
-
-    WITH date = Date.FromTime(Time.Now(), Date.UTC) DO
-        b := NewConst(
-            t,
-            "CM3_VERSION_NOW",
-            t.map.txt2id(
-                Fmt.FN(
-                    "%04s-%02s-%02s %02s:%02s:%02s",
-                    ARRAY OF TEXT{
-                        Fmt.Int(date.year),
-                        Fmt.Int(ORD(date.month) + 1),
-                        Fmt.Int(date.day),
-                        Fmt.Int(date.hour),
-                        Fmt.Int(date.minute),
-                        Fmt.Int(date.second)
-                        })));
-        EVAL t.globals.put(b.name, b);
-    END;
-
   END InitBuiltins;
 
 PROCEDURE NewBuiltin (t       : T;
@@ -1666,6 +1649,25 @@ PROCEDURE DoWrite (t: T;  n_args: INTEGER)
     EXCEPT Wr.Failure (ec) => Err (t, "write failed" & OSErr (ec));
     END;
   END DoWrite;
+
+PROCEDURE DoDateTime(t: T;  n_args: INTEGER) =
+  BEGIN
+    <*ASSERT n_args = 0*>
+    WITH date = Date.FromTime(Time.Now(), Date.UTC) DO
+        PushText (
+            t,
+            Fmt.FN(
+                "%04s-%02s-%02s %02s:%02s:%02s",
+                ARRAY OF TEXT{
+                    Fmt.Int(date.year),
+                    Fmt.Int(ORD(date.month) + 1),
+                    Fmt.Int(date.day),
+                    Fmt.Int(date.hour),
+                    Fmt.Int(date.minute),
+                    Fmt.Int(date.second)
+                    }));
+    END;
+  END DoDateTime;
 
 PROCEDURE DoTrace (t: T;  n_args: INTEGER) =
   BEGIN
