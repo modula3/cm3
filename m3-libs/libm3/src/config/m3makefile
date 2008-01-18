@@ -5,6 +5,10 @@
 % Last modified on Thu Dec  1 09:52:35 PST 1994 by kalsow
 %      modified on Mon Jan 18 11:50:18 PST 1993 by muller
 
+if not defined("LIB_USE")
+    LIB_USE = LIB_INSTALL
+end
+
 readonly M3Config_body = [
   "(* Copyright (C) 1994, Digital Equipment Corporation *)",
   "(* All rights reserved.                              *)",
