@@ -67,7 +67,7 @@ m3cc_ResponseFileCounter = "0"
 readonly proc m3cc_Run (x)
 is
     if equal($OS, "Windows_NT")
-        local readonly Temp = "temp" & Counter & ".sh"
+        local readonly Temp = "temp" & m3cc_ResponseFileCounter & ".sh"
         > Temp in
             write(x)
         end
