@@ -9,11 +9,36 @@ import sys
 import pylib
 from pylib import *
 
+def Hack1():
+
+    # appropriate
+    pylib.GCC_BACKEND = True
+    pylib.OMIT_GCC = False
+
+    # hack
+    os.environ["GCC_BACKEND"] = "yes"
+    os.environ.pop("OMIT_GCC", None)
+    reload(pylib)
+
+def Hack2():
+
+    # appropriate
+    pylib.GCC_BACKEND = False
+    pylib.OMIT_GCC = True
+    pylib.Target = "NT386GNU"
+
+    # hack
+    os.environ["OMIT_GCC"] = "yes"
+    os.environ.pop("GCC_BACKEND", None)
+    os.environ["CM3_TARGET"] = "NT386GNU"
+    reload(pylib)
+
 #
 # These should be arrays of function pointers instead of strings.
 #
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
+argv_Build = [sys.argv[0], "buildglobal"] + sys.argv[1:]
 
 # DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 
@@ -30,32 +55,32 @@ P = [
     "m3staloneback",
     "m3front",
     "m3quake",
-    "cm3",
-    "mklib",
     ]
 
-pylib.GCC_BACKEND = True
-pylib.OMIT_GCC = False
+P_lib = [
+    "m3core",
+    "libm3",
+    ]
 
-DoPackage(argv_BuildShip, P) or sys.exit(1)
+P_temp = [
+    "mklib",
+    "cm3",
+    ]
+
+Hack1();
+
+DoPackage(argv_BuildShip, P + P_temp) or sys.exit(1)
 ShipCompiler() or sys.exit(1)
 CopyConfigForDevelopment() or sys.exit(1)
 
-pylib.Target = "NT386GNU"
-pylib.GCC_BACKEND = False
-pylib.OMIT_GCC = True
+Hack2()
 
 DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
+DoPackage(argv_BuildShip, P_lib + P) or sys.exit(1)
+DoPackage(argv_Build, P_temp) or sys.exit(1)
 
-P = ["m3core", "libm3"] + P
-DoPackage(argv_BuildShip, P) or sys.exit(1)
-
-#
-# problem needs fixing here
+# not yet, not working
 # ShipCompiler() or sys.exit(1)
-#
-
-CopyConfigForDevelopment() or sys.exit(1)
 
 # DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
 
