@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.8 2008-01-19 03:46:45 jkrell Exp $
+# $Id: bootntgnu.py,v 1.9 2008-01-19 03:48:19 jkrell Exp $
 
 #
 # User may want to edit the clean and/or m3cc steps.
@@ -64,12 +64,9 @@ P_lib = [
     "libm3",
     ]
 
-P_temp = [
-    ]
-
 Hack1();
 
-DoPackage(argv_BuildShip, P + P_temp) or sys.exit(1)
+DoPackage(argv_BuildShip, P) or sys.exit(1)
 ShipCompiler() or sys.exit(1)
 CopyConfigForDevelopment() or sys.exit(1)
 
