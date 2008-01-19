@@ -108,6 +108,11 @@ B.pink { background: transparent ;
 .tablebg { /*background: #FFFFFF; *//*#DDEEFF*/
            font-size: 0.9em; }
 
+.tablebg2 { /*background: #FFFFFF; *//*#DDEEFF*/
+           font-size: 0.9em;
+           padding-left: 1em;
+          }
+
 .topnav { background: #ffffd0;
           color: #0077FF;
           font-size: 1em;
