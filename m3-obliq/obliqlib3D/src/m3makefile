@@ -8,6 +8,7 @@
 import ("anim3D")
 import ("obliqlibanim")
 import ("obliq")
+import ("obliqrt")
 
 /*** Auxiliary Stuff ***/
 
