@@ -55,6 +55,8 @@ P = [
     "m3staloneback",
     "m3front",
     "m3quake",
+    #"mklib",
+    "cm3",
     ]
 
 P_lib = [
@@ -63,8 +65,6 @@ P_lib = [
     ]
 
 P_temp = [
-    "mklib",
-    "cm3",
     ]
 
 Hack1();
@@ -77,8 +77,6 @@ Hack2()
 
 DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 DoPackage(argv_BuildShip, P_lib + P) or sys.exit(1)
-DoPackage(argv_Build, P_temp) or sys.exit(1)
-
 # not yet, not working
 # ShipCompiler() or sys.exit(1)
 
