@@ -36,7 +36,7 @@ cat > ${INDEX} << EOF
     <META NAME="robots" content="noindex">
   </head>
 
-  <body bgcolor="#ffffff">
+  <body>
     <h2>CM3 Package Status</h2>
 
 EOF
