@@ -36,6 +36,9 @@ do_checkout() {
 
 do_compile() {
 	( test_build_core_${BUILD_REL} ) 2>&1
+        if [ "$?" = 0 -a "${BUILD_REL}" == "rel" ] ; then
+        	( DOSHIP=yes test_make_bin_dist ) 2>&1
+        fi
 }
 
 do_tests() {

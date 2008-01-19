@@ -171,6 +171,11 @@ fi
 echo "creating distribution archive ${ABSARCH2}"
 ${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
 ls -l "${ABSARCH2}"
+if [ -n "${DOSHIP}" ]; then
+  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
+  scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
+fi
 echo "cleaning up"
 cd "${STAGE}" && rm -f ${INSTDATA}
 rm -rf "${INSTALLROOT}"

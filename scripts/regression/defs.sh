@@ -527,7 +527,7 @@ test_make_bin_dist()
     exit 1
   fi
 
-  ./scripts/make-bin-dist-min.sh || exit 1
+  DOSHIP=yes ./scripts/make-bin-dist-min.sh || exit 1
   echo " >>> OK make_bin_dist_lastok ${DS} ${WS}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 snapshot build done"
 }
