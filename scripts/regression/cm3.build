@@ -44,9 +44,9 @@ do_compile() {
 do_tests() {
         if [ "${BUILD_REL}" == "rel" ] ; then
                 # if we land here, core compilation succeeded with
-				# last release, so we have a new lastok
+		# last release, so we have a new lastok
                 ( test_build_std_lastok ) 2>&1
                 ( test_m3tests ) 2>&1
-				
+                ( test_m3_all_pkgs ) 2>&1
         fi
 }
