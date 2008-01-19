@@ -18,7 +18,7 @@ WS=`ls -1d ${WSPAT} | tail -1`
 YEAR=${YEAR:-`date -u +'%Y'`}
 D="${YEAR}-01-01 00:00:00 < ${YEAR}-12-31 23:59:59"
 
-cd ${WS} || exit 1
+cd ${WS}/cm3 || exit 1
 cvs2cl --utc -g -q -l "-d $D" -f ChangeLog-${YEAR} 2> ChangeLog.err
 
 if [ -d ${LOGS} ]; then
