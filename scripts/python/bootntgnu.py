@@ -5,16 +5,12 @@ import sys
 import pylib
 from pylib import *
 
-def Hack1():
+# appropriate but doesn't work currently
+pylib.Target = "NT386GNU"
 
-    # appropriate
-    pylib.GCC_BACKEND = True
-    pylib.OMIT_GCC = False
-
-    # hack
-    os.environ["GCC_BACKEND"] = "yes"
-    os.environ.pop("OMIT_GCC", None)
-    reload(pylib)
+# hack
+os.environ["CM3_TARGET"] = "NT386GNU"
+reload(pylib)
 
 #
 # These should be arrays of function pointers instead of strings.
@@ -22,10 +18,13 @@ def Hack1():
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
-Hack1()
-
 DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
+
+#
+# There may not be a backend at all, so build it first.
+#
 DoPackage(argv_BuildShip, ["m3cc"]) or sys.exit(1)
+
 DoPackage(
     "m3core",
     "libm3",
