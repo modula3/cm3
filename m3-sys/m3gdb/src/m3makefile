@@ -160,9 +160,9 @@ end
 
 % finally, build the exportable link and man page and export them
 write("###################### LINK_FILE: ##################" & CR)
-link_file ("gdb/gdb", "m3gdb")
+link_file ("gdb/gdb" & EXE, "m3gdb" & EXE)
 write("###################### BINDEXPORT: ##################" & CR)
-BindExport ("m3gdb")
+BindExport ("m3gdb" & EXE)
 write("###################### MANPAGE: ##################" & CR)
 ManPage ("m3gdb","1")
 
