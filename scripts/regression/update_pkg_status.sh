@@ -1,5 +1,14 @@
 #!/bin/sh
 
+NKEEP=${NKEEP:-10}
+if [ -r defs.sh ]; then
+  . ./defs.sh >/dev/null
+elif [ -r ${HOME}/work/cm3/scripts/regression/defs.sh ]; then
+  . ${HOME}/work/cm3/scripts/regression/defs.sh >/dev/null
+elif [ -r ${HOME}/cm3/cm3/scripts/regression/defs.sh ]; then
+  . ${HOME}/cm3/cm3/scripts/regression/defs.sh >/dev/null
+fi
+
 LOGS=${LOGS:-/var/www/modula3.elegosoft.com/cm3/logs}
 FNPAT1=${FNPAT1:-'cm3-pkg-report-'}
 FNPATSUF=${FNPATSUF:-.html}
@@ -11,12 +20,14 @@ TARGETS=`ls -1 ${FNPATLS} |
   sed -e "s/${FNPAT1}\([A-Za-z0-6_]*\)-.*${FNPATSUF}/\1/" |
   sort -u`
 
-mv ${INDEX} ${INDEX}.old
+if [ -f "${INDEX}" ]; then
+  mv ${INDEX} ${INDEX}.old
+fi
 cat > ${INDEX} << EOF
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
-    <title>CM3 5.1 Package Status</title>
+    <title>CM3 Package Status</title>
     <META HTTP-EQUIV="Content-Type" CONTENT="text/html">
     <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
     <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
@@ -40,6 +51,13 @@ for t in ${TARGETS}; do
     echo "<a href=\"$f\">`basename $f .html`</a><br>"
   done
 done >> ${INDEX}
+
+# cleanup
+for t in ${TARGETS}; do
+  pat="${FNPAT1}${t}-*${FNPATSUF}"
+  #echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+done
 
 cat >> ${INDEX} <<EOF
     <hr>

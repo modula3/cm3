@@ -291,7 +291,7 @@ all_but_last_n() {
 cleanup_all_but_last_n() { 
   # Beware! This may ruin your disk with wrong standard input...
   dirs=`all_but_last_n $1`
-  ${dirs} | xargs rm -rf
+  echo ${dirs} | xargs rm -rf
 }
 
 cleanup_all() {
