@@ -33,7 +33,7 @@ cat > ${INDEX} << EOF
     <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
     <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
     <META HTTP-EQUIV="Reply-to" CONTENT="m3-support@elego.de"> 
-    <LINK HREF="normal.css" REL="stylesheet" TYPE="text/css">
+    <LINK HREF="../normal.css" REL="stylesheet" TYPE="text/css">
     <META NAME="robots" content="noindex">
   </head>
 

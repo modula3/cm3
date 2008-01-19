@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.12 2008-01-16 08:12:27 wagner Exp $
+# $Id: pkgmap.sh,v 1.13 2008-01-19 19:19:58 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -94,7 +94,7 @@ report_header() {
     <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
     <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
     <META HTTP-EQUIV="Reply-to" CONTENT="m3-support@elego.de"> 
-    <LINK HREF="normal.css" REL="stylesheet" TYPE="text/css">
+    <LINK HREF="../normal.css" REL="stylesheet" TYPE="text/css">
     <META NAME="robots" content="noindex">
     <style type="text/css">
     <!--
