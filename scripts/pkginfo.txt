@@ -1,3 +1,4 @@
+m3cc core front
 m3core base core front min std
 libm3 base core front min std
 patternmatching core std
@@ -8,7 +9,6 @@ m3back core front
 m3staloneback core front
 m3front core front
 m3quake base core front std
-m3cc core front
 cm3 core front
 m3scanner base core std
 m3tools base core std
