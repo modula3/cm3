@@ -64,12 +64,9 @@ P_lib = [
     "libm3",
     ]
 
-P_temp = [
-    ]
-
 Hack1();
 
-DoPackage(argv_BuildShip, P + P_temp) or sys.exit(1)
+DoPackage(argv_BuildShip, P) or sys.exit(1)
 ShipCompiler() or sys.exit(1)
 CopyConfigForDevelopment() or sys.exit(1)
 
