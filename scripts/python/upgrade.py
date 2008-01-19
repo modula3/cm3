@@ -13,6 +13,8 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 #
 SetupEnvironment()
 
+CopyConfigForDevelopment() or sys.exit(1)
+
 #
 # clean everything
 #
