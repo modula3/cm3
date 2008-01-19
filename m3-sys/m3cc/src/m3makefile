@@ -62,24 +62,24 @@ if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
     if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 end
 
-%
-% Quake can't do math, or generate unique temp files.
-% Uniqueness is not critical here, it is merely useful
-% while debugging to go back and see the temp files.
-%
-readonly Increment =
-{ "0":"1","1":"2","2":"3","3":"4","4":"5",
-  "5":"6","6":"7","7":"8","8":"9","9":"1", }
+m3cc_ResponseFileCounter = "0"
 
-Counter = 0
-
-readonly proc Run (x) is
+readonly proc m3cc_Run (x)
+is
     if equal($OS, "Windows_NT")
-        Temp = "temp" & Counter & ".sh"
+        local readonly Temp = "temp" & Counter & ".sh"
         > Temp in
             write(x)
         end
-        Counter = Increment{Counter}
+        %
+        % Quake can't do math, or generate unique temp files.
+        % Uniqueness is not critical here, it is merely useful
+        % while debugging to go back and see the temp files.
+        %
+        Counter =
+            { "0":"1","1":"2","2":"3","3":"4","4":"5",
+              "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3cc_ResponseFileCounter}
+
         write("sh ./" & Temp & " (" & x & ")" & CR)
         exec("sh ./" & Temp)
     else
@@ -153,9 +153,9 @@ end
 done  = ".configure-done"
 donep = build_dir & SL & done
 if defined ("FORCE")
-  Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
-  Run("-cd " & build_dir & " && rm -f cm3cg" & EXE)
-  Run("-rm -f " & donep)
+  m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
+  m3cc_Run("-cd " & build_dir & " && rm -f cm3cg" & EXE)
+  m3cc_Run("-rm -f " & donep)
 end
 
 if not defined ("no_config")
@@ -163,7 +163,7 @@ if not defined ("no_config")
   if stale(donep, donep)
     if equal (M3CC_HOST, M3CC_TARGET)
       if equal (M3CC_TARGET, "SOLgnu")
-        Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+        m3cc_Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
               M3CC_CONFIG,
               "--srcdir=.." & SL & "gcc",
               "--enable-languages=m3cg",
@@ -171,7 +171,7 @@ if not defined ("no_config")
               "--with-gnu-ld=yes",
               "&& echo \"done\" > " & done])
       else
-        Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+        m3cc_Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
               M3CC_CONFIG,
               "--srcdir=.." & SL & "gcc",
               "--enable-languages=m3cg",
@@ -179,7 +179,7 @@ if not defined ("no_config")
               "&& echo \"done\" > " & done])
       end
     else
-      Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
+      m3cc_Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
             "--srcdir=.." & SL & "gcc",
             "--target=" & GNU_platform (M3CC_TARGET),
             "--enable-languages=m3cg",
@@ -219,7 +219,7 @@ if equal (M3CC_HOST, M3CC_TARGET)
 end
 
 % finally, compile it
-Run (cmds)
+m3cc_Run (cmds)
 %write (cmds & EOL)
 if defined("postcp")
   postcp()
