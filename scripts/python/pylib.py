@@ -368,6 +368,15 @@ DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 DEFS = (DEFS % vars())
 
+#
+# workaround crash when booting from 5.1.3 that is
+# difficult to debug -- crashes earlier in debugger
+# without this switch, no repro with this switch
+#
+# This has no effect with current tools/libraries.
+#
+DEFS += " @M3novm"
+
 if BuildArgs:
     BuildArgs = " " + BuildArgs
 
@@ -1526,10 +1535,11 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
 
-    elif Target == "NT386GNU":
+    if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND):
 
-        _ClearEnvironmentVariable("LIB")
-        _ClearEnvironmentVariable("INCLUDE")
+        if Target == "NT386GNU":
+            _ClearEnvironmentVariable("LIB")
+            _ClearEnvironmentVariable("INCLUDE")
 
         _SetupEnvironmentVariableAll(
             "PATH",
