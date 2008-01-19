@@ -1,7 +1,0 @@
-
-XXDIR = { "WIN32" : "N:\\m3-libs", "POSIX" : "/proj/cmass/src.2/m3-libs" }
-WORKDIR = XXDIR {OS_TYPE}
-
-% override ("m3core", WORKDIR)
-
-M3_FRONT_FLAGS += "-vsdebug"

@@ -1,7 +1,0 @@
-% Copyright 1997, Critical Mass, Inc.  All rights reserved.
-
-module ("InfoModule")
-module ("InfoThisFile")
-module ("InfoThisPath")
-module ("InfoThisLine")
-module ("InfoThisException")

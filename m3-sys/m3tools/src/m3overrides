@@ -1,6 +1,0 @@
-
-XXDIR = { "WIN32" : "N:\\m3-sys",  "POSIX" : "/proj/cmass/src.2/m3-sys" }
-WORKDIR = XXDIR {OS_TYPE}
-
-override ("m3middle", WORKDIR)
-override ("m3quake", WORKDIR)

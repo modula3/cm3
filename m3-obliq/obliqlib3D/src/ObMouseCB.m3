@@ -110,7 +110,7 @@ PROCEDURE GetRec (args    : ObValue.ArgArray;
 
 PROCEDURE RecToObliq (mr : MouseCB.Rec) : Obliq.Val =
   TYPE 
-    Field = RECORD label : TEXT; field : Obliq.Val END;
+    Field = ObValue.Field;
   BEGIN
     RETURN Obliq.NewObject (Obliq.Fields {
                     Field {"pos",       ObPoint.M3ToObliq (mr.pos2D)},
