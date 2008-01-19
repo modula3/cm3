@@ -1395,9 +1395,9 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
                 sys.exit(1)
         os.environ[Name] = NewValue
         if Value:
-            print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+            print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
         else:
-            print(Name + "=" + NewValue)
+            print(Name + "=" + Attempt)
 
 
 def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
@@ -1531,13 +1531,16 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAll(
             "PATH",
-            ["sh", "sed", "gawk", "make"],
-            os.path.join(SystemDrive, "msys", "1.0", "bin"))
+            ["gcc", "as", "ld"],
+            os.path.join(SystemDrive, "mingw", "bin"))
+
+
+        # ensure msys make is ahead of mingwin make
 
         _SetupEnvironmentVariableAll(
             "PATH",
-            ["gcc", "as", "ld"],
-            os.path.join(SystemDrive, "mingw", "bin"))
+            ["sh", "sed", "gawk", "make"],
+            os.path.join(SystemDrive, "msys", "1.0", "bin"))
 
 if __name__ == "__main__":
     #
