@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.32 2008-01-15 12:47:28 jkrell Exp $
+# $Id: pylib.py,v 1.33 2008-01-19 00:02:46 jkrell Exp $
 
 import os
 from os import getenv
@@ -1395,9 +1395,9 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
                 sys.exit(1)
         os.environ[Name] = NewValue
         if Value:
-            print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+            print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
         else:
-            print(Name + "=" + NewValue)
+            print(Name + "=" + Attempt)
 
 
 def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
@@ -1531,13 +1531,16 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAll(
             "PATH",
-            ["sh", "sed", "gawk", "make"],
-            os.path.join(SystemDrive, "msys", "1.0", "bin"))
+            ["gcc", "as", "ld"],
+            os.path.join(SystemDrive, "mingw", "bin"))
+
+
+        # ensure msys make is ahead of mingwin make
 
         _SetupEnvironmentVariableAll(
             "PATH",
-            ["gcc", "as", "ld"],
-            os.path.join(SystemDrive, "mingw", "bin"))
+            ["sh", "sed", "gawk", "make"],
+            os.path.join(SystemDrive, "msys", "1.0", "bin"))
 
 if __name__ == "__main__":
     #
