@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.36 2008-01-19 04:05:55 jkrell Exp $
+# $Id: pylib.py,v 1.37 2008-01-19 04:12:57 jkrell Exp $
 
 import os
 from os import getenv
@@ -876,10 +876,6 @@ PackageSets = {
 
     "all": # in order
         [
-
-    # compiler backend written in C
-        "m3cc",
-
     # base libraries
 
         "import-libs",
@@ -896,6 +892,7 @@ PackageSets = {
         "m3staloneback",
         "m3front",
         "m3quake",
+        "m3cc",
         "cm3",
         "m3scanner",
         "m3tools",
@@ -1130,7 +1127,6 @@ def DoPackage(args, PackagesFromCaller = None):
 
     if not PackagesFromCaller is None:
         PackagesFromCaller = FilterPackages(PackagesFromCaller)
-        # print("building " + " ".join(PackagesFromCaller))
         PackagesFromCaller = OrderPackages(PackagesFromCaller)
         if not PackagesFromCaller:
             print("no packages left")
@@ -1275,8 +1271,6 @@ GenericCommand:
         #return True
 
     Success = True
-
-    # print("building " + " ".join(PackageDirectories).replace("\\\\", "\\"))
 
     for p in PackageDirectories:
         print("== package %(p)s ==" % vars())
