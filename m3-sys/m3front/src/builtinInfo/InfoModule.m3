@@ -31,7 +31,7 @@ PROCEDURE Initialize () =
     platform_type := EnumType.Build (Platform_names);
     Tipe.Define ("Platform", platform_type, FALSE);
 
-    nm := OS_names [ORD (Text.Equal (Target.System_name, "NT386"))];
+    nm := OS_names [ORD (Text.Equal (Target.System_name, "NT386") OR Text.Equal (Target.System_name, "NT386GNU"))];
     IF NOT EnumType.LookUp (os_type, M3ID.Add (nm), enum) THEN
       Error.Txt (nm, "Unknown Compiler.OS value");
       <*ASSERT FALSE*>
