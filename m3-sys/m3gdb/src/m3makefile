@@ -30,8 +30,8 @@ readonly Platform_info = {
   "LINUXELF"  : "i486--linuxelf",
   "LINUXLIBC6": "i486--linuxelf",
   "NEXT"      : "next-bsd",
-  "NT386"     : "i486--nt",
-  "NT386GNU"  : "i486-pc-cygwin",
+  "NT386"     : "i686--cygwin",
+  "NT386GNU"  : "i686--cygwin",
   "OKI"       : "i860--sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -77,6 +77,50 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
+EXE = ""
+if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
+    EXE = ".exe"
+end
+
+m3gdb_ResponseFileCounter = "0"
+
+readonly proc m3gdb_Run (x)
+is
+    if equal($OS, "Windows_NT")
+        local readonly Temp = "temp" & m3gdb_ResponseFileCounter & ".sh"
+        > Temp in
+            write(x)
+        end
+        %
+        % Quake can't do math, or generate unique temp files.
+        % Uniqueness is not critical here, it is merely useful
+        % while debugging to go back and see the temp files.
+        %
+        m3gdb_ResponseFileCounter =
+            { "0":"1","1":"2","2":"3","3":"4","4":"5",
+              "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3gdb_ResponseFileCounter}
+
+        write("sh ./" & Temp & " (" & x & ")" & CR)
+        exec("sh ./" & Temp)
+    else
+        %
+        % PM3 m3gdb_Run apparently return a value that must be assigned to a variable
+        % local ExitCode = m3gdb_Run(x)
+        %
+        exec(x)
+    end
+end
+
+
+%
+% star means default
+% These are meant to come from the config file, but it can omit them
+%
+if not defined("GNU_CC")     GNU_CC     = "*"    end
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
+if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
+
+
 M3GDB_CFLAGS="-g"
 
 % check for overrides, otherwise use the defaults from the configuration file
@@ -93,48 +137,39 @@ ARG1 = get_overrides ("CFLAGS", M3GDB_CFLAGS)
 
 if defined ("quick")
   % do not bother reconfiguring, just build gdb
-  %PM3: returnCode = exec ([M3GDB_MAKE, ARG0, ARG1])
-  exec(M3GDB_MAKE, ARG0, ARG1)
+  %PM3: returnCode = m3gdb_Run ([M3GDB_MAKE, ARG0, ARG1])
+  m3gdb_Run([M3GDB_MAKE, ARG0, ARG1])
 else
   % configure the sources & compile
   % Here, current directory is LINUXLIBC6 
+
   CONFIG_PLATFORM = GNU_platform (M3GDB_HOST)
-  %PM3: r = exec(["echo", "###################### CONFIGURE: ##################"])
-  %PM3: returnCode = exec (["../gdb/configure", M3GDB_CONFIG,
-  %PM3:                     "--srcdir=../gdb", CONFIG_PLATFORM])
-  %PM3: returnCode = exec (["../gdb/configure", "--srcdir=../gdb"])
-  %PM3: r = exec(["echo", "###################### MAKE: ##################"])
-  %PM3: returnCode = exec ([M3GDB_MAKE, ARG0, ARG1])
-  exec("echo", "###################### CONFIGURE: ##################")
-  exec ("../gdb/configure", M3GDB_CONFIG, "--srcdir=../gdb", 
-        CONFIG_PLATFORM )
-  exec("echo", "###################### MAKE: ##################")
+
+  write("###################### CONFIGURE: ##################" & CR)
+  %
+  % PM3 PERHAPS ran configure twice here, with and without CONFIG_PLATFORM?
+  %
+  m3gdb_Run(["../gdb/configure", M3GDB_CONFIG, "--srcdir=../gdb",  CONFIG_PLATFORM])
+  write("###################### MAKE: ##################" & CR)
   EXTRA_MAKEFLAGS = ""
   if (equal(M3GDB_HOST, "SOLgnu"))
     EXTRA_MAKEFLAGS = "LDFLAGS=-lintl"
   end
-  exec(M3GDB_MAKE, EXTRA_MAKEFLAGS, ARG0, ARG1)
+  m3gdb_Run([M3GDB_MAKE, EXTRA_MAKEFLAGS, ARG0, ARG1])
 end
 
 % finally, build the exportable link and man page and export them
-%PM3: r = exec(["echo", "###################### LINK_FILE: ##################"])
-exec("echo", "###################### LINK_FILE: ##################")
+write("###################### LINK_FILE: ##################" & CR)
 link_file ("gdb/gdb", "m3gdb")
-%PM3: r = exec(["echo", "###################### BINDEXPORT: ##################"])
-exec("echo", "###################### BINDEXPORT: ##################")
+write("###################### BINDEXPORT: ##################" & CR)
 BindExport ("m3gdb")
-%PM3: r = exec(["echo", "###################### MANPAGE: ##################"])
-exec("echo", "###################### MANPAGE: ##################")
+write("###################### MANPAGE: ##################" & CR)
 ManPage ("m3gdb","1")
 
-%PM3: r = exec(["echo", "###################### IMPORT: ##################"])
-%exec("echo", "###################### IMPORT: ##################")
+%write("###################### IMPORT: ##################" & CR)
 %import("m3doc")
-%PM3: r = exec(["echo", "###################### HTMLFILE: ##################"])
-%exec("echo", "###################### HTMLFILE: ##################")
+%write("###################### HTMLFILE: ##################" & CR)
 %HtmlFile("index")
 
-%PM3: r = exec(["echo", "###################### OTHERPACKAGE: ##################"])
-%exec("echo", "###################### OTHERPACKAGE: ##################")
+%write("###################### OTHERPACKAGE: ##################" & CR)
 %OtherPackage("m3gdb")
-
