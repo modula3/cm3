@@ -1,5 +1,14 @@
 #!/bin/sh
 
+NKEEP=${NKEEP:-10}
+if [ -r defs.sh ]; then
+  . ./defs.sh >/dev/null
+elif [ -r ${HOME}/work/cm3/scripts/regression/defs.sh ]; then
+  . ${HOME}/work/cm3/scripts/regression/defs.sh >/dev/null
+elif [ -r ${HOME}/cm3/cm3/scripts/regression/defs.sh ]; then
+  . ${HOME}/cm3/cm3/scripts/regression/defs.sh >/dev/null
+fi
+
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/snaps}
 OSTYPE=${OSTYPE:-POSIX}
 FNPAT1=${FNPAT1:-"cm3-min-${OSTYPE}-"}
@@ -43,6 +52,13 @@ for t in ${TARGETS}; do
     echo "<a href=\"$f\">$f</a><br>"
   done
 done >> ${INDEX}
+
+# cleanup
+for t in ${TARGETS}; do
+  pat="${FNPAT1}${t}-*${FNPATSUF}"
+  #echo "${pat}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+done
 
 cat >> ${INDEX} <<EOF
     <hr>
