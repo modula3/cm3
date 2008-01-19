@@ -23,10 +23,11 @@ BODY { font-family: 'Times New Roman', 'New Century Schoolbook', serif ; }
 
 
 BODY { font-family: Helvetica, Arial, sans-serif ;
-       background:  #FFFFFF ;
+       background:  #ffffd0 ;
        color     :  #000000 ; 
      }
 
+.stdbgnav { background: #FFFFB0; }
 
 /* TD.highlight { background: #99CCFF } */
 /* TD.highlight { background: #FFFFFF } */
@@ -38,7 +39,7 @@ H4,
 H5,
 H6 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
      font-size  : .98em ;
-     background : #FFFFFF ;
+     /*background : #FFFFFF ;*/
      color      : #0077FF;
      text-align : center; }
 
@@ -64,6 +65,16 @@ SPAN.info    { color: yellow ; background: green; }
 SPAN.warning { color: black ;  background: yellow; }
 SPAN.error   { color: black ;  background: red; }
 SPAN.new     { color: yellow ; background: blue; }
+
+/*
+a:link { color:#0000ff; }
+a:visited { color:#0000ff; }
+a:active { color:#ff4040; font-style:italic }
+*/
+a:link { color: #0077ff; font-weight : bold; }
+a:visited { color: #0077ff; font-weight : bold; }
+a:active { color:#ff4040; font-weight : bold; }
+a:hover { color:#ff4040; font-weight : bold; }
 
 /* "Hide" Anchor border from NS */
 A.hidden { background: transparent ;
@@ -94,13 +105,13 @@ DT.toppad {
 B.pink { background: transparent ;
 	 color : #FFAAAA ; }
 
-.tablebg { background: #FFFFFF; /*#DDEEFF*/
+.tablebg { /*background: #FFFFFF; *//*#DDEEFF*/
            font-size: 0.9em; }
 
-.topnav { background: #DDEEFF;
+.topnav { background: #ffffd0;
           color: #0077FF;
           font-size: 1em;
-          font-weight: bold;
+          /* font-weight: bold; */
           text-align: center;
         }
 
