@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.33 2008-01-19 00:02:46 jkrell Exp $
+# $Id: pylib.py,v 1.34 2008-01-19 00:07:07 jkrell Exp $
 
 import os
 from os import getenv
@@ -1110,6 +1110,8 @@ def OrderPackages(Packages):
     return PackagesInOrder
 
 def DoPackage(args, PackagesFromCaller = None):
+
+    SetupEnvironment()
 
     # print("args is " + str(args))
     # sys.stdout.flush()
