@@ -20,7 +20,7 @@ CONST
 (*****************************************************************************)
 
 REVEAL 
-  T = ObValue.ValArray;
+  T = ObValue.ValArray BRANDED "ObPoint3.T" OBJECT END;
 
 
 PROCEDURE M3ToObliq (val : Point3.T) : T =
