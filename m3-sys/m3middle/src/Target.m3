@@ -697,6 +697,18 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  NTCall (7, "__cdecl",    0); (* __cdecl *)
                  NTCall (8, "__stdcall",  1); (* __stdcall *)
 
+                 (* temporary workaround; parameters are getting reversed
+                 elsewhere, so reverse them here *)
+                 CCs[0].args_left_to_right := TRUE;
+                 CCs[1].args_left_to_right := TRUE;
+                 CCs[2].args_left_to_right := TRUE;
+                 CCs[3].args_left_to_right := TRUE;
+                 CCs[4].args_left_to_right := TRUE;
+                 CCs[5].args_left_to_right := TRUE;
+                 CCs[6].args_left_to_right := TRUE;
+                 CCs[7].args_left_to_right := TRUE;
+                 CCs[8].args_left_to_right := TRUE;
+
     |  Systems.PPC_LINUX => 
       (* FIXME: preliminary assumptions bound to change *)
                  max_align                 := 64;
