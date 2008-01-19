@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.25 2008-01-04 21:20:53 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.26 2008-01-19 13:38:04 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -171,6 +171,11 @@ fi
 echo "creating distribution archive ${ABSARCH2}"
 ${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
 ls -l "${ABSARCH2}"
+if [ -n "${DOSHIP}" ]; then
+  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
+  scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
+fi
 echo "cleaning up"
 cd "${STAGE}" && rm -f ${INSTDATA}
 rm -rf "${INSTALLROOT}"
