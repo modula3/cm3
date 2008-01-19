@@ -26,6 +26,7 @@ DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 DoPackage(argv_BuildShip, ["m3cc"]) or sys.exit(1)
 
 DoPackage(
+    argv_BuildShip, [
     "m3core",
     "libm3",
     "import-libs",
@@ -41,8 +42,7 @@ DoPackage(
     "m3quake",
     #"mklib", # not yet working
     "cm3",
-    argv_BuildShip,
-    ) or sys.exit(1)
+    ]) or sys.exit(1)
 
 # not yet, not working
 # ShipCompiler() or sys.exit(1)
