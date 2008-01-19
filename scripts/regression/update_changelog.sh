@@ -13,7 +13,18 @@ FNPAT1=${FNPAT1:-'ChangeLog'}
 FNPATSUF=${FNPATSUF:-}
 FNPATLS=${FNPAT:-${FNPAT1}'*'${FNPATSUF}}
 INDEX=${INDEX:-changelog-index.html}
-cd $LOGS || exit 1
+WSPAT=`echo ${WS} | sed -e "s/${DS}/*/"`
+WS=`ls -1d ${WSPAT} | tail -1`
+YEAR=${YEAR:-`date -u +'%Y'`}
+D="${YEAR}-01-01 00:00:00 < ${YEAR}-12-31 23:59:59"
+
+cd ${WS} || exit 1
+cvs2cl --utc -g -q -l "-d $D" -f ChangeLog-${YEAR} 2> ChangeLog.err
+
+if [ -d ${LOGS} ]; then
+  cp ChangeLog-${YEAR} ${LOGS}
+  cd $LOGS || exit 1
+fi
 
 if [ -f "${INDEX}" ]; then
   mv ${INDEX} ${INDEX}.old
