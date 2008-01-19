@@ -109,7 +109,7 @@ PROCEDURE GetRec (args    : ObValue.ArgArray;
 
 PROCEDURE RecToObliq (mr : KeyCB.Rec) : Obliq.Val =
   TYPE 
-    Field = RECORD label : TEXT; field : Obliq.Val END;
+    Field = ObValue.Field;
   BEGIN
     RETURN Obliq.NewObject (Obliq.Fields {
                     Field {"change",    KeySymToObliq (mr.whatChanged)},
