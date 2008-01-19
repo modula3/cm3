@@ -26,8 +26,8 @@ readonly Platform_info = {
   "LINUXELF"  : "i486--linuxelf",
   "LINUXLIBC6": "i486--linuxelf",
   "NEXT"      : "next-bsd",
-  "NT386"     : "i486--nt",
-  "NT386GNU"  : "i486-pc-cygwin",
+  "NT386"     : "i686--mingw32",
+  "NT386GNU"  : "i686--mingw32",
   "OKI"       : "i860--sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -43,49 +43,6 @@ readonly Platform_info = {
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
 }
-
-%
-% TARGET == NT386 means are we bootstrapping NT386GNU from NT386.
-%
-if (not defined("SL")
-        or equal(TARGET, "NT386")
-        or equal(TARGET, "NT386GNU"))
-    SL = "/"
-end
-
-EXE = ""
-if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
-    EXE = ".exe"
-    % star means default
-    if not defined("GNU_CC")     GNU_CC     = "*"    end
-    if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
-    if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
-end
-
-m3cc_ResponseFileCounter = "0"
-
-readonly proc m3cc_Run (x)
-is
-    if equal($OS, "Windows_NT")
-        local readonly Temp = "temp" & m3cc_ResponseFileCounter & ".sh"
-        > Temp in
-            write(x)
-        end
-        %
-        % Quake can't do math, or generate unique temp files.
-        % Uniqueness is not critical here, it is merely useful
-        % while debugging to go back and see the temp files.
-        %
-        Counter =
-            { "0":"1","1":"2","2":"3","3":"4","4":"5",
-              "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3cc_ResponseFileCounter}
-
-        write("sh ./" & Temp & " (" & x & ")" & CR)
-        exec("sh ./" & Temp)
-    else
-        exec(x)
-    end
-end
 
 readonly proc GNU_platform (x) is
   if Platform_info contains x
@@ -131,6 +88,44 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
+EXE = ""
+if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
+    EXE = ".exe"
+end
+
+m3cc_ResponseFileCounter = "0"
+
+readonly proc m3cc_Run (x)
+is
+    if equal($OS, "Windows_NT")
+        local readonly Temp = "temp" & m3cc_ResponseFileCounter & ".sh"
+        > Temp in
+            write(x)
+        end
+        %
+        % Quake can't do math, or generate unique temp files.
+        % Uniqueness is not critical here, it is merely useful
+        % while debugging to go back and see the temp files.
+        %
+        Counter =
+            { "0":"1","1":"2","2":"3","3":"4","4":"5",
+              "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3cc_ResponseFileCounter}
+
+        write("sh ./" & Temp & " (" & x & ")" & CR)
+        exec("sh ./" & Temp)
+    else
+        exec(x)
+    end
+end
+
+%
+% star means default
+% These are meant to come from the config file, but it can omit them
+%
+if not defined("GNU_CC")     GNU_CC     = "*"    end
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
+if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
+
 % check for overrides, otherwise use the defaults from the configuration file
 if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
 if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
@@ -142,7 +137,7 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 % figure out where we're going to build the beast
 local build_dir = "."  % let m3build set the build directory
 if not equal (M3CC_HOST, M3CC_TARGET)
-  build_dir = ".." & SL & BUILD_DIR & "-" & M3CC_TARGET
+  build_dir = ".." & "/" & BUILD_DIR & "-" & M3CC_TARGET
 end
 
 % make sure the derived directory exists
@@ -151,7 +146,7 @@ if stale (build_dir, build_dir)
 end
 
 done  = ".configure-done"
-donep = build_dir & SL & done
+donep = build_dir & "/" & done
 if defined ("FORCE")
   m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
   m3cc_Run("-cd " & build_dir & " && rm -f cm3cg" & EXE)
@@ -163,24 +158,24 @@ if not defined ("no_config")
   if stale(donep, donep)
     if equal (M3CC_HOST, M3CC_TARGET)
       if equal (M3CC_TARGET, "SOLgnu")
-        m3cc_Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+        m3cc_Run (["cd", build_dir, "; .." & "/" & "gcc" & "/" & "configure", 
               M3CC_CONFIG,
-              "--srcdir=.." & SL & "gcc",
+              "--srcdir=.." & "/" & "gcc",
               "--enable-languages=m3cg",
               "--disable-nls",
               "--with-gnu-ld=yes",
               "&& echo \"done\" > " & done])
       else
-        m3cc_Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", 
+        m3cc_Run (["cd", build_dir, "; .." & "/" & "gcc" & "/" & "configure", 
               M3CC_CONFIG,
-              "--srcdir=.." & SL & "gcc",
+              "--srcdir=.." & "/" & "gcc",
               "--enable-languages=m3cg",
               "--disable-nls",
               "&& echo \"done\" > " & done])
       end
     else
-      m3cc_Run (["cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
-            "--srcdir=.." & SL & "gcc",
+      m3cc_Run (["cd", build_dir, "; .." & "/" & "gcc" & "/" & "configure", M3CC_CONFIG,
+            "--srcdir=.." & "/" & "gcc",
             "--target=" & GNU_platform (M3CC_TARGET),
             "--enable-languages=m3cg",
             "--disable-nls",
@@ -197,14 +192,14 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1
 
 readonly proc postcp() is
-  pSrc  = build_dir & SL & "gcc" & SL & "m3cgc1" & EXE
-  pDest = build_dir & SL & "cm3cg" & EXE
+  pSrc  = build_dir & "/" & "gcc" & "/" & "m3cgc1" & EXE
+  pDest = build_dir & "/" & "cm3cg" & EXE
   if stale(pDest, pSrc)
     cp_if(pSrc, pDest)
   end
   if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
-    pSrc = build_dir & SL & "gcc" & SL & "mips-tfile"
-    pDest = build_dir & SL & "mips-tfile"
+    pSrc = build_dir & "/" & "gcc" & "/" & "mips-tfile"
+    pDest = build_dir & "/" & "mips-tfile"
     if stale(pDest, pSrc)
       cp_if(pSrc, pDest)
     end
