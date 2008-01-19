@@ -1111,6 +1111,8 @@ def OrderPackages(Packages):
 
 def DoPackage(args, PackagesFromCaller = None):
 
+    SetupEnvironment()
+
     # print("args is " + str(args))
     # sys.stdout.flush()
 
