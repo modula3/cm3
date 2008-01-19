@@ -1,2 +1,0 @@
-override ("http", ROOT & "/m3-www")
-override ("vbtkit", ROOT & "/m3-ui")
