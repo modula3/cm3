@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-pkg.py,v 1.14 2008-01-19 00:01:51 jkrell Exp $
+# $Id: do-pkg.py,v 1.15 2008-01-19 01:48:23 jkrell Exp $
 
 import os.path
 import sys
