@@ -6,8 +6,14 @@
 
 %-------------------------------------------------- compilation environment ---
 
-%M3_PROFILING = TRUE  % set by cm3 since 5.1.2
+%M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
+
+if M3_PROFILING
+    readonly PROFILING_P = "p"
+else
+    readonly PROFILING_P = ""
+end
 
 readonly TARGET       = "PPC_DARWIN"    % code generation target
 if M3_PROFILING
@@ -43,19 +49,34 @@ end
 % the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
-INSTALL_ROOT = path() & "/.."
-
-BIN_INSTALL   = path()                      % executables
-if M3_PROFILING
-  LIB_INSTALL   = INSTALL_ROOT & "/libp"    % libraries
-else
-  LIB_INSTALL   = INSTALL_ROOT & "/lib"     % libraries
+readonly
+proc
+CM3SetInstallRoot(
+    )
+is
+    if defined("INSTALL_ROOT")
+        return
+    end
+    if not equal($CM3_INSTALL, "")
+        INSTALL_ROOT = $CM3_INSTALL
+        return
+    end
+    if not equal($INSTALLROOT, "")
+        INSTALL_ROOT = $INSTALLROOT
+        return
+    end
+    INSTALL_ROOT = (path() & SL & "..")
 end
-PKG_INSTALL   = INSTALL_ROOT & "/pkg"       % packages
-DOC_INSTALL   = INSTALL_ROOT & "/doc"       % documents
-EMACS_INSTALL = INSTALL_ROOT & "/elisp"     % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "/man"       % man pages
-HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
+
+CM3SetInstallRoot()
+
+readonly BIN_INSTALL    = INSTALL_ROOT & SL & "bin"     % executables
+readonly LIB_INSTALL    = INSTALL_ROOT & SL & "lib" & PROFILING_P   % libraries
+readonly PKG_INSTALL    = INSTALL_ROOT & SL & "pkg"     % packages
+readonly DOC_INSTALL    = INSTALL_ROOT & SL & "doc"     % documents
+readonly EMACS_INSTALL  = INSTALL_ROOT & SL & "elisp"   % emacs lisp code
+readonly MAN_INSTALL    = INSTALL_ROOT & SL & "man"     % man pages
+readonly HTML_INSTALL   = INSTALL_ROOT & SL & "www"     % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
@@ -109,7 +130,7 @@ SYSTEM_LIBORDER =
     "POSTGRES95",
     "FLEX-BISON",
     "LEX-YACC",
-    "LIBC"
+    "LIBC",
 ]
 
 %---------------------------------------------------------- system programs ---
