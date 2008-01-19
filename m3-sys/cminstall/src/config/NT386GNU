@@ -1,5 +1,6 @@
 % Copyright 1996 Critical Mass, Inc. All rights reserved.
-% 
+%
+%
 % configuration file for NT386 using gcc backend
 %
 
@@ -8,18 +9,19 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "NT386GNU"      % code generation target
-
-if M3_PROFILING 
-    readonly BUILD_DIR  = TARGET & "p"  % code generation target
+if M3_PROFILING
+    readonly PROFILING_P = "p"
 else
-    readonly BUILD_DIR  = TARGET        % directory for results
+    readonly PROFILING_P = ""
 end
-readonly OS_TYPE      = "POSIX"             % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486-pc-cygwin"    % "cpu-vendor-os" string for GNU
 
-readonly NAMING_CONVENTIONS = "0"
+readonly TARGET       = "NT386GNU"              % code generation target
+readonly BUILD_DIR    = TARGET & PROFILING_P    % directory for results
+readonly OS_TYPE      = "WIN32"                 % { "WIN32" or "POSIX" }
+readonly WORD_SIZE    = "32BITS"                % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "i486-pc-cygwin"        % "cpu-vendor-os" string for GNU
+
+readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
@@ -27,7 +29,7 @@ readonly NAMING_CONVENTIONS = "0"
 %
 
 %-------------------------------------------------- default compile options ---
-% "set_config_options" is called before starting the compilation.  It should
+% "set_config_options" is called before starting the compilation. It should
 % be used to provide system-wide default options.
 
 proc
@@ -45,36 +47,44 @@ end
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-if not defined("INSTALL_ROOT")
+readonly
+proc
+CM3SetInstallRoot(
+    )
+is
+    if defined("INSTALL_ROOT")
+        return
+    end
+    if not equal($CM3_INSTALL, "")
+        INSTALL_ROOT = $CM3_INSTALL
+        return
+    end
     if not equal($INSTALLROOT, "")
         INSTALL_ROOT = $INSTALLROOT
-    else
-        INSTALL_ROOT = (path() & "\\..")
+        return
     end
+    INSTALL_ROOT = (path() & SL & "..")
 end
 
-BIN_INSTALL   = INSTALL_ROOT & "/bin"       % executables
-if M3_PROFILING 
-    LIB_INSTALL   = INSTALL_ROOT & "/libp"  % libraries
-else
-    LIB_INSTALL   = INSTALL_ROOT & "/lib"   % libraries
-end
-PKG_INSTALL   = INSTALL_ROOT & "/pkg"       % packages
-DOC_INSTALL   = INSTALL_ROOT & "/doc"       % documents
-EMACS_INSTALL = INSTALL_ROOT & "/elisp"     % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "/man"       % man pages
-HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
+CM3SetInstallRoot()
 
+readonly BIN_INSTALL    = INSTALL_ROOT & SL & "bin"     % executables
+readonly LIB_INSTALL    = INSTALL_ROOT & SL & "lib" & PROFILING_P   % libraries
+readonly PKG_INSTALL    = INSTALL_ROOT & SL & "pkg"     % packages
+readonly DOC_INSTALL    = INSTALL_ROOT & SL & "doc"     % documents
+readonly EMACS_INSTALL  = INSTALL_ROOT & SL & "elisp"   % emacs lisp code
+readonly MAN_INSTALL    = INSTALL_ROOT & SL & "man"     % man pages
+readonly HTML_INSTALL   = INSTALL_ROOT & SL & "www"     % public hypertext
+
+%
 % On some systems (e.g. AFS) you must install public files in a different
-% place from where you use them.  If that is the case for your system,
+% place from where you use them. If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
 %
-USE_ROOT  = INSTALL_ROOT
-BIN_USE   = BIN_INSTALL       % executables
-LIB_USE   = LIB_INSTALL       % libraries
-PKG_USE   = PKG_INSTALL       % packages
+BIN_USE   = BIN_INSTALL     % executables
+PKG_USE   = PKG_INSTALL     % packages
 
-readonly INSTALL_IMPLS = TRUE
+readonly INSTALL_IMPLS = FALSE
 % TRUE
 %    => save all source files during the install
 %    => makes debugging easier and browsing more fruitful
@@ -85,24 +95,28 @@ readonly INSTALL_IMPLS = TRUE
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
-% are accessed.  If SYSTEM_LIBS{x} is defined it should be a list
+% are accessed. If SYSTEM_LIBS{x} is defined it should be a list
 % of linker arguments that are used when linking against that library.
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
 SYSTEM_LIBS =
 {
-    "LIBC"       : ["-lm"],
-%-- not present
-%   "LEX-YACC"   : ["-ll"],
-    "FLEX-BISON" : ["-lfl"],
-    "POSTGRES95" : ["-lpq"],
-    "OPENGL"     : ["-L/lib/w32api", "-lglu32", "-lopengl32"], % -lglut32 ?
-    "ODBC"       : ["-L/lib/w32api", "-lodbc32"], %  -lodbccp32 ?
-%   "MOTIF"     : ["-lXm"],
-%   "X11"       : ["-lXaw", "-lXmu", "-lXext",
-%                  "-lXt", "-lSM", "-lICE", "-lX11"],
-  " TCP"        : [ ]
+    "LIBC" :
+    [
+%       "-lwinspool",
+        "-lcomctl32",
+        "-lwsock32",
+%       "-lcomdlg32",
+        "-lnetapi32",
+        "-lgdi32",
+        "-luser32",
+%       "-ladvapi32",
+%       "-lkernel32",
+    ],
+    "ODBC" : ["-lodbc32"], %  -lodbccp32 ?
+    "OPENGL" : ["-lglu32", "-lopengl32"], % -lglut32 ?
+    "TCP" : [ ],
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
@@ -111,28 +125,21 @@ SYSTEM_LIBS =
 SYSTEM_LIBORDER =
 [
     "OPENGL",
-    "DECPEX",
-    "MOTIF",
-    "X11",
     "TCP",
     "ODBC",
-    "POSTGRES95",
-    "FLEX-BISON",
-    "LEX-YACC",
     "LIBC",
 ]
 
 %---------------------------------------------------------- system programs ---
 
 readonly SYSTEM_CC  = "gcc" % C compiler
-readonly SYSTEM_AR  = "ar" % Archiver
 readonly SYSTEM_ASM = "as"  % Assembler
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-readonly m3back = "@" & BIN_USE & "/cm3cg"
+readonly m3back = "@cm3cg"
 
 proc
 m3_backend(
@@ -162,8 +169,57 @@ M3_BACKEND_MODE = "3"
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
 
+%------------------------------------------------------------------------------
+
+proc
+FileExists(
+    a,
+    )
+is
+    return not stale(a, a)
+end
+
+%------------------------------------------------------------------------------
+
+proc
+DeleteFile(
+    a,
+    )
+is
+    delete_file(a)
+end
+
+%------------------------------------------------------------------------------
+
+readonly OS = $OS
+
+proc
+MoveFile(
+    a,
+    b,
+    )
+is
+    if equal(OS, "Windows_NT")
+        exec("@move", a, b)
+    else
+        exec("@mv", a, b)
+    end
+end
+
+%------------------------------------------------------------------------------
+
+proc
+DeleteFiles(
+    a
+    )
+is
+    foreach b in a
+        DeleteFile(b)
+    end
+end
+
 %--------------------------------------------------------------- C compiler ---
-% "compile_c" is called to compile C source files.  Note that this function
+% "compile_c" is called to compile C source files. Note that this function
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
@@ -186,11 +242,11 @@ is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@" & SYSTEM_CC, args, "-c", source)
+    return try_exec("@" & SYSTEM_CC, args, "-c", source, "-o", object)
 end
 
 %---------------------------------------------------------------- assembler ---
-% "assemble" is called to assemble .s or .asm files.  Note that this function
+% "assemble" is called to assemble .s or .asm files. Note that this function
 % is only called if your program or library explicitly includes assembly source
 % code, the system distributed by Critical Mass does not.
 
@@ -203,9 +259,109 @@ is
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
+%------------------------------------------------------------------------------
+
+%
+% Quake can't do math, or generate unique temp files,
+% at least not that it cleans up.
+%
+% Uniqueness is not critical here, it is merely useful
+% while debugging to go back and see the temp files.
+%
+% It is also good to put files in a place where they
+% will reliably get deleted -- not TEMP.
+%
+% It is open question as to if carry over to two digits
+% can be implemented in Quake. :)
+%
+ResponseFileCounter = "0"
+
+readonly
+proc
+GetResponseFileName(
+    )
+is
+    local readonly Result = "_m3responsefile" & ResponseFileCounter & ".txt"
+    ResponseFileCounter =
+        { "0":"1","1":"2","2":"3","3":"4","4":"5",
+          "5":"6","6":"7","7":"8","8":"9","9":"0", }{ResponseFileCounter}
+    return Result
+end
+
+%
+% mklib wants newlines, so a direct write doesn't work
+% I couldn't get anything with write to work, nothing would handle
+% plain parameters and lists
+%
+readonly
+proc
+WriteResponseFile(
+    File,
+    Args,
+    )
+is
+    local readonly Temp = arglist("", Args)
+    if equal(Temp, Args)
+        return Temp
+    end
+    MoveFile(Temp, File)
+    DeleteFile(Temp)
+    return "@" & File
+end
+
+%------------------------------------------------------------------------------
+
+readonly
+proc
+GetPackageDirectory(
+    )
+is
+    %
+    % older builds, such as 5.1.3, do not define PACKAGE_DIR
+    %
+    if defined("PACKAGE_DIR")
+        return PACKAGE_DIR & SL
+    end
+    return ""
+end
+
+%------------------------------------------------------------------------------
+
+readonly
+proc
+ConvertLibsToStandalone(
+    imported_libs,
+    shared,
+    )
+is
+    if shared
+        return imported_libs
+    end
+    local imports = [ ]
+    foreach f in imported_libs
+        local ff = f & ".sa"
+        if FileExists(ff)
+            imports += ff
+        else
+            imports += f
+        end
+    end
+    return imports
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
+
+%% NOTE: we should set the "base" load address of the various DLLs
+%%  to avoid relocating them every time they are loaded.
+
+%% m3_lib_flags = ["-debugtype:cv", "-machine:i386"]
+m3_lib_flags = ["-ign:__real"]
+
+%
+% make_lib and m3_link need to share code!
+%
 
 proc
 make_lib(
@@ -216,50 +372,115 @@ make_lib(
     shared,
     )
 is
-    local ret_code = 0
-    local lib_a    = format("lib%s.a", lib)
-    local lib_so   = format("lib%s.so", lib)
-    local lib_sox  = format("lib%s.so.5", lib)
+    local readonly lib_file = lib & ".lib"
+    local readonly lib0_file = lib & ".lib.sa"
+    local readonly dll_file = lib & ".dll"
+    local readonly listing  = lib & ".lst"
+    local LibResponseFile = GetResponseFileName()
+    local LinkResponseFile = GetResponseFileName()
+    local readonly Outputs = [
+        lib_file,
+        lib0_file,
+        dll_file,
+        listing,
+        LibResponseFile,
+        LinkResponseFile,
+        ]
 
-    % first, build the non-shared library
-    ret_code =
-        try_exec(
-            "@" & SYSTEM_AR, "crus", lib_a,
-            objects
+    % make sure files get cleaned up
+    DeleteFiles(Outputs)
+    deriveds("", Outputs)
+
+    % build the static library
+
+    LibResponseFile =
+        WriteResponseFile(
+            LibResponseFile,
+            [
+                m3_lib_flags,
+                "-out:" & lib_file,
+                options,
+                objects,
+            ])
+
+    local ret_code = try_exec("@mklib", LibResponseFile, ">", listing)
+    if not equal(ret_code, 0) or not FileExists(lib_file)
+        error(
+            "library creation failed, see "
+            & GetPackageDirectory()
+            & BUILD_DIR
+            & SL
+            & listing
+            & " for more information"
+            & EOL
             )
-    if not equal(ret_code, 0)
-        return ret_code
-    end
-
-    if shared
-        % build the shared library
-        pg = ""
-        if M3_PROFILING 
-            pg = "-pg "
-        end
-        ret_code =
-            try_exec(
-                "@" & SYSTEM_CC, pg & "-shared " & 
-                "-Wl,-soname," & lib_sox,
-                "-o", lib_sox, objects)
         if not equal(ret_code, 0)
             return ret_code
         end
-
-        % create the version aliases
-        link_file(lib_sox, lib_so)
-
-        % finally, make sure the shared library stuff gets installed properly
-        install_derived(lib_sox)
-        install_derived_link(lib_sox, lib_so)
-        install_link_to_derived(lib_sox, LIB_INSTALL)
-        install_link_to_derived(lib_so, LIB_INSTALL)
-    else
-        delete_file(lib_so)
-        delete_file(lib_sox)
+        return 1
     end
 
-    return 0
+    if shared
+
+        % build an import library & DLL
+
+        MoveFile(lib_file, lib0_file)
+
+        if M3_PROFILING 
+            objects += "-pg"
+        end
+
+        % not yet tested, and there is a problem
+        % in particular, whether or not lib is sharable is a separate question
+        % than whether or not it shares other libs, but cm3 only exposes one
+        % of these two bits.
+        % imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+
+        %
+        % Not clear if a) gcc options can go in response file
+        % b) lib paths can go in response files, due to slash issues
+        %
+        LinkResponseFile =
+            WriteResponseFile(
+                LinkResponseFile,
+                [
+                    "--output",
+                    dll_file,
+                    "--out-implib",
+                    lib_file,
+                    objects,
+                    escape(imported_libs),
+                ])
+
+        ret_code =
+            try_exec(
+                "@" & SYSTEM_CC,
+
+                "-shared", % must be visible to compiler
+                "-Wl," & LinkResponseFile,
+                ">", listing
+                )
+        if not equal(ret_code, 0) or not FileExists(dll_file)
+            error(
+                "dynamic link library creation failed, see "
+                & GetPackageDirectory()
+                & BUILD_DIR
+                & SL
+                & listing
+                & " for more information"
+                & EOL
+                )
+            if not equal(ret_code, 0)
+                return ret_code
+            end
+            return 1
+        end
+
+        BindExport(dll_file)
+        install_derived(lib0_file)
+    end
+
+    return ret_code
 end
 
 %-------------------------------------------------------------------
@@ -273,18 +494,28 @@ skip_lib(
     shared,
     )
 is
-    local lib_so   = format("lib%s.so", lib)
-    local lib_sox  = format("lib%s.so.5", lib)
+    local lib_file  = lib & ".lib"
+    local lib0_file = lib & ".lib.sa"
+    local dll_file  = lib & ".dll"
+    local listing   = lib & ".lst"
+
+    local readonly Outputs = [
+        lib_file,
+        lib0_file,
+        dll_file,
+        listing,
+        ]
+
+    % make sure files get cleaned up
+    deriveds("", Outputs)
 
     if shared
-        % make sure the shared library stuff gets installed properly
-        install_derived(lib_sox)
-        install_derived(lib_so)
-        install_link_to_derived(lib_sox, LIB_INSTALL)
-        install_link_to_derived(lib_so, LIB_INSTALL)
+        % would have built an import library & DLL
+        BindExport(dll_file)
+        install_derived(lib0_file)
     else
-        delete_file(lib_so)
-        delete_file(lib_sox)
+        DeleteFile(lib0_file)
+        DeleteFile(dll_file)
     end
 
     return 0
@@ -302,15 +533,69 @@ m3_link(
     shared,
     )
 is
-    local args = [ ]
-    if not ashared
-        args += "-static"
+
+    local readonly pgm_file = prog & ".exe"
+    local readonly listing  = prog & ".lst"
+    local LinkResponseFile = GetResponseFileName()
+
+    local readonly Outputs = [
+        pgm_file,
+        listing,
+        LinkResponseFile,
+        ]
+
+    % make sure files get cleaned up
+    DeleteFiles(Outputs)
+    deriveds("", Outputs)
+
+    if not shared
+        options += "-static"
     end
     if M3_PROFILING
-        args += "-pg"
+        options += "-pg"
     end
-    args += ["-o", prog, options, objects, imported_libs]
-    return try_exec("@" & SYSTEM_CC, args)
+
+    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+
+    % not tested
+    % if not defined("M3_WINDOWS_GUI")
+    %   M3_WINDOWS_GUI = FALSE
+    % end
+    % if M3_WINDOWS_GUI
+    %   options += "-mwindows"
+    % else
+    %   options += "-mconsole"
+    % end
+
+    LinkResponseFile =
+        WriteResponseFile(
+            LinkResponseFile,
+            [
+                "--output",
+                pgm_file,
+                options,
+                objects,
+                escape(imported_libs),
+            ])
+
+    local ret_code = try_exec("@" & SYSTEM_CC, "-Wl," & LinkResponseFile, ">", listing)
+    if not equal(ret_code, 0) or not FileExists(pgm_file)
+        error(
+            "link failed, see "
+            & GetPackageDirectory()
+            & BUILD_DIR
+            & SL
+            & listing
+            & " for more information"
+            & EOL
+            )
+        if not equal(ret_code, 0)
+            return ret_code
+        end
+        return 1
+    end
+
+    return ret_code
 end
 
 %-------------------------------------------------------------------
@@ -324,11 +609,22 @@ skip_link(
     shared,
     )
 is
+    local readonly pgm_file = prog & ".exe"
+    local readonly listing  = prog & ".lst"
+
+    local readonly Outputs = [
+        pgm_file,
+        listing,
+        ]
+
+    % make sure files get cleaned up
+    deriveds("", Outputs)
+
     return 0
 end
 
 %------------------------------------------------------------ misc. options ---
-% Note, most of these options can be set from the command line.  Otherwise,
+% Note, most of these options can be set from the command line. Otherwise,
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
@@ -347,13 +643,13 @@ M3_OPTIONS = [ ]
 % M3_COVERAGE = TRUE
 % --- compile & link with coverage options
 
-M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
+M3_COVERAGE_LIB = "report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
-M3_SPLIT_LIBNAMES = TRUE
+M3_SPLIT_LIBNAMES = FALSE
 % --- split library names and pass -L/-l arguments to the linker
 
-M3_SHARED_LIB_ARG = "-Wl,-R"
+% M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
@@ -374,14 +670,14 @@ M3_SHARED_LIB_ARG = "-Wl,-R"
 X11_WITH_SHARED_MEM = TRUE
 % --- X11 libraries include the shared memory extensions (XShm...)
 
-%M3_NEED_STANDALONE_LINKS = TRUE
+M3_NEED_STANDALONE_LINKS = FALSE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
 
 %-------------------------------------------------------------------- emacs ---
 % If you have emacs and want to compile ".el" files to ".elc" files,
-% fill in the function below.  Otherwise, comment out or delete the
-% entire function.  Note, the distributed code assumes gnuemacs version 19
+% fill in the function below. Otherwise, comment out or delete the
+% entire function. Note, the distributed code assumes gnuemacs version 19
 % or later.
 
 readonly
@@ -396,7 +692,7 @@ end
 %------------------------------------------------------------- GNU variants ---
 % The two large pieces of GNU software used by the Modula-3 system
 % gcc(=m3cc) and gdb(=m3gdb) often require slightly different C compilers
-% or flags.  They are specified here.  Note that they may be overridden
+% or flags. They are specified here. Note that they may be overridden
 % from the m3build command line.
 %
 % To use the GNU defaults for CC and CFLAGS, specify "*".

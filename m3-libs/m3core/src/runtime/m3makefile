@@ -45,7 +45,11 @@ readonly HAS_STACK_WALKER = {
 
 include_dir ("common")
 include_dir (OS_TYPE)
-include_dir (TARGET)
+if equal(TARGET, "NT386GNU")
+  include_dir ("NT386")
+else
+  include_dir (TARGET)
+end
 if defined("M3_USE_STACK_WALKER")
   if M3_USE_STACK_WALKER and HAS_STACK_WALKER{TARGET}
     include_dir("ex_stack")
