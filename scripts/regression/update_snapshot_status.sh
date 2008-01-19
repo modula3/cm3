@@ -10,8 +10,8 @@ elif [ -r ${HOME}/cm3/cm3/scripts/regression/defs.sh ]; then
 fi
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/snaps}
-OSTYPE=${OSTYPE:-POSIX}
-FNPAT1=${FNPAT1:-"cm3-min-${OSTYPE}-"}
+CM3_OSTYPE=${CM3_OSTYPE:-POSIX}
+FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
 FNPATSUF=${FNPATSUF:-.tgz}
 FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
 INDEX=${INDEX:-snapshot-index.html}
