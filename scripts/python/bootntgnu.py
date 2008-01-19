@@ -1,14 +1,8 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.5 2008-01-15 12:47:27 jkrell Exp $
+# $Id: bootntgnu.py,v 1.6 2008-01-19 01:48:36 jkrell Exp $
 
 #
-# It will be profitable for the user to make local edits
-# to this file skip completed steps. This script is more
-# guidance than exact automation.
-#
-# It would be greatly improved with some command line switches
-# or automatic incrementality, or something like Olaf's idea
-# where errors trigger more pessimistic behavior.
+# User may want to edit the clean and/or m3cc steps.
 #
 
 import sys
@@ -23,13 +17,9 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
 # DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 
-#
-# Need to figure out how to do this properly, if at all.
-#
-SetupEnvironment()
-
 P = [
     "import-libs",
+    "m3cc",
     "m3bundle",
     "m3middle",
     "m3quake",
@@ -42,33 +32,29 @@ P = [
     "m3quake",
     "cm3",
     "mklib",
-    "m3cc",
     ]
+
+pylib.GCC_BACKEND = True
+pylib.OMIT_GCC = False
 
 DoPackage(argv_BuildShip, P) or sys.exit(1)
 ShipCompiler() or sys.exit(1)
 CopyConfigForDevelopment() or sys.exit(1)
 
-SetupEnvironment()
+pylib.Target = "NT386GNU"
+pylib.GCC_BACKEND = False
+pylib.OMIT_GCC = True
 
-os.environ["CM3_TARGET"] = "NT386GNU"
-print("set CM3_TARGET=NT386GNU")
-
-os.environ["OMIT_GCC"] = "yes"
-print("set OMIT_GCC=yes")
-    
-reload(pylib)
-
-#
-# Need to figure out how to do this properly, if at all.
-#
-SetupEnvironment()
-
-# DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
+DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 
 P = ["m3core", "libm3"] + P
 DoPackage(argv_BuildShip, P) or sys.exit(1)
-ShipCompiler() or sys.exit(1)
+
+#
+# problem needs fixing here
+# ShipCompiler() or sys.exit(1)
+#
+
 CopyConfigForDevelopment() or sys.exit(1)
 
 # DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
