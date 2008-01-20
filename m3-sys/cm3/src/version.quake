@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.9 2008-01-18 15:24:45 jkrell Exp $
+% $Id: version.quake,v 1.10 2008-01-20 22:00:57 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -69,13 +69,13 @@ proc version_impl(name) is
 
     local NOW = ""
 
-    if equal($OS, "Windows_NT")
+    if defined("datetime")
+        NOW = datetime()
+    else
+        NOW = "not available"
+    end
 
-        if defined("datetime")
-            NOW = datetime()
-        else
-            NOW = "not available"
-        end
+    if equal($OS, "Windows_NT")
 
         % why two names for these?
         local readonly Map =
@@ -141,16 +141,6 @@ proc version_impl(name) is
                 end
             end
             exec("@.\\_m3version.cmd > " & datefn)
-        end
-    else
-        dcmd = "date -u +'%Y-%m-%d %H:%M:%S' | tr -d '\\n'"
-        > datefn in
-          write("NOW = \"")
-        end
-        dcmd = dcmd & " >> " & datefn
-        exec("@-" & dcmd)
-        >> datefn in
-          write("\"" & CR)
         end
     end
     if FileExists(datefn)
