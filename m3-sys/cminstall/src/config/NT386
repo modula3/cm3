@@ -4,6 +4,12 @@
 % Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95.
 %
 
+%
+% This file may appear to have gratuitous dead content in some places,
+% and at least to some extent this is to reduce the diff with other files,
+% which this will perhaps be merged with in the future.
+%
+
 %-------------------------------------------------- compilation environment ---
 
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
@@ -100,22 +106,35 @@ readonly INSTALL_IMPLS = FALSE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
+local readonly DashL = ""
+local readonly DotLib = ".lib"
+
+local
+readonly
+proc
+Lib(
+    a,
+    )
+is
+    return DashL & a & DotLib
+end
+
 SYSTEM_LIBS =
 {
     "LIBC" :
     [
-        "winspool.lib",
-        "comctl32.lib",
-        "wsock32.lib",
-        "comdlg32.lib",
-        "netapi32.lib",
-        "gdi32.lib",
-        "user32.lib",
-        "advapi32.lib",
-        "kernel32.lib"
+        Lib("winspool"),
+        Lib("comctl32"),
+        Lib("wsock32"),
+        Lib("comdlg32"),
+        Lib("netapi32"),
+        Lib("gdi32"),
+        Lib("user32"),
+        Lib("advapi32"),
+        Lib("kernel32"),
     ],
-    "ODBC" : ["odbc32.lib"],
-    "OPENGL" : ["opengl32.lib", "glu32.lib"],
+    "ODBC" : [Lib("odbc32")],
+    "OPENGL" : [Lib("opengl32"), Lib("glu32")],
     "TCP" : [ ],
 }
 
@@ -164,19 +183,37 @@ SYSTEM_LIBORDER =
     "LIBC",
 ]
 
+%---------------------------------------------------------- system programs ---
+
+readonly SYSTEM_CC  = "cl" % C compiler
+readonly SYSTEM_ASM = "ml"  % Assembler
+
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-% proc
-% m3_backend(
-%   source,
-%   object,
-%   optimize,
-%   debug,
-%   )
-% is
-% end
+readonly m3back = "@cm3cg"
+
+proc
+m3_backend(
+    source,
+    object,
+    optimize,
+    debug,
+    )
+is
+    local args = ["-quiet", source, "-o", object]
+    if optimize
+        args += "-O"
+    end
+    if debug
+        args += "-g"
+    end
+    if M3_PROFILING
+        args += "-p"
+    end
+    return try_exec(m3back, args)
+end
 
 M3_BACKEND_MODE = "0"
 % -- defines how the frontend, backend, and assembler interact
@@ -230,7 +267,7 @@ DeleteFiles(
     )
 is
     foreach b in a
-        delete_file(b)
+        DeleteFile(b)
     end
 end
 
@@ -283,9 +320,7 @@ is
     if optimize
         args += "-Ox"
     end
-    if debug
-        args += "-Oi"
-    end
+    args += "-Oi"
     return try_exec("cl", [args, "-c", source])
 end
 
@@ -343,12 +378,28 @@ readonly
 proc
 WriteResponseFile(
     File,
+    Divider,
     Args,
     )
 is
     local readonly Temp = arglist("", Args)
     if equal(Temp, Args)
-        return Temp
+        if equal(Divider, " ")
+            return Temp
+        end
+        %
+        % Quake has a fixed size limit on strings, after which it crashes.
+        % Hopefully that our parameter list is too short to be in a response
+        % file implies it is short enough to fit in a string.
+        %
+        local Result = ""
+        foreach Arg in Args
+            if Result
+                Result = Result & Divider
+            end
+            Result = Result & Arg
+        end
+        return Result
     end
     MoveFile(Temp, File)
     DeleteFile(Temp)
@@ -393,6 +444,44 @@ is
         end
     end
     return imports
+end
+
+%------------------------------------------------------------------------------
+
+% A "pdb' is a "program database", that is, a Microsoft symbol file.
+
+readonly
+proc
+PdbExport(
+    pdb,
+    )
+is
+    if FileExists(pdb)
+        BindExport(pdb)
+    end
+end
+
+%------------------------------------------------------------------------------
+
+readonly
+proc
+ManifestTool(
+    DllOrExe,
+    ManifestFile,
+    ResourceId,
+    )
+is
+    %
+    % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
+    %
+    if FileExists(ManifestFile)
+        ret_code = try_exec("mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId)
+        if not equal(ret_code, 0)
+            return ret_code
+        end
+        DeleteFile(ManifestFile)
+    end
+    return 0
 end
 
 %--------------------------------------------------------- library creation ---
@@ -448,6 +537,7 @@ is
     LibResponseFile =
         WriteResponseFile(
             LibResponseFile,
+            " ",
             [
                 m3_lib_flags,
                 "-out:" & lib_file,
@@ -455,7 +545,7 @@ is
                 objects,
             ])
 
-    local ret_code = try_exec("@mklib", LibResponseFile, "2>&1", ">", listing)
+    local ret_code = try_exec("mklib", LibResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error(
             "library creation failed, see "
@@ -513,6 +603,7 @@ is
         LinkResponseFile =
             WriteResponseFile(
                 LinkResponseFile,
+                " ",
                 [
                     m3_link_flags,
                     "-def:" & def_file,
@@ -540,19 +631,13 @@ is
             return 1
         end
 
-        %
-        % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
-        %
-        if FileExists(manifest_file)
-            ret_code = try_exec("mt /nologo /manifest " & manifest_file & " /outputresource:" & dll_file & ";2")
-            if not equal(ret_code, 0)
-                return ret_code
-            end
-            delete_file(manifest_file)
+        ret_code = ManifestTool(dll_file, manifest_file, "2")
+        if not equal(ret_code, 0)
+            return ret_code
         end
 
         BindExport(dll_file)
-        BindExport(pdb_file)
+        PdbExport(pdb_file)
         install_derived(lib0_file)
     end
 
@@ -594,14 +679,14 @@ is
     if shared
         % would have built an import library & DLL
         BindExport(dll_file)
-        delete_file(manifest_file)
-        BindExport(pdb_file)
+        DeleteFile(manifest_file)
+        PdbExport(pdb_file)
         install_derived(lib0_file)
     else
-        delete_file(lib0_file)
-        delete_file(dll_file)
-        delete_file(manifest_file)
-        delete_file(pdb_file)
+        DeleteFile(lib0_file)
+        DeleteFile(dll_file)
+        DeleteFile(manifest_file)
+        DeleteFile(pdb_file)
     end
 
     return 0
@@ -713,6 +798,7 @@ is
     LinkResponseFile =
         WriteResponseFile(
             LinkResponseFile,
+            " ",
             [
                 "-out:" & pgm_file,
                 entry,
@@ -739,18 +825,12 @@ is
         return 1
     end
 
-    %
-    % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
-    %
-    if FileExists(manifest_file)
-        ret_code = try_exec("mt /nologo /manifest " & manifest_file & " /outputresource:" & pgm_file & ";1")
-        if not equal(ret_code, 0)
-            return ret_code
-        end
-        delete_file(manifest_file)
+    ret_code = ManifestTool(pgm_file, manifest_file, "1")
+    if not equal(ret_code, 0)
+        return ret_code
     end
 
-    BindExport(pdb_file)
+    PdbExport(pdb_file)
 
     return ret_code
 end
@@ -766,17 +846,12 @@ skip_link(
     shared,
     )
 is
-    local readonly pgm_file = prog & ".exe"
-    local readonly manifest_file = pgm_file & ".manifest"
-    local readonly pdb_file = prog & ".pdb"
-    local readonly listing  = prog & ".lst"
-
     local readonly Outputs = [
-        pgm_file,
-        listing,
-        pdb_file,
-        manifest_file,
-        ]
+        prog & ".exe",
+        pgm_file & ".manifest",
+        prog & ".pdb",
+        prog & ".lst",
+    ]
 
     % make sure files get cleaned up
     deriveds("", Outputs)
