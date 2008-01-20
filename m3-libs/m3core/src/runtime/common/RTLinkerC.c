@@ -1,4 +1,4 @@
-/* $Id: RTLinkerC.c,v 1.1 2008-01-20 11:01:09 jkrell Exp $ */
+/* $Id: RTLinkerC.c,v 1.2 2008-01-20 11:03:00 jkrell Exp $ */
 
 /*
 a replacement for RTIO that works when things are too
@@ -16,8 +16,8 @@ typedef struct ModuleInfo_t ModuleInfo_t;
 struct ImportInfo_t;
 typedef struct ImportInfo_t ImportInfo_t;
 
-struct String_t;
-typedef struct String_t String_t;
+struct Text_t;
+typedef struct Text_t Text_t;
 
 struct ImportInfo_t
 {
@@ -43,9 +43,9 @@ struct ModuleInfo_t
     size_t GarbageCollectionFlags;
 };
 
-struct String_t
+struct Text_t
 {
-    void* VTable;
+    void* Functions;
     size_t Length;
     char Chars[1];
 };
@@ -66,7 +66,7 @@ RTIO__PutString(
 
 void
 RTIO__PutText(
-    String_t* a
+    Text_t* a
     );
 
 void
@@ -110,7 +110,7 @@ RTLinker__PrintString(
 
 void
 RTLinker__PrintText(
-    String_t* a
+    Text_t* a
     )
 {
     if (a == NULL)
