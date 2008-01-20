@@ -4,14 +4,12 @@
 MODULE InfoModule;
 
 IMPORT Scope, Tipe, Module, Constant, Target, EnumType;
-IMPORT Type, Value, M3ID, Text, Error;
+IMPORT Type, Value, M3ID, Error;
 IMPORT InfoThisFile, InfoThisPath, InfoThisLine, InfoThisException;
 
 CONST
-  OS_names = ARRAY [0..1] OF TEXT { "POSIX", "WIN32" };
-
-CONST
   Platform_names = Target.SystemNames;
+  OS_names = Target.OSNames;
 
 PROCEDURE Initialize () =
   VAR zz: Scope.T;  os_type, platform_type: Type.T;  enum: Value.T;  nm: TEXT;
@@ -31,7 +29,7 @@ PROCEDURE Initialize () =
     platform_type := EnumType.Build (Platform_names);
     Tipe.Define ("Platform", platform_type, FALSE);
 
-    nm := OS_names [ORD (Text.Equal (Target.System_name, "NT386") OR Text.Equal (Target.System_name, "NT386GNU"))];
+    nm := Target.OS_name;
     IF NOT EnumType.LookUp (os_type, M3ID.Add (nm), enum) THEN
       Error.Txt (nm, "Unknown Compiler.OS value");
       <*ASSERT FALSE*>

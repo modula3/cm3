@@ -73,6 +73,9 @@ CONST
     (* 35 *) "NetBSD2_i386"
   };
 
+CONST
+  OSNames = ARRAY OF TEXT { "POSIX", "WIN32" };
+
 (*-------------------------------------------------------- initialization ---*)
 
 PROCEDURE Init (system: TEXT): BOOLEAN;
@@ -85,6 +88,9 @@ VAR (*CONST*)
 
 VAR (*CONST*)
   System_name: TEXT := NIL; (* initialized by "Init" *)
+
+VAR (*CONST*)
+  OS_name: TEXT := NIL; (* initialized by "Init" *)
 
 (*------------------------------------------ machine/code generator types ---*)
 
