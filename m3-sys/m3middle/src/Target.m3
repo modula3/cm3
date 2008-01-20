@@ -25,6 +25,8 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     System := VAL(sys, Systems);
     System_name := SystemNames[sys];
 
+    OS_name := "POSIX";			 (* default is POSIX *)
+
     (* build a generic 32-bit/IEEE system description *)
 
     Int8.cg_type     := CGType.Int8;
@@ -372,6 +374,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  EOL                       := "\n";
 
     | Systems.NT386 =>
+                 OS_name                   := "WIN32";
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -665,6 +668,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  EOL                       := "\n";
 
     | Systems.NT386GNU => 
+                 OS_name                   := "WIN32";
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
