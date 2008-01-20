@@ -14,6 +14,9 @@ TINDERBOX_MAILER="wget -q -O - ${TINDERBOX_URL} --post-file"
 BUILD_REL=${BUILD_REL:-"rel"}
 BUILD_REL_NAME="${BUILD_REL}"
 
+# relative name to regression scripts directory 
+REGRESSION_SCRIPTS_DIR="regression-scripts"
+
 if [ "${BUILD_REL}" == "rel" ] ; then
 	BUILD_REL_NAME="release"
 fi
@@ -23,8 +26,10 @@ if [ -e ~/cm3/`hostname`.conf ]; then
   . ~/cm3/`hostname`.conf
 fi
 
-#source cm3 build script
-. defs.sh
+# checkout the current cm3 regression script and source it
+cvs -d :ext:modula3.elegosoft.com:/usr/cvs checkout -A -d ${REGRESSION_SCRIPTS_DIR} cm3/scripts/regression/defs.sh
+test -r ${REGRESSION_SCRIPTS_DIR}/defs.sh || exit 10
+. ${REGRESSION_SCRIPTS_DIR}/defs.sh
 
   
 TESTMACHINE=${TESTMACHINE:-"`uname -s` `uname -r`"}
@@ -36,17 +41,19 @@ do_checkout() {
 
 do_compile() {
 	( test_build_core_${BUILD_REL} ) 2>&1
-        if [ "$?" = 0 -a "${BUILD_REL}" == "rel" ] ; then
-        	( DOSHIP=yes test_make_bin_dist ) 2>&1
-        fi
 }
 
 do_tests() {
         if [ "${BUILD_REL}" == "rel" ] ; then
                 # if we land here, core compilation succeeded with
-		# last release, so we have a new lastok
+				# last release, so we have a new lastok
                 ( test_build_std_lastok ) 2>&1
                 ( test_m3tests ) 2>&1
                 ( test_m3_all_pkgs ) 2>&1
+				
         fi
+}
+
+do_cleanup() {
+	( cleanup_all 5 ) 2>/dev/null
 }
