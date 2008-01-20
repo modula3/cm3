@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.8 2008-01-19 04:05:55 jkrell Exp $
+# $Id: upgrade.py,v 1.9 2008-01-20 14:54:25 jkrell Exp $
 
 import sys
 import pylib
@@ -55,7 +55,9 @@ DoPackage(
     "m3front",
     "m3quake",
     "cm3",
-    "mklib",
+    # only Win32 can build mklib in the first pass, since preexisting
+    # m3core will not have the types it needs
+    #"mklib",
     ]) or sys.exit(1)
 
 #
