@@ -21,8 +21,10 @@ if equal (TARGET, "OS2")
   include_dir ("OS2")
 end
 
+include_dir ("win32")
+
 if equal (OS_TYPE, "WIN32")
-  include_dir ("win32")
+  % nothing
 else if equal (OS_TYPE, "POSIX")
   include_dir ("unix")
 else

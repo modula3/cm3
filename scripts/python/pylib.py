@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.37 2008-01-19 04:12:57 jkrell Exp $
+# $Id: pylib.py,v 1.38 2008-01-20 14:54:25 jkrell Exp $
 
 import os
 from os import getenv
@@ -663,12 +663,7 @@ def _FilterPackage(Package):
             "NetBSD2_i386" : True
             }.get(Target, False),
 
-        "m3objfile": BuildAll or OSType == "WIN32",
-        "mklib": BuildAll or OSType == "WIN32",
         "fix_nl": BuildAll or OSType == "WIN32",
-        "libdump": BuildAll or OSType == "WIN32",
-        "import-libs": BuildAll or OSType == "WIN32",
-
         "tcl": BuildAll or HAVE_TCL,
         "udp": BuildAll or OSType == "POSIX",
         "tapi": BuildAll or OSType == "WIN32",
@@ -1330,15 +1325,18 @@ def GetConfigForDistribution():
     b = os.path.join(a, "config", Target)
     return b
 
-def GetConfigForDevelopment():
-    return os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg")
-
 def CopyConfigForDevelopment():
-    CopyFile(GetConfigForDevelopment(), os.path.join(InstallRoot, "bin", "cm3.cfg")) or FatalError()
+    To = os.path.join(InstallRoot, "bin")
+    CopyFile(
+        os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
+        os.path.join(To)
+        ) or FatalError()
+    CopyFile(os.path.join(Root, "scripts", "sysinfo.sh"), To) or FatalError()
     return True
 
 def CopyConfigForDistribution(To):
-    CopyFile(GetConfigForDistribution(), os.path.join(To, "bin", "cm3.cfg")) or FatalError()
+    To = os.path.join(To, "bin")
+    CopyFile(GetConfigForDistribution(), To) or FatalError()
     return True
 
 def _CopyCompiler(From, To):
