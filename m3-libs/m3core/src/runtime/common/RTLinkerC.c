@@ -103,7 +103,7 @@ RTLinker__PrintString(
 		RTIO__PutString(a);
 		break;
 	case Trace_C:
-		fprintf(stdout, "%s", a);
+		printf("%s", a);
 		break;
 	}
 }
@@ -123,7 +123,7 @@ RTLinker__PrintText(
 		RTIO__PutText(a);
 		break;
 	case Trace_C:
-		fprintf(stdout, "%.*s", ((int) a->Length), a->Chars);
+		printf("%.*s", ((int) a->Length), a->Chars);
 		break;
 	}
 }
@@ -141,7 +141,7 @@ RTLinker__PrintInt(
 		RTIO__PutInt(a);
 		break;
 	case Trace_C:
-		fprintf(stdout, "%x", a);
+		printf("%x", a);
 		break;
 	}
 }
@@ -152,16 +152,13 @@ RTLinker__PrintModule(
     )
 {
     ImportInfo_t* Imports;
-    FILE* Out;
 
     if ((Module == NULL) || (traceInit != Trace_C))
         return;
-    Out = stdout;
     Imports = Module->Imports;
     while (Imports != NULL)
     {
-        fprintf(
-            Out,
+        printf(
             "Module %p %s Imports %p{Import %p, Binder %p, Next %p} %s\n",
             Module,
             Module->File,
@@ -173,5 +170,5 @@ RTLinker__PrintModule(
             );
         Imports = Imports->Next;
     }
-    fprintf(Out, "\n");
+    printf("\n");
 }
