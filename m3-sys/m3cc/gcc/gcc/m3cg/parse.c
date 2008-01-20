@@ -827,7 +827,7 @@ insert_block (tree block)
    Returns the ..._DECL node. */
 
 static tree
-pushdecl (tree decl ATTRIBUTE_UNUSED)
+pushdecl (tree decl)
 {
   gcc_assert (current_block == NULL_TREE);
   gcc_assert (current_function_decl == NULL_TREE);
@@ -3054,39 +3054,6 @@ m3cg_init_float (void)
   TREE_VALUE (v) = val;
 }
 
-static
-tree
-m3cg_build_stdcall_args(
-    tree cc,
-    long n_params
-    )
-{
-    tree atypes = NULL_TREE;
-
-    /* For NT386 __stdcall, we need to know the number of bytes of parameters.
-    Parameter are all ASSUMED to be pointer/word/int size.
-    This is NOT necessarily correct, e.g.:
-        type t.c
-            void __stdcall F1(__int64 a) { }
-            void __stdcall F2(struct {int a;} a) { }
-        cl /c t.c
-        link /dump /symbols t.obj
-            _F1@8
-            _F2@8
-    */
-    if ((cc != NULL_TREE) && (n_params != 0))
-    {
-        /* Is there a way to allocate n tree nodes all at once? */
-        long i;
-        atypes = tree_cons (NULL_TREE, t_void, NULL_TREE);
-        for (i = 0 ; i != n_params ; ++i)
-        {
-            atypes = tree_cons (NULL_TREE, t_word, atypes);
-        }
-    }
-    return atypes;
-}
-
 #define M3CG_ADAPT_RETURN_TYPE 1
 
 static void
@@ -3115,13 +3082,8 @@ m3cg_import_procedure (void)
   }
 #endif
 
-  if (p == 0) {
-    p = build_decl (FUNCTION_DECL, get_identifier (n), NULL_TREE);
-  } else {
-    DECL_NAME (p) = get_identifier (n);
-  }
-
-  TREE_TYPE (p) = build_function_type (return_type, m3cg_build_stdcall_args(cc, n_params));
+  DECL_NAME (p) = get_identifier (n);
+  TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   TREE_PUBLIC (p) = 1;
   DECL_EXTERNAL (p) = 1;
   DECL_CONTEXT (p) = NULL_TREE;
@@ -3173,7 +3135,7 @@ m3cg_declare_procedure (void)
   TREE_STATIC (p) = 1;
   TREE_PUBLIC (p) = 1 /* exported */ ; /* keep body even if inlined */
   DECL_CONTEXT (p) = parent;
-  TREE_TYPE (p) = build_function_type (return_type, m3cg_build_stdcall_args(cc, n_params));
+  TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   DECL_MODE (p) = FUNCTION_MODE;
   resultdecl = build_decl (RESULT_DECL, NULL_TREE, return_type);
   DECL_CONTEXT (resultdecl) = p;
