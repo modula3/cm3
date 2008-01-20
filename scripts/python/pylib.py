@@ -660,7 +660,8 @@ def _FilterPackage(Package):
             {"FreeBSD4": True,
             "LINUXLIBC6" : True,
             "SOLgnu" : True,
-            "NetBSD2_i386" : True
+            "NetBSD2_i386" : True,
+            "NT386GNU" : True,
             }.get(Target, False),
 
         "fix_nl": BuildAll or OSType == "WIN32",
@@ -1452,7 +1453,7 @@ def SetupEnvironment():
     else:
         NT = False
 
-    SystemDrive = os.environ.get("SystemDrive")
+    SystemDrive = os.environ.get("SYSTEMDRIVE")
     if SystemDrive:
         SystemDrive += os.path.sep
 
