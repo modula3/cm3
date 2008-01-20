@@ -158,7 +158,7 @@ readonly SYSTEM_ASM = "as"  % Assembler
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-readonly m3back = "@cm3cg"
+readonly m3back = "@cm3cg -mno-align-double"
 
 proc
 m3_backend(
