@@ -8,8 +8,6 @@
    startup code.
 *)
 
-(* $Id: RTLinker.i3,v 1.4 2008-01-20 11:01:09 jkrell Exp $ *)
-
 UNSAFE INTERFACE RTLinker;
 
 IMPORT RT0;
@@ -42,23 +40,5 @@ PROCEDURE RunMainBody (m: RT0.ModulePtr);
    Note: this procedure is only exported so that stack walkers
    can know when to quit looking at frames. *)
 
-<*EXTERNAL RTLinker__PrintString*>
-PROCEDURE PrintString (a : ADDRESS);
-
-<*EXTERNAL RTLinker__PrintText*>
-PROCEDURE PrintText(a : TEXT);
-
-<*EXTERNAL RTLinker__PrintInt*>
-PROCEDURE PrintInt(a : INTEGER);
-
-<*EXTERNAL RTLinker__PrintModule*>
-PROCEDURE PrintModule(a : ADDRESS);
-
-TYPE
- Trace_t = { None, M3, C };
-
-<*EXTERNAL RTLinker__traceInit*>
-VAR
- traceInit : Trace_t;
-
 END RTLinker.
+
