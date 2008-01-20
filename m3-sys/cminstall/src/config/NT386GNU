@@ -4,6 +4,12 @@
 % configuration file for NT386 using gcc backend
 %
 
+%
+% This file may appear to have gratuitous dead content in some places,
+% and at least to some extent this is to reduce the diff with other files,
+% which this will perhaps be merged with in the future.
+%
+
 %-------------------------------------------------- compilation environment ---
 
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
@@ -100,22 +106,35 @@ readonly INSTALL_IMPLS = FALSE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
+local readonly DashL = "-l"
+local readonly DotLib = ""
+
+local
+readonly
+proc
+Lib(
+    a,
+    )
+is
+    return DashL & a & DotLib
+end
+
 SYSTEM_LIBS =
 {
     "LIBC" :
     [
-%       "-lwinspool",
-        "-lcomctl32",
-        "-lwsock32",
-%       "-lcomdlg32",
-        "-lnetapi32",
-        "-lgdi32",
-        "-luser32",
-%       "-ladvapi32",
-%       "-lkernel32",
+%       Lib("winspool"),
+        Lib("comctl32"),
+        Lib("wsock32"),
+%       Lib("comdlg32"),
+        Lib("netapi32"),
+        Lib("gdi32"),
+        Lib("user32"),
+%       Lib("advapi32"),
+%       Lib("kernel32"),
     ],
-    "ODBC" : ["-lodbc32"], %  -lodbccp32 ?
-    "OPENGL" : ["-lglu32", "-lopengl32"], % -lglut32 ?
+    "ODBC" : [Lib("odbc32")], %  -lodbccp32 ?
+    "OPENGL" : [Lib("glu32"), Lib("opengl32")], % -lglut32 ?
     "TCP" : [ ],
 }
 
@@ -303,6 +322,9 @@ WriteResponseFile(
 is
     local readonly Temp = arglist("", Args)
     if equal(Temp, Args)
+        if equal(Divider, " ")
+            return Temp
+        end
         %
         % Quake has a fixed size limit on strings, after which it crashes.
         % Hopefully that our parameter list is too short to be in a response
@@ -362,6 +384,44 @@ is
     return imports
 end
 
+%------------------------------------------------------------------------------
+
+% A "pdb' is a "program database", that is, a Microsoft symbol file.
+
+readonly
+proc
+PdbExport(
+    pdb,
+    )
+is
+    if FileExists(pdb)
+        BindExport(pdb)
+    end
+end
+
+%------------------------------------------------------------------------------
+
+readonly
+proc
+ManifestTool(
+    DllOrExe,
+    ManifestFile,
+    ResourceId,
+    )
+is
+    %
+    % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
+    %
+    if FileExists(ManifestFile)
+        ret_code = try_exec("mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId)
+        if not equal(ret_code, 0)
+            return ret_code
+        end
+        DeleteFile(ManifestFile)
+    end
+    return 0
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -388,7 +448,10 @@ make_lib(
 is
     local readonly lib_file = lib & ".lib"
     local readonly lib0_file = lib & ".lib.sa"
+    local readonly def_file = lib & ".def"
     local readonly dll_file = lib & ".dll"
+    local readonly manifest_file  = dll_file & ".manifest"
+    local readonly pdb_file = lib & ".pdb"
     local readonly listing  = lib & ".lst"
     local LibResponseFile = GetResponseFileName()
     local LinkResponseFile = GetResponseFileName()
@@ -396,7 +459,10 @@ is
         lib_file,
         lib0_file,
         dll_file,
+        def_file,
         listing,
+        manifest_file,
+        pdb_file,
         LibResponseFile,
         LinkResponseFile,
         ]
@@ -418,7 +484,7 @@ is
                 objects,
             ])
 
-    local ret_code = try_exec("@mklib", LibResponseFile, "2>&1", ">", listing)
+    local ret_code = try_exec("mklib", LibResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error(
             "library creation failed, see "
@@ -472,7 +538,7 @@ is
 
         ret_code =
             try_exec(
-                "@" & SYSTEM_CC,
+                SYSTEM_CC,
                 "-shared", % must be visible to compiler
                 "-Wl," & LinkResponseFile,
                 "2>&1",
@@ -494,7 +560,13 @@ is
             return 1
         end
 
+        ret_code = ManifestTool(dll_file, manifest_file, "2")
+        if not equal(ret_code, 0)
+            return ret_code
+        end
+
         BindExport(dll_file)
+        PdbExport(pdb_file)
         install_derived(lib0_file)
     end
 
@@ -514,14 +586,20 @@ skip_lib(
 is
     local lib_file  = lib & ".lib"
     local lib0_file = lib & ".lib.sa"
+    local def_file  = lib & ".def"
     local dll_file  = lib & ".dll"
+    local manifest_file  = dll_file & ".manifest"
+    local pdb_file  = lib & ".pdb"
     local listing   = lib & ".lst"
 
     local readonly Outputs = [
         lib_file,
         lib0_file,
         dll_file,
+        def_file,
         listing,
+        manifest_file,
+        pdb_file,
         ]
 
     % make sure files get cleaned up
@@ -530,10 +608,14 @@ is
     if shared
         % would have built an import library & DLL
         BindExport(dll_file)
+        DeleteFile(manifest_file)
+        PdbExport(pdb_file)
         install_derived(lib0_file)
     else
         DeleteFile(lib0_file)
         DeleteFile(dll_file)
+        DeleteFile(manifest_file)
+        DeleteFile(pdb_file)
     end
 
     return 0
@@ -553,12 +635,16 @@ m3_link(
 is
 
     local readonly pgm_file = prog & ".exe"
+    local readonly manifest_file = pgm_file & ".manifest"
+    local readonly pdb_file = prog & ".pdb"
     local readonly listing  = prog & ".lst"
     local LinkResponseFile = GetResponseFileName()
 
     local readonly Outputs = [
         pgm_file,
         listing,
+        manifest_file,
+        pdb_file,
         LinkResponseFile,
         ]
 
@@ -600,7 +686,7 @@ is
                 escape(imported_libs),
             ])
 
-    local ret_code = try_exec("@" & SYSTEM_CC, "-Wl," & LinkResponseFile, "2>&1", ">", listing)
+    local ret_code = try_exec(SYSTEM_CC, "-Wl," & LinkResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(pgm_file)
         error(
             "link failed, see "
@@ -617,6 +703,13 @@ is
         return 1
     end
 
+    ret_code = ManifestTool(pgm_file, manifest_file, "1")
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+
+    PdbExport(pdb_file)
+
     return ret_code
 end
 
@@ -631,12 +724,11 @@ skip_link(
     shared,
     )
 is
-    local readonly pgm_file = prog & ".exe"
-    local readonly listing  = prog & ".lst"
-
     local readonly Outputs = [
-        pgm_file,
-        listing,
+        prog & ".exe",
+        pgm_file & ".manifest",
+        prog & ".pdb",
+        prog & ".lst",
         ]
 
     % make sure files get cleaned up
@@ -672,7 +764,7 @@ M3_SPLIT_LIBNAMES = FALSE
 % --- split library names and pass -L/-l arguments to the linker
 
 % M3_SHARED_LIB_ARG = "-Wl,-R"
-% --- pass "-R" flags to the linker too...
+% --- pass "-R" flags to the linker too.
 
 % M3_BOOTSTRAP = TRUE
 % --- generate bootstrap code (assembly) instead of finaly object code
@@ -710,16 +802,3 @@ emacs_compile(
 is
     exec("emacs -batch -f batch-byte-compile", el)
 end
-
-%------------------------------------------------------------- GNU variants ---
-% The two large pieces of GNU software used by the Modula-3 system
-% gcc(=m3cc) and gdb(=m3gdb) often require slightly different C compilers
-% or flags. They are specified here. Note that they may be overridden
-% from the m3build command line.
-%
-% To use the GNU defaults for CC and CFLAGS, specify "*".
-%
-
-GNU_CC     = "gcc"
-GNU_CFLAGS = "-O"
-GNU_MAKE   = "make"
