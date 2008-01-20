@@ -11,6 +11,7 @@
 
 pgm_source ("RTBuiltin.mx")
 
+c_source  ("RTLinkerC")
 Module    ("RTHooks")
 Module    ("RT0")
 Module    ("RuntimeError")

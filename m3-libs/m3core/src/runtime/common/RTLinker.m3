@@ -8,15 +8,16 @@
 (* The linker generates an inital direct call to this module's
    main body.  All Modula-3 code reached from here. *)
 
+(* $Id$ *)
+
 UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
 IMPORT RT0, RTParams, RTDebug, RTHeapRep, RTCollectorSRC;
 IMPORT RTTypeSRC, RTSignal, ThreadF, RTHeapInfo, RTLinkerX, 
-       RTIO, Word;
+       Word;
 
 VAR
-  traceInit   := FALSE;
   init_done   := FALSE;
   n_modules   := 0;
   n_fixed     := 0;
@@ -60,7 +61,7 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent("tracelinker") THEN
-      traceInit := TRUE;
+      traceInit := Trace_t.M3;
     END;
 
     AddUnit (RTLinkerX.RTDebug_M3);
@@ -149,21 +150,21 @@ PROCEDURE DumpModules () =
     FOR i := 0 TO n_modules - 1 DO
       mp := modules + i * ADRSIZE (RT0.ModulePtr);
       IF (mp^ # NIL) THEN
-        RTIO.PutText (" ");
-        RTIO.PutString (mp^.file);
+        PrintText (" ");
+        PrintString (mp^.file);
         imp := mp^.imports;
         WHILE (imp # NIL) DO
           IF (imp.import = NIL) THEN
-            RTIO.PutText (" <<< ");
+            PrintText (" <<< ");
             EXIT;
           END;
           imp := imp.next;
         END;
-        RTIO.Flush ();
+        PrintFlush ();
       END;
     END;
-    RTIO.PutText ("\r\n");
-    RTIO.Flush();
+    PrintText ("\r\n");
+    PrintFlush ();
   END DumpModules;
 ***)
 
@@ -190,6 +191,7 @@ PROCEDURE FindModules (m: RT0.ModulePtr) =
 PROCEDURE LinkModule (m: RT0.ModulePtr) =
   VAR mp: UNTRACED REF RT0.ModulePtr;
   BEGIN
+    PrintModule(m);
     IF (m # NIL) AND (m.link_state = LS_Initial) THEN
       TraceModuleAndImports("LinkModule: ", m);
       (* add this module to the list of known modules *)
@@ -462,89 +464,97 @@ PROCEDURE FromDataAddress (x: ADDRESS): RT0.ModulePtr =
 
 PROCEDURE OutModuleName (m: RT0.ModulePtr) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
     IF m = NIL THEN
-      (* RTIO.PutText("NIL"); *)
+      (* PrintText("NIL"); *)
       RETURN;
     END;
     IF m.file = NIL THEN
-      RTIO.PutText("NIL");
+      PrintText("NIL");
     ELSE
-      RTIO.PutString(m.file);
+      PrintString(m.file);
     END;
-    RTIO.PutText("(");
-    RTIO.PutInt(m.link_state);
-    RTIO.PutText(")");
-    RTIO.Flush();
+    PrintText("(");
+    PrintInt(m.link_state);
+    PrintText(")");
   END OutModuleName;
 
 PROCEDURE OutModuleImports (m: RT0.ModulePtr) =
   VAR imp: RT0.ImportPtr;
   BEGIN
-    IF NOT traceInit THEN RETURN END;
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
     imp := m.imports;
     WHILE (imp # NIL) DO
       IF imp.import # NIL THEN
-        RTIO.PutText("  ");
+        PrintText("  ");
         OutModuleName(imp.import);
-        RTIO.PutText("\r\n");
+        PrintText("\r\n");
       END;
       imp := imp.next;
     END;
-    RTIO.Flush();
   END OutModuleImports;
 
 PROCEDURE OutModuleAndImports (m: RT0.ModulePtr) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
     OutModuleName(m);
-    RTIO.PutText("\r\n");
+    PrintText("\r\n");
     OutModuleImports(m);
   END OutModuleAndImports;
 
 PROCEDURE TraceModule(s: TEXT; m: RT0.ModulePtr) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
-    RTIO.PutText(s);
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
+    PrintText(s);
     OutModuleName(m);
-    RTIO.PutText("\r\n");
-    RTIO.Flush();
+    PrintText("\r\n");
   END TraceModule;
 
 PROCEDURE TraceModuleAndImports(s: TEXT; m: RT0.ModulePtr) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
-    RTIO.PutText(s);
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
+    PrintText(s);
     OutModuleAndImports(m);
   END TraceModuleAndImports;
 
 <*UNUSED*> PROCEDURE TraceMsg(s: TEXT) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
-    RTIO.PutText(s);
-    RTIO.PutText("\r\n");
-    RTIO.Flush();
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
+    PrintText(s);
+    PrintText("\r\n");
   END TraceMsg;
 
 PROCEDURE TraceMsgI(s: TEXT; i: INTEGER) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
-    RTIO.PutText(s);
-    RTIO.PutInt(i);
-    RTIO.PutText("\r\n");
-    RTIO.Flush();
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
+    PrintText(s);
+    PrintInt(i);
+    PrintText("\r\n");
   END TraceMsgI;
 
 PROCEDURE TraceMsgS(s: TEXT; s2: RT0.String) =
   BEGIN
-    IF NOT traceInit THEN RETURN END;
-    RTIO.PutText(s);
-    RTIO.PutString(s2);
-    RTIO.PutText("\r\n");
-    RTIO.Flush();
+    IF traceInit = Trace_t.None THEN
+        RETURN
+    END;
+    PrintText(s);
+    PrintString(s2);
+    PrintText("\r\n");
   END TraceMsgS;
 
 BEGIN
 END RTLinker.
-
-
