@@ -305,7 +305,7 @@ is
     if equal(Temp, Args)
         %
         % Quake has a fixed size limit on strings, after which it crashes.
-        % Hopefully that are parameter list is too short to be in a response
+        % Hopefully that our parameter list is too short to be in a response
         % file implies it is short enough to fit in a string.
         %
         local Result = ""
