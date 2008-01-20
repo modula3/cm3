@@ -154,7 +154,7 @@ is
         args += "-O"
     end
     if debug
-        args += "-gstabs"
+        args += "-g"
     end
     if M3_PROFILING
         args += "-p"
@@ -237,7 +237,7 @@ is
         args += "-O"
     end
     if debug
-        args += "-gstabs"
+        args += "-g"
     end
     if M3_PROFILING
         args += "-pg"
@@ -297,12 +297,25 @@ readonly
 proc
 WriteResponseFile(
     File,
+    Divider,
     Args,
     )
 is
     local readonly Temp = arglist("", Args)
     if equal(Temp, Args)
-        return Temp
+        %
+        % Quake has a fixed size limit on strings, after which it crashes.
+        % Hopefully that are parameter list is too short to be in a response
+        % file implies it is short enough to fit in a string.
+        %
+        local Result = ""
+        foreach Arg in Args
+            if Result
+                Result = Result & Divider
+            end
+            Result = Result & Arg
+        end
+        return Result
     end
     MoveFile(Temp, File)
     DeleteFile(Temp)
@@ -357,7 +370,8 @@ end
 %%  to avoid relocating them every time they are loaded.
 
 %% m3_lib_flags = ["-debugtype:cv", "-machine:i386"]
-m3_lib_flags = ["-ign:__real"]
+%% m3_lib_flags = ["-ign:__real"]
+m3_lib_flags = [ ]
 
 %
 % make_lib and m3_link need to share code!
@@ -396,6 +410,7 @@ is
     LibResponseFile =
         WriteResponseFile(
             LibResponseFile,
+            " ",
             [
                 m3_lib_flags,
                 "-out:" & lib_file,
@@ -403,7 +418,7 @@ is
                 objects,
             ])
 
-    local ret_code = try_exec("@mklib", LibResponseFile, ">", listing)
+    local ret_code = try_exec("@mklib", LibResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error(
             "library creation failed, see "
@@ -436,18 +451,21 @@ is
         % of these two bits.
         % imported_libs = ConvertLibsToStandalone(imported_libs, shared)
 
-        %
-        % Not clear if a) gcc options can go in response file
-        % b) lib paths can go in response files, due to slash issues
-        %
         LinkResponseFile =
             WriteResponseFile(
                 LinkResponseFile,
+                ",",
                 [
                     "--output",
                     dll_file,
                     "--out-implib",
                     lib_file,
+                    %"--export-all-symbols",
+                    "--enable-auto-image-base",
+                    "--warn-duplicate-exports",
+                    "--disable-auto-import",
+                    "--disable-runtime-pseudo-reloc",
+                    "--large-address-aware",
                     objects,
                     escape(imported_libs),
                 ])
@@ -455,9 +473,9 @@ is
         ret_code =
             try_exec(
                 "@" & SYSTEM_CC,
-
                 "-shared", % must be visible to compiler
                 "-Wl," & LinkResponseFile,
+                "2>&1",
                 ">", listing
                 )
         if not equal(ret_code, 0) or not FileExists(dll_file)
@@ -570,15 +588,19 @@ is
     LinkResponseFile =
         WriteResponseFile(
             LinkResponseFile,
+            ",",
             [
                 "--output",
                 pgm_file,
+                "--disable-auto-import",
+                "--disable-runtime-pseudo-reloc",
+                "--large-address-aware",
                 options,
                 objects,
                 escape(imported_libs),
             ])
 
-    local ret_code = try_exec("@" & SYSTEM_CC, "-Wl," & LinkResponseFile, ">", listing)
+    local ret_code = try_exec("@" & SYSTEM_CC, "-Wl," & LinkResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(pgm_file)
         error(
             "link failed, see "

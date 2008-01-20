@@ -19,7 +19,7 @@ readonly TARGET       = "NT386"                 % code generation target
 readonly BUILD_DIR    = TARGET & PROFILING_P    % directory for results
 readonly OS_TYPE      = "WIN32"                 % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"                % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486-pc-cygwin"        % "cpu-vendor-os" string for GNU
+readonly GNU_PLATFORM = "i686-pc-cygwin"        % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "2"
 %                                        object files       libraries
@@ -455,7 +455,7 @@ is
                 objects,
             ])
 
-    local ret_code = try_exec("@mklib", LibResponseFile, ">", listing)
+    local ret_code = try_exec("@mklib", LibResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error(
             "library creation failed, see "
@@ -523,7 +523,7 @@ is
                      imported_libs,
                 ])
 
-        ret_code = try_exec("link", LinkResponseFile, ">", listing)
+        ret_code = try_exec("link", LinkResponseFile, "2>&1", ">", listing)
         if not equal(ret_code, 0) or not FileExists(dll_file)
             error(
                 "dynamic link library creation failed, see "
@@ -722,7 +722,7 @@ is
                 imported_libs
             ])
 
-    local ret_code = try_exec("link", LinkResponseFile, ">", listing)
+    local ret_code = try_exec("link", LinkResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(pgm_file)
         error(
             "link failed, see "
