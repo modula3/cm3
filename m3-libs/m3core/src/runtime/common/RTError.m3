@@ -7,8 +7,8 @@ UNSAFE MODULE RTError;
 IMPORT RTHeapRep, RTProcedure, RTProcedureSRC, RTProcess, RTIO;
 
 PROCEDURE Msg (file            : TEXT;
-                      line            : INTEGER;
-                      msgA, msgB, msgC: TEXT      := NIL) =
+               line            : INTEGER;
+               msgA, msgB, msgC: TEXT := NIL) =
   BEGIN
     StartError (msgA, msgB, msgC);
     IF (file # NIL) THEN
@@ -24,8 +24,8 @@ PROCEDURE Msg (file            : TEXT;
   END Msg;
 
 PROCEDURE MsgS (file            : ADDRESS;
-                       line            : INTEGER;
-                       msgA, msgB, msgC: TEXT      := NIL) =
+                line            : INTEGER;
+                msgA, msgB, msgC: TEXT := NIL) =
   BEGIN
     StartError (msgA, msgB, msgC);
     IF (file # NIL) THEN
@@ -40,7 +40,10 @@ PROCEDURE MsgS (file            : ADDRESS;
     EndError (crash := TRUE);
   END MsgS;
 
-PROCEDURE MsgI (file: TEXT; line: INTEGER; msg: TEXT := NIL; i: INTEGER) =
+PROCEDURE MsgI (file: TEXT;
+                line: INTEGER;
+                msg:  TEXT := NIL;
+                i:    INTEGER) =
   BEGIN
     StartError (msg);
     RTIO.PutInt (i);
