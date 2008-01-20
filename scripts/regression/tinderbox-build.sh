@@ -117,6 +117,10 @@ cleanup() {
 	echo "removing build tree ${BUILDDIR_BASE} ..." 
 	cd ${BUILDDIR_ROOT}
 	rm -rf ${BUILDDIR_BASE} 
+
+	# call build script cleanup
+	do_cleanup
+
 }
 
 STARTTIME=`date +%s`
