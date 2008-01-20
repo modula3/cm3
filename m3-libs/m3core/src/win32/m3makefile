@@ -4,6 +4,16 @@
 %
 % Last modified on Wed Nov  9 15:14:29 PST 1994 by kalsow  
 
+% $Id$
+
+if not equal (OS_TYPE, "WIN32")
+
+Interface  ("WinBaseTypes")
+Module     ("WinDef")
+Module     ("WinNT")
+
+else
+
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Interface  ("WinError")
@@ -29,3 +39,5 @@ Interface  ("WinCommCtrl")
 Module     ("WinTabCon")
 Module     ("WinListView")
 Module     ("WinImageList")
+
+end

@@ -55,7 +55,9 @@ DoPackage(
     "m3front",
     "m3quake",
     "cm3",
-    "mklib",
+    # only Win32 can build mklib in the first pass, since preexisting
+    # m3core will not have the types it needs
+    #"mklib",
     ]) or sys.exit(1)
 
 #
