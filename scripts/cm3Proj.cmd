@@ -7,6 +7,8 @@ REM v0.00--08/13/2003 by RCC
 REM v1.00--08/16/2003 by RCC
 REM v1.01--08/18/2003 by RCC
 REM v1.10--08/29/2003 by RCC, completed nested PROJ capability
+REM v1.11--06/10/2004 by RCC, fixed problem with FATAL errors not terminating during embedded calls to processDirective
+REM v1.12--01/21/2008 by RCC, don't check for TAR & GZIP in bin folder unless ARCSRC command is given.
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file aids users is building, shipping, 
@@ -50,6 +52,7 @@ REM    comprising the project).  These files specify the contents and build
 REM    order for the packages in the project.  See Help text for details.
 REM ===========================================================================
 @echo off
+if (%1)==((NEST)) if (%CM3P_Fatal%)==(TRUE) goto End
 set CM3P_Fatal=
 if defined CM3P_SavePrompt goto End
 
@@ -73,7 +76,7 @@ rem fall thru to Begin
 :Begin
 :-----
 echo ===============================================================================
-echo cm3Proj.CMD, written by R.C.Coleburn 08/13/2003, v1.10 08/29/2003 by RCC
+echo cm3Proj.CMD, written by R.C.Coleburn 08/13/2003, v1.12 01/21/2008 by RCC
 echo ===============================================================================
 
 :Params1
@@ -96,8 +99,6 @@ if not exist "%CM3_PKG%" goto FATAL_Env
 if not exist "%CM3_BIN%\cm3.exe" goto FATAL_Env
 if not exist "%CM3_BIN%\cm3Proj.CMD" goto FATAL_Env
 if not exist "%CM3_BIN%\cm3SetupCmdEnv.CMD" goto FATAL_Env
-if not exist "%CM3_BIN%\tar.exe" goto FATAL_Env
-if not exist "%CM3_BIN%\gzip.exe" goto FATAL_Env
 rem fall thru to Params2
 
 :Params2
@@ -266,6 +267,7 @@ rem          2=path to package/project
 rem          3=action (build, clean, ship, find, list, spotless, zapbak, arcsrc, delnt386, local, depend)
 rem          4=label for goto for processing each line
 rem          5=project name (only if this is a nested PROJ specification)
+if (%CM3P_Fatal%)==(TRUE) goto End
 if not (%1)==(PKG) if not (%1)==(PROJ) if not (%1)==(NAME) goto FATAL_ProjFileErr
 if (%1)==(NAME) if /I not (%2)==(%CM3P_ProjName%) goto FATAL_ProjFileErr
 if (%1)==(NAME) goto :EOF
@@ -413,6 +415,8 @@ goto :EOF
 
 :ArcSrc
 :------
+if not exist "%CM3_BIN%\tar.exe" goto FATAL_Env
+if not exist "%CM3_BIN%\gzip.exe" goto FATAL_Env
 echo Command Action = ARCSRC (archive all project sources)
 call :ShowFile
 echo -------------------------------------------------------------------------------
@@ -425,6 +429,7 @@ echo.
 echo *** copying project root's ReadMe files ...
 if exist read* xcopy /q read* %TEMP%\%CM3P_Archive%
 for /F "eol=; tokens=1,2,3" %%A in (%CM3P_File%) do call :processDirective %%A %%B %2 arcPkg %%C
+if (%CM3P_Fatal%)==(TRUE) goto End
 echo.
 echo *** deleting .bak and .asv files from temporary storage ...
 del /s/q %TEMP%\%CM3P_Archive%\*.bak >>NUL:
@@ -528,7 +533,7 @@ goto End
 :---------
 set CM3P_Fatal=TRUE
 echo.
-echo FATAL ERROR:  Unable to find CM3 installation.
+echo FATAL ERROR:  Unable to find a proper CM3 installation.
 echo           CM3_ROOT expected in folder %CM3_ROOT%
 echo            CM3_BIN expected in folder %CM3_BIN%
 echo            CM3_PKG expected in folder %CM3_PKG%
@@ -721,7 +726,6 @@ goto :EOF
 
 :FatalEnd
 :--------
-set CM3P_Fatal=
 EXIT /B 1
 goto :EOF
 
@@ -743,6 +747,6 @@ if defined CM3P_PriorFolder cd /d %CM3P_PriorFolder%
 set CM3P_PriorFolder=
 if defined CM3P_SavePrompt prompt %CM3P_SavePrompt%
 set CM3P_SavePrompt=
-echo ===============================================================================
 if (%CM3P_Fatal%)==(TRUE) goto FatalEnd
+echo ===============================================================================
 @echo on
