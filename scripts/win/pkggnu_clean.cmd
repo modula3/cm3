@@ -7,6 +7,8 @@
 
 @setlocal
 
+set CM3_TARGET=NT386GNU
+
 @call %~dp0clearenv || exit /b 1
 @call %~dp0sysinfo || exit /b 1
 @call %~dp0pkgcmds || exit /b 1
@@ -15,5 +17,5 @@
 echo INSTALLROOT is %INSTALLROOT%
 
 for /d %%a in (%INSTALLROOT%\pkg\*) do (
-    rmdir /q/s %%a\NT386GNU
+    rmdir /q/s %%a\%CM3_TARGET%
 )
